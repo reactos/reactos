@@ -22,6 +22,7 @@
  * FILE:            subsys/system/usetup/usetup.c
  * PURPOSE:         Text-mode setup
  * PROGRAMMER:      Eric Kohl
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 #include <ddk/ntddk.h>
@@ -39,6 +40,7 @@
 #include "progress.h"
 #include "bootsup.h"
 #include "registry.h"
+#include "format.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -623,6 +625,43 @@ InstallIntroPage(PINPUT_RECORD Ir)
 }
 
 
+/*
+ * Confirm delete partition
+ * RETURNS
+ *   TRUE: Delete currently selected partition.
+ *   FALSE: Don't delete currently selected partition.
+ */
+static BOOL
+ConfirmDeletePartition(PINPUT_RECORD Ir)
+{
+  BOOL Result = FALSE;
+
+  PopupError("Are you sure you want to delete this partition?\n"
+	     "\n"
+	     "  * Press ENTER to delete the partition.\n"
+	     "  * Press ESC to NOT delete the partition.",
+	     "ESC = Cancel  ENTER = Delete partition");
+
+  while(TRUE)
+    {
+      ConInKey(Ir);
+
+      if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
+	{
+	  Result = FALSE;
+	  break;
+	}
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN)	/* ENTER */
+	{
+	  Result = TRUE;
+	  break;
+	}
+    }
+
+  return(Result);
+}
+
+
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
@@ -735,6 +774,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 #ifdef ENABLE_FORMAT
     /* Don't destroy the parition list here */;
     return(CREATE_PARTITION_PAGE);
+#endif
+	}
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+	{
+#ifdef ENABLE_FORMAT
+	  if (ConfirmDeletePartition(Ir) == TRUE)
+      {
+        (BOOLEAN) DeleteSelectedPartition(CurrentPartitionList);
+      }
+    return(SELECT_PARTITION_PAGE);
 #endif
 	}
 
@@ -998,6 +1047,7 @@ CreatePartitionPage(PINPUT_RECORD Ir)
       					       &PartData);
           if (PartDataValid)
             {
+              PartData.CreatePartition = TRUE;
               PartData.NewPartSize = PartSize;
 
           	  ActivePartitionValid = GetActiveBootPartition(PartList,
@@ -1060,7 +1110,7 @@ CreateFileSystemList(SHORT Left,
   List->Left = Left;
   List->Top = Top;
 
-#if ENABLE_FORMAT
+#ifdef ENABLE_FORMAT
   List->FileSystemCount = 1;
 #else
   List->FileSystemCount = 0;
@@ -1308,7 +1358,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 FormatPartitionPage(PINPUT_RECORD Ir)
 {
-  BOOLEAN CreatePartition;
+  NTSTATUS Status;
   ULONG PartType;
   BOOLEAN Valid;
 
@@ -1335,30 +1385,23 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 	{
     SetStatusText("   Please wait ...");
 
-    CreatePartition = FALSE;
     switch (CurrentFileSystemList->CurrentFileSystem)
       {
 #ifdef ENABLE_FORMAT
         case FsFat:
           PartType = PARTITION_FAT32_XINT13;
-          CreatePartition = TRUE;
           break;
 #endif
         case FsKeep:
-          CreatePartition = FALSE;
           break;
         default:
           return QUIT_PAGE;
       }
 
-    if (CreatePartition)
+    if (PartData.CreatePartition)
       {
     	  Valid = CreateSelectedPartition(CurrentPartitionList, PartType, PartData.NewPartSize);
-        if (Valid)
-          {
-            return(INSTALL_DIRECTORY_PAGE);
-          }
-        else
+        if (!Valid)
           {
             DPRINT("CreateSelectedPartition() failed\n");
             /* FIXME: show an error dialog */
@@ -1370,6 +1413,13 @@ FormatPartitionPage(PINPUT_RECORD Ir)
       {
 #ifdef ENABLE_FORMAT
         case FsFat:
+          Status = FormatPartition(&DestinationRootPath);
+          if (!NT_SUCCESS(Status))
+            {
+              DPRINT1("FormatPartition() failed with status 0x%.08x\n", Status);
+              /* FIXME: show an error dialog */
+              return(QUIT_PAGE);
+            }
           break;
 #endif
         case FsKeep:
@@ -1377,6 +1427,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
         default:
           return QUIT_PAGE;
       }
+    return(INSTALL_DIRECTORY_PAGE);
 	}
     }
 
@@ -1559,7 +1610,6 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 //  SetTextXY(8, 14, "Create directories");
 
 //  SetStatusText("   Please wait...");
-
 
   /*
    * Build the file copy list

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.9 2003/04/18 14:00:17 chorns Exp $
+/* $Id: partlist.h,v 1.10 2003/04/28 19:44:13 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -35,6 +35,7 @@ typedef struct _PARTDATA
   USHORT Bus;
   USHORT Id;
 
+  BOOLEAN CreatePartition;
   ULONGLONG PartSize;
   ULONGLONG NewPartSize;
   ULONG PartNumber;
@@ -144,6 +145,9 @@ BOOL
 CreateSelectedPartition(PPARTLIST List,
   ULONG PartType,
   ULONGLONG NewPartSize);
+
+BOOL
+DeleteSelectedPartition(PPARTLIST List);
 
 #endif /* __PARTLIST_H__ */
 

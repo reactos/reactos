@@ -828,8 +828,8 @@ CHECKPOINT1;
 	 87); /* FAT32 BPB length */
 
   /* Disable the backup boot sector */
-  NewBootSector[0x32] = 0xFF;
-  NewBootSector[0x33] = 0xFF;
+  NewBootSector[0x32] = 0x00;
+  NewBootSector[0x33] = 0x00;
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1358,7 +1358,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 	 87); /* FAT32 BPB length */
 
   /* Get the location of the backup boot sector */
-  BackupBootSector = (OrigBootSector[0x33] << 8) + OrigBootSector[0x33];
+  BackupBootSector = (OrigBootSector[0x33] << 8) + OrigBootSector[0x32];
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1406,7 +1406,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
   }
 
   /* Write backup boot sector */
-  if (BackupBootSector != 0xFFFF)
+  if ((BackupBootSector != 0x0000) && (BackupBootSector != 0xFFFF))
   {
     FileOffset.QuadPart = (ULONGLONG)((ULONG)BackupBootSector * SECTORSIZE);
     Status = NtWriteFile(FileHandle,

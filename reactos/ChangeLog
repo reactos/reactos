@@ -1,3 +1,29 @@
+2003-04-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/fslib/vfatlib/vfatlib.h: New file.
+	* subsys/system/usetup/format.c: Ditto.
+	* subsys/system/usetup/format.h: Ditto.
+	* lib/fslib/vfatlib/vfatlib.c (GetShiftCount): Define.
+	(VfatWriteBootSector, VfatWriteFsInfo, VfatWriteFAT,
+	VfatWriteRootDirectory): New function.
+	(VfatFormat): Implement.
+	* subsys/system/usetup/bootsup.c: (InstallFat32BootCodeToFile): Use
+	0x0000 as marker to disable backup boot sector.
+	(InstallFat32BootCodeToDisk): Add lower 8-bit to BackupBootSector.
+	Also treat 0x0000 as no backup boot sector is available.
+	* subsys/system/usetup/makefile (TARGET_SDKLIBS): Define.
+	(TARGET_OBJECTS): Add format.o.
+	* subsys/system/usetup/partlist.c (AddPartitionList): Initialize
+	PartNumber field.
+	(GetSelectedPartition): Set PartEntryNumber correctly.
+	(CreateSelectedPartition): Write partition information to disk.
+	(DeleteSelectedPartition): New function.
+	* subsys/system/usetup/partlist.h (PARTDATA): Add field CreatePartition.
+	(DeleteSelectedPartition): Prototype.
+	* subsys/system/usetup/usetup.c (ConfirmDeletePartition): New function.
+	(SelectPartitionPage): Support deletion of partition.
+	(FormatPartitionPage): Support formatting of partition.
+
 2003-04-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/helper.mk (TARGET_ASFLAGS): Add -march and define MK_ARCH_ID.
