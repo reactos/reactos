@@ -435,7 +435,7 @@ DWORD
 STDCALL
 NtUserEmptyClipboard(VOID);
 
-BOOL
+UINT
 STDCALL
 NtUserEnableMenuItem(
   HMENU hMenu,

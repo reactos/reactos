@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.14 2003/08/04 10:13:51 weiden Exp $
+/* $Id: menu.c,v 1.15 2003/08/04 23:52:25 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -414,25 +414,7 @@ CheckMenuItem(HMENU hmenu,
 	      UINT uIDCheckItem,
 	      UINT uCheck)
 {
-  MENUITEM* Item;
-  DWORD Ret;
-
-  DPRINT("CheckMenuItem(hmenu 0x%X, uIDCheckItem %d, uCheck %d",
-	 hmenu, uIDCheckItem, uCheck);
-  if ((Item = MenuFindItem(&hmenu, &uIDCheckItem, uCheck)) == NULL)
-    {
-      return(-1);
-    }
-  Ret = Item->State & MF_CHECKED;
-  if (uCheck & MF_CHECKED)
-    {
-      Item->State |= MF_CHECKED;
-    }
-  else
-    {
-      Item->State &= ~MF_CHECKED;
-    }
-  return(Ret);
+  return NtUserCheckMenuItem(hmenu, uIDCheckItem, uCheck);
 }
 
 
@@ -586,23 +568,7 @@ EnableMenuItem(HMENU hMenu,
 	       UINT uIDEnableItem,
 	       UINT uEnable)
 {
-  PPOPUP_MENU Menu;
-  PMENUITEM Item;
-  UINT OldFlags;
-
-  Menu = MenuGetMenu(hMenu);
-  if (Menu == NULL)
-    {
-      return(-1);
-    }
-  Item = MenuFindItem(&hMenu, &uIDEnableItem, uEnable);
-  if (Item == NULL)
-    {
-      return(-1);
-    }
-  OldFlags = Item->State & (MF_GRAYED | MF_DISABLED);
-  Item->State ^= (OldFlags ^ uEnable) & (MF_GRAYED | MF_DISABLED);
-  return(OldFlags);
+  return NtUserEnableMenuItem(hMenu, uIDEnableItem, uEnable);
 }
 
 BOOL STATIC
@@ -751,23 +717,7 @@ GetMenuInfo(HMENU hmenu,
 int STDCALL
 GetMenuItemCount(HMENU hMenu)
 {
-  #if 0
   return NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
-  #else
-  HANDLE hHeap = RtlGetProcessHeap();
-  MENUITEMINFOW *mi;
-  int i = 0;
-  DWORD cnt = NtUserBuildMenuItemList(hMenu, NULL, 0, 0);
-  DbgPrint("NtUserBuildMenuItemList() count = %d\n", cnt);
-  mi = RtlAllocateHeap(hHeap, 0, cnt * sizeof(MENUITEMINFOW));
-  while(cnt > i)
-  {
-    DbgPrint("  %d-> (NULL)\n", i);
-    i++;
-  }
-  RtlFreeHeap (hHeap, 0, mi);
-  return cnt;
-  #endif
 }
 
 
@@ -902,7 +852,7 @@ GetSubMenu(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -912,8 +862,7 @@ HiliteMenuItem(
   UINT uItemHilite,
   UINT uHilite)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserHiliteMenuItem(hwnd, hmenu, uItemHilite, uHilite);
 }
 
 
@@ -967,11 +916,6 @@ InsertMenuItemA(
         return FALSE;
       }
       CleanHeap = TRUE;
-      DbgPrint("InsertMenuItemA() Text = %ws\n", (PWSTR)mi.dwTypeData);
-    }
-    else
-    {
-      DbgPrint("InsertMenuItemA() No Text\n");
     }
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);

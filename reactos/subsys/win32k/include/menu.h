@@ -84,7 +84,7 @@ NtUserDrawMenuBarTemp(
   HMENU hMenu,
   DWORD Unknown4);
   
-BOOL
+UINT
 STDCALL
 NtUserEnableMenuItem(
   HMENU hMenu,

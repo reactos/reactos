@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.6 2003/08/04 10:13:51 weiden Exp $
+/* $Id: menu.c,v 1.7 2003/08/04 23:52:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -57,6 +57,37 @@
 #define MIIM_FTYPE       (0x00000100)
 #endif
 
+/* TODO - Optimize */
+#define UpdateMenuItemState(state, change) \
+{\
+  if((change) & MFS_DISABLED) { \
+    if(!((state) & MFS_DISABLED)) (state) |= MFS_DISABLED; \
+  } else { \
+    if((state) & MFS_DISABLED) (state) ^= MFS_DISABLED; \
+  } \
+  if((change) & MFS_CHECKED) { \
+    if(!((state) & MFS_CHECKED)) (state) |= MFS_CHECKED; \
+  } else { \
+    if((state) & MFS_CHECKED) (state) ^= MFS_CHECKED; \
+  } \
+  if((change) & MFS_HILITE) { \
+    if(!((state) & MFS_HILITE)) (state) |= MFS_HILITE; \
+  } else { \
+    if((state) & MFS_HILITE) (state) ^= MFS_HILITE; \
+  } \
+}
+
+#define FreeMenuText(MenuItem) \
+{ \
+  if(((MenuItem).fMask & (MIIM_TYPE | MIIM_STRING)) && \
+           (MENU_ITEM_TYPE((MenuItem).fType) == MF_STRING) && \
+           (MenuItem).dwTypeData) { \
+    ExFreePool((MenuItem).dwTypeData); \
+    (MenuItem).dwTypeData = 0; \
+    (MenuItem).cch = 0; \
+  } \
+}
+
 NTSTATUS FASTCALL
 InitMenuImpl(VOID)
 {
@@ -68,6 +99,43 @@ CleanupMenuImpl(VOID)
 {
   return(STATUS_SUCCESS);
 }
+
+#if 0
+void FASTCALL
+DumpMenuItemList(PMENU_ITEM MenuItem)
+{
+  UINT cnt = 0;
+  while(MenuItem)
+  {
+    if(MenuItem->MenuItem.dwTypeData)
+      DbgPrint(" %d. %ws\n", ++cnt, (LPWSTR)MenuItem->MenuItem.dwTypeData);
+    else
+      DbgPrint(" %d. NO TEXT dwTypeData==%d\n", ++cnt, MenuItem->MenuItem.dwTypeData);
+    DbgPrint("   fType=");
+    if(MFT_BITMAP & MenuItem->MenuItem.fType) DbgPrint("MFT_BITMAP ");
+    if(MFT_MENUBARBREAK & MenuItem->MenuItem.fType) DbgPrint("MFT_MENUBARBREAK ");
+    if(MFT_MENUBREAK & MenuItem->MenuItem.fType) DbgPrint("MFT_MENUBREAK ");
+    if(MFT_OWNERDRAW & MenuItem->MenuItem.fType) DbgPrint("MFT_OWNERDRAW ");
+    if(MFT_RADIOCHECK & MenuItem->MenuItem.fType) DbgPrint("MFT_RADIOCHECK ");
+    if(MFT_RIGHTJUSTIFY & MenuItem->MenuItem.fType) DbgPrint("MFT_RIGHTJUSTIFY ");
+    if(MFT_SEPARATOR & MenuItem->MenuItem.fType) DbgPrint("MFT_SEPARATOR ");
+    if(MFT_STRING & MenuItem->MenuItem.fType) DbgPrint("MFT_STRING ");
+    DbgPrint("\n   fState=");
+    if(MFS_DISABLED & MenuItem->MenuItem.fState) DbgPrint("MFS_DISABLED ");
+    else DbgPrint("MFS_ENABLED ");
+    if(MFS_CHECKED & MenuItem->MenuItem.fState) DbgPrint("MFS_CHECKED ");
+    else DbgPrint("MFS_UNCHECKED ");
+    if(MFS_HILITE & MenuItem->MenuItem.fState) DbgPrint("MFS_HILITE ");
+    else DbgPrint("MFS_UNHILITE ");
+    if(MFS_DEFAULT & MenuItem->MenuItem.fState) DbgPrint("MFS_DEFAULT ");
+    if(MFS_GRAYED & MenuItem->MenuItem.fState) DbgPrint("MFS_GRAYED ");
+    DbgPrint("\n   wId=%d\n", MenuItem->MenuItem.wID);
+    MenuItem = MenuItem->Next;
+  }
+  DbgPrint("Entries: %d\n", cnt);
+  return;
+}
+#endif
 
 PMENU_OBJECT FASTCALL
 W32kGetMenuObject(HMENU hMenu)
@@ -204,54 +272,50 @@ W32kSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
   return FALSE;
 }
 
+
 int FASTCALL
-W32kGetMenuItemById(PMENU_OBJECT MenuObject, UINT wID, PMENU_ITEM *MenuItem)
+W32kGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag, PMENU_ITEM *MenuItem)
 {
-  PMENU_ITEM CurItem;
-  UINT p = 0;
-
-  CurItem = MenuObject->MenuItemList;
-  while(CurItem)
+  PMENU_ITEM CurItem = MenuObject->MenuItemList;
+  int p;
+  if(MF_BYPOSITION & fFlag)
   {
-    if(CurItem->MenuItem.wID == wID)
+    PMENU_ITEM PrevItem = NULL;
+    p = uSearchBy;
+    while(CurItem && (p > 0))
     {
-      if(MenuItem) *MenuItem = CurItem;
-      return p;
+      PrevItem = CurItem;
+      CurItem = CurItem->Next;
+      p--;
     }
-    CurItem = CurItem->Next;
-    p++;
-  }
+    if(MenuItem)
+    {
+      if(CurItem)
+        *MenuItem = CurItem;
+      else
+      {
+        *MenuItem = NULL;
+        return -1;
+      }
+    }
 
+    return uSearchBy - p;
+  }
+  else
+  {
+    p = 0;
+    while(CurItem)
+    {
+      if(CurItem->MenuItem.wID == uSearchBy)
+      {
+        if(MenuItem) *MenuItem = CurItem;
+        return p;
+      }
+      CurItem = CurItem->Next;
+      p++;
+    }
+  }
   return -1;
-}
-
-int FASTCALL
-W32kGetMenuItemByIndex(PMENU_OBJECT MenuObject, UINT Index, PMENU_ITEM *MenuItem)
-{
-  PMENU_ITEM PrevItem = NULL;
-  PMENU_ITEM CurItem;
-  UINT p = Index;
-
-  CurItem = MenuObject->MenuItemList;
-  while(CurItem && (p > 0))
-  {
-    PrevItem = CurItem;
-    CurItem = CurItem->Next;
-    p--;
-  }
-  if(MenuItem)
-  {
-    if(!CurItem)
-    {
-      *MenuItem = CurItem;
-    }
-    else
-    {
-      *MenuItem = PrevItem;
-    }
-  }
-  
-  return Index - p;
 }
 
 int FASTCALL
@@ -317,63 +381,6 @@ W32kInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
   return npos;
 }
 
-#if 0
-void FASTCALL
-DumpMenuItemList(PMENU_ITEM MenuItem)
-{
-  UINT cnt = 0;
-  while(MenuItem)
-  {
-    if(MenuItem->MenuItem.dwTypeData)
-      DbgPrint(" %d. %ws\n", ++cnt, (LPWSTR)MenuItem->MenuItem.dwTypeData);
-    else
-      DbgPrint(" %d. NO TEXT dwTypeData==%d\n", ++cnt, MenuItem->MenuItem.dwTypeData);
-    DbgPrint("   fType=");
-    if(MFT_BITMAP & MenuItem->MenuItem.fType) DbgPrint("MFT_BITMAP ");
-    if(MFT_MENUBARBREAK & MenuItem->MenuItem.fType) DbgPrint("MFT_MENUBARBREAK ");
-    if(MFT_MENUBREAK & MenuItem->MenuItem.fType) DbgPrint("MFT_MENUBREAK ");
-    if(MFT_OWNERDRAW & MenuItem->MenuItem.fType) DbgPrint("MFT_OWNERDRAW ");
-    if(MFT_RADIOCHECK & MenuItem->MenuItem.fType) DbgPrint("MFT_RADIOCHECK ");
-    if(MFT_RIGHTJUSTIFY & MenuItem->MenuItem.fType) DbgPrint("MFT_RIGHTJUSTIFY ");
-    if(MFT_SEPARATOR & MenuItem->MenuItem.fType) DbgPrint("MFT_SEPARATOR ");
-    if(MFT_STRING & MenuItem->MenuItem.fType) DbgPrint("MFT_STRING ");
-    DbgPrint("\n   fState=");
-    if(MFS_CHECKED & MenuItem->MenuItem.fState) DbgPrint("MFS_CHECKED ");
-    if(MFS_DEFAULT & MenuItem->MenuItem.fState) DbgPrint("MFS_DEFAULT ");
-    if(MFS_DISABLED & MenuItem->MenuItem.fState) DbgPrint("MFS_DISABLED ");
-    if(MFS_ENABLED & MenuItem->MenuItem.fState) DbgPrint("MFS_ENABLED ");
-    if(MFS_GRAYED & MenuItem->MenuItem.fState) DbgPrint("MFS_GRAYED ");
-    if(MFS_HILITE & MenuItem->MenuItem.fState) DbgPrint("MFS_HILITE ");
-    if(MFS_UNCHECKED & MenuItem->MenuItem.fState) DbgPrint("MFS_UNCHECKED ");
-    if(MFS_UNHILITE & MenuItem->MenuItem.fState) DbgPrint("MFS_UNHILITE ");
-    DbgPrint("\n   wId=%d\n", MenuItem->MenuItem.wID);
-    MenuItem = MenuItem->Next;
-  }
-  DbgPrint("Entries: %d\n", cnt);
-  return;
-}
-#endif
-
-/* TODO optimize this macro */
-#define UpdateMenuItemState(state, change) \
-{\
-  if((change) & MFS_DISABLED) { \
-    if(!((state) & MFS_DISABLED)) (state) |= MFS_DISABLED; \
-  } else { \
-    if((state) & MFS_DISABLED) (state) ^= MFS_DISABLED; \
-  } \
-  if((change) & MFS_CHECKED) { \
-    if(!((state) & MFS_CHECKED)) (state) |= MFS_CHECKED; \
-  } else { \
-    if((state) & MFS_CHECKED) (state) ^= MFS_CHECKED; \
-  } \
-  if((change) & MFS_HILITE) { \
-    if(!((state) & MFS_HILITE)) (state) |= MFS_HILITE; \
-  } else { \
-    if((state) & MFS_HILITE) (state) ^= MFS_HILITE; \
-  } \
-}
-
 BOOL FASTCALL
 W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFOW lpmii)
 {
@@ -389,6 +396,7 @@ W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFO
     /* delete old string */
     ExFreePool(MenuItem->MenuItem.dwTypeData);
     MenuItem->MenuItem.dwTypeData = 0;
+    MenuItem->MenuItem.cch = 0;
   }
   
   MenuItem->MenuItem.fType = lpmii->fType;
@@ -428,13 +436,16 @@ W32kSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPMENUITEMINFO
   if((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) && 
            (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING) && lpmii->dwTypeData)
   {
+    FreeMenuText(MenuItem->MenuItem);
     MenuItem->MenuItem.dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (lpmii->cch + 1) * sizeof(WCHAR));
     if(!MenuItem->MenuItem.dwTypeData)
     {
+      MenuItem->MenuItem.cch = 0;
       /* FIXME Set last error code? */
       SetLastWin32Error(STATUS_NO_MEMORY);
       return FALSE;
     }
+    MenuItem->MenuItem.cch = lpmii->cch;
     memcpy(MenuItem->MenuItem.dwTypeData, lpmii->dwTypeData, (lpmii->cch + 1) * sizeof(WCHAR));
   }
   
@@ -463,7 +474,7 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   }
   else
   {
-    pos = W32kGetMenuItemById(MenuObject, uItem, NULL);
+    pos = W32kGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, NULL);
   }
   if(pos < -1) pos = -1;
   
@@ -475,16 +486,8 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
     return FALSE;
   }
   
-  /* memcpy(&MenuItem->MenuItem, lpmii, sizeof(MENUITEMINFOW)); */
   RtlZeroMemory(&MenuItem->MenuItem, sizeof(MENUITEMINFOW));
   MenuItem->MenuItem.cbSize = sizeof(MENUITEMINFOW);
-  
-  if(!(lpmii->fMask & MIIM_STATE))
-  {
-    lpmii->fMask |= MIIM_STATE;
-    lpmii->fState = MFS_ENABLED | MFS_CHECKED;
-    UpdateMenuItemState(MenuItem->MenuItem.fState, lpmii->fState);
-  }
   
   if(!W32kSetMenuItemInfo(MenuObject, MenuItem, lpmii))
   {
@@ -494,46 +497,50 @@ W32kInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   
   pos = W32kInsertMenuItemToList(MenuObject, MenuItem, pos);
   
-  #if 0
-  DumpMenuItemList(MenuObject->MenuItemList);
-  #endif
-  
   return pos >= 0;
 }
 
-BOOL FASTCALL
+UINT FASTCALL
 W32kEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable)
 {
   PMENU_ITEM MenuItem;
-  UINT oldflags;
-  if(uEnable & MF_BYCOMMAND)
+  UINT res = W32kGetMenuItemByFlag(MenuObject, uIDEnableItem, uEnable, &MenuItem);
+  if(!MenuItem || (res == (UINT)-1))
   {
-    if(!W32kGetMenuItemById(MenuObject, uIDEnableItem, &MenuItem))
+    return (UINT)-1;
+  }
+  
+  res = MenuItem->MenuItem.fState & (MF_GRAYED | MF_DISABLED);
+  
+  if(uEnable & MF_DISABLED)
+  {
+    if(!(MenuItem->MenuItem.fState & MF_DISABLED))
+        MenuItem->MenuItem.fState |= MF_DISABLED;
+    if(uEnable & MF_GRAYED)
     {
-      return FALSE;
+      if(!(MenuItem->MenuItem.fState & MF_GRAYED))
+          MenuItem->MenuItem.fState |= MF_GRAYED;
     }
-    if(!MenuItem) return FALSE;
   }
   else
   {
-    if(!(uEnable & MF_BYPOSITION))
+    if(uEnable & MF_GRAYED)
     {
-      return FALSE;
+      if(!(MenuItem->MenuItem.fState & MF_GRAYED))
+          MenuItem->MenuItem.fState |= MF_GRAYED;
+      if(!(MenuItem->MenuItem.fState & MF_DISABLED))
+          MenuItem->MenuItem.fState |= MF_DISABLED;
     }
-    if(!W32kGetMenuItemByIndex(MenuObject, uIDEnableItem, &MenuItem))
+    else
     {
-      return FALSE;
-      if(!MenuItem) return FALSE;
+      if(MenuItem->MenuItem.fState & MF_DISABLED)
+          MenuItem->MenuItem.fState ^= MF_DISABLED;
+      if(MenuItem->MenuItem.fState & MF_GRAYED)
+          MenuItem->MenuItem.fState ^= MF_GRAYED;
     }
   }
   
-  /* FIXME from wine, hope  that works */
-  oldflags = MenuItem->MenuItem.fState & (MF_GRAYED | MF_DISABLED);
-  MenuItem->MenuItem.fState ^= (oldflags ^ uEnable) & (MF_GRAYED | MF_DISABLED);
-  #if 0
-  DumpMenuItemList(MenuObject->MenuItemList);
-  #endif
-  return TRUE;
+  return res;
 }
 
 /*
@@ -553,6 +560,57 @@ W32kBuildMenuItemList(PMENU_OBJECT MenuObject, MENUITEMINFOW *lpmiil, ULONG nMax
 }
 */
 
+DWORD FASTCALL
+W32kCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
+{
+  PMENU_ITEM MenuItem;
+  int res = -1;
+
+  if((W32kGetMenuItemByFlag(MenuObject, uIDCheckItem, uCheck, &MenuItem) < 0) || !MenuItem)
+  {
+    return -1;
+  }
+
+  res = (DWORD)(MenuItem->MenuItem.fState & MF_CHECKED);
+  if(uCheck & MF_CHECKED)
+  {
+    if(!(MenuItem->MenuItem.fState & MF_CHECKED))
+        MenuItem->MenuItem.fState |= MF_CHECKED;
+  }
+  else
+  {
+    if(MenuItem->MenuItem.fState & MF_CHECKED)
+        MenuItem->MenuItem.fState ^= MF_CHECKED;
+  }
+
+  return (DWORD)res;
+}
+
+BOOL FASTCALL
+W32kHiliteMenuItem(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject,
+  UINT uItemHilite, UINT uHilite)
+{
+  PMENU_ITEM MenuItem;
+  BOOL res = W32kGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, &MenuItem);
+  if(!MenuItem || !res)
+  {
+    return FALSE;
+  }
+  
+  if(uHilite & MF_HILITE)
+  {
+    if(!(MenuItem->MenuItem.fState & MF_HILITE))
+        MenuItem->MenuItem.fState |= MF_HILITE;
+  }
+  else
+  {
+    if(MenuItem->MenuItem.fState & MF_HILITE)
+        MenuItem->MenuItem.fState ^= MF_HILITE;
+  }
+  
+  return TRUE;
+}
+
 /* FUNCTIONS *****************************************************************/
 
 
@@ -567,12 +625,12 @@ NtUserBuildMenuItemList(
  ULONG nBufSize,
  DWORD Reserved)
 {
-  DWORD res = 0;
+  DWORD res = -1;
   PMENU_OBJECT MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
+    return -1;
   }
   
   if(lpmiil)
@@ -586,9 +644,6 @@ NtUserBuildMenuItemList(
   }
   else
   {
-  #if 0
-  DumpMenuItemList(MenuObject->MenuItemList);
-  #endif
     res = MenuObject->MenuItemCount;
   }
   W32kReleaseMenuObject(MenuObject);
@@ -597,7 +652,7 @@ NtUserBuildMenuItemList(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 NtUserCheckMenuItem(
@@ -605,9 +660,18 @@ NtUserCheckMenuItem(
   UINT uIDCheckItem,
   UINT uCheck)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  DWORD res = 0;
+  PMENU_OBJECT MenuObject = W32kGetMenuObject(hmenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return (DWORD)-1;
+  }
+  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  res = W32kCheckMenuItem(MenuObject, uIDCheckItem, uCheck);
+  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  W32kReleaseMenuObject(MenuObject);
+  return res;
 }
 
 
@@ -678,24 +742,25 @@ NtUserDestroyMenu(
 /*
  * @implemented
  */
-BOOL STDCALL
+UINT STDCALL
 NtUserEnableMenuItem(
   HMENU hMenu,
   UINT uIDEnableItem,
   UINT uEnable)
 {
-  BOOL res = FALSE;
+  UINT res = (UINT)-1;
   PMENU_OBJECT MenuObject;
   MenuObject = W32kGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
+    return res;
   }
   ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
   res = W32kEnableMenuItem(MenuObject, uIDEnableItem, uEnable);
   ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
   W32kReleaseMenuObject(MenuObject);
+
   return res;
 }
 
@@ -794,9 +859,30 @@ NtUserHiliteMenuItem(
   UINT uItemHilite,
   UINT uHilite)
 {
-  UNIMPLEMENTED
-
-  return 0;
+  BOOL res = FALSE;
+  PMENU_OBJECT MenuObject;
+  PWINDOW_OBJECT WindowObject = W32kGetWindowObject(hwnd);
+  if(!WindowObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return res;
+  }
+  MenuObject = W32kGetMenuObject(hmenu);
+  if(!MenuObject)
+  {
+    W32kReleaseWindowObject(WindowObject);
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return res;
+  }
+  if(WindowObject->Menu == hmenu)
+  {
+    ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    res = W32kHiliteMenuItem(WindowObject, MenuObject, uItemHilite, uHilite);
+    ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  }
+  W32kReleaseMenuObject(MenuObject);
+  W32kReleaseWindowObject(WindowObject);
+  return res;
 }
 
 
