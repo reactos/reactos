@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.5 2003/02/08 00:19:32 ekohl Exp $
+/* $Id: filesup.c,v 1.6 2003/05/18 12:50:17 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -111,7 +111,6 @@ SetupCopyFile(PWCHAR SourceFileName,
 		      FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       return(Status);
     }
 
@@ -122,7 +121,6 @@ CHECKPOINT1;
 				  FileStandardInformation);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
      NtClose(FileHandleSource);
      return(Status);
     }
@@ -133,7 +131,6 @@ CHECKPOINT1;
 				  FileBasicInformation);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       NtClose(FileHandleSource);
       return(Status);
     }
@@ -160,7 +157,6 @@ CHECKPOINT1;
 			0);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       NtClose(FileHandleSource);
       return(Status);
     }
@@ -174,7 +170,6 @@ CHECKPOINT1;
 				FilePositionInformation);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       NtClose(FileHandleSource);
       NtClose(FileHandleDest);
       return(Status);
@@ -187,7 +182,6 @@ CHECKPOINT1;
 				FilePositionInformation);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       NtClose(FileHandleSource);
       NtClose(FileHandleDest);
       return(Status);
@@ -206,7 +200,6 @@ CHECKPOINT1;
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       NtClose(FileHandleSource);
       NtClose(FileHandleDest);
       return(Status);
@@ -234,7 +227,6 @@ CHECKPOINT1;
 	      DPRINT("STATUS_END_OF_FILE\n");
 	      break;
 	    }
-CHECKPOINT1;
 	  NtClose(FileHandleSource);
 	  NtClose(FileHandleDest);
 	  return(Status);
@@ -253,7 +245,6 @@ CHECKPOINT1;
 			   NULL);
       if (!NT_SUCCESS(Status))
 	{
-CHECKPOINT1;
 	  NtFreeVirtualMemory(NtCurrentProcess(),
 			      (PVOID *)&Buffer,
 			      &RegionSize,
@@ -319,7 +310,6 @@ DoesFileExist(PWSTR PathName,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
       return(FALSE);
     }
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.3 2003/03/15 19:36:10 ekohl Exp $
+/* $Id: infcache.c,v 1.4 2003/05/18 12:50:17 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -442,7 +442,10 @@ inline static int is_eof( struct parser *parser, const CHAR *ptr )
 /* check if the pointer points to an end of line */
 inline static int is_eol( struct parser *parser, const CHAR *ptr )
 {
-  return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == '\r' /*'\n'*/);
+  return (ptr >= parser->end ||
+	  *ptr == CONTROL_Z ||
+	  *ptr == '\n' ||
+	  (*ptr == '\r' && *(ptr + 1) == '\n'));
 }
 
 
@@ -560,20 +563,24 @@ static const CHAR *line_start_state( struct parser *parser, const CHAR *pos )
     {
       switch(*p)
 	{
-//	  case '\n':
 	  case '\r':
-	    p++;
+	    continue;
+
+	  case '\n':
 	    parser->line_pos++;
 	    close_current_line( parser );
 	    break;
+
 	  case ';':
 	    push_state( parser, LINE_START );
 	    set_state( parser, COMMENT );
 	    return p + 1;
+
 	  case '[':
 	    parser->start = p + 1;
 	    set_state( parser, SECTION_NAME );
 	    return p + 1;
+
 	  default:
 	    if (!isspace(*p))
 	      {
@@ -727,20 +734,23 @@ static const CHAR *eol_backslash_state( struct parser *parser, const CHAR *pos )
     {
       switch(*p)
 	{
-//	  case '\n':
 	  case '\r':
+	    continue;
+
+	  case '\n':
 	    parser->line_pos++;
-//	    parser->start = p + 1;
-	    parser->start = p + 2;
+	    parser->start = p + 1;
 	    set_state( parser, LEADING_SPACES );
-//	    return p + 1;
-	    return p + 2;
+	    return p + 1;
+
 	  case '\\':
 	    continue;
+
 	  case ';':
 	    push_state( parser, EOL_BACKSLASH );
 	    set_state( parser, COMMENT );
 	    return p + 1;
+
 	  default:
 	    if (isspace(*p))
 	      continue;
