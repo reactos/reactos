@@ -1,7 +1,13 @@
+/* $Id: lpcsrv.c,v 1.4 2000/01/22 22:22:48 ea Exp $
+ *
+ * DESCRIPTION: Simple LPC Server
+ * PROGRAMMER:  David Welch
+ */
 #include <ddk/ntddk.h>
 #include <stdarg.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 HANDLE OutputHandle;
 HANDLE InputHandle;
@@ -18,7 +24,7 @@ void debug_printf(char* fmt, ...)
 }
 
 
-void main(int argc, char* argv[])
+int main(int argc, char* argv[])
 {
    UNICODE_STRING PortName;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -44,8 +50,8 @@ void main(int argc, char* argv[])
 			 0);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to create port\n");
-	return;
+	printf("(lpcsrv.exe) Failed to create port (Status = 0x%08X)\n", Status);
+	return EXIT_FAILURE;
      }
    
    
@@ -54,8 +60,8 @@ void main(int argc, char* argv[])
 			 &ConnectMsg);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to listen for connections\n");
-	return;
+	printf("(lpcsrv.exe) Failed to listen for connections (Status = 0x%08X)\n", Status);
+	return EXIT_FAILURE;
      }
    
    printf("(lpcsrv.exe) Accepting connections\n");
@@ -67,16 +73,16 @@ void main(int argc, char* argv[])
 				NULL);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to accept connection\n");
-	return;
+	printf("(lpcsrv.exe) Failed to accept connection (Status = 0x%08X)\n", Status);
+	return EXIT_FAILURE;
      }   
    
    printf("(lpcsrv.exe) Completing connection\n");
    Status = NtCompleteConnectPort(PortHandle);
    if (!NT_SUCCESS(Status))
      {
-	printf("(lpcsrv.exe) Failed to complete connection\n");
-	return;
+	printf("(lpcsrv.exe) Failed to complete connection (Status = 0x%08X)\n", Status);
+	return EXIT_FAILURE;
      }
    
    for(;;)
@@ -89,10 +95,14 @@ void main(int argc, char* argv[])
 					&Request);
 	if (!NT_SUCCESS(Status))
 	  {
-	     printf("(lpcsrv.exe) Failed to receive request\n");
-	     return;
+	     printf("(lpcsrv.exe) Failed to receive request (Status = 0x%08X)\n", Status);
+             return EXIT_FAILURE;
 	  }
 	
 	printf("(lpcsrv.exe) Message contents are <%s>\n", Request.MessageData);
      }
+   return EXIT_SUCCESS;
 }
+
+
+/* EOF */
