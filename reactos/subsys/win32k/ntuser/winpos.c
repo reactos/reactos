@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.86 2004/02/03 09:44:35 gvg Exp $
+/* $Id: winpos.c,v 1.87 2004/02/04 22:59:04 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -268,7 +268,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 	  {
 	    WinPosGetMinMaxInfo(WindowObject, &Size, &InternalPos->MaxPos, 
 				NULL, NULL);
-	    DPRINT1("Maximize: %d,%d %dx%d\n",
+	    DPRINT("Maximize: %d,%d %dx%d\n",
 	       InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
 	    if (WindowObject->Style & WS_MINIMIZE)
 	      {
@@ -599,10 +599,6 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
   Window->ClientRect.top += MoveY;
   Window->ClientRect.bottom += MoveY;
 
-#if 0
-  DceMoveDCE(Window->Self, MoveX, MoveY);
-#endif
-
   ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
   Child = Window->FirstChild;
   while (Child)
@@ -876,6 +872,10 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    {
       Window->Style |= WS_VISIBLE;
    }
+
+   DceResetActiveDCEs(Window,
+                      NewWindowRect.left - OldWindowRect.left,
+                      NewWindowRect.top - OldWindowRect.top);
 
    /* Determine the new visible region */
    VisAfter = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);

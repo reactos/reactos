@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.53 2004/02/02 23:28:17 gvg Exp $
+/* $Id: windc.c,v 1.54 2004/02/04 22:59:04 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -685,11 +685,12 @@ DceEmptyCache()
     }
 }
 
-VOID FASTCALL DceMoveDCE(HWND hwnd, int X, int Y)
+VOID FASTCALL 
+DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY)
 {
   DCE *pDCE;
-  PWINDOW_OBJECT Window = IntGetWindowObject(hwnd);
   PDC dc;
+  PWINDOW_OBJECT CurrentWindow;
 
   if (NULL == Window)
     {
@@ -699,34 +700,50 @@ VOID FASTCALL DceMoveDCE(HWND hwnd, int X, int Y)
   pDCE = FirstDce;
   while (pDCE)
     {
-      if (pDCE->DCXFlags & DCX_DCEEMPTY)
+      if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
         {
-          pDCE = pDCE->next;
-          continue;
-        }
-      if (pDCE->hwndCurrent == hwnd)
-        {
+          if (Window->Self == pDCE->hwndCurrent)
+            {
+              CurrentWindow = Window;
+            }
+          else
+            {
+              CurrentWindow = IntGetWindowObject(pDCE->hwndCurrent);
+              if (NULL == CurrentWindow)
+                {
+                  pDCE = pDCE->next;
+                  continue;
+                }
+            }
           dc = DC_LockDc(pDCE->hDC);
           if (dc == NULL)
             {
+              if (Window->Self != pDCE->hwndCurrent)
+                {
+                  IntReleaseWindowObject(CurrentWindow);
+                }
               pDCE = pDCE->next;
               continue;
             }
-          dc->w.DCOrgX += X;
-          dc->w.DCOrgY += Y;
-          NtGdiOffsetRgn(dc->w.hClipRgn, X, Y);
+          if ((0 != DeltaX || 0 != DeltaY)
+              && (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self)))
+            {
+              dc->w.DCOrgX += DeltaX;
+              dc->w.DCOrgY += DeltaY;
+              NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
+              NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
+            }
           DC_UnlockDc(pDCE->hDC);
-          NtGdiOffsetRgn(pDCE->hClipRgn, X, Y);
 
-          DceUpdateVisRgn(pDCE, Window, pDCE->DCXFlags);
-          IntReleaseWindowObject(Window);
+          DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
 
-          pDCE->DCXFlags |= DCX_DCEDIRTY;
+          if (Window->Self != pDCE->hwndCurrent)
+            {
+              IntReleaseWindowObject(CurrentWindow);
+            }
         }
       pDCE = pDCE->next;
     }
-
-  IntReleaseWindowObject(Window);
 }
 
 /* EOF */

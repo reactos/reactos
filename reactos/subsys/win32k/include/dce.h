@@ -42,7 +42,6 @@ typedef struct tagDCE
 #define  DCEOBJ_LockDCE(hDCE) ((PDCE)GDIOBJ_LockObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE))
 #define  DCEOBJ_UnlockDCE(hDCE) GDIOBJ_UnlockObj((HGDIOBJ)hDCE, GDI_OBJECT_TYPE_DCE)
 
-PDCE FASTCALL DCE_AllocDCE(HWND hWnd, DCE_TYPE type); // ???
 PDCE FASTCALL DceAllocDCE(HWND hWnd, DCE_TYPE Type);
 PDCE FASTCALL DCE_FreeDCE(PDCE dce);
 VOID FASTCALL DCE_FreeWindowDCE(HWND);
@@ -54,6 +53,6 @@ HWND FASTCALL IntWindowFromDC(HDC hDc);
 PDCE FASTCALL DceFreeDCE(PDCE dce);
 void FASTCALL DceFreeWindowDCE(PWINDOW_OBJECT Window);
 void FASTCALL DceEmptyCache(void);
-VOID FASTCALL DceMoveDCE(HWND hwnd, int X, int Y);
+VOID FASTCALL DceResetActiveDCEs(PWINDOW_OBJECT Window, int DeltaX, int DeltaY);
 
 #endif /* _WIN32K_DCE_H */
