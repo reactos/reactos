@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.44 2003/11/18 20:08:30 ekohl Exp $
+/* $Id: iomgr.c,v 1.45 2003/12/31 14:20:26 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -116,6 +116,7 @@ IopDeleteFile(PVOID ObjectBody)
 				        NULL,
 				        NULL,
 				        NULL);
+     Irp->Flags |= IRP_CLOSE_OPERATION;
      StackPtr = IoGetNextIrpStackLocation(Irp);
      StackPtr->FileObject = FileObject;
    
