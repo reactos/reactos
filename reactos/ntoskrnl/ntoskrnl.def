@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.163 2003/08/27 21:28:08 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.164 2003/09/09 14:50:19 gvg Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -444,9 +444,9 @@ KeRemoveEntryDeviceQueue@8
 KeRemoveQueue@12
 KeRemoveQueueDpc@4
 KeResetEvent@4
-;KeRestoreFloatingPointState
+KeRestoreFloatingPointState@4
 KeRundownQueue@4
-;KeSaveFloatingPointState
+KeSaveFloatingPointState@4
 KeServiceDescriptorTable DATA
 KeSetAffinityThread@8
 KeSetBasePriorityThread@8

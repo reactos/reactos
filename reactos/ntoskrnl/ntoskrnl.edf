@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.151 2003/08/27 21:28:08 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.152 2003/09/09 14:50:19 gvg Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -443,9 +443,9 @@ KeRemoveEntryDeviceQueue=KeRemoveEntryDeviceQueue@8
 KeRemoveQueue=KeRemoveQueue@12
 KeRemoveQueueDpc=KeRemoveQueueDpc@4
 KeResetEvent=KeResetEvent@4
-;KeRestoreFloatingPointState
+KeRestoreFloatingPointState=KeRestoreFloatingPointState@4
 KeRundownQueue=KeRundownQueue@4
-;KeSaveFloatingPointState
+KeSaveFloatingPointState=KeSaveFloatingPointState@4
 KeServiceDescriptorTable	DATA
 KeSetAffinityThread@8
 KeSetBasePriorityThread=KeSetBasePriorityThread@8

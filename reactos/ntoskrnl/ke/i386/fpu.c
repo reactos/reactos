@@ -1,4 +1,5 @@
-/*
+/* $Id: fpu.c,v 1.9 2003/09/09 14:50:19 gvg Exp $
+ *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
  *
@@ -71,4 +72,36 @@ KiCheckFPU(VOID)
    /* fsetpm for i287, ignored by i387 */
    __asm__(".byte 0xDB, 0xE4\n\t");
    HardwareMathSupport = 1;
+}
+
+/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
+   which will not work for WDM drivers. Please feel free to improve */
+
+#define FPU_STATE_SIZE 108
+
+NTSTATUS STDCALL
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+  VOID **FpState = (VOID **) Save;
+
+  *FpState = ExAllocatePool(PagedPool, FPU_STATE_SIZE);
+  if (NULL == *FpState)
+    {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  __asm__("fsave %0\n\t" : /* no output */ : "m" (*FpState));
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS STDCALL
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+  VOID **FpState = (VOID **) Save;
+
+  __asm__("frstor %0\n\t" : /* no output */ : "m" (*FpState));
+  ExFreePool(*FpState);
+
+  return STATUS_SUCCESS;
 }
