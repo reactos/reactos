@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.27 2003/08/21 20:29:43 weiden Exp $
+/* $Id: menu.c,v 1.28 2003/08/22 16:01:01 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -177,8 +177,8 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 	      mii.wID, mii.fType);
 	  mii.fType |= MF_SEPARATOR;
 	}
-      InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
-    }
+    InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
+  }
   while (!(resinfo & MF_END));
   return res;
 }
@@ -192,14 +192,16 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
  *
  * NOTE: flags is equivalent to the mtOption field
  */
-static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
+static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL TopLevel, BOOL unicode )
 {
   WORD flags, id = 0;
+  HMENU hSubMenu;
   LPCSTR str;
   BOOL end = FALSE;
 
   do
   {
+    hSubMenu = (HMENU)0;
     flags = GET_WORD(res);
 
     /* remove MF_END flag before passing it to AppendMenu()! */
@@ -219,14 +221,22 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
       res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
     if (flags & MF_POPUP)
     {
-      HMENU hSubMenu = CreatePopupMenu();
-      if(!hSubMenu) return NULL;
-      if(!(res = MENU_ParseResource(res, hSubMenu, unicode)))
-        return NULL;
-      if(!unicode)
-        AppendMenuA(hMenu, flags, (UINT)hSubMenu, str);
+      if(!TopLevel)
+      {
+        hSubMenu = CreatePopupMenu();
+        if(!hSubMenu) return NULL;
+      }
       else
-        AppendMenuW(hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str);
+        hSubMenu = hMenu;
+      if(!(res = MENU_ParseResource(res, hSubMenu, FALSE, unicode)))
+        return NULL;
+      if(!TopLevel)
+      {
+        if(!unicode)
+          AppendMenuA(hMenu, flags, (UINT)hSubMenu, str);
+        else
+          AppendMenuW(hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str);
+      }
     }
     else  /* Not a popup */
     {
@@ -734,7 +744,7 @@ HiliteMenuItem(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -745,8 +755,31 @@ InsertMenuA(
   UINT_PTR uIDNewItem,
   LPCSTR lpNewItem)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOA mii;
+  mii.cbSize = sizeof(MENUITEMINFOA);
+  mii.fMask = MIIM_FTYPE | MIIM_STRING;
+  mii.fType = 0;  
+  if(uFlags & MF_BITMAP)
+    mii.fType |= MFT_BITMAP;
+  else
+  {
+    if(uFlags & MF_STRING)
+    {
+      mii.fType |= MFT_STRING;
+    }
+    else if(uFlags & MF_OWNERDRAW)
+    {
+      mii.fType |= MFT_OWNERDRAW;
+    }
+    else
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
+    }
+  }
+  mii.dwTypeData = (LPSTR)lpNewItem;
+
+  return InsertMenuItemA(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 
 
@@ -808,6 +841,7 @@ InsertMenuItemW(
   BOOL CleanHeap = FALSE;
   ULONG len = 0;
   HANDLE hHeap = RtlGetProcessHeap();
+  mi.hbmpItem = (HBITMAP)0;
 
   // while we could just pass 'lpmii' to win32k, we make a copy so that
   // if a bad user passes bad data, we crash his process instead of the
@@ -822,17 +856,20 @@ InsertMenuItemW(
     if((mi.fMask & (MIIM_TYPE | MIIM_STRING)) && 
       (MENU_ITEM_TYPE(mi.fType) == MF_STRING) && mi.dwTypeData)
     {
-      len = lstrlenW(lpmii->dwTypeData);
-      mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
-      if(!mi.dwTypeData)
+      if(lpmii->cch > 0)
       {
-        SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-        return FALSE;
+        len = lstrlenW(lpmii->dwTypeData);
+        mi.dwTypeData = RtlAllocateHeap(hHeap, 0, (len + 1) * sizeof(WCHAR));
+        if(!mi.dwTypeData)
+        {
+          SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
+          return FALSE;
+        }
+        memcpy(&mi.dwTypeData, &lpmii->dwTypeData, len);
+        CleanHeap = TRUE;
+        mi.cch = len;
       }
-      memcpy(&mi.dwTypeData, &lpmii->dwTypeData, len);
-      CleanHeap = TRUE;
-      mi.cch = len;
-    }
+    };
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
     
@@ -843,7 +880,7 @@ InsertMenuItemW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -854,8 +891,28 @@ InsertMenuW(
   UINT_PTR uIDNewItem,
   LPCWSTR lpNewItem)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW mii;
+  mii.cbSize = sizeof(MENUITEMINFOW);
+  mii.fMask = MIIM_FTYPE | MIIM_STRING;
+  mii.fType = 0;
+
+  if(uFlags & MF_BITMAP)
+  {
+    mii.fType |= MFT_BITMAP;
+  }
+  else if(uFlags & MF_OWNERDRAW)
+  {
+    mii.fType |= MFT_OWNERDRAW;
+  }
+  else if(uFlags & MF_POPUP)
+  {
+    mii.fMask |= MIIM_SUBMENU;
+    mii.hSubMenu = (HMENU)uIDNewItem;
+    mii.wID = 0;
+  }
+  mii.dwTypeData = (LPWSTR)lpNewItem;
+
+  return InsertMenuItemW(hMenu, uPosition, (WINBOOL)!(MF_BYPOSITION & uFlags), &mii);
 }
 
 
@@ -919,7 +976,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       offset = GET_WORD(p);
       p += sizeof(WORD) + offset;
       if (!(hMenu = CreateMenu())) return 0;
-      if (!MENU_ParseResource(p, hMenu, TRUE))
+      if (!MENU_ParseResource(p, hMenu, TRUE, TRUE))
       {
         DestroyMenu(hMenu);
         return 0;

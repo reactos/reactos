@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.14 2003/08/22 00:39:15 weiden Exp $
+/* $Id: messagebox.c,v 1.15 2003/08/22 16:01:01 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -700,7 +700,7 @@ MessageBeep(UINT uType)
   switch(uType)
   {
     case 0xFFFFFFFF:
-      //if(WaveOutGetNumDevs() == 0)
+      if(waveOutGetNumDevs() == 0)
         return Beep(500, 100);    // Beep through speaker
       /* fall through */
     case MB_OK: 

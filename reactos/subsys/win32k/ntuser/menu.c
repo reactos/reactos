@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.26 2003/08/22 13:27:09 royce Exp $
+/* $Id: menu.c,v 1.27 2003/08/22 16:01:01 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -76,7 +76,8 @@
 { \
   if((MENU_ITEM_TYPE((MenuItem)->fType) == MF_STRING) && \
            (MenuItem)->dwTypeData) { \
-    ExFreePool((MenuItem)->dwTypeData); \
+    if((MenuItem)->cch) \
+      ExFreePool((MenuItem)->dwTypeData); \
     (MenuItem)->dwTypeData = 0; \
     (MenuItem)->cch = 0; \
   } \
@@ -94,7 +95,7 @@ CleanupMenuImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
-#if 0
+#if 1
 void FASTCALL
 DumpMenuItemList(PMENU_ITEM MenuItem)
 {
@@ -251,9 +252,10 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProc
 PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle)
 {
+  PMENU_OBJECT MenuObject;
   PW32PROCESS Win32Process = PsGetWin32Process();
 
-  PMENU_OBJECT MenuObject = (PMENU_OBJECT)ObmCreateObject(
+  MenuObject = (PMENU_OBJECT)ObmCreateObject(
       Win32Process->WindowStation->HandleTable, Handle, 
       otMenu, sizeof(MENU_OBJECT));
 
@@ -288,7 +290,8 @@ IntCreateMenu(PHANDLE Handle)
 BOOL FASTCALL
 IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
 {
-  PMENU_ITEM MenuItem, NewMenuItem, Old = NULL;
+  PMENU_ITEM MenuItem, NewMenuItem = NULL;
+  PMENU_ITEM Old = NULL;
 
   if(!Source->MenuItemCount)
     return FALSE;
@@ -300,12 +303,11 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
   while(MenuItem)
   {
     Old = NewMenuItem;
+    if(NewMenuItem)
+      NewMenuItem->Next = MenuItem;
     NewMenuItem = ExAllocatePool(PagedPool, sizeof(MENU_ITEM));
     if(!NewMenuItem)
-    {
-      goto finish;
-    }
-    
+      break;
     NewMenuItem->fType = MenuItem->fType;
     NewMenuItem->fState = MenuItem->fState;
     NewMenuItem->wID = MenuItem->wID;
@@ -314,28 +316,41 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
     NewMenuItem->hbmpUnchecked = MenuItem->hbmpUnchecked;
     NewMenuItem->dwItemData = MenuItem->dwItemData;
     NewMenuItem->dwTypeData = MenuItem->dwTypeData;
-    if((MENU_ITEM_TYPE(NewMenuItem->fType) == MF_STRING) &&
-           NewMenuItem->dwTypeData)
+    if((MENU_ITEM_TYPE(NewMenuItem->fType) == MF_STRING))
     {
-      DbgPrint("Copy menu item %ws\n", (LPWSTR)MenuItem->dwTypeData);
-      NewMenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (MenuItem->cch + 1) * sizeof(WCHAR));
-      if(!NewMenuItem->dwTypeData)
+      if(MenuItem->cch && NewMenuItem->dwTypeData)
       {
-        ExFreePool(NewMenuItem);
-        goto finish;
+        NewMenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (MenuItem->cch + 1) * sizeof(WCHAR));
+        if(!NewMenuItem->dwTypeData)
+        {
+          ExFreePool(NewMenuItem);
+          break;
+        }
+        memcpy(NewMenuItem->dwTypeData, MenuItem->dwTypeData, (MenuItem->cch + 1) * sizeof(WCHAR));
       }
-      memcpy(NewMenuItem->dwTypeData, MenuItem->dwTypeData, (MenuItem->cch + 1) * sizeof(WCHAR));
+      else
+      {
+        NewMenuItem->cch = MenuItem->cch;
+        NewMenuItem->dwTypeData = MenuItem->dwTypeData;
+      }
+    }
+    else
+    {
+      NewMenuItem->cch = MenuItem->cch;
+      NewMenuItem->dwTypeData = MenuItem->dwTypeData;
     }
     NewMenuItem->cch = MenuItem->cch;
     NewMenuItem->hbmpItem = MenuItem->hbmpItem;
 
-    Old->Next = NewMenuItem;
     NewMenuItem->Next = NULL;
-    Source->MenuItemCount++;
+    if(Old)
+      Old->Next = NewMenuItem;
+    else
+      Destination->MenuItemList = NewMenuItem;
+    Destination->MenuItemCount++;
     MenuItem = MenuItem->Next;
   }
-  
-finish:
+
   ExReleaseFastMutexUnsafe(&Source->MenuItemsLock);
   ExReleaseFastMutexUnsafe(&Destination->MenuItemsLock);
   return TRUE;
@@ -486,7 +501,7 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
   PMENU_ITEM CurItem;
   PMENU_ITEM LastItem = NULL;
   UINT npos = 0;
-  
+
   CurItem = MenuObject->MenuItemList;
   if(pos <= -1)
   {
@@ -527,7 +542,7 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
   {
     if(LastItem)
     {
-      /* insert at the end */
+      /* append item */
       LastItem->Next = MenuItem;
       MenuItem->Next = NULL;
     }
@@ -539,7 +554,7 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
     }
   }
   MenuObject->MenuItemCount++;
-  
+
   return npos;
 }
 
@@ -603,7 +618,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
     MenuItem->dwTypeData = 0;
     MenuItem->cch = 0;
   }*/
-  
+
   MenuItem->fType = lpmii->fType;
   MenuItem->cch = lpmii->cch;
   
@@ -643,19 +658,32 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, LPCMENUITEMINFO
     MenuItem->hSubMenu = lpmii->hSubMenu;
   }
   if((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) && 
-           (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING) && lpmii->dwTypeData)
+           (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
   {
-    FreeMenuText(MenuItem);
-    MenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (lpmii->cch + 1) * sizeof(WCHAR));
-    if(!MenuItem->dwTypeData)
+    if(lpmii->dwTypeData && lpmii->cch)
     {
-      MenuItem->cch = 0;
-      /* FIXME Set last error code? */
-      SetLastWin32Error(STATUS_NO_MEMORY);
-      return FALSE;
+      FreeMenuText(MenuItem);
+      MenuItem->dwTypeData = (LPWSTR)ExAllocatePool(PagedPool, (lpmii->cch + 1) * sizeof(WCHAR));
+      if(!MenuItem->dwTypeData)
+      {
+        MenuItem->cch = 0;
+        /* FIXME Set last error code? */
+        SetLastWin32Error(STATUS_NO_MEMORY);
+        return FALSE;
+      }
+      MenuItem->cch = lpmii->cch;
+      memcpy(MenuItem->dwTypeData, lpmii->dwTypeData, (lpmii->cch + 1) * sizeof(WCHAR));
     }
-    MenuItem->cch = lpmii->cch;
-    memcpy(MenuItem->dwTypeData, lpmii->dwTypeData, (lpmii->cch + 1) * sizeof(WCHAR));
+    else
+    {
+      MenuItem->fType = MF_SEPARATOR;
+      MenuItem->dwTypeData = NULL;
+      MenuItem->cch = 0;
+    }
+  }
+  else
+  {
+    MenuItem->dwTypeData = NULL;
   }
   
   return TRUE;
@@ -704,7 +732,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, WINBOOL fByPosition,
   MenuItem->dwItemData = (ULONG_PTR)NULL;
   MenuItem->cch = 0;
   MenuItem->hbmpItem = (HBITMAP)0;  
-  
+
   if(!IntSetMenuItemInfo(MenuObject, MenuItem, lpmii))
   {
     ExFreePool(MenuItem);
