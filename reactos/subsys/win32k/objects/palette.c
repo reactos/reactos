@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.8 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: palette.c,v 1.9 2003/08/01 16:08:14 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -30,6 +30,15 @@
 
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
+
+static ColorShifts PALETTE_PRed   = {0,0,0};
+//static ColorShifts PALETTE_LRed   = {0,0,0};
+static ColorShifts PALETTE_PGreen = {0,0,0};
+//static ColorShifts PALETTE_LGreen = {0,0,0};
+static ColorShifts PALETTE_PBlue  = {0,0,0};
+//static ColorShifts PALETTE_LBlue  = {0,0,0};
+static int PALETTE_Graymax        = 0;
+static int palette_size;
 
 int PALETTE_PaletteFlags     = 0;
 PALETTEENTRY *COLOR_sysPal   = NULL;
@@ -69,7 +78,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   hpalette = W32kCreatePalette(palPtr);
   ExFreePool(palPtr);
 
-  palObj = (PPALOBJ)AccessUserObject(hpalette);
+  palObj = (PPALOBJ)AccessUserObject((ULONG)hpalette);
   if (palObj)
   {
     if (!(palObj->mapping = ExAllocatePool(NonPagedPool, sizeof(int) * 20)))
@@ -133,7 +142,7 @@ UINT WINAPI GetNearestPaletteIndex(
     HPALETTE hpalette, /* [in] Handle of logical color palette */
     COLORREF color)      /* [in] Color to be matched */
 {
-  PPALOBJ palObj = (PPALOBJ)AccessUserObject(hpalette);
+  PPALOBJ palObj = (PPALOBJ)AccessUserObject((ULONG)hpalette);
   UINT    index  = 0;
 
   if( palObj )
@@ -278,7 +287,7 @@ INT FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color)
     WORD            index = 0;
     HPALETTE        hPal = (dc)? dc->w.hPalette: W32kGetStockObject(DEFAULT_PALETTE);
     unsigned char   spec_type = color >> 24;
-    PPALOBJ         palPtr = (PPALOBJ)AccessUserObject(hPal);
+    PPALOBJ         palPtr = (PPALOBJ)AccessUserObject((ULONG)hPal);
 
     /* palPtr can be NULL when DC is being destroyed */
     if( !palPtr ) return 0;

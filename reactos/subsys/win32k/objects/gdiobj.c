@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.29 2003/06/20 16:26:53 ekohl Exp $
+ * $Id: gdiobj.c,v 1.30 2003/08/01 16:08:14 royce Exp $
  *
  */
 
@@ -40,6 +40,9 @@
 #include <include/palette.h>
 #define NDEBUG
 #include <win32k/debug1.h>
+
+#define GDI_HANDLE2INDEX(h) (((WORD)(size_t)(h)) & 0xffff)
+#define GDI_INDEX2HANDLE(i) ((HANDLE)  (((size_t)(i))&0xffff)  )
 
 //  GDI stock objects
 
@@ -81,44 +84,44 @@ static LOGFONTW OEMFixedFont =
 /* Filler to make the location counter dword aligned again.  This is necessary
    since (a) LOGFONT is packed, (b) gcc places initialised variables in the code
    segment, and (c) Solaris assembler is stupid.  */
-static UINT align_OEMFixedFont = 1;
+//static UINT align_OEMFixedFont = 1;
 
 static LOGFONTW AnsiFixedFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
-static UINT align_AnsiFixedFont = 1;
+//static UINT align_AnsiFixedFont = 1;
 
 static LOGFONTW AnsiVarFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 
-static UINT align_AnsiVarFont = 1;
+//static UINT align_AnsiVarFont = 1;
 
 static LOGFONTW SystemFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"System" };
 
-static UINT align_SystemFont = 1;
+//static UINT align_SystemFont = 1;
 
 static LOGFONTW DeviceDefaultFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"" };
 
-static UINT align_DeviceDefaultFont = 1;
+//static UINT align_DeviceDefaultFont = 1;
 
 static LOGFONTW SystemFixedFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"" };
 
-static UINT align_SystemFixedFont = 1;
+//static UINT align_SystemFixedFont = 1;
 
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
 { 14, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" };
 
-static UINT align_DefaultGuiFont = 1;
+//static UINT align_DefaultGuiFont = 1;
 
 static HGDIOBJ *StockObjects[NB_STOCK_OBJECTS]; // we dont assign these statically as WINE does because we might redesign
                                                 // the way handles work, so it's more dynamic now
@@ -207,26 +210,26 @@ GDIOBJ_iGetNextOpenHandleIndex (void)
 */
 HGDIOBJ FASTCALL GDIOBJ_AllocObj(WORD Size, WORD Magic)
 {
-  	PGDIOBJHDR  newObject;
-  	PGDI_HANDLE_ENTRY  handleEntry;
+  PGDIOBJHDR  newObject;
+  PGDI_HANDLE_ENTRY  handleEntry;
 
-	DPRINT("GDIOBJ_AllocObj: size: %d, magic: %x\n", Size, Magic);
-  	newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
-  	if (newObject == NULL)
-  	{
-	  DPRINT("GDIOBJ_AllocObj: failed\n");
-  	  return  NULL;
-  	}
-  	RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
+  DPRINT("GDIOBJ_AllocObj: size: %d, magic: %x\n", Size, Magic);
+  newObject = ExAllocatePool (PagedPool, Size + sizeof (GDIOBJHDR));
+  if (newObject == NULL)
+  {
+    DPRINT("GDIOBJ_AllocObj: failed\n");
+    return  NULL;
+  }
+  RtlZeroMemory (newObject, Size + sizeof (GDIOBJHDR));
 
-  	newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
-	newObject->dwCount = 0;
-  	handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
-  	handleEntry->wMagic = Magic;
-  	handleEntry->hProcessId = PsGetCurrentProcessId ();
-  	handleEntry->pObject = newObject;
-	DPRINT("GDIOBJ_AllocObj: object handle %d\n", newObject->wTableIndex );
-  	return  (HGDIOBJ) newObject->wTableIndex;
+  newObject->wTableIndex = GDIOBJ_iGetNextOpenHandleIndex ();
+  newObject->dwCount = 0;
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex (newObject->wTableIndex);
+  handleEntry->wMagic = Magic;
+  handleEntry->hProcessId = PsGetCurrentProcessId ();
+  handleEntry->pObject = newObject;
+  DPRINT("GDIOBJ_AllocObj: object handle %d\n", newObject->wTableIndex );
+  return GDI_INDEX2HANDLE(newObject->wTableIndex);
 }
 
 /*!
@@ -250,7 +253,7 @@ BOOL STDCALL GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 	PGDIOBJ 	Obj;
 	BOOL 	bRet = TRUE;
 
-	handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)hObj & 0xffff);
+	handleEntry = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
 	DPRINT("GDIOBJ_FreeObj: hObj: %d, magic: %x, handleEntry: %x\n", (WORD)hObj & 0xffff, Magic, handleEntry );
 
 	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
@@ -328,28 +331,34 @@ BOOL STDCALL GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 */
 PGDIOBJ FASTCALL GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 {
-  	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
-  	PGDIOBJHDR  objectHeader;
+  PGDI_HANDLE_ENTRY handleEntry
+    = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
+  PGDIOBJHDR  objectHeader;
 
-	DPRINT("GDIOBJ_LockObj: hObj: %d, magic: %x, \n handleEntry: %x, mag %x\n", hObj, Magic, handleEntry, handleEntry->wMagic);
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
-	     || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
-		 handleEntry->hProcessId != PsGetCurrentProcessId ())){
-	  DPRINT("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
-  	  return  NULL;
-	}
+  DPRINT("GDIOBJ_LockObj: hObj: %d, magic: %x, \n handleEntry: %x, mag %x\n", hObj, Magic, handleEntry, handleEntry->wMagic);
+  if ( handleEntry == 0
+       || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+       || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
+           && handleEntry->hProcessId != PsGetCurrentProcessId ()
+	  )
+     )
+    {
+      DPRINT("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
+      return  NULL;
+    }
 
-	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-	ASSERT(objectHeader);
-	if( objectHeader->dwCount > 0 ){
-		DbgPrint("Caution! GDIOBJ_LockObj trying to lock object second time\n" );
-		DbgPrint("\t called from: %x\n", __builtin_return_address(0));
-	}
+  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+  ASSERT(objectHeader);
+  if( objectHeader->dwCount > 0 )
+    {
+      DbgPrint("Caution! GDIOBJ_LockObj trying to lock object second time\n" );
+      DbgPrint("\t called from: %x\n", __builtin_return_address(0));
+    }
 
-	ExAcquireFastMutex(&RefCountHandling);
-	objectHeader->dwCount++;
-	ExReleaseFastMutex(&RefCountHandling);
-	return (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
+  ExAcquireFastMutex(&RefCountHandling);
+  objectHeader->dwCount++;
+  ExReleaseFastMutex(&RefCountHandling);
+  return (PGDIOBJ)((PCHAR)objectHeader + sizeof(GDIOBJHDR));
 }
 
 /*!
@@ -399,40 +408,47 @@ BOOL FASTCALL GDIOBJ_LockMultipleObj( PGDIMULTILOCK pList, INT nObj )
 */
 BOOL FASTCALL GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 {
-  	PGDI_HANDLE_ENTRY handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) hObj & 0xffff);
-  	PGDIOBJHDR  objectHeader;
+  PGDI_HANDLE_ENTRY handleEntry
+    = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
+  PGDIOBJHDR  objectHeader;
 
-	DPRINT("GDIOBJ_UnlockObj: hObj: %d, magic: %x, \n handleEntry: %x\n", hObj, Magic, handleEntry);
-  	if (handleEntry == 0 || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
-	      || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
-		 handleEntry->hProcessId != PsGetCurrentProcessId ())){
-	  DPRINT( "GDIOBJ_UnLockObj: failed\n");
-	  return  FALSE;
-	}
+  DPRINT("GDIOBJ_UnlockObj: hObj: %d, magic: %x, \n handleEntry: %x\n", hObj, Magic, handleEntry);
+  if ( handleEntry == 0
+     || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+     || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
+         && handleEntry->hProcessId != PsGetCurrentProcessId ()
+	)
+     )
+  {
+    DPRINT( "GDIOBJ_UnLockObj: failed\n");
+    return  FALSE;
+  }
 
-	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-	ASSERT(objectHeader);
+  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+  ASSERT(objectHeader);
 
-  	ExAcquireFastMutex(&RefCountHandling);
-	if( ( objectHeader->dwCount & ~0x80000000 ) == 0 ){
-		ExReleaseFastMutex(&RefCountHandling);
-		DPRINT( "GDIOBJ_UnLockObj: unlock object that is not locked\n" );
-		return FALSE;
-	}
+  ExAcquireFastMutex(&RefCountHandling);
+  if( ( objectHeader->dwCount & ~0x80000000 ) == 0 )
+    {
+      ExReleaseFastMutex(&RefCountHandling);
+      DPRINT( "GDIOBJ_UnLockObj: unlock object that is not locked\n" );
+      return FALSE;
+    }
 
-	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-	ASSERT(objectHeader);
-	objectHeader->dwCount--;
+  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+  ASSERT(objectHeader);
+  objectHeader->dwCount--;
 
-	if( objectHeader->dwCount  == 0x80000000 ){
-		//delayed object release
-		objectHeader->dwCount = 0;
-		ExReleaseFastMutex(&RefCountHandling);
-		DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
-		return GDIOBJ_FreeObj( hObj, Magic, GDIOBJFLAG_DEFAULT );
-	}
-	ExReleaseFastMutex(&RefCountHandling);
-	return TRUE;
+  if( objectHeader->dwCount  == 0x80000000 )
+    {
+      //delayed object release
+      objectHeader->dwCount = 0;
+      ExReleaseFastMutex(&RefCountHandling);
+      DPRINT("GDIOBJ_UnlockObj: delayed delete\n");
+      return GDIOBJ_FreeObj( hObj, Magic, GDIOBJFLAG_DEFAULT );
+    }
+  ExReleaseFastMutex(&RefCountHandling);
+  return TRUE;
 }
 
 
@@ -479,7 +495,7 @@ VOID FASTCALL GDIOBJ_MarkObjectGlobal(HGDIOBJ ObjectHandle)
   if (ObjectHandle == NULL)
     return;
 
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(ObjectHandle) );
   if (handleEntry == 0)
     return;
 
@@ -498,7 +514,7 @@ WORD FASTCALL GDIOBJ_GetHandleMagic (HGDIOBJ ObjectHandle)
   if (ObjectHandle == NULL)
     return  0;
 
-  handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD)ObjectHandle & 0xffff);
+  handleEntry = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(ObjectHandle) );
   if (handleEntry == 0 ||
       (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF &&
        handleEntry->hProcessId != PsGetCurrentProcessId ()))
@@ -550,17 +566,17 @@ VOID FASTCALL CreateStockObjects(void)
   StockObjects[NULL_PEN] =  W32kCreatePenIndirect(&NullPen);
   GDIOBJ_MarkObjectGlobal(StockObjects[NULL_PEN]);
 
-  (void) TextIntCreateFontIndirect(&OEMFixedFont, &StockObjects[OEM_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[OEM_FIXED_FONT]);
-  (void) TextIntCreateFontIndirect(&AnsiFixedFont, &StockObjects[ANSI_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[ANSI_FIXED_FONT]);
-  (void) TextIntCreateFontIndirect(&SystemFont, &StockObjects[SYSTEM_FONT]);
+  (void) TextIntCreateFontIndirect(&SystemFont, (HFONT*)&StockObjects[SYSTEM_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FONT]);
-  (void) TextIntCreateFontIndirect(&DeviceDefaultFont, &StockObjects[DEVICE_DEFAULT_FONT]);
+  (void) TextIntCreateFontIndirect(&DeviceDefaultFont, (HFONT*)&StockObjects[DEVICE_DEFAULT_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[DEVICE_DEFAULT_FONT]);
-  (void) TextIntCreateFontIndirect(&SystemFixedFont, &StockObjects[SYSTEM_FIXED_FONT]);
+  (void) TextIntCreateFontIndirect(&SystemFixedFont, (HFONT*)&StockObjects[SYSTEM_FIXED_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[SYSTEM_FIXED_FONT]);
-  (void) TextIntCreateFontIndirect(&DefaultGuiFont, &StockObjects[DEFAULT_GUI_FONT]);
+  (void) TextIntCreateFontIndirect(&DefaultGuiFont, (HFONT*)&StockObjects[DEFAULT_GUI_FONT]);
   GDIOBJ_MarkObjectGlobal(StockObjects[DEFAULT_GUI_FONT]);
 
   StockObjects[DEFAULT_PALETTE] = (HGDIOBJ*)PALETTE_Init();
@@ -598,7 +614,7 @@ BOOL FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid)
   DWORD i;
   PGDI_HANDLE_ENTRY handleEntry;
   PGDIOBJHDR objectHeader;
-  NTSTATUS Status;
+  //NTSTATUS Status;
 
   KeAttachProcess(Process);
 
@@ -606,11 +622,11 @@ BOOL FASTCALL CleanupForProcess (struct _EPROCESS *Process, INT Pid)
     {
       handleEntry = GDIOBJ_iGetHandleEntryForIndex((WORD) i & 0xffff);
       if (NULL != handleEntry && 0 != handleEntry->wMagic &&
-          handleEntry->hProcessId == Pid)
+          (INT)handleEntry->hProcessId == Pid)
 	{
 	  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
 	  DPRINT("\nW32kCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
-	  GDIOBJ_FreeObj( (WORD) i & 0xffff, GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
+	  GDIOBJ_FreeObj( GDI_INDEX2HANDLE(i), GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
 	}
     }
 
