@@ -978,9 +978,8 @@ PVOID  APIENTRY  EngAllocMem(ULONG  Flags,
                              ULONG  MemSize,
                              ULONG  Tag);
 
-/*
-EngAllocUserMem
-*/
+PVOID STDCALL EngAllocUserMem(ULONG cj,
+                              ULONG tag);
 
 BOOL EngAssociateSurface(IN HSURF  Surface,
                          IN HDEV  Dev,
