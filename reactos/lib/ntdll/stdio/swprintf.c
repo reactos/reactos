@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.7 2001/05/30 14:37:25 ekohl Exp $
+/* $Id: swprintf.c,v 1.8 2001/07/29 16:47:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -326,7 +326,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			if (qualifier == 'h') {
 				/* print counted ascii string */
 				PANSI_STRING pus = va_arg(args, PANSI_STRING);
-				if ((pus == NULL) || (pus->Buffer)) {
+				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					sw = L"<NULL>";
 					while ((*sw) != 0)
 						*str++ = *sw++;
@@ -337,7 +337,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			} else {
 				/* print counted unicode string */
 				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
-				if ((pus == NULL) || (pus->Buffer)) {
+				if ((pus == NULL) || (pus->Buffer == NULL)) {
 					sw = L"<NULL>";
 					while ((*sw) != 0)
 						*str++ = *sw++;
