@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.5 2003/07/10 06:27:13 royce Exp $
+/* $Id: mdl.c,v 1.5.24.1 2004/06/27 01:13:13 hyperion Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *
@@ -6,6 +6,45 @@
 #include <ntos.h>
 #include <internal/cc.h>
 #include <ddk/ntifs.h>
+
+#include <internal/debug.h>
+
+/*
+ * @unimplemented
+ */
+VOID
+FsRtlIncrementCcFastReadResourceMiss( VOID )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FsRtlIncrementCcFastReadNotPossible( VOID )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FsRtlIncrementCcFastReadWait( VOID )
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+FsRtlIncrementCcFastReadNoWait( VOID )
+{
+  UNIMPLEMENTED;
+}
+
 
 /**********************************************************************
  * NAME							EXPORTED

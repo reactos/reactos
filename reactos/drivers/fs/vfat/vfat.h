@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.63 2004/05/15 23:00:02 hbirr Exp $ */
+/* $Id: vfat.h,v 1.63.6.1 2004/06/27 01:13:11 hyperion Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -129,6 +129,7 @@ typedef struct
   ULONG NumberOfClusters;
   ULONG FatType;
   ULONG Sectors;
+  BOOL FixedMedia;
 } FATINFO, *PFATINFO;
 
 struct _VFATFCB;
@@ -162,6 +163,9 @@ typedef struct
   struct _VFATFCB * VolumeFcb;
 
   LIST_ENTRY VolumeListEntry;
+
+  ULONG MediaChangeCount;
+
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct

@@ -454,6 +454,17 @@ typedef ULONG FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 #define IRP_MN_QUERY_DIRECTORY          0x01
 #define IRP_MN_NOTIFY_CHANGE_DIRECTORY  0x02
 
+
+typedef struct _FILE_QUOTA_INFORMATION {
+    ULONG NextEntryOffset;
+    ULONG SidLength;
+    LARGE_INTEGER ChangeTime;
+    LARGE_INTEGER QuotaUsed;
+    LARGE_INTEGER QuotaThreshold;
+    LARGE_INTEGER QuotaLimit;
+    LARGE_INTEGER Sid;
+} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
+
 /*
  * Floppy device data type
  */

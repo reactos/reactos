@@ -356,6 +356,12 @@ extern KSPIN_LOCK CmiKeyListLock;
 extern LIST_ENTRY CmiHiveListHead;
 extern ERESOURCE CmiHiveListLock;
 
+/* Registry Callback Function */
+typedef NTSTATUS (*PEX_CALLBACK_FUNCTION ) (
+    IN PVOID CallbackContext,
+    IN PVOID Argument1,
+    IN PVOID Argument2
+    );
 
 VOID
 CmiVerifyBinHeader(PHBIN BinHeader);
@@ -385,6 +391,15 @@ CmiVerifyRegistryHive(PREGISTRY_HIVE RegistryHive);
 #define VERIFY_KEY_OBJECT(x)
 #define VERIFY_REGISTRY_HIVE(x)
 #endif
+
+NTSTATUS STDCALL
+CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
+                   IN PVOID                 Context,
+                   IN OUT PLARGE_INTEGER    Cookie
+                    );
+
+NTSTATUS STDCALL
+CmUnRegisterCallback(IN LARGE_INTEGER    Cookie);
 
 NTSTATUS STDCALL
 CmiObjectParse(IN PVOID ParsedObject,

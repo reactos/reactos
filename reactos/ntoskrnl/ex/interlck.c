@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.12 2004/06/01 01:00:25 sedwards Exp $
+/* $Id: interlck.c,v 1.12.6.1 2004/06/27 01:13:13 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,8 @@
 
 #include <ddk/ntddk.h>
 
-
+#define NDEBUG
+#include <internal/debug.h>
 /* FUNCTIONS *****************************************************************/
 
 #ifdef ExInterlockedDecrementLong
@@ -214,6 +215,23 @@ ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
 
 	KeReleaseSpinLock (Lock, oldlvl);
 
+	return oldval;
+}
+
+/*
+ * @unimplemented
+ */
+LONGLONG
+FASTCALL
+ExfInterlockedCompareExchange64(
+    IN OUT LONGLONG volatile *Destination,
+    IN PLONGLONG ExChange,
+    IN PLONGLONG Comperand
+    )
+{
+	LONGLONG oldval;
+
+	UNIMPLEMENTED;
 	return oldval;
 }
 

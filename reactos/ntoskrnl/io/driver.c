@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.47 2004/06/20 00:44:55 navaraf Exp $
+/* $Id: driver.c,v 1.47.4.1 2004/06/27 01:13:14 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1477,6 +1477,34 @@ IopReinitializeDrivers(VOID)
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/
+
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+IoCreateDriver (
+	IN PUNICODE_STRING DriverName,   OPTIONAL
+	IN PDRIVER_INITIALIZE InitializationFunction
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoDeleteDriver (
+	IN PDRIVER_OBJECT DriverObject
+	)
+{
+	UNIMPLEMENTED;
+}
+
 
 /*
  * NtLoadDriver

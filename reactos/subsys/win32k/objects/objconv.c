@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.18 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: objconv.c,v 1.18.6.1 2004/06/27 01:13:17 hyperion Exp $ */
 #include <w32k.h>
 
 HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
@@ -31,13 +31,14 @@ HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
     {
     BitmapHandle = EngCreateBitmap(Size, BitmapObj->dib->dsBm.bmWidthBytes,
                                    BitmapFormat(BitmapObj->dib->dsBm.bmBitsPixel, BI_RGB),
-                                   0, BitmapObj->dib->dsBm.bmBits);
+                                   BitmapObj->dib->dsBmih.biHeight < 0 ? BMF_TOPDOWN : 0,
+                                   BitmapObj->dib->dsBm.bmBits);
     }
   else
     {
     BitmapHandle = EngCreateBitmap(Size, BitmapObj->bitmap.bmWidthBytes,
                                    BitmapFormat(BitmapObj->bitmap.bmBitsPixel, BI_RGB),
-                                   0, BitmapObj->bitmap.bmBits);
+                                   BMF_TOPDOWN, BitmapObj->bitmap.bmBits);
     }
   if (NULL != BitmapHandle && NULL != GDIDevice)
     {

@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.24 2004/03/11 21:50:23 dwelch Exp $
+/* $Id: kd.h,v 1.24.10.1 2004/06/27 01:13:13 hyperion Exp $
  *
  * kernel debugger prototypes
  */
@@ -48,6 +48,30 @@ VOID
 DebugLogInit(VOID);
 VOID
 DebugLogInit2(VOID);
+
+VOID
+STDCALL
+KdDisableDebugger(
+    VOID
+    );
+
+VOID
+STDCALL
+KdEnableDebugger(
+    VOID
+    );
+
+NTSTATUS
+STDCALL
+KdPowerTransition(
+	ULONG PowerState
+	);
+
+BOOLEAN
+STDCALL
+KeIsAttachedProcess(
+	VOID
+	);
 
 VOID
 KdInit1(VOID);

@@ -25,6 +25,22 @@
 /*
  * @unimplemented
  */
+STDCALL
+ULONG
+IoPnPDeliverServicePowerNotification(
+	ULONG		VetoedPowerOperation OPTIONAL,
+	ULONG		PowerNotification,
+	ULONG		Unknown OPTIONAL,
+	BOOLEAN  	Synchronous
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
 NTSTATUS
 STDCALL
 IoRegisterPlugPlayNotification(

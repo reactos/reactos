@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.16 2003/12/30 18:52:04 fireball Exp $
+/* $Id: errlog.c,v 1.16.14.1 2004/06/27 01:13:14 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -382,6 +382,17 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
   return (PVOID)((ULONG_PTR)LogEntry + sizeof(ERROR_LOG_ENTRY));
 }
 
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+IoFreeErrorLogEntry(
+    PVOID ElEntry
+    )
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

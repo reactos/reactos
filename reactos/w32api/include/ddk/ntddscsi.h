@@ -98,53 +98,53 @@ typedef struct _SCSI_PASS_THROUGH_DIRECT {
   UCHAR  Cdb[16];
 } SCSI_PASS_THROUGH_DIRECT, *PSCSI_PASS_THROUGH_DIRECT;
 
-typedef struct _SRB_IO_CONTROL { 
-  ULONG  HeaderLength; 
-  UCHAR  Signature[8]; 
-  ULONG  Timeout; 
-  ULONG  ControlCode; 
-  ULONG  ReturnCode; 
-  ULONG  Length; 
-} SRB_IO_CONTROL, *PSRB_IO_CONTROL; 
+typedef struct _SRB_IO_CONTROL {
+  ULONG  HeaderLength;
+  UCHAR  Signature[8];
+  ULONG  Timeout;
+  ULONG  ControlCode;
+  ULONG  ReturnCode;
+  ULONG  Length;
+} SRB_IO_CONTROL, *PSRB_IO_CONTROL;
 
 typedef struct _SCSI_ADDRESS {
-	ULONG  Length;
-	UCHAR  PortNumber;
-	UCHAR  PathId;
-	UCHAR  TargetId;
-	UCHAR  Lun;
+  ULONG  Length;
+  UCHAR  PortNumber;
+  UCHAR  PathId;
+  UCHAR  TargetId;
+  UCHAR  Lun;
 } SCSI_ADDRESS, *PSCSI_ADDRESS;
 
 typedef struct _SCSI_BUS_DATA {
-	UCHAR  NumberOfLogicalUnits;
-	UCHAR  InitiatorBusId;
-	ULONG  InquiryDataOffset;
+  UCHAR  NumberOfLogicalUnits;
+  UCHAR  InitiatorBusId;
+  ULONG  InquiryDataOffset;
 }SCSI_BUS_DATA, *PSCSI_BUS_DATA;
 
 typedef struct _SCSI_ADAPTER_BUS_INFO {
-	UCHAR  NumberOfBuses;
-	SCSI_BUS_DATA  BusData[1];
+  UCHAR  NumberOfBuses;
+  SCSI_BUS_DATA  BusData[1];
 } SCSI_ADAPTER_BUS_INFO, *PSCSI_ADAPTER_BUS_INFO;
 
 typedef struct _IO_SCSI_CAPABILITIES {
-	ULONG  Length;
-	ULONG  MaximumTransferLength;
-	ULONG  MaximumPhysicalPages;
-	ULONG  SupportedAsynchronousEvents;
-	ULONG  AlignmentMask;
-	BOOLEAN  TaggedQueuing;
-	BOOLEAN  AdapterScansDown;
-	BOOLEAN  AdapterUsesPio;
+  ULONG  Length;
+  ULONG  MaximumTransferLength;
+  ULONG  MaximumPhysicalPages;
+  ULONG  SupportedAsynchronousEvents;
+  ULONG  AlignmentMask;
+  BOOLEAN  TaggedQueuing;
+  BOOLEAN  AdapterScansDown;
+  BOOLEAN  AdapterUsesPio;
 } IO_SCSI_CAPABILITIES, *PIO_SCSI_CAPABILITIES;
 
 typedef struct _SCSI_INQUIRY_DATA {
-	UCHAR  PathId;
-	UCHAR  TargetId;
-	UCHAR  Lun;
-	BOOLEAN  DeviceClaimed;
-	ULONG  InquiryDataLength;
-	ULONG  NextInquiryDataOffset;
-	UCHAR  InquiryData[1];
+  UCHAR  PathId;
+  UCHAR  TargetId;
+  UCHAR  Lun;
+  BOOLEAN  DeviceClaimed;
+  ULONG  InquiryDataLength;
+  ULONG  NextInquiryDataOffset;
+  UCHAR  InquiryData[1];
 } SCSI_INQUIRY_DATA, *PSCSI_INQUIRY_DATA;
 
 #define SCSI_IOCTL_DATA_OUT               0
@@ -152,16 +152,16 @@ typedef struct _SCSI_INQUIRY_DATA {
 #define SCSI_IOCTL_DATA_UNSPECIFIED       2
 
 typedef struct _DUMP_POINTERS {
-	PADAPTER_OBJECT  AdapterObject;
-	PVOID  MappedRegisterBase;
-	PVOID  DumpData;
-	PVOID  CommonBufferVa;
-	LARGE_INTEGER  CommonBufferPa;
-	ULONG  CommonBufferSize;
-	BOOLEAN  AllocateCommonBuffers;
-	BOOLEAN  UseDiskDump;
-	UCHAR  Spare1[2];
-	PVOID  DeviceObject;
+  PADAPTER_OBJECT  AdapterObject;
+  PVOID  MappedRegisterBase;
+  PVOID  DumpData;
+  PVOID  CommonBufferVa;
+  LARGE_INTEGER  CommonBufferPa;
+  ULONG  CommonBufferSize;
+  BOOLEAN  AllocateCommonBuffers;
+  BOOLEAN  UseDiskDump;
+  UCHAR  Spare1[2];
+  PVOID  DeviceObject;
 } DUMP_POINTERS, *PDUMP_POINTERS;
 
 #ifdef __cplusplus

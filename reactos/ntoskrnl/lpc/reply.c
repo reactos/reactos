@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.19 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: reply.c,v 1.19.24.1 2004/06/27 01:13:16 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -335,5 +335,19 @@ NtReplyWaitReplyPort (HANDLE		PortHandle,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
+/*
+ * @unimplemented
+ */
+NTSTATUS
+STDCALL
+LpcRequestWaitReplyPort (
+	IN PEPORT		Port,
+	IN PLPC_MESSAGE	LpcMessageRequest,
+	OUT PLPC_MESSAGE	LpcMessageReply
+	)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
 
 /* EOF */

@@ -746,14 +746,16 @@ KeInitExceptions(VOID)
  * @implemented
  */
 
-VOID STDCALL
+NTSTATUS STDCALL
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
    /* FIXME: This needs SEH */
+	ULONG OldEip;
+	PKTHREAD Thread = KeGetCurrentThread();
 
-   PKTHREAD Thread = KeGetCurrentThread();
-
-   ProbeForWrite(&Thread->Teb->ExceptionCode, sizeof(NTSTATUS), sizeof(NTSTATUS)); /* NT doesn't check this -- bad? */
-   Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
-   Thread->Teb->ExceptionCode = ExceptionCode;
+	ProbeForWrite(&Thread->Teb->ExceptionCode, sizeof(NTSTATUS), sizeof(NTSTATUS)); /* NT doesn't check this -- bad? */
+	OldEip = Thread->TrapFrame->Eip;
+	Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
+	Thread->Teb->ExceptionCode = ExceptionCode;
+	return((NTSTATUS)OldEip);
 }

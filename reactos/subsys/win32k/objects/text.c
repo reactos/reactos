@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.97 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: text.c,v 1.97.2.1 2004/06/27 01:13:17 hyperion Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -284,7 +284,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Could not font file: %wZ\n", Filename);
+      DPRINT("Could not font file: %wZ\n", FileName);
       NtGdiDeleteObject(NewFont);
       return 0;
    }
@@ -1865,7 +1865,7 @@ NtGdiExtTextOut(
        * limit the work of the transbitblt.
        */
 
-      HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
+      HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, BMF_TOPDOWN, glyph->bitmap.buffer);
       SourceGlyphSurf = (SURFOBJ*)AccessUserObject((ULONG) HSourceGlyph);
     
       /*

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.51 2004/06/20 00:45:37 navaraf Exp $
+ * $Id: dib.c,v 1.51.2.1 2004/06/27 01:13:17 hyperion Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -54,9 +54,8 @@ NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Col
 
       /* Rebuild the palette. */
       NtGdiDeleteObject(dc->w.hPalette);
-      dc->w.hPalette = PALETTE_AllocPalette(PAL_INDEXED,
-         1 << BitmapObj->dib->dsBmih.biBitCount,
-         (PULONG)BitmapObj->ColorMap, 0, 0, 0);
+      dc->w.hPalette = PALETTE_AllocPaletteIndexedRGB(1 << BitmapObj->dib->dsBmih.biBitCount,
+                                                      BitmapObj->ColorMap);
    }
    else
       Entries = 0;
@@ -133,8 +132,7 @@ IntSetDIBits(
   //RGBQUAD  *lpRGB;
   HPALETTE    DDB_Palette, DIB_Palette;
   ULONG       DDB_Palette_Type, DIB_Palette_Type;
-  const BYTE *vBits = (const BYTE*)Bits;
-  INT         scanDirection = 1, DIBWidth;
+  INT         DIBWidth;
 
   // Check parameters
   if (!(bitmap = BITMAPOBJ_LockBitmap(hBitmap)))
@@ -161,18 +159,11 @@ IntSetDIBits(
   // Determine width of DIB
   DIBWidth = DIB_GetDIBWidthBytes(SourceSize.cx, bmi->bmiHeader.biBitCount);
 
-  // Determine DIB Vertical Orientation
-  if(bmi->bmiHeader.biHeight > 0)
-  {
-    scanDirection = -1;
-    vBits += DIBWidth * bmi->bmiHeader.biHeight - DIBWidth;
-  }
-
   SourceBitmap = EngCreateBitmap(SourceSize,
-                                 DIBWidth * scanDirection,
+                                 DIBWidth,
                                  BitmapFormat(bmi->bmiHeader.biBitCount, bmi->bmiHeader.biCompression),
-                                 0,
-                                 (PVOID)vBits );
+                                 0 < bmi->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
+                                 (PVOID) Bits);
   SourceSurf = (SURFOBJ*)AccessUserObject((ULONG)SourceBitmap);
 
   // Destination palette obtained from the hDC

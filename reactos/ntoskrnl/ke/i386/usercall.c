@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.25 2003/07/11 01:23:15 royce Exp $
+/* $Id: usercall.c,v 1.25.24.1 2004/06/27 01:13:16 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -122,6 +122,36 @@ KeAddSystemServiceTable (
     }
 
     return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+KeRemoveSystemServiceTable(
+    IN PUCHAR Number
+)
+{
+	UNIMPLEMENTED;
+	return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+KeUserModeCallback(
+    IN ULONG	FunctionID,
+    IN PVOID	InputBuffer,
+    IN ULONG	InputLength,
+    OUT PVOID	*OutputBuffer,
+    OUT PULONG	OutputLength
+)
+{
+	UNIMPLEMENTED;
+	return 0;
 }
 
 /* EOF */

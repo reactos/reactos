@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.125 2004/06/21 21:07:29 hyperion Exp $
+# $Id: Makefile,v 1.125.4.1 2004/06/27 01:13:13 hyperion Exp $
 #
 # ReactOS Operating System
 #
@@ -130,6 +130,7 @@ OBJECTS_KE = \
 	ke/catch.o \
 	ke/critical.o \
 	ke/dpc.o \
+        ke/device.o \
 	ke/error.o \
 	ke/event.o \
 	ke/kqueue.o \
@@ -137,6 +138,7 @@ OBJECTS_KE = \
 	ke/main.o \
 	ke/mutex.o \
 	ke/process.o \
+        ke/profile.o \
 	ke/queue.o \
 	ke/sem.o \
 	ke/spinlock.o \
@@ -222,7 +224,8 @@ OBJECTS_IO = \
 	io/vpb.o \
 	io/wdm.o \
 	io/xhaldisp.o \
-	io/xhaldrv.o
+        io/xhaldrv.o \
+        io/wmi.o
 
 # Object Manager (Ob)
 OBJECTS_OB = \
@@ -262,9 +265,12 @@ OBJECTS_EX = \
 	ex/napi.o \
 	ex/power.o \
 	ex/resource.o \
-	ex/time.o \
+        ex/rundown.o \
 	ex/stree.o \
+        ex/synch.o \
 	ex/sysinfo.o \
+        ex/time.o \
+        ex/util.o \
 	ex/win32k.o \
 	ex/work.o \
 	ex/zone.o

@@ -50,6 +50,18 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
+STDCALL
+BOOLEAN
+KeAreApcsDisabled(
+	VOID
+	)
+{
+	UNIMPLEMENTED;
+}
+
 VOID KiRundownThread(VOID)
 /*
  * FUNCTION: 

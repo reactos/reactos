@@ -165,6 +165,47 @@ l4:
 #endif
 }
 
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+KeI386FlatToGdtSelector(
+	IN ULONG	Base,
+	IN USHORT	Length,
+	IN USHORT	Selector
+)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS 
+KeI386ReleaseGdtSelectors(
+	OUT PULONG SelArray,
+	IN ULONG NumOfSelectors
+)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+NTSTATUS
+KeI386AllocateGdtSelectors(
+	OUT PULONG SelArray,
+    IN ULONG NumOfSelectors
+)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
 VOID 
 KeSetBaseGdtSelector(ULONG Entry,
 		     PVOID Base)

@@ -40,11 +40,6 @@
 #include <user32.h>
 #include <debug.h>
 
-/* FIXME - not yet defined in w32api :( */
-#define SPI_GETFOCUSBORDERWIDTH	(8206)
-#define SPI_SETFOCUSBORDERWIDTH	(8207)
-#define SPI_GETFOCUSBORDERHEIGHT	(8208)
-#define SPI_SETFOCUSBORDERHEIGHT	(8209)
 #define COLOR_MENUHILIGHT	(29)
 #define COLOR_MENUBAR	(30)
 

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.90 2004/06/20 10:36:17 gvg Exp $
+/* $Id: utils.c,v 1.90.2.1 2004/06/27 01:13:12 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -717,7 +717,10 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   NTSTATUS              Status;
   PLDR_MODULE           Module;
 
-  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n", Name, SearchPath ? " from " : "", SearchPath ? SearchPath : L"");
+  TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
+            Name,
+            SearchPath ? " from " : "",
+            SearchPath ? SearchPath : L"");
 
   if (Name == NULL)
     {
@@ -1217,179 +1220,125 @@ LdrGetExportByName(PVOID BaseAddress,
  * NOTE
  *
  */
-static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS        NTHeaders,
-                                       PVOID                    ImageBase)
+static NTSTATUS
+LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
+                      PVOID ImageBase)
 {
-  USHORT                        NumberOfEntries;
-  PUSHORT                       pValue16;
-  ULONG                 RelocationRVA;
-  ULONG                 Delta32;
-  ULONG                 Offset;
-  PULONG                        pValue32;
-  PRELOCATION_DIRECTORY RelocationDir;
-  PRELOCATION_ENTRY     RelocationBlock;
-  int                   i;
   PIMAGE_DATA_DIRECTORY RelocationDDir;
-  ULONG OldProtect;
-  PVOID ProtectBase;
-  ULONG ProtectSize;
-  ULONG OldProtect2;
-  PVOID ProtectBase2;
-  ULONG ProtectSize2;
+  PIMAGE_BASE_RELOCATION RelocationDir, RelocationEnd;
+  ULONG Count, ProtectSize, OldProtect, OldProtect2, i;
+  PVOID Page, ProtectPage, ProtectPage2;
+  PWORD TypeOffset;
+  ULONG Delta = (ULONG_PTR)ImageBase - NTHeaders->OptionalHeader.ImageBase;
   NTSTATUS Status;
-  PIMAGE_SECTION_HEADER Sections;
-  ULONG MaxExtend;
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
       return STATUS_UNSUCCESSFUL;
     }
 
-  Sections =
-    (PIMAGE_SECTION_HEADER)((PVOID)NTHeaders + sizeof(IMAGE_NT_HEADERS));
-  MaxExtend = 0;
-  for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
-    {
-      if (!(Sections[i].Characteristics & IMAGE_SECTION_NOLOAD))
-        {
-          ULONG Extend;
-          Extend =
-            (ULONG)(Sections[i].VirtualAddress + Sections[i].Misc.VirtualSize);
-          MaxExtend = max(MaxExtend, Extend);
-        }
-    }
-
   RelocationDDir =
     &NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_BASERELOC];
-  RelocationRVA = RelocationDDir->VirtualAddress;
 
-  if (RelocationRVA)
+  if (RelocationDDir->VirtualAddress == 0 || RelocationDDir->Size == 0)
     {
-      RelocationDir =
-        (PRELOCATION_DIRECTORY)((PCHAR)ImageBase + RelocationRVA);
+      return STATUS_SUCCESS;
+    }
+   
+  ProtectSize = PAGE_SIZE;
+  RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase + 
+                  RelocationDDir->VirtualAddress);
+  RelocationEnd = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)ImageBase +
+                  RelocationDDir->VirtualAddress + RelocationDDir->Size);
+  while (RelocationDir < RelocationEnd &&
+         RelocationDir->SizeOfBlock > 0)
+    {
+      Count = (RelocationDir->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) /
+              sizeof(WORD);
+      Page = ImageBase + RelocationDir->VirtualAddress;
+      TypeOffset = (PWORD)(RelocationDir + 1);
 
-      while (RelocationDir->SizeOfBlock)
+      /* Unprotect the page(s) we're about to relocate. */
+      ProtectPage = Page;
+      Status = NtProtectVirtualMemory(NtCurrentProcess(),
+                                      &ProtectPage,
+                                      &ProtectSize,
+                                      PAGE_READWRITE,
+                                      &OldProtect);
+      if (!NT_SUCCESS(Status))
         {
-          if (RelocationDir->VirtualAddress > MaxExtend)
-            {
-              RelocationRVA += RelocationDir->SizeOfBlock;
-              RelocationDir =
-                (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
-              continue;
-            }
+          DPRINT1("Failed to unprotect relocation target.\n");
+          return(Status);
+        }
 
-          Delta32 = (ULONG)(ImageBase - NTHeaders->OptionalHeader.ImageBase);
-          RelocationBlock =
-            (PRELOCATION_ENTRY) (RelocationRVA + ImageBase +
-                                 sizeof (RELOCATION_DIRECTORY));
-          NumberOfEntries =
-            RelocationDir->SizeOfBlock - sizeof (RELOCATION_DIRECTORY);
-          NumberOfEntries = NumberOfEntries / sizeof (RELOCATION_ENTRY);
-
-          ProtectBase = ImageBase + RelocationDir->VirtualAddress;
-          ProtectSize = PAGE_SIZE;
+      if (RelocationDir->VirtualAddress + PAGE_SIZE <
+          NTHeaders->OptionalHeader.SizeOfImage)
+        {
+          ProtectPage2 = ProtectPage + PAGE_SIZE;
           Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          &ProtectBase,
+                                          &ProtectPage2,
                                           &ProtectSize,
                                           PAGE_READWRITE,
-                                          &OldProtect);
+                                          &OldProtect2);
           if (!NT_SUCCESS(Status))
             {
-              DPRINT1("Failed to unprotect relocation target.\n");
+              DPRINT1("Failed to unprotect relocation target (2).\n");
+              NtProtectVirtualMemory(NtCurrentProcess(),
+                                     &ProtectPage,
+                                     &ProtectSize,
+                                     OldProtect,
+                                     &OldProtect);
               return(Status);
             }
-
-          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
-            {
-                  ProtectBase2 = ImageBase + RelocationDir->VirtualAddress + PAGE_SIZE;
-                  ProtectSize2 = PAGE_SIZE;
-                  Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  &ProtectBase2,
-                                                  &ProtectSize2,
-                                                  PAGE_READWRITE,
-                                                  &OldProtect2);
-                  if (!NT_SUCCESS(Status))
-                    {
-                      DPRINT1("Failed to unprotect relocation target (2).\n");
-                      NtProtectVirtualMemory(NtCurrentProcess(),
-                                             &ProtectBase,
-                                             &ProtectSize,
-                                             OldProtect,
-                                             &OldProtect);
-                      return(Status);
-                    }
-              }
-
-          for (i = 0; i < NumberOfEntries; i++)
-            {
-              Offset = (RelocationBlock[i].TypeOffset & 0xfff);
-              Offset += (ULONG)(RelocationDir->VirtualAddress + ImageBase);
-
-              /*
-               * What kind of relocations should we perform
-               * for the current entry?
-               */
-              switch (RelocationBlock[i].TypeOffset >> 12)
-                {
-                case TYPE_RELOC_ABSOLUTE:
-                  break;
-
-                case TYPE_RELOC_HIGH:
-                  pValue16 = (PUSHORT)Offset;
-                  *pValue16 += Delta32 >> 16;
-                  break;
-
-                case TYPE_RELOC_LOW:
-                  pValue16 = (PUSHORT)Offset;
-                  *pValue16 += Delta32 & 0xffff;
-                  break;
-
-                case TYPE_RELOC_HIGHLOW:
-                  pValue32 = (PULONG)Offset;
-                  *pValue32 += Delta32;
-                  break;
-
-                case TYPE_RELOC_HIGHADJ:
-                  /* FIXME: do the highadjust fixup  */
-                  DPRINT("TYPE_RELOC_HIGHADJ fixup not implemented, sorry\n");
-                  return(STATUS_UNSUCCESSFUL);
-
-                default:
-                  DPRINT("unexpected fixup type\n");
-                  return STATUS_UNSUCCESSFUL;
-                }
-            }
-
-          Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                          &ProtectBase,
-                                          &ProtectSize,
-                                          OldProtect,
-                                          &OldProtect);
-          if (!NT_SUCCESS(Status))
-            {
-              DPRINT1("Failed to protect relocation target.\n");
-              return(Status);
-            }
-
-          if (RelocationDir->VirtualAddress + PAGE_SIZE < MaxExtend)
-            {
-                  Status = NtProtectVirtualMemory(NtCurrentProcess(),
-                                                  &ProtectBase2,
-                                                  &ProtectSize2,
-                                                  OldProtect2,
-                                                  &OldProtect2);
-                  if (!NT_SUCCESS(Status))
-                    {
-                      DPRINT1("Failed to protect relocation target2.\n");
-                      return(Status);
-                    }
-            }
-
-          RelocationRVA += RelocationDir->SizeOfBlock;
-          RelocationDir =
-            (PRELOCATION_DIRECTORY) (ImageBase + RelocationRVA);
         }
+
+      /* Patch the page. */
+      for (i = 0; i < Count; i++)
+        {
+          SHORT Offset = TypeOffset[i] & 0xFFF;
+          USHORT Type = TypeOffset[i] >> 12;
+
+          switch (Type)
+            {
+              case IMAGE_REL_BASED_ABSOLUTE:
+                break;
+              case IMAGE_REL_BASED_HIGH:
+                *(PUSHORT)(Page + Offset) += HIWORD(Delta);
+                break;
+              case IMAGE_REL_BASED_LOW:
+                *(PUSHORT)(Page + Offset) += LOWORD(Delta);
+                break;
+              case IMAGE_REL_BASED_HIGHLOW:
+                *(PULONG)(Page + Offset) += Delta;
+                break;
+              case IMAGE_REL_BASED_HIGHADJ:
+              default:
+                DPRINT("Unknown/unsupported fixup type %d.\n", type);
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
+
+      /* Restore old page protection. */
+      NtProtectVirtualMemory(NtCurrentProcess(),
+                             &ProtectPage,
+                             &ProtectSize,
+                             OldProtect,
+                             &OldProtect);
+
+      if (RelocationDir->VirtualAddress + PAGE_SIZE <
+          NTHeaders->OptionalHeader.SizeOfImage)
+        {
+          NtProtectVirtualMemory(NtCurrentProcess(),
+                                 &ProtectPage2,
+                                 &ProtectSize,
+                                 OldProtect2,
+                                 &OldProtect2);
+        }
+
+      RelocationDir = (IMAGE_BASE_RELOCATION*)((ULONG_PTR)RelocationDir +
+                      RelocationDir->SizeOfBlock);
     }
+
   return STATUS_SUCCESS;
 }
 
@@ -1427,10 +1376,9 @@ LdrpGetOrLoadModule(PWCHAR SerachPath,
 }
 
 static NTSTATUS
-LdrpProcessImportDirectoryEntry(
-   PLDR_MODULE Module,
-   PLDR_MODULE ImportedModule,
-   PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory)
+LdrpProcessImportDirectoryEntry(PLDR_MODULE Module,
+                                PLDR_MODULE ImportedModule,
+                                PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory)
 {
    NTSTATUS Status;
    PVOID* ImportAddressList;
@@ -2571,8 +2519,8 @@ LdrpAttachProcess(VOID)
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
-   LdrpDetachProcess(TRUE);
-   return STATUS_SUCCESS;
+  LdrpDetachProcess(TRUE);
+  return STATUS_SUCCESS;
 }
 
 /*
@@ -2582,48 +2530,47 @@ LdrShutdownProcess (VOID)
 NTSTATUS
 LdrpAttachThread (VOID)
 {
-   PLIST_ENTRY ModuleListHead;
-   PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
-   NTSTATUS Status;
+  PLIST_ENTRY ModuleListHead;
+  PLIST_ENTRY Entry;
+  PLDR_MODULE Module;
+  NTSTATUS Status;
 
-   DPRINT("LdrpAttachThread() called for %wZ\n",
-          &ExeModule->BaseDllName);
+  DPRINT("LdrpAttachThread() called for %wZ\n",
+         &ExeModule->BaseDllName);
 
-   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+  RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
 
-   Status = LdrpInitializeTlsForThread();
+  Status = LdrpInitializeTlsForThread();
 
-   if (NT_SUCCESS(Status))
-     {
+  if (NT_SUCCESS(Status))
+    {
+      ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
+      Entry = ModuleListHead->Flink;
 
-       ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
-       Entry = ModuleListHead->Flink;
+      while (Entry != ModuleListHead)
+        {
+          Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
+          if (Module->Flags & PROCESS_ATTACH_CALLED &&
+              !(Module->Flags & DONT_CALL_FOR_THREAD) &&
+              !(Module->Flags & UNLOAD_IN_PROGRESS))
+            {
+              TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
+                        &Module->BaseDllName, Module->EntryPoint);
+              LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
+            }
+          Entry = Entry->Flink;
+        }
 
-       while (Entry != ModuleListHead)
-         {
-           Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
-           if (Module->Flags & PROCESS_ATTACH_CALLED &&
-               !(Module->Flags & DONT_CALL_FOR_THREAD) &&
-               !(Module->Flags & UNLOAD_IN_PROGRESS))
-             {
-               TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
-                         &Module->BaseDllName, Module->EntryPoint);
-               LdrpCallDllEntry(Module, DLL_THREAD_ATTACH, NULL);
-             }
-           Entry = Entry->Flink;
-         }
+      Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
+      Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+      LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
+    }
 
-       Entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
-       Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
-       LdrpTlsCallback(Module, DLL_THREAD_ATTACH);
-     }
+  RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
 
-   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
+  DPRINT("LdrpAttachThread() done\n");
 
-   DPRINT("LdrpAttachThread() done\n");
-
-   return Status;
+  return Status;
 }
 
 

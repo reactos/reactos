@@ -31,6 +31,31 @@ static BOOLEAN CmiRegistryInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+CmRegisterCallback(IN PEX_CALLBACK_FUNCTION Function,
+                   IN PVOID                 Context,
+                   IN OUT PLARGE_INTEGER    Cookie
+                    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+
+NTSTATUS STDCALL
+CmUnRegisterCallback(IN LARGE_INTEGER    Cookie)
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+
 NTSTATUS STDCALL
 NtCreateKey(OUT PHANDLE KeyHandle,
 	    IN ACCESS_MASK DesiredAccess,

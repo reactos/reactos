@@ -35,6 +35,49 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
+ULONG
+__cdecl
+DbgPrintReturnControlC(
+    PCH Format,
+    ...
+    )
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+DbgQueryDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+NTSTATUS
+DbgSetDebugFilterState(
+    IN ULONG ComponentId,
+    IN ULONG Level,
+    IN BOOLEAN State
+    )
+{
+	UNIMPLEMENTED;
+	return STATUS_NOT_IMPLEMENTED;
+}
+
 NTSTATUS STDCALL 
 NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
 		     PVOID InputBuffer,

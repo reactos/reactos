@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.19 2003/10/12 17:05:44 hbirr Exp $
+/* $Id: time.c,v 1.19.20.1 2004/06/27 01:13:13 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -125,6 +125,18 @@ ExLocalTimeToSystemTime (
                           _SystemTimeZoneInfo.Bias * TICKSPERMINUTE;
 }
 
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+ExSetTimerResolution (
+    IN ULONG DesiredTime,
+    IN BOOLEAN SetResolution
+    )
+{
+	UNIMPLEMENTED;
+}
 
 /*
  * @implemented

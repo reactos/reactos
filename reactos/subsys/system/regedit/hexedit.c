@@ -506,6 +506,11 @@ HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
     LocalFree(hed->hBuffer);
   }
   
+  if(hed->hFont)
+  {
+    DeleteObject(hed->hFont);
+  }
+  
   SetWindowLong(hed->hWndSelf, 0, 0);
   HeapFree(GetProcessHeap(), 0, hed);
   

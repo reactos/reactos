@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.29 2004/06/10 11:00:28 ekohl Exp $
+/* $Id: pnpmgr.c,v 1.29.6.1 2004/06/27 01:13:14 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -195,11 +195,13 @@ IoOpenDeviceRegistryKey(
 /*
  * @unimplemented
  */
-VOID
 STDCALL
+VOID
 IoRequestDeviceEject(
-  IN PDEVICE_OBJECT PhysicalDeviceObject)
+    IN PDEVICE_OBJECT PhysicalDeviceObject
+    )
 {
+	UNIMPLEMENTED;
 }
 
 
@@ -1410,6 +1412,7 @@ IopInvalidateDeviceRelations(
 
    return STATUS_SUCCESS;
 }
+
 
 VOID INIT_FUNCTION
 PnpInit(VOID)

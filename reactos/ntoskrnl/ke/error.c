@@ -17,6 +17,30 @@
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KiCoprocessorError(
+    VOID
+)
+{
+	UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+STDCALL
+VOID
+KiUnexpectedInterrupt(
+    VOID
+)
+{
+	UNIMPLEMENTED;
+}
+
 NTSTATUS STDCALL 
 NtRaiseHardError(IN NTSTATUS Status,
 		 ULONG Unknown2,
