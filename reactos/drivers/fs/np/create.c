@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.23 2004/10/11 12:37:04 ekohl Exp $
+/* $Id: create.c,v 1.24 2004/10/14 11:49:55 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -33,7 +33,7 @@ NpfsFindPipe(PNPFS_DEVICE_EXTENSION DeviceExt,
 				  &Pipe->PipeName,
 				  TRUE) == 0)
 	{
-	  DPRINT1("<%wZ> = <%wZ>\n", PipeName, &Pipe->PipeName);
+	  DPRINT("<%wZ> = <%wZ>\n", PipeName, &Pipe->PipeName);
 	  return Pipe;
 	}
 
