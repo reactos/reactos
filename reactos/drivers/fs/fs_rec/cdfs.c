@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdfs.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
+/* $Id: cdfs.c,v 1.3 2002/05/28 16:11:17 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,6 +35,8 @@
 #include "fs_rec.h"
 
 
+#define CDFS_PVD_SECTOR   16
+
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
@@ -52,9 +54,9 @@ FsRecIsCdfsVolume(IN PDEVICE_OBJECT DeviceObject)
 				0,
 				&DiskGeometry,
 				&Size);
-  DPRINT("FsRecDeviceIoControl() Status %lx\n", Status);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -67,12 +69,13 @@ FsRecIsCdfsVolume(IN PDEVICE_OBJECT DeviceObject)
     }
 
   Status = FsRecReadSectors(DeviceObject,
-			    16, /* CDFS_PVD_SECTOR */
+			    CDFS_PVD_SECTOR,
 			    1,
 			    DiskGeometry.BytesPerSector,
 			    Buffer);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("FsRecReadSectors() failed (Status %lx)\n", Status);
       return(Status);
     }
 

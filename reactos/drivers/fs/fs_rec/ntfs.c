@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
+/* $Id: ntfs.c,v 1.3 2002/05/28 16:11:17 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,9 +52,9 @@ FsRecIsNtfsVolume(IN PDEVICE_OBJECT DeviceObject)
 				0,
 				&DiskGeometry,
 				&Size);
-  DPRINT("FsRecDeviceIoControl() Status %lx\n", Status);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -73,9 +73,11 @@ FsRecIsNtfsVolume(IN PDEVICE_OBJECT DeviceObject)
 			    Buffer);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("FsRecReadSectors() failed (Status %lx)\n", Status);
       return(Status);
     }
 
+  DPRINT("NTFS-identifier: [%.8s]\n", &Buffer[3]);
   if (strncmp(&Buffer[3], "NTFS    ", 8) == 0)
     {
       Status = STATUS_SUCCESS;
