@@ -589,12 +589,13 @@ static void set_interrupt_gate(unsigned int sel, unsigned int func)
    KiIdt[sel].b = 0x8e00 + (((int)func)&0xffff0000);         
 }
 
-static void set_trap_gate(unsigned int sel, unsigned int func)
+static void set_trap_gate(unsigned int sel, unsigned int func, unsigned int dpl)
 {
-   DPRINT("set_trap_gate(sel %d, func %x)\n",sel,func);
+   DPRINT("set_trap_gate(sel %d, func %x, dpl %d)\n",sel, func, dpl);
+   assert(dpl <= 3);
    KiIdt[sel].a = (((int)func)&0xffff) +
      (KERNEL_CS << 16);
-   KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
+   KiIdt[sel].b = 0x8f00 + (dpl << 13) + (((int)func)&0xffff0000);         
 }
 
 static void
@@ -617,27 +618,27 @@ KeInitExceptions(VOID)
    /*
     * Set up the other gates
     */
-   set_trap_gate(0, (ULONG)KiTrap0);
-   set_trap_gate(1, (ULONG)KiTrap1);
-   set_trap_gate(2, (ULONG)KiTrap2);
-   set_trap_gate(3, (ULONG)KiTrap3);
-   set_trap_gate(4, (ULONG)KiTrap4);
-   set_trap_gate(5, (ULONG)KiTrap5);
-   set_trap_gate(6, (ULONG)KiTrap6);
-   set_trap_gate(7, (ULONG)KiTrap7);
+   set_trap_gate(0, (ULONG)KiTrap0, 0);
+   set_trap_gate(1, (ULONG)KiTrap1, 0);
+   set_trap_gate(2, (ULONG)KiTrap2, 0);
+   set_trap_gate(3, (ULONG)KiTrap3, 3);
+   set_trap_gate(4, (ULONG)KiTrap4, 0);
+   set_trap_gate(5, (ULONG)KiTrap5, 0);
+   set_trap_gate(6, (ULONG)KiTrap6, 0);
+   set_trap_gate(7, (ULONG)KiTrap7, 0);
    set_task_gate(8, TRAP_TSS_SELECTOR);
-   set_trap_gate(9, (ULONG)KiTrap9);
-   set_trap_gate(10, (ULONG)KiTrap10);
-   set_trap_gate(11, (ULONG)KiTrap11);
-   set_trap_gate(12, (ULONG)KiTrap12);
-   set_trap_gate(13, (ULONG)KiTrap13);
+   set_trap_gate(9, (ULONG)KiTrap9, 0);
+   set_trap_gate(10, (ULONG)KiTrap10, 0);
+   set_trap_gate(11, (ULONG)KiTrap11, 0);
+   set_trap_gate(12, (ULONG)KiTrap12, 0);
+   set_trap_gate(13, (ULONG)KiTrap13, 0);
    set_interrupt_gate(14, (ULONG)KiTrap14);
-   set_trap_gate(15, (ULONG)KiTrap15);
-   set_trap_gate(16, (ULONG)KiTrap16);
+   set_trap_gate(15, (ULONG)KiTrap15, 0);
+   set_trap_gate(16, (ULONG)KiTrap16, 0);
    
    for (i=17;i<256;i++)
         {
-	   set_trap_gate(i,(int)KiTrapUnknown);
+	   set_trap_gate(i,(int)KiTrapUnknown, 0);
         }
    
    set_system_call_gate(0x2d,(int)interrupt_handler2d);
