@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.95 2003/05/21 15:06:33 ekohl Exp $
+# $Id: Makefile,v 1.96 2003/05/27 19:21:14 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -92,9 +92,7 @@ OBJECTS_RTL = \
 	rtl/math.o \
 	rtl/mem.o \
 	rtl/memchr.o \
-	rtl/memcpy.o \
 	rtl/memmove.o \
-	rtl/memset.o \
 	rtl/message.o \
 	rtl/nls.o \
 	rtl/purecall.o \
@@ -499,7 +497,7 @@ OBJECTS := \
 	$(OBJECTS_RESOURCE)
 
 
-$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
+$(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA) $(SDK_PATH_LIB)/string.a  
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles \
@@ -513,6 +511,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -535,10 +534,11 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
+$(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a
 	- $(CC) \
 		-Wl,-T,$(LINKER_SCRIPT) \
 		-nostartfiles \
@@ -552,6 +552,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -574,13 +575,14 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(LINKER_SCRIPT) $(DDK_PATH_LIB)/hal.a
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
 $(TARGETNAME).dbg.o: $(TARGETNAME).o
 	$(STRIP) --strip-debug -o $(TARGETNAME).dbg.o $(TARGETNAME).o
 
-$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
+$(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk $(DDK_PATH_LIB)/hal.a $(SDK_PATH_LIB)/string.a
 	$(CC) \
 		-Wl,-T,$(TARGETNAME).dbg.lnk \
 		-nostartfiles \
@@ -594,6 +596,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,--base-file,base.tmp \
 		$(TARGETNAME).dbg.o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -616,6 +619,7 @@ $(TARGETNAME).dbg: $(TARGETNAME).dbg.o $(TARGETNAME).a $(TARGETNAME).dbg.lnk
 		-Wl,--entry,_NtProcessStartup \
 		-Wl,temp.exp \
 		$(TARGETNAME).dbg.o -lgcc \
+		$(SDK_PATH_LIB)/string.a \
 		$(DDK_PATH_LIB)/hal.a
 	- $(RM) temp.exp
 
