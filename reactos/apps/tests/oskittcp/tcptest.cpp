@@ -178,10 +178,10 @@ void display_row( char *data, int off, int len ) {
 int main( int argc, char **argv ) {
     int asock = INVALID_SOCKET, selret, dgrecv, fromsize, err, port = 5001;
     char datagram[MAX_DG_SIZE];
-    void *conn;
+    void *conn = 0;
     struct fd_set readf;
     struct timeval tv;
-    struct sockaddr_in addr_from = { AF_INET }, addr_to;
+    struct sockaddr_in addr_from = { AF_INET }, addr_to = { AF_INET };
     std::list<std::string>::iterator i;
     WSADATA wsadata;
 
@@ -200,6 +200,9 @@ int main( int argc, char **argv ) {
 	printf( "Bind error\n" );
 	return 0;
     }
+
+    addr_to.sin_port = htons( port & (~1) );
+    addr_to.sin_addr.s_addr = inet_addr("127.0.0.1");
 
     while( true ) {
 	FD_ZERO( &readf );
@@ -241,7 +244,12 @@ int main( int argc, char **argv ) {
 		    } else {
 			printf( "Socket created\n" );
 		    }
-		} else if( word == "recv" ) {
+		} 
+
+		/* The rest of the commands apply only to an open socket */
+		if( !conn ) continue;
+
+		if( word == "recv" ) {
 		    cmdin >> bytes;
 
 		    if( (err = OskitTCPRecv( conn, (OSK_PCHAR)datagram, 
@@ -302,6 +310,7 @@ int main( int argc, char **argv ) {
 		    }
 		} else if( word == "close" ) {
 		    OskitTCPClose( conn );
+		    conn = NULL;
 		}
 	    } else if( dgrecv > 14 ) {
 		addr_to = addr_from;
