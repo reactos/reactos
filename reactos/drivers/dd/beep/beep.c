@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.14 2002/09/08 10:22:04 chorns Exp $
+/* $Id: beep.c,v 1.15 2002/10/21 17:05:32 hbirr Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -46,7 +46,7 @@ BeepDPC(PKDPC Dpc,
   DeviceExtension->BeepOn = FALSE;
   KeSetEvent(&DeviceExtension->Event,
 	     0,
-	     TRUE);
+	     FALSE);
 
   DPRINT("BeepDPC() finished!\n");
 }
