@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.99 2004/05/22 16:48:50 weiden Exp $
+/* $Id: msgqueue.c,v 1.100 2004/05/22 17:51:08 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1193,7 +1193,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       /* free the message */
       ExFreePool(CurrentSentMessage);
     }
-  DbgPrint("Done cleaning up message queue...\n"); 
+  
   IntUnLockMessageQueue(MessageQueue);
 }
 
