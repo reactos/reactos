@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.25 2002/12/03 23:57:05 ekohl Exp $
+/* $Id: scsiport.c,v 1.26 2002/12/09 20:01:14 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -252,6 +252,7 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 			IN UCHAR Lun,
 			IN UCHAR SrbStatus)
 {
+  DPRINT("ScsiPortCompleteRequest()\n");
   UNIMPLEMENTED;
 }
 
@@ -259,6 +260,7 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 ULONG STDCALL
 ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
 {
+  DPRINT("ScsiPortConvertPhysicalAddressToUlong()\n");
   return(Address.u.LowPart);
 }
 
@@ -266,6 +268,7 @@ ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
 VOID STDCALL
 ScsiPortFlushDma(IN PVOID HwDeviceExtension)
 {
+  DPRINT("ScsiPortFlushDma()\n");
   UNIMPLEMENTED;
 }
 
@@ -274,6 +277,7 @@ VOID STDCALL
 ScsiPortFreeDeviceBase(IN PVOID HwDeviceExtension,
 		       IN PVOID MappedAddress)
 {
+  DPRINT("ScsiPortFreeDeviceBase()\n");
   UNIMPLEMENTED;
 }
 
@@ -308,6 +312,10 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
   PVOID Buffer;
   BOOLEAN rc;
 
+  
+
+  DPRINT("ScsiPortGetDeviceBase()\n");
+
   AddressSpace = (ULONG)InIoSpace;
 
   if (!HalTranslateBusAddress(BusType,
@@ -339,6 +347,7 @@ ScsiPortGetLogicalUnit(IN PVOID HwDeviceExtension,
 		       IN UCHAR TargetId,
 		       IN UCHAR Lun)
 {
+  DPRINT("ScsiPortGetLogicalUnit()\n");
   UNIMPLEMENTED;
 }
 
@@ -349,6 +358,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 			   IN PVOID VirtualAddress,
 			   OUT ULONG *Length)
 {
+  DPRINT("ScsiPortGetPhysicalAddress()\n");
   UNIMPLEMENTED;
 }
 
@@ -360,6 +370,7 @@ ScsiPortGetSrb(IN PVOID DeviceExtension,
 	       IN UCHAR Lun,
 	       IN LONG QueueTag)
 {
+  DPRINT("ScsiPortGetSrb()\n");
   UNIMPLEMENTED;
 }
 
@@ -369,6 +380,7 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
 			     IN PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			     IN ULONG NumberOfBytes)
 {
+  DPRINT("ScsiPortGetUncachedExtension()\n");
   UNIMPLEMENTED;
 }
 
@@ -377,6 +389,7 @@ PVOID STDCALL
 ScsiPortGetVirtualAddress(IN PVOID HwDeviceExtension,
 			  IN SCSI_PHYSICAL_ADDRESS PhysicalAddress)
 {
+  DPRINT("ScsiPortGetVirtualAddress()\n");
   UNIMPLEMENTED;
 }
 
@@ -558,6 +571,7 @@ ScsiPortIoMapTransfer(IN PVOID HwDeviceExtension,
 		      IN ULONG LogicalAddress,
 		      IN ULONG Length)
 {
+  DPRINT("ScsiPortIoMapTransfer()\n");
   UNIMPLEMENTED;
 }
 
@@ -571,6 +585,7 @@ ScsiPortLogError(IN PVOID HwDeviceExtension,
 		 IN ULONG ErrorCode,
 		 IN ULONG UniqueId)
 {
+  DPRINT("ScsiPortLogError()\n");
   UNIMPLEMENTED;
 }
 
@@ -633,6 +648,7 @@ ScsiPortSetBusDataByOffset(IN PVOID DeviceExtension,
 			   IN ULONG Offset,
 			   IN ULONG Length)
 {
+  DPRINT("ScsiPortSetBusDataByOffset()\n");
   return(HalSetBusDataByOffset(BusDataType,
 			       SystemIoBusNumber,
 			       SlotNumber,
@@ -650,6 +666,7 @@ ScsiPortValidateRange(IN PVOID HwDeviceExtension,
 		      IN ULONG NumberOfBytes,
 		      IN BOOLEAN InIoSpace)
 {
+  DPRINT("ScsiPortValidateRange()\n");
   return(TRUE);
 }
 
@@ -1076,25 +1093,20 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   UNICODE_STRING DosDeviceName;
   NTSTATUS Status;
   ULONG AccessRangeSize;
-
-#if 0
   ULONG MappedIrq;
   KIRQL Dirql;
   KAFFINITY Affinity;
-#endif
 
   DPRINT("ScsiPortCreatePortDevice() called\n");
 
   *RealDeviceExtension = NULL;
 
-#if 0
   MappedIrq = HalGetInterruptVector(PseudoDeviceExtension->PortConfig.AdapterInterfaceType,
 				    PseudoDeviceExtension->PortConfig.SystemIoBusNumber,
-				    0,
 				    PseudoDeviceExtension->PortConfig.BusInterruptLevel,
+				    PseudoDeviceExtension->PortConfig.BusInterruptVector,
 				    &Dirql,
 				    &Affinity);
-#endif
 
   /* Create a unicode device name */
   swprintf(NameBuffer,
@@ -1153,12 +1165,12 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
 			      ScsiPortIsr,
 			      PortDeviceExtension,
 			      &PortDeviceExtension->SpinLock,
-			      PortDeviceExtension->PortConfig.BusInterruptVector, // MappedIrq,
-			      PortDeviceExtension->PortConfig.BusInterruptLevel, // Dirql,
-			      15, //Dirql,
+			      MappedIrq,
+			      Dirql,
+			      Dirql,
 			      PortDeviceExtension->PortConfig.InterruptMode,
-			      FALSE,
-			      0xFFFF, //Affinity,
+			      TRUE,
+			      Affinity,
 			      FALSE);
   if (!NT_SUCCESS(Status))
     {
