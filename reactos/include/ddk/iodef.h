@@ -242,6 +242,12 @@ enum
 #define  FILE_EXISTS          0x0004
 #define  FILE_DOES_NOT_EXIST  0x0005
 
+/*
+ * ByteOffset parameter : special values
+ */
+
+#define FILE_WRITE_TO_END_OF_FILE       0xffffffff
+#define FILE_USE_FILE_POINTER_POSITION  0xfffffffe
 
 /*
  * file creation flags 
