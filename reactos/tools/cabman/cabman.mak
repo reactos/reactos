@@ -1,51 +1,64 @@
-CABMAN_BASE = tools$(SEP)cabman
+CABMAN_BASE = $(TOOLS_BASE_)cabman
+CABMAN_BASE_ = $(CABMAN_BASE)$(SEP)
+CABMAN_INT = $(INTERMEDIATE_)$(CABMAN_BASE)
+CABMAN_INT_ = $(CABMAN_INT)$(SEP)
+CABMAN_OUT = $(OUTPUT_)$(CABMAN_BASE)
+CABMAN_OUT_ = $(CABMAN_OUT)$(SEP)
 
-CABMAN_BASE_DIR = $(INTERMEDIATE)$(CABMAN_BASE)
+$(CABMAN_INT): $(TOOLS_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
 
-$(CABMAN_BASE_DIR): $(RMKDIR_TARGET)
-	${mkdir} $(INTERMEDIATE)$(CABMAN_BASE)
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(CABMAN_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 CABMAN_TARGET = \
-	$(CABMAN_BASE_DIR)$(SEP)cabman$(EXEPOSTFIX)
+	$(EXEPREFIX)$(CABMAN_OUT_)cabman$(EXEPOSTFIX)
 
-CABMAN_SOURCES = \
-	$(CABMAN_BASE)$(SEP)cabinet.cxx \
-	$(CABMAN_BASE)$(SEP)dfp.cxx \
-	$(CABMAN_BASE)$(SEP)main.cxx \
-	$(CABMAN_BASE)$(SEP)mszip.cxx \
-	$(CABMAN_BASE)$(SEP)raw.cxx
+CABMAN_SOURCES = $(addprefix $(CABMAN_INT_), \
+	cabinet.cxx \
+	dfp.cxx \
+	main.cxx \
+	mszip.cxx \
+	raw.cxx \
+	)
 
 CABMAN_OBJECTS = \
-  $(addprefix $(INTERMEDIATE), $(CABMAN_SOURCES:.cxx=.o))
+  $(addprefix $(INTERMEDIATE_), $(CABMAN_SOURCES:.cxx=.o))
 
 CABMAN_HOST_CFLAGS = -Iinclude/reactos -Ilib/zlib -g -Werror -Wall
 
-CABMAN_HOST_LFLAGS = -g $(ZLIB_HOST_TARGET)
+CABMAN_HOST_LIBS = $(ZLIB_HOST_TARGET)
+
+CABMAN_HOST_LFLAGS = -g $(CABMAN_HOST_LIBS)
 
 .PHONY: cabman
 cabman: $(CABMAN_TARGET)
 
-$(CABMAN_TARGET): $(CABMAN_OBJECTS) $(ZLIB_HOST_TARGET)
+$(CABMAN_TARGET): $(CABMAN_OBJECTS) $(CABMAN_HOST_LIBS) $(CABMAN_OUT)
 	$(ECHO_LD)
 	${host_gpp} $(CABMAN_OBJECTS) $(CABMAN_HOST_LFLAGS) -o $@
 
-$(CABMAN_BASE_DIR)$(SEP)cabinet.o: $(CABMAN_BASE)$(SEP)cabinet.cxx $(CABMAN_BASE_DIR)
+$(CABMAN_INT_)cabinet.o: $(CABMAN_BASE_)cabinet.cxx $(CABMAN_BASE_DIR)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_BASE_DIR)$(SEP)dfp.o: $(CABMAN_BASE)$(SEP)dfp.cxx $(CABMAN_BASE_DIR)
+$(CABMAN_INT_)dfp.o: $(CABMAN_BASE_)dfp.cxx $(CABMAN_BASE_DIR)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_BASE_DIR)$(SEP)main.o: $(CABMAN_BASE)$(SEP)main.cxx $(CABMAN_BASE_DIR)
+$(CABMAN_INT_)main.o: $(CABMAN_BASE_)main.cxx $(CABMAN_BASE_DIR)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_BASE_DIR)$(SEP)mszip.o: $(CABMAN_BASE)$(SEP)mszip.cxx $(CABMAN_BASE_DIR)
+$(CABMAN_INT_)mszip.o: $(CABMAN_BASE_)mszip.cxx $(CABMAN_BASE_DIR)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 
-$(CABMAN_BASE_DIR)$(SEP)raw.o: $(CABMAN_BASE)$(SEP)raw.cxx $(CABMAN_BASE_DIR)
+$(CABMAN_INT_)raw.o: $(CABMAN_BASE_)raw.cxx $(CABMAN_BASE_DIR)
 	$(ECHO_CC)
 	${host_gpp} $(CABMAN_HOST_CFLAGS) -c $< -o $@
 

@@ -1,62 +1,125 @@
-RBUILD_BASE = $(TOOLS_BASE)$(SEP)rbuild
+RBUILD_BASE = $(TOOLS_BASE_)rbuild
+RBUILD_BASE_ = $(RBUILD_BASE)$(SEP)
+RBUILD_INT = $(INTERMEDIATE_)$(RBUILD_BASE)
+RBUILD_INT_ = $(RBUILD_INT)$(SEP)
+RBUILD_OUT = $(OUTPUT_)$(RBUILD_BASE)
+RBUILD_OUT_ = $(RBUILD_OUT)$(SEP)
 
-RBUILD_BASE_DIR = $(INTERMEDIATE)$(RBUILD_BASE)
-RBUILD_BASE_DIR_EXISTS = $(RBUILD_BASE_DIR)$(SEP)$(EXISTS)
-
-$(RBUILD_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+$(RBUILD_INT): $(TOOLS_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(RBUILD_BASE_DIR)
-	@echo . >$@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(RBUILD_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
+
+RBUILD_BACKEND_BASE = $(RBUILD_BASE_)backend
+RBUILD_BACKEND_BASE_ = $(RBUILD_BACKEND_BASE)$(SEP)
+RBUILD_BACKEND_INT = $(INTERMEDIATE_)$(RBUILD_BACKEND_BASE)
+RBUILD_BACKEND_INT_ = $(RBUILD_BACKEND_INT)$(SEP)
+RBUILD_BACKEND_OUT = $(OUTPUT)$(RBUILD_BACKEND_BASE)
+RBUILD_BACKEND_OUT_ = $(RBUILD_BACKEND_OUT)$(SEP)
+
+$(RBUILD_BACKEND_INT): $(RBUILD_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(RBUILD_BACKEND_OUT): $(RBUILD_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
+
+RBUILD_MINGW_BASE = $(RBUILD_BACKEND_BASE_)mingw
+RBUILD_MINGW_BASE_ = $(RBUILD_MINGW_BASE)$(SEP)
+RBUILD_MINGW_INT = $(INTERMEDIATE_)$(RBUILD_MINGW_BASE)
+RBUILD_MINGW_INT_ = $(RBUILD_MINGW_INT)$(SEP)
+RBUILD_MINGW_OUT = $(OUTPUT)$(RBUILD_MINGW_BASE)
+RBUILD_MINGW_OUT_ = $(RBUILD_MINGW_OUT)$(SEP)
+
+$(RBUILD_MINGW_INT): $(RBUILD_BACKEND_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(RBUILD_MINGW_OUT): $(RBUILD_BACKEND_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
+
+RBUILD_DEVCPP_BASE = $(RBUILD_BACKEND_BASE_)devcpp
+RBUILD_DEVCPP_BASE_ = $(RBUILD_DEVCPP_BASE)$(SEP)
+RBUILD_DEVCPP_INT = $(INTERMEDIATE_)$(RBUILD_DEVCPP_BASE)
+RBUILD_DEVCPP_INT_ = $(RBUILD_DEVCPP_INT)$(SEP)
+RBUILD_DEVCPP_OUT = $(OUTPUT)$(RBUILD_DEVCPP_BASE)
+RBUILD_DEVCPP_OUT_ = $(RBUILD_DEVCPP_OUT)$(SEP)
+
+$(RBUILD_DEVCPP_INT): $(RBUILD_BACKEND_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(RBUILD_DEVCPP_OUT): $(RBUILD_BACKEND_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
+
 
 RBUILD_TARGET = \
-	$(RBUILD_BASE_DIR)$(SEP)rbuild$(EXEPOSTFIX)
+	$(EXEPREFIX)$(RBUILD_OUT_)rbuild$(EXEPOSTFIX)
 
 RBUILD_TEST_TARGET = \
-	$(RBUILD_BASE_DIR)$(SEP)rbuild_test$(EXEPOSTFIX)
+	$(EXEPREFIX)$(RBUILD_OUT_)rbuild_test$(EXEPOSTFIX)
 
-RBUILD_BACKEND_MINGW_BASE_SOURCES = \
-	backend$(SEP)mingw$(SEP)mingw.cpp \
-	backend$(SEP)mingw$(SEP)modulehandler.cpp
+RBUILD_BACKEND_MINGW_BASE_SOURCES = $(addprefix $(RBUILD_MINGW_BASE_), \
+	mingw.cpp \
+	modulehandler.cpp \
+	)
 
-RBUILD_BACKEND_DEVCPP_BASE_SOURCES = \
-	backend$(SEP)devcpp$(SEP)devcpp.cpp
+RBUILD_BACKEND_DEVCPP_BASE_SOURCES = $(addprefix $(RBUILD_DEVCPP_BASE_), \
+	devcpp.cpp \
+	)
 
-RBUILD_BACKEND_BASE_SOURCES = \
+RBUILD_BACKEND_SOURCES = \
 	$(RBUILD_BACKEND_MINGW_BASE_SOURCES) \
 	$(RBUILD_BACKEND_DEVCPP_BASE_SOURCES) \
-	backend$(SEP)backend.cpp
-
-RBUILD_BASE_SOURCES = \
-	$(RBUILD_BACKEND_BASE_SOURCES) \
-	automaticdependency.cpp \
-	bootstrap.cpp \
-	cdfile.cpp \
-	compilerflag.cpp \
-	define.cpp \
-	exception.cpp \
-	include.cpp \
-	linkerflag.cpp \
-	module.cpp \
-	project.cpp \
-	ssprintf.cpp \
-	stubbedcomponent.cpp \
-	XML.cpp
+	$(RBUILD_BACKEND_BASE_)backend.cpp
 
 RBUILD_COMMON_SOURCES = \
-	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_BASE_SOURCES)) \
+	$(RBUILD_BACKEND_SOURCES) \
+	$(addprefix $(RBUILD_BASE_), \
+		automaticdependency.cpp \
+		bootstrap.cpp \
+		cdfile.cpp \
+		compilerflag.cpp \
+		define.cpp \
+		exception.cpp \
+		include.cpp \
+		linkerflag.cpp \
+		module.cpp \
+		project.cpp \
+		ssprintf.cpp \
+		stubbedcomponent.cpp \
+		XML.cpp \
+		)
 
 RBUILD_SPECIAL_SOURCES = \
-	$(RBUILD_BASE)$(SEP)rbuild.cpp
+	$(RBUILD_BASE_)rbuild.cpp
 
 RBUILD_SOURCES = \
 	$(RBUILD_COMMON_SOURCES) \
 	$(RBUILD_SPECIAL_SOURCES)
 
 RBUILD_COMMON_OBJECTS = \
-	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_COMMON_SOURCES:.cpp=.o))
+	$(addprefix $(INTERMEDIATE_), $(RBUILD_COMMON_SOURCES:.cpp=.o))
 
 RBUILD_SPECIAL_OBJECTS = \
-	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_SPECIAL_SOURCES:.cpp=.o))
+	$(addprefix $(INTERMEDIATE_), $(RBUILD_SPECIAL_SOURCES:.cpp=.o))
 
 RBUILD_OBJECTS = \
 	$(RBUILD_COMMON_OBJECTS) \
@@ -76,15 +139,15 @@ RBUILD_TESTS = \
 	tests$(SEP)symboltest.cpp
 
 RBUILD_TEST_SPECIAL_SOURCES = \
-	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_TESTS)) \
-	$(RBUILD_BASE)$(SEP)tests$(SEP)alltests.cpp
+	$(addprefix $(RBUILD_BASE_), $(RBUILD_TESTS)) \
+	$(RBUILD_BASE_)tests$(SEP)alltests.cpp
 
 RBUILD_TEST_SOURCES = \
 	$(RBUILD_COMMON_SOURCES) \
 	$(RBUILD_TEST_SPECIAL_SOURCES)
 
 RBUILD_TEST_SPECIAL_OBJECTS = \
-	$(addprefix $(ROS_INTERMEDIATE), $(RBUILD_TEST_SPECIAL_SOURCES:.cpp=.o))
+	$(addprefix $(INTERMEDIATE_), $(RBUILD_TEST_SPECIAL_SOURCES:.cpp=.o))
 
 RBUILD_TEST_OBJECTS = \
 	$(RBUILD_COMMON_OBJECTS) \
@@ -97,25 +160,97 @@ RBUILD_HOST_LFLAGS = -g
 .PHONY: rbuild
 rbuild: $(RBUILD_TARGET)
 
-$(RBUILD_TARGET): $(RBUILD_OBJECTS) $(RBUILD_BASE_DIR_EXISTS)
+$(RBUILD_TARGET): $(RBUILD_OBJECTS) $(RBUILD_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TARGET)
+	${host_gpp} $(RBUILD_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
 
-$(RBUILD_COMMON_OBJECTS): %.o: %.cpp
+$(RBUILD_INT_)automaticdependency.o: $(RBUILD_BASE_)automaticdependency.cpp $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-$(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp
+$(RBUILD_INT_)bootstrap.o: $(RBUILD_BASE_)bootstrap.cpp $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
-$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_BASE_DIR_EXISTS)
-	$(ECHO_LD)
-	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $(RBUILD_TEST_TARGET)
-
-$(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp
+$(RBUILD_INT_)cdfile.o: $(RBUILD_BASE_)cdfile.cpp $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)compilerflag.o: $(RBUILD_BASE_)compilerflag.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)define.o: $(RBUILD_BASE_)define.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)exception.o: $(RBUILD_BASE_)exception.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)include.o: $(RBUILD_BASE_)include.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)linkerflag.o: $(RBUILD_BASE_)linkerflag.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)module.o: $(RBUILD_BASE_)module.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)project.o: $(RBUILD_BASE_)project.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)rbuild.o: $(RBUILD_BASE_)rbuild.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)ssprintf.o: $(RBUILD_BASE_)ssprintf.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)XML.o: $(RBUILD_BASE_)XML.cpp $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_BACKEND_INT_)backend.o: $(RBUILD_BACKEND_BASE_)backend.cpp $(RBUILD_BACKEND_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_MINGW_INT_)mingw.o: $(RBUILD_MINGW_BASE_)mingw.cpp $(RBUILD_MINGW_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_MINGW_INT_)modulehandler.o: $(RBUILD_MINGW_BASE_)modulehandler.cpp $(RBUILD_MINGW_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_DEVCPP_INT_)devcpp.o: $(RBUILD_DEVCPP_BASE_)devcpp.cpp $(RBUILD_DEVCPP_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+#$(RBUILD_COMMON_OBJECTS): %.o: %.cpp $(RBUILD_INT)
+#	$(ECHO_CC)
+#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+#$(RBUILD_SPECIAL_OBJECTS): %.o: %.cpp $(RBUILD_INT)
+#	$(ECHO_CC)
+#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+#$(RBUILD_TEST_TARGET): $(RBUILD_TEST_OBJECTS) $(RBUILD_OUT)
+#	$(ECHO_LD)
+#	${host_gpp} $(RBUILD_TEST_OBJECTS) $(RBUILD_HOST_LFLAGS) -o $@
+
+#$(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp $(RBUILD_INT)
+#	$(ECHO_CC)
+#	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 
 

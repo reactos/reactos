@@ -5,10 +5,9 @@
 #include "mingw.h"
 
 class MingwBackend;
-	
+
 extern std::string
-ReplaceExtension ( const std::string& filename,
-                   const std::string& newExtension );
+GetTargetMacro ( const Module&, bool with_dollar = true );
 
 extern std::string
 PrefixFilename (
@@ -18,332 +17,309 @@ PrefixFilename (
 class MingwModuleHandler
 {
 public:
-	typedef std::vector<std::string> string_list;
-	MingwModuleHandler ( ModuleType moduletype,
-	                     MingwBackend* backend_ );
+	MingwModuleHandler ( const Module& module_ );
 	virtual ~MingwModuleHandler();
 
+	static void SetBackend ( MingwBackend* backend_ );
 	static void SetMakefile ( FILE* f );
-	static MingwModuleHandler* InstanciateHandler ( const std::string& location,
-	                                                ModuleType moduletype_,
-	                                                MingwBackend* backend_ );
 	static void SetUsePch ( bool use_pch );
-	static MingwModuleHandler* LookupHandler ( const std::string& location,
-	                                           ModuleType moduletype_ );
+
+	static std::string PassThruCacheDirectory (
+		const std::string &f, bool out );
+
+	static std::string GetTargetFilename (
+		const Module& module,
+		string_list* pclean_files );
+
+	static std::string
+	GetImportLibraryFilename (
+		const Module& module,
+		string_list* pclean_files );
+
+	void GenerateTargetMacro();
+	void GenerateOtherMacros();
+
+	static MingwModuleHandler* InstanciateHandler ( const Module& module_,
+	                                                MingwBackend* backend_ );
 	virtual HostType DefaultHost() = 0;
-	virtual void Process ( const Module& module, string_list& clean_files ) = 0;
-	void GenerateCleanTarget ( const Module& module,
-	                           const string_list& clean_files ) const;
+	void GeneratePreconditionDependencies ();
+	virtual void Process () = 0;
+	virtual std::string TypeSpecificCFlags() { return ""; }
+	virtual std::string TypeSpecificNasmFlags() { return ""; }
+	void GenerateInvocations () const;
+	void GenerateCleanTarget () const;
 protected:
-	const std::string &PassThruCacheDirectory ( const std::string &f );
-	const std::string GetDirectoryDependency ( const std::string& file );
 	std::string GetWorkingDirectory () const;
 	std::string GetBasename ( const std::string& filename ) const;
 	std::string GetActualSourceFilename ( const std::string& filename ) const;
-	std::string GetModuleArchiveFilename ( const Module& module ) const;
+	std::string GetModuleArchiveFilename () const;
 	bool IsGeneratedFile ( const File& file ) const;
 	std::string GetImportLibraryDependency ( const Module& importedModule );
-	std::string GetModuleDependencies ( const Module& module );
-	std::string GetAllDependencies ( const Module& module ) const;
-	std::string GetSourceFilenames ( const Module& module,
-	                                 bool includeGeneratedFiles ) const;
-	std::string GetSourceFilenames ( const Module& module ) const;
-	std::string GetSourceFilenamesWithoutGeneratedFiles ( const Module& module ) const;
+	void GetModuleDependencies ( string_list& dependencies );
+	std::string GetAllDependencies () const;
+	void GetSourceFilenames ( string_list& list, bool includeGeneratedFiles = true ) const;
+	void GetSourceFilenamesWithoutGeneratedFiles ( string_list& list ) const;
+	std::string GetObjectFilename ( const std::string& sourceFilename,
+	                                string_list* pclean_files ) const;
 
-	std::string GetObjectFilenames ( const Module& module );
-	void GenerateInvocations ( const Module& module ) const;
+	std::string GetObjectFilenames ();
 	
-	std::string GetPreconditionDependenciesName ( const Module& module ) const;
-	void GeneratePreconditionDependencies ( const Module& module );
-	std::string GetCFlagsMacro ( const Module& module ) const;
-	std::string GetObjectsMacro ( const Module& module ) const;
-	std::string GetLinkingDependenciesMacro ( const Module& module ) const;
-	std::string GetLibsMacro ( const Module& module ) const;
-	std::string GetLinkerMacro ( const Module& module ) const;
-	void GenerateLinkerCommand ( const Module& module,
-	                             const std::string& target,
-	                             const std::string& dependencies,
+	std::string GetPreconditionDependenciesName () const;
+	std::string GetCFlagsMacro () const;
+	static std::string GetObjectsMacro ( const Module& );
+	std::string GetLinkingDependenciesMacro () const;
+	std::string GetLibsMacro () const;
+	std::string GetLinkerMacro () const;
+	void GenerateLinkerCommand ( const std::string& dependencies,
 	                             const std::string& linker,
 	                             const std::string& linkerParameters,
 	                             const std::string& objectsMacro,
-	                             const std::string& libsMacro,
-	                             string_list& clean_files ) const;
-	void GenerateMacrosAndTargets ( const Module& module,
-	                                const std::string* clags,
-	                                const std::string* nasmflags,
-	                                string_list& clean_files );
-	void GenerateImportLibraryTargetIfNeeded ( const Module& module, string_list& clean_files );
-	std::string GetDefinitionDependencies ( const Module& module );
-	std::string GetLinkingDependencies ( const Module& module ) const;
-  bool IsCPlusPlusModule ( const Module& module );
-  static FILE* fMakefile;
+	                             const std::string& libsMacro );
+	void GeneratePhonyTarget() const;
+	void GenerateRules ();
+	void GenerateImportLibraryTargetIfNeeded ();
+	void GetDefinitionDependencies ( string_list& dependencies ) const;
+	std::string GetLinkingDependencies () const;
+	static MingwBackend* backend;
+	static FILE* fMakefile;
 	static bool use_pch;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
 	                               const std::string& path2 ) const;
 	std::string GenerateGccDefineParametersFromVector ( const std::vector<Define*>& defines ) const;
-	std::string GenerateGccDefineParameters ( const Module& module ) const;
+	std::string GenerateGccDefineParameters () const;
 	std::string GenerateGccIncludeParametersFromVector ( const std::vector<Include*>& includes ) const;
 	std::string GenerateCompilerParametersFromVector ( const std::vector<CompilerFlag*>& compilerFlags ) const;
 	std::string GenerateLinkerParametersFromVector ( const std::vector<LinkerFlag*>& linkerFlags ) const;
 	std::string GenerateImportLibraryDependenciesFromVector ( const std::vector<Library*>& libraries );
-	std::string GenerateLinkerParameters ( const Module& module ) const;
+	std::string GenerateLinkerParameters () const;
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
 	                     const IfableData& data,
 	                     const std::vector<CompilerFlag*>* compilerFlags );
-	void GenerateMacros (
-	                      const Module& module,
-	                      const char* op,
+	void GenerateMacros ( const char* op,
 	                      const IfableData& data,
 	                      const std::vector<CompilerFlag*>* compilerFlags,
-	                      const std::vector<LinkerFlag*>* linkerFlags,
-	                      const std::string& cflags_macro,
-	                      const std::string& nasmflags_macro,
-	                      const std::string& windresflags_macro,
-	                      const std::string& linkerflags_macro,
-	                      const std::string& objs_macro,
-	                      const std::string& libs_macro,
-	                      const std::string& linkdeps_macro );
-	void GenerateMacros ( const Module& module,
-	                      const std::string& cflags_macro,
-	                      const std::string& nasmflags_macro,
-	                      const std::string& windresflags_macro,
-	                      const std::string& linkerflags_macro,
-	                      const std::string& objs_macro,
-	                      const std::string& libs_macro,
-	                      const std::string& linkDepsMacro );
-	std::string GenerateGccIncludeParameters ( const Module& module ) const;
-	std::string GenerateGccParameters ( const Module& module ) const;
-	std::string GenerateNasmParameters ( const Module& module ) const;
-	void GenerateGccCommand ( const Module& module,
-	                          const std::string& sourceFilename,
+	                      const std::vector<LinkerFlag*>* linkerFlags );
+	std::string GenerateGccIncludeParameters () const;
+	std::string GenerateGccParameters () const;
+	std::string GenerateNasmParameters () const;
+	void GenerateGccCommand ( const std::string& sourceFilename,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
-	void GenerateGccAssemblerCommand ( const Module& module,
-	                                   const std::string& sourceFilename,
+	void GenerateGccAssemblerCommand ( const std::string& sourceFilename,
 	                                   const std::string& cc,
 	                                   const std::string& cflagsMacro );
-	void GenerateNasmCommand ( const Module& module,
-	                           const std::string& sourceFilename,
+	void GenerateNasmCommand ( const std::string& sourceFilename,
 	                           const std::string& nasmflagsMacro );
-	void GenerateWindresCommand ( const Module& module,
-	                              const std::string& sourceFilename,
+	void GenerateWindresCommand ( const std::string& sourceFilename,
 	                              const std::string& windresflagsMacro );
-	void GenerateWinebuildCommands ( const Module& module,
-	                                 const std::string& sourceFilename,
-	                                 string_list& clean_files ) const;
-	void GenerateCommands ( const Module& module,
-	                        const std::string& sourceFilename,
+	void GenerateWinebuildCommands ( const std::string& sourceFilename );
+	void GenerateCommands ( const std::string& sourceFilename,
 	                        const std::string& cc,
 	                        const std::string& cppc,
 	                        const std::string& cflagsMacro,
 	                        const std::string& nasmflagsMacro,
-	                        const std::string& windresflagsMacro,
-	                        string_list& clean_files );
-	void GenerateObjectFileTargets ( const Module& module,
-	                                 const IfableData& data,
+	                        const std::string& windresflagsMacro );
+	void GenerateObjectFileTargets ( const IfableData& data,
 	                                 const std::string& cc,
 	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro,
-	                                 string_list& clean_files );
-	void GenerateObjectFileTargets ( const Module& module,
-	                                 const std::string& cc,
+	                                 const std::string& windresflagsMacro );
+	void GenerateObjectFileTargets ( const std::string& cc,
 	                                 const std::string& cppc,
 	                                 const std::string& cflagsMacro,
 	                                 const std::string& nasmflagsMacro,
-	                                 const std::string& windresflagsMacro,
-	                                 string_list& clean_files );
-	std::string GenerateArchiveTarget ( const Module& module,
-	                                    const std::string& ar,
+	                                 const std::string& windresflagsMacro );
+	std::string GenerateArchiveTarget ( const std::string& ar,
 	                                    const std::string& objs_macro ) const;
-	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
-	std::string GetDefaultDependencies ( const Module& module ) const;
-  std::string GetInvocationDependencies ( const Module& module );
-	MingwBackend* backend;
+	void GetSpecObjectDependencies ( string_list& dependencies,
+	                                 const std::string& filename ) const;
+	void GetDefaultDependencies ( string_list& dependencies ) const;
+	void GetInvocationDependencies ( const Module& module, string_list& dependencies );
+
+public:
+	const Module& module;
+	string_list clean_files;
+	std::string cflagsMacro, nasmflagsMacro, windresflagsMacro,
+		linkerflagsMacro, objectsMacro, libsMacro, linkDepsMacro;
 };
 
 
 class MingwBuildToolModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwBuildToolModuleHandler ( MingwBackend* backend );
+	MingwBuildToolModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostTrue; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateBuildToolModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateBuildToolModuleTarget ();
 };
 
 
 class MingwKernelModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwKernelModuleHandler ( MingwBackend* backend );
+	MingwKernelModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateKernelModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateKernelModuleTarget ();
 };
 
 
 class MingwStaticLibraryModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwStaticLibraryModuleHandler ( MingwBackend* backend );
+	MingwStaticLibraryModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateStaticLibraryModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateStaticLibraryModuleTarget ();
 };
 
 
 class MingwObjectLibraryModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwObjectLibraryModuleHandler ( MingwBackend* backend );
+	MingwObjectLibraryModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateObjectLibraryModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateObjectLibraryModuleTarget ();
 };
 
 
 class MingwKernelModeDLLModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwKernelModeDLLModuleHandler ( MingwBackend* backend );
+	MingwKernelModeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateKernelModeDLLModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateKernelModeDLLModuleTarget ();
 };
 
 
 class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwKernelModeDriverModuleHandler ( MingwBackend* backend );
+	MingwKernelModeDriverModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
+	std::string TypeSpecificCFlags() { return "-D__NTDRIVER__"; }
 private:
-	void GenerateKernelModeDriverModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateKernelModeDriverModuleTarget ();
 };
 
 
 class MingwNativeDLLModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwNativeDLLModuleHandler ( MingwBackend* backend );
+	MingwNativeDLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateNativeDLLModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateNativeDLLModuleTarget ();
 };
 
 
 class MingwNativeCUIModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwNativeCUIModuleHandler ( MingwBackend* backend );
+	MingwNativeCUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
+	std::string TypeSpecificCFlags() { return "-D__NTAPP__"; }
 private:
-	void GenerateNativeCUIModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateNativeCUIModuleTarget ();
 };
 
 
 class MingwWin32DLLModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwWin32DLLModuleHandler ( MingwBackend* backend );
+	MingwWin32DLLModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateExtractWineDLLResourcesTarget ( const Module& module, string_list& clean_files );
-	void GenerateWin32DLLModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateExtractWineDLLResourcesTarget ();
+	void GenerateWin32DLLModuleTarget ();
 };
 
 
 class MingwWin32CUIModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwWin32CUIModuleHandler ( MingwBackend* backend );
+	MingwWin32CUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateWin32CUIModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateWin32CUIModuleTarget ();
 };
 
 
 class MingwWin32GUIModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwWin32GUIModuleHandler ( MingwBackend* backend );
+	MingwWin32GUIModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateWin32GUIModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateWin32GUIModuleTarget ();
 };
 
 
 class MingwBootLoaderModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwBootLoaderModuleHandler ( MingwBackend* backend );
+	MingwBootLoaderModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateBootLoaderModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateBootLoaderModuleTarget ();
 };
 
 
 class MingwBootSectorModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwBootSectorModuleHandler ( MingwBackend* backend );
+	MingwBootSectorModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
+	std::string TypeSpecificNasmFlags() { return "-f bin"; }
 private:
-	void GenerateBootSectorModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateBootSectorModuleTarget ();
 };
 
 
 class MingwIsoModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwIsoModuleHandler ( MingwBackend* backend );
+	MingwIsoModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateIsoModuleTarget ( const Module& module, string_list& clean_files );
-	std::string GetBootstrapCdDirectories ( const std::string& bootcdDirectory,
-	                                        const Module& module );
-	std::string GetNonModuleCdDirectories ( const std::string& bootcdDirectory,
-	                                        const Module& module );
-	std::string GetCdDirectories ( const std::string& bootcdDirectory,
-	                               const Module& module );
-	void GetBootstrapCdFiles ( std::vector<std::string>& out,
-	                           const Module& module ) const;
-	void GetNonModuleCdFiles ( std::vector<std::string>& out,
-	                           const Module& module ) const;
-	void GetCdFiles ( std::vector<std::string>& out,
-	                  const Module& module ) const;
-	void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory,
-	                                       const Module& module );
-	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory,
-	                                const Module& module );
+	void GenerateIsoModuleTarget ();
+	std::string GetBootstrapCdDirectories ( const std::string& bootcdDirectory );
+	std::string GetNonModuleCdDirectories ( const std::string& bootcdDirectory );
+	std::string GetCdDirectories ( const std::string& bootcdDirectory );
+	void GetBootstrapCdFiles ( std::vector<std::string>& out ) const;
+	void GetNonModuleCdFiles ( std::vector<std::string>& out ) const;
+	void GetCdFiles ( std::vector<std::string>& out ) const;
+	void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory );
+	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory );
 };
 
 class MingwTestModuleHandler : public MingwModuleHandler
 {
 public:
-	MingwTestModuleHandler ( MingwBackend* backend );
+	MingwTestModuleHandler ( const Module& module );
 	virtual HostType DefaultHost() { return HostFalse; }
-	virtual void Process ( const Module& module, string_list& clean_files );
+	virtual void Process ();
 private:
-	void GenerateTestModuleTarget ( const Module& module, string_list& clean_files );
+	void GenerateTestModuleTarget ();
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

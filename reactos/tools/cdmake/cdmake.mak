@@ -1,22 +1,30 @@
-CDMAKE_BASE = $(TOOLS_BASE)$(SEP)cdmake
+CDMAKE_BASE = $(TOOLS_BASE_)cdmake
+CDMAKE_BASE_ = $(CDMAKE_BASE)$(SEP)
+CDMAKE_INT = $(INTERMEDIATE_)$(CDMAKE_BASE)
+CDMAKE_INT_ = $(CDMAKE_INT)$(SEP)
+CDMAKE_OUT = $(OUTPUT_)$(CDMAKE_BASE)
+CDMAKE_OUT_ = $(CDMAKE_OUT)$(SEP)
 
-CDMAKE_BASE_DIR = $(INTERMEDIATE)$(CDMAKE_BASE)
-CDMAKE_BASE_DIR_EXISTS = $(CDMAKE_BASE_DIR)$(SEP)$(EXISTS)
-
-$(CDMAKE_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+$(CDMAKE_INT): $(TOOLS_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(CDMAKE_BASE_DIR)
-	@echo . >$@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(CDMAKE_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 CDMAKE_TARGET = \
-	$(CDMAKE_BASE_DIR)$(SEP)cdmake$(EXEPOSTFIX)
+	$(EXEPREFIX)$(CDMAKE_OUT_)cdmake$(EXEPOSTFIX)
 
-CDMAKE_SOURCES = \
-	$(CDMAKE_BASE)$(SEP)cdmake.c \
-	$(CDMAKE_BASE)$(SEP)llmosrt.c
+CDMAKE_SOURCES = $(addprefix $(CDMAKE_BASE_), \
+	cdmake.c \
+	llmosrt.c \
+	)
 
 CDMAKE_OBJECTS = \
-	$(addprefix $(INTERMEDIATE), $(CDMAKE_SOURCES:.c=.o))
+	$(addprefix $(INTERMEDIATE_), $(CDMAKE_SOURCES:.c=.o))
 
 CDMAKE_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 
@@ -25,15 +33,15 @@ CDMAKE_HOST_LFLAGS = -g
 .PHONY: cdmake
 cdmake: $(CDMAKE_TARGET)
 
-$(CDMAKE_TARGET): $(CDMAKE_OBJECTS)
+$(CDMAKE_TARGET): $(CDMAKE_OBJECTS) $(CDMAKE_OUT)
 	$(ECHO_LD)
 	${host_gcc} $(CDMAKE_OBJECTS) $(CDMAKE_HOST_LFLAGS) -o $@
 
-$(CDMAKE_BASE_DIR)$(SEP)cdmake.o: $(CDMAKE_BASE)$(SEP)cdmake.c $(CDMAKE_BASE_DIR_EXISTS)
+$(CDMAKE_INT_)cdmake.o: $(CDMAKE_BASE_)cdmake.c $(CDMAKE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CDMAKE_HOST_CFLAGS) -c $< -o $@
 
-$(CDMAKE_BASE_DIR)$(SEP)llmosrt.o: $(CDMAKE_BASE)$(SEP)llmosrt.c $(CDMAKE_BASE_DIR_EXISTS)
+$(CDMAKE_INT_)llmosrt.o: $(CDMAKE_BASE_)llmosrt.c $(CDMAKE_INT)
 	$(ECHO_CC)
 	${host_gcc} $(CDMAKE_HOST_CFLAGS) -c $< -o $@
 

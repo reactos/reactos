@@ -22,6 +22,8 @@
 #include "exception.h"
 #include "XML.h"
 
+typedef std::vector<std::string> string_list;
+
 #ifdef WIN32
 #define EXEPREFIX ""
 #define EXEPOSTFIX ".exe"
@@ -180,7 +182,7 @@ public:
 	std::string GetBasePath () const;
 	std::string GetPath () const;
 	std::string GetPathWithPrefix ( const std::string& prefix ) const;
-	std::string GetTargets () const;
+	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
 	void InvokeModule () const;
@@ -278,7 +280,7 @@ public:
 	         const Module& _module );
 
 	void ProcessXML();
-	std::string GetTargets () const;
+	void GetTargets ( string_list& targets ) const;
 	std::string GetParameters () const;
 private:
 	void ProcessXMLSubElement ( const XMLElement& e );
@@ -561,6 +563,11 @@ public:
 
 extern std::string
 FixSeparator ( const std::string& s );
+
+extern std::string
+ReplaceExtension (
+	const std::string& filename,
+	const std::string& newExtension );
 
 extern std::string
 GetSubPath (

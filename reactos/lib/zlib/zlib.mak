@@ -1,29 +1,31 @@
-ZLIB_BASE = lib$(SEP)zlib
+ZLIB_BASE = $(LIB_BASE_)zlib
+ZLIB_BASE_ = $(ZLIB_BASE)$(SEP)
 
-ZLIB_BASE_DIR = $(INTERMEDIATE)$(ZLIB_BASE)
+ZLIB_INT = $(INTERMEDIATE_)$(ZLIB_BASE)
+ZLIB_OUT = $(OUTPUT_)$(ZLIB_BASE)
 
-
-#$(ZLIB_BASE_DIR): $(INTERMEDIATE_NO_SLASH) $(RMKDIR_TARGET)
+#$(ZLIB_INT): $(INTERMEDIATE_NO_SLASH) $(RMKDIR_TARGET)
 #	${mkdir} $(INTERMEDIATE)$(ZLIB_BASE)
 
 ZLIB_HOST_TARGET = \
-	$(INTERMEDIATE)$(ZLIB_BASE)$(SEP)zlib.host.a
+	$(ZLIB_OUT)$(SEP)zlib.host.a
 
-ZLIB_HOST_SOURCES = \
-	$(ZLIB_BASE)$(SEP)adler32.c \
-	$(ZLIB_BASE)$(SEP)compress.c \
-	$(ZLIB_BASE)$(SEP)crc32.c \
-	$(ZLIB_BASE)$(SEP)gzio.c \
-	$(ZLIB_BASE)$(SEP)uncompr.c \
-	$(ZLIB_BASE)$(SEP)deflate.c \
-	$(ZLIB_BASE)$(SEP)trees.c \
-	$(ZLIB_BASE)$(SEP)zutil.c \
-	$(ZLIB_BASE)$(SEP)inflate.c \
-	$(ZLIB_BASE)$(SEP)infblock.c \
-	$(ZLIB_BASE)$(SEP)inftrees.c \
-	$(ZLIB_BASE)$(SEP)infcodes.c \
-	$(ZLIB_BASE)$(SEP)infutil.c \
-	$(ZLIB_BASE)$(SEP)inffast.c
+ZLIB_HOST_SOURCES = $(addprefix $(ZLIB_BASE_), \
+	adler32.c \
+	compress.c \
+	crc32.c \
+	gzio.c \
+	uncompr.c \
+	deflate.c \
+	trees.c \
+	zutil.c \
+	inflate.c \
+	infblock.c \
+	inftrees.c \
+	infcodes.c \
+	infutil.c \
+	inffast.c \
+	)
 
 ZLIB_HOST_OBJECTS = \
 	$(ZLIB_HOST_SOURCES:.c=.o)
@@ -34,9 +36,9 @@ ZLIB_HOST_CFLAGS = -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
 .PHONY: zlib_host
 zlib_host: $(ZLIB_HOST_TARGET)
 
-$(ZLIB_HOST_TARGET): $(ZLIB_HOST_BASE_DIR) $(ZLIB_HOST_OBJECTS)
+$(ZLIB_HOST_TARGET): $(ZLIB_HOST_OBJECTS) $(ZLIB_OUT)
 	$(ECHO_AR)
-	$(host_ar) -r $(ZLIB_HOST_TARGET) $(ZLIB_HOST_OBJECTS)
+	$(host_ar) -r $@ $(ZLIB_HOST_OBJECTS)
 
 $(ZLIB_HOST_OBJECTS): %.o : %.c $(ZLIB_BASE_DIR)
 	$(ECHO_CC)

@@ -1,30 +1,38 @@
-NCI_BASE = $(TOOLS_BASE)$(SEP)nci
+NCI_BASE = $(TOOLS_BASE_)nci
+NCI_BASE_ = $(NCI_BASE)$(SEP)
+NCI_INT = $(INTERMEDIATE_)$(NCI_BASE)
+NCI_INT_ = $(NCI_INT)$(SEP)
+NCI_OUT = $(OUTPUT_)$(NCI_BASE)
+NCI_OUT_ = $(NCI_OUT)$(SEP)
 
-NCI_BASE_DIR = $(INTERMEDIATE)$(NCI_BASE)
-NCI_BASE_DIR_EXISTS = $(NCI_BASE_DIR)$(SEP)$(EXISTS)
+$(NCI_INT): $(TOOLS_INT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
 
-$(NCI_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXIST)
-	${mkdir} $(NCI_BASE_DIR)
-	@echo . > $@
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(NCI_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 NCI_TARGET = \
-	$(NCI_BASE_DIR)$(SEP)nci$(EXEPOSTFIX)
+	$(EXEPREFIX)$(NCI_OUT_)nci$(EXEPOSTFIX)
 
 NCI_SOURCES = \
-	$(NCI_BASE)$(SEP)ncitool.c
+	$(NCI_BASE_)ncitool.c
 
 NCI_OBJECTS = \
-    $(addprefix $(INTERMEDIATE), $(NCI_SOURCES:.c=.o))
+    $(addprefix $(INTERMEDIATE_), $(NCI_SOURCES:.c=.o))
 
 NCI_HOST_CFLAGS = -Iinclude -g -Werror -Wall
 
 NCI_HOST_LFLAGS = -g
 
-$(NCI_TARGET): $(NCI_OBJECTS)
+$(NCI_TARGET): $(NCI_OBJECTS) $(NCI_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_CFLAGS) -o $(NCI_TARGET)
+	${host_gcc} $(NCI_OBJECTS) $(NCI_HOST_LFLAGS) -o $@
 
-$(NCI_BASE_DIR)$(SEP)ncitool.o: $(NCI_BASE)$(SEP)ncitool.c $(NCI_BASE_DIR_EXISTS)
+$(NCI_INT_)ncitool.o: $(NCI_BASE_)ncitool.c $(NCI_INT)
 	$(ECHO_CC)
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
@@ -34,13 +42,13 @@ nci_clean:
 clean: nci_clean
 
 # WIN32K.SYS
-WIN32K_SVC_DB = $(NCI_BASE)$(SEP)w32ksvc.db
+WIN32K_SVC_DB = $(NCI_BASE_)w32ksvc.db
 WIN32K_SERVICE_TABLE = subsys$(SEP)win32k$(SEP)main$(SEP)svctab.c
 WIN32K_GDI_STUBS = lib$(SEP)gdi32$(SEP)misc$(SEP)win32k.S
 WIN32K_USER_STUBS = lib$(SEP)user32$(SEP)misc$(SEP)win32k.S
 
 # NTOSKRNL.EXE
-KERNEL_SVC_DB = $(NCI_BASE)$(SEP)sysfuncs.lst
+KERNEL_SVC_DB = $(NCI_BASE_)sysfuncs.lst
 KERNEL_SERVICE_TABLE = include$(SEP)ntdll$(SEP)napi.h
 NTDLL_STUBS = lib$(SEP)ntdll$(SEP)napi.S
 KERNEL_STUBS = ntoskrnl$(SEP)ex$(SEP)zw.S

@@ -100,7 +100,7 @@ ifeq ($(HOST),mingw32-linux)
 	EXEPREFIX = ./
 	EXEPOSTFIX =
 	SEP = /
-	nmkdir = -$(Q)mkdir -p
+	mkdir = -$(Q)mkdir -p
 	gcc = $(Q)mingw32-gcc
 	gpp = $(Q)mingw32-g++
 	ld = $(Q)mingw32-ld
@@ -116,7 +116,7 @@ else # mingw32-windows
 	EXEPOSTFIX = .exe
 	ROS_EMPTY =
 	SEP = \$(ROS_EMPTY)
-	nmkdir = -$(Q)mkdir
+	mkdir = -$(Q)mkdir
 	gcc = $(Q)gcc
 	gpp = $(Q)g++
 	ld = $(Q)ld
@@ -130,28 +130,26 @@ else # mingw32-windows
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
-  INTERMEDIATE = .$(SEP)$(ROS_INTERMEDIATE)$(SEP)
-  INTERMEDIATE_NO_SLASH := $(ROS_INTERMEDIATE)
+  INTERMEDIATE := $(ROS_INTERMEDIATE)
 else
-  INTERMEDIATE = obj-i386$(SEP)
-  INTERMEDIATE_NO_SLASH = obj-i386
+  INTERMEDIATE := obj-i386
 endif
+INTERMEDIATE_ := $(INTERMEDIATE)$(SEP)
 
 ifneq ($(ROS_OUTPUT),)
-  OUTPUT = $(ROS_OUTPUT)$(SEP)
-  OUTPUT_NO_SLASH = $(ROS_OUTPUT)
+  OUTPUT := $(ROS_OUTPUT)
 else
-  OUTPUT = obj-i386$(SEP)
-  OUTPUT_NO_SLASH = obj-i386
+  OUTPUT := obj-i386
 endif
+OUTPUT_ := $(OUTPUT)$(SEP)
 
-mkdir = -$(Q)$(INTERMEDIATE)rmkdir
-EXISTS = .exists
-INTERMEDIATE_EXISTS = $(INTERMEDIATE)$(EXISTS)
+$(INTERMEDIATE):
+	${mkdir} $@
 
-$(INTERMEDIATE_EXISTS):
-	-${nmkdir} $(INTERMEDIATE_NO_SLASH) 2>$(NUL) >$(NUL)
-	@echo . > $@
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(OUTPUT):
+	${mkdir} $@
+endif
 
 NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = lib$(SEP)kernel32$(SEP)kernel32.mc
@@ -161,6 +159,7 @@ BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
 ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
 ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 
+include lib/lib.mak
 include tools/tools.mak
 -include makefile.auto
 

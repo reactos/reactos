@@ -1,46 +1,54 @@
-BUILDNO_BASE = $(TOOLS_BASE)$(SEP)buildno
+BUILDNO_BASE = $(TOOLS_BASE_)buildno
+BUILDNO_BASE_ = $(BUILDNO_BASE)$(SEP)
+BUILDNO_INT = $(INTERMEDIATE_)$(BUILDNO_BASE)
+BUILDNO_INT_ = $(BUILDNO_INT)$(SEP)
+BUILDNO_OUT = $(OUTPUT_)$(BUILDNO_BASE)
+BUILDNO_OUT_ = $(BUILDNO_OUT)$(SEP)
 
-BUILDNO_BASE_DIR = $(INTERMEDIATE)$(BUILDNO_BASE)
-BUILDNO_BASE_DIR_EXISTS = $(BUILDNO_BASE_DIR)$(SEP)$(EXISTS)
-
-$(BUILDNO_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+$(BUILDNO_INT): $(TOOLS_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(BUILDNO_BASE_DIR)
-	@echo. > $@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(BUILDNO_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 BUILDNO_TARGET = \
-	$(BUILDNO_BASE_DIR)$(SEP)buildno$(EXEPOSTFIX)
+	$(EXEPREFIX)$(BUILDNO_OUT_)buildno$(EXEPOSTFIX)
 
-BUILDNO_SOURCES = \
-	$(BUILDNO_BASE)$(SEP)buildno.cpp \
-	$(BUILDNO_BASE)$(SEP)exception.cpp \
-	$(BUILDNO_BASE)$(SEP)ssprintf.cpp \
-	$(BUILDNO_BASE)$(SEP)XML.cpp
+BUILDNO_SOURCES = $(addprefix $(BUILDNO_BASE_), \
+	buildno.cpp \
+	exception.cpp \
+	ssprintf.cpp \
+	XML.cpp \
+	)
 
 BUILDNO_OBJECTS = \
-  $(addprefix $(INTERMEDIATE), $(BUILDNO_SOURCES:.cpp=.o))
+  $(addprefix $(INTERMEDIATE_), $(BUILDNO_SOURCES:.cpp=.o))
 
 BUILDNO_HOST_CFLAGS = -Iinclude/reactos -g -Werror -Wall
 
 BUILDNO_HOST_LFLAGS = -g
 
-$(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
+$(BUILDNO_TARGET): $(BUILDNO_OBJECTS) $(BUILDNO_OUT)
 	$(ECHO_LD)
-	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $(BUILDNO_TARGET)
+	${host_gpp} $(BUILDNO_OBJECTS) $(BUILDNO_HOST_LFLAGS) -o $@
 
-$(BUILDNO_BASE_DIR)$(SEP)buildno.o: $(BUILDNO_BASE)$(SEP)buildno.cpp $(BUILDNO_BASE_DIR_EXISTS)
+$(BUILDNO_INT_)buildno.o: $(BUILDNO_BASE_)buildno.cpp $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_BASE_DIR)$(SEP)exception.o: $(BUILDNO_BASE)$(SEP)exception.cpp $(BUILDNO_BASE_DIR_EXISTS)
+$(BUILDNO_INT_)exception.o: $(BUILDNO_BASE_)exception.cpp $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_BASE_DIR)$(SEP)ssprintf.o: $(BUILDNO_BASE)$(SEP)ssprintf.cpp $(BUILDNO_BASE_DIR_EXISTS)
+$(BUILDNO_INT_)ssprintf.o: $(BUILDNO_BASE_)ssprintf.cpp $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-$(BUILDNO_BASE_DIR)$(SEP)XML.o: $(BUILDNO_BASE)$(SEP)XML.cpp $(BUILDNO_BASE_DIR_EXISTS)
+$(BUILDNO_INT_)XML.o: $(BUILDNO_BASE_)XML.cpp $(BUILDNO_INT)
 	$(ECHO_CC)
 	${host_gpp} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 

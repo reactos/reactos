@@ -1,47 +1,55 @@
-WPP_BASE = $(TOOLS_BASE)$(SEP)wpp
+WPP_BASE = $(TOOLS_BASE_)wpp
+WPP_BASE_ = $(WPP_BASE)$(SEP)
+WPP_INT = $(INTERMEDIATE_)$(WPP_BASE)
+WPP_INT_ = $(WPP_INT)$(SEP)
+WPP_OUT = $(OUTPUT_)$(WPP_BASE)
+WPP_OUT_ = $(WPP_OUT)$(SEP)
 
-WPP_BASE_DIR = $(INTERMEDIATE)$(WPP_BASE)
-WPP_BASE_DIR_EXISTS = $(WPP_BASE_DIR)$(SEP)$(EXISTS)
-
-$(WPP_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+$(WPP_INT): $(TOOLS_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(WPP_BASE_DIR)
-	@echo . > $@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(WPP_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 WPP_TARGET = \
-	$(WPP_BASE_DIR)$(SEP)libwpp.a
+	$(WPP_OUT_)libwpp.a
 
-WPP_SOURCES = \
-	$(WPP_BASE)$(SEP)lex.yy.c \
-	$(WPP_BASE)$(SEP)preproc.c \
-	$(WPP_BASE)$(SEP)wpp.c \
-	$(WPP_BASE)$(SEP)wpp.tab.c
+WPP_SOURCES = $(addprefix $(WPP_BASE_), \
+	lex.yy.c \
+	preproc.c \
+	wpp.c \
+	wpp.tab.c \
+	)
 
 WPP_OBJECTS = \
-    $(addprefix $(INTERMEDIATE), $(WPP_SOURCES:.c=.o))
+    $(addprefix $(INTERMEDIATE_), $(WPP_SOURCES:.c=.o))
 
 WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine -g
 
 .PHONY: wpp
 wpp: $(WPP_TARGET)
 
-$(WPP_TARGET): $(WPP_OBJECTS)
+$(WPP_TARGET): $(WPP_OBJECTS) $(WPP_OUT)
 	$(ECHO_AR)
 	${host_ar} -rc $(WPP_TARGET) $(WPP_OBJECTS)
 
-$(WPP_BASE_DIR)$(SEP)lex.yy.o: $(WPP_BASE)$(SEP)lex.yy.c $(WPP_BASE_DIR_EXISTS)
+$(WPP_INT_)lex.yy.o: $(WPP_BASE_)lex.yy.c $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_BASE_DIR)$(SEP)preproc.o: $(WPP_BASE)$(SEP)preproc.c $(WPP_BASE_DIR_EXISTS)
+$(WPP_INT_)preproc.o: $(WPP_BASE_)preproc.c $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_BASE_DIR)$(SEP)wpp.o: $(WPP_BASE)$(SEP)wpp.c $(WPP_BASE_DIR_EXISTS)
+$(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_BASE_DIR)$(SEP)wpp.tab.o: $(WPP_BASE)$(SEP)wpp.tab.c $(WPP_BASE_DIR_EXISTS)
+$(WPP_INT_)wpp.tab.o: $(WPP_BASE_)wpp.tab.c $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 

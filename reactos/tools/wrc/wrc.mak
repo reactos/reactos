@@ -1,27 +1,41 @@
-WRC_BASE = $(TOOLS_BASE)$(SEP)wrc
+WRC_BASE = $(TOOLS_BASE_)wrc
+WRC_BASE_ = $(WRC_BASE)$(SEP)
+WRC_INT = $(INTERMEDIATE_)$(WRC_BASE)
+WRC_INT_ = $(WRC_INT)$(SEP)
+WRC_OUT = $(OUTPUT_)$(WRC_BASE)
+WRC_OUT_ = $(WRC_OUT)$(SEP)
 
-WRC_BASE_DIR = $(INTERMEDIATE)$(WRC_BASE)
-WRC_BASE_DIR_EXISTS = $(WRC_BASE_DIR)$(SEP)$(EXISTS)
-
-$(WRC_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+$(WRC_INT): $(TOOLS_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(WRC_BASE_DIR)
-	@echo . > $@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(WRC_OUT): $(TOOLS_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 WRC_PORT_BASE = $(WRC_BASE)$(SEP)port
+WRC_PORT_BASE_ = $(WRC_PORT_BASE)$(SEP)
+WRC_PORT_INT = $(INTERMEDIATE_)$(WRC_PORT_BASE)
+WRC_PORT_INT_ = $(WRC_PORT_INT)$(SEP)
+WRC_PORT_OUT = $(OUTPUT_)$(WRC_PORT_BASE)
+WRC_PORT_OUT_ = $(WRC_PORT_OUT)$(SEP)
 
-WRC_PORT_BASE_DIR = $(INTERMEDIATE)$(WRC_PORT_BASE)
-WRC_PORT_BASE_DIR_EXISTS = $(WRC_PORT_BASE_DIR)$(SEP)$(EXISTS)
-
-$(WRC_PORT_BASE_DIR_EXISTS): $(WRC_BASE_DIR_EXISTS)
+$(WRC_PORT_INT): $(WRC_INT)
 	$(ECHO_MKDIR)
-	${mkdir} $(WRC_PORT_BASE_DIR)
-	@echo . > $@
+	${mkdir} $@
+
+ifneq ($(INTERMEDIATE),$(OUTPUT))
+$(WRC_PORT_OUT): $(WRC_OUT)
+	$(ECHO_MKDIR)
+	${mkdir} $@
+endif
 
 WRC_TARGET = \
-	$(WRC_BASE_DIR)$(SEP)wrc$(EXEPOSTFIX)
+	$(EXEPREFIX)$(WRC_BASE_)wrc$(EXEPOSTFIX)
 
-WRC_SOURCES = $(addprefix $(WRC_BASE)$(SEP), \
+WRC_SOURCES = $(addprefix $(WRC_BASE_), \
 	dumpres.c \
 	genres.c \
 	newstruc.c \
@@ -36,7 +50,7 @@ WRC_SOURCES = $(addprefix $(WRC_BASE)$(SEP), \
 	)
 
 WRC_OBJECTS = \
-  $(addprefix $(INTERMEDIATE), $(WRC_SOURCES:.c=.o))
+  $(addprefix $(INTERMEDIATE_), $(WRC_SOURCES:.c=.o))
 
 WRC_HOST_CFLAGS = -I$(WRC_BASE) -g -Werror -Wall \
                   -D__USE_W32API -DWINE_UNICODE_API= \
@@ -46,54 +60,56 @@ WRC_HOST_CFLAGS = -I$(WRC_BASE) -g -Werror -Wall \
 
 WRC_HOST_LFLAGS = -g
 
+WRC_LIBS = $(UNICODE_TARGET) $(WPP_TARGET)
+
 .PHONY: wrc
 wrc: $(WRC_TARGET)
 
-$(WRC_TARGET): $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET)
+$(WRC_TARGET): $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_OUT)
 	$(ECHO_LD)
-	${host_gcc} $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET) $(WRC_HOST_LFLAGS) -o $@
+	${host_gcc} $(WRC_OBJECTS) $(WRC_LIBS) $(WRC_HOST_LFLAGS) -o $@
 
-$(WRC_BASE_DIR)$(SEP)dumpres.o: $(WRC_BASE)$(SEP)dumpres.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)dumpres.o: $(WRC_BASE_)dumpres.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)genres.o: $(WRC_BASE)$(SEP)genres.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)genres.o: $(WRC_BASE_)genres.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)newstruc.o: $(WRC_BASE)$(SEP)newstruc.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)newstruc.o: $(WRC_BASE_)newstruc.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)readres.o: $(WRC_BASE)$(SEP)readres.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)readres.o: $(WRC_BASE_)readres.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)translation.o: $(WRC_BASE)$(SEP)translation.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)translation.o: $(WRC_BASE_)translation.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)utils.o: $(WRC_BASE)$(SEP)utils.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)utils.o: $(WRC_BASE_)utils.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)wrc.o: $(WRC_BASE)$(SEP)wrc.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)wrc.o: $(WRC_BASE_)wrc.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)writeres.o: $(WRC_BASE)$(SEP)writeres.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)writeres.o: $(WRC_BASE_)writeres.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)y.tab.o: $(WRC_BASE)$(SEP)y.tab.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)y.tab.o: $(WRC_BASE_)y.tab.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_BASE_DIR)$(SEP)lex.yy.o: $(WRC_BASE)$(SEP)lex.yy.c $(WRC_BASE_DIR_EXISTS)
+$(WRC_INT_)lex.yy.o: $(WRC_BASE_)lex.yy.c $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_PORT_BASE_DIR)$(SEP)mkstemps.o: $(WRC_PORT_BASE)$(SEP)mkstemps.c $(WRC_PORT_BASE_DIR_EXISTS)
+$(WRC_PORT_INT_)mkstemps.o: $(WRC_PORT_BASE_)mkstemps.c $(WRC_PORT_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 

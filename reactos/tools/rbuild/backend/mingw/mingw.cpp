@@ -3,12 +3,75 @@
 
 #include "mingw.h"
 #include <assert.h>
+#include "modulehandler.h"
 
 using std::string;
 using std::vector;
 using std::set;
+using std::map;
 
 typedef set<string> set_string;
+typedef map<string,Directory*> directory_map;
+
+class Directory
+{
+public:
+	string name;
+	directory_map subdirs;
+	Directory ( const string& name );
+	void Add ( const char* subdir );
+	void CreateRule ( FILE* f, const string& parent );
+};
+
+Directory::Directory ( const string& name_ )
+	: name(name_)
+{
+}
+
+void Directory::Add ( const char* subdir )
+{
+	const char* p = strpbrk ( subdir, "/\\" );
+	if ( !p )
+		p = subdir + strlen(subdir);
+	string s ( subdir, p-subdir );
+	if ( subdirs.find(s) == subdirs.end() )
+		subdirs[s] = new Directory(s);
+	if ( *p && *++p )
+		subdirs[s]->Add ( p );
+}
+
+void
+Directory::CreateRule ( FILE* f, const string& parent )
+{
+	string path;
+
+	if ( parent.size() )
+	{
+		fprintf ( f,
+			"%s%c%s: %s\n",
+			parent.c_str (),
+			CSEP,
+			name.c_str (),
+			parent.c_str () );
+
+		fprintf ( f,
+			"\t$(ECHO_MKDIR)\n" );
+
+		fprintf ( f,
+			"\t${mkdir} $@\n" );
+
+		path = parent + SSEP + name;
+	}
+	else
+		path = name;
+
+	for ( directory_map::iterator i = subdirs.begin();
+		i != subdirs.end();
+		++i )
+	{
+		i->second->CreateRule ( f, path );
+	}
+}
 
 static class MingwFactory : public Backend::Factory
 {
@@ -22,33 +85,82 @@ public:
 
 
 MingwBackend::MingwBackend ( Project& project )
-	: Backend ( project )
+	: Backend ( project ),
+	  int_directories ( new Directory("$(INTERMEDIATE)") ),
+	  out_directories ( new Directory("$(OUTPUT)") )
 {
 }
 
-void
-MingwBackend::CreateDirectoryTargetIfNotYetCreated ( const string& directory )
+MingwBackend::~MingwBackend()
 {
-	directories.insert ( directory );
+	delete int_directories;
+	delete out_directories;
 }
 
+string
+MingwBackend::AddDirectoryTarget ( const string& directory, bool out )
+{
+	const char* dir_name = "$(INTERMEDIATE)";
+	Directory* dir = int_directories;
+	if ( out )
+	{
+		dir_name = "$(OUTPUT)";
+		dir = out_directories;
+	}
+	dir->Add ( directory.c_str() );
+	return dir_name;
+}
 
 void
 MingwBackend::Process ()
 {
+	size_t i;
+
 	DetectPCHSupport();
 
 	CreateMakefile ();
 	GenerateHeader ();
 	GenerateGlobalVariables ();
-	GenerateAllTarget ();
-	GenerateInitTarget ();
 	GenerateXmlBuildFilesMacro();
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+
+	vector<MingwModuleHandler*> v;
+
+	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		ProcessModule ( module );
+		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
+			module,
+			this );
+		if ( module.host == HostDefault )
+		{
+			module.host = h->DefaultHost();
+			assert ( module.host != HostDefault );
+		}
+		v.push_back ( h );
 	}
+
+	size_t iend = v.size ();
+
+	for ( i = 0; i < iend; i++ )
+		v[i]->GenerateTargetMacro();
+	fprintf ( fMakefile, "\n" );
+
+	GenerateAllTarget ( v );
+	GenerateInitTarget ();
+
+	for ( i = 0; i < iend; i++ )
+		v[i]->GenerateOtherMacros();
+
+	for ( i = 0; i < iend; i++ )
+	{
+		MingwModuleHandler& h = *v[i];
+		h.GeneratePreconditionDependencies ();
+		h.Process ();
+		h.GenerateInvocations ();
+		h.GenerateCleanTarget ();
+		delete v[i];
+	}
+
 	GenerateDirectoryTargets ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -60,6 +172,7 @@ MingwBackend::CreateMakefile ()
 	fMakefile = fopen ( ProjectNode.makefile.c_str (), "w" );
 	if ( !fMakefile )
 		throw AccessDeniedException ( ProjectNode.makefile );
+	MingwModuleHandler::SetBackend ( this );
 	MingwModuleHandler::SetMakefile ( fMakefile );
 	MingwModuleHandler::SetUsePch ( use_pch );
 }
@@ -129,7 +242,7 @@ MingwBackend::GenerateGlobalCFlagsAndProperties (
 	if ( data.includes.size() || data.defines.size() )
 	{
 		GenerateProjectCFlagsMacro ( assignmentOperation,
-                                     data );
+		                             data );
 	}
 
 	for ( i = 0; i < data.ifs.size(); i++ )
@@ -171,15 +284,6 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-#define TOOL_PREFIX "$(Q)$(INTERMEDIATE)tools" SSEP
-	fprintf ( fMakefile, "winebuild = " TOOL_PREFIX "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "bin2res = " TOOL_PREFIX "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cabman = " TOOL_PREFIX "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "cdmake = " TOOL_PREFIX "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "regtests = " TOOL_PREFIX "regtests" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "rsym = " TOOL_PREFIX "rsym" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "wrc = " TOOL_PREFIX "wrc" SSEP "wrc" EXEPOSTFIX "\n" );
-	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",
 		ProjectNode.non_if_data );
@@ -202,20 +306,21 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 }
 
 void
-MingwBackend::GenerateAllTarget () const
+MingwBackend::GenerateAllTarget ( const vector<MingwModuleHandler*>& handlers ) const
 {
 	fprintf ( fMakefile, "all:" );
 	int wrap_count = 0;
-	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	size_t iend = handlers.size ();
+	for ( size_t i = 0; i < iend; i++ )
 	{
-		Module& module = *ProjectNode.modules[i];
+		const Module& module = handlers[i]->module;
 		if ( IncludeInAllTarget ( module ) )
 		{
 			if ( wrap_count++ == 5 )
 				fprintf ( fMakefile, " \\\n\t\t" ), wrap_count = 0;
 			fprintf ( fMakefile,
 			          " %s",
-			          FixupTargetFilename ( module.GetPath () ).c_str () );
+			          GetTargetMacro(module).c_str () );
 		}
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
@@ -244,8 +349,7 @@ MingwBackend::GenerateInitTarget () const
 	fprintf ( fMakefile,
 	          "INIT = %s\n",
 	          GetBuildToolDependencies ().c_str () );
-	fprintf ( fMakefile,
-	          "\n" );
+	fprintf ( fMakefile, "\n" );
 }
 
 void
@@ -272,8 +376,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 			          xmlbuildFilenames.c_str ());
 			if ( i == ProjectNode.xmlbuildfiles.size () - 1 )
 			{
-				fprintf ( fMakefile,
-				          "\n" );
+				fprintf ( fMakefile, "\n" );
 			}
 			else
 			{
@@ -285,8 +388,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		}
 		numberOfExistingFiles++;
 	}
-	fprintf ( fMakefile,
-	          "\n" );
+	fprintf ( fMakefile, "\n" );
 }
 
 void
@@ -297,27 +399,10 @@ MingwBackend::CheckAutomaticDependencies ()
 	automaticDependency.CheckAutomaticDependencies ();
 }
 
-void
-MingwBackend::ProcessModule ( Module& module )
-{
-	MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
-		module.node.location,
-		module.type,
-	    this );
-	MingwModuleHandler::string_list clean_files;
-	if ( module.host == HostDefault )
-	{
-		module.host = h->DefaultHost();
-		assert ( module.host != HostDefault );
-	}
-	h->Process ( module, clean_files );
-	h->GenerateCleanTarget ( module, clean_files );
-}
-
 bool
 MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
 {
-	if ( directory == "$(INTERMEDIATE)tools")
+	if ( directory == "$(INTERMEDIATE)" SSEP "tools")
 		return false;
 	else
 		return true;
@@ -326,7 +411,15 @@ MingwBackend::IncludeDirectoryTarget ( const string& directory ) const
 void
 MingwBackend::GenerateDirectoryTargets ()
 {
-	if ( directories.size () == 0 )
+	// TODO FIXME - write new directory creation
+	for ( int i = 0; i < 2; i++ )
+	{
+		Directory& d = *(!i ? int_directories : out_directories);
+		if ( i ) fprintf ( fMakefile, "ifneq ($(INTERMEDIATE),$(OUTPUT))\n" );
+		d.CreateRule ( fMakefile, "" );
+		if ( i ) fprintf ( fMakefile, "endif\n" );
+	}
+	/*if ( directories.size () == 0 )
 		return;
 	
 	set_string::iterator i;
@@ -345,13 +438,13 @@ MingwBackend::GenerateDirectoryTargets ()
 		}
 	}
 
-	directories.clear ();
+	directories.clear ();*/
 }
 
 string
 FixupTargetFilename ( const string& targetFilename )
 {
-	return string("$(INTERMEDIATE)") + NormalizeFilename ( targetFilename );
+	return NormalizeFilename ( targetFilename );
 }
 
 void

@@ -20,6 +20,24 @@ FixSeparator ( const string& s )
 }
 
 string
+ReplaceExtension (
+	const string& filename,
+	const string& newExtension )
+{
+	size_t index = filename.find_last_of ( '/' );
+	if ( index == string::npos )
+		index = 0;
+	size_t index2 = filename.find_last_of ( '\\' );
+	if ( index2 != string::npos && index2 > index )
+		index = index2;
+	string tmp = filename.substr( index /*, filename.size() - index*/ );
+	size_t ext_index = tmp.find_last_of( '.' );
+	if ( ext_index != string::npos )
+		return filename.substr ( 0, index + ext_index ) + newExtension;
+	return filename + newExtension;
+}
+
+string
 GetSubPath (
 	const string& location,
 	const string& path,
@@ -542,11 +560,12 @@ Module::GetDependencyPath () const
 {
 	if ( HasImportLibrary () )
 	{
-		return ssprintf ( "dk%cnkm%clib%clib%s.a",
+		return ReplaceExtension ( GetPath(), ".a" );
+		/*return ssprintf ( "dk%cnkm%clib%clib%s.a",
 		                  CSEP,
 		                  CSEP,
 		                  CSEP,
-		                  name.c_str () );
+		                  name.c_str () );*/
 	}
 	else
 		return GetPath();
@@ -570,23 +589,19 @@ Module::GetPathWithPrefix ( const string& prefix ) const
 	return path + CSEP + prefix + GetTargetName ();
 }
 
-string
-Module::GetTargets () const
+void
+Module::GetTargets ( string_list& targets ) const
 {
 	if ( invocations.size () > 0 )
 	{
-		string targets ( "" );
 		for ( size_t i = 0; i < invocations.size (); i++ )
 		{
 			Invoke& invoke = *invocations[i];
-			if ( targets.length () > 0 )
-				targets += " ";
-			targets += invoke.GetTargets ();
+			invoke.GetTargets ( targets );
 		}
-		return targets;
 	}
 	else
-		return GetPath ();
+		targets.push_back ( GetPath () );
 }
 
 string
@@ -751,23 +766,20 @@ Invoke::ProcessXMLSubElementOutput ( const XMLElement& e )
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
-		throw InvalidBuildFileException ( e.location,
-		                                  "<%s> cannot have sub-elements",
-		                                  e.name.c_str() );
+		throw InvalidBuildFileException (
+			e.location,
+			"<%s> cannot have sub-elements",
+			e.name.c_str() );
 }
 
-string
-Invoke::GetTargets () const
+void
+Invoke::GetTargets ( string_list& targets ) const
 {
-	string targets ( "" );
 	for ( size_t i = 0; i < output.size (); i++ )
 	{
 		InvokeFile& file = *output[i];
-		if ( targets.length () > 0 )
-			targets += " ";
-		targets += NormalizeFilename ( file.name );
+		targets.push_back ( NormalizeFilename ( file.name ) );
 	}
-	return targets;
 }
 
 string
@@ -782,8 +794,7 @@ Invoke::GetParameters () const
 		InvokeFile& invokeFile = *output[i];
 		if ( invokeFile.switches.length () > 0 )
 		{
-			parameters += invokeFile.switches;
-			parameters += " ";
+			parameters += invokeFile.switches + " ";
 		}
 		parameters += invokeFile.name;
 	}
