@@ -578,9 +578,9 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	PARTITION_TABLE_ENTRY PartitionTableEntry;
 	ULONG rosPartition;
  
-    extern ULONG PageDirectoryStart;
-    extern ULONG PageDirectoryEnd;
-    extern BOOLEAN AcpiPresent;
+	extern ULONG PageDirectoryStart;
+	extern ULONG PageDirectoryEnd;
+	extern BOOLEAN AcpiPresent;
 
 	//
 	// Open the operating system section
@@ -597,7 +597,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Setup multiboot information structure
 	 */
 	LoaderBlock.Flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
-	if (AcpiPresent) LoaderBlock.Flags |= MB_INFO_FLAG_ACPI_TABLE;
 	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
 	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
 	LoaderBlock.BootDevice = 0xffffffff;
@@ -736,6 +735,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 */
 	MachHwDetect();
 
+	if (AcpiPresent) LoaderBlock.Flags |= MB_INFO_FLAG_ACPI_TABLE;
 
 	UiDrawStatusText("Loading...");
 	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
