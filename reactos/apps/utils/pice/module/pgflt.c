@@ -187,7 +187,9 @@ ULONG HandlePageFault(FRAME* ptr)
 	}
 
 	// lookup VMA for this address
-	vma = &(tsk->AddressSpace);
+	if( address > KERNEL_BASE )
+	  vma = my_init_mm;                // use kernel mem area for kernel addresses	    
+	else vma = &(tsk->AddressSpace);   // otherwise, use user memory area
 	if( !vma || !(IsAddressValid((ULONG)vma))){
 		DPRINT((0,"vma not valid: vma: %x\n", vma));
 		return 0;
