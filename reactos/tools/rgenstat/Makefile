@@ -26,8 +26,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del *.o
-	del rgenstat$(EXE_POSTFIX)
+	-del *.o
+	-del rgenstat$(EXE_POSTFIX)
 endif
 
 web/apistatus.html: web/apistatus.xml web/rapistatus.xsl

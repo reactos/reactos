@@ -26,8 +26,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del *.o
-	del create_nls$(EXE_POSTFIX)
+	-del *.o
+	-del create_nls$(EXE_POSTFIX)
 endif
 
 .phony: clean
@@ -43,7 +43,7 @@ clean_nls:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean_nls:
-	del ..\..\media\nls\*.nls
+	-del ..\..\media\nls\*.nls
 endif
 
 .phony: clean_nls

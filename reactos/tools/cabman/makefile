@@ -40,8 +40,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del *.o
-	del cabman$(EXE_POSTFIX)
+	-del *.o
+	-del cabman$(EXE_POSTFIX)
 endif
 
 .phony: clean

@@ -29,8 +29,8 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
-	del *.o
-	del cdmake$(EXE_POSTFIX)
+	-del *.o
+	-del cdmake$(EXE_POSTFIX)
 endif
 
 .phony: clean
