@@ -18,7 +18,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: bootvid.c,v 1.7 2004/03/04 18:55:08 navaraf Exp $
+ * $Id: bootvid.c,v 1.8 2004/05/15 22:45:50 hbirr Exp $
  */
 
 /* INCLUDES ******************************************************************/
@@ -123,7 +123,7 @@ InbvMapVideoMemory(VOID)
    PHYSICAL_ADDRESS PhysicalAddress;
 
    PhysicalAddress.QuadPart = 0xA0000;
-   VideoMemory = MmMapIoSpace(PhysicalAddress, 0x10000, FALSE);
+   VideoMemory = MmMapIoSpace(PhysicalAddress, 0x10000, MmNonCached);
 
    return VideoMemory != NULL;
 }

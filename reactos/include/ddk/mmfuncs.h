@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.21 2004/04/20 19:04:11 gdalsnes Exp $ */
+/* $Id: mmfuncs.h,v 1.22 2004/05/15 22:45:51 hbirr Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -356,7 +356,7 @@ STDCALL
 MmMapIoSpace (
 	PHYSICAL_ADDRESS	PhysicalAddress,
 	ULONG			NumberOfBytes,
-	BOOLEAN			CacheEnable
+	MEMORY_CACHING_TYPE 	CacheEnable
 	);
 /*
  * FUNCTION: Maps the pages described by a given MDL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.26 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: iospace.c,v 1.27 2004/05/15 22:45:49 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -52,7 +52,7 @@
  *  Number of bytes to map;
  *  
  * CacheEnable
- *  TRUE if the range can be cached.
+ *  Type of memory caching.
  *
  * RETURN VALUE
  * The base virtual address which maps the region.
@@ -68,9 +68,10 @@
 PVOID STDCALL
 MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
               IN ULONG NumberOfBytes,
-              IN BOOLEAN CacheEnable)
+              IN MEMORY_CACHING_TYPE CacheEnable)
 {
    PVOID Result;
+   ULONG Offset;
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
@@ -79,9 +80,20 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 
    DPRINT("MmMapIoSpace(%lx, %d, %d)\n", PhysicalAddress, NumberOfBytes, CacheEnable);
 
+   if (CacheEnable != MmNonCached &&
+       CacheEnable != MmCached &&
+       CacheEnable != MmWriteCombined)
+   {
+      return NULL;
+   }
+
    BoundaryAddressMultiple.QuadPart = 0;
-   MmLockAddressSpace(MmGetKernelAddressSpace());
    Result = NULL;
+   Offset = PhysicalAddress.u.LowPart % PAGE_SIZE;
+   NumberOfBytes += Offset;
+   PhysicalAddress.QuadPart -= Offset;
+
+   MmLockAddressSpace(MmGetKernelAddressSpace());
    Status = MmCreateMemoryArea (NULL,
                                 MmGetKernelAddressSpace(),
                                 MEMORY_AREA_IO_MAPPING,
@@ -100,43 +112,23 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
       return (NULL);
    }
    Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
-   if (!CacheEnable)
+   if (CacheEnable != MmCached)
    {
       Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
    }
-   for (i = 0; (i < (PAGE_ROUND_UP(NumberOfBytes) / PAGE_SIZE)); i++)
+   for (i = 0; i < PAGE_ROUND_UP(NumberOfBytes); i += PAGE_SIZE, PhysicalAddress.QuadPart += PAGE_SIZE)
    {
-#if !defined(__GNUC__)
-      PHYSICAL_ADDRESS dummyJunkNeeded;
-      dummyJunkNeeded.QuadPart = PhysicalAddress.QuadPart + (i * PAGE_SIZE);
-#endif
-
-      Status =
-         MmCreateVirtualMappingForKernel((char*)Result + (i * PAGE_SIZE),
-                                         Attributes,
-#if defined(__GNUC__)
-                                         (PHYSICAL_ADDRESS)
-                                         (PhysicalAddress.QuadPart +
-                                          (i * PAGE_SIZE))
-#else
-                                         dummyJunkNeeded
-#endif
-                                        );
+      Status = MmCreateVirtualMappingForKernel((char*)Result + i,
+                                               Attributes,
+                                               PhysicalAddress);
       if (!NT_SUCCESS(Status))
       {
          DbgPrint("Unable to create virtual mapping\n");
          KEBUGCHECK(0);
       }
-#if defined(__GNUC__)
-      MmMarkPageMapped((PHYSICAL_ADDRESS) (PhysicalAddress.QuadPart +
-                                           (i * PAGE_SIZE)));
-#else
-
-      MmMarkPageMapped(dummyJunkNeeded);
-#endif
-
+      MmMarkPageMapped(PhysicalAddress);
    }
-   return ((PVOID)((char*)Result + PhysicalAddress.QuadPart % PAGE_SIZE));
+   return ((PVOID)((char*)Result + Offset));
 }
 
 
@@ -168,9 +160,14 @@ VOID STDCALL
 MmUnmapIoSpace (IN PVOID BaseAddress,
                 IN ULONG NumberOfBytes)
 {
+   ULONG Offset;
+   Offset = (ULONG_PTR)BaseAddress % PAGE_SIZE;
+   BaseAddress = (PVOID)((PUCHAR)BaseAddress - Offset);
+   NumberOfBytes += Offset;
+
    MmLockAddressSpace(MmGetKernelAddressSpace());
    MmFreeMemoryArea(MmGetKernelAddressSpace(),
-                    (PVOID)(((ULONG)BaseAddress / PAGE_SIZE) * PAGE_SIZE),
+                    BaseAddress,
                     NumberOfBytes,
                     NULL,
                     NULL);

@@ -714,7 +714,7 @@ NdisMMapIoSpace(
   PAGED_CODE();
   ASSERT(VirtualAddress && MiniportAdapterHandle);
 
-  *VirtualAddress = MmMapIoSpace(PhysicalAddress, Length, FALSE);
+  *VirtualAddress = MmMapIoSpace(PhysicalAddress, Length, MmNonCached);
 
   if(!*VirtualAddress)
     return NDIS_STATUS_RESOURCES;
@@ -887,7 +887,7 @@ NdisMRegisterIoPortRange(
   NDIS_DbgPrint(MAX_TRACE, ("calling MmMapIoSpace\n"));
 
   *PortOffset = 0;
-  *PortOffset = MmMapIoSpace(TranslatedAddress, NumberOfPorts, 0);
+  *PortOffset = MmMapIoSpace(TranslatedAddress, NumberOfPorts, MmNonCached);
   NDIS_DbgPrint(MAX_TRACE, ("Returning 0x%x for port range\n", *PortOffset));
 
   if(!*PortOffset)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.55 2004/04/23 14:29:07 hbirr Exp $
+/* $Id: scsiport.c,v 1.56 2004/05/15 22:45:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -346,7 +346,7 @@ ScsiPortGetDeviceBase(IN PVOID HwDeviceExtension,
 
   MappedAddress = MmMapIoSpace(TranslatedAddress,
 			       NumberOfBytes,
-			       FALSE);
+			       MmNonCached);
 
   DeviceBase = ExAllocatePool(NonPagedPool,
 			      sizeof(SCSI_PORT_DEVICE_BASE));

@@ -148,7 +148,7 @@ acpi_os_map_memory(ACPI_PHYSICAL_ADDRESS phys, u32 size, void **virt)
   }
 
   Address.QuadPart = (ULONG)phys;
-  *virt = MmMapIoSpace(Address, size, FALSE);
+  *virt = MmMapIoSpace(Address, size, MmNonCached);
   if (!*virt)
     return AE_ERROR;
  

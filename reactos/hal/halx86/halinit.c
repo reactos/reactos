@@ -1,4 +1,4 @@
-/* $Id: halinit.c,v 1.7 2004/03/18 19:58:35 dwelch Exp $
+/* $Id: halinit.c,v 1.8 2004/05/15 22:45:51 hbirr Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -73,7 +73,7 @@ HalInitSystem (ULONG BootPhase,
       /* Go to blue screen */
       HalClearDisplay (0x17); /* grey on blue */
       
-      HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, FALSE);
+      HalpZeroPageMapping = MmMapIoSpace((LARGE_INTEGER)0LL, PAGE_SIZE, MmNonCached);
     }
 
   return TRUE;
