@@ -396,23 +396,4 @@ typedef struct _EPROCESS
 #define PROCESS_STATE_TERMINATED (1)
 #define PROCESS_STATE_ACTIVE     (2)
 
-// Added by PJS 
-// Thread priority adjustments, relative to process base priority
-
-#define THREAD_PRIORITY_IDLE			-15		// Idle thread priority, within priority class
-#define THREAD_PRIORITY_LOWEST			-2		// Extra low thread priority
-#define THREAD_PRIORITY_BELOW_NORMAL	-1		// Slightly lower priority
-#define THREAD_PRIORITY_NORMAL			0		// No priority change
-#define THREAD_PRIORITY_ABOVE_NORMAL	1		// Boost some
-#define THREAD_PRIORITY_HIGHEST			2		// Boost more
-#define THREAD_PRIORITY_TIME_CRITICAL	15		// Maximum boost, within priority class
-
-// Process base priority classes, compatable with windows, dont ask where they got these values.
-
-#define REALTIME_PRIORITY_CLASS			0x00000020		// Real Time priority class
-#define HIGH_PRIORITY_CLASS				0x00000040		// High priority class
-#define NORMAL_PRIORITY_CLASS			0x00000080		// Default process priority class
-#define IDLE_PRIORITY_CLASS				0x00000100		// Idle Priority class
-
 #endif /* __INCLUDE_DDK_PSTYPES_H */
-
