@@ -1,9 +1,14 @@
-#include <windows.h>
+/* $Id: regedt32.rc,v 1.8 2004/10/16 22:30:18 gvg Exp $ */
+
 #include <reactos/resource.h>
+
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Registry Editor 32 by Robert Dickenson\0"
+#define REACTOS_STR_INTERNAL_NAME	"regedt32\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"regedt32.exe\0"
+#include <reactos/version.rc>
 
 //Microsoft Developer Studio generated resource script.
 //
-#include "resource.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -178,49 +183,6 @@ BEGIN
 END
 
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
-	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x40004L
- FILETYPE 0x1L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
-            VALUE "CompanyName", RES_STR_COMPANY_NAME
-            VALUE "FileDescription", "ReactOS Registry Editor 32 by Robert Dickenson\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "regedt32\0"
-            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "regedt32.exe\0"
-            VALUE "PrivateBuild", "\0"
-            VALUE "ProductName",	RES_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
-            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0xc09, 1200
-    END
-END
 
 
 /////////////////////////////////////////////////////////////////////////////

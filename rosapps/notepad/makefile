@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2004/03/17 01:28:13 sedwards Exp $
+# $Id: makefile,v 1.5 2004/10/16 22:30:18 gvg Exp $
 
 PATH_TO_TOP = ../../reactos
 
@@ -23,5 +23,12 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+# EOF
+
+
+# EOF
+
+
 
 # EOF

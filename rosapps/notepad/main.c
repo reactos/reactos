@@ -353,3 +353,4 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     }
     return msg.wParam;
 }
+

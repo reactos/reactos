@@ -1,43 +1,9 @@
-/* $Id: notevil.rc,v 1.13 2003/10/11 21:06:18 gvg Exp $ */
-#include <windows.h>
-#include "../../reactos/include/reactos/resource.h"
+/* $Id: notevil.rc,v 1.14 2004/10/16 22:30:18 gvg Exp $ */
 
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-/* Version information. */
-
-VS_VERSION_INFO VERSIONINFO
-	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
-	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
-	FILEFLAGSMASK	0x3fL
-#ifdef _DEBUG
-	FILEFLAGS	0x1L
-#else
-	FILEFLAGS	0x0L
-#endif
-	FILEOS		0x40004L
-	FILETYPE	0x2L
-	FILESUBTYPE	0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904b0"
-        BEGIN
-            VALUE "CompanyName",	RES_STR_COMPANY_NAME
-            VALUE "FileDescription",	"ReactOS Coders Console Parade\0"
-            VALUE "FileVersion",	RES_STR_PRODUCT_VERSION
-            VALUE "InternalName",	"notevil\0"
-            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
-            VALUE "OriginalFilename",	"notevil.exe\0"
-            VALUE "ProductName",	RES_STR_PRODUCT_NAME
-            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Coders Console Parade\0"
+#define REACTOS_STR_INTERNAL_NAME	"notevil\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"notevil.exe\0"
+#include <reactos/version.rc>
 
 /*
  * String table
