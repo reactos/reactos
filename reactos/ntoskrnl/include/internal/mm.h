@@ -39,10 +39,6 @@ typedef ULONG SWAPENTRY;
 #define NR_SECTION_PAGE_TABLES           (1024)
 #define NR_SECTION_PAGE_ENTRIES          (1024)
 
-/*
- * Flags for section objects
- */
-#define SO_PHYSICAL_MEMORY                      (0x1)
 
 /*
  * Additional flags for protection attributes
@@ -72,6 +68,10 @@ typedef struct
 
 #define MM_PAGEFILE_SECTION    (0x1)
 #define MM_IMAGE_SECTION       (0x2)
+/*
+ * Flags for section objects
+ */
+#define SO_PHYSICAL_MEMORY                      (0x4)
 
 #define MM_SECTION_SEGMENT_BSS (0x1)
 
@@ -506,5 +506,8 @@ MmCreatePageFileMapping(PEPROCESS Process,
 			PVOID Address,
 			SWAPENTRY SwapEntry);
 BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address);
+VOID
+MmTransferOwnershipPage(PVOID PhysicalAddress, ULONG NewConsumer);
+VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address);
 
 #endif

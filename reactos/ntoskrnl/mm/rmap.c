@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.2 2002/01/01 03:29:15 dwelch Exp $
+/* $Id: rmap.c,v 1.3 2002/01/08 00:49:00 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -94,7 +94,8 @@ MmPageOutPhysicalAddress(PVOID PhysicalAddress)
       /*
        * Get or create a pageop
        */
-      PageOp = MmGetPageOp(MemoryArea, 0, 0, MemoryArea->Data.SectionData.Segment, 
+      PageOp = MmGetPageOp(MemoryArea, 0, 0, 
+			   MemoryArea->Data.SectionData.Segment, 
 			   Offset.u.LowPart, MM_PAGEOP_PAGEOUT);
       if (PageOp == NULL)
 	{
@@ -119,7 +120,8 @@ MmPageOutPhysicalAddress(PVOID PhysicalAddress)
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutSectionView(&Process->AddressSpace, MemoryArea, Address, PageOp);
+      Status = MmPageOutSectionView(&Process->AddressSpace, MemoryArea, 
+				    Address, PageOp);
     }
   else if (Type == MEMORY_AREA_VIRTUAL_MEMORY)
     {
@@ -142,7 +144,8 @@ MmPageOutPhysicalAddress(PVOID PhysicalAddress)
       /*
        * Do the actual page out work.
        */
-      Status = MmPageOutVirtualMemory(&Process->AddressSpace, MemoryArea, Address, PageOp);
+      Status = MmPageOutVirtualMemory(&Process->AddressSpace, MemoryArea, 
+				      Address, PageOp);
     }
   else
     {
@@ -157,6 +160,8 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
   PMM_RMAP_ENTRY current_entry;
   PMM_RMAP_ENTRY new_entry;
 
+  Address = (PVOID)PAGE_ROUND_DOWN(Address);
+
   new_entry = ExAllocatePool(NonPagedPool, sizeof(MM_RMAP_ENTRY));
   if (new_entry == NULL)
     {
@@ -165,11 +170,13 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
   new_entry->Address = Address;
   new_entry->Process = Process;
 
-  if (MmGetPhysicalAddressForProcess(Process, Address)!= (ULONG)PhysicalAddress)
+  if (MmGetPhysicalAddressForProcess(Process, Address) != 
+      (ULONG)PhysicalAddress)
     {
-      DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical address 0x%.8X\n",
-	      Process->UniqueProcessId, Address, 
-	      MmGetPhysicalAddressForProcess(Process, Address), PhysicalAddress)
+      DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical "
+	      "address 0x%.8X\n", Process->UniqueProcessId, Address, 
+	      MmGetPhysicalAddressForProcess(Process, Address), 
+	      PhysicalAddress)
       KeBugCheck(0);
     }
 
@@ -182,20 +189,27 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
 
 VOID
 MmDeleteAllRmaps(PVOID PhysicalAddress, PVOID Context, 
-		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, PVOID Address))
+		 VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process, 
+				       PVOID Address))
 {
   PMM_RMAP_ENTRY current_entry;
   PMM_RMAP_ENTRY previous_entry;
 
   ExAcquireFastMutex(&RmapListLock);
   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
+  if (current_entry == NULL)
+    {
+      DPRINT1("MmDeleteAllRmaps: No rmaps.\n");
+      KeBugCheck(0);
+    }
   while (current_entry != NULL)
     {
       previous_entry = current_entry;
       current_entry = current_entry->Next;
       if (DeleteMapping)
 	{
-	  DeleteMapping(Context, previous_entry->Process, previous_entry->Address);
+	  DeleteMapping(Context, previous_entry->Process, 
+			previous_entry->Address);
 	}
       ExFreePool(previous_entry);
     }
@@ -213,7 +227,8 @@ MmDeleteRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
   current_entry = MmGetRmapListHeadPage(PhysicalAddress);
   while (current_entry != NULL)
     {
-      if (current_entry->Process == Process && current_entry->Address == Address)
+      if (current_entry->Process == Process && 
+	  current_entry->Address == Address)
 	{
 	  if (previous_entry == NULL)
 	    {

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.34 2001/11/02 22:44:34 hbirr Exp $
+/* $Id: create.c,v 1.35 2002/01/08 00:49:01 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -579,12 +579,14 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   PVFATCCB pCcb;
   PVFATFCB pFcb;
   PWCHAR c;
+  BOOLEAN PagingFileCreate = FALSE;
 
   Stack = IoGetCurrentIrpStackLocation (Irp);
   assert (Stack);
   RequestedDisposition = ((Stack->Parameters.Create.Options >> 24) & 0xff);
   RequestedOptions =
     Stack->Parameters.Create.Options & FILE_VALID_OPTION_FLAGS;
+  PagingFileCreate = (Stack->Flags & SL_OPEN_PAGING_FILE) ? TRUE : FALSE;
   if ((RequestedOptions & FILE_DIRECTORY_FILE)
       && RequestedDisposition == FILE_SUPERSEDE)
     return STATUS_INVALID_PARAMETER;
@@ -693,6 +695,42 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	 Cluster = NextCluster;
        }
     }
+
+    /*
+     * If this create was for a paging file then make sure all the
+     * information needed to manipulate it is locked in memory.
+     */
+    if (PagingFileCreate)
+      {
+	ULONG CurrentCluster, NextCluster, i;
+
+	pFcb->Flags |= FCB_IS_PAGE_FILE;
+	pFcb->FatChainSize = 
+	  ((pFcb->entry.FileSize / DeviceExt->BytesPerCluster) + 2);
+	pFcb->FatChain = ExAllocatePool(NonPagedPool, 
+					pFcb->FatChainSize * sizeof(ULONG));
+
+	if (DeviceExt->FatType == FAT32)
+	  {
+	    CurrentCluster = pFcb->entry.FirstCluster + 
+	      pFcb->entry.FirstClusterHigh * 65536;
+	  }
+	else
+	  {
+	    CurrentCluster = pFcb->entry.FirstCluster;
+	  }
+
+	i = 0;
+	while (CurrentCluster != 0xffffffff)
+	  {
+	    Status = GetNextCluster (DeviceExt, CurrentCluster, &NextCluster, 
+				     FALSE);
+	    pFcb->FatChain[i] = NextCluster;
+	    i++;
+	    CurrentCluster = NextCluster;
+	  }
+	pFcb->FatChain[i] = 0xFFFFFFFF;
+      }
 
     /*
      * Check the file has the requested attributes

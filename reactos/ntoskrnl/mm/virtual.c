@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.53 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: virtual.c,v 1.54 2002/01/08 00:49:01 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -172,7 +172,8 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
      {
-       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", Status);
+       DPRINT1("MM: Failed to write to swap page (Status was 0x%.8X)\n", 
+	       Status);
        MmEnableVirtualMapping(MemoryArea->Process, Address);
        PageOp->Status = STATUS_UNSUCCESSFUL;
        KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -187,6 +188,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
+   MmSetSavedSwapEntryPage(PhysicalAddress, 0);
    MmReleasePageMemoryConsumer(MC_USER, PhysicalAddress);
    PageOp->Status = STATUS_SUCCESS;
    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -331,6 +333,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	 {
 	   KeBugCheck(0);
 	 }
+       MmSetSavedSwapEntryPage(Page, SwapEntry);
      }
    
    /*

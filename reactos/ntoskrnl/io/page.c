@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.13 2001/10/10 21:56:59 hbirr Exp $
+/* $Id: page.c,v 1.14 2002/01/08 00:49:00 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -89,7 +89,7 @@ IoPageRead(PFILE_OBJECT FileObject,
 			      IoFileObjectType,
 			      UserMode);
    
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   KeInitializeEvent(&Event, NotificationEvent, FALSE);
    Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_READ,
 					     FileObject->DeviceObject,
 					     Mdl,
@@ -100,7 +100,7 @@ IoPageRead(PFILE_OBJECT FileObject,
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    DPRINT("Before IoCallDriver\n");
-   Status = IoCallDriver(FileObject->DeviceObject,Irp);
+   Status = IoCallDriver(FileObject->DeviceObject, Irp);
    DPRINT("Status %d STATUS_PENDING %d\n",Status,STATUS_PENDING);
    if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {

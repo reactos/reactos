@@ -10,7 +10,11 @@ typedef const CHAR *LPCSTR;
 typedef const WCHAR *LPCWSTR;
 typedef unsigned int *LPBOOL;
 
+#ifndef __unix__
 #define STDCALL __attribute__((stdcall))
+#else
+#define STDCALL
+#endif
 
 int STDCALL MultiByteToWideChar(
   UINT CodePage,

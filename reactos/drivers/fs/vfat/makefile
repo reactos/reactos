@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.36 2001/11/02 22:47:36 hbirr Exp $
+# $Id: makefile,v 1.37 2002/01/08 00:49:01 dwelch Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -25,6 +25,8 @@ TARGET_OBJECTS = \
   misc.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
+
+TARGET_CFLAGS = -g
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.11 2001/11/02 22:40:50 hbirr Exp $
+/* $Id: fcb.c,v 1.12 2002/01/08 00:49:01 dwelch Exp $
  *
  *
  * FILE:             fcb.c
@@ -218,7 +218,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
     while (CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
       Size += pVCB->BytesPerCluster;
-      Status = NextCluster (pVCB, FirstCluster, &CurrentCluster, FALSE);
+      Status = NextCluster (pVCB, NULL, FirstCluster, &CurrentCluster, FALSE);
     }
   }
   else
@@ -304,7 +304,7 @@ vfatMakeFCBFromDirEntry(PVCB  vcb,
       while (CurrentCluster != 0xffffffff)
       {
          Size += vcb->BytesPerCluster;
-         Status = NextCluster (vcb, FirstCluster, &CurrentCluster, FALSE);
+         Status = NextCluster (vcb, NULL, FirstCluster, &CurrentCluster, FALSE);
       }
     }
   }

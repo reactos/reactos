@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: balance.c,v 1.4 2002/01/01 00:21:55 dwelch Exp $
+/* $Id: balance.c,v 1.5 2002/01/08 00:49:00 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -130,7 +130,8 @@ MiTrimMemoryConsumer(ULONG Consumer)
 {
   LONG Target;
 
-  Target = MiMemoryConsumers[Consumer].PagesUsed - MiMemoryConsumers[Consumer].PagesTarget;
+  Target = MiMemoryConsumers[Consumer].PagesUsed - 
+    MiMemoryConsumers[Consumer].PagesTarget;
   if (Target < 0)
     {
       Target = 1;
@@ -254,6 +255,7 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait, PVOID* AllocatedPag
 	{
 	  KeBugCheck(0);
 	}
+      MmTransferOwnershipPage(Page, Consumer);
       *AllocatedPage = Page;
       return(STATUS_SUCCESS);
     }

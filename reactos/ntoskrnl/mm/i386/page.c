@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.33 2002/01/01 03:29:15 dwelch Exp $
+/* $Id: page.c,v 1.34 2002/01/08 00:49:01 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -239,7 +239,7 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
        if (Address >= KERNEL_BASE &&
 	   MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] != 0)
 	 {
-	   (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
+ 	   (*Pde) = MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)];
 	   FLUSH_TLB;
 	 }
        else
@@ -505,7 +505,14 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
     */
    if (WasDirty != NULL)
      {
-       *WasDirty = Pte & PA_DIRTY;
+       if (Pte & PA_DIRTY)
+	 {
+	   *WasDirty = TRUE;
+	 }
+       else
+	 {
+	   *WasDirty = FALSE;
+	 }
      }
    if (PhysicalAddr != NULL)
      {
@@ -514,7 +521,8 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 }
 
 VOID
-MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, SWAPENTRY* SwapEntry) 
+MmDeletePageFileMapping(PEPROCESS Process, PVOID Address, 
+			SWAPENTRY* SwapEntry) 
 /*
  * FUNCTION: Delete a virtual mapping 
  */
@@ -741,6 +749,24 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
      }
 }
 
+VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
+{
+   PULONG PageEntry;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
+   
+   if (Process != CurrentProcess)
+     {
+	KeAttachProcess(Process);
+     }
+   PageEntry = MmGetPageEntry(Address);
+   (*PageEntry) = (*PageEntry) | PA_DIRTY;
+   FLUSH_TLB;
+   if (Process != CurrentProcess)
+     {
+	KeDetachProcess();
+     }
+}
+
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
    PULONG PageEntry;
@@ -850,10 +876,10 @@ MmCreatePageFileMapping(PEPROCESS Process,
 			PVOID Address,
 			SWAPENTRY SwapEntry)
 {
-   PEPROCESS CurrentProcess;
-   PULONG Pte;
-   NTSTATUS Status;
-
+  PEPROCESS CurrentProcess;
+  PULONG Pte;
+  NTSTATUS Status;
+  
   if (Process != NULL)
     {
       CurrentProcess = PsGetCurrentProcess();
@@ -951,8 +977,9 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    Attributes = ProtectToPTE(flProtect);
    if (!(Attributes & PA_PRESENT) && PhysicalAddress != 0)
      {
-       DPRINT1("Setting physical address but not allowing access at address 0x%.8X "
-	       "with attributes %x/%x.\n", Address, Attributes, flProtect);
+       DPRINT1("Setting physical address but not allowing access at address "
+	       "0x%.8X with attributes %x/%x.\n", 
+	       Address, Attributes, flProtect);
        KeBugCheck(0);
      }
    

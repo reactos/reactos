@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.34 2002/01/01 00:21:55 dwelch Exp $
+/* $Id: view.c,v 1.35 2002/01/08 00:49:00 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -105,13 +105,15 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 	{
 	  continue;
 	}
-      if (current->MappedCount > 0 || current->Dirty || current->ReferenceCount > 0)
+      if (current->MappedCount > 0 || current->Dirty || 
+	  current->ReferenceCount > 0)
 	{
 	  ExReleaseFastMutex(&current->Lock);
 	  continue;
 	}
       ExReleaseFastMutex(&current->Lock);
-      DPRINT("current->Bcb->CacheSegmentSize %d\n", current->Bcb->CacheSegmentSize);
+      DPRINT("current->Bcb->CacheSegmentSize %d\n", 
+	     current->Bcb->CacheSegmentSize);
       PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
       CcRosInternalFreeCacheSegment(current->Bcb, current);      
       DPRINT("CcRosTrimCache(): Freed %d\n", PagesPerSegment);
@@ -143,7 +145,8 @@ CcRosReleaseCacheSegment(PBCB Bcb,
    ExReleaseFastMutex(&CacheSeg->Lock);
    ExAcquireFastMutex(&ViewLock);
    RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
-   InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
+   InsertTailList(&CacheSegmentLRUListHead, 
+		  &CacheSeg->CacheSegmentLRUListEntry);
    ExReleaseFastMutex(&ViewLock);
    InterlockedDecrement(&CacheSeg->ReferenceCount);
 

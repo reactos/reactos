@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.14 2001/12/31 19:06:47 dwelch Exp $
+/* $Id: pagefile.c,v 1.15 2002/01/08 00:49:00 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -80,7 +80,7 @@ static ULONG MiReservedSwapPages;
 
 /*
  * Number of pages that can be used for potentially swapable memory without
- * pagefile space being reserved. The intention is that is allows smss
+ * pagefile space being reserved. The intention is that this allows smss
  * to start up and create page files while ordinarily having a commit
  * ratio of one.
  */
@@ -115,6 +115,18 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
+
+   if (i > MAX_PAGING_FILES)
+     {
+       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
+       KeBugCheck(0);
+     }
+   if (PagingFileList[i]->FileObject == NULL ||
+       PagingFileList[i]->FileObject->DeviceObject == NULL)
+     {
+       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
+       KeBugCheck(0);
+     }
    
    file_offset.QuadPart = offset * 4096;
      
@@ -141,6 +153,18 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    
    i = FILE_FROM_ENTRY(SwapEntry);
    offset = OFFSET_FROM_ENTRY(SwapEntry);
+
+   if (i > MAX_PAGING_FILES)
+     {
+       DPRINT1("Bad swap entry 0x%.8X\n", SwapEntry);
+       KeBugCheck(0);
+     }
+   if (PagingFileList[i]->FileObject == NULL ||
+       PagingFileList[i]->FileObject->DeviceObject == NULL)
+     {
+       DPRINT1("Bad paging file 0x%.8X\n", SwapEntry);
+       KeBugCheck(0);
+     }
    
    file_offset.QuadPart = offset * 4096;
      
@@ -204,7 +228,6 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 {
    KIRQL oldIrql;
    ULONG i, j;
-   static BOOLEAN SwapSpaceMessage = FALSE;
    
    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
    
@@ -229,11 +252,6 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
      }
    
    KeReleaseSpinLock(&PagingFile->AllocMapLock, oldIrql);
-   if (!SwapSpaceMessage)
-     {
-       DPRINT1("MM: Out of swap space.\n");
-       SwapSpaceMessage = TRUE;
-     }
    return(0xFFFFFFFF);
 }
 
@@ -273,12 +291,18 @@ MmAllocSwapPage(VOID)
    ULONG i;
    ULONG off;
    SWAPENTRY entry;
+   static BOOLEAN SwapSpaceMessage = FALSE;
    
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    
    if (MiFreeSwapPages == 0)
      {
 	KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+	if (!SwapSpaceMessage)
+	  {
+	    DPRINT1("MM: Out of swap space.\n");
+	    SwapSpaceMessage = TRUE;
+	  }
 	return(0);
      }
    
@@ -303,7 +327,12 @@ MmAllocSwapPage(VOID)
 	  }
      }
    
-   KeReleaseSpinLock(&PagingFileListLock, oldIrql);
+   KeReleaseSpinLock(&PagingFileListLock, oldIrql); 
+   if (!SwapSpaceMessage)
+     {
+       DPRINT1("MM: Out of swap space.\n");
+       SwapSpaceMessage = TRUE;
+     }
    return(0);
 }
 
@@ -355,7 +384,8 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 			      0,
 			      NULL,
 			      NULL);
-   Status = NtCreateFile(&FileHandle,
+   
+   Status = IoCreateFile(&FileHandle,
 			 FILE_ALL_ACCESS,
 			 &ObjectAttributes,
 			 &IoStatus,
@@ -365,7 +395,10 @@ NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 			 FILE_OPEN_IF,
 			 FILE_SYNCHRONOUS_IO_NONALERT,
 			 NULL,
-			 0);
+			 0,
+			 CreateFileTypeNone,
+			 NULL,
+			 SL_OPEN_PAGING_FILE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

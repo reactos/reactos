@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.9 2001/12/11 06:00:07 phreak Exp $
+# $Id: helper.mk,v 1.10 2002/01/08 00:49:02 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -398,6 +398,7 @@ MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
 
 # We don't want to link header files
 MK_OBJECTS := $(filter-out %.h,$(TARGET_OBJECTS)) 
+MK_STRIPPED_OBJECT := $(MK_BASENAME).stripped.o
 
 ifeq ($(MK_IMPLIBONLY),yes)
 
@@ -415,7 +416,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS)
 else # MK_IMPLIBONLY
 
 
-all: $(MK_FULLNAME)
+all: $(MK_FULLNAME) $(MK_NOSTRIPNAME)
 	
 
 ifeq ($(MK_IMPLIB),yes)
@@ -453,6 +454,11 @@ endif
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
+
+$(MK_FULLNAME): $(MK_NOSTRIPNAME)
+	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
+#	 $(STRIP) --strip-debug $(MK_FULLNAME)
+
 endif # KM_MODE
 
 # Kernel mode targets 
@@ -489,11 +495,33 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 	- $(RM) temp.exp
 	- $(NM) --numeric-sort $(MK_NOSTRIPNAME) > $(MK_BASENAME).sym
 
-endif # MK_MODE
+$(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
+	$(LD) -r -o $(MK_STRIPPED_OBJECT) $(MK_OBJECTS)
+	$(STRIP) --strip-debug $(MK_STRIPPED_OBJECT)
+	$(CC) -Wl,--base-file,base.tmp \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		$(TARGET_LFLAGS) \
+		-nostartfiles -nostdlib \
+		-o junk.tmp \
+		$(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname $(MK_FULLNAME) \
+		--base-file base.tmp \
+		--output-exp temp.exp $(MK_EXTRACMD)
+	- $(RM) base.tmp
+	$(CC) $(TARGET_LFLAGS) \
+		-Wl,--subsystem,native \
+		-Wl,--image-base,$(TARGET_BASE) \
+		-Wl,--file-alignment,0x1000 \
+		-Wl,--section-alignment,0x1000 \
+		-Wl,--entry,$(TARGET_ENTRY) \
+		-Wl,temp.exp \
+		-mdll -nostartfiles -nostdlib \
+		-o $(MK_FULLNAME) \
+	  $(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
+	- $(RM) temp.exp
 
-$(MK_FULLNAME): $(MK_NOSTRIPNAME)
-	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
-#	 $(STRIP) --strip-debug $(MK_FULLNAME)
+endif # MK_MODE
 
 endif # MK_IMPLIBONLY
 

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.37 2001/11/02 22:57:14 hbirr Exp $ */
+/* $Id: vfat.h,v 1.38 2002/01/08 00:49:01 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -137,6 +137,10 @@ typedef struct _VFATFCB
   ULONG dirIndex;
   ERESOURCE PagingIoResource;
   ERESOURCE MainResource;
+
+  /* Structure members used only for paging files. */
+  ULONG FatChainSize;
+  PULONG FatChain;
 } VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
@@ -212,6 +216,7 @@ NTSTATUS VfatSetVolumeInformation (PVFAT_IRP_CONTEXT);
 
 NTSTATUS
 NextCluster(PDEVICE_EXTENSION DeviceExt,
+	    PVFATFCB Fcb,
 	    ULONG FirstCluster,
 	    PULONG CurrentCluster,
 	    BOOLEAN Extend);
@@ -294,6 +299,7 @@ BOOL  vfatIsFileNameValid (PWCHAR pFileName);
  */
 NTSTATUS
 OffsetToCluster(PDEVICE_EXTENSION DeviceExt, 
+		PVFATFCB Fcb,
 		ULONG FirstCluster, 
 		ULONG FileOffset,
 		PULONG Cluster,

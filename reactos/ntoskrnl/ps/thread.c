@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.82 2002/01/03 14:03:05 ekohl Exp $
+/* $Id: thread.c,v 1.83 2002/01/08 00:49:01 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -108,9 +108,11 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 	 }
        if (IncludeSystem || current->ThreadsProcess->UniqueProcessId >= 6)
 	 {
-	   DbgPrint("current->Tcb.State %d PID.TID %d.%d Name %.8s\n",
-		    current->Tcb.State, current->ThreadsProcess->UniqueProcessId,
-		    current->Cid.UniqueThread, current->ThreadsProcess->ImageFileName);
+	   DbgPrint("current->Tcb.State %d PID.TID %d.%d Name %.8s Stack: \n",
+		    current->Tcb.State, 
+		    current->ThreadsProcess->UniqueProcessId,
+		    current->Cid.UniqueThread, 
+		    current->ThreadsProcess->ImageFileName);
 	   if (current->Tcb.State == THREAD_STATE_RUNNABLE ||
 	       current->Tcb.State == THREAD_STATE_SUSPENDED ||
 	       current->Tcb.State == THREAD_STATE_BLOCKED)
@@ -121,11 +123,12 @@ VOID PsDumpThreads(BOOLEAN IncludeSystem)
 	       i = 0;
 	       while (Ebp != 0 && Ebp >= (PULONG)current->Tcb.StackLimit)
 		 {
-		   DbgPrint("Frame: 0x%.8X Eip: 0x%.8X%s", Ebp[0], Ebp[1],
-			    (i % 2) == 1 ? "\n" : "");
+		   DbgPrint("%.8X%s", Ebp[0], Ebp[1],
+			    (i % 8) == 7 ? "\n" : "  ");
 		   Ebp = (PULONG)Ebp[0];
+		   i++;
 		 }
-	       if ((i % 2) == 0)
+	       if ((i % 8) != 7)
 		 {
 		   DbgPrint("\n");
 		 }

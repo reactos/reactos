@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.34 2001/11/02 22:47:36 hbirr Exp $
+/* $Id: rw.c,v 1.35 2002/01/08 00:49:01 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,7 @@
 
 NTSTATUS
 NextCluster(PDEVICE_EXTENSION DeviceExt,
+	    PVFATFCB Fcb,
 	    ULONG FirstCluster,
 	    PULONG CurrentCluster,
 	    BOOLEAN Extend)
@@ -37,33 +38,46 @@ NextCluster(PDEVICE_EXTENSION DeviceExt,
       * necessary
       */
 {
+  if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
+    {
+      ULONG NextCluster;
+      NextCluster = Fcb->FatChain[(*CurrentCluster)];
+      (*CurrentCluster) = NextCluster;
+      return(STATUS_SUCCESS);
+    }
   if (FirstCluster == 1)
-  {
-    (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
+    {
+      (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
       return(STATUS_SUCCESS);
     }
   else
- /* CN: FIXME: Real bug here or in dirwr, where CurrentCluster isn't initialized when 0*/
-  if (FirstCluster == 0)
     {
-      NTSTATUS Status;
-
-      Status = GetNextCluster(DeviceExt, 0, CurrentCluster,
-			      Extend);
-      return(Status);
-    }
-  else
-    {
-      NTSTATUS Status;
-
-      Status = GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster,
-			      Extend);
-      return(Status);
+      /* 
+       * CN: FIXME: Real bug here or in dirwr, where CurrentCluster isn't 
+       * initialized when 0
+       */
+      if (FirstCluster == 0)
+	{
+	  NTSTATUS Status;
+	  
+	  Status = GetNextCluster(DeviceExt, 0, CurrentCluster,
+				  Extend);
+	  return(Status);
+	}
+      else
+	{
+	  NTSTATUS Status;
+	  
+	  Status = GetNextCluster(DeviceExt, (*CurrentCluster), CurrentCluster,
+				  Extend);
+	  return(Status);
+	}
     }
 }
 
 NTSTATUS
 OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
+		PVFATFCB Fcb,
 		ULONG FirstCluster,
 		ULONG FileOffset,
 		PULONG Cluster,
@@ -77,6 +91,20 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG i;
   NTSTATUS Status;
 
+  if (Fcb != NULL && Fcb->Flags & FCB_IS_PAGE_FILE)
+    {
+      ULONG NCluster;
+      ULONG Offset = FileOffset / DeviceExt->BytesPerCluster;
+      if (Offset == 0)
+	{
+	  (*Cluster) = FirstCluster;
+	}
+      else
+	{
+	  (*Cluster) = Fcb->FatChain[Offset - 1];
+	}
+      return(STATUS_SUCCESS);
+    }
   if (FirstCluster == 1)
     {
       /* root of FAT16 or FAT12 */
@@ -103,6 +131,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
+		PVFATFCB Fcb,
 		ULONG FirstCluster,
 		PULONG CurrentCluster,
 		PVOID Destination,
@@ -133,7 +162,7 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
   {
      return(Status);
   }
-  Status = NextCluster(DeviceExt, FirstCluster, CurrentCluster, FALSE);
+  Status = NextCluster(DeviceExt, Fcb, FirstCluster, CurrentCluster, FALSE);
   return(Status);
 }
 
@@ -248,6 +277,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     CurrentCluster = Ccb->LastCluster;
   }
   Status = OffsetToCluster(DeviceExt,
+			   Fcb,
 			   FirstCluster,
 			   ROUND_DOWN(ReadOffset, DeviceExt->BytesPerCluster),
 			   &CurrentCluster,
@@ -265,8 +295,9 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     TempLength = min (Length, DeviceExt->BytesPerCluster - (ReadOffset % DeviceExt->BytesPerCluster));
     Ccb->LastCluster = CurrentCluster;
     Ccb->LastOffset = ROUND_DOWN(ReadOffset, DeviceExt->BytesPerCluster);
-    Status = VfatReadCluster(DeviceExt, FirstCluster, &CurrentCluster, Buffer,
-               ReadOffset % DeviceExt->BytesPerCluster, TempLength);
+    Status = VfatReadCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster, 
+			     Buffer, ReadOffset % DeviceExt->BytesPerCluster, 
+			     TempLength);
     if (NT_SUCCESS(Status))
     {
       (*LengthRead) = (*LengthRead) + TempLength;
@@ -284,7 +315,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     do
     {
       ClusterCount++;
-      Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
+      Status = NextCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster, FALSE);
     }
     while (StartCluster + ClusterCount == CurrentCluster && NT_SUCCESS(Status) &&
        Length - ClusterCount * DeviceExt->BytesPerCluster >= DeviceExt->BytesPerCluster);
@@ -311,7 +342,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     Ccb->LastCluster = CurrentCluster;
     Ccb->LastOffset = ReadOffset + DeviceExt->BytesPerCluster;
 
-    Status = VfatReadCluster(DeviceExt, FirstCluster, &CurrentCluster,
+    Status = VfatReadCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster,
                              Buffer, 0, Length);
     if (NT_SUCCESS(Status))
     {
@@ -323,6 +354,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
 NTSTATUS
 VfatWriteCluster(PDEVICE_EXTENSION DeviceExt,
+		 PVFATFCB Fcb,
 		    ULONG StartOffset,
 		    ULONG FirstCluster,
 		    PULONG CurrentCluster,
@@ -376,7 +408,7 @@ VfatWriteCluster(PDEVICE_EXTENSION DeviceExt,
   {
     return Status;
   }
-  Status = NextCluster(DeviceExt, FirstCluster, CurrentCluster, FALSE);
+  Status = NextCluster(DeviceExt, Fcb, FirstCluster, CurrentCluster, FALSE);
   return(Status);
 }
 
@@ -485,6 +517,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       CurrentCluster = pCcb->LastCluster;
     }
     Status = OffsetToCluster(DeviceExt,
+			     Fcb,
 			   FirstCluster,
 			   ROUND_DOWN(WriteOffset, DeviceExt->BytesPerCluster),
 			   &CurrentCluster,
@@ -506,6 +539,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     {
       TempLength = min (Length, DeviceExt->BytesPerCluster - (WriteOffset % DeviceExt->BytesPerCluster));
       Status = VfatWriteCluster(DeviceExt,
+				Fcb,
 			      ROUND_DOWN(WriteOffset, DeviceExt->BytesPerCluster),
 			      FirstCluster,
 			      &CurrentCluster,
@@ -528,7 +562,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       do
       {
         Count++;
-        Status = NextCluster(DeviceExt, FirstCluster, &CurrentCluster, FALSE);
+        Status = NextCluster(DeviceExt, Fcb, FirstCluster, &CurrentCluster, FALSE);
       }
       while (StartCluster + Count == CurrentCluster && NT_SUCCESS(Status) &&
         Length - Count * DeviceExt->BytesPerCluster >= DeviceExt->BytesPerCluster);
@@ -550,6 +584,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     if (Length > 0 && CurrentCluster != 0xffffffff && NT_SUCCESS(Status))
     {
       Status = VfatWriteCluster(DeviceExt,
+				Fcb,
 			     WriteOffset,
 			     FirstCluster,
 			     &CurrentCluster,
@@ -626,7 +661,7 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
     if (FirstCluster == 0)
     {
       // file of size zero
-      Status = NextCluster (pDeviceExt, FirstCluster, &CurrentCluster, TRUE);
+      Status = NextCluster (pDeviceExt, pFcb, FirstCluster, &CurrentCluster, TRUE);
       if (!NT_SUCCESS(Status))
       {
         DPRINT1("NextCluster failed, Status %x\n", Status);
@@ -636,7 +671,7 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
     }
     else
     {
-      Status = OffsetToCluster(pDeviceExt, FirstCluster,
+      Status = OffsetToCluster(pDeviceExt, pFcb, FirstCluster,
                  pFcb->RFCB.AllocationSize.QuadPart - pDeviceExt->BytesPerCluster,
                  &CurrentCluster, FALSE);
       if (!NT_SUCCESS(Status))
@@ -651,14 +686,14 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
       }
       // CurrentCluster zeigt jetzt auf den letzten Cluster in der Kette
       NewCluster = CurrentCluster;
-      Status = NextCluster(pDeviceExt, FirstCluster, &NewCluster, FALSE);
+      Status = NextCluster(pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
       if (NewCluster != 0xffffffff)
       {
         DPRINT1("Difference between size from direntry and the FAT.\n");
       }
     }
 
-    Status = OffsetToCluster(pDeviceExt, FirstCluster,
+    Status = OffsetToCluster(pDeviceExt, pFcb, FirstCluster,
                ROUND_DOWN(NewSize-1, pDeviceExt->BytesPerCluster),
                &NewCluster, TRUE);
     if (!NT_SUCCESS(Status) || NewCluster == 0xffffffff)
@@ -668,7 +703,7 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
       {
         NewCluster = CurrentCluster;
         // FIXME: check status
-        NextCluster(pDeviceExt, FirstCluster, &NewCluster, FALSE);
+        NextCluster(pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
         WriteCluster(pDeviceExt, CurrentCluster, 0xffffffff);
       }
       // free the allocated space
@@ -676,7 +711,7 @@ NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject
       {
         CurrentCluster = NewCluster;
         // FIXME: check status
-        NextCluster (pDeviceExt, FirstCluster, &NewCluster, FALSE);
+        NextCluster (pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
         WriteCluster (pDeviceExt, CurrentCluster, 0);
       }
       return STATUS_DISK_FULL;

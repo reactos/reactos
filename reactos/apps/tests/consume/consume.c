@@ -2,7 +2,9 @@
 #include <string.h>
 #include <windows.h>
 
-ULONG x[(4 * 1024 * 1024) / 4096];
+#define SIZE (128*1024*1024)
+
+ULONG x[SIZE / 4096];
 
 int main()
 {  
@@ -10,7 +12,7 @@ int main()
    PUCHAR BaseAddress;
    
    BaseAddress = VirtualAlloc(NULL,
-			      4 * 1024 * 1024,
+			      SIZE,
 			      MEM_COMMIT,
 			      PAGE_READONLY);
    if (BaseAddress == NULL)
@@ -19,9 +21,9 @@ int main()
 	return(1);
      }
    printf("BaseAddress %p\n", BaseAddress);
-   for (i = 0; i < ((4 * 1024 * 1024) / 4096); i++)
+   for (i = 0; i < (SIZE / 4096); i++)
      {
-	printf("%.6x, ", i*4096);
+	printf("%.8x  ", i*4096);
 	x[i] = BaseAddress[i*4096];
      }
    
