@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.20 2004/02/10 16:22:56 navaraf Exp $ */
+/* $Id: mmfuncs.h,v 1.21 2004/04/20 19:04:11 gdalsnes Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -51,6 +51,8 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  * FUNCTION: Returns the byte offset of the address within its page
  */
 #define BYTE_OFFSET(va) (((ULONG)va)%PAGE_SIZE)
+#define PAGE_OFFSET(va) BYTE_OFFSET(va)
+
 
 /*
  * FUNCTION: Takes a count in bytes and returns the number of pages
@@ -58,6 +60,11 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  */
 #define BYTES_TO_PAGES(Size) \
   ((ULONG) ((ULONG_PTR) (Size) >> PAGE_SHIFT) + (((ULONG) (Size) & (PAGE_SIZE - 1)) != 0))
+  
+  
+#define PAGE_ALIGN(va) ( (PVOID) (((ULONG)(va)) & (~(PAGE_SIZE-1))) )
+#define PAGE_BASE(va) PAGE_ALIGN(va)
+
 
 DWORD
 STDCALL
@@ -271,10 +278,9 @@ MmGrowKernelStack (
 	(MemoryDescriptorList)->Size = (CSHORT)(sizeof(MDL) + \
 		(ADDRESS_AND_SIZE_TO_SPAN_PAGES((BaseVa),(Length)) * sizeof(ULONG))); \
 	(MemoryDescriptorList)->MdlFlags = 0; \
-	(MemoryDescriptorList)->StartVa = (PVOID)PAGE_ROUND_DOWN((BaseVa)); \
-	(MemoryDescriptorList)->ByteOffset = (ULONG)((BaseVa) - PAGE_ROUND_DOWN((BaseVa))); \
+	(MemoryDescriptorList)->StartVa = (PVOID)PAGE_BASE(BaseVa); \
+	(MemoryDescriptorList)->ByteOffset = (ULONG)PAGE_OFFSET(BaseVa); \
 	(MemoryDescriptorList)->ByteCount = (Length); \
-	(MemoryDescriptorList)->Process = PsGetCurrentProcess(); \
 }
 
 /*

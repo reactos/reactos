@@ -119,27 +119,20 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
    FileObject = IoStack->FileObject;
    
    if (DeviceObject->Flags & DO_BUFFERED_IO)
-     {
-	if (IoStack->MajorFunction == IRP_MJ_READ)
-	  {
-	     DPRINT("Copying buffered io back to user\n");
-	     memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
+   {
+      if (IoStack->MajorFunction == IRP_MJ_READ)
+      {
+         DPRINT("Copying buffered io back to user\n");
+         memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
 		    IoStack->Parameters.Read.Length);
-	  }
-	ExFreePool(Irp->AssociatedIrp.SystemBuffer);
-     }
+      }
+      ExFreePool(Irp->AssociatedIrp.SystemBuffer);
+   }
+
    if (DeviceObject->Flags & DO_DIRECT_IO)
-     {
-	/* FIXME: Is the MDL destroyed on a paging i/o, check all cases. */
-	DPRINT("Tearing down MDL\n");
-	if (Irp->MdlAddress->MappedSystemVa != NULL)
-	  {	     
-	     MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
-				Irp->MdlAddress);
-	  }
-	MmUnlockPages(Irp->MdlAddress);
-	ExFreePool(Irp->MdlAddress);
-     }
+   {
+      IoFreeMdl(Irp->MdlAddress);
+   }
 }
 
 VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
@@ -201,6 +194,13 @@ IoSecondStageCompletion(
    Irp = (PIRP)(*SystemArgument1);
    PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
    
+   /*
+    * Note that we'll never see irp's flagged IRP_PAGING_IO (IRP_MOUNT_OPERATION)
+    * or IRP_CLOSE_OPERATION (IRP_MJ_CLOSE and IRP_MJ_CLEANUP) here since their
+    * cleanup/completion is fully taken care of in IoCompleteRequest.
+    * -Gunnar
+    */
+    
    /* 
    Remove synchronous irp's from the threads cleanup list.
    To synchronize with the code inserting the entry, this code must run 
@@ -278,7 +278,7 @@ IoSecondStageCompletion(
    }
 
    //Windows NT File System Internals, page 154
-   if (!(Irp->Flags & IRP_PAGING_IO) && OriginalFileObject)
+   if (OriginalFileObject)   
    {
       // if the event is not the one in the file object, it needs dereferenced
       if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)
@@ -286,10 +286,7 @@ IoSecondStageCompletion(
          ObDereferenceObject(Irp->UserEvent);
       }
   
-      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
-      {
-         ObDereferenceObject(OriginalFileObject);
-      }
+      ObDereferenceObject(OriginalFileObject);
    }
 
    if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)

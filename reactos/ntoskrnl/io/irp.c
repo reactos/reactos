@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.58 2004/03/04 00:07:00 navaraf Exp $
+/* $Id: irp.c,v 1.59 2004/04/20 19:01:47 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -231,6 +231,7 @@ IofCompleteRequest(PIRP Irp,
    PDEVICE_OBJECT    DeviceObject;
    PFILE_OBJECT      OriginalFileObject;
    KIRQL             oldIrql;
+   PMDL              Mdl;
 
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
       Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
@@ -285,42 +286,83 @@ IofCompleteRequest(PIRP Irp,
       }
    }
 
-   if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
-     {
-       if (Irp->Flags & IRP_PAGING_IO)
-         {
-           /* FIXME:
-            *   The mdl must be freed by the caller! 
-	    */
-           if (Irp->MdlAddress->MappedSystemVa != NULL)
-             {	     
-	       MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
-			          Irp->MdlAddress);
-	     }
-           MmUnlockPages(Irp->MdlAddress);
-           ExFreePool(Irp->MdlAddress);
-	 }
-       if (Irp->UserIosb)
-         {
-           *Irp->UserIosb = Irp->IoStatus;
-	 }
-       if (Irp->UserEvent)
-         {
-           KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
-	 }
-       IoFreeIrp(Irp);
-     }
-   else
-     {
-       //Windows NT File System Internals, page 154
-       OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
+   /*
+    * Were done calling completion routines. Now do any cleanup that can be 
+    * done in an arbitrarily context.
+    */
 
-       if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
+   /* Windows NT File System Internals, page 165 */
+   if (Irp->Flags & (IRP_PAGING_IO|IRP_CLOSE_OPERATION))
+   {
+      if (Irp->Flags & IRP_PAGING_IO)
+      {
+         /* FIXME:
+          *   The mdl should be freed by the caller! 
+	       */
+         if (Irp->MdlAddress->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
          {
-           BOOLEAN bStatus;
+            MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa, Irp->MdlAddress);            
+         }
+         
+         ExFreePool(Irp->MdlAddress);
+      }
+
+      if (Irp->UserIosb)
+      {
+         *Irp->UserIosb = Irp->IoStatus;
+      }
+
+      if (Irp->UserEvent)
+      {
+         KeSetEvent(Irp->UserEvent, PriorityBoost, FALSE);
+      }
       
-           DPRINT("Dispatching APC\n");
-           KeInitializeApc(  &Irp->Tail.Apc,
+      /* io manager frees the irp for close operations */
+      if (Irp->Flags & IRP_PAGING_IO)
+      {
+         IoFreeIrp(Irp);
+      }
+      
+      return;
+   }
+   
+   
+   /*
+   Hi Dave,
+   
+    I went through my old notes. You are correct and in most cases
+   IoCompleteRequest() will issue an MmUnlockPages() for each MDL in the IRP
+   chain. There are however few exceptions: one is MDLs for associated IRPs,
+   it's expected that those MDLs have been initialized with
+   IoBuildPartialMdl(). Another exception is PAGING_IO irps, the i/o completion
+   code doesn't do anything to MDLs of those IRPs.
+   
+   sara
+   
+*/
+   
+   //Windows NT File System Internals, page 166/167
+   if (!(Irp->Flags & IRP_ASSOCIATED_IRP))
+   {
+      for (Mdl = Irp->MdlAddress; Mdl; Mdl = Mdl->Next)
+      {
+         /* 
+          * Undo the MmProbeAndLockPages. If MmGetSystemAddressForMdl was called
+          * on this mdl, this mapping (if any) is also undone by MmUnlockPages.
+          */
+         MmUnlockPages(Irp->MdlAddress);
+      }
+   }
+    
+   //Windows NT File System Internals, page 154
+   OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
+
+   if (Irp->PendingReturned || KeGetCurrentIrql() == DISPATCH_LEVEL)
+   {
+      BOOLEAN bStatus;
+      
+      DPRINT("Dispatching APC\n");
+      KeInitializeApc(  &Irp->Tail.Apc,
                              &Irp->Tail.Overlay.Thread->Tcb,
                              OriginalApcEnvironment,
                              IoSecondStageCompletion,//kernel routine
@@ -329,27 +371,27 @@ IofCompleteRequest(PIRP Irp,
                              KernelMode,
                              OriginalFileObject);
       
-           bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
+      bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
                                       (PVOID)Irp,
                                       (PVOID)(ULONG)PriorityBoost,
                                       PriorityBoost);
 
-           if (bStatus == FALSE)
-             {
-               DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
-             }
+      if (bStatus == FALSE)
+      {
+         DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
+      }
 
-           DPRINT("Finished dispatching APC\n");
-	 }
-       else
-         {
-           DPRINT("Calling IoSecondStageCompletion routine directly\n");
-           KeRaiseIrql(APC_LEVEL, &oldIrql);
-           IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
-           KeLowerIrql(oldIrql);
-           DPRINT("Finished completition routine\n");
-	 }
+      DPRINT("Finished dispatching APC\n");
    }
+   else
+   {
+      DPRINT("Calling IoSecondStageCompletion routine directly\n");
+      KeRaiseIrql(APC_LEVEL, &oldIrql);
+      IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
+      KeLowerIrql(oldIrql);
+      DPRINT("Finished completition routine\n");
+   }
+
 
 }
 

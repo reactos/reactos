@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.13 2003/12/30 18:52:04 fireball Exp $
+/* $Id: mdl.c,v 1.14 2004/04/20 19:01:47 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,15 +50,38 @@ IoAllocateMdl(PVOID VirtualAddress,
 				    TAG_MDL);
      }
    MmInitializeMdl(Mdl, (char*)VirtualAddress, Length);
-   if (Irp!=NULL && !SecondaryBuffer)
-     {
-	Irp->MdlAddress = Mdl;
-     }
+   
+   if (Irp)
+   {
+      if (SecondaryBuffer)
+      {
+         assert(Irp->MdlAddress);
+         
+         /* FIXME: add to end of list maybe?? */
+         Mdl->Next = Irp->MdlAddress->Next;
+         Irp->MdlAddress->Next = Mdl;
+      }
+      else
+      {
+         /* 
+          * What if there's allready an mdl at Irp->MdlAddress?
+          * Is that bad and should we do something about it?
+          */
+         Irp->MdlAddress = Mdl;
+      }
+   }
+   
    return(Mdl);
 }
 
 /*
  * @implemented
+ *
+ * You must IoFreeMdl the slave before freeing the master.
+ *
+ * IoBuildPartialMdl is more similar to MmBuildMdlForNonPagedPool, the difference
+ * is that the former takes the physical addresses from the master MDL, while the
+ * latter - from the known location of the NPP.
  */
 VOID
 STDCALL
@@ -74,9 +97,11 @@ IoBuildPartialMdl(PMDL SourceMdl,
                  PAGE_SIZE;
 
    for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGE_SIZE); Va++)
-     {
-	TargetPages[Va] = SourcePages[Va+Delta];
-     }
+   {
+      TargetPages[Va] = SourcePages[Va+Delta];
+   }
+   
+   TargetMdl->MdlFlags |= MDL_PARTIAL;
 }
 
 /*
@@ -85,8 +110,12 @@ IoBuildPartialMdl(PMDL SourceMdl,
 VOID STDCALL
 IoFreeMdl(PMDL Mdl)
 {   
-   MmUnmapLockedPages(MmGetSystemAddressForMdl(Mdl), Mdl);
-   MmUnlockPages(Mdl);
+   /* 
+    * This unmaps partial mdl's from kernel space but also asserts that non-partial
+    * mdl's isn't still mapped into kernel space.
+    */
+   MmPrepareMdlForReuse(Mdl);
+   
    ExFreePool(Mdl);
 }
 

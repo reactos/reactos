@@ -32,6 +32,8 @@ VfatReadWriteCompletion (IN PDEVICE_OBJECT DeviceObject,
    while ((Mdl = Irp->MdlAddress))
      {
        Irp->MdlAddress = Mdl->Next;
+       
+       MmUnlockPages(Mdl);
        IoFreeMdl(Mdl);
      }
 
