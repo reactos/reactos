@@ -114,5 +114,12 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
                PUNICODE_STRING Output,
                CONST PDEVMODEW InitData);
 
+/* Coord functions */
+
+BOOL FASTCALL
+IntGdiCombineTransform(LPXFORM XFormResult,
+                       LPXFORM xform1,
+                       LPXFORM xform2);
+
 #endif /* _WIN32K_INTGDI_H */
 

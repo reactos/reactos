@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.114 2003/12/23 18:19:07 navaraf Exp $
+/* $Id: dc.c,v 1.115 2004/01/04 21:26:59 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -2010,7 +2010,7 @@ DC_UpdateXforms(PDC  dc)
   xformWnd2Vport.eDy  = (FLOAT)dc->vportOrgY - scaleY * (FLOAT)dc->wndOrgY;
 
   /* Combine with the world transformation */
-  NtGdiCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);
+  IntGdiCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);
 
   /* Create inverse of world-to-viewport transformation */
   dc->w.vport2WorldValid = DC_InvertXform(&dc->w.xformWorld2Vport, &dc->w.xformVport2World);
