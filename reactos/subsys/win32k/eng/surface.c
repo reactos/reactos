@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.26 2003/10/30 08:56:38 gvg Exp $
+/* $Id: surface.c,v 1.27 2003/11/18 18:05:40 sedwards Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -42,6 +42,13 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+enum Rle_EscapeCodes
+{
+  RLE_EOL   = 0, /* End of line */
+  RLE_END   = 1, /* End of bitmap */
+  RLE_DELTA = 2  /* Delta */
+};
 
 INT FASTCALL BitsPerFormat(ULONG Format)
 {
@@ -161,6 +168,119 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   return NewBitmap;
 }
 
+VOID Decompress4bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+{
+	int x = 0;
+	int y = Size.cy - 1;
+	int c;
+	int length;
+	int width = ((Size.cx+1)/2);
+	int height = Size.cy - 1;
+	BYTE *begin = CompressedBits;
+	BYTE *bits = CompressedBits;
+	BYTE *temp;
+	while (y >= 0)
+	{
+		length = *bits++ / 2;
+		if (length)
+		{
+			c = *bits++;
+			while (length--)
+			{
+				if (x >= width) break;
+				temp = UncompressedBits + (((height - y) * Delta) + x);
+				x++;
+				*temp = c;
+			}
+		} else {
+			length = *bits++;
+			switch (length)
+			{
+			case RLE_EOL:
+				x = 0;
+				y--;
+				break;
+			case RLE_END:
+				return;
+			case RLE_DELTA:
+				x += (*bits++)/2;
+				y -= (*bits++)/2;
+				break;
+			default:
+				length /= 2;
+				while (length--)
+				{
+					c = *bits++;
+					if (x < width)
+					{
+						temp = UncompressedBits + (((height - y) * Delta) + x);
+						x++;
+						*temp = c;
+					}
+				}
+				if ((bits - begin) & 1)
+					bits++;
+			}
+		}
+	}
+}
+
+VOID Decompress8bpp(SIZEL Size, BYTE *CompressedBits, BYTE *UncompressedBits, LONG Delta) 
+{
+	int x = 0;
+	int y = Size.cy - 1;
+	int c;
+	int length;
+	int width = Size.cx;
+	int height = Size.cy - 1;
+	BYTE *begin = CompressedBits;
+	BYTE *bits = CompressedBits;
+	BYTE *temp;
+	while (y >= 0)
+	{
+		length = *bits++;
+		if (length)
+		{
+			c = *bits++;
+			while (length--)
+			{
+				if (x >= width) break;
+				temp = UncompressedBits + (((height - y) * Delta) + x);
+				x++;
+				*temp = c;
+			}
+		} else {
+			length = *bits++;
+			switch (length)
+			{
+			case RLE_EOL:
+				x = 0;
+				y--;
+				break;
+			case RLE_END:
+				return;
+			case RLE_DELTA:
+				x += *bits++;
+				y -= *bits++;
+				break;
+			default:
+				while (length--)
+				{
+					c = *bits++;
+					if (x < width)
+					{
+						temp = UncompressedBits + (((height - y) * Delta) + x);
+						x++;
+						*temp = c;
+					}
+				}
+				if ((bits - begin) & 1)
+					bits++;
+			}
+		}
+	}
+}
+
 /*
  * @implemented
  */
@@ -174,6 +294,8 @@ EngCreateBitmap(IN SIZEL Size,
   HBITMAP NewBitmap;
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
+  PVOID UncompressedBits;
+  ULONG UncompressedFormat;
 
   NewBitmap = (PVOID)CreateGDIHandle(sizeof(SURFGDI), sizeof(SURFOBJ));
   if( !ValidEngHandle( NewBitmap ) )
@@ -183,14 +305,30 @@ EngCreateBitmap(IN SIZEL Size,
   SurfGDI = (SURFGDI*) AccessInternalObject( (ULONG) NewBitmap );
   ASSERT( SurfObj );
   ASSERT( SurfGDI );
-
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
+  if (Format == BMF_4RLE) {
+	  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_4BPP));
+	  SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+	  UncompressedFormat = BMF_4BPP;
+      UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+	  Decompress4bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
+  } else {
+	  if (Format == BMF_8RLE) {
+		  SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(BMF_8BPP));
+		  SurfObj->cjBits = SurfObj->lDelta * Size.cy;
+	      UncompressedFormat = BMF_8BPP;
+	      UncompressedBits = EngAllocMem(FL_ZERO_MEMORY, SurfObj->cjBits, 0);
+		  Decompress8bpp(Size, (BYTE *)Bits, (BYTE *)UncompressedBits, SurfObj->lDelta);
+	  } else {
   SurfObj->lDelta = Width;
   SurfObj->cjBits = SurfObj->lDelta * Size.cy;
-
-  if(Bits!=NULL)
+		  UncompressedBits = Bits;
+		  UncompressedFormat = Format;
+	  }
+  }
+  if(UncompressedBits!=NULL)
   {
-    SurfObj->pvBits = Bits;
+    SurfObj->pvBits = UncompressedBits;
   } else
   {
     if(Flags & BMF_USERMEM)
@@ -209,12 +347,12 @@ EngCreateBitmap(IN SIZEL Size,
   SurfObj->dhsurf = 0; // device managed surface
   SurfObj->hsurf  = 0;
   SurfObj->sizlBitmap = Size;
-  SurfObj->iBitmapFormat = Format;
+  SurfObj->iBitmapFormat = UncompressedFormat;
   SurfObj->iType = STYPE_BITMAP;
   SurfObj->fjBitmap = Flags & (BMF_TOPDOWN | BMF_NOZEROINIT);
   SurfObj->pvScan0 = SurfObj->pvBits;
 
-  InitializeFuncs(SurfGDI, Format);
+  InitializeFuncs(SurfGDI, UncompressedFormat);
 
   // Use flags to determine bitmap type -- TOP_DOWN or whatever
 
