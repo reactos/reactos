@@ -109,6 +109,8 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 
   char* vidmem;
 
+  ppdev->sizeSurf.cx = 640;
+  ppdev->sizeSurf.cy = 480;
   ppdev->ModeNum = 12;
 
   // Set the mode that was requested
