@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.166 2004/10/22 20:38:23 ekohl Exp $
+/* $Id: section.c,v 1.166.2.1 2004/11/25 19:48:30 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -29,6 +29,8 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#include <elf.h>
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -2507,6 +2509,18 @@ static ULONG SectionCharacteristicsToProtect[16] =
       PAGE_EXECUTE_READWRITE,      // 15 = WRITABLE, READABLE, EXECUTABLE, SHARED
    };
 
+static ULONG ElfProgramHeaderFlagsToProtect[8] =
+   {
+      PAGE_NOACCESS,              /* 0 = NONE */
+      PAGE_EXECUTE,               /* 1 = EXECUTABLE */
+      PAGE_READWRITE,             /* 2 = WRITABLE */
+      PAGE_EXECUTE_READWRITE,     /* 3 = WRITABLE, EXECUTABLE */
+      PAGE_READONLY,              /* 4 = READABLE */
+      PAGE_EXECUTE_READ,          /* 5 = READABLE, EXECUTABLE */
+      PAGE_READWRITE,             /* 6 = READABLE, WRITABLE */
+      PAGE_EXECUTE_READWRITE,     /* 7 = READABLE, EXECUTABLE, WRITABLE */
+   };
+
 NTSTATUS
 MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                      ACCESS_MASK DesiredAccess,
@@ -2519,7 +2533,12 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
    PSECTION_OBJECT Section;
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
-   IMAGE_DOS_HEADER DosHeader;
+   union {
+      IMAGE_DOS_HEADER DosHeader;
+#ifdef _ELF_SUPPORT
+      IMAGE_ELF_HEADER ElfHeader;
+#endif /* _ELF_SUPPORT */
+   } FileHeader;
    IO_STATUS_BLOCK Iosb;
    LARGE_INTEGER Offset;
    IMAGE_NT_HEADERS PEHeader;
@@ -2561,9 +2580,15 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 
    if (!NT_SUCCESS(Status) || FileObject->SectionObjectPointer->ImageSectionObject == NULL)
    {
-      PIMAGE_SECTION_HEADER ImageSections;
+      PIMAGE_SECTION_HEADER ImageSections = NULL;
+#ifdef _ELF_SUPPORT
+      PIMAGE_ELF_PROGRAM_HEADER ElfImagePHeaders = NULL;
+      BOOL ElfImageDynamic = FALSE;
+      PCHAR ElfImageInterp = NULL;
+#endif
+
       /*
-       * Read the dos header and check the DOS signature
+       * Read the DOS/ELF header and check the signature
        */
       Offset.QuadPart = 0;
       Status = ZwReadFile(FileHandle,
@@ -2571,8 +2596,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
                           NULL,
                           NULL,
                           &Iosb,
-                          &DosHeader,
-                          sizeof(DosHeader),
+                          &FileHeader,
+                          sizeof(FileHeader),
                           &Offset,
                           NULL);
       if (!NT_SUCCESS(Status))
@@ -2582,78 +2607,357 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       }
 
       /*
-       * Check the DOS signature
+       * Check the DOS/ELF signature
        */
-      if (Iosb.Information != sizeof(DosHeader) ||
-            DosHeader.e_magic != IMAGE_DOS_SIGNATURE)
+      if (Iosb.Information != sizeof(FileHeader) ||
+          (FileHeader.DosHeader.e_magic != IMAGE_DOS_SIGNATURE &&
+#ifdef _ELF_SUPPORT
+           !IMAGE_IS_ELF(FileHeader.ElfHeader)))
+#else
+           TRUE))
+#endif
       {
          ObDereferenceObject(FileObject);
          return(STATUS_INVALID_IMAGE_FORMAT);
       }
 
-      /*
-       * Read the PE header
-       */
-      Offset.QuadPart = DosHeader.e_lfanew;
-      Status = ZwReadFile(FileHandle,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &Iosb,
-                          &PEHeader,
-                          sizeof(PEHeader),
-                          &Offset,
-                          NULL);
-      if (!NT_SUCCESS(Status))
+      if (FileHeader.DosHeader.e_magic == IMAGE_DOS_SIGNATURE)
       {
-         ObDereferenceObject(FileObject);
-         return(Status);
-      }
+         /*
+          * Read the PE header
+          */
+         Offset.QuadPart = FileHeader.DosHeader.e_lfanew;
+         Status = ZwReadFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             &PEHeader,
+                             sizeof(PEHeader),
+                             &Offset,
+                             NULL);
+         if (!NT_SUCCESS(Status))
+         {
+            ObDereferenceObject(FileObject);
+            return(Status);
+         }
 
-      /*
-       * Check the signature
-       */
-      if (Iosb.Information != sizeof(PEHeader) ||
-            PEHeader.Signature != IMAGE_NT_SIGNATURE)
-      {
-         ObDereferenceObject(FileObject);
-         return(STATUS_INVALID_IMAGE_FORMAT);
-      }
+         /*
+          * Check the signature
+          */
+         if (Iosb.Information != sizeof(PEHeader) ||
+               PEHeader.Signature != IMAGE_NT_SIGNATURE)
+         {
+            ObDereferenceObject(FileObject);
+            return(STATUS_INVALID_IMAGE_FORMAT);
+         }
 
-      /*
-       * Read in the section headers
-       */
-      Offset.QuadPart = DosHeader.e_lfanew + sizeof(PEHeader);
-      ImageSections = ExAllocatePool(NonPagedPool,
-                                     PEHeader.FileHeader.NumberOfSections *
-                                     sizeof(IMAGE_SECTION_HEADER));
-      if (ImageSections == NULL)
-      {
-         ObDereferenceObject(FileObject);
-         return(STATUS_NO_MEMORY);
-      }
+         /*
+          * Read in the section headers
+          */
+         Offset.QuadPart = FileHeader.DosHeader.e_lfanew + sizeof(PEHeader);
+         ImageSections = ExAllocatePool(NonPagedPool,
+                                        PEHeader.FileHeader.NumberOfSections *
+                                        sizeof(IMAGE_SECTION_HEADER));
+         if (ImageSections == NULL)
+         {
+            ObDereferenceObject(FileObject);
+            return(STATUS_NO_MEMORY);
+         }
 
-      Status = ZwReadFile(FileHandle,
-                          NULL,
-                          NULL,
-                          NULL,
-                          &Iosb,
-                          ImageSections,
-                          PEHeader.FileHeader.NumberOfSections *
-                          sizeof(IMAGE_SECTION_HEADER),
-                          &Offset,
-                          0);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
-         return(Status);
+         Status = ZwReadFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             ImageSections,
+                             PEHeader.FileHeader.NumberOfSections *
+                             sizeof(IMAGE_SECTION_HEADER),
+                             &Offset,
+                             0);
+         if (!NT_SUCCESS(Status))
+         {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ImageSections);
+            return(Status);
+         }
+         if (Iosb.Information != (PEHeader.FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER)))
+         {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ImageSections);
+            return(STATUS_INVALID_IMAGE_FORMAT);
+         }
+         NrSegments = PEHeader.FileHeader.NumberOfSections;
       }
-      if (Iosb.Information != (PEHeader.FileHeader.NumberOfSections * sizeof(IMAGE_SECTION_HEADER)))
+      else
       {
-         ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
-         return(STATUS_INVALID_IMAGE_FORMAT);
+#ifdef _ELF_SUPPORT
+         BOOL ElfImageOk = TRUE;
+
+         assert(IMAGE_IS_ELF(FileHeader.ElfHeader));
+
+         /*
+          * Check the ELF type, target, ...
+          */
+         if (FileHeader.ElfHeader.Ident[IMAGE_ELF_IDENT_CLASS] != IMAGE_ELF_TARGET_CLASS ||
+             FileHeader.ElfHeader.Ident[IMAGE_ELF_IDENT_DATA] != IMAGE_ELF_TARGET_DATA)
+         {
+            DPRINT1("ELF: unsupported file layout\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.Ident[IMAGE_ELF_IDENT_VERSION] != IMAGE_ELF_VERSION_CURRENT ||
+                  FileHeader.ElfHeader.Version != IMAGE_ELF_VERSION_CURRENT)
+         {
+            DPRINT1("ELF: unsupported file version\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.Type != IMAGE_ELF_TYPE_EXEC &&
+                  FileHeader.ElfHeader.Type != IMAGE_ELF_TYPE_DYN)
+         {
+            DPRINT1("ELF: unsupported file type\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.Machine != IMAGE_ELF_TARGET_MACHINE)
+         {
+            DPRINT1("ELF: unsupported machine\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.PhEntSize != sizeof(IMAGE_ELF_PROGRAM_HEADER))
+         {
+            DPRINT1("ELF: invalid object: ElfHeader.PhEntSize != sizeof(IMAGE_ELF_PROGRAM_HEADER)\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.PhOff == 0)
+         {
+            DPRINT1("ELF: file does not contain a program header table (PhOff == 0)\n");
+            ElfImageOk = FALSE;
+         }
+         else if (FileHeader.ElfHeader.PhNum == 0)
+         {
+            DPRINT1("ELF: file does not contain a program header table (PhNum == 0)\n");
+            ElfImageOk = FALSE;
+         }
+
+         if (!ElfImageOk)
+         {
+            ObDereferenceObject(FileObject);
+		    return(STATUS_INVALID_IMAGE_FORMAT);
+         }
+
+         /*
+          * Read in the program header table
+          */
+         Offset.QuadPart = FileHeader.ElfHeader.PhOff;
+         ElfImagePHeaders = ExAllocatePool(NonPagedPool,
+                                           FileHeader.ElfHeader.PhNum *
+                                           sizeof(IMAGE_ELF_PROGRAM_HEADER));
+         if (ElfImagePHeaders == NULL)
+         {
+            ObDereferenceObject(FileObject);
+            return(STATUS_NO_MEMORY);
+         }
+
+         Status = ZwReadFile(FileHandle,
+                             NULL,
+                             NULL,
+                             NULL,
+                             &Iosb,
+                             ElfImagePHeaders,
+                             FileHeader.ElfHeader.PhNum *
+                             sizeof(IMAGE_ELF_PROGRAM_HEADER),
+                             &Offset,
+                             0);
+         if (!NT_SUCCESS(Status))
+         {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ElfImagePHeaders);
+            return(Status);
+         }
+         if (Iosb.Information != (FileHeader.ElfHeader.PhNum * sizeof(IMAGE_ELF_PROGRAM_HEADER)))
+         {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ElfImagePHeaders);
+            return(STATUS_INVALID_IMAGE_FORMAT);
+         }
+
+         /*
+          * Get some important program headers (.dynamic, .interp), count number of loadable segments
+          */
+         NrSegments = 0;
+         for (i = 0; i < FileHeader.ElfHeader.PhNum; i++)
+         {
+            switch (ElfImagePHeaders[i].Type)
+            {
+            case IMAGE_ELF_SEGMENT_TYPE_NULL:
+            case IMAGE_ELF_SEGMENT_TYPE_PHDR:
+               break;
+
+            case IMAGE_ELF_SEGMENT_TYPE_LOAD:
+               /* Check alignment of segment */
+               if (ElfImagePHeaders[i].Align > 1 && ElfImagePHeaders[i].Align < PAGE_SIZE)
+               {
+                  ObDereferenceObject(FileObject);
+                  ExFreePool(ElfImagePHeaders);
+                  if (ElfImageInterp != NULL)
+                     ExFreePool(ElfImageInterp);
+
+                  DPRINT1("ELF: IMAGE_ELF_SEGMENT_TYPE_LOAD Segment %d not page-aligned\n", i);
+                  return(STATUS_INVALID_IMAGE_FORMAT);
+               }
+               NrSegments++;
+               break;
+
+            case IMAGE_ELF_SEGMENT_TYPE_DYNAMIC: /* dynamically linked image */
+               ElfImageDynamic = TRUE;
+               break;
+
+            case IMAGE_ELF_SEGMENT_TYPE_INTERP:
+               /* Allocate memory for interpreter */
+               if (ElfImageInterp != NULL)
+               {
+                  ObDereferenceObject(FileObject);
+                  ExFreePool(ElfImagePHeaders);
+                  ExFreePool(ElfImageInterp);
+                  DPRINT1("ELF: Only one IMAGE_ELF_SEGMENT_TYPE_INTERP segment allowed\n");
+                  return(STATUS_INVALID_IMAGE_FORMAT);
+               }
+               Size = max(ElfImagePHeaders[i].MemSz, ElfImagePHeaders[i].FileSz + 1);
+               ElfImageInterp = ExAllocatePool(NonPagedPool, Size);
+               if (ElfImageInterp == NULL)
+               {
+                  ObDereferenceObject(FileObject);
+                  ExFreePool(ElfImagePHeaders);
+                  return(STATUS_NO_MEMORY);
+               }
+               
+               /* Read interpreter path */
+               Offset.QuadPart = ElfImagePHeaders[i].Offset;
+               Status = ZwReadFile(FileHandle,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &Iosb,
+                                   ElfImageInterp,
+                                   ElfImagePHeaders[i].FileSz,
+                                   &Offset,
+                                   0);
+               if (!NT_SUCCESS(Status))
+               {
+                  ObDereferenceObject(FileObject);
+                  ExFreePool(ElfImagePHeaders);
+                  ExFreePool(ElfImageInterp);
+                  return(Status);
+               }
+               if (Iosb.Information != ElfImagePHeaders[i].FileSz)
+               {
+                  ObDereferenceObject(FileObject);
+                  ExFreePool(ElfImagePHeaders);
+                  ExFreePool(ElfImageInterp);
+                  return(STATUS_INVALID_IMAGE_FORMAT);
+               }
+               ElfImageInterp[Size - 1] = '\0';
+               break;
+
+#if 0
+            case IMAGE_ELF_SEGMENT_TYPE_GNU_STACK:
+               ElfImageStackExec = TRUE; /* Stack should be executable */
+               break;
+#endif
+            default: /* Unknown/unused type */
+               DPRINT1("ELF: Segment %d has unknown type %d\n", i, ElfImagePHeaders[i].Type);
+               break;
+            }
+         }
+
+         if (NrSegments == 0) /* No loadable segments found */
+         {
+            ObDereferenceObject(FileObject);
+            ExFreePool(ElfImagePHeaders);
+            if (ElfImageInterp != NULL)
+               ExFreePool(ElfImageInterp);
+            DPRINT1("ELF: No loadable segments found!\n");
+            return(STATUS_INVALID_IMAGE_FORMAT);
+         }
+
+         if (ElfImageDynamic)
+         {
+            HANDLE hInterpFile;
+            OBJECT_ATTRIBUTES Attribs;
+            ANSI_STRING AnsiInterp;
+            UNICODE_STRING UnicodeInterp;
+            
+            if(ElfImageInterp == NULL)
+            {
+               ObDereferenceObject(FileObject);
+               ExFreePool(ElfImagePHeaders);
+               DPRINT1("ELF: Dynamic image needs interpreter!\n");
+               return(STATUS_INVALID_IMAGE_FORMAT);
+            }
+
+            /*
+             * Release resources
+             */
+            ObDereferenceObject(FileObject);
+            ExFreePool(ElfImagePHeaders);
+            
+            /*
+             * The ELF file contains an interpreter, let's try to map it instead...
+             */
+            RtlInitAnsiString(&AnsiInterp, ElfImageInterp);
+            Status = RtlAnsiStringToUnicodeString(&UnicodeInterp, &AnsiInterp, TRUE);
+            ExFreePool(ElfImageInterp);
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT1("ELF: Couldn't convert interpreter from ansi to unicode!\n");
+               return(Status);
+			}
+
+            InitializeObjectAttributes(&Attribs,
+                                       &UnicodeInterp,
+                                       (OBJ_CASE_INSENSITIVE | OBJ_INHERIT), /* FIXME: which flags to use? */
+                                       NULL,
+                                       NULL);
+
+            Status = ZwCreateFile(&hInterpFile,
+                                  GENERIC_READ | GENERIC_EXECUTE,
+                                  &Attribs,
+                                  &Iosb,
+                                  NULL,
+                                  FILE_ATTRIBUTE_NORMAL,
+                                  FILE_SHARE_READ,
+                                  FILE_OPEN,
+                                  FILE_NON_DIRECTORY_FILE,
+                                  NULL,
+                                  0);
+
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT1("ELF: Couldn't open interpreter '%wZ'!\n", &UnicodeInterp);
+               RtlFreeUnicodeString(&UnicodeInterp);
+               return(Status);
+			}
+            RtlFreeUnicodeString(&UnicodeInterp);
+
+            Status = MmCreateImageSection(SectionObject,
+                                          DesiredAccess,
+                                          NULL,
+                                          NULL,
+                                          PAGE_EXECUTE | PAGE_WRITECOPY,
+                                          SEC_IMAGE,
+                                          hInterpFile);
+            ZwClose(hInterpFile);
+            if (!NT_SUCCESS(Status))
+            {
+               DPRINT1("ELF: Couldn't create section for interpreter (0x%x)\n", Status);
+            }
+            return(Status); /* The interpreter should take care of the rest... */
+         }
+
+         NrSegments = FileHeader.ElfHeader.PhNum;
+
+#else /* _ELF_SUPPORT */
+         assert(0); /* should never be executed */
+#endif
       }
 
       /*
@@ -2671,7 +2975,14 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       if (!NT_SUCCESS(Status))
       {
          ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
+         if (ImageSections != NULL)
+            ExFreePool(ImageSections);
+#ifdef _ELF_SUPPORT
+         if (ElfImagePHeaders != NULL)
+            ExFreePool(ElfImagePHeaders);
+         if (ElfImageInterp != NULL)
+            ExFreePool(ElfImageInterp);
+#endif
          return(Status);
       }
 
@@ -2685,8 +2996,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       KeInitializeSpinLock(&Section->ViewListLock);
 
       /*
-              * Check file access required
-              */
+       * Check file access required
+       */
       if (SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE))
       {
          FileAccess = FILE_READ_DATA | FILE_WRITE_DATA;
@@ -2704,14 +3015,21 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       {
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
+         if (ImageSections != NULL)
+            ExFreePool(ImageSections);
+#ifdef _ELF_SUPPORT
+         if (ElfImagePHeaders != NULL)
+            ExFreePool(ElfImagePHeaders);
+         if (ElfImageInterp != NULL)
+            ExFreePool(ElfImageInterp);
+#endif
          return(Status);
       }
 
       /*
-       * allocate the section segments to describe the mapping
+       * allocate and fill the section segments to describe the mapping
        */
-      NrSegments = PEHeader.FileHeader.NumberOfSections + 1;
+      NrSegments += 1; /* the first segment is special i guess... */
       Size = sizeof(MM_IMAGE_SECTION_OBJECT) + sizeof(MM_SECTION_SEGMENT) * NrSegments;
       ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MM_SECTION_SEGMENT);
       if (ImageSectionObject == NULL)
@@ -2719,110 +3037,241 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
          ObDereferenceObject(Section);
          ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
+         if (ImageSections != NULL)
+            ExFreePool(ImageSections);
+#ifdef _ELF_SUPPORT
+         if (ElfImagePHeaders != NULL)
+            ExFreePool(ElfImagePHeaders);
+         if (ElfImageInterp != NULL)
+            ExFreePool(ElfImageInterp);
+#endif
          return(STATUS_NO_MEMORY);
       }
       Section->ImageSection = ImageSectionObject;
       ImageSectionObject->NrSegments = NrSegments;
-      ImageSectionObject->ImageBase = (PVOID)PEHeader.OptionalHeader.ImageBase;
-      ImageSectionObject->EntryPoint = (PVOID)PEHeader.OptionalHeader.AddressOfEntryPoint;
-      ImageSectionObject->StackReserve = PEHeader.OptionalHeader.SizeOfStackReserve;
-      ImageSectionObject->StackCommit = PEHeader.OptionalHeader.SizeOfStackCommit;
-      ImageSectionObject->Subsystem = PEHeader.OptionalHeader.Subsystem;
-      ImageSectionObject->MinorSubsystemVersion = PEHeader.OptionalHeader.MinorSubsystemVersion;
-      ImageSectionObject->MajorSubsystemVersion = PEHeader.OptionalHeader.MajorSubsystemVersion;
-      ImageSectionObject->ImageCharacteristics = PEHeader.FileHeader.Characteristics;
-      ImageSectionObject->Machine = PEHeader.FileHeader.Machine;
-      ImageSectionObject->Executable = (PEHeader.OptionalHeader.SizeOfCode != 0);
-
       SectionSegments = ImageSectionObject->Segments;
-      SectionSegments[0].FileOffset = 0;
-      SectionSegments[0].Characteristics = IMAGE_SECTION_CHAR_DATA;
-      SectionSegments[0].Protection = PAGE_READONLY;
-      SectionSegments[0].RawLength = PAGE_SIZE;
-      SectionSegments[0].Length = PAGE_SIZE;
-      SectionSegments[0].Flags = 0;
-      SectionSegments[0].ReferenceCount = 1;
-      SectionSegments[0].VirtualAddress = 0;
-      SectionSegments[0].WriteCopy = TRUE;
-      SectionSegments[0].Attributes = 0;
-      ExInitializeFastMutex(&SectionSegments[0].Lock);
-      RtlZeroMemory(&SectionSegments[0].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
-      for (i = 1; i < NrSegments; i++)
+
+      if (FileHeader.DosHeader.e_magic == IMAGE_DOS_SIGNATURE)
       {
-         SectionSegments[i].FileOffset = ImageSections[i-1].PointerToRawData;
-         SectionSegments[i].Characteristics = ImageSections[i-1].Characteristics;
+         ImageSectionObject->ImageBase = (PVOID)PEHeader.OptionalHeader.ImageBase;
+         ImageSectionObject->EntryPoint = (PVOID)PEHeader.OptionalHeader.AddressOfEntryPoint;
+         ImageSectionObject->StackReserve = PEHeader.OptionalHeader.SizeOfStackReserve;
+         ImageSectionObject->StackCommit = PEHeader.OptionalHeader.SizeOfStackCommit;
+         ImageSectionObject->Subsystem = PEHeader.OptionalHeader.Subsystem;
+         ImageSectionObject->MinorSubsystemVersion = PEHeader.OptionalHeader.MinorSubsystemVersion;
+         ImageSectionObject->MajorSubsystemVersion = PEHeader.OptionalHeader.MajorSubsystemVersion;
+         ImageSectionObject->ImageCharacteristics = PEHeader.FileHeader.Characteristics;
+         ImageSectionObject->Machine = PEHeader.FileHeader.Machine;
+         ImageSectionObject->Executable = (PEHeader.OptionalHeader.SizeOfCode != 0);
 
-         /*
-          * Set up the protection and write copy variables.
-          */
-         Characteristics = ImageSections[i - 1].Characteristics;
-         if (Characteristics & (IMAGE_SECTION_CHAR_READABLE|IMAGE_SECTION_CHAR_WRITABLE|IMAGE_SECTION_CHAR_EXECUTABLE))
+         SectionSegments[0].FileOffset = 0;
+         SectionSegments[0].Characteristics = IMAGE_SECTION_CHAR_DATA;
+         SectionSegments[0].Protection = PAGE_READONLY;
+         SectionSegments[0].RawLength = PAGE_SIZE;
+         SectionSegments[0].Length = PAGE_SIZE;
+         SectionSegments[0].Flags = 0;
+         SectionSegments[0].ReferenceCount = 1;
+         SectionSegments[0].VirtualAddress = 0;
+         SectionSegments[0].WriteCopy = TRUE;
+         SectionSegments[0].Attributes = 0;
+         ExInitializeFastMutex(&SectionSegments[0].Lock);
+         RtlZeroMemory(&SectionSegments[0].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+         for (i = 1; i < NrSegments; i++)
          {
-            SectionSegments[i].Protection = SectionCharacteristicsToProtect[Characteristics >> 28];
-            SectionSegments[i].WriteCopy = !(Characteristics & IMAGE_SECTION_CHAR_SHARED);
+            SectionSegments[i].FileOffset = ImageSections[i-1].PointerToRawData;
+            SectionSegments[i].Characteristics = ImageSections[i-1].Characteristics;
+
+            /*
+             * Set up the protection and write copy variables.
+             */
+            Characteristics = ImageSections[i - 1].Characteristics;
+            if (Characteristics & (IMAGE_SECTION_CHAR_READABLE|IMAGE_SECTION_CHAR_WRITABLE|IMAGE_SECTION_CHAR_EXECUTABLE))
+            {
+               SectionSegments[i].Protection = SectionCharacteristicsToProtect[Characteristics >> 28];
+               SectionSegments[i].WriteCopy = !(Characteristics & IMAGE_SECTION_CHAR_SHARED);
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+            {
+               SectionSegments[i].Protection = PAGE_EXECUTE_READ;
+               SectionSegments[i].WriteCopy = TRUE;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+            {
+               SectionSegments[i].Protection = PAGE_READWRITE;
+               SectionSegments[i].WriteCopy = TRUE;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
+            {
+               SectionSegments[i].Protection = PAGE_READWRITE;
+               SectionSegments[i].WriteCopy = TRUE;
+            }
+            else
+            {
+               SectionSegments[i].Protection = PAGE_NOACCESS;
+               SectionSegments[i].WriteCopy = TRUE;
+            }
+
+            /*
+             * Set up the attributes.
+             */
+            if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
+            {
+               SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
+            }
+            else
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+
+            SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
+            if (ImageSections[i-1].Misc.VirtualSize != 0)
+            {
+               SectionSegments[i].Length = ImageSections[i-1].Misc.VirtualSize;
+            }
+            else
+            {
+               SectionSegments[i].Length = ImageSections[i-1].SizeOfRawData;
+            }
+            SectionSegments[i].Flags = 0;
+            SectionSegments[i].ReferenceCount = 1;
+            SectionSegments[i].VirtualAddress = (PVOID)ImageSections[i-1].VirtualAddress;
+            ExInitializeFastMutex(&SectionSegments[i].Lock);
+            RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
          }
-         else if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+      }
+      else
+      {
+#ifdef _ELF_SUPPORT
+         ULONG j;
+
+         ImageSectionObject->ImageBase = (PVOID)ElfImagePHeaders[0].VAddr;
+         ImageSectionObject->EntryPoint = (PVOID)FileHeader.ElfHeader.Entry;
+         if (FileHeader.ElfHeader.Entry != (ELF_ADDR)NULL)
          {
-            SectionSegments[i].Protection = PAGE_EXECUTE_READ;
-            SectionSegments[i].WriteCopy = TRUE;
+            ImageSectionObject->EntryPoint = (PVOID)((UINT_PTR)FileHeader.ElfHeader.Entry -
+                                                     (UINT_PTR)ImageSectionObject->ImageBase);
          }
-         else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+         ImageSectionObject->StackReserve = 0x10000; /* FIXME: does ELF provide such info? */
+         ImageSectionObject->StackCommit = 0x1000; /* FIXME: does ELF provide such info? */
+         ImageSectionObject->Subsystem = IMAGE_SUBSYSTEM_WINDOWS_CUI; /* FIXME: we need to extend ELF */
+         ImageSectionObject->MajorSubsystemVersion = 4;
+         ImageSectionObject->MinorSubsystemVersion = 0; /* WinNT 4.0 */
+         ImageSectionObject->Executable = TRUE;
+         ImageSectionObject->ImageCharacteristics = IMAGE_FILE_32BIT_MACHINE;
+         if (FileHeader.ElfHeader.Type == IMAGE_ELF_TYPE_EXEC)
          {
-            SectionSegments[i].Protection = PAGE_READWRITE;
-            SectionSegments[i].WriteCopy = TRUE;
-         }
-         else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
-         {
-            SectionSegments[i].Protection = PAGE_READWRITE;
-            SectionSegments[i].WriteCopy = TRUE;
+            ImageSectionObject->ImageCharacteristics |= IMAGE_FILE_EXECUTABLE_IMAGE;
          }
          else
          {
-            SectionSegments[i].Protection = PAGE_NOACCESS;
-            SectionSegments[i].WriteCopy = TRUE;
-         }
-
-         /*
-          * Set up the attributes.
-          */
-         if (Characteristics & IMAGE_SECTION_CHAR_CODE)
-         {
-            SectionSegments[i].Attributes = 0;
-         }
-         else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
-         {
-            SectionSegments[i].Attributes = 0;
-         }
-         else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
-         {
-            SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
-         }
+            assert(FileHeader.ElfHeader.Type == IMAGE_ELF_TYPE_DYN);
+            ImageSectionObject->ImageCharacteristics |= IMAGE_FILE_DLL;
+		 }
+         
+         if (FileHeader.ElfHeader.Machine == IMAGE_ELF_MACHINE_386)
+            ImageSectionObject->Machine = IMAGE_FILE_MACHINE_I386;
          else
          {
-            SectionSegments[i].Attributes = 0;
+            /*
+             * This should never be reached because we check if 
+             * ElfHeader.Machine is IMAGE_ELF_TARGET_MACHINE above
+             * and fail if it is not.
+             */
+            assert(0);
          }
 
-         SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
-         if (ImageSections[i-1].Misc.VirtualSize != 0)
+         /* FIXME: what is this first segment used for? */
+         SectionSegments[0].FileOffset = 0;
+         SectionSegments[0].Characteristics = IMAGE_SECTION_CHAR_DATA;
+         SectionSegments[0].Protection = PAGE_READONLY;
+         SectionSegments[0].RawLength = PAGE_SIZE;
+         SectionSegments[0].Length = PAGE_SIZE;
+         SectionSegments[0].Flags = 0;
+         SectionSegments[0].ReferenceCount = 1;
+         SectionSegments[0].VirtualAddress = 0;
+         SectionSegments[0].WriteCopy = TRUE;
+         SectionSegments[0].Attributes = 0;
+         ExInitializeFastMutex(&SectionSegments[0].Lock);
+         RtlZeroMemory(&SectionSegments[0].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+         for (i = 1, j = 0; j < (NrSegments - 1); j++)
          {
-            SectionSegments[i].Length = ImageSections[i-1].Misc.VirtualSize;
+            if (ElfImagePHeaders[j].Type != IMAGE_ELF_SEGMENT_TYPE_LOAD)
+               continue;
+
+            SectionSegments[i].FileOffset = ElfImagePHeaders[j].Offset;
+
+            /*
+             * Fill in characteristics
+             */
+            Characteristics = 0;
+            if (ElfImagePHeaders[j].Flags & IMAGE_ELF_SEGMENT_FLAG_READ)
+               Characteristics |= IMAGE_SECTION_CHAR_READABLE;
+            if (ElfImagePHeaders[j].Flags & IMAGE_ELF_SEGMENT_FLAG_WRITE)
+               Characteristics |= IMAGE_SECTION_CHAR_WRITABLE;
+            if (ElfImagePHeaders[j].Flags & IMAGE_ELF_SEGMENT_FLAG_EXEC)
+               Characteristics |= IMAGE_SECTION_CHAR_EXECUTABLE | IMAGE_SECTION_CHAR_CODE;
+            else /* not executable, must be some kind of data */
+               Characteristics |= (ElfImagePHeaders[j].FileSz > 0) ? IMAGE_SECTION_CHAR_DATA :
+                                                                     IMAGE_SECTION_CHAR_BSS;
+            SectionSegments[i].Characteristics = Characteristics;
+
+            /*
+             * Set up the protection and write copy variables.
+             */
+            SectionSegments[i].Protection = ElfProgramHeaderFlagsToProtect[ElfImagePHeaders[j].Flags & 7];
+            SectionSegments[i].WriteCopy = TRUE; /* ELF does not support shared segments */
+
+            /*
+             * Set up the attributes.
+             */
+            if (Characteristics & IMAGE_SECTION_CHAR_CODE)
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_DATA)
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+            else if (Characteristics & IMAGE_SECTION_CHAR_BSS)
+            {
+               SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
+            }
+            else
+            {
+               SectionSegments[i].Attributes = 0;
+            }
+
+            SectionSegments[i].RawLength = ElfImagePHeaders[j].FileSz;
+            SectionSegments[i].Length = ElfImagePHeaders[j].MemSz; /* FIXME: I hope these are correct */
+
+            SectionSegments[i].Flags = 0;
+            SectionSegments[i].ReferenceCount = 1;
+            SectionSegments[i].VirtualAddress = (PVOID)((UINT_PTR)ElfImagePHeaders[j].VAddr -
+                                                        (UINT_PTR)ImageSectionObject->ImageBase);
+            ExInitializeFastMutex(&SectionSegments[i].Lock);
+            RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+
+            i++;
          }
-         else
-         {
-            SectionSegments[i].Length = ImageSections[i-1].SizeOfRawData;
-         }
-         SectionSegments[i].Flags = 0;
-         SectionSegments[i].ReferenceCount = 1;
-         SectionSegments[i].VirtualAddress = (PVOID)ImageSections[i-1].VirtualAddress;
-         ExInitializeFastMutex(&SectionSegments[i].Lock);
-         RtlZeroMemory(&SectionSegments[i].PageDirectory, sizeof(SECTION_PAGE_DIRECTORY));
+         ImageSectionObject->NrSegments = i;
+         
+#else /* if !_ELF_SUPPORT */
+         assert(0);
+#endif /* !_ELF_SUPPORT */
       }
       if (0 != InterlockedCompareExchange((PLONG)&FileObject->SectionObjectPointer->ImageSectionObject,
                                           (LONG)ImageSectionObject, 0))
       {
          /*
-          * An other thread has initialized the some image in the background
+          * An other thread has initialized the same image in the background
           */
          ExFreePool(ImageSectionObject);
          ImageSectionObject = FileObject->SectionObjectPointer->ImageSectionObject;
@@ -2834,7 +3283,10 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
             InterlockedIncrement((LONG *)&SectionSegments[i].ReferenceCount);
          }
       }
-      ExFreePool(ImageSections);
+      if (ImageSections != NULL)
+         ExFreePool(ImageSections);
+      if (ElfImagePHeaders != NULL)
+         ExFreePool(ElfImagePHeaders);
    }
    else
    {
@@ -3810,7 +4262,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
             return(STATUS_UNSUCCESSFUL);
          }
          /* Otherwise find a gap to map the image. */
-         ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), PAGE_SIZE, FALSE);
+         ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), FALSE);
          if (ImageBase == NULL)
          {
             MmUnlockAddressSpace(AddressSpace);
