@@ -97,7 +97,7 @@ VOID ExExecuteShell(VOID)
    ANSI_STRING afilename;
    UNICODE_STRING ufilename;
    LARGE_INTEGER SectionOffset;
-   ULONG Size;
+   ULONG Size, StackSize;
    CONTEXT Context;
    
    ZwCreateProcess(&ShellHandle,
@@ -130,12 +130,12 @@ VOID ExExecuteShell(VOID)
    BaseAddress = (PVOID)0x10000;
    SectionOffset.HighPart = 0;
    SectionOffset.LowPart = 0;
-   Size = 0x6000;
+   Size = 0x8000;
    ZwMapViewOfSection(SectionHandle,
 		      ShellHandle,
 		      &BaseAddress,
 		      0,
-                      0x6000,
+                      0x8000,
 		      &SectionOffset,
 		      &Size,
 		      0,
@@ -155,10 +155,11 @@ VOID ExExecuteShell(VOID)
    Context.SegGs = USER_DS;
    
    BaseAddress = 0x1000;
+   StackSize = 0x1000;
    ZwAllocateVirtualMemory(ShellHandle,
 			   &BaseAddress,
 			   0,
-			   PAGESIZE,
+			   &StackSize,
 			   MEM_COMMIT,
 			   PAGE_READWRITE);
 			   

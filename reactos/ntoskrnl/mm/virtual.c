@@ -312,7 +312,7 @@ ZwAllocateVirtualMemory(
    
    DbgPrint("ZwAllocateVirtualMemory(ProcessHandle %x, *BaseAddress %x, "
 	    "ZeroBits %d, RegionSize %d, AllocationType %x, Protect %x)\n",
-	    ProcessHandle,*BaseAddress,ZeroBits,RegionSize,AllocationType,
+	    ProcessHandle,*BaseAddress,ZeroBits,*RegionSize,AllocationType,
 	    Protect);
    
    Status = ObReferenceObjectByHandle(ProcessHandle,

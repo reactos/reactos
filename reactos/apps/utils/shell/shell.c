@@ -15,9 +15,6 @@ void debug_printf(char* fmt, ...)
    va_end(args);
 }
 
-#define VIDMEM_BASE 0xb8000
-static char* vidmem = (char *)(VIDMEM_BASE + IDMAP_BASE);
-
 void main()
 {
    KEY_EVENT_RECORD KeyEvent[2];
@@ -26,13 +23,11 @@ void main()
    HANDLE DefaultHeap;
    PVOID Buffer;
 
-   vidmem[(80 * 50 - 1) * 2] = '0';    
    NtDisplayString("Simple Shell Starting...\n");
    
 //   DefaultHeap = HeapCreate(0,1024*1024,1024*1024);
 //   Buffer = HeapAlloc(DefaultHeap,0,1024);
    
-   vidmem[(80 * 50 - 1) * 2] = '1';
    FileHandle = CreateFile("\\Device\\Keyboard",
 			   FILE_GENERIC_READ,
 			   0,
@@ -41,8 +36,9 @@ void main()
 			   0,
 			   NULL);
    
-   vidmem[(80 * 50 - 1) * 2] = '2';
+NtDisplayString("#1\n");
    debug_printf("C:\\");
+NtDisplayString("#2\n");
    for(;;)
      {
 	ReadFile(FileHandle,
@@ -50,6 +46,8 @@ void main()
 		 sizeof(KeyEvent),
 		 &Result,
 		 NULL);
+NtDisplayString("#3\n");
 	debug_printf("%c",KeyEvent[0].AsciiChar);
+NtDisplayString("#4\n");
      }
 }
