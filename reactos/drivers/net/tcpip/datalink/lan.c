@@ -485,6 +485,29 @@ VOID ProtocolStatusComplete(
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 }
 
+VOID ProtocolBindAdapter(
+    OUT PNDIS_STATUS   Status,
+    IN  NDIS_HANDLE    BindContext,
+    IN  PNDIS_STRING   DeviceName,
+    IN  PVOID          SystemSpecific1,
+    IN  PVOID          SystemSpecific2)
+/*
+ * FUNCTION: Called by NDIS during NdisRegisterProtocol to set up initial
+ *           bindings, and periodically thereafer as new adapters come online
+ * ARGUMENTS:
+ *     Status: Return value to NDIS
+ *     BindContext: Handle provided by NDIS to track pending binding operations
+ *     DeviceName: Name of the miniport device to bind to
+ *     SystemSpecific1: Pointer to a registry path with protocol-specific configuration information
+ *     SystemSpecific2: Unused
+ */
+{
+	/* we get to ignore BindContext because we will never pend an operation with NDIS */
+	DbgPrint(("tcpip!ProtocolBindAdapter called\n"));
+	TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
+	*Status = LANRegisterAdapter(DeviceName);
+}
+
 
 VOID LANTransmit(
     PVOID Context,
@@ -634,6 +657,7 @@ VOID BindAdapter(
     /* FIXME: Get address from registry.
        For now just use a private address, eg. 10.0.0.100 */
     Address = AddrBuildIPv4(0x6400000A);
+ //   Address = AddrBuildIPv4(0x6048F2D1);	// 209.242.72.96
     if (!Address) {
         TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
         FreeTDPackets(Adapter);
@@ -698,8 +722,7 @@ VOID UnbindAdapter(
 
 
 NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName,
-    PLAN_ADAPTER *Adapter)
+    PNDIS_STRING AdapterName)
 /*
  * FUNCTION: Registers protocol with an NDIS adapter
  * ARGUMENTS:
@@ -845,8 +868,6 @@ NDIS_STATUS LANRegisterAdapter(
     /* Convert returned link speed to bps (it is in 100bps increments) */
     IF->Speed = Speed * 100L;
 
-    *Adapter = IF;
-
     /* Add adapter to the adapter list */
     ExInterlockedInsertTailList(&AdapterListHead,
                                 &IF->ListEntry,
@@ -908,7 +929,7 @@ NDIS_STATUS LANUnregisterAdapter(
 
 
 NTSTATUS LANRegisterProtocol(
-    PSTRING Name)
+    PNDIS_STRING Name)
 /*
  * FUNCTION: Registers this protocol driver with NDIS
  * ARGUMENTS:
@@ -930,7 +951,8 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.MajorNdisVersion               = NDIS_VERSION_MAJOR;
     ProtChars.MinorNdisVersion               = NDIS_VERSION_MINOR;
     ProtChars.Name.Length                    = Name->Length;
-    ProtChars.Name.Buffer                    = (PVOID)Name->Buffer;
+    ProtChars.Name.Buffer                    = Name->Buffer;
+	 ProtChars.Name.MaximumLength             = Name->MaximumLength;
     ProtChars.OpenAdapterCompleteHandler     = ProtocolOpenAdapterComplete;
     ProtChars.CloseAdapterCompleteHandler    = ProtocolCloseAdapterComplete;
     ProtChars.ResetCompleteHandler           = ProtocolResetComplete;
@@ -941,14 +963,18 @@ NTSTATUS LANRegisterProtocol(
     ProtChars.ReceiveCompleteHandler         = ProtocolReceiveComplete;
     ProtChars.StatusHandler                  = ProtocolStatus;
     ProtChars.StatusCompleteHandler          = ProtocolStatusComplete;
+	 ProtChars.BindAdapterHandler             = ProtocolBindAdapter;
 
 	/* Try to register protocol */
     NdisRegisterProtocol(&NdisStatus,
                          &NdisProtocolHandle,
                          &ProtChars,
-                         sizeof(NDIS_PROTOCOL_CHARACTERISTICS) + Name->Length);
+                         sizeof(NDIS_PROTOCOL_CHARACTERISTICS));
     if (NdisStatus != NDIS_STATUS_SUCCESS)
+	 {
+		 TI_DbgPrint(MID_TRACE, ("NdisRegisterProtocol failed, status 0x%x\n", NdisStatus));
         return (NTSTATUS)NdisStatus;
+	 }
 
     ProtocolRegistered = TRUE;
 

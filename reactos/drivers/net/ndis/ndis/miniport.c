@@ -7,7 +7,7 @@
  * REVISIONS:
  *   CSH 01/08-2000 Created
  */
-#define DBG
+//#define DBG
 #include <miniport.h>
 #include <protocol.h>
 #ifdef DBG
@@ -17,7 +17,7 @@
 #ifdef DBG
 /* See debug.h for debug/trace constants */
 //ULONG DebugTraceLevel = MIN_TRACE;
-ULONG DebugTraceLevel = (MAX_TRACE + DEBUG_MINIPORT);
+//ULONG DebugTraceLevel = -1
 #endif /* DBG */
 
 #define SERVICES_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"

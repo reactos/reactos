@@ -16,6 +16,37 @@
 LIST_ENTRY ProtocolListHead;
 KSPIN_LOCK ProtocolListLock;
 
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisCompleteBindAdapter(
+    IN  NDIS_HANDLE BindAdapterContext,
+    IN  NDIS_STATUS Status,
+    IN  NDIS_STATUS OpenStatus)
+/*
+ * FUNCTION: Indicates a packet to bound protocols
+ * ARGUMENTS:
+ *     Adapter = Pointer to logical adapter
+ *     Packet  = Pointer to packet to indicate
+ * RETURNS:
+ *     Status of operation
+ */
+{
+    /* 
+	  * XXX partially-implemented!
+	  *
+	  * need to handle error conditions, and i'm not sure this is even what this func should do.
+	  * be sure to fix NdisRegisterProtocol before fixing this, though.
+	  */
+
+    PROTOCOL_BINDING *Protocol = (PROTOCOL_BINDING *)BindAdapterContext;
+
+    /* Put protocol binding struct on global list */
+    ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
+}
+
 
 NDIS_STATUS
 ProIndicatePacket(
@@ -450,11 +481,15 @@ NdisOpenAdapter(
     AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
     AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
 
+#if 0
+	 /* XXX this looks fishy */
+	 /* OK, this really *is* fishy - it bugchecks */
     /* Put on protocol's bound adapters list */
     ExInterlockedInsertTailList(&Protocol->AdapterListHead,
                                 &AdapterBinding->ProtocolListEntry,
                                 &Protocol->Lock);
-
+#endif
+	 /* XXX so does this */
     /* Put protocol on adapter's bound protocols list */
     ExInterlockedInsertTailList(&Adapter->ProtocolListHead,
                                 &AdapterBinding->AdapterListEntry,
@@ -483,16 +518,23 @@ NdisRegisterProtocol(
  *     NdisProtocolHandle      = Address of buffer for handle used to identify the driver
  *     ProtocolCharacteristics = Pointer to NDIS_PROTOCOL_CHARACTERISTICS structure
  *     CharacteristicsLength   = Size of structure which ProtocolCharacteristics targets
+ * TODO:
+ *     break this function up
+ *     make this thing able to handle >1 protocol
  */
 {
     PPROTOCOL_BINDING Protocol;
     NTSTATUS NtStatus;
     UINT MinSize;
+    HANDLE DriverKeyHandle = NULL;
+    PKEY_VALUE_PARTIAL_INFORMATION KeyInformation = NULL;
+	 UINT DataOffset = 0;
 
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
     switch (ProtocolCharacteristics->MajorNdisVersion) {
-    case 0x03:
+    case 0x03:	/* we don't really want to support ndis3 drivers - so we complainf or now */
+		  NDIS_DbgPrint(MID_TRACE, ("Ndis 3 protocol attempting to register\n"));
         MinSize = sizeof(NDIS30_PROTOCOL_CHARACTERISTICS_S);
         break;
 
@@ -506,6 +548,7 @@ NdisRegisterProtocol(
 
     default:
         *Status = NDIS_STATUS_BAD_VERSION;
+		  NDIS_DbgPrint(MIN_TRACE, ("Incorrect characteristics size\n"));
         return;
     }
 
@@ -541,10 +584,171 @@ NdisRegisterProtocol(
 
     InitializeListHead(&Protocol->AdapterListHead);
 
-    /* Put protocol binding on global list */
-    ExInterlockedInsertTailList(&ProtocolListHead,
-                                &Protocol->ListEntry,
-                                &ProtocolListLock);
+	 /* 
+	  * bind the adapter to all of its miniports 
+	  *
+	  * open registry path
+	  * get list of devices from Bind key
+	  * call BindAdapterHandler for each
+	  */
+	{
+		OBJECT_ATTRIBUTES ObjectAttributes;
+		UNICODE_STRING RegistryPath;
+		WCHAR *RegistryPathStr;
+
+#define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
+#define LINKAGE_KEY  L"\\Linkage"
+
+		RegistryPathStr = ExAllocatePool(PagedPool, 
+			sizeof(SERVICES_KEY) + ProtocolCharacteristics->Name.Length + sizeof(LINKAGE_KEY));
+		if(!RegistryPathStr)
+		{
+			NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_RESOURCES;
+			return;
+		}
+
+		wcscpy(RegistryPathStr, SERVICES_KEY);
+		wcsncat(RegistryPathStr, ((WCHAR *)ProtocolCharacteristics->Name.Buffer),
+				ProtocolCharacteristics->Name.Length);
+		RegistryPathStr[wcslen(SERVICES_KEY)+ProtocolCharacteristics->Name.Length/sizeof(WCHAR)] = 0;
+		wcscat(RegistryPathStr, LINKAGE_KEY);
+
+		RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
+		NDIS_DbgPrint(MAX_TRACE, ("Opening configuration key: %wZ\n", &RegistryPath));
+
+		InitializeObjectAttributes(&ObjectAttributes, &RegistryPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+		NtStatus = ZwOpenKey(&DriverKeyHandle, KEY_READ, &ObjectAttributes);
+
+		ExFreePool(RegistryPathStr);
+
+		if(!NT_SUCCESS(NtStatus))
+		{
+			NDIS_DbgPrint(MID_TRACE, ("Unable to open protocol configuration\n"));
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_FAILURE;
+			return;
+		}
+	}
+
+	NDIS_DbgPrint(MAX_TRACE, ("Successfully opened the registry configuration\n"));
+
+	{
+		UNICODE_STRING ValueName;
+		ULONG Length;
+		ULONG ResultLength;
+
+		RtlInitUnicodeString(&ValueName, L"Bind");
+
+		NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, NULL, 0, &ResultLength);
+		if(NtStatus != STATUS_BUFFER_OVERFLOW && NtStatus != STATUS_BUFFER_TOO_SMALL)
+		{
+			NDIS_DbgPrint(MID_TRACE, ("Unable to query the Bind value for size\n"));
+			ZwClose(DriverKeyHandle);
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_FAILURE;
+			return;
+		}
+
+		KeyInformation = ExAllocatePool(PagedPool, sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength);
+		if(!KeyInformation)
+		{
+			NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+			ZwClose(DriverKeyHandle);
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_FAILURE;
+			return;
+		}
+
+		NtStatus = ZwQueryValueKey(DriverKeyHandle, &ValueName, KeyValuePartialInformation, KeyInformation,
+				sizeof(KEY_VALUE_PARTIAL_INFORMATION) + ResultLength, &ResultLength);
+
+		if(!NT_SUCCESS(NtStatus))
+		{
+			NDIS_DbgPrint(MIN_TRACE, ("Unable to query the Bind value\n"));
+			ZwClose(DriverKeyHandle);
+			ExFreePool(KeyInformation);
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_FAILURE;
+			return;
+		}
+	}
+
+	DataOffset = 0;
+	while((KeyInformation->Data)[DataOffset])
+	{
+		/* BindContext is for tracking pending binding operations */
+		VOID *BindContext = 0;
+		NDIS_STRING DeviceName;
+		NDIS_STRING RegistryPath;
+		WCHAR *RegistryPathStr = NULL;
+		ULONG PathLength = 0;
+
+		RtlInitUnicodeString(&DeviceName, (WCHAR *)KeyInformation->Data);	/* we know this is 0-term */
+
+		/*
+		 * RegistryPath should be:
+		 *     \Registry\Machine\System\CurrentControlSet\Services\Nic1\Parameters\Tcpip
+		 *
+		 *  This is constructed as follows:
+		 *      SERVICES_KEY + extracted device name + Protocol name from characteristics 
+		 */
+#define PARAMETERS_KEY L"\\Parameters\\"
+		
+		PathLength = sizeof(SERVICES_KEY) +                              /* \Registry\Machine\System\CurrentControlSet\Services\ */
+			wcslen( ((WCHAR *)KeyInformation->Data)+8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
+			sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
+			ProtocolCharacteristics->Name.Length;                         /* Tcpip                                                */
+
+		RegistryPathStr = ExAllocatePool(PagedPool, PathLength);
+		if(!RegistryPathStr)
+		{
+			NDIS_DbgPrint(MIN_TRACE, ("insufficient resources.\n"));
+			ExFreePool(KeyInformation);
+			ExFreePool(Protocol);
+			*Status = NDIS_STATUS_RESOURCES;
+			return;
+		}
+
+		wcscpy(RegistryPathStr, SERVICES_KEY);
+		wcscat(RegistryPathStr, (((WCHAR *)(KeyInformation->Data)) +8 ));
+		wcscat(RegistryPathStr, PARAMETERS_KEY);
+		wcsncat(RegistryPathStr, ProtocolCharacteristics->Name.Buffer, ProtocolCharacteristics->Name.Length);
+
+		RegistryPathStr[PathLength/sizeof(WCHAR)] = 0;
+
+		RtlInitUnicodeString(&RegistryPath, RegistryPathStr);
+
+		NDIS_DbgPrint(MAX_TRACE, ("Calling protocol's BindAdapter handler with DeviceName %wZ and RegistryPath %wZ\n",
+					&DeviceName, &RegistryPath));
+
+		/* XXX SD must do something with bind context */
+		{
+			BIND_HANDLER BindHandler = ProtocolCharacteristics->BindAdapterHandler;
+			if(BindHandler)
+				BindHandler(Status, BindContext, &DeviceName, &RegistryPath, 0);
+			else
+				NDIS_DbgPrint(MID_TRACE, ("No protocol bind handler specified\n"));
+		}
+		/*
+      (*(Protocol->Chars.BindAdapterHandler))(Status, BindContext, &DeviceName, &RegistryPath, 0);
+		*/
+
+		if(*Status == NDIS_STATUS_SUCCESS)
+		{
+			 /* Put protocol binding struct on global list */
+			 ExInterlockedInsertTailList(&ProtocolListHead, &Protocol->ListEntry, &ProtocolListLock);
+		}
+		/*
+		else if(*Status != NDIS_STATUS_PENDING)
+		{
+			// what to do here?
+		}
+		*/
+
+		DataOffset += wcslen((WCHAR *)KeyInformation->Data);
+	}
 
     *NdisProtocolHandle = Protocol;
     *Status             = NDIS_STATUS_SUCCESS;

@@ -15,6 +15,12 @@
  *       had to be created to allow for resource tracking.  This means that Miniports cannot just
  *       pass this NDIS_HANDLE to things like ZwQueryValueKey().  I don't thknk they do (they
  *       certainly should not), but it should be kept in mind.
+ *         UPDATE:  I just found this in the NTDDK:
+ *         NdisOpenProtocolConfiguration returns a handle for the 
+ *         HKEY_LOCAL_MACHINE\System\CurrentControlSet\Services\NICDriverInstance\Parameters\ProtocolName 
+ *         registry key.  XXX This is a problem.  Following that, the DDK instructs programmers
+ *         to use NdisReadConfiguration and NdisWriteConfiguration.  No telling what the world's idiots
+ *         have done with this.
  *     - I have tried to stick to the DDK's definition of what return values are possible, which
  *       has resulted in stupid return values in some cases.  I do use STATUS_RESOURCES in a few
  *       places that the DDK doesn't explicitly mention it, though.
@@ -221,7 +227,7 @@ NdisOpenProtocolConfiguration(
  *     NDIS_STATUS_SUCCESS: the operation was a success
  *     NDIS_STATUS_FAILURE: the operation was not a success
  * NOTES:
- *     I think this is the parameters key; please verify.
+ *     I think this is the per-device (adapter) parameters\{ProtocolName} key; please verify.
  */
 {
     OBJECT_ATTRIBUTES KeyAttributes;
@@ -540,7 +546,7 @@ NdisReadConfiguration(
 
             MiniportResource->ResourceType = 0;
             MiniportResource->Resource = *ParameterValue;
-            NDIS_DbgPrint(MID_TRACK,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
+            NDIS_DbgPrint(MID_TRACE,("inserting 0x%x into the resource list\n", MiniportResource->Resource));
             ExInterlockedInsertTailList(&ConfigurationContext->ResourceListHead, &MiniportResource->ListEntry, &ConfigurationContext->ResourceLock);
 
             memcpy(RegData, KeyInformation->Data, KeyInformation->DataLength);

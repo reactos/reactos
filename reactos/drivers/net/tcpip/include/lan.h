@@ -81,14 +81,13 @@ typedef struct LAN_ADAPTER {
 
 
 NDIS_STATUS LANRegisterAdapter(
-    PNDIS_STRING AdapterName,
-    PLAN_ADAPTER *Adapter);
+    PNDIS_STRING AdapterName);
 
 NDIS_STATUS LANUnregisterAdapter(
     PLAN_ADAPTER Adapter);
 
 NTSTATUS LANRegisterProtocol(
-    STRING *Name);
+    PNDIS_STRING Name);
 
 VOID LANUnregisterProtocol(
     VOID);

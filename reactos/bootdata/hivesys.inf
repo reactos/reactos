@@ -217,10 +217,10 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Test",0x00010001,0xbaadf00d
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"NE20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00000000,"\Device\NE20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00000000,"\Device\NE20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00000000,"NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00000000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00000000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00000000,"Ne20001"
 
 ; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
 ; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
@@ -230,9 +230,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00000000,"NE20
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Type",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\NE20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\NE20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Route",0x00010000,"NE20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Route",0x00010000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Port",0x00010001,0x00000280
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00010001,0x00000009
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00010001,0xbaadf00d
@@ -277,7 +277,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00020000,"\Device\ne2000"
+HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00020000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00020000,"\Device\packet"
 
 ; Private ICE driver
@@ -321,9 +321,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Start",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00020000,"\Device\ne2000"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00020000,"\Device\tcpip"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00020000,""
+; These bindings are of the windows 2000 type, and will probably need to be
+; twiddled to get 3rd-party network-related software to work.
+; NT4 puts additional stuff in the Bind, Export, and Route values.
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00020000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00020000,"\Device\Tcpip_Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00020000,"Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00000000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00000000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00000000,"ROSHost"

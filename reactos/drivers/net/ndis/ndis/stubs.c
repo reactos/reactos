@@ -9,19 +9,6 @@
  */
 #include <ndissys.h>
 
-/*
- * @unimplemented
- */
-VOID
-EXPORT
-NdisCompleteBindAdapter(
-    IN  NDIS_HANDLE BindAdapterContext,
-    IN  NDIS_STATUS Status,
-    IN  NDIS_STATUS OpenStatus)
-{
-    UNIMPLEMENTED
-}
-
 
 /*
  * @unimplemented
@@ -177,7 +164,10 @@ NdisWriteErrorLogEntry(
  *  ERROR_LOG_MAXIMUM_SIZE = ... in MSDN
  */
 {
+	/*
+	 * let's just try not doing anything at all
     UNIMPLEMENTED
+	 */
 }
 
 
@@ -888,9 +878,14 @@ NdisWriteEventLogEntry(
  *    NDIS 5.0
  */
 {
+	/*
+	 * gonna try just returning true
+	 *
     UNIMPLEMENTED
 
     return NDIS_STATUS_FAILURE;
+	 */
+	return NDIS_STATUS_SUCCESS;
 }
 
 

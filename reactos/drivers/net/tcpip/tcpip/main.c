@@ -16,20 +16,8 @@
 #include <udp.h>
 #include <tcp.h>
 
-//#define _USE_NE2000
-
 #ifdef DBG
-
-/* See debug.h for debug/trace constants */
-#ifdef _USE_NE2000
 DWORD DebugTraceLevel = MID_TRACE;
-//DWORD DebugTraceLevel = (MAX_TRACE + DEBUG_DATALINK);
-#else
-DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = MAX_TRACE;
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
-#endif
-
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
@@ -714,12 +702,13 @@ DriverEntry(
 {
   NTSTATUS Status;
   UNICODE_STRING strDeviceName;
-  STRING strNdisDeviceName;
+  UNICODE_STRING strNdisDeviceName;
   NDIS_STATUS NdisStatus;
-  PLAN_ADAPTER Adapter;
   NDIS_STRING DeviceName;
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+  /* TdiInitialize() ? */
 
   /* FIXME: Create symbolic links in Win32 namespace */
 
@@ -798,9 +787,11 @@ DriverEntry(
   TCPStartup();
 
   /* Register protocol with NDIS */
-  RtlInitString(&strNdisDeviceName, IP_DEVICE_NAME);
+  /* This used to be IP_DEVICE_NAME but the DDK says it has to match your entry in the SCM */
+  RtlInitUnicodeString(&strNdisDeviceName, TCPIP_PROTOCOL_NAME);	
   Status = LANRegisterProtocol(&strNdisDeviceName);
   if (!NT_SUCCESS(Status)) {
+	  TI_DbgPrint(MIN_TRACE,("Failed to register protocol with NDIS; status 0x%x\n", Status));
 	  TiWriteErrorLog(
       DriverObject,
       EVENT_TRANSPORT_REGISTER_FAILED,
@@ -820,41 +811,10 @@ DriverEntry(
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
-/* Open underlying adapter(s) we are bound to */
-
-  /* FIXME: Get binding information from registry */
-
-  /* Put your own NDIS adapter device name here */
-#ifdef _USE_NE2000
-  /* ReactOS */
-  NdisInitUnicodeString(&DeviceName, L"\\Device\\ne2000");
-
-  /* NT4 style */
-  //NdisInitUnicodeString(&DeviceName, L"\\Device\\El90x1");
-
-  /* NT5 style */
-  //NdisInitUnicodeString(&DeviceName, L"\\Device\\{56388B49-67BB-4419-A3F4-28DF190B9149}");
-
-  NdisStatus = LANRegisterAdapter(&DeviceName, &Adapter);
-
-  /* Skip network adapter if it does not exist */
-  if (!NT_SUCCESS(NdisStatus)) {
-    TI_DbgPrint(MIN_TRACE, ("Failed to intialize adapter. Status (0x%X).\n", Status));
-	  TiWriteErrorLog(
-      DriverObject,
-      EVENT_TRANSPORT_ADAPTER_NOT_FOUND,
-      TI_ERROR_DRIVERENTRY,
-      NdisStatus,
-      NULL,
-      0,
-      NULL);
-    TiUnload(DriverObject);
-    return STATUS_DEVICE_DOES_NOT_EXIST;
-  }
-#endif
   /* Setup network layer and transport layer entities */
   EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
   if (!NT_SUCCESS(Status)) {
+	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     TiUnload(DriverObject);
     return STATUS_INSUFFICIENT_RESOURCES;
   }
