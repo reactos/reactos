@@ -37,8 +37,8 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    PKAPC Apc;
    PULONG Esp = (PULONG)UserContext->Esp;
    
-   current_entry = Thread->ApcState.ApcListHead[0].Flink;
-   while (current_entry != &Thread->ApcState.ApcListHead[0])
+   current_entry = Thread->ApcState.ApcListHead[1].Flink;
+   while (current_entry != &Thread->ApcState.ApcListHead[1])
      {
 	Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
 	
@@ -51,6 +51,7 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
 	
 	current_entry = current_entry->Flink;
      }
+   UserContext->Esp = (ULONG)Esp;
    return(TRUE);
 }
 
@@ -61,11 +62,17 @@ VOID KeApcProlog2(PKAPC Apc)
  */
 {
    DPRINT("KeApcProlog2(Apc %x)\n",Apc);
+   KeEnterCriticalRegion();
+   Apc->Thread->ApcState.KernelApcInProgress++;
+   Apc->Thread->ApcState.KernelApcPending--;
+   RemoveEntryList(&Apc->ApcListEntry);
    Apc->KernelRoutine(Apc,
 		      &Apc->NormalRoutine,
 		      &Apc->NormalContext,
 		      &Apc->SystemArgument2,
 		      &Apc->SystemArgument2);
+   Apc->Thread->ApcState.KernelApcInProgress++;
+   KeLeaveCriticalRegion();
    PsSuspendThread(CONTAINING_RECORD(Apc->Thread,ETHREAD,Tcb));
 }
 
@@ -81,12 +88,6 @@ VOID KeDeliverKernelApc(PKAPC Apc)
    DPRINT("KeDeliverKernelApc(Apc %x)\n", Apc);
    
    TargetThread = Apc->Thread;
-
-   if (TargetThread->KernelApcDisable <= 0)
-     {
-	DbgPrint("Queueing apc for thread %x\n", TargetThread);
-	return;
-     }
    
    if (TargetThread == KeGetCurrentThread())
      {	
@@ -130,10 +131,17 @@ VOID KeDeliverKernelApc(PKAPC Apc)
    PsResumeThread(CONTAINING_RECORD(TargetThread,ETHREAD,Tcb));   
 }
 
-void KeInsertQueueApc(PKAPC Apc, 
+VOID KeInsertQueueApc(PKAPC Apc, 
 		      PVOID SystemArgument1,
 		      PVOID SystemArgument2, 
 		      UCHAR Mode)
+/*
+ * FUNCTION: Queues an APC for execution
+ * ARGUMENTS:
+ *         Apc = APC to be queued
+ *         SystemArgument[1-2] = TBD
+ *         Mode = TBD
+ */
 {
    KIRQL oldlvl;
    PKTHREAD TargetThread;
@@ -151,15 +159,30 @@ void KeInsertQueueApc(PKAPC Apc,
      }
    
    TargetThread = Apc->Thread;
-   InsertTailList(&TargetThread->ApcState.ApcListHead[0], &Apc->ApcListEntry);
+   if (Apc->ApcMode == KernelMode)
+     {
+	InsertTailList(&TargetThread->ApcState.ApcListHead[0], 
+		       &Apc->ApcListEntry);
+	TargetThread->ApcState.KernelApcPending++;
+     }
+   else
+     {
+	InsertTailList(&TargetThread->ApcState.ApcListHead[1],
+		       &Apc->ApcListEntry);
+	TargetThread->ApcState.UserApcPending++;
+     }
    Apc->Inserted = TRUE;
    
    DPRINT("TargetThread->KernelApcDisable %d\n", 
 	  TargetThread->KernelApcDisable);
    DPRINT("Apc->KernelRoutine %x\n", Apc->KernelRoutine);
-   if (Apc->KernelRoutine != NULL)
+   if (Apc->ApcMode == KernelMode && TargetThread->KernelApcDisable >= 1)
      {
 	KeDeliverKernelApc(Apc);
+     }
+   else
+     {
+	DPRINT("Queuing APC for later delivery\n");
      }
    KeLowerIrql(oldlvl);
 }
@@ -172,6 +195,19 @@ VOID KeInitializeApc(PKAPC Apc,
 		     PKNORMAL_ROUTINE NormalRoutine,
 		     UCHAR Mode,
 		     PVOID Context)
+/*
+ * FUNCTION: Initialize an APC object
+ * ARGUMENTS:
+ *       Apc = Pointer to the APC object to initialized
+ *       Thread = Thread the APC is to be delivered to
+ *       StateIndex = TBD
+ *       KernelRoutine = Routine to be called for a kernel-mode APC
+ *       RundownRoutine = Routine to be called if the thread has exited with
+ *                        the APC being executed
+ *       NormalRoutine = Routine to be called for a user-mode APC
+ *       Mode = APC mode
+ *       Context = Parameter to be passed to the APC routine
+ */
 {
    DPRINT("KeInitializeApc(Apc %x, Thread %x, StateIndex %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
@@ -210,7 +246,43 @@ NTSTATUS STDCALL ZwQueueApcThread(HANDLE ThreadHandle,
 				  PVOID SystemArgument1,
 				  PVOID SystemArgument2)
 {
-   UNIMPLEMENTED;
+   PKAPC Apc;
+   PETHREAD Thread;
+   NTSTATUS Status;
+   
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_ALL_ACCESS, /* FIXME */
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
+   if (Apc == NULL)
+     {
+	ObDereferenceObject(Thread);
+	return(STATUS_NO_MEMORY);
+     }
+   
+   KeInitializeApc(Apc,
+		   &Thread->Tcb,
+		   0,
+		   NULL,
+		   NULL,
+		   ApcRoutine,
+		   UserMode,
+		   NormalContext);
+   KeInsertQueueApc(Apc,
+		    SystemArgument1,
+		    SystemArgument2,
+		    UserMode);
+   
+   ObDereferenceObject(Thread);
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL NtTestAlert(VOID)

@@ -177,7 +177,7 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
 	current = current->Next;
      } while (current != &LdrDllListHead);
    
-   DPRINT("Failed to find dll %s\n",Name);
+   dprintf("Failed to find dll %s\n",Name);
    
    return(LdrLoadDll(Dll, Name));
 }

@@ -158,12 +158,15 @@ HANDLE STDCALL OpenProcess(DWORD dwDesiredAccess,
    CLIENT_ID ClientId ;
    
    ClientId.UniqueProcess = (HANDLE)dwProcessId;
+   ClientId.UniqueThread = INVALID_HANDLE_VALUE;
+   
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = (HANDLE)NULL;
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
+   ObjectAttributes.ObjectName = NULL;
    
-   if ( bInheritHandle == TRUE )
+   if (bInheritHandle == TRUE)
      ObjectAttributes.Attributes = OBJ_INHERIT;
    else
      ObjectAttributes.Attributes = 0;

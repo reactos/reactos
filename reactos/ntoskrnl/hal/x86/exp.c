@@ -256,22 +256,10 @@ asmlinkage void exception_handler(unsigned int edi,
       printk("Frames:\n");
       for (i = 0; i < 32; i++)
         {
-          if (stack[i] > ((unsigned int) &stext) &&
-              stack[i] < ((unsigned int) &etext))
+          if (stack[i] > ((unsigned int) &stext))
             {
-              for (sym = -1, j = 0; symbol_table[j].name; j++)
-                {
-                  if (stack[i] >= symbol_table[j].value &&
-                      (sym == -1 ||
-                       symbol_table[j].value > symbol_table[sym].value))
-                    {
-                      sym = j;
-                    }
-                }
-              DbgPrint("  %.8x  (%s+%d)\n", 
-                       stack[i], 
-                       symbol_table[sym].name,
-                       stack[i] - symbol_table[sym].value);
+              DbgPrint("  %.8x\n", 
+                       stack[i]);
             }
         }
      }

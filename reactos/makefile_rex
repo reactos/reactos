@@ -16,7 +16,7 @@ include rules.mak
 #
 COMPONENTS = iface_native ntoskrnl
 DLLS = ntdll kernel32 crtdll fmifs
-#DLLS = crtdll mingw32
+#DLLS = advapi32
 SUBSYS = win32k
 
 #

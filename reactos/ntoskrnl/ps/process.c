@@ -19,7 +19,7 @@
 #include <internal/string.h>
 #include <internal/id.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
@@ -79,8 +79,6 @@ VOID PsInitProcessManagment(VOID)
 				ID_PROCESS_OBJECT,
 				sizeof(EPROCESS),
 				FALSE);
-   DPRINT("SystemProcess->Pcb.Type %x\n",
-	  SystemProcess->Pcb.Type);
    KProcess = &SystemProcess->Pcb;  
    
    InitializeListHead(&(KProcess->MemoryAreaList));
@@ -98,6 +96,17 @@ VOID PsInitProcessManagment(VOID)
 		  PROCESS_ALL_ACCESS,
 		  FALSE,
 		  &SystemProcessHandle);
+}
+
+VOID PiDeleteProcess(PVOID ObjectBody)
+{
+   KIRQL oldIrql;
+   
+   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+   RemoveEntryList(&((PEPROCESS)ObjectBody)->Pcb.ProcessListEntry);
+   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
 }
 
 PKPROCESS KeGetCurrentProcess(VOID)
@@ -251,10 +260,17 @@ NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
 				IN POBJECT_ATTRIBUTES ObjectAttributes,
 				IN PCLIENT_ID ClientId)
 {
+   DPRINT("ZwOpenProcess(ProcessHandle %x, DesiredAccess %x, "
+	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
+	  ProcessHandle, DesiredAccess, ObjectAttributes, ClientId,
+	  ClientId->UniqueProcess, ClientId->UniqueThread);
+	  
+   
    /*
-    * Not of the exact semantics 
+    * Not sure of the exact semantics 
     */
-   if (ObjectAttributes != NULL)
+   if (ObjectAttributes != NULL && ObjectAttributes->ObjectName != NULL &&
+       ObjectAttributes->ObjectName->Buffer != NULL)
      {
 	NTSTATUS Status;
 	PEPROCESS Process;
@@ -307,12 +323,14 @@ NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
 					  FALSE,
 					  ProcessHandle);
 		  ObDereferenceObject(current);
-		  
+		  DPRINT("*ProcessHandle %x\n", ProcessHandle);
+		  DPRINT("ZwOpenProcess() = %x\n", Status);
 		  return(Status);			  
 	       }
 	     current_entry = current_entry->Flink;
 	  }
 	KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+	DPRINT("ZwOpenProcess() = STATUS_UNSUCCESSFUL\n");
 	return(STATUS_UNSUCCESSFUL);
      }
    return(STATUS_UNSUCCESSFUL);

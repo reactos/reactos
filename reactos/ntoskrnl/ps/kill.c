@@ -25,12 +25,6 @@ extern ULONG PiNrThreads;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID PiDeleteProcess(PVOID ObjectBody)
-{
-   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
-   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
-}
-
 VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminates the current thread
@@ -59,7 +53,14 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
  * FUNCTION: Terminate a thread when calling from that thread's context
  */
 {
-   UNIMPLEMENTED;
+   KIRQL oldlvl;
+   
+   PiNrThreads--;
+   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   Thread->Tcb.State = THREAD_STATE_TERMINATED;
+   ObDereferenceObject(Thread->ThreadsProcess);
+   Thread->ThreadsProcess = NULL;
+   KeLowerIrql(oldlvl);
 }
 
 

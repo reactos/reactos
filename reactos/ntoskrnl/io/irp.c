@@ -299,12 +299,12 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
 			NULL,
 			(PKNORMAL_ROUTINE)
 			Irp->Overlay.AsynchronousParameters.UserApcRoutine,
-			0,
+			KernelMode,
 			(PVOID)Irp);
 	KeInsertQueueApc(&Irp->Tail.Apc,
 			 Irp->Overlay.AsynchronousParameters.UserApcContext,
 			 NULL,
-			 0);
+			 KernelMode);
      }
    else
      {

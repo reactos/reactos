@@ -1,3 +1,9 @@
+9/6/99:        Implemented ZwOpenProcess
+               Partially implemented killing other threads (possible memory
+                                                            leaks)
+	       Made a start on a proper implemention of APCs (based on 
+	       article in NT insider)
+
 8/12/98:       Corrected bug in shell (Read two keypresses and assumed they
                where the key going up and down respectively)
 	       Corrected race in dpc handling

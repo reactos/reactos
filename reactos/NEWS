@@ -1,4 +1,5 @@
-0.0.14:
+0.0.14:      Converted to PE format
+             All system libraries are now dlls
              
 
 0.0.13:      Mostly bugfixes (I think)

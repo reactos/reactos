@@ -205,6 +205,7 @@ ExecuteKill(char * lpPid)
 	DWORD	dwProcessId;
 
 	dwProcessId = (DWORD) atol(lpPid);
+   debug_printf("dwProcessId %d\n",dwProcessId);
 	hProcess = OpenProcess(
 			PROCESS_TERMINATE,
 			FALSE,

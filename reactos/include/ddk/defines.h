@@ -207,15 +207,9 @@ enum
    IRP_MN_POWER_SEQUENCE,
 };
 
-/*
- * PURPOSE: Used all over
- */
-enum
-{
-   KernelMode,
-   UserMode,
-};
-   
+#define KernelMode (0)
+#define UserMode   (1)
+
 /*
  * PURPOSE: Arguments to MmProbeAndLockPages
  */

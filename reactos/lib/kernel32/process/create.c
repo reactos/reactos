@@ -424,6 +424,8 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    IMAGE_DOS_HEADER DosHeader;
    HANDLE NTDllSection;
    ULONG InitialViewSize;
+   PROCESS_BASIC_INFORMATION ProcessBasicInfo;
+   ULONG retlen;
    
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
@@ -449,6 +451,14 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			    NULL,
 			    NULL,
 			    NULL);
+   ZwQueryInformationProcess(hProcess,
+			     ProcessBasicInformation,
+			     &ProcessBasicInfo,
+			     sizeof(ProcessBasicInfo),
+			     &retlen);
+   DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
+	  ProcessBasicInfo.UniqueProcessId);
+   lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
    
    /*
     * Map NT DLL into the process

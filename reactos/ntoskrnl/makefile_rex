@@ -15,7 +15,7 @@ RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/wstring.o rtl/memcpy.o rtl/memmove.o rtl/memset.o \
               rtl/memchr.o
 
-KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
+KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
 	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o \
@@ -121,17 +121,6 @@ CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o  \
               utils/export/export ntoskrnl.o ntoskrnl.a junk.tmp base.tmp  \
               temp.exp ntoskrnl.exe ntoskrnl.sym
 endif
-
-utils/export/export$(EXE_POSTFIX): utils/export/export.c
-	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
-
-ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
-ifeq ($(HOST),mingw32-windows)
-	.\\utils\\export\\export$(EXE_POSTFIX) < exports.lst > ke\\exports.c
-else
-	utils/export/export$(EXE_POSTFIX) < exports.lst > ke/exports.c
-endif
-	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
 ntoskrnl.exe: $(OBJECTS) ntoskrnl.def
 	$(LD) -r $(OBJECTS) -o ntoskrnl.o
