@@ -4,7 +4,6 @@
 #include <unknwn.h>
 
 /* First part: objidl.h copied from w32api. Fixed:
- * IMallocSpy::PreRealloc,
  * IMarshal::MarshalInteface
  * IMarshal::UnmarshalInterface
  * IStorage_CreateStorage
@@ -526,7 +525,7 @@ DECLARE_INTERFACE_(IMallocSpy,IUnknown)
 	STDMETHOD_(void*,PostAlloc)(THIS_ void*) PURE;
 	STDMETHOD_(void*,PreFree)(THIS_ void*,BOOL) PURE;
 	STDMETHOD_(void,PostFree)(THIS_ BOOL) PURE;
-	STDMETHOD_(ULONG,PreRealloc)(THIS_ void*,ULONG,void*,BOOL) PURE;
+	STDMETHOD_(ULONG,PreRealloc)(THIS_ void*,ULONG,void**,BOOL) PURE;
 	STDMETHOD_(void*,PostRealloc)(THIS_ void*,BOOL) PURE;
 	STDMETHOD_(void*,PreGetSize)(THIS_ void*,BOOL) PURE;
 	STDMETHOD_(ULONG,PostGetSize)(THIS_ ULONG,BOOL) PURE;
@@ -884,7 +883,7 @@ DECLARE_INTERFACE_(IROTData,IUnknown)
 	STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
 	STDMETHOD_(ULONG,AddRef)(THIS) PURE;
 	STDMETHOD_(ULONG,Release)(THIS) PURE;
-	STDMETHOD(GetComparisonData)(THIS_ PVOID,ULONG,PULONG) PURE;
+	STDMETHOD(GetComparisonData)(THIS_ PBYTE,ULONG,PULONG) PURE;
 };
 #undef INTERFACE
 
