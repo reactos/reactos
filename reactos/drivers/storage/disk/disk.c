@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.26 2003/04/27 18:10:38 ekohl Exp $
+/* $Id: disk.c,v 1.27 2003/04/28 11:05:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -41,6 +41,8 @@
 typedef struct _DISK_DATA
 {
   PDEVICE_EXTENSION NextPartition;
+  ULONG Signature;
+  ULONG MbrCheckSum;
   ULONG HiddenSectors;
   ULONG PartitionNumber;
   ULONG PartitionOrdinal;
@@ -89,6 +91,10 @@ DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DeviceObject,
 
 static VOID
 ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension);
+
+static BOOLEAN
+ScsiDiskCalcMbrCheckSum(IN PDEVICE_EXTENSION DeviceExtension,
+			OUT PULONG Checksum);
 
 
 /* FUNCTIONS ****************************************************************/
@@ -494,6 +500,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension = DiskDeviceObject->DeviceExtension;
   DiskDeviceExtension->LockCount = 0;
   DiskDeviceExtension->DeviceNumber = DiskNumber;
+  DiskDeviceExtension->DeviceObject = DiskDeviceObject;
   DiskDeviceExtension->PortDeviceObject = PortDeviceObject;
   DiskDeviceExtension->PhysicalDevice = DiskDeviceObject;
   DiskDeviceExtension->PortCapabilities = Capabilities;
@@ -628,9 +635,35 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if (NT_SUCCESS(Status))
     {
       DPRINT("Read partition table!\n");
-
       DPRINT("  Number of partitions: %u\n", PartitionList->PartitionCount);
 
+      /* Set disk signature */
+      DiskData->Signature = PartitionList->Signature;
+
+      /* Calculate MBR checksum if disk got no signature */
+      if (DiskData->Signature == 0)
+	{
+	  if (!ScsiDiskCalcMbrCheckSum(DiskDeviceExtension,
+				       &DiskData->MbrCheckSum))
+	    {
+	      DPRINT1("MBR checksum calculation failed for disk %lu\n",
+		      DiskDeviceExtension->DeviceNumber);
+	    }
+	  else
+	    {
+	      DPRINT1("MBR checksum for disk %lu is %lx\n",
+		      DiskDeviceExtension->DeviceNumber,
+		      DiskData->MbrCheckSum);
+	    }
+	}
+      else
+	{
+	  DPRINT1("Signature on disk %lu is %lx\n",
+		  DiskDeviceExtension->DeviceNumber,
+		  DiskData->Signature);
+	}
+
+      /* Update disk geometry if disk is visible to the BIOS */
       ScsiDiskUpdateFixedDiskGeometry(DiskDeviceExtension);
 
       for (PartitionNumber = 0; PartitionNumber < PartitionList->PartitionCount; PartitionNumber++)
@@ -667,6 +700,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension = PartitionDeviceObject->DeviceExtension;
 	      PartitionDeviceExtension->LockCount = 0;
 	      PartitionDeviceExtension->DeviceNumber = DiskNumber;
+	      PartitionDeviceExtension->DeviceObject = PartitionDeviceObject;
 	      PartitionDeviceExtension->PortDeviceObject = PortDeviceObject;
 	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
 	      PartitionDeviceExtension->PhysicalDevice = DiskDeviceExtension->PhysicalDevice;
@@ -1323,6 +1357,18 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
 }
 
 
+static NTSTATUS
+ScsiDiskEnumerateBusKey(IN PDEVICE_EXTENSION DeviceExtension,
+			IN HANDLE BusKey,
+			OUT PULONG DiskNumber)
+{
+
+  DPRINT1("ScsiDiskEnumerateBusKey() called\n");
+
+
+}
+
+
 /**********************************************************************
  * NAME							INTERNAL
  *	DiskClassUpdateFixedDiskGeometry
@@ -1352,6 +1398,8 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   UNICODE_STRING KeyName;
   UNICODE_STRING ValueName;
   HANDLE SystemKey;
+  HANDLE BusKey;
+  ULONG DiskNumber;
   ULONG Length;
   ULONG i;
   NTSTATUS Status;
@@ -1405,8 +1453,37 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
       return;
     }
 
-  ZwClose(SystemKey);
+  /* Open the 'MultifunctionAdapter' subkey */
+  RtlInitUnicodeString(&KeyName,
+		       L"MultifunctionAdapter");
 
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &KeyName,
+			     OBJ_CASE_INSENSITIVE,
+			     SystemKey,
+			     NULL);
+
+  Status = ZwOpenKey(&BusKey,
+		     KEY_READ,
+		     &ObjectAttributes);
+  ZwClose(SystemKey);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ZwQueryValueKey() failed (Status %lx)\n", Status);
+      ExFreePool(ValueBuffer);
+      return;
+    }
+
+  Status = ScsiDiskEnumerateBusKey(DeviceExtension,
+				   BusKey,
+				   &DiskNumber);
+  ZwClose(BusKey);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("ScsiDiskEnumerateBusKey() failed (Status %lx)\n", Status);
+      ExFreePool(ValueBuffer);
+      return;
+    }
 
   ResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)
     ((PUCHAR)ValueBuffer + ValueBuffer->DataOffset);
@@ -1429,6 +1506,87 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   ExFreePool(ValueBuffer);
 
   DPRINT1("ScsiDiskUpdateFixedDiskGeometry() done\n");
+}
+
+
+static BOOLEAN
+ScsiDiskCalcMbrCheckSum(IN PDEVICE_EXTENSION DeviceExtension,
+			OUT PULONG Checksum)
+{
+  IO_STATUS_BLOCK IoStatusBlock;
+  LARGE_INTEGER SectorOffset;
+  ULONG SectorSize;
+  PULONG MbrBuffer;
+  KEVENT Event;
+  PIRP Irp;
+  ULONG i;
+  ULONG Sum;
+  NTSTATUS Status;
+
+  KeInitializeEvent(&Event,
+		    NotificationEvent,
+		    FALSE);
+
+  /* Get the disk sector size */
+  SectorSize = DeviceExtension->DiskGeometry->BytesPerSector;
+  if (SectorSize < 512)
+    {
+      SectorSize = 512;
+    }
+
+  /* Allocate MBR buffer */
+  MbrBuffer = ExAllocatePool(NonPagedPool,
+			     SectorSize);
+  if (MbrBuffer == NULL)
+    {
+      return FALSE;
+    }
+
+  /* Allocate an IRP */
+  SectorOffset.QuadPart = 0ULL;
+  Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				     DeviceExtension->DeviceObject,
+				     MbrBuffer,
+				     SectorSize,
+				     &SectorOffset,
+				     &Event,
+				     &IoStatusBlock);
+  if (Irp == NULL)
+    {
+      ExFreePool(MbrBuffer);
+      return FALSE;
+    }
+
+  /* Call the miniport driver */
+  Status = IoCallDriver(DeviceExtension->DeviceObject,
+			Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Suspended,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      Status = IoStatusBlock.Status;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(MbrBuffer);
+      return FALSE;
+    }
+
+  /* Calculate MBR checksum */
+  Sum = 0;
+  for (i = 0; i < 128; i++)
+    {
+      Sum += MbrBuffer[i];
+    }
+  *Checksum = ~Sum + 1;
+
+  ExFreePool(MbrBuffer);
+
+  return TRUE;
 }
 
 /* EOF */
