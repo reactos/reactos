@@ -3045,7 +3045,6 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 		     PKEY_CELL NewKeyCell,
 		     BLOCK_OFFSET NewKeyCellOffset)
 {
-  BLOCK_OFFSET HashCellOffset;
   PHASH_TABLE_CELL HashCell;
   ULONG i;
   NTSTATUS Status;
@@ -3134,7 +3133,7 @@ CmiAddKeyToHashTable(PREGISTRY_HIVE RegistryHive,
 			    NewKeyCell->Name,
 			    min(NewKeyCell->NameSize, sizeof(ULONG)));
 	    }
-	  CmiMarkBlockDirty(RegistryHive, HashCellOffset);
+	  CmiMarkBlockDirty(RegistryHive, NewKeyCellOffset);
 	  ParentKeyCell->NumberOfSubKeys++;
 	  CmiMarkBlockDirty(RegistryHive, ParentKeyCellOffset);
 	  return STATUS_SUCCESS;
