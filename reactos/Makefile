@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.226 2004/06/04 23:44:26 navaraf Exp $
+# $Id: Makefile,v 1.227 2004/06/05 11:11:13 chorns Exp $
 #
 # Global makefile
 #
@@ -16,8 +16,8 @@ endif
 
 include $(PATH_TO_TOP)/rules.mak
 
-# Required to run the system
-COMPONENTS = iface_native iface_additional hallib ntoskrnl
+# System call entry points and ntoskrnl dependants
+COMPONENTS = iface_native iface_additional hallib
 
 # Hardware Abstraction Layers
 # halx86
@@ -117,25 +117,26 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 # Regression tests
 REGTESTS = regtests
 
-all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
-     $(APPS) $(EXT_MODULES)
+sequence: tools dk implib $(LIB_STATIC) $(COMPONENTS)
 
-#config: $(TOOLS:%=%_config)
+part1: ntoskrnl $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS)
+
+part2: $(SUBSYS) $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) $(APPS) $(EXT_MODULES)
+
+all: sequence part1 part2
 
 depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
-implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
+implib: ntoskrnl_implib $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
 	$(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
 	$(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
 	$(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
 
-clean: tools dk_clean $(HALS:%=%_clean) \
-       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
-       $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
-       $(NET_APPS:%=%_clean) \
+clean: tools dk_clean \
+       ntoskrnl_clean $(COMPONENTS:%=%_clean) $(HALS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) \
+       $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
+       $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(NET_APPS:%=%_clean) \
        $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) $(REGTESTS:%=%_clean) \
        clean_after tools_clean
 
@@ -143,7 +144,7 @@ clean_after:
 	$(RM) $(PATH_TO_TOP)/include/roscfg.h
 
 fastinstall: tools install_dirs install_before \
-         $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
+         ntoskrnl_install $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
          $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
@@ -170,7 +171,7 @@ bootcd_directory_layout:
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
-bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
+bootcd_bootstrap_files: ntoskrnl_bootcd $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
 	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
 	$(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
@@ -230,7 +231,7 @@ livecd: livecd_basic livecd_makecd
 registry: tools
 	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config
 
-.PHONY: all depends implib clean clean_before install freeldr bootcd_directory_layout \
+.PHONY: all sequence part1 part2 depends implib clean clean_before install freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
 
