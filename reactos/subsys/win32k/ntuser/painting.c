@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.82 2004/05/10 17:07:18 weiden Exp $
+ *  $Id: painting.c,v 1.83 2004/05/15 08:01:56 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -286,6 +286,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Split the nonclient update region.
     */
 
+   if (NULL != Window->UpdateRegion)
    {
       HRGN hRgnWindow, hRgnNonClient;
 
