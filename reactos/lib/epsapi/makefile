@@ -7,7 +7,7 @@ TARGET_TYPE = library
 TARGET_NAME = epsapi
 
 # require os code to explicitly request A/W version of structs/functions
-TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
+TARGET_CFLAGS += -D__USE_W32API -D_DISABLE_TIDENTS -Werror -Wall
 
 TARGET_OBJECTS = \
  enum/drivers.o \
