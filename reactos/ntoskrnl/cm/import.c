@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.10 2002/11/10 14:00:41 robd Exp $
+/* $Id: import.c,v 1.11 2003/03/22 18:26:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,6 +19,7 @@
 #include <string.h>
 #include <internal/pool.h>
 #include <internal/registry.h>
+#include <internal/ntoskrnl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -490,8 +491,8 @@ setKeyValue (HANDLE  currentKey,
 }
 
 VOID
-CmImportHive(PCHAR  ChunkBase,
-	     ULONG  ChunkSize)
+CmImportTextHive(PCHAR  ChunkBase,
+		 ULONG  ChunkSize)
 {
   HANDLE  currentKey = INVALID_HANDLE_VALUE;
   int  newKeySize;
@@ -612,3 +613,29 @@ CmImportHive(PCHAR  ChunkBase,
 }
 
 
+VOID
+CmImportSystemHive(PCHAR ChunkBase,
+		   ULONG ChunkSize)
+{
+  if (strncmp (ChunkBase, "REGEDIT4", 8) == 0)
+    {
+      DPRINT("Found 'REGEDIT4' magic\n");
+      CmImportTextHive (ChunkBase, ChunkSize);
+    }
+  else
+    {
+      DPRINT1("Found '%*s' magic\n", 4, ChunkBase);
+      KeBugCheck(0);
+    }
+}
+
+
+VOID
+CmImportHardwareHive(PCHAR ChunkBase,
+		     ULONG ChunkSize)
+{
+  DPRINT1("CmImportHardwareHive() called\n");
+
+}
+
+/* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.147 2003/01/15 19:58:07 chorns Exp $
+/* $Id: main.c,v 1.148 2003/03/22 18:27:40 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -102,26 +102,6 @@ RtlpCheckFileNameExtension(PCHAR FileName,
      return TRUE;
    else
      return FALSE;
-}
-
-
-static BOOLEAN
-RtlpIsSystemHive(PCHAR FileName)
-{
-  PCHAR Name;
-
-  Name = strrchr(FileName, '\\');
-  if (Name == NULL)
-  {
-    Name = FileName;
-  }
-  else
-  {
-    Name = Name + 1;
-  }
-
-  return((_stricmp(Name, "system.hiv") == 0) ||
-	 (_stricmp(Name, "system") == 0));
 }
 
 
@@ -499,22 +479,33 @@ ExpInitializeExecutive(VOID)
 	}
     }
 
-  /*  Pass 2: load registry chunks passed in  */
+  /*  Pass 2: import system registry chunk  */
   SetupBoot = TRUE;
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
     {
       start = KeLoaderModules[i].ModStart;
       length = KeLoaderModules[i].ModEnd - start;
       name = (PCHAR)KeLoaderModules[i].String;
-      if (RtlpCheckFileNameExtension(name, "") ||
-	  RtlpCheckFileNameExtension(name, ".hiv"))
+      if (!_stricmp (name, "system") ||
+	  !_stricmp (name, "system.hiv"))
 	{
-	  CPRINT("Process registry chunk at %08lx\n", start);
-	  CmImportHive((PCHAR)start, length);
-	}
-      if (RtlpIsSystemHive(name))
-	{
+	  CPRINT("Process 'system' registry chunk at %08lx\n", start);
 	  SetupBoot = FALSE;
+	  CmImportSystemHive((PCHAR)start, length);
+	}
+    }
+
+  /*  Pass 3: import hardware registry chunk  */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+      start = KeLoaderModules[i].ModStart;
+      length = KeLoaderModules[i].ModEnd - start;
+      name = (PCHAR)KeLoaderModules[i].String;
+      if (!_stricmp (name, "hardware") ||
+	  !_stricmp (name, "hardware.hiv"))
+	{
+	  CPRINT("Process 'hardware' registry chunk at %08lx\n", start);
+	  CmImportHardwareHive((PCHAR)start, length);
 	}
     }
 
@@ -533,7 +524,7 @@ ExpInitializeExecutive(VOID)
 
   IoCreateDriverList();
 
-  /*  Pass 3: process boot loaded drivers  */
+  /*  Pass 4: process boot loaded drivers  */
   BootDriverCount = 0;
   for (i=1; i < KeLoaderBlock.ModsCount; i++)
     {

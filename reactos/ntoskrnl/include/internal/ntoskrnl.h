@@ -45,7 +45,8 @@ VOID PsInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmInit2(PCHAR CommandLine);
 VOID CmShutdownRegistry(VOID);
-VOID CmImportHive(PCHAR ChunkBase, ULONG ChunkSize);
+VOID CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
+VOID CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 VOID RtlpInitNlsTables(VOID);
