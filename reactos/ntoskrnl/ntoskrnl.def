@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.71 2000/05/09 21:31:01 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.72 2000/05/13 01:46:22 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -481,7 +481,7 @@ RtlCreateAcl@12
 ;RtlCreateRegistryKey
 RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString@8
-;RtlCustomCPToUnicodeN
+RtlCustomCPToUnicodeN@24
 ;RtlDecompressBuffer
 ;RtlDecompressChunks
 ;RtlDecompressFragment
@@ -604,7 +604,7 @@ RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12
-;RtlUnicodeToCustomCPN
+RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN@20
@@ -614,7 +614,7 @@ RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString@12
 RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString@12
-;RtlUpcaseUnicodeToCustomCPN
+RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4

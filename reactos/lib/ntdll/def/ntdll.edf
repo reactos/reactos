@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.42 2000/04/25 23:22:56 ea Exp $
+; $Id: ntdll.edf,v 1.43 2000/05/13 01:48:01 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -272,6 +272,7 @@ RtlCreateUnicodeString=RtlCreateUnicodeString@8
 RtlCreateUnicodeStringFromAsciiz=RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess=RtlCreateUserProcess@40
 RtlCreateUserThread=RtlCreateUserThread@40
+RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
 RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteCriticalSection=RtlDeleteCriticalSection@4
@@ -399,6 +400,7 @@ RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize=RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString=RtlUnicodeStringToOemString@12
+RtlUnicodeToCustomCPN=RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN=RtlUnicodeToOemN@20
@@ -409,6 +411,7 @@ RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12
 RtlUpcaseUnicodeStringToCountedOemString=RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
+RtlUpcaseUnicodeToCustomCPN=RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4

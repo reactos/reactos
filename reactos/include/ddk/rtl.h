@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.33 2000/05/09 21:29:44 ekohl Exp $
+/* $Id: rtl.h,v 1.34 2000/05/13 01:44:53 ekohl Exp $
  * 
  */
 
@@ -64,6 +64,28 @@ typedef struct {
 	ULONG		Length;
 	ULONG		Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
+struct _LB_RANGE
+{
+	ULONG dummy;
+};
+
+typedef struct _RTL_NLS_DATA
+{
+	USHORT			CodePage;
+	USHORT			MaxCharacterSize;
+	WCHAR			DefaultCharacter;
+	WCHAR			char1;
+	WCHAR			char2;
+	WCHAR			char3;
+	USHORT			DbcsFlag;
+	struct _LB_RANGE	LeadByteRange[6];
+	USHORT			reserved;
+	PWCHAR			MultiByteToUnicode;
+	PCHAR			UnicodeToMultiByte;
+	ULONG			unknown;
+	PCHAR			DbcsTags;
+} RTL_NLS_DATA, *PRTL_NLS_DATA;
 
 
 /*
@@ -423,6 +445,17 @@ STDCALL
 RtlCreateUnicodeStringFromAsciiz (
 	OUT	PUNICODE_STRING	Destination,
 	IN	PCSZ		Source
+	);
+
+NTSTATUS
+STDCALL
+RtlCustomCPToUnicodeN (
+	PRTL_NLS_DATA	NlsData,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize,
+	PULONG		ResultSize,
+	PCHAR		CustomString,
+	ULONG		CustomSize
 	);
 
 NTSTATUS
@@ -1176,6 +1209,17 @@ RtlUnicodeStringToOemString (
 
 NTSTATUS
 STDCALL
+RtlUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		MbString,
+	ULONG		MbSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
+	);
+
+NTSTATUS
+STDCALL
 RtlUnicodeToMultiByteN (
 	PCHAR	MbString,
 	ULONG	MbSize,
@@ -1244,6 +1288,17 @@ RtlUpcaseUnicodeStringToOemString (
 	IN OUT	POEM_STRING	DestinationString,
 	IN	PUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
+	);
+
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		MbString,
+	ULONG		MbSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
 	);
 
 NTSTATUS

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.58 2000/05/09 21:31:01 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.59 2000/05/13 01:46:23 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -469,6 +469,7 @@ RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateAcl=RtlCreateAcl@12
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
 RtlCreateUnicodeString=RtlCreateUnicodeString@8
+RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
@@ -546,6 +547,7 @@ RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize=RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString=RtlUnicodeStringToOemString@12
+RtlUnicodeToCustomCPN=RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
@@ -553,6 +555,7 @@ RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString=RtlUpcaseUnicodeStringToAnsiString@12
 RtlUpcaseUnicodeStringToCountedOemString=RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString=RtlUpcaseUnicodeStringToOemString@12
+RtlUpcaseUnicodeToCustomCPN=RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN=RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN=RtlUpcaseUnicodeToOemN@20
 RtlUpperChar=RtlUpperChar@4

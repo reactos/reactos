@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.53 2000/04/25 23:22:55 ea Exp $
+; $Id: ntdll.def,v 1.54 2000/05/13 01:48:01 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -307,7 +307,7 @@ RtlCreateUnicodeStringFromAsciiz@8
 RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread@40
-;RtlCustomCPToUnicodeN
+RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
 RtlDeNormalizeProcessParams@4
 ;RtlDecompressBuffer
@@ -531,7 +531,7 @@ RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12
-;RtlUnicodeToCustomCPN
+RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize@12
 RtlUnicodeToOemN@20
@@ -543,7 +543,7 @@ RtlUpcaseUnicodeString@12
 RtlUpcaseUnicodeStringToAnsiString@12
 RtlUpcaseUnicodeStringToCountedOemString@12
 RtlUpcaseUnicodeStringToOemString@12
-;RtlUpcaseUnicodeToCustomCPN
+RtlUpcaseUnicodeToCustomCPN@24
 RtlUpcaseUnicodeToMultiByteN@20
 RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4

@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.3 2000/03/03 00:48:50 ekohl Exp $
+/* $Id: nls.c,v 1.4 2000/05/13 01:45:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,9 +54,46 @@ CHAR UnicodeToOemTable [65536];
 
 /* FUNCTIONS *****************************************************************/
 
-/*
- * RtlCustomCPToUnicodeN
- */
+NTSTATUS
+STDCALL
+RtlCustomCPToUnicodeN (
+	PRTL_NLS_DATA	NlsData,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize,
+	PULONG		ResultSize,
+	PCHAR		CustomString,
+	ULONG		CustomSize)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == FALSE)
+	{
+		/* single-byte code page */
+		if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
+			Size = UnicodeSize / sizeof(WCHAR);
+		else
+			Size = CustomSize;
+
+		if (ResultSize != NULL)
+			*ResultSize = Size * sizeof(WCHAR);
+
+		for (i = 0; i < Size; i++)
+		{
+			*UnicodeString = NlsData->MultiByteToUnicode[(int)*CustomString];
+			UnicodeString++;
+			CustomString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
 
 
 VOID
@@ -186,9 +223,47 @@ RtlOemToUnicodeN (
 }
 
 
-/*
- * RtlUnicodeToCustomCPN
- */
+NTSTATUS
+STDCALL
+RtlUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		CustomString,
+	ULONG		CustomSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
+	)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == 0)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+			Size = CustomSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
+			CustomString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
 
 
 NTSTATUS
@@ -304,9 +379,48 @@ RtlUnicodeToOemN (
 }
 
 
-/*
- * RtlUpcaseUnicodeToCustomCPN
- */
+NTSTATUS
+STDCALL
+RtlUpcaseUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		CustomString,
+	ULONG		CustomSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
+	)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == 0)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+			Size = CustomSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			/* FIXME: Upcase!! */
+			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
+			CustomString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
 
 
 NTSTATUS

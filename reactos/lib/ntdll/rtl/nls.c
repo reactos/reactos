@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.2 1999/11/20 21:46:46 ekohl Exp $
+/* $Id: nls.c,v 1.3 2000/05/13 01:47:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,8 @@
  *   1) Implement code to initialize the translation tables.
  *   2) Use fixed translation table for translation.
  *   3) Add loading of translation tables (NLS files).
- *   4) Add multi-byte translation code.
+ *   4) Implement unicode upcase and downcase handling.
+ *   5) Add multi-byte translation code.
  */
 
 #include <ddk/ntddk.h>
@@ -42,22 +43,79 @@ NlsAnsiCodePage = 0;
 USHORT
 NlsOemCodePage = 0; /* not exported */
 
-
 #if 0
-WCHAR AnsiToUnicodeTable[256];
-WCHAR OemToUnicodeTable[256];
+PWCHAR NlsAnsiToUnicodeTable = NULL;
+PWCHAR NlsOemToUnicodeTable = NULL;
 
-CHAR UnicodeToAnsiTable [65536];
-CHAR UnicodeToOemTable [65536];
+PCHAR NlsUnicodeToAnsiTable = NULL;
+PCHAR NlsUnicodeToOemTable = NULL;
+
+PWCHAR NlsUnicodeUpcaseTable = NULL;
+PWCHAR NlsUnicodeLowercaseTable = NULL;
 #endif
 
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * Missing functions:
+ *   RtlInitCodePageTable
+ *   RtlInitNlsTables
+ *   RtlResetRtlTranslations
+ */
+
+/*
+ * RtlConsoleMultiByteToUnicodeN@24
+ */
+
+NTSTATUS
+STDCALL
+RtlCustomCPToUnicodeN (
+	PRTL_NLS_DATA	NlsData,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize,
+	PULONG		ResultSize,
+	PCHAR		CustomString,
+	ULONG		CustomSize)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == FALSE)
+	{
+		/* single-byte code page */
+		if (CustomSize > (UnicodeSize / sizeof(WCHAR)))
+			Size = UnicodeSize / sizeof(WCHAR);
+		else
+			Size = CustomSize;
+
+		if (ResultSize != NULL)
+			*ResultSize = Size * sizeof(WCHAR);
+
+		for (i = 0; i < Size; i++)
+		{
+			*UnicodeString = NlsData->MultiByteToUnicode[*CustomString];
+			UnicodeString++;
+			CustomString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
+
+
 VOID
 STDCALL
-RtlGetDefaultCodePage (PUSHORT AnsiCodePage,
-                       PUSHORT OemCodePage)
+RtlGetDefaultCodePage (
+	PUSHORT	AnsiCodePage,
+	PUSHORT	OemCodePage
+	)
 {
 	*AnsiCodePage = NlsAnsiCodePage;
 	*OemCodePage = NlsOemCodePage;
@@ -66,11 +124,13 @@ RtlGetDefaultCodePage (PUSHORT AnsiCodePage,
 
 NTSTATUS
 STDCALL
-RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
-                       ULONG  UnicodeSize,
-                       PULONG ResultSize,
-                       PCHAR  MbString,
-                       ULONG  MbSize)
+RtlMultiByteToUnicodeN (
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize,
+	PULONG	ResultSize,
+	PCHAR	MbString,
+	ULONG	MbSize
+	)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -90,7 +150,7 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 		{
 			*UnicodeString = *MbString;
 #if 0
-			*UnicodeString = AnsiToUnicodeTable[*MbString];
+			*UnicodeString = NlsAnsiToUnicodeTable[*MbString];
 #endif
 
 			UnicodeString++;
@@ -110,9 +170,11 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 
 NTSTATUS
 STDCALL
-RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
-                          PCHAR MbString,
-                          ULONG MbSize)
+RtlMultiByteToUnicodeSize (
+	PULONG	UnicodeSize,
+	PCHAR	MbString,
+	ULONG	MbSize
+	)
 {
 	if (NlsMbCodePageTag == FALSE)
 	{
@@ -132,11 +194,13 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
 
 NTSTATUS
 STDCALL
-RtlOemToUnicodeN(PWCHAR UnicodeString,
-                 ULONG  UnicodeSize,
-                 PULONG ResultSize,
-                 PCHAR  OemString,
-                 ULONG  OemSize)
+RtlOemToUnicodeN (
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize,
+	PULONG	ResultSize,
+	PCHAR	OemString,
+	ULONG	OemSize
+	)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -156,7 +220,7 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 		{
 			*UnicodeString = *OemString;
 #if 0
-			*UnicodeString = OemToUnicodeTable[*OemString];
+			*UnicodeString = NlsOemToUnicodeTable[*OemString];
 #endif
 
 			UnicodeString++;
@@ -176,11 +240,56 @@ RtlOemToUnicodeN(PWCHAR UnicodeString,
 
 NTSTATUS
 STDCALL
-RtlUnicodeToMultiByteN(PCHAR  MbString,
-                       ULONG  MbSize,
-                       PULONG ResultSize,
-                       PWCHAR UnicodeString,
-                       ULONG  UnicodeSize)
+RtlUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		CustomString,
+	ULONG		CustomSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
+	)
+{
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == 0)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+			Size = CustomSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
+			CustomString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -220,9 +329,11 @@ RtlUnicodeToMultiByteN(PCHAR  MbString,
 
 NTSTATUS
 STDCALL
-RtlUnicodeToMultiByteSize(PULONG MbSize,
-                          PWCHAR UnicodeString,
-                          ULONG UnicodeSize)
+RtlUnicodeToMultiByteSize (
+	PULONG	MbSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	)
 {
 	if (NlsMbCodePageTag == FALSE)
 	{
@@ -242,11 +353,13 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
 
 NTSTATUS
 STDCALL
-RtlUnicodeToOemN(PCHAR  OemString,
-                 ULONG  OemSize,
-                 PULONG ResultSize,
-                 PWCHAR UnicodeString,
-                 ULONG  UnicodeSize)
+RtlUnicodeToOemN (
+	PCHAR	OemString,
+	ULONG	OemSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	)
 {
 	ULONG Size = 0;
 	ULONG i;
@@ -286,6 +399,54 @@ RtlUnicodeToOemN(PCHAR  OemString,
 
 NTSTATUS
 STDCALL
+RtlUpcaseUnicodeToCustomCPN (
+	PRTL_NLS_DATA	NlsData,
+	PCHAR		CustomString,
+	ULONG		CustomSize,
+	PULONG		ResultSize,
+	PWCHAR		UnicodeString,
+	ULONG		UnicodeSize
+	)
+{
+	WCHAR UpcaseChar;
+	ULONG Size = 0;
+	ULONG i;
+
+	if (NlsData->DbcsFlag == 0)
+	{
+		/* single-byte code page */
+		if (UnicodeSize > (CustomSize * sizeof(WCHAR)))
+			Size = CustomSize;
+		else
+			Size = UnicodeSize / sizeof(WCHAR);
+
+		if (ResultSize != NULL)
+			*ResultSize = Size;
+
+		for (i = 0; i < Size; i++)
+		{
+			*CustomString = NlsData->UnicodeToMultiByte[*UnicodeString];
+#if 0
+			UpcaseChar = NlsUnicodeUpcaseTable[*UnicodeString];
+			*CustomString = NlsData->UnicodeToMultiByte[UpcaseChar];
+#endif
+			CustomString++;
+			UnicodeString++;
+		}
+	}
+	else
+	{
+		/* multi-byte code page */
+		/* FIXME */
+
+	}
+
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+STDCALL
 RtlUpcaseUnicodeToMultiByteN (
 	PCHAR	MbString,
 	ULONG	MbSize,
@@ -294,6 +455,7 @@ RtlUpcaseUnicodeToMultiByteN (
 	ULONG	UnicodeSize
 	)
 {
+	WCHAR UpcaseChar;
 	ULONG Size = 0;
 	ULONG i;
 
@@ -310,10 +472,10 @@ RtlUpcaseUnicodeToMultiByteN (
 
 		for (i = 0; i < Size; i++)
 		{
-			/* FIXME: Upcase!! */
 			*MbString = *UnicodeString;
 #if 0
-			*MbString = UnicodeToAnsiTable[*UnicodeString];
+			UpcaseChar = NlsUnicodeUpcaseTable[*UnicodeString];
+			*MbString = NlsUnicodeToAnsiTable[UpcaseChar];
 #endif
 
 			MbString++;
@@ -341,6 +503,7 @@ RtlUpcaseUnicodeToOemN (
 	ULONG	UnicodeSize
 	)
 {
+	WCHAR UpcaseChar;
 	ULONG Size = 0;
 	ULONG i;
 
@@ -357,10 +520,10 @@ RtlUpcaseUnicodeToOemN (
 
 		for (i = 0; i < Size; i++)
 		{
-			/* FIXME: Upcase !! */
 			*OemString = *UnicodeString;
 #if 0
-			*OemString = UnicodeToOemTable[*UnicodeString];
+			UpcaseChar = NlsUnicodeUpcaseTable[*UnicodeString];
+			*OemString = UnicodeToOemTable[UpcaseChar];
 #endif
 
 			OemString++;
