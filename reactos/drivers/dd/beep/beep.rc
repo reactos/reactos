@@ -23,7 +23,7 @@ BEGIN
         BEGIN
             VALUE "CompanyName",	RES_STR_COMPANY_NAME
             VALUE "FileDescription",	"PC Speaker Device Driver\0"
-            VALUE "FileVersion",	"0.0.2\0"
+            VALUE "FileVersion",	"0.0.3\0"
             VALUE "InternalName",	"beep\0"
             VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
             VALUE "OriginalFilename",	"beep.sys\0"
