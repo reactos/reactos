@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.69 2004/03/18 16:19:26 weiden Exp $
+/* $Id: stubs.c,v 1.70 2004/03/18 18:29:19 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1885,20 +1885,6 @@ SetDllDirectoryW(
  */
 BOOL
 STDCALL
-SetFileShortNameW(
-    HANDLE hFile,
-    LPCWSTR lpShortName
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 SetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -2248,20 +2234,6 @@ BOOL
 STDCALL
 SetDllDirectoryA(
     LPCSTR lpPathName
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetFileShortNameA(
-    HANDLE hFile,
-    LPCSTR lpShortName
     )
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

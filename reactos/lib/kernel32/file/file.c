@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.52 2004/03/18 16:19:25 weiden Exp $
+/* $Id: file.c,v 1.53 2004/03/18 18:29:18 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1183,13 +1183,103 @@ SetFileValidData(
 						sizeof(FILE_VALID_DATA_LENGTH_INFORMATION),
 						FileValidDataLengthInformation
 						);
-
+  
 	if (!NT_SUCCESS(Status)){
 		SetLastErrorByStatus(Status);
 		return FALSE;
 	}
 	
 	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetFileShortNameW(
+  HANDLE hFile,
+  LPCWSTR lpShortName)
+{
+  NTSTATUS Status;
+  ULONG NeededSize;
+  UNICODE_STRING ShortName;
+  IO_STATUS_BLOCK IoStatusBlock;
+  PFILE_NAME_INFORMATION FileNameInformation;
+  
+  if(!lpShortName)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  RtlInitUnicodeString(&ShortName, lpShortName);
+  
+  NeededSize = sizeof(FILE_NAME_INFORMATION) + ShortName.Length + sizeof(WCHAR);
+  if(!(FileNameInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return FALSE;
+  }
+  
+  FileNameInformation->FileNameLength = ShortName.Length;
+  RtlCopyMemory(FileNameInformation->FileName, ShortName.Buffer, ShortName.Length);
+  
+  Status = NtSetInformationFile(hFile,
+                                &IoStatusBlock,	 //out
+                                FileNameInformation,
+                                NeededSize,
+                                FileShortNameInformation);
+  
+  RtlFreeHeap(RtlGetProcessHeap(), 0, FileNameInformation);
+  if(!NT_SUCCESS(Status))
+  {
+    
+    SetLastErrorByStatus(Status);
+  }
+  
+  return NT_SUCCESS(Status);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetFileShortNameA(
+    HANDLE hFile,
+    LPCSTR lpShortName
+    )
+{
+  NTSTATUS Status;
+  BOOL Ret;
+  ANSI_STRING ShortNameA;
+  UNICODE_STRING ShortName;
+  
+  if(!lpShortName)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
+  RtlInitAnsiString(&ShortNameA, (LPSTR)lpShortName);
+  
+  if(bIsFileApiAnsi)
+    Status = RtlAnsiStringToUnicodeString(&ShortName, &ShortNameA, TRUE);
+  else
+    Status = RtlOemStringToUnicodeString(&ShortName, &ShortNameA, TRUE);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+  
+  Ret = SetFileShortNameW(hFile, ShortName.Buffer);
+  
+  RtlFreeUnicodeString(&ShortName);
+  return Ret;
 }
 
 /* EOF */
