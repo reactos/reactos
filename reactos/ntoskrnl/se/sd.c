@@ -300,7 +300,7 @@ SeCaptureSecurityDescriptor(
                      ROUND_UP(SaclSize, sizeof(ULONG)) +
                      ROUND_UP(DaclSize, sizeof(ULONG));
 
-    NewDescriptor = ExAllocatePool(PagedPool,
+    NewDescriptor = ExAllocatePool(PoolType,
                                    DescriptorSize);
     if(NewDescriptor != NULL)
     {
