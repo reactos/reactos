@@ -99,6 +99,9 @@ typedef struct _WINDOW_OBJECT
   ULONG Status;
   /* counter for tiled child windows */
   ULONG TiledCounter;
+  /* WNDOBJ list */
+  LIST_ENTRY WndObjListHead;
+  FAST_MUTEX WndObjListLock;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */

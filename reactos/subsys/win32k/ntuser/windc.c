@@ -354,6 +354,11 @@ noparent:
    Dce->DCXFlags &= ~DCX_DCEDIRTY;
    NtGdiSelectVisRgn(Dce->hDC, hRgnVisible);
 
+   if (Window != NULL)
+   {
+      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
+   }
+
    if (hRgnVisible != NULL)
    {
       NtGdiDeleteObject(hRgnVisible);
@@ -856,6 +861,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
 
           if (Window->Self != pDCE->hwndCurrent)
             {
+//              IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
               IntReleaseWindowObject(CurrentWindow);
             }
         }
@@ -866,13 +872,6 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
   DCE_UnlockList();
 }
 
-/* FIXME: find header file for this prototype. */
-extern BOOL FASTCALL
-IntEnumDisplaySettings(
-  PUNICODE_STRING lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEW lpDevMode,
-  DWORD dwFlags);
 
 #define COPY_DEVMODE_VALUE_TO_CALLER(dst, src, member) \
     Status = MmCopyToCaller(&(dst)->member, &(src)->member, sizeof ((src)->member)); \
@@ -893,15 +892,18 @@ NtUserEnumDisplaySettings(
 {
   NTSTATUS Status;
   LPDEVMODEW pSafeDevMode;
-  DWORD Size = 0, ExtraSize = 0;
+  PUNICODE_STRING pSafeDeviceName = NULL;
+  UNICODE_STRING SafeDeviceName;
+  USHORT Size = 0, ExtraSize = 0;
   
-  Status = MmCopyFromCaller(&Size, &lpDevMode->dmSize, sizeof (lpDevMode->dmSize));
+  /* Copy the devmode */
+  Status = MmCopyFromCaller(&Size, &lpDevMode->dmSize, sizeof (Size));
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
     return FALSE;
   }
-  Status = MmCopyFromCaller(&ExtraSize, &lpDevMode->dmDriverExtra, sizeof (lpDevMode->dmDriverExtra));
+  Status = MmCopyFromCaller(&ExtraSize, &lpDevMode->dmDriverExtra, sizeof (ExtraSize));
   if (!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
@@ -911,17 +913,36 @@ NtUserEnumDisplaySettings(
   if (pSafeDevMode == NULL)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return DISP_CHANGE_FAILED;
+    return FALSE;
   }
   pSafeDevMode->dmSize = Size;
   pSafeDevMode->dmDriverExtra = ExtraSize;
 
-  if (!IntEnumDisplaySettings(lpszDeviceName, iModeNum, pSafeDevMode, dwFlags))
+  /* Copy the device name */
+  if (lpszDeviceName != NULL)
   {
+    Status = IntSafeCopyUnicodeString(&SafeDeviceName, lpszDeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(pSafeDevMode);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    pSafeDeviceName = &SafeDeviceName;
+  }
+
+  /* Call internal function */
+  if (!IntEnumDisplaySettings(pSafeDeviceName, iModeNum, pSafeDevMode, dwFlags))
+  {
+    if (pSafeDeviceName != NULL)
+      RtlFreeUnicodeString(pSafeDeviceName);
     ExFreePool(pSafeDevMode);
     return FALSE;
   }
+  if (pSafeDeviceName != NULL)
+    RtlFreeUnicodeString(pSafeDeviceName);
 
+  /* Copy some information back */
   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsWidth);
   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmPelsHeight);
   COPY_DEVMODE_VALUE_TO_CALLER(lpDevMode, pSafeDevMode, dmBitsPerPel);
@@ -940,9 +961,84 @@ NtUserEnumDisplaySettings(
     }
   }
 
+  ExFreePool(pSafeDevMode);
   return TRUE;
 }
 
 #undef COPY_DEVMODE_VALUE_TO_CALLER
+
+
+LONG
+STDCALL
+NtUserChangeDisplaySettings(
+  PUNICODE_STRING lpszDeviceName,
+  LPDEVMODEW lpDevMode,
+  HWND hwnd,
+  DWORD dwflags,
+  LPVOID lParam)
+{
+  NTSTATUS Status;
+  DEVMODEW DevMode;
+  PUNICODE_STRING pSafeDeviceName = NULL;
+  UNICODE_STRING SafeDeviceName;
+  LONG Ret;
+
+  /* Check arguments */
+#ifdef CDS_VIDEOPARAMETERS
+  if (dwflags != CDS_VIDEOPARAMETERS && lParam != NULL)
+#else
+  if (lParam != NULL)
+#endif
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return DISP_CHANGE_BADPARAM;
+  }
+  if (hwnd != NULL)
+  {
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+    return DISP_CHANGE_BADPARAM;
+  }
+  
+  /* Copy devmode */
+  Status = MmCopyFromCaller(&DevMode.dmSize, &lpDevMode->dmSize, sizeof (DevMode.dmSize));
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return DISP_CHANGE_BADPARAM;
+  }
+  DevMode.dmSize = min(sizeof (DevMode), DevMode.dmSize);
+  Status = MmCopyFromCaller(&DevMode, lpDevMode, DevMode.dmSize);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return DISP_CHANGE_BADPARAM;
+  }
+  if (DevMode.dmDriverExtra > 0)
+  {
+    DbgPrint("(%s:%i) WIN32K: %s lpDevMode->dmDriverExtra is IGNORED!\n", __FILE__, __LINE__, __FUNCTION__);
+    DevMode.dmDriverExtra = 0;
+  }
+
+  /* Copy the device name */
+  if (lpszDeviceName != NULL)
+  {
+    Status = IntSafeCopyUnicodeString(&SafeDeviceName, lpszDeviceName);
+    if (!NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return DISP_CHANGE_BADPARAM;
+    }
+    pSafeDeviceName = &SafeDeviceName;
+  }
+
+  /* Call internal function */
+  Ret = IntChangeDisplaySettings(pSafeDeviceName, &DevMode, dwflags, lParam);
+  
+  if (pSafeDeviceName != NULL)
+    RtlFreeUnicodeString(pSafeDeviceName);
+    
+  return Ret;
+}
+
 
 /* EOF */

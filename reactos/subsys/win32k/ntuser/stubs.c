@@ -110,20 +110,6 @@ NtUserCallMsgFilter(
   return 0;
 }
 
-LONG
-STDCALL
-NtUserChangeDisplaySettings(
-  PUNICODE_STRING lpszDeviceName,
-  LPDEVMODEW lpDevMode,
-  HWND hwnd,
-  DWORD dwflags,
-  LPVOID lParam)
-{
-  // UNIMPLEMENTED
-  DbgPrint("(%s:%i) WIN32K: %s UNIMPLEMENTED\n", __FILE__, __LINE__, __FUNCTION__ );
-  return DISP_CHANGE_BADMODE;
-}
-
 DWORD
 STDCALL
 NtUserConvertMemHandle(

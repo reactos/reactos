@@ -1341,6 +1341,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       IntSendMessage(Wnd, WM_MOVE, 0,
                      MAKELONG(Window->ClientRect.left,
                               Window->ClientRect.top));
+      IntEngWindowChanged(Window, WOC_RGN_CLIENT);
     }
 
   /* Activate the window if activation is not requested and the window is not minimized */

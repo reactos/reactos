@@ -2296,26 +2296,28 @@ IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
 /*! \brief Enumerate possible display settings for the given display...
  *
  * \todo Make thread safe!?
- * \todo Don't ignore lpszDeviceName
+ * \todo Don't ignore pDeviceName
  * \todo Implement non-raw mode (only return settings valid for driver and monitor)
  */
 BOOL FASTCALL
 IntEnumDisplaySettings(
-  PUNICODE_STRING lpszDeviceName,
-  DWORD iModeNum,
-  LPDEVMODEW lpDevMode,
-  DWORD dwFlags)
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN DWORD iModeNum,
+  IN OUT LPDEVMODEW pDevMode,
+  IN DWORD dwFlags)
 {
   static DEVMODEW *CachedDevModes = NULL, *CachedDevModesEnd = NULL;
   static DWORD SizeOfCachedDevModes = 0;
-  LPDEVMODEW CachedMode = NULL;
+  PDEVMODEW CachedMode = NULL;
   DEVMODEW DevMode;
   INT Size, OldSize;
   ULONG DisplayNumber = 0; /* only default display supported */
   
-  if (lpDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
-      lpDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
-      lpDevMode->dmSize != SIZEOF_DEVMODEW_500)
+  DPRINT1("DevMode->dmSize = %d\n", pDevMode->dmSize);
+  DPRINT1("DevMode->dmExtraSize = %d\n", pDevMode->dmDriverExtra);
+  if (pDevMode->dmSize != SIZEOF_DEVMODEW_300 &&
+      pDevMode->dmSize != SIZEOF_DEVMODEW_400 &&
+      pDevMode->dmSize != SIZEOF_DEVMODEW_500)
   {
     SetLastWin32Error(STATUS_INVALID_PARAMETER);
     return FALSE;
@@ -2324,7 +2326,7 @@ IntEnumDisplaySettings(
   if (iModeNum == ENUM_CURRENT_SETTINGS)
   {
     CachedMode = &PrimarySurface.DMW;    
-    assert(CachedMode->dmSize > 0);
+    ASSERT(CachedMode->dmSize > 0);
   }
   else if (iModeNum == ENUM_REGISTRY_SETTINGS)
   {
@@ -2488,24 +2490,90 @@ IntEnumDisplaySettings(
     }
   }
 
-  assert(CachedMode != NULL);
+  ASSERT(CachedMode != NULL);
 
-  Size = OldSize = lpDevMode->dmSize;
+  Size = OldSize = pDevMode->dmSize;
   if (Size > CachedMode->dmSize)
     Size = CachedMode->dmSize;
-  RtlCopyMemory(lpDevMode, CachedMode, Size);
-  RtlZeroMemory((PCHAR)lpDevMode + Size, OldSize - Size);
-  lpDevMode->dmSize = OldSize;
+  RtlCopyMemory(pDevMode, CachedMode, Size);
+  RtlZeroMemory((PCHAR)pDevMode + Size, OldSize - Size);
+  pDevMode->dmSize = OldSize;
   
-  Size = OldSize = lpDevMode->dmDriverExtra;
+  Size = OldSize = pDevMode->dmDriverExtra;
   if (Size > CachedMode->dmDriverExtra)
     Size = CachedMode->dmDriverExtra;
-  RtlCopyMemory((PCHAR)lpDevMode + lpDevMode->dmSize,
+  RtlCopyMemory((PCHAR)pDevMode + pDevMode->dmSize,
                 (PCHAR)CachedMode + CachedMode->dmSize, Size);
-  RtlZeroMemory((PCHAR)lpDevMode + lpDevMode->dmSize + Size, OldSize - Size);
-  lpDevMode->dmDriverExtra = OldSize;
+  RtlZeroMemory((PCHAR)pDevMode + pDevMode->dmSize + Size, OldSize - Size);
+  pDevMode->dmDriverExtra = OldSize;
 
   return TRUE;
+}
+
+LONG
+FASTCALL
+IntChangeDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN LPDEVMODEW DevMode,
+  IN DWORD dwflags,
+  IN PVOID lParam  OPTIONAL)
+{
+  BOOLEAN Global = FALSE;
+  BOOLEAN NoReset = FALSE;
+  BOOLEAN Reset = FALSE;
+  BOOLEAN SetPrimary = FALSE;
+  LONG Ret;
+
+  if ((dwflags & CDS_UPDATEREGISTRY) == CDS_UPDATEREGISTRY)
+  {
+    /* Check global, reset and noreset flags */
+    if ((dwflags & CDS_GLOBAL) == CDS_GLOBAL)
+      Global = TRUE;
+    if ((dwflags & CDS_NORESET) == CDS_NORESET)
+      NoReset = TRUE;
+    dwflags &= ~(CDS_GLOBAL | CDS_NORESET);
+  }
+  if ((dwflags & CDS_RESET) == CDS_RESET)
+    Reset = TRUE;
+  if ((dwflags & CDS_SET_PRIMARY) == CDS_SET_PRIMARY)
+    SetPrimary = TRUE;
+  dwflags &= ~(CDS_RESET | CDS_SET_PRIMARY);
+
+  if (Reset && NoReset)
+    return DISP_CHANGE_BADFLAGS;
+
+  switch (dwflags)
+  {
+  case 0: /* Dynamically change graphics mode */
+    Ret = DISP_CHANGE_FAILED;
+    break;
+    
+  case CDS_FULLSCREEN: /* Given mode is temporary */
+    Ret = DISP_CHANGE_FAILED;
+    break;
+    
+  case CDS_UPDATEREGISTRY:
+    Ret = DISP_CHANGE_FAILED;
+    break;
+     
+  case CDS_TEST: /* Test if the mode could be set */
+    Ret = DISP_CHANGE_FAILED;
+    break;
+    
+#ifdef CDS_VIDEOPARAMETERS
+  case CDS_VIDEOPARAMETERS:
+    if (lParam == NULL)
+      return DISP_CHANGE_BADPARAM;
+    Ret = DISP_CHANGE_FAILED;
+    break;
+#endif
+    
+  default:
+    Ret = DISP_CHANGE_BADFLAGS;
+    break;
+  }
+  
+  return Ret;
 }
 
 /* EOF */

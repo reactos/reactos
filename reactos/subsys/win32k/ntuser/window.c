@@ -1618,6 +1618,8 @@ IntCreateWindowEx(DWORD dwExStyle,
   ExInitializeFastMutex(&WindowObject->PropListLock);
   ExInitializeFastMutex(&WindowObject->RelativesLock);
   ExInitializeFastMutex(&WindowObject->UpdateLock);
+  InitializeListHead(&WindowObject->WndObjListHead);
+  ExInitializeFastMutex(&WindowObject->WndObjListLock);
 
   if (NULL != WindowName->Buffer)
     {  
@@ -1975,6 +1977,9 @@ IntCreateWindowEx(DWORD dwExStyle,
 	      WindowObject->ClientRect.top);
 	}
       IntSendMessage(WindowObject->Self, WM_MOVE, 0, lParam);
+
+      /* Call WNDOBJ change procs */
+      IntEngWindowChanged(WindowObject, WOC_RGN_CLIENT);
     }
 
   /* Show or maybe minimize or maximize the window. */
@@ -2180,6 +2185,7 @@ NtUserDestroyWindow(HWND Wnd)
     }
 #endif
 
+  IntEngWindowChanged(Window, WOC_DELETE);
   isChild = (0 != (Window->Style & WS_CHILD));
 
 #if 0 /* FIXME */

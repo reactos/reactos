@@ -193,5 +193,21 @@ IntGdiEscape(PDC    dc,
              LPCSTR InData,
              LPVOID OutData);
 
+BOOL
+FASTCALL
+IntEnumDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN DWORD iModeNum,
+  IN OUT LPDEVMODEW pDevMode,
+  IN DWORD dwFlags);
+  
+LONG
+FASTCALL
+IntChangeDisplaySettings(
+  IN PUNICODE_STRING pDeviceName  OPTIONAL,
+  IN LPDEVMODEW pDevMode,
+  IN DWORD dwflags,
+  IN PVOID lParam  OPTIONAL);
+
 #endif /* _WIN32K_INTGDI_H */
 
