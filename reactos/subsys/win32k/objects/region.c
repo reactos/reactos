@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.44 2004/03/23 16:32:20 weiden Exp $ */
+/* $Id: region.c,v 1.45 2004/03/23 17:07:41 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -2051,16 +2051,19 @@ NtGdiPtInRegion(HRGN  hRgn,
 {
   PROSRGNDATA rgn;
   ULONG i;
-  
+  PRECT r;
+
   if(!(rgn = RGNDATA_LockRgn(hRgn) ) )
 	  return FALSE;
   
   if(rgn->rdh.nCount > 0 && INRECT(rgn->rdh.rcBound, X, Y)){
+    r = (PRECT) rgn->Buffer;
     for(i = 0; i < rgn->rdh.nCount; i++) {
-      if(INRECT(*(PRECT)&rgn->Buffer[i], X, Y)){
-		RGNDATA_UnlockRgn(hRgn);
-		return TRUE;
-	  }
+      if(INRECT(*r, X, Y)){
+	RGNDATA_UnlockRgn(hRgn);
+	return TRUE;
+      }
+      r++;
     }
   }
   RGNDATA_UnlockRgn(hRgn);
