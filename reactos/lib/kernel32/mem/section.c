@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.18 2003/01/15 21:24:34 chorns Exp $
+/* $Id: section.c,v 1.19 2003/06/27 20:15:17 sedwards Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -59,7 +59,7 @@ CreateFileMappingA(HANDLE hFile,
 			    &MaximumSize,
 			    flProtect,
 			    0,
-			    hFile);
+			    hFile==INVALID_HANDLE_VALUE ? NULL : hFile);
    RtlFreeUnicodeString(&UnicodeName);
    if (!NT_SUCCESS(Status))
      {
@@ -118,7 +118,7 @@ CreateFileMappingW(HANDLE hFile,
 			    MaximumSizePointer,
 			    flProtect,
 			    0,
-			    hFile);
+			    hFile==INVALID_HANDLE_VALUE ? NULL : hFile);
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus(Status);
