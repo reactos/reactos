@@ -2,115 +2,67 @@
 #include "../vgavideo/vgavideo.h"
 #include "brush.h"
 
+#include "../../../../ntoskrnl/include/internal/i386/io.h"
+
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {
-  unsigned char a, b, mask;
-  unsigned int pre1, i, j, newx;
-  unsigned int orgpre1, orgx, midpre1;
-  unsigned long leftpixs, midpixs, rightpixs, temp, len;
-  long calc;
+	int x = Dimensions.left;
+	int y = Dimensions.top;
+	int w = Dimensions.right - Dimensions.left;
+	int h = Dimensions.bottom - Dimensions.top;
+	unsigned char *vp, *vpX;
+	volatile unsigned char dummy;
+	int byte_per_line;
+	int i;
 
-  orgx=Dimensions.left;
-  len=Dimensions.right - Dimensions.left;
-  Dimensions.bottom++;
+	ASSIGNVP4(x, y, vpX)
+	get_masks(x, w);
+	byte_per_line = SCREEN_X >> 3;
+	outb(GRA_I, 0x05);	/* write mode 2 */
+	saved_GC_mode = inb(GRA_D);
+	outb(GRA_D, 0x02);
+	outb(GRA_I, 0x03);	/* replace */
+	saved_GC_fun = inb(GRA_D);
+	outb(GRA_D, 0x00);
+	outb(GRA_I, 0x08);	/* bit mask */
+	saved_GC_mask = inb(GRA_D);
+	if (leftMask) {
+		outb(GRA_D, leftMask);	/* bit mask */
+		/* write to video */
+		vp = vpX;
+		for (i=h; i>0; i--) {
+			dummy = *vp; *vp = iColor;
+			vp += byte_per_line;
+		}
+		vpX++;
+	}
+	if (byteCounter) {
+		outb(GRA_D, 0xff);	/* bit mask */
+		/* write to video */
+		vp = vpX;
+		for (i=h; i>0; i--) {
+			memset(vp, iColor, byteCounter);
+			vp += byte_per_line;
+		}
+		vpX += byteCounter;
+	}
+	if (rightMask) {
+		outb(GRA_D, rightMask);	/* bit mask */
+		/* write to video */
+		vp = vpX;
+		for (i=h; i>0; i--) {
+			dummy = *vp; *vp = iColor;
+			vp += byte_per_line;
+		}
+	}
+	/* reset GC register */
+	outb(GRA_D, saved_GC_mask);
+	outb(GRA_I, 0x03);
+	outb(GRA_D, saved_GC_fun);
+	outb(GRA_I, 0x05);
+	outb(GRA_D, saved_GC_mode);
 
-  if(len<8)
-  {
-    for (i=Dimensions.left; i<Dimensions.left+len; i++)
-      vgaPutPixel(i, Dimensions.top, iColor);
-  } else {
-
-    leftpixs=Dimensions.left;
-    while(leftpixs>8) leftpixs-=8;
-    temp = len;
-    midpixs = 0;
-
-    while(temp>7)
-    {
-      temp-=8;
-      midpixs++;
-    }
-    if((temp>=0) && (midpixs>0)) midpixs--;
-
-    pre1=xconv[Dimensions.left]+y80[Dimensions.top];
-    orgpre1=pre1;
-
-    // Left
-    if(leftpixs==8) {
-      // Left edge should be an entire middle bar
-      Dimensions.left=orgx;
-      leftpixs=0;
-    }
-    else if(leftpixs>0)
-    {
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);                 // Set
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[leftpixs]); // the MASK
-
-      for(j=Dimensions.top; j<Dimensions.bottom; j++)
-      {
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
-        WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
-
-        pre1+=80;
-      }
-
-      // Middle
-      Dimensions.left=orgx+(8-leftpixs)+leftpixs;
-
-    } else {
-      // leftpixs == 0
-      midpixs+=1;
-    }
-
-    if(midpixs>0)
-    {
-      midpre1=xconv[Dimensions.left]+y80[Dimensions.top];
-
-      // Set mask to all pixels in byte
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
-      for(j=Dimensions.top; j<Dimensions.bottom; j++)
-      {
-        memset(vidmem+midpre1, iColor, midpixs);
-        midpre1+=80;
-      }
-    }
-
-    rightpixs = len - ((midpixs*8) + leftpixs);
-
-    if((rightpixs>0))
-    {
-      Dimensions.left=(orgx+len)-rightpixs;
-
-      // Go backwards till we reach the 8-byte boundary
-      while(mod(Dimensions.left, 8)!=0) { Dimensions.left--; rightpixs++; }
-
-      while(rightpixs>7)
-      {
-        // This is a BAD case as this should have been a midpixs
-
-        for(j=Dimensions.top; j<Dimensions.bottom; j++)
-          vgaPutByte(Dimensions.left, j, iColor);
-
-        rightpixs-=8;
-        Dimensions.left+=8;
-      }
-
-      pre1=xconv[Dimensions.left]+y80[Dimensions.top];
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);                // Set
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,endmasks[rightpixs]); // the MASK
-
-      for(j=Dimensions.top; j<Dimensions.bottom; j++)
-      {
-        a = READ_REGISTER_UCHAR(vidmem + pre1);
-        WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
-
-        pre1+=80;
-      }
-    }
-  }
-
-  return TRUE;
+	return TRUE;
 }
 
 BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
