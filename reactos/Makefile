@@ -1,3 +1,4 @@
+# $Id: Makefile,v 1.174 2003/10/07 07:47:21 gvg Exp $
 #
 # Global makefile
 #
@@ -199,6 +200,9 @@ ubootcd_unattend:
 bootcd: bootcd_basic bootcd_makecd
 
 ubootcd: bootcd_basic ubootcd_unattend bootcd_makecd
+
+registry: tools
+	$(TOOLS_PATH)/mkhive/mkhive$(EXE_POSTFIX) bootdata $(INSTALL_DIR)/system32/config
 
 .PHONY: all depends implib clean clean_before install dist freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
