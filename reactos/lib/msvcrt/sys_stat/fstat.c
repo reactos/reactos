@@ -15,7 +15,6 @@
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>
 
-
 int _fstat(int fd, struct stat *statbuf)
 {
   BY_HANDLE_FILE_INFORMATION  FileInformation;
@@ -45,10 +44,9 @@ int _fstat(int fd, struct stat *statbuf)
 
   statbuf->st_dev = fd;
   statbuf->st_size = FileInformation.nFileSizeLow;
-  statbuf->st_mode = S_IREAD;
+  statbuf->st_mode = S_IREAD | S_IFREG;
   if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) statbuf->st_mode |= S_IFDIR;
   if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
-
   return 0;
 }
 
@@ -75,7 +73,7 @@ __int64 _fstati64 (int fd, struct _stati64* statbuf)
   statbuf->st_dev = fd;
   statbuf->st_size = (((__int64)FileInformation.nFileSizeHigh) << 32) +
 		     FileInformation.nFileSizeLow;
-  statbuf->st_mode = S_IREAD;
+  statbuf->st_mode = S_IREAD | S_IFREG;
   if (FileInformation.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) statbuf->st_mode |= S_IFDIR;
   if (!(FileInformation.dwFileAttributes & FILE_ATTRIBUTE_READONLY)) statbuf->st_mode |= S_IWRITE;
   return 0;
