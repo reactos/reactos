@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.32 2000/10/22 16:36:52 ekohl Exp $
+/* $Id: npool.c,v 1.33 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -75,6 +75,9 @@ static KSPIN_LOCK MmNpoolLock;
 
 unsigned int EiFreeNonPagedPool = 0;
 unsigned int EiUsedNonPagedPool = 0;
+
+unsigned int 
+alloc_pool_region(unsigned int nr_pages);
 
 /* FUNCTIONS ***************************************************************/
 

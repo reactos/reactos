@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.40 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: section.c,v 1.41 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,9 +27,10 @@ POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
-				PMEMORY_AREA MArea,
-				PVOID Address)
+NTSTATUS 
+MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
+		       PMEMORY_AREA MArea,
+		       PVOID Address)
 {
    return(STATUS_UNSUCCESSFUL);
 }
@@ -153,8 +154,9 @@ MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
 		       &IoStatus);
    if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
      {
-	MmLockAddressSpace(AddressSpace);
-	return(Status);
+       DPRINT("IoPageRead failed (%x)\n", Status);
+       MmLockAddressSpace(AddressSpace);
+       return(Status);
      }
    
    MmLockAddressSpace(AddressSpace);
@@ -434,9 +436,9 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     /*
 	      * FIXME: What do we know in this case?
 	      */
-	     
-	     MmLockAddressSpace(AddressSpace);
-	     return(Status);
+	    DPRINT("IoPageRead failed (Status %x)\n", Status);
+	    MmLockAddressSpace(AddressSpace);
+	    return(Status);
 	  }
      
 	/*
@@ -481,7 +483,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     KeBugCheck(0);
 	  }
 	MmUnlockSection(Section);
-	
+	DPRINT("MmNotPresentFaultSectionView succeeded\n");
 	return(STATUS_SUCCESS);
 
      }

@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.46 2001/01/01 04:42:11 dwelch Exp $
+/* $Id: iface.c,v 1.47 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -51,7 +51,8 @@ VfatHasFileSystem (PDEVICE_OBJECT DeviceToMount)
 
   Boot = ExAllocatePool (NonPagedPool, 512);
 
-  VFATReadSectors (DeviceToMount, 0, 1, (UCHAR *) Boot);
+  /* FIXME: Check status */
+  VfatReadSectors (DeviceToMount, 0, 1, (UCHAR *) Boot);
 
   DPRINT ("Boot->SysType %.5s\n", Boot->SysType);
   if (strncmp (Boot->SysType, "FAT12", 5) == 0 ||
@@ -75,10 +76,8 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
   DPRINT ("DeviceExt %x\n", DeviceExt);
 
   DeviceExt->Boot = ExAllocatePool (NonPagedPool, 512);
-  VFATReadSectors (DeviceToMount, 0, 1, (UCHAR *) DeviceExt->Boot);
-
-  DPRINT ("DeviceExt->Boot->BytesPerSector %x\n",
-	  DeviceExt->Boot->BytesPerSector);
+  /* FIXME: Check status */
+  VfatReadSectors (DeviceToMount, 0, 1, (UCHAR *) DeviceExt->Boot);
 
   DeviceExt->FATStart = DeviceExt->Boot->ReservedSectors;
   DeviceExt->rootDirectorySectors =
@@ -107,6 +106,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
 
   if (strncmp (DeviceExt->Boot->SysType, "FAT12", 5) == 0)
     {
+      DbgPrint("FAT12\n");
       DeviceExt->FatType = FAT12; 
     }
   else
@@ -114,6 +114,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
 	(((struct _BootSector32 *) (DeviceExt->Boot))->SysType, "FAT32",
 	 5) == 0)
     {
+      DbgPrint("FAT32\n");
       DeviceExt->FatType = FAT32;
       DeviceExt->rootDirectorySectors = DeviceExt->Boot->SectorsPerCluster;
       DeviceExt->rootStart =
@@ -123,6 +124,7 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
     }
   else
     {
+      DbgPrint("FAT16\n");
       DeviceExt->FatType = FAT16;
     }
 
@@ -133,7 +135,8 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
       DeviceExt->FAT =
 	ExAllocatePool (NonPagedPool,
 			BLOCKSIZE * DeviceExt->Boot->FATSectors);
-      VFATReadSectors (DeviceToMount, DeviceExt->FATStart,
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceToMount, DeviceExt->FATStart,
 		       DeviceExt->Boot->FATSectors, (UCHAR *) DeviceExt->FAT);
     }
   return STATUS_SUCCESS;
@@ -147,6 +150,7 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 {
   PDEVICE_OBJECT DeviceObject;
   PDEVICE_EXTENSION DeviceExt;
+  NTSTATUS Status;
 
   IoCreateDevice (VfatDriverObject,
 		  sizeof (DEVICE_EXTENSION),
@@ -159,6 +163,11 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
   DeviceObject->Vpb->Flags |= VPB_MOUNTED;
   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack (DeviceObject,
 							  DeviceToMount);
+  DeviceExt->StreamStorageDevice = 
+    IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
+  Status = CcInitializeFileCache(DeviceExt->StreamStorageDevice,
+				 &DeviceExt->StorageBcb,
+				 PAGESIZE);
   ExInitializeResourceLite (&DeviceExt->DirResource);
   ExInitializeResourceLite (&DeviceExt->FatResource);
 

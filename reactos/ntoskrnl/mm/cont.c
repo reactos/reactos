@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.5 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: cont.c,v 1.6 2001/01/08 02:14:05 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,11 +69,19 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
    
    PBase = MmGetContinuousPages(NumberOfBytes,
 				HighestAcceptableAddress);
+   if (PBase == NULL)
+     {
+       MmFreeMemoryArea(MmGetKernelAddressSpace(),
+			BaseAddress,
+			0,
+			TRUE);
+       return(NULL);
+     }
    for (i = 0; i < (PAGE_ROUND_UP(NumberOfBytes) / 4096); i++)
      {
 	MmCreateVirtualMapping(NULL,
 			       BaseAddress + (i * 4096),
-			       PAGE_EXECUTE_READWRITE,
+			       PAGE_EXECUTE_READWRITE | PAGE_SYSTEM,
 			       (ULONG)(PBase + (i * 4096)));
      }
    return(BaseAddress);

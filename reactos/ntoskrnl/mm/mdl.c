@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.26 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: mdl.c,v 1.27 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -311,3 +311,12 @@ VOID STDCALL MmMapMemoryDumpMdl (PVOID	Unknown0)
 }
 
 /* EOF */
+
+
+
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.9 2000/12/29 23:17:12 dwelch Exp $
+ * $Id: fat.c,v 1.10 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,7 +35,8 @@ Fat32GetNextCluster (PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
   Block = ExAllocatePool (NonPagedPool, 1024);
   FATsector = CurrentCluster / (512 / sizeof (ULONG));
   FATeis = CurrentCluster - (FATsector * (512 / sizeof (ULONG)));
-  VFATReadSectors (DeviceExt->StorageDevice,
+  /* FIXME: Check status */
+  VfatReadSectors (DeviceExt->StorageDevice,
 		   (ULONG) (DeviceExt->FATStart + FATsector), 1,
 		   (UCHAR *) Block);
   CurrentCluster = Block[FATeis];
@@ -53,11 +54,36 @@ Fat16GetNextCluster (PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  */
 {
   PUSHORT Block;
-  Block = (PUSHORT) DeviceExt->FAT;
-  CurrentCluster = Block[CurrentCluster];
+  PVOID BaseAddress;
+  BOOLEAN Valid;
+  PCACHE_SEGMENT CacheSeg;
+  NTSTATUS Status;
+  ULONG FATOffset;
+  
+  FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + (CurrentCluster * 2);
+  
+  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+				 PAGE_ROUND_DOWN(FATOffset),
+				 &BaseAddress,
+				 &Valid,
+				 &CacheSeg);
+  if (!Valid)
+    {
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			      PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
+			      PAGESIZE / BLOCKSIZE,
+			      BaseAddress);
+      if (!NT_SUCCESS(Status))
+	{
+	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	  return(0xFFFFFFFF);
+	}
+    }
+  
+  CurrentCluster = *((PUSHORT)(BaseAddress + (FATOffset % PAGESIZE)));
   if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
-    CurrentCluster = 0xffffffff;
-  DPRINT ("Returning %x\n", CurrentCluster);
+   CurrentCluster = 0xffffffff;
+  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
   return (CurrentCluster);
 }
 
@@ -71,17 +97,82 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
   unsigned char *CBlock;
   ULONG FATOffset;
   ULONG Entry;
-  CBlock = DeviceExt->FAT;
-  FATOffset = (CurrentCluster * 12) / 8;	//first byte containing value
-  if ((CurrentCluster % 2) == 0)
+  PVOID PBlock;
+  NTSTATUS Status;
+  PVOID BaseAddress;
+  BOOLEAN Valid;
+  PCACHE_SEGMENT CacheSeg;
+  UCHAR Value1, Value2;
+
+  FATOffset = (DeviceExt->FATStart * BLOCKSIZE) + ((CurrentCluster * 12) / 8);
+
+  /*
+   * Get the page containing this offset
+   */
+  Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+				 PAGE_ROUND_DOWN(FATOffset),
+				 &BaseAddress,
+				 &Valid,
+				 &CacheSeg);
+  if (!Valid)
     {
-      Entry = CBlock[FATOffset];
-      Entry |= ((CBlock[FATOffset + 1] & 0xf) << 8);
+      Status = VfatReadSectors(DeviceExt->StorageDevice,
+			      PAGE_ROUND_DOWN(FATOffset) / BLOCKSIZE,
+			      PAGESIZE / BLOCKSIZE,
+			      BaseAddress);
+      if (!NT_SUCCESS(Status))
+	{
+	  CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	  return(0xFFFFFFFF);
+	}
+    }
+  Value1 = ((PUCHAR)BaseAddress)[FATOffset % PAGESIZE];
+
+  /*
+   * A FAT12 entry may straggle two sectors 
+   */
+  if ((FATOffset + 1) == PAGESIZE)
+    {
+      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+      Status = CcRequestCacheSegment(DeviceExt->StorageBcb,
+				     PAGE_ROUND_DOWN(FATOffset) + PAGESIZE,
+				     &BaseAddress,
+				     &Valid,
+				     &CacheSeg);
+      if (!Valid)
+	{
+	  ULONG NextOffset;
+
+	  NextOffset = (PAGE_ROUND_DOWN(FATOffset) + PAGESIZE) / BLOCKSIZE;
+	  Status = 
+	    VfatReadSectors(DeviceExt->StorageDevice,
+			    NextOffset,
+			    PAGESIZE / BLOCKSIZE,
+			    BaseAddress);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
+	      return(0xFFFFFFFF);
+	    }
+	}
+      Value2 = ((PUCHAR)BaseAddress)[0];
+      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
     }
   else
     {
-      Entry = (CBlock[FATOffset] >> 4);
-      Entry |= (CBlock[FATOffset + 1] << 4);
+      Value2 = ((PUCHAR)BaseAddress)[(FATOffset % PAGESIZE) + 1];
+      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+    }
+
+  if ((CurrentCluster % 2) == 0)
+    {
+      Entry = Value1;
+      Entry |= ((Value2 & 0xf) << 8);
+    }
+  else
+    {
+      Entry = (Value1 >> 4);
+      Entry |= (Value2 << 4);
     }
   DPRINT ("Entry %x\n", Entry);
   if (Entry >= 0xff8 && Entry <= 0xfff)
@@ -182,7 +273,8 @@ FAT32FindAvailableCluster (PDEVICE_EXTENSION DeviceExt)
        sector < ((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32;
        sector++)
     {
-      VFATReadSectors (DeviceExt->StorageDevice,
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceExt->StorageDevice,
 		       (ULONG) (DeviceExt->FATStart + sector), 1,
 		       (UCHAR *) Block);
 
@@ -278,7 +370,8 @@ FAT32CountAvailableClusters (PDEVICE_EXTENSION DeviceExt)
        sector < ((struct _BootSector32 *) (DeviceExt->Boot))->FATSectors32;
        sector++)
     {
-      VFATReadSectors (DeviceExt->StorageDevice,
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceExt->StorageDevice,
 		       (ULONG) (DeviceExt->FATStart + sector), 1,
 		       (UCHAR *) Block);
 
@@ -324,14 +417,16 @@ FAT12WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
     {
       if ((FATOffset % BLOCKSIZE) == (BLOCKSIZE - 1))	//entry is on 2 sectors
 	{
-	  VFATWriteSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatWriteSectors (DeviceExt->StorageDevice,
 			    DeviceExt->FATStart + FATsector
 			    + i * DeviceExt->Boot->FATSectors,
 			    2, CBlock + FATsector * 512);
 	}
       else
 	{
-	  VFATWriteSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatWriteSectors (DeviceExt->StorageDevice,
 			    DeviceExt->FATStart + FATsector
 			    + i * DeviceExt->Boot->FATSectors,
 			    1, CBlock + FATsector * 512);
@@ -363,7 +458,8 @@ FAT16WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   Start = DeviceExt->FATStart + FATsector;
   for (i = 0; i < DeviceExt->Boot->FATCount; i++)
     {
-      VFATWriteSectors (DeviceExt->StorageDevice,
+      /* FIXME: Check status */
+      VfatWriteSectors (DeviceExt->StorageDevice,
 			Start, 1, ((UCHAR *) Block) + FATsector * 512);
       Start += DeviceExt->Boot->FATSectors;
     }
@@ -387,7 +483,8 @@ FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   FATsector = ClusterToWrite / 128;
   FATeis = ClusterToWrite - (FATsector * 128);
   /* load sector, change value, then rewrite sector */
-  VFATReadSectors (DeviceExt->StorageDevice,
+  /* FIXME: Check status */
+  VfatReadSectors (DeviceExt->StorageDevice,
 		   DeviceExt->FATStart + FATsector, 1, (UCHAR *) Block);
   Block[FATeis] = NewValue;
   /* Write the changed FAT sector to disk (all FAT's) */
@@ -395,7 +492,8 @@ FAT32WriteCluster (PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
   pBoot = (struct _BootSector32 *) DeviceExt->Boot;
   for (i = 0; i < pBoot->FATCount; i++)
     {
-      VFATWriteSectors (DeviceExt->StorageDevice, Start, 1, (UCHAR *) Block);
+      /* FIXME: Check status */
+      VfatWriteSectors (DeviceExt->StorageDevice, Start, 1, (UCHAR *) Block);
       Start += pBoot->FATSectors;
     }
   ExFreePool (Block);
@@ -503,7 +601,8 @@ VFATLoadCluster (PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 
   Sector = ClusterToSector (DeviceExt, Cluster);
 
-  VFATReadSectors (DeviceExt->StorageDevice,
+  /* FIXME: Check status */
+  VfatReadSectors (DeviceExt->StorageDevice,
 		   Sector, DeviceExt->Boot->SectorsPerCluster, Buffer);
   DPRINT ("Finished VFATReadSectors\n");
 }
@@ -520,6 +619,7 @@ VFATWriteCluster (PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 
   Sector = ClusterToSector (DeviceExt, Cluster);
 
-  VFATWriteSectors (DeviceExt->StorageDevice,
+  /* FIXME: Check status */
+  VfatWriteSectors (DeviceExt->StorageDevice,
 		    Sector, DeviceExt->Boot->SectorsPerCluster, Buffer);
 }

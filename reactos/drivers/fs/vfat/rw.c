@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.13 2001/01/01 04:42:12 dwelch Exp $
+/* $Id: rw.c,v 1.14 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,6 +26,24 @@
 
 /* FUNCTIONS *****************************************************************/
 
+VOID
+NextCluster(PDEVICE_EXTENSION DeviceExt,
+	    ULONG FirstCluster,
+	    PULONG CurrentCluster)
+{
+  DPRINT("NextCluster() (*CurrentCluster) 0x%x\n", (*CurrentCluster));
+  if (FirstCluster == 1)
+    {
+      (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
+    }
+  else
+    {
+      (*CurrentCluster) = GetNextCluster(DeviceExt, (*CurrentCluster));
+    }
+  DPRINT("NextCluster() finished (*CurrentCluster) 0x%x\n",
+	 (*CurrentCluster));
+}
+
 ULONG
 OffsetToCluster(PDEVICE_EXTENSION DeviceExt, 
 		ULONG FirstCluster, 
@@ -33,6 +51,8 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
 {
   ULONG CurrentCluster;
   ULONG i;
+  
+  DPRINT("OffsetToCluster(FirstCluster 0x%x)\n", FirstCluster);
 
   CurrentCluster = FirstCluster;
   if (FirstCluster == 1)
@@ -48,6 +68,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
 	  CurrentCluster = GetNextCluster (DeviceExt, CurrentCluster);
 	}
     }
+  DPRINT("OffsetToCluster() = 0x%x\n", CurrentCluster);
   return(CurrentCluster);
 }
 
@@ -139,7 +160,8 @@ VfatReadFileNoCache (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     {
       if (FirstCluster == 1)
 	{
-	  VFATReadSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice,
 			   CurrentCluster,
 			   DeviceExt->Boot->SectorsPerCluster, Temp);
 	  CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
@@ -164,7 +186,8 @@ VfatReadFileNoCache (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     {
       if (FirstCluster == 1)
 	{
-	  VFATReadSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice,
 			   CurrentCluster,
 			   DeviceExt->Boot->SectorsPerCluster, Buffer);
 	  CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
@@ -190,7 +213,8 @@ VfatReadFileNoCache (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       (*LengthRead) = (*LengthRead) + Length;
       if (FirstCluster == 1)
 	{
-	  VFATReadSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice,
 			   CurrentCluster,
 			   DeviceExt->Boot->SectorsPerCluster, Temp);
 	  CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
@@ -212,9 +236,11 @@ VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt,
 		    PULONG CurrentCluster,
 		    PVOID Destination)
 {
+  DPRINT("VfatRawReadCluster() *CurrentCluster 0x%x\n", *CurrentCluster);
   if (FirstCluster == 1)
     {
-      VFATReadSectors (DeviceExt->StorageDevice,
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceExt->StorageDevice,
 		       (*CurrentCluster),
 		       DeviceExt->Boot->SectorsPerCluster, 
 		       Destination);
@@ -225,6 +251,8 @@ VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt,
       VFATLoadCluster (DeviceExt, Destination, (*CurrentCluster));
       (*CurrentCluster) = GetNextCluster (DeviceExt, (*CurrentCluster));
     }
+  DPRINT("VfatRawReadCluster() finished *CurrentCluster 0x%x\n",
+	 *CurrentCluster);
   return(STATUS_SUCCESS);
 }
 
@@ -297,9 +325,10 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
       ULONG i;
       ULONG ReadOffset;
       ULONG InternalOffset;
-
-      ReadOffset = ROUND_DOWN(StartOffset, PAGESIZE);
-      InternalOffset = StartOffset % PAGESIZE;
+      
+      /*
+       * Otherwise we read a page of clusters together
+       */
       Status = CcRequestCacheSegment(Fcb->RFCB.Bcb, 
 				     ReadOffset,
 				     &BaseAddress,
@@ -311,37 +340,43 @@ VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
 	}
       
       /*
-       * If necessary read all the data for the page
+       * If necessary read all the data for the page, unfortunately the
+       * file length may not be page aligned in which case the page will
+       * only be partially filled.
+       * FIXME: So zero fill the rest?
        */
       if (!Valid)
 	{
-	  ULONG StartCluster;
-
-	  StartCluster = OffsetToCluster(DeviceExt, FirstCluster, ReadOffset);
-
 	  for (i = 0; i < (PAGESIZE / BytesPerCluster); i++)
 	    {	  
 	      Status = VfatRawReadCluster(DeviceExt, 
 					  FirstCluster,
-					  &StartCluster,
+					  CurrentCluster,
 					  BaseAddress + (i * BytesPerCluster));
 	      if (!NT_SUCCESS(Status))
 		{
 		  CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
 		  return(Status);
 		}
+	      if (CurrentCluster == 0xFFFFFFFF)
+		{
+		  break;
+		}
 	    }
-	}
-      /*
-       * Go on to the next cluster
-       */
-      if (FirstCluster == 1)
-	{
-	  (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
 	}
       else
 	{
-	  (*CurrentCluster) = GetNextCluster(DeviceExt, (*CurrentCluster));
+	  /*
+	   * Otherwise just move onto the next cluster
+	   */
+	  for (i = 0; i < (PAGESIZE / DeviceExt->BytesPerCluster); i++)
+	    {
+	      NextCluster(DeviceExt, FirstCluster, CurrentCluster);
+	      if (CurrentCluster == 0xFFFFFFFF)
+		{
+		  break;
+		}
+	    }
 	}
       /*
        * Copy the data from the cache to the caller
@@ -366,6 +401,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   PVFATFCB Fcb;
   PVOID Temp;
   ULONG TempLength;
+  ULONG ChunkSize;
 
   /* PRECONDITION */
   assert (DeviceExt != NULL);
@@ -374,7 +410,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   assert (FileObject->FsContext != NULL);
 
   DPRINT ("FsdReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
-	  "Length %d, ReadOffset %d)\n", DeviceExt, FileObject, Buffer,
+	  "Length %d, ReadOffset 0x%x)\n", DeviceExt, FileObject, Buffer,
 	  Length, ReadOffset);
 
   Fcb = ((PVFATCCB)FileObject->FsContext2)->pFcb;
@@ -404,13 +440,15 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	}
     }
 
+  
+  ChunkSize = max(DeviceExt->BytesPerCluster, PAGESIZE);
 
   *LengthRead = 0;
   
   /*
    * Allocate a buffer to hold partial clusters
    */
-  Temp = ExAllocatePool (NonPagedPool, DeviceExt->BytesPerCluster);
+  Temp = ExAllocatePool (NonPagedPool, ChunkSize);
   if (!Temp)
     return STATUS_UNSUCCESSFUL;
 
@@ -425,16 +463,14 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    * If the read doesn't begin on a cluster boundary then read a full
    * cluster and copy it.
    */
-  if ((ReadOffset % DeviceExt->BytesPerCluster) != 0)
+  if ((ReadOffset % ChunkSize) != 0)
     {
       VfatReadCluster(DeviceExt, Fcb, 
-		      ROUND_DOWN(ReadOffset, DeviceExt->BytesPerCluster),
+		      ROUND_DOWN(ReadOffset, ChunkSize),
 		      FirstCluster, &CurrentCluster, Temp, 1);
-      TempLength = min (Length, DeviceExt->BytesPerCluster -
-			(ReadOffset % DeviceExt->BytesPerCluster));
+      TempLength = min (Length, ChunkSize - (ReadOffset % ChunkSize));
 
-      memcpy (Buffer, Temp + ReadOffset % DeviceExt->BytesPerCluster,
-	      TempLength);
+      memcpy (Buffer, Temp + ReadOffset % ChunkSize, TempLength);
 
       (*LengthRead) = (*LengthRead) + TempLength;
       Length = Length - TempLength;
@@ -442,7 +478,7 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       ReadOffset = ReadOffset + TempLength;
     }
 
-  while (Length >= DeviceExt->BytesPerCluster)
+  while (Length >= ChunkSize)
     {
       VfatReadCluster(DeviceExt, Fcb, ReadOffset,
 		      FirstCluster, &CurrentCluster, Buffer,  1);
@@ -452,10 +488,10 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  return (STATUS_SUCCESS);
 	}
 
-      (*LengthRead) = (*LengthRead) + DeviceExt->BytesPerCluster;
-      Buffer = Buffer + DeviceExt->BytesPerCluster;
-      Length = Length - DeviceExt->BytesPerCluster;
-      ReadOffset = ReadOffset + DeviceExt->BytesPerCluster;
+      (*LengthRead) = (*LengthRead) + ChunkSize;
+      Buffer = Buffer + ChunkSize;
+      Length = Length - ChunkSize;
+      ReadOffset = ReadOffset + ChunkSize;
     }
 
   if (Length > 0)
@@ -558,7 +594,8 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       /* Read in the existing cluster data */
       if (FirstCluster == 1)
 	{
-	  VFATReadSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice,
 			   CurrentCluster,
 			   DeviceExt->Boot->SectorsPerCluster, Temp);
 	}
@@ -632,7 +669,8 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       /* Read in the existing cluster data */
       if (FirstCluster == 1)
 	{
-	  VFATReadSectors (DeviceExt->StorageDevice,
+	  /* FIXME: Check status */
+	  VfatReadSectors (DeviceExt->StorageDevice,
 			   CurrentCluster,
 			   DeviceExt->Boot->SectorsPerCluster, Temp);
 	}

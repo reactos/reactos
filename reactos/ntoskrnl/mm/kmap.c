@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.4 2000/10/22 16:36:51 ekohl Exp $
+/* $Id: kmap.c,v 1.5 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -34,7 +34,8 @@ static PVOID kernel_pool_base;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID ExUnmapPage(PVOID Addr)
+VOID 
+ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
    ULONG i = (Addr - kernel_pool_base) / PAGESIZE;
@@ -48,7 +49,8 @@ VOID ExUnmapPage(PVOID Addr)
    KeReleaseSpinLock(&AllocMapLock, oldIrql);
 }
 
-PVOID ExAllocatePage(VOID)
+PVOID 
+ExAllocatePage(VOID)
 {
    KIRQL oldlvl;
    ULONG addr;
@@ -73,7 +75,7 @@ PVOID ExAllocatePage(VOID)
 	     addr = (ULONG)(kernel_pool_base + (i*PAGESIZE));
 	     Status = MmCreateVirtualMapping(NULL, 
 					     (PVOID)addr, 
-					     PAGE_READWRITE, 
+					     PAGE_READWRITE | PAGE_SYSTEM, 
 					     PhysPage);
 	     if (!NT_SUCCESS(Status))
 	       {
@@ -88,13 +90,15 @@ PVOID ExAllocatePage(VOID)
    return(NULL);
 }
 
-VOID MmInitKernelMap(PVOID BaseAddress)
+VOID 
+MmInitKernelMap(PVOID BaseAddress)
 {
    kernel_pool_base = BaseAddress;
    KeInitializeSpinLock(&AllocMapLock);
 }
 
-unsigned int alloc_pool_region(unsigned int nr_pages)
+unsigned int 
+alloc_pool_region(unsigned int nr_pages)
 /*
  * FUNCTION: Allocates a region of pages within the nonpaged pool area
  */

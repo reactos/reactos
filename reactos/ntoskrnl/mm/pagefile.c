@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.7 2000/09/03 14:53:03 ekohl Exp $
+/* $Id: pagefile.c,v 1.8 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,7 +21,7 @@
 
 /* TYPES *********************************************************************/
 
-typedef struct _PPAGINGFILE
+typedef struct _PAGINGFILE
 {
    LIST_ENTRY PagingFileListEntry;
    PFILE_OBJECT FileObject;
@@ -347,3 +347,10 @@ NTSTATUS STDCALL NtCreatePagingFile(IN	PUNICODE_STRING	PageFileName,
 
 
 /* EOF */
+
+
+
+
+
+
+

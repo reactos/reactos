@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.11 2001/01/01 04:42:11 dwelch Exp $
+/* $Id: create.c,v 1.12 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,7 +95,8 @@ GetEntryName (PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
 	      Offset = 0;
 	      StartingSector++;	//FIXME : nor always the next sector
 	      jloop++;
-	      VFATReadSectors (DeviceExt->StorageDevice,
+	      /* FIXME: Check status */
+	      VfatReadSectors (DeviceExt->StorageDevice,
 			       StartingSector, 1, Block);
 	      test2 = (slot *) Block;
 	    }
@@ -156,7 +157,8 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
   DPRINT ("FindFile : start at sector %lx, entry %ld\n", StartingSector, i);
   for (j = 0; j < Size; j++)
     {
-      VFATReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
 
       for (i = 0; i < ENTRIES_PER_SECTOR; i++)
 	{
@@ -291,7 +293,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
   DPRINT ("FindFile : start at sector %lx, entry %ld\n", StartingSector, i);
   for (j = 0; j < Size; j++)
     {
-      VFATReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
+      /* FIXME: Check status */
+      VfatReadSectors (DeviceExt->StorageDevice, StartingSector, 1, block);
 
       for (i = (Entry) ? (*Entry) : 0; i < ENTRIES_PER_SECTOR; i++)
 	{
@@ -320,7 +323,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 		      /* entry is in next sector */
 		      StartingSector++;
 		      /* FIXME : treat case of next sector fragmented */
-		      VFATReadSectors (DeviceExt->StorageDevice,
+		      /* FIXME: Check status */
+		      VfatReadSectors (DeviceExt->StorageDevice,
 				       StartingSector, 1, block);
 		      i = 0;
 		    }
@@ -563,7 +567,8 @@ FsdOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       ParentFcb = Temp;
     }
 
-  
+  FileObject->Flags = FileObject->Flags | 
+    FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
   FileObject->FsContext = (PVOID)&ParentFcb->RFCB;
   newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
   memset (newCCB, 0, sizeof (VFATCCB));

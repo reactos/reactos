@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.16 2000/08/27 22:35:22 ekohl Exp $
+/* $Id: ntddk.h,v 1.17 2001/01/08 02:14:05 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -23,6 +23,7 @@ extern "C"
 #ifndef FASTCALL
 #define FASTCALL STDCALL
 #endif
+#define STATIC static
 
 #include <ntos/types.h>
 #include <ntos/disk.h>

@@ -426,7 +426,7 @@ typedef struct _IMAGE_CONTROL_DATA{
 
 #define BUTTON       0x80
 #define EDIT         0x81
-#define STATIC       0x82
+//#define STATIC       0x82
 #define LISTBOX      0x83
 #define SCROLLBAR    0x84
 #define COMBOBOX     0x85

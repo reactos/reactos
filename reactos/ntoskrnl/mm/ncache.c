@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.6 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: ncache.c,v 1.7 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,13 +44,15 @@
  * REVISIONS
  *
  */
-PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
+PVOID STDCALL 
+MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 {
    PVOID Result;
    MEMORY_AREA* marea;
    NTSTATUS Status;
    ULONG i;
-   
+   ULONG Attributes;
+
    Result = NULL;
    Status = MmCreateMemoryArea (NULL,
 				MmGetKernelAddressSpace(),
@@ -63,17 +65,17 @@ PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
      {
 	return (NULL);
      }
-   for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
+   Attributes = PAGE_READWRITE | PAGE_SYSTEM | PAGE_NOCACHE | 
+     PAGE_WRITETHROUGH;
+   for (i = 0; i <= (NumberOfBytes / PAGESIZE); i++)
      {
-	Status = MmCreateVirtualMapping (NULL,
-					 (Result + (i * PAGESIZE)),
-					 PAGE_READWRITE,
-					 (ULONG)MmAllocPage(0));
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("Unable to create virtual mapping\n");
-	     KeBugCheck(0);
-	  }
+       PVOID NPage;
+
+       NPage = MmAllocPageMaybeSwap(0);
+       MmCreateVirtualMapping (NULL,
+			       Result + (i * PAGESIZE),
+			       Attributes,
+			       (ULONG)NPage);
      }
    return ((PVOID)Result);
 }
@@ -108,10 +110,10 @@ PVOID STDCALL MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 VOID STDCALL MmFreeNonCachedMemory (IN PVOID BaseAddress,
 				    IN ULONG NumberOfBytes)
 {
-   MmFreeMemoryArea (&PsGetCurrentProcess()->AddressSpace,
-		     BaseAddress,
-		     NumberOfBytes,
-		     TRUE);
+  MmFreeMemoryArea (MmGetKernelAddressSpace(),
+		    BaseAddress,
+		    NumberOfBytes,
+		    TRUE);
 }
 
 

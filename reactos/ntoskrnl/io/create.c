@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.34 2000/12/23 02:37:39 dwelch Exp $
+/* $Id: create.c,v 1.35 2001/01/08 02:14:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -168,41 +168,36 @@ PFILE_OBJECT STDCALL
 IoCreateStreamFileObject (PFILE_OBJECT	FileObject,
 			  PDEVICE_OBJECT	DeviceObject)
 {
-	HANDLE		FileHandle;
-	PFILE_OBJECT	CreatedFileObject;
+  HANDLE		FileHandle;
+  PFILE_OBJECT	CreatedFileObject;
+  
+  DbgPrint("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
+	   FileObject, DeviceObject);
    
-	DbgPrint("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
-		FileObject,
-		DeviceObject
-		);
-   
-	assert_irql (PASSIVE_LEVEL);
-   
-	CreatedFileObject = ObCreateObject (
-				& FileHandle,
-				STANDARD_RIGHTS_REQUIRED,
-				NULL,
-				IoFileObjectType
-				);
-	if (NULL == CreatedFileObject)
-	{
-		return (NULL);
-	}
-   
-	if (FileObject != NULL)
-	{
-		DeviceObject = FileObject->DeviceObject;
-	}
-	DeviceObject = IoGetAttachedDevice(DeviceObject);
-	CreatedFileObject->DeviceObject = DeviceObject;
-	CreatedFileObject->Vpb = DeviceObject->Vpb;
-	CreatedFileObject->Type = InternalFileType;
-	//CreatedFileObject->Flags = CreatedFileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
-   
-	ZwClose (FileHandle);
-   
-	return (CreatedFileObject);
+  assert_irql (PASSIVE_LEVEL);
+  
+  CreatedFileObject = ObCreateObject (&FileHandle,
+				      STANDARD_RIGHTS_REQUIRED,
+				      NULL,
+				      IoFileObjectType);
+  if (NULL == CreatedFileObject)
+    {
+      return (NULL);
+    }
+  
+  if (FileObject != NULL)
+    {
+      DeviceObject = FileObject->DeviceObject;
+    }
+  DeviceObject = IoGetAttachedDevice(DeviceObject);
+  CreatedFileObject->DeviceObject = DeviceObject;
+  CreatedFileObject->Vpb = DeviceObject->Vpb;
+  CreatedFileObject->Type = InternalFileType;
+  CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+  
+  ZwClose (FileHandle);
+  
+  return (CreatedFileObject);
 }
 
 

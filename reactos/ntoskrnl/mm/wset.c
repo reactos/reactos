@@ -1,4 +1,4 @@
-/* $Id: wset.c,v 1.5 2000/08/18 22:27:03 dwelch Exp $
+/* $Id: wset.c,v 1.6 2001/01/08 02:14:06 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -196,5 +196,6 @@ BOOLEAN MmAddPageToWorkingSet(PEPROCESS Process,
    
    return(TRUE);
 }
+
 
 

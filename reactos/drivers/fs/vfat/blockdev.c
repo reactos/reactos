@@ -18,15 +18,17 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
-VFATReadSectors (IN PDEVICE_OBJECT pDeviceObject,
-		 IN ULONG DiskSector, IN ULONG SectorCount, IN UCHAR * Buffer)
+NTSTATUS
+VfatReadSectors (IN PDEVICE_OBJECT pDeviceObject,
+		 IN ULONG DiskSector, 
+		 IN ULONG SectorCount,
+		 IN OUT PUCHAR Buffer)
 {
   LARGE_INTEGER sectorNumber;
-  PIRP irp;
-  IO_STATUS_BLOCK ioStatus;
+  PIRP Irp;
+  IO_STATUS_BLOCK IoStatus;
   KEVENT event;
-  NTSTATUS status;
+  NTSTATUS Status;
   ULONG sectorSize;
 
   sectorNumber.u.LowPart = DiskSector << 9;
@@ -34,7 +36,6 @@ VFATReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 
   KeInitializeEvent (&event, NotificationEvent, FALSE);
   sectorSize = BLOCKSIZE * SectorCount;
-
 
   DPRINT ("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
 	  pDeviceObject, DiskSector, Buffer);
@@ -44,53 +45,55 @@ VFATReadSectors (IN PDEVICE_OBJECT pDeviceObject,
 
 
   DPRINT ("Building synchronous FSD Request...\n");
-  irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
+  Irp = IoBuildSynchronousFsdRequest (IRP_MJ_READ,
 				      pDeviceObject,
 				      Buffer,
 				      sectorSize,
-				      &sectorNumber, &event, &ioStatus);
+				      &sectorNumber, 
+				      &event, 
+				      &IoStatus);
 
-  if (!irp)
+  if (Irp == NULL)
     {
-      DbgPrint ("READ failed!!!\n");
-      return FALSE;
+      DPRINT("IoBuildSynchronousFsdRequest failed\n");
+      return(STATUS_UNSUCCESSFUL);;
     }
 
-  DPRINT ("Calling IO Driver... with irp %x\n", irp);
-  status = IoCallDriver (pDeviceObject, irp);
+  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver (pDeviceObject, Irp);
 
-  DPRINT ("Waiting for IO Operation for %x\n", irp);
-  if (status == STATUS_PENDING)
+  DPRINT ("Waiting for IO Operation for %x\n", Irp);
+  if (Status == STATUS_PENDING)
     {
       DPRINT ("Operation pending\n");
       KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT ("Getting IO Status... for %x\n", irp);
-      status = ioStatus.Status;
+      DPRINT ("Getting IO Status... for %x\n", Irp);
+      Status = IoStatus.Status;
     }
 
-  if (!NT_SUCCESS (status))
+  if (!NT_SUCCESS (Status))
     {
-      DbgPrint ("IO failed!!! VFATREadSectors : Error code: %x\n", status);
-      DbgPrint
-	("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
-	 pDeviceObject, DiskSector, Buffer, sectorNumber.u.HighPart,
-	 sectorNumber.u.LowPart);
-      return FALSE;
+      DPRINT ("IO failed!!! VFATREadSectors : Error code: %x\n", Status);
+      DPRINT ("(pDeviceObject %x, DiskSector %x, Buffer %x, offset 0x%x%x)\n",
+	      pDeviceObject, DiskSector, Buffer, sectorNumber.u.HighPart,
+	      sectorNumber.u.LowPart);
+      return (Status);
     }
-  DPRINT ("Block request succeeded for %x\n", irp);
-  return TRUE;
+  DPRINT ("Block request succeeded for %x\n", Irp);
+  return (STATUS_SUCCESS);
 }
 
-BOOLEAN
-VFATWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
+NTSTATUS
+VfatWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
 		  IN ULONG DiskSector,
-		  IN ULONG SectorCount, IN UCHAR * Buffer)
+		  IN ULONG SectorCount, 
+		  IN PUCHAR Buffer)
 {
   LARGE_INTEGER sectorNumber;
-  PIRP irp;
-  IO_STATUS_BLOCK ioStatus;
+  PIRP Irp;
+  IO_STATUS_BLOCK IoStatus;
   KEVENT event;
-  NTSTATUS status;
+  NTSTATUS Status;
   ULONG sectorSize;
 
   DPRINT ("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
@@ -104,35 +107,37 @@ VFATWriteSectors (IN PDEVICE_OBJECT pDeviceObject,
   sectorSize = BLOCKSIZE * SectorCount;
 
   DPRINT ("Building synchronous FSD Request...\n");
-  irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
+  Irp = IoBuildSynchronousFsdRequest (IRP_MJ_WRITE,
 				      pDeviceObject,
 				      Buffer,
 				      sectorSize,
-				      &sectorNumber, &event, &ioStatus);
+				      &sectorNumber, 
+				      &event, 
+				      &IoStatus);
 
-  if (!irp)
+  if (!Irp)
     {
-      DbgPrint ("WRITE failed!!!\n");
-      return FALSE;
+      DPRINT ("WRITE failed!!!\n");
+      return (STATUS_UNSUCCESSFUL);
     }
 
   DPRINT ("Calling IO Driver...\n");
-  status = IoCallDriver (pDeviceObject, irp);
+  Status = IoCallDriver (pDeviceObject, Irp);
 
   DPRINT ("Waiting for IO Operation...\n");
-  if (status == STATUS_PENDING)
+  if (Status == STATUS_PENDING)
     {
       KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
       DPRINT ("Getting IO Status...\n");
-      status = ioStatus.Status;
+      Status = IoStatus.Status;
     }
 
-  if (!NT_SUCCESS (status))
+  if (!NT_SUCCESS (Status))
     {
-      DbgPrint ("IO failed!!! VFATWriteSectors : Error code: %x\n", status);
-      return FALSE;
+      DPRINT ("IO failed!!! VFATWriteSectors : Error code: %x\n", Status);
+      return (Status);
     }
 
   DPRINT ("Block request succeeded\n");
-  return TRUE;
+  return (STATUS_SUCCESS);
 }

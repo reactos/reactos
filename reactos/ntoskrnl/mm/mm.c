@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.39 2000/10/22 16:36:52 ekohl Exp $
+/* $Id: mm.c,v 1.40 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -196,7 +196,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					(PVOID)PAGE_ROUND_DOWN(Address),
 					PAGE_READONLY,
-					(ULONG)MmSharedDataPagePhysicalAddress);
+				       (ULONG)MmSharedDataPagePhysicalAddress);
 	break;
 	
       default:
@@ -210,13 +210,10 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
 
 /* Miscellanea functions: they may fit somewhere else */
 
-DWORD
-STDCALL
-MmAdjustWorkingSetSize (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+DWORD STDCALL
+MmAdjustWorkingSetSize (DWORD	Unknown0,
+			DWORD	Unknown1,
+			DWORD	Unknown2)
 {
 	UNIMPLEMENTED;
 	return (0);

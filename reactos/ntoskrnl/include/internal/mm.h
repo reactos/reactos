@@ -13,20 +13,18 @@
 struct _EPROCESS;
 typedef ULONG SWAPENTRY;
 
-enum
-{
-   MEMORY_AREA_INVALID,
-   MEMORY_AREA_SECTION_VIEW_COMMIT,
-   MEMORY_AREA_CONTINUOUS_MEMORY,
-   MEMORY_AREA_NO_CACHE,
-   MEMORY_AREA_IO_MAPPING,
-   MEMORY_AREA_SYSTEM,
-   MEMORY_AREA_MDL_MAPPING,
-   MEMORY_AREA_VIRTUAL_MEMORY,
-   MEMORY_AREA_SECTION_VIEW_RESERVE,
-   MEMORY_AREA_CACHE_SEGMENT,
-   MEMORY_AREA_SHARED_DATA,
-};
+#define MEMORY_AREA_INVALID              (0)
+#define MEMORY_AREA_SECTION_VIEW_COMMIT  (1)
+#define MEMORY_AREA_CONTINUOUS_MEMORY    (2)
+#define MEMORY_AREA_NO_CACHE             (3)
+#define MEMORY_AREA_IO_MAPPING           (4)
+#define MEMORY_AREA_SYSTEM               (5)
+#define MEMORY_AREA_MDL_MAPPING          (7)
+#define MEMORY_AREA_VIRTUAL_MEMORY       (8)
+#define MEMORY_AREA_SECTION_VIEW_RESERVE (9)
+#define MEMORY_AREA_CACHE_SEGMENT        (10)
+#define MEMORY_AREA_SHARED_DATA          (11)
+
 
 #define PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(x) \
                           ((x) / (4*1024*1024))
@@ -42,7 +40,26 @@ enum
 #define SPE_DIRTY                               (0x8)
 #define SPE_IN_PAGEFILE                         (0x10)
 
+/*
+ * Flags for section objects
+ */
 #define SO_PHYSICAL_MEMORY                      (0x1)
+
+/*
+ * Additional flags for protection attributes
+ */
+#define PAGE_WRITETHROUGH                       (1024)
+#define PAGE_SYSTEM                             (2048)
+#define PAGE_FLAGS_VALID_FROM_USER_MODE               (PAGE_READONLY | \
+						 PAGE_READWRITE | \
+						 PAGE_WRITECOPY | \
+						 PAGE_EXECUTE | \
+						 PAGE_EXECUTE_READ | \
+						 PAGE_EXECUTE_READWRITE | \
+						 PAGE_EXECUTE_WRITECOPY | \
+						 PAGE_GUARD | \
+						 PAGE_NOACCESS | \
+						 PAGE_NOCACHE)
 
 typedef struct
 {
@@ -259,7 +276,6 @@ VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);
 
 VOID MmInitKernelMap(PVOID BaseAddress);
-unsigned int alloc_pool_region(unsigned int nr_pages);
 
 VOID MmWaitForFreePages(VOID);
 PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry);

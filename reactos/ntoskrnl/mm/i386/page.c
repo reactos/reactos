@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.16 2000/10/22 16:36:52 ekohl Exp $
+/* $Id: page.c,v 1.17 2001/01/08 02:14:06 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -25,17 +25,23 @@
 #define PA_BIT_PRESENT   (0)
 #define PA_BIT_READWRITE (1)
 #define PA_BIT_USER      (2)
+#define PA_BIT_WT        (3)
+#define PA_BIT_CD        (4)
+#define PA_BIT_ACCESSED  (5)
 #define PA_BIT_DIRTY     (6)
 
-#define PA_PRESENT  (1<<PA_BIT_PRESENT)
-#define PA_DIRTY    (1<<PA_BIT_DIRTY)
+#define PA_PRESENT  (1 << PA_BIT_PRESENT)
+#define PA_DIRTY    (1 << PA_BIT_DIRTY)
+#define PA_WT       (1 << PA_BIT_WT)
+#define PA_CD       (1 << PA_BIT_CD)
 
 #define PAGETABLE_MAP     (0xf0000000)
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
 
 /* FUNCTIONS ***************************************************************/
 
-PULONG MmGetPageDirectory(void)
+PULONG 
+MmGetPageDirectory(VOID)
 {
    unsigned int page_dir=0;
    __asm__("movl %%cr3,%0\n\t"
@@ -43,23 +49,36 @@ PULONG MmGetPageDirectory(void)
    return((PULONG)page_dir);
 }
 
-static ULONG ProtectToPTE(ULONG flProtect)
+static ULONG 
+ProtectToPTE(ULONG flProtect)
 {
-   ULONG Attributes = 0;
-   
-   if (flProtect & PAGE_NOACCESS || flProtect & PAGE_GUARD)
-     {
-	Attributes = 0;
-     }
+  ULONG Attributes = 0;
+  
+  if (flProtect & PAGE_NOACCESS || flProtect & PAGE_GUARD)
+    {
+      Attributes = 0;
+    }
    if (flProtect & PAGE_READWRITE || flProtect & PAGE_EXECUTE_READWRITE)
      {
-	Attributes = PA_WRITE | PA_USER;
+       Attributes = PA_WRITE;
      }
    if (flProtect & PAGE_READONLY || flProtect & PAGE_EXECUTE ||
        flProtect & PAGE_EXECUTE_READ)
      {
-	Attributes = PA_READ | PA_USER; 
-      }
+       Attributes = PA_READ; 
+     }
+   if (!(flProtect & PAGE_SYSTEM))
+     {
+       Attributes = Attributes | PA_USER;
+     }
+   if (!(flProtect & PAGE_NOCACHE))
+     {
+       Attributes = Attributes | PA_CD;
+     }
+   if (!(flProtect & PAGE_WRITETHROUGH))
+     {
+       Attributes = Attributes | PA_WT;
+     }
    return(Attributes);
 }
 
@@ -448,9 +467,8 @@ NTSTATUS MmCreateVirtualMapping(PEPROCESS Process,
    return(STATUS_SUCCESS);
 }
 
-VOID MmSetPageProtect(PEPROCESS Process,
-		      PVOID Address,
-		      ULONG flProtect)
+VOID 
+MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
    ULONG Attributes = 0;
    PULONG PageEntry;
@@ -471,7 +489,8 @@ VOID MmSetPageProtect(PEPROCESS Process,
      }
 }
 
-PHYSICAL_ADDRESS STDCALL MmGetPhysicalAddress(PVOID vaddr)
+PHYSICAL_ADDRESS STDCALL 
+MmGetPhysicalAddress(PVOID vaddr)
 /*
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */

@@ -1,4 +1,4 @@
-/* $Id: aspace.c,v 1.4 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: aspace.c,v 1.5 2001/01/08 02:14:05 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,11 +19,12 @@
 
 /* GLOBALS ******************************************************************/
 
-static MADDRESS_SPACE KernelAddressSpace;
+STATIC MADDRESS_SPACE KernelAddressSpace;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
+VOID 
+MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    (VOID)KeWaitForMutexObject(&AddressSpace->Lock,
 			      0,
@@ -32,12 +33,14 @@ VOID MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 			      NULL);   
 }
 
-VOID MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
+VOID 
+MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    KeReleaseMutex(&AddressSpace->Lock, FALSE);
 }
 
-VOID MmInitializeKernelAddressSpace(VOID)
+VOID 
+MmInitializeKernelAddressSpace(VOID)
 {
    MmInitializeAddressSpace(NULL, &KernelAddressSpace);
 }
@@ -52,8 +55,9 @@ PMADDRESS_SPACE MmGetKernelAddressSpace(VOID)
    return(&KernelAddressSpace);
 }
 
-NTSTATUS MmInitializeAddressSpace(PEPROCESS Process,
-				  PMADDRESS_SPACE AddressSpace)
+NTSTATUS 
+MmInitializeAddressSpace(PEPROCESS Process,
+			 PMADDRESS_SPACE AddressSpace)
 {
    InitializeListHead(&AddressSpace->MAreaListHead);
    KeInitializeMutex(&AddressSpace->Lock, 1);
@@ -84,7 +88,8 @@ NTSTATUS MmInitializeAddressSpace(PEPROCESS Process,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
+NTSTATUS 
+MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    return(STATUS_SUCCESS);
 }

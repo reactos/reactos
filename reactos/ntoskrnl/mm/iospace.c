@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.6 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: iospace.c,v 1.7 2001/01/08 02:14:05 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,9 +47,10 @@
  * REVISIONS
  *
  */
-PVOID STDCALL MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
-			    IN ULONG NumberOfBytes,
-			    IN BOOLEAN CacheEnable)
+PVOID STDCALL 
+MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
+	      IN ULONG NumberOfBytes,
+	      IN BOOLEAN CacheEnable)
 {
    PVOID Result;
    MEMORY_AREA* marea;
@@ -69,17 +70,18 @@ PVOID STDCALL MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
      {
 	return (NULL);
      }
-   Attributes = PA_WRITE | PA_READ | PA_EXECUTE | PA_SYSTEM;
+   Attributes = PAGE_EXECUTE_READWRITE | PAGE_SYSTEM;
    if (!CacheEnable)
      {
-	Attributes |= (PA_PWT | PA_PCD);
+	Attributes |= (PAGE_NOCACHE | PAGE_WRITETHROUGH);
      }
    for (i = 0; (i <= (NumberOfBytes / PAGESIZE)); i++)
      {
-	Status = MmCreateVirtualMapping (NULL,
-					 (Result + (i * PAGESIZE)),
-					 PAGE_READWRITE,
-					 (PhysicalAddress.u.LowPart + (i * PAGESIZE)));
+	Status = 
+	  MmCreateVirtualMapping (NULL,
+				  (Result + (i * PAGESIZE)),
+				  Attributes,
+				  PhysicalAddress.u.LowPart + (i * PAGESIZE));
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Unable to create virtual mapping\n");
@@ -127,33 +129,20 @@ VOID STDCALL MmUnmapIoSpace (IN PVOID BaseAddress,
  * NAME							EXPORTED
  *	MmMapVideoDisplay@16
  */
-PVOID
-STDCALL
-MmMapVideoDisplay (
-	IN	PHYSICAL_ADDRESS	PhysicalAddress,
-	IN	ULONG			NumberOfBytes,
-	IN	MEMORY_CACHING_TYPE	CacheType
-	)
+PVOID STDCALL
+MmMapVideoDisplay (IN	PHYSICAL_ADDRESS	PhysicalAddress,
+		   IN	ULONG			NumberOfBytes,
+		   IN	MEMORY_CACHING_TYPE	CacheType)
 {
-	return MmMapIoSpace (
-			PhysicalAddress,
-			NumberOfBytes,
-			CacheType
-			);
+  return MmMapIoSpace (PhysicalAddress, NumberOfBytes, CacheType);
 }
 
 
-VOID
-STDCALL
-MmUnmapVideoDisplay (
-	IN	PVOID	BaseAddress,
-	IN	ULONG	NumberOfBytes
-	)
+VOID STDCALL
+MmUnmapVideoDisplay (IN	PVOID	BaseAddress,
+		     IN	ULONG	NumberOfBytes)
 {
-	MmUnmapIoSpace (
-		BaseAddress,
-		NumberOfBytes
-		);
+  MmUnmapIoSpace (BaseAddress, NumberOfBytes);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.19 2000/12/29 23:17:12 dwelch Exp $ */
+/* $Id: vfat.h,v 1.20 2001/01/08 02:14:06 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -74,19 +74,21 @@ typedef struct _slot slot;
 
 typedef struct
 {
-   ERESOURCE DirResource;
-   ERESOURCE FatResource;
-   
-   KSPIN_LOCK FcbListLock;
-   LIST_ENTRY FcbListHead;
-   
-   PDEVICE_OBJECT StorageDevice;
-   BootSector *Boot;
-   int rootDirectorySectors, FATStart, rootStart, dataStart;
-   int FATEntriesPerSector, FATUnit;
-   ULONG BytesPerCluster;
-   ULONG FatType;
-   unsigned char* FAT;   
+  ERESOURCE DirResource;
+  ERESOURCE FatResource;
+  
+  KSPIN_LOCK FcbListLock;
+  LIST_ENTRY FcbListHead;
+  
+  PDEVICE_OBJECT StorageDevice;
+  PFILE_OBJECT StreamStorageDevice;
+  PBCB StorageBcb;
+  BootSector *Boot;
+  int rootDirectorySectors, FATStart, rootStart, dataStart;
+  int FATEntriesPerSector, FATUnit;
+  ULONG BytesPerCluster;
+  ULONG FatType;
+  unsigned char* FAT;   
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _VFATFCB
@@ -118,7 +120,6 @@ typedef struct _VFATCCB
 
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
-
 
 typedef struct __DOSTIME
 {
@@ -154,14 +155,14 @@ VfatQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 /* internal functions in blockdev.c */
-BOOLEAN 
-VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
+NTSTATUS
+VfatReadSectors(IN PDEVICE_OBJECT pDeviceObject,
 		IN ULONG   DiskSector,
 		IN ULONG       SectorCount,
 		IN UCHAR*	Buffer);
 
-BOOLEAN 
-VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
+NTSTATUS
+VfatWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 		 IN ULONG   DiskSector,
 		 IN ULONG        SectorCount,
 		 IN UCHAR*	Buffer);

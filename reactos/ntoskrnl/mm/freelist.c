@@ -475,7 +475,8 @@ VOID MmUnlockPage(PVOID PhysicalAddress)
 }
 
 
-PVOID MmAllocPage(SWAPENTRY SavedSwapEntry)
+PVOID 
+MmAllocPage(SWAPENTRY SavedSwapEntry)
 {
    ULONG offset;
    PLIST_ENTRY ListEntry;
@@ -518,7 +519,8 @@ PVOID MmAllocPage(SWAPENTRY SavedSwapEntry)
    return((PVOID)offset);
 }
 
-PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry)
+PVOID 
+MmMustAllocPage(SWAPENTRY SavedSwapEntry)
 {
    PVOID Page;
    
@@ -532,7 +534,8 @@ PVOID MmMustAllocPage(SWAPENTRY SavedSwapEntry)
    return(Page);
 }
 
-PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry)
+PVOID 
+MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry)
 {
    PVOID Page;
    
@@ -545,7 +548,8 @@ PVOID MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry)
    return(Page);
 }
 
-NTSTATUS MmWaitForPage(PVOID PhysicalAddress)
+NTSTATUS 
+MmWaitForPage(PVOID PhysicalAddress)
 {
    NTSTATUS Status;
    ULONG Start;
@@ -559,7 +563,8 @@ NTSTATUS MmWaitForPage(PVOID PhysicalAddress)
    return(Status);
 }
 
-VOID MmClearWaitPage(PVOID PhysicalAddress)
+VOID 
+MmClearWaitPage(PVOID PhysicalAddress)
 {
    ULONG Start;
    
@@ -568,7 +573,8 @@ VOID MmClearWaitPage(PVOID PhysicalAddress)
    KeClearEvent(&MmPageArray[Start].Event);
 }
 
-VOID MmSetWaitPage(PVOID PhysicalAddress)
+VOID 
+MmSetWaitPage(PVOID PhysicalAddress)
 {
    ULONG Start;
    
