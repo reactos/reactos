@@ -161,7 +161,20 @@ NtEarlyInitVdm(VOID);
                                      __asm__("movl %%cr4,%0\n\t" :"=r" (__d)); \
                                      __d; \
                                  })
-#define Ke386SetCr4(X)           __asm__("movl %0,%%cr4": :"r" (X));
+#define Ke386SetCr4(X)           __asm__ __volatile__("movl %0,%%cr4": :"r" (X));
+
+static inline void Ki386Cpuid(ULONG Op, PULONG Eax, PULONG Ebx, PULONG Ecx, PULONG Edx)
+{
+    __asm__("cpuid"
+	    : "=a" (*Eax), "=b" (*Ebx), "=c" (*Ecx), "=d" (*Edx)
+	    : "0" (Op));
+}
+
+#define Ke386Rdmsr(msr,val1,val2) __asm__ __volatile__("rdmsr" : "=a" (val1), "=d" (val2) : "c" (msr))
+
+#define Ke386Wrmsr(msr,val1,val2) __asm__ __volatile__("wrmsr" : /* no outputs */ : "c" (msr), "a" (val1), "d" (val2))
+
+
 #elif defined(_MSC_VER)
 #define Ke386DisableInterrupts() __asm cli
 #define Ke386EnableInterrupts()  __asm sti

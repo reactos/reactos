@@ -38,61 +38,90 @@ static ULONG PcrsAllocated = 0;
 static PFN_TYPE PcrPages[MAXIMUM_PROCESSORS];
 ULONG Ke386CpuidFlags, Ke386CpuidFlags2, Ke386CpuidExFlags;
 ULONG Ke386Cpuid = 0x300;
+ULONG Ke386CacheAlignment;
+CHAR Ke386CpuidVendor[13] = {0,};
+CHAR Ke386CpuidModel[49] = {0,};
+ULONG Ke386L1CacheSize;
+ULONG Ke386L2CacheSize;
+BOOLEAN Ke386NoExecute = FALSE;
+BOOLEAN Ke386Pae = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION STATIC
 Ki386GetCpuId(VOID)
 {
-  ULONG OrigFlags, Flags, FinalFlags;
-  ULONG MaxCpuidLevel;
+   ULONG OrigFlags, Flags, FinalFlags;
+   ULONG MaxCpuidLevel;
+   ULONG Dummy, Ebx, Ecx, Edx;
 
-  Ke386CpuidFlags = Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
+   Ke386CpuidFlags = Ke386CpuidFlags2 =  Ke386CpuidExFlags = 0;
+   Ke386CacheAlignment = 32;
 
-  /* Try to toggle the id bit in eflags. */
-  __asm__ ("pushfl\n\t"
-	   "popl %0\n\t"
-	   : "=r" (OrigFlags));
-  Flags = OrigFlags ^ X86_EFLAGS_ID;
-  __asm__ ("pushl %1\n\t"
-	   "popfl\n\t"
-	   "pushfl\n\t"
-	   "popl %0\n\t"
-	   : "=r" (FinalFlags)
-	   : "r" (Flags));
+   /* Try to toggle the id bit in eflags. */
+   __asm__ ("pushfl\n\t"
+	    "popl %0\n\t"
+	    : "=r" (OrigFlags));
+   Flags = OrigFlags ^ X86_EFLAGS_ID;
+   __asm__ ("pushl %1\n\t"
+	    "popfl\n\t"
+	    "pushfl\n\t"
+	    "popl %0\n\t"
+	    : "=r" (FinalFlags)
+	    : "r" (Flags));
    if ((OrigFlags & X86_EFLAGS_ID) == (FinalFlags & X86_EFLAGS_ID))
-    {
+   {
       /* No cpuid supported. */
       return;
-    }
-  
-  /* Get maximum cpuid level supported. */
-  __asm__("cpuid\n\t"
-	  : "=a" (MaxCpuidLevel)
-	  : "a" (0x00000000)
-	  : "ebx", "ecx", "edx");       
-  if (MaxCpuidLevel > 0)
-    {
-      /* Get the feature flags. */
-      __asm__("cpuid\n\t"
-	  : "=a" (Ke386Cpuid),"=d" (Ke386CpuidFlags), "=c" (Ke386CpuidFlags2)
-	  : "a" (0x00000001)
-	  : "ebx");       
-    }
+   }
 
-  /* Get the maximum extended cpuid level supported. */
-  __asm__("cpuid\n\t"
-	  : "=a" (MaxCpuidLevel)
-	  : "a" (0x80000000)
-	  : "ebx", "ecx", "edx");       
-  if (MaxCpuidLevel > 0)
-    {
+   /* Get the vendor name and the maximum cpuid level supported. */
+   Ki386Cpuid(0, &MaxCpuidLevel, (PULONG)&Ke386CpuidVendor[0], (PULONG)&Ke386CpuidVendor[8], (PULONG)&Ke386CpuidVendor[4]);
+   if (MaxCpuidLevel > 0)
+   { 
+      /* Get the feature flags. */
+      Ki386Cpuid(1, &Ke386Cpuid, &Ebx, &Ke386CpuidFlags2, &Ke386CpuidFlags);
+      /* Get the cache alignment, if it is available */
+      if (Ke386CpuidFlags & (1<<19))
+      {
+         Ke386CacheAlignment = ((Ebx >> 8) & 0xff) * 8;
+      }
+   }
+
+   /* Get the maximum extended cpuid level supported. */
+   Ki386Cpuid(0x80000000, &MaxCpuidLevel, &Dummy, &Dummy, &Dummy);
+   if (MaxCpuidLevel > 0)
+   {
       /* Get the extended feature flags. */
-      __asm__("cpuid\n\t"
-	  : "=d" (Ke386CpuidExFlags)
-	  : "a" (0x80000001)
-	  : "ebx", "ecx");       
-    }
+      Ki386Cpuid(0x80000001, &Dummy, &Dummy, &Dummy, &Ke386CpuidExFlags);
+   }
+
+   /* Get the model name. */
+   if (MaxCpuidLevel >= 0x80000004)
+   {
+      PULONG v = (PULONG)&Ke386CpuidModel;
+      Ki386Cpuid(0x80000002, v, v + 1, v + 2, v + 3);
+      Ki386Cpuid(0x80000003, v + 4, v + 5, v + 6, v + 7);
+      Ki386Cpuid(0x80000004, v + 8, v + 9, v + 10, v + 11);
+   }
+
+   /* Get the L1 cache size */
+   if (MaxCpuidLevel >= 0x80000005)
+   {
+      Ki386Cpuid(0x80000005, &Dummy, &Dummy, &Ecx, &Edx);
+      Ke386L1CacheSize = (Ecx >> 24)+(Edx >> 24);
+      if ((Ecx & 0xff) > 0)
+      {
+         Ke386CacheAlignment = Ecx & 0xff;
+      }
+   }
+
+   /* Get the L2 cache size */
+   if (MaxCpuidLevel >= 0x80000006)
+   {
+      Ki386Cpuid(0x80000006, &Dummy, &Dummy, &Ecx, &Dummy);
+      Ke386L2CacheSize = Ecx >> 16;
+   }
 }
 
 VOID INIT_FUNCTION
@@ -236,9 +265,34 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
       p1 = p2;
    }
 
+   /* 
+    * FIXME:
+    *   Make the detection of the noexecute feature more portable.
+    */
+   if(((Ke386Cpuid >> 8) & 0xf) == 0xf &&
+      0 == strcmp("AuthenticAMD", Ke386CpuidVendor))
+   {
+      if (NoExecute)
+      {
+         ULONG Flags, l, h;
+         Ke386SaveFlags(Flags);
+         Ke386DisableInterrupts();
+
+	 Ke386Rdmsr(0xc0000080, l, h);
+	 l |= (1 << 11);
+	 Ke386Wrmsr(0xc0000080, l, h);
+	 Ke386NoExecute = TRUE;
+         Ke386RestoreFlags(Flags);
+      }
+   }  
+   else
+   {
+      NoExecute=FALSE;
+   }
+
+      
    /* Enable PAE mode */
-   if ((Pae && (Ke386CpuidFlags & X86_FEATURE_PAE)) ||
-       (NoExecute && (Ke386CpuidFlags & X86_FEATURE_PAE) /* && (check for the non execution capabilities of the processor) */))
+   if ((Pae && (Ke386CpuidFlags & X86_FEATURE_PAE)) || NoExecute)
    {
       MiEnablePAE((PVOID*)LastKernelAddress);
    }
@@ -255,13 +309,35 @@ KeInit2(VOID)
    if (Ke386CpuidFlags & X86_FEATURE_PAE)
    {
       DPRINT1("CPU supports PAE mode\n");
-      if (Ke386GetCr4() & X86_CR4_PAE)
+      if (Ke386Pae)
       {
          DPRINT1("CPU runs in PAE mode\n");
+         if (Ke386NoExecute)
+         {
+            DPRINT1("NoExecute is enabled\n");
+	 }
       }
       else
       {
          DPRINT1("CPU doesn't run in PAE mode\n");
       }
+   }
+   if (Ke386CpuidVendor[0])
+   {
+      DPRINT1("CPU Vendor: %s\n", Ke386CpuidVendor);
+   }
+   if (Ke386CpuidModel[0])
+   {
+      DPRINT1("CPU Model:  %s\n", Ke386CpuidModel);
+   }
+
+   DPRINT1("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
+   if (Ke386L1CacheSize)
+   {
+      DPRINT1("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
+   }
+   if (Ke386L2CacheSize)
+   {
+      DPRINT1("Ke386L2CacheSize: %dkB\n", Ke386L2CacheSize);
    }
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.73 2004/09/09 20:42:33 hbirr Exp $
+/* $Id: page.c,v 1.74 2004/09/26 16:32:17 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -78,7 +78,9 @@ __inline LARGE_INTEGER PTE_TO_PAGE(ULONG npage)
 #endif
 
 extern ULONG Ke386CpuidFlags;
-static BOOLEAN PAE = FALSE;
+extern ULONG Ke386Cpuid;
+extern BOOLEAN Ke386Pae;
+extern BOOLEAN Ke386NoExecute;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -112,7 +114,16 @@ ProtectToPTE(ULONG flProtect)
       DPRINT1("Unknown main protection type.\n");
       KEBUGCHECK(0);
    }
-   if (!(flProtect & PAGE_SYSTEM))
+   if (Ke386NoExecute && 
+       !(flProtect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE)))
+   {
+      Attributes = Attributes | 0x80000000;
+   }
+
+   if (flProtect & PAGE_SYSTEM)
+   {
+   }
+   else
    {
       Attributes = Attributes | PA_USER;
    }
@@ -172,7 +183,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
       ExFreePool((PVOID) LdtBase);
    }
 
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG PageDirTable;
       PULONGLONG PageDir;
@@ -276,7 +287,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
 
    DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
 
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG PageDirTable;
       PULONGLONG PageDir;
@@ -359,7 +370,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
       KeAttachProcess(Process);
    }
 
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG ZeroPde = 0LL;
       ExfpInterlockedExchange64(PAE_ADDR_TO_PDE(Address), &ZeroPde);
@@ -391,7 +402,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    {
       KeAttachProcess(Process);
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG PageTable;
       ULONGLONG ZeroPte = 0LL;
@@ -653,7 +664,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 
 BOOLEAN MmUnmapPageTable(PULONG Pt)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       if ((PULONGLONG)Pt >= (PULONGLONG)PAGETABLE_MAP && (PULONGLONG)Pt < (PULONGLONG)PAGETABLE_MAP + 4*512*512)
       {
@@ -709,7 +720,7 @@ MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
 {
 
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Entry;
       Entry = MmGetPageEntryForProcessForPAE(Process, Address);
@@ -738,7 +749,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
  */
 {
    BOOLEAN WasValid;
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Pte;
       ULONGLONG tmpPte;
@@ -825,7 +836,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
 VOID
 MmRawDeleteVirtualMapping(PVOID Address)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG ZeroPte = 0LL;
@@ -867,7 +878,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 
    DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
           Process, Address, FreePage, WasDirty, Page);
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Pte;
       PULONGLONG Pt;
@@ -994,7 +1005,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
       ULONG Idx;
       
       Ptrc = Process->AddressSpace.PageTableRefCountTable;
-      Idx = PAE ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
+      Idx = Ke386Pae ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
 
       Ptrc[Idx]--;
       if (Ptrc[Idx] == 0)
@@ -1011,7 +1022,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
  * FUNCTION: Delete a virtual mapping 
  */
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Pte;
       PULONGLONG Pt;
@@ -1110,7 +1121,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 BOOLEAN
 Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       PULONGLONG Pde;
@@ -1150,7 +1161,7 @@ Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
 
 BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       return MmGetPageEntryForProcessForPAE(Process, Address) & PA_DIRTY ? TRUE : FALSE;
    }
@@ -1168,7 +1179,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
       DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
       KEBUGCHECK(0);
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG Pte;
@@ -1239,7 +1250,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
       DPRINT1("MmSetCleanPage is called for user space without a process.\n");
       KEBUGCHECK(0);
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG Pte;
@@ -1308,7 +1319,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
       DPRINT1("MmSetDirtyPage is called for user space without a process.\n");
       KEBUGCHECK(0);
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG Pte;
@@ -1368,7 +1379,7 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 
 VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG Pte;
@@ -1428,7 +1439,7 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 
 BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       return MmGetPageEntryForProcessForPAE(Process, Address) & PA_PRESENT ? TRUE : FALSE;
    }
@@ -1440,7 +1451,7 @@ BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
 
 BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Entry;
       Entry = MmGetPageEntryForProcessForPAE(Process, Address);
@@ -1464,6 +1475,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    ULONG i;
    PVOID Addr;
    ULONG PdeOffset, oldPdeOffset;
+   BOOLEAN NoExecute = FALSE;
 
    DPRINT("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
            Address, flProtect, Pages, PageCount);
@@ -1475,6 +1487,11 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    }
 
    Attributes = ProtectToPTE(flProtect);
+   if (Attributes & 0x80000000)
+   {
+      NoExecute = TRUE;
+   }
+   Attributes &= 0xfff;
    if (Ke386CpuidFlags & X86_FEATURE_PGE)
    {
       Attributes |= PA_GLOBAL;
@@ -1482,7 +1499,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 
    Addr = Address;
 
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt = NULL;
       ULONGLONG Pte;
@@ -1514,6 +1531,10 @@ MmCreateVirtualMappingForKernel(PVOID Address,
          oldPdeOffset = PdeOffset;
 
 	 Pte = PFN_TO_PTE(Pages[i]) | Attributes;
+	 if (NoExecute)
+	 {
+	    Pte |= 0x8000000000000000LL;
+	 }
          Pte = ExfpInterlockedExchange64(Pt, &Pte);
          if (Pte != 0LL)
          {
@@ -1591,7 +1612,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
       KEBUGCHECK(0);
    }
 
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG Pte;
@@ -1657,7 +1678,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
      ULONG Idx;
 
      Ptrc = Process->AddressSpace.PageTableRefCountTable;
-     Idx = PAE ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
+     Idx = Ke386Pae ? PAE_ADDR_TO_PAGE_TABLE(Address) : ADDR_TO_PAGE_TABLE(Address);
      Ptrc[Idx]++;
    }
    return(STATUS_SUCCESS);
@@ -1675,9 +1696,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    PVOID Addr;
    ULONG i;
    ULONG oldPdeOffset, PdeOffset;
+   BOOLEAN NoExecute = FALSE;
 
-   DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x, %d)\n",
-          Process, Address, flProtect, Pages, PageCount);
+   DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
+          Process, Address, flProtect, Pages, *Pages, PageCount);
    
    if (Process == NULL)
    {
@@ -1709,6 +1731,11 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    }
 
    Attributes = ProtectToPTE(flProtect);
+   if (Attributes & 0x80000000)
+   {
+      NoExecute = TRUE;
+   }
+   Attributes &= 0xfff;
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
@@ -1724,7 +1751,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
    Addr = Address;
 
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Pte, tmpPte;
       PULONGLONG Pt = NULL;
@@ -1757,6 +1784,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
          MmMarkPageMapped(Pages[i]);
 	 tmpPte = PAE_PFN_TO_PTE(Pages[i]) | Attributes;
+	 if (NoExecute)
+	 {
+	    tmpPte |= 0x8000000000000000LL;
+	 }
          Pte = ExfpInterlockedExchange64(Pt, &tmpPte);
          if (PAE_PAGE_MASK((Pte)) != 0LL && !((Pte) & PA_PRESENT))
          {
@@ -1888,7 +1919,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 {
    ULONG Entry;
    ULONG Protect;
-   if (PAE)
+   if (Ke386Pae)
    {
       Entry = MmGetPageEntryForProcessForPAE(Process, Address);
    }
@@ -1932,11 +1963,17 @@ VOID
 MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
    ULONG Attributes = 0;
+   BOOLEAN NoExecute = FALSE;
 
    DPRINT("MmSetPageProtect(Process %x  Address %x  flProtect %x)\n",
           Process, Address, flProtect);
 
    Attributes = ProtectToPTE(flProtect);
+   if (Attributes & 0x80000000)
+   {
+      NoExecute = TRUE;
+   }
+   Attributes &= 0xfff;
    if (Address >= (PVOID)KERNEL_BASE)
    {
       Attributes &= ~PA_USER;
@@ -1949,7 +1986,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
    {
       Attributes |= PA_USER;
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG Pt;
       ULONGLONG tmpPte, Pte;
@@ -1957,12 +1994,21 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
       Pt = MmGetPageTableForProcessForPAE(Process, Address, FALSE);
       if (Pt == NULL)
       {
+         DPRINT1("Address %x\n", Address);
          KEBUGCHECK(0);
       }
       do
       {
         Pte = *Pt;
 	tmpPte = PAE_PAGE_MASK(Pte) | Attributes | (Pte & (PA_ACCESSED|PA_DIRTY));
+	if (NoExecute)
+	{
+	   tmpPte |= 0x8000000000000000LL;
+	}
+	else
+	{
+	   tmpPte &= ~0x8000000000000000LL;
+	}
       } while (Pte != ExfInterlockedCompareExchange64(Pt, &tmpPte, &Pte));
 
       if (MmUnmapPageTable((PULONG)Pt) || Address > (PVOID)KERNEL_BASE)
@@ -1999,7 +2045,7 @@ MmGetPhysicalAddress(PVOID vaddr)
    PHYSICAL_ADDRESS p;
 
    DPRINT("MmGetPhysicalAddress(vaddr %x)\n", vaddr);
-   if (PAE)
+   if (Ke386Pae)
    {
       ULONGLONG Pte;
       Pte = MmGetPageEntryForProcessForPAE(NULL, vaddr);
@@ -2038,7 +2084,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
    {
       KEBUGCHECK(0);
    }
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG PageDirTable;
       PULONGLONG Pde;
@@ -2098,7 +2144,7 @@ VOID INIT_FUNCTION
 MmInitGlobalKernelPageDirectory(VOID)
 {
    ULONG i;
-   if (PAE)
+   if (Ke386Pae)
    {
       PULONGLONG CurrentPageDirectory = (PULONGLONG)PAE_PAGEDIRECTORY_MAP + 3*512;
       for (i = 0; i < 512; i++)
@@ -2198,7 +2244,7 @@ MiEnablePAE(PVOID* LastKernelAddress)
    else
    {
       /* this is an application processor in a mp system */
-      if (PAE == FALSE)
+      if (!Ke386Pae)
       {
          return;
       }
@@ -2212,7 +2258,7 @@ MiEnablePAE(PVOID* LastKernelAddress)
    Ke386SetCr4(Ke386GetCr4() | X86_CR4_PAE);
    if (LastKernelAddress)
    {
-      PAE = TRUE;
+      Ke386Pae = TRUE;
    }
    Ke386RestoreFlags(Flags);
 }
@@ -2220,7 +2266,7 @@ MiEnablePAE(PVOID* LastKernelAddress)
 ULONG
 MiGetUserPageDirectoryCount(VOID)
 {
-   return PAE ? 1536 : 768;
+   return Ke386Pae ? 1536 : 768;
 }
 
 VOID INIT_FUNCTION
@@ -2231,12 +2277,12 @@ MiInitPageDirectoryMap(VOID)
    PVOID BaseAddress;
 
    BoundaryAddressMultiple.QuadPart = 0;
-   BaseAddress = (PVOID)0xf0000000;
+   BaseAddress = (PVOID)PAGETABLE_MAP;
    MmCreateMemoryArea(NULL,
                       MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
                       &BaseAddress,
-		      PAE ? 0x800000 : 0x400000,
+		      Ke386Pae ? 0x800000 : 0x400000,
                       0,
                       &kernel_map_desc,
                       TRUE,
