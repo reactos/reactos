@@ -165,9 +165,9 @@ NTSTATUS NtQueryKey(HANDLE KeyHandle,
 {
   return ZwQueryKey(KeyHandle, 
 		    KeyInformationClass,
-		    PVOID KeyInformation,
-		    ULONG Length,
-		    PULONG ResultLength);
+		    KeyInformation,
+		    Length,
+		    ResultLength);
 }
 
 NTSTATUS ZwQueryKey(HANDLE KeyHandle, 
