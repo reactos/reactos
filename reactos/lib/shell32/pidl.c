@@ -693,23 +693,39 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  *
  * NOTES
  */
-HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST *pidlReal)
+HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST* pidlReal)
 {
-	LPITEMIDLIST parentpidl;
-	HRESULT hr;
+	UINT cfShellIDList = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
 
-	TRACE("sf=%p pidlSimple=%p pidlReal=%p\n", lpsf, pidlSimple, pidlReal);
+	STGMEDIUM medium = {0, {0}, 0};
+	FORMATETC fmt = {cfShellIDList, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
 
-	hr = IShellFolder_ParseDisplayName(lpsf, 0, NULL, NULL, NULL, &parentpidl, NULL);
+	IDataObject* pDataObj;
+	HRESULT hr = IShellFolder_GetUIObjectOf(lpsf, 0, 1, &pidlSimple, &IID_IDataObject, 0, (LPVOID*)&pDataObj);
 
 	if (SUCCEEDED(hr)) {
-	    *pidlReal = ILCombine(parentpidl, pidlSimple);
+	    hr = IDataObject_GetData(pDataObj, &fmt, &medium);
 
-	    if (!*pidlReal)
-		hr = E_OUTOFMEMORY;
+	    IDataObject_Release(pDataObj);
+
+	    if (SUCCEEDED(hr)) {
+		//assert(pida->cidl==1);
+		LPIDA pida = (LPIDA)GlobalLock(medium.hGlobal);
+
+		LPCITEMIDLIST pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
+		LPCITEMIDLIST pidl_child = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[1]);
+
+		*pidlReal = ILCombine(pidl_folder, pidl_child);
+
+		if (!*pidlReal)
+			hr = E_OUTOFMEMORY;
+
+		GlobalUnlock(medium.hGlobal);
+		GlobalFree(medium.hGlobal);
+	    }
 	}
 
-	return S_OK;
+	return hr;
 }
 
 /*************************************************************************
@@ -1521,7 +1537,6 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 	  SHFree (pidlParent);
 	  if (psf) IShellFolder_Release(psf);
 	}
-
 
 	TRACE_(shell)("-- psf=%p pidl=%p ret=0x%08lx\n", *ppv, (ppidlLast)?*ppidlLast:NULL, hr);
 	return hr;
