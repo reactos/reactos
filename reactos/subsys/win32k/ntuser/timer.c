@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.21 2004/01/18 22:29:38 gdalsnes Exp $
+/* $Id: timer.c,v 1.22 2004/02/10 18:11:12 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -384,7 +384,7 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
 }
 
 extern VOID STDCALL ValidateNonPagedPool(VOID);
-static VOID STDCALL_FUNC
+static VOID STDCALL
 TimerThreadMain(PVOID StartContext)
 {
   NTSTATUS Status;

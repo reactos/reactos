@@ -238,7 +238,7 @@ NdisImmediateWritePortUshort(
 }
 
 
-IO_ALLOCATION_ACTION NdisMapRegisterCallback (
+IO_ALLOCATION_ACTION STDCALL NdisMapRegisterCallback (
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP            Irp,
     IN PVOID           MapRegisterBase,

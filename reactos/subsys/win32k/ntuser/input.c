@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.26 2004/02/07 15:39:14 navaraf Exp $
+/* $Id: input.c,v 1.27 2004/02/10 18:11:12 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -141,7 +141,7 @@ MouseThreadMain(PVOID StartContext)
 }
 #endif
 
-VOID STDCALL_FUNC STATIC
+STATIC VOID STDCALL
 KeyboardThreadMain(PVOID StartContext)
 {
   UNICODE_STRING KeyboardDeviceName;

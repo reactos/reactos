@@ -382,7 +382,7 @@ MiniEthReceiveIndication(
 }
 
 
-VOID
+VOID STDCALL
 MiniResetComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status,
@@ -392,7 +392,7 @@ MiniResetComplete(
 }
 
 
-VOID
+VOID STDCALL
 MiniSendComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,
@@ -419,7 +419,7 @@ MiniSendComplete(
 }
 
 
-VOID
+VOID STDCALL
 MiniSendResourcesAvailable(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -1162,7 +1162,7 @@ NdisMQueryInformationComplete(
 }
 
 
-VOID NdisIBugcheckCallback(
+VOID STDCALL NdisIBugcheckCallback(
     IN PVOID   Buffer,
     IN ULONG   Length)
 /*

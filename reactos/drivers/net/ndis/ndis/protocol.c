@@ -373,7 +373,7 @@ ProSend(
 }
 
 
-VOID
+VOID STDCALL
 ProSendPackets(
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PPNDIS_PACKET   PacketArray,
