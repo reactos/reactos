@@ -71,8 +71,8 @@ static BOOL argify(char* out, int len, const char* fmt, const char* lpFile, LPIT
     char    xlpFile[1024];
     BOOL    done = FALSE;
     LPVOID  pv;
-    char    *cmd;
     char    *res = out;
+    const char *cmd;
 
     while (*fmt)
     {
@@ -971,7 +971,7 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA sei, SHELL_ExecuteA1632 execf
 	    char buffer[MAX_PATH], xlpFile[MAX_PATH];
 
 	    LPSTR beg = szApplicationName;
-	    for(s=beg; space=strchr(s, ' '); s=space+1) {
+	    for(s=beg; (space=strchr(s, ' ')); s=space+1) {
 		int idx = space-szApplicationName;
 		strncpy(buffer, szApplicationName, idx);
 		buffer[idx] = '\0';

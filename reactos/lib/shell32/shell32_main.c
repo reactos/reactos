@@ -911,8 +911,6 @@ HRESULT WINAPI SHELL32_DllGetVersion (DLLVERSIONINFO *pdvi)
  */
 void	(WINAPI *pDLLInitComctl)(LPVOID);
 
-static HINSTANCE	hComctl32;
-
 HINSTANCE	shell32_hInstance = 0;
 HIMAGELIST	ShellSmallIconList = 0;
 HIMAGELIST	ShellBigIconList = 0;

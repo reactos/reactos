@@ -388,7 +388,7 @@ int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UI
 	if (SHELL_OsIsUnicode())
 	{
 	    HANDLE hToken;
-	    TOKEN_PRIVILEGES npr = {1, {0, 0, SE_PRIVILEGE_ENABLED}};
+	    TOKEN_PRIVILEGES npr = {1, {{{0, 0}, SE_PRIVILEGE_ENABLED}}};
 
 	    /* enable shutdown privilege for current process */
 	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
@@ -444,7 +444,7 @@ void WINAPI ExitWindowsDialog (HWND hWndOwner)
 	if (SHELL_OsIsUnicode())
 	{
 	    HANDLE hToken;
-	    TOKEN_PRIVILEGES npr = {1, {0, 0, SE_PRIVILEGE_ENABLED}};
+	    TOKEN_PRIVILEGES npr = {1, {{{0, 0}, SE_PRIVILEGE_ENABLED}}};
 
 	    /* enable shutdown privilege for current process */
 	    OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES, &hToken);
