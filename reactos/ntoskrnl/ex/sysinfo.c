@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.23 2003/07/17 16:57:38 silverblade Exp $
+/* $Id: sysinfo.c,v 1.24 2003/08/18 15:18:03 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -527,7 +527,7 @@ QSI_DEF(SystemProcessInformation)
 
 		SpiCur->BasePriority = 0; // FIXME
 		SpiCur->ProcessId = pr->UniqueProcessId;
-		SpiCur->InheritedFromProcessId = 0; // FIXME
+		SpiCur->InheritedFromProcessId = (DWORD)(pr->InheritedFromUniqueProcessId);
 		SpiCur->HandleCount = 0; // FIXME
 		SpiCur->VmCounters.PeakVirtualSize = pr->PeakVirtualSize;
 		SpiCur->VmCounters.VirtualSize = 0; // FIXME
