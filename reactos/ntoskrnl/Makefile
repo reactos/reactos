@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.62 2002/01/03 14:51:25 ekohl Exp $
+# $Id: Makefile,v 1.63 2002/01/04 13:09:36 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -125,7 +125,8 @@ OBJECTS_KE = \
 	ke/spinlock.o \
 	ke/timer.o \
 	ke/wait.o \
-	ke/kthread.o
+	ke/kthread.o \
+	ke/queue.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -216,7 +217,8 @@ OBJECTS_PS = \
 	ps/thread.o \
 	ps/tinfo.o \
 	ps/debug.o \
-	ps/suspend.o
+	ps/suspend.o \
+	ps/win32.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \

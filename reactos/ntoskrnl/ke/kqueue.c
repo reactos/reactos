@@ -187,3 +187,12 @@ KeInsertDeviceQueue (
    KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
    return(TRUE);
 }
+
+
+BOOLEAN STDCALL
+KeRemoveEntryDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
+			 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry)
+{
+  UNIMPLEMENTED;
+  return(FALSE);
+}

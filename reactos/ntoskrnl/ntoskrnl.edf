@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.108 2002/01/03 18:02:34 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.109 2002/01/04 13:09:37 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -354,15 +354,15 @@ KeInitializeEvent=KeInitializeEvent@12
 KeInitializeInterrupt=KeInitializeInterrupt@44
 KeInitializeMutant=KeInitializeMutant@8
 KeInitializeMutex=KeInitializeMutex@8
-;KeInitializeQueue
+KeInitializeQueue=KeInitializeQueue@8
 KeInitializeSemaphore=KeInitializeSemaphore@12
 KeInitializeSpinLock=KeInitializeSpinLock@4
 KeInitializeTimer=KeInitializeTimer@4
 KeInitializeTimerEx=KeInitializeTimerEx@8
 KeInsertByKeyDeviceQueue=KeInsertByKeyDeviceQueue@12
 KeInsertDeviceQueue=KeInsertDeviceQueue@8
-;KeInsertHeadQueue
-;KeInsertQueue
+KeInsertHeadQueue=KeInsertHeadQueue@8
+KeInsertQueue=KeInsertQueue@8
 KeInsertQueueApc=KeInsertQueueApc@16
 KeInsertQueueDpc=KeInsertQueueDpc@12
 ;KeIsExecutingDpc
@@ -379,7 +379,7 @@ KeQueryTimeIncrement=KeQueryTimeIncrement@0
 KeReadStateEvent=KeReadStateEvent@4
 KeReadStateMutant=KeReadStateMutant@4
 KeReadStateMutex=KeReadStateMutex@4
-;KeReadStateQueue
+KeReadStateQueue=KeReadStateQueue@4
 KeReadStateSemaphore=KeReadStateSemaphore@4
 KeReadStateTimer=KeReadStateTimer@4
 KeRegisterBugCheckCallback=KeRegisterBugCheckCallback@20
@@ -389,12 +389,12 @@ KeReleaseSemaphore=KeReleaseSemaphore@16
 KeReleaseSpinLockFromDpcLevel=KeReleaseSpinLockFromDpcLevel@4
 KeRemoveByKeyDeviceQueue=KeRemoveByKeyDeviceQueue@8
 KeRemoveDeviceQueue=KeRemoveDeviceQueue@4
-;KeRemoveEntryDeviceQueue
-;KeRemoveQueue
+KeRemoveEntryDeviceQueue=KeRemoveEntryDeviceQueue@8
+KeRemoveQueue=KeRemoveQueue@12
 KeRemoveQueueDpc=KeRemoveQueueDpc@4
 KeResetEvent=KeResetEvent@4
 ;KeRestoreFloatingPointState
-;KeRundownQueue
+KeRundownQueue=KeRundownQueue@4
 ;KeSaveFloatingPointState
 KeServiceDescriptorTable	DATA
 ;KeSetAffinityThread
@@ -590,9 +590,9 @@ PsAssignImpersonationToken=PsAssignImpersonationToken@8
 ;PsChargePoolQuota=PsChargePoolQuota@12
 PsCreateSystemProcess=PsCreateSystemProcess@12
 PsCreateSystemThread=PsCreateSystemThread@28
-;PsCreateWin32Process=PsCreateWin32Process@4
+PsCreateWin32Process=PsCreateWin32Process@4
 PsDispatchThread=PsDispatchThread@4
-;PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
+PsEstablishWin32Callouts=PsEstablishWin32Callouts@24
 PsGetCurrentProcessId=PsGetCurrentProcessId@0
 PsGetCurrentThreadId=PsGetCurrentThreadId@0
 PsGetCurrentThread=PsGetCurrentThread@0

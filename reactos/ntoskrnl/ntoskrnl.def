@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.122 2002/01/03 18:02:34 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.123 2002/01/04 13:09:37 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -354,15 +354,15 @@ KeInitializeEvent@12
 KeInitializeInterrupt@44
 KeInitializeMutant@8
 KeInitializeMutex@8
-;KeInitializeQueue
+KeInitializeQueue@8
 KeInitializeSemaphore@12
 KeInitializeSpinLock@4
 KeInitializeTimer@4
 KeInitializeTimerEx@8
 KeInsertByKeyDeviceQueue@12
 KeInsertDeviceQueue@8
-;KeInsertHeadQueue
-;KeInsertQueue
+KeInsertHeadQueue@8
+KeInsertQueue@8
 KeInsertQueueApc@16
 KeInsertQueueDpc@12
 ;KeIsExecutingDpc
@@ -379,7 +379,7 @@ KeQueryTimeIncrement@0
 KeReadStateEvent@4
 KeReadStateMutant@4
 KeReadStateMutex@4
-;KeReadStateQueue
+KeReadStateQueue@4
 KeReadStateSemaphore@4
 KeReadStateTimer@4
 KeRegisterBugCheckCallback@20
@@ -389,12 +389,12 @@ KeReleaseSemaphore@16
 KeReleaseSpinLockFromDpcLevel@4
 KeRemoveByKeyDeviceQueue@8
 KeRemoveDeviceQueue@4
-;KeRemoveEntryDeviceQueue
-;KeRemoveQueue
+KeRemoveEntryDeviceQueue@8
+KeRemoveQueue@12
 KeRemoveQueueDpc@4
 KeResetEvent@4
 ;KeRestoreFloatingPointState
-;KeRundownQueue
+KeRundownQueue@4
 ;KeSaveFloatingPointState
 KeServiceDescriptorTable DATA
 ;KeSetAffinityThread
@@ -590,9 +590,9 @@ PsAssignImpersonationToken@8
 ;PsChargePoolQuota@12
 PsCreateSystemProcess@12
 PsCreateSystemThread@28
-;PsCreateWin32Process@4
+PsCreateWin32Process@4
 PsDispatchThread@4
-;PsEstablishWin32Callouts@24
+PsEstablishWin32Callouts@24
 PsGetCurrentProcessId@0
 PsGetCurrentThreadId@0
 PsGetCurrentThread@0

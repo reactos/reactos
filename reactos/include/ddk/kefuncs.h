@@ -131,6 +131,10 @@ VOID STDCALL KeInitializeMutant(IN PKMUTANT Mutant,
 VOID STDCALL KeInitializeMutex (PKMUTEX	Mutex,
 				ULONG	Level);
 
+VOID STDCALL
+KeInitializeQueue(IN PKQUEUE Queue,
+		  IN ULONG Count);
+
 VOID STDCALL KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
 				    LONG		Count,
 				    LONG		Limit);
@@ -153,6 +157,14 @@ BOOLEAN STDCALL KeInsertByKeyDeviceQueue (PKDEVICE_QUEUE DeviceQueue,
 
 BOOLEAN STDCALL KeInsertDeviceQueue (PKDEVICE_QUEUE		DeviceQueue,
 				     PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
+
+LONG STDCALL
+KeInsertHeadQueue(IN PKQUEUE Queue,
+		  IN PLIST_ENTRY Entry);
+
+LONG STDCALL
+KeInsertQueue(IN PKQUEUE Queue,
+	      IN PLIST_ENTRY Entry);
 
 VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
 			       PVOID	SystemArgument1,
@@ -234,23 +246,17 @@ KeReadStateEvent (
 LONG STDCALL
 KeReadStateMutant(IN PKMUTANT Mutant);
 
-LONG
-STDCALL
-KeReadStateMutex (
-	PKMUTEX	Mutex
-	);
+LONG STDCALL
+KeReadStateMutex(IN PKMUTEX Mutex);
 
-LONG
-STDCALL
-KeReadStateSemaphore (
-	PKSEMAPHORE	Semaphore
-	);
+LONG STDCALL
+KeReadStateQueue(IN PKQUEUE Queue);
 
-BOOLEAN
-STDCALL
-KeReadStateTimer (
-	PKTIMER	Timer
-	);
+LONG STDCALL
+KeReadStateSemaphore(IN PKSEMAPHORE Semaphore);
+
+BOOLEAN STDCALL
+KeReadStateTimer(IN PKTIMER Timer);
 
 BOOLEAN
 STDCALL
@@ -313,27 +319,24 @@ KeRemoveDeviceQueue (
 	PKDEVICE_QUEUE	DeviceQueue
 	);
 
-BOOLEAN
-STDCALL
-KeRemoveEntryDeviceQueue (
-	PKDEVICE_QUEUE		DeviceQueue,
-	PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry
-	);
+BOOLEAN STDCALL
+KeRemoveEntryDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
+			 PKDEVICE_QUEUE_ENTRY DeviceQueueEntry);
 
-BOOLEAN
-STDCALL
-KeRemoveQueueDpc (
-	PKDPC	Dpc
-	);
+PLIST_ENTRY STDCALL
+KeRemoveQueue(IN PKQUEUE Queue,
+	      IN KPROCESSOR_MODE WaitMode,
+	      IN PLARGE_INTEGER Timeout OPTIONAL);
 
-LONG
-STDCALL
-KeResetEvent (
-	PKEVENT	Event
-	);
+BOOLEAN STDCALL
+KeRemoveQueueDpc(IN PKDPC Dpc);
 
-LONG STDCALL KeSetBasePriorityThread (struct _KTHREAD*	Thread,
-				      LONG		Increment);
+LONG STDCALL
+KeResetEvent(IN PKEVENT Event);
+
+LONG STDCALL
+KeSetBasePriorityThread(struct _KTHREAD* Thread,
+			LONG Increment);
 
 LONG
 STDCALL
