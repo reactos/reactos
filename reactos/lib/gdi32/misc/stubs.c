@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.23 2003/07/19 22:53:21 jimtabor Exp $
+/* $Id: stubs.c,v 1.24 2003/07/20 00:33:55 jimtabor Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -449,70 +449,12 @@ GetAspectRatioFilterEx(
 /*
  * @unimplemented
  */
-COLORREF
-STDCALL
-GetBkColor(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetBkMode(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetBoundsRect(
 	HDC	a0,
 	LPRECT	a1,
 	UINT	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetBrushOrgEx(
-	HDC	a0,
-	LPPOINT	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetClipRgn(
-	HDC	a0,
-	HRGN	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -553,21 +495,6 @@ GetCurrentObject(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetCurrentPositionEx(
-	HDC	a0,
-	LPPOINT	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 DWORD
 STDCALL
 GetFontData(
@@ -589,20 +516,6 @@ GetFontData(
 int
 STDCALL
 GetGraphicsMode(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-GetMapMode(
 	HDC	a0
 	)
 {
