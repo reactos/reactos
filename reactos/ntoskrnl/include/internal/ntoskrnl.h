@@ -53,6 +53,13 @@ VOID CmShutdownRegistry(VOID);
 VOID CmImportHive(PCHAR);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+NTSTATUS RtlpInitNlsSections(ULONG Mod1Start,
+			     ULONG Mod1End,
+			     ULONG Mod2Start,
+			     ULONG Mod2End,
+			     ULONG Mod3Start,
+			     ULONG Mod3End);
+
 #endif /* __ASM__ */
 
 /*
