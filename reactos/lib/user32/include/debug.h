@@ -63,6 +63,8 @@ extern DWORD DebugTraceLevel;
 #define CHECKPOINT \
     D(DEBUG_CHECK, ("\n"));
 
+#define DPRINT(X...) D(DEBUG_CHECK, (X))
+
 #define CP CHECKPOINT
 
 #endif /* __DEBUG_H */

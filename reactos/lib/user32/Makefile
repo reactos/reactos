@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.21 2002/01/13 22:52:07 dwelch Exp $
+# $Id: Makefile,v 1.1 2002/06/13 20:36:39 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,6 +20,11 @@ include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
 
+CONTROLS_OBJECTS = \
+	controls/combobox.o \
+	controls/listbox.o \
+	controls/scrollbar.o
+
 MISC_OBJECTS = \
   misc/desktop.o  \
 	misc/dllmain.o  \
@@ -27,17 +32,40 @@ MISC_OBJECTS = \
 	misc/stubs.o    \
 	misc/win32k.o   \
 	misc/winsta.o   \
-	misc/resources.o
+	misc/resources.o \
+	misc/dde.o \
+	misc/display.o \
+	misc/object.o \
+	misc/timer.o
 
 WINDOWS_OBJECTS = \
 	windows/class.o    \
 	windows/message.o  \
 	windows/window.o \
-	windows/defwnd.o
+	windows/defwnd.o \
+	windows/accel.o \
+	windows/bitmap.o \
+	windows/clipboard.o \
+	windows/cursor.o \
+	windows/dc.o \
+	windows/dialog.o \
+	windows/draw.o \
+	windows/font.o \
+	windows/hook.o \
+	windows/icon.o \
+	windows/input.o \
+	windows/mdi.o \
+	windows/menu.o \
+	windows/messagebox.o \
+	windows/paint.o \
+	windows/prop.o \
+	windows/rect.o \
+	windows/text.o
 
 OBJECTS = \
   $(MISC_OBJECTS) \
-  $(WINDOWS_OBJECTS)
+  $(WINDOWS_OBJECTS) \
+  $(CONTROLS_OBJECTS)
 
 $(TARGET_NAME).o: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET_NAME).o

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.5 2002/05/06 22:20:31 dwelch Exp $
+/* $Id: message.c,v 1.6 2002/06/13 20:36:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -11,6 +11,78 @@
 #include <windows.h>
 #include <user32.h>
 #include <debug.h>
+
+LPARAM
+STDCALL
+GetMessageExtraInfo(VOID)
+{
+  return (LPARAM)0;
+}
+
+DWORD
+STDCALL
+GetMessagePos(VOID)
+{
+  return 0;
+}
+
+LONG
+STDCALL
+GetMessageTime(VOID)
+{
+  return 0;
+}
+WINBOOL
+STDCALL
+InSendMessage(VOID)
+{
+  return FALSE;
+}
+
+DWORD
+STDCALL
+InSendMessageEx(
+  LPVOID lpReserved)
+{
+  return 0;
+}
+WINBOOL
+STDCALL
+ReplyMessage(
+  LRESULT lResult)
+{
+  return FALSE;
+}
+LPARAM
+STDCALL
+SetMessageExtraInfo(
+  LPARAM lParam)
+{
+  return (LPARAM)0;
+}
+LRESULT
+STDCALL
+CallWindowProcA(
+  WNDPROC lpPrevWndFunc,
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+CallWindowProcW(
+  WNDPROC lpPrevWndFunc,
+  HWND hWnd,
+  UINT Msg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
 
 
 LPMSG

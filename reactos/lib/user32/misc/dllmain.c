@@ -15,6 +15,34 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 HANDLE ProcessHeap;
 HWINSTA ProcessWindowStation;
 
+PVOID
+User32AllocHeap(ULONG Size)
+{
+  return(RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, Size));
+}
+
+VOID
+User32FreeHeap(PVOID Block)
+{
+  RtlFreeHeap(ProcessHeap, 0, Block);
+}
+
+PWSTR
+User32ConvertString(PCSTR String)
+{
+  ANSI_STRING InString;
+  UNICODE_STRING OutString;
+  RtlInitAnsiString(&InString, String);
+  RtlAnsiStringToUnicodeString(&OutString, &InString, TRUE);
+  return(OutString.Buffer);
+}
+
+VOID
+User32FreeString(PWSTR String)
+{
+  RtlFreeHeap(RtlGetProcessHeap(), 0, String);
+}
+
 DWORD
 Init(VOID)
 {

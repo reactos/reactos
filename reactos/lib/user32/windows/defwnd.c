@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.1 2002/01/14 01:11:58 dwelch Exp $
+/* $Id: defwnd.c,v 1.2 2002/06/13 20:36:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -28,6 +28,31 @@ static HBITMAP hbitmapRestore;
 static HBITMAP hbitmapRestoreD;
 
 /* FUNCTIONS *****************************************************************/
+
+LRESULT
+STDCALL
+DefFrameProcA(
+  HWND hWnd,
+  HWND hWndMDIClient,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
+LRESULT
+STDCALL
+DefFrameProcW(
+  HWND hWnd,
+  HWND hWndMDIClient,
+  UINT uMsg,
+  WPARAM wParam,
+  LPARAM lParam)
+{
+  return (LRESULT)0;
+}
+
 
 BOOL 
 UserRedrawIconTitle(HWND hWnd)

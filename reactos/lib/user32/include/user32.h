@@ -8,3 +8,7 @@
 #include <win32k/win32k.h>
 
 extern HANDLE ProcessHeap;
+VOID
+User32FreeHeap(PVOID Block);
+PVOID
+User32AllocHeap(ULONG Size);
