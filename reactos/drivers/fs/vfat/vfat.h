@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.54 2003/01/31 15:55:18 ekohl Exp $ */
+/* $Id: vfat.h,v 1.55 2003/02/09 18:02:55 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -155,6 +155,8 @@ typedef struct
   ULONG Flags;  
   struct _VFATFCB * VolumeFcb;
   struct _HASHENTRY* FcbHashTable[FCB_HASH_TABLE_SIZE];
+
+  LIST_ENTRY VolumeListEntry;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
 typedef struct
@@ -162,6 +164,8 @@ typedef struct
   PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT DeviceObject;
   ULONG Flags;
+  ERESOURCE VolumeListLock;
+  LIST_ENTRY VolumeListHead;
   NPAGED_LOOKASIDE_LIST FcbLookasideList;
   NPAGED_LOOKASIDE_LIST CcbLookasideList;
   NPAGED_LOOKASIDE_LIST IrpContextLookasideList;
@@ -509,4 +513,10 @@ NTSTATUS
 VfatSetExtendedAttributes(PFILE_OBJECT FileObject, 
 			  PVOID Ea,
 			  ULONG EaLength);
+/*  ------------------------------------------------------------- flush.c  */
+
+NTSTATUS VfatFlush(PVFAT_IRP_CONTEXT IrpContext);
+
+NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb);
+
 /* EOF */

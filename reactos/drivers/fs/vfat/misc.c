@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.5 2003/01/25 15:55:07 hbirr Exp $
+/* $Id: misc.c,v 1.6 2003/02/09 18:02:55 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -55,6 +55,8 @@ NTSTATUS VfatDispatchRequest (
          return VfatLockControl(IrpContext);
       case IRP_MJ_CLEANUP:
          return VfatCleanup(IrpContext);
+      case IRP_MJ_FLUSH_BUFFERS:
+         return VfatFlush(IrpContext);
       default:
          DPRINT1 ("Unexpected major function %x\n", IrpContext->MajorFunction);
          IrpContext->Irp->IoStatus.Status = STATUS_DRIVER_INTERNAL_ERROR;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.12 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: fsctl.c,v 1.13 2003/02/09 18:02:55 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -330,7 +330,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       DbgPrint ("CcRosInitializeFileCache failed\n");
       goto ByeBye;
    }
-   DeviceExt->LastAvailableCluster = 0;
+   DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
 
@@ -351,6 +351,10 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    VolumeFcb->RFCB.AllocationSize = VolumeFcb->RFCB.FileSize;
    VolumeFcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
    DeviceExt->VolumeFcb = VolumeFcb;
+
+   ExAcquireResourceExclusiveLite(&VfatGlobalData->VolumeListLock, TRUE);
+   InsertHeadList(&VfatGlobalData->VolumeListHead, &DeviceExt->VolumeListEntry);
+   ExReleaseResourceLite(&VfatGlobalData->VolumeListLock);
 
    /* read serial number */
    DeviceObject->Vpb->SerialNumber = DeviceExt->FatInfo.VolumeID;
