@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.97 2004/02/02 00:18:58 rcampbell Exp $
+/* $Id: window.c,v 1.98 2004/02/02 11:46:41 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -162,7 +162,7 @@ HWND STDCALL
 ChildWindowFromPoint(HWND hWndParent,
 		     POINT Point)
 {
-  return NtUserChildWindowFromPointEx(hWndParent, Point.x, Point.y, 0);
+  return (HWND) NtUserChildWindowFromPointEx(hWndParent, Point.x, Point.y, 0);
 }
 
 
@@ -174,7 +174,7 @@ ChildWindowFromPointEx(HWND hwndParent,
 		       POINT pt,
 		       UINT uFlags)
 {
-  return NtUserChildWindowFromPointEx(hwndParent, pt.x, pt.y, uFlags);
+  return (HWND) NtUserChildWindowFromPointEx(hwndParent, pt.x, pt.y, uFlags);
 }
 
 
