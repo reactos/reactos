@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.7 2003/03/01 08:56:34 rcampbell Exp $
+/* $Id: draw.c,v 1.8 2003/03/02 16:30:07 rcampbell Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -500,7 +500,11 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     if(LTOuterI != -1) LTOuterPen = GetSysColorPen(LTOuterI);
     if(RBInnerI != -1) RBInnerPen = GetSysColorPen(RBInnerI);
     if(RBOuterI != -1) RBOuterPen = GetSysColorPen(RBOuterI);
-
+    if((uFlags & BF_MIDDLE) && retval)
+	{
+            FillRect(hdc, &InnerRect, GetSysColorBrush(uFlags & BF_MONO ?
+                         COLOR_WINDOW : COLOR_BTNFACE));
+	}
     MoveToEx(hdc, 0, 0, &SavePoint);
 
     /* Draw the outer edge */
@@ -518,13 +522,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBOuterPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.left-1, InnerRect.bottom-1);
+        MoveToEx(hdc, InnerRect.right, InnerRect.bottom-1, NULL);
+        LineTo(hdc, InnerRect.left, InnerRect.bottom-1);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom-1, NULL);
-        LineTo(hdc, InnerRect.right-1, InnerRect.top-1);
+        MoveToEx(hdc, InnerRect.right-1, InnerRect.bottom, NULL);
+        LineTo(hdc, InnerRect.right-1, InnerRect.top);
     }
 
     /* Draw the inner edge */
@@ -542,13 +546,13 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
     SelectObject(hdc, RBInnerPen);
     if(uFlags & BF_BOTTOM)
     {
-        MoveToEx(hdc, InnerRect.right-1-RBpenplus, InnerRect.bottom-2, NULL);
-        LineTo(hdc, InnerRect.left-1+LBpenplus, InnerRect.bottom-2);
+        MoveToEx(hdc, InnerRect.right-RBpenplus, InnerRect.bottom-2, NULL);
+        LineTo(hdc, InnerRect.left+LBpenplus, InnerRect.bottom-2);
     }
     if(uFlags & BF_RIGHT)
     {
-        MoveToEx(hdc, InnerRect.right-2, InnerRect.bottom-1-RBpenplus, NULL);
-        LineTo(hdc, InnerRect.right-2, InnerRect.top-1+RTpenplus);
+        MoveToEx(hdc, InnerRect.right-2, InnerRect.bottom-RBpenplus, NULL);
+        LineTo(hdc, InnerRect.right-2, InnerRect.top+RTpenplus);
     }
 
     if( ((uFlags & BF_MIDDLE) && retval) || (uFlags & BF_ADJUST) )
@@ -560,12 +564,6 @@ static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
         if(uFlags & BF_RIGHT)  InnerRect.right  -= add;
         if(uFlags & BF_TOP)    InnerRect.top    += add;
         if(uFlags & BF_BOTTOM) InnerRect.bottom -= add;
-
-        if((uFlags & BF_MIDDLE) && retval)
-	{
-            FillRect(hdc, &InnerRect, GetSysColorBrush(uFlags & BF_MONO ?
-                         COLOR_WINDOW : COLOR_BTNFACE));
-	}
 
 	if(uFlags & BF_ADJUST)
 	    *rc = InnerRect;
@@ -950,8 +948,8 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
             MoveToEx(dc, start.x + i, start.y, &oldPos);
             LineTo(dc, start.x + i + width, start.y + height);
 
-            MoveToEx(dc, start.x + i, start.y + height - 1, &oldPos);
-            LineTo(dc, start.x + i + width, start.y - 1);
+            MoveToEx(dc, start.x + i, start.y + height, &oldPos);
+            LineTo(dc, start.x + i + width, start.y);
         }
 
         SelectObject(dc, hpsave);
