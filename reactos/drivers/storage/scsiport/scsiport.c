@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.21 2002/09/19 16:18:50 ekohl Exp $
+/* $Id: scsiport.c,v 1.22 2002/09/20 05:40:28 ei Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,6 +66,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PORT_CONFIGURATION_INFORMATION PortConfig;
   ULONG PortNumber;
   
+  KSPIN_LOCK IrpLock;
   KSPIN_LOCK SpinLock;
   PKINTERRUPT Interrupt;
   PIRP                   CurrentIrp;
@@ -942,6 +943,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 	{
 	  BOOLEAN Result;
 	  PSCSI_REQUEST_BLOCK Srb;
+	  KIRQL oldIrql;
 
 	  DPRINT("IRP_MJ_SCSI\n");
 
@@ -967,6 +969,7 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 		IoStartNextPacket(DeviceObject,
 				  FALSE);
 	    }
+	  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
 	  if (DeviceExtension->IrpFlags & IRP_FLAG_COMPLETE)
 	    {
 		DeviceExtension->IrpFlags &= ~IRP_FLAG_COMPLETE;
@@ -977,8 +980,13 @@ ScsiPortStartIo(IN PDEVICE_OBJECT DeviceObject,
 	  if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
 	    {
 		DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+	        KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
 		IoStartNextPacket(DeviceObject,
 				  FALSE);
+	    }
+	  else
+	    {
+	      	KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
 	    }
 	}
 	break;
@@ -1120,6 +1128,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   PortDeviceExtension->PortNumber = PortNumber;
 
   /* Initialize the spin lock in the controller extension */
+  KeInitializeSpinLock(&PortDeviceExtension->IrpLock);
   KeInitializeSpinLock(&PortDeviceExtension->SpinLock);
 
   /* Register an interrupt handler for this device */
@@ -1338,12 +1347,16 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
   PSCSI_REQUEST_BLOCK Srb;
+  KIRQL oldIrql;
 
   DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
 	  Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
+  KeAcquireSpinLock(&DeviceExtension->IrpLock, &oldIrql);
+  if (DeviceExtension->IrpFlags)
+  {
   IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
   Srb = IrpStack->Parameters.Scsi.Srb;
 
@@ -1379,7 +1392,7 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
       DeviceExtension->OriginalSrb = Srb;
       IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
 								  Srb);
-
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
       if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
 				  ScsiPortStartPacket,
 				  DeviceExtension))
@@ -1412,9 +1425,18 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
   if (DeviceExtension->IrpFlags & IRP_FLAG_NEXT)
     {
       DeviceExtension->IrpFlags &= ~IRP_FLAG_NEXT;
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
       IoStartNextPacket(DpcDeviceObject, FALSE);
     }
-
+    else
+    {
+      KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+    }
+  }
+  else
+  {
+    KeReleaseSpinLock(&DeviceExtension->IrpLock, oldIrql);
+  }
   DPRINT("ScsiPortDpcForIsr() done\n");
 }
 
