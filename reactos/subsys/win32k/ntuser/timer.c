@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.27 2004/03/11 16:17:25 weiden Exp $
+/* $Id: timer.c,v 1.28 2004/03/29 17:02:22 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -174,8 +174,6 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     }
     
     HintIndex = ++Index;
-    IntUnLockTimerList;
-    return Index;
   }
   else
   {
