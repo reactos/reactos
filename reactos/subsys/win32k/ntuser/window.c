@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.21 2003/01/24 22:42:15 jfilby Exp $
+/* $Id: window.c,v 1.22 2003/03/03 18:57:26 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -938,7 +938,9 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
 	Result = (DWORD)WindowObject->Class->Class.lpfnWndProc;	
 	break;
       }
-
+    case GWL_ID:
+    break;
+    
     default:
       {
 	DPRINT1("NtUserGetWindowLong(): Unsupported index %d\n", Index);
