@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.89 2004/04/16 01:27:44 weiden Exp $
+/* $Id: msgqueue.c,v 1.90 2004/04/16 18:53:53 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -138,7 +138,7 @@ MsqInitializeImpl(VOID)
 }
 
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
+MsqInsertSystemMessage(MSG* Msg)
 {
   LARGE_INTEGER LargeTickCount;
   KIRQL OldIrql;
@@ -150,7 +150,7 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
   IntLockSystemMessageQueue(OldIrql);
 
   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
-  if((Msg->message == WM_MOUSEMOVE) && RemMouseMoveMsg)
+  if(Msg->message == WM_MOUSEMOVE)
     mmov = SystemMessageQueueMouseMove;
 
   if(mmov != (ULONG)-1)
@@ -240,7 +240,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
 BOOL STATIC STDCALL
 MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
-			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, BOOL RemoveWhenFreed,
+			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed, 
 			 PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
   USHORT Msg = Message->Msg.message;
@@ -268,9 +268,13 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
 
   if (Window == NULL)
   {
-    if(RemoveWhenFreed)
+    if(!FromGlobalQueue)
     {
       RemoveEntryList(&Message->ListEntry);
+      if(MessageQueue->MouseMoveMsg == Message)
+      {
+        MessageQueue->MouseMoveMsg = NULL;
+      }
     }
     ExFreePool(Message);
     *Freed = TRUE;
@@ -452,17 +456,13 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
 	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
-					    Current, Remove, &Freed, TRUE,
+					    Current, Remove, &Freed, 
 					    DesktopWindow, &ScreenPoint, FALSE);
 	  if (Accept)
 	    {
 	      if (Remove)
 		{
 		  RemoveEntryList(&Current->ListEntry);
-		  if(MessageQueue->MouseMoveMsg == Current)
-		  {
-		    MessageQueue->MouseMoveMsg = NULL;
-		  }
 		}
 	      IntUnLockHardwareMessageQueue(MessageQueue);
               IntUnLockSystemHardwareMessageQueueLock(FALSE);
@@ -520,7 +520,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  /* Translate the message. */
 	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
-					    Current, Remove, &Freed, FALSE,
+					    Current, Remove, &Freed, 
 					    DesktopWindow, &ScreenPoint, TRUE);
 	  if (Accept)
 	    {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.65 2004/04/09 20:03:16 navaraf Exp $
+/* $Id: mouse.c,v 1.66 2004/04/16 18:53:53 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -297,7 +297,7 @@ MouseMoveCursor(LONG X, LONG Y)
       Msg.time = TickCount;
       Msg.pt.x = X;
       Msg.pt.y = Y;
-      MsqInsertSystemMessage(&Msg, TRUE);
+      MsqInsertSystemMessage(&Msg);
       res = TRUE;
     }
         
@@ -454,7 +454,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         }
         
         Msg.wParam = CurInfo->ButtonsDown;
-        MsqInsertSystemMessage(&Msg, FALSE);
+        MsqInsertSystemMessage(&Msg);
       }
     }
   }
@@ -467,7 +467,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
-    MsqInsertSystemMessage(&Msg, TRUE);
+    MsqInsertSystemMessage(&Msg);
     
     if (!CurInfo->SafetySwitch && 0 == CurInfo->SafetyRemoveCount &&
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
@@ -489,7 +489,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
     Msg.pt.x = CurInfo->x;
     Msg.pt.y = CurInfo->y;
-    MsqInsertSystemMessage(&Msg, FALSE);
+    MsqInsertSystemMessage(&Msg);
   }
 
   ObDereferenceObject(InputWindowStation);
