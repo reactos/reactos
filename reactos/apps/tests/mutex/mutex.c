@@ -116,5 +116,7 @@ int main(int argc, char* argv[])
 
   CloseHandle(hMutex);
 
+  dprintf("Main thread done!\n");
+
   return 0;
 }
