@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.24 2001/05/01 23:06:25 phreak Exp $
+/* $Id: init.c,v 1.25 2001/06/12 17:50:28 chorns Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -239,11 +239,41 @@ BOOL InitSessionManager (HANDLE	Children[])
    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
    RTL_PROCESS_INFO ProcessInfo;
    HANDLE CsrssInitEvent;
-
+   HANDLE	WindowsDirectory;
    WCHAR UnicodeBuffer[MAX_PATH];
    PKUSER_SHARED_DATA SharedUserData = 
 	(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
-   
+
+   /*
+    * FIXME: The '\Windows' directory is created by csrss.exe but
+    *        win32k.sys needs it at intialization and it is loaded
+    *        before csrss.exe
+    */
+
+   /*
+	  * Create the '\Windows' directory
+	  */
+   RtlInitUnicodeString(
+      &UnicodeString,
+      L"\\Windows");
+
+	 InitializeObjectAttributes(
+		  &ObjectAttributes,
+		  &UnicodeString,
+		  0,
+		  NULL,
+		  NULL);
+
+   Status = ZwCreateDirectoryObject(
+		  &WindowsDirectory,
+		  0,
+		  &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+     {
+   DisplayString (L"SM: Could not create \\Windows directory!\n");
+   return FALSE;
+     }
+
    /* Create the "\SmApiPort" object (LPC) */
    RtlInitUnicodeString (&UnicodeString,
 			 L"\\SmApiPort");

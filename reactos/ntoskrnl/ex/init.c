@@ -29,11 +29,10 @@
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 
+#define NDEBUG
+#include <internal/debug.h>
+
 /* DATA **********************************************************************/
-
-POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
-POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
-
 
 /* FUNCTIONS ****************************************************************/
 
@@ -42,6 +41,7 @@ ExInit (VOID)
 {
   ExInitTimeZoneInfo();
   ExInitializeWorkerThreads();
+  ExpWin32kInit();
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.1 2001/05/27 11:16:09 ekohl Exp $
+/* $Id: atom.c,v 1.2 2001/06/12 17:50:28 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,7 @@
 #include <internal/handle.h>
 #include <internal/pool.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 

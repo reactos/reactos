@@ -439,6 +439,7 @@ NtUserQueryUserCounters                 5
 NtUserQueryWindow                       2
 NtUserRealChildWindowFromPoint          3
 NtUserRedrawWindow                      4
+NtUserRegisterClassExWOW                6
 NtUserRegisterHotKey                    4
 NtUserRegisterTasklist                  1
 NtUserRegisterWindowMessage             1
@@ -475,6 +476,7 @@ NtUserSetMenuDefaultItem                3
 NtUserSetMenuFlagRtoL                   1
 NtUserSetObjectInformation              4
 NtUserSetParent                         2
+NtUserSetProcessWindowStation           1
 NtUserSetProp                           3
 NtUserSetRipFlags                       2
 NtUserSetScrollInfo                     4

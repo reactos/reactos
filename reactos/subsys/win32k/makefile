@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.32 2001/06/04 14:39:43 chorns Exp $
+# $Id: makefile,v 1.33 2001/06/12 17:50:28 chorns Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -9,7 +9,7 @@ TARGET=win32k
 # from atheos appserver makefile
 COPTS   = -pipe -O3 -I./freetype/include -c -Wall
 
-CFLAGS = -I.
+CFLAGS = -I. -DUNICODE
 
 #define FT_FLAT_COMPILE
 
@@ -17,9 +17,11 @@ ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copyb
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
 		eng/surface.o eng/xlate.o eng/transblt.o eng/mouse.o
 MAIN_OBJECTS = main/dllmain.o
-MISC_OBJECTS = misc/driver.o misc/math.o
+MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o
-NTUSER_OBJECTS = ntuser/stubs.o
+NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
+                 ntuser/message.o ntuser/msgqueue.o ntuser/stubs.o \
+                 ntuser/window.o ntuser/winsta.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \

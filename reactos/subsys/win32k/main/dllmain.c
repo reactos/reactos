@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.19 2001/05/02 12:33:42 jfilby Exp $
+/* $Id: dllmain.c,v 1.20 2001/06/12 17:50:29 chorns Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -11,6 +11,10 @@
 #include <ddk/service.h>
 
 #include <win32k/win32k.h>
+
+#include <include/winsta.h>
+#include <include/class.h>
+#include <include/window.h>
 
 /*
  * NOTE: the table is actually in the file ./svctab.c,
@@ -28,6 +32,7 @@ DllMain (
   IN	PDRIVER_OBJECT	DriverObject,
   IN	PUNICODE_STRING	RegistryPath)
 {
+  NTSTATUS Status;
   BOOLEAN Result;
 
   DbgPrint("Win32 kernel mode driver\n");
@@ -44,6 +49,28 @@ DllMain (
   }
 
   DbgPrint("System services added successfully!\n");
+
+  Status = InitWindowStationImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize window station implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Status = InitClassImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize window class implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
+  Status = InitWindowImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DbgPrint("Failed to initialize window implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
   return STATUS_SUCCESS;
 }
 

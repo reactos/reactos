@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2001/02/06 03:58:34 phreak Exp $
+# $Id: makefile,v 1.3 2001/06/12 17:50:26 chorns Exp $
 #
 # Logon/login Application
 #
@@ -13,7 +13,9 @@ BASE_CFLAGS = -I../../include
 
 OBJECTS = winlogon.o $(TARGET).coff
 
-LIBS = ../../../lib/kernel32/kernel32.a ../../../lib/ntdll/ntdll.a
+LIBS = $(PATH_TO_TOP)/lib/kernel32/kernel32.a \
+       $(PATH_TO_TOP)/lib/ntdll/ntdll.a \
+       $(PATH_TO_TOP)/lib/user32/user32.a
 
 all: $(TARGET).exe
 

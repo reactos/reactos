@@ -1,0 +1,783 @@
+/* $Id: winsta.c,v 1.1 2001/06/12 17:50:29 chorns Exp $
+ *
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * PURPOSE:          Window stations and desktops
+ * FILE:             subsys/win32k/ntuser/winsta.c
+ * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * REVISION HISTORY:
+ *       06-06-2001  CSH  Created
+ * NOTES:            Exported functions set the Win32 last error value
+ *                   on errors. The value can be retrieved with the Win32
+ *                   function GetLastError().
+ * TODO:             The process window station is created on
+ *                   the first USER32/GDI32 call not related
+ *                   to window station/desktop handling
+ */
+#include <ddk/ntddk.h>
+#include <win32k/win32k.h>
+#include <include/winsta.h>
+#include <include/object.h>
+
+#define NDEBUG
+#include <debug.h>
+
+#define WINSTA_ROOT_NAME L"\\Windows\\WindowStations"
+
+
+HDESK InputDesktop; /* Currently active desktop */
+
+
+NTSTATUS
+InitWindowStationImpl(VOID)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE WindowStationsDirectory;
+  UNICODE_STRING UnicodeString;
+  NTSTATUS Status;
+
+  /*
+	 * Create the '\Windows\WindowStations' directory
+	 */
+  RtlInitUnicodeString(
+    &UnicodeString,
+    WINSTA_ROOT_NAME);
+
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &UnicodeString,
+    0,
+    NULL,
+    NULL);
+
+  Status = ZwCreateDirectoryObject(
+	  &WindowStationsDirectory,
+    0,
+    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Could not create \\Windows\\WindowStations directory (Status 0x%X)\n", Status);
+    return Status;
+  }
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS
+CleanupWindowStationImpl(VOID)
+{
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+ValidateWindowStationHandle(
+  HWINSTA WindowStation,
+  KPROCESSOR_MODE AccessMode,
+  ACCESS_MASK DesiredAccess,
+  PWINSTATION_OBJECT *Object)
+{
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(
+    WindowStation,
+    DesiredAccess,
+    ExWindowStationObjectType,
+    AccessMode,
+    (PVOID*)Object,
+    NULL);
+  if (!NT_SUCCESS(Status)) {
+    SetLastNtError(Status);
+  }
+
+  return Status;
+}
+
+NTSTATUS
+ValidateDesktopHandle(
+  HDESK Desktop,
+  KPROCESSOR_MODE AccessMode,
+  ACCESS_MASK DesiredAccess,
+  PDESKTOP_OBJECT *Object)
+{
+  NTSTATUS Status;
+
+  Status = ObReferenceObjectByHandle(
+    Desktop,
+    DesiredAccess,
+    ExDesktopObjectType,
+    AccessMode,
+    (PVOID*)Object,
+    NULL);
+  if (!NT_SUCCESS(Status)) {
+    SetLastNtError(Status);
+  }
+
+  return Status;
+}
+
+/*
+ * FUNCTION:
+ *   Closes a window station handle
+ * ARGUMENTS:
+ *   hWinSta = Handle to the window station 
+ * RETURNS:
+ *   Status
+ * NOTES:
+ *   The window station handle can be created with
+ *   NtUserCreateWindowStation() or NtUserOpenWindowStation().
+ *   Attemps to close a handle to the window station assigned
+ *   to the calling process will fail
+ */
+BOOL
+STDCALL
+NtUserCloseWindowStation(
+  HWINSTA hWinSta)
+{
+  PWINSTATION_OBJECT Object;
+  NTSTATUS Status;
+
+  DPRINT("About to close window station handle (0x%X)\n", hWinSta);
+
+  Status = ValidateWindowStationHandle(
+    hWinSta,
+    KernelMode,
+    0,
+    &Object);
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("Validation of window station handle (0x%X) failed\n", hWinSta);
+    return FALSE;
+  }
+
+  ObDereferenceObject(Object);
+
+  DPRINT("Closing window station handle (0x%X)\n", hWinSta);
+
+  Status = ZwClose(hWinSta);
+  if (!NT_SUCCESS(Status)) {
+    SetLastNtError(Status);
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
+/*
+ * FUNCTION:
+ *   Creates a new window station
+ * ARGUMENTS:
+ *   lpszWindowStationName = Name of the new window station
+ *   dwDesiredAccess       = Requested type of access
+ *   lpSecurity            = Security descriptor
+ *   Unknown3              = Unused
+ *   Unknown4              = Unused
+ *   Unknown5              = Unused
+ * RETURNS:
+ *   Handle to the new window station that can be closed with
+ *   NtUserCloseWindowStation()
+ *   Zero on failure
+ */
+HWINSTA
+STDCALL
+NtUserCreateWindowStation(
+  PUNICODE_STRING lpszWindowStationName,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpSecurity,
+  DWORD Unknown3,
+  DWORD Unknown4,
+  DWORD Unknown5)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING WindowStationName;
+  PWINSTATION_OBJECT WinStaObject;
+  WCHAR NameBuffer[MAX_PATH];
+  NTSTATUS Status;
+  HWINSTA WinSta;
+
+  wcscpy(NameBuffer, WINSTA_ROOT_NAME);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, lpszWindowStationName->Buffer);
+  RtlInitUnicodeString(&WindowStationName, NameBuffer);
+
+  DPRINT("Trying to open window station (%wZ)\n", &WindowStationName);
+
+  /* Initialize ObjectAttributes for the window station object */
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &WindowStationName,
+    0,
+    NULL,
+    NULL);
+
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExWindowStationObjectType,
+    NULL,
+    UserMode,
+    dwDesiredAccess,
+    NULL,
+    &WinSta);
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Successfully opened window station (%wZ)\n", WindowStationName);
+    return (HWINSTA)WinSta;
+  }
+
+  DPRINT("Creating window station (%wZ)\n", &WindowStationName);
+
+  WinStaObject = (PWINSTATION_OBJECT)ObCreateObject(
+    &WinSta,
+    STANDARD_RIGHTS_REQUIRED,
+    &ObjectAttributes,
+    ExWindowStationObjectType);
+  if (!WinStaObject)
+  {
+    DPRINT("Failed creating window station (%wZ)\n", &WindowStationName);
+    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+    return (HWINSTA)0;
+  }
+
+  WinStaObject->HandleTable = ObmCreateHandleTable();
+  if (!WinStaObject->HandleTable)
+  {
+    DPRINT("Failed creating handle table\n");
+    ObDereferenceObject(WinStaObject);
+    SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+    return (HWINSTA)0;
+  }
+
+  DPRINT("Window station successfully created (%wZ)\n", &WindowStationName);
+
+  return (HWINSTA)WinSta;
+}
+
+BOOL
+STDCALL
+NtUserGetObjectInformation(
+  HANDLE hObject,
+  DWORD nIndex,
+  PVOID pvInformation,
+  DWORD nLength,
+  PDWORD nLengthNeeded)
+{
+  return FALSE;
+}
+
+/*
+ * FUNCTION:
+ *   Returns a handle to the current process window station
+ * ARGUMENTS:
+ *   None
+ * RETURNS:
+ *   Handle to the window station assigned to the current process
+ *   Zero on failure
+ * NOTES:
+ *   The handle need not be closed by the caller
+ */
+HWINSTA
+STDCALL
+NtUserGetProcessWindowStation(VOID)
+{
+  return PROCESS_WINDOW_STATION();
+}
+
+BOOL
+STDCALL
+NtUserLockWindowStation(
+  HWINSTA hWindowStation)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+/*
+ * FUNCTION:
+ *   Opens an existing window station
+ * ARGUMENTS:
+ *   lpszWindowStationName = Name of the existing window station
+ *   dwDesiredAccess       = Requested type of access
+ * RETURNS:
+ *   Handle to the window station
+ *   Zero on failure
+ * NOTES:
+ *   The returned handle can be closed with NtUserCloseWindowStation()
+ */
+HWINSTA
+STDCALL
+NtUserOpenWindowStation(
+  PUNICODE_STRING lpszWindowStationName,
+  ACCESS_MASK dwDesiredAccess)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING WindowStationName;
+  PWINSTATION_OBJECT WinStaObject;
+  WCHAR NameBuffer[MAX_PATH];
+  NTSTATUS Status;
+  HWINSTA WinSta;
+
+  wcscpy(NameBuffer, WINSTA_ROOT_NAME);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, lpszWindowStationName->Buffer);
+  RtlInitUnicodeString(&WindowStationName, NameBuffer);
+
+  DPRINT("Trying to open window station (%wZ)\n", &WindowStationName);
+
+  /* Initialize ObjectAttributes for the window station object */
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &WindowStationName,
+    0,
+    NULL,
+    NULL);
+
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExDesktopObjectType,
+    NULL,
+    UserMode,
+    dwDesiredAccess,
+    NULL,
+    &WinSta);
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Successfully opened window station (%wZ)\n", &WindowStationName);
+    return (HWINSTA)WinSta;
+  }
+
+  SetLastNtError(Status);
+  return (HWINSTA)0;
+}
+
+BOOL
+STDCALL
+NtUserSetObjectInformation(
+  HANDLE hObject,
+  DWORD nIndex,
+  PVOID pvInformation,
+  DWORD nLength)
+{
+  /* FIXME: ZwQueryObject */
+  /* FIXME: ZwSetInformationObject */
+  SetLastNtError(STATUS_UNSUCCESSFUL);
+  return FALSE;
+}
+
+/*
+ * FUNCTION:
+ *   Assigns a window station to the current process
+ * ARGUMENTS:
+ *   hWinSta = Handle to the window station
+ * RETURNS:
+ *   Status
+ */
+BOOL
+STDCALL
+NtUserSetProcessWindowStation(
+  HWINSTA hWindowStation)
+{
+  PWINSTATION_OBJECT Object;
+  NTSTATUS Status;
+
+  DPRINT("About to set process window station with handle (0x%X)\n", hWindowStation);
+
+  Status = ValidateWindowStationHandle(
+    hWindowStation,
+    KernelMode,
+    0,
+    &Object);
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("Validation of window station handle (0x%X) failed\n", hWindowStation);
+    return FALSE;
+  }
+
+  ObDereferenceObject(Object);
+
+  SET_PROCESS_WINDOW_STATION(hWindowStation);
+
+  return TRUE;
+}
+
+DWORD
+STDCALL
+NtUserSetWindowStationUser(
+  DWORD Unknown0,
+  DWORD Unknown1,
+  DWORD Unknown2,
+  DWORD Unknown3)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+BOOL
+STDCALL
+NtUserUnlockWindowStation(
+  HWINSTA hWindowStation)
+{
+  UNIMPLEMENTED
+
+  return FALSE;
+}
+
+
+/*
+ * FUNCTION:
+ *   Closes a desktop handle
+ * ARGUMENTS:
+ *   hDesktop = Handle to the desktop
+ * RETURNS:
+ *   Status
+ * NOTES:
+ *   The desktop handle can be created with NtUserCreateDesktop() or
+ *   NtUserOpenDesktop().
+ *   The function will fail if any thread in the calling process is using the
+ *   specified desktop handle or if the handle refers to the initial desktop
+ *   of the calling process
+ */
+BOOL
+STDCALL
+NtUserCloseDesktop(
+  HDESK hDesktop)
+{
+  PDESKTOP_OBJECT Object;
+  NTSTATUS Status;
+
+  DPRINT("About to close desktop handle (0x%X)\n", hDesktop);
+
+  Status = ValidateDesktopHandle(
+    hDesktop,
+    KernelMode,
+    0,
+    &Object);
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
+    return FALSE;
+  }
+
+  ObDereferenceObject(Object);
+
+  DPRINT("Closing desktop handle (0x%X)\n", hDesktop);
+
+  Status = ZwClose(hDesktop);
+  if (!NT_SUCCESS(Status)) {
+    SetLastNtError(Status);
+    return FALSE;
+  } else {
+    return TRUE;
+  }
+}
+
+/*
+ * FUNCTION:
+ *   Creates a new desktop
+ * ARGUMENTS:
+ *   lpszDesktopName = Name of the new desktop
+ *   dwFlags         = Interaction flags
+ *   dwDesiredAccess = Requested type of access
+ *   lpSecurity      = Security descriptor
+ *   hWindowStation  = Handle to window station on which to create the desktop
+ * RETURNS:
+ *   Handle to the new desktop that can be closed with NtUserCloseDesktop()
+ *   Zero on failure
+ */
+HDESK
+STDCALL
+NtUserCreateDesktop(
+  PUNICODE_STRING lpszDesktopName,
+  DWORD dwFlags,
+  ACCESS_MASK dwDesiredAccess,
+  LPSECURITY_ATTRIBUTES lpSecurity,
+  HWINSTA hWindowStation)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PWINSTATION_OBJECT WinStaObject;
+  PDESKTOP_OBJECT DesktopObject;
+  UNICODE_STRING DesktopName;
+  WCHAR NameBuffer[MAX_PATH];
+  NTSTATUS Status;
+  HDESK Desktop;
+
+  Status = ValidateWindowStationHandle(
+    hWindowStation,
+    KernelMode,
+    0,
+    &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Failed validation of window station handle (0x%X)\n", hWindowStation);
+    return (HDESK)0;
+  }
+
+  wcscpy(NameBuffer, WINSTA_ROOT_NAME);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, WinStaObject->Name.Buffer);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, lpszDesktopName->Buffer);
+  RtlInitUnicodeString(&DesktopName, NameBuffer);
+
+  ObDereferenceObject(WinStaObject);
+
+  DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
+
+  /* Initialize ObjectAttributes for the desktop object */
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &DesktopName,
+    0,
+    NULL,
+    NULL);
+
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExDesktopObjectType,
+    NULL,
+    UserMode,
+    dwDesiredAccess,
+    NULL,
+    &Desktop);
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
+    return (HDESK)Desktop;
+  }
+
+  DPRINT("Status for open operation (0x%X)\n", Status);
+
+  DesktopObject = (PDESKTOP_OBJECT)ObCreateObject(
+    &Desktop,
+    STANDARD_RIGHTS_REQUIRED,
+    &ObjectAttributes,
+    ExDesktopObjectType);
+  if (!DesktopObject)
+  {
+    DPRINT("Failed creating desktop (%wZ)\n", &DesktopName);
+    SetLastNtError(STATUS_UNSUCCESSFUL);
+    return (HDESK)0;
+  }
+
+  return (HDESK)Desktop;
+}
+
+HDESK
+STDCALL
+NtUserGetThreadDesktop(
+  DWORD dwThreadId,
+  DWORD Unknown1)
+{
+  UNIMPLEMENTED
+
+  return (HDESK)0;
+}
+
+/*
+ * FUNCTION:
+ *   Opens an existing desktop
+ * ARGUMENTS:
+ *   lpszDesktopName = Name of the existing desktop
+ *   dwFlags         = Interaction flags
+ *   dwDesiredAccess = Requested type of access
+ * RETURNS:
+ *   Handle to the desktop
+ *   Zero on failure
+ * NOTES:
+ *   The returned handle can be closed with NtUserCloseDesktop()
+ */
+HDESK
+STDCALL
+NtUserOpenDesktop(
+  PUNICODE_STRING lpszDesktopName,
+  DWORD dwFlags,
+  ACCESS_MASK dwDesiredAccess)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PWINSTATION_OBJECT WinStaObject;
+  UNICODE_STRING DesktopName;
+  WCHAR NameBuffer[MAX_PATH];
+  NTSTATUS Status;
+  HDESK Desktop;
+
+  /* Validate the window station handle and
+     compose the fully qualified desktop name */
+
+  Status = ValidateWindowStationHandle(
+    PROCESS_WINDOW_STATION(),
+    KernelMode,
+    0,
+    &WinStaObject);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("Failed validation of window station handle (0x%X)\n",
+      PROCESS_WINDOW_STATION());
+    return (HDESK)0;
+  }
+
+  wcscpy(NameBuffer, WINSTA_ROOT_NAME);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, WinStaObject->Name.Buffer);
+  wcscat(NameBuffer, L"\\");
+  wcscat(NameBuffer, lpszDesktopName->Buffer);
+  RtlInitUnicodeString(&DesktopName, NameBuffer);
+
+  ObDereferenceObject(WinStaObject);
+
+
+  DPRINT("Trying to open desktop station (%wZ)\n", &DesktopName);
+
+  /* Initialize ObjectAttributes for the desktop object */
+  InitializeObjectAttributes(
+    &ObjectAttributes,
+    &DesktopName,
+    0,
+    NULL,
+    NULL);
+
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExDesktopObjectType,
+    NULL,
+    UserMode,
+    dwDesiredAccess,
+    NULL,
+    &Desktop);
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
+    return (HDESK)Desktop;
+  }
+
+  SetLastNtError(Status);
+  return (HDESK)0;
+}
+
+/*
+ * FUNCTION:
+ *   Opens the input (interactive) desktop
+ * ARGUMENTS:
+ *   dwFlags         = Interaction flags
+ *   fInherit        = Inheritance option
+ *   dwDesiredAccess = Requested type of access
+ * RETURNS:
+ *   Handle to the input desktop
+ *   Zero on failure
+ * NOTES:
+ *   The returned handle can be closed with NtUserCloseDesktop()
+ */
+HDESK
+STDCALL
+NtUserOpenInputDesktop(
+  DWORD dwFlags,
+  BOOL fInherit,
+  ACCESS_MASK dwDesiredAccess)
+{
+  PDESKTOP_OBJECT Object;
+  NTSTATUS Status;
+  HDESK Desktop;
+
+  DPRINT("About to open input desktop\n");
+
+  /* Get a pointer to the desktop object */
+
+  Status = ValidateDesktopHandle(
+    InputDesktop,
+    KernelMode,
+    0,
+    &Object);
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
+    return (HDESK)0;
+  }
+
+  /* Create a new handle to the object */
+
+  Status = ObOpenObjectByPointer(
+    Object,
+    0,
+    NULL,
+    dwDesiredAccess,
+    ExDesktopObjectType,
+    UserMode,
+    &Desktop);
+
+  ObDereferenceObject(Object);
+
+  if (NT_SUCCESS(Status))
+  {
+    DPRINT("Successfully opened input desktop\n");
+    return (HDESK)Desktop;
+  }
+
+  SetLastNtError(Status);
+  return (HDESK)0;
+}
+
+BOOL
+STDCALL
+NtUserPaintDesktop(
+  HDC hDC)
+{
+  UNIMPLEMENTED
+
+  return FALSE;
+}
+
+DWORD
+STDCALL
+NtUserResolveDesktopForWOW(
+  DWORD Unknown0)
+{
+  UNIMPLEMENTED
+
+  return 0;
+}
+
+BOOL
+STDCALL
+NtUserSetThreadDesktop(
+  HDESK hDesktop)
+{
+  UNIMPLEMENTED
+
+  return FALSE;
+}
+
+/*
+ * FUNCTION:
+ *   Sets the current input (interactive) desktop
+ * ARGUMENTS:
+ *   hDesktop = Handle to desktop
+ * RETURNS:
+ *   Status
+ */
+BOOL
+STDCALL
+NtUserSwitchDesktop(
+  HDESK hDesktop)
+{
+  PDESKTOP_OBJECT Object;
+  NTSTATUS Status;
+
+  DPRINT("About to switch desktop (0x%X)\n", hDesktop);
+
+  Status = ValidateDesktopHandle(
+    hDesktop,
+    KernelMode,
+    0,
+    &Object);
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
+    return FALSE;
+  }
+
+  ObDereferenceObject(Object);
+
+  /* FIXME: Fail if the desktop belong to an invisible window station */
+  /* FIXME: Fail if the process is associated with a secured
+            desktop such as Winlogon or Screen-Saver */
+
+  /* FIXME: Connect to input device */
+  return TRUE;
+}
+
+/* EOF */

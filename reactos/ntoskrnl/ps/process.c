@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.63 2001/04/21 12:39:05 ekohl Exp $
+/* $Id: process.c,v 1.64 2001/06/12 17:50:28 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -246,7 +246,7 @@ VOID PiDeleteProcess(PVOID ObjectBody)
 {
    KIRQL oldIrql;
    
-   DPRINT1("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    RemoveEntryList(&((PEPROCESS)ObjectBody)->ProcessListEntry);

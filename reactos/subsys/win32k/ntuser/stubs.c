@@ -26,18 +26,6 @@ NtUserActivateKeyboardLayout(
 
 DWORD
 STDCALL
-NtUserAlterWindowStyle(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserAttachThreadInput(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -198,19 +186,6 @@ NtUserCallMsgFilter(
 
 DWORD
 STDCALL
-NtUserCallNextHookEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserCallNoParam(
   DWORD Unknown0)
 {
@@ -281,19 +256,6 @@ NtUserCheckMenuItem(
 
 DWORD
 STDCALL
-NtUserChildWindowFromPointEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserClipCursor(
   DWORD Unknown0)
 {
@@ -305,26 +267,6 @@ NtUserClipCursor(
 DWORD
 STDCALL
 NtUserCloseClipboard(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCloseDesktop(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCloseWindowStation(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -389,62 +331,11 @@ NtUserCreateCaret(
 
 DWORD
 STDCALL
-NtUserCreateDesktop(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserCreateLocalMemHandle(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCreateWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7,
-  DWORD Unknown8,
-  DWORD Unknown9,
-  DWORD Unknown10,
-  DWORD Unknown11,
-  DWORD Unknown12)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserCreateWindowStation(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
 {
   UNIMPLEMENTED
 
@@ -483,23 +374,6 @@ NtUserDdeSetQualityOfService(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDeferWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7)
 {
   UNIMPLEMENTED
 
@@ -553,26 +427,6 @@ NtUserDestroyCursor(
 DWORD
 STDCALL
 NtUserDestroyMenu(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDestroyWindow(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserDispatchMessage(
   DWORD Unknown0)
 {
   UNIMPLEMENTED
@@ -717,17 +571,6 @@ NtUserEnableScrollBar(
 
 DWORD
 STDCALL
-NtUserEndDeferWindowPosEx(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserEndMenu(VOID)
 {
   UNIMPLEMENTED
@@ -808,47 +651,10 @@ NtUserExcludeUpdateRgn(
 
 DWORD
 STDCALL
-NtUserFillWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserFindExistingCursorIcon(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserFindWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserFlashWindowEx(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -904,32 +710,6 @@ DWORD
 STDCALL
 NtUserGetCaretPos(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClassInfo(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetClassName(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 
@@ -1100,15 +880,6 @@ NtUserGetDoubleClickTime(VOID)
 
 DWORD
 STDCALL
-NtUserGetForegroundWindow(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetGuiResources(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -1164,18 +935,6 @@ NtUserGetImeHotKey(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetInternalWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 
@@ -1284,19 +1043,6 @@ NtUserGetMenuItemRect(
 
 DWORD
 STDCALL
-NtUserGetMessage(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetMouseMovePointsEx(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1311,41 +1057,9 @@ NtUserGetMouseMovePointsEx(
 
 DWORD
 STDCALL
-NtUserGetObjectInformation(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetOpenClipboardWindow(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetPriorityClipboardFormat(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetProcessWindowStation(VOID)
 {
   UNIMPLEMENTED
 
@@ -1367,17 +1081,6 @@ NtUserGetScrollBarInfo(
 DWORD
 STDCALL
 NtUserGetSystemMenu(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetThreadDesktop(
   DWORD Unknown0,
   DWORD Unknown1)
 {
@@ -1425,38 +1128,6 @@ NtUserGetUpdateRgn(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetWindowDC(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetWindowPlacement(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetWOWClass(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 
@@ -1532,18 +1203,6 @@ NtUserInitTask(
 
 DWORD
 STDCALL
-NtUserInternalGetWindowText(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserInvalidateRect(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1604,26 +1263,6 @@ NtUserLoadKeyboardLayoutEx(
 
 DWORD
 STDCALL
-NtUserLockWindowStation(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserLockWindowUpdate(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserLockWorkStation(VOID)
 {
   UNIMPLEMENTED
@@ -1651,22 +1290,6 @@ NtUserMenuItemFromPoint(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserMessageCall(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6)
 {
   UNIMPLEMENTED
 
@@ -1718,21 +1341,6 @@ NtUserModifyUserStartupInfoFlags(
 
 DWORD
 STDCALL
-NtUserMoveWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserNotifyIMEStatus(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1769,143 +1377,12 @@ NtUserOpenClipboard(
 
 DWORD
 STDCALL
-NtUserOpenDesktop(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserOpenInputDesktop(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserOpenWindowStation(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserPaintDesktop(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserPeekMessage(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserPostMessage(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserPostThreadMessage(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserQuerySendMessage(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserQueryUserCounters(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3,
   DWORD Unknown4)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserQueryWindow(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserRealChildWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserRedrawWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
 {
   UNIMPLEMENTED
 
@@ -1937,16 +1414,6 @@ NtUserRegisterTasklist(
 
 DWORD
 STDCALL
-NtUserRegisterWindowMessage(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserRemoveMenu(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -1962,16 +1429,6 @@ STDCALL
 NtUserRemoveProp(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserResolveDesktopForWOW(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -2009,23 +1466,6 @@ NtUserScrollDC(
 
 DWORD
 STDCALL
-NtUserScrollWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSendInput(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -2038,71 +1478,8 @@ NtUserSendInput(
 
 DWORD
 STDCALL
-NtUserSendMessageCallback(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSendNotifyMessage(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetActiveWindow(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetCapture(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetClassLong(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetClassWord(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 
@@ -2213,54 +1590,7 @@ NtUserSetImeHotKey(
 
 DWORD
 STDCALL
-NtUserSetImeOwnerWindow(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetInternalWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetKeyboardState(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetLayeredWindowAttributes(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetLogonNotifyWindow(
   DWORD Unknown0)
 {
   UNIMPLEMENTED
@@ -2315,19 +1645,6 @@ NtUserSetMenuFlagRtoL(
 
 DWORD
 STDCALL
-NtUserSetObjectInformation(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetParent(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -2367,17 +1684,6 @@ NtUserSetScrollInfo(
   DWORD Unknown1,
   DWORD Unknown2,
   DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetShellWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 
@@ -2434,16 +1740,6 @@ NtUserSetSystemTimer(
 
 DWORD
 STDCALL
-NtUserSetThreadDesktop(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1)
@@ -2468,138 +1764,6 @@ NtUserSetTimer(
 
 DWORD
 STDCALL
-NtUserSetWindowFNID(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowLong(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowPlacement(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowPos(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowRgn(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowsHookAW(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowsHookEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowStationUser(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWindowWord(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetWinEventHook(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserShowCaret(
   DWORD Unknown0)
 {
@@ -2614,38 +1778,6 @@ NtUserShowScrollBar(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserShowWindow(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserShowWindowAsync(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSwitchDesktop(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 
@@ -2746,61 +1878,8 @@ NtUserTranslateAccelerator(
 
 DWORD
 STDCALL
-NtUserTranslateMessage(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUnhookWindowsHookEx(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUnhookWinEvent(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserUnloadKeyboardLayout(
   DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUnlockWindowStation(
-  DWORD Unknown0)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUnregisterClass(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 
@@ -2836,24 +1915,6 @@ NtUserUpdateInstance(
   DWORD Unknown0,
   DWORD Unknown1,
   DWORD Unknown2)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserUpdateLayeredWindow(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7,
-  DWORD Unknown8)
 {
   UNIMPLEMENTED
 
@@ -2940,15 +2001,6 @@ NtUserWaitForMsgAndEvent(
 
 DWORD
 STDCALL
-NtUserWaitMessage(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
 NtUserWin32PoolAllocationStats(
   DWORD Unknown0,
   DWORD Unknown1,
@@ -2956,17 +2008,6 @@ NtUserWin32PoolAllocationStats(
   DWORD Unknown3,
   DWORD Unknown4,
   DWORD Unknown5)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserWindowFromPoint(
-  DWORD Unknown0,
-  DWORD Unknown1)
 {
   UNIMPLEMENTED
 

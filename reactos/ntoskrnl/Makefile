@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.42 2001/06/01 17:14:40 ekohl Exp $
+# $Id: Makefile,v 1.43 2001/06/12 17:50:27 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -237,6 +237,7 @@ OBJECTS_EX = \
 	ex/resource.o \
 	ex/time.o \
 	ex/sysinfo.o \
+	ex/win32k.o \
 	ex/work.o \
 	ex/zone.o
 

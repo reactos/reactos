@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.5 2001/04/26 01:36:32 phreak Exp $
+/* $Id: winlogon.c,v 1.6 2001/06/12 17:50:26 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,6 +20,11 @@
 
 
 /* GLOBALS ******************************************************************/
+
+HWINSTA InteractiveWindowStation;   /* WinSta0 */
+HDESK ApplicationDesktop;           /* WinSta0\Default */
+HDESK WinlogonDesktop;              /* WinSta0\Winlogon */
+HDESK ScreenSaverDesktop;           /* WinSta0\Screen-Saver */
 
 /* FUNCTIONS *****************************************************************/
 
@@ -221,12 +226,68 @@ WinMain(HINSTANCE hInstance,
    DWORD Result;
    CHAR LoginName[255];
    CHAR Password[255];
+   BOOL Success;
    ULONG i;
-   
-   /* 
-    * FIXME: Create WindowStations here. At the moment lsass and services
-    * share ours. Create a new console intead.
+
+   /*
+    * FIXME: Create a security descriptor with
+    *        one ACE containing the Winlogon SID
     */
+
+   /*
+    * Create the interactive window station
+    */
+   InteractiveWindowStation = CreateWindowStationW(
+      L"WinSta0", 0, GENERIC_ALL, NULL);
+
+   /*
+    * Set the process window station
+    */
+   SetProcessWindowStation(InteractiveWindowStation);
+
+   /*
+    * Create the application desktop
+    */
+   ApplicationDesktop = CreateDesktopW(
+      L"Default",
+      NULL,
+      NULL,
+      0,      /* FIXME: Set some flags */
+      GENERIC_ALL,
+      NULL);  /* FIXME: Create security descriptor (access to all) */
+
+   /*
+    * Create the winlogon desktop
+    */
+   WinlogonDesktop = CreateDesktopW(
+      L"Winlogon",
+      NULL,
+      NULL,
+      0,      /* FIXME: Set some flags */
+      GENERIC_ALL,
+      NULL);  /* FIXME: Create security descriptor (access for winlogon only) */
+
+   /*
+    * Create the screen saver desktop
+    */
+   ScreenSaverDesktop = CreateDesktopW(
+      L"Screen-Saver",
+      NULL,
+      NULL,
+      0,      /* FIXME: Set some flags */
+      GENERIC_ALL,
+      NULL);  /* FIXME: Create security descriptor (access to all) */
+
+   /*
+    * Switch to winlogon desktop
+    */
+   Success = SwitchDesktop(WinlogonDesktop);
+   if (!Success)
+   {
+      DbgPrint("Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
+   }
+
+
    AllocConsole();
    
    /* start system processes (services.exe & lsass.exe) */
@@ -246,6 +307,12 @@ WinMain(HINSTANCE hInstance,
      }
 #endif
    
+   /* FIXME: Create a window class and associate a Winlogon
+    *        window procedure with it.
+    *        Register SAS with the window.
+    *        Register for logoff notification
+    */
+
    /* Main loop */
    for (;;)
      {

@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.37 2001/05/05 09:33:16 ekohl Exp $
+/* $Id: object.c,v 1.38 2001/06/12 17:50:27 chorns Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -324,12 +324,12 @@ ObReferenceObjectByPointer(PVOID ObjectBody,
    
    if (ObjectType != NULL && ObjectHeader->ObjectType != ObjectType)
      {
-	DPRINT("Failed %x (type was %x %S) should %x\n",
+	DPRINT("Failed %x (type was %x %S) should be %x %S\n",
 		ObjectHeader,
 		ObjectHeader->ObjectType,
 		ObjectHeader->ObjectType->TypeName.Buffer,
-		ObjectType);
-	KeBugCheck(0);
+		ObjectType,
+    ObjectType->TypeName.Buffer);
 	return(STATUS_UNSUCCESSFUL);
      }
    if (ObjectHeader->ObjectType == PsProcessType)
