@@ -276,26 +276,7 @@ typedef enum _SID_NAME_USE {
     SidTypeInvalid,
     SidTypeUnknown
 } SID_NAME_USE, *PSID_NAME_USE;
-
-typedef enum _TOKEN_INFORMATION_CLASS {
-    TokenUser = 1,
-    TokenGroups,
-    TokenPrivileges,
-    TokenOwner,
-    TokenPrimaryGroup,
-    TokenDefaultDacl,
-    TokenSource,
-    TokenType,
-    TokenImpersonationLevel,
-    TokenStatistics,
-    TokenRestrictedSids
-} TOKEN_INFORMATION_CLASS, *PTOKEN_INFORMATION_CLASS;
-
-typedef enum _TOKEN_TYPE {
-    TokenPrimary = 1,
-    TokenImpersonation
-} TOKEN_TYPE, *PTOKEN_TYPE;
-
+  
 typedef struct _CACHE_UNINITIALIZE_EVENT {
     struct _CACHE_UNINITIALIZE_EVENT    *Next;
     KEVENT                              Event;
@@ -356,147 +337,12 @@ typedef struct _EXTENDED_IO_STACK_LOCATION {
 
 } EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
 
-typedef struct _FILE_ALLOCATION_INFORMATION {
-    LARGE_INTEGER AllocationSize;
-} FILE_ALLOCATION_INFORMATION, *PFILE_ALLOCATION_INFORMATION;
-
-typedef struct _FILE_BOTH_DIR_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           FileIndex;
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   EndOfFile;
-    LARGE_INTEGER   AllocationSize;
-    ULONG           FileAttributes;
-    ULONG           FileNameLength;
-    ULONG           EaSize;
-    CCHAR           ShortNameLength;
-    WCHAR           ShortName[12];
-    WCHAR           FileName[1];
-} FILE_BOTH_DIR_INFORMATION, *PFILE_BOTH_DIR_INFORMATION;
-
-typedef struct _FILE_COMPRESSION_INFORMATION {
-    LARGE_INTEGER CompressedFileSize;
-} FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
-
-typedef struct _FILE_DIRECTORY_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           FileIndex;
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   EndOfFile;
-    LARGE_INTEGER   AllocationSize;
-    ULONG           FileAttributes;
-    ULONG           FileNameLength;
-    WCHAR           FileName[1];
-} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
-
-typedef struct _FILE_EA_INFORMATION {
-    ULONG EaSize;
-} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
-
-typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
-    ULONG   FileSystemAttributes;
-    LONG    MaximumComponentNameLength;
-    ULONG   FileSystemNameLength;
-    WCHAR   FileSystemName[1];
-} FILE_FS_ATTRIBUTE_INFORMATION, *PFILE_FS_ATTRIBUTE_INFORMATION;
-
-typedef struct _FILE_FS_LABEL_INFORMATION {
-    ULONG VolumeLabelLength;
-    WCHAR VolumeLabel[1];
-} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
-
-typedef struct _FILE_FS_SIZE_INFORMATION {
-    LARGE_INTEGER   TotalAllocationUnits;
-    LARGE_INTEGER   AvailableAllocationUnits;
-    ULONG           SectorsPerAllocationUnit;
-    ULONG           BytesPerSector;
-} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_VOLUME_INFORMATION {
-    LARGE_INTEGER   VolumeCreationTime;
-    ULONG           VolumeSerialNumber;
-    ULONG           VolumeLabelLength;
-    BOOLEAN         SupportsObjects;
-    WCHAR           VolumeLabel[1];
-} FILE_FS_VOLUME_INFORMATION, *PFILE_FS_VOLUME_INFORMATION;
-
-typedef struct _FILE_FULL_DIR_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           FileIndex;
-    LARGE_INTEGER   CreationTime;
-    LARGE_INTEGER   LastAccessTime;
-    LARGE_INTEGER   LastWriteTime;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   EndOfFile;
-    LARGE_INTEGER   AllocationSize;
-    ULONG           FileAttributes;
-    ULONG           FileNameLength;
-    ULONG           EaSize;
-    WCHAR           FileName[1];
-} FILE_FULL_DIR_INFORMATION, *PFILE_FULL_DIR_INFORMATION;
-
-typedef struct _FILE_INTERNAL_INFORMATION {
-    LARGE_INTEGER IndexNumber;
-} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
-
 typedef struct _FILE_LINK_INFORMATION {
     BOOLEAN ReplaceIfExists;
     HANDLE  RootDirectory;
     ULONG   FileNameLength;
     WCHAR   FileName[1];
 } FILE_LINK_INFORMATION, *PFILE_LINK_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION {
-    ULONG FileNameLength;
-    WCHAR FileName[1];
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
-
-typedef struct _FILE_NAMES_INFORMATION {
-    ULONG NextEntryOffset;
-    ULONG FileIndex;
-    ULONG FileNameLength;
-    WCHAR FileName[1];
-} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;
-
-typedef struct _FILE_NOTIFY_INFORMATION {
-    ULONG NextEntryOffset;
-    ULONG Action;
-    ULONG FileNameLength;
-    WCHAR FileName[1];
-} FILE_NOTIFY_INFORMATION, *PFILE_NOTIFY_INFORMATION;
-
-typedef struct _FILE_RENAME_INFORMATION {
-    BOOLEAN ReplaceIfExists;
-    HANDLE  RootDirectory;
-    ULONG   FileNameLength;
-    WCHAR   FileName[1];
-} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
-
-typedef struct _FILE_STREAM_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           StreamNameLength;
-    LARGE_INTEGER   StreamSize;
-    LARGE_INTEGER   StreamAllocationSize;
-    WCHAR           StreamName[1];
-} FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
-
-typedef struct _FILE_ALL_INFORMATION {
-    FILE_BASIC_INFORMATION      BasicInformation;
-    FILE_STANDARD_INFORMATION   StandardInformation;
-    FILE_INTERNAL_INFORMATION   InternalInformation;
-    FILE_EA_INFORMATION         EaInformation;
-    //FILE_ACCESS_INFORMATION   AccessInformation;      // Yet unknown
-    FILE_POSITION_INFORMATION   PositionInformation;
-    //FILE_MODE_INFORMATION     ModeInformation;        // Yet unknown
-    FILE_ALIGNMENT_INFORMATION  AlignmentInformation;
-    FILE_NAME_INFORMATION       NameInformation;
-} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
 
 typedef struct _FSRTL_COMMON_FCB_HEADER {
     CSHORT          NodeTypeCode;
@@ -545,30 +391,9 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
 
-typedef struct _SID_IDENTIFIER_AUTHORITY {
-    UCHAR Value[6];
-} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY;
-
-typedef struct _SID {
-    UCHAR                       Revision;
-    UCHAR                       SubAuthorityCount;
-    SID_IDENTIFIER_AUTHORITY    IdentifierAuthority;
-    ULONG                       SubAuthority[1];
-} SID;
-
-typedef struct _SID_AND_ATTRIBUTES {
-    PSID    Sid;
-    ULONG   Attributes;
-} SID_AND_ATTRIBUTES, *PSID_AND_ATTRIBUTES;
-
 typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;
 } STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
-
-typedef struct _TOKEN_SOURCE {
-    CCHAR   SourceName[TOKEN_SOURCE_LENGTH];
-    LUID    SourceIdentifier;
-} TOKEN_SOURCE, *PTOKEN_SOURCE;
 
 typedef struct _TOKEN_CONTROL {
     LUID            TokenId;
@@ -576,28 +401,6 @@ typedef struct _TOKEN_CONTROL {
     LUID            ModifiedId;
     TOKEN_SOURCE    TokenSource;
 } TOKEN_CONTROL, *PTOKEN_CONTROL;
-
-typedef struct _TOKEN_DEFAULT_DACL {
-    PACL DefaultDacl;
-} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
-
-typedef struct _TOKEN_GROUPS {
-    ULONG               GroupCount;
-    SID_AND_ATTRIBUTES  Groups[1];
-} TOKEN_GROUPS, *PTOKEN_GROUPS;
-
-typedef struct _TOKEN_OWNER {
-    PSID Owner;
-} TOKEN_OWNER, *PTOKEN_OWNER;
-
-typedef struct _TOKEN_PRIMARY_GROUP {
-    PSID PrimaryGroup;
-} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP;
-
-typedef struct _TOKEN_PRIVILEGES {
-    ULONG               PrivilegeCount;
-    LUID_AND_ATTRIBUTES Privileges[1];
-} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES;
 
 typedef struct _TOKEN_STATISTICS {
     LUID                            TokenId;
@@ -611,10 +414,6 @@ typedef struct _TOKEN_STATISTICS {
     ULONG                           PrivilegeCount;
     LUID                            ModifiedId;
 } TOKEN_STATISTICS, *PTOKEN_STATISTICS;
-
-typedef struct _TOKEN_USER {
-    SID_AND_ATTRIBUTES User;
-} TOKEN_USER, *PTOKEN_USER;
 
 NTKERNELAPI
 BOOLEAN
@@ -1079,7 +878,7 @@ VOID
 IoAcquireVpbSpinLock (
     OUT PKIRQL Irql
 );
-
+/*
 NTKERNELAPI
 NTSTATUS
 IoCreateFile (
@@ -1098,7 +897,8 @@ IoCreateFile (
     IN ULONG                ExtraCreateParameters,
     IN ULONG                Options
 );
-
+*/
+  
 NTKERNELAPI
 PFILE_OBJECT
 IoCreateStreamFileObject (
@@ -1345,7 +1145,8 @@ ZwCreateSection (
     IN ULONG                AllocationAttributes,
     IN HANDLE               FileHandle OPTIONAL
 );
-
+  
+#if 0
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1359,7 +1160,8 @@ ZwCreateThread (
     IN HANDLE               ThreadStack,
     IN BOOLEAN              CreateSuspended
 );
-
+#endif
+  
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1495,6 +1297,7 @@ ZwOpenProcess (
     IN PCLIENT_ID           ClientId OPTIONAL
 );
 
+#if 0
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1503,7 +1306,8 @@ ZwOpenProcessToken (
     IN ACCESS_MASK  DesiredAccess,
     OUT PHANDLE     TokenHandle
 );
-
+#endif
+  
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1513,6 +1317,7 @@ ZwOpenSymbolicLinkObject (
     IN POBJECT_ATTRIBUTES   ObjectAttributes
 );
 
+#if 0
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1522,7 +1327,8 @@ ZwOpenThreadToken (
     IN BOOLEAN      OpenAsSelf,
     OUT PHANDLE     TokenHandle
 );
-
+#endif
+  
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1587,6 +1393,7 @@ ZwSetEaFile (
     IN ULONG                Length
 );
 
+#if 0
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1597,7 +1404,8 @@ ZwSetVolumeInformationFile (
     IN ULONG                Length,
     IN FS_INFORMATION_CLASS FsInformationClass
 );
-
+#endif
+  
 NTSYSAPI
 NTSTATUS
 NTAPI

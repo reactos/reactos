@@ -17,7 +17,7 @@ include rules.mak
 COMPONENTS = iface_native ntoskrnl
 DLLS = ntdll kernel32 crtdll fmifs gdi32
 #DLLS = advapi32 mingw32 user32
-SUBSYS = win32k
+SUBSYS = # win32k
 
 #
 # Select the server(s) you want to build

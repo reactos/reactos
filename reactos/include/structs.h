@@ -108,7 +108,7 @@ typedef LARGE_INTEGER LUID, *PLUID;
 typedef struct _TOKEN_SOURCE {
   CHAR SourceName[8]; 
   LUID SourceIdentifier; 
-} TOKEN_SOURCE; 
+} TOKEN_SOURCE, *PTOKEN_SOURCE; 
 
 typedef struct _PARTITION_INFORMATION { 
   BYTE PartitionType; 
@@ -4130,11 +4130,11 @@ typedef struct _TOKEN_CONTROL {
   LUID AuthenticationId; 
   LUID ModifiedId; 
   TOKEN_SOURCE TokenSource; 
-} TOKEN_CONTROL ; 
+} TOKEN_CONTROL, *PTOKEN_CONTROL ; 
  
 typedef struct _TOKEN_DEFAULT_DACL {  
   PACL DefaultDacl; 
-} TOKEN_DEFAULT_DACL; 
+} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
  
 typedef struct _TOKEN_GROUPS { 
   DWORD GroupCount; 
@@ -4143,11 +4143,11 @@ typedef struct _TOKEN_GROUPS {
  
 typedef struct _TOKEN_OWNER { 
   PSID Owner; 
-} TOKEN_OWNER; 
+} TOKEN_OWNER, *PTOKEN_OWNER; 
  
 typedef struct _TOKEN_PRIMARY_GROUP { 
   PSID PrimaryGroup; 
-} TOKEN_PRIMARY_GROUP; 
+} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP; 
  
 typedef struct _TOKEN_PRIVILEGES { 
   DWORD PrivilegeCount; 
@@ -4165,11 +4165,11 @@ typedef struct _TOKEN_STATISTICS {
   DWORD GroupCount; 
   DWORD PrivilegeCount; 
   LUID  ModifiedId; 
-} TOKEN_STATISTICS; 
+} TOKEN_STATISTICS, *PTOKEN_STATISTICS; 
  
 typedef struct _TOKEN_USER { 
   SID_AND_ATTRIBUTES User; 
-} TOKEN_USER; 
+} TOKEN_USER, *PTOKEN_USER; 
  
 typedef struct {  
   UINT      cbSize;    

@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.14 1999/07/04 22:00:31 ea Exp $
+/* $Id: zw.h,v 1.15 1999/07/13 01:08:47 rex Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -16,19 +16,59 @@
 #ifndef __DDK_ZW_H
 #define __DDK_ZW_H
 
+#if defined(WIN32_LEAN_AND_MEAN) && !defined(TOKEN_INFORMATION_CLASS_DEFINED)
 
-//#ifndef WIN32_LEAN_AND_MEAN
-#define PTOKEN_USER PVOID
-#define PTOKEN_GROUPS PVOID
-#define PTOKEN_OWNER PVOID
-#define PTOKEN_PRIVILEGES PVOID
-#define PTOKEN_PRIMARY_GROUP PVOID
-#define PTOKEN_DEFAULT_DACL PVOID
-#define PTOKEN_SOURCE PVOID
-#define TOKEN_INFORMATION_CLASS CINT
+typedef enum _TOKEN_INFORMATION_CLASS {
+    TokenUser = 1, 
+    TokenGroups, 
+    TokenPrivileges, 
+    TokenOwner, 
+    TokenPrimaryGroup, 
+    TokenDefaultDacl, 
+    TokenSource, 
+    TokenType, 
+    TokenImpersonationLevel, 
+    TokenStatistics 
+} TOKEN_INFORMATION_CLASS; 
+  
+typedef struct _SID_AND_ATTRIBUTES { 
+  PSID  Sid; 
+  DWORD Attributes; 
+} SID_AND_ATTRIBUTES ; 
+ 
+typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
+typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
+
+typedef struct _TOKEN_DEFAULT_DACL {  
+  PACL DefaultDacl; 
+} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
+ 
+typedef struct _TOKEN_GROUPS { 
+  DWORD GroupCount; 
+  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY]; 
+} TOKEN_GROUPS, *PTOKEN_GROUPS, *LPTOKEN_GROUPS; 
+ 
+typedef struct _TOKEN_OWNER { 
+  PSID Owner; 
+} TOKEN_OWNER, *PTOKEN_OWNER; 
+ 
+typedef struct _TOKEN_PRIMARY_GROUP { 
+  PSID PrimaryGroup; 
+} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP; 
+ 
+typedef struct _TOKEN_PRIVILEGES { 
+  DWORD PrivilegeCount; 
+  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY]; 
+} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES, *LPTOKEN_PRIVILEGES; 
+ 
+typedef struct _TOKEN_USER { 
+  SID_AND_ATTRIBUTES User; 
+} TOKEN_USER, *PTOKEN_USER; 
+ 
+#endif
+
 #define LCID ULONG
 #define SECURITY_INFORMATION ULONG
-//#endif
 
 
 /*

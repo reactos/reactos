@@ -13,6 +13,8 @@ $(TEST_PROGS:%=%_clean): %_clean:
 	- $(RM) $*.exe
 	- $(RM) $*.sym
 
+clean: $(TEST_PROGS:%=%_clean)
+
 .phony: clean
 
 floppy: # $(TEST_PROGS:%=%_floppy)

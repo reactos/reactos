@@ -402,6 +402,8 @@ typedef enum _SID_NAME_USE {
     SidTypeUnknown 
 } SID_NAME_USE, *PSID_NAME_USE; 
  
+#define TOKEN_INFORMATION_CLASS_DEFINED 1
+
 typedef enum _TOKEN_INFORMATION_CLASS {
     TokenUser = 1, 
     TokenGroups, 
