@@ -1,4 +1,4 @@
-/* $Id: mem.c,v 1.5 1999/10/31 22:41:49 ea Exp $
+/* $Id: mem.c,v 1.6 1999/11/09 18:03:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
-ULONG RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
+ULONG
+STDCALL
+RtlCompareMemory(PVOID Source1, PVOID Source2, ULONG Length)
 /*
  * FUNCTION: Compares blocks of memory and returns the number of equal bytes
  * ARGUMENTS:
@@ -67,6 +69,26 @@ RtlFillMemory (
 	)
 {
 	memset(Destination,Fill,Length);
+}
+
+
+VOID
+STDCALL
+RtlFillMemoryUlong (
+        PVOID   Destination,
+	ULONG	Length,
+        ULONG   Fill
+	)
+{
+   PULONG Dest  = Destination;
+   ULONG  Count = Length / 4;
+
+   while (Count > 0)
+   {
+       *Dest = Fill;
+       Dest++;
+       Count--;
+   }
 }
 
 
