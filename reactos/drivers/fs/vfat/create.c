@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.8 2000/12/05 17:12:16 jean Exp $
+/* $Id: create.c,v 1.9 2000/12/08 17:12:43 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -294,7 +294,6 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
 	       }
 	     if (GetEntryName((PVOID)block,&i,name,&j,DeviceExt,&StartingSector))
 	       {
-		  DPRINT("Comparing '%S' '%S'\n",name,FileToFind);
 		  if (wstrcmpjoki(name,FileToFind))
 		    {
 		       /* In the case of a long filename, the firstcluster is stored in
@@ -526,7 +525,6 @@ CHECKPOINT;
      }
 
    Temp = Fcb;
-CHECKPOINT;
    if (ParentFcb == NULL)
      {
 	CHECKPOINT;
@@ -536,12 +534,10 @@ CHECKPOINT;
      }
    else
      Fcb = ParentFcb;
-CHECKPOINT;
    ParentFcb = Temp;
    }
 
 
-CHECKPOINT;
    FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
    newCCB = ExAllocatePool(NonPagedPool,sizeof(VFATCCB));
    memset(newCCB,0,sizeof(VFATCCB));
@@ -587,6 +583,9 @@ NTSTATUS FsdCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
    assert(Stack);
    RequestedDisposition = ((Stack->Parameters.Create.Options>>24)&0xff);
    RequestedOptions=Stack->Parameters.Create.Options&FILE_VALID_OPTION_FLAGS;
+   if( (RequestedOptions&FILE_DIRECTORY_FILE)
+       && RequestedDisposition==FILE_SUPERSEDE)
+     return STATUS_INVALID_PARAMETER;
    FileObject = Stack->FileObject;
    DeviceExt = DeviceObject->DeviceExtension;
    assert(DeviceExt);
@@ -630,6 +629,26 @@ CHECKPOINT;
      }
      pCcb=FileObject->FsContext2;
      pFcb=pCcb->pFcb;
+     if(RequestedDisposition==FILE_SUPERSEDE)
+     {
+      ULONG Cluster,NextCluster;
+       /* FIXME set size to 0 and free clusters */
+       pFcb->entry.FileSize = 0;
+       if (DeviceExt->FatType == FAT32)
+	Cluster = pFcb->entry.FirstCluster
+                +pFcb->entry.FirstClusterHigh*65536;
+       else
+	Cluster = pFcb->entry.FirstCluster;
+       pFcb->entry.FirstCluster = 0;
+       pFcb->entry.FirstClusterHigh = 0;
+       updEntry(DeviceExt,FileObject);
+       while (Cluster != 0xffffffff && Cluster >1)
+       {
+         NextCluster = GetNextCluster(DeviceExt, Cluster);
+	 WriteCluster(DeviceExt, Cluster,0);
+	 Cluster = NextCluster;
+       }
+     }
      if( (RequestedOptions&FILE_NON_DIRECTORY_FILE)
          && (pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
