@@ -112,7 +112,7 @@ LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 
 	_root._entry = new ShellDirectory(GetDesktopFolder(), _create_info._root_shell_path, _hwnd);
 
-	jump_to((void*)(LPCITEMIDLIST)_create_info._shell_path);
+	jump_to(_create_info._shell_path);
 
 	 // -> set_curdir()
 	_root._entry->read_directory();
@@ -619,7 +619,14 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 }
 
 
-void ShellBrowserChild::jump_to(void* path)
+void ShellBrowserChild::jump_to(LPCTSTR path)
+{
+	///@todo implement "file://", ... parsing
+	jump_to(ShellPath(path));
+}
+
+
+void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
 	Entry* entry = NULL;
 
@@ -634,17 +641,27 @@ void ShellBrowserChild::jump_to(void* path)
 */
 
 	if (_cur_dir) {
-		_cur_dir->smart_scan();
+		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
 
-		entry = _cur_dir->find_entry(path);
+		LPCITEMIDLIST child_pidl;
 
-		if (entry)
-			jump_to(entry);
+		if (ILFindChild)
+			child_pidl = (*ILFindChild)(_cur_dir->create_absolute_pidl(), pidl);
+		else
+			child_pidl = pidl;	// This is not correct in the common case, but works on the desktop level.
+
+		if (child_pidl) {
+			_cur_dir->smart_scan();
+
+			entry = _cur_dir->find_entry(child_pidl);
+
+			if (entry)
+				jump_to(entry);
+		}
 	}
 
 		//@@ work around as long as we don't iterate correctly through the ShellEntry tree
 	if (!entry) {
-		LPITEMIDLIST pidl = (LPITEMIDLIST)path;
 		UpdateFolderView(ShellFolder(pidl));
 	}
 }

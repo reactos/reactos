@@ -169,10 +169,9 @@ HWND MainFrame::Create(LPCITEMIDLIST pidl, int mode)
 void MainFrame::jump_to(LPCTSTR path, int mode)
 {
 	if (_shellBrowser.get() && (_create_info._open_mode&~OWM_PIDL)==(mode&~OWM_PIDL)) {
-		_create_info._shell_path = path;
+		_shellBrowser->jump_to(path);
 
-		LPCITEMIDLIST pidl = _create_info._shell_path;
-		_shellBrowser->jump_to((void*)pidl);
+		_create_info._shell_path = path;
 	} else {
 		_create_info._open_mode = mode;
 		_create_info._shell_path = path;
@@ -185,10 +184,11 @@ void MainFrame::jump_to(LPCTSTR path, int mode)
 void MainFrame::jump_to(LPCITEMIDLIST path, int mode)
 {
 	if (_shellBrowser.get() && (_create_info._open_mode&~OWM_PIDL)==(mode&~OWM_PIDL)) {
-		_create_info._shell_path = path;
+		ShellPath shell_path = path;
 
-		LPCITEMIDLIST pidl = _create_info._shell_path;
-		_shellBrowser->jump_to((void*)pidl);
+		_shellBrowser->jump_to(shell_path);
+
+		_create_info._shell_path = shell_path;
 	} else {
 		_create_info._open_mode = mode;
 		_create_info._shell_path = path;

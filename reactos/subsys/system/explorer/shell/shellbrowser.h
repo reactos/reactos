@@ -145,7 +145,8 @@ public:
 	RECT	_clnt_rect;
 
 	/*virtual*/ void resize_children();
-	/*virtual*/ void jump_to(void* path);
+	/*virtual*/ void jump_to(LPCTSTR path);
+	/*virtual*/ void jump_to(LPCITEMIDLIST pidl);
 
 	void	jump_to(Entry* entry);
 
