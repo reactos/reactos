@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+# $Id: makefile,v 1.2 2001/02/12 03:50:00 phreak Exp $
 #
 # Shell: Simple shell application
 #
@@ -16,9 +16,6 @@ CLEAN_FILES= shell.o shell.coff shell.exe shell.sym
 BASE_CFLAGS = -I../../../include
 
 all: shell.exe
-
-$(TARGET).coff: $(TARGET).rc
-	$(RC) $(TARGET).rc $(TARGET).coff
 
 shell.exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) $(LIBS) -lgcc -o shell.exe
