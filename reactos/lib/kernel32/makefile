@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.68 2003/08/07 04:03:23 royce Exp $
+# $Id: makefile,v 1.69 2003/08/28 19:34:10 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -30,7 +30,7 @@ MISC_OBJECTS = misc/error.o misc/atom.o misc/handle.o misc/env.o \
                misc/stubs.o misc/ldr.o misc/res.o \
                misc/sysinfo.o misc/profile.o \
                misc/mbchars.o misc/muldiv.o misc/computername.o \
-               misc/perfcnt.o
+               misc/perfcnt.o misc/lzexpand_main.o
 
 FILE_OBJECTS = file/file.o file/curdir.o file/lfile.o file/dir.o \
                file/iocompl.o file/volume.o file/deviceio.o file/dosdev.o \
