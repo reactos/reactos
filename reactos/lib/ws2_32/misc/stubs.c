@@ -836,7 +836,7 @@ WSANSPIoctl(
     LPWSACOMPLETION  lpCompletion
     )
 {
-    UNIMPLEMENTED
+    //UNIMPLEMENTED
 
     return 0;
 }

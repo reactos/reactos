@@ -380,6 +380,13 @@ gethostname(
 
 
 /*
+ * XXX arty -- Partial implementation pending a better one.  This one will
+ * do for normal purposes.
+ *
+ * Return the address of a static LPPROTOENT corresponding to the named
+ * protocol.  These structs aren't very interesting, so I'm not too ashamed
+ * to have this function work on builtins for now.
+ *
  * @unimplemented
  */
 LPPROTOENT
@@ -387,11 +394,18 @@ EXPORT
 getprotobyname(
     IN  CONST CHAR FAR* name)
 {
-    UNIMPLEMENTED
-
-    return (LPPROTOENT)NULL;
+    static CHAR *udp_aliases = 0;
+    static PROTOENT udp = { "udp", &udp_aliases, 17 };
+    static CHAR *tcp_aliases = 0;
+    static PROTOENT tcp = { "tcp", &tcp_aliases, 6 };
+    if( !_stricmp( name, "udp" ) ) {
+	return &udp;
+    } else if( !_stricmp( name, "tcp" ) ) {
+	return &tcp;
+    }
+    
+    return 0;
 }
-
 
 /*
  * @unimplemented
