@@ -10,7 +10,6 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <internal/kernel.h>
 #include <internal/hal/page.h>
 #include <internal/mm.h>
 #include <internal/string.h>
@@ -127,8 +126,11 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
 {
+   PHYSICAL_ADDRESS p;
         DPRINT("get_page_physical_address(vaddr %x)\n",vaddr);
-        return(PAGE_MASK(*get_page_entry((unsigned int)vaddr)));
+   p.HighPart = 0;
+   p.LowPart = PAGE_MASK(*get_page_entry((unsigned int)vaddr));
+   return(p);
 }
 
 BOOL is_page_present(unsigned int vaddr)

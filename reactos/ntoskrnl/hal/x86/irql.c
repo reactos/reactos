@@ -122,7 +122,7 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
 //	  OldIrql);
    if (NewIrql < CurrentIrql)
      {
-	printk("%s:%d\n",__FILE__,__LINE__);
+	DbgPrint("%s:%d\n",__FILE__,__LINE__);
 	for(;;);
      }
    

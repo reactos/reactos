@@ -15,7 +15,6 @@
 #include <ddk/ntddk.h>
 #include <internal/objmgr.h>
 #include <internal/string.h>
-#include <internal/kernel.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -27,7 +26,7 @@ OBJECT_TYPE DirectoryObjectType = {{0,0,NULL},
                                    0,
                                    ULONG_MAX,
                                    ULONG_MAX,
-                                   sizeof(DEVICE_OBJECT),
+                                   sizeof(DIRECTORY_OBJECT),
                                    0,
                                    NULL,
                                    NULL,
@@ -39,18 +38,29 @@ OBJECT_TYPE DirectoryObjectType = {{0,0,NULL},
                                    NULL,
                                    };
 
+
 static struct
 {
    OBJECT_HEADER hdr;
 //   DIRECTORY_OBJECT directory;
    LIST_ENTRY head;
-} namespc_root;
+   KSPIN_LOCK Lock;
+} namespc_root = {{0,},};
 
 /* FUNCTIONS **************************************************************/
 
 NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
 			       ACCESS_MASK DesiredAccess,
 			       POBJECT_ATTRIBUTES ObjectAttributes)
+/*
+ * FUNCTION: Opens a namespace directory object
+ * ARGUMENTS:
+ *       DirectoryHandle (OUT) = Variable which receives the directory handle
+ *       DesiredAccess = Desired access to the directory
+ *       ObjectAttributes = Structure describing the directory
+ * RETURNS: Status
+ * NOTES: Undocumented
+ */
 {
    PVOID Object;
    NTSTATUS Status;
@@ -77,29 +87,96 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
 				IN BOOLEAN              IgnoreInputIndex, 
 				IN OUT PULONG           ObjectIndex,
 				OUT PULONG              DataWritten OPTIONAL)
+/*
+ * FUNCTION: Reads information from a namespace directory
+ * ARGUMENTS:
+ *        DirObjInformation (OUT) = Buffer to hold the data read
+ *        BufferLength = Size of the buffer in bytes
+ *        GetNextIndex = If TRUE then set ObjectIndex to the index of the
+ *                       next object
+ *                       If FALSE then set ObjectIndex to the number of
+ *                       objects in the directory
+ *        IgnoreInputIndex = If TRUE start reading at index 0
+ *                           If FALSE start reading at the index specified
+ *                           by object index
+ *        ObjectIndex = Zero based index into the directory, interpretation
+ *                      depends on IgnoreInputIndex and GetNextIndex
+ *        DataWritten (OUT) = Caller supplied storage for the number of bytes
+ *                            written (or NULL)
+ * RETURNS: Status
+ */
 {
    POBJECT_HEADER hdr = ObGetObjectByHandle(DirObjHandle);
    PDIRECTORY_OBJECT dir = (PDIRECTORY_OBJECT)(HEADER_TO_BODY(hdr));
+   ULONG EntriesToRead;
    PLIST_ENTRY current_entry;
    POBJECT_HEADER current;
-   PWSTR outbuffer = (PWSTR)(ObjectIndex);
+   ULONG i=0;
+   ULONG EntriesToSkip;
+   
+   assert_irql(PASSIVE_LEVEL);
+
+   EntriesToRead = BufferLength / sizeof(OBJDIR_INFORMATION);
+   *DataWritten = 0;
    
    current_entry = dir->head.Flink;
-   while (current_entry!=NULL)
+   
+   /*
+    * Optionally, skip over some entries at the start of the directory
+    */
+   if (!IgnoreInputIndex)
+     {
+	EntriesToSkip = *ObjectIndex;
+	while ( i<EntriesToSkip && current_entry!=NULL)
+	  {
+	     current_entry = current_entry->Flink;
+	  }
+     }
+   
+   /*
+    * Read the maximum entries possible into the buffer
+    */
+   while ( i<EntriesToRead && current_entry!=NULL)
      {
 	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,entry);
-	if (BufferLength < wstrlen(current->name.Buffer))
-	     {
-		return(STATUS_SUCCESS);
-	     }
-	BufferLength = BufferLength - wstrlen(current->name.Buffer);
-//	wcscpy(outbuffer,current->name.Buffer);
-	outbuffer = outbuffer + wstrlen(current->name.Buffer);
+	RtlCopyUnicodeString(&DirObjInformation[i].ObjectName,
+			     &(current->name));
+	i++;
 	current_entry = current_entry->Flink;
+	(*DataWritten) = (*DataWritten) + sizeof(OBJDIR_INFORMATION);
+     }
+   
+   /*
+    * Optionally, count the number of entries in the directory
+    */
+   if (!GetNextIndex)
+     {
+	*ObjectIndex=i;
+     }
+   else
+     {
+	while ( current_entry!=NULL )
+	  {
+	     current_entry=current_entry->Flink;
+	     i++;
+	  }
+	*ObjectIndex=i;
      }
    return(STATUS_SUCCESS);
 }
 
+
+NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
+				 ULONG Attributes,
+				 PACCESS_STATE PassedAccessState,
+				 ACCESS_MASK DesiredAccess,
+				 POBJECT_TYPE ObjectType,
+				 KPROCESSOR_MODE Accessmode,
+				 PVOID ParseContext,
+				 PVOID* ObjectPtr)
+{
+   UNIMPLEMENTED;
+}
 
 NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 			    PVOID* Object)
@@ -120,7 +197,7 @@ NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
    return(STATUS_SUCCESS);
 }
 
-void ObjNamespcInit(void)
+void ObInit(void)
 /*
  * FUNCTION: Initialize the object manager namespace
  */
@@ -160,7 +237,8 @@ NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
     * Initialize the object body
     */
    InitializeListHead(&dir->head);
-
+   KeInitializeSpinLock(&(dir->Lock));
+   
    return(STATUS_SUCCESS);
 }
 
@@ -219,10 +297,9 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
      }
    if (name[0]=='.'&&name[1]=='.'&&name[2]==0)
      {
-	UNIMPLEMENTED;
-	return(NULL);
+	return(BODY_TO_HEADER(BODY_TO_HEADER(dir)->Parent));
      }
-   while (current!=NULL)
+   while (current!=(&((PDIRECTORY_OBJECT)dir)->head))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,entry);
 	if ( wcscmp(current_obj->name.Buffer, name)==0)
@@ -300,7 +377,7 @@ PVOID ObLookupObject(HANDLE rooth, PWSTR string)
    
    if (string[0]!='\\')
      {
-        printk("(%s:%d) Non absolute pathname passed to %s\n",__FILE__,
+        DbgPrint("(%s:%d) Non absolute pathname passed to %s\n",__FILE__,
                __LINE__,__FUNCTION__);
 	return(NULL);
      }
@@ -324,7 +401,7 @@ PVOID ObLookupObject(HANDLE rooth, PWSTR string)
 	 */
 	if (current_dir->Type!=OBJTYP_DIRECTORY)
 	  {
-             printk("(%s:%d) Bad path component\n",__FILE__,
+             DbgPrint("(%s:%d) Bad path component\n",__FILE__,
                     __LINE__);
 	     ExFreePool(string);
 	     return(NULL);
@@ -336,7 +413,7 @@ PVOID ObLookupObject(HANDLE rooth, PWSTR string)
 	current_hdr=(PDIRECTORY_OBJECT)ObDirLookup(current_dir,current);
 	if (current_hdr==NULL)
 	  {
-             printk("(%s:%d) Path component not found\n",__FILE__,
+             DbgPrint("(%s:%d) Path component not found\n",__FILE__,
                     __LINE__);
 	     ExFreePool(string);
 	     return(NULL);

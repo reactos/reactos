@@ -206,6 +206,61 @@ VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
 			LARGE_INTEGER Mask);
 
 /* MISSING FUNCTIONS GO HERE */
+LARGE_INTEGER RtlConvertLongToLargeInteger(LONG SignedInteger);
+LARGE_INTEGER RtlConvertUlongToLargeInteger(ULONG UnsignedInteger);
+LARGE_INTEGER RtlEnlargedIntegerMultiply(LONG Multiplicand,
+                                         LONG Multiplier);
+ULONG RtlEnlargedUnsignedDivide(ULARGE_INTEGER Dividend,
+				ULONG Divisor,
+				PULONG Remainder);
+LARGE_INTEGER RtlEnlargedUnsignedMultiply(ULONG Multiplicand,
+					  ULONG Multipler);
+LARGE_INTEGER RtlExtendedIntegerMultiply(LARGE_INTEGER Multiplicand,
+                                         LONG Multiplier);
+LARGE_INTEGER RtlExtendedLargeIntegerDivide(LARGE_INTEGER Dividend,
+					    ULONG Divisor,
+					    PULONG Remainder);
+LARGE_INTEGER RtlExtendedMagicDivide(LARGE_INTEGER Dividend,
+				     LARGE_INTEGER MagicDivisor,
+				     CCHAR ShiftCount);
+LARGE_INTEGER ExInterlockedAddLargeInteger(PLARGE_INTEGER Addend,
+					   LARGE_INTEGER Increment,
+					   PKSPIN_LOCK Lock);
+LARGE_INTEGER RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
+                                 LARGE_INTEGER Addend2);
+VOID RtlLargeIntegerAnd(PLARGE_INTEGER Result,
+			LARGE_INTEGER Source,
+			LARGE_INTEGER Mask);
+LARGE_INTEGER RtlLargeIntegerArithmeticShift(LARGE_INTEGER LargeInteger,
+					     CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerDivide(LARGE_INTEGER Dividend,
+				    LARGE_INTEGER Divisor,
+				    PLARGE_INTEGER Remainder);
+BOOLEAN RtlLargeIntegerEqualTo(LARGE_INTEGER Operand1,
+                               LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerEqualToZero(LARGE_INTEGER Operand);
+BOOLEAN RtlLargeIntegerGreaterThan(LARGE_INTEGER Operand1,
+                                   LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerGreaterThanOrEqualTo(LARGE_INTEGER Operand1,
+                                            LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerGreaterThanOrEqualToZero(LARGE_INTEGER Operand1);
+BOOLEAN RtlLargeIntegerGreaterThanZero(LARGE_INTEGER Operand1);
+BOOLEAN RtlLargeIntegerLessThan(LARGE_INTEGER Operand1,
+                                LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerLessThanOrEqualTo(LARGE_INTEGER Operand1,
+                                         LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerLessThanOrEqualToZero(LARGE_INTEGER Operand);
+BOOLEAN RtlLargeIntegerLessThanZero(LARGE_INTEGER Operand);
+LARGE_INTEGER RtlLargeIntegerNegate(LARGE_INTEGER Subtrahend);
+BOOLEAN RtlLargeIntegerNotEqualTo(LARGE_INTEGER Operand1,
+                                  LARGE_INTEGER Operand2);
+BOOLEAN RtlLargeIntegerNotEqualToZero(LARGE_INTEGER Operand);
+LARGE_INTEGER RtlLargeIntegerShiftLeft(LARGE_INTEGER LargeInteger,
+				       CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerShiftRight(LARGE_INTEGER LargeInteger,
+					CCHAR ShiftCount);
+LARGE_INTEGER RtlLargeIntegerSubtract(LARGE_INTEGER Minuend,
+				      LARGE_INTEGER Subtrahend);
 
 ULONG RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor);
 VOID RtlMoveMemory(PVOID Destination, CONST VOID* Source, ULONG Length);
@@ -227,6 +282,7 @@ BOOLEAN RtlTimeFieldsToTime(PTIME_FIELDS TimeFields, PLARGE_INTEGER Time);
 VOID RtlTimeToTimeFields(PLARGE_INTEGER Time, PTIME_FIELDS TimeFields);
 PWSTR RtlStrtok(PUNICODE_STRING _string, PWSTR _sep, PWSTR* temp);
 VOID RtlGetCallersAddress(PVOID* CallersAddress);
+VOID RtlZeroMemory(PVOID Destination, ULONG Length);
 
 typedef struct {
 	ULONG    	Length;

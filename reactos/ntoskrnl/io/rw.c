@@ -12,7 +12,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 #include <internal/iomgr.h>
 #include <internal/string.h>
 #include <internal/objmgr.h>
@@ -29,7 +28,7 @@
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS ZwReadFile(HANDLE FileHandle,
-		    HANDLE Event,
+                    HANDLE EventHandle,
 		    PIO_APC_ROUTINE ApcRoutine,
 		    PVOID ApcContext,
 		    PIO_STATUS_BLOCK IoStatusBlock,
@@ -42,7 +41,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PFILE_OBJECT FileObject = (PFILE_OBJECT)hdr;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   
+   KEVENT Event;
+
    if (hdr==NULL)
      {
 	return(STATUS_INVALID_HANDLE);
@@ -75,6 +75,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 	Irp->UserBuffer = NULL;
 	Irp->AssociatedIrp.SystemBuffer = NULL;
      }
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   Irp->UserEvent=&Event;
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    DPRINT("StackPtr %x\n",StackPtr);
@@ -106,7 +108,11 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    IoCallDriver(FileObject->DeviceObject,Irp);
-   memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+   KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+   if (FileObject->DeviceObject->Flags&DO_BUFFERED_IO)
+     {
+        memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
+     }
    return(STATUS_SUCCESS);
 }
 

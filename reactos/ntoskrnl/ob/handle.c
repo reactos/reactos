@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/objmgr.h>
 #include <internal/string.h>
-#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -46,7 +45,7 @@ typedef struct
  * PURPOSE: Head of the list of handle blocks
  */
 LIST_ENTRY handle_list_head = {NULL,NULL};
-KSPIN_LOCK handle_list_lock;
+KSPIN_LOCK handle_list_lock = {0};
 
 /* FUNCTIONS ***************************************************************/
 

@@ -14,8 +14,9 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID PsMgrInit(VOID)
+VOID PsInit(VOID)
 {
    ObjInitializeHandleTable(NULL);
    PsInitThreadManagment();
+   PsInitIdleThread();
 }

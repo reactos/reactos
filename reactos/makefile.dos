@@ -32,6 +32,8 @@ all: $(COMPONENTS) $(LOADERS) $(MODULES)
 #
 # Device driver	rules
 #
+ide: dummy
+	       make -C services/ide
 
 parallel: dummy
 		      make -C services/parallel

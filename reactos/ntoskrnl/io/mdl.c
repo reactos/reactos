@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <internal/hal/page.h>
 #include <ddk/ntddk.h>
 

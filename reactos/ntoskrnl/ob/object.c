@@ -12,7 +12,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/objmgr.h>
-#include <internal/kernel.h>
 #include <wstring.h>
 
 #define NDEBUG
@@ -97,13 +96,13 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 	name=name+1;
      }
    
-   parent = ObLookupObject(ObjectAttributes->RootDirectory,path);
+   hdr->Parent = ObLookupObject(ObjectAttributes->RootDirectory,path);
    
    /*
     * Initialize the object header
     */
    ObInitializeObjectHeader(Type,name,hdr);
-   ObCreateEntry(parent,hdr);
+   ObCreateEntry(hdr->Parent,hdr);
       
    DPRINT("Handle %x\n",Handle);
    *Handle = ObAddHandle(HEADER_TO_BODY(hdr));
@@ -188,7 +187,7 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
 {
    POBJECT_HEADER Object;
 
-   DPRINT("ObReferenceObjectByPointer(%x %x)\n",ObjectBody,Object);
+   DPRINT("ObReferenceObjectByPointer(%x)\n",ObjectBody);
    
    Object = BODY_TO_HEADER(ObjectBody);
    Object->RefCount++;
@@ -253,7 +252,7 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
    PVOID ObjectBody;
    
    ASSERT_IRQL(PASSIVE_LEVEL);
-   assert(HandleInformation==NULL);
+   assert(HandleInformationPtr==NULL);
    assert(Object!=NULL);
    assert(Handle!=NULL);
 

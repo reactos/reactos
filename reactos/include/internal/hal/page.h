@@ -5,7 +5,7 @@
 #ifndef __INTERNAL_HAL_PAGE_H
 #define __INTERNAL_HAL_PAGE_H
 
-#include <internal/kernel.h>
+#include <ddk/ntddk.h>
 
 #define PAGESIZE (4096)
 
@@ -27,6 +27,8 @@ void set_page(unsigned int vaddr, unsigned int attributes,
 #define PA_READ            (1<<0)
 #define PA_WRITE           ((1<<0)+(1<<1))
 #define PA_EXECUTE         PA_READ
+#define PA_PCD             (1<<4)
+#define PA_PWT             (1<<3)
 
 /*
  * Page attributes
@@ -60,7 +62,6 @@ extern inline unsigned int* get_page_directory(void)
         unsigned int page_dir=0;
         __asm__("movl %%cr3,%0\n\t"
                 : "=r" (page_dir));
-//        printk("page_dir %x %x\n",page_dir,physical_to_linear(page_dir));
         return((unsigned int *)physical_to_linear(page_dir));
 }
 

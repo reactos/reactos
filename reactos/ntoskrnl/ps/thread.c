@@ -20,10 +20,10 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
+#include <internal/ke.h>
 #include <internal/objmgr.h>
 #include <internal/string.h>
-#include <internal/hal/hal.h>
+#include <internal/hal.h>
 #include <internal/psmgr.h>
 
 #define NDEBUG
@@ -38,7 +38,7 @@ OBJECT_TYPE ThreadObjectType = {{NULL,0,0},
                                 0,
                                 ULONG_MAX,
                                 ULONG_MAX,
-                                sizeof(KTHREAD),
+                                sizeof(ETHREAD),
                                 0,
                                NULL,
                                NULL,
@@ -50,23 +50,22 @@ OBJECT_TYPE ThreadObjectType = {{NULL,0,0},
                                NULL,
                                };
 
-
 #define NR_THREAD_PRIORITY_LEVELS (32)
 
-static KSPIN_LOCK ThreadListLock;
+static KSPIN_LOCK ThreadListLock = {0,};
 
 /*
  * PURPOSE: List of all threads currently active
  */
-static LIST_ENTRY ThreadListHead;
+static LIST_ENTRY ThreadListHead = {NULL,NULL};
 
 /*
  * PURPOSE: List of threads associated with each priority level
  */
-static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS];
+static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS]={{NULL,NULL},};
 static BOOLEAN DoneInitYet = FALSE;
 
-static PKTHREAD CurrentThread;
+static PETHREAD CurrentThread = NULL;
 
 static ULONG NextThreadUniqueId = 0;
 
@@ -82,7 +81,7 @@ NTSTATUS ZwSetInformationThread(HANDLE ThreadHandle,
 
 PKTHREAD KeGetCurrentThread(VOID)
 {
-   return(CurrentThread);
+   return((PKTHREAD)CurrentThread);
 }
 
 PETHREAD PsGetCurrentThread(VOID)
@@ -131,9 +130,9 @@ void PsDispatchThread(void)
     * If this was an involuntary reschedule then the current thread will still
     * be eligible to run later
     */
-   if (CurrentThread->State==THREAD_STATE_RUNNING)     
+   if (CurrentThread->Tcb.ThreadState==THREAD_STATE_RUNNING)     
      {
-	CurrentThread->State=THREAD_STATE_RUNNABLE;
+	CurrentThread->Tcb.ThreadState=THREAD_STATE_RUNNABLE;
      }
    
    /*
@@ -143,16 +142,17 @@ void PsDispatchThread(void)
    current = CONTAINING_RECORD(ThreadListHead.Flink,KTHREAD,Entry);
    current_entry = ThreadListHead.Flink;
 
-   while (current_entry!=NULL)
+   while (current_entry!=(&ThreadListHead))
      {
-	DPRINT("Scanning %x\n",current);
-	DPRINT("State %x Runnable %x\n",current->State,THREAD_STATE_RUNNABLE);
-        if (current->State == THREAD_STATE_RUNNABLE &&
-            current !=CurrentThread)
+        DPRINT("Scanning %x ",current);
+	DPRINT("State %x Runnable %x\n",current->ThreadState,
+	       THREAD_STATE_RUNNABLE);
+        if (current->ThreadState == THREAD_STATE_RUNNABLE &&
+            current != (PKTHREAD)CurrentThread)
 	  {	     
 	     DPRINT("Scheduling this one %x\n",current);
 	     CurrentThread = current;
-	     CurrentThread->State = THREAD_STATE_RUNNING;
+	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     KeReleaseSpinLock(&ThreadListLock,irql);
 	     HalTaskSwitch(current);
 	     return;
@@ -165,7 +165,7 @@ void PsDispatchThread(void)
     * If there are no other threads then continue with the current one if
     * possible 
     */
-   if (CurrentThread->State == THREAD_STATE_RUNNABLE)
+   if (CurrentThread->Tcb.ThreadState == THREAD_STATE_RUNNABLE)
      {
 	return;
      }
@@ -182,26 +182,27 @@ void PsInitThreadManagment(void)
  * FUNCTION: Initialize thread managment
  */
 {
-   PKTHREAD first_thread;
+   PETHREAD first_thread;
    
    InitializeListHead(&ThreadListHead);
    KeInitializeSpinLock(&ThreadListLock);
    
    ObRegisterType(OBJTYP_THREAD,&ThreadObjectType);
    
-   first_thread = ExAllocatePool(NonPagedPool,sizeof(KTHREAD));
-   first_thread->State = THREAD_STATE_RUNNING;
-   HalInitFirstTask(first_thread);
-   ExInterlockedInsertHeadList(&ThreadListHead,&first_thread->Entry,
+   first_thread = ExAllocatePool(NonPagedPool,sizeof(ETHREAD));
+   first_thread->Tcb.ThreadState = THREAD_STATE_RUNNING;
+   HalInitFirstTask((PKTHREAD)first_thread);
+   ExInterlockedInsertHeadList(&ThreadListHead,&first_thread->Tcb.Entry,
 			       &ThreadListLock);
    CurrentThread = first_thread;
    
    DoneInitYet = TRUE;
 }
 
-NTSTATUS PsWakeThread(PKTHREAD Thread)
+NTSTATUS PsWakeThread(PETHREAD Thread)
 {
-   Thread->State = THREAD_STATE_RUNNABLE;
+   Thread->Tcb.ThreadState = THREAD_STATE_RUNNABLE;
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS PsSuspendThread(VOID)
@@ -217,34 +218,12 @@ NTSTATUS PsSuspendThread(VOID)
     * NOTE: When we return from PsDispatchThread the spinlock will be
     * released
     */
-   CurrentThread->State = THREAD_STATE_SUSPENDED;
+   CurrentThread->Tcb.ThreadState = THREAD_STATE_SUSPENDED;
    PsDispatchThread();
+   return(STATUS_SUCCESS);
 }
 
-NTSTATUS PsCreateThread(HANDLE Parent,
-			LPSECURITY_ATTRIBUTES lpThreadAttributes,
-			PVOID Stack,
-			LPTHREAD_START_ROUTINE lpStartAddress,
-			LPVOID Parameter,
-			DWORD dwCreationFlags,
-			LPDWORD lpThreadId,
-			PHANDLE ThreadHandle)
-/*
- * FUNCTION: Creates a thread 
- * ARGUMENTS:
- *          Parent = Parent process (or NULL for current)
- *          lpThreadAttributes = Security descriptor for the new thread
- *          Stack = Caller allocated stack
- *          lpStartAddress = Entry point for the thread
- *          Parameter = Parameter to be passed to the entrypoint
- *          dwCreationFlags = Flags for creation
- *          lpThreadId = Pointer which receives thread identifier
- *          ThreadHandle = Variable which receives handle
- * RETURNS: Status
- */
-{
-   
-}
+
 
 NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
 /*
@@ -258,11 +237,21 @@ NTSTATUS PsTerminateSystemThread(NTSTATUS ExitStatus)
    
    DPRINT("terminating %x\n",CurrentThread);
    KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-   CurrentThread->State = THREAD_STATE_TERMINATED;
-   ExInterlockedRemoveEntryList(&ThreadListHead,&CurrentThread->Entry,
-				&ThreadListLock);
+   CurrentThread->Tcb.ThreadState = THREAD_STATE_TERMINATED;
+   RemoveEntryList(&CurrentThread->Tcb.Entry);
    PsDispatchThread();
    for(;;);
+}
+
+NTSTATUS NtCreateThread(PHANDLE ThreadHandle,
+			ACCESS_MASK DesiredAccess,
+			POBJECT_ATTRIBUTES ObjectAttributes,
+			HANDLE ProcessHandle,
+			PCLIENT_ID Client,
+			PCONTEXT ThreadContext,
+			PINITIAL_TEB InitialTeb,
+			BOOLEAN CreateSuspended)
+{
 }
 
 NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
@@ -289,28 +278,40 @@ NTSTATUS PsCreateSystemThread(PHANDLE ThreadHandle,
  * RETURNS: Success or failure status
  */
 {
-   PKTHREAD thread;
+   PETHREAD thread;
    ULONG ThreadId;
    ULONG ProcessId;
    
    thread = ObGenericCreateObject(ThreadHandle,0,NULL,OBJTYP_THREAD);
-				  
+   DPRINT("Allocating thread %x\n",thread);                                
    
-   thread->State=THREAD_STATE_RUNNABLE;
-   thread->Priority=0;
-//   thread->Process=ObjGetObjectByHandle(ProcessHandle);
-   thread->ProcessHandle=ProcessHandle;
-   HalInitTask(thread,StartRoutine,StartContext);
-
-//   ThreadId = InterlockedIncrement(&NextThreadUniqueId);   
-   if (ClientId != NULL)
+   thread->Tcb.ThreadState=THREAD_STATE_RUNNABLE;
+   thread->Tcb.BasePriority=0;
+   thread->Tcb.CurrentPriority=0;
+   thread->Tcb.ApcList=ExAllocatePool(NonPagedPool,sizeof(LIST_ENTRY));
+   InitializeListHead(thread->Tcb.ApcList);
+   HalInitTask(&(thread->Tcb),StartRoutine,StartContext);
+   InitializeListHead(&(thread->IrpList));
+   thread->Cid.UniqueThread=NextThreadUniqueId++;
+//   thread->Cid.ThreadId=InterlockedIncrement(&NextThreadUniqueId);
+   if (ClientId!=NULL)
      {
-	ClientId->UniqueThread = ThreadId;
+	*ClientId=thread->Cid;
      }
    
-   ExInterlockedInsertHeadList(&ThreadListHead,&thread->Entry,
+   if (ProcessHandle!=NULL)
+     {   
+	thread->ThreadsProcess=ObGetObjectByHandle(ProcessHandle);
+     }
+   else
+     {
+	thread->ThreadsProcess=&SystemProcess;
+     }
+   thread->StartAddress=StartRoutine;
+   
+   
+   ExInterlockedInsertHeadList(&ThreadListHead,&thread->Tcb.Entry,
 			       &ThreadListLock);
-   InitializeListHead(&thread->ApcQueueHead);
    return(STATUS_SUCCESS);
 }
 

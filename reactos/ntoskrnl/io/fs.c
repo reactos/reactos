@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>
@@ -26,8 +24,8 @@ typedef struct
 
 /* GLOBALS ******************************************************************/
 
-static KSPIN_LOCK FileSystemListLock;
-static LIST_ENTRY FileSystemListHead;
+static KSPIN_LOCK FileSystemListLock = {0,};
+static LIST_ENTRY FileSystemListHead = {NULL,NULL};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -113,7 +111,7 @@ VOID IoUnregisterFileSystem(PDEVICE_OBJECT DeviceObject)
 	current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
 	if (current->DeviceObject == DeviceObject)
 	  {
-	     RemoveEntryFromList(&FileSystemListHead,current_entry);
+	     RemoveEntryList(current_entry);
 	     KeReleaseSpinLock(&FileSystemListLock,oldlvl);
 	     return;
 	  }

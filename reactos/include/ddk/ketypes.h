@@ -3,6 +3,8 @@
 #ifndef __INCLUDE_DDK_KETYPES_H
 #define __INCLUDE_DDK_KETYPES_H
 
+struct _KMUTANT;
+
 typedef LONG KPRIORITY;
    
 typedef VOID (*PKBUGCHECK_CALLBACK_ROUTINE)(PVOID Buffer, ULONG Length);
@@ -34,9 +36,75 @@ typedef struct
    USHORT WaitType;
 } KWAIT_BLOCK, *PKWAIT_BLOCK;
 
+typedef struct _DISPATCHER_HEADER
+{
+   UCHAR Type;
+   UCHAR Absolute;
+   UCHAR Size;
+   UCHAR Inserted;
+   LONG SignalState;
+   LIST_ENTRY WaitListHead;
+} DISPATCHER_HEADER;
+
+struct _KDPC;
+
+typedef struct _KTIMER
+{
+   /*
+    * Pointers to maintain the linked list of activated timers
+    */
+   LIST_ENTRY entry;
+   
+   /*
+    * Absolute expiration time in system time units
+    */
+   signed long long expire_time;
+
+   /*
+    * Optional dpc associated with the timer 
+    */
+   struct _KDPC* dpc;
+   
+   /*
+    * True if the timer is signaled
+    */
+   BOOLEAN signaled;
+   
+   /*
+    * True if the timer is in the system timer queue
+    */
+   BOOLEAN running;
+   
+   /*
+    * Type of the timer either Notification or Synchronization
+    */
+   TIMER_TYPE type;
+   
+   /*
+    * Period of the timer in milliseconds (zero if once-only)
+    */
+   ULONG period;
+   
+} KTIMER, *PKTIMER;
+
+struct _KSPIN_LOCK;
+
+typedef struct _KSPIN_LOCK
+{
+   KIRQL irql;
+} KSPIN_LOCK, *PKSPIN_LOCK;
+
+typedef struct _KDEVICE_QUEUE
+{
+   LIST_ENTRY ListHead;
+   BOOLEAN Busy;
+   KSPIN_LOCK Lock;
+} KDEVICE_QUEUE, *PKDEVICE_QUEUE;
+
+#if RIGHT_DEFINITION_PROVIDED_ABOVE
 #define _KTHREAD _ETHREAD
 
-typedef struct _ETHREAD
+typedef struct _KTHREAD
 /*
  * PURPOSE: Describes a thread of execution
  */
@@ -84,17 +152,14 @@ typedef struct _ETHREAD
     */
    hal_thread_state context;
    
+   /*
+    * PURPOSE: Timeout for the thread to be woken up
+    */
+   signed long long int wake_time;
+   
 } KTHREAD, *PKTHREAD, *PETHREAD;
-	      	      
-typedef struct _DISPATCHER_HEADER
-{
-   UCHAR Type;
-   UCHAR Absolute;
-   UCHAR Size;
-   UCHAR Inserted;
-   LONG SignalState;
-   LIST_ENTRY WaitListHead;
-} DISPATCHER_HEADER;
+#endif
+
 	      
 typedef struct _KAPC
 {
@@ -152,10 +217,6 @@ typedef struct _KEVENT
 } KEVENT, *PKEVENT;
 
 
-typedef struct _KSPIN_LOCK
-{
-   KIRQL irql;
-} KSPIN_LOCK, *PKSPIN_LOCK;
 
 typedef VOID (*PDRIVER_ADD_DEVICE)(VOID);
 
@@ -206,12 +267,6 @@ typedef struct _KDPC
 } KDPC, *PKDPC;
 
 
-typedef struct _KDEVICE_QUEUE
-{
-   LIST_ENTRY ListHead;
-   BOOLEAN Busy;
-   KSPIN_LOCK Lock;
-} KDEVICE_QUEUE, *PKDEVICE_QUEUE;
 
 typedef struct _KDEVICE_QUEUE_ENTRY
 {
@@ -222,46 +277,6 @@ typedef struct _KDEVICE_QUEUE_ENTRY
 typedef struct _WAIT_CONTEXT_BLOCK
 {
 } WAIT_CONTEXT_BLOCK, *PWAIT_CONTEXT_BLOCK;
-
-
-typedef struct _KTIMER
-{
-   /*
-    * Pointers to maintain the linked list of activated timers
-    */
-   LIST_ENTRY entry;
-   
-   /*
-    * Absolute expiration time in system time units
-    */
-   unsigned long long expire_time;
-
-   /*
-    * Optional dpc associated with the timer 
-    */
-   PKDPC dpc;
-   
-   /*
-    * True if the timer is signaled
-    */
-   BOOLEAN signaled;
-   
-   /*
-    * True if the timer is in the system timer queue
-    */
-   BOOLEAN running;
-   
-   /*
-    * Type of the timer either Notification or Synchronization
-    */
-   TIMER_TYPE type;
-   
-   /*
-    * Period of the timer in milliseconds (zero if once-only)
-    */
-   ULONG period;
-   
-} KTIMER, *PKTIMER;
 
 struct _KINTERRUPT;
 

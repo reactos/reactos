@@ -12,8 +12,8 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -54,7 +54,7 @@ BOOLEAN KeInsertByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
      }
       
    current=DeviceQueue->ListHead.Flink;
-   while (current!=NULL)
+   while (current!=(&DeviceQueue->ListHead))
      {
 	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,Entry);
 	if (entry->Key < SortKey)
@@ -98,7 +98,7 @@ PKDEVICE_QUEUE_ENTRY KeRemoveByKeyDeviceQueue(PKDEVICE_QUEUE DeviceQueue,
 	entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,Entry);
 	if (entry->Key < SortKey || current->Flink == NULL)
 	  {
-	     RemoveEntryFromList(&DeviceQueue->ListHead,current);
+	     RemoveEntryList(current);
 	     KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);
 	     return(entry);
 	  }
@@ -118,6 +118,8 @@ PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
    PLIST_ENTRY list_entry;
    PKDEVICE_QUEUE_ENTRY entry;
    
+   DPRINT("KeRemoveDeviceQueue(DeviceQueue %x)\n",DeviceQueue);
+   
    assert_irql(DISPATCH_LEVEL);
    assert(DeviceQueue!=NULL);
    assert(DeviceQueue->Busy);
@@ -125,7 +127,7 @@ PKDEVICE_QUEUE_ENTRY KeRemoveDeviceQueue(PKDEVICE_QUEUE DeviceQueue)
    KeAcquireSpinLock(&DeviceQueue->Lock,&oldlvl);
    
    list_entry = RemoveHeadList(&DeviceQueue->ListHead);
-   if (list_entry==NULL)
+   if (list_entry==(&DeviceQueue->ListHead))
      {
 	DeviceQueue->Busy=FALSE;
 	KeReleaseSpinLock(&DeviceQueue->Lock,oldlvl);

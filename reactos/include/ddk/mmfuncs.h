@@ -294,3 +294,4 @@ VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle);
 
 VOID MmUnmapIoSpace(PVOID BaseAddress, ULONG NumberOfBytes);
 VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList);
+PVOID MmAllocateSection(ULONG Length);

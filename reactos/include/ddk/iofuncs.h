@@ -325,7 +325,7 @@ PCONFIGURATION_INFORMATION IoGetConfigurationInformation(VOID);
  */
 PIO_STACK_LOCATION IoGetCurrentIrpStackLocation(IRP* irp);
 
-PEPROCESS IoGetCurrentProcess(VOID);
+struct _EPROCESS* IoGetCurrentProcess(VOID);
 
 NTSTATUS IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
 				  ACCESS_MASK DesiredAccess,

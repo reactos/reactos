@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
 #include <internal/string.h>
 
@@ -23,9 +21,9 @@ VOID KeDrainApcQueue(VOID)
 {
    PLIST_ENTRY current_entry;
    PKAPC current;
+   PKTHREAD CurrentThread=KeGetCurrentThread();
    
-   current_entry = KeGetCurrentThread()->ApcQueueHead.Flink;
-   while (current_entry!=NULL)
+   while ((current_entry=RemoveHeadList(CurrentThread->ApcList))!=NULL)
      {
 	current = CONTAINING_RECORD(current_entry,KAPC,ApcListEntry);
 	current->NormalRoutine(current->NormalContext,
@@ -35,25 +33,40 @@ VOID KeDrainApcQueue(VOID)
      }
 }
 
-VOID KeInitializeApc(PKAPC Apc, PKNORMAL_ROUTINE NormalRoutine,
-		     PVOID NormalContext,
-		     PKTHREAD TargetThread)
+VOID KeInitializeApc(PKAPC Apc,
+		     PKTHREAD Thread,
+		     UCHAR StateIndex,
+		     PKKERNEL_ROUTINE KernelRoutine,
+		     PKRUNDOWN_ROUTINE RundownRoutine,
+		     PKNORMAL_ROUTINE NormalRoutine,
+		     UCHAR Mode,
+		     PVOID Context)
 {
    memset(Apc,0,sizeof(KAPC));
-   Apc->Thread = TargetThread;
+   Apc->Thread = Thread;
+   Apc->ApcListEntry.Flink=NULL;
+   Apc->ApcListEntry.Blink=NULL;
+   Apc->KernelRoutine=KernelRoutine;
+   Apc->RundownRoutine=RundownRoutine;
    Apc->NormalRoutine=NormalRoutine;
-   Apc->NormalContext=NormalContext;
+   Apc->NormalContext=Context;
    Apc->Inserted=FALSE;
+   Apc->ApcStateIndex=StateIndex;
+   Apc->ApcMode=Mode;
 }
 
-BOOLEAN KeInsertQueueApc(PKAPC Apc)
+void KeInsertQueueApc(PKAPC Apc, PVOID SystemArgument1,
+			 PVOID SystemArgument2, UCHAR Mode)
 {
+   Apc->SystemArgument1=SystemArgument1;
+   Apc->SystemArgument2=SystemArgument2;
+   Apc->ApcMode=Mode;
    if (Apc->Inserted)
      {
-	return(FALSE);
+	return;
      }
    Apc->Inserted=TRUE;
-   InsertTailList(&Apc->Thread->ApcQueueHead,&Apc->ApcListEntry);
-   return(TRUE);
+   InsertTailList(Apc->Thread->ApcList,&Apc->ApcListEntry);
+   return;
 }
 

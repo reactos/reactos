@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>
@@ -49,11 +47,11 @@ BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
    CallbackRecord->CallbackRoutine=CallbackRoutine;
 }
 
-asmlinkage VOID KeBugCheckEx(ULONG BugCheckCode,
-                             ULONG BugCheckParameter1,
-                             ULONG BugCheckParameter2,
-                             ULONG BugCheckParameter3,
-                             ULONG BugCheckParameter4)
+VOID KeBugCheckEx(ULONG BugCheckCode,
+		  ULONG BugCheckParameter1,
+		  ULONG BugCheckParameter2,
+		  ULONG BugCheckParameter3,
+		  ULONG BugCheckParameter4)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected
@@ -63,13 +61,13 @@ asmlinkage VOID KeBugCheckEx(ULONG BugCheckCode,
  * RETURNS: Doesn't
  */
 {
-   printk("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
+   DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
    for(;;);
 }
 
-asmlinkage VOID KeBugCheck(ULONG BugCheckCode)
+VOID KeBugCheck(ULONG BugCheckCode)
 /*
  * FUNCTION: Brings the system down in a controlled manner when an 
  * inconsistency that might otherwise cause corruption has been detected

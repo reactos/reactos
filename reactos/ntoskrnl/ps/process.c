@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
- * FILE:              kernel/psmgr/process.c
+ * FILE:              ntoskrnl/ps/process.c
  * PURPOSE:           Process managment
  * PROGRAMMER:        David Welch (welch@mcmail.com)
  * REVISION HISTORY:
@@ -10,18 +10,28 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <internal/kernel.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>
 
+/* GLOBALS ******************************************************************/
+
+EPROCESS SystemProcess = {{0},};
+HANDLE SystemProcessHandle = NULL;
+
 /* FUNCTIONS *****************************************************************/
 
-PEPROCESS PsGetCurrentProcess(VOID)
+PKPROCESS KeGetCurrentProcess(VOID)
+{
+   return(NULL);
+//   return(&(PsGetCurrentProcess()->Pcb));
+}
+
+struct _EPROCESS* PsGetCurrentProcess(VOID)
 /*
  * FUNCTION: Returns a pointer to the current process
  */
 {
-   return(PsGetCurrentThread()->Process);
+   return(PsGetCurrentThread()->ThreadsProcess);
 }
 

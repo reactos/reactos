@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/event.c
- * PURPOSE:         Implements event
+ * PURPOSE:         Implements events
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
@@ -10,27 +10,22 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/wait.h>
-
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
 VOID KeClearEvent(PKEVENT Event)
 {
-   Event->Header.SignalState=FALSE;   // (??) Is this atomic
+   Event->Header.SignalState=FALSE;   
 }
 
 VOID KeInitializeEvent(PKEVENT Event, EVENT_TYPE Type, BOOLEAN State)
 {
-   Event->Header.Type = Type;
-   Event->Header.Absolute = 0;
-   Event->Header.Inserted = 0;
-   Event->Header.Size = sizeof(KEVENT) / sizeof(ULONG);
-   Event->Header.SignalState = State;
+   KeInitializeDispatcherHeader(&(Event->Header),Type,
+				sizeof(Event)/sizeof(ULONG),State);
    InitializeListHead(&(Event->Header.WaitListHead));
 }
 
@@ -47,10 +42,11 @@ LONG KeResetEvent(PKEVENT Event)
 LONG KeSetEvent(PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait)
 {
    int ret;
-   KIRQL oldlvl;
-   
-   KeAcquireSpinLock(&DispatcherDatabaseLock,&oldlvl);
-   ret = InterlockedExchange(&(Event->Header.SignalState),1);
+
+   DPRINT("KeSetEvent(Event %x, Wait %x)\n",Event,Wait);
+   KeAcquireDispatcherDatabaseLock(Wait);
+//   ret = InterlockedExchange(&(Event->Header.SignalState),1);
+   Event->Header.SignalState=1;
    KeDispatcherObjectWake((DISPATCHER_HEADER *)Event);
-   KeReleaseSpinLock(&DispatcherDatabaseLock,oldlvl);
+   KeReleaseDispatcherDatabaseLock(Wait);
 }

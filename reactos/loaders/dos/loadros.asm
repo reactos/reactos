@@ -267,13 +267,12 @@ _load_file:
         ; Move onto the next position in prepartion for a future read
         ;
         movzx   eax,word [size_div_4k]
-        inc     eax
         mov     bx,[size_mod_4k]
         cmp     bx,0
-        je      l20
-        inc     eax
+        je     l20
+        inc     eax        
 l20:
-        shl     eax,12
+        shl     eax,0ch
         add     [next_load_base],eax
 
         push    fs

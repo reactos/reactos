@@ -12,7 +12,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 
 #include <internal/debug.h>
 
@@ -49,13 +48,12 @@ PSINGLE_LIST_ENTRY PopEntryList(PSINGLE_LIST_ENTRY ListHead)
  * RETURNS: The removed entry
  */
 {
-   PSINGLE_LIST_ENTRY entry = ListHead->Next;
-   if (entry==NULL)
+   PSINGLE_LIST_ENTRY ListEntry = ListHead->Next;
+   if (ListEntry!=NULL)
      {
-	return(NULL);
+	ListHead->Next = ListEntry->Next;
      }
-   ListHead->Next = ListHead->Next->Next;
-   return(entry);
+   return(ListEntry);
 }
 
 PSINGLE_LIST_ENTRY ExInterlockedPopEntryList(PSINGLE_LIST_ENTRY ListHead,

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/io/file.c
+ * FILE:            ntoskrnl/io/file.c
  * PURPOSE:         Graceful system shutdown if a bug is detected
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
 
 #include <internal/debug.h>

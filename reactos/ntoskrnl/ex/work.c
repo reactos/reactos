@@ -12,7 +12,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
 
 #include <internal/debug.h>
 
@@ -46,7 +45,7 @@ typedef struct
 /*
  * PURPOSE: Queue of items waiting to be processed at normal priority
  */
-WORK_QUEUE normal_work_queue;
+WORK_QUEUE normal_work_queue = {0,};
 
 #define WAIT_INTERVAL (0)
 

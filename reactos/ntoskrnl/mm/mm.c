@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
- * FILE:        mm/mm.c
+ * FILE:        ntoskrnl/mm/mm.c
  * PURPOSE:     kernel memory managment functions
  * PROGRAMMER:  David Welch
  * UPDATE HISTORY:
@@ -13,8 +13,7 @@
 #include <internal/stddef.h>
 #include <internal/mm.h>
 #include <internal/string.h>
-#include <internal/kernel.h>
-#include <internal/pool.h>
+#include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
 #include <internal/string.h>
 

@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/wstring.c
+ * FILE:            ntoskrnl/rtl/wstring.c
  * PURPOSE:         Wide string functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -10,8 +10,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <internal/kernel.h>
-#include <internal/linkage.h>
 #include <ddk/ntddk.h>
 #include <wstring.h>
 

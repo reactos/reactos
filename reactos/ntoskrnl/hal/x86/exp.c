@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 kernel/hal/x86/exp.c
+ * FILE:                 ntoskrnl/hal/x86/exp.c
  * PURPOSE:              Handling exceptions
  * PROGRAMMER:           David Welch (welch@mcmail.com)
  * REVISION HISTORY:
@@ -11,12 +11,18 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
+#include <internal/ke.h>
 #include <internal/hal/segment.h>
 #include <internal/hal/page.h>
 
+#define NDEBUG
+#include <internal/debug.h>
+
 /* GLOBALS *****************************************************************/
+
+typedef unsigned int (exception_hook)(CONTEXT* c, unsigned int exp);
+asmlinkage unsigned int ExHookException(exception_hook fn, UINT exp);
 
 extern descriptor idt[256];
 static exception_hook* exception_hooks[256]={NULL,};
@@ -116,6 +122,8 @@ asmlinkage void exception_handler(unsigned int edi,
    unsigned int i;
    unsigned int* stack;
    
+   __asm__("cli\n\t");
+   
    /*
     * Activate any hook for the exception
     */
@@ -129,6 +137,7 @@ asmlinkage void exception_handler(unsigned int edi,
     */
    printk("Exception: %d(%x)\n",type,error_code&0xffff);
    printk("CS:EIP %x:%x\n",cs&0xffff,eip);
+   for(;;);
    printk("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
    printk("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
    printk("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
@@ -192,12 +201,14 @@ asmlinkage unsigned int ExHookException(exception_hook fn, unsigned int exp)
         return(0);
 }
 
-asmlinkage void InitalizeExceptions(void)
+asmlinkage void KeInitExceptions(void)
 /*
  * FUNCTION: Initalize CPU exception handling
  */
 {
    int i;
+   
+   DPRINT("KeInitExceptions()\n",0);
    
    set_interrupt_gate(0,(int)exception_handler0);
    set_interrupt_gate(1,(int)exception_handler1);

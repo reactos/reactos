@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
- * FILE:         mkernel/mm/freelist.cc
+ * FILE:         ntoskrnl/mm/freelist.c
  * PURPOSE:      Handle the list of free physical pages
  * PROGRAMMER:   David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -22,7 +22,7 @@
 #include <internal/stddef.h>
 #include <internal/hal/page.h>
 #include <internal/mm.h>
-#include <internal/kernel.h>
+#include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
 #include <ddk/ntddk.h>
 

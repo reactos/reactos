@@ -16,14 +16,9 @@
 /* INCLUDES ***************************************************************/
 
 #include <limits.h>
-
-#include <internal/stddef.h>
-#include <internal/kernel.h>
-#include <internal/mm.h>
-#include <internal/hal/page.h>
-#include <internal/string.h>
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *****************************************************************/
@@ -55,7 +50,7 @@ static volatile unsigned long long ticks=0;
  * PURPOSE: List of timers
  */
 static LIST_ENTRY timer_list_head = {NULL,NULL};
-static KSPIN_LOCK timer_list_lock;
+static KSPIN_LOCK timer_list_lock = {0,};
 
 
 #define MICROSECONDS_TO_CALIBRATE  (1000000)
@@ -89,27 +84,45 @@ void KeCalibrateTimerLoop()
 	loops_per_microsecond = (loops_per_microsecond * MICROSECONDS_TO_CALIBRATE)
                            / (nr_ticks*MICROSECONDS_PER_TICK);
 	
-	printk("nr_ticks %d\n",nr_ticks);
-	printk("loops_per_microsecond %d\n",loops_per_microsecond);
-	printk("Processor speed (approx) %d\n",
-	       (6*loops_per_microsecond)/1000);
+	DbgPrint("nr_ticks %d\n",nr_ticks);
+	DbgPrint("loops_per_microsecond %d\n",loops_per_microsecond);
+	DbgPrint("Processor speed (approx) %d\n",
+		 (6*loops_per_microsecond)/1000);
 	
 	if (nr_ticks == (TICKS_PER_SECOND_APPROX * MICROSECONDS_TO_CALIBRATE) 
 	    / MICROSECONDS_IN_A_SECOND)
 	  {
-	     printk("Testing loop\n");
+	     DbgPrint("Testing loop\n");
 	     KeStallExecutionProcessor(10000);
-	     printk("Finished loop\n");
+	     DbgPrint("Finished loop\n");
 	     return;
 	  }
      }
 }
 
+NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
+{
+   KeInitializeTimer(&(Thread->TimerBlock));
+   KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+}
+
 NTSTATUS KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
 				BOOLEAN Alertable,
 				PLARGE_INTEGER Interval)
+/*
+ * FUNCTION: Puts the current thread into an alertable or nonalertable 
+ * wait state for a given internal
+ * ARGUMENTS:
+ *          WaitMode = Processor mode in which the caller is waiting
+ *          Altertable = Specifies if the wait is alertable
+ *          Interval = Specifies the interval to wait
+ * RETURNS: Status
+ */
 {
-   UNIMPLEMENTED;
+   PKTHREAD CurrentThread = KeGetCurrentThread();
+   KeAddThreadTimeout(CurrentThread,Interval);
+   return(KeWaitForSingleObject(&(CurrentThread->TimerBlock),Executive,
+				KernelMode,Alertable,NULL));
 }
 
 VOID KeStallExecutionProcessor(ULONG MicroSeconds)
@@ -241,8 +254,8 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    if (Timer->expire_time < 0)
      {
 	Timer->expire_time = system_time - Timer->expire_time;
-	Timer->signaled = FALSE;
      }
+   Timer->signaled = FALSE;
    if (Timer->running)
      {
 	KeReleaseSpinLock(&timer_list_lock,oldlvl);
@@ -270,7 +283,7 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
      {
 	return(FALSE);
      }
-   RemoveEntryFromList(&timer_list_head,&Timer->entry);
+   RemoveEntryList(&Timer->entry);
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
    return(TRUE);
 }
@@ -334,7 +347,7 @@ static void HandleExpiredTimer(PKTIMER current)
      }
    else
      {
-	RemoveEntryFromList(&timer_list_head,&current->entry);
+	RemoveEntryList(&current->entry);
 	current->running=FALSE;
      }
 }
@@ -347,7 +360,7 @@ void KeExpireTimers(void)
    
    KeAcquireSpinLock(&timer_list_lock,&oldlvl);
    
-   while (current_entry!=NULL)
+   while (current_entry!=(&timer_list_head))
      {
 	if (system_time == current->expire_time)
 	  {
@@ -360,7 +373,7 @@ void KeExpireTimers(void)
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
 }
 
-VOID KeTimerInterrupt(VOID)
+VOID KiTimerInterrupt(VOID)
 /*
  * FUNCTION: Handles a timer interrupt
  */

@@ -61,6 +61,10 @@ typedef VOID (*PIO_APC_ROUTINE) (PVOID ApcContext,
 
 /* STRUCTURE TYPES ***********************************************************/
 
+typedef struct _ADAPTER_OBJECT
+{
+} ADAPTER_OBJECT, *PADAPTER_OBJECT;
+
 /*
  * PURPOSE: Special timer associated with each device
  * NOTES: This is a guess
@@ -282,7 +286,7 @@ typedef struct _IRP
 	struct
 	  {
 	     KDEVICE_QUEUE_ENTRY DeviceQueueEntry;
-	     PETHREAD Thread;
+	     struct _ETHREAD* Thread;
 	     PCHAR AuxiliaryBuffer;
 	     LIST_ENTRY ListEntry;
 	     struct _IO_STACK_LOCATION* CurrentStackLocation;

@@ -12,10 +12,6 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
-#include <internal/kernel.h>
-#include <internal/mm.h>
-#include <internal/string.h>
-#include <internal/hal/page.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -27,7 +23,7 @@ BOOL HalIsaProbe()
  * true
  */
 {
-   printk("Assuming ISA bus\n");
+   DbgPrint("Assuming ISA bus\n");
    
    /*
     * Probe for plug and play support
