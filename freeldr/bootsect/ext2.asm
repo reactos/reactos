@@ -1,6 +1,6 @@
 ; EXT2.ASM
 ; EXT2 Boot Sector
-; Copyright (c) 2002 Brian Palmer
+; Copyright (c) 2002, 2003 Brian Palmer
 
 ; [bp-0x04] Here we will store the number of sectors per track
 ; [bp-0x08] Here we will store the number of heads
@@ -62,8 +62,14 @@ main:
         mov sp,7b00h            ; Setup a stack
 
 
+		cmp BYTE [BYTE bp+BootDrive],BYTE 0xff	; If they have specified a boot drive then use it
+		jne GetDriveParameters
+
+        mov [BYTE bp+BootDrive],dl				; Save the boot drive
+
+
 GetDriveParameters:
-		mov  ax,0800h
+		mov  ah,08h
 		mov  dl,[BYTE bp+BootDrive]					; Get boot drive in dl
 		int  13h									; Request drive parameters from the bios
 		jnc  CalcDriveSize							; If the call succeeded then calculate the drive size
@@ -334,7 +340,9 @@ Done:
 
 
 msgDiskError		db 'Disk error',0
-msgAnyKey			db 'Press any key to restart',0
+; Sorry, need the space...
+;msgAnyKey			db 'Press any key to restart',0
+msgAnyKey			db 'Press any key',0
 
         times 509-($-$$) db 0   ; Pad to 509 bytes
 
@@ -628,19 +636,19 @@ Ext2ReadDirectBlocksLoop:
 ; And reboots
 PrintFileNotFound:
         mov  si,msgFreeLdr      ; FreeLdr not found message
-		jmp short DisplayAndRebootIt
+		jmp short DisplayItAndReboot
 
 ; Displays a file size is 0 error
 ; And reboots
 PrintFileSizeError:
         mov  si,msgFileSize     ; Error message
-		jmp short DisplayAndRebootIt
+		jmp short DisplayItAndReboot
 
 ; Displays a file is not a regular file error
 ; And reboots
 PrintRegFileError:
         mov  si,msgRegFile      ; Error message
-DisplayAndRebootIt:
+DisplayItAndReboot:
         call PutChars           ; Display it
 		jmp  Reboot
 

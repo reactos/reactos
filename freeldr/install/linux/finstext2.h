@@ -8,7 +8,7 @@ typedef struct
 {
 	unsigned char	JmpBoot[3];
 	unsigned char	BootDrive;
-	unsigned char	BootPartition;
+	//unsigned char	BootPartition;
 	//unsigned char	SectorsPerTrack;
 	//unsigned short	NumberOfHeads;
 	//unsigned long	Reserved1;
@@ -22,6 +22,12 @@ typedef struct
 	unsigned long	Ext2FirstDataBlock;		// First data block (1 for 1024-byte blocks, 0 for bigger sizes)
 	unsigned long	Ext2InodesPerGroup;		// Number of inodes per group
 	unsigned long	Ext2InodesPerBlock;		// Number of inodes per block
+
+	unsigned char	BootCodeAndData[459];
+
+	unsigned char	BootPartition;
+	unsigned short	BootSignature;
+
 } PACKED EXT2_BOOTCODE, *PEXT2_BOOTCODE;
 
 

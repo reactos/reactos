@@ -111,8 +111,8 @@ int main(int argc, char *argv[])
 		printf("Cylinders: %d\n", Ext2DriveGeometry.cylinders);
 		printf("Start: %d\n", Ext2DriveGeometry.start);
 
-		Ext2BootCode->BootDrive = 0x80;
-		Ext2BootCode->BootPartition = 0x05;
+		Ext2BootCode->BootDrive = 0xff;
+		Ext2BootCode->BootPartition = 0x00;
 		//Ext2BootCode->SectorsPerTrack = Ext2DriveGeometry.sectors;
 		//Ext2BootCode->NumberOfHeads = Ext2DriveGeometry.heads;
 		Ext2BootCode->Ext2VolumeStartSector = Ext2DriveGeometry.start;
