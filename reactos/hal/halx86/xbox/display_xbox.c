@@ -1,4 +1,4 @@
-/* $Id: display_xbox.c,v 1.2 2004/12/08 11:42:28 gvg Exp $
+/* $Id: display_xbox.c,v 1.3 2004/12/11 14:45:00 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,11 +16,17 @@
 #include <hal.h>
 #include "halxbox.h"
 
+#define I2C_IO_BASE 0xc000
+
+#define CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
+
 #define MAKE_COLOR(Red, Green, Blue) (0xff000000 | (((Red) & 0xff) << 16) | (((Green) & 0xff) << 8) | ((Blue) & 0xff))
 
 /* Default to grey on blue */
 #define DEFAULT_FG_COLOR MAKE_COLOR(127, 127, 127)
 #define DEFAULT_BG_COLOR MAKE_COLOR(0, 0, 127)
+
+#define TAG_HALX     TAG('H', 'A', 'L', 'X')
 
 /* VARIABLES ****************************************************************/
 
@@ -40,6 +46,16 @@ static PHAL_RESET_DISPLAY_PARAMETERS HalResetDisplayParameters = NULL;
 static PVOID FrameBuffer;
 static ULONG BytesPerPixel;
 static ULONG Delta;
+
+/*
+ * It turns out that reading from the frame buffer is a pretty expensive
+ * operation. So, we're keeping shadow arrays of the contents and use
+ * those when needed (only for scrolling) instead of reading from the fb.
+ * This cuts down boot time from about 45 sec to about 6 sec.
+ */
+static PUCHAR CellContents;
+static PULONG CellFgColor;
+static PULONG CellBgColor;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -64,6 +80,13 @@ HalpXboxOutputChar(UCHAR Char, unsigned X, unsigned Y, ULONG FgColor, ULONG BgCo
           Mask = Mask >> 1;
         }
       Pixel = (PULONG) ((char *) Pixel + Delta);
+    }
+
+  if (NULL != CellContents)
+    {
+      CellContents[Y * SizeX + X] = Char;
+      CellFgColor[Y * SizeX + X] = FgColor;
+      CellBgColor[Y * SizeX + X] = BgColor;
     }
 }
 
@@ -101,6 +124,19 @@ HalpXboxClearScreenColor(ULONG Color)
           *p++ = Color;
         }
     }
+
+  if (NULL != CellContents)
+    {
+      for (Line = 0; Line < SizeY; Line++)
+        {
+          for (Col = 0; Col < SizeX; Col++)
+            {
+              CellContents[Line * SizeX + Col] = ' ';
+              CellFgColor[Line * SizeX + Col] = Color;
+              CellBgColor[Line * SizeX + Col] = Color;
+            }
+        }
+    }
 }
 
 VOID FASTCALL
@@ -122,17 +158,36 @@ HalScrollDisplay (VOID)
   ULONG Line, Col;
   PULONG p;
 
-  p = (PULONG) ((char *) FrameBuffer + (Delta * CHAR_HEIGHT));
-  RtlMoveMemory(FrameBuffer,
-		p,
-		(Delta * CHAR_HEIGHT) * (SizeY - 1));
-
-  for (Line = 0; Line < CHAR_HEIGHT; Line++)
+  if (NULL == CellContents)
     {
-      p = (PULONG) ((char *) FrameBuffer + (CHAR_HEIGHT * (SizeY - 1 ) + Line) * Delta);
-      for (Col = 0; Col < SizeX * CHAR_WIDTH; Col++)
+      p = (PULONG) ((char *) FrameBuffer + (Delta * CHAR_HEIGHT));
+      RtlMoveMemory(FrameBuffer,
+                    p,
+                    (Delta * CHAR_HEIGHT) * (SizeY - 1));
+
+      for (Line = 0; Line < CHAR_HEIGHT; Line++)
         {
-          *p++ = DEFAULT_BG_COLOR;
+          p = (PULONG) ((char *) FrameBuffer + (CHAR_HEIGHT * (SizeY - 1 ) + Line) * Delta);
+          for (Col = 0; Col < SizeX * CHAR_WIDTH; Col++)
+            {
+              *p++ = DEFAULT_BG_COLOR;
+            }
+        }
+    }
+  else
+    {
+      for (Line = 0; Line < SizeY - 1; Line++)
+        {
+          for (Col = 0; Col < SizeX; Col++)
+            {
+              HalpXboxOutputChar(CellContents[(Line + 1) * SizeX + Col], Col, Line,
+                                 CellFgColor[(Line + 1) * SizeX + Col],
+                                 CellBgColor[(Line + 1) * SizeX + Col]);
+            }
+        }
+      for (Col = 0; Col < SizeX; Col++)
+        {
+          HalpXboxOutputChar(' ', Col, SizeY - 1, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
         }
     }
 }
@@ -141,6 +196,90 @@ static VOID FASTCALL
 HalPutCharacter(UCHAR Character)
 {
   HalpXboxOutputChar(Character, CursorX, CursorY, DEFAULT_FG_COLOR, DEFAULT_BG_COLOR);
+}
+
+static BOOL
+ReadfromSMBus(UCHAR Address, UCHAR bRegister, UCHAR Size, ULONG *Data_to_smbus)
+{
+  int nRetriesToLive=50;
+
+  while (0 != (READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0)) & 0x0800))
+    {
+      ;  /* Franz's spin while bus busy with any master traffic */
+    }
+
+  while (0 != nRetriesToLive--)
+    {
+      UCHAR b;
+      int temp;
+
+      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 4), (Address << 1) | 1);
+      WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 8), bRegister);
+
+      temp = READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0));
+      WRITE_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 0), temp);  /* clear down all preexisting errors */
+
+      switch (Size)
+        {
+          case 4:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0d);      /* DWORD modus ? */
+            break;
+          case 2:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0b);      /* WORD modus */
+            break;
+          default:
+            WRITE_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 2), 0x0a);      // BYTE
+            break;
+        }
+
+      b = 0;
+
+      while (0 == (b & 0x36))
+        {
+          b = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 0));
+        }
+
+      if (0 != (b & 0x24))
+        {
+          /* printf("I2CTransmitByteGetReturn error %x\n", b); */
+        }
+
+      if(0 == (b & 0x10))
+        {
+          /* printf("I2CTransmitByteGetReturn no complete, retry\n"); */
+        }
+      else
+        {
+          switch (Size)
+            {
+              case 4:
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 9));
+                break;
+              case 2:
+                *Data_to_smbus = READ_PORT_USHORT((PUSHORT) (I2C_IO_BASE + 6));
+                break;
+              default:
+                *Data_to_smbus = READ_PORT_UCHAR((PUCHAR) (I2C_IO_BASE + 6));
+                break;
+            }
+
+
+          return TRUE;
+        }
+    }
+
+  return FALSE;
+}
+
+
+static BOOL
+I2CTransmitByteGetReturn(UCHAR bPicAddressI2cFormat, UCHAR bDataToWrite, ULONG *Return)
+{
+  return ReadfromSMBus(bPicAddressI2cFormat, bDataToWrite, 1, Return);
 }
 
 VOID FASTCALL
@@ -153,7 +292,10 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
   ULONG ScreenWidthPixels;
   ULONG ScreenHeightPixels;
+  PHYSICAL_ADDRESS PhysControl;
   PHYSICAL_ADDRESS PhysBuffer;
+  ULONG AvMode;
+  PVOID ControlBuffer;
 
   if (! DisplayInitialized)
     {
@@ -164,22 +306,71 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
       else
         {
-          /* Assume a 64Mb Xbox */
-          PhysBuffer.u.LowPart = 0x03c00000;
+          /* Assume a 64Mb Xbox, last 4MB for video buf */
+          PhysBuffer.u.LowPart = 60 * 1024 * 1024;
         }
       PhysBuffer.u.LowPart |= 0xf0000000;
-      FrameBuffer = MmMapIoSpace(PhysBuffer, 0x400000, MmNonCached);
+
+      /* Tell the nVidia controller about the framebuffer */
+      PhysControl.u.HighPart = 0;
+      PhysControl.u.LowPart = 0xfd000000;
+      ControlBuffer = MmMapIoSpace(PhysControl, 0x1000000, MmNonCached);
+      if (NULL == ControlBuffer)
+        {
+          return;
+        }
+      *((PULONG) ((char *) ControlBuffer + CONTROL_FRAMEBUFFER_ADDRESS_OFFSET)) = (ULONG) PhysBuffer.u.LowPart;
+      MmUnmapIoSpace(ControlBuffer, 0x1000000);
+
+      FrameBuffer = MmMapIoSpace(PhysBuffer, 4 * 1024 * 1024, MmNonCached);
       if (NULL == FrameBuffer)
         {
           return;
         }
-      ScreenWidthPixels = 720;
+
+      if (I2CTransmitByteGetReturn(0x10, 0x04, &AvMode))
+        {
+          if (1 == AvMode) /* HDTV */
+            {
+              ScreenWidthPixels = 720;
+            }
+          else
+            {
+              /* FIXME Other possible values of AvMode:
+               * 0 - AV_SCART_RGB
+               * 2 - AV_VGA_SOG
+               * 4 - AV_SVIDEO
+               * 6 - AV_COMPOSITE
+               * 7 - AV_VGA
+               * other AV_COMPOSITE
+               */
+              ScreenWidthPixels = 640;
+            }
+        }
+      else
+        {
+          ScreenWidthPixels = 640;
+        }
       ScreenHeightPixels = 480;
       BytesPerPixel = 4;
 
       SizeX = ScreenWidthPixels / CHAR_WIDTH;
       SizeY = ScreenHeightPixels / CHAR_HEIGHT;
       Delta = (ScreenWidthPixels * BytesPerPixel + 3) & ~ 0x3;
+
+      CellFgColor = (PULONG) ExAllocatePoolWithTag(PagedPool,
+                                                   SizeX * SizeY * (sizeof(ULONG) + sizeof(ULONG) + sizeof(UCHAR)),
+                                                   TAG_HALX);
+      if (NULL != CellFgColor)
+        {
+          CellBgColor = CellFgColor + SizeX * SizeY;
+          CellContents = (PUCHAR) (CellBgColor + SizeX * SizeY);
+        }
+      else
+        {
+          CellBgColor = NULL;
+          CellContents = NULL;
+        }
 
       HalpXboxClearScreenColor(MAKE_COLOR(0, 0, 0));
 
