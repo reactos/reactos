@@ -15,14 +15,23 @@ endif
 
 include $(PATH_TO_TOP)/rules.mak
 
-#
 # Required to run the system
-#
 COMPONENTS = iface_native iface_additional hallib ntoskrnl
+
+
+# Hardware Abstraction Layers
+# halx86
 HALS = halx86
+
+# Bus drivers
+# acpi isapnp pci
 BUS = acpi isapnp pci
-DLLS = ntdll kernel32 advapi32 crtdll msvcrt fmifs gdi32 msafd \
-	user32 secur32 ws2_32 version
+
+# User mode libraries
+# advapi32 crtdll fmifs gdi32 kernel32 msafd msvcrt ntdll ole32
+# oleaut32 psapi rpcrt4 secur32 shell32 user32 version ws2_32
+DLLS = advapi32 crtdll fmifs gdi32 kernel32 msafd msvcrt ntdll \
+       secur32 user32 version ws2_32
 SUBSYS = smss win32k csrss
 
 #
@@ -31,51 +40,54 @@ SUBSYS = smss win32k csrss
 #SERVERS = posix linux os2
 SERVERS = win32
 
-#
-# Select the loader(s) you want to build
-#
-#LOADERS = boot dos
+# Boot loaders
+# dos
 LOADERS = dos
 
-#
-# Select the device drivers and filesystems you want
-#
-#DEVICE_DRIVERS = beep floppy mouse sound test parallel serial
-DEVICE_DRIVERS = vidport vga blue ide null floppy
+# Driver support libraries
+#bzip2 zlib
+DRIVERS_LIB = bzip2 zlib
 
-#INPUT_DRIVERS = keyboard
+# Kernel mode device drivers
+# beep blue floppy ide keyboard mouse null parallel ramdrv serial vga vidport
+DEVICE_DRIVERS = blue floppy ide null vga vidport
+
+# Kernel mode input drivers
+# keyboard mouclass psaux sermouse
 INPUT_DRIVERS = keyboard mouclass psaux
 
-#FS_DRIVERS = minix ext2 template
-FS_DRIVERS = vfat ms np cdfs fs_rec
+# Kernel mode file system drivers
+# cdfs ext2 fs_rec ms np vfat
+FS_DRIVERS = cdfs fs_rec ms np vfat
 
-#NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
-NET_DRIVERS = ndis tdi tcpip tditest wshtcpip afd
+# Kernel mode networking drivers
+# afd ndis tcpip tdi wshtcpip
+NET_DRIVERS = afd ndis tcpip tdi wshtcpip
 
-#NET_DEVICE_DRIVERS = ne2000
+# Kernel mode networking device drivers
+# ne2000
 NET_DEVICE_DRIVERS = ne2000
 
-#
-# storage drivers (don't change the order)
-#
-STORAGE_DRIVERS = class2 scsiport atapi disk cdrom
+# Kernel mode storage drivers
+# atapi cdrom class2 disk scsiport
+STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
+
+# System applications
+# autochk lsass services shell winlogon
+SYS_APPS = autochk services shell winlogon
+
+# Test applications
+# alive apc args atomtest bench consume count dump_shared_data
+# event file gditest hello isotest lpc mstest mutex nptest
+# pteb regtest sectest shm simple thread vmtest winhello
+TEST_APPS = alive apc args atomtest bench consume count dump_shared_data \
+            event file gditest hello isotest lpc mstest mutex nptest \
+            pteb regtest sectest shm simple thread vmtest winhello
 
 #
-# system applications (required for startup)
-#
-#SYS_APPS = lsass
-SYS_APPS = services shell winlogon autochk
-
-#readfile
-APPS = args hello test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest regtest alive mstest nptest \
-       objdir atomtest winhello partinfo mutex stats pice isotest sectest
-
-
-#
-# Wine userspace win32 subsystem plus other stuff. This will all be moved 
+# Wine userspace win32 subsystem plus other stuff. This will all be moved
 # to helper makefile down the road and there will be peace on earth.
-#  
+#
 
 WINE_OTHER = unicode
 
@@ -94,28 +106,28 @@ WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
              winver
 
 ifeq ($(ROS_BUILD_WINE),yes)
-WINE_MODULES = $(WINE_OTHER) $(WINE_TOOLS) $(WINE_DLLS) $(WINE_PROGS) 
+WINE_MODULES = $(WINE_OTHER) $(WINE_TOOLS) $(WINE_DLLS) $(WINE_PROGS)
 else
 WINE_MODULES =
 endif
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
+KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
 	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
 
 all: tools dk implib $(COMPONENTS) $(HALS) $(BUS) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_SERVICES) $(SYS_APPS) $(APPS) \
+     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(TEST_APPS) \
      $(WINE_MODULES)
 
 implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
         $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
-        $(KERNEL_SERVICES:%=%_implib) $(SUBSYS:%=%_implib) \
-        $(SYS_APPS:%=%_implib) $(APPS:%=%_implib) \
+        $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
+        $(SYS_APPS:%=%_implib) $(TEST_APPS:%=%_implib) \
         $(WINE_MODULES:%=%_implib)
 
 clean: dk_clean $(HALS:%=%_clean) \
        $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
-       $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean) \
+       $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
+       $(SYS_APPS:%=%_clean) $(TEST_APPS:%=%_clean) $(NET_APPS:%=%_clean) \
        $(WINE_MODULES:%=%_clean) clean_after tools_clean
 
 clean_after:
@@ -124,14 +136,14 @@ clean_after:
 install: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(DLLS:%=%_install) $(LOADERS:%=%_install) \
-         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
-         $(SYS_APPS:%=%_install) $(APPS:%=%_install) \
+         $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
+         $(SYS_APPS:%=%_install) $(TEST_APPS:%=%_install) \
          $(WINE_MODULES:%=%_install)
 
 dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
       $(HALS:%=%_dist) $(COMPONENTS:%=%_dist) $(BUS:%=%_dist) $(DLLS:%=%_dist) \
-      $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
-      $(SYS_APPS:%=%_dist) $(APPS:%=%_dist) $(NET_APPS:%=%_dist) \
+      $(LOADERS:%=%_dist) $(KERNEL_DRIVERS:%=%_dist) $(SUBSYS:%=%_dist) \
+      $(SYS_APPS:%=%_dist) $(TEST_APPS:%=%_dist) $(NET_APPS:%=%_dist) \
       $(WINE_MODULES:%=%_dist)
 
 .PHONY: all implib clean clean_before install dist
@@ -140,41 +152,41 @@ dist: $(TOOLS_PATH)/rcopy$(EXE_POSTFIX) dist_clean dist_dirs \
 # System Applications
 #
 $(SYS_APPS): %:
-	make -C apps/system/$*
+	make -C subsys/system/$*
 
 $(SYS_APPS:%=%_implib): %_implib:
-	make -C apps/system/$* implib
+	make -C subsys/system/$* implib
 
 $(SYS_APPS:%=%_clean): %_clean:
-	make -C apps/system/$* clean
+	make -C subsys/system/$* clean
 
 $(SYS_APPS:%=%_dist): %_dist:
-	make -C apps/system/$* dist
+	make -C subsys/system/$* dist
 
 $(SYS_APPS:%=%_install): %_install:
-	make -C apps/system/$* install
+	make -C subsys/system/$* install
 
 .PHONY: $(SYS_APPS) $(SYS_APPS:%=%_implib) $(SYS_APPS:%=%_clean) $(SYS_APPS:%=%_install) $(SYS_APPS:%=%_dist)
 
 #
 # Applications
 #
-$(APPS): %:
-	make -C apps/$*
+$(TEST_APPS): %:
+	make -C apps/tests/$*
 
-$(APPS:%=%_implib): %_implib:
-	make -C apps/$* implib
+$(TEST_APPS:%=%_implib): %_implib:
+	make -C apps/tests/$* implib
 
-$(APPS:%=%_clean): %_clean:
-	make -C apps/$* clean
+$(TEST_APPS:%=%_clean): %_clean:
+	make -C apps/tests/$* clean
 
-$(APPS:%=%_dist): %_dist:
-	make -C apps/$* dist
+$(TEST_APPS:%=%_dist): %_dist:
+	make -C apps/tests/$* dist
 
-$(APPS:%=%_install): %_install:
-	make -C apps/$* install
+$(TEST_APPS:%=%_install): %_install:
+	make -C apps/tests/$* install
 
-.PHONY: $(APPS) $(APPS:%=%_implib) $(APPS:%=%_clean) $(APPS:%=%_install) $(APPS:%=%_dist)
+.PHONY: $(TEST_APPS) $(TEST_APPS:%=%_implib) $(TEST_APPS:%=%_clean) $(TEST_APPS:%=%_install) $(TEST_APPS:%=%_dist)
 
 #
 # Other Wine Modules
@@ -353,40 +365,61 @@ iface_additional_dist:
 # Bus driver rules
 #
 $(BUS): %:
-	make -C services/bus/$*
+	make -C drivers/bus/$*
 
 $(BUS:%=%_implib): %_implib:
-	make -C services/bus/$* implib
+	make -C drivers/bus/$* implib
 
 $(BUS:%=%_clean): %_clean:
-	make -C services/bus/$* clean
+	make -C drivers/bus/$* clean
 
 $(BUS:%=%_install): %_install:
-	make -C services/bus/$* install
+	make -C drivers/bus/$* install
 
 $(BUS:%=%_dist): %_dist:
-	make -C services/bus/$* dist
+	make -C drivers/bus/$* dist
 
 .PHONY: $(BUS) $(BUS:%=%_implib) $(BUS:%=%_clean) \
         $(BUS:%=%_install) $(BUS:%=%_dist)
 
 #
+# Driver support libraries rules
+#
+$(DRIVERS_LIB): %:
+	make -C drivers/lib/$*
+
+$(DRIVERS_LIB:%=%_implib): %_implib:
+	make -C drivers/lib/$* implib
+
+$(DRIVERS_LIB:%=%_clean): %_clean:
+	make -C drivers/lib/$* clean
+
+$(DRIVERS_LIB:%=%_install): %_install:
+	make -C drivers/lib/$* install
+
+$(DRIVERS_LIB:%=%_dist): %_dist:
+	make -C drivers/lib/$* dist
+
+.PHONY: $(DRIVERS_LIB) $(DRIVERS_LIB:%=%_implib) $(DRIVERS_LIB:%=%_clean) \
+        $(DRIVERS_LIB:%=%_install) $(DRIVERS_LIB:%=%_dist)
+
+#
 # Device driver rules
 #
 $(DEVICE_DRIVERS): %:
-	make -C services/dd/$*
+	make -C drivers/dd/$*
 
 $(DEVICE_DRIVERS:%=%_implib): %_implib:
-	make -C services/dd/$* implib
+	make -C drivers/dd/$* implib
 
 $(DEVICE_DRIVERS:%=%_clean): %_clean:
-	make -C services/dd/$* clean
+	make -C drivers/dd/$* clean
 
 $(DEVICE_DRIVERS:%=%_install): %_install:
-	make -C services/dd/$* install
+	make -C drivers/dd/$* install
 
 $(DEVICE_DRIVERS:%=%_dist): %_dist:
-	make -C services/dd/$* dist
+	make -C drivers/dd/$* dist
 
 .PHONY: $(DEVICE_DRIVERS) $(DEVICE_DRIVERS:%=%_implib) $(DEVICE_DRIVERS:%=%_clean) \
         $(DEVICE_DRIVERS:%=%_install) $(DEVICE_DRIVERS:%=%_dist)
@@ -395,37 +428,37 @@ $(DEVICE_DRIVERS:%=%_dist): %_dist:
 # Input driver rules
 #
 $(INPUT_DRIVERS): %:
-	make -C services/input/$*
+	make -C drivers/input/$*
 
 $(INPUT_DRIVERS:%=%_implib): %_implib:
-	make -C services/input/$* implib
+	make -C drivers/input/$* implib
 
 $(INPUT_DRIVERS:%=%_clean): %_clean:
-	make -C services/input/$* clean
+	make -C drivers/input/$* clean
 
 $(INPUT_DRIVERS:%=%_install): %_install:
-	make -C services/input/$* install
+	make -C drivers/input/$* install
 
 $(INPUT_DRIVERS:%=%_dist): %_dist:
-	make -C services/input/$* dist
+	make -C drivers/input/$* dist
 
 .PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
         $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_dist)
 
 $(FS_DRIVERS): %:
-	make -C services/fs/$*
+	make -C drivers/fs/$*
 
 $(FS_DRIVERS:%=%_implib): %_implib:
-	make -C services/fs/$* implib
+	make -C drivers/fs/$* implib
 
 $(FS_DRIVERS:%=%_clean): %_clean:
-	make -C services/fs/$* clean
+	make -C drivers/fs/$* clean
 
 $(FS_DRIVERS:%=%_install): %_install:
-	make -C services/fs/$* install
+	make -C drivers/fs/$* install
 
 $(FS_DRIVERS:%=%_dist): %_dist:
-	make -C services/fs/$* dist
+	make -C drivers/fs/$* dist
 
 .PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_implib) $(FS_DRIVERS:%=%_clean) \
         $(FS_DRIVERS:%=%_install) $(FS_DRIVERS:%=%_dist)
@@ -434,37 +467,37 @@ $(FS_DRIVERS:%=%_dist): %_dist:
 # Network driver rules
 #
 $(NET_DRIVERS): %:
-	make -C services/net/$*
+	make -C drivers/net/$*
 
 $(NET_DRIVERS:%=%_implib): %_implib:
-	make -C services/net/$* implib
+	make -C drivers/net/$* implib
 
 $(NET_DRIVERS:%=%_clean): %_clean:
-	make -C services/net/$* clean
+	make -C drivers/net/$* clean
 
 $(NET_DRIVERS:%=%_install): %_install:
-	make -C services/net/$* install
+	make -C drivers/net/$* install
 
 $(NET_DRIVERS:%=%_dist): %_dist:
-	make -C services/net/$* dist
+	make -C drivers/net/$* dist
 
 .PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_implib) $(NET_DRIVERS:%=%_clean) \
         $(NET_DRIVERS:%=%_install) $(NET_DRIVERS:%=%_dist)
 
 $(NET_DEVICE_DRIVERS): %:
-	make -C services/net/dd/$*
+	make -C drivers/net/dd/$*
 
 $(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
-	make -C services/net/dd/$* implib
+	make -C drivers/net/dd/$* implib
 
 $(NET_DEVICE_DRIVERS:%=%_clean): %_clean:
-	make -C services/net/dd/$* clean
+	make -C drivers/net/dd/$* clean
 
 $(NET_DEVICE_DRIVERS:%=%_install): %_install:
-	make -C services/net/dd/$* install
+	make -C drivers/net/dd/$* install
 
 $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
-	make -C services/net/dd/$* dist
+	make -C drivers/net/dd/$* dist
 
 .PHONY: $(NET_DEVICE_DRIVERS) $(NET_DEVICE_DRIVERS:%=%_clean) $(NET_DEVICE_DRIVERS:%=%_implib) \
         $(NET_DEVICE_DRIVERS:%=%_install) $(NET_DEVICE_DRIVERS:%=%_dist)
@@ -473,19 +506,19 @@ $(NET_DEVICE_DRIVERS:%=%_dist): %_dist:
 # storage driver rules
 #
 $(STORAGE_DRIVERS): %:
-	make -C services/storage/$*
+	make -C drivers/storage/$*
 
 $(STORAGE_DRIVERS:%=%_implib): %_implib:
-	make -C services/storage/$* implib
+	make -C drivers/storage/$* implib
 
 $(STORAGE_DRIVERS:%=%_clean): %_clean:
-	make -C services/storage/$* clean
+	make -C drivers/storage/$* clean
 
 $(STORAGE_DRIVERS:%=%_install): %_install:
-	make -C services/storage/$* install
+	make -C drivers/storage/$* install
 
 $(STORAGE_DRIVERS:%=%_dist): %_dist:
-	make -C services/storage/$* dist
+	make -C drivers/storage/$* dist
 
 .PHONY: $(STORAGE_DRIVERS) $(STORAGE_DRIVERS:%=%_clean) \
         $(STORAGE_DRIVERS:%=%_install) $(STORAGE_DRIVERS:%=%_dist)
@@ -596,7 +629,7 @@ $(DLLS:%=%_dist): %_dist:
 .PHONY: $(DLLS) $(DLLS:%=%_implib) $(DLLS:%=%_clean) $(DLLS:%=%_install) $(DLLS:%=%_dist)
 
 #
-# Kernel Subsystems
+# Subsystem support modules
 #
 
 $(SUBSYS): %:
@@ -651,9 +684,10 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)/system32/drivers
 
 install_before:
+	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
 	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
 	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
-	$(CP) boot.hiv $(INSTALL_DIR)/system32/boot.hiv
+	$(CP) system.hiv $(INSTALL_DIR)/system32/system.hiv
 	$(CP) media/fonts/helb____.ttf $(INSTALL_DIR)/media/fonts/helb____.ttf
 	$(CP) media/fonts/timr____.ttf $(INSTALL_DIR)/media/fonts/timr____.ttf
 

@@ -60,6 +60,13 @@ DISTFILES = README FAQ INDEX ChangeLog configure Make*[a-z0-9] *.[ch] *.mms \
 
 all: example minigzip
 
+implib:
+
+install:
+	
+dist:
+
+
 test: all
 	@LD_LIBRARY_PATH=.:$(LD_LIBRARY_PATH) ; export LD_LIBRARY_PATH; \
 	echo hello world | ./minigzip | ./minigzip -d || \
@@ -92,7 +99,7 @@ example: example.o $(LIBS)
 minigzip: minigzip.o $(LIBS)
 	$(CC) $(CFLAGS) -o $@ minigzip.o $(LDFLAGS)
 
-install: $(LIBS)
+install1: $(LIBS)
 	-@if [ ! -d $(includedir)  ]; then mkdir $(includedir); fi
 	-@if [ ! -d $(libdir) ]; then mkdir $(libdir); fi
 	cp zlib.h zconf.h $(includedir)
@@ -134,7 +141,7 @@ zip:
 	zip -ul9 zlib$$v $(DISTFILES)
 	mv Makefile~ Makefile
 
-dist:
+dist1:
 	mv Makefile Makefile~; cp -p Makefile.in Makefile
 	rm -f test.c ztest*.c contrib/minizip/test.zip
 	d=zlib-`sed -n '/VERSION "/s/.*"\(.*\)".*/\1/p' < zlib.h`;\

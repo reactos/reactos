@@ -1,6 +1,6 @@
-# $Id: makefile,v 1.5 2001/08/21 20:13:01 chorns Exp $
+# $Id: makefile,v 1.6 2002/06/02 19:24:58 chorns Exp $
 
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
 
 TARGET_NORC = yes
 

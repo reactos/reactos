@@ -1,6 +1,6 @@
 #include <ddk/ntddk.h>
 #include <win32k/dc.h>
-#include "../../services/input/include/mouse.h"
+#include "../../drivers/input/include/mouse.h"
 #include "objects.h"
 
 BOOLEAN SafetySwitch = FALSE, SafetySwitch2 = FALSE, MouseEnabled = FALSE;

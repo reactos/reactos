@@ -1,7 +1,7 @@
 #
 #
 #
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
 
 include $(PATH_TO_TOP)/rules.mak
 

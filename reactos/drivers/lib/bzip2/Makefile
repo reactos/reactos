@@ -1,4 +1,4 @@
-PATH_TO_TOP = ../..
+PATH_TO_TOP = ../../..
 TARGET_TYPE = export_driver
 TARGET_NAME = unbzip2
 TARGET_NORC = yes
