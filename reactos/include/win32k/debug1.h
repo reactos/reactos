@@ -39,7 +39,7 @@
 #endif
 #endif
 
-#define DPRINT1(args...) DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+#define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 #define CHECKPOINT1 DbgPrint("%s:%d\n",__FILE__,__LINE__);
 
 
@@ -50,7 +50,7 @@
 #endif
 
 #ifndef NDEBUG
-#define DPRINT(args...) DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
+#define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 #define CHECKPOINT DbgPrint("%s:%d\n",__FILE__,__LINE__);
 #else
 #define DPRINT(args...)
