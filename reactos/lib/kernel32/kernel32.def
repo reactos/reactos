@@ -60,7 +60,8 @@ CloseHandle = CloseHandle@4
 ;CmdBatNotification@4
 ;CommConfigDialogA@12
 ;CommConfigDialogW@12
-;CompareFileTime@8
+CompareFileTime@8
+CompareFileTime = CompareFileTime@8
 ;CompareStringA@24
 ;CompareStringA = CompareStringA@24
 ;CompareStringW@24
@@ -131,7 +132,8 @@ DeleteFileW = DeleteFileW@4
 ;DeviceIoControl@32
 ;DisableThreadLibraryCalls@4
 ;DisconnectNamedPipe@4
-;DosDateTimeToFileTime@12
+DosDateTimeToFileTime@12
+DosDateTimeToFileTime = DosDateTimeToFileTime@12
 ;DuplicateConsoleHandle@16
 DuplicateHandle@28
 DuplicateHandle = DuplicateHandle@28
@@ -168,7 +170,8 @@ ExitProcess = ExitProcess@4
 ;FatalAppExitA@8
 ;FatalAppExitW@8
 ;FatalExit@4
-;FileTimeToDosDateTime@12
+FileTimeToDosDateTime@12
+FileTimeToDosDateTime = FileTimeToDosDateTime@12
 FileTimeToLocalFileTime@8
 FileTimeToLocalFileTime = FileTimeToLocalFileTime@8
 FileTimeToSystemTime@8
@@ -403,7 +406,8 @@ GetStdHandle = GetStdHandle@4
 ;GetSystemDirectoryW@8
 ;GetSystemInfo@4
 ;GetSystemPowerStatus@4
-;GetSystemTime@4
+GetSystemTime@4
+GetSystemTime = GetSystemTime@4
 ;GetSystemTimeAdjustment@12
 GetSystemTimeAsFileTime@4
 GetSystemTimeAsFileTime = GetSystemTimeAsFileTime@4
@@ -695,7 +699,8 @@ SetLocalTime = SetLocalTime@4
 SetStdHandle@8
 SetStdHandle = SetStdHandle@8
 ;SetSystemPowerState@8
-;SetSystemTime@4
+SetSystemTime@4
+SetSystemTime = SetSystemTime@4
 ;SetSystemTimeAdjustment@8
 ;SetTapeParameters@12
 ;SetTapePosition@24
@@ -718,8 +723,10 @@ Sleep@4
 Sleep = Sleep@4
 ;SleepEx@8
 ;SuspendThread@4
-;SystemTimeToFileTime@8
-;SystemTimeToTzSpecificLocalTime@12
+SystemTimeToFileTime@8
+SystemTimeToFileTime = SystemTimeToFileTime@8
+SystemTimeToTzSpecificLocalTime@12
+SystemTimeToTzSpecificLocalTime = SystemTimeToTzSpecificLocalTime@12
 TerminateProcess@8
 TerminateProcess = TerminateProcess@8
 ;TerminateThread@8

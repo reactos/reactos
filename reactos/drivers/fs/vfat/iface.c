@@ -1771,11 +1771,15 @@ NTSTATUS FsdGetBasicInformation(PFILE_OBJECT FileObject,
                                 PFILE_BASIC_INFORMATION BasicInfo)
 {
     DPRINT("FsdGetBasicInformation()\n");
-    
-//    BasicInfo->CreationTime =
-//    BasicInfo->LastAccessTime =
-//    BasicInfo->LastWriteTime =
-//    BasicInfo->ChangeTime =
+
+    FsdDosDateTimeToFileTime(FCB->entry.CreationDate,FCB->entry.CreationTime,
+        &BasicInfo->CreationTime);
+    FsdDosDateTimeToFileTime(FCB->entry.AccessDate,0,
+        &BasicInfo->LastAccessTime);
+    FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,FCB->entry.UpdateTime,
+        &BasicInfo->LastWriteTime);
+    FsdDosDateTimeToFileTime(FCB->entry.UpdateDate,FCB->entry.UpdateTime,
+        &BasicInfo->ChangeTime);
 
     BasicInfo->FileAttributes = FCB->entry.Attrib;
 

@@ -131,6 +131,21 @@ typedef struct
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 
 
+typedef struct __DOSTIME
+{
+   WORD	Second:5; 
+   WORD	Minute:6;
+   WORD Hour:5;
+} DOSTIME, *PDOSTIME;
+
+typedef struct __DOSDATE
+{
+   WORD	Day:5; 
+   WORD	Month:4;
+   WORD Year:5;
+} DOSDATE, *PDOSDATE;
+
+
 extern PVfatFCB pFirstFcb;
 
 // functions called by i/o manager :
@@ -154,6 +169,9 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
              IN ULONG   DiskSector,
                          IN ULONG        SectorCount,
 			 IN UCHAR*	Buffer);
+
+//internal functions in dir.c :
+BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime);
 
 //internal functions in iface.c :
 NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,

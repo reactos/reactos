@@ -54,6 +54,8 @@ RtlInitUnicodeString
 RtlLargeIntegerAdd
 RtlLargeIntegerGreaterThan
 RtlLargeIntegerShiftRight
+RtlTimeFieldsToTime
+RtlTimeToTimeFields
 RtlZeroMemory
 ZwCreateDirectoryObject@12
 isdigit

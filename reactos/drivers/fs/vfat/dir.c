@@ -13,55 +13,37 @@
 #include <ddk/ntddk.h>
 #include <ddk/cctypes.h>
 #include <ddk/zwtypes.h>
+//#include <ddk/rtl.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 #include "vfat.h"
 
-//days from 1st January
-static const int MonthsDF1[2][12] =
-{
-    { 0,31, 59, 90,120,151,181,212,243,273,304,334 },
-    { 0,31, 60, 91,121,152,182,213,244,274,305,335 }
-};
-static __inline int IsLeapYear(int Year)
-{
-  return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
-}
+
 // function like DosDateTimeToFileTime
-BOOL fsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
+BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime)
 {
- WORD Day,Month,Year,Second,Minute,Hour;
- long long int *pTime=(long long int *)FileTime;
- long long int mult;
-  Day=wDosDate&0x001f;
-  Month= (wDosDate&0x00e0)>>5;//1=January
-  Year= ((wDosDate&0xff00)>>8)+1980;
-  Second=(wDosTime&0x001f)<<1;
-  Minute=(wDosTime&0x07e0)>>5;
-  Hour=  (wDosTime&0xf100)>>11;
-  mult=10000000;
-  *pTime=Second*mult;
-  mult *=60;
-  *pTime +=Minute*mult;
-  mult *=60;
-  *pTime +=Hour*mult;
-  mult *=24;
-  *pTime +=(Day-1)*mult;
-  if((Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0))
-    *pTime += MonthsDF1[1][Month-1];
-  else
-    *pTime += MonthsDF1[0][Month-1];
-  *pTime +=(Year-1601)*mult*365
-           +(Year-1601)/4
-           -(Year-1601)/100
-           +(Year-1601)/400;
+  PDOSTIME pdtime = (PDOSTIME)&wDosTime;
+  PDOSDATE pddate = (PDOSDATE)&wDosDate;
+  TIME_FIELDS TimeFields;
+
+  if (FileTime == NULL)
+    return FALSE;
+
+  TimeFields.Milliseconds = 0;
+  TimeFields.Second = pdtime->Second;
+  TimeFields.Minute = pdtime->Minute;
+  TimeFields.Hour = pdtime->Hour;
+
+  TimeFields.Day = pddate->Day;
+  TimeFields.Month = pddate->Month;
+  TimeFields.Year = 1980 + pddate->Year;
+
+  RtlTimeFieldsToTime(&TimeFields, (PLARGE_INTEGER)FileTime);
+
   return TRUE;
 }
-#define DosDateTimeToFileTime fsdDosDateTimeToFileTime
-
-
 
 
 unsigned long vfat_wstrlen(PWSTR s)
@@ -108,13 +90,13 @@ NTSTATUS FsdGetFileDirectoryInformation(PVfatFCB pFcb,
   memcpy(pInfo->FileName,pFcb->ObjectName
      ,sizeof(WCHAR)*(pInfo->FileNameLength));
 //      pInfo->FileIndex=;
-  DosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
+  FsdDosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
       ,&pInfo->CreationTime);
-  DosDateTimeToFileTime(pFcb->entry.AccessDate,0
+  FsdDosDateTimeToFileTime(pFcb->entry.AccessDate,0
       ,&pInfo->LastAccessTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->LastWriteTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->ChangeTime);
   pInfo->EndOfFile=RtlConvertUlongToLargeInteger(pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */
@@ -141,13 +123,13 @@ NTSTATUS FsdGetFileFullDirectoryInformation(PVfatFCB pFcb,
   memcpy(pInfo->FileName,pFcb->ObjectName
      ,sizeof(WCHAR)*(pInfo->FileNameLength));
 //      pInfo->FileIndex=;
-  DosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
+  FsdDosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
       ,&pInfo->CreationTime);
-  DosDateTimeToFileTime(pFcb->entry.AccessDate,0
+  FsdDosDateTimeToFileTime(pFcb->entry.AccessDate,0
       ,&pInfo->LastAccessTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->LastWriteTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->ChangeTime);
   pInfo->EndOfFile=RtlConvertUlongToLargeInteger(pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */
@@ -175,13 +157,13 @@ NTSTATUS FsdGetFileBothInformation(PVfatFCB pFcb,
   memcpy(pInfo->FileName,pFcb->ObjectName
      ,sizeof(WCHAR)*(pInfo->FileNameLength));
 //      pInfo->FileIndex=;
-  DosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
+  FsdDosDateTimeToFileTime(pFcb->entry.CreationDate,pFcb->entry.CreationTime
       ,&pInfo->CreationTime);
-  DosDateTimeToFileTime(pFcb->entry.AccessDate,0
+  FsdDosDateTimeToFileTime(pFcb->entry.AccessDate,0
       ,&pInfo->LastAccessTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->LastWriteTime);
-  DosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
+  FsdDosDateTimeToFileTime(pFcb->entry.UpdateDate,pFcb->entry.UpdateTime
       ,&pInfo->ChangeTime);
   pInfo->EndOfFile=RtlConvertUlongToLargeInteger(pFcb->entry.FileSize);
   /* Make allocsize a rounded up multiple of BytesPerCluster */

@@ -4,7 +4,7 @@
  * FILE:            lib/kernel32/misc/time.c
  * PURPOSE:         Time conversion functions
  * PROGRAMMER:      Boudewijn ( ariadne@xs4all.nl)
-		    DOSDATE and DOSTIME structures from Onno Hovers
+ *                  DOSDATE and DOSTIME structures from Onno Hovers
  * UPDATE HISTORY:
  *                  Created 19/01/99
  */
@@ -12,19 +12,24 @@
 #include <ddk/ntddk.h>
 #include <string.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
+
 typedef struct __DOSTIME
 {
-   WORD	Second:5; 
+   WORD	Second:5;
    WORD	Minute:6;
    WORD Hour:5;
 } DOSTIME, *PDOSTIME;
 
 typedef struct __DOSDATE
 {
-   WORD	Day:5; 
+   WORD	Day:5;
    WORD	Month:4;
    WORD Year:5;
 } DOSDATE, *PDOSDATE;
+
 
 #define NSPERSEC	10000000
 
@@ -38,18 +43,40 @@ typedef struct __DOSDATE
 #define MILLENIUM	(100*CENTURY)
 
 
-#define LISECOND RtlEnlargedUnsignedMultiply(SECOND,NSPERSEC)
-#define LIMINUTE RtlEnlargedUnsignedMultiply(MINUTE,NSPERSEC)
-#define LIHOUR RtlEnlargedUnsignedMultiply(HOUR,NSPERSEC)
-#define LIDAY RtlEnlargedUnsignedMultiply(DAY,NSPERSEC)
-#define LIYEAR RtlEnlargedUnsignedMultiply(YEAR,NSPERSEC)
-#define LIFOURYEAR RtlEnlargedUnsignedMultiply(FOURYEAR,NSPERSEC)
-#define LICENTURY RtlEnlargedUnsignedMultiply(CENTURY,NSPERSEC) 
-#define LIMILLENIUM RtlEnlargedUnsignedMultiply(CENTURY,10*NSPERSEC)
+#define TICKSPERMIN        600000000
+#define TICKSPERSEC        10000000
+#define TICKSPERMSEC       10000
+#define SECSPERDAY         86400
+#define SECSPERHOUR        3600
+#define SECSPERMIN         60
+#define MINSPERHOUR        60
+#define HOURSPERDAY        24
+#define EPOCHWEEKDAY       0
+#define DAYSPERWEEK        7
+#define EPOCHYEAR          1601
+#define DAYSPERNORMALYEAR  365
+#define DAYSPERLEAPYEAR    366
+#define MONSPERYEAR        12
 
+static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};
+static const int MonthLengths[2][MONSPERYEAR] =
+{
+	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
+	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
+};
 
+static __inline int IsLeapYear(int Year)
+{
+  return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
+}
 
-
+static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
+                                         CSHORT *CarryField,
+                                         int Modulus)
+{
+  *FieldToNormalize = (CSHORT) (*FieldToNormalize - Modulus);
+  *CarryField = (CSHORT) (*CarryField + 1);
+}
 
 
 WINBOOL
@@ -60,7 +87,6 @@ FileTimeToDosDateTime(
 		      LPWORD lpFatTime
 		      )
 {
-   
    PDOSTIME  pdtime=(PDOSTIME) lpFatTime;
    PDOSDATE  pddate=(PDOSDATE) lpFatDate;
    SYSTEMTIME SystemTime;
@@ -83,12 +109,9 @@ FileTimeToDosDateTime(
    pdtime->Minute = SystemTime.wMinute;
    pdtime->Hour = SystemTime.wHour;
 
-
    pddate->Day = SystemTime.wDay;
    pddate->Month = SystemTime.wMonth;
    pddate->Year = SystemTime.wYear - 1980;
-
-
 
    return TRUE; 
 }
@@ -101,7 +124,6 @@ DosDateTimeToFileTime(
 		      LPFILETIME lpFileTime
 		      )
 {
-   
    PDOSTIME  pdtime = (PDOSTIME) &wFatTime;
    PDOSDATE  pddate = (PDOSDATE) &wFatDate;
    SYSTEMTIME SystemTime;
@@ -109,13 +131,10 @@ DosDateTimeToFileTime(
    if ( lpFileTime == NULL )
 		return FALSE;
 
- 
-
    SystemTime.wMilliseconds = 0;
    SystemTime.wSecond = pdtime->Second;
    SystemTime.wMinute = pdtime->Minute;
    SystemTime.wHour = pdtime->Hour;
-
 
    SystemTime.wDay = pddate->Day;
    SystemTime.wMonth = pddate->Month;
@@ -133,36 +152,24 @@ CompareFileTime(
 		CONST FILETIME *lpFileTime2
 		)
 {
-   
   if ( lpFileTime1 == NULL )
 	return 0;
   if ( lpFileTime2 == NULL )
 	return 0;
- /*
-  if (lpFileTime1.HighPart > lpFileTime2.HighPart)
+
+  if (*((PLONGLONG)lpFileTime1) > *((PLONGLONG)lpFileTime2))
 	return 1;
-  else if (lpFileTime1.HighPart < lpFileTime2.HighPart)
-   	return -1;
-  else if (lpFileTime1.LowPart > lpFileTime2.LowPart)
-	return 1;
-  else if (lpFileTime1.LowPart < lpFileTime2.LowPart)
-   	return -1;
-  else
-	return 0;
- 
- */
+  else if (*((PLONGLONG)lpFileTime1) < *((PLONGLONG)lpFileTime2))
+	return -1;
+
+  return 0;
 }
 
 VOID
 STDCALL 
 GetSystemTimeAsFileTime(PFILETIME lpFileTime)
 {
-	NTSTATUS errCode;
-
-	errCode = NtQuerySystemTime (
-		(TIME *)lpFileTime
-	);
-	return;
+   NtQuerySystemTime ((TIME *)lpFileTime);
 }
 
 WINBOOL 
@@ -173,7 +180,7 @@ SystemTimeToFileTime(
    )
 
 {
-	LARGE_INTEGER FileTime;
+        LARGE_INTEGER FileTime;
 	LARGE_INTEGER Year;
 	LARGE_INTEGER Month;
 	LARGE_INTEGER Day;
@@ -186,7 +193,7 @@ SystemTimeToFileTime(
 
 	if ( (lpSystemTime->wYear % 4 == 0 && lpSystemTime->wYear % 100 != 0) || lpSystemTime->wYear % 400 == 0)
 		LeapDay = 1;
-  	else
+	else
 		LeapDay = 0;
 
 	
@@ -249,142 +256,70 @@ FileTimeToSystemTime(
 		     LPSYSTEMTIME lpSystemTime
 		     )
 {
+  const int *Months;
+  int LeapSecondCorrections, SecondsInDay, CurYear;
+  int LeapYear, CurMonth;
+  long int Days;
+  long long int Time = *((long long int*)lpFileTime);
 
+    /* Extract millisecond from time and convert time into seconds */
+  lpSystemTime->wMilliseconds = (WORD)((Time % TICKSPERSEC) / TICKSPERMSEC);
+  Time = Time / TICKSPERSEC;
 
-   LARGE_INTEGER FileTime;
+    /* FIXME: Compute the number of leap second corrections here */
+  LeapSecondCorrections = 0;
 
-   LARGE_INTEGER dwMillenium;
-   LARGE_INTEGER dwRemMillenium; 
-              
-   LARGE_INTEGER dwCentury;
-   LARGE_INTEGER dwRemCentury;
-              
-   LARGE_INTEGER dwFourYear;
-   LARGE_INTEGER dwRemFourYear;
-              
-   LARGE_INTEGER dwYear;
-   LARGE_INTEGER dwRemYear;
-              
-   LARGE_INTEGER dwDay;
-   LARGE_INTEGER dwRemDay;
-              
-   LARGE_INTEGER dwHour;
-   LARGE_INTEGER dwRemHour; 
-              
-   LARGE_INTEGER dwMinute;
-   LARGE_INTEGER dwRemMinute;
-              
-   LARGE_INTEGER dwSecond;
-   LARGE_INTEGER dwRemSecond;
+    /* Split the time into days and seconds within the day */
+  Days = Time / SECSPERDAY;
+  SecondsInDay = Time % SECSPERDAY;
 
-   LARGE_INTEGER dwDayOfWeek;
+    /* Adjust the values for GMT and leap seconds */
+  SecondsInDay += LeapSecondCorrections;
+  while (SecondsInDay < 0) 
+    {
+      SecondsInDay += SECSPERDAY;
+      Days--;
+    }
+  while (SecondsInDay >= SECSPERDAY) 
+    {
+      SecondsInDay -= SECSPERDAY;
+      Days++;
+    }
 
+    /* compute time of day */
+  lpSystemTime->wHour = (WORD) (SecondsInDay / SECSPERHOUR);
+  SecondsInDay = SecondsInDay % SECSPERHOUR;
+  lpSystemTime->wMinute = (WORD) (SecondsInDay / SECSPERMIN);
+  lpSystemTime->wSecond = (WORD) (SecondsInDay % SECSPERMIN);
 
-   DWORD LeapDay = 0;
+    /* FIXME: handle the possibility that we are on a leap second (i.e. Second = 60) */
 
-   
-   memcpy(&FileTime,lpFileTime,sizeof(FILETIME));
-   
-   
-   dwMillenium = RtlLargeIntegerDivide(FileTime,LIMILLENIUM,&dwRemMillenium);
-   dwCentury = RtlLargeIntegerDivide(dwRemMillenium,LICENTURY,&dwRemCentury);
-   dwFourYear = RtlLargeIntegerDivide(dwRemCentury,LIFOURYEAR,&dwRemFourYear);
-   dwYear = RtlLargeIntegerDivide(dwRemFourYear,LIYEAR,&dwRemYear);
-   dwDay = RtlLargeIntegerDivide(dwRemYear,LIDAY,&dwRemDay);
-   dwHour = RtlLargeIntegerDivide(dwRemDay,LIHOUR,&dwRemHour);
-   dwMinute = RtlLargeIntegerDivide(dwRemHour,LIMINUTE,&dwRemMinute);
-   dwSecond = RtlLargeIntegerDivide(dwRemMinute,LISECOND,&dwRemSecond);
-   
-   lpSystemTime->wHour=   (WORD)(dwHour.u.LowPart);
-   lpSystemTime->wMinute= (WORD)(dwMinute.u.LowPart); 
-   lpSystemTime->wSecond= (WORD)(dwSecond.u.LowPart); 
-   lpSystemTime->wMilliseconds = (WORD)(dwRemSecond.u.LowPart/10000);
-  
+    /* compute day of week */
+  lpSystemTime->wDayOfWeek = (WORD) ((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
 
-   if ( lpSystemTime->wSecond > 60 ) {
-	lpSystemTime->wSecond -= 60;
-	lpSystemTime->wMinute ++; 
-   }
+    /* compute year */
+  CurYear = EPOCHYEAR;
+    /* FIXME: handle calendar modifications */
+  while (1)
+    {
+      LeapYear = IsLeapYear(CurYear);
+      if (Days < (long) YearLengths[LeapYear])
+        {
+          break;
+        }
+      CurYear++;
+      Days = Days - (long) YearLengths[LeapYear];
+    }
+  lpSystemTime->wYear = (WORD) CurYear;
 
-   if ( lpSystemTime->wMinute > 60 ) {
-	lpSystemTime->wMinute -= 60;
-	lpSystemTime->wHour ++; 
-   }
+    /* Compute month of year */
+  Months = MonthLengths[LeapYear];
+  for (CurMonth = 0; Days >= (long) Months[CurMonth]; CurMonth++)
+    Days = Days - (long) Months[CurMonth];
+  lpSystemTime->wMonth = (WORD) (CurMonth + 1);
+  lpSystemTime->wDay = (WORD) (Days + 1);
 
-   if (lpSystemTime->wHour > 24 ) {
-	lpSystemTime->wHour-= 24;
-        dwDay.u.LowPart = dwDay.u.LowPart + 1; 
-   }
- 
-  //FIXME since 1972 some years have a leap second [ aprox 15 out of 20 ]
-
-  // if leap year  
-  lpSystemTime->wYear = 1601 + 1000* (LONG)dwMillenium.u.LowPart + 100 * (LONG)dwCentury.u.LowPart + 4 * (LONG)dwFourYear.u.LowPart + (LONG)dwYear.u.LowPart; 
-
-  if ( (lpSystemTime->wYear % 4 == 0 && lpSystemTime->wYear % 100 != 0) || lpSystemTime->wYear % 400 == 0)
-	LeapDay = 1;
-  else
-	LeapDay = 0;
-
-  
-
-  if ( dwDay.u.LowPart >= 0 && dwDay.u.LowPart < 31 ) {
-	lpSystemTime->wMonth = 1;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1;
-  }
-  else if ( dwDay.u.LowPart >= 31 && dwDay.u.LowPart < ( 59 + LeapDay )) {
-	lpSystemTime->wMonth = 2;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - 31;
-  }  
-  else if ( dwDay.u.LowPart >= ( 59 + LeapDay ) && dwDay.u.LowPart < ( 90 + LeapDay ) ) {
-	lpSystemTime->wMonth = 3;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 59 + LeapDay);
-  }  
-  else if ( dwDay.u.LowPart >= 90+ LeapDay && dwDay.u.LowPart < 120 + LeapDay) {
-	lpSystemTime->wMonth = 4;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - (31 + LeapDay );
-  }  
-  else if ( dwDay.u.LowPart >= 120 + LeapDay && dwDay.u.LowPart < 151 + LeapDay ) {
-	lpSystemTime->wMonth = 5;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - (120 + LeapDay);
-  }  
-  else if ( dwDay.u.LowPart >= ( 151 + LeapDay) && dwDay.u.LowPart < ( 181 + LeapDay ) ) {
-	lpSystemTime->wMonth = 6;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 151 + LeapDay );
-  }  
-  else if ( dwDay.u.LowPart >= ( 181 + LeapDay ) && dwDay.u.LowPart <  ( 212 + LeapDay ) ) {
-	lpSystemTime->wMonth = 7;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 181 + LeapDay );
-  }  
-   else if ( dwDay.u.LowPart >= ( 212 + LeapDay ) && dwDay.u.LowPart < ( 243 + LeapDay ) ) {
-	lpSystemTime->wMonth = 8;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 -  (212 + LeapDay );
-  }  
-  else if ( dwDay.u.LowPart >= ( 243+ LeapDay ) && dwDay.u.LowPart < ( 273 + LeapDay ) ) {
-	lpSystemTime->wMonth = 9;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 243 + LeapDay );
-  }  
-  else if ( dwDay.u.LowPart >= ( 273 + LeapDay ) && dwDay.u.LowPart < ( 304 + LeapDay ) ) {
-	lpSystemTime->wMonth = 10;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 273 + LeapDay);
-  }  
-  else if ( dwDay.u.LowPart >= ( 304 + LeapDay ) && dwDay.u.LowPart < ( 334 + LeapDay ) ) {
-	lpSystemTime->wMonth = 11;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 304 + LeapDay );
-  }  
-  else if ( dwDay.u.LowPart >= ( 334 + LeapDay ) && dwDay.u.LowPart < ( 365 + LeapDay )) {
-	lpSystemTime->wMonth = 12;
-        lpSystemTime->wDay = dwDay.u.LowPart + 1 - ( 334 + LeapDay );
-  }  
- 
-
-   dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
-   lpSystemTime->wDayOfWeek = 1 + dwDayOfWeek.u.LowPart % 7;
-
-  
-
-
-   return TRUE;	
+  return TRUE;
 }
 
 
@@ -395,9 +330,10 @@ FileTimeToLocalFileTime(
 			LPFILETIME lpLocalFileTime
 			)
 {
-   // memcpy(lpLocalFileTime,lpFileTime,sizeof(FILETIME));
-    
-    return TRUE;
+  // FIXME: include time bias
+  *((PLONGLONG)lpLocalFileTime) = *((PLONGLONG)lpFileTime);
+
+  return TRUE;
 }
 
 WINBOOL
@@ -407,8 +343,10 @@ LocalFileTimeToFileTime(
 			LPFILETIME lpFileTime
 			)
 {
- 
-    return TRUE;
+  // FIXME: include time bias
+  *((PLONGLONG)lpFileTime) = *((PLONGLONG)lpLocalFileTime);
+
+  return TRUE;
 }
 
 VOID
@@ -417,8 +355,12 @@ GetLocalTime(
 	     LPSYSTEMTIME lpSystemTime
 	     )
 {
-  GetSystemTime(lpSystemTime);
-  return;
+  FILETIME FileTime;
+  FILETIME LocalFileTime;
+
+  NtQuerySystemTime ((TIME*)&FileTime);
+  FileTimeToLocalFileTime (&FileTime, &LocalFileTime);
+  FileTimeToSystemTime (&LocalFileTime, lpSystemTime);
 }
 
 VOID
@@ -428,9 +370,9 @@ GetSystemTime(
 	      )
 {
   FILETIME FileTime;
-  GetSystemTimeAsFileTime(&FileTime);
-  FileTimeToSystemTime(&FileTime,lpSystemTime);
-  return;
+
+  NtQuerySystemTime ((TIME*)&FileTime);
+  FileTimeToSystemTime (&FileTime, lpSystemTime);
 }
 
 WINBOOL
@@ -439,24 +381,34 @@ SetLocalTime(
 	     CONST SYSTEMTIME *lpSystemTime
 	     )
 {
-   return SetSystemTime(lpSystemTime);
+  FILETIME LocalFileTime;
+  LARGE_INTEGER FileTime;
+  NTSTATUS errCode;
+
+  SystemTimeToFileTime (lpSystemTime, &LocalFileTime);
+  LocalFileTimeToFileTime (&LocalFileTime, (FILETIME *)&FileTime);
+  errCode = NtSetSystemTime (&FileTime, &FileTime);
+  if (!NT_SUCCESS(errCode))
+    return FALSE;
+  return TRUE;
 }
+
 WINBOOL
 STDCALL
 SetSystemTime(
 	      CONST SYSTEMTIME *lpSystemTime
 	      )
 {
-  	NTSTATUS errCode;
-	LARGE_INTEGER NewSystemTime;
-        
-	SystemTimeToFileTime(lpSystemTime, (FILETIME *)&NewSystemTime);
-	errCode = NtSetSystemTime (&NewSystemTime,&NewSystemTime);
-	if ( !NT_SUCCESS(errCode) )
-		return FALSE;
-	return TRUE;
+  LARGE_INTEGER NewSystemTime;
+  NTSTATUS errCode;
 
-} 
+  SystemTimeToFileTime (lpSystemTime, (PFILETIME)&NewSystemTime);
+  errCode = NtSetSystemTime (&NewSystemTime, &NewSystemTime);
+  if (!NT_SUCCESS(errCode))
+    return FALSE;
+  return TRUE;
+}
+
 /*
 typedef struct _TIME_ZONE_INFORMATION { // tzi 
     LONG       Bias; 
@@ -483,16 +435,85 @@ GetTimeZoneInformation(
   return TIME_ZONE_ID_UNKNOWN;
 }
 
+BOOL
+STDCALL
+SetTimeZoneInformation(
+                       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
+		       )
+{
+  
+  return FALSE;
+}
+
 DWORD STDCALL GetCurrentTime(VOID)
 {
-	return GetTickCount();
+  return GetTickCount ();
 }
 
 DWORD
 STDCALL
 GetTickCount(VOID)
 {
-	ULONG UpTime;
-	NtGetTickCount(&UpTime);
-	return UpTime;
+  ULONG UpTime;
+  NtGetTickCount (&UpTime);
+  return UpTime;
+}
+
+WINBOOL STDCALL
+SystemTimeToTzSpecificLocalTime(
+                                LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
+                                LPSYSTEMTIME lpUniversalTime,
+                                LPSYSTEMTIME lpLocalTime
+                               )
+{
+  TIME_ZONE_INFORMATION TimeZoneInformation;
+  LPTIME_ZONE_INFORMATION lpTzInfo;
+  LARGE_INTEGER FileTime;
+
+  if (!lpTimeZoneInformation)
+  {
+    GetTimeZoneInformation (&TimeZoneInformation);
+    lpTzInfo = &TimeZoneInformation;
+  }
+  else
+    lpTzInfo = lpTimeZoneInformation;
+
+  if (!lpUniversalTime)
+    return FALSE;
+
+  if (!lpLocalTime)
+    return FALSE;
+
+  SystemTimeToFileTime (lpUniversalTime, (PFILETIME)&FileTime);
+  FileTime.QuadPart -= (lpTzInfo->Bias * TICKSPERMIN);
+  FileTimeToSystemTime ((PFILETIME)&FileTime, lpLocalTime);
+
+  return TRUE;
+}
+
+WINBOOL
+STDCALL
+GetSystemTimeAdjustment(
+                        PDWORD lpTimeAdjustment,
+                        PDWORD lpTimeIncrement,
+                        PBOOL  lpTimeAdjustmentDisabled
+                       )
+{
+  // FIXME: Preliminary default settings.
+  *lpTimeAdjustment = 0;
+  *lpTimeIncrement = 0;
+  *lpTimeAdjustmentDisabled = TRUE;
+
+  return TRUE;
+}
+
+WINBOOL
+STDCALL
+SetSystemTimeAdjustment(
+                        DWORD dwTimeAdjustment,
+                        BOOL  bTimeAdjustmentDisabled
+                       )
+{
+
+  return TRUE;
 }
