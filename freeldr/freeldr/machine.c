@@ -1,4 +1,4 @@
-/* $Id: machine.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: machine.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
  *
  *  FreeLoader
  *
@@ -24,6 +24,7 @@
 #undef MachPutChar
 #undef MachPutCharAttrAtLoc
 #undef MachGetMemoryMap
+#undef MachDiskReadLogicalSectors
 
 MACHVTBL MachVtbl;
 
@@ -33,19 +34,28 @@ MachClearScreenAttr(U8 Attr)
   MachVtbl.ClearScreenAttr(Attr);
 }
 
-void MachPutChar(int Ch)
+void
+MachPutChar(int Ch)
 {
   MachVtbl.PutChar(Ch);
 }
 
-void MachPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y)
+void
+MachPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y)
 {
   MachVtbl.PutCharAttrAtLoc(Ch, Attr, X, Y);
 }
 
-U32 MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
+U32
+MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
 {
   return MachVtbl.GetMemoryMap(BiosMemoryMap, MaxMemoryMapSize);
+}
+
+BOOL
+MachDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer)
+{
+  return MachVtbl.DiskReadLogicalSectors(DriveNumber, SectorNumber, SectorCount, Buffer);
 }
 
 /* EOF */

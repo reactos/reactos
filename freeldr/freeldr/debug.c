@@ -76,7 +76,6 @@ VOID DebugInit(VOID)
 
 VOID DebugPrintChar(UCHAR Character)
 {
-extern VOID XboxVideoPutChar(char c);
 	if (Character == '\n')
 	{
 		DebugStartOfLine = TRUE;

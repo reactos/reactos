@@ -23,6 +23,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <arch.h>
+#include <machine.h>
 
 
 BOOL DiskGetActivePartitionEntry(U32 DriveNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry)
@@ -201,7 +202,7 @@ BOOL DiskReadBootRecord(U32 DriveNumber, U64 LogicalSectorNumber, PMASTER_BOOT_R
 #endif
 
 	// Read master boot record
-	if (!DiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))
+	if (!MachDiskReadLogicalSectors(DriveNumber, LogicalSectorNumber, 1, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}

@@ -27,6 +27,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>
+#include <machine.h>
 
 
 GEOMETRY			Ext2DiskGeometry;				// Ext2 file system disk geometry
@@ -563,7 +564,7 @@ BOOL Ext2ReadVolumeSectors(U8 DriveNumber, U64 SectorNumber, U64 SectorCount, PV
 	//{
 	//	return FALSE;
 	//}
-	//ReturnValue = DiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER);
+	//ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + Ext2VolumeStartSector, SectorCount, (PVOID)DISKREADBUFFER);
 	//RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
 	//return ReturnValue;
 
@@ -601,7 +602,7 @@ BOOL Ext2ReadSuperBlock(VOID)
 
 	// Now try to read the super block
 	// If this fails then abort
-	if (!DiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, (PVOID)DISKREADBUFFER))
+	if (!MachDiskReadLogicalSectors(Ext2DriveNumber, Ext2VolumeStartSector, 8, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}

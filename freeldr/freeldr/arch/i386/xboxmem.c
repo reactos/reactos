@@ -1,4 +1,4 @@
-/* $Id: xboxmem.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: xboxmem.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
  *
  *  FreeLoader
  *
@@ -106,18 +106,6 @@ XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize)
     }
 
   return EntryCount;
-}
-
-unsigned
-XboxMemGetInstalledMemoryMb(VOID)
-{
-  if (0 == InstalledMemoryMb)
-    {
-      /* Hmm, seems we're not initialized yet */
-      XboxMemInit();
-    }
-
-  return InstalledMemoryMb;
 }
 
 PVOID

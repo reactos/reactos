@@ -1,4 +1,4 @@
-/* $Id: machine.h,v 1.1 2004/11/08 22:02:48 gvg Exp $
+/* $Id: machine.h,v 1.2 2004/11/09 23:36:20 gvg Exp $
  *
  *  FreeLoader
  *
@@ -31,6 +31,8 @@ typedef struct tagMACHVTBL
   VOID (*PutCharAttrAtLoc)(int Ch, U8 Attr, unsigned X, unsigned Y);
 
   U32 (*GetMemoryMap)(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
+
+  BOOL (*DiskReadLogicalSectors)(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
 } MACHVTBL, *PMACHVTBL;
 
 VOID MachInit(VOID);
@@ -41,6 +43,7 @@ extern MACHVTBL MachVtbl;
 #define MachPutChar(Ch)				MachVtbl.PutChar(Ch)
 #define MachPutCharAttrAtLoc(Ch, Attr, X, Y)	MachVtbl.PutCharAttrAtLoc((Ch), (Attr), (X), (Y))
 #define MachGetMemoryMap(MMap, Size)		MachVtbl.GetMemoryMap((MMap), (Size))
+#define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 
 #endif /* __MACHINE_H_ */
 

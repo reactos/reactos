@@ -28,6 +28,7 @@
 #include <rtl.h>
 #include <arch.h>
 #include <debug.h>
+#include <machine.h>
 
 
 
@@ -69,7 +70,7 @@ BOOL FsRecIsIso9660(U32 DriveNumber)
 {
 	PUCHAR Sector = (PUCHAR)DISKREADBUFFER;
 
-	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Sector))
+	if (!MachDiskReadLogicalSectors(DriveNumber, 16, 1, Sector))
 	{
 		FileSystemError("Failed to read the PVD.");
 		return FALSE;
@@ -87,7 +88,7 @@ BOOL FsRecIsExt2(U32 DriveNumber, U32 VolumeStartSector)
 {
 	PEXT2_SUPER_BLOCK	SuperBlock = (PEXT2_SUPER_BLOCK)DISKREADBUFFER;
 
-	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector + 2, 2, SuperBlock))
+	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector + 2, 2, SuperBlock))
 	{
 		FileSystemError("Failed to read the super block.");
 		return FALSE;
@@ -105,7 +106,7 @@ BOOL FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector)
 {
 	PFAT_BOOTSECTOR	BootSector = (PFAT_BOOTSECTOR)DISKREADBUFFER;
 	PFAT32_BOOTSECTOR BootSector32 = (PFAT32_BOOTSECTOR)DISKREADBUFFER;
-	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
+	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
 	{
 		FileSystemError("Failed to read the boot sector.");
 		return FALSE;
@@ -124,7 +125,7 @@ BOOL FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector)
 BOOL FsRecIsNtfs(U32 DriveNumber, U32 VolumeStartSector)
 {
 	PNTFS_BOOTSECTOR BootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
-	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
+	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
 	{
 		FileSystemError("Failed to read the boot sector.");
 		return FALSE;

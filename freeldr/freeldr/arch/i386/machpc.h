@@ -1,4 +1,4 @@
-/* $Id: machpc.h,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: machpc.h,v 1.2 2004/11/09 23:36:19 gvg Exp $
  *
  *  FreeLoader
  *
@@ -33,6 +33,8 @@ VOID PcConsPutChar(int Ch);
 VOID PcConsPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y);
 
 U32 PcMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
+
+BOOL PcDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
 
 #endif /* __I386_MACHPC_H_ */
 

@@ -25,6 +25,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>
+#include <machine.h>
 
 #include "iso.h"
 
@@ -49,7 +50,7 @@ BOOL IsoOpenVolume(U32 DriveNumber)
 	IsoRootSector = 0;
 	IsoRootLength = 0;
 
-	if (!DiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
+	if (!MachDiskReadLogicalSectors(DriveNumber, 16, 1, Pvd))
 	{
 		FileSystemError("Failed to read the PVD.");
 		return FALSE;
@@ -160,7 +161,7 @@ static PVOID IsoBufferDirectory(U32 DirectoryStartSector, U32 DirectoryLength)
 	//
 	for (i = 0, Ptr = DirectoryBuffer; i < SectorCount; i++, Ptr += SECTORSIZE)
 	{
-		if (!DiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
+		if (!MachDiskReadLogicalSectors(IsoDriveNumber, DirectoryStartSector + i, 1, (PVOID)DISKREADBUFFER))
 		{
 			MmFreeMemory(DirectoryBuffer);
 			return NULL;
@@ -372,7 +373,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!DiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}
@@ -403,7 +404,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 			//
 			// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 			//
-			if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+			if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 			{
 				return FALSE;
 			}
@@ -430,7 +431,7 @@ BOOL IsoReadFile(FILE *FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer
 		//
 		// Now do the read and update BytesRead, BytesToRead, FilePointer, & Buffer
 		//
-		if (!DiskReadLogicalSectorsLBA(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
+		if (!MachDiskReadLogicalSectors(IsoDriveNumber, SectorNumber, 1, (PVOID)DISKREADBUFFER))
 		{
 			return FALSE;
 		}

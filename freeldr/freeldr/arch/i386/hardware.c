@@ -24,6 +24,7 @@
 #include <debug.h>
 #include <disk.h>
 #include <mm.h>
+#include <machine.h>
 #include <portio.h>
 #include <video.h>
 
@@ -569,7 +570,7 @@ SetHarddiskIdentifier(HKEY DiskKey,
   S32 Error;
 
   /* Read the MBR */
-  if (!DiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
+  if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
       DbgPrint((DPRINT_HWDETECT, "Reading MBR failed\n"));
       return;
@@ -645,7 +646,7 @@ DetectBiosDisks(HKEY SystemKey,
   /* Count the number of visible drives */
   DiskReportError(FALSE);
   DiskCount = 0;
-  while (DiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
+  while (MachDiskReadLogicalSectors(0x80 + DiskCount, 0ULL, 1, (PVOID)DISKREADBUFFER))
     {
       DiskCount++;
     }
@@ -2237,8 +2238,6 @@ DetectHardware(VOID)
   S32 Error;
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
-
-  HalpCalibrateStallExecution ();
 
   /* Create the 'System' key */
   Error = RegCreateKey(NULL,

@@ -159,6 +159,7 @@ typedef struct _CM_COMPONENT_INFORMATION
 /* PROTOTYPES ***************************************************************/
 
 /* hardware.c */
+VOID HalpCalibrateStallExecution(VOID);
 VOID KeStallExecutionProcessor(U32 Microseconds);
 
 VOID SetComponentInformation(HKEY ComponentKey,

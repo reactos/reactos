@@ -1,4 +1,4 @@
-/* $Id: archmach.c,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: archmach.c,v 1.2 2004/11/09 23:36:19 gvg Exp $
  *
  *  FreeLoader
  *
@@ -45,6 +45,8 @@ MachInit(VOID)
     {
       PcMachInit();
     }
+
+  HalpCalibrateStallExecution();
 }
 
 /* EOF */

@@ -27,6 +27,7 @@
 #include <inifile.h>
 #include <disk.h>
 #include <drivemap.h>
+#include <machine.h>
 
 VOID LoadAndBootBootSector(PUCHAR OperatingSystemName)
 {
@@ -152,7 +153,7 @@ VOID LoadAndBootPartition(PUCHAR OperatingSystemName)
 
 	// Now try to read the partition boot sector
 	// If this fails then abort
-	if (!DiskReadLogicalSectors(BootDrive, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
+	if (!MachDiskReadLogicalSectors(BootDrive, PartitionTableEntry.SectorCountBeforePartition, 1, (PVOID)0x7C00))
 	{
 		return;
 	}
@@ -204,7 +205,7 @@ VOID LoadAndBootDrive(PUCHAR OperatingSystemName)
 
 	// Now try to read the boot sector (or mbr)
 	// If this fails then abort
-	if (!DiskReadLogicalSectors(BootDrive, 0, 1, (PVOID)0x7C00))
+	if (!MachDiskReadLogicalSectors(BootDrive, 0, 1, (PVOID)0x7C00))
 	{
 		return;
 	}

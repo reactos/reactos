@@ -32,6 +32,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>
+#include <machine.h>
 
 #include "ntfs.h"
 
@@ -157,7 +158,7 @@ BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
     /* I. Read partial first sector if needed */
     if (Offset % NtfsBootSector->BytesPerSector)
     {
-        if (!DiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 1, (PCHAR)DISKREADBUFFER))
+        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 1, (PCHAR)DISKREADBUFFER))
             return FALSE;
         ReadLength = min(Length, NtfsBootSector->BytesPerSector - (Offset % NtfsBootSector->BytesPerSector));
         RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER + (Offset % NtfsBootSector->BytesPerSector), ReadLength);
@@ -169,7 +170,7 @@ BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
     /* II. Read all complete 64-sector blocks. */
     while (Length >= 64 * NtfsBootSector->BytesPerSector)
     {
-        if (!DiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 64, (PCHAR)DISKREADBUFFER))
+        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 64, (PCHAR)DISKREADBUFFER))
             return FALSE;
         RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER, 64 * NtfsBootSector->BytesPerSector);
         Buffer += 64 * NtfsBootSector->BytesPerSector;
@@ -181,7 +182,7 @@ BOOL NtfsDiskRead(U64 Offset, U64 Length, PCHAR Buffer)
     if (Length)
     {
         ReadLength = ((Length + NtfsBootSector->BytesPerSector - 1) / NtfsBootSector->BytesPerSector);
-        if (!DiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), ReadLength, (PCHAR)DISKREADBUFFER))
+        if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), ReadLength, (PCHAR)DISKREADBUFFER))
             return FALSE;
         RtlCopyMemory(Buffer, (PCHAR)DISKREADBUFFER, Length);
     }
@@ -611,7 +612,7 @@ BOOL NtfsOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
 
     DbgPrint((DPRINT_FILESYSTEM, "NtfsOpenVolume() DriveNumber = 0x%x VolumeStartSector = 0x%x\n", DriveNumber, VolumeStartSector));
 
-    if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PCHAR)DISKREADBUFFER))
+    if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PCHAR)DISKREADBUFFER))
     {
         FileSystemError("Failed to read the boot sector.");
         return FALSE;
@@ -651,7 +652,7 @@ BOOL NtfsOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
     NtfsSectorOfClusterZero = VolumeStartSector;
 
     DbgPrint((DPRINT_FILESYSTEM, "Reading MFT index...\n"));
-    if (!DiskReadLogicalSectors(DriveNumber,
+    if (!MachDiskReadLogicalSectors(DriveNumber,
                                 NtfsSectorOfClusterZero +
                                 (NtfsBootSector->MftLocation * NtfsBootSector->SectorsPerCluster),
                                 NtfsMftRecordSize / NtfsBootSector->BytesPerSector, (PCHAR)DISKREADBUFFER))

@@ -25,6 +25,7 @@
 #include <rtl.h>
 #include <debug.h>
 #include <arch.h>
+#include <machine.h>
 
 // Returns a pointer to a CACHE_BLOCK structure
 // Adds the block to the cache manager block list
@@ -122,7 +123,7 @@ PCACHE_BLOCK CacheInternalAddBlockToCache(PCACHE_DRIVE CacheDrive, U32 BlockNumb
 	}
 
 	// Now try to read in the block
-	if (!DiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, (PVOID)DISKREADBUFFER))
+	if (!MachDiskReadLogicalSectors(CacheDrive->DriveNumber, (BlockNumber * CacheDrive->BlockSize), CacheDrive->BlockSize, (PVOID)DISKREADBUFFER))
 	{
 		MmFreeMemory(CacheBlock->BlockData);
 		MmFreeMemory(CacheBlock);

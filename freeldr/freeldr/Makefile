@@ -213,7 +213,9 @@ ARCH_OBJS	=	fathelp.o	\
 			machpc.o	\
 			machxbox.o	\
 			pccons.o	\
+			pcdisk.o	\
 			pcmem.o		\
+			xboxdisk.o	\
 			xboxfont.o	\
 			xboxmem.o	\
 			xboxvideo.o	\

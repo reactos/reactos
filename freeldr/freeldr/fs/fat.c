@@ -27,6 +27,7 @@
 #include <mm.h>
 #include <debug.h>
 #include <cache.h>
+#include <machine.h>
 
 
 PFAT_BOOTSECTOR		FatVolumeBootSector = NULL;
@@ -76,7 +77,7 @@ BOOL FatOpenVolume(U32 DriveNumber, U32 VolumeStartSector)
 
 	// Now try to read the boot sector
 	// If this fails then abort
-	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
+	if (!MachDiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, (PVOID)DISKREADBUFFER))
 	{
 		return FALSE;
 	}
@@ -1206,7 +1207,7 @@ BOOL FatReadVolumeSectors(U32 DriveNumber, U32 SectorNumber, U32 SectorCount, PV
 	//{
 	//	return FALSE;
 	//}
-	//ReturnValue = DiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, (PVOID)DISKREADBUFFER);
+	//ReturnValue = MachDiskReadLogicalSectors(DriveNumber, SectorNumber + FatVolumeBootSector->HiddenSectors, SectorCount, (PVOID)DISKREADBUFFER);
 	//RtlCopyMemory(Buffer, (PVOID)DISKREADBUFFER, SectorCount * DiskGeometry.BytesPerSector);
 	//return ReturnValue;
 

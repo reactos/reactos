@@ -1,4 +1,4 @@
-/* $Id: machxbox.h,v 1.1 2004/11/08 22:02:47 gvg Exp $
+/* $Id: machxbox.h,v 1.2 2004/11/09 23:36:19 gvg Exp $
  *
  *  FreeLoader
  *
@@ -36,6 +36,8 @@ VOID XboxVideoPutCharAttrAtLoc(int Ch, U8 Attr, unsigned X, unsigned Y);
 VOID XboxMemInit(VOID);
 PVOID XboxMemReserveMemory(U32 MbToReserve);
 U32 XboxMemGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, U32 MaxMemoryMapSize);
+
+BOOL XboxDiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
 
 #endif /* __I386_HWXBOX_H_ */
 

@@ -106,9 +106,6 @@ typedef struct _MASTER_BOOT_RECORD
 ///////////////////////////////////////////////////////////////////////////////////////
 #ifdef __i386__
 
-//BOOL	DiskReadLogicalSectors(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
-BOOL	DiskReadLogicalSectorsLBA(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
-BOOL	DiskReadLogicalSectorsCHS(U32 DriveNumber, U64 SectorNumber, U32 SectorCount, PVOID Buffer);
 BOOL	DiskResetController(U32 DriveNumber);
 BOOL	DiskInt13ExtensionsSupported(U32 DriveNumber);
 //VOID	DiskStopFloppyMotor(VOID);
