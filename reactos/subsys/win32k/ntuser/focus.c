@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.14 2004/01/27 08:49:58 weiden Exp $
+ * $Id: focus.c,v 1.15 2004/01/27 11:52:37 weiden Exp $
  */
 
 #include <win32k/win32k.h>
@@ -108,6 +108,27 @@ IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
    }
 }
 
+HWND FASTCALL
+IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
+{
+  HWND Ret;
+  PWINDOW_OBJECT Child;
+  ExAcquireFastMutexUnsafe(&Root->ChildrenListLock);
+  
+  for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
+  {
+    if(Child->Owner == Owner)
+    {
+      Ret = Child->Self;
+      ExReleaseFastMutexUnsafe(&Root->ChildrenListLock);
+      return Ret;
+    }
+  }
+  
+  ExReleaseFastMutexUnsafe(&Root->ChildrenListLock);
+  return NULL;
+}
+
 STATIC BOOL FASTCALL
 IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
@@ -183,7 +204,22 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
   
   if(Window->Style & WS_DISABLED)
   {
-    /* FIXME - Activate a modal dialog window if available */
+    BOOL Ret;
+    PWINDOW_OBJECT TopWnd;
+    PWINDOW_OBJECT DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+    if(DesktopWindow)
+    {
+      Top = IntFindChildWindowToOwner(DesktopWindow, Window);
+      TopWnd = IntGetWindowObject(Top);
+      if(TopWnd)
+      {
+        Ret = IntMouseActivateWindow(TopWnd);
+        IntReleaseWindowObject(TopWnd);
+        IntReleaseWindowObject(DesktopWindow);
+        return Ret;
+      }
+      IntReleaseWindowObject(DesktopWindow);
+    }
     return FALSE;
   }
   
