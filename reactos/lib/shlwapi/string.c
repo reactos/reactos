@@ -710,10 +710,10 @@ int WINAPI StrToIntW(LPCWSTR lpszStr)
  *
  * NOTES
  *  Leading whitespace, '-' and '+' are allowed before the number. If
- *  dwFlags includes STIF_SUPPORT_HEX, hexidecimal numbers are allowed, if
+ *  dwFlags includes STIF_SUPPORT_HEX, hexadecimal numbers are allowed, if
  *  preceeded by '0x'. If this flag is not set, or there is no '0x' prefix,
  *  the string is treated as a decimal string. A leading '-' is ignored for
- *  hexidecimal numbers.
+ *  hexadecimal numbers.
  */
 BOOL WINAPI StrToIntExA(LPCSTR lpszStr, DWORD dwFlags, LPINT lpiRet)
 {
@@ -2098,7 +2098,7 @@ BOOL WINAPI StrIsIntlEqualW(BOOL bCase, LPCWSTR lpszStr, LPCWSTR lpszComp,
  *  iLen     [I] Maximum number of chars to copy
  *
  * RETURNS
- *  Success: A pointer to the last character written.
+ *  Success: A pointer to the last character written to lpszDest..
  *  Failure: lpszDest, if any arguments are invalid.
  */
 LPSTR WINAPI StrCpyNXA(LPSTR lpszDest, LPCSTR lpszSrc, int iLen)
@@ -2620,6 +2620,48 @@ INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen)
     INT myint = iLen;
 
     return SHUnicodeToAnsiCP(CP_ACP, lpSrcStr, lpDstStr, &myint);
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.345]
+ *
+ * Copy one string to another.
+ *
+ * PARAMS
+ *  lpszSrc [I] Source string to copy
+ *  lpszDst [O] Destination for copy
+ *  iLen    [I] Length of lpszDst in characters
+ *
+ * RETURNS
+ *  The length of the copied string, including the terminating NUL. lpszDst
+ *  contains iLen characters of lpszSrc.
+ */
+DWORD WINAPI SHAnsiToAnsi(LPCSTR lpszSrc, LPSTR lpszDst, int iLen)
+{
+    LPSTR lpszRet;
+
+    TRACE("(%s,%p,0x%08x)\n", debugstr_a(lpszSrc), lpszDst, iLen);
+
+    /* Our original version used lstrncpy/lstrlen, incorrectly filling up all
+     * of lpszDst with extra NULs. This version is correct, and faster too.
+     */
+    lpszRet = StrCpyNXA(lpszDst, lpszSrc, iLen);
+    return lpszRet - lpszDst + 1;
+}
+
+/*************************************************************************
+ *      @	[SHLWAPI.346]
+ *
+ * Unicode version of SSHAnsiToAnsi.
+ */
+DWORD WINAPI SHUnicodeToUnicode(LPCWSTR lpszSrc, LPWSTR lpszDst, int iLen)
+{
+    LPWSTR lpszRet;
+
+    TRACE("(%s,%p,0x%08x)\n", debugstr_w(lpszSrc), lpszDst, iLen);
+
+    lpszRet = StrCpyNXW(lpszDst, lpszSrc, iLen);
+    return lpszRet - lpszDst + 1;
 }
 
 /*************************************************************************

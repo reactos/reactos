@@ -46,7 +46,7 @@ typedef struct
 */
 static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVOID *ppvObj)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
@@ -72,7 +72,7 @@ static HRESULT WINAPI IStream_fnQueryInterface(IStream *iface, REFIID riid, LPVO
 */
 static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)->(count=%lu)\n",This, This->ref);
 
@@ -84,7 +84,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 */
 static ULONG WINAPI IStream_fnRelease(IStream *iface)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)->()\n",This);
 
@@ -109,7 +109,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
  */
 static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG* pcbRead)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	DWORD dwBytesToRead, dwBytesLeft;
 
@@ -140,7 +140,7 @@ static HRESULT WINAPI IStream_fnRead (IStream * iface, void* pv, ULONG cb, ULONG
  */
 static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb, ULONG* pcbWritten)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -155,7 +155,7 @@ static HRESULT WINAPI IStream_fnWrite (IStream * iface, const void* pv, ULONG cb
  */
 static HRESULT WINAPI IStream_fnSeek (IStream * iface, LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -169,7 +169,7 @@ static HRESULT WINAPI IStream_fnSeek (IStream * iface, LARGE_INTEGER dlibMove, D
  */
 static HRESULT WINAPI IStream_fnSetSize (IStream * iface, ULARGE_INTEGER libNewSize)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 	return E_NOTIMPL;
@@ -180,7 +180,7 @@ static HRESULT WINAPI IStream_fnSetSize (IStream * iface, ULARGE_INTEGER libNewS
  */
 static HRESULT WINAPI IStream_fnCopyTo (IStream * iface, IStream* pstm, ULARGE_INTEGER cb, ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 	if (pcbRead)
@@ -195,7 +195,7 @@ static HRESULT WINAPI IStream_fnCopyTo (IStream * iface, IStream* pstm, ULARGE_I
  */
 static HRESULT WINAPI IStream_fnCommit (IStream * iface, DWORD grfCommitFlags)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -207,7 +207,7 @@ static HRESULT WINAPI IStream_fnCommit (IStream * iface, DWORD grfCommitFlags)
  */
 static HRESULT WINAPI IStream_fnRevert (IStream * iface)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -219,7 +219,7 @@ static HRESULT WINAPI IStream_fnRevert (IStream * iface)
  */
 static HRESULT WINAPI IStream_fnLockUnlockRegion (IStream * iface, ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -231,7 +231,7 @@ static HRESULT WINAPI IStream_fnLockUnlockRegion (IStream * iface, ULARGE_INTEGE
  */
 static HRESULT WINAPI IStream_fnStat (IStream * iface, STATSTG*   pstatstg, DWORD grfStatFlag)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 
@@ -243,7 +243,7 @@ static HRESULT WINAPI IStream_fnStat (IStream * iface, STATSTG*   pstatstg, DWOR
  */
 static HRESULT WINAPI IStream_fnClone (IStream * iface, IStream** ppstm)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 
 	TRACE("(%p)\n",This);
 	if (ppstm)
@@ -253,7 +253,6 @@ static HRESULT WINAPI IStream_fnClone (IStream * iface, IStream** ppstm)
 
 static struct IStreamVtbl rstvt =
 {
-	ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
 	IStream_fnQueryInterface,
 	IStream_fnAddRef,
 	IStream_fnRelease,
@@ -277,7 +276,7 @@ static struct IStreamVtbl rstvt =
  */
 static ULONG WINAPI IStream_fnAddRefDummy(IStream *iface)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 	TRACE("(%p)\n", This);
 	return 2;
 }
@@ -287,7 +286,7 @@ static ULONG WINAPI IStream_fnAddRefDummy(IStream *iface)
  */
 static ULONG WINAPI IStream_fnReleaseDummy(IStream *iface)
 {
-	ICOM_THIS(ISHRegStream, iface);
+	ISHRegStream *This = (ISHRegStream *)iface;
 	TRACE("(%p)\n", This);
 	return 1;
 }
@@ -304,7 +303,6 @@ static HRESULT WINAPI IStream_fnReadDummy(IStream *iface, LPVOID pv, ULONG cb, U
 
 static struct IStreamVtbl DummyRegStreamVTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   IStream_fnQueryInterface,
   IStream_fnAddRefDummy,  /* Overridden */
   IStream_fnReleaseDummy, /* Overridden */

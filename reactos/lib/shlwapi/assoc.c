@@ -440,7 +440,7 @@ static HRESULT WINAPI IQueryAssociations_fnQueryInterface(
   REFIID riid,
   LPVOID *ppvObj)
 {
-  ICOM_THIS(IQueryAssociationsImpl, iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   TRACE("(%p,%s,%p)\n",This, debugstr_guid(riid), ppvObj);
 
@@ -466,7 +466,7 @@ static HRESULT WINAPI IQueryAssociations_fnQueryInterface(
  */
 static ULONG WINAPI IQueryAssociations_fnAddRef(IQueryAssociations *iface)
 {
-  ICOM_THIS(IQueryAssociationsImpl,iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   TRACE("(%p)->(ref before=%lu)\n",This, This->ref);
 
@@ -480,7 +480,7 @@ static ULONG WINAPI IQueryAssociations_fnAddRef(IQueryAssociations *iface)
  */
 static ULONG WINAPI IQueryAssociations_fnRelease(IQueryAssociations *iface)
 {
-  ICOM_THIS(IQueryAssociationsImpl,iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
   ULONG ulRet;
 
   TRACE("(%p)->(ref before=%lu)\n",This, This->ref);
@@ -517,7 +517,7 @@ static HRESULT WINAPI IQueryAssociations_fnInit(
   HWND hWnd)
 {
     static const WCHAR szProgID[] = {'P','r','o','g','I','D',0};
-    ICOM_THIS(IQueryAssociationsImpl,iface);
+    IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
     HRESULT hr;
 
     TRACE("(%p)->(%ld,%s,%p,%p)\n", iface,
@@ -587,7 +587,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetString(
   LPWSTR pszOut,
   DWORD *pcchOut)
 {
-  ICOM_THIS(IQueryAssociationsImpl, iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   FIXME("(%p,0x%8lx,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, str,
         debugstr_w(pszExtra), pszOut, pcchOut);
@@ -617,7 +617,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetKey(
   LPCWSTR pszExtra,
   HKEY *phkeyOut)
 {
-  ICOM_THIS(IQueryAssociationsImpl, iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   FIXME("(%p,0x%8lx,0x%8x,%s,%p)-stub!\n", This, cfFlags, assockey,
         debugstr_w(pszExtra), phkeyOut);
@@ -649,7 +649,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetData(
   LPVOID pvOut,
   DWORD *pcbOut)
 {
-  ICOM_THIS(IQueryAssociationsImpl, iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   FIXME("(%p,0x%8lx,0x%8x,%s,%p,%p)-stub!\n", This, cfFlags, assocdata,
         debugstr_w(pszExtra), pvOut, pcbOut);
@@ -684,7 +684,7 @@ static HRESULT WINAPI IQueryAssociations_fnGetEnum(
   REFIID riid,
   LPVOID *ppvOut)
 {
-  ICOM_THIS(IQueryAssociationsImpl, iface);
+  IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
 
   FIXME("(%p,0x%8lx,0x%8x,%s,%s,%p)-stub!\n", This, cfFlags, assocenum,
         debugstr_w(pszExtra), debugstr_guid(riid), ppvOut);
@@ -693,7 +693,6 @@ static HRESULT WINAPI IQueryAssociations_fnGetEnum(
 
 static struct IQueryAssociationsVtbl IQueryAssociations_vtbl =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   IQueryAssociations_fnQueryInterface,
   IQueryAssociations_fnAddRef,
   IQueryAssociations_fnRelease,

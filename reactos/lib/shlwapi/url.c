@@ -1668,6 +1668,7 @@ BOOL WINAPI UrlIsA(LPCSTR pszUrl, URLIS Urlis)
 {
     UNKNOWN_SHLWAPI_1 base;
     DWORD res1;
+    LPCSTR last;
 
     switch (Urlis) {
 
@@ -1680,11 +1681,16 @@ BOOL WINAPI UrlIsA(LPCSTR pszUrl, URLIS Urlis)
 	    return FALSE;
 	return TRUE;
 
+    case URLIS_FILEURL:
+        return !StrCmpNA("file://", pszUrl, 7);
+
+    case URLIS_DIRECTORY:
+        last = pszUrl + strlen(pszUrl) - 1;
+        return (last >= pszUrl && (*last == '/' || *last == '\\' ));
+
     case URLIS_URL:
     case URLIS_NOHISTORY:
-    case URLIS_FILEURL:
     case URLIS_APPLIABLE:
-    case URLIS_DIRECTORY:
     case URLIS_HASQUERY:
     default:
 	FIXME("(%s %d): stub\n", debugstr_a(pszUrl), Urlis);
@@ -1699,8 +1705,10 @@ BOOL WINAPI UrlIsA(LPCSTR pszUrl, URLIS Urlis)
  */
 BOOL WINAPI UrlIsW(LPCWSTR pszUrl, URLIS Urlis)
 {
+    static const WCHAR stemp[] = { 'f','i','l','e',':','/','/',0 };
     UNKNOWN_SHLWAPI_2 base;
     DWORD res1;
+    LPCWSTR last;
 
     switch (Urlis) {
 
@@ -1708,16 +1716,21 @@ BOOL WINAPI UrlIsW(LPCWSTR pszUrl, URLIS Urlis)
 	base.size = 24;
 	res1 = ParseURLW(pszUrl, &base);
 	if (res1) return FALSE;  /* invalid scheme */
-	if ((*base.ap2 == L'/') && (*(base.ap2+1) == L'/'))
+	if ((*base.ap2 == '/') && (*(base.ap2+1) == '/'))
 	    /* has scheme followed by 2 '/' */
 	    return FALSE;
 	return TRUE;
 
+    case URLIS_FILEURL:
+        return !strncmpW(stemp, pszUrl, 7);
+
+    case URLIS_DIRECTORY:
+        last = pszUrl + strlenW(pszUrl) - 1;
+        return (last >= pszUrl && (*last == '/' || *last == '\\'));
+
     case URLIS_URL:
     case URLIS_NOHISTORY:
-    case URLIS_FILEURL:
     case URLIS_APPLIABLE:
-    case URLIS_DIRECTORY:
     case URLIS_HASQUERY:
     default:
 	FIXME("(%s %d): stub\n", debugstr_w(pszUrl), Urlis);

@@ -1833,6 +1833,77 @@ BOOL WINAPI GetMIMETypeSubKeyW(LPCWSTR lpszType, LPWSTR lpszBuffer, DWORD dwLen)
 }
 
 /*************************************************************************
+ * @   [SHLWAPI.330]
+ *
+ * Get the file extension for a given Mime type.
+ *
+ * PARAMS
+ *  lpszType [I] Mime type to get the file extension for
+ *  lpExt    [O] Destination for the resulting extension
+ *  iLen     [I] Length of lpExt in characters
+ *
+ * RETURNS
+ *  Success: TRUE. lpExt contains the file extension.
+ *  Failure: FALSE, if any parameter is invalid or the extension cannot be
+ *           retrieved. If iLen > 0, lpExt is set to an empty string.
+ *
+ * NOTES
+ *  - The extension returned in lpExt always has a leading '.' character, even
+ *  if the registry Mime database entry does not.
+ *  - iLen must be long enough for the file extension for this function to succeed.
+ */
+BOOL WINAPI MIME_GetExtensionA(LPCSTR lpszType, LPSTR lpExt, INT iLen)
+{
+  char szSubKey[MAX_PATH];
+  DWORD dwlen = iLen - 1, dwType;
+  BOOL bRet = FALSE;
+
+  if (iLen > 0 && lpExt)
+    *lpExt = '\0';
+
+  if (lpszType && lpExt && iLen > 2 &&
+      GetMIMETypeSubKeyA(lpszType, szSubKey, MAX_PATH) &&
+      !SHGetValueA(HKEY_CLASSES_ROOT, szSubKey, szExtensionA, &dwType, lpExt + 1, &dwlen) &&
+      lpExt[1])
+  {
+    if (lpExt[1] == '.')
+      memmove(lpExt, lpExt + 1, strlen(lpExt + 1) + 1);
+    else
+      *lpExt = '.'; /* Supply a '.' */
+    bRet = TRUE;
+  }
+  return bRet;
+}
+
+/*************************************************************************
+ * @   [SHLWAPI.331]
+ *
+ * Unicode version of MIME_GetExtensionA.
+ */
+BOOL WINAPI MIME_GetExtensionW(LPCWSTR lpszType, LPWSTR lpExt, INT iLen)
+{
+  WCHAR szSubKey[MAX_PATH];
+  DWORD dwlen = iLen - 1, dwType;
+  BOOL bRet = FALSE;
+
+  if (iLen > 0 && lpExt)
+    *lpExt = '\0';
+
+  if (lpszType && lpExt && iLen > 2 &&
+      GetMIMETypeSubKeyW(lpszType, szSubKey, MAX_PATH) &&
+      !SHGetValueW(HKEY_CLASSES_ROOT, szSubKey, szExtensionW, &dwType, lpExt + 1, &dwlen) &&
+      lpExt[1])
+  {
+    if (lpExt[1] == '.')
+      memmove(lpExt, lpExt + 1, (strlenW(lpExt + 1) + 1) * sizeof(WCHAR));
+    else
+      *lpExt = '.'; /* Supply a '.' */
+    bRet = TRUE;
+  }
+  return bRet;
+}
+
+/*************************************************************************
  * @   [SHLWAPI.324]
  *
  * Set the file extension for a MIME content key.

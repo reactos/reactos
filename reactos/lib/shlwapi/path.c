@@ -141,11 +141,11 @@ LPSTR WINAPI PathCombineA(LPSTR lpszDest, LPCSTR lpszDir, LPCSTR lpszFile)
     WCHAR szDir[MAX_PATH];
     WCHAR szFile[MAX_PATH];
     if (lpszDir)
-      MultiByteToWideChar(0,0,lpszDir,-1,szDir,MAX_PATH);
+      MultiByteToWideChar(CP_ACP,0,lpszDir,-1,szDir,MAX_PATH);
     if (lpszFile)
-      MultiByteToWideChar(0,0,lpszFile,-1,szFile,MAX_PATH);
+      MultiByteToWideChar(CP_ACP,0,lpszFile,-1,szFile,MAX_PATH);
     PathCombineW(szDest, lpszDir ? szDir : NULL, lpszFile ? szFile : NULL);
-    WideCharToMultiByte(0,0,szDest,-1,lpszDest,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szDest,-1,lpszDest,MAX_PATH,0,0);
   }
   return lpszDest;
 }
@@ -1079,7 +1079,7 @@ BOOL WINAPI PathFileExistsDefExtW(LPWSTR lpszPath,DWORD dwWhich)
       int iLen = lstrlenW(lpszPath);
       if (iLen > (MAX_PATH - 5))
         return FALSE;
-      while (dwWhich & 0x1 && iChoose < sizeof(pszExts))
+      while ( (dwWhich & 0x1) && pszExts[iChoose][0] )
       {
         lstrcpyW(lpszPath + iLen, pszExts[iChoose]);
         if (PathFileExistsW(lpszPath))
@@ -1126,10 +1126,10 @@ BOOL WINAPI PathFileExistsDefExtA(LPSTR lpszPath,DWORD dwWhich)
   if (lpszPath)
   {
     WCHAR szPath[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     bRet = PathFileExistsDefExtW(szPath, dwWhich);
     if (bRet)
-      WideCharToMultiByte(0,0,szPath,-1,lpszPath,MAX_PATH,0,0);
+      WideCharToMultiByte(CP_ACP,0,szPath,-1,lpszPath,MAX_PATH,0,0);
   }
   return bRet;
 }
@@ -1239,7 +1239,7 @@ BOOL WINAPI PathFindOnPathExA(LPSTR lpszFile,LPCSTR *lppszOtherDirs,DWORD dwWhic
   if (!lpszFile || !PathIsFileSpecA(lpszFile))
     return FALSE;
 
-  MultiByteToWideChar(0,0,lpszFile,-1,szFile,MAX_PATH);
+  MultiByteToWideChar(CP_ACP,0,lpszFile,-1,szFile,MAX_PATH);
 
   /* Search provided directories first */
   if (lppszOtherDirs && *lppszOtherDirs)
@@ -1249,11 +1249,11 @@ BOOL WINAPI PathFindOnPathExA(LPSTR lpszFile,LPCSTR *lppszOtherDirs,DWORD dwWhic
 
     while (lpszOtherPath && *lpszOtherPath && (*lpszOtherPath)[0])
     {
-      MultiByteToWideChar(0,0,*lpszOtherPath,-1,szOther,MAX_PATH);
+      MultiByteToWideChar(CP_ACP,0,*lpszOtherPath,-1,szOther,MAX_PATH);
       PathCombineW(buff, szOther, szFile);
       if (PathFileExistsDefExtW(buff, dwWhich))
       {
-        WideCharToMultiByte(0,0,buff,-1,lpszFile,MAX_PATH,0,0);
+        WideCharToMultiByte(CP_ACP,0,buff,-1,lpszFile,MAX_PATH,0,0);
         return TRUE;
       }
       lpszOtherPath++;
@@ -1262,7 +1262,7 @@ BOOL WINAPI PathFindOnPathExA(LPSTR lpszFile,LPCSTR *lppszOtherDirs,DWORD dwWhic
   /* Not found, try system and path dirs */
   if (SHLWAPI_PathFindInOtherDirs(szFile, dwWhich))
   {
-    WideCharToMultiByte(0,0,szFile,-1,lpszFile,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szFile,-1,lpszFile,MAX_PATH,0,0);
     return TRUE;
   }
   return FALSE;
@@ -1369,10 +1369,10 @@ BOOL WINAPI PathCompactPathExA(LPSTR lpszDest, LPCSTR lpszPath,
     WCHAR szPath[MAX_PATH];
     WCHAR szDest[MAX_PATH];
 
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     szDest[0] = '\0';
     bRet = PathCompactPathExW(szDest, szPath, cchMax, dwFlags);
-    WideCharToMultiByte(0,0,szDest,-1,lpszDest,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szDest,-1,lpszDest,MAX_PATH,0,0);
   }
   return bRet;
 }
@@ -2339,9 +2339,9 @@ BOOL WINAPI PathCanonicalizeA(LPSTR lpszBuf, LPCSTR lpszPath)
   {
     WCHAR szPath[MAX_PATH];
     WCHAR szBuff[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     bRet = PathCanonicalizeW(szBuff, szPath);
-    WideCharToMultiByte(0,0,szBuff,-1,lpszBuf,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szBuff,-1,lpszBuf,MAX_PATH,0,0);
   }
   return bRet;
 }
@@ -2779,9 +2779,9 @@ BOOL WINAPI PathCompactPathA(HDC hDC, LPSTR lpszPath, UINT dx)
   if (lpszPath)
   {
     WCHAR szPath[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     bRet = PathCompactPathW(hDC, szPath, dx);
-    WideCharToMultiByte(0,0,szPath,-1,lpszPath,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szPath,-1,lpszPath,MAX_PATH,0,0);
   }
   return bRet;
 }
@@ -3011,7 +3011,7 @@ BOOL WINAPI PathMakeSystemFolderA(LPCSTR lpszPath)
   if (lpszPath && *lpszPath)
   {
     WCHAR szPath[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     bRet = PathMakeSystemFolderW(szPath);
   }
   return bRet;
@@ -3245,7 +3245,7 @@ HRESULT WINAPI PathCreateFromUrlA(LPCSTR lpszUrl, LPSTR lpszPath,
 HRESULT WINAPI PathCreateFromUrlW(LPCWSTR lpszUrl, LPWSTR lpszPath,
                                   LPDWORD pcchPath, DWORD dwFlags)
 {
-  static const WCHAR stemp[] = { 'f','i','l','e',':','/','/',0 };
+  static const WCHAR stemp[] = { 'f','i','l','e',':','/','/','/',0 };
   LPWSTR pwszPathPart;
   HRESULT hr;
 
@@ -3254,8 +3254,13 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR lpszUrl, LPWSTR lpszPath,
   if (!lpszUrl || !lpszPath || !pcchPath || !*pcchPath)
     return E_INVALIDARG;
 
+  /* Path of the form file:///... */
+  if (!strncmpW(lpszUrl, stemp, 8))
+  {
+    lpszUrl += 8;
+  }
   /* Path of the form file://... */
-  if (!strncmpW(lpszUrl, stemp, 7))
+  else if (!strncmpW(lpszUrl, stemp, 7))
   {
     lpszUrl += 7;
   }
@@ -3327,10 +3332,10 @@ BOOL WINAPI PathRelativePathToA(LPSTR lpszPath, LPCSTR lpszFrom, DWORD dwAttrFro
     WCHAR szPath[MAX_PATH];
     WCHAR szFrom[MAX_PATH];
     WCHAR szTo[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszFrom,-1,szFrom,MAX_PATH);
-    MultiByteToWideChar(0,0,lpszTo,-1,szTo,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszFrom,-1,szFrom,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszTo,-1,szTo,MAX_PATH);
     bRet = PathRelativePathToW(szPath,szFrom,dwAttrFrom,szTo,dwAttrTo);
-    WideCharToMultiByte(0,0,szPath,-1,lpszPath,MAX_PATH,0,0);
+    WideCharToMultiByte(CP_ACP,0,szPath,-1,lpszPath,MAX_PATH,0,0);
   }
   return bRet;
 }
@@ -3476,7 +3481,7 @@ VOID WINAPI PathSetDlgItemPathA(HWND hDlg, int id, LPCSTR lpszPath)
   TRACE("(%p,%8x,%s)\n",hDlg, id, debugstr_a(lpszPath));
 
   if (lpszPath)
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
   else
     szPath[0] = '\0';
   PathSetDlgItemPathW(hDlg, id, szPath);
@@ -3501,7 +3506,7 @@ VOID WINAPI PathSetDlgItemPathW(HWND hDlg, int id, LPCWSTR lpszPath)
     return;
 
   if (lpszPath)
-    strncpyW(path, lpszPath, sizeof(path));
+    lstrcpynW(path, lpszPath, sizeof(path) / sizeof(WCHAR));
   else
     path[0] = '\0';
 
@@ -3680,7 +3685,7 @@ BOOL WINAPI PathIsDirectoryEmptyA(LPCSTR lpszPath)
   if (lpszPath)
   {
     WCHAR szPath[MAX_PATH];
-    MultiByteToWideChar(0,0,lpszPath,-1,szPath,MAX_PATH);
+    MultiByteToWideChar(CP_ACP,0,lpszPath,-1,szPath,MAX_PATH);
     bRet = PathIsDirectoryEmptyW(szPath);
   }
   return bRet;
@@ -3897,10 +3902,10 @@ HRESULT WINAPI SHGetWebFolderFilePathA(LPCSTR lpszFile, LPSTR lpszPath, DWORD dw
 
   TRACE("(%s,%p,%ld)\n", lpszFile, lpszPath, dwPathLen);
 
-  MultiByteToWideChar(0, 0, lpszFile, -1, szFile, MAX_PATH);
+  MultiByteToWideChar(CP_ACP, 0, lpszFile, -1, szFile, MAX_PATH);
   szPath[0] = '\0';
   hRet = SHGetWebFolderFilePathW(szFile, szPath, dwPathLen);
-  WideCharToMultiByte(0, 0, szPath, -1, lpszPath, dwPathLen, 0, 0);
+  WideCharToMultiByte(CP_ACP, 0, szPath, -1, lpszPath, dwPathLen, 0, 0);
   return hRet;
 }
 
