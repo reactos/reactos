@@ -77,7 +77,14 @@ Project::ProcessXMLSubElement ( const XMLElement& e, const string& path )
 	string subpath(path);
 	if ( e.name == "module" )
 	{
-		modules.push_back ( new Module ( *this, e, path ) );
+		Module* module = new Module ( *this, e, path );
+		if ( LocateModule ( module->name ) )
+			throw InvalidBuildFileException (
+				node->location,
+				"module name conflict: '%s' (originally defined at %s)",
+				module->name.c_str(),
+				module->node.location.c_str() );
+		modules.push_back ( module );
 		return; // defer processing until later
 	}
 	else if ( e.name == "directory" )
