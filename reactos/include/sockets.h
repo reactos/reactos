@@ -771,12 +771,7 @@ int PASCAL getsockopt (SOCKET s, int level, int optname,
 
 u_long PASCAL htonl (u_long hostlong);
 
-/* For some reason WSOCK.LIB has htons defined as a 4 byte paramter?! */
-#ifdef _WIN32
-u_short PASCAL htons (u_long hostshort);
-#else
 u_short PASCAL htons (u_short hostshort);
-#endif /* _WIN32 */
 
 unsigned long PASCAL inet_addr (const char * cp);
 
