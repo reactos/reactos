@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.25 2000/07/02 10:54:23 ekohl Exp $
+/* $Id: blue.c,v 1.26 2000/07/11 04:08:43 phreak Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -197,7 +197,9 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 		      {
 			 cursorx = columns - 1;
 			 cursory--;
-		      }   
+		      }
+		   vidmem[(cursorx * 2) + (cursory * columns * 2)] = ' ';
+		   vidmem[(cursorx * 2) + (cursory * columns * 2) + 1] = (char) DeviceExtension->CharAttribute;
 		   break;
 		   
 		case '\n':
