@@ -26,19 +26,9 @@ BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 /* FUNCTIONS ****************************************************************/
 
 
-PWCHAR 
+
+PWCHAR
 FilenameA2W(LPCSTR NameA, BOOL alloc)
-{
-   PUNICODE_STRING pstrW;
-
-   pstrW = FilenameA2U(NameA, alloc);
-   
-   return pstrW ? pstrW->Buffer : NULL;
-}
-
-
-PUNICODE_STRING
-FilenameA2U(LPCSTR NameA, BOOL alloc)
 {
    ANSI_STRING str;
    UNICODE_STRING strW;
@@ -57,7 +47,7 @@ FilenameA2U(LPCSTR NameA, BOOL alloc)
         Status= RtlOemStringToUnicodeString( pstrW, &str, alloc );
 
     if (NT_SUCCESS(Status))
-       return pstrW;
+       return pstrW->Buffer;
 
     if (Status== STATUS_BUFFER_OVERFLOW)
         SetLastError( ERROR_FILENAME_EXCED_RANGE );
@@ -134,7 +124,9 @@ FilenameW2A_FitOrFail(
 }
 
 
-
+/*
+Return: num. TCHARS copied into dest including nullterm
+*/
 DWORD 
 FilenameA2W_N( 
    LPWSTR dest, 
@@ -154,10 +146,12 @@ FilenameA2W_N(
     
     if (ret) dest[(ret/sizeof(WCHAR))-1]=0;
     
-    return ret;
+    return ret/sizeof(WCHAR);
 }
 
-
+/*
+Return: num. TCHARS copied into dest including nullterm
+*/
 DWORD 
 FilenameW2A_N( 
    LPSTR dest, 

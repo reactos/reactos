@@ -82,7 +82,6 @@ DllMain(HANDLE hDll,
 	LPVOID lpReserved)
 {
   NTSTATUS Status;
-  PTEB Teb = NtCurrentTeb();
   
   (void)lpReserved;
 
@@ -149,10 +148,6 @@ DllMain(HANDLE hDll,
 	SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
 
 
-   Teb->StaticUnicodeString.Length = 0;
-   Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
-   Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
-
    /* Insert more dll attach stuff here! */
    
 	DllInitialized = TRUE;
@@ -177,14 +172,6 @@ DllMain(HANDLE hDll,
 	    RtlFreeUnicodeString (&WindowsDirectory);
 	  }
 	break;
-
-   case DLL_THREAD_ATTACH:
-   
-      Teb->StaticUnicodeString.Length = 0;
-      Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
-      Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
-      break;
-      
 
       default:
 	break;

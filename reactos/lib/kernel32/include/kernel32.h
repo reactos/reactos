@@ -62,7 +62,6 @@ PTEB GetTeb(VOID);
 
 
 PWCHAR FilenameA2W(LPCSTR NameA, BOOL alloc);
-PUNICODE_STRING FilenameA2U(LPCSTR NameA, BOOL alloc);
    
 DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sourceLen);
 DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);

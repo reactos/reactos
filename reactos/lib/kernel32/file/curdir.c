@@ -83,23 +83,14 @@ SetCurrentDirectoryA (
 	LPCSTR	lpPathName
 	)
 {
-   PUNICODE_STRING PathNameU;
-	NTSTATUS Status;
+   PWCHAR PathNameW;
 
    DPRINT("setcurrdir: %s\n",lpPathName);
 
-   if (!(PathNameU = FilenameA2U(lpPathName, FALSE)))
+   if (!(PathNameW = FilenameA2W(lpPathName, FALSE)))
       return FALSE;
 
-   Status = RtlSetCurrentDirectory_U(PathNameU);
-
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return FALSE;
-	}
-
-	return TRUE;
+   return SetCurrentDirectoryW(PathNameW);
 }
 
 
