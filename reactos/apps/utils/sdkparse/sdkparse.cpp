@@ -267,6 +267,10 @@ void process_preprocessor ( const char* filename, Header& h, const string& eleme
 
 		h.symbols.push_back ( s );
 	}
+	else if ( preproc == "undef" )
+	{
+		// safely ignoreable for now, I think
+	}
 	else if ( preproc == "if" || preproc == "ifdef" || preproc == "ifndef" )
 	{
 		size_t len = element.size();
