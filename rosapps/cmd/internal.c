@@ -314,7 +314,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		p = split (param, &argc);
+		p = split (param, &argc, FALSE);
 		if (argc > 1)
 		{
 			/*JPP 20-Jul-1998 use standard error message */
@@ -387,7 +387,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		p = split (param, &argc);
+		p = split (param, &argc, FALSE);
 		if (argc > 1)
 		{
 			/*JPP 20-Jul-1998 use standard error message */

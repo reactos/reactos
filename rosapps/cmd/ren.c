@@ -84,7 +84,7 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
     }
 
   /* split the argument list */
-  arg = split(param, &args);
+  arg = split(param, &args, FALSE);
 
   if (args < 2)
     {

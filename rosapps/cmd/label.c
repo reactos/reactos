@@ -47,7 +47,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* get parameters */
-	arg = split (param, &args);
+	arg = split (param, &args, FALSE);
 
 	if (args > 2)
 	{

@@ -1,4 +1,4 @@
-/* $Id: cmd.h,v 1.21 2001/02/03 10:37:51 ekohl Exp $
+/* $Id: cmd.h,v 1.22 2003/01/17 00:31:32 gvg Exp $
  *
  *  CMD.H - header file for the modules in CMD.EXE
  *
@@ -303,7 +303,7 @@ INT CommandMemory (LPTSTR, LPTSTR);
 /* Prototypes for MISC.C */
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
-LPTSTR *split (LPTSTR, LPINT);
+LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
 LPTSTR stpcpy (LPTSTR, LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);

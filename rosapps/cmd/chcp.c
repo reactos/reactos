@@ -53,7 +53,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* get parameters */
-	arg = split (param, &args);
+	arg = split (param, &args, FALSE);
 
 	/* save old code page */
 	uOldCodePage = GetConsoleCP ();

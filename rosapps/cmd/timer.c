@@ -132,7 +132,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	}
 
 
-	p = split (param,&argc);
+	p = split (param, &argc, FALSE);
 
 	//read options
 	for (i = 0; i < argc; i++)

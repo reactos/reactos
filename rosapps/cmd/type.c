@@ -37,17 +37,15 @@
 INT cmd_type (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR  buff[256];
-	HANDLE hFile, hConsoleOut, hFind;
+	HANDLE hFile, hConsoleOut;
 	DWORD  dwRead;
 	DWORD  dwWritten;
 	BOOL   bRet;
 	INT    argc,i;
 	LPTSTR *argv;
-	WIN32_FIND_DATA FindData;
+	LPTSTR errmsg;
 	
 	hConsoleOut=GetStdHandle (STD_OUTPUT_HANDLE);
-
-
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -62,81 +60,49 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
-	argv = split (param, &argc);
+	argv = split (param, &argc, TRUE);
 	
 	for (i = 0; i < argc; i++)
 	{
-		hFind=FindFirstFile(argv[i],&FindData);
-		
-		if (hFind==INVALID_HANDLE_VALUE)
+		if (_T('/') == argv[i][0])
 		{
-			ConErrPrintf("File not found - %s\n",argv[i]);
+			ConErrPrintf("Invalid option \"%s\"\n", argv[i] + 1);
+			continue;
+		}
+		hFile = CreateFile(argv[i],
+			GENERIC_READ,
+			FILE_SHARE_READ,NULL,
+			OPEN_EXISTING,
+			FILE_ATTRIBUTE_NORMAL,NULL);
+
+		if(hFile == INVALID_HANDLE_VALUE)
+		{
+			FormatMessage (FORMAT_MESSAGE_ALLOCATE_BUFFER |
+			               FORMAT_MESSAGE_IGNORE_INSERTS |
+			               FORMAT_MESSAGE_FROM_SYSTEM,
+			               NULL,
+			               GetLastError(),
+			               MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+			               (LPTSTR) &errmsg,
+			               0,
+			               NULL);
+			ConErrPrintf ("%s - %s", argv[i], errmsg);
+			LocalFree (errmsg);
 			continue;
 		}
 
 		do
 		{
-			hFile = CreateFile(FindData.cFileName,
-				GENERIC_READ,
-				FILE_SHARE_READ,NULL,
-				OPEN_EXISTING,
-				FILE_ATTRIBUTE_NORMAL,NULL);
+			bRet = ReadFile(hFile,buff,sizeof(buff),&dwRead,NULL);
 
-			if(hFile == INVALID_HANDLE_VALUE)
-			{
-				ConErrPrintf("File not found - %s\n",FindData.cFileName);
-				continue;
-			}
-
-			do
-			{
-				bRet = ReadFile(hFile,buff,sizeof(buff),&dwRead,NULL);
-
-				if (dwRead>0 && bRet)
-					WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
+			if (dwRead>0 && bRet)
+				WriteFile(hConsoleOut,buff,dwRead,&dwWritten,NULL);
 			
-			} while(dwRead>0 && bRet);
+		} while(dwRead>0 && bRet);
 
-			CloseHandle(hFile);
-
-		}
-		while(FindNextFile(hFind,&FindData));
-
-		FindClose(hFind);
+		CloseHandle(hFile);
 	}	
 	
-/*
-	if (args > 1)
-	{
-		error_too_many_parameters (_T("\b \b"));
-		freep (arg);
-		return 1;
-	}
-
-	hFile = CreateFile (arg[0], GENERIC_READ, FILE_SHARE_READ,
-						NULL, OPEN_EXISTING,
-						FILE_ATTRIBUTE_NORMAL | FILE_FLAG_SEQUENTIAL_SCAN,
-						NULL);
-
-	if (hFile == INVALID_HANDLE_VALUE)
-	{
-		error_sfile_not_found (param);
-		freep (arg);
-		return 1;
-	}
-
-	do
-	{
-		bResult = ReadFile (hFile, szBuffer, sizeof(szBuffer),
-							&dwBytesRead, NULL);
-		if (dwBytesRead)
-			WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szBuffer, dwBytesRead,
-					   &dwBytesWritten, NULL);
-	}
-	while (bResult && dwBytesRead > 0);
-
-	CloseHandle (hFile);
-	*/
 	freep (argv);
 
 	return 0;

@@ -110,7 +110,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	arg = split (param, &argc);
+	arg = split (param, &argc, FALSE);
 	nFiles = argc;
 
 	/* read options */

@@ -202,7 +202,7 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* build parameter array */
-	arg = split (param, &argc);
+	arg = split (param, &argc, FALSE);
 
 	/* check for options */
 	for (i = 0; i < argc; i++)

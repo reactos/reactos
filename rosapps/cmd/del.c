@@ -111,7 +111,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	arg = split (param, &args);
+	arg = split (param, &args, FALSE);
 
 	if (args > 0)
 	{

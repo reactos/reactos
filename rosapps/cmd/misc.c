@@ -35,7 +35,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
-//#include <stdarg.h>
 #include <stdio.h>
 #include <tchar.h>
 
@@ -122,16 +121,65 @@ BOOL CheckCtrlBreak (INT mode)
 	return TRUE;
 }
 
+/* add new entry for new argument */
+static BOOL add_entry (LPINT ac, LPTSTR **arg, LPTSTR entry)
+{
+	LPTSTR q;
+	LPTSTR *oldarg;
+
+	q = malloc ((_tcslen(entry) + 1) * sizeof (TCHAR));
+	if (NULL == q)
+	{
+		return FALSE;
+	}
+	_tcscpy (q, entry);
+		
+	oldarg = *arg;
+	*arg = realloc (oldarg, (*ac + 2) * sizeof (LPTSTR));
+	if (NULL == *arg)
+	{
+		*arg = oldarg;
+		return FALSE;
+	}
+
+	/* save new entry */
+	(*arg)[*ac] = q;
+	(*arg)[++(*ac)] = NULL;
+
+	return TRUE;
+}
+
+static BOOL expand (LPINT ac, LPTSTR **arg, LPTSTR pattern)
+{
+	HANDLE hFind;
+	WIN32_FIND_DATA FindData;
+	BOOL ok;
+
+	hFind = FindFirstFile (pattern, &FindData);
+	if (INVALID_HANDLE_VALUE != hFind)
+	{
+		do
+		{
+			ok = add_entry(ac, arg, FindData.cFileName);
+		} while (FindNextFile (hFind, &FindData) && ok);
+		FindClose (hFind);
+	}
+	else
+	{
+		ok = add_entry(ac, arg, pattern);
+	}
+
+	return ok;
+}
 
 /*
  * split - splits a line up into separate arguments, deliminators
  *         are spaces and slashes ('/').
  */
 
-LPTSTR *split (LPTSTR s, LPINT args)
+LPTSTR *split (LPTSTR s, LPINT args, BOOL expand_wildcards)
 {
 	LPTSTR *arg;
-	LPTSTR *p;
 	LPTSTR start;
 	LPTSTR q;
 	INT  ac;
@@ -178,24 +226,33 @@ LPTSTR *split (LPTSTR s, LPINT args)
 		/* a word was found */
 		if (s != start)
 		{
-			/* add new entry for new argument */
-			arg = realloc (p = arg, (ac + 2) * sizeof (LPTSTR));
-			if (!arg)
-			{
-				freep (p);
-				return NULL;
-			}
-
-			/* create new entry */
-			q = arg[ac] = malloc (((len = s - start) + 1) * sizeof (TCHAR));
-			arg[++ac] = NULL;
+			q = malloc (((len = s - start) + 1) * sizeof (TCHAR));
 			if (!q)
 			{
-				freep (arg);
 				return NULL;
 			}
 			memcpy (q, start, len * sizeof (TCHAR));
 			q[len] = _T('\0');
+			if (expand_wildcards && _T('/') != *start &&
+			    (NULL != _tcschr(q, _T('*')) || NULL != _tcschr(q, _T('?'))))
+			{
+				if (! expand(&ac, &arg, q))
+				{
+					free (q);
+					freep (arg);
+					return NULL;
+				}
+			}
+			else
+			{
+				if (! add_entry(&ac, &arg, q))
+				{
+					free (q);
+					freep (arg);
+					return NULL;
+				}
+			}
+			free (q);
 		}
 
 		/* adjust string pointer if quoted (") */

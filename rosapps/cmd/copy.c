@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.7 2000/04/08 14:50:47 ekohl Exp $
+/* $Id: copy.c,v 1.8 2003/01/17 00:31:32 gvg Exp $
  *
  *  COPY.C -- copy internal command.
  *
@@ -647,7 +647,7 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		return 1;
 	}
 
-	p = split (rest, &argc);
+	p = split (rest, &argc, FALSE);
 
 	if (argc == 0)
 	{

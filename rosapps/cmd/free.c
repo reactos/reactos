@@ -150,7 +150,7 @@ INT CommandFree (LPTSTR cmd, LPTSTR param)
 	else
 		szParam = param;
 
-	arg = split (szParam, &argc);
+	arg = split (szParam, &argc, FALSE);
 
 	for (i = 0; i < argc; i++)
 		PrintDiskInfo (arg[i]);
