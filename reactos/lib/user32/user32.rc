@@ -38,18 +38,46 @@ BEGIN
     END
 END
 
+/////////////////////////////////////////////////////////////////////////////
+//
+// Cursors
+//
+
+32512 CURSOR "resources/ocr_normal.cur"
+32513 CURSOR "resources/ocr_ibeam.cur"
+32514 CURSOR "resources/ocr_wait.cur"
+32515 CURSOR "resources/ocr_cross.cur"
+32516 CURSOR "resources/ocr_up.cur"
+32642 CURSOR "resources/ocr_sizenwse.cur"
+32643 CURSOR "resources/ocr_sizenesw.cur"
+32644 CURSOR "resources/ocr_sizewe.cur"
+32645 CURSOR "resources/ocr_sizens.cur"
+32646 CURSOR "resources/ocr_sizeall.cur"
+32648 CURSOR "resources/ocr_no.cur"
+32650 CURSOR "resources/ocr_appstarting.cur"
+32651 CURSOR "resources/ocr_help.cur"
+32640 CURSOR "resources/ocr_size.cur"
+32641 CURSOR "resources/ocr_icon.cur"
+32649 CURSOR "resources/ocr_hand.cur"
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmaps
+//
+
 OBM_CLOSE BITMAP "resources/obm_close.bmp"
 DF_HATCH BITMAP "resources/df_hatch.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Dialog
+// Dialogs
 //
 
 MSGBOX DIALOG DISCARDABLE  100, 80, 495, 77
 STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU
 FONT 8, "MS Sans Serif"
+CAPTION "Error"
 BEGIN
         ICON "", 1088, 9, 20, 16, 16, WS_CHILD | WS_VISIBLE
         LTEXT "", 100, 48, 16, 176, 48, WS_CHILD | WS_VISIBLE | WS_GROUP
@@ -62,11 +90,24 @@ BEGIN
         PUSHBUTTON "&No", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
         PUSHBUTTON "&Help", 9, 351, 55, 40, 14, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
         PUSHBUTTON "&Try Again", 10, 398, 54, 40, 14, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-        PUSHBUTTON "&Continue", 11, 445, 55, 40, 14, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+        PUSHBUTTON "Co&ntinue", 11, 445, 55, 40, 14, BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU
+FONT 8, "MS Sans Serif"
+CAPTION "Select Window"
+BEGIN
+  LISTBOX "", 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&OK", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Cancel", 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
 
-/* Menus */
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
 
 EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
