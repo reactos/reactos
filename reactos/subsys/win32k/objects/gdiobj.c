@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.55 2003/12/27 17:47:44 gvg Exp $
+ * $Id: gdiobj.c,v 1.56 2004/01/11 01:42:08 gvg Exp $
  *
  */
 
@@ -528,7 +528,8 @@ NtGdiDeleteObject(HGDIOBJ hObject)
 {
   DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
 
-  return GDIOBJ_FreeObj(hObject, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_DEFAULT);
+  return NULL != hObject
+         ? GDIOBJ_FreeObj(hObject, GDI_OBJECT_TYPE_DONTCARE, GDIOBJFLAG_DEFAULT) : FALSE;
 }
 
 /*!
