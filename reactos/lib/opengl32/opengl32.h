@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.16 2004/07/16 16:16:16 blight Exp $
+/* $Id: opengl32.h,v 1.17 2004/07/17 02:26:33 blight Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -22,7 +22,7 @@ extern "C" {
 # define PFD_GENERIC_ACCELERATED 0x00001000
 #endif
 
-#define OPENGL_DRIVERS_SUBKEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\"
+#define OPENGL_DRIVERS_SUBKEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers"
 
 /* gl function list */
 #include "glfuncs.h"

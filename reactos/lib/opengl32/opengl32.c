@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.17 2004/07/16 16:16:16 blight Exp $
+/* $Id: opengl32.c,v 1.18 2004/07/17 02:26:33 blight Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -601,7 +601,7 @@ static DWORD
 OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
 {
 	HKEY hKey;
-	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY;
+	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY"\\";
 	LONG ret;
 	DWORD type, size;
 
