@@ -12,7 +12,6 @@ wchar_t * wcsncpy(wchar_t * dest,const wchar_t *src,size_t count)
 	     return(dest);
 	  }
      }
-   dest[i]=0;
    return(dest);
 }
 

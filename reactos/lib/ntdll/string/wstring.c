@@ -1,4 +1,4 @@
-/* $Id: wstring.c,v 1.7 2000/02/05 23:45:46 ekohl Exp $
+/* $Id: wstring.c,v 1.8 2003/01/02 16:05:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -200,7 +200,6 @@ wchar_t* wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
           return dest;
         }
     }
-  dest[i] = 0;
 
   return dest;
 }

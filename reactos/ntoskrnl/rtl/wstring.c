@@ -1,4 +1,5 @@
-/*
+/* $Id: wstring.c,v 1.18 2003/01/02 16:05:50 hbirr Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/wstring.c
@@ -234,7 +235,6 @@ wchar_t *wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
           return dest;
         }
     }
-  dest[i] = 0;
 
   return dest;
 }
