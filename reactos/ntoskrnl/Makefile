@@ -14,12 +14,6 @@ TARGET_BOOTSTRAP = yes
 
 CONFIG :=
 
-ifeq ($(DBG), 1)
-CFLAGS_DBG := -g
-else
-CFLAGS_DBG :=
-endif
-
 LINKER_SCRIPT := ntoskrnl.lnk
 STRIP_FLAGS := -Wl,-s
 
@@ -33,7 +27,7 @@ ifeq ($(KDBG), 1)
 OBJECTS_KDBG := dbg/kdb.o dbg/kdb_serial.o dbg/kdb_keyboard.o dbg/rdebug.o \
                 dbg/i386/kdb_help.o dbg/kdb_stabs.o dbg/kdb_symbols.o dbg/profile.o \
 		../dk/w32/lib/kjs.a dbg/i386/i386-dis.o
-CFLAGS += -I../lib/kjs/include
+CFLAGS_KDBG := -I../lib/kjs/include
 preall: all
 
 ../dk/w32/lib/kjs.a:
@@ -43,37 +37,26 @@ OBJECTS_KDBG :=
 endif
 
 ifeq ($(strip $(SDK_PATH_INC)),)
-ASFLAGS += -I./include
-CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror $(CFLAGS_OPT)
+TARGET_ASFLAGS = -I./include
+TARGET_CFLAGS = -I./include $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 else
-ASFLAGS += -I./include -I$(SDK_PATH_INC)
-CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror $(CFLAGS_OPT)
+TARGET_ASFLAGS = -I./include -I$(SDK_PATH_INC)
+TARGET_CFLAGS = -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_KDBG) -Wall -Werror $(CFLAGS_OPT)
 endif
 
 # require os code to explicitly request A/W version of structs/functions
-CFLAGS += -D_DISABLE_TIDENTS
-
-# no native setjmp/longjmp in the kernel
-CFLAGS += -D_SEH_NO_NATIVE_NLG
+TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 # 3GB User Mode Memory Space support
 ifeq ($(3GB), 1)
-CFLAGS += -D__3GB__
+TARGET_CFLAGS += -D__3GB__
 TARGET_BASE = 0xC0000000
 else
 TARGET_BASE = 0x80000000
 endif
 
 # enable thread event pair features (NT4 only!)
-# CFLAGS += -D_ENABLE_THRDEVTPAIR
-
-CFLAGS += $(STD_CFLAGS)
-ASFLAGS += $(STD_ASFLAGS)
-RCFLAGS += $(STD_RCFLAGS)
-
-TARGET_CFLAGS = $(CFLAGS)
-TARGET_ASFLAGS = $(ASFLAGS)
-TARGET_RCFLAGS = $(RCFLAGS)
+# TARGET_CFLAGS += -D_ENABLE_THRDEVTPAIR
 
 #
 # Javascript extension for kdb
