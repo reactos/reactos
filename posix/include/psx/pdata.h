@@ -1,4 +1,4 @@
-/* $Id: pdata.h,v 1.4 2002/03/10 17:03:18 hyperion Exp $
+/* $Id: pdata.h,v 1.5 2002/03/11 20:51:16 hyperion Exp $
  */
 /*
  * psx/pdata.h
@@ -80,6 +80,15 @@ typedef struct __tagPDX_SERIALIZED_PDATA
 /* PROTOTYPES */
 NTSTATUS STDCALL __PdxSerializeProcessData(IN __PPDX_PDATA, OUT __PPDX_SERIALIZED_PDATA *);
 NTSTATUS STDCALL __PdxUnserializeProcessData(IN OUT __PPDX_SERIALIZED_PDATA *, OUT __PPDX_PDATA * OPTIONAL);
+
+NTSTATUS
+STDCALL
+__PdxProcessDataToProcessParameters
+(
+ OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
+ IN __PPDX_PDATA ProcessData,
+ IN PUNICODE_STRING ImageFile
+);
 
 /* MACROS */
 #define __PdxAcquirePdataLock() (RtlAcquirePebLock())
