@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.24 2001/02/28 22:33:23 ekohl Exp $
+/* $Id: cmd.c,v 1.25 2001/04/26 11:31:33 ekohl Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -746,7 +746,7 @@ ProcessInput (BOOL bFlag)
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR readline[CMDLINE_LENGTH];
-	LPTSTR tp;
+	LPTSTR tp = NULL;
 	LPTSTR ip;
 	LPTSTR cp;
 	BOOL bEchoThisLine;
@@ -800,7 +800,8 @@ ProcessInput (BOOL bFlag)
 						break;
 
 					default:
-						if ((tp = _tcschr (ip, _T('%'))) && (tp<=(unsigned int)strchr(ip,_T(' '))-1))
+						if ((tp == _tcschr(ip, _T('%'))) &&
+						    (tp <= _tcschr(ip, _T(' '))-1))
 						{
 							char evar[512];
 							*tp = _T('\0');

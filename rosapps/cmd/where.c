@@ -102,29 +102,24 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	*pFullName = _T('\0');
 
 #ifdef _DEBUG
-        DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
+	DebugPrintf (_T("SearchForExecutable: \'%s\'\n"), pFileName);
 #endif
 
-        if (_tcschr (pFileName, _T('\\')) != NULL)
-        {
-                LPTSTR pFilePart;
+	if (_tcschr (pFileName, _T('\\')) != NULL)
+	{
+		LPTSTR pFilePart;
 #ifdef _DEBUG
-                DebugPrintf (_T("Absolute or relative path is given.\n"));
+		DebugPrintf (_T("Absolute or relative path is given.\n"));
 #endif
-                
 
-				
-				
-				if (GetFullPathName (pFileName,
-						             MAX_PATH,
-							         szPathBuffer,
-								     &pFilePart)  ==0)								
-					return FALSE;
+		if (GetFullPathName (pFileName,
+			             MAX_PATH,
+			             szPathBuffer,
+			             &pFilePart)  ==0)
+			return FALSE;
 
-				
-				if(pFilePart == 0)
-					return FALSE;
-				
+		if(pFilePart == 0)
+			return FALSE;
 
 
                 if (_tcschr (pFilePart, _T('.')) != NULL)

@@ -38,25 +38,33 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 	DWORD dwSerialNr;
 
 	/* get the volume information of the drive */
-        if(!GetVolumeInformation (pszRootPath, szVolName, 80, &dwSerialNr,
-                                  NULL, NULL, NULL, 0))
-        {
-                ErrorMessage (GetLastError (), _T(""));
-                return 1;
-        }
+	if(!GetVolumeInformation (pszRootPath,
+				  szVolName,
+				  80,
+				  &dwSerialNr,
+				  NULL,
+				  NULL,
+				  NULL,
+				  0))
+	{
+		ErrorMessage (GetLastError (), _T(""));
+		return 1;
+	}
 
 	/* print drive info */
 	ConOutPrintf (_T(" Volume in drive %c:"), pszRootPath[0]);
 
 	if (szVolName[0] != '\0')
-		ConOutPrintf (_T(" is %s\n"), szVolName);
+		ConOutPrintf (_T(" is %s\n"),
+			      szVolName);
 	else
 		ConOutPrintf (_T(" has no label\n"));
 
 	/* print the volume serial number */
 	ConOutPrintf (_T(" Volume Serial Number is %04X-%04X\n"),
-				  HIWORD(dwSerialNr), LOWORD(dwSerialNr));
-        return 0;
+		      HIWORD(dwSerialNr),
+		      LOWORD(dwSerialNr));
+	return 0;
 }
 
 
@@ -68,7 +76,7 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Displays the disk volume label and serial number, if they exist.\n\n"
-					   "VOL [drive:]"));
+			    "VOL [drive:]"));
 		return 0;
 	}
 
@@ -96,8 +104,8 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* print the header */
-        if (!PrintVolumeHeader (szRootPath))
-            return 1;
+	if (!PrintVolumeHeader (szRootPath))
+		return 1;
 
 	return 0;
 }
