@@ -222,8 +222,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
 HWND STDCALL
 NtUserGetClipboardOwner(VOID)
 {
-   UNIMPLEMENTED
-   return 0;
+   return ClipboardWindow;
 }
 
 DWORD STDCALL
