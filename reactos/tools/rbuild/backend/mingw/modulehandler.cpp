@@ -795,10 +795,11 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          "\t${rm} %s\n",
 	          junk_tmp.c_str () );
 	fprintf ( fMakefile,
-	          "\t${dlltool} --dllname %s --base-file %s --output-exp %s --kill-at\n",
+	          "\t${dlltool} --dllname %s --base-file %s --def ntoskrnl/ntoskrnl.def --output-exp %s --kill-at\n",
 	          target.c_str (),
 	          base_tmp.c_str (),
-	          temp_exp.c_str ());
+	          //FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+	          temp_exp.c_str () );
 	fprintf ( fMakefile,
 	          "\t${rm} %s\n",
 	          base_tmp.c_str () );
