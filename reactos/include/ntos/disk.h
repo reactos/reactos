@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.7 2002/05/25 13:32:51 ekohl Exp $
+/* $Id: disk.h,v 1.8 2002/05/29 21:39:06 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -32,6 +32,26 @@
 #define IOCTL_DISK_REQUEST_DATA         CTL_CODE(FILE_DEVICE_DISK, 16, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
 
+#define PARTITION_ENTRY_UNUSED          0x00
+#define PARTITION_FAT_12                0x01
+#define PARTITION_XENIX_1               0x02
+#define PARTITION_XENIX_2               0x03
+#define PARTITION_FAT_16                0x04
+#define PARTITION_EXTENDED              0x05
+#define PARTITION_HUGE                  0x06
+#define PARTITION_IFS                   0x07
+#define PARTITION_FAT32                 0x0B
+#define PARTITION_FAT32_XINT13          0x0C
+#define PARTITION_XINT13                0x0E
+#define PARTITION_XINT13_EXTENDED       0x0F
+#define PARTITION_PREP                  0x41
+#define PARTITION_LDM                   0x42
+#define PARTITION_UNIX                  0x63
+
+#define PARTITION_NTFT                  0x80
+#define VALID_NTFT                      0xC0
+
+#if 0
 #define PTEmpty                         0x00
 #define PTDOS3xPrimary                  0x01
 #define PTXENIXRoot                     0x02
@@ -69,25 +89,21 @@
 #define PTDOSRO                         0xE3
 #define PTDOSSecondary                  0xF2
 #define PTBBT                           0xFF
-
+#endif
 
 #define IsRecognizedPartition(P)  \
-    ((P) == PTDOS3xPrimary  || \
-     (P) == PTOLDDOS16Bit   || \
-     (P) == PTDos5xPrimary  || \
-     (P) == PTIfs           || \
-     (P) == PTWin95FAT32    || \
-     (P) == PTWin95FAT32LBA || \
-     (P) == PTWin95FAT16LBA || \
-     (P) == PTLinuxExt2)
+    ((P) == PARTITION_FAT_12       || \
+     (P) == PARTITION_FAT_16       || \
+     (P) == PARTITION_HUGE         || \
+     (P) == PARTITION_IFS          || \
+     (P) == PARTITION_FAT32        || \
+     (P) == PARTITION_FAT32_XINT13 || \
+     (P) == PARTITION_XINT13)
 
-#define IsExtendedPartition(P)  \
-    ((P) == PTDosExtended || \
-     (P) == PTWin95ExtendedLBA)
+#define IsContainerPartition(P)  \
+    ((P) == PARTITION_EXTENDED || \
+     (P) == PARTITION_XINT13_EXTENDED)
 
-#define IsNormalPartition(P)   \
-    ((P) != PTEmpty &&         \
-     !IsExtendedPartition(P))
 
 typedef enum _MEDIA_TYPE {
   Unknown,
