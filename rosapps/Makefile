@@ -7,14 +7,7 @@ include rules.mak
 #
 # Available applications
 #
-#net$(SEP)arp
-#net$(SEP)ipconfig
-#net$(SEP)netstat
-#net$(SEP)niclist
-#net$(SEP)telnet
-#net$(SEP)whois
-#net$(SEP)finger 
-#net$(SEP)ping 
+ 
 APPS = 	calc \
 	cmdutils \
 	cmdutils$(SEP)mode \
@@ -25,6 +18,14 @@ APPS = 	calc \
 	sysutils \
 	demos$(SEP)maze\
 	sysutils$(SEP)ctm \
+	net$(SEP)ping \
+	net$(SEP)finger \
+	net$(SEP)telnet \
+	net$(SEP)niclist \
+	net$(SEP)whois \
+	net$(SEP)arp \
+	net$(SEP)netstat \
+	net$(SEP)ipconfig \
 	net$(SEP)ncftp \
 	regedt32 \
 	welcome \
