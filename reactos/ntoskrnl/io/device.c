@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.16 2000/03/26 19:38:22 ea Exp $
+/* $Id: device.c,v 1.17 2000/06/18 15:23:40 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -48,7 +48,11 @@ NTSTATUS STDCALL NtUnloadDriver(IN PUNICODE_STRING DriverServiceName)
  *
  * REVISIONS
  */
-NTSTATUS STDCALL NtLoadDriver (PUNICODE_STRING	DriverServiceName)
+NTSTATUS
+STDCALL
+NtLoadDriver (
+	PUNICODE_STRING	DriverServiceName
+	)
 {
   /* FIXME: this should lookup the filename from the registry and then call LdrLoadDriver  */
   return  LdrLoadDriver (DriverServiceName);
@@ -57,10 +61,23 @@ NTSTATUS STDCALL NtLoadDriver (PUNICODE_STRING	DriverServiceName)
 
 NTSTATUS
 STDCALL
-IoAttachDeviceByPointer(PDEVICE_OBJECT	SourceDevice,
-				 PDEVICE_OBJECT	TargetDevice)
+IoAttachDeviceByPointer (
+	IN	PDEVICE_OBJECT	SourceDevice,
+	IN	PDEVICE_OBJECT	TargetDevice
+	)
 {
-	UNIMPLEMENTED;
+	PDEVICE_OBJECT AttachedDevice;
+
+	DPRINT("IoAttachDeviceByPointer(SourceDevice %x, TargetDevice %x)\n",
+	       SourceDevice,
+	       TargetDevice);
+
+	AttachedDevice = IoAttachDeviceToDeviceStack (SourceDevice,
+	                                              TargetDevice);
+	if (AttachedDevice == NULL)
+		return STATUS_NO_SUCH_DEVICE;
+
+	return STATUS_SUCCESS;
 }
 
 
@@ -84,13 +101,55 @@ IoGetRelatedDeviceObject (
 
 NTSTATUS
 STDCALL
-IoGetDeviceObjectPointer(PUNICODE_STRING ObjectName,
-				  ACCESS_MASK DesiredAccess,
-				  PFILE_OBJECT* FileObject,
-				  PDEVICE_OBJECT* DeviceObject)
+IoGetDeviceObjectPointer (
+	IN	PUNICODE_STRING	ObjectName,
+	IN	ACCESS_MASK	DesiredAccess,
+	OUT	PFILE_OBJECT	* FileObject,
+	OUT	PDEVICE_OBJECT	* DeviceObject)
 {
-   UNIMPLEMENTED;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK StatusBlock;
+	PFILE_OBJECT LocalFileObject;
+	HANDLE FileHandle;
+	NTSTATUS Status;
+
+	DPRINT("IoGetDeviceObjectPointer(ObjectName %wZ, DesiredAccess %x, FileObject %p DeviceObject %p)\n",
+	       ObjectName,
+	       DesiredAccess,
+	       FileObject,
+	       DeviceObject);
+
+	InitializeObjectAttributes (&ObjectAttributes,
+	                            ObjectName,
+	                            0,
+	                            NULL,
+	                            NULL);
+
+	Status = NtOpenFile (&FileHandle,
+	                     DesiredAccess,
+	                     &ObjectAttributes,
+	                     &StatusBlock,
+	                     0,
+	                     FILE_NON_DIRECTORY_FILE);
+	if (!NT_SUCCESS(Status))
+		return Status;
+
+	Status = ObReferenceObjectByHandle (FileHandle,
+	                                    0,
+	                                    IoFileObjectType,
+	                                    KernelMode,
+	                                    (PVOID*)&LocalFileObject,
+	                                    NULL);
+	if (NT_SUCCESS(Status))
+	{
+		*DeviceObject = IoGetRelatedDeviceObject (LocalFileObject);
+		*FileObject = LocalFileObject;
+	}
+	NtClose (FileHandle);
+
+	return Status;
 }
+
 
 VOID
 STDCALL
@@ -98,6 +157,7 @@ IoDetachDevice(PDEVICE_OBJECT TargetDevice)
 {
    UNIMPLEMENTED;
 }
+
 
 PDEVICE_OBJECT
 STDCALL
