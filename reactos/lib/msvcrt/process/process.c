@@ -85,7 +85,6 @@ const char* find_exec(const char* path, char* rpath)
 		  }
 	       }
 	    }
-	    free(env);
 	}
     }
     

@@ -56,6 +56,8 @@ void* calloc(size_t _nmemb, size_t _size)
  */
 void* realloc(void* _ptr, size_t _size)
 {
+   if (!_ptr)
+      return HeapAlloc(hHeap, 0, _size);
    return HeapReAlloc(hHeap, 0, _ptr, _size);
 }
 

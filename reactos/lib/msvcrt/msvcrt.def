@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.35 2004/05/15 12:55:47 jfilby Exp $
+; $Id: msvcrt.def,v 1.36 2004/08/27 03:08:23 navaraf Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -129,7 +129,7 @@ __p___argv
 __p___wargv
 __p___initenv
 __p___mb_cur_max
-;__p___winitenv
+__p___winitenv
 __p__acmdln
 ;__p__amblksiz
 __p__commode
@@ -148,7 +148,7 @@ __p__pwctype
 ;__p__timezone
 ;__p__tzname
 ;__p__wcmdln
-;__p__wenviron
+__p__wenviron
 __p__winmajor
 __p__winminor
 __p__winver
@@ -164,9 +164,9 @@ __toascii
 __unDName
 ;__unDNameEx
 ;__unguarded_readlc_active
-;__wargv
+__wargv
 __wgetmainargs
-;__winitenv
+__winitenv
 ;___lc_codepage_func
 ;___lc_handle_func
 ;___mb_cur_max_func
@@ -246,7 +246,6 @@ _dup2
 _ecvt
 _endthread
 _endthreadex
-_environ_dll DATA
 ;_environ
 _eof
 _errno
@@ -561,7 +560,7 @@ _waccess
 _wasctime
 _wchdir
 _wchmod
-_wcmdln=MSVCRT__wcmdln
+_wcmdln
 _wcreat
 _wcsdup
 ;_wcserror

@@ -4,23 +4,24 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+#undef environ
 
 /*
  * @implemented
  */
 char *getenv(const char *name)
 {
-	char *buffer = (char*)0xffffffff;
-	int len = GetEnvironmentVariableA(name,buffer,0) + 1;
-	DPRINT("getenv(%s)\n", name);
-	buffer = (char *)malloc(len);
-	DPRINT("getenv('%s') %d %x\n", name, len, buffer);
-	if (buffer == NULL || GetEnvironmentVariableA(name,buffer,len) == 0 )
-	{
-		free(buffer);
-		return NULL;
-	}
-	return buffer;
+   char **environ;
+   unsigned int length = strlen(name);
+
+   for (environ = *__p__environ(); *environ; environ++)
+   {
+      char *str = *environ;
+      char *pos = strchr(str,'=');
+      if (pos && ((pos - str) == length) && !strnicmp(str, name, length))
+         return pos + 1;
+   }
+   return NULL;
 }
 
 /*
@@ -28,14 +29,15 @@ char *getenv(const char *name)
  */
 wchar_t *_wgetenv(const wchar_t *name)
 {
-	wchar_t *buffer = (wchar_t*)0xffffffff;
-	int len = GetEnvironmentVariableW(name, buffer,0) + 1;
-	DPRINT("_wgetenv(%S)\n", name);
-	buffer = (wchar_t *)malloc(len * sizeof(wchar_t));
-	if (buffer == NULL || GetEnvironmentVariableW(name,buffer,len) == 0)
-	{
-		free(buffer);
-		return NULL;
-	}
-	return buffer;
+   wchar_t **environ;
+   unsigned int length = wcslen(name);
+
+   for (environ = *__p__wenviron(); *environ; environ++)
+   {
+      wchar_t *str = *environ;
+      wchar_t *pos = wcschr(str, L'=');
+      if (pos && ((pos - str) == length) && !wcsnicmp(str, name, length))
+         return pos + 1;
+   }
+   return NULL;
 }

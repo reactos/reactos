@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.10 2004/08/15 18:16:37 chorns Exp $
+/* $Id: _system.c,v 1.11 2004/08/27 03:08:23 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -39,10 +39,7 @@ int system(const char *command)
       if (szComSpec == NULL)
 	return 0;
       else
-      {
-	free(szComSpec);
 	return -1;
-      }
     }
 
 // should return 127 or 0 ( MS ) if the shell is not found
