@@ -1,4 +1,4 @@
-/* $Id: fsctrl.c,v 1.5 2001/07/29 16:40:20 ekohl Exp $
+/* $Id: fsctrl.c,v 1.6 2001/10/20 15:30:07 ekohl Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -55,7 +55,8 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 				      NPFS_FCB,
 				      FcbListEntry);
 	
-	if (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	if ((ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	    || (ClientFcb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
 	  {
 	     break;
 	  }
@@ -63,7 +64,8 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	current_entry = current_entry->Flink;
      }
    
-   if (current_entry != &Pipe->ClientFcbListHead)
+   if ((current_entry != &Pipe->ClientFcbListHead)
+       && (ClientFcb->PipeState == FILE_PIPE_LISTENING_STATE))
      {
 	/* found a listening client fcb */
 	DPRINT("Listening client fcb found -- connecting\n");
@@ -81,6 +83,15 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
 	/* signal client's connect event */
 	KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
 
+     }
+   else if ((current_entry != &Pipe->ClientFcbListHead)
+	    && (ClientFcb->PipeState == FILE_PIPE_DISCONNECTED_STATE))
+     {
+	/* found a disconnected client fcb */
+	DPRINT("Disconnected client fcb found - notifying client\n");
+
+	/* signal client's connect event */
+	KeSetEvent(&ClientFcb->ConnectEvent, IO_NO_INCREMENT, FALSE);
      }
    else
      {
@@ -141,10 +152,54 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
 
 
 static NTSTATUS
-NpfsWaitPipe(PNPFS_FCB Fcb)
+NpfsWaitPipe(PIRP Irp,
+	     PNPFS_FCB Fcb)
 {
+  PNPFS_PIPE Pipe;
+  PLIST_ENTRY current_entry;
+  PNPFS_FCB ServerFcb;
+  PNPFS_WAIT_PIPE WaitPipe;
+  NTSTATUS Status;
+
   DPRINT("NpfsWaitPipe\n");
-  return STATUS_NOT_IMPLEMENTED;
+
+  WaitPipe = (PNPFS_WAIT_PIPE)Irp->AssociatedIrp.SystemBuffer;
+  Pipe = Fcb->Pipe;
+
+  /* search for listening server */
+  current_entry = Pipe->ServerFcbListHead.Flink;
+  while (current_entry != &Pipe->ServerFcbListHead)
+    {
+      ServerFcb = CONTAINING_RECORD(current_entry,
+				    NPFS_FCB,
+				    FcbListEntry);
+
+      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+	break;
+
+      current_entry = current_entry->Flink;
+    }
+
+  if (current_entry != &Pipe->ServerFcbListHead)
+    {
+      /* found a listening server fcb */
+      DPRINT("Listening server fcb found -- connecting\n");
+
+      Status = STATUS_SUCCESS;
+    }
+  else
+    {
+      /* no listening server fcb found -- wait for one */
+      Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
+
+      Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
+				     UserRequest,
+				     KernelMode,
+				     FALSE,
+				     &WaitPipe->Timeout);
+    }
+
+  return(Status);
 }
 
 
@@ -186,7 +241,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_WAIT:
 	DPRINT("Waiting for pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsWaitPipe(Fcb);
+	Status = NpfsWaitPipe(Irp, Fcb);
 	break;
 
       default:
