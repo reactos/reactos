@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.28 2003/03/04 21:58:05 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.29 2003/03/28 22:47:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,7 +58,8 @@ typedef struct _MBR
 typedef enum _DISK_MANAGER
 {
   NoDiskManager,
-  OntrackDiskManager
+  OntrackDiskManager,
+  EZ_Drive
 } DISK_MANAGER;
 
 
@@ -188,7 +189,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   PIRP Irp;
   NTSTATUS Status;
 
-  DPRINT1("xHalExamineMBR()\n");
+  DPRINT("xHalExamineMBR()\n");
   *Buffer = NULL;
 
   if (SectorSize < 512)
@@ -229,7 +230,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Reading MBR failed (Status 0x%08lx)\n",
+      DPRINT("Reading MBR failed (Status 0x%08lx)\n",
 	     Status);
       ExFreePool(Sector);
       return;
@@ -239,14 +240,14 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 
   if (Mbr->Magic != PARTITION_MAGIC)
     {
-      DPRINT1("Invalid MBR magic value\n");
+      DPRINT("Invalid MBR magic value\n");
       ExFreePool(Sector);
       return;
     }
 
   if (Mbr->Partition[0].PartitionType != MBRTypeIdentifier)
     {
-      DPRINT1("Invalid MBRTypeIdentifier\n");
+      DPRINT("Invalid MBRTypeIdentifier\n");
       ExFreePool(Sector);
       return;
     }
@@ -254,7 +255,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   if (Mbr->Partition[0].PartitionType == 0x54)
     {
       /* Found 'Ontrack Disk Manager'. Shift all sectors by 63 */
-      DPRINT1("Found 'Ontrack Disk Manager'!\n");
+      DPRINT("Found 'Ontrack Disk Manager'!\n");
       Shift = (PULONG)Mbr;
       *Shift = 63;
     }
@@ -615,8 +616,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
   ULARGE_INTEGER PartitionOffset;
-  ULARGE_INTEGER  nextPartitionOffset;
-  ULARGE_INTEGER  containerOffset;
+  ULARGE_INTEGER RealPartitionOffset;
+  ULARGE_INTEGER nextPartitionOffset;
+  ULARGE_INTEGER containerOffset;
   PUCHAR SectorBuffer;
   PIRP Irp;
   NTSTATUS Status;
@@ -640,12 +642,24 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   /* Check for 'Ontrack Disk Manager' */
   xHalExamineMBR(DeviceObject,
 		 SectorSize,
+		 0x54,
+		 &MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT("Found 'Ontrack Disk Manager'\n");
+      DiskManager = OntrackDiskManager;
+      ExFreePool(MbrBuffer);
+    }
+
+  /* Check for 'EZ-Drive' */
+  xHalExamineMBR(DeviceObject,
+		 SectorSize,
 		 0x55,
 		 &MbrBuffer);
   if (MbrBuffer != NULL)
     {
-      DPRINT1("Found 'Ontrack Disk Manager'\n");
-      DiskManager = OntrackDiskManager;
+      DPRINT("Found 'EZ-Drive'\n");
+      DiskManager = EZ_Drive;
       ExFreePool(MbrBuffer);
     }
 
@@ -667,25 +681,33 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(LayoutBuffer,
 		0x1000);
 
-  PartitionOffset.QuadPart = 0;
-  containerOffset.QuadPart = 0;
+  PartitionOffset.QuadPart = (ULONGLONG)0;
+  containerOffset.QuadPart = (ULONGLONG)0;
 
   do
     {
-      if (DiskManager == OntrackDiskManager)
-	PartitionOffset.QuadPart += (63 * 512);
-
       KeInitializeEvent(&Event,
 			NotificationEvent,
 			FALSE);
 
       DPRINT("PartitionOffset: %I64u\n", PartitionOffset.QuadPart / SectorSize);
 
+      if (DiskManager == OntrackDiskManager)
+	{
+	  RealPartitionOffset.QuadPart = PartitionOffset.QuadPart + (ULONGLONG)(63 * SectorSize);
+	}
+      else
+	{
+	  RealPartitionOffset.QuadPart = PartitionOffset.QuadPart;
+	}
+
+      DPRINT("RealPartitionOffset: %I64u\n", RealPartitionOffset.QuadPart / SectorSize);
+
       Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 					 DeviceObject,
 					 SectorBuffer,
 					 SectorSize,
-					 (PLARGE_INTEGER)&PartitionOffset,
+					 (PLARGE_INTEGER)&RealPartitionOffset,
 					 &Event,
 					 &StatusBlock);
       Status = IoCallDriver(DeviceObject,

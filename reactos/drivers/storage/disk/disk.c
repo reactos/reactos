@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.22 2003/02/26 16:25:40 ekohl Exp $
+/* $Id: disk.c,v 1.23 2003/03/28 22:45:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,6 +47,13 @@ typedef struct _DISK_DATA
   BOOLEAN BootIndicator;
   BOOLEAN DriveNotReady;
 } DISK_DATA, *PDISK_DATA;
+
+typedef enum _DISK_MANAGER
+{
+  NoDiskManager,
+  OntrackDiskManager,
+  EZ_Drive
+} DISK_MANAGER;
 
 
 BOOLEAN STDCALL
@@ -403,6 +410,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   ULONG PartitionNumber;
   PVOID MbrBuffer;
   NTSTATUS Status;
+  DISK_MANAGER DiskManager = NoDiskManager;
 
   DPRINT("DiskClassCreateDeviceObject() called\n");
 
@@ -548,9 +556,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		&MbrBuffer);
   if (MbrBuffer != NULL)
     {
-      DPRINT1("Found 'Ontrack Disk Manager'!\n");
-      KeBugCheck(0);
-
+      DPRINT("Found 'Ontrack Disk Manager'!\n");
+      DiskManager = OntrackDiskManager;
       ExFreePool(MbrBuffer);
       MbrBuffer = NULL;
     }
@@ -561,13 +568,18 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 		&MbrBuffer);
   if (MbrBuffer != NULL)
     {
-      DPRINT1("Found 'EZ-Drive' disk manager!\n");
-      KeBugCheck(0);
-
+      DPRINT("Found 'EZ-Drive' disk manager!\n");
+      DiskManager = EZ_Drive;
       ExFreePool(MbrBuffer);
       MbrBuffer = NULL;
     }
 
+  /* Start disk at sector 63 if the Ontrack Disk Manager was found */
+  if (DiskManager == OntrackDiskManager)
+    {
+      DiskDeviceExtension->StartingOffset.QuadPart = 
+	(ULONGLONG)(63 * DiskDeviceExtension->DiskGeometry->BytesPerSector);
+    }
 
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
       (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
@@ -667,8 +679,17 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->DiskGeometry = DiskDeviceExtension->DiskGeometry;
 	      PartitionDeviceExtension->PhysicalDevice = DiskDeviceExtension->PhysicalDevice;
 	      PartitionDeviceExtension->PortCapabilities = Capabilities;
-	      PartitionDeviceExtension->StartingOffset.QuadPart =
-		PartitionEntry->StartingOffset.QuadPart;
+	      if (DiskManager == OntrackDiskManager)
+		{
+		  PartitionDeviceExtension->StartingOffset.QuadPart =
+		    PartitionEntry->StartingOffset.QuadPart +
+		    (ULONGLONG)(63 * DiskDeviceExtension->DiskGeometry->BytesPerSector);
+		}
+	      else
+		{
+		  PartitionDeviceExtension->StartingOffset.QuadPart =
+		    PartitionEntry->StartingOffset.QuadPart;
+		}
 	      PartitionDeviceExtension->PartitionLength.QuadPart =
 		PartitionEntry->PartitionLength.QuadPart;
 	      PartitionDeviceExtension->PortNumber = (UCHAR)PortNumber;
