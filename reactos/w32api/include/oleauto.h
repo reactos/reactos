@@ -16,6 +16,13 @@
 #define VARIANT_LOCALBOOL 0x08
 #define VAR_TIMEVALUEONLY 0x0001
 #define VAR_DATEVALUEONLY 0x0002
+#define VAR_VALIDDATE 0x0004
+#define VAR_CALENDAR_HIJRI 0x0008
+#define VAR_LOCALBOOL 0x0010
+#define VAR_FORMAT_NOSUBSTITUTE 0x0020
+#define VAR_FOURDIGITYEARS 0x0040
+#define VAR_CALENDAR_THAI 0x0080
+#define	VAR_CALENDAR_GREGORIAN 0x0100
 #define MEMBERID_NIL DISPID_UNKNOWN
 #define ID_DEFAULTINST (-2)
 #define DISPATCH_METHOD 1
@@ -102,8 +109,6 @@
 #define VARCMP_GT 2
 #define VARCMP_NULL 3
 
-#define VAR_LOCALBOOL 0x10
-
 #define LOCALE_USE_NLS 0x10000000
 
 #define VARIANT_NOUSEROVERRIDE 0x04
@@ -111,10 +116,6 @@
 #define VARIANT_CALENDAR_THAI 0x20
 #define VARIANT_CALENDAR_GREGORIAN 0x40
 #define VARIANT_USE_NLS 0x80
-
-#define VAR_CALENDAR_HIJRI 0x08
-#define VAR_CALENDAR_THAI 0x80
-#define	VAR_CALENDAR_GREGORIAN 0x100
 
 #define NUMPRS_LEADING_WHITE 0x00001
 #define NUMPRS_TRAILING_WHITE 0x00002
@@ -132,6 +133,19 @@
 #define NUMPRS_STD 0x01FFF
 #define NUMPRS_NEG 0x10000
 #define NUMPRS_INEXACT 0x20000
+
+#define VTBIT_I1 (1<<VT_I1)
+#define VTBIT_UI1 (1<<VT_UI1)
+#define VTBIT_I2 (1<<VT_I2)
+#define VTBIT_UI2 (1<<VT_UI2)
+#define VTBIT_I4 (1<<VT_I4)
+#define VTBIT_UI4 (1<<VT_UI4)
+#define VTBIT_I8 (1<<VT_I8)
+#define VTBIT_UI8 (1<<VT_UI8)
+#define VTBIT_R4 (1<<VT_R4)
+#define VTBIT_R8 (1<<VT_R8)
+#define VTBIT_CY (1<<VT_CY)
+#define VTBIT_DECIMAL (1<<VT_DECIMAL)
 
 #include <oaidl.h>
 
@@ -160,6 +174,11 @@ typedef struct tagINTERFACEDATA {
 } INTERFACEDATA,*LPINTERFACEDATA;
 
 typedef struct {
+	SYSTEMTIME st;
+	USHORT wDayOfYear;
+} UDATE;
+
+typedef struct {
 	int cDig;
 	unsigned long dwInFlags;
 	unsigned long dwOutFlags;
@@ -180,6 +199,9 @@ WINOLEAUTAPI_(int) DosDateTimeToVariantTime(unsigned short,unsigned short,double
 WINOLEAUTAPI_(int) VariantTimeToDosDateTime(double,unsigned short*,unsigned short*);
 WINOLEAUTAPI_(int) VariantTimeToSystemTime(double,LPSYSTEMTIME);
 WINOLEAUTAPI_(int) SystemTimeToVariantTime(LPSYSTEMTIME, double*);
+WINOLEAUTAPI VarDateFromUdate(UDATE*,ULONG,DATE*);
+WINOLEAUTAPI VarDateFromUdateEx(UDATE*,LCID,ULONG,DATE*);
+WINOLEAUTAPI VarUdateFromDate(DATE,ULONG,UDATE*);
 WINOLEAUTAPI SafeArrayAllocDescriptor(unsigned int,SAFEARRAY**);
 WINOLEAUTAPI SafeArrayAllocData(SAFEARRAY*);
 WINOLEAUTAPI_(SAFEARRAY*) SafeArrayCreate(VARTYPE,unsigned int,SAFEARRAYBOUND*);
