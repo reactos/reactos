@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.14 2003/11/20 11:08:52 ekohl Exp $
+/* $Id: errlog.c,v 1.15 2003/11/21 22:28:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,7 @@
 
 #include <internal/port.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <internal/debug.h>
 
 /* TYPES *********************************************************************/
@@ -24,6 +24,7 @@ typedef struct _ERROR_LOG_ENTRY
 {
   LIST_ENTRY Entry;
   LARGE_INTEGER TimeStamp;
+  PVOID IoObject;
   ULONG PacketSize;
 } ERROR_LOG_ENTRY, *PERROR_LOG_ENTRY;
 
@@ -74,12 +75,12 @@ IopLogDpcRoutine (PKDPC Dpc,
 {
   PWORK_QUEUE_ITEM LogWorkItem;
 
-  DPRINT1 ("\nIopLogDpcRoutine() called\n");
+  DPRINT ("\nIopLogDpcRoutine() called\n");
 
   /* Release the WorkerDpc struct */
   ExFreePool (DeferredContext);
 
-  /* Allocate, initialize and reissue a work item */
+  /* Allocate, initialize and restart a work item */
   LogWorkItem = ExAllocatePool (NonPagedPool,
 				sizeof(WORK_QUEUE_ITEM));
   if (LogWorkItem == NULL)
@@ -103,7 +104,7 @@ IopRestartLogWorker (VOID)
   PLOG_WORKER_DPC WorkerDpc;
   LARGE_INTEGER Timeout;
 
-  DPRINT1 ("IopRestartWorker() called\n");
+  DPRINT ("IopRestartWorker() called\n");
 
   WorkerDpc = ExAllocatePool (NonPagedPool,
 			      sizeof(LOG_WORKER_DPC));
@@ -132,9 +133,8 @@ IopConnectLogPort (VOID)
 {
   UNICODE_STRING PortName;
   NTSTATUS Status;
-  ULONG MaxMessageSize;
 
-  DPRINT1 ("IopConnectLogPort() called\n");
+  DPRINT ("IopConnectLogPort() called\n");
 
   RtlInitUnicodeString (&PortName,
 			L"\\ErrorLogPort");
@@ -144,19 +144,16 @@ IopConnectLogPort (VOID)
 			  NULL,
 			  NULL,
 			  NULL,
-			  &MaxMessageSize, //NULL,
+			  NULL,
 			  NULL,
 			  NULL);
-  DPRINT1 ("NtConnectPort() (Status %lx)\n", Status);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1 ("NtConnectPort() failed (Status %lx)\n", Status);
+      DPRINT ("NtConnectPort() failed (Status %lx)\n", Status);
       return FALSE;
     }
 
-  DPRINT1 ("Maximum message size %lu\n", MaxMessageSize);
-
-  DPRINT1 ("IopConnectLogPort() done\n");
+  DPRINT ("IopConnectLogPort() done\n");
 
   return TRUE;
 }
@@ -172,7 +169,13 @@ IopLogWorker (PVOID Parameter)
   KIRQL Irql;
   NTSTATUS Status;
 
-  DPRINT1 ("IopLogWorker() called\n");
+  UCHAR Buffer[256];
+  POBJECT_NAME_INFORMATION ObjectNameInfo;
+  ULONG ReturnedLength;
+  PWCHAR DriverName;
+  ULONG DriverNameLength;
+
+  DPRINT ("IopLogWorker() called\n");
 
   /* Release the work item */
   ExFreePool (Parameter);
@@ -183,12 +186,10 @@ IopLogWorker (PVOID Parameter)
     {
       if (IopConnectLogPort () == FALSE)
 	{
-CHECKPOINT1;
 	  IopRestartLogWorker ();
 	  return;
 	}
 
-CHECKPOINT1;
       IopLogPortConnected = TRUE;
     }
 
@@ -215,21 +216,54 @@ CHECKPOINT1;
 
       if (LogEntry == NULL)
 	{
-	  DPRINT1 ("No message in log list\n");
+	  DPRINT ("No message in log list\n");
 	  break;
 	}
 
       /* Get pointer to the log packet */
       Packet = (PIO_ERROR_LOG_PACKET)((ULONG_PTR)LogEntry + sizeof(ERROR_LOG_ENTRY));
 
+
+      /* Get driver or device name */
+      ObjectNameInfo = (POBJECT_NAME_INFORMATION)Buffer;
+      Status = ObQueryNameString (LogEntry->IoObject,
+				  ObjectNameInfo,
+				  256,
+				  &ReturnedLength);
+      if (NT_SUCCESS(Status))
+	{
+	  DPRINT ("ReturnedLength: %lu\n", ReturnedLength);
+	  DPRINT ("Length: %hu\n", ObjectNameInfo->Name.Length);
+	  DPRINT ("MaximumLength: %hu\n", ObjectNameInfo->Name.MaximumLength);
+	  DPRINT ("Object: %wZ\n", &ObjectNameInfo->Name);
+
+	  DriverName = wcsrchr(ObjectNameInfo->Name.Buffer, L'\\');
+	  if (DriverName != NULL)
+	    DriverName++;
+	  else
+	    DriverName = ObjectNameInfo->Name.Buffer;
+
+	  DriverNameLength = wcslen (DriverName) * sizeof(WCHAR);
+	  DPRINT ("Driver name '%S'\n", DriverName);
+	}
+      else
+	{
+	  DriverName = NULL;
+	  DriverNameLength = 0;
+	}
+
       /* Allocate request buffer */
       Request = ExAllocatePool (NonPagedPool,
 				sizeof(LPC_MAX_MESSAGE));
       if (Request == NULL)
 	{
-	  DPRINT1("Failed to allocate request buffer!\n");
+	  DPRINT ("Failed to allocate request buffer!\n");
 
-	  /* FIXME: Requeue log message and restart the worker */
+	  /* Requeue log message and restart the worker */
+	  ExInterlockedInsertTailList (&IopLogListHead,
+				       &LogEntry->Entry,
+				       &IopLogListLock);
+	  IopRestartLogWorker ();
 
 	  return;
 	}
@@ -238,16 +272,23 @@ CHECKPOINT1;
       Message = (PIO_ERROR_LOG_MESSAGE)Request->Data;
       Message->Type = 0xC; //IO_TYPE_ERROR_MESSAGE;
       Message->Size =
-	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) + LogEntry->PacketSize;
-      Message->DriverNameLength = 0; /* FIXME */
+	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) +
+	LogEntry->PacketSize + DriverNameLength;
+      Message->DriverNameLength = DriverNameLength;
       Message->TimeStamp.QuadPart = LogEntry->TimeStamp.QuadPart;
-      Message->DriverNameOffset = 0;  /* FIXME */
+      Message->DriverNameOffset = (DriverName != NULL) ? LogEntry->PacketSize : 0;
 
+      /* Copy error log packet */
       RtlCopyMemory (&Message->EntryData,
 		     Packet,
 		     LogEntry->PacketSize);
 
-  DPRINT1 ("SequenceNumber %lx\n", Packet->SequenceNumber);
+      /* Copy driver or device name */
+      RtlCopyMemory ((PVOID)((ULONG_PTR)Message + Message->DriverNameOffset),
+		     DriverName,
+		     DriverNameLength);
+
+      DPRINT ("SequenceNumber %lx\n", Packet->SequenceNumber);
 
       Request->Header.DataSize = Message->Size;
       Request->Header.MessageSize =
@@ -262,9 +303,13 @@ CHECKPOINT1;
 
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1 ("NtRequestPort() failed (Status %lx)\n", Status);
+	  DPRINT ("NtRequestPort() failed (Status %lx)\n", Status);
 
-	  /* FIXME: Requeue log message and restart the worker */
+	  /* Requeue log message and restart the worker */
+	  ExInterlockedInsertTailList (&IopLogListHead,
+				       &LogEntry->Entry,
+				       &IopLogListLock);
+	  IopRestartLogWorker ();
 
 	  return;
 	}
@@ -282,7 +327,7 @@ CHECKPOINT1;
 
   IopLogWorkerRunning = FALSE;
 
-  DPRINT1 ("IopLogWorker() done\n");
+  DPRINT ("IopLogWorker() done\n");
 }
 
 
@@ -324,6 +369,7 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
 
   IopTotalLogSize += EntrySize;
 
+  LogEntry->IoObject = IoObject;
   LogEntry->PacketSize = LogEntrySize;
 
   KeReleaseSpinLock (&IopAllocationLock,
@@ -343,7 +389,7 @@ IoWriteErrorLogEntry (IN PVOID ElEntry)
   PERROR_LOG_ENTRY LogEntry;
   KIRQL Irql;
 
-  DPRINT1 ("IoWriteErrorLogEntry() called\n");
+  DPRINT ("IoWriteErrorLogEntry() called\n");
 
   LogEntry = (PERROR_LOG_ENTRY)((ULONG_PTR)ElEntry - sizeof(ERROR_LOG_ENTRY));
 
@@ -376,7 +422,7 @@ IoWriteErrorLogEntry (IN PVOID ElEntry)
   KeReleaseSpinLock (&IopLogListLock,
 		     Irql);
 
-  DPRINT1 ("IoWriteErrorLogEntry() done\n");
+  DPRINT ("IoWriteErrorLogEntry() done\n");
 }
 
 /* EOF */
