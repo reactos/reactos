@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.32 2003/12/09 14:28:48 fireball Exp $
+/* $Id: bitblt.c,v 1.33 2003/12/25 00:28:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -109,7 +109,7 @@ BltMask(SURFOBJ* Dest,
   LONG i, j, dx, dy, c8;
   BYTE *tMask, *lMask;
   static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
-
+  
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
@@ -794,6 +794,322 @@ IntEngStretchBlt(SURFOBJ *DestObj,
     {
     MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
     }
+
+  return ret;
+}
+
+/**** REACTOS FONT RENDERING CODE *********************************************/
+
+/* renders the alpha mask bitmap */
+static BOOLEAN STDCALL
+AlphaBltMask(SURFOBJ* Dest,
+	SURFGDI* DestGDI,
+	SURFOBJ* Source,
+	SURFGDI* SourceGDI,
+	SURFOBJ* Mask, 
+	XLATEOBJ* ColorTranslation,
+	XLATEOBJ* SrcColorTranslation,
+	RECTL* DestRect,
+	POINTL* SourcePoint,
+	POINTL* MaskPoint,
+	BRUSHOBJ* Brush,
+	POINTL* BrushPoint)
+{
+  LONG i, j, dx, dy;
+  int r[2], g[2], b[2];
+  ULONG Background, BrushColor;
+  BYTE *tMask, *lMask;
+
+  dx = DestRect->right  - DestRect->left;
+  dy = DestRect->bottom - DestRect->top;
+
+  if (Mask != NULL)
+    {
+      BrushColor = XLATEOBJ_iXlate(ColorTranslation, Brush->iSolidColor);
+      r[0] = (int)GetRValue(BrushColor);
+      g[0] = (int)GetGValue(BrushColor);
+      b[0] = (int)GetBValue(BrushColor);
+      
+      tMask = Mask->pvBits + SourcePoint->y * Mask->lDelta;
+      for (j = 0; j < dy; j++)
+	{
+	  lMask = tMask;
+	  for (i = 0; i < dx; i++)
+	    {
+	      if (*lMask > 0)
+		{
+			if(*lMask == 0xff)
+			{
+				DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+			}
+			else
+			{
+				Background = DIB_GetSource(Dest, DestGDI, DestRect->left + i, DestRect->top + j, SrcColorTranslation);
+				
+				r[1] = (((int)GetRValue(Background) - r[0]) * (255 - (int)*lMask)) /255 + r[0];
+				g[1] = (((int)GetGValue(Background) - g[0]) * (255 - (int)*lMask)) /255 + g[0];
+				b[1] = (((int)GetBValue(Background) - b[0]) * (255 - (int)*lMask)) /255 + b[0];
+				
+				Background = XLATEOBJ_iXlate(ColorTranslation, RGB((UCHAR)r[1], (UCHAR)g[1], (UCHAR)b[1]));
+				DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Background);
+			}
+		}
+		  lMask++;
+	    }
+	  tMask += Mask->lDelta;
+	}
+      return TRUE;
+    }
+  else
+    {
+    return FALSE;
+    }
+}
+
+BOOL STDCALL
+EngMaskBitBlt(SURFOBJ *DestObj,
+	  SURFOBJ *Mask,
+	  CLIPOBJ *ClipRegion,
+	  XLATEOBJ *DestColorTranslation,
+	  XLATEOBJ *SourceColorTranslation,
+	  RECTL *DestRect,
+	  POINTL *SourcePoint,
+	  POINTL *MaskOrigin,
+	  BRUSHOBJ *Brush,
+	  POINTL *BrushOrigin)
+{
+  BYTE               clippingType;
+  RECTL              CombinedRect;
+  RECT_ENUM          RectEnum;
+  BOOL               EnumMore;
+  SURFGDI*           OutputGDI;
+  SURFGDI*           InputGDI;
+  POINTL             InputPoint;
+  RECTL              InputRect;
+  RECTL              OutputRect;
+  POINTL             Translate;
+  INTENG_ENTER_LEAVE EnterLeaveSource;
+  INTENG_ENTER_LEAVE EnterLeaveDest;
+  SURFOBJ*           InputObj;
+  SURFOBJ*           OutputObj;
+  BOOLEAN            Ret;
+  RECTL              ClipRect;
+  unsigned           i;
+  POINTL             Pt;
+  ULONG              Direction;
+
+  if (NULL != SourcePoint)
+    {
+    InputRect.left = SourcePoint->x;
+    InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
+    InputRect.top = SourcePoint->y;
+    InputRect.bottom = SourcePoint->y + (DestRect->bottom - DestRect->top);
+    }
+  else
+    {
+    InputRect.left = 0;
+    InputRect.right = DestRect->right - DestRect->left;
+    InputRect.top = 0;
+    InputRect.bottom = DestRect->bottom - DestRect->top;
+    }
+
+  if (! IntEngEnter(&EnterLeaveSource, NULL, &InputRect, TRUE, &Translate, &InputObj))
+    {
+    return FALSE;
+    }
+
+  if (NULL != SourcePoint)
+    {
+    InputPoint.x = SourcePoint->x + Translate.x;
+    InputPoint.y = SourcePoint->y + Translate.y;
+    }
+  else
+    {
+    InputPoint.x = 0;
+    InputPoint.y = 0;
+    }
+
+  if (NULL != InputObj)
+    {
+    InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
+    }
+  else
+    {
+      InputGDI = NULL;
+    }
+
+  OutputRect = *DestRect;
+  if (NULL != ClipRegion)
+    {
+      if (OutputRect.left < ClipRegion->rclBounds.left)
+	{
+	  InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
+	  InputPoint.x += ClipRegion->rclBounds.left - OutputRect.left;
+	  OutputRect.left = ClipRegion->rclBounds.left;
+	}
+      if (ClipRegion->rclBounds.right < OutputRect.right)
+	{
+	  InputRect.right -=  OutputRect.right - ClipRegion->rclBounds.right;
+	  OutputRect.right = ClipRegion->rclBounds.right;
+	}
+      if (OutputRect.top < ClipRegion->rclBounds.top)
+	{
+	  InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
+	  InputPoint.y += ClipRegion->rclBounds.top - OutputRect.top;
+	  OutputRect.top = ClipRegion->rclBounds.top;
+	}
+      if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
+	{
+	  InputRect.bottom -=  OutputRect.bottom - ClipRegion->rclBounds.bottom;
+	  OutputRect.bottom = ClipRegion->rclBounds.bottom;
+	}
+    }
+
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
+     nothing to do */
+  if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return TRUE;
+    }
+
+  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return FALSE;
+    }
+
+  OutputRect.left = DestRect->left + Translate.x;
+  OutputRect.right = DestRect->right + Translate.x;
+  OutputRect.top = DestRect->top + Translate.y;
+  OutputRect.bottom = DestRect->bottom + Translate.y;
+
+  if (NULL != OutputObj)
+    {
+    OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
+    }
+
+  // Determine clipping type
+  if (ClipRegion == (CLIPOBJ *) NULL)
+  {
+    clippingType = DC_TRIVIAL;
+  } else {
+    clippingType = ClipRegion->iDComplexity;
+  }
+
+  switch(clippingType)
+  {
+    case DC_TRIVIAL:
+      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+                           &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
+      break;
+    case DC_RECT:
+      // Clip the blt to the clip rectangle
+      ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
+      ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
+      ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
+      ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin);
+      break;
+    case DC_COMPLEX:
+      Ret = TRUE;
+      if (OutputObj == InputObj)
+	{
+	  if (OutputRect.top < InputPoint.y)
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	    }
+	  else
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTUP : CD_LEFTUP;
+	    }
+	}
+      else
+	{
+	  Direction = CD_ANY;
+	}
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+
+	  for (i = 0; i < RectEnum.c; i++)
+	    {
+	      ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+	      Ret = AlphaBltMask(OutputObj, OutputGDI, InputObj, InputGDI, Mask, DestColorTranslation, SourceColorTranslation,
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin) &&
+	            Ret;
+	    }
+	}
+      while(EnumMore);
+      break;
+  }
+
+
+  IntEngLeave(&EnterLeaveDest);
+  IntEngLeave(&EnterLeaveSource);
+
+  return Ret;
+}
+
+BOOL STDCALL
+IntEngMaskBlt(SURFOBJ *DestObj,
+             SURFOBJ *Mask,
+             CLIPOBJ *ClipRegion,
+             XLATEOBJ *DestColorTranslation,
+             XLATEOBJ *SourceColorTranslation,
+             RECTL *DestRect,
+             POINTL *SourcePoint,
+             POINTL *MaskOrigin,
+             BRUSHOBJ *Brush,
+             POINTL *BrushOrigin)
+{
+  BOOLEAN ret;
+  SURFGDI *DestGDI;
+  RECTL OutputRect;
+  POINTL InputPoint;
+
+  if (NULL != SourcePoint)
+    {
+      InputPoint = *SourcePoint;
+    }
+
+  /* Clip against the bounds of the clipping region so we won't try to write
+   * outside the surface */
+  if (NULL != ClipRegion)
+    {
+      if (! EngIntersectRect(&OutputRect, DestRect, &ClipRegion->rclBounds))
+	{
+	  return TRUE;
+	}
+      InputPoint.x += OutputRect.left - DestRect->left;
+      InputPoint.y += OutputRect.top - DestRect->top;
+    }
+  else
+    {
+      OutputRect = *DestRect;
+    }
+
+  /* No success yet */
+  ret = FALSE;
+  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
+  MouseSafetyOnDrawStart(DestObj, DestGDI, OutputRect.left, OutputRect.top,
+                         OutputRect.right, OutputRect.bottom);
+
+  ret = EngMaskBitBlt(DestObj, Mask, ClipRegion, DestColorTranslation, SourceColorTranslation,
+                      &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin);
+
+  MouseSafetyOnDrawEnd(DestObj, DestGDI);
 
   return ret;
 }

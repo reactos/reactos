@@ -355,7 +355,7 @@ typedef enum _SID_NAME_USE {
 #define GetBValue(rgb)   ((BYTE) ((rgb) >> 16)) 
 #define GetGValue(rgb)   ((BYTE) (((WORD) (rgb)) >> 8)) 
 #define GetRValue(rgb)   ((BYTE) (rgb)) 
-#define RGB(r, g ,b)  ((DWORD) (((BYTE) (r) | ((WORD) (g) << 8)) | (((DWORD) (BYTE) (b)) << 16))) 
+#define RGB(r,g,b)          ((COLORREF)(((BYTE)(r)|((WORD)((BYTE)(g))<<8))|(((DWORD)(BYTE)(b))<<16)))
 
 #define HANDLE_WM_NOTIFY(hwnd, wParam, lParam, fn) (fn)((hwnd), (int)(wParam), (NMHDR FAR*)(lParam)) 
 

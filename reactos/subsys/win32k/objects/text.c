@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.65 2003/12/23 21:29:37 navaraf Exp $ */
+/* $Id: text.c,v 1.66 2003/12/25 00:28:09 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -55,6 +55,25 @@ typedef struct _FONT_ENTRY {
 static LIST_ENTRY FontListHead;
 static FAST_MUTEX FontListLock;
 static INT FontsLoaded = 0; /* number of all fonts loaded (including private fonts */
+
+FT_Render_Mode FASTCALL
+IntGetFontRenderMode(LOGFONTW *logfont)
+{
+  switch(logfont->lfQuality)
+  {
+    //case ANTIALIASED_QUALITY:
+    case DEFAULT_QUALITY:
+      return FT_RENDER_MODE_NORMAL;
+    case DRAFT_QUALITY:
+      return FT_RENDER_MODE_LIGHT;
+    //case NONANTIALIASED_QUALITY:
+    case PROOF_QUALITY:
+      return FT_RENDER_MODE_MONO;
+    //case CLEARTYPE_QUALITY:
+    //  return FT_RENDER_MODE_LCD;
+  }
+  return FT_RENDER_MODE_MONO;
+}
 
 int FASTCALL
 IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
@@ -616,7 +635,7 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
 
     if (glyph->format == ft_glyph_format_outline)
     {
-      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+      error = FT_Render_Glyph(glyph, IntGetFontRenderMode(&TextObj->logfont));
       if(error) {
         DPRINT1("WARNING: Failed to render glyph!\n");
 		goto fail;
@@ -689,7 +708,6 @@ NtGdiExtTextOut(HDC hDC, int XStart, int YStart, UINT fuOptions,
 
     // We should create the bitmap out of the loop at the biggest possible glyph size
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
-
     HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
 
@@ -1038,7 +1056,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
       TotalWidth += glyph->advance.x >> 6;
       if (glyph->format == ft_glyph_format_outline)
 	{
-	  error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+	  error = FT_Render_Glyph(glyph, FT_RENDER_MODE_MONO);
 	  if (error)
 	    {
 	      DPRINT1("WARNING: Failed to render glyph!\n");
@@ -1477,7 +1495,7 @@ NtGdiTextOut(HDC  hDC,
   PFONTGDI FontGDI;
   PTEXTOBJ TextObj;
   PPALGDI PalDestGDI;
-  PXLATEOBJ XlateObj;
+  PXLATEOBJ XlateObj, XlateObj2;
   ULONG Mode;
 
   dc = DC_LockDc(hDC);
@@ -1550,8 +1568,8 @@ NtGdiTextOut(HDC  hDC,
         goto fail;
       }
     }
-  EngDeleteXlate(XlateObj);
-
+  XlateObj2 = (PXLATEOBJ)IntEngCreateXlate(PAL_RGB, Mode, NULL, dc->w.hPalette);
+  
   SourcePoint.x = 0;
   SourcePoint.y = 0;
   MaskRect.left = 0;
@@ -1577,8 +1595,10 @@ NtGdiTextOut(HDC  hDC,
   for(i=0; i<Count; i++)
   {
     glyph_index = FT_Get_Char_Index(face, *String);
-    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+    error = FT_Load_Glyph(face, glyph_index, FT_LOAD_RENDER);
     if(error) {
+      EngDeleteXlate(XlateObj);
+      EngDeleteXlate(XlateObj2);
       DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
       goto fail;
     }
@@ -1594,8 +1614,10 @@ NtGdiTextOut(HDC  hDC,
 
     if (glyph->format == ft_glyph_format_outline)
     {
-      error = FT_Render_Glyph(glyph, ft_render_mode_mono);
+      error = FT_Render_Glyph(glyph, IntGetFontRenderMode(&TextObj->logfont));
       if(error) {
+        EngDeleteXlate(XlateObj);
+        EngDeleteXlate(XlateObj2);
         DPRINT1("WARNING: Failed to render glyph!\n");
 		goto fail;
       }
@@ -1633,26 +1655,24 @@ NtGdiTextOut(HDC  hDC,
     bitSize.cy = glyph->bitmap.rows;
     MaskRect.right = glyph->bitmap.width;
     MaskRect.bottom = glyph->bitmap.rows;
-
+    
     // We should create the bitmap out of the loop at the biggest possible glyph size
     // Then use memset with 0 to clear it and sourcerect to limit the work of the transbitblt
-
-    HSourceGlyph = EngCreateBitmap(bitSize, pitch, BMF_1BPP, 0, glyph->bitmap.buffer);
+    HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, 0, glyph->bitmap.buffer);
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject((ULONG) HSourceGlyph);
-
+DPRINT1("glyph->bitmap.palette_mode == 0x%x (0x%x)\n", glyph->bitmap.palette_mode, glyph->bitmap.num_grays);
     // Use the font data as a mask to paint onto the DCs surface using a brush
-    IntEngBitBlt (
+    IntEngMaskBlt (
 		SurfObj,
-		NULL,
 		SourceGlyphSurf,
 		dc->CombinedClip,
-		NULL,
+		XlateObj,
+		XlateObj2,
 		&DestRect,
 		&SourcePoint,
 		(PPOINTL)&MaskRect,
 		BrushFg,
-		&BrushOrigin,
-		0xAACC );
+		&BrushOrigin);
 
     EngDeleteSurface(HSourceGlyph);
 
@@ -1661,6 +1681,8 @@ NtGdiTextOut(HDC  hDC,
 
     String++;
   }
+  EngDeleteXlate(XlateObj);
+  EngDeleteXlate(XlateObj2);
   TEXTOBJ_UnlockText(dc->w.hFont);
   if (NULL != hBrushBg)
     {
