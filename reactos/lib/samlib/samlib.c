@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: samlib.c,v 1.2 2004/02/04 17:57:56 ekohl Exp $
+/* $Id: samlib.c,v 1.3 2004/07/05 22:33:14 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -397,7 +397,7 @@ SamCreateUser (PWSTR UserName,
 
   if (dwDisposition == REG_OPENED_EXISTING_KEY)
     {
-      DPRINT1 ("User alredy exists!\n");
+      DPRINT1 ("User already exists!\n");
       RegCloseKey (hUserKey);
       SetLastError (ERROR_USER_EXISTS);
       return FALSE;
