@@ -160,8 +160,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
       AddressSpace = MmGetKernelAddressSpace();
    }
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          Address);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
    switch(VirtualMemoryInformationClass)
    {
       case MemoryBasicInformation:
@@ -405,8 +404,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    AddressSpace = &Process->AddressSpace;
 
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    if (MemoryArea == NULL)
    {
       MmUnlockAddressSpace(AddressSpace);

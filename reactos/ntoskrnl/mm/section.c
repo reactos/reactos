@@ -1829,7 +1829,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
    BOOL DoCOW = FALSE;
    ULONG i;
 
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    Segment = MemoryArea->Data.SectionData.Segment;
 
    if ((Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView) &&
@@ -3688,8 +3688,8 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    PMM_REGION CurrentRegion;
    PLIST_ENTRY RegionListHead;
 
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
+                                            BaseAddress);
    if (MemoryArea == NULL)
    {
       return(STATUS_UNSUCCESSFUL);
@@ -3749,8 +3749,8 @@ MmUnmapViewOfSection(PEPROCESS Process,
    ASSERT(Process);
 
    AddressSpace = &Process->AddressSpace;
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
+                                            BaseAddress);
    if (MemoryArea == NULL ||
        MemoryArea->Type != MEMORY_AREA_SECTION_VIEW ||
        MemoryArea->DeleteInProgress)
@@ -4209,8 +4209,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       /* Check there is enough space to map the section at that point. */
-      if (MmOpenMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
-                                   PAGE_ROUND_UP(ImageSize)) != NULL)
+      if (MmLocateMemoryAreaByRegion(AddressSpace, (PVOID)ImageBase,
+                                     PAGE_ROUND_UP(ImageSize)) != NULL)
       {
          /* Fail if the user requested a fixed base address. */
          if ((*BaseAddress) != NULL)

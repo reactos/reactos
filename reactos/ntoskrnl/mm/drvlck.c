@@ -50,7 +50,7 @@ PVOID
 MmLockPagableCodeSection(IN PVOID AddressWithinSection)
 {
    PVOID Handle;
-   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+   Handle = MmLocateMemoryAreaByAddress(NULL,AddressWithinSection);
    MmLockPagableSectionByHandle(Handle);
    return(Handle);
 }
@@ -64,7 +64,7 @@ PVOID STDCALL
 MmLockPagableDataSection(IN PVOID AddressWithinSection)
 {
    PVOID Handle;
-   Handle = MmOpenMemoryAreaByAddress(NULL, AddressWithinSection);
+   Handle = MmLocateMemoryAreaByAddress(NULL, AddressWithinSection);
    MmLockPagableSectionByHandle(Handle);
    return(Handle);
 }

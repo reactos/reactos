@@ -409,7 +409,7 @@ MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
       
       ASSERT(Mdl->Process == PsGetCurrentProcess());
 
-      Marea = MmOpenMemoryAreaByAddress( &Mdl->Process->AddressSpace, BaseAddress );
+      Marea = MmLocateMemoryAreaByAddress( &Mdl->Process->AddressSpace, BaseAddress );
       if (Marea == NULL)
       {
          DPRINT1( "Couldn't open memory area when unmapping user-space pages!\n" );

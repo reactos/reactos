@@ -117,7 +117,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
     * freed or paged out after we read the rmap entry.) 
     */
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);
@@ -242,7 +242,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    }
 
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, Address);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
       MmUnlockAddressSpace(AddressSpace);

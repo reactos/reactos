@@ -197,13 +197,13 @@ MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace)
 }
 
 PMEMORY_AREA STDCALL
-MmOpenMemoryAreaByAddress(
+MmLocateMemoryAreaByAddress(
    PMADDRESS_SPACE AddressSpace,
    PVOID Address)
 {
    PMEMORY_AREA Node = AddressSpace->MemoryAreaRoot;
 
-   DPRINT("MmOpenMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
+   DPRINT("MmLocateMemoryAreaByAddress(AddressSpace %x, Address %x)\n",
            AddressSpace, Address);
 
    if (!(KdDebugState & KD_DEBUG_SCREEN))
@@ -217,18 +217,18 @@ MmOpenMemoryAreaByAddress(
          Node = Node->RightChild;
       else
       {
-         DPRINT("MmOpenMemoryAreaByAddress(%x): %x [%x - %x]\n",
+         DPRINT("MmLocateMemoryAreaByAddress(%x): %x [%x - %x]\n",
                 Address, Node, Node->StartingAddress, Node->EndingAddress);
          return Node;
       }
    }
 
-   DPRINT("MmOpenMemoryAreaByAddress(%x): 0\n", Address);
+   DPRINT("MmLocateMemoryAreaByAddress(%x): 0\n", Address);
    return NULL;
 }
 
 PMEMORY_AREA STDCALL
-MmOpenMemoryAreaByRegion(
+MmLocateMemoryAreaByRegion(
    PMADDRESS_SPACE AddressSpace,
    PVOID Address,
    ULONG_PTR Length)
@@ -250,7 +250,7 @@ MmOpenMemoryAreaByRegion(
       if (Node->StartingAddress >= Address &&
           Node->StartingAddress < Extent)
       {
-         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
                 Address, Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
@@ -258,7 +258,7 @@ MmOpenMemoryAreaByRegion(
       if (Node->EndingAddress > Address &&
           Node->EndingAddress < Extent)
       {
-         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
                 Address, Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
@@ -266,14 +266,14 @@ MmOpenMemoryAreaByRegion(
       if (Node->StartingAddress <= Address &&
           Node->EndingAddress >= Extent)
       {
-         DPRINT("MmOpenMemoryAreaByRegion(%x - %x): %x - %x\n",
+         DPRINT("MmLocateMemoryAreaByRegion(%x - %x): %x - %x\n",
                 Address, Address + Length, Node->StartingAddress,
                 Node->EndingAddress);
          return Node;
       }
       if (Node->StartingAddress >= Extent)
       {
-         DPRINT("Finished MmOpenMemoryAreaByRegion() = NULL\n");
+         DPRINT("Finished MmLocateMemoryAreaByRegion() = NULL\n");
          return NULL;
       }
    }
@@ -866,14 +866,14 @@ MmFreeMemoryAreaByPtr(
 {
    PMEMORY_AREA MemoryArea;
 
-   DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
-          "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,
+   DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, "
+          "FreePageContext %d)\n", AddressSpace, BaseAddress,
           FreePageContext);
 
    MmVerifyMemoryAreas(AddressSpace);
 
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
+                                            BaseAddress);
    if (MemoryArea == NULL)
    {
       KEBUGCHECK(0);
@@ -974,9 +974,9 @@ MmCreateMemoryArea(PEPROCESS Process,
          ASSERT(((ULONG_PTR)*BaseAddress/BoundaryAddressMultiple.QuadPart) == ((DWORD_PTR)EndAddress/BoundaryAddressMultiple.QuadPart));
       }
 
-      if (MmOpenMemoryAreaByRegion(AddressSpace,
-                                   *BaseAddress,
-                                   tmpLength)!=NULL)
+      if (MmLocateMemoryAreaByRegion(AddressSpace,
+                                     *BaseAddress,
+                                     tmpLength) != NULL)
       {
          DPRINT("Memory area already occupied\n");
          return STATUS_CONFLICTING_ADDRESSES;
@@ -1016,7 +1016,7 @@ MmReleaseMemoryAreaIfDecommitted(PEPROCESS Process,
   
    MmVerifyMemoryAreas(AddressSpace);
 
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    if (MemoryArea != NULL)
    {
       Entry = MemoryArea->Data.VirtualMemoryData.RegionListHead.Flink;

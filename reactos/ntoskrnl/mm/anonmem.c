@@ -580,8 +580,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
 
    if (PBaseAddress != 0)
    {
-      MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                             BaseAddress);
+      MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
 
       if (MemoryArea != NULL)
       {
@@ -813,8 +812,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    AddressSpace = &Process->AddressSpace;
 
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          BaseAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
    if (MemoryArea == NULL)
    {
       MmUnlockAddressSpace(AddressSpace);

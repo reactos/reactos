@@ -187,8 +187,8 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    }
 
    MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
-                                          VirtualAddress);
+   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
+                                            VirtualAddress);
 
    if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
    {
@@ -247,7 +247,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    }
    do
    {
-      MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+      MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
       if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
       {
          if (!FromMdl)
@@ -374,7 +374,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
     */
    do
    {
-      MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace, (PVOID)Address);
+      MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, (PVOID)Address);
       if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
       {
          if (!FromMdl)

@@ -377,11 +377,11 @@ MmCreateMemoryArea(
    PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL);
 
 PMEMORY_AREA STDCALL
-MmOpenMemoryAreaByAddress(
+MmLocateMemoryAreaByAddress(
    PMADDRESS_SPACE AddressSpace, 
    PVOID Address);
 
-ULONG STDCALL
+ULONG_PTR STDCALL
 MmFindGapAtAddress(
    PMADDRESS_SPACE AddressSpace, 
    PVOID Address);
@@ -404,7 +404,7 @@ VOID STDCALL
 MmDumpMemoryAreas(PMADDRESS_SPACE AddressSpace);
 
 PMEMORY_AREA STDCALL
-MmOpenMemoryAreaByRegion(
+MmLocateMemoryAreaByRegion(
    PMADDRESS_SPACE AddressSpace, 
    PVOID Address,
    ULONG_PTR Length);
