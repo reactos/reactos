@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.16 2003/02/15 20:25:03 phreak Exp $
+/* $Id: path.c,v 1.17 2003/03/23 10:49:19 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -103,6 +103,11 @@ static VOID RtlpEatPath (PWSTR Path)
 		    }
 	       }
 	  }
+     }
+     if (Path[2] == 0)
+     {
+        Path[2] = L'\\';
+	Path[3] = 0;
      }
 }
 
@@ -252,9 +257,9 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 
 	DPRINT ("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
 
-	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
-
 	RtlAcquirePebLock();
+
+	cd = (PCURDIR)&(NtCurrentPeb ()->ProcessParameters->CurrentDirectoryName);
 	Length = cd->DosPath.Length / sizeof(WCHAR);
 	if (cd->DosPath.Buffer[Length - 1] == L'\\' &&
 	    cd->DosPath.Buffer[Length - 2] != L':')
