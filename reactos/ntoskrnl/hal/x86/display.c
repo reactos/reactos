@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.4 1999/12/12 03:48:47 phreak Exp $
+/* $Id: display.c,v 1.5 2000/01/09 21:39:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,23 +19,27 @@
 #define SCREEN_SYNCHRONIZATION
 
 
-#ifdef SCREEN_SYNCHRONIZATION
-#define CRTC_COMMAND 0x3d4
-#define CRTC_DATA 0x3d5
-#define CRTC_CURLO 0x0f
-#define CRTC_CURHI 0x0e
-#endif
+#define CRTC_COMMAND       0x3d4
+#define CRTC_DATA          0x3d5
+
+#define CRTC_COLUMNS       0x01
+#define CRTC_OVERFLOW      0x07
+#define CRTC_ROWS          0x12
+#define CRTC_SCANLINES     0x09
+
+#define CRTC_CURHI         0x0e
+#define CRTC_CURLO         0x0f
 
 
-#define CHAR_ATTRIBUTE 0x17  /* grey on blue */
+#define CHAR_ATTRIBUTE     0x17  /* grey on blue */
 
 
 /* VARIABLES ****************************************************************/
 
 static ULONG CursorX = 0;      /* Cursor Position */
 static ULONG CursorY = 0;
-static ULONG SizeX = 80;       /* Display size */
-static ULONG SizeY = 50;
+static ULONG SizeX = 0;       /* Display size */
+static ULONG SizeY = 0;
 
 static BOOLEAN DisplayInitialized = FALSE;
 static BOOLEAN HalOwnsDisplay = TRUE;
@@ -102,14 +106,29 @@ HalInitializeDisplay (boot_param *bp)
 {
     if (DisplayInitialized == FALSE)
     {
+        ULONG ScanLines;
+        ULONG Data;
+
         VideoBuffer = (WORD *)(0xd0000000 + 0xb8000);
 //        VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
 
         /* Set cursor position */
         CursorX = bp->cursorx;
         CursorY = bp->cursory;
-        SizeX = 80;
-        SizeY = 50;
+
+        /* read screen size from the crtc */
+        /* FIXME: screen size should be read from the boot paramseters */
+        outb_p (CRTC_COMMAND, CRTC_COLUMNS);
+        SizeX = inb_p (CRTC_DATA) + 1;
+        outb_p (CRTC_COMMAND, CRTC_ROWS);
+        SizeY = inb_p (CRTC_DATA);
+        outb_p (CRTC_COMMAND, CRTC_OVERFLOW);
+        Data = inb_p (CRTC_DATA);
+        SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
+        SizeY++;
+        outb_p (CRTC_COMMAND, CRTC_SCANLINES);
+        ScanLines = (inb_p (CRTC_DATA) & 0x1F) + 1;
+        SizeY = SizeY / ScanLines;
 
         HalClearDisplay ();
 
