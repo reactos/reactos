@@ -2,7 +2,7 @@
 typedef struct _VIDEOPORT_EXTENSTION_DATA
 {
   PDEVICE_OBJECT  DeviceObject;
-  KINTERRUPT  InterruptObject;
+  PKINTERRUPT  InterruptObject;
   KSPIN_LOCK  InterruptSpinLock;
   ULONG  InterruptLevel;
   KIRQL  IRQL;

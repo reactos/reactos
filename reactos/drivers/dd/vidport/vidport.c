@@ -5,6 +5,7 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
+#include <internal/halio.h>
 
 #include "vidport.h"
 
@@ -211,7 +212,7 @@ VideoPortInitialize(IN PVOID  Context1,
       /* FIXME: Need to figure out what string to pass as param 3  */
       Status = HwInitializationData->HwFindAdapter(VPExtensionToMPExtension(ExtensionData),
                                                    Context2,
-                                                   "",
+                                                   L"",
                                                    &ConfigInfo,
                                                    &Again);
       if (!NT_SUCCESS(Status))
@@ -230,22 +231,23 @@ VideoPortInitialize(IN PVOID  Context1,
             ConfigInfo.BusInterruptVector == 0))
         {
           ExtensionData->IRQL = ConfigInfo.BusInterruptLevel;
-          ExtensionData->Interrupt = 
-            HalGetinterruptVector(ConfigInfo.AdapterInterfaceType,
+          ExtensionData->InterruptLevel = 
+            HalGetInterruptVector(ConfigInfo.AdapterInterfaceType,
                                   ConfigInfo.SystemIoBusNumber,
                                   ConfigInfo.BusInterruptLevel,
-                                  ConfigInfo.BufInterruptVector,
+                                  ConfigInfo.BusInterruptVector,
                                   &ExtensionData->IRQL,
                                   &ExtensionData->Affinity);
           KeInitializeSpinLock(&ExtensionData->InterruptSpinLock);
           Status = IoConnectInterrupt(&ExtensionData->InterruptObject,
-                                      HwInitializationData->HwInterrupt,
+                                      (PKSERVICE_ROUTINE)
+                                        HwInitializationData->HwInterrupt,
                                       VPExtensionToMPExtension(ExtensionData),
                                       &ExtensionData->InterruptSpinLock,
                                       ExtensionData->InterruptLevel,
                                       ExtensionData->IRQL,
                                       ExtensionData->IRQL,
-                                      ConfigData.InterruptMode,
+                                      ConfigInfo.InterruptMode,
                                       FALSE,
                                       ExtensionData->Affinity,
                                       FALSE);
@@ -262,11 +264,12 @@ VideoPortInitialize(IN PVOID  Context1,
   while (&Again);
 
   /* FIXME: initialize timer routine for MP Driver  */
-  if (HwInitialization->HwTimer != NULL)
+  if (HwInitializationData->HwTimer != NULL)
     {
       Status = IoInitializeTimer(MPDeviceObject,
-                                 HwInitialization->HwTimer,
-                                 VPExtensionTPMPExtension(ExtensionData));
+                                 (PIO_TIMER_ROUTINE)
+                                   HwInitializationData->HwTimer,
+                                 VPExtensionToMPExtension(ExtensionData));
       if (!NT_SUCCESS(Status))
         {
           DbgPrint("IoInitializeTimer failed\n");
@@ -323,9 +326,10 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
 {
   if (*InIoSpace)
     {
-      *VirtualAddress = MmMapIoSpace(PhyiscalAddress, Length, FALSE);
+      *VirtualAddress = MmMapIoSpace(PhysicalAddress, *Length, FALSE);
       
-      return *VirtualAddress != NULL ? STATUS_SUCCESS : STATUS_INSUFFICFIENT_RESOURCES;
+      return *VirtualAddress != NULL ? STATUS_SUCCESS : 
+                                  STATUS_INSUFFICIENT_RESOURCES;
     }
   else
     {
