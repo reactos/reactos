@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.22 2002/10/26 00:32:19 chorns Exp $
+# $Id: helper.mk,v 1.23 2002/10/31 00:48:27 ekohl Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -288,7 +288,7 @@ ifeq ($(TARGET_TYPE),program)
   endif
 
   ifeq ($(TARGET_APPTYPE),native)
-    MK_DEFENTRY := _NtProcessStartup
+    MK_DEFENTRY := _NtProcessStartup@4
     MK_SDKLIBS := ntdll.a
     TARGET_LFLAGS += -Wl,--subsystem,native -nostartfiles
   endif
@@ -353,8 +353,13 @@ endif
 
 ifeq ($(MK_MODE),user)
   MK_DEFBASE := 0x400000
-  MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS) $(TARGET_SDKLIBS))
+  ifneq ($(TARGET_SDKLIBS),)
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(TARGET_SDKLIBS))
+  else
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS))
+  endif
 endif
+
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
