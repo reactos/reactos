@@ -47,13 +47,13 @@ static char sccsid[] = "@(#)whois.c	8.1 (Berkeley) 6/6/93";
 #endif /* not lint */
 
 #include <sys/types.h>
-/*#include <sys/socket.h>*/
 #include <winsock2.h>
-/*#include <netinet/in.h>*/
-/*#include <netdb.h>*/
+/* #include <sys/socket.h> */
+/* #include <netinet/in.h> */
+/* #include <netdb.h> */
 #include <stdio.h>
 
-//#include <various.h>
+/* #include <various.h> */
 #include <getopt.h>
 #include <io.h>
 
@@ -62,7 +62,7 @@ static char sccsid[] = "@(#)whois.c	8.1 (Berkeley) 6/6/93";
 void usage();
 void leave(int iExitCode);
 
-void main(int argc, char **argv)
+int main(int argc, char **argv)
 {
 	extern char *optarg;
 	extern int optind;
@@ -98,9 +98,9 @@ void main(int argc, char **argv)
 	if ( err != 0 ) 
 	{
 		/* Tell the user that we couldn't find a usable */
-		/* WinSock DLL.                                  */
-		fprintf(stderr, "WSAStartup failed\n");
-		return;
+		/* WinSock DLL.                                 */
+		perror("whois: WSAStartup failed");
+		leave(1);
 	}
 
 	hp = gethostbyname(host);

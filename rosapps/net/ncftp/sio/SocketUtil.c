@@ -22,7 +22,7 @@ GetSocketBufSize(int sockfd, size_t *const rsize, size_t *const ssize)
 	if (ssize != NULL) {
 		opt = 0;
 		optsize = sizeof(opt);
-		rc = getsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &opt, &optsize);
+		rc = getsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (char *) &opt, &optsize);
 		if (rc == 0)
 			*ssize = (size_t) opt;
 		else
@@ -31,7 +31,7 @@ GetSocketBufSize(int sockfd, size_t *const rsize, size_t *const ssize)
 	if (rsize != NULL) {
 		opt = 0;
 		optsize = sizeof(opt);
-		rc = getsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &opt, &optsize);
+		rc = getsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, (char *) &opt, &optsize);
 		if (rc == 0)
 			*rsize = (size_t) opt;
 		else
@@ -64,14 +64,14 @@ SetSocketBufSize(int sockfd, size_t rsize, size_t ssize)
 	if (ssize > 0) {
 		opt = (int) ssize;
 		optsize = sizeof(opt);
-		rc = setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, &opt, optsize);
+		rc = setsockopt(sockfd, SOL_SOCKET, SO_SNDBUF, (const char *) &opt, optsize);
 		if (rc < 0)
 			return (rc);
 	}
 	if (rsize > 0) {
 		opt = (int) rsize;
 		optsize = sizeof(opt);
-		rc = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, &opt, optsize);
+		rc = setsockopt(sockfd, SOL_SOCKET, SO_RCVBUF, (const char *) &opt, optsize);
 		if (rc < 0)
 			return (rc);
 	}

@@ -21,10 +21,10 @@
 #define SELECT_TYPE_ARG1 int
 
 /* Define to the type of args 2, 3 and 4 for select(). */
-#define SELECT_TYPE_ARG234 (fd_set FAR *)
+#define SELECT_TYPE_ARG234 (PFD_SET)
 
 /* Define to the type of arg5 for select(). */
-#define SELECT_TYPE_ARG5 (const struct timeval FAR *)
+#define SELECT_TYPE_ARG5 (PTIMEVAL)
 
 /* Define to `unsigned' if <sys/types.h> doesn't define.  */
 /* #undef size_t */
