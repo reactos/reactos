@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/09/10 23:29:07 sedwards Exp $
+# $Id: makefile,v 1.16 2004/09/15 18:57:01 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -29,6 +29,9 @@ MISC_OBJECTS = \
  misc/logfont.o \
  misc/qsort.o
 
+FILE_OBJECTS = \
+ file/sparse.o
+
 include $(PATH_TO_TOP)/config
 
 include makefile.$(ARCH)
@@ -40,7 +43,7 @@ TARGET_NAME = rosrtl
 TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 TARGET_OBJECTS = $(THREAD_OBJECTS) $(MISC_OBJECTS) $(STRING_OBJECTS) \
-		 $(REGISTRY_OBJECTS)
+		 $(REGISTRY_OBJECTS) $(FILE_OBJECTS)
  
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
