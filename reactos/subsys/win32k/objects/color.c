@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.23 2003/08/28 12:35:59 gvg Exp $ */
+/* $Id: color.c,v 1.24 2003/09/10 21:03:18 fireball Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -342,6 +342,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   HPALETTE systemPalette;
   PSURFGDI SurfGDI;
   BOOLEAN success;
+  USHORT sysMode, palMode;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -374,6 +375,12 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     }
   }
 
+  // need to pass this to IntEngCreateXlate with palettes unlocked
+  sysMode = sysGDI->Mode;
+  palMode = palGDI->Mode;
+  PALETTE_UnlockPalette(systemPalette);
+  PALETTE_UnlockPalette(dc->w.hPalette);
+
   // Step 3: Create the XLATEOBJ for device managed DCs
   if(dc->w.flags != DC_MEMORY)
   {
@@ -381,8 +388,6 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     palPtr->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
   }
 
-  PALETTE_UnlockPalette(systemPalette);
-  PALETTE_UnlockPalette(dc->w.hPalette);
   DC_UnlockDc(hDC);
 
   return realized;
