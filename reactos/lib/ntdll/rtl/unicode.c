@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.25 2002/12/08 15:57:39 robd Exp $
+/* $Id: unicode.c,v 1.26 2003/03/26 15:16:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -870,6 +870,61 @@ RtlIntegerToUnicodeString(
 	                                       FALSE);
 
 	return Status;
+}
+
+
+#define ITU_IMPLEMENTED_TESTS (IS_TEXT_UNICODE_ODD_LENGTH|IS_TEXT_UNICODE_SIGNATURE)
+
+ULONG STDCALL
+RtlIsTextUnicode (PVOID Buffer,
+		  ULONG Length,
+		  ULONG *Flags)
+{
+  PWSTR s = Buffer;
+  ULONG in_flags = (ULONG)-1;
+  ULONG out_flags = 0;
+
+  if (Length == 0)
+    goto done;
+
+  if (Flags != 0)
+    in_flags = *Flags;
+
+  /*
+   * Apply various tests to the text string. According to the
+   * docs, each test "passed" sets the corresponding flag in
+   * the output flags. But some of the tests are mutually
+   * exclusive, so I don't see how you could pass all tests ...
+   */
+
+  /* Check for an odd length ... pass if even. */
+  if (!(Length & 1))
+    out_flags |= IS_TEXT_UNICODE_ODD_LENGTH;
+
+  /* Check for the BOM (byte order mark). */
+  if (*s == 0xFEFF)
+    out_flags |= IS_TEXT_UNICODE_SIGNATURE;
+
+#if 0
+  /* Check for the reverse BOM (byte order mark). */
+  if (*s == 0xFFFE)
+    out_flags |= IS_TEXT_UNICODE_REVERSE_SIGNATURE;
+#endif
+
+  /* FIXME: Add more tests */
+
+  /*
+   * Check whether the string passed all of the tests.
+   */
+  in_flags &= ITU_IMPLEMENTED_TESTS;
+  if ((out_flags & in_flags) != in_flags)
+    Length = 0;
+
+done:
+  if (Flags != 0)
+    *Flags = out_flags;
+
+  return Length;
 }
 
 

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.82 2003/03/16 14:16:54 chorns Exp $
+; $Id: ntdll.edf,v 1.83 2003/03/26 15:19:28 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -456,7 +456,7 @@ RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
 RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
 ;RtlIsGenericTableEmpty
 RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
-;RtlIsTextUnicode
+RtlIsTextUnicode=RtlIsTextUnicode@12
 RtlIsValidHandle=RtlIsValidHandle@8
 RtlIsValidIndexHandle=RtlIsValidIndexHandle@12
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
