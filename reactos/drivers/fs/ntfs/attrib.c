@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: attrib.c,v 1.9 2004/01/28 20:53:06 ekohl Exp $
+/* $Id: attrib.c,v 1.10 2004/06/05 08:28:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -279,7 +279,8 @@ NtfsDumpFileAttributes (PFILE_RECORD_HEADER FileRecord)
   PATTRIBUTE Attribute;
 
   Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-  while (Attribute->AttributeType !=-1)
+  while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+         Attribute->AttributeType != -1)
     {
       NtfsDumpAttribute (Attribute);
 

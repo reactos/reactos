@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mft.c,v 1.4 2003/11/13 15:26:34 ekohl Exp $
+/* $Id: mft.c,v 1.5 2004/06/05 08:28:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 #include <ddk/ntddk.h>
 #include <ntos/minmax.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
@@ -60,8 +60,7 @@ NtfsOpenMft (PDEVICE_EXTENSION Vcb)
 
   DPRINT1("NtfsOpenMft() called\n");
 
-  BytesPerFileRecord =
-    Vcb->NtfsInfo.ClustersPerFileRecord * Vcb->NtfsInfo.BytesPerCluster;
+  BytesPerFileRecord = Vcb->NtfsInfo.BytesPerFileRecord;
 
   MftRecord = ExAllocatePool(NonPagedPool,
 			     BytesPerFileRecord);
@@ -129,7 +128,8 @@ FindAttribute (PFILE_RECORD_HEADER FileRecord,
   PATTRIBUTE Attribute;
 
   Attribute = (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->AttributeOffset);
-  while (Attribute->AttributeType != -1)
+  while (Attribute < (PATTRIBUTE)((ULONG_PTR)FileRecord + FileRecord->BytesInUse) &&
+         Attribute->AttributeType != -1)
     {
       if (Attribute->AttributeType == Type)
 	{
@@ -189,18 +189,17 @@ ReadAttribute (PATTRIBUTE attr,
 
 
 
-VOID
+NTSTATUS
 ReadFileRecord (PDEVICE_EXTENSION Vcb,
 		ULONG index,
 		PFILE_RECORD_HEADER file,
 		PFILE_RECORD_HEADER Mft)
 {
   PVOID p;
-  ULONG clusters = Vcb->NtfsInfo.ClustersPerFileRecord;
-  ULONG BytesPerFileRecord = clusters * Vcb->NtfsInfo.BytesPerCluster;
+  ULONG BytesPerFileRecord = Vcb->NtfsInfo.BytesPerFileRecord;
+  ULONG clusters = max(BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster, 1);
 
-
-  p = ExAllocatePool(NonPagedPool, BytesPerFileRecord);
+  p = ExAllocatePool(NonPagedPool, clusters * Vcb->NtfsInfo.BytesPerCluster);
 
   ULONGLONG vcn = index * BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster;
 
@@ -215,6 +214,8 @@ ReadFileRecord (PDEVICE_EXTENSION Vcb,
   ExFreePool(p);
 
   FixupUpdateSequenceArray(file);
+
+  return STATUS_SUCCESS;
 }
 
 

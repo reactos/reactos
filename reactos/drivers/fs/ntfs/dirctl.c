@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dirctl.c,v 1.7 2003/11/13 15:26:34 ekohl Exp $
+/* $Id: dirctl.c,v 1.8 2004/06/05 08:28:37 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,7 +29,7 @@
 
 #include <ddk/ntddk.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "ntfs.h"
