@@ -252,8 +252,8 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 		if (autostart)
 		{
-			char* argv[] = {""};
-			startup(1, argv);
+			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
+			startup(2, argv);
 		}
 	}
 
