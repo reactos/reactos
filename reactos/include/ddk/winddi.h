@@ -671,14 +671,34 @@ typedef struct _XFORMOBJ
   /* FIXME: what does this beast look like?  */
 } XFORMOBJ, *PXFORMOBJ;
 
+typedef struct _GLYPHBITS
+{
+  POINTL ptlOrigin;
+  SIZEL  sizlBitmap;
+  BYTE   aj[1];
+} GLYPHBITS;
+
+typedef union _GLYPHDEF
+{
+  GLYPHBITS  *pgb;
+  PATHOBJ    *ppo;
+} GLYPHDEF;
+
+typedef struct _GLYPHPOS
+{
+  HGLYPH     hg;
+  GLYPHDEF  *pgdf;
+  POINTL    *ptl;
+} GLYPHPOS, *PGLYPHPOS;
+
 typedef struct _STROBJ
 {
-  ULONG  cGlyphs;
-  FLONG  flAccel;
-  ULONG  ulCharInc;
-  RECTL  rclBkGround;
+  ULONG      cGlyphs;
+  LONG       flAccel;
+  ULONG      ulCharInc;
+  RECTL      rclBkGround;
   GLYPHPOS  *pgp;
-  LPWSTR  pwszOrg;
+  LPWSTR     pwszOrg;
 } STROBJ, *PSTROBJ;
 
 /*
