@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.17 2003/01/24 22:42:15 jfilby Exp $
+/* $Id: defwnd.c,v 1.18 2003/01/25 23:05:36 ei Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -107,10 +107,10 @@ DefFrameProcW(HWND hWnd,
 }
 
 
-BOOL 
+BOOL
 DefWndRedrawIconTitle(HWND hWnd)
 {
-  PINTERNALPOS lpPos = (PINTERNALPOS)GetPropA(hWnd, 
+  PINTERNALPOS lpPos = (PINTERNALPOS)GetPropA(hWnd,
 					      (LPSTR)(DWORD)AtomInternalPos);
   if (lpPos != NULL)
     {
@@ -187,7 +187,7 @@ void UserGetInsideRectNC( HWND hwnd, RECT *rect )
   /* Remove frame from rectangle */
   if (UserHasThickFrameStyle(Style, ExStyle ))
       {
-	InflateRect( rect, -GetSystemMetrics(SM_CXFRAME), 
+	InflateRect( rect, -GetSystemMetrics(SM_CXFRAME),
 		     -GetSystemMetrics(SM_CYFRAME) );
       }
     else
@@ -222,8 +222,8 @@ void UserDrawSysButton( HWND hwnd, HDC hdc, BOOL down )
     UserGetInsideRectNC( hwnd, &rect );
     hdcMem = CreateCompatibleDC( hdc );
     hbitmap = SelectObject( hdcMem, hbitmapClose );
-    BitBlt(hdc, rect.left, rect.top, GetSystemMetrics(SM_CXSIZE), 
-	   GetSystemMetrics(SM_CYSIZE), hdcMem, 
+    BitBlt(hdc, rect.left, rect.top, GetSystemMetrics(SM_CXSIZE),
+	   GetSystemMetrics(SM_CYSIZE), hdcMem,
 	   (Style & WS_CHILD) ? GetSystemMetrics(SM_CXSIZE) : 0, 0,
 	   down ? NOTSRCCOPY : SRCCOPY );
     SelectObject( hdcMem, hbitmap );
@@ -237,7 +237,7 @@ static void UserDrawMaxButton( HWND hwnd, HDC hdc, BOOL down )
 
     UserGetInsideRectNC( hwnd, &rect );
     hdcMem = CreateCompatibleDC( hdc );
-    SelectObject( hdcMem,  (IsZoomed(hwnd) 
+    SelectObject( hdcMem,  (IsZoomed(hwnd)
 			    ? (down ? hbitmapRestoreD : hbitmapRestore)
 			    : (down ? hbitmapMaximizeD : hbitmapMaximize)) );
     BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
@@ -250,16 +250,16 @@ static void UserDrawMinButton( HWND hwnd, HDC hdc, BOOL down)
 {
   RECT rect;
   HDC hdcMem;
-    
+
   UserGetInsideRectNC(hwnd, &rect);
   hdcMem = CreateCompatibleDC(hdc);
   SelectObject(hdcMem, (down ? hbitmapMinimizeD : hbitmapMinimize));
-  if (GetWindowLong(hwnd, GWL_STYLE) & WS_MAXIMIZEBOX) 
+  if (GetWindowLong(hwnd, GWL_STYLE) & WS_MAXIMIZEBOX)
     {
       rect.right -= GetSystemMetrics(SM_CXSMSIZE)+1;
     }
   BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
-	  GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), 
+	  GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE),
 	  hdcMem, 0, 0,
 	  SRCCOPY );
   DeleteDC( hdcMem );
@@ -272,7 +272,7 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
   char buffer[256];
 
   if (!hbitmapClose)
-    {      
+    {
       hbitmapClose = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_CLOSE));
       hbitmapMinimize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCE) );
       hbitmapMinimizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCED) );
@@ -281,7 +281,7 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
       hbitmapRestore   = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORE) );
       hbitmapRestoreD  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORED) );
     }
-    
+
   if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_DLGMODALFRAME)
     {
       HBRUSH hbrushOld = SelectObject(hdc, GetSysColorBrush(COLOR_WINDOW) );
@@ -313,10 +313,10 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
       UserDrawMinButton( hwnd, hdc, FALSE );
       r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     }
-  
+
   FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
 					    COLOR_INACTIVECAPTION) );
-  
+
   if (GetWindowTextA( hwnd, buffer, sizeof(buffer) ))
     {
       NONCLIENTMETRICS nclm;
@@ -359,7 +359,7 @@ UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
       SelectObject( hdc, GetSysColorBrush(active ? COLOR_ACTIVEBORDER :
 					    COLOR_INACTIVEBORDER) );
     }
-  
+
   /* Draw frame */
   PatBlt( hdc, rect->left, rect->top,
 	  rect->right - rect->left, height, PATCOPY );
@@ -373,22 +373,22 @@ UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
   if (dlgFrame)
     {
       InflateRect( rect, -width, -height );
-    } 
+    }
   else
     {
-      INT decYOff = GetSystemMetrics(SM_CXFRAME) + 
+      INT decYOff = GetSystemMetrics(SM_CXFRAME) +
 	GetSystemMetrics(SM_CXSIZE) - 1;
-      INT decXOff = GetSystemMetrics(SM_CYFRAME) + 
+      INT decXOff = GetSystemMetrics(SM_CYFRAME) +
 	GetSystemMetrics(SM_CYSIZE) - 1;
 
       /* Draw inner rectangle */
-      
+
       SelectObject( hdc, GetStockObject(NULL_BRUSH) );
       Rectangle( hdc, rect->left + width, rect->top + height,
 		 rect->right - width , rect->bottom - height );
-      
+
       /* Draw the decorations */
-      
+
       MoveToEx( hdc, rect->left, rect->top + decYOff, NULL );
       LineTo( hdc, rect->left + width, rect->top + decYOff );
       MoveToEx( hdc, rect->right - 1, rect->top + decYOff, NULL );
@@ -397,7 +397,7 @@ UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
       LineTo( hdc, rect->left + width, rect->bottom - decYOff );
       MoveToEx( hdc, rect->right - 1, rect->bottom - decYOff, NULL );
       LineTo( hdc, rect->right - width - 1, rect->bottom - decYOff );
-      
+
       MoveToEx( hdc, rect->left + decXOff, rect->top, NULL );
       LineTo( hdc, rect->left + decXOff, rect->top + height);
       MoveToEx( hdc, rect->left + decXOff, rect->bottom - 1, NULL );
@@ -406,7 +406,7 @@ UserDrawFrameNC(HDC hdc, RECT* rect, BOOL dlgFrame, BOOL active)
       LineTo( hdc, rect->right - decXOff, rect->top + height );
       MoveToEx( hdc, rect->right - decXOff, rect->bottom - 1, NULL );
       LineTo( hdc, rect->right - decXOff, rect->bottom - height - 1 );
-      
+
       InflateRect( rect, -width - 1, -height - 1 );
     }
 }
@@ -734,13 +734,13 @@ DefWndTrackMinMaxBox(HWND hWnd, WPARAM wParam)
 
   if (wParam == HTMINBUTTON)
     {
-      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MINIMIZE, 
+      SendMessageA(hWnd, WM_SYSCOMMAND, SC_MINIMIZE,
 		   MAKELONG(Msg.pt.x, Msg.pt.y));
     }
   else
     {
-      SendMessageA(hWnd, WM_SYSCOMMAND, 
-		   IsZoomed(hWnd) ? SC_RESTORE : SC_MAXIMIZE, 
+      SendMessageA(hWnd, WM_SYSCOMMAND,
+		   IsZoomed(hWnd) ? SC_RESTORE : SC_MAXIMIZE,
 		   MAKELONG(Msg.pt.x, Msg.pt.y));
     }
 }
@@ -756,8 +756,8 @@ DefWndDrawSysButton(HWND hWnd, HDC hDC, BOOL Down)
   hDcMem = CreateCompatibleDC(hDC);
   hSavedBitmap = SelectObject(hDcMem, hbitmapClose);
   BitBlt(hDC, Rect.left, Rect.top, GetSystemMetrics(SM_CXSIZE),
-	 GetSystemMetrics(SM_CYSIZE), hDcMem, 
-	 (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ? 
+	 GetSystemMetrics(SM_CYSIZE), hDcMem,
+	 (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD) ?
 	 GetSystemMetrics(SM_CXSIZE): 0, 0, Down ? NOTSRCCOPY : SRCCOPY);
   SelectObject(hDcMem, hSavedBitmap);
   DeleteDC(hDcMem);
@@ -787,7 +787,7 @@ DefWndHandleLButtonDownNC(HWND hWnd, WPARAM wParam, LPARAM lParam)
 		DefWndDrawSysButton(hWnd, hDC, TRUE);
 		ReleaseDC(hWnd, hDC);
 	      }
-	    SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU, 
+	    SendMessageA(hWnd, WM_SYSCOMMAND, SC_MOUSEMENU + HTSYSMENU,
 			 lParam);
 	  }
 	break;
@@ -843,7 +843,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
 {
 }
 
-LRESULT 
+LRESULT
 DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   /* Not for child windows. */
@@ -920,7 +920,7 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
 
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
-      InflateRect(Rect, GetSystemMetrics(SM_CXFRAME), 
+      InflateRect(Rect, GetSystemMetrics(SM_CXFRAME),
 		  GetSystemMetrics(SM_CYFRAME));
     }
   else if (UserHasDlgFrameStyle(Style, ExStyle))
@@ -935,7 +935,7 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
     }
   if (Style & WS_CAPTION)
     {
-      Rect->top -= GetSystemMetrics(SM_CYCAPTION) - 
+      Rect->top -= GetSystemMetrics(SM_CYCAPTION) -
 	GetSystemMetrics(SM_CYBORDER);
     }
   if (Menu)
@@ -1088,7 +1088,7 @@ User32DefWindowProc(HWND hWnd,
 
 	    Pt.x = SLOWORD(lParam);
 	    Pt.y = SHIWORD(lParam);
-	    
+
 	    if (GetWindowLong(hWnd, GWL_STYLE) & WS_CHILD)
 	      {
 		ScreenToClient(GetParent(hWnd), &Pt);
@@ -1250,12 +1250,12 @@ User32DefWindowProc(HWND hWnd,
 		BOOL bResult;
 		if (bUnicode)
 		  {
-		    bResult = SendMessageW(GetParent(hWnd), WM_SETCURSOR, 
+		    bResult = SendMessageW(GetParent(hWnd), WM_SETCURSOR,
 					   wParam, lParam);
 		  }
-		else		  
+		else
 		  {
-		    bResult = SendMessageA(GetParent(hWnd), WM_SETCURSOR, 
+		    bResult = SendMessageA(GetParent(hWnd), WM_SETCURSOR,
 					   wParam, lParam);
 		  }
 		if (bResult)
@@ -1264,7 +1264,7 @@ User32DefWindowProc(HWND hWnd,
 		  }
 	      }
 	  }
-	return(DefWndHandleSetCursor(hWnd, wParam, lParam));      
+	return(DefWndHandleSetCursor(hWnd, wParam, lParam));
       }
 
     case WM_SYSCOMMAND:
@@ -1288,7 +1288,7 @@ User32DefWindowProc(HWND hWnd,
 	    (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE) && wParam))
 	  {
 	    return(0);
-	  } 
+	  }
 	ShowWindow(hWnd, wParam ? SW_SHOWNOACTIVATE : SW_HIDE);
 	break;
       }
@@ -1404,7 +1404,7 @@ DefWindowProcA(HWND hWnd,
 	CREATESTRUCTA* Cs = (CREATESTRUCTA*)lParam;
 	if (HIWORD(Cs->lpszName))
 	  {
-	    WindowTextAtom = 
+	    WindowTextAtom =
 	      (LPSTR)(ULONG)GlobalAddAtomA("USER32!WindowTextAtomA");
 	    WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
 					 strlen(Cs->lpszName) * sizeof(CHAR));
@@ -1453,8 +1453,8 @@ DefWindowProcA(HWND hWnd,
       {
 	if (WindowTextAtom != 0)
 	  {
-	    WindowTextAtom = 
-	      (LPSTR)(DWORD)GlobalAddAtomA("USER32!WindowTextAtomW");	    
+	    WindowTextAtom =
+	      (LPSTR)(DWORD)GlobalAddAtomA("USER32!WindowTextAtomW");
 	  }
 	if (WindowTextAtom != 0 &&
 	    (WindowText = GetPropA(hWnd, WindowTextAtom)) == NULL)
@@ -1507,7 +1507,7 @@ DefWindowProcW(HWND hWnd,
 	CREATESTRUCTW* Cs = (CREATESTRUCTW*)lParam;
 	if (HIWORD(Cs->lpszName))
 	  {
-	    WindowTextAtom = 
+	    WindowTextAtom =
 	      (LPWSTR)(DWORD)GlobalAddAtomW(L"USER32!WindowTextAtomW");
 	    WindowText = RtlAllocateHeap(RtlGetProcessHeap(), 0,
 					 wcslen(Cs->lpszName) * sizeof(WCHAR));
@@ -1556,8 +1556,8 @@ DefWindowProcW(HWND hWnd,
       {
 	if (WindowTextAtom != 0)
 	  {
-	    WindowTextAtom = 
-	      (LPWSTR)(DWORD)GlobalAddAtom(L"USER32!WindowTextAtomW");	    
+	    WindowTextAtom =
+	      (LPWSTR)(DWORD)GlobalAddAtom(L"USER32!WindowTextAtomW");
 	  }
 	if (WindowTextAtom != 0 &&
 	    (WindowText = GetPropW(hWnd, WindowTextAtom)) == NULL)
@@ -1569,6 +1569,8 @@ DefWindowProcW(HWND hWnd,
 	wcscpy(WindowText, (PWSTR)lParam);
 	SetPropW(hWnd, WindowTextAtom, WindowText);
       }
+	  //FIXME: return correct code
+	  return TRUE;
 
     case WM_NCDESTROY:
       {
