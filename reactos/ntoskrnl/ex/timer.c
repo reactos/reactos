@@ -483,22 +483,27 @@ NtQueryTimer(IN HANDLE TimerHandle,
     /* Check for Success */
     if(NT_SUCCESS(Status)) {
         
-        /* Return the Basic Information */       
-         _SEH_TRY {
-           
-            /* FIXME: Interrupt correction based on Interrupt Time */
-            DPRINT("Returning Information for Timer: %x. Time Remaining: %d\n", Timer, Timer->KeTimer.DueTime.QuadPart);
-            BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart;
-            BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
-            ObDereferenceObject(Timer);
+        switch(TimerInformationClass) {
+           case TimerBasicInformation: {
+              /* Return the Basic Information */
+               _SEH_TRY {
 
-            if(ReturnLength != NULL) {
-                *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
-            }
+                  /* FIXME: Interrupt correction based on Interrupt Time */
+                  DPRINT("Returning Information for Timer: %x. Time Remaining: %d\n", Timer, Timer->KeTimer.DueTime.QuadPart);
+                  BasicInfo->TimeRemaining.QuadPart = Timer->KeTimer.DueTime.QuadPart;
+                  BasicInfo->SignalState = KeReadStateTimer(&Timer->KeTimer);
+
+                  if(ReturnLength != NULL) {
+                      *ReturnLength = sizeof(TIMER_BASIC_INFORMATION);
+                  }
+
+              } _SEH_HANDLE {
+                  Status = _SEH_GetExceptionCode();
+              } _SEH_END;
+           }
+        }
         
-        } _SEH_HANDLE {
-            Status = _SEH_GetExceptionCode();
-        } _SEH_END;
+        ObDereferenceObject(Timer);
     }
    
     /* Return Status */
@@ -517,7 +522,7 @@ NtSetTimer(IN HANDLE TimerHandle,
 {
     PETIMER Timer;
     KIRQL OldIrql;
-    BOOLEAN KillTimer;
+    BOOLEAN KillTimer = FALSE;
     BOOLEAN State;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PETHREAD CurrentThread = PsGetCurrentThread();
