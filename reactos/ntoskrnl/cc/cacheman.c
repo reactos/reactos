@@ -35,10 +35,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS 
+VOID
 CcInit(VOID)
 {
   CcInitView();
-   
-  return(STATUS_SUCCESS);
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.29 2001/10/10 21:50:15 hbirr Exp $
+/* $Id: view.c,v 1.30 2001/12/27 23:56:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,26 +69,12 @@
 #define TAG_CSEG  TAG('C', 'S', 'E', 'G')
 #define TAG_BCB   TAG('B', 'C', 'B', ' ')
 
-static LIST_ENTRY BcbListHead;
-static KSPIN_LOCK BcbListLock;
+static LIST_ENTRY DirtySegmentListHead;
+static LIST_ENTRY CacheSegmentListHead;
+
+static FAST_MUTEX ViewLock;
 
 /* FUNCTIONS *****************************************************************/
-
-NTSTATUS STDCALL 
-CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSeg)
-/*
- * FUNCTION: Asks the FSD to flush the contents of the page back to disk
- */
-{
-   KeWaitForSingleObject(&CacheSeg->Lock,
-			 Executive,
-			 KernelMode,
-			 FALSE,
-			 NULL);
-   /* FIXME: Build an IRP_MJ_WRITE and send it to the filesystem */
-   KeSetEvent(&CacheSeg->Lock, IO_NO_INCREMENT, 0);
-   return(STATUS_NOT_IMPLEMENTED);
-}
 
 NTSTATUS STDCALL 
 CcRosReleaseCacheSegment(PBCB Bcb,
@@ -100,7 +86,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
    
    CacheSeg->ReferenceCount--;
    CacheSeg->Valid = Valid;
-   KeSetEvent(&CacheSeg->Lock, IO_NO_INCREMENT, FALSE);
+   ExReleaseFastMutex(&CacheSeg->Lock);
    
    DPRINT("CcReleaseCachePage() finished\n");
    
@@ -109,54 +95,63 @@ CcRosReleaseCacheSegment(PBCB Bcb,
 
 NTSTATUS
 CcRosGetCacheSegment(PBCB Bcb,
-		  ULONG FileOffset,
-		  PULONG BaseOffset,
-		  PVOID* BaseAddress,
-		  PBOOLEAN UptoDate,
-		  PCACHE_SEGMENT* CacheSeg)
+		     ULONG FileOffset,
+		     PULONG BaseOffset,
+		     PVOID* BaseAddress,
+		     PBOOLEAN UptoDate,
+		     PCACHE_SEGMENT* CacheSeg)
 {
-   KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
    ULONG i;
    NTSTATUS Status;
+   KIRQL oldIrql;
 
-   KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-   
-   current_entry = Bcb->CacheSegmentListHead.Flink;
-   while (current_entry != &Bcb->CacheSegmentListHead)
+   /*
+    * Acquire the global lock.
+    */
+   ExAcquireFastMutex(&ViewLock);
+
+   /*
+    * Look for a cache segment already mapping the same data.
+    */
+   current_entry = Bcb->BcbSegmentListHead.Flink;
+   while (current_entry != &Bcb->BcbSegmentListHead)
      {
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, 
-				    BcbListEntry);
+				    BcbSegmentListEntry);
 	if (current->FileOffset <= FileOffset &&
 	    (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
 	  {
-	     current->ReferenceCount++;
-	     KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-	     KeWaitForSingleObject(&current->Lock,
-				   Executive,
-				   KernelMode,
-				   FALSE,
-				   NULL);
-	     *UptoDate = current->Valid;
-	     *BaseAddress = current->BaseAddress;
-	     *CacheSeg = current;
-	     *BaseOffset = current->FileOffset;
-	     return(STATUS_SUCCESS);
+	    /*
+	     * Make sure the cache segment can't go away outside of our control.
+	     */
+	    current->ReferenceCount++;
+	    /*
+	     * Release the global lock and lock the cache segment.
+	     */
+	    ExReleaseFastMutex(&ViewLock);
+	    ExAcquireFastMutex(&current->Lock);
+	    /*
+	     * Return information about the segment to the caller.
+	     */
+	    *UptoDate = current->Valid;
+	    *BaseAddress = current->BaseAddress;
+	    *CacheSeg = current;
+	    *BaseOffset = current->FileOffset;
+	    return(STATUS_SUCCESS);
 	  }
 	current_entry = current_entry->Flink;
      }
 
-   DPRINT("Creating new segment\n"); 
-   
-   KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-
+   /*
+    * Otherwise create a new segment.
+    */
    current = ExAllocatePoolWithTag(NonPagedPool, sizeof(CACHE_SEGMENT), 
 				   TAG_CSEG);
 
    MmLockAddressSpace(MmGetKernelAddressSpace());
    current->BaseAddress = NULL;
-
    Status = MmCreateMemoryArea(KernelMode,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_CACHE_SEGMENT,
@@ -172,11 +167,18 @@ CcRosGetCacheSegment(PBCB Bcb,
      }
    		
    current->Valid = FALSE;
+   current->Dirty = FALSE;
    current->FileOffset = ROUND_DOWN(FileOffset, Bcb->CacheSegmentSize);
    current->Bcb = Bcb;
-   KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
+   ExInitializeFastMutex(&current->Lock);
    current->ReferenceCount = 1;
-   InsertTailList(&Bcb->CacheSegmentListHead, &current->BcbListEntry);
+   KeAcquireSpinLock(&Bcb->BcbLock, &oldIrql);
+   InsertTailList(&Bcb->BcbSegmentListHead, &current->BcbSegmentListEntry);
+   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
+   InsertTailList(&CacheSegmentListHead, &current->CacheSegmentListEntry);
+   current->DirtySegmentListEntry.Flink = current->DirtySegmentListEntry.Blink = NULL;
+   ExAcquireFastMutex(&current->Lock);
+   ExReleaseFastMutex(&ViewLock);
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
    *CacheSeg = current;
@@ -240,6 +242,7 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
  */
 {
   DPRINT("Freeing cache segment %x\n", CacheSeg);
+  RemoveEntryList(&CacheSeg->CacheSegmentListEntry);
   MmFreeMemoryArea(MmGetKernelAddressSpace(),
 		   CacheSeg->BaseAddress,
 		   Bcb->CacheSegmentSize,
@@ -262,20 +265,21 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 
    MmFreeSectionSegments(Bcb->FileObject);
    
-   current_entry = Bcb->CacheSegmentListHead.Flink;
-   while (current_entry != &Bcb->CacheSegmentListHead)
+   /*
+    * Release all cache segments.
+    */
+   current_entry = Bcb->BcbSegmentListHead.Flink;
+   while (current_entry != &Bcb->BcbSegmentListHead)
      {
 	current = 
-	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
+	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
 	current_entry = current_entry->Flink;
 	CcRosFreeCacheSegment(Bcb, current);
      }
 
    ObDereferenceObject (Bcb->FileObject);
    ExFreePool(Bcb);
-   
-   DPRINT("CcRosReleaseFileCache() finished\n");
-   
+
    return(STATUS_SUCCESS);
 }
 
@@ -286,9 +290,7 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
-{
-   DPRINT("CcRosInitializeFileCache(FileObject %x)\n",FileObject);
-   
+{   
    (*Bcb) = ExAllocatePoolWithTag(NonPagedPool, sizeof(BCB), TAG_BCB);
    if ((*Bcb) == NULL)
      {
@@ -300,76 +302,34 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
 			      NULL,
 			      KernelMode);
    (*Bcb)->FileObject = FileObject;
-   InitializeListHead(&(*Bcb)->CacheSegmentListHead);
-   KeInitializeSpinLock(&(*Bcb)->BcbLock);
    (*Bcb)->CacheSegmentSize = CacheSegmentSize;
    if (FileObject->FsContext)
-   {
-     (*Bcb)->AllocationSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
-     (*Bcb)->FileSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
-   }
-
-   DPRINT("Finished CcRosInitializeFileCache() = %x\n", *Bcb);
+     {
+       (*Bcb)->AllocationSize = 
+	 ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->AllocationSize;
+       (*Bcb)->FileSize = ((REACTOS_COMMON_FCB_HEADER*)FileObject->FsContext)->FileSize;
+     }
+   KeInitializeSpinLock(&(*Bcb)->BcbLock);
+   InitializeListHead(&(*Bcb)->BcbSegmentListHead);
    
    return(STATUS_SUCCESS);
-}
-
-
-/**********************************************************************
- * NAME							INTERNAL
- * 	CcMdlReadCompleteDev@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *	MdlChain
- *	DeviceObject
- *	
- * RETURN VALUE
- * 	None.
- *
- * NOTE
- * 	Used by CcMdlReadComplete@8 and FsRtl
- */
-VOID STDCALL
-CcMdlReadCompleteDev (IN	PMDL		MdlChain,
-		      IN	PDEVICE_OBJECT	DeviceObject)
-{
-  UNIMPLEMENTED;
-}
-
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	CcMdlReadComplete@8
- *
- * DESCRIPTION
- *
- * ARGUMENTS
- *
- * RETURN VALUE
- * 	None.
- *
- * NOTE
- * 	From Bo Branten's ntifs.h v13.
- */
-VOID STDCALL
-CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
-		   IN	PMDL		MdlChain)
-{
-   PDEVICE_OBJECT	DeviceObject = NULL;
-   
-   DeviceObject = IoGetRelatedDeviceObject (FileObject);
-   /* FIXME: try fast I/O first */
-   CcMdlReadCompleteDev (MdlChain,
-			 DeviceObject);
 }
 
 VOID
 CcInitView(VOID)
 {
-  InitializeListHead(&BcbListHead);
-  KeInitializeSpinLock(&BcbListLock);
+  DPRINT1("CcInitView()\n");
+  InitializeListHead(&CacheSegmentListHead);
+  InitializeListHead(&DirtySegmentListHead);
+  ExInitializeFastMutex(&ViewLock);
 }
 
 /* EOF */
+
+
+
+
+
+
+
+

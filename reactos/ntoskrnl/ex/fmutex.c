@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fmutex.c,v 1.11 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: fmutex.c,v 1.12 2001/12/27 23:56:42 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
@@ -39,17 +39,17 @@
 VOID FASTCALL
 ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
+  InterlockedIncrement(&FastMutex->Contention);
   while (InterlockedExchange(&FastMutex->Count, 0) == 0)
-     {
-       FastMutex->Contention++;
+     {       
        KeWaitForSingleObject(&FastMutex->Event,
 			     Executive,
 			     KernelMode,
 			     FALSE,
-			     NULL);
-       FastMutex->Contention--;
+			     NULL);      
      }
-   FastMutex->Owner = KeGetCurrentThread();
+  InterlockedDecrement(&FastMutex->Contention);
+  FastMutex->Owner = KeGetCurrentThread();
 }
 
 VOID FASTCALL
@@ -57,8 +57,11 @@ ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
   assert(FastMutex->Owner == KeGetCurrentThread());
   FastMutex->Owner = NULL;
+  if (FastMutex->Contention > 0)
+    {
+      KeSetEvent(&FastMutex->Event, 0, FALSE);
+    }
   InterlockedExchange(&FastMutex->Count, 1);
-  KeSetEvent(&FastMutex->Event, 0, FALSE);
 }
 
 /* EOF */

@@ -15,6 +15,56 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/**********************************************************************
+ * NAME							INTERNAL
+ * 	CcMdlReadCompleteDev@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *	MdlChain
+ *	DeviceObject
+ *	
+ * RETURN VALUE
+ * 	None.
+ *
+ * NOTE
+ * 	Used by CcMdlReadComplete@8 and FsRtl
+ */
+VOID STDCALL
+CcMdlReadCompleteDev (IN	PMDL		MdlChain,
+		      IN	PDEVICE_OBJECT	DeviceObject)
+{
+  UNIMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	CcMdlReadComplete@8
+ *
+ * DESCRIPTION
+ *
+ * ARGUMENTS
+ *
+ * RETURN VALUE
+ * 	None.
+ *
+ * NOTE
+ * 	From Bo Branten's ntifs.h v13.
+ */
+VOID STDCALL
+CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
+		   IN	PMDL		MdlChain)
+{
+   PDEVICE_OBJECT	DeviceObject = NULL;
+   
+   DeviceObject = IoGetRelatedDeviceObject (FileObject);
+   /* FIXME: try fast I/O first */
+   CcMdlReadCompleteDev (MdlChain,
+			 DeviceObject);
+}
+
 VOID STDCALL
 CcSetFileSizes (
    IN PFILE_OBJECT FileObject,
@@ -37,10 +87,10 @@ CcSetFileSizes (
 
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
   {
-    current_entry = Bcb->CacheSegmentListHead.Flink;
-    while (current_entry != &Bcb->CacheSegmentListHead)
+    current_entry = Bcb->BcbSegmentListHead.Flink;
+    while (current_entry != &Bcb->BcbSegmentListHead)
     {
-      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
+      current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
       current_entry = current_entry->Flink;
       if (current->FileOffset > FileSizes->AllocationSize.QuadPart)
       {

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.1 2001/10/10 21:46:13 hbirr Exp $
+/* $Id: copy.c,v 1.2 2001/12/27 23:56:41 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -118,10 +118,10 @@ CcCopyRead (
    if (!Wait)
    {
      KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-     current_entry = Bcb->CacheSegmentListHead.Flink;
-     while (current_entry != &Bcb->CacheSegmentListHead)
+     current_entry = Bcb->BcbSegmentListHead.Flink;
+     while (current_entry != &Bcb->BcbSegmentListHead)
      {
-       current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
+       current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
        if (!current->Valid && current->FileOffset < ReadOffset + Length
          && current->FileOffset + Bcb->CacheSegmentSize > ReadOffset)
        {
@@ -231,10 +231,10 @@ CcCopyWrite (
    {
      // testing, if the requested datas are available
      KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
-     current_entry = Bcb->CacheSegmentListHead.Flink;
-     while (current_entry != &Bcb->CacheSegmentListHead)
+     current_entry = Bcb->BcbSegmentListHead.Flink;
+     while (current_entry != &Bcb->BcbSegmentListHead)
      {
-       CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
+       CacheSeg = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbSegmentListEntry);
        if (!CacheSeg->Valid)
        {
          if ((WriteOffset >= CacheSeg->FileOffset && WriteOffset < CacheSeg->FileOffset + Bcb->CacheSegmentSize)

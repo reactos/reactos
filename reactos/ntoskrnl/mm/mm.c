@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.50 2001/12/20 03:56:09 dwelch Exp $
+/* $Id: mm.c,v 1.51 2001/12/27 23:56:42 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -249,7 +249,7 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address)
   Status = 
     MmCreateVirtualMapping(NULL,
 			   (PVOID)PAGE_ROUND_DOWN(Address),
-			   PAGE_READONLY,
+			   PAGE_READWRITE,
 			   (ULONG)AllocatedPage);  
   return(Status);
 }

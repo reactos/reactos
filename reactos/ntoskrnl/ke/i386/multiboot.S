@@ -188,10 +188,10 @@ _multiboot_entry:
 	movl	%eax, %cr3
 
 	/*
-	 * Enable paging
+	 * Enable paging and set write protect
 	 */
 	movl	%cr0, %eax
-	orl	$0x80000000, %eax
+	orl	$0x80010000, %eax
 	movl	%eax, %cr0
 
 	/*

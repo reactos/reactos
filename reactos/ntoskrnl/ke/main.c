@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.109 2001/11/25 15:21:10 dwelch Exp $
+/* $Id: main.c,v 1.110 2001/12/27 23:56:42 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -39,6 +39,7 @@
 #include <internal/ke.h>
 #include <internal/io.h>
 #include <internal/po.h>
+#include <internal/cc.h>
 //#include <internal/se.h>
 #include <napi/shared_data.h>
 #include <internal/v86m.h>
@@ -1026,6 +1027,7 @@ ExpInitializeExecutive(VOID)
   CmInitializeRegistry();
   NtInit();
   MmInit3();
+  CcInit();
   
   /* Report all resources used by hal */
   HalReportResourceUsage();
