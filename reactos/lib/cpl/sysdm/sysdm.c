@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sysdm.c,v 1.1 2004/03/08 14:24:47 weiden Exp $
+/* $Id: sysdm.c,v 1.2 2004/06/30 10:53:05 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/sysdm.c
@@ -26,17 +26,17 @@
  *      03-04-2004  Created
  */
 #include <windows.h>
+#include <commctrl.h>
+#include <prsht.h>
+#include <cpl.h>
 #include <stdlib.h>
+
 #include "resource.h"
 #include "sysdm.h"
 
 #define NUM_APPLETS	(1)
 
 LONG CALLBACK SystemApplet(VOID);
-BOOL CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
 
 /* Applets */
@@ -52,7 +52,7 @@ InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc)
   psp->dwSize = sizeof(PROPSHEETPAGE);
   psp->dwFlags = PSP_DEFAULT;
   psp->hInstance = hApplet;
-  psp->u1.pszTemplate = MAKEINTRESOURCE(idDlg);
+  psp->pszTemplate = MAKEINTRESOURCE(idDlg);
   psp->pfnDlgProc = DlgProc;
 }
 
@@ -93,7 +93,7 @@ PropSheetProc(
 LONG CALLBACK
 SystemApplet(VOID)
 {
-  PROPSHEETPAGE psp[4];
+  PROPSHEETPAGE psp[5];
   PROPSHEETHEADER psh;
   TCHAR Caption[1024];
   
@@ -101,20 +101,21 @@ SystemApplet(VOID)
   
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_USECALLBACK | PSH_PROPTITLE;
+  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE; /* | PSH_USECALLBACK */
   psh.hwndParent = NULL;
   psh.hInstance = hApplet;
-  psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
+  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
   psh.pszCaption = Caption;
   psh.nPages = sizeof(psp) / sizeof(PROPSHEETHEADER);
-  psh.u2.nStartPage = 0;
-  psh.u3.ppsp = psp;
-  psh.pfnCallback = PropSheetProc;
+  psh.nStartPage = 0;
+  psh.ppsp = psp;
+  psh.pfnCallback = NULL; /* PropSheetProc; */
   
   InitPropSheetPage(&psp[0], IDD_PROPPAGEGENERAL, GeneralPageProc);
   InitPropSheetPage(&psp[1], IDD_PROPPAGECOMPUTER, ComputerPageProc);
   InitPropSheetPage(&psp[2], IDD_PROPPAGEHARDWARE, HardwarePageProc);
-  InitPropSheetPage(&psp[3], IDD_PROPPAGEADVANCED, AdvancedPageProc);
+  InitPropSheetPage(&psp[3], IDD_PROPPAGEUSERPROFILE, UserProfilePageProc);
+  InitPropSheetPage(&psp[4], IDD_PROPPAGEADVANCED, AdvancedPageProc);
   
   return (LONG)(PropertySheet(&psh) != -1);
 }

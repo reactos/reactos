@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/05/29 21:24:43 hbirr Exp $
+# $Id: Makefile,v 1.3 2004/06/30 10:53:05 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,10 +13,13 @@ TARGET_INSTALLDIR = system32
 TARGET_BASE = $(TARGET_BASE_LIB_CPL_SYSDM)
 
 TARGET_CFLAGS = \
+ -D_WIN32_IE=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
  -I./include \
  -DUNICODE \
  -D_UNICODE \
  -D__REACTOS__ \
+ -D__USE_W32API \
  -Wall \
  -Werror \
  -fno-builtin
@@ -31,7 +34,7 @@ TARGET_PCH =
 
 TARGET_CLEAN = 
 
-TARGET_OBJECTS = sysdm.o general.o computer.o hardware.o advanced.o
+TARGET_OBJECTS = sysdm.o general.o computer.o hardware.o advanced.o userprofile.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

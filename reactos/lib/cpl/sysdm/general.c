@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: general.c,v 1.1 2004/03/08 14:24:47 weiden Exp $
+/* $Id: general.c,v 1.2 2004/06/30 10:53:05 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/general.c
@@ -26,21 +26,23 @@
  *      03-04-2004  Created
  */
 #include <windows.h>
+#include <tchar.h>
 #include <stdlib.h>
+
 #include "resource.h"
 #include "sysdm.h"
 
 void
 ShowLastWin32Error(HWND hWndOwner)
 {
-  LPWSTR lpMsg;
+  LPTSTR lpMsg;
   DWORD LastError;
   
   LastError = GetLastError();
   
   if((LastError == 0) || !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | 
                     FORMAT_MESSAGE_FROM_SYSTEM, NULL, LastError, 
-                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPWSTR)&lpMsg, 0, 
+                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),(LPTSTR)&lpMsg, 0, 
                     NULL))
   {
     return;

@@ -16,40 +16,33 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: advanced.c,v 1.2 2004/06/30 10:53:05 ekohl Exp $
+/* $Id: userprofile.c,v 1.1 2004/06/30 10:53:05 ekohl Exp $
  *
  * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/system/advanced.c
- * PURPOSE:         Memory, start-up and profiles settings
+ * FILE:            lib/cpl/system/computer.c
+ * PURPOSE:         Computer settings for networking
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * UPDATE HISTORY:
  *      03-04-2004  Created
  */
 #include <windows.h>
 #include <stdlib.h>
-#include <tchar.h>
-
 #include "resource.h"
 #include "sysdm.h"
 
 /* Property page dialog callback */
 BOOL CALLBACK
-AdvancedPageProc(
+UserProfilePageProc(
   HWND hwndDlg,
   UINT uMsg,
   WPARAM wParam,
   LPARAM lParam
 )
 {
-  switch (uMsg)
+  switch(uMsg)
   {
     case WM_INITDIALOG:
-      break;
-
-    case WM_COMMAND:
-      break;
-
+      break; //GetUserName
   }
   return FALSE;
 }
-
