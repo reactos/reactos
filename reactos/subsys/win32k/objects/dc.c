@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.34 2002/08/18 07:02:57 ei Exp $
+/* $Id: dc.c,v 1.35 2002/08/19 21:49:45 ei Exp $
  *
  * DC.C - Device context functions
  *
@@ -904,6 +904,7 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PSURFGDI  surfgdi;
   PDC dc;
   PPENOBJ pen;
+  PBRUSHOBJ brush;
   PXLATEOBJ XlateObj;
   PPALGDI PalGDI;
   WORD  objectMagic;
@@ -923,14 +924,25 @@ HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       // Convert the color of the pen to the format of the DC
       PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
-      XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
-      pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
-      pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
-	  GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+	  if( PalGDI ){
+      	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+      	pen = GDIOBJ_LockObj(dc->w.hPen, GO_PEN_MAGIC);
+      	pen->logpen.lopnColor = XLATEOBJ_iXlate(XlateObj, pen->logpen.lopnColor);
+	  	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+	  }
       break;
     case GO_BRUSH_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hBrush;
       dc->w.hBrush = (HBRUSH) hGDIObj;
+
+      // Convert the color of the brush to the format of the DC
+      PalGDI = (PPALGDI)AccessInternalObject(dc->w.hPalette);
+	  if( PalGDI ){
+      	XlateObj = (PXLATEOBJ)EngCreateXlate(PalGDI->Mode, PAL_RGB, dc->w.hPalette, NULL);
+      	brush = GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);
+      	brush->iSolidColor = XLATEOBJ_iXlate(XlateObj, brush->iSolidColor);
+	  	GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC);
+	  }
       break;
       case GO_FONT_MAGIC:
       objOrg = (HGDIOBJ)dc->w.hFont;

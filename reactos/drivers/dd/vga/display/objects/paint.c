@@ -13,7 +13,6 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   ULONG long leftpixs, midpixs, rightpixs, temp;
   UCHAR a;
 
-  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
 
   // Swap dimensions so that x, y are at topmost left
   if(Dimensions.right < Dimensions.left) {
@@ -34,6 +33,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   // Calculate the width and height
   w = x2 - x;
   h = y2 - y;
+  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d, color: %d\n", x, y, w, h, iColor);
 
   // Calculate the starting offset
   offset = xconv[x]+y80[y];
@@ -87,6 +87,7 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
       }
 
       // Middle
+
       x=orgx+(8-leftpixs)+leftpixs;
 
     } else {
