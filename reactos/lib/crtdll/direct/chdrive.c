@@ -1,5 +1,6 @@
 #include <direct.h>
 #include <stdlib.h>
+#include <ctype.h>
 #include <windows.h>
 
 int cur_drive = 0;

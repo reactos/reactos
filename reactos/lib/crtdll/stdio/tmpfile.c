@@ -34,9 +34,11 @@ tmpfile(void)
      retries the call to `tmpnam' until we actually succeed
      to create the file which didn't exist before.  */
   do {
-    errno = 0;
+   // errno = 0;
     temp_fd = _open(temp_name, 0, SH_DENYRW);
-  } while (temp_fd == -1 && errno != ENOENT && (temp_name = tmpnam(0)) != 0);
+  //  if (  errno == ENOENT )
+//	break;
+  } while (temp_fd == -1 && (temp_name = tmpnam(0)) != 0);
 
   if (temp_name == 0)
     return 0;

@@ -7,7 +7,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-//#include <unistd.h>
 #include <libc/file.h>
 #include <io.h>
 
@@ -19,13 +18,13 @@ fflush(FILE *f)
 
   if (f == NULL)
   {
-    int e = errno;
+//    int e = errno;
 
-    errno = 0;
+//    errno = 0;
     _fwalk((void (*)(FILE *))fflush);
-    if (errno)
-      return EOF;
-    errno = e;
+//    if (errno)
+//      return EOF;
+//    errno = e;
     return 0;
   }
 

@@ -17,7 +17,7 @@ int isalnum(int c)
 }
 
 #undef iswalnum
-int iswalnum(wint_t c)
+int iswalnum(int c)
 {
    return iswctype(c,_ALPHA | _DIGIT);
 }
