@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.29 2004/12/13 07:09:56 royce Exp $
+/* $Id: misc.c,v 1.30 2004/12/13 19:06:28 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -541,14 +541,14 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
     if ( dwLastError != ERROR_NO_TOKEN
       && dwLastError != ERROR_NO_IMPERSONATION_TOKEN )
     {
-      // don't call SetLastError(),
-      // as OpenThreadToken() ought to have set one
+      /* don't call SetLastError(),
+         as OpenThreadToken() ought to have set one */
       return FALSE;
     }
     if ( !OpenProcessToken ( GetCurrentProcess(), TOKEN_QUERY, &hToken ) )
     {
-      // don't call SetLastError(),
-      // as OpenProcessToken() ought to have set one
+      /* don't call SetLastError(),
+         as OpenProcessToken() ought to have set one */
       return FALSE;
     }
   }
@@ -569,8 +569,8 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
     }
     if ( !GetTokenInformation ( hToken, TokenUser, tu_buf, tu_len, &tu_len ) )
     {
-      // don't call SetLastError(),
-      // as GetTokenInformation() ought to have set one
+      /* don't call SetLastError(),
+         as GetTokenInformation() ought to have set one */
       LocalFree ( tu_buf );
       CloseHandle ( hToken );
       return FALSE;
@@ -603,8 +603,8 @@ GetUserNameW ( LPWSTR lpszName, LPDWORD lpSize )
     }
     if ( !LookupAccountSidW ( NULL, token_user->User.Sid, lpszName, &an_len, domain_name, &dn_len, &snu ) )
     {
-      // don't call SetLastError(),
-      // as LookupAccountSid() ought to have set one
+      /* don't call SetLastError(),
+         as LookupAccountSid() ought to have set one */
       LocalFree ( domain_name );
       CloseHandle ( hToken );
       return FALSE;
@@ -1022,6 +1022,25 @@ GetSecurityInfo(HANDLE handle,
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+
+/**********************************************************************
+ * SetSecurityInfo				EXPORTED
+ *
+ * @unimplemented
+ */
+DWORD
+WINAPI
+SetSecurityInfo(HANDLE handle,
+                SE_OBJECT_TYPE ObjectType,
+                SECURITY_INFORMATION SecurityInfo,
+                PSID psidOwner,
+                PSID psidGroup,
+                PACL pDacl,
+                PACL pSacl)
+{
+  DPRINT1("SetSecurityInfo: stub\n");
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 
 /******************************************************************************

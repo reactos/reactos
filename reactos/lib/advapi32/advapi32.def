@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.26 2004/12/11 00:21:33 weiden Exp $
+; $Id: advapi32.def,v 1.27 2004/12/13 19:06:27 weiden Exp $
 ;
 ; advapi32.def
 ;
@@ -122,6 +122,7 @@ EnumServicesStatusW@32
 EqualPrefixSid@8
 EqualSid@8
 FindFirstFreeAce@8
+FreeInheritedFromArray@12
 FreeSid@4
 GetAce@12
 GetAclInformation@16
@@ -143,6 +144,8 @@ GetCurrentHwProfileW@4
 ;GetExplicitEntriesFromAclW@12
 GetFileSecurityA@20
 GetFileSecurityW@20
+GetInheritanceSourceA@40
+GetInheritanceSourceW@40
 GetKernelObjectSecurity@20
 GetLengthSid@4
 ;GetMultipleTrusteeA@4
@@ -376,7 +379,7 @@ SetSecurityDescriptorDacl@16
 SetSecurityDescriptorGroup@12
 SetSecurityDescriptorOwner@12
 SetSecurityDescriptorSacl@16
-;SetSecurityInfo@28
+SetSecurityInfo@28
 SetServiceBits@16
 SetServiceObjectSecurity@12
 SetServiceStatus@8

@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.11 2004/09/13 12:14:11 ekohl Exp $
+/* $Id: ac.c,v 1.12 2004/12/13 19:06:28 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -8,6 +8,8 @@
 
 #include "advapi32.h"
 
+#define NDEBUG
+#include <debug.h>
 
 /* --- ACL --- */
 
@@ -373,6 +375,68 @@ GetAce (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetInheritanceSourceW (
+	LPWSTR			pObjectName,
+	SE_OBJECT_TYPE		ObjectType,
+	SECURITY_INFORMATION	SecurityInfo,
+	BOOL			Container,
+	GUID**			pObjectClassGuids  OPTIONAL,
+	DWORD			GuidCount,
+	PACL			pAcl,
+	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL,
+	PGENERIC_MAPPING	pGenericMapping,
+	PINHERITED_FROMW	pInheritArray
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetInheritanceSourceA (
+	LPSTR			pObjectName,
+	SE_OBJECT_TYPE		ObjectType,
+	SECURITY_INFORMATION	SecurityInfo,
+	BOOL			Container,
+	GUID**			pObjectClassGuids  OPTIONAL,
+	DWORD			GuidCount,
+	PACL			pAcl,
+	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL,
+	PGENERIC_MAPPING	pGenericMapping,
+	PINHERITED_FROM		pInheritArray
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+FreeInheritedFromArray (
+	PINHERITED_FROM		pInheritArray,
+	USHORT			AceCnt,
+	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */
