@@ -2,13 +2,18 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * AUTHOR:            See gditest-- (initial changes by Mark Tempel)
  * shaptest
- * This test application is for testing shape drawing GDI routines.
- * Much code is taken from gditest (just look at the revision history).
+ *
+ * This is a windowed application that should draw two polygons. One
+ * is drawn with ALTERNATE fill, the other is drawn with WINDING fill.
+ * This is used to test out the Polygon() implementation.
  */
 
 #include <windows.h>
+#include <stdio.h>
 
-extern BOOL STDCALL GdiDllInitialize(HANDLE hInstance, DWORD Event, LPVOID Reserved);
+
+HFONT tf;
+LRESULT WINAPI MainWndProc(HWND, UINT, WPARAM, LPARAM);
 
 void __stdcall PolygonTest(HDC Desktop)
 {
@@ -19,8 +24,7 @@ void __stdcall PolygonTest(HDC Desktop)
 	POINT lpPointsAlternate[5];
 	POINT lpPointsWinding[5];
 	DWORD Mode;
-	printf("In PolygonTest()\n");
-	
+
 	//create a pen to draw the shape
 	BluePen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0xff));
 	RedBrush = CreateSolidBrush(RGB(0xff, 0, 0));
@@ -49,9 +53,7 @@ void __stdcall PolygonTest(HDC Desktop)
 	lpPointsWinding[4].x = 210;
 	lpPointsWinding[4].y = 40; //{210,40};
 
-	printf("Selecting in a blue pen.\n");
 	OldPen = (HPEN)SelectObject(Desktop, BluePen);
-	printf("Drawing a 5 point star.\n");
 	OldBrush = (HBRUSH)SelectObject(Desktop, RedBrush);
 
 	Mode = GetPolyFillMode(Desktop);
@@ -72,7 +74,7 @@ void __stdcall PolygonTest(HDC Desktop)
 }
 
 
-void shaptest( void ){
+void shaptest( HDC DevCtx ){
   HDC  Desktop, MyDC, DC24;
   HPEN  RedPen, GreenPen, BluePen, WhitePen;
   HBITMAP  MyBitmap, DIB24;
@@ -84,73 +86,107 @@ void shaptest( void ){
   int sec,Xmod,Ymod;
   char tbuf[5];
 
-  // Set up a DC called Desktop that accesses DISPLAY
-  Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
-  if (Desktop == NULL){
-	printf("Can't create desktop\n");
-    return;
-  }
 
-
-//ei
   BlueBrush = CreateSolidBrush( RGB(0, 0, 0xff) );
-  DefBrush = SelectObject( Desktop, BlueBrush );
+  DefBrush = SelectObject( DevCtx, BlueBrush );
 
-  hRgn1 = CreateRectRgn( 1, 2, 100, 101 );
-  hRgn2 = CreateRectRgn( 10, 20, 150, 151 );
-  hRgn3 = CreateRectRgn( 1, 1, 1, 1);
-  CombineRgn( hRgn3, hRgn1, hRgn2, RGN_XOR );
-
-  //PaintRgn( Desktop, hRgn3 );
-  SelectObject( Desktop, DefBrush );
+  SelectObject( DevCtx, DefBrush );
   DeleteObject( BlueBrush );
 
   // Create a blue pen and select it into the DC
   BluePen = CreatePen(PS_SOLID, 8, RGB(0, 0, 0xff));
-  SelectObject(Desktop, BluePen);
+  SelectObject(DevCtx, BluePen);
 
-  
-  // Test font support
-  GreenPen = CreatePen(PS_SOLID, 3, RGB(0, 0xff, 0));
-  RedPen = CreatePen(PS_SOLID, 3, RGB(0xff, 0, 0));
-
-  tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
-                   ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                   DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
-  SelectObject(Desktop, tf);
-  SetTextColor(Desktop, RGB(0xff, 0xff, 0xff));
-  
-  //Test 3 Test the Polygon routine.
-  PolygonTest(Desktop);
-
-  //Countdown our exit.
-  TextOutA(Desktop, 70, 110, "Exiting app in: ", 16);
-#define TIME_OUT 30 
-  for (sec = 0; sec < TIME_OUT; ++sec)
-  {
-	sprintf(tbuf,"%d",TIME_OUT - sec);
-	
-	Xmod = (sec % 10) * 20;
-	Ymod = (sec / 10) * 20;
-
-	TextOutA(Desktop, 200 + Xmod , 110 + Ymod, tbuf, strlen(tbuf));
-	Sleep( 1500 ); 
-  }
-  // Free up everything
-  DeleteDC(Desktop);
-  DeleteDC(MyDC);
+  //Test the Polygon routine.
+  PolygonTest(DevCtx);
 }
 
-int main (int argc, char* argv[])
+
+int WINAPI 
+WinMain(HINSTANCE hInstance,
+	HINSTANCE hPrevInstance,
+	LPSTR lpszCmdLine,
+	int nCmdShow)
 {
-  printf("Entering ShapTest (with polygon)..\n");
-  
-  Sleep( 1000 );
+  WNDCLASS wc;
+  MSG msg;
+  HWND hWnd;
 
-  GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
-  
-  shaptest();
-  
+  wc.lpszClassName = "ShapTestClass";
+  wc.lpfnWndProc = MainWndProc;
+  wc.style = CS_VREDRAW | CS_HREDRAW;
+  wc.hInstance = hInstance;
+  wc.hIcon = LoadIcon(NULL, IDI_APPLICATION);
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
+  wc.lpszMenuName = NULL;
+  wc.cbClsExtra = 0;
+  wc.cbWndExtra = 0;
+  if (RegisterClass(&wc) == 0)
+    {
+      fprintf(stderr, "RegisterClass failed (last error 0x%X)\n",
+	      GetLastError());
+      return(1);
+    }
 
-  return 0;
+  hWnd = CreateWindow("ShapTestClass",
+		      "Shaptest",
+		      WS_OVERLAPPEDWINDOW|WS_HSCROLL|WS_VSCROLL,
+		      0,
+		      0,
+		      CW_USEDEFAULT,
+		      CW_USEDEFAULT,
+		      NULL,
+		      NULL,
+		      hInstance,
+		      NULL);
+  if (hWnd == NULL)
+    {
+      fprintf(stderr, "CreateWindow failed (last error 0x%X)\n",
+	      GetLastError());
+      return(1);
+    }
+
+	tf = CreateFontA(14, 0, 0, TA_BASELINE, FW_NORMAL, FALSE, FALSE, FALSE,
+		ANSI_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+		DEFAULT_QUALITY, FIXED_PITCH|FF_DONTCARE, "Timmons");
+
+  ShowWindow(hWnd, nCmdShow);
+
+  while(GetMessage(&msg, NULL, 0, 0))
+  {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+
+  DeleteObject(tf);
+
+  return msg.wParam;
 }
+
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+	PAINTSTRUCT ps;
+	HDC hDC;
+	RECT clr, wir;
+        char spr[100], sir[100];
+
+	switch(msg)
+	{
+	
+	case WM_PAINT:
+	  hDC = BeginPaint(hWnd, &ps);
+	  shaptest( hDC );
+	  EndPaint(hWnd, &ps);
+	  break;
+
+	case WM_DESTROY:
+	  PostQuitMessage(0);
+	  break;
+
+	default:
+	  return DefWindowProc(hWnd, msg, wParam, lParam);
+	}
+	return 0;
+}
+
