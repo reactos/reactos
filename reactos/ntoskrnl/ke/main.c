@@ -25,7 +25,7 @@
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* FUNCTIONS ****************************************************************/
@@ -106,6 +106,20 @@ void set_breakpoint(unsigned int i, unsigned int addr, unsigned int type,
 extern int edata;
 extern int end;
 
+static char * INIData =
+  "[HKEY_LOCAL_MACHINE\HARDWARE]\r\n"
+  "\r\n"
+  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP]\r\n"
+  "\r\n"
+  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\AtDisk]\r\n"
+  "\r\n"
+  "[HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP\AtDisk\Controller 0]\r\n"
+  "Controller Address=dword:000001f0\r\n"
+  "Controller Interrupt=dword:0000000e\r\n"
+  "\r\n"
+  "\r\n"
+  "\r\n"
+  "";
 
 asmlinkage void _main(boot_param* _bp)
 /*
@@ -164,6 +178,7 @@ asmlinkage void _main(boot_param* _bp)
    PsInit();
    IoInit();
    LdrInitModuleManagement();
+   CmInitializeRegistry();
       
    /*
     * Initalize services loaded at boot time

@@ -18,7 +18,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-#define  PROTO_REG  1  /* Comment out to disable */
+/* #define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
@@ -277,9 +277,11 @@ VOID
 CmInitializeRegistry(VOID)
 {
 #if PROTO_REG
+  NTSTATUS  Status;
   HANDLE  RootKeyHandle;
   UNICODE_STRING  RootKeyName;
   OBJECT_ATTRIBUTES  ObjectAttributes;
+  PKEY_BLOCK  KeyBlock;
   
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -311,14 +313,49 @@ CmInitializeRegistry(VOID)
   KeInitializeSpinLock(&CmiKeyListLock);
 
   /*  Build volitile registry store  */
+CHECKPOINT;
   CmiVolatileFile = CmiCreateRegistry(NULL);
 
   /*  Build system registry store  */
-  CmiSystemFile = CmiCreateRegistry(SYSTEM_REG_FILE);
+CHECKPOINT;
+  CmiSystemFile = NULL; // CmiCreateRegistry(SYSTEM_REG_FILE);
 
-  /* FIXME: Create initial predefined symbolic links  */
+  /*  Create initial predefined symbolic links  */
   /* HKEY_LOCAL_MACHINE  */
+CHECKPOINT;
+  Status = CmiCreateKey(CmiVolatileFile,
+                        L"Machine",
+                        &KeyBlock,
+                        KEY_ALL_ACCESS,
+                        0, 
+                        NULL, 
+                        REG_OPTION_VOLATILE, 
+                        0);
+  if (!NT_SUCCESS(Status))
+    {
+      return;
+    }
+CHECKPOINT;
+  CmiReleaseBlock(CmiVolatileFile, KeyBlock);
+  
   /* HKEY_USERS  */
+CHECKPOINT;
+  Status = CmiCreateKey(CmiVolatileFile,
+                        L"Users",
+                        &KeyBlock,
+                        KEY_ALL_ACCESS,
+                        0, 
+                        NULL, 
+                        REG_OPTION_VOLATILE, 
+                        0);
+  if (!NT_SUCCESS(Status))
+    {
+      return;
+    }
+CHECKPOINT;
+  CmiReleaseBlock(CmiVolatileFile, KeyBlock);
+
+  /* FIXME: create remaining structure needed for default handles  */
   /* FIXME: load volatile registry data from ROSDTECT  */
 
 #endif
@@ -1653,11 +1690,13 @@ CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
 
   /* FIXME:  Should handle search by Class/TitleIndex  */
 
+CHECKPOINT;
   /*  Loop through each key level and find or build the needed subkey  */
   Status = STATUS_SUCCESS;
   /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
   CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
                                RegistryFile->HeaderBlock->RootKeyBlock);
+CHECKPOINT;
   Remainder = KeyNameBuf;
   while (NT_SUCCESS(Status)  &&
          (NextSlash = wcschr(Remainder, L'\\')) != NULL)
@@ -1667,6 +1706,7 @@ CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
       CurKeyName[NextSlash - Remainder] = 0;
 
       /* Verify existance of/Create CurKeyName  */
+CHECKPOINT;
       Status = CmiScanForSubKey(RegistryFile, 
                                 CurKeyBlock, 
                                 &SubKeyBlock,
@@ -1695,8 +1735,10 @@ CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
 
       Remainder = NextSlash + 1;      
     }
+CHECKPOINT;
   if (NT_SUCCESS(Status))
     {
+CHECKPOINT;
       Status = CmiScanForSubKey(RegistryFile, 
                                 CurKeyBlock, 
                                 &SubKeyBlock,
@@ -1723,7 +1765,10 @@ CmiCreateKey(IN PREGISTRY_FILE  RegistryFile,
                                     TitleIndex,
                                     ClassName, 
                                     CreateOptions);
-              ExFreePool(ClassName);
+              if (ClassName != NULL)
+                {
+                  ExFreePool(ClassName);
+                }
               if (NT_SUCCESS(Status) && Disposition != NULL)
                 {
                   *Disposition = REG_CREATED_NEW_KEY;
@@ -2222,8 +2267,9 @@ CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
   /*  Handle volatile files first  */
   if (RegistryFile->Filename == NULL)
     {
-      NewKeySize = sizeof(KEY_BLOCK) + wcslen(KeyName) + 1 + 
-        (Class != NULL ? wcslen(Class) + 1 : 0);
+      NewKeySize = sizeof(KEY_BLOCK) + 
+        (wcslen(KeyName) + 1) * sizeof(WCHAR) + 
+        (Class != NULL ? (wcslen(Class) + 1) * sizeof(WCHAR) : 0);
       NewKeyBlock = ExAllocatePool(NonPagedPool, NewKeySize);
       if (NewKeyBlock == NULL)
         {
@@ -2385,7 +2431,14 @@ CmiAddKeyToHashTable(PREGISTRY_FILE  RegistryFile,
                      PHASH_TABLE_BLOCK  HashBlock,
                      PKEY_BLOCK  NewKeyBlock)
 {
-  UNIMPLEMENTED;
+  HashBlock->Table[HashBlock->HashTableSize].KeyOffset = 
+    CmiGetBlockOffset(RegistryFile, NewKeyBlock);
+  RtlCopyMemory(&HashBlock->Table[HashBlock->HashTableSize].HashValue,
+                NewKeyBlock->Name, 
+                4);
+  HashBlock->HashTableSize++;
+
+  return  STATUS_SUCCESS;
 }
 
 static NTSTATUS

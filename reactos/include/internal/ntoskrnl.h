@@ -92,6 +92,7 @@ VOID PsInit(VOID);
 VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID HalInitConsole(boot_param* bp);
+VOID CmInitializeRegistry(VOID);
 
 extern WCHAR wtolower(WCHAR ch);
 

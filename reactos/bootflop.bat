@@ -3,9 +3,9 @@
 :
 : copy files to HD...
 :
-COPY /Y A:\DRIVERS\*.SYS C:\reactos\system\drivers > NUL:
-COPY /Y A:\DLLS\*.DLL C:\reactos\system > NUL:
-COPY /Y A:\APPS\*.EXE C:\reactos\system > NUL:
+COPY /Y A:\DRIVERS\*.SYS C:\reactos\system32\drivers > NUL:
+COPY /Y A:\DLLS\*.DLL C:\reactos\system32 > NUL:
+COPY /Y A:\APPS\*.EXE C:\reactos\system32 > NUL:
 :
 : present a menu to the booter...
 :
