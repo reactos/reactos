@@ -2,7 +2,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/advapi32/token/token.c
- * PURPOSE:         Registry functions
+ * PURPOSE:         Token functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
  *                  Created 01/11/98
@@ -168,23 +168,17 @@ SetThreadToken (
                 HANDLE TokenHandle
                  )
 {
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
+	NTSTATUS errCode;
+	HANDLE hThread  = NtCurrentThread();
+	if ( ThreadHandle != NULL )
+		hThread = ThreadHandle;
+	errCode = NtSetInformationThread(hThread,ThreadImpersonationToken,TokenHandle,sizeof(HANDLE));
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
 }
-
-
-WINBOOL
-STDCALL
-DuplicateToken (
-                HANDLE ExistingTokenHandle,
-                SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
-                PHANDLE DuplicateTokenHandle
-                 )
-{
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
-}
-
 
 
 WINBOOL
@@ -198,9 +192,54 @@ DuplicateTokenEx (
                   PHANDLE DuplicateTokenHandle
                    )
 {
-        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-        return FALSE;
+	NTSTATUS errCode;
+	HANDLE NewToken;
+
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   	ObjectAttributes.RootDirectory = NULL;
+   	ObjectAttributes.ObjectName = NULL;
+   	ObjectAttributes.Attributes = 0;
+	if ( lpTokenAttributes->bInheritHandle )
+		ObjectAttributes.Attributes |= OBJ_INHERIT;	
+
+	ObjectAttributes.SecurityDescriptor = lpTokenAttributes->lpSecurityDescriptor;
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	errCode = NtDuplicateToken(  ExistingTokenHandle, dwDesiredAccess, 
+ 		&ObjectAttributes, ImpersonationLevel,
+		TokenType,  &NewToken     );
+
+	if ( !NT_SUCCESS(errCode) ) {
+		SetLastError(RtlNtStatusToDosError(errCode));
+		return FALSE;
+	}
+	return TRUE;
 }
+
+
+WINBOOL
+STDCALL
+DuplicateToken (
+                HANDLE ExistingTokenHandle,
+                SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                PHANDLE DuplicateTokenHandle
+                 )
+{
+ 	return DuplicateTokenEx (
+                  ExistingTokenHandle,
+                  TOKEN_DUPLICATE|TOKEN_IMPERSONATE|TOKEN_QUERY,
+                  NULL,
+                  ImpersonationLevel,
+                  TokenImpersonation,
+                  DuplicateTokenHandle
+                   );
+}
+
+
+
 
 
 /* EOF */

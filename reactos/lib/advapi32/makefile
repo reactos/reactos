@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 1999/08/29 13:44:52 dwelch Exp $
+# $Id: makefile,v 1.8 1999/09/25 06:25:51 ariadne Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -18,7 +18,7 @@ endif
 
 
 MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
-		misc/sysfunc.o misc/stubs.o
+		misc/sysfunc.o 
 
 REGISTRY_OBJECTS = reg/reg.o
 
@@ -36,6 +36,9 @@ OBJECTS = $(MISC_OBJECTS) $(REGISTRY_OBJECTS) $(SECURITY_OBJECTS) \
 	  $(RESOURCE_OBJECT)
 
 all: $(DLLTARGET)
+
+$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
+	windres $(TARGET).rc $(TARGET).coff
 
 $(TARGET).a: $(OBJECTS)
 	$(LD) -r $(OBJECTS) -o $(TARGET).a
@@ -76,7 +79,6 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-$(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
 clean:
 

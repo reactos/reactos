@@ -358,7 +358,7 @@ RegOpenKeyW (
 	OBJECT_ATTRIBUTES	ObjectAttributes;
 
 	SubKeyString.Buffer = (LPWSTR)lpSubKey;
-	SubKeyString.Length = wcslen(lpSubKey);
+	SubKeyString.Length = wcslen(SubKeyString.Buffer);
 	SubKeyString.MaximumLength = SubKeyString.Length;
 
 	ObjectAttributes.RootDirectory =  hKey;
