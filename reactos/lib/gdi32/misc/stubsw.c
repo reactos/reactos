@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.21 2003/11/15 15:18:06 weiden Exp $
+/* $Id: stubsw.c,v 1.22 2003/12/12 21:37:39 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -21,8 +21,11 @@ int
 STDCALL
 AddFontResourceExW ( LPCWSTR lpszFilename, DWORD fl, PVOID pvReserved )
 {
+  UNICODE_STRING Filename;
+
   /* FIXME handle fl parameter */
-  return NtGdiAddFontResource ( lpszFilename );
+  RtlInitUnicodeString(&Filename, lpszFilename);
+  return NtGdiAddFontResource ( &Filename, fl );
 }
 
 /*

@@ -22,7 +22,8 @@ NTSTATUS FASTCALL TextIntCreateFontIndirect(CONST LPLOGFONTW lf, HFONT *NewFont)
 
 int
 STDCALL
-NtGdiAddFontResource(LPCWSTR  Filename);
+NtGdiAddFontResource(PUNICODE_STRING Filename,
+					 DWORD fl);
 
 HFONT
 STDCALL

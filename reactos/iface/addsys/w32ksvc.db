@@ -1,7 +1,7 @@
 # NAME					ARG_COUNT
 NtGdiAbortDoc				1
 NtGdiAbortPath				1
-NtGdiAddFontResource			1
+NtGdiAddFontResource			2
 NtGdiAngleArc				6
 NtGdiAnimatePalette			4
 NtGdiArc					9

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.56 2003/12/12 20:51:42 gvg Exp $ */
+/* $Id: text.c,v 1.57 2003/12/12 21:37:39 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -52,91 +52,12 @@ typedef struct _FONTTABLE {
 FONTTABLE FontTable[256];
 INT FontsLoaded = 0;
 
-BOOL FASTCALL InitFontSupport(VOID)
-{
-  ULONG error;
-  UINT File;
-  static WCHAR *FontFiles[] =
-  {
-  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
-  L"\\SystemRoot\\media\\fonts\\helb____.ttf",
-  L"\\SystemRoot\\media\\fonts\\timr____.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraBd.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraBI.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraIt.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoBd.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoBI.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMoIt.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraMono.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraSe.ttf",
-  L"\\SystemRoot\\media\\fonts\\VeraSeBd.ttf"
-  };
-
-  error = FT_Init_FreeType(&library);
-  if(error)
-  {
-    return FALSE;
-  }
-
-  for (File = 0; File < sizeof(FontFiles) / sizeof(WCHAR *); File++)
-    {
-    DPRINT("Loading font %S\n", FontFiles[File]);
-
-    NtGdiAddFontResource(FontFiles[File]);
-    }
-
-  DPRINT("All fonts loaded\n");
-
-  return TRUE;
-}
-
-static NTSTATUS STDCALL
-GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
-{
-  NTSTATUS Status = STATUS_SUCCESS;
-
-  ASSERT(NULL != TextObj && NULL != TextObj->GDIFontHandle);
-  if (NULL != TextObj && NULL != TextObj->GDIFontHandle)
-  {
-    if (NT_SUCCESS(Status) && NULL != FontHandle)
-    {
-      *FontHandle = TextObj->GDIFontHandle;
-    }
-    if (NT_SUCCESS(Status) && NULL != FontObj)
-    {
-      *FontObj = AccessUserObject((ULONG) TextObj->GDIFontHandle);
-      if (NULL == *FontObj)
-      {
-	ASSERT(FALSE);
-	Status = STATUS_INVALID_HANDLE;
-      }
-    }
-    if (NT_SUCCESS(Status) && NULL != FontGDI)
-    {
-      *FontGDI = AccessInternalObject((ULONG) TextObj->GDIFontHandle);
-      if (NULL == *FontGDI)
-      {
-	ASSERT(FALSE);
-	Status = STATUS_INVALID_HANDLE;
-      }
-    }
-  }
-  else
-  {
-    Status = STATUS_INVALID_HANDLE;
-  }
-
-  return Status;
-}
-
-int
-STDCALL
-NtGdiAddFontResource(LPCWSTR  Filename)
+int FASTCALL
+IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 {
   HFONT NewFont;
   PFONTOBJ FontObj;
   PFONTGDI FontGDI;
-  UNICODE_STRING uFileName;
   NTSTATUS Status;
   HANDLE FileHandle;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -153,10 +74,8 @@ NtGdiAddFontResource(LPCWSTR  Filename)
   FontObj = (PFONTOBJ) AccessUserObject( (ULONG) NewFont );
   FontGDI = (PFONTGDI) AccessInternalObject( (ULONG) NewFont );
 
-  RtlCreateUnicodeString(&uFileName, (LPWSTR)Filename);
-
   //  Open the Module
-  InitializeObjectAttributes(&ObjectAttributes, &uFileName, 0, NULL, NULL);
+  InitializeObjectAttributes(&ObjectAttributes, Filename, 0, NULL, NULL);
 
   Status = ZwOpenFile(&FileHandle, 
                       GENERIC_READ|SYNCHRONIZE, 
@@ -167,7 +86,7 @@ NtGdiAddFontResource(LPCWSTR  Filename)
 
   if (!NT_SUCCESS(Status))
   {
-    DPRINT1("Could not open module file: %S\n", Filename);
+    DPRINT1("Could not open module file: %wZ\n", Filename);
     return 0;
   }
 
@@ -244,6 +163,125 @@ NtGdiAddFontResource(LPCWSTR  Filename)
   FontsLoaded++;
 
   return 1;
+}
+
+BOOL FASTCALL InitFontSupport(VOID)
+{
+  ULONG error;
+  UINT File;
+  UNICODE_STRING Filename;
+  
+  static WCHAR *FontFiles[] =
+  {
+  L"\\SystemRoot\\media\\fonts\\Vera.ttf",
+  L"\\SystemRoot\\media\\fonts\\helb____.ttf",
+  L"\\SystemRoot\\media\\fonts\\timr____.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraBd.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraBI.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraIt.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoBd.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoBI.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMoIt.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraMono.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraSe.ttf",
+  L"\\SystemRoot\\media\\fonts\\VeraSeBd.ttf"
+  };
+
+  error = FT_Init_FreeType(&library);
+  if(error)
+  {
+    return FALSE;
+  }
+
+  for (File = 0; File < sizeof(FontFiles) / sizeof(WCHAR *); File++)
+    {
+    DPRINT("Loading font %S\n", FontFiles[File]);
+    
+    RtlInitUnicodeString(&Filename, FontFiles[File]);
+    IntGdiAddFontResource(&Filename, 0);
+    }
+
+  DPRINT("All fonts loaded\n");
+
+  return TRUE;
+}
+
+static NTSTATUS STDCALL
+GetFontObjectsFromTextObj(PTEXTOBJ TextObj, HFONT *FontHandle, PFONTOBJ *FontObj, PFONTGDI *FontGDI)
+{
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  ASSERT(NULL != TextObj && NULL != TextObj->GDIFontHandle);
+  if (NULL != TextObj && NULL != TextObj->GDIFontHandle)
+  {
+    if (NT_SUCCESS(Status) && NULL != FontHandle)
+    {
+      *FontHandle = TextObj->GDIFontHandle;
+    }
+    if (NT_SUCCESS(Status) && NULL != FontObj)
+    {
+      *FontObj = AccessUserObject((ULONG) TextObj->GDIFontHandle);
+      if (NULL == *FontObj)
+      {
+	ASSERT(FALSE);
+	Status = STATUS_INVALID_HANDLE;
+      }
+    }
+    if (NT_SUCCESS(Status) && NULL != FontGDI)
+    {
+      *FontGDI = AccessInternalObject((ULONG) TextObj->GDIFontHandle);
+      if (NULL == *FontGDI)
+      {
+	ASSERT(FALSE);
+	Status = STATUS_INVALID_HANDLE;
+      }
+    }
+  }
+  else
+  {
+    Status = STATUS_INVALID_HANDLE;
+  }
+
+  return Status;
+}
+
+int
+STDCALL
+NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
+{
+  UNICODE_STRING SafeFileName;
+  PWSTR src;
+  NTSTATUS Status;
+  int Ret;
+  
+  /* Copy the UNICODE_STRING structure */
+  Status = MmCopyFromCaller(&SafeFileName, Filename, sizeof(UNICODE_STRING));
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  src = SafeFileName.Buffer;
+  SafeFileName.Buffer = (PWSTR)ExAllocatePool(PagedPool, SafeFileName.MaximumLength);
+  if(!SafeFileName.Buffer)
+  {
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+  
+  Status = MmCopyFromCaller(&SafeFileName.Buffer, src, SafeFileName.MaximumLength);
+  if(!NT_SUCCESS(Status))
+  {
+    ExFreePool(SafeFileName.Buffer);
+    SetLastNtError(Status);
+    return 0;
+  }
+  
+  Ret = IntGdiAddFontResource(&SafeFileName, fl);
+  
+  ExFreePool(SafeFileName.Buffer);
+  return Ret;
 }
 
 NTSTATUS FASTCALL
