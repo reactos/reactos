@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.1 2003/04/14 17:18:48 ekohl Exp $
+/* $Id: reginf.c,v 1.2 2003/04/17 10:41:02 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -55,32 +55,32 @@
 static BOOL
 GetRootKey (PCHAR Name)
 {
-  if (!stricmp (Name, "HKCR"))
+  if (!strcasecmp (Name, "HKCR"))
     {
       strcpy (Name, "\\Registry\\Machine\\SOFTWARE\\Classes\\");
       return TRUE;
     }
 
-  if (!stricmp (Name, "HKCU"))
+  if (!strcasecmp (Name, "HKCU"))
     {
       strcpy (Name, "\\Registry\\User\\.DEFAULT\\");
       return TRUE;
     }
 
-  if (!stricmp (Name, "HKLM"))
+  if (!strcasecmp (Name, "HKLM"))
     {
       strcpy (Name, "\\Registry\\Machine\\");
       return TRUE;
     }
 
-  if (!stricmp (Name, "HKU"))
+  if (!strcasecmp (Name, "HKU"))
     {
       strcpy (Name, "\\Registry\\User\\");
       return TRUE;
     }
 
 #if 0
-  if (!stricmp (Name, "HKR"))
+  if (!strcasecmp (Name, "HKR"))
     return FALSE;
 #endif
 

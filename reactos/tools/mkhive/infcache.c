@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
+/* $Id: infcache.c,v 1.3 2003/04/17 10:41:02 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/infcache.c
@@ -29,6 +29,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "mkhive.h"
 #include "infcache.h"
@@ -222,7 +223,7 @@ InfpCacheFindSection (PINFCACHE Cache,
   Section = Cache->FirstSection;
   while (Section != NULL)
     {
-      if (stricmp (Section->Name, Name) == 0)
+      if (strcasecmp (Section->Name, Name) == 0)
 	{
 	  return Section;
 	}
@@ -378,7 +379,7 @@ InfpCacheFindKeyLine (PINFCACHESECTION Section,
   Line = Section->FirstLine;
   while (Line != NULL)
     {
-      if (Line->Key != NULL && stricmp (Line->Key, Key) == 0)
+      if (Line->Key != NULL && strcasecmp (Line->Key, Key) == 0)
 	{
 	  return Line;
 	}
@@ -998,7 +999,7 @@ InfFindFirstLine (HINF InfHandle,
       DPRINT("Comparing '%s' and '%s'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (strcasecmp(CacheSection->Name, Section) == 0)
 	{
 	  if (Key != NULL)
 	    {
@@ -1072,7 +1073,7 @@ InfFindFirstMatchLine (PINFCONTEXT ContextIn,
   CacheLine = ((PINFCACHESECTION)(ContextIn->Section))->FirstLine;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcasecmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1108,7 +1109,7 @@ InfFindNextMatchLine (PINFCONTEXT ContextIn,
   CacheLine = (PINFCACHELINE)ContextIn->Line;
   while (CacheLine != NULL)
     {
-      if (CacheLine->Key != NULL && stricmp (CacheLine->Key, Key) == 0)
+      if (CacheLine->Key != NULL && strcasecmp (CacheLine->Key, Key) == 0)
 	{
 
 	  if (ContextIn != ContextOut)
@@ -1150,7 +1151,7 @@ InfGetLineCount(HINF InfHandle,
       DPRINT("Comparing '%s' and '%s'\n", CacheSection->Name, Section);
 
       /* Are the section names the same? */
-      if (stricmp(CacheSection->Name, Section) == 0)
+      if (strcasecmp(CacheSection->Name, Section) == 0)
 	{
 	  return CacheSection->LineCount;
 	}

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.2 2003/04/16 15:06:33 ekohl Exp $
+/* $Id: registry.c,v 1.3 2003/04/17 10:41:02 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -432,7 +432,7 @@ RegSetValue(HKEY Key,
 
 	  DPRINT ("Value->Name '%s'\n", Value->Name);
 
-	  if (stricmp(Value->Name, ValueName) == 0)
+	  if (strcasecmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -535,7 +535,7 @@ RegQueryValue(HKEY Key,
 
 	  DPRINT("Searching for '%s'. Value name '%s'\n", ValueName, Value->Name);
 
-	  if (stricmp(Value->Name, ValueName) == 0)
+	  if (strcasecmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
