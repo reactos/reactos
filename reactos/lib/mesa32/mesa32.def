@@ -60,7 +60,7 @@ EXPORTS
 	_mesa_new_buffer_object
 	_mesa_new_texture_object
 	_mesa_problem
-	_mesa_ResizeBuffersMESA
+	_mesa_ResizeBuffersMESA@0
 	_mesa_store_compressed_teximage1d
 	_mesa_store_compressed_teximage2d
 	_mesa_store_compressed_teximage3d
@@ -75,7 +75,7 @@ EXPORTS
 	_mesa_store_texsubimage3d
 	_mesa_strcmp
 	_mesa_test_proxy_teximage
-	_mesa_Viewport
+	_mesa_Viewport@16
 	_swrast_Accum
 	_swrast_alloc_buffers
 	_swrast_Bitmap
