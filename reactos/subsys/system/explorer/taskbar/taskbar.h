@@ -39,9 +39,6 @@
 //#define TASKBAR_AT_TOP
 
 
-#define	xxx CSIDL_APPDATA _T("Microsoft\\Internet Explorer\\Quick Launch")
-
-
 #define	IDW_TASKTOOLBAR	100
 
  /// internal task bar button management entry
@@ -77,8 +74,6 @@ struct TaskBar : public Window
 	~TaskBar();
 
 	static HWND Create(HWND hwndParent);
-
-	DesktopBar*	_desktop_bar;	// may be not necessary
 
 protected:
 	WindowHandle _htoolbar;

@@ -364,7 +364,7 @@ struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic ex
 {
 	typedef IShellFolderPtr super;
 
-	ShellFolder();
+	ShellFolder();	// desktop folder
 	ShellFolder(IShellFolder* p);
 	ShellFolder(IShellFolder* parent, LPCITEMIDLIST pidl);
 	ShellFolder(LPCITEMIDLIST pidl);
@@ -726,18 +726,26 @@ private:
 };
 
 
-struct SpecialFolder : public ShellPath
+struct SpecialFolderPath : public ShellPath
 {
-	SpecialFolder(int folder, HWND hwnd)
+	SpecialFolderPath(int folder, HWND hwnd)
 	{
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
 	}
 };
 
-struct DesktopFolder : public SpecialFolder
+struct DesktopFolder : public SpecialFolderPath
 {
 	DesktopFolder()
-	 :	SpecialFolder(CSIDL_DESKTOP, 0)
+	 :	SpecialFolderPath(CSIDL_DESKTOP, 0)
+	{
+	}
+};
+
+struct SpecialFolder : public ShellFolder
+{
+	SpecialFolder(int folder, HWND hwnd)
+	 :	ShellFolder(Desktop(), SpecialFolderPath(folder, hwnd))
 	{
 	}
 };
@@ -745,9 +753,10 @@ struct DesktopFolder : public SpecialFolder
 
 #if _WIN32_IE>=0x400 // is SHGetSpecialFolderPath() available?
 
-struct SpecialFolderPath
+ /// file system path of special folder
+struct SpecialFolderFSPath
 {
-	SpecialFolderPath(int folder/*e.g. CSIDL_DESKTOP*/, HWND hwnd)
+	SpecialFolderFSPath(int folder/*e.g. CSIDL_DESKTOP*/, HWND hwnd)
 	{
 		_fullpath[0] = '\0';
 
@@ -765,9 +774,9 @@ protected:
 
 #else // _WIN32_IE<0x400 -> use SHGetSpecialFolderLocation()
 
-struct SpecialFolderPath : public FileSysShellPath
+struct SpecialFolderFSPath : public FileSysShellPath
 {
-	SpecialFolderPath(int folder, HWND hwnd)
+	SpecialFolderFSPath(int folder, HWND hwnd)
 	{
 		HRESULT hr = SHGetSpecialFolderLocation(hwnd, folder, &_p);
 	}

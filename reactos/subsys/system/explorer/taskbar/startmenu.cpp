@@ -381,7 +381,7 @@ void StartMenu::CreateSubmenu(int id, int folder_id, CREATORFUNC creator)
 {
 	StartMenuFolders new_folders;
 
-	SpecialFolder folder(folder_id, _hwnd);
+	SpecialFolderPath folder(folder_id, _hwnd);
 
 	if (folder)
 		new_folders.push_back(folder);
@@ -393,12 +393,12 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUN
 {
 	StartMenuFolders new_folders;
 
-	SpecialFolder folder1(folder_id1, _hwnd);
+	SpecialFolderPath folder1(folder_id1, _hwnd);
 
 	if (folder1)
 		new_folders.push_back(folder1);
 
-	SpecialFolder folder2(folder_id2, _hwnd);
+	SpecialFolderPath folder2(folder_id2, _hwnd);
 
 	if (folder2)
 		new_folders.push_back(folder2);
@@ -531,11 +531,11 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
  :	super(hwnd)
 {
 	 // insert directory "All Users\Start Menu"
-	ShellDirectory cmn_startmenu(Desktop(), SpecialFolder(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
+	ShellDirectory cmn_startmenu(Desktop(), SpecialFolderPath(CSIDL_COMMON_STARTMENU, _hwnd), _hwnd);
 	_dirs.push_back(StartMenuDirectory(cmn_startmenu, false));	// dont't add subfolders
 
 	 // insert directory "<user name>\Start Menu"
-	ShellDirectory usr_startmenu(Desktop(), SpecialFolder(CSIDL_STARTMENU, _hwnd), _hwnd);
+	ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
 	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// dont't add subfolders
 }
 

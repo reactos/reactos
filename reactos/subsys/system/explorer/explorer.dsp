@@ -408,6 +408,14 @@ SOURCE=.\taskbar\desktopbar.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\taskbar\quicklaunch.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\taskbar\quicklaunch.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\taskbar\startmenu.cpp
 # End Source File
 # Begin Source File

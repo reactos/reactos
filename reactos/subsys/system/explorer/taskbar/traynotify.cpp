@@ -30,7 +30,6 @@
 
 #include "../explorer.h"
 
-//#include "taskbar.h"	// for _desktop_bar
 #include "traynotify.h"
 
 
@@ -75,6 +74,8 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 		_dwState = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
 #endif
 
+	//TODO: store and display tool tip texts
+
 	return *this;
 }
 
@@ -82,7 +83,6 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 NotifyArea::NotifyArea(HWND hwnd)
  :	super(hwnd)
 {
-//	_desktop_bar = NULL;
 	_next_idx = 0;
 }
 

@@ -30,9 +30,6 @@
 #define	TITLE_EXPLORERBAR		_T("DesktopBar")	//_T("")
 
 
-#define	xxx CSIDL_APPDATA _T("Microsoft\\Internet Explorer\\Quick Launch")	//@@
-
-
 #define	WINMSG_TASKBARCREATED	_T("TaskbarCreated")
 
 
@@ -82,4 +79,5 @@ protected:
 	WindowHandle _hwndTaskBar;
 	WindowHandle _startMenuRoot;
 	WindowHandle _hwndNotify;
+	WindowHandle _hwndQuickLaunch;
 };

@@ -2,6 +2,7 @@
 
 	* subsys/system/explorer/taskbar/traynotify.cpp:
 	Added tray notification area.
+	Implemented quick launch bar.
 
 2003-08-22  Martin Fuchs	<martin-fuchs@gmx.net>
 

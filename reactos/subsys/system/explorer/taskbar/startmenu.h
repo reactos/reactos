@@ -130,6 +130,15 @@ struct StartMenu : public OwnerDrawParent<Dialog>
 	static CREATORFUNC s_def_creator;
 
 protected:
+	 // overridden member functions
+	LRESULT	Init(LPCREATESTRUCT pcs);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
+
+	 // window class
+	static BtnWindowClass s_wcStartMenu;
+
+	 // data members
 	int		_next_id;
 	ShellEntryMap _entries;
 	StartMenuShellDirs _dirs;
@@ -137,12 +146,7 @@ protected:
 	UINT	_submenu_id;
 	WindowHandle _submenu;
 
-	static BtnWindowClass s_wcStartMenu;
-
-	LRESULT	Init(LPCREATESTRUCT pcs);
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-	int		Command(int id, int code);
-
+	 // member functions
 	void	ResizeButtons(int cx);
 
 	virtual void AddEntries();

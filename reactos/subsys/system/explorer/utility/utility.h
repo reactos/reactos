@@ -370,6 +370,9 @@ extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow);
 #define	launch_fileA launch_file
 #endif
 
+ // create a bitmap from an icon
+extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
 
 #ifdef __cplusplus
 } // extern "C"

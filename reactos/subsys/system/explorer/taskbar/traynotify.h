@@ -80,8 +80,6 @@ struct NotifyArea : public Window
 
 	static HWND Create(HWND hwndParent);
 
-//	DesktopBar*	_desktop_bar;
-
 	LRESULT	ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
 
 protected:

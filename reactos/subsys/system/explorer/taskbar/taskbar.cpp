@@ -56,11 +56,12 @@ TaskBarMap::~TaskBarMap()
 TaskBar::TaskBar(HWND hwnd)
  :	super(hwnd)
 {
-	_desktop_bar = NULL;
 }
 
 TaskBar::~TaskBar()
 {
+	KillTimer(_hwnd, 0);
+
 	//DeinstallShellHook();
 }
 
@@ -80,7 +81,7 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	_htoolbar = CreateToolbarEx(_hwnd,
 		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|
-		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_TRANSPARENT,
+		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,
 		IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
 	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(80,160));
@@ -192,11 +193,9 @@ static HICON get_window_icon(HWND hwnd)
 	return hIcon;
 }
 
-static HBITMAP create_bitmap_from_icon(HICON hIcon, HWND hwnd, HBRUSH hbrush_bkgnd)
+HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
 {
-	HDC hdc_wnd = GetDC(hwnd);
 	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
-	ReleaseDC(hwnd, hdc_wnd);
 
 	HDC hdc = CreateCompatibleDC(0);
 	HBITMAP hbmp_org = SelectBitmap(hdc, hbmp);
@@ -217,8 +216,6 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 
 	if ((style&WS_VISIBLE) && !(ex_style&WS_EX_TOOLWINDOW) &&
 		!GetParent(hwnd) && !GetWindow(hwnd,GW_OWNER)) {
-		TBBUTTON btn = {-2/*I_IMAGENONE*/, 0, TBSTATE_ENABLED/*|TBSTATE_ELLIPSES*/, BTNS_BUTTON, {0, 0}, 0, 0};
-
 		TCHAR title[BUFFER_LEN];
 
 		if (!GetWindowText(hwnd, title, BUFFER_LEN))
@@ -234,7 +231,9 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 				found->second._id = pThis->_next_id++;
 		} else {
 			HICON hIcon = get_window_icon(hwnd);
-			HBITMAP hbmp = create_bitmap_from_icon(hIcon, pThis->_htoolbar, GetSysColorBrush(COLOR_BTNFACE));
+			HDC hdc_wnd = GetDC(pThis->_htoolbar);
+			HBITMAP hbmp = create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), hdc_wnd);
+			ReleaseDC(pThis->_htoolbar, hdc_wnd);
 
 			TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 			int bmp_idx = SendMessage(pThis->_htoolbar, TB_ADDBITMAP, 1, (LPARAM)&ab);
@@ -250,6 +249,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			found = pThis->_map.find(hwnd);
 		}
 
+		TBBUTTON btn = {-2/*I_IMAGENONE*/, 0, TBSTATE_ENABLED/*|TBSTATE_ELLIPSES*/, BTNS_BUTTON, {0, 0}, 0, 0};
 		TaskBarEntry& entry = found->second;
 
 		++entry._used;

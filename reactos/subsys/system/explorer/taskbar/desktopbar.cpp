@@ -37,6 +37,7 @@
 #include "taskbar.h"
 #include "startmenu.h"
 #include "traynotify.h"
+#include "quicklaunch.h"
 
 
 HWND InitializeExplorerBar(HINSTANCE hInstance)
@@ -84,14 +85,10 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);
 
-	TaskBar* taskbar = static_cast<TaskBar*>(get_window(_hwndTaskBar));
-	taskbar->_desktop_bar = this;
-
 	 // create tray notification area
 	_hwndNotify = NotifyArea::Create(_hwnd);
 
-//	NotifyArea* notify_area = static_cast<NotifyArea*>(get_window(_hwndNotify));
-//	notify_area->_desktop_bar = this;
+	_hwndQuickLaunch = QuickLaunchBar::Create(_hwnd);
 
 	RegisterHotkeys();
 
@@ -159,10 +156,13 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		int cy = HIWORD(lparam);
 
 		if (_hwndTaskBar)
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, cx-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), cy, TRUE);
+			MoveWindow(_hwndTaskBar, TASKBAR_LEFT+QUICKLAUNCH_WIDTH, 0, cx-(TASKBAR_LEFT+QUICKLAUNCH_WIDTH)-(NOTIFYAREA_WIDTH+1), cy, TRUE);
 
 		if (_hwndNotify)
 			MoveWindow(_hwndNotify, cx-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
+
+		if (_hwndQuickLaunch)
+			MoveWindow(_hwndQuickLaunch, TASKBAR_LEFT, 1, QUICKLAUNCH_WIDTH, cy-2, TRUE);
 
 		WindowRect rect(_hwnd);
 		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), rect.top};
@@ -202,6 +202,10 @@ int DesktopBar::Command(int id, int code)
 	  case IDC_START:	//TODO: startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
 		ToggleStartmenu();
 		break;
+
+	  default:
+		if ((id&~0xFF) == IDC_FIRST_QUICK_ID)
+			SendMessage(_hwndQuickLaunch, WM_COMMAND, MAKEWPARAM(id,code), 0);
 	}
 
 	return 0;

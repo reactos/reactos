@@ -67,7 +67,8 @@ TARGET_OBJECTS = \
 	desktopbar.o \
 	taskbar.o \
 	startmenu.o \
-	traynotify.o
+	traynotify.o \
+	quicklaunch.o
 
 include $(PATH_TO_TOP)/rules.mak
 

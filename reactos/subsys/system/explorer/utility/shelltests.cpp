@@ -88,8 +88,8 @@ int main()
 
 		 // example for retrieval of special folder paths
 
-		SpecialFolderPath programs(CSIDL_PROGRAM_FILES, hwnd);
-		SpecialFolderPath autostart(CSIDL_STARTUP, hwnd);
+		SpecialFolderFSPath programs(CSIDL_PROGRAM_FILES, hwnd);
+		SpecialFolderFSPath autostart(CSIDL_STARTUP, hwnd);
 
 		cout << "program files path = " << (LPCTSTR)programs << endl;
 		cout << "autostart folder path = " << (LPCTSTR)autostart << endl;
