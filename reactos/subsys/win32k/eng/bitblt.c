@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.31 2003/12/08 18:07:56 fireball Exp $
+/* $Id: bitblt.c,v 1.32 2003/12/09 14:28:48 fireball Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -496,7 +496,6 @@ CallDibStretchBlt(SURFOBJ* OutputObj,
                   POINTL* BrushOrigin,
                   ULONG Mode)
 {
-  DPRINT1("CallDibStretchBlt() called...");
   return OutputGDI->DIB_StretchBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputRect, MaskOrigin, BrushOrigin, ColorTranslation, Mode);
 }
 
