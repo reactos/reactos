@@ -97,7 +97,7 @@ void QuickLaunchBar::AddShortcuts()
 	try {
 		TCHAR path[MAX_PATH];
 
-		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);	// perhaps also look into CSIDL_COMMON_APPDATA ?
+		SpecialFolderFSPath app_data(CSIDL_APPDATA, _hwnd);	///@todo perhaps also look into CSIDL_COMMON_APPDATA ?
 
 		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 

@@ -307,9 +307,6 @@ BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 
 			path[i] = '\0';
 
-			if (i >= l)
-				break;
-
 			hFind = FindFirstFile(path, &w32fd);
 
 			if (hFind != INVALID_HANDLE_VALUE)
