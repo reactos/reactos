@@ -117,6 +117,8 @@ else
 INSTALL_DIR = $(ROS_INSTALL)
 endif
 
+implib:
+
 install:
 	-$(TOOLS_PATH)/rcopy $(TARGET) $(INSTALL_DIR)/$(TARGET)
 
