@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.29 2002/03/25 21:07:17 hbirr Exp $
+/* $Id: file.c,v 1.30 2002/04/01 22:06:51 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -68,44 +68,54 @@ OpenFile(LPCSTR lpFileName,
 	PWCHAR FilePart;
 	ULONG Len;
 
+	DPRINT("OpenFile('%s', lpReOpenBuff %x, uStyle %x)\n", lpFileName, lpReOpenBuff, uStyle);
+
 	if (lpReOpenBuff == NULL)
 	{
 		return FALSE;
 	}
 
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
+	RtlInitAnsiString (&FileName, (LPSTR)lpFileName);
 
 	/* convert ansi (or oem) string to unicode */
 	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
+		RtlAnsiStringToUnicodeString (&FileNameU, &FileName, TRUE);
 	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
+		RtlOemStringToUnicodeString (&FileNameU, &FileName, TRUE);
 
 	Len = SearchPathW (NULL,
 	                   FileNameU.Buffer,
 	                   NULL,
-	                   MAX_PATH,
+	                   OFS_MAXPATHNAME,
 	                   PathNameW,
 	                   &FilePart);
 
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             FileNameU.Buffer);
+	RtlFreeUnicodeString(&FileNameU);
 
-	if (Len == 0)
-		return (HFILE)NULL;
+	if (Len == 0 || Len > OFS_MAXPATHNAME)
+	{
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
 
-	if (Len > MAX_PATH)
-		return (HFILE)NULL;
+	FileName.Buffer = lpReOpenBuff->szPathName;
+	FileName.Length = 0;
+	FileName.MaximumLength = OFS_MAXPATHNAME;
 
-	FileNameString.Length = lstrlenW(PathNameW) * sizeof(WCHAR);
-	FileNameString.Buffer = PathNameW;
-	FileNameString.MaximumLength = FileNameString.Length + sizeof(WCHAR);
+	RtlInitUnicodeString(&FileNameU, PathNameW);
+
+	/* convert unicode string to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FileName, &FileNameU, FALSE);
+	else
+		RtlUnicodeStringToOemString (&FileName, &FileNameU, FALSE);
+
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)PathNameW,
+					   &FileNameString,
+					   NULL,
+					   NULL))
+	{
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
 
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
 	ObjectAttributes.RootDirectory = NULL;
@@ -118,7 +128,10 @@ OpenFile(LPCSTR lpFileName,
 	// FILE_NO_INTERMEDIATE_BUFFERING
 
 	if ((uStyle & OF_PARSE) == OF_PARSE)
+	{
+		RtlFreeUnicodeString(&FileNameString);
 		return (HFILE)NULL;
+	}
 
 	errCode = NtOpenFile (&FileHandle,
 	                      GENERIC_READ|SYNCHRONIZE,
@@ -126,6 +139,8 @@ OpenFile(LPCSTR lpFileName,
 	                      &IoStatusBlock,
 	                      FILE_SHARE_READ,
 	                      FILE_NON_DIRECTORY_FILE);
+
+	RtlFreeUnicodeString(&FileNameString);
 
 	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
 
