@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.99 2004/02/22 23:40:58 gvg Exp $
+/* $Id: window.c,v 1.100 2004/02/26 22:52:05 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1375,8 +1375,14 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
   LONG XMove, YMove;
   ULONG i;
 
-  NtUserGetClientOrigin(hWndFrom, &FromOffset);
-  NtUserGetClientOrigin(hWndTo, &ToOffset);
+  if(!NtUserGetClientOrigin(hWndFrom, &FromOffset))
+  {
+    return 0;
+  }
+  if(!NtUserGetClientOrigin(hWndTo, &ToOffset))
+  {
+    return 0;
+  }
   XMove = FromOffset.x - ToOffset.x;
   YMove = FromOffset.y - ToOffset.y;
 
@@ -1395,7 +1401,7 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 BOOL STDCALL 
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
-  return(MapWindowPoints(NULL, hWnd, lpPoint, 1));
+  return(MapWindowPoints(NULL, hWnd, lpPoint, 1) != 0);
 }
 
 
@@ -1405,7 +1411,7 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 BOOL STDCALL
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
-    return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ));
+    return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ) != 0);
 }
 
 
