@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.14 2004/03/28 23:25:48 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.15 2004/03/31 21:21:30 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -227,7 +227,7 @@ DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       else
       {
 	/* FIXME */
-	DPRINT1("DIB_32BPP_Bitblt: Unhandled ColorTranslation for 32 -> 32 copy");
+	DPRINT1("DIB_32BPP_Bitblt: Unhandled ColorTranslation (0x%x) for 32 -> 32 copy\n", ColorTranslation->flXlate);
         return FALSE;
       }
       break;
