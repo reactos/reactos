@@ -134,30 +134,31 @@ KePrepareForApplicationProcessorInit(ULONG Id)
 VOID
 KeApplicationProcessorInit(VOID)
 {
-  PKPCR KPCR;
+  PKPCR Pcr;
   ULONG Offset;
 
   /*
    * Create a PCR for this processor
    */
   Offset = InterlockedIncrement((LONG *)&PcrsAllocated) - 1;
-  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
-  MmCreateVirtualMappingForKernel((PVOID)KPCR,
+  Pcr = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
+  MmCreateVirtualMappingForKernel((PVOID)Pcr,
 				  PAGE_READWRITE,
 				  &PcrPages[Offset],
 				  1);
-  memset(KPCR, 0, PAGE_SIZE);
-  KPCR->ProcessorNumber = (UCHAR)Offset;
-  KPCR->Self = KPCR;
-  KPCR->Irql = HIGH_LEVEL;
+  memset(Pcr, 0, PAGE_SIZE);
+  Pcr->ProcessorNumber = (UCHAR)Offset;
+  Pcr->Self = Pcr;
+  Pcr->Tib.Self = &Pcr->Tib;
+  Pcr->Irql = HIGH_LEVEL;
 
   /* Mark the end of the exception handler list */
-  KPCR->Tib.ExceptionList = (PVOID)-1;
+  Pcr->Tib.ExceptionList = (PVOID)-1;
 
   /*
    * Initialize the GDT
    */
-  KiInitializeGdt(KPCR);
+  KiInitializeGdt(Pcr);
   
   /*
    * It is now safe to process interrupts
@@ -215,6 +216,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = (PKPCR)KPCR_BASE;
+   KPCR->Tib.Self = (PKPCR_TIB)KPCR_BASE;
    KPCR->Irql = HIGH_LEVEL;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;

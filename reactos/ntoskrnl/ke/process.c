@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.29 2004/10/13 22:27:03 ion Exp $
+/* $Id: process.c,v 1.30 2004/10/17 03:43:26 ion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -138,8 +138,8 @@ KeStackAttachProcess (
 	KIRQL OldIrql;
 	PKTHREAD Thread;
 	
-	Thread = KeGetCurrentThread();
 	OldIrql = KeAcquireDispatcherDatabaseLock();
+	Thread = KeGetCurrentThread();
 	
 	/* Crash system if DPC is being executed! */
 	if (KeIsExecutingDpc()) {
