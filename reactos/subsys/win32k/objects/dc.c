@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.117 2004/01/16 19:32:00 gvg Exp $
+/* $Id: dc.c,v 1.118 2004/01/16 23:29:10 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1027,12 +1027,10 @@ NtGdiGetDCState(HDC  hDC)
   newdc->w.CursPosX         = dc->w.CursPosX;
   newdc->w.CursPosY         = dc->w.CursPosY;
   newdc->w.ArcDirection     = dc->w.ArcDirection;
-#if 0
   newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
   newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
   newdc->w.xformVport2World = dc->w.xformVport2World;
   newdc->w.vport2WorldValid = dc->w.vport2WorldValid;
-#endif
   newdc->wndOrgX            = dc->wndOrgX;
   newdc->wndOrgY            = dc->wndOrgY;
   newdc->wndExtX            = dc->wndExtX;
@@ -1118,12 +1116,10 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 	dc->w.CursPosY         = dcs->w.CursPosY;
 	dc->w.ArcDirection     = dcs->w.ArcDirection;
 
-#if 0
 	dc->w.xformWorld2Wnd   = dcs->w.xformWorld2Wnd;
 	dc->w.xformWorld2Vport = dcs->w.xformWorld2Vport;
 	dc->w.xformVport2World = dcs->w.xformVport2World;
 	dc->w.vport2WorldValid = dcs->w.vport2WorldValid;
-#endif
 
 	dc->wndOrgX            = dcs->wndOrgX;
 	dc->wndOrgY            = dcs->wndOrgY;
