@@ -602,7 +602,7 @@ static VS_VERSION_INFO_STRUCT16 *VersionInfo16_FindChild( VS_VERSION_INFO_STRUCT
 
     while ( (DWORD)child < (DWORD)info + info->wLength )
     {
-        if ( !strncasecmp( child->szKey, szKey, cbKey ) )
+        if ( !strncmp( child->szKey, szKey, cbKey ) )
             return child;
 
 	if (!(child->wLength)) return NULL;
