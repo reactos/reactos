@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.100 2004/02/26 22:52:05 weiden Exp $
+/* $Id: window.c,v 1.101 2004/03/07 20:38:17 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1375,10 +1375,19 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
   LONG XMove, YMove;
   ULONG i;
 
+  if (hWndFrom == NULL)
+  {
+    FromOffset.x = FromOffset.y = 0;
+  } else
   if(!NtUserGetClientOrigin(hWndFrom, &FromOffset))
   {
     return 0;
   }
+
+  if (hWndTo == NULL)
+  {
+    ToOffset.x = ToOffset.y = 0;
+  } else
   if(!NtUserGetClientOrigin(hWndTo, &ToOffset))
   {
     return 0;
