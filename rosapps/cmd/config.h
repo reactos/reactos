@@ -14,9 +14,17 @@
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
 
-#ifndef __REACTOS__
+//#ifndef __REACTOS__
 #define WIN32_LEAN_AND_MEAN
-#endif /* __REACTOS__ */
+//#endif /* __REACTOS__ */
+
+
+//#ifdef UNICODE
+//#define _T(x)  L##x
+//#else
+//#define _T(x)  x
+//#endif
+
 
 
 /* JPP 20 Jul 1998 - define DEBUG to add debugging code */

@@ -28,6 +28,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "cmd.h"
 
 #define MAXLINES 128
 
