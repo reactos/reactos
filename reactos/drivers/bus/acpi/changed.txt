@@ -1,0 +1,10 @@
+Changes to ACPI CA
+------------------
+
++ = Added
+- = Removed
+* = Altered
+
++ include/platform/acwin.h
++ include/platform/types.h
+- ospm/*
