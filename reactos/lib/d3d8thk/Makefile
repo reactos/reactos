@@ -4,8 +4,6 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = d3d8thk
 
-TARGET_DEFONLY = yes
-
 #TARGET_BASE = 0x76340000
 
 # require os code to explicitly request A/W version of structs/functions

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.91 2003/10/25 10:59:19 gvg Exp $
+/* $Id: dc.c,v 1.92 2003/10/28 19:30:08 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -570,6 +570,9 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   DPRINT("Display driver %S loaded\n", CurrentName);
 
   DPRINT("Building DDI Functions\n");
+
+  /*  Make sure the non existant functions are NULL  */
+  RtlZeroMemory(&PrimarySurface.DriverFunctions, sizeof(PrimarySurface.DriverFunctions));
 
   /*  Construct DDI driver function dispatch table  */
   if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))

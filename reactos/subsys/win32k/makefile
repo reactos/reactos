@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.80 2003/10/25 20:34:34 gvg Exp $
+# $Id: makefile,v 1.81 2003/10/28 19:30:08 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -72,7 +72,7 @@ DIB_OBJECTS = dib/dib.o dib/dib1bpp.o dib/dib4bpp.o dib/dib8bpp.o dib/dib16bpp.o
 
 STUBS_OBJECTS = stubs/stubs.o stubs/xpstubs.o
 
-NTDDRAW_OBJECTS = ntddraw/stubs.o
+NTDDRAW_OBJECTS = ntddraw/stubs.o ntddraw/ddraw.o
 
 TARGET_OBJECTS = \
   $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) \

@@ -323,6 +323,12 @@ typedef struct _DDSCAPS2 {
 	DWORD   dwCaps4; /* more reserved capabilities */
 } DDSCAPS2,*LPDDSCAPS2;
 
+typedef struct _DDSCAPSEX {
+	DWORD   dwCaps2; /* additional capabilities */
+	DWORD   dwCaps3; /* reserved capabilities */
+	DWORD   dwCaps4; /* more reserved capabilities */
+} DDSCAPSEX,*LPDDSCAPSEX;
+
 #define	DD_ROP_SPACE	(256/32)	/* space required to store ROP array */
 
 typedef struct DDCAPS_DX7		/* DirectX 7 version of caps struct */

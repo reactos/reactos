@@ -16,7 +16,7 @@
 #else
 #include <windows.h>
 #endif
-#include <ddk/ddrawi.h>
+#include <ddk/ddrawint.h>
 
 #ifndef IN
 #define IN
@@ -34,28 +34,6 @@ typedef DWORD PTRDIFF;
 #define DDI_DRIVER_VERSION_NT5_01 0x30100
 
 #define GDI_DRIVER_VERSION 0x4000   /* NT 4 compatibility */
-
-typedef DDHAL_DDCALLBACKS *PDD_CALLBACKS;
-typedef DDHALINFO *PDD_HALINFO;
-typedef DDHAL_DDPALETTECALLBACKS *PDD_PALETTECALLBACKS;
-typedef DDHAL_DDSURFACECALLBACKS *PDD_SURFACECALLBACKS;
-typedef struct _VIDEOMEMORY
-{
-    DWORD               dwFlags;
-    FLATPTR             fpStart;
-    union
-    {
-        FLATPTR         fpEnd;
-        DWORD           dwWidth;
-    };
-    DDSCAPS             ddsCaps;
-    DDSCAPS             ddsCapsAlt;
-    union
-    {
-        struct _VMEMHEAP *lpHeap;
-        DWORD           dwHeight;
-    };
-} VIDEOMEMORY, *PVIDEOMEMORY;
 
 typedef struct _FONTINFO
 {

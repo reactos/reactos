@@ -15,11 +15,11 @@
 #include <debug.h>
 
 
-BOOL APIENTRY NtGdiD3dContextCreate(
+BOOL STDCALL NtGdiD3dContextCreate(
     HANDLE hDirectDrawLocal,
     HANDLE hSurfColor,
     HANDLE hSurfZ,
-    D3DNTHAL_CONTEXTCREATEDATA *pdcci
+    PD3DNTHAL_CONTEXTCREATEDATA pdcci
 )
 {
 	UNIMPLEMENTED
@@ -27,8 +27,8 @@ BOOL APIENTRY NtGdiD3dContextCreate(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiD3dContextDestroy(      
-    LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
+DWORD STDCALL NtGdiD3dContextDestroy(      
+    PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 )
 {
 	UNIMPLEMENTED
@@ -36,17 +36,18 @@ DWORD APIENTRY NtGdiD3dContextDestroy(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiD3dContextDestroyAll(VOID)
+DWORD STDCALL NtGdiD3dContextDestroyAll(VOID)
 {
+	/* This entry point is not supported on NT5 and ROS */
 	UNIMPLEMENTED
 
 	return 0;
 }
 
-DWORD APIENTRY NtGdiD3dDrawPrimitives2(      
+DWORD STDCALL NtGdiD3dDrawPrimitives2(      
     HANDLE hCmdBuf,
     HANDLE hVBuf,
-    LPD3DNTHAL_DRAWPRIMITIVES2DATA pded,
+    PD3DNTHAL_DRAWPRIMITIVES2DATA pded,
     FLATPTR *pfpVidMemCmd,
     DWORD *pdwSizeCmd,
     FLATPTR *pfpVidMemVtx,
@@ -58,8 +59,8 @@ DWORD APIENTRY NtGdiD3dDrawPrimitives2(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiD3dValidateTextureStageState(      
-    LPD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
+DWORD STDCALL NtGdiD3dValidateTextureStageState(      
+    PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 )
 {
 	UNIMPLEMENTED
@@ -67,7 +68,7 @@ DWORD APIENTRY NtGdiD3dValidateTextureStageState(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdAddAttachedSurface(      
+DWORD STDCALL NtGdiDdAddAttachedSurface(      
     HANDLE hSurface,
     HANDLE hSurfaceAttached,
     PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
@@ -78,14 +79,14 @@ DWORD APIENTRY NtGdiDdAddAttachedSurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdAlphaBlt(VOID)
+DWORD STDCALL NtGdiDdAlphaBlt(VOID)
 {
 	UNIMPLEMENTED
 
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdAttachSurface(      
+BOOL STDCALL NtGdiDdAttachSurface(      
     HANDLE hSurfaceFrom,
     HANDLE hSurfaceTo
 )
@@ -95,7 +96,7 @@ BOOL APIENTRY NtGdiDdAttachSurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdBeginMoCompFrame(      
+DWORD STDCALL NtGdiDdBeginMoCompFrame(      
     HANDLE hMoComp,
     PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData
 )
@@ -105,7 +106,7 @@ DWORD APIENTRY NtGdiDdBeginMoCompFrame(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdBlt(      
+DWORD STDCALL NtGdiDdBlt(      
     HANDLE hSurfaceDest,
     HANDLE hSurfaceSrc,
     PDD_BLTDATA puBltData
@@ -116,7 +117,7 @@ DWORD APIENTRY NtGdiDdBlt(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdCanCreateD3DBuffer(      
+DWORD STDCALL NtGdiDdCanCreateD3DBuffer(      
     HANDLE hDirectDraw,
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 )
@@ -126,7 +127,7 @@ DWORD APIENTRY NtGdiDdCanCreateD3DBuffer(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdCanCreateSurface(      
+DWORD STDCALL NtGdiDdCanCreateSurface(      
     HANDLE hDirectDraw,
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 )
@@ -136,7 +137,7 @@ DWORD APIENTRY NtGdiDdCanCreateSurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdColorControl(      
+DWORD STDCALL NtGdiDdColorControl(      
     HANDLE hSurface,
     PDD_COLORCONTROLDATA puColorControlData
 )
@@ -146,14 +147,14 @@ DWORD APIENTRY NtGdiDdColorControl(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdCreateD3DBuffer(      
+DWORD STDCALL NtGdiDdCreateD3DBuffer(      
     HANDLE hDirectDraw,
     HANDLE *hSurface,
     DDSURFACEDESC *puSurfaceDescription,
     DD_SURFACE_GLOBAL *puSurfaceGlobalData,
     DD_SURFACE_LOCAL *puSurfaceLocalData,
     DD_SURFACE_MORE *puSurfaceMoreData,
-    DD_CREATESURFACEDATA *puCreateSurfaceData,
+    PDD_CREATESURFACEDATA puCreateSurfaceData,
     HANDLE *puhSurface
 )
 {
@@ -162,7 +163,8 @@ DWORD APIENTRY NtGdiDdCreateD3DBuffer(
 	return 0;
 }
 
-HANDLE APIENTRY NtGdiDdCreateDirectDrawObject(      
+/*
+HANDLE STDCALL NtGdiDdCreateDirectDrawObject(      
     HDC hdc
 )
 {
@@ -170,8 +172,9 @@ HANDLE APIENTRY NtGdiDdCreateDirectDrawObject(
 
 	return 0;
 }
+*/
 
-HANDLE APIENTRY NtGdiDdCreateMoComp(      
+HANDLE STDCALL NtGdiDdCreateMoComp(      
     HANDLE hDirectDraw,
     PDD_CREATEMOCOMPDATA puCreateMoCompData
 )
@@ -181,14 +184,14 @@ HANDLE APIENTRY NtGdiDdCreateMoComp(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdCreateSurface(      
+DWORD STDCALL NtGdiDdCreateSurface(      
     HANDLE hDirectDraw,
     HANDLE *hSurface,
     DDSURFACEDESC *puSurfaceDescription,
     DD_SURFACE_GLOBAL *puSurfaceGlobalData,
     DD_SURFACE_LOCAL *puSurfaceLocalData,
     DD_SURFACE_MORE *puSurfaceMoreData,
-    DD_CREATESURFACEDATA *puCreateSurfaceData,
+    PDD_CREATESURFACEDATA puCreateSurfaceData,
     HANDLE *puhSurface
 )
 {
@@ -197,7 +200,7 @@ DWORD APIENTRY NtGdiDdCreateSurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdCreateSurfaceEx(      
+DWORD STDCALL NtGdiDdCreateSurfaceEx(      
     HANDLE hDirectDraw,
     HANDLE hSurface,
     DWORD dwSurfaceHandle
@@ -208,7 +211,8 @@ DWORD APIENTRY NtGdiDdCreateSurfaceEx(
 	return 0;
 }
 
-HANDLE APIENTRY NtGdiDdCreateSurfaceObject(      
+/*
+HANDLE STDCALL NtGdiDdCreateSurfaceObject(      
     HANDLE hDirectDrawLocal,
     HANDLE hSurface,
     PDD_SURFACE_LOCAL puSurfaceLocal,
@@ -222,7 +226,7 @@ HANDLE APIENTRY NtGdiDdCreateSurfaceObject(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdDeleteDirectDrawObject(      
+BOOL STDCALL NtGdiDdDeleteDirectDrawObject(      
     HANDLE hDirectDrawLocal
 )
 {
@@ -231,7 +235,17 @@ BOOL APIENTRY NtGdiDdDeleteDirectDrawObject(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdDeleteSurfaceObject(      
+BOOL STDCALL NtGdiDdDeleteSurfaceObject(      
+    HANDLE hSurface
+)
+{
+	UNIMPLEMENTED
+
+	return 0;
+}
+*/
+
+DWORD STDCALL NtGdiDdDestroyD3DBuffer(      
     HANDLE hSurface
 )
 {
@@ -240,16 +254,7 @@ BOOL APIENTRY NtGdiDdDeleteSurfaceObject(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdDestroyD3DBuffer(      
-    HANDLE hSurface
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
-
-DWORD APIENTRY NtGdiDdDestroyMoComp(      
+DWORD STDCALL NtGdiDdDestroyMoComp(      
     HANDLE hMoComp,
     PDD_DESTROYMOCOMPDATA puBeginFrameData
 )
@@ -259,7 +264,7 @@ DWORD APIENTRY NtGdiDdDestroyMoComp(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdDestroySurface(      
+DWORD STDCALL NtGdiDdDestroySurface(      
     HANDLE hSurface,
     BOOL bRealDestroy
 )
@@ -269,7 +274,7 @@ DWORD APIENTRY NtGdiDdDestroySurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdEndMoCompFrame(      
+DWORD STDCALL NtGdiDdEndMoCompFrame(      
     HANDLE hMoComp,
     PDD_ENDMOCOMPFRAMEDATA puEndFrameData
 )
@@ -279,7 +284,7 @@ DWORD APIENTRY NtGdiDdEndMoCompFrame(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdFlip(      
+DWORD STDCALL NtGdiDdFlip(      
     HANDLE hSurfaceCurrent,
     HANDLE hSurfaceTarget,
     HANDLE hSurfaceCurrentLeft,
@@ -292,7 +297,7 @@ DWORD APIENTRY NtGdiDdFlip(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdFlipToGDISurface(      
+DWORD STDCALL NtGdiDdFlipToGDISurface(      
     HANDLE hDirectDraw,
     PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData
 )
@@ -302,7 +307,7 @@ DWORD APIENTRY NtGdiDdFlipToGDISurface(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetAvailDriverMemory(      
+DWORD STDCALL NtGdiDdGetAvailDriverMemory(      
     HANDLE hDirectDraw,
     PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
 )
@@ -312,7 +317,7 @@ DWORD APIENTRY NtGdiDdGetAvailDriverMemory(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetBltStatus(      
+DWORD STDCALL NtGdiDdGetBltStatus(      
     HANDLE hSurface,
     PDD_GETBLTSTATUSDATA puGetBltStatusData
 )
@@ -322,7 +327,7 @@ DWORD APIENTRY NtGdiDdGetBltStatus(
 	return 0;
 }
 
-HDC APIENTRY NtGdiDdGetDC(      
+HDC STDCALL NtGdiDdGetDC(      
     HANDLE hSurface,
     PALETTEENTRY *puColorTable
 )
@@ -332,7 +337,7 @@ HDC APIENTRY NtGdiDdGetDC(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetDriverInfo(      
+DWORD STDCALL NtGdiDdGetDriverInfo(      
     HANDLE hDirectDraw,
     PDD_GETDRIVERINFODATA puGetDriverInfoData
 )
@@ -342,7 +347,7 @@ DWORD APIENTRY NtGdiDdGetDriverInfo(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetDriverState(      
+DWORD STDCALL NtGdiDdGetDriverState(      
     PDD_GETDRIVERSTATEDATA pdata
 )
 {
@@ -351,7 +356,7 @@ DWORD APIENTRY NtGdiDdGetDriverState(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetDxHandle(      
+DWORD STDCALL NtGdiDdGetDxHandle(      
     HANDLE hDirectDraw,
     HANDLE hSurface,
     BOOL bRelease
@@ -362,7 +367,7 @@ DWORD APIENTRY NtGdiDdGetDxHandle(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetFlipStatus(      
+DWORD STDCALL NtGdiDdGetFlipStatus(      
     HANDLE hSurface,
     PDD_GETFLIPSTATUSDATA puGetFlipStatusData
 )
@@ -372,7 +377,7 @@ DWORD APIENTRY NtGdiDdGetFlipStatus(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetInternalMoCompInfo(      
+DWORD STDCALL NtGdiDdGetInternalMoCompInfo(      
     HANDLE hDirectDraw,
     PDD_GETINTERNALMOCOMPDATA puGetInternalData
 )
@@ -382,7 +387,7 @@ DWORD APIENTRY NtGdiDdGetInternalMoCompInfo(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetMoCompBuffInfo(      
+DWORD STDCALL NtGdiDdGetMoCompBuffInfo(      
     HANDLE hDirectDraw,
     PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData
 )
@@ -392,7 +397,7 @@ DWORD APIENTRY NtGdiDdGetMoCompBuffInfo(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetMoCompFormats(      
+DWORD STDCALL NtGdiDdGetMoCompFormats(      
     HANDLE hDirectDraw,
     PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData
 )
@@ -402,7 +407,7 @@ DWORD APIENTRY NtGdiDdGetMoCompFormats(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetMoCompGuids(      
+DWORD STDCALL NtGdiDdGetMoCompGuids(      
     HANDLE hDirectDraw,
     PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData
 )
@@ -412,7 +417,7 @@ DWORD APIENTRY NtGdiDdGetMoCompGuids(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdGetScanLine(      
+DWORD STDCALL NtGdiDdGetScanLine(      
     HANDLE hDirectDraw,
     PDD_GETSCANLINEDATA puGetScanLineData
 )
@@ -422,7 +427,7 @@ DWORD APIENTRY NtGdiDdGetScanLine(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdLock(      
+DWORD STDCALL NtGdiDdLock(      
     HANDLE hSurface,
     PDD_LOCKDATA puLockData,
     HDC hdcClip
@@ -433,7 +438,7 @@ DWORD APIENTRY NtGdiDdLock(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdLockD3D(      
+DWORD STDCALL NtGdiDdLockD3D(      
     HANDLE hSurface,
     PDD_LOCKDATA puLockData
 )
@@ -443,12 +448,13 @@ DWORD APIENTRY NtGdiDdLockD3D(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdQueryDirectDrawObject(      
+/*
+BOOL STDCALL NtGdiDdQueryDirectDrawObject(      
     HANDLE hDirectDrawLocal,
     DD_HALINFO *pHalInfo,
     DWORD *pCallBackFlags,
-    LPD3DNTHAL_CALLBACKS puD3dCallbacks,
-    LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+    PD3DNTHAL_CALLBACKS puD3dCallbacks,
+    PD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
     PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
     LPDDSURFACEDESC puD3dTextureFormats,
     DWORD *puNumHeaps,
@@ -461,8 +467,9 @@ BOOL APIENTRY NtGdiDdQueryDirectDrawObject(
 
 	return 0;
 }
+*/
 
-DWORD APIENTRY NtGdiDdQueryMoCompStatus(      
+DWORD STDCALL NtGdiDdQueryMoCompStatus(      
     HANDLE hMoComp,
     PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData
 )
@@ -472,7 +479,7 @@ DWORD APIENTRY NtGdiDdQueryMoCompStatus(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdReenableDirectDrawObject(      
+BOOL STDCALL NtGdiDdReenableDirectDrawObject(      
     HANDLE hDirectDrawLocal,
     BOOL *pubNewMode
 )
@@ -482,7 +489,7 @@ BOOL APIENTRY NtGdiDdReenableDirectDrawObject(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdReleaseDC(      
+BOOL STDCALL NtGdiDdReleaseDC(      
     HANDLE hSurface
 )
 {
@@ -491,7 +498,7 @@ BOOL APIENTRY NtGdiDdReleaseDC(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdRenderMoComp(      
+DWORD STDCALL NtGdiDdRenderMoComp(      
     HANDLE hMoComp,
     PDD_RENDERMOCOMPDATA puRenderMoCompData
 )
@@ -501,7 +508,7 @@ DWORD APIENTRY NtGdiDdRenderMoComp(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdResetVisrgn(      
+BOOL STDCALL NtGdiDdResetVisrgn(      
     HANDLE hSurface,
     HWND hwnd
 )
@@ -511,7 +518,7 @@ BOOL APIENTRY NtGdiDdResetVisrgn(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdSetColorKey(      
+DWORD STDCALL NtGdiDdSetColorKey(      
     HANDLE hSurface,
     PDD_SETCOLORKEYDATA puSetColorKeyData
 )
@@ -521,7 +528,7 @@ DWORD APIENTRY NtGdiDdSetColorKey(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdSetExclusiveMode(      
+DWORD STDCALL NtGdiDdSetExclusiveMode(      
     HANDLE hDirectDraw,
     PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
 )
@@ -531,7 +538,7 @@ DWORD APIENTRY NtGdiDdSetExclusiveMode(
 	return 0;
 }
 
-BOOL APIENTRY NtGdiDdSetGammaRamp(      
+BOOL STDCALL NtGdiDdSetGammaRamp(      
     HANDLE hDirectDraw,
     HDC hdc,
     LPVOID lpGammaRamp
@@ -542,7 +549,7 @@ BOOL APIENTRY NtGdiDdSetGammaRamp(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdSetOverlayPosition(      
+DWORD STDCALL NtGdiDdSetOverlayPosition(      
     HANDLE hSurfaceSource,
     HANDLE hSurfaceDestination,
     PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
@@ -553,7 +560,7 @@ DWORD APIENTRY NtGdiDdSetOverlayPosition(
 	return 0;
 }
 
-VOID APIENTRY NtGdiDdUnattachSurface(      
+VOID STDCALL NtGdiDdUnattachSurface(      
     HANDLE hSurface,
     HANDLE hSurfaceAttached
 )
@@ -561,7 +568,7 @@ VOID APIENTRY NtGdiDdUnattachSurface(
 	UNIMPLEMENTED
 }
 
-DWORD APIENTRY NtGdiDdUnlock(      
+DWORD STDCALL NtGdiDdUnlock(      
     HANDLE hSurface,
     PDD_UNLOCKDATA puUnlockData
 )
@@ -571,7 +578,7 @@ DWORD APIENTRY NtGdiDdUnlock(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdUnlockD3D(      
+DWORD STDCALL NtGdiDdUnlockD3D(      
     HANDLE hSurface,
     PDD_UNLOCKDATA puUnlockData
 )
@@ -581,7 +588,7 @@ DWORD APIENTRY NtGdiDdUnlockD3D(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdUpdateOverlay(      
+DWORD STDCALL NtGdiDdUpdateOverlay(      
     HANDLE hSurfaceDestination,
     HANDLE hSurfaceSource,
     PDD_UPDATEOVERLAYDATA puUpdateOverlayData
@@ -592,7 +599,7 @@ DWORD APIENTRY NtGdiDdUpdateOverlay(
 	return 0;
 }
 
-DWORD APIENTRY NtGdiDdWaitForVerticalBlank(      
+DWORD STDCALL NtGdiDdWaitForVerticalBlank(      
     HANDLE hDirectDraw,
     PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
 )
