@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pen.c,v 1.12 2003/12/11 14:48:55 weiden Exp $ */
+/* $Id: pen.c,v 1.13 2003/12/12 15:47:37 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -26,6 +26,30 @@
 
 #define NDEBUG
 #include <win32k/debug1.h>
+
+HPEN FASTCALL
+IntGdiCreatePenIndirect(PLOGPEN lgpn)
+{
+  HPEN hpen;
+  PPENOBJ penPtr;
+  
+  if (lgpn->lopnStyle > PS_INSIDEFRAME) return 0;
+
+  hpen = PENOBJ_AllocPen();
+  if (!hpen) return 0;
+
+  penPtr   = PENOBJ_LockPen( hpen );
+  ASSERT( penPtr );
+
+  penPtr->logpen.lopnStyle = lgpn->lopnStyle;
+  penPtr->logpen.lopnWidth = lgpn->lopnWidth;
+  penPtr->logpen.lopnColor = lgpn->lopnColor;
+  PENOBJ_UnlockPen( hpen );
+  
+  return hpen;
+}
+
+/******************************************************************************/
 
 HPEN
 STDCALL
@@ -38,16 +62,14 @@ NtGdiCreatePen(INT PenStyle, INT Width, COLORREF Color)
   logpen.lopnWidth.y = 0;
   logpen.lopnColor = Color;
 
-  return NtGdiCreatePenIndirect(&logpen);
+  return IntGdiCreatePenIndirect(&logpen);
 }
 
 HPEN
 STDCALL
 NtGdiCreatePenIndirect(CONST PLOGPEN lgpn)
 {
-  PPENOBJ  penPtr;
   LOGPEN   Safelgpn;
-  HPEN     hpen;
   NTSTATUS Status;
   
   Status = MmCopyFromCaller(&Safelgpn, lgpn, sizeof(LOGPEN));
@@ -57,19 +79,7 @@ NtGdiCreatePenIndirect(CONST PLOGPEN lgpn)
     return 0;
   }
   
-  if (Safelgpn.lopnStyle > PS_INSIDEFRAME) return 0;
-
-  hpen = PENOBJ_AllocPen();
-  if (!hpen) return 0;
-
-  penPtr   = PENOBJ_LockPen( hpen );
-  ASSERT( penPtr );
-
-  penPtr->logpen.lopnStyle = Safelgpn.lopnStyle;
-  penPtr->logpen.lopnWidth = Safelgpn.lopnWidth;
-  penPtr->logpen.lopnColor = Safelgpn.lopnColor;
-  PENOBJ_UnlockPen( hpen );
-  return hpen;
+  return IntGdiCreatePenIndirect(&Safelgpn);
 }
 
 HPEN

@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.52 2003/11/26 21:48:35 gvg Exp $
+ * $Id: gdiobj.c,v 1.53 2003/12/12 15:47:37 weiden Exp $
  *
  */
 
@@ -38,6 +38,7 @@
 #include <win32k/region.h>
 #include <win32k/cursoricon.h>
 #include <include/palette.h>
+#include <include/intgdi.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -476,16 +477,16 @@ CreateStockObjects(void)
 
   /* Create GDI Stock Objects from the logical structures we've defined */
 
-  StockObjects[WHITE_BRUSH] =  NtGdiCreateBrushIndirect(&WhiteBrush);
-  StockObjects[LTGRAY_BRUSH] = NtGdiCreateBrushIndirect(&LtGrayBrush);
-  StockObjects[GRAY_BRUSH] =   NtGdiCreateBrushIndirect(&GrayBrush);
-  StockObjects[DKGRAY_BRUSH] = NtGdiCreateBrushIndirect(&DkGrayBrush);
-  StockObjects[BLACK_BRUSH] =  NtGdiCreateBrushIndirect(&BlackBrush);
-  StockObjects[NULL_BRUSH] =   NtGdiCreateBrushIndirect(&NullBrush);
+  StockObjects[WHITE_BRUSH] =  IntGdiCreateBrushIndirect(&WhiteBrush);
+  StockObjects[LTGRAY_BRUSH] = IntGdiCreateBrushIndirect(&LtGrayBrush);
+  StockObjects[GRAY_BRUSH] =   IntGdiCreateBrushIndirect(&GrayBrush);
+  StockObjects[DKGRAY_BRUSH] = IntGdiCreateBrushIndirect(&DkGrayBrush);
+  StockObjects[BLACK_BRUSH] =  IntGdiCreateBrushIndirect(&BlackBrush);
+  StockObjects[NULL_BRUSH] =   IntGdiCreateBrushIndirect(&NullBrush);
 
-  StockObjects[WHITE_PEN] = NtGdiCreatePenIndirect(&WhitePen);
-  StockObjects[BLACK_PEN] = NtGdiCreatePenIndirect(&BlackPen);
-  StockObjects[NULL_PEN] =  NtGdiCreatePenIndirect(&NullPen);
+  StockObjects[WHITE_PEN] = IntGdiCreatePenIndirect(&WhitePen);
+  StockObjects[BLACK_PEN] = IntGdiCreatePenIndirect(&BlackPen);
+  StockObjects[NULL_PEN] =  IntGdiCreatePenIndirect(&NullPen);
 
   (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);
   (void) TextIntCreateFontIndirect(&AnsiFixedFont, (HFONT*)&StockObjects[ANSI_FIXED_FONT]);
