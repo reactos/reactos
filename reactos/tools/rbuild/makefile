@@ -67,7 +67,7 @@ endif
 	$(HOST_CXX) $(HOST_CXXFLAGS) -c $< -o $@
 
 test: rbuild_tests$(EXE_POSTFIX)
-	$(EXE_PREFIX)rbuild_tests$(EXE_POSTFIX)
+	./$(EXE_PREFIX)rbuild_tests$(EXE_POSTFIX)
 
 rbuild_tests$(EXE_POSTFIX): $(TEST_OBJECTS)
 	$(HOST_CXX) $(TEST_OBJECTS) $(HOST_LFLAGS) -o rbuild_tests$(EXE_POSTFIX)
