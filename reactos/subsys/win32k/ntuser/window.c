@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.83 2003/08/09 18:22:11 mf Exp $
+/* $Id: window.c,v 1.84 2003/08/09 21:13:14 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -625,7 +625,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
    */
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
-  WindowObject->Style = dwStyle | WIN_NCACTIVATED;
+  WindowObject->Style = dwStyle;
+  if (0 == (dwStyle & WS_CHILD))
+    {
+      WindowObject->Style = WindowObject->Style | WIN_NCACTIVATED;
+    }
   WindowObject->x = x;
   WindowObject->y = y;
   WindowObject->Width = nWidth;
