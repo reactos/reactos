@@ -22,6 +22,7 @@
 #define __WINE_WINNT_H
 
 #include_next <winnt.h>
+#include <w32api.h>
 
 /* non standard; keep the number high enough (but < 0xff) */
 #define LANG_ESPERANTO			 0x8f
@@ -31,6 +32,8 @@
 #define LANG_BRETON                      0x93
 
 #define WINE_UNUSED   __attribute__((unused))
+
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
 
 static inline struct _TEB * NtCurrentTeb(void)
 {
@@ -46,5 +49,7 @@ static inline struct _TEB * NtCurrentTeb(void)
 
  return pTeb;
 }
+
+#endif
 
 #endif  /* __WINE_WINNT_H */
