@@ -69,8 +69,12 @@ CloseHandle = CloseHandle@4
 ;ConsoleMenuControl@12
 ;ContinueDebugEvent@12
 ;ConvertDefaultLocale@4
-;CopyFileA@12
+CopyFileA@12
 CopyFileA = CopyFileA@12
+CopyFileExA@24
+CopyFileExA = CopyFileExA@24
+CopyFileExW@24
+CopyFileExW = CopyFileExW@24
 CopyFileW@12
 CopyFileW = CopyFileW@12
 ;CreateConsoleScreenBuffer@20
@@ -194,7 +198,8 @@ FindNextFileW = FindNextFileW@8
 ;FindResourceExA@16
 ;FindResourceExW@16
 ;FindResourceW@12
-;FlushConsoleInputBuffer@4
+FlushConsoleInputBuffer@4
+FlushConsoleInputBuffer = FlushConsoleInputBuffer@4
 FlushFileBuffers@4
 FlushFileBuffers = FlushFileBuffers@4
 ;FlushInstructionCache@12
@@ -253,7 +258,8 @@ GetConsoleCP = GetConsoleCP@0
 ;GetConsoleCommandHistoryLengthA@4
 ;GetConsoleCommandHistoryLengthW@4
 ;GetConsoleCommandHistoryW@12
-;GetConsoleCursorInfo@8
+GetConsoleCursorInfo@8
+GetConsoleCursorInfo = GetConsoleCursorInfo@8
 ;GetConsoleDisplayMode@4
 ;GetConsoleFontInfo@16
 ;GetConsoleFontSize@8
@@ -570,8 +576,10 @@ ReadConsoleInputA@16
 ReadConsoleInputA = ReadConsoleInputA@16
 ;ReadConsoleInputW@16
 ;ReadConsoleOutputA@20
-;ReadConsoleOutputAttribute@20
-;ReadConsoleOutputCharacterA@20
+ReadConsoleOutputAttribute@20
+ReadConsoleOutputAttribute = ReadConsoleOutputAttribute@20
+ReadConsoleOutputCharacterA@20
+ReadConsoleOutputCharacterA = ReadConsoleOutputCharacterA@20
 ;ReadConsoleOutputCharacterW@20
 ;ReadConsoleOutputW@20
 ;ReadConsoleW@20
@@ -756,8 +764,10 @@ WriteConsoleA = WriteConsoleA@20
 ;WriteConsoleInputVDMW@16
 ;WriteConsoleInputW@16
 ;WriteConsoleOutputA@20
-;WriteConsoleOutputAttribute@20
-;WriteConsoleOutputCharacterA@20
+WriteConsoleOutputAttribute@20
+WriteConsoleOutputAttribute = WriteConsoleOutputAttribute@20
+WriteConsoleOutputCharacterA@20
+WriteConsoleOutputCharacterA = WriteConsoleOutputCharacterA@20
 ;WriteConsoleOutputCharacterW@20
 ;WriteConsoleOutputW@20
 ;WriteConsoleW@20
@@ -801,5 +811,6 @@ _llseek = _llseek@12
 ;lstrcpynA@12
 ;lstrcpynW@12
 ;lstrlen@4
-;lstrlenA@4
+lstrlenA@4
+lstrlenA = lstrlenA@4
 ;lstrlenW@4
