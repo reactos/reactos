@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.43 2003/08/24 10:36:07 chorns Exp $
+# $Id: helper.mk,v 1.44 2003/10/20 17:54:17 gvg Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -48,6 +48,7 @@
 #   $TARGET_GENREGTESTS = Generate regression test registrations (optional)
 #   $WINE_MODE         = Compile using WINE headers (no,yes) (optional)
 #   $WINE_RC           = Name of .rc file for WINE modules (optional)
+#   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
 
@@ -556,7 +557,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(TARGET_OBJECTS) $(MK_DEFNAME)
 else # MK_IMPLIBONLY
 
 
-all: $(MK_GENREGTESTS) $(MK_FULLNAME) $(MK_NOSTRIPNAME)
+all: $(MK_GENREGTESTS) $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(SUBDIRS:%=%_all)
 
 
 ifeq ($(TARGET_GENREGTESTS),yes)
@@ -782,7 +783,7 @@ $(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
 
 implib: $(MK_IMPLIBPATH)/$(MK_BASENAME).a
 else
-implib:
+implib: $(SUBDIRS:%=%_implib)
 endif
 
 # Be carefull not to clean non-object files
@@ -790,7 +791,7 @@ MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
-clean:
+clean: $(SUBDIRS:%=%_clean)
 	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_GENREGTESTS_CLEAN) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp \
@@ -826,7 +827,7 @@ bootcd:
 
 else # MK_MODE
 
-install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+install: $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME) $(SUBDIRS:%=%_install)
 
 ifeq ($(INSTALL_SYMBOLS),no)
 
@@ -841,7 +842,7 @@ $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME): $(MK_FULLNAME) $(MK_BASENAME).sy
 
 endif # INSTALL_SYMBOLS
 
-dist: $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
+dist: $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME) $(SUBDIRS:%=%_dist)
 
 $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME): $(MK_FULLNAME)
 	$(CP) $(MK_FULLNAME) $(DIST_DIR)/$(MK_DISTDIR)/$(MK_FULLNAME)
@@ -856,7 +857,7 @@ else # TARGET_BOOTSTRAP_NAME
 MK_BOOTSTRAP_NAME := $(MK_FULLNAME)
 endif # TARGET_BOOTSTRAP_NAME
 
-bootcd: $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
+bootcd: $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME) $(SUBDIRS:%=%_bootcd)
 
 $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME):
 	$(CP) $(MK_FULLNAME) $(BOOTCD_DIR)/reactos/$(MK_BOOTCDDIR)/$(MK_BOOTSTRAP_NAME)
@@ -874,6 +875,28 @@ endif # MK_IMPLIBONLY
 
 .phony: all depends implib clean install dist bootcd depends
 
+ifneq ($(SUBDIRS),)
+$(SUBDIRS:%=%_all): %_all:
+	$(MAKE) -C $* SUBDIRS= all
+
+$(SUBDIRS:%=%_implib): %_implib:
+	$(MAKE) -C $* SUBDIRS= implib
+
+$(SUBDIRS:%=%_clean): %_clean:
+	$(MAKE) -C $* SUBDIRS= clean
+
+$(SUBDIRS:%=%_install): %_install:
+	$(MAKE) -C $* SUBDIRS= install
+
+$(SUBDIRS:%=%_dist): %_dist:
+	$(MAKE) -C $* SUBDIRS= dist
+
+$(SUBDIRS:%=%_bootcd): %_bootcd:
+	$(MAKE) -C $* SUBDIRS= bootcd
+
+.phony: $(SUBDIRS:%=%_all) $(SUBDIRS:%=%_implib) $(SUBDIRS:%=%_clean) \
+        $(SUBDIRS:%=%_install) $(SUBDIRS:%=%_dist) $(SUBDIRS:%=%_bootcd)
+endif
 
 # Precompiled header support
 # When using PCHs, use dependency tracking to keep the .pch files up-to-date.
