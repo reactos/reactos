@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.2 2001/06/22 12:36:22 ekohl Exp $
+/* $Id: message.c,v 1.3 2002/01/10 00:54:35 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,7 +32,6 @@ RtlFindMessage(PVOID BaseAddress,
    NTSTATUS Status;
    ULONG EntryOffset, IdOffset;
    PRTL_MESSAGE_RESOURCE_ENTRY MessageEntry;
-
    ULONG i;
 
    DPRINT("RtlFindMessage()\n");
@@ -88,7 +87,7 @@ RtlFindMessage(PVOID BaseAddress,
 	  }
      }
 
-   MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((ULONG)MessageTable + MessageTable->Blocks[i].OffsetToEntries);
+   MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageTable + MessageTable->Blocks[i].OffsetToEntries);
 
    DPRINT("EntryOffset 0x%08lx\n", EntryOffset);
    DPRINT("IdOffset 0x%08lx\n", IdOffset);
@@ -96,7 +95,7 @@ RtlFindMessage(PVOID BaseAddress,
    DPRINT("MessageEntry: %p\n", MessageEntry);
    for (i = 0; i < IdOffset; i++)
      {
-	MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)(MessageEntry + (ULONG)MessageEntry->Length);
+	MessageEntry = (PRTL_MESSAGE_RESOURCE_ENTRY)((PUCHAR)MessageEntry + (ULONG)MessageEntry->Length);
      }
 
    if (MessageEntry->Flags == 0)
