@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.5 2002/05/06 22:20:32 dwelch Exp $
+/* $Id: message.c,v 1.6 2002/06/06 17:50:16 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -181,14 +181,86 @@ NtUserMessageCall(
 
 BOOL STDCALL
 NtUserPeekMessage(LPMSG lpMsg,
-		  HWND hWnd,
-		  UINT wMsgFilterMin,
-		  UINT wMsgFilterMax,
-		  UINT wRemoveMsg)
+  HWND hWnd,
+  UINT wMsgFilterMin,
+  UINT wMsgFilterMax,
+  UINT wRemoveMsg)
+/*
+ * FUNCTION: Get a message from the calling thread's message queue.
+ * ARGUMENTS:
+ *      lpMsg - Pointer to the structure which receives the returned message.
+ *      hWnd - Window whose messages are to be retrieved.
+ *      wMsgFilterMin - Integer value of the lowest message value to be
+ *                      retrieved.
+ *      wMsgFilterMax - Integer value of the highest message value to be
+ *                      retrieved.
+ *      wRemoveMsg - Specificies whether or not to remove messages from the queue after processing
+ */
 {
-  UNIMPLEMENTED;
-    
-  return 0;
+  PUSER_MESSAGE_QUEUE ThreadQueue;
+  BOOLEAN Present;
+  PUSER_MESSAGE Message;
+  NTSTATUS Status;
+  BOOLEAN RemoveMessages;
+
+  /* Initialize the thread's win32 state if necessary. */ 
+  W32kGuiCheck();
+
+  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
+
+  /* Inspect wRemoveMsg flags */
+  /* FIXME: The only flag we process is PM_REMOVE - processing of others must still be implemented */
+  RemoveMessages = wRemoveMsg & PM_REMOVE;
+
+  /* FIXME: Dispatch sent messages here. */
+      
+  /* Now look for a quit message. */
+  /* FIXME: WINE checks the message number filter here. */
+  if (ThreadQueue->QuitPosted)
+  {
+	  lpMsg->hwnd = hWnd;
+	  lpMsg->message = WM_QUIT;
+	  lpMsg->wParam = ThreadQueue->QuitExitCode;
+	  lpMsg->lParam = 0;
+	  ThreadQueue->QuitPosted = FALSE;
+	  return(FALSE);
+  }
+
+  /* Now check for normal messages. */
+  Present = MsqFindMessage(ThreadQueue,
+       FALSE,
+       RemoveMessages,
+       hWnd,
+       wMsgFilterMin,
+       wMsgFilterMax,
+       &Message);
+  if (Present)
+  {
+	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
+	  ExFreePool(Message);
+	  return(TRUE);
+  }
+
+  /* Check for hardware events. */
+  Present = MsqFindMessage(ThreadQueue,
+       TRUE,
+       RemoveMessages,
+       hWnd,
+       wMsgFilterMin,
+       wMsgFilterMax,
+       &Message);
+  if (Present)
+  {
+	  RtlCopyMemory(lpMsg, &Message->Msg, sizeof(MSG));
+	  ExFreePool(Message);
+	  return(TRUE);
+  }
+
+  /* FIXME: Check for sent messages again. */
+
+  /* FIXME: Check for paint messages. */
+
+  return((BOOLEAN)(-1));
 }
 
 BOOL STDCALL
