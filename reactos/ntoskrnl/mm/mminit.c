@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.7 2000/08/30 19:33:28 dwelch Exp $
+/* $Id: mminit.c,v 1.8 2000/10/07 13:41:53 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -39,14 +39,12 @@
 /*
  * Compiler defined symbol s
  */
-extern unsigned int stext;
-extern unsigned int etext;
-extern unsigned int end;
+extern unsigned int _text_start__;
+extern unsigned int _text_end__;
 
 static BOOLEAN IsThisAnNtAsSystem = FALSE;
 static MM_SYSTEM_SIZE MmSystemSize = MmSmallSystem;
 
-extern unsigned int etext;
 extern unsigned int _bss_end__;
 
 static MEMORY_AREA* kernel_text_desc = NULL;
@@ -73,7 +71,8 @@ VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
+VOID MmInitVirtualMemory(ULONG LastKernelAddress,
+			 ULONG KernelLength)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:
@@ -81,10 +80,9 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
  *           kernel_len = Length of the kernel
  */
 {
-   unsigned int kernel_len = bp->end_mem - bp->start_mem;
    PVOID BaseAddress;
    ULONG Length;
-   ULONG ParamLength = kernel_len;
+   ULONG ParamLength = KernelLength;
    NTSTATUS Status;
    
    DPRINT("MmInitVirtualMemory(%x)\n",bp);
@@ -100,7 +98,7 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
     * Setup the system area descriptor list
     */
    BaseAddress = (PVOID)KERNEL_BASE;
-   Length = PAGE_ROUND_UP(((ULONG)&etext)) - KERNEL_BASE;
+   Length = PAGE_ROUND_UP(((ULONG)&_text_end__)) - KERNEL_BASE;
    ParamLength = ParamLength - Length;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
@@ -111,10 +109,10 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 		      &kernel_text_desc);
    
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
-            PAGE_ROUND_UP(((ULONG)&etext));
+            PAGE_ROUND_UP(((ULONG)&_text_end__));
    ParamLength = ParamLength - Length;
    DPRINT("Length %x\n",Length);
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&etext));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_text_end__));
    DPRINT("BaseAddress %x\n",BaseAddress);
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),		      
@@ -124,7 +122,7 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
 		      0,
 		      &kernel_data_desc);
    
-   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&end));
+   BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
 //   Length = ParamLength;
    Length = LastKernelAddress - (ULONG)BaseAddress;
    MmCreateMemoryArea(NULL,
@@ -170,13 +168,13 @@ VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
    DPRINT("MmInitVirtualMemory() done\n");
 }
 
-VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
+VOID MmInit1(ULONG FirstKrnlPhysAddr, 
+	     ULONG LastKrnlPhysAddr,
+	     ULONG LastKernelAddress)
 /*
  * FUNCTION: Initalize memory managment
  */
 {
-   ULONG first_krnl_phys_addr;
-   ULONG last_krnl_phys_addr;
    ULONG i;
    ULONG kernel_len;
    
@@ -218,20 +216,18 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
     * (we assume the kernel occupies a continuous range of physical
     * memory)
     */
-   first_krnl_phys_addr = bp->start_mem;
-   last_krnl_phys_addr = bp->end_mem;
-   DPRINT("first krnl %x\nlast krnl %x\n",first_krnl_phys_addr,
-	  last_krnl_phys_addr);
+   DPRINT("first krnl %x\nlast krnl %x\n",FirstKrnlPhysAddr,
+	  LastKrnlPhysAddr);
    
    /*
     * Free physical memory not used by the kernel
     */
    LastKernelAddress = (ULONG)MmInitializePageList(
-					   (PVOID)first_krnl_phys_addr,
-					   (PVOID)last_krnl_phys_addr,
+					   (PVOID)FirstKrnlPhysAddr,
+					   (PVOID)LastKrnlPhysAddr,
 					   1024,
 					   PAGE_ROUND_UP(LastKernelAddress));
-   kernel_len = last_krnl_phys_addr - first_krnl_phys_addr;
+   kernel_len = LastKrnlPhysAddr - FirstKrnlPhysAddr;
    
    /*
     * Create a trap for null pointer references and protect text
@@ -239,8 +235,8 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
     */
    CHECKPOINT;
    DPRINT("stext %x etext %x\n",(int)&stext,(int)&etext);
-   for (i=PAGE_ROUND_UP(((int)&stext));
-	i<PAGE_ROUND_DOWN(((int)&etext));i=i+PAGESIZE)
+   for (i=PAGE_ROUND_UP(((int)&_text_start__));
+	i<PAGE_ROUND_DOWN(((int)&_text_end__));i=i+PAGESIZE)
      {
 	MmSetPageProtect(NULL,
 			 (PVOID)i,
@@ -261,7 +257,7 @@ VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress)
    /*
     * Intialize memory areas
     */
-   MmInitVirtualMemory(bp, LastKernelAddress);
+   MmInitVirtualMemory(LastKernelAddress, kernel_len);
 }
 
 VOID MmInit2(VOID)

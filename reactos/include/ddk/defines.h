@@ -3,6 +3,8 @@
 
 /* GENERAL DEFINITIONS ****************************************************/
 
+#ifndef __ASM__
+
 #define _WIN32_WINNT 0x0400
 
 #include <ddk/kedef.h> 
@@ -207,11 +209,6 @@ enum
    IRP_MN_POWER_SEQUENCE,
 };
 
-
-/* Values returned by KeGetPreviousMode() */
-#define KernelMode (0)
-#define UserMode   (1)
-
 /*
  * PURPOSE: Arguments to MmProbeAndLockPages
  */
@@ -250,5 +247,11 @@ enum
 #define HIGH_LEVEL	31		// Highest interrupt level
 #define SYNCH_LEVEL	(IPI_LEVEL-1)	// synchronization level
 #endif
+
+#endif /* __ASM__ */
+
+/* Values returned by KeGetPreviousMode() */
+#define KernelMode (0)
+#define UserMode   (1)
 
 #endif /* ndef _DDK_DEFINES_H */

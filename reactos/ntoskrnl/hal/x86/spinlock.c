@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.11 2000/06/09 22:22:32 ea Exp $
+/* $Id: spinlock.c,v 1.12 2000/10/07 13:41:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,8 +23,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID
-STDCALL
+VOID STDCALL
 KeAcquireSpinLock (
 	PKSPIN_LOCK	SpinLock,
 	PKIRQL		OldIrql
@@ -40,8 +39,7 @@ KeAcquireSpinLock (
    KeAcquireSpinLockAtDpcLevel(SpinLock);
 }
 
-KIRQL
-FASTCALL
+KIRQL FASTCALL
 KeAcquireSpinLockRaiseToSynch (
 	PKSPIN_LOCK	SpinLock
 	)
@@ -49,8 +47,7 @@ KeAcquireSpinLockRaiseToSynch (
    UNIMPLEMENTED;
 }
 
-VOID
-STDCALL
+VOID STDCALL
 KeReleaseSpinLock (
 	PKSPIN_LOCK	SpinLock,
 	KIRQL		NewIrql
@@ -66,8 +63,7 @@ KeReleaseSpinLock (
    KeLowerIrql(NewIrql);
 }
 
-KIRQL
-FASTCALL
+KIRQL FASTCALL
 KfAcquireSpinLock (
 	PKSPIN_LOCK	SpinLock
 	)
@@ -80,8 +76,7 @@ KfAcquireSpinLock (
    return OldIrql;
 }
 
-VOID
-FASTCALL
+VOID FASTCALL
 KfReleaseSpinLock (
 	PKSPIN_LOCK	SpinLock,
 	KIRQL		NewIrql

@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.14 2000/08/20 17:02:09 dwelch Exp $
+/* $Id: page.c,v 1.15 2000/10/07 13:41:53 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -35,6 +35,14 @@
 #define PAGEDIRECTORY_MAP (0xf0000000 + (PAGETABLE_MAP / (1024)))
 
 /* FUNCTIONS ***************************************************************/
+
+PULONG MmGetPageDirectory(void)
+{
+   unsigned int page_dir=0;
+   __asm__("movl %%cr3,%0\n\t"
+                : "=r" (page_dir));
+   return((PULONG)page_dir);
+}
 
 static ULONG ProtectToPTE(ULONG flProtect)
 {
@@ -94,6 +102,10 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
    
    memset(PageDirectory,0,PAGESIZE);
    for (i=768; i<896; i++)
+     {
+	PageDirectory[i] = CurrentPageDirectory[i];
+     }
+   for (i=961; i<1024; i++)
      {
 	PageDirectory[i] = CurrentPageDirectory[i];
      }

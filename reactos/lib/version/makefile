@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2000/08/18 22:27:02 dwelch Exp $
+# $Id: makefile,v 1.5 2000/10/07 13:41:49 dwelch Exp $
 #
 # Makefile for ReactOS version.dll
 #
@@ -50,7 +50,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-mdll \
 		-o $(TARGET).dll \
 		-Wl,--entry,_DllMain@12 \
-		-Wl,--image-base,0x70000000 \
+		-Wl,--image-base,0x77a90000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.12 2000/09/10 10:14:39 ea Exp $
+# $Id: makefile_rex,v 1.13 2000/10/07 13:41:49 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -99,10 +99,10 @@ OBJECTS = $(MISC_OBJECTS) $(INTERNAL_OBJECTS) $(GRAPHICS_OBJECTS) $(RESOURCE_OBJ
 	$(CONTROLS_OBJECTS) $(WINDOWS_OBJECTS)
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = misc\*.o \
+CLEAN_FILES = misc\*.o windows\*.o internal\*.o controls\*.o graphics\*.o resources\*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).dll $(TARGET).sym
 else
-CLEAN_FILES = misc/*.o  \
+CLEAN_FILES = misc/*.o windows/*.o internal/*.o controls/*.o graphics/*.o resources/*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).dll $(TARGET).sym
 endif
 
@@ -140,7 +140,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o $(TARGET).dll \
-		-Wl,--image-base,0x70000000 \
+		-Wl,--image-base,0x77e70000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

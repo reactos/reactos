@@ -1,8 +1,10 @@
 # TCPIP.SYS - TCP/IP protocol driver
+#
+PATH_TO_TOP = ../../../
 
 TARGETNAME=tcpip
 
-BASE_CFLAGS = -I./include -I../../../include
+CFLAGS = -I./include -O2
 
 RESOURCE_OBJECT  = $(TARGETNAME).coff
 TCPIP_OBJECTS    = tcpip/main.o tcpip/address.o tcpip/checksum.o \

@@ -1,33 +1,24 @@
-# $Id: Makefile,v 1.3 2000/08/29 20:10:49 ea Exp $
+# $Id: Makefile,v 1.4 2000/10/07 13:41:49 dwelch Exp $
 #
 # ReactOS Operating System
 #
 PATH_TO_TOP = ../..
 
+CFLAGS = -Iinclude -D__SECUR32__ -DDBG -g -Wall -Werror
+
 TARGET = secur32
 
 SECUR32_BASE = 0x10000000
 
-BASE_CFLAGS = -I../../include
-
-CFLAGS = $(CFLAGS)
-
-include ../../rules.mak
 DLLTARGET=$(TARGET).dll
 
 all: $(DLLTARGET)
 
 OBJECTS = lsa.o dllmain.o $(TARGET).coff
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = $(OBJECTS) \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
-else
 CLEAN_FILES = $(OBJECTS) \
 	      $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
 	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
-endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
@@ -75,5 +66,5 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 
 .PHONY: clean $(CLEAN_FILES:%=%_clean)
 
-WARNINGS_ARE_ERRORS = yes
+include $(PATH_TO_TOP)/rules.mak
 

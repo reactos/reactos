@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.1 2000/07/02 10:48:31 ekohl Exp $
+/* $Id: list.c,v 1.2 2000/10/07 13:41:50 dwelch Exp $
  *
  * COPYRIGHT:           See COPYING in the top level directory
  * PROJECT:             ReactOS kernel
@@ -18,8 +18,7 @@
 /* FUNCTIONS *************************************************************/
 
 
-PLIST_ENTRY
-STDCALL
+PLIST_ENTRY STDCALL
 ExInterlockedInsertHeadList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
@@ -53,8 +52,7 @@ ExInterlockedInsertHeadList (
 }
 
 
-PLIST_ENTRY
-STDCALL
+PLIST_ENTRY STDCALL
 ExInterlockedInsertTailList (
 	PLIST_ENTRY	ListHead,
 	PLIST_ENTRY	ListEntry,
@@ -80,8 +78,7 @@ ExInterlockedInsertTailList (
 }
 
 
-PLIST_ENTRY
-STDCALL
+PLIST_ENTRY STDCALL
 ExInterlockedRemoveHeadList (
 	PLIST_ENTRY	Head,
 	PKSPIN_LOCK	Lock

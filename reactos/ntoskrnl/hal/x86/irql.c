@@ -36,9 +36,22 @@ static VOID KeSetCurrentIrql(KIRQL newlvl);
 
 VOID HalpInitPICs(VOID)
 {
+   /* Initialization sequence */
+   WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
+   WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
+   /* Start of hardware irqs (0x20) */
+   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x40);
+   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x48);
+   /* 8259-1 is master */
+   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
+   /* 8259-2 is slave */
+   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x2);
+   /* 8086 mode */
+   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
+   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
    /* Mask off all interrupts from PICs */
-   outb(0x21,0xff);
-   outb(0xa1,0xff);
+   WRITE_PORT_UCHAR((PUCHAR)0x21, 0xff);
+   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0xff);
 }
 
 #if 0

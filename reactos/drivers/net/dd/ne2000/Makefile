@@ -1,11 +1,11 @@
-# $Id: Makefile,v 1.2 2000/09/10 20:00:13 ea Exp $
+# $Id: Makefile,v 1.3 2000/10/07 13:41:56 dwelch Exp $
 #
-# NE2000.SYS build spec
 #
+PATH_TO_TOP = ../../../..
 
-TARGETNAME=ne2000
+TARGET = ne2000
 
-BASE_CFLAGS = -I./include -I../../../../include -DNDIS_MINIPORT_DRIVER
+OBJECTS = ne2000/main.o ne2000/8390.o $(TARGET).coff $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 RESOURCE_OBJECT  = $(TARGETNAME).coff
 NE2000_OBJECTS   = ne2000/main.o ne2000/8390.o $(RESOURCE_OBJECT)
@@ -61,58 +61,24 @@ $(TARGETNAME).sys: $(OBJECTS) $(TARGETNAME).def
         $(TARGETNAME).o \
         $(IMPORT_LIBS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) \
-		--dllname $(TARGETNAME).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def $(TARGETNAME).def \
-		--kill-at
 	- $(RM) base.tmp
-	$(CC) \
-        -specs=../../../../specs \
-		--subsystem=native \
-		-mdll \
-		--dll \
-		-e _DriverEntry@8 \
-		-o $(TARGETNAME).sys \
-		-Wl,--image-base,0x0 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
-		-Wl,temp.exp \
-		$(TARGETNAME).o \
-        $(IMPORT_LIBS)
 	- $(RM) temp.exp
-	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
+	- $(RM) $(TARGET).sys
 
-clean: $(CLEAN_FILES:%=%_clean)
+.phony: clean
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
+install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+$(FLOPPY_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys $(FLOPPY_DIR)/drivers/$(TARGET).sys
 
-install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
-else
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-endif
+../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
+	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
-dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
+$(TARGET).sys: $(OBJECTS)
 
-$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
-else
-	$(CP) $(TARGETNAME).sys ../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
-endif
-
-#WITH_DEBUGGING      = yes
-#WIN32_LEAN_AND_MEAN = yes
-#WARNINGS_ARE_ERRORS = yes
+WITH_DEBUGGING=yes
 include ../../../../rules.mak
+

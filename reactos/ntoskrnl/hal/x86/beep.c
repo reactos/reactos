@@ -37,12 +37,15 @@ HalMakeBeep (
 	ULONG	Frequency
 	)
 {
+   UCHAR b;
+   
     /* save flags and disable interrupts */
     __asm__("pushf\n\t" \
             "cli\n\t");
 
     /* speaker off */
-    outb_p(PORT_B, inb_p(PORT_B) & 0xFC);
+    b = inb_p(PORT_B);
+    outb_p(PORT_B, b & 0xFC);
 
     if (Frequency)
     {

@@ -1,8 +1,10 @@
 # TDITEST.SYS - TDI test driver
+#
+PATH_TO_TOP = ../../..
 
 TARGETNAME=tditest
 
-BASE_CFLAGS = -I./include -I../../../include
+CFLAGS = -I./include 
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 TDITEST_OBJECTS = tditest/tditest.o
@@ -63,22 +65,11 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 
 $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
-endif
 
 dist: $(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).sys ..\..\..\$(DIST_DIR)\drivers\$(TARGETNAME).sys
-else
 	$(CP) $(TARGETNAME).sys ../../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
-endif
 
-#WITH_DEBUGGING      = yes
-#WIN32_LEAN_AND_MEAN = yes
-#WARNINGS_ARE_ERRORS = yes
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

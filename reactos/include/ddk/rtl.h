@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.40 2000/07/04 08:52:34 dwelch Exp $
+/* $Id: rtl.h,v 1.41 2000/10/07 13:41:46 dwelch Exp $
  * 
  */
 
@@ -275,13 +275,15 @@ extern BOOLEAN NLS_MB_OEM_CODE_PAGE_TAG;
 #define InsertTailList(ListHead, ListEntry) \
 { \
 	PLIST_ENTRY OldBlink; \
+        assert((ListEntry)->Blink == NULL); \
+        assert((ListEntry)->Flink == NULL); \
 	OldBlink = (ListHead)->Blink; \
 	(ListEntry)->Flink = (ListHead); \
 	(ListEntry)->Blink = OldBlink; \
 	OldBlink->Flink = (ListEntry); \
 	(ListHead)->Blink = (ListEntry); \
 	assert((ListEntry) != NULL); \
-	assert((ListEntry)->Blink!=NULL); \
+	assert((ListEntry)->Blink != NULL); \
 	assert((ListEntry)->Blink->Flink == (ListEntry)); \
 	assert((ListEntry)->Flink != NULL); \
 	assert((ListEntry)->Flink->Blink == (ListEntry)); \
@@ -398,6 +400,8 @@ PushEntryList (
 	OldBlink = (ListEntry)->Blink; \
 	OldFlink->Blink = OldBlink; \
 	OldBlink->Flink = OldFlink; \
+        (ListEntry)->Flink = NULL; \
+        (ListEntry)->Blink = NULL; \
 }
 
 
@@ -445,7 +449,12 @@ RemoveHeadList (
 	OldBlink = ListHead->Flink->Blink;
 	OldFlink->Blink = OldBlink;
 	OldBlink->Flink = OldFlink;
-
+        if (Old != ListHead)
+     {
+        Old->Flink = NULL;
+        Old->Blink = NULL;
+     }
+   
 	return(Old);
 }
 
@@ -494,13 +503,17 @@ RemoveTailList (
 	OldBlink = ListHead->Blink->Blink;
 	OldFlink->Blink = OldBlink;
 	OldBlink->Flink = OldFlink;
-
+   if (Old != ListHead)
+     {
+        Old->Flink = NULL;
+        Old->Blink = NULL;
+     }
+   
 	return(Old);
 }
 
 
-PVOID
-STDCALL
+PVOID STDCALL
 RtlAllocateHeap (
 	HANDLE	Heap,
 	ULONG	Flags,

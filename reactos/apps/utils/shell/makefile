@@ -3,7 +3,7 @@
 #
 PATH_TO_TOP = ../..
 
-OBJECTS= ../common/crt0.o shell.o
+OBJECTS= shell.o
 PROGS= shell.exe
 LIBS= ../../lib/kernel32/kernel32.a ../../lib/ntdll/ntdll.a
 CLEAN_FILES= shell.o shell.exe shell.sym
@@ -38,7 +38,7 @@ else
 endif
 
 shell.exe: $(OBJECTS) $(LIBS)
-	$(CC) -specs=../../specs $(OBJECTS) $(LIBS) -lgcc -o shell.exe
+	$(CC) $(OBJECTS) $(LIBS) -lgcc -o shell.exe
 	$(NM) --numeric-sort shell.exe > shell.sym
 
 include ../../rules.mak

@@ -227,7 +227,7 @@ static inline PNT_TEB NtCurrentTeb(VOID)
    int x;
    
    __asm__ __volatile__("movl %%fs:0x18, %0\n\t"
-			: "=g" (x)
+			: "=r" (x) /* can't have two memory operands */
 			: /* no inputs */
 			);
    

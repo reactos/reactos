@@ -1,8 +1,10 @@
 # NDIS.SYS - NDIS library
+#
+PATH_TO_TOP = ../../..
 
 TARGETNAME=ndis
 
-BASE_CFLAGS = -I./include -I../../../include -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
+CFLAGS = -I./include -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
 
 RESOURCE_OBJECT = $(TARGETNAME).coff
 NDIS_OBJECTS    = ndis/main.o ndis/40gone.o ndis/50gone.o ndis/buffer.o ndis/cl.o \

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.34 2000/08/30 19:33:28 dwelch Exp $
+/* $Id: timer.c,v 1.35 2000/10/07 13:41:52 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -41,12 +41,12 @@
  * Return a linear address which can be used to access the physical memory
  * starting at x 
  */
-extern inline unsigned int physical_to_linear(unsigned int x)
+unsigned int physical_to_linear(unsigned int x)
 {
         return(x+IDMAP_BASE);
 }
 
-extern inline unsigned int linear_to_physical(unsigned int x)
+unsigned int linear_to_physical(unsigned int x)
 {
         return(x-IDMAP_BASE);
 }

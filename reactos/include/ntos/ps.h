@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
- * FILE:         include/ps.h
+ * FILE:         include/ntos/ps.h
  * PURPOSE:      Process/thread declarations used by all the parts of the 
  *               system
  * PROGRAMMER:   David Welch <welch@cwcom.net>

@@ -17,30 +17,31 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
- * FILE:            ntoskrnl/include/internal/i386/segment.h
- * PURPOSE:         Segment selector definitions
+ * FILE:            ntoskrnl/rtl/memcmp.c
+ * PURPOSE:         Implements memcmp function
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
- *                  Created ??/??/??
+ *                  Created 01/10/00
  */
 
-/* INCLUDES *****************************************************************/
+#include <string.h>
 
-#ifndef __INCLUDE_INTERNAL_I386_SEGMENT_H
-#define __INCLUDE_INTERNAL_i386_SEGMENT_H
-
-#define NULL_SELECTOR        (0x0)
-#define KERNEL_CS            (0x8)
-#define KERNEL_DS            (0x10)
-#define USER_CS              (0x18 + 0x3)
-#define USER_DS              (0x20 + 0x3)
-/*
- * FIXME: We actually have one TSS per thread
- */
-#define RESERVED_FOR_TSS     (0x28)
-#define PCR_SELECTOR         (0x30)
-#define TEB_SELECTOR         (0x38 + 0x3)
-#define RESERVED1_SELECTOR   (0x40)
-#define LDT_SELECTOR         (0x48)
-
-#endif /* __INCLUDE_INTERNAL_I386_SEGMENT_H */
+int memcmp(const void* _s1, const void* _s2, size_t n)
+{
+   unsigned int i;
+   const char* s1;
+   const char* s2;
+   
+   s1 = (const char *)_s1;
+   s2 = (const char *)_s2;
+   for (i = 0; i < n; i++)
+     {
+	if ((*s1) != (*s2))
+	  {
+	     return((*s1) - (*s2));
+	  }
+	s1++;
+	s2++;
+     }
+   return(0);
+}

@@ -1,16 +1,14 @@
-# $Id: makefile,v 1.39 2000/08/18 22:27:00 dwelch Exp $
+# $Id: makefile,v 1.40 2000/10/07 13:41:48 dwelch Exp $
 #
 # ReactOS Operating System
 #
 PATH_TO_TOP = ../..
 
-TARGET=kernel32
+TARGET = kernel32
 
 KERNEL32_BASE = 0x77f00000
 
-BASE_CFLAGS = -I../../include
-
-CFLAGS = $(CFLAGS) -DKERNEL32_BASE=$(KERNEL32_BASE)
+CFLAGS = -DKERNEL32_BASE=$(KERNEL32_BASE)
 
 DLLTARGET=$(TARGET).dll
 
@@ -102,12 +100,12 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
-		-specs=k32_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp \
 		$(TARGET).o \
-		../ntdll/ntdll.a
+		../ntdll/ntdll.a -lgcc
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
@@ -116,11 +114,11 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
-		-specs=k32_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGET).dll \
 		$(TARGET).o \
-		../ntdll/ntdll.a \
+		../ntdll/ntdll.a -lgcc \
 		-Wl,--image-base,$(KERNEL32_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.7 2000/07/02 17:30:31 ekohl Exp $ */
+/* $Id: mmfuncs.h,v 1.8 2000/10/07 13:41:46 dwelch Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 #include <ddk/i386/pagesize.h>
@@ -36,6 +36,7 @@
  *          Size = Size of range
  * RETURNS: The number of pages
  */
+#if 0
 extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
 							  ULONG Size)
 {
@@ -46,6 +47,10 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
    LowestAddr = PAGE_ROUND_DOWN((ULONG)Va);
    return((HighestAddr - LowestAddr) / PAGESIZE);
 }
+#endif
+#define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va, Size) \
+       (ULONG)((PAGE_ROUND_UP((Size) + ((ULONG)(Va))) - \
+                PAGE_ROUND_DOWN((ULONG)(Va))) / PAGESIZE)
 
 /*
  * FUNCTION: Returns FALSE is the pointer is NULL, TRUE otherwise

@@ -248,7 +248,9 @@ VOID MmDereserveSwapPages(ULONG Nr);
 SWAPENTRY MmAllocSwapPage(VOID);
 VOID MmFreeSwapPage(SWAPENTRY Entry);
 
-VOID MmInit1(PLOADER_PARAMETER_BLOCK bp, ULONG LastKernelAddress);
+VOID MmInit1(ULONG FirstKernelPhysAddress, 
+	     ULONG LastKernelPhysAddress,
+	     ULONG LastKernelAddress);
 VOID MmInit2(VOID);
 VOID MmInit3(VOID);
 NTSTATUS MmInitPagerThread(VOID);
@@ -294,6 +296,9 @@ SWAPENTRY MmGetSavedSwapEntryPage(PVOID PhysicalAddress);
 VOID MmSetCleanPage(struct _EPROCESS* Process, PVOID Address);
 VOID MmLockPage(PVOID PhysicalPage);
 VOID MmUnlockPage(PVOID PhysicalPage);
+
+NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG Count);
+NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG Count);
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
 

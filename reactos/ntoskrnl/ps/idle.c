@@ -56,7 +56,7 @@ VOID PsInitIdleThread(VOID)
 			PsIdleThreadMain,
 			NULL);
    
-   Priority = THREAD_PRIORITY_IDLE;
+   Priority = LOW_PRIORITY;
    ZwSetInformationThread(PsIdleThreadHandle,
 			  ThreadPriority,
 			  &Priority,

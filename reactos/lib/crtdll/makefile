@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.38 2000/08/18 22:26:59 dwelch Exp $
+# $Id: makefile,v 1.39 2000/10/07 13:41:47 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -8,7 +8,7 @@ TARGET=crtdll
 DLLTARGET=$(TARGET).dll
 
 
-BASE_CFLAGS = -I../../include
+CFLAGS = 
 
 all: $(DLLTARGET)
 
@@ -173,12 +173,12 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).def \
 		--output-lib $(TARGET).a
 	$(CC) \
-		-specs=crt_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp \
 		$(TARGET).o \
-		../kernel32/kernel32.a 
+		../kernel32/kernel32.a -lgcc
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
@@ -187,11 +187,11 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).def
 	- $(RM) base.tmp
 	$(CC) \
-		-specs=crt_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGET).dll \
 		$(TARGET).o  \
-		../kernel32/kernel32.a \
+		../kernel32/kernel32.a -lgcc \
 		-Wl,--image-base,0x77630000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

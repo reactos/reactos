@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.52 2000/08/12 19:33:22 dwelch Exp $
+/* $Id: process.c,v 1.53 2000/10/07 13:41:54 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -210,7 +210,7 @@ VOID PsInitProcessManagment(VOID)
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
    ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
-   KProcess->PageTableDirectory = get_page_directory();
+   KProcess->PageTableDirectory = MmGetPageDirectory();
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement(&PiNextProcessUniqueId);
    

@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.9 2000/09/29 15:03:21 jean Exp $
+/* $Id: display.c,v 1.10 2000/10/07 13:41:50 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,7 +14,6 @@
 
 /* only needed for screen synchronization */
 #include <internal/halio.h>
-
 
 #define SCREEN_SYNCHRONIZATION
 
@@ -113,8 +112,10 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 //        VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
 
         /* Set cursor position */
-        CursorX = LoaderBlock->cursorx;
-        CursorY = LoaderBlock->cursory;
+//        CursorX = LoaderBlock->cursorx;
+//        CursorY = LoaderBlock->cursory;
+        CursorX = 0;
+        CursorY = 0;
 
         /* read screen size from the crtc */
         /* FIXME: screen size should be read from the boot paramseters */

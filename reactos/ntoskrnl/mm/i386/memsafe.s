@@ -39,7 +39,8 @@ _MmSafeCopyFromUserRestart:
 	popl	%edi
 	popl	%esi
 
-	ret
+        popl    %ebp
+        ret
 
 /*****************************************************************************/
 
@@ -76,6 +77,7 @@ _MmSafeCopyToUserRestart:
 	popl	%ecx
 	popl	%edi
 	popl	%esi
-
+	
+	popl    %ebp
 	ret
 

@@ -7,7 +7,7 @@ int main(int argc, char* argv[])
    
    printf("TEB dumpper\n");
    __asm__("movl %%fs:0x18, %0\n\t"
-	   : "=g" (x)
+	   : "=a" (x)
 	   : /* no inputs */);
    printf("fs[0x18] %x\n", x);
    return(0);

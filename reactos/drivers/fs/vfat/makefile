@@ -1,14 +1,15 @@
-# $Id: makefile,v 1.21 2000/08/18 22:27:09 dwelch Exp $
+# $Id: makefile,v 1.22 2000/10/07 13:41:56 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
+
 TARGET=vfatfs
 
 OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
           rw.o finfo.o volume.o $(TARGET).coff
 LIBS = ../../../ntoskrnl/ntoskrnl.a
 
-BASE_CFLAGS = -I. -I../../../include
+CFLAGS = 
 
 all: $(TARGET).nostrip.sys $(TARGET).sys
 

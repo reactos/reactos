@@ -32,8 +32,8 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = vidport vga blue ide keyboard null parallel serial floppy
-# DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
+DEVICE_DRIVERS = vidport vga blue ide keyboard null floppy
+# DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1 parallel serial
 
 FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
@@ -66,20 +66,20 @@ clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_cle
 
 ifeq ($(HOST),mingw32-linux)
 rcopy$(EXE_POSTFIX): rcopy.c
-	$(NATIVE_CC) -g -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
+	$(HOST_CC) -g -DUNIX_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
 endif
 ifeq ($(HOST),mingw32-windows)
 rcopy$(EXE_POSTFIX): rcopy.c
-	$(NATIVE_CC) -g -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
+	$(HOST_CC) -g -DDOS_PATHS rcopy.c -o rcopy$(EXE_POSTFIX)
 endif
 
 ifeq ($(HOST),mingw32-linux)
 rmkdir$(EXE_POSTFIX): rmkdir.c
-	$(NATIVE_CC) -g -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
+	$(HOST_CC) -g -DUNIX_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
 endif
 ifeq ($(HOST),mingw32-windows)
 rmkdir$(EXE_POSTFIX): rmkdir.c
-	$(NATIVE_CC) -g -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
+	$(HOST_CC) -g -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
 endif
 
 

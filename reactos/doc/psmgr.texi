@@ -1,100 +1,52 @@
 \input texinfo @c -*-texinfo-*-
 @c %**start of header
 @setfilename psmgr.info
-@settitle Process Manager Design and Implementation
+@settitle Reactos Process Manager: Design and Implementation
 @setchapternewpage odd
 @c %**end of header
 
 @ifinfo
-This document describes the ReactOS process manager design and implementation
+This file documents the ReactOS Process Manager.
+
+Copyright 2000 David Welch 
 @end ifinfo
 
 @titlepage
-@title Process Manager Design and Implementation
-@author David Welch <david.welch@seh.ox.ac.uk>
+@title ReactOS Process Manager: Design and Implementation
+@author David Welch
+
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1999 David Welch
+Copyright @copyright{} 2000 David Welch
 @end titlepage
 
-@node Top, Overview, , (dir)
-@comment node-name, next, previous, up
+@node Top, Copyright, , (dir)
 
 @ifinfo
-This document describes the design and implementation of the reactos process 
-manager
+This document describes the ReactOS Process Manager.
+
+This document applies to version 0.0.16.
 @end ifinfo
 
 @menu
-* Overview:: Overview of this document
-* External Interfaces:: External Interfaces
-* Data Structures:: Data Structures
-* Concept Index:: This index has two entries
+* Copyright::       Your rights and freedoms
+* Overview::        Introduction
 @end menu
 
-@node Overview, External Interfaces, top, top
-@comment node-name, next, previous, up
+@node Copyright, Overview, Top, Top
+@chapter Copyright
+@cindex Index entry for Copyright
+ReactOS is distributed under the terms of the GNU General Public License,
+this basically means that you can give it to anyone for any price as long
+as full source code is included; you also have the right to distribute
+modified copies in the same way. For the actual legalese see the file
+'COPYING' in the distribution. 
+
+@node Overview, ,Copyright, Top
 @chapter Overview
+@cindex Index entry for Overview
 
-This document describes the design and implementation of the ReactOS process 
-manager. ReactOS is a GPLed operating system that attempts to be compatible 
-with Windows NT, for more information see @uref{http://www.reactos.com}.
 
-@node External Interfaces, Data Structures, Overview, top
-@comment node-name, next, previous, up
-@chapter External Interfaces
 
-This chapter describes the external interfaces provided by the process
-manager both to user-mode and to the rest of the kernel.
-
-@menu
-* NtCreateProcess:: Creates a new process
-@end menu
-
-@node NtCreateProcess, , , External Interfaces
-@comment node-name, next, previous, up
-
-@deftypefn Function NTSTATUS NtCreateProcess
-
-The parameters are
-@itemize @bullet
-@item
-HANDLE ProcessHandle: Received a handle for the created process on return.
-@item
-ACCESS_MASK DesiredAccess: Specifies the requested types of access to
-the created process.
-@item
-POBJECT_ATTRIBUTES ObjectAttributes: Specifies various attributes for the
-created process.
-@item
-HANDLE ParentProcessHandle: Specifies the parent process for the created
-process.
-@item
-BOOLEAN InheritObjectTable: True if the new process such inherit its parent's
-handles.
-@item
-HANDLE SectionHandle: If this parameter is NULL then the new process's
-address space will be a copy of its parent's. Otherwise the new process's
-address space will contain a mapping of the section pointed to by this
-handle and NTDLL.
-@item
-HANDLE DebugPort: Specifies a handle that will receive debug messages
-associated with this process.
-@item
-HANDLE ExceptionPort: Specifies a handle that will receive exception messages
-associated with this process.
-@end itemize
-
-The return value is either STATUS_SUCCESS or a value indicating the reason
-by failure.
-@end deftypefn
-
-@node Data Structures, Concept Index, External Interfaces, top
-@comment node-name, next, previous, up
-@chapter Data Structures
-
-@node Concept Index, ,Data Structures, Top
-@unnumbered Concept Index
-@printindex cp
 @contents
 @bye

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.22 2000/09/06 03:08:08 phreak Exp $
+/* $Id: create.c,v 1.23 2000/10/07 13:41:54 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -253,10 +253,10 @@ PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(PETHREAD Thread,
    return(Thread->ImpersonationInfo->Token);
 }
 
-static VOID PiTimeoutThread(struct _KDPC *dpc, 
-			    PVOID Context, 
-			    PVOID arg1, 
-			    PVOID arg2 )
+VOID PiTimeoutThread(struct _KDPC *dpc, 
+		      PVOID Context, 
+		      PVOID arg1, 
+		      PVOID arg2)
 {
    // wake up the thread, and tell it it timed out
    NTSTATUS Status = STATUS_TIMEOUT;
@@ -360,23 +360,14 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    
    PiNrThreads++;
    
-   Thread->Tcb.State = THREAD_STATE_SUSPENDED;
-   Thread->Tcb.SuspendCount = 0;
-   Thread->Tcb.FreezeCount = 1;
-   InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[0]);
-   InitializeListHead(&Thread->Tcb.ApcState.ApcListHead[1]);
-   Thread->Tcb.KernelApcDisable = 1;
-   Thread->Tcb.WaitIrql = PASSIVE_LEVEL;
+   KeInitializeThread(&Process->Pcb, &Thread->Tcb);
    Thread->ThreadsProcess = Process;
-   KeInitializeDpc(&Thread->Tcb.TimerDpc, PiTimeoutThread, Thread);
-   Thread->Tcb.WaitBlockList = NULL;
+   /*
+    * FIXME: What lock protects this?
+    */
    InsertTailList(&Thread->ThreadsProcess->ThreadListHead, 
 		  &Thread->Tcb.ProcessThreadListEntry);
    InitializeListHead(&Thread->TerminationPortList);
-   KeInitializeDispatcherHeader(&Thread->Tcb.DispatcherHeader,
-                                InternalThreadType,
-                                sizeof(ETHREAD),
-                                FALSE);
    KeInitializeSpinLock(&Thread->ActiveTimerListLock);
    InitializeListHead(&Thread->IrpList);
    Thread->Cid.UniqueThread = (HANDLE)InterlockedIncrement(

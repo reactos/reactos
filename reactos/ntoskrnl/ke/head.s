@@ -2,7 +2,6 @@
 
 #define NR_TASKS 128
 
-.globl _stext
 .globl _start
 .globl _mainCRTStartup
 .globl start
@@ -38,13 +37,10 @@ _gdt_descr:
         .word ((8+NR_TASKS)*8)-1
         .long _KiGdt
 
-.text
-
 .align 8
 _init_stack:
         .fill MM_STACK_SIZE,1,0
 _init_stack_top:
 
-_stext:
 
 

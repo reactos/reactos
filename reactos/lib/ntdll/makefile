@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.53 2000/09/04 19:03:46 ekohl Exp $
+# $Id: makefile,v 1.54 2000/10/07 13:41:48 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 TARGET = ntdll
 
-BASE_CFLAGS = -I../../include -D__NTDLL__
+CFLAGS = -D__NTDLL__ -g
 
 IMAGE_BASE = 0x77f60000
 
@@ -74,11 +74,11 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		--kill-at \
 		--output-lib $(TARGET).a
 	$(CC) \
-		-specs=$(TARGET)_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp \
-		$(TARGET).o
+		$(TARGET).o -lgcc
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).dll \
@@ -87,11 +87,11 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 		--def def/$(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
-		-specs=$(TARGET)_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGET).dll \
-		$(TARGET).o \
-		-Wl,--entry=0x00000000 \
+		$(TARGET).o -lgcc \
+		-Wl,--entry=_LdrInitializeThunk@16 \
 		-Wl,--image-base,$(IMAGE_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -125,6 +125,4 @@ else
 	$(CP) $(TARGET).dll ../../$(DIST_DIR)/dlls/$(TARGET).dll
 endif
 
-#WITH_DEBUGGING = yes
-#WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak

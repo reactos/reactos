@@ -30,6 +30,9 @@ PULONG MmGetPageEntry(PVOID Address);
 
 #define FLUSH_TLB    __asm__("movl %cr3,%eax\n\tmovl %eax,%cr3\n\t")
 
+PULONG MmGetPageDirectory(VOID);
+
+#if 0
 extern inline PULONG get_page_directory(void)
 {
         unsigned int page_dir=0;
@@ -37,6 +40,7 @@ extern inline PULONG get_page_directory(void)
                 : "=r" (page_dir));
         return((PULONG)page_dir);
 }
+#endif
 
 
 /*

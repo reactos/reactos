@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2000/08/18 22:26:53 dwelch Exp $
+# $Id: Makefile,v 1.8 2000/10/07 13:41:44 dwelch Exp $
 #
 
 PATH_TO_TOP = ../..
@@ -12,7 +12,7 @@ all: $(TARGETNAME)$(EXE_POSTFIX)
 
 
 $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c ../../include/reactos/version.h
-	$(NATIVE_CC) -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).c
+	$(HOST_CC) -o $(TARGETNAME)$(EXE_POSTFIX) $(TARGETNAME).c
 
 
 

@@ -54,7 +54,7 @@ extern ULONG init_stack_top;
 
 /* FUNCTIONS ****************************************************************/
 
-extern unsigned int stext, etext;
+extern unsigned int _text_start__, _text_end__;
 
 static void print_address(PVOID address)
 {
@@ -229,7 +229,7 @@ static void print_address(PVOID address)
        DbgPrint("Frames:\n");
        for (i = 0; i < 32; i++)
 	 {
-	    if (stack[i] > ((unsigned int) &stext) &&
+	    if (stack[i] > ((unsigned int) &_text_start__) &&
 	      !(stack[i] >= ((ULONG)&init_stack) &&
 		stack[i] <= ((ULONG)&init_stack_top)))
 	      {

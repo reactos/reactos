@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.27 2000/09/29 15:03:21 jean Exp $
+/* $Id: object.c,v 1.28 2000/10/07 13:41:53 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -23,6 +23,18 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ************************************************************/
+
+PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
+{
+   return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
+}
+
+POBJECT_HEADER BODY_TO_HEADER(PVOID body)
+{
+   PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
+   return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
+}
+
 
 /**********************************************************************
  * NAME							PRIVATE

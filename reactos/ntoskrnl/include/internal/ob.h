@@ -67,16 +67,8 @@ NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header);
  */
 VOID ObCreateEntry(PDIRECTORY_OBJECT parent, POBJECT_HEADER object);
 
-extern inline POBJECT_HEADER BODY_TO_HEADER(PVOID body)
-{
-   PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
-   return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
-}
-
-extern inline PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
-{
-   return(((void *)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
-}
+POBJECT_HEADER BODY_TO_HEADER(PVOID body);
+PVOID HEADER_TO_BODY(POBJECT_HEADER obj);
 
 #define OBJECT_ALLOC_SIZE(type) (type->NonpagedPoolCharge+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER))
 

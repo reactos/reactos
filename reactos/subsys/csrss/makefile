@@ -1,12 +1,14 @@
-# $Id: makefile,v 1.8 2000/08/11 12:46:24 ekohl Exp $
+# $Id: makefile,v 1.9 2000/10/07 13:41:57 dwelch Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET=csrss
 
-BASE_CFLAGS = -I../../include -I.
+CFLAGS = -I.
 
 OBJECTS_API = api/process.o api/wapi.o api/conio.o api/handle.o
 
@@ -47,21 +49,12 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 
 $(FLOPPY_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe $(FLOPPY_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe $(FLOPPY_DIR)/subsys/$(TARGET).exe
-endif
-
 
 dist: $(DIST_DIR)/subsys/$(TARGET).exe
 
 $(DIST_DIR)/subsys/$(TARGET).exe: $(TARGET).exe
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGET).exe ..\..\$(DIST_DIR)\subsys\$(TARGET).exe
-else
 	$(CP) $(TARGET).exe ../../$(DIST_DIR)/subsys/$(TARGET).exe
-endif
 
 WITH_DEBUGGING = yes
 include ../../rules.mak

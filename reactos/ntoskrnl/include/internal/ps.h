@@ -1,8 +1,68 @@
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2000 David Welch <welch@cwcom.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
+ * FILE:            ntoskrnl/ke/kthread.c
+ * PURPOSE:         Process manager definitions
+ * PROGRAMMER:      David Welch (welch@cwcom.net)
+ * UPDATE HISTORY:
+ *                  Created 22/05/98
+ */
+
 #ifndef __INCLUDE_INTERNAL_PS_H
 #define __INCLUDE_INTERNAL_PS_H
 
+/*
+ * Defines for accessing KPCR and KTHREAD structure members
+ */
+#define KTHREAD_PREVIOUS_MODE     0x137
+#define KTHREAD_TRAP_FRAME        0x128
+
+#define KPCR_BASE                 0xFFDFF000
+
+#define KPCR_EXCEPTION_LIST       0x0
+#define KPCR_CURRENT_THREAD       0x124	
+
+#ifndef __ASM__
+
 #include <internal/hal.h>
 #include <internal/mm.h>
+
+struct _KTHREAD;
+struct _KTRAPFRAME;
+
+/*
+ * Processor Control Region
+ */
+typedef struct _KPCR
+{
+   PVOID ExceptionList;               /* 00 */
+   PVOID StackBase;                   /* 04 */
+   PVOID StackLimit;                  /* 08 */
+   PVOID SubSystemTib;                /* 0C */
+   PVOID Reserved1;                   /* 10 */
+   PVOID ArbitraryUserPointer;        /* 14 */
+   struct _KPCR* Self;                /* 18 */
+   UCHAR Reserved2[0x108];            /* 1C */
+   struct _KTHREAD* CurrentThread;    /* 124 */
+} KPCR, *PKPCR;
+
+#define CURRENT_KPCR ((PKPCR)KPCR_BASE)
 
 extern HANDLE SystemProcessHandle;
 
@@ -10,84 +70,92 @@ typedef struct _KAPC_STATE
 {
    LIST_ENTRY ApcListHead[2];
    struct _KPROCESS* Process;
-   ULONG KernelApcInProgress;
-   ULONG KernelApcPending;
+   UCHAR KernelApcInProgress;
+   UCHAR KernelApcPending;
    USHORT UserApcPending;
-} KAPC_STATE, *PKAPC_STATE;
+} __attribute__((packed)) KAPC_STATE, *PKAPC_STATE;
 
 typedef struct _KTHREAD
 {
-   DISPATCHER_HEADER DispatcherHeader;    // For waiting for the thread
-   LIST_ENTRY        MutantListHead;
-   PVOID             InitialStack;
-   ULONG             StackLimit;
-   NT_TEB*           Teb;
-   PVOID             TlsArray;
-   PVOID             KernelStack;
-   UCHAR             DebugActive;
-   UCHAR             State;
-   UCHAR             Alerted[2];
-   UCHAR             Iopl;
-   UCHAR             NpxState;
-   UCHAR             Saturation;
-   KPRIORITY         Priority;
-   KAPC_STATE        ApcState;
-   ULONG             ContextSwitches;
-   ULONG             WaitStatus;
-   KIRQL             WaitIrql;
-   ULONG             WaitMode;
-   UCHAR             WaitNext;
-   UCHAR             WaitReason;
-   PKWAIT_BLOCK      WaitBlockList;
-   LIST_ENTRY        WaitListEntry;
-   ULONG             WaitTime;
-   KPRIORITY         BasePriority;
-   UCHAR             DecrementCount;
-   UCHAR             PriorityDecrement;
-   UCHAR             Quantum;
-   KWAIT_BLOCK       WaitBlock[4];
-   PVOID             LegoData;         // ??
-   LONG              KernelApcDisable;
-   KAFFINITY         UserAffinity;
-   UCHAR             SystemAffinityActive;
-   UCHAR             Pad;
-   PKQUEUE           Queue;    
-   KSPIN_LOCK        ApcQueueLock;
-   KTIMER            Timer;
-   LIST_ENTRY        QueueListEntry;
-   KAFFINITY         Affinity;
-   UCHAR             Preempted;
-   UCHAR             ProcessReadyQueue;
-   UCHAR             KernelStackResident;
-   UCHAR             NextProcessor;
-   PVOID             CallbackStack;
-   BOOL              Win32Thread;
-   PVOID             TrapFrame;
-   PVOID             ApcStatePointer;      // Is actually eight bytes
-   UCHAR             EnableStackSwap;
-   UCHAR             LargeStack;
-   UCHAR             ResourceIndex;
-   UCHAR             PreviousMode;
-   TIME              KernelTime;
-   TIME              UserTime;
-   KAPC_STATE        SavedApcState;
-   UCHAR             Alertable;
-   UCHAR             ApcQueueable;
-   ULONG             AutoAlignment;
-   PVOID             StackBase;
-   KAPC              SuspendApc;
-   KSEMAPHORE        SuspendSemaphore;
-   LIST_ENTRY        ThreadListEntry;
-   CHAR             FreezeCount;
-   ULONG             SuspendCount;
-   UCHAR             IdealProcessor;
-   UCHAR             DisableBoost;
-   LIST_ENTRY        ProcessThreadListEntry;        // Added by Phillip Susi for list of threads in a process
+   DISPATCHER_HEADER DispatcherHeader;    /* 00 */
+   LIST_ENTRY        MutantListHead;      /* 10 */
+   PVOID             InitialStack;        /* 18 */
+   ULONG             StackLimit;          /* 1C */
+   NT_TEB*           Teb;                 /* 20 */
+   PVOID             TlsArray;            /* 24 */
+   PVOID             KernelStack;         /* 28 */
+   UCHAR             DebugActive;         /* 2C */
+   UCHAR             State;               /* 2D */
+   UCHAR             Alerted[2];          /* 2E */
+   UCHAR             Iopl;                /* 30 */
+   UCHAR             NpxState;            /* 31 */
+   UCHAR             Saturation;          /* 32 */
+   CHAR              Priority;            /* 33 */
+   KAPC_STATE        ApcState;            /* 34 */
+   ULONG             ContextSwitches;     /* 4C */
+   ULONG             WaitStatus;          /* 50 */
+   KIRQL             WaitIrql;            /* 54 */
+   UCHAR             WaitMode;            /* 55 */
+   UCHAR             WaitNext;            /* 56 */
+   UCHAR             WaitReason;          /* 57 */
+   PKWAIT_BLOCK      WaitBlockList;       /* 58 */
+   LIST_ENTRY        WaitListEntry;       /* 5C */
+   ULONG             WaitTime;            /* 64 */
+   CHAR              BasePriority;        /* 68 */
+   UCHAR             DecrementCount;      /* 69 */
+   UCHAR             PriorityDecrement;   /* 6A */
+   UCHAR             Quantum;             /* 6B */
+   KWAIT_BLOCK       WaitBlock[4];        /* 6C */
+   PVOID             LegoData;            /* CC */
+   LONG              KernelApcDisable;    /* D0 */
+   KAFFINITY         UserAffinity;        /* D4 */
+   UCHAR             SystemAffinityActive;/* D8 */
+   UCHAR             Pad[7];              /* D9 */
+   PKQUEUE           Queue;               /* E0 */
+   KSPIN_LOCK        ApcQueueLock;        /* E4 */
+   KTIMER            Timer;               /* E8 */
+   LIST_ENTRY        QueueListEntry;      /* 110 */
+   KAFFINITY         Affinity;            /* 118 */
+   UCHAR             Preempted;           /* 11C */
+   UCHAR             ProcessReadyQueue;   /* 11D */
+   UCHAR             KernelStackResident; /* 11E */
+   UCHAR             NextProcessor;       /* 11F */
+   PVOID             CallbackStack;       /* 120 */
+   BOOL              Win32Thread;         /* 124 */
+   struct _KTRAP_FRAME*      TrapFrame;   /* 128 */
+   PVOID             ApcStatePointer[2];  /* 12C */
+   UCHAR             EnableStackSwap;     /* 134 */
+   UCHAR             LargeStack;          /* 135 */
+   UCHAR             ResourceIndex;       /* 136 */
+   UCHAR             PreviousMode;        /* 137 */
+   TIME              KernelTime;          /* 138 */
+   TIME              UserTime;            /* 13C */
+   KAPC_STATE        SavedApcState;       /* 140 */
+   UCHAR             Alertable;           /* 158 */
+   UCHAR             ApcStateIndex;       /* 159 */
+   UCHAR             ApcQueueable;        /* 15A */
+   UCHAR             AutoAlignment;       /* 15B */
+   PVOID             StackBase;           /* 15C */
+   KAPC              SuspendApc;          /* 160 */
+   KSEMAPHORE        SuspendSemaphore;    /* 190 */
+   LIST_ENTRY        ThreadListEntry;     /* 1A4 */
+   CHAR              FreezeCount;         /* 1AC */
+   UCHAR             SuspendCount;        /* 1AD */
+   UCHAR             IdealProcessor;      /* 1AE */
+   UCHAR             DisableBoost;        /* 1AF */
+   
+   /*
+    * Below here are thread structure members that are specific to ReactOS
+    */
+   
+   /* Added by Phillip Susi for list of threads in a process */
+   LIST_ENTRY        ProcessThreadListEntry;        
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
-   KDPC              TimerDpc;			// Added by Phillip Susi for internal KeAddThreadTimeout() impl.
-} KTHREAD, *PKTHREAD;
+   /* Added by Phillip Susi for internal KeAddThreadTimeout() implementation */
+   KDPC              TimerDpc;		       
+} __attribute__((packed)) KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and
 // a reserved part [ 1 M ] but can be specified otherwise in the image file.
@@ -316,8 +384,10 @@ ULONG PsResumeThread(PETHREAD Thread,
 #define THREAD_STATE_MAX          (7)
 
 
-// Internal thread priorities, added by Phillip Susi
-// TODO: rebalence these to make use of all priorities... the ones above 16 can not all be used right now
+/*
+ * Internal thread priorities, added by Phillip Susi
+ * TODO: rebalence these to make use of all priorities... the ones above 16 can not all be used right now
+ */
 
 #define PROCESS_PRIO_IDLE			3
 #define PROCESS_PRIO_NORMAL			8
@@ -327,6 +397,9 @@ ULONG PsResumeThread(PETHREAD Thread,
 /*
  * Functions the HAL must provide
  */
+
+VOID 
+KeInitializeThread(PKPROCESS Process, PKTHREAD Thread);
 
 void HalInitFirstTask(PETHREAD thread);
 NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
@@ -340,5 +413,7 @@ VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
+
+#endif /* ASSEMBLER */
 
 #endif /* __INCLUDE_INTERNAL_PS_H */

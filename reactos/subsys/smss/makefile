@@ -1,9 +1,11 @@
-# $Id: makefile,v 1.4 2000/08/11 12:46:37 ekohl Exp $
+# $Id: makefile,v 1.5 2000/10/07 13:41:57 dwelch Exp $
 #
 # Session Manager
 #
 # ReactOS Operating System
 #
+PATH_TO_TOP = ../..
+
 TARGET=smss
 
 BASE_CFLAGS = -I../../include

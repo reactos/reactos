@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.62 2000/09/13 10:29:48 jean Exp $
+/* $Id: main.c,v 1.63 2000/10/07 13:41:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,12 +32,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* DATA *********************************************************************/
+/* GLOBALS *******************************************************************/
 
 ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
 ULONG EXPORTED NtGlobalFlag = 0;
 CHAR  EXPORTED KeNumberProcessors = 1;
 LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
+static LOADER_MODULE KeLoaderModules[64];
+static UCHAR KeLoaderModuleStrings[64][256];
+static UCHAR KeLoaderCommandLine[256];
 
 /* FUNCTIONS ****************************************************************/
 
@@ -345,31 +348,46 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-
-void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
+void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
  * ARGUMENTS:
- *          LoaderBlock = Pointer to boot parameters initialized by the boot loader
+ *          LoaderBlock = Pointer to boot parameters initialized by the boot 
+ *                        loader
  * NOTE: The boot parameters are stored in low memory which will become
  * invalid after the memory managment is initialized so we make a local copy.
  */
 {
-   unsigned int i;
-   unsigned int last_kernel_address;
-   ULONG start, start1;
+   ULONG i;
+   ULONG last_kernel_address;
+   ULONG start;
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
-   memcpy (&KeLoaderBlock, LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
-
+   memcpy (&KeLoaderBlock, _LoaderBlock, sizeof(LOADER_PARAMETER_BLOCK));
+   memcpy (&KeLoaderModules, (PVOID)KeLoaderBlock.ModsAddr,
+	   sizeof(LOADER_MODULE) * KeLoaderBlock.ModsCount);
+   KeLoaderBlock.ModsAddr = (ULONG)&KeLoaderModules;
+   strcpy (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
+   for (i = 0; i < KeLoaderBlock.ModsCount; i++)
+     {
+	strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
+	KeLoaderModules[i].ModStart -= 0x200000;
+	KeLoaderModules[i].ModStart += 0xc0000000;
+	KeLoaderModules[i].ModEnd -= 0x200000;
+	KeLoaderModules[i].ModEnd += 0xc0000000;
+	KeLoaderModules[i].String = (ULONG)KeLoaderModuleStrings[i];
+     }
+   
    /*
+
     * FIXME: Preliminary hack!!!!
     * Initializes the kernel parameter line.
     * This should be done by the boot loader.
     */
-   strcpy (KeLoaderBlock.kernel_parameters,
+   strcpy (KeLoaderBlock.CommandLine,
 	   "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
 
    /*
@@ -389,14 +407,11 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    HalDisplayString("conditions.\n");
    HalDisplayString("There is absolutely no warranty for ReactOS.\n");
    
-   last_kernel_address = KERNEL_BASE;
-   for (i=0; i <= KeLoaderBlock.nr_files; i++)
-     {
-	last_kernel_address = last_kernel_address +
-	  PAGE_ROUND_UP(KeLoaderBlock.module_length[i]);
-     }
+   last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
 
-   MmInit1((PLOADER_PARAMETER_BLOCK)&KeLoaderBlock, last_kernel_address);
+   MmInit1(KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000,
+	   last_kernel_address - 0xc0000000 + 0x200000,
+	   last_kernel_address);
 
    /*
     * Initialize the kernel debugger
@@ -435,35 +450,32 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /*
     * Initalize services loaded at boot time
     */
-   DPRINT1("%d files loaded\n",KeLoaderBlock.nr_files);
+   DPRINT1("%d files loaded\n",KeLoaderBlock.ModsCount);
 
-   /*  Pass 1: load registry chunks passed in  */
-   start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
-   for (i = 1; i < KeLoaderBlock.nr_files; i++)
-     {
-       if (!strcmp ((PCHAR) start, "REGEDIT4"))
-         {
-           DPRINT1("process registry chunk at %08lx\n", start);
-           CmImportHive((PCHAR) start);
-         }
-       start = start + KeLoaderBlock.module_length[i];
-     }
+  /*  Pass 1: load registry chunks passed in  */
+  for (i = 1; i < KeLoaderBlock.ModsCount; i++)
+    {
+       start = KeLoaderModules[i].ModStart;
+       if (strcmp ((PCHAR) start, "REGEDIT4") == 0)
+	 {
+	    DPRINT1("process registry chunk at %08lx\n", start);
+	    CmImportHive((PCHAR) start);
+	 }
+    }
 
-   /*  Pass 2: process boot loaded drivers  */
-   start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
-   start1 = start + KeLoaderBlock.module_length[1];
-   for (i=1;i<KeLoaderBlock.nr_files;i++)
-     {
-       if (strcmp ((PCHAR) start, "REGEDIT4"))
-         {
-           DPRINT1("process module at %08lx\n", start);
-           LdrProcessDriver((PVOID)start);
-         }
-       start = start + KeLoaderBlock.module_length[i];
-     }
+  /*  Pass 2: process boot loaded drivers  */
+  for (i=1; i < KeLoaderBlock.ModsCount; i++)
+    {
+       start = KeLoaderModules[i].ModStart;
+       if (strcmp ((PCHAR) start, "REGEDIT4") != 0)
+	 {
+	    DPRINT1("process module at %08lx\n", start);
+	    LdrProcessDriver((PVOID)start);
+	 }
+    }
    
    /* Create the SystemRoot symbolic link */
-   CreateSystemRootLink (KeLoaderBlock.kernel_parameters);
+  CreateSystemRootLink (KeLoaderBlock.CommandLine);
    
    CmInitializeRegistry2();
    /*
@@ -483,7 +495,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
     * Initialize shared user page:
     *  - set dos system path, dos device map, etc.
     */
-   InitSystemSharedUserPage (KeLoaderBlock.kernel_parameters);
+   InitSystemSharedUserPage (KeLoaderBlock.CommandLine);
 
   /*
    *  Launch initial process
@@ -495,3 +507,4 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 /* EOF */
+

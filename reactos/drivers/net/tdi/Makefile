@@ -1,11 +1,12 @@
-# $Id: Makefile,v 1.8 2000/08/11 12:45:45 ekohl Exp $
+# $Id: Makefile,v 1.9 2000/10/07 13:41:57 dwelch Exp $
 #
 # TDI.SYS build spec
 #
+PATH_TO_TOP = ../../../
 
 TARGETNAME=tdi
 
-BASE_CFLAGS = -I../../../include
+CFLAGS = 
 
 OBJECTS_CTE = cte/stubs.o cte/string.o
 OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o tdi/dereg.o

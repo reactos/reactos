@@ -6,23 +6,22 @@
 ;
 ; Base address of the kernel
 ;
-KERNEL_BASE	equ     0c0000000h
+LOAD_BASE	equ     0200000h
 
 ;
 ; Segment selectors
 ;
-;USER_CS		equ     08h
-;USER_DS		equ     010h
-;KERNEL_CS	equ     020h
-;KERNEL_DS	equ     028h
+%define KERNEL_CS     (0x8)
+%define KERNEL_DS     (0x10)
+%define LOADER_CS     (0x18)
+%define LOADER_DS     (0x20)
 
-KERNEL_CS       equ     08h
-KERNEL_DS       equ     010h
-                                     
-;
-; Space reserved in the gdt for tss descriptors
-;
-NR_TASKS        equ     128
+struc multiboot_module
+mbm_mod_start:	resd    1
+mbm_mod_end:	resd	1
+mbm_string:		resd	1
+mbm_reserved:	resd	1
+endstruc
 
 ;
 ; We are a .com program
@@ -55,9 +54,9 @@ BITS 16
 %endmacro
 
 entry:
-        ;
-        ; Load stack
-        ;
+        ;;
+        ;; Load stack
+        ;;
         cli
         push    ds
         pop     ss
@@ -66,9 +65,9 @@ entry:
         mov     sp,real_stack_end
         sti
 
-        ;
-        ; Setup the loader space
-        ;
+        ;;
+        ;; Setup the 32-bit registers
+        ;;
         mov     ebx,0
         mov     eax,0
         mov     ecx,0
@@ -76,123 +75,158 @@ entry:
         mov     esi,0
         mov     edi,0
 
-        ;
-        ; Calculate the end of this module
-        ;
-        mov     ax,ds
-        movzx   ebx,ax
-        shl     ebx,4
-        add     ebx,_end
-
-        ;
-        ; Round up to the nearest page
-        ;
-        and     ebx,~0xfff
-        add     ebx,01000h
-
-        ;
-        ; Set the start of the page directory
-        ;
-        mov     [kernel_page_directory_base],ebx
-
-        ;
-        ; Set the start of the continuous range of physical memory
-        ; occupied by the kernel
-        ;
-        mov     [_start_mem],ebx
-        add     ebx,01000h
-
-        ;
-        ; Calculate the start of the system page table (0xc0000000 upwards)
-        ;
-        mov     [system_page_table_base],ebx
-        add     ebx,01000h
-
-        ;
-        ; Calculate the start of the page table to map the first 4mb
-        ;
-        mov     [lowmem_page_table_base],ebx
-        add     ebx,01000h
-
-        ;
-        ; Set the position for the first module to be loaded
-        ;
-        mov     [next_load_base],ebx
-
-        ;
-        ; Set the address of the start of kernel code
-        ;
-        mov     [_start_kernel],ebx
+        ;;
+        ;; Set the position for the first module to be loaded
+        ;;
+        mov     dword [next_load_base], LOAD_BASE
 	
-	;
-        ; Setup various variables
-        ;
+	;;
+        ;; Setup various variables
+        ;;
         mov     bx,ds
         movzx   eax,bx
         shl     eax,4
         add     [gdt_base],eax
-	
-	;
-	; Make the argument list into a c string
-	;
+
+	;;
+	;; Setup the loader code and data segments
+	;;
+	mov	eax, 0
+	mov	ax, cs
+	shl     eax, 4
+	mov	[_loader_code_base_0_15], ax
+	shr	eax, 16
+	mov	byte [_loader_code_base_16_23], al
+
+	mov	eax, 0
+	mov	ax, ds
+	shl     eax, 4
+	mov	[_loader_data_base_0_15], ax
+	shr	eax, 16
+	mov	byte [_loader_data_base_16_23], al
+
+	;;
+        ;; load gdt
+        ;;
+        lgdt    [gdt_descr]
+
+        ;;
+        ;; Enable the A20 address line (to allow access to over 1mb)
+        ;;
+	call	empty_8042
+        mov     al,0D1h                ; command write
+        out     064h,al
+	call	empty_8042
+        mov     al,0DFh                ; A20 on
+        out     060h,al
+	call	empty_8042
+
+	;;
+	;; Make the argument list into a c string
+	;;
 	mov     di,081h
-	mov     si,_kernel_parameters
-l21:
+	mov     si,_multiboot_kernel_cmdline
+.next_char
         mov     al,[di]
 	mov     [si],al 
         cmp     byte [di],0dh
-	je      l22
+	je      .end_of_command_line
 	inc     di
 	inc     si
-	jmp     l21
-l22:
+	jmp     .next_char
+	
+.end_of_command_line:
         mov     byte [di], 0
 	mov     byte [si], 0
 	mov     [end_cmd_line], di
 	
-        ;
-        ; Make the argument list into a c string
-        ;
+        ;;
+        ;; Make the argument list into a c string
+        ;;
         mov     di,081h
-l1:
+.next_char2
         cmp     byte [di], 0
-	je      l2
+	je      .end_of_command_line2
         cmp     byte [di],' '
-        jne      l12
+        jne     .not_space
         mov     byte [di],0
-l12:
+.not_space
         inc     di
-        jmp     l1
-l2:
+        jmp     .next_char2
+.end_of_command_line2
  
-        ;
-	; Check if we want to skip the first character
-	;
+        ;;
+	;; Check if we want to skip the first character
+	;;
 	cmp     byte [081h],0
-	jne      l32
+	jne     .first_char_is_zero
         mov     dx,082h
-	jmp     l14
-l32:
+	jmp     .start_loading
+.first_char_is_zero
         mov     dx,081h
 
-        ;
-	; Check if we have reached the end of the string
-	;
-l14:	
+        ;;
+	;; Check if we have reached the end of the string
+	;;
+.start_loading
         mov     bx,dx
         cmp     byte [bx],0
-        je      l16
+        jne     .more_modules
+	jmp     .done_loading
 
-        ;
-        ; Process the arguments	
-        ;
+.more_modules
+        ;;
+        ;; Process the arguments	
+        ;;
 	cmp     byte [di], '/'
-	je      l15
-	
+	je      .next_module
+        
+	;;
+	;; Display a message saying we are loading the module
+	;;
         mov     di,loading_msg
         call    print_string
         mov     di,dx
         call    print_string
+
+        ;;
+	;; Save the filename
+	;;
+	mov     si, di
+        mov     edx, 0
+
+	mov     dx, [_multiboot_mods_count]
+	shl     dx, 8           
+	add     dx, _multiboot_module_strings	
+	mov     bx, [_multiboot_mods_count]
+	imul    bx, bx, multiboot_module_size
+	add     bx, _multiboot_modules
+	mov     eax, 0
+	mov     ax, ds
+	shl     eax, 4
+	add     eax, edx
+	mov     [bx + mbm_string], eax
+	
+        mov     bx, dx
+.copy_next_char
+        mov     al, [si]
+	mov     [bx], al
+	inc     si
+	inc     bx
+	cmp     al, 0
+	jne     .copy_next_char
+
+        ;;
+        ;; Load the file
+        ;;
+        push    di
+        mov     dx,di
+	call	pe_load_module
+        pop     di
+	cmp     eax, 0
+	jne     .load_success     
+	jmp     .exit
+.load_success:	
         mov     ah,02h
         mov     dl,0dh
         int     021h
@@ -200,76 +234,154 @@ l14:
         mov     dl,0ah
         int     021h
 
-        ;
-        ; Load the file
-        ;
-        push    di
-        mov     dx,di
-;        call    _load_file
-	call	pe_load_module
-        pop     di
-
-        ;
-        ; Move onto the next module name in the command line
-        ;
-l15:
+        ;;
+        ;; Move onto the next module name in the command line
+        ;;
+.next_module
         cmp     di,[end_cmd_line]
-        je      l16
+        je      .done_loading
         cmp     byte [di],0
-        je      l17
+        je      .found_module_name
         inc     di
-        jmp     l15
-l17:
+        jmp     .next_module
+.found_module_name
         inc     di
         mov     dx,di
-        jmp     l14
-l16:
+        jmp     .start_loading
+	
+.done_loading:
 
-        ;
-        ; Set the end of kernel memory 
-        ;
-        mov     eax,[next_load_base]
-        mov     [_end_mem],eax
+        ;;
+	;; Initialize the multiboot information
+	;;
+	mov     eax, 0
+	mov     ax, ds
+	shl     eax, 4
+	
+	mov     [_multiboot_info_base], eax
+	add     dword [_multiboot_info_base], _multiboot_info
+	
+	mov     dword [_multiboot_flags], 0xc
+	
+	mov     [_multiboot_cmdline], eax
+	add     dword [_multiboot_cmdline], _multiboot_kernel_cmdline
+	
+	mov     [_multiboot_mods_addr], eax
+	add     dword [_multiboot_mods_addr], _multiboot_modules
+	
+        ;;
+        ;; Begin the pmode initalization
+        ;;
+	
+	;;
+        ;; Save cursor position
+        ;;
+        mov     ax,3          ;! Reset video mode
+        int     10h
 
-        ;
-        ; Begin the pmode initalization
-        ;
-        jmp     _to_pmode
+        mov     bl,10
+        mov     ah,12
+        int     10h
+        
+	mov     ax,1112h      ;! Use 8x8 font
+	xor	bl,bl
+	int     10h
+        mov     ax,1200h      ;! Use alternate print screen
+        mov     bl,20h
+        int     10h
+        mov     ah,1h         ;! Define cursor (scan lines 6 to 7)
+        mov     cx,0607h
+        int     10h
 
-exit:
+        mov     ah,1
+        mov     cx,0600h
+        int     10h
+
+        mov       ah,6        ;SCROLL ACTIVE PAGE UP
+        mov       al,32H     ;CLEAR 25 LINES
+        mov       cx,0H       ;UPPER LEFT OF SCROLL
+        mov       dx,314FH    ;LOWER RIGHT OF SCROLL
+        mov       bh,1*10h+1       ;USE NORMAL ATTRIBUTE ON BLANKED LINE
+        int       10h         ;VIDEO-IO
+
+
+        mov     dx,0
+        mov     dh,0
+
+        mov     ah,02h
+        mov     bh,0
+        int     10h
+
+        mov     dx,0
+        mov     dh,0
+
+        mov     ah,02h
+        mov     bh,0
+        int     010h
+          
+        mov     ah,03h
+        mov     bh,0h
+        int     010h
+        movzx   eax,dl
+;        mov     [_cursorx],eax
+        movzx   eax,dh
+;        mov     [_cursory],eax	
+
+         cli
+
+        ;;
+	;; Load the absolute address of the multiboot information structure
+	;;
+        mov     ebx, [_multiboot_info_base]
+
+        ;;       
+        ;; Enter pmode and clear prefetch queue
+        ;;
+        mov     eax,cr0
+        or      eax,0x10001
+        mov     cr0,eax
+        jmp     .next
+.next:
+        ;;
+        ;; NOTE: This must be position independant (no references to
+        ;; non absolute variables)
+        ;;
+
+        ;;
+        ;; Initalize segment registers
+        ;;
+        mov     ax,KERNEL_DS
+        mov     ds,ax
+        mov     ss,ax        
+        mov     es,ax
+        mov     fs,ax
+        mov     gs,ax
+
+        ;;
+        ;; Initalize eflags
+        ;;
+        push    dword 0
+        popf
+
+        ;;
+	;; Load the multiboot magic value into eax
+	;;	
+	mov     eax, 0x2badb002
+
+        ;;
+        ;; Jump to start of the kernel
+        ;;
+        jmp     dword KERNEL_CS:(LOAD_BASE+0x1000)
+	
+	;;
+	;; Never get here
+	;;
+
+.exit:
         mov     ax,04c00h
         int     21h
 
-        ;
-        ; Any errors detected jump here
-        ;
-_error:
-        mov     di,err_msg
-        call    print_string
-        jmp     exit
-
 end_cmd_line dw 0
-
-;
-; In: EDI = address
-; Out: FS = segment
-;      DI = base
-;
-convert_to_seg:
-        push    eax
-
-        mov     eax,edi
-;        shr     eax,16
-;        shl     eax,12
-;        mov     fs,ax
-	shr	eax, 4
-	mov	fs, ax
-	and	edi, 0xf
-
-;        and     edi,0ffffh
-
-        pop     eax
-        ret
 
 ;
 ; Print string in DS:DI
@@ -401,9 +513,8 @@ print_eax:
 	pop	ebx
 	pop	eax
 	ret
-
-
-STRUC	DOS_HDR
+	
+STRUC	pe_doshdr
 e_magic:	resw	1
 e_cblp:		resw	1
 e_cp:		resw	1
@@ -425,7 +536,7 @@ e_res2:		resw	10
 e_lfanew:	resd	1
 ENDSTRUC
 
-STRUC	NT_HDRS
+STRUC	pe_filehdr
 nth_sig:	resd	1
 ntf_mach:	resw	1    
 ntf_num_secs:	resw	1
@@ -473,7 +584,7 @@ dd_rva:		resd	1
 dd_sz:		resd	1
 ENDSTRUC
 
-STRUC  SCN_HDR
+STRUC  pe_scnhdr
 se_name:	resb	8
 se_vsz:		resd	1
 se_vaddr:	resd	1
@@ -486,448 +597,328 @@ se_num_lnums:	resw	1
 se_chars:	resd	1
 ENDSTRUC
 
-;
-; pe_load_module - load a PE module into memory
-;
-;	DI - Filename
-;
-;	[_nr_files] - total files loaded (incremented)
-;	[next_load_base] - load base for file (updated to next loc)
-;	[_module_lengths] - correct slot is set.
-;
-
+_cpe_doshdr:
+        times pe_doshdr_size db 0
+_cpe_filehdr
+        times pe_filehdr_size db 0
+_cpe_scnhdr:
+	times pe_scnhdr_size db 0
+_cscn:
+	dw 0
+_cscn_offset:
+	dd 0
+_current_filehandle:
+	dw 0
+_current_size:
+	dd 0
+	
+	;;
+	;; Load a PE file
+	;;	DS:DX = Filename
+	;;
 pe_load_module:
-	push	dx
-	push	ds
+	;;
+	;; Open file
+	;; 
+	mov	ax, 0x3d00
+	int	0x21
+	jnc     .file_opened
+	mov     dx, error_file_open_failed
+	jmp	near .error
+.file_opened:
 
-	push	ds
-	pop	es
+	;;
+	;; Save the file handle
+	;; 
+	mov	[_current_filehandle], ax
 
-	mov	eax, [next_load_base]
-	mov	[load_base], eax
-DPRINT	'next_load_base %A', 13, 10, 0
+	;;
+	;; Seek to the start of the file
+	;; 
+	mov	ax, 0x4200
+	mov	bx, [_current_filehandle]
+	mov	cx, 0
+	mov	dx, 0
+	int	0x21
+	jnc     .seek_start
+	mov     dx, error_file_seek_failed
+	jmp	near .error
+.seek_start:
 
-        ;
-        ; Open the file
-        ;
-        mov     ax, 0x3d00
-        mov     dx, di
-        int     0x21
-        jnc	.open_good
-	jmp	.error
-.open_good:
-        mov     [file_handle],ax
-        
-        ;
-        ; Seek to beginning of file
-        ;
-        mov     ax,0x4200
-        mov     bx, [file_handle]
-        mov     cx, 0
-        mov     dx, 0
-        int     0x21
-	jnc	.rewind_good
-        jmp	.error
-.rewind_good:
+	;;
+	;; Read in the DOS EXE header
+	;; 
+	mov	ah, 0x3f
+	mov	bx, [_current_filehandle]
+	mov	cx, pe_doshdr_size
+	mov	dx, _cpe_doshdr
+	int	0x21
+	jnc     .header_read
+	mov     dx, error_file_read_failed
+	jmp	near .error
+.header_read
 
-	;
-	; Compute load address for PE headers
-	;
-        mov     edi,[load_base]
-        call    convert_to_seg
-        mov     dx,di
-        push    fs
-        pop     ds
-
-	;
-	; Load the headers
-	;
-        mov     ax, 0x3f00
-        mov     bx, [es:file_handle]
-        mov     cx, 0x1000
-        int     0x21
-
-	;
-	;  Check DOS MZ Header
-	;
-	mov	bx, dx
-	mov	ax, word [bx + e_magic]
+        ;;
+	;; Check the DOS EXE magic
+	;;
+	mov	ax, word [_cpe_doshdr + e_magic]
 	cmp	ax, 'MZ'
 	je	.mz_hdr_good
-        push    es
-        pop     ds
-	mov	dx, bad_mz_msg
-	mov	di, dx
-	call	print_string
-	jmp	.error
+	mov	dx, error_bad_mz
+	jmp	near .error
+.mz_hdr_good
 
-.mz_hdr_good:
-	;
-	;  Check PE Header
-	;
-	mov	eax, dword [bx + e_lfanew]
-DPRINT	'lfanew %A ', 0
-	add	bx, ax
-	mov	eax, dword [bx + nth_sig]
-	cmp	eax, 0x00004550
-	je	.pe_hdr_good
-        push    es
-        pop     ds
-	mov	dx, bad_pe_msg
-	mov	di, dx
-	call	print_string
-	jmp	.error
+        ;;
+	;; Seek to the end of the file to get the file size
+	;;
+	mov     edx, 0
+	mov     ax, 0x4202
+	mov     dx, 0
+	mov     cx, 0
+	mov     bx, [_current_filehandle]
+	int     0x21
+	jnc     .start_end
+	mov     dx, error_file_seek_failed
+	jmp     near .error
+.start_end
+        shl     edx, 16
+	mov     dx, ax
+	mov     [_current_size], edx
 	
-.pe_hdr_good:
-	;
-	;  Get header size and bump next_load_base
-	;
-	mov	eax, [bx + nto_hdr_sz]
-DPRINT	'header size %A ', 0
-	add	dword [es:next_load_base], eax
-
-	;
-	;  Setup section pointer
-	;
-	mov	ax, [bx + ntf_num_secs]
-DPRINT	'num sections %a', 13, 10, 0
-	mov	[es:num_sections], ax
-	add	bx, NT_HDRS_size
-	mov	[es:cur_section], bx
-	mov	[es:cur_section + 2], ds
-	;
-	;  Load each section or fill with zeroes
-	;
-.scn_loop:
-	;
-	;  Compute size of data to load from file
-	;
-	mov	eax, [bx + se_rawsz]
-DPRINT	'raw size %A ', 0
-	cmp	eax, 0
-	jne	.got_data
-	jmp	.no_data
-.got_data:
-        mov     [es:size_mod_4k], ax
-        and     word [es:size_mod_4k], 0x0fff
-        shr     eax, 12
-        mov     dword [es:size_div_4k], eax
-
-	;
-	;  Seek to section offset
-	;
-	mov	eax, [bx + se_raw_ofs]
-DPRINT	'raw offset %A ', 0
-	mov	dx, ax
-	shr	eax, 16
-	mov	cx, ax
-        mov     ax,0x4200
-        mov     bx, [es:file_handle]
-        int     0x21
-	jnc	.seek_good
-        jmp	.error
-.seek_good:
-
-	;
-	;  Load the base pointer
-	;
-        mov     edi,[es:next_load_base]
-        call    convert_to_seg
-        mov     dx, di
-        push    fs
-        pop     ds
-
-        ;
-        ;  Read data in 4k chunks
-        ;
-.do_chunk:
-        ;
-        ; Check if we have read it all
-        ;
-        mov     eax, [es:size_div_4k]
-        cmp     eax, 0
-        je      .chunk_done
-
-        ;
-        ; Make the call (dx was loaded above)
-        ;
-        mov     ax, 0x3f00
-        mov     bx, [es:file_handle]
-        mov     cx, 0x1000
-        int     0x21               
-	; FIXME: should check return status and count
-
-        ;
-        ; We move onto the next pointer by altering ds
-        ;
-        mov     ax, ds
-        add     ax, 0x0100
-        mov     ds, ax
-        dec     word [es:size_div_4k]
-        jmp     .do_chunk
-
-.chunk_done:
-        ;
-        ; Read the last section
-        ;
-        mov     ax, 0x3f00
-        mov     bx, [es:file_handle]
-        mov     cx, [es:size_mod_4k]
-        int     0x21
-	jnc	.last_read_good
-        jmp	.error
-.last_read_good:
-
-.no_data:
-	;
-	;  Zero out uninitialized data sections
-	;
-	lds	bx, [es:cur_section]
-mov	eax, dword [bx + se_chars]
-DPRINT	'section chars %A', 13, 10, 0
-	test	dword [bx + se_chars], 0x80
-	jz	.no_fill
+	mov     edx, 0
+	mov     ax, 0x4200
+	mov     dx, 0
+	mov     cx, 0
+	mov     bx, [_current_filehandle]
+	int     0x21
+	jnc     .start_seek
+	mov     dx, error_file_seek_failed
+	jmp     near .error
+.start_seek      	
 	
-	;
-	;  Compute size of section to zero fill
-	;
-	mov	eax, [bx + se_vsz]
-	cmp	eax, 0
-	je	.no_fill
-        mov     [es:size_mod_4k], ax
-        and     word [es:size_mod_4k], 0x0fff
-        shr     eax, 12
-        mov     [size_div_4k], eax
+	mov     edi, [next_load_base]
+	
+.read_next:
+        cmp     dword [_current_size], 32768
+	jle     .read_tail
 
-	;
-	;  Load the base pointer
-	;
-        mov     edi,[es:next_load_base]
-        call    convert_to_seg
-        mov     dx, di
-        push    fs
-        pop     ds
-
-.do_fill:
-        ;
-        ; Check if we have read it all
-        ;
-        mov     eax, [es:size_div_4k]
-        cmp     eax, 0
-        je      .fill_done
-
-        ;
-        ; Zero out a chunk
-        ;
-	mov	ax, 0x0000	
-        mov     cx, 0x1000
-	push	di
-	push	es
+	;;
+	;; Read in the file data
+	;;
 	push	ds
-	pop	es
-rep	stosb
-	pop	es
-	pop	di
-
-        ;
-        ; We move onto the next pointer by altering ds
-        ;
-        mov     ax, ds
-        add     ax, 0x0100
-        mov     ds, ax
-        dec     word [es:size_div_4k]
-        jmp     .do_fill
-
-.fill_done:
-        ;
-        ; Read the last section
-        ;
-	mov	ax, 0x0000	
-        mov     cx, [es:size_mod_4k]
-	push	di
-	push	es
-	push	ds
-	pop	es
-rep	stosb
-	pop	es
-	pop	di
-
-.no_fill:
-
-	;
-	;  Update raw data offset in section header
-	;
-	lds	bx, [es:cur_section]
-	mov	eax, [es:next_load_base]
-	sub	eax, [es:load_base]
-DPRINT	'new raw offset %A ', 0
-	mov	[bx + se_raw_ofs], eax
-	
-	;
-	;  Update next_load_base
-	;
-	mov	eax, [bx + se_vsz]
-DPRINT	'scn virtual sz %A ', 0
-	and	eax, 0xfffff000
-	add	dword [es:next_load_base], eax
-	test	dword [bx + se_vsz], 0xfff
-	jz	.even_scn
-	add	dword [es:next_load_base], 0x1000
-
-.even_scn:
-mov	eax, [es:next_load_base]
-DPRINT	'next load base %A', 13, 10, 0
-
-	;
-	;  Setup for next section or exit loop
-	;
-	dec	word [es:num_sections]
-	jz	.scn_done
-	add	bx, SCN_HDR_size
-	mov	[es:cur_section], bx
-	jmp	.scn_loop
-
-.scn_done:
-	;
-	;  Update module_length
-	;
-	mov	eax, [es:next_load_base]
-	sub	eax, [es:load_base]
-	mov	esi, [es:_nr_files]
-	mov	[es:_module_lengths + esi * 4], eax
-
-        inc     dword [es:_nr_files]
-
+	mov	ah, 0x3f
+	mov	bx, [_current_filehandle]
+	mov	cx, 32768
+	mov     dx, 0x9000
+	mov	ds, dx
+	mov	dx, 0
+	int	0x21
+	jnc     .read_data_succeeded
 	pop	ds
-	pop	dx
+	mov     dx, error_file_read_failed
+	jmp	.error
+.read_data_succeeded:
+        mov     ah,02h
+        mov     dl,'#'
+        int     021h
+
+	;;
+	;; Copy the file data just read in to high memory
+	;;
+	pop	ds
+	mov     esi, 0x90000
+	mov	ecx, 32768
+	call	_himem_copy
+        mov     ah,02h
+        mov     dl,'$'
+        int     021h
+
+        sub     dword [_current_size], 32768
+	jmp     .read_next
+
+.read_tail
+	;;
+	;; Read in the tailing part of the section data
+	;;
+	push	ds
+	mov     eax, [_current_size]
+	mov     cx, ax
+	mov	ah, 0x3f
+	mov	bx, [_current_filehandle]
+	mov	dx, 0x9000
+	mov	ds, dx
+	mov	dx, 0
+	int	0x21
+	jnc     .section_read_last_data_succeeded
+	pop	ds
+	mov     dx, error_file_read_failed
+	jmp	.error
+.section_read_last_data_succeeded:
+        mov     ah,02h
+        mov     dl,'#'
+        int     021h
+
+	;;
+	;; Copy the tailing part to high memory
+	;;
+	pop	ds
+	mov	ecx, [_current_size]
+	mov     esi, 0x90000
+	call	_himem_copy
+        mov     ah,02h
+        mov     dl,'$'
+        int     021h
+
+.do_round:
+	test    di, 0xfff
+	jz      .no_round
+	and     di, 0xf000
+	add     edi, 0x1000
+.no_round
+	mov     bx, [_multiboot_mods_count]
+	imul    bx, bx, multiboot_module_size
+	add     bx, _multiboot_modules
+	
+	mov     edx, [next_load_base]
+	mov     [bx + mbm_mod_start], edx
+        mov     [bx + mbm_mod_end], edi
+	mov     [next_load_base], edi
+	mov     dword [bx + mbm_reserved], 0
+	
+	inc     dword [_multiboot_mods_count]
+        
+	mov     eax, 1
+	
+	ret	
+
+	;;
+	;; On error print a message and return zero
+	;; 
+.error:	
+        mov     ah, 0x9
+	int     0x21
+	mov	eax, 0
 	ret
 
-.error:
-	push	es
+	;;
+	;; Copy to high memory
+	;; ARGUMENTS
+	;;	ESI = Source address
+	;;	EDI = Destination address
+	;;	ECX = Byte count
+	;; RETURNS
+	;;	EDI = End of the destination region
+	;;	ECX = 0
+	;; 
+_himem_copy:
+	push	ds		; Save DS
+	push	es		; Save ES
+	push	eax
+	push	esi
+        
+	cmp     eax, 0
+	je      .l3
+	
+	cli			; No interrupts during pmode
+	
+	mov	eax, cr0	; Entered protected mode
+	or	eax, 0x1
+	mov	cr0, eax
+
+	jmp	.l1	        ; Flush prefetch queue
+.l1:	
+	
+	mov	eax, KERNEL_DS	; Load DS with a suitable selector
+	mov	ds, ax
+	mov	eax, KERNEL_DS
+	mov	es, ax
+        
+	cld
+        a32 rep movsb
+;.l2:
+;	mov	al, [esi]	; Copy the data
+;	mov	[edi], al
+;	dec	ecx
+;	inc	esi
+;	inc	edi
+;	cmp	ecx, 0
+;	jne	.l2
+
+	mov	eax, cr0	; Leave protected mode
+	and	eax, 0xfffffffe
+	mov	cr0, eax
+	
+	jmp     .l3
+.l3:	
+        sti
+	pop     esi
+	pop	eax
+	pop	es
 	pop	ds
-        mov     di, err_msg
-        call    print_string
-        jmp     exit
+	ret
 
-        ;
-	; copy 'ecx' bytes from 'es:esi' to logical address 'edi'
-	; 'eax' is destroyed
-	;
-himem_copy:
-        push    ds
+	;;
+	;; Zero high memory
+	;; ARGUMENTS
+	;;	EDI = Destination address
+	;;	ECX = Byte count
+	;; RETURNS
+	;;	EDI = End of the destination region
+	;;	ECX = 0
+	;; 
+_himem_zero:
+	push	ds		; Save DS
+	push	es
+	push	eax
 
-        ;
-        ; load gdt
-        ;
-        lgdt    [gdt_descr]
+        mov     [.old_cs], cs
 
-        ;       
-        ; Enter pmode and clear prefetch queue
-        ;
-        mov     eax,cr0
-        or      eax,0x1
-        mov     cr0,eax
-        jmp     himem_copy_next
-himem_copy_next:
-
-        ;
-	; Load the ds register with a segment suitable for accessing
-	; logical addresses
-	;
-        mov     ax, KERNEL_DS
-	mov     ds, ax
-
-        ;
-	; Copy the data
-	;
-himem_copy_l1:
-        mov     al, [es:si]
-	mov     [ds:edi], al
-	dec     ecx
-	jnz     himem_copy_l1
+	cli			; No interrupts during pmode
 	
-	;
-	; Exit protected mode
-	;
-	mov     eax,cr0
-	and     eax,0xfffffffe
-	mov     cr0,eax
-	jmp     himem_copy_next1
-himem_copy_next1:	
+	mov	eax, cr0	; Entered protected mode
+	or	eax, 0x1
+	mov	cr0, eax
+
+	jmp	LOADER_CS:.l1	; Flush prefetch queue
+.l1:	
 	
-	;
-	; Restore ds
-	;
-        pop     ds	
+	mov	eax, KERNEL_DS	; Load DS with a suitable selector
+	mov	ds, ax
+	mov	eax, LOADER_DS
+	mov	es, ax
+	
+.l2:
+	mov	byte [ds:edi], 0
+	dec	ecx
+	inc	si
+	inc	edi
+	cmp	ecx, 0
+	jne	.l2
+
+	mov	eax, cr0	; Leave protected mode
+	and	eax, 0xfffffffe
+	mov	cr0, eax
+
+	db	0xea
+	dw	.l3
+.old_cs:
+	dw	0x0
+.l3
+        sti
+	pop	eax
+	pop	es
+	pop	ds
 	ret
 
 ;
-; Handle of the currently open file
+; Loading message
 ;
-file_handle dw 0
-
-;
-; Size of the current file mod 4k
-;
-size_mod_4k dw 0
-
-;
-; Size of the current file divided by 4k
-;
-size_div_4k dd 0
-
-load_base	dd	0
-num_sections	dw	0
-cur_section	dd	0
-
-;
-;
-;
-last_addr dw 0
-
-;
-; Generic error message
-;
-err_msg		db	'Error during operation',10, 13, 0
-bad_mz_msg	db	'Module has bad MZ header', 10, 13, 0
-bad_pe_msg	db	'Module has bad PE header', 10, 13, 0
-rostitle	db	'',0
 loading_msg	db	'Loading: ',0
-death_msg	db	'death', 0
 
-filelength_lo	dw 0
-filelength_hi	dw 0
-
-kernel_page_directory_base dd 0
-system_page_table_base dd 0
-lowmem_page_table_base dd 0
+;; 
+;; Next free address in high memory
+;;
 next_load_base dd 0
-_start_kernel dd 0
-
-boot_param_struct_base dd 0
-
-;
-; These variables are passed to the kernel (as a structure)
-;
-align 4
-_boot_param_struct:
-_magic:
-        dd 0
-_cursorx:
-        dd 0
-_cursory:
-        dd 0
-_nr_files:
-        dd 0
-_start_mem:
-        dd 0
-_end_mem:
-        dd 0
-_module_lengths:
-        times 64 dd 0
-_kernel_parameters:
-        times 256 db 0
-_end_boot_param_struct
              
 ;
 ; Needed for enabling the a20 address line
@@ -946,281 +937,117 @@ empty_8042:
 align 8
 gdt_descr:
 gdt_limit:
-        dw (3*8)-1
+        dw (5*8)-1
 gdt_base:
-        dd gdt
+        dd _gdt
 
-
-_to_pmode:
-        ;
-        ; Setup kernel parameters
-        ;
-        mov     dword [_magic],0xdeadbeef
-
-        ;
-        ; Save cursor position
-        ;
-        mov     ax,3          ;! Reset video mode
-        int     10h
-
-
-        mov     bl,10
-        mov     ah,12
-        int     10h
-        
-	mov     ax,1112h      ;! Use 8x8 font
-	xor	bl,bl
-	int     10h
-        mov     ax,1200h      ;! Use alternate print screen
-        mov     bl,20h
-        int     10h
-        mov     ah,1h         ;! Define cursor (scan lines 6 to 7)
-        mov     cx,0607h
-        int     10h
-
-        mov     ah,1
-        mov     cx,0600h
-        int     10h
-
-        MOV       AH,6        ;SCROLL ACTIVE PAGE UP
-        MOV       AL,32H     ;CLEAR 25 LINES
-        MOV       CX,0H       ;UPPER LEFT OF SCROLL
-        MOV       DX,314FH    ;LOWER RIGHT OF SCROLL
-        MOV       BH,1*10h+1       ;USE NORMAL ATTRIBUTE ON BLANKED LINE
-        INT       10H         ;VIDEO-IO
-
-
-        mov     dx,0
-        mov     dh,0
-
-        mov     ah,02h
-        mov     bh,0
-        int     10h
-
-        mov     dx,0
-        mov     dh,0
-
-        mov     ah,02h
-        mov     bh,0
-        int     010h
-          
-        mov     ah,03h
-        mov     bh,0h
-        int     010h
-        movzx   eax,dl
-        mov     [_cursorx],eax
-        movzx   eax,dh
-        mov     [_cursory],eax
-
-        mov     bx,ds
-        movzx   eax,bx
-        shl     eax,4
-        add     eax,_boot_param_struct
-        mov     [boot_param_struct_base],eax        
-
-        cli
-
-        ;
-        ; Zero out the kernel page directory
-        ;
-        ;
-        mov     edi,[kernel_page_directory_base]
-        call    convert_to_seg
-
-        mov     cx,1024
-l10:
-        mov     dword [fs:di],0
-        add     di,4
-        loop    l10
-
-        ;
-        ; Map in the lowmem page table (and reuse it for the identity map)
-        ;
-        mov     edi,[kernel_page_directory_base]
-        call    convert_to_seg
-
-        mov     eax,[lowmem_page_table_base]
-        add     eax,07h
-        mov     [fs:di],eax
-        mov     [fs:di+(0xd0000000/(1024*1024))],eax
-	
-	;
-	; Map the page tables from the page table
-	;
-	mov     eax,[kernel_page_directory_base]
-	add     eax,07h
-	mov     [fs:di+(0xf0000000/(1024*1024))],eax
-	
-        ;
-        ; Map in the kernel page table
-        ;
-        mov     eax,[system_page_table_base]
-        add     eax,07h
-        mov     [fs:di+3072],eax
-
-        ;
-        ; Setup the lowmem page table
-        ;
-        mov     edi,[lowmem_page_table_base]
-        call    convert_to_seg
-
-        mov     ebx,0
-l9:
-        mov     eax,ebx
-        shl     eax,12        ; ebx = ebx * 4096
-        add     eax,07h       ; user, rw, present
-        mov     [fs:edi+ebx*4],eax
-        inc     ebx
-        cmp     ebx,1024
-        jl      l9
-
-        ;
-        ; Setup the system page table
-        ;
-        mov     edi,[system_page_table_base]
-        call    convert_to_seg
-
-        mov     eax,07h
-l8:
-        mov     edx,eax
-        add     edx,[_start_kernel]
-        mov     [fs:edi],edx
-        add     edi,4
-        add     eax,1000h
-        cmp     eax,100007h
-        jl      l8
-        
-        ;
-        ; Load the page directory into cr3
-        ;
-        mov     eax,[kernel_page_directory_base]
-        mov     cr3,eax
-
-        ;
-        ; Enable the A20 address line (to allow access to over 1mb)
-        ;
-	call	empty_8042
-        mov     al,0D1h                ; command write
-        out     064h,al
-	call	empty_8042
-        mov     al,0DFh                ; A20 on
-        out     060h,al
-	call	empty_8042
-
-        ;
-        ; Reprogram the PIC because they overlap the Intel defined
-        ; exceptions 
-        ;
-        mov     al,011h                ; initialization sequence
-        out     020h,al                ; send it to 8259A-1
-        dw   0x00eb,0x00eb           ; jmp $+2, jmp $+2
-        out     0A0h,al                ; and to 8259A-2
-        dw   0x00eb,0x00eb
-        mov     al,040h                ; start of hardware int's (0x20)
-        out     021h,al
-        dw   0x00eb,0x00eb
-        mov     al,048h                ; start of hardware int's 2 (0x28)
-        out     0A1h,al
-        dw   0x00eb,0x00eb
-        mov     al,04h                ; 8259-1 is master
-        out     021h,al
-        dw  0x00eb,0x00eb
-        mov     al,002h                ; 8259-2 is slave
-        out     0A1h,al
-        dw   0x00eb,0x00eb
-        mov     al,01h                ; 8086 mode for both
-        out     021h,al
-        dw  0x00eb,0x00eb
-        out     0A1h,al
-        dw   0x00eb,0x00eb
-        mov     al,0FFh                ; mask off all interrupts for now
-        out     021h,al
-        dw   0x00eb,0x00eb
-        out     0A1h,al
-
-        ;
-        ; Load stack
-        ;
-        mov     bx,ds
-        movzx   eax,bx
-        shl     eax,4
-        add     eax,real_stack_end
-        mov     [real_stack_base],eax
-        mov     esp,[real_stack_base]
-        mov     edx,[boot_param_struct_base]
-
-        ;
-        ; load gdt
-        ;
-        lgdt    [gdt_descr]
-
-        ;       
-        ; Enter pmode and clear prefetch queue
-        ;
-        mov     eax,cr0
-        or      eax,0x80010001
-        mov     cr0,eax
-        jmp     next
-next:
-        ;
-        ; NOTE: This must be position independant (no references to
-        ; non absolute variables)
-        ;
-
-        ;
-        ; Initalize segment registers
-        ;
-        mov     ax,KERNEL_DS
-        mov     ds,ax
-        mov     ss,ax        
-        mov     es,ax
-        mov     fs,ax
-        mov     gs,ax
-
-        ;
-        ; Initalize eflags
-        ;
-        push    dword 0
-        popf
-
-        ;
-        ; Jump to start of 32 bit code at c0000000
-        ;
-        push    edx
-        push    dword 0
-        jmp     dword KERNEL_CS:(KERNEL_BASE+0x1000)
-
-
-;
-; Our initial stack
-;
+	;; 
+	;; Our initial stack
+	;; 
 real_stack times 1024 db 0
 real_stack_end:
 
-real_stack_base dd 0
+	;;
+	;; Boot information structure
+	;;
+_multiboot_info_base:
+        dd      0x0
+
+_multiboot_info:	
+_multiboot_flags:	
+	dd	0x0
+_multiboot_mem_lower:	
+	dd	0x0
+_multiboot_mem_upper:	
+	dd	0x0
+_multiboot_boot_device:	
+	dd	0x0
+_multiboot_cmdline:	
+	dd	0x0
+_multiboot_mods_count:	
+	dd	0x0
+_multiboot_mods_addr:	
+	dd	0x0
+_multiboot_syms:	
+	times 12 db 0
+_multiboot_mmap_length:	
+	dd	0x0
+_multiboot_mmap_addr:	
+	dd	0x0
+_multiboot_drives_count:	
+	dd	0x0
+_multiboot_drives_addr:
+	dd	0x0
+_multiboot_config_table:
+	dd	0x0
+_multiboot_boot_loader_name:
+	dd	0x0
+_multiboot_apm_table:
+	dd	0x0
+
+_multiboot_modules:	
+	times (64*multiboot_module_size) db 0	
+_multiboot_module_strings:
+	times (64*256) db 0
+	
+_multiboot_kernel_cmdline:
+        times 255 db 0
+
+	;;
+	;; Global descriptor table
+	;; 
+_gdt:	
+	dw	0x0		; Zero descriptor
+	dw	0x0
+	dw	0x0
+	dw	0x0
+
+	dw	0xffff		; Kernel code descriptor
+	dw	0x0000
+	dw	0x9a00
+	dw	0x00cf
+
+	dw	0xffff		;  Kernel data descriptor
+	dw	0x0000
+	dw	0x9200
+	dw	0x00cf
+
+	dw	0xffff		;  Loader code descriptor
+_loader_code_base_0_15:
+	dw	0x0000
+_loader_code_base_16_23:
+	db      0x00
+	db      0x9a
+	dw	0x0000
+	
+	dw	0xffff		;  Loader data descriptor
+_loader_data_base_0_15:
+	dw	0x0000
+_loader_data_base_16_23:
+	db      0x00
+	db      0x92
+	dw	0x0000
+
+error_pmode_already:
+        db      'Error: The processor is already in protected mode'
+	db      0xa, 0xd, '$'
+error_file_open_failed:
+        db      'Error: Failed to open file'
+        db      0xa, 0xd, '$'
+error_file_seek_failed:
+        db      'Error: File seek failed'
+	db      0xa, 0xd, '$'
+error_file_read_failed:
+        db      'Error: File read failed'
+	db      0xa, 0xd, '$'
+error_coff_load_failed:
+        db      'Error: Failed to load COFF file'
+	db      0xa, 0xd, '$'
+error_bad_mz:
+        db      'Error: Bad DOS EXE magic'
+	db      0xa, 0xd, '$'
 
 
-;
-; Global descriptor table
-;
-align 8
-gdt:
-        dw 0               ; Zero descriptor
-        dw 0
-        dw 0
-        dw 0
-                                
-        dw 0ffffh          ; Kernel code descriptor 
-        dw 00000h          ; 
-        dw 09a00h          ; base 0h limit 4gb
-        dw 000cfh
-                               
-        dw 0ffffh          ; Kernel data descriptor
-        dw 00000h          ; 
-        dw 09200h          ; base 0h limit 4gb
-        dw 000cfh
-
-_end:
 
 
 

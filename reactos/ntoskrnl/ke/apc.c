@@ -45,8 +45,26 @@ VOID KeCallKernelRoutineApc(PKAPC Apc)
    DPRINT("Finished KeCallKernelRoutineApc()\n");
 }
 
-BOOLEAN KiTestAlert(PKTHREAD Thread,
-		    PCONTEXT UserContext)
+BOOLEAN KiTestAlert(VOID)
+/*
+ * FUNCTION: Tests whether there are any pending APCs for the curren thread
+ * and if so the APCs will be delivered on exit from kernel mode
+ */
+{
+   KIRQL oldIrql; 
+   
+   KeAcquireSpinLock(&PiApcLock, &oldIrql);
+   if (IsListEmpty(&KeGetCurrentThread()->ApcState.ApcListHead[1]))
+     {
+	KeReleaseSpinLock(&PiApcLock, oldIrql);
+	return(FALSE);
+     }
+   KeGetCurrentThread()->ApcState.UserApcPending = 1;
+   KeReleaseSpinLock(&PiApcLock, oldIrql);
+   return(TRUE);
+}
+
+BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
 /*
  * FUNCTION: Tests whether there are any pending APCs for the current thread
  * and if so the APCs will be delivered on exit from kernel mode.
@@ -55,6 +73,7 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
  *        UserContext = The user context saved on entry to kernel mode
  */
 {
+#if 0   
    PLIST_ENTRY current_entry;
    PKAPC Apc;
    PULONG Esp;
@@ -63,8 +82,10 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    ULONG Top;
    BOOL ret = FALSE;
    PETHREAD EThread;
+   PKTHREAD Thread;
    
-   DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
+   DPRINT("KiDeliverUserApc(TrapFrame %x)\n", TrapFrame);
+   Thread = KeGetCurrentThread();
    while(1)
      {
        KeAcquireSpinLock(&PiApcLock, &oldlvl);
@@ -119,6 +140,8 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
 	KeReleaseSpinLock(&PiThreadListLock, oldlvl);
      }
    return ret;
+#endif
+   return(TRUE);
 }
 
 VOID STDCALL KiDeliverApc(ULONG Unknown1,
@@ -315,7 +338,7 @@ NTSTATUS STDCALL NtQueueApcThread(HANDLE			ThreadHandle,
 
 NTSTATUS STDCALL NtTestAlert(VOID)
 {
-   KiTestAlert(KeGetCurrentThread(),NULL);
+   KiTestAlert();
    return(STATUS_SUCCESS);
 }
 

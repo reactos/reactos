@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.31 2000/07/30 18:22:34 dwelch Exp $
+/* $Id: create.c,v 1.32 2000/10/07 13:41:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,12 +81,12 @@ IopCreateFile (
 		DPRINT("DeviceObject was NULL\n");
 		return (STATUS_SUCCESS);
 	}
-	if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
-	{
-		DPRINT ("Parent is not a device type\n");
-		return (STATUS_UNSUCCESSFUL);
-	}
-	Status = ObReferenceObjectByPointer (
+   if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
+     {
+	DPRINT ("Parent is not a device type\n");
+	return (STATUS_UNSUCCESSFUL);
+     }
+   Status = ObReferenceObjectByPointer (
 			DeviceObject,
 			STANDARD_RIGHTS_REQUIRED,
 			IoDeviceObjectType,

@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.4 2000/06/09 20:07:20 ekohl Exp $
+/* $Id: spinlock.c,v 1.5 2000/10/07 13:41:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,13 +22,10 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN
-STDCALL
-KeSynchronizeExecution (
-	PKINTERRUPT		Interrupt,
-	PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
-	PVOID			SynchronizeContext
-	)
+BOOLEAN STDCALL
+KeSynchronizeExecution (PKINTERRUPT		Interrupt,
+			PKSYNCHRONIZE_ROUTINE	SynchronizeRoutine,
+			PVOID			SynchronizeContext)
 /*
  * FUNCTION: Synchronizes the execution of a given routine with the ISR
  * of a given interrupt object
@@ -54,11 +51,8 @@ KeSynchronizeExecution (
    return(ret);
 }
 
-VOID
-STDCALL
-KeInitializeSpinLock (
-	PKSPIN_LOCK	SpinLock
-	)
+VOID STDCALL
+KeInitializeSpinLock (PKSPIN_LOCK	SpinLock)
 /*
  * FUNCTION: Initalizes a spinlock
  * ARGUMENTS:
@@ -68,11 +62,8 @@ KeInitializeSpinLock (
    SpinLock->Lock = 0;
 }
 
-VOID
-STDCALL
-KeAcquireSpinLockAtDpcLevel (
-	PKSPIN_LOCK	SpinLock
-	)
+VOID STDCALL
+KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
  * FUNCTION: Acquires a spinlock when the caller is already running at 
  * dispatch level
@@ -89,11 +80,8 @@ KeAcquireSpinLockAtDpcLevel (
      }
 }
 
-VOID
-STDCALL
-KeReleaseSpinLockFromDpcLevel (
-	PKSPIN_LOCK	SpinLock
-	)
+VOID STDCALL
+KeReleaseSpinLockFromDpcLevel (PKSPIN_LOCK	SpinLock)
 /*
  * FUNCTION: Releases a spinlock when the caller was running at dispatch
  * level before acquiring it

@@ -59,9 +59,19 @@ NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
 	break;
 	
       case ThreadPriority:
-	KeSetPriorityThread(&Thread->Tcb, *(KPRIORITY *)ThreadInformation);
-	Status = STATUS_SUCCESS;
-	break;
+	  {
+	     KPRIORITY Priority;
+	     
+	     Priority = *(KPRIORITY*)ThreadInformation;
+	     if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
+	       {
+		  Status = STATUS_INVALID_PARAMETER;
+		  break;
+	       }
+	     KeSetPriorityThread(&Thread->Tcb, Priority);
+	     Status = STATUS_SUCCESS;
+	     break;
+	  }
 	
       case ThreadBasePriority:
 	break;
@@ -105,8 +115,7 @@ NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 NtQueryInformationThread (
 	IN	HANDLE		ThreadHandle,
 	IN	THREADINFOCLASS	ThreadInformationClass,
@@ -191,22 +200,16 @@ VOID KeSetPreviousMode(ULONG Mode)
    PsGetCurrentThread()->Tcb.PreviousMode = Mode;
 }
 
-ULONG
-STDCALL
-KeGetPreviousMode (
-	VOID
-	)
+ULONG STDCALL
+KeGetPreviousMode (VOID)
 {
    /* CurrentThread is in ntoskrnl/ps/thread.c */
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 
-ULONG
-STDCALL
-ExGetPreviousMode (
-	VOID
-	)
+ULONG STDCALL
+ExGetPreviousMode (VOID)
 {
    /* CurrentThread is in ntoskrnl/ps/thread.c */
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;

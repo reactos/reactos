@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.10 2000/08/18 22:26:58 dwelch Exp $
+# $Id: makefile,v 1.11 2000/10/07 13:41:45 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -28,9 +28,9 @@ $(NAPI_FILES): $(SYSTEM_CALLS_DB) $(TARGET)$(EXE_POSTFIX)
 		$(KERNEL_SERVICE_TABLE) \
 		$(KERNEL_ZW_CALLS)
 
-# (rjj) i removed the following option from line below: -If:\gnu\mingw32\include 
+# (rjj) i removed the following option from line below: -If:\gnu\mingw32\include
 $(TARGET)$(EXE_POSTFIX): $(TARGET).c
-	$(NATIVE_CC) -g $(TARGET).c -o $(TARGET)$(EXE_POSTFIX)	
+	$(HOST_CC) -g $(TARGET).c -o $(TARGET)$(EXE_POSTFIX)	
 
 clean:
 	- $(RM) $(TARGET)$(EXE_POSTFIX)

@@ -47,51 +47,51 @@ VOID HalTaskSwitch(PKTHREAD thread)
  * again (possibly never)
  */
 {
-//   PETHREAD Thread;
-//   PVOID Teb;
+   if (KeGetCurrentIrql() != DISPATCH_LEVEL)
+     {
+	DPRINT1("HalTaskSwitch: Bad IRQL on entry\n");
+	KeBugCheck(0);
+     }
    
-   /* Set the base of the TEB selector to the base of the TEB for the
-    * new thread
+   /*
+    * This sequence must be atomic with respect to interrupts on the local
+    * processor because an interrupt handler might want to use current thread
+    * information in the PCR. We wouldn't switch processors because we are
+    * at DISPATCH_LEVEL.
+    */
+   __asm__("cli\n\t");
+   
+   /* 
+    * Set the base of the TEB selector to the base of the TEB for the
+    * new thread. This can't be done on the other side of the TSS jump
+    * because the new thread might be starting at different point.
     */
    KeSetBaseGdtSelector(TEB_SELECTOR, thread->Teb);
-//   DPRINT1("esp0 %x esp %x tid %d\n", 
-//	   thread->Context.esp0,
-//	   thread->Context.esp,
-//	   ((PETHREAD)thread)->Cid.UniqueThread);
+   /*
+    * Set the current thread information in the PCR. 
+    */
+   CURRENT_KPCR->CurrentThread = (PVOID)thread;
    /* Switch to the new thread's context and stack */
-   __asm__("pushfl\n\t"
-	   "cli\n\t"
-	   "ljmp %0\n\t"
-	   "popfl\n\t"
+   __asm__("ljmp %0\n\t"
 	   : /* No outputs */
 	   : "m" (*(((unsigned char *)(&(thread->Context.nr)))-4) )
 	   : "ax","dx");
-   /* Reload the TEB selector */
+   /* 
+    * Load the PCR selector. 
+    */
    __asm__("movw %0, %%ax\n\t"
 	   "movw %%ax, %%fs\n\t"
 	   : /* No outputs */
-	   : "i" (TEB_SELECTOR)
+	   : "i" (PCR_SELECTOR)
 	   : "ax");
+   /*
+    * Allow the new thread to use the FPU
+    */
    __asm__("clts\n\t");
-
-#if 0
-   Thread = PsGetCurrentThread();
-   if (Thread->Cid.UniqueThread != (HANDLE)1)
-     {
-//	DbgPrint("Scheduling thread %x (id %d) teb %x\n",Thread, 
-//		 Thread->Cid.UniqueThread, Thread->Tcb.Teb);
-     }
-   
-   if (Thread->Tcb.Teb != NULL)
-     {
-//	DbgPrint("cr3 %x\n", Thread->ThreadsProcess->Pcb.PageTableDirectory);
-	__asm__("movl %%fs:0x18, %0\n\t"
-		: "=g" (Teb)
-		: /* No inputs */
-		);
-//	DbgPrint("Teb %x\n", Teb);
-     }
-#endif
+   /*
+    * Allow local interrupts again
+    */
+   __asm__("sti\n\t");
 }
 
 #define FLAG_NT (1<<14)

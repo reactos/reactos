@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.35 2000/09/12 10:12:12 jean Exp $
+/* $Id: ide.c,v 1.36 2000/10/07 13:41:55 dwelch Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -188,7 +188,7 @@ static VOID IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
 
 //  ----------------------------------------------------------------  Inlines
 
-extern inline void 
+void
 IDESwapBytePairs(char *Buf, 
                  int Cnt) 
 {

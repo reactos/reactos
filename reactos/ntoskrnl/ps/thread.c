@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.55 2000/09/24 23:55:21 phreak Exp $
+/* $Id: thread.c,v 1.56 2000/10/07 13:41:54 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -38,16 +38,13 @@
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
-#define NR_THREAD_PRIORITY_LEVELS (32)
-#define THREAD_PRIORITY_MAX (15)
-
 KSPIN_LOCK PiThreadListLock;
 
 /*
  * PURPOSE: List of threads associated with each priority level
  */
 LIST_ENTRY PiThreadListHead;
-static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS];
+static LIST_ENTRY PriorityListHead[MAXIMUM_PRIORITY];
 static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
@@ -116,7 +113,6 @@ PETHREAD STDCALL PsGetCurrentThread(VOID)
    return(CurrentThread);
 }
 
-
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
 {
    return(PsGetCurrentThread()->Cid.UniqueThread);
@@ -124,11 +120,20 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
 
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
 {
-   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
-	  Thread);
-   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
-   InsertTailList(&PriorityListHead[THREAD_PRIORITY_MAX+Priority],
-		  &Thread->Tcb.QueueListEntry);
+//   DPRINT("PsInsertIntoThreadList(Priority %x, Thread %x)\n",Priority,
+//	  Thread);
+//   DPRINT("Offset %x\n", THREAD_PRIORITY_MAX + Priority);
+   
+   if (PiThreadListLock.Lock == 0)
+     {
+	KeBugCheck(0);
+     }
+   if (Priority >= MAXIMUM_PRIORITY || Priority < 0)
+     {
+	DPRINT1("Invalid thread priority\n");
+	KeBugCheck(0);
+     }
+   InsertTailList(&PriorityListHead[Priority], &Thread->Tcb.QueueListEntry);
    PiNrRunnableThreads++;
 }
 
@@ -171,10 +176,12 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority)
    PETHREAD current;
    
 //   DPRINT("PsScanThreadList(Priority %d)\n",Priority);
-   
-   current_entry = RemoveHeadList(
-			    &PriorityListHead[THREAD_PRIORITY_MAX + Priority]);
-   if (current_entry != &PriorityListHead[THREAD_PRIORITY_MAX + Priority])
+   if (PiThreadListLock.Lock == 0)
+     {
+	KeBugCheck(0);
+     }
+   current_entry = RemoveHeadList(&PriorityListHead[Priority]);
+   if (current_entry != &PriorityListHead[Priority])
      {	
 	current = CONTAINING_RECORD(current_entry, ETHREAD, 
 				    Tcb.QueueListEntry);
@@ -194,15 +201,15 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    PETHREAD Candidate;
    
    CurrentThread->Tcb.State = NewThreadStatus;
-   PiNrRunnableThreads--;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
      {
+	PiNrRunnableThreads--;
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
 			       CurrentThread);
      }
    
-   for (CurrentPriority = (THREAD_PRIORITY_TIME_CRITICAL + 1);
-	(CurrentPriority >= THREAD_PRIORITY_IDLE);
+   for (CurrentPriority = HIGH_PRIORITY;
+	CurrentPriority >= LOW_PRIORITY;
 	CurrentPriority--)
      {
 	Candidate = PsScanThreadList(CurrentPriority);
@@ -219,7 +226,7 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    	     
 	     CurrentThread = Candidate;
 	     
-	     KeReleaseSpinLockFromDpcLevel( &PiThreadListLock );
+	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
 	     HalTaskSwitch(&CurrentThread->Tcb);
 	     PsReapThreads();
 	     return;
@@ -239,10 +246,12 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
      }   
    
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);  
-   CurrentThread->Tcb.WaitIrql = oldIrql;		// save wait Irql
+   /*
+    * Save wait IrqL
+    */
+   CurrentThread->Tcb.WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
-//   DPRINT("oldIrql %d\n",oldIrql);
 }
 
 /*
@@ -366,11 +375,10 @@ VOID PsInitThreadManagment(VOID)
 {
    PETHREAD FirstThread;
    ULONG i;
-   ANSI_STRING AnsiString;
    HANDLE FirstThreadHandle;
    
    KeInitializeSpinLock(&PiThreadListLock);
-   for (i=0; i<NR_THREAD_PRIORITY_LEVELS; i++)
+   for (i=0; i < MAXIMUM_PRIORITY; i++)
      {
 	InitializeListHead(&PriorityListHead[i]);
      }
@@ -378,8 +386,7 @@ VOID PsInitThreadManagment(VOID)
    
    PsThreadType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitAnsiString(&AnsiString,"Thread");
-   RtlAnsiStringToUnicodeString(&PsThreadType->TypeName,&AnsiString,TRUE);
+   RtlInitUnicodeString(&PsThreadType->TypeName, L"Thread");
    
    PsThreadType->TotalObjects = 0;
    PsThreadType->TotalHandles = 0;
@@ -402,12 +409,12 @@ VOID PsInitThreadManagment(VOID)
    HalInitFirstTask(FirstThread);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
+   CurrentThread = FirstThread;
+   CURRENT_KPCR->CurrentThread = (PVOID)FirstThread;
    ZwClose(FirstThreadHandle);
    
    DPRINT("FirstThread %x\n",FirstThread);
-   
-   CurrentThread = FirstThread;
-   
+      
    DoneInitYet = TRUE;
 }
 
@@ -416,45 +423,41 @@ VOID PsInitThreadManagment(VOID)
  * Sets thread's base priority relative to the process' base priority
  * Should only be passed in THREAD_PRIORITY_ constants in pstypes.h
  */
-LONG
-STDCALL
-KeSetBasePriorityThread (
-	PKTHREAD	Thread,
-	LONG		Increment
-	)
+LONG STDCALL
+KeSetBasePriorityThread (PKTHREAD	Thread,
+			 LONG		Increment)
 {
-   Thread->BasePriority = ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
-   if( Thread->BasePriority < 0 )
-	   Thread->BasePriority = 0;
-   else if( Thread->BasePriority >= NR_THREAD_PRIORITY_LEVELS )
-	   Thread->BasePriority = NR_THREAD_PRIORITY_LEVELS - 1;
+   Thread->BasePriority = 
+     ((PETHREAD)Thread)->ThreadsProcess->Pcb.BasePriority + Increment;
+   if (Thread->BasePriority < LOW_PRIORITY)
+     Thread->BasePriority = LOW_PRIORITY;
+   else if (Thread->BasePriority >= MAXIMUM_PRIORITY)
+	   Thread->BasePriority = HIGH_PRIORITY;
    Thread->Priority = Thread->BasePriority;
    return 1;
 }
 
 
-KPRIORITY
-STDCALL
-KeSetPriorityThread (
-	PKTHREAD	Thread,
-	KPRIORITY	Priority
-	)
+KPRIORITY STDCALL
+KeSetPriorityThread (PKTHREAD Thread, KPRIORITY Priority)
 {
    KPRIORITY OldPriority;
    KIRQL oldIrql;
+   
+   if (Priority < 0 || Priority >= MAXIMUM_PRIORITY)
+     {
+	KeBugCheck(0);
+     }
+   
+   OldPriority = Thread->Priority;
+   Thread->Priority = (CHAR)Priority;
 
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   // Truncate priority to the max value
-   Priority = Priority > THREAD_PRIORITY_MAX ? THREAD_PRIORITY_MAX : Priority;
-   OldPriority = Thread->Priority;
-   Thread->Priority = Priority;
-   // Remove thread from run queue, and plcae it back on using the new priority
-   // but only if it is already on the runqueue!
-   if( Thread->State == THREAD_STATE_RUNNABLE )
-     {
-       RemoveEntryList(&Thread->QueueListEntry);
-       PsInsertIntoThreadList(Thread->Priority,
-			      CONTAINING_RECORD(Thread,ETHREAD,Tcb));
+   if (Thread->State == THREAD_STATE_RUNNABLE)
+    {
+	RemoveEntryList(&Thread->QueueListEntry);
+	PsInsertIntoThreadList(Thread->BasePriority, 
+			       CONTAINING_RECORD(Thread,ETHREAD,Tcb));
      }
    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
    return(OldPriority);

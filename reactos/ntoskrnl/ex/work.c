@@ -1,4 +1,4 @@
-/* $Id: work.c,v 1.8 2000/07/30 18:22:33 dwelch Exp $
+/* $Id: work.c,v 1.9 2000/10/07 13:41:50 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -31,7 +31,7 @@ typedef struct _WORK_QUEUE
    LIST_ENTRY Head;
    
    /*
-    * PURPOSE: Sychronize access to the access
+    * PURPOSE: Sychronize access to the work queue
     */
    KSPIN_LOCK Lock;
    
@@ -89,6 +89,7 @@ static NTSTATUS ExWorkerThreadEntryPoint(PVOID context)
 				   KernelMode,
 				   FALSE,
 				   NULL);
+	     DPRINT1("Woke from wait\n");
 	  }
      }
 }

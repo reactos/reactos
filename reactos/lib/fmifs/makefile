@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2000/08/18 22:26:59 dwelch Exp $
+# $Id: makefile,v 1.10 2000/10/07 13:41:47 dwelch Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -51,7 +51,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-mdll \
 		-o $(TARGET).dll \
 		$(TARGET).o \
-		-Wl,--image-base,0x70000000 \
+		-Wl,--image-base,0x76df0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

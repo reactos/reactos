@@ -60,7 +60,7 @@ typedef struct _KTRAP_FRAME
    USHORT Reserved8;
    USHORT V86_Gs;
    USHORT Reserved9;
-} KTRAP_FRAME;
+} KTRAP_FRAME, *PKTRAP_FRAME;
 
 VOID KiUpdateSystemTime (VOID);
 
@@ -78,7 +78,7 @@ VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 VOID KeDumpStackFrames(PVOID Stack, ULONG NrFrames);
 ULONG KeAllocateGdtSelector(ULONG Desc[2]);
 VOID KeFreeGdtSelector(ULONG Entry);
-BOOLEAN KiTestAlert(struct _KTHREAD* Thread, PCONTEXT UserContext);
+BOOLEAN KiTestAlert(VOID);
 VOID KeRemoveAllWaitsThread(struct _ETHREAD* Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
 
@@ -95,5 +95,7 @@ VOID KeInitializeBugCheck(VOID);
 
 VOID KeInit1(VOID);
 VOID KeInit2(VOID);
+
+BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame);
 
 #endif

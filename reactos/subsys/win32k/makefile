@@ -1,11 +1,12 @@
-# $Id: makefile,v 1.25 2000/08/11 12:46:47 ekohl Exp $
+# $Id: makefile,v 1.26 2000/10/07 13:41:58 dwelch Exp $
 #
 # WIN32K.SYS build spec
 #
+PATH_TO_TOP = ../..
 
 TARGET=win32k
 
-BASE_CFLAGS = -I. -I../../include
+CFLAGS = -I.
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
@@ -52,6 +53,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		--output-lib $(TARGET).a \
 		--kill-at
 	$(CC) \
+		-nostartfiles -nostdlib \
 		--subsystem=native \
 		-mdll \
 		--dll \
@@ -64,7 +66,6 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp $(TARGET).o \
-		-specs=../../specs \
 		../../ntoskrnl/ntoskrnl.a
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
@@ -75,6 +76,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		--kill-at
 	- $(RM) base.tmp
 	$(CC) \
+		-nostartfiles -nostdlib \
 		--subsystem=native \
 		-mdll \
 		--dll \
@@ -88,8 +90,7 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 		-Wl,--defsym,_end=end \
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
-		-Wl,temp.exp \
-		-specs=../../specs
+		-Wl,temp.exp 
               
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym

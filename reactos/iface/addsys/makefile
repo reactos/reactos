@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2000/08/18 22:26:58 dwelch Exp $
+# $Id: makefile,v 1.8 2000/10/07 13:41:45 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -35,7 +35,7 @@ BASE_CFLAGS = -I../../include
 all: $(SVC_FILES)
 
 $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c
-	$(NATIVE_CC) \
+	$(HOST_CC) \
 		$(CFLAGS) \
 		-o $(TARGETNAME) \
 		-O2 \

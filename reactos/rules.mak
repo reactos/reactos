@@ -24,7 +24,7 @@ EXE_PREFIX = ./
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
-KM_SPECS = $(TOPDIR)/specs
+#KM_SPECS = $(TOPDIR)/specs
 FLOPPY_DIR = /a
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
@@ -40,72 +40,39 @@ DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = del
 RMDIR = rmdir
-KM_SPECS = specs
+#KM_SPECS = specs
 DOSCLI = yes
 FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
 endif
 
-#
-# Create variables for all the compiler tools 
-#
-ifeq ($(WITH_DEBUGGING),yes)
-DEBUGGING_CFLAGS = -g
-OPTIMIZATIONS = -O2
-else
-DEBUGGING_CFLAGS =
-OPTIMIZATIONS = -O2
-endif
-
-
-ifeq ($(WARNINGS_ARE_ERRORS),yes)
-EXTRA_CFLAGS = -Werror
-endif
-
-ifeq ($(BOCHS_30ROWS),yes)
-DEFINES = -DDBG -DBOCHS_30ROWS
-else
-DEFINES = -DDBG
-endif
-
-ifeq ($(WIN32_LEAN_AND_MEAN),yes)
-LEAN_AND_MEAN_DEFINE = -DWIN32_LEAN_AND_MEAN
-else
-LEAN_AND_MEAN_DEFINE = 
-endif 
-
 CC = $(PREFIX)gcc
-NATIVE_CC = gcc
-NATIVE_NM = nm
-CFLAGS = $(BASE_CFLAGS) \
-	-pipe \
-	$(OPTIMIZATIONS) \
-	$(LEAN_AND_MEAN_DEFINE)  \
-	$(DEFINES) -Wall \
-	-Wstrict-prototypes $(DEBUGGING_CFLAGS) \
-	$(EXTRA_CFLAGS)
+HOST_CC = gcc
+HOST_NM = nm
+CFLAGS := $(CFLAGS) -I$(PATH_TO_TOP)/include -pipe
 CXXFLAGS = $(CFLAGS)
-NFLAGS = -i../../include/ -i../include/ -pinternal/asm.inc -f$(NASM_FORMAT) -d$(NASM_FORMAT)
+NFLAGS = -i$(PATH_TO_TOP)/include/ -f$(NASM_FORMAT) -d$(NASM_FORMAT)
 LD = $(PREFIX)ld
 NM = $(PREFIX)nm
 OBJCOPY = $(PREFIX)objcopy
 STRIP = $(PREFIX)strip
-AS_INCLUDES = -I../include
-AS = $(PREFIX)gcc -c -x assembler-with-cpp -D__ASM__ $(AS_BASEFLAGS) $(AS_INCLUDES)
+ASFLAGS := $(ASFLAGS) -I$(PATH_TO_TOP)/include -D__ASM__
+AS = $(PREFIX)gcc -c -x assembler-with-cpp 
 CPP = $(PREFIX)cpp
 AR = $(PREFIX)ar
 RC = $(PREFIX)windres
-RCINC = \
-	--include-dir ../include	\
-	--include-dir ../../include	\
-	--include-dir ../../../include	\
-	--include-dir ../../../../include
+RCINC = --include-dir $(PATH_TO_TOP)/include
+OBJCOPY = $(PREFIX)objcopy
 
 %.o: %.cc
 	$(CC) $(CFLAGS) -c $< -o $@
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.S
+	$(AS) $(ASFLAGS) -c $< -o $@
+%.o: %.s
+	$(AS) $(ASFLAGS) -c $< -o $@	
 %.o: %.asm
 	$(NASM_CMD) $(NFLAGS) $< -o $@
 %.coff: %.rc
@@ -113,7 +80,7 @@ RCINC = \
 
 %.sys: %.o
 	$(CC) \
-		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-nostartfiles -nostdlib -e _DriverEntry@8\
 		-mdll \
 		-o junk.tmp \
 		-Wl,--defsym,_end=end \
@@ -132,14 +99,14 @@ RCINC = \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \
-		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
 		-mdll \
 		-o $@.unstripped \
 		$^
 	- $(RM) temp.exp
 	$(STRIP) --strip-debug $<
 	$(CC) \
-		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--defsym,_end=end \
@@ -158,10 +125,18 @@ RCINC = \
 		-Wl,--image-base,0x10000 \
 		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \
-		-specs=$(PATH_TO_TOP)/services/svc_specs \
+		-nostartfiles -nostdlib -e _DriverEntry@8 \
 		-mdll \
 		-o $@ \
 		$^
 	- $(RM) temp.exp
 
 RULES_MAK_INCLUDED = 1
+
+
+
+
+
+
+
+

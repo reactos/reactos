@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2000/08/18 22:26:59 dwelch Exp $
+# $Id: makefile,v 1.15 2000/10/07 13:41:46 dwelch Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -57,7 +57,7 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-specs=$(TARGETNAME)_specs \
+		-nostartfiles -nostdlib -Wl,--entry=_DllMain@12\
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp 
@@ -72,10 +72,10 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 		$(TARGETNAME).o \
 		../ntdll/ntdll.a \
 		../kernel32/kernel32.a \
-		-specs=$(TARGETNAME)_specs \
+		-nostartfiles -nostdlib -Wl,--entry=_DllMain@12\
 		-mdll \
 		-o $(TARGETNAME).dll \
-		-Wl,--image-base,0x20000000 \
+		-Wl,--image-base,0x77dc0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
@@ -93,20 +93,12 @@ $(CLEAN_FILES:%=%_clean): %_clean:
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 
 $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 dist: $(DIST_DIR)/dlls/$(TARGETNAME).dll
 
 $(DIST_DIR)/dlls/$(TARGETNAME).dll: $(TARGETNAME).dll
-ifeq ($(DOSCLI),yes)
-	$(CP) $(TARGETNAME).dll ..\..\$(DIST_DIR)\dlls\$(TARGETNAME).dll
-else
 	$(CP) $(TARGETNAME).dll ../../$(DIST_DIR)/dlls/$(TARGETNAME).dll
-endif
 
 include ../../rules.mak
 

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.62 2000/08/26 16:20:34 ekohl Exp $
+/* $Id: loader.c,v 1.63 2000/10/07 13:41:52 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -612,8 +612,9 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   DPRINT("DrvrBase:%08lx ImgBase:%08lx RelocDelta:%08lx\n", 
          DriverBase,
          PEOptionalHeader->ImageBase,
-         RelocDelta);
+         RelocDelta);   
   DPRINT("RelocDir %x\n",RelocDir);
+#if 1
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
        if (PESectionHeaders[Idx].VirtualAddress == (DWORD)RelocDir)
@@ -627,6 +628,11 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
 	    break;
 	 }
     }
+#else
+   RelocDir = RelocDir + (ULONG)DriverBase;
+   CurrentSize = PEOptionalHeader->DataDirectory
+		  [IMAGE_DIRECTORY_ENTRY_BASERELOC].Size;
+#endif   
   DPRINT("RelocDir %08lx CurrentSize %08lx\n", RelocDir, CurrentSize);
   TotalRelocs = 0;
   while (TotalRelocs < CurrentSize && RelocDir->SizeOfBlock != 0)
@@ -661,7 +667,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
             }
           else if (Type != 0)
             {
-              DbgPrint("Unknown relocation type %x\n",Type);
+              DbgPrint("Unknown relocation type %x at %x\n",Type, &Type);
               return 0;
             }
         }

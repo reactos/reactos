@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2000/08/18 22:27:00 dwelch Exp $
+# $Id: makefile,v 1.16 2000/10/07 13:41:48 dwelch Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -54,7 +54,7 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		-mdll \
 		-o $(TARGET).dll \
 		-Wl,--entry,_DllMain@12 \
-		-Wl,--image-base,0x70000000 \
+		-Wl,--image-base,0x77ed0000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp

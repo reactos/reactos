@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.10 2000/07/30 18:22:34 dwelch Exp $
+/* $Id: process.c,v 1.11 2000/10/07 13:41:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,11 +62,11 @@ IoGetRequestorProcess (IN	PIRP	Irp)
  * 	processing policy.
  */
 BOOLEAN STDCALL EXPORTED
-IoSetThreadHardErrorMode (IN	BOOLEAN	HardErrorEnabled)
+IoSetThreadHardErrorMode (IN BOOLEAN HardErrorEnabled)
 {
-	BOOLEAN PreviousHEM = NtCurrentTeb ()->HardErrorDisabled;
+   BOOLEAN PreviousHEM = NtCurrentTeb ()->HardErrorDisabled;
 	
-	NtCurrentTeb ()->HardErrorDisabled = (
+   NtCurrentTeb ()->HardErrorDisabled = (
 		(TRUE == HardErrorEnabled)
 		 ? FALSE
 		 : TRUE

@@ -1,6 +1,22 @@
 #ifndef _ASM_IO_H
 #define _ASM_IO_H
 
+#define outb(port, val)     WRITE_PORT_UCHAR((PUCHAR)port, val)
+#define outb_p(port, val)   WRITE_PORT_UCHAR((PUCHAR)port, val)
+#define outw(port, val)     WRITE_PORT_USHORT((PUSHORT)port, val)
+#define outw_p(port, val)   WRITE_PORT_USHORT((PUSHORT)port, val)
+#define outl(port, val)     WRITE_PORT_ULONG((PULONG)port, val)
+#define outl_p(port, val)   WRITE_PORT_ULONG((PULONG)port, val)
+
+#define inb(port) READ_PORT_UCHAR((PUCHAR)port)
+#define inb_p(port) READ_PORT_UCHAR((PUCHAR)port)
+#define inw(port) READ_PORT_USHORT((PUSHORT)port)
+#define inw_p(port) READ_PORT_USHORT((PUSHORT)port)
+#define inl(port) READ_PORT_ULONG((PULONG)port)
+#define inl_p(port) READ_PORT_ULONG((PULONG)port)
+
+#if 0
+
 /*
  * This file contains the definitions for the x86 IO instructions
  * inb/inw/inl/outb/outw/outl and the "string versions" of the same
@@ -164,6 +180,7 @@ __OUTS(l)
 	__inlc_p(port) : \
 	__inl_p(port))
 
+#endif
 #endif
 
 
