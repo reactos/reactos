@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.24 2003/05/18 19:21:24 ea Exp $
+/* $Id: mouse.c,v 1.25 2003/05/18 19:30:55 ea Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -306,11 +306,7 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
     if (SafetySwitch == FALSE && SafetySwitch2 == FALSE)
     {
-#if 1
       SurfGDI->MovePointer(SurfObj, mouse_x, mouse_y, &MouseRect);
-#else
-      DbgPrint("WIN32K.%s: call SurfGDI->MovePointer()\n",__FUNCTION__);
-#endif
     }
   }
 }
