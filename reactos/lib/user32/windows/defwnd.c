@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.89 2003/09/26 20:58:06 gvg Exp $
+/* $Id: defwnd.c,v 1.90 2003/09/29 19:00:44 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -658,7 +658,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
 {
   BOOL Active = FALSE;
   HDC hDC;
-  RECT rect;
+  RECT rect, clientrect;
   ULONG Style;
   ULONG ExStyle;
   int wFrame = 0;
@@ -680,6 +680,7 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   rect.right = rect.right - rect.left;
   rect.bottom = rect.bottom - rect.top;
   rect.top = rect.left = 0;
+  clientrect = rect;
   SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
   if (UserHasThickFrameStyle(Style, ExStyle))
     {
@@ -711,9 +712,9 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     }
 
   /*  Draw scrollbars */
-  if (Style & WS_VSCROLL)
+  if (Style & WS_VSCROLL && (clientrect.right - clientrect.left > GetSystemMetrics(SM_CXVSCROLL)))
       SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
-  if (Style & WS_HSCROLL)
+  if (Style & WS_HSCROLL && (clientrect.bottom - clientrect.top > GetSystemMetrics(SM_CYHSCROLL)))
       SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box.*/
@@ -744,6 +745,7 @@ LRESULT
 DefWndHitTestNC(HWND hWnd, POINT Point)
 {
   RECT WindowRect;
+  LONG ScrollXY;
   ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
   ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
@@ -881,25 +883,34 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
   if (Style & WS_VSCROLL)
     {
-      WindowRect.right += GetSystemMetrics(SM_CXVSCROLL);
-      if (PtInRect(&WindowRect, Point))
-	{
-	  return(HTVSCROLL);
-	}
+      ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
+      if(WindowRect.right - WindowRect.left > ScrollXY)
+      {
+        WindowRect.right += ScrollXY;
+        if (PtInRect(&WindowRect, Point))
+        {
+          return(HTVSCROLL);
+        }
+      }
     }
 
   if (Style & WS_HSCROLL)
     {
-      WindowRect.bottom += GetSystemMetrics(SM_CYHSCROLL);
-      if (PtInRect(&WindowRect, Point))
-	{
-	  if ((Style & WS_VSCROLL) &&
-	      (Point.x >= (WindowRect.right - GetSystemMetrics(SM_CXVSCROLL))))
-	    {
-	      return(HTBOTTOMRIGHT);
-	    }
-	  return(HTHSCROLL);
-	}
+      ScrollXY = GetSystemMetrics(SM_CYHSCROLL);
+      if(WindowRect.bottom - WindowRect.top > ScrollXY)
+      {
+        WindowRect.bottom += ScrollXY;
+        if (PtInRect(&WindowRect, Point))
+        {
+          ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
+          if ((Style & WS_VSCROLL) && (WindowRect.right - WindowRect.left > ScrollXY) &&
+            (Point.x >= (WindowRect.right - ScrollXY)))
+          {
+            return(HTBOTTOMRIGHT);
+          }
+          return(HTHSCROLL);
+        }
+      }
     }
 
   if (UserHasMenu(hWnd, Style))
@@ -1113,7 +1124,7 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam)
       {
 	WORD Msg = HIWORD(lParam);
 	if (Msg == WM_LBUTTONDOWN || Msg == WM_MBUTTONDOWN ||
-	    Msg == WM_RBUTTONDOWN)
+	    Msg == WM_RBUTTONDOWN || Msg == WM_XBUTTONDOWN)
 	  {
 	    MessageBeep(0);
 	  }
@@ -1588,7 +1599,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 
 
 VOID
-DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
+DefWndAdjustRect(RECT* Rect,  ULONG Style, BOOL Menu, ULONG ExStyle)
 {
   if (Style & WS_ICONIC)
     {
@@ -1619,30 +1630,16 @@ DefWndAdjustRect(RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
     {
       Rect->top -= GetSystemMetrics(SM_CYMENU) + GetSystemMetrics(SM_CYBORDER);
     }
-  if (Style & WS_VSCROLL)
-    {
-      Rect->right += GetSystemMetrics(SM_CXVSCROLL) - 1;
-      if (UserHasAnyFrameStyle(Style, ExStyle))
-	{
-	  Rect->right++;
-	}
-    }
-  if (Style & WS_HSCROLL)
-    {
-      Rect->bottom += GetSystemMetrics(SM_CYHSCROLL) - 1;
-      if (UserHasAnyFrameStyle(Style, ExStyle))
-	{
-	  Rect->bottom++;
-	}
-    }
 }
 
 LRESULT STDCALL
 DefWndNCCalcSize(HWND hWnd, RECT* Rect)
 {
     LRESULT Result = 0;
-    LONG Style = GetClassLongW(hWnd, GCL_STYLE);
+    LONG ScrollXY;
     RECT TmpRect = {0, 0, 0, 0};
+    ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+    LONG Style = GetClassLongW(hWnd, GCL_STYLE);
 
     if (Style & CS_VREDRAW)
     {
@@ -1652,16 +1649,42 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
     {
         Result |= WVR_HREDRAW;
     }
+    
+    Style = GetWindowLongW(hWnd, GWL_STYLE);
 
-    if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
+    if (!(Style & WS_MINIMIZE))
     {
-        DefWndAdjustRect(&TmpRect, GetWindowLongW(hWnd, GWL_STYLE),
-                         FALSE, GetWindowLongW(hWnd, GWL_EXSTYLE));
+        DefWndAdjustRect(&TmpRect, Style, FALSE, ExStyle);
+        if (Style & WS_VSCROLL)
+        {
+          ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
+          DbgPrint("@! %d > %d (%d, %d, %d ,%d)\n", Rect->right - Rect->left, ScrollXY, Rect->left, Rect->top, Rect->right, Rect->bottom);
+          if(Rect->right - Rect->left > ScrollXY)
+          {
+            TmpRect.right += ScrollXY - 1;
+            if (UserHasAnyFrameStyle(Style, ExStyle))
+            {
+              TmpRect.right++;
+            }
+          }
+        }
+        if (Style & WS_HSCROLL)
+        {
+          ScrollXY = GetSystemMetrics(SM_CYHSCROLL);
+          if(Rect->bottom - Rect->top > ScrollXY)
+          {
+            TmpRect.bottom += ScrollXY - 1;
+            if (UserHasAnyFrameStyle(Style, ExStyle))
+            {
+              TmpRect.bottom++;
+            }
+          }
+        }
         Rect->left -= TmpRect.left;
         Rect->top -= TmpRect.top;
         Rect->right -= TmpRect.right;
         Rect->bottom -= TmpRect.bottom;
-        if (UserHasMenu(hWnd, GetWindowLongW(hWnd, GWL_STYLE)))
+        if (UserHasMenu(hWnd, Style))
         {
             Rect->top += MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left,
                 -TmpRect.left, -TmpRect.top) + 1;
@@ -1994,7 +2017,7 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_MOUSEWHEEL:
         {
-            if (GetWindowLongW(hWnd, GWL_STYLE & WS_CHILD))
+            if (GetWindowLongW(hWnd, GWL_STYLE) & WS_CHILD)
             {
                 if (bUnicode)
                 {
@@ -2426,3 +2449,4 @@ DefWindowProcW(HWND hWnd,
 
     return User32DefWindowProc(hWnd, Msg, wParam, lParam, TRUE);
 }
+
