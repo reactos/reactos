@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2004/02/14 20:13:04 sedwards Exp $
+# $Id: makefile,v 1.3 2004/05/28 17:56:17 royce Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -18,6 +18,7 @@ TARGET_SDKLIBS = gdi32.a user32.a
 TARGET_OBJECTS = \
 	testlist.o \
 	class.o \
+	dde.o \
 	dialog.o \
 	listbox.o \
 	msg.o \

@@ -7,7 +7,9 @@
 #include "winbase.h"
 
 extern void func_class(void);
+extern void func_dde(void);
 extern void func_dialog(void);
+//extern void func_input(void);
 extern void func_listbox(void);
 extern void func_msg(void);
 extern void func_resource(void);
@@ -24,7 +26,9 @@ struct test
 static const struct test winetest_testlist[] =
 {
     { "class", func_class },
+    { "dde", func_dde },
     { "dialog", func_dialog },
+    //{ "input", func_input },
     { "listbox", func_listbox },
     { "msg", func_msg },
     { "resource", func_resource },

@@ -46,15 +46,18 @@
 
 #define _WIN32_WINNT 0x401
 
+#include <windows.h>
 #include "wine/test.h"
-#include "winbase.h"
-#include "winuser.h"
+//#include "winbase.h"
+//#include "winuser.h"
 
 #include <assert.h>
 
 /* globals */
 HWND hWndTest;
 long timetag = 0x10000000;
+
+static UINT (WINAPI *ptr_SendInput) (UINT, INPUT*, size_t);
 
 #define MAXKEYEVENTS 6
 #define MAXKEYMESSAGES MAXKEYEVENTS /* assuming a key event generates one
@@ -203,12 +206,19 @@ int KbdMessage( KEV kev, WPARAM *pwParam, LPARAM *plParam )
  */
 void do_test( HWND hwnd, int seqnr, KEV td[] )
 {
+    HMODULE module;
     INPUT inputs[MAXKEYEVENTS];
     KMSG expmsg[MAXKEYEVENTS];
     MSG msg;
     char buf[100];
     UINT evtctr=0;
     int kmctr, i;
+
+    module = GetModuleHandleA("user32");
+    if (!module) return;
+    ptr_SendInput = (void *)GetProcAddress(module, "SendInput");
+    if (!ptr_SendInput) return;
+
     buf[0]='\0';
     TrackSysKey=0; /* see input.c */
     for( i = 0; i < MAXKEYEVENTS; i++) {
@@ -222,7 +232,7 @@ void do_test( HWND hwnd, int seqnr, KEV td[] )
     for( kmctr = 0; kmctr < MAXKEYEVENTS && expmsg[kmctr].message; kmctr++)
         ;
     assert( evtctr <= MAXKEYEVENTS );
-    assert( evtctr == SendInput(evtctr, &inputs[0], sizeof(INPUT)));
+    assert( evtctr == ptr_SendInput(evtctr, &inputs[0], sizeof(INPUT)));
     i = 0;
     trace("======== key stroke sequence #%d: %s =============\n",
             seqnr + 1, buf);

@@ -20,9 +20,6 @@
 
 /* To get CS_DROPSHADOW with the MSVC headers */
 #define _WIN32_WINNT 0x0501
-#ifndef CS_DROPSHADOW
-#define CS_DROPSHADOW       0x00020000
-#endif
 
 #include <assert.h>
 #include <stdlib.h>
@@ -48,8 +45,8 @@ static LRESULT WINAPI ClassTest_WndProc (HWND hWnd, UINT msg, WPARAM wParam, LPA
 static void ClassTest(HINSTANCE hInstance, BOOL global)
 {
     WNDCLASSW cls, wc;
-    WCHAR className[] = {'T','e','s','t','C','l','a','s','s',0};
-    WCHAR winName[]   = {'W','i','n','C','l','a','s','s','T','e','s','t',0};
+    static const WCHAR className[] = {'T','e','s','t','C','l','a','s','s',0};
+    static const WCHAR winName[]   = {'W','i','n','C','l','a','s','s','T','e','s','t',0};
     ATOM test_atom;
     HWND hTestWnd;
     DWORD i;
@@ -243,7 +240,7 @@ static void check_class(HINSTANCE inst, const char *name, const char *menu_name)
 
 static void check_instance( const char *name, HINSTANCE inst, HINSTANCE info_inst, HINSTANCE gcl_inst )
 {
-    WNDCLASS wc;
+    WNDCLASSA wc;
     HWND hwnd;
 
     ok( GetClassInfo( inst, name, &wc ), "Couldn't find class %s inst %p\n", name, inst );
@@ -251,9 +248,12 @@ static void check_instance( const char *name, HINSTANCE inst, HINSTANCE info_ins
         wc.hInstance, info_inst, name );
     hwnd = CreateWindowExA( 0, name, "test_window", 0, 0, 0, 0, 0, 0, 0, inst, 0 );
     ok( hwnd != NULL, "Couldn't create window for class %s inst %p\n", name, inst );
-    ok( (HINSTANCE)GetClassLong( hwnd, GCL_HMODULE ) == gcl_inst,
+    ok( (HINSTANCE)GetClassLongA( hwnd, GCL_HMODULE ) == gcl_inst,
         "Wrong GCL instance %p/%p for class %s\n",
-        (HINSTANCE)GetClassLong( hwnd, GCL_HMODULE ), gcl_inst, name );
+        (HINSTANCE)GetClassLongA( hwnd, GCL_HMODULE ), gcl_inst, name );
+    ok( (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ) == inst,
+        "Wrong GWL instance %p/%p for window %s\n",
+        (HINSTANCE)GetWindowLongA( hwnd, GWL_HINSTANCE ), inst, name );
     DestroyWindow(hwnd);
 }
 

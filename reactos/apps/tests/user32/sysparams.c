@@ -78,6 +78,16 @@ static int strict;
 #define SPI_SETSHOWSOUNDS_VALNAME    "On"
 #define SPI_SETDRAGFULLWINDOWS_REGKEY           "Control Panel\\Desktop"
 #define SPI_SETDRAGFULLWINDOWS_VALNAME          "DragFullWindows"
+#define SPI_SETMOUSEHOVERWIDTH_REGKEY           "Control Panel\\Mouse"
+#define SPI_SETMOUSEHOVERWIDTH_VALNAME          "MouseHoverWidth"
+#define SPI_SETMOUSEHOVERHEIGHT_REGKEY          "Control Panel\\Mouse"
+#define SPI_SETMOUSEHOVERHEIGHT_VALNAME         "MouseHoverHeight"
+#define SPI_SETMOUSEHOVERTIME_REGKEY            "Control Panel\\Mouse"
+#define SPI_SETMOUSEHOVERTIME_VALNAME           "MouseHoverTime"
+#define SPI_SETMOUSESCROLLLINES_REGKEY          "Control Panel\\Desktop"
+#define SPI_SETMOUSESCROLLLINES_VALNAME         "WheelScrollLines"
+#define SPI_SETMENUSHOWDELAY_REGKEY             "Control Panel\\Desktop"
+#define SPI_SETMENUSHOWDELAY_VALNAME            "MenuShowDelay"
 #define SPI_SETDESKWALLPAPER_REGKEY		"Control Panel\\Desktop"
 #define SPI_SETDESKWALLPAPER_VALNAME		"Wallpaper"
 /* FIXME - don't have access to Windows with this action (W95, NT5.0). Set real values */
@@ -1028,6 +1038,200 @@ static void test_SPI_SETSCREENREADER( void )           /*     71 */
     /* TODO!!! - don't have version of Windows which has this */
 }
 
+static void test_SPI_SETMOUSEHOVERWIDTH( void )      /*     99 */
+{
+    BOOL rc;
+    UINT old_width;
+    const UINT vals[]={0,32767};
+    int i;
+
+    trace("testing SPI_{GET,SET}MOUSEHOVERWIDTH\n");
+    rc=SystemParametersInfoA( SPI_GETMOUSEHOVERWIDTH, 0, &old_width, 0 );
+    if (rc==0 && (GetLastError()==0 || GetLastError()==ERROR_INVALID_SPI_VALUE))
+    {
+        /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
+         * what MSDN states (Verified on Win98SE)
+         */
+        trace("SPI_{GET,SET}MOUSEHOVERWIDTH not supported on this platform\n");
+        return;
+    }
+    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
+    
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETMOUSEHOVERWIDTH, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        test_change_message( SPI_SETMOUSEHOVERWIDTH, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMOUSEHOVERWIDTH_REGKEY,
+                      SPI_SETMOUSEHOVERWIDTH_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETMOUSEHOVERWIDTH, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}MOUSEHOVERWIDTH", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETMOUSEHOVERWIDTH, old_width, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
+}
+
+static void test_SPI_SETMOUSEHOVERHEIGHT( void )      /*     101 */
+{
+    BOOL rc;
+    UINT old_height;
+    const UINT vals[]={0,32767};
+    int i;
+
+    trace("testing SPI_{GET,SET}MOUSEHOVERHEIGHT\n");
+    rc=SystemParametersInfoA( SPI_GETMOUSEHOVERHEIGHT, 0, &old_height, 0 );
+    if (rc==0 && (GetLastError()==0 || GetLastError()==ERROR_INVALID_SPI_VALUE))
+    {
+        /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
+         * what MSDN states (Verified on Win98SE)
+         */
+        trace("SPI_{GET,SET}MOUSEHOVERHEIGHT not supported on this platform\n");
+        return;
+    }
+    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
+    
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETMOUSEHOVERHEIGHT, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        test_change_message( SPI_SETMOUSEHOVERHEIGHT, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMOUSEHOVERHEIGHT_REGKEY,
+                      SPI_SETMOUSEHOVERHEIGHT_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETMOUSEHOVERHEIGHT, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}MOUSEHOVERHEIGHT", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETMOUSEHOVERHEIGHT, old_height, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
+}
+
+static void test_SPI_SETMOUSEHOVERTIME( void )      /*     103 */
+{
+    BOOL rc;
+    UINT old_time;
+    const UINT vals[]={0,32767};
+    int i;
+
+    trace("testing SPI_{GET,SET}MOUSEHOVERTIME\n");
+    rc=SystemParametersInfoA( SPI_GETMOUSEHOVERTIME, 0, &old_time, 0 );
+    if (rc==0 && (GetLastError()==0 || GetLastError()==ERROR_INVALID_SPI_VALUE))
+    {
+        /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
+         * what MSDN states (Verified on Win98SE)
+         */
+        trace("SPI_{GET,SET}MOUSEHOVERTIME not supported on this platform\n");
+        return;
+    }
+    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
+    
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETMOUSEHOVERTIME, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        test_change_message( SPI_SETMOUSEHOVERTIME, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMOUSEHOVERTIME_REGKEY,
+                      SPI_SETMOUSEHOVERTIME_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETMOUSEHOVERTIME, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}MOUSEHOVERTIME", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETMOUSEHOVERTIME, old_time, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
+}
+
+static void test_SPI_SETWHEELSCROLLLINES( void )      /*     105 */
+{
+    BOOL rc;
+    UINT old_lines;
+    const UINT vals[]={0,32767};
+    int i;
+
+    trace("testing SPI_{GET,SET}WHEELSCROLLLINES\n");
+    rc=SystemParametersInfoA( SPI_GETWHEELSCROLLLINES, 0, &old_lines, 0 );
+    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
+
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETWHEELSCROLLLINES, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        test_change_message( SPI_SETWHEELSCROLLLINES, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMOUSESCROLLLINES_REGKEY,
+                      SPI_SETMOUSESCROLLLINES_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETWHEELSCROLLLINES, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}MOUSESCROLLLINES", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETWHEELSCROLLLINES, old_lines, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
+}
+
+static void test_SPI_SETMENUSHOWDELAY( void )      /*     107 */
+{
+    BOOL rc;
+    UINT old_delay;
+    const UINT vals[]={0,32767};
+    int i;
+
+    trace("testing SPI_{GET,SET}MENUSHOWDELAY\n");
+    rc=SystemParametersInfoA( SPI_GETMENUSHOWDELAY, 0, &old_delay, 0 );
+    ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
+
+    for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
+    {
+        UINT v;
+        char buf[10];
+
+        rc=SystemParametersInfoA( SPI_SETMENUSHOWDELAY, vals[i], 0,
+                               SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        test_change_message( SPI_SETMENUSHOWDELAY, 0 );
+        sprintf( buf, "%d", vals[i] );
+        test_reg_key( SPI_SETMENUSHOWDELAY_REGKEY,
+                      SPI_SETMENUSHOWDELAY_VALNAME, buf );
+
+        SystemParametersInfoA( SPI_GETMENUSHOWDELAY, 0, &v, 0 );
+        ok(rc!=0,"%d: rc=%d err=%ld\n",i,rc,GetLastError());
+        eq( v, vals[i], "SPI_{GET,SET}MENUSHOWDELAY", "%d" );
+    }
+
+    rc=SystemParametersInfoA( SPI_SETMENUSHOWDELAY, old_delay, 0,
+                              SPIF_UPDATEINIFILE );
+    ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
+}
+
 static void test_SPI_SETWALLPAPER( void )              /*   115 */
 {
     BOOL rc;
@@ -1088,6 +1292,11 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam )
     test_SPI_SETSHOWSOUNDS();                   /*     57 */
     test_SPI_SETKEYBOARDPREF();                 /*     69 */
     test_SPI_SETSCREENREADER();                 /*     71 */
+    test_SPI_SETMOUSEHOVERWIDTH();              /*     99 */
+    test_SPI_SETMOUSEHOVERHEIGHT();             /*    101 */
+    test_SPI_SETMOUSEHOVERTIME();               /*    103 */
+    test_SPI_SETWHEELSCROLLLINES();             /*    105 */
+    test_SPI_SETMENUSHOWDELAY();                /*    107 */
     test_SPI_SETWALLPAPER();                    /*    115 */
     SendMessageA( ghTestWnd, WM_DESTROY, 0, 0 );
     return 0;

@@ -26,7 +26,7 @@ void
 test_LoadStringA (void)
 {
     HINSTANCE hInst = GetModuleHandle (NULL);
-    const char str[] = "String resource"; /* same in resource.rc */
+    static const char str[] = "String resource"; /* same in resource.rc */
     char buf[128];
     struct string_test {
         int bufsiz;
