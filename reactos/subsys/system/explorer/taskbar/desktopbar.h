@@ -64,6 +64,8 @@ struct DesktopBar : public OwnerDrawParent<Window>
 	DesktopBar(HWND hwnd);
 	~DesktopBar();
 
+	static HWND Create();
+
 protected:
 	CommonControlInit _usingCmnCtrl;
 

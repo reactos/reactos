@@ -40,26 +40,6 @@
 #include "quicklaunch.h"
 
 
-HWND InitializeExplorerBar(HINSTANCE hInstance)
-{
-	RECT rect;
-
-	rect.left = -2;	// hide left border
-#ifdef TASKBAR_AT_TOP
-	rect.top = -2;	// hide top border
-#else
-	rect.top = GetSystemMetrics(SM_CYSCREEN) - DESKTOPBARBAR_HEIGHT;
-#endif
-	rect.right = GetSystemMetrics(SM_CXSCREEN) + 2;
-	rect.bottom = rect.top + DESKTOPBARBAR_HEIGHT + 2;
-
-	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
-							BtnWindowClass(CLASSNAME_EXPLORERBAR), TITLE_EXPLORERBAR,
-							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
-							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
-}
-
-
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
  	 // initialize Common Controls library
@@ -76,6 +56,26 @@ DesktopBar::~DesktopBar()
 
 	 // exit application after destroying desktop window
 	PostQuitMessage(0);
+}
+
+
+HWND DesktopBar::Create()
+{
+	RECT rect;
+
+	rect.left = -2;	// hide left border
+#ifdef TASKBAR_AT_TOP
+	rect.top = -2;	// hide top border
+#else
+	rect.top = GetSystemMetrics(SM_CYSCREEN) - DESKTOPBARBAR_HEIGHT;
+#endif
+	rect.right = GetSystemMetrics(SM_CXSCREEN) + 2;
+	rect.bottom = rect.top + DESKTOPBARBAR_HEIGHT + 2;
+
+	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
+							BtnWindowClass(CLASSNAME_EXPLORERBAR), TITLE_EXPLORERBAR,
+							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
+							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 }
 
 
@@ -107,11 +107,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 void DesktopBar::RegisterHotkeys()
 {
-	 // register hotkey CTRL+ESC for opening Startmenu
-	RegisterHotKey(_hwnd, 0, MOD_CONTROL, VK_ESCAPE);
-
 	 // register hotkey WIN+E opening explorer
-	RegisterHotKey(_hwnd, 1, MOD_WIN, 'E');
+	RegisterHotKey(_hwnd, 0, MOD_WIN, 'E');
 
 		//TODO: register all common hotkeys
 }
@@ -119,8 +116,7 @@ void DesktopBar::RegisterHotkeys()
 void DesktopBar::ProcessHotKey(int id_hotkey)
 {
 	switch(id_hotkey) {
-	  case 0:	ToggleStartmenu();							break;
-	  case 1:	explorer_show_frame(_hwnd, SW_SHOWNORMAL);	break;
+	  case 0:	explorer_show_frame(_hwnd, SW_SHOWNORMAL);	break;
 		//TODO: implement all common hotkeys
 	}
 }
@@ -154,7 +150,8 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				goto def;
 			else
 				return 0;			// disable any other resizing
-		}
+		} else if (wparam == SC_TASKLIST)
+			ToggleStartmenu();
 		goto def;
 
 	  case WM_SIZE: {

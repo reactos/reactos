@@ -31,6 +31,8 @@
 #include "utility/utility.h"
 
 #include "explorer.h"
+#include "desktop/desktop.h"
+
 #include "globals.h"
 #include "externals.h"
 
@@ -161,13 +163,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	if (startup_desktop)
 	{
-		hwndDesktop = create_desktop_window();
-
-		 // Initialize the explorer bar
-		HWND hwndExplorerBar = InitializeExplorerBar(hInstance);
-
-		 // Load plugins
-//		LoadAvailablePlugIns(hwndExplorerBar);
+		hwndDesktop = DesktopWindow::Create();
 
 #ifndef _DEBUG	//MF: disabled for debugging
 		{
@@ -178,8 +174,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	}
 
 	int ret = explorer_main(hInstance, hwndDesktop, nShowCmd);
-
-//	ReleaseAvailablePlugIns();
 
 	return ret;
 }

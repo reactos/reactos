@@ -26,7 +26,13 @@
  //
 
 
+#include "../utility/utility.h"
+#include "../utility/shellclasses.h"
+#include "../utility/shellbrowserimpl.h"
+#include "../utility/window.h"
+
 #include "desktop.h"
+#include "../taskbar/desktopbar.h"
 
 #include "../externals.h"
 #include "../explorer_intres.h"
@@ -67,7 +73,6 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	// This next part could be improved by working out how much
 	// space the text actually needs...
 
-#define	DESKTOPBARBAR_HEIGHT	30
 	rect.left = rect.right - 280;
 	rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
 	rect.right = rect.left + 250;
@@ -114,6 +119,20 @@ DesktopWindow::~DesktopWindow()
 {
 	if (_pShellView)
 		_pShellView->Release();
+}
+
+
+HWND DesktopWindow::Create()
+{
+	IconWindowClass wcDesktop(_T("Progman"), IDI_REACTOS, CS_DBLCLKS);
+	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
+
+	int width = GetSystemMetrics(SM_CXSCREEN);
+	int height = GetSystemMetrics(SM_CYSCREEN);
+
+	return Window::Create(WINDOW_CREATOR(DesktopWindow),
+					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					0, 0, width, height, 0);
 }
 
 
@@ -189,6 +208,9 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 	else if (SetShellWindow)
 		SetShellWindow(_hwnd);
 
+	 // create the explorer bar
+	_desktopBar = DesktopBar::Create();
+
 	return 0;
 }
 
@@ -221,23 +243,16 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_CLOSE:
 		break;	// Over-ride close. We need to close desktop some other way.
 
-	  default:
+	  case WM_SYSCOMMAND:
+		if (wparam == SC_TASKLIST) {
+			if (_desktopBar)
+				SendMessage(_desktopBar, nmsg, wparam, lparam);
+		}
+		goto def;
+
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
-}
-
-
-HWND create_desktop_window()
-{
-	IconWindowClass wcDesktop(_T("Progman"), IDI_REACTOS, CS_DBLCLKS);
-	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
-
-	int width = GetSystemMetrics(SM_CXSCREEN);
-	int height = GetSystemMetrics(SM_CYSCREEN);
-
-	return Window::Create(WINDOW_CREATOR(DesktopWindow),
-					WS_EX_TOOLWINDOW, wcDesktop, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
-					0, 0, width, height, 0);
 }

@@ -179,7 +179,7 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 			if (entry._idx == -1)
 				entry._idx = ++_next_idx;
 
-			Refresh();
+			Refresh();	//TODO: call only if really changes occurred
 		}
 		break;
 

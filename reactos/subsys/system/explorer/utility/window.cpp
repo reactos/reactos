@@ -191,7 +191,7 @@ LRESULT Window::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	 // close startup menu and other popup menus
 	 // This functionality is for tray notification icons missing in MS Windows.
 	if (nmsg == WM_SETFOCUS)
-		CancelModes((HWND)wparam);
+		CancelModes((HWND)wparam);	//@@ erronesly cancels desktop bar resize when switching from another process
 
 	return DefWindowProc(hwnd, nmsg, wparam, lparam);
 }

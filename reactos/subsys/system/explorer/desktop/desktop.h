@@ -26,14 +26,6 @@
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../utility/shellbrowserimpl.h"
-#include "../utility/window.h"
-
-#include "../externals.h"
-
-
 struct BackgroundWindow : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
@@ -51,6 +43,8 @@ struct DesktopWindow : public Window, public IShellBrowserImpl
 
 	DesktopWindow(HWND hwnd);
 	~DesktopWindow();
+
+	static HWND Create();
 
 	STDMETHOD(GetWindow)(HWND* lphwnd)
 	{
@@ -80,4 +74,5 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	IShellView*	_pShellView;
+	WindowHandle _desktopBar;
 };
