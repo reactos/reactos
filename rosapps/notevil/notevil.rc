@@ -1,4 +1,4 @@
-/* $Id: notevil.rc,v 1.4 2000/09/12 23:21:20 ea Exp $ */
+/* $Id: notevil.rc,v 1.5 2001/10/16 21:02:02 ea Exp $ */
 #include "../../reactos/include/defines.h"
 #include "../../reactos/include/reactos/resource.h"
 
@@ -69,6 +69,7 @@ BEGIN
  19, "Paolo Pantaleo"
  20, "Hernan Ochoa"
  21, "Casper Hornstrup"
+ 22, "Hartmut Birr"
 END
 
 /* EOF */

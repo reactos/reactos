@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2001/07/28 08:02:05 ea Exp $
+# $Id: makefile,v 1.10 2001/10/16 21:02:02 ea Exp $
 #
 # ReactOS System Utilities
 #
@@ -21,6 +21,7 @@
 # 2000-08-4 (ea)
 #	Added ldd.c; removed login.c
 #
+#
 PATH_TO_TOP=..
 PATH_TO_CVSROOT=../$(PATH_TO_TOP)
 
@@ -29,13 +30,13 @@ BASE_CFLAGS = -I$(PATH_TO_CVSROOT)/reactos/include
 
 ROS_DIR=$(PATH_TO_CVSROOT)/reactos
 ROS_INC=$(ROS_DIR)/include
-ROS_LIB=$(ROS_DIR)/lib
-IMPORT_NTDLL=$(ROS_LIB)/ntdll/ntdll.a
-IMPORT_FMIFS=$(ROS_LIB)/fmifs/fmifs.a
-IMPORT_KERNEL32=$(ROS_LIB)/kernel32/kernel32.a
-IMPORT_ADVAPI32=$(ROS_LIB)/advapi32/advapi32.a
-IMPORT_USER32=$(ROS_LIB)/user32/user32.a
-IMPORT_MSVCRT=$(ROS_LIB)/msvcrt/msvcrt.a
+ROS_LIB=$(ROS_DIR)/dk/w32/lib
+IMPORT_NTDLL=$(ROS_LIB)/ntdll.a
+IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
+IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
+IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
+IMPORT_USER32=$(ROS_LIB)/user32.a
+IMPORT_MSVCRT=$(ROS_LIB)/msvcrt.a
 
 TARGET=\
 	chklib$(EXE_POSTFIX)	\

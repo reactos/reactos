@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2001/04/16 05:11:54 narnaoud Exp $
+# $Id: Makefile,v 1.6 2001/10/16 21:02:02 ea Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -13,13 +13,13 @@ include depend.mak
 
 ROS_DIR=../../../reactos
 ROS_INC=$(ROS_DIR)/include
-ROS_LIB=$(ROS_DIR)/lib
-IMPORT_NTDLL=$(ROS_LIB)/ntdll/ntdll.a
-IMPORT_FMIFS=$(ROS_LIB)/fmifs/fmifs.a
-IMPORT_KERNEL32=$(ROS_LIB)/kernel32/kernel32.a
-IMPORT_ADVAPI32=$(ROS_LIB)/advapi32/advapi32.a
-IMPORT_USER32=$(ROS_LIB)/user32/user32.a
-IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
+ROS_LIB=$(ROS_DIR)/dk/w32/lib
+IMPORT_NTDLL=$(ROS_LIB)/ntdll.a
+IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
+IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
+IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
+IMPORT_USER32=$(ROS_LIB)/user32.a
+IMPORT_CRTDLL=$(ROS_LIB)/crtdll.a
 
 depend.mak : *.h
 	$(CC) \

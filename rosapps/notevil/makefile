@@ -1,9 +1,14 @@
-# $Id: makefile,v 1.4 2001/07/28 08:02:05 ea Exp $
+# $Id: makefile,v 1.5 2001/10/16 21:02:02 ea Exp $
 #
 # ReactOS makefile for notevil
 # Compiler: egcs 1.1.2
 #
+PATH_TO_TOP = ..
+PATH_TO_REACTOS = $(PATH_TO_TOP)/../reactos
+
 TARGET=notevil
+
+BASE_CFLAGS = -I$(PATH_TO_REACTOS)/include
 
 all: $(TARGET).exe
 
@@ -41,15 +46,15 @@ else
 endif
 
 
-dist: $(TARGET:%=../$(DIST_DIR)/apps/%)
+dist: $(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%)
 
-$(TARGET:%=../$(DIST_DIR)/apps/%): ../$(DIST_DIR)/apps/%: %
+$(TARGET:%=$(PATH_TO_TOP)/$(DIST_DIR)/apps/%): $(PATH_TO_TOP)/$(DIST_DIR)/apps/%: %
 ifeq ($(DOSCLI),yes)
 	$(CP) $* ..\$(DIST_DIR)\apps\$*
 else
-	$(CP) $* ../$(DIST_DIR)/apps/$*
+	$(CP) $* $(PATH_TO_TOP)/$(DIST_DIR)/apps/$*
 endif
 
-include ../rules.mak
+include $(PATH_TO_TOP)/rules.mak
 
 # EOF
