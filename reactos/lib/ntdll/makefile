@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.75 2002/10/26 00:32:18 chorns Exp $
+# $Id: makefile,v 1.76 2002/12/08 15:57:39 robd Exp $
 
 PATH_TO_TOP = ../..
 
@@ -68,6 +68,7 @@ TARGET_OBJECTS = \
   $(STDLIB_OBJECTS) \
   $(STRING_OBJECTS) \
   stubs/stubs.o \
+  ldr/res.o \
   ldr/utils.o \
   $(CSR_OBJECTS)
 

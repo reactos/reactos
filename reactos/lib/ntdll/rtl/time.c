@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.13 2002/09/30 20:57:54 hbirr Exp $
+/* $Id: time.c,v 1.14 2002/12/08 15:57:39 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,43 +55,11 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
-RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
-			   OUT PTIME_FIELDS TimeFields)
-{
-  ULONGLONG ElapsedSeconds;
-  ULONG SecondsInDay;
-  ULONG SecondsInMinute;
-
-  /* Extract millisecond from time */
-  TimeFields->Milliseconds = (CSHORT)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
-
-  /* Compute elapsed seconds */
-  ElapsedSeconds = (ULONGLONG)Time->QuadPart / TICKSPERSEC;
-
-  /* Compute seconds within the day */
-  SecondsInDay = ElapsedSeconds % SECSPERDAY;
-
-  /* Compute elapsed minutes within the day */
-  SecondsInMinute = SecondsInDay % SECSPERHOUR;
-
-  /* Compute elapsed time of day */
-  TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
-  TimeFields->Minute = (CSHORT)(SecondsInMinute / SECSPERMIN);
-  TimeFields->Second = (CSHORT)(SecondsInMinute % SECSPERMIN);
-
-  /* Compute elapsed days */
-  TimeFields->Day = (CSHORT)(ElapsedSeconds / SECSPERDAY);
-
-  /* The elapsed number of months and days cannot be calculated */
-  TimeFields->Month = 0;
-  TimeFields->Year = 0;
-}
-
-
-VOID STDCALL
-RtlTimeToTimeFields(PLARGE_INTEGER liTime,
-		    PTIME_FIELDS TimeFields)
+VOID
+STDCALL
+RtlTimeToTimeFields(
+	PLARGE_INTEGER liTime,
+	PTIME_FIELDS TimeFields)
 {
   const int *Months;
   int LeapSecondCorrections, SecondsInDay, CurYear;
@@ -169,11 +137,14 @@ RtlTimeToTimeFields(PLARGE_INTEGER liTime,
 }
 
 
-BOOLEAN STDCALL
-RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
-		    PLARGE_INTEGER Time)
+BOOLEAN
+STDCALL
+RtlTimeFieldsToTime(
+	PTIME_FIELDS tfTimeFields,
+	PLARGE_INTEGER Time)
 {
-  int CurYear, CurMonth;
+  int CurYear;
+  int CurMonth;
   long long int rcTime;
   TIME_FIELDS TimeFields = *tfTimeFields;
 
@@ -233,9 +204,11 @@ RtlTimeFieldsToTime(PTIME_FIELDS tfTimeFields,
 }
 
 
-VOID STDCALL
-RtlSecondsSince1970ToTime(ULONG SecondsSince1970,
-			  PLARGE_INTEGER Time)
+VOID
+STDCALL
+RtlSecondsSince1970ToTime(
+	ULONG SecondsSince1970,
+	PLARGE_INTEGER Time)
 {
   LONGLONG llTime;
 
@@ -245,9 +218,11 @@ RtlSecondsSince1970ToTime(ULONG SecondsSince1970,
 }
 
 
-VOID STDCALL
-RtlSecondsSince1980ToTime(ULONG SecondsSince1980,
-			  PLARGE_INTEGER Time)
+VOID
+STDCALL
+RtlSecondsSince1980ToTime(
+	ULONG SecondsSince1980,
+	PLARGE_INTEGER Time)
 {
   LONGLONG llTime;
 
@@ -257,9 +232,11 @@ RtlSecondsSince1980ToTime(ULONG SecondsSince1980,
 }
 
 
-BOOLEAN STDCALL
-RtlTimeToSecondsSince1970(PLARGE_INTEGER Time,
-			  PULONG SecondsSince1970)
+BOOLEAN
+STDCALL
+RtlTimeToSecondsSince1970(
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1970)
 {
   LARGE_INTEGER liTime;
 
@@ -267,17 +244,19 @@ RtlTimeToSecondsSince1970(PLARGE_INTEGER Time,
   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
 
   if (liTime.u.HighPart != 0)
-    return(FALSE);
+    return FALSE;
 
   *SecondsSince1970 = liTime.u.LowPart;
 
-  return(TRUE);
+  return TRUE;
 }
 
 
-BOOLEAN STDCALL
-RtlTimeToSecondsSince1980(PLARGE_INTEGER Time,
-			  PULONG SecondsSince1980)
+BOOLEAN
+STDCALL
+RtlTimeToSecondsSince1980(
+	PLARGE_INTEGER Time,
+	PULONG SecondsSince1980)
 {
   LARGE_INTEGER liTime;
 
@@ -285,15 +264,16 @@ RtlTimeToSecondsSince1980(PLARGE_INTEGER Time,
   liTime.QuadPart = liTime.QuadPart / TICKSPERSEC;
 
   if (liTime.u.HighPart != 0)
-    return(FALSE);
+    return FALSE;
 
   *SecondsSince1980 = liTime.u.LowPart;
 
-  return(TRUE);
+  return TRUE;
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
 			 PLARGE_INTEGER SystemTime)
 {
@@ -314,7 +294,8 @@ RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
 			 PLARGE_INTEGER LocalTime)
 {
@@ -333,5 +314,41 @@ RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
 
   return(STATUS_SUCCESS);
 }
+
+
+VOID
+STDCALL
+RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
+			   OUT PTIME_FIELDS TimeFields)
+{
+  ULONGLONG ElapsedSeconds;
+  ULONG SecondsInDay;
+  ULONG SecondsInMinute;
+
+  /* Extract millisecond from time */
+  TimeFields->Milliseconds = (CSHORT)((Time->QuadPart % TICKSPERSEC) / TICKSPERMSEC);
+
+  /* Compute elapsed seconds */
+  ElapsedSeconds = (ULONGLONG)Time->QuadPart / TICKSPERSEC;
+
+  /* Compute seconds within the day */
+  SecondsInDay = ElapsedSeconds % SECSPERDAY;
+
+  /* Compute elapsed minutes within the day */
+  SecondsInMinute = SecondsInDay % SECSPERHOUR;
+
+  /* Compute elapsed time of day */
+  TimeFields->Hour = (CSHORT)(SecondsInDay / SECSPERHOUR);
+  TimeFields->Minute = (CSHORT)(SecondsInMinute / SECSPERMIN);
+  TimeFields->Second = (CSHORT)(SecondsInMinute % SECSPERMIN);
+
+  /* Compute elapsed days */
+  TimeFields->Day = (CSHORT)(ElapsedSeconds / SECSPERDAY);
+
+  /* The elapsed number of months and days cannot be calculated */
+  TimeFields->Month = 0;
+  TimeFields->Year = 0;
+}
+
 
 /* EOF */

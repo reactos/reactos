@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.46 2002/11/15 22:06:01 ekohl Exp $
+/* $Id: startup.c,v 1.47 2002/12/08 15:57:40 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,20 +64,20 @@ LdrInitializeThunk (ULONG Unknown1,
 
        RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
        current_entry = 
-	 NtCurrentPeb()->Ldr->InInitializationOrderModuleList.Flink;
+         NtCurrentPeb()->Ldr->InInitializationOrderModuleList.Flink;
        while (current_entry != 
-	      &NtCurrentPeb()->Ldr->InInitializationOrderModuleList)
-	 {
-	   current = CONTAINING_RECORD(current_entry, LDR_MODULE, 
-				       InInitializationOrderModuleList);
-	   Entrypoint = (PDLLMAIN_FUNC)current->EntryPoint;
-	   if (Entrypoint != NULL &&
-	       current->BaseAddress != NtCurrentPeb()->ImageBaseAddress)
-	     {
-	       (VOID)Entrypoint(current->BaseAddress, DLL_THREAD_ATTACH, NULL);
-	     }
-	   current_entry = current_entry->Flink;
-	 }
+              &NtCurrentPeb()->Ldr->InInitializationOrderModuleList)
+         {
+           current = CONTAINING_RECORD(current_entry, LDR_MODULE, 
+                                       InInitializationOrderModuleList);
+           Entrypoint = (PDLLMAIN_FUNC)current->EntryPoint;
+           if (Entrypoint != NULL &&
+               current->BaseAddress != NtCurrentPeb()->ImageBaseAddress)
+             {
+               (VOID)Entrypoint(current->BaseAddress, DLL_THREAD_ATTACH, NULL);
+             }
+           current_entry = current_entry->Flink;
+         }
        RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
        return;
      }
@@ -88,8 +88,8 @@ LdrInitializeThunk (ULONG Unknown1,
    DPRINT("ImageBase %x\n", ImageBase);
    if (ImageBase <= (PVOID)0x1000)
      {
-	DPRINT("ImageBase is null\n");
-	ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
+        DPRINT("ImageBase is null\n");
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
 
    NtGlobalFlag = Peb->NtGlobalFlag;
@@ -101,8 +101,8 @@ LdrInitializeThunk (ULONG Unknown1,
        PEDosHeader->e_lfanew == 0L ||
        *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
-	DbgPrint("Image has bad header\n");
-	ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
+        DbgPrint("Image has bad header\n");
+        ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
 
    /* normalize process parameters */
@@ -122,15 +122,15 @@ LdrInitializeThunk (ULONG Unknown1,
    /* create process heap */
    RtlInitializeHeapManager();
    Peb->ProcessHeap = RtlCreateHeap(HEAP_GROWABLE,
-				    (PVOID)HEAP_BASE,
-				    NTHeaders->OptionalHeader.SizeOfHeapReserve,
-				    NTHeaders->OptionalHeader.SizeOfHeapCommit,
-				    NULL,
-				    NULL);
+                                    (PVOID)HEAP_BASE,
+                                    NTHeaders->OptionalHeader.SizeOfHeapReserve,
+                                    NTHeaders->OptionalHeader.SizeOfHeapCommit,
+                                    NULL,
+                                    NULL);
    if (Peb->ProcessHeap == 0)
      {
-	DbgPrint("Failed to create process heap\n");
-	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+        DbgPrint("Failed to create process heap\n");
+        ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
 
    /* initalize peb lock support */
@@ -141,16 +141,16 @@ LdrInitializeThunk (ULONG Unknown1,
 
    /* initialize tls bitmap */
    RtlInitializeBitMap (&TlsBitMap,
-			Peb->TlsBitmapBits,
-			TLS_MINIMUM_AVAILABLE);
+                        Peb->TlsBitmapBits,
+                        TLS_MINIMUM_AVAILABLE);
    Peb->TlsBitmap = &TlsBitMap;
    Peb->TlsExpansionCounter = TLS_MINIMUM_AVAILABLE;
 
    /* Initialize table of callbacks for the kernel. */
    Peb->KernelCallbackTable = 
      RtlAllocateHeap(RtlGetProcessHeap(),
-		     0,
-		     sizeof(PVOID) * USER32_CALLBACK_MAXIMUM);
+                     0,
+                     sizeof(PVOID) * USER32_CALLBACK_MAXIMUM);
 
    /* initalize loader lock */
    RtlInitializeCriticalSection (&LoaderLock);
@@ -158,12 +158,12 @@ LdrInitializeThunk (ULONG Unknown1,
 
    /* create loader information */
    Peb->Ldr = (PPEB_LDR_DATA)RtlAllocateHeap (Peb->ProcessHeap,
-					      0,
-					      sizeof(PEB_LDR_DATA));
+                                              0,
+                                              sizeof(PEB_LDR_DATA));
    if (Peb->Ldr == NULL)
      {
-	DbgPrint("Failed to create loader data\n");
-	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+        DbgPrint("Failed to create loader data\n");
+        ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    Peb->Ldr->Length = sizeof(PEB_LDR_DATA);
    Peb->Ldr->Initialized = FALSE;
@@ -178,21 +178,21 @@ LdrInitializeThunk (ULONG Unknown1,
 
    /* add entry for ntdll */
    NtModule = (PLDR_MODULE)RtlAllocateHeap (Peb->ProcessHeap,
-					    0,
-					    sizeof(LDR_MODULE));
+                                            0,
+                                            sizeof(LDR_MODULE));
    if (NtModule == NULL)
      {
-	DbgPrint("Failed to create loader module entry (NTDLL)\n");
-	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+        DbgPrint("Failed to create loader module entry (NTDLL)\n");
+        ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    memset(NtModule, 0, sizeof(LDR_MODULE));
 
    NtModule->BaseAddress = (PVOID)&_image_base__;
    NtModule->EntryPoint = 0; /* no entry point */
    RtlCreateUnicodeString (&NtModule->FullDllName,
-			   FullNtDllPath);
+                           FullNtDllPath);
    RtlCreateUnicodeString (&NtModule->BaseDllName,
-			   L"ntdll.dll");
+                           L"ntdll.dll");
    NtModule->Flags = 0;
    NtModule->LoadCount = -1; /* don't unload */
    NtModule->TlsIndex = 0;
@@ -204,9 +204,9 @@ LdrInitializeThunk (ULONG Unknown1,
    NtModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
    InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
-		  &NtModule->InLoadOrderModuleList);
+                  &NtModule->InLoadOrderModuleList);
    InsertTailList(&Peb->Ldr->InInitializationOrderModuleList,
-		  &NtModule->InInitializationOrderModuleList);
+                  &NtModule->InInitializationOrderModuleList);
 
 #ifdef DBG
 
@@ -216,12 +216,12 @@ LdrInitializeThunk (ULONG Unknown1,
 
    /* add entry for executable (becomes first list entry) */
    ExeModule = (PLDR_MODULE)RtlAllocateHeap (Peb->ProcessHeap,
-					     0,
-					     sizeof(LDR_MODULE));
+                                             0,
+                                             sizeof(LDR_MODULE));
    if (ExeModule == NULL)
      {
-	DbgPrint("Failed to create loader module infomation\n");
-	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+        DbgPrint("Failed to create loader module infomation\n");
+        ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
    ExeModule->BaseAddress = Peb->ImageBaseAddress;
 
@@ -233,13 +233,13 @@ LdrInitializeThunk (ULONG Unknown1,
     }
 
   RtlCreateUnicodeString(&ExeModule->FullDllName,
-			 Peb->ProcessParameters->ImagePathName.Buffer);
+                         Peb->ProcessParameters->ImagePathName.Buffer);
   RtlCreateUnicodeString(&ExeModule->BaseDllName,
-			 wcsrchr(ExeModule->FullDllName.Buffer, L'\\') + 1);
+                         wcsrchr(ExeModule->FullDllName.Buffer, L'\\') + 1);
 
   DPRINT("BaseDllName '%wZ'  FullDllName '%wZ'\n",
-	 &ExeModule->BaseDllName,
-	 &ExeModule->FullDllName);
+         &ExeModule->BaseDllName,
+         &ExeModule->FullDllName);
 
    ExeModule->Flags = 0;
    ExeModule->LoadCount = -1; /* don't unload */
@@ -252,7 +252,7 @@ LdrInitializeThunk (ULONG Unknown1,
    ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
    InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
-		  &ExeModule->InLoadOrderModuleList);
+                  &ExeModule->InLoadOrderModuleList);
 
 #ifdef DBG
 
@@ -269,8 +269,8 @@ LdrInitializeThunk (ULONG Unknown1,
    /* Check before returning that we can run the image safely. */
    if (EntryPoint == NULL)
      {
-	DbgPrint("Failed to initialize image\n");
-	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
+        DbgPrint("Failed to initialize image\n");
+        ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
 }
 

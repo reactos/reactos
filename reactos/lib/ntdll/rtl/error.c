@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.11 2002/09/08 10:23:05 chorns Exp $
+/* $Id: error.c,v 1.12 2002/12/08 15:57:38 robd Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -826,12 +826,10 @@ RPC_NT_SS_CONTEXT_MISMATCH           ERROR_INVALID_HANDLE
 
 VOID
 STDCALL
-RtlAssert (
-	PVOID FailedAssertion,
+RtlAssert(PVOID FailedAssertion,
 	PVOID FileName,
 	ULONG LineNumber,
-	PCHAR Message
-	)
+	PCHAR Message)
 {
 	DbgPrint ("Assertion \'%s\' failed at %s line %d: %s\n",
 	          (PCHAR)FailedAssertion,
@@ -881,9 +879,9 @@ RtlNtStatusToDosErrorNoTeb(NTSTATUS Status)
 			if (!ret)
 				ret = Status;  /* 0 means 1:1 mapping */
 			else if (ret == ERROR_MR_MID_NOT_FOUND)
-			  {
+			{
 			    DbgPrint("RTL: RtlNtStatusToDosErrorNoTeb(0x%lx): no valid W32 error mapping\n", Status);
-			  }
+			}
 			return ret;
 		}
 		Table++;
