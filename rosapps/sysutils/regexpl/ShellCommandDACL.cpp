@@ -1,4 +1,4 @@
-/* $Id: ShellCommandDACL.cpp,v 1.4 2001/01/13 23:55:36 narnaoud Exp $
+/* $Id: ShellCommandDACL.cpp,v 1.5 2004/10/11 01:24:22 sedwards Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -172,7 +172,7 @@ CheckDACLArgument:
         DWORD nACECount = sd.GetDACLEntriesCount();
         rConsole.Write(_T("DACL has "));
         TCHAR Buffer[256];
-        rConsole.Write(_itot(nACECount,Buffer,10));
+        rConsole.Write(_itoa(nACECount,Buffer,10));
         rConsole.Write(_T(" ACEs.\n"));
         if (nACECount == 0)
         {
@@ -184,7 +184,7 @@ CheckDACLArgument:
           {
             rConsole.Write(_T("\n"));
             rConsole.Write(_T("\tACE Index: "));
-            rConsole.Write(_itot(i,Buffer,10));
+            rConsole.Write(_itoa(i,Buffer,10));
             rConsole.Write(_T("\n"));
             rConsole.Write(_T("\tACE Type: "));
             switch (sd.GetDACLEntry(i))
@@ -217,7 +217,7 @@ CheckDACLArgument:
                 ASSERT(dwError != ERROR_INSUFFICIENT_BUFFER);
                 rConsole.Write(_T("Error "));
                 TCHAR Buffer[256];
-                rConsole.Write(_itot(dwError,Buffer,10));
+                rConsole.Write(_itoa(dwError,Buffer,10));
                 rConsole.Write(_T("\nGetting string representation of SID\n"));
               }
               else
@@ -238,7 +238,7 @@ CheckDACLArgument:
               {
                 rConsole.Write(_T("Error "));
                 TCHAR Buffer[256];
-                rConsole.Write(_itot(GetLastError(),Buffer,10));
+                rConsole.Write(_itoa(GetLastError(),Buffer,10));
                 rConsole.Write(_T("\n"));
               }
               else
@@ -358,7 +358,7 @@ AbortDumpDACL:
   {
     rConsole.Write(_T("Error "));
     TCHAR Buffer[256];
-    rConsole.Write(_itot(dwError,Buffer,10));
+    rConsole.Write(_itoa(dwError,Buffer,10));
     rConsole.Write(_T("\n"));
     if (pchName) delete [] pchName;
     if (pchDomainName) delete [] pchDomainName;

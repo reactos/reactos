@@ -1,4 +1,4 @@
-/* $Id: ShellCommandValue.cpp,v 1.4 2001/01/13 23:55:37 narnaoud Exp $
+/* $Id: ShellCommandValue.cpp,v 1.5 2004/10/11 01:24:22 sedwards Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -399,7 +399,7 @@ CheckValueArgument:
     {
       rConsole.Write(_T("Error "));
       TCHAR Buffer[256];
-      rConsole.Write(_itot(nError,Buffer,10));
+      rConsole.Write(_itoa(nError,Buffer,10));
       rConsole.Write(_T("\n"));
       if (nError == ERROR_FILE_NOT_FOUND)
       {

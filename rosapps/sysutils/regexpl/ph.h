@@ -1,4 +1,4 @@
-/* $Id: ph.h,v 1.4 2002/09/09 22:48:03 sedwards Exp $ */
+/* $Id: ph.h,v 1.5 2004/10/11 01:24:22 sedwards Exp $ */
 
 // ph.h : include file for standard system include files,
 //  or project specific include files that are used frequently, but
@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <assert.h>
+#include <ctype.h>
+#include <tchar.h>
 #define ASSERT	assert
 #ifdef _DEBUG
 #define VERIFY ASSERT

@@ -1,4 +1,4 @@
-/* $Id: ShellCommandSACL.cpp,v 1.4 2001/01/13 23:55:37 narnaoud Exp $
+/* $Id: ShellCommandSACL.cpp,v 1.5 2004/10/11 01:24:22 sedwards Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -255,7 +255,7 @@ CheckSACLArgument:
   nACECount = sd.GetSACLEntriesCount();
   rConsole.Write(_T("SACL has "));
   TCHAR Buffer[256];
-  rConsole.Write(_itot(nACECount,Buffer,10));
+  rConsole.Write(_itoa(nACECount,Buffer,10));
   rConsole.Write(_T(" ACEs.\n"));
   ASSERT(sizeof(ACL) == 8);
   rConsole.Write(_T("\n"));
@@ -263,7 +263,7 @@ CheckSACLArgument:
   {
     rConsole.Write(_T("\n"));
     rConsole.Write(_T("\tACE Index: "));
-    rConsole.Write(_itot(i,Buffer,10));
+    rConsole.Write(_itoa(i,Buffer,10));
     rConsole.Write(_T("\n"));
     rConsole.Write(_T("\tAudit Type: "));
     BOOL blnFailed, blnSuccessful;
@@ -306,7 +306,7 @@ CheckSACLArgument:
       ASSERT(dwError != ERROR_INSUFFICIENT_BUFFER);
       rConsole.Write(_T("Error "));
       TCHAR Buffer[256];
-      rConsole.Write(_itot(dwError,Buffer,10));
+      rConsole.Write(_itoa(dwError,Buffer,10));
       rConsole.Write(_T("\nGetting string representation of SID\n"));
     }
     else
@@ -342,7 +342,7 @@ CheckSACLArgument:
     {
       rConsole.Write(_T("Error "));
       TCHAR Buffer[256];
-      rConsole.Write(_itot(GetLastError(),Buffer,10));
+      rConsole.Write(_itoa(GetLastError(),Buffer,10));
       rConsole.Write(_T("\n"));
     }
     else
