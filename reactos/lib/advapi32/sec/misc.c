@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.23 2004/09/06 22:12:25 ekohl Exp $
+/* $Id: misc.c,v 1.24 2004/09/08 11:36:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -126,7 +126,7 @@ GetFileSecurityW(LPCWSTR lpFileName,
 				    NULL))
     {
       DPRINT("Invalid path\n");
-      SetLastError(ERROR_BAD_PATHNAME);
+      SetLastError(ERROR_INVALID_NAME);
       return FALSE;
     }
 
@@ -196,33 +196,117 @@ GetKernelObjectSecurity(HANDLE Handle,
 
 
 /******************************************************************************
- * SetFileSecurityW [ADVAPI32.@]
+ * SetFileSecurityA [ADVAPI32.@]
  * Sets the security of a file or directory
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-SetFileSecurityW (LPCWSTR lpFileName,
-		  SECURITY_INFORMATION RequestedInformation,
+SetFileSecurityA (LPCSTR lpFileName,
+		  SECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  DPRINT1("SetFileSecurityW : stub\n");
-  return TRUE;
+  UNICODE_STRING FileName;
+  NTSTATUS Status;
+  BOOL bResult;
+
+  Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
+					    (LPSTR)lpFileName);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
+  bResult = SetFileSecurityW(FileName.Buffer,
+			     SecurityInformation,
+			     pSecurityDescriptor);
+
+  RtlFreeUnicodeString(&FileName);
+
+  return bResult;
 }
 
 
 /******************************************************************************
- * SetFileSecurityA [ADVAPI32.@]
+ * SetFileSecurityW [ADVAPI32.@]
  * Sets the security of a file or directory
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-SetFileSecurityA (LPCSTR lpFileName,
-		  SECURITY_INFORMATION RequestedInformation,
+SetFileSecurityW (LPCWSTR lpFileName,
+		  SECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR pSecurityDescriptor)
 {
-  DPRINT("SetFileSecurityA : stub\n");
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK StatusBlock;
+  UNICODE_STRING FileName;
+  ULONG AccessMask = 0;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+  DPRINT("SetFileSecurityW() called\n");
+
+  if (SecurityInformation &
+      (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
+    {
+      AccessMask |= WRITE_OWNER;
+    }
+
+  if (SecurityInformation & DACL_SECURITY_INFORMATION)
+    {
+      AccessMask |= WRITE_DAC;
+    }
+
+  if (SecurityInformation & SACL_SECURITY_INFORMATION)
+    {
+      AccessMask |= ACCESS_SYSTEM_SECURITY;
+    }
+
+  if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName,
+				    &FileName,
+				    NULL,
+				    NULL))
+    {
+      DPRINT("Invalid path\n");
+      SetLastError(ERROR_INVALID_NAME);
+      return FALSE;
+    }
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &FileName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenFile(&FileHandle,
+		      AccessMask,
+		      &ObjectAttributes,
+		      &StatusBlock,
+		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		      0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
+  RtlFreeUnicodeString(&FileName);
+
+  Status = NtSetSecurityObject(FileHandle,
+			       SecurityInformation,
+			       pSecurityDescriptor);
+  NtClose(FileHandle);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtSetSecurityObject() failed (Status %lx)\n", Status);
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
   return TRUE;
 }
 
