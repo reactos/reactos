@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.15 2004/03/31 21:21:30 weiden Exp $ */
+/* $Id: dib32bpp.c,v 1.16 2004/04/01 19:31:05 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -83,6 +83,7 @@ DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
+  PDWORD   Source32, Dest32;
 
   DestBits = DestSurf->pvScan0 + (DestRect->top * DestSurf->lDelta) + 4 * DestRect->left;
 
@@ -226,9 +227,61 @@ DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       else
       {
-	/* FIXME */
-	DPRINT1("DIB_32BPP_Bitblt: Unhandled ColorTranslation (0x%x) for 32 -> 32 copy\n", ColorTranslation->flXlate);
-        return FALSE;
+	if (DestRect->top < SourcePoint->y)
+	  {
+	    SourceBits = (SourceSurf->pvScan0 + (SourcePoint->y * SourceSurf->lDelta) + 4 * SourcePoint->x);
+	    for (j = DestRect->top; j < DestRect->bottom; j++)
+	      {
+                if (DestRect->left < SourcePoint->x)
+                  {
+                    Dest32 = (DWORD *) DestBits;
+                    Source32 = (DWORD *) SourceBits;
+                    for (i = DestRect->left; i < DestRect->right; i++)
+                      {
+                        *Dest32++ = XLATEOBJ_iXlate(ColorTranslation, *Source32++);
+                      }
+                  }
+                else
+                  {
+                    Dest32 = (DWORD *) DestBits + (DestRect->right - DestRect->left - 1);
+                    Source32 = (DWORD *) SourceBits + (DestRect->right - DestRect->left - 1);
+                    for (i = DestRect->right - 1; DestRect->left <= i; i--)
+                      {
+                        *Dest32-- = XLATEOBJ_iXlate(ColorTranslation, *Source32--);
+                      }
+                  }
+		SourceBits += SourceSurf->lDelta;
+		DestBits += DestSurf->lDelta;
+	      }
+	  }
+	else
+	  {
+	    SourceBits = SourceSurf->pvScan0 + ((SourcePoint->y + DestRect->bottom - DestRect->top - 1) * SourceSurf->lDelta) + 4 * SourcePoint->x;
+	    DestBits = DestSurf->pvScan0 + ((DestRect->bottom - 1) * DestSurf->lDelta) + 4 * DestRect->left;
+	    for (j = DestRect->bottom - 1; DestRect->top <= j; j--)
+	      {
+                if (DestRect->left < SourcePoint->x)
+                  {
+                    Dest32 = (DWORD *) DestBits;
+                    Source32 = (DWORD *) SourceBits;
+                    for (i = DestRect->left; i < DestRect->right; i++)
+                      {
+                        *Dest32++ = XLATEOBJ_iXlate(ColorTranslation, *Source32++);
+                      }
+                  }
+                else
+                  {
+                    Dest32 = (DWORD *) DestBits + (DestRect->right - DestRect->left - 1);
+                    Source32 = (DWORD *) SourceBits + (DestRect->right - DestRect->left - 1);
+                    for (i = DestRect->right; DestRect->left < i; i--)
+                      {
+                        *Dest32-- = XLATEOBJ_iXlate(ColorTranslation, *Source32--);
+                      }
+                  }
+		SourceBits -= SourceSurf->lDelta;
+		DestBits -= DestSurf->lDelta;
+	      }
+	  }
       }
       break;
 
