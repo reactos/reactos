@@ -576,22 +576,6 @@ protected:
 	}
 #endif
 
-	void append_content(const char* s, int l)
-	{
-		//if (_children.empty())
-			_content.append(s, l);
-		//else
-		//	_children.back()->_content.append(s, l);
-	}
-
-	void append_trailing(const char* s, int l)
-	{
-		if (_children.empty())
-			_content.append(s, l);
-		else
-			_children.back()->_trailing.append(s, l);
-	}
-
 	void write_worker(std::ostream& out, int indent) const;
 	void pretty_write_worker(std::ostream& out, int indent) const;
 	void smart_write_worker(std::ostream& out, int indent) const;
@@ -1227,7 +1211,7 @@ struct XMLReader
 		XML_SetElementHandler(_parser, XML_StartElementHandler, XML_EndElementHandler);
 		XML_SetDefaultHandler(_parser, XML_DefaultHandler);
 
-		_in_node = false;
+		_last_tag = TAG_NONE;
 	}
 
 	~XMLReader()
@@ -1265,7 +1249,7 @@ protected:
 	std::string _encoding;
 
 	std::string _content;
-	bool		_in_node;
+	enum {TAG_NONE, TAG_START, TAG_END} _last_tag;
 
 	static void XMLCALL XML_XmlDeclHandler(void* userData, const XML_Char* version, const XML_Char* encoding, int standalone);
 	static void XMLCALL XML_StartElementHandler(void* userData, const XML_Char* name, const XML_Char** atts);
