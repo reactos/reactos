@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.5 2001/08/30 22:20:11 dwelch Exp $
+# $Id: helper.mk,v 1.6 2001/09/01 10:38:49 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -116,7 +116,7 @@ endif
 ifeq ($(TARGET_TYPE),driver_library)
   MK_MODE := kernel
   MK_EXETYPE := dll
-  MK_DEFEXT := .a
+  MK_DEFEXT := .dll
   MK_DEFENTRY :=
   MK_DDKLIBS :=
   MK_SDKLIBS :=
