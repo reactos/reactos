@@ -7,6 +7,7 @@
  * UPDATE HISTORY:
  *   DW   22/05/98  Created
  *   RJJ  10/12/98  Completed loader function and added hooks for MZ/PE 
+ *   RJJ  10/12/98  Rolled in David's code to load COFF drivers
  */
 
 /* INCLUDES *****************************************************************/
@@ -26,9 +27,13 @@
 
 #include "pe.h"
 
-/* FUNCTIONS *****************************************************************/
+/* FORWARD DECLARATIONS ******************************************************/
+
+NTSTATUS LdrCOFFProcessDriver(PVOID ModuleLoadBase);
+NTSTATUS LdrPEProcessDriver(PVOID ModuleLoadBase);
 
 /* COFF Driver load support **************************************************/
+
 static BOOLEAN LdrCOFFDoRelocations(module *Module, unsigned int SectionIndex);
 static BOOLEAN LdrCOFFDoAddr32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
 static BOOLEAN LdrCOFFDoReloc32Reloc(module *Module, SCNHDR *Section, RELOC *Relocation);
@@ -37,22 +42,49 @@ static unsigned int LdrCOFFGetSymbolValue(module *Module, unsigned int Idx);
 static unsigned int LdrCOFFGetKernelSymbolAddr(char *Name);
 static unsigned int LdrCOFFGetSymbolValueByName(module *Module, char *SymbolName, unsigned int Idx);
 
-static NTSTATUS 
-LdrCOFFProcessDriver(HANDLE FileHandle)
-{
-  BOOLEAN FoundEntry;
-  char SymbolName[255];
-  int i;
-  NTSTATUS Status;
-  PVOID ModuleLoadBase;
-  ULONG EntryOffset;
-  FILHDR *FileHeader;
-  AOUTHDR *AOUTHeader;
-  module *Module;
-  FILE_STANDARD_INFORMATION FileStdInfo;
-  PDRIVER_INITIALIZE EntryRoutine;
+/* FUNCTIONS *****************************************************************/
 
-  /*  Get the size of the file for the section  */
+/*
+ * FUNCTION: Loads a kernel driver
+ * ARGUMENTS:
+ *         FileName = Driver to load
+ * RETURNS: Status
+ */
+
+NTSTATUS 
+LdrLoadDriver(PUNICODE_STRING Filename)
+{
+  char BlockBuffer[512];
+  PVOID ModuleLoadBase;
+  NTSTATUS Status;
+  HANDLE FileHandle;
+  OBJECT_ATTRIBUTES FileObjectAttributes;
+  PIMAGE_DOS_HEADER PEDosHeader;
+  FILE_STANDARD_INFORMATION FileStdInfo;
+
+  /*  Open the Driver  */
+  InitializeObjectAttributes(&FileObjectAttributes,
+                             Filename, 
+                             0,
+                             NULL,
+                             NULL);
+  Status = ZwOpenFile(&FileHandle, 0, &FileObjectAttributes, NULL, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  CHECKPOINT;
+
+  /*  Read first block of image to determine type  */
+  Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 512, 0, 0);
+  if (!NT_SUCCESS(Status))
+    {
+      ZwClose(FileHandle);
+      return Status;
+    }    
+  CHECKPOINT;
+
+  /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
                                   NULL,
                                   &FileStdInfo,
@@ -86,6 +118,83 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
     }
   CHECKPOINT;
 
+  ZwClose(FileHandle);
+
+  /*  If MZ header exists  */
+  PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
+  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC && PEDosHeader->e_lfanew != 0L)
+    {
+      Status = LdrPEProcessDriver(ModuleLoadBase);
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(ModuleLoadBase);
+          return Status;
+        }
+    }
+  if (PEDosHeader->e_magic == IMAGE_DOS_MAGIC)
+    {
+      ExFreePool(ModuleLoadBase);
+      return STATUS_NOT_IMPLEMENTED;
+    }
+  else  /*  Assume COFF format and load  */
+    {
+      Status = LdrCOFFProcessDriver(ModuleLoadBase);
+      if (!NT_SUCCESS(Status))
+        {
+          ExFreePool(ModuleLoadBase);
+          return Status;
+        }
+    }
+
+  /*  Cleanup  */
+  ExFreePool(ModuleLoadBase);
+
+  return STATUS_SUCCESS;
+}
+
+NTSTATUS 
+LdrPEProcessDriver(PVOID ModuleLoadBase)
+{
+  PULONG NTMagic;
+  PIMAGE_DOS_HEADER PEDosHeader;
+  PIMAGE_FILE_HEADER PEFileHeader;
+  PIMAGE_OPTIONAL_HEADER PEOptionalHeader;
+  
+  /*  Get header pointers  */
+  PEDosHeader = (PIMAGE_DOS_HEADER) ModuleLoadBase;
+  PEMagic = (PULONG) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew);
+  PEFileHeader = (PIMAGE_FILE_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG));
+  PEOptionalHeader = (PIMAGE_OPTIONAL_HEADER) ((unsigned int) ModuleLoadBase + 
+    PEDosHeader->e_lfanew + sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER));
+
+  /*  Check file magic numbers  */
+  if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC || 
+      PEDosHeader->e_lfanew == 0 ||
+      *PEMagic != IMAGE_NT_MAGIC ||
+      PEFileHeader->Machine != IMAGE_FILE_MACHINE_I386)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+
+
+  return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS 
+LdrCOFFProcessDriver(PVOID ModuleLoadBase)
+{
+  BOOLEAN FoundEntry;
+  char SymbolName[255];
+  int i;
+  ULONG EntryOffset;
+  FILHDR *FileHeader;
+  AOUTHDR *AOUTHeader;
+  module *Module;
+  PDRIVER_INITIALIZE EntryRoutine;
+
   /*  Get header pointers  */
   FileHeader = ModuleLoadBase;
   AOUTHeader = ModuleLoadBase + FILHSZ;
@@ -96,7 +205,6 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
     {
       DbgPrint("Module has bad magic value (%x)\n", 
                FileHeader->f_magic);
-      ExFreePool(ModuleLoadBase);
       return STATUS_UNSUCCESSFUL;
     }
   CHECKPOINT;
@@ -105,7 +213,6 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
   Module = (module *) ExAllocatePool(NonPagedPool, sizeof(module));
   if (Module == NULL)
     {
-      ExFreePool(ModuleLoadBase);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   Module->sym_list = (SYMENT *)(ModuleLoadBase + FileHeader->f_symptr);
@@ -153,7 +260,6 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
     {
       DbgPrint("Failed to alloc section for module\n");
       ExFreePool(Module);
-      ExFreePool(ModuleLoadBase);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
   CHECKPOINT;
@@ -176,8 +282,11 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
             {
               DPRINT("Relocation failed for section %s\n",
                      Module->scn_list[i].s_name);
+
+              /* FIXME: unallocate all sections here  */
+
               ExFreePool(Module);
-              ExFreePool(ModuleLoadBase);
+
               return STATUS_UNSUCCESSFUL;
             }
         }
@@ -208,12 +317,17 @@ LdrCOFFProcessDriver(HANDLE FileHandle)
     {
       DbgPrint("No module entry point defined\n");
       ExFreePool(Module);
-      ExFreePool(ModuleLoadBase);
+
+      /* FIXME: unallocate all sections here  */
+
       return STATUS_UNSUCCESSFUL;
     }
    
-  /*  Call the module initalization routine  */
+  /*  Get the address of the module initalization routine  */
   EntryRoutine = (PDRIVER_INITIALIZE)(Module->base + EntryOffset);
+
+  /*  Cleanup  */
+  ExFreePool(Module);
 
   return InitalizeLoadedDriver(EntryRoutine);
 }
@@ -456,76 +570,6 @@ LdrCOFFGetSymbolValueByName(module *Module,
 
 
 
-
-static NTSTATUS 
-LdrProcessPEDriver(HANDLE FileHandle, PIMAGE_DOS_HEADER DosHeader)
-{
-  return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS 
-LdrLoadDriver(PUNICODE_STRING Filename)
-/*
- * FUNCTION: Loads a kernel driver
- * ARGUMENTS:
- *         FileName = Driver to load
- * RETURNS: Status
- */
-{
-  char BlockBuffer[512];
-  NTSTATUS Status;
-  HANDLE FileHandle;
-  OBJECT_ATTRIBUTES FileObjectAttributes;
-  PIMAGE_DOS_HEADER PEDosHeader;
-
-  /*  Open the Driver  */
-  InitializeObjectAttributes(&FileObjectAttributes,
-                             Filename, 
-                             0,
-                             NULL,
-                             NULL);
-  Status = ZwOpenFile(&FileHandle, 0, &FileObjectAttributes, NULL, 0, 0);
-  if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-  /*  Read first block of image to determine type  */
-  Status = ZwReadFile(FileHandle, 0, 0, 0, 0, BlockBuffer, 512, 0, 0);
-  if (!NT_SUCCESS(Status))
-    {
-      ZwClose(FileHandle);
-      return Status;
-    }    
-
-  /*  If MZ header exists  */
-  PEDosHeader = (PIMAGE_DOS_HEADER) BlockBuffer;
-  if (PEDosHeader->e_magic == 0x54AD && PEDosHeader->e_lfanew != 0L)
-    {
-      Status = LdrProcessPEDriver(FileHandle, PEDosHeader);
-      if (!NT_SUCCESS(Status))
-        {
-          ZwClose(FileHandle);
-          return Status;
-        }
-    }
-  if (PEDosHeader->e_magic == 0x54AD)
-    {
-      ZwClose(FileHandle);
-      return STATUS_NOT_IMPLEMENTED;
-    }
-  else /*  Assume coff format and load  */
-    {
-      Status = LdrCOFFProcessDriver(FileHandle);
-      if (!NT_SUCCESS(Status))
-        {
-          ZwClose(FileHandle);
-          return Status;
-        }
-    }
-
-  return STATUS_NOT_IMPLEMENTED;
-}
 
 static NTSTATUS 
 LdrProcessMZImage(HANDLE ProcessHandle, 

@@ -7,6 +7,9 @@ typedef WORD *PWORD;
 typedef DWORD *PDWORD;
 #endif
 
+#define IMAGE_DOS_MAGIC  0x54ad
+#define IMAGE_NT_MAGIC   0x00004550
+
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
