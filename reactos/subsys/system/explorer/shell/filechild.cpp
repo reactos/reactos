@@ -36,7 +36,7 @@
 
 FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
 {
-#ifdef __linux__
+#ifdef __WINE__
 	if (*path == '/')
 		_etype = ET_UNIX;
 	else
@@ -86,7 +86,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME/*_sortOrder*/);
 	}
 	else
-#ifdef __linux__
+#ifdef __WINE__
 	if (info._etype == ET_UNIX)
 	{
 		_root._drive_type = GetDriveType(info._path);

@@ -28,7 +28,7 @@
 
 enum ENTRY_TYPE {
 	ET_WINDOWS,
-#ifdef __linux__
+#ifdef __WINE__
 	ET_UNIX,
 #endif
 	ET_SHELL

@@ -26,7 +26,7 @@
  //
 
 
-#ifdef __linux__
+#ifdef __WINE__
 
 #include "../utility/utility.h"
 #include "../utility/shellclasses.h"
@@ -195,4 +195,4 @@ void UnixEntry::get_path(PTSTR path) const
 	path[len] = TEXT('\0');
 }
 
-#endif // __linux__
+#endif // __WINE__

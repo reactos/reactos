@@ -26,7 +26,7 @@
  //
 
 
-#ifdef __linux__
+#ifdef __WINE__
 
 struct UnixEntry : public Entry
 {

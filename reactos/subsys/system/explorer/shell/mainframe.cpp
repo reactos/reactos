@@ -90,7 +90,7 @@ MainFrame::MainFrame(HWND hwnd)
 
 	drivebarBtn.fsStyle = BTNS_BUTTON;
 
-#ifdef _linux_
+#ifdef __WINE__
 	 // insert unix file system button
 	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("/\0"));
 
@@ -381,7 +381,7 @@ int MainFrame::Command(int id, int code)
 		CheckMenuItem(_menu_info._hMenuOptions, id, toggle_fullscreen()?MF_CHECKED:0);
 		break;
 
-#ifdef _linux_
+#ifdef __WINE__
 	  case ID_DRIVE_UNIX_FS: {
 		TCHAR path[MAX_PATH];
 		FileChildWindow* child;
