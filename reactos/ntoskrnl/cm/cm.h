@@ -531,8 +531,9 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAddFree(PREGISTRY_HIVE  RegistryHive,
-	PCELL_HEADER FreeBlock,
-  BLOCK_OFFSET FreeOffset);
+	   PCELL_HEADER FreeBlock,
+	   BLOCK_OFFSET FreeOffset,
+	   BOOLEAN MergeFreeBlocks);
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetUpBoot);

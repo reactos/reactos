@@ -743,7 +743,8 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 	    {
 	      Status = CmiAddFree(RegistryHive,
 				  FreeBlock,
-				  RegistryHive->BlockList[i]->BlockOffset + FreeOffset);
+				  RegistryHive->BlockList[i]->BlockOffset + FreeOffset,
+				  FALSE);
 
 	      if (!NT_SUCCESS(Status))
 		{
@@ -1429,16 +1430,27 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
     {
       DPRINT1("ParentKey %p\n", ParentKey)
       ParentKey->KeyCell->NumberOfSubKeys--;
-      NtQuerySystemTime((PTIME)&ParentKey->KeyCell->LastWriteTime);
-      CmiMarkBlockDirty(RegistryHive,
-			ParentKey->BlockOffset);
 
       /* Remove the parent key's hash table */
       if (ParentKey->KeyCell->NumberOfSubKeys == 0)
 	{
-	  DPRINT1("FIXME: Remove parent key hash table\n")
-
+	  DPRINT1("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
+	  HashBlock = CmiGetBlock(RegistryHive,
+				  ParentKey->KeyCell->HashTableOffset,
+				  NULL);
+	  DPRINT1("ParentKey HashBlock %p\n", HashBlock)
+	  if (HashBlock != NULL)
+	    {
+	      CmiDestroyBlock(RegistryHive,
+			      HashBlock,
+			      ParentKey->KeyCell->HashTableOffset);
+	      ParentKey->KeyCell->HashTableOffset = -1;
+	    }
 	}
+
+      NtQuerySystemTime((PTIME)&ParentKey->KeyCell->LastWriteTime);
+      CmiMarkBlockDirty(RegistryHive,
+			ParentKey->BlockOffset);
     }
 
   /* Destroy key cell */
@@ -1447,8 +1459,6 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 		  SubKey->BlockOffset);
   SubKey->BlockOffset = -1;
   SubKey->KeyCell = NULL;
-
-  /* FIXME: Merge free blocks within the Bin */
 
   return(STATUS_SUCCESS);
 }
@@ -1488,13 +1498,13 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 				CurValueCell->Name,
 				CurValueCell->NameSize,
 				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
-        {
-          *ValueCell = CurValueCell;
-          if (VBOffset)
-            *VBOffset = ValueListCell->Values[i];
-          //DPRINT("Found value %s\n", ValueName);
-          break;
-        }
+	{
+	  *ValueCell = CurValueCell;
+	  if (VBOffset)
+	    *VBOffset = ValueListCell->Values[i];
+	  //DPRINT("Found value %s\n", ValueName);
+	  break;
+	}
       CmiReleaseBlock(RegistryHive, CurValueCell);
     }
 
@@ -1651,7 +1661,9 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
 				CurValueCell->Name,
 				CurValueCell->NameSize,
 				CurValueCell->Flags & REG_VALUE_NAME_PACKED))
-        {
+	{
+	  CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->Values[i]);
+
           if ((KeyCell->NumberOfValues - 1) < i)
             {
               RtlCopyMemory(&ValueListCell->Values[i],
@@ -1664,9 +1676,8 @@ CmiDeleteValueFromKey(IN PREGISTRY_HIVE RegistryHive,
             }
 
           KeyCell->NumberOfValues -= 1;
-          CmiDestroyValueCell(RegistryHive, CurValueCell, ValueListCell->Values[i]);
           break;
-        }
+	}
       CmiReleaseBlock(RegistryHive, CurValueCell);
     }
 
@@ -1852,16 +1863,18 @@ CmiAllocateValueCell(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
-  PVALUE_CELL ValueCell,
-  BLOCK_OFFSET VBOffset)
+		    PVALUE_CELL ValueCell,
+		    BLOCK_OFFSET VBOffset)
 {
   NTSTATUS Status;
   PVOID pBlock;
   PHBIN pBin;
 
+  DPRINT("CmiDestroyValueCell(Cell %p  Offset %lx)\n", ValueCell, VBOffset);
+
   VERIFY_VALUE_CELL(ValueCell);
 
-  /* First, release data: */
+  /* Destroy the data cell */
   if (ValueCell->DataSize > 4)
     {
       pBlock = CmiGetBlock(RegistryHive, ValueCell->DataOffset, &pBin);
@@ -1876,6 +1889,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 	ZwQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
+  /* Destroy the value cell */
   Status = CmiDestroyBlock(RegistryHive, ValueCell, VBOffset);
 
   /* Update time of heap */
@@ -2047,8 +2061,12 @@ CmiAllocateBlock(PREGISTRY_HIVE RegistryHive,
 	    {
 	      NewBlock = (PCELL_HEADER) ((ULONG_PTR) NewBlock+BlockSize);
 	      NewBlock->CellSize = ((PCELL_HEADER) (*Block))->CellSize - BlockSize;
-	      CmiAddFree(RegistryHive, NewBlock, *pBlockOffset + BlockSize);
-	      CmiMarkBlockDirty(RegistryHive, *pBlockOffset + BlockSize);
+	      CmiAddFree(RegistryHive,
+			 NewBlock,
+			 *pBlockOffset + BlockSize,
+			 TRUE);
+	      CmiMarkBlockDirty(RegistryHive,
+				*pBlockOffset + BlockSize);
 	    }
 	  else if (NewBlock->CellSize < BlockSize)
 	    {
@@ -2091,7 +2109,8 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
       RtlZeroMemory(((PVOID)pFree) + sizeof(ULONG),
 		    pFree->CellSize - sizeof(ULONG));
 
-      CmiAddFree(RegistryHive, Block, Offset);
+      /* add block to the list of free blocks */
+      CmiAddFree(RegistryHive, Block, Offset, TRUE);
       CmiReleaseBlock(RegistryHive, Block);
 
       /* Update time of heap */
@@ -2108,81 +2127,166 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
 }
 
 
+static BOOLEAN
+CmiMergeFree(PREGISTRY_HIVE RegistryHive,
+	     PCELL_HEADER FreeBlock,
+	     BLOCK_OFFSET FreeOffset)
+{
+  BLOCK_OFFSET BlockOffset;
+  BLOCK_OFFSET BinOffset;
+  ULONG BlockSize;
+  ULONG BinSize;
+  PHBIN Bin;
+  LONG i;
+
+  DPRINT("CmiMergeFree(Block %lx  Offset %lx  Size %lx) called\n",
+	 FreeBlock, FreeOffset, FreeBlock->CellSize);
+
+  CmiGetBlock(RegistryHive,
+	      FreeOffset,
+	      &Bin);
+  DPRINT("Bin %p\n", Bin);
+  if (Bin == NULL)
+    return(FALSE);
+
+  BinOffset = Bin->BlockOffset;
+  BinSize = Bin->BlockSize;
+  DPRINT("Bin %p  Offset %lx  Size %lx\n", Bin, BinOffset, BinSize);
+
+  for (i = 0; i < RegistryHive->FreeListSize; i++)
+    {
+      BlockOffset = RegistryHive->FreeListOffset[i];
+      BlockSize = RegistryHive->FreeList[i]->CellSize;
+      if (BlockOffset > BinOffset &&
+	  BlockOffset < BinOffset + BinSize)
+	{
+	  DPRINT("Free block: Offset %lx  Size %lx\n",
+		  BlockOffset, BlockSize);
+
+	  if ((i < (RegistryHive->FreeListSize - 1)) &&
+	      (BlockOffset + BlockSize == FreeOffset) &&
+	      (FreeOffset + FreeBlock->CellSize == RegistryHive->FreeListOffset[i + 1]))
+	    {
+	      DPRINT("Merge current block with previous and next block\n");
+
+	      RegistryHive->FreeList[i]->CellSize +=
+		(FreeBlock->CellSize + RegistryHive->FreeList[i + 1]->CellSize);
+
+	      FreeBlock->CellSize = 0;
+	      RegistryHive->FreeList[i + 1]->CellSize = 0;
+
+
+	      if ((i + 2) < RegistryHive->FreeListSize)
+		{
+		  RtlMoveMemory(&RegistryHive->FreeListOffset[i + 1],
+				&RegistryHive->FreeListOffset[i + 2],
+				sizeof(RegistryHive->FreeListOffset[0])
+				  * (RegistryHive->FreeListSize - i - 2));
+		}
+	      RegistryHive->FreeListSize--;
+
+	      CmiMarkBlockDirty(RegistryHive, BlockOffset);
+
+	      return(TRUE);
+	    }
+	  else if (BlockOffset + BlockSize == FreeOffset)
+	    {
+	      DPRINT("Merge current block with previous block\n");
+
+	      RegistryHive->FreeList[i]->CellSize += FreeBlock->CellSize;
+	      FreeBlock->CellSize = 0;
+
+	      CmiMarkBlockDirty(RegistryHive, BlockOffset);
+
+	      return(TRUE);
+	    }
+	  else if (FreeOffset + FreeBlock->CellSize == BlockOffset)
+	    {
+	      DPRINT("Merge current block with next block\n");
+
+	      FreeBlock->CellSize += RegistryHive->FreeList[i]->CellSize;
+	      RegistryHive->FreeList[i]->CellSize = 0;
+	      RegistryHive->FreeList[i] = FreeBlock;
+	      RegistryHive->FreeListOffset[i] = FreeOffset;
+
+	      CmiMarkBlockDirty(RegistryHive, FreeOffset);
+
+	      return(TRUE);
+	    }
+	}
+    }
+
+  return(FALSE);
+}
+
+
 NTSTATUS
 CmiAddFree(PREGISTRY_HIVE RegistryHive,
-  PCELL_HEADER FreeBlock,
-  BLOCK_OFFSET FreeOffset)
+	   PCELL_HEADER FreeBlock,
+	   BLOCK_OFFSET FreeOffset,
+	   BOOLEAN MergeFreeBlocks)
 {
-	PCELL_HEADER *tmpList;
-	BLOCK_OFFSET *tmpListOffset;
-	LONG minInd;
+  PCELL_HEADER *tmpList;
+  BLOCK_OFFSET *tmpListOffset;
+  LONG minInd;
   LONG maxInd;
   LONG medInd;
 
   assert(RegistryHive);
   assert(FreeBlock);
 
-  DPRINT("FreeBlock %.08x  FreeOffset %.08x\n",
-    FreeBlock, FreeOffset);
-DPRINT("\n");
+  DPRINT("FreeBlock %.08lx  FreeOffset %.08lx\n",
+	 FreeBlock, FreeOffset);
+
+  /* Merge free blocks */
+  if (MergeFreeBlocks == TRUE)
+    {
+      if (CmiMergeFree(RegistryHive, FreeBlock, FreeOffset))
+	return(STATUS_SUCCESS);
+    }
+
   if ((RegistryHive->FreeListSize + 1) > RegistryHive->FreeListMax)
     {
-DPRINT("\n");
       tmpList = ExAllocatePool(PagedPool,
 			  sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax + 32));
-DPRINT("\n");
-
       if (tmpList == NULL)
 	return STATUS_INSUFFICIENT_RESOURCES;
-DPRINT("\n");
 
       tmpListOffset = ExAllocatePool(PagedPool,
 			  sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax + 32));
-DPRINT("\n");
 
       if (tmpListOffset == NULL)
 	{
 	  ExFreePool(tmpList);
 	  return STATUS_INSUFFICIENT_RESOURCES;
 	}
-DPRINT("\n");
 
       if (RegistryHive->FreeListMax)
 	{
-DPRINT("\n");
 	  RtlMoveMemory(tmpList,
 			RegistryHive->FreeList,
 			sizeof(PCELL_HEADER) * (RegistryHive->FreeListMax));
-DPRINT("\n");
 	  RtlMoveMemory(tmpListOffset,
 			RegistryHive->FreeListOffset,
 			sizeof(BLOCK_OFFSET *) * (RegistryHive->FreeListMax));
-DPRINT("\n");
 	  ExFreePool(RegistryHive->FreeList);
-DPRINT("\n");
 	  ExFreePool(RegistryHive->FreeListOffset);
-DPRINT("\n");
 	}
-DPRINT("\n");
       RegistryHive->FreeList = tmpList;
       RegistryHive->FreeListOffset = tmpListOffset;
       RegistryHive->FreeListMax += 32;
-DPRINT("\n");
     }
-DPRINT("\n");
 
   /* Add new offset to free list, maintaining list in ascending order */
   if ((RegistryHive->FreeListSize == 0)
      || (RegistryHive->FreeListOffset[RegistryHive->FreeListSize-1] < FreeOffset))
     {
-DPRINT("\n");
       /* Add to end of list */
       RegistryHive->FreeList[RegistryHive->FreeListSize] = FreeBlock;
       RegistryHive->FreeListOffset[RegistryHive->FreeListSize++] = FreeOffset;
     }
   else if (RegistryHive->FreeListOffset[0] > FreeOffset)
     {
-DPRINT("\n");
       /* Add to begin of list */
       RtlMoveMemory(&RegistryHive->FreeList[1],
 		    &RegistryHive->FreeList[0],
@@ -2196,7 +2300,6 @@ DPRINT("\n");
     }
   else
     {
-DPRINT("\n");
       /* Search where to insert */
       minInd = 0;
       maxInd = RegistryHive->FreeListSize - 1;
@@ -2220,7 +2323,6 @@ DPRINT("\n");
       RegistryHive->FreeListOffset[maxInd] = FreeOffset;
       RegistryHive->FreeListSize++;
     }
-DPRINT("\n");
 
   return STATUS_SUCCESS;
 }
@@ -2248,7 +2350,7 @@ CmiGetBlock(PREGISTRY_HIVE RegistryHive,
       pBin = RegistryHive->BlockList[BlockOffset / 4096];
       if (ppBin)
 	*ppBin = pBin;
-      return ((PVOID) ((ULONG_PTR) pBin + (BlockOffset - pBin->BlockOffset)));
+      return((PVOID)((ULONG_PTR)pBin + (BlockOffset - pBin->BlockOffset)));
     }
 }
 
