@@ -90,20 +90,9 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "winuser.h"
-#ifndef __REACTOS__
-#include "wownt32.h"
-#endif
 #include "wine/unicode.h"
-#ifndef __REACTOS__
-#include "win.h"
-#include "nonclient.h"
-#include "controls.h"
-#include "user.h"
-#include "struct32.h"
-#else
 #include "user32/regcontrol.h"
 #include <winnls.h>
-#endif
 #include "wine/debug.h"
 #include "dlgs.h"
 
