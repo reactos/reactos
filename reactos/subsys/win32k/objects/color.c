@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.48 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: color.c,v 1.49 2004/07/04 17:09:45 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -550,9 +550,9 @@ INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,
       continue;
 #endif
 
-    r = palPalEntry[i].peRed - GetRValue(col);
-    g = palPalEntry[i].peGreen - GetGValue(col);
-    b = palPalEntry[i].peBlue - GetBValue(col);
+    r = abs((SHORT)palPalEntry[i].peRed - GetRValue(col));
+    g = abs((SHORT)palPalEntry[i].peGreen - GetGValue(col));
+    b = abs((SHORT)palPalEntry[i].peBlue - GetBValue(col));
 
     r = r*r + g*g + b*b;
 

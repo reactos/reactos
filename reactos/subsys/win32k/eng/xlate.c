@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.39 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: xlate.c,v 1.40 2004/07/04 17:09:45 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,11 +64,11 @@ ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
 
    for (CurrentIndex = 0; CurrentIndex < NumColors; CurrentIndex++)
    {
-      cxRed = (SourceRed - DestColors[CurrentIndex].peRed);
+      cxRed = abs((SHORT)SourceRed - (SHORT)DestColors[CurrentIndex].peRed);
       cxRed *= cxRed;
-      cxGreen = (SourceGreen - DestColors[CurrentIndex].peGreen);
+      cxGreen = abs((SHORT)SourceGreen - (SHORT)DestColors[CurrentIndex].peGreen);
       cxGreen *= cxGreen;
-      cxBlue = (SourceBlue - DestColors[CurrentIndex].peBlue);
+      cxBlue = abs((SHORT)SourceBlue - (SHORT)DestColors[CurrentIndex].peBlue);
       cxBlue *= cxBlue;
 
       Rating = cxRed + cxGreen + cxBlue;
