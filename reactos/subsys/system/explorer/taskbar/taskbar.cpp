@@ -116,6 +116,9 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 		goto def;}
 
+	  case PM_GET_LAST_ACTIVE:
+		return (LRESULT)(HWND)_last_foreground_wnd;
+
 	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
