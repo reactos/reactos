@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.82 2004/04/09 20:03:19 navaraf Exp $
+/* $Id: msgqueue.c,v 1.83 2004/04/13 13:50:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -682,7 +682,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   return(FALSE);
 }
 
-VOID STDCALL
+VOID FASTCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
@@ -722,7 +722,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   }
 }
 
-VOID STDCALL
+VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 {
   PWINDOW_OBJECT Window;

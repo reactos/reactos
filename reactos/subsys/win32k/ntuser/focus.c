@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.19 2004/02/24 13:27:03 weiden Exp $
+ * $Id: focus.c,v 1.20 2004/04/13 13:50:31 weiden Exp $
  */
 
 #include <win32k/win32k.h>
@@ -58,8 +58,8 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      IntSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
-      IntSendMessage(hWndPrev, WM_ACTIVATE,
+      IntPostOrSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
+      IntPostOrSendMessage(hWndPrev, WM_ACTIVATE,
          MAKEWPARAM(WA_INACTIVE, NtUserGetWindowLong(hWndPrev, GWL_STYLE, FALSE) & WS_MINIMIZE),
          (LPARAM)hWnd);
    }
@@ -71,9 +71,9 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
    if (hWnd)
    {
       /* Send palette messages */
-      if (IntSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
-         IntSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
+         IntPostOrSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
             (WPARAM)hWnd, 0);
       }
 
@@ -83,9 +83,9 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
-      IntSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0);
+      IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(hWnd == NtUserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
-      IntSendMessage(hWnd, WM_ACTIVATE,
+      IntPostOrSendMessage(hWnd, WM_ACTIVATE,
          MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
                     NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE),
          (LPARAM)hWndPrev);
@@ -97,7 +97,7 @@ IntSendKillFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      IntSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
+      IntPostOrSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)hWnd, 0);
    }
 }
 
@@ -106,7 +106,7 @@ IntSendSetFocusMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWnd)
    {
-      IntSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
+      IntPostOrSendMessage(hWnd, WM_SETFOCUS, (WPARAM)hWndPrev, 0);
    }
 }
 
@@ -411,7 +411,7 @@ NtUserSetCapture(HWND hWnd)
       }
    }
    hWndPrev = ThreadQueue->CaptureWindow;
-   IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    IntLockMessageQueue(ThreadQueue);
    ThreadQueue->CaptureWindow = hWnd;
    IntUnLockMessageQueue(ThreadQueue);

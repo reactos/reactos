@@ -144,12 +144,17 @@ VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-LRESULT STDCALL
+LRESULT FASTCALL
 IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam);
-LRESULT STDCALL
+LRESULT FASTCALL
+IntPostOrSendMessage(HWND hWnd,
+		     UINT Msg,
+		     WPARAM wParam,
+		     LPARAM lParam);
+LRESULT FASTCALL
 IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
@@ -162,9 +167,9 @@ IntDispatchMessage(MSG* Msg);
 BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
 
-VOID STDCALL
+VOID FASTCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
-VOID STDCALL
+VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg);

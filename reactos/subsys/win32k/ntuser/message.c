@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.56 2004/04/07 21:12:40 gvg Exp $
+/* $Id: message.c,v 1.57 2004/04/13 13:50:31 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -373,7 +373,7 @@ NtUserPeekMessage(LPMSG UnsafeMsg,
   return Present;
 }
 
-static BOOL STDCALL
+static BOOL FASTCALL
 IntWaitMessage(HWND Wnd,
                 UINT MsgFilterMin,
                 UINT MsgFilterMax)
@@ -651,7 +651,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
     }
 }
 
-static FASTCALL NTSTATUS
+static NTSTATUS FASTCALL
 PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
 {
   NCCALCSIZE_PARAMS *UnpackedParams;
@@ -711,7 +711,7 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
   return STATUS_INVALID_PARAMETER;
 }
 
-LRESULT STDCALL
+LRESULT FASTCALL
 IntSendMessage(HWND hWnd,
                UINT Msg,
                WPARAM wParam,
@@ -725,7 +725,7 @@ IntSendMessage(HWND hWnd,
   return 0;
 }
 
-static LRESULT STDCALL
+static LRESULT FASTCALL
 IntSendMessageTimeoutSingle(HWND hWnd,
                             UINT Msg,
                             WPARAM wParam,
@@ -826,7 +826,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
   return TRUE;
 }
 
-LRESULT STDCALL
+LRESULT FASTCALL
 IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
@@ -922,6 +922,47 @@ CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg)
     }
 
   return STATUS_SUCCESS;
+}
+
+/* This function posts a message if the destination's message queue belongs to
+   another thread, otherwise it sends the message. It does not support broadcast
+   messages! */
+LRESULT FASTCALL
+IntPostOrSendMessage(HWND hWnd,
+                     UINT Msg,
+                     WPARAM wParam,
+                     LPARAM lParam)
+{
+  LRESULT Result;
+  PWINDOW_OBJECT Window;
+  
+  if(hWnd == HWND_BROADCAST)
+  {
+    return 0;
+  }
+  
+  Window = IntGetWindowObject(hWnd);
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return 0;
+  }
+  
+  if(Window->MessageQueue != PsGetWin32Thread()->MessageQueue)
+  {
+    Result = NtUserPostMessage(hWnd, Msg, wParam, lParam);
+  }
+  else
+  {
+    if(!IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
+    {
+      Result = 0;
+    }
+  }
+  
+  IntReleaseWindowObject(Window);
+  
+  return Result;
 }
 
 static NTSTATUS FASTCALL
