@@ -50,3 +50,5 @@ else
 endif
 
 include ../rules.mak
+
+# EOF

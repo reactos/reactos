@@ -1,4 +1,5 @@
-/*
+/* $Id: call.c,v 1.3 1999/10/03 22:20:33 ekohl Exp $
+ *
  *  CALL.C - call internal batch command.
  *
  *
@@ -90,3 +91,5 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+/* EOF */

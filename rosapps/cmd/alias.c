@@ -45,13 +45,13 @@ typedef struct tagALIAS
 	struct tagALIAS *next;
 	LPTSTR lpName;
 	LPTSTR lpSubst;
-	WORD   wUsed;
+	DWORD  dwUsed;
 } ALIAS, *LPALIAS;
 
 
 static LPALIAS lpFirst = NULL;
 static LPALIAS lpLast = NULL;
-static WORD    wUsed = 0;
+static DWORD   dwUsed = 0;
 
 
 /* module internal functions */
@@ -159,7 +159,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 	/* it's necessary for recursive substitution */
 	partstrlwr (ptr->lpSubst);
 
-	ptr->wUsed = 0;
+	ptr->dwUsed = 0;
 
 	/* Alias table must be sorted!
 	 * Here a little example:
@@ -208,6 +208,34 @@ AddAlias (LPTSTR name, LPTSTR subst)
 }
 
 
+VOID InitializeAlias (VOID)
+{
+	lpFirst = NULL;
+	lpLast = NULL;
+	dwUsed = 0;
+}
+
+VOID DestroyAlias (VOID)
+{
+	while (lpFirst->next != NULL)
+	{
+		lpLast = lpFirst;
+		lpFirst = lpLast->next;
+
+		free (lpLast->lpName);
+		free (lpLast->lpSubst);
+		free (lpLast);
+	}
+
+	free (lpFirst->lpName);
+	free (lpFirst->lpSubst);
+	free (lpFirst);
+
+	lpFirst = NULL;
+	lpLast = NULL;
+	dwUsed = 0;
+}
+
 /* specified routines */
 VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 {
@@ -218,13 +246,13 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 	short d = 1;
 	LPALIAS ptr = lpFirst;
 
-	wUsed++;
-	if (wUsed == 0)
+	dwUsed++;
+	if (dwUsed == 0)
 	{
 		while (ptr)
-			ptr->wUsed = 0;
+			ptr->dwUsed = 0;
 		ptr = lpFirst;
-		wUsed = 1;
+		dwUsed = 1;
 	}
 
 	/* skipping white spaces */
@@ -234,7 +262,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 	partstrlwr (&cmd[n]);
 
 	if (!_tcsncmp (&cmd[n], _T("NOALIAS"), 7) &&
-		(_istspace (cmd[n + 7]) || cmd[n + 7] == _T('\0')))
+	    (_istspace (cmd[n + 7]) || cmd[n + 7] == _T('\0')))
 	{
 		memmove (cmd, &cmd[n + 7], (_tcslen (&cmd[n + 7]) + 1) * sizeof (TCHAR));
 		return;
@@ -248,8 +276,8 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 		{
 			len = _tcslen (ptr->lpName);
 			if (!_tcsncmp (&cmd[n], ptr->lpName, len) &&
-				(_istspace (cmd[n + len]) || cmd[n + len] == _T('\0')) &&
-				ptr->wUsed != wUsed)
+			    (_istspace (cmd[n + len]) || cmd[n + len] == _T('\0')) &&
+				ptr->dwUsed != dwUsed)
 			{
 				m = _tcslen (ptr->lpSubst);
 				if ((int)(_tcslen (cmd) - len + m - n) > maxlen)
@@ -263,7 +291,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 					memmove (&cmd[m], &cmd[n + len], (_tcslen(&cmd[n + len]) + 1) * sizeof (TCHAR));
 					for (i = 0; i < m; i++)
 						cmd[i] = ptr->lpSubst[i];
-					ptr->wUsed = wUsed;
+					ptr->dwUsed = dwUsed;
 					/* whitespaces are removed! */
 					n = 0;
 					d = 1;
@@ -275,7 +303,7 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 }
 
 
-VOID CommandAlias (LPTSTR cmd, LPTSTR param)
+INT CommandAlias (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR ptr;
 
@@ -297,18 +325,18 @@ VOID CommandAlias (LPTSTR cmd, LPTSTR param)
 					   "  ALIAS da="
 //					   "Type ALIAS without a parameter to display the alias list.\n"
 					   ));
-		return;
+		return 0;
 	}
 
 	if (param[0] == _T('\0'))
 	{
 		PrintAlias ();
-		return;
+		return 0;
 	}
 
 	/* error if no '=' found */
 	if ((ptr = _tcschr (param, _T('='))) == 0)
-		return;
+		return 1;
 
 	/* Split rest into name and substitute */
 	*ptr++ = _T('\0');
@@ -320,6 +348,6 @@ VOID CommandAlias (LPTSTR cmd, LPTSTR param)
 	else
 		AddAlias (param, ptr);
 
-	return;
+	return 0;
 }
 #endif

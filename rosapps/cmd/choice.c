@@ -52,32 +52,28 @@ GetCharacterTimeout (LPTCH ch, DWORD dwMilliseconds)
 
 	hInput = GetStdHandle (STD_INPUT_HANDLE);
 
-#ifdef _DEBUG
-	if (hInput == INVALID_HANDLE_VALUE)
-		DebugPrintf ("Invalid input handle!!!\n");
-#endif
-		//if the timeout experied return GC_TIMEOUT
-		if (WaitForSingleObject (hInput, dwMilliseconds) == WAIT_TIMEOUT)
-			return GC_TIMEOUT;
+	//if the timeout experied return GC_TIMEOUT
+	if (WaitForSingleObject (hInput, dwMilliseconds) == WAIT_TIMEOUT)
+		return GC_TIMEOUT;
 
-		//otherwise get the event
-		ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead);
-		
-		//if the event is a key pressed
-		if ((lpBuffer.EventType == KEY_EVENT) &&
-			(lpBuffer.Event.KeyEvent.bKeyDown == TRUE))
-		{
-			//read the key
+	//otherwise get the event
+	ReadConsoleInput (hInput, &lpBuffer, 1, &dwRead);
+
+	//if the event is a key pressed
+	if ((lpBuffer.EventType == KEY_EVENT) &&
+		(lpBuffer.Event.KeyEvent.bKeyDown == TRUE))
+	{
+		//read the key
 #ifdef _UNICODE
-			*ch = lpBuffer.Event.KeyEvent.uChar.UnicodeChar;
+		*ch = lpBuffer.Event.KeyEvent.uChar.UnicodeChar;
 #else
-			*ch = lpBuffer.Event.KeyEvent.uChar.AsciiChar;
+		*ch = lpBuffer.Event.KeyEvent.uChar.AsciiChar;
 #endif
-			return GC_KEYREAD;
-		}
+		return GC_KEYREAD;
+	}
 
-		//else return no key
-			return GC_NOKEY;
+	//else return no key
+	return GC_NOKEY;
 }
 
 static INT
@@ -284,25 +280,25 @@ loop:
 	switch (GCret)
 	{
 		case GC_TIMEOUT:
-#ifdef DEBUG
+#ifdef _DEBUG
 			DebugPrintf (_T("GC_TIMEOUT\n"));
 			DebugPrintf (_T("elapsed %d msecs\n"), GetTickCount () - clk);
-#endif /* DEBUG */
+#endif /* _DEBUG */
 			break;
 
 		case GC_NOKEY:
-#ifdef DEBUG
+#ifdef _DEBUG
 			DebugPrintf(_T("GC_NOKEY\n"));
 			DebugPrintf(_T("elapsed %d msecs\n"), GetTickCount () - clk);
-#endif /* DEBUG */
+#endif /* _DEBUG */
 			goto loop;
 
 		case GC_KEYREAD:
-#ifdef DEBUG
+#ifdef _DEBUG
 			DebugPrintf(_T("GC_KEYREAD\n"));
 			DebugPrintf(_T("elapsed %d msecs\n"), GetTickCount () - clk);
 			DebugPrintf(_T("read %c"), Ch);
-#endif /* DEBUG */
+#endif /* _DEBUG */
 			if ((val=IsKeyInString(lpOptions,Ch,bCaseSensitive))==-1)
 			{
 				Beep (440, 50);
@@ -312,10 +308,10 @@ loop:
 			break;
 	}
 
-#ifdef DEBUG
-	DebugPrintf(_T("exiting waiting loop after %d msecs\n"),
+#ifdef _DEBUG
+	DebugPrintf(_T("exiting wait loop after %d msecs\n"),
 	            GetTickCount () - clk);
-#endif /* DEBUG */
+#endif /* _DEBUG */
 
 	val = IsKeyInString (lpOptions, cDefault, bCaseSensitive);
 	ConOutPrintf (_T("%c\n"), lpOptions[val]);
@@ -324,9 +320,9 @@ loop:
 
 	freep (arg);
 
-#ifdef DEBUG
+#ifdef _DEBUG
 	DebugPrintf (_T("ErrorLevel: %d\n"), nErrorLevel);
-#endif /* DEBUG */
+#endif /* _DEBUG */
 
 	return 0;
 }

@@ -102,11 +102,11 @@ PrintAttribute (LPTSTR pszPath, LPTSTR pszFile, BOOL bRecurse)
 		_tcscpy (pszFileName, findData.cFileName);
 
 		ConOutPrintf (_T("%c  %c%c%c     %s\n"),
-				  (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? _T('A') : _T(' '),
-				  (findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? _T('S') : _T(' '),
-				  (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? _T('H') : _T(' '),
-				  (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? _T('R') : _T(' '),
-				  szFullName);
+		              (findData.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE) ? _T('A') : _T(' '),
+		              (findData.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM) ? _T('S') : _T(' '),
+		              (findData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ? _T('H') : _T(' '),
+		              (findData.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ? _T('R') : _T(' '),
+		              szFullName);
 	}
 	while (FindNextFile (hFind, &findData));
 	FindClose (hFind);
@@ -189,7 +189,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 }
 
 
-INT cmd_attrib (LPTSTR cmd, LPTSTR param)
+INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    argc, i;
@@ -316,41 +316,40 @@ INT cmd_attrib (LPTSTR cmd, LPTSTR param)
 
 	if (argc == 0)
 	{
-                DWORD len;
+		DWORD len;
 
-                len = GetCurrentDirectory (MAX_PATH, szPath);
-                if (szPath[len-1] != _T('\\'))
-                {
-                        szPath[len] = _T('\\');
-                        szPath[len + 1] = 0;
-                }
+		len = GetCurrentDirectory (MAX_PATH, szPath);
+		if (szPath[len-1] != _T('\\'))
+		{
+			szPath[len] = _T('\\');
+			szPath[len + 1] = 0;
+		}
 		_tcscpy (szFileName, _T("*.*"));
 		PrintAttribute (szPath, szFileName, bRecurse);
+		freep (arg);
+		return 0;
 	}
-	else
-	{
-		/* get full file name */
-		for (i = 0; i < argc; i++)
-		{
-			if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) &&	(*arg[i] != _T('/')))
-			{
-				LPTSTR p;
-				GetFullPathName (arg[i], MAX_PATH, szPath, NULL);
-				p = _tcsrchr (szPath, _T('\\')) + 1;
-				_tcscpy (szFileName, p);
-				*p = _T('\0');
 
-				if (dwMask == 0)
-					PrintAttribute (szPath, szFileName, bRecurse);
-				else
-					ChangeAttribute (szPath, szFileName, dwMask,
-									 dwAttrib, bRecurse, bDirectories);
-			}
+	/* get full file name */
+	for (i = 0; i < argc; i++)
+	{
+		if ((*arg[i] != _T('+')) && (*arg[i] != _T('-')) &&	(*arg[i] != _T('/')))
+		{
+			LPTSTR p;
+			GetFullPathName (arg[i], MAX_PATH, szPath, NULL);
+			p = _tcsrchr (szPath, _T('\\')) + 1;
+			_tcscpy (szFileName, p);
+			*p = _T('\0');
+
+			if (dwMask == 0)
+				PrintAttribute (szPath, szFileName, bRecurse);
+			else
+				ChangeAttribute (szPath, szFileName, dwMask,
+								 dwAttrib, bRecurse, bDirectories);
 		}
 	}
 
 	freep (arg);
-
 	return 0;
 }
 

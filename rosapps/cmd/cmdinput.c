@@ -122,11 +122,7 @@ ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 	SetCursorXY (orgx, orgy);
 	for (count = 0; count < (INT)_tcslen (str); count++)
 		ConOutChar (_T(' '));
-#ifndef __REACTOS__
 	_tcsnset (str, _T('\0'), maxlen);
-#else
-	memset (str, 0, maxlen * sizeof(TCHAR));
-#endif
 	SetCursorXY (orgx, orgy);
 }
 

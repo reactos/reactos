@@ -279,13 +279,13 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	while ((--nBufferLength >  0) &&
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
-		*lpString++ = ch;
 		if (ch == _T('\r'))
 		{
 			/* overread '\n' */
 			ReadFile (hFile, &ch, 1, &dwRead, NULL);
 			break;
 		}
+		*lpString++ = ch;
 	}
 
 	if (!dwRead && lpString == lpBuffer)

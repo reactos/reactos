@@ -440,17 +440,15 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
  * set the exitflag to true
  *
  */
-INT internal_exit (LPTSTR cmd, LPTSTR param)
+INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Exits the command line interpreter.\n\nEXIT"));
-	}
-	else
-	{
-		bExit = TRUE;
+		return 0;
 	}
 
+	bExit = TRUE;
 	return 0;
 }
 
@@ -460,7 +458,7 @@ INT internal_exit (LPTSTR cmd, LPTSTR param)
  * does nothing
  *
  */
-VOID CommandRem (LPTSTR cmd, LPTSTR param)
+INT CommandRem (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
@@ -468,12 +466,12 @@ VOID CommandRem (LPTSTR cmd, LPTSTR param)
 		               "REM [Comment]"));
 	}
 
-	return;
+	return 0;
 }
 #endif /* INCLUDE_CMD_REM */
 
 
-VOID CommandShowCommands (LPTSTR cmd, LPTSTR param)
+INT CommandShowCommands (LPTSTR cmd, LPTSTR param)
 {
 	LPCOMMAND cmdptr;
 	INT y;
@@ -496,7 +494,7 @@ VOID CommandShowCommands (LPTSTR cmd, LPTSTR param)
 	if (y != 0)
 		ConOutChar (_T('\n'));
 
-	return;
+	return 0;
 }
 
 /* EOF */

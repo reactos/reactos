@@ -32,12 +32,16 @@ COMMAND cmds[] =
 {
 	{_T("?"), 0, CommandShowCommands},
 
+#ifdef INCLUDE_CMD_ACTIVATE
+	{_T("activate"),   0, CommandActivate},
+#endif
+
 #ifdef FEATURE_ALIASES
 	{_T("alias"), 0, CommandAlias},
 #endif
 
 #ifdef INCLUDE_CMD_ATTRIB
-	{_T("attrib"),   0, cmd_attrib},
+	{_T("attrib"),   0, CommandAttrib},
 #endif
 
 #ifdef INCLUDE_CMD_BEEP
@@ -99,13 +103,16 @@ COMMAND cmds[] =
 	{_T("dir"), CMD_SPECIAL, cmd_dir},
 #endif
 
-	{_T("echo"), 0, cmd_echo},
+	{_T("echo"), 0, CommandEcho},
+	{_T("echos"), 0, CommandEchos},
+	{_T("echoerr"), 0, CommandEchoerr},
+	{_T("echoserr"), 0, CommandEchoserr},
 
 #ifdef INCLUDE_CMD_DEL
 	{_T("erase"), 0, cmd_del},
 #endif
 
-	{_T("exit"), 0, internal_exit},
+	{_T("exit"), 0, CommandExit},
 
 	{_T("for"), 0, cmd_for},
 
@@ -147,7 +154,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef FEATURE_DIRECTORY_STACK
-	{_T("popd"), 0, cmd_popd},
+	{_T("popd"), 0, CommandPopd},
 #endif
 
 #ifdef INCLUDE_CMD_PROMPT
@@ -218,7 +225,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_WINDOW
-        {_T("window"), 0, CommandWindow},
+	{_T("window"), 0, CommandWindow},
 #endif
 
 	{NULL, 0, NULL}

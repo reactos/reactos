@@ -1,4 +1,5 @@
-/*
+/* $Id: batch.c,v 1.3 1999/10/03 22:20:32 ekohl Exp $
+ *
  *  BATCH.C - batch file processor for CMD.EXE.
  *
  *
@@ -107,7 +108,6 @@ LPTSTR FindArg (INT n)
 }
 
 
-/* HBP_002 { FOR command support */
 /*
  * Batch_params builds a parameter list in newlay allocated memory.
  * The parameters consist of null terminated strings with a final
@@ -163,8 +163,6 @@ LPTSTR BatchParams (LPTSTR s1, LPTSTR s2)
 	return dp;
 }
 
-/* HBP_002 } */
-
 
 /*
  * If a batch file is current, exits it, freeing the context block and
@@ -182,7 +180,7 @@ VOID ExitBatch (LPTSTR msg)
 	DebugPrintf ("ExitBatch: (\'%s\')\n", msg);
 #endif
 
-	if (bc)
+	if (bc != NULL)
 	{
 		LPBATCH_CONTEXT t = bc;
 
@@ -195,27 +193,18 @@ VOID ExitBatch (LPTSTR msg)
 		if (bc->params)
 			free(bc->params);
 
-/* HBP_002 { FOR command support */
-
 		if (bc->forproto)
 			free(bc->forproto);
 
 		if (bc->ffind)
 			free(bc->ffind);
 
-/* HBP_002 } */
-
-/* HBP_003 { fix echo restore */
 		/* Preserve echo state across batch calls */
 		bEcho = bc->bEcho;
-
-/* HBP_003 fix echo restore } */
 
 		bc = bc->prev;
 		free(t);
 	}
-
-/* HBP_001 } */
 
 	if (msg && *msg)
 		ConOutPrintf ("%s\n", msg);
@@ -248,13 +237,9 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 		return FALSE;
 	}
 
-/* HBP_002 { FOR command support */
-
 	/* Kill any and all FOR contexts */
 	while (bc && bc->forvar)
 		ExitBatch (NULL);
-
-/* HBP_002 } */
 
 	if (bc == NULL)
 	{
@@ -263,7 +248,6 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 		if (n == NULL)
 		{
-			/* JPP 20-Jul-1998 added error checking */
 			error_out_of_memory ();
 			return FALSE;
 		}
@@ -280,15 +264,17 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	}
 
 	bc->hBatchFile = hFile;
-	bc->bEcho = bEcho; /* Preserve echo across batch calls [HBP_001] */
+	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 
-	/* HBP_002 { FOR command support */
 	bc->ffind = NULL;
 	bc->forvar = _T('\0');
 	bc->forproto = NULL;
 	bc->params = BatchParams (firstword, param);
-	/* HBP_002 } */
+
+#ifdef _DEBUG
+	DebugPrintf ("Batch: returns TRUE\n");
+#endif
 
 	return TRUE;
 }
@@ -330,7 +316,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 			return NULL;
 		}
 
-		/* HBP_002 { FOR command support */
 		/* No batch */
 		if (bc == NULL)
 			return NULL;
@@ -368,7 +353,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 					/*  For first find, allocate a find first block */
 					if ((bc->ffind = (LPWIN32_FIND_DATA)malloc (sizeof (WIN32_FIND_DATA))) == NULL)
 					{
-						error_out_of_memory();  /* JPP 20-Jul-1998 added error checking */
+						error_out_of_memory();
 						return NULL;
 					}
 
@@ -408,8 +393,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			return textline;
 		}
-
-		/* HBP_002 } */
 
 		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline)))
 		{
@@ -459,3 +442,5 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 	return first;
 }
+
+/* EOF */

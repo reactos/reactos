@@ -4,7 +4,7 @@
  * clone from 4nt msgbox command
  *
  * 30 Aug 1999
- *     started - Dr.F <dfaustus@freemail.it>
+ *     started - Paolo Pantaleo <paolopan@freemail.it>
  *
  *
  */

@@ -21,8 +21,8 @@
 #endif /* __REACTOS__ */
 
 
-/* JPP 20 Jul 1998 - define DEBUG to add debugging code */
-/*#define DEBUG */
+/* JPP 20 Jul 1998 - define _DEBUG to add debugging code */
+/* #define _DEBUG */
 
 
 /* Define to enable the alias command, and aliases.*/
@@ -57,6 +57,9 @@
 /* #define LOCALE_DEFAULT */   /* United States locale */
 #endif
 
+#ifndef __REACTOS__
+#define INCLUDE_CMD_ACTIVATE
+#endif
 #define INCLUDE_CMD_ATTRIB
 /*#define INCLUDE_CMD_BREAK*/
 #define INCLUDE_CMD_CHCP

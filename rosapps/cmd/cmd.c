@@ -219,7 +219,7 @@ Execute (LPTSTR first, LPTSTR rest)
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
 
-#ifndef __REACTOS__                 
+#ifndef __REACTOS__
 		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
 		                   0, NULL, NULL, &stui, &prci))
 #else
@@ -332,8 +332,10 @@ DoCommand (LPTSTR line)
  * full input/output redirection and piping are supported
  */
 
-VOID ParseCommandLine (LPTSTR s)
+VOID ParseCommandLine (LPTSTR cmd)
 {
+	TCHAR cmdline[CMDLINE_LENGTH];
+	LPTSTR s;
 #ifdef FEATURE_REDIRECTION
 	TCHAR in[CMDLINE_LENGTH] = "";
 	TCHAR out[CMDLINE_LENGTH] = "";
@@ -350,9 +352,12 @@ VOID ParseCommandLine (LPTSTR s)
 	HANDLE hOldConErr;
 #endif /* FEATURE_REDIRECTION */
 
+	_tcscpy (cmdline, cmd);
+	s = &cmdline[0];
+
 #ifdef _DEBUG
 	DebugPrintf ("ParseCommandLine: (\'%s\')]\n", s);
-#endif /* _DEBUG */
+#endif /* DEBUG */
 
 #ifdef FEATURE_ALIASES
 	/* expand all aliases */
@@ -658,8 +663,6 @@ ProcessInput (BOOL bFlag)
 	LPTSTR tp;
 	LPTSTR ip;
 	LPTSTR cp;
-
-	/* JPP 19980807 - changed name so not to conflict with echo global */
 	BOOL bEchoThisLine;
 
 	do
@@ -835,8 +838,10 @@ ShowCommands (VOID)
  * argv - command-line parameters
  *
  */
-static VOID Initialize (int argc, char *argv[])
+static VOID
+Initialize (int argc, char *argv[])
 {
+	TCHAR commandline[CMDLINE_LENGTH];
 	INT i;
 
 	/* Added by Rob Lake 06/16/98.  This enables the command.com
@@ -863,66 +868,96 @@ static VOID Initialize (int argc, char *argv[])
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
 	hIn  = GetStdHandle (STD_INPUT_HANDLE);
 
+	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
+	{
+		ConOutPuts (_T("Starts a new instance of the ReactOS command line interpreter\n\n"
+		               "CMD [/P][/C]...\n\n"
+		               "  /P  ...\n"
+		               "  /C  ..."));
+		ExitProcess (0);
+	}
+
+	ShortVersion ();
+	ShowCommands ();
+
 #ifdef INCLUDE_CMD_CHDIR
 	InitLastPath ();
 #endif
 
+#ifdef FATURE_ALIASES
+	InitializeAlias ();
+#endif
+
 	if (argc >= 2)
 	{
-		if (!_tcsncmp (argv[1], _T("/?"), 2))
+		for (i = 1; i < argc; i++)
 		{
-			ConOutPuts (_T("Starts a new instance of the ReactOS command line interpreter\n\n"
-			               "CMD [/P][/C]...\n\n"
-			               "  /P  ...\n"
-			               "  /C  ..."));
-			ExitProcess (0);
-		}
-		else
-		{
-			for (i = 1; i < argc; i++)
+			if (!_tcsicmp (argv[i], _T("/p")))
 			{
-				if (!_tcsicmp (argv[i], _T("/p")))
+				if (!IsValidFileName (_T("\\autoexec.bat")))
 				{
-					if (!IsValidFileName (_T("\\autoexec.bat")))
-					{
 #ifdef INCLUDE_CMD_DATE
-						cmd_date ("", "");
+					cmd_date ("", "");
 #endif
 #ifdef INCLUDE_CMD_TIME
-						cmd_time ("", "");
+					cmd_time ("", "");
 #endif
-					}
-					else
-						ParseCommandLine ("\\autoexec.bat");
-					bCanExit = FALSE;
 				}
-				else if (!_tcsicmp (argv[i], _T("/c")))
+				else
 				{
-					/* This just runs a program and exits, RL: 06/16,21/98 */
-					char commandline[CMDLINE_LENGTH];
-					++i;
-					strcpy(commandline, argv[i]);
-					while (argv[++i])
-					{
-						strcat(commandline, " ");
-						strcat(commandline, argv[i]);
-					}
-
-					ParseCommandLine(commandline);
-
-					/* HBP_003 { Fix return value when /C used }*/
-					ExitProcess (ProcessInput (TRUE));
+					ParseCommandLine (_T("\\autoexec.bat"));
 				}
+				bCanExit = FALSE;
+			}
+			else if (!_tcsicmp (argv[i], _T("/c")))
+			{
+				/* This just runs a program and exits, RL: 06/16,21/98 */
+				++i;
+				_tcscpy (commandline, argv[i]);
+				while (argv[++i])
+				{
+					_tcscat (commandline, " ");
+					_tcscat (commandline, argv[i]);
+				}
+
+				ParseCommandLine(commandline);
+				ExitProcess (ProcessInput (TRUE));
+			}
 
 #ifdef INCLUDE_CMD_COLOR
-				else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
-				{
-					/* process /t (color) argument */
-					wDefColor = (WORD)strtoul (&argv[i][3], NULL, 16);
-					wColor = wDefColor;
-				}
-#endif
+			else if (!_tcsnicmp (argv[i], _T("/t:"), 3))
+			{
+				/* process /t (color) argument */
+				wDefColor = (WORD)strtoul (&argv[i][3], NULL, 16);
+				wColor = wDefColor;
+				SetScreenColor (wColor);
 			}
+#endif
+		}
+	}
+
+	/* run cmdstart.bat */
+	if (IsValidFileName (_T("cmdstart.bat")))
+	{
+		ParseCommandLine (_T("cmdstart.bat"));
+	}
+	else if (IsValidFileName (_T("\\cmdstart.bat")))
+	{
+		ParseCommandLine (_T("\\cmdstart.bat"));
+	}
+	else
+	{
+		/* try to run cmdstart.bat from install dir */
+		LPTSTR p;
+
+		_tcscpy (commandline, argv[0]);
+		p = _tcsrchr (commandline, _T('\\')) + 1;
+		_tcscpy (p, _T("cmdstart.bat"));
+
+		if (IsValidFileName (_T("commandline")))
+		{
+			ConErrPrintf ("Running %s...\n", commandline);
+			ParseCommandLine (commandline);
 		}
 	}
 
@@ -930,14 +965,6 @@ static VOID Initialize (int argc, char *argv[])
 	/* initialize directory stack */
 	InitDirectoryStack ();
 #endif
-
-#ifdef INCLUDE_CMD_COLOR
-	/* set default colors */
-	SetScreenColor (wColor);
-#endif
-
-	ShortVersion ();
-	ShowCommands ();
 
 	/* Set COMSPEC environment variable */
 #ifndef __REACTOS__
@@ -952,8 +979,39 @@ static VOID Initialize (int argc, char *argv[])
 }
 
 
-static VOID Cleanup (VOID)
+static VOID Cleanup (int argc, char *argv[])
 {
+	/* run cmdexit.bat */
+	if (IsValidFileName (_T("cmdexit.bat")))
+	{
+		ConErrPrintf ("Running cmdexit.bat...\n");
+		ParseCommandLine (_T("cmdexit.bat"));
+	}
+	else if (IsValidFileName (_T("\\cmdexit.bat")))
+	{
+		ConErrPrintf ("Running \\cmdexit.bat...\n");
+		ParseCommandLine (_T("\\cmdexit.bat"));
+	}
+	else
+	{
+		/* try to run cmdexit.bat from install dir */
+		TCHAR commandline[CMDLINE_LENGTH];
+		LPTSTR p;
+
+		_tcscpy (commandline, argv[0]);
+		p = _tcsrchr (commandline, _T('\\')) + 1;
+		_tcscpy (p, _T("cmdexit.bat"));
+
+		if (IsValidFileName (_T("commandline")))
+		{
+			ConErrPrintf ("Running %s...\n", commandline);
+			ParseCommandLine (commandline);
+		}
+	}
+
+#ifdef FEATURE_ALIASES
+	DestroyAlias ();
+#endif
 
 #ifdef FEATURE_DIECTORY_STACK
 	/* destroy directory stack */
@@ -994,7 +1052,7 @@ int main (int argc, char *argv[])
 	nExitCode = ProcessInput (FALSE);
 
 	/* do the cleanup */
-	Cleanup ();
+	Cleanup (argc, argv);
 	FreeConsole ();
 
 	return nExitCode;

@@ -121,7 +121,7 @@ INT GetDirectoryStackDepth (VOID)
 /*
  * pushd command
  */
-VOID CommandPushd (LPTSTR first, LPTSTR rest)
+INT CommandPushd (LPTSTR first, LPTSTR rest)
 {
 	TCHAR curPath[MAX_PATH];
 	TCHAR newPath[MAX_PATH];
@@ -130,10 +130,10 @@ VOID CommandPushd (LPTSTR first, LPTSTR rest)
 	if (!_tcsncmp (rest, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Stores the current directory for use by the POPD command, then\n"
-			  "changes to the specified directory.\n\n"
-			  "PUSHD [path | ..]\n\n"
-			  "  path        Specifies the directory to make the current directory"));
-		return;
+		               "changes to the specified directory.\n\n"
+		               "PUSHD [path | ..]\n\n"
+		               "  path        Specifies the directory to make the current directory"));
+		return 0;
 	}
 
 	if (rest[0] != _T('\0'))
@@ -144,26 +144,26 @@ VOID CommandPushd (LPTSTR first, LPTSTR rest)
 
 	GetCurrentDirectory (MAX_PATH, curPath);
 	if (PushDirectory (curPath))
-		return;
+		return 0;
 
 	if (bChangePath)
 		SetCurrentDirectory (newPath);
 
-	return;
+	return 0;
 }
 
 
 /*
  * popd command
  */
-INT cmd_popd (LPTSTR first, LPTSTR rest)
+INT CommandPopd (LPTSTR first, LPTSTR rest)
 {
 	TCHAR szPath[MAX_PATH];
 
 	if (!_tcsncmp(rest, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Changes to the directory stored by the PUSHD command.\n\n"
-					   "POPD"));
+		               "POPD"));
 		return 0;
 	}
 

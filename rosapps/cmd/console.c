@@ -1,4 +1,5 @@
-/*
+/* $Id: console.c,v 1.10 1999/10/03 22:20:33 ekohl Exp $
+ *
  *  CONSOLE.C - console input/output functions.
  *
  *
@@ -33,7 +34,11 @@ VOID DebugPrintf (LPTSTR szFormat, ...)
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+	           szOut,
+	           _tcslen(szOut) * sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 #if 0
 	OutputDebugString (szOut);
 #endif
@@ -50,7 +55,7 @@ VOID ConInDummy (VOID)
 #ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
 		DebugPrintf ("Invalid input handle!!!\n");
-#endif
+#endif /* _DEBUG */
 
 	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
 }
@@ -69,7 +74,7 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 #ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
 		DebugPrintf ("Invalid input handle!!!\n");
-#endif
+#endif /* _DEBUG */
 
 	do
 	{
@@ -118,7 +123,11 @@ VOID ConOutChar (TCHAR c)
 {
 	DWORD dwWritten;
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), &c, 1, &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+	           &c,
+	           sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
@@ -126,25 +135,34 @@ VOID ConOutPuts (LPTSTR szText)
 {
 	DWORD dwWritten;
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-#if 0
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
-#endif
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), "\n", 1, &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+	           szText,
+	           _tcslen(szText) * sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+	           _T("\n"),
+	           sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
-        TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
+	           szOut,
+	           _tcslen(szOut) * sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
@@ -152,7 +170,11 @@ VOID ConErrChar (TCHAR c)
 {
 	DWORD dwWritten;
 
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), &c, 1, &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
+	           &c,
+	           sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
@@ -160,25 +182,34 @@ VOID ConErrPuts (LPTSTR szText)
 {
 	DWORD dwWritten;
 
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szText, _tcslen(szText), &dwWritten, NULL);
-#if 0
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\x0a\x0d", 2, &dwWritten, NULL);
-#endif
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), "\n", 1, &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
+	           szText,
+	           _tcslen(szText) * sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
+	           _T ("\n"),
+	           sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
 VOID ConErrPrintf (LPTSTR szFormat, ...)
 {
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
-        TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
 	_vstprintf (szOut, szFormat, arg_ptr);
 	va_end (arg_ptr);
 
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE), szOut, _tcslen(szOut), &dwWritten, NULL);
+	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
+	           szOut,
+	           _tcslen(szOut) * sizeof(TCHAR),
+	           &dwWritten,
+	           NULL);
 }
 
 
@@ -245,3 +276,5 @@ VOID SetCursorType (BOOL bInsert, BOOL bVisible)
 
 	SetConsoleCursorInfo (GetStdHandle (STD_OUTPUT_HANDLE), &cci);
 }
+
+/* EOF */

@@ -78,21 +78,20 @@ extern SHORT  maxx;
 extern SHORT  maxy;
 extern OSVERSIONINFO osvi;
 
-
 void command(char *);
 VOID ParseCommandLine (LPTSTR);
 int  c_brk(void);
 
 
-
-
 /* Prototypes for ALIAS.C */
+VOID InitializeAlias (VOID);
+VOID DestroyAlias (VOID);
 VOID ExpandAlias (LPTSTR, INT);
-VOID CommandAlias (LPTSTR, LPTSTR);
+INT CommandAlias (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ATTRIB.C */
-INT cmd_attrib (LPTSTR, LPTSTR);
+INT CommandAttrib (LPTSTR, LPTSTR);
 
 
 /* Prototypes for BEEP.C */
@@ -104,7 +103,7 @@ INT cmd_call (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CHCP.C */
-VOID CommandChcp (LPTSTR, LPTSTR);
+INT CommandChcp (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CHOICE.C */
@@ -189,12 +188,15 @@ INT cmd_dir (LPTSTR, LPTSTR);
 VOID InitDirectoryStack (VOID);
 VOID DestroyDirectoryStack (VOID);
 INT  GetDirectoryStackDepth (VOID);
-VOID CommandPushd (LPTSTR, LPTSTR);
-INT  cmd_popd (LPTSTR, LPTSTR);
+INT  CommandPushd (LPTSTR, LPTSTR);
+INT  CommandPopd (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ECHO.C */
-INT  cmd_echo (LPTSTR, LPTSTR);
+INT  CommandEcho (LPTSTR, LPTSTR);
+INT  CommandEchos (LPTSTR, LPTSTR);
+INT  CommandEchoerr (LPTSTR, LPTSTR);
+INT  CommandEchoserr (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ERROR.C */
@@ -249,9 +251,9 @@ VOID FreeLastPath (VOID);
 INT  cmd_chdir (LPTSTR, LPTSTR);
 INT  cmd_mkdir (LPTSTR, LPTSTR);
 INT  cmd_rmdir (LPTSTR, LPTSTR);
-INT  internal_exit (LPTSTR, LPTSTR);
-VOID CommandRem (LPTSTR, LPTSTR);
-VOID CommandShowCommands (LPTSTR, LPTSTR);
+INT  CommandExit (LPTSTR, LPTSTR);
+INT  CommandRem (LPTSTR, LPTSTR);
+INT  CommandShowCommands (LPTSTR, LPTSTR);
 
 
 /* Prototypes for LABEL.C */
@@ -367,6 +369,7 @@ INT cmd_vol (LPTSTR, LPTSTR);
 BOOL SearchForExecutable (LPCTSTR, LPTSTR);
 
 /* Prototypes for WINDOW.C */
+INT CommandActivate (LPTSTR, LPTSTR);
 INT CommandWindow (LPTSTR, LPTSTR);
 
 
