@@ -186,7 +186,9 @@ static const CLSID CLSID_MozillaBrowser =
 
   
 WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
- :	super(hwnd)
+ :	super(hwnd),
+	_evt_handler1(NULL),
+	_evt_handler2(NULL)
 {
 	 // first try to create MS IE web control
 	HRESULT hr = create_control(hwnd, CLSID_WebBrowser, IID_IWebBrowser2);
@@ -197,24 +199,24 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 
 	if (SUCCEEDED(hr)) {
 		 // handling events using DWebBrowserEvents
-		_evt_demo1 = new DWebBrowserEventsHandler(_hwnd, _control);
+		_evt_handler1 = new DWebBrowserEventsHandler(_hwnd, _control);
 
 		 // handling events using DWebBrowserEvents2
-		_evt_demo2 = new DWebBrowserEvents2Handler(_hwnd, _control);
-	}
+		_evt_handler2 = new DWebBrowserEvents2Handler(_hwnd, _control);
 
-	SIfacePtr<IWebBrowser2> browser(get_browser());
+		SIfacePtr<IWebBrowser2> browser(get_browser());
 
 #ifdef __MINGW32__	// MinGW is lacking vtMissing (as of 07.02.2004)
-	Variant vtMissing;
+		Variant vtMissing;
 #endif
 
-	browser->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
-	//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
+		browser->Navigate(BStr(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
+		//browser->Navigate2(&Variant(info._path), &vtMissing, &vtMissing, &vtMissing, &vtMissing);
+	}
 }
 
 WebChildWindow::~WebChildWindow()
 {
-	delete _evt_demo2;
-	delete _evt_demo1;
+	delete _evt_handler2;
+	delete _evt_handler1;
 }

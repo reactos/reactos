@@ -332,7 +332,6 @@ template<typename T> struct SIfacePtr
 	SIfacePtr(IUnknown* unknown, REFIID riid)
 	{
 		CHECKERROR(unknown->QueryInterface(riid, (LPVOID*)&_p));
-		//@@ _p->AddRef();
 	}
 
 	~SIfacePtr()

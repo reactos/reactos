@@ -427,8 +427,11 @@ protected:
 			}
 		} else if (message == WM_CLOSE) {
 			_in_place_object = NULL;
-			_client_side.detach(SIfacePtr<IOleObject>(_control, IID_IOleObject), OLECLOSE_NOSAVE);
-			_control = NULL;
+
+			if (_control) {
+				_client_side.detach(SIfacePtr<IOleObject>(_control, IID_IOleObject), OLECLOSE_NOSAVE);
+				_control = NULL;
+			}
 		}
 
 		return super::WndProc(message, wparam, lparam);
@@ -1356,6 +1359,6 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 	}
 
 protected:
-	DWebBrowserEventsHandler* _evt_demo1;
-	DWebBrowserEvents2Handler* _evt_demo2;
+	DWebBrowserEventsHandler* _evt_handler1;
+	DWebBrowserEvents2Handler* _evt_handler2;
 };
