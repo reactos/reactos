@@ -101,6 +101,224 @@ static void _create_istream16(LPSTREAM16 *str);
 
 #define IMPLEMENTED 1
 
+/* The following is taken from the CorVu implementation of docfiles, and
+ * documents things about the file format that are not implemented here, and
+ * not documented by the LAOLA project. The CorVu implementation was posted
+ * to wine-devel in February 2004, and released under the LGPL at the same
+ * time. Because that implementation is in C++, it's not directly usable in
+ * Wine, but does have documentation value.
+ *
+ *
+ * #define DF_EXT_VTOC		-4
+ * #define DF_VTOC_VTOC		-3
+ * #define DF_VTOC_EOF		-2
+ * #define DF_VTOC_FREE		-1
+ * #define DF_NAMELEN	0x20	// Maximum entry name length - 31 characters plus
+ * 				// a NUL terminator
+ * 
+ * #define DF_FT_STORAGE	1
+ * #define DF_FT_STREAM		2
+ * #define DF_FT_LOCKBYTES	3	// Not used -- How the bloody hell did I manage
+ * #define DF_FT_PROPERTY	4	// Not Used -- to figure these two out?
+ * #define DF_FT_ROOT		5
+ * 
+ * #define DF_BLOCK_SIZE	0x200
+ * #define DF_VTOC_SIZE		0x80
+ * #define DF_DE_PER_BLOCK	4
+ * #define DF_STREAM_BLOCK_SIZE	0x40
+ * 
+ * A DocFile is divided into blocks of 512 bytes.
+ * The first block contains the header.
+ *
+ * The file header contains The first 109 entries in the VTOC of VTOCs.
+ *
+ * Each block pointed to by a VTOC of VTOCs contains a VTOC, which
+ * includes block chains - just like FAT. This is a somewhat poor
+ * design for the following reasons:
+ *
+ *	1. FAT was a poor file system design to begin with, and
+ *	   has long been known to be horrendously inefficient
+ *	   for day to day operations.
+ *
+ *	2. The problem is compounded here, since the file
+ *	   level streams are generally *not* read sequentially.
+ *	   This means that a significant percentage of reads
+ *	   require seeking from the start of the chain.
+ *
+ * Data chains also contain an internal VTOC. The block size for
+ * the standard VTOC is 512. The block size for the internal VTOC
+ * is 64.
+ *
+ * Now, the 109 blocks in the VTOC of VTOCs allows for files of
+ * up to around 7MB. So what do you think happens if that's
+ * exceeded? Well, there's an entry in the header block which
+ * points to the first block used as additional storage for
+ * the VTOC of VTOCs.
+ *
+ * Now we can get up to around 15MB. Now, guess how the file
+ * format adds in another block to the VTOC of VTOCs. Come on,
+ * it's no big surprise. That's right - the last entry in each
+ * block extending the VTOC of VTOCs is, you guessed it, the
+ * block number of the next block containing an extension to
+ * the VTOC of VTOCs. The VTOC of VTOCs is chained!!!!
+ *
+ * So, to review:
+ *
+ * 1. If you are using a FAT file system, the location of
+ *    your file's blocks is stored in chains.
+ *
+ * 2. At the abstract level, the file contains a VTOC of VTOCs,
+ *    which is stored in the most inefficient possible format for
+ *    random access - a chain (AKA list).
+ *
+ * 3. The VTOC of VTOCs contains descriptions of three file level
+ *    streams:
+ *
+ *    a. The Directory stream
+ *    b. The Data stream
+ *    c. The Data VTOC stream
+ *
+ *    These are, of course, represented as chains.
+ *
+ * 4. The Data VTOC contains data describing the chains of blocks
+ *    within the Data stream.
+ *
+ * That's right - we have a total of four levels of block chains!
+ *
+ * Now, is that complicated enough for you? No? OK, there's another
+ * complication. If an individual stream (ie. an IStream) reaches
+ * 4096 bytes in size, it gets moved from the Data Stream to
+ * a new file level stream. Now, if the stream then gets truncated
+ * back to less than 4096 bytes, it returns to the data stream.
+ *
+ * The effect of using this format can be seen very easily. Pick
+ * an arbitrary application with a grid data representation that
+ * can export to both Lotus 123 and Excel 5 or higher. Export
+ * a large file to Lotus 123 and time it. Export the same thing
+ * to Excel 5 and time that. The difference is the inefficiency
+ * of the Microsoft DocFile format.
+ *
+ *
+ * #define TOTAL_SIMPLE_VTOCS	109
+ * 
+ * struct	DocFile_Header
+ * {
+ * 	df_byte iMagic1;	// 0xd0 
+ * 	df_byte iMagic2;	// 0xcf 
+ * 	df_byte iMagic3;	// 0x11 
+ * 	df_byte iMagic4;	// 0xe0 - Spells D0CF11E0, or DocFile 
+ * 	df_byte iMagic5;	// 161	(igi upside down) 
+ * 	df_byte iMagic6;	// 177	(lli upside down - see below 
+ * 	df_byte iMagic7;	// 26 (gz upside down) 
+ * 	df_byte iMagic8;	// 225 (szz upside down) - see below 
+ * 	df_int4 aiUnknown1[4];
+ * 	df_int4 iVersion;	// DocFile Version - 0x03003E	
+ * 	df_int4 aiUnknown2[4];
+ * 	df_int4 nVTOCs;		// Number of VTOCs 
+ * 	df_int4 iFirstDirBlock; // First Directory Block 
+ * 	df_int4 aiUnknown3[2];
+ * 	df_int4 iFirstDataVTOC; // First data VTOC block 
+ * 	df_int4 iHasData;	// 1 if there is data in the file - yes, this is important
+ * 	df_int4 iExtendedVTOC;	// Extended VTOC location 
+ * 	df_int4 iExtendedVTOCSize; // Size of extended VTOC (+1?) 
+ * 	df_int4 aiVTOCofVTOCs[TOTAL_SIMPLE_VTOCS];
+ * };
+ * 
+ * struct	DocFile_VTOC
+ * {
+ * 	df_int4 aiBlocks[DF_VTOC_SIZE];
+ * };
+ * 
+ * 
+ * The meaning of the magic numbers
+ *
+ * 0xd0cf11e0 is DocFile with a zero on the end (sort of)
+ *
+ * If you key 177161 into a calculator, then turn the calculator
+ * upside down, you get igilli, which may be a reference to
+ * somebody's name, or to the Hebrew word for "angel".
+ *
+ * If you key 26225 into a calculator, then turn it upside down, you
+ * get szzgz. Microsoft has a tradition of creating nonsense words
+ * using the letters s, g, z and y. We think szzgz may be one of the
+ * Microsoft placeholder variables, along the lines of foo, bar and baz.
+ * Alternatively, it could be 22526, which would be gzszz.
+ *
+ * 
+ * struct	DocFile_DirEnt
+ * {
+ * 	df_char achEntryName[DF_NAMELEN];	// Entry Name 
+ * 	df_int2 iNameLen;			// Name length in bytes, including NUL terminator 
+ * 	df_byte iFileType;			// Entry type 
+ * 	df_byte iColour;			// 1 = Black, 0 = Red 
+ * 	df_int4 iLeftSibling;			// Next Left Sibling Entry - See below 
+ * 	df_int4 iRightSibling;			// Next Right Sibling Entry 
+ * 	df_int4 iFirstChild;			// First Child Entry 
+ * 	df_byte achClassID[16];			// Class ID 
+ * 	df_int4 iStateBits;			// [GS]etStateBits value 
+ * 	df_int4 iCreatedLow;			// Low DWORD of creation time 
+ * 	df_int4 iCreatedHigh;			// High DWORD of creation time 
+ * 	df_int4 iModifiedLow;			// Low DWORD of modification time 
+ * 	df_int4 iModifiedHigh;			// High DWORD of modification time 
+ * 	df_int4 iVTOCPosition;			// VTOC Position 
+ * 	df_int4 iFileSize;			// Size of the stream 
+ * 	df_int4 iZero;				// We think this is part of the 64 bit stream size - must be 0 
+ * };
+ * 
+ * Siblings
+ * ========
+ *
+ * Siblings are stored in an obscure but incredibly elegant
+ * data structure called a red-black tree. This is generally
+ * defined as a 2-3-4 tree stored in a binary tree.
+ *
+ * A red-black tree can always be balanced very easily. The rules
+ * for a red-black tree are as follows:
+ *
+ *	1. The root node is always black.
+ *	2. The parent of a red node is always black.
+ *
+ * There is a Java demo of red-black trees at:
+ *
+ *	http://langevin.usc.edu/BST/RedBlackTree-Example.html
+ *
+ * This demo is an excellent tool for learning how red-black
+ * trees work, without having to go through the process of
+ * learning how they were derived.
+ *
+ * Within the tree, elements are ordered by the length of the
+ * name and within that, ASCII order by name. This causes the
+ * apparently bizarre reordering you see when you use dfview.
+ *
+ * This is a somewhat bizarre choice. It suggests that the
+ * designer of the DocFile format was trying to optimise
+ * searching through the directory entries. However searching
+ * through directory entries is a relatively rare operation.
+ * Reading and seeking within a stream are much more common
+ * operations, especially within the file level streams, yet
+ * these use the horrendously inefficient FAT chains.
+ *
+ * This suggests that the designer was probably somebody
+ * fresh out of university, who had some basic knowledge of
+ * basic data structures, but little knowledge of anything
+ * more practical. It is bizarre to attempt to optimise
+ * directory searches while not using a more efficient file
+ * block locating system than FAT (seedling/sapling/tree
+ * would result in a massive improvement - in fact we have
+ * an alternative to DocFiles that we use internally that
+ * uses seedling/sapling/tree and *is* far more efficient).
+ *
+ * It is worth noting that the MS implementation of red-black
+ * trees is incorrect (I can tell you're surprised) and
+ * actually causes more operations to occur than are really
+ * needed. Fortunately the fact that our implementation is
+ * correct will not cause any problems - the MS implementation
+ * still appears to cause the tree to satisfy the rules, albeit
+ * a sequence of the same insertions in the different
+ * implementations may result in a different, and possibly
+ * deeper (but never shallower) tree.
+ */
+
 
 /******************************************************************************
  *		STORAGE_get_big_block	[Internal]
