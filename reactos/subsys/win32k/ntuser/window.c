@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.116 2003/10/22 13:34:25 gvg Exp $
+/* $Id: window.c,v 1.117 2003/10/22 21:10:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1804,6 +1804,7 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
 
   if (!(Wnd = IntGetWindowObject(hWnd)))
   {
+    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
@@ -1962,6 +1963,7 @@ NtUserGetParent(HWND hWnd)
 
   if (!(Wnd = IntGetWindowObject(hWnd)))
   {
+    IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return NULL;
   }
