@@ -33,6 +33,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <time.h>
+#ifdef WIN32
+#include <io.h> /* write() */
+#endif /* WIN32 */
 
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT

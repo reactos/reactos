@@ -36,7 +36,8 @@ CLEAN_FILES = *.o $(TARGET)
 
 HOST_CFLAGS = -DYYDEBUG=1 -DINT16=SHORT -D__USE_W32API \
               -I$(LIB_WPP_DIR) -I$(PATH_TO_TOP)/include/wine \
-              -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include
+              -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include \
+              -Werror -Wall
 
 %.o: %.c
 	$(HOST_CC) $(HOST_CFLAGS) -c $< -o $@

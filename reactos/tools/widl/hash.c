@@ -511,7 +511,7 @@ unsigned long lhash_val_of_name_sys( syskind_t skind, LCID lcid, LPCSTR lpStr)
   switch (PRIMARYLANGID(LANGIDFROMLCID(lcid)))
   {
   default:
-    fprintf(stderr, "Unknown lcid %lx, treating as latin-based, please report\n", lcid);
+    fprintf(stderr, "Unknown lcid %lx, treating as latin-based, please report\n", (long)lcid);
     /* .. Fall Through .. */
   case LANG_AFRIKAANS:  case LANG_ALBANIAN:   case LANG_ARMENIAN:
   case LANG_ASSAMESE:   case LANG_AZERI:      case LANG_BASQUE:
