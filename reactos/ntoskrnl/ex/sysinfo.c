@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.41 2004/07/29 20:37:02 jimtabor Exp $
+/* $Id: sysinfo.c,v 1.42 2004/07/31 00:14:39 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -817,8 +817,24 @@ QSI_DEF(SystemObjectInformation)
 /* Class 18 -  Information */
 QSI_DEF(SystemPageFileInformation)
 {
+	SYSTEM_PAGEFILE_INFORMATION *Spfi = (SYSTEM_PAGEFILE_INFORMATION *) Buffer;
+
+	if (Size < sizeof (SYSTEM_PAGEFILE_INFORMATION))
+	{
+		* ReqSize = sizeof (SYSTEM_PAGEFILE_INFORMATION);
+		return (STATUS_INFO_LENGTH_MISMATCH);
+	}
+
+	UNICODE_STRING FileName; /* FIXME */
+
 	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+	Spfi->RelativeOffset = 0;
+
+	Spfi->CurrentSizePages = MiFreeSwapPages + MiUsedSwapPages;
+	Spfi->TotalUsedPages = MiUsedSwapPages;
+	Spfi->PeakUsedPages = MiUsedSwapPages; /* FIXME */
+	Spfi->PagefileFileName = FileName;
+	return (STATUS_SUCCESS);
 }
 
 /* Class 19 - Vdm Instemul Information */
@@ -845,9 +861,12 @@ QSI_DEF(SystemFileCacheInformation)
 		* ReqSize = sizeof (SYSTEM_CACHE_INFORMATION);
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
+	/* Return the Byte size not the page size. */
+	Sci->CurrentSize = 
+		MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE;
+	Sci->PeakSize = 
+	        MiMemoryConsumers[MC_CACHE].PagesUsed * PAGE_SIZE; /* FIXME */
 
-	Sci->CurrentSize = MiFreeSwapPages + MiUsedSwapPages; /* FIXME */
-	Sci->PeakSize = 0; /* FIXME */
 	Sci->PageFaultCount = 0; /* FIXME */
 	Sci->MinimumWorkingSet = 0; /* FIXME */
 	Sci->MaximumWorkingSet = 0; /* FIXME */
