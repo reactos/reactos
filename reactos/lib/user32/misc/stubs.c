@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.51 2003/11/19 12:25:03 weiden Exp $
+/* $Id: stubs.c,v 1.52 2003/11/19 12:48:47 weiden Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -91,22 +91,6 @@ BroadcastSystemMessageW(
 {
   UNIMPLEMENTED;
   return 0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-CheckRadioButton(
-  HWND hDlg,
-  int nIDFirstButton,
-  int nIDLastButton,
-  int nIDCheckButton)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dialog.c,v 1.21 2003/11/08 15:35:58 mf Exp $
+/* $Id: dialog.c,v 1.22 2003/11/19 12:48:48 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/dialog.c
@@ -115,6 +115,14 @@ typedef struct
     INT        nIDDlgItem;
     HWND       control;
 } GETDLGITEMINFO;
+
+/* CheckRadioButton structure */
+typedef struct
+{
+  UINT firstID;
+  UINT lastID;
+  UINT checkID;
+} RADIOGROUP;
 
 
 /*********************************************************************
@@ -2187,3 +2195,45 @@ CheckDlgButton(
 	SendDlgItemMessageA( hDlg, nIDButton, BM_SETCHECK, uCheck, 0 );
 	return TRUE;
 }
+
+static BOOL CALLBACK CheckRB(HWND hwnd, LPARAM lParam)
+{
+  LONG lChildID = GetWindowLongW(hwnd, GWL_ID);
+  RADIOGROUP *lpRadioGroup = (RADIOGROUP *)lParam;
+  
+  if((lChildID >= lpRadioGroup->firstID) &&
+     (lChildID <= lpRadioGroup->lastID))
+  {
+    if (lChildID == lpRadioGroup->checkID)
+    {
+      SendMessageW(hwnd, BM_SETCHECK, BST_CHECKED, 0);
+    }
+    else
+    {
+      SendMessageW(hwnd, BM_SETCHECK, BST_UNCHECKED, 0);
+    }
+  }
+  
+   return TRUE;
+}
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+CheckRadioButton(
+  HWND hDlg,
+  int nIDFirstButton,
+  int nIDLastButton,
+  int nIDCheckButton)
+{
+  RADIOGROUP radioGroup;
+  
+  radioGroup.firstID = nIDFirstButton;
+  radioGroup.lastID = nIDLastButton;
+  radioGroup.checkID = nIDCheckButton;
+  
+  return EnumChildWindows(hDlg, CheckRB, (LPARAM)&radioGroup);
+}
+
