@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.2 2001/01/21 00:05:53 phreak Exp $
+/* $Id: shell.c,v 1.3 2001/02/01 16:30:46 jean Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -23,11 +23,12 @@ void debug_printf(char* fmt, ...)
 {
    va_list args;
    char buffer[255];
+   DWORD nbChar;
 
    va_start(args,fmt);
    vsprintf(buffer,fmt,args);
    va_end(args);
-   WriteConsoleA(OutputHandle, buffer, strlen(buffer), NULL, NULL);
+   WriteConsoleA(OutputHandle, buffer, strlen(buffer), &nbChar, NULL);
 }
 
 
