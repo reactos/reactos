@@ -50,6 +50,7 @@ IopCompleteRequest1(struct _KAPC* Apc,
    if (Irp->UserEvent!=NULL)
      {
 	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+	ObDereferenceObject( Irp->UserEvent );
      }
 
    FileObject = IoStack->FileObject;
@@ -175,7 +176,8 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
 	  Irp, PriorityBoost);
    
    IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
-
+   FileObject = IoStack->FileObject;
+   
    DeviceObject = IoStack->DeviceObject;
    
    switch (IoStack->MajorFunction)
@@ -241,10 +243,11 @@ VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
    if (Irp->UserEvent!=NULL)
      {
 	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+	// if the event is not the one in the file object, it needs dereferenced
+	if( FileObject && Irp->UserEvent != &FileObject->Event )
+	  ObDereferenceObject( Irp->UserEvent );
      }
 
-   FileObject = IoStack->FileObject;
-   
    if (FileObject != NULL && IoStack->MajorFunction != IRP_MJ_CLOSE)
      {
 	//ObDereferenceObject(FileObject);

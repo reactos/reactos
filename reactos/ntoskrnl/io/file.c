@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.15 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: file.c,v 1.16 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,6 @@ NtQueryInformationFile(HANDLE FileHandle,
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT Event;
    PVOID SystemBuffer;
    IO_STATUS_BLOCK IoSB;
    
@@ -64,9 +63,6 @@ NtQueryInformationFile(HANDLE FileHandle,
      }
    DPRINT("FileObject %x\n", FileObject);
    
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
    DeviceObject = FileObject->DeviceObject;
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,
@@ -89,7 +85,8 @@ NtQueryInformationFile(HANDLE FileHandle,
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = &IoSB;
-   Irp->UserEvent = &Event;
+   Irp->UserEvent = &FileObject->Event;
+   KeResetEvent( &FileObject->Event );
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
@@ -107,7 +104,7 @@ NtQueryInformationFile(HANDLE FileHandle,
 			 Irp);
    if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
@@ -145,7 +142,6 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    PIRP Irp;
    PDEVICE_OBJECT DeviceObject;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT Event;
    NTSTATUS Status;
    
    assert(FileInformation != NULL)
@@ -161,9 +157,6 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    
    DPRINT("FileObject %x\n", FileObject);
    
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
    DeviceObject = FileObject->DeviceObject;
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,
@@ -176,7 +169,8 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
    
    Irp->AssociatedIrp.SystemBuffer = FileInformation;
    Irp->UserIosb = &IoStatusBlock;
-   Irp->UserEvent = &Event;
+   Irp->UserEvent = &FileObject->Event;
+   KeResetEvent( &FileObject->Event );
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_QUERY_INFORMATION;
@@ -194,7 +188,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 			 Irp);
    if (Status==STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,
@@ -224,7 +218,6 @@ NtSetInformationFile(HANDLE FileHandle,
    PFILE_OBJECT FileObject;
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
-   KEVENT Event;
    NTSTATUS Status;
    PVOID SystemBuffer;
    IO_STATUS_BLOCK IoSB;
@@ -253,14 +246,6 @@ NtSetInformationFile(HANDLE FileHandle,
    
    DPRINT("FileObject %x\n", FileObject);
    
-   /*
-    * Initialize an event object to wait
-    * on for the request.
-    */
-   KeInitializeEvent(&Event,
-		     NotificationEvent,
-		     FALSE);
-   
    DeviceObject = FileObject->DeviceObject;
    
    Irp = IoAllocateIrp(DeviceObject->StackSize,
@@ -287,7 +272,8 @@ NtSetInformationFile(HANDLE FileHandle,
    
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = &IoSB;
-   Irp->UserEvent = &Event;
+   Irp->UserEvent = &FileObject->Event;
+   KeResetEvent( &FileObject->Event );
    
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = IRP_MJ_SET_INFORMATION;
@@ -310,7 +296,7 @@ NtSetInformationFile(HANDLE FileHandle,
 			 Irp);
    if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,

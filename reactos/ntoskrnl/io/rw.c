@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.34 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: rw.c,v 1.35 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -53,7 +53,6 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
    PKEVENT ptrEvent = NULL;
-   KEVENT Event;
    IO_STATUS_BLOCK IoSB;
    
    DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
@@ -66,12 +65,6 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 				      UserMode,
 				      (PVOID*)&FileObject,
 				      NULL);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("NtReadFile() = %x\n",Status);
-	return Status;
-     }
-   
    if (ByteOffset == NULL)
      {
 	ByteOffset = &FileObject->CurrentByteOffset;
@@ -91,16 +84,10 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 	     return Status;
 	  }
      }
-   else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-     {	
-	ptrEvent = NULL;
-     }
-   else
+   else 
      {
-	KeInitializeEvent(&Event,
-			  NotificationEvent,
-			  FALSE);
-	ptrEvent = &Event;
+       ptrEvent = &FileObject->Event;
+       KeResetEvent( ptrEvent );
      }
    
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
@@ -128,7 +115,7 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
    Status = IoCallDriver(FileObject->DeviceObject,
 			 Irp);
    if (EventHandle == NULL && Status == STATUS_PENDING && 
-       !(FileObject->Flags & FO_SYNCHRONOUS_IO))
+       (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	BOOLEAN Alertable;
 	
@@ -141,12 +128,16 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
 	     Alertable = FALSE;
 	  } 
 	
-	KeWaitForSingleObject(&Event,
-			      Executive,
-			      KernelMode,
-			      Alertable,
-			      NULL);
-	Status = IoSB.Status;
+	Status = KeWaitForSingleObject(ptrEvent,
+				       Executive,
+				       KernelMode,
+				       Alertable,
+				       NULL);
+	if( !NT_SUCCESS( Status ) )
+	  {
+	    DPRINT1( "WaitForSingleObject failed: %x\n", Status );
+	  }
+	else Status = IoSB.Status;
      }
    if (IoStatusBlock && EventHandle == NULL)
      {
@@ -183,7 +174,6 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
    PFILE_OBJECT FileObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT Event;
    PKEVENT ptrEvent;
    IO_STATUS_BLOCK IoSB;
    
@@ -220,16 +210,10 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
 	     return(Status);
 	  }
      }
-   else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-     {	
-	ptrEvent = NULL;
-     }
    else
      {
-	KeInitializeEvent(&Event,
-			  NotificationEvent,
-			  FALSE);
-	ptrEvent = &Event;
+	ptrEvent = &FileObject->Event;
+	KeResetEvent( ptrEvent );
      }
 
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
@@ -259,7 +243,7 @@ NTSTATUS STDCALL NtWriteFile(HANDLE			FileHandle,
    if (EventHandle == NULL && Status == STATUS_PENDING && 
        !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(ptrEvent,
 			      Executive,
 			      KernelMode,
 			      FALSE,

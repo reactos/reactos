@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.20 2001/12/05 12:14:13 ekohl Exp $
+/* $Id: fs.c,v 1.21 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -184,27 +184,30 @@ NTSTATUS IoAskFileSystemToMountDevice(PDEVICE_OBJECT DeviceObject,
 				      PDEVICE_OBJECT DeviceToMount)
 {
    PIRP Irp;
-   KEVENT Event;
    IO_STATUS_BLOCK IoStatusBlock;
    NTSTATUS Status;
+   PKEVENT Event;   // KEVENT must be allocated from non paged pool, not stack
    
    DPRINT("IoAskFileSystemToMountDevice(DeviceObject %x, DeviceToMount %x)\n",
 	  DeviceObject,DeviceToMount);
    
    assert_irql(PASSIVE_LEVEL);
-   
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   Event = ExAllocatePool( NonPagedPool, sizeof( KEVENT ) );
+   if( Event == 0 )
+     return STATUS_INSUFFICIENT_RESOURCES;
+   KeInitializeEvent(Event,NotificationEvent,FALSE);
    Irp = IoBuildFilesystemControlRequest(IRP_MN_MOUNT_VOLUME,
 					 DeviceObject,
-					 &Event,
+					 Event,
 					 &IoStatusBlock,
 					 DeviceToMount);
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status==STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	KeWaitForSingleObject(Event,Executive,KernelMode,FALSE,NULL);
 	Status = IoStatusBlock.Status;
      }
+   ExFreePool( Event );
    return(Status);
 }
 

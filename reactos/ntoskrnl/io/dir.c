@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.11 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: dir.c,v 1.12 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,7 +85,6 @@ NtQueryDirectoryFile(
    PDEVICE_OBJECT DeviceObject;
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
-   KEVENT Event;
    PIO_STACK_LOCATION IoStack;
    IO_STATUS_BLOCK IoSB;
    
@@ -103,7 +102,6 @@ NtQueryDirectoryFile(
 	ObDereferenceObject(FileObject);
 	return(Status);
      }
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
    DeviceObject = FileObject->DeviceObject;
    
    Irp = IoAllocateIrp(DeviceObject->StackSize, TRUE);
@@ -115,7 +113,8 @@ NtQueryDirectoryFile(
    
    
    Irp->UserIosb = &IoSB;
-   Irp->UserEvent = &Event;
+   Irp->UserEvent = &FileObject->Event;
+   KeResetEvent( &FileObject->Event );
    Irp->UserBuffer=FileInformation;
    
    IoStack = IoGetNextIrpStackLocation(Irp);
@@ -150,11 +149,11 @@ NtQueryDirectoryFile(
      {
 	if (FileObject->Flags & FO_ALERTABLE_IO)
 	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
 	  }
 	else
 	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
 	  }
 	Status = IoSB.Status;
      }

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.54 2002/04/01 22:18:01 hbirr Exp $
+/* $Id: create.c,v 1.55 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -106,15 +106,8 @@ IopCreateFile(PVOID			ObjectBody,
    if (NULL == RemainingPath)
      {
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	FileObject->FileName.Buffer = 
-	  ExAllocatePoolWithTag(NonPagedPool,
-				(ObjectAttributes->ObjectName->Length+1)*sizeof(WCHAR),
-				TAG_FILE_NAME);
-	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
-	FileObject->FileName.MaximumLength = 
-	  ObjectAttributes->ObjectName->MaximumLength;
-	RtlCopyUnicodeString(&(FileObject->FileName),
-			     ObjectAttributes->ObjectName);
+	FileObject->FileName.Buffer = 0;
+	FileObject->FileName.Length = FileObject->FileName.MaximumLength = 0;
      }
    else
      {
@@ -218,6 +211,9 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
   CreatedFileObject->Vpb = DeviceObject->Vpb;
   CreatedFileObject->Type = InternalFileType;
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
+
+  // shouldn't we initialize the lock event, and several other things here too?
+  KeInitializeEvent( &CreatedFileObject->Event, NotificationEvent, FALSE );
   
   ZwClose (FileHandle);
   
@@ -312,7 +308,6 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    PFILE_OBJECT		FileObject;
    NTSTATUS		Status;
    PIRP			Irp;
-   KEVENT		Event;
    PIO_STACK_LOCATION	StackLoc;
    IO_STATUS_BLOCK      IoSB;
    IO_SECURITY_CONTEXT  SecurityContext;
@@ -354,7 +349,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    SecurityContext.FullCreateOptions = 0; /* ?? */
    
    KeInitializeEvent(&FileObject->Lock, NotificationEvent, TRUE);
-   KeInitializeEvent(&Event, NotificationEvent, FALSE);
+   KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
    
    DPRINT("FileObject %x\n", FileObject);
    DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
@@ -374,7 +369,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;
    Irp->Tail.Overlay.AuxiliaryBuffer = (PCHAR)ExtraCreateParameters;
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-   Irp->UserEvent = &Event;
+   Irp->UserEvent = &FileObject->Event;
    
    /*
     * Get the stack location for the new
@@ -418,7 +413,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    
    if (Status == STATUS_PENDING)
      {
-	KeWaitForSingleObject(&Event,
+	KeWaitForSingleObject(&FileObject->Event,
 			      Executive,
 			      KernelMode,
 			      FALSE,

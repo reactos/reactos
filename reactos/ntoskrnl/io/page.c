@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.14 2002/01/08 00:49:00 dwelch Exp $
+/* $Id: page.c,v 1.15 2002/04/07 18:36:13 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,6 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 			    BOOLEAN PagingIo)
 {
    PIRP Irp;
-   KEVENT Event;
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
@@ -37,13 +36,12 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 			      STANDARD_RIGHTS_REQUIRED,
 			      IoFileObjectType,
 			      UserMode);
-   
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   KeResetEvent( &FileObject->Event );   
    Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_WRITE,
 					     FileObject->DeviceObject,
 					     Mdl,
 					     Offset,
-					     &Event,
+					     &FileObject->Event,
 					     StatusBlock,
 					     PagingIo);
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -56,12 +54,12 @@ NTSTATUS STDCALL IoPageWrite(PFILE_OBJECT FileObject,
 	DPRINT("Waiting for io operation\n");
 	if (FileObject->Flags & FO_ALERTABLE_IO)
 	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
 	  }
 	else
 	  {
 	     DPRINT("Non-alertable wait\n");
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
 	  }
 	Status = StatusBlock->Status;
      }
@@ -77,7 +75,6 @@ IoPageRead(PFILE_OBJECT FileObject,
 	   BOOLEAN PagingIo)
 {
    PIRP Irp;
-   KEVENT Event;
    PIO_STACK_LOCATION StackPtr;
    NTSTATUS Status;
    
@@ -88,13 +85,12 @@ IoPageRead(PFILE_OBJECT FileObject,
 			      STANDARD_RIGHTS_REQUIRED,
 			      IoFileObjectType,
 			      UserMode);
-   
-   KeInitializeEvent(&Event, NotificationEvent, FALSE);
+   KeResetEvent( &FileObject->Event );   
    Irp = IoBuildSynchronousFsdRequestWithMdl(IRP_MJ_READ,
 					     FileObject->DeviceObject,
 					     Mdl,
 					     Offset,
-					     &Event,
+					     &FileObject->Event,
 					     StatusBlock,
 					     PagingIo);
    StackPtr = IoGetNextIrpStackLocation(Irp);
@@ -107,12 +103,12 @@ IoPageRead(PFILE_OBJECT FileObject,
 	DPRINT("Waiting for io operation\n");
 	if (FileObject->Flags & FO_ALERTABLE_IO)
 	  {
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,TRUE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,TRUE,NULL);
 	  }
 	else
 	  {
 	     DPRINT("Non-alertable wait\n");
-	     KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	     KeWaitForSingleObject(&FileObject->Event,Executive,KernelMode,FALSE,NULL);
 	  }
 	Status = StatusBlock->Status;
      }
