@@ -88,6 +88,27 @@
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.xml" />
 </directory>
+<directory name="kbdda">
+	<xi:include href="kbdda/kbdda.xml" />
+</directory>
+<directory name="kbddv">
+	<xi:include href="kbddv/kbddv.xml" />
+</directory>
+<directory name="kbdfr">
+	<xi:include href="kbdfr/kbdfr.xml" />
+</directory>
+<directory name="kbdgr">
+	<xi:include href="kbdgr/kbdgr.xml" />
+</directory>
+<directory name="kbdse">
+	<xi:include href="kbdse/kbdse.xml" />
+</directory>
+<directory name="kbduk">
+	<xi:include href="kbduk/kbduk.xml" />
+</directory>
+<directory name="kbdus">
+	<xi:include href="kbdus/kbdus.xml" />
+</directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
 </directory>
