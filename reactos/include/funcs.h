@@ -1285,6 +1285,12 @@ GetProcessHeaps(
 		PHANDLE ProcessHeaps
 		);
 
+DWORD
+STDCALL
+GetProcessVersion (
+		DWORD	ProcessId
+		);
+
 WINBOOL
 STDCALL
 HeapLock(
