@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <win32k/driver.h>
 #include <win32k/gdiobj.h>
+#include <win32k/path.h>
 
 /*  (RJJ) Taken from WINE  */
 typedef struct _DEVICECAPS
@@ -54,12 +55,12 @@ typedef struct _WIN_DC_INFO
   HBITMAP  hBitmap;
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
-#if 0
+// #if 0
     HANDLE      hDevice;
     HPALETTE    hPalette;
     
     GdiPath       path;
-#endif
+// #endif
 
   WORD  ROPmode;
   WORD  polyFillMode;
@@ -207,7 +208,7 @@ BOOL STDCALL  W32kGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
 HDC STDCALL  W32kResetDC(HDC  hDC, CONST DEVMODE  *InitData);
 BOOL STDCALL  W32kRestoreDC(HDC  hDC, INT  SavedDC);
 INT STDCALL  W32kSaveDC(HDC  hDC);
-HGDIOBJ STDCALL  W32kSelectObject(HDC  hDC, HGDIOBJ  GDIObj);
+HGDIOBJ STDCALL  W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 INT STDCALL  W32kSetBkMode(HDC  hDC, INT  backgroundMode);
 INT STDCALL  W32kSetPolyFillMode(HDC  hDC, INT polyFillMode);
 INT STDCALL  W32kSetRelAbs(HDC  hDC, INT  relAbsMode);

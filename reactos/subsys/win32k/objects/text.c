@@ -5,6 +5,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/dc.h>
 #include <win32k/text.h>
+#include <win32k/kapi.h>
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -186,6 +187,8 @@ W32kGetGlyphOutline(HDC  hDC,
                            CONST LPMAT2 mat2)
 {
   UNIMPLEMENTED;
+
+
 }
 
 DWORD
@@ -361,7 +364,19 @@ W32kTextOut(HDC  hDC,
                   LPCWSTR  String,
                   int  Count)
 {
-  UNIMPLEMENTED;
+    DC			*dc      = DC_HandleToPtr(hDC);
+    SURFOBJ		*SurfObj = AccessUserObject(dc->Surface);
+    PUNICODE_STRING	UString;
+    PANSI_STRING	AString;
+
+    RtlCreateUnicodeString(UString, (PWSTR)String);
+    RtlUnicodeStringToAnsiString(AString, UString, TRUE);
+
+    // For now we're just going to use an internal font
+    grWriteCellString(SurfObj, XStart, YStart, AString->Buffer, 0xffffff);
+
+    RtlFreeAnsiString(AString);
+    RtlFreeUnicodeString(UString);
 }
 
 UINT

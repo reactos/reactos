@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.15 2000/04/03 19:55:33 jfilby Exp $
+/* $Id: dc.c,v 1.16 2000/06/16 07:22:37 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -7,6 +7,8 @@
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
+
+/* FIXME: Surely we should just have one include file that includes all of these.. */
 #include <win32k/bitmaps.h>
 #include <win32k/coord.h>
 #include <win32k/driver.h>
@@ -14,6 +16,8 @@
 #include <win32k/print.h>
 #include <win32k/region.h>
 #include <win32k/gdiobj.h>
+#include <win32k/pen.h>
+#include "../eng/objects.h"
 
 // #define NDEBUG
 #include <internal/debug.h>
@@ -224,7 +228,7 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
       return NULL;
     }
   NewDC->w.flags        = DC_MEMORY;
-  NewDC->w.bitsPerPixel = 1;
+  NewDC->w.bitsPerPixel = 1; /* FIXME: OrigDC->w.bitsPerPixel ? */
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
 
@@ -243,6 +247,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   PDC  NewDC;
   HDC  hDC = NULL;
   DRVENABLEDATA  DED;
+int i; // DELETEME
 
   /*  Check for existing DC object  */
   if ((NewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -250,6 +255,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       hDC = DC_PtrToHandle(NewDC);
       return  W32kCreateCompatableDC(hDC);
     }
+
+DbgPrint("NAME: %S\n", Driver);
   
   /*  Allocate a DC object  */
   if ((NewDC = DC_AllocDC(Driver)) == NULL)
@@ -280,6 +287,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       DbgPrint("DrvEnableDriver failed\n");
       goto Failure;
     }
+DbgPrint("Building DDI Functions\n");
 
   /*  Construct DDI driver function dispatch table  */
   if (!DRIVER_BuildDDIFunctions(&DED, &NewDC->DriverFunctions))
@@ -291,7 +299,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /*  Allocate a phyical device handle from the driver  */
   if (Device != NULL)
     {
-      wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME);
+DbgPrint("Device in u: %u\n", Device);
+//      wcsncpy(NewDC->DMW.dmDeviceName, Device, DMMAXDEVICENAME); FIXME: this crashes everything?
     }
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
   NewDC->DMW.dmFields = 0x000fc000;
@@ -304,6 +313,10 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   NewDC->DMW.dmPelsHeight = 480;
   NewDC->DMW.dmDisplayFlags = 0;
   NewDC->DMW.dmDisplayFrequency = 0;
+
+  NewDC->w.bitsPerPixel = 8; // FIXME: set this here??
+
+DbgPrint("Enabling PDev\n");
 
   NewDC->PDev = NewDC->DriverFunctions.EnablePDev(&NewDC->DMW,
                                                   L"",
@@ -322,16 +335,24 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
       goto Failure;
     }
 
+DbgPrint("calling completePDev\n");
+
   /*  Complete initialization of the physical device  */
   NewDC->DriverFunctions.CompletePDev(NewDC->PDev, NewDC);
 
+DbgPrint("calling DRIVER_ReferenceDriver\n");
+
   DRIVER_ReferenceDriver (Driver);
+
+DbgPrint("calling EnableSurface\n");
 
   /*  Enable the drawing surface  */
   NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
 
+DbgPrint("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
+
   /* Test EngXxx functions */
-  TestEngXxx(NewDC);
+//  TestEngXxx(NewDC);
 
   /*  Initialize the DC state  */
   DC_InitDC(NewDC);
@@ -787,9 +808,63 @@ INT STDCALL W32kSaveDC(HDC  hDC)
   return  ret;
 }
 
-HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  GDIObj)
+HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 {
-  UNIMPLEMENTED;
+   HGDIOBJ   objOrg;
+   GDIOBJHDR *GdiObjHdr;
+   BITMAPOBJ *pb;
+   PSURFOBJ  surfobj;
+   PSURFGDI  surfgdi;
+   PDC dc;
+
+   if(!hDC || !hGDIObj) return NULL;
+
+   dc = DC_HandleToPtr(hDC);
+   GdiObjHdr = hGDIObj;
+
+   // FIXME: Get object handle from GDIObj and use it instead of GDIObj below?
+
+   switch(GdiObjHdr->wMagic) {
+      case GO_PEN_MAGIC:
+         objOrg = (HGDIOBJ)dc->w.hPen;
+         dc->w.hPen = hGDIObj;
+         break;
+      case GO_BRUSH_MAGIC:
+         objOrg = (HGDIOBJ)dc->w.hBrush;
+         dc->w.hBrush = (BRUSHOBJ *)GdiObjHdr;
+         break;
+      case GO_FONT_MAGIC:
+         objOrg = (HGDIOBJ)dc->w.hFont;
+         dc->w.hFont = (FONTOBJ *)GdiObjHdr;
+         break;
+      case GO_BITMAP_MAGIC:
+         // must be memory dc to select bitmap
+         if (!(dc->w.flags & DC_MEMORY))
+            return NULL;
+         objOrg = (HGDIOBJ)dc->w.hBitmap;
+
+         // setup mem dc for drawing into bitmap
+         pb   = BITMAPOBJ_HandleToPtr(GdiObjHdr);
+         surfobj = ExAllocatePool(NonPagedPool, sizeof(SURFOBJ));
+         surfgdi = ExAllocatePool(NonPagedPool, sizeof(SURFGDI));
+         BitmapToSurf(surfgdi, surfobj, pb);
+
+         dc->w.hBitmap = (BITMAPOBJ *)GdiObjHdr;
+         dc->Surface   = CreateGDIHandle(surfgdi, surfobj);
+
+         break;
+#if UPDATEREGIONS
+      case GO_REGION_MAGIC:
+         /* objOrg = (HGDIOBJ)hDC->region; */
+         objOrg = NULL;	/* FIXME? hDC->region is destroyed below */
+         SelectClipRgn(hDC, (HRGN)GdiObjHdr);
+         break;
+#endif
+      default:
+      return NULL;
+   }
+
+   return objOrg;
 }
 
 DC_SET_MODE( W32kSetBkMode, w.backgroundMode, TRANSPARENT, OPAQUE ) 
@@ -1038,5 +1113,3 @@ DC_InvertXform(const XFORM *xformSrc,
   
   return  TRUE;
 }
-
-

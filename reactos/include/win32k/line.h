@@ -34,7 +34,7 @@ W32kArcTo(HDC  hDC,
                 int  XRadial2,
                 int  YRadial2);
 
-int
+INT
 STDCALL
 W32kGetArcDirection(HDC  hDC);
 

@@ -12,6 +12,9 @@
 #include "handle.h"
 
 // FIXME: Total rewrite..
+// Place User and GDI objects in ONE object with the user items shown first
+// See ..\objects\gdiobj
+// To switch between user and gdi objects, just -\+ the size of all the user items
 
 ULONG CreateGDIHandle(PVOID InternalObject, PVOID UserObject)
 {

@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.14 2000/04/02 13:09:50 jfilby Exp $
+/* $Id: dllmain.c,v 1.15 2000/06/16 07:22:37 jfilby Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -62,6 +62,9 @@ W32kInitialize (VOID)
 	// FIXME: Retrieve name from registry
 	RtlInitUnicodeString (&DriverNameW, L"\\??\\C:\\reactos\\system32\\drivers\\vidport.sys");
 	EngLoadImage(&DriverNameW);
+
+	// Create surface used to draw the internal font onto
+	CreateCellCharSurface();
 
 	return TRUE;
 }

@@ -82,6 +82,14 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
                         IN ULONG  Flags,
                         IN PVOID  Bits)
 {
+
+/* SHOULD CALL THIS */
+/* HBITMAP STDCALL W32kCreateBitmap(INT  Width,
+                          INT  Height,
+                          UINT  Planes,
+                          UINT  BitsPerPel,
+                          CONST VOID *Bits) */
+
    HBITMAP NewBitmap;
    SURFOBJ *SurfObj;
    SURFGDI *SurfGDI;
@@ -216,8 +224,7 @@ BOOL EngDeleteSurface(HSURF Surface)
 
 SURFOBJ *EngLockSurface(HSURF Surface)
 {
-   // FIXME: Do we need to allocate new memory for this user object?? Since there's an unlock.. it appears to be so
-   //        probably because win32k is supposed to do some kind of wierd handle\object thing that we don't
+   // FIXME: Call GDI_LockObject (see subsys/win32k/objects/gdi.c)
 
    return AccessUserObject(Surface);
 }

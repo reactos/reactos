@@ -19,7 +19,58 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
                  INT  YSrc,
                  DWORD  ROP)
 {
-  UNIMPLEMENTED;
+  PDC		DCDest = DC_HandleToPtr(hDCDest);
+  PDC		DCSrc  = DC_HandleToPtr(hDCSrc);
+  PSURFOBJ	SurfDest;
+  PSURFOBJ	SurfSrc;
+  RECTL		DestRect;
+  POINTL	SourcePoint;
+  PBITMAPOBJ	DestBitmapObj;
+  PBITMAPOBJ	SrcBitmapObj;
+  BOOL		Status, SurfDestAlloc, SurfSrcAlloc;
+
+  DestRect.left   = XDest;
+  DestRect.top    = YDest;
+  DestRect.right  = XDest+Width;
+  DestRect.bottom = YDest+Height;
+
+  SourcePoint.x = XSrc;
+  SourcePoint.y = YSrc;
+
+  SurfDestAlloc = FALSE;
+  SurfSrcAlloc  = FALSE;
+
+DbgPrint("Get surfdest.. ");
+
+  // Get the SurfDest
+  if(DCDest->Surface != NULL)
+  {
+    // Use the DC's surface if it has one
+    SurfDest = AccessUserObject(DCDest->Surface);
+  } else
+    return FALSE;
+
+DbgPrint("Get surfsrc.. ");
+
+  // Get the SurfSrc
+  if(DCSrc->Surface != NULL)
+  {
+DbgPrint("from DC's surface\n");
+
+    // Use the DC's surface if it has one
+    SurfSrc = AccessUserObject(DCSrc->Surface);
+  } else
+    return FALSE;
+
+
+DbgPrint("Go to EngBitBlt\n");
+  Status = EngBitBlt(SurfDest, SurfSrc, NULL, NULL, NULL,
+			&DestRect, &SourcePoint, NULL, NULL, NULL, NULL); // FIXME: Color translation (xlateobj)
+
+  if(SurfDestAlloc == TRUE) ExFreePool(SurfDest);
+  if(SurfSrcAlloc  == TRUE) ExFreePool(SurfSrc);
+
+  return Status;
 }
 
 HBITMAP STDCALL W32kCreateBitmap(INT  Width,
@@ -60,8 +111,8 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
       return 0;
     }
 
-  DPRINT("%dx%d, %d colors returning %08x\n", Width, Height,
-         1 << (Planes * BitsPerPel), bmp);
+  DPRINT("W32kCreateBitmap:%dx%d, %d (%d BPP) colors returning %08x\n", Width, Height,
+         1 << (Planes * BitsPerPel), BitsPerPel, bmp);
 
   bmp->size.cx = 0;
   bmp->size.cy = 0;
@@ -75,12 +126,17 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
   bmp->DDBitmap = NULL;
   bmp->dib = NULL;
   hBitmap = BITMAPOBJ_PtrToHandle (bmp);
+
+  // Allocate memory for bitmap bits
+  bmp->bitmap.bmBits = ExAllocatePool(NonPagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight);
+
   if (Bits) /* Set bitmap bits */
     {
       W32kSetBitmapBits(hBitmap, 
                         Height * bmp->bitmap.bmWidthBytes,
                         Bits);
     }
+
   BITMAPOBJ_UnlockBitmap (hBitmap);
 
   return  hBitmap;
@@ -94,8 +150,10 @@ HBITMAP STDCALL W32kCreateCompatibleBitmap(HDC hDC,
   PDC  dc;
 
   hbmpRet = 0;
-  DPRINT("(%04x,%d,%d) = \n", hDC, Width, Height);
-  dc = DC_PtrToHandle (hDC);
+  dc = DC_HandleToPtr (hDC);
+
+  DPRINT("W32kCreateCompatibleBitmap(%04x,%d,%d, bpp:%d) = \n", hDC, Width, Height, dc->w.bitsPerPixel);
+
   if (!dc)
     {
       return 0;
@@ -357,7 +415,7 @@ LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
       height = bmp->bitmap.bmHeight;
     }
   Bytes = height * bmp->bitmap.bmWidthBytes;
-  DPRINT ("(%08x, %ld, %p) %dx%d %d colors fetched height: %ld\n",
+  DPRINT ("(%08x, bytes:%ld, bits:%p) %dx%d %d colors fetched height: %ld\n",
           hBitmap, 
           Bytes, 
           Bits, 

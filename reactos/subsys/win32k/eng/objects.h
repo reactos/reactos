@@ -20,7 +20,7 @@ typedef struct _CLIPGDI {
 
    ULONG EnumPos;
    ENUMRECTS EnumRects;
-} CLIPGDI;
+} CLIPGDI, *PCLIPGDI;
 
 typedef struct _DRVFUNCTIONSGDI {
    HDEV  hdev;
@@ -42,7 +42,7 @@ typedef struct _PALGDI {
    ULONG RedMask;
    ULONG GreenMask;
    ULONG BlueMask;
-} PALGDI;
+} PALGDI, *PPALGDI;
 
 typedef struct _PATHGDI {
 
@@ -98,7 +98,7 @@ typedef struct _SURFGDI {
    PFN_CopyBits CopyBits;
    PFN_Synchronize Synchronize;
    BOOL SynchronizeAccess;
-} SURFGDI;
+} SURFGDI, *PSURFGDI;
 
 typedef struct _XFORMGDI {
 

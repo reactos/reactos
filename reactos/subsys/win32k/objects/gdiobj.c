@@ -1,7 +1,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.5 2000/03/01 03:23:57 ekohl Exp $
+ * $Id: gdiobj.c,v 1.6 2000/06/16 07:22:39 jfilby Exp $
  *
  */
 
@@ -14,7 +14,7 @@ PGDIOBJ  GDIOBJ_AllocObject(WORD Size, WORD Magic)
 {
   PGDIOBJHDR  NewObj;
   
-  NewObj = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR));
+  NewObj = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR)); // FIXME: Allocate with tag of MAGIC?
   if (NewObj == NULL)
     {
       return  NULL;
@@ -46,6 +46,7 @@ HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
 {
   PGDIOBJHDR  objHeader;
   
+  if (Obj == NULL) return NULL;
   objHeader = (PGDIOBJHDR) (((PCHAR)Obj) - sizeof (GDIOBJHDR));
   if (objHeader->wMagic != Magic)
     {
@@ -58,12 +59,14 @@ HGDIOBJ  GDIOBJ_PtrToHandle (PGDIOBJ Obj, WORD Magic)
 PGDIOBJ  GDIOBJ_HandleToPtr (HGDIOBJ Obj, WORD Magic)
 {
   PGDIOBJHDR  objHeader;
-  
+
+  if (Obj == NULL) return NULL;
+
   objHeader = (PGDIOBJHDR) Obj;
-  
+
   /*  FIXME: Lock object for duration  */
 
-  if (objHeader->wMagic != Magic)
+  if ((objHeader->wMagic != Magic) && (Magic != GO_MAGIC_DONTCARE))
     {
       return  0;
     }

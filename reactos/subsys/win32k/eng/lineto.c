@@ -1,6 +1,8 @@
 #include <ddk/winddi.h>
 #include "objects.h"
 
+// POSSIBLE FIXME: Switch X and Y's so that drawing a line doesn't try to draw from 150 to 50 (negative dx)
+
 VOID LinePoint(SURFOBJ *Surface, SURFGDI *SurfGDI,
                LONG x, LONG y, ULONG iColor)
 {

@@ -10,18 +10,39 @@
 
 HPEN
 STDCALL
-W32kCreatePen(INT  PenStyle,
-                    INT  Width,
-                    COLORREF  Color)
+W32kCreatePen(INT PenStyle, INT Width, COLORREF Color)
 {
-  UNIMPLEMENTED;
+   LOGPEN logpen;
+
+   logpen.lopnStyle = PenStyle; 
+   logpen.lopnWidth.x = Width;
+   logpen.lopnWidth.y = 0;
+   logpen.lopnColor = Color;
+
+   return W32kCreatePenIndirect(&logpen);
 }
 
 HPEN
 STDCALL
-W32kCreatePenIndirect(CONST PLOGPEN  lgpn)
+W32kCreatePenIndirect(CONST PLOGPEN lgpn)
 {
-  UNIMPLEMENTED;
+   PPENOBJ penPtr;
+   HPEN    hpen;
+
+   if (lgpn->lopnStyle > PS_INSIDEFRAME) return 0;
+
+   penPtr = PENOBJ_AllocPen();
+   hpen   = PENOBJ_PtrToHandle(penPtr);
+   if (!hpen) return 0;
+   PENOBJ_LockPen(hpen);
+
+   penPtr->logpen.lopnStyle = lgpn->lopnStyle;
+   penPtr->logpen.lopnWidth = lgpn->lopnWidth;
+   penPtr->logpen.lopnColor = lgpn->lopnColor;
+
+   PENOBJ_UnlockPen(hpen);
+
+   return hpen;
 }
 
 HPEN
@@ -34,6 +55,3 @@ W32kExtCreatePen(DWORD  PenStyle,
 {
   UNIMPLEMENTED;
 }
-
-
-

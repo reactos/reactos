@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 2000/05/14 13:10:01 dwelch Exp $
+# $Id: makefile,v 1.21 2000/06/16 07:22:36 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -12,18 +12,31 @@ ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copyb
 		eng/surface.o eng/xlate.o
 MAIN_OBJECTS = main/dllmain.o
 MISC_OBJECTS = misc/driver.o
+MATH_OBJECTS = math/acos.o math/acosh.o math/asin.o math/asinh.o math/atan.o math/atan2.o \
+		math/atanh.o math/ceil.o math/cos.o math/cosh.o math/exp.o math/fabs.o \
+		math/floor.o math/fmod.o math/frexp.o math/huge_val.o math/hypot.o \
+		math/ldexp.o math/log.o math/log10.o math/modf.o math/pow.o \
+		math/sin.o math/sinh.o math/sqrt.o math/tan.o \
+		math/tanh.o math/stubs.o math/j0_y0.o math/j1_y1.o math/jn_yn.o \
+		math/cabs.o math/ftol.o
+FLOAT_OBJECTS = float/fpreset.o float/clearfp.o float/cntrlfp.o float/statfp.o float/logb.o\
+		float/chgsign.o float/fpclass.o float/isnan.o float/nafter.o float/scalb.o\
+		float/copysign.o
 LDR_OBJECTS = ldr/loader.o
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \
                   objects/fillshap.o objects/gdiobj.o objects/icm.o  \
                   objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
-                  objects/region.o objects/text.o objects/wingl.o
+                  objects/region.o objects/text.o objects/wingl.o \
+                  objects/bezier.o objects/objconv.o
+FREETYPE_OBJECTS =	freetype/grfont.o
+
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
 OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) $(OBJECTS_OBJECTS)  \
-          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) 
+          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS)
 
 all: $(TARGET).sys
 

@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.8 2000/02/20 22:52:50 ea Exp $
+/* $Id: brush.c,v 1.9 2000/06/16 07:22:37 jfilby Exp $
  */
 
 
@@ -164,7 +164,13 @@ HBRUSH STDCALL W32kCreatePatternBrush(HBITMAP  hBitmap)
 
 HBRUSH STDCALL W32kCreateSolidBrush(COLORREF  Color)
 {
-  UNIMPLEMENTED;
+   LOGBRUSH logbrush;
+
+   logbrush.lbStyle = BS_SOLID;
+   logbrush.lbColor = Color;
+   logbrush.lbHatch = 0;
+
+   return W32kCreateBrushIndirect(&logbrush);
 }
 
 BOOL STDCALL W32kFixBrushOrgEx(VOID)
@@ -189,5 +195,3 @@ BOOL STDCALL W32kSetBrushOrgEx(HDC  hDC,
 {
   UNIMPLEMENTED;
 }
-
-
