@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.24 2003/06/07 12:23:14 chorns Exp $
+/* $Id: token.c,v 1.25 2003/06/17 10:42:37 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -879,18 +879,21 @@ SepAdjustPrivileges(PACCESS_TOKEN Token,
 
 
 NTSTATUS STDCALL
-NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
-			IN BOOLEAN DisableAllPrivileges,
-			IN PTOKEN_PRIVILEGES NewState,
-			IN ULONG BufferLength,
-			OUT PTOKEN_PRIVILEGES PreviousState,
-			OUT PULONG ReturnLength)
+NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
+			 IN BOOLEAN DisableAllPrivileges,
+			 IN PTOKEN_PRIVILEGES NewState,
+			 IN ULONG BufferLength,
+			 OUT PTOKEN_PRIVILEGES PreviousState OPTIONAL,
+			 OUT PULONG ReturnLength OPTIONAL)
 {
-  PLUID_AND_ATTRIBUTES Privileges;
+//  PLUID_AND_ATTRIBUTES Privileges;
   KPROCESSOR_MODE PreviousMode;
-  ULONG PrivilegeCount;
+//  ULONG PrivilegeCount;
   PACCESS_TOKEN Token;
-  ULONG Length;
+//  ULONG Length;
+  ULONG i;
+  ULONG j;
+  ULONG k;
 #if 0
    ULONG a;
    ULONG b;
@@ -898,33 +901,33 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 #endif
   NTSTATUS Status;
 
-  DPRINT1("NtAdjustPrivilegesToken() called\n");
+  DPRINT ("NtAdjustPrivilegesToken() called\n");
 
-  PrivilegeCount = NewState->PrivilegeCount;
-  PreviousMode = KeGetPreviousMode();
-  SeCaptureLuidAndAttributesArray(NewState->Privileges,
-				  PrivilegeCount,
-				  PreviousMode,
-				  NULL,
-				  0,
-				  NonPagedPool,
-				  1,
-				  &Privileges,
-				  &Length);
+//  PrivilegeCount = NewState->PrivilegeCount;
+  PreviousMode = KeGetPreviousMode ();
+//  SeCaptureLuidAndAttributesArray(NewState->Privileges,
+//				  PrivilegeCount,
+//				  PreviousMode,
+//				  NULL,
+//				  0,
+//				  NonPagedPool,
+//				  1,
+//				  &Privileges,
+//				  &Length);
 
-  Status = ObReferenceObjectByHandle(TokenHandle,
-				     TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
-				     SepTokenObjectType,
-				     PreviousMode,
-				     (PVOID*)&Token,
-				     NULL);
+  Status = ObReferenceObjectByHandle (TokenHandle,
+				      TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
+				      SepTokenObjectType,
+				      PreviousMode,
+				      (PVOID*)&Token,
+				      NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("Failed to reference token (Status %lx)\n", Status);
-      SeReleaseLuidAndAttributesArray(Privileges,
-				      PreviousMode,
-				      0);
-      return(Status);
+      DPRINT1 ("Failed to reference token (Status %lx)\n", Status);
+//      SeReleaseLuidAndAttributesArray(Privileges,
+//				      PreviousMode,
+//				      0);
+      return Status;
     }
 
 
@@ -940,13 +943,85 @@ NtAdjustPrivilegesToken(IN HANDLE TokenHandle,
 		       &c);
 #endif
 
-  ObDereferenceObject(Token);
+  k = 0;
+  if (DisableAllPrivileges == TRUE)
+    {
+      for (i = 0; i < Token->PrivilegeCount; i++)
+	{
+	  if (Token->Privileges[i].Attributes != 0)
+	    {
+	      DPRINT ("Attributes differ\n");
 
-  SeReleaseLuidAndAttributesArray(Privileges,
-				  PreviousMode,
-				  0);
+	      /* Save current privilege */
+	      if (PreviousState != NULL && k < PreviousState->PrivilegeCount)
+		{
+		  PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
+		  PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
+		  k++;
+		}
 
-  DPRINT1("NtAdjustPrivilegesToken() done\n");
+	      /* Update current privlege */
+	      Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
+	    }
+	}
+    }
+  else
+    {
+      for (i = 0; i < Token->PrivilegeCount; i++)
+	{
+	  for (j = 0; j < NewState->PrivilegeCount; j++)
+	    {
+	      if (Token->Privileges[i].Luid.LowPart == NewState->Privileges[j].Luid.LowPart &&
+		  Token->Privileges[i].Luid.HighPart == NewState->Privileges[j].Luid.HighPart)
+		{
+		  DPRINT ("Found privilege\n");
+
+		  if ((Token->Privileges[i].Attributes & SE_PRIVILEGE_ENABLED) !=
+		      (NewState->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED))
+		    {
+		      DPRINT ("Attributes differ\n");
+		      DPRINT ("Current attributes %lx  desired attributes %lx\n",
+			      Token->Privileges[i].Attributes,
+			      NewState->Privileges[j].Attributes);
+
+		      /* Save current privilege */
+		      if (PreviousState != NULL && k < PreviousState->PrivilegeCount)
+			{
+			  PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
+			  PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
+			  k++;
+			}
+
+		      /* Update current privlege */
+		      Token->Privileges[i].Attributes &= ~SE_PRIVILEGE_ENABLED;
+		      Token->Privileges[i].Attributes |= 
+			(NewState->Privileges[j].Attributes & SE_PRIVILEGE_ENABLED);
+		      DPRINT ("New attributes %lx\n",
+			      Token->Privileges[i].Attributes);
+		    }
+		}
+	    }
+	}
+    }
+
+  if (ReturnLength != NULL)
+    {
+      *ReturnLength = sizeof(TOKEN_PRIVILEGES) +
+		      (sizeof(LUID_AND_ATTRIBUTES) * (k - 1));
+    }
+
+  ObDereferenceObject (Token);
+
+//  SeReleaseLuidAndAttributesArray(Privileges,
+//				  PreviousMode,
+//				  0);
+
+  DPRINT ("NtAdjustPrivilegesToken() done\n");
+
+  if (k < NewState->PrivilegeCount)
+    {
+      return STATUS_NOT_ALL_ASSIGNED;
+    }
 
   return STATUS_SUCCESS;
 }
