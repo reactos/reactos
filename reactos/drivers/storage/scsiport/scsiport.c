@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.56 2004/05/15 22:45:50 hbirr Exp $
+/* $Id: scsiport.c,v 1.57 2004/05/24 20:33:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -433,26 +433,37 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 				      SCSI_PORT_DEVICE_EXTENSION,
 				      MiniPortDeviceExtension);
 
-  *Length = 0;
-
+  if (Length != NULL)
+    {
+      *Length = 0;
+    }
   if (Srb == NULL)
     {
-      if ((ULONG_PTR)DeviceExtension->VirtualAddress > (ULONG_PTR)VirtualAddress)
-	{
-	  PhysicalAddress.QuadPart = 0ULL;
-	  return PhysicalAddress;
+      EndAddress = DeviceExtension->VirtualAddress + DeviceExtension->CommonBufferLength;
+      if (VirtualAddress >= DeviceExtension->VirtualAddress && VirtualAddress < EndAddress)
+        {
+	  Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->VirtualAddress;
+	  PhysicalAddress.QuadPart = DeviceExtension->PhysicalAddress.QuadPart + Offset;
+          BufferLength = (ULONG_PTR)EndAddress - (ULONG_PTR)VirtualAddress;
 	}
-
-      Offset = (ULONG_PTR)VirtualAddress - (ULONG_PTR)DeviceExtension->VirtualAddress;
-      if (Offset >= DeviceExtension->CommonBufferLength)
-	{
-	  PhysicalAddress.QuadPart = 0ULL;
-	  return PhysicalAddress;
+      else
+        {
+	  /*
+	   * The given virtual address is not within the range 
+	   * of the drivers uncached extension or srb extension.
+	   */
+	  /*
+	   * FIXME: 
+	   *   Check if the address is a sense info buffer of an active srb.
+	   */
+	  PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
+	  if (PhysicalAddress.QuadPart == 0LL)
+	    {
+	      CHECKPOINT;
+	      return PhysicalAddress;
+	    }
+	  BufferLength = PAGE_SIZE - PhysicalAddress.u.LowPart % PAGE_SIZE;
 	}
-
-      PhysicalAddress.QuadPart =
-	DeviceExtension->PhysicalAddress.QuadPart + (ULONGLONG)Offset;
-      BufferLength = DeviceExtension->CommonBufferLength - Offset;
     }
   else
     {
@@ -463,30 +474,27 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 	}
       else if (VirtualAddress < Srb->DataBuffer || VirtualAddress >= EndAddress)
 	{
-	  PhysicalAddress.QuadPart = 0LL;
-	  return PhysicalAddress;
+	  EndAddress = Srb->SenseInfoBuffer + Srb->SenseInfoBufferLength;
+	  if (VirtualAddress < Srb->SenseInfoBuffer || VirtualAddress >= EndAddress)
+	    {
+	      PhysicalAddress.QuadPart = 0LL;
+	      CHECKPOINT;
+	      return PhysicalAddress;
+	    }
 	}
 
       PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
       if (PhysicalAddress.QuadPart == 0LL)
 	{
+	  CHECKPOINT;
 	  return PhysicalAddress;
 	}
 
-      Offset = (ULONG_PTR)VirtualAddress & (PAGE_SIZE - 1);
-#if 1
-      /* 
-       * FIXME:
-       *   MmGetPhysicalAddress doesn't return the offset within the page.
-       *   We must set the correct offset.
-       */
-      PhysicalAddress.u.LowPart = (PhysicalAddress.u.LowPart & ~(PAGE_SIZE - 1)) + Offset;
-#endif
-      BufferLength += PAGE_SIZE - Offset;
+      BufferLength = PAGE_SIZE - (ULONG_PTR)VirtualAddress % PAGE_SIZE;
       while (VirtualAddress + BufferLength < EndAddress)
 	{
 	  NextPhysicalAddress = MmGetPhysicalAddress(VirtualAddress + BufferLength);
-	  if (PhysicalAddress.QuadPart + (ULONGLONG)BufferLength != NextPhysicalAddress.QuadPart)
+	  if (PhysicalAddress.QuadPart + BufferLength != NextPhysicalAddress.QuadPart)
 	    {
 	      break;
 	    }
@@ -497,9 +505,11 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 	  BufferLength = EndAddress - VirtualAddress;
 	}
     }
-
-  *Length = BufferLength;
-
+  if (Length != NULL)
+    {
+      *Length = BufferLength;
+    }
+  DPRINT("Address %I64x, Length %d\n", PhysicalAddress.QuadPart, BufferLength);
   return PhysicalAddress;
 }
 
@@ -758,13 +768,11 @@ ScsiPortInitialize(IN PVOID Argument1,
       DeviceExtension->HwStartIo = HwInitializationData->HwStartIo;
       DeviceExtension->HwInterrupt = HwInitializationData->HwInterrupt;
 
-#if 0
       DeviceExtension->AdapterObject = NULL;
       DeviceExtension->MapRegisterCount = 0;
       DeviceExtension->PhysicalAddress.QuadPart = 0ULL;
       DeviceExtension->VirtualAddress = NULL;
       DeviceExtension->CommonBufferLength = 0;
-#endif
 
       /* Initialize the device base list */
       InitializeListHead (&DeviceExtension->DeviceBaseListHead);
@@ -814,36 +822,36 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortConfig->NumberOfPhysicalBreaks = SP_UNINITIALIZED_VALUE;
       PortConfig->DmaChannel = SP_UNINITIALIZED_VALUE;
       PortConfig->DmaPort = SP_UNINITIALIZED_VALUE;
-//  PortConfig->DmaWidth =
-//  PortConfig->DmaSpeed =
-//  PortConfig->AlignmentMask =
+      PortConfig->DmaWidth = 0;
+      PortConfig->DmaSpeed = Compatible;
+      PortConfig->AlignmentMask = 0;
       PortConfig->NumberOfAccessRanges = HwInitializationData->NumberOfAccessRanges;
-//  PortConfig->NumberOfBuses =
+      PortConfig->NumberOfBuses = 0;
 
       for (i = 0; i < SCSI_MAXIMUM_BUSES; i++)
 	PortConfig->InitiatorBusId[i] = 255;
 
-//  PortConfig->ScatterGather =
-//  PortConfig->Master =
-//  PortConfig->CachesData =
-//  PortConfig->AdapterScansDown =
+      PortConfig->ScatterGather = FALSE;
+      PortConfig->Master = FALSE;
+      PortConfig->CachesData = FALSE;
+      PortConfig->AdapterScansDown = FALSE;
       PortConfig->AtdiskPrimaryClaimed = SystemConfig->AtDiskPrimaryAddressClaimed;
       PortConfig->AtdiskSecondaryClaimed = SystemConfig->AtDiskSecondaryAddressClaimed;
-//  PortConfig->Dma32BitAddresses =
-//  PortConfig->DemandMode =
+      PortConfig->Dma32BitAddresses = FALSE;
+      PortConfig->DemandMode = FALSE;
       PortConfig->MapBuffers = HwInitializationData->MapBuffers;
       PortConfig->NeedPhysicalAddresses = HwInitializationData->NeedPhysicalAddresses;
       PortConfig->TaggedQueuing = HwInitializationData->TaggedQueueing;
       PortConfig->AutoRequestSense = HwInitializationData->AutoRequestSense;
       PortConfig->MultipleRequestPerLu = HwInitializationData->MultipleRequestPerLu;
       PortConfig->ReceiveEvent = HwInitializationData->ReceiveEvent;
-//  PortConfig->RealModeInitialized =
-//  PortConfig->BufferAccessScsiPortControlled =
+      PortConfig->RealModeInitialized = FALSE;
+      PortConfig->BufferAccessScsiPortControlled = FALSE;
       PortConfig->MaximumNumberOfTargets = SCSI_MAXIMUM_TARGETS;
-//  PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
+//      PortConfig->MaximumNumberOfLogicalUnits = SCSI_MAXIMUM_LOGICAL_UNITS;
 
-    PortConfig->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
-    PortConfig->SpecificLuExtensionSize = HwInitializationData->SpecificLuExtensionSize;
+      PortConfig->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
+      PortConfig->SpecificLuExtensionSize = HwInitializationData->SpecificLuExtensionSize;
 
       PortConfig->SlotNumber = SlotNumber.u.AsULONG;
 
@@ -1903,6 +1911,7 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      else
 		{
 		  SpiRemoveLunExtension (LunExtension);
+		  break;
 		}
 	    }
 	}
@@ -2070,14 +2079,19 @@ static PSCSI_REQUEST_BLOCK
 ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb)
 {
   PSCSI_REQUEST_BLOCK Srb;
+  ULONG Length;
   PCDB Cdb;
 
+  Length = sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA) + 32;
   Srb = ExAllocatePoolWithTag(NonPagedPool, 
-                       sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA),
-		       TAG('S', 'S', 'r', 'b'));
+                              Length,
+		              TAG('S', 'S', 'r', 'b'));
+  if (Srb == NULL)
+    {
+      return NULL;
+    }
 
-  RtlZeroMemory(Srb,
-		sizeof(SCSI_REQUEST_BLOCK) + sizeof(SENSE_DATA));
+  RtlZeroMemory(Srb, Length);
 
   Srb->PathId = OriginalSrb->PathId;
   Srb->TargetId = OriginalSrb->TargetId;
@@ -2089,7 +2103,12 @@ ScsiPortInitSenseRequestSrb(PSCSI_REQUEST_BLOCK OriginalSrb)
   Srb->TimeOutValue = 4;
 
   Srb->CdbLength = 6;
-  Srb->DataBuffer = Srb + 1;
+  /* The DataBuffer must be located in contiguous physical memory if 
+   * the miniport driver uses dma for the sense info. The size of 
+   * the sense data is 18 byte. If the buffer starts at a 32 byte 
+   * boundary than is the buffer always in one memory page. 
+   */
+  Srb->DataBuffer = (PVOID)ROUND_UP((ULONG_PTR)(Srb + 1), 32);
   Srb->DataTransferLength = sizeof(SENSE_DATA);
 
   Cdb = (PCDB)Srb->Cdb;
@@ -2625,18 +2644,18 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 	              DPRINT("SenseCode: %x\n", SenseInfoBuffer->AdditionalSenseCode);
 	      
 	              /* Copy sense data */
-	              if (OriginalSrb->SenseInfoBufferLength != 0)
-	                {
-	                  RtlCopyMemory(OriginalSrb->SenseInfoBuffer,
-			                SenseInfoBuffer,
-			                sizeof(SENSE_DATA));
-	                  OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
-	                }
+                      RtlCopyMemory(OriginalSrb->SenseInfoBuffer,
+		                    SenseInfoBuffer,
+		                    sizeof(SENSE_DATA));
+	              OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
 		      ExFreePool(Srb);
 		      CompleteThisRequest = TRUE;
 		    }
-		  else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
-	                   (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
+		  else if (SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS &&
+	                   Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION &&
+	                   Srb->SenseInfoBuffer != NULL &&
+	                   Srb->SenseInfoBufferLength >= sizeof(SENSE_DATA) &&
+	                   !(Srb->SrbStatus & SRB_STATUS_AUTOSENSE_VALID))
 	            {
 	              DPRINT("SCSIOP_REQUEST_SENSE required!\n");
 
