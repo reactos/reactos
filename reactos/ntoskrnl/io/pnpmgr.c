@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.38 2004/10/19 19:37:45 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.39 2004/10/19 23:23:04 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -865,11 +865,11 @@ IopSetDeviceInstanceData(HANDLE InstanceKey,
     /* Set 'BootConfig' value */
     if (DeviceNode->BootResourcesList != NULL)
     {
-      ResCount = DeviceNode->BootResourcesList->List[0].PartialResourceList.Count;
+      ResCount = DeviceNode->BootResourcesList->Count;
       if (ResCount != 0)
       {
 	ListSize = sizeof(CM_RESOURCE_LIST) +
-		   ((ResCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+		   ((ResCount - 1) * sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 
 	RtlInitUnicodeString(&KeyName,
 			     L"BootConfig");
