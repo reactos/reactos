@@ -1,5 +1,6 @@
-rpcss.coff
+*.coff
 *.d
 *.o
 *.sym
 *.exe
+*.map

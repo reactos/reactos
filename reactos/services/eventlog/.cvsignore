@@ -1,5 +1,6 @@
-eventlog.coff
+*.coff
 *.d
 *.o
 *.sym
 *.exe
+*.map
