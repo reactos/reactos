@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.77 2004/01/07 10:09:03 hbirr Exp $
+/* $Id: utils.c,v 1.78 2004/01/11 00:25:17 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -2108,7 +2108,7 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
 	    return Status;
 	  }
 #ifdef KDBG
-        LdrpLoadUserModuleSymbols(Module);
+        LdrpLoadUserModuleSymbols(*Module);
 #endif
         RtlEnterCriticalSection(NtCurrentPeb()->LoaderLock);
         InsertTailList(&NtCurrentPeb()->Ldr->InInitializationOrderModuleList, 
