@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.5 2000/07/01 17:07:00 ea Exp $
+/* $Id: handle.c,v 1.6 2002/05/07 22:24:52 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -121,7 +121,20 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 				DWORD dwOptions)
 {
    NTSTATUS errCode;
-
+   if (IsConsoleHandle(hSourceHandle))
+   {
+      /* FIXME: call CSRSS for console handle duplication */
+      if (hSourceProcessHandle == hTargetProcessHandle)
+      {
+	 *lpTargetHandle = hSourceHandle;
+	 return TRUE;
+      }
+      else
+      {
+	 return FALSE;
+      }
+   }
+      
    errCode = NtDuplicateObject(hSourceProcessHandle,
 			       hSourceHandle,
 			       hTargetProcessHandle,
