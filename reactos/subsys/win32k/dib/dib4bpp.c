@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib4bpp.c,v 1.19 2003/10/06 16:25:53 gvg Exp $ */
+/* $Id: dib4bpp.c,v 1.20 2003/10/06 21:04:24 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -283,9 +283,10 @@ DIB_4BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 	    if (UsesSource)
 	      {
 		Source = 0;
-		for (k = 0; k < 8; k++)
+		for (k = 0; k < 8; k += 2)
 		  {
-		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << (k * 4));
+		    Source |= (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k, sy, ColorTranslation) << ((k + 1) * 4))
+                              | (DIB_GetSource(SourceSurf, SourceGDI, sx + (i - DestRect->left) + k + 1, sy, ColorTranslation) << (k * 4));
 		  }
 	      }
 	    if (UsesPattern)
