@@ -1,4 +1,4 @@
-typedef NTSTATUS (*PEPFUNC)(VOID);
+typedef NTSTATUS (*PEPFUNC)(PPEB);
 
 typedef struct _DLL
 {

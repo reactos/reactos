@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.12 1999/11/25 10:47:55 dwelch Exp $
+/* $Id: startup.c,v 1.13 1999/12/08 12:58:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,15 +43,15 @@ NTSTATUS LdrMapNTDllForProcess (HANDLE	ProcessHandle,
    NTSTATUS Status;
    HANDLE NTDllSectionHandle;
    PVOID ImageBase;
-   PIMAGE_NT_HEADERS NTHeaders;   
+   PIMAGE_NT_HEADERS NTHeaders;
    PIMAGE_DOS_HEADER PEDosHeader;
-   
+
    DPRINT("LdrMapNTDllForProcess(ProcessHandle %x)\n",ProcessHandle);
-   
+
    PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
    NTHeaders = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
 				   PEDosHeader->e_lfanew);
-   
+
    NTDllSectionHandle = LdrDllListHead.SectionHandle;
    InitialViewSize = PEDosHeader->e_lfanew + sizeof(IMAGE_NT_HEADERS) 
      + sizeof(IMAGE_SECTION_HEADER) * NTHeaders->FileHeader.NumberOfSections;
@@ -81,7 +81,8 @@ NTSTATUS LdrMapNTDllForProcess (HANDLE	ProcessHandle,
  * ARGUMENTS:
  *   DWORD    ImageBase  The base address of the process image
  */
-VOID LdrStartup(HANDLE SectionHandle, 
+VOID LdrStartup(PPEB Peb,
+		HANDLE SectionHandle,
 		DWORD ImageBase,
 		HANDLE NTDllSectionHandle)
 {
@@ -89,11 +90,11 @@ VOID LdrStartup(HANDLE SectionHandle,
    PIMAGE_DOS_HEADER PEDosHeader;
    NTSTATUS Status;
    PIMAGE_NT_HEADERS NTHeaders;
-   
-   DPRINT("LdrStartup(ImageBase %x, SectionHandle %x, "
-	   "NTDllSectionHandle %x)\n",ImageBase,
-	   SectionHandle, NTDllSectionHandle);
-   
+
+   DPRINT("LdrStartup(Peb %x SectionHandle %x, ImageBase %x, "
+	   "NTDllSectionHandle %x )\n",
+	   Peb, SectionHandle, ImageBase, NTDllSectionHandle);
+
    LdrDllListHead.BaseAddress = (PVOID)&_image_base__;
    LdrDllListHead.Prev = &LdrDllListHead;
    LdrDllListHead.Next = &LdrDllListHead;
@@ -101,7 +102,7 @@ VOID LdrStartup(HANDLE SectionHandle,
    PEDosHeader = (PIMAGE_DOS_HEADER)LdrDllListHead.BaseAddress;
    LdrDllListHead.Headers = (PIMAGE_NT_HEADERS)(LdrDllListHead.BaseAddress +
 						PEDosHeader->e_lfanew);
-   
+
   /*  If MZ header exists  */
   PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
   if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
@@ -115,7 +116,7 @@ VOID LdrStartup(HANDLE SectionHandle,
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
    __ProcessHeap = RtlCreateHeap(0,
 				 (PVOID)HEAP_BASE,
-				 NTHeaders->OptionalHeader.SizeOfHeapCommit, 
+				 NTHeaders->OptionalHeader.SizeOfHeapCommit,
 				 NTHeaders->OptionalHeader.SizeOfHeapReserve,
 				 NULL,
 				 NULL);
@@ -126,11 +127,10 @@ VOID LdrStartup(HANDLE SectionHandle,
 	dprintf("Failed to initialize image\n");
 	ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
      }
-   
+
 //   dprintf("Transferring control to image at %x\n",EntryPoint);
-   Status = EntryPoint();
+   Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }
-
 
 /* EOF */

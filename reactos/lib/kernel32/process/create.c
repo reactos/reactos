@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.14 1999/12/06 00:23:40 ekohl Exp $
+/* $Id: create.c,v 1.15 1999/12/08 12:58:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -93,10 +93,9 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 				 LPSECURITY_ATTRIBUTES lpThreadAttributes,
 				 DWORD dwStackSize,
 				 LPTHREAD_START_ROUTINE lpStartAddress,
-				 LPVOID lpParameter,
+				 PPEB Peb,
 				 DWORD dwCreationFlags,
 				 LPDWORD lpThreadId,
-				 PWSTR lpCommandLine,
 				 HANDLE NTDllSectionHandle,
 				 HANDLE SectionHandle,
 				 PVOID ImageBase)
@@ -151,7 +150,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;
-   ThreadContext.Esp = STACK_TOP - 16;
+   ThreadContext.Esp = STACK_TOP - 20;
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
    DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
@@ -185,6 +184,11 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 			(PVOID)(STACK_TOP - 12),
 			&DupSectionHandle,
 			sizeof(DupSectionHandle),
+			&BytesWritten);
+   NtWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 16),
+			&Peb,
+			sizeof(PPEB),
 			&BytesWritten);
 
 
@@ -343,6 +347,7 @@ HANDLE KERNEL32_MapFile(LPCWSTR lpApplicationName,
 
 static NTSTATUS
 CreatePeb (
+	PPEB	*PebPtr,
 	HANDLE	ProcessHandle,
 	PPPB	Ppb)
 {
@@ -391,6 +396,8 @@ CreatePeb (
 			Ppb->TotalSize,
 			&BytesWritten);
 
+   *PebPtr = (PPEB)PebBase;
+
    return(STATUS_SUCCESS);
 }
 
@@ -412,7 +419,6 @@ CreateProcessW (
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
-   LPVOID  lpParameter = NULL;
    WCHAR TempCommandLine[256];
    PVOID BaseAddress;
    LARGE_INTEGER SectionOffset;
@@ -425,6 +431,7 @@ CreateProcessW (
    DWORD len = 0;
    PPPB Ppb;
    UNICODE_STRING CommandLine_U;
+   PPEB Peb;
 
    DPRINT("CreateProcessW(lpApplicationName '%w', lpCommandLine '%w')\n",
 	   lpApplicationName,lpCommandLine);
@@ -519,7 +526,7 @@ CreateProcessW (
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   CreatePeb(hProcess, Ppb);
+   CreatePeb(&Peb, hProcess, Ppb);
 
    RtlDestroyProcessParameters (Ppb);
 
@@ -532,10 +539,9 @@ CreateProcessW (
 				lpThreadAttributes,
 				Headers.OptionalHeader.SizeOfStackReserve,
 				lpStartAddress,
-				lpParameter,
+				Peb,
 				dwCreationFlags,
 				&lpProcessInformation->dwThreadId,
-				TempCommandLine,
 				NTDllSection,
 				hSection,
 				(PVOID)Headers.OptionalHeader.ImageBase);

@@ -37,71 +37,20 @@
 
 /* FUNCTIONS ****************************************************************/
 
-/**********************************************************************
- * NAME
- * 	LdrLoadImage
- * 	
- * FUNCTION:
- *   Builds the initial environment for a process.  Should be used
- *   to load the initial user process.
- *   
- * ARGUMENTS:
- *   HANDLE   ProcessHandle  handle of the process to load the module into
- *   PUNICODE_STRING  Filename  name of the module to load
- *   
- * RETURNS: 
- *   NTSTATUS
- */
 
 #define STACK_TOP (0xb0000000)
 
-static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
+static NTSTATUS
+LdrCreatePpb (
+	PPPB	*PpbPtr,
+	HANDLE	ProcessHandle
+	)
 {
-	PVOID		PebBase;
-	ULONG		PebSize;
-	PEB		Peb;
 	PVOID		PpbBase;
 	ULONG		PpbSize;
 	PPB		Ppb;
 	ULONG		BytesWritten;
 	NTSTATUS	Status;
-
-	PebBase = (PVOID)PEB_BASE;
-	PebSize = 0x1000;
-
-	memset(&Peb, 0, sizeof Peb);
-
-	Peb.Ppb = (PPPB)PEB_STARTUPINFO;
-
-	Status = ZwAllocateVirtualMemory (
-		ProcessHandle,
-		(PVOID*)&PebBase,
-		0,
-		&PebSize,
-		MEM_COMMIT,
-		PAGE_READWRITE
-		);
-	if (!NT_SUCCESS(Status))
-	{
-		DbgPrint ("Peb allocation failed \n");
-		DbgPrintErrorMessage (Status);
-	}
-
-	ZwWriteVirtualMemory (
-		ProcessHandle,
-		PebBase,
-		&Peb,
-		sizeof(Peb),
-		&BytesWritten);
-
-	/* write pointer to peb on the stack (parameter of NtProcessStartup) */
-	ZwWriteVirtualMemory(
-		ProcessHandle,
-		(PVOID) (STACK_TOP - 16),
-		&PebBase,
-		sizeof (PVOID),
-		& BytesWritten
-		);
 
 	/* Create process parameters block (PPB)*/
 	PpbBase = (PVOID)PEB_STARTUPINFO;
@@ -119,9 +68,11 @@ static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
 	{
 		DbgPrint ("Ppb allocation failed \n");
 		DbgPrintErrorMessage (Status);
+		return Status;
 	}
 
-	memset(&Ppb, 0, sizeof(PPB));
+	/* initialize the ppb */
+	memset (&Ppb, 0, sizeof(PPB));
 
 	ZwWriteVirtualMemory (
 			ProcessHandle,
@@ -130,9 +81,74 @@ static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
 			sizeof(PPB),
 			&BytesWritten);
 
+	*PpbPtr = PpbBase;
+
+	return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+LdrCreatePeb (
+	PPEB	*PebPtr,
+	HANDLE	ProcessHandle,
+	PPPB	Ppb
+	)
+{
+	PPEB		PebBase;
+	ULONG		PebSize;
+	PEB		Peb;
+	ULONG		BytesWritten;
+	NTSTATUS	Status;
+
+	PebBase = (PVOID)PEB_BASE;
+	PebSize = 0x1000;
+
+	Status = ZwAllocateVirtualMemory (
+		ProcessHandle,
+		(PVOID*)&PebBase,
+		0,
+		&PebSize,
+		MEM_COMMIT,
+		PAGE_READWRITE
+		);
+	if (!NT_SUCCESS(Status))
+	{
+		DbgPrint ("Peb allocation failed \n");
+		DbgPrintErrorMessage (Status);
+	}
+
+	/* initialize the peb */
+	memset(&Peb, 0, sizeof Peb);
+	Peb.Ppb = Ppb;
+
+	ZwWriteVirtualMemory (
+		ProcessHandle,
+		PebBase,
+		&Peb,
+		sizeof(Peb),
+		&BytesWritten);
+
+	*PebPtr = (PPEB)PebBase;
+
 	return(STATUS_SUCCESS);
 }
 
+
+/**********************************************************************
+ * NAME
+ * 	LdrLoadImage
+ *
+ * FUNCTION:
+ *   Builds the initial environment for a process.  Should be used
+ *   to load the initial user process.
+ *   
+ * ARGUMENTS:
+ *   HANDLE   ProcessHandle  handle of the process to load the module into
+ *   PUNICODE_STRING  Filename  name of the module to load
+ *   
+ * RETURNS:
+ *   NTSTATUS
+ */
 
 NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		      PUNICODE_STRING	Filename)
@@ -158,12 +174,15 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
    ULONG			InitialViewSize;
    ULONG			i;
    HANDLE			DupSectionHandle;
-   
+
    WCHAR			TmpNameBuffer [MAX_PATH];
-   
-   
+
+   PPPB				Ppb;
+   PPEB				Peb;
+
+
 /* -- PART I -- */
-	
+
    /*
     * Locate and open NTDLL to determine ImageBase
     * and LdrStartup
@@ -285,7 +304,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 	ULONG			Base;
 	
 	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(BlockBuffer);
-       	Base = Sections[i].VirtualAddress + ImageBase;
+	Base = Sections[i].VirtualAddress + ImageBase;
 	Offset.u.LowPart = Sections[i].PointerToRawData;
 	Offset.u.HighPart = 0;
 	Status = ZwMapViewOfSection(NTDllSectionHandle,
@@ -440,6 +459,36 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
 /* -- PART III -- */
 
+	/* Create the process parameter block (PPB) */
+	Status = LdrCreatePpb (&Ppb,
+	                       ProcessHandle);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("PPB creation failed ");
+		DbgPrintErrorMessage(Status);
+
+		/* FIXME: unmap the section here  */
+		/* FIXME: destroy the section here  */
+
+		return Status;
+	}
+
+	/* Create the process environment block (PEB) */
+	Status = LdrCreatePeb (&Peb,
+	                       ProcessHandle,
+	                       Ppb);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("PEB creation failed ");
+		DbgPrintErrorMessage(Status);
+
+		/* FIXME: unmap the section here  */
+		/* FIXME: destroy the section here  */
+		/* FIXME: free the PPB */
+
+		return Status;
+	}
+
 	/*
 	 * Create page backed section for stack
 	 */
@@ -449,6 +498,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		);
 	StackSize =
 		NTHeaders->OptionalHeader.SizeOfStackReserve;
+	DbgPrint ("Stack size %x\n", StackSize);
 
 	Status = ZwAllocateVirtualMemory(
 			ProcessHandle,
@@ -509,22 +559,23 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 		sizeof (DupSectionHandle),
 		& BytesWritten
 		);
-   /*
-    * Create a peb (grungy)
-    */
-   Status = LdrCreatePeb(ProcessHandle);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("LDR: Failed to create initial peb\n");
-	return (Status);
-     }
 
+	/* write pointer to peb on the stack (parameter of NtProcessStartup) */
+	ZwWriteVirtualMemory(
+		ProcessHandle,
+		(PVOID) (STACK_TOP - 16),
+		&Peb,
+		sizeof (ULONG),
+		&BytesWritten
+		);
+
+	DbgPrint ("NTOSKRNL: Peb = %x\n", Peb);
    /*
     * Initialize context to point to LdrStartup
     */
    memset(&Context,0,sizeof(CONTEXT));
    Context.SegSs = USER_DS;
-   Context.Esp = STACK_TOP - 16;
+   Context.Esp = STACK_TOP - 20;
    Context.EFlags = 0x202;
    Context.SegCs = USER_CS;
    Context.Eip = LdrStartupAddr;

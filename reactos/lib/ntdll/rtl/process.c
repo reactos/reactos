@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.5 1999/12/06 00:22:43 ekohl Exp $
+/* $Id: process.c,v 1.6 1999/12/08 12:58:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,10 +35,9 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
                       PSECURITY_DESCRIPTOR SecurityDescriptor,
 				 DWORD dwStackSize,
 				 LPTHREAD_START_ROUTINE lpStartAddress,
-				 LPVOID lpParameter,
+				 PPEB Peb,
 				 DWORD dwCreationFlags,
 				 LPDWORD lpThreadId,
-				 PWSTR lpCommandLine,
 				 HANDLE NTDllSectionHandle,
 				 HANDLE SectionHandle,
 				 PVOID ImageBase)
@@ -67,6 +66,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
    else
      CreateSuspended = FALSE;
 
+   /* create the process stack (first thead) */
    BaseAddress = (PVOID)(STACK_TOP - dwStackSize);
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &BaseAddress,
@@ -88,7 +88,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;
-   ThreadContext.Esp = STACK_TOP - 16;
+   ThreadContext.Esp = STACK_TOP - 20;
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
    DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);
@@ -122,6 +122,11 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 			(PVOID)(STACK_TOP - 12),
 			&DupSectionHandle,
 			sizeof(DupSectionHandle),
+			&BytesWritten);
+   NtWriteVirtualMemory(ProcessHandle,
+			(PVOID)(STACK_TOP - 16),
+			&Peb,
+			sizeof(PPEB),
 			&BytesWritten);
 
    Status = NtCreateThread(&ThreadHandle,
@@ -221,7 +226,8 @@ RtlpMapFile(PUNICODE_STRING ApplicationName,
 
 
 static NTSTATUS
-RtlpCreatePeb (
+RtlpCreatePpbAndPeb (
+	PPEB	*PebPtr,
 	HANDLE	ProcessHandle,
 	PPPB	Ppb)
 {
@@ -233,9 +239,31 @@ RtlpCreatePeb (
     PVOID PpbBase;
     ULONG PpbSize;
 
-    PebBase = (PVOID)PEB_BASE;
-    PebSize = 0x1000;
+	/* create the PPB */
+	PpbBase = (PVOID)PEB_STARTUPINFO;
+	PpbSize = Ppb->TotalSize;
+	Status = NtAllocateVirtualMemory (
+		ProcessHandle,
+		&PpbBase,
+		0,
+		&PpbSize,
+		MEM_COMMIT,
+		PAGE_READWRITE);
 
+	if (!NT_SUCCESS(Status))
+		return(Status);
+
+	DPRINT("Ppb size %x\n", PpbSize);
+	NtWriteVirtualMemory (
+		ProcessHandle,
+		PpbBase,
+		Ppb,
+		Ppb->TotalSize,
+		&BytesWritten);
+
+	/* create the PEB */
+	PebBase = (PVOID)PEB_BASE;
+	PebSize = 0x1000;
 	Status = NtAllocateVirtualMemory (
 		ProcessHandle,
 		&PebBase,
@@ -244,33 +272,17 @@ RtlpCreatePeb (
 		MEM_COMMIT,
 		PAGE_READWRITE);
 
-	memset(&Peb, 0, sizeof(Peb));
-	Peb.Ppb = (PPPB)PEB_STARTUPINFO;
+	memset (&Peb, 0, sizeof(PEB));
+	Peb.Ppb = (PPPB)PpbBase;
 
-    NtWriteVirtualMemory(ProcessHandle,
-                         (PVOID)PEB_BASE,
-                         &Peb,
-                         sizeof(Peb),
-                         &BytesWritten);
-
-    PpbBase = (PVOID)PEB_STARTUPINFO;
-    PpbSize = Ppb->TotalSize;
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &PpbBase,
-                                     0,
-                                     &PpbSize,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-	return(Status);
-
-	DPRINT("Ppb size %x\n", PpbSize);
 	NtWriteVirtualMemory (
 		ProcessHandle,
-		(PVOID)PEB_STARTUPINFO,
-		Ppb,
-		Ppb->TotalSize,
+		PebBase,
+		&Peb,
+		sizeof(PEB),
 		&BytesWritten);
+
+	*PebPtr = (PPEB)PebBase;
 
 	return STATUS_SUCCESS;
 }
@@ -293,8 +305,6 @@ RtlCreateUserProcess (
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
-   LPVOID  lpParameter = NULL;
-   WCHAR TempCommandLine[256];
    PVOID BaseAddress;
    LARGE_INTEGER SectionOffset;
    IMAGE_NT_HEADERS Headers;
@@ -304,6 +314,7 @@ RtlCreateUserProcess (
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    CLIENT_ID LocalClientId;
    ULONG retlen;
+   PPEB Peb;
 
 	DPRINT ("RtlCreateUserProcess(CommandLine '%w')\n",
 		CommandLine->Buffer);
@@ -358,8 +369,8 @@ RtlCreateUserProcess (
    /*
     * 
     */
-   DPRINT("Creating peb\n");
-   RtlpCreatePeb (hProcess, Ppb);
+   DPRINT("Creating PPB and PEB\n");
+   RtlpCreatePpbAndPeb (&Peb, hProcess, Ppb);
 
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
@@ -371,10 +382,9 @@ RtlCreateUserProcess (
 		ThreadSd,
 		Headers.OptionalHeader.SizeOfStackReserve,
 		lpStartAddress,
-		lpParameter,
+		Peb,
 		dwCreationFlags,
 		&LocalClientId.UniqueThread,
-		TempCommandLine,
 		NTDllSection,
 		hSection,
 		(PVOID)Headers.OptionalHeader.ImageBase);
