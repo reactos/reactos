@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.34 2004/01/09 20:21:31 gvg Exp $
+/* $Id: disk.c,v 1.35 2004/02/14 12:29:33 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -561,7 +561,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   /* Allocate sense data buffer */
   DiskDeviceExtension->SenseData = ExAllocatePool(NonPagedPool,
-						  sizeof(SENSE_BUFFER_SIZE));
+						  SENSE_BUFFER_SIZE);
   if (DiskDeviceExtension->SenseData == NULL)
     {
       DPRINT("Failed to allocate sense data buffer!\n");
