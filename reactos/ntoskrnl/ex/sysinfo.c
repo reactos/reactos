@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.62 2004/12/16 22:36:09 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -723,7 +723,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 		= (PSYSTEM_PROCESSORTIME_INFO) Buffer;
 
         ULONG i;
-	TIME CurrentTime;
+	LARGE_INTEGER CurrentTime;
 	PKPCR Pcr;
 
 	*ReqSize = KeNumberProcessors * sizeof (SYSTEM_PROCESSORTIME_INFO);

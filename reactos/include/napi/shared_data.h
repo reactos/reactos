@@ -13,8 +13,6 @@
 #define PF_PAE_ENABLED                      9
 #define PF_XMMI64_INSTRUCTIONS_AVAILABLE   10
 
-#define PROCESSOR_FEATURES_MAX             64
-
 typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 {
    StandardDesign,
