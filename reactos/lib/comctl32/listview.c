@@ -7254,9 +7254,11 @@ static INT WINAPI LISTVIEW_CallBackCompare(LPVOID first, LPVOID second, LPARAM l
   LISTVIEW_INFO *infoPtr = (LISTVIEW_INFO *)lParam;
   ITEM_INFO* lv_first = (ITEM_INFO*) DPA_GetPtr( (HDPA)first, 0 );
   ITEM_INFO* lv_second = (ITEM_INFO*) DPA_GetPtr( (HDPA)second, 0 );
+  PFNLVCOMPARE CompareFunction = infoPtr->pfnCompare;
 
   /* Forward the call to the client defined callback */
-  return (infoPtr->pfnCompare)( lv_first->lParam , lv_second->lParam, infoPtr->lParamSort );
+  
+  return (CompareFunction)( lv_first->lParam , lv_second->lParam, infoPtr->lParamSort );
 }
 
 /***

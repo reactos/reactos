@@ -13,7 +13,7 @@
 #include <windows.h>
 #include <string.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
