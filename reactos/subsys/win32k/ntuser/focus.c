@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.23 2004/06/20 22:25:14 gvg Exp $
+ * $Id: focus.c,v 1.24 2004/06/23 15:38:07 weiden Exp $
  */
 
 #include <w32k.h>
@@ -452,7 +452,7 @@ NtUserSetFocus(HWND hWnd)
       if (Window->Style & (WS_MINIMIZE | WS_DISABLED))
       {
          IntReleaseWindowObject(Window);
-         return ThreadQueue ? 0 : ThreadQueue->FocusWindow;
+         return (ThreadQueue ? ThreadQueue->FocusWindow : 0);
       }
 
       if (Window->MessageQueue != ThreadQueue)
