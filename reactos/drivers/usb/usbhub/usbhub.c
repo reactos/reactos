@@ -23,7 +23,7 @@
 #include <stddef.h>
 #include <windef.h>
 #include <ddk/ntddk.h>
-#include "..\usbport\usbport.h"
+#include "../usbport/usbport.h"
 
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
