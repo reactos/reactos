@@ -157,7 +157,7 @@ KiIpiSendPacket(ULONG TargetSet, VOID STDCALL (*WorkerRoutine)(PVOID), PVOID Arg
 }
 
 VOID
-KeIpiGenericCall(VOID STDCALL (*Function)(PVOID), PVOID Argument)
+KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
 {
    KIRQL oldIrql;
    ULONG TargetSet;
