@@ -27,7 +27,7 @@
 
 
 #define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
-#define	TITLE_EXPLORERBAR		_T("DesktopBar")	//_T("")
+#define	TITLE_EXPLORERBAR		_T("")	// use an empty window title, so windows taskmanager does not show the window in its application list
 
 
 #define	WINMSG_TASKBARCREATED	_T("TaskbarCreated")
@@ -64,6 +64,8 @@ struct DesktopBar : public OwnerDrawParent<Window>
 	~DesktopBar();
 
 protected:
+	CommonControlInit _usingCmnCtrl;
+
 	int		WM_TASKBARCREATED;
 	RECT	_work_area_org;
 

@@ -41,6 +41,7 @@
 
 #define	IDW_TASKTOOLBAR	100
 
+
  /// internal task bar button management entry
 struct TaskBarEntry
 {	
@@ -55,15 +56,15 @@ struct TaskBarEntry
 	BYTE	_fsState;
 };
 
- /// map for managing the task bar buttons
+ /// map for managing the task bar buttons, mapped by application window handle
 struct TaskBarMap : public map<HWND, TaskBarEntry>
 {
 	~TaskBarMap();
 
 	iterator find_id(int id);
+	iterator find_by_idx(int idx);
 };
 
-struct DesktopBar;
 
  /// Taskbar window
 struct TaskBar : public Window
@@ -84,6 +85,10 @@ protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
+	int		Notify(int id, NMHDR* pnmh);
+
+	void	ActivateApp(TaskBarMap::iterator it, bool can_minimize=true);
+	void	ShowAppSystemMenu(TaskBarMap::iterator it);
 
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);
 

@@ -114,7 +114,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 	OleInit usingCOM;
 
 	 // initialize Common Controls library
-	CommonControlInit usingCmnCtrl(ICC_LISTVIEW_CLASSES|ICC_TREEVIEW_CLASSES|ICC_BAR_CLASSES);
+	CommonControlInit usingCmnCtrl;
 
 	try {
 		InitInstance(hInstance);

@@ -1,6 +1,8 @@
 - extend shell view code in Wine
-- context menus for task bar and quick launch bar
+- tool tip texts for notification icons and clock display
+- context menus for quick launch bar
 - add rebars for resizable task bar, quick launch bar and notification area
+- handling of full screen applications
 - implement additional deskbands
 - Drag Drop on desktop does not work.
 - implement Drag Drop from the tree view.

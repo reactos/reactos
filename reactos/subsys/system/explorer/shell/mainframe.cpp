@@ -72,6 +72,7 @@ MainFrame::MainFrame(HWND hwnd)
 	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
 		IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
 		sizeof(toolbarBtns)/sizeof(TBBUTTON), 16, 15, 16, 15, sizeof(TBBUTTON));
+
 	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 

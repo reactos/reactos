@@ -62,6 +62,7 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
+ 	 // initialize Common Controls library
 	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
 {
 	SystemParametersInfo(SPI_GETWORKAREA, 0, &_work_area_org, 0);

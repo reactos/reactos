@@ -49,6 +49,9 @@
 #define BTNS_BUTTON TBSTYLE_BUTTON //TODO: should be in mingw headers
 #define BTNS_SEP TBSTYLE_SEP
 #endif
+#ifndef TB_HITTEST	//missing in mingw headers
+#define TB_HITTEST (WM_USER+69)
+#endif
 
 
 #ifdef __cplusplus
@@ -83,7 +86,7 @@ using namespace _com_util;
 
 struct CommonControlInit
 {
-	CommonControlInit(DWORD flags=ICC_LISTVIEW_CLASSES)
+	CommonControlInit(DWORD flags=ICC_LISTVIEW_CLASSES|ICC_TREEVIEW_CLASSES|ICC_BAR_CLASSES|ICC_PROGRESS_CLASS|ICC_COOL_CLASSES)
 	{
 		INITCOMMONCONTROLSEX icc = {sizeof(INITCOMMONCONTROLSEX), flags};
 

@@ -80,9 +80,9 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 		return 1;
 
 	_htoolbar = CreateToolbarEx(_hwnd,
-		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|
-		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,
-		IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
+								WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|
+								TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,
+								IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
 	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(80,160));
 	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
@@ -103,9 +103,6 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-/*	  case WM_CLOSE:
-		break; */
-
 	  case WM_SIZE:
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
 		break;
@@ -142,27 +139,73 @@ int TaskBar::Command(int id, int code)
 	TaskBarMap::iterator found = _map.find_id(id);
 
 	if (found != _map.end()) {
-		HWND hwnd = found->first;
-
-		if (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd) {
-			ShowWindowAsync(hwnd, SW_MINIMIZE);
-			_last_foreground_wnd = 0;
-		} else {
-			 // switch to selected application window
-			if (IsIconic(hwnd))
-				ShowWindowAsync(hwnd, SW_RESTORE);
-
-			SetForegroundWindow(hwnd);
-
-			_last_foreground_wnd = hwnd;
-		}
-
-		Refresh();
-
+		ActivateApp(found);
 		return 0;
 	}
 
 	return super::Command(id, code);
+}
+
+int TaskBar::Notify(int id, NMHDR* pnmh)
+{
+	if (pnmh->hwndFrom == _htoolbar)
+		switch(pnmh->code) {
+		  case NM_RCLICK: {
+			TaskBarMap::iterator it;
+			Point pt(GetMessagePos());
+			ScreenToClient(_htoolbar, &pt);
+
+			int idx = SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt);
+
+			if (idx>=0 && (it=_map.find_by_idx(idx))!=_map.end()) {
+				TaskBarEntry& entry = it->second;
+
+				ActivateApp(it, false);
+				ShowAppSystemMenu(it);
+			}
+			break;}
+
+		  default:
+			return super::Notify(id, pnmh);
+		}
+
+	return 0;
+}
+
+
+void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
+{
+	HWND hwnd = it->first;
+
+	if (can_minimize && (hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd)) {
+		ShowWindowAsync(hwnd, SW_MINIMIZE);
+		_last_foreground_wnd = 0;
+	} else {
+		 // switch to selected application window
+		if (IsIconic(hwnd))
+			ShowWindowAsync(hwnd, SW_RESTORE);
+
+		SetForegroundWindow(hwnd);
+
+		_last_foreground_wnd = hwnd;
+	}
+
+	Refresh();
+}
+
+void TaskBar::ShowAppSystemMenu(TaskBarMap::iterator it)
+{
+	HMENU hmenu = GetSystemMenu(it->first, FALSE);
+
+	if (hmenu) {
+		POINT pt;
+
+		GetCursorPos(&pt);
+		int cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, _hwnd, NULL);
+
+		if (cmd)
+			PostMessage(it->first, WM_SYSCOMMAND, cmd, 0);
+	}
 }
 
 
@@ -344,6 +387,15 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 {
 	for(iterator it=begin(); it!=end(); ++it)
 		if (it->second._id == id)
+			return it;
+
+	return end();
+}
+
+TaskBarMap::iterator TaskBarMap::find_by_idx(int idx)
+{
+	for(iterator it=begin(); it!=end(); ++it)
+		if (it->second._btn_idx == idx)
 			return it;
 
 	return end();

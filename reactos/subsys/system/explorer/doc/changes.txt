@@ -21,3 +21,7 @@
 						Start menu popup is now closed when clicking in another window.
 22.08.2003	m. fuchs	implemented clock display in tray notification area
 						implemented quick launch bar
+23.08.2003	m. fuchs	implemented "Run..." dialog by calling shell32.dll
+						fixed memory and GDI handle leaks
+						implemented context menus for task bar
+						tool tips for quick launch bar
