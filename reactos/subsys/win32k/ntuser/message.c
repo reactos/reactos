@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.57 2004/04/13 13:50:31 weiden Exp $
+/* $Id: message.c,v 1.58 2004/04/14 20:18:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -106,7 +106,7 @@ IntDispatchMessage(MSG* Msg)
   if(WindowObject->OwnerThread != PsGetCurrentThread())
   {
     IntReleaseWindowObject(WindowObject);
-    DPRINT("Window doesn't belong to the calling thread!\n");
+    DPRINT1("Window doesn't belong to the calling thread!\n");
     return 0;
   }
   /* FIXME: Call hook procedures. */
@@ -265,10 +265,12 @@ IntPeekMessage(LPMSG Msg,
     ;
       
   /* Now look for a quit message. */
-  /* FIXME: WINE checks the message number filter here. */
+  
   if (ThreadQueue->QuitPosted)
   {
-    Msg->hwnd = Wnd;
+    /* According to the PSDK, WM_QUIT messages are always returned, regardless
+       of the filter specified */
+    Msg->hwnd = NULL;
     Msg->message = WM_QUIT;
     Msg->wParam = ThreadQueue->QuitExitCode;
     Msg->lParam = 0;
