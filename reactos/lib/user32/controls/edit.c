@@ -3380,12 +3380,15 @@ static void EDIT_WM_Command(EDITSTATE *es, INT code, INT id, HWND control)
  */
 static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 {
-	HMENU menu = LoadMenuA(GetModuleHandleA("USER32"), "EDITMENU");
-	HMENU popup = GetSubMenu(menu, 0);
-	UINT start = es->selection_start;
-	UINT end = es->selection_end;
+	UINT start, end;
+	HMENU popup;
+	
+	start = es->selection_start;
+	end = es->selection_end;
 
 	ORDER_UINT(start, end);
+
+	popup = LoadMenuW(GetModuleHandleW(L"USER32"), L"EDITMENU");
 
 	/* undo */
 	EnableMenuItem(popup, 0, MF_BYPOSITION | (EDIT_EM_CanUndo(es) && !(es->style & ES_READONLY) ? MF_ENABLED : MF_GRAYED));
@@ -3401,7 +3404,7 @@ static void EDIT_WM_ContextMenu(EDITSTATE *es, INT x, INT y)
 	EnableMenuItem(popup, 7, MF_BYPOSITION | (start || (end != strlenW(es->text)) ? MF_ENABLED : MF_GRAYED));
 
 	TrackPopupMenu(popup, TPM_LEFTALIGN | TPM_RIGHTBUTTON, x, y, 0, es->hwndSelf, NULL);
-	DestroyMenu(menu);
+	DestroyMenu(popup);
 }
 
 

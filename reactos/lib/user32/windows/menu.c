@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.28 2003/08/22 16:01:01 weiden Exp $
+/* $Id: menu.c,v 1.29 2003/08/23 17:06:07 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -192,7 +192,7 @@ static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
  *
  * NOTE: flags is equivalent to the mtOption field
  */
-static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL TopLevel, BOOL unicode )
+static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL unicode )
 {
   WORD flags, id = 0;
   HMENU hSubMenu;
@@ -201,7 +201,6 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL TopLevel, BOOL u
 
   do
   {
-    hSubMenu = (HMENU)0;
     flags = GET_WORD(res);
 
     /* remove MF_END flag before passing it to AppendMenu()! */
@@ -221,22 +220,14 @@ static LPCSTR MENU_ParseResource( LPCSTR res, HMENU hMenu, BOOL TopLevel, BOOL u
       res += (strlenW((LPCWSTR)str) + 1) * sizeof(WCHAR);
     if (flags & MF_POPUP)
     {
-      if(!TopLevel)
-      {
-        hSubMenu = CreatePopupMenu();
-        if(!hSubMenu) return NULL;
-      }
-      else
-        hSubMenu = hMenu;
-      if(!(res = MENU_ParseResource(res, hSubMenu, FALSE, unicode)))
+      hSubMenu = CreatePopupMenu();
+      if(!hSubMenu) return NULL;
+      if(!(res = MENU_ParseResource(res, hSubMenu, unicode)))
         return NULL;
-      if(!TopLevel)
-      {
-        if(!unicode)
-          AppendMenuA(hMenu, flags, (UINT)hSubMenu, str);
-        else
-          AppendMenuW(hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str);
-      }
+      if(!unicode)
+        AppendMenuA(hMenu, flags, (UINT)hSubMenu, str);
+      else
+        AppendMenuW(hMenu, flags, (UINT)hSubMenu, (LPCWSTR)str);
     }
     else  /* Not a popup */
     {
@@ -257,7 +248,7 @@ User32LoadSysMenuTemplateForKernel(PVOID Arguments, ULONG ArgumentLength)
 {
   LRESULT Result;
   HMODULE hUser32;
-  hUser32 = GetModuleHandleW(L"user32.dll");
+  hUser32 = GetModuleHandleW(L"USER32");
   Result = (LRESULT)LoadMenuW(hUser32, L"SYSMENU");
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }
@@ -976,7 +967,7 @@ LoadMenuIndirectW(CONST MENUTEMPLATE *lpMenuTemplate)
       offset = GET_WORD(p);
       p += sizeof(WORD) + offset;
       if (!(hMenu = CreateMenu())) return 0;
-      if (!MENU_ParseResource(p, hMenu, TRUE, TRUE))
+      if (!MENU_ParseResource(p, hMenu, TRUE))
       {
         DestroyMenu(hMenu);
         return 0;
