@@ -61,7 +61,7 @@ BOOL WINAPI DestroyEnvironmentBlock(LPVOID);
 typedef PROFILEINFOW PROFILEINFO;
 typedef LPPROFILEINFOW LPPROFILEINFO;
 /* begin private */
-#define CreateUserProfile  CreateuserProfileW
+#define CreateUserProfile  CreateUserProfileW
 /* end private */
 #define LoadUserProfile  LoadUserProfileW
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryW
@@ -72,7 +72,7 @@ typedef LPPROFILEINFOW LPPROFILEINFO;
 typedef PROFILEINFOA PROFILEINFO;
 typedef LPPROFILEINFOA LPPROFILEINFO;
 /* begin private */
-#define CreateUserProfile  CreateuserProfileA
+#define CreateUserProfile  CreateUserProfileA
 /* end private */
 #define LoadUserProfile  LoadUserProfileA
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryA
