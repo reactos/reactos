@@ -18,7 +18,7 @@ static int RunTest(char *Buffer)
                                      HighestAcceptableAddress);
   if (pmem1 == 0)
   {
-    DbgPrint("MmAllocateContiguousMemory() for pmem1 failed\n");
+    strcpy(Buffer, "MmAllocateContiguousMemory() for pmem1 failed\n");
     return TS_FAILED;
   }
 
@@ -33,7 +33,7 @@ static int RunTest(char *Buffer)
                                                  MmNonCached);
   if (pmem2 == 0)
   {
-    DbgPrint("MmAllocateContiguousMemorySpecifyCache() for pmem2 failed\n");
+    strcpy(Buffer, "MmAllocateContiguousMemorySpecifyCache() for pmem2 failed\n");
     return TS_FAILED;
   }
 
@@ -48,7 +48,7 @@ static int RunTest(char *Buffer)
                                                  MmCached);
   if (pmem3 == 0)
   {
-    DbgPrint("MmAllocateContiguousMemorySpecifyCache() for pmem3 failed\n");
+    strcpy(Buffer, "MmAllocateContiguousMemorySpecifyCache() for pmem3 failed\n");
     return TS_FAILED;
   }
 
@@ -64,7 +64,7 @@ static int RunTest(char *Buffer)
                                                  MmWriteCombined);
   if (pmem4 == 0)
   {
-    DbgPrint("MmAllocateContiguousMemorySpecifyCache() for pmem4 failed\n");
+    strcpy(Buffer, "MmAllocateContiguousMemorySpecifyCache() for pmem4 failed\n");
     return TS_FAILED;
   }
 
@@ -72,7 +72,7 @@ static int RunTest(char *Buffer)
   pmem5 = MmAllocateNonCachedMemory(AllocSize5);
   if (pmem5 == 0)
   {
-    DbgPrint("MmAllocateNonCachedMemory() for pmem5 failed\n");
+    strcpy(Buffer, "MmAllocateNonCachedMemory() for pmem5 failed\n");
     return TS_FAILED;
   }
 
@@ -80,68 +80,70 @@ static int RunTest(char *Buffer)
   PhysicalAddress = MmGetPhysicalAddress(pmem1);
   if (PhysicalAddress.QuadPart == 0)
   {
-    DbgPrint("MmGetPhysicalAddress() failed\n");
+    strcpy(Buffer, "MmGetPhysicalAddress() failed\n");
     return TS_FAILED;
   }
 
   if (MmIsAddressValid(pmem1) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem1\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem1\n");
     return TS_FAILED;
   }
   if (MmIsAddressValid(pmem2) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem2\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem2\n");
     return TS_FAILED;
   }
   if (MmIsAddressValid(pmem3) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem3\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem3\n");
     return TS_FAILED;
   }
   if (MmIsAddressValid(pmem4) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem4\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem4\n");
     return TS_FAILED;
   }
   if (MmIsAddressValid(pmem5) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem5\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem5\n");
     return TS_FAILED;
   }
 
   if (MmIsNonPagedSystemAddressValid(pmem1) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem1\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem1\n");
     return TS_FAILED;
   }
   if (MmIsNonPagedSystemAddressValid(pmem2) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem2\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem2\n");
     return TS_FAILED;
   }
   if (MmIsNonPagedSystemAddressValid(pmem3) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem3\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem3\n");
     return TS_FAILED;
   }
   if (MmIsNonPagedSystemAddressValid(pmem4) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem4\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem4\n");
     return TS_FAILED;
   }
   if (MmIsNonPagedSystemAddressValid(pmem5) == FALSE)
   {
-    DbgPrint("MmIsAddressValid() failed for pmem5\n");
+    strcpy(Buffer, "MmIsAddressValid() failed for pmem5\n");
     return TS_FAILED;
   }
 
   /* Misc functions */
   Server = MmIsThisAnNtAsSystem();
   MemSize = MmQuerySystemSize();
-  if (MemSize == 0)
+  if (MemSize != MmSmallSystem &&
+      MemSize != MmMediumSystem &&
+      MemSize != MmLargeSystem)
   {
-    DbgPrint("MmQuerySystemSize() failed\n");
+    strcpy(Buffer, "MmQuerySystemSize() failed\n");
     return TS_FAILED;
   }
 
