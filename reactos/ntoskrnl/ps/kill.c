@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.54 2002/06/10 21:37:45 hbirr Exp $
+/* $Id: kill.c,v 1.55 2002/08/16 01:39:16 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -81,8 +81,6 @@ PsReapThreads(VOID)
    PETHREAD current;
    KIRQL oldIrql;
    
-//   DPRINT1("PsReapThreads()\n");
-   
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
    
    current_entry = PiThreadListHead.Flink;
@@ -99,19 +97,15 @@ PsReapThreads(VOID)
 	     PEPROCESS Process = current->ThreadsProcess; 
 	     NTSTATUS Status = current->ExitStatus;
 	     
-	     DPRINT("PsProcessType %x\n", PsProcessType);
-	     DPRINT("Reaping thread %x\n", current);
-	     DPRINT("Pointer count %d\n", ObGetObjectPointerCount(Process));
+	     PiNrThreadsAwaitingReaping--;
 	     current->Tcb.State = THREAD_STATE_TERMINATED_2;
 	     RemoveEntryList(&current->Tcb.ProcessThreadListEntry);
 	     if (IsListEmpty(&Process->ThreadListHead))
 	       {
-		  DPRINT("Last thread terminated, terminating process\n");
 		  KeReleaseSpinLock( &PiThreadListLock, oldIrql );
 		  PiTerminateProcess(Process, Status);
 		  KeAcquireSpinLock( &PiThreadListLock, &oldIrql );
 	       }
-	     DPRINT("Pointer count %d\n", ObGetObjectPointerCount(Process));
 	     KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	     ObDereferenceObject(current);
 	     KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
@@ -161,7 +155,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
    KeReleaseDispatcherDatabaseLock(FALSE);
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
    KeBugCheck(0);
 }

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.101 2002/08/14 20:58:38 dwelch Exp $
+/* $Id: thread.c,v 1.102 2002/08/16 01:39:16 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -49,6 +49,10 @@ static BOOLEAN DoneInitYet = FALSE;
 static PETHREAD IdleThreads[MAXIMUM_PROCESSORS];
 ULONG PiNrThreads = 0;
 ULONG PiNrReadyThreads = 0;
+static HANDLE PiReaperThreadHandle;
+static KEVENT PiReaperThreadEvent;
+static BOOL PiReaperThreadShouldTerminate = FALSE;
+ULONG PiNrThreadsAwaitingReaping = 0;
 
 static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 					  THREAD_WRITE,
@@ -164,6 +168,30 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
    return(NULL);
 }
 
+VOID STDCALL
+PiWakeupReaperThread(VOID)
+{
+  KeSetEvent(&PiReaperThreadEvent, 0, FALSE);
+}
+
+NTSTATUS STDCALL
+PiReaperThreadMain(PVOID Ignored)
+{
+  while (1)
+    {
+      KeWaitForSingleObject(&PiReaperThreadEvent,
+			    Executive,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      if (PiReaperThreadShouldTerminate)
+	{
+	  PsTerminateSystemThread(0);
+	}
+      PsReapThreads();
+    }
+}
+
 VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 {
    KPRIORITY CurrentPriority;
@@ -181,6 +209,10 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	PiNrReadyThreads++;
 	PsInsertIntoThreadList(CurrentThread->Tcb.Priority,
 			       CurrentThread);
+     }
+   if (CurrentThread->Tcb.State == THREAD_STATE_TERMINATED_1)
+     {
+       PiNrThreadsAwaitingReaping++;
      }
    
    Affinity = 1 << KeGetCurrentProcessorNumber();
@@ -206,8 +238,11 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	    CurrentThread = Candidate;
 	     
 	    KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
+	    if (PiNrThreadsAwaitingReaping > 0)
+	      {
+		PiWakeupReaperThread();
+	      }
 	    KiArchContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
-	    PsReapThreads();
 	    return;
 	  }
      }
@@ -229,7 +264,7 @@ PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   KeGetCurrentKPCR()->CurrentThread->WaitIrql = oldIrql;
+   KeGetCurrentKPCR()->CurrentThread->WaitIrql = oldIrql;   
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -367,6 +402,7 @@ PsInitThreadManagment(VOID)
    PETHREAD FirstThread;
    ULONG i;
    HANDLE FirstThreadHandle;
+   NTSTATUS Status;
    
    KeInitializeSpinLock(&PiThreadListLock);
    for (i=0; i < MAXIMUM_PRIORITY; i++)
@@ -409,6 +445,23 @@ PsInitThreadManagment(VOID)
    DPRINT("FirstThread %x\n",FirstThread);
       
    DoneInitYet = TRUE;
+
+   /*
+    * Create the reaper thread
+    */
+   KeInitializeEvent(&PiReaperThreadEvent, SynchronizationEvent, FALSE);
+   Status = PsCreateSystemThread(&PiReaperThreadHandle,
+				 THREAD_ALL_ACCESS,
+				 NULL,
+				 NULL,
+				 NULL,
+				 PiReaperThreadMain,
+				 NULL);
+   if (!NT_SUCCESS(Status))
+     {
+       DPRINT1("PS: Failed to create reaper thread.\n");
+       KeBugCheck(0);
+     }
 }
 
 LONG STDCALL

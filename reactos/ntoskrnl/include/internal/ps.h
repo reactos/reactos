@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.39 2002/08/14 20:58:34 dwelch Exp $
+/* $Id: ps.h,v 1.40 2002/08/16 01:39:16 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -501,6 +501,8 @@ VOID STDCALL
 PsDispatchThread(ULONG NewThreadStatus);
 VOID
 PsInitialiseSuspendImplementation(VOID);
+
+extern ULONG PiNrThreadsAwaitingReaping;
 
 #endif /* ASSEMBLER */
 

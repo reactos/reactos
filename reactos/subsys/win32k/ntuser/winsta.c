@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.5 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: winsta.c,v 1.6 2002/08/16 01:39:17 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -26,7 +26,7 @@
 #include <include/class.h>
 #include <include/window.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/

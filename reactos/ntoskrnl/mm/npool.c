@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.58 2002/06/04 15:26:57 dwelch Exp $
+/* $Id: npool.c,v 1.59 2002/08/16 01:39:16 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1007,7 +1007,7 @@ PVOID STDCALL
 ExAllocateWholePageBlock(ULONG UserSize)
 {
   PVOID Address;
-  PVOID Page;
+  PHYSICAL_ADDRESS Page;
   ULONG i;
   ULONG Size;
   ULONG NrPages;
@@ -1020,14 +1020,14 @@ ExAllocateWholePageBlock(ULONG UserSize)
   for (i = 0; i < NrPages; i++)
     {
       Page = MmAllocPage(MC_NPPOOL, 0);
-      if (Page == NULL)
+      if (Page.QuadPart == 0LL)
 	{
 	  KeBugCheck(0);
 	}
       MmCreateVirtualMapping(NULL, 
 			     Address + (i * PAGESIZE),
 			     PAGE_READWRITE | PAGE_SYSTEM,
-			     (ULONG)Page,
+			     Page,
 			     TRUE);
     }
 

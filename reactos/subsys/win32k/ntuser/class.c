@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.9 2002/07/17 21:04:57 dwelch Exp $
+/* $Id: class.c,v 1.10 2002/08/16 01:39:17 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -188,7 +188,7 @@ W32kCreateClass(LPWNDCLASSEX lpwcx,
     {
       ClassObject->Class.lpszMenuName = namePtr;
       wcscpy (namePtr, lpwcx->lpszMenuName);
-      namePtr += wcslen (lpwcx->lpszMenuName + 1);
+      namePtr += wcslen (lpwcx->lpszMenuName) + 1;
     }
   ClassObject->Class.lpszClassName = namePtr;
   wcscpy (namePtr, lpwcx->lpszClassName);
