@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.11 2000/05/24 22:29:36 dwelch Exp $
+/* $Id: kdebug.c,v 1.12 2000/07/01 18:25:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,8 +64,8 @@ PrintString (char* fmt,...)
 
 VOID
 KdInitSystem (
-	ULONG		Reserved,
-	boot_param*	BootParam
+	ULONG			Reserved,
+	PLOADER_PARAMETER_BLOCK	LoaderBlock
 	)
 {
 	KD_PORT_INFORMATION PortInfo;
@@ -81,7 +81,7 @@ KdInitSystem (
 	 */
 
 	/* check for 'DEBUGPORT' */
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;
@@ -120,7 +120,7 @@ KdInitSystem (
 	}
 
 	/* check for 'BAUDRATE' */
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;
@@ -143,7 +143,7 @@ KdInitSystem (
 	}
 
 	/* Check for 'DEBUG'. Dont' accept 'DEBUGPORT'!*/
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;
@@ -159,7 +159,7 @@ KdInitSystem (
 	}
 
 	/* Check for 'NODEBUG' */
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;
@@ -173,7 +173,7 @@ KdInitSystem (
 	}
 
 	/* Check for 'CRASHDEBUG' */
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;
@@ -187,7 +187,7 @@ KdInitSystem (
 	}
 
 	/* Check for 'BREAK' */
-	p1 = BootParam->kernel_parameters;
+	p1 = LoaderBlock->kernel_parameters;
 	while (p1 && (p2 = strchr (p1, '/')))
 	{
 		p2++;

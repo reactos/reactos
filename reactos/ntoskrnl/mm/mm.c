@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.31 2000/06/25 03:59:15 dwelch Exp $
+/* $Id: mm.c,v 1.32 2000/07/01 18:27:03 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -62,20 +62,20 @@ VOID MiShutdownMemoryManager(VOID)
 {
 }
 
-VOID MmInitVirtualMemory(boot_param* bp, ULONG LastKernelAddress)
+VOID MmInitVirtualMemory(PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress)
 /*
  * FUNCTION: Intialize the memory areas list
  * ARGUMENTS:
- *           bp = Pointer to the boot parameters
+ *           LoaderBlock = Pointer to the boot parameters
  *           kernel_len = Length of the kernel
  */
 {
-   unsigned int kernel_len = bp->end_mem - bp->start_mem;
+   unsigned int kernel_len = LoaderBlock->end_mem - LoaderBlock->start_mem;
    PVOID BaseAddress;
    ULONG Length;
    ULONG ParamLength = kernel_len;
    
-   DPRINT("MmInitVirtualMemory(%x)\n",bp);
+   DPRINT("MmInitVirtualMemory(%x)\n",LoaderBlock);
    
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
@@ -229,7 +229,7 @@ MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
    return(MmSystemSize);
 }
 
-void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
+void MmInitialize(PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress)
 /*
  * FUNCTION: Initalize memory managment
  */
@@ -239,7 +239,8 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
    int i;
    unsigned int kernel_len;
    
-   DPRINT("MmInitialize(bp %x, LastKernelAddress %x)\n", bp, 
+   DPRINT("MmInitialize(LoaderBlock %x, LastKernelAddress %x)\n",
+	  LoaderBlock,
 	  LastKernelAddress);
 
    /*
@@ -252,8 +253,8 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
     * (we assume the kernel occupies a continuous range of physical
     * memory)
     */
-   first_krnl_phys_addr = bp->start_mem;
-   last_krnl_phys_addr = bp->end_mem;
+   first_krnl_phys_addr = LoaderBlock->start_mem;
+   last_krnl_phys_addr = LoaderBlock->end_mem;
    DPRINT("first krnl %x\nlast krnl %x\n",first_krnl_phys_addr,
 	  last_krnl_phys_addr);
    
@@ -295,16 +296,20 @@ void MmInitialize(boot_param* bp, ULONG LastKernelAddress)
    /*
     * Intialize memory areas
     */
-   MmInitVirtualMemory(bp, LastKernelAddress);
+   MmInitVirtualMemory(LoaderBlock, LastKernelAddress);
 }
 
-VOID MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)
+VOID MmInitSystem (
+	ULONG			Phase,
+	PLOADER_PARAMETER_BLOCK	LoaderBlock,
+	ULONG			LastKernelAddress
+	)
 {
    if (Phase == 0)
      {
 	/* Phase 0 Initialization */
 	MmInitializeKernelAddressSpace();
-	MmInitialize (bp, LastKernelAddress);
+	MmInitialize (LoaderBlock, LastKernelAddress);
      }
    else
      {

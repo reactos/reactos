@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.6 2000/03/19 13:34:47 ekohl Exp $
+/* $Id: display.c,v 1.7 2000/07/01 18:23:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,7 +97,7 @@ HalPutCharacter (CHAR Character)
 /* PRIVATE FUNCTIONS ********************************************************/
 
 VOID
-HalInitializeDisplay (boot_param *bp)
+HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Initalize the display
  * ARGUMENTS:
@@ -113,8 +113,8 @@ HalInitializeDisplay (boot_param *bp)
 //        VideoBuffer = HalMapPhysicalMemory (0xb8000, 2);
 
         /* Set cursor position */
-        CursorX = bp->cursorx;
-        CursorY = bp->cursory;
+        CursorX = LoaderBlock->cursorx;
+        CursorY = LoaderBlock->cursory;
 
         /* read screen size from the crtc */
         /* FIXME: screen size should be read from the boot paramseters */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.64 2000/06/30 22:50:53 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.65 2000/07/01 18:22:14 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -336,7 +336,10 @@ KeDetachProcess=KeDetachProcess@0
 ;KeDisconnectInterrupt
 KeEnterCriticalRegion=KeEnterCriticalRegion@0
 KeEnterKernelDebugger=KeEnterKernelDebugger@0
-KeFlushIoBuffers
+;KeFindConfigurationEntry
+;KeFindConfigurationNextEntry
+;KeFlushEntireTb
+KeGetCurrentThread=KeGetCurrentThread@0
 KeGetPreviousMode=KeGetPreviousMode@0
 ;KeI386AbiosCall
 ;KeI386AllocateGdtSelectors
@@ -405,12 +408,12 @@ KeSetBasePriorityThread=KeSetBasePriorityThread@8
 KeSetEvent=KeSetEvent@12
 ;KeSetEventBoostPriority
 ;KeSetIdealProcessorThread
-;KeSetImportanceDpc
+KeSetImportanceDpc=KeSetImportanceDpc@8
 ;KeSetKernelStackSwapEnable
 KeSetPriorityThread=KeSetPriorityThread@8
 ;KeSetProfileIrql
 ;KeSetSwapContextNotifyRoutine
-;KeSetTargetProcessorDpc
+KeSetTargetProcessorDpc=KeSetTargetProcessorDpc@8
 ;KeSetThreadSelectNotifyRoutine
 ;KeSetTimeIncrement
 KeSetTimer=KeSetTimer@16

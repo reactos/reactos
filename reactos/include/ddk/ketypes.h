@@ -209,10 +209,10 @@ struct _KDPC;
 typedef VOID (*PKDEFERRED_ROUTINE)(struct _KDPC* Dpc, PVOID DeferredContext, 
 			   PVOID SystemArgument1, PVOID SystemArgument2);
 
-typedef struct _KDPC
 /*
  * PURPOSE: Defines a delayed procedure call object
  */
+typedef struct _KDPC
 {
    SHORT Type;
    UCHAR Number;

@@ -4,15 +4,6 @@
 
 /* KERNEL FUNCTIONS ********************************************************/
 
-VOID
-STDCALL
-KeAttachProcess (
-	struct _EPROCESS*	Process
-	);
-
-VOID KeDrainApcQueue(VOID);
-PKPROCESS KeGetCurrentProcess(VOID);
-
 /*
  * FUNCTION: Acquires a spinlock so the caller can synchronize access to 
  * data
@@ -23,14 +14,26 @@ PKPROCESS KeGetCurrentProcess(VOID);
 VOID
 STDCALL
 KeAcquireSpinLock (
-	PKSPIN_LOCK	SpinLock,
-	PKIRQL		OldIrql
+	IN	PKSPIN_LOCK	SpinLock,
+	OUT	PKIRQL		OldIrql
 	);
 
 VOID
 STDCALL
 KeAcquireSpinLockAtDpcLevel (
-	PKSPIN_LOCK	SpinLock
+	IN	PKSPIN_LOCK	SpinLock
+	);
+
+KIRQL
+FASTCALL
+KeAcquireSpinLockRaiseToSynch (
+	IN	PKSPIN_LOCK	SpinLock
+	);
+
+VOID
+STDCALL
+KeAttachProcess (
+	IN	PEPROCESS	Process
 	);
 
 /*
@@ -43,7 +46,7 @@ KeAcquireSpinLockAtDpcLevel (
 VOID
 STDCALL
 KeBugCheck (
-	ULONG	BugCheckCode
+	IN	ULONG	BugCheckCode
 	);
 
 /*
@@ -57,23 +60,23 @@ KeBugCheck (
 VOID
 STDCALL
 KeBugCheckEx (
-	ULONG	BugCheckCode,
-	ULONG	BugCheckParameter1,
-	ULONG	BugCheckParameter2,
-	ULONG	BugCheckParameter3,
-	ULONG	BugCheckParameter4
+	IN	ULONG	BugCheckCode,
+	IN	ULONG	BugCheckParameter1,
+	IN	ULONG	BugCheckParameter2,
+	IN	ULONG	BugCheckParameter3,
+	IN	ULONG	BugCheckParameter4
 	);
 
 BOOLEAN
 STDCALL
 KeCancelTimer (
-	PKTIMER	Timer
+	IN	PKTIMER	Timer
 	);
 
 VOID
 STDCALL
 KeClearEvent (
-	PKEVENT	Event
+	IN	PKEVENT	Event
 	);
 
 NTSTATUS
@@ -87,7 +90,7 @@ KeDelayExecutionThread (
 BOOLEAN
 STDCALL
 KeDeregisterBugCheckCallback (
-	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
+	IN	PKBUGCHECK_CALLBACK_RECORD	CallbackRecord
 	);
 
 VOID
@@ -102,7 +105,32 @@ KeEnterCriticalRegion (
 	VOID
 	);
 
-VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation);
+/*
+ * FUNCTION: Enters the kernel debugger
+ * ARGUMENTS:
+ *	None
+ */
+VOID
+STDCALL
+KeEnterKernelDebugger (
+	VOID
+	);
+
+/*
+ * VOID
+ * KeFlushIoBuffers (
+ *      PMDL    Mdl,
+ *      BOOLEAN ReadOperation,
+ *      BOOLEAN DmaOperation
+ *      );
+ */
+#define KeFlushIoBuffers(Mdl,ReadOperation,DmaOperation)
+
+VOID
+STDCALL
+KeFlushWriteBuffer (
+	VOID
+	);
 
 KIRQL
 STDCALL
@@ -118,7 +146,13 @@ KeGetCurrentThread (
 	VOID
 	);
 
-ULONG KeGetDcacheFillSize(VOID);
+/*
+ * ULONG KeGetDcacheFillSize(VOID);
+ *
+ * FUNCTION:
+ *      Returns the microprocessor's data cache-line boundary in bytes
+ */
+#define KeGetDcacheFillSize() 1L
 
 ULONG
 STDCALL
@@ -278,6 +312,17 @@ KeRaiseIrql (
 	PKIRQL	OldIrql
 	);
 
+/*
+ * FUNCTION: Raises a user mode exception
+ * ARGUMENTS:
+ *	ExceptionCode = Status code of the exception
+ */
+VOID
+STDCALL
+KeRaiseUserException (
+	IN	NTSTATUS	ExceptionCode
+	);
+
 LONG
 STDCALL
 KeReadStateEvent (
@@ -388,11 +433,25 @@ KeSetEvent (
 	BOOLEAN		Wait
 	);
 
+VOID
+STDCALL
+KeSetImportanceDpc (
+	IN	PKDPC		Dpc,
+	IN	KDPC_IMPORTANCE	Importance
+	);
+
 KPRIORITY
 STDCALL
 KeSetPriorityThread (
 	PKTHREAD	Thread,
 	KPRIORITY	Priority
+	);
+
+VOID
+STDCALL
+KeSetTargetProcessorDpc (
+	IN	PKDPC	Dpc,
+	IN	CCHAR	Number
 	);
 
 BOOLEAN
@@ -473,14 +532,14 @@ KeWaitForSingleObject (
  *          newlvl = IRQ level to set
  * NOTE: This is for internal use only
  */
-VOID KeSetCurrentIrql(KIRQL newlvl);
+//VOID KeSetCurrentIrql(KIRQL newlvl);
 
 
 // io permission map has a 8k size
 // Each bit in the IOPM corresponds to an io port byte address. The bitmap
 // is initialized to allow IO at any port. [ all bits set ]. 
 
-typedef struct _IOPM 
+typedef struct _IOPM
 {
 	UCHAR Bitmap[8192];
 } IOPM, *PIOPM;
@@ -537,39 +596,10 @@ NTSTATUS KeI386ReleaseGdtSelectors(OUT PULONG SelArray,
 NTSTATUS KeI386AllocateGdtSelectors(OUT PULONG SelArray,
 				    IN ULONG NumOfSelectors);
 
-/*
- * FUNCTION: Raises a user mode exception
- * ARGUMENTS:
- *	ExceptionCode = Status code of the exception
- */
-VOID KeRaiseUserException(NTSTATUS ExceptionCode);
-
-
-/*
- * FUNCTION: Enters the kernel debugger
- * ARGUMENTS:
- *	None
- */
-VOID
-STDCALL
-KeEnterKernelDebugger (VOID);
-
-
-VOID
-STDCALL
-KeFlushWriteBuffer (
-	VOID
-	);
 
 KIRQL
 FASTCALL
 KfAcquireSpinLock (
-	IN	PKSPIN_LOCK	SpinLock
-	);
-
-KIRQL
-FASTCALL
-KeAcquireSpinLockRaiseToSynch (
 	IN	PKSPIN_LOCK	SpinLock
 	);
 

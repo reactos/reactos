@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.77 2000/06/30 22:50:53 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.78 2000/07/01 18:22:14 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -340,7 +340,6 @@ KeEnterKernelDebugger@0
 ;KeFindConfigurationEntry
 ;KeFindConfigurationNextEntry
 ;KeFlushEntireTb
-KeFlushIoBuffers
 KeGetCurrentThread@0
 KeGetPreviousMode@0
 ;KeI386AbiosCall
@@ -410,12 +409,12 @@ KeSetBasePriorityThread@8
 KeSetEvent@12
 ;KeSetEventBoostPriority
 ;KeSetIdealProcessorThread
-;KeSetImportanceDpc
+KeSetImportanceDpc@8
 ;KeSetKernelStackSwapEnable
 KeSetPriorityThread@8
 ;KeSetProfileIrql
 ;KeSetSwapContextNotifyRoutine
-;KeSetTargetProcessorDpc
+KeSetTargetProcessorDpc@8
 ;KeSetThreadSelectNotifyRoutine
 ;KeSetTimeIncrement
 KeSetTimer@16

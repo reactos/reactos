@@ -1,4 +1,4 @@
-/* $Id: bug.c,v 1.11 2000/06/04 19:50:12 ekohl Exp $
+/* $Id: bug.c,v 1.12 2000/07/01 18:26:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,12 @@ VOID PsDumpThreads(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
+VOID KeInitializeBugCheck(VOID)
+{
+   InitializeListHead(&BugcheckCallbackListHead);
+   InBugCheck = 0;
+}
+
 BOOLEAN
 STDCALL
 KeDeregisterBugCheckCallback (
@@ -33,12 +39,6 @@ KeDeregisterBugCheckCallback (
 	)
 {
    UNIMPLEMENTED;
-}
-
-VOID KeInitializeBugCheck(VOID)
-{
-   InitializeListHead(&BugcheckCallbackListHead);
-   InBugCheck = 0;
 }
 
 VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.49 2000/06/30 22:53:32 ekohl Exp $
+/* $Id: main.c,v 1.50 2000/07/01 18:26:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -163,7 +163,8 @@ unsigned int old_idt[256][2];
 //extern unsigned int idt[];
 unsigned int old_idt_valid = 1;
 
-void _main(boot_param* _bp)
+
+void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
  * ARGUMENTS:
@@ -175,31 +176,31 @@ void _main(boot_param* _bp)
    unsigned int i;
    unsigned int start;
    unsigned int start1;
-   boot_param bp;
    unsigned int last_kernel_address;
-   
-//   memset((void *)&edata,0,((int)&end)-((int)&edata));
    
    /*
     * Copy the parameters to a local buffer because lowmem will go away
     */
-   memcpy(&bp,_bp,sizeof(boot_param));
+   memcpy (&KeLoaderBlock,
+	   LoaderBlock,
+	   sizeof(LOADER_PARAMETER_BLOCK));
 
    /*
     * FIXME: Preliminary hack!!!!
     * Initializes the kernel parameter line.
     * This should be done by the boot loader.
     */
-   strcpy (bp.kernel_parameters, "/DEBUGPORT=SCREEN");
+   strcpy (KeLoaderBlock.kernel_parameters,
+	   "/DEBUGPORT=SCREEN");
 
    /*
     * Initialization phase 0
     */
-   HalInitSystem (0, &bp);
+   HalInitSystem (0, &KeLoaderBlock);
 
    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
 
-   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+   start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
    if (start < ((int)&end))
      {
 	PrintString("start %x end %x\n",start,(int)&end);
@@ -209,22 +210,22 @@ void _main(boot_param* _bp)
 	for(;;)
 	     __asm__("hlt\n\t");
      }
-   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
+   start1 = start+PAGE_ROUND_UP(KeLoaderBlock.module_length[1]);
 
    last_kernel_address = KERNEL_BASE;
-   for (i=0; i<=bp.nr_files; i++)
+   for (i=0; i<=KeLoaderBlock.nr_files; i++)
      {
 	last_kernel_address = last_kernel_address +
-	  PAGE_ROUND_UP(bp.module_length[i]);
+	  PAGE_ROUND_UP(KeLoaderBlock.module_length[i]);
      }
 
    DPRINT("MmInitSystem()\n");
-   MmInitSystem(0, &bp, last_kernel_address);
+   MmInitSystem(0, &KeLoaderBlock, last_kernel_address);
 
    /*
     * Initialize the kernel debugger
     */
-   KdInitSystem (0, &bp);
+   KdInitSystem (0, &KeLoaderBlock);
    if (KdPollBreakIn ())
      {
 	DbgBreakPointWithStatus (DBG_STATUS_CONTROL_C);
@@ -237,9 +238,9 @@ void _main(boot_param* _bp)
    DPRINT("Kernel Initialization Phase 1\n");
 
    DPRINT("HalInitSystem()\n");
-   HalInitSystem (1, &bp);
+   HalInitSystem (1, &KeLoaderBlock);
    DPRINT("MmInitSystem()\n");
-   MmInitSystem(1, &bp, 0);
+   MmInitSystem(1, &KeLoaderBlock, 0);
 
    DPRINT("KeInit()\n");
    KeInit();
@@ -265,31 +266,31 @@ void _main(boot_param* _bp)
    /*
     * Initalize services loaded at boot time
     */
-   DPRINT1("%d files loaded\n",bp.nr_files);
+   DPRINT1("%d files loaded\n",KeLoaderBlock.nr_files);
 
   /*  Pass 1: load registry chunks passed in  */
-  start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-  for (i = 1; i < bp.nr_files; i++)
+  start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
+  for (i = 1; i < KeLoaderBlock.nr_files; i++)
     {
       if (!strcmp ((PCHAR) start, "REGEDIT4"))
         {
           DPRINT1("process registry chunk at %08lx\n", start);
           CmImportHive((PCHAR) start);
         }
-      start = start + bp.module_length[i];
+      start = start + KeLoaderBlock.module_length[i];
     }
 
   /*  Pass 2: process boot loaded drivers  */
-  start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-  start1 = start + bp.module_length[1];
-  for (i=1;i<bp.nr_files;i++)
+  start = KERNEL_BASE + PAGE_ROUND_UP(KeLoaderBlock.module_length[0]);
+  start1 = start + KeLoaderBlock.module_length[1];
+  for (i=1;i<KeLoaderBlock.nr_files;i++)
     {
       if (strcmp ((PCHAR) start, "REGEDIT4"))
         {
           DPRINT1("process module at %08lx\n", start);
           LdrProcessDriver((PVOID)start);
         }
-      start = start + bp.module_length[i];
+      start = start + KeLoaderBlock.module_length[i];
     }
    
    /* Create the SystemRoot symbolic link */
@@ -322,6 +323,5 @@ void _main(boot_param* _bp)
    DbgPrint("Finished main()\n");
    PsTerminateSystemThread(STATUS_SUCCESS);
 }
-
 
 /* EOF */

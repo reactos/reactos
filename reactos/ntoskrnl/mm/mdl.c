@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.18 2000/04/02 13:32:41 ea Exp $
+/* $Id: mdl.c,v 1.19 2000/07/01 18:27:03 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -109,12 +109,6 @@ VOID MmPrepareMdlForReuse(PMDL Mdl)
    UNIMPLEMENTED;
 }
 
-VOID KeFlushIoBuffers(PMDL Mdl, BOOLEAN ReadOperation, BOOLEAN DmaOperation)
-{
-   /* NOP on the x86 */
-   /* See ntddk.h from Windows 98 DDK */
-}
-
 VOID MmBuildMdlFromPages(PMDL Mdl)
 {
    ULONG i;
@@ -129,9 +123,9 @@ VOID MmBuildMdlFromPages(PMDL Mdl)
      }
    
 }
-			 
 
-VOID STDCALL MmProbeAndLockPages(PMDL Mdl, 
+
+VOID STDCALL MmProbeAndLockPages(PMDL Mdl,
 			 KPROCESSOR_MODE AccessMode,
 			 LOCK_OPERATION Operation)
 /*

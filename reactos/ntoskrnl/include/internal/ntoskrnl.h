@@ -7,41 +7,6 @@
 
 #ifndef __ASM__
 
-typedef struct
-{
-        /*
-         * Magic value (useless really)
-         */
-        unsigned int magic;
-
-        /*
-         * Cursor position
-         */
-        unsigned int cursorx;
-        unsigned int cursory;
-
-        /*
-         * Number of files (including the kernel) loaded
-         */
-        unsigned int nr_files;
-
-        /*
-         * Range of physical memory being used by the system
-         */
-        unsigned int start_mem;
-        unsigned int end_mem;
-
-        /*
-         * List of module lengths (terminated by a 0)
-         */
-        unsigned int module_length[64];
-
-        /*
-         * Kernel parameter string
-         */
-        char kernel_parameters[256];
-} boot_param;
-
 #include <ddk/ntddk.h>
 
 #include <stdarg.h>
@@ -78,7 +43,7 @@ VOID NtInit(VOID);
 /*
  * Initalization functions (called once by main())
  */
-VOID MmInitSystem(ULONG Phase, boot_param* bp, ULONG LastKernelAddress);
+VOID MmInitSystem(ULONG Phase, PLOADER_PARAMETER_BLOCK LoaderBlock, ULONG LastKernelAddress);
 VOID IoInit(VOID);
 VOID ObInit(VOID);
 VOID PsInit(VOID);
@@ -86,7 +51,7 @@ VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID CmInitializeRegistry(VOID);
 VOID CmImportHive(PCHAR);
-VOID KdInitSystem(ULONG Reserved, boot_param* BootParam);
+VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 #endif /* __ASM__ */
 

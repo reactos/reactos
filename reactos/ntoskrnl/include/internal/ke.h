@@ -19,8 +19,10 @@ BOOLEAN KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
 
 VOID KiInterruptDispatch(ULONG irq);
 VOID KiDispatchInterrupt(ULONG irq);
+VOID KeDrainApcQueue(VOID);
 VOID KeDrainDpcQueue(VOID);
 VOID KeExpireTimers(VOID);
+PKPROCESS KeGetCurrentProcess(VOID);
 NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval);
 VOID KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULONG Type,
 				  ULONG Size, ULONG SignalState);
@@ -32,6 +34,16 @@ BOOLEAN KiTestAlert(PKTHREAD Thread, PCONTEXT UserContext);
 VOID KeCallApcsThread(VOID);
 VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus);
 PULONG KeGetStackTopThread(PETHREAD Thread);
+
+/*
+ * FUNCTION: Sets the current irql without altering the current processor 
+ * state
+ * ARGUMENTS:
+ *          newlvl = IRQ level to set
+ * NOTE: This is for internal use only
+ */
+VOID KeSetCurrentIrql(KIRQL newlvl);
+
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

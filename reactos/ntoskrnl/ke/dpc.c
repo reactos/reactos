@@ -1,4 +1,5 @@
-/*
+/* $Id: dpc.c,v 1.16 2000/07/01 18:26:10 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/dpc.c
@@ -8,7 +9,7 @@
  *                28/05/98: Created
  *                12/3/99:  Phillip Susi: Fixed IRQL problem
  */
-                
+
 /*
  * NOTE: See also the higher level support routines in ntoskrnl/io/dpc.c
  */
@@ -139,7 +140,7 @@ BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
    assert(KeGetCurrentIrql()>=DISPATCH_LEVEL);
 
    Dpc->Number=0;
-   Dpc->Importance=Medium;
+   Dpc->Importance=MediumImportance;
    Dpc->SystemArgument1=SystemArgument1;
    Dpc->SystemArgument2=SystemArgument2;
    if (Dpc->Lock)
@@ -158,6 +159,40 @@ BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
    return(TRUE);
 }
 
+/*
+ * FUNCTION: Specifies the DPCs importance
+ * ARGUMENTS:
+ *          Dpc = Initalizes DPC
+ *          Importance = DPC importance
+ * RETURNS: None
+ */
+VOID
+STDCALL
+KeSetImportanceDpc (
+	IN	PKDPC		Dpc,
+	IN	KDPC_IMPORTANCE	Importance
+	)
+{
+	Dpc->Importance = Importance;
+}
+
+/*
+ * FUNCTION: Specifies on which processor the DPC will run
+ * ARGUMENTS:
+ *          Dpc = Initalizes DPC
+ *          Number = Processor number
+ * RETURNS: None
+ */
+VOID
+STDCALL
+KeSetTargetProcessorDpc (
+	IN	PKDPC	Dpc,
+	IN	CCHAR	Number
+	)
+{
+	UNIMPLEMENTED;
+}
+
 VOID KeInitDpc(VOID)
 /*
  * FUNCTION: Initialize DPC handling
@@ -167,3 +202,4 @@ VOID KeInitDpc(VOID)
    KeInitializeSpinLock(&DpcQueueLock);
 }
 
+/* EOF */

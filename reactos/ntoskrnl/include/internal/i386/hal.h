@@ -24,7 +24,7 @@ VOID Hal_bios32_probe(VOID);
  */
 BOOLEAN Hal_bios32_is_service_present(ULONG service);
 
-VOID HalInitializeDisplay (boot_param *bp);
+VOID HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
 VOID HalResetDisplay (VOID);
 
 VOID
@@ -36,13 +36,5 @@ VOID HalpCalibrateStallExecution(VOID);
 /* irq.c */
 VOID HalpDispatchInterrupt (ULONG irq);
 VOID HalpInitIRQs (VOID);
-
-BOOLEAN
-STDCALL
-HalInitSystem (
-	ULONG		Phase,
-	boot_param	*bp
-	);
-
 
 #endif /* __INTERNAL_HAL_HAL_H */

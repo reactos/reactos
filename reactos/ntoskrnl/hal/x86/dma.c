@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.6 2000/06/12 14:53:38 ekohl Exp $
+/* $Id: dma.c,v 1.7 2000/07/01 18:23:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -157,14 +157,6 @@ HalReadDmaCounter (
 	)
 {
    UNIMPLEMENTED;
-}
-
-ULONG KeGetDcacheFillSize()
-/*
- * FUNCTION: Returns the microprocessor's data cache-line boundary in bytes
- */
-{
-   return(1);
 }
 
 /* EOF */
