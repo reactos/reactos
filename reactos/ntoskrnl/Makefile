@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.98 2003/06/07 11:31:06 ekohl Exp $
+# $Id: Makefile,v 1.99 2003/06/11 12:29:49 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -89,7 +89,6 @@ OBJECTS_RTL = \
 	rtl/error.o \
 	rtl/handle.o \
 	rtl/largeint.o \
-	rtl/math.o \
 	rtl/mem.o \
 	rtl/message.o \
 	rtl/nls.o \

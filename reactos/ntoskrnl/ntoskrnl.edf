@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.141 2003/06/07 12:17:19 chorns Exp $
+; $Id: ntoskrnl.edf,v 1.142 2003/06/11 12:29:49 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -973,14 +973,14 @@ ZwWaitForSingleObject=ZwWaitForSingleObject@12
 ZwWriteFile=ZwWriteFile@36
 ZwYieldExecution=ZwYieldExecution@0
 _abnormal_termination
-_alldiv=_alldiv@4
-_allmul=_allmul@4
-_allrem=_allrem@4
-_allshl=_allshl@4
-_allshr=_allshr@4
-_aulldiv=_aulldiv@4
-_aullrem=_aullrem@4
-_aullshr=_aullshr@4
+_alldiv
+_allmul
+_allrem
+_allshl
+_allshr
+_aulldiv
+_aullrem
+_aullshr
 _except_handler2
 _except_handler3
 _global_unwind2

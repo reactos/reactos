@@ -40,6 +40,14 @@ OBJECTS_MM_I386 := \
 	mm/i386/pfault.o
 
 OBJECTS_RTL_I386 := \
+	rtl/i386/alldiv.o \
+	rtl/i386/allmul.o \
+	rtl/i386/allrem.o \
+	rtl/i386/allshl.o \
+	rtl/i386/allshr.o \
+	rtl/i386/aulldiv.o \
+	rtl/i386/aullrem.o \
+	rtl/i386/aullshr.o \
 	rtl/i386/except.o \
 	rtl/i386/exception.o \
 	rtl/i386/seh.o
