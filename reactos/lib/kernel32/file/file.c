@@ -29,93 +29,123 @@ WINBOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
 /* FUNCTIONS ****************************************************************/
 
-VOID STDCALL SetFileApisToOEM(VOID)
+VOID
+STDCALL
+SetFileApisToOEM (
+	VOID
+	)
 {
-   bIsFileApiAnsi = FALSE;
+	bIsFileApiAnsi = FALSE;
 }
 
 
-VOID STDCALL SetFileApisToANSI(VOID)
+VOID
+STDCALL
+SetFileApisToANSI (
+	VOID
+	)
 {
-   bIsFileApiAnsi = TRUE;
+	bIsFileApiAnsi = TRUE;
 }
 
 
-WINBOOL STDCALL AreFileApisANSI(VOID)
+WINBOOL
+STDCALL
+AreFileApisANSI (
+	VOID
+	)
 {
-   return (bIsFileApiAnsi);
+	return bIsFileApiAnsi;
 }
 
 
-HFILE STDCALL OpenFile(LPCSTR lpFileName,
-		       LPOFSTRUCT lpReOpenBuff,
-		       UINT uStyle)
+HFILE
+STDCALL
+OpenFile (
+	LPCSTR		lpFileName,
+	LPOFSTRUCT	lpReOpenBuff,
+	UINT		uStyle
+	)
 {
-   NTSTATUS errCode;
-   HANDLE FileHandle = NULL;
-   UNICODE_STRING FileNameString;
-   WCHAR FileNameW[MAX_PATH];
-   WCHAR PathNameW[MAX_PATH];
-   ULONG i;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   IO_STATUS_BLOCK IoStatusBlock;
-   WCHAR *FilePart;	
-   ULONG Len;
-   
-   if (lpReOpenBuff == NULL) 
-     {
-	return FALSE;
-     }
-     
-   i = 0;
-   while ((*lpFileName)!=0 && i < MAX_PATH)
-     {
-	FileNameW[i] = *lpFileName;
-	lpFileName++;
-	i++;
-     }
-   FileNameW[i] = 0;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING FileNameString;
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	WCHAR PathNameW[MAX_PATH];
+	HANDLE FileHandle = NULL;
+	NTSTATUS errCode;
+	PWCHAR FilePart;
+	ULONG Len;
 
-   Len = SearchPathW(NULL,FileNameW,NULL,MAX_PATH,PathNameW,&FilePart);
-   if ( Len == 0 )
-     return (HFILE)NULL;
+	if (lpReOpenBuff == NULL)
+	{
+		return FALSE;
+	}
 
-   if ( Len > MAX_PATH )
-     return (HFILE)NULL;
-   
-   FileNameString.Length = lstrlenW(PathNameW)*sizeof(WCHAR);
-   FileNameString.Buffer = PathNameW;
-   FileNameString.MaximumLength = FileNameString.Length+sizeof(WCHAR);
-   
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &FileNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
 
-   // FILE_SHARE_READ
-   // FILE_NO_INTERMEDIATE_BUFFERING
-   
-   if ((uStyle & OF_PARSE) == OF_PARSE ) 
-     return (HFILE)NULL;
-   
-   errCode = NtOpenFile(&FileHandle,
-			GENERIC_READ|SYNCHRONIZE,
-			&ObjectAttributes,
-			&IoStatusBlock,   
-			FILE_SHARE_READ,         
-			FILE_NON_DIRECTORY_FILE);
-   
-   lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
-   
-   if (!NT_SUCCESS(errCode)) 
-     {
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return (HFILE)INVALID_HANDLE_VALUE;
-     }
-   
-   return (HFILE)FileHandle;
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+	Len = SearchPathW (NULL,
+	                   FileNameU.Buffer,
+	                   NULL,
+	                   MAX_PATH,
+	                   PathNameW,
+	                   &FilePart);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+
+	if (Len == 0)
+		return (HFILE)NULL;
+
+	if (Len > MAX_PATH)
+		return (HFILE)NULL;
+
+	FileNameString.Length = lstrlenW(PathNameW) * sizeof(WCHAR);
+	FileNameString.Buffer = PathNameW;
+	FileNameString.MaximumLength = FileNameString.Length + sizeof(WCHAR);
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &FileNameString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	// FILE_SHARE_READ
+	// FILE_NO_INTERMEDIATE_BUFFERING
+
+	if ((uStyle & OF_PARSE) == OF_PARSE)
+		return (HFILE)NULL;
+
+	errCode = NtOpenFile (&FileHandle,
+	                      GENERIC_READ|SYNCHRONIZE,
+	                      &ObjectAttributes,
+	                      &IoStatusBlock,
+	                      FILE_SHARE_READ,
+	                      FILE_NON_DIRECTORY_FILE);
+
+	lpReOpenBuff->nErrCode = RtlNtStatusToDosError(errCode);
+
+	if (!NT_SUCCESS(errCode))
+	{
+		SetLastError (RtlNtStatusToDosError (errCode));
+		return (HFILE)INVALID_HANDLE_VALUE;
+	}
+
+	return (HFILE)FileHandle;
 }
 
 
@@ -123,10 +153,10 @@ WINBOOL STDCALL FlushFileBuffers(HANDLE hFile)
 {
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
-   
+
    errCode = NtFlushBuffersFile(hFile,
 				&IoStatusBlock);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return(FALSE);
@@ -152,16 +182,16 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
    Distance.u.LowPart = lDistanceToMove;
    Distance.u.HighPart = (lpDistanceToMoveHigh) ? *lpDistanceToMoveHigh : 0;
 
-   if (dwMoveMethod == FILE_CURRENT) 
+   if (dwMoveMethod == FILE_CURRENT)
      {
 	NtQueryInformationFile(hFile,
 			       &IoStatusBlock,
-			       &FilePosition, 
+			       &FilePosition,
 			       sizeof(FILE_POSITION_INFORMATION),
 			       FilePositionInformation);
         FilePosition.CurrentByteOffset.QuadPart += Distance.QuadPart;
      }
-   else if (dwMoveMethod == FILE_END) 
+   else if (dwMoveMethod == FILE_END)
      {
 	NtQueryInformationFile(hFile,
                                &IoStatusBlock,
@@ -171,17 +201,17 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
         FilePosition.CurrentByteOffset.QuadPart =
                 FileEndOfFile.EndOfFile.QuadPart - Distance.QuadPart;
      }
-   else if ( dwMoveMethod == FILE_BEGIN ) 
+   else if ( dwMoveMethod == FILE_BEGIN )
      {
         FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
      }
    
    errCode = NtSetInformationFile(hFile,
 				  &IoStatusBlock,
-				  &FilePosition, 
+				  &FilePosition,
 				  sizeof(FILE_POSITION_INFORMATION),
 				  FilePositionInformation);
-   if (!NT_SUCCESS(errCode)) 
+   if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return -1;
@@ -201,7 +231,7 @@ DWORD STDCALL GetFileType(HANDLE hFile)
 }
 
 
-DWORD STDCALL GetFileSize(HANDLE hFile,	
+DWORD STDCALL GetFileSize(HANDLE hFile,
 			  LPDWORD lpFileSizeHigh)
 {
    NTSTATUS errCode;
@@ -355,20 +385,36 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 }
 
 
-DWORD STDCALL GetFileAttributesA(LPCSTR lpFileName)
+DWORD
+STDCALL
+GetFileAttributesA (
+	LPCSTR	lpFileName
+	)
 {
-   ULONG i;
-   WCHAR FileNameW[MAX_PATH];
-   
-   i = 0;
-   while ((*lpFileName)!=0 && i < MAX_PATH)
-     {
-	FileNameW[i] = *lpFileName;
-	lpFileName++;
-	i++;
-     }
-   FileNameW[i] = 0;
-   return GetFileAttributesW(FileNameW);
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	WINBOOL Result;
+
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+	Result = GetFileAttributesW (FileNameU.Buffer);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+
+	return Result;
 }
 
 
@@ -407,20 +453,38 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
 }
 
 
-WINBOOL STDCALL SetFileAttributesA(LPCSTR lpFileName,
-				   DWORD dwFileAttributes)
+WINBOOL
+STDCALL
+SetFileAttributesA (
+	LPCSTR	lpFileName,
+	DWORD	dwFileAttributes
+	)
 {
-	ULONG i;
-	WCHAR FileNameW[MAX_PATH];
-	i = 0;
-	while ((*lpFileName)!=0 && i < MAX_PATH)
-	{
-		FileNameW[i] = *lpFileName;
-		lpFileName++;
-		i++;
-	}
-	FileNameW[i] = 0;
-	return SetFileAttributesW(FileNameW, dwFileAttributes);
+	UNICODE_STRING FileNameU;
+	ANSI_STRING FileName;
+	WINBOOL Result;
+
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+
+	Result = SetFileAttributesW (FileNameU.Buffer,
+	                             dwFileAttributes);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+
+	return Result;
 }
 
 
@@ -598,3 +662,5 @@ WINBOOL STDCALL SetEndOfFile(HANDLE hFile)
    DWORD Num;
    return WriteFile(hFile,&x,1,&Num,NULL);
 }
+
+/* EOF */

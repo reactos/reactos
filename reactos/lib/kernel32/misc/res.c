@@ -6,81 +6,99 @@
 #include <ntdll/ldr.h>
 #include <kernel32/kernel32.h>
 
+
 HRSRC
 STDCALL
-FindResourceA(
-	      HINSTANCE hModule,
-	      LPCSTR lpName,
-	      LPCSTR lpType
-	      )
+FindResourceA (
+	HINSTANCE	hModule,
+	LPCSTR		lpName,
+	LPCSTR		lpType
+	)
 {
-	return FindResourceExA(hModule,lpName,lpType,0);
+	return FindResourceExA (hModule, lpName, lpType, 0);
 }
 
 HRSRC
 STDCALL
 FindResourceExA(
-		HINSTANCE hModule,
-		LPCSTR lpType,
-		LPCSTR lpName,
-		WORD    wLanguage
-		)
+	HINSTANCE	hModule,
+	LPCSTR		lpType,
+	LPCSTR		lpName,
+	WORD		wLanguage
+	)
 {
-     WCHAR ResourceNameW[MAX_PATH];
-     WCHAR TypeNameW[MAX_PATH];
+//     WCHAR ResourceNameW[MAX_PATH];
+//     WCHAR TypeNameW[MAX_PATH];
 
-     WCHAR *ResourceName = ResourceNameW;
-     WCHAR *TypeName = TypeNameW;
+//     WCHAR *ResourceName = ResourceNameW;
+//     WCHAR *TypeName = TypeNameW;
+	UNICODE_STRING TypeU;
+	UNICODE_STRING NameU;
+	ANSI_STRING Type;
+	ANSI_STRING Name;
+	HRSRC Res;
 
-     if ( HIWORD(lpName) != 0 ) {
+	RtlInitUnicodeString (&NameU,
+	                      NULL);
+	RtlInitUnicodeString (&TypeU,
+	                      NULL);
 
-     	if (!KERNEL32_AnsiToUnicode(ResourceNameW,
-			       lpName,
-			       MAX_PATH))
-     	{
-		return NULL;
-     	}	
-     }
-     else
-	ResourceName = (WCHAR *)lpName;
+	if (HIWORD(lpName) != 0)
+	{
+		RtlInitAnsiString (&Name,
+		                   (LPSTR)lpName);
+		RtlAnsiStringToUnicodeString (&NameU,
+		                              &Name,
+		                              TRUE);
+	}
+	else
+		NameU.Buffer = (PWSTR)lpName;
 
-     if ( HIWORD(lpType) != 0 ) {
+	if (HIWORD(lpType) != 0)
+	{
+		RtlInitAnsiString (&Type,
+		                   (LPSTR)lpType);
+		RtlAnsiStringToUnicodeString (&TypeU,
+		                              &Type,
+		                              TRUE);
+	}
+	else
+		TypeU.Buffer = (PWSTR)lpType;
 
-     	if (!KERNEL32_AnsiToUnicode(TypeNameW,
-			       lpType,
-			       MAX_PATH))
-     	{
-		return NULL;
-     	}	
-     }
-     else
-	TypeName = lpType;
+	Res = FindResourceExW (hModule,
+	                       TypeU.Buffer,
+	                       NameU.Buffer,
+	                       wLanguage);
 
-     return FindResourceExW(hModule,TypeName,ResourceName,wLanguage);
-     
+	if (HIWORD(lpName) != 0)
+		RtlFreeUnicodeString (&NameU);
+
+	if (HIWORD(lpType) != 0)
+		RtlFreeUnicodeString (&TypeU);
+
+	return Res;
 }
 
 HRSRC
 STDCALL
-FindResourceW(
-    HINSTANCE hModule,
-    LPCWSTR lpName,
-    LPCWSTR lpType
-    )
+FindResourceW (
+	HINSTANCE	hModule,
+	LPCWSTR		lpName,
+	LPCWSTR		lpType
+	)
 {
-	return FindResourceExW(hModule,lpName,lpType,0);
+	return FindResourceExW (hModule, lpName, lpType, 0);
 }
 
 HRSRC
 STDCALL
-FindResourceExW(
-    HINSTANCE hModule,
-    LPCWSTR lpType,
-    LPCWSTR lpName,
-    WORD    wLanguage
-    )
+FindResourceExW (
+	HINSTANCE	hModule,
+	LPCWSTR		lpType,
+	LPCWSTR		lpName,
+	WORD		wLanguage
+	)
 {
-
 	IMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry;
 	NTSTATUS Status;
 	int i,l;
@@ -88,7 +106,6 @@ FindResourceExW(
 	
 	if ( hModule == NULL )
 		hModule = GetModuleHandle(NULL);
-
 
 	if ( HIWORD(lpName) != 0 )  {
 		if ( lpName[0] == L'#' ) {
@@ -104,8 +121,6 @@ FindResourceExW(
 
 		lpName = (LPWSTR)nName;
 	}
-		
-
 
 	if ( HIWORD(lpType) != 0 )  {
 		if ( lpType[0] == L'#' ) {
@@ -116,15 +131,12 @@ FindResourceExW(
 				if ( i < l - 1 )
 					nType*= 10;
 			}
-
 		}
 		else
 			return NULL;
 	}
 	else
 		nType = lpType;
-     	
-        
 
 	Status = LdrFindResource_U(hModule,&ResourceDataEntry,lpName, nType,wLanguage);
 	if ( !NT_SUCCESS(Status ) ) {
@@ -134,27 +146,27 @@ FindResourceExW(
 	return ResourceDataEntry;
 }
 
-
 HGLOBAL
 STDCALL
-LoadResource(
-	     HINSTANCE hModule,
-	     HRSRC hResInfo
-	     )
+LoadResource (
+	HINSTANCE	hModule,
+	HRSRC		hResInfo
+	)
 {
 	void **Data;
-	Data = HeapAlloc(GetProcessHeap(),0,sizeof(void *));
 
-	LdrAccessResource(hModule, hResInfo, Data);
+	Data = HeapAlloc (GetProcessHeap (), 0, sizeof(void *));
+	LdrAccessResource (hModule, hResInfo, Data);
+
 	return *Data;
 }
 
 DWORD
 STDCALL
-SizeofResource(
-	       HINSTANCE hModule,
-	       HRSRC hResInfo
-	       )
+SizeofResource (
+	HINSTANCE	hModule,
+	HRSRC		hResInfo
+	)
 {
 	return ((PIMAGE_RESOURCE_DATA_ENTRY)hResInfo)->Size;
 }
@@ -165,7 +177,7 @@ FreeResource (
 	HGLOBAL	hResData
 	)
 {
-	HeapFree(GetProcessHeap(),0,&hResData);
+	HeapFree (GetProcessHeap (), 0, &hResData);
 	return TRUE;
 }
 
@@ -178,5 +190,4 @@ LockResource (
 	return hResData;
 }
 
-
-
+/* EOF */

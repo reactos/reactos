@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.24 2000/02/18 00:49:39 ekohl Exp $
+/* $Id: dir.c,v 1.25 2000/03/15 18:28:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,294 +27,278 @@
 
 /* FUNCTIONS *****************************************************************/
 
-WINBOOL STDCALL CreateDirectoryA(LPCSTR lpPathName,
-				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+WINBOOL
+STDCALL
+CreateDirectoryA (
+	LPCSTR			lpPathName,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
+	)
 {
-   return CreateDirectoryExA(NULL,lpPathName,lpSecurityAttributes);
+	return CreateDirectoryExA (NULL,
+	                           lpPathName,
+	                           lpSecurityAttributes);
 }
 
-WINBOOL STDCALL CreateDirectoryExA(LPCSTR lpTemplateDirectory,
-				   LPCSTR lpNewDirectory,
-				   LPSECURITY_ATTRIBUTES lpSecurityAttributes)
+WINBOOL
+STDCALL
+CreateDirectoryExA (
+	LPCSTR			lpTemplateDirectory,
+	LPCSTR			lpNewDirectory,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes)
 {
-   WCHAR TemplateDirectoryW[MAX_PATH];
-   WCHAR NewDirectoryW[MAX_PATH];
-   ULONG i;
+	UNICODE_STRING TmplDirU;
+	UNICODE_STRING NewDirU;
+	ANSI_STRING TmplDir;
+	ANSI_STRING NewDir;
+	WINBOOL Result;
 
-   DPRINT("lpTemplateDirectory %s lpNewDirectory %s lpSecurityAttributes %p\n",
-          lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
+	RtlInitUnicodeString (&TmplDirU,
+	                      NULL);
 
-   if (lpTemplateDirectory)
-     {
-        i = 0;
-        while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
-          {
-             TemplateDirectoryW[i] = *lpTemplateDirectory;
-             lpTemplateDirectory++;
-             i++;
-          }
-        TemplateDirectoryW[i] = 0;
-     }
-   DPRINT ("\n");
+	RtlInitUnicodeString (&NewDirU,
+	                      NULL);
 
-   if (lpNewDirectory)
-     {
-        i = 0;
-        while ((*lpNewDirectory)!=0 && i < MAX_PATH)
-          {
-             NewDirectoryW[i] = *lpNewDirectory;
-             lpNewDirectory++;
-             i++;
-          }
-        NewDirectoryW[i] = 0;
-     }
-   DPRINT ("\n");
-
-   return CreateDirectoryExW(lpTemplateDirectory?TemplateDirectoryW:NULL,
-                             lpNewDirectory?NewDirectoryW:NULL,
-                             lpSecurityAttributes);
-}
-
-
-WINBOOL STDCALL CreateDirectoryW(LPCWSTR lpPathName, 
-				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
-{
-   return CreateDirectoryExW(NULL,lpPathName,lpSecurityAttributes);
-}
-
-WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
-				   LPCWSTR lpNewDirectory,
-				   LPSECURITY_ATTRIBUTES lpSecurityAttributes)
-{
-   NTSTATUS errCode;
-   HANDLE DirectoryHandle;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING DirectoryNameString;
-   IO_STATUS_BLOCK IoStatusBlock;
-   WCHAR PathNameW[MAX_PATH];
-   WCHAR DirectoryNameW[MAX_PATH];
-   UINT Len = 0;
-
-   DPRINT("lpTemplateDirectory %S lpNewDirectory %S lpSecurityAttributes %p\n",
-           lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
-
-   if ( lpTemplateDirectory != NULL && *lpTemplateDirectory != 0 )
-     {
-	// get object attributes from template directory
-	DPRINT("KERNEL32:FIXME:%s:%d\n",__FILE__,__LINE__);
-	return(FALSE);
-     }
-
-   if (lpNewDirectory[1] == (WCHAR)':') 
-     {
-        wcscpy(PathNameW, lpNewDirectory);
-     }
-   else if (wcslen(lpNewDirectory) > 4 &&
-            lpNewDirectory[0] == (WCHAR)'\\' &&
-            lpNewDirectory[1] == (WCHAR)'\\' &&
-            lpNewDirectory[2] == (WCHAR)'.' &&
-            lpNewDirectory[3] == (WCHAR)'\\')
-     {
-        wcscpy(PathNameW, lpNewDirectory);
-     }
-   else if (lpNewDirectory[0] == (WCHAR)'\\')
-     {
-	GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	PathNameW[3] = 0;
-	wcscat(PathNameW, lpNewDirectory);
-     }
-   else
-     {
-	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	if ( Len == 0 )
-	  return FALSE;
-	if ( PathNameW[Len-1] != L'\\' ) {
-	   PathNameW[Len] = L'\\';
-	   PathNameW[Len+1] = 0;
-	}
-        wcscat(PathNameW,lpNewDirectory);
-     }
-
-   DirectoryNameW[0] = '\\';
-   DirectoryNameW[1] = '?';
-   DirectoryNameW[2] = '?';
-   DirectoryNameW[3] = '\\';
-   DirectoryNameW[4] = 0;
-   wcscat(DirectoryNameW,PathNameW);
-
-   DirectoryNameString.Length = wcslen (DirectoryNameW)*sizeof(WCHAR);
-
-   if ( DirectoryNameString.Length == 0 )
-	return FALSE;
-
-   if ( DirectoryNameString.Length > MAX_PATH*sizeof(WCHAR) )
-	return FALSE;
-
-   DirectoryNameString.Buffer = (WCHAR *)DirectoryNameW;
-   DirectoryNameString.MaximumLength = DirectoryNameString.Length + sizeof(WCHAR);
-
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &DirectoryNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-
-   errCode = NtCreateFile(&DirectoryHandle,
-			  DIRECTORY_ALL_ACCESS,
-			  &ObjectAttributes,
-			  &IoStatusBlock,
-			  NULL,
-			  FILE_ATTRIBUTE_DIRECTORY,
-			  0,
-			  FILE_CREATE,
-			  FILE_DIRECTORY_FILE,
-			  NULL,
-			  0);
-   DPRINT("errCode: %x\n", errCode);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
-
-   NtClose(DirectoryHandle);
-
-   return TRUE;
-}
-
-WINBOOL STDCALL RemoveDirectoryA(LPCSTR lpPathName)
-{
-	WCHAR PathNameW[MAX_PATH];
-	ULONG i;
-	i = 0;
-	while ((*lpPathName)!=0 && i < MAX_PATH)
+	if (lpTemplateDirectory != NULL)
 	{
-		PathNameW[i] = *lpPathName;
-		lpPathName++;
-		i++;
+		RtlInitAnsiString (&TmplDir,
+		                   (LPSTR)lpTemplateDirectory);
+
+		/* convert ansi (or oem) string to unicode */
+		if (bIsFileApiAnsi)
+			RtlAnsiStringToUnicodeString (&TmplDirU,
+			                              &TmplDir,
+			                              TRUE);
+		else
+			RtlOemStringToUnicodeString (&TmplDirU,
+			                             &TmplDir,
+			                             TRUE);
 	}
-	PathNameW[i] = 0;
-	return RemoveDirectoryW(PathNameW);
+
+	if (lpNewDirectory != NULL)
+	{
+		RtlInitAnsiString (&NewDir,
+		                   (LPSTR)lpNewDirectory);
+
+		/* convert ansi (or oem) string to unicode */
+		if (bIsFileApiAnsi)
+			RtlAnsiStringToUnicodeString (&NewDirU,
+			                              &NewDir,
+			                              TRUE);
+		else
+			RtlOemStringToUnicodeString (&NewDirU,
+			                             &NewDir,
+			                             TRUE);
+	}
+
+	Result = CreateDirectoryExW (TmplDirU.Buffer,
+	                             NewDirU.Buffer,
+	                             lpSecurityAttributes);
+
+	if (lpTemplateDirectory != NULL)
+		RtlFreeHeap (RtlGetProcessHeap (),
+		             0,
+		             TmplDirU.Buffer);
+
+	if (lpNewDirectory != NULL)
+		RtlFreeHeap (RtlGetProcessHeap (),
+		             0,
+		             NewDirU.Buffer);
+
+	return Result;
 }
 
 
-WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
+WINBOOL
+STDCALL
+CreateDirectoryW (
+	LPCWSTR			lpPathName,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
+	)
 {
-   NTSTATUS errCode;
-   HANDLE DirectoryHandle;
-   IO_STATUS_BLOCK IoStatusBlock;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING DirectoryNameString;
-   WCHAR PathNameW[MAX_PATH];
-   WCHAR DirectoryNameW[MAX_PATH];
-   FILE_DISPOSITION_INFORMATION FileDispInfo;
-   UINT Len = 0;
-   
-   DPRINT("lpPathName %S\n",
-           lpPathName);
+	return CreateDirectoryExW (NULL,
+	                           lpPathName,
+	                           lpSecurityAttributes);
+}
 
-   if (lpPathName[1] == (WCHAR)':') 
-     {
-        wcscpy(PathNameW, lpPathName);
-     }
-   else if (wcslen(lpPathName) > 4 &&
-            lpPathName[0] == (WCHAR)'\\' &&
-            lpPathName[1] == (WCHAR)'\\' &&
-            lpPathName[2] == (WCHAR)'.' &&
-            lpPathName[3] == (WCHAR)'\\')
-     {
-        wcscpy(PathNameW, lpPathName);
-     }
-   else if (lpPathName[0] == (WCHAR)'\\')
-     {
-	GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	wcscpy (&PathNameW[2], lpPathName);
-     }
-   else
-     {
-	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
-	if ( Len == 0 )
-	  return FALSE;
-	if ( PathNameW[Len-1] != L'\\' ) {
-	   PathNameW[Len] = L'\\';
-	   PathNameW[Len+1] = 0;
+
+WINBOOL
+STDCALL
+CreateDirectoryExW (
+	LPCWSTR			lpTemplateDirectory,
+	LPCWSTR			lpNewDirectory,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
+	)
+{
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING NtPathU;
+	HANDLE DirectoryHandle;
+	NTSTATUS Status;
+
+	DPRINT ("lpTemplateDirectory %S lpNewDirectory %S lpSecurityAttributes %p\n",
+	        lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
+
+	if (lpTemplateDirectory != NULL && *lpTemplateDirectory != 0)
+	{
+		// get object attributes from template directory
+		DPRINT("KERNEL32:FIXME:%s:%d\n",__FILE__,__LINE__);
+		return FALSE;
 	}
-        wcscat(PathNameW,lpPathName);
-     }
 
-   DirectoryNameW[0] = '\\';
-   DirectoryNameW[1] = '?';
-   DirectoryNameW[2] = '?';
-   DirectoryNameW[3] = '\\';
-   DirectoryNameW[4] = 0;
-   wcscat(DirectoryNameW,PathNameW);
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewDirectory,
+	                                   &NtPathU,
+	                                   NULL,
+	                                   NULL))
+		return FALSE;
 
-   DirectoryNameString.Length = wcslen (DirectoryNameW)*sizeof(WCHAR);
+	DPRINT1 ("NtPathU \'%wZ\'\n", &NtPathU);
 
-   if ( DirectoryNameString.Length == 0 )
-        return FALSE;
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &NtPathU;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
 
-   if ( DirectoryNameString.Length > MAX_PATH*sizeof(WCHAR) )
-        return FALSE;
+	Status = NtCreateFile (&DirectoryHandle,
+	                       DIRECTORY_ALL_ACCESS,
+	                       &ObjectAttributes,
+	                       &IoStatusBlock,
+	                       NULL,
+	                       FILE_ATTRIBUTE_DIRECTORY,
+	                       0,
+	                       FILE_CREATE,
+	                       FILE_DIRECTORY_FILE,
+	                       NULL,
+	                       0);
+	DPRINT("Status: %lx\n", Status);
 
-   DirectoryNameString.Buffer = (WCHAR *)DirectoryNameW;
-   DirectoryNameString.MaximumLength = DirectoryNameString.Length + sizeof(WCHAR);
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             NtPathU.Buffer);
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &DirectoryNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError(RtlNtStatusToDosError(Status));
+		return FALSE;
+	}
 
-   DPRINT("DirectoryNameW '%S'\n", DirectoryNameW);
+	NtClose (DirectoryHandle);
 
-   errCode = NtCreateFile(&DirectoryHandle,
-                          FILE_WRITE_ATTRIBUTES,    /* 0x110080 */
-			  &ObjectAttributes,
-			  &IoStatusBlock,
-			  NULL,
-                          FILE_ATTRIBUTE_DIRECTORY, /* 0x7 */
-			  0,
-                          FILE_OPEN,
-                          FILE_DIRECTORY_FILE,      /* 0x204021 */
-			  NULL,
-			  0);
+	return TRUE;
+}
 
-   if (!NT_SUCCESS(errCode))
-     {
-        CHECKPOINT;
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
 
-   FileDispInfo.DeleteFile = TRUE;
+WINBOOL
+STDCALL
+RemoveDirectoryA (
+	LPCSTR	lpPathName
+	)
+{
+	UNICODE_STRING PathNameU;
+	ANSI_STRING PathName;
+	WINBOOL Result;
 
-   errCode = NtSetInformationFile(DirectoryHandle,
-                                  &IoStatusBlock,
-                                  &FileDispInfo,
-                                  sizeof(FILE_DISPOSITION_INFORMATION),
-                                  FileDispositionInformation);
+	RtlInitAnsiString (&PathName,
+	                   (LPSTR)lpPathName);
 
-   if (!NT_SUCCESS(errCode))
-     {
-        CHECKPOINT;
-        NtClose(DirectoryHandle);
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&PathNameU,
+		                              &PathName,
+		                              TRUE);
+	else
+		RtlOemStringToUnicodeString (&PathNameU,
+		                             &PathName,
+		                             TRUE);
 
-   errCode = NtClose(DirectoryHandle);
+	Result = RemoveDirectoryW (PathNameU.Buffer);
 
-   if (!NT_SUCCESS(errCode))
-     {
-        CHECKPOINT;
-	SetLastError(RtlNtStatusToDosError(errCode));
-	return FALSE;
-     }
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             PathNameU.Buffer);
 
-   return TRUE;
+	return Result;
+}
+
+
+WINBOOL
+STDCALL
+RemoveDirectoryW (
+	LPCWSTR	lpPathName
+	)
+{
+	FILE_DISPOSITION_INFORMATION FileDispInfo;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	IO_STATUS_BLOCK IoStatusBlock;
+	UNICODE_STRING NtPathU;
+	HANDLE DirectoryHandle;
+	NTSTATUS Status;
+
+	DPRINT("lpPathName %S\n", lpPathName);
+
+	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpPathName,
+	                                   &NtPathU,
+	                                   NULL,
+	                                   NULL))
+		return FALSE;
+
+	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+	ObjectAttributes.RootDirectory = NULL;
+	ObjectAttributes.ObjectName = &NtPathU;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+	ObjectAttributes.SecurityDescriptor = NULL;
+	ObjectAttributes.SecurityQualityOfService = NULL;
+
+	DPRINT("NtPathU '%S'\n", NtPathU.Buffer);
+
+	Status = NtCreateFile (&DirectoryHandle,
+	                       FILE_WRITE_ATTRIBUTES,    /* 0x110080 */
+	                       &ObjectAttributes,
+	                       &IoStatusBlock,
+	                       NULL,
+	                       FILE_ATTRIBUTE_DIRECTORY, /* 0x7 */
+	                       0,
+	                       FILE_OPEN,
+	                       FILE_DIRECTORY_FILE,      /* 0x204021 */
+	                       NULL,
+	                       0);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             NtPathU.Buffer);
+
+	if (!NT_SUCCESS(Status))
+	{
+		CHECKPOINT;
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	FileDispInfo.DeleteFile = TRUE;
+
+	Status = NtSetInformationFile (DirectoryHandle,
+	                               &IoStatusBlock,
+	                               &FileDispInfo,
+	                               sizeof(FILE_DISPOSITION_INFORMATION),
+	                               FileDispositionInformation);
+	if (!NT_SUCCESS(Status))
+	{
+		CHECKPOINT;
+		NtClose(DirectoryHandle);
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	Status = NtClose (DirectoryHandle);
+	if (!NT_SUCCESS(Status))
+	{
+		CHECKPOINT;
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
 }
 
 
@@ -341,14 +325,9 @@ GetFullPathNameA (
 	RtlInitAnsiString (&FileName,
 	                   (LPSTR)lpFileName);
 
-	if (bIsFileApiAnsi)
-		RtlAnsiStringToUnicodeString (&FileNameU,
-		                              &FileName,
-		                              TRUE);
-	else
-		RtlOemStringToUnicodeString (&FileNameU,
-		                             &FileName,
-		                             TRUE);
+	RtlAnsiStringToUnicodeString (&FileNameU,
+	                              &FileName,
+	                              TRUE);
 
 	BufferLength = nBufferLength * sizeof(WCHAR);
 
@@ -369,15 +348,9 @@ GetFullPathNameA (
 	FullName.Length = 0;
 	FullName.Buffer = lpBuffer;
 
-	/* convert unicode to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&FullName,
-		                              &FullNameU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&FullName,
-		                             &FullNameU,
-		                             FALSE);
+	RtlUnicodeStringToAnsiString (&FullName,
+	                              &FullNameU,
+	                              FALSE);
 
 	if (lpFilePart != NULL)
 	{
@@ -424,14 +397,14 @@ GetFullPathNameW (
 
 DWORD
 STDCALL
-GetShortPathNameA(
-		  LPCSTR lpszLongPath,
-		  LPSTR  lpszShortPath,
-		  DWORD    cchBuffer
-		  )
+GetShortPathNameA (
+	LPCSTR	lpszLongPath,
+	LPSTR	lpszShortPath,
+	DWORD	cchBuffer
+	)
 {
 	//1 remove unicode chars and spaces
-	//2 remove preceding and trailing periods. 
+	//2 remove preceding and trailing periods.
 	//3 remove embedded periods except the last one
 	
 	//4 Split the string in two parts before and after the period
@@ -441,81 +414,134 @@ GetShortPathNameA(
 	
 	//4 Increment the ~1 string if the resulting name allready exists
 
+	return 0;
 }
+
 
 DWORD
 STDCALL
-GetShortPathNameW(
-    LPCWSTR lpszLongPath,
-    LPWSTR  lpszShortPath,
-    DWORD    cchBuffer
-    )
+GetShortPathNameW (
+	LPCWSTR	lpszLongPath,
+	LPWSTR	lpszShortPath,
+	DWORD	cchBuffer
+	)
 {
-
+	return 0;
 }
+
 
 DWORD
 STDCALL
-SearchPathA(
-    LPCSTR lpPath,
-    LPCSTR lpFileName,
-    LPCSTR lpExtension,
-    DWORD nBufferLength,
-    LPSTR lpBuffer,
-    LPSTR *lpFilePart
-    )
+SearchPathA (
+	LPCSTR	lpPath,
+	LPCSTR	lpFileName,
+	LPCSTR	lpExtension,
+	DWORD	nBufferLength,
+	LPSTR	lpBuffer,
+	LPSTR	*lpFilePart
+	)
 {
-	WCHAR PathW[MAX_PATH];
-	WCHAR FileNameW[MAX_PATH];
-	WCHAR ExtensionW[MAX_PATH];
-
-	WCHAR BufferW[MAX_PATH];
-	WCHAR *FilePartW;
-
-	ULONG i;
+	UNICODE_STRING PathU;
+	UNICODE_STRING FileNameU;
+	UNICODE_STRING ExtensionU;
+	UNICODE_STRING BufferU;
+	ANSI_STRING Path;
+	ANSI_STRING FileName;
+	ANSI_STRING Extension;
+	ANSI_STRING Buffer;
+	PWCHAR FilePartW;
 	DWORD RetValue;
 
-	i = 0;
-	while ((*lpPath)!=0 && i < MAX_PATH)
+	RtlInitAnsiString (&Path,
+	                   (LPSTR)lpPath);
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+	RtlInitAnsiString (&Extension,
+	                   (LPSTR)lpExtension);
+
+	/* convert ansi (or oem) strings to unicode */
+	if (bIsFileApiAnsi)
 	{
-		PathW[i] = *lpPath;
-		lpPath++;
-		i++;
+		RtlAnsiStringToUnicodeString (&PathU,
+		                              &Path,
+		                              TRUE);
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
+		RtlAnsiStringToUnicodeString (&ExtensionU,
+		                              &Extension,
+		                              TRUE);
 	}
-	PathW[i] = 0;
-
-	i = 0;
-	while ((*lpFileName)!=0 && i < MAX_PATH)
+	else
 	{
-		FileNameW[i] = *lpFileName;
-		lpFileName++;
-		i++;
+		RtlOemStringToUnicodeString (&PathU,
+		                             &Path,
+		                             TRUE);
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
+		RtlOemStringToUnicodeString (&ExtensionU,
+		                             &Extension,
+		                             TRUE);
 	}
-	FileNameW[i] = 0;
 
-	i = 0;
-	while ((*lpExtension)!=0 && i < MAX_PATH)
-	{
-		ExtensionW[i] = *lpExtension;
-		lpExtension++;
-		i++;
-	}
-	ExtensionW[i] = 0;
+	BufferU.Length = 0;
+	BufferU.MaximumLength = nBufferLength * sizeof(WCHAR);
+	BufferU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                  0,
+	                                  BufferU.MaximumLength);
 
-	RetValue = SearchPathW(PathW,FileNameW,ExtensionW,nBufferLength,BufferW,&FilePartW);
-	for(i=0;i<nBufferLength;i++)
-		lpBuffer[i] = (char)BufferW[i];
+	Buffer.Length = 0;
+	Buffer.MaximumLength = nBufferLength;
+	Buffer.Buffer = lpBuffer;
 
-	*lpFilePart = strrchr(lpBuffer,'\\')+1;
+	RetValue = SearchPathW (PathU.Buffer,
+	                        FileNameU.Buffer,
+	                        ExtensionU.Buffer,
+	                        nBufferLength,
+	                        BufferU.Buffer,
+	                        &FilePartW);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             PathU.Buffer);
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FileNameU.Buffer);
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             ExtensionU.Buffer);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&Buffer,
+		                              &BufferU,
+		                              FALSE);
+	else
+		RtlUnicodeStringToOemString (&Buffer,
+		                             &BufferU,
+		                             FALSE);
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             BufferU.Buffer);
+
+	*lpFilePart = strrchr (lpBuffer, '\\') + 1;
+
 	return RetValue;
 }
 
-DWORD STDCALL SearchPathW(LPCWSTR lpPath,
-			  LPCWSTR lpFileName,
-			  LPCWSTR lpExtension,
-			  DWORD nBufferLength,
-			  LPWSTR lpBuffer,
-			  LPWSTR *lpFilePart)
+
+DWORD
+STDCALL
+SearchPathW (
+	LPCWSTR	lpPath,
+	LPCWSTR	lpFileName,
+	LPCWSTR	lpExtension,
+	DWORD	nBufferLength,
+	LPWSTR	lpBuffer,
+	LPWSTR	*lpFilePart
+	)
 /*
  * FUNCTION: Searches for the specified file
  * ARGUMENTS:

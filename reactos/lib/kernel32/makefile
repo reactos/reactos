@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.30 2000/02/13 16:05:12 dwelch Exp $
+# $Id: makefile,v 1.31 2000/03/15 18:28:34 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -63,7 +63,7 @@ PROCESS_OBJECTS = process/proc.o process/cmdline.o process/create.o \
 
 STRING_OBJECTS = string/lstring.o
 
-INTERNAL_OBJECTS = internal/dprintf.o internal/string.o
+INTERNAL_OBJECTS = internal/dprintf.o
 
 EXCEPT_OBJECTS = except/except.o
 

@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.9 2000/01/11 17:31:22 ekohl Exp $
+/* $Id: section.c,v 1.10 2000/03/15 18:30:14 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -55,6 +55,7 @@ HANDLE STDCALL CreateFileMappingA (
 			    flProtect,
 			    0,
 			    hFile);
+   RtlFreeUnicodeString (&UnicodeName);
    if (!NT_SUCCESS(Status))
      {
 	SetLastError(RtlNtStatusToDosError(Status));
@@ -163,14 +164,12 @@ LPVOID STDCALL MapViewOfFileEx(HANDLE	hFileMappingObject,
 			ViewShare,
 			0,
 			Protect);
-			
-			
 
 	if (!NT_SUCCESS(Status))
-		{
+	{
 		SetLastError(RtlNtStatusToDosError(Status));
 		return NULL;
-		}
+	}
 
 	return BaseAddress;
 }
@@ -231,7 +230,6 @@ OpenFileMappingA (
    RtlInitAnsiString(&AnsiName, (LPSTR)lpName);
    RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
 
-
    InitializeObjectAttributes(&ObjectAttributes,
 			      &UnicodeName,
 			      Attributes,
@@ -241,11 +239,12 @@ OpenFileMappingA (
 			    SECTION_ALL_ACCESS,
 			    &ObjectAttributes
 		);
+	RtlFreeUnicodeString (&UnicodeName);
 	if (!NT_SUCCESS(Status))
-		{
+	{
 		SetLastError(RtlNtStatusToDosError(Status));
 		return NULL;
-		}
+	}
 
 	return SectionHandle;
 }
