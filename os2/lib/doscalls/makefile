@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2002/03/24 18:52:10 ea Exp $
+# $Id: makefile,v 1.3 2002/05/30 15:11:46 robertk Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -21,7 +21,7 @@ TARGET_OBJECTS = $(TARGET_NAME).o
 TARGET_CLEAN = file/*.o vio/*.o sync/*.o mem/*.o \
 				misc/*.o mou/*.o kbd/*.o run/*.o
 
-DOSCALLS_MISC_OBJECTS = misc/doscalls.o
+DOSCALLS_MISC_OBJECTS = misc/doscalls.o file/openclose.o run/process.o devices/devices.o
 
 #SYNC_OBJECTS =
 

@@ -1,4 +1,4 @@
-/* $Id: doscalls.h,v 1.3 2002/03/24 18:55:39 ea Exp $
+/* $Id: doscalls.h,v 1.4 2002/05/30 15:11:46 robertk Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS OS/2 sub system
@@ -11,7 +11,6 @@
 
 
 
-#include "os2def.h"
 
 
 // FIXME: use ib headers

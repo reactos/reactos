@@ -1,6 +1,6 @@
 
-
-#include "../../dll/doscalls/doscalls.h"
+#define INCL_DOSPROCESS
+#include "../../include/os2.h"
 
 void Eingang()
 {
