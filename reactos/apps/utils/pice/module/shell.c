@@ -504,7 +504,7 @@ void DebuggerShell(void)
 							PICE_memset(&ucCommandBuffer,0,sizeof(ucCommandBuffer));
 							// copy the found command into command buffer
 							PICE_strcpy(ucCommandBuffer,pCmd);
-							strcat(ucCommandBuffer," ");
+							PICE_strcat(ucCommandBuffer," ");
 							usCurrentPosInInputBuffer = PICE_strlen(ucCommandBuffer);
 							Print(OUTPUT_WINDOW,ucCommandBuffer);
 						}
@@ -663,7 +663,7 @@ void DebuggerShell(void)
                                 // source window up
                                 else if(bControl)
                                 {
-                                    if((ulCurrentlyDisplayedLineNumber-1)>0 && strlen(szCurrentFile) )
+                                    if((ulCurrentlyDisplayedLineNumber-1)>0 && PICE_strlen(szCurrentFile) )
                                     {
                                         PICE_SYMBOLFILE_SOURCE* pSrc;
 
@@ -706,7 +706,7 @@ void DebuggerShell(void)
                                             PICE_sprintf(tempShell,":");
                                             ReplaceRingBufferCurrent(tempShell);
                         					PICE_memset(&ucCommandBuffer,0,sizeof(ucCommandBuffer));
-                                            strcpy(ucCommandBuffer,pCurrentCmd);
+                                            PICE_strcpy(ucCommandBuffer,pCurrentCmd);
             							    usCurrentPosInInputBuffer=len;
                                             Print(OUTPUT_WINDOW,pCurrentCmd);
                                         }
@@ -744,7 +744,7 @@ void DebuggerShell(void)
                                 // source window down
                                 else if(bControl)
                                 {
-                                    if(ulCurrentlyDisplayedLineNumber>0 && strlen(szCurrentFile))
+                                    if(ulCurrentlyDisplayedLineNumber>0 && PICE_strlen(szCurrentFile))
                                     {
                                         PICE_SYMBOLFILE_SOURCE* pSrc;
 
@@ -784,7 +784,7 @@ void DebuggerShell(void)
                                             PICE_sprintf(tempShell,":");
                                             ReplaceRingBufferCurrent(tempShell);
                              				PICE_memset(&ucCommandBuffer,0,sizeof(ucCommandBuffer));
-                                            strcpy(ucCommandBuffer,pCurrentCmd);
+                                            PICE_strcpy(ucCommandBuffer,pCurrentCmd);
             							    usCurrentPosInInputBuffer=len;
                                             Print(OUTPUT_WINDOW,pCurrentCmd);
                                         }
@@ -875,7 +875,7 @@ void DebuggerShell(void)
                                 // source window page up
                                 else if(bControl)
                                 {
-                                    if(strlen(szCurrentFile))
+                                    if(PICE_strlen(szCurrentFile))
                                     {
                                         if((ulCurrentlyDisplayedLineNumber-wWindow[SOURCE_WINDOW].cy)>0)
                                         {
@@ -945,7 +945,7 @@ void DebuggerShell(void)
                                 }
                                 else if(bControl)
                                 {
-                                    if(strlen(szCurrentFile) )
+                                    if(PICE_strlen(szCurrentFile) )
                                     {
                                         if((ulCurrentlyDisplayedLineNumber+wWindow[SOURCE_WINDOW].cy)>0)
                                         {

@@ -437,7 +437,7 @@ BOOLEAN PrintRingBufferOffset(ULONG ulLines,ULONG ulOffset)
         ClrLine(wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy-1);
         wWindow[OUTPUT_WINDOW].usCurY = wWindow[OUTPUT_WINDOW].cy-1;
 		Print(OUTPUT_WINDOW_UNBUFFERED,aBuffers[ulInPos]);
-    	wWindow[OUTPUT_WINDOW].usCurX = strlen(aBuffers[ulInPos])+1;
+    	wWindow[OUTPUT_WINDOW].usCurX = PICE_strlen(aBuffers[ulInPos])+1;
     }
 
 //    LEAVE_FUNC();
@@ -489,7 +489,7 @@ BOOLEAN PrintRingBufferHome(ULONG ulLines)
         ClrLine(wWindow[OUTPUT_WINDOW].y+wWindow[OUTPUT_WINDOW].cy-1);
         wWindow[OUTPUT_WINDOW].usCurY = wWindow[OUTPUT_WINDOW].cy-1;
 		Print(OUTPUT_WINDOW_UNBUFFERED,aBuffers[ulInPos]);
-    	wWindow[OUTPUT_WINDOW].usCurX = strlen(aBuffers[ulInPos])+1;
+    	wWindow[OUTPUT_WINDOW].usCurX = PICE_strlen(aBuffers[ulInPos])+1;
     }
     
 //    LEAVE_FUNC();

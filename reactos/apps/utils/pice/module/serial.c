@@ -369,10 +369,10 @@ void FlushSerial(void)
     pPrint->fgcol = eForegroundColor;
     pPrint->bkcol = eBackgroundColor;
     flush_buffer[ulFlushBufferPos++] = 0;
-    strcpy(pPrint->string,flush_buffer);
+    PICE_strcpy(pPrint->string,flush_buffer);
     ulFlushBufferPos = 0;
 
-    p = AssemblePacket((PUCHAR)pPrint,sizeof(SERIAL_DATA_PACKET_PRINT)+strlen(flush_buffer));
+    p = AssemblePacket((PUCHAR)pPrint,sizeof(SERIAL_DATA_PACKET_PRINT)+PICE_strlen(flush_buffer));
     SendPacket(p);
 }
 

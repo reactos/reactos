@@ -108,7 +108,7 @@ BOOLEAN DebugSendByte(UCHAR x)
 ///************************************************************************
 void DebugSendString(LPSTR s)
 {
-    ULONG len = strlen(s),i;
+    ULONG len = PICE_strlen(s),i;
 
     for(i=0;i<len;i++)
     {

@@ -60,7 +60,7 @@ typedef struct _FRAME
 {\
 	if(wait && WaitForKey()==FALSE)\
 		return TRUE;\
-	sprintf(tempCmd,#field" = %.8x\n",ptr->##field);\
+	PICE_sprintf(tempCmd,#field" = %.8x\n",ptr->##field);\
 	Print(OUTPUT_WINDOW,tempCmd);\
 }
 

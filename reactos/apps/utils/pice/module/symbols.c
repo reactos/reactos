@@ -162,7 +162,7 @@ nomatch:
 				case 1:
 					break;
 				case 2:
-					if(strcmp(p,pFind)!=0)
+					if(PICE_strcmp(p,pFind)!=0)
 					{
 						pExp = pOldStr+1;	
 						goto nomatch;
@@ -1004,14 +1004,14 @@ LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG 
                 nNextOffset = pStab->n_value;
                 break;
             case N_SO:
-                if((nLen = strlen(pName)))
+                if((nLen = PICE_strlen(pName)))
                 {
                     if(pName[nLen-1]!='/')
                     {
 						ulCurrentFileNumber++;
-                        if(strlen(szCurrentPath))
+                        if(PICE_strlen(szCurrentPath))
                         {
-                            strcat(szCurrentPath,pName);
+                            PICE_strcat(szCurrentPath,pName);
                             DPRINT((0,"FindTypeDefinitionForCombinedTypes(): changing source file %s\n",szCurrentPath));
                         }
                         else
@@ -1035,26 +1035,26 @@ LPSTR FindTypeDefinitionForCombinedTypes(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG 
 					// handle multi-line symbols
 					if(PICE_strchr(pName,'\\'))
 					{
-						if(strlen(szAccumulatedName))
+						if(PICE_strlen(szAccumulatedName))
 						{
-							strcat(szAccumulatedName,pName);
+							PICE_strcat(szAccumulatedName,pName);
 						}
 						else
 						{
 							PICE_strcpy(szAccumulatedName,pName);
 						}
-                        szAccumulatedName[strlen(szAccumulatedName)-1]=0;
+                        szAccumulatedName[PICE_strlen(szAccumulatedName)-1]=0;
                         //DPRINT((0,"accum. %s\n",szAccumulatedName));
 					}
                     else
                     {
-						if(strlen(szAccumulatedName)==0)
+						if(PICE_strlen(szAccumulatedName)==0)
                         {
                             PICE_strcpy(szAccumulatedName,pName);
                         }
                         else
                         {
-                            strcat(szAccumulatedName,pName);
+                            PICE_strcat(szAccumulatedName,pName);
                         }
                         pNameTemp = szAccumulatedName;
 
@@ -1120,14 +1120,14 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
                 nNextOffset = pStab->n_value;
                 break;
             case N_SO:
-                if((strLen = strlen(pName)))
+                if((strLen = PICE_strlen(pName)))
                 {
                     if(pName[strLen-1]!='/')
                     {
 						ulCurrentFileNumber++;
-                        if(strlen(szCurrentPath))
+                        if(PICE_strlen(szCurrentPath))
                         {
-                            strcat(szCurrentPath,pName);
+                            PICE_strcat(szCurrentPath,pName);
                             DPRINT((0,"FindTypeDefinition(): changing source file %s\n",szCurrentPath));
                         }
                         else
@@ -1151,9 +1151,9 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 					// handle multi-line symbols
 					if(strrchr(pName,'\\'))
 					{
-						if(strlen(szAccumulatedName))
+						if(PICE_strlen(szAccumulatedName))
 						{
-							strcat(szAccumulatedName,pName);
+							PICE_strcat(szAccumulatedName,pName);
                             DPRINT((0,"FindTypeDefinition(): [1] accum. %s\n",szAccumulatedName));
 						}
 						else
@@ -1161,18 +1161,18 @@ LPSTR FindTypeDefinition(PICE_SYMBOLFILE_HEADER* pSymbols,ULONG ulTypeNumber,ULO
 							PICE_strcpy(szAccumulatedName,pName);
                             DPRINT((0,"FindTypeDefinition(): [2] accum. %s\n",szAccumulatedName));
 						}
-                        szAccumulatedName[strlen(szAccumulatedName)-1]=0;
+                        szAccumulatedName[PICE_strlen(szAccumulatedName)-1]=0;
 					}
 					else
 					{
                         DPRINT((0,"FindTypeDefinition(): [3] accum. %s\n",szAccumulatedName));
-						if(strlen(szAccumulatedName)==0)
+						if(PICE_strlen(szAccumulatedName)==0)
                         {
                             PICE_strcpy(szAccumulatedName,pName);
                         }
                         else
                         {
-                            strcat(szAccumulatedName,pName);
+                            PICE_strcat(szAccumulatedName,pName);
                         }
                         pTypeString = szAccumulatedName;
 
@@ -1272,14 +1272,14 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                         nNextOffset = pStab->n_value;
                         break;
                     case N_SO:
-                        if((strLen = strlen(pName)))
+                        if((strLen = PICE_strlen(pName)))
                         {
                             if(pName[strLen-1]!='/')
                             {
                                 ulCurrentFileNumber++;
-                                if(strlen(szCurrentPath))
+                                if(PICE_strlen(szCurrentPath))
                                 {
-                                    strcat(szCurrentPath,pName);
+                                    PICE_strcat(szCurrentPath,pName);
                                     DPRINT((0,"changing source file %s\n",szCurrentPath));
                                 }
                                 else
@@ -1297,7 +1297,7 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                         break;
                     case N_LSYM:
 						// if we're in the function we're looking for
-                        if(szCurrentFunction[0] && strcmp(szCurrentFunction,pFunctionName)==0)
+                        if(szCurrentFunction[0] && PICE_strcmp(szCurrentFunction,pFunctionName)==0)
                         {
                             DPRINT((0,"local variable %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
 							ulTypeNumber = ExtractTypeNumber(pName);
@@ -1316,7 +1316,7 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                         break;
 					case N_PSYM:
 						// if we're in the function we're looking for
-                        if(szCurrentFunction[0] && strcmp(szCurrentFunction,pFunctionName)==0)
+                        if(szCurrentFunction[0] && PICE_strcmp(szCurrentFunction,pFunctionName)==0)
                         {
                             DPRINT((0,"parameter variable %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
 							ulTypeNumber = ExtractTypeNumber(pName);
@@ -1333,7 +1333,7 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                         break;
                     case N_RSYM:
 						// if we're in the function we're looking for
-                        if(szCurrentFunction[0] && strcmp(szCurrentFunction,pFunctionName)==0)
+                        if(szCurrentFunction[0] && PICE_strcmp(szCurrentFunction,pFunctionName)==0)
                         {
                             DPRINT((0,"local variable %.8X %.8X %.8X %.8X %.8X %s\n",pStab->n_strx,pStab->n_type,pStab->n_other,pStab->n_desc,pStab->n_value,pName));
 							ulTypeNumber = ExtractTypeNumber(pName);
@@ -1351,12 +1351,12 @@ PLOCAL_VARIABLE FindLocalsByAddress(ULONG addr)
                         }
                         break;
                     case N_FUN:
-                        if(strlen(pName))
+                        if(PICE_strlen(pName))
                         {
                             ULONG len;
 
 	                        len=StrLenUpToWhiteChar(pName,":");
-	                        strncpy(szCurrentFunction,pName,len);
+	                        PICE_strncpy(szCurrentFunction,pName,len);
                             szCurrentFunction[len]=0;
                             DPRINT((0,"function %s\n",szCurrentFunction));
                         }
@@ -1434,7 +1434,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                     case N_SO:
                         DPRINT((0,"changing source file %s\n",pName));
                         // if filename has a length record it
-                        if((strLen = strlen(pName)))
+                        if((strLen = PICE_strlen(pName)))
                         {
                             PICE_strcpy(szCurrentPath,pName);
                         }
@@ -1448,7 +1448,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                     case N_SOL:
                         DPRINT((0,"changing sub source file %s\n",pName));
                         // if filename has a length record it
-                        if((strLen = strlen(pName)))
+                        if((strLen = PICE_strlen(pName)))
                         {
                             PICE_strcpy(szCurrentPath,pName);
                         }
@@ -1461,7 +1461,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                     // line number
                     case N_SLINE:
 						// if we're in the function we're looking for
-                        if(szCurrentFunction[0] && strcmp(szCurrentFunction,pFunctionName)==0)
+                        if(szCurrentFunction[0] && PICE_strcmp(szCurrentFunction,pFunctionName)==0)
                         {
                             //DPRINT((0,"code source line number #%u for addr. %x (function @ %x) ulMinValue = %x ulDelta = %x\n",pStab->n_desc,start+pStab->n_value,start,ulMinValue,(addr-(start+pStab->n_value))));
 
@@ -1476,7 +1476,7 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                             // and we're lower or equal than minimum value
                             if(addr>=start+pStab->n_value &&
                                (addr-(start+pStab->n_value))<=ulMinValue &&
-                               strcmp(szWantedPath,szCurrentPath)==0 )
+                               PICE_strcmp(szWantedPath,szCurrentPath)==0 )
                             {
                                 ULONG j;
                                 PICE_SYMBOLFILE_SOURCE* pSrc = (PICE_SYMBOLFILE_SOURCE*)((ULONG)pSymbols+pSymbols->ulOffsetToSrcFiles);
@@ -1557,13 +1557,13 @@ LPSTR FindSourceLineForAddress(ULONG addr,PULONG pulLineNumber,LPSTR* ppSrcStart
                     // a function symbol
                     case N_FUN:
                         // if it has a length it's the start of a function
-                        if(strlen(pName))
+                        if(PICE_strlen(pName))
                         {
                             ULONG len;
 
                             // extract the name only, the type string is of no use here
 	                        len=StrLenUpToWhiteChar(pName,":");
-	                        strncpy(szCurrentFunction,pName,len);
+	                        PICE_strncpy(szCurrentFunction,pName,len);
                             szCurrentFunction[len]=0;
 
                             DPRINT((0,"function %s\n",szCurrentFunction));
@@ -1632,13 +1632,13 @@ BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,struct modul
                     nNextOffset = pStab->n_value;
                     break;
                 case N_SO:
-                    if((strLen = strlen(pName)))
+                    if((strLen = PICE_strlen(pName)))
                     {
                         if(pName[strLen-1]!='/')
                         {
-                            if(strlen(szCurrentPath))
+                            if(PICE_strlen(szCurrentPath))
                             {
-                                strcat(szCurrentPath,pName);
+                                PICE_strcat(szCurrentPath,pName);
                                 DPRINT((0,"changing source file %s\n",szCurrentPath));
                             }
                             else
@@ -1674,12 +1674,12 @@ BOOLEAN FindAddressForSourceLine(ULONG ulLineNumber,LPSTR pFilename,struct modul
                     }
                     break;
                 case N_FUN:
-                    if(strlen(pName))
+                    if(PICE_strlen(pName))
                     {
                         ULONG len;
 
 	                    len=StrLenUpToWhiteChar(pName,":");
-	                    strncpy(szCurrentFunction,pName,len);
+	                    PICE_strncpy(szCurrentFunction,pName,len);
                         szCurrentFunction[len]=0;
                         DPRINT((0,"function %s\n",szCurrentFunction));
                     }
@@ -2075,7 +2075,7 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
 							pConfig++;
 
 						// finally try to load the symbols
-						if(strlen(temp))
+						if(PICE_strlen(temp))
 						{
                             PICE_SYMBOLFILE_HEADER *pSymbols;
 
@@ -2084,9 +2084,9 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
                             {
                                 if(!bIgnoreBootParams)
                                 {
-                                    if(!strlen(szBootParams))
+                                    if(!PICE_strlen(szBootParams))
                                     {
-                                        strcpy(szBootParams,temp+1);
+                                        PICE_strcpy(szBootParams,temp+1);
                                         DPRINT((0,"pICE: boot params = %s\n",szBootParams));
                                     }
                                     else
@@ -2098,19 +2098,19 @@ BOOLEAN LoadSymbolsFromConfig(BOOLEAN bIgnoreBootParams)
                             // options
                             else if(*temp == '+')
                             {
-                                if(strlen(temp)>1)
+                                if(PICE_strlen(temp)>1)
                                 {
-                                    if(strcmp(temp,"+vga")==0)
+                                    if(PICE_strcmp(temp,"+vga")==0)
                                     {
                                         eTerminalMode = TERMINAL_MODE_VGA_TEXT;
                                         DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_VGA_TEXT\n"));
                                     }
-                                    else if(strcmp(temp,"+hercules")==0)
+                                    else if(PICE_strcmp(temp,"+hercules")==0)
                                     {
                                         eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS;
                                         DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_HERCULES_GRAPHICS\n"));
                                     }
-                                    else if(strcmp(temp,"+serial")==0)
+                                    else if(PICE_strcmp(temp,"+serial")==0)
                                     {
                                         eTerminalMode = TERMINAL_MODE_SERIAL;
                                         DPRINT((0,"pICE: eTerminalMode = TERMINAL_MODE_SERIAL\n"));
@@ -2251,14 +2251,14 @@ BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumbe
 						break;
                     // a source file symbol
 					case N_SO:
-						if((strLen = strlen(pName)))
+						if((strLen = PICE_strlen(pName)))
 						{
 							if(pName[strLen-1]!='/')
 							{
 								ulCurrentFileNumber++;
-								if(strlen(szCurrentPath))
+								if(PICE_strlen(szCurrentPath))
 								{
-									strcat(szCurrentPath,pName);
+									PICE_strcat(szCurrentPath,pName);
 									DPRINT((0,"changing source file %s\n",szCurrentPath));
 								}
 								else
@@ -2277,7 +2277,7 @@ BOOLEAN FindGlobalStabSymbol(LPSTR pExpression,PULONG pValue,PULONG pulTypeNumbe
 					case N_GSYM:
                         // symbol-name:type-identifier type-number =
 						nLen = StrLenUpToWhiteChar(pName,":");
-						strncpy(SymbolName,pName,nLen);
+						PICE_strncpy(SymbolName,pName,nLen);
 						SymbolName[nLen] = 0;
 						if(PICE_strcmpi(SymbolName,pExpression)==0)
 						{
@@ -2468,7 +2468,7 @@ PVRET ExtractStructMembers(PVRET pvr,LPSTR p)
     if(len)
     {
         // extract member name
-	    strncpy(member_name,p,len);
+	    PICE_strncpy(member_name,p,len);
         member_name[len]=0;
         DPRINT((0,"ExtractStructMembers(): member_name = %s\n",member_name));
 
@@ -2710,7 +2710,7 @@ BOOLEAN EvaluateSymbol(PVRET pvr,LPSTR pToken)
                         // put this into our array
                         vrStructMembers[ulNumStructMembers] = *ExtractStructMembers(pvr,pStructMembers);
 
-                        if(!strlen(vrStructMembers[ulNumStructMembers].type_name))
+                        if(!PICE_strlen(vrStructMembers[ulNumStructMembers].type_name))
                         {
                             ULONG i;
                             PVRET pvrThis = &vrStructMembers[ulNumStructMembers];
@@ -2830,13 +2830,13 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
 		DPRINT((0,"value = %x type = %x\n",vr.value,vr.type));
         if(vr.bStructType)
         {
-            sprintf(tempSym,"struct %s %s @ %x\n",vr.type_name,p,vr.address);
+            PICE_sprintf(tempSym,"struct %s %s @ %x\n",vr.type_name,p,vr.address);
             Print(OUTPUT_WINDOW,tempSym);
             for(i=0;i<ulNumStructMembers;i++)
             {
                 if(vrStructMembers[i].bArrayType)
                 {
-                    sprintf(tempSym,"[%.8X %.8X] %s %s[%u]\n",
+                    PICE_sprintf(tempSym,"[%.8X %.8X] %s %s[%u]\n",
                             vrStructMembers[i].address,
                             vrStructMembers[i].size/8,
                             vrStructMembers[i].type_name,
@@ -2845,7 +2845,7 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
                 }
                 else if(vrStructMembers[i].bPtrType)
                 {
-                    sprintf(tempSym,"[%.8X %.8X] %s* %s -> %x (%u)\n",
+                    PICE_sprintf(tempSym,"[%.8X %.8X] %s* %s -> %x (%u)\n",
                             vrStructMembers[i].address,
                             vrStructMembers[i].size/8,
                             vrStructMembers[i].type_name,
@@ -2855,7 +2855,7 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
                 }
                 else
                 {
-                    sprintf(tempSym,"[%.8X %.8X] %s %s = %x (%u)\n",
+                    PICE_sprintf(tempSym,"[%.8X %.8X] %s %s = %x (%u)\n",
                             vrStructMembers[i].address,
                             vrStructMembers[i].size/8,
                             vrStructMembers[i].type_name,
@@ -2872,7 +2872,7 @@ void Evaluate(PICE_SYMBOLFILE_HEADER* pSymbols,LPSTR p)
         }
         else
         {
-            sprintf(tempSym,"%s %s @ %x = %x (%u)\n",vr.type_name,p,vr.address,vr.value,vr.value);
+            PICE_sprintf(tempSym,"%s %s @ %x = %x (%u)\n",vr.type_name,p,vr.address,vr.value,vr.value);
             Print(OUTPUT_WINDOW,tempSym);
         }
 	}

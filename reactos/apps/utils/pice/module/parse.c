@@ -1364,7 +1364,7 @@ void DisplaySourceFile(LPSTR pSrcLine,LPSTR pSrcEnd,ULONG ulLineNumber,ULONG ulL
         if(pSrcLine<pSrcEnd)
         {
             PICE_sprintf(tempCmd,".%.5u ",ulLineNumber+i);
-            pTemp = tempCmd + strlen(tempCmd);
+            pTemp = tempCmd + PICE_strlen(tempCmd);
 
             while(pSrcLine<pSrcEnd && *pSrcLine!=0x0a && *pSrcLine!=0x0d)
             {
@@ -1822,7 +1822,7 @@ COMMAND_PROTOTYPE(Unassemble)
                     }
 			    }
 		    }
-            strcat(tempCmd,"\n");
+            PICE_strcat(tempCmd,"\n");
 
             if(ulWindowOffset)
             {
@@ -1954,7 +1954,7 @@ LPSTR DecodeVmFlags(ULONG flags)
 
     if(flags == VM_STACK_FLAGS)
     {
-        strcpy(temp," (STACK)");
+        PICE_strcpy(temp," (STACK)");
     }
     else
     {
@@ -1962,8 +1962,8 @@ LPSTR DecodeVmFlags(ULONG flags)
         {
             if(flags&0x1)
             {
-                strcat(temp," ");
-                strcat(temp,flags_syms_on[i]);
+                PICE_strcat(temp," ");
+                PICE_strcat(temp,flags_syms_on[i]);
             }
             flags >>= 1;
         }
@@ -3234,7 +3234,7 @@ COMMAND_PROTOTYPE(ShowSysCallTable)
 
     if(pArgs->Count == 0)
     {
-        sprintf(tempCmd,"%u system calls\n",190);
+        PICE_sprintf(tempCmd,"%u system calls\n",190);
         Print(OUTPUT_WINDOW,tempCmd);
         if(WaitForKey()!=FALSE)
             for(i=0;i<190;i++)
@@ -3329,8 +3329,8 @@ LPSTR FindCommand(LPSTR p)
            CmdTable[i].CommandGroup != COMMAND_GROUP_HELP_ONLY)
 		{
 			if(PICE_strlen(tempCmd))
-				strcat(tempCmd,", ");
-			strcat(tempCmd,CmdTable[i].Cmd);
+				PICE_strcat(tempCmd,", ");
+			PICE_strcat(tempCmd,CmdTable[i].Cmd);
 			j++;
 			k=i;
 		}
@@ -3674,7 +3674,7 @@ BOOLEAN ConvertTokenToKeyword(LPSTR p,PULONG pValue)
 
 	DPRINT((0,"ConvertTokenToKeyword()\n"));
 	count=StrLenUpToWhiteChar(p," ");
-	strncpy(Name,p,count);
+	PICE_strncpy(Name,p,count);
 	Name[count]=0;
 	if(ReplaceKeywordWithValue(Name,pValue,RegKeyWords))
 	{
@@ -3694,7 +3694,7 @@ BOOLEAN ConvertTokenToSpecialKeyword(LPSTR p,PULONG pValue)
     ULONG count;
 
 	count=StrLenUpToWhiteChar(p," ");
-	strncpy(Name,p,count);
+	PICE_strncpy(Name,p,count);
 	Name[count]=0;
 	if(ReplaceKeywordWithValue(Name,pValue,SpecialKeyWords))
 	{
@@ -3713,7 +3713,7 @@ BOOLEAN ConvertTokenToOnOff(LPSTR p,PULONG pValue)
     ULONG count;
 
 	count=StrLenUpToWhiteChar(p," ");
-	strncpy(Name,p,count);
+	PICE_strncpy(Name,p,count);
 	Name[count]=0;
 	if(ReplaceKeywordWithValue(Name,pValue,OnOffKeyWords))
 	{
@@ -4093,7 +4093,7 @@ void Parse(LPSTR pCmdLine,BOOLEAN bInvokedByFkey)
                 DPRINT((0,"Parse(): PARAM_CAN_BE_LETTER\n"));
                 if(pCurrentCommand->ParamFlags[i] & PARAM_CAN_BE_LETTER)
                 {
-                    if(PICE_strlen(pToken)==1 && isprint(pToken[0]))
+                    if(PICE_strlen(pToken)==1 && PICE_isprint(pToken[0]))
                     {
                         Arguments.Value[i]=(ULONG)pToken[0];
                         i++;

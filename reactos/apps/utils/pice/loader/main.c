@@ -84,7 +84,7 @@ void process_stabs(
 
     PICE_memset((void*)&SymbolFileHeader,0,sizeof(SymbolFileHeader));
 	SymbolFileHeader.magic = PICE_MAGIC;
-	strcpy(temp,pExeName);
+	PICE_strcpy(temp,pExeName);
 	pSlash = strrchr(temp,'/');
 	pDot = strrchr(temp,'.');
 	if(pDot)
@@ -95,7 +95,7 @@ void process_stabs(
 	{
 		pCopyExeName = pSlash+1;
 	}
-	strcpy(SymbolFileHeader.name,pCopyExeName);
+	PICE_strcpy(SymbolFileHeader.name,pCopyExeName);
 
     for(i=0;i<(nStabLen/sizeof(STAB_ENTRY));i++)
     {
@@ -119,27 +119,27 @@ void process_stabs(
                 //printf("LOADER: changing string offset %x %x\n",nOffset,nNextOffset);
                 break;
             case N_SO:
-                if((strLen = strlen(pName)))
+                if((strLen = PICE_strlen(pName)))
                 {
                     if(pName[strLen-1]!='/')
                     {
                         if(strlen(szCurrentPath))
                         {
                             //printf("LOADER: ###########################################################################\n");
-                            strcat(szCurrentPath,pName);
+                            PICE_strcat(szCurrentPath,pName);
                             //printf("LOADER: changing source file %s\n",szCurrentPath);
-                            strcpy(SrcFileNames[ulCurrentSrcFile++],szCurrentPath);
+                            PICE_strcpy(SrcFileNames[ulCurrentSrcFile++],szCurrentPath);
                             szCurrentPath[0]=0;
                         }
                         else
                         {
                             //printf("LOADER: ###########################################################################\n");
                             //printf("LOADER: changing source file %s\n",pName);
-                            strcpy(SrcFileNames[ulCurrentSrcFile++],pName);
+                            PICE_strcpy(SrcFileNames[ulCurrentSrcFile++],pName);
                         }
                     }
                     else
-                        strcpy(szCurrentPath,pName);
+                        PICE_strcpy(szCurrentPath,pName);
                 }
                 else
                 {
@@ -248,7 +248,7 @@ void process_stabs(
         
             lseek(file,0,SEEK_SET);
 
-            strcpy(pss.filename,SrcFileNames[i]);
+            PICE_strcpy(pss.filename,SrcFileNames[i]);
             pss.ulOffsetToNext = len+sizeof(PICE_SYMBOLFILE_SOURCE);
 
             pFile = malloc(len);
@@ -288,13 +288,13 @@ char* pStr = (char*)((int)p + pSHdr[index].sh_offset);
     {
         int sh_name = pSHdr->sh_name;
         //printf("LOADER: [%u] %32s %8x %8x %8x %8x %8x\n",i,&pStr[sh_name],pSHdr->sh_offset,pSHdr->sh_size,pSHdr->sh_addr,pSHdr->sh_type,pSHdr->sh_link);
-        if(strcmp(&pStr[sh_name],".stab") == 0)
+        if(PICE_strcmp(&pStr[sh_name],".stab") == 0)
         {
             *ppStab = (PSTAB_ENTRY)((int)p + pSHdr->sh_offset);
             *pLen = pSHdr->sh_size;
             //printf("LOADER: .stab @ %x (offset %x) len = %x\n",*ppStab,pSHdr->sh_offset,pSHdr->sh_size);
         }
-        else if(strcmp(&pStr[sh_name],".stabstr") == 0)
+        else if(PICE_strcmp(&pStr[sh_name],".stabstr") == 0)
         {
             *ppStr = (char*)((int)p + pSHdr->sh_offset);
 			*pnStabStrLen = pSHdr->sh_size;
@@ -407,16 +407,16 @@ int process_elf(char* filename,int file,void* p,int len)
 			{
 				LPSTR pDot;
 
-				strcpy(szSymName,filename);
+				PICE_strcpy(szSymName,filename);
 				//printf("LOADER: file name = %s\n",szSymName);
 				if((pDot = strrchr(szSymName,'.')))
 				{
 					*pDot = 0;
-					strcat(pDot,".sym");
+					PICE_strcat(pDot,".sym");
 				}
 				else
 				{
-					strcat(szSymName,".sym");
+					PICE_strcat(szSymName,".sym");
 				}
 				//printf("LOADER: symbol file name = %s\n",szSymName);
                 printf("LOADER: creating symbol file %s for %s\n",szSymName,filename);
@@ -818,44 +818,44 @@ int process_switches(int argc,char* argv[])
 		    int new_action=ACTION_NONE;
 			
 			parg++;
-			if(strcmp(parg,"load")==0 || strcmp(parg,"l")==0)
+			if(PICE_strcmp(parg,"load")==0 || PICE_strcmp(parg,"l")==0)
 			{
 				new_action = ACTION_LOAD;
 			}
-			else if(strcmp(parg,"unload")==0 || strcmp(parg,"u")==0)
+			else if(PICE_strcmp(parg,"unload")==0 || PICE_strcmp(parg,"u")==0)
 			{
 				new_action = ACTION_UNLOAD;
 			}
-			else if(strcmp(parg,"trans")==0 || strcmp(parg,"t")==0)
+			else if(PICE_strcmp(parg,"trans")==0 || PICE_strcmp(parg,"t")==0)
             {
                 new_action = ACTION_TRANS;
             }
-			else if(strcmp(parg,"reload")==0 || strcmp(parg,"r")==0)
+			else if(PICE_strcmp(parg,"reload")==0 || PICE_strcmp(parg,"r")==0)
             {
                 new_action = ACTION_RELOAD;
             }
-			else if(strcmp(parg,"verbose")==0 || strcmp(parg,"v")==0)
+			else if(PICE_strcmp(parg,"verbose")==0 || PICE_strcmp(parg,"v")==0)
             {
 			    if( ulGlobalVerbose+1 > ulGlobalVerbose )
 				    ulGlobalVerbose++;
             }
-			else if(strcmp(parg,"install")==0 || strcmp(parg,"i")==0)
+			else if(PICE_strcmp(parg,"install")==0 || PICE_strcmp(parg,"i")==0)
             {
                 new_action = ACTION_INSTALL;
             }
-			else if(strcmp(parg,"uninstall")==0 || strcmp(parg,"x")==0)
+			else if(PICE_strcmp(parg,"uninstall")==0 || PICE_strcmp(parg,"x")==0)
             {
                 new_action = ACTION_UNINSTALL;
             }
-			else if(strcmp(parg,"status")==0 || strcmp(parg,"s")==0)
+			else if(PICE_strcmp(parg,"status")==0 || PICE_strcmp(parg,"s")==0)
             {
                 new_action = ACTION_STATUS;
             }
-			else if(strcmp(parg,"break")==0 || strcmp(parg,"b")==0)
+			else if(PICE_strcmp(parg,"break")==0 || PICE_strcmp(parg,"b")==0)
             {
                 new_action = ACTION_BREAK;
             }
-			else if(strcmp(parg,"serial")==0 || strcmp(parg,"ser")==0)
+			else if(PICE_strcmp(parg,"serial")==0 || PICE_strcmp(parg,"ser")==0)
             {
                 new_action = ACTION_TERMINAL;
             }
