@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.14 2003/06/19 15:48:39 gvg Exp $
+/* $Id: anonmem.c,v 1.15 2003/06/19 19:01:01 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -165,7 +165,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (!WasDirty)
      {
-       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL, TRUE);
+       MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
        MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
        if ((SwapEntry = MmGetSavedSwapEntryPage(PhysicalAddress)) != 0)
 	 {
@@ -218,7 +218,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", PhysicalAddress);
-   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL, TRUE);
+   MmDeleteVirtualMapping(MemoryArea->Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(MemoryArea->Process, Address, SwapEntry);
    MmDeleteAllRmaps(PhysicalAddress, NULL, NULL);
    MmSetSavedSwapEntryPage(PhysicalAddress, 0);
@@ -468,7 +468,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGE_SIZE));
 	      MmDeleteVirtualMapping(AddressSpace->Process,
 				     BaseAddress + (i*PAGE_SIZE),
-				     FALSE, NULL, NULL, TRUE);
+				     FALSE, NULL, NULL);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
 		  SWAPENTRY SavedSwapEntry;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.52 2003/06/19 15:48:39 gvg Exp $
+/* $Id: page.c,v 1.53 2003/06/19 19:01:01 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -444,8 +444,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PHYSIC
 
 VOID
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
-		       BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr,
-                       BOOL MarkPageUnmapped)
+		       BOOL* WasDirty, PHYSICAL_ADDRESS* PhysicalAddr)
 /*
  * FUNCTION: Delete a virtual mapping 
  */
@@ -502,7 +501,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
    Pte = (ULONG)InterlockedExchange((PLONG)ADDR_TO_PTE(Address), 0);
    FLUSH_TLB;
    WasValid = (PAGE_MASK(Pte) != 0);
-   if (MarkPageUnmapped && WasValid)
+   if (WasValid)
      {
        MmMarkPageUnmapped(PTE_TO_PAGE(Pte));
      }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.117 2003/06/19 15:48:39 gvg Exp $
+/* $Id: section.c,v 1.118 2003/06/19 19:01:01 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1216,7 +1216,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Delete the old entry.
     */
-   MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL, TRUE);
+   MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
 
    /*
     * Set the PTE to point to the new page
@@ -1263,8 +1263,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 			 Address,
 			 FALSE,
 			 &WasDirty,
-			 &Page,
-                         TRUE);
+			 &Page);
   if (WasDirty)
     {
       PageOutContext->WasDirty = TRUE;

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.23 2003/06/19 15:48:39 gvg Exp $
+/* $Id: kmap.c,v 1.24 2003/06/19 19:01:01 gvg Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -43,7 +43,7 @@ ExUnmapPage(PVOID Addr)
    
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
    
-   MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL, TRUE);
+   MmDeleteVirtualMapping(NULL, (PVOID)Addr, FALSE, NULL, NULL);
    KeAcquireSpinLock(&AllocMapLock, &oldIrql);   
    RtlClearBits(&AllocMap, Base, 1);
    AllocMapHint = min(AllocMapHint, Base);
@@ -148,8 +148,7 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 			     Addr + (i * PAGE_SIZE), 
 			     Free, 
 			     NULL, 
-			     NULL,
-			     TRUE);
+			     NULL);
   }
   KeAcquireSpinLock(&AllocMapLock, &oldlvl);
   RtlClearBits(&AllocMap, Base, Count);
