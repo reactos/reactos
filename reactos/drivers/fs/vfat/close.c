@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.9 2001/11/02 22:44:34 hbirr Exp $
+/* $Id: close.c,v 1.10 2002/05/05 20:18:33 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,12 +39,18 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   {
     return  STATUS_SUCCESS;
   }
-  if (FileObject->FileName.Buffer)
+  pFcb = pCcb->pFcb;
+  if (pFcb->Flags & FCB_IS_VOLUME)
+  {
+     DPRINT1("Volume\n");
+     pFcb->RefCount--;
+     FileObject->FsContext2 = NULL;
+  }
+  else if (FileObject->FileName.Buffer)
   {
     // This a FO, that was created outside from FSD.
     // Some FO's are created with IoCreateStreamFileObject() insid from FSD.
     // This FO's haven't a FileName.
-    pFcb = pCcb->pFcb;
     if (FileObject->DeletePending)
     {
       if (pFcb->Flags & FCB_DELETE_PENDING)

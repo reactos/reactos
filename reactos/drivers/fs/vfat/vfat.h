@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.40 2002/03/18 22:37:13 hbirr Exp $ */
+/* $Id: vfat.h,v 1.41 2002/05/05 20:18:33 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -113,8 +113,11 @@ typedef struct
   ULONG BytesPerCluster;
   ULONG NumberOfClusters;
   ULONG FatType;
+  ULONG Sectors;
 }
 FATINFO, *PFATINFO;
+
+struct _VFATFCB;
 
 typedef struct
 {
@@ -131,6 +134,7 @@ typedef struct
   ULONG AvailableClusters;
   BOOLEAN AvailableClustersValid;
   ULONG Flags;
+  struct _VFATFCB * VolumeFcb;
 }
 DEVICE_EXTENSION, *PDEVICE_EXTENSION, VCB, *PVCB;
 
@@ -148,6 +152,7 @@ extern PVFAT_GLOBAL_DATA VfatGlobalData;
 #define FCB_DELETE_PENDING      0x0002
 #define FCB_IS_FAT              0x0004
 #define FCB_IS_PAGE_FILE        0x0008
+#define FCB_IS_VOLUME           0x0010
 
 typedef struct _VFATFCB
 {
@@ -482,7 +487,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt,
                           PFILE_OBJECT pFileObject,
                           ULONG NewSize);
-/*
+
 NTSTATUS VfatWriteFile (PDEVICE_EXTENSION DeviceExt,
                         PFILE_OBJECT FileObject,
                         PVOID Buffer,
@@ -498,7 +503,6 @@ NTSTATUS VfatReadFile (PDEVICE_EXTENSION DeviceExt,
                        ULONG ReadOffset,
                        PULONG LengthRead,
                        ULONG NoCache);
-*/
 
 NTSTATUS NextCluster(PDEVICE_EXTENSION DeviceExt,
                      PVFATFCB Fcb,
@@ -517,11 +521,11 @@ VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
                                    PIRP Irp);
-/*
+
 PVOID VfatGetUserBuffer(IN PIRP);
 
 NTSTATUS VfatLockUserBuffer(IN PIRP, IN ULONG,
                             IN LOCK_OPERATION);
-*/
+
 
 /* EOF */

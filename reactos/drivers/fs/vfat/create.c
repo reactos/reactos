@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.39 2002/03/18 22:37:12 hbirr Exp $
+/* $Id: create.c,v 1.40 2002/05/05 20:18:33 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -582,6 +582,43 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   FileObject = Stack->FileObject;
   DeviceExt = DeviceObject->DeviceExtension;
   assert (DeviceExt);
+
+  if (FileObject->FileName.Length == 0 && FileObject->RelatedFileObject == NULL)
+  {
+    /* This a open operation for the volume itself */
+    if (RequestedDisposition == FILE_CREATE ||
+        RequestedDisposition == FILE_OVERWRITE_IF ||
+        RequestedDisposition == FILE_SUPERSEDE)
+    {
+       Irp->IoStatus.Status = STATUS_ACCESS_DENIED;
+       return STATUS_ACCESS_DENIED;
+    }
+    if (RequestedOptions & FILE_DIRECTORY_FILE)
+    {
+       Irp->IoStatus.Status = STATUS_NOT_A_DIRECTORY;
+       return STATUS_NOT_A_DIRECTORY;
+    }
+    pFcb = DeviceExt->VolumeFcb;
+    pCcb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+    if (pCcb == NULL)
+    {
+       Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+       return  STATUS_INSUFFICIENT_RESOURCES;
+    }
+    memset(pCcb, 0, sizeof(VFATCCB));
+    FileObject->Flags |= FO_FCB_IS_VALID;
+    FileObject->SectionObjectPointers = &pFcb->SectionObjectPointers;
+    FileObject->FsContext = (PVOID) &pFcb->RFCB;
+    FileObject->FsContext2 = pCcb;
+    pCcb->pFcb = pFcb;
+    pCcb->PtrFileObject = FileObject;
+    pFcb->pDevExt = DeviceExt;
+    pFcb->RefCount++;
+
+    Irp->IoStatus.Information = FILE_OPENED;
+    Irp->IoStatus.Status = STATUS_SUCCESS;
+    return STATUS_SUCCESS;
+  }
 
   /*
    * Check for illegal characters in the file name
