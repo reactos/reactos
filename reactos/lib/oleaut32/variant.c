@@ -603,8 +603,7 @@ HRESULT WINAPI VariantClear(VARIANTARG* pVarg)
         if (V_ARRAY(pVarg))
           hres = SafeArrayDestroy(V_ARRAY(pVarg));
       }
-	  else
-      if (V_VT(pVarg) == VT_BSTR)
+      else if (V_VT(pVarg) == VT_BSTR)
       {
         if (V_BSTR(pVarg))
           SysFreeString(V_BSTR(pVarg));
@@ -724,8 +723,7 @@ HRESULT WINAPI VariantCopy(VARIANTARG* pvargDest, VARIANTARG* pvargSrc)
         if (V_ARRAY(pvargSrc))
           hres = SafeArrayCopy(V_ARRAY(pvargSrc), &V_ARRAY(pvargDest));
       }
-	  else
-      if (V_VT(pvargSrc) == VT_BSTR)
+      else if (V_VT(pvargSrc) == VT_BSTR)
       {
         if (V_BSTR(pvargSrc))
         {
@@ -859,8 +857,7 @@ HRESULT WINAPI VariantCopyInd(VARIANT* pvargDest, VARIANTARG* pvargSrc)
     /* Native doesn't check that *V_ARRAYREF(pSrc) is valid */
     hres = SafeArrayCopy(*V_ARRAYREF(pSrc), &V_ARRAY(pvargDest));
   }
-  else
-  if (V_VT(pSrc) == (VT_BSTR|VT_BYREF))
+  else if (V_VT(pSrc) == (VT_BSTR|VT_BYREF))
   {
     /* Native doesn't check that *V_BSTRREF(pSrc) is valid */
     V_BSTR(pvargDest) = SysAllocStringByteLen((char*)*V_BSTRREF(pSrc), SysStringByteLen(*V_BSTRREF(pSrc)));

@@ -1105,7 +1105,6 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
     hr = S_OK;
     break;
   }
-#ifndef __REACTOS__ /*FIXME: missing CURSORICONFILEDIR */
   case 0x0000: { /* ICON , first word is dwReserved */
     HICON hicon;
     CURSORICONFILEDIR	*cifd = (CURSORICONFILEDIR*)xbuf;
@@ -1160,7 +1159,6 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
     }
     break;
   }
-#endif
   default:
   {
     int i;

@@ -380,7 +380,7 @@
 397 stub UserMSG_to_local
 398 stub UserMSG_free_inst
 399 stub UserMSG_free_local
-#401 stdcall OleLoadPictureEx(ptr long long long long long long ptr)
+401 stdcall OleLoadPictureEx(ptr long long long long long long ptr)
 402 stub OleLoadPictureFileEx
 410 stdcall -private DllCanUnloadNow() OLEAUT32_DllCanUnloadNow
 411 stdcall SafeArrayCreateVector(long long long)
@@ -390,8 +390,8 @@
 415 stdcall OleIconToCursor(long long)
 416 stdcall OleCreatePropertyFrameIndirect(ptr)
 417 stdcall OleCreatePropertyFrame(ptr long long ptr long ptr long ptr ptr long ptr)
-#418 stdcall OleLoadPicture(ptr long long ptr ptr)
-#419 stdcall OleCreatePictureIndirect(ptr ptr long ptr)
+418 stdcall OleLoadPicture(ptr long long ptr ptr)
+419 stdcall OleCreatePictureIndirect(ptr ptr long ptr)
 #420 stdcall OleCreateFontIndirect(ptr ptr ptr)
 421 stdcall OleTranslateColor(long long long)
 422 stub OleLoadPictureFile

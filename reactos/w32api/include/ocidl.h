@@ -610,6 +610,26 @@ DECLARE_INTERFACE_(IPicture,IUnknown)
 };
 #undef INTERFACE
 
+#ifdef COBJMACROS
+#define IPicture_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IPicture_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IPicture_Release(p) (p)->lpVtbl->Release(p)
+#define IPicture_get_Handle(p,a) (p)->lpVtbl->get_Handle(p,a)
+#define IPicture_get_hPal(p,a) (p)->lpVtbl->get_hPal(p,a)
+#define IPicture_get_Type(p,a) (p)->lpVtbl->get_Type(p,a)
+#define IPicture_get_Width(p,a) (p)->lpVtbl->get_Width(p,a)
+#define IPicture_get_Height(p,a) (p)->lpVtbl->get_Height(p,a)
+#define IPicture_Render(p,a,b,c,d,e,f,g,h,i,j) (p)->lpVtbl->Render(p,a,b,c,d,e,f,g,h,i,j)
+#define IPicture_set_hPal(p,a) (p)->lpVtbl->set_hPal(p,a)
+#define IPicture_get_CurDC(p,a) (p)->lpVtbl->get_CurDC(p,a)
+#define IPicture_SelectPicture(p,a,b,c) (p)->lpVtbl->SelectPicture(p,a,b,c)
+#define IPicture_get_KeepOriginalFormat(p,a) (p)->lpVtbl->get_KeepOriginalFormat(p,a)
+#define IPicture_put_KeepOriginalFormat(p,a) (p)->lpVtbl->put_KeepOriginalFormat(p,a)
+#define IPicture_PictureChanged(p) (p)->lpVtbl->PictureChanged(p)
+#define IPicture_SaveAsFile(p,a,b,c) (p)->lpVtbl->SaveAsFile(p,a,b,c)
+#define IPicture_get_Attributes(p,a) (p)->lpVtbl->get_Attributes(p,a)
+#endif
+
 EXTERN_C const IID IID_IPictureDisp;
 #define INTERFACE IPictureDisp
 DECLARE_INTERFACE_(IPictureDisp,IDispatch)
