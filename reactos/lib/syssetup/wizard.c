@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.3 2004/05/22 12:04:10 ekohl Exp $
+/* $Id: wizard.c,v 1.4 2004/06/17 21:23:50 kuehng Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -146,6 +146,9 @@ OwnerPageDlgProc(HWND hwndDlg,
 
           SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
           SendDlgItemMessage(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
+
+		  /* set focus to owner name */
+		  SetFocus(GetDlgItem(hwndDlg,IDC_OWNERNAME));
         }
         break;
 
