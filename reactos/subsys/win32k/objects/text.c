@@ -427,18 +427,14 @@ IntGetFontRenderMode(LOGFONTW *logfont)
 {
   switch(logfont->lfQuality)
   {
-    //case ANTIALIASED_QUALITY:
-    case DEFAULT_QUALITY:
-      return FT_RENDER_MODE_NORMAL;
+    case NONANTIALIASED_QUALITY:
+      return FT_RENDER_MODE_MONO;
     case DRAFT_QUALITY:
       return FT_RENDER_MODE_LIGHT;
-    //case NONANTIALIASED_QUALITY:
-    case PROOF_QUALITY:
-      return FT_RENDER_MODE_MONO;
-    //case CLEARTYPE_QUALITY:
-    //  return FT_RENDER_MODE_LCD;
+/*    case CLEARTYPE_QUALITY:
+        return FT_RENDER_MODE_LCD; */
   }
-  return FT_RENDER_MODE_MONO;
+  return FT_RENDER_MODE_NORMAL;
 }
 
 int
