@@ -25,3 +25,5 @@
 						fixed memory and GDI handle leaks
 						implemented context menus for task bar
 						tool tips for quick launch bar
+24.08.2003	m. fuchs	added reactos logo to startmenu
+						Added romanian translation of Ciobanu Alexander
