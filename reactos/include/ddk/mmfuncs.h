@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.8 2000/10/07 13:41:46 dwelch Exp $ */
+/* $Id: mmfuncs.h,v 1.9 2001/03/31 16:02:07 phreak Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 #include <ddk/i386/pagesize.h>
@@ -81,6 +81,12 @@ MmAllocateContiguousMemory (
 	IN	ULONG			NumberOfBytes,
 	IN	PHYSICAL_ADDRESS	HighestAcceptableAddress
 	);
+
+PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+				  IN ULONG Alignment);
+
 PVOID
 STDCALL
 MmAllocateNonCachedMemory (
