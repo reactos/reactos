@@ -456,6 +456,7 @@ NtUserPostThreadMessage                 4
 NtUserQuerySendMessage                  1
 NtUserQueryUserCounters                 5
 NtUserQueryWindow                       2
+NtUserReleaseDC				2
 NtUserRealChildWindowFromPoint          3
 NtUserRedrawWindow                      4
 NtUserRegisterClassExWOW                5
