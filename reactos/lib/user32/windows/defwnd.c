@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.113 2003/12/22 20:22:40 navaraf Exp $
+/* $Id: defwnd.c,v 1.114 2003/12/23 08:48:59 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -898,11 +898,19 @@ DefWndControlColor(HDC hDC, UINT ctlType)
        */
       if (bk == GetSysColor(COLOR_WINDOW))
 	{
-#if 0 /* FIXME */
-	  return CACHE_GetPattern55AABrush();
-#else
-	  return NULL;
-#endif
+          static const WORD wPattern55AA[] =
+          {
+              0x5555, 0xaaaa, 0x5555, 0xaaaa,
+              0x5555, 0xaaaa, 0x5555, 0xaaaa
+          };
+          static HBITMAP hPattern55AABitmap = NULL;
+          static HBRUSH hPattern55AABrush = NULL;
+          if (hPattern55AABrush == NULL)
+            {
+              hPattern55AABitmap = CreateBitmap(8, 8, 1, 1, wPattern55AA);
+              hPattern55AABrush = CreatePatternBrush(hPattern55AABitmap);
+            }
+          return hPattern55AABrush;
 	}
       UnrealizeObject(hb);
       return hb;

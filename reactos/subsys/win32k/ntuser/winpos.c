@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.61 2003/12/22 15:30:21 navaraf Exp $
+/* $Id: winpos.c,v 1.62 2003/12/23 08:48:59 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -758,8 +758,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /*
     * Only allow CSRSS to mess with the desktop window
     */
-   if (Wnd == IntGetDesktopWindow()
-       && Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+   if (Wnd == IntGetDesktopWindow() &&
+       Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
    {
       return FALSE;
    }
@@ -1051,8 +1051,8 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       }
    }
 
-   /* FIXME: Check some conditions before doing this. */
-   IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
+   if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
+      IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
    IntReleaseWindowObject(Window);
 

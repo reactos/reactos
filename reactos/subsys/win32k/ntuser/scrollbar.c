@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.21 2003/12/22 20:44:02 weiden Exp $
+/* $Id: scrollbar.c,v 1.22 2003/12/23 08:48:59 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,30 +135,18 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
   switch (nBar)
     {
     case SB_HORZ:
-      lprect->left = ClientRect.left - WindowRect.left + 1;
+      lprect->left = ClientRect.left - WindowRect.left;
       lprect->top = ClientRect.bottom - WindowRect.top;
-      lprect->right = ClientRect.right - WindowRect.left - 1;
+      lprect->right = ClientRect.right - WindowRect.left;
       lprect->bottom = lprect->top + NtUserGetSystemMetrics (SM_CYHSCROLL);
-      if (Window->Style & WS_BORDER)
-	{
-	  lprect->left--;
-	  lprect->right++;
-	}
       vertical = FALSE;
       break;
 
     case SB_VERT:
-      lprect->left = (ClientRect.right - WindowRect.left);
-      lprect->top = (ClientRect.top - WindowRect.top) + 1;
-      lprect->right = (lprect->left + NtUserGetSystemMetrics (SM_CXVSCROLL));
-      lprect->bottom = (ClientRect.bottom - WindowRect.top) - 1;
-      if (Window->Style & WS_BORDER)
-	{
-	  lprect->top--;
-	  lprect->bottom++;
-	}
-      else if (Window->Style & WS_HSCROLL)
-	lprect->bottom++;
+      lprect->left = ClientRect.right - WindowRect.left;
+      lprect->top = ClientRect.top - WindowRect.top;
+      lprect->right = lprect->left + NtUserGetSystemMetrics(SM_CXVSCROLL);
+      lprect->bottom = ClientRect.bottom - WindowRect.top;
       vertical = TRUE;
       break;
 
@@ -363,9 +351,6 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
   else
     Mask = lpsi->fMask;
   
-  if(Action)
-    *Action = 0;
-  
   if(Mask & SIF_DISABLENOSCROLL)
   {
     /* FIXME */
@@ -380,8 +365,8 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
       psi->nMin = 0;
       psi->nMax = 0;
       Chg = TRUE;
-      if(Action)
-        *Action |= SBU_SCROLLBOX;
+//      if(Action)
+//        *Action |= SBU_SCROLLBOX;
     }
     else
     {
@@ -392,8 +377,8 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
         psi->nMin = lpsi->nMin;
         psi->nMax = lpsi->nMax;
         Chg = TRUE;
-        if(Action)
-          *Action |= SBU_SCROLLBOX;
+//        if(Action)
+//          *Action |= SBU_SCROLLBOX;
       }
     }
   }
@@ -409,8 +394,8 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
     if(old != psi->nPage)
     {
       Chg = TRUE;
-      if(Action)
-        *Action |= SBU_SCROLLBOX;
+//      if(Action)
+//        *Action |= SBU_SCROLLBOX;
     }
   }
   
@@ -426,8 +411,8 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
     if(old != psi->nPos)
     {
       Chg = TRUE;
-      if(Action)
-        *Action |= SBU_SCROLLBOX;
+//      if(Action)
+//        *Action |= SBU_SCROLLBOX;
     }
   }
   
@@ -595,6 +580,9 @@ IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedr
       }
 #endif
    }
+
+   if (bRedraw)
+      IntSendMessage(Window->Self, WM_NCPAINT, 1, 0, TRUE);
 
    /* Return current position */
    return Info->nPos;
@@ -1017,8 +1005,7 @@ NtUserSetScrollInfo(
 }
 
 /* Ported from WINE20020904 (SCROLL_ShowScrollBar) */
-DWORD
-STDCALL
+DWORD STDCALL
 NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
 {
    PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
@@ -1039,22 +1026,34 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
    if (wBar == SB_BOTH || wBar == SB_HORZ)
    {
       if (bShow)
-	 Window->Style |= WS_HSCROLL;
+      {
+         Window->Style |= WS_HSCROLL;
+         if (!Window->pHScroll)
+            IntCreateScrollBar(Window, SB_HORZ);
+      }
       else
-	 Window->Style &= ~WS_HSCROLL;
+      {
+         Window->Style &= ~WS_HSCROLL;
+      }
    }
 
    if (wBar == SB_BOTH || wBar == SB_VERT)
    {
       if (bShow)
-	 Window->Style |= WS_VSCROLL;
+      {
+         Window->Style |= WS_VSCROLL;
+         if (!Window->pVScroll)
+            IntCreateScrollBar(Window, SB_VERT);
+      }
       else
-	 Window->Style &= ~WS_VSCROLL;
+      {
+         Window->Style &= ~WS_VSCROLL;
+      }
    }
 
    /* Frame has been changed, let the window redraw itself */
    WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
-      SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+      SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
 
    IntReleaseWindowObject(Window);
    return TRUE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.171 2003/12/22 14:34:25 weiden Exp $
+/* $Id: window.c,v 1.172 2003/12/23 08:48:59 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1310,9 +1310,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   
   /* Initialize the window's scrollbars */
   if (dwStyle & WS_VSCROLL)
-      IntCreateScrollBar(WindowObject, SB_VERT);
+  {
+     WindowObject->Style &= ~WS_VSCROLL;
+     NtUserShowScrollBar(WindowObject->Self, SB_VERT, TRUE);
+  }
   if (dwStyle & WS_HSCROLL)
-      IntCreateScrollBar(WindowObject, SB_HORZ);
+  {
+     WindowObject->Style &= ~WS_HSCROLL;
+     NtUserShowScrollBar(WindowObject->Self, SB_HORZ, TRUE);
+  }
 
   /* Send a NCCREATE message. */
   Cs.cx = nWidth;
