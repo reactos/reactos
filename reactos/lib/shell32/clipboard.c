@@ -259,7 +259,7 @@ HGLOBAL RenderFILENAMEW (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl)
 	if (FAILED(hr))
 		return 0;
 
-	size = strlenW(szTemp) + 1;
+	size = (strlenW(szTemp)+1) * sizeof(WCHAR);
 
 	/* fill the structure */
 	hGlobal = GlobalAlloc(GHND|GMEM_SHARE, size);
