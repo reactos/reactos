@@ -31,7 +31,7 @@ struct BackgroundWindow : public SubclassedWindow
 {
 	typedef SubclassedWindow super;
 
-	BackgroundWindow(HWND hwnd) : super(hwnd) {}
+	BackgroundWindow(HWND hwnd);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
