@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.90 2003/09/29 19:00:44 weiden Exp $
+/* $Id: defwnd.c,v 1.91 2003/10/01 19:11:06 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1003,7 +1003,7 @@ DefWndDoScrollBarDown(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   hit = SCROLL_HitTest(hWnd, (wParam == HTHSCROLL) ? SB_HORZ : SB_VERT, Point, FALSE);
   
   if(hit)
-    DbgPrint("SCROLL_HitTest() == 0x%x\n", hit);
+    DPRINT("SCROLL_HitTest() == 0x%x\n", hit);
   
   SendMessageA(hWnd, WM_SYSCOMMAND, Msg + (UINT)wParam, lParam);
 }
@@ -1658,7 +1658,7 @@ DefWndNCCalcSize(HWND hWnd, RECT* Rect)
         if (Style & WS_VSCROLL)
         {
           ScrollXY = GetSystemMetrics(SM_CXVSCROLL);
-          DbgPrint("@! %d > %d (%d, %d, %d ,%d)\n", Rect->right - Rect->left, ScrollXY, Rect->left, Rect->top, Rect->right, Rect->bottom);
+          DPRINT("@! %d > %d (%d, %d, %d ,%d)\n", Rect->right - Rect->left, ScrollXY, Rect->left, Rect->top, Rect->right, Rect->bottom);
           if(Rect->right - Rect->left > ScrollXY)
           {
             TmpRect.right += ScrollXY - 1;
