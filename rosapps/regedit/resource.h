@@ -4,9 +4,9 @@
 //
 #define ID_REGISTRY_MENU                0
 #define ID_EDIT_MENU                    1
-#define ID_FILE_MENU                    2
-#define ID_VIEW_MENU                    3
-#define ID_FAVOURITES_MENU              4
+#define ID_VIEW_MENU                    2
+#define ID_FAVOURITES_MENU              3
+#define ID_HELP_MENU                    4
 #define ID_EDIT_NEW_MENU                5
 
 #define IDD_ABOUTBOX                    103

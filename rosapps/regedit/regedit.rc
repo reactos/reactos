@@ -175,9 +175,9 @@ BEGIN
     ID_REGISTRY_MENU        "Contains commands for working with the whole registry"
     ID_EDIT_MENU            "Contains commands for editing values or keys"
     ID_EDIT_NEW_MENU        "Contains commands for creating new keys or values"
-    ID_FILE_MENU            "Contains commands for customising the registry window"
-    ID_VIEW_MENU            "Contains commands for accessing frequently used keys"
-    ID_FAVOURITES_MENU      "Contains commands for displaying help and information about registry editor"
+    ID_VIEW_MENU            "Contains commands for customising the registry window"
+    ID_FAVOURITES_MENU      "Contains commands for accessing frequently used keys"
+    ID_HELP_MENU            "Contains commands for displaying help and information about registry editor"
 
     ID_REGISTRY_IMPORTREGISTRYFILE        "Imports a text file into the registry"
     ID_REGISTRY_EXPORTREGISTRYFILE        "Exports all or part of the registry to a text file"
