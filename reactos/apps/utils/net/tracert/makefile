@@ -4,7 +4,7 @@ TARGET_TYPE = program
 
 TARGET_APPTYPE = console
 
-TARGET_NAME = traceroute
+TARGET_NAME = tracert
 
 TARGET_INSTALLDIR = system32
 
