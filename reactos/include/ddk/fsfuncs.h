@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.25 2004/06/27 11:23:57 navaraf Exp $ */
+/* $Id: fsfuncs.h,v 1.26 2004/07/16 13:45:02 ion Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -58,8 +58,8 @@ FsRtlFreeFileLock(
 	IN PFILE_LOCK FileLock
 	);
 
-STDCALL
 VOID
+STDCALL
 FsRtlAcquireFileExclusive (
     IN PFILE_OBJECT FileObject
     );
@@ -348,15 +348,15 @@ FsRtlInitializeTunnelCache (
     IN PTUNNEL Cache
     );
 
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlInsertPerFileObjectContext (
     IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
     IN PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/ Ptr
     );
 
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlInsertPerStreamContext (
     IN PFSRTL_ADVANCED_FCB_HEADER PerStreamContext,
     IN PFSRTL_PER_STREAM_CONTEXT Ptr
@@ -425,8 +425,8 @@ BOOLEAN STDCALL
 FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
 			     OUT PLONGLONG Vbn,
 			     OUT PLONGLONG Lbn);
-STDCALL
 BOOLEAN
+STDCALL
 FsRtlLookupLastLargeMcbEntryAndIndex (
     IN PLARGE_MCB OpaqueMcb,
     OUT PLONGLONG LargeVbn,
@@ -444,16 +444,17 @@ FsRtlLookupMcbEntry (IN PMCB     Mcb,
 		     OUT PLBN    Lbn,
 		     OUT PULONG  SectorCount OPTIONAL,
 		     OUT PULONG  Index);
-STDCALL
+
 PFSRTL_PER_STREAM_CONTEXT
+STDCALL
 FsRtlLookupPerStreamContextInternal (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID OwnerId OPTIONAL,
     IN PVOID InstanceId OPTIONAL
     );
 
-STDCALL
 PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+STDCALL
 FsRtlLookupPerFileObjectContext (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID OwnerId OPTIONAL,
@@ -534,8 +535,9 @@ BOOLEAN (*PCHECK_FOR_TRAVERSE_ACCESS) (
 	IN	PVOID				TargetContext,
 	IN	PSECURITY_SUBJECT_CONTEXT	SubjectContext
 	);
-STDCALL
+
 VOID
+STDCALL
 FsRtlNotifyFilterChangeDirectory (
     IN PNOTIFY_SYNC NotifySync,
     IN PLIST_ENTRY NotifyList,
@@ -550,8 +552,8 @@ FsRtlNotifyFilterChangeDirectory (
     IN PFILTER_REPORT_CHANGE FilterCallback OPTIONAL
     );
 
-STDCALL
 VOID
+STDCALL
 FsRtlNotifyFilterReportChange (
     IN PNOTIFY_SYNC NotifySync,
     IN PLIST_ENTRY NotifyList,
@@ -695,8 +697,8 @@ FsRtlProcessFileLock (
     IN PVOID        Context OPTIONAL
     );
 
-STDCALL
 NTSTATUS
+STDCALL
 FsRtlRegisterFileSystemFilterCallbacks (
     IN PVOID		Unknown1,
     IN PVOID		Unknown2
@@ -707,8 +709,8 @@ FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
 			 IN PUNICODE_STRING RedirectorDeviceName,
 			 IN BOOLEAN MailslotsSupported);
 
-STDCALL
 VOID
+STDCALL
 FsRtlReleaseFile (
     IN PFILE_OBJECT FileObject
     );
@@ -723,24 +725,24 @@ FsRtlRemoveMcbEntry (IN PMCB     Mcb,
 		     IN VBN      Vbn,
 		     IN ULONG    SectorCount);
 
-STDCALL
 PFSRTL_PER_STREAM_CONTEXT
+STDCALL
 FsRtlRemovePerStreamContext (
     IN PFSRTL_ADVANCED_FCB_HEADER StreamContext,
     IN PVOID Unknown1 OPTIONAL,
     IN PVOID Unknown2 OPTIONAL
     );
 
-STDCALL
 PVOID /* PFSRTL_PER_FILE_OBJECT_CONTEXT*/
+STDCALL
 FsRtlRemovePerFileObjectContext (
    IN PFSRTL_ADVANCED_FCB_HEADER PerFileObjectContext,
     IN PVOID OwnerId OPTIONAL,
     IN PVOID InstanceId OPTIONAL
     );
 
-STDCALL
 VOID
+STDCALL
 FsRtlResetLargeMcb (
     IN PLARGE_MCB Mcb,
     IN BOOLEAN SelfSynchronized
@@ -759,8 +761,8 @@ FsRtlSyncVolumes (
 	DWORD	Unknown2
 	);
 
-STDCALL
 VOID
+STDCALL
 FsRtlTeardownPerStreamContexts (
   IN PFSRTL_ADVANCED_FCB_HEADER AdvancedHeader
   );
