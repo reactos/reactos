@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.3 2002/03/15 16:35:41 ekohl Exp $
+/* $Id: cdrom.c,v 1.4 2002/03/20 20:00:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -170,7 +170,7 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
   BOOLEAN FoundDevice;
   NTSTATUS Status;
 
-  DPRINT1("CdromClassFindDevices() called.\n");
+  DPRINT("CdromClassFindDevices() called.\n");
 
   /* Get port capabilities */
   Status = ScsiClassGetCapabilities(PortDeviceObject,
@@ -181,7 +181,7 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
-  DPRINT1("MaximumTransferLength: %lu\n", PortCapabilities->MaximumTransferLength);
+  DPRINT("MaximumTransferLength: %lu\n", PortCapabilities->MaximumTransferLength);
 
   /* Get inquiry data */
   Status = ScsiClassGetInquiryData(PortDeviceObject,
@@ -202,10 +202,10 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
       return(FALSE);
     }
 
-  DPRINT1("Found %lu unclaimed devices!\n", DeviceCount);
+  DPRINT("Found %lu unclaimed devices!\n", DeviceCount);
 
   ConfigInfo = IoGetConfigurationInformation();
-  DPRINT1("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
+  DPRINT("Number of SCSI ports: %lu\n", ConfigInfo->ScsiPortCount);
 
   /* Search each bus of this adapter */
   for (Bus = 0; Bus < (ULONG)AdapterBusInfo->NumberOfBuses; Bus++)
@@ -250,6 +250,8 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
 
   ExFreePool(Buffer);
   ExFreePool(PortCapabilities);
+
+  DPRINT("CdromClassFindDevices() done\n");
 
   return(TRUE);
 }
@@ -309,7 +311,7 @@ NTSTATUS STDCALL
 CdromClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp)
 {
-  DPRINT1("CdromClassCheckReadWrite() called\n");
+  DPRINT("CdromClassCheckReadWrite() called\n");
 
   return(STATUS_SUCCESS);
 }
@@ -358,7 +360,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   PCDROM_DATA CdromData;
   NTSTATUS Status;
 
-  DPRINT1("CdromClassCreateDeviceObject() called\n");
+  DPRINT("CdromClassCreateDeviceObject() called\n");
 
   /* Claim the cdrom device */
   Status = ScsiClassClaimDevice(PortDeviceObject,
@@ -422,7 +424,6 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   RtlZeroMemory(CdromData,
 		sizeof(CDROM_DATA));
 
-#if 0
   /* Get disk geometry */
   DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
 						     sizeof(DISK_GEOMETRY));
@@ -443,6 +444,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   /* Read the drive's capacity */
   Status = ScsiClassReadDriveCapacity(DiskDeviceObject);
+#if 0
   if (!NT_SUCCESS(Status) &&
       (DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0)
     {
@@ -454,13 +456,18 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       /* Clear the verify flag for non-removable media drives. */
       DiskDeviceObject->Flags &= ~DO_VERIFY_VOLUME;
     }
-
-  DPRINT1("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 #endif
 
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to retrieve drive capacity!\n");
+      return(STATUS_SUCCESS);
+    }
+
+  DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
 
-  DPRINT1("CdromClassCreateDeviceObjects() done\n");
+  DPRINT("CdromClassCreateDeviceObjects() done\n");
 
   return(STATUS_SUCCESS);
 }
@@ -486,11 +493,38 @@ NTSTATUS STDCALL
 CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 			IN PIRP Irp)
 {
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  ULONG ControlCode, InputLength, OutputLength;
+  PCDROM_DATA CdromData;
+  ULONG Information;
+  NTSTATUS Status;
+
   DPRINT("CdromClassDeviceControl() called!\n");
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  Status = STATUS_INVALID_DEVICE_REQUEST;
+  Information = 0;
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
+  InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
+  OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  CdromData = (PCDROM_DATA)(DeviceExtension + 1);
+
+  switch (ControlCode)
+    {
+      default:
+	DPRINT1("Unhandled control code: %lx\n", ControlCode);
+	Status = STATUS_INVALID_DEVICE_REQUEST;
+	Information = 0;
+	break;
+    }
+
+
+  Irp->IoStatus.Status = Status;
+  Irp->IoStatus.Information = Information;
+  IoCompleteRequest(Irp,
+		    IO_NO_INCREMENT);
 
   return(STATUS_SUCCESS);
 }
