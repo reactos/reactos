@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.53 2004/02/01 15:45:41 gvg Exp $ */
+/* $Id: bitmaps.c,v 1.54 2004/02/12 21:50:19 navaraf Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -434,7 +434,7 @@ COLORREF STDCALL NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
    if (XPos < dc->CombinedClip->rclBounds.left ||
        XPos > dc->CombinedClip->rclBounds.right ||
        YPos < dc->CombinedClip->rclBounds.top ||
-       YPos > dc->CombinedClip->rclBounds.top)
+       YPos > dc->CombinedClip->rclBounds.bottom)
    {
       DC_UnlockDc(hDC);
       return (COLORREF)CLR_INVALID;
