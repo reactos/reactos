@@ -631,6 +631,7 @@ NTSTATUS TCPConnect(
 
   Connection->LocalAddress = Connection->AddressFile->ADE->Address;
   Connection->LocalPort    = Connection->AddressFile->Port;
+  Connection->State        = ctSynSent;
 
   Status = AddrBuildAddress(
     (PTA_ADDRESS)(&((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress)->Address[0]),
@@ -917,7 +918,7 @@ static inline VOID TCPiReceiveSynSent(
 
   /* FIXME: Protect AddrFile->Connection */
 
-  if ((TCPHeader->Flags & TCP_ACK) > 0)
+  if ((TCPHeader->Flags & TCP_ACK) > 0 && !(TCPHeader->Flags & TCP_SYN))
     {
       /* FIXME: If SEG.ACK =< ISS, or SEG.ACK > SND.NXT, send a reset (unless
           the RST bit is set, if so drop the segment and return)
@@ -991,8 +992,10 @@ static inline VOID TCPiReceiveSynSent(
               /* Continue */
             }
         }
+#if 0
       TI_DbgPrint(MIN_TRACE, ("?.\n"));
       return; /* ??? */
+#endif
     }
 
   /* The ACK is ok, or there is no ACK, and it the segment did not contain a RST */
@@ -1741,6 +1744,7 @@ VOID TCPReceive(
                              TCPHeader->DestinationPort,
                              IPPROTO_TCP,
                              &SearchContext);
+  
   if (AddrFile) {
     ULONG TotalLength;
     ULONG DataOffset;
