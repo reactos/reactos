@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.8 2003/12/07 10:31:21 navaraf Exp $
+/* $Id: atom.c,v 1.9 2004/02/27 23:11:32 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -641,13 +641,14 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
    if (NameLength != NULL)
      {
-	*NameLength = AtomEntry->Name.Length;
 	if (AtomName != NULL && *NameLength >= AtomEntry->Name.Length)
 	  {
+	     *NameLength = AtomEntry->Name.Length;
 	     memcpy(AtomName, AtomEntry->Name.Buffer, AtomEntry->Name.Length);
           }
         else
           {
+	     *NameLength = AtomEntry->Name.Length;
 	     RtlpUnlockAtomTable(AtomTable);
 	     return STATUS_BUFFER_TOO_SMALL;
 	  }
