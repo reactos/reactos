@@ -613,11 +613,9 @@ VBEMapVideoMemory(
    FrameBuffer.QuadPart =
       DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].PhysBasePtr;
    MapInformation->VideoRamBase = RequestedAddress->RequestedVirtualAddress;
-   MapInformation->VideoRamLength = (
-      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].XResolution *
-      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution *
-      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BitsPerPixel
-      ) >> 3;
+   MapInformation->VideoRamLength = 
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].BytesPerScanLine *
+      DeviceExtension->ModeInfo[DeviceExtension->CurrentMode].YResolution;
 
    VideoPortMapMemory(DeviceExtension, FrameBuffer,
       &MapInformation->VideoRamLength, &inIoSpace,
