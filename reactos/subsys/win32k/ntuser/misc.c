@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.81.2.1 2004/07/07 18:03:01 weiden Exp $
+/* $Id: misc.c,v 1.81.2.2 2004/07/08 22:58:12 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,39 +38,44 @@ W32kGetPrimitiveMessageQueue(VOID) {
 }
 
 BOOL FASTCALL
-IntRegisterLogonProcess(HANDLE hProcess, BOOL x)
+IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister)
 {
   PEPROCESS Process;
   NTSTATUS Status;
-  
-  if(LogonProcess != NULL && LogonProcess != PsGetWin32Process())
+
+  Status = PsLookupProcessByProcessId((PVOID)dwProcessId,
+				      &Process);
+  if (!NT_SUCCESS(Status))
   {
-    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    SetLastWin32Error(RtlNtStatusToDosError(Status));
     return FALSE;
   }
-  
-  if(hProcess)
+
+  if (bRegister)
   {
-    Status = ObReferenceObjectByHandle(hProcess,
-                                       PROCESS_QUERY_INFORMATION,
-                                       PsProcessType,
-                                       ExGetPreviousMode(),
-                                       (PVOID*)&Process,
-                                       NULL);
-    if(!NT_SUCCESS(Status))
+    /* Register the logon process */
+    if (LogonProcess != NULL)
     {
-      SetLastNtError(Status);
-      return 0;
+      ObDereferenceObject(Process);
+      return FALSE;
     }
-  
+
     LogonProcess = Process->Win32Process;
-    ObDereferenceObject(Process);
   }
   else
   {
-    /* deregister the logon process */
+    /* Deregister the logon process */
+    if (LogonProcess != Process->Win32Process)
+    {
+      ObDereferenceObject(Process);
+      return FALSE;
+    }
+
     LogonProcess = NULL;
   }
+
+  ObDereferenceObject(Process);
+
   return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.43 2004/02/03 14:19:56 ekohl Exp $
+/* $Id: rtl.h,v 1.43.12.1 2004/07/08 22:58:10 weiden Exp $
  *
  */
 
@@ -615,6 +615,39 @@ RtlRunDecodeUnicodeString (IN UCHAR Hash,
 VOID STDCALL
 RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
 			   IN OUT PUNICODE_STRING String);
+
+/* Timer Queue functions */
+
+#ifdef __USE_W32API
+#include <winnt.h>
+#else /* __USE_W32API */
+typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
+#endif /* __USE_W32API */
+
+NTSTATUS
+STDCALL
+RtlCreateTimer(HANDLE TimerQueue,PHANDLE phNewTimer, WAITORTIMERCALLBACKFUNC Callback,PVOID Parameter,DWORD DueTime,DWORD Period,ULONG Flags);
+
+NTSTATUS
+STDCALL
+RtlCreateTimerQueue(PHANDLE TimerQueue);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimer(HANDLE TimerQueue,HANDLE Timer,HANDLE CompletionEvent);
+
+NTSTATUS
+STDCALL
+RtlUpdateTimer(HANDLE TimerQueue,HANDLE Timer,ULONG DueTime,ULONG Period);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueueEx(HANDLE TimerQueue,HANDLE CompletionEvent);
+
+NTSTATUS
+STDCALL
+RtlDeleteTimerQueue(HANDLE TimerQueue);
+
 
 #ifndef __NTDRIVER__
 

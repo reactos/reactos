@@ -1000,6 +1000,7 @@ VOID FASTCALL SetPointerRect(PSYSTEM_CURSORINFO CurInfo, PRECTL PointerRect);
 
 INT   FASTCALL IntGetSystemMetrics(INT nIndex);
 BOOL  FASTCALL IntSystemParametersInfo(UINT uiAction, UINT uiParam, PVOID pvParam, UINT fWinIni);
+BOOL  FASTCALL IntRegisterLogonProcess(DWORD dwProcessId, BOOL bRegister);
 void           W32kRegisterPrimitiveMessageQueue();
 
 #endif /* _NTUSER_H */
