@@ -1035,7 +1035,7 @@ static bool wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int s
 	return true;
 }
 
-static int string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
+static int do_string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (s == NULL)
@@ -1076,7 +1076,7 @@ static int string(std::string& f, const char* s, int len, int field_width, int p
 	return done;
 }
 
-static int wstring(std::wstring& f, const wchar_t* s, int len, int field_width, int precision, int flags)
+static int do_wstring(std::wstring& f, const wchar_t* s, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (s == NULL)
@@ -1226,7 +1226,7 @@ std::string ssvprintf ( const char *fmt, va_list args )
 	long double _ldouble;
 	double _double;
 	const char *s;
-	const unsigned short* sw;
+	const wchar_t* sw;
 	int result;
 	std::string f;
 
@@ -1370,7 +1370,7 @@ std::string ssvprintf ( const char *fmt, va_list args )
 			} else {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				result = string(f, s, -1, field_width, precision, flags);
+				result = do_string(f, s, -1, field_width, precision, flags);
 			}
 			if (result < 0)
 			{
@@ -1383,7 +1383,7 @@ std::string ssvprintf ( const char *fmt, va_list args )
 			if (qualifier == 'h') {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				result = string(f, s, -1, field_width, precision, flags);
+				result = do_string(f, s, -1, field_width, precision, flags);
 			} else {
 				/* print unicode string */
 				sw = va_arg(args, wchar_t *);
@@ -1720,7 +1720,7 @@ std::wstring sswvprintf ( const wchar_t* fmt, va_list args )
 			} else {
 				/* print unicode string */
 				s = va_arg(args, wchar_t *);
-				result = wstring(f, s, -1, field_width, precision, flags);
+				result = do_wstring(f, s, -1, field_width, precision, flags);
 			}
 			if (result < 0)
 			{
@@ -1733,7 +1733,7 @@ std::wstring sswvprintf ( const wchar_t* fmt, va_list args )
 			if (qualifier == L'l' || qualifier == L'w') {
 				/* print unicode string */
 				s = va_arg(args, wchar_t *);
-				result = wstring(f, s, -1, field_width, precision, flags);
+				result = do_wstring(f, s, -1, field_width, precision, flags);
 			} else {
 				/* print ascii string */
 				sa = va_arg(args, char *);
