@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.31 2001/06/24 17:58:13 phreak Exp $
+/* $Id: rtl.h,v 1.32 2001/11/21 22:27:26 ekohl Exp $
  *
  */
 
@@ -463,6 +463,12 @@ RtlIsValidIndexHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
 	IN OUT	PRTL_HANDLE		*Handle,
 	IN	ULONG			Index
+	);
+
+NTSTATUS
+STDCALL
+RtlImpersonateSelf (
+	IN	SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel
 	);
 
 NTSTATUS

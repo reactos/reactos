@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.69 2001/11/03 16:48:06 chorns Exp $
+; $Id: ntdll.edf,v 1.70 2001/11/21 22:31:18 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -433,7 +433,7 @@ RtlImageDirectoryEntryToData=RtlImageDirectoryEntryToData@16
 RtlImageNtHeader=RtlImageNtHeader@4
 RtlImageRvaToSection=RtlImageRvaToSection@12
 RtlImageRvaToVa=RtlImageRvaToVa@16
-;RtlImpersonateSelf
+RtlImpersonateSelf=RtlImpersonateSelf@4
 RtlInitAnsiString=RtlInitAnsiString@8
 ;RtlInitCodePageTable
 ;RtlInitNlsTables
