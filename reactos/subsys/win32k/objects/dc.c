@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.134 2004/05/10 17:07:20 weiden Exp $
+/* $Id: dc.c,v 1.135 2004/05/14 16:55:18 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -1120,17 +1120,11 @@ NtGdiGetDCState(HDC  hDC)
 
   /* Get/SetDCState() don't change hVisRgn field ("Undoc. Windows" p.559). */
 
-#if 0
   newdc->w.hGCClipRgn = newdc->w.hVisRgn = 0;
-#endif
   if (dc->w.hClipRgn)
   {
     newdc->w.hClipRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
     NtGdiCombineRgn( newdc->w.hClipRgn, dc->w.hClipRgn, 0, RGN_COPY );
-  }
-  else
-  {
-    newdc->w.hClipRgn = 0;
   }
   DC_UnlockDc( hnewdc );
   DC_UnlockDc( hDC );
@@ -1634,25 +1628,23 @@ NtGdiResetDC(HDC  hDC, CONST DEVMODEW *InitData)
 BOOL STDCALL
 NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
 {
-  PDC  dc, dcs;
-  BOOL  success;
+  PDC dc, dcs;
+  BOOL success;
+
+  DPRINT("NtGdiRestoreDC(%lx, %d)\n", hDC, SaveLevel);
 
   dc = DC_LockDc(hDC);
-  if(!dc)
+  if (!dc)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
 
   if (SaveLevel == -1)
-  {
     SaveLevel = dc->saveLevel;
-  }
 
   if ((SaveLevel < 1) || (SaveLevel > dc->saveLevel))
-  {
     return FALSE;
-  }
 
   success = TRUE;
   while (dc->saveLevel >= SaveLevel)
@@ -1700,6 +1692,8 @@ NtGdiSaveDC(HDC  hDC)
   HDC  hdcs;
   PDC  dc, dcs;
   INT  ret;
+
+  DPRINT("NtGdiSaveDC(%lx)\n", hDC);
 
   if (!(hdcs = NtGdiGetDCState(hDC)))
   {

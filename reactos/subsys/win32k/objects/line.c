@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.30 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: line.c,v 1.31 2004/05/14 16:55:18 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -196,7 +196,6 @@ IntGdiPolyline(DC      *dc,
   SURFOBJ     *SurfObj = NULL;
   BOOL         ret = FALSE; // default to failure
   LONG         i;
-  PROSRGNDATA  reg;
   PGDIBRUSHOBJ PenBrushObj;
   POINT       *pts;
 
@@ -205,10 +204,6 @@ IntGdiPolyline(DC      *dc,
 
   if ( PATH_IsPathOpen ( dc->w.path ) )
     return PATH_Polyline ( dc, pt, Count );
-
-  reg = RGNDATA_LockRgn(dc->w.hGCClipRgn);
-
-  //FIXME: Do somthing with reg...
 
   //Allocate "Count" bytes of memory to hold a safe copy of pt
   pts = (POINT*)ExAllocatePoolWithTag ( NonPagedPool, sizeof(POINT)*Count, TAG_SHAPE );
@@ -244,9 +239,6 @@ IntGdiPolyline(DC      *dc,
 
     ExFreePool ( pts );
   }
-
-  //Clean up
-  RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
 
   return ret;
 }

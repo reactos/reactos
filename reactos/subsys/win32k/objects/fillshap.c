@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.48 2004/05/10 17:07:20 weiden Exp $ */
+/* $Id: fillshap.c,v 1.49 2004/05/14 16:55:18 navaraf Exp $ */
 #include <w32k.h>
 
 /*
@@ -46,7 +46,6 @@ IntGdiPolygon(PDC    dc,
   SURFOBJ *SurfObj;
   PGDIBRUSHOBJ PenBrushObj, FillBrushObj;
   BOOL ret = FALSE; // default to failure
-  PRECTL RectBounds;
   RECTL DestRect;
   int CurrentPoint;
 
@@ -67,9 +66,6 @@ IntGdiPolygon(PDC    dc,
 	  UnsafePoints[CurrentPoint].x += dc->w.DCOrgX;
 	  UnsafePoints[CurrentPoint].y += dc->w.DCOrgY;
 	}
-
-      RectBounds = (PRECTL) RGNDATA_LockRgn(dc->w.hGCClipRgn);
-      //ei not yet implemented ASSERT(RectBounds);
 
       if (PATH_IsPathOpen(dc->w.path)) 
 	ret = PATH_Polygon(dc, UnsafePoints, Count );
@@ -140,7 +136,6 @@ IntGdiPolygon(PDC    dc,
       }
 
       PENOBJ_UnlockPen( dc->w.hPen );
-      RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
   
   return ret;
 }
