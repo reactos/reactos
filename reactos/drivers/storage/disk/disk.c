@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.21 2003/01/30 22:09:15 ekohl Exp $
+/* $Id: disk.c,v 1.22 2003/02/26 16:25:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -401,6 +401,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   PPARTITION_INFORMATION PartitionEntry;
   PDISK_DATA DiskData;
   ULONG PartitionNumber;
+  PVOID MbrBuffer;
   NTSTATUS Status;
 
   DPRINT("DiskClassCreateDeviceObject() called\n");
@@ -539,6 +540,34 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
 
   DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
+
+  /* Check disk for presence of a disk manager */
+  HalExamineMBR(DiskDeviceObject,
+		DiskDeviceExtension->DiskGeometry->BytesPerSector,
+		0x54,
+		&MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT1("Found 'Ontrack Disk Manager'!\n");
+      KeBugCheck(0);
+
+      ExFreePool(MbrBuffer);
+      MbrBuffer = NULL;
+    }
+
+  HalExamineMBR(DiskDeviceObject,
+		DiskDeviceExtension->DiskGeometry->BytesPerSector,
+		0x55,
+		&MbrBuffer);
+  if (MbrBuffer != NULL)
+    {
+      DPRINT1("Found 'EZ-Drive' disk manager!\n");
+      KeBugCheck(0);
+
+      ExFreePool(MbrBuffer);
+      MbrBuffer = NULL;
+    }
+
 
   if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
       (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
