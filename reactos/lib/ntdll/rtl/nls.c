@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.13 2003/07/24 16:28:26 gvg Exp $
+/* $Id: nls.c,v 1.14 2003/07/26 23:25:17 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -276,7 +276,7 @@ RtlMultiByteToUnicodeSize (OUT PULONG UnicodeSize,
     {
       /* multi-byte code page */
       /* FIXME */
-
+      assert(FALSE);
     }
 
   return STATUS_SUCCESS;
