@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.90 2004/04/16 18:53:53 weiden Exp $
+/* $Id: msgqueue.c,v 1.91 2004/04/29 21:13:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -493,6 +493,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
       /* What to do if out of memory? For now we just panic a bit in debug */
       ASSERT(UserMsg);
+      UserMsg->FreeLParam = FALSE;
       UserMsg->Msg = Msg;
       InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
       IntLockSystemMessageQueue(OldIrql);
@@ -597,7 +598,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
   FocusMessageQueue = IntGetFocusMessageQueue();
   if( !IntGetScreenDC() ) {
     if( W32kGetPrimitiveMessageQueue() ) {
-      MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg);
+      MsqPostMessage(W32kGetPrimitiveMessageQueue(), &Msg, FALSE);
     }
   } else {
     if (FocusMessageQueue == NULL)
@@ -610,7 +611,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
-	MsqPostMessage(FocusMessageQueue, &Msg);
+	MsqPostMessage(FocusMessageQueue, &Msg, FALSE);
       }
     else
       {
@@ -665,7 +666,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 //      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
 //      KeQueryTickCount(&LargeTickCount);
 //      Mesg.time = LargeTickCount.u.LowPart;
-  MsqPostMessage(Window->MessageQueue, &Mesg);
+  MsqPostMessage(Window->MessageQueue, &Mesg, FALSE);
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);
 
@@ -678,7 +679,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg)
+MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
 
@@ -688,6 +689,7 @@ MsqCreateMessage(LPMSG Msg)
       return NULL;
     }
 
+  Message->FreeLParam = FreeLParam;
   RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
 
   return Message;
@@ -875,11 +877,11 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg)
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
   
-  if(!(Message = MsqCreateMessage(Msg)))
+  if(!(Message = MsqCreateMessage(Msg, FreeLParam)))
   {
     return;
   }

@@ -384,9 +384,17 @@ NtUserDestroyCursorIcon(
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd);
 
+typedef struct tagNTUSERDISPATCHMESSAGEINFO
+{
+  BOOL HandledByKernel;
+  BOOL Ansi;
+  WNDPROC Proc;
+  MSG Msg;
+} NTUSERDISPATCHMESSAGEINFO, *PNTUSERDISPATCHMESSAGEINFO;
+
 LRESULT
 STDCALL
-NtUserDispatchMessage(CONST MSG* lpmsg);
+NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo);
 
 BOOL
 STDCALL
@@ -734,10 +742,16 @@ STDCALL
 NtUserGetListBoxInfo(
   DWORD Unknown0);
 
+typedef struct tagNTUSERGETMESSAGEINFO
+{
+  MSG Msg;
+  ULONG LParamSize;
+} NTUSERGETMESSAGEINFO, *PNTUSERGETMESSAGEINFO;
+
 BOOL
 STDCALL
 NtUserGetMessage(
-  LPMSG lpMsg,
+  PNTUSERGETMESSAGEINFO MsgInfo,
   HWND hWnd,
   UINT wMsgFilterMin,
   UINT wMsgFilterMax);
@@ -1036,7 +1050,7 @@ NtUserPaintDesktop(
 BOOL
 STDCALL
 NtUserPeekMessage(
-  LPMSG lpMsg,
+  PNTUSERGETMESSAGEINFO MsgInfo,
   HWND hWnd,
   UINT wMsgFilterMin,
   UINT wMsgFilterMax,
@@ -1716,6 +1730,28 @@ NtUserSetScrollBarInfo(
   HWND hwnd,
   LONG idObject,
   SETSCROLLBARINFO *info);
+
+/* lParam of DDE messages */
+typedef struct tagKMDDEEXECUTEDATA
+{
+  HWND Sender;
+  HGLOBAL ClientMem;
+  /* BYTE Data[DataSize] */
+} KMDDEEXECUTEDATA, *PKMDDEEXECUTEDATA; 
+
+typedef struct tagKMDDELPARAM
+{
+  BOOL Packed;
+  union
+    {
+      struct
+        {
+          UINT uiLo;
+          UINT uiHi;
+        } Packed;
+      LPARAM Unpacked;
+    } Value;
+} KMDDELPARAM, *PKMDDELPARAM;
 
 #endif /* __WIN32K_NTUSER_H */
 

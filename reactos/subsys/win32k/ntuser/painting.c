@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.80 2004/04/09 20:03:19 navaraf Exp $
+ *  $Id: painting.c,v 1.81 2004/04/29 21:13:16 gvg Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -609,8 +609,8 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
 }
 
 BOOL FASTCALL
-IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
-   BOOL Remove)
+IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
+                   PW32THREAD Thread, MSG *Message, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
    PUSER_MESSAGE_QUEUE MessageQueue = (PUSER_MESSAGE_QUEUE)Thread->MessageQueue;
@@ -625,13 +625,14 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
 
    if (Message->hwnd == NULL)
    {
-#if 0
-      DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
-#endif
-      IntLockMessageQueue(MessageQueue);
-      MessageQueue->PaintPosted = 0;
-      MessageQueue->PaintCount = 0;
-      IntUnLockMessageQueue(MessageQueue);
+      if (NULL == hWnd)
+      {
+         DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+         IntLockMessageQueue(MessageQueue);
+         MessageQueue->PaintPosted = 0;
+         MessageQueue->PaintCount = 0;
+         IntUnLockMessageQueue(MessageQueue);
+      }
       return FALSE;
    }
 
@@ -639,7 +640,10 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
    if (Window != NULL)
    {
       IntLockWindowUpdate(Window);
-      if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+      if (0 != (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
+          && ((0 == MsgFilterMin && 0 == MsgFilterMax) ||
+              (MsgFilterMin <= WM_NCPAINT &&
+               WM_NCPAINT <= MsgFilterMax)))
       {
          Message->message = WM_NCPAINT;
          Message->wParam = (WPARAM)Window->NCUpdateRegion;
@@ -651,7 +655,9 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
             Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
             MsqDecPaintCountQueue(Window->MessageQueue);
          }
-      } else
+      } else if ((0 == MsgFilterMin && 0 == MsgFilterMax) ||
+                 (MsgFilterMin <= WM_PAINT &&
+                  WM_PAINT <= MsgFilterMax))
       {
          Message->message = WM_PAINT;
          Message->wParam = Message->lParam = 0;

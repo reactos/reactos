@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.59 2004/04/15 23:36:03 weiden Exp $
+/* $Id: message.c,v 1.60 2004/04/29 21:13:16 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,91 +70,242 @@ IntCleanupMessageImpl(VOID)
   return STATUS_SUCCESS;
 }
 
-LRESULT FASTCALL
-IntDispatchMessage(MSG* Msg)
-{
-  LRESULT Result;
-  PWINDOW_OBJECT WindowObject;
-  /* Process timer messages. */
-  if (Msg->message == WM_TIMER)
-    {
-      if (Msg->lParam)
-	{
-	  LARGE_INTEGER LargeTickCount;
-	  /* FIXME: Call hooks. */
-
-	  /* FIXME: Check for continuing validity of timer. */
-	  
-          KeQueryTickCount(&LargeTickCount);
-	  return IntCallWindowProc((WNDPROC)Msg->lParam,
-                                      FALSE,
-                                      Msg->hwnd,
-                                      Msg->message,
-                                      Msg->wParam,
-                                      (LPARAM)LargeTickCount.u.LowPart,
-                                      -1);
-	}
-    }
-
-  if( Msg->hwnd == 0 ) return 0;
-
-  /* Get the window object. */
-  WindowObject = IntGetWindowObject(Msg->hwnd);
-  if(!WindowObject)
-    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
-    }
-  if(WindowObject->OwnerThread != PsGetCurrentThread())
+#define MMS_SIZE_WPARAM      -1
+#define MMS_SIZE_WPARAMWCHAR -2
+#define MMS_SIZE_LPARAMSZ    -3
+#define MMS_SIZE_SPECIAL     -4
+#define MMS_FLAG_READ        0x01
+#define MMS_FLAG_WRITE       0x02
+#define MMS_FLAG_READWRITE   (MMS_FLAG_READ | MMS_FLAG_WRITE)
+typedef struct tagMSGMEMORY
   {
-    IntReleaseWindowObject(WindowObject);
-    DPRINT1("Window doesn't belong to the calling thread!\n");
-    return 0;
-  }
-  /* FIXME: Call hook procedures. */
+    UINT Message;
+    UINT Size;
+    INT Flags;
+  } MSGMEMORY, *PMSGMEMORY;
 
-  /* Call the window procedure. */
-  if (0xFFFF0000 != ((DWORD) WindowObject->WndProcW & 0xFFFF0000))
+static MSGMEMORY MsgMemory[] =
+  {
+    { WM_CREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
+    { WM_DDE_ACK, sizeof(KMDDELPARAM), MMS_FLAG_READ },
+    { WM_DDE_EXECUTE, MMS_SIZE_WPARAM, MMS_FLAG_READ },
+    { WM_GETMINMAXINFO, sizeof(MINMAXINFO), MMS_FLAG_READWRITE },
+    { WM_GETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_WRITE },
+    { WM_NCCALCSIZE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
+    { WM_NCCREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
+    { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
+    { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
+    { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
+    { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
+    { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
+  };
+
+static PMSGMEMORY FASTCALL
+FindMsgMemory(UINT Msg)
+  {
+  PMSGMEMORY MsgMemoryEntry;
+
+  /* See if this message type is present in the table */
+  for (MsgMemoryEntry = MsgMemory;
+       MsgMemoryEntry < MsgMemory + sizeof(MsgMemory) / sizeof(MSGMEMORY);
+       MsgMemoryEntry++)
     {
-      Result = IntCallWindowProc(WindowObject->WndProcW,
-                                 FALSE,
-                                 Msg->hwnd,
-                                 Msg->message,
-                                 Msg->wParam,
-                                 Msg->lParam,
-                                 -1);
+      if (Msg == MsgMemoryEntry->Message)
+        {
+          return MsgMemoryEntry;
+        }
+    }
+
+  return NULL;
+}
+
+static UINT FASTCALL
+MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
+{
+  if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
+    {
+      return (UINT) wParam;
+    }
+  else if (MMS_SIZE_WPARAMWCHAR == MsgMemoryEntry->Size)
+    {
+      return (UINT) (wParam * sizeof(WCHAR));
+    }
+  else if (MMS_SIZE_LPARAMSZ == MsgMemoryEntry->Size)
+    {
+      return (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
+    }
+  else if (MMS_SIZE_SPECIAL == MsgMemoryEntry->Size)
+    {
+      switch(MsgMemoryEntry->Message)
+        {
+        case WM_NCCALCSIZE:
+          return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
+          break;
+        default:
+          assert(FALSE);
+          return 0;
+          break;
+        }
     }
   else
     {
-      Result = IntCallWindowProc(WindowObject->WndProcA,
-                                 TRUE,
-                                 Msg->hwnd,
-                                 Msg->message,
-                                 Msg->wParam,
-                                 Msg->lParam,
-                                 -1);
+      return MsgMemoryEntry->Size;
     }
-  
-  IntReleaseWindowObject(WindowObject);
-  
-  return Result;
+}
+
+static FASTCALL NTSTATUS
+PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  NCCALCSIZE_PARAMS *UnpackedParams;
+  NCCALCSIZE_PARAMS *PackedParams;
+
+  *lParamPacked = lParam;
+  if (WM_NCCALCSIZE == Msg && wParam)
+    {
+      UnpackedParams = (NCCALCSIZE_PARAMS *) lParam;
+      if (UnpackedParams->lppos != (PWINDOWPOS) (UnpackedParams + 1))
+        {
+          PackedParams = ExAllocatePoolWithTag(PagedPool,
+                                               sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
+                                               TAG_MSG);
+          if (NULL == PackedParams)
+            {
+              DPRINT1("Not enough memory to pack lParam\n");
+              return STATUS_NO_MEMORY;
+            }
+          RtlCopyMemory(PackedParams, UnpackedParams, sizeof(NCCALCSIZE_PARAMS));
+          PackedParams->lppos = (PWINDOWPOS) (PackedParams + 1);
+          RtlCopyMemory(PackedParams->lppos, UnpackedParams->lppos, sizeof(WINDOWPOS));
+          *lParamPacked = (LPARAM) PackedParams;
+        }
+    }
+
+  return STATUS_SUCCESS;
+}
+
+static FASTCALL NTSTATUS
+UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+  NCCALCSIZE_PARAMS *UnpackedParams;
+  NCCALCSIZE_PARAMS *PackedParams;
+  PWINDOWPOS UnpackedWindowPos;
+
+  if (lParamPacked == lParam)
+    {
+      return STATUS_SUCCESS;
+    }
+
+  if (WM_NCCALCSIZE == Msg && wParam)
+    {
+      PackedParams = (NCCALCSIZE_PARAMS *) lParamPacked;
+      UnpackedParams = (NCCALCSIZE_PARAMS *) lParam;
+      UnpackedWindowPos = UnpackedParams->lppos;
+      RtlCopyMemory(UnpackedParams, PackedParams, sizeof(NCCALCSIZE_PARAMS));
+      UnpackedParams->lppos = UnpackedWindowPos;
+      RtlCopyMemory(UnpackedWindowPos, PackedParams + 1, sizeof(WINDOWPOS));
+      ExFreePool((PVOID) lParamPacked);
+
+      return STATUS_SUCCESS;
+    }
+
+  assert(FALSE);
+
+  return STATUS_INVALID_PARAMETER;
 }
 
 
 LRESULT STDCALL
-NtUserDispatchMessage(CONST MSG* UnsafeMsg)
+NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 {
   NTSTATUS Status;
-  MSG Msg;
+  NTUSERDISPATCHMESSAGEINFO MsgInfo;
+  PWINDOW_OBJECT WindowObject;
+  LRESULT Result;
 
-  Status = MmCopyFromCaller(&Msg, (PVOID) UnsafeMsg, sizeof(MSG));
+  Status = MmCopyFromCaller(&MsgInfo, UnsafeMsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
   if (! NT_SUCCESS(Status))
     {
-    SetLastNtError(Status);
-    return 0;
+      SetLastNtError(Status);
+      return 0;
+    }
+
+  /* Process timer messages. */
+  if (WM_TIMER == MsgInfo.Msg.message && 0 != MsgInfo.Msg.lParam)
+    {
+      LARGE_INTEGER LargeTickCount;
+      /* FIXME: Call hooks. */
+
+      /* FIXME: Check for continuing validity of timer. */
+
+      MsgInfo.HandledByKernel = FALSE;
+      KeQueryTickCount(&LargeTickCount);
+      MsgInfo.Proc = (WNDPROC) MsgInfo.Msg.lParam;
+      MsgInfo.Msg.lParam = (LPARAM)LargeTickCount.u.LowPart;
+    }
+  else if (NULL == MsgInfo.Msg.hwnd)
+    {
+      MsgInfo.HandledByKernel = TRUE;
+      Result = 0;
+    }
+  else
+    {
+      /* Get the window object. */
+      WindowObject = IntGetWindowObject(MsgInfo.Msg.hwnd);
+      if (NULL == WindowObject)
+        {
+          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+          MsgInfo.HandledByKernel = TRUE;
+          Result = 0;
+        }
+      else
+        {
+          if (WindowObject->OwnerThread != PsGetCurrentThread())
+            {
+              IntReleaseWindowObject(WindowObject);
+              DPRINT1("Window doesn't belong to the calling thread!\n");
+              MsgInfo.HandledByKernel = TRUE;
+              Result = 0;
+            }
+          else
+            {
+              /* FIXME: Call hook procedures. */
+
+              MsgInfo.HandledByKernel = FALSE;
+              Result = 0;
+              if (0xFFFF0000 != ((DWORD) WindowObject->WndProcW & 0xFFFF0000))
+                {
+                  if (0xFFFF0000 != ((DWORD) WindowObject->WndProcA & 0xFFFF0000))
+                    {
+                      /* Both Unicode and Ansi winprocs are real, use whatever
+                         usermode prefers */
+                      MsgInfo.Proc = (MsgInfo.Ansi ? WindowObject->WndProcA
+                                      : WindowObject->WndProcW);
+                    }
+                  else
+                    {
+                      /* Real Unicode winproc */
+                      MsgInfo.Ansi = FALSE;
+                      MsgInfo.Proc = WindowObject->WndProcW;
+                    }
+                }
+              else
+                {
+                  /* Must have real Ansi winproc */
+                  MsgInfo.Ansi = TRUE;
+                  MsgInfo.Proc = WindowObject->WndProcA;
+                }
+            }
+          IntReleaseWindowObject(WindowObject);
+        }
+    }
+  Status = MmCopyToCaller(UnsafeMsgInfo, &MsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
+  if (! NT_SUCCESS(Status))
+    {
+      SetLastNtError(Status);
+      return 0;
     }
   
-  return IntDispatchMessage(&Msg);
+  return Result;
 }
 
 
@@ -336,7 +487,7 @@ IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *Hit
  * Internal version of PeekMessage() doing all the work
  */
 BOOL FASTCALL
-IntPeekMessage(LPMSG Msg,
+IntPeekMessage(PUSER_MESSAGE Msg,
                 HWND Wnd,
                 UINT MsgFilterMin,
                 UINT MsgFilterMax,
@@ -372,10 +523,11 @@ IntPeekMessage(LPMSG Msg,
   {
     /* According to the PSDK, WM_QUIT messages are always returned, regardless
        of the filter specified */
-    Msg->hwnd = NULL;
-    Msg->message = WM_QUIT;
-    Msg->wParam = ThreadQueue->QuitExitCode;
-    Msg->lParam = 0;
+    Msg->Msg.hwnd = NULL;
+    Msg->Msg.message = WM_QUIT;
+    Msg->Msg.wParam = ThreadQueue->QuitExitCode;
+    Msg->Msg.lParam = 0;
+    Msg->FreeLParam = FALSE;
     if (RemoveMessages)
     {
       ThreadQueue->QuitPosted = FALSE;
@@ -393,7 +545,7 @@ IntPeekMessage(LPMSG Msg,
                            &Message);
   if (Present)
   {
-    RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+    RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
     if (RemoveMessages)
     {
       MsqDestroyMessage(Message);
@@ -411,7 +563,7 @@ IntPeekMessage(LPMSG Msg,
                            &Message);
   if (Present)
   {
-    RtlCopyMemory(Msg, &Message->Msg, sizeof(MSG));
+    RtlCopyMemory(Msg, Message, sizeof(USER_MESSAGE));
     if (RemoveMessages)
     {
       MsqDestroyMessage(Message);
@@ -423,8 +575,9 @@ IntPeekMessage(LPMSG Msg,
   while (MsqDispatchOneSentMessage(ThreadQueue));
 
   /* Check for paint messages. */
-  if (IntGetPaintMessage(Wnd, PsGetWin32Thread(), Msg, RemoveMessages))
+  if (IntGetPaintMessage(Wnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
   {
+    Msg->FreeLParam = FALSE;
     return TRUE;
   }
   
@@ -438,12 +591,12 @@ IntPeekMessage(LPMSG Msg,
     {
       PWINDOW_OBJECT MsgWindow = NULL;;
       
-      if(Msg->hwnd && (MsgWindow = IntGetWindowObject(Msg->hwnd)) &&
-         Msg->message >= WM_MOUSEFIRST && Msg->message <= WM_MOUSELAST)
+      if(Msg->Msg.hwnd && (MsgWindow = IntGetWindowObject(Msg->Msg.hwnd)) &&
+         Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST)
       {
         USHORT HitTest;
         
-        if(IntTranslateMouseMessage(ThreadQueue, Msg, &HitTest, TRUE))
+        if(IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
           /* FIXME - check message filter again, if the message doesn't match anymore,
                      search again */
         {
@@ -453,10 +606,10 @@ IntPeekMessage(LPMSG Msg,
         }
         if(ThreadQueue->CaptureWindow == NULL)
         {
-          IntSendHitTestMessages(ThreadQueue, Msg);
-          if((Msg->message != WM_MOUSEMOVE && Msg->message != WM_NCMOUSEMOVE) &&
-             IS_BTN_MESSAGE(Msg->message, DOWN) &&
-             IntActivateWindowMouse(ThreadQueue, Msg, MsgWindow, &HitTest))
+          IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
+          if((Msg->Msg.message != WM_MOUSEMOVE && Msg->Msg.message != WM_NCMOUSEMOVE) &&
+             IS_BTN_MESSAGE(Msg->Msg.message, DOWN) &&
+             IntActivateWindowMouse(ThreadQueue, &Msg->Msg, MsgWindow, &HitTest))
           {
             IntReleaseWindowObject(MsgWindow);
             /* eat the message, search again */
@@ -466,7 +619,7 @@ IntPeekMessage(LPMSG Msg,
       }
       else
       {
-        IntSendHitTestMessages(ThreadQueue, Msg);
+        IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
       }
       
       if(MsgWindow)
@@ -478,8 +631,8 @@ IntPeekMessage(LPMSG Msg,
     }
     
     USHORT HitTest;
-    if((Msg->hwnd && Msg->message >= WM_MOUSEFIRST && Msg->message <= WM_MOUSELAST) &&
-       IntTranslateMouseMessage(ThreadQueue, Msg, &HitTest, FALSE))
+    if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
+       IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, FALSE))
       /* FIXME - check message filter again, if the message doesn't match anymore,
                  search again */
     {
@@ -494,43 +647,88 @@ IntPeekMessage(LPMSG Msg,
 }
 
 BOOL STDCALL
-NtUserPeekMessage(LPMSG UnsafeMsg,
+NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
                   HWND Wnd,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax,
                   UINT RemoveMsg)
 {
-  MSG SafeMsg;
   NTSTATUS Status;
   BOOL Present;
+  NTUSERGETMESSAGEINFO Info;
   PWINDOW_OBJECT Window;
+  PMSGMEMORY MsgMemoryEntry;
+  PVOID UserMem;
+  UINT Size;
+  USER_MESSAGE Msg;
 
   /* Validate input */
   if (NULL != Wnd)
     {
       Window = IntGetWindowObject(Wnd);
-      if(!Window)
-        Wnd = NULL;
+      if (NULL == Window)
+        {
+          Wnd = NULL;
+        }
       else
-        IntReleaseWindowObject(Window);
+        {
+          IntReleaseWindowObject(Window);
+        }
     }
+
   if (MsgFilterMax < MsgFilterMin)
     {
       MsgFilterMin = 0;
       MsgFilterMax = 0;
     }
 
-  Present = IntPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+  Present = IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
   if (Present)
     {
-      Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
+      Info.Msg = Msg.Msg;
+      /* See if this message type is present in the table */
+      MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
+      if (NULL == MsgMemoryEntry)
+        {
+          /* Not present, no copying needed */
+          Info.LParamSize = 0;
+        }
+      else
+        {
+          /* Determine required size */
+          Size = MsgMemorySize(MsgMemoryEntry, Info.Msg.wParam,
+                               Info.Msg.lParam);
+          /* Allocate required amount of user-mode memory */
+          Info.LParamSize = Size;
+          UserMem = NULL;
+          Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &UserMem, 0,
+                                           &Info.LParamSize, MEM_COMMIT, PAGE_READWRITE);
+          if (! NT_SUCCESS(Status))
+            {
+              SetLastNtError(Status);
+              return (BOOL) -1;
+            }
+          /* Transfer lParam data to user-mode mem */
+          Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Size);
+          if (! NT_SUCCESS(Status))
+            {
+              ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &UserMem,
+                                  &Info.LParamSize, MEM_DECOMMIT);
+              SetLastNtError(Status);
+              return (BOOL) -1;
+            }
+          Info.Msg.lParam = (LPARAM) UserMem;
+        }
+      if (Msg.FreeLParam && 0 != Msg.Msg.lParam)
+        {
+          ExFreePool((void *) Msg.Msg.lParam);
+        }
+      Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
       if (! NT_SUCCESS(Status))
-	{
-	  /* There is error return documented for PeekMessage().
-             Do the best we can */
-	  SetLastNtError(Status);
-	  return FALSE;
-	}
+        {
+          SetLastNtError(Status);
+          return (BOOL) -1;
+        }
     }
 
   return Present;
@@ -543,7 +741,7 @@ IntWaitMessage(HWND Wnd,
 {
   PUSER_MESSAGE_QUEUE ThreadQueue;
   NTSTATUS Status;
-  MSG Msg;
+  USER_MESSAGE Msg;
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
@@ -565,7 +763,7 @@ IntWaitMessage(HWND Wnd,
 }
 
 BOOL STDCALL
-NtUserGetMessage(LPMSG UnsafeMsg,
+NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 		 HWND Wnd,
 		 UINT MsgFilterMin,
 		 UINT MsgFilterMax)
@@ -581,9 +779,13 @@ NtUserGetMessage(LPMSG UnsafeMsg,
  */
 {
   BOOL GotMessage;
-  MSG SafeMsg;
+  NTUSERGETMESSAGEINFO Info;
   NTSTATUS Status;
   PWINDOW_OBJECT Window;
+  PMSGMEMORY MsgMemoryEntry;
+  PVOID UserMem;
+  UINT Size;
+  USER_MESSAGE Msg;
 
   /* Validate input */
   if (NULL != Wnd)
@@ -602,10 +804,49 @@ NtUserGetMessage(LPMSG UnsafeMsg,
 
   do
     {
-      GotMessage = IntPeekMessage(&SafeMsg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      GotMessage = IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
       if (GotMessage)
 	{
-	  Status = MmCopyToCaller(UnsafeMsg, &SafeMsg, sizeof(MSG));
+          Info.Msg = Msg.Msg;
+          /* See if this message type is present in the table */
+          MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
+          if (NULL == MsgMemoryEntry)
+            {
+              /* Not present, no copying needed */
+              Info.LParamSize = 0;
+            }
+          else
+            {
+              /* Determine required size */
+              Size = MsgMemorySize(MsgMemoryEntry, Info.Msg.wParam,
+                                   Info.Msg.lParam);
+              /* Allocate required amount of user-mode memory */
+              Info.LParamSize = Size;
+              UserMem = NULL;
+              Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &UserMem, 0,
+                                               &Info.LParamSize, MEM_COMMIT, PAGE_READWRITE);
+
+              if (! NT_SUCCESS(Status))
+                {
+                  SetLastNtError(Status);
+                  return (BOOL) -1;
+                }
+              /* Transfer lParam data to user-mode mem */
+              Status = MmCopyToCaller(UserMem, (PVOID) Info.Msg.lParam, Size);
+              if (! NT_SUCCESS(Status))
+                {
+                  ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &UserMem,
+                                      &Info.LParamSize, MEM_DECOMMIT);
+                  SetLastNtError(Status);
+                  return (BOOL) -1;
+                }
+              Info.Msg.lParam = (LPARAM) UserMem;
+            }
+          if (Msg.FreeLParam && 0 != Msg.Msg.lParam)
+            {
+              ExFreePool((void *) Msg.Msg.lParam);
+            }
+	  Status = MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
 	  if (! NT_SUCCESS(Status))
 	    {
 	      SetLastNtError(Status);
@@ -619,7 +860,7 @@ NtUserGetMessage(LPMSG UnsafeMsg,
     }
   while (! GotMessage);
 
-  return WM_QUIT != SafeMsg.message;
+  return WM_QUIT != Info.Msg.message;
 }
 
 DWORD
@@ -638,21 +879,117 @@ NtUserMessageCall(
   return 0;
 }
 
+static NTSTATUS FASTCALL
+CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry)
+{
+  NTSTATUS Status;
+  
+  PVOID KernelMem;
+  UINT Size;
+
+  *KernelModeMsg = *UserModeMsg;
+
+  /* See if this message type is present in the table */
+  if (NULL == MsgMemoryEntry)
+    {
+      /* Not present, no copying needed */
+      return STATUS_SUCCESS;
+    }
+
+  /* Determine required size */
+  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
+
+  if (0 != Size)
+    {
+      /* Allocate kernel mem */
+      KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
+      if (NULL == KernelMem)
+        {
+          DPRINT1("Not enough memory to copy message to kernel mem\n");
+          return STATUS_NO_MEMORY;
+        }
+      KernelModeMsg->lParam = (LPARAM) KernelMem;
+
+      /* Copy data if required */
+      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
+        {
+          Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
+          if (! NT_SUCCESS(Status))
+            {
+              DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
+              ExFreePool(KernelMem);
+              return Status;
+            }
+        }
+      else
+        {
+          /* Make sure we don't pass any secrets to usermode */
+          RtlZeroMemory(KernelMem, Size);
+        }
+    }
+  else
+    {
+      KernelModeMsg->lParam = 0;
+    }
+
+  return STATUS_SUCCESS;
+}
+
+static NTSTATUS FASTCALL
+CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
+{
+  NTSTATUS Status;
+  PMSGMEMORY MsgMemoryEntry;
+  UINT Size;
+
+  /* See if this message type is present in the table */
+  MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
+  if (NULL == MsgMemoryEntry)
+    {
+      /* Not present, no copying needed */
+      return STATUS_SUCCESS;
+    }
+
+  /* Determine required size */
+  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
+
+  if (0 != Size)
+    {
+      /* Copy data if required */
+      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
+        {
+          Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
+          if (! NT_SUCCESS(Status))
+            {
+              DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
+              ExFreePool((PVOID) KernelModeMsg->lParam);
+              return Status;
+            }
+        }
+
+      ExFreePool((PVOID) KernelModeMsg->lParam);
+    }
+
+  return STATUS_SUCCESS;
+}
+
 BOOL STDCALL
-NtUserPostMessage(HWND hWnd,
+NtUserPostMessage(HWND Wnd,
 		  UINT Msg,
 		  WPARAM wParam,
 		  LPARAM lParam)
 {
   PWINDOW_OBJECT Window;
-  MSG Mesg;
+  MSG UserModeMsg, KernelModeMsg;
   LARGE_INTEGER LargeTickCount;
+  NTSTATUS Status;
+  PMSGMEMORY MsgMemoryEntry;
 
   if (WM_QUIT == Msg)
     {
       MsqPostQuitMessage(PsGetWin32Thread()->MessageQueue, wParam);
     }
-  else if (hWnd == HWND_BROADCAST)
+  else if (Wnd == HWND_BROADCAST)
     {
       HWND *List;
       PWINDOW_OBJECT DesktopWindow;
@@ -670,21 +1007,30 @@ NtUserPostMessage(HWND hWnd,
     }
   else
     {
-      Window = IntGetWindowObject(hWnd);
-      if (!Window)
+      Window = IntGetWindowObject(Wnd);
+      if (NULL == Window)
         {
-	      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
           return FALSE;
         }
-      Mesg.hwnd = hWnd;
-      Mesg.message = Msg;
-      Mesg.wParam = wParam;
-      Mesg.lParam = lParam;
-      Mesg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
-      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
+
+      UserModeMsg.hwnd = Wnd;
+      UserModeMsg.message = Msg;
+      UserModeMsg.wParam = wParam;
+      UserModeMsg.lParam = lParam;
+      MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+      Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+      if (! NT_SUCCESS(Status))
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return FALSE;
+        }
+      KernelModeMsg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
+      KernelModeMsg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
       KeQueryTickCount(&LargeTickCount);
-      Mesg.time = LargeTickCount.u.LowPart;
-      MsqPostMessage(Window->MessageQueue, &Mesg);
+      KernelModeMsg.time = LargeTickCount.u.LowPart;
+      MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
+                     NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
       IntReleaseWindowObject(Window);
     }
 
@@ -697,11 +1043,11 @@ NtUserPostThreadMessage(DWORD idThread,
 			WPARAM wParam,
 			LPARAM lParam)
 {
-  MSG Mesg;
-
+  MSG UserModeMsg, KernelModeMsg;
   PETHREAD peThread;
   PW32THREAD pThread;
   NTSTATUS Status;
+  PMSGMEMORY MsgMemoryEntry;
 
   Status = PsLookupThreadByThreadId((void *)idThread,&peThread);
   
@@ -712,11 +1058,20 @@ NtUserPostThreadMessage(DWORD idThread,
 	ObDereferenceObject( peThread );
 	return FALSE;
       }
-    Mesg.hwnd = 0;
-    Mesg.message = Msg;
-    Mesg.wParam = wParam;
-    Mesg.lParam = lParam;
-    MsqPostMessage(pThread->MessageQueue, &Mesg);
+
+    UserModeMsg.hwnd = NULL;
+    UserModeMsg.message = Msg;
+    UserModeMsg.wParam = wParam;
+    UserModeMsg.lParam = lParam;
+    MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+    Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
+    if (! NT_SUCCESS(Status))
+      {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+      }
+    MsqPostMessage(pThread->MessageQueue, &KernelModeMsg,
+                   NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam);
     ObDereferenceObject( peThread );
     return TRUE;
   } else {
@@ -731,147 +1086,6 @@ NtUserQuerySendMessage(DWORD Unknown0)
   UNIMPLEMENTED;
 
   return 0;
-}
-
-#define MMS_SIZE_WPARAM      -1
-#define MMS_SIZE_WPARAMWCHAR -2
-#define MMS_SIZE_LPARAMSZ    -3
-#define MMS_SIZE_SPECIAL     -4
-#define MMS_FLAG_READ        0x01
-#define MMS_FLAG_WRITE       0x02
-#define MMS_FLAG_READWRITE   (MMS_FLAG_READ | MMS_FLAG_WRITE)
-typedef struct tagMSGMEMORY
-  {
-    UINT Message;
-    UINT Size;
-    INT Flags;
-  } MSGMEMORY, *PMSGMEMORY;
-
-static MSGMEMORY MsgMemory[] =
-  {
-    { WM_CREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
-    { WM_GETMINMAXINFO, sizeof(MINMAXINFO), MMS_FLAG_READWRITE },
-    { WM_GETTEXT, MMS_SIZE_WPARAMWCHAR, MMS_FLAG_WRITE },
-    { WM_NCCALCSIZE, MMS_SIZE_SPECIAL, MMS_FLAG_READWRITE },
-    { WM_NCCREATE, sizeof(CREATESTRUCTW), MMS_FLAG_READWRITE },
-    { WM_SETTEXT, MMS_SIZE_LPARAMSZ, MMS_FLAG_READ },
-    { WM_STYLECHANGED, sizeof(STYLESTRUCT), MMS_FLAG_READ },
-    { WM_STYLECHANGING, sizeof(STYLESTRUCT), MMS_FLAG_READWRITE },
-    { WM_WINDOWPOSCHANGED, sizeof(WINDOWPOS), MMS_FLAG_READ },
-    { WM_WINDOWPOSCHANGING, sizeof(WINDOWPOS), MMS_FLAG_READWRITE },
-  };
-
-static PMSGMEMORY FASTCALL
-FindMsgMemory(UINT Msg)
-  {
-  PMSGMEMORY MsgMemoryEntry;
-
-  /* See if this message type is present in the table */
-  for (MsgMemoryEntry = MsgMemory;
-       MsgMemoryEntry < MsgMemory + sizeof(MsgMemory) / sizeof(MSGMEMORY);
-       MsgMemoryEntry++)
-    {
-      if (Msg == MsgMemoryEntry->Message)
-        {
-          return MsgMemoryEntry;
-        }
-    }
-
-  return NULL;
-}
-
-static UINT FASTCALL
-MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
-{
-  if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
-    {
-      return (UINT) wParam;
-    }
-  else if (MMS_SIZE_WPARAMWCHAR == MsgMemoryEntry->Size)
-    {
-      return (UINT) (wParam * sizeof(WCHAR));
-    }
-  else if (MMS_SIZE_LPARAMSZ == MsgMemoryEntry->Size)
-    {
-      return (UINT) ((wcslen((PWSTR) lParam) + 1) * sizeof(WCHAR));
-    }
-  else if (MMS_SIZE_SPECIAL == MsgMemoryEntry->Size)
-    {
-      switch(MsgMemoryEntry->Message)
-        {
-        case WM_NCCALCSIZE:
-          return wParam ? sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS) : sizeof(RECT);
-          break;
-        default:
-          assert(FALSE);
-          return 0;
-          break;
-        }
-    }
-  else
-    {
-      return MsgMemoryEntry->Size;
-    }
-}
-
-static NTSTATUS FASTCALL
-PackParam(LPARAM *lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  NCCALCSIZE_PARAMS *UnpackedParams;
-  NCCALCSIZE_PARAMS *PackedParams;
-
-  *lParamPacked = lParam;
-  if (WM_NCCALCSIZE == Msg && wParam)
-    {
-      UnpackedParams = (NCCALCSIZE_PARAMS *) lParam;
-      if (UnpackedParams->lppos != (PWINDOWPOS) (UnpackedParams + 1))
-        {
-          PackedParams = ExAllocatePoolWithTag(PagedPool,
-                                               sizeof(NCCALCSIZE_PARAMS) + sizeof(WINDOWPOS),
-                                               TAG_MSG);
-          if (NULL == PackedParams)
-            {
-              DPRINT1("Not enough memory to pack lParam\n");
-              return STATUS_NO_MEMORY;
-            }
-          RtlCopyMemory(PackedParams, UnpackedParams, sizeof(NCCALCSIZE_PARAMS));
-          PackedParams->lppos = (PWINDOWPOS) (PackedParams + 1);
-          RtlCopyMemory(PackedParams->lppos, UnpackedParams->lppos, sizeof(WINDOWPOS));
-          *lParamPacked = (LPARAM) PackedParams;
-        }
-    }
-
-  return STATUS_SUCCESS;
-}
-
-static FASTCALL NTSTATUS
-UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
-{
-  NCCALCSIZE_PARAMS *UnpackedParams;
-  NCCALCSIZE_PARAMS *PackedParams;
-  PWINDOWPOS UnpackedWindowPos;
-
-  if (lParamPacked == lParam)
-    {
-      return STATUS_SUCCESS;
-    }
-
-  if (WM_NCCALCSIZE == Msg && wParam)
-    {
-      PackedParams = (NCCALCSIZE_PARAMS *) lParamPacked;
-      UnpackedParams = (NCCALCSIZE_PARAMS *) lParam;
-      UnpackedWindowPos = UnpackedParams->lppos;
-      RtlCopyMemory(UnpackedParams, PackedParams, sizeof(NCCALCSIZE_PARAMS));
-      UnpackedParams->lppos = UnpackedWindowPos;
-      RtlCopyMemory(UnpackedWindowPos, PackedParams + 1, sizeof(WINDOWPOS));
-      ExFreePool((PVOID) lParamPacked);
-
-      return STATUS_SUCCESS;
-    }
-
-  assert(FALSE);
-
-  return STATUS_INVALID_PARAMETER;
 }
 
 LRESULT FASTCALL
@@ -1030,62 +1244,6 @@ IntSendMessageTimeout(HWND hWnd,
   return (LRESULT) TRUE;
 }
 
-static NTSTATUS FASTCALL
-CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg)
-{
-  NTSTATUS Status;
-  PMSGMEMORY MsgMemoryEntry;
-  PVOID KernelMem;
-  UINT Size;
-
-  *KernelModeMsg = *UserModeMsg;
-
-  /* See if this message type is present in the table */
-  MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
-  if (NULL == MsgMemoryEntry)
-    {
-      /* Not present, no copying needed */
-      return STATUS_SUCCESS;
-    }
-
-  /* Determine required size */
-  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
-
-  if (0 != Size)
-    {
-      /* Allocate kernel mem */
-      KernelMem = ExAllocatePoolWithTag(PagedPool, Size, TAG_MSG);
-      if (NULL == KernelMem)
-        {
-          DPRINT1("Not enough memory to copy message to kernel mem\n");
-          return STATUS_NO_MEMORY;
-        }
-      KernelModeMsg->lParam = (LPARAM) KernelMem;
-
-      /* Copy data if required */
-      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_READ))
-        {
-          Status = MmCopyFromCaller(KernelMem, (PVOID) UserModeMsg->lParam, Size);
-          if (! NT_SUCCESS(Status))
-            {
-              DPRINT1("Failed to copy message to kernel: invalid usermode buffer\n");
-              ExFreePool(KernelMem);
-              return Status;
-            }
-        }
-      else
-        {
-          /* Make sure we don't pass any secrets to usermode */
-          RtlZeroMemory(KernelMem, Size);
-        }
-    }
-  else
-    {
-      KernelModeMsg->lParam = 0;
-    }
-
-  return STATUS_SUCCESS;
-}
 
 /* This function posts a message if the destination's message queue belongs to
    another thread, otherwise it sends the message. It does not support broadcast
@@ -1128,44 +1286,6 @@ IntPostOrSendMessage(HWND hWnd,
   return Result;
 }
 
-static NTSTATUS FASTCALL
-CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg)
-{
-  NTSTATUS Status;
-  PMSGMEMORY MsgMemoryEntry;
-  UINT Size;
-
-  /* See if this message type is present in the table */
-  MsgMemoryEntry = FindMsgMemory(UserModeMsg->message);
-  if (NULL == MsgMemoryEntry)
-    {
-      /* Not present, no copying needed */
-      return STATUS_SUCCESS;
-    }
-
-  /* Determine required size */
-  Size = MsgMemorySize(MsgMemoryEntry, UserModeMsg->wParam, UserModeMsg->lParam);
-
-  if (0 != Size)
-    {
-      /* Copy data if required */
-      if (0 != (MsgMemoryEntry->Flags & MMS_FLAG_WRITE))
-        {
-          Status = MmCopyToCaller((PVOID) UserModeMsg->lParam, (PVOID) KernelModeMsg->lParam, Size);
-          if (! NT_SUCCESS(Status))
-            {
-              DPRINT1("Failed to copy message from kernel: invalid usermode buffer\n");
-              ExFreePool((PVOID) KernelModeMsg->lParam);
-              return Status;
-            }
-        }
-
-      ExFreePool((PVOID) KernelModeMsg->lParam);
-    }
-
-  return STATUS_SUCCESS;
-}
-
 LRESULT FASTCALL
 IntDoSendMessage(HWND Wnd,
 		 UINT Msg,
@@ -1180,6 +1300,7 @@ IntDoSendMessage(HWND Wnd,
   NTUSERSENDMESSAGEINFO Info;
   MSG UserModeMsg;
   MSG KernelModeMsg;
+  PMSGMEMORY MsgMemoryEntry;
 
   RtlZeroMemory(&Info, sizeof(NTUSERSENDMESSAGEINFO));
 
@@ -1245,7 +1366,8 @@ IntDoSendMessage(HWND Wnd,
       UserModeMsg.message = Msg;
       UserModeMsg.wParam = wParam;
       UserModeMsg.lParam = lParam;
-      Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg);
+      MsgMemoryEntry = FindMsgMemory(UserModeMsg.message);
+      Status = CopyMsgToKernelMem(&KernelModeMsg, &UserModeMsg, MsgMemoryEntry);
       if (! NT_SUCCESS(Status))
         {
           MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));

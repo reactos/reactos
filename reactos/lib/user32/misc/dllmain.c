@@ -6,6 +6,7 @@
 #include <user32/accel.h>
 #include <window.h>
 #include <menu.h>
+#include <message.h>
 #define _WIN32K_KAPI_H
 #include <user32.h>
 #include <strpool.h>
@@ -73,6 +74,7 @@ Init(VOID)
   User32TlsIndex = TlsAlloc();
 
   MenuInit();
+  MessageInit();
 
   InitializeCriticalSection(&U32AccelCacheLock);
   InitializeCriticalSection(&gcsMPH);

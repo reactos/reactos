@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.112 2004/04/15 23:36:02 weiden Exp $
+/* $Id: window.c,v 1.113 2004/04/29 21:13:16 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -45,53 +45,6 @@ User32CallSendAsyncProcForKernel(PVOID Arguments, ULONG ArgumentLength)
   CallbackArgs->Callback(CallbackArgs->Wnd, CallbackArgs->Msg,
 			 CallbackArgs->Context, CallbackArgs->Result);
   return(STATUS_SUCCESS);
-}
-
-
-NTSTATUS STDCALL
-User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
-{
-  PWINDOWPROC_CALLBACK_ARGUMENTS CallbackArgs;
-  LPARAM lParam;
-
-  /* Make sure we don't try to access mem beyond what we were given */
-  if (ArgumentLength < sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
-    {
-      return STATUS_INFO_LENGTH_MISMATCH;
-    }
-
-  CallbackArgs = (PWINDOWPROC_CALLBACK_ARGUMENTS) Arguments;
-  /* Check if lParam is really a pointer and adjust it if it is */
-  if (0 <= CallbackArgs->lParamBufferSize)
-    {
-      if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS)
-                            + CallbackArgs->lParamBufferSize)
-        {
-          return STATUS_INFO_LENGTH_MISMATCH;
-        }
-      lParam = (LPARAM) ((char *) CallbackArgs + sizeof(WINDOWPROC_CALLBACK_ARGUMENTS));
-    }
-  else
-    {
-      if (ArgumentLength != sizeof(WINDOWPROC_CALLBACK_ARGUMENTS))
-        {
-          return STATUS_INFO_LENGTH_MISMATCH;
-        }
-      lParam = CallbackArgs->lParam;
-    }
-
-  if (WM_NCCALCSIZE == CallbackArgs->Msg && CallbackArgs->wParam)
-    {
-      NCCALCSIZE_PARAMS *Params = (NCCALCSIZE_PARAMS *) lParam;
-      Params->lppos = (PWINDOWPOS) (Params + 1);
-    }
-
-
-  CallbackArgs->Result = IntCallWindowProcW(CallbackArgs->IsAnsiProc, CallbackArgs->Proc,
-                                            CallbackArgs->Wnd, CallbackArgs->Msg,
-                                            CallbackArgs->wParam, lParam);
-
-  return ZwCallbackReturn(CallbackArgs, ArgumentLength, STATUS_SUCCESS);
 }
 
 
