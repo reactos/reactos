@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.30 2004/08/15 16:39:08 chorns Exp $
+/* $Id: ppool.c,v 1.31 2004/10/01 20:51:29 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -171,6 +171,8 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
    PMM_PPOOL_FREE_BLOCK_HEADER BestPreviousBlock;
    PVOID BlockAddress;
    ULONG Alignment;
+
+   ASSERT_IRQL(PASSIVE_LEVEL);
 
    ExAcquireFastMutex(&MmPagedPoolLock);
 

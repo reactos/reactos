@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.90 2004/09/25 06:41:16 arty Exp $
+/* $Id: npool.c,v 1.91 2004/10/01 20:51:28 arty Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1555,6 +1555,8 @@ ExAllocateNonPagedPoolWithTag(ULONG Type, ULONG Size, ULONG Tag, PVOID Caller)
 #ifdef WHOLE_PAGE_ALLOCATIONS
    PVOID block;
    KIRQL oldIrql;
+
+   ASSERT_IRQL(DISPATCH_LEVEL);
 
    POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
               Size,Caller);
