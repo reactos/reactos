@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
-/* $Id: ifs.h,v 1.4 2002/11/13 06:01:11 robd Exp $ */
+/* $Id: ifs.h,v 1.5 2003/01/25 15:52:43 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -11,12 +11,12 @@ VOID STDCALL
 FsRtlpInitFileLockingImplementation(VOID);
 
 VOID STDCALL
-FsRtlpPendingFileLockCancelRoutine(
+FsRtlpFileLockCancelRoutine(
 	IN PDEVICE_OBJECT DeviceObject, 
 	IN PIRP Irp
 	);
 
-BOOLEAN STDCALL
+BOOLEAN FASTCALL
 FsRtlpCheckLockForReadOrWriteAccess(
     IN PFILE_LOCK           FileLock,
     IN PLARGE_INTEGER       FileOffset,
@@ -27,7 +27,7 @@ FsRtlpCheckLockForReadOrWriteAccess(
 	IN BOOLEAN				Read	
    );
 
-NTSTATUS STDCALL
+NTSTATUS FASTCALL
 FsRtlpFastUnlockAllByKey(
     IN PFILE_LOCK           FileLock,
     IN PFILE_OBJECT         FileObject,
@@ -37,7 +37,7 @@ FsRtlpFastUnlockAllByKey(
     IN PVOID                Context OPTIONAL
     );
 
-NTSTATUS STDCALL
+NTSTATUS FASTCALL
 FsRtlpAddLock(
     IN PFILE_LOCK_TOC		LockToc,
     IN PFILE_OBJECT         FileObject,
@@ -48,14 +48,14 @@ FsRtlpAddLock(
     IN BOOLEAN              ExclusiveLock
 	);
 
-VOID STDCALL
-FsRtlpTryCompletePendingLocks(
+VOID FASTCALL
+FsRtlpCompletePendingLocks(
 	IN		PFILE_LOCK		FileLock,
 	IN		PFILE_LOCK_TOC	LockToc,
 	IN OUT	PKIRQL			oldirql
 	);
 
-NTSTATUS STDCALL
+NTSTATUS FASTCALL
 FsRtlpUnlockSingle(
     IN PFILE_LOCK           FileLock,
     IN PFILE_OBJECT         FileObject,
@@ -68,7 +68,7 @@ FsRtlpUnlockSingle(
 	IN BOOLEAN				CallUnlockRoutine
 	);
 
-VOID STDCALL
+VOID FASTCALL
 FsRtlpDumpFileLocks(
 	IN PFILE_LOCK	FileLock
 	);
