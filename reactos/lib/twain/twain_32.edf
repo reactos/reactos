@@ -1,0 +1,6 @@
+; File generated automatically from twain_32.spec; do not edit!
+
+LIBRARY 
+
+EXPORTS
+DSM_Entry=DSM_Entry@24
