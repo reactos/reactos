@@ -34,7 +34,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    static PCH FamousLastWords[] =
      {
        "Oh my God, they killed Kenny! Those bastards!\n",
-       "Goodbye, and thanks for all the fish\n",
+       "So long, and thanks for all the fish\n",
        "I think you ought to know I'm feeling very depressed\n",
        "I'm not getting you down at all am I?\n",
        "I'll be back\n",
@@ -44,7 +44,12 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "the blackness and darkness forever.\n",
        "Your knees start shakin' and your fingers pop\n"
        "Like a pinch on the neck from Mr. Spock!\n",
-       "It's worse than that ... He's dead, Jim\n"
+       "It's worse than that ... He's dead, Jim\n",
+	   "Don't Panic!\n",
+	   "Et tu... Brute?\n",
+	   "Dog of a Saxon! Take thy lance, and prepare for the death thou hast drawn upon thee!\n",
+	   "My Precious!  O my Precious!\n",
+	   "What are you doing, Dave...?\n",
      };
    LARGE_INTEGER Now;
 
