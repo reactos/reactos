@@ -68,6 +68,8 @@ typedef struct _DESKTOP_OBJECT
   HANDLE PrevActiveWindow;
   /* Thread blocking input */
   PVOID BlockInputThread;
+
+  LIST_ENTRY ShellHookWindows;
 } DESKTOP_OBJECT, *PDESKTOP_OBJECT;
 
 

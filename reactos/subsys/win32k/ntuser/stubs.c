@@ -59,6 +59,17 @@ NtUserCallHwnd(
   DWORD Unknown0,
   DWORD Unknown1)
 {
+  switch (Unknown0) {
+    case HWND_ROUTINE_REGISTERSHELLHOOKWINDOW:
+      if (IntIsWindow((HWND) Unknown1))
+        return IntRegisterShellHookWindow((HWND) Unknown1);
+      return FALSE;
+      break;
+    case HWND_ROUTINE_DEREGISTERSHELLHOOKWINDOW:
+      if (IntIsWindow((HWND) Unknown1))
+        return IntDeRegisterShellHookWindow((HWND) Unknown1);
+      return FALSE;
+  }
   UNIMPLEMENTED
 
   return 0;

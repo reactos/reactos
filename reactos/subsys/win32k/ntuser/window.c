@@ -147,6 +147,17 @@ IntGetParent(PWINDOW_OBJECT Wnd)
   return NULL;
 }
 
+PWINDOW_OBJECT FASTCALL
+IntGetOwner(PWINDOW_OBJECT Wnd)
+{
+  HWND hWnd;
+
+  IntLockRelatives(Wnd);
+  hWnd = Wnd->Owner;
+  IntUnLockRelatives(Wnd);
+
+  return IntGetWindowObject(hWnd);
+}
 
 PWINDOW_OBJECT FASTCALL
 IntGetParentObject(PWINDOW_OBJECT Wnd)
@@ -205,6 +216,8 @@ IntWinListChildren(PWINDOW_OBJECT Window)
  */
 static void IntSendDestroyMsg(HWND Wnd)
 {
+
+  PWINDOW_OBJECT Window, Owner, Parent;
 #if 0 /* FIXME */
   GUITHREADINFO info;
 
@@ -217,9 +230,28 @@ static void IntSendDestroyMsg(HWND Wnd)
     }
 #endif
 
+  Window = IntGetWindowObject(Wnd);
+  if (Window) {
+    Owner = IntGetOwner(Window);
+    if (!Owner) {
+      Parent = IntGetParent(Window);
+      if (!Parent) 
+        IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM) Wnd);
+      else
+        IntReleaseWindowObject(Parent);
+    } else {
+      IntReleaseWindowObject(Owner);
+    }
+
+    IntReleaseWindowObject(Window);
+  }
+
+  /* The window could already be destroyed here */
+
   /*
    * Send the WM_DESTROY to the window.
    */
+
   IntSendMessage(Wnd, WM_DESTROY, 0, 0);
 
   /*
@@ -284,6 +316,8 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   IntUnLockThreadWindows(Window->OwnerThread->Tcb.Win32Thread);
   
   BelongsToThreadData = IntWndBelongsToThread(Window, ThreadData);
+
+  IntDeRegisterShellHookWindow(Window->Self);
   
   if(SendMessages)
   {
@@ -1417,6 +1451,8 @@ IntCreateWindowEx(DWORD dwExStyle,
   BOOL MenuChanged;
   BOOL ClassFound;
 
+  BOOL HasOwner;
+
   ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
   OwnerWindowHandle = NULL;
 
@@ -1542,9 +1578,11 @@ IntCreateWindowEx(DWORD dwExStyle,
   {
     WindowObject->Owner = OwnerWindowHandle;
     IntReleaseWindowObject(OwnerWindow);
-  }
-  else
+    HasOwner = TRUE;
+  } else {
     WindowObject->Owner = NULL;
+    HasOwner = FALSE;
+  }
   WindowObject->UserData = 0;
   if ((((DWORD)ClassObject->lpfnWndProcA & 0xFFFF0000) != 0xFFFF0000)
       && (((DWORD)ClassObject->lpfnWndProcW & 0xFFFF0000) != 0xFFFF0000)) 
@@ -1968,6 +2006,13 @@ IntCreateWindowEx(DWORD dwExStyle,
                      MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
                      (LPARAM)WindowObject->Self);
     }
+
+  if ((!hWndParent) && (!HasOwner)) {
+      DPRINT("Sending CREATED notify\n");
+      IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Handle);
+  } else {
+      DPRINT("Not sending CREATED notify, %x %d\n", ParentWindow, HasOwner);
+  }
 
   if (NULL != ParentWindow)
     {
@@ -4060,7 +4105,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 BOOL STDCALL
 NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText)
 {
-  PWINDOW_OBJECT WindowObject;
+  PWINDOW_OBJECT WindowObject, Parent, Owner;
   UNICODE_STRING SafeText;
   NTSTATUS Status;
   
@@ -4090,6 +4135,26 @@ NtUserDefSetText(HWND WindowHandle, PUNICODE_STRING WindowText)
   RtlFreeUnicodeString(&WindowObject->WindowName);
   
   WindowObject->WindowName = SafeText;
+
+  /* Send shell notifications */
+
+  Owner = IntGetOwner(WindowObject);
+  Parent = IntGetParent(WindowObject);
+
+  if ((!Owner) && (!Parent))
+  {
+    IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowHandle);
+  }
+
+  if (Owner)
+  {
+    IntReleaseWindowObject(Owner);
+  }
+
+  if (Parent)
+  {
+    IntReleaseWindowObject(Parent);
+  }
   
   IntReleaseWindowObject(WindowObject);
   return TRUE;

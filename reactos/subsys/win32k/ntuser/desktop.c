@@ -92,6 +92,7 @@ IntDesktopObjectCreate(PVOID ObjectBody,
   DPRINT("Creating desktop (0x%X)  Name (%wZ)\n", Desktop, &UnicodeString);
 
   KeInitializeSpinLock(&Desktop->Lock);
+  InitializeListHead(&Desktop->ShellHookWindows);
 
   Desktop->WindowStation = (PWINSTATION_OBJECT)Parent;
 
@@ -538,6 +539,147 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 
   return STATUS_SUCCESS;
 #endif
+}
+
+/*
+ * Send the Message to the windows registered for ShellHook
+ * notifications. The lParam contents depend on the Message. See
+ * MSDN for more details (RegisterShellHookWindow)
+ */
+VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
+{
+  PDESKTOP_OBJECT Desktop = IntGetActiveDesktop();
+  PLIST_ENTRY Entry, Entry2;
+  PSHELL_HOOK_WINDOW Current;
+  KIRQL OldLevel;
+
+  static UINT MsgType = 0;
+
+  if (!MsgType) {
+
+    /* Too bad, this doesn't work.*/
+#if 0
+    UNICODE_STRING Str;
+    RtlInitUnicodeString(&Str, L"SHELLHOOK");
+    MsgType = NtUserRegisterWindowMessage(&Str);
+#endif
+    MsgType = IntAddAtom(L"SHELLHOOK");
+
+    DPRINT("MsgType = %x\n", MsgType);
+    if (!MsgType)
+      DPRINT1("LastError: %x\n", GetLastNtError());
+  }
+
+  if (!Desktop) {
+    DPRINT1("IntShellHookNotify: No desktop!\n");
+    return;
+  }
+
+  /* We have to do some tricks because the list could change
+   * between calls, and we can't keep the lock during the call
+   */
+
+  KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
+  Entry = Desktop->ShellHookWindows.Flink;
+  while (Entry != &Desktop->ShellHookWindows) {
+    Current = CONTAINING_RECORD(Entry, SHELL_HOOK_WINDOW, ListEntry);
+    KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+
+    DPRINT("Sending notify\n");
+    IntPostOrSendMessage(Current->hWnd,
+                         MsgType,
+                         Message,
+                         lParam);
+
+    /* Loop again to find the window we were sending to. If it doesn't
+     * exist anymore, we just stop. This could leave an infinite loop
+     * if a window is removed and readded to the list. That's quite
+     * unlikely though.
+     */
+
+    KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
+    Entry2 = Desktop->ShellHookWindows.Flink;
+    while (Entry2 != Entry &&
+           Entry2 != &Desktop->ShellHookWindows) {
+      Entry2 = Entry2->Flink;
+    }
+
+    if (Entry2 == Entry)
+      Entry = Entry->Flink;
+    else
+      break;
+  }
+  KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+}
+ 
+/*
+ * Add the window to the ShellHookWindows list. The windows
+ * on that list get notifications that are important to shell
+ * type applications.
+ *
+ * TODO: Validate the window? I'm not sure if sending these messages to
+ * an unsuspecting application that is not your own is a nice thing to do.
+ */
+BOOL IntRegisterShellHookWindow(HWND hWnd)
+{
+  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+  PSHELL_HOOK_WINDOW Entry;
+  KIRQL OldLevel;
+
+  DPRINT("IntRegisterShellHookWindow\n");
+
+  /* First deregister the window, so we can be sure it's never twice in the
+   * list.
+   */
+  IntDeRegisterShellHookWindow(hWnd);
+
+  Entry = ExAllocatePoolWithTag(NonPagedPool,
+                                sizeof(SHELL_HOOK_WINDOW),
+                                TAG_WINSTA);
+  /* We have to walk this structure with while holding a spinlock, so we
+   * need NonPagedPool */
+
+  if (!Entry)
+    return FALSE;
+
+  Entry->hWnd = hWnd;
+
+  KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
+  InsertTailList(&Desktop->ShellHookWindows, &Entry->ListEntry);
+  KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+
+  return TRUE;
+}
+
+/*
+ * Remove the window from the ShellHookWindows list. The windows
+ * on that list get notifications that are important to shell
+ * type applications.
+ */
+BOOL IntDeRegisterShellHookWindow(HWND hWnd)
+{
+  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
+  PLIST_ENTRY Entry;
+  PSHELL_HOOK_WINDOW Current;
+  KIRQL OldLevel;
+
+  KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
+
+  Entry = Desktop->ShellHookWindows.Flink;
+  while (Entry != &Desktop->ShellHookWindows) {
+    Current = CONTAINING_RECORD(Entry, SHELL_HOOK_WINDOW, ListEntry);
+    if (Current->hWnd == hWnd) {
+      RemoveEntryList(Entry);
+      KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+      ExFreePool(Entry);
+      return TRUE;
+    }
+    Entry = Entry->Flink;
+  }
+
+  KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+
+  return FALSE;
 }
 
 /*

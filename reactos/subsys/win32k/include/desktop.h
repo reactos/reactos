@@ -14,6 +14,12 @@ extern PWNDCLASS_OBJECT DesktopWindowClass;
 extern HDC ScreenDeviceContext;
 extern BOOL g_PaintDesktopVersion;
 
+typedef struct _SHELL_HOOK_WINDOW
+{
+  LIST_ENTRY ListEntry;
+  HWND hWnd;
+} SHELL_HOOK_WINDOW, *PSHELL_HOOK_WINDOW;
+
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID);
 
@@ -78,6 +84,11 @@ IntParseDesktopPath(PEPROCESS Process,
 
 BOOL FASTCALL
 IntDesktopUpdatePerUserSettings(BOOL bEnable);
+
+BOOL IntRegisterShellHookWindow(HWND hWnd);
+BOOL IntDeRegisterShellHookWindow(HWND hWnd);
+
+VOID IntShellHookNotify(WPARAM Message, LPARAM lParam);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))

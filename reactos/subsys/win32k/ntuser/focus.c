@@ -62,6 +62,8 @@ IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 VOID FASTCALL
 IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
+   PWINDOW_OBJECT Window, Owner, Parent;
+
    if (hWnd)
    {
       /* Send palette messages */
@@ -74,6 +76,22 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       if (NtUserGetWindow(hWnd, GW_HWNDPREV) != NULL)
          WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
             SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+
+      Window = IntGetWindowObject(hWnd);
+      if (Window) {
+        Owner = IntGetOwner(Window);
+        if (!Owner) {
+          Parent = IntGetParent(Window);
+          if (!Parent)
+            IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
+          else
+            IntReleaseWindowObject(Parent);
+        } else {
+          IntReleaseWindowObject(Owner);
+        }
+
+        IntReleaseWindowObject(Window);
+      }
 
       /* FIXME: IntIsWindow */
 

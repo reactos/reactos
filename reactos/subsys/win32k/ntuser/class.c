@@ -534,6 +534,8 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 void FASTCALL
 IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
+  PWINDOW_OBJECT Parent, Owner;
+
   if ((int)Offset >= 0)
     {
       DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
@@ -562,6 +564,25 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
       break;
     case GCL_HICON:
       WindowObject->Class->hIcon = (HICON)dwNewLong;
+      Owner = IntGetOwner(WindowObject);
+      Parent = IntGetParent(WindowObject);
+
+      if ((!Owner) && (!Parent))
+        {
+          IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->Self);
+        }
+
+      if (Parent)
+        {
+          IntReleaseWindowObject(Parent);
+        }
+
+      if (Owner)
+        {
+          IntReleaseWindowObject(Owner);
+        }
+
+
       break;
     case GCL_HICONSM:
       WindowObject->Class->hIconSm = (HICON)dwNewLong;
