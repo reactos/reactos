@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.9 2003/06/06 10:17:44 gvg Exp $
+/* $Id: mem.c,v 1.10 2003/06/19 17:13:28 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,10 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+
+#define NDEBUG
+#include <win32k/debug1.h>
+#include <debug.h>
 
 typedef struct _USERMEMHEADER
   {
@@ -90,4 +94,17 @@ EngFreeUserMem(PVOID pv)
 
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_DECOMMIT);
 }
+
+HANDLE STDCALL
+EngSecureMem(PVOID Address, ULONG Length)
+{
+  return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
+}
+
+VOID STDCALL
+EngUnsecureMem(HANDLE Mem)
+{
+  return MmUnsecureVirtualMemory((PVOID) Mem);
+}
+
 /* EOF */

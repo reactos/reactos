@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.8 2003/02/15 19:16:33 gvg Exp $
+; $Id: win32k.edf,v 1.9 2003/06/19 17:13:28 gvg Exp $
 ;
 ; win32k.def
 ;
@@ -81,12 +81,12 @@ EngProbeForRead
 EngProbeForReadAndWrite
 EngQueryLocalTime
 EngQueryPalette
-EngQueryPerformanceCounter
-EngQueryPerformanceFrequency
+EngQueryPerformanceCounter=EngQueryPerformanceCounter@4
+EngQueryPerformanceFrequency=EngQueryPerformanceFrequency@4
 EngReleaseSemaphore
 EngRestoreFloatingPointState
 EngSaveFloatingPointState
-EngSecureMem
+EngSecureMem=EngSecureMem@8
 EngSetEvent
 EngSetLastError
 EngSetPointerShape
@@ -105,7 +105,7 @@ EngUnlockSurface=EngUnlockSurface@4
 EngUnmapEvent
 EngUnmapFontFile
 ; EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
-EngUnsecureMem
+EngUnsecureMem=EngUnsecureMem@4
 EngWaitForSingleObject
 EngWideCharToMultiByte
 EngWritePrinter

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.15 2003/05/14 10:51:26 ekohl Exp $ */
+/* $Id: mmfuncs.h,v 1.16 2003/06/19 17:13:27 gvg Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -455,12 +455,12 @@ MmResetDriverPaging (
 	PVOID	AddressWithinSection
 	);
 
-DWORD
+PVOID
 STDCALL
 MmSecureVirtualMemory (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	PVOID   Address,
+	SIZE_T	Length,
+	ULONG   Mode
 	);
 BOOLEAN
 STDCALL
@@ -548,6 +548,6 @@ MmUnmapViewOfSection (
 VOID
 STDCALL
 MmUnsecureVirtualMemory (
-	DWORD	Unknown0
+	PVOID	SecureMem
 	);
 #endif

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.65 2003/04/28 10:37:40 gvg Exp $
+/* $Id: virtual.c,v 1.66 2003/06/19 17:13:28 gvg Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -344,19 +344,31 @@ NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
-DWORD STDCALL
-MmSecureVirtualMemory (DWORD	Unknown0,
-		       DWORD	Unknown1,
-		       DWORD	Unknown2)
+PVOID STDCALL
+MmSecureVirtualMemory (PVOID  Address,
+                       SIZE_T Length,
+                       ULONG  Mode)
 {
+  /* Only works for user space */
+  if (MmHighestUserAddress < Address)
+    {
+      return NULL;
+    }
+
   UNIMPLEMENTED;
+
   return 0;
 }
 
 
 VOID STDCALL
-MmUnsecureVirtualMemory (DWORD Unknown0)
+MmUnsecureVirtualMemory(PVOID SecureMem)
 {
+  if (NULL == SecureMem)
+    {
+      return;
+    }
+
   UNIMPLEMENTED;
 }
 
