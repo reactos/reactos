@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Martin Fuchs
+ * Copyright 2003, 2004 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -262,6 +262,15 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 	FreeLibrary(hmod);
 
 	return TRUE;
+}
+
+
+BOOL launch_cpanel(HWND hwnd, LPCTSTR applet)
+{
+	//launch_file(_hwnd, applet, SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
+	//launch_file(_hwnd, TEXT("rundll32.exe /d shell32.dll,Control_RunDLL ")+applet, SW_SHOWNORMAL);
+
+	return RunDLL(hwnd, TEXT("shell32"), "Control_RunDLL", applet, SW_SHOWNORMAL);
 }
 
 

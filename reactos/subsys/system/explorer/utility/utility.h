@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Martin Fuchs
+ * Copyright 2003, 2004 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -195,7 +195,10 @@ extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow, LPCSTR parameters=
 #endif
 
  // call an DLL export like rundll32
-BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
+extern BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
+
+ // launch control panel applet
+extern BOOL launch_cpanel(HWND hwnd, LPCTSTR applet);
 
 
  /// initialization of windows common controls

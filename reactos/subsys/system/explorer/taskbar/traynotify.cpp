@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Martin Fuchs
+ * Copyright 2003, 2004 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -34,6 +34,8 @@
 #include "../explorer_intres.h"
 
 #include "traynotify.h"
+
+#include "../dialogs/settings.h"
 
 
 #include "../notifyhook/notifyhook.h"
@@ -379,11 +381,11 @@ int NotifyArea::Command(int id, int code)
 		break;
 
 	  case ID_CONFIG_NOTIFYAREA:
-		///@todo
+		ExplorerPropertySheet(_hwnd);
 		break;
 
 	  case ID_CONFIG_TIME:
-		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("timedate.cpl"), SW_SHOWNORMAL);
+		launch_cpanel(_hwnd, TEXT("timedate.cpl"));
 		break;
 
 	  default:
@@ -704,9 +706,7 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_LBUTTONDBLCLK:
-		//launch_file(_hwnd, TEXT("timedate.cpl"), SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
-		//launch_file(_hwnd, TEXT("rundll32.exe /d shell32.dll,Control_RunDLL timedate.cpl"), SW_SHOWNORMAL);
-		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("timedate.cpl"), SW_SHOWNORMAL);
+		launch_cpanel(_hwnd, TEXT("timedate.cpl"));
 		break;
 
 	  default:

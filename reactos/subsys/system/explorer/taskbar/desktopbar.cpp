@@ -1,5 +1,5 @@
 /*
- * Copyright 2003 Martin Fuchs
+ * Copyright 2003, 2004 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -329,7 +329,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_VOLUME_PROPERTIES:
-		RunDLL(_hwnd, TEXT("shell32"), "Control_RunDLL", TEXT("mmsys.cpl"), SW_SHOWNORMAL);
+		launch_cpanel(_hwnd, TEXT("mmsys.cpl"));
 		break;
 
 	  default:
