@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.36 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: virtual.c,v 1.37 2001/01/21 14:54:29 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -995,16 +995,18 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	
 	for (i=0; i<=(MemoryArea->Length/PAGESIZE); i++)
 	  {
-	     LARGE_INTEGER PhysicalAddr;
+	     ULONG PhysicalAddr;
 	     
-	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
-						 (i*PAGESIZE));
-	     if (PhysicalAddr.u.LowPart != 0)
+	     PhysicalAddr = 
+	       MmGetPhysicalAddressForProcess(Process, 
+					      MemoryArea->BaseAddress + 
+					      (i*PAGESIZE));
+	     if (PhysicalAddr != 0)
 	       {
 		  MmRemovePageFromWorkingSet(AddressSpace->Process,
 					     MemoryArea->BaseAddress +
 					     (i*PAGESIZE));
-		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr));
 	       }
 	  }
 	

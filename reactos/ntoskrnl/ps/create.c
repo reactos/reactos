@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.28 2001/01/19 15:09:01 dwelch Exp $
+/* $Id: create.c,v 1.29 2001/01/21 14:54:29 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -512,14 +512,15 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
-				 ACCESS_MASK		DesiredAccess,
-				 POBJECT_ATTRIBUTES	ObjectAttributes,
-				 HANDLE			ProcessHandle,
-				 PCLIENT_ID		Client,
-				 PCONTEXT		ThreadContext,
-				 PINITIAL_TEB		InitialTeb,
-				 BOOLEAN CreateSuspended)
+NTSTATUS STDCALL 
+NtCreateThread (PHANDLE		ThreadHandle,
+		ACCESS_MASK		DesiredAccess,
+		POBJECT_ATTRIBUTES	ObjectAttributes,
+		HANDLE			ProcessHandle,
+		PCLIENT_ID		Client,
+		PCONTEXT		ThreadContext,
+		PINITIAL_TEB		InitialTeb,
+		BOOLEAN CreateSuspended)
 {
    PETHREAD Thread;
    PNT_TEB  TebBase;
@@ -601,23 +602,24 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
    if (!CreateSuspended)
      {
 	DPRINT("Not creating suspended\n");
-	PsResumeThread(Thread);
+	PsUnblockThread(Thread, NULL);
      }
-   DPRINT("Thread %x\n", Thread);
-   DPRINT("ObGetReferenceCount(Thread) %d ObGetHandleCount(Thread) %x\n",
-	  ObGetReferenceCount(Thread), ObGetHandleCount(Thread));
-   DPRINT("Finished PsCreateThread()\n");
+   else
+     {
+       KeBugCheck(0);
+     }
    return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
-				      ACCESS_MASK DesiredAccess,
-				      POBJECT_ATTRIBUTES ObjectAttributes,
-				      HANDLE ProcessHandle,
-				      PCLIENT_ID ClientId,
-				      PKSTART_ROUTINE StartRoutine,
-				      PVOID StartContext)
+NTSTATUS STDCALL 
+PsCreateSystemThread(PHANDLE ThreadHandle,
+		     ACCESS_MASK DesiredAccess,
+		     POBJECT_ATTRIBUTES ObjectAttributes,
+		     HANDLE ProcessHandle,
+		     PCLIENT_ID ClientId,
+		     PKSTART_ROUTINE StartRoutine,
+		     PVOID StartContext)
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
  * ARGUMENTS:
@@ -660,7 +662,7 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
 	*ClientId=Thread->Cid;
      }  
 
-   PsResumeThread(Thread);
+   PsUnblockThread(Thread, NULL);
    
    return(STATUS_SUCCESS);
 }

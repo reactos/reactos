@@ -17,14 +17,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
-					THREADINFOCLASS	ThreadInformationClass,
-					PVOID		ThreadInformation,
-					ULONG ThreadInformationLength)
+NTSTATUS STDCALL 
+NtSetInformationThread(HANDLE		ThreadHandle,
+		       THREADINFOCLASS	ThreadInformationClass,
+		       PVOID		ThreadInformation,
+		       ULONG ThreadInformationLength)
 {
    PETHREAD			Thread;
    NTSTATUS			Status;
-   PTHREAD_BASIC_INFORMATION	ThreadBasicInformationP;
    
    Status = ObReferenceObjectByHandle(ThreadHandle,
 				      THREAD_SET_INFORMATION,
@@ -40,73 +40,111 @@ NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
    switch (ThreadInformationClass)
      {
       case ThreadBasicInformation:
-	ThreadBasicInformationP = 
-	  (PTHREAD_BASIC_INFORMATION) ThreadInformation;
-	ThreadBasicInformationP->ExitStatus = 
-	  Thread->ExitStatus;
-	ThreadBasicInformationP->TebBaseAddress = 
-	  Thread->Tcb.Teb;
-	ThreadBasicInformationP->AffinityMask = 
-	  Thread->Tcb.Affinity;
-	ThreadBasicInformationP->BasePriority = 
-	  Thread->Tcb.BasePriority;
-	ThreadBasicInformationP->UniqueThreadId = 
-	  (ULONG) Thread->Cid.UniqueThread;
-	Status = STATUS_SUCCESS;
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
 	
       case ThreadTimes:
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
 	
       case ThreadPriority:
 	  {
-	     KPRIORITY Priority;
-	     
-	     Priority = *(KPRIORITY*)ThreadInformation;
-	     if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
-	       {
-		  Status = STATUS_INVALID_PARAMETER;
-		  break;
-	       }
-	     KeSetPriorityThread(&Thread->Tcb, Priority);
-	     Status = STATUS_SUCCESS;
-	     break;
+	    KPRIORITY Priority;
+	    
+	    if (ThreadInformationLength != sizeof(KPRIORITY))
+	      {
+		Status = STATUS_INFO_LENGTH_MISMATCH;
+		break;
+	      }
+	    Priority = *(KPRIORITY*)ThreadInformation;
+	    if (Priority < LOW_PRIORITY || Priority >= MAXIMUM_PRIORITY)
+	      {
+		Status = STATUS_INVALID_PARAMETER;
+		break;
+	      }
+	    KeSetPriorityThread(&Thread->Tcb, Priority);
+	    Status = STATUS_SUCCESS;
+	    break;
 	  }
 	
       case ThreadBasePriority:
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
       case ThreadAffinityMask:
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
       case ThreadImpersonationToken:
-	Status = PsAssignImpersonationToken(Thread, 
-					    *((PHANDLE)ThreadInformation));
-	break;
+	{
+	  HANDLE TokenHandle;
+
+	  if (ThreadInformationLength != sizeof(HANDLE))
+	    {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+	      break;
+	    }
+	  TokenHandle = *((PHANDLE)ThreadInformation);
+	  Status = PsAssignImpersonationToken(Thread, TokenHandle);
+	  break;
+	}
 	
       case ThreadDescriptorTableEntry:
-	UNIMPLEMENTED;
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
 	
       case ThreadEventPair:
-	UNIMPLEMENTED;
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
       case ThreadQuerySetWin32StartAddress:
+	if (ThreadInformationLength != sizeof(ULONG))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	    break;
+	  }
+	Thread->u2.Win32StartAddress = (PVOID)*((PULONG)ThreadInformation);
+	Status = STATUS_SUCCESS;
 	break;
-	
+		
       case ThreadZeroTlsCell:
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 	
       case ThreadPerformanceCount:
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
 	
       case ThreadAmILastThread:
+	/* Can only be queried */
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
 	
-      case ThreadPriorityBoost:
-	break;
+     case ThreadIdealProcessor:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
+       
+     case ThreadPriorityBoost:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
 	
+     case ThreadSetTlsArrayAddress:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
+
+     case ThreadIsIoPending:
+       /* Can only be queried */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
+
+     case ThreadHideFromDebugger:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
+
       default:
 	Status = STATUS_UNSUCCESSFUL;
      }
@@ -116,12 +154,11 @@ NTSTATUS STDCALL NtSetInformationThread(HANDLE		ThreadHandle,
 
 
 NTSTATUS STDCALL
-NtQueryInformationThread (
-	IN	HANDLE		ThreadHandle,
-	IN	THREADINFOCLASS	ThreadInformationClass,
-	OUT	PVOID		ThreadInformation,
-	IN	ULONG		ThreadInformationLength,
-	OUT	PULONG		ReturnLength)
+NtQueryInformationThread (IN	HANDLE		ThreadHandle,
+			  IN	THREADINFOCLASS	ThreadInformationClass,
+			  OUT	PVOID		ThreadInformation,
+			  IN	ULONG		ThreadInformationLength,
+			  OUT	PULONG		ReturnLength)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -139,60 +176,141 @@ NtQueryInformationThread (
 
    switch (ThreadInformationClass)
      {
-      case ThreadBasicInformation:
-	break;
+     case ThreadBasicInformation:
+       {
+	 PTHREAD_BASIC_INFORMATION TBI;
+	 
+	 TBI = (PTHREAD_BASIC_INFORMATION)ThreadInformation;
+	 
+	 if (ThreadInformationLength != sizeof(THREAD_BASIC_INFORMATION))
+	   {
+	     Status = STATUS_INFO_LENGTH_MISMATCH;
+	     break;
+	   }
+	 
+	 TBI->ExitStatus = Thread->ExitStatus;
+	 TBI->TebBaseAddress = Thread->Tcb.Teb;
+	 TBI->ClientId = Thread->Cid;
+	 TBI->AffinityMask = Thread->Tcb.Affinity;
+	 TBI->Priority = Thread->Tcb.Priority;
+	 TBI->BasePriority = Thread->Tcb.BasePriority;
+	 Status = STATUS_SUCCESS;
+	 break;
+       }
+       
+     case ThreadTimes:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
+       
+     case ThreadPriority:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
+       
+     case ThreadBasePriority:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
+       
+     case ThreadAffinityMask:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
 
-      case ThreadTimes:
-	break;
+     case ThreadImpersonationToken:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
+       
+     case ThreadDescriptorTableEntry:
+       /* Nebbett says nothing about this */
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
 
-      case ThreadPriority:
-	break;
+     case ThreadEnableAlignmentFaultFixup:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
+       
+     case ThreadEventPair:
+       /* Can be set only */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
 
-      case ThreadBasePriority:
-	break;
+     case ThreadQuerySetWin32StartAddress:
+       if (ThreadInformationLength != sizeof(PVOID))
+	 {
+	   Status = STATUS_INFO_LENGTH_MISMATCH;
+	   break;
+	 }
+       *((PVOID*)ThreadInformation) = Thread->u2.Win32StartAddress;
+       Status = STATUS_SUCCESS;
+       break;
 
-      case ThreadAffinityMask:
-	break;
+     case ThreadZeroTlsCell:
+       /* Can only be set */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
 
-      case ThreadImpersonationToken:
-	break;
+     case ThreadPerformanceCount:
+       /* Nebbett says this class is always zero */
+       if (ThreadInformationLength != sizeof(LARGE_INTEGER))
+	 {
+	   Status = STATUS_INFO_LENGTH_MISMATCH;
+	   break;
+	 }
+       ((PLARGE_INTEGER)ThreadInformation)->QuadPart = 0;
+       Status = STATUS_SUCCESS;
+       break;
 
-      case ThreadDescriptorTableEntry:
-	UNIMPLEMENTED;
-	break;
+     case ThreadAmILastThread:
+       {
+	 if (ThreadInformationLength != sizeof(BOOLEAN))
+	   {
+	     Status = STATUS_INFO_LENGTH_MISMATCH;
+	     break;
+	   }
+	 if (Thread->ThreadsProcess->ThreadListHead.Flink->Flink ==
+	     &Thread->ThreadsProcess->ThreadListHead)
+	   {
+	     *((PBOOLEAN)ThreadInformation) = TRUE;
+	   }
+	 else
+	   {
+	     *((PBOOLEAN)ThreadInformation) = FALSE;
+	   }
+	 Status = STATUS_SUCCESS;
+	 break;
+       }
 
-      case ThreadEventPair:
-	UNIMPLEMENTED;
-	break;
+     case ThreadIdealProcessor:
+       /* Can only be set */
+       Status = STATUS_INFO_LENGTH_MISMATCH;
+       break;
 
-      case ThreadQuerySetWin32StartAddress:
-	break;
+     case ThreadPriorityBoost:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
 
-      case ThreadZeroTlsCell:
-	break;
+     case ThreadSetTlsArrayAddress:
+       /* Can only be set */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
 
-      case ThreadPerformanceCount:
-	break;
-
-      case ThreadAmILastThread:
-	{
-	   BOOLEAN *LastThread;
-	   PLIST_ENTRY Entry;
-
-	   LastThread = (PBOOLEAN) ThreadInformation;
-	   Entry = &(Thread->ThreadsProcess->ThreadListHead);
-	   *LastThread = (Entry->Flink->Flink == Entry)?TRUE:FALSE;
-	}
-	break;
-
-      case ThreadPriorityBoost:
-	break;
+     case ThreadIsIoPending:
+       Status = STATUS_NOT_IMPLEMENTED;
+       break;
+       
+     case ThreadHideFromDebugger:
+       /* Can only be set */
+       Status = STATUS_INVALID_INFO_CLASS;
+       break;
 
       default:
-	Status = STATUS_UNSUCCESSFUL;
+	Status = STATUS_INVALID_INFO_CLASS;
      }
    ObDereferenceObject(Thread);
-   return Status;
+   return(Status);
 }
 
 VOID KeSetPreviousMode(ULONG Mode)
@@ -203,15 +321,12 @@ VOID KeSetPreviousMode(ULONG Mode)
 ULONG STDCALL
 KeGetPreviousMode (VOID)
 {
-   /* CurrentThread is in ntoskrnl/ps/thread.c */
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
-
 
 ULONG STDCALL
 ExGetPreviousMode (VOID)
 {
-   /* CurrentThread is in ntoskrnl/ps/thread.c */
    return (ULONG)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 

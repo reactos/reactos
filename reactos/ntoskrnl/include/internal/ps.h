@@ -396,15 +396,8 @@ PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
 NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
 			      PACCESS_TOKEN* Token);
 
-ULONG PsFreezeThread(PETHREAD Thread,
-		     PNTSTATUS WaitStatus,
-		     UCHAR Alertable,
-		     ULONG WaitMode);
-ULONG PsUnfreezeThread(PETHREAD Thread,
-		       PNTSTATUS WaitStatus);
-
-ULONG PsSuspendThread(PETHREAD Thread);
-ULONG PsResumeThread(PETHREAD Thread);
+NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
+NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
 
 
 #define THREAD_STATE_INVALID      (0)

@@ -1,4 +1,4 @@
-/* $Id: suspend.c,v 1.1 2001/01/19 15:09:01 dwelch Exp $
+/* $Id: suspend.c,v 1.2 2001/01/21 14:54:30 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -19,36 +19,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-extern KSPIN_LOCK PiThreadListLock;
-VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread);
+/* NOTES **********************************************************************
+ *
+ */
 
 /* FUNCTIONS *****************************************************************/
 
-#if 1
-ULONG PsResumeThread(PETHREAD Thread)
-{
-   KIRQL oldIrql;
-   ULONG SuspendCount;
-
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-
-   if (Thread->Tcb.SuspendCount > 0)
-     {
-	Thread->Tcb.SuspendCount--;
-	SuspendCount = Thread->Tcb.SuspendCount;
-	Thread->Tcb.State = THREAD_STATE_RUNNABLE;
-	PsInsertIntoThreadList(Thread->Tcb.Priority, Thread);
-     }
-
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-   return SuspendCount;
-}
-#endif
-
-#if 0
 VOID
 PiSuspendThreadRundownRoutine(PKAPC Apc)
 {
@@ -62,8 +38,7 @@ PiSuspendThreadKernelRoutine(PKAPC Apc,
 			     PVOID* SystemArgument1,
 			     PVOID* SystemArguemnt2)
 {
-   InterlockedIncrement(&PsGetCurrentThread()->Tcb.SuspendThread);
-   KeWaitForSingleObject((PVOID)&PsGetCurrentThread()->SuspendSemaphore,
+   KeWaitForSingleObject(&PsGetCurrentThread()->Tcb.SuspendSemaphore,
 			 0,
 			 UserMode,
 			 TRUE,
@@ -71,22 +46,46 @@ PiSuspendThreadKernelRoutine(PKAPC Apc,
    ExFreePool(Apc);
 }
 
+NTSTATUS
+PsResumeThread(PETHREAD Thread, PULONG SuspendCount)
+{
+  KeReleaseSemaphore(&Thread->Tcb.SuspendSemaphore, IO_NO_INCREMENT, 1, FALSE);
+  return(STATUS_SUCCESS);
+}
+
 NTSTATUS 
-PsSuspendThread(PETHREAD Thread, PULONG SuspendCount)
+PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
 {
    PKAPC Apc;
-   
+   NTSTATUS Status;
+
+   /*
+    * If we are suspending ourselves then we can cut out the work in
+    * sending an APC
+    */
+   if (Thread == PsGetCurrentThread())
+     {
+       Status = KeWaitForSingleObject(&Thread->Tcb.SuspendSemaphore,
+				      0,
+				      UserMode,
+				      FALSE,
+				      NULL);
+       if (!NT_SUCCESS(Status))
+	 {
+	   return(Status);
+	 }
+       return(Status);
+     }
+
    Apc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
    if (Apc == NULL)
      {
-	return(STATUS_NO_MORE_MEMORY);
+	return(STATUS_NO_MEMORY);
      }
-   
-   *SuspendCount = Thread->Tcb.SuspendCount;
    
    KeInitializeApc(Apc,
 		   &Thread->Tcb,
-		   NULL,
+		   0,
 		   PiSuspendThreadKernelRoutine,
 		   PiSuspendThreadRundownRoutine,
 		   NULL,
@@ -98,33 +97,89 @@ PsSuspendThread(PETHREAD Thread, PULONG SuspendCount)
 		    0);
    return(STATUS_SUCCESS);
 }
-#endif
 
-#if 1
-ULONG 
-PsSuspendThread(PETHREAD Thread)
+NTSTATUS STDCALL 
+NtResumeThread (IN	HANDLE	ThreadHandle,
+		IN	PULONG	SuspendCount)
+/*
+ * FUNCTION: Decrements a thread's resume count
+ * ARGUMENTS: 
+ *        ThreadHandle = Handle to the thread that should be resumed
+ *        ResumeCount =  The resulting resume count.
+ * RETURNS: Status
+ */
 {
-   KIRQL oldIrql;
-   ULONG PreviousSuspendCount;
+   PETHREAD Thread;
+   NTSTATUS Status;
+   ULONG Count;
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-
-   PreviousSuspendCount = Thread->Tcb.SuspendCount;
-   if (Thread->Tcb.SuspendCount < MAXIMUM_SUSPEND_COUNT)
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
      {
-	Thread->Tcb.SuspendCount++;
+	return(Status);
      }
 
-   if (PsGetCurrentThread() == Thread)
+   Status = PsResumeThread(Thread, &Count);
+   if (SuspendCount != NULL)
      {
-	DbgPrint("Cannot suspend self\n");
-	KeBugCheck(0);
+	*SuspendCount = Count;
      }
 
-   Thread->Tcb.State = THREAD_STATE_SUSPENDED;
+   ObDereferenceObject((PVOID)Thread);
 
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-   return PreviousSuspendCount;
+   return STATUS_SUCCESS;
 }
-#endif
+
+
+NTSTATUS STDCALL 
+NtSuspendThread (IN HANDLE ThreadHandle,
+		 IN PULONG PreviousSuspendCount)
+/*
+ * FUNCTION: Increments a thread's suspend count
+ * ARGUMENTS: 
+ *        ThreadHandle = Handle to the thread that should be resumed
+ *        PreviousSuspendCount =  The resulting/previous suspend count.
+ * REMARK:
+ *        A thread will be suspended if its suspend count is greater than 0. 
+ *        This procedure maps to the win32 SuspendThread function. ( 
+ *        documentation about the the suspend count can be found here aswell )
+ *        The suspend count is not increased if it is greater than 
+ *        MAXIMUM_SUSPEND_COUNT.
+ * RETURNS: Status
+ */ 
+{
+   PETHREAD Thread;
+   NTSTATUS Status;
+   ULONG Count;
+
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      THREAD_SUSPEND_RESUME,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+
+   Status = PsSuspendThread(Thread, &Count);
+   if (PreviousSuspendCount != NULL)
+     {
+	*PreviousSuspendCount = Count;
+     }
+
+   ObDereferenceObject((PVOID)Thread);
+
+   return STATUS_SUCCESS;
+}
+
+
+
+
+

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.54 2000/10/22 16:36:53 ekohl Exp $
+/* $Id: process.c,v 1.55 2001/01/21 14:54:29 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -315,14 +315,15 @@ PEPROCESS STDCALL IoGetCurrentProcess(VOID)
    return(PsGetCurrentProcess());
 }
 
-NTSTATUS STDCALL NtCreateProcess (OUT PHANDLE ProcessHandle,
-				  IN ACCESS_MASK DesiredAccess,
-				  IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-				  IN HANDLE ParentProcessHandle,
-				  IN BOOLEAN InheritObjectTable,
-				  IN HANDLE SectionHandle OPTIONAL,
-				  IN HANDLE DebugPortHandle OPTIONAL,
-				  IN HANDLE ExceptionPortHandle OPTIONAL)
+NTSTATUS STDCALL 
+NtCreateProcess (OUT PHANDLE ProcessHandle,
+		 IN ACCESS_MASK DesiredAccess,
+		 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+		 IN HANDLE ParentProcessHandle,
+		 IN BOOLEAN InheritObjectTable,
+		 IN HANDLE SectionHandle OPTIONAL,
+		 IN HANDLE DebugPortHandle OPTIONAL,
+		 IN HANDLE ExceptionPortHandle OPTIONAL)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:

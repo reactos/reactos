@@ -55,7 +55,9 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ProcessImageFileName                    22
 #define MaxProcessInfoClass			23
 
-// thread query / set information class
+/*
+ * thread query / set information class
+ */
 #define ThreadBasicInformation			0
 #define ThreadTimes				1
 #define ThreadPriority				2
@@ -71,7 +73,10 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ThreadAmILastThread			12
 #define ThreadIdealProcessor			13
 #define ThreadPriorityBoost			14
-#define MaxThreadInfoClass			15
+#define ThreadSetTlsArrayAddress                15
+#define ThreadIsIoPending                       16
+#define ThreadHideFromDebugger                  17
+#define MaxThreadInfoClass			17
 
 // object handle information
 
@@ -862,11 +867,12 @@ typedef KERNEL_USER_TIMES *PKERNEL_USER_TIMES;
 
 typedef struct _THREAD_BASIC_INFORMATION
 {
-	NTSTATUS ExitStatus;
-	PVOID TebBaseAddress;
-	KAFFINITY AffinityMask;
-	KPRIORITY BasePriority;
-	ULONG UniqueThreadId;
+  NTSTATUS ExitStatus;
+  PVOID TebBaseAddress;
+  CLIENT_ID ClientId;
+  KAFFINITY AffinityMask;
+  KPRIORITY Priority;
+  KPRIORITY BasePriority;
 } THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
 
 // object information

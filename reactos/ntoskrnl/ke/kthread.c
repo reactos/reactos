@@ -77,7 +77,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    Thread->Teb = NULL;
    Thread->TlsArray = NULL;
    Thread->DebugActive = 0;
-   Thread->State = THREAD_STATE_SUSPENDED;
+   Thread->State = THREAD_STATE_BLOCKED;
    Thread->Alerted[0] = 0;
    Thread->Alerted[1] = 0;
    Thread->Iopl = 0;
@@ -146,7 +146,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
    Thread->ThreadListEntry.Flink = NULL;
    Thread->ThreadListEntry.Blink = NULL;
    Thread->FreezeCount = 0;
-   Thread->SuspendCount = 1;
+   Thread->SuspendCount = 0;
 
    /*
     * Initialize ReactOS specific members
