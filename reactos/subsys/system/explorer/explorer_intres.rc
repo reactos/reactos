@@ -655,14 +655,14 @@ LANGUAGE LANG_FRENCH, SUBLANG_FRENCH
 
 IDM_MAINFRAME MENU PRELOAD DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "Fichier"
     BEGIN
-        MENUITEM "E&xit",                       ID_FILE_EXIT
+        MENUITEM "Fermer",                      ID_FILE_EXIT
     END
-    POPUP "&View"
+    POPUP "Affichage"
     BEGIN
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR
+        MENUITEM "Barre d'outils",              ID_VIEW_TOOL_BAR
+        MENUITEM "Barre d'état",                ID_VIEW_STATUSBAR
     END
     POPUP "&Window"
     BEGIN
@@ -674,10 +674,10 @@ BEGIN
         MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
         MENUITEM "&Refresh\tF5",                ID_REFRESH
     END
-    POPUP "&Help"
+    POPUP "Aide"
     BEGIN
-        MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&About Explorer...",          ID_ABOUT
+        MENUITEM "FAQ Explorateur...",          ID_EXPLORER_FAQ
+        MENUITEM "A propos de l'explorateur...", ID_ABOUT
     END
 END
 
@@ -711,35 +711,35 @@ END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_TITLE               "Reactos Explorer"
+    IDS_TITLE               "Explorateur Reactos"
     IDS_START               "Démarrer"
-    IDS_LOGOFF              "Log Off..."
-    IDS_SHUTDOWN            "Turn Off..."
-    IDS_LAUNCH              "Run..."
-    IDS_START_HELP          "Help"
-    IDS_SEARCH              "Search..."
+    IDS_LOGOFF              "Déconnexion ..."
+    IDS_SHUTDOWN            "Arrêter..."
+    IDS_LAUNCH              "Exécuter..."
+    IDS_START_HELP          "Aide"
+    IDS_SEARCH              "Rechercher..."
     IDS_DOCUMENTS           "Documents"
-    IDS_FAVORITES           "Favorites"
-    IDS_PROGRAMS            "Programs"
-    IDS_SETTINGS            "Settings"
+    IDS_FAVORITES           "Favoris"
+    IDS_PROGRAMS            "Programmes"
+    IDS_SETTINGS            "Paramètres"
     IDS_EXPLORE             "Explore"
-    IDS_EMPTY               "(Empty)"
-    IDS_RECENT              "Recent Documents"
+    IDS_EMPTY               "(Vide)"
+    IDS_RECENT              "Documents récents"
     IDS_ADMIN               "Administration"
 END
 
 STRINGTABLE DISCARDABLE 
 BEGIN
-    IDS_NETWORK             "Network"
-    IDS_CONNECTIONS         "Network Connections"
-    IDS_DRIVES              "Drives"
-    IDS_SEARCH_COMPUTER     "Search Computer..."
-    IDS_SETTINGS_MENU       "Settings Menu"
-    IDS_CONTROL_PANEL       "Control Panel"
-    IDS_PRINTERS            "Printers"
-    IDS_BROWSE              "Browse Files..."
-    IDS_SEARCH_PRG          "Search Programm..."
-    IDS_ALL_USERS           "All Users\\"
+    IDS_NETWORK             "Réseaux"
+    IDS_CONNECTIONS         "Connexions réseaux"
+    IDS_DRIVES              "Disques"
+    IDS_SEARCH_COMPUTER     "Recherche Ordinateurs..."
+    IDS_SETTINGS_MENU       "Barre des tâches et menu démarrer"
+    IDS_CONTROL_PANEL       "Panneau de configuration"
+    IDS_PRINTERS            "Imprimantes"
+    IDS_BROWSE              "Parcourir..."
+    IDS_SEARCH_PRG          "Recherche Programme..."
+    IDS_ALL_USERS           "Tous les utilisateurs\\"
 END
 
 #endif    // French (France) resources
