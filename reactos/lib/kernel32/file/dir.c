@@ -37,13 +37,16 @@ CreateDirectoryExA(
 	WCHAR NewDirectoryW[MAX_PATH];
 	ULONG i;
 	i = 0;
-   	while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
+    if(lpTemplateDirectory)
+    {
+      while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
      	{
 		TemplateDirectoryW[i] = *lpTemplateDirectory;
 		lpTemplateDirectory++;
 		i++;
      	}
-   	TemplateDirectoryW[i] = 0;
+      TemplateDirectoryW[i] = 0;
+    }
 
 	i = 0;
    	while ((*lpNewDirectory)!=0 && i < MAX_PATH)
@@ -80,14 +83,27 @@ CreateDirectoryExW(
 	HANDLE DirectoryHandle;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING DirectoryNameString;
+   WCHAR PathNameW[MAX_PATH],CurrentDir[MAX_PATH];
 
 	if ( lpTemplateDirectory != NULL ) {
 		// get object attributes from template directory
 	}
+   PathNameW[0] = '\\';
+   PathNameW[1] = '?';
+   PathNameW[2] = '?';
+   PathNameW[3] = '\\';
+   PathNameW[4] = 0;
+   
+   if (lpNewDirectory[0] != L'\\' && lpNewDirectory[1] != L':')
+     {
+    GetCurrentDirectoryW(MAX_PATH,CurrentDir);
+	lstrcatW(PathNameW,CurrentDir);
+     }
+   lstrcatW(PathNameW,lpNewDirectory);
 
 
-	DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
-	DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
+    DirectoryNameString.Length = lstrlenW(PathNameW)*sizeof(WCHAR);
+    DirectoryNameString.Buffer = (WCHAR *)PathNameW;
 	DirectoryNameString.MaximumLength = DirectoryNameString.Length;
 	
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
@@ -98,11 +114,17 @@ CreateDirectoryExW(
 	ObjectAttributes.SecurityQualityOfService = NULL;
 
 
-	errCode = NtCreateDirectoryObject(
-    		&DirectoryHandle,
-    		GENERIC_ALL,
-    		&ObjectAttributes
-    	);
+   errCode = NtCreateFile(&DirectoryHandle,
+             FILE_LIST_DIRECTORY,
+			 &ObjectAttributes,
+             NULL,
+			 NULL,
+             FILE_ATTRIBUTE_NORMAL,
+             0,
+             FILE_CREATE,
+             FILE_DIRECTORY_FILE,
+			 NULL,
+			 0);
 	if (!NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
