@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.101 2003/08/21 21:52:06 weiden Exp $
+/* $Id: window.c,v 1.102 2003/08/21 22:17:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -107,6 +107,9 @@ IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 }
 
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetAncestor(HWND hWnd, UINT Type)
 {
@@ -145,6 +148,9 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 }
 
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetParent(HWND hWnd)
 {
@@ -416,6 +422,9 @@ IntGetClientRect(PWINDOW_OBJECT WindowObject, PRECT Rect)
  * \param	hWnd	window handle.
  * \param	Rect	pointer to the buffer where the coordinates are returned.
 */
+/*
+ * @implemented
+ */
 BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
 {
@@ -448,6 +457,9 @@ NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
  * \param	Rect	pointer to the buffer where the coordinates are returned.
  *
 */
+/*
+ * @implemented
+ */
 BOOL STDCALL
 NtUserGetClientRect(HWND hWnd, LPRECT Rect)
 {
@@ -521,6 +533,9 @@ CleanupWindowImpl(VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserAlterWindowStyle(DWORD Unknown0,
 		       DWORD Unknown1,
@@ -531,6 +546,10 @@ NtUserAlterWindowStyle(DWORD Unknown0,
   return(0);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserChildWindowFromPointEx(HWND Parent,
 			     LONG x,
@@ -668,6 +687,9 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
 }
 
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserCreateWindowEx(DWORD dwExStyle,
 		     PUNICODE_STRING lpClassName,
@@ -1251,6 +1273,10 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL
 NtUserDestroyWindow(HWND Wnd)
 {
@@ -1419,6 +1445,10 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
   ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserEndDeferWindowPosEx(DWORD Unknown0,
 			  DWORD Unknown1)
@@ -1428,6 +1458,10 @@ NtUserEndDeferWindowPosEx(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserFillWindow(DWORD Unknown0,
 		 DWORD Unknown1,
@@ -1463,7 +1497,9 @@ NtUserFillWindow(DWORD Unknown0,
  *   Should use MmCopyFromCaller, we don't want an access violation in here
  *	 
  */
-
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserFindWindowEx(HWND hwndParent,
 		   HWND hwndChildAfter,
@@ -1544,6 +1580,10 @@ NtUserFindWindowEx(HWND hwndParent,
   return  NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserFlashWindowEx(DWORD Unknown0)
 {
@@ -1552,6 +1592,10 @@ NtUserFlashWindowEx(DWORD Unknown0)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserGetForegroundWindow(VOID)
 {
@@ -1560,6 +1604,10 @@ NtUserGetForegroundWindow(VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserGetInternalWindowPos(DWORD Unknown0,
 			   DWORD Unknown1,
@@ -1570,6 +1618,10 @@ NtUserGetInternalWindowPos(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserGetOpenClipboardWindow(VOID)
 {
@@ -1578,12 +1630,20 @@ NtUserGetOpenClipboardWindow(VOID)
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 NtUserGetWindowDC(HWND hWnd)
 {
   return (DWORD) NtUserGetDCEx( hWnd, 0, DCX_USESTYLE | DCX_WINDOW );
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserGetWindowPlacement(DWORD Unknown0,
 			 DWORD Unknown1)
@@ -1593,6 +1653,10 @@ NtUserGetWindowPlacement(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserInternalGetWindowText(HWND hWnd,
 			    LPWSTR lpString,
@@ -1627,6 +1691,10 @@ NtUserInternalGetWindowText(HWND hWnd,
   return res;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserLockWindowUpdate(DWORD Unknown0)
 {
@@ -1635,6 +1703,10 @@ NtUserLockWindowUpdate(DWORD Unknown0)
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 NtUserMoveWindow(      
     HWND hWnd,
@@ -1663,6 +1735,9 @@ NtUserMoveWindow(
                                 DesktopWindow, it shutdown the system
                                 and rebooted.
 */
+/*
+ * @implemented
+ */
 DWORD STDCALL
 NtUserQueryWindow(HWND hWnd, DWORD Index)
 {
@@ -1687,6 +1762,10 @@ PWINDOW_OBJECT Window = IntGetWindowObject(hWnd);
 
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 NtUserRealChildWindowFromPoint(DWORD Unknown0,
 			       DWORD Unknown1,
@@ -1697,6 +1776,10 @@ NtUserRealChildWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 NtUserRedrawWindow
@@ -1748,6 +1831,10 @@ NtUserRedrawWindow
  return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 UINT STDCALL
 NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
 {
@@ -1814,6 +1901,10 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
   return Msg;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserScrollWindowEx(DWORD Unknown0,
 		     DWORD Unknown1,
@@ -1829,6 +1920,10 @@ NtUserScrollWindowEx(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetImeOwnerWindow(DWORD Unknown0,
 			DWORD Unknown1)
@@ -1838,6 +1933,10 @@ NtUserSetImeOwnerWindow(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetInternalWindowPos(DWORD Unknown0,
 			   DWORD Unknown1,
@@ -1850,6 +1949,10 @@ NtUserSetInternalWindowPos(DWORD Unknown0,
 
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetLayeredWindowAttributes(DWORD Unknown0,
 				 DWORD Unknown1,
@@ -1861,6 +1964,10 @@ NtUserSetLayeredWindowAttributes(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetLogonNotifyWindow(DWORD Unknown0)
 {
@@ -1875,6 +1982,10 @@ HWND hwndShellWindow = 0;
 HWND hwndShellListView = 0;
 DWORD pidShellWindow = 0;
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
 {
@@ -1895,6 +2006,10 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndShellListView)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetShellWindow()
 {
@@ -1902,6 +2017,9 @@ NtUserGetShellWindow()
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetWindowFNID(DWORD Unknown0,
 		    DWORD Unknown1)
@@ -1911,6 +2029,10 @@ NtUserSetWindowFNID(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 {
@@ -1990,6 +2112,10 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
   return Result;
 }
 
+
+/*
+ * @implemented
+ */
 LONG STDCALL
 NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
@@ -2094,6 +2220,10 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
   return(OldValue);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetWindowPlacement(DWORD Unknown0,
 			 DWORD Unknown1)
@@ -2103,6 +2233,10 @@ NtUserSetWindowPlacement(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL 
 STDCALL NtUserSetWindowPos(      
     HWND hWnd,
@@ -2116,6 +2250,10 @@ STDCALL NtUserSetWindowPos(
   return WinPosSetWindowPos(hWnd, hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserSetWindowRgn(DWORD Unknown0,
 		   DWORD Unknown1,
@@ -2127,6 +2265,9 @@ NtUserSetWindowRgn(DWORD Unknown0,
 }
 
 
+/*
+ * @unimplemented
+ */
 WORD STDCALL
 NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal)
 {
@@ -2135,6 +2276,9 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewVal)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 NtUserShowWindow(HWND hWnd,
 		 LONG nCmdShow)
@@ -2142,6 +2286,10 @@ NtUserShowWindow(HWND hWnd,
   return(WinPosShowWindow(hWnd, nCmdShow));
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserShowWindowAsync(DWORD Unknown0,
 		      DWORD Unknown1)
@@ -2151,6 +2299,10 @@ NtUserShowWindowAsync(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL NtUserUpdateWindow( HWND hWnd )
 {
     PWINDOW_OBJECT pWindow = IntGetWindowObject( hWnd);
@@ -2163,6 +2315,10 @@ BOOL STDCALL NtUserUpdateWindow( HWND hWnd )
     return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserUpdateLayeredWindow(DWORD Unknown0,
 			  DWORD Unknown1,
@@ -2179,6 +2335,10 @@ NtUserUpdateLayeredWindow(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 NtUserWindowFromPoint(DWORD Unknown0,
 		      DWORD Unknown1)
@@ -2188,12 +2348,20 @@ NtUserWindowFromPoint(DWORD Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetDesktopWindow()
 {
   return IntGetDesktopWindow();
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetCapture(VOID)
 {
@@ -2209,6 +2377,10 @@ NtUserGetCapture(VOID)
     }
 }
 
+
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserSetCapture(HWND Wnd)
 {
@@ -2252,6 +2424,9 @@ IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
 {
@@ -2283,6 +2458,9 @@ NtUserGetWindowThreadProcessId(HWND hWnd, LPDWORD UnsafePid)
  * It's supposed to build a list of HWNDs to return to the caller.
  * We can figure out what kind of list by what parameters are
  * passed to us.
+ */
+/*
+ * @implemented
  */
 ULONG
 STDCALL
@@ -2409,11 +2587,16 @@ NtUserBuildHwndList(
   return dwCount;
 }
 
+
+/*
+ * @implemented
+ */
 VOID STDCALL
 NtUserValidateRect(HWND hWnd, const RECT* Rect)
 {
   (VOID)NtUserRedrawWindow(hWnd, Rect, 0, RDW_VALIDATE | RDW_NOCHILDREN);
 }
+
 
 /*
  * @unimplemented
@@ -2432,6 +2615,9 @@ NtUserDrawMenuBarTemp(
 }
 
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetWindow(HWND hWnd, UINT Relationship)
 {
@@ -2493,6 +2679,9 @@ NtUserGetWindow(HWND hWnd, UINT Relationship)
 }
 
 
+/*
+ * @implemented
+ */
 HWND STDCALL
 NtUserGetLastActivePopup(HWND hWnd)
 {
@@ -2580,6 +2769,9 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 }
 
 
+/*
+ * @implemented
+ */
 HWND
 STDCALL
 NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
