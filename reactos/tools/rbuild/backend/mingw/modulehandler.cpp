@@ -1970,9 +1970,25 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands ( const string bootcdDire
 	}
 }
 
+void
+MingwIsoModuleHandler::OutputCdfileCopyCommands ( const string bootcdDirectory,
+	                                              const Module& module ) const
+{
+	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
+	{
+		const CDFile& cdfile = *module.project.cdfiles[i];
+		string targetFilenameNoFixup = bootcdDirectory + SSEP + cdfile.base + SSEP + cdfile.nameoncd;
+		string targetFilename = PassThruCacheDirectory ( FixupTargetFilename ( targetFilenameNoFixup ) );
+		fprintf ( fMakefile,
+		          "\t${cp} %s %s\n",
+		          cdfile.GetPath ().c_str (),
+		          targetFilename.c_str () );
+	}
+}
+
 string
-MingwIsoModuleHandler::GetCdDirectories ( const string bootcdDirectory,
-	                                      const Module& module ) const
+MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string bootcdDirectory,
+	                                               const Module& module ) const
 {
 	string directories;
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
@@ -1990,21 +2006,74 @@ MingwIsoModuleHandler::GetCdDirectories ( const string bootcdDirectory,
 }
 
 string
-MingwIsoModuleHandler::GetCdFiles ( const string bootcdDirectory,
-	                                const Module& module ) const
+MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string bootcdDirectory,
+	                                               const Module& module ) const
 {
-	string files;
+	string directories;
+	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
+	{
+		const CDFile& cdfile = *module.project.cdfiles[i];
+		string targetDirecctory = bootcdDirectory + SSEP + cdfile.base;
+		if ( directories.size () > 0 )
+			directories += " ";
+		directories += FixupTargetFilename ( targetDirecctory );
+	}
+	return directories;
+}
+
+string
+MingwIsoModuleHandler::GetCdDirectories ( const string bootcdDirectory,
+	                                      const Module& module ) const
+{
+	string directories = GetBootstrapCdDirectories ( bootcdDirectory,
+	                                                 module );
+	directories += " " + GetNonModuleCdDirectories ( bootcdDirectory,
+	                                                 module );
+	return directories;
+}
+
+string
+MingwIsoModuleHandler::GetBootstrapCdFiles ( const string bootcdDirectory,
+	                                         const Module& module ) const
+{
+	string cdfiles;
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
 		if ( m.bootstrap != NULL )
 		{
-			if ( files.size () > 0 )
-				files += " ";
-			files += FixupTargetFilename ( m.GetPath () );
+			if ( cdfiles.size () > 0 )
+				cdfiles += " ";
+			cdfiles += FixupTargetFilename ( m.GetPath () );
 		}
 	}
-	return files;
+	return cdfiles;
+}
+
+string
+MingwIsoModuleHandler::GetNonModuleCdFiles ( const string bootcdDirectory,
+	                                         const Module& module ) const
+{
+	string cdfiles;
+	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
+	{
+		const CDFile& cdfile = *module.project.cdfiles[i];
+		if ( cdfiles.size () > 0 )
+			cdfiles += " ";
+		cdfiles += NormalizeFilename ( cdfile.GetPath () );
+	}
+	return cdfiles;
+}
+
+string
+MingwIsoModuleHandler::GetCdFiles ( const string bootcdDirectory,
+	                                const Module& module ) const
+{
+	string cdfiles = GetBootstrapCdFiles ( bootcdDirectory,
+	                                       module );
+	cdfiles += " " + GetNonModuleCdFiles ( bootcdDirectory,
+	                                       module );
+	return cdfiles;
 }
 
 void
@@ -2044,6 +2113,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	          reactosInf.c_str () );
 	OutputBootstrapfileCopyCommands ( bootcdDirectory,
 	                                  module );
+	OutputCdfileCopyCommands ( bootcdDirectory,
+	                           module );
 	fprintf ( fMakefile,
 	          "\t${cdmake} -v -m -b %s %s REACTOS ReactOS.iso\n",
 	          isoboot.c_str (),

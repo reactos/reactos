@@ -4,6 +4,8 @@
 #include "rbuild.h"
 #include "backend/mingw/mingw.h"
 
+#define RBUILD_BASE "tools" SSEP "rbuild" SSEP
+	
 class BaseTest
 {
 public:
@@ -115,6 +117,13 @@ private:
 	bool IsParentOf ( const SourceFile* parent,
 	                  const SourceFile* child );
 
+};
+
+
+class CDFileTest : public BaseTest
+{
+public:
+	void Run ();
 };
 
 #endif /* __TEST_H */

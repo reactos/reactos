@@ -4,7 +4,7 @@ using std::string;
 
 void LinkerFlagTest::Run()
 {
-	string projectFilename ( "tests/data/linkerflag.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/linkerflag.xml" );
 	Project project ( projectFilename );
 	ARE_EQUAL(1, project.linkerFlags.size());
 	LinkerFlag& linkerFlag1 = *project.linkerFlags[0];

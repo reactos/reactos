@@ -22,6 +22,7 @@ RBUILD_BASE_SOURCES = \
 	$(RBUILD_BACKEND_BASE_SOURCES) \
 	automaticdependency.cpp \
 	bootstrap.cpp \
+	cdfile.cpp \
 	compilerflag.cpp \
 	define.cpp \
 	exception.cpp \
@@ -61,7 +62,8 @@ RBUILD_TESTS = \
 	tests$(SEP)linkerflagtest.cpp \
 	tests$(SEP)moduletest.cpp \
 	tests$(SEP)projecttest.cpp \
-	tests$(SEP)sourcefiletest.cpp
+	tests$(SEP)sourcefiletest.cpp \
+	tests$(SEP)cdfiletest.cpp
 
 RBUILD_TEST_SPECIAL_SOURCES = \
 	$(addprefix $(RBUILD_BASE)$(SEP), $(RBUILD_TESTS)) \

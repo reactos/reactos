@@ -4,7 +4,7 @@ using std::string;
 
 void IncludeTest::Run()
 {
-	string projectFilename ( "tests/data/include.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/include.xml" );
 	Project project ( projectFilename );
 	ARE_EQUAL(1, project.includes.size());
 	Include& include1 = *project.includes[0];

@@ -52,6 +52,7 @@ class LinkerFlag;
 class Property;
 class AutomaticDependency;
 class Bootstrap;
+class CDFile;
 
 class SourceFileTest;
 
@@ -68,6 +69,7 @@ public:
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<Property*> properties;
 	std::vector<If*> ifs;
+	std::vector<CDFile*> cdfiles;
 
 	Project ( const std::string& filename );
 	~Project ();
@@ -469,6 +471,25 @@ public:
 private:
 	bool IsSupportedModuleType ( ModuleType type );
 	void Initialize();
+};
+
+
+class CDFile
+{
+public:
+	const Project& project;
+	const XMLElement& node;
+	std::string name;
+	std::string base;
+	std::string nameoncd;
+	std::string path;
+
+	CDFile ( const Project& project,
+	         const XMLElement& bootstrapNode,
+	         const std::string& path );
+	~CDFile ();
+	void ProcessXML();
+	std::string GetPath () const;
 };
 
 

@@ -4,7 +4,7 @@ using std::string;
 
 void ModuleTest::Run()
 {
-	string projectFilename ( "tests/data/module.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/module.xml" );
 	Project project ( projectFilename );
 	ARE_EQUAL(2, project.modules.size());
 

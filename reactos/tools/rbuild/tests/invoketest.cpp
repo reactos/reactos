@@ -4,7 +4,7 @@ using std::string;
 
 void InvokeTest::Run()
 {
-	string projectFilename ( "tests/data/invoke.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/invoke.xml" );
 	Project project ( projectFilename );
 	ARE_EQUAL(1, project.modules.size());
 

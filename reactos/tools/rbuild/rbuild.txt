@@ -161,6 +161,24 @@ Elements:
 	None.
 
 
+CDFile element
+--------------
+A cdfile element specifies the name of a file that is to be put on the bootable CD.
+
+Syntax:
+	<cdfile base="reactos" nameoncd="ReadMe.txt">ReadMe.txt</cdfile>
+
+Attributes:
+	base - Put file in this directory on the bootable CD. This attribute is optional.
+	nameoncd - Name of file on the bootable CD. This attribute is optional.
+
+Value:
+	Name of file.
+
+Elements:
+	None.
+
+
 Define element
 --------------
 A define element specifies the name and (optionally) value of a define for the C/C++ compiler and resource compiler.
@@ -211,7 +229,7 @@ Value:
 	None.
 
 Elements:
-	directory, file, if, property.
+	cdfile, directory, file, if, property.
 
 
 File element

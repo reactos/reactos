@@ -4,7 +4,7 @@ using std::string;
 
 void DefineTest::Run()
 {
-	string projectFilename ( "tests/data/define.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/define.xml" );
 	Project project ( projectFilename );
 	ARE_EQUAL(1, project.defines.size());
 	Define& define1 = *project.defines[0];

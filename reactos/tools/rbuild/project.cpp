@@ -30,6 +30,8 @@ Project::~Project ()
 		delete properties[i];
 	for ( i = 0; i < ifs.size (); i++ )
 		delete ifs[i];
+	for ( i = 0; i < cdfiles.size (); i++ )
+		delete cdfiles[i];
 	delete head;
 }
 
@@ -216,26 +218,28 @@ Project::ProcessXML ( const string& path )
 	makefile = att->value;
 
 	size_t i;
-	for ( i = 0; i < node->subElements.size(); i++ )
+	for ( i = 0; i < node->subElements.size (); i++ )
 		ProcessXMLSubElement ( *node->subElements[i], path );
-	for ( i = 0; i < modules.size(); i++ )
-		modules[i]->ProcessXML();
-	for ( i = 0; i < includes.size(); i++ )
-		includes[i]->ProcessXML();
-	for ( i = 0; i < defines.size(); i++ )
-		defines[i]->ProcessXML();
-	for ( i = 0; i < linkerFlags.size(); i++ )
-		linkerFlags[i]->ProcessXML();
+	for ( i = 0; i < modules.size (); i++ )
+		modules[i]->ProcessXML ();
+	for ( i = 0; i < includes.size (); i++ )
+		includes[i]->ProcessXML ();
+	for ( i = 0; i < defines.size (); i++ )
+		defines[i]->ProcessXML ();
+	for ( i = 0; i < linkerFlags.size (); i++ )
+		linkerFlags[i]->ProcessXML ();
 	for ( i = 0; i < properties.size(); i++ )
-		properties[i]->ProcessXML();
-	for ( i = 0; i < ifs.size(); i++ )
-		ifs[i]->ProcessXML();
+		properties[i]->ProcessXML ();
+	for ( i = 0; i < ifs.size (); i++ )
+		ifs[i]->ProcessXML ();
+	for ( i = 0; i < cdfiles.size (); i++ )
+		ifs[i]->ProcessXML ();
 }
 
 void
 Project::ProcessXMLSubElement ( const XMLElement& e,
                                 const string& path,
-                                If* pIf /*= NULL*/ )
+                                If* pIf )
 {
 	bool subs_invalid = false;
 	string subpath(path);
@@ -254,6 +258,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 				module->node.location.c_str() );
 		modules.push_back ( module );
 		return; // defer processing until later
+	}
+	else if ( e.name == "cdfile" )
+	{
+		CDFile* cdfile = new CDFile ( *this, e, path );
+		cdfiles.push_back ( cdfile );
+		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )
 	{

@@ -291,12 +291,22 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateIsoModuleTarget ( const Module& module );
+	std::string GetBootstrapCdDirectories ( const std::string bootcdDirectory,
+	                                        const Module& module ) const;
+	std::string GetNonModuleCdDirectories ( const std::string bootcdDirectory,
+	                                        const Module& module ) const;
 	std::string GetCdDirectories ( const std::string bootcdDirectory,
 	                               const Module& module ) const;
+	std::string GetBootstrapCdFiles ( const std::string bootcdDirectory,
+	                                  const Module& module ) const;
+	std::string GetNonModuleCdFiles ( const std::string bootcdDirectory,
+	                                  const Module& module ) const;
 	std::string GetCdFiles ( const std::string bootcdDirectory,
 	                         const Module& module ) const;
 	void OutputBootstrapfileCopyCommands ( const std::string bootcdDirectory,
 	                                       const Module& module ) const;
+	void OutputCdfileCopyCommands ( const std::string bootcdDirectory,
+	                                const Module& module ) const;
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

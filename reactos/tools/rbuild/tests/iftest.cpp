@@ -4,7 +4,7 @@ using std::string;
 
 void IfTest::Run()
 {
-	string projectFilename ( "tests/data/if.xml" );
+	string projectFilename ( RBUILD_BASE "tests/data/if.xml" );
 	Project project ( projectFilename );
 
 	ARE_EQUAL ( 1, project.modules.size () );
