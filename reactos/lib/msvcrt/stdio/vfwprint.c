@@ -809,7 +809,7 @@ int __vfwprintf(FILE *f, const wchar_t *fmt, va_list args)
 				{
 					if (putwc(L' ', f) == WEOF)
 						return -1;
-					done;
+					done++;
 				}
 			if (qualifier == L'l' || qualifier == L'w')
 			{
