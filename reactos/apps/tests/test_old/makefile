@@ -4,7 +4,7 @@
 PATH_TO_TOP = ../..
 
 PROGS= test-stdio tst-printf tstdiomisc bug2 bug3 \
-       temptest test-fseek test_rdwr
+       temptest test-fseek test_rdwr testfsd
 
 all: $(PROGS:%=%.exe)
 
@@ -64,5 +64,9 @@ tst-printf.exe: tst-printf.c
 tstdiomisc.exe: tstdiomisc.c
 	$(CC) tstdiomisc.c -lkernel32 -o tstdiomisc.exe
 	$(NM) --numeric-sort tstdiomisc.exe > tstdiomisc.sym
+
+testfsd.exe: testfsd.c
+	$(CC) testfsd.c -lkernel32 -o testfsd.exe
+	$(NM) --numeric-sort testfsd.exe > testfsd.sym
 
 include ../../rules.mak
