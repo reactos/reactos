@@ -12,7 +12,7 @@
 */
 
 #include <ddk/ntddk.h>
-#include "..\include\mouse.h"
+#include "../include/mouse.h"
 #include "mouclass.h"
 
 BOOLEAN AlreadyOpened = FALSE;
