@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.32 2003/10/11 17:51:56 hbirr Exp $
+ * $Id: dir.c,v 1.33 2003/12/13 14:25:04 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -206,12 +206,15 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 
   // determine Buffer for result :
   BufferLength = Stack->Parameters.QueryDirectory.Length;
+#if 0
+  /* Do not probe the user buffer until SEH is available */
   if (IrpContext->Irp->RequestorMode != KernelMode &&
       IrpContext->Irp->MdlAddress == NULL && 
       IrpContext->Irp->UserBuffer != NULL)
     {
       ProbeForWrite(IrpContext->Irp->UserBuffer, BufferLength, 1);
     }
+#endif
   Buffer = VfatGetUserBuffer(IrpContext->Irp);
 
   if (!ExAcquireResourceSharedLite(&pFcb->MainResource,
