@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.9 2002/11/05 21:13:14 dwelch Exp $
+/* $Id: anonmem.c,v 1.10 2003/01/11 15:45:55 hbirr Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -285,7 +285,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Get or create a page operation
     */
-   PageOp = MmGetPageOp(MemoryArea, (ULONG)PsGetCurrentProcessId(), 
+   PageOp = MmGetPageOp(MemoryArea, (ULONG)MemoryArea->Process->UniqueProcessId, 
 			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0,
 			MM_PAGEOP_PAGEIN);
    if (PageOp == NULL)
@@ -325,6 +325,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        if (PageOp->OpType != MM_PAGEOP_PAGEIN)
 	 {
            MmLockAddressSpace(AddressSpace);
+           KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
 	   MmReleasePageOp(PageOp);
 	   return(STATUS_MM_RESTART_OPERATION);
 	 }
@@ -334,6 +335,8 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        if (!NT_SUCCESS(PageOp->Status))
 	 {
            MmLockAddressSpace(AddressSpace);
+           KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+           Status = PageOp->Status;
 	   MmReleasePageOp(PageOp);
 	   return(Status);
 	 }
@@ -342,6 +345,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockPage(MmGetPhysicalAddressForProcess(NULL, Address));
 	 }
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
        MmReleasePageOp(PageOp);
        return(STATUS_SUCCESS);
      }
@@ -356,6 +360,11 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
        MmLockAddressSpace(AddressSpace);
      }
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("MmRequestPageMemoryConsumer failed, status = %x\n", Status);
+      KeBugCheck(0);
+   }
 
    /*
     * Handle swapped out pages.
@@ -380,15 +389,15 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Set the page. If we fail because we are out of memory then
     * try again
     */
-   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
-				   Address,
+   Status = MmCreateVirtualMapping(MemoryArea->Process,		      
+				   (PVOID)PAGE_ROUND_DOWN(Address),
 				   MemoryArea->Attributes,
 				   Page,
 				   FALSE);
    while (Status == STATUS_NO_MEMORY)
      {
 	MmUnlockAddressSpace(AddressSpace);
-	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),		      
+	Status = MmCreateVirtualMapping(MemoryArea->Process,	      
 					Address,
 					MemoryArea->Attributes,
 					Page,
@@ -405,7 +414,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Add the page to the process's working set
     */
-   MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+   MmInsertRmap(Page, MemoryArea->Process, (PVOID)PAGE_ROUND_DOWN(Address));
 
    /*
     * Finish the operation
@@ -593,7 +602,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 	      MmAlterRegion(AddressSpace, 
 			    MemoryArea->BaseAddress, 
 			    &MemoryArea->Data.VirtualMemoryData.RegionListHead,
-			    PBaseAddress, RegionSize,
+			    BaseAddress, RegionSize,
 			    Type, Protect, MmModifyAttributes);
 	    MmUnlockAddressSpace(AddressSpace);
 	    ObDereferenceObject(Process);
@@ -609,7 +618,7 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
      }
    
    Status = MmCreateMemoryArea(Process,
-			       &Process->AddressSpace,
+			       AddressSpace,
 			       MEMORY_AREA_VIRTUAL_MEMORY,
 			       &BaseAddress,
 			       RegionSize,
