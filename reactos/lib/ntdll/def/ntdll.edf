@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.74 2002/07/29 15:37:06 ekohl Exp $
+; $Id: ntdll.edf,v 1.75 2002/08/10 21:57:21 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -313,7 +313,7 @@ RtlCompareMemory=RtlCompareMemory@12
 RtlCompareMemoryUlong=RtlCompareMemoryUlong@12
 RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
-;RtlCompressBuffer
+RtlCompressBuffer=RtlCompressBuffer@32
 ;RtlConsoleMultiByteToUnicodeN
 RtlConvertExclusiveToShared=RtlConvertExclusiveToShared@4
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
@@ -347,8 +347,8 @@ RtlCreateUserThread=RtlCreateUserThread@40
 RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
 RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
-;RtlDecompressBuffer
-;RtlDecompressFragment
+RtlDecompressBuffer=RtlDecompressBuffer@24
+RtlDecompressFragment=RtlDecompressFragment@32
 ;RtlDelete
 RtlDeleteAce=RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
@@ -414,7 +414,7 @@ RtlFreeUserThreadStack=RtlFreeUserThreadStack@8
 RtlGenerate8dot3Name=RtlGenerate8dot3Name@16
 RtlGetAce=RtlGetAce@12
 ;RtlGetCallersAddress
-;RtlGetCompressionWorkSpaceSize
+RtlGetCompressionWorkSpaceSize=RtlGetCompressionWorkSpaceSize@12
 RtlGetControlSecurityDescriptor=RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U=RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16

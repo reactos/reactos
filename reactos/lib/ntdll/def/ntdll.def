@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.85 2002/07/29 15:37:05 ekohl Exp $
+; $Id: ntdll.def,v 1.86 2002/08/10 21:57:21 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -313,7 +313,7 @@ RtlCompareMemory@12
 RtlCompareMemoryUlong@12
 RtlCompareString@12
 RtlCompareUnicodeString@12
-;RtlCompressBuffer
+RtlCompressBuffer@32
 ;RtlConsoleMultiByteToUnicodeN
 RtlConvertExclusiveToShared@4
 RtlConvertLongToLargeInteger@4
@@ -347,8 +347,8 @@ RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
 ;RtlCutoverTimeToSystemTime
 RtlDeNormalizeProcessParams@4
-;RtlDecompressBuffer
-;RtlDecompressFragment
+RtlDecompressBuffer@24
+RtlDecompressFragment@32
 ;RtlDelete
 RtlDeleteAce@8
 RtlDeleteAtomFromAtomTable@8
@@ -415,7 +415,7 @@ RtlFreeUserThreadStack@8
 RtlGenerate8dot3Name@16
 RtlGetAce@12
 ;RtlGetCallersAddress
-;RtlGetCompressionWorkSpaceSize
+RtlGetCompressionWorkSpaceSize@12
 RtlGetControlSecurityDescriptor@12
 RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor@16
