@@ -119,6 +119,10 @@ winemine.exe = 2
 
 [SetupData]
 DefaultPath = \ReactOS
+OsLoadOptions = "/NODEBUG"
+;OsLoadOptions = "/DEBUGPORT=COM1"
+;OsLoadOptions = "/DEBUGPORT=SCREEN"
+;OsLoadOptions = "/DEBUGPORT=BOCHS"
 
 [HiveInfs.Install]
 AddReg=hivecls.inf,AddReg
