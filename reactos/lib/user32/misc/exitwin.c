@@ -1,4 +1,4 @@
-/* $Id: exitwin.c,v 1.1 1999/05/15 13:35:57 ea Exp $
+/* $Id: exitwin.c,v 1.2 1999/05/15 13:48:38 ea Exp $
  *
  * exitwin.c
  *
@@ -102,27 +102,6 @@ ExitWindowsEx(
 	return NT_SUCCESS(rv)
 		? TRUE
 		: FALSE;
-}
-
-
-/***********************************************************************
- * 	ExitWindows
- *
- * ARGUMENTS
- *	dwReserved,	reserved 
- * 	uReserved 	reserved
- */
-BOOL
-__stdcall
-ExitWindows(
-	DWORD	dwReserved,	// reserved 
-	UINT	uReserved 	// reserved 
-	)
-{
-	return ExitWindowsEx(
-			EWX_SHUTDOWN,
-			dwReserved
-			);
 }
 
 

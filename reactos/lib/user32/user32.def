@@ -203,7 +203,7 @@ EXPORTS
 ;EnumWindows
 ;EqualRect
 ;ExcludeUpdateRgn
-;ExitWindowsEx
+ExitWindowsEx = ExitWindowsEx@8
 ;FillRect
 ;FindWindowA
 ;FindWindowExA
