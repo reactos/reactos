@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.170 2003/12/22 11:37:32 navaraf Exp $
+/* $Id: window.c,v 1.171 2003/12/22 14:34:25 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2661,9 +2661,8 @@ NtUserGetWindowPlacement(HWND hWnd,
     return FALSE;
   }
   
-  /* FIXME - fill structure */
   Safepl.flags = 0;
-  Safepl.showCmd = ((WindowObject->Style & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
+  Safepl.showCmd = ((WindowObject->Flags & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
   if (WindowObject->InternalPos)
   {
     Safepl.rcNormalPosition = WindowObject->InternalPos->NormalRect;
