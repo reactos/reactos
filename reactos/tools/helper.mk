@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.56 2004/02/22 18:53:38 dwelch Exp $
+# $Id: helper.mk,v 1.57 2004/03/02 20:29:16 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -943,7 +943,7 @@ $(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
 $(MK_RESOURCE): $(MK_RC_BINARIES)
 endif
 
-$(REGTEST_TARGETS): tests/tests/* $(REGTESTS)
+$(REGTEST_TARGETS): tests/tests/*.c $(REGTESTS)
 ifeq ($(MK_MODE),user)
 	$(REGTESTS) ./tests/tests ./tests/_regtests.c ./tests/Makefile.tests -u ./tests/_rtstub.c
 	$(MAKE) -C tests TARGET_REGTESTS=no all
