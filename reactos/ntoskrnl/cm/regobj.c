@@ -6,6 +6,9 @@
  * UPDATE HISTORY:
 */
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -19,6 +22,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 
 static NTSTATUS
@@ -139,7 +143,7 @@ CmiObjectParse(PVOID ParsedObject,
 	}
 
       /* Create new key object and put into linked list */
-      DPRINT("CmiObjectParse %s\n", cPath);
+      DPRINT("CmiObjectParse: %s\n", cPath);
       Status = ObCreateObject(NULL,
 			      STANDARD_RIGHTS_REQUIRED,
 			      NULL,
@@ -209,8 +213,16 @@ CmiObjectParse(PVOID ParsedObject,
 				 NULL,
 				 UserMode);
     }
-
-  DPRINT("CmiObjectParse %s\n", FoundObject->Name);
+#ifndef WIN32_REGDBG
+  DPRINT("CmiObjectParse: %s\n", FoundObject->Name);
+#else
+  {
+      char buffer[_BUFFER_LEN];
+      memset(buffer, 0, _BUFFER_LEN);
+      strncpy(buffer, FoundObject->Name, min(FoundObject->NameSize, _BUFFER_LEN - 1));
+      DPRINT("CmiObjectParse: %s\n", buffer);
+  }
+#endif
 
   if (end != NULL)
     {
@@ -376,8 +388,17 @@ CmiScanKeyList(PKEY_OBJECT Parent,
   WORD NameSize;
   DWORD Index;
 
-  DPRINT("Scanning key list for %s (Parent %s)\n",
+#ifndef WIN32_REGDBG
+  DPRINT("Scanning key list for: %s (Parent: %s)\n",
     KeyName, Parent->Name);
+#else
+  {
+      char buffer[_BUFFER_LEN];
+      memset(buffer, 0, _BUFFER_LEN);
+      strncpy(buffer, Parent->Name, min(Parent->NameSize, _BUFFER_LEN - 1));
+      DPRINT("Scanning key list for: %s (Parent: %s)\n", KeyName, buffer);
+  }
+#endif
 
   NameSize = strlen(KeyName);
   KeAcquireSpinLock(&CmiKeyListLock, &OldIrql);
