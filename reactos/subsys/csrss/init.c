@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.7 2000/03/22 18:35:58 dwelch Exp $
+/* $Id: init.c,v 1.8 2000/04/23 17:44:53 phreak Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -33,6 +33,7 @@ HANDLE CsrSbApiPort = INVALID_HANDLE_VALUE;
 
 UNICODE_STRING CsrDirectoryName;
 
+extern HANDLE CsrssApiHeap;
 
 static NTSTATUS
 CsrParseCommandLine (
@@ -120,7 +121,19 @@ CsrServerInitialization (
 	PrintString("CSR: Unable to create \\ApiPort (Status %x)\n", Status);
 	return(FALSE);
      }
+   CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
+				NULL,
+				65536,
+				65536,
+				NULL,
+				NULL);
+   if (CsrssApiHeap == NULL)
+     {
+	PrintString("CSR: Failed to create private heap, aborting\n");
+	return FALSE;
+     }
 
+   CsrInitConsoleSupport();
    Status = RtlCreateUserThread(NtCurrentProcess(),
 				NULL,
 				FALSE,
@@ -137,7 +150,12 @@ CsrServerInitialization (
 	NtClose(ApiPortHandle);
 	return FALSE;
      }
-   
+   Status = RtlCreateUserThread( NtCurrentProcess(), NULL, FALSE, 0, NULL, NULL, (PTHREAD_START_ROUTINE)Console_Api, 0, NULL, NULL );
+   if( !NT_SUCCESS( Status ) )
+     {
+       PrintString( "CSR: Unable to create console thread\n" );
+       return FALSE;
+     }
    return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.7 2000/04/03 21:54:41 dwelch Exp $
+/* $Id: process.c,v 1.8 2000/04/23 17:44:53 phreak Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -12,7 +12,7 @@
 #include <ddk/ntddk.h>
 
 #include <csrss/csrss.h>
-
+#include <ntdll/rtl.h>
 #include "api.h"
 
 /* GLOBALS *******************************************************************/
@@ -64,13 +64,48 @@ PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId)
    return(NULL);
 }
 
+NTSTATUS CsrFreeProcessData( ULONG Pid )
+{
+   int i;
+   for( i = 0; i < NrProcess; i++ )
+      {
+	 if( ProcessData[i] && ProcessData[i]->ProcessId == Pid )
+	    {
+	       if( ProcessData[i]->HandleTable )
+		  {
+		     int c;
+		     for( c = 0; c < ProcessData[i]->HandleTableSize; c++ )
+			if( ProcessData[i]->HandleTable[c] )
+			  CsrReleaseObject( ProcessData[i], (HANDLE)((c + 1) << 2) );
+		     RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i]->HandleTable );
+		  }
+	       if( ProcessData[i]->Console )
+		  {
+		     RtlEnterCriticalSection( &ProcessData[i]->Console->Lock );
+		     if( --ProcessData[i]->Console->ReferenceCount == 0 )
+			{
+			   RtlLeaveCriticalSection( &ProcessData[i]->Console->Lock );
+			   CsrDeleteConsole( ProcessData[i], ProcessData[i]->Console );
+			}
+		     RtlLeaveCriticalSection( &ProcessData[i]->Console->Lock );
+		  }
+	       RtlFreeHeap( CsrssApiHeap, 0, ProcessData[i] );
+	       ProcessData[i] = 0;
+	       return STATUS_SUCCESS;
+	    }
+      }
+   return STATUS_INVALID_PARAMETER;
+}
+
 
 NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 			   PCSRSS_CREATE_PROCESS_REQUEST Request,
 			   PCSRSS_API_REPLY Reply)
 {
    PCSRSS_PROCESS_DATA NewProcessData;
-   
+   NTSTATUS Status;
+   HANDLE Process;
+
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - 
      sizeof(LPC_MESSAGE_HEADER);
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
@@ -97,18 +132,43 @@ NTSTATUS CsrCreateProcess (PCSRSS_PROCESS_DATA ProcessData,
 	CsrInitConsole(ProcessData,
 		       Console);
 	NewProcessData->Console = Console;
+	Console->ReferenceCount++;
      }
    else
      {
 	NewProcessData->Console = ProcessData->Console;
+	RtlEnterCriticalSection( &ProcessData->Console->Lock );
+	ProcessData->Console->ReferenceCount++;
+	RtlLeaveCriticalSection( &ProcessData->Console->Lock );
      }
    
-   CsrInsertObject(NewProcessData,
-		   &Reply->Data.CreateProcessReply.ConsoleHandle,
-		   NewProcessData->Console);
-   
-//   DbgPrint("CSR: ConsoleHandle %x\n",
-//	    Reply->Data.CreateProcessReply.ConsoleHandle);
+   if( NewProcessData->Console )
+     {
+       CLIENT_ID ClientId;
+       CsrInsertObject(NewProcessData,
+		       &Reply->Data.CreateProcessReply.ConsoleHandle,
+		       (Object_t *)NewProcessData->Console);
+       ClientId.UniqueProcess = (HANDLE)NewProcessData->ProcessId;
+       Status = NtOpenProcess( &Process, PROCESS_DUP_HANDLE, 0, &ClientId );
+       if( !NT_SUCCESS( Status ) )
+	 {
+	   DbgPrint( "CSR: NtOpenProcess() failed for handle duplication\n" );
+	   CsrFreeProcessData( NewProcessData->ProcessId );
+	   Reply->Status = Status;
+	   return Status;
+	 }
+       Status = NtDuplicateObject( NtCurrentProcess(), &NewProcessData->Console->ActiveEvent, Process, &NewProcessData->ConsoleEvent, SYNCHRONIZE, FALSE, 0 );
+       if( !NT_SUCCESS( Status ) )
+	 {
+	   DbgPrint( "CSR: NtDuplicateObject() failed\n" );
+	   NtClose( Process );
+	   CsrFreeProcessData( NewProcessData->ProcessId );
+	   Reply->Status = Status;
+	   return Status;
+	 }
+       NtClose( Process );
+     }
+   else Reply->Data.CreateProcessReply.ConsoleHandle = INVALID_HANDLE_VALUE;
 //   DisplayString(L"CSR: Did CreateProcess successfully\n");
 //   DbgPrint("Reply->Header.MessageSize %d\n", Reply->Header.MessageSize);
    

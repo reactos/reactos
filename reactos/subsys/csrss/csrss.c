@@ -1,4 +1,4 @@
-/* $Id: csrss.c,v 1.6 2000/03/22 18:35:58 dwelch Exp $
+/* $Id: csrss.c,v 1.7 2000/04/23 17:44:53 phreak Exp $
  *
  * csrss.c - Client/Server Runtime subsystem
  * 
@@ -106,7 +106,7 @@ VOID NtProcessStartup(PPEB Peb)
      {
 	DbgPrint("CSR: Failed to open csrss notification event\n");
      }
-   
+   DbgPrint( "foof\n" );
    if (CsrServerInitialization (argc, argv) == TRUE)
      {
 	DisplayString( L"CSR: Subsystem initialized.\n" );

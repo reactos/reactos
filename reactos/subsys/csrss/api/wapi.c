@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.6 2000/04/03 21:54:41 dwelch Exp $
+/* $Id: wapi.c,v 1.7 2000/04/23 17:44:53 phreak Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -46,7 +46,8 @@ static void Thread_Api2(HANDLE ServerPort)
 	
 	if (LpcRequest.Header.MessageType == LPC_PORT_CLOSED)
 	  {
-//	     DbgPrint("Client closed port\n");
+	     DbgPrint("Client closed port\n");
+	     CsrFreeProcessData( LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 	  }
@@ -127,20 +128,7 @@ void Thread_Api(PVOID PortHandle)
    HANDLE ServerPort;
    HANDLE ServerThread;
    
-   CsrssApiHeap = RtlCreateHeap(HEAP_GROWABLE,
-				NULL,
-				65536,
-				65536,
-				NULL,
-				NULL);
-   if (CsrssApiHeap == NULL)
-     {
-	PrintString("CSR: Failed to create private heap, aborting\n");
-	return;
-     }
-
    CsrInitProcessData();
-   CsrInitConsoleSupport();
    
    for (;;)
      {

@@ -1,24 +1,49 @@
 #include <ddk/ntddk.h>
 
 #include <csrss/csrss.h>
+#include <defines.h>
+#include <structs.h>
 
-typedef struct
+/* Object type magic numbers */
+
+#define CSRSS_CONSOLE_MAGIC 1
+
+typedef struct Object_tt
 {
-   BOOL TopLevel;
+   DWORD Type;
+   DWORD ReferenceCount;
+   CRITICAL_SECTION Lock;
+} Object_t;
+
+typedef struct ConsoleInput_t
+{
+  LIST_ENTRY ListEntry;
+  INPUT_RECORD InputEvent;
+} ConsoleInput;
+
+typedef struct CSRSS_CONSOLE_t
+{
+   DWORD Type;
+   DWORD ReferenceCount;              /* Inherited from Object_t */
+   CRITICAL_SECTION Lock;
+   struct CSRSS_CONSOLE_t *Prev, *Next; /* Next and Prev consoles in console wheel */
    HANDLE ActiveEvent;
-   BYTE Screen[80*25*2];
-   ULONG ReferenceCount;
-   HANDLE LockMutant;
+   BYTE *Buffer;
+   USHORT MaxX, MaxY;          /* size of the entire scrollback buffer */
+   USHORT ShowX, ShowY;        /* beginning offset for the actual display area */
    ULONG CurrentX;
    ULONG CurrentY;
+   BYTE DefaultAttrib;        /* default char attribute */
+   LIST_ENTRY InputEvents;    /* List head for input event queue */
 } CSRSS_CONSOLE, *PCSRSS_CONSOLE;
 
 typedef struct
 {
    PCSRSS_CONSOLE Console;
    ULONG HandleTableSize;
-   PVOID* HandleTable;
+   Object_t ** HandleTable;
    ULONG ProcessId;
+   HANDLE ConsoleEvent;
 } CSRSS_PROCESS_DATA, *PCSRSS_PROCESS_DATA;
 
 VOID CsrInitProcessData(VOID);
@@ -57,24 +82,29 @@ VOID PrintString (char* fmt, ...);
 
 /* api/wapi.c */
 VOID Thread_Api(PVOID PortHandle);
+VOID Console_Api( DWORD Ignored );
 
 extern HANDLE CsrssApiHeap;
 
 /* api/conio.c */
-VOID CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
+NTSTATUS CsrInitConsole(PCSRSS_PROCESS_DATA ProcessData,
 		    PCSRSS_CONSOLE Console);
+VOID CsrDeleteConsole( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_CONSOLE Console );
 VOID CsrInitConsoleSupport(VOID);
 
 /* api/process.c */
 PCSRSS_PROCESS_DATA CsrGetProcessData(ULONG ProcessId);
-
+NTSTATUS CsrFreeProcessData( ULONG Pid );
 /* api/handle.c */
-NTSTATUS CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-			 PHANDLE Handle,
-			 PVOID Object);
-NTSTATUS CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
-		      HANDLE Handle,
-		      PVOID* Object);
+NTSTATUS CsrInsertObject( PCSRSS_PROCESS_DATA ProcessData, PHANDLE Handle, Object_t *Object );
+NTSTATUS CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object );
 
 BOOL STDCALL CsrServerInitialization (ULONG ArgumentCount,
 				      PWSTR *ArgumentArray);
+NTSTATUS CsrReleaseObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Object );
+VOID CsrUnlockObject( Object_t *Object );
+VOID CsrDrawConsole( PCSRSS_CONSOLE Console );
+
+
+
+
