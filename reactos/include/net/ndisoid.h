@@ -36,96 +36,41 @@ typedef struct _NET_PNP_TRANSLATE_LIST
     NET_PNP_ID  IdArray[ANYSIZE_ARRAY];
 } NET_PNP_TRANSLATE_LIST, *PNET_PNP_TRANSLATE_LIST;
 
-
-
-/* Generel objects */
-
-/* General operational characteristics */
+/* Connection-oriented operational characteristics */
 
 /* Mandatory */
-#define OID_GEN_SUPPORTED_LIST                  0x00010101
-#define OID_GEN_HARDWARE_STATUS                 0x00010102
-#define OID_GEN_MEDIA_SUPPORTED                 0x00010103
-#define OID_GEN_MEDIA_IN_USE                    0x00010104
-#define OID_GEN_MAXIMUM_LOOKAHEAD               0x00010105
-#define OID_GEN_MAXIMUM_FRAME_SIZE              0x00010106
-#define OID_GEN_LINK_SPEED                      0x00010107
-#define OID_GEN_TRANSMIT_BUFFER_SPACE           0x00010108
-#define OID_GEN_RECEIVE_BUFFER_SPACE            0x00010109
-#define OID_GEN_TRANSMIT_BLOCK_SIZE             0x0001010A
-#define OID_GEN_RECEIVE_BLOCK_SIZE              0x0001010B
-#define OID_GEN_VENDOR_ID                       0x0001010C
-#define OID_GEN_VENDOR_DESCRIPTION              0x0001010D
-#define OID_GEN_CURRENT_PACKET_FILTER           0x0001010E
-#define OID_GEN_CURRENT_LOOKAHEAD               0x0001010F
-#define OID_GEN_DRIVER_VERSION                  0x00010110
-#define OID_GEN_MAXIMUM_TOTAL_SIZE              0x00010111
-#define OID_GEN_PROTOCOL_OPTIONS                0x00010112
-#define OID_GEN_MAC_OPTIONS                     0x00010113
-#define OID_GEN_MEDIA_CONNECT_STATUS            0x00010114
-#define OID_GEN_MAXIMUM_SEND_PACKETS            0x00010115
-#define OID_GEN_VENDOR_DRIVER_VERSION           0x00010116
+#define OID_GEN_CO_SUPPORTED_LIST               OID_GEN_SUPPORTED_LIST
+#define OID_GEN_CO_HARDWARE_STATUS              OID_GEN_HARDWARE_STATUS
+#define OID_GEN_CO_MEDIA_SUPPORTED              OID_GEN_MEDIA_SUPPORTED
+#define OID_GEN_CO_MEDIA_IN_USE	                OID_GEN_MEDIA_IN_USE
+#define OID_GEN_CO_LINK_SPEED                   OID_GEN_LINK_SPEED
+#define OID_GEN_CO_VENDOR_ID                    OID_GEN_VENDOR_ID
+#define OID_GEN_CO_VENDOR_DESCRIPTION           OID_GEN_VENDOR_DESCRIPTION
+#define OID_GEN_CO_DRIVER_VERSION               OID_GEN_DRIVER_VERSION
+#define OID_GEN_CO_PROTOCOL_OPTIONS	            OID_GEN_PROTOCOL_OPTIONS
+#define OID_GEN_CO_MAC_OPTIONS                  OID_GEN_MAC_OPTIONS
+#define OID_GEN_CO_MEDIA_CONNECT_STATUS	        OID_GEN_MEDIA_CONNECT_STATUS
+#define OID_GEN_CO_VENDOR_DRIVER_VERSION        OID_GEN_VENDOR_DRIVER_VERSION
 
 /* Optional */
-#define	OID_GEN_SUPPORTED_GUIDS                 0x00010117
-#define	OID_GEN_NETWORK_LAYER_ADDRESSES         0x00010118
-#define OID_GEN_TRANSPORT_HEADER_OFFSET         0x00010119
+#define	OID_GEN_CO_SUPPORTED_GUIDS              OID_GEN_SUPPORTED_GUIDS
+#define OID_GEN_CO_GET_TIME_CAPS                OID_GEN_GET_TIME_CAPS
+#define OID_GEN_CO_GET_NETCARD_TIME	            OID_GEN_GET_NETCARD_TIME
+#define OID_GEN_CO_MINIMUM_LINK_SPEED           0x00020120
 
-/* General statistics */
+/* Connection-oriented statistics */
 
-/* Mandatory */
-#define OID_GEN_XMIT_OK                         0x00020101
-#define OID_GEN_RCV_OK                          0x00020102
-#define OID_GEN_XMIT_ERROR                      0x00020103
-#define OID_GEN_RCV_ERROR                       0x00020104
-#define OID_GEN_RCV_NO_BUFFER                   0x00020105
-
-/* Optional */
-#define OID_GEN_DIRECTED_BYTES_XMIT             0x00020201
-#define OID_GEN_DIRECTED_FRAMES_XMIT            0x00020202
-#define OID_GEN_MULTICAST_BYTES_XMIT            0x00020203
-#define OID_GEN_MULTICAST_FRAMES_XMIT           0x00020204
-#define OID_GEN_BROADCAST_BYTES_XMIT            0x00020205
-#define OID_GEN_BROADCAST_FRAMES_XMIT           0x00020206
-#define OID_GEN_DIRECTED_BYTES_RCV              0x00020207
-#define OID_GEN_DIRECTED_FRAMES_RCV             0x00020208
-#define OID_GEN_MULTICAST_BYTES_RCV             0x00020209
-#define OID_GEN_MULTICAST_FRAMES_RCV            0x0002020A
-#define OID_GEN_BROADCAST_BYTES_RCV             0x0002020B
-#define OID_GEN_BROADCAST_FRAMES_RCV            0x0002020C
-#define OID_GEN_RCV_CRC_ERROR                   0x0002020D
-#define OID_GEN_TRANSMIT_QUEUE_LENGTH           0x0002020E
-
-
-/* Ethernet objects */
-
-/* Ethernet operational characteristics */
-
-/* Mandatory */
-#define OID_802_3_PERMANENT_ADDRESS             0x01010101
-#define OID_802_3_CURRENT_ADDRESS               0x01010102
-#define OID_802_3_MULTICAST_LIST                0x01010103
-#define OID_802_3_MAXIMUM_LIST_SIZE             0x01010104
-
-/* Optional */
-#define OID_802_3_MAC_OPTIONS                   0x01010105
-
-/* Ethernet statistics */
-
-/* Mandatory */
-#define OID_802_3_RCV_ERROR_ALIGNMENT           0x01020101
-#define OID_802_3_XMIT_ONE_COLLISION            0x01020102
-#define OID_802_3_XMIT_MORE_COLLISIONS          0x01020103
-
-/* Optional */
-#define OID_802_3_XMIT_DEFERRED                 0x01020201
-#define OID_802_3_XMIT_MAX_COLLISIONS           0x01020202
-#define OID_802_3_RCV_OVERRUN                   0x01020203
-#define OID_802_3_XMIT_UNDERRUN                 0x01020204
-#define OID_802_3_XMIT_HEARTBEAT_FAILURE        0x01020205
-#define OID_802_3_XMIT_TIMES_CRS_LOST           0x01020206
-#define OID_802_3_XMIT_LATE_COLLISIONS          0x01020207
-
+#define	OID_GEN_CO_XMIT_PDUS_OK	                OID_GEN_XMIT_OK
+#define	OID_GEN_CO_RCV_PDUS_OK                  OID_GEN_RCV_OK
+#define	OID_GEN_CO_XMIT_PDUS_ERROR              OID_GEN_XMIT_ERROR
+#define	OID_GEN_CO_RCV_PDUS_ERROR               OID_GEN_RCV_ERROR
+#define	OID_GEN_CO_RCV_PDUS_NO_BUFFER           OID_GEN_RCV_NO_BUFFER
+#define	OID_GEN_CO_RCV_CRC_ERROR                OID_GEN_RCV_CRC_ERROR
+#define OID_GEN_CO_TRANSMIT_QUEUE_LENGTH        OID_GEN_TRANSMIT_QUEUE_LENGTH
+#define	OID_GEN_CO_BYTES_XMIT                   OID_GEN_DIRECTED_BYTES_XMIT
+#define OID_GEN_CO_BYTES_RCV                    OID_GEN_DIRECTED_BYTES_RCV
+#define	OID_GEN_CO_NETCARD_LOAD	                OID_GEN_NETCARD_LOAD
+#define	OID_GEN_CO_DEVICE_PROFILE               OID_GEN_DEVICE_PROFILE
 
 /* Token Ring objects */
 
@@ -366,43 +311,6 @@ typedef struct _NET_PNP_TRANSLATE_LIST
 #define OID_WW_MBX_TEMP_DEFAULTLIST             0x09050107
 
 
-/* Connection-oriented objects */
-
-/* Connection-oriented operational characteristics */
-
-/* Mandatory */
-#define OID_GEN_CO_SUPPORTED_LIST               OID_GEN_SUPPORTED_LIST
-#define OID_GEN_CO_HARDWARE_STATUS              OID_GEN_HARDWARE_STATUS
-#define OID_GEN_CO_MEDIA_SUPPORTED              OID_GEN_MEDIA_SUPPORTED
-#define OID_GEN_CO_MEDIA_IN_USE	                OID_GEN_MEDIA_IN_USE
-#define OID_GEN_CO_LINK_SPEED                   OID_GEN_LINK_SPEED
-#define OID_GEN_CO_VENDOR_ID                    OID_GEN_VENDOR_ID
-#define OID_GEN_CO_VENDOR_DESCRIPTION           OID_GEN_VENDOR_DESCRIPTION
-#define OID_GEN_CO_DRIVER_VERSION               OID_GEN_DRIVER_VERSION
-#define OID_GEN_CO_PROTOCOL_OPTIONS	            OID_GEN_PROTOCOL_OPTIONS
-#define OID_GEN_CO_MAC_OPTIONS                  OID_GEN_MAC_OPTIONS
-#define OID_GEN_CO_MEDIA_CONNECT_STATUS	        OID_GEN_MEDIA_CONNECT_STATUS
-#define OID_GEN_CO_VENDOR_DRIVER_VERSION        OID_GEN_VENDOR_DRIVER_VERSION
-
-/* Optional */
-#define	OID_GEN_CO_SUPPORTED_GUIDS              OID_GEN_SUPPORTED_GUIDS
-#define OID_GEN_CO_GET_TIME_CAPS                OID_GEN_GET_TIME_CAPS
-#define OID_GEN_CO_GET_NETCARD_TIME	            OID_GEN_GET_NETCARD_TIME
-#define OID_GEN_CO_MINIMUM_LINK_SPEED           0x00020120
-
-/* Connection-oriented statistics */
-
-#define	OID_GEN_CO_XMIT_PDUS_OK	                OID_GEN_XMIT_OK
-#define	OID_GEN_CO_RCV_PDUS_OK                  OID_GEN_RCV_OK
-#define	OID_GEN_CO_XMIT_PDUS_ERROR              OID_GEN_XMIT_ERROR
-#define	OID_GEN_CO_RCV_PDUS_ERROR               OID_GEN_RCV_ERROR
-#define	OID_GEN_CO_RCV_PDUS_NO_BUFFER           OID_GEN_RCV_NO_BUFFER
-#define	OID_GEN_CO_RCV_CRC_ERROR                OID_GEN_RCV_CRC_ERROR
-#define OID_GEN_CO_TRANSMIT_QUEUE_LENGTH        OID_GEN_TRANSMIT_QUEUE_LENGTH
-#define	OID_GEN_CO_BYTES_XMIT                   OID_GEN_DIRECTED_BYTES_XMIT
-#define OID_GEN_CO_BYTES_RCV                    OID_GEN_DIRECTED_BYTES_RCV
-#define	OID_GEN_CO_NETCARD_LOAD	                OID_GEN_NETCARD_LOAD
-#define	OID_GEN_CO_DEVICE_PROFILE               OID_GEN_DEVICE_PROFILE
 #define	OID_GEN_CO_BYTES_XMIT_OUTSTANDING       0x00020221
 
 #endif /* __NDISOID_H */
