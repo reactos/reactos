@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.2 2003/12/12 21:54:42 ekohl Exp $
+/* $Id: pdo.c,v 1.3 2004/03/12 19:40:05 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -15,6 +15,8 @@
 
 #define NDEBUG
 #include <debug.h>
+
+DEFINE_GUID(GUID_BUS_TYPE_PCI, 0xc8ebdfb0L, 0xb510, 0x11d0, 0x80, 0xe5, 0x00, 0xa0, 0xc9, 0x25, 0x42, 0xe3);
 
 /*** PRIVATE *****************************************************************/
 
@@ -72,6 +74,35 @@ PdoQueryId(
   }
 
   return Status;
+}
+
+
+NTSTATUS
+PdoQueryBusInformation(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+  PPNP_BUS_INFORMATION BusInformation;
+
+  DPRINT("Called\n");
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
+  BusInformation = ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+  Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
+  if (BusInformation != NULL)
+  {
+    BusInformation->BusTypeGuid = GUID_BUS_TYPE_PCI;
+    BusInformation->LegacyBusType = PCIBus;
+    BusInformation->BusNumber = DeviceExtension->BusNumber;
+
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -139,10 +170,13 @@ PdoPnpControl(
 
   case IRP_MN_EJECT:
     break;
+#endif
 
   case IRP_MN_QUERY_BUS_INFORMATION:
+    Status = PdoQueryBusInformation(DeviceObject, Irp, IrpSp);
     break;
 
+#if 0
   case IRP_MN_QUERY_CAPABILITIES:
     break;
 

@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.4 2003/12/12 21:54:42 ekohl Exp $ */
+/* $Id: pci.h,v 1.5 2004/03/12 19:40:05 navaraf Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -17,7 +17,9 @@ typedef struct _PCI_DEVICE
   LIST_ENTRY ListEntry;
   // Physical Device Object of device
   PDEVICE_OBJECT Pdo;
-  /* PCI Slot number */
+  // PCI bus number
+  ULONG BusNumber;
+  // PCI slot number
   PCI_SLOT_NUMBER SlotNumber;
   // PCI configuration data
   PCI_COMMON_CONFIG PciConfig;
@@ -52,6 +54,10 @@ typedef struct _PDO_DEVICE_EXTENSION
 {
   // Common device data
   COMMON_DEVICE_EXTENSION Common;
+  // Functional device object
+  PDEVICE_OBJECT Fdo;
+  // PCI bus number
+  ULONG BusNumber;
   // Device ID
   UNICODE_STRING DeviceID;
   // Instance ID
@@ -71,8 +77,6 @@ typedef struct _FDO_DEVICE_EXTENSION
 {
   // Common device data
   COMMON_DEVICE_EXTENSION Common;
-  // Physical Device Object
-  PDEVICE_OBJECT Pdo;
   // Current state of the driver
   PCI_DEVICE_STATE State;
   // Namespace device list
@@ -82,7 +86,7 @@ typedef struct _FDO_DEVICE_EXTENSION
   // Lock for namespace device list
   KSPIN_LOCK DeviceListLock;
   // PCI bus number
-  ULONG BusNumber;
+/*  ULONG BusNumber;*/
   // Lower device object
   PDEVICE_OBJECT Ldo;
 } __attribute((packed)) FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
