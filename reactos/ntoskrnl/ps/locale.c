@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.7 2004/02/12 15:55:57 navaraf Exp $
+/* $Id: locale.c,v 1.8 2004/03/10 20:26:40 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,7 +26,7 @@
  */
 LCID PsDefaultThreadLocaleId = 0;
 LCID PsDefaultSystemLocaleId = 0;
-
+BOOL PsDefaultThreadLocaleInitialized = FALSE;
 
 #define VALUE_BUFFER_SIZE 256
 
@@ -96,6 +96,33 @@ PiInitDefaultLocale(VOID)
 	  }
 	NtClose(KeyHandle);
      }
+}
+
+
+VOID STDCALL
+PiInitThreadLocale(VOID)
+/*
+ * FUNCTION:
+ *    Initializes the default thread locale.
+ *    Reads default locale from registry, if available
+ * ARGUMENTS:
+ *    None.
+ * Returns:
+ *    None.
+ */
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING KeyName;
+   UNICODE_STRING ValueName;
+   HANDLE KeyHandle;
+   ULONG ValueLength;
+   UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
+   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+   UNICODE_STRING ValueString;
+   ULONG LocaleValue;
+   NTSTATUS Status;
+
+   ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
 
    /* read default thread locale */
    RtlRosInitUnicodeStringFromLiteral(&KeyName,
@@ -136,6 +163,8 @@ PiInitDefaultLocale(VOID)
 	  }
 	NtClose(KeyHandle);
      }
+
+   PsDefaultThreadLocaleInitialized = TRUE;
 }
 
 
@@ -158,6 +187,10 @@ NtQueryDefaultLocale(IN BOOLEAN ThreadOrSystem,
 
    if (ThreadOrSystem == TRUE)
      {
+        if (PsDefaultThreadLocaleInitialized == FALSE)
+          {
+             PiInitThreadLocale();
+          }
 	/* set thread locale */
 	*DefaultLocaleId = PsDefaultThreadLocaleId;
      }
@@ -259,6 +292,7 @@ NtSetDefaultLocale(IN BOOLEAN ThreadOrSystem,
 	/* set thread locale */
 	DPRINT("Thread locale: %08lu\n", DefaultLocaleId);
 	PsDefaultThreadLocaleId = DefaultLocaleId;
+	PsDefaultThreadLocaleInitialized = TRUE;
      }
    else
      {
