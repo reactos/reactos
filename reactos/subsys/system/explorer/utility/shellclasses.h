@@ -605,7 +605,7 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	}
 
 	 // convert an item id list from relative to absolute (=relative to the desktop) format
-	ShellPath create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const;
+	ShellPath create_absolute_pidl(LPCITEMIDLIST parent_pidl) const;
 };
 
 

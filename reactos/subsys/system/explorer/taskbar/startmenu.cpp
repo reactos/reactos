@@ -454,7 +454,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 		ShellEntry* entry = const_cast<ShellEntry*>(*it);
 
 		if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-			new_folders.push_back(entry->create_absolute_pidl(_hwnd));
+			new_folders.push_back(entry->create_absolute_pidl());
 		else {
 			 // If the entry is no subdirectory, there can only be one shell entry.
 			assert(entries.size()==1);

@@ -105,6 +105,7 @@ protected:
 
 	WindowHandle _hWndFrame;
 	ShellChildWndInfo _create_info;
+	ShellFolder	_folder;
 
 	IShellView*	_pShellView;	// current hosted shellview
 	HIMAGELIST	_himlSmall;		// list

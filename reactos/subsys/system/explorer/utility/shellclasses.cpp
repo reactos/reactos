@@ -315,7 +315,7 @@ void ShellPath::GetUIObjectOf(REFIID riid, LPVOID* ppvOut, HWND hWnd, ShellFolde
 #ifndef __MINGW32__	// ILCombine() is currently missing in MinGW.
 
  // convert an item id list from relative to absolute (=relative to the desktop) format
-ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 {
 	return ILCombine(parent_pidl, _p);
 
@@ -335,7 +335,7 @@ ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) 
 
 #else
 
-ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl, HWND hwnd) const
+ShellPath ShellPath::create_absolute_pidl(LPCITEMIDLIST parent_pidl) const
 {
 	static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILCombine(_T("SHELL32"), 25);
 

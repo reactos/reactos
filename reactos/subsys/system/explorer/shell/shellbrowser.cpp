@@ -283,7 +283,7 @@ void ShellBrowserChild::OnTreeGetDispInfo(int idCtrl, LPNMHDR pnmh)
 	}
 
 	if (lpdi->item.mask & (TVIF_IMAGE|TVIF_SELECTEDIMAGE)) {
-		ShellPath pidl_abs = entry->create_absolute_pidl(_hwnd);	// Caching of absolute PIDLs could enhance performance.
+		ShellPath pidl_abs = entry->create_absolute_pidl();	// Caching of absolute PIDLs could enhance performance.
 		LPCITEMIDLIST pidl = pidl_abs;
 
 		SHFILEINFO sfi;
@@ -385,6 +385,8 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 	FOLDERSETTINGS fs;
 	IShellView* pLastShellView = _pShellView;
 
+	_folder = folder;
+
 	if (pLastShellView)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
@@ -445,27 +447,31 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 
 HRESULT ShellBrowserChild::OnDefaultCommand(LPIDA pIDList)
 {
-	if (pIDList->cidl>=1 && _last_sel) {
-		ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
+	if (pIDList->cidl>=1) {
+		if (_left_hwnd) {	// explorer mode
+			if (_last_sel) {
+				ShellDirectory* parent = (ShellDirectory*)TreeView_GetItemData(_left_hwnd, _last_sel);
 
-		if (parent) {
-			try {
-				parent->smart_scan();
-			} catch(COMException& e) {
-				return e.Error();
+				if (parent) {
+					try {
+						parent->smart_scan();
+					} catch(COMException& e) {
+						return e.Error();
+					}
+
+					UINT firstOffset = pIDList->aoffset[1];
+					LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pIDList+firstOffset);
+
+					Entry* entry = parent->find_entry(pidl);
+
+					if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+						if (expand_folder(static_cast<ShellDirectory*>(entry)))
+							return S_OK;
+				}
 			}
-
-			//UINT folderOffset = pIDList->aoffset[0];
-			//LPITEMIDLIST pidlFolder = (LPITEMIDLIST)((LPBYTE)pIDList+folderOffset);
-
-			UINT firstOffset = pIDList->aoffset[1];
-			LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pIDList+firstOffset);
-
-			Entry* entry = parent->find_entry(pidl);
-
-			if (entry && (entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-				if (expand_folder(static_cast<ShellDirectory*>(entry)))
-					return S_OK;
+		} else { // no tree control
+			if (MainFrame::OpenShellFolders(pIDList))
+				return S_OK;
 		}
 	}
 

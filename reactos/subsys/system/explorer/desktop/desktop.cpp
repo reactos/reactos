@@ -267,23 +267,8 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HRESULT DesktopWindow::OnDefaultCommand(LPIDA pIDList)
 {
-	HRESULT ret = E_NOTIMPL;
-	int cnt = pIDList->cidl;
+	if (MainFrame::OpenShellFolders(pIDList))
+		return S_OK;
 
-	for(int i=0; ++i<=cnt; ) {
-	  /* We know, the parent folder is the desktop, so we do not need to look at pIDList->aoffset[0]
-		UINT folderOffset = pIDList->aoffset[0];
-		LPITEMIDLIST pidlFolder = (LPITEMIDLIST)((LPBYTE)pIDList+folderOffset);
-	  */
-		LPCITEMIDLIST pidl = (LPCITEMIDLIST)((LPBYTE)pIDList+pIDList->aoffset[i]);
-
-		SFGAOF attribs = SFGAO_FOLDER;
-		HRESULT hr = Desktop()->GetAttributesOf(1, &pidl, &attribs);
-
-		if (SUCCEEDED(hr) && (attribs&SFGAO_FOLDER))
-			if (MainFrame::Create(pidl, FALSE))
-				ret = S_OK;
-	}
-
-	return ret;
+	return E_NOTIMPL;
 }
