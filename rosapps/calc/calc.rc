@@ -1,3 +1,6 @@
+#include <defines.h>
+#include <reactos/resource.h>
+
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
@@ -167,6 +170,7 @@ END
 // Accelerator
 //
 
+#ifdef _MSC_VER
 IDR_ACCELERATOR ACCELERATORS DISCARDABLE 
 BEGIN
     VK_F2,          ID_VIEW_DEGREES,    VIRTKEY, NOINVERT
@@ -176,6 +180,50 @@ BEGIN
     VK_F6,          ID_VIEW_DECIMAL,    VIRTKEY, NOINVERT
     VK_F7,          ID_VIEW_OCTAL,      VIRTKEY, NOINVERT
     VK_F8,          ID_VIEW_BINARY,     VIRTKEY, NOINVERT
+END
+#endif // _MSC_VER
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "Comments", "Absolutely no warranties whatsoever - Use at your own risk\0"
+            VALUE "CompanyName", RES_STR_COMPANY_NAME
+            VALUE "FileDescription", "ReactOS Calculator by Robert Dickenson\0"
+            VALUE "FileVersion", "1, 0, 0, 1\0"
+            VALUE "InternalName", "calc\0"
+            VALUE "LegalCopyright", "Copyright © 2002 Robert Dickenson\0"
+            VALUE "LegalTrademarks", "\0"
+            VALUE "OriginalFilename", "calc.exe\0"
+            VALUE "PrivateBuild", "\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+            VALUE "SpecialBuild", "Non-versioned Development Beta Release\0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0xc09, 1200
+    END
 END
 
 
@@ -187,6 +235,9 @@ END
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "ReactOS Calculator"
+    IDS_APP_REG_KEY         "\\Calculator"
+    IDS_APP_REG_PATH        RES_STR_ROSAPP_REGISTRY_ROOT
+
 END
 
 #endif    // English (Australia) resources

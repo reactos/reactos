@@ -38,7 +38,7 @@ LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
 
 all:	$(TARGET).exe
 
-$(TARGET).res:	$(TARGET).rc
+#$(TARGET).res:	$(TARGET).rc
 
 $(TARGET).exe:	$(OBJS) $(TARGET).coff
 	$(CC) -Wl,--subsystem,windows -o $(TARGET).exe $(OBJS) $(TARGET).coff $(LIBS)

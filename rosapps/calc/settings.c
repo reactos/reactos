@@ -23,12 +23,14 @@
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <tchar.h>
+#include <assert.h>
+#define ASSERT assert
     
 #include "main.h"
 #include "settings.h"
 
 
-BOOL CheckResult(LONG error)
+static BOOL CheckResult(LONG error)
 {
     if (error != ERROR_SUCCESS) {
     	PTSTR msg;
@@ -43,46 +45,64 @@ BOOL CheckResult(LONG error)
     return TRUE;
 }
 
+static BOOL CreateRegistryPath(LPTSTR szRegPath, int nMaxLen)
+{
+    LPTSTR pRegPath = szRegPath;
+
+    // Initialise registry path string from application PATH and KEY resources
+    int nLength = LoadString(hInst, IDS_APP_REG_PATH, szRegPath, nMaxLen);
+    nLength += LoadString(hInst, IDS_APP_REG_KEY, szRegPath + nLength, nMaxLen - nLength);
+    ASSERT(nLength < (nMaxLen - 1));
+    szRegPath[nLength] = _T('\\');
+
+    // walk the registry path string creating the tree if required
+    while (pRegPath = _tcschr(pRegPath, _T('\\'))) {
+        LONG  result;
+        HKEY  hKey = NULL;
+        *pRegPath = _T('\0');
+        // Open (or create) the key
+        result = RegCreateKeyEx(HKEY_CURRENT_USER, szRegPath, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+        if (!CheckResult(result)) return FALSE;
+        RegCloseKey(hKey);
+        *pRegPath = _T('\\');
+        pRegPath = pRegPath + 1;
+    }
+    szRegPath[nLength] = _T('\0');
+    return TRUE;
+}
+
 void LoadSettings(void)
 {
+    TCHAR szRegPath[MAX_LOADSTRING];
+
     HKEY  hKey;
     DWORD dwSize;
     LONG  result;
-    char  szSubKey[] = "Software\\ReactWare\\Calculator";
+
+    if (!CreateRegistryPath(szRegPath, MAX_LOADSTRING)) return;
 
     // Open the key
-    result = RegOpenKeyEx(HKEY_CURRENT_USER, szSubKey, 0, KEY_READ, &hKey);
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, szRegPath, 0, KEY_READ, &hKey);
     if (!CheckResult(result)) return;
 
     // Read the settings
     dwSize = sizeof(CALC_TYPES);
     result = RegQueryValueEx(hKey, _T("Preferences"), NULL, NULL, (LPBYTE)&CalcType, &dwSize);
-    if (!CheckResult(result)) goto abort;
 
-abort:
     // Close the key
     RegCloseKey(hKey);
 }
 
 void SaveSettings(void)
 {
-    HKEY hKey;
-    LONG  result;
-    char szSubKey1[] = "Software";
-    char szSubKey2[] = "Software\\ReactWare";
-    char szSubKey3[] = "Software\\ReactWare\\Calculator";
+    TCHAR szRegPath[MAX_LOADSTRING];
+    HKEY hKey = NULL;
+    LONG result;
 
-    // Open (or create) the key
-    hKey = NULL;
-    result = RegCreateKeyEx(HKEY_CURRENT_USER, szSubKey1, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-    if (!CheckResult(result)) return;
-    RegCloseKey(hKey);
-    hKey = NULL;
-    result = RegCreateKeyEx(HKEY_CURRENT_USER, szSubKey2, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
-    if (!CheckResult(result)) return;
-    RegCloseKey(hKey);
-    hKey = NULL;
-    result = RegCreateKeyEx(HKEY_CURRENT_USER, szSubKey3, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL);
+    if (!CreateRegistryPath(szRegPath, MAX_LOADSTRING)) return;
+
+    // Open the key
+    result = RegOpenKeyEx(HKEY_CURRENT_USER, szRegPath, 0, KEY_WRITE, &hKey);
     if (!CheckResult(result)) return;
 
     // Save the settings
