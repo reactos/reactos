@@ -1,0 +1,32 @@
+; PACKET.DLL - Windows Packet Capture DLL
+
+LIBRARY packet.dll
+
+EXPORTS
+;WEP
+PacketLibraryVersion=PacketLibraryVersion
+PacketGetVersion=PacketGetVersion
+PacketOpenAdapter=PacketOpenAdapter
+PacketSendPacket=PacketSendPacket
+PacketAllocatePacket=PacketAllocatePacket
+PacketInitPacket=PacketInitPacket
+PacketFreePacket=PacketFreePacket
+PacketReceivePacket=PacketReceivePacket
+PacketCloseAdapter=PacketCloseAdapter
+PacketSetHwFilter=PacketSetHwFilter
+PacketGetAdapterNames=PacketGetAdapterNames
+PacketRequest=PacketRequest
+PacketSetBuff=PacketSetBuff
+PacketSetBpf=PacketSetBpf
+PacketGetStats=PacketGetStats
+PacketGetNetType=PacketGetNetType
+PacketSetReadTimeout=PacketSetReadTimeout
+PacketSetMode=PacketSetMode
+PacketSetNumWrites=PacketSetNumWrites
+PacketGetNetInfo=PacketGetNetInfo
+PacketGetNetInfoEx=PacketGetNetInfoEx
+PacketSetMinToCopy=PacketSetMinToCopy
+PacketGetReadEvent=PacketGetReadEvent
+PacketStopDriver=PacketStopDriver
+
+; EOF
