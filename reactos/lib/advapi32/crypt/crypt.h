@@ -61,20 +61,20 @@ typedef struct tagCRYPTPROV
 	UINT refcount;
 	HMODULE hModule;
 	PPROVFUNCS pFuncs;
-        HCRYPTPROV hPrivate;  /*CSP's handle - Should not be given to application under any circumstances!*/
+	HCRYPTPROV hPrivate;  /*CSP's handle - Should not be given to application under any circumstances!*/
 	PVTableProvStruc pVTable;
 } CRYPTPROV, *PCRYPTPROV;
 
 typedef struct tagCRYPTKEY
 {
 	PCRYPTPROV pProvider;
-        HCRYPTKEY hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
+	HCRYPTKEY hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
 } CRYPTKEY, *PCRYPTKEY;
 
 typedef struct tagCRYPTHASH
 {
 	PCRYPTPROV pProvider;
-        HCRYPTHASH hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
+	HCRYPTHASH hPrivate;    /*CSP's handle - Should not be given to application under any circumstances!*/
 } CRYPTHASH, *PCRYPTHASH;
 
 #define MAXPROVTYPES 999

@@ -17,9 +17,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <stdarg.h>
-#include "windef.h"
-#include "winbase.h"
+#include "advapi32.h"
+#include "crypt.h"
+
 
 /* SHA Context Structure Declaration */
 
@@ -50,7 +50,8 @@ typedef struct {
 #define R4(v,w,x,y,z,i) z+=f4(w,x,y)+blk1(i)+0xCA62C1D6+rol(v,5);w=rol(w,30);
 
 /* Hash a single 512-bit block. This is the core of the algorithm. */
-void SHA1Transform(ULONG State[5], CHAR Buffer[64])
+static VOID
+SHA1Transform(ULONG State[5], CHAR Buffer[64])
 {
    ULONG a, b, c, d, e;
    ULONG *Block;

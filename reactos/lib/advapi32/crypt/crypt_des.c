@@ -20,7 +20,7 @@
  *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
+#include "advapi32.h"
 #include "crypt.h"
 
 static const unsigned char InitialPermuteMap[64] =
@@ -141,11 +141,11 @@ static const unsigned char FinalPermuteMap[64] =
      0, 32,  8, 40, 16, 48, 24, 56
 };
 
-#define CLRBIT( STR, IDX ) ( (STR)[(IDX)/8] &= ~(0x01 << (7 - ((IDX)%8))) )
-#define SETBIT( STR, IDX ) ( (STR)[(IDX)/8] |= (0x01 << (7 - ((IDX)%8))) )
-#define GETBIT( STR, IDX ) (( ((STR)[(IDX)/8]) >> (7 - ((IDX)%8)) ) & 0x01)
+#define CLRBIT(STR, IDX) ((STR)[(IDX)/8] &= ~(0x01 << (7 - ((IDX)%8))))
+#define SETBIT(STR, IDX) ((STR)[(IDX)/8] |= (0x01 << (7 - ((IDX)%8))))
+#define GETBIT(STR, IDX) ((((STR)[(IDX)/8]) >> (7 - ((IDX)%8))) & 0x01)
 
-static void Permute( unsigned char *dst, const unsigned char *src, const unsigned char *map, const int mapsize )
+static void Permute(unsigned char *dst, const unsigned char *src, const unsigned char *map, const int mapsize)
 {
     int bitcount, i;
 
@@ -156,12 +156,12 @@ static void Permute( unsigned char *dst, const unsigned char *src, const unsigne
 
     for (i = 0; i < bitcount; i++)
     {
-        if (GETBIT( src, map[i] ))
-            SETBIT( dst, i );
+        if (GETBIT(src, map[i]))
+            SETBIT(dst, i);
     }
-} 
+}
 
-static void KeyShift( unsigned char *key, const int numbits )
+static void KeyShift(unsigned char *key, const int numbits)
 {
     int i;
     unsigned char keep = key[0];
@@ -177,20 +177,20 @@ static void KeyShift( unsigned char *key, const int numbits )
             key[j] <<= 1;
         }
 
-        if (GETBIT( key, 27 ))
+        if (GETBIT(key, 27))
         {
-            CLRBIT( key, 27 );
-            SETBIT( key, 55 );
+            CLRBIT(key, 27);
+            SETBIT(key, 55);
         }
 
         if (keep & 0x80)
-            SETBIT( key, 27 );
+            SETBIT(key, 27);
 
         keep <<= 1;
     }
 }
 
-static void sbox( unsigned char *dst, const unsigned char *src )
+static void sbox(unsigned char *dst, const unsigned char *src)
 {
     int i;
 
@@ -204,7 +204,7 @@ static void sbox( unsigned char *dst, const unsigned char *src )
         for (Snum = j = 0, bitnum = (i * 6); j < 6; j++, bitnum++)
         {
             Snum <<= 1;
-            Snum |= GETBIT( src, bitnum );
+            Snum |= GETBIT(src, bitnum);
         }
 
         if (0 == (i%2))
@@ -214,7 +214,7 @@ static void sbox( unsigned char *dst, const unsigned char *src )
     }
 }
 
-static void xor( unsigned char *dst, const unsigned char *a, const unsigned char *b, const int count )
+static void xor(unsigned char *dst, const unsigned char *a, const unsigned char *b, const int count)
 {
     int i;
 
@@ -222,7 +222,7 @@ static void xor( unsigned char *dst, const unsigned char *a, const unsigned char
         dst[i] = a[i] ^ b[i];
 }
 
-unsigned char *CRYPT_DESkey8to7( unsigned char *dst, const unsigned char *key )
+unsigned char *CRYPT_DESkey8to7(unsigned char *dst, const unsigned char *key)
 {
     int i;
     unsigned char tmp[7];
@@ -241,7 +241,7 @@ unsigned char *CRYPT_DESkey8to7( unsigned char *dst, const unsigned char *key )
     if ((dst == NULL) || (key == NULL))
         return NULL;
 
-    Permute( tmp, key, map8to7, 7 );
+    Permute(tmp, key, map8to7, 7);
 
     for (i = 0; i < 7; i++)
         dst[i] = tmp[i];
@@ -249,14 +249,15 @@ unsigned char *CRYPT_DESkey8to7( unsigned char *dst, const unsigned char *key )
     return dst;
 }
 
-unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *key, const unsigned char *src )
+
+unsigned char *CRYPT_DEShash(unsigned char *dst, const unsigned char *key, const unsigned char *src)
 {
     int i;
     unsigned char K[7];
     unsigned char D[8];
 
-    Permute( K, key, KeyPermuteMap, 7 );
-    Permute( D, src, InitialPermuteMap, 8 );
+    Permute(K, key, KeyPermuteMap, 7);
+    Permute(D, src, InitialPermuteMap, 8);
 
     for (i = 0; i < 16; i++)
     {
@@ -267,15 +268,15 @@ unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *key, cons
         unsigned char  Rn[4];
         unsigned char  SubK[6];
 
-        KeyShift( K, KeyRotation[i] );
-        Permute( SubK, K, KeyCompression, 6 );
+        KeyShift(K, KeyRotation[i]);
+        Permute(SubK, K, KeyCompression, 6);
 
-        Permute( Rexp, R, DataExpansion, 6 );
-        xor( Rexp, Rexp, SubK, 6 );
+        Permute(Rexp, R, DataExpansion, 6);
+        xor(Rexp, Rexp, SubK, 6);
 
-        sbox( Rn, Rexp );
-        Permute( Rexp, Rn, PBox, 4 );
-        xor( Rn, L, Rexp, 4 );
+        sbox(Rn, Rexp);
+        Permute(Rexp, Rn, PBox, 4);
+        xor(Rn, L, Rexp, 4);
 
         for (j = 0; j < 4; j++)
         {
@@ -284,7 +285,7 @@ unsigned char *CRYPT_DEShash( unsigned char *dst, const unsigned char *key, cons
         }
     }
 
-    Permute( dst, D, FinalPermuteMap, 8 );
+    Permute(dst, D, FinalPermuteMap, 8);
 
     return dst;
 }

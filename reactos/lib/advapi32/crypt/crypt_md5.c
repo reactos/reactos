@@ -33,10 +33,9 @@
  * will fill a supplied 16-byte array with the digest.
  */
 
-#include <stdarg.h>
+#include "advapi32.h"
+#include "crypt.h"
 
-#include "windef.h"
-#include "winbase.h"
 
 typedef struct
 {
@@ -46,138 +45,6 @@ typedef struct
     unsigned char digest[16];
 } MD5_CTX;
 
-static void MD5Transform( unsigned int buf[4], const unsigned int in[16] );
-
-/*
- * Note: this code is harmless on little-endian machines.
- */
-static void byteReverse( unsigned char *buf, unsigned longs )
-{
-    unsigned int t;
-
-    do {
-        t = (unsigned int)((unsigned)buf[3] << 8 | buf[2]) << 16 |
-            ((unsigned)buf[1] << 8 | buf[0]);
-        *(unsigned int *)buf = t;
-        buf += 4;
-    } while (--longs);
-}
-
-/*
- * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
- * initialization constants.
- */
-VOID WINAPI MD5Init( MD5_CTX *ctx )
-{
-    ctx->buf[0] = 0x67452301;
-    ctx->buf[1] = 0xefcdab89;
-    ctx->buf[2] = 0x98badcfe;
-    ctx->buf[3] = 0x10325476;
-
-    ctx->i[0] = ctx->i[1] = 0;
-}
-
-/*
- * Update context to reflect the concatenation of another buffer full
- * of bytes.
- */
-VOID WINAPI MD5Update( MD5_CTX *ctx, const unsigned char *buf, unsigned int len )
-{
-    register unsigned int t;
-
-    /* Update bitcount */
-    t = ctx->i[0];
-
-    if ((ctx->i[0] = t + ((unsigned int)len << 3)) < t)
-        ctx->i[1]++;        /* Carry from low to high */
-
-    ctx->i[1] += len >> 29;
-    t = (t >> 3) & 0x3f;
-
-    /* Handle any leading odd-sized chunks */
-    if (t)
-    {
-        unsigned char *p = (unsigned char *)ctx->in + t;
-        t = 64 - t;
-
-        if (len < t)
-        {
-            memcpy( p, buf, len );
-            return;
-        }
-
-        memcpy( p, buf, t );
-        byteReverse( ctx->in, 16 );
-
-        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
-
-        buf += t;
-        len -= t;
-    }
-
-    /* Process data in 64-byte chunks */
-    while (len >= 64)
-    {
-        memcpy( ctx->in, buf, 64 );
-        byteReverse( ctx->in, 16 );
-
-        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
-
-        buf += 64;
-        len -= 64;
-    }
-
-    /* Handle any remaining bytes of data. */
-    memcpy( ctx->in, buf, len );
-}
-
-/*
- * Final wrapup - pad to 64-byte boundary with the bit pattern 
- * 1 0* (64-bit count of bits processed, MSB-first)
- */
-VOID WINAPI MD5Final( MD5_CTX *ctx )
-{
-    unsigned int count;
-    unsigned char *p;
-
-    /* Compute number of bytes mod 64 */
-    count = (ctx->i[0] >> 3) & 0x3F;
-
-    /* Set the first char of padding to 0x80.  This is safe since there is
-       always at least one byte free */
-    p = ctx->in + count;
-    *p++ = 0x80;
-
-    /* Bytes of padding needed to make 64 bytes */
-    count = 64 - 1 - count;
-
-    /* Pad out to 56 mod 64 */
-    if (count < 8)
-    {
-        /* Two lots of padding:  Pad the first block to 64 bytes */
-        memset( p, 0, count );
-        byteReverse( ctx->in, 16 );
-        MD5Transform( ctx->buf, (unsigned int *)ctx->in );
-
-        /* Now fill the next block with 56 bytes */
-        memset( ctx->in, 0, 56 );
-    }
-    else
-    {
-        /* Pad block to 56 bytes */
-        memset( p, 0, count - 8 );
-    }
-
-    byteReverse( ctx->in, 14 );
-
-    /* Append length in bits and transform */
-    ((unsigned int *)ctx->in)[14] = ctx->i[0];
-    ((unsigned int *)ctx->in)[15] = ctx->i[1];
-
-    MD5Transform( ctx->buf, (unsigned int *)ctx->in );
-    byteReverse( (unsigned char *)ctx->buf, 4 );
-    memcpy( ctx->digest, ctx->buf, 16 );
-}
 
 /* The four core functions - F1 is optimized somewhat */
 
@@ -196,7 +63,7 @@ VOID WINAPI MD5Final( MD5_CTX *ctx )
  * reflect the addition of 16 longwords of new data.  MD5Update blocks
  * the data and converts bytes into longwords for this routine.
  */
-static void MD5Transform( unsigned int buf[4], const unsigned int in[16] )
+static void MD5Transform(unsigned int buf[4], const unsigned int in[16])
 {
     register unsigned int a, b, c, d;
 
@@ -277,4 +144,136 @@ static void MD5Transform( unsigned int buf[4], const unsigned int in[16] )
     buf[1] += b;
     buf[2] += c;
     buf[3] += d;
+}
+
+/*
+ * Note: this code is harmless on little-endian machines.
+ */
+static VOID byteReverse(unsigned char *buf, unsigned longs)
+{
+    unsigned int t;
+
+    do
+    {
+        t = (unsigned int)((unsigned)buf[3] << 8 | buf[2]) << 16 |
+            ((unsigned)buf[1] << 8 | buf[0]);
+        *(unsigned int *)buf = t;
+        buf += 4;
+    } while (--longs);
+}
+
+/*
+ * Start MD5 accumulation.  Set bit count to 0 and buffer to mysterious
+ * initialization constants.
+ */
+VOID WINAPI MD5Init(MD5_CTX *ctx)
+{
+    ctx->buf[0] = 0x67452301;
+    ctx->buf[1] = 0xefcdab89;
+    ctx->buf[2] = 0x98badcfe;
+    ctx->buf[3] = 0x10325476;
+
+    ctx->i[0] = ctx->i[1] = 0;
+}
+
+/*
+ * Update context to reflect the concatenation of another buffer full
+ * of bytes.
+ */
+VOID WINAPI MD5Update(MD5_CTX *ctx, const unsigned char *buf, unsigned int len)
+{
+    register unsigned int t;
+
+    /* Update bitcount */
+    t = ctx->i[0];
+
+    if ((ctx->i[0] = t + ((unsigned int)len << 3)) < t)
+        ctx->i[1]++;        /* Carry from low to high */
+
+    ctx->i[1] += len >> 29;
+    t = (t >> 3) & 0x3f;
+
+    /* Handle any leading odd-sized chunks */
+    if (t)
+    {
+        unsigned char *p = (unsigned char *)ctx->in + t;
+        t = 64 - t;
+
+        if (len < t)
+        {
+            memcpy(p, buf, len);
+            return;
+        }
+
+        memcpy(p, buf, t);
+        byteReverse(ctx->in, 16);
+
+        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+
+        buf += t;
+        len -= t;
+    }
+
+    /* Process data in 64-byte chunks */
+    while (len >= 64)
+    {
+        memcpy(ctx->in, buf, 64);
+        byteReverse(ctx->in, 16);
+
+        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+
+        buf += 64;
+        len -= 64;
+    }
+
+    /* Handle any remaining bytes of data. */
+    memcpy(ctx->in, buf, len);
+}
+
+/*
+ * Final wrapup - pad to 64-byte boundary with the bit pattern 
+ * 1 0* (64-bit count of bits processed, MSB-first)
+ */
+VOID WINAPI MD5Final( MD5_CTX *ctx )
+{
+    unsigned int count;
+    unsigned char *p;
+
+    /* Compute number of bytes mod 64 */
+    count = (ctx->i[0] >> 3) & 0x3F;
+
+    /* Set the first char of padding to 0x80.  This is safe since there is
+       always at least one byte free */
+    p = ctx->in + count;
+    *p++ = 0x80;
+
+    /* Bytes of padding needed to make 64 bytes */
+    count = 64 - 1 - count;
+
+    /* Pad out to 56 mod 64 */
+    if (count < 8)
+    {
+        /* Two lots of padding:  Pad the first block to 64 bytes */
+        memset(p, 0, count);
+        byteReverse(ctx->in, 16);
+        MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+
+        /* Now fill the next block with 56 bytes */
+        memset(ctx->in, 0, 56);
+    }
+    else
+    {
+        /* Pad block to 56 bytes */
+        memset(p, 0, count - 8);
+    }
+
+    byteReverse(ctx->in, 14);
+
+    /* Append length in bits and transform */
+    ((unsigned int *)ctx->in)[14] = ctx->i[0];
+    ((unsigned int *)ctx->in)[15] = ctx->i[1];
+
+    MD5Transform(ctx->buf, (unsigned int *)ctx->in);
+    byteReverse((unsigned char *)ctx->buf, 4);
+    memcpy(ctx->digest, ctx->buf, 16);
 }

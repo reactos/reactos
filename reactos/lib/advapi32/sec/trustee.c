@@ -1,14 +1,15 @@
-/* $Id: trustee.c,v 1.1 2004/12/11 00:21:33 weiden Exp $
+/* $Id: trustee.c,v 1.2 2004/12/12 15:16:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/sec/ac.c
- * PURPOSE:         ACL/ACE functions
+ * FILE:            lib/advapi32/sec/trustee.c
+ * PURPOSE:         Trustee functions
  */
 
 #include "advapi32.h"
 
-#include "wine/debug.h"
+#define NDEBUG
+#include "debug.h"
 
 
 /******************************************************************************
@@ -25,6 +26,7 @@ VOID WINAPI BuildTrusteeWithSidA(PTRUSTEEA pTrustee, PSID pSid)
     pTrustee->ptstrName = (LPSTR) pSid;
 }
 
+
 /******************************************************************************
  * BuildTrusteeWithSidW [ADVAPI32.@]
  */
@@ -39,12 +41,13 @@ VOID WINAPI BuildTrusteeWithSidW(PTRUSTEEW pTrustee, PSID pSid)
     pTrustee->ptstrName = (LPWSTR) pSid;
 }
 
+
 /******************************************************************************
  * BuildTrusteeWithNameA [ADVAPI32.@]
  */
 VOID WINAPI BuildTrusteeWithNameA(PTRUSTEEA pTrustee, LPSTR name)
 {
-    DPRINT("%p %s\n", pTrustee, debugstr_a(name) );
+    DPRINT("%p %s\n", pTrustee, name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -53,12 +56,13 @@ VOID WINAPI BuildTrusteeWithNameA(PTRUSTEEA pTrustee, LPSTR name)
     pTrustee->ptstrName = name;
 }
 
+
 /******************************************************************************
  * BuildTrusteeWithNameW [ADVAPI32.@]
  */
 VOID WINAPI BuildTrusteeWithNameW(PTRUSTEEW pTrustee, LPWSTR name)
 {
-    DPRINT("%p %s\n", pTrustee, debugstr_w(name) );
+    DPRINT("%p %s\n", pTrustee, name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;

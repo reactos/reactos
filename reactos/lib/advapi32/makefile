@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.44 2004/12/12 04:34:23 jimtabor Exp $
+# $Id: makefile,v 1.45 2004/12/12 15:17:38 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,12 +8,12 @@ TARGET_NAME = advapi32
 
 TARGET_PCH = advapi32.h
 
-TARGET_CFLAGS = -Wall -Werror -fno-builtin -D__USE_W32API -D__REACTOS__
+TARGET_CFLAGS = -Wall -Werror -fno-builtin -D__USE_W32API
 # TARGET_CFLAGS += -DUNICODE
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = wine.a ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_ADVAPI32)
 
