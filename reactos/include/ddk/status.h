@@ -663,6 +663,9 @@ Note that !NT_SUCCESS(errCode) is NOT the same as NT_ERROR(errCode)
 #define STATUS_IO_REPARSE_DATA_INVALID              ((NTSTATUS)0xc0000278)
 #define STATUS_IO_REPARSE_TAG_NOT_HANDLED           ((NTSTATUS)0xc0000279)
 
+#define STATUS_RANGE_LIST_CONFLICT                  ((NTSTATUS)0xC0000282)
+
+#define STATUS_RANGE_NOT_FOUND                      ((NTSTATUS)0xC000028C)
 
 #define STATUS_SAM_INIT_FAILURE                     ((NTSTATUS)0xC00002CB)
 
