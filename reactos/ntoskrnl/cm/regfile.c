@@ -634,7 +634,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   RegistryHive->BlockList[0] = ExAllocatePool(PagedPool,
 	  RegistryHive->FileSize - 4096);
 
-  if (RegistryHive->BlockList == NULL)
+  if (RegistryHive->BlockList[0] == NULL)
     {
       ExFreePool(RegistryHive->BlockList);
       ObDereferenceObject(RegistryHive->FileObject);
