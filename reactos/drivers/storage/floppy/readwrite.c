@@ -654,10 +654,10 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
 
       /* 1-based sector number */
-      if( ((DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1) < 
+      if( (((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1 ) < 
 	  (Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector)
 	{
-	  CurrentTransferSectors = (UCHAR)(DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1;
+	  CurrentTransferSectors = (UCHAR)((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1;
 	}
       else
 	{
@@ -703,7 +703,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
       /* Issue the read/write command to the controller.  Note that it expects the opposite of WriteToDevice. */ 
       if(HwReadWriteData(DriveInfo->ControllerInfo, !WriteToDevice, DriveInfo->UnitNumber, Cylinder, Head, StartSector, 
-			 DriveInfo->BytesPerSectorCode, StartSector + CurrentTransferSectors, 0, 0xff) != STATUS_SUCCESS)
+			 DriveInfo->BytesPerSectorCode, DriveInfo->DiskGeometry.SectorsPerTrack, 0, 0xff) != STATUS_SUCCESS)
 	{
 	  KdPrint(("floppy: ReadWritePassive(): HwReadWriteData returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n"));
 	  RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
