@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.28 2003/12/20 14:19:47 navaraf Exp $
+/* $Id: xlate.c,v 1.29 2003/12/20 14:51:41 navaraf Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,16 +42,6 @@
 #include <win32k/debug1.h>
 
 ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
-
-ULONG STDCALL RGBtoULONG(BYTE Red, BYTE Green, BYTE Blue)
-{
-  return ((Red & 0xff) << 16) | ((Green & 0xff) << 8) | (Blue & 0xff);
-}
-
-ULONG STDCALL BGRtoULONG(BYTE Blue, BYTE Green, BYTE Red)
-{
-  return ((Blue & 0xff) << 16) | ((Green & 0xff) << 8) | (Red & 0xff);
-}
 
 static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {
@@ -470,65 +460,65 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
 /*
  * @implemented
  */
-ULONG * STDCALL
+PULONG STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
-  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
+   XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
 
-  if(XlateObj->iSrcType == PAL_INDEXED)
-  {
-    return XlateGDI->translationTable;
-  }
+   if (XlateObj->iSrcType == PAL_INDEXED)
+   {
+      return XlateGDI->translationTable;
+   }
 
-  return NULL;
+   return NULL;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG STDCALL
-XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
-		ULONG Color)
+XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
-  PALGDI   *PalGDI;
-  ULONG Closest;
+   PALGDI *PalGDI;
+   ULONG Closest;
 
-  // Return the original color if there's no color translation object
-  if(!XlateObj) return Color;
+   /* Return the original color if there's no color translation object. */
+   if (!XlateObj)
+      return Color;
 
-  if(XlateObj->flXlate & XO_TRIVIAL)
-  {
-    return Color;
-  } else
-  {
-    XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
+   if (XlateObj->flXlate & XO_TRIVIAL)
+   {
+      return Color;
+   } else
+   {
+      XLATEGDI *XlateGDI = (XLATEGDI *)AccessInternalObjectFromUserObject(XlateObj);
 
-    if(XlateObj->flXlate & XO_TO_MONO)
-    {
-      return Color == XlateGDI->BackgroundColor;
-    } else
-    if(XlateGDI->UseShiftAndMask)
-    {
-      return ShiftAndMask(XlateGDI, Color);
-    } else
-    if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType
-        || PAL_BITFIELDS == XlateObj->iSrcType)
-    {
-      // FIXME: should we cache colors used often?
-      // FIXME: won't work if destination isn't indexed
+      if (XlateObj->flXlate & XO_TO_MONO)
+      {
+         return Color == XlateGDI->BackgroundColor;
+      } else
+      if (XlateGDI->UseShiftAndMask)
+      {
+         return ShiftAndMask(XlateGDI, Color);
+      } else
+      if (XlateObj->iSrcType == PAL_RGB || XlateObj->iSrcType == PAL_BGR ||
+          XlateObj->iSrcType == PAL_BITFIELDS)
+      {
+         /* FIXME: should we cache colors used often? *
+         /* FIXME: won't work if destination isn't indexed */
 
-      // Extract the destination palette
-      PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
+         /* Extract the destination palette. */
+         PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
 
-      // Return closest match for the given color
-      Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
-      PALETTE_UnlockPalette(XlateGDI->DestPal);
-      return Closest;
-    } else
-    if(XlateObj->iSrcType == PAL_INDEXED)
-    {
-      return XlateGDI->translationTable[Color];
-    }
+         /* Return closest match for the given color. */
+         Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
+         PALETTE_UnlockPalette(XlateGDI->DestPal);
+         return Closest;
+      } else
+      if (XlateObj->iSrcType == PAL_INDEXED)
+      {
+         return XlateGDI->translationTable[Color];
+      }
   }
 
   return 0;
@@ -538,32 +528,27 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
  * @implemented
  */
 ULONG STDCALL
-XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
-		     ULONG PalOutType,
-		     ULONG cPal,
-		     ULONG *OutPal)
+XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
+   ULONG *OutPal)
 {
-  ULONG i;
-  HPALETTE HPal;
-  XLATEGDI *XlateGDI;
-  PALGDI *PalGDI;
+   HPALETTE hPalette;
+   XLATEGDI *XlateGDI;
+   PALGDI *PalGDI;
+   ULONG i;
 
-  XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
+   XlateGDI = (XLATEGDI*)AccessInternalObjectFromUserObject(XlateObj);
+   if (PalOutType == XO_SRCPALETTE)
+      hPalette = XlateGDI->SourcePal;
+   else if (PalOutType == XO_DESTPALETTE)
+      hPalette = XlateGDI->DestPal;
+   else
+      UNIMPLEMENTED;
 
-  if(PalOutType == XO_SRCPALETTE)
-  {
-    HPal = XlateGDI->SourcePal;
-  } else
-  if(PalOutType == XO_DESTPALETTE)
-  {
-    HPal = XlateGDI->DestPal;
-  }
+   PalGDI = PALETTE_LockPalette(hPalette);
+   RtlCopyMemory(OutPal, PalGDI->IndexedColors, sizeof(ULONG) * cPal);
+   PALETTE_UnlockPalette(hPalette);
 
-  PalGDI = PALETTE_LockPalette(HPal);
-  RtlCopyMemory(OutPal, PalGDI->IndexedColors, sizeof(ULONG)*cPal);
-  PALETTE_UnlockPalette(HPal);
-
-  return i;
+   return cPal;
 }
 
 /* EOF */
