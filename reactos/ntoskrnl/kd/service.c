@@ -1,4 +1,4 @@
-/* $Id: service.c,v 1.9 2004/08/15 16:39:04 chorns Exp $
+/* $Id: service.c,v 1.10 2004/11/21 11:37:22 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,8 +84,13 @@ void interrupt_handler2d(void);
 	   
            /* FIXME: check to see if SS is valid/inrange */
            
-           /*  DS is now also kernel segment */
+           /*  DS and GS are now also kernel segments */
            "movw %bx,%ds\n\t"
+	   "movw %bx,%gs\n\t"
+
+           /* Set FS to the PCR */
+	   "movw  $"STR(PCR_SELECTOR)",%bx\n\t"
+	   "movw  %bx,%fs\n\t"
            
            /* Call debug service dispatcher */
            "pushl %edx\n\t"
