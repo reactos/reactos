@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.15 2004/01/05 14:28:21 weiden Exp $
+/* $Id: acl.c,v 1.16 2004/02/02 12:05:41 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -55,15 +55,15 @@ SepInitDACLs(VOID)
 
   RtlCreateAcl(SePublicDefaultDacl,
 	       AclLength2,
-	       2);
+	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicDefaultDacl,
-			 2,
+			 ACL_REVISION,
 			 GENERIC_EXECUTE,
 			 SeWorldSid);
 
   RtlAddAccessAllowedAce(SePublicDefaultDacl,
-			 2,
+			 ACL_REVISION,
 			 GENERIC_ALL,
 			 SeLocalSystemSid);
 
@@ -77,25 +77,25 @@ SepInitDACLs(VOID)
 
   RtlCreateAcl(SePublicDefaultUnrestrictedDacl,
 	       AclLength4,
-	       2);
+	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
-			 4,
+			 ACL_REVISION,
 			 GENERIC_EXECUTE,
 			 SeWorldSid);
 
   RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
-			 4,
+			 ACL_REVISION,
 			 GENERIC_ALL,
 			 SeLocalSystemSid);
 
   RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
-			 4,
+			 ACL_REVISION,
 			 GENERIC_ALL,
 			 SeAliasAdminsSid);
 
   RtlAddAccessAllowedAce(SePublicDefaultUnrestrictedDacl,
-			 4,
+			 ACL_REVISION,
 			 GENERIC_READ | GENERIC_EXECUTE | STANDARD_RIGHTS_READ,
 			 SeRestrictedCodeSid);
 
@@ -108,20 +108,20 @@ SepInitDACLs(VOID)
 
   RtlCreateAcl(SePublicOpenDacl,
 	       AclLength3,
-	       3);
+	       ACL_REVISION);
 
   RtlAddAccessAllowedAce(SePublicOpenDacl,
-			 2,
+			 ACL_REVISION,
 			 GENERIC_READ | GENERIC_WRITE | GENERIC_EXECUTE,
 			 SeWorldSid);
 
   RtlAddAccessAllowedAce(SePublicOpenDacl,
-			 2,
+			 ACL_REVISION,
 			 GENERIC_ALL,
 			 SeLocalSystemSid);
 
   RtlAddAccessAllowedAce(SePublicOpenDacl,
-			 2,
+			 ACL_REVISION,
 			 GENERIC_ALL,
 			 SeAliasAdminsSid);
 
@@ -155,12 +155,10 @@ RtlFirstFreeAce(PACL Acl,
 	  return(FALSE);
 	}
 
-      if (Current->Header.AceType == 4)
+      if (Current->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
+	  Acl->AclRevision < ACL_REVISION3)
 	{
-	  if (Acl->AclRevision < 3)
-	    {
-	      return(FALSE);
-	    }
+	  return(FALSE);
 	}
       Current = (PACE)((char*)Current + (ULONG)Current->Header.AceSize);
       i++;
@@ -189,8 +187,8 @@ RtlpAddKnownAce(PACL Acl,
     {
       return(STATUS_INVALID_SID);
     }
-  if (Acl->AclRevision > 3 ||
-      Revision > 3)
+  if (Acl->AclRevision > MAX_ACL_REVISION ||
+      Revision > MAX_ACL_REVISION)
     {
       return(STATUS_UNKNOWN_REVISION);
     }
@@ -226,12 +224,16 @@ RtlpAddKnownAce(PACL Acl,
  * @implemented
  */
 NTSTATUS STDCALL
-RtlAddAccessAllowedAce(PACL Acl,
-		       ULONG Revision,
-		       ACCESS_MASK AccessMask,
-		       PSID Sid)
+RtlAddAccessAllowedAce (PACL Acl,
+			ULONG Revision,
+			ACCESS_MASK AccessMask,
+			PSID Sid)
 {
-  return(RtlpAddKnownAce(Acl, Revision, AccessMask, Sid, 0));
+  return RtlpAddKnownAce (Acl,
+			  Revision,
+			  AccessMask,
+			  Sid,
+			  ACCESS_ALLOWED_ACE_TYPE);
 }
 
 
@@ -249,9 +251,9 @@ RtlAddAce(PACL Acl,
    ULONG i;
    PACE Current;
    ULONG j;
-   
-   if (Acl->AclRevision != 2 &&
-       Acl->AclRevision != 3)
+
+   if (Acl->AclRevision < MIN_ACL_REVISION ||
+       Acl->AclRevision > MAX_ACL_REVISION)
      {
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -271,8 +273,8 @@ RtlAddAce(PACL Acl,
    Current = (PACE)(Acl + 1);
    while ((char*)Current < ((char*)AceList + AceListLength))
      {
-	if (AceList->Header.AceType == 4 &&
-	    AclRevision < 3)
+	if (AceList->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
+	    AclRevision < ACL_REVISION3)
 	  {
 	     return(STATUS_UNSUCCESSFUL);
 	  }
@@ -317,8 +319,8 @@ RtlCreateAcl(PACL Acl,
     {
       return(STATUS_BUFFER_TOO_SMALL);
     }
-  if (AclRevision != 2 &&
-      AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(STATUS_UNKNOWN_REVISION);
     }
@@ -342,14 +344,13 @@ RtlValidAcl(PACL Acl)
   PACE Ace;
   USHORT Size;
 
-  Size = (Acl->AclSize + 3) & ~3;
-
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3)
+  if (Acl->AclRevision < MIN_ACL_REVISION ||
+      Acl->AclRevision > MAX_ACL_REVISION)
     {
       return(FALSE);
     }
 
+  Size = (Acl->AclSize + 3) & ~3;
   if (Size != Acl->AclSize)
     {
       return(FALSE);
