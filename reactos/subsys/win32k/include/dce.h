@@ -30,6 +30,7 @@ typedef struct tagDCE
     HRGN         hClipRgn;
     DCE_TYPE     type;
     DWORD        DCXFlags;
+    HANDLE       Self;
 } DCE, *PDCE;
 
 
@@ -48,5 +49,7 @@ INT  FASTCALL DCE_ExcludeRgn(HDC, HWND, HRGN);
 BOOL FASTCALL DCE_InvalidateDCE(HWND, const PRECTL);
 BOOL FASTCALL DCE_InternalDelete(PDCE dce);
 HWND FASTCALL IntWindowFromDC(HDC hDc);
+PDCE FASTCALL DceFreeDCE(PDCE dce);
+void FASTCALL DceFreeWindowDCE(HWND hwnd);
 
 #endif

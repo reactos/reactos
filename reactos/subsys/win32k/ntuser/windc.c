@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.30 2003/10/06 18:49:50 navaraf Exp $
+/* $Id: windc.c,v 1.31 2003/10/09 07:30:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -132,6 +132,7 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
     return NULL;
   
   Dce = DCEOBJ_LockDCE(DceHandle);
+  Dce->Self = DceHandle;
   Dce->hDC = NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
   if (NULL == defaultDCstate)
     {
@@ -233,7 +234,7 @@ DceReleaseDC(DCE* dce)
   if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
       (dce->DCXFlags & (DCX_CACHE | DCX_WINDOWPAINT)) )
     {
-      DceDeleteClipRgn( dce );
+      DceDeleteClipRgn(dce);
     }
 
   if (dce->DCXFlags & DCX_CACHE)
@@ -554,6 +555,113 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
 
   return nRet;
 }
+
+/***********************************************************************
+ *           DceFreeDCE
+ */
+PDCE FASTCALL
+DceFreeDCE(PDCE dce)
+{
+  DCE **ppDCE, *ret;
+  HANDLE hDce;
+
+  if (NULL == dce)
+    {
+      return NULL;
+    }
+
+#if 0  /* FIXME */
+  USER_Lock();
+#endif
+
+  ppDCE = &FirstDce;
+
+  while (*ppDCE && (*ppDCE != dce))
+    {
+      ppDCE = &(*ppDCE)->next;
+    }
+  if (*ppDCE == dce)
+    {
+      *ppDCE = dce->next;
+    }
+  ret = *ppDCE;
+
+#if 0 /* FIXME */
+  USER_Unlock();
+#endif
+
+#if 0 /* FIXME */
+  SetDCHook(dce->hDC, NULL, 0L);
+#endif
+
+  NtGdiDeleteDC(dce->hDC);
+  if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
+    {
+      NtGdiDeleteObject(dce->hClipRgn);
+    }
+
+  hDce = dce->Self;
+  DCEOBJ_UnlockDCE(hDce);
+  DCEOBJ_FreeDCE(hDce);
+
+  return ret;
+}
   
+
+/***********************************************************************
+ *           DceFreeWindowDCE
+ *
+ * Remove owned DCE and reset unreleased cache DCEs.
+ */
+void FASTCALL
+DceFreeWindowDCE(HWND hwnd)
+{
+  DCE *pDCE;
+  PWINDOW_OBJECT pWnd = IntGetWindowObject(hwnd);
+
+  pDCE = FirstDce;
+  while (pDCE)
+    {
+      if (pDCE->hwndCurrent == hwnd)
+        {
+          if (pDCE == pWnd->Dce) /* owned or Class DCE*/
+            {
+              if (pWnd->Class->style & CS_OWNDC) /* owned DCE*/
+                {
+                  pDCE = DceFreeDCE(pDCE);
+                  pWnd->Dce = NULL;
+                  continue;
+                }
+              else if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN))	/* Class DCE*/
+		{
+                  DceDeleteClipRgn(pDCE);
+                  pDCE->hwndCurrent = 0;
+                }
+            }
+          else
+            {
+              if (pDCE->DCXFlags & DCX_DCEBUSY) /* shared cache DCE */
+                {
+                  /* FIXME: AFAICS we are doing the right thing here so
+                   * this should be a DPRINT. But this is best left as an ERR
+                   * because the 'application error' is likely to come from
+                   * another part of Wine (i.e. it's our fault after all).
+                   * We should change this to DPRINT when ReactOS is more stable
+                   * (for 1.0?).
+                   */
+                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", hwnd);
+                  DceReleaseDC(pDCE);
+                }
+
+              pDCE->DCXFlags &= DCX_CACHE;
+              pDCE->DCXFlags |= DCX_DCEEMPTY;
+              pDCE->hwndCurrent = 0;
+            }
+        }
+      pDCE = pDCE->next;
+    }
+
+  IntReleaseWindowObject(pWnd);
+}
 
 /* EOF */

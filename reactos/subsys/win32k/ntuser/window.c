@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.110 2003/10/04 16:04:01 weiden Exp $
+/* $Id: window.c,v 1.111 2003/10/09 07:30:02 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -236,7 +236,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
       DestroyMenu(Window->hSysMenu);
       Window->hSysMenu = 0;
     }
-  DCE_FreeWindowDCE(Window->Self);    /* Always do this to catch orphaned DCs */
+#endif
+  DceFreeWindowDCE(Window->Self);    /* Always do this to catch orphaned DCs */
+#if 0 /* FIXME */
   WINPROC_FreeProc(Window->winproc, WIN_PROC_WINDOW);
   CLASS_RemoveWindow(Window->Class);
 #endif
