@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.11 2003/07/12 10:24:45 chorns Exp $
+/* $Id: interlck.c,v 1.12 2004/06/01 01:00:25 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -177,7 +177,7 @@ ExInterlockedIncrementLong (PLONG		Addend,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID FASTCALL
 ExInterlockedAddLargeStatistic (IN	PLARGE_INTEGER	Addend,
@@ -190,7 +190,7 @@ ExInterlockedAddLargeStatistic (IN	PLARGE_INTEGER	Addend,
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 LONGLONG FASTCALL
 ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
