@@ -869,6 +869,7 @@ static POINT save_point;
 static int save_b[5];
 static int b[5];
 static POINT point;
+int calc;
 int count_button;
 #endif
 
@@ -917,14 +918,17 @@ GetCursorPos( &point );
   time = GetTickCount();
   if (*entries == 0) return DIERR_INVALIDPARAM;
   
-  last_event++;
+
 
   for (count=0;count<*entries;count++) {
 	  
 	 if (save_point.x != point.x) {
-         dod[count_ent].dwOfs =   DIMOFS_X;         
-		 dod[count_ent].dwData =  point.x - save_point.x;		
-		 
+         dod[count].dwOfs =   DIMOFS_X;         
+		 calc = point.x - save_point.x;	
+		 if (calc >2) dod[count].dwData = 2;
+		 else if (calc < -2) dod[count].dwData = -2;
+		 else dod[count].dwData =  calc;	
+         		 
          dod[count].dwTimeStamp =  time +1; 
          dod[count].dwSequence = last_event++;  
 		 count_ent++;
@@ -933,7 +937,10 @@ GetCursorPos( &point );
 
      if (save_point.y != point.y) {
         dod[count].dwOfs =   DIMOFS_Y;
-        dod[count].dwData =    point.y - save_point.y;
+        calc =    point.y - save_point.y;
+		if (calc >2) dod[count].dwData = 2;
+		 else if (calc < -2) dod[count].dwData = -2;
+		 else dod[count].dwData =  calc;	
 
         dod[count].dwTimeStamp =  time +1;
         dod[count].dwSequence = last_event++;
