@@ -36,11 +36,13 @@ NtResumeThread(IN HANDLE ThreadHandle,
                IN PULONG SuspendCount  OPTIONAL)
 {
     PETHREAD Thread;
-    NTSTATUS Status;
     ULONG Prev;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
   
     PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
 
     DPRINT("NtResumeThead(ThreadHandle %lx  SuspendCount %p)\n",
            ThreadHandle, SuspendCount);
@@ -115,11 +117,13 @@ NtSuspendThread(IN HANDLE ThreadHandle,
                 IN PULONG PreviousSuspendCount  OPTIONAL)
 {
     PETHREAD Thread;
-    NTSTATUS Status;
     ULONG Prev;
-    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
   
     PAGED_CODE();
+    
+    PreviousMode = ExGetPreviousMode();
     
     /* Check buffer validity */
     if(PreviousSuspendCount && PreviousMode == UserMode) {
