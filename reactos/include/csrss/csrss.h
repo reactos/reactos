@@ -110,8 +110,8 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
-   COORD Coord;
    WORD Length;
+   COORD Coord;
    CHAR String[1];
 } CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST;
 
@@ -123,8 +123,8 @@ typedef struct
 typedef struct
 {
    HANDLE ConsoleHandle;
-   COORD Coord;
    WORD Length;
+   COORD Coord;
    CHAR String[1];
 } CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST, *PCSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST;
 
