@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.38 2004/03/31 05:25:36 jimtabor Exp $
+/* $Id: disk.c,v 1.39 2004/04/01 15:01:35 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -873,6 +873,8 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
       /* Drive is not ready. */
       DPRINT("Drive not ready\n");
       DiskData->DriveNotReady = TRUE;
+      if (PartitionList != NULL)
+          ExFreePool(PartitionList);      
       return Status;
     }
 
@@ -909,7 +911,8 @@ DiskBuildPartitionTable(IN PDEVICE_OBJECT DiskDeviceObject,
     }
 
   DPRINT("DiskBuildPartitionTable() done\n");
-
+  if (PartitionList != NULL)
+        ExFreePool(PartitionList);
   return(STATUS_SUCCESS);
 }
 
