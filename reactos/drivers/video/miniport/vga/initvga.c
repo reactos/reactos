@@ -103,6 +103,9 @@ vgaSetRegisters(PVGA_REGISTERS Registers)
       VideoPortWritePortUchar(ATTRIB, i);
       VideoPortWritePortUchar(ATTRIB, Registers->Attribute[i]);
    }
+
+   /* Renable screen. */
+   VideoPortWritePortUchar(ATTRIB, 0x20);
 }
 
 VOID
