@@ -35,6 +35,9 @@
 #include <time.h>
 #ifdef WIN32
 #include <io.h> /* write() */
+#else
+#include <fcntl.h> /* create */
+#include <unistd.h> /* write and close */
 #endif /* WIN32 */
 
 #define NONAMELESSUNION
