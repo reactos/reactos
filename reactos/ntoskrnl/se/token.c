@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.44 2004/12/14 00:41:24 gdalsnes Exp $
+/* $Id: token.c,v 1.45 2004/12/19 16:16:58 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -913,8 +913,14 @@ NtSetInformationToken(IN HANDLE TokenHandle,
       NeededAccess = TOKEN_ADJUST_DEFAULT;
       break;
 
+    case TokenDefaultDacl:
+      if (TokenInformationLength < sizeof(TOKEN_DEFAULT_DACL))
+        return STATUS_BUFFER_TOO_SMALL;
+      NeededAccess = TOKEN_ADJUST_DEFAULT;
+      break;
+
     default:
-      DPRINT1("NtSetInformationToken: lying about success (stub)\n");   
+      DPRINT1("NtSetInformationToken: lying about success (stub) - %x\n", TokenInformationClass);
       return STATUS_SUCCESS;  
 
     }
@@ -953,6 +959,55 @@ NtSetInformationToken(IN HANDLE TokenHandle,
       DPRINT("NtSetInformationToken(TokenPrimaryGroup),"
 	     "Token->PrimaryGroup = 0x%08x\n", Token->PrimaryGroup);
       break;
+
+    case TokenDefaultDacl:
+      {
+        TOKEN_DEFAULT_DACL TokenDefaultDacl = { 0 };
+        ACL OldAcl;
+        PACL NewAcl;
+
+        Status = MmCopyFromCaller( &TokenDefaultDacl, TokenInformation, 
+                                   sizeof(TOKEN_DEFAULT_DACL) );
+        if (!NT_SUCCESS(Status))
+          {
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+          }
+
+        Status = MmCopyFromCaller( &OldAcl, TokenDefaultDacl.DefaultDacl,
+                                   sizeof(ACL) );
+        if (!NT_SUCCESS(Status))
+          {
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+          }
+
+        NewAcl = ExAllocatePool(NonPagedPool, sizeof(ACL));
+        if (NewAcl == NULL)
+          {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            break;
+          }
+
+        Status = MmCopyFromCaller( NewAcl, TokenDefaultDacl.DefaultDacl,
+                                   OldAcl.AclSize );
+        if (!NT_SUCCESS(Status))
+          {
+            Status = STATUS_INVALID_PARAMETER;
+            ExFreePool(NewAcl);
+            break;
+          }
+
+        if (Token->DefaultDacl)
+          {
+            ExFreePool(Token->DefaultDacl);
+          }
+
+        Token->DefaultDacl = NewAcl;
+
+        Status = STATUS_SUCCESS;
+        break;
+      }
 
     default:
       Status = STATUS_NOT_IMPLEMENTED;

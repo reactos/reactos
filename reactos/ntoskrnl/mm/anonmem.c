@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.33 2004/10/01 20:26:04 gvg Exp $
+/* $Id: anonmem.c,v 1.34 2004/12/19 16:16:57 navaraf Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -814,7 +814,8 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
    {
       case MEM_RELEASE:
          /* We can only free a memory area in one step. */
-         if (MemoryArea->BaseAddress != BaseAddress)
+         if (MemoryArea->BaseAddress != BaseAddress ||
+             MemoryArea->Type != MEMORY_AREA_VIRTUAL_MEMORY)
          {
             MmUnlockAddressSpace(AddressSpace);
             ObDereferenceObject(Process);

@@ -498,55 +498,6 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    return(STATUS_SUCCESS);
 }
 
-PMEMORY_AREA MmSplitMemoryArea(PEPROCESS Process,
-                               PMADDRESS_SPACE AddressSpace,
-                               PMEMORY_AREA OriginalMemoryArea,
-                               PVOID BaseAddress,
-                               ULONG Length,
-                               ULONG NewType,
-                               ULONG NewAttributes)
-{
-   PMEMORY_AREA Result;
-   PMEMORY_AREA Split;
-
-   Result = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
-                                  TAG_MAREA);
-   RtlZeroMemory(Result,sizeof(MEMORY_AREA));
-   Result->Type = NewType;
-   Result->BaseAddress = BaseAddress;
-   Result->Length = Length;
-   Result->Attributes = NewAttributes;
-   Result->LockCount = 0;
-   Result->Process = Process;
-
-   if (BaseAddress == OriginalMemoryArea->BaseAddress)
-   {
-      OriginalMemoryArea->BaseAddress = (char*)BaseAddress + Length;
-      OriginalMemoryArea->Length = OriginalMemoryArea->Length - Length;
-      MmInsertMemoryArea(AddressSpace, Result);
-      return(Result);
-   }
-   if (((char*)BaseAddress + Length) ==
-         ((char*)OriginalMemoryArea->BaseAddress + OriginalMemoryArea->Length))
-   {
-      OriginalMemoryArea->Length = OriginalMemoryArea->Length - Length;
-      MmInsertMemoryArea(AddressSpace, Result);
-
-      return(Result);
-   }
-
-   Split = ExAllocatePoolWithTag(NonPagedPool, sizeof(MEMORY_AREA),
-                                 TAG_MAREA);
-   RtlCopyMemory(Split,OriginalMemoryArea,sizeof(MEMORY_AREA));
-   Split->BaseAddress = (char*)BaseAddress + Length;
-   Split->Length = OriginalMemoryArea->Length - (((ULONG)BaseAddress)
-                   + Length);
-
-   OriginalMemoryArea->Length = (char*)BaseAddress - (char*)OriginalMemoryArea->BaseAddress;
-
-   return(Split);
-}
-
 NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
                             PMADDRESS_SPACE AddressSpace,
                             ULONG Type,

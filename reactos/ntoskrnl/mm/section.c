@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.166 2004/10/22 20:38:23 ekohl Exp $
+/* $Id: section.c,v 1.167 2004/12/19 16:16:58 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -3023,8 +3023,8 @@ MmMapViewOfSegment(PEPROCESS Process,
                                BoundaryAddressMultiple);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
-              (*BaseAddress), (char*)(*BaseAddress) + ViewSize);
+      DPRINT1("Mapping between 0x%.8X and 0x%.8X failed (%X).\n",
+              (*BaseAddress), (char*)(*BaseAddress) + ViewSize, Status);
       return(Status);
    }
 

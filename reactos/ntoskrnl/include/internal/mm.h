@@ -370,14 +370,6 @@ NTSTATUS MmLockMemoryArea(MEMORY_AREA* MemoryArea);
 
 NTSTATUS MmUnlockMemoryArea(MEMORY_AREA* MemoryArea);
 
-PMEMORY_AREA MmSplitMemoryArea(struct _EPROCESS* Process,
-			       PMADDRESS_SPACE AddressSpace,
-			       PMEMORY_AREA OriginalMemoryArea,
-			       PVOID BaseAddress,
-			       ULONG Length,
-			       ULONG NewType,
-			       ULONG NewAttributes);
-
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,
 				      ULONG Length);
