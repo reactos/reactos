@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.134 2004/11/12 12:06:54 ekohl Exp $
+; $Id: ntdll.def,v 1.135 2004/12/05 21:16:01 navaraf Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -487,6 +487,7 @@ RtlInitCodePageTable@8
 RtlInitNlsTables@16
 RtlInitString@8
 RtlInitUnicodeString@8
+RtlInitUnicodeStringEx@8
 ;RtlInitializeAtomPackage
 RtlInitializeBitMap@12
 RtlInitializeContext@20

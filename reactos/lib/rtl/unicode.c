@@ -499,6 +499,29 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
 
 /*
  * @implemented
+ */
+NTSTATUS STDCALL
+RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
+                       IN PCWSTR SourceString)
+{
+   ULONG Length = 0;
+
+   if (SourceString != NULL)
+   {
+      Length = wcslen(SourceString) * sizeof(WCHAR);
+      if (Length > 0xFFFC)
+         return STATUS_NAME_TOO_LONG;
+   }
+
+   DestinationString->Length = Length;
+   DestinationString->MaximumLength = Length + sizeof(WCHAR);
+   DestinationString->Buffer = (PWSTR)SourceString;
+
+   return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
  *
  * NOTES
  *  Writes at most length characters to the string str.
