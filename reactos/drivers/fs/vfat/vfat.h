@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.48 2002/11/11 21:49:18 hbirr Exp $ */
+/* $Id: vfat.h,v 1.49 2002/12/03 01:14:49 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -65,9 +65,15 @@ struct _BootBackupSector
 
 typedef struct _BootSector BootSector;
 
+#define VFAT_CASE_LOWER_BASE	8			// base is lower case
+#define VFAT_CASE_LOWER_EXT	16			// extension is lower case
+
 struct _FATDirEntry
 {
-  unsigned char  Filename[8], Ext[3], Attrib, Res[2];
+  unsigned char  Filename[8], Ext[3];
+  unsigned char  Attrib;
+  unsigned char  lCase;
+  unsigned char  CreationTimeMs;
   unsigned short CreationTime,CreationDate,AccessDate;
   unsigned short FirstClusterHigh;                      // higher
   unsigned short UpdateTime;                            //time create/update
@@ -313,8 +319,7 @@ NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
                    PULONG pDirIndex,
                    PULONG pDirIndex2);
 
-VOID vfat8Dot3ToString (PCHAR pBasename,
-                        PCHAR pExtension,
+VOID vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry,
                         PWSTR pName);
 
 NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt,

@@ -1,4 +1,4 @@
-/* $Id: direntry.c,v 1.10 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: direntry.c,v 1.11 2002/12/03 01:14:49 hbirr Exp $
  *
  *
  * FILE:             DirEntry.c
@@ -68,7 +68,7 @@ vfatIsDirEntryVolume (FATDirEntry * pFatDirEntry)
 void
 vfatGetDirEntryName (PFAT_DIR_ENTRY  dirEntry,  PWSTR  entryName)
 {
-  vfat8Dot3ToString (dirEntry->Filename, dirEntry->Ext, entryName);
+  vfat8Dot3ToString (dirEntry, entryName);
 }
 
 
@@ -86,13 +86,6 @@ NTSTATUS vfatGetNextDirEntry(PVOID * pContext,
     FATDirEntry * fatDirEntry;
     slot * longNameEntry;
     ULONG index;
-
-    DPRINT ("vfatGetNextDirEntry (%x,%x,%d,%x,%x)\n",
-            DeviceExt,
-            pDirFcb,
-            *pDirIndex,
-            pFileName,
-            pDirEntry);
 
     *pFileName = 0;
 

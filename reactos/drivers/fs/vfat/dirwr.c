@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.32 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: dirwr.c,v 1.33 2002/12/03 01:14:49 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -192,6 +192,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   short nbSlots = 0, nbFree = 0, j, posCar, NameLen;
   PUCHAR Buffer;
   BOOLEAN needTilde = FALSE, needLong = FALSE;
+  BOOLEAN lCaseBase, uCaseBase, lCaseExt, uCaseExt;
   PVFATFCB newFCB;
   ULONG CurrentCluster;
   LARGE_INTEGER SystemTime, LocalTime, FileOffset;
@@ -334,7 +335,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
     pEntry->Filename[posCar - 2] = '~';
     pEntry->Filename[posCar - 1] = '1';
-    vfat8Dot3ToString (pEntry->Filename, pEntry->Ext, DirName);
+    vfat8Dot3ToString (pEntry, DirName);
     //try first with xxxxxx~y.zzz
     for (i = 1; i < 10; i++)
     {
@@ -356,7 +357,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
       pEntry->Filename[posCar - 3] = '~';
       pEntry->Filename[posCar - 2] = '1';
       pEntry->Filename[posCar - 1] = '0';
-      vfat8Dot3ToString (pEntry->Filename, pEntry->Ext, DirName);
+      vfat8Dot3ToString (pEntry, DirName);
       //try second with xxxxx~yy.zzz
       for (i = 10; i < 100; i++)
       {
@@ -381,9 +382,20 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   else
   {
     DPRINT ("check if long name entry needed, needlong=%d\n", needLong);
+    lCaseBase = uCaseBase = lCaseExt = uCaseExt = FALSE;
     for (i = 0; i < posCar; i++)
     {
-      if ((USHORT) pEntry->Filename[i] != FileName[i])
+      if ((USHORT) tolower(pEntry->Filename[i]) == FileName[i])
+      {
+         DPRINT ("i=%d,%d,%d\n", i, pEntry->Filename[i], FileName[i]);
+	 lCaseBase = TRUE;
+      }
+      else if ((USHORT) pEntry->Filename[i] == FileName[i])
+      {
+         DPRINT ("i=%d,%d,%d\n", i, pEntry->Filename[i], FileName[i]);
+	 uCaseBase = TRUE;
+      }
+      else
       {
         DPRINT ("i=%d,%d,%d\n", i, pEntry->Filename[i], FileName[i]);
         needLong = TRUE;
@@ -392,15 +404,29 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     if (FileName[i])
     {
       i++;			//jump on point char
-      for (j = 0, i = posCar + 1; FileName[i] && i < posCar + 4; i++)
+      for (j = 0, i = posCar + 1; FileName[i] && i < posCar + 4; i++, j++)
       {
-        if ((USHORT) pEntry->Ext[j++] != FileName[i])
+	if ((USHORT) tolower(pEntry->Ext[j]) == FileName[i])
+	{
+           DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Ext[j], FileName[i]);
+	   lCaseExt = TRUE;
+	}
+	else if ((USHORT) pEntry->Ext[j] == FileName[i])
+	{
+           DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Ext[j], FileName[i]);
+	   uCaseExt = TRUE;
+	}
+        else
         {
-          DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Filename[i],
-          FileName[i]);
+          DPRINT ("i=%d,j=%d,%d,%d\n", i, j, pEntry->Ext[j], FileName[i]);
           needLong = TRUE;
         }
       }
+    }
+    if ((lCaseBase && uCaseBase) || (lCaseExt && uCaseExt))
+    {
+       CHECKPOINT;
+       needLong = TRUE;
     }
   }
   if (needLong == FALSE)
@@ -409,6 +435,14 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     memcpy (Buffer, pEntry, sizeof (FATDirEntry));
     memset (pEntry, 0, sizeof (FATDirEntry));
     pEntry = (FATDirEntry *) Buffer;
+    if (lCaseBase)
+    {
+	pEntry->lCase |= VFAT_CASE_LOWER_BASE;
+    }
+    if (lCaseExt)
+    {
+	pEntry->lCase |= VFAT_CASE_LOWER_EXT;
+    }
   }
   else
   {
@@ -443,33 +477,35 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   pEntry->UpdateTime = pEntry->CreationTime;
   pEntry->AccessDate = pEntry->CreationDate;
 
-  // calculate checksum for 8.3 name
-  for (pSlots[0].alias_checksum = i = 0; i < 11; i++)
+  if (needLong)
   {
-    pSlots[0].alias_checksum = (((pSlots[0].alias_checksum & 1) << 7
-                                | ((pSlots[0].alias_checksum & 0xfe) >> 1))
-                                + pEntry->Filename[i]);
-  }
-  //construct slots and entry
-  for (i = nbSlots - 2; i >= 0; i--)
-  {
-    DPRINT ("construct slot %d\n", i);
-    pSlots[i].attr = 0xf;
-    if (i)
+    // calculate checksum for 8.3 name
+    for (pSlots[0].alias_checksum = i = 0; i < 11; i++)
     {
-      pSlots[i].id = nbSlots - i - 1;
+       pSlots[0].alias_checksum = (((pSlots[0].alias_checksum & 1) << 7
+                                  | ((pSlots[0].alias_checksum & 0xfe) >> 1))
+                                  + pEntry->Filename[i]);
     }
-    else
+    //construct slots and entry
+    for (i = nbSlots - 2; i >= 0; i--)
     {
-      pSlots[i].id = nbSlots - i - 1 + 0x40;
-    }
-    pSlots[i].alias_checksum = pSlots[0].alias_checksum;
+       DPRINT ("construct slot %d\n", i);
+       pSlots[i].attr = 0xf;
+       if (i)
+       {
+          pSlots[i].id = nbSlots - i - 1;
+       }
+       else
+       {
+          pSlots[i].id = nbSlots - i - 1 + 0x40;
+       }
+       pSlots[i].alias_checksum = pSlots[0].alias_checksum;
 //FIXME      pSlots[i].start=;
-    memcpy (pSlots[i].name0_4, DirName + (nbSlots - i - 2) * 13, 10);
-    memcpy (pSlots[i].name5_10, DirName + (nbSlots - i - 2) * 13 + 5, 12);
-    memcpy (pSlots[i].name11_12, DirName + (nbSlots - i - 2) * 13 + 11, 4);
+       memcpy (pSlots[i].name0_4, DirName + (nbSlots - i - 2) * 13, 10);
+       memcpy (pSlots[i].name5_10, DirName + (nbSlots - i - 2) * 13 + 5, 12);
+       memcpy (pSlots[i].name11_12, DirName + (nbSlots - i - 2) * 13 + 11, 4);
+    }
   }
-
   //try to find nbSlots contiguous entries frees in directory
   if (!findDirSpace(DeviceExt, pDirFcb, nbSlots, &start))
   {

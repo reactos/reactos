@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.48 2002/11/11 21:49:17 hbirr Exp $
+/* $Id: create.c,v 1.49 2002/12/03 01:14:49 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -42,42 +42,70 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void  vfat8Dot3ToString (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
+void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PWSTR pName)
 {
   int  fromIndex, toIndex;
 
   fromIndex = toIndex = 0; 
-  while (fromIndex < 8 && pBasename [fromIndex] != ' ')
+  while (fromIndex < 8 && pEntry->Filename [fromIndex] != ' ')
   {
-    pName [toIndex++] = pBasename [fromIndex++];
+     if (pEntry->lCase & VFAT_CASE_LOWER_BASE)
+     {
+	pName [toIndex++] = tolower(pEntry->Filename [fromIndex++]);
+     }
+     else
+     {
+        pName [toIndex++] = pEntry->Filename [fromIndex++];
+     }
   }
-  if (pExtension [0] != ' ')
+  if (pEntry->Ext [0] != ' ')
   {
     pName [toIndex++] = L'.';
     fromIndex = 0;
-    while (fromIndex < 3 && pExtension [fromIndex] != ' ')
+    while (fromIndex < 3 && pEntry->Ext [fromIndex] != ' ')
     {
-      pName [toIndex++] = pExtension [fromIndex++];
+       if (pEntry->lCase & VFAT_CASE_LOWER_EXT)
+       {
+	  pName [toIndex++] = tolower(pEntry->Ext [fromIndex++]);
+       }
+       else
+       {
+	  pName [toIndex++] = pEntry->Ext [fromIndex++];
+       }
     }
   }
   pName [toIndex] = L'\0';
 }
 
-static void  vfat8Dot3ToVolumeLabel (PCHAR pBasename, PCHAR pExtension, PWSTR pName)
+static void  vfat8Dot3ToVolumeLabel (PFAT_DIR_ENTRY pEntry, PWSTR pName)
 {
   int  fromIndex, toIndex;
 
   fromIndex = toIndex = 0;
-  while (fromIndex < 8 && pBasename [fromIndex] != ' ')
+  while (fromIndex < 8 && pEntry->Filename [fromIndex] != ' ')
   {
-    pName [toIndex++] = pBasename [fromIndex++];
+    if (pEntry->lCase & VFAT_CASE_LOWER_BASE)
+     {
+	pName [toIndex++] = tolower(pEntry->Filename [fromIndex++]);
+     }
+     else
+     {
+        pName [toIndex++] = pEntry->Filename [fromIndex++];
+     }
   }
-  if (pExtension [0] != ' ')
+  if (pEntry->Ext [0] != ' ')
   {
     fromIndex = 0;
-    while (fromIndex < 3 && pBasename [fromIndex] != ' ')
+    while (fromIndex < 3 && pEntry->Ext [fromIndex] != ' ')
     {
-      pName [toIndex++] = pExtension [fromIndex++];
+       if (pEntry->lCase & VFAT_CASE_LOWER_EXT)
+       {
+	  pName [toIndex++] = tolower(pEntry->Ext [fromIndex++]);
+       }
+       else
+       {
+	  pName [toIndex++] = pEntry->Ext [fromIndex++];
+       }
     }
   }
   pName [toIndex] = L'\0';
@@ -108,7 +136,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
        if (vfatIsDirEntryVolume(Entry))
        {
           /* copy volume label */
-          vfat8Dot3ToVolumeLabel (Entry->Filename, Entry->Ext, Vpb->VolumeLabel);
+          vfat8Dot3ToVolumeLabel (Entry, Vpb->VolumeLabel);
           Vpb->VolumeLabelLength = wcslen (Vpb->VolumeLabel) * sizeof(WCHAR);
           break;
        }
@@ -286,7 +314,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
       DirIndex++;
       continue;
     }
-    vfat8Dot3ToString(fatDirEntry.Filename, fatDirEntry.Ext, name2);
+    vfat8Dot3ToString(&fatDirEntry, name2);
     if (wstrcmpjoki (name, FileToFind) || wstrcmpjoki (name2, FileToFind))
     {
        if (Parent && Parent->PathName)
