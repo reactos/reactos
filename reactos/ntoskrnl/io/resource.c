@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.19 2004/08/15 16:39:03 chorns Exp $
+/* $Id: resource.c,v 1.20 2004/10/08 21:20:35 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -383,7 +383,10 @@ IopQueryDeviceDescription(
                Status = ZwQueryValueKey(PeripheralKeyHandle, &PeripheralString, KeyValueFullInformation, NULL, 0, &LenKeyFullInformation);
 
 	       if(!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL && Status != STATUS_BUFFER_OVERFLOW)
+	       {
+	         PeripheralInformation[PeripheralLoop] = NULL;
 		 continue;
+	       }
 
                /* Allocate it */
                PeripheralInformation[PeripheralLoop] = ExAllocatePoolWithTag(PagedPool, LenKeyFullInformation, TAG_IO_RESOURCE);
