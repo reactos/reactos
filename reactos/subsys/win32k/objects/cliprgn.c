@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.35 2004/04/25 16:40:39 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.36 2004/04/26 19:58:45 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -370,7 +370,7 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
                     int  X,
                     int  Y)
 {
-  BOOL Ret;
+  HRGN rgn;
   DC *dc;
   
   if(!(dc = DC_LockDc(hDC)))
@@ -379,17 +379,10 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
     return FALSE;
   }
   
-  if(dc->w.hClipRgn)
-  {
-    Ret = NtGdiPtInRegion(dc->w.hClipRgn, X, Y);
-  }
-  else
-  {
-    Ret = FALSE;
-  }
-  
+  rgn = dc->w.hClipRgn;
   DC_UnlockDc(hDC);
-  return Ret;
+  
+  return (rgn ? NtGdiPtInRegion(rgn, X, Y) : FALSE);
 }
 
 BOOL STDCALL NtGdiRectVisible(HDC  hDC,
