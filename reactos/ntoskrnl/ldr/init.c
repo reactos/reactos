@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: init.c,v 1.39 2003/04/26 23:13:31 hyperion Exp $
+/* $Id: init.c,v 1.40 2003/04/27 18:58:00 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
@@ -507,6 +507,10 @@ LdrLoadInitialProcess(PHANDLE ProcessHandle,
 #if defined(_M_IX86)
   memset(&Context,0,sizeof(CONTEXT));
   Context.ContextFlags = CONTEXT_FULL;
+  Context.FloatSave.ControlWord = 0xffff037f;
+  Context.FloatSave.StatusWord = 0xffff0000;
+  Context.FloatSave.TagWord = 0xffffffff;
+  Context.FloatSave.DataSelector = 0xffff0000;
   Context.Eip = (ULONG_PTR)(ImageBaseAddress + (ULONG_PTR)Sii.EntryPoint);
   Context.SegCs = USER_CS;
   Context.SegDs = USER_DS;

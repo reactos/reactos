@@ -378,7 +378,10 @@ NTSTATUS STDCALL RtlInitializeContextEx
  memset(Context, 0, sizeof(CONTEXT));
 
  Context->ContextFlags = CONTEXT_FULL;
-
+ Context->FloatSave.ControlWord = 0xffff037f;
+ Context->FloatSave.StatusWord = 0xffff0000;
+ Context->FloatSave.TagWord = 0xffffffff;
+ Context->FloatSave.DataSelector = 0xffff0000;
  Context->Eip = (ULONG_PTR)StartAddress;
  Context->SegGs = USER_DS;
  Context->SegFs = TEB_SELECTOR;
