@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84 2004/07/09 20:13:00 navaraf Exp $
+ *  $Id: painting.c,v 1.85 2004/09/24 15:07:38 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -111,7 +111,15 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
         {
           if (Window->UpdateRegion)
             {
-              IntValidateParent(Window, Window->UpdateRegion);
+              /*
+               * This surely wrong! Why we would want to validate the parent?
+               * It breaks quite a few things including dummy WM_ERASEBKGND
+               * implementations that return only TRUE and have corresponding
+               * WM_PAINT that doesn't paint the whole client area.
+               * I left the code here so that no one will readd it again!
+               * - Filip
+               */
+              /* IntValidateParent(Window, Window->UpdateRegion); */
               hDC = NtUserGetDCEx(hWnd, 0, DCX_CACHE | DCX_USESTYLE |
                                            DCX_INTERSECTUPDATE);
               if (hDC != NULL)

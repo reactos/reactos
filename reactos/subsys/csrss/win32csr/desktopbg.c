@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.9 2004/08/17 14:57:52 weiden Exp $
+/* $Id: desktopbg.c,v 1.10 2004/09/24 15:07:38 navaraf Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -107,7 +107,7 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                                     NULL, 0, 0,
                                     nmh->ShowDesktop.Width,
                                     nmh->ShowDesktop.Height,
-                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOREDRAW);
+                                    SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW);
             UpdateWindow(Wnd);
             VisibleDesktopWindow = Wnd;
             return Result;
