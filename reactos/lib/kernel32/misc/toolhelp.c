@@ -1,4 +1,4 @@
-/* $Id: toolhelp.c,v 1.2 2003/01/05 14:32:32 robd Exp $
+/* $Id: toolhelp.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -22,6 +22,9 @@
     }
 
 
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
 {
@@ -31,6 +34,10 @@ Heap32First(LPHEAPENTRY32 lphe, DWORD th32ProcessID, DWORD th32HeapID)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Heap32Next(LPHEAPENTRY32 lphe)
 {
@@ -51,6 +58,10 @@ typedef struct tagHEAPENTRY32 {
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
 {
@@ -60,6 +71,10 @@ Heap32ListFirst(HANDLE hSnapshot, LPHEAPLIST32 lphl)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Heap32ListNext(HANDLE hSnapshot, LPHEAPLIST32 lph1)
 {
@@ -75,6 +90,10 @@ typedef struct tagHEAPLIST32 {
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Module32First(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
 {
@@ -84,6 +103,10 @@ Module32First(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
 {
@@ -93,6 +116,10 @@ Module32FirstW(HANDLE hSnapshot, LPMODULEENTRY32W lpme)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Module32Next(HANDLE hSnapshot, LPMODULEENTRY32 lpme)
 {
@@ -136,6 +163,10 @@ typedef struct tagMODULEENTRY32W {
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
 {
@@ -145,6 +176,10 @@ Process32First(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 Process32Next(HANDLE hSnapshot, LPPROCESSENTRY32 lppe)
 {
@@ -166,6 +201,10 @@ typedef struct tagPROCESSENTRY32 {
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
@@ -175,6 +214,10 @@ Process32FirstW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 Process32NextW(HANDLE hSnapshot, LPPROCESSENTRY32W lppe)
 {
@@ -205,6 +248,10 @@ BOOL WINAPI Thread32First(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI Thread32Next(HANDLE hSnapshot, LPTHREADENTRY32 lpte)
 {
 /*
@@ -222,6 +269,10 @@ typedef struct tagTHREADENTRY32 {
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI
 Toolhelp32ReadProcessMemory(DWORD th32ProcessID,
   LPCVOID lpBaseAddress, LPVOID lpBuffer,
@@ -234,6 +285,9 @@ Toolhelp32ReadProcessMemory(DWORD th32ProcessID,
 
 #define TL_DEV_NAME L"\\??\\TlHelpDevice"
 
+/*
+ * @unimplemented
+ */
 HANDLE STDCALL
 CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {

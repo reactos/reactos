@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.5 2003/05/29 00:36:41 hyperion Exp $
+/* $Id: fiber.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
  *
  * FILE: lib/kernel32/thread/fiber.c
  *
@@ -42,6 +42,9 @@ typedef struct _FIBER FIBER, * PFIBER;
 
 __declspec(noreturn) void WINAPI FiberStartup(PVOID lpStartAddress);
 
+/*
+ * @implemented
+ */
 BOOL WINAPI ConvertFiberToThread(void)
 {
  PTEB pTeb = NtCurrentTeb();
@@ -63,11 +66,19 @@ BOOL WINAPI ConvertFiberToThread(void)
  /* success */
 }
 
+
+/*
+ * @implemented
+ */
 LPVOID WINAPI ConvertThreadToFiber(LPVOID lpParameter)
 {
  return ConvertThreadToFiberEx(lpParameter, 0);
 }
 
+
+/*
+ * @implemented
+ */
 LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
 {
  PTEB pTeb = NtCurrentTeb();
@@ -103,6 +114,10 @@ LPVOID WINAPI ConvertThreadToFiberEx(LPVOID lpParameter, DWORD dwFlags)
  return (LPVOID)pfCurFiber;
 }
 
+
+/*
+ * @implemented
+ */
 LPVOID WINAPI CreateFiber
 (
  SIZE_T dwStackSize,
@@ -113,6 +128,10 @@ LPVOID WINAPI CreateFiber
  return CreateFiberEx(dwStackSize, 0, 0, lpStartAddress, lpParameter);
 }
 
+
+/*
+ * @implemented
+ */
 LPVOID WINAPI CreateFiberEx
 (
  SIZE_T dwStackCommitSize,
@@ -233,6 +252,10 @@ l_CleanupFiber:
  return NULL;
 }
 
+
+/*
+ * @implemented
+ */
 void WINAPI DeleteFiber(LPVOID lpFiber)
 {
  SIZE_T nSize = 0;
@@ -255,11 +278,13 @@ void WINAPI DeleteFiber(LPVOID lpFiber)
  );
 }
 
+
 __declspec(noreturn) extern void WINAPI ThreadStartup
 (
  LPTHREAD_START_ROUTINE lpStartAddress,
  LPVOID lpParameter
 );
+
 
 __declspec(noreturn) void WINAPI FiberStartup(PVOID lpStartAddress)
 {

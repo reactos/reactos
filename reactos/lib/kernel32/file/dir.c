@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.36 2003/05/06 06:49:57 gvg Exp $
+/* $Id: dir.c,v 1.37 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CreateDirectoryA (
@@ -35,6 +38,10 @@ CreateDirectoryA (
 	                           lpSecurityAttributes);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CreateDirectoryExA (
@@ -104,6 +111,9 @@ CreateDirectoryExA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CreateDirectoryW (
@@ -117,6 +127,9 @@ CreateDirectoryW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CreateDirectoryExW (
@@ -192,6 +205,9 @@ CreateDirectoryExW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 RemoveDirectoryA (
@@ -225,6 +241,9 @@ RemoveDirectoryA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 RemoveDirectoryW (
@@ -305,6 +324,9 @@ RemoveDirectoryW (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetFullPathNameA (
@@ -378,6 +400,9 @@ GetFullPathNameA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetFullPathNameW (
@@ -404,6 +429,9 @@ GetFullPathNameW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetShortPathNameA (
@@ -427,6 +455,9 @@ GetShortPathNameA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetShortPathNameW (
@@ -439,6 +470,9 @@ GetShortPathNameW (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 SearchPathA (
@@ -541,6 +575,9 @@ SearchPathA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 SearchPathW (

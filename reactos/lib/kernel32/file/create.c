@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.32 2003/02/24 23:23:32 hbirr Exp $
+/* $Id: create.c,v 1.33 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL CreateFileA (LPCSTR			lpFileName,
 			    DWORD			dwDesiredAccess,
 			    DWORD			dwShareMode,
@@ -66,6 +69,9 @@ HANDLE STDCALL CreateFileA (LPCSTR			lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 			    DWORD			dwDesiredAccess,
 			    DWORD			dwShareMode,

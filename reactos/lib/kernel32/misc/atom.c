@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.16 2003/01/15 21:24:34 chorns Exp $
+/* $Id: atom.c,v 1.17 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,6 +25,9 @@ static PRTL_ATOM_TABLE GetLocalAtomTable(VOID);
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 GlobalAddAtomA(LPCSTR lpString)
 {
@@ -58,6 +61,9 @@ GlobalAddAtomA(LPCSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 GlobalAddAtomW(LPCWSTR lpString)
 {
@@ -86,6 +92,9 @@ GlobalAddAtomW(LPCWSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 GlobalDeleteAtom(ATOM nAtom)
 {
@@ -107,6 +116,9 @@ GlobalDeleteAtom(ATOM nAtom)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 GlobalFindAtomA(LPCSTR lpString)
 {
@@ -139,6 +151,9 @@ GlobalFindAtomA(LPCSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 GlobalFindAtomW(LPCWSTR lpString)
 {
@@ -215,6 +230,9 @@ GlobalGetAtomNameA(ATOM nAtom,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GlobalGetAtomNameW(ATOM nAtom,
 		   LPWSTR lpBuffer,
@@ -266,6 +284,9 @@ GetLocalAtomTable(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 InitAtomTable(DWORD nSize)
 {
@@ -293,6 +314,9 @@ InitAtomTable(DWORD nSize)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 AddAtomA(LPCSTR lpString)
 {
@@ -330,6 +354,9 @@ AddAtomA(LPCSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 AddAtomW(LPCWSTR lpString)
 {
@@ -362,6 +389,9 @@ AddAtomW(LPCWSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 DeleteAtom(ATOM nAtom)
 {
@@ -387,6 +417,9 @@ DeleteAtom(ATOM nAtom)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 FindAtomA(LPCSTR lpString)
 {
@@ -422,6 +455,9 @@ FindAtomA(LPCSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 ATOM STDCALL
 FindAtomW(LPCWSTR lpString)
 {
@@ -454,6 +490,9 @@ FindAtomW(LPCWSTR lpString)
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetAtomNameA(ATOM nAtom,
 	     LPSTR lpBuffer,
@@ -505,6 +544,9 @@ GetAtomNameA(ATOM nAtom,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetAtomNameW(ATOM nAtom,
 	     LPWSTR lpBuffer,

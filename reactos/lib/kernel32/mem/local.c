@@ -1,4 +1,4 @@
-/* $Id: local.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
+/* $Id: local.c,v 1.9 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  *              Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -29,6 +29,9 @@
 /* FUNCTIONS ***************************************************************/
 
 
+/*
+ * @implemented
+ */
 HLOCAL STDCALL
 LocalAlloc(UINT uFlags,
 	   UINT uBytes)
@@ -37,6 +40,9 @@ LocalAlloc(UINT uFlags,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 LocalCompact(UINT uMinFree)
 {
@@ -44,6 +50,9 @@ LocalCompact(UINT uMinFree)
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 LocalFlags(HLOCAL hMem)
 {
@@ -51,6 +60,9 @@ LocalFlags(HLOCAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 HLOCAL STDCALL
 LocalFree(HLOCAL hMem)
 {
@@ -58,6 +70,9 @@ LocalFree(HLOCAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 HLOCAL STDCALL
 LocalHandle(LPCVOID pMem)
 {
@@ -65,6 +80,9 @@ LocalHandle(LPCVOID pMem)
 }
 
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 LocalLock(HLOCAL hMem)
 {
@@ -72,6 +90,9 @@ LocalLock(HLOCAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 HLOCAL STDCALL
 LocalReAlloc(HLOCAL hMem,
 	     UINT uBytes,
@@ -81,6 +102,9 @@ LocalReAlloc(HLOCAL hMem,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 LocalShrink(HLOCAL hMem, UINT cbNewSize)
 {
@@ -88,6 +112,9 @@ LocalShrink(HLOCAL hMem, UINT cbNewSize)
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 LocalSize(HLOCAL hMem)
 {
@@ -95,6 +122,9 @@ LocalSize(HLOCAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 LocalUnlock(HLOCAL hMem)
 {

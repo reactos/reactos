@@ -1,4 +1,4 @@
-/* $Id: session.c,v 1.4 2003/01/15 21:24:35 chorns Exp $
+/* $Id: session.c,v 1.5 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -10,6 +10,9 @@
  */
 #include <k32.h>
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL ProcessIdToSessionId (
   DWORD dwProcessId,
   DWORD* pSessionId

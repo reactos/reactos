@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.19 2003/06/27 20:15:17 sedwards Exp $
+/* $Id: section.c,v 1.20 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateFileMappingA(HANDLE hFile,
 		   LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
@@ -70,6 +73,9 @@ CreateFileMappingA(HANDLE hFile,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateFileMappingW(HANDLE hFile,
 		   LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
@@ -128,6 +134,9 @@ CreateFileMappingW(HANDLE hFile,
 }
 
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 MapViewOfFileEx(HANDLE hFileMappingObject,
 		DWORD dwDesiredAccess,
@@ -186,6 +195,9 @@ MapViewOfFileEx(HANDLE hFileMappingObject,
 }
 
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 MapViewOfFile(HANDLE hFileMappingObject,
 	      DWORD dwDesiredAccess,
@@ -202,6 +214,9 @@ MapViewOfFile(HANDLE hFileMappingObject,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 UnmapViewOfFile(LPVOID lpBaseAddress)
 {
@@ -218,6 +233,9 @@ UnmapViewOfFile(LPVOID lpBaseAddress)
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenFileMappingA(DWORD dwDesiredAccess,
 		 WINBOOL bInheritHandle,
@@ -260,6 +278,9 @@ OpenFileMappingA(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenFileMappingW(DWORD dwDesiredAccess,
 		 WINBOOL bInheritHandle,
@@ -295,6 +316,9 @@ OpenFileMappingW(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 FlushViewOfFile(LPCVOID lpBaseAddress,
 		DWORD dwNumberOfBytesToFlush)

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.53 2003/04/26 23:13:28 hyperion Exp $
+/* $Id: proc.c,v 1.54 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -33,6 +33,9 @@ GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GetProcessAffinityMask (HANDLE hProcess,
 			LPDWORD lpProcessAffinityMask,
@@ -62,6 +65,9 @@ GetProcessAffinityMask (HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetProcessAffinityMask (HANDLE hProcess,
 			DWORD dwProcessAffinityMask)
@@ -82,6 +88,9 @@ SetProcessAffinityMask (HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetProcessShutdownParameters (LPDWORD lpdwLevel,
 			      LPDWORD lpdwFlags)
@@ -108,6 +117,9 @@ GetProcessShutdownParameters (LPDWORD lpdwLevel,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetProcessShutdownParameters (DWORD dwLevel,
 			      DWORD dwFlags)
@@ -134,6 +146,9 @@ SetProcessShutdownParameters (DWORD dwLevel,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetProcessWorkingSetSize (HANDLE hProcess,
 			  LPDWORD lpMinimumWorkingSetSize,
@@ -160,6 +175,9 @@ GetProcessWorkingSetSize (HANDLE hProcess,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetProcessWorkingSetSize(HANDLE hProcess,
 			 DWORD dwMinimumWorkingSetSize,
@@ -170,6 +188,9 @@ SetProcessWorkingSetSize(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetProcessTimes(HANDLE hProcess,
 		LPFILETIME lpCreationTime,
@@ -207,6 +228,9 @@ GetProcessTimes(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 GetCurrentProcess(VOID)
 {
@@ -214,6 +238,9 @@ GetCurrentProcess(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 GetCurrentThread(VOID)
 {
@@ -221,6 +248,9 @@ GetCurrentThread(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetCurrentProcessId(VOID)
 {
@@ -228,6 +258,9 @@ GetCurrentProcessId(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetExitCodeProcess(HANDLE hProcess,
 		   LPDWORD lpExitCode)
@@ -253,6 +286,9 @@ GetExitCodeProcess(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetProcessId(HANDLE hProcess,
 	     LPDWORD lpProcessId)
@@ -278,6 +314,9 @@ GetProcessId(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenProcess(DWORD dwDesiredAccess,
 	    WINBOOL bInheritHandle,
@@ -315,6 +354,9 @@ OpenProcess(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 WinExec(LPCSTR lpCmdLine,
 	UINT uCmdShow)
@@ -356,6 +398,9 @@ WinExec(LPCSTR lpCmdLine,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 RegisterWaitForInputIdle (
 	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
@@ -366,6 +411,9 @@ RegisterWaitForInputIdle (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 WaitForInputIdle (
 	HANDLE	hProcess,
@@ -376,6 +424,9 @@ WaitForInputIdle (
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 Sleep(DWORD dwMilliseconds)
 {
@@ -384,6 +435,9 @@ Sleep(DWORD dwMilliseconds)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 SleepEx(DWORD dwMilliseconds,
 	BOOL bAlertable)
@@ -416,6 +470,9 @@ SleepEx(DWORD dwMilliseconds,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 {
@@ -451,6 +508,9 @@ GetStartupInfoW(LPSTARTUPINFOW lpStartupInfo)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 {
@@ -520,6 +580,9 @@ GetStartupInfoA(LPSTARTUPINFOA lpStartupInfo)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 FlushInstructionCache (HANDLE	hProcess,
 		       LPCVOID	lpBaseAddress,
@@ -539,6 +602,9 @@ FlushInstructionCache (HANDLE	hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExitProcess(UINT uExitCode)
 {
@@ -571,6 +637,9 @@ ExitProcess(UINT uExitCode)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 TerminateProcess (HANDLE	hProcess,
 		  UINT	uExitCode)
@@ -587,6 +656,9 @@ TerminateProcess (HANDLE	hProcess,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FatalAppExitA (UINT	uAction,
 	       LPCSTR	lpMessageText)
@@ -606,6 +678,9 @@ FatalAppExitA (UINT	uAction,
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 FatalAppExitW(UINT uAction,
 	      LPCWSTR lpMessageText)
@@ -614,6 +689,9 @@ FatalAppExitW(UINT uAction,
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 FatalExit (int ExitCode)
 {
@@ -621,6 +699,9 @@ FatalExit (int ExitCode)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetPriorityClass (HANDLE	hProcess)
 {
@@ -661,7 +742,9 @@ GetPriorityClass (HANDLE	hProcess)
 }
 
 
-
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetPriorityClass (HANDLE	hProcess,
 		  DWORD	dwPriorityClass)
@@ -713,6 +796,9 @@ SetPriorityClass (HANDLE	hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetProcessVersion (DWORD ProcessId)
 {

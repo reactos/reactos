@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.14 2003/03/16 12:57:32 chorns Exp $
+/* $Id: copy.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -190,6 +190,10 @@ SetLastWriteTime(
    return errCode;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CopyFileExW (
@@ -304,6 +308,9 @@ CopyFileExW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CopyFileExA (
@@ -365,6 +372,9 @@ CopyFileExA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CopyFileA (
@@ -382,6 +392,9 @@ CopyFileA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 CopyFileW (

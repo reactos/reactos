@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.51 2003/06/09 19:58:21 hbirr Exp $
+/* $Id: stubs.c,v 1.52 2003/07/10 18:50:51 chorns Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -7,6 +7,9 @@
 
 //#define _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 BaseAttachCompleteThunk (VOID)
@@ -16,6 +19,9 @@ BaseAttachCompleteThunk (VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 CmdBatNotification (
@@ -27,6 +33,9 @@ CmdBatNotification (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 CompareStringA (
@@ -43,6 +52,9 @@ CompareStringA (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 CompareStringW (
@@ -59,6 +71,9 @@ CompareStringW (
 }
 
 
+/*
+ * @unimplemented
+ */
 LCID
 STDCALL
 ConvertDefaultLocale (
@@ -70,6 +85,9 @@ ConvertDefaultLocale (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 CreateVirtualBuffer (
@@ -83,6 +101,9 @@ CreateVirtualBuffer (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumCalendarInfoW (
@@ -97,6 +118,9 @@ EnumCalendarInfoW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumCalendarInfoA (
@@ -111,6 +135,9 @@ EnumCalendarInfoA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDateFormatsW (
@@ -124,6 +151,9 @@ EnumDateFormatsW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumDateFormatsA (
@@ -137,6 +167,9 @@ EnumDateFormatsA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumSystemCodePagesW (
@@ -149,6 +182,9 @@ EnumSystemCodePagesW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumSystemCodePagesA (
@@ -162,6 +198,9 @@ EnumSystemCodePagesA (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumSystemLocalesW (
@@ -174,6 +213,9 @@ EnumSystemLocalesW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumSystemLocalesA (
@@ -187,6 +229,9 @@ EnumSystemLocalesA (
 
 #endif
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumTimeFormatsW (
@@ -200,6 +245,9 @@ EnumTimeFormatsW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumTimeFormatsA (
@@ -213,6 +261,9 @@ EnumTimeFormatsA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 ExitVDM (
@@ -225,6 +276,9 @@ ExitVDM (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 ExtendVirtualBuffer (
@@ -237,6 +291,9 @@ ExtendVirtualBuffer (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 FoldStringW (
@@ -252,6 +309,9 @@ FoldStringW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 FoldStringA (
@@ -267,6 +327,9 @@ FoldStringA (
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 STDCALL
 FreeVirtualBuffer (
@@ -279,6 +342,9 @@ FreeVirtualBuffer (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetACP (VOID)
@@ -289,6 +355,9 @@ GetACP (VOID)
 
 #endif
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetBinaryTypeW (
@@ -301,6 +370,9 @@ GetBinaryTypeW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetBinaryTypeA (
@@ -314,6 +386,9 @@ GetBinaryTypeA (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetCPInfo (
@@ -341,6 +416,9 @@ GetCPInfo (
 
 #endif
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetCurrencyFormatW (
@@ -357,6 +435,9 @@ GetCurrencyFormatW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetCurrencyFormatA (
@@ -374,6 +455,9 @@ GetCurrencyFormatA (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetDateFormatW (
@@ -390,6 +474,9 @@ GetDateFormatW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetDateFormatA (
@@ -406,6 +493,9 @@ GetDateFormatA (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetLocaleInfoW (
@@ -420,6 +510,9 @@ GetLocaleInfoW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetLocaleInfoA (
@@ -434,6 +527,9 @@ GetLocaleInfoA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetNextVDMCommand (
@@ -445,6 +541,9 @@ GetNextVDMCommand (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetNumberFormatW (
@@ -461,6 +560,9 @@ GetNumberFormatW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetNumberFormatA (
@@ -477,6 +579,9 @@ GetNumberFormatA (
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT
 STDCALL
 GetOEMCP (VOID)
@@ -486,6 +591,9 @@ GetOEMCP (VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetStringTypeExW (
@@ -501,6 +609,9 @@ GetStringTypeExW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetStringTypeExA (
@@ -516,6 +627,9 @@ GetStringTypeExA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetStringTypeW (
@@ -530,6 +644,9 @@ GetStringTypeW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetStringTypeA (
@@ -545,6 +662,9 @@ GetStringTypeA (
 }
 
 
+/*
+ * @unimplemented
+ */
 LCID
 STDCALL
 GetSystemDefaultLCID (VOID)
@@ -558,6 +678,9 @@ GetSystemDefaultLCID (VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 LANGID
 STDCALL
 GetSystemDefaultLangID (VOID)
@@ -572,6 +695,9 @@ GetSystemDefaultLangID (VOID)
 
 #endif
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetSystemPowerStatus (
@@ -584,6 +710,9 @@ GetSystemPowerStatus (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 LCID
 STDCALL
 GetThreadLocale (VOID)
@@ -598,6 +727,9 @@ GetThreadLocale (VOID)
 
 #endif
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTimeFormatW (
@@ -614,6 +746,9 @@ GetTimeFormatW (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 GetTimeFormatA (
@@ -631,6 +766,9 @@ GetTimeFormatA (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 LCID
 STDCALL
 GetUserDefaultLCID (VOID)
@@ -644,6 +782,9 @@ GetUserDefaultLCID (VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 LANGID
 STDCALL
 GetUserDefaultLangID (VOID)
@@ -658,6 +799,9 @@ GetUserDefaultLangID (VOID)
 
 #endif
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetVDMCurrentDirectories (
@@ -671,6 +815,9 @@ GetVDMCurrentDirectories (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsDBCSLeadByte (
@@ -682,6 +829,9 @@ IsDBCSLeadByte (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsDBCSLeadByteEx (
@@ -694,6 +844,9 @@ IsDBCSLeadByteEx (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsValidCodePage (
@@ -705,6 +858,9 @@ IsValidCodePage (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 IsValidLocale (
@@ -717,6 +873,9 @@ IsValidLocale (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 LCMapStringA (
@@ -733,6 +892,9 @@ LCMapStringA (
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 STDCALL
 LCMapStringW (
@@ -750,6 +912,9 @@ LCMapStringW (
 
 #endif
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 LoadModule (
@@ -762,6 +927,9 @@ LoadModule (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 RegisterConsoleVDM (
@@ -783,6 +951,9 @@ RegisterConsoleVDM (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 RegisterWowBaseHandlers (
@@ -794,6 +965,9 @@ RegisterWowBaseHandlers (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 RegisterWowExec (
@@ -807,6 +981,9 @@ RegisterWowExec (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetLocaleInfoA (
@@ -820,6 +997,9 @@ SetLocaleInfoA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetLocaleInfoW (
@@ -833,6 +1013,9 @@ SetLocaleInfoW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetThreadLocale (
@@ -846,6 +1029,9 @@ SetThreadLocale (
 #endif
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetSystemPowerState (
     IN WINBOOL fSuspend,
@@ -857,6 +1043,9 @@ SetSystemPowerState (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetVDMCurrentDirectories (
@@ -869,6 +1058,9 @@ SetVDMCurrentDirectories (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 TrimVirtualBuffer (
@@ -880,6 +1072,9 @@ TrimVirtualBuffer (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VDMConsoleOperation (
@@ -892,6 +1087,9 @@ VDMConsoleOperation (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VDMOperationStarted (
@@ -905,6 +1103,9 @@ VDMOperationStarted (
 
 #ifndef _OLE2NLS_IN_BUILD_
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerLanguageNameA (
@@ -918,6 +1119,9 @@ VerLanguageNameA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VerLanguageNameW (
@@ -932,6 +1136,9 @@ VerLanguageNameW (
 
 #endif
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 VirtualBufferExceptionHandler (
@@ -943,6 +1150,5 @@ VirtualBufferExceptionHandler (
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
 
 /* EOF */

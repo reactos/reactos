@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
+/* $Id: pipe.c,v 1.9 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,6 +21,9 @@ ULONG ProcessPipeId = 0;
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
 			PHANDLE hWritePipe,
 			LPSECURITY_ATTRIBUTES lpPipeAttributes,

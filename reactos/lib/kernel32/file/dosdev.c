@@ -1,4 +1,4 @@
-/* $Id: dosdev.c,v 1.6 2003/01/15 21:24:33 chorns Exp $
+/* $Id: dosdev.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,9 @@
 #include <k32.h>
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DefineDosDeviceA(
@@ -47,6 +50,9 @@ DefineDosDeviceA(
 
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 QueryDosDeviceA(
@@ -83,6 +89,9 @@ QueryDosDeviceA(
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 DefineDosDeviceW(
@@ -94,6 +103,10 @@ DefineDosDeviceW(
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 QueryDosDeviceW(

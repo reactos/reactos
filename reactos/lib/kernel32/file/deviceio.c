@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.11 2003/01/15 21:24:33 chorns Exp $
+/* $Id: deviceio.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,6 +16,9 @@
 #include <kernel32/kernel32.h>
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DeviceIoControl(
@@ -130,6 +133,9 @@ DeviceIoControl(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetOverlappedResult (

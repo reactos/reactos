@@ -1,4 +1,4 @@
-/* $Id: isbad.c,v 1.6 2003/04/29 22:39:57 gvg Exp $
+/* $Id: isbad.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
  *
  * lib/kernel32/mem/isbad.c
  *
@@ -11,6 +11,9 @@
 #include <kernel32/kernel32.h>
 
 /* FIXME: Stubs. What is it for? */
+/*
+ * @unimplemented
+ */
 UINT
 wcsnlen (
 	LPCWSTR	lpsz,
@@ -24,6 +27,9 @@ wcsnlen (
 
 
 /* FIXME: Stubs. What is it for? */
+/*
+ * @unimplemented
+ */
 UINT
 strnlen (
 	LPCSTR	lpsz,
@@ -37,6 +43,9 @@ strnlen (
 
 /* --- --- --- */
 
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL
 IsBadReadPtr (
@@ -82,6 +91,9 @@ IsBadReadPtr (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL
 IsBadHugeReadPtr (
@@ -93,6 +105,9 @@ IsBadHugeReadPtr (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL
 IsBadCodePtr (
@@ -124,6 +139,9 @@ IsBadCodePtr (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 IsBadWritePtr (
@@ -176,6 +194,9 @@ IsBadWritePtr (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 IsBadHugeWritePtr (
@@ -187,6 +208,9 @@ IsBadHugeWritePtr (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 IsBadStringPtrW (
@@ -205,6 +229,9 @@ IsBadStringPtrW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL
 IsBadStringPtrA (

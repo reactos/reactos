@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.35 2003/03/23 10:46:59 hbirr Exp $
+/* $Id: curdir.c,v 1.36 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,6 +25,9 @@ UNICODE_STRING WindowsDirectory;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetCurrentDirectoryA (
@@ -72,6 +75,9 @@ GetCurrentDirectoryA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetCurrentDirectoryW (
@@ -88,6 +94,9 @@ GetCurrentDirectoryW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCurrentDirectoryA (
@@ -125,6 +134,9 @@ SetCurrentDirectoryA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCurrentDirectoryW (
@@ -148,6 +160,9 @@ SetCurrentDirectoryW (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetTempPathA (
@@ -191,6 +206,9 @@ GetTempPathA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetTempPathW (
@@ -238,6 +256,9 @@ GetTempPathW (
 }
 
 
+/*
+ * @implemented
+ */
 UINT
 STDCALL
 GetSystemDirectoryA (
@@ -279,6 +300,9 @@ GetSystemDirectoryA (
 }
 
 
+/*
+ * @implemented
+ */
 UINT
 STDCALL
 GetSystemDirectoryW (
@@ -305,6 +329,9 @@ GetSystemDirectoryW (
 }
 
 
+/*
+ * @implemented
+ */
 UINT
 STDCALL
 GetWindowsDirectoryA (
@@ -347,6 +374,9 @@ GetWindowsDirectoryA (
 }
 
 
+/*
+ * @implemented
+ */
 UINT
 STDCALL
 GetWindowsDirectoryW (

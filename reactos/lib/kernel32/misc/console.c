@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.59 2003/07/09 10:43:08 ekohl Exp $
+/* $Id: console.c,v 1.60 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,6 +26,9 @@ static PHANDLER_ROUTINE* CtrlHandlers = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 AddConsoleAliasA (LPSTR Source,
 		  LPSTR Target,
@@ -35,6 +38,10 @@ AddConsoleAliasA (LPSTR Source,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 AddConsoleAliasW (LPWSTR Source,
 		  LPWSTR Target,
@@ -44,6 +51,10 @@ AddConsoleAliasW (LPWSTR Source,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 ConsoleMenuControl (HANDLE	hConsole,
 		    DWORD	Unknown1,
@@ -56,6 +67,10 @@ ConsoleMenuControl (HANDLE	hConsole,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 DuplicateConsoleHandle (HANDLE	hConsole,
 			DWORD   dwDesiredAccess,
@@ -87,6 +102,10 @@ DuplicateConsoleHandle (HANDLE	hConsole,
   return Reply.Data.DuplicateHandleReply.Handle;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 ExpungeConsoleCommandHistoryW (DWORD	Unknown0)
      /*
@@ -98,6 +117,9 @@ ExpungeConsoleCommandHistoryW (DWORD	Unknown0)
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
      /*
@@ -108,6 +130,10 @@ ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasW (DWORD	Unknown0,
 		  DWORD	Unknown1,
@@ -122,6 +148,9 @@ GetConsoleAliasW (DWORD	Unknown0,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasA (DWORD	Unknown0,
 		  DWORD	Unknown1,
@@ -135,6 +164,10 @@ GetConsoleAliasA (DWORD	Unknown0,
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasExesW (DWORD	Unknown0,
 		      DWORD	Unknown1)
@@ -147,7 +180,9 @@ GetConsoleAliasExesW (DWORD	Unknown0,
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasExesA (DWORD	Unknown0,
 		      DWORD	Unknown1)
@@ -160,7 +195,9 @@ GetConsoleAliasExesA (DWORD	Unknown0,
 }
 
 
-
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasExesLengthA (VOID)
      /*
@@ -171,6 +208,10 @@ GetConsoleAliasExesLengthA (VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasExesLengthW (VOID)
      /*
@@ -181,6 +222,10 @@ GetConsoleAliasExesLengthW (VOID)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasesW (DWORD	Unknown0,
 		    DWORD	Unknown1,
@@ -193,6 +238,10 @@ GetConsoleAliasesW (DWORD	Unknown0,
   return 0;
 }
  
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasesA (DWORD	Unknown0,
 		    DWORD	Unknown1,
@@ -205,6 +254,10 @@ GetConsoleAliasesA (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasesLengthW (DWORD Unknown0)
      /*
@@ -215,6 +268,10 @@ GetConsoleAliasesLengthW (DWORD Unknown0)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleAliasesLengthA (DWORD Unknown0)
      /*
@@ -225,6 +282,10 @@ GetConsoleAliasesLengthA (DWORD Unknown0)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleCommandHistoryW (DWORD	Unknown0,
 			   DWORD	Unknown1,
@@ -237,6 +298,10 @@ GetConsoleCommandHistoryW (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleCommandHistoryA (DWORD	Unknown0,
 			   DWORD	Unknown1,
@@ -249,6 +314,10 @@ GetConsoleCommandHistoryA (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleCommandHistoryLengthW (DWORD	Unknown0)
      /*
@@ -259,6 +328,10 @@ GetConsoleCommandHistoryLengthW (DWORD	Unknown0)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
      /*
@@ -269,6 +342,9 @@ GetConsoleCommandHistoryLengthA (DWORD	Unknown0)
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleDisplayMode (LPDWORD lpdwMode)
      /*
@@ -283,6 +359,10 @@ GetConsoleDisplayMode (LPDWORD lpdwMode)
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleFontInfo (DWORD	Unknown0,
 		    DWORD	Unknown1,
@@ -296,6 +376,10 @@ GetConsoleFontInfo (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleFontSize(HANDLE hConsoleOutput,
 		   DWORD nFont)
@@ -304,6 +388,10 @@ GetConsoleFontSize(HANDLE hConsoleOutput,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetConsoleHardwareState (HANDLE	hConsole,
 			 DWORD	Flags,
@@ -333,6 +421,10 @@ GetConsoleHardwareState (HANDLE	hConsole,
   return TRUE;  
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetConsoleInputWaitHandle (VOID)
      /*
@@ -343,6 +435,10 @@ GetConsoleInputWaitHandle (VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetCurrentConsoleFont(HANDLE hConsoleOutput,
 		      BOOL bMaximumWindow,
@@ -352,6 +448,10 @@ GetCurrentConsoleFont(HANDLE hConsoleOutput,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 ULONG STDCALL
 GetNumberOfConsoleFonts (VOID)
      /*
@@ -362,6 +462,10 @@ GetNumberOfConsoleFonts (VOID)
   return 1; /* FIXME: call csrss.exe */
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 InvalidateConsoleDIBits (DWORD	Unknown0,
 			 DWORD	Unknown1)
@@ -373,6 +477,10 @@ InvalidateConsoleDIBits (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE STDCALL
 OpenConsoleW (LPWSTR  wsName,
 	      DWORD   dwDesiredAccess,
@@ -425,6 +533,10 @@ OpenConsoleW (LPWSTR  wsName,
   return(*phConsole);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleCommandHistoryMode (DWORD	dwMode)
      /*
@@ -435,6 +547,10 @@ SetConsoleCommandHistoryMode (DWORD	dwMode)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleCursor (DWORD	Unknown0,
 		  DWORD	Unknown1)
@@ -446,6 +562,10 @@ SetConsoleCursor (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleDisplayMode (HANDLE hOut,
 		       DWORD dwNewMode,
@@ -462,6 +582,10 @@ SetConsoleDisplayMode (HANDLE hOut,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleFont (DWORD	Unknown0,
 		DWORD	Unknown1)
@@ -473,6 +597,10 @@ SetConsoleFont (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetConsoleHardwareState (HANDLE	hConsole,
 			 DWORD	Flags,
@@ -502,6 +630,10 @@ SetConsoleHardwareState (HANDLE	hConsole,
   return TRUE;  
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleKeyShortcuts (DWORD	Unknown0,
 			DWORD	Unknown1,
@@ -515,6 +647,10 @@ SetConsoleKeyShortcuts (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleMaximumWindowSize (DWORD	Unknown0,
 			     DWORD	Unknown1)
@@ -526,6 +662,10 @@ SetConsoleMaximumWindowSize (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleMenuClose (DWORD	Unknown0)
      /*
@@ -536,6 +676,10 @@ SetConsoleMenuClose (DWORD	Unknown0)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleNumberOfCommandsA (DWORD	Unknown0,
 			     DWORD	Unknown1)
@@ -547,6 +691,10 @@ SetConsoleNumberOfCommandsA (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsoleNumberOfCommandsW (DWORD	Unknown0,
 			     DWORD	Unknown1)
@@ -558,6 +706,10 @@ SetConsoleNumberOfCommandsW (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetConsolePalette (DWORD	Unknown0,
 		   DWORD	Unknown1,
@@ -570,6 +722,10 @@ SetConsolePalette (DWORD	Unknown0,
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 SetLastConsoleEventActive (VOID)
      /*
@@ -580,6 +736,10 @@ SetLastConsoleEventActive (VOID)
   return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 ShowConsoleCursor (DWORD	Unknown0,
 		   DWORD	Unknown1)
@@ -600,6 +760,8 @@ ShowConsoleCursor (DWORD	Unknown0,
  *      TRUE: Handle is a valid console handle
  *      FALSE: Handle is not a valid console handle.
  * STATUS: Officially undocumented
+ *
+ * @implemented
  */
 BOOL STDCALL
 VerifyConsoleIoHandle(HANDLE Handle)
@@ -624,6 +786,9 @@ VerifyConsoleIoHandle(HANDLE Handle)
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 WriteConsoleInputVDMA (DWORD	Unknown0,
 		       DWORD	Unknown1,
@@ -634,6 +799,10 @@ WriteConsoleInputVDMA (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 WriteConsoleInputVDMW (DWORD	Unknown0,
 		       DWORD	Unknown1,
@@ -644,6 +813,10 @@ WriteConsoleInputVDMW (DWORD	Unknown0,
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 CloseConsoleHandle(HANDLE Handle)
      /*
@@ -676,6 +849,9 @@ CloseConsoleHandle(HANDLE Handle)
 }
 
 
+/*
+ * @implemented
+ */
 BOOLEAN STDCALL 
 IsConsoleHandle(HANDLE Handle)
 {
@@ -686,6 +862,10 @@ IsConsoleHandle(HANDLE Handle)
   return(FALSE);
 }
 
+
+/*
+ * @implemented
+ */
 HANDLE STDCALL 
 GetStdHandle(DWORD nStdHandle)
      /*
@@ -716,6 +896,10 @@ GetStdHandle(DWORD nStdHandle)
   return INVALID_HANDLE_VALUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBASEAPI BOOL WINAPI 
 SetStdHandle(DWORD nStdHandle,
 	     HANDLE hHandle)
@@ -763,6 +947,8 @@ SetStdHandle(DWORD nStdHandle,
 
 /*--------------------------------------------------------------
  *	WriteConsoleA
+ *
+ * @implemented
  */
 WINBOOL STDCALL 
 WriteConsoleA(HANDLE hConsoleOutput,
@@ -830,6 +1016,8 @@ WriteConsoleA(HANDLE hConsoleOutput,
 
 /*--------------------------------------------------------------
  *	ReadConsoleA
+ *
+ * @implemented
  */
 WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 			     LPVOID lpBuffer,
@@ -923,6 +1111,8 @@ WINBOOL STDCALL ReadConsoleA(HANDLE hConsoleInput,
 
 /*--------------------------------------------------------------
  *	AllocConsole
+ *
+ * @implemented
  */
 WINBOOL STDCALL AllocConsole(VOID)
 {
@@ -951,6 +1141,8 @@ WINBOOL STDCALL AllocConsole(VOID)
 
 /*--------------------------------------------------------------
  *	FreeConsole
+ *
+ * @unimplemented
  */
 WINBOOL STDCALL FreeConsole(VOID)
 {
@@ -961,6 +1153,8 @@ WINBOOL STDCALL FreeConsole(VOID)
 
 /*--------------------------------------------------------------
  *	GetConsoleScreenBufferInfo
+ *
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -988,6 +1182,8 @@ GetConsoleScreenBufferInfo(
 
 /*--------------------------------------------------------------
  *	SetConsoleCursorPosition
+ *
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1015,6 +1211,8 @@ SetConsoleCursorPosition(
 
 /*--------------------------------------------------------------
  *	FillConsoleOutputCharacterA
+ *
+ * @implemented
  */
 WINBOOL STDCALL
 FillConsoleOutputCharacterA(
@@ -1048,6 +1246,8 @@ FillConsoleOutputCharacterA(
 
 /*--------------------------------------------------------------
  *	FillConsoleOutputCharacterW
+ *
+ * @unimplemented
  */
 WINBOOL
 STDCALL
@@ -1066,6 +1266,8 @@ FillConsoleOutputCharacterW(
 
 /*--------------------------------------------------------------
  * 	PeekConsoleInputA
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1135,6 +1337,8 @@ PeekConsoleInputA(
 
 /*--------------------------------------------------------------
  * 	PeekConsoleInputW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1153,6 +1357,8 @@ PeekConsoleInputW(
 
 /*--------------------------------------------------------------
  * 	ReadConsoleInputA
+ *
+ * @implemented
  */
 WINBASEAPI BOOL WINAPI
 ReadConsoleInputA(HANDLE hConsoleInput,
@@ -1229,6 +1435,8 @@ ReadConsoleInputA(HANDLE hConsoleInput,
 
 /*--------------------------------------------------------------
  * 	ReadConsoleInputW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1247,6 +1455,8 @@ ReadConsoleInputW(
 
 /*--------------------------------------------------------------
  * 	WriteConsoleInputA
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1312,6 +1522,8 @@ WriteConsoleInputA(
 
 /*--------------------------------------------------------------
  * 	WriteConsoleInputW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1330,6 +1542,8 @@ WriteConsoleInputW(
 
 /*--------------------------------------------------------------
  * 	ReadConsoleOutputA
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1403,6 +1617,8 @@ ReadConsoleOutputA(
 
 /*--------------------------------------------------------------
  * 	ReadConsoleOutputW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1421,6 +1637,8 @@ ReadConsoleOutputW(
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputA
+ *
+ * @implemented
  */
 WINBASEAPI BOOL WINAPI
 WriteConsoleOutputA(HANDLE		 hConsoleOutput,
@@ -1486,6 +1704,8 @@ WriteConsoleOutputA(HANDLE		 hConsoleOutput,
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1505,6 +1725,8 @@ WriteConsoleOutputW(
 
 /*--------------------------------------------------------------
  * 	ReadConsoleOutputCharacterA
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1572,6 +1794,8 @@ ReadConsoleOutputCharacterA(
 
 /*--------------------------------------------------------------
  *      ReadConsoleOutputCharacterW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1591,6 +1815,8 @@ ReadConsoleOutputCharacterW(
 
 /*--------------------------------------------------------------
  * 	ReadConsoleOutputAttribute
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1660,6 +1886,8 @@ ReadConsoleOutputAttribute(
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputCharacterA
+ *
+ * @implemented
  */
 WINBASEAPI BOOL WINAPI
 WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
@@ -1712,6 +1940,8 @@ WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputCharacterW
+ *
+ * @implemented
  */
 WINBASEAPI BOOL WINAPI
 WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
@@ -1773,6 +2003,8 @@ WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
 
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputAttribute
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1829,6 +2061,8 @@ WriteConsoleOutputAttribute(
 
 /*--------------------------------------------------------------
  * 	FillConsoleOutputAttribute
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1864,6 +2098,8 @@ FillConsoleOutputAttribute(
 
 /*--------------------------------------------------------------
  * 	GetConsoleMode
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1892,6 +2128,8 @@ GetConsoleMode(
 
 /*--------------------------------------------------------------
  * 	GetNumberOfConsoleInputEvents
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1928,6 +2166,8 @@ GetNumberOfConsoleInputEvents(
 
 /*--------------------------------------------------------------
  * 	GetLargestConsoleWindowSize
+ *
+ * @unimplemented
  */
 WINBASEAPI
 COORD
@@ -1947,6 +2187,8 @@ GetLargestConsoleWindowSize(
 
 /*--------------------------------------------------------------
  *	GetConsoleCursorInfo
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -1976,6 +2218,8 @@ GetConsoleCursorInfo(
 
 /*--------------------------------------------------------------
  * 	GetNumberOfConsoleMouseButtons
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -1991,6 +2235,8 @@ GetNumberOfConsoleMouseButtons(
 
 /*--------------------------------------------------------------
  * 	SetConsoleMode
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2019,6 +2265,8 @@ SetConsoleMode(
 
 /*--------------------------------------------------------------
  * 	SetConsoleActiveScreenBuffer
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2045,6 +2293,8 @@ SetConsoleActiveScreenBuffer(
 
 /*--------------------------------------------------------------
  * 	FlushConsoleInputBuffer
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2071,6 +2321,8 @@ FlushConsoleInputBuffer(
 
 /*--------------------------------------------------------------
  * 	SetConsoleScreenBufferSize
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2086,6 +2338,8 @@ SetConsoleScreenBufferSize(
 
 /*--------------------------------------------------------------
  * 	SetConsoleCursorInfo
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2115,6 +2369,8 @@ SetConsoleCursorInfo(
 
 /*--------------------------------------------------------------
  *	ScrollConsoleScreenBufferA
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2160,6 +2416,8 @@ ScrollConsoleScreenBufferA(
 
 /*--------------------------------------------------------------
  * 	ScrollConsoleScreenBufferW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2179,6 +2437,8 @@ ScrollConsoleScreenBufferW(
 
 /*--------------------------------------------------------------
  * 	SetConsoleWindowInfo
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2196,6 +2456,8 @@ SetConsoleWindowInfo(
 
 /*--------------------------------------------------------------
  *      SetConsoleTextAttribute
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2220,6 +2482,7 @@ SetConsoleTextAttribute(
       }
    return TRUE;
 }
+
 
 BOOL STATIC
 AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
@@ -2246,6 +2509,7 @@ AddConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
       return(TRUE);
     }
 }
+
 
 BOOL STATIC
 RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
@@ -2277,6 +2541,10 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
   return(FALSE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBASEAPI BOOL WINAPI
 SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 		      BOOL Add)
@@ -2299,6 +2567,8 @@ SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 
 /*--------------------------------------------------------------
  * 	GenerateConsoleCtrlEvent
+ *
+ * @unimplemented
  */
 WINBASEAPI BOOL WINAPI
 GenerateConsoleCtrlEvent(
@@ -2313,8 +2583,9 @@ GenerateConsoleCtrlEvent(
 
 /*--------------------------------------------------------------
  *	GetConsoleTitleW
+ *
+ * @implemented
  */
-
 WINBASEAPI
 DWORD
 WINAPI
@@ -2375,6 +2646,8 @@ GetConsoleTitleW(
  * 	GetConsoleTitleA
  *
  * 	19990306 EA
+ *
+ * @implemented
  */
 WINBASEAPI
 DWORD
@@ -2413,6 +2686,8 @@ GetConsoleTitleA(
 
 /*--------------------------------------------------------------
  *	SetConsoleTitleW
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2472,6 +2747,8 @@ SetConsoleTitleW(
  *	SetConsoleTitleA
  *	
  * 	19990204 EA	Added
+ *
+ * @implemented
  */
 WINBASEAPI
 BOOL
@@ -2529,6 +2806,8 @@ SetConsoleTitleA(
 
 /*--------------------------------------------------------------
  *	ReadConsoleW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2548,6 +2827,8 @@ ReadConsoleW(
 
 /*--------------------------------------------------------------
  *	WriteConsoleW
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2612,6 +2893,8 @@ WriteConsoleW(
 
 /*--------------------------------------------------------------
  *	CreateConsoleScreenBuffer
+ *
+ * @implemented
  */
 WINBASEAPI
 HANDLE
@@ -2642,6 +2925,8 @@ CreateConsoleScreenBuffer(
 
 /*--------------------------------------------------------------
  *	GetConsoleCP
+ *
+ * @unimplemented
  */
 WINBASEAPI
 UINT
@@ -2655,6 +2940,8 @@ GetConsoleCP( VOID )
 
 /*--------------------------------------------------------------
  *	SetConsoleCP
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2670,6 +2957,8 @@ SetConsoleCP(
 
 /*--------------------------------------------------------------
  *	GetConsoleOutputCP
+ *
+ * @unimplemented
  */
 WINBASEAPI
 UINT
@@ -2683,6 +2972,8 @@ GetConsoleOutputCP( VOID )
 
 /*--------------------------------------------------------------
  *	SetConsoleOutputCP
+ *
+ * @unimplemented
  */
 WINBASEAPI
 BOOL
@@ -2698,6 +2989,8 @@ SetConsoleOutputCP(
 
 /*--------------------------------------------------------------
  * 	GetConsoleProcessList
+ *
+ * @unimplemented
  */
 DWORD STDCALL
 GetConsoleProcessList(LPDWORD lpdwProcessList,
@@ -2711,6 +3004,8 @@ GetConsoleProcessList(LPDWORD lpdwProcessList,
 
 /*--------------------------------------------------------------
  * 	GetConsoleSelectionInfo
+ *
+ * @unimplemented
  */
 BOOL STDCALL
 GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
@@ -2723,6 +3018,8 @@ GetConsoleSelectionInfo(PCONSOLE_SELECTION_INFO lpConsoleSelectionInfo)
 
 /*--------------------------------------------------------------
  * 	AttachConsole
+ *
+ * @unimplemented
  */
 BOOL STDCALL 
 AttachConsole(DWORD dwProcessId)
@@ -2733,6 +3030,8 @@ AttachConsole(DWORD dwProcessId)
 
 /*--------------------------------------------------------------
  * 	GetConsoleWindow/0
+ *
+ * @implemented
  */
 HWND STDCALL
 GetConsoleWindow (VOID)
@@ -2756,6 +3055,5 @@ GetConsoleWindow (VOID)
   }
   return Reply.Data.ConsoleWindowReply.WindowHandle;
 }
-
 
 /* EOF */

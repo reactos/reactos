@@ -1,4 +1,4 @@
-/* $Id: break.c,v 1.1 2003/03/31 22:28:59 hyperion Exp $
+/* $Id: break.c,v 1.2 2003/07/10 18:50:50 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -13,6 +13,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOL WINAPI DebugBreakProcess(HANDLE Process)
 {
  NTSTATUS nErrCode = DbgUiIssueRemoteBreakin(Process);

@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.13 2003/01/15 21:24:33 chorns Exp $
+/* $Id: delete.c,v 1.14 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DeleteFileA (
@@ -52,6 +55,9 @@ DeleteFileA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DeleteFileW (

@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.22 2003/05/18 19:37:20 ekohl Exp $
+/* $Id: wait.c,v 1.23 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 WaitForSingleObject(HANDLE hHandle,
 		    DWORD dwMilliseconds)
@@ -28,6 +31,9 @@ WaitForSingleObject(HANDLE hHandle,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 WaitForSingleObjectEx(HANDLE hHandle,
                       DWORD  dwMilliseconds,
@@ -93,6 +99,9 @@ WaitForSingleObjectEx(HANDLE hHandle,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 WaitForMultipleObjects(DWORD nCount,
 		       CONST HANDLE *lpHandles,
@@ -107,6 +116,9 @@ WaitForMultipleObjects(DWORD nCount,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 WaitForMultipleObjectsEx(DWORD nCount,
                          CONST HANDLE *lpHandles,
@@ -200,6 +212,9 @@ WaitForMultipleObjectsEx(DWORD nCount,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SignalObjectAndWait(HANDLE hObjectToSignal,
 		    HANDLE hObjectToWaitOn,

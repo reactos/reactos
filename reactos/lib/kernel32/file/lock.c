@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
+/* $Id: lock.c,v 1.9 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -21,6 +21,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 LockFile(
@@ -42,6 +45,10 @@ LockFile(
  
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 LockFileEx(
@@ -103,6 +110,10 @@ LockFileEx(
   	         
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 UnlockFile(
@@ -123,7 +134,9 @@ UnlockFile(
 }
 
 
-
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL 
 UnlockFileEx(

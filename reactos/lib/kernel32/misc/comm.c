@@ -1,4 +1,4 @@
-/* $Id: comm.c,v 1.7 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: comm.c,v 1.8 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -579,6 +579,9 @@ COMMDCB_PARAM_HANDLER(xon)
   (ULONG_PTR)&COMMDCB_ ## __P__ ## Param \
  }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BuildCommDCBAndTimeoutsW
@@ -699,6 +702,9 @@ InvalidParam:
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BuildCommDCBAndTimeoutsA(LPCSTR lpDef, LPDCB lpDCB,	LPCOMMTIMEOUTS lpCommTimeouts)
@@ -725,6 +731,9 @@ BuildCommDCBAndTimeoutsA(LPCSTR lpDef, LPDCB lpDCB,	LPCOMMTIMEOUTS lpCommTimeout
  return bRetVal;
 }
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
@@ -732,6 +741,10 @@ BuildCommDCBA(LPCSTR lpDef, LPDCB lpDCB)
  return BuildCommDCBAndTimeoutsA(lpDef, lpDCB, NULL);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
@@ -739,6 +752,10 @@ BuildCommDCBW(LPCWSTR lpDef, LPDCB lpDCB)
  return BuildCommDCBAndTimeoutsW(lpDef, lpDCB, NULL);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 ClearCommBreak(HANDLE hFile)
@@ -753,6 +770,10 @@ ClearCommBreak(HANDLE hFile)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 ClearCommError(HANDLE hFile, LPDWORD lpErrors, LPCOMSTAT lpStat)
@@ -802,6 +823,10 @@ CE_TXFULL The application tried to transmit a character, but the output buffer w
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
@@ -810,6 +835,10 @@ CommConfigDialogA(LPCSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
@@ -818,6 +847,10 @@ CommConfigDialogW(LPCWSTR lpszName, HWND hWnd, LPCOMMCONFIG lpCC)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
@@ -861,6 +894,10 @@ EscapeCommFunction(HANDLE hFile, DWORD dwFunc)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
@@ -869,6 +906,10 @@ GetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
@@ -884,6 +925,10 @@ GetCommMask(HANDLE hFile, LPDWORD lpEvtMask)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
@@ -899,6 +944,10 @@ GetCommModemStatus(HANDLE hFile, LPDWORD lpModemStat)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
@@ -907,6 +956,10 @@ GetCommProperties(HANDLE hFile, LPCOMMPROP lpCommProp)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetCommState(HANDLE hFile, LPDCB lpDCB)
@@ -1016,6 +1069,10 @@ GetCommState(HANDLE hFile, LPDCB lpDCB)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
@@ -1036,6 +1093,10 @@ GetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
@@ -1044,6 +1105,10 @@ GetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 GetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
@@ -1052,6 +1117,10 @@ GetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, LPDWORD lpdwSize)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PurgeComm(HANDLE hFile, DWORD dwFlags)
@@ -1067,6 +1136,10 @@ PurgeComm(HANDLE hFile, DWORD dwFlags)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCommBreak(HANDLE hFile)
@@ -1081,6 +1154,10 @@ SetCommBreak(HANDLE hFile)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
@@ -1089,6 +1166,10 @@ SetCommConfig(HANDLE hCommDev, LPCOMMCONFIG lpCC, DWORD dwSize)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCommMask(HANDLE hFile, DWORD dwEvtMask)
@@ -1104,6 +1185,10 @@ SetCommMask(HANDLE hFile, DWORD dwEvtMask)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCommState(HANDLE	hFile, LPDCB lpDCB)
@@ -1231,6 +1316,10 @@ SetCommState(HANDLE	hFile, LPDCB lpDCB)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
@@ -1255,6 +1344,10 @@ SetCommTimeouts(HANDLE hFile, LPCOMMTIMEOUTS lpCommTimeouts)
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
@@ -1263,6 +1356,10 @@ SetDefaultCommConfigA(LPCSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 SetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
@@ -1271,6 +1368,10 @@ SetDefaultCommConfigW(LPCWSTR lpszName, LPCOMMCONFIG lpCC, DWORD dwSize)
 	return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
@@ -1289,6 +1390,10 @@ SetupComm(HANDLE hFile, DWORD dwInQueue, DWORD dwOutQueue)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 TransmitCommChar(HANDLE hFile, char cChar)
@@ -1304,6 +1409,10 @@ TransmitCommChar(HANDLE hFile, char cChar)
 	return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 WaitCommEvent(HANDLE hFile, LPDWORD lpEvtMask, LPOVERLAPPED lpOverlapped)

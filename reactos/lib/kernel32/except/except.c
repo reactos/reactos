@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.10 2003/01/15 21:24:33 chorns Exp $
+/* $Id: except.c,v 1.11 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,6 +29,10 @@ UINT GetErrorMode(void)
 	return GlobalErrMode;
 }
 
+
+/*
+ * @implemented
+ */
 UINT 
 STDCALL
 SetErrorMode(  UINT uMode  )
@@ -38,6 +42,10 @@ SetErrorMode(  UINT uMode  )
 	return OldErrMode;
 }
 
+
+/*
+ * @implemented
+ */
 LPTOP_LEVEL_EXCEPTION_FILTER
 STDCALL
 SetUnhandledExceptionFilter(
@@ -51,6 +59,9 @@ SetUnhandledExceptionFilter(
 }
 
 
+/*
+ * @unimplemented
+ */
 LONG
 STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
@@ -96,6 +107,10 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 	
 }
 
+
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 RaiseException (

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.15 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: ldr.c,v 1.16 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -15,6 +15,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DisableThreadLibraryCalls (
@@ -33,6 +36,9 @@ DisableThreadLibraryCalls (
 }
 
 
+/*
+ * @implemented
+ */
 HINSTANCE
 STDCALL
 LoadLibraryA (
@@ -43,6 +49,9 @@ LoadLibraryA (
 }
 
 
+/*
+ * @implemented
+ */
 HINSTANCE
 STDCALL
 LoadLibraryExA (
@@ -88,6 +97,9 @@ LoadLibraryExA (
 }
 
 
+/*
+ * @implemented
+ */
 HINSTANCE
 STDCALL
 LoadLibraryW (
@@ -98,6 +110,9 @@ LoadLibraryW (
 }
 
 
+/*
+ * @implemented
+ */
 HINSTANCE
 STDCALL
 LoadLibraryExW (
@@ -127,6 +142,9 @@ LoadLibraryExW (
 }
 
 
+/*
+ * @implemented
+ */
 FARPROC
 STDCALL
 GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
@@ -155,6 +173,9 @@ GetProcAddress( HMODULE hModule, LPCSTR lpProcName )
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FreeLibrary( HMODULE hLibModule )
@@ -164,6 +185,9 @@ FreeLibrary( HMODULE hLibModule )
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 FreeLibraryAndExitThread (
@@ -177,6 +201,9 @@ FreeLibraryAndExitThread (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetModuleFileNameA (
@@ -242,6 +269,9 @@ GetModuleFileNameA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetModuleFileNameW (
@@ -300,6 +330,9 @@ GetModuleFileNameW (
 }
 
 
+/*
+ * @implemented
+ */
 HMODULE
 STDCALL
 GetModuleHandleA ( LPCSTR lpModuleName )
@@ -341,6 +374,9 @@ GetModuleHandleA ( LPCSTR lpModuleName )
 }
 
 
+/*
+ * @implemented
+ */
 HMODULE
 STDCALL
 GetModuleHandleW (LPCWSTR lpModuleName)

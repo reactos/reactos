@@ -1,4 +1,4 @@
-/* $Id: procmem.c,v 1.5 2003/01/15 21:24:34 chorns Exp $
+/* $Id: procmem.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,6 +12,10 @@
 #include <k32.h>
 
 /* FUNCTIONS *****************************************************************/
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 ReadProcessMemory (
@@ -38,6 +42,9 @@ ReadProcessMemory (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 WriteProcessMemory (
@@ -61,6 +68,5 @@ WriteProcessMemory (
      	}
 	return TRUE;
 }
-
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.12 2003/01/15 21:24:36 chorns Exp $
+/* $Id: timer.c,v 1.13 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 		     WINBOOL bManualReset,
@@ -53,6 +56,9 @@ CreateWaitableTimerW(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 		     WINBOOL bManualReset,
@@ -78,6 +84,9 @@ CreateWaitableTimerA(LPSECURITY_ATTRIBUTES lpTimerAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenWaitableTimerW(DWORD dwDesiredAccess,
 		   WINBOOL bInheritHandle,
@@ -115,6 +124,9 @@ OpenWaitableTimerW(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenWaitableTimerA(DWORD dwDesiredAccess,
 		   WINBOOL bInheritHandle,
@@ -140,6 +152,9 @@ OpenWaitableTimerA(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetWaitableTimer(HANDLE hTimer,
 		 const LARGE_INTEGER *pDueTime,
@@ -167,6 +182,9 @@ SetWaitableTimer(HANDLE hTimer,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 CancelWaitableTimer(HANDLE hTimer)
 {

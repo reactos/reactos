@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.21 2003/04/18 08:29:35 gvg Exp $
+/* $Id: env.c,v 1.22 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,9 @@
 
 /* FUNCTIONS ******************************************************************/
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetEnvironmentVariableA (
@@ -92,6 +95,9 @@ GetEnvironmentVariableA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetEnvironmentVariableW (
@@ -131,6 +137,9 @@ GetEnvironmentVariableW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetEnvironmentVariableA (
@@ -175,6 +184,9 @@ SetEnvironmentVariableA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetEnvironmentVariableW (
@@ -207,6 +219,9 @@ SetEnvironmentVariableW (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetVersion(VOID)
@@ -229,6 +244,9 @@ GetVersion(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetVersionExW(
@@ -292,6 +310,9 @@ GetVersionExW(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetVersionExA(
@@ -389,6 +410,9 @@ GetVersionExA(
 }
 
 
+/*
+ * @implemented
+ */
 LPSTR
 STDCALL
 GetEnvironmentStringsA (
@@ -460,6 +484,9 @@ GetEnvironmentStringsA (
 }
 
 
+/*
+ * @implemented
+ */
 LPWSTR
 STDCALL
 GetEnvironmentStringsW (
@@ -470,6 +497,9 @@ GetEnvironmentStringsW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FreeEnvironmentStringsA (
@@ -487,6 +517,9 @@ FreeEnvironmentStringsA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FreeEnvironmentStringsW (
@@ -498,6 +531,9 @@ FreeEnvironmentStringsW (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 ExpandEnvironmentStringsA (
@@ -557,6 +593,9 @@ ExpandEnvironmentStringsA (
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 ExpandEnvironmentStringsW (

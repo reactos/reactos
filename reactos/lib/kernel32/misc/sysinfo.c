@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.7 2003/02/12 03:44:20 ekohl Exp $
+/* $Id: sysinfo.c,v 1.8 2003/07/10 18:50:51 chorns Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -11,6 +11,9 @@
 
 #define PV_NT351 0x00030033
 
+/*
+ * @unimplemented
+ */
 VOID
 STDCALL
 GetSystemInfo (
@@ -119,6 +122,10 @@ GetSystemInfo (
 	}
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 IsProcessorFeaturePresent(DWORD ProcessorFeature)
 {

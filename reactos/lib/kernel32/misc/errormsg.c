@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.5 2003/05/19 19:42:30 guido Exp $
+/* $Id: errormsg.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -718,6 +718,9 @@ DWORD WINAPI FormatMessageW(
 
 /* EXPORTED */
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 FormatMessageW(
@@ -737,6 +740,9 @@ FormatMessageW(
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 FormatMessageA(

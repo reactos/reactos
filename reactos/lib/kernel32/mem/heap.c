@@ -1,4 +1,4 @@
-/* $Id: heap.c,v 1.23 2003/01/15 21:24:34 chorns Exp $
+/* $Id: heap.c,v 1.24 2003/07/10 18:50:51 chorns Exp $
  *
  * kernel/heap.c
  * Copyright (C) 1996, Onno Hovers, All rights reserved
@@ -35,6 +35,9 @@
 /*********************************************************************
 *                     HeapCreate -- KERNEL32                         *
 *********************************************************************/
+/*
+ * @implemented
+ */
 HANDLE STDCALL HeapCreate(DWORD flags, DWORD dwInitialSize, DWORD dwMaximumSize)
 {
 
@@ -45,6 +48,9 @@ HANDLE STDCALL HeapCreate(DWORD flags, DWORD dwInitialSize, DWORD dwMaximumSize)
 /*********************************************************************
 *                     HeapDestroy -- KERNEL32                        *
 *********************************************************************/
+/*
+ * @implemented
+ */
 BOOL WINAPI HeapDestroy(HANDLE hheap)
 {
    return(RtlDestroyHeap(hheap));
@@ -53,6 +59,9 @@ BOOL WINAPI HeapDestroy(HANDLE hheap)
 /*********************************************************************
 *                   GetProcessHeap  --  KERNEL32                     *
 *********************************************************************/
+/*
+ * @implemented
+ */
 HANDLE WINAPI GetProcessHeap(VOID)
 {
    DPRINT("GetProcessHeap()\n");
@@ -62,6 +71,9 @@ HANDLE WINAPI GetProcessHeap(VOID)
 /********************************************************************
 *                   GetProcessHeaps  --  KERNEL32                   *
 ********************************************************************/
+/*
+ * @implemented
+ */
 DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles)
 {
    return(RtlGetProcessHeaps(maxheaps, phandles));
@@ -70,6 +82,9 @@ DWORD WINAPI GetProcessHeaps(DWORD maxheaps, PHANDLE phandles)
 /*********************************************************************
 *                    HeapLock  --  KERNEL32                          *
 *********************************************************************/
+/*
+ * @implemented
+ */
 BOOL WINAPI HeapLock(HANDLE hheap)
 {
    return(RtlLockHeap(hheap));
@@ -78,6 +93,9 @@ BOOL WINAPI HeapLock(HANDLE hheap)
 /*********************************************************************
 *                    HeapUnlock  --  KERNEL32                        *
 *********************************************************************/
+/*
+ * @implemented
+ */
 BOOL WINAPI HeapUnlock(HANDLE hheap)
 {
    return(RtlUnlockHeap(hheap));
@@ -89,6 +107,9 @@ BOOL WINAPI HeapUnlock(HANDLE hheap)
 * NT uses this function to compact moveable blocks and other things  *
 * Here it does not compact, but it finds the largest free region     *
 *********************************************************************/
+/*
+ * @implemented
+ */
 UINT WINAPI HeapCompact(HANDLE hheap, DWORD flags)
 {
    return RtlCompactHeap(hheap, flags);
@@ -97,12 +118,18 @@ UINT WINAPI HeapCompact(HANDLE hheap, DWORD flags)
 /*********************************************************************
 *                    HeapValidate  --  KERNEL32                      *
 *********************************************************************/
+/*
+ * @implemented
+ */
 BOOL WINAPI HeapValidate(HANDLE hheap, DWORD flags, LPCVOID pmem)
 {
    return(RtlValidateHeap(hheap, flags, (PVOID)pmem));
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 HeapCreateTagsW (
@@ -117,6 +144,9 @@ HeapCreateTagsW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 HeapExtend (
@@ -143,6 +173,9 @@ HeapExtend (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 HeapQueryTagW (
@@ -158,6 +191,9 @@ HeapQueryTagW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 HeapSummary (
@@ -171,6 +207,9 @@ HeapSummary (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 HeapUsage (
@@ -186,6 +225,9 @@ HeapUsage (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 HeapWalk (

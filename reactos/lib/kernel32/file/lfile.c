@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.8 2003/01/15 21:24:34 chorns Exp $
+/* $Id: lfile.c,v 1.9 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,9 @@
 #include <k32.h>
 
 
+/*
+ * @implemented
+ */
 long
 STDCALL
 _hread(
@@ -55,6 +58,9 @@ _lread (
 */
 
 
+/*
+ * @implemented
+ */
 long
 STDCALL
 _hwrite (
@@ -103,6 +109,9 @@ _lwrite(
 */
 
 
+/*
+ * @implemented
+ */
 HFILE
 STDCALL
 _lopen (
@@ -143,6 +152,9 @@ _lopen (
 }
 
 
+/*
+ * @implemented
+ */
 HFILE
 STDCALL
 _lcreat (
@@ -173,6 +185,9 @@ _lcreat (
 }
 
 
+/*
+ * @implemented
+ */
 int
 STDCALL
 _lclose (
@@ -187,6 +202,9 @@ _lclose (
 }
 
 
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 _llseek(

@@ -11,6 +11,9 @@
 #include <k32.h>
 
 
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrcmpA(
@@ -21,6 +24,10 @@ lstrcmpA(
 	return strcmp(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrcmpiA(
@@ -31,6 +38,10 @@ lstrcmpiA(
         return _stricmp(lpString1,lpString2); 
 }
 
+
+/*
+ * @implemented
+ */
 LPSTR
 STDCALL
 lstrcpynA(
@@ -42,6 +53,10 @@ lstrcpynA(
 	return strncpy(lpString1,lpString2,iMaxLength);
 }
 
+
+/*
+ * @implemented
+ */
 LPSTR
 STDCALL
 lstrcpyA(
@@ -52,6 +67,10 @@ lstrcpyA(
 	return strcpy(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 LPSTR
 STDCALL
 lstrcatA(
@@ -62,6 +81,10 @@ lstrcatA(
 	return strcat(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrlenA(
@@ -71,6 +94,10 @@ lstrlenA(
 	return strlen(lpString);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrcmpW(
@@ -81,6 +108,10 @@ lstrcmpW(
 	return wcscmp(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrcmpiW(
@@ -91,6 +122,10 @@ lstrcmpiW(
         return _wcsicmp(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 LPWSTR
 STDCALL
 lstrcpynW(
@@ -102,6 +137,10 @@ lstrcpynW(
 	return wcsncpy(lpString1,lpString2,iMaxLength);
 }
 
+
+/*
+ * @implemented
+ */
 LPWSTR
 STDCALL
 lstrcpyW(
@@ -112,6 +151,10 @@ lstrcpyW(
 	return wcscpy(lpString1,lpString2);	
 }
 
+
+/*
+ * @implemented
+ */
 LPWSTR
 STDCALL
 lstrcatW(
@@ -122,6 +165,10 @@ lstrcatW(
 	return wcscat(lpString1,lpString2);
 }
 
+
+/*
+ * @implemented
+ */
 int
 STDCALL
 lstrlenW(
@@ -130,5 +177,3 @@ lstrlenW(
 {
 	return wcslen(lpString);
 }
-
-

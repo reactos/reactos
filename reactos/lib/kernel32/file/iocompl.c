@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.9 2003/03/19 23:16:55 gdalsnes Exp $
+/* $Id: iocompl.c,v 1.10 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,9 @@
 
 #include <kernel32/error.h>
 
+/*
+ * @implemented
+ */
 HANDLE
 STDCALL
 CreateIoCompletionPort(
@@ -81,6 +84,9 @@ CreateIoCompletionPort(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 GetQueuedCompletionStatus(
@@ -140,6 +146,9 @@ GetQueuedCompletionStatus(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 PostQueuedCompletionStatus(
@@ -166,6 +175,9 @@ PostQueuedCompletionStatus(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 CancelIo(HANDLE hFile)
 {

@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.14 2003/01/15 21:24:34 chorns Exp $
+/* $Id: npipe.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateNamedPipeA(LPCSTR lpName,
 		 DWORD dwOpenMode,
@@ -50,6 +53,9 @@ CreateNamedPipeA(LPCSTR lpName,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateNamedPipeW(LPCWSTR lpName,
 		 DWORD dwOpenMode,
@@ -196,6 +202,9 @@ CreateNamedPipeW(LPCWSTR lpName,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 WaitNamedPipeA(LPCSTR lpNamedPipeName,
 	       DWORD nTimeOut)
@@ -215,6 +224,9 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 	       DWORD nTimeOut)
@@ -277,6 +289,9 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 ConnectNamedPipe(HANDLE hNamedPipe,
 		 LPOVERLAPPED lpOverlapped)
@@ -330,6 +345,9 @@ ConnectNamedPipe(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetNamedPipeHandleState(HANDLE hNamedPipe,
 			LPDWORD lpMode,
@@ -436,6 +454,9 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 CallNamedPipeA(LPCSTR lpNamedPipeName,
 	       LPVOID lpInBuffer,
@@ -465,6 +486,9 @@ CallNamedPipeA(LPCSTR lpNamedPipeName,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 CallNamedPipeW(LPCWSTR lpNamedPipeName,
 	       LPVOID lpInBuffer,
@@ -524,6 +548,9 @@ CallNamedPipeW(LPCWSTR lpNamedPipeName,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 DisconnectNamedPipe(HANDLE hNamedPipe)
 {
@@ -561,6 +588,9 @@ DisconnectNamedPipe(HANDLE hNamedPipe)
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetNamedPipeHandleStateW(HANDLE hNamedPipe,
 			 LPDWORD lpState,
@@ -613,6 +643,9 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 			 LPDWORD lpState,
@@ -627,6 +660,9 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetNamedPipeInfo(HANDLE hNamedPipe,
 		 LPDWORD lpFlags,
@@ -673,6 +709,9 @@ GetNamedPipeInfo(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 PeekNamedPipe(HANDLE hNamedPipe,
 	      LPVOID lpBuffer,
@@ -754,6 +793,9 @@ PeekNamedPipe(HANDLE hNamedPipe,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 TransactNamedPipe(HANDLE hNamedPipe,
 		  LPVOID lpInBuffer,

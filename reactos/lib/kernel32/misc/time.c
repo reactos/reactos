@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.21 2003/07/09 20:19:50 hbirr Exp $
+/* $Id: time.c,v 1.22 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,6 +37,9 @@ typedef struct __DOSDATE
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FileTimeToDosDateTime(
@@ -74,6 +77,10 @@ FileTimeToDosDateTime(
    return TRUE; 
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 DosDateTimeToFileTime(
@@ -103,6 +110,10 @@ DosDateTimeToFileTime(
    return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 LONG
 STDCALL
 CompareFileTime(
@@ -123,6 +134,10 @@ CompareFileTime(
   return 0;
 }
 
+
+/*
+ * @implemented
+ */
 VOID
 STDCALL 
 GetSystemTimeAsFileTime(PFILETIME lpFileTime)
@@ -130,6 +145,10 @@ GetSystemTimeAsFileTime(PFILETIME lpFileTime)
    NtQuerySystemTime ((TIME *)lpFileTime);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL 
 STDCALL
 SystemTimeToFileTime(
@@ -158,11 +177,10 @@ SystemTimeToFileTime(
   return FALSE;
 }
 
-//   dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
-//   lpSystemTime->wDayOfWeek = 1 + GET_LARGE_INTEGER_LOW_PART(dwDayOfWeek) % 7;
 
-  
-
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FileTimeToSystemTime(
@@ -194,6 +212,9 @@ FileTimeToSystemTime(
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 FileTimeToLocalFileTime(
@@ -207,6 +228,10 @@ FileTimeToLocalFileTime(
   return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 LocalFileTimeToFileTime(
@@ -221,6 +246,9 @@ LocalFileTimeToFileTime(
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GetLocalTime(LPSYSTEMTIME lpSystemTime)
 {
@@ -233,6 +261,9 @@ GetLocalTime(LPSYSTEMTIME lpSystemTime)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GetSystemTime(LPSYSTEMTIME lpSystemTime)
 {
@@ -243,6 +274,9 @@ GetSystemTime(LPSYSTEMTIME lpSystemTime)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 {
@@ -259,6 +293,9 @@ SetLocalTime(CONST SYSTEMTIME *lpSystemTime)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 {
@@ -273,6 +310,9 @@ SetSystemTime(CONST SYSTEMTIME *lpSystemTime)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 {
@@ -299,6 +339,9 @@ GetTimeZoneInformation(LPTIME_ZONE_INFORMATION lpTimeZoneInformation)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 {
@@ -324,6 +367,9 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetCurrentTime(VOID)
 {
@@ -331,6 +377,9 @@ GetCurrentTime(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetTickCount(VOID)
 {
@@ -338,6 +387,9 @@ GetTickCount(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SystemTimeToTzSpecificLocalTime(
                                 LPTIME_ZONE_INFORMATION lpTimeZoneInformation,
@@ -371,6 +423,9 @@ SystemTimeToTzSpecificLocalTime(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 			PDWORD lpTimeIncrement,
@@ -397,6 +452,9 @@ GetSystemTimeAdjustment(PDWORD lpTimeAdjustment,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetSystemTimeAdjustment(DWORD dwTimeAdjustment,
 			WINBOOL bTimeAdjustmentDisabled)

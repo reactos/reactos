@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.5 2003/01/15 21:24:36 chorns Exp $
+/* $Id: mutex.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 	     WINBOOL bInitialOwner,
@@ -43,6 +46,9 @@ CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 	     WINBOOL bInitialOwner,
@@ -86,6 +92,9 @@ CreateMutexW(LPSECURITY_ATTRIBUTES lpMutexAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenMutexA(DWORD dwDesiredAccess,
 	   WINBOOL bInheritHandle,
@@ -136,6 +145,9 @@ OpenMutexA(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenMutexW(DWORD dwDesiredAccess,
 	   WINBOOL bInheritHandle,
@@ -179,6 +191,9 @@ OpenMutexW(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ReleaseMutex(HANDLE hMutex)
 {

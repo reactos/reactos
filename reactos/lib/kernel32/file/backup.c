@@ -1,4 +1,4 @@
-/* $Id: backup.c,v 1.4 2003/01/15 21:24:33 chorns Exp $
+/* $Id: backup.c,v 1.5 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BackupRead (
@@ -31,6 +34,9 @@ BackupRead (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BackupSeek (
@@ -47,6 +53,9 @@ BackupSeek (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 BackupWrite (
@@ -62,6 +71,5 @@ BackupWrite (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
 
 /* EOF */

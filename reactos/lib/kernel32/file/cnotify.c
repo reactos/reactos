@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.6 2003/06/07 16:16:39 chorns Exp $
+/* $Id: cnotify.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 FindCloseChangeNotification (HANDLE hChangeHandle)
 {
@@ -22,6 +25,9 @@ FindCloseChangeNotification (HANDLE hChangeHandle)
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE
 STDCALL
 FindFirstChangeNotificationA (
@@ -61,6 +67,9 @@ FindFirstChangeNotificationA (
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE
 STDCALL
 FindFirstChangeNotificationW (
@@ -129,6 +138,9 @@ FindFirstChangeNotificationW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 FindNextChangeNotification (

@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.6 2003/01/15 21:24:35 chorns Exp $
+/* $Id: profile.c,v 1.7 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -15,6 +15,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 CloseProfileUserMapping(VOID)
 {
@@ -23,6 +26,9 @@ CloseProfileUserMapping(VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetPrivateProfileIntW (
 	LPCWSTR	lpAppName,
@@ -36,6 +42,9 @@ GetPrivateProfileIntW (
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetPrivateProfileIntA (
 	LPCSTR	lpAppName,
@@ -49,6 +58,9 @@ GetPrivateProfileIntA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileSectionW (
 	LPCWSTR	lpAppName,
@@ -62,6 +74,9 @@ GetPrivateProfileSectionW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileSectionA (
 	LPCSTR	lpAppName,
@@ -75,6 +90,9 @@ GetPrivateProfileSectionA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileSectionNamesW (
 	DWORD	Unknown0,
@@ -87,6 +105,9 @@ GetPrivateProfileSectionNamesW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileSectionNamesA (
 	DWORD	Unknown0,
@@ -99,6 +120,9 @@ GetPrivateProfileSectionNamesA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileStringW (
 	LPCWSTR lpAppName,
@@ -114,6 +138,9 @@ GetPrivateProfileStringW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileStringA (
 	LPCSTR	lpAppName,
@@ -129,6 +156,9 @@ GetPrivateProfileStringA (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileStructW (
 	DWORD	Unknown0,
@@ -143,6 +173,9 @@ GetPrivateProfileStructW (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetPrivateProfileStructA (
 	DWORD	Unknown0,
@@ -156,6 +189,10 @@ GetPrivateProfileStructA (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetProfileIntW(LPCWSTR lpAppName,
 	       LPCWSTR lpKeyName,
@@ -168,6 +205,9 @@ GetProfileIntW(LPCWSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GetProfileIntA(LPCSTR lpAppName,
 	       LPCSTR lpKeyName,
@@ -180,6 +220,9 @@ GetProfileIntA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetProfileSectionW(LPCWSTR lpAppName,
 		   LPWSTR lpReturnedString,
@@ -192,6 +235,9 @@ GetProfileSectionW(LPCWSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetProfileSectionA(LPCSTR lpAppName,
 		   LPSTR lpReturnedString,
@@ -204,6 +250,9 @@ GetProfileSectionA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetProfileStringW(LPCWSTR lpAppName,
 		  LPCWSTR lpKeyName,
@@ -220,6 +269,9 @@ GetProfileStringW(LPCWSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD STDCALL
 GetProfileStringA(LPCSTR lpAppName,
 		  LPCSTR lpKeyName,
@@ -236,6 +288,9 @@ GetProfileStringA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 OpenProfileUserMapping (VOID)
 {
@@ -244,6 +299,9 @@ OpenProfileUserMapping (VOID)
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 QueryWin31IniFilesMappedToRegistry (
 	DWORD	Unknown0,
@@ -257,6 +315,9 @@ QueryWin31IniFilesMappedToRegistry (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileSectionA (
 	LPCSTR	lpAppName,
@@ -269,6 +330,9 @@ WritePrivateProfileSectionA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileSectionW (
 	LPCWSTR	lpAppName,
@@ -281,6 +345,9 @@ WritePrivateProfileSectionW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileStringA(LPCSTR lpAppName,
 			   LPCSTR lpKeyName,
@@ -292,6 +359,9 @@ WritePrivateProfileStringA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileStringW(LPCWSTR lpAppName,
 			   LPCWSTR lpKeyName,
@@ -303,6 +373,9 @@ WritePrivateProfileStringW(LPCWSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileStructA (
 	DWORD	Unknown0,
@@ -317,6 +390,9 @@ WritePrivateProfileStructA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WritePrivateProfileStructW (
 	DWORD	Unknown0,
@@ -331,6 +407,9 @@ WritePrivateProfileStructW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WriteProfileSectionA(LPCSTR lpAppName,
 		     LPCSTR lpString)
@@ -341,6 +420,9 @@ WriteProfileSectionA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WriteProfileSectionW(LPCWSTR lpAppName,
 		     LPCWSTR lpString)
@@ -351,6 +433,9 @@ WriteProfileSectionW(LPCWSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WriteProfileStringA(LPCSTR lpAppName,
 		    LPCSTR lpKeyName,
@@ -363,6 +448,9 @@ WriteProfileStringA(LPCSTR lpAppName,
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL STDCALL
 WriteProfileStringW(LPCWSTR lpAppName,
 		    LPCWSTR lpKeyName,

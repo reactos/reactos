@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.28 2003/01/15 21:24:34 chorns Exp $
+/* $Id: volume.c,v 1.29 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -77,6 +77,9 @@ InternalOpenDirW(LPCWSTR DirName,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetLogicalDriveStringsA(DWORD nBufferLength,
 			LPSTR lpBuffer)
@@ -111,6 +114,9 @@ GetLogicalDriveStringsA(DWORD nBufferLength,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetLogicalDriveStringsW(DWORD nBufferLength,
 			LPWSTR lpBuffer)
@@ -143,6 +149,9 @@ GetLogicalDriveStringsW(DWORD nBufferLength,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetLogicalDrives(VOID)
 {
@@ -150,6 +159,9 @@ GetLogicalDrives(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetDiskFreeSpaceA (
 	LPCSTR	lpRootPathName,
@@ -199,6 +211,9 @@ GetDiskFreeSpaceA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetDiskFreeSpaceW(
     LPCWSTR lpRootPathName,
@@ -251,6 +266,9 @@ GetDiskFreeSpaceW(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetDiskFreeSpaceExA (
 	LPCSTR		lpDirectoryName,
@@ -298,6 +316,9 @@ GetDiskFreeSpaceExA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetDiskFreeSpaceExW(
     LPCWSTR lpDirectoryName,
@@ -361,6 +382,9 @@ GetDiskFreeSpaceExW(
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetDriveTypeA(LPCSTR lpRootPathName)
 {
@@ -390,6 +414,10 @@ GetDriveTypeA(LPCSTR lpRootPathName)
 	return Result;
 }
 
+
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetDriveTypeW(LPCWSTR lpRootPathName)
 {
@@ -421,6 +449,9 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetVolumeInformationA(
 	LPCSTR	lpRootPathName,
@@ -529,6 +560,9 @@ GetVolumeInformationA(
 #define FS_ATTRIBUTE_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_ATTRIBUTE_INFORMATION))
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetVolumeInformationW(
     LPCWSTR lpRootPathName,
@@ -609,6 +643,9 @@ GetVolumeInformationW(
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 SetVolumeLabelA (
@@ -661,6 +698,9 @@ SetVolumeLabelA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetVolumeLabelW(LPCWSTR lpRootPathName,
 		LPCWSTR lpVolumeName)

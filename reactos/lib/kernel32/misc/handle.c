@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.11 2003/03/09 21:37:57 hbirr Exp $
+/* $Id: handle.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -29,6 +29,9 @@ DuplicateConsoleHandle (HANDLE	hConsole,
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL WINAPI GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags)
 {
    OBJECT_DATA_INFORMATION HandleInfo;
@@ -53,6 +56,9 @@ WINBOOL WINAPI GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
 				     DWORD dwMask,
 				     DWORD dwFlags)
@@ -94,6 +100,9 @@ WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL CloseHandle(HANDLE  hObject)
 /*
  * FUNCTION: Closes an open object handle
@@ -121,6 +130,9 @@ WINBOOL STDCALL CloseHandle(HANDLE  hObject)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
 				HANDLE hSourceHandle,
 				HANDLE hTargetProcessHandle,
@@ -162,10 +174,13 @@ WINBOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
    return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 UINT STDCALL SetHandleCount(UINT nCount)
 {
    return(nCount);
 }
-
 
 /* EOF */

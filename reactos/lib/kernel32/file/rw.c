@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.20 2003/01/15 21:24:34 chorns Exp $
+/* $Id: rw.c,v 1.21 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
 			  DWORD nNumberOfBytesToWrite,
@@ -83,7 +86,9 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 }
 
 
-
+/*
+ * @implemented
+ */
 WINBOOL STDCALL ReadFile(HANDLE hFile,
 			 LPVOID lpBuffer,
 			 DWORD nNumberOfBytesToRead,
@@ -159,6 +164,9 @@ VOID STDCALL ApcRoutine(PVOID ApcContext,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL 
 WriteFileEx (HANDLE				hFile,
 	     LPCVOID				lpBuffer,
@@ -203,6 +211,10 @@ WriteFileEx (HANDLE				hFile,
    return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL ReadFileEx(HANDLE hFile,
 			   LPVOID lpBuffer,
 			   DWORD nNumberOfBytesToRead,

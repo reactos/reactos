@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.16 2003/01/15 21:24:35 chorns Exp $
+/* $Id: cmdline.c,v 1.17 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -66,6 +66,9 @@ InitCommandLines (VOID)
 }
 
 
+/*
+ * @implemented
+ */
 LPSTR STDCALL GetCommandLineA(VOID)
 {
 	if (bCommandLineInitialized == FALSE)
@@ -78,6 +81,10 @@ LPSTR STDCALL GetCommandLineA(VOID)
 	return(CommandLineStringA.Buffer);
 }
 
+
+/*
+ * @implemented
+ */
 LPWSTR STDCALL GetCommandLineW (VOID)
 {
 	if (bCommandLineInitialized == FALSE)

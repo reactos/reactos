@@ -1,4 +1,4 @@
-/* $Id: sem.c,v 1.5 2003/01/15 21:24:36 chorns Exp $
+/* $Id: sem.c,v 1.6 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		 LONG lInitialCount,
@@ -45,6 +48,9 @@ CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 		 LONG lInitialCount,
@@ -97,6 +103,9 @@ CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenSemaphoreA(DWORD dwDesiredAccess,
 	       WINBOOL bInheritHandle,
@@ -147,6 +156,9 @@ OpenSemaphoreA(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenSemaphoreW(DWORD dwDesiredAccess,
 	       WINBOOL bInheritHandle,
@@ -190,6 +202,9 @@ OpenSemaphoreW(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ReleaseSemaphore(HANDLE hSemaphore,
 		 LONG lReleaseCount,

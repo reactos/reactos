@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.44 2003/06/09 19:58:21 hbirr Exp $
+/* $Id: file.c,v 1.45 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,6 +25,9 @@ WINBOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 SetFileApisToOEM(VOID)
 {
@@ -32,6 +35,9 @@ SetFileApisToOEM(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 SetFileApisToANSI(VOID)
 {
@@ -39,6 +45,9 @@ SetFileApisToANSI(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 AreFileApisANSI(VOID)
 {
@@ -46,6 +55,9 @@ AreFileApisANSI(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 HFILE STDCALL
 OpenFile(LPCSTR lpFileName,
 	 LPOFSTRUCT lpReOpenBuff,
@@ -148,6 +160,9 @@ OpenFile(LPCSTR lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 FlushFileBuffers(HANDLE hFile)
 {
@@ -170,6 +185,9 @@ FlushFileBuffers(HANDLE hFile)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 SetFilePointer(HANDLE hFile,
 	       LONG lDistanceToMove,
@@ -242,6 +260,9 @@ SetFilePointer(HANDLE hFile,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetFileType(HANDLE hFile)
 {
@@ -314,6 +335,9 @@ GetFileType(HANDLE hFile)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetFileSize(HANDLE hFile,
 	    LPDWORD lpFileSizeHigh)
@@ -346,6 +370,9 @@ GetFileSize(HANDLE hFile,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetCompressedFileSizeA(LPCSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
@@ -376,6 +403,9 @@ GetCompressedFileSizeA(LPCSTR lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetCompressedFileSizeW(LPCWSTR lpFileName,
 		       LPDWORD lpFileSizeHigh)
@@ -413,6 +443,9 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetFileInformationByHandle(HANDLE hFile,
 			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
@@ -491,6 +524,10 @@ GetFileInformationByHandle(HANDLE hFile,
    return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GetFileAttributesExW(LPCWSTR lpFileName, 
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
@@ -575,6 +612,9 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GetFileAttributesExA(LPCSTR lpFileName,
 		     GET_FILEEX_INFO_LEVELS fInfoLevelId, 
@@ -603,6 +643,10 @@ GetFileAttributesExA(LPCSTR lpFileName,
 	return Result;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetFileAttributesA(LPCSTR lpFileName)
 {
@@ -631,6 +675,10 @@ GetFileAttributesA(LPCSTR lpFileName)
 	return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetFileAttributesW(LPCWSTR lpFileName)
 {
@@ -674,6 +722,9 @@ SetFileAttributesA(LPCSTR lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetFileAttributesW(LPCWSTR lpFileName,
 		   DWORD dwFileAttributes)
@@ -752,6 +803,9 @@ SetFileAttributesW(LPCWSTR lpFileName,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetTempFileNameA(LPCSTR lpPathName,
 		 LPCSTR lpPrefixString,
@@ -797,6 +851,9 @@ GetTempFileNameA(LPCSTR lpPathName,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GetTempFileNameW(LPCWSTR lpPathName,
 		 LPCWSTR lpPrefixString,
@@ -842,6 +899,9 @@ GetTempFileNameW(LPCWSTR lpPathName,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetFileTime(HANDLE hFile,
 	    LPFILETIME lpCreationTime,
@@ -874,6 +934,9 @@ GetFileTime(HANDLE hFile,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetFileTime(HANDLE hFile,
 	    CONST FILETIME *lpCreationTime,
@@ -920,8 +983,10 @@ SetFileTime(HANDLE hFile,
 
 
 /*
-The caller must have opened the file with the DesiredAccess FILE_WRITE_DATA flag set.
-*/
+ * The caller must have opened the file with the DesiredAccess FILE_WRITE_DATA flag set.
+ *
+ * @implemented
+ */
 WINBOOL STDCALL
 SetEndOfFile(HANDLE hFile)
 {

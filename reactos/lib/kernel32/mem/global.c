@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.11 2003/01/15 21:24:34 chorns Exp $
+/* $Id: global.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -31,6 +31,9 @@ typedef struct __GLOBAL_LOCAL_HANDLE
 
 /* FUNCTIONS ***************************************************************/
 
+/*
+ * @implemented
+ */
 HGLOBAL STDCALL
 GlobalAlloc(UINT uFlags,
 	    DWORD dwBytes)
@@ -76,6 +79,9 @@ GlobalAlloc(UINT uFlags,
 }
 
 
+/*
+ * @implemented
+ */
 UINT STDCALL
 GlobalCompact(DWORD dwMinFree)
 {
@@ -83,6 +89,9 @@ GlobalCompact(DWORD dwMinFree)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GlobalFix(HGLOBAL hMem)
 {
@@ -91,6 +100,9 @@ GlobalFix(HGLOBAL hMem)
 }
 
 
+/*
+ * @unimplemented
+ */
 UINT STDCALL
 GlobalFlags(HGLOBAL hMem)
 {
@@ -130,6 +142,9 @@ GlobalFlags(HGLOBAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 HGLOBAL STDCALL
 GlobalFree(HGLOBAL hMem)
 {
@@ -165,6 +180,9 @@ GlobalFree(HGLOBAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 HGLOBAL STDCALL
 GlobalHandle(LPCVOID pMem)
 {
@@ -181,6 +199,9 @@ GlobalHandle(LPCVOID pMem)
 }
 
 
+/*
+ * @unimplemented
+ */
 LPVOID STDCALL
 GlobalLock(HGLOBAL hMem)
 {
@@ -216,6 +237,9 @@ GlobalLock(HGLOBAL hMem)
 }
 
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
@@ -382,6 +406,9 @@ GlobalSize(HGLOBAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 GlobalUnfix(HGLOBAL hMem)
 {
@@ -390,6 +417,9 @@ GlobalUnfix(HGLOBAL hMem)
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 GlobalUnlock(HGLOBAL hMem)
 {
@@ -426,6 +456,9 @@ GlobalUnlock(HGLOBAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GlobalUnWire(HGLOBAL hMem)
 {
@@ -433,6 +466,9 @@ GlobalUnWire(HGLOBAL hMem)
 }
 
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 GlobalWire(HGLOBAL hMem)
 {

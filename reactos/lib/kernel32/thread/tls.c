@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.11 2003/03/17 22:39:09 gdalsnes Exp $
+/* $Id: tls.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,6 +20,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 DWORD STDCALL 
 TlsAlloc(VOID)
 {
@@ -40,6 +43,10 @@ TlsAlloc(VOID)
    return(Index);
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL 
 TlsFree(DWORD dwTlsIndex)
 {
@@ -69,6 +76,10 @@ TlsFree(DWORD dwTlsIndex)
    return(TRUE);
 }
 
+
+/*
+ * @implemented
+ */
 LPVOID STDCALL 
 TlsGetValue(DWORD dwTlsIndex)
 {
@@ -88,6 +99,10 @@ TlsGetValue(DWORD dwTlsIndex)
    return Value;
 }
 
+
+/*
+ * @implemented
+ */
 WINBOOL STDCALL 
 TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {

@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.14 2003/04/10 19:12:14 gvg Exp $
+/* $Id: res.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -13,6 +13,9 @@
 #include <kernel32/kernel32.h>
 
 
+/*
+ * @implemented
+ */
 HRSRC
 STDCALL
 FindResourceA (
@@ -24,6 +27,10 @@ FindResourceA (
 	return FindResourceExA (hModule, lpType, lpName, 0);
 }
 
+
+/*
+ * @implemented
+ */
 HRSRC
 STDCALL
 FindResourceExA(
@@ -80,6 +87,10 @@ FindResourceExA(
 	return Res;
 }
 
+
+/*
+ * @implemented
+ */
 HRSRC
 STDCALL
 FindResourceW (
@@ -91,6 +102,10 @@ FindResourceW (
 	return FindResourceExW (hModule, lpType, lpName, 0);
 }
 
+
+/*
+ * @implemented
+ */
 HRSRC
 STDCALL
 FindResourceExW (
@@ -131,6 +146,10 @@ FindResourceExW (
 	return ResourceDataEntry;
 }
 
+
+/*
+ * @implemented
+ */
 HGLOBAL
 STDCALL
 LoadResource (
@@ -156,6 +175,10 @@ LoadResource (
 	return Data;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 SizeofResource (
@@ -166,6 +189,10 @@ SizeofResource (
 	return ((PIMAGE_RESOURCE_DATA_ENTRY)hResInfo)->Size;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 FreeResource (
@@ -175,6 +202,10 @@ FreeResource (
 	return TRUE;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPVOID
 STDCALL
 LockResource (
@@ -184,6 +215,10 @@ LockResource (
 	return hResData;
 }
 
+
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 BeginUpdateResourceW (
@@ -196,6 +231,9 @@ BeginUpdateResourceW (
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 BeginUpdateResourceA (
@@ -207,6 +245,10 @@ BeginUpdateResourceA (
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EndUpdateResourceW (
@@ -219,6 +261,9 @@ EndUpdateResourceW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EndUpdateResourceA (
@@ -232,6 +277,10 @@ EndUpdateResourceA (
 			);
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumResourceLanguagesW (
@@ -262,6 +311,9 @@ EnumResourceLanguagesA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumResourceNamesW (
@@ -276,6 +328,9 @@ EnumResourceNamesW (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumResourceNamesA (
@@ -290,6 +345,9 @@ EnumResourceNamesA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumResourceTypesW (
@@ -303,7 +361,9 @@ EnumResourceTypesW (
 }
 
 
-
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 EnumResourceTypesA (
@@ -316,6 +376,10 @@ EnumResourceTypesA (
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UpdateResourceA (
@@ -332,6 +396,9 @@ UpdateResourceA (
 }
 
 
+/*
+ * @unimplemented
+ */
 WINBOOL
 STDCALL
 UpdateResourceW (
@@ -346,6 +413,5 @@ UpdateResourceW (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
 
 /* EOF */

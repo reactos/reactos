@@ -1,4 +1,4 @@
-/* $Id: tape.c,v 1.4 2003/01/15 21:24:34 chorns Exp $
+/* $Id: tape.c,v 1.5 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,6 +19,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 CreateTapePartition (
@@ -32,6 +35,10 @@ CreateTapePartition (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 EraseTape (
@@ -44,6 +51,9 @@ EraseTape (
 	return 0;
 }
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetTapeParameters (
@@ -58,6 +68,9 @@ GetTapeParameters (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetTapeStatus (
@@ -68,6 +81,10 @@ GetTapeStatus (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 PrepareTape (
@@ -80,6 +97,10 @@ PrepareTape (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetTapeParameters (
@@ -93,6 +114,9 @@ SetTapeParameters (
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 SetTapePosition (
@@ -108,6 +132,10 @@ SetTapePosition (
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 WriteTapemark (
@@ -121,6 +149,10 @@ WriteTapemark (
 	return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 STDCALL
 GetTapePosition (
@@ -134,6 +166,5 @@ GetTapePosition (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
 
 /* EOF */

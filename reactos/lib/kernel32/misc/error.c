@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.18 2003/04/26 12:50:56 gvg Exp $
+/* $Id: error.c,v 1.19 2003/07/10 18:50:51 chorns Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -10,6 +10,9 @@
 #include <kernel32/kernel32.h>
 
 
+/*
+ * @implemented
+ */
 VOID
 STDCALL
 SetLastError (
@@ -19,6 +22,10 @@ SetLastError (
 	NtCurrentTeb ()->LastErrorValue = (ULONG) dwErrorCode;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetLastError (VOID)
@@ -27,6 +34,9 @@ GetLastError (VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 Beep (DWORD dwFreq, DWORD dwDuration)
@@ -62,6 +72,5 @@ Beep (DWORD dwFreq, DWORD dwDuration)
 
     return TRUE;
 }
-
 
 /* EOF */

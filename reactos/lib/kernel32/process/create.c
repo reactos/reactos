@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67 2003/04/29 02:16:59 hyperion Exp $
+/* $Id: create.c,v 1.68 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -93,6 +93,10 @@ VOID STDCALL RtlRosR32AttribsToNativeAttribsNamed
  }
 }
 
+
+/*
+ * @implemented
+ */
 BOOL STDCALL CreateProcessA
 (
  LPCSTR lpApplicationName,
@@ -653,6 +657,9 @@ static NTSTATUS KlInitPeb
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL 
 CreateProcessW
 (

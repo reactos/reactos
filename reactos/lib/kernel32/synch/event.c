@@ -1,4 +1,4 @@
-/* $Id: event.c,v 1.13 2003/01/15 21:24:36 chorns Exp $
+/* $Id: event.c,v 1.14 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,
 	     WINBOOL bManualReset,
@@ -53,6 +56,9 @@ CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
 	     WINBOOL bManualReset,
@@ -94,6 +100,9 @@ CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenEventA(DWORD dwDesiredAccess,
 	   WINBOOL bInheritHandle,
@@ -128,6 +137,9 @@ OpenEventA(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 OpenEventW(DWORD dwDesiredAccess,
 	   WINBOOL bInheritHandle,
@@ -170,6 +182,9 @@ OpenEventW(DWORD dwDesiredAccess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 PulseEvent(HANDLE hEvent)
 {
@@ -188,6 +203,9 @@ PulseEvent(HANDLE hEvent)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 ResetEvent(HANDLE hEvent)
 {
@@ -206,6 +224,9 @@ ResetEvent(HANDLE hEvent)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetEvent(HANDLE hEvent)
 {

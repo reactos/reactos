@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.9 2003/01/15 21:24:34 chorns Exp $
+/* $Id: move.c,v 1.10 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileA (
@@ -36,6 +39,9 @@ MoveFileA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileExA (
@@ -52,6 +58,9 @@ MoveFileExA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileWithProgressA (
@@ -111,6 +120,9 @@ MoveFileWithProgressA (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileW (
@@ -124,6 +136,9 @@ MoveFileW (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileExW (
@@ -267,6 +282,9 @@ AdjustFileAttributes (
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL
 STDCALL
 MoveFileWithProgressW (

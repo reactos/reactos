@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: computername.c,v 1.1 2003/06/08 20:59:30 ekohl Exp $
+/* $Id: computername.c,v 1.2 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GetComputerNameA (LPSTR lpBuffer,
 		  LPDWORD lpnSize)
@@ -76,6 +79,9 @@ GetComputerNameA (LPSTR lpBuffer,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 GetComputerNameW (LPWSTR lpBuffer,
 		  LPDWORD lpnSize)
@@ -153,6 +159,9 @@ GetComputerNameW (LPWSTR lpBuffer,
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetComputerNameA (LPCSTR lpComputerName)
 {
@@ -170,6 +179,9 @@ SetComputerNameA (LPCSTR lpComputerName)
 }
 
 
+/*
+ * @implemented
+ */
 static BOOL
 IsValidComputerName (LPCWSTR lpComputerName)
 {
@@ -211,6 +223,9 @@ IsValidComputerName (LPCWSTR lpComputerName)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetComputerNameW (LPCWSTR lpComputerName)
 {

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.10 2003/01/15 21:24:34 chorns Exp $
+/* $Id: virtual.c,v 1.11 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -13,6 +13,9 @@
 
 /* FUNCTIONS *****************************************************************/
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 VirtualAllocEx(HANDLE hProcess,
 	       LPVOID lpAddress,
@@ -37,6 +40,9 @@ VirtualAllocEx(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 LPVOID STDCALL
 VirtualAlloc(LPVOID lpAddress,
 	     DWORD dwSize,
@@ -51,6 +57,9 @@ VirtualAlloc(LPVOID lpAddress,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualFreeEx(HANDLE hProcess,
 	      LPVOID lpAddress,
@@ -72,6 +81,9 @@ VirtualFreeEx(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualFree(LPVOID lpAddress,
 	    DWORD dwSize,
@@ -84,6 +96,9 @@ VirtualFree(LPVOID lpAddress,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualProtect(LPVOID lpAddress,
 	       DWORD dwSize,
@@ -98,6 +113,9 @@ VirtualProtect(LPVOID lpAddress,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualProtectEx(HANDLE hProcess,
 		 LPVOID lpAddress,
@@ -121,6 +139,9 @@ VirtualProtectEx(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualLock(LPVOID lpAddress,
 	    DWORD dwSize)
@@ -141,6 +162,9 @@ VirtualLock(LPVOID lpAddress,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 VirtualQuery(LPCVOID lpAddress,
 	     PMEMORY_BASIC_INFORMATION lpBuffer,
@@ -153,6 +177,9 @@ VirtualQuery(LPCVOID lpAddress,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 VirtualQueryEx(HANDLE hProcess,
 	       LPCVOID lpAddress,
@@ -177,6 +204,9 @@ VirtualQueryEx(HANDLE hProcess,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 VirtualUnlock(LPVOID lpAddress,
 	      DWORD dwSize)

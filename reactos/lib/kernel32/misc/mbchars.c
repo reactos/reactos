@@ -1,4 +1,4 @@
-/* $Id: mbchars.c,v 1.2 2002/12/12 04:53:23 robd Exp $
+/* $Id: mbchars.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
  *
  */
 #include <windows.h>
@@ -63,6 +63,8 @@ IsInstalledCP(UINT CodePage)
  *  NEVER multi-byte (that is each input character is
  *  8-bit ASCII) and is ALWAYS NULL terminated.
  *  FIXME-FIXME-FIXME-FIXME
+ *
+ * @implemented
  */
 INT
 STDCALL
@@ -209,8 +211,9 @@ MultiByteToWideChar(
  *  A raw converter for now. It just cuts off the upper 9 Bit.
  *  So the MBCS-string does not contain any LeadCharacters
  *  FIXME - FIXME - FIXME - FIXME
+ *
+ * @implemented
  */
-
 int
 STDCALL
 WideCharToMultiByte(

@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.41 2003/06/09 22:39:48 hyperion Exp $
+/* $Id: thread.c,v 1.42 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,6 +56,9 @@ __declspec(noreturn) void STDCALL ThreadStartup
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL CreateThread
 (
  LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -79,6 +82,9 @@ HANDLE STDCALL CreateThread
 }
 
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL CreateRemoteThread
 (
  HANDLE hProcess,
@@ -240,6 +246,10 @@ HANDLE STDCALL CreateRemoteThread
  return hThread;
 }
 
+
+/*
+ * @implemented
+ */
 PTEB
 GetTeb(VOID)
 {
@@ -247,6 +257,9 @@ GetTeb(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SwitchToThread(VOID)
 {
@@ -256,6 +269,9 @@ SwitchToThread(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 GetCurrentThreadId(VOID)
 {
@@ -263,6 +279,9 @@ GetCurrentThreadId(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 ExitThread(DWORD uExitCode)
 {
@@ -296,6 +315,9 @@ ExitThread(DWORD uExitCode)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetThreadTimes(HANDLE hThread,
 	       LPFILETIME lpCreationTime,
@@ -327,6 +349,9 @@ GetThreadTimes(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetThreadContext(HANDLE hThread,
 		 LPCONTEXT lpContext)
@@ -345,6 +370,9 @@ GetThreadContext(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetThreadContext(HANDLE hThread,
 		 CONST CONTEXT *lpContext)
@@ -363,6 +391,9 @@ SetThreadContext(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetExitCodeThread(HANDLE hThread,
 		  LPDWORD lpExitCode)
@@ -388,6 +419,9 @@ GetExitCodeThread(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 ResumeThread(HANDLE hThread)
 {
@@ -406,6 +440,9 @@ ResumeThread(HANDLE hThread)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 TerminateThread(HANDLE hThread,
 		DWORD dwExitCode)
@@ -430,6 +467,9 @@ TerminateThread(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 SuspendThread(HANDLE hThread)
 {
@@ -448,6 +488,9 @@ SuspendThread(HANDLE hThread)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 SetThreadAffinityMask(HANDLE hThread,
 		      DWORD dwThreadAffinityMask)
@@ -481,6 +524,9 @@ SetThreadAffinityMask(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetThreadPriority(HANDLE hThread,
 		  int nPriority)
@@ -503,6 +549,9 @@ SetThreadPriority(HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 int STDCALL
 GetThreadPriority(HANDLE hThread)
 {
@@ -525,6 +574,9 @@ GetThreadPriority(HANDLE hThread)
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetThreadPriorityBoost(IN HANDLE hThread,
 		       OUT PBOOL pDisablePriorityBoost)
@@ -550,6 +602,9 @@ GetThreadPriorityBoost(IN HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetThreadPriorityBoost(IN HANDLE hThread,
 		       IN WINBOOL bDisablePriorityBoost)
@@ -573,6 +628,9 @@ SetThreadPriorityBoost(IN HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 GetThreadSelectorEntry(IN HANDLE hThread,
 		       IN DWORD dwSelector,
@@ -583,6 +641,9 @@ GetThreadSelectorEntry(IN HANDLE hThread,
 }
 
 
+/*
+ * @implemented
+ */
 WINBOOL STDCALL
 SetThreadIdealProcessor(HANDLE hThread,
 			DWORD dwIdealProcessor)

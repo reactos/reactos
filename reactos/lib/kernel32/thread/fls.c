@@ -1,4 +1,4 @@
-/* $Id: fls.c,v 1.2 2003/07/06 23:04:19 hyperion Exp $
+/* $Id: fls.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
@@ -15,6 +15,9 @@
 
 #include <kernel32/kernel32.h>
 
+/*
+ * @unimplemented
+ */
 DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
 {
  (void)lpCallback;
@@ -24,6 +27,10 @@ DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION lpCallback)
  return FLS_OUT_OF_INDEXES;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL WINAPI FlsFree(DWORD dwFlsIndex)
 {
  (void)dwFlsIndex;
@@ -33,6 +40,10 @@ BOOL WINAPI FlsFree(DWORD dwFlsIndex)
  return FALSE;
 }
 
+
+/*
+ * @implemented
+ */
 PVOID WINAPI FlsGetValue(DWORD dwFlsIndex)
 {
  PVOID * ppFlsSlots;
@@ -54,6 +65,10 @@ l_InvalidParam:
  return NULL;
 }
 
+
+/*
+ * @implemented
+ */
 BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 {
  PVOID * ppFlsSlots;

@@ -14,6 +14,8 @@
  * Copyright 1997 Onno Hovers
  */
 
+#include <k32.h>
+
 
 /************************************************************************
 *           InterlockedIncrement			                *
@@ -26,10 +28,10 @@
 * The returned number need not be equal to the result!!!!		*
 * note:									*
 *									*
+*
+* @implemented
+*
 ************************************************************************/
-
-#include <k32.h>
-
 LONG 
 STDCALL 
 InterlockedIncrement(PLONG Addend)
@@ -59,8 +61,11 @@ InterlockedIncrement(PLONG Addend)
 *  -  a positive number if the result > 0				*
 *									*
 * The returned number need not be equal to the result!!!!		*
+*
+*
+* @implemented
+*
 ************************************************************************/
-
 LONG 
 STDCALL
 InterlockedDecrement(LPLONG lpAddend)
@@ -90,8 +95,9 @@ InterlockedDecrement(LPLONG lpAddend)
  *
  * RETURNS
  *	Prior value of value pointed to by Target
+ *
+ * @implemented
  */
- 
 LONG 
 STDCALL 
 InterlockedExchange(LPLONG target, LONG value )
@@ -114,6 +120,8 @@ InterlockedExchange(LPLONG target, LONG value )
  *
  * RETURNS
  *	Prior value of value pointed to by Destination
+ *
+ * @implemented
  */
 PVOID 
 STDCALL 
@@ -141,6 +149,8 @@ InterlockedCompareExchange(
  *
  * RETURNS
  *	Prior value of value pointed to by Addend
+ *
+ * @implemented
  */
 LONG 
 STDCALL 
@@ -158,5 +168,4 @@ InterlockedExchangeAdd(
                   :"r" (Addend), "0" (Increment)
                   :"memory" );
 	return ret;
-
 }
