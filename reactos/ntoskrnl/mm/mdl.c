@@ -862,8 +862,9 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       }
       if (AccessMode == UserMode)
       {
-         /* FIXME: Raise an exception */
-         return NULL;
+         /* Throw exception */
+         ExRaiseStatus(STATUS_ACCESS_VIOLATION);
+         ASSERT(0);
       }
       else /* AccessMode == KernelMode */
       {
@@ -888,6 +889,8 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       }
       Mdl->MappedSystemVa = (char*)Base + Mdl->ByteOffset;
    }
+   else
+      DPRINT1("UserMode mapping - returning 0x%x\n", (ULONG)Base + Mdl->ByteOffset);
 
    return((char*)Base + Mdl->ByteOffset);
 }
