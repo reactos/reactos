@@ -29,3 +29,4 @@ NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
 
 VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
                               PIRP Irp);
+

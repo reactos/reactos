@@ -71,12 +71,15 @@ typedef struct _DRIVE_INFO
   DISK_GEOMETRY            DiskGeometry;
   UCHAR                    BytesPerSectorCode;
   WCHAR                    SymLinkBuffer[MAX_DEVICE_NAME];
+  WCHAR                    ArcPathBuffer[MAX_ARC_PATH_LEN];
   ULONG                    DiskChangeCount;
+  BOOLEAN                  Initialized;
 } DRIVE_INFO, *PDRIVE_INFO;
 
 typedef struct _CONTROLLER_INFO
 {
   BOOLEAN          Populated;
+  BOOLEAN          Initialized;
   ULONG            ControllerNumber;
   INTERFACE_TYPE   InterfaceType;
   ULONG            BusNumber;
@@ -111,6 +114,14 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
 VOID NTAPI SignalMediaChanged(PDEVICE_OBJECT DeviceObject,
                               PIRP Irp);
 
+VOID NTAPI WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo);
+
+NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo);
+
+VOID NTAPI StartMotor(PDRIVE_INFO DriveInfo);
+
+VOID NTAPI StopMotor(PCONTROLLER_INFO ControllerInfo);
+
 /*
  * MEDIA TYPES
  *
@@ -132,11 +143,4 @@ VOID NTAPI SignalMediaChanged(PDEVICE_OBJECT DeviceObject,
 #define GEOMETRY_144_TRACKSPERCYLINDER 2
 #define GEOMETRY_144_SECTORSPERTRACK 18
 #define GEOMETRY_144_BYTESPERSECTOR 512
-
-VOID NTAPI WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo);
-
-NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo);
-
-VOID NTAPI StartMotor(PDRIVE_INFO DriveInfo);
-VOID NTAPI StopMotor(PCONTROLLER_INFO ControllerInfo);
 

@@ -41,7 +41,6 @@
  *       thread.  
  *     - Some information taken from Intel 82077AA data sheet (order #290166-007)
  *
- * TODO: Fix all of the stupid STATUS_UNSUCCESSFUL return codes
  * TODO: ATM the constants defined in hardware.h *might* be shifted to line up
  *       with the bit position in the register, or they *might not*.  This should
  *       all be converted to standardize on absolute values or shifts.
@@ -81,21 +80,11 @@ static BOOLEAN NTAPI ReadyForWrite(PCONTROLLER_INFO ControllerInfo)
 {
   UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
 	
-  PAGED_CODE();
-
   if((Status & MSR_IO_DIRECTION)) /* 0 for out */
-    {
-      //KdPrint(("floppy: ReadyForWrite returning false due to incorrect FIFO direction; Status = 0x%x\n", Status));
-      //HwDumpRegisters(ControllerInfo);
       return FALSE;
-    }
 
   if(!(Status & MSR_DATA_REG_READY_FOR_IO))
-    {
-      //KdPrint(("floppy: ReadyForWrite returning false due to MSR Not ready for I/O; Status = 0x%x\n", Status));
-      //HwDumpRegisters(ControllerInfo);
       return FALSE;
-    }
 
   return TRUE;
 }
@@ -116,21 +105,11 @@ static BOOLEAN NTAPI ReadyForRead(PCONTROLLER_INFO ControllerInfo)
 {
   UCHAR Status = READ_PORT_UCHAR(ControllerInfo->BaseAddress + MAIN_STATUS_REGISTER);
 	
-  PAGED_CODE();
-
   if(!(Status & MSR_IO_DIRECTION)) /* Read = 1 */
-    {
-//      KdPrint(("floppy: ReadyForRead returning FALSE due to incorrect FIFO direction; Status 0x%x\n", Status));
-//      HwDumpRegisters(ControllerInfo);
       return FALSE;
-    }
 
   if(!(Status & MSR_DATA_REG_READY_FOR_IO))
-    {
-//      KdPrint(("floppy: ReadyForRead returning FALSE due to MSR Not ready for I/O\n; Status 0x%x", Status));
-//      HwDumpRegisters(ControllerInfo);
       return FALSE;
-    }
 
   return TRUE;
 }
@@ -157,13 +136,12 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
  *       maximum.
  *     - This function is necessary because sometimes the FIFO reacts slowly
  *       and isn't yet ready to read or write the next byte
+ * FIXME: time interval here and in Get_Byte
  */
 {
   LARGE_INTEGER StartingTickCount;
   LARGE_INTEGER CurrentTickCount;
   PUCHAR Address;
-
-  //KdPrint(("floppy: Send_Byte called to write 0x%x at offset 0x%x\n", Byte, Offset));
 
   PAGED_CODE();
 
@@ -192,8 +170,6 @@ static NTSTATUS NTAPI Send_Byte(PCONTROLLER_INFO ControllerInfo,
 	  KeQueryTickCount(&CurrentTickCount);
 	  ElapsedTicks = CurrentTickCount.QuadPart - StartingTickCount.QuadPart;
 	  TimeUnits = ElapsedTicks * TimeIncrement;
-
-	  //KdPrint(("floppy: Send_Byte: failed to write; elapsed time %d\n", TimeUnits));
 
 	  if(TimeUnits > 25000000)
 	    break;
@@ -263,8 +239,6 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
 	  ElapsedTicks = CurrentTickCount.QuadPart - StartingTickCount.QuadPart;
 	  TimeUnits = ElapsedTicks * TimeIncrement;
 
-	  //KdPrint(("floppy: Get_Byte: failed to read; elapsed time %d\n", TimeUnits));
-
 	  if(TimeUnits > 25000000)
 	    break;
 
@@ -272,8 +246,6 @@ static NTSTATUS NTAPI Get_Byte(PCONTROLLER_INFO ControllerInfo,
 	}
 			
       *Byte = READ_PORT_UCHAR(Address);
-
-      //KdPrint(("floppy: Get_Byte read 0x%x from offset 0x%x\n", *Byte, Offset));
 
       return STATUS_SUCCESS;
     }
@@ -334,13 +306,12 @@ NTSTATUS NTAPI HwTurnOnMotor(PDRIVE_INFO DriveInfo)
  *     STATUS_UNSUCCESSFUL otherwise
  * NOTES:
  *     - Doesn't interrupt
+ *     - Currently cannot fail
  */
 {
   PCONTROLLER_INFO ControllerInfo = DriveInfo->ControllerInfo;
   UCHAR Unit = DriveInfo->UnitNumber;
   UCHAR Buffer;
-
-  //KdPrint(("floppy: HwTurnOnMotor called; setting unit 0x%x to data rate 0x%x\n", Unit, DataRate));
 
   PAGED_CODE();
 
@@ -435,8 +406,6 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
 
   PAGED_CODE();
 
-  //KdPrint(("floppy: HwReadWriteData called\n"));
-
   /* Shouldn't be using DataLength in this driver */
   ASSERT(DataLength == 0xff);
 
@@ -469,7 +438,6 @@ NTSTATUS NTAPI HwReadWriteData(PCONTROLLER_INFO ControllerInfo,
 	  }
     }
 
-  //KdPrint(("floppy: HwReadWriteData: returning STATUS_SUCCESS\n"));
   return STATUS_SUCCESS;
 }
 
@@ -487,15 +455,13 @@ NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo)
  *       whole thing down to a single SUCCESS or FAILURE result
  *     - Called post-interrupt; does not interrupt
  * TODO 
- *     - handle much more status
+ *     - perhaps handle more status
  */
 {
   UCHAR Buffer[2];
   int i;
 
   PAGED_CODE();
-
-  //KdPrint(("floppy: HwRecalibrateResult called\n"));
 
   if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
@@ -552,14 +518,12 @@ NTSTATUS NTAPI HwReadWriteResult(PCONTROLLER_INFO ControllerInfo)
  *     - This function tests the error conditions itself, and boils the
  *       whole thing down to a single SUCCESS or FAILURE result
  *     - Called post-interrupt; does not interrupt
- * TODO 
- *     - handle much more status
+ * TODO:
+ *     - perhaps handle more status
  */
 {
   UCHAR Buffer[7];
   int i;
-
-  //KdPrint(("floppy: HwReadWriteResult called\n"));
 
   PAGED_CODE();
 
@@ -631,8 +595,6 @@ NTSTATUS NTAPI HwSenseInterruptStatus(PCONTROLLER_INFO ControllerInfo)
   int i;
 
   PAGED_CODE();
-
-  //KdPrint(("floppy: HwSenseInterruptStatus called\n"));
 
   if(Send_Byte(ControllerInfo, COMMAND_SENSE_INTERRUPT_STATUS) != STATUS_SUCCESS)
     {
@@ -885,9 +847,8 @@ NTSTATUS NTAPI HwDiskChanged(PDRIVE_INFO DriveInfo,
     {
       if(!(Buffer & DIR_DISKETTE_CHANGE))
 	{
-	  /* FIXME FIXME FIXME: This is wrong */
 	  KdPrint(("floppy: HdDiskChanged - Model30 - returning TRUE\n"));
-	  *DiskChanged = FALSE;
+	  *DiskChanged = TRUE;
 	}
       else
 	{
@@ -957,7 +918,7 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
  *       whole thing down to a single SUCCESS or FAILURE result
  *     - Called post-interrupt; does not interrupt
  * TODO 
- *     - handle much more status
+ *     - perhaps handle more status
  */
 {
   UCHAR Buffer[7] = {0,0,0,0,0,0,0};

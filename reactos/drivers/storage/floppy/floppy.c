@@ -23,32 +23,21 @@
  * REVISIONS:
  *                  15-Feb-2004 vizzini - Created
  * NOTES:
+ *  - This driver is only designed to work with ISA-bus floppy controllers.  This
+ *    won't work on PCI-based controllers or on anything else with level-sensitive
+ *    interrupts without modification.  I don't think these controllers exist.
  *
  * ---- General to-do items ----
- * TODO: Clean up properly on failed init
- * TODO: Add arc-path support so we can boot from the floppy
- * TODO: Fix all these stupid STATUS_UNSUCCESSFUL return values
- * TODO: Think about IO_NO_INCREMENT
- * TODO: Figure out why CreateClose isn't called any more on XP.  Seems to correspond 
- *       with the driver not being unloadable.  Does it have to do with cleanup?
- * TODO: Consider using the built-in device object pointer in the stack location 
- *       rather than the context area
+ * TODO: Figure out why CreateClose isn't called any more.  Seems to correspond 
+ *       with the driver not being unloadable.
  * TODO: Think about StopDpcQueued -- could be a race; too tired atm to tell
+ * TODO: Clean up drive start/stop responsibilities (currently a mess...)
  *
  * ---- Support for proper media detection ----
  * TODO: Handle MFM flag
  * TODO: Un-hardcode the data rate from various places
  * TODO: Proper media detection (right now we're hardcoded to 1.44)
  * TODO: Media detection based on sector 1
- *
- * ---- Support for normal floppy hardware ----
- * TODO: Support the three primary types of controller
- * TODO: Figure out thinkpad compatibility (I've heard rumors of weirdness with them)
- *
- * ---- Support for non-ISA and/or non-slave-dma controllers, if they exist ----
- * TODO: Find controllers on non-ISA buses
- * TODO: Think about making the interrupt shareable
- * TODO: Support bus-master controllers.  PCI will break ATM.
  */
 
 #include <ntddk.h>
@@ -101,7 +90,7 @@ static VOID NTAPI MotorStopDpcFunc(PKDPC UnusedDpc,
 
   HwTurnOffMotor(ControllerInfo);
   ControllerInfo->StopDpcQueued = FALSE;
-  KeSetEvent(&ControllerInfo->MotorStoppedEvent, IO_NO_INCREMENT, FALSE);
+  KeSetEvent(&ControllerInfo->MotorStoppedEvent, EVENT_INCREMENT, FALSE);
 }
 
 
@@ -202,7 +191,7 @@ static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
  *     - No state to track, so this routine is easy
  *     - Can be called <= DISPATCH_LEVEL
  *
- * TODO: Figure out why this isn't getting called any more, and remove the ASSERT once that happens
+ * TODO: Figure out why this isn't getting called 
  */
 {
   UNREFERENCED_PARAMETER(DeviceObject);
@@ -212,7 +201,7 @@ static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = FILE_OPENED;
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 
   return STATUS_SUCCESS;
 }
@@ -225,7 +214,7 @@ static NTSTATUS NTAPI Recalibrate(PDRIVE_INFO DriveInfo)
  *     DriveInfo: Pointer to the driveinfo struct associated with the targeted drive
  * RETURNS:
  *     STATUS_SUCCESS on successful starting of the process
- *     STATUS_UNSUCCESSFUL if it fails
+ *     STATUS_IO_DEVICE_ERROR if it fails
  * NOTES:
  *     - Sometimes you have to do two recalibrations, particularly if the disk has <80 tracks.
  *     - PAGED_CODE because we wait
@@ -246,13 +235,17 @@ static NTSTATUS NTAPI Recalibrate(PDRIVE_INFO DriveInfo)
   if(HwSetDataRate(DriveInfo->ControllerInfo, 0) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: Recalibrate: HwSetDataRate failed\n"));
-      return STATUS_UNSUCCESSFUL;
+      StopMotor(DriveInfo->ControllerInfo);
+      return STATUS_IO_DEVICE_ERROR;
     }
 
   /* clear the event just in case the last call forgot */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
-  /* sometimes you have to do this twice */
+  /* sometimes you have to do this twice; we'll just do it twice all the time since
+   * we don't know if the people calling this Recalibrate routine expect a disk to
+   * even be in the drive, and if so, if that disk is formatted.
+   */
   for(i = 0; i < 2; i++)
     {
       /* Send the command */
@@ -312,10 +305,14 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
   /* clear spurious interrupts in prep for seeks */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
+  /* must re-start the drive because Recalibrate() stops it */
+  StartMotor(DriveInfo);
+
   /* Seek to 1 */
   if(HwSeek(DriveInfo, 1) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwSeek failed; returning STATUS_IO_DEVICE_ERROR\n"));
+      StopMotor(DriveInfo->ControllerInfo);
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -324,6 +321,7 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
   if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwSenseInterruptStatus failed; bailing out\n"));
+      StopMotor(DriveInfo->ControllerInfo);
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -331,6 +329,7 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
   if(HwSeek(DriveInfo, 1) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwSeek failed; returning STATUS_IO_DEVICE_ERROR\n"));
+      StopMotor(DriveInfo->ControllerInfo);
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -339,6 +338,7 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
   if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwSenseInterruptStatus #2 failed; bailing\n"));
+      StopMotor(DriveInfo->ControllerInfo);
       return STATUS_IO_DEVICE_ERROR;
     }
 
@@ -346,8 +346,11 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
   if(HwDiskChanged(DriveInfo, &DiskChanged) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: ResetChangeFlag(): HwDiskChagned failed; returning STATUS_IO_DEVICE_ERROR\n"));
+      StopMotor(DriveInfo->ControllerInfo);
       return STATUS_IO_DEVICE_ERROR;
     }
+
+  StopMotor(DriveInfo->ControllerInfo);
 
   /* if the change flag is still set, there's probably no media in the drive. */
   if(DiskChanged)
@@ -363,8 +366,6 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
  * FUNCTION: Unload the driver from memory
  * ARGUMENTS:
  *     DriverObject - The driver that is being unloaded
- *
- * TODO: Delete ARC links
  */
 {
   ULONG i,j;
@@ -380,16 +381,24 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
 
   for(i = 0; i < gNumberOfControllers; i++)
     {
-      if(!gControllerInfo[i].Populated)
+      if(!gControllerInfo[i].Initialized)
 	continue;
 
       for(j = 0; j < gControllerInfo[i].NumberOfDrives; j++)
 	{
+	  if(!gControllerInfo[i].DriveInfo[j].Initialized)
+	    continue;
+
           if(gControllerInfo[i].DriveInfo[j].DeviceObject)
             {
 	      UNICODE_STRING Link;
+
 	      RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].SymLinkBuffer);
 	      IoDeleteSymbolicLink(&Link);
+
+	      RtlInitUnicodeString(&Link, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
+	      IoDeassignArcName(&Link);
+
               IoDeleteDevice(gControllerInfo[i].DriveInfo[j].DeviceObject);
             }
 	}
@@ -502,13 +511,9 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
 	    }
 
           if(AddressSpace == 0)
-	    {
-              gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, 8, MmNonCached); // symbolic constant?
-	    }
+              gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, FDC_PORT_BYTES, MmNonCached);
           else
-	    {
               gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)TranslatedAddress.u.LowPart;
-	    }
         }
 
       else if(PartialDescriptor->Type == CmResourceTypeDma)
@@ -579,7 +584,6 @@ static BOOLEAN NTAPI Isr(PKINTERRUPT Interrupt,
  *       triggered, this is safe to not do here, as we can just wait for the DPC.
  *     - Either way, we don't want to do this here.  The controller shouldn't interrupt again, so we'll
  *       schedule a DPC to take care of it.
- * TODO:
  *     - This driver really cannot shrare interrupts, as I don't know how to conclusively say 
  *       whether it was our controller that interrupted or not.  I just have to assume that any time
  *       my ISR gets called, it was my board that called it.  Dumb design, yes, but it goes back to 
@@ -640,7 +644,7 @@ VOID NTAPI DpcForIsr(PKDPC UnusedDpc,
 
   KdPrint(("floppy: DpcForIsr called\n"));
 
-  KeSetEvent(&ControllerInfo->SynchEvent, IO_NO_INCREMENT, FALSE);
+  KeSetEvent(&ControllerInfo->SynchEvent, EVENT_INCREMENT, FALSE);
 }
 
 
@@ -651,7 +655,7 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
  *     ControllerInfo: pointer to the controller to be initialized
  * RETURNS:
  *     STATUS_SUCCESS if the controller is successfully initialized
- *     STATUS_UNSUCCESSFUL otherwise
+ *     STATUS_IO_DEVICE_ERROR otherwise
  */
 {
   int i;
@@ -666,18 +670,14 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
 
   KeClearEvent(&ControllerInfo->SynchEvent);
 
-  //HwDumpRegisters(ControllerInfo);
-
   KdPrint(("floppy: InitController: resetting the controller\n"));
 
   /* Reset the controller */
   if(HwReset(ControllerInfo) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: InitController: unable to reset controller\n"));
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_IO_DEVICE_ERROR;
     }
-
-  //HwDumpRegisters(ControllerInfo);
 
   KdPrint(("floppy: InitController: setting data rate\n"));
 
@@ -685,7 +685,7 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   if(HwSetDataRate(ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: InitController: unable to set data rate\n"));
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_IO_DEVICE_ERROR;
     }
 
   KdPrint(("floppy: InitController: waiting for initial interrupt\n"));
@@ -697,27 +697,18 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   for(i = 0; i < MAX_DRIVES_PER_CONTROLLER; i++)
     {
       KdPrint(("floppy: InitController: Sensing interrupt %d\n", i));
-      //HwDumpRegisters(ControllerInfo);
 
       if(HwSenseInterruptStatus(ControllerInfo) != STATUS_SUCCESS)
 	{
 	  KdPrint(("floppy: InitController: Unable to clear interrupt 0x%x\n", i));
-	  return STATUS_UNSUCCESSFUL;
+	  return STATUS_IO_DEVICE_ERROR;
 	}
     }
 
   KdPrint(("floppy: InitController: done sensing interrupts\n"));
 
-  //HwDumpRegisters(ControllerInfo);
-
   /* Next, see if we have the right version to do implied seek */
-  if(HwGetVersion(ControllerInfo) != VERSION_ENHANCED)
-    {
-      KdPrint(("floppy: InitController: enhanced version not supported; disabling implied seeks\n"));
-      ControllerInfo->ImpliedSeeks = FALSE;
-      ControllerInfo->Model30 = FALSE;
-    }
-  else
+  if(HwGetVersion(ControllerInfo) == VERSION_ENHANCED)
     {
       /* If so, set that up -- all defaults below except first TRUE for EIS */
       if(HwConfigure(ControllerInfo, TRUE, TRUE, FALSE, 0, 0) != STATUS_SUCCESS)
@@ -731,7 +722,32 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
           ControllerInfo->ImpliedSeeks = TRUE;
 	}
 
-      ControllerInfo->Model30 = TRUE;
+      /* 
+       * FIXME: Figure out the answer to the below
+       *
+       * I must admit that I'm really confused about the Model 30 issue.  At least one
+       * important bit (the disk change bit in the DIR) is flipped if this is a Model 30
+       * controller.  However, at least one other floppy driver believes that there are only
+       * two computers that are guaranteed to have a Model 30 controller:
+       *  - IBM Thinkpad 750
+       *  - IBM PS2e
+       *
+       * ...and another driver only lists a config option for "thinkpad", that flips
+       * the change line.  A third driver doesn't mention the Model 30 issue at all.
+       *
+       * What I can't tell is whether or not the average, run-of-the-mill computer now has
+       * a Model 30 controller.  For the time being, I'm going to wire this to FALSE,
+       * and just not support the computers mentioned above, while I try to figure out
+       * how ubiquitous these newfangled 30 thingies are.
+       */
+      //ControllerInfo->Model30 = TRUE;
+      ControllerInfo->Model30 = FALSE;
+    }
+  else
+    {
+      KdPrint(("floppy: InitController: enhanced version not supported; disabling implied seeks\n"));
+      ControllerInfo->ImpliedSeeks = FALSE;
+      ControllerInfo->Model30 = FALSE;
     }
   
   /* Specify */
@@ -746,10 +762,8 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   if(HwSpecify(ControllerInfo, HeadLoadTime, HeadUnloadTime, StepRateTime, FALSE) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: InitController: unable to specify options\n"));
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_IO_DEVICE_ERROR;
     }
-
-  //HwDumpRegisters(ControllerInfo);
 
   /* Init the stop stuff */
   KeInitializeDpc(&ControllerInfo->MotorStopDpc, MotorStopDpcFunc, ControllerInfo);
@@ -757,20 +771,15 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   KeInitializeEvent(&ControllerInfo->MotorStoppedEvent, SynchronizationEvent, FALSE);
   ControllerInfo->StopDpcQueued = FALSE;
 
-  /* Recalibrate each drive on the controller (depends on StartMotor, which depends on the timer stuff above) */
-  /* TODO: Handle failure of one or more drives */
+  /* 
+   * Recalibrate each drive on the controller (depends on StartMotor, which depends on the timer stuff above) 
+   * We don't even know if there is a disk in the drive, so this may not work, but that's OK.
+   */
   for(i = 0; i < ControllerInfo->NumberOfDrives; i++)
     {
       KdPrint(("floppy: InitController: recalibrating drive 0x%x on controller 0x%x\n", i, ControllerInfo));
-
-      if(Recalibrate(&ControllerInfo->DriveInfo[i]) != STATUS_SUCCESS)
-	{
-	  KdPrint(("floppy: InitController: unable to recalibrate drive\n"));
-	  return STATUS_UNSUCCESSFUL;
-	}
+      Recalibrate(&ControllerInfo->DriveInfo[i]);
     }
-
-  //HwDumpRegisters(ControllerInfo);
 
   KdPrint(("floppy: InitController: done initializing; returning STATUS_SUCCESS\n"));
 
@@ -792,11 +801,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
  *       just test a boolean value in the first object to see if it was completely populated.  The same value
  *       is tested for each controller before we build device objects for it.
  * TODO:
- *     - Figure out a workable interrupt-sharing scheme and un-hardcode FALSE in IoConnectInterrupt
- *     - Add support for non-ISA buses, by looping through all of the bus types looking for floppy controllers
  *     - Report resource usage to the HAL
- *     - Add ARC path support
- *     - Think more about error handling; atm most errors abort the start of the driver
  */
 {
   INTERFACE_TYPE InterfaceType = Isa;
@@ -814,7 +819,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 
   /* 
    * w2k breaks the return val from ConfigCallback, so we have to hack around it, rather than just
-   * looking for a return value from ConfigCallback
+   * looking for a return value from ConfigCallback.  We expect at least one controller.
    */ 
   if(!gControllerInfo[0].Populated)
     {
@@ -826,7 +831,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
   for(i = 0; i < gNumberOfControllers; i++)
     {
       /* 0: Report resource usage to the kernel, to make sure they aren't assigned to anyone else */
-      /* XXX do me baby */
+      /* FIXME: Implement me. */
 
       /* 1: Set up interrupt */
       gControllerInfo[i].MappedVector = HalGetInterruptVector(gControllerInfo[i].InterfaceType, gControllerInfo[i].BusNumber,
@@ -845,26 +850,18 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
          FALSE, Affinity, 0) != STATUS_SUCCESS)
         {
           KdPrint(("floppy: AddControllers: unable to connect interrupt\n"));
-          return FALSE;
+          continue;
         }
 
       /* 2: Set up DMA */
-
       memset(&DeviceDescription, 0, sizeof(DeviceDescription));
       DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
-      DeviceDescription.Master = (gControllerInfo[i].InterfaceType == PCIBus ? TRUE : FALSE); /* guessing if not pci not master */
       DeviceDescription.DmaChannel = gControllerInfo[i].Dma;
       DeviceDescription.InterfaceType = gControllerInfo[i].InterfaceType;
       DeviceDescription.BusNumber = gControllerInfo[i].BusNumber;
 
-      if(gControllerInfo[i].InterfaceType == PCIBus)
-        {
-          DeviceDescription.Dma32BitAddresses = TRUE;
-          DeviceDescription.DmaWidth = Width32Bits;
-        }
-      else
-	/* DMA 0,1,2,3 are 8-bit; 4,5,6,7 are 16-bit (4 is chain i think) */
-        DeviceDescription.DmaWidth = gControllerInfo[i].Dma > 3 ? Width16Bits: Width8Bits;
+      /* DMA 0,1,2,3 are 8-bit; 4,5,6,7 are 16-bit (4 is chain i think) */
+      DeviceDescription.DmaWidth = gControllerInfo[i].Dma > 3 ? Width16Bits: Width8Bits;
 
       gControllerInfo[i].AdapterObject = HalGetAdapter(&DeviceDescription, &gControllerInfo[i].MapRegisters);
 
@@ -872,16 +869,19 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
         {
           KdPrint(("floppy: AddControllers: unable to allocate an adapter object\n"));
           IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
-          return FALSE;
+          continue;
         }
 
       /* 2b: Initialize the new controller */
       if(InitController(&gControllerInfo[i]) != STATUS_SUCCESS)
 	{
 	  KdPrint(("floppy: AddControllers():Unable to set up controller %d - initialization failed\n", i));
-	  ASSERT(0); /* FIXME: clean up properly */
+          IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
 	  continue;
 	}
+
+      /* 2c: Set the controller's initlized flag so we know to release stuff in Unload */
+      gControllerInfo[i].Initialized = TRUE;
 
       /* 3: per-drive setup */
       for(j = 0; j < gControllerInfo[i].NumberOfDrives; j++)
@@ -889,6 +889,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
           WCHAR DeviceNameBuf[MAX_DEVICE_NAME];
           UNICODE_STRING DeviceName;
           UNICODE_STRING LinkName;
+	  UNICODE_STRING ArcPath;
 	  UCHAR DriveNumber;
 
 	  KdPrint(("floppy: AddControllers(): Configuring drive %d on controller %d\n", i, j));
@@ -917,10 +918,17 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
             {
               KdPrint(("floppy: AddControllers: unable to register a Device object\n"));
               IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
-              return FALSE;
+              continue; /* continue on to next drive */
             }
 
 	  KdPrint(("floppy: AddControllers: New device: %S (0x%x)\n", DeviceNameBuf, gControllerInfo[i].DriveInfo[j].DeviceObject));
+
+	  /* 3b.5: Create an ARC path in case we're booting from this drive */
+	  swprintf(gControllerInfo[i].DriveInfo[j].ArcPathBuffer,
+		   L"\\ArcName\\multi(%d)disk(%d)fdisk(%d)", gControllerInfo[i].BusNumber, i, DriveNumber);
+
+	  RtlInitUnicodeString(&ArcPath, gControllerInfo[i].DriveInfo[j].ArcPathBuffer);
+	  IoAssignArcName(&ArcPath, &DeviceName);
 
 	  /* 3c: Set flags up */
 	  gControllerInfo[i].DriveInfo[j].DeviceObject->Flags |= DO_DIRECT_IO;
@@ -932,8 +940,8 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	    {
 	      KdPrint(("floppy: AddControllers: Unable to create a symlink for drive %d\n", DriveNumber));
 	      IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
-	      // delete devices too?
-	      return FALSE;
+	      IoDeassignArcName(&ArcPath);
+	      continue; /* continue to next drive */
 	    }
 
 	  /* 3e: Set up the DPC */
@@ -947,6 +955,9 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	  /* 3h: set the initial media type to unknown */
 	  memset(&gControllerInfo[i].DriveInfo[j].DiskGeometry, 0, sizeof(DISK_GEOMETRY));
 	  gControllerInfo[i].DriveInfo[j].DiskGeometry.MediaType = Unknown;
+
+	  /* 3i: Now that we're done, set the Initialized flag so we know to free this in Unload */
+	  gControllerInfo[i].DriveInfo[j].Initialized = TRUE;
         }
     }
 
@@ -1131,7 +1142,7 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   if(PsCreateSystemThread(&ThreadHandle, 0, 0, 0, 0, QueueThread, 0) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: Unable to create system thread; failing init\n"));
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   if(ObReferenceObjectByHandle(ThreadHandle, STANDARD_RIGHTS_ALL, NULL, KernelMode, &ThreadObject, NULL) != STATUS_SUCCESS)
@@ -1140,6 +1151,11 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
       return STATUS_UNSUCCESSFUL;
     }
 
+  /* 
+   * Close the handle, now that we have the object pointer and a reference of our own. 
+   * The handle will certainly not be valid in the context of the caller next time we
+   * need it, as handles are process-specific.
+   */
   ZwClose(ThreadHandle);
 
   /*
@@ -1148,9 +1164,8 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
   KeInitializeEvent(&QueueThreadTerminate, NotificationEvent, FALSE);
 
   /*
-   * Start the device discovery proces.  In theory, this should return STATUS_SUCCESS if
-   * it finds even one drive attached to one controller.  In practice, the AddControllers
-   * routine doesn't handle all of the errors right just yet.  FIXME.
+   * Start the device discovery proces.  Returns STATUS_SUCCESS if
+   * it finds even one drive attached to one controller. 
    */
   if(!AddControllers(DriverObject))
     return STATUS_NO_SUCH_DEVICE;

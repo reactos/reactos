@@ -45,7 +45,6 @@
  *       of RWComputeCHS.  I've never seen Windows send a partial-sector request, though, so
  *       this may not be a bad thing.  Should be looked into, regardless.
  *
- * TODO: Handle split reads and writes across multiple map registers
  * TODO: Break up ReadWritePassive and handle errors better
  * TODO: Figure out data rate issues
  * TODO: Media type detection
@@ -85,7 +84,7 @@ static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObjec
   ControllerInfo->MapRegisterBase = MapRegisterBase;
   KeSetEvent(&ControllerInfo->SynchEvent, 0, FALSE);
 
-  return KeepObject; /* FIXME: Should be something else if we find a bus master */
+  return KeepObject;
 }
 
 
@@ -184,6 +183,8 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
   do
     {
+      int i;
+
       /* Program data rate */
       if(HwSetDataRate(DriveInfo->ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
 	{
@@ -207,20 +208,29 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
       KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
       /* Recalibrate --> head over first track */
-      /* FIXME: should be done in a loop? */
-      if(HwRecalibrate(DriveInfo) != STATUS_SUCCESS)
+      for(i=0; i < 2; i++)
 	{
-	  KdPrint(("floppy: RWDetermineMediaType(): Recalibrate failed\n"));
-	  return STATUS_UNSUCCESSFUL;
-	}
+	  NTSTATUS RecalStatus;
 
-      /* Wait for the recalibrate to finish */
-      WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+	  if(HwRecalibrate(DriveInfo) != STATUS_SUCCESS)
+	    {
+	      KdPrint(("floppy: RWDetermineMediaType(): Recalibrate failed\n"));
+	      return STATUS_UNSUCCESSFUL;
+	    }
 
-      if(HwRecalibrateResult(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
-	{
-	  KdPrint(("floppy: RWDetermineMediaType(): RecalibrateResult failed\n"));
-	  return STATUS_UNSUCCESSFUL;
+	  /* Wait for the recalibrate to finish */
+	  WaitForControllerInterrupt(DriveInfo->ControllerInfo);
+
+	  RecalStatus = HwRecalibrateResult(DriveInfo->ControllerInfo);
+	  
+	  if(RecalStatus == STATUS_SUCCESS)
+	    break;
+
+	  if(i == 1) /* failed for 2nd time */
+	    {
+	      KdPrint(("floppy: RWDetermineMediaType(): RecalibrateResult failed\n"));
+	      return STATUS_UNSUCCESSFUL;
+	    }
 	}
 
       /* clear any spurious interrupts */
@@ -574,7 +584,6 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    */ 
 
   /* Get map registers for DMA */
-  /* FIXME: Just request all of our map regiters for now */
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
   Status = IoAllocateAdapterChannel(DriveInfo->ControllerInfo->AdapterObject, DeviceObject,
 				    DriveInfo->ControllerInfo->MapRegisters, MapRegisterCallback, DriveInfo->ControllerInfo);

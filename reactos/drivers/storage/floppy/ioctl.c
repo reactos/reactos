@@ -135,6 +135,11 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
     }
 
   /*
+   * Start the drive to see if the disk has changed
+   */
+  StartMotor(DriveInfo);
+
+  /*
    * Check the change line, and if it's set, return
    */
   if(HwDiskChanged(DriveInfo, &DiskChanged) != STATUS_SUCCESS)
@@ -143,6 +148,7 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
       Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
       Irp->IoStatus.Information = 0;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      StopMotor(DriveInfo->ControllerInfo);
       return;
     }
 
@@ -161,7 +167,7 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
 	Irp->IoStatus.Status = STATUS_NO_MEDIA_IN_DEVICE;
 
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
+      StopMotor(DriveInfo->ControllerInfo);
       return;
     }
 
@@ -245,6 +251,7 @@ VOID NTAPI DeviceIoctlPassive(PDRIVE_INFO DriveInfo,
   KdPrint(("floppy: ioctl: completing with status 0x%x\n", Irp->IoStatus.Status));
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
+  StopMotor(DriveInfo->ControllerInfo);
   return;
 }
 
