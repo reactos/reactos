@@ -1112,7 +1112,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     /*
      * Draw the initial image
      */
-    if(fStyle & ILD_MASK) {
+    if (fStyle & ILD_MASK) {
 	if (himl->hbmMask) {
             BitBlt(hImageDC, 0, 0, cx, cy, hMaskListDC, lx, ly, SRCCOPY);
 	} else {
@@ -2824,23 +2824,52 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
     if ((ilc >= ILC_COLOR4 && ilc <= ILC_COLOR32) || ilc == ILC_COLOR)
     {
         VOID* bits;
-        BITMAPINFO bmi;
+        BITMAPINFO *bmi;
 
         TRACE("Creating DIBSection: %d Bits per Pixel\n", himl->uBitsPixel);
 
-	bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	bmi.bmiHeader.biWidth = width;
-	bmi.bmiHeader.biHeight = height;
-	bmi.bmiHeader.biPlanes = 1;
-	bmi.bmiHeader.biBitCount = himl->uBitsPixel;
-	bmi.bmiHeader.biCompression = BI_RGB;
-	bmi.bmiHeader.biSizeImage = 0;
-	bmi.bmiHeader.biXPelsPerMeter = 0;
-	bmi.bmiHeader.biYPelsPerMeter = 0;
-	bmi.bmiHeader.biClrUsed = 0;
-	bmi.bmiHeader.biClrImportant = 0;
+	if (himl->uBitsPixel <= ILC_COLOR8)
+	{
+	    LPPALETTEENTRY pal;
+	    ULONG i, colors;
+	    BYTE temp;
 
-	hbmNewBitmap = CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &bits, 0, 0);
+	    colors = 1 << himl->uBitsPixel;
+	    bmi = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFOHEADER) +
+	                    sizeof(PALETTEENTRY) * colors);
+
+	    pal = (LPPALETTEENTRY)bmi->bmiColors;
+	    GetPaletteEntries(GetStockObject(DEFAULT_PALETTE), 0, colors, pal);
+
+	    /* Swap colors returned by GetPaletteEntries so we can use them for
+	     * CreateDIBSection call. */
+	    for (i = 0; i < colors; i++)
+	    {
+	        temp = pal[i].peBlue;
+	        bmi->bmiColors[i].rgbRed = pal[i].peRed;
+	        bmi->bmiColors[i].rgbBlue = temp;
+	    }
+	}
+	else
+	{
+	    bmi = HeapAlloc(GetProcessHeap(), 0, sizeof(BITMAPINFOHEADER));
+	}
+
+	bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	bmi->bmiHeader.biWidth = width;
+	bmi->bmiHeader.biHeight = height;
+	bmi->bmiHeader.biPlanes = 1;
+	bmi->bmiHeader.biBitCount = himl->uBitsPixel;
+	bmi->bmiHeader.biCompression = BI_RGB;
+	bmi->bmiHeader.biSizeImage = 0;
+	bmi->bmiHeader.biXPelsPerMeter = 0;
+	bmi->bmiHeader.biYPelsPerMeter = 0;
+	bmi->bmiHeader.biClrUsed = 0;
+	bmi->bmiHeader.biClrImportant = 0;
+
+	hbmNewBitmap = CreateDIBSection(hdc, bmi, DIB_RGB_COLORS, &bits, 0, 0);
+
+	HeapFree(GetProcessHeap(), 0, bmi);
     }
     else /*if (ilc == ILC_COLORDDB)*/
     {
