@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.50 2004/09/03 04:19:12 navaraf Exp $
+/* $Id: atapi.c,v 1.51 2004/09/03 04:44:45 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -56,7 +56,7 @@
 
 #include "atapi.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define VERSION  "0.0.1"
