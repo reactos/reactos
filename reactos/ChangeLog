@@ -1,3 +1,7 @@
+2003-01-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* boot.bat: Use DOS end-of-line characters.
+
 2003-01-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* ntoskrnl/ke/timer.c (KeExpireTimers): Avoid signed/unsigned comparison
