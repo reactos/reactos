@@ -51,3 +51,21 @@ diff -u -r1.136 shell32_main.c
  	    InitChangeNotifications();
  	    break;
  
+Index: shell32_main.h
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_main.h,v
+retrieving revision 1.91
+diff -u -r1.91 shell32_main.h
+--- shell32_main.h	22 Aug 2004 21:38:46 -0000	1.91
++++ shell32_main.h	21 Sep 2004 19:24:47 -0000
+@@ -128,10 +128,6 @@
+ 	(((kst) & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY):\
+ 	DROPEFFECT_MOVE)
+ 
+-/* Systray */
+-BOOL SYSTRAY_Init(void);
+-
+-
+ HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
+ HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
+ HGLOBAL RenderSHELLIDLISTOFFSET (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);

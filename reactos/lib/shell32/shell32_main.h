@@ -30,6 +30,7 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "commctrl.h"
+#include "objbase.h"
 #include "docobj.h"
 #include "undocshell.h"
 #include "shlobj.h"
@@ -56,7 +57,7 @@ INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex );
 
 /* Classes Root */
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, DWORD len, BOOL bPrependDot);
-BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len);
+BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
 BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr);
 BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, LPDWORD dwNr);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
@@ -126,12 +127,6 @@ HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uI
 	(((kst) & MK_CONTROL) ?\
 	(((kst) & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY):\
 	DROPEFFECT_MOVE)
-
-#ifndef __REACTOS__
-/* Systray */
-BOOL SYSTRAY_Init(void);
-#endif
-
 
 HGLOBAL RenderHDROP(LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
 HGLOBAL RenderSHELLIDLIST (LPITEMIDLIST pidlRoot, LPITEMIDLIST * apidl, UINT cidl);
