@@ -139,7 +139,7 @@ CFLAGS	=	$(COMPILER_OPTIONS)		\
 # LINKER COMMAND LINE OPTIONS
 #
 #LINKER_OPTIONS = -N -Ttext=0x8000 --oformat=binary -s
-LINKER_OPTIONS = -N -Ttext=0x8000 -s
+LINKER_OPTIONS = -N -Ttext=0x8000
 
 #############################################
 # LINKER FLAGS
@@ -270,6 +270,7 @@ freeldr.sys : $(OBJS)
 	@echo ===================================================== LINKING $@
 #	@$(LD) -N -Ttext=0x8000 --oformat=binary -s -o freeldr.sys $(OBJS)
 	@$(LD) $(LFLAGS) -Map freeldr.map -o freeldr.exe $(OBJS)
+	@$(NM) --numeric-sort freeldr.exe > freeldr.sym
 	@$(OBJCOPY) -O binary freeldr.exe freeldr.sys
 
 #############################################
