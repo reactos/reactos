@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.31 2002/09/08 10:22:41 chorns Exp $
+/* $Id: curdir.c,v 1.32 2002/10/20 03:33:34 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -250,29 +250,35 @@ GetSystemDirectoryA (
 {
 	ANSI_STRING String;
 	ULONG Length;
+	NTSTATUS Status;
 
 	if (lpBuffer == NULL)
 		return 0;
 
-	Length = RtlUnicodeStringToAnsiSize (&SystemDirectory);
-	if (uSize > Length)
-	{
+	Length = RtlUnicodeStringToAnsiSize (&SystemDirectory);	  //len of ansi str incl. nullchar
+
+	if (uSize >= Length){
 		String.Length = 0;
 		String.MaximumLength = uSize;
 		String.Buffer = lpBuffer;
 
 		/* convert unicode string to ansi (or oem) */
 		if (bIsFileApiAnsi)
-			RtlUnicodeStringToAnsiString (&String,
+			Status = RtlUnicodeStringToAnsiString (&String,
 			                              &SystemDirectory,
 			                              FALSE);
 		else
-			RtlUnicodeStringToOemString (&String,
+			Status = RtlUnicodeStringToOemString (&String,
 			                             &SystemDirectory,
 			                             FALSE);
+		if (!NT_SUCCESS(Status) )
+			return 0;
+
+		return Length-1;  //good: ret chars excl. nullchar
+
 	}
 
-	return Length;
+	return Length;	 //bad: ret space needed incl. nullchar
 }
 
 
@@ -289,15 +295,16 @@ GetSystemDirectoryW (
 		return 0;
 
 	Length = SystemDirectory.Length / sizeof (WCHAR);
-	if (uSize > Length)
-	{
+	if (uSize > Length)	{
 		memmove (lpBuffer,
 		         SystemDirectory.Buffer,
 		         SystemDirectory.Length);
 		lpBuffer[Length] = 0;
+
+		return Length;	  //good: ret chars excl. nullchar
 	}
 
-	return Length;
+	return Length+1;	 //bad: ret space needed incl. nullchar
 }
 
 
@@ -310,29 +317,43 @@ GetWindowsDirectoryA (
 {
 	ANSI_STRING String;
 	ULONG Length;
+	NTSTATUS Status;
 
 	if (lpBuffer == NULL)
 		return 0;
 
-	Length = RtlUnicodeStringToAnsiSize (&WindowsDirectory);
-	if (uSize > Length)
-	{
+	Length = RtlUnicodeStringToAnsiSize (&WindowsDirectory); //len of ansi str incl. nullchar
+	
+	printf("windirlen incl term %i\n", Length);
+
+	if (uSize >= Length){
+
+		printf("ok: enoug space\n");
+
 		String.Length = 0;
 		String.MaximumLength = uSize;
 		String.Buffer = lpBuffer;
 
 		/* convert unicode string to ansi (or oem) */
 		if (bIsFileApiAnsi)
-			RtlUnicodeStringToAnsiString (&String,
+			Status = RtlUnicodeStringToAnsiString (&String,
 			                              &WindowsDirectory,
 			                              FALSE);
 		else
-			RtlUnicodeStringToOemString (&String,
+			Status = RtlUnicodeStringToOemString (&String,
 			                             &WindowsDirectory,
 			                             FALSE);
+
+		if (!NT_SUCCESS(Status))
+			return 0;
+
+		printf("good: ret chars %i\n",Length-1);
+		printf("dir: %s\n",lpBuffer);
+		return Length-1;	//good: ret chars excl. nullchar
 	}
 
-	return Length;
+	printf("bad: ret chars needed %i\n",Length);
+	return Length;	//bad: ret space needed incl. nullchar
 }
 
 
@@ -355,9 +376,11 @@ GetWindowsDirectoryW (
 		         WindowsDirectory.Buffer,
 		         WindowsDirectory.Length);
 		lpBuffer[Length] = 0;
+
+		return Length;	  //good: ret chars excl. nullchar
 	}
 
-	return Length;
+	return Length+1;	//bad: ret space needed incl. nullchar
 }
 
 /* EOF */

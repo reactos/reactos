@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.23 2002/09/17 23:41:44 dwelch Exp $
+/* $Id: unicode.c,v 1.24 2002/10/20 03:34:00 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1122,7 +1122,7 @@ RtlUnicodeStringToAnsiSize (
 	                           UnicodeString->Buffer,
 	                           UnicodeString->Length);
 
-	return Size;
+	return Size+1; //NB: incl. nullterm
 }
 
 
@@ -1286,7 +1286,7 @@ RtlUnicodeStringToOemSize (
 	                           UnicodeString->Buffer,
 	                           UnicodeString->Length);
 
-	return Size;
+	return Size+1; //NB: incl. nullterm
 }
 
 
@@ -1303,7 +1303,7 @@ RtlUnicodeStringToCountedOemString (
 	ULONG Size;
 
 	if (NlsMbOemCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+		Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
 	else
 		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
@@ -1370,7 +1370,7 @@ RtlUnicodeStringToOemString (
 	ULONG Size;
 
 	if (NlsMbOemCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+		Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
 	else
 		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
@@ -1496,7 +1496,7 @@ RtlUpcaseUnicodeStringToAnsiString (
 	ULONG Size;
 
 	if (NlsMbCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+		Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
 	else
 		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
@@ -1563,7 +1563,7 @@ RtlUpcaseUnicodeStringToCountedOemString (
 	ULONG Size;
 
 	if (NlsMbCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+		Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
 	else
 		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
@@ -1630,7 +1630,7 @@ RtlUpcaseUnicodeStringToOemString (
 	ULONG Size;
 
 	if (NlsMbOemCodePageTag == TRUE)
-		Length = RtlUnicodeStringToAnsiSize (SourceString) + 1;
+		Length = RtlUnicodeStringToAnsiSize (SourceString)/* + 1*/;
 	else
 		Length = SourceString->Length / sizeof(WCHAR) + 1;
 
