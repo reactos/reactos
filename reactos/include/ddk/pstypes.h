@@ -230,6 +230,7 @@ typedef struct _KTHREAD
    ULONG             SuspendCount;
    UCHAR             IdealProcessor;
    UCHAR             DisableBoost;
+   LIST_ENTRY        ProcessThreadListEntry;        // Added by Phillip Susi for list of threads in a process
 
    /* Provisionally added by David Welch */
    hal_thread_state                   Context;
@@ -329,6 +330,9 @@ typedef struct _KPROCESS
    LIST_ENTRY           MemoryAreaList;
    HANDLE_TABLE         HandleTable;
    LIST_ENTRY           ProcessListEntry;
+
+   LIST_ENTRY           ThreadListHead;     // Added by Phillip Susi for list of threads in process
+
 } KPROCESS, *PKPROCESS;
 
 typedef struct _EPROCESS
