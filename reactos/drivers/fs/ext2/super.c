@@ -104,8 +104,14 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
    DeviceExt = (PVOID)DeviceObject->DeviceExtension;
    DPRINT("DeviceExt %x\n",DeviceExt);
-   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
-							  DeviceToMount);
+
+  DeviceExt->StorageDevice = DeviceToMount;
+  DeviceExt->StorageDevice->Vpb->DeviceObject = DeviceObject;
+  DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
+  DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
+  DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
+  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
    DPRINT("DeviceExt->StorageDevice %x\n", DeviceExt->StorageDevice);
    DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
    DeviceExt->superblock = superblock;

@@ -1,4 +1,22 @@
-/* $Id: fsctl.c,v 1.3 2002/05/05 20:19:14 hbirr Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2002 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: fsctl.c,v 1.4 2002/05/23 09:53:26 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -254,8 +272,15 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
       DbgPrint("RootCluster:        %d\n", DeviceExt->FatInfo.RootCluster);
    }
 #endif
-   DeviceObject->Vpb->Flags |= VPB_MOUNTED;
-   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject, IrpContext->Stack->Parameters.MountVolume.DeviceObject);
+
+  DeviceExt->StorageDevice = IrpContext->Stack->Parameters.MountVolume.DeviceObject;
+  DeviceExt->StorageDevice->Vpb->DeviceObject = DeviceObject;
+  DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
+  DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
+  DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
+  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+  DPRINT("FsDeviceObject %lx\n", DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
    Fcb = vfatNewFCB(NULL);
@@ -334,7 +359,6 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
 
    Status = STATUS_SUCCESS;
-
 ByeBye:
 
   if (!NT_SUCCESS(Status))

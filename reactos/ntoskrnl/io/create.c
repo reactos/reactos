@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.57 2002/05/15 09:39:02 ekohl Exp $
+/* $Id: create.c,v 1.58 2002/05/23 09:51:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,8 +139,9 @@ IopCreateFile(PVOID			ObjectBody,
 			 Status);
 		  return(Status);
 		}
-	      DeviceObject = IoGetAttachedDevice(DeviceObject);
 	    }
+	  DeviceObject = DeviceObject->Vpb->DeviceObject;
+	  DPRINT("FsDeviceObject %lx\n", DeviceObject);
 	}
       RtlCreateUnicodeString(&(FileObject->FileName),
 			     RemainingPath);
@@ -189,7 +190,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
 	 FileObject, DeviceObject);
-  
+
   assert_irql(PASSIVE_LEVEL);
 
   Status = ObCreateObject(&FileHandle,
@@ -202,7 +203,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
       DPRINT("Could not create FileObject\n");
       return (NULL);
     }
-  
+
   if (FileObject != NULL)
     {
       DeviceObject = FileObject->DeviceObject;
@@ -211,16 +212,16 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
   DPRINT("DeviceObject %x\n", DeviceObject);
 
-  CreatedFileObject->DeviceObject = DeviceObject;
+  CreatedFileObject->DeviceObject = DeviceObject->Vpb->DeviceObject;
   CreatedFileObject->Vpb = DeviceObject->Vpb;
   CreatedFileObject->Type = InternalFileType;
   CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
 
   // shouldn't we initialize the lock event, and several other things here too?
   KeInitializeEvent(&CreatedFileObject->Event, NotificationEvent, FALSE);
-  
+
   ZwClose(FileHandle);
-  
+
   return(CreatedFileObject);
 }
 
@@ -332,8 +333,8 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 			   (PVOID*)&FileObject);
    if (!NT_SUCCESS(Status))
      {
-	DPRINT("ObCreateObject() failed!\n");
-	return (Status);
+	DPRINT("ObCreateObject() failed! (Status %lx)\n", Status);
+	return(Status);
      }
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {

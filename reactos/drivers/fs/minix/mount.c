@@ -42,25 +42,30 @@ static PDRIVER_OBJECT DriverObject;
 
 VOID MinixMount(PDEVICE_OBJECT DeviceToMount)
 {
-   PDEVICE_OBJECT DeviceObject;
-   MINIX_DEVICE_EXTENSION* DeviceExt;
-   
-   IoCreateDevice(DriverObject,
-		  sizeof(MINIX_DEVICE_EXTENSION),
-		  NULL,
-		  FILE_DEVICE_FILE_SYSTEM,
-		  0,
-		  FALSE,
-		  &DeviceObject);
-   DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
-   DeviceExt = DeviceObject->DeviceExtension;
-   
-   MinixReadSector(DeviceToMount,1,DeviceExt->superblock_buf);
-   DeviceExt->sb = (struct minix_super_block *)(DeviceExt->superblock_buf);
-   
-   DeviceExt->AttachedDevice = IoAttachDeviceToDeviceStack(DeviceObject,
-							   DeviceToMount);
-   DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+  PDEVICE_OBJECT DeviceObject;
+  MINIX_DEVICE_EXTENSION* DeviceExt;
+
+  IoCreateDevice(DriverObject,
+		 sizeof(MINIX_DEVICE_EXTENSION),
+		 NULL,
+		 FILE_DEVICE_FILE_SYSTEM,
+		 0,
+		 FALSE,
+		 &DeviceObject);
+  DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
+  DeviceExt = DeviceObject->DeviceExtension;
+
+  MinixReadSector(DeviceToMount,1,DeviceExt->superblock_buf);
+  DeviceExt->sb = (struct minix_super_block *)(DeviceExt->superblock_buf);
+
+  DeviceExt->StorageDevice = DeviceToMount;
+  DeviceExt->StorageDevice->Vpb->DeviceObject = DeviceObject;
+  DeviceExt->StorageDevice->Vpb->RealDevice = DeviceExt->StorageDevice;
+  DeviceExt->StorageDevice->Vpb->Flags |= VPB_MOUNTED;
+  DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
+  DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
+
+  DeviceExt->FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
 }
 
 NTSTATUS STDCALL
