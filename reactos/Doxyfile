@@ -73,6 +73,8 @@ FILE_PATTERNS          = *.c \
                          *.h
 RECURSIVE              = YES
 EXCLUDE                = ntoskrnl \
+                         lib/ntdll \
+                         lib/freetype \
                          drivers \
                          tools \
                          apps \
