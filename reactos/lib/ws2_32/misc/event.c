@@ -11,6 +11,9 @@
 #include <handle.h>
 
 
+/*
+ * @implemented
+ */
 BOOL
 EXPORT
 WSACloseEvent(
@@ -32,6 +35,9 @@ WSACloseEvent(
 }
 
 
+/*
+ * @implemented
+ */
 WSAEVENT
 EXPORT
 WSACreateEvent(VOID)
@@ -52,6 +58,9 @@ WSACreateEvent(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 EXPORT
 WSAResetEvent(
@@ -73,6 +82,9 @@ WSAResetEvent(
 }
 
 
+/*
+ * @implemented
+ */
 BOOL
 EXPORT
 WSASetEvent(
@@ -94,6 +106,9 @@ WSASetEvent(
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 EXPORT
 WSAWaitForMultipleEvents(
@@ -128,6 +143,9 @@ WSAWaitForMultipleEvents(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSAEnumNetworkEvents(
@@ -166,6 +184,9 @@ WSAEnumNetworkEvents(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSAEventSelect(

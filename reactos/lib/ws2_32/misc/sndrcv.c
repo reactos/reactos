@@ -11,6 +11,10 @@
 #include <catalog.h>
 #include <handle.h>
 
+
+/*
+ * @implemented
+ */
 INT
 EXPORT
 recv(
@@ -34,6 +38,9 @@ recv(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 recvfrom(
@@ -59,6 +66,9 @@ recvfrom(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 send( 
@@ -80,6 +90,9 @@ send(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 sendto(
@@ -103,6 +116,9 @@ sendto(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSARecv(
@@ -140,6 +156,9 @@ WSARecv(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSARecvDisconnect(
@@ -152,6 +171,9 @@ WSARecvDisconnect(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSARecvFrom(
@@ -191,6 +213,9 @@ WSARecvFrom(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSASend(
@@ -228,6 +253,9 @@ WSASend(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSASendDisconnect(
@@ -240,6 +268,9 @@ WSASendDisconnect(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSASendTo(

@@ -9,6 +9,9 @@
  */
 #include <ws2_32.h>
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 getpeername(
@@ -21,6 +24,10 @@ getpeername(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 getsockname(
@@ -33,6 +40,10 @@ getsockname(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 getsockopt(
@@ -47,6 +58,10 @@ getsockopt(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 ioctlsocket(
@@ -59,6 +74,10 @@ ioctlsocket(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 setsockopt(
@@ -73,6 +92,10 @@ setsockopt(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 shutdown(
@@ -84,6 +107,10 @@ shutdown(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAAsyncSelect(
@@ -97,6 +124,10 @@ WSAAsyncSelect(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSACancelBlockingCall(VOID)
@@ -106,6 +137,10 @@ WSACancelBlockingCall(VOID)
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSADuplicateSocketA(
@@ -118,6 +153,10 @@ WSADuplicateSocketA(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSADuplicateSocketW(
@@ -130,6 +169,10 @@ WSADuplicateSocketW(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAEnumProtocolsA(
@@ -142,6 +185,10 @@ WSAEnumProtocolsA(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAEnumProtocolsW(
@@ -154,6 +201,10 @@ WSAEnumProtocolsW(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 EXPORT
 WSAGetOverlappedResult(
@@ -168,6 +219,10 @@ WSAGetOverlappedResult(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 EXPORT
 WSAGetQOSByName(
@@ -180,6 +235,10 @@ WSAGetQOSByName(
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAHtonl(
@@ -192,6 +251,10 @@ WSAHtonl(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAHtons(
@@ -204,6 +267,10 @@ WSAHtons(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAIoctl(
@@ -222,6 +289,10 @@ WSAIoctl(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 BOOL
 EXPORT
 WSAIsBlocking(VOID)
@@ -231,6 +302,10 @@ WSAIsBlocking(VOID)
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
 SOCKET
 EXPORT
 WSAJoinLeaf(
@@ -248,6 +323,10 @@ WSAJoinLeaf(
     return INVALID_SOCKET;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSANtohl(
@@ -260,6 +339,10 @@ WSANtohl(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSANtohs(
@@ -272,6 +355,10 @@ WSANtohs(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 FARPROC
 EXPORT
 WSASetBlockingHook(
@@ -282,6 +369,10 @@ WSASetBlockingHook(
     return (FARPROC)0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAUnhookBlockingHook(VOID)
@@ -291,6 +382,10 @@ WSAUnhookBlockingHook(VOID)
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAProviderConfigChange(
@@ -303,6 +398,10 @@ WSAProviderConfigChange(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSACancelAsyncRequest(
@@ -313,6 +412,9 @@ WSACancelAsyncRequest(
     return 0;
 }
 
+/*
+ * @unimplemented
+ */
 INT
 #if 0
 PASCAL FAR
@@ -329,6 +431,9 @@ __WSAFDIsSet(SOCKET s, LPFD_SET set)
 
 /* WinSock Service Provider support functions */
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WPUCompleteOverlappedRequest(
@@ -343,6 +448,10 @@ WPUCompleteOverlappedRequest(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSPStartup(
@@ -357,6 +466,10 @@ WSPStartup(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCDeinstallProvider(
@@ -368,6 +481,10 @@ WSCDeinstallProvider(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCEnumProtocols(
@@ -381,6 +498,10 @@ WSCEnumProtocols(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCGetProviderPath(
@@ -394,6 +515,10 @@ WSCGetProviderPath(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCInstallProvider(
@@ -408,6 +533,10 @@ WSCInstallProvider(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCEnableNSProvider(
@@ -419,6 +548,10 @@ WSCEnableNSProvider(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCInstallNameSpace(
@@ -433,6 +566,10 @@ WSCInstallNameSpace(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCUnInstallNameSpace(
@@ -443,6 +580,10 @@ WSCUnInstallNameSpace(
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSCWriteProviderOrder(

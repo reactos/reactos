@@ -11,6 +11,9 @@
 
 /* Name resolution APIs */
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAAddressToStringA(
@@ -26,6 +29,9 @@ WSAAddressToStringA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAAddressToStringW(
@@ -41,6 +47,9 @@ WSAAddressToStringW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAEnumNameSpaceProvidersA(
@@ -53,6 +62,9 @@ WSAEnumNameSpaceProvidersA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAEnumNameSpaceProvidersW(
@@ -65,6 +77,9 @@ WSAEnumNameSpaceProvidersW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAGetServiceClassInfoA(
@@ -79,6 +94,9 @@ WSAGetServiceClassInfoA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAGetServiceClassInfoW(
@@ -93,6 +111,9 @@ WSAGetServiceClassInfoW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAGetServiceClassNameByClassIdA(
@@ -106,6 +127,9 @@ WSAGetServiceClassNameByClassIdA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAGetServiceClassNameByClassIdW(
@@ -119,6 +143,9 @@ WSAGetServiceClassNameByClassIdW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAInstallServiceClassA(
@@ -130,6 +157,9 @@ WSAInstallServiceClassA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAInstallServiceClassW(
@@ -141,6 +171,9 @@ WSAInstallServiceClassW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSALookupServiceBeginA(
@@ -154,6 +187,9 @@ WSALookupServiceBeginA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSALookupServiceBeginW(
@@ -167,6 +203,9 @@ WSALookupServiceBeginW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSALookupServiceEnd(
@@ -178,6 +217,9 @@ WSALookupServiceEnd(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSALookupServiceNextA(
@@ -192,6 +234,9 @@ WSALookupServiceNextA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSALookupServiceNextW(
@@ -206,6 +251,9 @@ WSALookupServiceNextW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSARemoveServiceClass(
@@ -217,6 +265,9 @@ WSARemoveServiceClass(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSASetServiceA(
@@ -230,6 +281,9 @@ WSASetServiceA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSASetServiceW(
@@ -243,6 +297,9 @@ WSASetServiceW(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAStringToAddressA(
@@ -258,6 +315,9 @@ WSAStringToAddressA(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 WSAStringToAddressW(
@@ -275,6 +335,9 @@ WSAStringToAddressW(
 
 /* WinSock 1.1 compatible name resolution APIs */
 
+/*
+ * @unimplemented
+ */
 LPHOSTENT
 EXPORT
 gethostbyaddr(
@@ -287,6 +350,9 @@ gethostbyaddr(
     return (LPHOSTENT)NULL;
 }
 
+/*
+ * @unimplemented
+ */
 LPHOSTENT
 EXPORT
 gethostbyname(
@@ -298,6 +364,9 @@ gethostbyname(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 EXPORT
 gethostname(
@@ -310,6 +379,9 @@ gethostname(
 }
 
 
+/*
+ * @unimplemented
+ */
 LPPROTOENT
 EXPORT
 getprotobyname(
@@ -321,6 +393,9 @@ getprotobyname(
 }
 
 
+/*
+ * @unimplemented
+ */
 LPPROTOENT
 EXPORT
 getprotobynumber(
@@ -331,6 +406,10 @@ getprotobynumber(
     return (LPPROTOENT)NULL;
 }
 
+
+/*
+ * @unimplemented
+ */
 LPSERVENT
 EXPORT
 getservbyname(
@@ -343,6 +422,9 @@ getservbyname(
 }
 
 
+/*
+ * @unimplemented
+ */
 LPSERVENT
 EXPORT
 getservbyport(
@@ -355,6 +437,9 @@ getservbyport(
 }
 
 
+/*
+ * @implemented
+ */
 ULONG
 EXPORT
 inet_addr(
@@ -395,6 +480,9 @@ inet_addr(
 }
 
 
+/*
+ * @implemented
+ */
 CHAR FAR*
 EXPORT
 inet_ntoa(
@@ -419,6 +507,9 @@ inet_ntoa(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetHostByAddr(
@@ -436,6 +527,9 @@ WSAAsyncGetHostByAddr(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetHostByName(
@@ -451,6 +545,9 @@ WSAAsyncGetHostByName(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetProtoByName(
@@ -466,6 +563,9 @@ WSAAsyncGetProtoByName(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetProtoByNumber(
@@ -481,6 +581,9 @@ WSAAsyncGetProtoByNumber(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetServByName(
@@ -497,6 +600,9 @@ WSAAsyncGetServByName(
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 EXPORT
 WSAAsyncGetServByPort(

@@ -11,6 +11,9 @@
 #include <catalog.h>
 #include <handle.h>
 
+/*
+ * @implemented
+ */
 BOOL
 WSPAPI
 WPUCloseEvent(
@@ -23,6 +26,9 @@ WPUCloseEvent(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUCloseSocketHandle(
@@ -35,6 +41,9 @@ WPUCloseSocketHandle(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUCloseThread(
@@ -47,6 +56,9 @@ WPUCloseThread(
 }
 
 
+/*
+ * @unimplemented
+ */
 WSAEVENT
 WSPAPI
 WPUCreateEvent(
@@ -58,6 +70,9 @@ WPUCreateEvent(
 }
 
 
+/*
+ * @unimplemented
+ */
 SOCKET
 WSPAPI
 WPUCreateSocketHandle(
@@ -71,6 +86,9 @@ WPUCreateSocketHandle(
 }
 
 
+/*
+ * @unimplemented
+ */
 SOCKET
 WSPAPI
 WPUFDIsSet(
@@ -83,6 +101,9 @@ WPUFDIsSet(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUGetProviderPath(
@@ -97,6 +118,9 @@ WPUGetProviderPath(
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 WSPAPI
 WPUModifyIFSHandle(
@@ -128,6 +152,9 @@ WPUModifyIFSHandle(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUOpenCurrentThread(
@@ -140,6 +167,9 @@ WPUOpenCurrentThread(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 WSPAPI
 WPUPostMessage(
@@ -154,6 +184,9 @@ WPUPostMessage(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUQueryBlockingCallback(
@@ -168,6 +201,9 @@ WPUQueryBlockingCallback(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUQuerySocketHandleContext(
@@ -181,6 +217,9 @@ WPUQuerySocketHandleContext(
 }
 
 
+/*
+ * @unimplemented
+ */
 INT
 WSPAPI
 WPUQueueApc(
@@ -195,6 +234,9 @@ WPUQueueApc(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 WSPAPI
 WPUResetEvent(
@@ -207,6 +249,9 @@ WPUResetEvent(
 }
 
 
+/*
+ * @unimplemented
+ */
 BOOL
 WSPAPI
 WPUSetEvent(

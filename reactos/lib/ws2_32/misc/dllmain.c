@@ -28,6 +28,9 @@ HANDLE GlobalHeap;
 WSPUPCALLTABLE UpcallTable;
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSAGetLastError(VOID)
@@ -43,6 +46,9 @@ WSAGetLastError(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 VOID
 EXPORT
 WSASetLastError(
@@ -55,6 +61,9 @@ WSASetLastError(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSAStartup(
@@ -77,6 +86,9 @@ WSAStartup(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSACleanup(VOID)
@@ -92,6 +104,9 @@ WSACleanup(VOID)
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 socket(
@@ -103,6 +118,9 @@ socket(
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 WSASocketA(
@@ -146,6 +164,9 @@ WSASocketA(
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 WSASocketW(
@@ -224,6 +245,9 @@ WSASocketW(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 closesocket(
@@ -264,6 +288,9 @@ closesocket(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 select(
@@ -336,6 +363,9 @@ select(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 bind(
@@ -370,6 +400,9 @@ bind(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 listen(
@@ -403,6 +436,9 @@ listen(
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 accept(
@@ -414,6 +450,9 @@ accept(
 }
 
 
+/*
+ * @implemented
+ */
 SOCKET
 EXPORT
 WSAAccept(
@@ -450,6 +489,9 @@ WSAAccept(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 connect(
@@ -461,6 +503,9 @@ connect(
 }
 
 
+/*
+ * @implemented
+ */
 INT
 EXPORT
 WSAConnect(

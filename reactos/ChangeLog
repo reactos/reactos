@@ -1,5 +1,16 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/ws2_32/misc/bsd.c: Add @implemented and @unimplemented
+	to APIs.
+	* lib/ws2_32/misc/dllmain.c: Ditto.
+	* lib/ws2_32/misc/event.c: Ditto.
+	* lib/ws2_32/misc/ns.c: Ditto.
+	* lib/ws2_32/misc/sndrcv.c: Ditto.
+	* lib/ws2_32/misc/stubs.c: Ditto.
+	* lib/ws2_32/misc/upcall.c: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/dd/videoprt/videoprt.c: Add @implemented and @unimplemented
 	to APIs.
 
