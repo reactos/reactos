@@ -1,10 +1,103 @@
+Index: Makefile.in
+===================================================================
+RCS file: /home/wine/wine/dlls/commdlg/Makefile.in,v
+retrieving revision 1.39
+diff -u -r1.39 Makefile.in
+--- Makefile.in	12 Apr 2004 22:03:55 -0000	1.39
++++ Makefile.in	8 May 2004 13:01:07 -0000
+@@ -13,7 +13,6 @@
+ 	cdlg32.c \
+ 	colordlg.c \
+ 	filedlg.c \
+-	filedlg16.c \
+ 	filedlgbrowser.c \
+ 	finddlg32.c \
+ 	filetitle.c \
+@@ -22,6 +21,7 @@
+ 
+ C_SRCS16 = \
+ 	colordlg16.c \
++	filedlg16.c \
+ 	finddlg.c \
+ 	fontdlg16.c \
+ 	generic.c \
+Index: filedlg.c
+===================================================================
+RCS file: /home/wine/wine/dlls/commdlg/filedlg.c,v
+retrieving revision 1.79
+diff -u -r1.79 filedlg.c
+--- filedlg.c	5 May 2004 23:49:39 -0000	1.79
++++ filedlg.c	8 May 2004 13:01:08 -0000
+@@ -3241,6 +3241,7 @@
+ BOOL WINAPI GetOpenFileNameA(
+ 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
+ {
++#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
+     BOOL win16look = FALSE;
+ 
+     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+@@ -3249,6 +3250,7 @@
+     if (win16look)
+         return GetFileName31A(ofn, OPEN_DIALOG);
+     else
++#endif
+         return GetFileDialog95A(ofn, OPEN_DIALOG);
+ }
+ 
+@@ -3265,6 +3267,7 @@
+ BOOL WINAPI GetOpenFileNameW(
+ 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
+ {
++#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
+     BOOL win16look = FALSE;
+ 
+     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+@@ -3273,6 +3276,7 @@
+     if (win16look)
+         return GetFileName31W(ofn, OPEN_DIALOG);
+     else
++#endif
+         return GetFileDialog95W(ofn, OPEN_DIALOG);
+ }
+ 
+@@ -3290,6 +3294,7 @@
+ BOOL WINAPI GetSaveFileNameA(
+ 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
+ {
++#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
+     BOOL win16look = FALSE;
+ 
+     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+@@ -3298,6 +3303,7 @@
+     if (win16look)
+         return GetFileName31A(ofn, SAVE_DIALOG);
+     else
++#endif
+         return GetFileDialog95A(ofn, SAVE_DIALOG);
+ }
+ 
+@@ -3314,6 +3320,7 @@
+ BOOL WINAPI GetSaveFileNameW(
+ 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
+ {
++#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
+     BOOL win16look = FALSE;
+ 
+     if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+@@ -3322,5 +3329,6 @@
+     if (win16look)
+         return GetFileName31W(ofn, SAVE_DIALOG);
+     else
++#endif
+         return GetFileDialog95W(ofn, SAVE_DIALOG);
+ }
 Index: printdlg.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/commdlg/printdlg.c,v
-retrieving revision 1.74
-diff -u -r1.74 printdlg.c
---- printdlg.c	9 Jan 2004 05:10:35 -0000	1.74
-+++ printdlg.c	15 Apr 2004 08:51:04 -0000
+retrieving revision 1.75
+diff -u -r1.75 printdlg.c
+--- printdlg.c	19 Apr 2004 20:12:15 -0000	1.75
++++ printdlg.c	8 May 2004 13:01:09 -0000
 @@ -341,7 +341,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);

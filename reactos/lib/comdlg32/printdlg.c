@@ -1866,8 +1866,8 @@ static HGLOBAL PRINTDLG_GetDlgTemplateW(PRINTDLGW *lppd)
 {
     HRSRC hResInfo;
     HGLOBAL hDlgTmpl;
-    const WCHAR xpsetup[] = { 'P','R','I','N','T','3','2','_','S','E','T','U','P',0};
-    const WCHAR xprint[] = { 'P','R','I','N','T','3','2',0};
+    static const WCHAR xpsetup[] = { 'P','R','I','N','T','3','2','_','S','E','T','U','P',0};
+    static const WCHAR xprint[] = { 'P','R','I','N','T','3','2',0};
 
     if (lppd->Flags & PD_PRINTSETUP) {
 	if(lppd->Flags & PD_ENABLESETUPTEMPLATEHANDLE) {
@@ -2875,7 +2875,7 @@ BOOL WINAPI PageSetupDlgW(LPPAGESETUPDLGW setupdlg) {
 
     /* short cut exit, just return default values */
     if (setupdlg->Flags & PSD_RETURNDEFAULT) {
-        const WCHAR a4[] = {'A','4',0};
+        static const WCHAR a4[] = {'A','4',0};
 	setupdlg->hDevMode	= pdlg.hDevMode;
 	setupdlg->hDevNames	= pdlg.hDevNames;
 	/* FIXME: Just return "A4" for now. */

@@ -34,9 +34,6 @@
  *
  * FIXME: lpstrCustomFilter not handled
  *
- * FIXME: if the size of lpstrFile (nMaxFile) is too small the first
- * two bytes of lpstrFile should contain the needed size
- *
  * FIXME: algorithm for selecting the initial directory is too simple
  *
  * FIXME: add to recent docs
@@ -227,6 +224,10 @@ HRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
 HRESULT FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCount, UINT sizeUsed);
 static BOOL BrowseSelectedFolder(HWND hwnd);
+
+/* old style dialogs */
+extern BOOL GetFileName31A(LPOPENFILENAMEA lpofn, UINT dlgType);
+extern BOOL GetFileName31W(LPOPENFILENAMEW lpofn, UINT dlgType);
 
 /***********************************************************************
  *      GetFileName95
@@ -1012,8 +1013,8 @@ static LRESULT FILEDLG95_InitControls(HWND hwnd)
   int win98plus   = 0;
   int handledPath = FALSE;
   OSVERSIONINFOA osVi;
-  const WCHAR szwSlash[] = { '\\', 0 };
-  const WCHAR szwStar[] = { '*',0 };
+  static const WCHAR szwSlash[] = { '\\', 0 };
+  static const WCHAR szwStar[] = { '*',0 };
 
   TBBUTTON tbb[] =
   {
@@ -1535,7 +1536,7 @@ BOOL FILEDLG95_OnOpenMultipleFiles(HWND hwnd, LPWSTR lpstrFileList, UINT nFileCo
         WCHAR lpstrNotFound[100];
         WCHAR lpstrMsg[100];
         WCHAR tmp[400];
-        WCHAR nl[] = {'\n',0};
+        static const WCHAR nl[] = {'\n',0};
 
         LoadStringW(COMDLG32_hInstance, IDS_FILENOTFOUND, lpstrNotFound, 100);
         LoadStringW(COMDLG32_hInstance, IDS_VERIFYFILE, lpstrMsg, 100);
@@ -1713,7 +1714,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
   {
     LPWSTR lpszTemp, lpszTemp1;
     LPITEMIDLIST pidl = NULL;
-    WCHAR szwInvalid[] = { '/',':','<','>','|', 0};
+    static const WCHAR szwInvalid[] = { '/',':','<','>','|', 0};
 
     /* check for invalid chars */
     if((strpbrkW(lpstrPathAndFile+3, szwInvalid) != NULL) && !(fodInfos->ofnInfos->Flags & OFN_NOVALIDATE))
@@ -1743,7 +1744,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
       if(*lpszTemp==0)
       {
-        WCHAR wszWild[] = { '*', '?', 0 };
+        static const WCHAR wszWild[] = { '*', '?', 0 };
 	/* if the last element is a wildcard do a search */
         if(strpbrkW(lpszTemp1, wszWild) != NULL)
         {
@@ -1872,6 +1873,12 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
     case ONOPEN_OPEN:   /* fill in the return struct and close the dialog */
       TRACE("ONOPEN_OPEN %s\n", debugstr_w(lpstrPathAndFile));
       {
+        /* update READONLY check box flag */
+	if ((SendMessageA(GetDlgItem(hwnd,IDC_OPENREADONLY),BM_GETCHECK,0,0) & 0x03) == BST_CHECKED)
+	  fodInfos->ofnInfos->Flags |= OFN_READONLY;
+	else
+	  fodInfos->ofnInfos->Flags &= ~OFN_READONLY;
+
 	/* add default extension */
 	if (fodInfos->defext)
 	{
@@ -1882,7 +1889,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	    /* only add "." in case a default extension does exist */
 	    if (*fodInfos->defext != '\0')
 	    {
-                const WCHAR szwDot[] = {'.',0};
+                static const WCHAR szwDot[] = {'.',0};
 		int PathLength = strlenW(lpstrPathAndFile);
 
 	        strcatW(lpstrPathAndFile, szwDot);
@@ -1985,9 +1992,16 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 	}
 	else
         {
-          /* FIXME set error FNERR_BUFFERTOSMALL */
+          WORD size;
+
+          size = strlenW(lpstrPathAndFile) + 1;
+          if (fodInfos->ofnInfos->Flags & OFN_ALLOWMULTISELECT)
+             size += 1;
+          /* return needed size in first two bytes of lpstrFile */
+          *(WORD *)fodInfos->ofnInfos->lpstrFile = size;
           FILEDLG95_Clean(hwnd);
           ret = EndDialog(hwnd, FALSE);
+          COMDLG32_SetCommDlgExtendedError(FNERR_BUFFERTOOSMALL);
         }
         goto ret;
       }
@@ -3184,7 +3198,7 @@ static BOOL BrowseSelectedFolder(HWND hwnd)
           if ( FAILED( IShellBrowser_BrowseObject( fodInfos->Shell.FOIShellBrowser,
                          pidlSelection, SBSP_RELATIVE ) ) )
           {
-               WCHAR notexist[] = {'P','a','t','h',' ','d','o','e','s',
+               static const WCHAR notexist[] = {'P','a','t','h',' ','d','o','e','s',
                                    ' ','n','o','t',' ','e','x','i','s','t',0};
                MessageBoxW( hwnd, notexist, fodInfos->title, MB_OK | MB_ICONEXCLAMATION );
           }
@@ -3227,6 +3241,16 @@ static void MemFree(void *mem)
 BOOL WINAPI GetOpenFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
+#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
+    BOOL win16look = FALSE;
+
+    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
+
+    if (win16look)
+        return GetFileName31A(ofn, OPEN_DIALOG);
+    else
+#endif
         return GetFileDialog95A(ofn, OPEN_DIALOG);
 }
 
@@ -3243,8 +3267,19 @@ BOOL WINAPI GetOpenFileNameA(
 BOOL WINAPI GetOpenFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
+#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
+    BOOL win16look = FALSE;
+
+    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
+
+    if (win16look)
+        return GetFileName31W(ofn, OPEN_DIALOG);
+    else
+#endif
         return GetFileDialog95W(ofn, OPEN_DIALOG);
 }
+
 
 /***********************************************************************
  *            GetSaveFileNameA  (COMDLG32.@)
@@ -3259,6 +3294,16 @@ BOOL WINAPI GetOpenFileNameW(
 BOOL WINAPI GetSaveFileNameA(
 	LPOPENFILENAMEA ofn) /* [in/out] address of init structure */
 {
+#if 0 /* FIXME GetFileName31A uses 16 bit stuff */
+    BOOL win16look = FALSE;
+
+    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
+
+    if (win16look)
+        return GetFileName31A(ofn, SAVE_DIALOG);
+    else
+#endif
         return GetFileDialog95A(ofn, SAVE_DIALOG);
 }
 
@@ -3275,5 +3320,15 @@ BOOL WINAPI GetSaveFileNameA(
 BOOL WINAPI GetSaveFileNameW(
 	LPOPENFILENAMEW ofn) /* [in/out] address of init structure */
 {
-	return GetFileDialog95W(ofn, SAVE_DIALOG);
+#if 0 /* FIXME GetFileName31W uses 16 bit stuff */
+    BOOL win16look = FALSE;
+
+    if (ofn->Flags & (OFN_ALLOWMULTISELECT|OFN_ENABLEHOOK|OFN_ENABLETEMPLATE))
+        win16look = (ofn->Flags & OFN_EXPLORER) ? FALSE : TRUE;
+
+    if (win16look)
+        return GetFileName31W(ofn, SAVE_DIALOG);
+    else
+#endif
+        return GetFileDialog95W(ofn, SAVE_DIALOG);
 }

@@ -84,8 +84,6 @@ static HICON hFloppy = 0;
 static HICON hHDisk = 0;
 static HICON hCDRom = 0;
 static HICON hNet = 0;
-static char defaultopen[]="Open File";
-static char defaultsave[]="Save as";
 
 /***********************************************************************
  * 				FileDlg_Init			[internal]
@@ -971,8 +969,8 @@ void FILEDLG_MapOfnStructA(LPOPENFILENAMEA ofnA, LPOPENFILENAMEW ofnW, BOOL open
         str = ofnA->lpstrTitle;
     else
         /* Allocates default title (FIXME : get it from resource) */
-        str = open ? defaultopen:defaultsave;
-    RtlCreateUnicodeStringFromAsciiz (&usBuffer,ofnA->lpstrTitle);
+        str = open ? "Open File" : "Save as";
+    RtlCreateUnicodeStringFromAsciiz (&usBuffer,str);
     ofnW->lpstrTitle = usBuffer.Buffer;
     ofnW->Flags = ofnA->Flags;
     ofnW->nFileOffset = ofnA->nFileOffset;
@@ -1149,6 +1147,122 @@ static BOOL FILEDLG_CallWindowProc16(LFSPRIVATE lfs, UINT wMsg, WPARAM wParam,
 }
 
 /***********************************************************************
+ *                              FILEDLG_WMInitDialog            [internal]
+ */
+
+static LONG FILEDLG_WMInitDialog(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+  int i, n;
+  WCHAR tmpstr[BUFFILE];
+  LPWSTR pstr, old_pstr;
+  LPOPENFILENAMEW ofn;
+  LFSPRIVATE lfs = (LFSPRIVATE) lParam;
+
+  if (!lfs) return FALSE;
+  SetPropA(hWnd, OFN_PROP, (HANDLE)lfs);
+  lfs->hwnd = hWnd;
+  ofn = lfs->ofnW;
+
+  TRACE("flags=%lx initialdir=%s\n", ofn->Flags, debugstr_w(ofn->lpstrInitialDir));
+
+  SetWindowTextW( hWnd, ofn->lpstrTitle );
+  /* read custom filter information */
+  if (ofn->lpstrCustomFilter)
+    {
+      pstr = ofn->lpstrCustomFilter;
+      n = 0;
+      TRACE("lpstrCustomFilter = %p\n", pstr);
+      while(*pstr)
+	{
+	  old_pstr = pstr;
+          i = SendDlgItemMessageW(hWnd, cmb1, CB_ADDSTRING, 0,
+                                   (LPARAM)(ofn->lpstrCustomFilter) + n );
+          n += lstrlenW(pstr) + 1;
+	  pstr += lstrlenW(pstr) + 1;
+	  TRACE("add str=%s associated to %s\n",
+                debugstr_w(old_pstr), debugstr_w(pstr));
+          SendDlgItemMessageW(hWnd, cmb1, CB_SETITEMDATA, i, (LPARAM)pstr);
+          n += lstrlenW(pstr) + 1;
+	  pstr += lstrlenW(pstr) + 1;
+	}
+    }
+  /* read filter information */
+  if (ofn->lpstrFilter) {
+	pstr = (LPWSTR) ofn->lpstrFilter;
+	n = 0;
+	while(*pstr) {
+	  old_pstr = pstr;
+	  i = SendDlgItemMessageW(hWnd, cmb1, CB_ADDSTRING, 0,
+				       (LPARAM)(ofn->lpstrFilter + n) );
+	  n += lstrlenW(pstr) + 1;
+	  pstr += lstrlenW(pstr) + 1;
+	  TRACE("add str=%s associated to %s\n",
+                debugstr_w(old_pstr), debugstr_w(pstr));
+	  SendDlgItemMessageW(hWnd, cmb1, CB_SETITEMDATA, i, (LPARAM)pstr);
+	  n += lstrlenW(pstr) + 1;
+	  pstr += lstrlenW(pstr) + 1;
+	}
+  }
+  /* set default filter */
+  if (ofn->nFilterIndex == 0 && ofn->lpstrCustomFilter == NULL)
+  	ofn->nFilterIndex = 1;
+  SendDlgItemMessageW(hWnd, cmb1, CB_SETCURSEL, ofn->nFilterIndex - 1, 0);
+  lstrcpynW(tmpstr, FILEDLG_GetFileType(ofn->lpstrCustomFilter,
+	     (LPWSTR)ofn->lpstrFilter, ofn->nFilterIndex - 1),BUFFILE);
+  TRACE("nFilterIndex = %ld, SetText of edt1 to %s\n",
+  			ofn->nFilterIndex, debugstr_w(tmpstr));
+  SetDlgItemTextW( hWnd, edt1, tmpstr );
+  /* get drive list */
+  *tmpstr = 0;
+  DlgDirListComboBoxW(hWnd, tmpstr, cmb2, 0, DDL_DRIVES | DDL_EXCLUSIVE);
+  /* read initial directory */
+  /* FIXME: Note that this is now very version-specific (See MSDN description of
+   * the OPENFILENAME structure).  For example under 2000/XP any path in the
+   * lpstrFile overrides the lpstrInitialDir, but not under 95/98/ME
+   */
+  if (ofn->lpstrInitialDir != NULL)
+    {
+      int len;
+      lstrcpynW(tmpstr, ofn->lpstrInitialDir, 511);
+      len = lstrlenW(tmpstr);
+      if (len > 0 && tmpstr[len-1] != '\\'  && tmpstr[len-1] != ':') {
+        tmpstr[len]='\\';
+        tmpstr[len+1]='\0';
+      }
+    }
+  else
+    *tmpstr = 0;
+  if (!FILEDLG_ScanDir(hWnd, tmpstr)) {
+    *tmpstr = 0;
+    if (!FILEDLG_ScanDir(hWnd, tmpstr))
+      WARN("Couldn't read initial directory %s!\n", debugstr_w(tmpstr));
+  }
+  /* select current drive in combo 2, omit missing drives */
+  {
+      char dir[MAX_PATH];
+      char str[4] = "a:\\";
+      GetCurrentDirectoryA( sizeof(dir), dir );
+      for(i = 0, n = -1; i < 26; i++)
+      {
+          str[0] = 'a' + i;
+          if (GetDriveTypeA(str) > DRIVE_NO_ROOT_DIR) n++;
+          if (toupper(str[0]) == toupper(dir[0])) break;
+      }
+  }
+  SendDlgItemMessageW(hWnd, cmb2, CB_SETCURSEL, n, 0);
+  if (!(ofn->Flags & OFN_SHOWHELP))
+    ShowWindow(GetDlgItem(hWnd, pshHelp), SW_HIDE);
+  if (ofn->Flags & OFN_HIDEREADONLY)
+    ShowWindow(GetDlgItem(hWnd, chx1), SW_HIDE);
+  if (lfs->hook)
+      return (BOOL) FILEDLG_CallWindowProc(lfs, WM_INITDIALOG, wParam, lfs->lParam);
+  return TRUE;
+}
+
+
+
+
+/***********************************************************************
  *                              FILEDLG_WMInitDialog16            [internal]
  *      The is a duplicate of the 32bit FILEDLG_WMInitDialog function 
  *      The only differnce is that it calls FILEDLG_CallWindowProc16 
@@ -1265,6 +1379,19 @@ static LONG FILEDLG_WMInitDialog16(HWND hWnd, WPARAM wParam, LPARAM lParam)
 }
 
 /***********************************************************************
+ *                              FILEDLG_WMMeasureItem           [internal]
+ */
+static LONG FILEDLG_WMMeasureItem(HWND hWnd, WPARAM wParam, LPARAM lParam)
+{
+    LPMEASUREITEMSTRUCT lpmeasure;
+
+    lpmeasure = (LPMEASUREITEMSTRUCT)lParam;
+    lpmeasure->itemHeight = fldrHeight;
+    return TRUE;
+}
+
+
+/***********************************************************************
  *                              FILEDLG_WMMeasureItem16         [internal]
  */
 static LONG FILEDLG_WMMeasureItem16(HWND16 hWnd, WPARAM16 wParam, LPARAM lParam)
@@ -1277,6 +1404,54 @@ static LONG FILEDLG_WMMeasureItem16(HWND16 hWnd, WPARAM16 wParam, LPARAM lParam)
 }
 
 /* ------------------ Dialog procedures ---------------------- */
+
+/***********************************************************************
+ *           FileOpenDlgProc                                    [internal]
+ *      Used for open and save, in fact.
+ */
+static INT_PTR CALLBACK FileOpenDlgProc(HWND hWnd, UINT wMsg,
+                                      WPARAM wParam, LPARAM lParam)
+{
+    LFSPRIVATE lfs = (LFSPRIVATE)GetPropA(hWnd,OFN_PROP);
+
+    TRACE("msg=%x wparam=%x lParam=%lx\n", wMsg, wParam, lParam);
+    if ((wMsg != WM_INITDIALOG) && lfs && lfs->hook)
+        {
+            INT_PTR lRet;
+            lRet  = (INT_PTR)FILEDLG_CallWindowProc(lfs, wMsg, wParam, lParam);
+            if (lRet)
+                return lRet;         /* else continue message processing */
+        }
+    switch (wMsg)
+    {
+    case WM_INITDIALOG:
+        return FILEDLG_WMInitDialog(hWnd, wParam, lParam);
+
+    case WM_MEASUREITEM:
+        return FILEDLG_WMMeasureItem(hWnd, wParam, lParam);
+
+    case WM_DRAWITEM:
+        return FILEDLG_WMDrawItem(hWnd, wParam, lParam, !lfs->open, (DRAWITEMSTRUCT *)lParam);
+
+    case WM_COMMAND:
+        return FILEDLG_WMCommand(hWnd, lParam, HIWORD(wParam), LOWORD(wParam), lfs);
+#if 0
+    case WM_CTLCOLOR:
+         SetBkColor((HDC16)wParam, 0x00C0C0C0);
+         switch (HIWORD(lParam))
+         {
+	 case CTLCOLOR_BTN:
+	     SetTextColor((HDC16)wParam, 0x00000000);
+             return hGRAYBrush;
+	case CTLCOLOR_STATIC:
+             SetTextColor((HDC16)wParam, 0x00000000);
+             return hGRAYBrush;
+	}
+      break;
+#endif
+    }
+    return FALSE;
+}
 
 /***********************************************************************
  *           FileOpenDlgProc   (COMMDLG.6)
@@ -1377,6 +1552,73 @@ BOOL16 CALLBACK FileSaveDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam,
    */
   return FALSE;
 }
+
+
+
+/***********************************************************************
+ *           GetFileName31A                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save.
+ */
+BOOL GetFileName31A(
+                    LPOPENFILENAMEA lpofn, /* addess of structure with data*/
+                    UINT dlgType /* type dialogue : open/save */
+                    )
+{
+    HINSTANCE hInst;
+    BOOL bRet = FALSE;
+    LFSPRIVATE lfs;
+
+    if (!lpofn || !FileDlg_Init()) return FALSE;
+
+    TRACE("ofn flags %08lx\n", lpofn->Flags);
+    lfs = FILEDLG_AllocPrivate((LPARAM) lpofn, LFS32A, dlgType);
+    if (lfs)
+    {
+        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        bRet = DialogBoxIndirectParamA( hInst, lfs->template, lpofn->hwndOwner,
+                                        FileOpenDlgProc, (LPARAM)lfs);
+        FILEDLG_DestroyPrivate(lfs);
+    }
+
+    TRACE("return lpstrFile='%s' !\n", lpofn->lpstrFile);
+    return bRet;
+}
+
+/***********************************************************************
+ *           GetFileName31W                                 [internal]
+ *
+ * Creates a win31 style dialog box for the user to select a file to open/save
+ */
+BOOL GetFileName31W(
+                    LPOPENFILENAMEW lpofn, /* addess of structure with data*/
+                    UINT dlgType /* type dialogue : open/save */
+                    )
+{
+    HINSTANCE hInst;
+    BOOL bRet = FALSE;
+    LFSPRIVATE lfs;
+
+    if (!lpofn || !FileDlg_Init()) return FALSE;
+
+    lfs = FILEDLG_AllocPrivate((LPARAM) lpofn, LFS32W, dlgType);
+    if (lfs)
+    {
+        hInst = (HINSTANCE)GetWindowLongA( lpofn->hwndOwner, GWL_HINSTANCE );
+        bRet = DialogBoxIndirectParamW( hInst, lfs->template, lpofn->hwndOwner,
+                                        FileOpenDlgProc, (LPARAM)lfs);
+        FILEDLG_DestroyPrivate(lfs);
+    }
+
+    TRACE("return lpstrFile=%s !\n", debugstr_w(lpofn->lpstrFile));
+    return bRet;
+}
+
+
+
+
+
+
 
 /* ------------------ APIs ---------------------- */
 
