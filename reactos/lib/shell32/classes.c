@@ -114,67 +114,7 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, DWORD len, BOOL b
 }
 
 
-BOOL HCR_GetExecuteCommandW(LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len)
-{
-        static const WCHAR swShell[] = {'\\','s','h','e','l','l','\\',0};
-        static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};
-	WCHAR	sTemp[MAX_PATH];
-
-	TRACE("%s %s %p\n",debugstr_w(szClass), debugstr_w(szVerb), szDest);
-
-	lstrcpyW(sTemp, szClass);
-	lstrcatW(sTemp, swShell);
-	lstrcatW(sTemp, szVerb);
-	lstrcatW(sTemp, swCommand);
-
-	if (ERROR_SUCCESS == SHGetValueW(HKEY_CLASSES_ROOT, sTemp, NULL, NULL, szDest, &len)) {
-	    TRACE("-- %s\n", debugstr_w(szDest) );
-	    return TRUE;
-	}
-	return FALSE;
-}
-
-BOOL HCR_GetExecuteCommandA(LPCSTR szClass, LPCSTR szVerb, LPSTR szDest, DWORD len)
-{
-	char	sTemp[MAX_PATH];
-
-	TRACE("%s %s\n",szClass, szVerb );
-
-	snprintf(sTemp, MAX_PATH, "%s\\shell\\%s\\command",szClass, szVerb);
-
-	if (ERROR_SUCCESS == SHGetValueA(HKEY_CLASSES_ROOT, sTemp, NULL, NULL, szDest, &len)) {
-	    TRACE("-- %s\n", debugstr_a(szDest) );
-	    return TRUE;
-	}
-	return FALSE;
-}
-
-BOOL HCR_GetExecuteCommandExA( HKEY hkeyClass, LPCSTR szClass, LPCSTR szVerb, LPSTR szDest, DWORD len )
-{
-	BOOL	ret = FALSE;
-
-	TRACE("%p %s %s\n", hkeyClass, szClass, szVerb );
-
-	if (szClass)
-            RegOpenKeyExA(HKEY_CLASSES_ROOT, szClass, 0, 0x02000000, &hkeyClass);
-
-        if (hkeyClass)
-	{
-	    char sTemp[MAX_PATH];
-
-	    snprintf(sTemp, MAX_PATH, "shell\\%s\\command", szVerb);
-
-            ret = (ERROR_SUCCESS == SHGetValueA(hkeyClass, sTemp, NULL, NULL, szDest, &len));
-
-	    if (szClass)
-	       RegCloseKey(hkeyClass);
-	}
-
-	TRACE("-- %s\n", szDest );
-	return ret;
-}
-
-BOOL HCR_GetExecuteCommandExW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len )
+BOOL HCR_GetExecuteCommandW(HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len)
 {
         static const WCHAR swShell[] = {'\\','s','h','e','l','l','\\',0};
         static const WCHAR swCommand[] = {'\\','c','o','m','m','a','n','d',0};

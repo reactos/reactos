@@ -926,7 +926,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     static const WCHAR wExtLnk[] = {'.','l','n','k',0};
     static const WCHAR wExplorer[] = {'e','x','p','l','o','r','e','r','.','e','x','e',0};
 
-    WCHAR wszApplicationName[MAX_PATH+2], wszParameters[MAX_PATH], wfileName[MAX_PATH], wszDir[MAX_PATH];
+    WCHAR wszApplicationName[MAX_PATH+2], wszParameters[1024], wfileName[MAX_PATH], wszDir[MAX_PATH];
     SHELLEXECUTEINFOW sei_tmp;	/* modifyable copy of SHELLEXECUTEINFO struct */
     void *env;
     WCHAR wszProtocol[256];
@@ -1003,15 +1003,11 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     {
         /* launch a document by fileclass like 'WordPad.Document.1' */
         /* the Commandline contains 'c:\Path\wordpad.exe "%1"' */
-        /* FIXME: wszParameters should not be of a fixed size. Plus MAX_PATH is way too short! */
-        if (sei_tmp.fMask & SEE_MASK_CLASSKEY)
-            HCR_GetExecuteCommandExW(sei_tmp.hkeyClass,
-                                    sei_tmp.fMask&SEE_MASK_CLASSNAME? sei_tmp.lpClass: NULL,
-                                    sei_tmp.lpVerb? sei_tmp.lpVerb: wszOpen,
-				    wszParameters/*sei_tmp.lpParameters*/, sizeof(wszParameters)/sizeof(WCHAR));
-        else if (sei_tmp.fMask & SEE_MASK_CLASSNAME)
-            HCR_GetExecuteCommandW(sei_tmp.lpClass, sei_tmp.lpVerb? sei_tmp.lpVerb: wszOpen,
-				    wszParameters/*sei_tmp.lpParameters*/, sizeof(wszParameters)/sizeof(WCHAR));
+        /* FIXME: wszParameters should not be of a fixed size. Fixed to 1024, MAX_PATH is way too short! */
+        HCR_GetExecuteCommandW((sei_tmp.fMask & SEE_MASK_CLASSKEY)? sei_tmp.hkeyClass: NULL,
+                               (sei_tmp.fMask & SEE_MASK_CLASSNAME)? sei_tmp.lpClass: NULL,
+                               (sei_tmp.lpVerb)? sei_tmp.lpVerb: wszOpen,
+                               wszParameters/*sei_tmp.lpParameters*/, sizeof(wszParameters)/sizeof(WCHAR));
 
         /* FIXME: get the extension of lpFile, check if it fits to the lpClass */
         TRACE("SEE_MASK_CLASSNAME->'%s', doc->'%s'\n", debugstr_w(sei_tmp.lpParameters), debugstr_w(sei_tmp.lpFile));
@@ -1082,7 +1078,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 		strcpyW(wszApplicationName, wExplorer);
 
 		sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
-	    } else if (HCR_GetExecuteCommandW(wszFolder, sei_tmp.lpVerb?sei_tmp.lpVerb:wszOpen, buffer, sizeof(buffer))) {
+	    } else if (HCR_GetExecuteCommandW(0, wszFolder, sei_tmp.lpVerb?sei_tmp.lpVerb:wszOpen, buffer, sizeof(buffer))) {
 		SHELL_ArgifyW(wszApplicationName, sizeof(wszApplicationName)/sizeof(WCHAR), buffer, NULL, sei_tmp.lpIDList, NULL);
 
 		sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;

@@ -1,5 +1,6 @@
 /*
  * Copyright 1998 Juergen Schmied
+ * Copyright 2003 Filip Navara
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -95,7 +96,7 @@ CAPTION "Procházet..."
 FONT 8, "Helv"
 {
  DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Cancel", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Storno", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
  LTEXT "", IDD_TITLE, 4, 4, 180, 12
  LTEXT "", IDD_STATUS, 4, 25, 180, 12
  CONTROL "", IDD_TREEVIEW, "SysTreeView32",

@@ -344,7 +344,7 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
  *  file:      0x40400177      FILESYSTEM | CANMONIKER
  *  drive      0xF0400154      FILESYSTEM | HASSUBFOLDER | FOLDER | FILESYSANCESTOR | CANMONIKER | CANRENAME (LABEL)
  *
- * This functions does not set flags!! It only resets flags when nessesary.
+ * This function does not set flags!! It only resets flags when necessary.
  */
 HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWORD pdwAttributes)
 {

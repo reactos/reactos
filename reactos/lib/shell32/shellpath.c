@@ -1038,13 +1038,8 @@ HRESULT WINAPI SHGetFolderPathW(
 
 	dwCsidlFlags = CSIDL_Data[folder].dwFlags;
 	hRootKey = CSIDL_Data[folder].hRootKey;
-#if 0
-	strcpyW(szValueName, CSIDL_Data[folder].szValueName);
-	strcpyW(szDefaultPath, CSIDL_Data[folder].szDefaultPath);
-#else
 	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szValueName, -1, szValueName, MAX_PATH);
 	MultiByteToWideChar(CP_ACP, 0, CSIDL_Data[folder].szDefaultPath, -1, szDefaultPath, MAX_PATH);
-#endif
 
 	if (dwCsidlFlags & CSIDL_MYFLAG_SHFOLDER)
 	{

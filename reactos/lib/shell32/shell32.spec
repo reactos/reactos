@@ -68,7 +68,7 @@
   72 stdcall Shell_GetCachedImageIndex(ptr ptr long) Shell_GetCachedImageIndexAW
   73 stdcall SHShellFolderView_Message(long long long)
   74 stdcall SHCreateStdEnumFmtEtc(long ptr ptr)
-  75 stdcall PathYetAnotherMakeUniqueName(ptr ptr ptr ptr)
+  75 stdcall PathYetAnotherMakeUniqueName(ptr wstr wstr wstr)
   76 stub DragQueryInfo
   77 stdcall SHMapPIDLToSystemImageListIndex(ptr ptr ptr)
   78 stdcall OleStrToStrN(str long wstr long) OleStrToStrNAW
