@@ -3,6 +3,6 @@
 <cdfile>readme.txt</cdfile>
 <cdfile base="reactos">hivecls.inf</cdfile>
 <cdfile base="reactos">hivedef.inf</cdfile>
-<cdfile base="reactos">hiveinst.inf</cdfile>
 <cdfile base="reactos">hivesft.inf</cdfile>
 <cdfile base="reactos">hivesys.inf</cdfile>
+<cdfile base="reactos">txtsetup.sif</cdfile>

@@ -33,11 +33,11 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case Win32GUI:
 		case KernelModeDriver:
 		case BootSector:
+		case BootLoader:
 			return true;
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
-		case BootLoader:
 		case Iso:
 			return false;
 	}

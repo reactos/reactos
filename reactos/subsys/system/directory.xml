@@ -19,6 +19,9 @@
 <directory name="notepad">
 	<xi:include href="notepad/notepad.xml" />
 </directory>
+<directory name="reactos">
+	<xi:include href="reactos/reactos.xml" />
+</directory>
 <directory name="regedit">
 	<xi:include href="regedit/regedit.xml" />
 </directory>
