@@ -1,10 +1,10 @@
-# $Id: Makefile,v 1.2 2002/04/07 13:53:51 ea Exp $
+# $Id: Makefile,v 1.3 2002/06/08 16:28:03 ea Exp $
 #
 # Tu run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
 # and pass "console" in the ld's --subsystem option.
 # 
 #
-PATH_TO_TOP=../../../..
+PATH_TO_TOP=../../../reactos
 
 PATH_TO_PSX_TOP=../..
 

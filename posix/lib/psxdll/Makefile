@@ -1,6 +1,8 @@
-# $Id: Makefile,v 1.8 2002/05/17 02:21:54 hyperion Exp $
+# $Id: Makefile,v 1.9 2002/06/08 16:28:04 ea Exp $
 
-PATH_TO_TOP = ../../../..
+PATH_TO_TOP = ../../../reactos
+
+PATH_TO_PSX_TOP = ../..
 
 TARGET_TYPE = dynlink
 
@@ -21,7 +23,7 @@ TARGET_CFLAGS =\
 	-nostdinc \
 	-nostdlib \
 	-fno-builtin \
-	-I$(PATH_TO_TOP)/subsys/psx/include \
+	-I$(PATH_TO_PSX_TOP)/include \
 	-I$(PATH_TO_TOP)/include \
 	-D__PSXDLL__ \
 	-D__PSX_DEBUG_WANT_ALL__

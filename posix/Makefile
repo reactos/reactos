@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.1 2002/04/10 21:30:20 ea Exp $
+# $Id: Makefile,v 1.2 2002/06/08 16:28:02 ea Exp $
 #
 # ReactOS POSIX+ Personality
 #
-PATH_TO_TOP=../..
+PATH_TO_TOP=../reactos
 
 CFLAGS=-Iinclude
 
@@ -12,7 +12,7 @@ all: lib/crt0w32.o
 	make -C lib/psxdll
 	make -C lib/psxx
 	make -C apps/baresh
-	make -C apps/csrterm
+	make -C apps/posixw32
 
 lib/crt0w32.o: lib/crt0w32.c
 

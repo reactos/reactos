@@ -1,9 +1,9 @@
-# $Id: Makefile,v 1.1 2002/04/06 16:07:34 ea Exp $
+# $Id: Makefile,v 1.2 2002/06/08 16:28:05 ea Exp $
 #
 # Tool to generate the POSIX+ server system calls table
 # and other auxiliary C files.
 #
-PATH_TO_TOP=../../..
+PATH_TO_TOP=../../reactos
 PATH_TO_PSX_TOP=..
 
 TARGET_NAME=mksystab

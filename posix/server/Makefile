@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.1 2002/04/10 21:30:21 ea Exp $
+# $Id: Makefile,v 1.2 2002/06/08 16:28:04 ea Exp $
 #
 # ReactOS POSIX+ Environment Subsystem
 #
-PATH_TO_TOP=../../..
+PATH_TO_TOP=../../reactos
 
 TARGET_TYPE = program
 
