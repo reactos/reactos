@@ -4,8 +4,10 @@
  * FILE:            lib/advapi32/sec/sec.c
  * PURPOSE:         Registry functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *		    Steven Edwards ( Steven_Ed4153@yahoo.com )
  * UPDATE HISTORY:
  *                  Created 01/11/98
+ *                  Added a few new stubs 6/27/03
  */
 
 #define NTOS_MODE_USER
@@ -363,4 +365,40 @@ GetUserNameW(LPWSTR lpBuffer, LPDWORD nSize)
   return(FALSE);
 }
 
+WINBOOL
+STDCALL
+GetFileSecurityA (
+    LPCSTR lpFileName,
+    SECURITY_INFORMATION RequestedInformation,
+    PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    DWORD nLength,
+    LPDWORD lpnLengthNeeded
+    )
+{
+  return(FALSE);
+}
+
+WINBOOL
+STDCALL
+GetFileSecurityW (
+    LPCWSTR lpFileName,
+    SECURITY_INFORMATION RequestedInformation,
+    PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    DWORD nLength,
+    LPDWORD lpnLengthNeeded
+    )
+{
+  return(FALSE);
+}
+
+WINBOOL
+STDCALL
+SetFileSecurityA (
+    LPCSTR lpFileName,
+    SECURITY_INFORMATION SecurityInformation,
+    PSECURITY_DESCRIPTOR pSecurityDescriptor
+    )
+{
+  return(FALSE);
+}
 /* EOF */

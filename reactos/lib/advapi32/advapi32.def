@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.7 2003/03/24 13:45:27 ekohl Exp $
+; $Id: advapi32.def,v 1.8 2003/06/27 15:19:18 sedwards Exp $
 ;
 ; advapi32.def
 ;
@@ -405,6 +405,8 @@ SystemFunction030@8
 SystemFunction031@8
 SystemFunction032@8
 SystemFunction033@8
+;SystemFunction034@8
+SystemFunction035@8
 UnlockServiceDatabase@4
 WinLoadTrustProvider@4
 WinSubmitCertificate@4

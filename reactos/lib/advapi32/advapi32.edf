@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.19 2003/02/02 19:24:43 hyperion Exp $
+; $Id: advapi32.edf,v 1.20 2003/06/27 15:19:18 sedwards Exp $
 ;
 ; advapi32.edf
 ;
@@ -83,7 +83,7 @@ DeleteAce=DeleteAce@8
 DeleteService=DeleteService@4
 ;DenyAccessRightsA
 ;DenyAccessRightsW
-;DeregisterEventSource=DeregisterEventSource@4
+DeregisterEventSource=DeregisterEventSource@4
 ;DestroyPrivateObjectSecurity=DestroyPrivateObjectSecurity@4
 DuplicateToken=DuplicateToken@12
 DuplicateTokenEx=DuplicateTokenEx@24
@@ -133,8 +133,8 @@ GetAclInformation=GetAclInformation@16
 ;GetExplicitAccessRightsW=GetExplicitAccessRightsW@16
 ;GetExplicitEntriesFromAclA=GetExplicitEntriesFromAclA@12
 ;GetExplicitEntriesFromAclW=GetExplicitEntriesFromAclW@12
-;GetFileSecurityA=GetFileSecurityA@20
-;GetFileSecurityW=GetFileSecurityW@20
+GetFileSecurityA=GetFileSecurityA@20
+GetFileSecurityW=GetFileSecurityW@20
 GetKernelObjectSecurity=GetKernelObjectSecurity@20
 GetLengthSid=GetLengthSid@4
 ;GetMultipleTrusteeA=GetMultipleTrusteeA@4
@@ -348,14 +348,14 @@ RegSetValueExW=RegSetValueExW@24
 RegSetValueW=RegSetValueW@20
 RegUnLoadKeyA=RegUnLoadKeyA@8
 RegUnLoadKeyW=RegUnLoadKeyW@8
-;RegisterEventSourceA=RegisterEventSourceA@8
-;RegisterEventSourceW=RegisterEventSourceW@8
+RegisterEventSourceA=RegisterEventSourceA@8
+RegisterEventSourceW=RegisterEventSourceW@8
 RegisterServiceCtrlHandlerA=RegisterServiceCtrlHandlerA@8
 RegisterServiceCtrlHandlerW=RegisterServiceCtrlHandlerW@8
 ;ReplaceAllAccessRightsA
 ;ReplaceAllAccessRightsW
-;ReportEventA=ReportEventA@36
-;ReportEventW=ReportEventW@36
+ReportEventA=ReportEventA@36
+ReportEventW=ReportEventW@36
 RevertToSelf=RevertToSelf@0
 ;RevokeExplicitAccessRightsA=RevokeExplicitAccessRightsA@16
 ;RevokeExplicitAccessRightsW=RevokeExplicitAccessRightsW@16
@@ -364,8 +364,8 @@ RevertToSelf=RevertToSelf@0
 SetAclInformation=SetAclInformation@16
 ;SetEntriesInAclA=SetEntriesInAclA@16
 ;SetEntriesInAclW=SetEntriesInAclW@16
-;SetFileSecurityA=SetFileSecurityA@12
-;SetFileSecurityW=SetFileSecurityW@12
+SetFileSecurityA=SetFileSecurityA@12
+SetFileSecurityW=SetFileSecurityW@12
 SetKernelObjectSecurity=SetKernelObjectSecurity@12
 ;SetNamedSecurityInfoA=SetNamedSecurityInfoA@28
 ;SetNamedSecurityInfoW=SetNamedSecurityInfoW@28
@@ -418,6 +418,8 @@ SystemFunction030=SystemFunction030@8
 SystemFunction031=SystemFunction031@8
 SystemFunction032=SystemFunction032@8
 SystemFunction033=SystemFunction033@8
+SystemFunction033=SystemFunction034@8
+SystemFunction033=SystemFunction035@8
 UnlockServiceDatabase=UnlockServiceDatabase@4
 ;WinLoadTrustProvider=WinLoadTrustProvider@4
 ;WinSubmitCertificate=WinSubmitCertificate@4

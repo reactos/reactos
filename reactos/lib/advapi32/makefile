@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.26 2003/04/14 01:19:06 hyperion Exp $
+# $Id: makefile,v 1.27 2003/06/27 15:19:18 sedwards Exp $
 
 PATH_TO_TOP = ../..
 
@@ -22,7 +22,8 @@ TARGET_BASE = 0x77DB0000
 MISC_OBJECTS=\
 	misc/dllmain.o	\
 	misc/shutdown.o	\
-	misc/sysfunc.o 
+	misc/sysfunc.o \
+	misc/stubs.o
 
 REGISTRY_OBJECTS=\
 	reg/reg.o
