@@ -41,7 +41,7 @@ DEFINE_GUID(GUID_DEVINTERFACE_IRDAPORT,
   0x86e0d1e0L, 0x8089, 0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x74);
 DEFINE_GUID(GUID_DEVINTERFACE_IRDAENUM_BUS_ENUMERATOR,
   0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x19);
-#endif // DEFINE_GUID
+#endif /* DEFINE_GUID */
 
 #define WINDOWS_AF_IRDA 26
 #define WINDOWS_PF_IRDA WINDOWS_AF_IRDA
@@ -76,16 +76,16 @@ DEFINE_GUID(GUID_DEVINTERFACE_IRDAENUM_BUS_ENUMERATOR,
 #define IRLMP_9WIRE_MODE     ((ULONG)0x16)
 
 #if 0
-// Available/Used on Windows 98 only ???
+/* Available/Used on Windows 98 only ??? */
 #define IRLMP_TINYTP_MODE    ((ULONG)0x17)
 #define IRLMP_PARAMETERS     ((ULONG)0x18)
 #define IRLMP_DISCOVERY_MODE ((ULONG)0x19)
-// Available/Used on Windows CE only ???
+/* Available/Used on Windows CE only ??? */
 #define IRLMP_SHARP_MODE     ((ULONG)0x20)
 #endif
 
 enum {
-// First hint byte
+/* First hint byte */
   LM_HB1_PnP =         0x01,
   LM_HB1_PDA_Palmtop = 0x02,
   LM_HB1_Computer =    0x04,
@@ -93,10 +93,10 @@ enum {
   LM_HB1_Modem =       0x10,
   LM_HB1_Fax =         0x20,
   LM_HB1_LANAccess =   0x40,
-// Second hint byte
+/* Second hint byte */
   LM_HB2_Telephony =   0x01,
   LM_HB2_FileServer =  0x02,
-// Any hint byte
+/* Any hint byte */
   LM_HB_Extension =    0x80,
 };
 
@@ -123,17 +123,17 @@ enum {
 #define  LM_BAUD_1152K  1152000
 #define  LM_BAUD_4M     4000000
 
-#if 0 // Available/Used on Windows 98 only ???
+#if 0 /* Available/Used on Windows 98 only ??? */
 typedef ULONG LM_BAUD_RATE;
 typedef struct {
-    ULONG        nTXDataBytes;  // packet transmit receive bytes
-    ULONG        nRXDataBytes;  // packet maximum receive bytes
-    LM_BAUD_RATE nBaudRate;     // link negotiated baud
-    ULONG        thresholdTime; // milliseconds for threshold time
-    ULONG        discTime;      // milliseconds for disconnect time
-    USHORT       nMSLinkTurn;   // milliseconds for link turn around time
-    UCHAR        nTXPackets;    // transmit window packets
-    UCHAR        nRXPackets;    // receive window packets
+    ULONG        nTXDataBytes;  /* packet transmit receive bytes */
+    ULONG        nRXDataBytes;  /* packet maximum receive bytes */
+    LM_BAUD_RATE nBaudRate;     /* link negotiated baud */
+    ULONG        thresholdTime; /* milliseconds for threshold time */
+    ULONG        discTime;      /* milliseconds for disconnect time
+    USHORT       nMSLinkTurn;   /* milliseconds for link turn around time */
+    UCHAR        nTXPackets;    /* transmit window packets */
+    UCHAR        nRXPackets;    /* receive window packets */
 } LM_IRPARMS;
 typedef LM_IRPARMS *PLM_IRPARMS;
 #endif

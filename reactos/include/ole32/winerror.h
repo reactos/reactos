@@ -30,21 +30,21 @@ Cambridge, MA 02139, USA.
 #ifndef _WINERROR_H
 #define _WINERROR_H
 #if 0
-//
-//	Return Code macros
-//
+/*
+ *	Return Code macros
+ */
 #define	SUCCEEDED(Status)	((HRESULT)(Status) >= 0)
 #define	FAILED(Status)		((HRESULT)(Status)<0)
 
-//
-//	Success Codes
-//
+/*
+ *	Success Codes
+ */
 #define S_OK						0x00000000L
 #define S_FALSE						0x00000001L
 
-//
-//	Error Codes
-//
+/*
+ *	Error Codes
+ */
 #define E_NOINTERFACE				0x80000004L
 #define E_POINTER					0x80004003L
 #define	E_FAIL						0x80004005L

@@ -36,10 +36,10 @@ extern "C" {
 
 typedef struct _KEYBOARD_INPUT_DATA {
 
-    //
-    // Unit number.  E.g., for \Device\KeyboardPort0 the unit is '0',
-    // for \Device\KeyboardPort1 the unit is '1', and so on.
-    //
+    /*
+     * Unit number.  E.g., for \Device\KeyboardPort0 the unit is '0',
+     * for \Device\KeyboardPort1 the unit is '1', and so on.
+     */
 
     USHORT UnitId;
     USHORT MakeCode;

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.19 2003/08/14 18:30:27 silverblade Exp $ */
+/* $Id: extypes.h,v 1.20 2003/08/25 01:37:47 sedwards Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -27,7 +27,7 @@ typedef struct _OWNER_ENTRY
      {
 	LONG OwnerCount;
 	ULONG TableSize;
-     }; // anon
+     }; /* anon */
 } OWNER_ENTRY, *POWNER_ENTRY;
 
 typedef struct _ERESOURCE
@@ -46,7 +46,7 @@ typedef struct _ERESOURCE
      {
 	PVOID Address;
 	ULONG CreatorBackTraceIndex;
-     }; // anon
+     }; /* anon */
    KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 
@@ -70,8 +70,8 @@ typedef struct _ZONE_HEADER
 
 typedef struct _ZONE_SEGMENT_HEADER
 {
-   SINGLE_LIST_ENTRY SegmentList; // was Entry
-   PVOID Reserved;  // was ULONG Size;
+   SINGLE_LIST_ENTRY SegmentList; /* was Entry */
+   PVOID Reserved;  /* was ULONG Size; */
 } ZONE_SEGMENT_HEADER, *PZONE_SEGMENT_HEADER;
 
 
@@ -80,7 +80,7 @@ typedef VOID STDCALL_FUNC
 (*PWORKER_THREAD_ROUTINE)(PVOID Parameter);
 
 
-// Modified by Andrew Greenwood, 16th July 2003:
+/* Modified by Andrew Greenwood, 16th July 2003: */
 
 typedef struct _WORK_QUEUE_ITEM
 {
@@ -105,7 +105,7 @@ typedef union _SLIST_HEADER
 	SINGLE_LIST_ENTRY Next;
 	USHORT Depth;
 	USHORT Sequence;	
-     }; // now anonymous
+     }; /* now anonymous */
 } SLIST_HEADER, *PSLIST_HEADER;
 
 typedef struct _NPAGED_LOOKASIDE_LIST

@@ -4,7 +4,7 @@
 struct _DEVICE_OBJECT;
 struct _FILE_OBJECT;
 
-// windows.h may be included before
+/* windows.h may be included before */
 #ifndef _GUID_DEFINED
 #define _GUID_DEFINED
 
@@ -58,9 +58,9 @@ typedef struct _DEVICE_INTERFACE_CHANGE_NOTIFICATION {
   USHORT Version;
   USHORT Size;
   GUID Event;
-  //
-  // Event-specific data
-  //
+  /*
+   * Event-specific data
+   */
   GUID InterfaceClassGuid;
   PUNICODE_STRING SymbolicLinkName;
 } DEVICE_INTERFACE_CHANGE_NOTIFICATION, *PDEVICE_INTERFACE_CHANGE_NOTIFICATION;
@@ -69,9 +69,9 @@ typedef struct _HWPROFILE_CHANGE_NOTIFICATION {
   USHORT Version;
   USHORT Size;
   GUID Event;
-  //
-  // (No event-specific data)
-  //
+  /*
+   * (No event-specific data)
+   */
 } HWPROFILE_CHANGE_NOTIFICATION, *PHWPROFILE_CHANGE_NOTIFICATION;
 
 typedef struct _PLUGPLAY_NOTIFICATION_HEADER {
@@ -93,9 +93,9 @@ typedef struct _TARGET_DEVICE_CUSTOM_NOTIFICATION {
   USHORT Version;
   USHORT Size;
   GUID Event;
-  //
-  // Event-specific data
-  //
+  /*
+   * Event-specific data
+   */
   struct _FILE_OBJECT *FileObject;
   LONG NameBufferOffset;
   UCHAR CustomDataBuffer[1];
@@ -105,14 +105,14 @@ typedef struct _TARGET_DEVICE_REMOVAL_NOTIFICATION {
   USHORT Version;
   USHORT Size;
   GUID Event;
-  //
-  // Event-specific data
-  //
+  /*
+   * Event-specific data
+   */
   struct _FILE_OBJECT *FileObject;
 } TARGET_DEVICE_REMOVAL_NOTIFICATION, *PTARGET_DEVICE_REMOVAL_NOTIFICATION;
 
 
-// PnP Device Property for IoGetDeviceProperty
+/* PnP Device Property for IoGetDeviceProperty */
 typedef enum {
   DevicePropertyDeviceDescription,
   DevicePropertyHardwareID,
@@ -134,12 +134,12 @@ typedef enum {
   DevicePropertyUINumber
 } DEVICE_REGISTRY_PROPERTY;
 
-// DevInstKeyType values for IoOpenDeviceRegistryKey
+/* DevInstKeyType values for IoOpenDeviceRegistryKey */
 #define PLUGPLAY_REGKEY_DEVICE              1
 #define PLUGPLAY_REGKEY_DRIVER              2
 #define PLUGPLAY_REGKEY_CURRENT_HWPROFILE   4
 
-// EventCategory for IoRegisterPlugPlayNotification
+/* EventCategory for IoRegisterPlugPlayNotification */
 typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryReserved,
   EventCategoryHardwareProfileChange,
@@ -147,18 +147,18 @@ typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryTargetDeviceChange
 } IO_NOTIFICATION_EVENT_CATEGORY;
 
-// CallbackRoutine for IoRegisterPlugPlayNotification
+/* CallbackRoutine for IoRegisterPlugPlayNotification */
 typedef NTSTATUS STDCALL_FUNC
 (*PDRIVER_NOTIFICATION_CALLBACK_ROUTINE)(
   IN PVOID NotificationStructure,
   IN PVOID Context);
 
-// Callback for IoReportTargetDeviceChangeAsynchronous
+/* Callback for IoReportTargetDeviceChangeAsynchronous */
 typedef VOID STDCALL_FUNC
 (*PDEVICE_CHANGE_COMPLETE_CALLBACK)(
   IN PVOID Context);
 
-// PNP/POWER values for IRP_MJ_PNP/IRP_MJ_POWER
+/* PNP/POWER values for IRP_MJ_PNP/IRP_MJ_POWER */
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
   EjectionRelations,

@@ -24,7 +24,7 @@ typedef struct _AFD_SOCKET_INFORMATION {
 
 /* AFD IOCTL code definitions */
 
-#define FSCTL_AFD_BASE     FILE_DEVICE_NAMED_PIPE // ???
+#define FSCTL_AFD_BASE     FILE_DEVICE_NAMED_PIPE /* ??? */
 
 #define AFD_CTL_CODE(Function, Method, Access) \
   CTL_CODE(FSCTL_AFD_BASE, Function, Method, Access)

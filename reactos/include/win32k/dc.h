@@ -19,12 +19,12 @@ typedef struct _WIN_DC_INFO
   HBITMAP  hBitmap;
   HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
-// #if 0
+/* #if 0 */
     HANDLE      hDevice;
     HPALETTE    hPalette;
 
     GdiPath       path;
-// #endif
+/* #endif */
 
   WORD  ROPmode;
   WORD  polyFillMode;

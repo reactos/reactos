@@ -1,9 +1,12 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.14 2003/08/14 18:30:27 silverblade Exp $ */
+/* $Id: ntos.h,v 1.15 2003/08/25 01:37:47 sedwards Exp $ */
 
 #if defined(NTOS_MODE_USER)
-// include windows.h before ntddk.h to get user mode prototype for InterlockedXxx functions
+/* 
+ * Include windows.h before ntddk.h to get user mode prototype 
+ * for InterlockedXxx functions.
+ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
@@ -14,7 +17,7 @@
 #include "ntos/except.h"
 #include "ntos/file.h"
 #include "ntos/gditypes.h"
-#include "ntos/fstypes.h"   // AG
+#include "ntos/fstypes.h"   /* AG */
 #include "ntos/heap.h"
 #include "ntos/kdbgsyms.h"
 #include "ntos/keyboard.h"
@@ -49,7 +52,7 @@
 #include "ntdll/trace.h"
 #include "rosrtl/thread.h"
 #include "kernel32/error.h"
-#else // Assume kernel mode
+#else /* Assume kernel mode */
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include "ntos/types.h"
@@ -88,8 +91,8 @@
 #include "ntos/haltypes.h"
 #include "ntos/halfuncs.h"
 #include "ntos/kdfuncs.h"
-#include "ntos/kefuncs.h"   // AG
-#include "ntos/fstypes.h"   // AG
+#include "ntos/kefuncs.h"   /* AG */
+#include "ntos/fstypes.h"   /* AG */
 #include "ntos/obtypes.h"
 #include "ntos/tss.h"
 #include "rosrtl/thread.h"

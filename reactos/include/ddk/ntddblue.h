@@ -54,9 +54,9 @@ typedef struct _OUTPUT_CHARACTER
 
 typedef struct _CONSOLE_DRAW
 {
-	SHORT	X;		// Origin
+	SHORT	X;		/* Origin */
 	SHORT	Y;
-	SHORT	SizeX;		// Size of the screen buffer
+	SHORT	SizeX;		/* Size of the screen buffer */
 	SHORT	SizeY;
 } CONSOLE_DRAW, *PCONSOLE_DRAW;
 

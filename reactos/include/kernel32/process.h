@@ -9,7 +9,7 @@ typedef void* HANDLE_TABLE;
 typedef struct _pPebInfo {
 	LPWSTR		lpCommandLine;
 	DWORD		cb;
-	HANDLE		hStdInput; //18
+	HANDLE		hStdInput; /* 18 */
     	HANDLE		hStdOutput;  
     	HANDLE 		hStdError; 
 	LPWSTR		lpEnvironment;
@@ -34,7 +34,7 @@ typedef struct _NT_PEB
 	
 	LONG			ImageBaseAddress; 
 	void			*HeapIndex;
-	DWORD			dwTlsBits[2]; // tls in use bits 
+	DWORD			dwTlsBits[2]; /* tls in use bits */
 	WORD			NumberOfProcessors;
 	WORD			NtGlobalFlag;
 	DWORD			dwCriticalSectionTimeout;

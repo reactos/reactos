@@ -45,7 +45,7 @@
 #define SE_SELF_RELATIVE	(32768)
 #endif
 
-// This is defined in the Win 32 API headers as something else:
+/* This is defined in the Win 32 API headers as something else: */
 typedef ULONG ACCESS_MODE, *PACCESS_MODE;
 
 #if 0

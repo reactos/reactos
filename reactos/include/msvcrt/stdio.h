@@ -22,9 +22,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: robd $
- * $Date: 2002/11/25 15:47:52 $
+ * $Revision: 1.7 $
+ * $Author: sedwards $
+ * $Date: 2003/08/25 01:37:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -73,10 +73,12 @@ extern "C" {
  * functions later on in the file which use va_list. That conflicts with
  * using stdio.h and varargs.h in the same file, so I do the typedef myself.
  */
-//#ifndef _VA_LIST
-//#define _VA_LIST
-//typedef   char* va_list;
-//#endif
+/*
+ *#ifndef _VA_LIST
+ *#define _VA_LIST
+ *typedef   char* va_list;
+ *#endif
+ */
 #include <msvcrt/stdarg.h>
 
 /*
@@ -262,8 +264,8 @@ wint_t fgetwc(FILE* fileRead);
 wint_t fputwc(wchar_t wc, FILE* fileWrite);
 wint_t getwc(FILE *fileRead); // not exported from crtdll
 
-// TODO: check type wint_t, why doesn't compare to WEOF correctly ???
-//wint_t putwc(wint_t wc, FILE* fileWrite);
+/* TODO: check type wint_t, why doesn't compare to WEOF correctly ??? */
+/* wint_t putwc(wint_t wc, FILE* fileWrite); */
 int putwc(wint_t wc, FILE* fileWrite);
 
 wint_t putwchar(wint_t c);
@@ -344,7 +346,7 @@ void _wperror(const wchar_t *s);
 
 #define clearerr(f)  (((f)->_flag) &= ~(_IOERR|_IOEOF))
 #define feof(f)      (((f)->_flag&_IOEOF)!=0)
-//#define ferror(f)    (((f)->_flag&_IOERR)!=0)
+/* #define ferror(f)    (((f)->_flag&_IOERR)!=0) */
 int ferror(FILE* fileIsError);
 #define perror(s)    (fprintf(stderr, "%s: %s\n", (s), _strerror(NULL)))
 

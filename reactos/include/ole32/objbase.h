@@ -54,7 +54,7 @@ Cambridge, MA 02139, USA.
 #define	STDMETHODIMP_(type)		type STDMETHODCALLTYPE
 
 
-//	variable argument lists versions
+/*	variable argument lists versions */
 #define STDAPIV                 EXTERN_C HRESULT STDAPIVCALLTYPE
 #define STDAPIV_(type)          EXTERN_C type STDAPIVCALLTYPE
 
@@ -66,20 +66,20 @@ Cambridge, MA 02139, USA.
 	#define WINOLEAPI_(type) STDAPI_(type)
 #endif
 
-//
-//	COM interface declaration macros [from the wine implementation
-//
-//	These macros declare interfaces for both C and C++ depending for what
-//	language you are compiling
-//
-//	DECLARE_INTERFACE(iface): declare not derived interface
-//	DECLARE_INTERFACE(iface, baseiface): declare derived interface
-//
-//	Use CINTERFACE if you want to force a c style interface declaration,
-//	else, the compiler will look at the source file extension
-//
+/*
+ *	COM interface declaration macros [from the wine implementation
+ *
+ *	These macros declare interfaces for both C and C++ depending for what
+ *	language you are compiling
+ *
+ *	DECLARE_INTERFACE(iface): declare not derived interface
+ *	DECLARE_INTERFACE(iface, baseiface): declare derived interface
+ *
+ *	Use CINTERFACE if you want to force a c style interface declaration,
+ *	else, the compiler will look at the source file extension
+ */
 #if	defined(__cplusplus) && !defined(CINTERFACE)
-	//	define the c++ macros
+	/*	define the c++ macros */
 	#define interface					struct
 	#define STDMETHOD(method)			virtual	HRESULT	STDMETHODCALLTYPE	method
 	#define STDMETHOD_(type,method)		virtual type	STDMETHODCALLTYPE	method
@@ -92,7 +92,7 @@ Cambridge, MA 02139, USA.
 	#define DECLARE_INTERFACE_(iface, baseiface)	interface iface : public baseiface
 
 #else
-	//	define the c macros
+	/*	define the c macros */
 	#define	interface				struct
 	#define	STDMETHOD(method)		HRESULT	(STDMETHODCALLTYPE*		method)
 	#define	STDMETHOD_(type,method)	type	(STDMETHODCALLTYPE*		method)

@@ -27,9 +27,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.4 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Revision: 1.5 $
+ * $Author: sedwards $
+ * $Date: 2003/08/25 01:37:47 $
  *
  */
 
@@ -196,9 +196,9 @@ int     _finite         (double);
 int     _fpclass        (double);
 int     _isnan          (double);
 
-int     _isinf          (double); // not exported
-int     _isnanl         (long double); // not exported
-int     _isinfl         (long double); // not exported
+int     _isinf          (double); /* not exported */
+int     _isnanl         (long double); /* not exported */
+int     _isinfl         (long double); /* not exported */
 
 #define isnan(x)        _isnan(x)
 #define isinf(x)        _isinf(x)

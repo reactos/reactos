@@ -14,7 +14,7 @@ typedef enum {
 	ExceptionContinueSearch,
 	ExceptionNestedException,
 	ExceptionCollidedUnwind,
-  ExceptionDismiss  // ???
+  ExceptionDismiss  /* ??? */
 } EXCEPTION_DISPOSITION;
 
 
@@ -107,17 +107,17 @@ typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
 
 #if 1
 
-// Runtime DLL structures
+/* Runtime DLL structures */
 
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #ifdef __NTOSKRNL__
 #define EXCEPTION_EXECUTE_HANDLER     1
 #define EXCEPTION_CONTINUE_SEARCH     0
-// #define EXCEPTION_CONTINUE_EXECUTION -1
+/* #define EXCEPTION_CONTINUE_EXECUTION -1 */
 #endif /* __NTOSKRNL__ */
 #endif /* _GNU_H_WINDOWS32_DEFINES */
 
-// Functions of the following prototype return one of the above constants
+/* Functions of the following prototype return one of the above constants */
 #ifdef __GNUC__
 typedef DWORD CDECL (*PSCOPE_EXCEPTION_FILTER)(VOID);
 typedef VOID CDECL (*PSCOPE_EXCEPTION_HANDLER)(VOID);

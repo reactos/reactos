@@ -16,8 +16,8 @@ typedef BOOL STDCALL
 typedef struct _LDR_MODULE
 {
    LIST_ENTRY     InLoadOrderModuleList;
-   LIST_ENTRY     InMemoryOrderModuleList;		// not used
-   LIST_ENTRY     InInitializationOrderModuleList;	// not used
+   LIST_ENTRY     InMemoryOrderModuleList;		/* not used */
+   LIST_ENTRY     InInitializationOrderModuleList;	/* not used */
    PVOID          BaseAddress;
    ULONG          EntryPoint;
    ULONG          SizeOfImage;

@@ -146,7 +146,7 @@ typedef HANDLE HTASK;
 typedef HANDLE HWINEVENTHOOK;
 typedef VOID (CALLBACK* WINEVENTPROC)(HWINEVENTHOOK hWinEventHook,DWORD event,HWND hwnd,LONG idObject,LONG idChild,DWORD idEventThread,DWORD dwmsEventTime);
 typedef unsigned short LANGID;
-//typedef DWORD LCID;
+/*typedef DWORD LCID; */
 typedef DWORD LCTYPE;
 /* typedef LOCALHANDLE */
 typedef unsigned short *LP;

@@ -18,12 +18,12 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: chorns $
- * $Date: 2003/08/24 10:00:12 $
+ * $Revision: 1.4 $
+ * $Author: sedwards $
+ * $Date: 2003/08/25 01:37:48 $
  *
  */
-// added modfl 
+/* added modfl */
 
 #ifndef _MATH_H_
 #define _MATH_H_

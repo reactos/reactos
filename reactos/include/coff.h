@@ -6,11 +6,11 @@
 extern "C" {
 #endif
 
-//#ifndef __dj_ENFORCE_ANSI_FREESTANDING
-
-//#ifndef __STRICT_ANSI__
-
-//#ifndef _POSIX_SOURCE
+/*
+ * #ifndef __dj_ENFORCE_ANSI_FREESTANDING
+ * #ifndef __STRICT_ANSI__
+ * #ifndef _POSIX_SOURCE
+ */
 
 /*** coff information for Intel 386/486.  */
 
@@ -325,10 +325,11 @@ struct external_reloc {
 /* For new sections we havn't heard of before */
 #define DEFAULT_SECTION_ALIGNMENT 4
 
-//#endif /* !_POSIX_SOURCE */
-//#endif /* !__STRICT_ANSI__ */
-//#endif /* !__dj_ENFORCE_ANSI_FREESTANDING */
-
+/*
+ * #endif /* !_POSIX_SOURCE */
+ * #endif /* !__STRICT_ANSI__ */
+ * #endif /* !__dj_ENFORCE_ANSI_FREESTANDING */
+ */
 #ifndef __dj_ENFORCE_FUNCTION_CALLS
 #endif /* !__dj_ENFORCE_FUNCTION_CALLS */
 

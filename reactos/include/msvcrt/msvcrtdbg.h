@@ -49,15 +49,15 @@
 #define CHECKPOINT
 #endif /* NDEBUG */
 
-//ULONG CDECL DbgPrint(PCH Format, ...);
-//ULONG DbgPrint(PCH Format,...);
-//unsigned long DbgPrint(const char* Format, ...);
+/* ULONG CDECL DbgPrint(PCH Format, ...); */
+/* ULONG DbgPrint(PCH Format,...); */
+/* unsigned long DbgPrint(const char* Format, ...); */
 
 
 
-//#define TRACE 0 ? (void)0 : Trace
+/* #define TRACE 0 ? (void)0 : Trace */
 
-//void Trace(TCHAR* lpszFormat, ...);
+/* void Trace(TCHAR* lpszFormat, ...); */
 
 
 

@@ -2,11 +2,11 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
-//#if MSC | WATCOM
+/* #if MSC | WATCOM */
 #include <direct.h>
-//#else
-//#include <dir.h>
-//#endif
+/* #else */
+/* #include <dir.h> */
+/* #endif */
 
 #define swap(a,b){int x=a;a=b;b=x;}
 /* ------- platform-dependent values ------ */
@@ -16,8 +16,8 @@
 #define ZEROFLAG 0x40
 #define MAXSAVES 50
 
-//#define SCREENWIDTH  (80)
-//#define SCREENHEIGHT (25)
+/* #define SCREENWIDTH  (80) */
+/* #define SCREENHEIGHT (25) */
 
 HANDLE hInput;
 HANDLE hOutput;

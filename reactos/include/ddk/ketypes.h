@@ -3,7 +3,7 @@
 #ifndef __INCLUDE_DDK_KETYPES_H
 #define __INCLUDE_DDK_KETYPES_H
 
-// include ntos/ketypes.h here?
+/* include ntos/ketypes.h here? */
 
 struct _KMUTANT;
 
@@ -219,6 +219,6 @@ typedef LONG FLOAT_LONG, *PFLOAT_LONG;
 
 typedef LONG FLOATL;
 
-typedef LONG FIX; // fixed-point number
+typedef LONG FIX; /* fixed-point number */
 
 #endif /* __INCLUDE_DDK_KETYPES_H */

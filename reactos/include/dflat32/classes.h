@@ -15,7 +15,7 @@ ClassDef(  APPLICATION, NORMAL,  ApplicationProc, VISIBLE   |
                                                   SAVESELF  |
                                                   CONTROLBOX )
 ClassDef(  TEXTBOX,     NORMAL,  TextBoxProc,     0          )
-//ClassDef(  LISTBOX,     TEXTBOX, ListBoxProc,     0          )
+/* ClassDef(  LISTBOX,     TEXTBOX, ListBoxProc,     0          ) */
 ClassDef(  EDITBOX,     TEXTBOX, EditBoxProc,     0          )
 ClassDef(  MENUBAR,     NORMAL,  MenuBarProc,     NOCLIP     )
 ClassDef(  POPDOWNMENU, LISTBOX, PopDownProc,     SAVESELF  |
@@ -30,8 +30,8 @@ ClassDef(  DIALOG,      NORMAL,  DialogProc,      SHADOW    |
                                                   HASBORDER |
                                                   NOCLIP     )
 ClassDef(  BOX,         NORMAL,  BoxProc,         HASBORDER  )
-//ClassDef(  BUTTON,      TEXTBOX, ButtonProc,      SHADOW     )
-//ClassDef(  COMBOBOX,    EDITBOX, ComboProc,       0          )
+/* ClassDef(  BUTTON,      TEXTBOX, ButtonProc,      SHADOW     ) */
+/* ClassDef(  COMBOBOX,    EDITBOX, ComboProc,       0          ) */
 ClassDef(  TEXT,        TEXTBOX, TextProc,        0          )
 ClassDef(  RADIOBUTTON, TEXTBOX, RadioButtonProc, 0          )
 ClassDef(  CHECKBOX,    TEXTBOX, CheckBoxProc,    0          )

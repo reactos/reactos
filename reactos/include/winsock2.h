@@ -385,17 +385,17 @@ extern INT PASCAL FAR __WSAFDIsSet(SOCKET, fd_set FAR*);
 
 
 typedef struct _WSAOVERLAPPED {
-    DWORD Internal;     // reserved
-    DWORD InternalHigh; // reserved
-    DWORD Offset;       // reserved
-    DWORD OffsetHigh;   // reserved
+    DWORD Internal;     /* reserved */
+    DWORD InternalHigh; /* reserved */
+    DWORD Offset;       /* reserved */
+    DWORD OffsetHigh;   /* reserved */
     WSAEVENT hEvent;
 } WSAOVERLAPPED, FAR* LPWSAOVERLAPPED;
 
 
 typedef struct __WSABUF {
-    ULONG len;     // buffer length
-    CHAR FAR* buf; // pointer to buffer
+    ULONG len;     /* buffer length */
+    CHAR FAR* buf; /* pointer to buffer */
 } WSABUF, FAR* LPWSABUF;
 
 
@@ -561,12 +561,12 @@ struct servent {
     CHAR FAR* s_proto;
 };
 
-// It is assumed here that a network number fits in 32 bits.
+/* It is assumed here that a network number fits in 32 bits. */
 struct netent {
-    CHAR FAR* n_name;               // official net name
-    CHAR FAR* FAR* n_aliases;       // list of alias's
-    SHORT n_addrtype;               // network address type id
-    ULONG n_net;                    // network number
+    CHAR FAR* n_name;               /* official net name */
+    CHAR FAR* FAR* n_aliases;       /* list of alias's */
+    SHORT n_addrtype;               /* network address type id */
+    ULONG n_net;                    /* network number */
 };
 
 

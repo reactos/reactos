@@ -9,11 +9,11 @@
 
 /* FIXME: Missed some definitions in ntddk.h */
 
-/* Could be defined elsewhere */
-//#ifndef INT
-//typedef signed int INT, *PINT;
-//#endif
-
+/* Could be defined elsewhere 
+ * #ifndef INT
+ * typedef signed int INT, *PINT;
+ * #endif
+ */
 
 
 /* Basic types */

@@ -441,7 +441,7 @@ ExIsResourceAcquiredExclusiveLite (
 	PERESOURCE	Resource
 	);
 
-// was ULONG
+/* was ULONG */
 USHORT
 STDCALL
 ExIsResourceAcquiredSharedLite (

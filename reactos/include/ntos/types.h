@@ -90,12 +90,13 @@ typedef __WCHAR_TYPE__      wchar_t;
 #endif  /* wchar_t not already defined */
 
 
-//#ifndef __cplusplus
-//#ifndef _WCHAR_T_DEFINED
-//#define _WCHAR_T_DEFINED
-//typedef unsigned short wchar_t;
-//#endif
-//#endif
+/* #ifndef __cplusplus
+#ifndef _WCHAR_T_DEFINED
+#define _WCHAR_T_DEFINED
+typedef unsigned short wchar_t;
+#endif
+#endif
+*/
 
 typedef unsigned char UCHAR;
 typedef unsigned short USHORT;
@@ -115,7 +116,7 @@ typedef float *PFLOAT;
 typedef wchar_t *PWCH;
 typedef unsigned short *PWORD;
 
-#include <msvcrt/crttypes.h> // for definition of LONGLONG, PLONGLONG etc
+#include <msvcrt/crttypes.h> /* for definition of LONGLONG, PLONGLONG etc */
 
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;
@@ -178,9 +179,10 @@ typedef union _ULARGE_INTEGER
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
 
-// Moved here by AG
-// typedef ULARGE_INTEGER TIME, *PTIME;
-
+/* 
+ * Moved here by AG
+ * typedef ULARGE_INTEGER TIME, *PTIME;
+ */
 
 typedef struct _FILETIME
 {
@@ -421,7 +423,7 @@ typedef struct value_ent
   DWORD  ve_type;
 } WVALENT, *PWVALENT;
 
-//#include "except.h"
+/* #include "except.h" */
 
 #ifndef __USE_W32API
 

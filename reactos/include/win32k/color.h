@@ -4,9 +4,9 @@
 #ifndef CLR_INVALID
 #define CLR_INVALID         0xffffffff
 #endif
-#define PC_SYS_USED     0x80		// palentry is used (both system and logical)
-#define PC_SYS_RESERVED 0x40		// system palentry is not to be mapped to
-#define PC_SYS_MAPPED   0x10		// logical palentry is a direct alias for system palentry
+#define PC_SYS_USED     0x80		/* palentry is used (both system and logical) */
+#define PC_SYS_RESERVED 0x40		/* system palentry is not to be mapped to */
+#define PC_SYS_MAPPED   0x10		/* logical palentry is a direct alias for system palentry */
 
 BOOL
 STDCALL

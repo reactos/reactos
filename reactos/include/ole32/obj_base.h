@@ -108,11 +108,11 @@ INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax);
  *    #undef ICOM_INTERFACE
  *
  *    #ifdef ICOM_CINTERFACE
- *    // *** IUnknown methods *** //
+ *     *** IUnknown methods *** 
  *    #define IDirect3D_QueryInterface(p,a,b) ICOM_CALL2(QueryInterface,p,a,b)
  *    #define IDirect3D_AddRef(p)             ICOM_CALL (AddRef,p)
  *    #define IDirect3D_Release(p)            ICOM_CALL (Release,p)
- *    // *** IDirect3D methods *** //
+ *     *** IDirect3D methods *** 
  *    #define IDirect3D_Initialize(p,a)       ICOM_CALL1(Initialize,p,a)
  *    #define IDirect3D_EnumDevices(p,a,b)    ICOM_CALL2(EnumDevice,p,a,b)
  *    #define IDirect3D_CreateLight(p,a,b)    ICOM_CALL2(CreateLight,p,a,b)
@@ -178,11 +178,11 @@ INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax);
  *    }; 
  *
  *    #ifdef ICOM_CINTERFACE
- *    // *** IUnknown methods *** //
+ *     *** IUnknown methods *** 
  *    #define IDirect3D_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
  *    #define IDirect3D_AddRef(p)             (p)->lpVtbl->AddRef(p)
  *    #define IDirect3D_Release(p)            (p)->lpVtbl->Release(p)
- *    // *** IDirect3D methods *** //
+ *     *** IDirect3D methods *** 
  *    #define IDirect3D_Initialize(p,a)       (p)->lpVtbl->Initialize(p,a)
  *    #define IDirect3D_EnumDevices(p,a,b)    (p)->lpVtbl->EnumDevice(p,a,b)
  *    #define IDirect3D_CreateLight(p,a,b)    (p)->lpVtbl->CreateLight(p,a,b)
@@ -263,21 +263,21 @@ INT WINAPI StringFromGUID2(REFGUID id, LPOLESTR str, INT cmax);
  *
  *    typedef struct _IDirect3D {
  *        void* lpVtbl;
- *        // ...
+ *         ...
  *
  *    } _IDirect3D;
  *
  *    static ICOM_VTABLE(IDirect3D) d3dvt;
  *
- *    // implement the IDirect3D methods here
+ *    ***implement the IDirect3D methods here****
  *
  *    int IDirect3D_QueryInterface(IDirect3D* me)
  *    {
  *        ICOM_THIS(IDirect3D,me);
- *        // ...
+ *        ...
  *    }
  *
- *    // ...
+ *       ...
  *
  *    static ICOM_VTABLE(IDirect3D) d3dvt = {
  *        ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE

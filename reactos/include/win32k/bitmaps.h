@@ -8,8 +8,8 @@
 typedef struct _DDBITMAP
 {
   const PDRIVER_FUNCTIONS  pDriverFunctions;
-//  DHPDEV  PDev;
-//  HSURF  Surface;
+/*  DHPDEV  PDev; */
+/*  HSURF  Surface; */
 } DDBITMAP;
 
 /* GDI logical bitmap object */

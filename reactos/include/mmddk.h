@@ -27,7 +27,7 @@
 #define __MMDDK_H
 
 #include "mmsystem.h"
-//#include "winbase.h"
+/* #include "winbase.h" */
 
 #define MAX_MIDIINDRV 	(16)
 /* For now I'm making 16 the maximum number of midi devices one can
@@ -416,9 +416,6 @@ typedef struct {
 	UINT			wCustomCommandTable;	/* custom command table (0xFFFF if none) * filled in by the driver */
 	UINT			wType;			/* driver type (filled in by the driver) */
 } MCI_OPEN_DRIVER_PARMSW, *LPMCI_OPEN_DRIVER_PARMSW;
-
-//DECL_WINELIB_TYPE_AW(MCI_OPEN_DRIVER_PARMS)
-//DECL_WINELIB_TYPE_AW(LPMCI_OPEN_DRIVER_PARMS)
 
 DWORD 			WINAPI	mciGetDriverData(UINT uDeviceID);
 BOOL			WINAPI	mciSetDriverData(UINT uDeviceID, DWORD dwData);

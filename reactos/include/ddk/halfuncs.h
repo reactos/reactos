@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.10 2003/07/17 16:57:38 silverblade Exp $ */
+/* $Id: halfuncs.h,v 1.11 2003/08/25 01:37:47 sedwards Exp $ */
 
 #include <ntos/haltypes.h>
 
@@ -97,11 +97,13 @@ HalGetBusDataByOffset(BUS_DATA_TYPE BusDataType,
 		      ULONG Offset,
 		      ULONG Length);
 
-/* Is this function really exported ?? */
-//ULONG
-//HalGetDmaAlignmentRequirement(VOID);
-// NTOSAPI
-// DDKAPI
+/* Is this function really exported ??
+ULONG
+HalGetDmaAlignmentRequirement(VOID);
+NTOSAPI
+DDKAPI
+*/
+
 ULONG STDCALL
 HalGetDmaAlignmentRequirement( 
   VOID);

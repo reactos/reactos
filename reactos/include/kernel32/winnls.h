@@ -2,7 +2,7 @@
 #define __WINE_WINNLS_H
 
 /* flags to GetLocaleInfo */
-//#define	LOCALE_NOUSEROVERRIDE	    0x80000000
+/* #define	LOCALE_NOUSEROVERRIDE	    0x80000000 */
 #define	LOCALE_USE_CP_ACP	    0x40000000
 
 #define LOCALE_LOCALEINFOFLAGSMASK  0xC0000000
@@ -126,13 +126,13 @@
 #endif
 
 #if 0
-#define CP_ACP					0			//ANSI code page 
-#define CP_OEMCP				1			//OEM code page 
-#define CP_MACCP				2			//Macintosh code page 
-#define CP_THREAD_ACP			3			//ACP Current thread's ANSI code page 
-#define CP_SYMBOL				42			//Symbol code page (42) 
-#define CP_UTF7					65000		//Translate using UTF-7 
-#define CP_UTF8					65001		//Translate using UTF-8 
+#define CP_ACP					0		/* ANSI code page */
+#define CP_OEMCP				1		/* OEM code page */
+#define CP_MACCP				2		/* Macintosh code page */
+#define CP_THREAD_ACP				3		/* ACP Current thread's ANSI code page */
+#define CP_SYMBOL				42		/* Symbol code page (42) */
+#define CP_UTF7					65000		/* Translate using UTF-7 */
+#define CP_UTF8					65001		/* Translate using UTF-8 */
 #endif
 
 #if 0
@@ -154,9 +154,11 @@
 #ifdef _KERNEL32_INCLUDE_LANG_
 #define LANG_SYSTEM_DEFAULT	(MAKELANGID(LANG_NEUTRAL, SUBLANG_SYS_DEFAULT))
 #define LANG_USER_DEFAULT	(MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT))
-//#define LOCALE_SYSTEM_DEFAULT	(MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT))
-//#define LOCALE_USER_DEFAULT	(MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)) 
-//#define LOCALE_NEUTRAL		(MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT))
+/*
+ *#define LOCALE_SYSTEM_DEFAULT	(MAKELCID(LANG_SYSTEM_DEFAULT, SORT_DEFAULT))
+ *#define LOCALE_USER_DEFAULT	(MAKELCID(LANG_USER_DEFAULT, SORT_DEFAULT)) 
+ *#define LOCALE_NEUTRAL	(MAKELCID(MAKELANGID(LANG_NEUTRAL,SUBLANG_NEUTRAL),SORT_DEFAULT))
+ */
 #endif
 
 /* Language IDs (were in winnt.h,  for some reason) */

@@ -2,7 +2,7 @@
 #ifndef DFLAT_H
 #define DFLAT_H
 
-//#ifdef BUILD_FULL_DFLAT
+/* #ifdef BUILD_FULL_DFLAT */
 #define INCLUDE_MULTI_WINDOWS
 #define INCLUDE_LOGGING
 #define INCLUDE_SHELLDOS
@@ -12,7 +12,7 @@
 #define INCLUDE_MAXIMIZE
 #define INCLUDE_RESTORE
 #define INCLUDE_EXTENDEDSELECTIONS
-//#endif
+/* #endif */
 
 #include <windows.h>
 #include <stdio.h>
@@ -272,7 +272,7 @@ extern BOOL ClipString;
 #define SCROLLBARCHAR  (unsigned char) 176
 #define SCROLLBOXCHAR  (unsigned char) 178
 /* ------------------ menu characters --------------------- */
-#define CHECKMARK      (unsigned char) '\x04' //(SCREENHEIGHT==25?251:4)
+#define CHECKMARK      (unsigned char) '\x04' /* (SCREENHEIGHT==25?251:4) */
 #define CASCADEPOINTER (unsigned char) '\x10'
 /* ----------------- title bar characters ----------------- */
 #define CONTROLBOXCHAR (unsigned char) '\xf0'

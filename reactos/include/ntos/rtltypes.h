@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.9 2003/07/23 15:30:53 gvg Exp $
+/* $Id: rtltypes.h,v 1.10 2003/08/25 01:37:47 sedwards Exp $
  * 
  */
 
@@ -159,7 +159,7 @@ typedef struct _RTL_ATOM_TABLE
 typedef struct _CPTABLEINFO
 {
   USHORT  CodePage;
-  USHORT  MaximumCharacterSize;  // SBCS = 1, DBCS = 2
+  USHORT  MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
   USHORT  DefaultChar;
   USHORT  UniDefaultChar;
   USHORT  TransDefaultChar;
@@ -184,7 +184,7 @@ typedef struct _NLS_FILE_HEADER
 {
   USHORT  HeaderSize;
   USHORT  CodePage;
-  USHORT  MaximumCharacterSize;  // SBCS = 1, DBCS = 2
+  USHORT  MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
   USHORT  DefaultChar;
   USHORT  UniDefaultChar;
   USHORT  TransDefaultChar;

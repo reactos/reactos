@@ -36,10 +36,10 @@
 
 /* TODO: bit masks */
 /*
-//#define _MS   0x01
-//#define _MP   0x02
-//#define _M1   0x04
-//#define _M2   0x08
+ *#define _MS   0x01
+ *#define _MP   0x02
+ *#define _M1   0x04
+ *#define _M2   0x08
 #define _SBUP
 #define _SBLOW
 */

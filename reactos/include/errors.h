@@ -41,15 +41,15 @@
 extern "C" {
 #endif /* __cplusplus */
 
-//
-//	Return Code macros
-//
+/*
+ *	Return Code macros
+ */
 #define	SUCCEEDED(Status)	((HRESULT)(Status) >= 0)
 #define	FAILED(Status)		((HRESULT)(Status)<0)
 
-//
-//	Success Codes
-//
+/*
+ *	Success Codes
+ */
 #define S_OK						0x00000000L
 #define S_FALSE						0x00000001L
 

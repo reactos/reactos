@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.52 2003/08/14 18:30:27 silverblade Exp $
+/* $Id: iotypes.h,v 1.53 2003/08/25 01:37:47 sedwards Exp $
  *
  */
 
@@ -24,7 +24,7 @@ extern POBJECT_TYPE IMPORTED IoFileObjectType;
 #endif
 
 
-// from winddk.h
+/* from winddk.h */
 #define POINTER_ALIGNMENT
 
 

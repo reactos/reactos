@@ -11,12 +11,12 @@
 
 #pragma pack(1)
 
-// System Service Dispatch Table
+/* System Service Dispatch Table */
 typedef struct t_SSDT {
                 ULONG           SysCallPtr;
 } SSDT, *PSSDT;
 
-// System Service Parameters Table
+/* System Service Parameters Table */
 typedef struct t_SSPT   {
                 unsigned int    ParamBytes;
 } SSPT, *PSSPT;

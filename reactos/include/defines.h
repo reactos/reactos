@@ -42,11 +42,13 @@
 
 
 #ifndef WIN32_NO_STATUS
-//#define STATUS_WAIT_0     		(0x00000000L)
-//#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
-//#define STATUS_USER_APC    		(0x000000C0L)
-//#define STATUS_TIMEOUT     		(0x00000102L)
-//#define STATUS_PENDING     		(0x00000103L)
+/*
+#define STATUS_WAIT_0     		(0x00000000L)
+#define STATUS_ABANDONED_WAIT_0 	(0x00000080L)
+#define STATUS_USER_APC    		(0x000000C0L)
+#define STATUS_TIMEOUT     		(0x00000102L)
+#define STATUS_PENDING     		(0x00000103L)
+*/
 #endif /* WIN32_NO_STATUS */
 
 #define GA_PARENT               (1)
@@ -943,7 +945,7 @@ extern "C" {
 #define DSS_UNION	(16)
 #define DSS_DISABLED	(32)
 #define DSS_MONO	(128)
-#define DSS_RIGHT   (0x8000)    // Undocumented
+#define DSS_RIGHT   (0x8000)    /* Undocumented */
 
 /* DrawStatusText */
 #define SBT_NOBORDERS	(256)
@@ -1348,10 +1350,10 @@ extern "C" {
 #define CP_ACP	(0)
 #define CP_MACCP	(2)
 #define CP_OEMCP	(1)
-#define CP_THREAD_ACP			3			//ACP Current thread's ANSI code page 
-#define CP_SYMBOL				42			//Symbol code page (42) 
-#define CP_UTF7					65000		//Translate using UTF-7 
-#define CP_UTF8					65001		//Translate using UTF-8 
+#define CP_THREAD_ACP			3			/* ACP Current thread's ANSI code page */
+#define CP_SYMBOL				42			/* Symbol code page (42) */
+#define CP_UTF7					65000		/* Translate using UTF-7 */
+#define CP_UTF8					65001		/* Translate using UTF-8 */ 
 
 /* GetDateFormat */
 #define DATE_SHORTDATE	(1)
@@ -4843,19 +4845,19 @@ typedef enum _SC_ENUM_TYPE {
 #endif /* !__USE_W32API */
 
 typedef enum _SystemState {
-  STATE_SYSTEM_UNAVAILABLE        = 0x00000001, // Disabled
+  STATE_SYSTEM_UNAVAILABLE        = 0x00000001, /* Disabled */
   STATE_SYSTEM_SELECTED           = 0x00000002,
   STATE_SYSTEM_FOCUSED            = 0x00000004,
   STATE_SYSTEM_PRESSED            = 0x00000008,
   STATE_SYSTEM_CHECKED            = 0x00000010,
-  STATE_SYSTEM_MIXED              = 0x00000020, // 3-state checkbox or toolbar button
+  STATE_SYSTEM_MIXED              = 0x00000020, /* 3-state checkbox or toolbar button */
   STATE_SYSTEM_READONLY           = 0x00000040,
   STATE_SYSTEM_HOTTRACKED         = 0x00000080,
   STATE_SYSTEM_DEFAULT            = 0x00000100,
   STATE_SYSTEM_EXPANDED           = 0x00000200,
   STATE_SYSTEM_COLLAPSED          = 0x00000400,
   STATE_SYSTEM_BUSY               = 0x00000800,
-  STATE_SYSTEM_FLOATING           = 0x00001000, // Children "owned" not "contained" by parent
+  STATE_SYSTEM_FLOATING           = 0x00001000, /* Children "owned" not "contained" by parent */
   STATE_SYSTEM_MARQUEED           = 0x00002000,
   STATE_SYSTEM_ANIMATED           = 0x00004000,
   STATE_SYSTEM_INVISIBLE          = 0x00008000,
@@ -4867,11 +4869,11 @@ typedef enum _SystemState {
   STATE_SYSTEM_SELECTABLE         = 0x00200000,
   STATE_SYSTEM_LINKED             = 0x00400000,
   STATE_SYSTEM_TRAVERSED          = 0x00800000,
-  STATE_SYSTEM_MULTISELECTABLE    = 0x01000000,  // Supports multiple selection
-  STATE_SYSTEM_EXTSELECTABLE      = 0x02000000,  // Supports extended selection
-  STATE_SYSTEM_ALERT_LOW          = 0x04000000,  // This information is of low priority
-  STATE_SYSTEM_ALERT_MEDIUM       = 0x08000000,  // This information is of medium priority
-  STATE_SYSTEM_ALERT_HIGH         = 0x10000000,  // This information is of high priority
+  STATE_SYSTEM_MULTISELECTABLE    = 0x01000000,  /* Supports multiple selection */
+  STATE_SYSTEM_EXTSELECTABLE      = 0x02000000,  /* Supports extended selection */
+  STATE_SYSTEM_ALERT_LOW          = 0x04000000,  /* This information is of low priority */
+  STATE_SYSTEM_ALERT_MEDIUM       = 0x08000000,  /* This information is of medium priority */
+  STATE_SYSTEM_ALERT_HIGH         = 0x10000000,  /* This information is of high priority */
   STATE_SYSTEM_VALID              = 0x1FFFFFFF
 } SystemState;
 

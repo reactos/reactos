@@ -29,6 +29,6 @@ Cambridge, MA 02139, USA.
 ********************************************************************/
 #include <ole32\objbase.h>
 
-//	Dll register functions
+/*	Dll register functions */
 STDAPI DllRegisterServer(void);
 STDAPI DllUnregisterServer(void);

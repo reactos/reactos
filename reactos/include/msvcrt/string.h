@@ -18,9 +18,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.5 $
- * $Author: robd $
- * $Date: 2002/11/24 18:06:00 $
+ * $Revision: 1.6 $
+ * $Author: sedwards $
+ * $Date: 2003/08/25 01:37:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -44,7 +44,7 @@
 extern "C" {
 #endif
 
-char * ___strtok; // removed extern specifier 02-06-98, BD
+char * ___strtok; /* removed extern specifier 02-06-98, BD */
 
 /*
  * Prototypes of the ANSI Standard C library string functions.
@@ -63,7 +63,7 @@ size_t  strcspn(const char* szGetPrefix, const char* szNotIncluding);
 char*   strerror(int nError); /* NOTE: NOT an old name wrapper. */
 char *  _strerror(const char *s);
 size_t  strlen(const char* sz);
-size_t  strnlen(const char* sz, size_t count); // not exported
+size_t  strnlen(const char* sz, size_t count); /* not exported */
 char*   strncat(char* szAddTo, const char* szAdd, size_t sizeMaxAdd);
 int     strncmp(const char* sz1, const char* sz2, size_t sizeMaxCompare);
 char*   strncpy(char* szCopyTo, const char* szSource, size_t sizeMaxCopy);

@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.2 2002/10/03 18:33:47 sedwards Exp $
+/* $Id: srb.h,v 1.3 2003/08/25 01:37:47 sedwards Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -99,27 +99,27 @@ typedef struct _PORT_CONFIGURATION_INFORMATION
 
 typedef struct _SCSI_REQUEST_BLOCK
 {
-  USHORT Length;			// 0x00
-  UCHAR Function;			// 0x02
-  UCHAR SrbStatus;			// 0x03
-  UCHAR ScsiStatus;			// 0x04
-  UCHAR PathId;				// 0x05
-  UCHAR TargetId;			// 0x06
-  UCHAR Lun;				// 0x07
-  UCHAR QueueTag;			// 0x08
-  UCHAR QueueAction;			// 0x09
-  UCHAR CdbLength;			// 0x0A
-  UCHAR SenseInfoBufferLength;		// 0x0B
-  ULONG SrbFlags;			// 0x0C
-  ULONG DataTransferLength;		// 0x10
-  ULONG TimeOutValue;			// 0x14
-  PVOID DataBuffer;			// 0x18
-  PVOID SenseInfoBuffer;		// 0x1C
-  struct _SCSI_REQUEST_BLOCK *NextSrb;	// 0x20
-  PVOID OriginalRequest;		// 0x24
-  PVOID SrbExtension;			// 0x28
-  ULONG QueueSortKey;			// 0x2C
-  UCHAR Cdb[16];			// 0x30
+  USHORT Length;			/* 0x00 */
+  UCHAR Function;			/* 0x02 */
+  UCHAR SrbStatus;			/* 0x03 */
+  UCHAR ScsiStatus;			/* 0x04 */
+  UCHAR PathId;				/* 0x05 */
+  UCHAR TargetId;			/* 0x06 */
+  UCHAR Lun;				/* 0x07 */
+  UCHAR QueueTag;			/* 0x08 */
+  UCHAR QueueAction;			/* 0x09 */
+  UCHAR CdbLength;			/* 0x0A */
+  UCHAR SenseInfoBufferLength;		/* 0x0B */
+  ULONG SrbFlags;			/* 0x0C */
+  ULONG DataTransferLength;		/* 0x10 */
+  ULONG TimeOutValue;			/* 0x14 */
+  PVOID DataBuffer;			/* 0x18 */
+  PVOID SenseInfoBuffer;		/* 0x1C */
+  struct _SCSI_REQUEST_BLOCK *NextSrb;	/* 0x20 */
+  PVOID OriginalRequest;		/* 0x24 */
+  PVOID SrbExtension;			/* 0x28 */
+  ULONG QueueSortKey;			/* 0x2C */
+  UCHAR Cdb[16];			/* 0x30 */
 } SCSI_REQUEST_BLOCK, *PSCSI_REQUEST_BLOCK;
 
 #define SCSI_REQUEST_BLOCK_SIZE sizeof(SCSI_REQUEST_BLOCK)

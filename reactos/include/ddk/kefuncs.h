@@ -413,10 +413,10 @@ KeWaitForSingleObject (
 
 
 
-// io permission map has a 8k size
-// Each bit in the IOPM corresponds to an io port byte address. The bitmap
-// is initialized to allow IO at any port. [ all bits set ]. 
-
+/* io permission map has a 8k size
+ * Each bit in the IOPM corresponds to an io port byte address. The bitmap
+ * is initialized to allow IO at any port. [ all bits set ]. 
+ */
 typedef struct _IOPM
 {
 	UCHAR Bitmap[8192];

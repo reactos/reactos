@@ -55,7 +55,7 @@ typedef struct _LPC_MESSAGE
    USHORT VirtualRangesOffset;
    CLIENT_ID ClientId;
    ULONG MessageId;
-   ULONG SectionSize; // CallbackID
+   ULONG SectionSize; /* CallbackID */
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
 #endif /* !__USE_W32API */

@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.11 2003/02/15 18:43:20 ekohl Exp $
+/* $Id: setypes.h,v 1.12 2003/08/25 01:37:47 sedwards Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -57,50 +57,50 @@
 
 typedef struct _ACCESS_TOKEN
 {
-  TOKEN_SOURCE			TokenSource;               // 0x00
-  LUID				TokenId;                   // 0x10
-  LUID				AuthenticationId;          // 0x18
-  LARGE_INTEGER			ExpirationTime;            // 0x20
-  LUID				ModifiedId;                // 0x28
-  ULONG				UserAndGroupCount;         // 0x30
-  ULONG				PrivilegeCount;            // 0x34
-  ULONG				VariableLength;            // 0x38
-  ULONG				DynamicCharged;            // 0x3C
-  ULONG				DynamicAvailable;          // 0x40
-  ULONG				DefaultOwnerIndex;         // 0x44
-  PSID_AND_ATTRIBUTES		UserAndGroups;             // 0x48
-  PSID				PrimaryGroup;              // 0x4C
-  PLUID_AND_ATTRIBUTES		Privileges;                // 0x50
-  ULONG				Unknown1;                  // 0x54
-  PACL				DefaultDacl;               // 0x58
-  TOKEN_TYPE			TokenType;                 // 0x5C
-  SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel;        // 0x60
-  UCHAR				TokenFlags;                // 0x64
-  UCHAR				TokenInUse;                // 0x65
-  UCHAR				Unused[2];                 // 0x66
-  PVOID				ProxyData;                 // 0x68
-  PVOID				AuditData;                 // 0x6c
-  UCHAR				VariablePart[0];           // 0x70
+  TOKEN_SOURCE			TokenSource;               /* 0x00 */
+  LUID				TokenId;                   /* 0x10 */
+  LUID				AuthenticationId;          /* 0x18 */
+  LARGE_INTEGER			ExpirationTime;            /* 0x20 */
+  LUID				ModifiedId;                /* 0x28 */
+  ULONG				UserAndGroupCount;         /* 0x30 */
+  ULONG				PrivilegeCount;            /* 0x34 */
+  ULONG				VariableLength;            /* 0x38 */
+  ULONG				DynamicCharged;            /* 0x3C */
+  ULONG				DynamicAvailable;          /* 0x40 */
+  ULONG				DefaultOwnerIndex;         /* 0x44 */
+  PSID_AND_ATTRIBUTES		UserAndGroups;             /* 0x48 */
+  PSID				PrimaryGroup;              /* 0x4C */
+  PLUID_AND_ATTRIBUTES		Privileges;                /* 0x50 */
+  ULONG				Unknown1;                  /* 0x54 */
+  PACL				DefaultDacl;               /* 0x58 */
+  TOKEN_TYPE			TokenType;                 /* 0x5C */
+  SECURITY_IMPERSONATION_LEVEL	ImpersonationLevel;        /* 0x60 */
+  UCHAR				TokenFlags;                /* 0x64 */
+  UCHAR				TokenInUse;                /* 0x65 */
+  UCHAR				Unused[2];                 /* 0x66 */
+  PVOID				ProxyData;                 /* 0x68 */
+  PVOID				AuditData;                 /* 0x6c */
+  UCHAR				VariablePart[0];           /* 0x70 */
 } ACCESS_TOKEN, *PACCESS_TOKEN;
 
 
 typedef struct _SECURITY_SUBJECT_CONTEXT
 {
-  PACCESS_TOKEN ClientToken;                              // 0x0
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;        // 0x4
-  PACCESS_TOKEN PrimaryToken;                             // 0x8
-  PVOID ProcessAuditId;                                   // 0xC
+  PACCESS_TOKEN ClientToken;                              /* 0x0 */
+  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;        /* 0x4 */
+  PACCESS_TOKEN PrimaryToken;                             /* 0x8 */
+  PVOID ProcessAuditId;                                   /* 0xC */
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
 
 typedef struct _SECURITY_CLIENT_CONTEXT
 {
-  SECURITY_QUALITY_OF_SERVICE SecurityQos;	// 0x00
-  PACCESS_TOKEN Token;				// 0x0C
-  BOOLEAN DirectlyAccessClientToken;		// 0x10
-  BOOLEAN DirectAccessEffectiveOnly;		// 0x11
-  BOOLEAN ServerIsRemote;			// 0x12
-  TOKEN_CONTROL ClientTokenControl;		// 0x14
+  SECURITY_QUALITY_OF_SERVICE SecurityQos;	/* 0x00 */
+  PACCESS_TOKEN Token;				/* 0x0C */
+  BOOLEAN DirectlyAccessClientToken;		/* 0x10 */
+  BOOLEAN DirectAccessEffectiveOnly;		/* 0x11 */
+  BOOLEAN ServerIsRemote;			/* 0x12 */
+  TOKEN_CONTROL ClientTokenControl;		/* 0x14 */
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
 

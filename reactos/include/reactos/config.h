@@ -1,6 +1,6 @@
 #ifndef _INC_REACTOS_CONFIG_H
 #define _INC_REACTOS_CONFIG_H 
-/* $Id: config.h,v 1.3 2000/02/20 22:52:47 ea Exp $ */
+/* $Id: config.h,v 1.4 2003/08/25 01:37:47 sedwards Exp $ */
 /* ReactOS global configuration options */
 
 #define CONFIG_PROCESSOR_FAMILY_I386	386L
@@ -24,7 +24,9 @@
  * Use __fastcall calling conventions when needed
  * in system components that require it.
  */
-//#define CONFIG_USE_FASTCALL
+
+/* #define CONFIG_USE_FASTCALL */
+
 /*
  * Enable debugging output on a per module
  * base.

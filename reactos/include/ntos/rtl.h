@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.16 2003/08/14 17:54:27 ekohl Exp $
+/* $Id: rtl.h,v 1.17 2003/08/25 01:37:47 sedwards Exp $
  * 
  */
 
@@ -451,7 +451,7 @@ RtlZeroMemory (PVOID Destination, ULONG Length);
 #define RTL_REGISTRY_WINDOWS_NT 3
 #define RTL_REGISTRY_DEVICEMAP  4
 #define RTL_REGISTRY_USER       5
-#define RTL_REGISTRY_ENUM       6   // ReactOS specific: Used internally in kernel only
+#define RTL_REGISTRY_ENUM       6   /* ReactOS specific: Used internally in kernel only */
 #define RTL_REGISTRY_MAXIMUM    7
 
 #define RTL_REGISTRY_HANDLE     0x40000000
@@ -807,8 +807,8 @@ STDCALL
 RtlCreateHeap (
 	ULONG			Flags,
 	PVOID			BaseAddress,
-	ULONG			SizeToReserve,     // dwMaximumSize
-	ULONG			SizeToCommit,      // dwInitialSize
+	ULONG			SizeToReserve,     /* dwMaximumSize */
+	ULONG			SizeToCommit,      /* dwInitialSize */
 	PVOID			Unknown,
 	PRTL_HEAP_DEFINITION	Definition
 	);

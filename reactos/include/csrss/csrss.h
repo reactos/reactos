@@ -52,7 +52,7 @@ typedef struct
 {
    HANDLE ConsoleHandle;
    WORD NrCharactersToRead;
-   WORD nCharsCanBeDeleted;     // number of chars already in buffer that can be backspaced
+   WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
 } CSRSS_READ_CONSOLE_REQUEST, *PCSRSS_READ_CONSOLE_REQUEST;
 
 typedef struct
@@ -385,7 +385,7 @@ typedef struct
 typedef struct
 {
   HANDLE ConsoleHandle;
-  DWORD SetGet; // 0=get; 1=set
+  DWORD SetGet; /* 0=get; 1=set */
   DWORD State;
 
 } CSRSS_CONSOLE_HARDWARE_STATE, *PCSRSS_CONSOLE_HARDWARE_STATE;
@@ -411,7 +411,7 @@ typedef struct
 
 #define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB_REQUEST))
 
-// WCHARs, not bytes!
+/* WCHARs, not bytes! */
 #define CSRSS_MAX_TITLE_LENGTH          80
 
 #define CSRSS_CREATE_PROCESS                (0x0)

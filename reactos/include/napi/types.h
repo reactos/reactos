@@ -1,7 +1,7 @@
 #ifndef __INCLUDE_NAPI_TYPES_H
 #define __INCLUDE_NAPI_TYPES_H
 
-// these should be moved to a file like ntdef.h
+/* these should be moved to a file like ntdef.h */
 
 enum
 {

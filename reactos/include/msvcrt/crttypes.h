@@ -14,10 +14,12 @@
 
 #ifdef  __GNUC__
 
-//typedef long long LONGLONG;
-//typedef unsigned long long ULONGLONG;
-//typedef long long *PLONGLONG;
-//typedef unsigned long long *PULONGLONG;
+/*
+typedef long long LONGLONG;
+typedef unsigned long long ULONGLONG;
+typedef long long *PLONGLONG;
+typedef unsigned long long *PULONGLONG;
+*/
 #define HAVE_LONGLONG
 #define LONGLONG_DEFINED
 #define LONGLONG    long long

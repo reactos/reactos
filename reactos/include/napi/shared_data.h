@@ -31,7 +31,7 @@ typedef struct _KUSER_SHARED_DATA
    ULONG NtMinorVersion;
    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURES_MAX];
 
-   // NT5 / Win2k specific ??
+   /* NT5 / Win2k specific ?? */
    ULONG Reserved1;
    ULONG Reserved3;
    volatile ULONG TimeSlip;

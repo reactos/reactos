@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.14 2003/08/14 18:30:27 silverblade Exp $
+/* $Id: disk.h,v 1.15 2003/08/25 01:37:47 sedwards Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -77,7 +77,7 @@
 #define PTOLDDOS16Bit                   0x04
 #define PTDosExtended                   0x05
 #define PTDos5xPrimary                  0x06
-#define PTIfs                           0x07	// e.g.: HPFS, NTFS, etc
+#define PTIfs                           0x07	/* e.g.: HPFS, NTFS, etc */
 #define PTAIX                           0x08
 #define PTAIXBootable                   0x09
 #define PTOS2BootMgr                    0x0A

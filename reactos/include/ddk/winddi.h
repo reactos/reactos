@@ -27,7 +27,7 @@
 typedef DWORD PTRDIFF;
 #endif
 
-#define GDI_DRIVER_VERSION 0x4000   // NT 4 compatibility
+#define GDI_DRIVER_VERSION 0x4000   /* NT 4 compatibility */
 
 /* FIXME: find definitions for these structs  */
 typedef PVOID  PCOLORADJUSTMENT;
@@ -195,7 +195,7 @@ enum _GLYPH_MODE
   FO_PATHOBJ
 };
 
-// Allowed values for GDIINFO.ulPrimaryOrder.
+/* Allowed values for GDIINFO.ulPrimaryOrder. */
 
 #define PRIMARY_ORDER_ABC       0
 #define PRIMARY_ORDER_ACB       1
@@ -204,7 +204,7 @@ enum _GLYPH_MODE
 #define PRIMARY_ORDER_CBA       4
 #define PRIMARY_ORDER_CAB       5
 
-// Allowed values for GDIINFO.ulHTPatternSize.
+/* Allowed values for GDIINFO.ulHTPatternSize. */
 
 #define HT_PATSIZE_2x2          0
 #define HT_PATSIZE_2x2_M        1
@@ -225,7 +225,7 @@ enum _GLYPH_MODE
 #define HT_PATSIZE_MAX_INDEX    HT_PATSIZE_16x16_M
 #define HT_PATSIZE_DEFAULT      HT_PATSIZE_4x4_M
 
-// Allowed values for GDIINFO.ulHTOutputFormat.
+/* Allowed values for GDIINFO.ulHTOutputFormat. */
 
 #define HT_FORMAT_1BPP          0
 #define HT_FORMAT_4BPP          2
@@ -235,7 +235,7 @@ enum _GLYPH_MODE
 #define HT_FORMAT_24BPP         6
 #define HT_FORMAT_32BPP         7
 
-// Allowed values for GDIINFO.flHTFlags.
+/* Allowed values for GDIINFO.flHTFlags. */
 
 #define HT_FLAG_SQUARE_DEVICE_PEL    0x00000001
 #define HT_FLAG_HAS_BLACK_DYE        0x00000002
@@ -614,7 +614,7 @@ typedef struct _IFIMETRICS
   PANOSE panose;
 } IFIMETRICS, *PIFIMETRICS;
 
-#define NB_RESERVED_COLORS              20 // number of fixed colors in system palette
+#define NB_RESERVED_COLORS              20 /* number of fixed colors in system palette */
 
 typedef struct _XLATEOBJ
 {
@@ -630,7 +630,7 @@ typedef struct _PALOBJ
 {
   PXLATEOBJ logicalToSystem;
   int *mapping;
-  PLOGPALETTE logpalette; // _MUST_ be the last field
+  PLOGPALETTE logpalette; /* _MUST_ be the last field */
 } PALOBJ, *PPALOBJ;
 
 typedef struct _PATHOBJ

@@ -23,7 +23,7 @@
 #ifndef __WINE_WINDEF16_H
 #define __WINE_WINDEF16_H
 
-// #include "windef.h"
+/* #include "windef.h" */
 
 /* Standard data types */
 

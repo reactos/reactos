@@ -1,4 +1,4 @@
-// Mouse definitions common to both mouse class and port drivers
+/* Mouse definitions common to both mouse class and port drivers */
 
 #define IO_MOUSE_INCREMENT	6
 #define MOUSE_BUFFER_SIZE	32
