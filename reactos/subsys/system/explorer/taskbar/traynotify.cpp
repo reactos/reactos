@@ -185,7 +185,13 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 				 // Notify the message if the owner is still alive
 				if (IsWindow(entry._hWnd)) {
-					if (nmsg == WM_MOUSEMOVE)	// avoid to call blocking SendMessage() for merely moving the mouse over icons
+					if (nmsg == WM_MOUSEMOVE ||		// avoid to call blocking SendMessage() for merely moving the mouse over icons
+						nmsg == WM_LBUTTONDOWN ||	// Some programs need PostMessage() instead of SendMessage().
+						nmsg == WM_MBUTTONDOWN ||	// So call SendMessage() only for BUTTONUP and BLCLK messages
+#ifdef WM_XBUTTONDOWN
+						nmsg == WM_XBUTTONDOWN ||
+#endif
+						nmsg == WM_RBUTTONDOWN)
 						PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 					else {
 						 // allow SetForegroundWindow() in client process
