@@ -76,3 +76,16 @@ If you search for more information, look into the CVS repository.
 28.03.2004	m. fuchs	configuration options for showing/hiding clock, ...
 04.04.2004	m. fuchs	import of IE bookmarks; explorer sidebar with bookmark display
 09.04.2004	m. fuchs	changed favorites start menu implementation to work with internal bookmarks
+
+12.04.2004	m. fuchs	ShellBrowserChild: jump to addressbar target
+17.05.2004	m. fuchs	use precompiled headers for VC++ builds
+01.06.2004	m. fuchs	integrate optional SDI mode into main explorer branch
+15.07.2004	m. fuchs	fix root path for folders opened from the desktop
+18.07.2004	m. fuchs	precompiled header support for GCC 3.4.1
+31.07.2004	m. fuchs	use same startmenu entries height as MS explorer
+02.08.2004	m. fuchs	context menus for start menus and quick launch bar
+03.08.2004	m. fuchs	get version number to display from RES_STR_PRODUCT_VERSION
+16.08.2004	m. fuchs	display version information in about dialog and on the desktop
+15.09.2004	m. fuchs	remove direct version output from desktop; instead store the activation flag into the registry
+17.09.2004	m. fuchs	handle "." and ".." as special direcory names and move them at the very first beginning of directory listings
+23.09.2004	m. fuchs	configuration dialog to choose between MDI and SDI mode with persistent storage
