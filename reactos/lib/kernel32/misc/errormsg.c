@@ -1,4 +1,4 @@
-/* $Id: errormsg.c,v 1.4 2003/02/17 16:27:08 ekohl Exp $
+/* $Id: errormsg.c,v 1.5 2003/05/19 19:42:30 guido Exp $
  *
  * reactos/lib/kernel32/misc/errormsg.c
  *
@@ -46,12 +46,12 @@
 #define strlenW lstrlen
 #define strlen  lstrlen
 
-#define MAKEINTRESOURCE(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
+//#define MAKEINTRESOURCE(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
 //#define MAKEINTRESOURCEA(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
 //#define MAKEINTRESOURCEW(i)  (LPTSTR) ((DWORD) ((WORD) (i)))
 
-#define MAKEINTRESOURCEA(i) (LPSTR)((ULONG_PTR)((WORD)(i)))
-#define MAKEINTRESOURCEW(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
+//#define MAKEINTRESOURCEA(i) (LPSTR)((ULONG_PTR)((WORD)(i)))
+//#define MAKEINTRESOURCEW(i) (LPWSTR)((ULONG_PTR)((WORD)(i)))
 //#define MAKEINTRESOURCE WINELIB_NAME_AW(MAKEINTRESOURCE)
 
 
