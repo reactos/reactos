@@ -39,6 +39,7 @@
 
 #include <ddk/ntddk.h>
 #include <epsapi.h>
+#include <ntos/zwtypes.h>
 
 #include "ctm.h"
 
@@ -322,7 +323,7 @@ void PerfDataRefresh()
 	DWORD							dwSize;
 	double							CurrentKernelTime;
 	PSYSTEM_PROCESSORTIME_INFO		SysProcessorTimeInfo;
-	SYSTEM_PERFORMANCE_INFO	SysPerfInfo;
+	SYSTEM_PERFORMANCE_INFORMATION	SysPerfInfo;
 	SYSTEM_TIMEOFDAY_INFORMATION            SysTimeInfo;
 
 #ifdef TIMES
