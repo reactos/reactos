@@ -20,7 +20,7 @@
 /* Check for mouse on COM1? */
 #define SERMOUSE_COM1_SUPPORT
 /* Check for mouse on COM2? */
-#define SERMOUSE_COM2_SUPPORT
+//#define SERMOUSE_COM2_SUPPORT
 /* Create \??\Mouse* symlink for device? */
 #define SERMOUSE_MOUSESYMLINK_SUPPORT
 
@@ -271,10 +271,6 @@ SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
 		case IOCTL_INTERNAL_MOUSE_CONNECT:
-			/* Enable interrupts */
-			WRITE_PORT_UCHAR((PUCHAR)(DeviceExtension->MousePort) + 1, 1);
-			ClearMouse(DeviceExtension->MousePort);
-
 			DeviceExtension->ClassInformation =
 				*((PCLASS_INFORMATION)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 
@@ -529,9 +525,13 @@ InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 	InitializeSerialPort(Port, 2);
 	MouseType = DetectMicrosoftMouse(Port);
 
+	/* Enable interrupts */
+	WRITE_PORT_UCHAR((PUCHAR)(Port) + 1, 1);
+	ClearMouse(Port);
+
 	/* No mouse, no need to continue */
 	if (MouseType == MOUSE_TYPE_NONE)
-	   return FALSE;
+		return FALSE;
 
     /* Allocate new device */
     DeviceObject = AllocatePointerDevice(DriverObject);
