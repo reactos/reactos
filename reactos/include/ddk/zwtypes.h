@@ -1,6 +1,11 @@
 #ifndef __INCLUDE_DDK_ZWTYPES_H
 #define __INCLUDE_DDK_ZWTYPES_H
 
+typedef enum _KPROFILE_SOURCE
+{
+  ProfileTime
+} KPROFILE_SOURCE;
+
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
 

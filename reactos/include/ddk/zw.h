@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.40 2001/01/02 00:46:10 ekohl Exp $
+/* $Id: zw.h,v 1.41 2001/03/16 16:05:32 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -816,17 +816,15 @@ ZwCreateProcess(
 
 NTSTATUS 
 STDCALL
-NtCreateProfile(
-	OUT PHANDLE ProfileHandle, 
-	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN ULONG ImageBase, 
-	IN ULONG ImageSize, 
-	IN ULONG Granularity,
-	OUT PVOID Buffer, 
-	IN ULONG ProfilingSize,
-	IN ULONG ClockSource,
-	IN ULONG ProcessorMask 
-	);
+NtCreateProfile(OUT PHANDLE ProfileHandle, 
+		IN HANDLE ProcessHandle,
+		IN PVOID ImageBase, 
+		IN ULONG ImageSize, 
+		IN ULONG Granularity,
+		OUT PULONG Buffer, 
+		IN ULONG ProfilingSize,
+		IN KPROFILE_SOURCE Source,
+		IN ULONG ProcessorMask);
 
 NTSTATUS 
 STDCALL
@@ -3031,14 +3029,14 @@ NTSTATUS
 STDCALL
 NtQueryIntervalProfile(
 	OUT PULONG Interval,
-	OUT PULONG ClockSource
+	OUT KPROFILE_SOURCE ClockSource
 	);
 
 NTSTATUS
 STDCALL
 ZwQueryIntervalProfile(
 	OUT PULONG Interval,
-	OUT PULONG ClockSource
+	OUT KPROFILE_SOURCE ClockSource
 	);
 
 
@@ -4396,14 +4394,14 @@ NTSTATUS
 STDCALL
 NtSetIntervalProfile(
 	ULONG Interval,
-	ULONG ClockSource
+	KPROFILE_SOURCE ClockSource
 	);
 
 NTSTATUS 
 STDCALL
 ZwSetIntervalProfile(
 	ULONG Interval,
-	ULONG ClockSource
+	KPROFILE_SOURCE ClockSource
 	);
 
 

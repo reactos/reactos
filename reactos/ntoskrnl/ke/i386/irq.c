@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.7 2001/03/14 23:19:14 dwelch Exp $
+/* $Id: irq.c,v 1.8 2001/03/16 16:05:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -154,7 +154,7 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
 
    if (irq==0)
      {
-       KiUpdateSystemTime(old_level);
+       KiUpdateSystemTime(old_level, Trapframe->Eip);
      }
    else
      {

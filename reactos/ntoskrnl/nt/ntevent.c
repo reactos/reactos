@@ -132,18 +132,27 @@ NtCreateEvent(OUT PHANDLE UnsafeEventHandle,
    PKEVENT Event;
    HANDLE EventHandle;
    NTSTATUS Status;
-   OBJECT_ATTRIBUTES ObjectAttributes;
-
-   Status = MmCopyFromCaller(&ObjectAttributes, UnsafeObjectAttributes,
-			     sizeof(OBJECT_ATTRIBUTES));
-   if (!NT_SUCCESS(Status))
+   OBJECT_ATTRIBUTES SafeObjectAttributes;
+   POBJECT_ATTRIBUTES ObjectAttributes;
+   
+   if (UnsafeObjectAttributes != NULL)
      {
-       return(Status);
+       Status = MmCopyFromCaller(&SafeObjectAttributes, UnsafeObjectAttributes,
+				 sizeof(OBJECT_ATTRIBUTES));
+       if (!NT_SUCCESS(Status))
+	 {
+	   return(Status);
+	 }
+       ObjectAttributes = &SafeObjectAttributes;
+     }
+   else
+     {
+       ObjectAttributes = NULL;
      }
 
    Event = ObCreateObject(&EventHandle,
 			  DesiredAccess,
-			  &ObjectAttributes,
+			  ObjectAttributes,
 			  ExEventObjectType);
    KeInitializeEvent(Event,
 		     ManualReset ? NotificationEvent : SynchronizationEvent,

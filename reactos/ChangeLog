@@ -1,5 +1,25 @@
 2001-03-16  David Welch  <welch@cwcom.net>
 
+	* include/ddk/zw.h: Corrected declarations of NtCreateProfile,
+	NtQueryIntervalProfile, NtSetIntervalProfile.
+	* include/ddk/zwtypes.h: Added definitions of KPROFILE_SOURCE.
+	* ntoskrnl/include/internal/ke.h: Added the interrupted EIP as a
+	parameter to KiUpdateSystemTime for profiling purposes.
+	* ntoskrnl/include/internal/nt: Added declaration for profiling
+	support initialization.
+	* ntoskrnl/ke/timer.c (KiUpdateSystemTime, KeExpireTimers): Call
+	the profiling code on a timer interrupt with the interrupt EIP.
+	* ntoskrnl/ke/i386/irq.c (KiDispatchInterrupt): Pass the interrupted
+	EIP to KiUpdateSystemTime.
+	* ntoskrnl/mm/virtual.c (NtReadVirtualMemory, NtWriteVirtualMemory):
+	Release the MDLs used properly.
+	* ntoskrnl/nt/nt.c: Call the profiling support initialization.
+	* ntoskrnl/nt/ntevent.c (NtCreateEvent): Don't try copying the
+	ObjectAttributes parameter if it is NULL.
+	* ntoskrnl/nt/profile.c: Implemented profiling.
+
+2001-03-16  David Welch  <welch@cwcom.net>
+
 	* ntoskrnl/include/internal/safe.h: Corrected typo.
 	* ntoskrnl/nt/ntevent.c (NtCreateEvent, NtOpenEvent, NtQueryEvent):
 	Corrected typos.

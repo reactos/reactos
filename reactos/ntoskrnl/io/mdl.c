@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.6 2001/03/07 16:48:42 dwelch Exp $
+/* $Id: mdl.c,v 1.7 2001/03/16 16:05:33 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -74,11 +74,10 @@ IoBuildPartialMdl(PMDL SourceMdl,
      }
 }
 
-VOID
-STDCALL
+VOID STDCALL
 IoFreeMdl(PMDL Mdl)
 {   
-   MmUnmapLockedPages(MmGetSystemAddressForMdl(Mdl),Mdl);
+   MmUnmapLockedPages(MmGetSystemAddressForMdl(Mdl), Mdl);
    MmUnlockPages(Mdl);
    ExFreePool(Mdl);
 }

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.41 2001/03/14 23:19:14 dwelch Exp $
+/* $Id: timer.c,v 1.42 2001/03/16 16:05:33 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -403,6 +403,7 @@ KeExpireTimers(PKDPC Dpc,
 {
    PLIST_ENTRY current_entry = NULL;
    PKTIMER current = NULL;
+   ULONG Eip = (ULONG)Arg1;
 
    DPRINT("KeExpireTimers()\n");
    
@@ -421,13 +422,15 @@ KeExpireTimers(PKDPC Dpc,
 	   HandleExpiredTimer(current);
 	 }      
      }
+
+   KiAddProfileEvent(ProfileTime, Eip);
    
    KeReleaseSpinLockFromDpcLevel(&TimerListLock);
 }
 
 
 VOID 
-KiUpdateSystemTime (KIRQL oldIrql)
+KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
 /*
  * FUNCTION: Handles a timer interrupt
  */
@@ -463,7 +466,7 @@ KiUpdateSystemTime (KIRQL oldIrql)
    /*
     * Queue a DPC that will expire timers
     */
-   KeInsertQueueDpc(&ExpireTimerDpc, 0, 0);
+   KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)Eip, 0);
 }
 
 

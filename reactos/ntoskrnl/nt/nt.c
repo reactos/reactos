@@ -1,4 +1,4 @@
-/* $Id: nt.c,v 1.6 2001/02/04 17:28:13 ekohl Exp $
+/* $Id: nt.c,v 1.7 2001/03/16 16:05:34 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,6 +25,7 @@ VOID NtInit(VOID)
    NtInitializeSemaphoreImplementation();
    NtInitializeTimerImplementation();
    NiInitPort();
+   NtInitializeProfileImplementation();
 }
 
 /* EOF */

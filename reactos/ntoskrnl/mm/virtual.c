@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.42 2001/03/13 16:25:54 dwelch Exp $
+/* $Id: virtual.c,v 1.43 2001/03/16 16:05:34 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -1346,6 +1346,13 @@ NtReadVirtualMemory(IN	HANDLE	ProcessHandle,
    memcpy(SystemAddress, BaseAddress, NumberOfBytesToRead);
    
    KeDetachProcess();
+
+   if (Mdl->MappedSystemVa != NULL)
+     {	     
+       MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+     }
+   MmUnlockPages(Mdl);
+   ExFreePool(Mdl);
    
    ObDereferenceObject(Process);
    
@@ -1410,6 +1417,13 @@ NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    KeDetachProcess();
    
    ObDereferenceObject(Process);
+
+   if (Mdl->MappedSystemVa != NULL)
+     {	     
+       MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+     }
+   MmUnlockPages(Mdl);
+   ExFreePool(Mdl);
    
    *NumberOfBytesWritten = NumberOfBytesToWrite;
    
