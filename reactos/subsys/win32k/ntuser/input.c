@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.8 2003/07/05 16:04:01 chorns Exp $
+/* $Id: input.c,v 1.9 2003/07/29 23:03:01 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -108,6 +108,10 @@ KeyboardThreadMain(PVOID StartContext)
 			       sizeof(KEY_EVENT_RECORD),
 			       NULL,
 			       NULL);
+    DbgPrint( "KeyRaw: %s %04x\n",
+	      KeyEvent.bKeyDown ? "down" : "up",
+	      KeyEvent.wVirtualScanCode );
+
 	  if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    {
 	      break;
@@ -119,6 +123,7 @@ KeyboardThreadMain(PVOID StartContext)
 	    }
 	  
     SysKey = KeyEvent.dwControlKeyState & (LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED);
+	DbgPrint( "Key: %s\n", KeyEvent.bKeyDown ? "down" : "up" );
 
 	  /*
 	   * Post a keyboard message.
@@ -157,9 +162,7 @@ KeyboardThreadMain(PVOID StartContext)
           {
             lParam |= (1 << 29);  /* Context mode. 1 if ALT if pressed while the key is pressed */
           }
-
-
-	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYDOWN : WM_KEYDOWN, KeyEvent.wVirtualKeyCode, 
+	      MsqPostKeyboardMessage(SysKey ? WM_SYSKEYUP : WM_KEYUP, KeyEvent.wVirtualKeyCode, 
 				     lParam);
 	    }
 	}

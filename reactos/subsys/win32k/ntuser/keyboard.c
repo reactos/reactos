@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.5 2003/07/20 05:32:19 jimtabor Exp $
+/* $Id: keyboard.c,v 1.6 2003/07/29 23:03:01 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,6 +32,7 @@
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
 #include <internal/safe.h>
+#include <internal/kbd.h>
 #include <include/guicheck.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
@@ -43,9 +44,11 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
-
+DWORD ModBits = 0;
 BYTE QueueKeyStateTable[256];
+static PVOID pkKeyboardLayout = 0;
+
+/* arty -- These should be phased out for the general kbdxx.dll tables */
 
 struct accent_char
 {
@@ -164,35 +167,225 @@ static const struct accent_char accent_chars[] =
 /*  {'.', 'I', '\335'},  {'.', 'i', '\375'}, */	/* dot above */
 };
 
+/* FUNCTIONS *****************************************************************/
+
+/*** Statics used by TranslateMessage ***/
+
+static VOID STDCALL SetKeyState(DWORD key, BOOL down) {
+  if( key >= 'a' && key <= 'z' ) key += 'A' - 'a';
+  QueueKeyStateTable[key] = down;
+}
+
+static BOOL SetModKey( PKBDTABLES pkKT, WORD wVK, BOOL down ) {
+  int i;
+  
+  for( i = 0; pkKT->pCharModifiers->pVkToBit[i].Vk; i++ ) {
+    DbgPrint( "vk[%d] = { %04x, %x }\n", i, 
+	pkKT->pCharModifiers->pVkToBit[i].Vk,
+	pkKT->pCharModifiers->pVkToBit[i].ModBits );
+    if( pkKT->pCharModifiers->pVkToBit[i].Vk == wVK ) {
+      if( down ) ModBits |= pkKT->pCharModifiers->pVkToBit[i].ModBits;
+      else ModBits &= ~pkKT->pCharModifiers->pVkToBit[i].ModBits;
+      DbgPrint( "ModBits: %x\n", ModBits );
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
+
+static BOOL TryToTranslateChar( WORD wVirtKey,
+				PVK_TO_WCHAR_TABLE vtwTbl, 
+				DWORD ModBits,
+				PBOOL pbDead,
+				PBOOL pbLigature,
+				PWCHAR pwcTranslatedChar ) {
+  int i,j;
+  size_t size_this_entry = vtwTbl->cbSize;
+  int nStates = vtwTbl->nModifications;
+  PVK_TO_WCHARS10 vkPtr;
+
+  for( i = 0;; i++ ) {
+    vkPtr = (PVK_TO_WCHARS10)
+      (((BYTE *)vtwTbl->pVkToWchars) + i * size_this_entry);
+
+    if( !vkPtr->VirtualKey ) return FALSE;
+    if( wVirtKey == vkPtr->VirtualKey ) {
+      for( j = 0; j < nStates; j++ ) {
+	if( j == ModBits ) { /* OK, we found a wchar with the correct
+				shift state and vk */
+	  *pbDead = vkPtr->wch[j] == WCH_DEAD;
+	  *pbLigature = vkPtr->wch[j] == WCH_LGTR;
+	  *pwcTranslatedChar = vkPtr->wch[j];
+	  if( *pbDead ) {
+	    i++;
+	    vkPtr = (PVK_TO_WCHARS10)
+	      (((BYTE *)vtwTbl->pVkToWchars) + i * size_this_entry);
+	    if( vkPtr->VirtualKey != 0xff ) {
+	      DPRINT( "Found dead key with no trailer in the table.\n" );
+	      DPRINT( "VK: %04x, ADDR: %08x\n", wVirtKey, (int)vkPtr );
+	      return FALSE;
+	    }
+	    *pwcTranslatedChar = vkPtr->wch[j];
+	  }
+	  return TRUE;
+	}
+      }
+    }
+  }
+}
+
+static
 int STDCALL
-ToUnicode(UINT wVirtKey,
-	  UINT wScanCode,
-	  PBYTE lpKeyState,
-	  LPWSTR pwszBuff,
-	  int cchBuff,
-	  UINT wFlags)
+ToUnicodeInner(UINT wVirtKey,
+	       UINT wScanCode,
+	       PBYTE lpKeyState,
+	       LPWSTR pwszBuff,
+	       int cchBuff,
+	       UINT wFlags,
+	       DWORD ModBits,
+	       PKBDTABLES pkKT)
 {
-	return(0);
+  int i;
+
+  DbgPrint("wVirtKey=%08x, wScanCode=%08x, lpKeyState=[], "
+	   "pwszBuff=%S, cchBuff=%d, wFlags=%x\n",
+	   wVirtKey, wScanCode, /* lpKeyState, */ pwszBuff,
+	   cchBuff, wFlags );
+
+  for( i = 0; pkKT->pVkToWcharTable[i].nModifications; i++ ) {
+    WCHAR wcTranslatedChar;
+    BOOL bDead;
+    BOOL bLigature;
+
+    if( TryToTranslateChar( wVirtKey,
+			    &pkKT->pVkToWcharTable[i], 
+			    ModBits,
+			    &bDead,
+			    &bLigature,
+			    &wcTranslatedChar ) ) {
+      if( bLigature ) {
+	DPRINT("Not handling ligature (yet)\n" );
+	return 0;
+      }
+
+      if( cchBuff > 0 ) pwszBuff[0] = wcTranslatedChar;
+
+      if( bDead ) return -1;
+      else return 1;
+    }
+  }
+
+  return 0;
+}
+
+DWORD
+STDCALL
+NtUserGetKeyState(
+  DWORD key)
+{
+  DWORD ret;
+
+    if (key >= 'a' && key <= 'z') key += 'A' - 'a';
+    ret = ((DWORD)(QueueKeyStateTable[key] & 0x80) << 8 ) |
+              (QueueKeyStateTable[key] & 0x80) |
+              (QueueKeyStateTable[key] & 0x01);
+    return ret;
+}
+
+int STDCALL ToUnicode( UINT wVirtKey,
+		       UINT wScanCode,
+		       PBYTE lpKeyState,
+		       LPWSTR pwszBuff,
+		       int cchBuff,
+		       UINT wFlags ) {
+  return ToUnicodeInner( wVirtKey,
+			 wScanCode,
+			 QueueKeyStateTable,
+			 pwszBuff,
+			 cchBuff,
+			 wFlags,
+			 ModBits,
+			 pkKeyboardLayout );
+}
+
+typedef PVOID (*KbdLayerDescriptor)(VOID);
+NTSTATUS STDCALL LdrGetProcedureAddress(PVOID module,
+					PANSI_STRING import_name,
+					DWORD flags,
+					PVOID *func_addr);
+
+void InitKbdLayout( PVOID *pkKeyboardLayout ) {
+  HMODULE kbModule = 0;
+  ANSI_STRING kbdProcedureName;
+  NTSTATUS Status;
+
+  KbdLayerDescriptor layerDescGetFn;
+
+  kbModule = EngLoadImage(L"\\SystemRoot\\system32\\kbdus.dll");
+
+  if( !kbModule ) {
+    DbgPrint( "Foo: No kbdus.dll\n" );
+    return;
+  }
+
+  RtlInitAnsiString( &kbdProcedureName, "KbdLayerDescriptor" );
+  LdrGetProcedureAddress((PVOID)kbModule,
+			 &kbdProcedureName,
+			 0,
+			 &layerDescGetFn);
+  if( layerDescGetFn ) {
+    *pkKeyboardLayout = layerDescGetFn();
+  }
 }
 
 BOOL STDCALL
 NtUserTranslateMessage(LPMSG lpMsg,
-		       DWORD Unknown1)
+		       DWORD Unknown1) /* Used to pass the kbd layout */
 {
-  LONG UState;
-  WCHAR wp[2];
-  MSG NewMsg;
-  static INT dead_char;
+  static INT dead_char = 0;
+  LONG UState = 0;
+  WCHAR wp[2] = { 0 };
+  MSG NewMsg = { 0 };
   PUSER_MESSAGE UMsg;
+
+  /* FIXME: Should pass current keyboard layout for this thread. */
+  /* At the moment, the keyboard layout is global. */
+  /* Also, we're fixed at kbdus.dll ... */
+  if( !pkKeyboardLayout ) InitKbdLayout( &pkKeyboardLayout );
+  if( !pkKeyboardLayout ) {
+    DbgPrint( "Not Translating due to empty layout.\n" );
+    return FALSE;
+  }
 
   if (lpMsg->message != WM_KEYDOWN && lpMsg->message != WM_SYSKEYDOWN)
     {
+      if (lpMsg->message == WM_KEYUP) {
+	DbgPrint( "About to SetKeyState( %04x, FALSE );\n", lpMsg->wParam );
+	SetKeyState( lpMsg->wParam, FALSE ); /* Release key */
+        DbgPrint( "About to SetModKey();\n" );
+	SetModKey( pkKeyboardLayout, lpMsg->wParam, FALSE );
+	/* Release Mod if any */
+	DbgPrint( "Done with keys.\n" );
+      }
       return(FALSE);
     }
 
-  /* FIXME: Should pass current keyboard layout for this thread. */
-  UState = ToUnicode(lpMsg->wParam, HIWORD(lpMsg->lParam),
-		     QueueKeyStateTable, wp, 2, 0);
+  DbgPrint( "About to SetKeyState( %04x, TRUE );\n", lpMsg->wParam );
+  SetKeyState( lpMsg->wParam, TRUE ); /* Strike key */
+
+  /* Pass 1: Search for modifiers */
+  DbgPrint( "About to SetModKey();\n" );
+  if( SetModKey( pkKeyboardLayout, lpMsg->wParam, TRUE ) ) return TRUE;
+  DbgPrint( "Done with keys.\n" );
+
+  /* Pass 2: Get Unicode Character */
+  DbgPrint( "Calling ToUnicodeString()\n" );
+  UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam),
+			  QueueKeyStateTable, wp, 2, 0, ModBits,
+			  pkKeyboardLayout);
+
+  DbgPrint( "UState is %d after key %04x\n", UState, wp[0] );
   if (UState == 1)
     {
       NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
@@ -218,13 +411,14 @@ NtUserTranslateMessage(LPMSG lpMsg,
                 }
 	      dead_char = 0;
 	    }
-	  NewMsg.hwnd = lpMsg->hwnd;
-	  NewMsg.wParam = wp[0];
-	  NewMsg.lParam = lpMsg->lParam;
-	  UMsg = MsqCreateMessage(&NewMsg);
-	  MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
-	  return(TRUE);
-	}
+        }
+      NewMsg.hwnd = lpMsg->hwnd;
+      NewMsg.wParam = wp[0];
+      NewMsg.lParam = lpMsg->lParam;
+      UMsg = MsqCreateMessage(&NewMsg);
+      DbgPrint( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
+      MsqPostMessage(PsGetWin32Thread()->MessageQueue, UMsg);
+      return(TRUE);
     }
   else if (UState == -1)
     {
@@ -245,21 +439,6 @@ HWND STDCALL
 NtUserSetFocus(HWND hWnd)
 {
   return W32kSetFocusWindow(hWnd);
-}
-
-
-DWORD
-STDCALL
-NtUserGetKeyState(
-  DWORD key)
-{
-DWORD ret;
-
-    if (key >= 'a' && key <= 'z') key += 'A' - 'a';
-    ret = ((DWORD)(QueueKeyStateTable[key] & 0x80) << 8 ) |
-              (QueueKeyStateTable[key] & 0x80) |
-              (QueueKeyStateTable[key] & 0x01);
-    return ret;
 }
 
 DWORD

@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.48 2003/06/19 19:38:26 ea Exp $
+/* $Id: conio.c,v 1.49 2003/07/29 23:03:01 jimtabor Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -33,6 +33,7 @@ static HANDLE KeyboardDeviceHandle;
 static PCSRSS_CONSOLE ActiveConsole;
 CRITICAL_SECTION ActiveConsoleLock;
 static COORD PhysicalConsoleSize;
+static BOOL KeyReadInhibit = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -926,8 +927,12 @@ VOID Console_Api( DWORD RefreshEvent )
 	  continue;
 	}
       KeyEventRecord->InputEvent.EventType = KEY_EVENT;
-      Status = NtReadFile( KeyboardDeviceHandle, Events[0], NULL, NULL, &Iosb,
-        &KeyEventRecord->InputEvent.Event.KeyEvent, sizeof( KEY_EVENT_RECORD ), NULL, 0 );
+      if( !KeyReadInhibit ) {
+        Status = NtReadFile( KeyboardDeviceHandle, Events[0], NULL, NULL, &Iosb,
+                             &KeyEventRecord->InputEvent.Event.KeyEvent, sizeof( KEY_EVENT_RECORD ), NULL, 0 );
+      } else {
+	Status = STATUS_PENDING;
+      }
       if( !NT_SUCCESS( Status ) )
 	{
 	  DbgPrint( "CSR: ReadFile on keyboard device failed\n" );
@@ -2462,9 +2467,20 @@ CSR_API(CsrWriteConsoleInput)
  */
 static NTSTATUS FASTCALL SetConsoleHardwareState (PCSRSS_CONSOLE Console, DWORD ConsoleHwState)
 {
+   DbgPrint( "Console Hardware State: %d\n", ConsoleHwState );
+
    if ( (CONSOLE_HARDWARE_STATE_GDI_MANAGED == ConsoleHwState)
       ||(CONSOLE_HARDWARE_STATE_DIRECT == ConsoleHwState))
    {
+      /* Inhibit keyboard input when hardware state ==
+       * CONSOLE_HARDWARE_STATE_GDI_MANAGED */
+      if (CONSOLE_HARDWARE_STATE_GDI_MANAGED == ConsoleHwState) {
+         DbgPrint( "Keyboard Inhibited.\n" );
+         KeyReadInhibit = TRUE;
+      } else {
+         DbgPrint( "Keyboard Enabled.\n" );
+         KeyReadInhibit = FALSE;
+      }
       if (Console->HardwareState != ConsoleHwState)
       {
 	 /* TODO: implement switching from full screen to windowed mode */
@@ -2493,13 +2509,15 @@ CSR_API(CsrHardwareStateProperty)
 		   );
    if (!NT_SUCCESS(Status))
    {
+      DbgPrint( "Failed to get console handle in SetConsoleHardwareState\n" );
       Reply->Status = Status;
    }
    else
    {
       if(Console->Header.Type != CSRSS_CONSOLE_MAGIC)
       {
-         Reply->Status = STATUS_INVALID_HANDLE;
+	DbgPrint( "Bad magic on Console: %08x\n", Console->Header.Type );
+        Reply->Status = STATUS_INVALID_HANDLE;
       }
       else
       {
@@ -2510,6 +2528,7 @@ CSR_API(CsrHardwareStateProperty)
             break;
       
          case CONSOLE_HARDWARE_STATE_SET:
+	    DbgPrint( "Setting console hardware state.\n" );
             Reply->Status = SetConsoleHardwareState (Console, Request->Data.ConsoleHardwareStateRequest.State);
             break;
 
