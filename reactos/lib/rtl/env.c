@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.3 2004/09/18 09:31:53 greatlrd Exp $
+/* $Id: env.c,v 1.4 2004/12/27 16:40:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -120,83 +120,125 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
                               PUNICODE_STRING Destination,
                               PULONG Length)
 {
-   UNICODE_STRING var;
-   UNICODE_STRING val;
-   NTSTATUS Status = STATUS_SUCCESS;
-   BOOLEAN flag = FALSE;
-   PWSTR s;
-   PWSTR d;
-   PWSTR w;
-   int src_len;
-   int dst_max;
-   int tail;
+   UNICODE_STRING Variable;
+   UNICODE_STRING Value;
+   NTSTATUS ReturnStatus = STATUS_SUCCESS;
+   NTSTATUS Status;
+   PWSTR SourceBuffer;
+   PWSTR DestBuffer;
+   PWSTR CopyBuffer;
+   PWSTR VariableEnd;
+   ULONG SourceLength;
+   ULONG DestMax;
+   ULONG CopyLength;
+   ULONG Tail;
+   ULONG TotalLength = 1; /* for terminating NULL */
 
    DPRINT("RtlExpandEnvironmentStrings_U %p %wZ %p %p\n",
           Environment, Source, Destination, Length);
 
-   src_len = Source->Length / sizeof(WCHAR);
-   s = Source->Buffer;
-   dst_max = Destination->MaximumLength / sizeof(WCHAR);
-   d = Destination->Buffer;
+   SourceLength = Source->Length / sizeof(WCHAR);
+   SourceBuffer = Source->Buffer;
+   DestMax = Destination->MaximumLength / sizeof(WCHAR);
+   DestBuffer = Destination->Buffer;
 
-   while (src_len)
+   while (SourceLength)
    {
-      if (*s == L'%')
+      if (*SourceBuffer != L'%')
       {
-         if (flag)
+         CopyBuffer = SourceBuffer;
+         CopyLength = 0;
+         while (SourceLength != 0 && *SourceBuffer != L'%')
          {
-            flag = FALSE;
-            goto copy;
+            SourceBuffer++;
+            CopyLength++;
+            SourceLength--;
          }
-         w = s + 1;
-         tail = src_len - 1;
-         while (*w != L'%' && tail)
-         {
-            w++;
-            tail--;
-         }
-         if (!tail)
-            goto copy;
-
-         var.Length = (w - ( s + 1)) * sizeof(WCHAR);
-         var.MaximumLength = var.Length;
-         var.Buffer = s + 1;
-
-         val.Length = 0;
-         val.MaximumLength = dst_max * sizeof(WCHAR);
-         val.Buffer = d;
-         Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val);
-         if (NT_SUCCESS(Status))
-         {
-            d += val.Length / sizeof(WCHAR);
-            dst_max -= val.Length / sizeof(WCHAR);
-            s = w + 1;
-            src_len = tail - 1;
-            continue;
-         }
-         /* variable not found or buffer too small, just copy %var% */
-         flag = TRUE;
       }
-copy:
-      if (!dst_max)
+      else
       {
-         Status = STATUS_BUFFER_TOO_SMALL;
-         break;
+         /* Process environment variable. */ 
+         
+         VariableEnd = SourceBuffer + 1;
+         Tail = SourceLength - 1;
+         while (*VariableEnd != L'%' && Tail != 0)
+         {
+            VariableEnd++;
+            Tail--;
+         }
+
+         if (Tail != 0)
+         {
+            Variable.MaximumLength = 
+            Variable.Length = (VariableEnd - (SourceBuffer + 1)) * sizeof(WCHAR);
+            Variable.Buffer = SourceBuffer + 1;
+
+            Value.Length = 0;
+            Value.MaximumLength = DestMax * sizeof(WCHAR);
+            Value.Buffer = DestBuffer;
+
+            Status = RtlQueryEnvironmentVariable_U(Environment, &Variable,
+                                                   &Value);
+            if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
+            {
+                SourceBuffer = VariableEnd + 1;
+                SourceLength = Tail - 1;
+                TotalLength += Value.Length / sizeof(WCHAR);
+                if (Status != STATUS_BUFFER_TOO_SMALL)
+                {
+                   DestBuffer += Value.Length / sizeof(WCHAR);
+                   DestMax -= Value.Length / sizeof(WCHAR);
+                }
+                else
+                {
+                   DestMax = 0;
+                   ReturnStatus = STATUS_BUFFER_TOO_SMALL;
+                }
+                continue;
+            }
+            else
+            {
+               /* Variable not found. */
+               CopyBuffer = SourceBuffer;
+               CopyLength = SourceLength - Tail + 1;
+               SourceLength -= CopyLength;
+               SourceBuffer += CopyLength;
+            }
+         }
+         else
+         {
+            /* Unfinished variable name. */
+            CopyBuffer = SourceBuffer;
+            CopyLength = SourceLength;
+            SourceLength = 0;
+         }
       }
 
-      *d++ = *s++;
-      dst_max--;
-      src_len--;
+      TotalLength += CopyLength;
+      if (DestMax)
+      {
+         if (DestMax < CopyLength)
+         {
+            CopyLength = DestMax;
+            ReturnStatus = STATUS_BUFFER_TOO_SMALL;
+         }
+         RtlCopyMemory(DestBuffer, CopyBuffer, CopyLength * sizeof(WCHAR));
+         DestMax -= CopyLength;
+         DestBuffer += CopyLength;
+      }
    }
 
-   Destination->Length = (d - Destination->Buffer) * sizeof(WCHAR);
+   /* NULL-terminate the buffer. */
+   if (DestMax)
+      *DestBuffer = 0;
+
+   Destination->Length = (DestBuffer - Destination->Buffer) * sizeof(WCHAR);
    if (Length != NULL)
-      *Length = Destination->Length;
-   if (dst_max)
-      Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
+      *Length = TotalLength * sizeof(WCHAR);
 
    DPRINT("Destination %wZ\n", Destination);
-   return(Status);
+
+   return ReturnStatus;
 }
 
 

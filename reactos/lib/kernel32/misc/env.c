@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.26 2004/12/18 21:06:25 gvg Exp $
+/* $Id: env.c,v 1.27 2004/12/27 16:40:14 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -581,7 +581,7 @@ ExpandEnvironmentStringsA (
 
 	Destination.Length = 0;
 	Destination.MaximumLength = nSize;
-	Destination.Buffer = lpDst,
+	Destination.Buffer = lpDst;
 
 	DestinationU.Length = 0;
 	DestinationU.MaximumLength = nSize * sizeof(WCHAR);
@@ -598,11 +598,14 @@ ExpandEnvironmentStringsA (
 
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeHeap (RtlGetProcessHeap (),
-		             0,
-		             DestinationU.Buffer);
 		SetLastErrorByStatus (Status);
-		return 0;
+		if (Status != STATUS_BUFFER_TOO_SMALL)
+		{
+			RtlFreeHeap (RtlGetProcessHeap (),
+			             0,
+			             DestinationU.Buffer);
+			return 0;
+		}
 	}
 
 	RtlUnicodeStringToAnsiString (&Destination,
@@ -647,7 +650,8 @@ ExpandEnvironmentStringsW (
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
-		return 0;
+		if (Status != STATUS_BUFFER_TOO_SMALL)
+			return 0;
 	}
 
 	return (Length / sizeof(WCHAR));
