@@ -26,7 +26,7 @@
  * - a right mousebutton-copy sets the following formats:
  *  classic:
  *	Shell IDList Array
- *	Preferred Drop Effect
+ *	Prefered Drop Effect
  *	Shell Object Offsets
  *	HDROP
  *	FileName

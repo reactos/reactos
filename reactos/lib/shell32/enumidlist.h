@@ -25,6 +25,6 @@ BOOL AddToEnumList(IEnumIDList *list, LPITEMIDLIST pidl);
 /* Enumerates the folders and/or files (depending on dwFlags) in lpszPath and
  * adds them to the already-created list.
  */
-BOOL CreateFolderEnumList(IEnumIDList *list, LPCWSTR lpszPath, DWORD dwFlags);
+BOOL CreateFolderEnumList(IEnumIDList *list, LPCSTR lpszPath, DWORD dwFlags);
 
 #endif /* ndef __ENUMIDLIST_H__ */

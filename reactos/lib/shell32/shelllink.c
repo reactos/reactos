@@ -1,8 +1,7 @@
 /*
  *
- *      Copyright 1997  Marcus Meissner
- *      Copyright 1998  Juergen Schmied
- *      Copyright 2005  Mike McCormack
+ *	Copyright 1997	Marcus Meissner
+ *	Copyright 1998	Juergen Schmied
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -22,14 +21,6 @@
  *   Nearly complete informations about the binary formats 
  *   of .lnk files available at http://www.wotsit.org
  *
- *  You can use winedump to examine the contents of a link file:
- *   winedump lnk sc.lnk
- *
- *  MSI advertised shortcuts are totally undocumented.  They provide an
- *   icon for a program that is not yet installed, and invoke MSI to
- *   install the program when the shortcut is clicked on.  They are
- *   created by passing a special string to SetPath, and the information
- *   in that string is parsed an stored.
  */
 
 #include "config.h"
@@ -67,28 +58,19 @@
 #include "shlguid.h"
 #include "shlwapi.h"
 
-#include "initguid.h"
-
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-DEFINE_GUID( SHELL32_AdvtShortcutProduct,
-       0x9db1186f,0x40df,0x11d1,0xaa,0x8c,0x00,0xc0,0x4f,0xb6,0x78,0x63);
-DEFINE_GUID( SHELL32_AdvtShortcutComponent,
-       0x9db1186e,0x40df,0x11d1,0xaa,0x8c,0x00,0xc0,0x4f,0xb6,0x78,0x63);
 
 /* link file formats */
 
 /* flag1: lnk elements: simple link has 0x0B */
-#define SCF_PIDL 1
-#define SCF_LOCATION 2
+#define SCF_PIDL   1
+#define SCF_NORMAL 2
 #define SCF_DESCRIPTION 4
 #define SCF_RELATIVE 8
 #define SCF_WORKDIR 0x10
 #define SCF_ARGS 0x20
 #define SCF_CUSTOMICON 0x40
 #define SCF_UNICODE 0x80
-#define SCF_PRODUCT 0x800
-#define SCF_COMPONENT 0x1000
 
 #include "pshpack1.h"
 
@@ -131,21 +113,6 @@ typedef struct _LOCAL_VOLUME_INFO
     DWORD dwVolLabelOfs;
 } LOCAL_VOLUME_INFO;
 
-typedef struct tagLINK_ADVERTISEINFO
-{
-    DWORD size;
-    DWORD magic;
-    CHAR  bufA[MAX_PATH];
-    WCHAR bufW[MAX_PATH];
-} LINK_ADVERTISEINFO;
-
-typedef struct volume_info_t
-{
-    DWORD type;
-    DWORD serial;
-    WCHAR label[12];  /* assume 8.3 */
-} volume_info;
-
 #include "poppack.h"
 
 static IShellLinkAVtbl		slvt;
@@ -179,9 +146,6 @@ typedef struct
 	LPWSTR        sWorkDir;
 	LPWSTR        sDescription;
 	LPWSTR        sPathRel;
- 	LPWSTR        sProduct;
- 	LPWSTR        sComponent;
-	volume_info   volume;
 
 	BOOL		bDirty;
 } IShellLinkImpl;
@@ -207,6 +171,7 @@ inline static LPWSTR HEAP_strdupAtoW( HANDLE heap, DWORD flags, LPCSTR str)
     MultiByteToWideChar( CP_ACP, 0, str, -1, p, len );
     return p;
 }
+
 
 /**************************************************************************
  *  IPersistFile_QueryInterface
@@ -286,9 +251,8 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
 
 static BOOL StartLinkProcessor( LPCOLESTR szLink )
 {
-    static const WCHAR szFormat[] = {
-        'w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',
-        ' ','-','r',' ','"','%','s','"',0 };
+    static const WCHAR szFormat[] = {'w','i','n','e','m','e','n','u','b','u','i','l','d','e','r','.','e','x','e',
+                              ' ','-','r',' ','"','%','s','"',0 };
     LONG len;
     LPWSTR buffer;
     STARTUPINFOW si;
@@ -326,7 +290,7 @@ static HRESULT WINAPI IPersistFile_fnSave(IPersistFile* iface, LPCOLESTR pszFile
 
     TRACE("(%p)->(%s)\n",This,debugstr_w(pszFileName));
 
-    if (!pszFileName)
+    if (!pszFileName || !This->sPath)
         return E_FAIL;
 
     r = CreateStreamOnFile(pszFileName, STGM_READWRITE | STGM_CREATE, &stm);
@@ -505,175 +469,44 @@ static HRESULT Stream_LoadString( IStream* stm, BOOL unicode, LPWSTR *pstr )
     return S_OK;
 }
 
-static HRESULT Stream_ReadChunk( IStream* stm, LPVOID *data )
+static HRESULT Stream_LoadLocation( IStream* stm )
 {
     DWORD size;
     ULONG count;
     HRESULT r;
-    struct sized_chunk {
-        DWORD size;
-        unsigned char data[1];
-    } *chunk;
+    LOCATION_INFO *loc;
 
     TRACE("%p\n",stm);
 
     r = IStream_Read( stm, &size, sizeof(size), &count );
-    if( FAILED( r )  || count != sizeof(size) )
+    if( FAILED( r ) )
+        return r;
+    if( count != sizeof(loc->dwTotalSize) )
         return E_FAIL;
 
-    chunk = HeapAlloc( GetProcessHeap(), 0, size );
-    if( !chunk )
+    loc = HeapAlloc( GetProcessHeap(), 0, size );
+    if( ! loc )
         return E_OUTOFMEMORY;
 
-    chunk->size = size;
-    r = IStream_Read( stm, chunk->data, size - sizeof(size), &count );
-    if( FAILED( r ) || count != (size - sizeof(size)) )
-    {
-        HeapFree( GetProcessHeap(), 0, chunk );
-        return E_FAIL;
-    }
-
-    TRACE("Read %ld bytes\n",chunk->size);
-
-    *data = (LPVOID) chunk;
-
-    return S_OK;
-}
-
-static BOOL Stream_LoadVolume( LOCAL_VOLUME_INFO *vol, volume_info *volume )
-{
-    const int label_sz = sizeof volume->label/sizeof volume->label[0];
-    LPSTR label;
-    int len;
-
-    volume->serial = vol->dwVolSerial;
-    volume->type = vol->dwType;
-
-    if( !vol->dwVolLabelOfs )
-        return FALSE;
-    if( vol->dwSize <= vol->dwVolLabelOfs )
-        return FALSE;
-    len = vol->dwSize - vol->dwVolLabelOfs;
-
-    label = (LPSTR) vol;
-    label += vol->dwVolLabelOfs;
-    MultiByteToWideChar( CP_ACP, 0, label, len, volume->label, label_sz-1);
-
-    return TRUE;
-}
-
-static LPWSTR Stream_LoadPath( LPSTR p, DWORD maxlen )
-{
-    int len = 0, wlen;
-    LPWSTR path;
-
-    while( p[len] && (len < maxlen) )
-        len++;
-
-    wlen = MultiByteToWideChar(CP_ACP, 0, p, len, NULL, 0);
-    path = HeapAlloc(GetProcessHeap(), 0, (wlen+1)*sizeof(WCHAR));
-    MultiByteToWideChar(CP_ACP, 0, p, len, path, wlen);
-    path[wlen] = 0;
-
-    return path;
-}
-
-static HRESULT Stream_LoadLocation( IStream *stm,
-                volume_info *volume, LPWSTR *path )
-{
-    unsigned char *p = NULL;
-    LOCATION_INFO *loc;
-    HRESULT r;
-    int n;
-
-    r = Stream_ReadChunk( stm, (LPVOID*) &p );
-    if( FAILED(r) )
-        return r;
-
-    loc = (LOCATION_INFO*) p;
-    if (loc->dwTotalSize < sizeof(LOCATION_INFO) - sizeof(DWORD))
-    {
-        HeapFree( GetProcessHeap(), 0, p );
-        return E_FAIL;
-    }
-
-    /* if there's valid local volume information, load it */
-    if( loc->dwVolTableOfs && 
-       ((loc->dwVolTableOfs + sizeof(LOCAL_VOLUME_INFO)) <= loc->dwTotalSize) )
-    {
-        LOCAL_VOLUME_INFO *volume_info;
-
-        volume_info = (LOCAL_VOLUME_INFO*) &p[loc->dwVolTableOfs];
-        Stream_LoadVolume( volume_info, volume );
-    }
-
-    /* if there's a local path, load it */
-    n = loc->dwLocalPathOfs;
-    if( n && (n < loc->dwTotalSize) )
-        *path = Stream_LoadPath( &p[n], loc->dwTotalSize - n );
-
-    TRACE("type %ld serial %08lx name %s path %s\n", volume->type,
-          volume->serial, debugstr_w(volume->label), debugstr_w(*path));
-
-    HeapFree( GetProcessHeap(), 0, p );
-    return S_OK;
-}
-
-/*
- *  The format of the advertised shortcut info seems to be:
- *
- *  Offset     Description
- *  ------     -----------
- *
- *    0          Length of the block (4 bytes, usually 0x314)
- *    4          tag (dword)
- *    8          string data in ASCII
- *    8+0x104    string data in UNICODE
- *
- * In the original Win32 implementation the buffers are not initialized
- *  to zero, so data trailing the string is random garbage.
- */
-static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
-{
-    DWORD size;
-    ULONG count;
-    HRESULT r;
-    LINK_ADVERTISEINFO buffer;
-    
-    TRACE("%p\n",stm);
-
-    r = IStream_Read( stm, &buffer.size, sizeof (DWORD), &count );
+    r = IStream_Read( stm, &loc->dwHeaderSize, size-sizeof(size), &count );
     if( FAILED( r ) )
-        return r;
-
-    /* make sure that we read the size of the structure even on error */
-    size = sizeof buffer - sizeof (DWORD);
-    if( buffer.size != sizeof buffer )
+        goto end;
+    if( count != (size - sizeof(size)) )
     {
-        ERR("Ooops.  This structure is not as expected...\n");
-        return E_FAIL;
+        r = E_FAIL;
+        goto end;
     }
+    loc->dwTotalSize = size;
 
-    r = IStream_Read( stm, &buffer.magic, size, &count );
-    if( FAILED( r ) )
-        return r;
+    TRACE("Read %ld bytes\n",count);
 
-    if( count != size )
-        return E_FAIL;
-
-    TRACE("magic %08lx  string = %s\n", buffer.magic, debugstr_w(buffer.bufW));
-
-    if( (buffer.magic&0xffff0000) != 0xa0000000 )
-    {
-        ERR("Unknown magic number %08lx in advertised shortcut\n", buffer.magic);
-        return E_FAIL;
-    }
-
-    *str = HeapAlloc( GetProcessHeap(), 0, 
-                     (strlenW(buffer.bufW)+1) * sizeof(WCHAR) );
-    strcpyW( *str, buffer.bufW );
+    /* FIXME: do something useful with it */
+    HeapFree( GetProcessHeap(), 0, loc );
 
     return S_OK;
+end:
+    HeapFree( GetProcessHeap(), 0, loc );
+    return r;
 }
 
 /************************************************************************
@@ -686,12 +519,12 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     LINK_HEADER hdr;
     ULONG    dwBytesRead;
     BOOL     unicode;
+    WCHAR    sTemp[MAX_PATH];
     HRESULT  r;
-    DWORD    zero;
 
     _ICOM_THIS_From_IPersistStream(IShellLinkImpl, iface);
 
-    TRACE("%p %p\n", This, stm);
+    TRACE("(%p)(%p)\n", This, stm);
 
     if( !stm )
 	  return STG_E_INVALIDPOINTER;
@@ -708,61 +541,30 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     if( !IsEqualIID(&hdr.MagicGuid, &CLSID_ShellLink) )
         return E_FAIL;
 
-    /* free all the old stuff */
-    ILFree(This->pPidl);
-    This->pPidl = NULL;
-    memset( &This->volume, 0, sizeof This->volume );
-    HeapFree(GetProcessHeap(), 0, This->sPath);
-    This->sPath = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sDescription);
-    This->sDescription = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sPathRel);
-    This->sPathRel = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sWorkDir);
-    This->sWorkDir = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sArgs);
-    This->sArgs = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sIcoPath);
-    This->sIcoPath = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sProduct);
-    This->sProduct = NULL;
-    HeapFree(GetProcessHeap(), 0, This->sComponent);
-    This->sComponent = NULL;
-        
-    This->wHotKey = (WORD)hdr.wHotKey;
-    This->iIcoNdx = hdr.nIcon;
-    FileTimeToSystemTime (&hdr.Time1, &This->time1);
-    FileTimeToSystemTime (&hdr.Time2, &This->time2);
-    FileTimeToSystemTime (&hdr.Time3, &This->time3);
-    if (TRACE_ON(shell))
-    {
-        WCHAR sTemp[MAX_PATH];
-        GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE, &This->time1,
-                       NULL, sTemp, sizeof(sTemp)/sizeof(*sTemp));
-        TRACE("-- time1: %s\n", debugstr_w(sTemp) );
-        GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE, &This->time2,
-                       NULL, sTemp, sizeof(sTemp)/sizeof(*sTemp));
-        TRACE("-- time2: %s\n", debugstr_w(sTemp) );
-        GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE, &This->time3,
-                       NULL, sTemp, sizeof(sTemp)/sizeof(*sTemp));
-        TRACE("-- time3: %s\n", debugstr_w(sTemp) );
-    }
-
-    /* load all the new stuff */
-    if( hdr.dwFlags & SCF_PIDL )
+    /* if( hdr.dwFlags & SCF_PIDL ) */  /* FIXME: seems to always have a PIDL */
     {
         r = ILLoadFromStream( stm, &This->pPidl );
         if( FAILED( r ) )
             return r;
     }
-    pdump(This->pPidl);
-
-    /* load the location information */
-    if( hdr.dwFlags & SCF_LOCATION )
-        r = Stream_LoadLocation( stm, &This->volume, &This->sPath );
+    This->wHotKey = (WORD)hdr.wHotKey;
+    This->iIcoNdx = hdr.nIcon;
+    FileTimeToSystemTime (&hdr.Time1, &This->time1);
+    FileTimeToSystemTime (&hdr.Time2, &This->time2);
+    FileTimeToSystemTime (&hdr.Time3, &This->time3);
+#if 1
+    GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&This->time1, NULL, sTemp, 256);
+    TRACE("-- time1: %s\n", debugstr_w(sTemp) );
+    GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&This->time2, NULL, sTemp, 256);
+    TRACE("-- time1: %s\n", debugstr_w(sTemp) );
+    GetDateFormatW(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&This->time3, NULL, sTemp, 256);
+    TRACE("-- time1: %s\n", debugstr_w(sTemp) );
+    pdump (This->pPidl);
+#endif
+    if( hdr.dwFlags & SCF_NORMAL )
+        r = Stream_LoadLocation( stm );
     if( FAILED( r ) )
         goto end;
-
     unicode = hdr.dwFlags & SCF_UNICODE;
     if( hdr.dwFlags & SCF_DESCRIPTION )
     {
@@ -781,7 +583,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
         goto end;
 
     if( hdr.dwFlags & SCF_WORKDIR )
-    {
+          {
         r = Stream_LoadString( stm, unicode, &This->sWorkDir );
         TRACE("Working Dir  -> %s\n",debugstr_w(This->sWorkDir));
     }
@@ -803,26 +605,6 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     }
     if( FAILED( r ) )
         goto end;
-
-    if( hdr.dwFlags & SCF_PRODUCT )
-    {
-        r = Stream_LoadAdvertiseInfo( stm, &This->sProduct );
-        TRACE("Product      -> %s\n",debugstr_w(This->sProduct));
-    }
-    if( FAILED( r ) )
-        goto end;
-
-    if( hdr.dwFlags & SCF_COMPONENT )
-    {
-        r = Stream_LoadAdvertiseInfo( stm, &This->sComponent );
-        TRACE("Component    -> %s\n",debugstr_w(This->sComponent));
-    }
-    if( FAILED( r ) )
-        goto end;
-
-    r = IStream_Read(stm, &zero, sizeof zero, &dwBytesRead);
-    if( FAILED( r ) || zero || dwBytesRead != sizeof zero )
-        ERR("Last word was not zero\n");
 
     TRACE("OK\n");
 
@@ -858,81 +640,19 @@ static HRESULT Stream_WriteString( IStream* stm, LPCWSTR str )
     return S_OK;
 }
 
-/************************************************************************
- * Stream_WriteLocationInfo
- *
- * Writes the location info to a stream
- *
- * FIXME: One day we might want to write the network volume information
- *        and the final path.
- *        Figure out how Windows deals with unicode paths here.
- */
-static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR path,
-                                         volume_info *volume )
+static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR filename )
 {
-    DWORD total_size, path_size, volume_info_size, label_size, final_path_size;
-    LOCAL_VOLUME_INFO *vol;
-    LOCATION_INFO *loc;
-    LPSTR szLabel, szPath, szFinalPath;
-    ULONG count = 0;
-
-    TRACE("%p %s %p\n", stm, debugstr_w(path), volume);
-
-    /* figure out the size of everything */
-    label_size = WideCharToMultiByte( CP_ACP, 0, volume->label, -1,
-                                      NULL, 0, NULL, NULL );
-    path_size = WideCharToMultiByte( CP_ACP, 0, path, -1,
-                                     NULL, 0, NULL, NULL );
-    volume_info_size = sizeof *vol + label_size;
-    final_path_size = 1;
-    total_size = sizeof *loc + volume_info_size + path_size + final_path_size;
-
-    /* create pointers to everything */
-    loc = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, total_size);
-    vol = (LOCAL_VOLUME_INFO*) &loc[1];
-    szLabel = (LPSTR) &vol[1];
-    szPath = &szLabel[label_size];
-    szFinalPath = &szPath[path_size];
-
-    /* fill in the location information header */
-    loc->dwTotalSize = total_size;
-    loc->dwHeaderSize = sizeof (*loc);
-    loc->dwFlags = 1;
-    loc->dwVolTableOfs = sizeof (*loc);
-    loc->dwLocalPathOfs = sizeof (*loc) + volume_info_size;
-    loc->dwNetworkVolTableOfs = 0;
-    loc->dwFinalPathOfs = sizeof (*loc) + volume_info_size + path_size;
-
-    /* fill in the volume information */
-    vol->dwSize = volume_info_size;
-    vol->dwType = volume->type;
-    vol->dwVolSerial = volume->serial;
-    vol->dwVolLabelOfs = sizeof (*vol);
-
-    /* copy in the strings */
-    WideCharToMultiByte( CP_ACP, 0, volume->label, -1,
-                         szLabel, label_size, NULL, NULL );
-    WideCharToMultiByte( CP_ACP, 0, path, -1,
-                         szPath, path_size, NULL, NULL );
-    szFinalPath[0] = 0;
-
-    return IStream_Write( stm, loc, total_size, &count );
-}
-
-static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD magic )
-{
+    LOCATION_INFO loc;
     ULONG count;
-    LINK_ADVERTISEINFO buffer;
-    
-    TRACE("%p\n",stm);
 
-    memset( &buffer, 0, sizeof buffer );
-    buffer.size = sizeof buffer;
-    buffer.magic = magic;
-    strncpyW( buffer.bufW, string, MAX_PATH );
-    WideCharToMultiByte(CP_ACP, 0, string, -1, buffer.bufA, MAX_PATH, NULL, NULL );
+    FIXME("writing empty location info\n");
 
-    return IStream_Write( stm, &buffer, buffer.size, &count );
+    memset( &loc, 0, sizeof(loc) );
+    loc.dwTotalSize = sizeof(loc) - sizeof(loc.dwTotalSize);
+
+    /* FIXME: fill this in */
+
+    return IStream_Write( stm, &loc, loc.dwTotalSize, &count );
 }
 
 /************************************************************************
@@ -950,39 +670,38 @@ static HRESULT WINAPI IPersistStream_fnSave(
     LINK_HEADER header;
     WCHAR   exePath[MAX_PATH];
     ULONG   count;
-    DWORD   zero;
     HRESULT r;
 
     _ICOM_THIS_From_IPersistStream(IShellLinkImpl, iface);
 
-    TRACE("%p %p %x\n", This, stm, fClearDirty);
+    TRACE("(%p) %p %x\n", This, stm, fClearDirty);
 
     *exePath = '\0';
 
     if (This->sPath)
     {
-        SHELL_FindExecutable(NULL, This->sPath, wOpen, exePath, MAX_PATH,
-                             NULL, NULL, NULL, NULL);
+        SHELL_FindExecutable(NULL, This->sPath, wOpen, exePath, MAX_PATH, NULL, NULL, NULL, NULL);
         /*
          * windows can create lnk files to executables that do not exist yet
          * so if the executable does not exist the just trust the path they
          * gave us
          */
-        if (!*exePath) strcpyW(exePath,This->sPath);
+        if( !*exePath ) strcpyW(exePath,This->sPath);
     }
+
+    /* if there's no PIDL, generate one */
+    if( ! This->pPidl ) This->pPidl = ILCreateFromPathW(exePath);
 
     memset(&header, 0, sizeof(header));
     header.dwSize = sizeof(header);
-    header.fStartup = This->iShowCmd;
     memcpy(&header.MagicGuid, &CLSID_ShellLink, sizeof(header.MagicGuid) );
 
     header.wHotKey = This->wHotKey;
     header.nIcon = This->iIcoNdx;
     header.dwFlags = SCF_UNICODE;   /* strings are in unicode */
+    header.dwFlags |= SCF_NORMAL;   /* how do we determine this ? */
     if( This->pPidl )
         header.dwFlags |= SCF_PIDL;
-    if( This->sPath )
-        header.dwFlags |= SCF_LOCATION;
     if( This->sDescription )
         header.dwFlags |= SCF_DESCRIPTION;
     if( This->sWorkDir )
@@ -991,10 +710,6 @@ static HRESULT WINAPI IPersistStream_fnSave(
         header.dwFlags |= SCF_ARGS;
     if( This->sIcoPath )
         header.dwFlags |= SCF_CUSTOMICON;
-    if( This->sProduct )
-        header.dwFlags |= SCF_PRODUCT;
-    if( This->sComponent )
-        header.dwFlags |= SCF_COMPONENT;
 
     SystemTimeToFileTime ( &This->time1, &header.Time1 );
     SystemTimeToFileTime ( &This->time2, &header.Time2 );
@@ -1021,9 +736,9 @@ static HRESULT WINAPI IPersistStream_fnSave(
         }
     }
 
-    if( This->sPath )
-        Stream_WriteLocationInfo( stm, exePath, &This->volume );
+    Stream_WriteLocationInfo( stm, exePath );
 
+    TRACE("Description = %s\n", debugstr_w(This->sDescription));
     if( This->sDescription )
         r = Stream_WriteString( stm, This->sDescription );
 
@@ -1038,16 +753,6 @@ static HRESULT WINAPI IPersistStream_fnSave(
 
     if( This->sIcoPath )
         r = Stream_WriteString( stm, This->sIcoPath );
-
-    if( This->sProduct )
-        r = Stream_WriteAdvertiseInfo( stm, This->sProduct, 0xa0000007 );
-
-    if( This->sComponent )
-        r = Stream_WriteAdvertiseInfo( stm, This->sComponent, 0xa0000006 );
-
-    /* the last field is a single zero dword */
-    zero = 0;
-    r = IStream_Write( stm, &zero, sizeof zero, &count );
 
     return S_OK;
 }
@@ -1123,9 +828,13 @@ HRESULT WINAPI IShellLink_Constructor (
 
 static BOOL SHELL_ExistsFileW(LPCWSTR path)
 {
-    if (INVALID_FILE_ATTRIBUTES == GetFileAttributesW(path))
+    HANDLE hfile = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
+
+    if (hfile != INVALID_HANDLE_VALUE) {
+	CloseHandle(hfile);
+	return TRUE;
+    } else
         return FALSE;
-    return TRUE;
 }
 
 /**************************************************************************
@@ -1308,10 +1017,7 @@ static HRESULT WINAPI IShellLinkA_fnGetPath(IShellLinkA * iface, LPSTR pszFile,
     TRACE("(%p)->(pfile=%p len=%u find_data=%p flags=%lu)(%s)\n",
           This, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(This->sPath));
 
-    if (This->sComponent || This->sProduct)
-        return S_FALSE;
-
-    if (cchMaxPath)
+    if( cchMaxPath )
         pszFile[0] = 0;
     if (This->sPath)
         WideCharToMultiByte( CP_ACP, 0, This->sPath, -1,
@@ -1319,16 +1025,18 @@ static HRESULT WINAPI IShellLinkA_fnGetPath(IShellLinkA * iface, LPSTR pszFile,
 
     if (pfd) FIXME("(%p): WIN32_FIND_DATA is not yet filled.\n", This);
 
-    return S_OK;
+    return NOERROR;
 }
 
 static HRESULT WINAPI IShellLinkA_fnGetIDList(IShellLinkA * iface, LPITEMIDLIST * ppidl)
 {
-    IShellLinkImpl *This = (IShellLinkImpl *)iface;
+	IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
-    TRACE("(%p)->(ppidl=%p)\n",This, ppidl);
+	TRACE("(%p)->(ppidl=%p)\n",This, ppidl);
 
-    return IShellLinkW_GetIDList((IShellLinkW*)&(This->lpvtblw), ppidl);
+	*ppidl = ILClone(This->pPidl);
+
+	return NOERROR;
 }
 
 static HRESULT WINAPI IShellLinkA_fnSetIDList(IShellLinkA * iface, LPCITEMIDLIST pidl)
@@ -1510,23 +1218,21 @@ static HRESULT WINAPI IShellLinkA_fnGetIconLocation(IShellLinkA * iface, LPSTR p
 
     TRACE("(%p)->(%p len=%u iicon=%p)\n", This, pszIconPath, cchIconPath, piIcon);
 
-    pszIconPath[0] = 0;
-    *piIcon = This->iIcoNdx;
+    if (cchIconPath)
+        pszIconPath[0] = 0;
 
-    if (This->sIcoPath)
-    {
+    if (This->sIcoPath) {
         WideCharToMultiByte(CP_ACP, 0, This->sIcoPath, -1, pszIconPath, cchIconPath, NULL, NULL);
+	*piIcon = This->iIcoNdx;
 	return S_OK;
     }
 
-    if (This->pPidl || This->sPath)
-    {
+    if (This->pPidl || This->sPath) {
 	IShellFolder* pdsk;
 
 	HRESULT hr = SHGetDesktopFolder(&pdsk);
 
-	if (SUCCEEDED(hr))
-        {
+	if (SUCCEEDED(hr)) {
 	    /* first look for an icon using the PIDL (if present) */
 	    if (This->pPidl)
 		hr = SHELL_PidlGeticonLocationA(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
@@ -1534,8 +1240,7 @@ static HRESULT WINAPI IShellLinkA_fnGetIconLocation(IShellLinkA * iface, LPSTR p
 		hr = E_FAIL;
 
 	    /* if we couldn't find an icon yet, look for it using the file system path */
-	    if (FAILED(hr) && This->sPath)
-            {
+	    if (FAILED(hr) && This->sPath) {
 		LPITEMIDLIST pidl;
 
 		hr = IShellFolder_ParseDisplayName(pdsk, 0, NULL, This->sPath, NULL, &pidl, NULL);
@@ -1551,8 +1256,8 @@ static HRESULT WINAPI IShellLinkA_fnGetIconLocation(IShellLinkA * iface, LPSTR p
 	}
 
 	return hr;
-    }
-    return S_OK;
+    } else
+        return E_FAIL;
 }
 
 static HRESULT WINAPI IShellLinkA_fnSetIconLocation(IShellLinkA * iface, LPCSTR pszIconPath,INT iIcon)
@@ -1576,7 +1281,7 @@ static HRESULT WINAPI IShellLinkA_fnSetRelativePath(IShellLinkA * iface, LPCSTR 
 {
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
-    TRACE("(%p)->(path=%s %lx)\n",This, pszPathRel, dwReserved);
+    FIXME("(%p)->(path=%s %lx)\n",This, pszPathRel, dwReserved);
 
     HeapFree(GetProcessHeap(), 0, This->sPathRel);
     This->sPathRel = HEAP_strdupAtoW(GetProcessHeap(), 0, pszPathRel);
@@ -1591,7 +1296,7 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
 
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
 
-    TRACE("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
+    FIXME("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
 
     /*FIXME: use IResolveShellLink interface */
 
@@ -1628,20 +1333,23 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
 
 static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
 {
-    HRESULT r;
-    LPWSTR str;
     IShellLinkImpl *This = (IShellLinkImpl *)iface;
+    char buffer[MAX_PATH];
+    LPSTR fname;
 
     TRACE("(%p)->(path=%s)\n",This, pszFile);
 
-    str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
-    if( !str ) 
+    if (!GetFullPathNameA(pszFile, MAX_PATH, buffer, &fname))
+	return E_FAIL;
+
+    HeapFree(GetProcessHeap(), 0, This->sPath);
+    This->sPath = HEAP_strdupAtoW(GetProcessHeap(), 0, buffer);
+    if( !This->sPath )
         return E_OUTOFMEMORY;
 
-    r = IShellLinkW_SetPath((IShellLinkW*)&(This->lpvtblw), str);
-    HeapFree( GetProcessHeap(), 0, str );
+    This->bDirty = TRUE;
 
-    return r;
+    return S_OK;
 }
 
 /**************************************************************************
@@ -1713,20 +1421,17 @@ static HRESULT WINAPI IShellLinkW_fnGetPath(IShellLinkW * iface, LPWSTR pszFile,
 {
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
 
-    TRACE("(%p)->(pfile=%p len=%u find_data=%p flags=%lu)(%s)\n",
-          This, pszFile, cchMaxPath, pfd, fFlags, debugstr_w(This->sPath));
+    TRACE("(%p)->(pfile=%p len=%u find_data=%p flags=%lu)\n",
+		  This, pszFile, cchMaxPath, pfd, fFlags);
 
-    if (This->sComponent || This->sProduct)
-        return S_FALSE;
-
-    if (cchMaxPath)
+    if( cchMaxPath )
         pszFile[0] = 0;
-    if (This->sPath)
+    if( This->sPath )
         lstrcpynW( pszFile, This->sPath, cchMaxPath );
 
     if (pfd) FIXME("(%p): WIN32_FIND_DATA is not yet filled.\n", This);
 
-    return S_OK;
+    return NOERROR;
 }
 
 static HRESULT WINAPI IShellLinkW_fnGetIDList(IShellLinkW * iface, LPITEMIDLIST * ppidl)
@@ -1735,9 +1440,11 @@ static HRESULT WINAPI IShellLinkW_fnGetIDList(IShellLinkW * iface, LPITEMIDLIST 
 
     TRACE("(%p)->(ppidl=%p)\n",This, ppidl);
 
-    if (!This->pPidl)
-        return S_FALSE;
-    *ppidl = ILClone(This->pPidl);
+    if( This->pPidl)
+        *ppidl = ILClone( This->pPidl );
+    else
+        *ppidl = NULL;
+
     return S_OK;
 }
 
@@ -1764,7 +1471,8 @@ static HRESULT WINAPI IShellLinkW_fnGetDescription(IShellLinkW * iface, LPWSTR p
 
     TRACE("(%p)->(%p len=%u)\n",This, pszName, cchMaxName);
 
-    pszName[0] = 0;
+    if( cchMaxName )
+        pszName[0] = 0;
     if( This->sDescription )
         lstrcpynW( pszName, This->sDescription, cchMaxName );
 
@@ -1924,23 +1632,21 @@ static HRESULT WINAPI IShellLinkW_fnGetIconLocation(IShellLinkW * iface, LPWSTR 
 
     TRACE("(%p)->(%p len=%u iicon=%p)\n", This, pszIconPath, cchIconPath, piIcon);
 
-    pszIconPath[0] = 0;
-    *piIcon = This->iIcoNdx;
+    if (cchIconPath)
+        pszIconPath[0] = 0;
 
-    if (This->sIcoPath)
-    {
+    if (This->sIcoPath) {
 	lstrcpynW(pszIconPath, This->sIcoPath, cchIconPath);
+	*piIcon = This->iIcoNdx;
 	return S_OK;
     }
 
-    if (This->pPidl || This->sPath)
-    {
+    if (This->pPidl || This->sPath) {
 	IShellFolder* pdsk;
 
 	HRESULT hr = SHGetDesktopFolder(&pdsk);
 
-	if (SUCCEEDED(hr))
-        {
+	if (SUCCEEDED(hr)) {
 	    /* first look for an icon using the PIDL (if present) */
 	    if (This->pPidl)
 		hr = SHELL_PidlGeticonLocationW(pdsk, This->pPidl, pszIconPath, cchIconPath, piIcon);
@@ -1948,14 +1654,12 @@ static HRESULT WINAPI IShellLinkW_fnGetIconLocation(IShellLinkW * iface, LPWSTR 
 		hr = E_FAIL;
 
 	    /* if we couldn't find an icon yet, look for it using the file system path */
-	    if (FAILED(hr) && This->sPath)
-            {
+	    if (FAILED(hr) && This->sPath) {
 		LPITEMIDLIST pidl;
 
 		hr = IShellFolder_ParseDisplayName(pdsk, 0, NULL, This->sPath, NULL, &pidl, NULL);
 
-		if (SUCCEEDED(hr))
-                {
+		if (SUCCEEDED(hr)) {
 		    hr = SHELL_PidlGeticonLocationW(pdsk, pidl, pszIconPath, cchIconPath, piIcon);
 
 		    SHFree(pidl);
@@ -1964,9 +1668,10 @@ static HRESULT WINAPI IShellLinkW_fnGetIconLocation(IShellLinkW * iface, LPWSTR 
 
 	    IShellFolder_Release(pdsk);
 	}
+
 	return hr;
-    }
-    return S_OK;
+    } else
+        return E_FAIL;
 }
 
 static HRESULT WINAPI IShellLinkW_fnSetIconLocation(IShellLinkW * iface, LPCWSTR pszIconPath,INT iIcon)
@@ -2011,7 +1716,7 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
 
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
 
-    TRACE("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
+    FIXME("(%p)->(hwnd=%p flags=%lx)\n",This, hwnd, fFlags);
 
     /*FIXME: use IResolveShellLink interface */
 
@@ -2046,141 +1751,27 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
     return hr;
 }
 
-static LPWSTR ShellLink_GetAdvertisedArg(LPCWSTR str)
-{
-    LPWSTR ret;
-    LPCWSTR p;
-    DWORD len;
-
-    p = strchrW( str, ':' );
-    if( !p )
-        return NULL;
-    len = p - str;
-    ret = HeapAlloc( GetProcessHeap(), 0, sizeof(WCHAR)*(len+1));
-    if( !ret )
-        return ret;
-    memcpy( ret, str, sizeof(WCHAR)*len );
-    ret[len] = 0;
-    return ret;
-}
-
-static HRESULT ShellLink_SetAdvertiseInfo(IShellLinkImpl *This, LPCWSTR str)
-{
-    LPCWSTR szComponent = NULL, szProduct = NULL, p;
-    WCHAR szGuid[39];
-    HRESULT r;
-    GUID guid;
-    int len;
-
-    while( str[0] )
-    {
-        /* each segment must start with two colons */
-        if( str[0] != ':' || str[1] != ':' )
-            return E_FAIL;
-
-        /* the last segment is just two colons */
-        if( !str[2] )
-            break;
-        str += 2;
-
-        /* there must be a colon straight after a guid */
-        p = strchrW( str, ':' );
-        if( !p )
-            return E_FAIL;
-        len = p - str;
-        if( len != 38 )
-            return E_FAIL;
-
-        /* get the guid, and check it's validly formatted */
-        memcpy( szGuid, str, sizeof(WCHAR)*len );
-        szGuid[len] = 0;
-        r = CLSIDFromString( szGuid, &guid );
-        if( r != S_OK )
-            return r;
-        str = p + 1;
-
-        /* match it up to a guid that we care about */
-        if( IsEqualGUID( &guid, &SHELL32_AdvtShortcutComponent ) && !szComponent )
-            szComponent = str;
-        else if( IsEqualGUID( &guid, &SHELL32_AdvtShortcutProduct ) && !szProduct )
-            szProduct = str;
-        else
-            return E_FAIL;
-
-        /* skip to the next field */
-        str = strchrW( str, ':' );
-        if( !str )
-            return E_FAIL;
-    }
-
-    /* we have to have at least one of these two for an advertised shortcut */
-    if( !szComponent && !szProduct )
-        return E_FAIL;
-
-    This->sComponent = ShellLink_GetAdvertisedArg( szComponent );
-    This->sProduct = ShellLink_GetAdvertisedArg( szProduct );
-
-    TRACE("Component = %s\n", debugstr_w(This->sComponent));
-    TRACE("Product = %s\n", debugstr_w(This->sProduct));
-
-    return S_OK;
-}
-
-static BOOL ShellLink_GetVolumeInfo(LPWSTR path, volume_info *volume)
-{
-    const int label_sz = sizeof volume->label/sizeof volume->label[0];
-    WCHAR drive[4] = { path[0], ':', '\\', 0 };
-    BOOL r;
-
-    volume->type = GetDriveTypeW(drive);
-    r = GetVolumeInformationW(drive, volume->label, label_sz,
-                              &volume->serial, NULL, NULL, NULL, 0);
-    TRACE("r = %d type %ld serial %08lx name %s\n", r,
-          volume->type, volume->serial, debugstr_w(volume->label));
-    return r;
-}
-
 static HRESULT WINAPI IShellLinkW_fnSetPath(IShellLinkW * iface, LPCWSTR pszFile)
 {
     _ICOM_THIS_From_IShellLinkW(IShellLinkImpl, iface);
     WCHAR buffer[MAX_PATH];
     LPWSTR fname;
-    HRESULT hr = S_OK;
 
     TRACE("(%p)->(path=%s)\n",This, debugstr_w(pszFile));
 
+    if (!GetFullPathNameW(pszFile, MAX_PATH, buffer, &fname))
+	return E_FAIL;
+
     HeapFree(GetProcessHeap(), 0, This->sPath);
-    This->sPath = NULL;
-
-    HeapFree(GetProcessHeap(), 0, This->sComponent);
-    This->sComponent = NULL;
-
-    if (This->pPidl)
-        ILFree(This->pPidl);
-    This->pPidl = NULL;
-
-    if (S_OK != ShellLink_SetAdvertiseInfo( This, pszFile ))
-    {
-        if (*pszFile == '\0')
-            *buffer = '\0';
-        else if (!GetFullPathNameW(pszFile, MAX_PATH, buffer, &fname))
-	    return E_FAIL;
-        else if(!PathFileExistsW(buffer))
-            hr = S_FALSE;
-
-        This->pPidl = SHSimpleIDListFromPathW(pszFile);
-        ShellLink_GetVolumeInfo(buffer, &This->volume);
-
-        This->sPath = HeapAlloc( GetProcessHeap(), 0,
+    This->sPath = HeapAlloc( GetProcessHeap(), 0,
                              (lstrlenW( buffer )+1) * sizeof (WCHAR) );
-        if (!This->sPath)
-            return E_OUTOFMEMORY;
+    if (!This->sPath)
+        return E_OUTOFMEMORY;
 
-        lstrcpyW(This->sPath, buffer);
-    }
+    lstrcpyW(This->sPath, buffer);
     This->bDirty = TRUE;
 
-    return hr;
+    return S_OK;
 }
 
 /**************************************************************************

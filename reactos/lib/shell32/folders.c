@@ -328,7 +328,7 @@ static HRESULT WINAPI IExtractIconW_fnGetIconLocation(
 
 	      found = TRUE;
 	    }
-	    else if (!lstrcmpiA(sTemp, "lnkfile"))
+	    else if (!strcasecmp(sTemp, "lnkfile"))
 	    {
 	      /* extract icon from shell shortcut */
 	      IShellFolder* dsf;

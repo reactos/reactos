@@ -37,7 +37,6 @@ C_SRCS = \
 	shfldr_desktop.c \
 	shfldr_fs.c \
 	shfldr_mycomp.c \
-	shfldr_unixfs.c \
 	shlexec.c \
 	shlfileop.c \
 	shlfolder.c \
@@ -78,7 +77,7 @@ version16.res: version16.rc
 	$(LDPATH) $(RC16) $(RC16FLAGS) -fo$@ $(SRCDIR)/version16.rc
 
 shell.spec.c: shell.spec version16.res
-	$(WINEBUILD) $(DEFS) $(DLLFLAGS) --dll -o $@ --main-module $(MODULE) --res version16.res --export $(SRCDIR)/shell.spec
+	$(WINEBUILD) $(DEFS) $(DLLFLAGS) -o $@ --main-module $(MODULE) --res version16.res --dll $(SRCDIR)/shell.spec
 
 authors.c: $(TOPSRCDIR)/AUTHORS
 	(LC_ALL=C; export LC_ALL; echo 'const char * const SHELL_Authors[] = {' && \

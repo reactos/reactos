@@ -55,95 +55,68 @@ static inline DWORD BrowseFlagsToSHCONTF(UINT ulFlags)
     return SHCONTF_FOLDERS | (ulFlags & BIF_BROWSEINCLUDEFILES ? SHCONTF_NONFOLDERS : 0);
 }
 
-/******************************************************************************
- * InitializeTreeView [Internal]
- *
- * Called from WM_INITDIALOG handler.
- * 
- * PARAMS
- *  hwndParent [I] The BrowseForFolder dialog
- *  root       [I] ITEMIDLIST of the root shell folder
- */
 static void InitializeTreeView(HWND hwndParent, LPCITEMIDLIST root)
 {
-    LPITEMIDLIST pidlParent, pidlChild;
-    HIMAGELIST hImageList;
-    HRESULT hr;
-    IShellFolder *lpsfParent, *lpsfRoot;
-    IEnumIDList * pEnumChildren = NULL;
+	HIMAGELIST	hImageList;
+	IShellFolder *	lpsf;
+	HRESULT	hr;
+	IEnumIDList * pEnumIL = NULL;
+	LPITEMIDLIST parentofroot;
+	parentofroot = ILClone(root);
+	ILRemoveLastID(parentofroot);
 
-    TRACE("dlg=%p tree=%p\n", hwndParent, hwndTreeView );
-    
-    hwndTreeView = GetDlgItem (hwndParent, IDD_TREEVIEW);
-    if (!hwndTreeView) {
-        FIXME("Could not get handle to treeview control! Error: %08lx\n", GetLastError());
-        return;
-    }
-    Shell_GetImageList(NULL, &hImageList);
+	hwndTreeView = GetDlgItem (hwndParent, IDD_TREEVIEW);
+	Shell_GetImageList(NULL, &hImageList);
 
-    if (hImageList)
-        TreeView_SetImageList(hwndTreeView, hImageList, 0);
+	TRACE("dlg=%p tree=%p\n", hwndParent, hwndTreeView );
 
-    /* We want to call InsertTreeViewItem down the code, in order to insert
-     * the root item of the treeview. Due to InsertTreeViewItem's signature, 
-     * we need the following to do this:
-     *
-     * + An ITEMIDLIST corresponding to _the parent_ of root. 
-     * + An ITEMIDLIST, which is a relative path from root's parent to root 
-     *   (containing a single SHITEMID).
-     * + An IShellFolder interface pointer of root's parent folder.
-     *
-     * If root is 'Desktop', then root's parent is also 'Desktop'.
-     */
+	if (hImageList && hwndTreeView)
+	  TreeView_SetImageList(hwndTreeView, hImageList, 0);
 
-    pidlParent = ILClone(root);
-    ILRemoveLastID(pidlParent);
-    pidlChild = ILClone(ILFindLastID(root));
-    
-    if (_ILIsDesktop(pidlParent)) {
-        hr = SHGetDesktopFolder(&lpsfParent);
-    } else {
-        IShellFolder *lpsfDesktop;
-        hr = SHGetDesktopFolder(&lpsfDesktop);
-        if (!SUCCEEDED(hr)) {
-            WARN("SHGetDesktopFolder failed! hr = %08lx\n", hr);
-            return;
-        }
-        hr = IShellFolder_BindToObject(lpsfDesktop, pidlParent, 0, &IID_IShellFolder, (LPVOID*)&lpsfParent);
-        IShellFolder_Release(lpsfDesktop);
-    }
-    
-    if (!SUCCEEDED(hr)) {
-        WARN("Could not bind to parent shell folder! hr = %08lx\n", hr);
-        return;
-    }
+	if (_ILIsDesktop (root)) {
+	   hr = SHGetDesktopFolder(&lpsf);
+	} else {
+	   IShellFolder *	lpsfdesktop;
 
-    if (pidlChild && pidlChild->mkid.cb) {
-        hr = IShellFolder_BindToObject(lpsfParent, pidlChild, 0, &IID_IShellFolder, (LPVOID*)&lpsfRoot);
-    } else {
-        lpsfRoot = lpsfParent;
-        hr = IShellFolder_AddRef(lpsfParent);
-    }
-    
-    if (!SUCCEEDED(hr)) {
-        WARN("Could not bind to root shell folder! hr = %08lx\n", hr);
-        IShellFolder_Release(lpsfParent);
-        return;
-    }
+	   hr = SHGetDesktopFolder(&lpsfdesktop);
+	   if (SUCCEEDED(hr)) {
+	      hr = IShellFolder_BindToObject(lpsfdesktop, parentofroot, 0,(REFIID)&IID_IShellFolder,(LPVOID *)&lpsf);
+	      IShellFolder_Release(lpsfdesktop);
+	   }
+	}
+	if (SUCCEEDED(hr))
+	{
+	    IShellFolder * pSFRoot;
+	    if (_ILIsPidlSimple(root))
+	    {
+	        pSFRoot = lpsf;
+	        IShellFolder_AddRef(pSFRoot);
+	    }
+	    else
+	        hr = IShellFolder_BindToObject(lpsf,ILFindLastID(root),0,&IID_IShellFolder,(LPVOID *)&pSFRoot);
+	    if (SUCCEEDED(hr))
+	    {
+	        hr = IShellFolder_EnumObjects(
+	            pSFRoot,
+	            hwndParent,
+	            BrowseFlagsToSHCONTF(lpBrowseInfo->ulFlags),
+	            &pEnumIL);
+	        IShellFolder_Release(pSFRoot);
+	    }
+	}
 
-    hr = IShellFolder_EnumObjects(lpsfRoot, hwndParent, BrowseFlagsToSHCONTF(lpBrowseInfo->ulFlags), &pEnumChildren);
-    if (!SUCCEEDED(hr)) {
-        WARN("Could not get child iterator! hr = %08lx\n", hr);
-        IShellFolder_Release(lpsfParent);
-        IShellFolder_Release(lpsfRoot);
-        return;
-    }
+	if (SUCCEEDED(hr) && hwndTreeView)
+	{
+	  TreeView_DeleteAllItems(hwndTreeView);
+	  TreeView_Expand(hwndTreeView,
+	                  InsertTreeViewItem(lpsf, _ILIsPidlSimple(root) ? root : ILFindLastID(root), parentofroot, pEnumIL,  TVI_ROOT),
+	                  TVE_EXPAND);
+	}
 
-    TreeView_DeleteAllItems(hwndTreeView);
-    TreeView_Expand(hwndTreeView, InsertTreeViewItem(lpsfParent, pidlChild, pidlParent, pEnumChildren,  TVI_ROOT), TVE_EXPAND);
+	if (SUCCEEDED(hr))
+	  IShellFolder_Release(lpsf);
 
-    IShellFolder_Release(lpsfRoot);
-    IShellFolder_Release(lpsfParent);
+	TRACE("done\n");
 }
 
 static int GetIcon(LPITEMIDLIST lpi, UINT uFlags)
@@ -176,27 +149,12 @@ static void GetNormalAndSelectedIcons(LPITEMIDLIST lpifq, LPTVITEMW lpTV_ITEM)
 
 typedef struct tagID
 {
-   LPSHELLFOLDER lpsfParent; /* IShellFolder of the parent */
-   LPITEMIDLIST  lpi;        /* PIDL relativ to parent */
-   LPITEMIDLIST  lpifq;      /* Fully qualified PIDL */
-   IEnumIDList*  pEnumIL;    /* Children iterator */ 
+   LPSHELLFOLDER lpsfParent;
+   LPITEMIDLIST  lpi;
+   LPITEMIDLIST  lpifq;
+   IEnumIDList*  pEnumIL;
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
-/******************************************************************************
- * GetName [Internal]
- *
- * Query a shell folder for the display name of one of it's children
- *
- * PARAMS
- *  lpsf           [I] IShellFolder interface of the folder to be queried.
- *  lpi            [I] ITEMIDLIST of the child, relative to parent
- *  dwFlags        [I] as in IShellFolder::GetDisplayNameOf
- *  lpFriendlyName [O] The desired display name in unicode
- *
- * RETURNS
- *  Success: TRUE
- *  Failure: FALSE
- */
 static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR lpFriendlyName)
 {
 	BOOL   bSuccess=TRUE;
@@ -217,22 +175,7 @@ static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR
 	return bSuccess;
 }
 
-/******************************************************************************
- * InsertTreeViewItem [Internal]
- *
- * PARAMS
- *  lpsf       [I] IShellFolder interface of the item's parent shell folder 
- *  pidl       [I] ITEMIDLIST of the child to insert, relativ to parent 
- *  pidlParent [I] ITEMIDLIST of the parent shell folder
- *  pEnumIL    [I] Iterator for the children of the item to be inserted
- *  hParent    [I] The treeview-item that represents the parent shell folder
- *
- * RETURNS
- *  Success: Handle to the created and inserted treeview-item
- *  Failure: NULL
- */
-static HTREEITEM InsertTreeViewItem(IShellFolder * lpsf, LPCITEMIDLIST pidl, 
-    LPCITEMIDLIST pidlParent, IEnumIDList* pEnumIL, HTREEITEM hParent)
+static HTREEITEM InsertTreeViewItem(IShellFolder * lpsf, LPCITEMIDLIST pidl, LPCITEMIDLIST pidlParent, IEnumIDList* pEnumIL, HTREEITEM hParent)
 {
 	TVITEMW 	tvi;
 	TVINSERTSTRUCTW	tvins;
@@ -268,18 +211,6 @@ static HTREEITEM InsertTreeViewItem(IShellFolder * lpsf, LPCITEMIDLIST pidl,
 	return (HTREEITEM)TreeView_InsertItemW(hwndTreeView, &tvins);
 }
 
-/******************************************************************************
- * FillTreeView [Internal]
- *
- * For each child (given by lpe) of the parent shell folder, which is given by 
- * lpsf and whose PIDL is pidl, insert a treeview-item right under hParent
- *
- * PARAMS
- *  lpsf    [I] IShellFolder interface of the parent shell folder
- *  pidl    [I] ITEMIDLIST of the parent shell folder
- *  hParent [I] The treeview item that represents the parent shell folder
- *  lpe     [I] An iterator for the children of the parent shell folder
- */
 static void FillTreeView(IShellFolder * lpsf, LPITEMIDLIST  pidl, HTREEITEM hParent, IEnumIDList* lpe)
 {
 	HTREEITEM	hPrev = 0;
@@ -288,11 +219,7 @@ static void FillTreeView(IShellFolder * lpsf, LPITEMIDLIST  pidl, HTREEITEM hPar
 	HRESULT		hr;
 	HWND		hwnd=GetParent(hwndTreeView);
 
-	TRACE("%p %p %x %p\n",lpsf, pidl, (INT)hParent, lpe);
-
-	/* No IEnumIDList -> No children */
-	if (!lpe) return;
-	
+	TRACE("%p %p %x\n",lpsf, pidl, (INT)hParent);
 	SetCapture(GetParent(hwndTreeView));
 	SetCursor(LoadCursorA(0, (LPSTR)IDC_WAIT));
 
