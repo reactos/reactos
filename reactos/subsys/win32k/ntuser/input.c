@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.24 2003/12/07 19:29:33 weiden Exp $
+/* $Id: input.c,v 1.25 2003/12/14 14:05:47 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,6 +48,8 @@
 /* GLOBALS *******************************************************************/
 
 static HANDLE MouseDeviceHandle;
+static HANDLE MouseThreadHandle;
+static CLIENT_ID MouseThreadId;
 static HANDLE KeyboardThreadHandle;
 static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
@@ -55,7 +57,85 @@ static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveMessageQueue = 0;
 
+#define ENABLEMOUSEGDICALLBACK 1
+
 /* FUNCTIONS *****************************************************************/
+
+VOID STDCALL_FUNC STATIC
+MouseThreadMain(PVOID StartContext)
+{
+  UNICODE_STRING MouseDeviceName;
+  OBJECT_ATTRIBUTES MouseObjectAttributes;
+  IO_STATUS_BLOCK Iosb;
+  NTSTATUS Status;
+  
+  RtlRosInitUnicodeStringFromLiteral(&MouseDeviceName, L"\\??\\Mouse"); /* FIXME - does win use the same? */
+  InitializeObjectAttributes(&MouseObjectAttributes,
+                             &MouseDeviceName,
+                             0,
+                             NULL,
+                             NULL);
+  Status = NtOpenFile(&MouseDeviceHandle,
+                      FILE_ALL_ACCESS,
+                      &MouseObjectAttributes,
+                      &Iosb,
+                      0,
+                      FILE_SYNCHRONOUS_IO_ALERT);
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("Win32K: Failed to open mouse.\n");
+    return; //(Status);
+  }
+  
+  for(;;)
+  {
+    /*
+     * Wait to start input.
+     */
+    DPRINT("Mouse Input Thread Waiting for start event\n");
+    Status = KeWaitForSingleObject(&InputThreadsStart,
+                                   0,
+                                   KernelMode,
+                                   TRUE,
+                                   NULL);
+    DPRINT("Mouse Input Thread Starting...\n");
+    
+    /*
+     * Receive and process keyboard input.
+     */
+    while(InputThreadsRunning)
+    {
+      MOUSE_INPUT_DATA MouseInput;
+      Status = NtReadFile(MouseDeviceHandle,
+                          NULL,
+                          NULL,
+                          NULL,
+                          &Iosb,
+                          &MouseInput,
+                          sizeof(MOUSE_INPUT_DATA),
+                          NULL,
+                          NULL);
+      if(Status == STATUS_ALERTED && !InputThreadsRunning)
+      {
+        break;
+      }
+      if(Status == STATUS_PENDING)
+      {
+        NtWaitForSingleObject(MouseDeviceHandle, FALSE, NULL);
+        Status = Iosb.Status;
+      }
+      if(!NT_SUCCESS(Status))
+      {
+        DPRINT1("Win32K: Failed to read from mouse.\n");
+        return; //(Status);
+      }
+      DPRINT("MouseEvent\n");
+      
+      MouseGDICallBack(&MouseInput, sizeof(MOUSE_INPUT_DATA));
+    }
+    DPRINT("Mouse Input Thread Stopped...\n");
+  }
+}
 
 VOID STDCALL_FUNC STATIC
 KeyboardThreadMain(PVOID StartContext)
@@ -91,13 +171,13 @@ KeyboardThreadMain(PVOID StartContext)
       /*
        * Wait to start input.
        */
-      DPRINT( "Input Thread Waiting for start event\n" );
+      DPRINT( "Keyboard Input Thread Waiting for start event\n" );
       Status = KeWaitForSingleObject(&InputThreadsStart,
 				     0,
-				     UserMode,
+				     KernelMode,
 				     TRUE,
 				     NULL);
-      DPRINT( "Input Thread Starting...\n" );
+      DPRINT( "Keyboard Input Thread Starting...\n" );
 
       /*
        * Receive and process keyboard input.
@@ -224,7 +304,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
-      DPRINT( "Input Thread Stopped...\n" );
+      DPRINT( "KeyboardInput Thread Stopped...\n" );
     }
 }
 
@@ -253,6 +333,7 @@ NTSTATUS FASTCALL
 InitInputImpl(VOID)
 {
   NTSTATUS Status;
+#if ENABLEMOUSEGDICALLBACK
   UNICODE_STRING MouseDeviceName;
   OBJECT_ATTRIBUTES MouseObjectAttributes;
   IO_STATUS_BLOCK Iosb;
@@ -261,6 +342,7 @@ InitInputImpl(VOID)
   GDI_INFORMATION GdiInfo;
   KEVENT IoEvent;
   PIO_STACK_LOCATION StackPtr;
+#endif
 
   KeInitializeEvent(&InputThreadsStart, NotificationEvent, FALSE);
 
@@ -272,10 +354,26 @@ InitInputImpl(VOID)
 				KeyboardThreadMain,
 				NULL);
   if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("Win32K: Failed to create keyboard thread.\n");
-    }
+  {
+    DPRINT1("Win32K: Failed to create keyboard thread.\n");
+  }
 
+  /* Initialize the default keyboard layout */
+  (VOID)W32kGetDefaultKeyLayout();
+  
+  Status = PsCreateSystemThread(&MouseThreadHandle,
+				THREAD_ALL_ACCESS,
+				NULL,
+				NULL,
+				&MouseThreadId,
+				MouseThreadMain,
+				NULL);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Win32K: Failed to create keyboard thread.\n");
+  }
+  
+#if ENABLEMOUSEGDICALLBACK
   /*
    * Connect to the mouse class driver.
    * Failures here don't result in a failure return, the system must be
@@ -346,11 +444,9 @@ InitInputImpl(VOID)
        NtClose(MouseDeviceHandle);
        return STATUS_SUCCESS;
      }
-
-   /* Initialize the default keyboard layout */
-   (VOID)W32kGetDefaultKeyLayout();
-   
-   return STATUS_SUCCESS;
+#endif
+  
+  return STATUS_SUCCESS;
 }
 
 NTSTATUS FASTCALL
