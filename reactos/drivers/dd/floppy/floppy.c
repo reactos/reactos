@@ -14,7 +14,6 @@
  */
 
 #include <ddk/ntddk.h>
-#include "../../../ntoskrnl/include/internal/i386/io.h"
 
 #include "floppy.h"
 
@@ -96,7 +95,7 @@ static BOOLEAN FloppyInitialized = FALSE;
 static int
 FloppyReadSTAT(ULONG PortBase)
 {
-   return(inb_p(PortBase + FLOPPY_STATUS));
+   return(READ_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_STATUS)));
 }
 
 /* waits until the fdc becomes ready */
@@ -128,7 +127,7 @@ FloppyWaitUntilReady(WORD PortBase)
 static VOID
 FloppyWriteData(WORD PortBase, BYTE Byte)
 {
-   outb_p(PortBase + FLOPPY_DATA, Byte);
+   WRITE_PORT_UCHAR((PUCHAR)(PortBase + FLOPPY_DATA), Byte);
 }
 
 /* sends a command byte to the fdc */
@@ -179,7 +178,7 @@ FloppyReadResultCode(WORD PortBase, PUCHAR Result)
         }
       if (Status == (STATUS_DIR | STATUS_READY | STATUS_BUSY))
         {
-          Result[Replies] = inb_p(FLOPPY_DATA);
+          Result[Replies] = READ_PORT_UCHAR((PUCHAR)FLOPPY_DATA);
         }
       else
         {
@@ -235,7 +234,7 @@ FloppyConfigure(WORD PortBase, BOOLEAN DisableFIFO, BYTE FIFODepth)
   FloppyWriteCommandByte(PortBase, 0); 
 
   return TRUE;
-}       
+}
 
 /*    FloppyGetControllerVersion
  *
@@ -395,6 +394,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    UNICODE_STRING SymlinkName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
+   PCONFIGURATION_INFORMATION ConfigInfo;
    
    /*  Detect controller and determine type  */
    if (!FloppyGetControllerVersion(ControllerParameters, &ControllerType))
@@ -475,13 +475,14 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
    DeviceObject->AlignmentRequirement = FILE_WORD_ALIGNMENT;
    
-   /* Create a symlink */
-   RtlInitUnicodeString(&SymlinkName, L"\\??\\A:");
-   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
-   
+   /* count new floppy drive */
+   /* NOTE: HalIoAssignDriveLetters assigns the drive letters! */
+   ConfigInfo = IoGetConfigurationInformation ();
+   ConfigInfo->FloppyCount++;
+
    return  STATUS_SUCCESS;
 }
-   
+
 VOID FloppyStartIo(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {
@@ -545,7 +546,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
      {
 	DPRINT("Could not find floppy controller\n");
 	return STATUS_NO_SUCH_DEVICE;
-     }     
+     }
    
    return STATUS_SUCCESS;
 }
