@@ -1146,12 +1146,14 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     	PatBlt(hBlendMaskDC, 0, 0, cx, cy, PATCOPY);
     	SelectObject(hBlendMaskDC, hOldBrush);
 
+#if 0
     	/* Modify the blend mask if an Image Mask exist */
     	if(himl->hbmMask) {
 	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hMaskListDC, lx, ly, 0x220326); /* NOTSRCAND */
 	    BitBlt(hBlendMaskDC, 0, 0, cx, cy, hBlendMaskDC, 0, 0, NOTSRCCOPY);
 	}
-	
+#endif
+
 	/* now apply blend to the current image given the BlendMask */
         if (clrBlend == CLR_DEFAULT) clrBlend = GetSysColor (COLOR_HIGHLIGHT);
         else if (clrBlend == CLR_NONE) clrBlend = GetTextColor (pimldp->hdcDst);
