@@ -1,9 +1,0 @@
-;
-; rospower.def
-;
-; ReactOS Operating System
-;
-;
-LIBRARY rospower.cpl
-EXPORTS
-CPlApplet
