@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.7 2003/07/11 01:23:16 royce Exp $
+/* $Id: exception.c,v 1.8 2003/07/27 11:49:32 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -164,6 +164,13 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
  
   DPRINT("RegistrationFrame is 0x%X\n", RegistrationFrame);
 
+  /* Check if there are any exception handlers at all. */
+  if ((ULONG_PTR)RegistrationFrame == (ULONG_PTR)-1)
+    {
+      ExceptionRecord->ExceptionFlags |= EXCEPTION_NONCONTINUABLE;
+      return ExceptionContinueExecution;
+    }
+
   while ((ULONG_PTR)RegistrationFrame != (ULONG_PTR)-1)
   {
     EXCEPTION_RECORD ExceptionRecord2;
@@ -273,9 +280,9 @@ RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
 
       ExceptionRecord->ExceptionFlags |= EXCEPTION_EXIT_UNWIND;
       if (DispatcherContext > Temp)
-	  {
+	{	  
           Temp = DispatcherContext;
-	  }
+	}
     }
     else /* if (ReturnValue == ExceptionCollidedUnwind) */
     {
