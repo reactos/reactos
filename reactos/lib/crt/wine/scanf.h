@@ -98,257 +98,257 @@ _FUNCTION_ {
     if (nch == _EOF_) return _EOF_RET;
 
     while (*format) {
-	/* a whitespace character in the format string causes scanf to read,
-	 * but not store, all consecutive white-space characters in the input
-	 * up to the next non-white-space character.  One white space character
-	 * in the input matches any number (including zero) and combination of
-	 * white-space characters in the input. */
-	if (_ISSPACE_(*format)) {
+   /* a whitespace character in the format string causes scanf to read,
+    * but not store, all consecutive white-space characters in the input
+    * up to the next non-white-space character.  One white space character
+    * in the input matches any number (including zero) and combination of
+    * white-space characters in the input. */
+   if (_ISSPACE_(*format)) {
             /* skip whitespace */
             while ((nch!=_EOF_) && _ISSPACE_(nch))
                 nch = _GETC_(file);
         }
-	/* a format specification causes scanf to read and convert characters
-	 * in the input into values of a specified type.  The value is assigned
-	 * to an argument in the argument list.  Format specifications have
-	 * the form %[*][width][{h | l | I64 | L}]type */
+   /* a format specification causes scanf to read and convert characters
+    * in the input into values of a specified type.  The value is assigned
+    * to an argument in the argument list.  Format specifications have
+    * the form %[*][width][{h | l | I64 | L}]type */
         else if (*format == '%') {
             int st = 0; int suppress = 0; int width = 0;
-	    int base, number_signed;
-	    int h_prefix = 0;
-	    int l_prefix = 0;
-	    int L_prefix = 0;
-	    int w_prefix = 0;
-	    int prefix_finished = 0;
-	    int I64_prefix = 0;
+       int base, number_signed;
+       int h_prefix = 0;
+       int l_prefix = 0;
+       int L_prefix = 0;
+       int w_prefix = 0;
+       int prefix_finished = 0;
+       int I64_prefix = 0;
             format++;
-	    /* look for leading asterisk, which means 'suppress assignment of
-	     * this field'. */
-	    if (*format=='*') {
-		format++;
-		suppress=1;
-	    }
-	    /* look for width specification */
-	    while (_ISDIGIT_(*format)) {
-		width*=10;
-		width+=*format++ - '0';
-	    }
-	    if (width==0) width=-1; /* no width spec seen */
-	    /* read prefix (if any) */
-	    while (!prefix_finished) {
-		switch(*format) {
-		case 'h': h_prefix = 1; break;
-		case 'l': l_prefix = 1; break;
-		case 'w': w_prefix = 1; break;
-		case 'L': L_prefix = 1; break;
-		case 'I':
-		    if (*(format + 1) == '6' &&
-			*(format + 2) == '4') {
-			I64_prefix = 1;
-			format += 2;
-		    }
-		    break;
-		default:
-		    prefix_finished = 1;
-		}
-		if (!prefix_finished) format++;
-	    }
-	    /* read type */
+       /* look for leading asterisk, which means 'suppress assignment of
+        * this field'. */
+       if (*format=='*') {
+      format++;
+      suppress=1;
+       }
+       /* look for width specification */
+       while (_ISDIGIT_(*format)) {
+      width*=10;
+      width+=*format++ - '0';
+       }
+       if (width==0) width=-1; /* no width spec seen */
+       /* read prefix (if any) */
+       while (!prefix_finished) {
+      switch(*format) {
+      case 'h': h_prefix = 1; break;
+      case 'l': l_prefix = 1; break;
+      case 'w': w_prefix = 1; break;
+      case 'L': L_prefix = 1; break;
+      case 'I':
+          if (*(format + 1) == '6' &&
+         *(format + 2) == '4') {
+         I64_prefix = 1;
+         format += 2;
+          }
+          break;
+      default:
+          prefix_finished = 1;
+      }
+      if (!prefix_finished) format++;
+       }
+       /* read type */
             switch(*format) {
-	    case 'x':
-	    case 'X': /* hexadecimal integer. */
-		base = 16; number_signed = 0;
-		goto number;
-	    case 'o': /* octal integer */
-		base = 8; number_signed = 0;
-		goto number;
-	    case 'u': /* unsigned decimal integer */
-		base = 10; number_signed = 0;
-		goto number;
-	    case 'd': /* signed decimal integer */
-		base = 10; number_signed = 1;
-		goto number;
-	    case 'i': /* generic integer */
-		base = 10; number_signed = 1;
-	    number: {
-		    /* read an integer */
-		    ULONGLONG cur = 0;
-		    int negative = 0;
-		    int seendigit=0;
+       case 'x':
+       case 'X': /* hexadecimal integer. */
+      base = 16; number_signed = 0;
+      goto number;
+       case 'o': /* octal integer */
+      base = 8; number_signed = 0;
+      goto number;
+       case 'u': /* unsigned decimal integer */
+      base = 10; number_signed = 0;
+      goto number;
+       case 'd': /* signed decimal integer */
+      base = 10; number_signed = 1;
+      goto number;
+       case 'i': /* generic integer */
+      base = 10; number_signed = 1;
+       number: {
+          /* read an integer */
+          ULONGLONG cur = 0;
+          int negative = 0;
+          int seendigit=0;
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
                     /* get sign */
                     if (number_signed && (nch == '-' ||
-					  nch == '+')) {
-			negative = (nch=='-');
+                 nch == '+')) {
+         negative = (nch=='-');
                         nch = _GETC_(file);
-			if (width>0) width--;
+         if (width>0) width--;
                     }
-		    /* look for leading indication of base */
-		    if (width!=0 && nch == '0') {
+          /* look for leading indication of base */
+          if (width!=0 && nch == '0') {
                         nch = _GETC_(file);
-			if (width>0) width--;
-			seendigit=1;
-			if (width!=0 && (nch=='x' || nch=='X')) {
-			    if (base==0)
-				base=16;
-			    if (base==16) {
-				nch = _GETC_(file);
-				if (width>0) width--;
-				seendigit=0;
-			    }
-			} else if (base==0)
-			    base = 8;
-		    }
-		    /* throw away leading zeros */
-		    while (width!=0 && nch=='0') {
+         if (width>0) width--;
+         seendigit=1;
+         if (width!=0 && (nch=='x' || nch=='X')) {
+             if (base==0)
+            base=16;
+             if (base==16) {
+            nch = _GETC_(file);
+            if (width>0) width--;
+            seendigit=0;
+             }
+         } else if (base==0)
+             base = 8;
+          }
+          /* throw away leading zeros */
+          while (width!=0 && nch=='0') {
                         nch = _GETC_(file);
-			if (width>0) width--;
-			seendigit=1;
-		    }
-		    if (width!=0 && _CHAR2DIGIT_(nch, base)!=-1) {
-			cur = _CHAR2DIGIT_(nch, base);
-			nch = _GETC_(file);
-			if (width>0) width--;
-			seendigit=1;
-		    }
+         if (width>0) width--;
+         seendigit=1;
+          }
+          if (width!=0 && _CHAR2DIGIT_(nch, base)!=-1) {
+         cur = _CHAR2DIGIT_(nch, base);
+         nch = _GETC_(file);
+         if (width>0) width--;
+         seendigit=1;
+          }
                     /* read until no more digits */
                     while (width!=0 && (nch!=_EOF_) && _CHAR2DIGIT_(nch, base)!=-1) {
                         cur = cur*base + _CHAR2DIGIT_(nch, base);
                         nch = _GETC_(file);
-			if (width>0) width--;
-			seendigit=1;
+         if (width>0) width--;
+         seendigit=1;
                     }
-		    /* okay, done! */
-		    if (!seendigit) break; /* not a valid number */
+          /* okay, done! */
+          if (!seendigit) break; /* not a valid number */
                     st = 1;
                     if (!suppress) {
 #define _SET_NUMBER_(type) *va_arg(ap, type*) = negative ? -cur : cur
-			if (number_signed) {
-			    if (I64_prefix) _SET_NUMBER_(LONGLONG);
-			    else if (l_prefix) _SET_NUMBER_(long int);
-			    else if (h_prefix) _SET_NUMBER_(short int);
-			    else _SET_NUMBER_(int);
-			} else {
-			    if (negative) {
-				WARN("Dropping sign in reading a negative number into an unsigned value");
-				negative = 0;
-			    }
-			    if (I64_prefix) _SET_NUMBER_(ULONGLONG);
-			    else if (l_prefix) _SET_NUMBER_(unsigned long int);
-			    else if (h_prefix)
-				_SET_NUMBER_(unsigned short int);
-			    else _SET_NUMBER_(unsigned int);
-			}
-		    }
+         if (number_signed) {
+             if (I64_prefix) _SET_NUMBER_(LONGLONG);
+             else if (l_prefix) _SET_NUMBER_(long int);
+             else if (h_prefix) _SET_NUMBER_(short int);
+             else _SET_NUMBER_(int);
+         } else {
+             if (negative) {
+            WARN("Dropping sign in reading a negative number into an unsigned value");
+            negative = 0;
+             }
+             if (I64_prefix) _SET_NUMBER_(ULONGLONG);
+             else if (l_prefix) _SET_NUMBER_(unsigned long int);
+             else if (h_prefix)
+            _SET_NUMBER_(unsigned short int);
+             else _SET_NUMBER_(unsigned int);
+         }
+          }
                 }
                 break;
-	    case 'e':
-	    case 'E':
-	    case 'f':
-	    case 'g':
+       case 'e':
+       case 'E':
+       case 'f':
+       case 'g':
             case 'G': { /* read a float */
                     long double cur = 0;
-		    int negative = 0;
+          int negative = 0;
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
                         nch = _GETC_(file);
-		    /* get sign. */
+          /* get sign. */
                     if (nch == '-' || nch == '+') {
-			negative = (nch=='-');
-			if (width>0) width--;
-			if (width==0) break;
+         negative = (nch=='-');
+         if (width>0) width--;
+         if (width==0) break;
                         nch = _GETC_(file);
                     }
-		    /* get first digit. */
-		    if ('.' != nch) {
-		      if (!_ISDIGIT_(nch)) break;
-		      cur = (nch - '0');
-		      nch = _GETC_(file);
-		      if (width>0) width--;
-		      /* read until no more digits */
-		      while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+          /* get first digit. */
+          if ('.' != nch) {
+            if (!_ISDIGIT_(nch)) break;
+            cur = (nch - '0');
+            nch = _GETC_(file);
+            if (width>0) width--;
+            /* read until no more digits */
+            while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
                         cur = cur*10 + (nch - '0');
                         nch = _GETC_(file);
-			if (width>0) width--;
-		      }
-		    } else {
-		      cur = 0; /* MaxPayneDemo Fix: .8 -> 0.8 */
-		    }
-		    /* handle decimals */
+         if (width>0) width--;
+            }
+          } else {
+            cur = 0; /* MaxPayneDemo Fix: .8 -> 0.8 */
+          }
+          /* handle decimals */
                     if (width!=0 && nch == '.') {
                         float dec = 1;
                         nch = _GETC_(file);
-			if (width>0) width--;
+         if (width>0) width--;
                         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
                             dec /= 10;
                             cur += dec * (nch - '0');
                             nch = _GETC_(file);
-			    if (width>0) width--;
+             if (width>0) width--;
                         }
                     }
-		    /* handle exponent */
-		    if (width!=0 && (nch == 'e' || nch == 'E')) {
-			int exponent = 0, negexp = 0;
-			float expcnt;
+          /* handle exponent */
+          if (width!=0 && (nch == 'e' || nch == 'E')) {
+         int exponent = 0, negexp = 0;
+         float expcnt;
                         nch = _GETC_(file);
-			if (width>0) width--;
-			/* possible sign on the exponent */
-			if (width!=0 && (nch=='+' || nch=='-')) {
-			    negexp = (nch=='-');
+         if (width>0) width--;
+         /* possible sign on the exponent */
+         if (width!=0 && (nch=='+' || nch=='-')) {
+             negexp = (nch=='-');
                             nch = _GETC_(file);
-			    if (width>0) width--;
-			}
-			/* exponent digits */
-			while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
-			    exponent *= 10;
-			    exponent += (nch - '0');
+             if (width>0) width--;
+         }
+         /* exponent digits */
+         while (width!=0 && (nch!=_EOF_) && _ISDIGIT_(nch)) {
+             exponent *= 10;
+             exponent += (nch - '0');
                             nch = _GETC_(file);
-			    if (width>0) width--;
+             if (width>0) width--;
                         }
-			/* update 'cur' with this exponent. */
-			expcnt =  negexp ? .1 : 10;
-			while (exponent!=0) {
-			    if (exponent&1)
-				cur*=expcnt;
-			    exponent/=2;
-			    expcnt=expcnt*expcnt;
-			}
-		    }
+         /* update 'cur' with this exponent. */
+         expcnt =  negexp ? .1 : 10;
+         while (exponent!=0) {
+             if (exponent&1)
+            cur*=expcnt;
+             exponent/=2;
+             expcnt=expcnt*expcnt;
+         }
+          }
                     st = 1;
                     if (!suppress) {
-			if (L_prefix) _SET_NUMBER_(long double);
-			else if (l_prefix) _SET_NUMBER_(double);
-			else _SET_NUMBER_(float);
-		    }
+         if (L_prefix) _SET_NUMBER_(long double);
+         else if (l_prefix) _SET_NUMBER_(double);
+         else _SET_NUMBER_(float);
+          }
                 }
                 break;
-		/* According to
-		 * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt_scanf_type_field_characters.asp
-		 * 's' reads a character string in a call to fscanf
-		 * and 'S' a wide character string and vice versa in a
-		 * call to fwscanf. The 'h', 'w' and 'l' prefixes override
-		 * this behaviour. 'h' forces reading char * but 'l' and 'w'
-		 * force reading WCHAR. */
-	    case 's':
-		    if (w_prefix || l_prefix) goto widecharstring;
-		    else if (h_prefix) goto charstring;
+      /* According to
+       * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vclib/html/_crt_scanf_type_field_characters.asp
+       * 's' reads a character string in a call to fscanf
+       * and 'S' a wide character string and vice versa in a
+       * call to fwscanf. The 'h', 'w' and 'l' prefixes override
+       * this behaviour. 'h' forces reading char * but 'l' and 'w'
+       * force reading WCHAR. */
+       case 's':
+          if (w_prefix || l_prefix) goto widecharstring;
+          else if (h_prefix) goto charstring;
 #ifdef WIDE_SCANF
-		    else goto widecharstring;
+          else goto widecharstring;
 #else /* WIDE_SCANF */
-		    else goto charstring;
+          else goto charstring;
 #endif /* WIDE_SCANF */
-	    case 'S':
-		    if (w_prefix || l_prefix) goto widecharstring;
-		    else if (h_prefix) goto charstring;
+       case 'S':
+          if (w_prefix || l_prefix) goto widecharstring;
+          else if (h_prefix) goto charstring;
 #ifdef WIDE_SCANF
-		    else goto charstring;
+          else goto charstring;
 #else /* WIDE_SCANF */
-		    else goto widecharstring;
+          else goto widecharstring;
 #endif /* WIDE_SCANF */
-	    charstring: { /* read a word into a char */
-		    char*str = suppress ? NULL : va_arg(ap, char*);
+       charstring: { /* read a word into a char */
+          char*str = suppress ? NULL : va_arg(ap, char*);
                     char*sptr = str;
                     /* skip initial whitespace */
                     while ((nch!=_EOF_) && _ISSPACE_(nch))
@@ -356,15 +356,15 @@ _FUNCTION_ {
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
                         if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
-			st++;
+         st++;
                         nch = _GETC_(file);
-			if (width>0) width--;
+         if (width>0) width--;
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
                 }
                 break;
-	    widecharstring: { /* read a word into a wchar_t* */
+       widecharstring: { /* read a word into a wchar_t* */
 		    wchar_t*str =
 			suppress ? NULL : va_arg(ap, wchar_t*);
                     wchar_t*sptr = str;
@@ -374,33 +374,33 @@ _FUNCTION_ {
                     /* read until whitespace */
                     while (width!=0 && (nch!=_EOF_) && !_ISSPACE_(nch)) {
                         if (!suppress) *sptr++ = _WIDE2SUPPORTED_(nch);
-			st++;
+         st++;
                         nch = _GETC_(file);
-			if (width>0) width--;
+         if (width>0) width--;
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
                 }
                 break;
             /* 'c' and 'C work analogously to 's' and 'S' as described
-	     * above */
-	    case 'c':
-		    if (w_prefix || l_prefix) goto widecharacter;
-		    else if (h_prefix) goto character;
+        * above */
+       case 'c':
+          if (w_prefix || l_prefix) goto widecharacter;
+          else if (h_prefix) goto character;
 #ifdef WIDE_SCANF
-		    else goto widecharacter;
+          else goto widecharacter;
 #else /* WIDE_SCANF */
-		    else goto character;
+          else goto character;
 #endif /* WIDE_SCANF */
-	    case 'C':
-		    if (w_prefix || l_prefix) goto widecharacter;
-		    else if (h_prefix) goto character;
+       case 'C':
+          if (w_prefix || l_prefix) goto widecharacter;
+          else if (h_prefix) goto character;
 #ifdef WIDE_SCANF
-		    else goto character;
+          else goto character;
 #else /* WIDE_SCANF */
-		    else goto widecharacter;
+          else goto widecharacter;
 #endif /* WIDE_SCANF */
-	  character: { /* read single character into char */
+     character: { /* read single character into char */
                     if (nch!=_EOF_) {
                         if (!suppress) {
                             char*c = va_arg(ap, char*);
@@ -410,8 +410,8 @@ _FUNCTION_ {
                         nch = _GETC_(file);
                     }
                 }
-		break;
-	  widecharacter: { /* read single character into a wchar_t */
+      break;
+     widecharacter: { /* read single character into a wchar_t */
                     if (nch!=_EOF_) {
                         if (!suppress) {
                             wchar_t*c = va_arg(ap, wchar_t*);
@@ -420,80 +420,103 @@ _FUNCTION_ {
                         nch = _GETC_(file);
                         st = 1;
                     }
-	        }
-		break;
-	    case 'n': {
- 		    if (!suppress) {
-			int*n = va_arg(ap, int*);
-			*n = consumed - (nch!=_EOF_);
-		    }
-	        }
-		break;
-	    case '[': {
+           }
+      break;
+       case 'n': {
+          if (!suppress) {
+         int*n = va_arg(ap, int*);
+
+         /* 
+         *n = consumed - (nch!=_EOF_);
+         
+         FIXME: The above is the Wine version and it doesnt work in ros
+         when %n is at end of input string (return one too many).
+         But does it fail in Wine too?? If so wine also needs fixin.
+         -Gunnar
+         */
+
+         *n = consumed - 1;
+          }
+          /* This is an odd one: according to the standard,
+           * "Execution of a %n directive does not increment the
+           * assignment count returned at the completion of
+           * execution" even if it wasn't suppressed with the
+           * '*' flag.  The Corrigendum to the standard seems
+           * to contradict this (comment out the assignment to
+           * suppress below if you want to implement these
+           * alternate semantics) but the windows program I'm
+           * looking at expects the behavior I've coded here
+           * (which happens to be what glibc does as well).
+           */
+          suppress = 1;
+          st = 1;
+           }
+      break;
+       case '[': {
                     _CHAR_ *str = suppress ? NULL : va_arg(ap, _CHAR_*);
                     _CHAR_ *sptr = str;
-		    RTL_BITMAP bitMask;
+          RTL_BITMAP bitMask;
                     ULONG *Mask;
-		    int invert = 0; /* Set if we are NOT to find the chars */
+          int invert = 0; /* Set if we are NOT to find the chars */
 
-		    /* Init our bitmap */
+          /* Init our bitmap */
           Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
-		    RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
+          RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
 
-		    /* Read the format */
-		    format++;
-		    if(*format == '^') {
-			invert = 1;
-			format++;
-		    }
-		    if(*format == ']') {
-			RtlSetBits(&bitMask, ']', 1);
-			format++;
-		    }
+          /* Read the format */
+          format++;
+          if(*format == '^') {
+         invert = 1;
+         format++;
+          }
+          if(*format == ']') {
+         RtlSetBits(&bitMask, ']', 1);
+         format++;
+          }
                     while(*format && (*format != ']')) {
-			/* According to:
-			 * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccore98/html/_crt_scanf_width_specification.asp
-			 * "Note that %[a-z] and %[z-a] are interpreted as equivalent to %[abcde...z]." */
-			if((*format == '-') && (*(format + 1) != ']')) {
-			    if ((*(format - 1)) < *(format + 1))
-				RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
-			    else
-				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));			      
-			    format++;
-			} else
-			    RtlSetBits(&bitMask, *format, 1);
-			format++;
-		    }
+         /* According to:
+          * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccore98/html/_crt_scanf_width_specification.asp
+          * "Note that %[a-z] and %[z-a] are interpreted as equivalent to %[abcde...z]." */
+         if((*format == '-') && (*(format + 1) != ']')) {
+             if ((*(format - 1)) < *(format + 1))
+            RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
+             else
+            RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));             
+             format++;
+         } else
+             RtlSetBits(&bitMask, *format, 1);
+         format++;
+          }
                     /* read until char is not suitable */
                     while ((width != 0) && (nch != _EOF_)) {
-			if(!invert) {
-			    if(RtlAreBitsSet(&bitMask, nch, 1)) {
-				if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
-			    } else
-				break;
-			} else {
-			    if(RtlAreBitsClear(&bitMask, nch, 1)) {
-				if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
-			    } else
-				break;
-			}
+         if(!invert) {
+             if(RtlAreBitsSet(&bitMask, nch, 1)) {
+            if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
+             } else
+            break;
+         } else {
+             if(RtlAreBitsClear(&bitMask, nch, 1)) {
+            if (!suppress) *sptr++ = _CHAR2SUPPORTED_(nch);
+             } else
+            break;
+         }
                         st++;
                         nch = _GETC_(file);
                         if (width>0) width--;
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
-		    HeapFree(GetProcessHeap(), 0, Mask);
+          HeapFree(GetProcessHeap(), 0, Mask);
                 }
                 break;
             default:
-		/* From spec: "if a percent sign is followed by a character
-		 * that has no meaning as a format-control character, that
-		 * character and the following characters are treated as
-		 * an ordinary sequence of characters, that is, a sequence
-		 * of characters that must match the input.  For example,
-		 * to specify that a percent-sign character is to be input,
-		 * use %%." */
+      /* From spec: "if a percent sign is followed by a character
+       * that has no meaning as a format-control character, that
+       * character and the following characters are treated as
+       * an ordinary sequence of characters, that is, a sequence
+       * of characters that must match the input.  For example,
+       * to specify that a percent-sign character is to be input,
+       * use %%." */
                 while ((nch!=_EOF_) && _ISSPACE_(nch))
                     nch = _GETC_(file);
                 if (nch==*format) {
@@ -506,18 +529,18 @@ _FUNCTION_ {
             if (st && !suppress) rd++;
             else if (!st) break;
         }
-	/* a non-white-space character causes scanf to read, but not store,
-	 * a matching non-white-space character. */
+   /* a non-white-space character causes scanf to read, but not store,
+    * a matching non-white-space character. */
         else {
             /* check for character match */
             if (nch == *format) {
-		nch = _GETC_(file);
+      nch = _GETC_(file);
             } else break;
         }
         format++;
     }
     if (nch!=_EOF_) {
-	_UNGETC_(nch, file);
+   _UNGETC_(nch, file);
     }
     TRACE("returning %d\n", rd);
     return rd;
