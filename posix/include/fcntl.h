@@ -1,4 +1,4 @@
-/* $Id: fcntl.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+/* $Id: fcntl.h,v 1.3 2002/03/21 22:50:06 hyperion Exp $
  */
 /*
  * fcntl.h
@@ -56,7 +56,7 @@ enum __fcntl_cmd
  F_GETFD,  /* get file descriptor flags */
  F_SETFD,  /* set file descriptor flags */
  F_GETFL,  /* get file status flags and file access modes */
- F_SETFL,  /* Set file status flags */
+ F_SETFL,  /* set file status flags */
  F_GETLK,  /* get record locking information */
  F_SETLK,  /* set record locking information */
  F_SETLKW, /* set record locking information; wait if blocked */
