@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.22 2003/08/13 20:24:04 chorns Exp $
+ * $Id: lineto.c,v 1.23 2003/08/14 22:34:16 gvg Exp $
  */
 
 #include <ddk/winddi.h>
@@ -71,7 +71,7 @@ NWtoSE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta / 2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c /* there's still a current clip rect */
@@ -141,7 +141,7 @@ SWtoNE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta / 2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
@@ -210,7 +210,7 @@ NEtoSW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta / 2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
@@ -279,7 +279,7 @@ SEtoNW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
   ClipRect = RectEnum.arcl;
   delta = max(deltax, deltay);
   i = 0;
-  error = 0;
+  error = delta / 2;
   while (i < delta && (ClipRect < RectEnum.arcl + RectEnum.c || EnumMore))
     {
       while ((ClipRect < RectEnum.arcl + RectEnum.c
@@ -394,8 +394,7 @@ EngLineTo(SURFOBJ *DestObj,
     {
       xchange = -1;
       deltax = - deltax;
-      hx = x2;
-      x--;
+      hx = x2 + 1;
     }
   else
     {
@@ -407,8 +406,7 @@ EngLineTo(SURFOBJ *DestObj,
     {
       ychange = -1;
       deltay = - deltay;
-      vy = y2;
-      y--;
+      vy = y2 + 1;
     }
   else
     {
