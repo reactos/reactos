@@ -5,8 +5,8 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
-#include <ddk/ntifs.h>
-#include <ndk/haltypes.h>
+#include <ddk/ntddk.h>
+#include <ndk/ntndk.h>
 
 /*
  * FUNCTION: Probes for a BIOS32 extension
@@ -340,7 +340,7 @@ EXPORTED PADAPTER_OBJECT MasterAdapter;
  * NOTES:
  *     - I've updated this to the Windows Object Defintion. 
  */
-struct _ADAPTER_OBJECT {
+typedef struct _ADAPTER_OBJECT {
   DMA_ADAPTER DmaHeader;
   struct _ADAPTER_OBJECT *MasterAdapter;
   ULONG MapRegistersPerChannel;
@@ -368,7 +368,7 @@ struct _ADAPTER_OBJECT {
   UCHAR Dma64BitAddresses;
   BOOLEAN LegacyAdapter;
   LIST_ENTRY AdapterList;
-};
+} ADAPTER_OBJECT;
  
 /*
 struct _ADAPTER_OBJECT {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: display.c,v 1.15.6.2 2004/10/25 02:26:26 ion Exp $
+/* $Id: display.c,v 1.15.6.3 2004/10/25 02:57:19 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -121,8 +121,7 @@
  * since there is already support for them via the VideoPortInt10 routine.
  */
 
-#include <ddk/ntifs.h>
-#include <ndk/kefuncs.h>
+#include <ddk/ntddk.h>
 #include <hal.h>
 
 #define SCREEN_SYNCHRONIZATION

@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.15.6.2 2004/10/25 02:26:26 ion Exp $
+/* $Id: irql.c,v 1.15.6.3 2004/10/25 02:57:19 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ndk/kefuncs.h>
 #include <internal/ps.h>
 #include <hal.h>
 
@@ -21,6 +20,11 @@
 
 #define NR_IRQS         (16)
 #define IRQ_BASE        (0x40)
+
+
+/*
+ * FIXME: Use EISA_CONTROL STRUCTURE INSTEAD OF HARD-CODED OFFSETS 
+*/
 
 /*
  * PURPOSE: Current irq level
@@ -239,7 +243,7 @@ KfLowerIrql (KIRQL	NewIrql)
  * NOTES
  */
 #ifdef KeLowerIrql
-#undef KeLowerIrql
+#undef KeLowerIrql 
 #endif
 VOID STDCALL
 KeLowerIrql (KIRQL NewIrql)
@@ -304,7 +308,7 @@ KfRaiseIrql (KIRQL	NewIrql)
  *	Calls KfRaiseIrql
  */
 #ifdef KeRaiseIrql
-#undef KeRaiseIrql
+#undef KeRaiseIrql 
 #endif
 VOID STDCALL
 KeRaiseIrql (KIRQL	NewIrql,
@@ -409,11 +413,8 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
   HalpEndSystemInterrupt(Irql);
 }
   
-BOOLEAN
-STDCALL
-HalDisableSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql)
+BOOLEAN STDCALL HalDisableSystemInterrupt(ULONG Vector,
+   					  KIRQL Irql)
 {
   ULONG irq;
   
@@ -435,12 +436,9 @@ HalDisableSystemInterrupt(
 }
 
 
-BOOLEAN
-STDCALL
-HalEnableSystemInterrupt(
-  ULONG Vector,
-  KIRQL Irql,
-  KINTERRUPT_MODE InterruptMode)
+BOOLEAN STDCALL HalEnableSystemInterrupt(ULONG Vector,
+  					 KIRQL Irql,
+  					 KINTERRUPT_MODE InterruptMode)
 {
   ULONG irq;
 

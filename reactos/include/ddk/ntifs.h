@@ -1982,22 +1982,6 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
 
-// Information class 3
-typedef struct _VM_COUNTERS_
-{
-	ULONG PeakVirtualSize;
-	ULONG VirtualSize;
-	ULONG PageFaultCount;
-	ULONG PeakWorkingSetSize;
-	ULONG WorkingSetSize;
-	ULONG QuotaPeakPagedPoolUsage;
-	ULONG QuotaPagedPoolUsage;
-	ULONG QuotaPeakNonPagedPoolUsage;
-	ULONG QuotaNonPagedPoolUsage;
-	ULONG PagefileUsage;
-	ULONG PeakPagefileUsage;
-} VM_COUNTERS, *PVM_COUNTERS;
-
 // Information class 4
 typedef struct _KERNEL_USER_TIMES
 {
@@ -3426,13 +3410,6 @@ FsRtlUninitializeOplock (
 NTSYSAPI
 VOID
 NTAPI
-HalDisplayString (
-    IN PCHAR String
-);
-
-NTSYSAPI
-VOID
-NTAPI
 HalQueryRealTimeClock (
     IN OUT PTIME_FIELDS TimeFields
 );
@@ -3899,92 +3876,6 @@ NTAPI
 MmSetAddressRangeModified (
     IN PVOID    Address,
     IN ULONG    Length
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObCreateObject (
-    IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
-    IN POBJECT_TYPE         ObjectType,
-    IN POBJECT_ATTRIBUTES   ObjectAttributes OPTIONAL,
-    IN KPROCESSOR_MODE      AccessMode,
-    IN OUT PVOID            ParseContext OPTIONAL,
-    IN ULONG                ObjectSize,
-    IN ULONG                PagedPoolCharge OPTIONAL,
-    IN ULONG                NonPagedPoolCharge OPTIONAL,
-    OUT PVOID               *Object
-);
-
-NTKERNELAPI
-ULONG
-NTAPI
-ObGetObjectPointerCount (
-    IN PVOID Object
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObInsertObject (
-    IN PVOID            Object,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess,
-    IN ULONG            AdditionalReferences,
-    OUT PVOID           *ReferencedObject OPTIONAL,
-    OUT PHANDLE         Handle
-);
-
-NTKERNELAPI
-VOID
-NTAPI
-ObMakeTemporaryObject (
-    IN PVOID Object
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObOpenObjectByPointer (
-    IN PVOID            Object,
-    IN ULONG            HandleAttributes,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE     ObjectType OPTIONAL,
-    IN KPROCESSOR_MODE  AccessMode,
-    OUT PHANDLE         Handle
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryNameString (
-    IN PVOID                        Object,
-    OUT POBJECT_NAME_INFORMATION    ObjectNameInfo,
-    IN ULONG                        Length,
-    OUT PULONG                      ReturnLength
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObQueryObjectAuditingByHandle (
-    IN HANDLE       Handle,
-    OUT PBOOLEAN    GenerateOnClose
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-ObReferenceObjectByName (
-    IN PUNICODE_STRING  ObjectName,
-    IN ULONG            Attributes,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE     ObjectType,
-    IN KPROCESSOR_MODE  AccessMode,
-    IN OUT PVOID        ParseContext OPTIONAL,
-    OUT PVOID           *Object
 );
 
 NTKERNELAPI

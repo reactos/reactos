@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.8.20.2 2004/10/25 02:26:26 ion Exp $
+/* $Id: spinlock.c,v 1.8.20.3 2004/10/25 02:57:19 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ndk/kefuncs.h>
+#include <hal.h>
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
@@ -73,7 +73,7 @@ KfAcquireSpinLock (
 {
    KIRQL OldIrql;
 
-   assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
    
    OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
    KiAcquireSpinLock(SpinLock);
@@ -93,7 +93,7 @@ KfReleaseSpinLock (
  *        NewIrql = Irql level before acquiring the spinlock
  */
 {
-   assert(KeGetCurrentIrql() == DISPATCH_LEVEL || KeGetCurrentIrql() == SYNCH_LEVEL);
+   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL || KeGetCurrentIrql() == SYNCH_LEVEL);
    KiReleaseSpinLock(SpinLock);
    KfLowerIrql(NewIrql);
 }

@@ -1,4 +1,4 @@
-/* $Id: umtypes.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: umtypes.h,v 1.1.2.2 2004/10/25 02:57:20 ion Exp $
  *
  *  ReactOS Headers
  *  Copyright (C) 1998-2004 ReactOS Team
@@ -648,21 +648,6 @@ typedef struct _PROCESS_BASIC_INFORMATION
 	ULONG UniqueProcessId;
 	ULONG InheritedFromUniqueProcessId;
 } PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
-
-typedef struct _VM_COUNTERS_
-{
-	ULONG PeakVirtualSize;
-	ULONG VirtualSize;
-	ULONG PageFaultCount;
-	ULONG PeakWorkingSetSize;
-	ULONG WorkingSetSize;
-	ULONG QuotaPeakPagedPoolUsage;
-	ULONG QuotaPagedPoolUsage;
-	ULONG QuotaPeakNonPagedPoolUsage;
-	ULONG QuotaNonPagedPoolUsage;
-	ULONG PagefileUsage;
-	ULONG PeakPagefileUsage;
-} VM_COUNTERS, *PVM_COUNTERS;
 
 typedef enum _KWAIT_REASON {
   Executive,

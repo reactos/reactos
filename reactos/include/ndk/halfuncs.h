@@ -1,4 +1,4 @@
-/* $Id: halfuncs.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: halfuncs.h,v 1.1.2.2 2004/10/25 02:57:20 ion Exp $
  *
  *  ReactOS Headers
  *  Copyright (C) 1998-2004 ReactOS Team
@@ -47,6 +47,12 @@ STDCALL
 HalDisableSystemInterrupt(
 	ULONG Vector,
 	KIRQL Irql
+);
+
+VOID
+STDCALL
+HalDisplayString (
+	IN PCHAR String
 );
 
 BOOLEAN

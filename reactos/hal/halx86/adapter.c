@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.11.6.2 2004/10/25 02:26:26 ion Exp $
+/* $Id: adapter.c,v 1.11.6.3 2004/10/25 02:57:19 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,7 +14,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/iotypes.h>
 #include <internal/debug.h>
 #include <hal.h>
 

@@ -1,4 +1,4 @@
-/* $Id: ntndk.h,v 1.1.2.1 2004/10/25 01:24:07 ion Exp $
+/* $Id: ntndk.h,v 1.1.2.2 2004/10/25 02:57:20 ion Exp $
  *
  *  ReactOS Headers
  *  Copyright (C) 1998-2004 ReactOS Team
@@ -39,6 +39,7 @@
 #include "ldrtypes.h"
 #include "lpctypes.h"
 #include "mmtypes.h"
+#include "obfuncs.h"
 #include "potypes.h"
 #include "pstypes.h"
 #include "rostypes.h"
