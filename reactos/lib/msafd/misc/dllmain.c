@@ -267,6 +267,7 @@ DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
     case STATUS_SUCCESS: 
 	/* Return Number of bytes Read */
 	if( ReturnedBytes ) *ReturnedBytes = Received; break;
+    case STATUS_END_OF_FILE: *Errno = WSAESHUTDOWN; *ReturnedBytes = 0; break;
     case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
     case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
     default: {
