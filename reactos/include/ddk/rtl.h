@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.47 2001/02/10 22:51:07 dwelch Exp $
+/* $Id: rtl.h,v 1.48 2001/03/01 15:33:39 ekohl Exp $
  * 
  */
 
@@ -814,6 +814,13 @@ RtlDowncaseUnicodeString (
 	IN BOOLEAN		AllocateDestinationString
 	);
 
+NTSTATUS
+STDCALL
+RtlEmptyAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+		ULONG		Unknown2
+	);
+
 LARGE_INTEGER
 STDCALL
 RtlEnlargedIntegerMultiply (
@@ -1396,6 +1403,17 @@ RtlPrefixUnicodeString (
 	PUNICODE_STRING	String1,
 	PUNICODE_STRING	String2,
 	BOOLEAN		CaseInsensitive
+	);
+
+NTSTATUS
+STDCALL
+RtlQueryAtomInAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+	IN	PRTL_ATOM	Atom,
+	IN	ULONG		Unknown3,
+	IN	ULONG		Unknown4,
+	IN OUT	PVOID		Buffer,
+	IN OUT	PULONG		ReturnLength
 	);
 
 NTSTATUS

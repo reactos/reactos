@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.4 2000/10/08 12:49:26 ekohl Exp $
+/* $Id: atom.c,v 1.5 2001/03/01 15:35:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,9 +13,10 @@
 
 #include <ddk/ntddk.h>
 
+//#define NDEBUG
 #include <internal/debug.h>
 
-static PRTL_ATOM_TABLE RtlpGetGlobalAtomTable (VOID);
+static PRTL_ATOM_TABLE RtlpGetGlobalAtomTable(VOID);
 
 /* GLOBALS *******************************************************************/
 
@@ -24,10 +25,9 @@ static PRTL_ATOM_TABLE GlobalAtomTable = NULL;
 /* FUNCTIONS *****************************************************************/
 
 
-NTSTATUS
-STDCALL
-NtAddAtom (OUT PRTL_ATOM Atom,
-	   IN PUNICODE_STRING AtomString)
+NTSTATUS STDCALL
+NtAddAtom(OUT PRTL_ATOM Atom,
+	  IN PUNICODE_STRING AtomString)
 {
    PRTL_ATOM_TABLE AtomTable;
 
@@ -41,9 +41,8 @@ NtAddAtom (OUT PRTL_ATOM Atom,
 }
 
 
-NTSTATUS
-STDCALL
-NtDeleteAtom (IN RTL_ATOM Atom)
+NTSTATUS STDCALL
+NtDeleteAtom(IN RTL_ATOM Atom)
 {
    PRTL_ATOM_TABLE AtomTable;
 
@@ -56,10 +55,9 @@ NtDeleteAtom (IN RTL_ATOM Atom)
 }
 
 
-NTSTATUS
-STDCALL
-NtFindAtom (OUT PRTL_ATOM Atom,
-	    IN PUNICODE_STRING AtomString)
+NTSTATUS STDCALL
+NtFindAtom(OUT PRTL_ATOM Atom,
+	   IN PUNICODE_STRING AtomString)
 {
    PRTL_ATOM_TABLE AtomTable;
 
@@ -73,14 +71,12 @@ NtFindAtom (OUT PRTL_ATOM Atom,
 }
 
 
-NTSTATUS
-STDCALL
-NtQueryInformationAtom (IN RTL_ATOM Atom,
-	IN	CINT	AtomInformationClass,
-	OUT	PVOID	AtomInformation,
-	IN	ULONG	AtomInformationLength,
-	OUT	PULONG	ReturnLength
-	)
+NTSTATUS STDCALL
+NtQueryInformationAtom(IN RTL_ATOM Atom,
+		       IN CINT AtomInformationClass,
+		       OUT PVOID AtomInformation,
+		       IN ULONG AtomInformationLength,
+		       OUT PULONG ReturnLength)
 {
 #if 0
    PRTL_ATOM_TABLE AtomTable;
@@ -100,7 +96,7 @@ NtQueryInformationAtom (IN RTL_ATOM Atom,
 
 
 static PRTL_ATOM_TABLE
-RtlpGetGlobalAtomTable (VOID)
+RtlpGetGlobalAtomTable(VOID)
 {
    NTSTATUS Status;
 
@@ -116,8 +112,8 @@ RtlpGetGlobalAtomTable (VOID)
 
 
 NTSTATUS STDCALL
-RtlCreateAtomTable (ULONG TableSize,
-		    PRTL_ATOM_TABLE *AtomTable)
+RtlCreateAtomTable(ULONG TableSize,
+		   PRTL_ATOM_TABLE *AtomTable)
 {
 #if 0
    PRTL_ATOM_TABLE Table;
@@ -143,7 +139,7 @@ RtlCreateAtomTable (ULONG TableSize,
 
 
 NTSTATUS STDCALL
-RtlDestroyAtomTable (IN PRTL_ATOM_TABLE AtomTable)
+RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -151,8 +147,8 @@ RtlDestroyAtomTable (IN PRTL_ATOM_TABLE AtomTable)
 
 
 NTSTATUS STDCALL
-RtlEmptyAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-		   ULONG Unknown2)
+RtlEmptyAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+		  ULONG Unknown2)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -160,9 +156,9 @@ RtlEmptyAtomTable (IN PRTL_ATOM_TABLE AtomTable,
 
 
 NTSTATUS STDCALL
-RtlAddAtomToAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-		       IN PWSTR AtomName,
-		       OUT PRTL_ATOM Atom)
+RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+		      IN PWSTR AtomName,
+		      OUT PRTL_ATOM Atom)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -170,8 +166,8 @@ RtlAddAtomToAtomTable (IN PRTL_ATOM_TABLE AtomTable,
 
 
 NTSTATUS STDCALL
-RtlDeleteAtomFromAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-			    IN RTL_ATOM Atom)
+RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+			   IN RTL_ATOM Atom)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -179,9 +175,9 @@ RtlDeleteAtomFromAtomTable (IN PRTL_ATOM_TABLE AtomTable,
 
 
 NTSTATUS STDCALL
-RtlLookupAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-			  IN PUNICODE_STRING AtomName,
-			  OUT PRTL_ATOM Atom)
+RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+			 IN PUNICODE_STRING AtomName,
+			 OUT PRTL_ATOM Atom)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
@@ -189,19 +185,24 @@ RtlLookupAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
 
 
 NTSTATUS STDCALL
-RtlPinAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-		       IN PRTL_ATOM Atom)
+RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+		      IN PRTL_ATOM Atom)
 {
    UNIMPLEMENTED;
    return STATUS_SUCCESS;
 }
 
 
-/*
 NTSTATUS STDCALL
-RtlQueryAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
-			 IN RTL_ATOM Atom,
-*/
-
+RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
+			IN PRTL_ATOM Atom,
+			IN ULONG Unknown3,
+			IN ULONG Unknown4,
+			IN OUT PVOID Buffer,
+			IN OUT PULONG ReturnLength)
+{
+   UNIMPLEMENTED;
+   return STATUS_SUCCESS;
+}
 
 /* EOF */

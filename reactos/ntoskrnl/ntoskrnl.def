@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.98 2001/02/21 18:19:19 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.99 2001/03/01 15:36:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -668,7 +668,7 @@ RtlDeleteRegistryValue@12
 RtlDestroyAtomTable@4
 ;RtlDestroyHeap
 RtlDowncaseUnicodeString@12
-;RtlEmptyAtomTable
+RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
@@ -749,7 +749,7 @@ RtlOemToUnicodeN@20
 RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
-;RtlQueryAtomInAtomTable
+RtlQueryAtomInAtomTable@24
 RtlQueryRegistryValues@20
 ;RtlQueryTimeZoneInformation
 RtlRaiseException@4
