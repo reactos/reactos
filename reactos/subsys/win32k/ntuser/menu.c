@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.51 2004/03/09 14:03:18 gvg Exp $
+/* $Id: menu.c,v 1.52 2004/03/25 12:32:13 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -707,6 +707,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
 {
   PUNICODE_STRING Source;
   UINT copylen = 0;
+  PMENU_OBJECT SubMenuObject;
   
   if(!MenuItem || !MenuObject || !lpmii)
   {
@@ -749,6 +750,16 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
   if(lpmii->fMask & MIIM_SUBMENU)
   {
     MenuItem->hSubMenu = lpmii->hSubMenu;
+    /* Make sure the submenu is marked as a popup menu */
+    if (0 != (MenuItem->fType & MF_POPUP))
+    {
+      SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu);
+      if (NULL != SubMenuObject)
+      {
+        SubMenuObject->MenuInfo.Flags |= MF_POPUP;
+        IntReleaseMenuObject(SubMenuObject);
+      }
+    }
   }
   if((lpmii->fMask & (MIIM_TYPE | MIIM_STRING)) && 
            (MENU_ITEM_TYPE(lpmii->fType) == MF_STRING))
