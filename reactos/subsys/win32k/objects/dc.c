@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.13 2000/03/17 21:02:59 jfilby Exp $
+/* $Id: dc.c,v 1.14 2000/04/01 12:31:29 jfilby Exp $
  *
  * DC.C - Device context functions
  * 
@@ -17,6 +17,26 @@
 
 // #define NDEBUG
 #include <internal/debug.h>
+
+void TestEngXxx(PDC Dc)
+{
+  BRUSHOBJ brushobj;
+  SURFOBJ  *SurfObj;
+
+DbgPrint("testing.. ");
+  brushobj.iSolidColor = 1;
+  SurfObj = AccessUserObject(Dc->Surface);
+
+  /* Diagonals */
+  EngLineTo(SurfObj, NULL, &brushobj, 0, 0, 639, 479, NULL, NULL);
+  EngLineTo(SurfObj, NULL, &brushobj, 639, 0, 0, 479, NULL, NULL);
+
+  /* Border */
+  EngLineTo(SurfObj, NULL, &brushobj, 0,   0, 639, 0,   NULL, NULL);
+  EngLineTo(SurfObj, NULL, &brushobj, 639, 0, 639, 479, NULL, NULL);
+  EngLineTo(SurfObj, NULL, &brushobj, 639, 479, 0, 479, NULL, NULL);
+  EngLineTo(SurfObj, NULL, &brushobj, 0, 479,   0,   0, NULL, NULL);
+}
 
 /* FIXME: DCs should probably be thread safe  */
 
@@ -251,7 +271,10 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   DRIVER_ReferenceDriver (Driver);
 
   /*  Enable the drawing surface  */
-  NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev);
+  NewDC->Surface = NewDC->DriverFunctions.EnableSurface(NewDC->PDev); // hsurf
+
+  /* Test EngXxx functions */
+  TestEngXxx(NewDC);
 
   /*  Initialize the DC state  */
   DC_InitDC(NewDC);

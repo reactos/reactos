@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2000/03/17 21:02:57 jfilby Exp $
+# $Id: makefile,v 1.3 2000/04/01 12:31:28 jfilby Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
@@ -19,7 +19,7 @@ endif
 all: $(DLLTARGET)
 
 MAIN_OBJECTS = main/enable.o
-OTHER_OBJECTS = objects/screen.o
+OTHER_OBJECTS = objects/screen.o objects/lineto.o vgavideo/vgavideo.o
 RESOURCE_OBJECTS = $(TARGET).coff
 
 OBJECTS = $(MAIN_OBJECTS) $(OTHER_OBJECTS) $(RESOURCE_OBJECTS)

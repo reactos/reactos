@@ -1,13 +1,14 @@
 /*
  * entry.c
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: jfilby $
- * $Date: 2000/03/17 21:02:57 $
+ * $Date: 2000/04/01 12:31:28 $
  *
  */
 
 #include "gdiinfo.h"
+#include "..\vgavideo\vgavideo.h"
 #include <internal/debug.h>
 
 #define  DBG_PREFIX  "VGADDI: "
@@ -33,6 +34,9 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev);
 ULONG VGADDIGetModes(IN HANDLE Driver,
                      IN ULONG DataSize,
                      OUT PDEVMODEW DM);
+BOOL VGADDILineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
+                  LONG x1, LONG y1, LONG x2, LONG y2,
+                  RECTL *RectBounds, MIX mix);
 
 DRVFN FuncList[] =
 {
@@ -44,6 +48,7 @@ DRVFN FuncList[] =
   {INDEX_DrvEnablePDEV, (PFN) VGADDIEnablePDEV},
   {INDEX_DrvEnableSurface, (PFN) VGADDIEnableSurface},
   {INDEX_DrvGetModes, (PFN) VGADDIGetModes},
+  {INDEX_DrvLineTo, (PFN) VGADDILineTo},
 
 #if 0
   /*  Optional Display driver functions  */
@@ -84,6 +89,10 @@ DrvEnableDriver(IN ULONG  EngineVersion,
                 OUT PDRVENABLEDATA  DriveEnableData)
 {
   EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0);
+
+  vgaPreCalc();
+  // FIXME: Use Vidport to map the memory properly
+  vidmem = (char *)(0xd0000000 + 0xa0000);
 
   DriveEnableData->pdrvfn = FuncList;
   DriveEnableData->c = sizeof(FuncList) / sizeof(DRVFN);
@@ -324,6 +333,8 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
   DHSURF dhsurf;
   HSURF hsurf;
 
+  DbgPrint("DrvEnableSurface..\n");
+
   // Initialize the VGA
   if (!InitVGA(ppdev, TRUE))
   {
@@ -361,6 +372,8 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
       goto error_clean;
    } BANKING CODE UNIMPLEMENTED */
 
+  DbgPrint("Calling EngCreateDeviceSurface..\n");
+
   if ((hsurf = EngCreateDeviceSurface(dhsurf, ppdev->sizeSurf, BMF_4BPP)) ==
       (HSURF)0)
   {
@@ -368,8 +381,9 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
     EngDebugPrint("VGADDI:", "EngCreateDeviceSurface call failed\n", 0);
     goto error_clean;
   }
-
+DbgPrint("init saved bits.. ");
   InitSavedBits(ppdev);
+DbgPrint("successful\n");
 
   if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO))
   {

@@ -1,6 +1,3 @@
-#include <ddk/ntddk.h>
-#include <ddk/ntddvid.h>
-
 #define VGA_NORMAL 0
 #define VGA_AND    8
 #define VGA_OR     16
@@ -24,9 +21,9 @@ typedef struct _VideoMode {
   unsigned short VidSeg;
   unsigned char  Misc;
   unsigned char  Feature;
-  unsigned short Seq[6];
-  unsigned short Crtc[25];
-  unsigned short Gfx[9];
+  unsigned char  Seq[5];
+  unsigned char  Crtc[25];
+  unsigned char  Gfx[9];
   unsigned char  Attrib[21];
 } VideoMode;
 

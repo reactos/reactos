@@ -2,15 +2,17 @@
 
 #include "vgaVideo.h"
 
-void outxay(unsigned short ad, unsigned char x, unsigned char y)
+void outxay(USHORT ad, UCHAR x, UCHAR y)
 {
-  unsigned short xy = (x << 8) + y;
-  VideoPortWritePortUshort(ad, xy);
+  USHORT xy = (x << 8) + y;
+
+  VideoPortWritePortUshort((PUSHORT)ad, xy);
 }
 
 void setMode(VideoMode mode)
 {
   unsigned char x;
+  unsigned int y, c, a, m, n;
 
   VideoPortWritePortUchar((PUCHAR)MISC, mode.Misc);
   VideoPortWritePortUchar((PUCHAR)STATUS, 0);
@@ -21,8 +23,8 @@ void setMode(VideoMode mode)
     outxay(SEQ, mode.Seq[x], x);
   }
 
-  VideoPortWritePortUshort((USHORT)CRTC, 0x11);
-  VideoPortWritePortUshort((USHORT)CRTC, (mode.Crtc[0x11] & 0x7f));
+  VideoPortWritePortUshort((PUSHORT)CRTC, 0x11);
+  VideoPortWritePortUshort((PUSHORT)CRTC, (mode.Crtc[0x11] & 0x7f));
 
   for(x=0; x<25; x++)
   {
@@ -34,7 +36,7 @@ void setMode(VideoMode mode)
     outxay(GRAPHICS, mode.Gfx[x], x);
   }
 
-  x=VideoPortReadPortUchar(FEATURE);
+  x=VideoPortReadPortUchar((PUCHAR)FEATURE);
 
   for(x=0; x<21; x++)
   {
@@ -42,15 +44,15 @@ void setMode(VideoMode mode)
     VideoPortWritePortUchar((PUCHAR)ATTRIB, mode.Attrib[x]);
   }
 
-  x=VideoPortReadPortUchar(STATUS);
+  x=VideoPortReadPortUchar((PUCHAR)STATUS);
 
-  VideoPortWritePortUchar(ATTRIB, 0x20);
+  VideoPortWritePortUchar((PUCHAR)ATTRIB, 0x20);
 }
 
 VideoMode Mode12 = {
-    0xa000, 0xe3, 0x00,
+    0xa000, /* 0xe3, */ 0xc3, 0x00,
 
-    {0x02, 0x01, 0x0f, 0x00, 0x06},
+    {0x02, 0x01, 0x0f, 0x00, 0x06 },
 
     {0x5f, 0x4f, 0x50, 0x82, 0x54, 0x80, 0x0b, 0x3e, 0x00, 0x40, 0x00, 0x00,
      0x00, 0x00, 0x00, 0x59, 0xea, 0x8c, 0xdf, 0x28, 0x00, 0xe7, 0x04, 0xe3,
@@ -77,26 +79,19 @@ VideoMode Mode13 = {
      0x0c, 0x0d, 0x0e, 0x0f, 0x41, 0x00, 0x0f, 0x00, 0x00}
 };
 
-void myvgaPutPixel(int x, int y, unsigned char c)
-{
-  unsigned offset;
-  unsigned char a;
-
-  offset = xconv[x]+y80[y];
-
-  VideoPortWritePortUchar((PUCHAR)0x3ce,0x08);               // Set
-  VideoPortWritePortUchar((PUCHAR)0x3cf,maskbit[x]);         // the MASK
-  VideoPortWritePortUshort((PUSHORT)0x3ce,0x0205);            // write mode = 2 (bits 0,1)
-                                      // read mode = 0  (bit 3
-  a = vidmem[offset];                 // Update bit buffer
-  vidmem[offset] = c;                 // Write the pixel
-}
-
 void InitVGAMode()
 {
-//   vidmem += __djgpp_conventional_base;
+   int i;
+
+   // FIXME: Use Vidport to map the memory properly
+   vidmem = (char *)(0xd0000000 + 0xa0000);
 
    setMode(Mode12);
-   RtlZeroMemory(vidmem, 38400);
+
+   WRITE_PORT_USHORT((PUSHORT)0x3C4, 0x0f02); // index=MASK MAP, write to all bitplanes
+   i = vidmem[0];
+//   RtlZeroMemory(vidmem, 38400);
+   RtlZeroMemory(vidmem, 64000);
+
    vgaPreCalc();
 }

@@ -9,6 +9,7 @@
  */
 
 #include <ddk/winddi.h>
+#include <win32k/dc.h>
 #include "objects.h"
 
 BYTE bytesPerPixel(ULONG Format)
@@ -62,6 +63,7 @@ HBITMAP EngCreateDeviceBitmap(DHSURF dhsurf, SIZEL Size, ULONG Format)
    NewBitmap = CreateGDIHandle(SurfGDI, SurfObj);
 
    InitializeHooks(SurfGDI);
+
    SurfGDI->BytesPerPixel = bytesPerPixel(Format);
 
    SurfObj->dhsurf = dhsurf;
@@ -138,6 +140,7 @@ HSURF EngCreateDeviceSurface(DHSURF dhsurf, SIZEL Size, ULONG Format)
    NewSurface = CreateGDIHandle(SurfGDI, SurfObj);
 
    InitializeHooks(SurfGDI);
+
    SurfGDI->BytesPerPixel = bytesPerPixel(Format);
 
    SurfObj->dhsurf = dhsurf;
@@ -167,39 +170,33 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
    SURFOBJ *SurfObj;
    SURFGDI *SurfGDI;
 
-   DRVENABLEDATA *DED;
+// it looks like this Dev is actually a pointer to the DC!
+   PDC Dc = (PDC)Dev;
+
+//   DRVENABLEDATA *DED;
 
    SurfGDI = AccessInternalObject(Surface);
    SurfObj = AccessUserObject(Surface);
 
-   DED = AccessInternalObject(Dev);
+//   DED = AccessInternalObject(Dev);
 
    // Associate the hdev
    SurfObj->hdev = Dev;
 
    // Hook up specified functions
-   if(Hooks & HOOK_BITBLT)
-      SurfGDI->BitBlt = DriverFunction(DED, INDEX_DrvBitBlt);
-   if(Hooks & HOOK_STRETCHBLT)
-      SurfGDI->StretchBlt = DriverFunction(DED, INDEX_DrvStretchBlt);
-   if(Hooks & HOOK_TEXTOUT)
-      SurfGDI->TextOut = DriverFunction(DED, INDEX_DrvTextOut);
-   if(Hooks & HOOK_PAINT)
-      SurfGDI->Paint = DriverFunction(DED, INDEX_DrvPaint);
-   if(Hooks & HOOK_STROKEPATH)
-      SurfGDI->StrokePath = DriverFunction(DED, INDEX_DrvStrokePath);
-   if(Hooks & HOOK_FILLPATH)
-      SurfGDI->FillPath = DriverFunction(DED, INDEX_DrvFillPath);
-   if(Hooks & HOOK_STROKEANDFILLPATH)
-      SurfGDI->StrokeAndFillPath = DriverFunction(DED, INDEX_DrvStrokeAndFillPath);
-   if(Hooks & HOOK_LINETO)
-      SurfGDI->LineTo = DriverFunction(DED, INDEX_DrvLineTo);
-   if(Hooks & HOOK_COPYBITS)
-      SurfGDI->CopyBits = DriverFunction(DED, INDEX_DrvCopyBits);
-   if(Hooks & HOOK_SYNCHRONIZE)
-      SurfGDI->Synchronize = DriverFunction(DED, INDEX_DrvSynchronize);
-   if(Hooks & HOOK_SYNCHRONIZEACCESS)
-      SurfGDI->SynchronizeAccess = TRUE;
+   if(Hooks & HOOK_BITBLT)            SurfGDI->BitBlt            = Dc->DriverFunctions.BitBlt;
+   if(Hooks & HOOK_STRETCHBLT)        SurfGDI->StretchBlt        = Dc->DriverFunctions.StretchBlt;
+   if(Hooks & HOOK_TEXTOUT)           SurfGDI->TextOut           = Dc->DriverFunctions.TextOut;
+   if(Hooks & HOOK_PAINT)             SurfGDI->Paint             = Dc->DriverFunctions.Paint;
+   if(Hooks & HOOK_STROKEPATH)        SurfGDI->StrokePath        = Dc->DriverFunctions.StrokePath;
+   if(Hooks & HOOK_FILLPATH)          SurfGDI->FillPath          = Dc->DriverFunctions.FillPath;
+   if(Hooks & HOOK_STROKEANDFILLPATH) SurfGDI->StrokeAndFillPath = Dc->DriverFunctions.StrokeAndFillPath;
+   if(Hooks & HOOK_LINETO) {           SurfGDI->LineTo            = Dc->DriverFunctions.LineTo;
+DbgPrint("associating LineTo is now %08x\n", SurfGDI->LineTo);
+}
+   if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Dc->DriverFunctions.CopyBits;
+   if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Dc->DriverFunctions.Synchronize;
+   if(Hooks & HOOK_SYNCHRONIZEACCESS) SurfGDI->SynchronizeAccess = TRUE;
 
    return TRUE;
 }

@@ -109,6 +109,8 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
    VIDEO_MEMORY VideoMemory;
    VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
 
+char* vidmem;
+
    ppdev->ModeNum = 12;
 
    // Set the mode that was requested
@@ -144,8 +146,11 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
       return(FALSE);
    }
 
-   if (bFirst) {
+/*
 
+gotta fix this up.. it prevents drawing to vidmem right now
+
+    if (bFirst) {
       // map video memory into virtual memory
       VideoMemory.RequestedVirtualAddress = NULL;
 
@@ -162,6 +167,6 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst)
 
       ppdev->fbScreen = VideoMemoryInfo.FrameBufferBase;
    }
-
+*/
    return TRUE;
 }
