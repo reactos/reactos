@@ -108,7 +108,7 @@ LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut)
 HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
 				  LPITEMIDLIST * pidlInOut, LPOLESTR szNext, DWORD * pEaten, DWORD * pdwAttributes)
 {
-    HRESULT hr = E_OUTOFMEMORY;
+    HRESULT hr = E_INVALIDARG;
     LPITEMIDLIST pidlOut = NULL,
       pidlTemp = NULL;
     IShellFolder *psfChild;
@@ -123,6 +123,9 @@ HRESULT SHELL32_ParseNextElement (IShellFolder2 * psf, HWND hwndOwner, LPBC pbc,
 	IShellFolder_Release (psfChild);
 
 	pidlTemp = ILCombine (*pidlInOut, pidlOut);
+
+	if (!pidlTemp)
+	    hr = E_OUTOFMEMORY;
 
 	if (pidlOut)
 	    ILFree (pidlOut);
@@ -159,6 +162,9 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,
 	    IPersistFolder_Initialize (pPF, pidlAbsolute);
 	    IPersistFolder_Release (pPF);
 	    SHFree (pidlAbsolute);
+
+	    if (!pidlAbsolute)
+		hr = E_OUTOFMEMORY;
 	}
     }
 
@@ -293,7 +299,7 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
 				       LPCITEMIDLIST pidl, DWORD dwFlags, LPSTR szOut, DWORD dwOutLen)
 {
     LPITEMIDLIST pidlFirst;
-    HRESULT hr = E_OUTOFMEMORY;
+    HRESULT hr = E_INVALIDARG;
 
     TRACE ("(%p)->(pidl=%p 0x%08lx %p 0x%08lx)\n", psf, pidl, dwFlags, szOut, dwOutLen);
     pdump (pidl);
@@ -314,7 +320,8 @@ HRESULT SHELL32_GetDisplayNameOfChild (IShellFolder2 * psf,
 	    IShellFolder_Release (psfChild);
 	}
 	ILFree (pidlFirst);
-    }
+    } else
+	hr = E_OUTOFMEMORY;
 
     TRACE ("-- ret=0x%08lx %s\n", hr, szOut);
 

@@ -325,7 +325,7 @@ IShellFolder_fnParseDisplayName (IShellFolder2 * iface,
 {
     _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
 
-    HRESULT hr = E_OUTOFMEMORY;
+    HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
     WCHAR szElement[MAX_PATH];
     CHAR szPath[MAX_PATH];
