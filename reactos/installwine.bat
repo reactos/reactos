@@ -15,8 +15,8 @@ set WINE_TESTS_INSTALL=%ROS_INSTALL%\tests
 
 :Install
 echo Installing libwine and wine_unicode to %WINE_INSTALL%
-copy ..\wine\library\libwine.dll %WINE_INSTALL%
-copy ..\wine\unicode\wine_unicode.dll %WINE_INSTALL%
+copy ..\wine\libs\wine\libwine.dll %WINE_INSTALL%
+copy ..\wine\libs\unicode\wine_unicode.dll %WINE_INSTALL%
 
 
 echo Installing dlls to %WINE_INSTALL%
@@ -73,8 +73,21 @@ REM
 echo Installing Regression tests to %WINE_TESTS_INSTALL%
 REM
 copy ..\wine\dlls\advapi32\tests\advapi32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\comctl32\tests\comctl32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\dsound\tests\dsound_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\gdi\tests\gdi32_test.exe		%WINE_TESTS_INSTALL%
 copy ..\wine\dlls\kernel\tests\kernel32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\msvcrt\tests\msvcrt_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\netapi\tests\netapi_test.exe		%WINE_TESTS_INSTALL%
 copy ..\wine\dlls\ntdll\tests\ntdll_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\oleaut32\tests\oleaut32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\shlwapi\tests\shlwapi_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\urlmon\tests\urlmon_test.exe		%WINE_TESTS_INSTALL%
 copy ..\wine\dlls\user32\tests\user32_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\wininet\tests\wininet_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\winmm\tests\winmm_test.exe		%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\winsock\tests\ws_2_32_test.exe	%WINE_TESTS_INSTALL%
+copy ..\wine\dlls\winspool\tests\winspool_test.exe	%WINE_TESTS_INSTALL%
+
 REM
 pause
