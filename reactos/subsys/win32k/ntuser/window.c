@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.123 2003/10/28 22:46:30 navaraf Exp $
+/* $Id: window.c,v 1.124 2003/10/29 08:49:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -851,81 +851,103 @@ IntSetFocusWindow(HWND hWnd)
 }
 
 
-PWINDOW_OBJECT FASTCALL
-IntSetOwner(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewOwner)
+HWND FASTCALL
+IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 {
-    HWND ret = Wnd->hWndOwner;
-    Wnd->hWndOwner = WndNewOwner;
-    return ret;
+  PWINDOW_OBJECT Wnd;
+  HWND ret;
+  
+  Wnd = IntGetWindowObject(hWnd);
+  ret = Wnd->hWndOwner;
+  Wnd->hWndOwner = hWndNewOwner;
+  IntReleaseWindowObject(Wnd);
+  return ret;
 }
 
 PWINDOW_OBJECT FASTCALL
 IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 {
-  PWINDOW_OBJECT WndOldParent;
-  BOOL was_visible;
-  HWND hWnd, hWndNewParent, hWndOldParent;
+   PWINDOW_OBJECT WndOldParent, TempWnd;
+   HWND hWnd, hWndNewParent, hWndOldParent;
+   BOOL WasVisible, ReleaseNewParent = FALSE;
 
-  if (Wnd->Self == IntGetDesktopWindow())
-  {
-    SetLastWin32Error(STATUS_ACCESS_DENIED);
-    return NULL;
-  }
+   if (!WndNewParent)
+   {
+      WndNewParent = IntGetWindowObject(IntGetDesktopWindow());
+      ReleaseNewParent = TRUE;
+   }
 
-  if (!WndNewParent) WndNewParent = IntGetWindowObject(IntGetDesktopWindow());
+   hWnd = Wnd->Self;
+   hWndNewParent = WndNewParent->Self;
 
-  hWnd = Wnd;
-  hWndNewParent = WndNewParent;
+   /*
+    * Windows hides the window first, then shows it again
+    * including the WM_SHOWWINDOW messages and all
+    */
+   WasVisible = WinPosShowWindow(hWnd, SW_HIDE);
 
-#if 0
-  if (!(full_handle = WIN_IsCurrentThread( hwnd )))
-    return (HWND)SendMessageW( hwnd, WM_WINE_SETPARENT, (WPARAM)parent, 0 );
+   /* Validate that window and parent still exist */
+   if (!(TempWnd = IntGetWindowObject(hWnd)))
+      return NULL;
+   else
+      IntReleaseWindowObject(TempWnd);
 
-  if (USER_Driver.pSetParent)
-    return USER_Driver.pSetParent( hwnd, parent );
-#endif
+   if (!(TempWnd = IntGetWindowObject(hWndNewParent)))
+      return NULL;
+   else
+      IntReleaseWindowObject(TempWnd);
 
-  /* Windows hides the window first, then shows it again
-   * including the WM_SHOWWINDOW messages and all */
-  was_visible = WinPosShowWindow( hWnd, SW_HIDE );
+   /* Window must belong to current process */
+   if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+      return NULL;
 
-  /* validate that window and parent still exist */
-  if (!IntGetWindowObject(hWnd) || !IntGetWindowObject(hWndNewParent)) return NULL;
+   WndOldParent = Wnd->Parent;
+   hWndOldParent = WndOldParent->Self;
 
-  /* window must belong to current process */
-  if (Wnd->OwnerThread->ThreadsProcess != PsGetCurrentProcess()) return NULL;
+   if (WndNewParent != WndOldParent)
+   {
+      IntUnlinkWindow(Wnd);
+      IntLinkWindow(Wnd, WndNewParent, NULL /*prev sibling*/);
 
-  WndOldParent = Wnd->Parent;
-  hWndOldParent =  WndOldParent->Self;
-
-  if (WndNewParent != WndOldParent)
-  {
-    IntUnlinkWindow(Wnd);
-    IntLinkWindow(Wnd, WndNewParent, NULL /*prev sibling*/);
-
-    if (WndNewParent->Self != IntGetDesktopWindow()) /* a child window */
-    {
-      if (!(Wnd->Style & WS_CHILD))
+      if (WndNewParent->Self != IntGetDesktopWindow()) /* a child window */
       {
-        //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
-        Wnd->IDMenu = 0;
+         if (!(Wnd->Style & WS_CHILD))
+         {
+            //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
+            Wnd->IDMenu = 0;
+         }
       }
-    }
-  }
+   }
 
-  /* SetParent additionally needs to make hwnd the topmost window
-       in the x-order and send the expected WM_WINDOWPOSCHANGING and
-       WM_WINDOWPOSCHANGED notification messages.
-   */
-  WinPosSetWindowPos( hWnd, HWND_TOPMOST, 0, 0, 0, 0,
-                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | (was_visible ? SWP_SHOWWINDOW : 0) );
-  /* FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
-   * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE */
+   /*
+    * SetParent additionally needs to make hwnd the topmost window
+    * in the x-order and send the expected WM_WINDOWPOSCHANGING and
+    * WM_WINDOWPOSCHANGED notification messages.
+    */
+   WinPosSetWindowPos(hWnd, HWND_TOPMOST, 0, 0, 0, 0,
+      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | (WasVisible ? SWP_SHOWWINDOW : 0));
+
+   /*
+    * FIXME: a WM_MOVE is also generated (in the DefWindowProc handler
+    * for WM_WINDOWPOSCHANGED) in Windows, should probably remove SWP_NOMOVE
+    */
   
-  /* validate that the old parent still exist, since it migth have been destroyed
-     during the last callbacks to user-mode 
-   */
-  return (IntGetWindowObject(hWndOldParent) ? WndOldParent : NULL);
+   if (ReleaseNewParent)
+   {
+      IntReleaseWindowObject(WndNewParent);
+   }
+   
+   /*
+    * Validate that the old parent still exist, since it migth have been
+    * destroyed during the last callbacks to user-mode 
+    */
+
+   if (!(TempWnd = IntGetWindowObject(hWndOldParent)))
+      return NULL;
+   else
+      IntReleaseWindowObject(TempWnd);
+    
+   return WndOldParent;
 }
 
 
@@ -2862,6 +2884,12 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
     return NULL;
   }
   
+  if (hWndChild == IntGetDesktopWindow())
+  {
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    return NULL;
+  }
+
   IntAcquireWinLockExclusive();
   if (hWndNewParent)
   {
@@ -2873,7 +2901,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
     }
   }
 
-  if (!(Wnd = IntGetWindowObject(hWndNewParent)))
+  if (!(Wnd = IntGetWindowObject(hWndChild)))
   {
     IntReleaseWinLock();
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -3063,11 +3091,11 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	case GWL_HWNDPARENT:
 	  if (WindowObject->ParentHandle == IntGetDesktopWindow())
 	  {
-		OldValue = (LONG) IntSetOwner(WindowObject, (HWND) NewValue);
+		OldValue = (LONG) IntSetOwner(WindowObject->Self, (HWND) NewValue);
 	  }
 	  else
 	  {
-		OldValue = (LONG) IntSetParent(WindowObject, (HWND) NewValue);
+		OldValue = (LONG) NtUserSetParent(WindowObject->Self, (HWND) NewValue);
 	  }
 	  break;
 
