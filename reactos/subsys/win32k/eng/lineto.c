@@ -2,9 +2,20 @@
 #include "objects.h"
 #include "../dib/dib.h"
 
-BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
-               LONG x1, LONG y1, LONG x2, LONG y2,
-               RECTL *RectBounds, MIX mix)
+#include <include/mouse.h>
+#include <include/object.h>
+#include <include/surface.h>
+
+BOOL STDCALL
+EngLineTo(SURFOBJ *Surface,
+	  CLIPOBJ *Clip,
+	  BRUSHOBJ *Brush,
+	  LONG x1,
+	  LONG y1,
+	  LONG x2,
+	  LONG y2,
+	  RECTL *RectBounds,
+	  MIX mix)
 {
   BOOLEAN ret;
   SURFGDI *SurfGDI;

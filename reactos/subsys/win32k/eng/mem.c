@@ -11,7 +11,10 @@
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 
-PVOID STDCALL EngAllocMem(ULONG Flags, ULONG MemSize, ULONG Tag)
+PVOID STDCALL
+EngAllocMem(ULONG Flags,
+	    ULONG MemSize,
+	    ULONG Tag)
 {
   PVOID newMem;
 
@@ -25,12 +28,14 @@ PVOID STDCALL EngAllocMem(ULONG Flags, ULONG MemSize, ULONG Tag)
   return newMem;
 }
 
-VOID STDCALL EngFreeMem(PVOID Mem)
+VOID STDCALL
+EngFreeMem(PVOID Mem)
 {
   ExFreePool(Mem);
 }
 
-PVOID STDCALL EngAllocUserMem(ULONG cj, ULONG tag)
+PVOID STDCALL
+EngAllocUserMem(ULONG cj, ULONG tag)
 {
 /*  PVOID newMem;
 
@@ -40,7 +45,8 @@ PVOID STDCALL EngAllocUserMem(ULONG cj, ULONG tag)
   return NULL;
 }
 
-VOID STDCALL EngFreeUserMem(PVOID pv)
+VOID STDCALL
+EngFreeUserMem(PVOID pv)
 {
 /*  ZwFreeVirtualMemory (mycurrentprocess, pv, 0, MEM_DECOMMIT); */
 }

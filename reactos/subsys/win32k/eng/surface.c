@@ -14,6 +14,9 @@
 
 #include <ddk/winddi.h>
 #include <win32k/dc.h>
+#include <include/dib.h>
+#include <include/object.h>
+#include <include/paint.h>
 #include "objects.h"
 
 INT BitsPerFormat(ULONG Format)
@@ -63,23 +66,27 @@ VOID InitializeHooks(SURFGDI *SurfGDI)
   SurfGDI->TransparentBlt = NULL;
 }
 
-HBITMAP EngCreateDeviceBitmap(DHSURF dhsurf, SIZEL Size, ULONG Format)
+HBITMAP STDCALL
+EngCreateDeviceBitmap(IN DHSURF dhsurf,
+		      IN SIZEL Size,
+		      IN ULONG Format)
 {
   HBITMAP NewBitmap;
   SURFOBJ *SurfObj;
 
   NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
-  SurfObj = (PVOID)AccessUserObject(NewBitmap);
+  SurfObj = (PVOID)AccessUserObject((ULONG)NewBitmap);
   SurfObj->dhpdev = dhsurf;
 
   return NewBitmap;
 }
 
-HBITMAP EngCreateBitmap(IN SIZEL  Size,
-                        IN LONG  Width,
-                        IN ULONG  Format,
-                        IN ULONG  Flags,
-                        IN PVOID  Bits)
+HBITMAP STDCALL
+EngCreateBitmap(IN SIZEL Size,
+		IN LONG Width,
+		IN ULONG Format,
+		IN ULONG Flags,
+		IN PVOID Bits)
 {
   HBITMAP NewBitmap;
   SURFOBJ *SurfObj;
@@ -125,7 +132,10 @@ HBITMAP EngCreateBitmap(IN SIZEL  Size,
   return NewBitmap;
 }
 
-HSURF EngCreateDeviceSurface(DHSURF dhsurf, SIZEL Size, ULONG Format)
+HSURF STDCALL
+EngCreateDeviceSurface(IN DHSURF dhsurf,
+		       IN SIZEL Size,
+		       IN ULONG Format)
 {
   HSURF   NewSurface;
   SURFOBJ *SurfObj;
@@ -161,15 +171,18 @@ PFN DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
   return NULL;
 }
 
-BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
+BOOL STDCALL
+EngAssociateSurface(IN HSURF Surface,
+		    IN HDEV Dev,
+		    IN ULONG Hooks)
 {
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
   PDC Dc = (PDC)Dev;
 
-  SurfGDI = (PVOID)AccessInternalObject(Surface);
-  SurfObj = (PVOID)AccessUserObject(Surface);
+  SurfGDI = (PVOID)AccessInternalObject((ULONG)Surface);
+  SurfObj = (PVOID)AccessUserObject((ULONG)Surface);
 
   // Associate the hdev
   SurfObj->hdev = Dev;
@@ -196,23 +209,33 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
   return TRUE;
 }
 
-BOOL EngDeleteSurface(HSURF Surface)
+BOOL STDCALL
+EngDeleteSurface(IN HSURF Surface)
 {
   SURFOBJ *SurfObj;
   SURFGDI *SurfGDI;
 
-  SurfGDI = (SURFGDI*)AccessInternalObject(Surface);
-  SurfObj = (SURFOBJ*)AccessUserObject(Surface);
+  SurfGDI = (SURFGDI*)AccessInternalObject((ULONG)Surface);
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG)Surface);
 
   EngFreeMem(SurfGDI);
   EngFreeMem(SurfObj);
-  FreeGDIHandle(Surface);
+  FreeGDIHandle((ULONG)Surface);
 
   return TRUE;
 }
 
-SURFOBJ *EngLockSurface(HSURF Surface)
+BOOL STDCALL
+EngEraseSurface(SURFOBJ *Surface,
+		RECTL *Rect,
+		ULONG iColor)
+{
+  return FillSolid(Surface, Rect, iColor);
+}
+
+SURFOBJ * STDCALL
+EngLockSurface(IN HSURF Surface)
 {
   // FIXME: Call GDI_LockObject (see subsys/win32k/objects/gdi.c)
-  return (SURFOBJ*)AccessUserObject(Surface);
+  return (SURFOBJ*)AccessUserObject((ULONG)Surface);
 }

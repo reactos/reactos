@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.5 2001/03/20 15:06:22 ekohl Exp $
+; $Id: win32k.edf,v 1.6 2002/06/15 21:40:41 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -7,44 +7,43 @@
 LIBRARY win32k
 EXPORTS
 ;W32kGetVectors
-BRUSHOBJ_pvAllocRbrush
-BRUSHOBJ_pvGetRbrush
+BRUSHOBJ_pvAllocRbrush=BRUSHOBJ_pvAllocRbrush@8
+BRUSHOBJ_pvGetRbrush=BRUSHOBJ_pvGetRbrush@4
 BRUSHOBJ_ulGetBrushColor
-CLIPOBJ_bEnum
-CLIPOBJ_cEnumStart
+CLIPOBJ_bEnum=CLIPOBJ_bEnum@12
+CLIPOBJ_cEnumStart=CLIPOBJ_cEnumStart@20
 CLIPOBJ_ppoGetPath
 EngAcquireSemaphore
 EngAllocMem=EngAllocMem@12
 EngAllocUserMem=EngAllocUserMem@8
-EngAssociateSurface
-EngBitBlt
+EngAssociateSurface=EngAssociateSurface@12
+EngBitBlt=EngBitBlt@44
 EngCheckAbort
 EngComputeGlyphSet
-EngCopyBits
-EngCreateBitmap
-EngCreateClip
-EngCreateDeviceBitmap
-EngCreateDeviceSurface
+EngCopyBits=EngCopyBits@24
+EngCreateBitmap=EngCreateBitmap@24
+EngCreateClip=EngCreateClip@0
+EngCreateDeviceBitmap=EngCreateDeviceBitmap@16
+EngCreateDeviceSurface=EngCreateDeviceSurface@16
 EngCreateDriverObj
 EngCreateEvent
-EngCreatePalette
+EngCreatePalette=EngCreatePalette@24
 EngCreatePath
 EngCreateSemaphore
 EngCreateWnd
-; EngDebugBreak = NTOSKRNL.DbgBreakPoint
-EngDebugBreak
+EngDebugBreak=NTOSKRNL.DbgBreakPoint
 EngDebugPrint=EngDebugPrint@12
-EngDeleteClip
+EngDeleteClip=EngDeleteClip@4
 EngDeleteDriverObj
 EngDeleteEvent
-EngDeletePalette
+EngDeletePalette=EngDeletePalette@4
 EngDeletePath
 EngDeleteSemaphore
-EngDeleteSurface
+EngDeleteSurface=EngDeleteSurface@4
 EngDeleteWnd
 EngDeviceIoControl=EngDeviceIoControl@28
 EngEnumForms
-EngEraseSurface
+EngEraseSurface=EngEraseSurface@12
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
@@ -62,12 +61,12 @@ EngGetPrinterData
 EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
-EngLineTo
+EngLineTo=EngLineTo@36
 EngLoadImage=EngLoadImage@4
 EngLoadModule=EngLoadModule@4
 EngLoadModuleForWrite
 EngLockDriverObj
-EngLockSurface
+EngLockSurface=EngLockSurface@4
 EngMapEvent
 EngMapFontFile
 EngMapModule
@@ -76,7 +75,7 @@ EngMovePointer
 EngMulDiv
 EngMultiByteToUnicodeN
 EngMultiByteToWideChar
-EngPaint
+EngPaint=EngPaint@20
 EngProbeForRead
 ; EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
 EngProbeForReadAndWrite
@@ -98,6 +97,7 @@ EngStretchBlt
 EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
+EngTransparentBlt=EngTransparentBlt@32
 EngUnicodeToMultiByteN
 EngUnloadImage
 EngUnlockDriverObj
@@ -144,7 +144,7 @@ FONTOBJ_pxoGetXform
 FONTOBJ_vGetInfo
 HT_ComputeRGBGammaTable
 HT_Get8BPPFormatPalette
-PALOBJ_cGetColors
+PALOBJ_cGetColors=PALOBJ_cGetColors@16
 PATHOBJ_bCloseFigure
 PATHOBJ_bEnum
 PATHOBJ_bEnumClipLines
@@ -154,14 +154,14 @@ PATHOBJ_bPolyLineTo
 PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
 PATHOBJ_vGetBounds
-RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
-RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
-RtlRaiseException = NTOSKRNL.RtlRaiseException
-RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
-RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
-RtlUnwind = NTOSKRNL.RtlUnwind
-RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
-RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+RtlAnsiCharToUnicodeChar=NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlMultiByteToUnicodeN=NTOSKRNL.RtlMultiByteToUnicodeN
+RtlRaiseException=NTOSKRNL.RtlRaiseException
+RtlUnicodeToMultiByteN=NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize=NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnwind=NTOSKRNL.RtlUnwind
+RtlUpcaseUnicodeChar=NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN=NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
 STROBJ_bEnum
 STROBJ_dwGetCodePage
 STROBJ_vEnumStart
@@ -171,15 +171,15 @@ WNDOBJ_vSetConsumer
 XFORMOBJ_bApplyXform
 XFORMOBJ_iGetFloatObjXform
 XFORMOBJ_iGetXform
-XLATEOBJ_cGetPalette
-XLATEOBJ_iXlate
-XLATEOBJ_piVector
-; _abnormal_termination = NTOSKRNL._abnormal_termination
-_abnormal_termination
-; _except_handler2 = NTOSKRNL._except_handler2
-_except_handler2
-; _global_unwind2 = NTOSKRNL._global_unwind2
-_global_unwind2
-; _local_unwind2 = NTOSKRNL._local_unwind2
-_local_unwind2
+XLATEOBJ_cGetPalette=XLATEOBJ_cGetPalette@16
+XLATEOBJ_iXlate=XLATEOBJ_iXlate@8
+XLATEOBJ_piVector=XLATEOBJ_piVector@4
+_abnormal_termination=NTOSKRNL._abnormal_termination
+;_abnormal_termination
+_except_handler2=NTOSKRNL._except_handler2
+;_except_handler2
+_global_unwind2=NTOSKRNL._global_unwind2
+;_global_unwind2
+_local_unwind2=NTOSKRNL._local_unwind2
+;_local_unwind2
 

@@ -84,19 +84,24 @@ VOID EngIntersectClipRegion(CLIPOBJ *ClipObj, ULONG NumRects, RECTL *IntersectRe
   }
 }
 
-CLIPOBJ *EngCreateClip(VOID)
+CLIPOBJ * STDCALL
+EngCreateClip(VOID)
 {
   return EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
 }
 
-VOID EngDeleteClip(CLIPOBJ *ClipRegion)
+VOID STDCALL
+EngDeleteClip(CLIPOBJ *ClipRegion)
 {
   EngFreeMem(ClipRegion);
 }
 
-ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj, IN BOOL ShouldDoAll,
-                         IN ULONG ClipType,   IN ULONG BuildOrder,
-                         IN ULONG MaxRects)
+ULONG STDCALL
+CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
+		   IN BOOL ShouldDoAll,
+		   IN ULONG ClipType,
+		   IN ULONG BuildOrder,
+		   IN ULONG MaxRects)
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 
@@ -112,8 +117,10 @@ ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj, IN BOOL ShouldDoAll,
   return ClipGDI->EnumRects.c;
 }
 
-BOOL CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj, IN ULONG ObjSize,
-                   OUT ULONG *EnumRects)
+BOOL STDCALL
+CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
+	      IN ULONG ObjSize,
+	      OUT ULONG *EnumRects)
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
 

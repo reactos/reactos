@@ -11,14 +11,25 @@
 #include <ddk/winddi.h>
 #include <ddk/ntddk.h>
 #include <ntos/minmax.h>
+#include <include/dib.h>
+#include <include/object.h>
+#include <include/surface.h>
+
 #include "brush.h"
 #include "enum.h"
 #include "objects.h"
 
-BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
-                       PCLIPOBJ Clip, PXLATEOBJ ColorTranslation,
-                       PRECTL DestRect, PRECTL SourceRect,
-                       ULONG TransparentColor, ULONG Reserved)
+#include <include/mouse.h>
+
+BOOL STDCALL
+EngTransparentBlt(PSURFOBJ Dest,
+		  PSURFOBJ Source,
+		  PCLIPOBJ Clip,
+		  PXLATEOBJ ColorTranslation,
+		  PRECTL DestRect,
+		  PRECTL SourceRect,
+		  ULONG TransparentColor,
+		  ULONG Reserved)
 {
   PSURFGDI DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest),
            SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
@@ -55,8 +66,9 @@ BOOL EngTransparentBlt(PSURFOBJ Dest, PSURFOBJ Source,
     TempSize.cy = TempRect.bottom;
 
     hTemp = EngCreateBitmap(TempSize,
-                 DIB_GetDIBWidthBytes(dx, BitsPerFormat(Dest->iBitmapFormat)), Dest->iBitmapFormat, 0, NULL);
-    TempSurf = (PSURFOBJ)AccessUserObject(hTemp);
+			    DIB_GetDIBWidthBytes(dx, BitsPerFormat(Dest->iBitmapFormat)),
+			    Dest->iBitmapFormat, 0, NULL);
+    TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
 
     SourcePoint.x = SourceRect->left;
     SourcePoint.y = SourceRect->top;

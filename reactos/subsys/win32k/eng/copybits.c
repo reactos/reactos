@@ -51,9 +51,13 @@ BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
-BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
-                 CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
-                 RECTL *DestRect, POINTL *SourcePoint)
+BOOL STDCALL
+EngCopyBits(SURFOBJ *Dest,
+	    SURFOBJ *Source,
+	    CLIPOBJ *Clip,
+	    XLATEOBJ *ColorTranslation,
+	    RECTL *DestRect,
+	    POINTL *SourcePoint)
 {
   BOOLEAN   ret;
   SURFGDI   *DestGDI, *SourceGDI;

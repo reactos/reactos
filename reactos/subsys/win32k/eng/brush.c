@@ -10,14 +10,16 @@
 
 #include <ddk/winddi.h>
 
-PVOID BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
-                             IN ULONG  ObjSize)
+PVOID STDCALL
+BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
+		       IN ULONG  ObjSize)
 {
   BrushObj->pvRbrush=EngAllocMem(0, ObjSize, 0);
-  return BrushObj->pvRbrush;
+  return(BrushObj->pvRbrush);
 }
 
-PVOID BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj)
+PVOID STDCALL
+BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj)
 {
-  return BrushObj->pvRbrush;
+  return(BrushObj->pvRbrush);
 }

@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.12 2001/03/20 15:06:22 ekohl Exp $
+; $Id: win32k.def,v 1.13 2002/06/15 21:40:41 ekohl Exp $
 ;
 ; win32k.def
 ;
@@ -7,44 +7,43 @@
 LIBRARY win32k
 EXPORTS
 ;W32kGetVectors
-BRUSHOBJ_pvAllocRbrush
-BRUSHOBJ_pvGetRbrush
+BRUSHOBJ_pvAllocRbrush@8
+BRUSHOBJ_pvGetRbrush@4
 BRUSHOBJ_ulGetBrushColor
-CLIPOBJ_bEnum
-CLIPOBJ_cEnumStart
+CLIPOBJ_bEnum@12
+CLIPOBJ_cEnumStart@20
 CLIPOBJ_ppoGetPath
 EngAcquireSemaphore
 EngAllocMem@12
 EngAllocUserMem@8
-EngAssociateSurface
-EngBitBlt
+EngAssociateSurface@12
+EngBitBlt@44
 EngCheckAbort
 EngComputeGlyphSet
-EngCopyBits
-EngCreateBitmap
-EngCreateClip
-EngCreateDeviceBitmap
-EngCreateDeviceSurface
+EngCopyBits@24
+EngCreateBitmap@24
+EngCreateClip@0
+EngCreateDeviceBitmap@16
+EngCreateDeviceSurface@16
 EngCreateDriverObj
 EngCreateEvent
-EngCreatePalette
+EngCreatePalette@24
 EngCreatePath
 EngCreateSemaphore
 EngCreateWnd
-; EngDebugBreak = NTOSKRNL.DbgBreakPoint
-EngDebugBreak
+EngDebugBreak@0
 EngDebugPrint@12
-EngDeleteClip
+EngDeleteClip@4
 EngDeleteDriverObj
 EngDeleteEvent
-EngDeletePalette
+EngDeletePalette@4
 EngDeletePath
 EngDeleteSemaphore
-EngDeleteSurface
+EngDeleteSurface@4
 EngDeleteWnd
 EngDeviceIoControl@28
 EngEnumForms
-EngEraseSurface
+EngEraseSurface@12
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
@@ -62,12 +61,12 @@ EngGetPrinterData
 EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
-EngLineTo
+EngLineTo@36
 EngLoadImage@4
 EngLoadModule@4
 EngLoadModuleForWrite
 EngLockDriverObj
-EngLockSurface
+EngLockSurface@4
 EngMapEvent
 EngMapFontFile
 EngMapModule
@@ -76,7 +75,7 @@ EngMovePointer
 EngMulDiv
 EngMultiByteToUnicodeN
 EngMultiByteToWideChar
-EngPaint
+EngPaint@20
 EngProbeForRead
 ; EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
 EngProbeForReadAndWrite
@@ -98,6 +97,7 @@ EngStretchBlt
 EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
+EngTransparentBlt@32
 EngUnicodeToMultiByteN
 EngUnloadImage
 EngUnlockDriverObj
@@ -144,7 +144,7 @@ FONTOBJ_pxoGetXform
 FONTOBJ_vGetInfo
 HT_ComputeRGBGammaTable
 HT_Get8BPPFormatPalette
-PALOBJ_cGetColors
+PALOBJ_cGetColors@16
 PATHOBJ_bCloseFigure
 PATHOBJ_bEnum
 PATHOBJ_bEnumClipLines
@@ -171,15 +171,11 @@ WNDOBJ_vSetConsumer
 XFORMOBJ_bApplyXform
 XFORMOBJ_iGetFloatObjXform
 XFORMOBJ_iGetXform
-XLATEOBJ_cGetPalette
-XLATEOBJ_iXlate
-XLATEOBJ_piVector
-; _abnormal_termination = NTOSKRNL._abnormal_termination
+XLATEOBJ_cGetPalette@16
+XLATEOBJ_iXlate@8
+XLATEOBJ_piVector@4
 _abnormal_termination
-; _except_handler2 = NTOSKRNL._except_handler2
 _except_handler2
-; _global_unwind2 = NTOSKRNL._global_unwind2
 _global_unwind2
-; _local_unwind2 = NTOSKRNL._local_unwind2
 _local_unwind2
 

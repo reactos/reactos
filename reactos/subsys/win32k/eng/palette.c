@@ -9,14 +9,16 @@
  */
 
 #include <ddk/winddi.h>
+#include <include/object.h>
 #include "objects.h"
 
-HPALETTE EngCreatePalette(ULONG  Mode,
-                          ULONG  NumColors,
-                          PULONG *Colors, // FIXME: This was implemented with ULONG *Colors!!
-                          ULONG  Red,
-                          ULONG  Green,
-                          ULONG  Blue)
+HPALETTE STDCALL
+EngCreatePalette(ULONG Mode,
+		 ULONG NumColors,
+		 PULONG *Colors, // FIXME: This was implemented with ULONG *Colors!!
+		 ULONG Red,
+		 ULONG Green,
+		 ULONG Blue)
 {
   HPALETTE NewPalette;
   PALOBJ *PalObj;
@@ -50,23 +52,27 @@ HPALETTE EngCreatePalette(ULONG  Mode,
   return NewPalette;
 }
 
-BOOL EngDeletePalette(IN HPALETTE Palette)
+BOOL STDCALL
+EngDeletePalette(IN HPALETTE Palette)
 {
   PALOBJ *PalObj;
   PALGDI *PalGDI;
 
-  PalGDI = (PALGDI*)AccessInternalObject(Palette);
-  PalObj = (PALOBJ*)AccessUserObject(Palette);
+  PalGDI = (PALGDI*)AccessInternalObject((ULONG)Palette);
+  PalObj = (PALOBJ*)AccessUserObject((ULONG)Palette);
 
   EngFreeMem(PalGDI);
   EngFreeMem(PalObj);
-  FreeGDIHandle(Palette);
+  FreeGDIHandle((ULONG)Palette);
 
   return TRUE;
 }
 
-ULONG PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors,
-                        ULONG  *PaletteEntry)
+ULONG STDCALL
+PALOBJ_cGetColors(PALOBJ *PalObj,
+		  ULONG Start,
+		  ULONG Colors,
+		  ULONG *PaletteEntry)
 {
   ULONG i, entry;
   PALGDI *PalGDI;

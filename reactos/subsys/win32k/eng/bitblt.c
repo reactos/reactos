@@ -42,11 +42,18 @@ BOOL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 
 INT abs(INT nm);
 
-BOOL EngBitBlt(SURFOBJ *Dest, SURFOBJ *Source,
-               SURFOBJ *Mask, CLIPOBJ *ClipRegion,
-               XLATEOBJ *ColorTranslation, RECTL *DestRect,
-               POINTL *SourcePoint, POINTL *MaskRect,
-               BRUSHOBJ *Brush, POINTL *BrushOrigin, ROP4 rop4)
+BOOL STDCALL
+EngBitBlt(SURFOBJ *Dest,
+	  SURFOBJ *Source,
+	  SURFOBJ *Mask,
+	  CLIPOBJ *ClipRegion,
+	  XLATEOBJ *ColorTranslation,
+	  RECTL *DestRect,
+	  POINTL *SourcePoint,
+	  POINTL *MaskRect,
+	  BRUSHOBJ *Brush,
+	  POINTL *BrushOrigin,
+	  ROP4 rop4)
 {
   BOOLEAN   ret;
   BYTE      clippingType;

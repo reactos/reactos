@@ -9,6 +9,8 @@
  */
 
 #include <ddk/winddi.h>
+#include <include/object.h>
+#include <include/paint.h>
 #include "objects.h"
 #include "brush.h"
 #include "enum.h"
@@ -65,9 +67,12 @@ BOOL EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
   }
 }
 
-BOOL EngPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
-              IN BRUSHOBJ *Brush,  IN POINTL *BrushOrigin,
-              IN MIX  Mix)
+BOOL STDCALL
+EngPaint(IN SURFOBJ *Surface,
+	 IN CLIPOBJ *ClipRegion,
+	 IN BRUSHOBJ *Brush,
+	 IN POINTL *BrushOrigin,
+	 IN MIX  Mix)
 {
   BOOLEAN ret;
   SURFGDI *SurfGDI;
@@ -92,9 +97,4 @@ BOOL EngPaint(IN SURFOBJ *Surface, IN CLIPOBJ *ClipRegion,
   // MouseSafetyOnDrawEnd(Surface, SurfGDI);
 
   return ret;
-}
-
-BOOL EngEraseSurface(SURFOBJ *Surface, RECTL *Rect, ULONG iColor)
-{
-  return FillSolid(Surface, Rect, iColor);
 }

@@ -930,17 +930,18 @@ DrvStartDoc(IN PSURFOBJ SurfObj,
 	    IN DWORD JobID);
 BOOL STDCALL
 DrvStartPage(IN PSURFOBJ SurfObj);
-BOOL DrvStretchBlt(IN PSURFOBJ  DestSurface,
-                   IN PSURFOBJ  SrcSurface,
-                   IN PSURFOBJ  MaskSurface,
-                   IN PCLIPOBJ  ClipObj,
-                   IN PXLATEOBJ  XLateObj,
-                   IN PCOLORADJUSTMENT  CA,
-                   IN PPOINTL  HTOrg,
-                   IN PRECTL  Dest,
-                   IN PRECTL  Src,
-                   IN PPOINTL  Mask,
-                   IN ULONG  Mode);
+BOOL STDCALL
+DrvStretchBlt(IN PSURFOBJ DestSurface,
+	      IN PSURFOBJ SrcSurface,
+	      IN PSURFOBJ MaskSurface,
+	      IN PCLIPOBJ ClipObj,
+	      IN PXLATEOBJ XLateObj,
+	      IN PCOLORADJUSTMENT CA,
+	      IN PPOINTL HTOrg,
+	      IN PRECTL Dest,
+	      IN PRECTL Src,
+	      IN PPOINTL Mask,
+	      IN ULONG Mode);
 BOOL STDCALL
 DrvStrokeAndFillPath(IN PSURFOBJ SurfObj,
 		     IN PPATHOBJ PathObj,
@@ -988,18 +989,26 @@ BOOL STDCALL
 DrvUnloadFontFile(IN ULONG FileNumber);
 
 /*  DDI --> GDI calls  */
-PVOID BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj, 
-                             IN ULONG  ObjSize); 
-PVOID BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj); 
-BOOL CLIPOBJ_bEnum(IN PCLIPOBJ  ClipObj, 
-                   IN ULONG  ObjSize, 
-                   OUT ULONG  *EnumRects); 
-ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ  ClipObj, 
-                         IN BOOL  ShouldDoAll, 
-                         IN ULONG  ClipType, 
-                         IN ULONG  BuildOrder, 
-                         IN ULONG  MaxRects); 
-PPATHOBJ CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj);
+PVOID STDCALL
+BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ BrushObj,
+		       IN ULONG ObjSize);
+PVOID STDCALL
+BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ BrushObj);
+
+BOOL STDCALL
+CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
+	      IN ULONG ObjSize,
+	      OUT ULONG *EnumRects);
+
+ULONG STDCALL
+CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
+		   IN BOOL ShouldDoAll,
+		   IN ULONG ClipType,
+		   IN ULONG BuildOrder,
+		   IN ULONG MaxRects);
+
+PPATHOBJ STDCALL
+CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj);
 
 /*
 EngAcquireSemaphore
@@ -1017,31 +1026,53 @@ PVOID STDCALL
 EngAllocUserMem(ULONG cj,
 		ULONG tag);
 
-BOOL
+BOOL STDCALL
 EngAssociateSurface(IN HSURF Surface,
 		    IN HDEV Dev,
 		    IN ULONG Hooks);
 
+BOOL STDCALL
+EngBitBlt(SURFOBJ *Dest,
+	  SURFOBJ *Source,
+	  SURFOBJ *Mask,
+	  CLIPOBJ *ClipRegion,
+	  XLATEOBJ *ColorTranslation,
+	  RECTL *DestRect,
+	  POINTL *SourcePoint,
+	  POINTL *MaskRect,
+	  BRUSHOBJ *Brush,
+	  POINTL *BrushOrigin,
+	  ROP4 rop4);
+
 /*
-EngBitBlt
 EngCheckAbort
 EngComputeGlyphSet
-EngCopyBits
 */
 
-HBITMAP
+BOOL STDCALL
+EngCopyBits(SURFOBJ *Dest,
+	    SURFOBJ *Source,
+	    CLIPOBJ *Clip,
+	    XLATEOBJ *ColorTranslation,
+	    RECTL *DestRect,
+	    POINTL *SourcePoint);
+
+HBITMAP STDCALL
 EngCreateBitmap(IN SIZEL Size,
 		IN LONG Width,
 		IN ULONG Format,
 		IN ULONG Flags,
 		IN PVOID Bits);
 
-/*
-EngCreateClip
-EngCreateDeviceBitmap
-*/
+PCLIPOBJ STDCALL
+EngCreateClip(VOID);
 
-HSURF
+HBITMAP STDCALL
+EngCreateDeviceBitmap(IN DHSURF Surface,
+		      IN SIZEL Size,
+		      IN ULONG Format);
+
+HSURF STDCALL
 EngCreateDeviceSurface(IN DHSURF Surface,
 		       IN SIZEL Size,
 		       IN ULONG FormatVersion);
@@ -1051,7 +1082,7 @@ EngCreateDriverObj
 EngCreateEvent
 */
 
-HPALETTE
+HPALETTE STDCALL
 EngCreatePalette(IN ULONG Mode,
 		 IN ULONG NumColors,
 		 IN PULONG *Colors,
@@ -1063,27 +1094,40 @@ EngCreatePalette(IN ULONG Mode,
 EngCreatePath
 EngCreateSemaphore
 EngCreateWnd
-EngDebugBreak = NTOSKRNL.DbgBreakPoint
 */
 
-VOID APIENTRY
+VOID STDCALL
+EngDebugBreak(VOID);
+
+VOID STDCALL
 EngDebugPrint(PCHAR StandardPrefix,
 	      PCHAR DebugMessage,
 	      va_list ArgList);
 
+VOID STDCALL
+EngDeleteClip(CLIPOBJ *ClipRegion);
+
 /*
-EngDeleteClip
 EngDeleteDriverObj
 EngDeleteEvent
-EngDeletePalette
+*/
+
+BOOL STDCALL
+EngDeletePalette(IN HPALETTE Palette);
+
+/*
 EngDeletePath
 EngDeleteSemaphore
-EngDeleteSurface
+*/
+
+BOOL STDCALL
+EngDeleteSurface(IN HSURF Surface);
+
+/*
 EngDeleteWnd
 */
 
-
-DWORD APIENTRY
+DWORD STDCALL
 EngDeviceIoControl(HANDLE hDevice,
 		   DWORD dwIoControlCode,
 		   LPVOID lpInBuffer,
@@ -1094,7 +1138,14 @@ EngDeviceIoControl(HANDLE hDevice,
 
 /*
 EngEnumForms
-EngEraseSurface
+*/
+
+BOOL STDCALL
+EngEraseSurface(SURFOBJ *Surface,
+		RECTL *Rect,
+		ULONG iColor);
+
+/*
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
@@ -1103,11 +1154,14 @@ EngFindResource
 VOID STDCALL
 EngFreeMem(PVOID Mem);
 
+/*
+EngFreeModule
+*/
+
 VOID STDCALL
 EngFreeUserMem(PVOID pv);
 
 /*
-EngFreeModule
 EngGetCurrentCodePage
 EngGetDriverName
 EngGetFileChangeTime
@@ -1119,8 +1173,18 @@ EngGetPrinterData
 EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
-EngLineTo
 */
+
+BOOL STDCALL
+EngLineTo(SURFOBJ *Surface,
+	  CLIPOBJ *Clip,
+	  BRUSHOBJ *Brush,
+	  LONG x1,
+	  LONG y1,
+	  LONG x2,
+	  LONG y2,
+	  RECTL *RectBounds,
+	  MIX mix);
 
 HANDLE STDCALL
 EngLoadImage(LPWSTR DriverName);
@@ -1129,7 +1193,12 @@ EngLoadImage(LPWSTR DriverName);
 EngLoadModule
 EngLoadModuleForWrite
 EngLockDriverObj
-EngLockSurface
+*/
+
+SURFOBJ * STDCALL
+EngLockSurface(IN HSURF Surface);
+
+/*
 EngMapEvent
 EngMapFontFile
 EngMapModule
@@ -1138,7 +1207,16 @@ EngMovePointer
 EngMulDiv
 EngMultiByteToUnicodeN
 EngMultiByteToWideChar
-EngPaint
+*/
+
+BOOL STDCALL
+EngPaint(IN SURFOBJ *Surface,
+	 IN CLIPOBJ *ClipRegion,
+	 IN BRUSHOBJ *Brush,
+	 IN POINTL *BrushOrigin,
+	 IN MIX  Mix);
+
+/*
 EngProbeForRead
 EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
 EngQueryLocalTime
@@ -1159,6 +1237,19 @@ EngStretchBlt
 EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
+*/
+
+BOOL STDCALL
+EngTransparentBlt(PSURFOBJ Dest,
+		  PSURFOBJ Source,
+		  PCLIPOBJ Clip,
+		  PXLATEOBJ ColorTranslation,
+		  PRECTL DestRect,
+		  PRECTL SourceRect,
+		  ULONG TransparentColor,
+		  ULONG Reserved);
+
+/*
 EngUnicodeToMultiByteN
 EngUnloadImage
 EngUnlockDriverObj
@@ -1217,7 +1308,15 @@ VOID  FONTOBJ_vGetInfo(IN PFONTOBJ  FontObj,
 /*
 HT_ComputeRGBGammaTable
 HT_Get8BPPFormatPalette
-PALOBJ_cGetColors
+*/
+
+ULONG STDCALL
+PALOBJ_cGetColors(PALOBJ *PalObj,
+		  ULONG Start,
+		  ULONG Colors,
+		  ULONG *PaletteEntry);
+
+/*
 PATHOBJ_bCloseFigure
 PATHOBJ_bEnum
 PATHOBJ_bEnumClipLines
@@ -1244,10 +1343,20 @@ WNDOBJ_vSetConsumer
 XFORMOBJ_bApplyXform
 XFORMOBJ_iGetFloatObjXform
 XFORMOBJ_iGetXform
-XLATEOBJ_cGetPalette
-XLATEOBJ_iXlate
-XLATEOBJ_piVector
 */
+
+ULONG STDCALL
+XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
+		     ULONG PalOutType,
+		     ULONG cPal,
+		     ULONG *OutPal);
+
+ULONG STDCALL
+XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
+		ULONG Color);
+
+ULONG * STDCALL
+XLATEOBJ_piVector(XLATEOBJ *XlateObj);
 
 #endif
 
