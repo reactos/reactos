@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.44 2000/01/31 20:25:43 ekohl Exp $
+/* $Id: loader.c,v 1.45 2000/02/03 21:34:14 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -555,15 +555,10 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
       return 0;
     }
   CHECKPOINT;
-   DPRINT1("Module is at base %x\n",DriverBase);
-   
-  /*  Copy image sections into virtual section  */
-  memcpy(DriverBase, ModuleLoadBase, PESectionHeaders[0].PointerToRawData);
-//  CurrentBase = (PVOID) ((DWORD)DriverBase + PESectionHeaders[0].PointerToRawData);
+  /*  Copy headers over */
+  memcpy(DriverBase, ModuleLoadBase, PEOptionalHeader->SizeOfHeaders);
    CurrentSize = 0;
-
-   memcpy(DriverBase, ModuleLoadBase, DriverSize);
-
+  /*  Copy image sections into virtual section  */
   for (Idx = 0; Idx < PEFileHeader->NumberOfSections; Idx++)
     {
       //  Copy current section into current offset of virtual section
@@ -574,7 +569,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
 		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
            memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
                   (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
-                  PESectionHeaders[Idx].Misc.VirtualSize);
+                  PESectionHeaders[Idx].Misc.VirtualSize > PESectionHeaders[Idx].SizeOfRawData ? PESectionHeaders[Idx].SizeOfRawData : PESectionHeaders[Idx].Misc.VirtualSize );
         }
       else
         {
