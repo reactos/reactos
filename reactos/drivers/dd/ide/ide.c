@@ -969,7 +969,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
 
   if (Win32Alias != NULL)
     {
-      DbgPrint("%s is %s %dMB\n", DeviceName, Win32Alias, (Size + 512) / 1024);
+      DbgPrint("%s is %s %dMB\n", DeviceName, Win32Alias, Size / 2048);
     }
 
   return  RC;
