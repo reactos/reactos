@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.19 2001/03/06 23:28:42 cnettel Exp $
+/* $Id: create.c,v 1.20 2001/03/06 23:31:44 cnettel Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -14,7 +14,7 @@
 #include <wchar.h>
 #include <limits.h>
 
-#define NDEBUGN
+#define NDEBUG
 #include <debug.h>
 
 #include "vfat.h"
