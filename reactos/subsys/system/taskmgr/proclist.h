@@ -25,6 +25,6 @@
 
 LRESULT CALLBACK	ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
-extern	LONG		OldProcessListWndProc;
+extern	WNDPROC		OldProcessListWndProc;
 
 #endif /* __PROCLIST_H */

@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.20 2004/09/10 22:14:52 gvg Exp $
+/* $Id: guiconsole.c,v 1.21 2004/09/26 15:55:53 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -53,7 +53,7 @@ static HWND NotifyWnd;
 static VOID FASTCALL
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
 {
-  *Console = (PCSRSS_CONSOLE) GetWindowLongW(hWnd, GWL_USERDATA);
+  *Console = (PCSRSS_CONSOLE) GetWindowLongPtrW(hWnd, GWL_USERDATA);
   *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
 }
 
@@ -140,7 +140,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->Selection.left = -1;
   
   Console->PrivateData = GuiData;
-  SetWindowLongW(hWnd, GWL_USERDATA, (LONG) Console);
+  SetWindowLongPtrW(hWnd, GWL_USERDATA, (DWORD_PTR) Console);
 
   GetWindowRect(hWnd, &Rect);
   Rect.right = Rect.left + Console->Size.X * GuiData->CharWidth +

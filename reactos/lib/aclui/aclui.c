@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: aclui.c,v 1.6 2004/08/14 11:50:25 weiden Exp $
+/* $Id: aclui.c,v 1.7 2004/09/26 15:55:52 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/aclui.c
@@ -96,7 +96,7 @@ SecurityPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         sp->hiUsrs = ImageList_LoadBitmap(hDllInstance, MAKEINTRESOURCE(IDB_USRGRPIMAGES), 16, 3, 0);
         
         /* save the pointer to the structure */
-        SetWindowLong(hwndDlg, DWL_USER, (LONG)sp);
+        SetWindowLongPtr(hwndDlg, DWL_USER, (DWORD_PTR)sp);
         
         GetClientRect(sp->hWndUsrList, &rcLvClient);
         

@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: ncpa.c,v 1.2 2004/08/15 16:50:30 kuehng Exp $
+/* $Id: ncpa.c,v 1.3 2004/09/26 15:55:52 weiden Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/ncpa.c
@@ -242,7 +242,7 @@ void NICPropertyProtocolCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 
 BOOL CALLBACK NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLong(hwndDlg,GWL_USERDATA);
+	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
 	switch(uMsg)
 	{
     case WM_INITDIALOG:	
@@ -272,7 +272,7 @@ BOOL CALLBACK NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM
 			EnableWindow(GetDlgItem(hwndDlg,IDC_CONFIGURE),FALSE);
 
 
-			SetWindowLong(hwndDlg,GWL_USERDATA,lParam);
+			SetWindowLongPtr(hwndDlg,GWL_USERDATA,(DWORD_PTR)lParam);
 			//SetDlgItemTextA(hwndDlg,IDC_NETCARDNAME,Info[pPage->lParam].Description);
 			EnumRegKeys(NICPropertyProtocolCallback,hwndDlg,HKEY_LOCAL_MACHINE,_T("System\\CurrentControlSet\\Control\\Network\\{4D36E975-E325-11CE-BFC1-08002BE10318}"));
 
@@ -434,7 +434,7 @@ BOOL CALLBACK NICStatusPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM l
 		{
 			PROPSHEETPAGE *psp= (PROPSHEETPAGE *)lParam;
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ENDISABLE),FALSE);
-			SetWindowLong(hwndDlg,DWL_USER,psp->lParam);
+			SetWindowLongPtr(hwndDlg,DWL_USER,(DWORD_PTR)psp->lParam);
 		}
 		break;
 	case WM_COMMAND:

@@ -502,7 +502,7 @@ HEXEDIT_WM_NCCREATE(HWND hWnd, CREATESTRUCT *cs)
   hed->SplitSpacing = 2;
   hed->EditingField = TRUE; /* in hexdump field */
   
-  SetWindowLong(hWnd, 0, (LONG)hed);
+  SetWindowLongPtr(hWnd, 0, (DWORD_PTR)hed);
   HEXEDIT_Update(hed);
   
   return TRUE;
@@ -522,7 +522,7 @@ HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
     DeleteObject(hed->hFont);
   }
   
-  SetWindowLong(hed->hWndSelf, 0, 0);
+  SetWindowLongPtr(hed->hWndSelf, 0, (DWORD_PTR)0);
   HeapFree(GetProcessHeap(), 0, hed);
   
   return 0;
@@ -864,7 +864,7 @@ HexEditWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PHEXEDIT_DATA hed;
   
-  hed = (PHEXEDIT_DATA)GetWindowLong(hWnd, 0);
+  hed = (PHEXEDIT_DATA)GetWindowLongPtr(hWnd, (DWORD_PTR)0);
   switch(uMsg)
   {
     case WM_ERASEBKGND:

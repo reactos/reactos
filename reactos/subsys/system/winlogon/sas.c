@@ -1,4 +1,4 @@
-/* $Id: sas.c,v 1.2 2004/07/12 20:09:35 gvg Exp $
+/* $Id: sas.c,v 1.3 2004/09/26 15:55:53 weiden Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -158,7 +158,7 @@ HandleExitWindows(DWORD RequestingProcessId, UINT Flags)
 LRESULT CALLBACK
 SASProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  PWLSESSION Session = (PWLSESSION)GetWindowLong(hwnd, GWL_USERDATA);
+  PWLSESSION Session = (PWLSESSION)GetWindowLongPtr(hwnd, GWL_USERDATA);
   if(!Session)
   {
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
@@ -231,7 +231,7 @@ InitializeSAS(PWLSESSION Session)
   }
   
   /* Save the Session pointer so the window proc can access it */
-  SetWindowLong(Session->SASWindow, GWL_USERDATA, (LONG)Session);
+  SetWindowLongPtr(Session->SASWindow, GWL_USERDATA, (DWORD_PTR)Session);
   
   /* Register SAS window to receive SAS notifications */
   if(!SetLogonNotifyWindow(Session->SASWindow, Session->InteractiveWindowStation))

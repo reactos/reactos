@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.7 2004/09/24 18:51:52 ekohl Exp $
+/* $Id: wizard.c,v 1.8 2004/09/26 15:55:53 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -364,7 +364,7 @@ LocalePageDlgProc(HWND hwndDlg,
   PSETUPDATA SetupData;
 
   /* Retrieve pointer to the global setup data */
-  SetupData = (PSETUPDATA)GetWindowLong (hwndDlg, GWL_USERDATA);
+  SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
 
   switch (uMsg)
     {
@@ -372,7 +372,7 @@ LocalePageDlgProc(HWND hwndDlg,
         {
           /* Save pointer to the global setup data */
           SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-          SetWindowLong(hwndDlg, GWL_USERDATA, (LONG)SetupData);
+          SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
 
         }
         break;
@@ -415,7 +415,7 @@ ProcessPageDlgProc(HWND hwndDlg,
   PSETUPDATA SetupData;
 
   /* Retrieve pointer to the global setup data */
-  SetupData = (PSETUPDATA)GetWindowLong (hwndDlg, GWL_USERDATA);
+  SetupData = (PSETUPDATA)GetWindowLongPtr (hwndDlg, GWL_USERDATA);
 
   switch (uMsg)
     {
@@ -423,7 +423,7 @@ ProcessPageDlgProc(HWND hwndDlg,
         {
           /* Save pointer to the global setup data */
           SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
-          SetWindowLong(hwndDlg, GWL_USERDATA, (LONG)SetupData);
+          SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
         }
         break;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: welcome.c,v 1.5 2003/12/21 16:24:19 weiden Exp $
+/* $Id: welcome.c,v 1.6 2004/09/26 15:55:53 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS welcome/autorun application
@@ -278,7 +278,7 @@ RunApplication(int nTopic)
 static VOID
 SubclassButton(HWND hWnd)
 {
-  fnOldBtn = (WNDPROC)SetWindowLong(hWnd, GWL_WNDPROC, (LPARAM)ButtonSubclassWndProc);
+  fnOldBtn = (WNDPROC)SetWindowLongPtr(hWnd, GWL_WNDPROC, (DWORD_PTR)ButtonSubclassWndProc);
 }
 
 

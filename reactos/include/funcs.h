@@ -107,6 +107,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define MessageBoxIndirect  MessageBoxIndirectW
 #define GetWindowLong  GetWindowLongW
 #define SetWindowLong  SetWindowLongW
+#define GetWindowLongPtr  GetWindowLongW
+#define SetWindowLongPtr  SetWindowLongW
 #define GetClassLong  GetClassLongW
 #define SetClassLong  SetClassLongW
 #define FindWindow  FindWindowW

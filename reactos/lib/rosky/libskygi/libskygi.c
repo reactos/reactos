@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: libskygi.c,v 1.11 2004/08/14 10:47:19 weiden Exp $
+/* $Id: libskygi.c,v 1.12 2004/09/26 15:55:53 weiden Exp $
  *
  * PROJECT:         SkyOS GI library
  * FILE:            lib/libskygi/libskygi.c
@@ -481,7 +481,7 @@ GI_wait_message(s_gi_msg *m,
     /* loop until we found a message that a sky app would handle, too */
     RtlZeroMemory(m, sizeof(s_gi_msg));
 
-    if(Msg.hwnd != NULL && (msgwnd = (PSKY_WINDOW)GetWindowLongW(Msg.hwnd, GWL_USERDATA)))
+    if(Msg.hwnd != NULL && (msgwnd = (PSKY_WINDOW)GetWindowLongPtrW(Msg.hwnd, GWL_USERDATA)))
       {
         SkyMessage = IntIsSkyMessage(msgwnd, &Msg, m);
       }

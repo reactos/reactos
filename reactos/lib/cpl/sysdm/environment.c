@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: environment.c,v 1.3 2004/07/07 09:42:58 ekohl Exp $
+/* $Id: environment.c,v 1.4 2004/09/26 15:55:53 weiden Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/sysdm/environment.c
@@ -52,12 +52,12 @@ EditVariableDlgProc(HWND hwndDlg,
   DWORD dwNameLength;
   DWORD dwValueLength;
 
-  VarData = (PVARIABLE_DATA)GetWindowLong(hwndDlg, GWL_USERDATA);
+  VarData = (PVARIABLE_DATA)GetWindowLongPtr(hwndDlg, GWL_USERDATA);
 
   switch (uMsg)
   {
     case WM_INITDIALOG:
-      SetWindowLong(hwndDlg, GWL_USERDATA, (LONG)lParam);
+      SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)lParam);
       VarData = (PVARIABLE_DATA)lParam;
 
       if (VarData->lpName != NULL)

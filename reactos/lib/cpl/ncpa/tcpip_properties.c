@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: tcpip_properties.c,v 1.1 2004/08/15 16:50:30 kuehng Exp $
+/* $Id: tcpip_properties.c,v 1.2 2004/09/26 15:55:52 weiden Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/tcpip_properties.c
@@ -54,7 +54,7 @@ extern void InitPropSheetPage(PROPSHEETPAGE *psp, WORD idDlg, DLGPROC DlgProc);
 
 BOOL CALLBACK TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLong(hwndDlg,GWL_USERDATA);
+	PROPSHEETPAGE *pPage = (PROPSHEETPAGE *)GetWindowLongPtr(hwndDlg,GWL_USERDATA);
 	IP_ADAPTER_INFO *pInfo = NULL;
 	if(pPage)
 		pInfo = (IP_ADAPTER_INFO *)pPage->lParam;
@@ -65,7 +65,7 @@ BOOL CALLBACK TCPIPPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPAR
 			pPage = (PROPSHEETPAGE *)lParam;
 			pInfo = (IP_ADAPTER_INFO *)pPage->lParam;
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ADVANCED),FALSE);
-			SetWindowLong(hwndDlg,GWL_USERDATA,pPage->lParam);
+			SetWindowLongPtr(hwndDlg,GWL_USERDATA,(DWORD_PTR)pPage->lParam);
 
 			if(pInfo->DhcpEnabled) {
 				CheckDlgButton(hwndDlg,IDC_USEDHCP,BST_CHECKED);
