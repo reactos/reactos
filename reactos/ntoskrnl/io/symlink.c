@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.27 2002/06/20 21:30:33 ekohl Exp $
+/* $Id: symlink.c,v 1.28 2002/06/27 17:46:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -359,31 +359,31 @@ IoCreateSymbolicLink(PUNICODE_STRING SymbolicLinkName,
 NTSTATUS STDCALL
 IoDeleteSymbolicLink(PUNICODE_STRING SymbolicLinkName)
 {
-	OBJECT_ATTRIBUTES	ObjectAttributes;
-	HANDLE			Handle;
-	NTSTATUS		Status;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  HANDLE Handle;
+  NTSTATUS Status;
 
-	assert_irql(PASSIVE_LEVEL);
+  assert_irql(PASSIVE_LEVEL);
 
-	DPRINT("IoDeleteSymbolicLink (SymbolicLinkName %S)\n",
-	       SymbolicLinkName->Buffer);
+  DPRINT("IoDeleteSymbolicLink (SymbolicLinkName %S)\n",
+	 SymbolicLinkName->Buffer);
 
-	InitializeObjectAttributes (&ObjectAttributes,
-	                            SymbolicLinkName,
-	                            0,
-	                            NULL,
-	                            NULL);
+  InitializeObjectAttributes(&ObjectAttributes,
+			     SymbolicLinkName,
+			     OBJ_OPENLINK,
+			     NULL,
+			     NULL);
 
-	Status = NtOpenSymbolicLinkObject (&Handle,
-	                                   SYMBOLIC_LINK_ALL_ACCESS,
-	                                   &ObjectAttributes);
-	if (!NT_SUCCESS(Status))
-		return Status;
+  Status = NtOpenSymbolicLinkObject(&Handle,
+				    SYMBOLIC_LINK_ALL_ACCESS,
+				    &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-	Status = NtMakeTemporaryObject (Handle);
-	NtClose (Handle);
+  Status = NtMakeTemporaryObject(Handle);
+  NtClose(Handle);
 
-	return Status;
+  return(Status);
 }
 
 
