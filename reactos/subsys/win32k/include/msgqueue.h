@@ -170,6 +170,22 @@ VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 
+#define IntLockMessageQueue(MsgQueue) \
+  ExAcquireFastMutex(&MsgQueue->Lock)
+
+#define IntUnLockMessageQueue(MsgQueue) \
+  ExReleaseFastMutex(&MsgQueue->Lock)
+
+#define IntLockHardwareMessageQueue(MsgQueue) \
+  ExAcquireFastMutex(&MsgQueue->HardwareLock)
+
+#define IntUnLockHardwareMessageQueue(MsgQueue) \
+  ExReleaseFastMutex(&MsgQueue->HardwareLock)
+
+/* check the queue status */
+#define MsqIsSignaled(MsgQueue) \
+  ((MsgQueue->WakeBits & MsgQueue->WakeMask) || (MsgQueue->ChangedBits & MsgQueue->ChangedMask))
+
 #endif /* _WIN32K_MSGQUEUE_H */
 
 /* EOF */

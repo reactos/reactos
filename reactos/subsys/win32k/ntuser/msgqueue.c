@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.70 2004/02/24 01:30:57 weiden Exp $
+/* $Id: msgqueue.c,v 1.71 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -68,13 +68,16 @@ static KEVENT HardwareMessageEvent;
 
 static PAGED_LOOKASIDE_LIST MessageLookasideList;
 
-/* FUNCTIONS *****************************************************************/
+#define IntLockSystemMessageQueue(OldIrql) \
+  KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql)
 
-/* check the queue status */
-inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE Queue )
-{
-    return ((Queue->WakeBits & Queue->WakeMask) || (Queue->ChangedBits & Queue->ChangedMask));
-}
+#define IntUnLockSystemMessageQueue(OldIrql) \
+  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql)
+
+#define IntUnLockSystemHardwareMessageQueueLock(Wait) \
+  KeReleaseMutex(&HardwareMessageQueueLock, Wait)
+
+/* FUNCTIONS *****************************************************************/
 
 /* set some queue bits */
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
@@ -94,23 +97,23 @@ inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-  ExAcquireFastMutex(&Queue->Lock);
+  IntLockMessageQueue(Queue);
   Queue->PaintCount++;
   Queue->PaintPosted = TRUE;
   KeSetEvent(&Queue->NewMessages, IO_NO_INCREMENT, FALSE);
-  ExReleaseFastMutex(&Queue->Lock);
+  IntUnLockMessageQueue(Queue);
 }
 
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-  ExAcquireFastMutex(&Queue->Lock);
+  IntLockMessageQueue(Queue);
   Queue->PaintCount--;
   if (Queue->PaintCount == 0)
     {
       Queue->PaintPosted = FALSE;
     }
-  ExReleaseFastMutex(&Queue->Lock);
+  IntUnLockMessageQueue(Queue);
 }
 
 
@@ -144,7 +147,7 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
   KeQueryTickCount(&LargeTickCount);
   Msg->time = LargeTickCount.u.LowPart;
 
-  KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
+  IntLockSystemMessageQueue(OldIrql);
 
   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
   if((Msg->message == WM_MOUSEMOVE) && RemMouseMoveMsg)
@@ -167,7 +170,7 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
   {
     if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
     {
-      KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
+      IntUnLockSystemMessageQueue(OldIrql);
       return;
     }
     SystemMessageQueue[SystemMessageQueueTail] = *Msg;
@@ -177,7 +180,7 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg)
       (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
     SystemMessageQueueCount++;
   }
-  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
+  IntUnLockSystemMessageQueue(OldIrql);
   KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
 
@@ -253,7 +256,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Msg == WM_XBUTTONDOWN)
   {
     USHORT Hit = WinPosWindowFromPoint(ScopeWin, 
-    				   Message->Msg.pt, 
+    				   &Message->Msg.pt, 
     				   &Window);
     /*
     **Make sure that we have a window that is not already in focus
@@ -312,7 +315,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
     else
     {
-      *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
+      *HitTest = WinPosWindowFromPoint(ScopeWin, &Message->Msg.pt, &Window);
       if(!Window)
       {
         /* change the cursor on desktop background */
@@ -346,10 +349,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
        * old queue */
       RemoveEntryList(&Message->ListEntry);
     }
-    ExAcquireFastMutex(&Window->MessageQueue->HardwareLock);
+    IntLockHardwareMessageQueue(Window->MessageQueue);
     InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
                    &Message->ListEntry);
-    ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
+    IntUnLockHardwareMessageQueue(Window->MessageQueue);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
     *Freed = FALSE;
@@ -359,10 +362,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   if (hWnd != NULL && Window->Self != hWnd &&
       !IntIsChildWindow(hWnd, Window->Self))
   {
-    ExAcquireFastMutex(&Window->MessageQueue->HardwareLock);
+    IntLockHardwareMessageQueue(Window->MessageQueue);
     InsertTailList(&Window->MessageQueue->HardwareMessagesListHead,
                    &Message->ListEntry);
-    ExReleaseFastMutex(&Window->MessageQueue->HardwareLock);
+    IntUnLockHardwareMessageQueue(Window->MessageQueue);
     KeSetEvent(&Window->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
     IntReleaseWindowObject(Window);
     *Freed = FALSE;
@@ -463,7 +466,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
   /* Process messages in the message queue itself. */
-  ExAcquireFastMutex(&MessageQueue->HardwareLock);
+  IntLockHardwareMessageQueue(MessageQueue);
   CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
   while (CurrentEntry != &MessageQueue->HardwareMessagesListHead)
     {
@@ -483,8 +486,8 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		{
 		  RemoveEntryList(&Current->ListEntry);
 		}
-	      ExReleaseFastMutex(&MessageQueue->HardwareLock);
-              KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
+	      IntUnLockHardwareMessageQueue(MessageQueue);
+              IntUnLockSystemHardwareMessageQueueLock(FALSE);
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
@@ -494,12 +497,12 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	    RemoveEntryList(&Current->ListEntry);
 	}
     }
-  ExReleaseFastMutex(&MessageQueue->HardwareLock);
+  IntUnLockHardwareMessageQueue(MessageQueue);
 
   /* Now try the global queue. */
 
   /* Transfer all messages from the DPC accessible queue to the main queue. */
-  KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
+  IntLockSystemMessageQueue(OldIrql);
   while (SystemMessageQueueCount > 0)
     {
       PUSER_MESSAGE UserMsg;
@@ -510,13 +513,13 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       SystemMessageQueueHead =
 	(SystemMessageQueueHead + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
       SystemMessageQueueCount--;
-      KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
+      IntUnLockSystemMessageQueue(OldIrql);
       UserMsg = ExAllocateFromPagedLookasideList(&MessageLookasideList);
       /* What to do if out of memory? For now we just panic a bit in debug */
       ASSERT(UserMsg);
       UserMsg->Msg = Msg;
       InsertTailList(&HardwareMessageQueueHead, &UserMsg->ListEntry);
-      KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
+      IntLockSystemMessageQueue(OldIrql);
     }
   /*
    * we could set this to -1 conditionally if we find one, but
@@ -524,7 +527,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    */
   SystemMessageQueueMouseMove = -1;
   HardwareMessageQueueStamp++;
-  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
+  IntUnLockSystemMessageQueue(OldIrql);
 
   /* Process messages in the queue until we find one to return. */
   CurrentEntry = HardwareMessageQueueHead.Flink;
@@ -547,13 +550,13 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	  if (Accept)
 	    {
 	      /* Check for no more messages in the system queue. */
-	      KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
+	      IntLockSystemMessageQueue(OldIrql);
 	      if (SystemMessageQueueCount == 0 &&
 		  IsListEmpty(&HardwareMessageQueueHead))
 		{
 		  KeClearEvent(&HardwareMessageEvent);
 		}
-	      KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
+	      IntUnLockSystemMessageQueue(OldIrql);
 
 	      /*
 		 If we aren't removing the message then add it to the private
@@ -561,12 +564,12 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	      */
 	      if (!Remove)
 		{
-                  ExAcquireFastMutex(&MessageQueue->HardwareLock);
+                  IntLockHardwareMessageQueue(MessageQueue);
 		  InsertTailList(&MessageQueue->HardwareMessagesListHead,
 				 &Current->ListEntry);
-                  ExReleaseFastMutex(&MessageQueue->HardwareLock);
+                  IntUnLockHardwareMessageQueue(MessageQueue);
 		}
-	      KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
+	      IntUnLockSystemHardwareMessageQueueLock(FALSE);
 	      *Message = Current;
 	      IntReleaseWindowObject(DesktopWindow);
 	      return(TRUE);
@@ -581,13 +584,13 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
     }
   IntReleaseWindowObject(DesktopWindow);
   /* Check if the system message queue is now empty. */
-  KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
+  IntLockSystemMessageQueue(OldIrql);
   if (SystemMessageQueueCount == 0 && IsListEmpty(&HardwareMessageQueueHead))
     {
       KeClearEvent(&HardwareMessageEvent);
     }
-  KeReleaseSpinLock(&SystemMessageQueueLock, OldIrql);
-  KeReleaseMutex(&HardwareMessageQueueLock, FALSE);
+  IntUnLockSystemMessageQueue(OldIrql);
+  IntUnLockSystemHardwareMessageQueueLock(FALSE);
 
   return(FALSE);
 }
@@ -687,11 +690,11 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);
 
-//  ExAcquireFastMutex(&pThread->MessageQueue->Lock);
+//  IntLockMessageQueue(pThread->MessageQueue);
 //  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,
 //		 &Message->ListEntry);
 //  KeSetEvent(&pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-//  ExReleaseFastMutex(&pThread->MessageQueue->Lock);
+//  IntUnLockMessageQueue(pThread->MessageQueue);
 
 }
 
@@ -732,11 +735,11 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 
   while (!IsListEmpty(&MessageQueue->SentMessagesListHead))
   {
-    ExAcquireFastMutex(&MessageQueue->Lock);
+    IntLockMessageQueue(MessageQueue);
     ListEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
     Message = CONTAINING_RECORD(ListEntry, USER_SENT_MESSAGE_NOTIFY,
 				ListEntry);
-    ExReleaseFastMutex(&MessageQueue->Lock);
+    IntUnLockMessageQueue(MessageQueue);
 
     IntCallSentMessageCallback(Message->CompletionCallback,
 				Message->hWnd,
@@ -760,7 +763,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   LRESULT Result;
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
     {
       ExReleaseFastMutex(&MessageQueue->Lock);
@@ -768,7 +771,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
     }
   Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
   Message = CONTAINING_RECORD(Entry, USER_SENT_MESSAGE, ListEntry);
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
 
   /* Call the window procedure. */
   Result = IntSendMessage(Message->Msg.hwnd,
@@ -811,11 +814,11 @@ VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
 {
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->NotifyMessagesListHead,
 		 &NotifyMessage->ListEntry);
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
 }
 
 LRESULT FASTCALL
@@ -841,10 +844,10 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   Message->CompletionQueue = NULL;
   Message->CompletionCallback = NULL;
 
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
 
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   WaitObjects[1] = &ThreadQueue->NewMessages;
@@ -866,21 +869,21 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_MESSAGE Message)
 {
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->PostedMessagesListHead,
 		 &Message->ListEntry);
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
 }
 
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 {
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   MessageQueue->QuitPosted = TRUE;
   MessageQueue->QuitExitCode = ExitCode;
   KeSetEvent(&MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
 }
 
 BOOLEAN STDCALL
@@ -903,7 +906,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 				    Remove, Message));
     }
 
-  ExAcquireFastMutex(&MessageQueue->Lock);
+  IntLockMessageQueue(MessageQueue);
   CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
   ListHead = &MessageQueue->PostedMessagesListHead;
   while (CurrentEntry != ListHead)
@@ -919,13 +922,13 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	    {
 	      RemoveEntryList(&CurrentMessage->ListEntry);
 	    }
-	  ExReleaseFastMutex(&MessageQueue->Lock);
+	  IntUnLockMessageQueue(MessageQueue);
 	  *Message = CurrentMessage;
 	  return(TRUE);
 	}
       CurrentEntry = CurrentEntry->Flink;
     }
-  ExReleaseFastMutex(&MessageQueue->Lock);
+  IntUnLockMessageQueue(MessageQueue);
   return(FALSE);
 }
 

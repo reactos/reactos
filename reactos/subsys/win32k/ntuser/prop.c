@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.8 2004/02/22 14:09:51 weiden Exp $
+/* $Id: prop.c,v 1.9 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -100,7 +100,7 @@ NtUserBuildPropList(HWND hWnd,
     }
     
     /* copy list */
-    ExAcquireFastMutexUnsafe(&WindowObject->PropListLock);
+    IntLockWindowProperties(WindowObject);
     
     li = (PROPLISTITEM *)Buffer;
     ListEntry = WindowObject->PropListHead.Flink;
@@ -113,7 +113,7 @@ NtUserBuildPropList(HWND hWnd,
       Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
       if(!NT_SUCCESS(Status))
       {
-        ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+        IntUnLockWindowProperties(WindowObject);
         IntReleaseWindowObject(WindowObject);
         return Status;
       }
@@ -124,13 +124,13 @@ NtUserBuildPropList(HWND hWnd,
       ListEntry = ListEntry->Flink;
     }
     
-    ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+    IntUnLockWindowProperties(WindowObject);
   }
   else
   {
-    ExAcquireFastMutexUnsafe(&WindowObject->PropListLock);
+    IntLockWindowProperties(WindowObject);
     Cnt = WindowObject->PropListItems * sizeof(PROPLISTITEM);
-    ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+    IntUnLockWindowProperties(WindowObject);
   }
   
   IntReleaseWindowObject(WindowObject);
@@ -160,12 +160,12 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
     return NULL;
   }
   
-  ExAcquireFastMutexUnsafe(&WindowObject->PropListLock);
+  IntLockWindowProperties(WindowObject);
   Prop = IntGetProp(WindowObject, Atom);
   
   if (Prop == NULL)
     {
-      ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+      IntUnLockWindowProperties(WindowObject);
       IntReleaseWindowObject(WindowObject);
       return(NULL);
     }
@@ -173,7 +173,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   RemoveEntryList(&Prop->PropListEntry);
   ExFreePool(Prop);
   WindowObject->PropListItems--;
-  ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+  IntUnLockWindowProperties(WindowObject);
   IntReleaseWindowObject(WindowObject);
   return(Data);
 }
@@ -191,9 +191,9 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
     return FALSE;
   }
   
-  ExAcquireFastMutexUnsafe(&WindowObject->PropListLock);
+  IntLockWindowProperties(WindowObject);
   Prop = IntGetProp(WindowObject, Atom);
-  ExReleaseFastMutexUnsafe(&WindowObject->PropListLock);
+  IntUnLockWindowProperties(WindowObject);
   if (Prop != NULL)
   {
     Data = Prop->Data;
@@ -238,9 +238,9 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
     return FALSE;
   }
   
-  ExAcquireFastMutexUnsafe(&Wnd->PropListLock);
+  IntLockWindowProperties(Wnd);
   ret = IntSetProp(Wnd, Atom, Data);
-  ExReleaseFastMutexUnsafe(&Wnd->PropListLock);
+  IntUnLockWindowProperties(Wnd);
   
   return ret;
 }

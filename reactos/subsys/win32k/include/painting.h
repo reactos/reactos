@@ -16,4 +16,10 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message, BOOL Remove);
 BOOL STDCALL
 NtUserValidateRgn(HWND hWnd, HRGN hRgn);
 
+#define IntLockWindowUpdate(Window) \
+  ExAcquireFastMutex(&Window->UpdateLock)
+
+#define IntUnLockWindowUpdate(Window) \
+  ExReleaseFastMutex(&Window->UpdateLock)
+
 #endif /* _WIN32K_PAINTING_H */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.41 2004/02/06 20:36:31 gvg Exp $
+/* $Id: bitblt.c,v 1.42 2004/02/24 13:27:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/object.h>
 #include <include/dib.h>
 #include <include/surface.h>
+#include <include/eng.h>
 #include <include/inteng.h>
 
 #define NDEBUG
@@ -519,11 +520,11 @@ IntEngBitBlt(SURFOBJ *DestObj,
   /* Call the driver's DrvBitBlt if available */
   if (NULL != DestGDI->BitBlt)
     {
-      ExAcquireFastMutex(DestGDI->DriverLock);
+      IntLockGDIDriver(DestGDI);
       ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
                             &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
                             Rop4);
-      ExReleaseFastMutex(DestGDI->DriverLock);
+      IntUnLockGDIDriver(DestGDI);
     }
 
   if (! ret)
@@ -837,10 +838,10 @@ IntEngStretchBlt(SURFOBJ *DestObj,
       /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
       SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC */
       // FIXME: MaskOrigin is always NULL !
-      ExAcquireFastMutex(DestGDI->DriverLock);
+      IntLockGDIDriver(DestGDI);
       ret = DestGDI->StretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
                             &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode);
-      ExReleaseFastMutex(DestGDI->DriverLock);
+      IntUnLockGDIDriver(DestGDI);
     }
 
   if (! ret)
@@ -977,10 +978,10 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     }
 
   DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
-  ExAcquireFastMutex(DestGDI->DriverLock);
+  IntLockGDIDriver(DestGDI);
   if (! IntEngEnter(&EnterLeaveSource, NULL, &InputRect, TRUE, &Translate, &InputObj))
     {
-    ExReleaseFastMutex(DestGDI->DriverLock);
+    IntUnLockGDIDriver(DestGDI);
     return FALSE;
     }
 
@@ -1036,14 +1037,14 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
     {
     IntEngLeave(&EnterLeaveSource);
-    ExReleaseFastMutex(DestGDI->DriverLock);
+    IntUnLockGDIDriver(DestGDI);
     return TRUE;
     }
 
   if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
     {
     IntEngLeave(&EnterLeaveSource);
-    ExReleaseFastMutex(DestGDI->DriverLock);
+    IntUnLockGDIDriver(DestGDI);
     return FALSE;
     }
 
@@ -1138,7 +1139,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
 
-  ExReleaseFastMutex(DestGDI->DriverLock);
+  IntUnLockGDIDriver(DestGDI);
 
   /* Dummy BitBlt to let driver know that something has changed.
      0x00AA0029 is the Rop for D (no-op) */

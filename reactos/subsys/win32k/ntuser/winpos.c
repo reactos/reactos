@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.98 2004/02/24 01:30:58 weiden Exp $
+/* $Id: winpos.c,v 1.99 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -178,7 +178,7 @@ WinPosFindIconPos(HWND hWnd, POINT *Pos)
 }
 
 PINTERNALPOS FASTCALL
-WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
+WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
 {
   PWINDOW_OBJECT Parent;
   INT XInc, YInc;
@@ -233,11 +233,11 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
     }
   if (WindowObject->Style & WS_MINIMIZE)
     {
-      WindowObject->InternalPos->IconPos = pt;
+      WindowObject->InternalPos->IconPos = *pt;
     }
   else if (WindowObject->Style & WS_MAXIMIZE)
     {
-      WindowObject->InternalPos->MaxPos = pt;
+      WindowObject->InternalPos->MaxPos = *pt;
     }
   else if (RestoreRect != NULL)
     {
@@ -255,7 +255,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
 
   Size.x = WindowObject->WindowRect.left;
   Size.y = WindowObject->WindowRect.top;
-  InternalPos = WinPosInitInternalPos(WindowObject, Size, 
+  InternalPos = WinPosInitInternalPos(WindowObject, &Size, 
 				      &WindowObject->WindowRect); 
 
   if (InternalPos)
@@ -1357,12 +1357,12 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
 }
 
 USHORT FASTCALL
-WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint, 
+WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT *WinPoint, 
 		      PWINDOW_OBJECT* Window)
 {
   HWND DesktopWindowHandle;
   PWINDOW_OBJECT DesktopWindow;
-  POINT Point = WinPoint;
+  POINT Point = *WinPoint;
   USHORT HitTest;
 
   *Window = NULL;
@@ -1417,7 +1417,7 @@ NtUserGetMinMaxInfo(
 
   Size.x = Window->WindowRect.left;
   Size.y = Window->WindowRect.top;
-  InternalPos = WinPosInitInternalPos(Window, Size, 
+  InternalPos = WinPosInitInternalPos(Window, &Size, 
 				      &Window->WindowRect); 
   if(InternalPos)
   {

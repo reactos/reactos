@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.77 2004/02/22 08:35:21 navaraf Exp $ */
+/* $Id: text.c,v 1.78 2004/02/24 13:27:03 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -184,9 +184,9 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 
   ZwClose(FileHandle);
 
-  ExAcquireFastMutex(&FreeTypeLock);
+  IntLockFreeType;
   error = FT_New_Memory_Face(library, buffer, size, 0, &face);
-  ExReleaseFastMutex(&FreeTypeLock);
+  IntUnLockFreeType;
   if (error == FT_Err_Unknown_File_Format)
   {
     DPRINT1("Unknown font file format\n");
@@ -226,17 +226,17 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   {
     PW32PROCESS Win32Process = PsGetWin32Process();
     
-    ExAcquireFastMutex(&Win32Process->PrivateFontListLock);
+    IntLockProcessPrivateFonts(Win32Process);
     InsertTailList(&Win32Process->PrivateFontListHead, &entry->ListEntry);
     FontsLoaded++;
-    ExReleaseFastMutex(&Win32Process->PrivateFontListLock);
+    IntUnLockProcessPrivateFonts(Win32Process);
   }
   else
   {
-    ExAcquireFastMutex(&FontListLock);
+    IntLockGlobalFonts;
     InsertTailList(&FontListHead, &entry->ListEntry);
     FontsLoaded++;
-    ExReleaseFastMutex(&FontListLock);
+    IntUnLockGlobalFonts;
   }
 
   return 1;
@@ -637,9 +637,9 @@ NtGdiExtTextOut(
       }
       if (!found)
          DPRINT1("WARNING: Could not find desired charmap!\n");
-      ExAcquireFastMutex(&FreeTypeLock);
+      IntLockFreeType;
       error = FT_Set_Charmap(face, found);
-      ExReleaseFastMutex(&FreeTypeLock);
+      IntUnLockFreeType;
       if (error)
          DPRINT1("WARNING: Could not set the charmap!\n");
    }
@@ -650,7 +650,7 @@ NtGdiExtTextOut(
    else
       RenderMode = FT_RENDER_MODE_MONO;
   
-   ExAcquireFastMutex(&FreeTypeLock);
+   IntLockFreeType;
    error = FT_Set_Pixel_Sizes(
       face,
       /* FIXME should set character height if neg */
@@ -658,7 +658,7 @@ NtGdiExtTextOut(
       - TextObj->logfont.lfHeight :
       TextObj->logfont.lfHeight),
       TextObj->logfont.lfWidth);
-   ExReleaseFastMutex(&FreeTypeLock);
+   IntUnLockFreeType;
    if (error)
    {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -752,10 +752,10 @@ NtGdiExtTextOut(
 
       for (i = 0; i < Count; i++)
       {
-         ExAcquireFastMutex(&FreeTypeLock);
+         IntLockFreeType;
          glyph_index = FT_Get_Char_Index(face, *TempText);
          error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-         ExReleaseFastMutex(&FreeTypeLock);
+         IntUnLockFreeType;
       
          if (error)
          {
@@ -768,9 +768,9 @@ NtGdiExtTextOut(
          if (use_kerning && previous && glyph_index)
          {
             FT_Vector delta;
-            ExAcquireFastMutex(&FreeTypeLock);
+            IntLockFreeType;
             FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-            ExReleaseFastMutex(&FreeTypeLock);
+            IntUnLockFreeType;
             TextWidth += delta.x >> 6;
          }
 
@@ -802,10 +802,10 @@ NtGdiExtTextOut(
 
    for (i = 0; i < Count; i++)
    {
-      ExAcquireFastMutex(&FreeTypeLock);
+      IntLockFreeType;
       glyph_index = FT_Get_Char_Index(face, *String);
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      ExReleaseFastMutex(&FreeTypeLock);
+      IntUnLockFreeType;
 
       if (error)
       {
@@ -821,17 +821,17 @@ NtGdiExtTextOut(
       if (use_kerning && previous && glyph_index)
       {
          FT_Vector delta;
-         ExAcquireFastMutex(&FreeTypeLock);
+         IntLockFreeType;
          FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-         ExReleaseFastMutex(&FreeTypeLock);
+         IntUnLockFreeType;
          TextLeft += delta.x >> 6;
       }
 
       if (glyph->format == ft_glyph_format_outline)
       {
-         ExAcquireFastMutex(&FreeTypeLock);
+         IntLockFreeType;
          error = FT_Render_Glyph(glyph, RenderMode);
-         ExReleaseFastMutex(&FreeTypeLock);
+         IntUnLockFreeType;
          if (error)
          {
             EngDeleteXlate(XlateObj);
@@ -1054,12 +1054,12 @@ NtGdiGetCharWidth32(HDC  hDC,
          return FALSE;
       }
 
-      ExAcquireFastMutex(&FreeTypeLock);
+      IntLockFreeType;
       FT_Set_Charmap(face, found);
-      ExReleaseFastMutex(&FreeTypeLock);
+      IntUnLockFreeType;
    }
 
-   ExAcquireFastMutex(&FreeTypeLock);
+   IntLockFreeType;
    FT_Set_Pixel_Sizes(face,
                       /* FIXME should set character height if neg */
                       (TextObj->logfont.lfHeight < 0 ?
@@ -1073,7 +1073,7 @@ NtGdiGetCharWidth32(HDC  hDC,
       FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
       SafeBuffer[i] = face->glyph->advance.x >> 6;
    }
-   ExReleaseFastMutex(&FreeTypeLock);
+   IntUnLockFreeType;
    TEXTOBJ_UnlockText(dc->w.hFont);
    MmCopyToCaller(Buffer, SafeBuffer, BufferSize);
    ExFreePool(SafeBuffer);
@@ -1201,23 +1201,23 @@ TextIntGetTextExtentPoint(HDC hDC,
 	  DPRINT1("WARNING: Could not find desired charmap!\n");
 	}
 
-      ExAcquireFastMutex(&FreeTypeLock);
+      IntLockFreeType;
       error = FT_Set_Charmap(face, found);
-      ExReleaseFastMutex(&FreeTypeLock);
+      IntUnLockFreeType;
       if (error)
 	{
 	  DPRINT1("WARNING: Could not set the charmap!\n");
 	}
     }
 
-  ExAcquireFastMutex(&FreeTypeLock);
+  IntLockFreeType;
   error = FT_Set_Pixel_Sizes(face,
                              /* FIXME should set character height if neg */
                              (TextObj->logfont.lfHeight < 0 ?
                               - TextObj->logfont.lfHeight :
                               TextObj->logfont.lfHeight),
                              TextObj->logfont.lfWidth);
-  ExReleaseFastMutex(&FreeTypeLock);
+  IntUnLockFreeType;
   if (error)
     {
       DPRINT1("Error in setting pixel sizes: %u\n", error);
@@ -1228,10 +1228,10 @@ TextIntGetTextExtentPoint(HDC hDC,
 
   for (i = 0; i < Count; i++)
     {
-      ExAcquireFastMutex(&FreeTypeLock);
+      IntLockFreeType;
       glyph_index = FT_Get_Char_Index(face, *String);
       error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
-      ExReleaseFastMutex(&FreeTypeLock);
+      IntUnLockFreeType;
       if (error)
 	{
 	  DPRINT1("WARNING: Failed to load and render glyph! [index: %u]\n", glyph_index);
@@ -1242,9 +1242,9 @@ TextIntGetTextExtentPoint(HDC hDC,
       if (use_kerning && previous && glyph_index)
 	{
 	  FT_Vector delta;
-          ExAcquireFastMutex(&FreeTypeLock);
+          IntLockFreeType;
 	  FT_Get_Kerning(face, previous, glyph_index, 0, &delta);
-          ExReleaseFastMutex(&FreeTypeLock);
+          IntUnLockFreeType;
 	  TotalWidth += delta.x >> 6;
 	}
 
@@ -1536,14 +1536,14 @@ NtGdiGetTextMetrics(HDC hDC,
       if (NT_SUCCESS(Status))
       {
 	Face = FontGDI->face;
-        ExAcquireFastMutex(&FreeTypeLock);
+        IntLockFreeType;
 	Error = FT_Set_Pixel_Sizes(Face,
 	                           /* FIXME should set character height if neg */
 	                           (TextObj->logfont.lfHeight < 0 ?
 	                            - TextObj->logfont.lfHeight :
 	                            TextObj->logfont.lfHeight),
 	                           TextObj->logfont.lfWidth);
-        ExReleaseFastMutex(&FreeTypeLock);
+        IntUnLockFreeType;
 	if (0 != Error)
 	  {
 	  DPRINT1("Error in setting pixel sizes: %u\n", Error);
@@ -1552,9 +1552,9 @@ NtGdiGetTextMetrics(HDC hDC,
         else
 	  {
 	  memcpy(&SafeTm, &FontGDI->TextMetric, sizeof(TEXTMETRICW));
-          ExAcquireFastMutex(&FreeTypeLock);
+          IntLockFreeType;
           pOS2 = FT_Get_Sfnt_Table(Face, ft_sfnt_os2);
-          ExReleaseFastMutex(&FreeTypeLock);
+          IntUnLockFreeType;
           if (NULL == pOS2)
             {
               DPRINT1("Can't find OS/2 table - not TT font?\n");
@@ -1695,7 +1695,7 @@ TextIntRealizeFont(HFONT FontHandle)
     /* find font in private fonts */
     Win32Process = PsGetWin32Process();
     
-    ExAcquireFastMutex(&Win32Process->PrivateFontListLock);
+    IntLockProcessPrivateFonts(Win32Process);
     
     Entry = Win32Process->PrivateFontListHead.Flink;
     while(Entry != &Win32Process->PrivateFontListHead)
@@ -1710,10 +1710,10 @@ TextIntRealizeFont(HFONT FontHandle)
       }
       Entry = Entry->Flink;
     }
-    ExReleaseFastMutex(&Win32Process->PrivateFontListLock);
+    IntUnLockProcessPrivateFonts(Win32Process);
     
     /* find font in system fonts */
-    ExAcquireFastMutex(&FontListLock);
+    IntLockGlobalFonts;
     
     Entry = FontListHead.Flink;
     while(Entry != &FontListHead)
@@ -1749,7 +1749,10 @@ TextIntRealizeFont(HFONT FontHandle)
       
     }
     
-    ExReleaseFastMutex((Private ? &Win32Process->PrivateFontListLock : &FontListLock));
+    if(Private)
+      IntUnLockProcessPrivateFonts(Win32Process);
+    else
+      IntUnLockGlobalFonts;
 
     ASSERT(! NT_SUCCESS(Status) || NULL != TextObj->GDIFontHandle);
 

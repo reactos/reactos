@@ -34,6 +34,12 @@ InitClassImpl(VOID);
 NTSTATUS FASTCALL
 CleanupClassImpl(VOID);
 
+#define IntLockProcessClasses(W32Process) \
+  ExAcquireFastMutex(&W32Process->ClassListLock)
+
+#define IntUnLockProcessClasses(W32Process) \
+  ExReleaseFastMutex(&W32Process->ClassListLock)
+
 NTSTATUS STDCALL
 ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
 			  LPCWSTR ClassName);

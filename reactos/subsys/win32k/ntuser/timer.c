@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.23 2004/02/19 21:12:09 weiden Exp $
+/* $Id: timer.c,v 1.24 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -61,6 +61,12 @@ static ULONG          HintIndex = 0;
 static HANDLE        MsgTimerThreadHandle;
 static CLIENT_ID     MsgTimerThreadId;
 
+
+#define IntLockTimerList \
+  ExAcquireFastMutex(&Mutex)
+
+#define IntUnLockTimerList \
+  ExReleaseFastMutex(&Mutex)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -140,7 +146,7 @@ RemoveTimersThread(HANDLE ThreadID)
   PMSG_TIMER_ENTRY MsgTimer;
   PLIST_ENTRY EnumEntry;
   
-  ExAcquireFastMutex(&Mutex);
+  IntLockTimerList;
   
   EnumEntry = SysTimerListHead.Flink;
   while (EnumEntry != &SysTimerListHead)
@@ -173,7 +179,7 @@ RemoveTimersThread(HANDLE ThreadID)
     }
   }
   
-  ExReleaseFastMutex(&Mutex);
+  IntUnLockTimerList;
 }
 
 UINT_PTR FASTCALL
@@ -190,7 +196,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   
   ThreadID = PsGetCurrentThreadId();
   KeQuerySystemTime(&CurrentTime);
-  ExAcquireFastMutex(&Mutex);
+  IntLockTimerList;
   
   if((hWnd == NULL) && !SystemTimer)
   {
@@ -199,12 +205,12 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     
     if(Index == (ULONG) -1)
     {
-      ExReleaseFastMutex(&Mutex);
+      IntUnLockTimerList;
       return 0;
     }
     
     HintIndex = ++Index;
-    ExReleaseFastMutex(&Mutex);
+    IntUnLockTimerList;
     return Index;
   }
   else
@@ -212,15 +218,15 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
-      ExReleaseFastMutex(&Mutex);
+      IntUnLockTimerList;
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
     }
     
     if(WindowObject->OwnerThread != PsGetCurrentThread())
     {
+      IntUnLockTimerList;
       IntReleaseWindowObject(WindowObject);
-      ExReleaseFastMutex(&Mutex);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return 0;
     }
@@ -263,7 +269,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     NewTimer = ExAllocatePoolWithTag(PagedPool, sizeof(MSG_TIMER_ENTRY), TAG_TIMER);
     if(!NewTimer)
     {
-      ExReleaseFastMutex(&Mutex);
+      IntUnLockTimerList;
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
     }
@@ -322,7 +328,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
     }
   }
 
-  ExReleaseFastMutex(&Mutex);
+  IntUnLockTimerList;
 
   return Ret;
 }
@@ -333,16 +339,16 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   PMSG_TIMER_ENTRY MsgTimer;
   PWINDOW_OBJECT WindowObject;
   
-  ExAcquireFastMutex(&Mutex);
+  IntLockTimerList;
   
   /* handle-less timer? */
   if((hWnd == NULL) && !SystemTimer)
   {
     if(!RtlAreBitsSet(&HandleLessTimersBitMap, uIDEvent - 1, 1))
     {
+      IntUnLockTimerList;
       /* bit was not set */
       /* FIXME: set the last error */
-      ExReleaseFastMutex(&Mutex); 
       return FALSE;
     }
     
@@ -353,14 +359,14 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
     WindowObject = IntGetWindowObject(hWnd);
     if(!WindowObject)
     {
-      ExReleaseFastMutex(&Mutex); 
+      IntUnLockTimerList; 
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
     }
     if(WindowObject->OwnerThread != PsGetCurrentThread())
     {
+      IntUnLockTimerList;
       IntReleaseWindowObject(WindowObject);
-      ExReleaseFastMutex(&Mutex); 
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
     }
@@ -369,7 +375,7 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   
   MsgTimer = IntRemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), SystemTimer);
   
-  ExReleaseFastMutex(&Mutex);
+  IntUnLockTimerList;
   
   if(MsgTimer == NULL)
   {
@@ -409,11 +415,11 @@ TimerThreadMain(PVOID StartContext)
       KEBUGCHECK(0);
     }
     
-    ExAcquireFastMutex(&Mutex);
+    ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
+    
+    IntLockTimerList;
     
     KeQuerySystemTime(&CurrentTime);
-    
-    ThreadsToDereferenceCount = ThreadsToDereferencePos = 0;
 
     for (EnumEntry = TimerListHead.Flink;
          EnumEntry != &TimerListHead;
@@ -552,7 +558,7 @@ TimerThreadMain(PVOID StartContext)
       }
     }
     
-    ExReleaseFastMutex(&Mutex);
+    IntUnLockTimerList;
 
     for (i = 0; i < ThreadsToDereferencePos; i++)
        ObDereferenceObject(ThreadsToDereference[i]);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.33 2004/01/16 19:32:00 gvg Exp $ */
+/* $Id: color.c,v 1.34 2004/02/24 13:27:03 weiden Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -31,6 +31,7 @@
 #include <win32k/ntuser.h>
 #include "../eng/handle.h"
 #include <include/inteng.h>
+#include <include/eng.h>
 #include <include/color.h>
 #include <include/palette.h>
 #include <include/error.h>
@@ -333,9 +334,9 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   } else {
     if(SurfGDI->SetPalette)
     {
-      ExAcquireFastMutex(SurfGDI->DriverLock);
+      IntLockGDIDriver(SurfGDI);
       success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
+      IntUnLockGDIDriver(SurfGDI);
     }
   }
 

@@ -23,6 +23,12 @@ VOID FASTCALL IntReleaseCurIconObject(PCURICON_OBJECT Object);
 PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
 VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
 
+#define IntLockProcessCursorIcons(W32Process) \
+  ExAcquireFastMutex(&W32Process->CursorIconListLock)
+
+#define IntUnLockProcessCursorIcons(W32Process) \
+  ExReleaseFastMutex(&W32Process->CursorIconListLock)
+
 #endif /* _WIN32K_CURSORICON_H */
 
 /* EOF */

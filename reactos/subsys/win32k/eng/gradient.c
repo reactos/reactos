@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.4 2004/02/09 22:16:50 weiden Exp $
+/* $Id: gradient.c,v 1.5 2004/02/24 13:27:02 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,7 @@
 
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
+#include <include/eng.h>
 #include <include/object.h>
 #include <include/paint.h>
 #include <include/surface.h>
@@ -549,10 +550,10 @@ IntEngGradientFill(
                          pco->rclBounds.right, pco->rclBounds.bottom);
   if((psoDest->iType != STYPE_BITMAP) && SurfGDI->GradientFill)
   {
-    ExAcquireFastMutex(SurfGDI->DriverLock);
+    IntLockGDIDriver(SurfGDI);
     Ret = SurfGDI->GradientFill(psoDest, pco, pxlo, pVertex, nVertex, pMesh, nMesh, 
                                 prclExtents, pptlDitherOrg, ulMode);
-    ExReleaseFastMutex(SurfGDI->DriverLock);
+    IntUnLockGDIDriver(SurfGDI);
     MouseSafetyOnDrawEnd(psoDest, SurfGDI);
     return Ret;
   }
@@ -564,10 +565,10 @@ IntEngGradientFill(
        0x00AA0029 is the Rop for D (no-op) */
     if(SurfGDI->BitBlt)
     {
-      ExAcquireFastMutex(SurfGDI->DriverLock);
+      IntLockGDIDriver(SurfGDI);
       SurfGDI->BitBlt(psoDest, NULL, NULL, pco, pxlo,
                       prclExtents, pptlDitherOrg, NULL, NULL, NULL, 0x00AA0029);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
+      IntUnLockGDIDriver(SurfGDI);
       MouseSafetyOnDrawEnd(psoDest, SurfGDI);
       return TRUE;
     }

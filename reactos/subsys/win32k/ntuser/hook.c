@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.5 2004/02/19 21:12:09 weiden Exp $
+/* $Id: hook.c,v 1.6 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -106,9 +106,9 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
   Hook->HookId = HookId;
   RtlInitUnicodeString(&Hook->ModuleName, NULL);
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   InsertHeadList(&Table->Hooks[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
 
   return Hook;
 }
@@ -142,7 +142,7 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
   PHOOK Hook;
   PLIST_ENTRY Elem;
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   Hook = IntGetFirstHook(Table, HookId);
   while (NULL != Hook && NULL == Hook->Proc)
     {
@@ -150,7 +150,7 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
       Hook = (Elem == &Table->Hooks[HOOKID_TO_INDEX(HookId)]
               ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain));
     }
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
   
   return Hook;
 }
@@ -163,18 +163,18 @@ IntGetNextHook(PHOOK Hook)
   int HookId = Hook->HookId;
   PLIST_ENTRY Elem;
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   Elem = Hook->Chain.Flink;
   while (Elem != &Table->Hooks[HOOKID_TO_INDEX(HookId)])
     {
       Hook = CONTAINING_RECORD(Elem, HOOK, Chain);
       if (NULL != Hook->Proc)
         {
-          ExReleaseFastMutex(&Table->Lock);
+          IntUnLockHookTable(Table);
           return Hook;
         }
     }
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
 
   if (NULL != GlobalHooks && Table != GlobalHooks)  /* now search through the global table */
     {
@@ -206,7 +206,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
       return;
     }
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
     {
       Hook->Proc = NULL; /* chain is in use, just mark it and return */
@@ -215,7 +215,7 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     {
       IntFreeHook(Table, Hook, WinStaObj);
     }
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
 }
 
 /* release a hook chain, removing deleted hooks if the use count drops to 0 */
@@ -230,12 +230,12 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
       return;
     }
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   /* use count shouldn't already be 0 */
   ASSERT(0 != Table->Counts[HOOKID_TO_INDEX(HookId)]);
   if (0 == Table->Counts[HOOKID_TO_INDEX(HookId)])
     {
-      ExReleaseFastMutex(&Table->Lock);
+      IntUnLockHookTable(Table);
       return;
     }
   if (0 == --Table->Counts[HOOKID_TO_INDEX(HookId)])
@@ -251,7 +251,7 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
             }
         }
     }
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
 }
 
 LRESULT FASTCALL
@@ -281,14 +281,14 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       return 0;
     }
 
-  ExAcquireFastMutex(&Table->Lock);
+  IntLockHookTable(Table);
   Table->Counts[HOOKID_TO_INDEX(HookId)]++;
-  ExReleaseFastMutex(&Table->Lock);
+  IntUnLockHookTable(Table);
   if (Table != GlobalHooks && GlobalHooks != NULL)
     {
-      ExAcquireFastMutex(&GlobalHooks->Lock);
+      IntLockHookTable(GlobalHooks);
       GlobalHooks->Counts[HOOKID_TO_INDEX(HookId)]++;
-      ExReleaseFastMutex(&GlobalHooks->Lock);
+      IntUnLockHookTable(GlobalHooks);
     }
 
   Result = IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
@@ -334,7 +334,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
           DPRINT1("Invalid window station????\n");
           return;
         }
-      ExAcquireFastMutex(&GlobalHooks->Lock);
+      IntLockHookTable(GlobalHooks);
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
         {
           /* only low-level keyboard/mouse global hooks can be owned by a thread */
@@ -355,7 +355,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
               break;
             }
         }
-      ExReleaseFastMutex(&GlobalHooks->Lock);
+      IntUnLockHookTable(GlobalHooks);
       ObDereferenceObject(WinStaObj);
     }
 }

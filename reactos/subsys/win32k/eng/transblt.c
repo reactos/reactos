@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.10 2004/01/16 19:32:00 gvg Exp $
+/* $Id: transblt.c,v 1.11 2004/02/24 13:27:02 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,6 +32,7 @@
 #include <ddk/ntddmou.h>
 #include <ntos/minmax.h>
 #include <include/dib.h>
+#include <include/eng.h>
 #include <include/object.h>
 #include <include/surface.h>
 
@@ -96,10 +97,10 @@ EngTransparentBlt(PSURFOBJ Dest,
     // FIXME: Skip creating a TempSurf if we have the same BPP and palette
     EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, &SourcePoint, NULL, NULL, NULL, 0);
 
-    ExAcquireFastMutex(DestGDI->DriverLock);
+    IntLockGDIDriver(DestGDI);
     ret = DestGDI->TransparentBlt(Dest, TempSurf, Clip, NULL, DestRect, SourceRect,
                                   TransparentColor, Reserved);
-    ExReleaseFastMutex(DestGDI->DriverLock);
+    IntUnLockGDIDriver(DestGDI);
 
     MouseSafetyOnDrawEnd(Source, SourceGDI);
     MouseSafetyOnDrawEnd(Dest, DestGDI);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.47 2004/02/19 21:12:09 weiden Exp $
+/* $Id: class.c,v 1.48 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,7 +66,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
   PLIST_ENTRY CurrentEntry;
   PW32PROCESS Process = PsGetWin32Process();
   
-  ExAcquireFastMutexUnsafe (&Process->ClassListLock);
+  IntLockProcessClasses(Process);
   CurrentEntry = Process->ClassListHead.Flink;
   while (CurrentEntry != &Process->ClassListHead)
     {
@@ -76,13 +76,13 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
 	{
 	*Class = Current;
 	ObmReferenceObject(Current);
-	ExReleaseFastMutexUnsafe (&Process->ClassListLock);
+	IntUnLockProcessClasses(Process);
 	return(STATUS_SUCCESS);
 	}
 
 	CurrentEntry = CurrentEntry->Flink;
     }
-  ExReleaseFastMutexUnsafe (&Process->ClassListLock);
+  IntUnLockProcessClasses(Process);
   
   return(STATUS_NOT_FOUND);
 }
@@ -418,9 +418,9 @@ NtUserRegisterClassExWOW(
     DPRINT("Failed creating window class object\n");
     return((RTL_ATOM)0);
   }
-  ExAcquireFastMutex(&PsGetWin32Process()->ClassListLock);
+  IntLockProcessClasses(PsGetWin32Process());
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
-  ExReleaseFastMutex(&PsGetWin32Process()->ClassListLock);
+  IntUnLockProcessClasses(PsGetWin32Process());
   ObDereferenceObject(WinStaObject);
   return(Atom);
 }

@@ -16,7 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.18 2004/02/24 01:30:57 weiden Exp $
+ * $Id: focus.c,v 1.19 2004/02/24 13:27:03 weiden Exp $
  */
 
 #include <win32k/win32k.h>
@@ -26,6 +26,7 @@
 #include <include/focus.h>
 #include <include/error.h>
 #include <include/winpos.h>
+#include <include/msgqueue.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 #include <debug.h>
@@ -174,18 +175,18 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    /* FIXME: Call hooks. */
 
    IntSetFocusMessageQueue(Window->MessageQueue);
-   ExAcquireFastMutex(&Window->MessageQueue->Lock);
+   IntLockMessageQueue(Window->MessageQueue);
    if (Window->MessageQueue)
    {
       Window->MessageQueue->ActiveWindow = hWnd;
    }
-   ExReleaseFastMutex(&Window->MessageQueue->Lock);
-   ExAcquireFastMutex(&FocusWindow->MessageQueue->Lock);
+   IntUnLockMessageQueue(Window->MessageQueue);
+   IntLockMessageQueue(FocusWindow->MessageQueue);
    if (FocusWindow->MessageQueue)
    {
       FocusWindow->MessageQueue->FocusWindow = hWndFocus;
    }
-   ExReleaseFastMutex(&FocusWindow->MessageQueue->Lock);
+   IntUnLockMessageQueue(FocusWindow->MessageQueue);
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
@@ -278,9 +279,9 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 
    /* FIXME: Call hooks. */
 
-   ExAcquireFastMutex(&ThreadQueue->Lock);
+   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->ActiveWindow = hWnd;
-   ExReleaseFastMutex(&ThreadQueue->Lock);
+   IntUnLockMessageQueue(ThreadQueue);
 
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendActivateMessages(hWndPrev, hWnd, FALSE);
@@ -305,9 +306,9 @@ IntSetFocusWindow(HWND hWnd)
       return hWndPrev;
    }
 
-   ExAcquireFastMutex(&ThreadQueue->Lock);
+   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->FocusWindow = hWnd;
-   ExReleaseFastMutex(&ThreadQueue->Lock);
+   IntUnLockMessageQueue(ThreadQueue);
 
    IntSendKillFocusMessages(hWndPrev, hWnd);
    IntSendSetFocusMessages(hWndPrev, hWnd);
@@ -411,9 +412,9 @@ NtUserSetCapture(HWND hWnd)
    }
    hWndPrev = ThreadQueue->CaptureWindow;
    IntSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
-   ExAcquireFastMutex(&ThreadQueue->Lock);
+   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->CaptureWindow = hWnd;
-   ExReleaseFastMutex(&ThreadQueue->Lock);
+   IntUnLockMessageQueue(ThreadQueue);
 
    return hWndPrev;
 }

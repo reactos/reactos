@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.20 2004/01/16 19:32:00 gvg Exp $
+/* $Id: copybits.c,v 1.21 2004/02/24 13:27:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -75,9 +75,9 @@ EngCopyBits(SURFOBJ *Dest,
 
       if (DestGDI->CopyBits!=NULL)
       {
-        ExAcquireFastMutex(DestGDI->DriverLock);
+        IntLockGDIDriver(DestGDI);
         ret = DestGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
-        ExReleaseFastMutex(DestGDI->DriverLock);
+        IntUnLockGDIDriver(DestGDI);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -93,9 +93,9 @@ EngCopyBits(SURFOBJ *Dest,
 
       if (SourceGDI->CopyBits!=NULL)
       {
-        ExAcquireFastMutex(DestGDI->DriverLock);
+        IntLockGDIDriver(DestGDI);
         ret = SourceGDI->CopyBits(Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
-        ExReleaseFastMutex(DestGDI->DriverLock);
+        IntUnLockGDIDriver(DestGDI);
 
         MouseSafetyOnDrawEnd(Source, SourceGDI);
         MouseSafetyOnDrawEnd(Dest, DestGDI);

@@ -8,5 +8,11 @@ typedef struct _PROPERTY
   ATOM Atom;
 } PROPERTY, *PPROPERTY;
 
+#define IntLockWindowProperties(Window) \
+  ExAcquireFastMutex(&Window->PropListLock)
+
+#define IntUnLockWindowProperties(Window) \
+  ExReleaseFastMutex(&Window->PropListLock)
+
 #endif /* _WIN32K_PROP_H */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.47 2004/02/10 23:40:01 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.48 2004/02/24 13:27:03 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -146,9 +146,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       if (NULL != CurInfo->CurrentCursorObject && CurInfo->ShowingCursor)
       {
          /* Remove the cursor if it was displayed */
-         ExAcquireFastMutex(SurfGDI->DriverLock);
+         IntLockGDIDriver(SurfGDI);
          SurfGDI->MovePointer(SurfObj, -1, -1, &PointerRect);
-         ExReleaseFastMutex(SurfGDI->DriverLock);
+         IntUnLockGDIDriver(SurfGDI);
          SetPointerRect(CurInfo, &PointerRect);
       }
 
@@ -220,7 +220,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       CurInfo->CurrentCursorObject = NULL;
     }
     
-    ExAcquireFastMutex(SurfGDI->DriverLock);
+    IntLockGDIDriver(SurfGDI);
     SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, soMask, soColor, XlateObj,
                                                       NewCursor->IconInfo.xHotspot,
                                                       NewCursor->IconInfo.yHotspot,
@@ -228,7 +228,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                                                       CurInfo->y, 
                                                       &PointerRect,
                                                       SPS_CHANGE);
-    ExReleaseFastMutex(SurfGDI->DriverLock);
+    IntUnLockGDIDriver(SurfGDI);
 
     if(SurfGDI->PointerStatus == SPS_DECLINE)
     {
@@ -287,7 +287,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
   ULONG i;
   
   HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
-  ExAcquireFastMutex(&HandleTable->ListLock);
+  ObmpLockHandleTable(HandleTable);
   
   CurrentEntry = HandleTable->ListHead.Flink;
   while(CurrentEntry != &HandleTable->ListHead)
@@ -303,14 +303,14 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
           continue;
         }
         ObmReferenceObject(Object);
-        ExReleaseFastMutex(&HandleTable->ListLock);
+        ObmpUnlockHandleTable(HandleTable);
         return Object;
       }
     }
     CurrentEntry = CurrentEntry->Flink;
   }
   
-  ExReleaseFastMutex(&HandleTable->ListLock);
+  ObmpUnlockHandleTable(HandleTable);
   return NULL;
 }
 
@@ -334,9 +334,9 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   
   Win32Process = PsGetWin32Process();
   
-  ExAcquireFastMutex(&Win32Process->CursorIconListLock);
+  IntLockProcessCursorIcons(Win32Process);
   InsertTailList(&Win32Process->CursorIconListHead, &Object->ListEntry);
-  ExReleaseFastMutex(&Win32Process->CursorIconListLock);
+  IntUnLockProcessCursorIcons(Win32Process);
   
   Object->Self = Handle;
   Object->Process = PsGetWin32Process();
@@ -373,9 +373,9 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle, BOOL Rem
   
   if(Object->Process && RemoveFromProcess)
   {
-    ExAcquireFastMutex(&Object->Process->CursorIconListLock);
+    IntLockProcessCursorIcons(Object->Process);
     RemoveEntryList(&Object->ListEntry);
-    ExReleaseFastMutex(&Object->Process->CursorIconListLock);
+    IntUnLockProcessCursorIcons(Object->Process);
   }
   
   ObmDereferenceObject(Object);
@@ -401,7 +401,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   if(!(WinStaObject = Win32Process->WindowStation))
     return;
   
-  ExAcquireFastMutex(&Win32Process->CursorIconListLock);
+  IntLockProcessCursorIcons(Win32Process);
   CurrentEntry = Win32Process->CursorIconListHead.Flink;
   while(CurrentEntry != &Win32Process->CursorIconListHead)
   {
@@ -411,7 +411,7 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
     IntDestroyCurIconObject(WinStaObject, Current->Self, FALSE);
     CurrentEntry = NextEntry;
   }
-  ExReleaseFastMutex(&Win32Process->CursorIconListLock);
+  IntUnLockProcessCursorIcons(Win32Process);
 }
 
 /*

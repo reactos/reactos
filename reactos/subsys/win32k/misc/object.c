@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.9 2004/02/24 01:30:57 weiden Exp $
+/* $Id: object.c,v 1.10 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -36,31 +36,13 @@
 #define NDEBUG
 #include <debug.h>
 
+#define HEADER_TO_BODY(ObjectHeader) \
+  ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
+
+#define BODY_TO_HEADER(ObjectBody) \
+  ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
+
 /* FUNCTIONS *****************************************************************/
-
-PVOID FASTCALL
-HEADER_TO_BODY(PUSER_OBJECT_HEADER ObjectHeader)
-{
-  return (((PUSER_OBJECT_HEADER)ObjectHeader) + 1);
-}
-
-PUSER_OBJECT_HEADER FASTCALL
-BODY_TO_HEADER(PVOID ObjectBody)
-{
-  return (((PUSER_OBJECT_HEADER)ObjectBody) - 1);
-}
-
-VOID STATIC FASTCALL
-ObmpLockHandleTable(PUSER_HANDLE_TABLE HandleTable)
-{
-  ExAcquireFastMutex(&HandleTable->ListLock);
-}
-
-VOID STATIC FASTCALL
-ObmpUnlockHandleTable(PUSER_HANDLE_TABLE HandleTable)
-{
-  ExReleaseFastMutex(&HandleTable->ListLock);
-}
 
 VOID FASTCALL
 ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
@@ -307,10 +289,7 @@ ObmDereferenceObject(PVOID ObjectBody)
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   
   ObjectHeader->RefCount--;
-  #if 0
-  if(ObjectHeader->Type == otWindow)
-    DbgPrint("Dereference 0x%x: %d\n", ((PWINDOW_OBJECT)ObjectBody)->Self, ObjectHeader->RefCount);
-  #endif
+  
   ObmpPerformRetentionChecks(ObjectHeader);
 }
 
@@ -333,10 +312,7 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
     {
       return STATUS_INVALID_PARAMETER;
     }
-  #if 0
-  if(ObjectType == otWindow)
-    DbgPrint("Reference 0x%x: %d\n", ((PWINDOW_OBJECT)ObjectBody)->Self, ObjectHeader->RefCount);
-  #endif
+  
   ObjectHeader->RefCount++;
   
   return STATUS_SUCCESS;

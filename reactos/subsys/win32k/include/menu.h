@@ -44,8 +44,20 @@ typedef struct _MENU_OBJECT
 PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu);
 
-VOID FASTCALL
-IntReleaseMenuObject(PMENU_OBJECT MenuObject);
+#define IntLockMenuItems(MenuObj) \
+  ExAcquireFastMutex(&MenuObj->MenuItemsLock)
+
+#define IntUnLockMenuItems(MenuObj) \
+  ExReleaseFastMutex(&MenuObj->MenuItemsLock)
+
+#define IntLockProcessMenus(W32Process) \
+  ExAcquireFastMutex(&W32Process->MenuListLock)
+
+#define IntUnLockProcessMenus(W32Process) \
+  ExReleaseFastMutex(&W32Process->MenuListLock)
+
+#define IntReleaseMenuObject(MenuObj) \
+  ObmDereferenceObject(MenuObj)
 
 BOOL FASTCALL
 IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.51 2004/02/24 01:30:57 weiden Exp $
+/* $Id: message.c,v 1.52 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1018,7 +1018,7 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 
    Queue = PsGetWin32Thread()->MessageQueue;
 
-   ExAcquireFastMutex(&Queue->Lock);
+   IntLockMessageQueue(Queue);
 
    Result = MAKELONG(Queue->ChangedBits, Queue->WakeBits);
    if (ClearChanges)
@@ -1026,7 +1026,7 @@ NtUserGetQueueStatus(BOOL ClearChanges)
       Queue->ChangedBits = 0;
    }
 
-   ExReleaseFastMutex(&Queue->Lock);
+   IntUnLockMessageQueue(Queue);
 
    return Result;
 }

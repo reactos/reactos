@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.24 2004/02/19 21:12:09 weiden Exp $
+/* $Id: keyboard.c,v 1.25 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -66,6 +66,12 @@
 FAST_MUTEX QueueStateLock;
 
 BYTE QueueKeyStateTable[256];
+
+#define IntLockQueueState \
+  ExAcquireFastMutex(&QueueStateLock)
+
+#define IntUnLockQueueState \
+  ExReleaseFastMutex(&QueueStateLock)
 
 /* FUNCTIONS *****************************************************************/
 
@@ -314,12 +320,12 @@ NtUserGetKeyState(
 {
   DWORD ret = 0;
 
-  ExAcquireFastMutex(&QueueStateLock);
+  IntLockQueueState;
   if( key < 0x100 ) {
     ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
       (QueueKeyStateTable[key] & KS_LOCK_BIT);
   }
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
   return ret;
 }
 
@@ -332,7 +338,7 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
 			 HKL dwhkl ) {
   int ToUnicodeResult = 0;
 
-  ExAcquireFastMutex(&QueueStateLock);
+  IntLockQueueState;
   ToUnicodeResult = ToUnicodeInner( wVirtKey,
 				    wScanCode,
 				    lpKeyState,
@@ -341,7 +347,7 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
 				    wFlags,
 				    PsGetWin32Thread() ? 
 				    PsGetWin32Thread()->KeyboardLayout : 0 );
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
 
   return ToUnicodeResult;
 }
@@ -618,7 +624,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
   ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
-  ExAcquireFastMutex(&QueueStateLock);
+  IntLockQueueState;
 
   UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
 			  QueueKeyStateTable, wp, 2, 0, 
@@ -681,7 +687,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       Result = TRUE;
     }
 
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
   return Result;
 }
 
@@ -692,12 +698,12 @@ NtUserGetKeyboardState(
 {
   BOOL Result = TRUE;
 
-  ExAcquireFastMutex(&QueueStateLock);
+  IntLockQueueState;
   if (lpKeyState) {
 	if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, QueueKeyStateTable, 256)))
 	  Result = FALSE;
   }
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
   return Result;
 }
 
@@ -708,12 +714,12 @@ NtUserSetKeyboardState(
 {
   BOOL Result = TRUE;
 
-  ExAcquireFastMutex(&QueueStateLock);
+ IntLockQueueState;
   if (lpKeyState) {
     if(! NT_SUCCESS(MmCopyFromCaller(QueueKeyStateTable, lpKeyState, 256)))
       Result = FALSE;
   }
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
   
   return Result;
 }
@@ -964,7 +970,7 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
       return;
     }
 
-  ExAcquireFastMutex(&QueueStateLock);
+  IntLockQueueState;
 
   /* arty -- handle numpad -- On real windows, the actual key produced 
    * by the messaging layer is different based on the state of numlock. */
@@ -1017,6 +1023,6 @@ VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyboardLayout) {
       else Msg->message = WM_KEYUP;
   }
 
-  ExReleaseFastMutex(&QueueStateLock);
+  IntUnLockQueueState;
 }
 /* EOF */

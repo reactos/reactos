@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.7 2004/02/19 21:12:09 weiden Exp $
+/* $Id: hotkey.c,v 1.8 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -80,7 +80,7 @@ GetHotKey (PWINSTATION_OBJECT WinStaObject,
     return FALSE;
   }
 
-  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+  IntLockHotKeys(WinStaObject);
 
   Entry = WinStaObject->HotKeyListHead.Flink;
   while (Entry != &WinStaObject->HotKeyListHead)
@@ -100,7 +100,7 @@ GetHotKey (PWINSTATION_OBJECT WinStaObject,
 	  if (id != NULL)
 	    *id = HotKeyItem->id;
 
-	  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+	  IntUnLockHotKeys(WinStaObject);
 
 	  return TRUE;
 	}
@@ -108,7 +108,7 @@ GetHotKey (PWINSTATION_OBJECT WinStaObject,
       Entry = Entry->Flink;
     }
 
-  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  IntUnLockHotKeys(WinStaObject);
 
   return FALSE;
 }
@@ -128,7 +128,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
   if(!WinStaObject)
     return;
 
-  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+  IntLockHotKeys(WinStaObject);
 
   Entry = WinStaObject->HotKeyListHead.Flink;
   while (Entry != &WinStaObject->HotKeyListHead)
@@ -144,7 +144,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 	}
     }
 
-  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  IntUnLockHotKeys(WinStaObject);
 }
 
 
@@ -161,7 +161,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
   if(!WinStaObject)
     return;
   
-  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+  IntLockHotKeys(WinStaObject);
 
   Entry = WinStaObject->HotKeyListHead.Flink;
   while (Entry != &WinStaObject->HotKeyListHead)
@@ -177,7 +177,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 	}
     }
 
-  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  IntUnLockHotKeys(WinStaObject);
 }
 
 
@@ -234,12 +234,12 @@ NtUserRegisterHotKey(HWND hWnd,
     return FALSE;
   }
 
-  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+  IntLockHotKeys(WinStaObject);
 
   /* Check for existing hotkey */
   if (IsHotKey (WinStaObject, fsModifiers, vk))
   {
-    ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+    IntUnLockHotKeys(WinStaObject);
     IntReleaseWindowObject(Window);
     return FALSE;
   }
@@ -247,7 +247,7 @@ NtUserRegisterHotKey(HWND hWnd,
   HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), TAG_HOTKEY);
   if (HotKeyItem == NULL)
     {
-      ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+      IntUnLockHotKeys(WinStaObject);
       IntReleaseWindowObject(Window);
       return FALSE;
     }
@@ -261,7 +261,7 @@ NtUserRegisterHotKey(HWND hWnd,
   InsertHeadList (&WinStaObject->HotKeyListHead,
 		  &HotKeyItem->ListEntry);
 
-  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  IntUnLockHotKeys(WinStaObject);
   
   IntReleaseWindowObject(Window);
   return TRUE;
@@ -293,7 +293,7 @@ NtUserUnregisterHotKey(HWND hWnd,
     return FALSE;
   }
 
-  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+  IntLockHotKeys(WinStaObject);
 
   Entry = WinStaObject->HotKeyListHead.Flink;
   while (Entry != &WinStaObject->HotKeyListHead)
@@ -306,7 +306,7 @@ NtUserUnregisterHotKey(HWND hWnd,
 	{
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);
-	  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+	  IntUnLockHotKeys(WinStaObject);
 	  
 	  IntReleaseWindowObject(Window);
 	  return TRUE;
@@ -315,7 +315,7 @@ NtUserUnregisterHotKey(HWND hWnd,
       Entry = Entry->Flink;
     }
 
-  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  IntUnLockHotKeys(WinStaObject);
   
   IntReleaseWindowObject(Window);
   return FALSE;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.17 2004/01/16 19:32:00 gvg Exp $
+/* $Id: paint.c,v 1.18 2004/02/24 13:27:02 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,6 +32,7 @@
 #include <include/object.h>
 #include <include/paint.h>
 #include <include/surface.h>
+#include <include/eng.h>
 
 #include "objects.h"
 #include <include/mouse.h>
@@ -141,9 +142,9 @@ IntEngPaint(IN SURFOBJ *Surface,
 	                         ClipRegion->rclBounds.top, ClipRegion->rclBounds.right,
 							 ClipRegion->rclBounds.bottom);
 
-    ExAcquireFastMutex(SurfGDI->DriverLock);
+    IntLockGDIDriver(SurfGDI);
     ret = SurfGDI->Paint(Surface, ClipRegion, Brush, BrushOrigin, Mix);
-    ExReleaseFastMutex(SurfGDI->DriverLock);
+    IntUnLockGDIDriver(SurfGDI);
     MouseSafetyOnDrawEnd(Surface, SurfGDI);
     return ret;
   }

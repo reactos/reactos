@@ -16,12 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.29 2004/01/16 19:32:00 gvg Exp $
+ * $Id: lineto.c,v 1.30 2004/02/24 13:27:02 weiden Exp $
  */
 
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <include/inteng.h>
+#include <include/eng.h>
 #include <include/dib.h>
 #include "clip.h"
 #include "objects.h"
@@ -521,9 +522,9 @@ IntEngLineTo(SURFOBJ *DestSurf,
   if (NULL != SurfGDI->LineTo)
     {
     /* Call the driver's DrvLineTo */
-    ExAcquireFastMutex(SurfGDI->DriverLock);
+    IntLockGDIDriver(SurfGDI);
     ret = SurfGDI->LineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, mix);
-    ExReleaseFastMutex(SurfGDI->DriverLock);
+    IntUnLockGDIDriver(SurfGDI);
     }
 
 #if 0

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.191 2004/02/24 01:30:57 weiden Exp $
+/* $Id: window.c,v 1.192 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -390,9 +390,9 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
   
   IntUnlinkWindow(Window);
 
-  ExAcquireFastMutexUnsafe (&ThreadData->WindowListLock);
+  IntLockThreadWindows(ThreadData);
   RemoveEntryList(&Window->ThreadListEntry);
-  ExReleaseFastMutexUnsafe (&ThreadData->WindowListLock);
+  IntUnLockThreadWindows(ThreadData);
   
   IntDestroyScrollBar(Window, SB_VERT);
   IntDestroyScrollBar(Window, SB_HORZ);
@@ -482,24 +482,24 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
 
   Win32Thread = Thread->Win32Thread;
   Win32Process = Thread->ThreadsProcess->Win32Process;
-  ExAcquireFastMutexUnsafe(&Win32Thread->WindowListLock);
+  IntLockThreadWindows(Win32Thread);
   LastHead = NULL;
   while (Win32Thread->WindowListHead.Flink != &(Win32Thread->WindowListHead) &&
          Win32Thread->WindowListHead.Flink != LastHead)
     {
       LastHead = Win32Thread->WindowListHead.Flink;
       Window = CONTAINING_RECORD(Win32Thread->WindowListHead.Flink, WINDOW_OBJECT, ThreadListEntry);
-      ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
+      IntUnLockThreadWindows(Win32Thread);
       WinPosShowWindow(Window->Self, SW_HIDE);
       IntDestroyWindow(Window, Win32Process, Win32Thread, FALSE);
-      ExAcquireFastMutexUnsafe(&Win32Thread->WindowListLock);
+      IntLockThreadWindows(Win32Thread);
     }
   if (Win32Thread->WindowListHead.Flink == LastHead)
     {
       /* Window at head of list was not removed, should never happen, infinite loop */
       KEBUGCHECK(0);
     }
-  ExReleaseFastMutexUnsafe(&Win32Thread->WindowListLock);
+  IntUnLockThreadWindows(Win32Thread);
 }
 
 
@@ -1009,7 +1009,7 @@ NtUserBuildHwndList(
 
       ObDereferenceObject(Thread);
 
-      ExAcquireFastMutex(&HandleTable->ListLock);
+      ObmpLockHandleTable(HandleTable);
 
       Current = HandleTable->ListHead.Flink;
       while ( Current != &HandleTable->ListHead )
@@ -1031,7 +1031,7 @@ NtUserBuildHwndList(
 	  Current = Current->Flink;
 	}
 
-      ExReleaseFastMutex(&HandleTable->ListLock);
+      ObmpUnlockHandleTable(HandleTable);
     }
   else
     {
@@ -1383,10 +1383,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   }
   
   /* Insert the window into the thread's window list. */
-  ExAcquireFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
+  IntLockThreadWindows(PsGetWin32Thread());
   InsertTailList (&PsGetWin32Thread()->WindowListHead, 
 		  &WindowObject->ThreadListEntry);
-  ExReleaseFastMutexUnsafe (&PsGetWin32Thread()->WindowListLock);
+  IntUnLockThreadWindows(PsGetWin32Thread());
 
   /* Allocate a DCE for this window. */
   if (dwStyle & CS_OWNDC)
@@ -1668,14 +1668,14 @@ NtUserDestroyWindow(HWND Wnd)
           WinPosActivateOtherWindow(Window);
         }
     }
-  ExAcquireFastMutex(&Window->MessageQueue->Lock);
+  IntLockMessageQueue(Window->MessageQueue);
   if (Window->MessageQueue->ActiveWindow == Window->Self)
     Window->MessageQueue->ActiveWindow = NULL;
   if (Window->MessageQueue->FocusWindow == Window->Self)
     Window->MessageQueue->FocusWindow = NULL;
   if (Window->MessageQueue->CaptureWindow == Window->Self)
     Window->MessageQueue->CaptureWindow = NULL;
-  ExReleaseFastMutex(&Window->MessageQueue->Lock);
+  IntUnLockMessageQueue(Window->MessageQueue);
 
   /* Call hooks */
 #if 0 /* FIXME */
@@ -2858,7 +2858,7 @@ NtUserGetWindowPlacement(HWND hWnd,
   
   Size.x = WindowObject->WindowRect.left;
   Size.y = WindowObject->WindowRect.top;
-  InternalPos = WinPosInitInternalPos(WindowObject, Size, 
+  InternalPos = WinPosInitInternalPos(WindowObject, &Size, 
 				      &WindowObject->WindowRect);
   if (InternalPos)
   {
@@ -3373,7 +3373,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
       pt.x = X;
       pt.y = Y;
       
-      Hit = WinPosWindowFromPoint(DesktopWindow, pt, &Window);
+      Hit = WinPosWindowFromPoint(DesktopWindow, &pt, &Window);
       
       if(Window)
       {

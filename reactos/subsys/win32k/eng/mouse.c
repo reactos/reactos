@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.61 2004/02/19 21:12:09 weiden Exp $
+/* $Id: mouse.c,v 1.62 2004/02/24 13:27:02 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -154,9 +154,9 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
           return FALSE;
         }
       CurInfo->SafetySwitch = TRUE;
-      ExAcquireFastMutex(SurfGDI->DriverLock);
+      IntLockGDIDriver(SurfGDI);
       SurfGDI->MovePointer(SurfObj, -1, -1, NULL);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
+      IntUnLockGDIDriver(SurfGDI);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }
     
@@ -224,9 +224,9 @@ MouseSafetyOnDrawEnd(PSURFOBJ SurfObj, PSURFGDI SurfGDI)
           ObDereferenceObject(InputWindowStation);
           return FALSE;
         }
-      ExAcquireFastMutex(SurfGDI->DriverLock);
+      IntLockGDIDriver(SurfGDI);
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
+      IntUnLockGDIDriver(SurfGDI);
       SetPointerRect(CurInfo, &PointerRect);
       CurInfo->SafetySwitch = FALSE;
     }
@@ -280,9 +280,9 @@ MouseMoveCursor(LONG X, LONG Y)
       if(CurInfo->Enabled)
       {
         ExAcquireFastMutex(&CurInfo->CursorMutex);
-        ExAcquireFastMutex(SurfGDI->DriverLock);
+        IntLockGDIDriver(SurfGDI);
         SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-        ExReleaseFastMutex(SurfGDI->DriverLock);
+        IntUnLockGDIDriver(SurfGDI);
         SetPointerRect(CurInfo, &PointerRect);
         ExReleaseFastMutex(&CurInfo->CursorMutex);
       }
@@ -441,9 +441,9 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
               ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
           {
             ExAcquireFastMutex(&CurInfo->CursorMutex);
-            ExAcquireFastMutex(SurfGDI->DriverLock);
+            IntLockGDIDriver(SurfGDI);
             SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-            ExReleaseFastMutex(SurfGDI->DriverLock);
+            IntUnLockGDIDriver(SurfGDI);
             SetPointerRect(CurInfo, &PointerRect);
             ExReleaseFastMutex(&CurInfo->CursorMutex);
             mouse_cx = 0;
@@ -471,9 +471,9 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
         ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
     {
       ExAcquireFastMutex(&CurInfo->CursorMutex);
-      ExAcquireFastMutex(SurfGDI->DriverLock);
+      IntLockGDIDriver(SurfGDI);
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
-      ExReleaseFastMutex(SurfGDI->DriverLock);
+      IntUnLockGDIDriver(SurfGDI);
       SetPointerRect(CurInfo, &PointerRect);
       ExReleaseFastMutex(&CurInfo->CursorMutex);
     }

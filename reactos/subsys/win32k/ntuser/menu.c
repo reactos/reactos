@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.49 2004/02/23 21:18:45 gvg Exp $
+/* $Id: menu.c,v 1.50 2004/02/24 13:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -163,12 +163,6 @@ IntGetMenuObject(HMENU hMenu)
   return MenuObject;
 }
 
-VOID FASTCALL
-IntReleaseMenuObject(PMENU_OBJECT MenuObject)
-{
-  ObmDereferenceObject(MenuObject);
-}
-
 BOOL FASTCALL
 IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse)
@@ -243,15 +237,15 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
   if(MenuObject)
   {
     /* remove all menu items */
-    ExAcquireFastMutexUnsafe (&MenuObject->MenuItemsLock);
+    IntLockMenuItems(MenuObject);
     IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
-    ExReleaseFastMutexUnsafe (&MenuObject->MenuItemsLock);
+    IntUnLockMenuItems(MenuObject);
     
     if(RemoveFromProcess)
     {
-      ExAcquireFastMutexUnsafe(&MenuObject->W32Process->MenuListLock);
+      IntLockProcessMenus(MenuObject->W32Process);
       RemoveEntryList(&MenuObject->ListEntry);
-      ExReleaseFastMutexUnsafe(&MenuObject->W32Process->MenuListLock);
+      IntUnLockProcessMenus(MenuObject->W32Process);
     }
     
     ObmCloseHandle(MenuObject->W32Process->WindowStation->HandleTable, MenuObject->MenuInfo.Self);
@@ -301,9 +295,9 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
 
   /* Insert menu item into process menu handle list */
-  ExAcquireFastMutexUnsafe(&Win32Process->MenuListLock);
+  IntLockProcessMenus(Win32Process);
   InsertTailList(&Win32Process->MenuListHead, &MenuObject->ListEntry);
-  ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
+  IntUnLockProcessMenus(Win32Process);
 
   return MenuObject;
 }
@@ -317,8 +311,8 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
   if(!Source->MenuInfo.MenuItemCount)
     return FALSE;
 
-  ExAcquireFastMutexUnsafe(&Destination->MenuItemsLock);
-  ExAcquireFastMutexUnsafe(&Source->MenuItemsLock);
+  IntLockMenuItems(Destination);
+  IntLockMenuItems(Source);
 
   MenuItem = Source->MenuItemList;
   while(MenuItem)
@@ -370,8 +364,8 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
     MenuItem = MenuItem->Next;
   }
 
-  ExReleaseFastMutexUnsafe(&Source->MenuItemsLock);
-  ExReleaseFastMutexUnsafe(&Destination->MenuItemsLock);
+  IntUnLockMenuItems(Source);
+  IntUnLockMenuItems(Destination);
   return TRUE;
 }
 
@@ -413,9 +407,9 @@ IntCloneMenu(PMENU_OBJECT Source)
   ExInitializeFastMutex(&MenuObject->MenuItemsLock);
   
   /* Insert menu item into process menu handle list */
-  ExAcquireFastMutexUnsafe(&Process->MenuListLock);
+  IntLockProcessMenus(Process);
   InsertTailList(&Process->MenuListHead, &MenuObject->ListEntry);
-  ExReleaseFastMutexUnsafe(&Process->MenuListLock);
+  IntUnLockProcessMenus(Process);
 
   IntCloneMenuItems(MenuObject, Source);
 
@@ -1142,15 +1136,15 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
         if(!SubMenuObject || (SubMenuObject == MenuObject))
           break;
           
-        ExAcquireFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
-        ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+        IntLockMenuItems(SubMenuObject);
+        IntUnLockMenuItems(MenuObject);
         
         (*gismc)++;
         sres = IntGetMenuDefaultItem(SubMenuObject, fByPos, gmdiFlags, gismc);
         (*gismc)--;
         
-        ExReleaseFastMutexUnsafe(&SubMenuObject->MenuItemsLock);
-        ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+        IntUnLockMenuItems(SubMenuObject);
+        IntLockMenuItems(MenuObject);
         IntReleaseMenuObject(SubMenuObject);
         
         if(sres > (UINT)-1)
@@ -1239,18 +1233,18 @@ IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process)
     KeAttachProcess(Process);
   }
   
-  ExAcquireFastMutexUnsafe(&Win32Process->MenuListLock); 
+  IntLockProcessMenus(Win32Process); 
   while (Win32Process->MenuListHead.Flink != &(Win32Process->MenuListHead) &&
          Win32Process->MenuListHead.Flink != LastHead)
   {
     LastHead = Win32Process->MenuListHead.Flink;
     MenuObject = CONTAINING_RECORD(Win32Process->MenuListHead.Flink, MENU_OBJECT, ListEntry);
     
-    ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
+    IntUnLockProcessMenus(Win32Process);
     IntDestroyMenuObject(MenuObject, FALSE, TRUE);
-    ExAcquireFastMutexUnsafe(&Win32Process->MenuListLock); 
+    IntLockProcessMenus(Win32Process); 
   }
-  ExReleaseFastMutexUnsafe(&Win32Process->MenuListLock);
+  IntUnLockProcessMenus(Win32Process);
   
   if (CurrentProcess != Process)
   {
@@ -1283,9 +1277,9 @@ NtUserBuildMenuItemList(
   
   if(Buffer)
   {
-    ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    IntLockMenuItems(MenuObject);
     res = IntBuildMenuItemList(MenuObject, Buffer, nBufSize);
-    ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    IntUnLockMenuItems(MenuObject);
   }
   else
   {
@@ -1314,9 +1308,9 @@ NtUserCheckMenuItem(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return (DWORD)-1;
   }
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   res = IntCheckMenuItem(MenuObject, uIDCheckItem, uCheck);
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
   return res;
 }
@@ -1421,9 +1415,9 @@ NtUserEnableMenuItem(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return res;
   }
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   res = IntEnableMenuItem(MenuObject, uIDEnableItem, uEnable);
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
   return res;
@@ -1466,9 +1460,9 @@ NtUserInsertMenuItem(
       return FALSE;
     }
 
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   Res = IntInsertMenuItem(MenuObject, uItem, fByPosition, &ItemInfo);
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
   return Res;
@@ -1505,9 +1499,9 @@ NtUserGetMenuDefaultItem(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return res;
   }
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   res = IntGetMenuDefaultItem(MenuObject, fByPos, gmdiFlags, &gismc);
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
   return res;
 }
@@ -1586,9 +1580,9 @@ NtUserHiliteMenuItem(
   }
   if(WindowObject->IDMenu == (UINT)hmenu)
   {
-    ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    IntLockMenuItems(MenuObject);
     res = IntHiliteMenuItem(WindowObject, MenuObject, uItemHilite, uHilite);
-    ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+    IntUnLockMenuItems(MenuObject);
   }
   IntReleaseMenuObject(MenuObject);
   IntReleaseWindowObject(WindowObject);
@@ -1697,7 +1691,7 @@ NtUserMenuItemFromPoint(
       IntReleaseWindowObject(WindowObject);
     }
   
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   mi = MenuObject->MenuItemList;
   for (i = 0; NULL != mi; i++)
     {
@@ -1707,7 +1701,7 @@ NtUserMenuItemFromPoint(
         }
       mi = mi->Next;
     }
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   
   IntReleaseMenuObject(MenuObject);
   
@@ -1857,9 +1851,9 @@ NtUserSetMenuDefaultItem(
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     return FALSE;
   }
-  ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntLockMenuItems(MenuObject);
   res = IntSetMenuDefaultItem(MenuObject, uItem, fByPos);
-  ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+  IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
   return res;

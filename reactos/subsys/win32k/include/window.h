@@ -128,10 +128,16 @@ typedef struct _WINDOW_OBJECT
   WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
 
 #define IntLockRelatives(WndObj) \
-  ExAcquireFastMutexUnsafe(&WndObj->RelativesLock)
+  ExAcquireFastMutex(&WndObj->RelativesLock)
 
 #define IntUnLockRelatives(WndObj) \
-  ExReleaseFastMutexUnsafe(&WndObj->RelativesLock)
+  ExReleaseFastMutex(&WndObj->RelativesLock)
+
+#define IntLockThreadWindows(Thread) \
+  ExAcquireFastMutex(&Thread->WindowListLock)
+
+#define IntUnLockThreadWindows(Thread) \
+  ExReleaseFastMutex(&Thread->WindowListLock)
 
 
 PWINDOW_OBJECT FASTCALL
