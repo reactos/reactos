@@ -621,7 +621,7 @@ NTSTATUS DispTdiQueryInformation(
         Address->TAAddressCount = 1;
         Address->Address[0].AddressLength = TDI_ADDRESS_LENGTH_IP;
         Address->Address[0].AddressType = TDI_ADDRESS_TYPE_IP;
-        Address->Address[0].Address[0].sin_port = AddrFile->Port;
+        Address->Address[0].Address[0].sin_port = htons(AddrFile->Port);
         Address->Address[0].Address[0].in_addr = 
           AddrFile->Address.Address.IPv4Address;        
         RtlZeroMemory(
