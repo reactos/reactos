@@ -203,6 +203,7 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
     LPCTSTR keyPath;
     LPTSTR Name;
     LONG errCode;
+    HCURSOR hcursorOld;
 
     static int expanding;
     if (expanding) return FALSE;
@@ -210,6 +211,8 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
         return TRUE;
     }
     expanding = TRUE;
+    hcursorOld = SetCursor(LoadCursor(NULL, IDC_WAIT));
+    SendMessage(hwndTV, WM_SETREDRAW, FALSE, 0);
 
     keyPath = GetItemPath(hwndTV, pnmtv->itemNew.hItem, &hRoot);
     if (!keyPath) goto done;
@@ -249,6 +252,8 @@ BOOL OnTreeExpanding(HWND hwndTV, NMTREEVIEW* pnmtv)
     HeapFree(GetProcessHeap(), 0, Name);
 
 done:
+    SendMessage(hwndTV, WM_SETREDRAW, TRUE, 0);
+    SetCursor(hcursorOld);
     expanding = FALSE;
 
     return TRUE;
