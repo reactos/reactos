@@ -1,4 +1,4 @@
-/* $Id: version.rc,v 1.1 2004/10/16 20:27:29 gvg Exp $
+/* $Id$
  *
  * Inspired by Wine file include/wine_common_ver.rc
  * Copyright 2001 Dmitry Timoshkov
@@ -78,7 +78,7 @@
 #endif /* REACTOS_STR_INTERNAL_NAME */
 
 #ifndef REACTOS_STR_LEGAL_COPYRIGHT
-#define REACTOS_STR_LEGAL_COPYRIGHT "Copyright 1998-2004 ReactOS Team\0"
+#define REACTOS_STR_LEGAL_COPYRIGHT "Copyright 1998-2005 ReactOS Team\0"
 #endif /* REACTOS_STR_LEGAL_COPYRIGHT */
 
 #ifndef REACTOS_STR_ORIGINAL_FILENAME
