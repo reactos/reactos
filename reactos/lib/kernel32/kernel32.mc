@@ -2477,7 +2477,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_DEVICE_ENUMERATION_ERROR
 Language=English
-ERROR_DEVICE_ENUMERATION_ERROR - The "%hs" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
+ERROR_DEVICE_ENUMERATION_ERROR - The \"%hs\" encountered an error while applying power or reading the device configuration. This may be caused by a failure of your hardware or by a poor connection.
 .
 
 MessageId=649
@@ -2981,7 +2981,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_CARDBUS_NOT_SUPPORTED
 Language=English
-ERROR_CARDBUS_NOT_SUPPORTED - The device "%hs" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
+ERROR_CARDBUS_NOT_SUPPORTED - The device \"%hs\" has detected a CardBus card in its slot, but the firmware on this system is not configured to allow the CardBus controller to be run in CardBus mode. The operating system will currently accept only 16-bit (R2) pc-cards on this controller.
 .
 
 MessageId=725
@@ -16489,7 +16489,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE
 Language=English
-ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE - The manifest has a default namespace specified on the assembly element but its value is not "urn:schemas-microsoft-com:asm.v1".
+ERROR_SXS_MANIFEST_INVALID_REQUIRED_DEFAULT_NAMESPACE - The manifest has a default namespace specified on the assembly element but its value is not \"urn:schemas-microsoft-com:asm.v1\".
 .
 
 MessageId=14020
@@ -16865,7 +16865,7 @@ Severity=Success
 Facility=System
 SymbolicName=ERROR_SXS_XML_E_RESERVEDNAMESPACE
 Language=English
-ERROR_SXS_XML_E_RESERVEDNAMESPACE - Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string "xml".
+ERROR_SXS_XML_E_RESERVEDNAMESPACE - Manifest Parse Error : The namespace prefix is not allowed to start with the reserved string \"xml\".
 .
 
 MessageId=14067
