@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.68 2001/11/21 22:30:57 ekohl Exp $
+# $Id: makefile,v 1.69 2002/01/01 03:29:15 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = ntdll
 
-TARGET_CFLAGS = -D__NTDLL__
+TARGET_CFLAGS = -g -D__NTDLL__
 
 TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \

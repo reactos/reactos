@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.41 2001/08/07 14:11:41 ekohl Exp $
+/* $Id: create.c,v 1.42 2002/01/01 03:29:15 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -66,6 +66,7 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	ANSI_STRING CurrentDirectory;
 	ANSI_STRING CommandLine;
 	WINBOOL Result;
+	CHAR TempCurrentDirectoryA[256];
 
 	DPRINT("CreateProcessA\n");
 
@@ -73,8 +74,17 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	                   lpCommandLine);
 	RtlInitAnsiString (&ApplicationName,
 	                   (LPSTR)lpApplicationName);
-	RtlInitAnsiString (&CurrentDirectory,
-	                   (LPSTR)lpCurrentDirectory);
+	if (lpCurrentDirectory != NULL)
+	  {
+	    RtlInitAnsiString (&CurrentDirectory,
+			       (LPSTR)lpCurrentDirectory);
+	  }
+	else
+	  {
+	    GetCurrentDirectoryA(256, TempCurrentDirectoryA);
+	    RtlInitAnsiString (&CurrentDirectory,
+			       TempCurrentDirectoryA);
+	  }
 
 	/* convert ansi (or oem) strings to unicode */
 	if (bIsFileApiAnsi)
@@ -473,6 +483,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
    ANSI_STRING ProcedureName;
    UNICODE_STRING CurrentDirectoryW;
    SECTION_IMAGE_INFORMATION Sii;
+   CHAR TempCurrentDirectoryW[256];
    
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName,lpCommandLine);
@@ -521,8 +532,17 @@ CreateProcessW(LPCWSTR lpApplicationName,
      }
 
    /* Initialize the current directory string */
-   RtlInitUnicodeString(&CurrentDirectoryW,
-			lpCurrentDirectory);
+   if (lpCurrentDirectory != NULL)
+     {
+       RtlInitUnicodeString(&CurrentDirectoryW,
+			    lpCurrentDirectory);
+     }
+   else
+     {
+       GetCurrentDirectoryW(256, TempCurrentDirectoryW);
+       RtlInitUnicodeString(&CurrentDirectoryW,
+			    TempCurrentDirectoryW);
+     }
 
    /*
     * Create the PPB

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.72 2002/01/01 00:21:56 dwelch Exp $
+/* $Id: section.c,v 1.73 2002/01/01 03:29:15 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -685,7 +685,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Check if this page needs to be mapped COW
     */
-   if (Segment->Characteristics & IMAGE_SECTION_CHAR_DATA)
+   if (Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView)
      {
        Attributes = PAGE_READONLY;
      }
@@ -769,7 +769,25 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 				       Attributes,
 				       (ULONG)Page,
 				       FALSE);
-       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));
+       if (!NT_SUCCESS(Status))
+	 {
+	   MmUnlockSectionSegment(Segment);
+	   MmUnlockSection(Section);
+	   MmUnlockAddressSpace(AddressSpace);
+	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+					   Address,
+					   Attributes,
+					   (ULONG)Page,
+					   TRUE);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       KeBugCheck(0);
+	     }
+	   MmLockAddressSpace(AddressSpace);
+	   MmLockSection(Section);
+	   MmLockSectionSegment(Segment);
+	 }
+       MmInsertRmap(Page, PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Address));     
        if (!NT_SUCCESS(Status))
 	 {
 	   DbgPrint("Unable to create virtual mapping\n");
@@ -942,7 +960,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Check if we are doing COW
     */
-   if (!(Segment->Characteristics & IMAGE_SECTION_CHAR_DATA))
+   if (!(Segment->WriteCopy || MemoryArea->Data.SectionData.WriteCopyView))
      {
        MmUnlockSection(Section);
        MmUnlockSectionSegment(Segment);
@@ -1568,6 +1586,7 @@ MmCreatePageFileSection(PHANDLE SectionHandle,
   Segment->Attributes = AllocationAttributes;
   Segment->Length = MaximumSize.u.LowPart;
   Segment->Flags = MM_PAGEFILE_SECTION;
+  Segment->WriteCopy = FALSE;
   return(STATUS_SUCCESS);
 }
 
@@ -1749,6 +1768,7 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
       Segment->Attributes = 0;
       Segment->Flags = 0;
       Segment->Characteristics = 0;
+      Segment->WriteCopy = FALSE;
       if (AllocationAttributes & SEC_RESERVE)
 	{
 	  Segment->Length = 0;
@@ -1797,6 +1817,26 @@ MmCreateDataFileSection(PHANDLE SectionHandle,
   ObDereferenceObject(Section);
   return(STATUS_SUCCESS);
 }
+
+static ULONG SectionCharacteristicsToProtect[16] = 
+{
+  PAGE_NOACCESS,               // 0 = NONE
+  PAGE_NOACCESS,               // 1 = SHARED
+  PAGE_EXECUTE,                // 2 = EXECUTABLE
+  PAGE_EXECUTE,                // 3 = EXECUTABLE, SHARED
+  PAGE_READONLY,               // 4 = READABLE
+  PAGE_READONLY,               // 5 = READABLE, SHARED
+  PAGE_EXECUTE_READ,           // 6 = READABLE, EXECUTABLE
+  PAGE_EXECUTE_READ,           // 7 = READABLE, EXECUTABLE, SHARED
+  PAGE_READWRITE,              // 8 = WRITABLE
+  PAGE_READWRITE,              // 9 = WRITABLE, SHARED
+  PAGE_EXECUTE_READWRITE,      // 10 = WRITABLE, EXECUTABLE
+  PAGE_EXECUTE_READWRITE,      // 11 = WRITABLE, EXECUTABLE, SHARED
+  PAGE_READWRITE,              // 12 = WRITABLE, READABLE
+  PAGE_READWRITE,              // 13 = WRITABLE, READABLE, SHARED
+  PAGE_EXECUTE_READWRITE,      // 14 = WRITABLE, READABLE, EXECUTABLE,
+  PAGE_EXECUTE_READWRITE,      // 15 = WRITABLE, READABLE, EXECUTABLE, SHARED
+};
 
 NTSTATUS
 MmCreateImageSection(PHANDLE SectionHandle,
@@ -2059,6 +2099,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
       SectionSegments[0].Flags = 0;
       SectionSegments[0].ReferenceCount = 1;
       SectionSegments[0].VirtualAddress = 0;
+      SectionSegments[0].WriteCopy = TRUE;
       KeInitializeMutex(&SectionSegments[0].Lock, 0);
 
       for (i = 1; i < NrSegments; i++)
@@ -2067,21 +2108,32 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	    ImageSections[i-1].PointerToRawData;
 	  SectionSegments[i].Characteristics = 
 	    ImageSections[i-1].Characteristics;
-	  if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)
+	  if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_CODE)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_EXECUTE_READ;
 	      SectionSegments[i].Attributes = 0;
+	      SectionSegments[i].WriteCopy = TRUE;
 	    }
 	  else if (ImageSections[i-1].Characteristics & 
-		   IMAGE_SECTION_CHAR_DATA)
+		   IMAGE_SECTION_CHAR_DATA)	    
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
 	      SectionSegments[i].Attributes = 0;
+	      SectionSegments[i].WriteCopy = TRUE;
 	    }
 	  else if (ImageSections[i-1].Characteristics & IMAGE_SECTION_CHAR_BSS)
 	    {
 	      SectionSegments[i].Protection = PAGE_READWRITE;
 	      SectionSegments[i].Attributes = MM_SECTION_SEGMENT_BSS;
+	      SectionSegments[i].WriteCopy = TRUE;
+	    }
+	  else
+	    {
+	      SectionSegments[i].Protection = 
+		SectionCharacteristicsToProtect[ImageSections[i-1].Characteristics >> 28];
+	      SectionSegments[i].Attributes = 0;
+	      SectionSegments[i].WriteCopy = 
+		!(ImageSections[i - 1].Characteristics & IMAGE_SECTION_CHAR_SHARED);
 	    }
 	  SectionSegments[i].RawLength = ImageSections[i-1].SizeOfRawData;
 	  SectionSegments[i].Length = 
@@ -2216,6 +2268,11 @@ MmMapViewOfSegment(PEPROCESS Process,
   KIRQL oldIrql;
 
   MmLockAddressSpace(&Process->AddressSpace);
+  if (Protect == PAGE_NOACCESS || Protect == PAGE_GUARD)
+    {
+      DPRINT1("Mapping inaccessible region between 0x%.8X and 0x%.8X\n",
+	      (*BaseAddress), (*BaseAddress) + ViewSize);
+    }
   Status = MmCreateMemoryArea(Process,
 			      &Process->AddressSpace,
 			      MEMORY_AREA_SECTION_VIEW_COMMIT,
@@ -2244,6 +2301,7 @@ MmMapViewOfSegment(PEPROCESS Process,
    MArea->Data.SectionData.Segment = Segment;
    MArea->Data.SectionData.Section = Section;
    MArea->Data.SectionData.ViewOffset = ViewOffset;
+   MArea->Data.SectionData.WriteCopyView = FALSE;
 
    return(STATUS_SUCCESS);
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.32 2002/01/01 00:21:57 dwelch Exp $
+/* $Id: page.c,v 1.33 2002/01/01 03:29:15 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -81,28 +81,33 @@ ProtectToPTE(ULONG flProtect)
     {
       Attributes = 0;
     }
-   if (flProtect & PAGE_READWRITE || flProtect & PAGE_EXECUTE_READWRITE)
-     {
-       Attributes = PA_PRESENT | PA_READWRITE;
-     }
-   if (flProtect & PAGE_READONLY || flProtect & PAGE_EXECUTE ||
-       flProtect & PAGE_EXECUTE_READ)
-     {
-       Attributes = PA_PRESENT; 
-     }
-   if (!(flProtect & PAGE_SYSTEM))
-     {
-       Attributes = Attributes | PA_USER;
-     }
-   if (flProtect & PAGE_NOCACHE)
-     {
-       Attributes = Attributes | PA_CD;
-     }
-   if (flProtect & PAGE_WRITETHROUGH)
-     {
-       Attributes = Attributes | PA_WT;
-     }
-   return(Attributes);
+  else if (flProtect & PAGE_READWRITE || flProtect & PAGE_EXECUTE_READWRITE)
+    {
+      Attributes = PA_PRESENT | PA_READWRITE;
+    }
+  else if (flProtect & PAGE_READONLY || flProtect & PAGE_EXECUTE ||
+	   flProtect & PAGE_EXECUTE_READ)
+    {
+      Attributes = PA_PRESENT; 
+    }
+  else
+    {
+      DPRINT1("Unknown main protection type.\n");
+      KeBugCheck(0);
+    }
+  if (!(flProtect & PAGE_SYSTEM))
+    {
+      Attributes = Attributes | PA_USER;
+    }
+  if (flProtect & PAGE_NOCACHE)
+    {
+      Attributes = Attributes | PA_CD;
+    }
+  if (flProtect & PAGE_WRITETHROUGH)
+    {
+      Attributes = Attributes | PA_WT;
+    }
+  return(Attributes);
 }
 
 #define ADDR_TO_PAGE_TABLE(v) (((ULONG)(v)) / (4 * 1024 * 1024))
@@ -944,6 +949,12 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    MmMarkPageMapped((PVOID)PhysicalAddress);
    
    Attributes = ProtectToPTE(flProtect);
+   if (!(Attributes & PA_PRESENT) && PhysicalAddress != 0)
+     {
+       DPRINT1("Setting physical address but not allowing access at address 0x%.8X "
+	       "with attributes %x/%x.\n", Address, Attributes, flProtect);
+       KeBugCheck(0);
+     }
    
    if (Process != NULL && Process != CurrentProcess)
      {

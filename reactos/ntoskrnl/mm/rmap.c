@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rmap.c,v 1.1 2001/12/31 01:53:45 dwelch Exp $
+/* $Id: rmap.c,v 1.2 2002/01/01 03:29:15 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -167,6 +167,9 @@ MmInsertRmap(PVOID PhysicalAddress, PEPROCESS Process, PVOID Address)
 
   if (MmGetPhysicalAddressForProcess(Process, Address)!= (ULONG)PhysicalAddress)
     {
+      DPRINT1("Insert rmap (%d, 0x%.8X) 0x%.8X which doesn't match physical address 0x%.8X\n",
+	      Process->UniqueProcessId, Address, 
+	      MmGetPhysicalAddressForProcess(Process, Address), PhysicalAddress)
       KeBugCheck(0);
     }
 

@@ -88,6 +88,7 @@ typedef struct _MM_SECTION_SEGMENT
   ULONG Flags;
   PVOID VirtualAddress;
   ULONG Characteristics;
+  BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct
@@ -127,18 +128,19 @@ typedef struct
    struct _EPROCESS* Process;
    union
      {
-	struct
-	  {	     
-	     SECTION_OBJECT* Section;
-	     ULONG ViewOffset;
-	     LIST_ENTRY ViewListEntry;
- 	     PMM_SECTION_SEGMENT Segment;
-	  } SectionData;
-	struct
-	  {
-	     LIST_ENTRY SegmentListHead;
-	  } VirtualMemoryData;
-     } Data;
+       struct
+	{	     
+	  SECTION_OBJECT* Section;
+	  ULONG ViewOffset;
+	  LIST_ENTRY ViewListEntry;
+	  PMM_SECTION_SEGMENT Segment;
+	  BOOLEAN WriteCopyView;
+       } SectionData;
+       struct
+       {
+	 LIST_ENTRY SegmentListHead;
+       } VirtualMemoryData;
+   } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
 typedef struct _MADDRESS_SPACE

@@ -526,11 +526,11 @@ KeyboardHandler(PKINTERRUPT Interrupt,
 
 //   DbgPrint("Key: %c\n",VirtualToAscii(ScanToVirtual(thisKey),isDown));
 //   DbgPrint("Key: %x\n",ScanToVirtual(thisKey));
-   if (ScanToVirtual(thisKey) == VK_PRINT && isDown)
+   if (ScanToVirtual(thisKey) == VK_TAB && isDown)
      {
        InSysRq = TRUE;
      }
-   else if (ScanToVirtual(thisKey) == VK_PRINT && !isDown)
+   else if (ScanToVirtual(thisKey) == VK_TAB && !isDown)
      {
        InSysRq = FALSE;
      }
