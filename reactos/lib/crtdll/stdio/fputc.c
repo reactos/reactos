@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <wchar.h>
-#include <libc/file.h>
+#include <crtdll/stdio.h>
+#include <crtdll/wchar.h>
+#include <crtdll/internal/file.h>
 
 int
 fputc(int c, FILE *fp)

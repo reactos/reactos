@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-//#include <libc/unconst.h>
+#include <crtdll/string.h>
+//#include <crtdll/unconst.h>
 
 char *
 strstr(const char *s, const char *find)

@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 
 #undef isalnum
@@ -17,7 +17,7 @@ int isalnum(int c)
 }
 
 #undef iswalnum
-int iswalnum(int c)
+int iswalnum(wint_t c)
 {
    return iswctype(c,_ALPHA | _DIGIT);
 }

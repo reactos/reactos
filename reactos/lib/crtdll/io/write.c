@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <io.h>
+#include <crtdll/io.h>
 #include <windows.h>
 
 

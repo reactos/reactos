@@ -1,6 +1,6 @@
-#include <direct.h>
+#include <crtdll/direct.h>
 #include <windows.h>
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 
 unsigned int _getdiskfree(unsigned int _drive, struct _diskfree_t *_diskspace)

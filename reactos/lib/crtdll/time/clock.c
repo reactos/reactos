@@ -9,10 +9,10 @@
  */
 
 #include <windows.h>
-#include <time.h>
+#include <crtdll/time.h>
+#include <crtdll/internal/file.h>
 
-// should be replace by a call to RtltimeToSecondsSince70
-time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder ); 
+VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
 clock_t clock ( void )
 {
@@ -24,11 +24,11 @@ clock_t clock ( void )
 	FILETIME  SystemTime;
 	DWORD Remainder;
 
-	if ( !GetProcessTimes(-1,&CreationTime,&ExitTime,&KernelTime,&UserTime ) )
+	if ( !GetProcessTimes(GetCurrentProcess(),&CreationTime,&ExitTime,&KernelTime,&UserTime ) )
 		return -1;
 
-	if ( !GetSystemTimeAsFileTime(&SystemTime) )
-		return -1;
+	GetSystemTimeAsFileTime(&SystemTime);
+		
 
 	return FileTimeToUnixTime( &SystemTime,&Remainder ) - FileTimeToUnixTime( &CreationTime,&Remainder ); 
 }

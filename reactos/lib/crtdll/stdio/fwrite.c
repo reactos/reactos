@@ -1,9 +1,9 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <libc/file.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
+#include <crtdll/internal/file.h>
 
 size_t
 fwrite(const void *vptr, size_t size, size_t count, FILE *f)

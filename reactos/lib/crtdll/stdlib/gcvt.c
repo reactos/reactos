@@ -1,7 +1,7 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
 
 char *
 _gcvt (double value, int ndigits, char *buf)

@@ -14,9 +14,9 @@
  *  DISCLAMED. This includeds but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -25,7 +25,7 @@
 #ifndef _DIRENT_H_
 #define _DIRENT_H_
 
-#include <dir.h>
+#include <crtdll/dir.h>
 
 #ifdef __cplusplus
 extern "C" {

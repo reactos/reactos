@@ -39,17 +39,17 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 
 
 
-#include <fcntl.h>
-#include <time.h>
-#include <string.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/time.h>
+#include <crtdll/string.h>
+#include <crtdll/ctype.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
 
 #include <windows.h>
 #include "tzfile.h"
 
-#include <io.h>
+#include <crtdll/io.h>
 
 #include "posixrul.h"
 
@@ -81,6 +81,8 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 ** manual page of what this "time zone abbreviation" means (doing this so
 ** that tzname[0] has the "normal" length of three characters).
 */
+int _daylight_dll;
+
 static char WILDABBR[] = "   ";
 
 #ifndef TRUE

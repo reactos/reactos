@@ -1,15 +1,11 @@
 #include <windows.h>
-#include <stdio.h>
-#include <io.h> 
+#include <crtdll/stdio.h>
+#include <crtdll/io.h> 
 
-int rename(const char *old, const char *new)
-{
-	return _rename(old,new);
-}
 
-int _rename(const char *old, const char *new)
+int rename(const char *old_, const char *new_)
 {
- 	if ( !MoveFile(old,new) )
+ 	if ( !MoveFile(old_,new_) )
 		return -1;
 
 	return 0;

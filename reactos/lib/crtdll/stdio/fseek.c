@@ -2,10 +2,10 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <stdio.h>
-#include <libc/file.h>
-#include <fcntl.h>
-#include <io.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/io.h>
 
 #define _fillsize _bufsiz
 

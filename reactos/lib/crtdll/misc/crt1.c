@@ -19,18 +19,18 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:43 $
+ * $Revision: 1.2 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:43:55 $
  *
  */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <io.h>
-#include <fcntl.h>
-#include <process.h>
-#include <float.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdio.h>
+#include <crtdll/io.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/process.h>
+#include <crtdll/float.h>
 #include <windows.h>
 
 /* NOTE: The code for initializing the _argv, _argc, and environ variables
@@ -95,11 +95,7 @@ mainCRTStartup ()
 	 * UnhandledExceptionFilter, which is prototyped just above
 	 * (see Functions.h).
 	 */
-	SetUnhandledExceptionFilter (NULL);
-	/*
-	 * Initialize errno.
-	 */
-	errno = 0;
+	//SetUnhandledExceptionFilter (NULL);
 
 	/*
 	 * Initialize floating point unit.
@@ -111,7 +107,6 @@ mainCRTStartup ()
 	 */
 	_mingw32_init_mainargs();
 
-	
 	/*
 	 * Sets the default file mode for stdin, stdout and stderr, as well
 	 * as files later opened by the user, to _CRT_fmode.
@@ -125,8 +120,7 @@ mainCRTStartup ()
 	 * that one calls WinMain. See main.c in the 'lib' dir
 	 * for more details.
 	 */
- 
-	nRet = cmdmain(_argc, _argv, environ);
+	nRet = main(_argc, _argv, _environ);
 
 	/*
 	 * Perform exit processing for the C library. This means
@@ -162,5 +156,4 @@ WinMainCRTStartup ()
 asm (".section .idata$3\n" ".long 0,0,0,0,0,0,0,0");
 #endif
 #endif
-
 

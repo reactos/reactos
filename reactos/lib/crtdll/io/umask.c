@@ -1,11 +1,11 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <sys/stat.h>
+#include <crtdll/sys/stat.h>
 
-mode_t
-_umask(mode_t newmask)
+unsigned _unMode_dll = 022;
+
+unsigned	_umask (unsigned unMode)
 {
-  static mode_t the_mask = 022;
-  mode_t old_mask = the_mask;
-  the_mask = newmask;
+  unsigned old_mask = _unMode_dll;
+  _unMode_dll = unMode;
   return old_mask;
 }

@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <conio.h>
+#include <crtdll/conio.h>
 #include <windows.h>
 
 int _putch( int c )

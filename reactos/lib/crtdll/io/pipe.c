@@ -8,8 +8,8 @@
  *              28/12/98: Appropriated for Reactos
  */
 #include <windows.h>
-#include <io.h>
-#include <libc/file.h>
+#include <crtdll/io.h>
+#include <crtdll/internal/file.h>
 
 
 int _pipe(int _fildes[2], unsigned int size, int mode )

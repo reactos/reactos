@@ -1,4 +1,4 @@
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 
 
 int	mblen		(const char* mbs, size_t sizeString)

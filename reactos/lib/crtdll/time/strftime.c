@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include <crtdll/string.h>
 
 
-#include <time.h>
+#include <crtdll/time.h>
 
 #define TM_YEAR_BASE 1900
 

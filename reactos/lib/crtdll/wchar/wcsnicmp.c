@@ -1,6 +1,6 @@
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
-int wcsnicmp(const wchar_t * cs,const wchar_t * ct,size_t count)
+int _wcsnicmp(const wchar_t * cs,const wchar_t * ct,size_t count)
 {
   wchar_t *save = cs;
   while (towlower(*cs) == towlower(*ct) && (int)(cs - save) < count)

@@ -2,8 +2,8 @@
    Exception handling and basis for signal support for DJGPP V2.0
    This software may be freely distributed, no warranty. */
 
-#include <signal.h>
-#include <stdlib.h>
+#include <crtdll/signal.h>
+#include <crtdll/stdlib.h>
 
 extern unsigned end __asm__ ("end");
 

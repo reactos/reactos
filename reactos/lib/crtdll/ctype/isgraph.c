@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef isgraph
 int isgraph(int c)
@@ -8,7 +8,7 @@ int isgraph(int c)
 }
 
 #undef iswgraph
-int iswgraph(int c)
+int iswgraph(wint_t c)
 {
 	return iswctype(c,_GRAPH);
 }

@@ -1,4 +1,4 @@
-#include <io.h>
+#include <crtdll/io.h>
 
 
 int _sopen(char *path,int access,int shflag,int mode)

@@ -7,10 +7,10 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <conio.h>
-#include <stdio.h>
 #include <windows.h>
-#include <io.h>
+#include <crtdll/conio.h>
+#include <crtdll/stdio.h>
+#include <crtdll/io.h>
 
 extern int char_avail;
 extern int ungot_char;

@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <io.h>
+#include <crtdll/io.h>
 #include <windows.h>
 
 size_t	_read(int _fd, void *_buf, size_t _nbyte)

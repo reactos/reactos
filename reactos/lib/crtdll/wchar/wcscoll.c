@@ -8,9 +8,9 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
-size_t wcscoll(wchar_t *a1,wchar_t *a2)
+int wcscoll(const wchar_t *a1,const wchar_t *a2)
 {
 	/* FIXME: handle collates */
 	return wcscmp(a1,a2);

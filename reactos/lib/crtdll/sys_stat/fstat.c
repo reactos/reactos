@@ -1,15 +1,13 @@
-#include 	<sys/types.h>
-#include	<sys/stat.h>
-#include 	<fcntl.h>
-#include	<string.h>
+#include 	<crtdll/sys/types.h>
+#include	<crtdll/sys/stat.h>
+#include 	<crtdll/fcntl.h>
+#include	<crtdll/string.h>
 #include	<windows.h>
-//#include	<libc/file.h>
+#include	<crtdll/internal/file.h>
 
-void UnixTimeToFileTime( time_t unix_time, FILETIME *filetime, DWORD remainder );
-time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );
 
 int
-fstat(int handle, struct stat *statbuf)
+_fstat(int handle, struct stat *statbuf)
 {
  
   BY_HANDLE_FILE_INFORMATION  FileInformation;

@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <crtdll/stdio.h>
 #include <windows.h>
-#include <libc/file.h>
+#include <crtdll/internal/file.h>
 
 int putc(int c, FILE *fp)
 {

@@ -1,6 +1,6 @@
-#include <direct.h>
+#include <crtdll/direct.h>
 #include <windows.h>
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 char _SetCurrentDirectory(char *dir);
 int _GetCurrentDirectory(int count,char *buffer);

@@ -1,7 +1,7 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <libc/file.h>
-//#include <libc/stdiohk.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+//#include <crtdll/stdiohk.h>
 
 
 
@@ -16,7 +16,7 @@ FILE _crtdll_iob[] =
 	// stdout
 {
  NULL, 0, NULL,
-   _IOWRT | _IOFBF |_IOSTRG,
+   _IOWRT | _IOLBF |_IOSTRG,
   1,0,0, NULL
 },
 	// stderr

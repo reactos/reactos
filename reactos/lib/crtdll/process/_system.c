@@ -1,5 +1,7 @@
-#include <process.h>
+#include <crtdll/process.h>
 #include <windows.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
 
 int system(const char *command)
 {

@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
 
 void _makepath( char *path, const char *drive, const char *dir, const char *fname, const char *ext )
 {

@@ -1,6 +1,6 @@
-#include <direct.h>
-#include <stdlib.h>
-#include <ctype.h>
+#include <crtdll/direct.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/ctype.h>
 #include <windows.h>
 
 int cur_drive = 0;

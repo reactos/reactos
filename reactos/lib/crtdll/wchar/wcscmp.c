@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
 int wcscmp(const wchar_t* cs,const wchar_t * ct)
 {

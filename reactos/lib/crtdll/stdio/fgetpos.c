@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <errno.h>
+#include <crtdll/stdio.h>
+#include <crtdll/errno.h>
 
 int
 fgetpos(FILE *stream, fpos_t *pos)

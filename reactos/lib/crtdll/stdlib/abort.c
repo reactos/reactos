@@ -1,6 +1,6 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <io.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdio.h>
+#include <crtdll/io.h>
 
 static char msg[] = "Abort!\r\n";
 

@@ -1,9 +1,12 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <process.h>
-#include <stdlib.h>
+#include <crtdll/process.h>
+#include <crtdll/stdlib.h>
+#include <stdarg.h>
 
-int _execl(const char *path, const char *argv0, ...)
+int	_execl(const char* szPath, const char* szArgv0, ...)
 {
-  return _spawnve(P_OVERLAY, path, (char *const*)&argv0, _environ);
+  va_list a = 0;
+  va_start(a,szArgv0);
+  return _spawnve(P_OVERLAY, szPath, (char *const*)a, _environ);
 }

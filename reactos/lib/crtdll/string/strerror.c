@@ -1,9 +1,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-//#include <libc/unconst.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/errno.h>
 
 
 char __syserr00[] = "No Error";
@@ -59,8 +58,9 @@ __syserr35, __syserr36, __syserr37, __syserr38
 
 int __sys_nerr = sizeof(__sys_errlist) / sizeof(__sys_errlist[0]);
 
-char *
-strerror(int errnum)
+int*	_sys_nerr_dll = &__sys_nerr;
+
+char *strerror(int errnum)
 {
   static char ebuf[40];		/* 64-bit number + slop */
   char *cp;
@@ -91,8 +91,7 @@ strerror(int errnum)
   return ebuf;
 }
 
-#undef errno
-extern int errno;
+
 char *_strerror(const char *s)
 {
 	if ( s == NULL )

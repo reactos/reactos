@@ -1,4 +1,6 @@
-size_t wcsnlen(const wchar_t * s, size_t count)
+#include <crtdll/wchar.h>
+
+size_t _wcsnlen(const wchar_t * s, size_t count)
 {
       
         unsigned int len=0;

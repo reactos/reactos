@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -103,16 +103,27 @@ int*	__doserrno(void);
 
 #if	__MSVCRT__
 /* One of the MSVCRTxx libraries */
+
 extern int*	__imp__sys_nerr;
 #define	sys_nerr	(*__imp__sys_nerr)
-#else
-/* CRTDLL run time library */
-extern int*	__imp__sys_nerr_dll;
-#define sys_nerr	(*__imp__sys_nerr_dll)
-#endif
 
 extern char**	__imp__sys_errlist;
 #define	sys_errlist	(__imp__sys_errlist)
+
+#else
+/* CRTDLL run time library */
+
+
+#define _sys_nerr   (*_sys_nerr_dll)
+extern int*	_sys_nerr_dll;
+#define sys_nerr	(*_sys_nerr_dll)
+
+extern const char*	__sys_errlist[];
+#define	sys_errlist	(__sys_errlist)
+
+#endif
+
+
 
 #ifdef	__cplusplus
 }

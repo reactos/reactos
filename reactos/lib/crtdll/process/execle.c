@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
 
-#include <process.h>
+#include <crtdll/process.h>
 
 #define scan_ptr() \
 	const char **ptr; \

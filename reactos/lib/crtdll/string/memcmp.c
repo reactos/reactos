@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include <crtdll/string.h>
 
 int
 memcmp(const void *s1, const void *s2, size_t n)

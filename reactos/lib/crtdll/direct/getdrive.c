@@ -1,5 +1,5 @@
-#include <direct.h>
-#include <ctype.h>
+#include <crtdll/direct.h>
+#include <crtdll/ctype.h>
 #include <windows.h>
 
 extern int cur_drive;

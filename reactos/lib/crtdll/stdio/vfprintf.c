@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <crtdll/stdio.h>
 #include <stdarg.h>
-#include <libc/file.h>
+#include <crtdll/internal/file.h>
 
 int
 vfprintf(FILE *f, const char *fmt, va_list ap)

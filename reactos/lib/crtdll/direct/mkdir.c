@@ -1,4 +1,4 @@
-#include <direct.h>
+#include <crtdll/direct.h>
 #include <windows.h>
 
 #undef mkdir

@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <stdlib.h>
-#include <libc/file.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/internal/file.h>
 
 void
 setbuf(FILE *f, char *buf)

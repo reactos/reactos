@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 
 /*-
  * Copyright (c) 1980, 1983 The Regents of the University of California.

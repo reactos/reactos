@@ -1,4 +1,4 @@
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
 size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 {

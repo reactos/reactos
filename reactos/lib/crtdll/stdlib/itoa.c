@@ -9,8 +9,8 @@
  *              1998: Added ltoa Boudewijn Dekker
  */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <errno.h>
-#include <stdlib.h>
+#include <crtdll/errno.h>
+#include <crtdll/stdlib.h>
 
 char *
 itoa(int value, char *string, int radix)

@@ -1,3 +1,5 @@
+#include <crtdll/wchar.h>
+
 wchar_t* wcsrchr(const wchar_t* str, wchar_t ch)
 {
   

@@ -1,13 +1,13 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <stdlib.h>
-//#include <unistd.h>
-//#include <go32.h>
-#include <libc/file.h>
-#include <io.h>
+//#include <crtdll/stubs.h>
+#include <crtdll/stdio.h>
+#include <crtdll/sys/types.h>
+#include <crtdll/stdlib.h>
+//#include <crtdll/unistd.h>
+//#include <crtdll/go32.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/io.h>
 
 int
 _flsbuf(int c, FILE *f)

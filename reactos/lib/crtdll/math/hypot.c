@@ -16,9 +16,9 @@
  *
  */
  
-#include <float.h>
-#include <math.h>
-#include <errno.h>
+#include <crtdll/float.h>
+#include <crtdll/math.h>
+#include <crtdll/errno.h>
  
 /* Approximate square roots of DBL_MAX and DBL_MIN.  Numbers
    between these two shouldn't neither overflow nor underflow
@@ -27,7 +27,7 @@
 #define __SQRT_DBL_MIN 2.3e-162
  
 double
-hypot(double x, double y)
+_hypot(double x, double y)
 {
   double abig = fabs(x), asmall = fabs(y);
   double ratio;
@@ -78,21 +78,19 @@ hypot(double x, double y)
  
 #ifdef  TEST
  
-#include <stdio.h>
+#include <crtdll/stdio.h>
  
 int
 main(void)
 {
-  printf("hypot(3, 4) =\t\t\t %25.17e\n", hypot(3., 4.));
-  printf("hypot(3*10^150, 4*10^150) =\t %25.17g\n", hypot(3.e+150, 4.e+150));
-  printf("hypot(3*10^306, 4*10^306) =\t %25.17g\n", hypot(3.e+306, 4.e+306));
-  printf("hypot(3*10^-320, 4*10^-320) =\t %25.17g\n",
-         hypot(3.e-320, 4.e-320));
-  printf("hypot(0.7*DBL_MAX, 0.7*DBL_MAX) =%25.17g\n",
-         hypot(0.7*DBL_MAX, 0.7*DBL_MAX));
-  printf("hypot(DBL_MAX, 1.0) =\t\t %25.17g\n", hypot(DBL_MAX, 1.0));
-  printf("hypot(1.0, DBL_MAX) =\t\t %25.17g\n", hypot(1.0, DBL_MAX));
-  printf("hypot(0.0, DBL_MAX) =\t\t %25.17g\n", hypot(0.0, DBL_MAX));
+  printf("hypot(3, 4) =\t\t\t %25.17e\n", _hypot(3., 4.));
+  printf("hypot(3*10^150, 4*10^150) =\t %25.17g\n", _hypot(3.e+150, 4.e+150));
+  printf("hypot(3*10^306, 4*10^306) =\t %25.17g\n", _hypot(3.e+306, 4.e+306));
+  printf("hypot(3*10^-320, 4*10^-320) =\t %25.17g\n",_hypot(3.e-320, 4.e-320));
+  printf("hypot(0.7*DBL_MAX, 0.7*DBL_MAX) =%25.17g\n",_hypot(0.7*DBL_MAX, 0.7*DBL_MAX));
+  printf("hypot(DBL_MAX, 1.0) =\t\t %25.17g\n", _hypot(DBL_MAX, 1.0));
+  printf("hypot(1.0, DBL_MAX) =\t\t %25.17g\n", _hypot(1.0, DBL_MAX));
+  printf("hypot(0.0, DBL_MAX) =\t\t %25.17g\n", _hypot(0.0, DBL_MAX));
  
   return 0;
 }

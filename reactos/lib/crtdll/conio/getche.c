@@ -10,8 +10,8 @@
  *              28/12/98: Created
  */
 
-#include <process.h>
-#include <conio.h>
+#include <crtdll/process.h>
+#include <crtdll/conio.h>
 
 
 extern int char_avail;

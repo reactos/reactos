@@ -1,13 +1,12 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <libc/file.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/ctype.h>
+#include <crtdll/internal/file.h>
 
-//long double
-//atold(const char *ascii);
+
 #define atold 	atof
 
 // dubious variable 
@@ -15,9 +14,9 @@
 
 int
 _doscan_low(FILE *iop, int (*scan_getc)(FILE *), int (*scan_ungetc)(int, FILE *),
-            const char *fmt, void **argp);
+            const char *fmt, va_list argp);
 
-//#include <libc/local.h>
+//#include <crtdll/local.h>
 
 #define	SPC	01
 #define	STP	02
@@ -53,20 +52,20 @@ static char _sctab[256] = {
 static int nchars = 0;
 
 int 
-_doscan(FILE *iop, const char *fmt, void **argp)
+_doscan(FILE *iop, const char *fmt, va_list argp)
 {
   return(_doscan_low(iop, fgetc, ungetc, fmt, argp));
 }
 
 int 
-_dowscan(FILE *iop, const wchar_t *fmt, void **argp)
+_dowscan(FILE *iop, const wchar_t *fmt, va_list argp)
 {
-  return(_doscan_low(iop, fgetwc, ungetwc, fmt, argp));
+  return(_doscan_low(iop, fgetwc, ((void *)ungetwc), ((void *)fmt), argp));
 }
 
 int
 _doscan_low(FILE *iop, int (*scan_getc)(FILE *), int (*scan_ungetc)(int, FILE *),
-            const char *fmt, void **argp)
+            const char *fmt, va_list argp)
 {
   register int ch;
   int nmatch, len, ch1;
@@ -83,7 +82,7 @@ _doscan_low(FILE *iop, int (*scan_getc)(FILE *), int (*scan_ungetc)(int, FILE *)
       goto def;
     ptr = 0;
     if (ch != '*')
-      ptr = (int **)argp++;
+	ptr = va_arg(argp, int **);
     else
       ch = *fmt++;
     len = 0;
@@ -210,7 +209,7 @@ _innum(int **ptr, int type, int len, int size, FILE *iop,
   np = numbuf;
   expseen = 0;
   negflg = 0;
-  while (((nchars++, c = scan_getc(iop)) != EOF) && (_sctab[c] & SPC))
+  while (((nchars++, c = scan_getc(iop)) != EOF)  && (_sctab[c] & SPC) )
     ;
   if (c == EOF) nchars--;
   if (c=='-') {

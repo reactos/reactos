@@ -1,5 +1,5 @@
-#include <stdlib.h>
-#include <string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
 
 void _splitpath( const char *path, char *drive, char *dir, char *fname, char *ext )
 {

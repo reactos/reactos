@@ -1,10 +1,12 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <process.h>
+#include <crtdll/process.h>
+#include <crtdll/stdlib.h>
+#include <stdarg.h>
 
-extern char **_environ;
-
-int _spawnl(int mode, const char *path, const char *argv0, ...)
+int _spawnl(int nMode, const char* szPath, const char* szArgv0,...)
 {
-  return spawnve(mode, path, (char * const *)&argv0, _environ);
+  va_list a = 0;
+  va_start(a,szArgv0);
+  return _spawnve(nMode, szPath, (char * const *)a, _environ);
 }

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 
 void *malloc(size_t size);
 

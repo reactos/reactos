@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef iscntrl
 int iscntrl(int c)
@@ -8,7 +8,7 @@ int iscntrl(int c)
 }
 
 #undef iswcntrl
-int iswcntrl(int c)
+int iswcntrl(wint_t c)
 {
   return iswctype(c,_CONTROL);
 }

@@ -8,7 +8,7 @@
  *              28/12/98: Created
  */
 
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef isalpha
 int isalpha(int c)
@@ -17,7 +17,7 @@ int isalpha(int c)
 }
 
 #undef iswalpha
-int iswalpha(int c)
+int iswalpha(wint_t c)
 {
 	return iswctype(c,_ALPHA);
 }

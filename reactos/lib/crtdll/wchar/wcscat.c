@@ -1,6 +1,6 @@
 
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
 wchar_t * wcscat(wchar_t * dest,const wchar_t * src)
 {

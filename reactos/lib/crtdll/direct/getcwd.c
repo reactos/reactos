@@ -1,6 +1,6 @@
 #include <windows.h>
-#include <direct.h>
-#include <stdlib.h>
+#include <crtdll/direct.h>
+#include <crtdll/stdlib.h>
 
 
 

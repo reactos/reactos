@@ -1,14 +1,16 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <libc/file.h>
-#include <internal/debug.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+
+
 int
 printf(const char *fmt, ...)
 {
   int len;
-
-  len = _doprnt(fmt, (&fmt)+1, stdout);
+  va_list a = 0;
+  va_start( a, fmt ); 
+  len = _doprnt(fmt, a, stdout);
 
   /* People were confused when printf() didn't flush stdout,
      so we'll do it to reduce confusion */

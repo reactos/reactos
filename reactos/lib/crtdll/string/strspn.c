@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include <crtdll/string.h>
 
 size_t
 strspn(const char *s1, const char *s2)

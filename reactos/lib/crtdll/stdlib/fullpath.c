@@ -7,7 +7,7 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 #include <windows.h>
 
 #undef fullpath

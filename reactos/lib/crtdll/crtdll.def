@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.3 $
-; $Author: dwelch $
-; $Date: 1999/01/17 17:27:24 $
+; $Revision: 1.4 $
+; $Author: ariadne $
+; $Date: 1999/04/02 21:43:45 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -27,6 +27,13 @@
 ;    ??2@YAPAXI@Z
 ;    ??3@YAXPAX@Z
 ;    ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z
+;
+;    Added functionallt equivalent placeholders:
+;
+; __builtin_new
+; __builtin_delete
+; _set_new_handler__FPFUi_i
+;
 ;
 ; These are functions for which I have not yet written prototypes or
 ; otherwise set up (they are still included below though unlike those
@@ -193,6 +200,9 @@
 ;    _wtol
 ;
 EXPORTS
+__builtin_new
+__builtin_delete
+_set_new_handler__FPFUi_i
 _CIacos
 _CIasin
 _CIatan

@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <libc/atexit.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/internal/atexit.h>
 
 int
 atexit(void (*a)(void))

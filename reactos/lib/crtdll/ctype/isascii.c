@@ -8,14 +8,14 @@
  *              28/12/98: Created
  */
 
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 int __isascii(int c)
 {
   return  (!((c)&(~0x7f))) ;
 }
 
-int iswascii(int c)
+int iswascii(wint_t c)
 {
 	return __isascii(c);
 }

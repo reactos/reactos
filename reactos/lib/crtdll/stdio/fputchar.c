@@ -1,5 +1,5 @@
-#include <stdio.h>
-#include <conio.h>
+#include <crtdll/stdio.h>
+#include <crtdll/conio.h>
 
 int	_fputchar (int c)
 {

@@ -27,9 +27,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -146,15 +146,15 @@ unsigned int	_controlfp (unsigned int unNew, unsigned int unMask);
 unsigned int	_control87 (unsigned int unNew, unsigned int unMask);
 
 
-unsigned int	_clearfp ();	/* Clear the FPU status word */
-unsigned int	_statusfp ();	/* Report the FPU status word */
+unsigned int	_clearfp (void);	/* Clear the FPU status word */
+unsigned int	_statusfp (void);	/* Report the FPU status word */
 #define		_clear87	_clearfp
 #define		_status87	_statusfp
 
-void		_fpreset ();	/* Reset the FPU */
+void		_fpreset (void);	/* Reset the FPU */
 
 /* Global 'variable' for the current floating point error code. */
-int *	__fpecode();
+int *	__fpecode(void);
 #define	_fpecode	(*(__fpecode()))
 
 /*

@@ -1,10 +1,10 @@
 
-#include <io.h>
-#include <errno.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <libc/file.h>
+#include <crtdll/io.h>
+#include <crtdll/errno.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
+#include <crtdll/internal/file.h>
 
 FILE *
 _popen (const char *cm, const char *md) /* program name, pipe mode */

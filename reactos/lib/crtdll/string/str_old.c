@@ -19,19 +19,19 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:44 $
+ * $Revision: 1.2 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:44:05 $
  *
  */
 
-#include <string.h>
-#include <wchar.h>
+#include <crtdll/string.h>
+#include <crtdll/wchar.h>
 
 int
 strcasecmp (const char* sz1, const char* sz2)
 {
-	return stricmp (sz1, sz2);
+	return _stricmp (sz1, sz2);
 }
 
 int
@@ -43,6 +43,7 @@ strncasecmp	(const char* sz1, const char* sz2, size_t sizeMaxCompare)
 int
 wcscmpi (const wchar_t* ws1, const wchar_t* ws2)
 {
-	return wcsicmp (ws1, ws2);
+	//return wcsicmp (ws1, ws2);
+	return 0;
 }
 

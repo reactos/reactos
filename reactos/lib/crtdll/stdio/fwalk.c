@@ -1,7 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <libc/file.h>
-//#include <libc/local.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+
+// not exported by crtdll
 
 #define __FILE_REC_MAX 20
 typedef struct __file_rec {

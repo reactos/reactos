@@ -17,3 +17,15 @@ memcpy (char *to, char *from, size_t count)
 
   return to;
 }
+
+void *__constant_memcpy(char *to, char *from, size_t count)
+{
+	return memcpy(to,from,count);
+}
+
+void *__memcpy(char *to, char *from, size_t count)
+{
+	return memcpy(to,from,count);
+}
+
+

@@ -18,12 +18,13 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:09 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
+/* changed second argument of cwait from nPID to hProc */
 
 #ifndef	_PROCESS_H_
 #define	_PROCESS_H_
@@ -49,21 +50,18 @@ void	_c_exit(void);
 #define	WAIT_GRANDCHILD		_WAIT_GRANDCHILD
 #endif	/* Not _NO_OLDNAMES */
 
-int	_cwait (int* pnStatus, int nPID, int nAction);
+int	_cwait (int* pnStatus, int hProc, int nAction);
 
 int	_getpid(void);
 
-int _execl(const char *_path, const char *_argv0, ...);
-int _execle(const char *_path, const char *_argv0, ... /*, char *const _envp[] */);
-int _execlp(const char *_path, const char *_argv0, ...);
-int _execlpe(const char *_path, const char *_argv0, ... /*, char *const _envp[] */);
-
-int _execv(const char *_path,const char *const _argv[]);
-int _execve(const char *_path,const char *const _argv[],const char *const _envp[]);
-int _execvp(const char *_path,const char *const _argv[]);
-int _execvpe(const char *_path,const char *const _argv[],const char *const _envp[]);
-
-
+int	_execl		(const char* szPath, const char* szArgv0, ...);
+int	_execle		(const char* szPath, const char* szArgv0, ...);
+int	_execlp		(const char* szPath, const char* szArgv0, ...);
+int	_execlpe	(const char* szPath, const char* szArgv0, ...);
+int	_execv		(const char* szPath, char* const* szaArgv);
+int	_execve		(const char* szPath, char* const* szaArgv, char* const* szaEnv);
+int	_execvp		(const char* szPath, char* const* szaArgv);
+int	_execvpe	(const char* szPath, char* const* szaArgv, char* const* szaEnv);
 
 
 /*
@@ -85,16 +83,14 @@ int _execvpe(const char *_path,const char *const _argv[],const char *const _envp
 #define	P_DETACH	_P_DETACH
 #endif	/* Not _NO_OLDNAMES */
 
-int _spawnl(int _mode, const char *_path, const char *_argv0, ...);
-int _spawnle(int _mode, const char *_path, const char *_argv0, ... /*, char *const _envp[] */);
-int _spawnlp(int _mode, const char *_path, const char *_argv0, ...);
-int _spawnlpe(int _mode, const char *_path, const char *_argv0, ... /*, char *const _envp[] */);
-
-int _spawnv(int _mode, const char *_path,const char *const _argv[]);
-int _spawnve(int _mode, const char *_path,const char *const _argv[],const char *const _envp[]);
-int _spawnvp(int _mode, const char *_path,const char *const _argv[]);
-int _spawnvpe(int _mode, const char *_path,const char *const _argv[],const char *const _envp[]);
-
+int	_spawnl		(int nMode, const char* szPath, const char* szArgv0, ...);
+int	_spawnle	(int nMode, const char* szPath, const char* szArgv0,...);
+int	_spawnlp	(int nMode, const char* szPath, const char* szArgv0,...);
+int	_spawnlpe	(int nMode, const char* szPath, const char* szArgv0,...);
+int	_spawnv		(int nMode, const char* szPath, char* const* szaArgv);
+int	_spawnve	(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
+int	_spawnvp	(int nMode, const char* szPath, char* const* szaArgv);
+int	_spawnvpe	(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv);
 /*
  * The functions _beginthreadex and _endthreadex are not provided by CRTDLL.
  * They are provided by MSVCRT.
@@ -122,6 +118,11 @@ void	_endthreadex	(unsigned unExitCode);
 
 void *_loaddll (char *name);
 int _unloaddll(void *handle);
+
+unsigned long __threadid(void);
+#define _threadid     __threadid()
+void * __threadhandle(void);
+
 
 #ifndef	_NO_OLDNAMES
 

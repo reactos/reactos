@@ -1,34 +1,51 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/*
+ * stdio.h
+ *
+ * Definitions of types and prototypes of functions for standard input and
+ * output.
+ *
+ * NOTE: The file manipulation functions provided by Microsoft seem to
+ * work with either slash (/) or backslash (\) as the path separator.
+ *
+ * This file is part of the Mingw32 package.
+ *
+ * Contributors:
+ *  Created by Colin Peters <colin@bird.fu.is.saga-u.ac.jp>
+ *
+ *  THIS SOFTWARE IS NOT COPYRIGHTED
+ *
+ *  This source code is offered for use in the public domain. You may
+ *  use, modify or distribute it freely.
+ *
+ *  This code is distributed in the hope that it will be useful but
+ *  WITHOUT ANY WARRANTY. ALL WARRANTIES, EXPRESS OR IMPLIED ARE HEREBY
+ *  DISCLAMED. This includes but is not limited to warranties of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ *
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
+ *
+ */
+/* Appropriated for Reactos Crtdll by Ariadne */
+/* implemented clearerr feof ferror perror as macros */
+/* added _IOCOMMIT */
+/* added filbuf and flsbuf and fwalk   */
 
-#ifndef __dj_include_stdio_h_
-#define __dj_include_stdio_h_
+#ifndef _STDIO_H_
+#define	_STDIO_H_
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#ifndef __dj_ENFORCE_ANSI_FREESTANDING
+#define __need_size_t
+#define __need_NULL
+#define __need_wchar_t
+#include <crtdll/stddef.h>
 
-#include <sys/djtypes.h>
-  
-#define _IOFBF    	00001
-#define _IONBF    	00002
-#define _IOLBF    	00004
 
-#define BUFSIZ		16384
-#define EOF		(-1)
-#define FILENAME_MAX	260
-#define FOPEN_MAX	20
-#define L_tmpnam	260
-#ifndef NULL
-#define NULL		0
-#endif
-#define TMP_MAX		999999
-
-#define SEEK_SET	0
-#define SEEK_CUR	1
-#define SEEK_END	2
-
+/* Some flags for the iobuf structure provided by djgpp stdio.h */
 #define _IOREAD   000010
 #define _IOWRT    000020
 #define _IOMYBUF  000040
@@ -40,14 +57,23 @@ extern "C" {
 #define _IORMONCL 004000  /* remove on close, for temp files */
 /* if _flag & _IORMONCL, ._name_to_remove needs freeing */
 #define _IOUNGETC 010000  /* there is an ungetc'ed character in the buffer */
+#define _IOCOMMIT 0x4000
 
 
-#include <internal/types.h>
+/*
+ * I used to include stdarg.h at this point, in order to allow for the
+ * functions later on in the file which use va_list. That conflicts with
+ * using stdio.h and varargs.h in the same file, so I do the typedef myself.
+ */
+#ifndef _VA_LIST
+#define _VA_LIST
+typedef	char* va_list;
+#endif
 
-__DJ_va_list
-#undef __DJ_va_list
-#define __DJ_va_list
-
+/*
+ * FILE should be used as a pointer to an opaque data type. Do not rely on
+ * anything else, especially the size or contents of this structure!
+ */
 #ifndef _FILE_DEFINED
 typedef struct {
   char *_ptr;
@@ -62,96 +88,260 @@ typedef struct {
 #define _FILE_DEFINED
 #endif
 
-typedef unsigned long		fpos_t;
 
-extern FILE _iob[];
-
+/*
+ * The three standard file pointers provided by the run time library.
+ * NOTE: These will go to the bit-bucket silently in GUI applications!
+ */
+extern FILE (*__imp__iob)[];	/* A pointer to an array of FILE */
+#define _iob	(*__imp__iob)	/* An array of FILE */
 #define stdin	(&_iob[0])
 #define stdout	(&_iob[1])
 #define stderr	(&_iob[2])
 #define stdaux	(&_iob[3])
 #define stdprn	(&_iob[4])
 
-void	clearerr(FILE *_stream);
-int	fclose(FILE *_stream);
-int	feof(FILE *_stream);
-int	ferror(FILE *_stream);
-int	fflush(FILE *_stream);
-int	fgetc(FILE *_stream);
-int	fgetpos(FILE *_stream, fpos_t *_pos);
-char *	fgets(char *_s, int _n, FILE *_stream);
-FILE *	fopen(const char *_filename, const char *_mode);
-int	fprintf(FILE *_stream, const char *_format, ...);
-int	fputc(int _c, FILE *_stream);
-int	fputs(const char *_s, FILE *_stream);
-size_t	fread(void *_ptr, size_t _size, size_t _nelem, FILE *_stream);
-FILE *	freopen(const char *_filename, const char *_mode, FILE *_stream);
-int	fscanf(FILE *_stream, const char *_format, ...);
-int	fseek(FILE *_stream, long _offset, int _mode);
-int	fsetpos(FILE *_stream, const fpos_t *_pos);
-long	ftell(FILE *_stream);
-size_t	fwrite(const void *_ptr, size_t _size, size_t _nelem, FILE *_stream);
-int	getc(FILE *_stream);
-int	getchar(void);
-char *	gets(char *_s);
-void	perror(const char *_s);
-int	printf(const char *_format, ...);
-int	putc(int _c, FILE *_stream);
-int	putchar(int _c);
-int	puts(const char *_s);
-int	remove(const char *_filename);
-int	rename(const char *_old, const char *_new);
-void	rewind(FILE *_stream);
-int	scanf(const char *_format, ...);
-void	setbuf(FILE *_stream, char *_buf);
-int	setvbuf(FILE *_stream, char *_buf, int _mode, size_t _size);
-int	sprintf(char *_s, const char *_format, ...);
-int	sscanf(const char *_s, const char *_format, ...);
-FILE *	tmpfile(void);
-char *	tmpnam(char *_s);
-char *	_tmpnam(char *_s);
-int	ungetc(int _c, FILE *_stream);
-int	vfprintf(FILE *_stream, const char *_format, va_list _ap);
-int	vprintf(const char *_format, va_list _ap);
-int	vsprintf(char *_s, const char *_format, va_list _ap);
+/* Returned by various functions on end of file condition or error. */
+#define	EOF	(-1)
+
+
+/*
+ * The maximum length of a file name. You should use GetVolumeInformation
+ * instead of this constant. But hey, this works.
+ *
+ * NOTE: This is used in the structure _finddata_t (see dir.h) so changing it
+ *       is probably not a good idea.
+ */
+#define	FILENAME_MAX	(260)
+
+/*
+ * The maximum number of files that may be open at once. I have set this to
+ * a conservative number. The actual value may be higher.
+ */
+#define FOPEN_MAX	(20)
+
+
+/*
+ * File Operations
+ */
+
+FILE*	fopen (const char* szFileName, const char* szMode);
+FILE*	freopen (const char* szNewFileName, const char* szNewMode,
+		 FILE* fileChangeAssociation);
+int	fflush (FILE* fileFlush);
+int	fclose (FILE* fileClose);
+#define fcloseall 	_fcloseall
+int	remove (const char* szFileName);
+int	rename (const char* szOldFileName, const char* szNewFileName);
+FILE*	tmpfile (void);
+
+int	_filbuf(FILE *f);
+int	_flsbuf(int c, FILE *f); 
+void	_fwalk(void (*func)(FILE *)); // not exported
+int 	_fcloseall( void );
+
+
+/*
+ * The maximum size of name (including NUL) that will be put in the user
+ * supplied buffer caName.
+ * NOTE: This has not been determined by experiment, but based on the
+ * maximum file name length above it is probably reasonable. I could be
+ * wrong...
+ */
+#define	L_tmpnam	(260)
+
+char*	tmpnam (char caName[]);
+char*	_tempnam (const char *szDir, const char *szPfx);
+
+#ifndef _NO_OLDNAMES
+#define	tempnam _tempnam
+#endif  /* Not _NO_OLDNAMES */
+
+/*
+ * The three possible buffering mode (nMode) values for setvbuf.
+ * NOTE: _IOFBF works, but _IOLBF seems to work like unbuffered...
+ * maybe I'm testing it wrong?
+ */
+#define	_IOFBF	0	/* fully buffered */
+#define	_IOLBF	1	/* line buffered */
+#define	_IONBF	2	/* unbuffered */
+
+int	setvbuf (FILE* fileSetBuffer, char* caBuffer, int nMode,
+		 size_t sizeBuffer);
+
+
+/*
+ * The buffer size as used by setbuf such that it is equivalent to
+ * (void) setvbuf(fileSetBuffer, caBuffer, _IOFBF, BUFSIZ).
+ */
+#define	BUFSIZ	512
+
+void	setbuf (FILE* fileSetBuffer, char* caBuffer);
+
+/*
+ * Pipe Operations
+ */
+  
+int	_pclose (FILE* pipeClose);
+FILE*	_popen (const char* szPipeName, const char* szMode);
+
+#define	popen _popen
+#define	pclose _pclose
+
+/* Wide character version */
+FILE*	_wpopen (const wchar_t* szPipeName, const wchar_t* szMode);
+
+/*
+ * Formatted Output
+ */
+
+int	fprintf (FILE* filePrintTo, const char* szFormat, ...);
+int	printf (const char* szFormat, ...);
+int	sprintf (char* caBuffer, const char* szFormat, ...);
+int	vfprintf (FILE* filePrintTo, const char* szFormat, va_list varg);
+int	vprintf (const char* szFormat, va_list varg);
+int	vsprintf (char* caBuffer, const char* szFormat, va_list varg);
+
+/* Wide character versions */
+int	fwprintf (FILE* filePrintTo, const wchar_t* wsFormat, ...);
+int	wprintf (const wchar_t* wsFormat, ...);
+int	swprintf (wchar_t* wcaBuffer, const wchar_t* wsFormat, ...);
+int	vfwprintf (FILE* filePrintTo, const wchar_t* wsFormat, va_list varg);
+int	vwprintf (const wchar_t* wsFormat, va_list varg);
+int	vswprintf (wchar_t* wcaBuffer, const wchar_t* wsFormat, va_list varg);
+
+/*
+ * Formatted Input
+ */
+
+int	fscanf (FILE* fileReadFrom, const char* szFormat, ...);
+int	scanf (const char* szFormat, ...);
+int	sscanf (const char* szReadFrom, const char* szFormat, ...);
+
+/* Wide character versions */
+int	fwscanf (FILE* fileReadFrom, const wchar_t* wsFormat, ...);
+int	wscanf (const wchar_t* wsFormat, ...);
+int	swscanf (const wchar_t* wsReadFrom, const wchar_t* wsFormat, ...);
+
+/*
+ * Character Input and Output Functions
+ */
+
+int	fgetc (FILE* fileRead);
+char*	fgets (char* caBuffer, int nBufferSize, FILE* fileRead);
+int	fputc (int c, FILE* fileWrite);
+int	fputs (const char* szOutput, FILE* fileWrite);
+int	getc (FILE* fileRead);
+int	getchar (void);
+char*	gets (char* caBuffer);	/* Unsafe: how does gets know how long the
+				 * buffer is? */
+int	putc (int c, FILE* fileWrite);
+int	putchar (int c);
+int	puts (const char* szOutput);
+int	ungetc (int c, FILE* fileWasRead);
+
+/* Wide character versions */
+int	fgetwc (FILE* fileRead);
+int	fputwc (wchar_t wc, FILE* fileWrite);
+int	ungetwc (wchar_t wc, FILE* fileWasRead);
+
+/*
+ * Not exported by CRTDLL.DLL included for reference purposes.
+ */
+#if 0
+wchar_t*	fgetws (wchar_t* wcaBuffer, int nBufferSize, FILE* fileRead);
+int		fputws (const wchar_t* wsOutput, FILE* fileWrite);
+int		getwc (FILE* fileRead);
+int		getwchar ();
+wchar_t*	getws (wchar_t* wcaBuffer);
+int		putwc (wchar_t wc, FILE* fileWrite);
+int		putws (const wchar_t* wsOutput);
+#endif	/* 0 */
+
+/* NOTE: putchar has no wide char equivalent even in tchar.h */
+
+
+/*
+ * Direct Input and Output Functions
+ */
+
+size_t	fread (void* pBuffer, size_t sizeObject, size_t sizeObjCount,
+		FILE* fileRead);
+size_t	fwrite (const void* pObjArray, size_t sizeObject, size_t sizeObjCount,
+		FILE* fileWrite);
+
+
+/*
+ * File Positioning Functions
+ */
+
+/* Constants for nOrigin indicating the position relative to which fseek
+ * sets the file position. Enclosed in ifdefs because io.h could also
+ * define them. (Though not anymore since io.h includes this file now.) */
+#ifndef	SEEK_SET
+#define SEEK_SET	(0)
+#endif
+
+#ifndef	SEEK_CUR
+#define	SEEK_CUR	(1)
+#endif
+
+#ifndef	SEEK_END
+#define SEEK_END	(2)
+#endif
+
+int	fseek	(FILE* fileSetPosition, long lnOffset, int nOrigin);
+long	ftell	(FILE* fileGetPosition);
+void	rewind	(FILE* fileRewind);
+
+/*
+ * An opaque data type used for storing file positions... The contents of
+ * this type are unknown, but we (the compiler) need to know the size
+ * because the programmer using fgetpos and fsetpos will be setting aside
+ * storage for fpos_t structres. Actually I tested using a byte array and
+ * it is fairly evident that the fpos_t type is a long (in CRTDLL.DLL).
+ * Perhaps an unsigned long? TODO?
+ */
+typedef long	fpos_t;
+
+int	fgetpos	(FILE* fileGetPosition, fpos_t* pfpos);
+int	fsetpos (FILE* fileSetPosition, const fpos_t* pfpos);
+
+
+/*
+ * Error Functions
+ */
+#if 0
+void	clearerr (FILE* fileClearErrors);
+int	feof (FILE* fileIsAtEnd);
+int	ferror (FILE* fileIsError);
+void	perror (const char* szErrorMessage);
+
+#endif
+
+#define  clearerr(f)     (((f)->_flag) &= ~(_IOERR|_IOEOF))
+#define feof(f)		(((f)->_flag&_IOEOF)!=0)
+#define ferror(f)	(((f)->_flag&_IOERR)!=0)
+#define  perror(s)	(fprintf(stderr, "%s: %s\n", (s), _strerror(NULL)))
+/*
+ * Non ANSI functions
+ */
 
 #ifndef __STRICT_ANSI__
+int	_fgetchar (void);
+int	_fputchar (int c);
+FILE*	_fdopen (int nHandle, char* szMode);
 
-#define L_ctermid
-#define L_cusrid
-/* #define STREAM_MAX	20 - DOS can change this */
+#ifndef _NO_OLDNAMES
+#define	fgetchar 	_fgetchar
+#define	fputchar 	_fputchar
+#define	fdopen 		_fdopen
+#endif	/* Not _NO_OLDNAMES */
 
-int	fileno(FILE *_stream);
-int	_fileno(FILE *_stream);
-FILE *	fdopen(int _fildes, const char *_type);
-int	pclose(FILE *_pf);
-FILE *	popen(const char *_command, const char *_mode);
-
-#ifndef _POSIX_SOURCE
-
-void	_djstat_describe_lossage(FILE *_to_where);
-int	_doprnt(const char *_fmt, va_list _args, FILE *_f);
-int	_doscan(FILE *_f, const char *_fmt, void **_argp);
-int	_doscan_low(FILE *, int (*)(FILE *_get), int (*_unget)(int, FILE *), const char *_fmt, void **_argp);
-int	fpurge(FILE *_f);
-int	getw(FILE *_f);
-int	mkstemp(char *_template);
-char *	mktemp(char *_template);
-int	putw(int _v, FILE *_f);
-void	setbuffer(FILE *_f, void *_buf, int _size);
-void	setlinebuf(FILE *_f);
-char *	tempnam(const char *_dir, const char *_prefix);
-int	_rename(const char *_old, const char *_new);	/* Simple (no directory) */
-
-#endif /* !_POSIX_SOURCE */
-#endif /* !__STRICT_ANSI__ */
-#endif /* !__dj_ENFORCE_ANSI_FREESTANDING */
-
-#ifndef __dj_ENFORCE_FUNCTION_CALLS
-#endif /* !__dj_ENFORCE_FUNCTION_CALLS */
+#endif	/* Not __STRICT_ANSI__ */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* !__dj_include_stdio_h_ */
+#endif /* _STDIO_H_ */

@@ -1,12 +1,12 @@
-#include <process.h>
-#include <string.h>
+#include <crtdll/process.h>
+#include <crtdll/string.h>
 #include <windows.h>
-#include <stdio.h>
+#include <crtdll/stdio.h>
 
 
 int _p_overlay = 2;
 
-int _spawnve(int mode, const char *path,const char *const argv[],const char *const envp[])
+int _spawnve(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv)
 {
 
   char ApplicationName[MAX_PATH];
@@ -16,12 +16,12 @@ int _spawnve(int mode, const char *path,const char *const argv[],const char *con
   
   int i = 0;
   CommandLine[0] = 0;
-  while(argv[i] != NULL ) {
-	strcat(CommandLine,argv[i]);
+  while(szaArgv[i] != NULL ) {
+	strcat(CommandLine,szaArgv[i]);
 	strcat(CommandLine," ");
   	i++; 
   }
-  strcpy(ApplicationName,argv[0]);
+  strcpy(ApplicationName,szaArgv[0]);
  
   fflush(stdout); /* just in case */
   StartupInfo.cb = sizeof(STARTUPINFO);
@@ -29,15 +29,14 @@ int _spawnve(int mode, const char *path,const char *const argv[],const char *con
   StartupInfo.dwFlags = 0;
 
 
-//  if ( CreateProcessA(ApplicationName,CommandLine,NULL,NULL,TRUE,CREATE_NEW_CONSOLE|NORMAL_PRIORITY_CLASS,NULL,*envp,&StartupInfo,&ProcessInformation) ) {
-//	errno = GetLastError();
-//	return -1;
-//  }
+  if ( CreateProcessA(ApplicationName,CommandLine,NULL,NULL,TRUE,CREATE_NEW_CONSOLE|NORMAL_PRIORITY_CLASS,NULL,*szaEnv,&StartupInfo,&ProcessInformation) ) {
+	return -1;
+  }
 
   
-  if (mode == P_OVERLAY)
-    _exit(i);
+ // if (nMode == P_OVERLAY)
+ //   _exit(i);
 
 // _P_NOWAIT or _P_NOWAITO 
-  return ProcessInformation.hProcess;
+  return (int )ProcessInformation.hProcess;
 }

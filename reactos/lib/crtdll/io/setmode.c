@@ -8,9 +8,9 @@
  *              28/12/98: Created
  */
 
-#include <io.h>
-#include <stdio.h>
-#include <libc/file.h>
+#include <crtdll/io.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
 
 #undef setmode
 int setmode(int _fd, int _newmode)

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <io.h>
+#include <crtdll/io.h>
 
 int
 _chmod(const char *filename, int func)

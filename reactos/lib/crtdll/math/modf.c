@@ -1,6 +1,6 @@
 // from linux libc
 
-#include <math.h>
+#include <crtdll/math.h>
 
 /* Slooow version. */
 

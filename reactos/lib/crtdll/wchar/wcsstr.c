@@ -1,3 +1,5 @@
+#include <crtdll/wchar.h>
+
 wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
 {
 	wchar_t *x;

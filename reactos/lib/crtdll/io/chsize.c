@@ -1,5 +1,5 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
-#include <io.h>
+#include <crtdll/io.h>
 
 int
 chsize(int _fd, long size)

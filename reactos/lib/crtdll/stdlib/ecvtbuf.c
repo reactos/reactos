@@ -1,9 +1,9 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <float.h>
-#include <locale.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
+#include <crtdll/float.h>
+#include <crtdll/locale.h>
 
 void __ecvround (char *, char *, const char *, int *);
 

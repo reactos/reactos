@@ -8,7 +8,7 @@
  *              28/12/98: Created
  */
 
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 int __iscsymf(int c)
 {

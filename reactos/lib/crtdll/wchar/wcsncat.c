@@ -1,4 +1,4 @@
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
 wchar_t * wcsncat(wchar_t * dest,const wchar_t * src,size_t count)
 {

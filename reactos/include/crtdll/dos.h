@@ -139,7 +139,7 @@ void           _setdrive(unsigned int _drive, unsigned int *_p_drives);
 int            exterr(struct _DOSERROR *_p_error);
 #define dosexterr(_ep) exterr(_ep)
 
-#include <direct.h>
+#include <crtdll/direct.h>
 
 #define int386(_i, _ir, _or)         int86(_i, _ir, _or)
 #define int386x(_i, _ir, _or, _sr)   int86x(_i, _ir, _or, _sr)

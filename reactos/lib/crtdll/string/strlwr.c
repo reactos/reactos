@@ -8,10 +8,10 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <string.h>
-#include <ctype.h>
+#include <crtdll/string.h>
+#include <crtdll/ctype.h>
 
-char * strlwr(char *x)
+char * _strlwr(char *x)
 {
 	char  *y=x;
 

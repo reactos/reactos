@@ -11,14 +11,14 @@
  * Contributors:
  *  Code supplied by Stan Cox <scox@cygnus.com>
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:43 $
+ * $Revision: 1.2 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:43:56 $
  *
  */
 
 /* Needed for the atexit prototype. */
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 
 typedef void (*func_ptr) (void);
 extern func_ptr __CTOR_LIST__[];

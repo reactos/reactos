@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-#include <stdlib.h>
+//#include <crtdll/stubs.h>
+#include <crtdll/stdio.h>
+#include <crtdll/stdlib.h>
 
 void setbuffer(FILE *f, void *buf, int size)
 {

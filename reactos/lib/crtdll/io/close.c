@@ -1,6 +1,6 @@
-#include <io.h>
+#include <crtdll/io.h>
 #include <windows.h>
-#include <libc/file.h>
+#include <crtdll/internal/file.h>
 
 
 int	_close(int _fd)

@@ -1,10 +1,10 @@
-#include <string.h>
+#include <crtdll/string.h>
 
 
 void * memmove(void *dest,const void *src,size_t count)
 {
-	char *char_dest = dest;
-	char *char_src = src;
+	char *char_dest = (char *)dest;
+	char *char_src = (char *)src;
 
 	while(count > 0 )
 	{

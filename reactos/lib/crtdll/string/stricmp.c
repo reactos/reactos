@@ -1,9 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-#include <ctype.h>
+#include <crtdll/string.h>
+#include <crtdll/ctype.h>
 
 int
-stricmp(const char *s1, const char *s2)
+_stricmp(const char *s1, const char *s2)
 {
   while (toupper(*s1) == toupper(*s2))
   {
@@ -13,4 +13,10 @@ stricmp(const char *s1, const char *s2)
     s2++;
   }
   return toupper(*(unsigned const char *)s1) - toupper(*(unsigned const char *)(s2));
+}
+
+int
+_strcmpi(const char *s1, const char *s2)
+{
+	return stricmp(s1,s2);
 }

@@ -1,14 +1,15 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <libc/file.h>
-#include <io.h>
+
+#include <crtdll/stdio.h>
+#include <crtdll/errno.h>
+#include <crtdll/sys/types.h>
+#include <crtdll/sys/stat.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/io.h>
+
 
 int
 fflush(FILE *f)
@@ -18,13 +19,13 @@ fflush(FILE *f)
 
   if (f == NULL)
   {
-//    int e = errno;
+     int e = errno;
 
-//    errno = 0;
+     __set_errno(0);
     _fwalk((void (*)(FILE *))fflush);
-//    if (errno)
-//      return EOF;
-//    errno = e;
+    if (_errno)
+      return EOF;
+    __set_errno(e);
     return 0;
   }
 

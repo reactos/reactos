@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -44,11 +44,17 @@ extern "C" {
  * CRTDLL nicely supplies a function which does the actual output and
  * call to abort.
  */
-void	_assert (const char* szExpression, const char* szFileName, int nLine)
+#ifndef  __ATTRIB_NORETURN
 #ifdef	__GNUC__
-	__attribute__ ((noreturn))
+#define	_ATTRIB_NORETURN	__attribute__ ((noreturn))
+#else	/* Not __GNUC__ */
+#define	_ATTRIB_NORETURN
+#endif	/* __GNUC__ */
 #endif
-	;
+
+void	_assert (const char* szExpression, const char* szFileName, int nLine) 
+_ATTRIB_NORETURN
+;
 
 /*
  * Definition of the assert macro.

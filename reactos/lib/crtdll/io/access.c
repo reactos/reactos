@@ -1,4 +1,4 @@
-#include <io.h>
+#include <crtdll/io.h>
 #include <windows.h>
 
 #ifndef F_OK
@@ -24,7 +24,7 @@ int _access( const char *_path, int _amode )
 	if ( Attributes == -1 )
 		return -1;
 
-	if ( _amode & W_OK == W_OK ) {
+	if ( (_amode & W_OK) == W_OK ) {
 		if ( (Attributes & FILE_ATTRIBUTE_READONLY) == FILE_ATTRIBUTE_READONLY )
 			return -1;
 	}

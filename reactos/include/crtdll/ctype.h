@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 #ifndef _LINUX_CTYPE_H
@@ -31,7 +31,7 @@
 
 #define	__need_wchar_t
 #define	__need_wint_t
-#include <stddef.h>
+#include <crtdll/stddef.h>
 
 
 /*
@@ -46,22 +46,11 @@
 #define	_CONTROL	0x0020
 #define	_BLANK		0x0040
 #define	_HEX		0x0080
+#define	_ALPHA		0x0103
+#define _GRAPH		0x0200	// added
+#define _PRINT		0x0400  // added
 #define	_LEADBYTE	0x8000
 
-#define	_ALPHA		0x0103
-
-/* from DJGPP, see appropriate licence */
-#define __dj_ISALNUM 	0x0001
-#define __dj_ISALPHA	0x0002
-#define __dj_ISCNTRL	0x0004
-#define __dj_ISDIGIT	0x0008
-#define __dj_ISGRAPH	0x0010
-#define __dj_ISLOWER	0x0020
-#define __dj_ISPRINT	0x0040
-#define __dj_ISPUNCT	0x0080
-#define __dj_ISSPACE	0x0100
-#define __dj_ISUPPER	0x0200
-#define __dj_ISXDIGIT	0x0400
 
 #ifdef __cplusplus
 extern "C" {

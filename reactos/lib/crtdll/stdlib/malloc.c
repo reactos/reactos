@@ -1,6 +1,6 @@
 #include <windows.h>
-#include <stdlib.h>
-//#include <types.h>
+#include <crtdll/stdlib.h>
+//#include <crtdll/types.h>
 #include <ddk/ntddk.h>
 
 void* malloc(size_t _size)

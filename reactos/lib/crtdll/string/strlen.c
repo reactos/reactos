@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include <crtdll/string.h>
 
 size_t
 strlen(const char *str)

@@ -1,20 +1,17 @@
-#include <process.h>
 #include <windows.h>
+#include <crtdll/process.h>
+#include <crtdll/errno.h>
+#include <crtdll/internal/file.h>
 
-int _cwait( int *termstat, int procHandle, int action )
+int	_cwait (int* pnStatus, int hProc, int nAction)
 {
-	DWORD RetVal;
-	RetVal = WaitForSingleObject((HANDLE)procHandle, INFINITE);
-	if (RetVal == WAIT_FAILED || RetVal == WAIT_ABANDONED) {
-		//errno = ECHILD;
+	nAction = 0;
+	if ( WaitForSingleObject((void *)hProc,INFINITE) != WAIT_OBJECT_0 ) {
+		__set_errno(ECHILD);
 		return -1;
 	}
-	if ( RetVal == WAIT_OBJECT_0 ) {
-		GetExitCodeProcess((HANDLE)procHandle, termstat);
-		return procHandle;
-	}
 
-
-	return -1;
-	// WAIT_TIMEOUT
+	if ( !GetExitCodeProcess((void *)hProc,pnStatus) )
+		return -1;
+	return *pnStatus;
 }

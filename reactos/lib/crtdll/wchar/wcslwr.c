@@ -8,9 +8,9 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
-wchar_t * wcslwr(wchar_t *x)
+wchar_t * _wcslwr(wchar_t *x)
 {
 	wchar_t  *y=x;
 

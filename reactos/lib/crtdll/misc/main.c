@@ -20,14 +20,14 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:43 $
+ * $Revision: 1.2 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:43:56 $
  *
  */
 
-#include <stdlib.h>
-#include <process.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/process.h>
 #include <windows.h>
 
 #define ISSPACE(a)	(a == ' ' || a == '\t')

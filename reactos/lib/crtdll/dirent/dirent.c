@@ -9,21 +9,21 @@
  * Significantly revised and rewinddir, seekdir and telldir added by Colin
  * Peters <colin@fu.is.saga-u.ac.jp>
  *
- * $Revision: 1.1 $
- * $Author: rex $
- * $Date: 1999/01/16 02:11:43 $
+ * $Revision: 1.2 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:43:47 $
  *
  */
 
-#include <stdlib.h>
-/* #include <ctype.h> */
-#include <errno.h>
-#include <string.h>
-#include <dir.h>
-#include <direct.h>
-#include <sys/stat.h>
+#include <crtdll/stdlib.h>
+/* #include <crtdll/ctype.h> */
+#include <crtdll/errno.h>
+#include <crtdll/string.h>
+#include <crtdll/dir.h>
+#include <crtdll/direct.h>
+#include <crtdll/sys/stat.h>
 
-#include <dirent.h>
+#include <crtdll/dirent.h>
 
 #define SUFFIX	"*"
 #define	SLASH	"\\"

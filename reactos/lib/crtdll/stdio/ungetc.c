@@ -1,7 +1,8 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <libc/file.h>
+#include <crtdll/stdio.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/wchar.h>
 
 int
 ungetc(int c, FILE *f)
@@ -29,4 +30,11 @@ ungetc(int c, FILE *f)
   }
 
   return c;
+}
+
+
+int
+ungetwc(wchar_t c, FILE *f)
+{
+	return ungetc(c,f);
 }

@@ -1,15 +1,12 @@
 #include <windows.h>
-#include <stdlib.h>
-#include <io.h>
-#include <fcntl.h>
-#include <libc/atexit.h>
-
-void 	_exit(int _status);
+#include <crtdll/stdlib.h>
+#include <crtdll/io.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/internal/atexit.h>
 
 struct __atexit *__atexit_ptr = 0;
 
-void
-exit(int status)
+void exit(int status) 
 {
   //int i;
   struct __atexit *a = __atexit_ptr;
@@ -28,13 +25,15 @@ exit(int status)
   /* in case the program set it this way */
   setmode(0, O_TEXT);
   _exit(status);
+  for(;;);
 }
 
 
 
 void _exit(int _status)
 {
-	//ExitProcess(_status);
+	ExitProcess(_status);
+	for(;;);
 }
 
 void _cexit( void )

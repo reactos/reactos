@@ -1,13 +1,13 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef islower
 int islower(int c)
 {
-  return _isctype((unsigned char)c,_LOWER);
+  return _isctype(c,_LOWER);
 }
 
-int iswlower(int c)
+int iswlower(wint_t c)
 {
-  return iswctype((unsigned short)c,_LOWER);
+  return iswctype(c,_LOWER);
 }

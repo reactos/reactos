@@ -1,7 +1,7 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-//#include <libc/unconst.h>
+#include <crtdll/string.h>
+//#include <crtdll/unconst.h>
 
 char *
 strrchr(const char *s, int c)

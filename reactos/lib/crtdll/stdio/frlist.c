@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-//#include <libc/local.h>
+#include <crtdll/stdio.h>
+//#include <crtdll/local.h>
 
 static __file_rec __initial_file_rec = {
   0,

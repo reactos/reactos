@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
-#include <ctype.h>
-//#include <libc/unconst.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/ctype.h>
+//#include <crtdll/unconst.h>
 
 static double powten[] =
 {

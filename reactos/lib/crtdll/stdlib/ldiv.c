@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 
 ldiv_t
 ldiv(long num, long denom)

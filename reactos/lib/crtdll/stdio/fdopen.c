@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <crtdll/stdio.h>
 
 FILE *_fdopen(int handle, char *mode)
 {

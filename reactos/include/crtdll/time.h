@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:10 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -29,7 +29,7 @@
 
 #define __need_wchar_t
 #define __need_size_t
-#include <stddef.h>
+#include <crtdll/stddef.h>
 
 #ifdef	__cplusplus
 extern "C" {
@@ -53,7 +53,7 @@ typedef	long	clock_t;
 /*
  * Need a definition of time_t.
  */
-#include <sys/types.h>
+#include <crtdll/sys/types.h>
 
 /*
  * A type for storing the current time and date. This is the number of

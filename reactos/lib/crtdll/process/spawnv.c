@@ -1,10 +1,9 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <process.h>
-#include <stdlib.h>
+#include <crtdll/process.h>
+#include <crtdll/stdlib.h>
 
-
-int _spawnv(int mode, const char *path,const char *const argv[])
+int _spawnv	(int nMode, const char* szPath, char* const* szaArgv)
 {
-  return _spawnve(mode, path, (char * const *)argv, _environ);
+  return _spawnve(nMode, szPath, (char * const *)szaArgv, _environ);
 }

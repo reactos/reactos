@@ -8,7 +8,7 @@
  *              28/12/98: Appropriated for Reactos
  */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <crtdll/stdio.h>
 
 char *
 gets(char *s)

@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef isxdigit
 int isxdigit(int c)
@@ -8,7 +8,7 @@ int isxdigit(int c)
 }
 
 #undef iswxdigit
-int iswxdigit(int c)
+int iswxdigit(wint_t c)
 {
  return iswctype(c,_HEX);
 }

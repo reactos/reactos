@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -29,8 +29,8 @@
 #ifndef _DIR_H_
 #define	_DIR_H_
 
-#include <stdio.h>	/* To get FILENAME_MAX... ugly. */
-#include <sys/types.h>	/* To get time_t. */
+#include <crtdll/stdio.h>	/* To get FILENAME_MAX... ugly. */
+#include <crtdll/sys/types.h>	/* To get time_t. */
 
 #ifdef	__cplusplus
 extern "C" {

@@ -7,16 +7,16 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef isspace
 int isspace(int c)
 {
-  return _isctype((unsigned char)c,_SPACE);
+  return _isctype(c,_SPACE);
 }
 
 #undef iswspace
-int iswspace(int c)
+int iswspace(wint_t c)
 {
-  return iswctype((unsigned short)c,_SPACE);
+  return iswctype(c,_SPACE);
 }

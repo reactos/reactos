@@ -1,6 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
 wchar_t* wcschr(const wchar_t* str, wchar_t ch)
 {

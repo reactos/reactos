@@ -18,13 +18,15 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:09 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
 /* added splitpath */
+/* changed definition of environ and argc */
+/* moved prototype for swab from string.h to stdlib.h */
 #ifndef _STDLIB_H_
 #define _STDLIB_H_
 
@@ -38,21 +40,26 @@ extern "C" {
  * argc and argv. environ is a pointer to a table of environment variables.
  * NOTE: Strings in _argv and environ are ANSI strings.
  */
-extern int	_argc;
-extern char**	_argv;
-extern char**	environ;
+extern int*	__argc_dll;
+extern char***	__argv_dll;
+extern char***	_environ_dll;
+#define __argc      (*__argc_dll)
+#define __argv      (*__argv_dll)
+#define _environ    (*_environ_dll)
 
 
 #define __need_size_t
 #define __need_wchar_t
 #define __need_NULL
-#include <stddef.h>
+#include <crtdll/stddef.h>
 
+#ifndef  __ATTRIB_NORETURN
 #ifdef	__GNUC__
 #define	_ATTRIB_NORETURN	__attribute__ ((noreturn))
 #else	/* Not __GNUC__ */
 #define	_ATTRIB_NORETURN
 #endif	/* __GNUC__ */
+#endif
 
 double	atof	(const char* szNumber);
 int	atoi	(const char* szNumber);
@@ -97,7 +104,7 @@ void	free	(void* pObject);
 #define	EXIT_SUCCESS	0
 #define	EXIT_FAILURE	-1
 
-void	abort	(void) _ATTRIB_NORETURN;
+void	abort	(void)  _ATTRIB_NORETURN;
 void	exit	(int nStatus) _ATTRIB_NORETURN;
 int	atexit	(void (*pfuncExitProcessing)(void));
 
@@ -159,6 +166,8 @@ char*	_gcvt (double dValue, int nDec, char* caBuf);
 
 char*	_fullpath (char* caBuf, const char* szPath, size_t sizeMax);
 
+void	_swab (const char* caFrom, char* caTo, size_t sizeToCopy);
+
 #ifndef	_NO_OLDNAMES
 #define	 beep 		_beep
 #define  seterrormode 	_seterrormode 
@@ -173,6 +182,8 @@ char*	_fullpath (char* caBuf, const char* szPath, size_t sizeMax);
 #define  ecvt		_ecvt
 #define  fcvt		_fcvt
 #define  gcvt		_gcvt
+
+#define  swab		_swab
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not __STRICT_ANSI__ */

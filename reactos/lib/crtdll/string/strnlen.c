@@ -1,8 +1,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
+#include <crtdll/string.h>
 
 size_t
-strnlen(const char *str, int count)
+strnlen(const char *str, size_t count)
 {
   const char *s;
 

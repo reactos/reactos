@@ -7,14 +7,14 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <io.h>
+#include <crtdll/io.h>
 #include <windows.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-#include <libc/file.h>
-#include <string.h>
-#include <share.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/sys/stat.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/string.h>
+#include <crtdll/share.h>
 
 typedef struct _fileno_modes_type
 {
@@ -39,12 +39,6 @@ char __is_text_file(FILE *p) {
 
 int __fileno_alloc(HANDLE hFile, int mode);
 
-// fixme
-#undef open
-int open(const char *_path, int _oflag,...)
-{
-	return _open(_path,_oflag);
-}
 
 int _open(const char *_path, int _oflag,...)
 {
@@ -55,9 +49,9 @@ int _open(const char *_path, int _oflag,...)
 	DWORD dwCreationDistribution = 0;
 	DWORD dwFlagsAndAttributes = 0;
 	
-	if (( _oflag & _S_IREAD ) == _S_IREAD)
+	if (( _oflag & S_IREAD ) == S_IREAD)
 		dwShareMode = FILE_SHARE_READ;
-	else if ( ( _oflag & _S_IWRITE) == _S_IWRITE ) {
+	else if ( ( _oflag & S_IWRITE) == S_IWRITE ) {
 		dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE;
 	}
 
@@ -74,18 +68,21 @@ _O_TEXT   Opens file in text (translated) mode. (For more information, see Text 
 	else if (( _oflag & _O_WRONLY ) == _O_WRONLY )
 		dwDesiredAccess |= GENERIC_WRITE;
 	
-	if (( _oflag & _S_IREAD ) == _S_IREAD )
+	if (( _oflag & S_IREAD ) == S_IREAD )
 		dwShareMode |= FILE_SHARE_READ;
 	
-	if (( _oflag & _S_IWRITE ) == _S_IWRITE )
+	if (( _oflag & S_IWRITE ) == S_IWRITE )
 		dwShareMode |= FILE_SHARE_WRITE;	
 
 	if (( _oflag & (_O_CREAT | _O_EXCL ) ) == (_O_CREAT | _O_EXCL) )
 		dwCreationDistribution |= CREATE_NEW;
 
-	else if (( _oflag & (O_TRUNC | O_CREAT ) ) == (O_TRUNC | O_CREAT) )
-		dwCreationDistribution |= CREATE_ALWAYS;
-
+	else if (( _oflag &  O_TRUNC ) == O_TRUNC  ) {
+		if (( _oflag &  O_CREAT ) ==  O_CREAT ) 
+			dwCreationDistribution |= CREATE_ALWAYS;
+		else if (( _oflag & O_RDONLY ) != O_RDONLY ) 
+			dwCreationDistribution |= TRUNCATE_EXISTING;
+	}
 	else if (( _oflag & _O_APPEND ) == _O_APPEND )
 		dwCreationDistribution |= OPEN_EXISTING;
 	else if (( _oflag &  _O_CREAT ) == _O_CREAT )
@@ -93,8 +90,7 @@ _O_TEXT   Opens file in text (translated) mode. (For more information, see Text 
 	else
 		dwCreationDistribution |= OPEN_EXISTING;
 
-//	if (( _oflag &  _O_TRUNC ) == _O_TRUNC )
-//		dwCreationDistribution |= TRUNCATE_EXISTING;
+	
 
 	if (( _oflag &  _O_RANDOM ) == _O_RANDOM )
 		dwFlagsAndAttributes |= FILE_FLAG_RANDOM_ACCESS;	
@@ -224,7 +220,7 @@ int __fileno_dup2( int handle1, int handle2 )
 int __fileno_setmode(int _fd, int _newmode)
 {
 	int m;
-	if ( _fd < 0 )
+	if ( _fd < minfno )
 		return -1;
 
 	if ( _fd >= maxfno )
@@ -245,10 +241,15 @@ int	__fileno_close(int _fd)
 
 	fileno_modes[_fd].fd = -1;
 	fileno_modes[_fd].hFile = (HANDLE)-1;
-		
+	return 0;	
 }
 
 int _open_osfhandle (void *osfhandle, int flags )
 {
 	return __fileno_alloc((HANDLE)osfhandle, flags);
 }	
+
+void *_get_osfhandle( int fileno )
+{
+	return	filehnd(fileno);
+}

@@ -1,20 +1,21 @@
 #include <windows.h>
-#include <stdlib.h>
-#include <string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/string.h>
 
-#undef _acmdln_dll
+
+char *_pgmptr_dll;
 char *_acmdln_dll;   
-#undef _commode_dll   
 unsigned  int _commode_dll;     
-    
-#undef _winmajor_dll
 unsigned  int _winmajor_dll;   
-#undef _winminor_dll  
 unsigned  int _winminor_dll;
-#undef _winver_dll     
 unsigned  int _winver_dll;    
-#undef _osver_dll
-unsigned  int _osver_dll;    
+
+
+unsigned  int _osmajor_dll;
+unsigned  int _osminor_dll;
+unsigned  int _osmode_dll;
+unsigned  int _osver_dll;
+unsigned  int _osversion_dll;
 
 #undef __argv
 #undef __argc
@@ -33,8 +34,7 @@ char **_environ;
 char *** _environ_dll = &_environ;    
  
         
-
-int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
+int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
 {
    int i,afterlastspace;
    DWORD   version;
@@ -80,10 +80,12 @@ int __GetMainArgs(int *argc,char ***argv,char **env,int flag)
    _environ = (char **)GetEnvironmentStringsA();;
    _environ_dll = &_environ;    
     
-   argc = __argc_dll;
-   argv = __argv_dll;
-   env  = _environ_dll;
+   *argc = __argc;
+   *argv = __argv;
+   *env  = _environ;
  
+   _pgmptr_dll = strdup((char *)argv[0]);
+
    return 0;
 }
 

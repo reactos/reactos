@@ -13,9 +13,9 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <stdio.h>
-#include <string.h>
-#include <io.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
+#include <crtdll/io.h>
 
 
 char *

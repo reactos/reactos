@@ -19,16 +19,11 @@
 
 #include <stdarg.h>
 
-//#include <internal/debug.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
-#include <string.h>
-
-//#undef isdigit
-
-size_t strnlen( const char *string, size_t count );
-
+//#include <crtdll/internal/debug.h>
+#include <crtdll/ctype.h>
+#include <crtdll/string.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
 
 static int skip_atoi(const char **s)
 {
@@ -95,7 +90,7 @@ static char * number(FILE * f, long num, int base, int size, int precision
 	if (num == 0)
 		tmp[i++]='0';
 	else while (num != 0)
-		tmp[i++] = digits[do_div(&num,base)];
+		tmp[i++] = digits[do_div((int *)&num,base)];
 	if (i > precision)
 		precision = i;
 	size -= precision;
@@ -104,16 +99,19 @@ static char * number(FILE * f, long num, int base, int size, int precision
 			putc( ' ',f);
 	if (sign)
 		putc( sign,f);
-	if (type & SPECIAL)
-		if (base==8)
+	if (type & SPECIAL) {
+		if (base==8) {
 			putc( '0',f);
+		}
 		else if (base==16) {
 			putc( '0', f);
 			putc( digits[33],f);
 		}
-	if (!(type & LEFT))
+	}
+	if (!(type & LEFT)) {
 		while (size-- > 0)
 			putc( c,f);
+	}
 	while (i < precision--)
 		putc( '0', f);
 	while (i-- > 0)
@@ -260,10 +258,12 @@ int _doprnt(const char *fmt, va_list args, FILE *f)
 
 		case 'n':
 			if (qualifier == 'l') {
-				long * ip = va_arg(args, long *);
+				long * ip;
+				ip = va_arg(args, long *);
 				//*ip = (str - buf);
 			} else {
-				int * ip = va_arg(args, int *);
+				int * ip;
+				ip  = va_arg(args, int *);
 				//*ip = (str - buf);
 			}
 			continue;
@@ -300,11 +300,12 @@ int _doprnt(const char *fmt, va_list args, FILE *f)
 		}
 		if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
-		else if (qualifier == 'h')
+		else if (qualifier == 'h') {
 			if (flags & SIGN)
 				num = va_arg(args, short);
 			else
 				num = va_arg(args, unsigned short);
+		}
 		else if (flags & SIGN)
 			num = va_arg(args, int);
 		else

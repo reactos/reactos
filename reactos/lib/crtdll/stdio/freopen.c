@@ -1,10 +1,10 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <sys/types.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <libc/file.h>
-#include <io.h>
+#include <crtdll/sys/types.h>
+#include <crtdll/stdio.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/io.h>
 
 
 

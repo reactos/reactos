@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <wstring.h>
+#include <crtdll/wchar.h>
 
-int wcsicmp(const wchar_t* cs,const wchar_t * ct)  
+int _wcsicmp(const wchar_t* cs,const wchar_t * ct)  
 {
 	while (towlower(*cs) == towlower(*ct))
   	{

@@ -1,10 +1,9 @@
 
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <string.h>
-#include <stdlib.h>
+#include <crtdll/string.h>
+#include <crtdll/stdlib.h>
 
-char *
-strdup(const char *_s)
+char *_strdup(const char *_s)
 {
   char *rv;
   if (_s == 0)

@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:07 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -46,8 +46,8 @@ extern double*	__imp__HUGE;
 #define	HUGE_VAL	(*__imp__HUGE)
 #else
 /* CRTDLL */
-extern double*	__imp__HUGE_dll;
-#define	HUGE_VAL	(*__imp__HUGE_dll)
+extern double*	_HUGE_dll;
+#define	HUGE_VAL	(*_HUGE_dll)
 #endif
 
 

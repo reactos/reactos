@@ -1,6 +1,6 @@
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
 #include <windows.h>
-#include <string.h>
+#include <crtdll/string.h>
 
 void _searchenv(const char *file,const char *var,char *path )
 {

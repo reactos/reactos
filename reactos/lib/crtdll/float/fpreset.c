@@ -1,4 +1,4 @@
-#include <float.h>
+#include <crtdll/float.h>
 
 void    _fpreset (void)
 {

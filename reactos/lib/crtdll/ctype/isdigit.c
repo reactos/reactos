@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 #undef isdigit
 int isdigit(int c)
@@ -8,7 +8,7 @@ int isdigit(int c)
 }
 
 #undef iswdigit
-int iswdigit(int c)
+int iswdigit(wint_t c)
 {
    return iswctype(c,_DIGIT);
 }

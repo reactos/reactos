@@ -1,11 +1,6 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
-#include <wstring.h>
-
-size_t wstrlen(const wchar_t *s)
-{
-    return wcslen(s);
-}
+#include <crtdll/wchar.h>
 
 
 size_t wcslen(const wchar_t * s)
@@ -17,3 +12,10 @@ size_t wcslen(const wchar_t * s)
 	for (save = s; *save; ++save);
 	return save-s;
 }
+
+size_t wstrlen(const wchar_t *s)
+{
+    return wcslen(s);
+}
+
+

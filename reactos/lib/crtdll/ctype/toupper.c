@@ -1,6 +1,6 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
-#include <wchar.h>
+#include <crtdll/ctype.h>
+#include <crtdll/wchar.h>
 
 #undef toupper
 int toupper(int c)

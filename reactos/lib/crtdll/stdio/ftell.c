@@ -1,11 +1,11 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-//#include <unistd.h>
-#include <libc/file.h>
-#include <fcntl.h>
-#include <io.h>
+//#include <crtdll/stubs.h>
+#include <crtdll/stdio.h>
+//#include <crtdll/unistd.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/fcntl.h>
+#include <crtdll/io.h>
 
 
 long

@@ -1,5 +1,5 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <ctype.h>
+#include <crtdll/ctype.h>
 
 
 #define __dj_ISUPPER	_UPPER
@@ -12,10 +12,7 @@
 #define __dj_ISXDIGIT	_HEX
 #define __dj_ISALPHA	_ALPHA
 #define __dj_ISPRINT	_PRINT
-#define __dj_ISALNUM 	( _ALPHA | _DIGIT )
 #define __dj_ISGRAPH	_GRAPH
-
-int __mb_cur_max = 2;
 
 // removed the first value
 
@@ -68,16 +65,16 @@ unsigned short _pctype_dll[] = {
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `-', 0x2d */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `.', 0x2e */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `/', 0x2f */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `0', 0x30 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `1', 0x31 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `2', 0x32 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `3', 0x33 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `4', 0x34 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `5', 0x35 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `6', 0x36 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `7', 0x37 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `8', 0x38 */
-  __dj_ISALNUM | __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `9', 0x39 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `0', 0x30 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `1', 0x31 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `2', 0x32 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `3', 0x33 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `4', 0x34 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `5', 0x35 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `6', 0x36 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `7', 0x37 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `8', 0x38 */
+   __dj_ISDIGIT | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISXDIGIT,			/* `9', 0x39 */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `:', 0x3a */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `;', 0x3b */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `<', 0x3c */
@@ -85,64 +82,64 @@ unsigned short _pctype_dll[] = {
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `>', 0x3e */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `?', 0x3f */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `@', 0x40 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `A', 0x41 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `B', 0x42 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `C', 0x43 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `D', 0x44 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `E', 0x45 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `F', 0x46 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `G', 0x47 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `H', 0x48 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `I', 0x49 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `J', 0x4a */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `K', 0x4b */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `L', 0x4c */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `M', 0x4d */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `N', 0x4e */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `O', 0x4f */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `P', 0x50 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Q', 0x51 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `R', 0x52 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `S', 0x53 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `T', 0x54 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `U', 0x55 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `V', 0x56 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `W', 0x57 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `X', 0x58 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Y', 0x59 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Z', 0x5a */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `A', 0x41 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `B', 0x42 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `C', 0x43 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `D', 0x44 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `E', 0x45 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER | __dj_ISXDIGIT,		/* `F', 0x46 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `G', 0x47 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `H', 0x48 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `I', 0x49 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `J', 0x4a */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `K', 0x4b */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `L', 0x4c */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `M', 0x4d */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `N', 0x4e */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `O', 0x4f */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `P', 0x50 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Q', 0x51 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `R', 0x52 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `S', 0x53 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `T', 0x54 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `U', 0x55 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `V', 0x56 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `W', 0x57 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `X', 0x58 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Y', 0x59 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISPRINT | __dj_ISUPPER,			/* `Z', 0x5a */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `[', 0x5b */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* 0x5c */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `]', 0x5d */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `^', 0x5e */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `_', 0x5f */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* 0x60 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `a', 0x61 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `b', 0x62 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `c', 0x63 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `d', 0x64 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `e', 0x65 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `f', 0x66 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `g', 0x67 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `h', 0x68 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `i', 0x69 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `j', 0x6a */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `k', 0x6b */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `l', 0x6c */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `m', 0x6d */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `n', 0x6e */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `o', 0x6f */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `p', 0x70 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `q', 0x71 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `r', 0x72 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `s', 0x73 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `t', 0x74 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `u', 0x75 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `v', 0x76 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `w', 0x77 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `x', 0x78 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `y', 0x79 */
-  __dj_ISALNUM | __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `z', 0x7a */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `a', 0x61 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `b', 0x62 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `c', 0x63 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `d', 0x64 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `e', 0x65 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT | __dj_ISXDIGIT,		/* `f', 0x66 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `g', 0x67 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `h', 0x68 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `i', 0x69 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `j', 0x6a */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `k', 0x6b */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `l', 0x6c */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `m', 0x6d */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `n', 0x6e */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `o', 0x6f */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `p', 0x70 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `q', 0x71 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `r', 0x72 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `s', 0x73 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `t', 0x74 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `u', 0x75 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `v', 0x76 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `w', 0x77 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `x', 0x78 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `y', 0x79 */
+   __dj_ISALPHA | __dj_ISGRAPH | __dj_ISLOWER | __dj_ISPRINT,			/* `z', 0x7a */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `{', 0x7b */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `|', 0x7c */
   __dj_ISGRAPH | __dj_ISPRINT | __dj_ISPUNCT,							/* `}', 0x7d */
@@ -281,23 +278,23 @@ unsigned short _pctype_dll[] = {
 unsigned short *_ctype = _pctype_dll -1; // unused
 unsigned short *_pwctype_dll = _pctype_dll;
 
-
-int _isctype(unsigned char c, int t)
+int	_isctype (unsigned int c, int ctypeFlags)
 {		
 
-	return ((_pctype_dll[(c & 0xFF)]&t) == t );
+	return ((_pctype_dll[(unsigned char)(c & 0xFF)]&ctypeFlags) == ctypeFlags );
 }
 
-int iswctype(unsigned short c, int t)
+
+int	iswctype(wint_t wc, wctype_t wctypeFlags)
 {		
 
-	return ((_pwctype_dll[(c & 0xFF)]&t) == t );
+	return ((_pwctype_dll[(unsigned char)(wc & 0xFF)]&wctypeFlags) == wctypeFlags );
 }
 
 // obsolete
-int is_wctype(unsigned short c, int t)
+int	is_wctype(wint_t wc, wctype_t wctypeFlags)
 {		
 
-	return ((_pctype_dll[(c & 0xFF)]&t) == t );
+	return ((_pwctype_dll[(unsigned char)(wc & 0xFF)]&wctypeFlags) == wctypeFlags );
 }
 

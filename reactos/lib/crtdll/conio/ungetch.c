@@ -10,7 +10,7 @@
  *              28/12/98: Created
  */
 
-#include <process.h>
+#include <crtdll/process.h>
 #define EOF -1
 
 int char_avail = 0;

@@ -1,10 +1,9 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <libc/file.h>
-//#include <libc/local.h>
-//#include <libc/stdiohk.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/internal/file.h>
+
 
 FILE *	__alloc_file(void);
 
@@ -68,7 +67,7 @@ int _fcloseall( void )
   __file_rec *fr = __file_rec_list;
   __file_rec **last_fr = &__file_rec_list;
   
-  int total_closed;
+  int total_closed = 0;
   int i = 0;
 
   /* Try to find an empty slot */

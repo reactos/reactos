@@ -28,9 +28,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
- * $Author: rex $
- * $Date: 1999/03/19 05:55:09 $
+ * $Revision: 1.3 $
+ * $Author: ariadne $
+ * $Date: 1999/04/02 21:42:06 $
  *
  */
 
@@ -168,5 +168,6 @@ typedef	__WINT_TYPE__		wint_t;
 #if defined (_STDDEF_H_)
 #define	offsetof(TYPE, MEMBER)	((size_t) &( ((TYPE *) 0)->MEMBER ))
 #endif	/* _STDDEF_H_ */
+
 
 #endif /* not _STDDEF_H_ */

@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <io.h>
+#include <crtdll/io.h>
 
 long
 _filelength(int _fd)

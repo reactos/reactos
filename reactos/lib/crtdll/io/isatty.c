@@ -1,8 +1,14 @@
-#include <io.h>
+#include <crtdll/io.h>
+#include <crtdll/sys/stat.h>
 
-#undef isatty
 
-int isatty( int handle )
+int _isatty( int fd )
 {
-	return (handle & 3);
+  struct stat buf;
+
+  if (fstat (fd, &buf) < 0)
+    return 0;
+  if (S_ISCHR (buf.st_mode))
+    return 1;
+  return 0;
 }

@@ -9,8 +9,8 @@
  */
 
 
-#include <string.h>
-#include <ctype.h>
+#include <crtdll/string.h>
+#include <crtdll/ctype.h>
 
 char *strupr(char *x)
 {

@@ -1,8 +1,8 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <crtdll/stdio.h>
 #include <stdarg.h>
-#include <libc/file.h>
-//#include <libc/unconst.h>
+#include <crtdll/internal/file.h>
+//#include <crtdll/unconst.h>
 
 int
 sscanf(const char *str, const char *fmt, ...)

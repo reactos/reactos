@@ -1,11 +1,11 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 
 
-#include <process.h>
+#include <crtdll/process.h>
 
-int _execvpe(const char *path,const char * const argv[],const char * const envp[])
+int _execvpe(const char* szPath, char* const* szaArgv, char* const* szaEnv)
 {
-  return _spawnvpe(P_OVERLAY, path, argv, envp);
+  return _spawnvpe(P_OVERLAY, szPath, szaArgv, szaEnv);
 }
 
 

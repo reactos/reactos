@@ -1,12 +1,12 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-#include <io.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <stdlib.h>
-//#include <unistd.h>
-#include <libc/file.h>
+//#include <crtdll/stubs.h>
+#include <crtdll/stdio.h>
+#include <crtdll/io.h>
+#include <crtdll/sys/types.h>
+#include <crtdll/sys/stat.h>
+#include <crtdll/stdlib.h>
+//#include <crtdll/unistd.h>
+#include <crtdll/internal/file.h>
 
 #if 0
 #ifndef __dj_include_stdio_h_

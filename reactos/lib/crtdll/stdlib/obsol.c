@@ -1,5 +1,9 @@
 #include <windows.h>
-#include <stdlib.h>
+#include <crtdll/stdlib.h>
+
+#undef _cpumode
+unsigned char _cpumode = 0;
+unsigned char *_cpumode_dll = &_cpumode;
 
 void _seterrormode(int nMode)
 {
@@ -7,7 +11,7 @@ void _seterrormode(int nMode)
 	return;
 }
 
-void _beep(unsigned nFreq, unsigned dur)
+void _beep(unsigned nFreq, unsigned nDur)
 {
 	Beep(nFreq,nDur);
 	return;

@@ -2,16 +2,16 @@
 /* Copyright (C) 1997 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-//#include <unistd.h>
-#include <io.h>
-#include <libc/file.h>
-#include <share.h>
+//#include <crtdll/stubs.h>
+#include <crtdll/stdio.h>
+#include <crtdll/string.h>
+#include <crtdll/stdlib.h>
+#include <crtdll/errno.h>
+#include <crtdll/fcntl.h>
+//#include <crtdll/unistd.h>
+#include <crtdll/io.h>
+#include <crtdll/internal/file.h>
+#include <crtdll/share.h>
 
 #if 0
 #ifndef __dj_include_stdio_h_

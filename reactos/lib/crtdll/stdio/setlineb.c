@@ -1,5 +1,5 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <stdio.h>
+#include <crtdll/stdio.h>
 
 void setlinebuf(FILE *f)
 {

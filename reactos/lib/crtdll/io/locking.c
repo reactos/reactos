@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <io.h>
+#include <crtdll/io.h>
 
 int _locking( int _fd, int mode, long nbytes )
 {
