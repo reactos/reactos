@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.23 2002/08/18 21:07:59 hbirr Exp $
+/* $Id: volume.c,v 1.24 2002/08/27 06:38:23 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -30,6 +30,51 @@
 
 #define MAX_DOS_DRIVES 26
 
+HANDLE InternalOpenDirW(PWCHAR DirName, BOOLEAN Write)
+{
+    UNICODE_STRING NtPathU;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS errCode;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+
+    if (!RtlDosPathNameToNtPathName_U ((LPWSTR)DirName,
+				       &NtPathU,
+				       NULL,
+				       NULL))
+    {
+	DPRINT("Invalid path\n");
+	SetLastError(ERROR_BAD_PATHNAME);
+	return INVALID_HANDLE_VALUE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+	                       &NtPathU,
+			       Write ? FILE_WRITE_ATTRIBUTES : FILE_READ_ATTRIBUTES,
+			       NULL,
+			       NULL);
+
+    errCode = NtCreateFile (&hFile,
+	                    Write ? FILE_GENERIC_WRITE : FILE_GENERIC_READ,
+			    &ObjectAttributes,
+			    &IoStatusBlock,
+			    NULL,
+			    0,
+			    FILE_SHARE_READ|FILE_SHARE_WRITE,
+			    FILE_OPEN,
+			    0,
+			    NULL,
+			    0);
+
+    RtlFreeUnicodeString(&NtPathU);
+
+    if (!NT_SUCCESS(errCode))
+    {
+	SetLastErrorByStatus (errCode);
+	return INVALID_HANDLE_VALUE;
+    }
+    return hFile;
+}
 
 DWORD STDCALL
 GetLogicalDriveStringsA(DWORD nBufferLength,
@@ -178,13 +223,11 @@ GetDiskFreeSpaceW(
         RootPathName[3] = 0;
     }
 	
-    hFile = CreateFileW(RootPathName,
-                        FILE_READ_ATTRIBUTES,
-                        FILE_SHARE_READ,
-                        NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
+    if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW((PWCHAR)lpRootPathName, FALSE)))
+    {
+        return FALSE;
+    }
+   
 
     errCode = NtQueryVolumeInformationFile(hFile,
                                            &IoStatusBlock,
@@ -279,14 +322,11 @@ GetDiskFreeSpaceExW(
         RootPathName[3] = 0;
     }
 	
-    hFile = CreateFileW(RootPathName,
-                        FILE_READ_ATTRIBUTES,
-                        FILE_SHARE_READ,
-                        NULL,
-                        OPEN_EXISTING,
-                        FILE_ATTRIBUTE_NORMAL,
-                        NULL);
-
+    if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW(lpDirectoryName, FALSE)))
+    {
+        return FALSE;
+    }
+   
     errCode = NtQueryVolumeInformationFile(hFile,
                                            &IoStatusBlock,
                                            &FileFsSize,
@@ -348,7 +388,6 @@ GetDriveTypeA(LPCSTR lpRootPathName)
 	return Result;
 }
 
-
 UINT STDCALL
 GetDriveTypeW(LPCWSTR lpRootPathName)
 {
@@ -358,13 +397,11 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 	HANDLE hFile;
 	NTSTATUS errCode;
 
-	hFile = CreateFileW (lpRootPathName,
-	                     GENERIC_ALL,
-	                     FILE_SHARE_READ|FILE_SHARE_WRITE,
-	                     NULL,
-	                     OPEN_EXISTING,
-	                     FILE_ATTRIBUTE_NORMAL,
-	                     NULL);
+	hFile = InternalOpenDirW(lpRootPathName, FALSE);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+	    return 0;
+	}
 
 	errCode = NtQueryVolumeInformationFile (hFile,
 	                                        &IoStatusBlock,
@@ -506,7 +543,6 @@ GetVolumeInformationW(
 	PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
 	IO_STATUS_BLOCK IoStatusBlock;
         OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING NtPathU;
 	USHORT Buffer[FS_VOLUME_BUFFER_SIZE];
 	USHORT Buffer2[FS_ATTRIBUTE_BUFFER_SIZE];
 
@@ -519,39 +555,9 @@ GetVolumeInformationW(
         DPRINT("FileFsVolume %p\n", FileFsVolume);
         DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
-	if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpRootPathName,
-					   &NtPathU,
-					   NULL,
-					   NULL))
+	hFile = InternalOpenDirW(lpRootPathName, FALSE);
+	if (hFile == INVALID_HANDLE_VALUE)
 	{
-	    DPRINT("Invalid path\n");
-	    SetLastError(ERROR_BAD_PATHNAME);
-	    return FALSE;
-	}
-
-	InitializeObjectAttributes(&ObjectAttributes,
-				   &NtPathU,
-				   FILE_READ_ATTRIBUTES,
-				   NULL,
-				   NULL);
-
-        errCode = NtCreateFile (&hFile,
-			        FILE_GENERIC_READ,
-			        &ObjectAttributes,
-			        &IoStatusBlock,
-			        NULL,
-			        0,
-			        FILE_SHARE_READ|FILE_SHARE_WRITE,
-			        FILE_OPEN,
-			        0,
-			        NULL,
-			        0);
-
-        RtlFreeUnicodeString(&NtPathU);
-
-        if (!NT_SUCCESS(errCode))
-	{
-	    SetLastErrorByStatus (errCode);
 	    return FALSE;
 	}
 
@@ -672,14 +678,10 @@ SetVolumeLabelW(LPCWSTR lpRootPathName,
    wcscpy(LabelInfo->VolumeLabel,
 	  lpVolumeName);
    
-   hFile = CreateFileW(lpRootPathName,
-		       FILE_WRITE_ATTRIBUTES,
-		       FILE_SHARE_READ|FILE_SHARE_WRITE,
-		       NULL,
-		       OPEN_EXISTING,
-		       FILE_ATTRIBUTE_NORMAL,
-		       NULL);
-   DPRINT("hFile: %x\n", hFile);
+   if (INVALID_HANDLE_VALUE == (hFile = InternalOpenDirW(lpRootPathName, TRUE)))
+   {
+        return FALSE;
+   }
    
    Status = NtSetVolumeInformationFile(hFile,
 				       &IoStatusBlock,
