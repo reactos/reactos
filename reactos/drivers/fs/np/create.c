@@ -320,11 +320,11 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        InitializeListHead(&Pipe->ClientFcbListHead);
        KeInitializeMutex(&Pipe->FcbListLock, 0);
 
-       Pipe->PipeType = Buffer->NamedPipeType ? FILE_PIPE_MESSAGE_TYPE : FILE_PIPE_BYTE_STREAM_TYPE;
-       Pipe->PipeWriteMode = Buffer->NamedPipeType ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-       Pipe->PipeReadMode = Buffer->ReadMode ? FILE_PIPE_MESSAGE_MODE : FILE_PIPE_BYTE_STREAM_MODE;
-       Pipe->PipeBlockMode = Buffer->CompletionMode;
-       Pipe->PipeConfiguration = IoStack->Parameters.Create.Options & 0x3;
+       Pipe->PipeType = Buffer->NamedPipeType;
+       Pipe->WriteMode = Buffer->ReadMode;
+       Pipe->ReadMode = Buffer->ReadMode;
+       Pipe->CompletionMode = Buffer->CompletionMode;
+       Pipe->PipeConfiguration = IoStack->Parameters.CreatePipe.Options & 0x3;
        Pipe->MaximumInstances = Buffer->MaximumInstances;
        Pipe->CurrentInstances = 0;
        Pipe->TimeOut = Buffer->DefaultTimeout;

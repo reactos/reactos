@@ -26,9 +26,9 @@ typedef struct _NPFS_PIPE
   LIST_ENTRY ServerFcbListHead;
   LIST_ENTRY ClientFcbListHead;
   ULONG PipeType;
-  ULONG PipeReadMode;
-  ULONG PipeWriteMode;
-  ULONG PipeBlockMode;
+  ULONG ReadMode;
+  ULONG WriteMode;
+  ULONG CompletionMode;
   ULONG PipeConfiguration;
   ULONG MaximumInstances;
   ULONG CurrentInstances;

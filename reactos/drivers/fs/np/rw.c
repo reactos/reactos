@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.16 2004/12/30 16:15:10 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -168,7 +168,7 @@ NpfsRead(PDEVICE_OBJECT DeviceObject,
 	  KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
 	}
 
-      if (Pipe->PipeReadMode == FILE_PIPE_BYTE_STREAM_MODE)
+      if (Pipe->ReadMode == FILE_PIPE_BYTE_STREAM_MODE)
 	{
 	  DPRINT("Byte stream mode\n");
 	  /* Byte stream mode */
@@ -363,7 +363,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 	  KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
 	}
 
-      if (Pipe->PipeWriteMode == FILE_PIPE_BYTE_STREAM_MODE)
+      if (Pipe->WriteMode == FILE_PIPE_BYTE_STREAM_MODE)
 	{
 	  DPRINT("Byte stream mode\n");
 	  while (Length > 0 && Fcb->WriteQuotaAvailable > 0)
