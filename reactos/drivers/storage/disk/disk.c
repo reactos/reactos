@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.27 2003/04/28 11:05:34 ekohl Exp $
+/* $Id: disk.c,v 1.28 2003/04/29 18:06:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,6 +85,11 @@ NTSTATUS STDCALL
 DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 
+static BOOLEAN
+ScsiDiskSearchForDisk(IN PDEVICE_EXTENSION DeviceExtension,
+		      IN HANDLE BusKey,
+		      OUT PULONG DetectedDiskNumber);
+
 static VOID
 DiskClassUpdatePartitionDeviceObjects (IN PDEVICE_OBJECT DeviceObject,
 				       IN PIRP Irp);
@@ -149,6 +154,13 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   InitData.ClassShutdownFlush = DiskClassShutdownFlush;
   InitData.ClassCreateClose = NULL;
   InitData.ClassStartIo = NULL;
+
+  ScsiClassInitialize(DriverObject,
+		      RegistryPath,
+		      &InitData);
+
+  DPRINT1("*** System stopped ***\n");
+  for(;;);
 
   return(ScsiClassInitialize(DriverObject,
 			     RegistryPath,
@@ -1225,17 +1237,17 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
 	  /* Assign new partiton ordinal */
 	  DiskData->PartitionOrdinal = PartitionOrdinal;
 
-	  DPRINT1("Partition ordinal %lu was assigned to partition %lu\n",
-		  DiskData->PartitionOrdinal,
-		  DiskData->PartitionNumber);
+	  DPRINT("Partition ordinal %lu was assigned to partition %lu\n",
+		 DiskData->PartitionOrdinal,
+		 DiskData->PartitionNumber);
 	}
       else
 	{
 	  /* Delete this partition */
 	  DeviceExtension->PartitionLength.QuadPart = 0ULL;
 
-	  DPRINT1("Deleting partition %lu\n",
-		  DiskData->PartitionNumber);
+	  DPRINT("Deleting partition %lu\n",
+		 DiskData->PartitionNumber);
 	}
     }
 
@@ -1281,7 +1293,7 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
       if (PartitionNumber == 0)
 	{
 	  /* Create a new partition device object */
-	  DPRINT1("Create new partition device object\n");
+	  DPRINT("Create new partition device object\n");
 
 	  /* Get new partiton number */
 	  LastPartitionNumber++;
@@ -1332,7 +1344,7 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
       else
 	{
 	  /* Reuse an existing partition device object */
-	  DPRINT1("Reuse an exisiting partition device object\n");
+	  DPRINT("Reuse an exisiting partition device object\n");
 	  DiskData = (PDISK_DATA)(DeviceExtension + 1);
 	}
 
@@ -1348,24 +1360,245 @@ DiskClassUpdatePartitionDeviceObjects(IN PDEVICE_OBJECT DiskDeviceObject,
       /* Update partition number in the partition list */
       PartitionEntry->PartitionNumber = PartitionNumber;
 
-      DPRINT1("Partition ordinal %lu was assigned to partition %lu\n",
-	      DiskData->PartitionOrdinal,
-	      DiskData->PartitionNumber);
+      DPRINT("Partition ordinal %lu was assigned to partition %lu\n",
+	     DiskData->PartitionOrdinal,
+	     DiskData->PartitionNumber);
     }
 
   DPRINT("ScsiDiskUpdatePartitionDeviceObjects() done\n");
 }
 
 
-static NTSTATUS
-ScsiDiskEnumerateBusKey(IN PDEVICE_EXTENSION DeviceExtension,
-			IN HANDLE BusKey,
-			OUT PULONG DiskNumber)
+/**********************************************************************
+ * NAME							INTERNAL
+ *	ScsiDiskSearchForDisk
+ *
+ * DESCRIPTION
+ *	Searches the hardware tree for the given disk.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		Disk device extension.
+ *
+ *	BusKey
+ *		Handle to the hardware bus key.
+ *
+ *	DetectedDiskNumber
+ *		Returned disk number.
+ *
+ * RETURN VALUE
+ *	TRUE: Disk was found.
+ *	FALSE: Search failed.
+ */
+
+static BOOLEAN
+ScsiDiskSearchForDisk(IN PDEVICE_EXTENSION DeviceExtension,
+		      IN HANDLE BusKey,
+		      OUT PULONG DetectedDiskNumber)
 {
+  PKEY_VALUE_FULL_INFORMATION ValueData;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PDISK_DATA DiskData;
+  UNICODE_STRING IdentifierString;
+  UNICODE_STRING NameString;
+  HANDLE BusInstanceKey;
+  HANDLE ControllerKey;
+  HANDLE DiskKey;
+  HANDLE DiskInstanceKey;
+  ULONG BusNumber;
+  ULONG ControllerNumber;
+  ULONG DiskNumber;
+  ULONG Length;
+  WCHAR Buffer[32];
+  BOOLEAN DiskFound;
+  NTSTATUS Status;
 
-  DPRINT1("ScsiDiskEnumerateBusKey() called\n");
+  DPRINT("ScsiDiskSearchForDiskData() called\n");
 
+  DiskFound = FALSE;
 
+  /* Enumerate buses */
+  for (BusNumber = 0; ; BusNumber++)
+    {
+      /* Open bus instance subkey */
+      swprintf(Buffer,
+	       L"%lu",
+	       BusNumber);
+
+      RtlInitUnicodeString(&NameString,
+			   Buffer);
+
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &NameString,
+				 OBJ_CASE_INSENSITIVE,
+				 BusKey,
+				 NULL);
+
+      Status = ZwOpenKey(&BusInstanceKey,
+			 KEY_READ,
+			 &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  break;
+	}
+
+      /* Open 'DiskController' subkey */
+      RtlInitUnicodeString(&NameString,
+			   L"DiskController");
+
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &NameString,
+				 OBJ_CASE_INSENSITIVE,
+				 BusInstanceKey,
+				 NULL);
+
+      Status = ZwOpenKey(&ControllerKey,
+			 KEY_READ,
+			 &ObjectAttributes);
+      if (!NT_SUCCESS(Status))
+	{
+	  ZwClose(BusInstanceKey);
+	  continue;
+	}
+
+      /* Enumerate controllers */
+      for (ControllerNumber = 0; ; ControllerNumber++)
+	{
+	  /* Open 'DiskPeripheral' subkey */
+	  swprintf(Buffer,
+		   L"%lu\\DiskPeripheral",
+		   ControllerNumber);
+
+	  RtlInitUnicodeString(&NameString,
+			       Buffer);
+
+	  InitializeObjectAttributes(&ObjectAttributes,
+				     &NameString,
+				     OBJ_CASE_INSENSITIVE,
+				     ControllerKey,
+				     NULL);
+
+	  Status = ZwOpenKey(&DiskKey,
+			     KEY_READ,
+			     &ObjectAttributes);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      break;
+	    }
+
+	  /* Enumerate disks */
+	  for (DiskNumber = 0; ; DiskNumber++)
+	    {
+	      /* Open disk instance subkey */
+	      swprintf(Buffer,
+		       L"%lu",
+		       DiskNumber);
+
+	      RtlInitUnicodeString(&NameString,
+				   Buffer);
+
+	      InitializeObjectAttributes(&ObjectAttributes,
+					 &NameString,
+					 OBJ_CASE_INSENSITIVE,
+					 DiskKey,
+					 NULL);
+
+	      Status = ZwOpenKey(&DiskInstanceKey,
+				 KEY_READ,
+				 &ObjectAttributes);
+	      if (!NT_SUCCESS(Status))
+		{
+		  break;
+		}
+
+	      DPRINT("Found disk key: bus %lu  controller %lu  disk %lu\n",
+		     BusNumber,
+		     ControllerNumber,
+		     DiskNumber);
+
+	      /* Allocate data buffer */
+	      ValueData = ExAllocatePool(PagedPool,
+					 2048);
+	      if (ValueData == NULL)
+		{
+		  ZwClose(DiskInstanceKey);
+		  continue;
+		}
+
+	      /* Get the 'Identifier' value */
+	      RtlInitUnicodeString(&NameString,
+				   L"Identifier");
+	      Status = ZwQueryValueKey(DiskInstanceKey,
+				       &NameString,
+				       KeyValueFullInformation,
+				       ValueData,
+				       2048,
+				       &Length);
+
+	      ZwClose(DiskInstanceKey);
+	      if (!NT_SUCCESS(Status))
+		{
+		  ExFreePool(ValueData);
+		  continue;
+		}
+
+	      IdentifierString.Buffer =
+		(PWSTR)((PUCHAR)ValueData + ValueData->DataOffset);
+	      IdentifierString.Length = (USHORT)ValueData->DataLength - 2;
+	      IdentifierString.MaximumLength = (USHORT)ValueData->DataLength;
+
+	      DPRINT("DiskIdentifier: %wZ\n",
+		     &IdentifierString);
+
+	      DiskData = (PDISK_DATA)(DeviceExtension + 1);
+	      if (DiskData->Signature != 0)
+		{
+		  /* Comapre disk signature */
+		  swprintf(Buffer,
+			   L"%08lx",
+			   DiskData->Signature);
+		  if (!_wcsnicmp(Buffer, &IdentifierString.Buffer[9], 8))
+		    {
+		      DPRINT("Found disk %lu\n", DiskNumber);
+		      DiskFound = TRUE;
+		      *DetectedDiskNumber = DiskNumber;
+		    }
+		}
+	      else
+		{
+		  /* Comapre mbr checksum */
+		  swprintf(Buffer,
+			   L"%08lx",
+			   DiskData->MbrCheckSum);
+		  if (!_wcsnicmp(Buffer, &IdentifierString.Buffer[0], 8))
+		    {
+		      DPRINT("Found disk %lu\n", DiskNumber);
+		      DiskFound = TRUE;
+		      *DetectedDiskNumber = DiskNumber;
+		    }
+		}
+
+	      ExFreePool(ValueData);
+
+	      ZwClose(DiskInstanceKey);
+
+	      if (DiskFound == TRUE)
+		break;
+	    }
+
+	  ZwClose(DiskKey);
+	}
+
+      ZwClose(ControllerKey);
+      ZwClose(BusInstanceKey);
+    }
+
+  DPRINT("ScsiDiskSearchForDisk() done\n");
+
+  return DiskFound;
 }
 
 
@@ -1402,9 +1635,13 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   ULONG DiskNumber;
   ULONG Length;
   ULONG i;
+  ULONG Cylinders;
+  ULONG Sectors;
+  ULONG SectorsPerTrack;
+  ULONG TracksPerCylinder;
   NTSTATUS Status;
 
-  DPRINT1("ScsiDiskUpdateFixedDiskGeometry() called\n");
+  DPRINT("ScsiDiskUpdateFixedDiskGeometry() called\n");
 
   RtlInitUnicodeString(&KeyName,
 		       L"\\Registry\\Machine\\Hardware\\Description\\System");
@@ -1474,16 +1711,15 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
       return;
     }
 
-  Status = ScsiDiskEnumerateBusKey(DeviceExtension,
-				   BusKey,
-				   &DiskNumber);
-  ZwClose(BusKey);
-  if (!NT_SUCCESS(Status))
+  if (!ScsiDiskSearchForDisk(DeviceExtension, BusKey, &DiskNumber))
     {
-      DPRINT1("ScsiDiskEnumerateBusKey() failed (Status %lx)\n", Status);
+      DPRINT1("ScsiDiskSearchForDisk() failed\n");
+      ZwClose(BusKey);
       ExFreePool(ValueBuffer);
       return;
     }
+
+  ZwClose(BusKey);
 
   ResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)
     ((PUCHAR)ValueBuffer + ValueBuffer->DataOffset);
@@ -1491,6 +1727,7 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
   DriveParameters = (PCM_INT13_DRIVE_PARAMETER)
     ((PUCHAR)ResourceDescriptor + sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 
+#if 0
   for (i = 0; i< DriveParameters[0].NumberDrives; i++)
     {
       DPRINT1("Drive %lu: %lu Cylinders  %hu Heads  %hu Sectors\n",
@@ -1499,15 +1736,78 @@ ScsiDiskUpdateFixedDiskGeometry(IN PDEVICE_EXTENSION DeviceExtension)
 	      DriveParameters[i].MaxHeads,
 	      DriveParameters[i].SectorsPerTrack);
     }
+#endif
 
-  DPRINT1("*** System stopped ***\n");
-  for(;;);
+  Cylinders = DriveParameters[DiskNumber].MaxCylinders + 1;
+  TracksPerCylinder = DriveParameters[DiskNumber].MaxHeads +1;
+  SectorsPerTrack = DriveParameters[DiskNumber].SectorsPerTrack;
+
+  DPRINT1("BIOS geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
+	  Cylinders,
+	  TracksPerCylinder,
+	  SectorsPerTrack);
+
+  Sectors = (ULONG)
+    (DeviceExtension->PartitionLength.QuadPart >> DeviceExtension->SectorShift);
+
+  DPRINT("Physical sectors: %lu\n",
+	 Sectors);
+
+  Length = TracksPerCylinder * SectorsPerTrack;
+  if (Length == 0)
+    {
+      DPRINT1("Invalid track length 0\n");
+      ExFreePool(ValueBuffer);
+      return;
+    }
+
+  Cylinders = Sectors / Length;
+
+  DPRINT1("Logical geometry: %lu Cylinders  %hu Heads  %hu Sectors\n",
+	  Cylinders,
+	  TracksPerCylinder,
+	  SectorsPerTrack);
+
+  /* Update the disk geometry */
+  DeviceExtension->DiskGeometry->SectorsPerTrack = SectorsPerTrack;
+  DeviceExtension->DiskGeometry->TracksPerCylinder = TracksPerCylinder;
+  DeviceExtension->DiskGeometry->Cylinders.QuadPart = (ULONGLONG)Cylinders;
+
+  if (DeviceExtension->DMActive)
+    {
+      DPRINT1("FIXME: Update geometry with respect to the installed disk manager!\n");
+
+      /* FIXME: Update geometry for disk managers */
+
+    }
 
   ExFreePool(ValueBuffer);
 
-  DPRINT1("ScsiDiskUpdateFixedDiskGeometry() done\n");
+  DPRINT("ScsiDiskUpdateFixedDiskGeometry() done\n");
 }
 
+
+/**********************************************************************
+ * NAME							INTERNAL
+ *	ScsiDiskCalcMbrCheckSum
+ *
+ * DESCRIPTION
+ *	Calculates the Checksum from drives MBR.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceExtension
+ *		Disk device extension.
+ *
+ *	Checksum
+ *		Pointer to the caller supplied cecksum variable.
+ *
+ * RETURN VALUE
+ *	TRUE: Checksum was calculated.
+ *	FALSE: Calculation failed.
+ */
 
 static BOOLEAN
 ScsiDiskCalcMbrCheckSum(IN PDEVICE_EXTENSION DeviceExtension,
