@@ -22,7 +22,11 @@ RCFLAGS	+= -DNDEBUG
 LFLAGS	+= -s
 endif
 
-ifdef UNICODE
+ifndef UNICODE
+UNICODE = 1
+endif
+
+ifeq ($(UNICODE),1)
 CFLAGS	+= -DUNICODE
 # LFLAGS+= -Wl,--entry,_wWinMain@16
 endif

@@ -18,7 +18,9 @@ RC = windres
 CD_PREFIX := 
 endif
 
+ifndef UNICODE
 UNICODE = 1
+endif
 
 TOOLS_PATH = ../../../tools
 
@@ -36,7 +38,7 @@ RCFLAGS	+= -DNDEBUG
 LFLAGS	+= -s
 endif
 
-ifdef UNICODE
+ifeq ($(ifdef UNICODE),1)
 CFLAGS	+= -DUNICODE
 # LFLAGS+= -Wl,--entry,_wWinMain@16
 endif
