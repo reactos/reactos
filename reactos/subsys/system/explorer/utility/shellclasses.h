@@ -884,17 +884,10 @@ struct DesktopFolder : public ShellFolder
 };
 
 
-#if _WIN32_IE>=0x400 // is SHGetSpecialFolderPath() available?
-
  /// file system path of special folder
 struct SpecialFolderFSPath
 {
-	SpecialFolderFSPath(int folder/*e.g. CSIDL_DESKTOP*/, HWND hwnd)
-	{
-		_fullpath[0] = '\0';
-
-		SHGetSpecialFolderPath(hwnd, _fullpath, folder, TRUE);
-	}
+	SpecialFolderFSPath(int folder/*e.g. CSIDL_DESKTOP*/, HWND hwnd);
 
 	operator LPCTSTR()
 	{
@@ -905,8 +898,7 @@ protected:
 	TCHAR	_fullpath[MAX_PATH];
 };
 
-#else // _WIN32_IE<0x400 -> use SHGetSpecialFolderLocation()
-
+/*
  /// file system path of special folder
 struct SpecialFolderFSPath : public FileSysShellPath
 {
@@ -918,8 +910,7 @@ struct SpecialFolderFSPath : public FileSysShellPath
 		CHECKERROR(hr);
 	}
 };
-
-#endif
+*/
 
 
  /// wrapper class for enumerating shell namespace objects

@@ -428,6 +428,45 @@ UINT ILGetSize(LPCITEMIDLIST pidl)
 #endif
 
 
+#ifndef	_SHFOLDER_H_
+#define	CSIDL_FLAG_CREATE	0x8000
+#endif
+
+ /// file system path of special folder
+SpecialFolderFSPath::SpecialFolderFSPath(int folder, HWND hwnd)
+{
+	_fullpath[0] = '\0';
+
+#ifdef UNICODE
+	static DynamicFct<BOOL (__stdcall*)(HWND hwnd, LPTSTR pszPath, int csidl, BOOL fCreate)> s_pSHGetSpecialFolderPath(TEXT("shell32"), "SHGetSpecialFolderPathW");
+#else
+	static DynamicFct<BOOL (__stdcall*)(HWND hwnd, LPTSTR pszPath, int csidl, BOOL fCreate)> s_pSHGetSpecialFolderPath(TEXT("shell32"), "SHGetSpecialFolderPathA");
+#endif
+	if (*s_pSHGetSpecialFolderPath)
+		(*s_pSHGetSpecialFolderPath)(hwnd, _fullpath, folder, TRUE);
+	else {
+		 // SHGetSpecialFolderPath() is not compatible to WIN95/NT4
+#ifdef UNICODE
+		static DynamicFct<HRESULT (__stdcall*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPTSTR pszPath)> s_pSHGetFolderPath_shell32(TEXT("shell32"), "SHGetFolderPathW");
+#else
+		static DynamicFct<HRESULT (__stdcall*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPTSTR pszPath)> s_pSHGetFolderPath_shell32(TEXT("shell32"), "SHGetFolderPathA");
+#endif
+		if (*s_pSHGetFolderPath_shell32)
+			(*s_pSHGetFolderPath_shell32)(hwnd, folder|CSIDL_FLAG_CREATE, 0, 0, _fullpath);
+		else {
+			 // SHGetFolderPath() is only present in shfolder.dll on some platforms.
+#ifdef UNICODE
+			static DynamicLoadLibFct<HRESULT (__stdcall*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPTSTR pszPath)> s_pSHGetFolderPath_shfolder(TEXT("shfolder"), "SHGetFolderPathW");
+#else
+			static DynamicLoadLibFct<HRESULT (__stdcall*)(HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPTSTR pszPath)> s_pSHGetFolderPath_shfolder(TEXT("shfolder"), "SHGetFolderPathA");
+#endif
+			if (*s_pSHGetFolderPath_shfolder)
+				(*s_pSHGetFolderPath_shfolder)(hwnd, folder|CSIDL_FLAG_CREATE, 0, 0, _fullpath);
+		}
+	}
+}
+
+
 HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* apidl, int x, int y)
 {
 	IContextMenu* pcm;
