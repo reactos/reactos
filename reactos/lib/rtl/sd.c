@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.4 2004/08/28 22:22:39 navaraf Exp $
+/* $Id: sd.c,v 1.5 2004/09/22 20:16:02 weiden Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -46,17 +46,11 @@ RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 ULONG STDCALL
 RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-   PSID Owner;
-   PSID Group;
-   ULONG Length;
-   PACL Dacl;
-   PACL Sacl;
-
-   Length = sizeof(SECURITY_DESCRIPTOR);
+   ULONG Length = sizeof(SECURITY_DESCRIPTOR);
 
    if (SecurityDescriptor->Owner != NULL)
    {
-      Owner = SecurityDescriptor->Owner;
+      PSID Owner = SecurityDescriptor->Owner;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Owner = (PSID)((ULONG_PTR)Owner +
@@ -68,7 +62,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 
    if (SecurityDescriptor->Group != NULL)
    {
-      Group = SecurityDescriptor->Group;
+      PSID Group = SecurityDescriptor->Group;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
@@ -80,7 +74,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
          SecurityDescriptor->Dacl != NULL)
    {
-      Dacl = SecurityDescriptor->Dacl;
+      PACL Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Dacl = (PACL)((ULONG_PTR)Dacl + (ULONG_PTR)SecurityDescriptor);
@@ -91,7 +85,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    if (SecurityDescriptor->Control & SE_SACL_PRESENT &&
          SecurityDescriptor->Sacl != NULL)
    {
-      Sacl = SecurityDescriptor->Sacl;
+      PACL Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Sacl = (PACL)((ULONG_PTR)Sacl + (ULONG_PTR)SecurityDescriptor);
@@ -189,42 +183,43 @@ RtlSetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
 BOOLEAN STDCALL
 RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
-   PSID Owner;
-   PSID Group;
-   PACL Sacl;
-   PACL Dacl;
-
    if (SecurityDescriptor->Revision != 1)
    {
       return(FALSE);
    }
 
-   Owner = SecurityDescriptor->Owner;
-   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+   if (SecurityDescriptor->Owner != NULL)
    {
-      Owner = (PSID)((ULONG_PTR)Owner + (ULONG_PTR)SecurityDescriptor);
+      PSID Owner = SecurityDescriptor->Owner;
+      if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+      {
+         Owner = (PSID)((ULONG_PTR)Owner + (ULONG_PTR)SecurityDescriptor);
+      }
+
+      if (!RtlValidSid(Owner))
+      {
+         return(FALSE);
+      }
    }
 
-   if (!RtlValidSid(Owner))
+   if (SecurityDescriptor->Group != NULL)
    {
-      return(FALSE);
-   }
+      PSID Group = SecurityDescriptor->Group;
+      if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
+      {
+         Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
+      }
 
-   Group = SecurityDescriptor->Group;
-   if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
-   {
-      Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
-   }
-
-   if (!RtlValidSid(Group))
-   {
-      return(FALSE);
+      if (!RtlValidSid(Group))
+      {
+         return(FALSE);
+      }
    }
 
    if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
          SecurityDescriptor->Dacl != NULL)
    {
-      Dacl = SecurityDescriptor->Dacl;
+      PACL Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Dacl = (PACL)((ULONG_PTR)Dacl + (ULONG_PTR)SecurityDescriptor);
@@ -239,7 +234,7 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    if (SecurityDescriptor->Control & SE_SACL_PRESENT &&
          SecurityDescriptor->Sacl != NULL)
    {
-      Sacl = SecurityDescriptor->Sacl;
+      PACL Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
          Sacl = (PACL)((ULONG_PTR)Sacl + (ULONG_PTR)SecurityDescriptor);
@@ -768,7 +763,7 @@ RtlSelfRelativeToAbsoluteSD2(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 BOOLEAN
 STDCALL
@@ -778,8 +773,66 @@ RtlValidRelativeSecurityDescriptor (
 	IN SECURITY_INFORMATION RequiredInformation
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;
+   if (SecurityDescriptorLength < sizeof(SECURITY_DESCRIPTOR) ||
+       SecurityDescriptorInput->Revision != 1 ||
+       !(SecurityDescriptorInput->Control & SE_SELF_RELATIVE))
+   {
+      return(FALSE);
+   }
+
+   if (SecurityDescriptorInput->Owner != NULL)
+   {
+      PSID Owner = (PSID)((ULONG_PTR)SecurityDescriptorInput->Owner + (ULONG_PTR)SecurityDescriptorInput);
+      if (!RtlValidSid(Owner))
+      {
+         return(FALSE);
+      }
+   }
+   else if (RequiredInformation & OWNER_SECURITY_INFORMATION)
+   {
+      return(FALSE);
+   }
+
+   if (SecurityDescriptorInput->Group != NULL)
+   {
+      PSID Group = (PSID)((ULONG_PTR)SecurityDescriptorInput->Group + (ULONG_PTR)SecurityDescriptorInput);
+      if (!RtlValidSid(Group))
+      {
+         return(FALSE);
+      }
+   }
+   else if (RequiredInformation & GROUP_SECURITY_INFORMATION)
+   {
+      return(FALSE);
+   }
+
+   if (SecurityDescriptorInput->Control & SE_DACL_PRESENT)
+   {
+      if (SecurityDescriptorInput->Dacl != NULL &&
+          !RtlValidAcl((PACL)((ULONG_PTR)SecurityDescriptorInput->Dacl + (ULONG_PTR)SecurityDescriptorInput)))
+      {
+         return(FALSE);
+      }
+   }
+   else if (RequiredInformation & DACL_SECURITY_INFORMATION)
+   {
+      return(FALSE);
+   }
+
+   if (SecurityDescriptorInput->Control & SE_SACL_PRESENT)
+   {
+      if (SecurityDescriptorInput->Sacl != NULL &&
+          !RtlValidAcl((PACL)((ULONG_PTR)SecurityDescriptorInput->Sacl + (ULONG_PTR)SecurityDescriptorInput)))
+      {
+         return(FALSE);
+      }
+   }
+   else if (RequiredInformation & SACL_SECURITY_INFORMATION)
+   {
+      return(FALSE);
+   }
+
+   return(TRUE);
 }
 
 
