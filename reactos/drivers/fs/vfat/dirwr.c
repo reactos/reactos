@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.33 2002/12/03 01:14:49 hbirr Exp $
+/* $Id: dirwr.c,v 1.34 2003/01/11 15:57:55 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,22 +39,16 @@ VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
 {
   PVOID Context;
   PVOID Buffer;
-  NTSTATUS status;
-  PVFATFCB pDirFcb = NULL, pFcb = NULL;
+  PVFATFCB pDirFcb, pFcb;
   LARGE_INTEGER Offset;
 
   DPRINT ("updEntry PathFileName \'%S\'\n", 
           ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
-  status = vfatGetFCBForFile(DeviceExt, &pDirFcb, &pFcb, 
-             ((PVFATCCB)(pFileObject->FsContext2))->pFcb->PathName);
-  if (!NT_SUCCESS(status))
-  {
-    if (pDirFcb != NULL)
-    {
-      vfatReleaseFCB(DeviceExt, pDirFcb);
-    }
-    return status;
-  }
+
+  pFcb = ((PVFATCCB)(pFileObject->FsContext2))->pFcb;
+  assert (pFcb);
+  pDirFcb = pFcb->parentFcb;
+  assert (pDirFcb);
 
   Offset.u.HighPart = 0;
   Offset.u.LowPart = pFcb->dirIndex * sizeof(FATDirEntry);
@@ -67,8 +61,7 @@ VfatUpdateEntry (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT pFileObject)
   }
   else
      DPRINT1 ("Failed write to \'%S\'.\n", pDirFcb->PathName);
-  vfatReleaseFCB(DeviceExt, pDirFcb);
-  vfatReleaseFCB(DeviceExt, pFcb);
+
   return STATUS_SUCCESS;
 }
 
