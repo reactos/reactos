@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.26 2003/02/26 14:12:43 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.27 2003/03/01 00:00:32 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,9 +50,7 @@ typedef struct _PARTITION_TABLE
 
 typedef struct _MBR
 {
-  UCHAR MbrBootCode[442];			/* 0x000 */
-  ULONG Signature;				/* 0x1B8 */
-  USHORT Unused;				/* 0x1BC */
+  UCHAR MbrBootCode[446];			/* 0x000 */
   PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
   USHORT Magic;					/* 0x1FE */
 } PACKED MBR, *PMBR;
@@ -178,6 +176,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   KEVENT Event;
   IO_STATUS_BLOCK StatusBlock;
   LARGE_INTEGER Offset;
+  PUCHAR Sector;
   PULONG Shift;
   PMBR Mbr;
   PIRP Irp;
@@ -191,9 +190,9 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   if (SectorSize > 4096)
     SectorSize = 4096;
 
-  Mbr = (PMBR)ExAllocatePool(PagedPool,
-			     SectorSize);
-  if (Mbr == NULL)
+  Sector = (PUCHAR)ExAllocatePool(PagedPool,
+				  SectorSize);
+  if (Sector == NULL)
     return;
 
   KeInitializeEvent(&Event,
@@ -204,7 +203,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
   Offset.QuadPart = 0;
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				     DeviceObject,
-				     Mbr,
+				     Sector,
 				     SectorSize,
 				     &Offset,
 				     &Event,
@@ -224,34 +223,37 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("xHalExamineMBR failed (Status = 0x%08lx)\n",
+      DPRINT1("Reading MBR failed (Status 0x%08lx)\n",
 	     Status);
-      ExFreePool(Mbr);
+      ExFreePool(Sector);
       return;
     }
 
+  Mbr = (PMBR)Sector;
+
   if (Mbr->Magic != PARTITION_MAGIC)
     {
-      DPRINT("xHalExamineMBR: invalid MBR magic value\n");
-      ExFreePool(Mbr);
+      DPRINT1("Invalid MBR magic value\n");
+      ExFreePool(Sector);
       return;
     }
 
   if (Mbr->Partition[0].PartitionType != MBRTypeIdentifier)
     {
-      DPRINT("xHalExamineMBR: invalid MBRTypeIdentifier\n");
-      ExFreePool(Mbr);
+      DPRINT1("Invalid MBRTypeIdentifier\n");
+      ExFreePool(Sector);
       return;
     }
 
   if (Mbr->Partition[0].PartitionType == 0x54)
     {
       /* Found 'Ontrack Disk Manager'. Shift all sectors by 63 */
+      DPRINT1("Found 'Ontrack Disk Manager'!\n");
       Shift = (PULONG)Mbr;
       *Shift = 63;
     }
 
-  *Buffer = (PVOID)Mbr;
+  *Buffer = (PVOID)Sector;
 }
 
 
