@@ -1173,7 +1173,7 @@ NtUserBuildHwndList(
     if(!(W32Thread = Thread->Tcb.Win32Thread))
     {
       ObDereferenceObject(Thread);
-      DPRINT1("Thread is not a GUI Thread!\n");
+      DPRINT("Thread is not a GUI Thread!\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
     }
