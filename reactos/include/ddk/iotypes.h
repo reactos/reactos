@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.58 2003/11/14 15:19:35 ekohl Exp $
+/* $Id: iotypes.h,v 1.59 2003/11/19 12:50:11 ekohl Exp $
  *
  */
 
@@ -1126,8 +1126,37 @@ typedef struct _IO_MAILSLOT_CREATE_BUFFER
 } IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
 
 
-/* DMA types */
+/* error logging */
 
+typedef struct _IO_ERROR_LOG_PACKET
+{
+  UCHAR MajorFunctionCode;
+  UCHAR RetryCount;
+  USHORT DumpDataSize;
+  USHORT NumberOfStrings;
+  USHORT StringOffset;
+  USHORT EventCategory;
+  NTSTATUS ErrorCode;
+  ULONG UniqueErrorValue;
+  NTSTATUS FinalStatus;
+  ULONG SequenceNumber;
+  ULONG IoControlCode;
+  LARGE_INTEGER DeviceOffset;
+  ULONG DumpData[1];
+} IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
+
+typedef struct _IO_ERROR_LOG_MESSAGE
+{
+  USHORT Type;
+  USHORT Size;
+  USHORT DriverNameLength;
+  LARGE_INTEGER TimeStamp;
+  ULONG DriverNameOffset;
+  IO_ERROR_LOG_PACKET EntryData;
+} IO_ERROR_LOG_MESSAGE, *PIO_ERROR_LOG_MESSAGE;
+
+
+/* DMA types */
 
 typedef struct _SCATTER_GATHER_ELEMENT {
   PHYSICAL_ADDRESS Address;
