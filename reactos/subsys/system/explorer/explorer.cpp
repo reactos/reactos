@@ -39,8 +39,11 @@
 #include "explorer_intres.h"
 
 #include <locale.h>	// for setlocale()
+
+#ifndef __WINE__
 #include <io.h>		// for dup2()
 #include <fcntl.h>	// for _O_RDONLY
+#endif
 
 
 ExplorerGlobals g_Globals;
@@ -215,6 +218,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
 
+#ifndef __WINE__
 	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
 		AllocConsole();
 
@@ -225,6 +229,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		g_Globals._log = fdopen(1, "w");
 		setvbuf(g_Globals._log, 0, _IONBF, 0);
 	}
+#endif
 
 	g_Globals._hInstance = hInstance;
 
