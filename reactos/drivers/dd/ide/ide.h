@@ -13,7 +13,7 @@ extern "C" {
 
 #define IDE_MAX_NAME_LENGTH     50
 #define IDE_NT_ROOTDIR_NAME     "\\Device"
-#define IDE_NT_DEVICE_NAME      "\\HardDrive"
+#define IDE_NT_DEVICE_NAME      "\\Harddisk"
 #define IDE_NT_PARTITION_NAME   "\\Partition"
 #define IDE_WIN32_DEVICE_NAME   "\\DosDevices\\IDE"
 #define IDE_DRIVER_NAME         "IDEDRIVER"
