@@ -12,12 +12,10 @@ CLEAN_FILES = atomtest.o atomtest.exe
 
 all: atomtest.exe
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

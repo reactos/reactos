@@ -11,9 +11,7 @@ all: cat.exe
 .phony: all
 
 clean:
-	- $(RM) cat.o
-	- $(RM) cat.exe
-	- $(RM) cat.sym
+	- $(RM) cat.o cat.exe cat.sym
 
 .phony: clean
 

@@ -10,11 +10,7 @@ all: sdisk.sys
 .phony: all
 
 clean:
-	- $(RM) sdisk.o
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) sdisk.sys
+	- $(RM) sdisk.o junk.tmp base.tmp temp.exp sdisk.sys
 
 .phony: clean
 

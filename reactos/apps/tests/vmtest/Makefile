@@ -10,12 +10,10 @@ CLEAN_FILES = vmtest.o vmtest.exe
 
 all: vmtest.exe
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.6 2001/06/22 12:26:09 ekohl Exp $
+# $Id: makefile,v 1.7 2001/07/15 21:18:59 rex Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -11,12 +11,7 @@ all: vgamp.sys
 .phony: all
 
 clean:
-	- $(RM) *.o
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) *.sys
-	- $(RM) *.coff
+	- $(RM) *.o junk.tmp base.tmp temp.exp *.sys *.coff
 
 .phony: clean
 

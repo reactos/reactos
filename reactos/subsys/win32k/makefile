@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.36 2001/07/06 00:05:05 rex Exp $
+# $Id: makefile,v 1.37 2001/07/15 21:19:02 rex Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -47,17 +47,10 @@ all: $(TARGET).sys
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = dib\*.o eng\*.o freetype\*.o ldr\*.o main\*.o misc\*.o ntuser\*.o  \
-              objects\*.o stubs\*.o  \
-              $(TARGET).coff $(TARGET).o $(TARGET).a  \
-              junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
-else
 CLEAN_FILES = dib/*.o eng/*.o freetype/*.o ldr/*.o main/*.o misc/*.o ntuser/*.o  \
               objects/*.o stubs/*.o  \
               $(TARGET).coff $(TARGET).o $(TARGET).a  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
-endif
 
 $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	$(LD) -r $(OBJECTS) -o $(TARGET).o
@@ -109,12 +102,10 @@ $(TARGET).sys: $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).sys > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 

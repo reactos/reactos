@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.47 2001/04/05 01:53:57 ekohl Exp $
+# $Id: makefile,v 1.48 2001/07/15 21:18:54 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -74,17 +74,10 @@ OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
           $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) $(RESOURCE_OBJECT)
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = except\*.o file\*.o mem\*.o misc\*.o nls\*.o \
-              process\*.o string\*.o synch\*.o thread\*.o \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
-else
 CLEAN_FILES = except/*.o file/*.o mem/*.o misc/*.o nls/*.o  \
               process/*.o string/*.o synch/*.o thread/*.o  \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
 	      $(TARGET).dll $(TARGET).sym $(TARGET).coff
-endif
 
 nls/ole2nls.o: nls/ole2nls.c
 	$(CC) $(CFLAGS) -I. nls/ole2nls.c
@@ -130,12 +123,10 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

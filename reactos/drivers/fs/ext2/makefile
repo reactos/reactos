@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2001/06/22 12:26:30 ekohl Exp $
+# $Id: makefile,v 1.12 2001/07/15 21:18:59 rex Exp $
 #
 # Linux Ext2 IFS Driver
 #
@@ -18,12 +18,7 @@ all: $(TARGETNAME).sys
 .phony: all
 
 clean:
-	- $(RM) *.o 
-	- $(RM) ext2.coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) $(TARGETNAME).sys
+	- $(RM) *.o ext2.coff junk.tmp base.tmp temp.exp $(TARGETNAME).sys
 
 .phony: clean
 

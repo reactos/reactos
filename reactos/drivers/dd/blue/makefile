@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2001/06/22 12:23:56 ekohl Exp $
+# $Id: makefile,v 1.17 2001/07/15 21:18:57 rex Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -14,13 +14,7 @@ all: $(TARGET).sys $(TARGET).sys.unstripped
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
-	- $(RM) $(TARGET).coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) blue.sys
-	- $(RM) blue.sys.unstripped
+	- $(RM) $(TARGET).o $(TARGET).coff junk.tmp base.tmp temp.exp blue.sys blue.sys.unstripped
 
 .phony: clean
 

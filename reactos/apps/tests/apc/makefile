@@ -17,9 +17,7 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) apc.o
-	- $(RM) apc.exe
-	- $(RM) apc.sym
+	- $(RM) apc.o apc.exe apc.sym
 
 .phony: clean
 

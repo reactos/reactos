@@ -11,11 +11,7 @@ all: mouse.o
 .phony: all
 
 clean:
-	- $(RM) mouse.o
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) mouse.sys
+	- $(RM) mouse.o junk.tmp base.tmp temp.exp mouse.sys
 
 .phony: clean
 

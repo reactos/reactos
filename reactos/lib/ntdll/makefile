@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.62 2001/06/17 20:05:09 ea Exp $
+# $Id: makefile,v 1.63 2001/07/15 21:18:55 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -50,16 +50,9 @@ OBJECTS = napi.o ldr/startup.o $(DBG_OBJECTS) $(RTL_OBJECTS) \
           $(STDIO_OBJECTS) $(STDLIB_OBJECTS) $(STRING_OBJECTS) \
           stubs/stubs.o ldr/utils.o $(CSR_OBJECTS) $(TARGET).coff
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = napi.o csr\*.o dbg\*.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o \
-	      string\*.o stubs\*.o \
-              $(TARGET).a main\dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
-              base.tmp temp.exp $(TARGET).sym $(TARGET).coff
-else
 CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o csr/*.o dbg/*.o \
               $(TARGET).a main/dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
               base.tmp temp.exp $(TARGET).sym $(TARGET).coff
-endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
@@ -103,12 +96,10 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) def/ntdll.def def/ntdll.edf
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

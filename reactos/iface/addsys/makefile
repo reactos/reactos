@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2001/07/15 18:06:23 rex Exp $
+# $Id: makefile,v 1.10 2001/07/15 21:18:54 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -14,17 +14,13 @@ SVC_DB=w32ksvc.db
 SVC_MASK=0x1000
 
 # DOS and Win32 kernels handle Unix paths too.
-ifeq ($(DOSCLI),yes)
-SVC_SERVICE_TABLE=..\..\subsys\win32k\main\svctab.c
-SVC_GDI_STUBS=..\..\lib\gdi32\misc\win32k.c
-SVC_USER_STUBS=..\..\lib\user32\misc\win32k.c
-else
 SVC_SERVICE_TABLE=../../subsys/win32k/main/svctab.c
 SVC_GDI_STUBS=../../lib/gdi32/misc/win32k.c
 SVC_USER_STUBS=../../lib/user32/misc/win32k.c
-endif
 
 SVC_FILES = $(SVC_GDI_STUBS) $(SVC_USER_STUBS) $(SVC_SERVICE_TABLE)
+
+CLEAN_FILES = $(TARGETNAME)$(EXE_POSTFIX) $(SVC_FILES)
 
 BASE_CFLAGS = -I../../include
 
@@ -53,10 +49,7 @@ $(SVC_FILES): $(SVC_DB) $(TARGETNAME)$(EXE_POSTFIX)
 
 
 clean:
-	- $(RM) $(TARGETNAME)$(EXE_POSTFIX)
-	- $(RM) $(SVC_GDI_STUBS)
-	- $(RM) $(SVC_USER_STUBS)
-	- $(RM) $(SVC_SERVICE_TABLE)
+	- $(RM) $(CLEAN_FILES)
 	
 .PHONY: all clean 
 

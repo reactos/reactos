@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2000/10/07 13:41:45 dwelch Exp $
+# $Id: makefile,v 1.12 2001/07/15 21:18:54 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -33,16 +33,7 @@ $(TARGET)$(EXE_POSTFIX): $(TARGET).c
 	$(HOST_CC) -g $(TARGET).c -o $(TARGET)$(EXE_POSTFIX)	
 
 clean:
-	- $(RM) $(TARGET)$(EXE_POSTFIX)
-ifeq ($(DOSCLI),yes)
-	- $(RM) ..\..\lib\ntdll\napi.c
-	- $(RM) ..\..\include\ntdll\napi.h
-	- $(RM) ..\..\ntoskrnl\nt\zw.c
-else
-	- $(RM) $(NTDLL_STUBS)
-	- $(RM) $(KERNEL_SERVICE_TABLE)
-	- $(RM) $(KERNEL_ZW_CALLS)
-endif
+	- $(RM) $(TARGET)$(EXE_POSTFIX) $(NTDLL_STUBS) $(KERNEL_SERVICE_TABLE) $(KERNEL_ZW_CALLS)
 	
 .PHONY: all clean 
 

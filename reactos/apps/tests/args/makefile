@@ -13,9 +13,7 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) args.o
-	- $(RM) args.exe
-	- $(RM) args.sym
+	- $(RM) args.o args.exe args.sym
 
 .phony: clean
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2001/06/22 12:29:40 ekohl Exp $
+# $Id: Makefile,v 1.12 2001/07/15 21:19:01 rex Exp $
 #
 # TDI.SYS build spec
 #
@@ -19,19 +19,11 @@ all: $(TARGETNAME).sys
 
 misc/$(TARGETNAME).coff: misc/$(TARGETNAME).rc ../../../include/reactos/resource.h
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = \
-		cte\*.o tdi\*.o misc\*.o misc\*.coff \
-		$(TARGETNAME).o $(TARGETNAME).a \
-		junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
-else
 CLEAN_FILES = \
 		cte/*.o tdi/*.o misc/*.o misc/*.coff \
 		$(TARGETNAME).o $(TARGETNAME).a \
 		junk.tmp base.tmp temp.exp \
 		$(TARGETNAME).sys $(TARGETNAME).sym
-endif
 
 $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
@@ -82,12 +74,10 @@ $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 

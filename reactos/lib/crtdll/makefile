@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.44 2001/02/01 16:44:19 jean Exp $
+# $Id: makefile,v 1.45 2001/07/15 21:18:54 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -145,22 +145,12 @@ OBJECTS = $(MISC_OBJECTS) $(STDLIB_OBJECTS) $(IO_OBJECTS) \
 	  $(SIGNAL_OBJECTS) $(SETJMP_OBJECTS) $(RESOURCE_OBJECT) \
 	  $(LOCALE_OBJECTS) $(EXCEPT_OBJECTS) $(TCHAR_OBJECTS)
 
-ifeq ($(DOSCLI), yes)
-CLEAN_FILES = assert\*.o conio\*.o ctype\*.o direct\*.o dirent\*.o \
-	except\*.o float\*.o io\*.o libc\*.o locale\*.o malloc\*.o \
-	math\*.o mbstring\*.o misc\*.o process\*.o quad\*.o search\*.o \
-	setjmp\*.o signal\*.o stdio\*.o stdlib\*.o string\*.o sys_stat\*.o \
-	tchar\*.o time\*.o wchar\*.o \
-	$(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
-	$(TARGET).coff
-else
 CLEAN_FILES = assert/*.o conio/*.o ctype/*.o direct/*.o dirent/*.o \
 	except/*.o float/*.o io/*.o libc/*.o locale/*.o malloc/*.o \
 	math/*.o mbstring/*.o misc/*.o process/*.o quad/*.o search/*.o \
 	setjmp/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o tchar/*.o \
 	time/*.o wchar/*.o $(TARGET).a $(TARGET).o $(TARGET).dll $(TARGET).sym \
 	$(TARGET).coff $(SIGNAL_OBJECTS)
-endif
 
 $(TARGET).coff: $(TARGET).rc ../../include/reactos/resource.h
 
@@ -202,10 +192,10 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
+.phony: clean
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

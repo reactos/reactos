@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2001/02/19 15:04:50 dwelch Exp $
+# $Id: makefile,v 1.4 2001/07/15 21:18:53 rex Exp $
 #
 # Shell: Simple shell application
 #
@@ -21,12 +21,10 @@ shell.exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) $(LIBS) -o shell.exe
 	$(NM) --numeric-sort shell.exe > shell.sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

@@ -10,8 +10,7 @@ all: tfsd.o
 .phony: all
 
 clean:
-	- $(RM) template.o
-	- $(RM) tfsd.o
+	- $(RM) template.o tfsd.o
 
 .phony: clean
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2001/07/04 20:40:21 chorns Exp $
+# $Id: makefile,v 1.5 2001/07/15 21:19:00 rex Exp $
 #
 #
 TARGET = psaux
@@ -14,12 +14,7 @@ all: $(TARGET).sys
 .phony: all
 
 clean:
-	- $(RM) *.o
-	- $(RM) $(TARGET).coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) psaux.sys
+	- $(RM) *.o $(TARGET).coff junk.tmp base.tmp temp.exp psaux.sys
 
 .phony: clean
 

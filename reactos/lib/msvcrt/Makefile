@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.17 2001/07/12 16:31:03 ekohl Exp $
+# $Id: Makefile,v 1.18 2001/07/15 21:18:55 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -365,60 +365,11 @@ OBJECTS = \
 	$(OBJECTS_WSTRING) \
 	msvcrt.coff
 
-ifeq ($(DOSCLI), yes)
-CLEAN_FILES = \
-	conio\*.o \
-	ctype\*.o \
-	direct\*.o \
-	except\*.o \
-	float\*.o \
-	io\*.o \
-	locale\*.o \
-	math\*.o \
-	misc\*.o \
-	process\*.o \
-	search\*.o \
-	setjmp\*.o \
-	signal\*.o \
-	stdio\*.o \
-	stdlib\*.o \
-	string\*.o \
-	sys_stat\*.o \
-	time\*.o \
-	wstring\*.o \
-	$(TARGET_NAME).a \
-	$(TARGET_NAME).coff \
-	$(TARGET_NAME).o \
-	$(TARGET_NAME).dll \
-	$(TARGET_NAME).sym \
-	base.tmp
-else
-CLEAN_FILES = \
-	conio/*.o \
-	ctype/*.o \
-	direct/*.o \
-	except/*.o \
-	float/*.o \
-	io/*.o \
-	locale/*.o \
-	math/*.o \
-	misc/*.o \
-	process/*.o \
-	search/*.o \
-	setjmp/*.o \
-	signal/*.o \
-	stdio/*.o \
-	stdlib/*.o \
-	string/*.o \
-	sys_stat/*.o \
-	time/*.o \
-	wstring/*.o \
-	$(TARGET_NAME).a \
-	$(TARGET_NAME).coff \
-	$(TARGET_NAME).o \
-	$(TARGET_NAME).dll \
-	$(TARGET_NAME).sym
-endif
+CLEAN_FILES = conio/*.o ctype/*.o direct/*.o except/*.o float/*.o io/*.o \
+	locale/*.o math/*.o misc/*.o process/*.o search/*.o setjmp/*.o \
+	signal/*.o stdio/*.o stdlib/*.o string/*.o sys_stat/*.o time/*.o \
+	wstring/*.o $(TARGET_NAME).a $(TARGET_NAME).coff $(TARGET_NAME).o \
+	$(TARGET_NAME).dll $(TARGET_NAME).sym
 
 $(TARGET_NAME).coff: $(TARGET_NAME).rc ../../include/reactos/resource.h
 
@@ -460,10 +411,10 @@ $(TARGET_NAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGET_NAME).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET_NAME).dll > $(TARGET_NAME).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
+.phony: clean
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET_NAME).dll
 

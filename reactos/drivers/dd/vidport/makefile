@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2001/06/22 12:26:18 ekohl Exp $
+# $Id: makefile,v 1.12 2001/07/15 21:18:59 rex Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -14,13 +14,7 @@ all: $(TARGET).sys vidport.a
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
-	- $(RM) $(TARGET).a
-	- $(RM) $(TARGET).coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGET).o $(TARGET).a $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys
 
 .phony: clean
 

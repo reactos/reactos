@@ -16,13 +16,8 @@ LIBS = ../../../lib/ntdll/ntdll.a \
        ../../../lib/kernel32/kernel32.a \
        ../../../lib/ws2_32/ws2_32.a
 
-ifeq ($(DOSCLI),yes)
 CLEAN_FILES = $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 	          $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-else
-CLEAN_FILES = $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	          $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-endif
 
 all: $(TARGETNAME).dll
 
@@ -59,12 +54,10 @@ $(TARGETNAME).dll: $(LIBS) $(OBJECTS) $(TARGETNAME).def
 	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 

@@ -17,12 +17,7 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) lpcsrv.o
-	- $(RM) lpcsrv.exe
-	- $(RM) lpcsrv.sym
-	- $(RM) lpcclt.o
-	- $(RM) lpcclt.exe
-	- $(RM) lpcsrv.sym
+	- $(RM) lpcsrv.o lpcsrv.exe lpcsrv.sym lpcclt.o lpcclt.exe lpcsrv.sym
 	
 .phony: clean
 

@@ -14,21 +14,15 @@ PROGS           = $(TARGET).exe test.exe
 
 CFLAGS 		+= -O3
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.o zlib\*.o $(TARGET).exe $(TARGET).sym test.exe test.sym
-else
 CLEAN_FILES = *.o zlib/*.o $(TARGET).exe $(TARGET).sym test.exe test.sym
-endif
 
 
 all: $(PROGS)
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

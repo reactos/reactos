@@ -15,12 +15,10 @@ CLEAN_FILES = $(TARGETNAME).o $(TARGETNAME).exe $(TARGETNAME).sym
 
 all: $(TARGETNAME).exe
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

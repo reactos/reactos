@@ -22,15 +22,9 @@ OBJECTS=\
 	Storage.o
 
 
-ifeq ($(DOSCLI),yes)
 CLEAN_FILES = *.o \
               $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 	      $(TARGETNAME).dll $(TARGETNAME).sym
-else
-CLEAN_FILES = *.o \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym
-endif
 
 all: $(DLLTARGET)
 
@@ -76,12 +70,9 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 include ../../rules.mak

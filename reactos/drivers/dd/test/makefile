@@ -10,12 +10,7 @@ all: test.sys
 .phony: all
 
 clean:
-	- $(RM) test.o
-	- $(RM) test.a
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) test.sys
+	- $(RM) test.o test.a junk.tmp base.tmp temp.exp test.sys
 
 .phony: clean
 

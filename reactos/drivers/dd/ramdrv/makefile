@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2001/06/22 12:25:24 ekohl Exp $
+# $Id: makefile,v 1.3 2001/07/15 21:18:58 rex Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -16,12 +16,7 @@ ramdrv.o: ramdrv.h
 .phony: all
 
 clean:
-	- $(RM) floppy.o
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) $(TARGET).sys
-	- $(RM) $(TARGET).sys.unstripped
+	- $(RM) floppy.o junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 
 .phony: clean
 

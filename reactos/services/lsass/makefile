@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/08/29 13:45:05 dwelch Exp $
+# $Id: makefile,v 1.3 2001/07/15 21:19:00 rex Exp $
 #
 # Local Security Authority Subsystem
 #
@@ -17,10 +17,7 @@ all: $(TARGET).exe
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
+	- $(RM) $(TARGET).o $(TARGET).exe $(TARGET).sym $(TARGET).coff
 
 .phony: clean
 

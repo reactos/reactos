@@ -10,15 +10,7 @@ all: sound.sys
 .phony: all
 
 clean:
-ifeq ($(DOSCLI),yes)
-	- $(RM) sound.o
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) sound.sys
-else
 	- $(RM) sound.o junk.tmp base.tmp temp.exp sound.sys
-endif
 
 .phony: clean
 

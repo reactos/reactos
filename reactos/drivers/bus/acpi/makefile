@@ -263,28 +263,16 @@ $(TARGET).sys: $(OBJECTS_PATH) $(OBJECTS) $(LIBS)
 #	$(STRIP) --strip-debug $(TARGET).sys
 
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = $(OBJECTS_PATH)\*.o dispatcher\*.o events\*.o executer\*.o hardware\*.o \
-              namespace\*.o ospm\*.o ospm\busmgr\*.o parser\*.o resource\*.o tables\*.o \
-              utils\*.o \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-              $(TARGET).sys $(TARGET).sym $(TARGET).coff
-else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o dispatcher/*.o events/*.o executer/*.o hardware/*.o \
               namespace/*.o ospm/*.o ospm/busmgr/*.o parser/*.o resource/*.o tables/*.o \
               utils/*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
               $(TARGET).sys $(TARGET).sym $(TARGET).coff
-endif
 
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-clean: $(CLEAN_FILES:%=%_clean)
-
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2001/03/17 22:05:25 ea Exp $
+# $Id: makefile,v 1.18 2001/07/15 21:18:54 rex Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -46,15 +46,9 @@ OBJECTS=\
 	$(TOKEN_OBJECTS)	\
 	$(RESOURCE_OBJECT)
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = misc\*.o reg\*.o sec\*.o service\*.o token\*.o \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-else
 CLEAN_FILES = misc/*.o reg/*.o sec/*.o service/*.o token/*.o \
               $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-endif
 
 all: $(DLLTARGET)
 
@@ -104,13 +98,10 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 

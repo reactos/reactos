@@ -44,7 +44,7 @@ EXE_POSTFIX := .exe
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasmw
-RM = del
+RM = $(PATH_TO_TOP)/rdel
 RMDIR = rmdir
 #KM_SPECS = specs
 DOSCLI = yes

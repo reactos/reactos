@@ -22,13 +22,8 @@ $(TARGETNAME).coff: $(TARGETNAME).rc ../../../include/reactos/resource.h
 OBJECTS = $(NDIS_OBJECTS) $(RESOURCE_OBJECT) ../../../ntoskrnl/ntoskrnl.a
 
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.o objects\*.o ndis\*.o $(TARGETNAME).coff $(TARGETNAME).o $(TARGETNAME).a \
-              junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
-else
 CLEAN_FILES = *.o objects/*.o ndis/*.o $(TARGETNAME).coff $(TARGETNAME).o $(TARGETNAME).a \
               junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
-endif
 
 $(TARGETNAME).sys: $(OBJECTS)
 	$(DLLTOOL) \
@@ -68,12 +63,10 @@ $(TARGETNAME).sys: $(OBJECTS)
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 

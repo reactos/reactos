@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.18 2001/06/18 03:05:54 phreak Exp $
+# $Id: makefile_rex,v 1.19 2001/07/15 21:18:56 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -33,13 +33,8 @@ LIBS = ../ntdll/ntdll.a \
        ../kernel32/kernel32.a \
        ../gdi32/gdi32.a
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = misc\*.o windows\*.o internal\*.o controls\*.o graphics\*.o resources\*.o \
-              $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).dll $(TARGET).sym
-else
 CLEAN_FILES = misc/*.o windows/*.o internal/*.o controls/*.o graphics/*.o resources/*.o \
               $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp $(TARGET).dll $(TARGET).sym
-endif
 
 all: $(TARGET).dll
 
@@ -82,12 +77,10 @@ $(TARGET).dll: $(LIBS) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

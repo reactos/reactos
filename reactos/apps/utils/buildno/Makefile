@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2001/04/11 22:13:21 dwelch Exp $
+# $Id: Makefile,v 1.10 2001/07/15 21:18:49 rex Exp $
 #
 
 PATH_TO_TOP = ../..
@@ -17,9 +17,7 @@ $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c ../../include/reactos/version.h
 
 
 clean:
-	- $(RM) $(TARGETNAME).o
-	- $(RM) $(TARGETNAME).sym
-	- $(RM) $(TARGETNAME)$(EXE_POSTFIX)
+	- $(RM) $(CLEAN_FILES)
 
 .phony: clean 
 

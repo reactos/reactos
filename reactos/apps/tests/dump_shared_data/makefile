@@ -10,12 +10,10 @@ CLEAN_FILES = dump_shared_data.o dump_shared_data.exe
 
 all: dump_shared_data.exe
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

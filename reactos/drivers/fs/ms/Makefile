@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2001/06/22 12:26:46 ekohl Exp $
+# $Id: Makefile,v 1.4 2001/07/15 21:18:59 rex Exp $
 #
 # Mailslot File System
 #
@@ -17,9 +17,7 @@ all: $(TARGETNAME).sys
 .phony: all
 
 clean:
-	- $(RM) *.o 
-	- $(RM) $(TARGETNAME).sym
-	- $(RM) $(TARGETNAME).sys
+	- $(RM) *.o $(TARGETNAME).sym $(TARGETNAME).sys
 
 .phony: clean
 

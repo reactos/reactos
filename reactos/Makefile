@@ -71,7 +71,8 @@ all: buildno $(COMPONENTS) $(BUS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES
 
 .PHONY: all
 
-clean: buildno_clean $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(DLLS:%=%_clean) \
+clean: rdel$(EXE_POSTFIX) buildno_clean $(COMPONENTS:%=%_clean) \
+       $(BUS:%=%_clean) $(DLLS:%=%_clean) \
        $(LOADERS:%=%_clean) $(KERNEL_SERVICES:%=%_clean) $(SUBSYS:%=%_clean) \
        $(SYS_APPS:%=%_clean) $(APPS:%=%_clean) $(NET_APPS:%=%_clean)
 
@@ -95,6 +96,8 @@ rmkdir$(EXE_POSTFIX): rmkdir.c
 	$(HOST_CC) -g -DDOS_PATHS rmkdir.c -o rmkdir$(EXE_POSTFIX)
 endif
 
+rdel$(EXE_POSTFIX): rdel.c
+	$(HOST_CC) -g rdel.c -liberty -o rdel$(EXE_POSTFIX)
 
 install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_install \
         $(COMPONENTS:%=%_install) $(BUS:%=%_install) \

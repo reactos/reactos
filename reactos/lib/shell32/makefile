@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2001/07/06 04:01:27 rex Exp $
+# $Id: makefile,v 1.3 2001/07/15 21:18:55 rex Exp $
 #
 # Makefile for ReactOS shell32.dll
 #
@@ -19,15 +19,9 @@ MISC_OBJECTS=\
 OBJECTS=\
 	$(MISC_OBJECTS)
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = misc\*.o  \
-              $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-else
 CLEAN_FILES = misc/*.o  \
               $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 	      $(TARGETNAME).dll $(TARGETNAME).sym $(TARGETNAME).coff
-endif
 
 all: $(DLLTARGET)
 
@@ -77,13 +71,10 @@ $(TARGETNAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGETNAME).def
 	$(NM) --numeric-sort $(TARGETNAME).dll > $(TARGETNAME).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGETNAME).dll
 

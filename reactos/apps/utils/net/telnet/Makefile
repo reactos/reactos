@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/01/27 22:38:43 ea Exp $
+# $Id: Makefile,v 1.2 2001/07/15 21:18:52 rex Exp $
 #
 # ReactOS Network Virtual Terminal (telnet) console client
 #
@@ -24,20 +24,14 @@ LIBRARIES=\
 
 PROGS=$(TARGET_NAME).exe
 	
-ifeq ($(DOSCLI), yes)
 CLEAN_FILES = *.o $(TARGET_NAME).exe $(TARGET_NAME).sym
-else
-CLEAN_FILES = *.o $(TARGET_NAME).exe $(TARGET_NAME).sym
-endif
 
 all: $(TARGET_NAME).exe
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

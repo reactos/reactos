@@ -22,22 +22,13 @@ $(TARGET).coff: $(TARGET).rc $(PATH_TO_TOP)/include/reactos/resource.h
 $(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
 
 
-ifeq ($(DOSCLI),yes)
 CLEAN_FILES = *.o $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
               $(TARGET).exe $(TARGET).nostrip.exe $(TARGET).sym $(TARGET).coff
-else
-CLEAN_FILES = *.o $(TARGET).o $(TARGET).a junk.tmp base.tmp temp.exp \
-              $(TARGET).exe $(TARGET).nostrip.exe $(TARGET).sym $(TARGET).coff
-endif
 
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-clean: $(CLEAN_FILES:%=%_clean)
-
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGET).sys
 

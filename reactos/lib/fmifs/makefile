@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.12 2001/06/25 14:20:44 ekohl Exp $
+# $Id: makefile,v 1.13 2001/07/15 21:18:54 rex Exp $
 #
 # Makefile for fmifs.dll
 #
@@ -66,12 +66,10 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

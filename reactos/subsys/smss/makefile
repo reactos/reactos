@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2001/06/25 12:32:39 ekohl Exp $
+# $Id: makefile,v 1.8 2001/07/15 21:19:02 rex Exp $
 #
 # Session Manager
 #
@@ -32,13 +32,10 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
-
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/subsys/$(TARGET).exe
 

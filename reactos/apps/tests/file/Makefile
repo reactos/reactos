@@ -13,9 +13,7 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) file.o
-	- $(RM) file.exe
-	- $(RM) file.sym
+	- $(RM) file.o file.exe file.sym
 
 .phony: clean
 

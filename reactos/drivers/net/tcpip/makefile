@@ -52,21 +52,12 @@ OBJECTS = objects/tcpip.o objects/datalink.o objects/network.o \
 
 $(TARGETNAME).coff: $(TARGETNAME).rc ../../../include/reactos/resource.h
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = \
-		*.o objects\*.o tcpip\*.o datalink\*.o network\*.o \
-        transport\datagram\*.o transport\rawip\*.o \
-        transport\tcp\*.o transport\udp\*.o $(TARGETNAME).coff \
-        $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
-else
 CLEAN_FILES = \
 		*.o objects/*.o tcpip/*.o datalink/*.o network/*.o \
         transport/datagram/*.o transport/rawip/*.o \
         transport/tcp/*.o transport/udp/*.o $(TARGETNAME).coff \
         $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 		$(TARGETNAME).sys $(TARGETNAME).sym
-endif
 
 
 $(TARGETNAME).sys: $(OBJECTS)
@@ -107,12 +98,10 @@ $(TARGETNAME).sys: $(OBJECTS)
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.47 2001/07/15 18:06:23 rex Exp $
+# $Id: Makefile,v 1.48 2001/07/15 21:18:56 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -490,21 +490,11 @@ OBJECTS := \
 	$(OBJECTS_RESOURCE)
 
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = $(OBJECTS_PATH)\*.o cc\*.o cm\*.o dbg\*.o dbg\i386\*.o ex\*.o hal\x86\*.o io\*.o \
-              ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
-              ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o lpc\*.o \
-              kd\*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff \
-              $(subst /,\,$(D1_FILES))
-else
 CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
               ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o lpc/*.o \
               kd/*.o $(TARGETNAME).o $(TARGETNAME).a junk.tmp base.tmp temp.exp \
               $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym $(TARGETNAME).coff $(D1_FILES)
-endif
-
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 	$(CC) \
@@ -624,12 +614,10 @@ $(TARGETNAME).a: $(TARGETNAME).def
 		--output-lib $(TARGETNAME).a \
 		--kill-at
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/$(TARGETNAME).exe
 

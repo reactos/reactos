@@ -10,12 +10,8 @@ all: $(PROGS:%=%.exe)
 
 .phony: all
 
-$(PROGS:%=%_clean): %_clean:
-	- $(RM) $*.o
-	- $(RM) $*.exe
-	- $(RM) $*.sym
-
-clean: $(PROGS:%=%_clean)
+clean:
+	- $(RM) *.o *.exe *.sym
 
 .phony: clean
 

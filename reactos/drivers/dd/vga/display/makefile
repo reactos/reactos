@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2001/06/22 12:26:01 ekohl Exp $
+# $Id: makefile,v 1.16 2001/07/15 21:18:59 rex Exp $
 #
 # Makefile for ReactOS vgaddi.dll
 #
@@ -67,18 +67,12 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main\*.o objects\*.o vgavideo\*.o *.a
-else
 CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main/*.o objects/*.o vgavideo/*.o *.a
-endif
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
+.PHONY: clean 
 
 install: $(FLOPPY_DIR)/dlls/$(TARGET).dll
 

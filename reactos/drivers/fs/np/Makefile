@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.8 2001/06/22 12:27:02 ekohl Exp $
+# $Id: Makefile,v 1.9 2001/07/15 21:18:59 rex Exp $
 #
 # Named Pipes File System
 #
@@ -17,12 +17,7 @@ all: $(TARGETNAME).sys
 .phony: all
 
 clean:
-	- $(RM) *.o 
-	- $(RM) npfs.coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) $(TARGETNAME).sys
+	- $(RM) *.o npfs.coff junk.tmp base.tmp temp.exp $(TARGETNAME).sys
 
 .phony: clean
 

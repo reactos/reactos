@@ -23,9 +23,7 @@ all: $(PROGS)
 .phony: all
 
 clean:
-	- $(RM) $(TARGET_NAME).o
-	- $(RM) $(TARGET_NAME).exe
-	- $(RM) $(TARGET_NAME).sym
+	- $(RM) $(TARGET_NAME).o $(TARGET_NAME).exe $(TARGET_NAME).sym
 
 .phony: clean
 

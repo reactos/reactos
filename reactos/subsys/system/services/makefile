@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2000/12/05 02:38:08 ekohl Exp $
+# $Id: makefile,v 1.2 2001/07/15 21:18:53 rex Exp $
 #
 # Services: Service control manager (SCM)
 #
@@ -24,12 +24,10 @@ $(TARGET).exe: $(OBJECTS) $(LIBS)
 	$(CC) $(OBJECTS) $(LIBS) -o $(TARGET).exe
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.phony: clean $(CLEAN_FILES:%=%_clean)
+.phony: clean 
 
 install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
 

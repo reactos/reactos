@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2001/07/04 21:24:02 chorns Exp $
+# $Id: Makefile,v 1.10 2001/07/15 21:19:01 rex Exp $
 #
 #
 PATH_TO_TOP = ../../../..
@@ -18,17 +18,10 @@ all: $(TARGETNAME).sys
 
 $(TARGETNAME).coff: $(TARGETNAME).rc $(PATH_TO_TOP)/include/reactos/resource.h
 
-ifeq ($(DOSCLI),yes)
-CLEAN_FILES = \
-	    ne2000\*.o $(TARGETNAME).coff \
-        $(TARGETNAME).a junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
-else
 CLEAN_FILES = \
 		ne2000/*.o $(TARGETNAME).coff \
         $(TARGETNAME).a junk.tmp base.tmp temp.exp \
 		$(TARGETNAME).sys $(TARGETNAME).sym
-endif
 
 $(TARGETNAME).sys: $(OBJECTS)
 	$(DLLTOOL) \
@@ -65,12 +58,9 @@ $(TARGETNAME).sys: $(OBJECTS)
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
-clean: $(CLEAN_FILES:%=%_clean)
+clean: 
+	- $(RM) $(CLEAN_FILES)
 
-$(CLEAN_FILES:%=%_clean): %_clean:
-	- $(RM) $*
-
-.PHONY: clean $(CLEAN_FILES:%=%_clean)
 .phony: clean
 
 install: $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys

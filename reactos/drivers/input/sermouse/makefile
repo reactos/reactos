@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 2001/06/22 12:28:25 ekohl Exp $
+# $Id: makefile,v 1.5 2001/07/15 21:19:00 rex Exp $
 #
 #
 TARGET = sermouse
@@ -14,12 +14,7 @@ all: $(TARGET).sys
 .phony: all
 
 clean:
-	- $(RM) $(TARGET).o
-	- $(RM) $(TARGET).coff
-	- $(RM) junk.tmp
-	- $(RM) base.tmp
-	- $(RM) temp.exp
-	- $(RM) sermouse.sys
+	- $(RM) $(TARGET).o $(TARGET).coff junk.tmp base.tmp temp.exp sermouse.sys
 
 .phony: clean
 

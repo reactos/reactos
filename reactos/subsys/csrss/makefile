@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2001/06/25 12:32:27 ekohl Exp $
+# $Id: makefile,v 1.14 2001/07/15 21:19:02 rex Exp $
 #
 # CSRSS: Client/server runtime subsystem
 #
@@ -18,6 +18,8 @@ OBJECTS_MISC = $(TARGET).o init.o print.o video.o $(TARGET).coff
 
 OBJECTS = $(OBJECTS_API) $(OBJECTS_SBAPI) $(OBJECTS_MISC)
 
+CLEAN_FILES = $(OBJECTS) $(TARGET).exe
+
 LIBS = ../../lib/ntdll/ntdll.a
 
 all: $(TARGET).exe
@@ -25,17 +27,7 @@ all: $(TARGET).exe
 .phony: all
 
 clean:
-ifeq ($(DOSCLI),yes)
-	- $(RM) api\*.o
-	- $(RM) sbapi\*.o
-else
-	- $(RM) api/*.o
-	- $(RM) sbapi/*.o
-endif
-	- $(RM) *.o
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
+	- $(RM) $(CLEAN_FILES)
 
 .phony: clean
 
