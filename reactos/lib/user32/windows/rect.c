@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.7 2002/09/03 22:44:20 dwelch Exp $
+/* $Id: rect.c,v 1.8 2002/09/05 21:50:53 ea Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -47,7 +47,15 @@ EqualRect(
   CONST RECT *lprc1,
   CONST RECT *lprc2)
 {
-  UNIMPLEMENTED;
+  if ((lprc1->left   == lprc2->left)
+   && (lprc1->top    == lprc2->top)
+   && (lprc1->right  == lprc2->right)
+   && (lprc1->bottom == lprc2->bottom))
+  {
+    return TRUE;
+  }
+  /* TODO: return the correct error code. */
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }
 
