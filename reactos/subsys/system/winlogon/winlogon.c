@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.37 2004/11/20 16:46:05 weiden Exp $
+/* $Id: winlogon.c,v 1.38 2004/12/22 01:22:08 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -364,7 +364,7 @@ static BOOL StartIntoGUI(VOID)
 
 
 static PWCHAR
-GetShell (WCHAR *CommandLine)
+GetUserInit (WCHAR *CommandLine)
 {
    HKEY WinLogonKey;
    BOOL GotCommandLine;
@@ -377,7 +377,7 @@ GetShell (WCHAR *CommandLine)
      {
 	Size = MAX_PATH;
 	if (ERROR_SUCCESS == RegQueryValueEx(WinLogonKey,
-                                         L"Shell",
+                                         L"UserInit",
 	                                     NULL,
 	                                     &Type,
 	                                     (LPBYTE) Shell,
@@ -399,8 +399,8 @@ GetShell (WCHAR *CommandLine)
 
    if (! GotCommandLine)
      {
-	GetWindowsDirectory(CommandLine, MAX_PATH - 15);
-	wcscat(CommandLine, L"\\explorer.exe");
+	GetSystemDirectory(CommandLine, MAX_PATH - 15);
+	wcscat(CommandLine, L"\\userinit.exe");
      }
 
    return CommandLine;
@@ -479,7 +479,7 @@ DoLogonUser (PWCHAR Name,
 
   Result = CreateProcessAsUserW (hToken,
 				 NULL,
-				 GetShell (CommandLine),
+				 GetUserInit (CommandLine),
 				 NULL,
 				 NULL,
 				 FALSE,
