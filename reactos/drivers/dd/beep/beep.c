@@ -1,4 +1,4 @@
-/* $Id: beep.c,v 1.8 2001/07/25 08:26:06 ekohl Exp $
+/* $Id: beep.c,v 1.9 2001/08/05 21:48:25 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -92,7 +92,7 @@ BeepClose(PDEVICE_OBJECT DeviceObject,
   DPRINT("BeepClose() called!\n");
 
   DeviceExtension = DeviceObject->DeviceExtension;
-  if (DeviceObject->BeepOn == TRUE)
+  if (DeviceExtension->BeepOn == TRUE)
     {
       HalMakeBeep(0);
       DeviceExtension->BeepOn = FALSE;
