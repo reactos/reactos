@@ -18,11 +18,11 @@
 
 /* FILE STATICS *************************************************************/
 
-POBJECT_TYPE CmKeyType = NULL;
-PKEY_OBJECT RootKey = NULL;
-
 #if PROTO_REG
-static PVOID CmpObjectParse(PVOID ParsedObject, PWSTR* Path);
+POBJECT_TYPE  CmKeyType = NULL;
+PKEY_OBJECT  RootKey = NULL;
+
+static PVOID  CmpObjectParse(PVOID  ParsedObject, PWSTR  *Path);
 #endif
 
 /* FUNCTIONS *****************************************************************/
@@ -31,8 +31,10 @@ VOID
 CmInitializeRegistry(VOID)
 {
 #if PROTO_REG
-  ANSI_STRING AnsiString;
+  UNICODE_STRING  RootKeyName;
+  OBJECT_ATTRIBUTES  ObjectAttributes;
   
+  /*  Initialize the Key object type  */
   CmKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
   CmKeyType->TotalObjects = 0;
   CmKeyType->TotalHandles = 0;
@@ -48,44 +50,22 @@ CmInitializeRegistry(VOID)
   CmKeyType->Security = NULL;
   CmKeyType->QueryName = NULL;
   CmKeyType->OkayToClose = NULL;
-   
-  RtlInitAnsiString(&AnsiString, "Key");
-  RtlAnsiStringToUnicodeString(&CmKeyType->TypeName, &AnsiString, TRUE);
+  RtlInitUnicodeString(&CmKeyType->TypeName, L"Key");
 
-  RtlInitAnsiString(&AnsiString,"\\Registry");
-  RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
-  InitializeObjectAttributes(&attr, &UnicodeString, 0, NULL, NULL);
-  ZwCreateDirectoryObject(&handle, 0, &attr);
-  RtlFreeUnicodeString(UnicodeString);
+  /*  Build the Root Key Object  */
+  RtlInitUnicodeString(&RootKeyName, L"\\Registry");
+  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  Status = ObCreateObject(&RootKeyHandle,
+                          STANDARD_RIGHTS_REQUIRED,
+                          &ObjectAttributes,
+                          ObKeyType);
 
-  /* FIXME: build initial registry skeleton */
-  RootKey = ObGenericCreateObject(NULL, 
-                                 KEY_ALL_ACCESS, 
-                                 NULL, 
-                                 CmKeyType);
-  if (NewKey == NULL)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-  RootKey->Flags = 0;
-  KeQuerySystemTime(&RootKey->LastWriteTime);
-  RootKey->TitleIndex = 0;
-  RootKey->NumSubKeys = 0;
-  RootKey->MaxSubNameLength = 0;
-  RootKey->MaxSubClassLength = 0;
-  RootKey->SubKeys = NULL;
-  RootKey->NumValues = 0;
-  RootKey->MaxValueNameLength = 0;
-  RootKey->MaxValueDataLength = 0;
-  RootKey->Values = NULL;
-  RootKey->Name = ExAllocatePool(NonPagedPool, 2);
-  wstrcpy(RootKey->Name, "\\");
-  RootKey->Class = NULL;
-  RootKey->NextKey = NULL;
+  /* FIXME: map / build registry data  */
+  /* FIXME: Create initial predefined symbolic links  */
+  /* HKEY_LOCAL_MACHINE  */
+  /* HKEY_USERS  */
+  /* FIXME: load volatile registry data from ROSDTECT  */
 
-  /* FIXME: Create initial predefined symbolic links */
-  /* HKEY_LOCAL_MACHINE */
-  /* HKEY_USERS */
 #endif
 }
 
@@ -697,6 +677,7 @@ NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
    UNIMPLEMENTED;
 }
 
+/*  ------------------------------------------  Private Implementation  */
 
 #if 0
 static PVOID 
@@ -710,6 +691,7 @@ CmpObjectParse(PVOID ParsedObject, PWSTR* Path)
   /*  If the path is an empty string, we're done  */
   if (Path == NULL || Path[0] == 0)
     {
+/* FIXME: return the root key */
       return NULL;
     }
 
