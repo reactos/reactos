@@ -26,27 +26,37 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are derived from Wine.
-reactos/tools/wmc		# Wine Message Compiler
-reactos/tools/winebuild		# Wine Build tool for Creating *.def files
+reactos/tools/makedep		# fast dependancy tool
 reactos/tools/bin2res		# Resource to binary converter
+reactos/tools/winebuild		# Wine Build tool for Creating *.def files
+reactos/tools/wmc		# Wine Message Compiler
+
 
 The following shared libraries are a 100% port from Winehq sourcs.
 
 reactos/lib/cabinet             # Synced to Wine-20040716
 reactos/lib/comctl32            # Synced to Wine-20040809
 reactos/lib/comdlg32		# Synced to Wine-20040716
-reactos/lib/imagehlp		# Out of sync
-reactos/lib/imm32
-reactos/lib/msvcrt20
+reactos/lib/iphlpapi		# Out of sync
+reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
+reactos/lib/msvcrt20		# Out of sync
 reactos/lib/mpr                 # Synced to Wine-20040716
+reactos/lib/msacm		# Out of sync
+reactos/lib/msvidoe		# Out of sync
+reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
 reactos/lib/ole32               # Synced to Wine-20040716
+reactos/lib/oleaut32		# Out of sync
 reactos/lib/oledlg              # Synced to Wine-20040716
+reactos/lib/oldpro32		# Out of sync
 reactos/lib/richedit		# Synced to Wine-20040716
 reactos/lib/rpcrt4		# Synced to Wine-20040716
+reactos/lib/setupapi		# Out of sync
 reactos/lib/shell32             # 2004/08/08: Syncing in progress
 reactos/lib/shlwapi             # Synced to Wine-20040716
 reactos/lib/twain		# Out of sync
-reactos/lib/unicode		# make this go away. Synced to Wine-20040716
+reactos/lib/unicode		# Dependancy on this lib needs to be removed. Synced to Wine-20040716
+reactos/lib/version		# Out of sync
+reactos/lib/wininet		# Out of sync
 reactos/lib/winmm		# Synced to Wine-20040716
 reactos/lib/winmm/midimap       # Synced to Wine-20040716
 reactos/lib/winmm/wavemap       # Synced to Wine-20040716
@@ -55,9 +65,12 @@ ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	#Out of sync
 reactos/subsys/system/expand
 
-In addition the following source files are mostly based on code ported
+In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
 check Wine current souces first as it may already be fixed.
+
+reactos/lib/imm32		# 
+reactos/lib/uuid		#
 
 reactos/lib/user32/controls/button.c
 reactos/lib/user32/controls/edit.c
