@@ -49,6 +49,9 @@ KeRaiseIrqlToSynchLevel(VOID);
 VOID STDCALL
 HalReturnToFirmware(ULONG Action);
 
+VOID FASTCALL
+HalRequestSoftwareInterrupt(KIRQL SoftwareInterruptRequested);
+
 /* Non-standard functions */
 VOID STDCALL
 HalReleaseDisplayOwnership();
