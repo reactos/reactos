@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.76 2004/08/18 15:09:02 navaraf Exp $
+/* $Id: device.c,v 1.77 2004/08/21 20:51:25 tamlin Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -159,8 +159,8 @@ IoAttachDeviceByPointer(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoAttachDeviceToDeviceStackSafe(
     IN PDEVICE_OBJECT SourceDevice,
     IN PDEVICE_OBJECT TargetDevice,
@@ -217,8 +217,8 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoEnumerateDeviceObjectList(
     IN  PDRIVER_OBJECT  DriverObject,
     IN  PDEVICE_OBJECT  *DeviceObjectList,
@@ -234,8 +234,8 @@ IoEnumerateDeviceObjectList(
 /*
  * @unimplemented
  */
-STDCALL
 PDEVICE_OBJECT
+STDCALL
 IoGetDeviceAttachmentBaseRef(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -247,8 +247,8 @@ IoGetDeviceAttachmentBaseRef(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoGetDiskDeviceObject(
     IN  PDEVICE_OBJECT  FileSystemDeviceObject,
     OUT PDEVICE_OBJECT  *DiskDeviceObject
@@ -261,8 +261,8 @@ IoGetDiskDeviceObject(
 /*
  * @unimplemented
  */
-STDCALL
 PDEVICE_OBJECT
+STDCALL
 IoGetLowerDeviceObject(
     IN  PDEVICE_OBJECT  DeviceObject
     )
@@ -685,8 +685,8 @@ IoOpenDeviceInstanceKey(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoRegisterBootDriverReinitialization(
     IN PDRIVER_OBJECT DriverObject,
     IN PDRIVER_REINITIALIZE DriverReinitializationRoutine,
@@ -700,8 +700,8 @@ IoRegisterBootDriverReinitialization(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoRegisterLastChanceShutdownNotification(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -729,8 +729,8 @@ IoQueryDeviceEnumInfo(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoSetStartIoAttributes(
     IN PDEVICE_OBJECT DeviceObject,
     IN BOOLEAN DeferredStartIo,
@@ -743,8 +743,8 @@ IoSetStartIoAttributes(
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoSynchronousInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type
@@ -757,8 +757,8 @@ IoSynchronousInvalidateDeviceRelations(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoValidateDeviceIoControlAccess(
     IN  PIRP    Irp,
     IN  ULONG   RequiredAccess

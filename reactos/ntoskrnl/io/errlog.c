@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.18 2004/08/15 16:39:03 chorns Exp $
+/* $Id: errlog.c,v 1.19 2004/08/21 20:51:26 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -382,8 +382,8 @@ IoAllocateErrorLogEntry (IN PVOID IoObject,
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoFreeErrorLogEntry(
     PVOID ElEntry
     )

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.18 2004/08/15 16:39:03 chorns Exp $
+/* $Id: process.c,v 1.19 2004/08/21 20:55:41 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -58,8 +58,8 @@ IoGetStackLimits(OUT PULONG LowLimit,
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 IoIsSystemThread(
     IN PETHREAD Thread
     )

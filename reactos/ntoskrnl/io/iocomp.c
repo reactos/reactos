@@ -65,8 +65,8 @@ NtpDeleteIoCompletion(PVOID ObjectBody)
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoSetCompletionRoutineEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
@@ -84,8 +84,8 @@ IoSetCompletionRoutineEx(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoSetIoCompletion (
 	IN PVOID IoCompletion,
 	IN PVOID KeyContext,

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.33 2004/08/15 16:39:03 chorns Exp $
+/* $Id: file.c,v 1.34 2004/08/21 20:51:26 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -168,8 +168,8 @@ NtSetQuotaInformationFile(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCheckQuerySetFileInformation(
     IN FILE_INFORMATION_CLASS FileInformationClass,
     IN ULONG Length,
@@ -183,8 +183,8 @@ IoCheckQuerySetFileInformation(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCheckQuerySetVolumeInformation(
     IN FS_INFORMATION_CLASS FsInformationClass,
     IN ULONG Length,
@@ -198,8 +198,8 @@ IoCheckQuerySetVolumeInformation(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCheckQuotaBufferValidity(
     IN PFILE_QUOTA_INFORMATION QuotaBuffer,
     IN ULONG QuotaLength,
@@ -213,8 +213,8 @@ IoCheckQuotaBufferValidity(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCreateFileSpecifyDeviceObjectHint(
     OUT PHANDLE FileHandle,
     IN ACCESS_MASK DesiredAccess,
@@ -240,8 +240,8 @@ IoCreateFileSpecifyDeviceObjectHint(
 /*
  * @unimplemented
  */
-STDCALL
 PFILE_OBJECT
+STDCALL
 IoCreateStreamFileObjectEx(
     IN PFILE_OBJECT FileObject OPTIONAL,
     IN PDEVICE_OBJECT DeviceObject OPTIONAL,
@@ -254,8 +254,8 @@ IoCreateStreamFileObjectEx(
 /*
  * @unimplemented
  */
-STDCALL
 PFILE_OBJECT
+STDCALL
 IoCreateStreamFileObjectLite(
     IN PFILE_OBJECT FileObject OPTIONAL,
     IN PDEVICE_OBJECT DeviceObject OPTIONAL
@@ -268,8 +268,8 @@ IoCreateStreamFileObjectLite(
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 IoIsFileOriginRemote(
     IN PFILE_OBJECT FileObject
     )
@@ -281,8 +281,8 @@ IoIsFileOriginRemote(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoQueryFileDosDeviceName(
     IN PFILE_OBJECT FileObject,
     OUT POBJECT_NAME_INFORMATION *ObjectNameInformation
@@ -518,8 +518,8 @@ NtSetInformationFile(HANDLE FileHandle,
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoSetFileOrigin(
     IN PFILE_OBJECT FileObject,
     IN BOOLEAN Remote

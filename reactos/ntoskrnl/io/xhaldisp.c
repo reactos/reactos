@@ -1,4 +1,4 @@
-/* $Id: xhaldisp.c,v 1.10 2004/08/15 16:39:03 chorns Exp $
+/* $Id: xhaldisp.c,v 1.11 2004/08/21 20:55:40 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -69,8 +69,8 @@ IoAssignDriveLetters(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCreateDisk(
     IN PDEVICE_OBJECT DeviceObject,
     IN struct _CREATE_DISK* Disk
@@ -83,8 +83,8 @@ IoCreateDisk(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoGetBootDiskInformation(
     IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
     IN ULONG Size
@@ -98,8 +98,8 @@ IoGetBootDiskInformation(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoReadDiskSignature(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG BytesPerSector,
@@ -113,8 +113,8 @@ IoReadDiskSignature(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoReadPartitionTableEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN struct _DRIVE_LAYOUT_INFORMATION_EX** DriveLayout
@@ -127,8 +127,8 @@ IoReadPartitionTableEx(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoSetPartitionInformationEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN ULONG PartitionNumber,
@@ -142,8 +142,8 @@ IoSetPartitionInformationEx(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoSetSystemPartition(
     PUNICODE_STRING VolumeNameString
     )
@@ -155,8 +155,8 @@ IoSetSystemPartition(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoVerifyPartitionTable(
     IN PDEVICE_OBJECT DeviceObject,
     IN BOOLEAN FixErrors
@@ -169,8 +169,8 @@ IoVerifyPartitionTable(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoVolumeDeviceToDosName(
     IN  PVOID           VolumeDeviceObject,
     OUT PUNICODE_STRING DosName
@@ -183,8 +183,8 @@ IoVolumeDeviceToDosName(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoWritePartitionTableEx(
     IN PDEVICE_OBJECT DeviceObject,
     IN struct _DRIVE_LAYOUT_INFORMATION_EX* DriveLayfout

@@ -18,8 +18,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 ULONG
+STDCALL
 IoPnPDeliverServicePowerNotification(
 	ULONG		VetoedPowerOperation OPTIONAL,
 	ULONG		PowerNotification,

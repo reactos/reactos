@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.49 2004/08/15 16:39:03 chorns Exp $
+/* $Id: driver.c,v 1.50 2004/08/21 20:51:25 tamlin Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1468,8 +1468,8 @@ IopReinitializeDrivers(VOID)
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoCreateDriver (
 	IN PUNICODE_STRING DriverName,   OPTIONAL
 	IN PDRIVER_INITIALIZE InitializationFunction
@@ -1482,8 +1482,8 @@ IoCreateDriver (
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoDeleteDriver (
 	IN PDRIVER_OBJECT DriverObject
 	)

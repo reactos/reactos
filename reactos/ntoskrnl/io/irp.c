@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.66 2004/08/18 02:24:02 navaraf Exp $
+/* $Id: irp.c,v 1.67 2004/08/21 20:51:26 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -44,8 +44,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 IoForwardIrpSynchronously(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -72,8 +72,8 @@ IoFreeIrp(PIRP Irp)
 /*
  * @unimplemented
  */
-STDCALL
 ULONG
+STDCALL
 IoGetRequestorProcessId(
     IN PIRP Irp
     )
@@ -85,8 +85,8 @@ IoGetRequestorProcessId(
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 IoGetRequestorSessionId(
 	IN PIRP Irp,
 	OUT PULONG pSessionId
@@ -100,8 +100,8 @@ IoGetRequestorSessionId(
 /*
  * @unimplemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 IoIsValidNameGraftingBuffer(
     IN PIRP Irp,
     IN PREPARSE_DATA_BUFFER ReparseBuffer

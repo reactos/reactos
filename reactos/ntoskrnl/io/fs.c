@@ -52,8 +52,8 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 /*
  * @unimplemented
  */
-STDCALL
 VOID
+STDCALL
 IoCancelFileOpen(
     IN PDEVICE_OBJECT  DeviceObject,
     IN PFILE_OBJECT    FileObject
