@@ -39,6 +39,7 @@ PsIdleThreadMain(PVOID Context)
 	   KeLowerIrql(oldlvl);
 	 }
        NtYieldExecution();
+       __asm__( "hlt" );
      }
 }
 
