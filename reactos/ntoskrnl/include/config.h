@@ -1,5 +1,3 @@
-/* $$$ Modified by ReactOS config tool on Sun Nov 28 18:18:50 2004
- */
 #ifndef __INCLUDE_NTOSKRNL_CONFIG_H
 #define __INCLUDE_NTOSKRNL_CONFIG_H
 
