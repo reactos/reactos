@@ -321,6 +321,13 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_CANCELMODE:
 		CloseStartMenu();
+
+#ifdef _LIGHT_STARTMENU
+		if (_scroll_mode != SCROLL_NOT) {
+			ReleaseCapture();
+			KillTimer(_hwnd, 0);
+		}
+#endif
 		break;
 
 #ifdef _LIGHT_STARTMENU
@@ -342,11 +349,13 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 					scroll_mode = SCROLL_DOWN;
 
 				if (scroll_mode != _scroll_mode) {
-					if (scroll_mode == SCROLL_NOT)
+					if (scroll_mode == SCROLL_NOT) {
+						ReleaseCapture();
 						KillTimer(_hwnd, 0);
-					else {
+					} else {
 						CloseSubmenus();
 						SetTimer(_hwnd, 0, 150, NULL);	// 150 ms scroll interval
+						SetCapture(_hwnd);
 					}
 
 					_scroll_mode = scroll_mode;
