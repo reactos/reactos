@@ -300,24 +300,48 @@ HalpCalibrateStallExecution(VOID)
 
 
 static VOID
-DetectCPU(VOID)
+DetectCPU(HKEY CpuKey,
+	  HKEY FpuKey)
 {
   char VendorIdentifier[13];
-//  char Buffer[64];
+  char Identifier[64];
+  U32 FeatureSet;
+  HKEY CpuInstKey;
+  HKEY FpuInstKey;
   U32 eax = 0;
   U32 ebx = 0;
   U32 ecx = 0;
   U32 edx = 0;
   U32 *Ptr;
+  S32 Error;
+
+  /* Create the CPU instance key */
+  Error = RegCreateKey(CpuKey,
+		       "0",
+		       &CpuInstKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Create the FPU instance key */
+  Error = RegCreateKey(FpuKey,
+		       "0",
+		       &FpuInstKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
 
   eax = CpuidSupported();
   if (eax & 1)
     {
-      printf("  CPUID supported\n");
+      DbgPrint((DPRINT_HWDETECT, "CPUID supported\n"));
 
+      /* Get vendor identifier */
       GetCpuid(0, &eax, &ebx, &ecx, &edx);
-//      printf("    Level 0: %x %x %x %x\n", (int)eax, (int)ebx, (int)ecx, (int)edx);
-
       VendorIdentifier[12] = 0;
       Ptr = (U32*)&VendorIdentifier[0];
       *Ptr = ebx;
@@ -326,45 +350,90 @@ DetectCPU(VOID)
       Ptr++;
       *Ptr = ecx;
 
-      printf("    Vendor Identifier: %s\n",
-	     VendorIdentifier);
-
+      /* Get Identifier */
       GetCpuid(1, &eax, &ebx, &ecx, &edx);
-//      printf("    Level 1: %x %x %x %x\n", (int)eax, (int)ebx, (int)ecx, (int)edx);
-
-      printf("    Identifier: x86 Family %u Model %u Stepping %u\n",
-	     (unsigned int)((eax >> 8) & 0x0F),
-	     (unsigned int)((eax >> 4) & 0x0F),
-	     (unsigned int)(eax & 0x0F));
-
-      printf("    FeatureSet: %x\n",
-	     (unsigned int)edx);
+      sprintf(Identifier,
+	      "x86 Family %u Model %u Stepping %u\n",
+	      (unsigned int)((eax >> 8) & 0x0F),
+	      (unsigned int)((eax >> 4) & 0x0F),
+	      (unsigned int)(eax & 0x0F));
+      FeatureSet = edx;
     }
   else
     {
-      edx = 0; /* No feature set */
+      DbgPrint((DPRINT_HWDETECT, "CPUID not supported\n"));
 
-      printf("  CPUID not supported\n");
-      printf("    Vendor Identifier: Unknown\n");
-      printf("    Identifier: x86 Family %u Model %u Stepping %u\n",
-	     (unsigned int)((eax >> 8) & 0x0F),
-	     (unsigned int)((eax >> 4) & 0x0F),
-	     (unsigned int)(eax & 0x0F));
-      printf("    FeatureSet: %x\n",
-	     (unsigned int)edx);
+      strcpy(VendorIdentifier, "Unknown");
+      sprintf(Identifier,
+	      "x86 Family %u Model %u Stepping %u\n",
+	      (unsigned int)((eax >> 8) & 0x0F),
+	      (unsigned int)((eax >> 4) & 0x0F),
+	      (unsigned int)(eax & 0x0F));
+      FeatureSet = 0;
     }
 
-  /* FIXME: add more checks */
+  /* FIXME: Set 'Configuration Data' value (CPU and FPU) */
 
+  /* Set 'FeatureSet' value (CPU only) */
+  DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
 
-  /* FIXME: store cpu info in the registry (CPU 0 only) */
+  Error = RegSetValue(CpuInstKey,
+		      "FeatureSet",
+		      REG_DWORD,
+		      (PU8)&FeatureSet,
+		      sizeof(U32));
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
 
-  printf("\n");
+  /* Set 'Identifier' value (CPU and FPU) */
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %s\n", Identifier));
+
+  Error = RegSetValue(CpuInstKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)Identifier,
+		      strlen(Identifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  Error = RegSetValue(FpuInstKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)Identifier,
+		      strlen(Identifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  /* Set 'VendorIdentifier' value (CPU only) */
+  DbgPrint((DPRINT_HWDETECT, "Vendor Identifier: %s\n", VendorIdentifier));
+
+  Error = RegSetValue(CpuInstKey,
+		      "VendorIdentifier",
+		      REG_SZ,
+		      (PU8)VendorIdentifier,
+		      strlen(VendorIdentifier) + 1);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+
+  /* FIXME: Set 'Update Signature' value (CPU only) */
+
+  /* FIXME: Set 'Update Status' value (CPU only) */
+
+  /* FIXME: Set '~MHz' value (CPU only) */
 }
 
 
 static BOOL
-DetectMps(VOID)
+DetectMps(HKEY CpuKey,
+	  HKEY FpuKey)
 {
   U32 DefaultConfig;
   char *Buffer;
@@ -406,6 +475,12 @@ DetectMps(VOID)
 			(unsigned int)((CpuEntry->CpuSignature >> 8) & 0x0F),
 			(unsigned int)((CpuEntry->CpuSignature >> 4) & 0x0F),
 			(unsigned int)(CpuEntry->CpuSignature & 0x0F));
+
+		printf ("CpuFlags %x  FeatureFlags %x  Reserved1 %x  Reserved2 %x\n",
+			CpuEntry->CpuFlags,
+			CpuEntry->FeatureFlags,
+			CpuEntry->Reserved1,
+			CpuEntry->Reserved2);
 
 //		printf("    Processor Entry\n");
 //		printf("      APIC Id %u  APIC Version %u  Flags %x  Signature %x  Feature %x\n",
@@ -456,12 +531,40 @@ DetectMps(VOID)
 
 
 static VOID
-DetectCPUs(VOID)
+DetectCPUs(HKEY SystemKey)
 {
-  if (MpsSupported ())
-    DetectMps ();
+  HKEY CpuKey;
+  HKEY FpuKey;
+  S32 Error;
+
+  /* Create the 'CentralProcessor' key */
+  Error = RegCreateKey(SystemKey,
+		       "CentralProcessor",
+		       &CpuKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Create the 'CentralProcessor' key */
+  Error = RegCreateKey(SystemKey,
+		       "FloatingPointProcessor",
+		       &FpuKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  if (MpsSupported())
+    {
+      DetectMps(CpuKey, FpuKey);
+    }
   else
-    DetectCPU ();
+    {
+      DetectCPU(CpuKey, FpuKey);
+    }
 }
 
 
@@ -491,6 +594,9 @@ SetHarddiskConfigurationData(HKEY DiskKey,
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = 0;
   FullResourceDescriptor->PartialResourceList.Count = 1;
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
     sizeof(CM_DISK_GEOMETRY_DEVICE_DATA);
 
@@ -653,6 +759,9 @@ DetectBiosDisks(HKEY SystemKey,
   FullResourceDescriptor->InterfaceType = InterfaceTypeUndefined;
   FullResourceDescriptor->BusNumber = -1;
   FullResourceDescriptor->PartialResourceList.Count = 1;
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
   FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
     sizeof(CM_INT13_DRIVE_PARAMETER) * DiskCount;
 
@@ -660,13 +769,21 @@ DetectBiosDisks(HKEY SystemKey,
   Int13Drives = ((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
   for (i = 0; i < DiskCount; i++)
     {
-      if (DiskGetDriveParameters(0x80 + DiskCount, &Geometry))
+      if (DiskGetDriveParameters(0x80 + i, &Geometry))
 	{
-	  Int13Drives[i].DriveSelect = 0x80 + 1;
+	  Int13Drives[i].DriveSelect = 0x80 + i;
 	  Int13Drives[i].MaxCylinders = Geometry.Cylinders - 1;
 	  Int13Drives[i].SectorsPerTrack = Geometry.Sectors;
 	  Int13Drives[i].MaxHeads = Geometry.Heads - 1;
 	  Int13Drives[i].NumberDrives = DiskCount;
+
+	  DbgPrint((DPRINT_HWDETECT,
+		    "Disk %x: %u Cylinders  %u Heads  %u Sectors  %u Bytes\n",
+		    0x80 + i,
+		    Geometry.Cylinders - 1,
+		    Geometry.Heads -1,
+		    Geometry.Sectors,
+		    Geometry.BytesPerSector));
 	}
     }
 
@@ -711,22 +828,13 @@ DetectBiosDisks(HKEY SystemKey,
 
 
 static VOID
-DetectIsaBus(U32 *BusNumber)
+DetectIsaBios(HKEY SystemKey, U32 *BusNumber)
 {
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   char Buffer[80];
-  HKEY SystemKey;
   HKEY BusKey;
+  U32 Size;
   S32 Error;
-
-  /* Create or open the 'System' key */
-  Error = RegCreateKey(NULL,
-		       "\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
-		       &SystemKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
 
   /* Create new bus key */
   sprintf(Buffer,
@@ -743,7 +851,7 @@ DetectIsaBus(U32 *BusNumber)
   /* Increment bus number */
   (*BusNumber)++;
 
-  /* Set bus identifier */
+  /* Set 'Identifier' value */
   Error = RegSetValue(BusKey,
 		      "Identifier",
 		      REG_SZ,
@@ -755,9 +863,43 @@ DetectIsaBus(U32 *BusNumber)
       return;
     }
 
+  /* Set 'Configuration Data' value */
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+	 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+  FullResourceDescriptor = MmAllocateMemory(Size);
+  if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+
+  /* Initialize resource descriptor */
+  memset(FullResourceDescriptor, 0, Size);
+  FullResourceDescriptor->InterfaceType = Isa;
+  FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Count = 0;
+
+  /* Set 'Configuration Data' value */
+  Error = RegSetValue(SystemKey,
+		      "Configuration Data",
+		      REG_FULL_RESOURCE_DESCRIPTOR,
+		      (PU8) FullResourceDescriptor,
+		      Size);
+  MmFreeMemory(FullResourceDescriptor);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+      return;
+    }
+
+
+
   /* Detect ISA/BIOS devices */
-//  DetectBiosFloppys(SystemKey, BusKey);
   DetectBiosDisks(SystemKey, BusKey);
+//  DetectBiosFloppyDisks(SystemKey, BusKey);
 
 // DetectBiosSerialPorts
 // DetectBiosParallelPorts
@@ -772,22 +914,35 @@ DetectIsaBus(U32 *BusNumber)
 VOID
 DetectHardware(VOID)
 {
+  HKEY SystemKey;
   U32 BusNumber = 0;
+  S32 Error
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 
   HalpCalibrateStallExecution ();
 
-//  DetectBiosData();
-  DetectCPUs ();
+  /* Create the 'System' key */
+  Error = RegCreateKey(NULL,
+		       "\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
+		       &SystemKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+//  DetectBiosData ();
+  DetectCPUs (SystemKey);
 
   /* Detect buses */
-//  DetectPciBios (&BusNumber);
-//  DetectPci (&BusNumber);
-//  DetectApm (&BusNumber);
-//  DetectPnpBios (&BusNumber);
 
-  DetectIsaBus (&BusNumber);
+//  DetectPciBios (&BusNumber);
+//  DetectApmBios (&BusNumber);
+//  DetectPnpBios (&BusNumber);
+  DetectIsaBios (SystemKey, &BusNumber);
+//  DetectAcpiBios (&BusNumber);
+
 
 
   DbgPrint ((DPRINT_HWDETECT, "DetectHardware() Done\n"));
