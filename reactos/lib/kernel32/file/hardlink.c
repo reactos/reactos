@@ -1,4 +1,4 @@
-/* $Id: hardlink.c,v 1.1 2004/03/14 09:21:42 weiden Exp $
+/* $Id: hardlink.c,v 1.2 2004/03/14 10:16:18 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -79,7 +79,8 @@ CreateHardLinkW(
     return FALSE;
   }
   
-  if(!RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart))
+  if(!RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart) ||
+     (*lpNtLinkTarget) == L'\0')
   {
     RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
     RtlFreeUnicodeString(&LinkTarget);
