@@ -28,6 +28,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 #include <internal/ob.h>
+#include <wchar.h>
 
 #define NDEBUG
 #include <internal/debug.h>

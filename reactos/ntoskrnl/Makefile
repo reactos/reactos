@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.53 2001/09/03 20:41:52 ea Exp $
+# $Id: Makefile,v 1.54 2001/09/06 20:26:36 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -32,9 +32,13 @@ else
 OBJECTS_KDBG :=
 endif
 
-
+ifeq ($(strip $(SDK_PATH_INC)),)
+ASFLAGS += -I./include
+CFLAGS += -I./include -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+else
 ASFLAGS += -I./include -I$(SDK_PATH_INC)
 CFLAGS += -I./include -I$(SDK_PATH_INC) -D__NTOSKRNL__ $(CFLAGS_DBG) -Wall -Werror
+endif
 
 #
 # Build configuration

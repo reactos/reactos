@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.11 2000/10/22 16:36:49 ekohl Exp $
+/* $Id: time.c,v 1.12 2001/09/06 20:26:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,6 +13,9 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
+#include <internal/safe.h>
+#include <ddk/halfuncs.h>
+#include <ddk/kefuncs.h>
 
 #include <internal/debug.h>
 
@@ -38,27 +41,71 @@ ExInitTimeZoneInfo (VOID)
 }
 
 
-NTSTATUS
-STDCALL
-NtSetSystemTime (
-	IN	PLARGE_INTEGER	SystemTime,
-	IN	PLARGE_INTEGER	NewSystemTime	OPTIONAL
-	)
+NTSTATUS STDCALL
+NtSetSystemTime (IN	PLARGE_INTEGER	UnsafeNewSystemTime,
+		 OUT	PLARGE_INTEGER	UnsafeOldSystemTime	OPTIONAL)
+     /*
+      * FUNCTION: Sets the system time.
+      * PARAMETERS:
+      *        NewTime - Points to a variable that specified the new time
+      *        of day in the standard time format.
+      *        OldTime - Optionally points to a variable that receives the
+      *        old time of day in the standard time format.
+      * RETURNS: Status
+      */
 {
-//        HalSetRealTimeClock ((PTIME)SystemTime);
-//        UNIMPLEMENTED;
-        return STATUS_SUCCESS;
+  NTSTATUS Status;
+  LARGE_INTEGER OldSystemTime;
+  LARGE_INTEGER NewSystemTime;
+
+  /* FIXME: Check for SeSystemTimePrivilege */
+
+  Status = MmCopyFromCaller(&NewSystemTime, UnsafeNewSystemTime,
+			    sizeof(NewSystemTime));
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  
+  if (UnsafeOldSystemTime != NULL)
+    {
+      KeQuerySystemTime(&OldSystemTime);
+    }
+  HalSetRealTimeClock ((PTIME_FIELDS)&NewSystemTime);
+
+  if (UnsafeOldSystemTime != NULL)
+    {
+      Status = MmCopyToCaller(UnsafeOldSystemTime, &OldSystemTime,
+			      sizeof(OldSystemTime));
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+    }
+  return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS
-STDCALL
-NtQuerySystemTime (
-	OUT	TIME	* CurrentTime
-	)
+NTSTATUS STDCALL
+NtQuerySystemTime (OUT TIME* UnsafeCurrentTime)
+     /*
+      * FUNCTION: Retrieves the system time.
+      * PARAMETERS:
+      *          CurrentTime - Points to a variable that receives the current
+      *          time of day in the standard time format.
+      */
 {
-	KeQuerySystemTime((PLARGE_INTEGER)CurrentTime);
-	return STATUS_SUCCESS;
+  LARGE_INTEGER CurrentTime;
+  NTSTATUS Status;
+
+  KeQuerySystemTime(&CurrentTime);
+  Status = MmCopyToCaller(UnsafeCurrentTime, &CurrentTime,
+			  sizeof(CurrentTime));
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+  return STATUS_SUCCESS;
 }
 
 

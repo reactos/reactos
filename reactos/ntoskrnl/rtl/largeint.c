@@ -1,4 +1,4 @@
-/* $Id: largeint.c,v 1.9 1999/11/27 03:31:20 ekohl Exp $
+/* $Id: largeint.c,v 1.10 2001/09/06 20:26:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,15 +119,15 @@ RtlExtendedLargeIntegerDivide (
 	return RC;
 }
 
-LARGE_INTEGER
-STDCALL
-RtlExtendedMagicDivide (
-	LARGE_INTEGER	Dividend,
-	LARGE_INTEGER	MagicDivisor,
-	CCHAR		ShiftCount
-	)
+LARGE_INTEGER STDCALL
+RtlExtendedMagicDivide (LARGE_INTEGER	Dividend,
+			LARGE_INTEGER	MagicDivisor,
+			CCHAR		ShiftCount)
 {
-	UNIMPLEMENTED;
+  LARGE_INTEGER Result;
+
+  Result.QuadPart = (Dividend.QuadPart * MagicDivisor.QuadPart) >> ShiftCount;
+  return(Result);
 }
 
 LARGE_INTEGER
