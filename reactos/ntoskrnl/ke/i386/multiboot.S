@@ -100,8 +100,8 @@ _multiboot_entry:
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000
 	 */
-	lgdt	_gdt_descr
-	lidt	_idt_descr
+	lgdt	_KiGdtDescriptor
+	lidt	_KiIdtDescriptor
 
 	/*
 	 * Reload the data segment registers 
@@ -658,6 +658,7 @@ lowmem_pagetable:
 	.long 0x3f0007,0x3f1007,0x3f2007,0x3f3007,0x3f4007,0x3f5007,0x3f6007,0x3f7007
 	.long 0x3f8007,0x3f9007,0x3fa007,0x3fb007,0x3fc007,0x3fd007,0x3fe007,0x3ff007
 
+.bss	
 _unmap_me:
 	.fill 4096, 1, 0
 	
@@ -674,12 +675,5 @@ _trap_stack_top:
 	
 _unmap_me3:	
 	.fill 4096, 1, 0			
-	
-_gdt_descr:
-	.word (11*8)-1
-	.long _KiGdt
-	
-_idt_descr:
-	.word (256*8)-1
-	.long _KiIdt
+
 

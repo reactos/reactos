@@ -51,15 +51,15 @@ SECTIONS
     *(.debug$F)
     *(.drectve)
   }
-  .idata BLOCK(__section_alignment__) :
+  /DISCARD/ :
   {
     /* This cannot currently be handled with grouped sections.
 	See pe.em:sort_sections.  */
     SORT(*)(.idata$2)
     SORT(*)(.idata$3)
     /* These zeroes mark the end of the import list.  */
-    LONG (0); LONG (0); LONG (0); LONG (0); LONG (0);
-    SORT(*)(.idata$4)
+/*    LONG (0); LONG (0); LONG (0); LONG (0); LONG (0);*/
+    SORT(*)(.idata$4)	
     SORT(*)(.idata$5)
     SORT(*)(.idata$6)
     SORT(*)(.idata$7)
@@ -80,12 +80,10 @@ SECTIONS
     *(COMMON)
     __bss_end__ = . ;
   }
-/*
-  .reloc BLOCK(__section_alignment__) :
-  { 					
-    *(.reloc) 
-  }
-*/
+  /DISCARD/ :
+  {
+    *(.reloc)
+  }  
   .stab BLOCK(__section_alignment__) (NOLOAD) :
   {
     [ .stab ]

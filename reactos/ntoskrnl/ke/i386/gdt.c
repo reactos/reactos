@@ -49,6 +49,12 @@ USHORT KiGdt[11 * 4] =
  0x0, 0x0, 0x0, 0x0               /* Trap TSS */
 };
 
+struct
+{
+  USHORT Length;
+  ULONG Base;
+} __attribute__((packed)) KiGdtDescriptor = { 11 * 8, (ULONG)KiGdt };
+
 static KSPIN_LOCK GdtLock;
 
 /* FUNCTIONS *****************************************************************/

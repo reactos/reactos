@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.32 2001/04/10 22:13:22 dwelch Exp $
+# $Id: Makefile,v 1.33 2001/04/11 22:13:21 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -524,7 +524,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		$(TARGETNAME).o -lgcc
 	- $(RM) temp.exp
 
-$(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
+$(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a $(TARGETNAME).lnk
 	$(CC) \
 		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles -nostdlib \

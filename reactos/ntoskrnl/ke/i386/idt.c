@@ -19,5 +19,13 @@
 
 IDT_DESCRIPTOR KiIdt[256];
 
+struct
+{
+  USHORT Length;
+  ULONG Base;
+} __attribute__((packed)) KiIdtDescriptor = {256 * 8, (ULONG)KiIdt};
+
+
 /* FUNCTIONS *****************************************************************/
+
 

@@ -1,4 +1,4 @@
-/* $Id: buildno.c,v 1.5 2000/12/10 16:23:15 ea Exp $
+/* $Id: buildno.c,v 1.6 2001/04/11 22:13:21 dwelch Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
@@ -85,73 +85,70 @@ elapsed_days (
 void
 write_h (int build)
 {
-	FILE	*h = NULL;
+  FILE	*h = NULL;
+  char* s;
+  char* s1;
+  int length;
 
-	h = fopen ( BUILDNO_INCLUDE_FILE, "w");
-	if (!h) 
+  s1 = s = malloc(256 * 1024);
+  
+  s = s + sprintf (s, "/* Do not edit - Machine generated */\n");
+	
+  s = s + sprintf (s, "#ifndef _INC_REACTOS_BUILDNO\n" );
+  s = s + sprintf (s, "#define _INC_REACTOS_BUILDNO\n" );
+  
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
+  s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%d\"\n", build);
+  s = s + sprintf (s, "#define KERNEL_RELEASE_RC\t\"%d.%d.%d.%d\\0\"\n",
+		   KERNEL_VERSION_MAJOR, KERNEL_VERSION_MINOR,
+		   KERNEL_VERSION_PATCH_LEVEL, build);
+  s = s + sprintf (s, "#define KERNEL_RELEASE_STR\t\"%d.%d.%d.%d\"\n",
+		   KERNEL_VERSION_MAJOR,
+		   KERNEL_VERSION_MINOR,
+		   KERNEL_VERSION_PATCH_LEVEL,
+		   build);
+  s = s + sprintf (s, "#define KERNEL_VERSION_RC\t\"%d.%d.%d\\0\"\n",
+		   KERNEL_VERSION_MAJOR,
+		   KERNEL_VERSION_MINOR,
+		   KERNEL_VERSION_PATCH_LEVEL);
+  s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d.%d\"\n", 
+		   KERNEL_VERSION_MAJOR,
+		   KERNEL_VERSION_MINOR,
+		   KERNEL_VERSION_PATCH_LEVEL);
+  s = s + sprintf (s, "#endif\n/* EOF */\n");
+
+  h = fopen (BUILDNO_INCLUDE_FILE, "r");
+  if (h != NULL)
+    {
+      fseek(h, 0, SEEK_END);
+      length = ftell(h);
+      if (length == strlen(s1))
 	{
-		fprintf (
-			stderr,
-			"%s: can not create file \"%s\"!\n",
-			argv0,
-			BUILDNO_INCLUDE_FILE
-			);
-		return;
+	  char* orig;
+	  
+	  orig = malloc(length);
+	  fseek(h, 0, SEEK_SET);
+	  fread(orig, 1, length, h);
+	  if (memcmp(s1, orig, length) == 0)
+	    {
+	      fclose(h);
+	      return;
+	    }
 	}
-	fprintf (
-		h,
-		"/* Do not edit - Machine generated */\n"
-		);
-	
-	fprintf (h, "#ifndef _INC_REACTOS_BUILDNO\n" );
-	fprintf (h, "#define _INC_REACTOS_BUILDNO\n" );
+      fclose(h);
+    }
 
-	fprintf (
-		h,
-		"#define KERNEL_VERSION_BUILD\t%d\n",
-		build
-		);
-	fprintf (
-		h,
-		"#define KERNEL_VERSION_BUILD_STR\t\"%d\"\n",
-		build
-		);
-	fprintf (
-		h,
-		"#define KERNEL_RELEASE_RC\t\"%d.%d.%d.%d\\0\"\n",
-		KERNEL_VERSION_MAJOR,
-		KERNEL_VERSION_MINOR,
-		KERNEL_VERSION_PATCH_LEVEL,
-		build
-		);
-	fprintf (
-		h,
-		"#define KERNEL_RELEASE_STR\t\"%d.%d.%d.%d\"\n",
-		KERNEL_VERSION_MAJOR,
-		KERNEL_VERSION_MINOR,
-		KERNEL_VERSION_PATCH_LEVEL,
-		build
-		);
-	fprintf (
-		h,
-		"#define KERNEL_VERSION_RC\t\"%d.%d.%d\\0\"\n",
-		KERNEL_VERSION_MAJOR,
-		KERNEL_VERSION_MINOR,
-		KERNEL_VERSION_PATCH_LEVEL
-		);
-	fprintf (
-		h,
-		"#define KERNEL_VERSION_STR\t\"%d.%d.%d\"\n", 
-		KERNEL_VERSION_MAJOR,
-		KERNEL_VERSION_MINOR,
-		KERNEL_VERSION_PATCH_LEVEL
-		);
-	fprintf (
-		h,
-		"#endif\n/* EOF */\n"
-		);
-	
-	fclose (h);
+  h = fopen (BUILDNO_INCLUDE_FILE, "w");
+  if (!h) 
+    {
+      fprintf (stderr,
+	       "%s: can not create file \"%s\"!\n",
+	       argv0,
+	       BUILDNO_INCLUDE_FILE);
+      return;
+    }
+  fwrite(s1, 1, strlen(s1), h);
+  fclose (h);
 }
 
 void
