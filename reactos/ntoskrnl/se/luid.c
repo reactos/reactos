@@ -1,4 +1,4 @@
-/* $Id: luid.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+/* $Id: luid.c,v 1.3 1999/12/29 01:36:06 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -35,3 +35,25 @@ NTSTATUS STDCALL NtAllocateLocallyUniqueId(OUT LUID* LocallyUniqueId)
    *LocallyUniqueId = ReturnedLuid;
    return(STATUS_SUCCESS);
 }
+
+VOID
+STDCALL
+RtlCopyLuid (
+	PLUID LuidDest,
+	PLUID LuidSrc
+	)
+{
+	LuidDest->QuadPart = LuidSrc->QuadPart;
+}
+
+BOOLEAN
+STDCALL
+RtlEqualLuid (
+	PLUID	Luid1,
+	PLUID	Luid2
+	)
+{
+	return ((Luid1->QuadPart == Luid2->QuadPart) ? TRUE : FALSE);
+}
+
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.23 1999/12/27 15:04:50 ekohl Exp $
+/* $Id: rtl.h,v 1.24 1999/12/29 01:36:58 ekohl Exp $
  * 
  */
 
@@ -1136,6 +1136,84 @@ ULONG
 STDCALL
 RtlxUnicodeStringToOemSize (
 	IN	PUNICODE_STRING	UnicodeString
+	);
+
+
+/* Register io functions */
+
+UCHAR
+READ_REGISTER_UCHAR (
+	PUCHAR	Register
+	);
+
+USHORT
+READ_REGISTER_USHORT (
+	PUSHORT	Register
+	);
+
+ULONG
+READ_REGISTER_ULONG (
+	PULONG	Register
+	);
+
+VOID
+READ_REGISTER_BUFFER_UCHAR (
+	PUCHAR	Register,
+	PUCHAR	Buffer,
+	ULONG	Count
+	);
+
+VOID
+READ_REGISTER_BUFFER_USHORT (
+	PUSHORT	Register,
+	PUSHORT	Buffer,
+	ULONG	Count
+	);
+
+VOID
+READ_REGISTER_BUFFER_ULONG (
+	PULONG	Register,
+	PULONG	Buffer,
+	ULONG	Count
+	);
+
+VOID
+WRITE_REGISTER_UCHAR (
+	PUCHAR	Register,
+	UCHAR	Value
+	);
+
+VOID
+WRITE_REGISTER_USHORT (
+	PUSHORT	Register,
+	USHORT	Value
+	);
+
+VOID
+WRITE_REGISTER_ULONG (
+	PULONG	Register,
+	ULONG	Value
+	);
+
+VOID
+WRITE_REGISTER_BUFFER_UCHAR (
+	PUCHAR	Register,
+	PUCHAR	Buffer,
+	ULONG	Count
+	);
+
+VOID
+WRITE_REGISTER_BUFFER_USHORT (
+	PUSHORT	Register,
+	PUSHORT	Buffer,
+	ULONG	Count
+	);
+
+VOID
+WRITE_REGISTER_BUFFER_ULONG (
+	PULONG	Register,
+	PULONG	Buffer,
+	ULONG	Count
 	);
 
 

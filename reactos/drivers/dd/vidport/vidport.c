@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.9 1999/12/04 20:58:42 ea Exp $
+/* $Id: vidport.c,v 1.10 1999/12/29 01:37:30 ekohl Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -6,7 +6,6 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
-#include <internal/halio.h>
 
 #include "vidport.h"
 
@@ -288,7 +287,7 @@ VideoPortInitialize(IN PVOID  Context1,
           
           if (HwInitializationData->HwInterrupt != NULL)
             {
-              IoDisconnectInterrupt(&ExtensionData->InterruptObject);
+              IoDisconnectInterrupt(ExtensionData->InterruptObject);
             }
           IoDeleteDevice(MPDeviceObject);
           
@@ -352,7 +351,7 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
       UNIMPLEMENTED;
     }
   
-  return  STATUS_SUCCESS;  
+  return  STATUS_SUCCESS;
 }
 
 VOID 
@@ -566,7 +565,7 @@ STDCALL
 VideoPortWritePortUchar(IN PUCHAR  Port, 
                         IN UCHAR  Value)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_UCHAR(Port, Value);
 }
 
 VOID 
@@ -574,7 +573,7 @@ STDCALL
 VideoPortWritePortUshort(IN PUSHORT  Port, 
                          IN USHORT  Value)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_USHORT(Port, Value);
 }
 
 VOID 
@@ -582,7 +581,7 @@ STDCALL
 VideoPortWritePortUlong(IN PULONG Port, 
                         IN ULONG Value)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_ULONG(Port, Value);
 }
 
 VOID 
@@ -591,7 +590,7 @@ VideoPortWritePortBufferUchar(IN PUCHAR  Port,
                               IN PUCHAR  Buffer, 
                               IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_BUFFER_UCHAR(Port, Buffer, Count);
 }
 
 VOID 
@@ -600,7 +599,7 @@ VideoPortWritePortBufferUshort(IN PUSHORT  Port,
                                IN PUSHORT  Buffer, 
                                IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_BUFFER_USHORT(Port, Buffer, Count);
 }
 
 VOID 
@@ -609,7 +608,7 @@ VideoPortWritePortBufferUlong(IN PULONG  Port,
                               IN PULONG  Buffer, 
                               IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_PORT_BUFFER_ULONG(Port, Buffer, Count);
 }
 
 VOID 
@@ -617,7 +616,7 @@ STDCALL
 VideoPortWriteRegisterUchar(IN PUCHAR  Register, 
                             IN UCHAR  Value)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_UCHAR(Register, Value);
 }
 
 VOID 
@@ -625,7 +624,7 @@ STDCALL
 VideoPortWriteRegisterUshort(IN PUSHORT  Register, 
                              IN USHORT  Value)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_USHORT(Register, Value);
 }
 
 VOID 
@@ -633,7 +632,7 @@ STDCALL
 VideoPortWriteRegisterUlong(IN PULONG  Register, 
                             IN ULONG  Value)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_ULONG(Register, Value);
 }
 
 VOID 
@@ -642,7 +641,7 @@ VideoPortWriteRegisterBufferUchar(IN PUCHAR  Register,
                                   IN PUCHAR  Buffer, 
                                   IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_BUFFER_UCHAR(Register, Buffer, Count);
 }
 
 VOID 
@@ -651,7 +650,7 @@ VideoPortWriteRegisterBufferUshort(IN PUSHORT  Register,
                                    IN PUSHORT  Buffer, 
                                    IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_BUFFER_USHORT(Register, Buffer, Count);
 }
 
 VOID 
@@ -660,7 +659,7 @@ VideoPortWriteRegisterBufferUlong(IN PULONG  Register,
                                   IN PULONG  Buffer, 
                                   IN ULONG  Count)
 {
-  UNIMPLEMENTED;
+  WRITE_REGISTER_BUFFER_ULONG(Register, Buffer, Count);
 }
 
 VOID

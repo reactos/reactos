@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.22 1999/12/27 15:05:33 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.23 1999/12/29 01:36:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -201,6 +201,12 @@ NtWriteFile=NtWriteFile@36
 PoQueryPowerSequence=PoQueryPowerSequence@0
 PoRequestPowerChange=PoRequestPowerChange@12
 PoSetDeviceIdleDetection=PoSetDeviceIdleDetection@8
+READ_REGISTER_UCHAR
+READ_REGISTER_ULONG
+READ_REGISTER_USHORT
+READ_REGISTER_BUFFER_UCHAR
+READ_REGISTER_BUFFER_ULONG
+READ_REGISTER_BUFFER_USHORT
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12
@@ -214,6 +220,7 @@ RtlCompareString=RtlCompareString@12
 RtlCompareUnicodeString=RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
+RtlCopyLuid=RtlCopyLuid@8
 RtlCopyMemory
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
@@ -222,6 +229,7 @@ RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply=RtlEnlargedUnsignedMultiply@8
+RtlEqualLuid=RtlEqualLuid@8
 RtlEqualString=RtlEqualString@12
 RtlEqualUnicodeString=RtlEqualUnicodeString@12
 RtlExtendedIntegerMultiply=RtlExtendedIntegerMultiply@12
@@ -276,6 +284,12 @@ RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize=RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize=RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize=RtlxUnicodeStringToOemSize@4
+WRITE_REGISTER_UCHAR
+WRITE_REGISTER_ULONG
+WRITE_REGISTER_USHORT
+WRITE_REGISTER_BUFFER_UCHAR
+WRITE_REGISTER_BUFFER_ULONG
+WRITE_REGISTER_BUFFER_USHORT
 ZwAccessCheckAndAuditAlarm=ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread=ZwAlertThread@4
 ZwAllocateVirtualMemory=ZwAllocateVirtualMemory@24

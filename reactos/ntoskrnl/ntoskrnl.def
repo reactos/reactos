@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.35 1999/12/27 15:05:33 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.36 1999/12/29 01:36:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -201,6 +201,12 @@ NtWriteFile@36
 PoQueryPowerSequence@0
 PoRequestPowerChange@12
 PoSetDeviceIdleDetection@8
+READ_REGISTER_UCHAR
+READ_REGISTER_ULONG
+READ_REGISTER_USHORT
+READ_REGISTER_BUFFER_UCHAR
+READ_REGISTER_BUFFER_ULONG
+READ_REGISTER_BUFFER_USHORT
 RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString@12
@@ -214,6 +220,7 @@ RtlCompareString@12
 RtlCompareUnicodeString@12
 RtlConvertLongToLargeInteger@4
 RtlConvertUlongToLargeInteger@4
+RtlCopyLuid@8
 RtlCopyMemory
 RtlCopyString@8
 RtlCopyUnicodeString@8
@@ -222,6 +229,7 @@ RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
 RtlEnlargedUnsignedMultiply@8
+RtlEqualLuid@8
 RtlEqualString@12
 RtlEqualUnicodeString@12
 RtlExtendedIntegerMultiply@12
@@ -278,6 +286,12 @@ RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize@4
+WRITE_REGISTER_UCHAR
+WRITE_REGISTER_ULONG
+WRITE_REGISTER_USHORT
+WRITE_REGISTER_BUFFER_UCHAR
+WRITE_REGISTER_BUFFER_ULONG
+WRITE_REGISTER_BUFFER_USHORT
 ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread@4
 ZwAllocateVirtualMemory@24
