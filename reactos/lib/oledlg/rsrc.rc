@@ -31,6 +31,7 @@
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
+#include "oledlg_Cs.rc"
 #include "oledlg_De.rc"
 #include "oledlg_En.rc"
 #include "oledlg_Es.rc"
