@@ -6,4 +6,4 @@
 *.map
 *.tmp
 Makefile.ros
-oleaut32.spec.def
+msvfw32.spec.def
