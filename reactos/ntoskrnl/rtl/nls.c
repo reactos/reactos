@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.14 2003/05/20 14:38:05 ekohl Exp $
+/* $Id: nls.c,v 1.15 2003/05/21 16:09:30 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -448,12 +448,14 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
   /* Set ANSI data */
   NlsAnsiToUnicodeTable = NlsTable->AnsiTableInfo.MultiByteTable;
   NlsUnicodeToAnsiTable = NlsTable->AnsiTableInfo.WideCharTable;
+  NlsMbCodePageTag = (NlsTable->AnsiTableInfo.DBCSCodePage != 0);
   NlsAnsiCodePage = NlsTable->AnsiTableInfo.CodePage;
   DPRINT("Ansi codepage %hu\n", NlsAnsiCodePage);
 
   /* Set OEM data */
   NlsOemToUnicodeTable = NlsTable->OemTableInfo.MultiByteTable;
   NlsUnicodeToOemTable = NlsTable->OemTableInfo.WideCharTable;
+  NlsMbOemCodePageTag = (NlsTable->OemTableInfo.DBCSCodePage != 0);
   NlsOemCodePage = NlsTable->OemTableInfo.CodePage;
   DPRINT("Oem codepage %hu\n", NlsOemCodePage);
 
