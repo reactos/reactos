@@ -41,11 +41,6 @@ $(PROGS:%=$(INSTALL_DIR)/bin/%): $(INSTALL_DIR)/bin/%: %
 
 endif # BOOTCD_INSTALL
 
-dist: $(PROGS:%=$(DIST_DIR)/apps/%)
-
-$(PROGS:%=$(DIST_DIR)/apps/%): $(DIST_DIR)/apps/%: %
-	$(CP) $* $(DIST_DIR)/apps/$*
-
 npserver.exe: $(SRV_OBJECTS) $(LIBS)
 	$(CC) $(SRV_OBJECTS) $(LIBS) -o npserver.exe
 	$(NM) --numeric-sort npserver.exe > npserver.sym

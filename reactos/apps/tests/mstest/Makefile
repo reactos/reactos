@@ -42,11 +42,6 @@ $(PROGS:%=$(INSTALL_DIR)/bin/%): $(INSTALL_DIR)/bin/%: %
 
 endif # BOOTCD_INSTALL
 
-dist: $(PROGS:%=$(DIST_DIR)/apps/%)
-
-$(PROGS:%=$(DIST_DIR)/apps/%): $(DIST_DIR)/apps/%: %
-	$(CP) $* $(DIST_DIR)/apps/$*
-
 msserver.exe: $(SRV_OBJECTS) $(LIBS)
 	$(CC) $(SRV_OBJECTS) $(LIBS) -o msserver.exe
 	$(NM) --numeric-sort msserver.exe > msserver.sym
