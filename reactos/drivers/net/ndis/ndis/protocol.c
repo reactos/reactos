@@ -367,7 +367,6 @@ ProSend(
           NdisStatus = (*Adapter->Miniport->Chars.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
 	  if( NdisStatus != NDIS_STATUS_PENDING ) {
-	      NdisMSendComplete( Adapter, Packet, NdisStatus );
 	      Adapter->MiniportBusy = FALSE;
 	  }
           KeLowerIrql(RaiseOldIrql);
