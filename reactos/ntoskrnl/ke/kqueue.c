@@ -17,6 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
+
 /*
  * @implemented
  */
@@ -26,9 +27,6 @@ KeInsertByKeyDeviceQueue (
   IN PKDEVICE_QUEUE_ENTRY	DeviceQueueEntry,
   IN ULONG			SortKey)
 {
-  PLIST_ENTRY current;
-  PKDEVICE_QUEUE_ENTRY entry;
-   
   DPRINT("KeInsertByKeyDeviceQueue()\n");
   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);   
    
@@ -42,26 +40,13 @@ KeInsertByKeyDeviceQueue (
     KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
     return(FALSE);
   }
-      
-  /*
-  Insert new entry after the last entry with SortKey less or equal to passed-in SortKey. 
-  NOTE: walking list in reverse order.
-  */
-  current=DeviceQueue->DeviceListHead.Blink;
-  while (current!=(&DeviceQueue->DeviceListHead))
-  {
-    entry = CONTAINING_RECORD(current,KDEVICE_QUEUE_ENTRY,DeviceListEntry);
-    if (entry->SortKey <= SortKey)
-    {
-      /* insert new entry after current entry */
-      InsertTailList(current, &DeviceQueueEntry->DeviceListEntry); 
-      KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
-      return(TRUE);
-    }
-    current = current->Blink;
-  } 
-     
-  InsertHeadList(&DeviceQueue->DeviceListHead,&DeviceQueueEntry->DeviceListEntry);
+  
+  /* Insert new entry after the last entry with SortKey less or equal to passed-in SortKey */
+  InsertAscendingList(&DeviceQueue->DeviceListHead,
+                      &DeviceQueueEntry->DeviceListEntry,
+                      KDEVICE_QUEUE_ENTRY,
+                      DeviceListEntry,
+                      SortKey);
    
   KeReleaseSpinLockFromDpcLevel(&DeviceQueue->Lock);
   return(TRUE);
