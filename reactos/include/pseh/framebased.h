@@ -79,6 +79,8 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
   struct __SEHPortableFrame * _SEHPortableFrame \
  )
 
+#define _SEH_STATIC_FILTER(ACTION_) ((_SEHFilter_t)((ACTION_) + 2))
+
 #define _SEH_FINALLY(NAME_) \
  void __stdcall NAME_ \
  ( \
@@ -88,7 +90,7 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(_SEH_CONTINUE_SEARCH + 1), \
+  _SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH), \
   (FINALLY_) \
  )
 
@@ -100,7 +102,7 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 #define _SEH_TRY_HANDLE_FINALLY(FINALLY_) \
  _SEH_TRY_FILTER_FINALLY \
  ( \
-  (_SEHFilter_t)(_SEH_EXECUTE_HANDLER + 1), \
+  _SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER), \
   (FINALLY_) \
  )
 

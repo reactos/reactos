@@ -27,6 +27,7 @@
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
 #include <excpt.h>
+#include <pseh/framebased.h>
 
 /* Assembly helpers, see i386/framebased.asm */
 extern void __cdecl _SEHCleanHandlerEnvironment(void);
@@ -77,11 +78,11 @@ int __cdecl _SEHFrameHandler
 
   switch((UINT_PTR)frame->SPF_Handlers->SH_Filter)
   {
-   case _SEH_EXECUTE_HANDLER + 1:
-   case _SEH_CONTINUE_SEARCH + 1:
-   case _SEH_CONTINUE_EXECUTION + 1:
+   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_EXECUTE_HANDLER):
+   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_SEARCH):
+   case (UINT_PTR)_SEH_STATIC_FILTER(_SEH_CONTINUE_EXECUTION):
    {
-    ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 1;
+    ret = (int)((UINT_PTR)frame->SPF_Handlers->SH_Filter) - 2;
     break;
    }
 
