@@ -19,6 +19,7 @@
  */
 #include <stdarg.h>
 
+#define INITGUID
 #ifdef __REACTOS__
 #include "wine/icom.h"
 #endif

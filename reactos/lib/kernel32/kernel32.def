@@ -474,6 +474,8 @@ GetSystemTimeAsFileTime@4
 GetSystemTimes@12
 GetSystemWow64DirectoryA@8
 GetSystemWow64DirectoryW@8
+GetSystemWindowsDirectoryA@8
+GetSystemWindowsDirectoryW@8
 GetWindowsDirectoryA@8
 GetWindowsDirectoryW@8
 GetTapeParameters@16

@@ -58,19 +58,21 @@ DEFINE_SHLGUID(IID_IRemoteComputer,     0x000214FEL, 0, 0);
 DEFINE_SHLGUID(IID_IQueryInfo,          0x00021500L, 0, 0);
 
 /* avoid duplicate definitions with shobjidl.h (FIXME) */
-/* DEFINE_SHLGUID(IID_IExtractIconA,       0x000214EBL, 0, 0); */
-/* DEFINE_SHLGUID(IID_IExtractIconW,       0x000214FAL, 0, 0); */
-/* DEFINE_SHLGUID(IID_IContextMenu,        0x000214E4L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IContextMenu2,       0x000214F4L, 0, 0); */
-/* DEFINE_SHLGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellBrowser,       0x000214E2L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellView,          0x000214E3L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellFolder,        0x000214E6L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellExtInit,       0x000214E8L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IPersistFolder,      0x000214EAL, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellLinkA,         0x000214EEL, 0, 0); */
-/* DEFINE_SHLGUID(IID_IEnumIDList,         0x000214F2L, 0, 0); */
-/* DEFINE_SHLGUID(IID_IShellLinkW,         0x000214F9L, 0, 0); */
+#ifdef __REACTOS__
+DEFINE_SHLGUID(IID_IExtractIconA,       0x000214EBL, 0, 0);
+DEFINE_SHLGUID(IID_IExtractIconW,       0x000214FAL, 0, 0);
+DEFINE_SHLGUID(IID_IContextMenu,        0x000214E4L, 0, 0);
+DEFINE_SHLGUID(IID_IContextMenu2,       0x000214F4L, 0, 0);
+DEFINE_SHLGUID(IID_ICommDlgBrowser,     0x000214F1L, 0, 0);
+DEFINE_SHLGUID(IID_IShellBrowser,       0x000214E2L, 0, 0);
+DEFINE_SHLGUID(IID_IShellView,          0x000214E3L, 0, 0);
+DEFINE_SHLGUID(IID_IShellFolder,        0x000214E6L, 0, 0);
+DEFINE_SHLGUID(IID_IShellExtInit,       0x000214E8L, 0, 0);
+DEFINE_SHLGUID(IID_IPersistFolder,      0x000214EAL, 0, 0);
+DEFINE_SHLGUID(IID_IShellLinkA,         0x000214EEL, 0, 0);
+DEFINE_SHLGUID(IID_IEnumIDList,         0x000214F2L, 0, 0);
+DEFINE_SHLGUID(IID_IShellLinkW,         0x000214F9L, 0, 0);
+#endif
 
 DEFINE_GUID(SID_STopLevelBrowser, 0x4C96BE40L, 0x915C, 0x11CF, 0x99, 0xD3, 0x00, 0xAA, 0x00, 0x4A, 0xE8, 0x37);
 

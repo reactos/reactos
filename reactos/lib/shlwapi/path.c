@@ -38,6 +38,9 @@
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
 #include "wine/debug.h"
+#ifdef __REACTOS__
+UINT WINAPI GetSystemWindowsDirectoryW(LPWSTR,UINT);
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

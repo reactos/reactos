@@ -678,7 +678,7 @@ LPWSTR WINAPI StrStrIW(LPCWSTR lpszStr, LPCWSTR lpszSearch)
   TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
 
 #ifdef __REACTOS__
-  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, wcsnicmp);
+  return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, _wcsnicmp);
 #else
   return SHLWAPI_StrStrHelperW(lpszStr, lpszSearch, strncmpiW);
 #endif
