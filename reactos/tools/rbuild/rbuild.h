@@ -3,6 +3,16 @@
 
 #include "pch.h"
 
+#ifdef WIN32
+#include <direct.h>
+#include <io.h>
+#else
+#define _MAX_PATH 255
+#endif
+#include <sys/stat.h>
+#include <time.h>
+#include <utime.h>
+
 #include "ssprintf.h"
 #include "exception.h"
 #include "XML.h"
@@ -367,6 +377,9 @@ public:
 	std::vector<SourceFile*> parents; /* List of files, this file is included from */
 	bool isNonAutomaticDependency;
 	std::string cachedDependencies;
+	time_t lastWriteTime;
+	time_t youngestLastWriteTime; /* Youngest last write time of this file and all children */
+	SourceFile* youngestFile;
 private:
 	void GetDirectoryAndFilenameParts ();
 	void Close ();
@@ -402,6 +415,8 @@ public:
 	                                       const std::string& filename,
 	                                       SourceFile* parentSourceFile );
 	SourceFile* RetrieveFromCache ( const std::string& filename );
+	void CheckAutomaticDependencies ();
+	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
 	void ProcessModule ( Module& module );
 	void ProcessFile ( Module& module,

@@ -1,12 +1,4 @@
 #include "pch.h"
-
-#ifdef WIN32
-#include <direct.h>
-#include <io.h>
-#else
-#include <sys/stat.h>
-#define _MAX_PATH 255
-#endif
 #include <assert.h>
 
 #include "rbuild.h"
@@ -26,7 +18,8 @@ SourceFile::SourceFile ( AutomaticDependency* automaticDependency,
 	: automaticDependency ( automaticDependency ),
 	  module ( module ),
 	  filename ( filename ),
-	  isNonAutomaticDependency ( isNonAutomaticDependency )
+	  isNonAutomaticDependency ( isNonAutomaticDependency ),
+	  youngestLastWriteTime ( 0 )
 {
   	if ( parent != NULL )
 		parents.push_back ( parent );
@@ -59,12 +52,25 @@ SourceFile::Close ()
 void
 SourceFile::Open ()
 {
+	struct stat statbuf;
+
 	Close ();
 	FILE* f = fopen ( filename.c_str (), "rb" );
 	if ( !f )
 		throw FileNotFoundException ( filename );
+
+	if ( fstat ( fileno ( f ), &statbuf ) != 0 )
+	{
+		fclose ( f );
+		throw AccessDeniedException ( filename );
+	}
+	lastWriteTime = statbuf.st_mtime;
+/*	printf ( "lastWriteTime of %s is %s\n",
+	          filename.c_str (),
+	          ctime ( &lastWriteTime ) ); */
+
 	unsigned long len = (unsigned long) filelen ( f );
-	if ( len > MAX_BYTES_TO_READ)
+	if ( len > MAX_BYTES_TO_READ )
 		len = MAX_BYTES_TO_READ;
 	buf.resize ( len );
 	fread ( &buf[0], 1, len, f );
@@ -324,4 +330,77 @@ SourceFile*
 AutomaticDependency::RetrieveFromCache ( const string& filename )
 {
 	return sourcefile_map[filename];
+}
+
+void
+AutomaticDependency::CheckAutomaticDependencies ()
+{
+	struct utimbuf timebuf;
+	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
+	{
+		Module& module = *project.modules[mi];
+		for ( size_t fi = 0; fi < module.files.size (); fi++ )
+		{
+			File& file = *module.files[fi];
+			string normalizedFilename = NormalizeFilename ( file.name );
+
+			SourceFile* sourceFile = RetrieveFromCache ( normalizedFilename );
+			if ( sourceFile != NULL )
+			{
+				CheckAutomaticDependenciesForFile ( sourceFile );
+				assert ( sourceFile->youngestLastWriteTime != 0 );
+				if ( sourceFile->youngestLastWriteTime > sourceFile->lastWriteTime )
+				{
+					printf ( "Marking %s for rebuild\n",
+					         sourceFile->filename.c_str () );
+					timebuf.actime = sourceFile->youngestLastWriteTime;
+					timebuf.modtime = sourceFile->youngestLastWriteTime;
+					utime ( sourceFile->filename.c_str (),
+					        &timebuf );
+
+					/*printf ( "lastWriteTime of %s is %s\n",
+					         sourceFile->filename.c_str (),
+					         ctime ( &sourceFile->lastWriteTime ) );
+					printf ( "youngestLastWriteTime is %s with %s\n",
+					         sourceFile->youngestFile->filename.c_str (),
+					         ctime ( &sourceFile->youngestLastWriteTime ) );*/
+				}
+			}
+		}
+	}
+}
+
+void
+AutomaticDependency::CheckAutomaticDependenciesForFile ( SourceFile* sourceFile )
+{
+	if ( sourceFile->youngestLastWriteTime > 0 )
+		return;
+
+	if ( sourceFile->files.size () == 0 )
+	{
+		sourceFile->youngestLastWriteTime = sourceFile->lastWriteTime;
+		sourceFile->youngestFile = sourceFile;
+		return;
+	}
+
+	for ( size_t i = 0; i < sourceFile->files.size (); i++ )
+	{
+		SourceFile* childSourceFile = sourceFile->files[i];
+		
+		CheckAutomaticDependenciesForFile ( childSourceFile );
+		if ( ( childSourceFile->youngestLastWriteTime > sourceFile->youngestLastWriteTime ) ||
+		     ( childSourceFile->lastWriteTime > sourceFile->youngestLastWriteTime ) )
+		{
+			if ( childSourceFile->youngestLastWriteTime > childSourceFile->lastWriteTime )
+			{
+				sourceFile->youngestLastWriteTime = childSourceFile->youngestLastWriteTime;
+				sourceFile->youngestFile = childSourceFile->youngestFile;
+			}
+			else
+			{
+				sourceFile->youngestLastWriteTime = childSourceFile->lastWriteTime;
+				sourceFile->youngestFile = childSourceFile;
+			}
+		}
+	}
 }

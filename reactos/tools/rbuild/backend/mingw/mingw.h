@@ -28,19 +28,8 @@ private:
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget () const;
-	std::string* GenerateAutomaticDependencyUniqueId ();
-	void GenerateAutomaticDependencies ();
-	bool IsAutomaticDependencyGenerated ( SourceFile* sourceFile );
-	void OutputAutomaticDependenciesForFile ( SourceFile* sourceFile );
-	std::string GetFilename ( const std::string& filename ) const;
-	void GenerateAutomaticDependenciesForFileCached ( SourceFile* sourceFile,
-	                                                  std::string& dependencies );
-	void GenerateAutomaticDependenciesForFile ( SourceFile* sourceFile,
-	                                            std::string& dependencies );
+	void CheckAutomaticDependencies ();
 	FILE* fMakefile;
-	int automaticDependencyUniqueIdCounter;
-	std::map<std::string, std::string*> automaticDependencyMap;
-	std::map<std::string, std::string*> automaticDependencyDirectoryMap;
 };
 
 std::string FixupTargetFilename ( const std::string& targetFilename );

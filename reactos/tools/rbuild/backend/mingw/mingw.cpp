@@ -19,8 +19,7 @@ public:
 
 
 MingwBackend::MingwBackend ( Project& project )
-	: Backend ( project ),
-	  automaticDependencyUniqueIdCounter ( 0 )
+	: Backend ( project )
 {
 }
 
@@ -36,7 +35,7 @@ MingwBackend::Process ()
 		Module& module = *ProjectNode.modules[i];
 		ProcessModule ( module );
 	}
-	//GenerateAutomaticDependencies ();
+	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
 
@@ -241,133 +240,12 @@ MingwBackend::GenerateAllTarget () const
 	fprintf ( fMakefile, "\n\t\n\n" );
 }
 
-string*
-MingwBackend::GenerateAutomaticDependencyUniqueId ()
-{
-	automaticDependencyUniqueIdCounter++;
-	return new string ( ssprintf ( "d%d",
-	                               automaticDependencyUniqueIdCounter ) );
-}
-
 void
-MingwBackend::GenerateAutomaticDependencies ()
+MingwBackend::CheckAutomaticDependencies ()
 {
 	AutomaticDependency automaticDependency ( ProjectNode );
 	automaticDependency.Process ();
-	for ( size_t mi = 0; mi < ProjectNode.modules.size (); mi++ )
-	{
-		Module& module = *ProjectNode.modules[mi];
-		for ( size_t fi = 0; fi < module.files.size (); fi++ )
-		{
-			File& file = *module.files[fi];
-			string normalizedFilename = NormalizeFilename ( file.name );
-
-			SourceFile* sourceFile = automaticDependency.RetrieveFromCache ( normalizedFilename );
-			if ( sourceFile != NULL )
-			{
-				string dependencies ( "" );
-				GenerateAutomaticDependenciesForFileCached ( sourceFile,
-	                                                         dependencies );
-				if ( dependencies.size () > 0 )
-				{
-					const string& objectFilename = MingwModuleHandler::GetObjectFilename ( normalizedFilename );
-					string* uniqueId = automaticDependencyMap[dependencies];
-					if ( uniqueId == NULL )
-					{
-						uniqueId = GenerateAutomaticDependencyUniqueId ();
-						automaticDependencyMap[dependencies] = uniqueId;
-						fprintf ( fMakefile,
-						          "%s = %s\n",
-						          uniqueId->c_str (),
-						          dependencies.c_str () );
-					}
-					fprintf ( fMakefile,
-					          "%s: $(%s)\n",
-					          objectFilename.c_str (),
-					          uniqueId->c_str () );
-				}
-			}
-		}
-	}
-}
-
-string 
-MingwBackend::GetFilename ( const string& filename ) const 
-{
-	size_t index = filename.find_last_of ( CSEP );
-	if ( index == string::npos )
-		return filename;
-	else
-		return filename.substr ( index + 1, filename.length () - index );
-}
-
-void
-MingwBackend::GenerateAutomaticDependenciesForFileCached ( SourceFile* sourceFile,
-	                                                       string& dependencies )
-{
-	for ( size_t i = 0; i < sourceFile->files.size (); i++)
-	{
-		SourceFile* childSourceFile = sourceFile->files[i];
-
-		string* uniqueId = automaticDependencyDirectoryMap[childSourceFile->directoryPart];
-		if ( uniqueId == NULL )
-		{
-			uniqueId = GenerateAutomaticDependencyUniqueId ();
-			automaticDependencyDirectoryMap[childSourceFile->directoryPart] = uniqueId;
-			fprintf ( fMakefile,
-			          "%s = %s\n",
-			          uniqueId->c_str (),
-			          childSourceFile->directoryPart.c_str () );
-		}
-		dependencies += ssprintf ( "${%s}%s%s",
-		                           uniqueId->c_str (),
-		                           SSEP,
-		                           childSourceFile->filenamePart.c_str () );
-
-			string childDependencies;
-		if ( childSourceFile->cachedDependencies.length () > 0 )
-			childDependencies = childSourceFile->cachedDependencies;
-		else
-		{
-			GenerateAutomaticDependenciesForFile ( childSourceFile,
-			                                       childDependencies );
-			if ( childDependencies.length () > 200 )
-			{
-				childSourceFile->cachedDependencies = childDependencies;
-			}
-		}
-		dependencies += " " + childDependencies;
-	}
-}
-
-void
-MingwBackend::GenerateAutomaticDependenciesForFile ( SourceFile* sourceFile,
-	                                                 string& dependencies )
-{
-	for ( size_t i = 0; i < sourceFile->files.size (); i++ )
-	{
-		SourceFile* childSourceFile = sourceFile->files[i];
-
-		if ( dependencies.length () > 0 )
-			dependencies += " ";
-
-		string* uniqueId = automaticDependencyDirectoryMap[childSourceFile->directoryPart];
-		if ( uniqueId == NULL )
-		{
-			uniqueId = GenerateAutomaticDependencyUniqueId ();
-			automaticDependencyDirectoryMap[childSourceFile->directoryPart] = uniqueId;
-			fprintf ( fMakefile,
-			          "%s = %s\n",
-			          uniqueId->c_str (),
-			          childSourceFile->directoryPart.c_str () );
-		}
-		dependencies += ssprintf ( "${%s}%s%s",
-		                           uniqueId->c_str (),
-		                           SSEP,
-		                           childSourceFile->filenamePart.c_str () );
-		GenerateAutomaticDependenciesForFile ( childSourceFile,
-		                                       dependencies );
-	}
+	automaticDependency.CheckAutomaticDependencies ();
 }
 
 void
