@@ -393,11 +393,12 @@ NtUserDragDetect(
 DWORD
 STDCALL
 NtUserDragObject(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4);
+	   HWND    hwnd1,
+	   HWND    hwnd2,
+	   UINT    u1,
+	   DWORD   dw1,
+	   HCURSOR hc1
+	   );
 
 DWORD
 STDCALL

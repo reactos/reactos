@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.49 2003/11/09 13:50:03 navaraf Exp $
+/* $Id: stubs.c,v 1.50 2003/11/09 18:38:09 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -14,6 +14,7 @@
 #include <string.h>
 typedef UINT *LPUINT;
 #include <mmsystem.h>
+#include <user32.h>
 
 
 /*
