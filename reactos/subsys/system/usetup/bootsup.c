@@ -481,7 +481,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, BootSector);
@@ -522,7 +522,7 @@ SaveCurrentBootSector(PWSTR RootPath,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_SUPERSEDE,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
@@ -584,7 +584,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -633,7 +633,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -682,7 +682,7 @@ InstallFat16BootCodeToFile(PWSTR SrcPath,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
@@ -748,7 +748,7 @@ InstallFat32BootCodeToFile(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -797,7 +797,7 @@ CHECKPOINT1;
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -852,7 +852,7 @@ CHECKPOINT1;
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_SUPERSEDE,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
@@ -892,7 +892,7 @@ CHECKPOINT1;
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, NewBootSector);
@@ -955,7 +955,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1004,7 +1004,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1055,7 +1055,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
@@ -1116,7 +1116,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1165,7 +1165,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1216,7 +1216,7 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_OVERWRITE_IF,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
@@ -1282,7 +1282,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1331,7 +1331,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1382,7 +1382,7 @@ InstallFat32BootCodeToDisk(PWSTR SrcPath,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY);
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
@@ -1480,7 +1480,7 @@ UnprotectBootIni(PWSTR FileName,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (Status == STATUS_NO_SUCH_FILE)
   {
     DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);
@@ -1551,7 +1551,7 @@ ProtectBootIni(PWSTR FileName,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      0,
-		      FILE_SYNCHRONOUS_IO_ALERT);
+		      FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("NtOpenFile() failed (Status %lx)\n", Status);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: inicache.c,v 1.5 2003/07/24 13:52:27 ekohl Exp $
+/* $Id: inicache.c,v 1.6 2003/11/08 09:13:46 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/inicache.c
@@ -550,7 +550,7 @@ IniCacheLoad(PINICACHE *Cache,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      FILE_SHARE_READ,
-		      FILE_NON_DIRECTORY_FILE);
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
@@ -565,12 +565,7 @@ IniCacheLoad(PINICACHE *Cache,
 				  &FileInfo,
 				  sizeof(FILE_STANDARD_INFORMATION),
 				  FileStandardInformation);
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("NtQueryInformationFile() returns STATUS_PENDING\n");
-
-    }
-  else if (!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
@@ -603,13 +598,6 @@ IniCacheLoad(PINICACHE *Cache,
 		      FileLength,
 		      &FileOffset,
 		      NULL);
-
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("NtReadFile() returns STATUS_PENDING\n");
-
-      Status = IoStatusBlock.Status;
-    }
 
   /* Append string terminator */
   FileBuffer[FileLength] = 0;
@@ -1101,7 +1089,7 @@ IniCacheSave(PINICACHE Cache,
 			FILE_ATTRIBUTE_NORMAL,
 			0,
 			FILE_SUPERSEDE,
-			FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY,
+			FILE_SYNCHRONOUS_IO_NONALERT | FILE_SEQUENTIAL_ONLY,
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))

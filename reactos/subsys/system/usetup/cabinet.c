@@ -935,7 +935,7 @@ ReadString(PWCHAR String, ULONG MaxLength)
 
 
 static ULONG
-ReadFileTable()
+ReadFileTable(VOID)
 /*
  * FUNCTION: Reads the file table from the cabinet file
  * RETURNS:
@@ -1125,7 +1125,7 @@ ComputeChecksum(PVOID Buffer,
 
 
 static ULONG
-CloseCabinet()
+CloseCabinet(VOID)
 /*
  * FUNCTION: Closes the current cabinet
  * RETURNS:
@@ -1157,7 +1157,7 @@ CloseCabinet()
 
 
 VOID
-CabinetInitialize()
+CabinetInitialize(VOID)
 /*
  * FUNCTION: Initialize archiver
  */
@@ -1199,7 +1199,7 @@ CabinetInitialize()
 
 
 VOID
-CabinetCleanup()
+CabinetCleanup(VOID)
 /*
  * FUNCTION: Cleanup archiver
  */
@@ -1285,7 +1285,7 @@ CabinetGetDestinationPath()
 
 
 ULONG
-CabinetOpen()
+CabinetOpen(VOID)
 /*
  * FUNCTION: Opens a cabinet file
  * RETURNS:
@@ -1324,7 +1324,7 @@ CabinetOpen()
 		    &ObjectAttributes,
 		    &IoStatusBlock,
 		    FILE_SHARE_READ,
-		    FILE_SYNCHRONOUS_IO_ALERT);
+		    FILE_SYNCHRONOUS_IO_NONALERT);
       if (!NT_SUCCESS(NtStatus))
         {
           DPRINT("Cannot open file (%S) (%x).\n", CabinetName, NtStatus);
@@ -1487,7 +1487,7 @@ CabinetOpen()
 
 
 VOID
-CabinetClose()
+CabinetClose(VOID)
 /*
  * FUNCTION: Closes the cabinet file
  */
@@ -1674,7 +1674,7 @@ CabinetExtractFile(PWCHAR FileName)
     FILE_ATTRIBUTE_NORMAL,
     0,
     FILE_CREATE,
-    FILE_SYNCHRONOUS_IO_ALERT,
+    FILE_SYNCHRONOUS_IO_NONALERT,
     NULL,
     0);
   if (!NT_SUCCESS(NtStatus))

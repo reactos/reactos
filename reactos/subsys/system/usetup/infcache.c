@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.7 2003/10/16 08:39:28 robd Exp $
+/* $Id: infcache.c,v 1.8 2003/11/08 09:13:46 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/infcache.c
@@ -993,7 +993,7 @@ InfOpenFile(PHINF InfHandle,
 		      &ObjectAttributes,
 		      &IoStatusBlock,
 		      FILE_SHARE_READ,
-		      FILE_NON_DIRECTORY_FILE);
+		      FILE_SYNCHRONOUS_IO_NONALERT | FILE_NON_DIRECTORY_FILE);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
@@ -1008,12 +1008,7 @@ InfOpenFile(PHINF InfHandle,
 				  &FileInfo,
 				  sizeof(FILE_STANDARD_INFORMATION),
 				  FileStandardInformation);
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("NtQueryInformationFile() returns STATUS_PENDING\n");
-
-    }
-  else if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status))
     {
       DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
@@ -1046,13 +1041,6 @@ InfOpenFile(PHINF InfHandle,
 		      FileLength,
 		      &FileOffset,
 		      NULL);
-
-  if (Status == STATUS_PENDING)
-    {
-      DPRINT("NtReadFile() returns STATUS_PENDING\n");
-
-      Status = IoStatusBlock.Status;
-    }
 
   /* Append string terminator */
   FileBuffer[FileLength] = 0;
