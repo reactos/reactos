@@ -898,17 +898,19 @@ GetCursorPos( &point );
 
   if (This->acquired == 0) {
 	WARN(" application tries to get data from an unacquired device !\n");
-	return DIERR_NOTACQUIRED;
+	//return DIERR_NOTACQUIRED;
 
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	// SysMouseAImpl_Acquire(iface);
-	// we are reading the mouse before we reache here. 
-	// we do not need call on SysMouseAImpl_Acquire 
-	// for now. 
+	 if (last_event==0)
+	 {
+	  This->absolute = 0;
+	  SysMouseAImpl_Acquire(iface);
+	  FIXME("This make the mouse choppy in Tribes , need new center code for calcuation of the mouse !!!!!!!!\n"); 
+	 }	
 	}
 	
     
@@ -926,9 +928,7 @@ GetCursorPos( &point );
 	if (This->data_queue==NULL) {
        WARN("No buffer have been set up !\n");	  
        return DIERR_NOTINITIALIZED;
-	}   
-	    
-  FIXME("This is broken in Tribes ??, need right implant of the buffer!!!!!!!!\n"); 
+	}   	      
     
   if (GetTickCount()-time <50) {
 	  *entries=0;
