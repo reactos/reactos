@@ -28,19 +28,23 @@
 #define NOIMAGE
 #define NOTAPE
 
-#ifdef UNICODE
-#define	_UNICODE
-#include <wchar.h>
-#endif
-#include <tchar.h>
-
+#define NONAMELESSUNION
 #include <windows.h>
 #include <windowsx.h>
 #include <commctrl.h>
 #include <commdlg.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <locale.h>
+#include <time.h>
+
+#ifdef UNICODE
+#define _UNICODE
+#include <wchar.h>
+#endif
+#include <tchar.h>
 
 #ifdef _MSC_VER
 #include <malloc.h>	/* for alloca() */
@@ -52,7 +56,7 @@
 #include <objbase.h>
 #include <shellapi.h>
 #include <shlobj.h>
-#endif
+#endif /* _NO_EXTENSIONS */
 
 #ifndef FILE_ATTRIBUTE_NOT_CONTENT_INDEXED
 #define FILE_ATTRIBUTE_ENCRYPTED            0x00000040

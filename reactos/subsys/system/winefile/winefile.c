@@ -18,10 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include <locale.h>
-#include <time.h>
-
-#define NONAMELESSUNION
 #include "winefile.h"
 
 #include "resource.h"
@@ -170,6 +166,26 @@ extern int call_stat(
 	time_t* patime, time_t* pmtime,
 	unsigned long* plinks
 );
+
+/* call vswprintf() in msvcrt.dll */
+int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
+{
+	static int (__cdecl *vswprintf)(wchar_t*, const wchar_t*, va_list);
+
+	va_list ap;
+	int ret;
+
+	if (!vswprintf) {
+		HMODULE hmod = LoadLibraryA("msvcrt");
+		vswprintf = (int(__cdecl*)(wchar_t*,const wchar_t*,va_list)) GetProcAddress(hmod, "vswprintf");
+	}
+
+	va_start(ap, fmt);
+	ret = vswprintf(buffer, fmt, ap);
+	va_end(ap);
+
+	return 0;
+}
 
 #endif
 
