@@ -50,6 +50,7 @@
 #define _UNICODE
 #endif
 #include <tchar.h>
+#include <malloc.h>
 
 #include <fstream>
 #include <sstream>
@@ -95,15 +96,15 @@ struct String
 	String(LPCSTR s, int l) {assign(s, l);}
 	String(const std::string& other) {assign(other.c_str());}
 	String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, -1, b, BUFFER_LEN)-1);} else erase();}
-	void assign(LPCSTR s, int l) {if (s) {TCHAR b[BUFFER_LEN]; super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, BUFFER_LEN));} else erase();}
+	void assign(LPCSTR s) {if (s) {int bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
+	void assign(LPCSTR s, int l) {if (s) {int bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
 #else
 	String(LPCWSTR s) {assign(s);}
 	String(LPCWSTR s, int l) {assign(s, l);}
 	String(const std::wstring& other) {assign(other.c_str());}
 	String& operator=(LPCWSTR s) {assign(s); return *this;}
-	void assign(LPCWSTR s) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, -1, b, BUFFER_LEN, 0, 0)-1);} else erase();}
-	void assign(LPCWSTR s, int l) {if (s) {char b[BUFFER_LEN]; super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, BUFFER_LEN, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, bl, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, bl, 0, 0));} else erase();}
 #endif
 
 	String& operator=(LPCTSTR s) {if (s) super::assign(s); else erase(); return *this;}
@@ -114,9 +115,9 @@ struct String
 	operator LPCTSTR() const {return c_str();}
 
 #ifdef UNICODE
-	operator std::string() const {char b[BUFFER_LEN]; return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN, 0, 0)-1);}
+	operator std::string() const {int bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
 #else
-	operator std::wstring() const {WCHAR b[BUFFER_LEN]; return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
+	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), bl, b, bl));}
 #endif
 
 	String& printf(LPCTSTR fmt, ...)
@@ -167,15 +168,17 @@ struct String
 
 inline void assign_utf8(String& s, const char* str)
 {
-	TCHAR buffer[BUFFER_LEN];
+	int lutf8 = strlen(str);
 
 #ifdef UNICODE
-	int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, buffer, BUFFER_LEN) - 1;
+	LPTSTR buffer = (LPTSTR)alloca(lutf8);
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, lutf8, buffer, lutf8);
 #else
-	WCHAR wbuffer[BUFFER_LEN];
+	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*lutf8);
+	int l = MultiByteToWideChar(CP_UTF8, 0, str, lutf8, wbuffer, lutf8);
 
-	int l = MultiByteToWideChar(CP_UTF8, 0, str, -1, wbuffer, BUFFER_LEN) - 1;
-	l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_ACP, 0, wbuffer, l, buffer, bl, 0, 0);
 #endif
 
 	s.assign(buffer, l);
@@ -183,15 +186,15 @@ inline void assign_utf8(String& s, const char* str)
 
 inline std::string get_utf8(LPCTSTR s, int l)
 {
-	char buffer[BUFFER_LEN];
-
 #ifdef UNICODE
-	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, BUFFER_LEN, 0, 0);
+	LPSTR buffer = (LPSTR)alloca(l);
+	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, l, 0, 0);
 #else
-	WCHAR wbuffer[BUFFER_LEN];
+	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*l);
+	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, l);
 
-	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, BUFFER_LEN);
-	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, BUFFER_LEN, 0, 0);
+	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, bl, 0, 0);
 #endif
 
 	return std::string(buffer, l);
@@ -1282,6 +1285,11 @@ struct XMLString
 		return _value;
 	}
 
+	const String& c_str() const
+	{
+		return _value;
+	}
+
 protected:
 	String	_value;
 
@@ -1318,6 +1326,25 @@ struct XMStringRef
 protected:
 	String& _ref;
 };
+
+
+template<typename T>
+	inline void read_option(T& var, const_XMLPos& cfg, LPCTSTR key)
+	{
+		const String& val = cfg.get(key);
+
+		if (!val.empty())
+			var = val;
+	}
+
+template<>
+	inline void read_option(int& var, const_XMLPos& cfg, LPCTSTR key)
+	{
+		const String& val = cfg.get(key);
+
+		if (!val.empty())
+			var = _ttoi(val);
+	}
 
 
 #ifdef _MSC_VER
@@ -1392,7 +1419,7 @@ struct XMLReader : public XMLReaderBase
 		if (!_in.good())
 			return -1;
 
-		_in.read(buffer, BUFFER_LEN);
+		_in.read(buffer, len);
 
 		return _in.gcount();
 	}

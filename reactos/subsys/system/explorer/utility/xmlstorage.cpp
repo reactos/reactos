@@ -238,7 +238,7 @@ std::string XMLReaderBase::get_error_string() const
 
 std::string EncodeXMLString(LPCTSTR s)
 {
-	TCHAR buffer[BUFFER_LEN];
+	LPTSTR buffer = (LPTSTR)alloca(5*sizeof(TCHAR)*_tcslen(s));	// worst case. "&amp;"
 	LPTSTR o = buffer;
 
 	for(LPCTSTR p=s; *p; ++p)
@@ -264,7 +264,7 @@ std::string EncodeXMLString(LPCTSTR s)
 
 String DecodeXMLString(LPCTSTR s)
 {
-	TCHAR buffer[BUFFER_LEN];
+	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*_tcslen(s));
 	LPTSTR o = buffer;
 
 	for(LPCTSTR p=s; *p; ++p)
