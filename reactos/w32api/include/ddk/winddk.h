@@ -3176,6 +3176,8 @@ typedef NTSTATUS DDKAPI
 #define RTL_REGISTRY_WINDOWS_NT           3
 #define RTL_REGISTRY_DEVICEMAP            4
 #define RTL_REGISTRY_USER                 5
+#define RTL_REGISTRY_HANDLE               0x40000000
+#define RTL_REGISTRY_OPTIONAL             0x80000000
 
 /* RTL_QUERY_REGISTRY_TABLE.Flags */
 #define RTL_QUERY_REGISTRY_SUBKEY         0x00000001
