@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.32 2001/01/21 00:07:03 phreak Exp $
+/* $Id: create.c,v 1.33 2001/01/23 09:58:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -123,7 +123,6 @@ CreateProcessA (
 	return Result;
 }
 
-#define STACK_TOP (0xb0000000)
 
 HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
 				   LPSECURITY_ATTRIBUTES lpThreadAttributes,
@@ -159,8 +158,8 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    else
      CreateSuspended = FALSE;
 
-
-   BaseAddress = (PVOID)(STACK_TOP - dwStackSize);
+   /* Allocate thread stack */
+   BaseAddress = NULL;
    Status = NtAllocateVirtualMemory(ProcessHandle,
 				    &BaseAddress,
 				    0,
@@ -180,7 +179,7 @@ HANDLE STDCALL KlCreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
    ThreadContext.SegSs = USER_DS;
-   ThreadContext.Esp = STACK_TOP - 20;
+   ThreadContext.Esp = (ULONG)(BaseAddress + dwStackSize - 20);
    ThreadContext.EFlags = (1<<1) + (1<<9);
 
    DPRINT("ThreadContext.Eip %x\n",ThreadContext.Eip);

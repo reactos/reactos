@@ -30,10 +30,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *******************************************************************/
-
-#define STACK_TOP (0xb0000000)
-
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -157,16 +153,14 @@ NTSTATUS LdrLoadInitialProcess (VOID)
 	  Peb->ImageBaseAddress);
    NTHeaders = RtlImageNtHeader(Peb->ImageBaseAddress);
    DPRINT("NTHeaders %x\n", NTHeaders);
-   StackBase = (PVOID)
-     (STACK_TOP - NTHeaders->OptionalHeader.SizeOfStackReserve);
-   DPRINT("StackBase %x\n", StackBase);
    StackSize = NTHeaders->OptionalHeader.SizeOfStackReserve;
    DPRINT("StackSize %x\n", StackSize);
    KeDetachProcess();
    DPRINT("Dereferencing process\n");
 //   ObDereferenceObject(Process);
    
-   DPRINT("Stack size %x\n", StackSize);
+   StackBase = (PVOID)NULL;
+   DPRINT("StackBase %x StackSize %x\n", StackBase, StackSize);
    DPRINT("Allocating virtual memory\n");
    Status = ZwAllocateVirtualMemory(ProcessHandle,
 				    (PVOID*)&StackBase,
@@ -194,7 +188,7 @@ NTSTATUS LdrLoadInitialProcess (VOID)
     */
    memset(&Context,0,sizeof(CONTEXT));
    Context.SegSs = USER_DS;
-   Context.Esp = STACK_TOP - 20;
+   Context.Esp = (ULONG)StackBase + StackSize - 20;
    Context.EFlags = 0x202;
    Context.SegCs = USER_CS;
    Context.Eip = (ULONG)LdrStartupAddr;
