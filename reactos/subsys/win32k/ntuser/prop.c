@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.9 2004/02/24 13:27:03 weiden Exp $
+/* $Id: prop.c,v 1.10 2004/04/16 21:50:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -193,12 +193,12 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   
   IntLockWindowProperties(WindowObject);
   Prop = IntGetProp(WindowObject, Atom);
-  IntUnLockWindowProperties(WindowObject);
   if (Prop != NULL)
   {
     Data = Prop->Data;
   }
-
+  IntUnLockWindowProperties(WindowObject);
+  IntReleaseWindowObject(WindowObject);
   return(Data);
 }
 
@@ -229,19 +229,20 @@ IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
 BOOL STDCALL
 NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
 {
-  PWINDOW_OBJECT Wnd;
+  PWINDOW_OBJECT WindowObject;
   BOOL ret;
 
-  if (!(Wnd = IntGetWindowObject(hWnd)))
+  if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
   
-  IntLockWindowProperties(Wnd);
-  ret = IntSetProp(Wnd, Atom, Data);
-  IntUnLockWindowProperties(Wnd);
+  IntLockWindowProperties(WindowObject);
+  ret = IntSetProp(WindowObject, Atom, Data);
+  IntUnLockWindowProperties(WindowObject);
   
+  IntReleaseWindowObject(WindowObject);
   return ret;
 }
 
