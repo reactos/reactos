@@ -25,6 +25,7 @@ typedef struct _WNDCLASS_OBJECT
   RTL_ATOM Atom;
   HICON   hIconSm;
   BOOL Unicode;
+  BOOL Global;
   LIST_ENTRY ListEntry;
   PCHAR   ExtraData;
 } WNDCLASS_OBJECT, *PWNDCLASS_OBJECT;
@@ -41,22 +42,24 @@ CleanupClassImpl(VOID);
 #define IntUnLockProcessClasses(W32Process) \
   ExReleaseFastMutex(&W32Process->ClassListLock)
 
-NTSTATUS STDCALL
-ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
-			  LPCWSTR ClassName);
+BOOL FASTCALL
+ClassReferenceClassByAtom(
+   PWNDCLASS_OBJECT* Class,
+   RTL_ATOM Atom,
+   HINSTANCE hInstance);
 
-NTSTATUS FASTCALL
-ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
-			  RTL_ATOM ClassAtom);
+BOOL FASTCALL
+ClassReferenceClassByName(
+   PWNDCLASS_OBJECT *Class,
+   LPCWSTR ClassName,
+   HINSTANCE hInstance);
 
-NTSTATUS FASTCALL
-ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
-				LPCWSTR ClassNameOrAtom);
-PWNDCLASS_OBJECT FASTCALL
-IntCreateClass(CONST WNDCLASSEXW *lpwcx,
-		BOOL bUnicodeClass,
-		WNDPROC wpExtra,
-		RTL_ATOM Atom);
+BOOL FASTCALL
+ClassReferenceClassByNameOrAtom(
+   PWNDCLASS_OBJECT *Class,
+   LPCWSTR ClassNameOrAtom,
+   HINSTANCE hInstance);
+
 struct _WINDOW_OBJECT;
 ULONG FASTCALL
 IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi);

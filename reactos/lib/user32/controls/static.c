@@ -1,4 +1,4 @@
-/* $Id: static.c,v 1.12 2004/03/10 23:21:56 navaraf Exp $
+/* $Id: static.c,v 1.13 2004/05/16 19:31:06 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -60,7 +60,7 @@ static pfPaint staticPaintFunc[SS_TYPEMASK+1] =
 const struct builtin_class_descr STATIC_builtin_class =
 {
     L"Static",            /* name */
-    CS_GLOBALCLASS | CS_DBLCLKS, /* style  */
+    CS_DBLCLKS | CS_PARENTDC, /* style  */
     (WNDPROC) StaticWndProcW,                  /* procW */
     (WNDPROC) StaticWndProcA,                  /* procA */
     STATIC_EXTRA_BYTES,                        /* extra */

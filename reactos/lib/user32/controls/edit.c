@@ -293,7 +293,7 @@ const struct builtin_class_descr EDIT_builtin_class =
 {
 #ifdef __REACTOS__
     L"Edit",               /* name */
-    CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC, /* style */
+    CS_DBLCLKS | CS_PARENTDC, /* style */
     (WNDPROC)EditWndProcW, /* procW */
     (WNDPROC)EditWndProcA, /* procA */
     sizeof(EDITSTATE *),   /* extra */

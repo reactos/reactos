@@ -21,6 +21,7 @@ DWORD DebugTraceLevel = MIN_TRACE;
 
 extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
+HINSTANCE User32Instance;
 
 /* To make the linker happy */
 VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
@@ -108,6 +109,7 @@ DllMain(
   switch (dwReason)
     {
     case DLL_PROCESS_ATTACH:
+      User32Instance = hinstDll;
       hProcessHeap = RtlGetProcessHeap();
       Init();
       InitThread();

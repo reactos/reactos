@@ -38,18 +38,21 @@ static HFONT hIconTitleFont;
 static LRESULT CALLBACK IconTitleWndProcW( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 static LRESULT CALLBACK IconTitleWndProcA( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam );
 
+#define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))
+#define ICONTITLE_CLASS_ATOM MAKEINTATOMW(32772)
+
 /*********************************************************************
  * icon title class descriptor
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
-    L"ICONTITLE_CLASS_ATOM",     /* name */
-    CS_GLOBALCLASS,             /* style */
+    ICONTITLE_CLASS_ATOM,        /* name */
+    0,                           /* style */
     (WNDPROC) IconTitleWndProcW, /* procW */
     (WNDPROC) IconTitleWndProcA, /* procA */
-    0,                          /* extra */
+    0,                           /* extra */
     (LPCWSTR) IDC_ARROW,         /* cursor */ /* FIXME Wine uses IDC_ARROWA */
-    0                           /* brush */
+    0                            /* brush */
 };
 
 
@@ -57,6 +60,7 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
 /***********************************************************************
  *           ICONTITLE_Create
  */
+#ifndef __REACTOS__
 HWND ICONTITLE_Create( HWND owner )
 {
     HWND hWnd;
@@ -77,6 +81,7 @@ HWND ICONTITLE_Create( HWND owner )
                     GetWindowLongW( hWnd, GWL_STYLE ) & ~(WS_CAPTION | WS_BORDER) );
     return hWnd;
 }
+#endif
 
 /***********************************************************************
  *           ICONTITLE_SetTitlePos

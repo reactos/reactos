@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.232 2004/05/14 16:50:16 navaraf Exp $
+/* $Id: window.c,v 1.233 2004/05/16 19:31:09 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1413,6 +1413,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   CBT_CREATEWNDW CbtCreate;
   LRESULT Result;
   BOOL MenuChanged;
+  BOOL ClassFound;
   LPWSTR OrigWindowName = NULL;
 
   DPRINT("NtUserCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
@@ -1488,16 +1489,16 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* FIXME: parent must belong to the current process */
 
   /* Check the class. */
-  Status = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer);
-  if (!NT_SUCCESS(Status))
-    {
-      RtlFreeUnicodeString(&WindowName);
-      if (NULL != ParentWindow)
-        {
-          IntReleaseWindowObject(ParentWindow);
-        }
-      return((HWND)0);
-    }
+  ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, lpClassName->Buffer, hInstance);
+  if (!ClassFound)
+  {
+     RtlFreeUnicodeString(&WindowName);
+     if (NULL != ParentWindow)
+     {
+        IntReleaseWindowObject(ParentWindow);
+     }
+     return((HWND)0);
+  }
 
   /* Check the window station. */
   DPRINT("IoGetCurrentProcess() %X\n", IoGetCurrentProcess());
@@ -2304,6 +2305,7 @@ NtUserFindWindowEx(HWND hwndParent,
   NTSTATUS Status;
   HWND Desktop, Ret = NULL;
   PWNDCLASS_OBJECT ClassObject = NULL;
+  BOOL ClassFound;
   
   Desktop = IntGetDesktopWindow();
   
@@ -2373,15 +2375,14 @@ NtUserFindWindowEx(HWND hwndParent,
   if(ClassName.Buffer)
   {
     /* this expects the string in ClassName to be NULL-terminated! */
-    Status = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName.Buffer);
-    if(!NT_SUCCESS(Status))
+    ClassFound = ClassReferenceClassByNameOrAtom(&ClassObject, ClassName.Buffer, NULL);
+    if(!ClassFound)
     {
       if (IS_ATOM(ClassName.Buffer))
         DPRINT1("Window class not found (%lx)\n", (ULONG_PTR)ClassName.Buffer);
       else
         DPRINT1("Window class not found (%S)\n", ClassName.Buffer);
-      /* windows returns ERROR_FILE_NOT_FOUND !? */
-      SetLastWin32Error(ERROR_FILE_NOT_FOUND);
+      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
       goto Cleanup;
     }
   }

@@ -7,6 +7,8 @@
 #include <windows.h>
 #include <win32k/win32k.h>
 
+extern HINSTANCE User32Instance;
+
 typedef struct _USER32_THREAD_DATA
 {
   MSG LastMessage;

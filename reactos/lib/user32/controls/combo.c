@@ -85,7 +85,7 @@ static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 const struct builtin_class_descr COMBO_builtin_class =
 {
     L"ComboBox",           /* name */
-    CS_GLOBALCLASS | CS_PARENTDC | CS_DBLCLKS, /* style  */
+    CS_PARENTDC | CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS, /* style  */
     (WNDPROC) ComboWndProcW,        /* procW */
     (WNDPROC) ComboWndProcA,        /* procA */
     sizeof(HEADCOMBO *),  /* extra */

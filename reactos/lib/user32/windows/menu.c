@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.67 2004/05/15 08:53:06 navaraf Exp $
+/* $Id: menu.c,v 1.68 2004/05/16 19:31:07 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -120,12 +120,12 @@ static LRESULT WINAPI PopupMenuWndProcW(HWND hwnd, UINT message, WPARAM wParam, 
 const struct builtin_class_descr POPUPMENU_builtin_class =
 {
     POPUPMENU_CLASS_ATOMW,                     /* name */
-    CS_GLOBALCLASS | CS_SAVEBITS | CS_DBLCLKS, /* style  */
+    CS_SAVEBITS | CS_DBLCLKS,                  /* style  */
     (WNDPROC) PopupMenuWndProcW,               /* FIXME - procW */
     (WNDPROC) NULL,                            /* FIXME - procA */
     sizeof(MENUINFO *),                        /* extra */
-    (LPCWSTR) IDC_ARROW,                        /* cursor */
-    (HBRUSH)(COLOR_MENU + 1)                    /* brush */
+    (LPCWSTR) IDC_ARROW,                       /* cursor */
+    (HBRUSH)(COLOR_MENU + 1)                   /* brush */
 };
 
 

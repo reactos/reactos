@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.16 2004/04/09 20:03:13 navaraf Exp $
+/* $Id: listbox.c,v 1.17 2004/05/16 19:31:06 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -136,7 +136,7 @@ static LRESULT LISTBOX_GetItemRect( LB_DESCR *descr, INT index, RECT *rect );
 const struct builtin_class_descr LISTBOX_builtin_class =
 {
     L"ListBox",            /* name */
-    CS_GLOBALCLASS | CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
+    CS_DBLCLKS /*| CS_PARENTDC*/,  /* style */
     (WNDPROC)ListBoxWndProcW,      /* procW */
     (WNDPROC)ListBoxWndProcA,      /* procA */
     sizeof(LB_DESCR *),   /* extra */
@@ -151,7 +151,7 @@ const struct builtin_class_descr LISTBOX_builtin_class =
 const struct builtin_class_descr COMBOLBOX_builtin_class =
 {
     L"ComboLBox",          /* name */
-    CS_GLOBALCLASS | CS_DBLCLKS | CS_SAVEBITS,  /* style */
+    CS_DBLCLKS | CS_SAVEBITS,  /* style */
     (WNDPROC)ComboLBWndProcW,      /* procW */
     (WNDPROC)ComboLBWndProcA,      /* procA */
     sizeof(LB_DESCR *),   /* extra */

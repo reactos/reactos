@@ -213,23 +213,13 @@ static void MDI_PostUpdate(HWND hwnd, MDICLIENTINFO* ci, WORD recalc)
  */
 const struct builtin_class_descr MDICLIENT_builtin_class =
 {
-#ifdef __REACTOS__
     L"MDIClient",            /* name */
-    CS_GLOBALCLASS,          /* style */
+    0,                       /* style */
     MDIClientWndProcW,       /* procW */
     MDIClientWndProcA,       /* procA */
     sizeof(MDICLIENTINFO *), /* extra */
     IDC_ARROW,               /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
-#else
-    "MDIClient",            /* name */
-    CS_GLOBALCLASS,         /* style */
-    MDIClientWndProcW,      /* procW */
-    MDIClientWndProcA,      /* procA */
-    sizeof(MDICLIENTINFO),  /* extra */
-    IDC_ARROW,              /* cursor */
-    (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
-#endif
 };
 
 

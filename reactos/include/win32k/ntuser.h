@@ -1115,13 +1115,20 @@ NtUserRedrawWindow
  UINT flags
 );
 
-RTL_ATOM
-STDCALL
-NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcx,
-			 BOOL bUnicodeClass,
-			 WNDPROC wpExtra,
-			 DWORD Unknown4,
-			 DWORD Unknown5);
+/* FIXME: These flag constans aren't what Windows uses. */
+#define REGISTERCLASS_ANSI	2
+#define REGISTERCLASS_SYSTEM	4
+#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI | REGISTERCLASS_SYSTEM)
+
+RTL_ATOM STDCALL
+NtUserRegisterClassExWOW(
+   CONST WNDCLASSEXW* lpwcx,
+   PUNICODE_STRING ClassName,
+   PUNICODE_STRING ClassNameCopy,
+   PUNICODE_STRING MenuName,
+   WNDPROC wpExtra,
+   DWORD Flags,
+   DWORD Unknown7);
 
 BOOL
 STDCALL

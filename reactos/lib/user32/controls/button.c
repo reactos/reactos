@@ -112,7 +112,7 @@ const struct builtin_class_descr BUTTON_builtin_class =
 {
 #ifdef __REACTOS__
     L"Button",           /* name */
-    CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
+    CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
     ButtonWndProcW,      /* procW */
     ButtonWndProcA,      /* procA */
     NB_EXTRA_BYTES,      /* extra */
