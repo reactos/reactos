@@ -546,7 +546,11 @@ CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 	   BOOLEAN MergeFreeBlocks);
 
 NTSTATUS
-CmiInitHives(BOOLEAN SetUpBoot);
+CmiConnectHive(PREGISTRY_HIVE RegistryHive,
+	       PUNICODE_STRING KeyName);
+
+NTSTATUS
+CmiInitHives(BOOLEAN SetupBoot);
 
 ULONG
 CmiGetPackedNameLength(IN PUNICODE_STRING Name,

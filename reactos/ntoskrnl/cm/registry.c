@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.89 2003/04/01 19:01:58 ekohl Exp $
+/* $Id: registry.c,v 1.90 2003/04/04 14:05:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,9 +11,6 @@
  *                  Created 22/05/98
  */
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <limits.h>
@@ -26,9 +23,8 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#endif
 
-/*  -------------------------------------------------  File Statics  */
+/* GLOBALS ******************************************************************/
 
 POBJECT_TYPE  CmiKeyType = NULL;
 PREGISTRY_HIVE  CmiVolatileHive = NULL;
@@ -41,11 +37,6 @@ volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
 KDPC CmiHiveSyncDpc;
 KTIMER CmiHiveSyncTimer;
-
-static PKEY_OBJECT  CmiRootKey = NULL;
-PKEY_OBJECT  CmiMachineKey = NULL;
-static PKEY_OBJECT  CmiUserKey = NULL;
-static PKEY_OBJECT  CmiHardwareKey = NULL;
 
 static GENERIC_MAPPING CmiKeyMapping =
 	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
@@ -260,10 +251,17 @@ CmInitializeRegistry(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING RootKeyName;
+  PKEY_OBJECT RootKey;
+  PKEY_OBJECT MachineKey;
+  PKEY_OBJECT UserKey;
   HANDLE RootKeyHandle;
-  PKEY_OBJECT NewKey;
   HANDLE KeyHandle;
   NTSTATUS Status;
+
+  /* FIXME: remove the hardware keys before the hardware hive is imported */
+  PKEY_OBJECT HardwareKey;
+  PKEY_OBJECT NewKey;
+
 
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
@@ -302,187 +300,186 @@ CmInitializeRegistry(VOID)
 		STANDARD_RIGHTS_REQUIRED,
 		&ObjectAttributes,
 		CmiKeyType,
-		(PVOID *) &NewKey);
+		(PVOID *) &RootKey);
   assert(NT_SUCCESS(Status));
-  CmiRootKey = NewKey;
   Status = ObReferenceObjectByHandle(RootKeyHandle,
-    STANDARD_RIGHTS_REQUIRED,
-		CmiKeyType,
-		KernelMode,
-		(PVOID *) &CmiRootKey,
-		NULL);
+				     STANDARD_RIGHTS_REQUIRED,
+				     CmiKeyType,
+				     KernelMode,
+				     (PVOID *)&RootKey,
+				     NULL);
   assert(NT_SUCCESS(Status));
-  CmiRootKey->RegistryHive = CmiVolatileHive;
-  NewKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
-  NewKey->KeyCell = CmiGetBlock(CmiVolatileHive, NewKey->BlockOffset, NULL);
-  CmiRootKey->Flags = 0;
-  CmiRootKey->NumberOfSubKeys = 0;
-  CmiRootKey->SubKeys = NULL;
-  CmiRootKey->SizeOfSubKeys = 0;
-  CmiRootKey->Name = ExAllocatePool(PagedPool, strlen("Registry"));
-  CmiRootKey->NameSize = strlen("Registry");
-  memcpy(CmiRootKey->Name, "Registry", strlen("Registry"));
+  RootKey->RegistryHive = CmiVolatileHive;
+  RootKey->BlockOffset = CmiVolatileHive->HiveHeader->RootKeyCell;
+  RootKey->KeyCell = CmiGetBlock(CmiVolatileHive, RootKey->BlockOffset, NULL);
+  RootKey->Flags = 0;
+  RootKey->NumberOfSubKeys = 0;
+  RootKey->SubKeys = NULL;
+  RootKey->SizeOfSubKeys = 0;
+  RootKey->NameSize = strlen("Registry");
+  RootKey->Name = ExAllocatePool(PagedPool, RootKey->NameSize);
+  RtlCopyMemory(RootKey->Name, "Registry", RootKey->NameSize);
 
   KeInitializeSpinLock(&CmiKeyListLock);
 
   /* Create '\Registry\Machine' key. */
   Status = ObCreateObject(&KeyHandle,
-    STANDARD_RIGHTS_REQUIRED,
-    NULL,
-    CmiKeyType,
-    (PVOID*) &NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&MachineKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-		CmiRootKey,
-		NewKey,
-		L"Machine",
-		wcslen(L"Machine") * sizeof(WCHAR),
-		0,
-		NULL,
-		0);
+			RootKey,
+			MachineKey,
+			L"Machine",
+			wcslen(L"Machine") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
-	NewKey->RegistryHive = CmiVolatileHive;
-	NewKey->Flags = 0;
-	NewKey->NumberOfSubKeys = 0;
-	NewKey->SubKeys = NULL;
-	NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-	NewKey->Name = ExAllocatePool(PagedPool, strlen("Machine"));
-	NewKey->NameSize = strlen("Machine");
-	memcpy(NewKey->Name, "Machine", strlen("Machine"));
-  CmiAddKeyToList(CmiRootKey, NewKey);
-  CmiMachineKey = NewKey;
+  MachineKey->RegistryHive = CmiVolatileHive;
+  MachineKey->Flags = 0;
+  MachineKey->NumberOfSubKeys = 0;
+  MachineKey->SubKeys = NULL;
+  MachineKey->SizeOfSubKeys = MachineKey->KeyCell->NumberOfSubKeys;
+  MachineKey->NameSize = strlen("Machine");
+  MachineKey->Name = ExAllocatePool(PagedPool, MachineKey->NameSize);
+  RtlCopyMemory(MachineKey->Name, "Machine", MachineKey->NameSize);
+  CmiAddKeyToList(RootKey, MachineKey);
 
   /* Create '\Registry\User' key. */
   Status = ObCreateObject(&KeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		NULL,
-		CmiKeyType,
-		(PVOID*) &NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&UserKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-    CmiRootKey,
-    NewKey,
-    L"User",
-    wcslen(L"User") * sizeof(WCHAR),
-    0,
-    NULL,
-    0);
+			RootKey,
+			UserKey,
+			L"User",
+			wcslen(L"User") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
-	NewKey->RegistryHive = CmiVolatileHive;
-	NewKey->Flags = 0;
-	NewKey->NumberOfSubKeys = 0;
-	NewKey->SubKeys = NULL;
-	NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-	NewKey->Name = ExAllocatePool(PagedPool, strlen("User"));
-	NewKey->NameSize = strlen("User");
-	memcpy(NewKey->Name, "User", strlen("User"));
-	CmiAddKeyToList(CmiRootKey, NewKey);
-	CmiUserKey = NewKey;
+  UserKey->RegistryHive = CmiVolatileHive;
+  UserKey->Flags = 0;
+  UserKey->NumberOfSubKeys = 0;
+  UserKey->SubKeys = NULL;
+  UserKey->SizeOfSubKeys = UserKey->KeyCell->NumberOfSubKeys;
+  UserKey->NameSize = strlen("User");
+  UserKey->Name = ExAllocatePool(PagedPool, UserKey->NameSize);
+  RtlCopyMemory(UserKey->Name, "User", UserKey->NameSize);
+  CmiAddKeyToList(RootKey, UserKey);
+
+
+  /* FIXME: remove the hardware keys before the hardware hive is imported */
 
   /* Create '\Registry\Machine\HARDWARE' key. */
   Status = ObCreateObject(&KeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		NULL,
-		CmiKeyType,
-		(PVOID*)&NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&HardwareKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-    CmiMachineKey,
-    NewKey,
-    L"HARDWARE",
-    wcslen(L"HARDWARE") * sizeof(WCHAR),
-    0,
-    NULL,
-    0);
+			MachineKey,
+			HardwareKey,
+			L"HARDWARE",
+			wcslen(L"HARDWARE") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
-  NewKey->RegistryHive = CmiVolatileHive;
-  NewKey->Flags = 0;
-  NewKey->NumberOfSubKeys = 0;
-  NewKey->SubKeys = NULL;
-  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->Name = ExAllocatePool(PagedPool, strlen("HARDWARE"));
-  NewKey->NameSize = strlen("HARDWARE");
-  memcpy(NewKey->Name, "HARDWARE", strlen("HARDWARE"));
-  CmiAddKeyToList(CmiMachineKey, NewKey);
-  CmiHardwareKey = NewKey;
+  HardwareKey->RegistryHive = CmiVolatileHive;
+  HardwareKey->Flags = 0;
+  HardwareKey->NumberOfSubKeys = 0;
+  HardwareKey->SubKeys = NULL;
+  HardwareKey->SizeOfSubKeys = HardwareKey->KeyCell->NumberOfSubKeys;
+  HardwareKey->NameSize = strlen("HARDWARE");
+  HardwareKey->Name = ExAllocatePool(PagedPool, strlen("HARDWARE"));
+  RtlCopyMemory(HardwareKey->Name, "HARDWARE", HardwareKey->NameSize);
+  CmiAddKeyToList(MachineKey, HardwareKey);
 
   /* Create '\Registry\Machine\HARDWARE\DESCRIPTION' key. */
   Status = ObCreateObject(&KeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		NULL,
-		CmiKeyType,
-		(PVOID*) &NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&NewKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-		CmiHardwareKey,
-		NewKey,
-		L"DESCRIPTION",
-		wcslen(L"DESCRIPTION") * sizeof(WCHAR),
-		0,
-		NULL,
-		0);
+			HardwareKey,
+			NewKey,
+			L"DESCRIPTION",
+			wcslen(L"DESCRIPTION") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
   NewKey->RegistryHive = CmiVolatileHive;
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
   NewKey->SubKeys = NULL;
   NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->Name = ExAllocatePool(PagedPool, strlen("DESCRIPTION"));
   NewKey->NameSize = strlen("DESCRIPTION");
-  memcpy(NewKey->Name, "DESCRIPTION", strlen("DESCRIPTION"));
-  CmiAddKeyToList(CmiHardwareKey, NewKey);
+  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
+  RtlCopyMemory(NewKey->Name, "DESCRIPTION", NewKey->NameSize);
+  CmiAddKeyToList(HardwareKey, NewKey);
 
   /* Create '\Registry\Machine\HARDWARE\DEVICEMAP' key. */
   Status = ObCreateObject(&KeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		NULL,
-		CmiKeyType,
-		(PVOID*) &NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&NewKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-    CmiHardwareKey,
-    NewKey,
-    L"DEVICEMAP",
-		wcslen(L"DEVICEMAP") * sizeof(WCHAR),
-    0,
-    NULL,
-    0);
+			HardwareKey,
+			NewKey,
+			L"DEVICEMAP",
+			wcslen(L"DEVICEMAP") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
   NewKey->RegistryHive = CmiVolatileHive;
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
   NewKey->SubKeys = NULL;
   NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->Name = ExAllocatePool(PagedPool, strlen("DEVICEMAP"));
   NewKey->NameSize = strlen("DEVICEMAP");
-  memcpy(NewKey->Name, "DEVICEMAP", strlen("DEVICEMAP"));
-  CmiAddKeyToList(CmiHardwareKey,NewKey);
+  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
+  RtlCopyMemory(NewKey->Name, "DEVICEMAP", NewKey->NameSize);
+  CmiAddKeyToList(HardwareKey,NewKey);
 
   /* Create '\Registry\Machine\HARDWARE\RESOURCEMAP' key. */
   Status = ObCreateObject(&KeyHandle,
-		STANDARD_RIGHTS_REQUIRED,
-		NULL,
-		CmiKeyType,
-		(PVOID*) &NewKey);
+			  STANDARD_RIGHTS_REQUIRED,
+			  NULL,
+			  CmiKeyType,
+			  (PVOID*)&NewKey);
   assert(NT_SUCCESS(Status));
   Status = CmiAddSubKey(CmiVolatileHive,
-		CmiHardwareKey,
-		NewKey,
-		L"RESOURCEMAP",
-		wcslen(L"RESOURCEMAP") * sizeof(WCHAR),
-		0,
-		NULL,
-		0);
+			HardwareKey,
+			NewKey,
+			L"RESOURCEMAP",
+			wcslen(L"RESOURCEMAP") * sizeof(WCHAR),
+			0,
+			NULL,
+			0);
   assert(NT_SUCCESS(Status));
   NewKey->RegistryHive = CmiVolatileHive;
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
   NewKey->SubKeys = NULL;
   NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->Name = ExAllocatePool(PagedPool, strlen("RESOURCEMAP"));
   NewKey->NameSize = strlen("RESOURCEMAP");
-  memcpy(NewKey->Name, "RESOURCEMAP", strlen("RESOURCEMAP"));
-  CmiAddKeyToList(CmiHardwareKey, NewKey);
+  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
+  RtlCopyMemory(NewKey->Name, "RESOURCEMAP", NewKey->NameSize);
+  CmiAddKeyToList(HardwareKey, NewKey);
 }
 
 
@@ -499,12 +496,10 @@ CmInit2(PCHAR CommandLine)
 
   /* Create the 'CurrentControlSet' link. */
   Status = CmiCreateCurrentControlSetLink();
-#ifndef WIN32_REGDBG
   if (!NT_SUCCESS(Status))
     {
       KeBugCheck(CONFIG_INITIALIZATION_FAILED);
     }
-#endif
 
   /* Set PICE 'Start' value to 1, if PICE debugging is enabled */
   PiceStart = 4;
@@ -527,7 +522,7 @@ CmInit2(PCHAR CommandLine)
 	}
       p1 = p2;
     }
-#ifndef WIN32_REGDBG
+
   Status = RtlWriteRegistryValue(RTL_REGISTRY_SERVICES,
 				 L"\\Pice",
 				 L"Start",
@@ -538,7 +533,6 @@ CmInit2(PCHAR CommandLine)
     {
       KeBugCheck(CONFIG_INITIALIZATION_FAILED);
     }
-#endif
 }
 
 
@@ -638,20 +632,52 @@ CmiCreateCurrentControlSetLink(VOID)
 
 NTSTATUS
 CmiConnectHive(PREGISTRY_HIVE RegistryHive,
-	       PUNICODE_STRING FullName,
-	       PCHAR KeyName,
-	       PKEY_OBJECT Parent)
+	       PUNICODE_STRING KeyName)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING ParentKeyName;
+  PKEY_OBJECT ParentKey;
   PKEY_OBJECT NewKey;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  PWSTR SubName;
 
-  DPRINT("CmiConnectHive(%p, %wZ, %s, %p) called.\n",
-	 RegistryHive, FullName, KeyName, Parent);
+  DPRINT("CmiConnectHive(%p, %wZ) called.\n",
+	 RegistryHive, KeyName);
+
+  SubName = wcsrchr (KeyName->Buffer, L'\\');
+  if (SubName == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  ParentKeyName.Length = (USHORT)(SubName - KeyName->Buffer) * sizeof(WCHAR);
+  ParentKeyName.MaximumLength = ParentKeyName.MaximumLength + sizeof(WCHAR);
+  ParentKeyName.Buffer = ExAllocatePool (NonPagedPool,
+					 ParentKeyName.MaximumLength);
+  RtlCopyMemory (ParentKeyName.Buffer,
+		 KeyName->Buffer,
+		 ParentKeyName.Length);
+  ParentKeyName.Buffer[ParentKeyName.Length / sizeof(WCHAR)] = 0;
+  SubName++;
+
+  Status = ObReferenceObjectByName (&ParentKeyName,
+				    OBJ_CASE_INSENSITIVE,
+				    NULL,
+				    STANDARD_RIGHTS_REQUIRED,
+				    CmiKeyType,
+				    KernelMode,
+				    NULL,
+				    (PVOID*)&ParentKey);
+  RtlFreeUnicodeString (&ParentKeyName);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
+      return Status;
+    }
 
   InitializeObjectAttributes(&ObjectAttributes,
-			     FullName,
+			     KeyName,
 			     0,
 			     NULL,
 			     NULL);
@@ -663,9 +689,9 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
 			  (PVOID*)&NewKey);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
-      KeBugCheck(0);
-      return(Status);
+      DPRINT1 ("ObCreateObject() failed (Status %lx)\n", Status);
+      ObDereferenceObject (ParentKey);
+      return Status;
     }
 
   NewKey->RegistryHive = RegistryHive;
@@ -674,30 +700,36 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
   NewKey->Flags = 0;
   NewKey->NumberOfSubKeys = 0;
   NewKey->SubKeys = ExAllocatePool(PagedPool,
-  NewKey->KeyCell->NumberOfSubKeys * sizeof(DWORD));
+  NewKey->KeyCell->NumberOfSubKeys * sizeof(ULONG));
 
   if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
     {
       DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
-      ZwClose(NewKey);
+      NtClose(NewKey);
+      ObDereferenceObject (ParentKey);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-  NewKey->Name = ExAllocatePool(PagedPool, strlen(KeyName));
+  NewKey->NameSize = wcslen (SubName);
+  NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
 
-  if ((NewKey->Name == NULL) && (strlen(KeyName) != 0))
+  if ((NewKey->Name == NULL) && (NewKey->NameSize != 0))
     {
-      DPRINT("strlen(KeyName) %d\n", strlen(KeyName));
+      DPRINT("NewKey->NameSize %d\n", NewKey->NameSize);
       if (NewKey->SubKeys != NULL)
 	ExFreePool(NewKey->SubKeys);
-      ZwClose(NewKey);
+      NtClose(KeyHandle);
+      ObDereferenceObject (ParentKey);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  NewKey->NameSize = strlen(KeyName);
-  memcpy(NewKey->Name, KeyName, strlen(KeyName));
-  CmiAddKeyToList(Parent, NewKey);
+  wcstombs (NewKey->Name,
+	    SubName,
+	    NewKey->NameSize);
+
+  CmiAddKeyToList (ParentKey, NewKey);
+  ObDereferenceObject (ParentKey);
 
   VERIFY_KEY_OBJECT(NewKey);
 
@@ -706,11 +738,8 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
 
 
 static NTSTATUS
-CmiInitializeSystemHive(PWSTR FileName,
-			PUNICODE_STRING FullName,
-			PCHAR KeyName,
-			PKEY_OBJECT Parent,
-			BOOLEAN CreateNew)
+CmiInitializeSystemHive (PWSTR FileName,
+			 PUNICODE_STRING KeyName)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING ControlSetKeyName;
@@ -720,96 +749,88 @@ CmiInitializeSystemHive(PWSTR FileName,
   NTSTATUS Status;
   PREGISTRY_HIVE RegistryHive;
 
-  if (CreateNew == TRUE)
+  Status = CmiCreateRegistryHive (FileName,
+				  &RegistryHive,
+				  TRUE);
+  if (!NT_SUCCESS(Status))
     {
-      Status = CmiCreateRegistryHive(FileName,
-				     &RegistryHive,
-				     TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
-	  KeBugCheck(0);
-	  return(Status);
-	}
-
-      Status = CmiConnectHive(RegistryHive,
-			      FullName,
-			      KeyName,
-			      Parent);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
-	  CmiRemoveRegistryHive(RegistryHive);
-	  return(Status);
-	}
-
-      /* Create 'ControlSet001' key */
-      RtlInitUnicodeStringFromLiteral(&ControlSetKeyName,
-				      L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &ControlSetKeyName,
-				 OBJ_CASE_INSENSITIVE,
-				 NULL,
-				 NULL);
-      Status = NtCreateKey(&KeyHandle,
-			   KEY_ALL_ACCESS,
-			   &ObjectAttributes,
-			   0,
-			   NULL,
-			   REG_OPTION_NON_VOLATILE,
-			   NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-	  return(Status);
-	}
-      NtClose(KeyHandle);
-
-      /* Link 'CurrentControlSet' to 'ControlSet001' key */
-      RtlInitUnicodeStringFromLiteral(&ControlSetLinkName,
-				      L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
-      InitializeObjectAttributes(&ObjectAttributes,
-				 &ControlSetLinkName,
-				 OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
-				 NULL,
-				 NULL);
-      Status = NtCreateKey(&KeyHandle,
-			   KEY_ALL_ACCESS | KEY_CREATE_LINK,
-			   &ObjectAttributes,
-			   0,
-			   NULL,
-			   REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
-			   NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
-	  return(Status);
-	}
-
-      RtlInitUnicodeStringFromLiteral(&ControlSetValueName,
-				      L"SymbolicLinkValue");
-      Status = NtSetValueKey(KeyHandle,
-			     &ControlSetValueName,
-			     0,
-			     REG_LINK,
-			     (PVOID)ControlSetKeyName.Buffer,
-			     ControlSetKeyName.Length);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-	}
-      NtClose(KeyHandle);
+      DPRINT1 ("CmiCreateRegistryHive() failed (Status %lx)\n", Status);
+      return Status;
     }
 
-  return(STATUS_SUCCESS);
+  Status = CmiConnectHive (RegistryHive,
+			   KeyName);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+      CmiRemoveRegistryHive (RegistryHive);
+      return Status;
+    }
+
+  /* Create 'ControlSet001' key */
+  RtlInitUnicodeStringFromLiteral (&ControlSetKeyName,
+				   L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &ControlSetKeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  Status = NtCreateKey (&KeyHandle,
+			KEY_ALL_ACCESS,
+			&ObjectAttributes,
+			0,
+			NULL,
+			REG_OPTION_NON_VOLATILE,
+			NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtCreateKey() failed (Status %lx)\n", Status);
+      return Status;
+    }
+  NtClose (KeyHandle);
+
+  /* Link 'CurrentControlSet' to 'ControlSet001' key */
+  RtlInitUnicodeStringFromLiteral (&ControlSetLinkName,
+				   L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &ControlSetLinkName,
+			      OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
+			      NULL,
+			      NULL);
+  Status = NtCreateKey (&KeyHandle,
+			KEY_ALL_ACCESS | KEY_CREATE_LINK,
+			&ObjectAttributes,
+			0,
+			NULL,
+			REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
+			NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtCreateKey() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  RtlInitUnicodeStringFromLiteral (&ControlSetValueName,
+				   L"SymbolicLinkValue");
+  Status = NtSetValueKey (KeyHandle,
+			  &ControlSetValueName,
+			  0,
+			  REG_LINK,
+			  (PVOID)ControlSetKeyName.Buffer,
+			  ControlSetKeyName.Length);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("NtSetValueKey() failed (Status %lx)\n", Status);
+    }
+  NtClose (KeyHandle);
+
+  return STATUS_SUCCESS;
 }
 
 
 NTSTATUS
 CmiInitializeHive(PWSTR FileName,
-		  PUNICODE_STRING FullName,
-		  PCHAR KeyName,
-		  PKEY_OBJECT Parent,
+		  PUNICODE_STRING KeyName,
 		  BOOLEAN CreateNew)
 {
   PREGISTRY_HIVE RegistryHive;
@@ -832,9 +853,7 @@ CmiInitializeHive(PWSTR FileName,
 
   /* Connect the hive */
   Status = CmiConnectHive(RegistryHive,
-			  FullName,
-			  KeyName,
-			  Parent);
+			  KeyName);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
@@ -849,7 +868,7 @@ CmiInitializeHive(PWSTR FileName,
 
 
 NTSTATUS
-CmiInitHives(BOOLEAN SetUpBoot)
+CmiInitHives(BOOLEAN SetupBoot)
 {
   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
   OBJECT_ATTRIBUTES ObjectAttributes;
@@ -865,12 +884,10 @@ CmiInitHives(BOOLEAN SetUpBoot)
   ULONG ResultSize;
   PWSTR EndPtr;
 
-  UNICODE_STRING ParentKeyName;
-
 
   DPRINT("CmiInitHives() called\n");
 
-  if (SetUpBoot == TRUE)
+  if (SetupBoot == TRUE)
     {
       RtlInitUnicodeStringFromLiteral(&KeyName,
 				      L"\\Registry\\Machine\\HARDWARE");
@@ -933,34 +950,32 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* FIXME: Save boot log */
 
-  /* Connect the SYSTEM hive */
-  wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
-  DPRINT("ConfigPath: %S\n", ConfigPath);
-
-  RtlInitUnicodeString (&ParentKeyName,
-			REG_SYSTEM_KEY_NAME);
-  Status = CmiInitializeSystemHive(ConfigPath,
-				   &ParentKeyName,
-				   "System",
-				   CmiMachineKey,
-				   SetUpBoot);
-  if (!NT_SUCCESS(Status))
+  /* Connect the SYSTEM hive only if it has been created */
+  if (SetupBoot == TRUE)
     {
-      DPRINT1("CmiInitializeSystemHive() failed (Status %lx)\n", Status);
-      return(Status);
+      wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
+      DPRINT ("ConfigPath: %S\n", ConfigPath);
+
+      RtlInitUnicodeString (&KeyName,
+			    REG_SYSTEM_KEY_NAME);
+      Status = CmiInitializeSystemHive (ConfigPath,
+					&KeyName);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("CmiInitializeSystemHive() failed (Status %lx)\n", Status);
+	  return(Status);
+	}
     }
 
   /* Connect the SOFTWARE hive */
   wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
-  DPRINT("ConfigPath: %S\n", ConfigPath);
+  DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&ParentKeyName,
+  RtlInitUnicodeString (&KeyName,
 			REG_SOFTWARE_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     &ParentKeyName,
-			     "Software",
-			     CmiMachineKey,
-			     SetUpBoot);
+			     &KeyName,
+			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
@@ -969,15 +984,13 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* Connect the SAM hive */
   wcscpy(EndPtr, REG_SAM_FILE_NAME);
-  DPRINT1("ConfigPath: %S\n", ConfigPath);
+  DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&ParentKeyName,
+  RtlInitUnicodeString (&KeyName,
 			REG_SAM_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     &ParentKeyName,
-			     "Sam",
-			     CmiMachineKey,
-			     SetUpBoot);
+			     &KeyName,
+			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
@@ -986,14 +999,13 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* Connect the SECURITY hive */
   wcscpy(EndPtr, REG_SEC_FILE_NAME);
-  DPRINT1("ConfigPath: %S\n", ConfigPath);
-  RtlInitUnicodeString (&ParentKeyName,
+  DPRINT ("ConfigPath: %S\n", ConfigPath);
+
+  RtlInitUnicodeString (&KeyName,
 			REG_SEC_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     &ParentKeyName,
-			     "Security",
-			     CmiMachineKey,
-			     SetUpBoot);
+			     &KeyName,
+			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
@@ -1002,15 +1014,13 @@ CmiInitHives(BOOLEAN SetUpBoot)
 
   /* Connect the DEFAULT hive */
   wcscpy(EndPtr, REG_USER_FILE_NAME);
-  DPRINT1("ConfigPath: %S\n", ConfigPath);
+  DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-  RtlInitUnicodeString (&ParentKeyName,
+  RtlInitUnicodeString (&KeyName,
 			REG_USER_KEY_NAME);
   Status = CmiInitializeHive(ConfigPath,
-			     &ParentKeyName,
-			     ".Default",
-			     CmiUserKey,
-			     SetUpBoot);
+			     &KeyName,
+			     SetupBoot);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
