@@ -34,22 +34,22 @@ reactos/tools/wmc		# Wine Message Compiler
 
 The following shared libraries are a 100% port from Winehq sources.
 
-reactos/lib/cabinet             # Synced to Wine-20040914
-reactos/lib/comctl32            # Synced to Wine-20040914
-reactos/lib/comdlg32		# Synced to Wine-20040914
+reactos/lib/cabinet             # Synced to Wine-20041019
+reactos/lib/comctl32            # Synced to Wine-20041019
+reactos/lib/comdlg32		# Synced to Wine-20041019
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
 reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-20040914
+reactos/lib/mpr                 # Synced to Wine-20041019
 reactos/lib/msacm		# Out of sync
 reactos/lib/msvidoe		# Out of sync
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-20040914
+reactos/lib/ole32               # Synced to Wine-20041019
 reactos/lib/oleaut32		# Out of sync
-reactos/lib/oledlg              # Synced to Wine-20040914
+reactos/lib/oledlg              # Synced to Wine-20041019
 reactos/lib/oldpro32		# Out of sync
-reactos/lib/richedit		# Synced to Wine-20040914
-reactos/lib/rpcrt4		# Synced to Wine-20040914
+reactos/lib/richedit		# Synced to Wine-20041019
+reactos/lib/rpcrt4		# Synced to Wine-20041019
 reactos/lib/setupapi		# Out of sync
 reactos/lib/shell32             # 2004/08/08: Syncing in progress
 reactos/lib/shlwapi             # Synced to Wine-20040914
