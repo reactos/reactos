@@ -17,7 +17,7 @@
 #include <tcp.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = MID_TRACE;
+DWORD DebugTraceLevel = MIN_TRACE;
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
