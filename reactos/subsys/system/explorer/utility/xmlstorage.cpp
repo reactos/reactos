@@ -256,6 +256,14 @@ std::string EncodeXMLString(const XS_String& str)
 			*o++ = '&';	*o++ = 'g'; *o++ = 't';	*o++ = ';';
 			break;
 
+		  case '"':
+			*o++ = '&';	*o++ = 'q'; *o++ = 'u'; *o++ = 'o'; *o++ = 't';	*o++ = ';';
+			break;
+
+		  case '\'':
+			*o++ = '&';	*o++ = 'a'; *o++ = 'p'; *o++ = 'o'; *o++ = 's';	*o++ = ';';
+			break;
+
 		  default:
 			*o++ = *p;
 		}
@@ -275,15 +283,21 @@ XS_String DecodeXMLString(const XS_String& str)
 
 	for(LPCXSSTR p=s; *p; ++p)
 		if (*p == '&') {
-			if (!XS_nicmp(p+1, XS_TEXT("amp;"), 4)) {
-				*o++ = '&';
-				p += 4;
-			} else if (!XS_nicmp(p+1, XS_TEXT("lt;"), 3)) {
+			if (!XS_nicmp(p+1, XS_TEXT("lt;"), 3)) {
 				*o++ = '<';
 				p += 3;
 			} else if (!XS_nicmp(p+1, XS_TEXT("gt;"), 3)) {
 				*o++ = '>';
 				p += 3;
+			} else if (!XS_nicmp(p+1, XS_TEXT("amp;"), 4)) {
+				*o++ = '&';
+				p += 4;
+			} else if (!XS_nicmp(p+1, XS_TEXT("quot;"), 5)) {
+				*o++ = '"';
+				p += 5;
+			} else if (!XS_nicmp(p+1, XS_TEXT("apos;"), 5)) {
+				*o++ = '\'';
+				p += 5;
 			} else
 				*o++ = *p;
 		} else

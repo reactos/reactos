@@ -75,7 +75,6 @@ namespace XMLStorage {
 #ifdef __GNUC__
 #define	XS_STRING_UTF8	// The W32API std::wstring implementation of stdlibc++ is unusable, so use UTF8 encoded strings with std::string instead
 #endif
-	#define	XS_STRING_UTF8//@@
 
 #ifdef XS_STRING_UTF8
 #define	XS_CHAR char
