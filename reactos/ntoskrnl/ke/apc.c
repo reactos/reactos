@@ -373,7 +373,7 @@ KeInsertQueueApc (PKAPC	Apc,
        Apc->NormalRoutine == NULL)
      {
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
-			       STATUS_KERNEL_APC);
+			       STATUS_KERNEL_APC, TRUE);
      }
 
    /*
@@ -390,7 +390,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	   PETHREAD Thread;
 
 	   Thread = CONTAINING_RECORD(TargetThread, ETHREAD, Tcb);
-	   KeRemoveAllWaitsThread(Thread, STATUS_USER_APC);
+	   KeRemoveAllWaitsThread(Thread, STATUS_USER_APC, TRUE);
 	 }
      }
 
@@ -409,7 +409,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	Status = STATUS_USER_APC;
 	TargetThread->Alerted[0] = 1;
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
-			       STATUS_USER_APC);
+			       STATUS_USER_APC, TRUE);
      }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
    return TRUE;

@@ -144,6 +144,14 @@ _Ki386ContextSwitch:
 	 */
 	sti
 	
+	push	$_PiThreadListLock
+	call	_KeReleaseSpinLockFromDpcLevel@4
+	
+	cmpl	$0, _PiNrThreadsAwaitingReaping
+	je	.L3
+	call	_PiWakeupReaperThread@0
+.L3:	
+	
 	/*
 	 * Restore the saved register and exit
 	 */

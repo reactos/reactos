@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.62 2003/07/21 21:53:53 royce Exp $
+/* $Id: kill.c,v 1.63 2003/08/18 11:23:32 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -158,10 +158,11 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    PLIST_ENTRY current_entry;
    PKMUTANT Mutant;
    
-   CurrentThread = PsGetCurrentThread();
 
    DPRINT("terminating %x\n",CurrentThread);
    KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+
+   CurrentThread = PsGetCurrentThread();
    
    CurrentThread->ExitStatus = ExitStatus;
    Thread = KeGetCurrentThread();
@@ -180,15 +181,18 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
 			FALSE);
 	current_entry = Thread->MutantListHead.Flink;
      }
+
+   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
    
    KeAcquireDispatcherDatabaseLock(FALSE);
    CurrentThread->Tcb.DispatcherHeader.SignalState = TRUE;
    KeDispatcherObjectWake(&CurrentThread->Tcb.DispatcherHeader);
-   KeReleaseDispatcherDatabaseLock(FALSE);
+   KeReleaseDispatcherDatabaseLockAtDpcLevel(FALSE);
 
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);   
+   KeRemoveAllWaitsThread (CurrentThread, STATUS_UNSUCCESSFUL, FALSE);
+
    PsDispatchThreadNoLock(THREAD_STATE_TERMINATED_1);
-DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
+   DPRINT1("Unexpected return, CurrentThread %x PsGetCurrentThread() %x\n", CurrentThread, PsGetCurrentThread());
    KEBUGCHECK(0);
 }
 

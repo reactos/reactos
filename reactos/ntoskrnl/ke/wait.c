@@ -188,9 +188,9 @@ KiIsObjectSignalled(DISPATCHER_HEADER * hdr,
    }
 }
 
-VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus)
+VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus, BOOL Unblock)
 {
-   PKWAIT_BLOCK WaitBlock;
+   PKWAIT_BLOCK WaitBlock, PrevWaitBlock;
    BOOLEAN WasWaiting = FALSE;
 
    KeAcquireDispatcherDatabaseLock(FALSE);
@@ -202,12 +202,18 @@ VOID KeRemoveAllWaitsThread(PETHREAD Thread, NTSTATUS WaitStatus)
      }
    while (WaitBlock != NULL)
      {
-	RemoveEntryList(&WaitBlock->WaitListEntry);
+	if (WaitBlock->WaitListEntry.Flink != NULL && WaitBlock->WaitListEntry.Blink != NULL)
+	  { 
+	    RemoveEntryList (&WaitBlock->WaitListEntry);
+            WaitBlock->WaitListEntry.Flink = WaitBlock->WaitListEntry.Blink = NULL;
+	  }
+	PrevWaitBlock = WaitBlock;
 	WaitBlock = WaitBlock->NextWaitBlock;
+	PrevWaitBlock->NextWaitBlock = NULL;
      }
    Thread->Tcb.WaitBlockList = NULL;
 
-   if (WasWaiting)
+   if (WasWaiting && Unblock)
      {
 	PsUnblockThread(Thread, &WaitStatus);
      }
@@ -243,6 +249,7 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
       WaiterHead = CONTAINING_RECORD(EnumEntry, KWAIT_BLOCK, WaitListEntry);
       DPRINT("current_entry %x current %x\n", EnumEntry, WaiterHead);
       EnumEntry = EnumEntry->Flink;
+      assert(WaiterHead->Thread != NULL);
       assert(WaiterHead->Thread->WaitBlockList != NULL);
 
       Abandoned = FALSE;
@@ -252,7 +259,11 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
          DPRINT("WaitAny: Remove all wait blocks.\n");
          for (Waiter = WaiterHead->Thread->WaitBlockList; Waiter; Waiter = Waiter->NextWaitBlock)
          {
-            RemoveEntryList(&Waiter->WaitListEntry);
+            if (Waiter->WaitListEntry.Flink != NULL && Waiter->WaitListEntry.Blink != NULL)
+	      {
+		RemoveEntryList(&Waiter->WaitListEntry);
+		Waiter->WaitListEntry.Flink = Waiter->WaitListEntry.Blink = NULL;
+	      }
          }
 
          WaiterHead->Thread->WaitBlockList = NULL;
@@ -287,8 +298,12 @@ KeDispatcherObjectWakeOneOrAll(DISPATCHER_HEADER * hdr,
          {
             for (Waiter = WaiterHead->Thread->WaitBlockList; Waiter; Waiter = Waiter->NextWaitBlock)
             {
-               RemoveEntryList(&Waiter->WaitListEntry);
-
+               if (Waiter->WaitListEntry.Flink != NULL && Waiter->WaitListEntry.Blink != NULL)
+	       {
+		  RemoveEntryList(&Waiter->WaitListEntry);
+		  Waiter->WaitListEntry.Flink = Waiter->WaitListEntry.Blink = NULL;
+	       }
+         
                if (Waiter->WaitType == WaitAll)
                {
                   Abandoned = KiSideEffectsBeforeWake(Waiter->Object, Waiter->Thread)
@@ -488,7 +503,7 @@ KeWaitForMultipleObjects(ULONG Count,
    {
       KeAcquireDispatcherDatabaseLock(FALSE);
 
- 	  /*
+      /*
        * If we are going to wait alertably and a user apc is pending
        * then return
        */
