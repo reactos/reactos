@@ -264,10 +264,21 @@ StretchBlt(
 				nYOriginSrc,   // y-coordinate of source upper-left corner
 				dwRop  // raster operation code
 				);
+	} else
+	{
+		DPRINT1("FIXME: StretchBlt is in development phase now...\n");
+		return NtGdiStretchBlt(hdcDest,
+					nXOriginDest,
+					nYOriginDest,
+					nWidthDest,
+					nHeightDest,
+					hdcSrc,
+					nXOriginSrc,
+					nYOriginSrc,
+					nWidthSrc,
+					nHeightSrc,
+					dwRop);	
 	}
-	
-	DPRINT1("FIXME: StretchBlt can only Blt, not Stretch!\n");
-	return FALSE;
 }
 
 
