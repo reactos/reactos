@@ -122,7 +122,7 @@ EXT_MODULES =
 endif
 
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
-	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS) VIDEO_DRIVERS
+	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS) VIDEO_DRIVERS USB_DRIVERS
 
 # Regression tests
 REGTESTS = regtests
@@ -577,6 +577,30 @@ VIDEO_DRIVERS_bootcd:
 
 .PHONY: VIDEO_DRIVERS VIDEO_DRIVERS_implib VIDEO_DRIVERS_test\
         VIDEO_DRIVERS_clean VIDEO_DRIVERS_install VIDEO_DRIVERS_bootcd
+
+#
+# USB device driver rules
+#
+USB_DRIVERS: $(IMPLIB)
+	$(MAKE) -C drivers/usb
+
+USB_DRIVERS_implib: dk
+	$(MAKE) --silent -C drivers/usb implib
+
+USB_DRIVERS_test:
+	$(MAKE) -C drivers/usb test
+
+USB_DRIVERS_clean:
+	$(MAKE) -C drivers/usb clean
+
+USB_DRIVERS_install:
+	$(MAKE) -C drivers/usb install
+
+USB_DRIVERS_bootcd:
+	$(MAKE) -C drivers/usb bootcd
+
+.PHONY: USB_DRIVERS USB_DRIVERS_implib USB_DRIVERS_test\
+        USB_DRIVERS_clean USB_DRIVERS_install USB_DRIVERS_bootcd
 
 
 #
