@@ -25,7 +25,8 @@ public:
 	static void SetUsePch ( bool use_pch );
 
 	static std::string PassThruCacheDirectory (
-		const std::string &f, bool out );
+		const std::string &f,
+		Directory* directoryTree );
 
 	static std::string GetTargetFilename (
 		const Module& module,

@@ -100,10 +100,12 @@ MingwModuleHandler::RemoveVariables ( string path)
 
 /*static*/ string
 MingwModuleHandler::PassThruCacheDirectory (
-	const string &file, bool out )
+	const string &file,
+	Directory* directoryTree )
 {
 	string directory ( GetDirectory ( RemoveVariables ( file ) ) );
-	string generatedFilesDirectory = backend->AddDirectoryTarget ( directory, out );
+	string generatedFilesDirectory = backend->AddDirectoryTarget ( directory,
+	                                                               directoryTree );
 	if ( directory.find ( generatedFilesDirectory ) != string::npos )
 		/* This path already includes the generated files directory variable */
 		return file;
@@ -118,7 +120,7 @@ MingwModuleHandler::GetTargetFilename (
 {
 	string target = PassThruCacheDirectory (
 		FixupTargetFilename ( module.GetPath () ),
-		true );
+		backend->outputDirectory );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -134,7 +136,7 @@ MingwModuleHandler::GetImportLibraryFilename (
 {
 	string target = PassThruCacheDirectory (
 		FixupTargetFilename ( module.GetDependencyPath () ),
-		true );
+		backend->outputDirectory );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -228,8 +230,8 @@ MingwModuleHandler::GetActualSourceFilename (
 	if ( extension == ".spec" || extension == ".SPEC" )
 	{
 		string basename = GetBasename ( filename );
-		return PassThruCacheDirectory ( FixupTargetFilename ( basename + ".stubs.c" ),
-		                                false );
+		return PassThruCacheDirectory ( NormalizeFilename ( basename + ".stubs.c" ),
+		                                backend->intermediateDirectory );
 	}
 	else
 		return filename;
@@ -241,8 +243,9 @@ MingwModuleHandler::GetModuleArchiveFilename () const
 	if ( module.type == StaticLibrary )
 		return GetTargetFilename ( module, NULL );
 	return PassThruCacheDirectory ( ReplaceExtension (
-		FixupTargetFilename ( module.GetPath () ),
-		".temp.a" ), false );
+		NormalizeFilename ( module.GetPath () ),
+		".temp.a" ),
+		backend->intermediateDirectory );
 }
 
 bool
@@ -345,10 +348,10 @@ MingwModuleHandler::GetObjectFilename (
 	else
 		newExtension = ".o";
 	string obj_file = PassThruCacheDirectory (
-		FixupTargetFilename ( ReplaceExtension (
+		NormalizeFilename ( ReplaceExtension (
 			RemoveVariables ( sourceFilename ),
 			                  newExtension ) ),
-			false );
+			backend->intermediateDirectory );
 	if ( pclean_files )
 	{
 		string_list& clean_files = *pclean_files;
@@ -825,12 +828,12 @@ MingwModuleHandler::GenerateWinebuildCommands (
 
 	string def_file = PassThruCacheDirectory (
 		basename + ".spec.def",
-		false );
+		backend->intermediateDirectory );
 	CLEAN_FILE(def_file);
 
 	string stub_file = PassThruCacheDirectory (
 		basename + ".stubs.c",
-		false );
+		backend->intermediateDirectory );
 	CLEAN_FILE(stub_file)
 
 	fprintf ( fMakefile,
@@ -925,7 +928,7 @@ MingwModuleHandler::GenerateBuildMapCode ()
 
 	string mapFilename = PassThruCacheDirectory (
 		GetBasename ( module.GetPath () ) + ".map",
-		true );
+		backend->outputDirectory );
 	CLEAN_FILE ( mapFilename );
 	
 	fprintf ( fMakefile,
@@ -1475,7 +1478,8 @@ MingwModuleHandler::GetDefinitionFilename () const
 {
 	string defFilename = module.GetBasePath () + SSEP + module.importLibrary->definition;
 	if ( IsWineModule () )
-		return PassThruCacheDirectory ( defFilename, false );
+		return PassThruCacheDirectory ( NormalizeFilename ( defFilename ),
+		                                backend->intermediateDirectory );
 	else
 		return defFilename;
 }
@@ -1522,9 +1526,13 @@ MingwModuleHandler::GetSpecObjectDependencies (
 	const string& filename ) const
 {
 	string basename = GetBasename ( filename );
-	string defDependency = PassThruCacheDirectory ( FixupTargetFilename ( basename + ".spec.def" ), false );
+	string defDependency = PassThruCacheDirectory (
+		NormalizeFilename ( basename + ".spec.def" ),
+		backend->intermediateDirectory );
 	dependencies.push_back ( defDependency );
-	string stubsDependency = PassThruCacheDirectory ( FixupTargetFilename ( basename + ".stubs.c" ), false );
+	string stubsDependency = PassThruCacheDirectory (
+		NormalizeFilename ( basename + ".stubs.c" ),
+		backend->intermediateDirectory );
 	dependencies.push_back ( stubsDependency );
 }
 
@@ -1533,11 +1541,6 @@ MingwModuleHandler::GetDefinitionDependencies (
 	string_list& dependencies ) const
 {
 	string dkNkmLibNoFixup = "dk/nkm/lib";
-	// TODO FIXME - verify this is the correct dependency...
-	// easiest way to tell is to remove it and see what breaks
-	/*dependencies += PassThruCacheDirectory (
-		FixupTargetFilename ( dkNkmLibNoFixup ),
-		false, NULL );*/
 	const vector<File*>& files = module.non_if_data.files;
 	for ( size_t i = 0; i < files.size (); i++ )
 	{
@@ -2205,8 +2208,8 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 		const CDFile& cdfile = *module.project.cdfiles[i];
 		string targetFilenameNoFixup = bootcdDirectory + SSEP + cdfile.base + SSEP + cdfile.nameoncd;
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
-			FixupTargetFilename ( targetFilenameNoFixup ),
-			true );
+			NormalizeFilename ( targetFilenameNoFixup ),
+			backend->outputDirectory );
 		fprintf ( fMakefile,
 		          "\t$(ECHO_CP)\n" );
 		fprintf ( fMakefile,
@@ -2229,8 +2232,8 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 			if ( directories.size () > 0 )
 				directories += " ";
 			directories += PassThruCacheDirectory (
-				FixupTargetFilename ( targetDirectory ),
-				true );
+				NormalizeFilename ( targetDirectory ),
+				backend->outputDirectory );
 		}
 	}
 	return directories;
@@ -2247,8 +2250,8 @@ MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string& bootcdDirectory
 		if ( directories.size () > 0 )
 			directories += " ";
 		directories += PassThruCacheDirectory (
-			FixupTargetFilename ( targetDirectory ),
-			true );
+			NormalizeFilename ( targetDirectory ),
+			backend->outputDirectory );
 	}
 	return directories;
 }
@@ -2299,8 +2302,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	string isoboot = FixupTargetFilename ( "boot/freeldr/bootsect/isoboot.o" );
 	string bootcdReactosNoFixup = bootcdDirectory + "/reactos";
 	string bootcdReactos = PassThruCacheDirectory (
-		FixupTargetFilename ( bootcdReactosNoFixup ),
-		true );
+		NormalizeFilename ( bootcdReactosNoFixup ),
+		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
 	string reactosInf = ros_temp + FixupTargetFilename ( bootcdReactosNoFixup + "/reactos.inf" );
 	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
@@ -2359,7 +2362,7 @@ MingwTestModuleHandler::Process ()
 void
 MingwTestModuleHandler::GenerateTestModuleTarget ()
 {
-	string targetMacro ( GetTargetMacro (module) );
+	string targetMacro ( GetTargetMacro ( module ) );
 	string workingDirectory = GetWorkingDirectory ( );
 	string objectsMacro = GetObjectsMacro ( module );
 	string linkDepsMacro = GetLinkingDependenciesMacro ();

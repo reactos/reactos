@@ -18,7 +18,6 @@ using std::set;
 using std::map;
 
 typedef set<string> set_string;
-typedef map<string,Directory*> directory_map;
 
 
 string
@@ -42,33 +41,13 @@ v2s ( const string_list& v, int wrap_at )
 }
 
 
-class Directory
-{
-public:
-	string name;
-	directory_map subdirs;
-	Directory ( const string& name );
-	void Add ( const char* subdir );
-	void GenerateTree ( const string& parent,
-	                    bool verbose );
-private:
-	bool mkdir_p ( const char* path );
-	string ReplaceVariable ( string name,
-	                         string value,
-	                         string path );
-	string GetIntermediatePath ();
-	string GetOutputPath ();
-	void ResolveVariablesInPath ( char* buf,
-	                              string path );
-	bool CreateDirectory ( string path );
-};
-
 Directory::Directory ( const string& name_ )
 	: name(name_)
 {
 }
 
-void Directory::Add ( const char* subdir )
+void
+Directory::Add ( const char* subdir )
 {
 	size_t i;
 	string s1 = string ( subdir );
@@ -187,6 +166,7 @@ Directory::GenerateTree ( const string& parent,
 	}
 }
 
+
 static class MingwFactory : public Backend::Factory
 {
 public:
@@ -200,29 +180,23 @@ public:
 
 MingwBackend::MingwBackend ( Project& project, bool verbose )
 	: Backend ( project, verbose ),
-	  int_directories ( new Directory("$(INTERMEDIATE)") ),
-	  out_directories ( new Directory("$(OUTPUT)") )
+	  intermediateDirectory ( new Directory ("$(INTERMEDIATE)" ) ),
+	  outputDirectory ( new Directory ( "$(OUTPUT)" ) )
 {
 }
 
 MingwBackend::~MingwBackend()
 {
-	delete int_directories;
-	delete out_directories;
+	delete intermediateDirectory;
+	delete outputDirectory;
 }
 
 string
-MingwBackend::AddDirectoryTarget ( const string& directory, bool out )
+MingwBackend::AddDirectoryTarget ( const string& directory,
+	                               Directory* directoryTree )
 {
-	const char* dir_name = "$(INTERMEDIATE)";
-	Directory* dir = int_directories;
-	if ( out )
-	{
-		dir_name = "$(OUTPUT)";
-		dir = out_directories;
-	}
-	dir->Add ( directory.c_str() );
-	return dir_name;
+	directoryTree->Add ( directory.c_str() );
+	return directoryTree->name;
 }
 
 void
@@ -538,8 +512,8 @@ void
 MingwBackend::GenerateDirectories ()
 {
 	printf ( "Creating directories..." );
-	int_directories->GenerateTree ( "", verbose );
-	out_directories->GenerateTree ( "", verbose );
+	intermediateDirectory->GenerateTree ( "", verbose );
+	outputDirectory->GenerateTree ( "", verbose );
 	printf ( "done\n" );
 }
 
@@ -625,7 +599,7 @@ MingwBackend::GetNonModuleInstallTargetFiles (
 		string targetFilenameNoFixup = installDirectory + SSEP + installfile.base + SSEP + installfile.newname;
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 			NormalizeFilename ( targetFilenameNoFixup ),
-			true );
+			outputDirectory );
 		out.push_back ( targetFilename );
 	}
 }
@@ -643,7 +617,7 @@ MingwBackend::GetModuleInstallTargetFiles (
 			string targetFilenameNoFixup = installDirectory + SSEP + module.installBase + SSEP + module.installName;
 			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( targetFilenameNoFixup ),
-				true );
+				outputDirectory );
 			out.push_back ( targetFilename );
 		}
 	}
@@ -668,10 +642,10 @@ MingwBackend::OutputInstallTarget ( const string& installDirectory,
 {
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( installDirectory + SSEP + targetDirectory + SSEP + targetFilename ),
-		true );
+		outputDirectory );
 	string normalizedTargetDirectory = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( installDirectory + SSEP + targetDirectory ),
-		true );
+		outputDirectory );
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          normalizedTargetFilename.c_str (),
@@ -708,7 +682,7 @@ MingwBackend::OutputModuleInstallTargets ( const string& installDirectory )
 		{
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( module.GetPath () ),
-				true );
+				outputDirectory );
 			OutputInstallTarget ( installDirectory,
 		                          sourceFilename,
 		                          module.installName,
@@ -732,7 +706,7 @@ MingwBackend::GetRegistryTargetFiles ( const string& installDirectory )
 {
 	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
-		true );
+		outputDirectory );
 	return system32ConfigDirectory + SSEP "default " +
 		system32ConfigDirectory + SSEP "sam " +
 		system32ConfigDirectory + SSEP "security " +
@@ -745,7 +719,7 @@ MingwBackend::OutputRegistryInstallTarget ( const string& installDirectory )
 {
 	string system32ConfigDirectory = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( installDirectory + SSEP + "system32" + SSEP "config" ),
-		true );
+		outputDirectory );
 
 	string registrySourceFiles = GetRegistrySourceFiles ();
 	string registryTargetFiles = GetRegistryTargetFiles ( installDirectory );
@@ -772,7 +746,7 @@ MingwBackend::GenerateInstallTarget ()
 	string installDirectoryNoFixup = "reactos";
 	string installDirectory = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( installDirectoryNoFixup ),
-		true );
+		outputDirectory );
 	vector<string> vInstallTargetFiles;
 	GetInstallTargetFiles ( installDirectoryNoFixup,
 	                        vInstallTargetFiles );

@@ -15,14 +15,41 @@ class MingwModuleHandler;
 extern std::string
 v2s ( const string_list& v, int wrap_at );
 
+typedef std::map<std::string,Directory*> directory_map;
+
+class Directory
+{
+public:
+	std::string name;
+	directory_map subdirs;
+	Directory ( const std::string& name );
+	void Add ( const char* subdir );
+	void GenerateTree ( const std::string& parent,
+	                    bool verbose );
+private:
+	bool mkdir_p ( const char* path );
+	std::string ReplaceVariable ( std::string name,
+	                              std::string value,
+	                              std::string path );
+	std::string GetIntermediatePath ();
+	std::string GetOutputPath ();
+	void ResolveVariablesInPath ( char* buf,
+	                              std::string path );
+	bool CreateDirectory ( std::string path );
+};
+
+
 class MingwBackend : public Backend
 {
 public:
 	MingwBackend ( Project& project, bool verbose );
 	virtual ~MingwBackend ();
 	virtual void Process ();
-	std::string AddDirectoryTarget ( const std::string& directory, bool out );
+	std::string AddDirectoryTarget ( const std::string& directory,
+	                                 Directory* directoryTree );
 	bool usePipe;
+	Directory* intermediateDirectory;
+	Directory* outputDirectory;
 private:
 	void CreateMakefile ();
 	void CloseMakefile () const;
@@ -66,7 +93,6 @@ private:
 	void GenerateInstallTarget ();
 	FILE* fMakefile;
 	bool use_pch;
-	Directory *int_directories, *out_directories;
 };
 
 std::string FixupTargetFilename ( const std::string& targetFilename );
