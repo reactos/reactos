@@ -44,6 +44,7 @@ KIRQL KeGetCurrentIrql(VOID);
 ULONG KeGetCurrentProcessorNumber(VOID);
 ULONG KeGetDcacheFillSize(VOID);
 PKTHREAD KeGetCurrentThread(VOID);
+ULONG KeGetPreviousMode(VOID);
 VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord);
 VOID KeInitializeDeviceQueue(PKDEVICE_QUEUE DeviceQueue);
 VOID KeInitializeDpc(PKDPC Dpc, PKDEFERRED_ROUTINE DeferredRoutine,

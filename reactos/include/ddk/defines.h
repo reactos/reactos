@@ -207,6 +207,8 @@ enum
    IRP_MN_POWER_SEQUENCE,
 };
 
+
+/* Values returned by KeGetPreviousMode() */
 #define KernelMode (0)
 #define UserMode   (1)
 

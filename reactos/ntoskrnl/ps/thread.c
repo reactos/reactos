@@ -50,7 +50,7 @@ static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
 
-static PETHREAD CurrentThread = NULL;
+PETHREAD CurrentThread = NULL;
 
 static ULONG PiNextThreadUniqueId = 0;
 

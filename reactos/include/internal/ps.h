@@ -6,8 +6,10 @@
 extern PEPROCESS SystemProcess;
 extern HANDLE SystemProcessHandle;
 
-extern POBJECT_TYPE PsThreadType;
-extern POBJECT_TYPE PsProcessType;
+/* ntoskrnl/ps/thread.c */
+extern POBJECT_TYPE	PsThreadType;
+extern POBJECT_TYPE	PsProcessType;
+extern PETHREAD		CurrentThread;
 
 void PsInitThreadManagment(void);
 VOID PsInitProcessManagment(VOID);
