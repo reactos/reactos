@@ -40,6 +40,16 @@ REGEDIT4
 [\Registry\Machine\SYSTEM\CurrentControlSet\Control\ServiceGroupOrder]
 "List"="SCSI Port;SCSI Miniport;Primary Disk;SCSI Class Helper;SCSI Class;Boot File System;Base;Pointer Port;Keyboard Port;Pointer Class;Keyboard Class;Video;File System"
 
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager]
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Control\Session Manager\DOS Devices]
+"AUX"="\DosDevices\COM1"
+"MAILSLOT"="\Device\MailSlot"
+"NUL"="\Device\Null"
+"PIPE"="\Device\NamedPipe"
+"PRN"="\DosDevices\LPT1"
+"UNC"="\Device\Mup"
+
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services]
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Atapi]
@@ -52,6 +62,18 @@ REGEDIT4
 "ImagePath"="system32\drivers\beep.sys"
 "Group"="Base"
 "Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdfs]
+"ImagePath"="system32\drivers\cdfs.sys"
+"Group"="File System"
+"Start"=dword:00000004
+"Type"=dword:00000002
+
+[\Registry\Machine\SYSTEM\CurrentControlSet\Services\Cdrom]
+"ImagePath"="system32\drivers\cdrom.sys"
+"Group"="SCSI Class"
+"Start"=dword:00000004
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\CurrentControlSet\Services\Class2]
@@ -107,5 +129,3 @@ REGEDIT4
 "Group"="Boot File System"
 "Start"=dword:00000000
 "Type"=dword:00000002
-
-

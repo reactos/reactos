@@ -58,7 +58,7 @@ NET_DEVICE_DRIVERS = ne2000
 #
 # storage drivers (don't change the order)
 #
-STORAGE_DRIVERS = class2 scsiport atapi disk
+STORAGE_DRIVERS = class2 scsiport atapi disk cdrom
 
 #
 # system applications (required for startup)
@@ -70,8 +70,8 @@ SYS_APPS = services shell winlogon
 APPS = args hello test cat bench apc shm lpc thread event file gditest \
        pteb consume dump_shared_data vmtest regtest alive mstest nptest \
        objdir atomtest winhello partinfo mutex stats
-  
 
+  
 #lzexpand mapi32 (missing imports)
 #dsound (missing winmm.dll)
 WINE_DLLS = rpcrt4 ole32 oleaut32 oledlg olepro32 olecli olesvr \
