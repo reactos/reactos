@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.83 2004/11/14 18:47:09 hbirr Exp $
+/* $Id: console.c,v 1.84 2004/12/17 00:44:46 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1290,7 +1290,7 @@ IntReadConsole(HANDLE hConsoleInput,
     *lpNumberOfCharsRead = CharsRead;
   }
   
-  return (nNumberOfCharsToRead == 0);
+  return TRUE;
 }
 
 
