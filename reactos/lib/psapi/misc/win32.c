@@ -1365,4 +1365,31 @@ GetProcessMemoryInfo(HANDLE Process,
   return Ret;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+QueryWorkingSet(HANDLE hProcess,
+                PVOID pv,
+                DWORD cb)
+{
+  NTSTATUS Status;
+
+  Status = NtQueryVirtualMemory(hProcess,
+                                NULL,
+                                MemoryWorkingSetList,
+                                pv,
+                                cb,
+                                NULL);
+  if(!NT_SUCCESS(Status))
+  {
+    SetLastErrorByStatus(Status);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 /* EOF */

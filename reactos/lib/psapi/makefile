@@ -22,7 +22,6 @@ TARGET_PCH = precomp.h
 TARGET_OBJECTS = \
 	misc/dllmain.o \
 	misc/malloc.o \
-	misc/stubs.o \
 	misc/win32.o
 	
 DEP_OBJECTS = $(TARGET_OBJECTS)
