@@ -51,7 +51,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
   NTSTATUS Status = STATUS_SUCCESS;
   
   /* at least one output parameter must be != NULL! */
-  ASSERT((ULONG_PTR)CapturedObjectAttributes ^ (ULONG_PTR)ObjectName != 0);
+  ASSERT(((ULONG_PTR)CapturedObjectAttributes ^ (ULONG_PTR)ObjectName) != 0);
   
   if(ObjectAttributes == NULL)
   {
