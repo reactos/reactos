@@ -61,6 +61,18 @@ Module::ProcessXML ( const XMLElement& e,
 		assert(att);
 		subpath = path + CSEP + att->value;
 	}
+	else if ( e.name == "include" )
+	{
+		Include* include = new Include ( project, this, e );
+		includes.push_back ( include );
+		include->ProcessXML ( e );
+	}
+	else if ( e.name == "define" )
+	{
+		Define* define = new Define ( project, this, e );
+		defines.push_back ( define );
+		define->ProcessXML ( e );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );
 }

@@ -23,6 +23,8 @@
 
 class Project;
 class Module;
+class Include;
+class Define;
 class File;
 class Library;
 
@@ -32,7 +34,9 @@ public:
 	std::string name;
 	std::string makefile;
 	std::vector<Module*> modules;
-
+	std::vector<Include*> includes;
+	std::vector<Define*> defines;
+	
 	Project ();
 	Project ( const std::string& filename );
 	~Project ();
@@ -53,6 +57,7 @@ enum ModuleType
 	KernelModeDLL
 };
 
+
 class Module
 {
 public:
@@ -63,15 +68,58 @@ public:
 	ModuleType type;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
+	std::vector<Include*> includes;
+	std::vector<Define*> defines;
 
 	Module ( Project* project,
 	         const XMLElement& moduleNode,
 	         const std::string& moduleName,
 	         const std::string& modulePath );
-	~Module();
+	~Module ();
 	ModuleType GetModuleType (const XMLAttribute& attribute );
 	std::string GetPath ();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
+};
+
+
+class Include
+{
+public:
+	Project* project;
+	Module* module;
+	const XMLElement& node;
+	std::string directory;
+
+	Include ( Project* project,
+	          const XMLElement& includeNode );
+	Include ( Project* project,
+	          Module* module,
+	          const XMLElement& includeNode );
+	~Include ();
+	void ProcessXML ( const XMLElement& e );
+private:
+	void Initialize ( const XMLElement& includeNode );
+};
+
+
+class Define
+{
+public:
+	Project* project;
+	Module* module;
+	const XMLElement& node;
+	std::string name;
+	std::string value;
+
+	Define ( Project* project,
+	         const XMLElement& defineNode );
+	Define ( Project* project,
+	         Module* module,
+	         const XMLElement& defineNode );
+	~Define();
+	void ProcessXML ( const XMLElement& e );
+private:
+	void Initialize ( const XMLElement& defineNode );
 };
 
 

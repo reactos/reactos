@@ -72,6 +72,18 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 		assert(att);
 		subpath = path + CSEP + att->value;
 	}
+	else if ( e.name == "include" )
+	{
+		Include* include = new Include ( this, e );
+		includes.push_back ( include );
+		include->ProcessXML ( e );
+	}
+	else if ( e.name == "define" )
+	{
+		Define* define = new Define ( this, e );
+		defines.push_back ( define );
+		define->ProcessXML ( e );
+	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );
 }

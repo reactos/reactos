@@ -7,6 +7,7 @@
 #include "modulehandler.h"
 
 using std::string;
+using std::vector;
 
 MingwModuleHandler::MingwModuleHandler ( FILE* fMakefile )
 	: fMakefile ( fMakefile )
@@ -93,6 +94,80 @@ MingwModuleHandler::GetObjectFilenames ( Module& module )
 	return objectFilenames;
 }
 
+string
+MingwModuleHandler::GenerateGccDefineParametersFromVector ( vector<Define*> defines )
+{
+	string parameters;
+	for (size_t i = 0; i < defines.size (); i++)
+	{
+		Define& define = *defines[i];
+		if (parameters.length () > 0)
+			parameters += " ";
+		parameters += "-D";
+		parameters += define.name;
+		if (define.value.length () > 0)
+		{
+			parameters += "=";
+			parameters += define.value;
+		}
+	}
+	return parameters;
+}
+
+string
+MingwModuleHandler::GenerateGccDefineParameters ( Module& module )
+{
+	string parameters = GenerateGccDefineParametersFromVector ( module.project->defines );
+	string s = GenerateGccDefineParametersFromVector ( module.defines );
+	if (s.length () > 0)
+	{
+		parameters += " ";
+		parameters += s;
+	}
+	return parameters;
+}
+
+string
+MingwModuleHandler::GenerateGccIncludeParametersFromVector ( vector<Include*> includes )
+{
+	string parameters;
+	for (size_t i = 0; i < includes.size (); i++)
+	{
+		Include& include = *includes[i];
+		if (parameters.length () > 0)
+			parameters += " ";
+		parameters += "-I";
+		parameters += include.directory;
+	}
+	return parameters;
+}
+
+string
+MingwModuleHandler::GenerateGccIncludeParameters ( Module& module )
+{
+	string parameters = GenerateGccIncludeParametersFromVector ( module.project->includes );
+	string s = GenerateGccIncludeParametersFromVector ( module.includes );
+	if (s.length () > 0)
+	{
+		parameters += " ";
+		parameters += s;
+	}
+	return parameters;
+}
+
+string
+MingwModuleHandler::GenerateGccParameters ( Module& module )
+{
+	string parameters = GenerateGccDefineParameters ( module );
+	string s = GenerateGccIncludeParameters ( module );
+	if (s.length () > 0)
+	{
+		parameters += " ";
+		parameters += s;
+	}
+	return parameters;
+}
+
 void
 MingwModuleHandler::GenerateObjectFileTargets ( Module& module )
 {
@@ -108,9 +183,10 @@ MingwModuleHandler::GenerateObjectFileTargets ( Module& module )
 		          objectFilename.c_str (),
 		          sourceFilename.c_str() );
 		fprintf ( fMakefile,
-		          "\t${gcc} -c %s -o %s\n",
+		          "\t${gcc} -c %s -o %s %s\n",
 		          sourceFilename.c_str (),
-		          objectFilename.c_str () );
+		          objectFilename.c_str (),
+		          GenerateGccParameters ( module ).c_str () );
 	}
 	
 	fprintf ( fMakefile, "\n" );

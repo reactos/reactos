@@ -147,6 +147,8 @@ private:
 	{
 		tests.push_back(new ProjectTest());
 		tests.push_back(new ModuleTest());
+		tests.push_back(new DefineTest());
+		tests.push_back(new IncludeTest());
 	}
 };
 

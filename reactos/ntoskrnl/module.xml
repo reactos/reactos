@@ -1,4 +1,9 @@
 <module name="ntoskrnl" type="kernelmodedll">
+	<define name="_SEH_NO_NATIVE_NLG"></define>
+	<define name="_DISABLE_TIDENTS"></define>
+	<define name="__NTOSKRNL__"></define>
+	<define name="__3GB__"></define>
+	<include>.</include>
 	<include>./include</include>
 	<include>../lib/kjs/include</include>
 	<library>kjs</library>
@@ -7,7 +12,6 @@
 		<file>copy.c</file>
 		<file>fs.c</file>
 		<file>mdl.c</file>
-		<file>misc.c</file>
 		<file>pin.c</file>
 		<file>view.c</file>
 	</directory>
@@ -35,8 +39,8 @@
 				<file>kdb.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
-				<file>profile.c</file>
 				<file>rdebug.c</file>
+				<file>profile.c</file>
 			</group>
 		</if>
 		<or>
@@ -53,10 +57,10 @@
 				</group>
 			</if>
 		</or>
-		<file>user.c</file>
 		<file>dbgctrl.c</file>
 		<file>errinfo.c</file>
 		<file>print.c</file>
+		<file>user.c</file>
 	</directory>
 	<directory name="ex">
 		<if property="arch" value="i386">
@@ -100,10 +104,6 @@
 		<file>util.c</file>
 	</directory>
 	<directory name="inbv">
-		<if property="arch" value="i386">
-			<directory name="i386">
-			</directory>
-		</if>
 		<file>inbv.c</file>
 	</directory>
 	<directory name="io">
@@ -177,8 +177,7 @@
 				<file>i386-mcount.S</file>
 				<file>idt.c</file>
 				<file>irq.c</file>
-				<file>irqhand.S</file>
-				<file>kernel.c</file>
+				<file>irqhand.s</file>
 				<file>kernel.c</file>
 				<file>ldt.c</file>
 				<file>multiboot.S</file>
@@ -251,6 +250,9 @@
 		<file>balance.c</file>
 		<file>cont.c</file>
 		<file>drvlck.c</file>
+		<file>elf32.c</file>
+		<file>elf64.c</file>
+		<file>elf.c</file>
 		<file>freelist.c</file>
 		<file>iospace.c</file>
 		<file>kmap.c</file>
@@ -266,6 +268,7 @@
 		<file>pager.c</file>
 		<file>pagfault.c</file>
 		<file>paging.c</file>
+		<file>pe.c</file>
 		<file>physical.c</file>
 		<file>pool.c</file>
 		<file>ppool.c</file>

@@ -14,7 +14,9 @@ BACKEND_BASE_OBJECTS = \
 
 BASE_OBJECTS = \
 	$(BACKEND_BASE_OBJECTS) \
+	define.o \
 	exception.o \
+	include.o \
 	module.o \
 	project.o \
 	ssprintf.o \
@@ -23,6 +25,8 @@ BASE_OBJECTS = \
 OBJECTS = $(BASE_OBJECTS) rbuild.o
 
 TESTS = \
+	tests/definetest.o \
+	tests/includetest.o \
 	tests/moduletest.o \
 	tests/projecttest.o
 

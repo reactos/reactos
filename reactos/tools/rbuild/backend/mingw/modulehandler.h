@@ -21,6 +21,12 @@ protected:
 	void GenerateObjectFileTargets ( Module& module );
 	void GenerateArchiveTarget ( Module& module );
 	FILE* fMakefile;
+private:
+	std::string GenerateGccDefineParametersFromVector ( std::vector<Define*> defines );
+	std::string GenerateGccDefineParameters ( Module& module );
+	std::string GenerateGccIncludeParametersFromVector ( std::vector<Include*> includes );
+	std::string GenerateGccIncludeParameters ( Module& module );
+	std::string GenerateGccParameters ( Module& module );
 };
 
 

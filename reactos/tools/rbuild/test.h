@@ -52,4 +52,18 @@ public:
 	void Run();
 };
 
+
+class DefineTest : public BaseTest
+{
+public:
+	void Run();
+};
+
+
+class IncludeTest : public BaseTest
+{
+public:
+	void Run();
+};
+
 #endif /* __TEST_H */
