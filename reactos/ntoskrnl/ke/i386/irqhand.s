@@ -3,15 +3,18 @@
 
 .global _irq_handler_0
 _irq_handler_0:
+	cld
 	pusha
-        pushl	%ds
+	pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
         pushl	%esp
@@ -20,6 +23,7 @@ _irq_handler_0:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -28,15 +32,18 @@ _irq_handler_0:
 
 .global _irq_handler_1
 _irq_handler_1: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -45,6 +52,7 @@ _irq_handler_1:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -53,15 +61,18 @@ _irq_handler_1:
 	
 .global _irq_handler_2
 _irq_handler_2: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -70,6 +81,7 @@ _irq_handler_2:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -78,15 +90,18 @@ _irq_handler_2:
 	
 .global _irq_handler_3
 _irq_handler_3: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -95,6 +110,7 @@ _irq_handler_3:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -103,15 +119,18 @@ _irq_handler_3:
 	
 .global _irq_handler_4
 _irq_handler_4: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -120,6 +139,7 @@ _irq_handler_4:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -128,15 +148,18 @@ _irq_handler_4:
 	
 .global _irq_handler_5
 _irq_handler_5: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -145,6 +168,7 @@ _irq_handler_5:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -153,15 +177,18 @@ _irq_handler_5:
 	
 .global _irq_handler_6
 _irq_handler_6: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl   %gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -170,6 +197,7 @@ _irq_handler_6:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -178,15 +206,18 @@ _irq_handler_6:
 	
 .global _irq_handler_7
 _irq_handler_7: 
+	cld
 	pusha
         pushl	%ds
         pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -195,6 +226,7 @@ _irq_handler_7:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -203,15 +235,18 @@ _irq_handler_7:
 		
 .global _irq_handler_8
 _irq_handler_8:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -220,6 +255,7 @@ _irq_handler_8:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -228,15 +264,18 @@ _irq_handler_8:
 
 .global _irq_handler_9
 _irq_handler_9:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -245,6 +284,7 @@ _irq_handler_9:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -253,15 +293,18 @@ _irq_handler_9:
 	
 .global _irq_handler_10
 _irq_handler_10:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -270,6 +313,7 @@ _irq_handler_10:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -278,15 +322,18 @@ _irq_handler_10:
 	
 .global _irq_handler_11
 _irq_handler_11:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -295,6 +342,7 @@ _irq_handler_11:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -303,15 +351,18 @@ _irq_handler_11:
 	
 .global _irq_handler_12
 _irq_handler_12:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -320,6 +371,7 @@ _irq_handler_12:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -328,15 +380,18 @@ _irq_handler_12:
 	
 .global _irq_handler_13
 _irq_handler_13:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -345,6 +400,7 @@ _irq_handler_13:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -353,15 +409,18 @@ _irq_handler_13:
 	
 .global _irq_handler_14
 _irq_handler_14:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -370,6 +429,7 @@ _irq_handler_14:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds
@@ -378,15 +438,18 @@ _irq_handler_14:
 	
 .global _irq_handler_15
 _irq_handler_15:
+	cld
         pusha
 	pushl	%ds
 	pushl	%es
         pushl	%fs
+        pushl	%gs
         movl	$0xceafbeef,%eax
         pushl	%eax
         movw	$KERNEL_DS,%ax
         movw	%ax,%ds
         movw	%ax,%es
+        movw	%ax,%gs
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs	
         pushl	%esp
@@ -395,6 +458,7 @@ _irq_handler_15:
         popl	%eax
         popl	%eax
         popl	%eax
+        popl	%gs
         popl	%fs
         popl	%es
         popl	%ds

@@ -138,6 +138,7 @@ typedef struct _KTRAP_FRAME
 typedef struct _KIRQ_TRAPFRAME
 {
    ULONG Magic;
+   ULONG Gs;
    ULONG Fs;
    ULONG Es;
    ULONG Ds;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.49 2004/10/30 23:48:56 navaraf Exp $
+/* $Id: irq.c,v 1.50 2004/10/31 12:49:37 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -82,6 +82,7 @@ __asm__( \
   "movl	$" STR(KERNEL_DS) ",%eax\n\t" \
   "movl	%eax,%ds\n\t" \
   "movl	%eax,%es\n\t" \
+  "movl %eax,%gs\n\t" \
   "movl	$" STR(PCR_SELECTOR) ",%eax\n\t" \
   "movl	%eax,%fs\n\t" \
   "pushl %esp\n\t" \
@@ -250,6 +251,7 @@ VOID
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
   PKTRAP_FRAME TrapFrame)
 {
+   TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
    TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
    TrapFrame->Es     = (USHORT)IrqTrapFrame->Es;
    TrapFrame->Ds     = (USHORT)IrqTrapFrame->Ds;
@@ -270,6 +272,7 @@ VOID
 KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
   PKIRQ_TRAPFRAME IrqTrapFrame)
 {
+   IrqTrapFrame->Gs     = TrapFrame->Gs;
    IrqTrapFrame->Fs     = TrapFrame->Fs;
    IrqTrapFrame->Es     = TrapFrame->Es;
    IrqTrapFrame->Ds     = TrapFrame->Ds;
