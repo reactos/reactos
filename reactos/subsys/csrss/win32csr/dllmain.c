@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.3 2004/01/11 17:31:16 gvg Exp $
+/* $Id: dllmain.c,v 1.4 2004/01/19 20:14:28 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,7 @@ extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
 /* GLOBALS *******************************************************************/
 
 HANDLE Win32CsrApiHeap;
+HINSTANCE Win32CsrDllHandle;
 static CSRSS_EXPORTED_FUNCS CsrExports;
 
 static CSRSS_API_DEFINITION Win32CsrApiDefinitions[] =
@@ -77,6 +78,11 @@ DllMain(HANDLE hDll,
 	DWORD dwReason,
 	LPVOID lpReserved)
 {
+  if (DLL_PROCESS_ATTACH == dwReason)
+    {
+      Win32CsrDllHandle = hDll;
+    }
+
   return TRUE;
 }
 

@@ -1,4 +1,4 @@
-/* $Id: guiconsole.c,v 1.7 2004/01/11 17:31:16 gvg Exp $
+/* $Id: guiconsole.c,v 1.8 2004/01/19 20:14:28 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -682,7 +682,7 @@ GuiInit(VOID)
 {
   HDESK Desktop;
   NTSTATUS Status;
-  WNDCLASSW wc;
+  WNDCLASSEXW wc;
 
   Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
@@ -705,6 +705,7 @@ GuiInit(VOID)
       return FALSE;
     }
 
+  wc.cbSize = sizeof(WNDCLASSEXW);
   wc.lpszClassName = L"Win32CsrCreateNotify";
   wc.lpfnWndProc = GuiConsoleNotifyWndProc;
   wc.style = 0;
@@ -715,23 +716,28 @@ GuiInit(VOID)
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
-  if (RegisterClassW(&wc) == 0)
+  wc.hIconSm = NULL;
+  if (RegisterClassExW(&wc) == 0)
     {
       DPRINT1("Failed to register notify wndproc\n");
       return FALSE;
     }
 
+  wc.cbSize = sizeof(WNDCLASSEXW);
   wc.lpszClassName = L"Win32CsrConsole";
   wc.lpfnWndProc = GuiConsoleWndProc;
   wc.style = 0;
   wc.hInstance = (HINSTANCE) GetModuleHandleW(NULL);
-  wc.hIcon = LoadIconW(NULL, (LPCWSTR) IDI_APPLICATION);
-  wc.hCursor = LoadCursorW(NULL, (LPCWSTR) IDC_ARROW);
+  wc.hIcon = LoadIconW(Win32CsrDllHandle, MAKEINTRESOURCEW(1));
+  wc.hCursor = LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_ARROW));
   wc.hbrBackground = NULL;
   wc.lpszMenuName = NULL;
   wc.cbClsExtra = 0;
   wc.cbWndExtra = 0;
-  if (RegisterClassW(&wc) == 0)
+  wc.hIconSm = LoadImageW(Win32CsrDllHandle, MAKEINTRESOURCEW(1), IMAGE_ICON,
+                          GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON),
+                          LR_SHARED);
+  if (RegisterClassExW(&wc) == 0)
     {
       DPRINT1("Failed to register console wndproc\n");
       return FALSE;
