@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.49 2004/10/12 00:56:46 ion Exp $
+/* $Id: catch.c,v 1.50 2004/11/08 00:36:41 blight Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -86,7 +86,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	}
     }
 #endif /* KDBG */
-  if (Action != kdHandleException)
+  if (Action != kdDoNotHandleException)
     {
       if (PreviousMode == UserMode)
 	{
