@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.86 2004/10/31 15:24:06 hbirr Exp $
+/* $Id: timer.c,v 1.87 2004/10/31 21:22:06 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -698,19 +698,13 @@ KeUpdateRunTime(
 
    Pcr = KeGetCurrentKPCR();
 
-   /*
-    * Make sure no counting can take place until Processes and Threads are
-    * running!
-    */
-   if ((PsInitialSystemProcess == NULL) || (Pcr->PrcbData.IdleThread == NULL) || 
-        (KiTimerSystemAuditing == 0))
-     {
-       return;
-     }
+   /* Make sure we don't go further if we're in early boot phase. */
+   if (Pcr == NULL || Pcr->PrcbData.CurrentThread == NULL)
+      return;
 
    DPRINT("KernelTime  %u, UserTime %u \n", Pcr->PrcbData.KernelTime, Pcr->PrcbData.UserTime);
 
-   CurrentThread = /* Pcr->PcrbData.CurrentThread */ KeGetCurrentThread();
+   CurrentThread = Pcr->PrcbData.CurrentThread;
    CurrentProcess = CurrentThread->ApcState.Process;
 
    /* 

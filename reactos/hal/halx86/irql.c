@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.17 2004/10/23 23:43:23 ion Exp $
+/* $Id: irql.c,v 1.18 2004/10/31 21:22:06 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -176,7 +176,11 @@ HalpLowerIrql(KIRQL NewIrql)
       return;
     }
   KeGetCurrentKPCR()->Irql = DISPATCH_LEVEL;
-  KiDispatchInterrupt();
+  if (DpcRequested)
+    {
+      DpcRequested = FALSE;
+      KiDispatchInterrupt();
+    }
   KeGetCurrentKPCR()->Irql = APC_LEVEL;
   if (NewIrql == APC_LEVEL)
     {

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.147 2004/10/30 23:48:57 navaraf Exp $
+/* $Id: process.c,v 1.148 2004/10/31 21:22:06 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -293,6 +293,7 @@ PsInitProcessManagment(VOID)
    PsInitialSystemProcess->Pcb.LdtDescriptor[0] = 0;
    PsInitialSystemProcess->Pcb.LdtDescriptor[1] = 0;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
+   PsInitialSystemProcess->Pcb.ThreadQuantum = 6;
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,

@@ -370,6 +370,7 @@ KeInsertQueueApc (PKAPC	Apc,
    if (Apc->ApcMode == KernelMode && TargetThread == KeGetCurrentThread() && 
        Apc->NormalRoutine == NULL)
      {
+       HalRequestSoftwareInterrupt(APC_LEVEL);
        KeLowerIrql(oldlvl);
        return TRUE;
      }
@@ -424,6 +425,7 @@ KeInsertQueueApc (PKAPC	Apc,
 	KeRemoveAllWaitsThread(CONTAINING_RECORD(TargetThread, ETHREAD, Tcb),
 			       STATUS_USER_APC, TRUE);
      }
+   HalRequestSoftwareInterrupt(APC_LEVEL);
    KeLowerIrql(oldlvl);
    return TRUE;
 }
