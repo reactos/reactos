@@ -86,4 +86,4 @@ clean:
 	- $(RM) $(TARGET).sym
 	- $(RM) $(TARGET).coff
 
-include ../rules.mak
+include $(PATH_TO_TOP)/rules.mak

@@ -31,8 +31,8 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDI_REGEDT32            ICON    DISCARDABLE     "regedt32.ICO"
-IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+IDI_REGEDT32            ICON    DISCARDABLE     "res/regedt32.ico"
+IDI_SMALL               ICON    DISCARDABLE     "res/small.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

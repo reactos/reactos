@@ -23,8 +23,15 @@
 #ifndef __ABOUT_H__
 #define __ABOUT_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void ShowAboutBox(HWND hWnd);
 
+
+#ifdef __cplusplus
+};
+#endif
 
 #endif // __ABOUT_H__
