@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c,v 1.6 2004/06/18 17:20:49 navaraf Exp $
+ * $Id: int10.c,v 1.7 2004/07/19 17:55:33 weiden Exp $
  */
 
 #include "videoprt.h"
@@ -63,10 +63,10 @@ IntInt10AllocateBuffer(
    }
 
    *Seg = (ULONG)MemoryAddress >> 4;
-   *Off = (ULONG)MemoryAddress & 0xFF;
+   *Off = (ULONG)MemoryAddress & 0xF;
 
    DPRINT("- Segment: %x\n", (ULONG)MemoryAddress >> 4);
-   DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xFF);
+   DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
    DPRINT("- Length: %x\n", *Length);
 
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
@@ -80,7 +80,7 @@ IntInt10FreeBuffer(
    IN USHORT Seg,
    IN USHORT Off)
 {
-   PVOID MemoryAddress = (PVOID)((Seg << 4) + Off);
+   PVOID MemoryAddress = (PVOID)((Seg << 4) | Off);
    NTSTATUS Status;
    PEPROCESS CallingProcess; 
    PEPROCESS PrevAttachedProcess; 
@@ -115,7 +115,7 @@ IntInt10ReadMemory(
    DPRINT("- Length: %x\n", Length);
 
    IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
-   RtlCopyMemory(Buffer, (PVOID)((Seg << 4) + Off), Length);
+   RtlCopyMemory(Buffer, (PVOID)((Seg << 4) | Off), Length);
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    return NO_ERROR;
@@ -139,7 +139,7 @@ IntInt10WriteMemory(
    DPRINT("- Length: %x\n", Length);
 
    IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
-   RtlCopyMemory((PVOID)((Seg << 4) + Off), Buffer, Length);
+   RtlCopyMemory((PVOID)((Seg << 4) | Off), Buffer, Length);
    IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
 
    return NO_ERROR;
