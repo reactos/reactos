@@ -44,7 +44,7 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		//TODO: SDI implementation
 #endif
 
-		ShowWindow(child->_hwnd, info._pos.showCmd);
+		ShowWindow(*child, info._pos.showCmd);
 
 		return static_cast<ShellBrowserChild*>(child);
 	}

@@ -45,11 +45,11 @@ WindowClass::WindowClass(LPCTSTR classname, WNDPROC wndproc)
 
 
 HHOOK Window::s_hcbthook = 0;
-Window::WindowCreatorFunc Window::s_window_creator = NULL;
+Window::WINDOWCREATORFUNC Window::s_window_creator = NULL;
 const void* Window::s_new_info = NULL;
 
 
-HWND Window::Create(WindowCreatorFunc creator,
+HWND Window::Create(WINDOWCREATORFUNC creator,
 					DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
@@ -62,7 +62,7 @@ HWND Window::Create(WindowCreatorFunc creator,
 							hwndParent, hMenu, g_Globals._hInstance, 0/*lpParam*/);
 }
 
-HWND Window::Create(WindowCreatorFunc creator, const void* info,
+HWND Window::Create(WINDOWCREATORFUNC creator, const void* info,
 					DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
 					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
@@ -78,7 +78,7 @@ HWND Window::Create(WindowCreatorFunc creator, const void* info,
 
 static Window* s_new_child_wnd = NULL;
 
-Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WindowCreatorFunc creator, const void* info)
+Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WINDOWCREATORFUNC creator, const void* info)
 {
 	s_window_creator = creator;
 	s_new_info = info;
@@ -128,7 +128,7 @@ Window* Window::get_window(HWND hwnd)
 		const void* info = s_new_info;
 		s_new_info = NULL;
 
-		WindowCreatorFunc window_creator = s_window_creator;
+		WINDOWCREATORFUNC window_creator = s_window_creator;
 		s_window_creator = NULL;
 
 		wnd = window_creator(hwnd, info);
@@ -138,7 +138,7 @@ Window* Window::get_window(HWND hwnd)
 }
 
 
-LRESULT CALLBACK Window::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	Window* pThis = get_window(hwnd);
 
@@ -178,6 +178,13 @@ int Window::Notify(int id, NMHDR* pnmh)
 }
 
 
+SubclassedWindow::SubclassedWindow(HWND hwnd)
+ :	Window(hwnd)
+{
+	_orgWndProc = SubclassWindow(_hwnd, WindowWndProc);
+}
+
+
 ChildWindow::ChildWindow(HWND hwnd)
  :	Window(hwnd)
 {
@@ -190,7 +197,7 @@ ChildWindow::ChildWindow(HWND hwnd)
 }
 
 
-ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, WindowCreatorFunc creator, LPCTSTR classname, LPCTSTR title)
+ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, WINDOWCREATORFUNC creator, LPCTSTR classname, LPCTSTR title)
 {
 	MDICREATESTRUCT mcs;
 

@@ -117,7 +117,7 @@ LINK32=link.cmd
 # PROP BASE Target_Dir ""
 # PROP Use_MFC 0
 # PROP Use_Debug_Libraries 0
-# PROP Output_Dir "."
+# PROP Output_Dir "URelease"
 # PROP Intermediate_Dir "URelease"
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""

@@ -109,15 +109,14 @@ static const int g_pos_align[] = {
 };
 
 
-HWND Pane::create(HWND hparent, int id, int id_header)
+Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int visible_cols)
+ :	SubclassedWindow(CreateWindow(TEXT("ListBox"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
+					 LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
+					 0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0)),
+	_root(root),
+	_treePane(treePane),
+	_visible_cols(visible_cols)
 {
-	_hwnd = CreateWindow(TEXT("ListBox"), TEXT(""), WS_CHILD|WS_VISIBLE|WS_HSCROLL|WS_VSCROLL|
-						 LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
-						 0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0);
-
-	SetWindowLong(_hwnd, GWL_USERDATA, (LPARAM)this);
-	s_orgTreeWndProc = SubclassWindow(_hwnd, TreeWndProc);
-
 	 // insert entries into listbox
 	Entry* entry = _root;
 
@@ -127,37 +126,35 @@ HWND Pane::create(HWND hparent, int id, int id_header)
 	init();
 
 	create_header(hparent, id_header);
-
-	return _hwnd;
 }
 
 
-WNDPROC Pane::s_orgTreeWndProc;
-
-LRESULT CALLBACK Pane::TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+LRESULT Pane::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(hwnd), WM_GET_FILEWND_PTR, 0, 0);
-	Pane* pane = (Pane*) GetWindowLong(hwnd, GWL_USERDATA);
-
 	switch(nmsg) {
 		case WM_HSCROLL:
-			pane->set_header();
+			set_header();
 			break;
 
-		case WM_SETFOCUS:
-			child->set_focus_pane(pane);
-			ListBox_SetSel(hwnd, TRUE, 1);
+		case WM_SETFOCUS: {
+			FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+
+			child->set_focus_pane(this);
+			ListBox_SetSel(_hwnd, TRUE, 1);
 			/*TODO: check menu items */
-			break;
+			break;}
 
-		case WM_KEYDOWN:
+		case WM_KEYDOWN: {
+			FileChildWindow* child = (FileChildWindow*) SendMessage(GetParent(_hwnd), WM_GET_FILEWND_PTR, 0, 0);
+
 			if (wparam == VK_TAB) {
 				/*TODO: SetFocus(g_Globals.hdrivebar) */
 				child->switch_focus_pane();
 			}
+			break;}
 	}
 
-	return CallWindowProc(s_orgTreeWndProc, hwnd, nmsg, wparam, lparam);
+	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
 }
 
 

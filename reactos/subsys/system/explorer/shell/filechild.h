@@ -71,8 +71,8 @@ protected:
 
 protected:
 	Root	_root;
-	Pane	_left;
-	Pane	_right;
+	Pane*	_left;
+	Pane*	_right;
 	SORT_ORDER _sortOrder;
 	TCHAR	_path[MAX_PATH];
 	bool	_header_wdths_ok;
@@ -81,10 +81,10 @@ public:
 	const Root& get_root() const {return _root;}
 
 	void	set_focus_pane(Pane* pane)
-		{_focus_pane = pane==&_right? 1: 0;}
+		{_focus_pane = pane==_right? 1: 0;}
 
 	void	switch_focus_pane()
-		{SetFocus(_focus_pane? _left._hwnd: _right._hwnd);}
+		{SetFocus(_focus_pane? *_left: *_right);}
 };
 
 

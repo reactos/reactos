@@ -62,24 +62,20 @@ struct OutputWorker {
 };
 
 
-struct Pane //@@: public Window
+struct Pane : public SubclassedWindow
 {
-	HWND	_hwnd;
-	HWND	_hwndHeader;
+	Pane(HWND hparent, int id, int id_header, Entry* rool, bool treePane, int visible_cols);
 
 #define COLUMNS 10
 	int 	_widths[COLUMNS];
 	int 	_positions[COLUMNS+1];
 		
+	HWND	_hwndHeader;
+
 	bool	_treePane;
 	int 	_visible_cols;
 	Entry*	_root;
 	Entry*	_cur;
-
-	HWND	create(HWND hparent, int id, int id_header);
-	static LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
-
-	static WNDPROC s_orgTreeWndProc;
 
 	void	init();
 	void	set_header();
@@ -94,6 +90,8 @@ struct Pane //@@: public Window
 	LRESULT Notify(NMHDR* pnmh);
 
 protected:
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+
 	void	calc_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
 	void	calc_tabbed_width(LPDRAWITEMSTRUCT dis, int col, LPCTSTR str);
 	MainFrame* get_frame();

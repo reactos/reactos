@@ -39,39 +39,52 @@ struct Window
 		SetWindowLong(_hwnd, GWL_USERDATA, 0);
 	}
 
-	HWND	_hwnd;
+
+	operator HWND() const {return _hwnd;}
 
 
-	typedef Window* (*WindowCreatorFunc)(HWND, const void*);
+	typedef Window* (*WINDOWCREATORFUNC)(HWND, const void*);
 
-	static HWND Create(WindowCreatorFunc creator,
+	static HWND Create(WINDOWCREATORFUNC creator,
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
 
-	static HWND Create(WindowCreatorFunc creator, const void* info,
+	static HWND Create(WINDOWCREATORFUNC creator, const void* info,
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
 
-	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WindowCreatorFunc creator, const void* info=NULL);
+	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, WINDOWCREATORFUNC creator, const void* info=NULL);
 
-	static LRESULT CALLBACK WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 	static Window* get_window(HWND hwnd);
 
 
 protected:
+	HWND	_hwnd;
+
+
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);
 	virtual int 	Notify(int id, NMHDR* pnmh);
 
 
 	static const void* s_new_info;	//TODO: protect for multithreaded access
-	static WindowCreatorFunc s_window_creator;	//TODO: protect for multithreaded access
+	static WINDOWCREATORFUNC s_window_creator;	//TODO: protect for multithreaded access
 
 	 // MDI child creation
 	static HHOOK s_hcbthook;
 	static LRESULT CALLBACK CBTHookProc(int code, WPARAM wparam, LPARAM lparam);
+};
+
+
+struct SubclassedWindow : public Window
+{
+	SubclassedWindow(HWND);
+
+protected:
+	WNDPROC	_orgWndProc;
 };
 
 
@@ -84,7 +97,7 @@ template<typename WND_CLASS> struct WindowCreator
 };
 
 #define WINDOW_CREATOR(WND_CLASS) \
-	(Window::WindowCreatorFunc) WindowCreator<WND_CLASS>::window_creator
+	(Window::WINDOWCREATORFUNC) WindowCreator<WND_CLASS>::window_creator
 
 
 template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
@@ -96,12 +109,12 @@ template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 };
 
 #define WINDOW_CREATOR_INFO(WND_CLASS, INFO_CLASS) \
-	(Window::WindowCreatorFunc) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
+	(Window::WINDOWCREATORFUNC) WindowCreatorInfo<WND_CLASS, INFO_CLASS>::window_creator
 
 
 struct WindowClass : public WNDCLASSEX
 {
-	WindowClass(LPCTSTR classname, WNDPROC wndproc=Window::WndProc);
+	WindowClass(LPCTSTR classname, WNDPROC wndproc=Window::WindowWndProc);
 
 	ATOM Register()
 	{
@@ -136,7 +149,7 @@ struct ChildWindow : public Window
 	ChildWindow(HWND hwnd);
 
 	static ChildWindow* create(HWND hmdiclient, const RECT& rect,
-				WindowCreatorFunc creator, LPCTSTR classname, LPCTSTR title=NULL);
+				WINDOWCREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

@@ -120,25 +120,16 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_root._entry->_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 
 
-	_left._treePane = true;
-	_left._visible_cols = 0;
-
-	_left._root = _root._entry;
-	_right._root = NULL;
-
-	_right._treePane = false;
-	_right._visible_cols = COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS;
+	_left_hwnd = *(_left=new Pane(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT, _root._entry, true, 0));
+	_right_hwnd = *(_right=new Pane(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT, NULL, false, COL_SIZE|COL_DATE|COL_TIME|COL_ATTRIBUTES|COL_INDEX|COL_LINKS));
 
 	_sortOrder = SORT_NAME;
 	_header_wdths_ok = false;
 
-	_left_hwnd = _left.create(_hwnd, IDW_TREE_LEFT, IDW_HEADER_LEFT);
-	_right_hwnd = _right.create(_hwnd, IDW_TREE_RIGHT, IDW_HEADER_RIGHT);
-
 	set_curdir(entry, hwnd);
 
-	int idx = ListBox_FindItemData(_left._hwnd, ListBox_GetCurSel(_left._hwnd), _left._cur);
-	ListBox_SetCurSel(_left._hwnd, idx);
+	int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), _left->_cur);
+	ListBox_SetCurSel(_left_hwnd, idx);
 
 	 //TODO: scroll to visibility
 
@@ -153,18 +144,18 @@ void FileChildWindow::set_curdir(Entry* entry, HWND hwnd)
 {
 	_path[0] = TEXT('\0');
 
-	_left._cur = entry;
-	_right._root = entry&&entry->_down? entry->_down: entry;
-	_right._cur = entry;
+	_left->_cur = entry;
+	_right->_root = entry&&entry->_down? entry->_down: entry;
+	_right->_cur = entry;
 
 	if (entry) {
 		if (!entry->_scanned)
 			scan_entry(entry, hwnd);
 		else {
-			ListBox_ResetContent(_right._hwnd);
-			_right.insert_entries(entry->_down, -1);
-			_right.calc_widths(false);
-			_right.set_header();
+			ListBox_ResetContent(_right_hwnd);
+			_right->insert_entries(entry->_down, -1);
+			_right->calc_widths(false);
+			_right->set_header();
 		}
 
 		entry->get_path(_path);
@@ -203,16 +194,16 @@ bool FileChildWindow::expand_entry(Entry* dir)
 	if (!(p->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		return FALSE;
 
-	idx = ListBox_FindItemData(_left._hwnd, 0, dir);
+	idx = ListBox_FindItemData(_left_hwnd, 0, dir);
 
 	dir->_expanded = true;
 
 	 // insert entries in left pane
-	_left.insert_entries(p, idx);
+	_left->insert_entries(p, idx);
 
 	if (!_header_wdths_ok) {
-		if (_left.calc_widths(false)) {
-			_left.set_header();
+		if (_left->calc_widths(false)) {
+			_left->set_header();
 
 			_header_wdths_ok = true;
 		}
@@ -224,24 +215,24 @@ bool FileChildWindow::expand_entry(Entry* dir)
 
 void FileChildWindow::collapse_entry(Pane* pane, Entry* dir)
 {
-	int idx = ListBox_FindItemData(pane->_hwnd, 0, dir);
+	int idx = ListBox_FindItemData(*pane, 0, dir);
 
-	SendMessage(pane->_hwnd, WM_SETREDRAW, FALSE, 0);	//ShowWindow(pane->_hwnd, SW_HIDE);
+	SendMessage(*pane, WM_SETREDRAW, FALSE, 0);	//ShowWindow(*pane, SW_HIDE);
 
 	 // hide sub entries
 	for(;;) {
-		LRESULT res = ListBox_GetItemData(pane->_hwnd, idx+1);
+		LRESULT res = ListBox_GetItemData(*pane, idx+1);
 		Entry* sub = (Entry*) res;
 
 		if (res==LB_ERR || !sub || sub->_level<=dir->_level)
 			break;
 
-		ListBox_DeleteString(pane->_hwnd, idx+1);
+		ListBox_DeleteString(*pane, idx+1);
 	}
 
 	dir->_expanded = false;
 
-	SendMessage(pane->_hwnd, WM_SETREDRAW, TRUE, 0);	//ShowWindow(pane->_hwnd, SW_SHOW);
+	SendMessage(*pane, WM_SETREDRAW, TRUE, 0);	//ShowWindow(*pane, SW_SHOW);
 }
 
 
@@ -285,18 +276,18 @@ void FileChildWindow::resize_children(int cx, int cy)
 		hdl.prc   = &rt;
 		hdl.pwpos = &wp;
 
-		Header_Layout(_left._hwndHeader, &hdl);
+		Header_Layout(_left->_hwndHeader, &hdl);
 
-		DeferWindowPos(hdwp, _left._hwndHeader, wp.hwndInsertAfter,
+		DeferWindowPos(hdwp, _left->_hwndHeader, wp.hwndInsertAfter,
 						wp.x-1, wp.y, _split_pos-SPLIT_WIDTH/2+1, wp.cy, wp.flags);
 
-		DeferWindowPos(hdwp, _right._hwndHeader, wp.hwndInsertAfter,
+		DeferWindowPos(hdwp, _right->_hwndHeader, wp.hwndInsertAfter,
 						rt.left+cx+1, wp.y, wp.cx-cx+2, wp.cy, wp.flags);
 	}
 
-	DeferWindowPos(hdwp, _left._hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
-	DeferWindowPos(hdwp, _right._hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
 }
@@ -310,9 +301,9 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			Entry* entry = (Entry*) dis->itemData;
 
 			if (dis->CtlID == IDW_TREE_LEFT)
-				_left.draw_item(dis, entry);
+				_left->draw_item(dis, entry);
 			else
-				_right.draw_item(dis, entry);
+				_right->draw_item(dis, entry);
 
 			return TRUE;}
 
@@ -327,16 +318,16 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_SETFOCUS: {
 			TCHAR path[MAX_PATH];
 
-			if (_left._cur) {
-				_left._cur->get_path(path);
+			if (_left->_cur) {
+				_left->_cur->get_path(path);
 				SetCurrentDirectory(path);
 			}
 
-			SetFocus(_focus_pane? _right._hwnd: _left._hwnd);
+			SetFocus(_focus_pane? _right_hwnd: _left_hwnd);
 			break;}
 
 		case WM_DISPATCH_COMMAND: {
-			Pane* pane = GetFocus()==_left._hwnd? &_left: &_right;
+			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 
 			switch(LOWORD(wparam)) {
 			  case ID_WINDOW_NEW:
@@ -347,12 +338,12 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				break;
 
 			  case ID_REFRESH: {
-				bool expanded = _left._cur->_expanded;
+				bool expanded = _left->_cur->_expanded;
 
-				scan_entry(_left._cur, _hwnd);
+				scan_entry(_left->_cur, _hwnd);
 
 				if (expanded)
-					expand_entry(_left._cur);
+					expand_entry(_left->_cur);
 				break;}
 
 			  case ID_ACTIVATE:
@@ -375,14 +366,14 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int FileChildWindow::Command(int id, int code)
 {
-	Pane* pane = GetFocus()==_left._hwnd? &_left: &_right;
+	Pane* pane = GetFocus()==_left_hwnd? _left: _right;
 
 	switch(code) {
 	  case LBN_SELCHANGE: {
-		int idx = ListBox_GetCurSel(pane->_hwnd);
-		Entry* entry = (Entry*) ListBox_GetItemData(pane->_hwnd, idx);
+		int idx = ListBox_GetCurSel(*pane);
+		Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
-		if (pane == &_left)
+		if (pane == _left)
 			set_curdir(entry, _hwnd);
 		else
 			pane->_cur = entry;
@@ -414,17 +405,17 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 			return;
 
 		if (entry->_data.cFileName[0]=='.' && entry->_data.cFileName[1]=='.' && entry->_data.cFileName[2]=='\0') {
-			entry = _left._cur->_up;
-			collapse_entry(&_left, entry);
+			entry = _left->_cur->_up;
+			collapse_entry(_left, entry);
 			goto focus_entry;
 		} else if (entry->_expanded)
-			collapse_entry(pane, _left._cur);
+			collapse_entry(pane, _left->_cur);
 		else {
-			expand_entry(_left._cur);
+			expand_entry(_left->_cur);
 
 			if (!pane->_treePane) focus_entry: {
-				int idx = ListBox_FindItemData(_left._hwnd, ListBox_GetCurSel(_left._hwnd), entry);
-				ListBox_SetCurSel(_left._hwnd, idx);
+				int idx = ListBox_FindItemData(_left_hwnd, ListBox_GetCurSel(_left_hwnd), entry);
+				ListBox_SetCurSel(_left_hwnd, idx);
 				set_curdir(entry, _hwnd);
 			}
 		}
@@ -442,22 +433,22 @@ void FileChildWindow::activate_entry(Pane* pane, HWND hwnd)
 
 void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
 {
-	int idx = ListBox_GetCurSel(_left._hwnd);
+	int idx = ListBox_GetCurSel(_left_hwnd);
 	HCURSOR old_cursor = SetCursor(LoadCursor(0, IDC_WAIT));
 
 	 // delete sub entries in left pane
 	for(;;) {
-		LRESULT res = ListBox_GetItemData(_left._hwnd, idx+1);
+		LRESULT res = ListBox_GetItemData(_left_hwnd, idx+1);
 		Entry* sub = (Entry*) res;
 
 		if (res==LB_ERR || !sub || sub->_level<=entry->_level)
 			break;
 
-		ListBox_DeleteString(_left._hwnd, idx+1);
+		ListBox_DeleteString(_left_hwnd, idx+1);
 	}
 
 	 // empty right pane
-	ListBox_ResetContent(_right._hwnd);
+	ListBox_ResetContent(_right_hwnd);
 
 	 // release memory
 	entry->free_subentries();
@@ -467,10 +458,10 @@ void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
 	entry->read_directory(_sortOrder);
 
 	 // insert found entries in right pane
-	_right.insert_entries(entry->_down, -1);
+	_right->insert_entries(entry->_down, -1);
 
-	_right.calc_widths(false);
-	_right.set_header();
+	_right->calc_widths(false);
+	_right->set_header();
 
 	_header_wdths_ok = FALSE;
 
@@ -480,7 +471,7 @@ void FileChildWindow::scan_entry(Entry* entry, HWND hwnd)
 
 int FileChildWindow::Notify(int id, NMHDR* pnmh)
 {
-	return (pnmh->idFrom==IDW_HEADER_LEFT? &_left: &_right)->Notify(pnmh);
+	return (pnmh->idFrom==IDW_HEADER_LEFT? _left: _right)->Notify(pnmh);
 }
 
 
