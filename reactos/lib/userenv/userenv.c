@@ -1,4 +1,4 @@
-/* $Id: userenv.c,v 1.1 2004/01/09 19:52:01 ekohl Exp $ 
+/* $Id: userenv.c,v 1.2 2004/03/13 20:49:07 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,6 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
+#include <ntos.h>
 #include <windows.h>
 #include <userenv.h>
 

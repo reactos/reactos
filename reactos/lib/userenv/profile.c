@@ -1,4 +1,4 @@
-/* $Id: profile.c,v 1.5 2004/02/28 11:30:59 ekohl Exp $
+/* $Id: profile.c,v 1.6 2004/03/13 20:49:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -515,6 +515,14 @@ BOOL WINAPI
 LoadUserProfileW (HANDLE hToken,
 		  LPPROFILEINFOW lpProfileInfo)
 {
+  WCHAR szRawProfilesPath[MAX_PATH];
+  WCHAR szProfilesPath[MAX_PATH];
+  WCHAR szUserHivePath[MAX_PATH];
+  UNICODE_STRING SidString;
+  DWORD dwLength;
+  HKEY hKey;
+
+  DPRINT ("LoadUserProfileW() called\n");
 
   /* Check profile info */
   if (lpProfileInfo->dwSize != sizeof(PROFILEINFOW) ||
@@ -525,7 +533,110 @@ LoadUserProfileW (HANDLE hToken,
       return FALSE;
     }
 
-  /* FIXME: load the profile */
+  if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
+		     L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList",
+		     0,
+		     KEY_ALL_ACCESS,
+		     &hKey))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Get profiles path */
+  dwLength = MAX_PATH * sizeof(WCHAR);
+  if (RegQueryValueExW (hKey,
+			L"ProfilesDirectory",
+			NULL,
+			NULL,
+			(LPBYTE)szRawProfilesPath,
+			&dwLength))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  /* Expand it */
+  if (!ExpandEnvironmentStringsW (szRawProfilesPath,
+				  szProfilesPath,
+				  MAX_PATH))
+    {
+      DPRINT1("Error: %lu\n", GetLastError());
+      RegCloseKey (hKey);
+      return FALSE;
+    }
+
+  RegCloseKey (hKey);
+
+  wcscpy (szUserHivePath, szProfilesPath);
+  wcscat (szUserHivePath, L"\\");
+  wcscat (szUserHivePath, lpProfileInfo->lpUserName);
+  if (!AppendSystemPostfix (szUserHivePath, MAX_PATH))
+    {
+      DPRINT1("AppendSystemPostfix() failed\n", GetLastError());
+      return FALSE;
+    }
+
+  /* Create user hive name */
+  wcscat (szUserHivePath, L"\\ntuser.dat");
+
+  DPRINT ("szUserHivePath: %S\n", szUserHivePath);
+
+  if (!GetUserSidFromToken (hToken,
+			    &SidString))
+    {
+      DPRINT1 ("GetUserSidFromToken() failed\n");
+      return FALSE;
+    }
+
+  DPRINT ("SidString: '%wZ'\n", &SidString);
+
+  if (RegLoadKeyW (HKEY_USERS,
+		   SidString.Buffer,
+		   szUserHivePath))
+    {
+      DPRINT1 ("RegLoadKeyW() failed (Error %ld)\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
+  RtlFreeUnicodeString (&SidString);
+
+  DPRINT ("LoadUserProfileW() done\n");
+
+  return TRUE;
+}
+
+
+BOOL WINAPI
+UnloadUserProfile (HANDLE hToken,
+		   HANDLE hProfile)
+{
+  UNICODE_STRING SidString;
+
+  DPRINT ("UnloadUserProfile() called\n");
+
+  if (!GetUserSidFromToken (hToken,
+			    &SidString))
+    {
+      DPRINT1 ("GetUserSidFromToken() failed\n");
+      return FALSE;
+    }
+
+  DPRINT ("SidString: '%wZ'\n", &SidString);
+
+  if (RegUnLoadKeyW (HKEY_USERS,
+		     SidString.Buffer))
+    {
+      DPRINT1 ("RegUnLoadKeyW() failed (Error %ld)\n", GetLastError());
+      RtlFreeUnicodeString (&SidString);
+      return FALSE;
+    }
+
+  RtlFreeUnicodeString (&SidString);
+
+  DPRINT ("UnloadUserProfile() done\n");
 
   return TRUE;
 }

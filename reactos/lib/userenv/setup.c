@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.3 2004/01/16 15:31:53 ekohl Exp $ 
+/* $Id: setup.c,v 1.4 2004/03/13 20:49:07 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -7,6 +7,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
+#include <ntos.h>
 #include <windows.h>
 #include <string.h>
 #include <stdarg.h>

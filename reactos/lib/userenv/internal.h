@@ -1,4 +1,4 @@
-/* $Id: internal.h,v 1.4 2004/01/16 15:31:53 ekohl Exp $ 
+/* $Id: internal.h,v 1.5 2004/03/13 20:49:07 ekohl Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,21 +24,25 @@ DebugPrint (char* fmt,...);
 #endif	/* __GNUC__ */
 #define CHECKPOINT
 
-/* directory.h */
+/* directory.c */
 BOOL
 CopyDirectory (LPCWSTR lpDestinationPath,
 	       LPCWSTR lpSourcePath);
 
-/* misc.h */
+/* misc.c */
 LPWSTR
 AppendBackslash (LPWSTR String);
 
 BOOL
+GetUserSidFromToken (HANDLE hToken,
+		     PUNICODE_STRING SidString);
+
+/* profile.c */
+BOOL
 AppendSystemPostfix (LPWSTR lpName,
 		     DWORD dwMaxLength);
 
-
-/* registry.h */
+/* registry.c */
 BOOL
 CreateUserHive (LPCWSTR lpKeyName);
 

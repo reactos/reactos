@@ -7,4 +7,5 @@ GetProfilesDirectoryW=GetProfilesDirectoryW@8
 GetUserProfileDirectoryW=GetUserProfileDirectoryW@12
 CreateUserProfileW=CreateUserProfileW@8
 LoadUserProfileW=LoadUserProfileW@8
+UnloadUserProfile=UnloadUserProfile@8
 ;EOF
