@@ -47,7 +47,7 @@ copy ..\wine\dlls\shfolder\shfolder.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
 copy ..\wine\dlls\tapi32\tapi32.dll	%WINE_INSTALL%
 copy ..\wine\dlls\urlmon\urlmon.dll	%WINE_INSTALL%
-REMcopy ..\wine\dlls\version\version.dll	%WINE_INSTALL%
+REM copy ..\wine\dlls\version\version.dll	%WINE_INSTALL%
 copy ..\wine\dlls\wintrust\wintrust.dll	%WINE_INSTALL%
 copy ..\wine\dlls\winspool\winspool.drv	%WINE_INSTALL%
 REM

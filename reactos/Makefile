@@ -93,8 +93,8 @@ TEST_APPS = alive apc args atomtest bench consume copymove count dump_shared_dat
 UTIL_APPS = cat objdir partinfo sc stats
 
 # External (sub)systems for ReactOS
-# wine posix os2 java
-EXTERNALS = posix
+# rosapps wine posix os2 (requires c++) java (non-existant)
+EXTERNALS = rosapps wine posix os2
 
 ifeq ($(ROS_BUILD_EXT),yes)
 EXT_MODULES = $(EXTERNALS)

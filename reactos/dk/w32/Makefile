@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/10/28 15:20:37 robd Exp $
+# $Id: Makefile,v 1.5 2003/01/07 18:20:34 robd Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -44,9 +44,9 @@ MODULES_NET=\
 	$(TARGET_FOLDER_LIB)/wshirda.a\
 	$(TARGET_FOLDER_LIB)/wsock32.a
 
-MODULES_COM=\
-	$(TARGET_FOLDER_LIB)/ole32.a\
-	$(TARGET_FOLDER_LIB)/oleaut32.a
+#MODULES_COM=\
+#	$(TARGET_FOLDER_LIB)/ole32.a\
+#	$(TARGET_FOLDER_LIB)/oleaut32.a\
 #	$(TARGET_FOLDER_LIB)/rpcrt4.a
 
 MODULES_CRT=\
@@ -56,14 +56,30 @@ MODULES_CRT=\
 MODULES_MISC=\
 	$(TARGET_FOLDER_LIB)/version.a
 
+MODULES_WINE=\
+	$(TARGET_FOLDER_LIB)/libwine.a\
+	$(TARGET_FOLDER_LIB)/rpcrt4.a\
+	$(TARGET_FOLDER_LIB)/shlwapi.a\
+	$(TARGET_FOLDER_LIB)/ole32.a\
+	$(TARGET_FOLDER_LIB)/oleaut32.a\
+	$(TARGET_FOLDER_LIB)/lz32.a\
+	$(TARGET_FOLDER_LIB)/wininet.a\
+	$(TARGET_FOLDER_LIB)/wine_unicode.a
+
+MODULES_CONTRIB=\
+	$(TARGET_FOLDER_LIB)/perl58.a
+
 MODULES =\
 	$(MODULES_CORE)\
+	$(MODULES_COM)\
 	$(MODULES_ADVANCED)\
 	$(MODULES_SHELL)\
 	$(MODULES_NET)\
-	$(MODULES_COM)\
 	$(MODULES_CRT)\
-	$(MODULES_MISC)
+	$(MODULES_MISC)\
+	$(MODULES_WINE)
+
+#	$(MODULES_CONTRIB)\
 
 # --- Rules ---
 
@@ -175,23 +191,23 @@ $(TARGET_FOLDER_LIB)/wsock32.a: $(PATH_TO_TOP)/lib/wsock32/wsock32.def
 
 # --- COM ---
 
-$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/lib/ole32/ole32.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D ole32.dll\
-		-d $(PATH_TO_TOP)/lib/ole32/ole32.def
+#$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/lib/ole32/ole32.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D ole32.dll\
+#		-d $(PATH_TO_TOP)/lib/ole32/ole32.def
 
-$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D oleaut32.dll\
-		-d $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
+#$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D oleaut32.dll\
+#		-d $(PATH_TO_TOP)/lib/oleaut32/oleaut32.def
 
-$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
-	$(DLLTOOL) \
-		$(DTFLAGS)\
-		-D rpcrt4.dll\
-		-d $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
+#$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
+#	$(DLLTOOL) \
+#		$(DTFLAGS)\
+#		-D rpcrt4.dll\
+#		-d $(PATH_TO_TOP)/lib/rpcrt4/rpcrt4.def
 
 # --- CRT ---
 
@@ -214,6 +230,65 @@ $(TARGET_FOLDER_LIB)/version.a: $(PATH_TO_TOP)/lib/version/version.def
 		$(DTFLAGS)\
 		-D version.dll\
 		-d $(PATH_TO_TOP)/lib/version/version.def
+
+# --- WINE ---
+
+$(TARGET_FOLDER_LIB)/ole32.a: $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D ole32.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/ole32/ole32.def
+
+$(TARGET_FOLDER_LIB)/oleaut32.a: $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D oleaut32.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/oleaut32/oleaut32.def
+
+$(TARGET_FOLDER_LIB)/rpcrt4.a: $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D rpcrt4.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/rpcrt4/rpcrt4.def
+
+$(TARGET_FOLDER_LIB)/shlwapi.a: $(PATH_TO_TOP)/../wine/dlls/shlwapi/shlwapi.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D shlwapi.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/shlwapi/shlwapi.def
+
+
+$(TARGET_FOLDER_LIB)/wininet.a: $(PATH_TO_TOP)/../wine/dlls/wininet/wininet.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D wininet.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/wininet/wininet.def
+
+$(TARGET_FOLDER_LIB)/lz32.a: $(PATH_TO_TOP)/../wine/dlls/lzexpand/lz32.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D lz32.dll\
+		-d $(PATH_TO_TOP)/../wine/dlls/lzexpand/lz32.def
+
+$(TARGET_FOLDER_LIB)/libwine.a: $(PATH_TO_TOP)/../wine/library/libwine.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D libwine.dll\
+		-d $(PATH_TO_TOP)/../wine/library/libwine.def
+
+$(TARGET_FOLDER_LIB)/wine_unicode.a: $(PATH_TO_TOP)/../wine/unicode/wine_unicode.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D wine_unicode.dll\
+		-d $(PATH_TO_TOP)/../wine/unicode/wine_unicode.def
+
+# --- CONTRIB ---
+
+$(TARGET_FOLDER_LIB)/perl58.a: $(PATH_TO_TOP)/../contrib/perl-5.8.0/win32/perldll.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D perl58.dll\
+		-d $(PATH_TO_TOP)/../contrib/perl-5.8.0/win32/perldll.def
 
 # --- Service rules ---
 

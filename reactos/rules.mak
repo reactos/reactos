@@ -120,5 +120,10 @@ POSIX_PATH=$(PATH_TO_TOP)/../posix
 POSIX_PATH_LIB=$(POSIX_PATH)/lib
 POSIX_PATH_INC=$(POSIX_PATH)/include
 
+# OS/2 Integration
+OS2_PATH=$(PATH_TO_TOP)/../os2
+OS2_PATH_LIB=$(OS2_PATH)/lib
+OS2_PATH_INC=$(OS2_PATH)/include
+
 # Other systems integration
 ROOT_PATH=$(PATH_TO_TOP)/..

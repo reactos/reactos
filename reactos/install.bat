@@ -5,7 +5,6 @@ goto Install
 :NoParameter
 set ROS_INSTALL=c:\reactos
 :Install
-echo on
 echo Installing to %ROS_INSTALL%
 @echo off
 
@@ -140,3 +139,22 @@ copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 rem copy media\nls\*.nls %ROS_INSTALL%\system32
 copy ntoskrnl\ntoskrnl.map %ROS_INSTALL%\symbols
+
+if %ROS_BUILD_EXT == "" goto Finish
+
+echo Installing extra programs from rosapps directory...
+pushd ..\rosapps
+call install.bat
+popd
+echo Installing targets modules ported from WINE...
+pushd ..\wine
+call install.bat
+popd
+echo Installing targets for POSIX+ support...
+pushd ..\posix
+call install.bat
+popd
+echo Done.
+
+:Finish
+
