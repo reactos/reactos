@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.53 2004/09/24 20:55:58 weiden Exp $
+/* $Id: thread.c,v 1.54 2004/10/24 12:16:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -268,16 +268,11 @@ OpenThread(
    ClientId.UniqueProcess = INVALID_HANDLE_VALUE;
    ClientId.UniqueThread = (HANDLE)dwThreadId;
    
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = (HANDLE)NULL;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   ObjectAttributes.ObjectName = NULL;
-   
-   if (bInheritHandle == TRUE)
-     ObjectAttributes.Attributes = OBJ_INHERIT;
-   else
-     ObjectAttributes.Attributes = 0;
+   InitializeObjectAttributes (&ObjectAttributes,
+			      NULL,
+			      (bInheritHandle ? OBJ_INHERIT : 0),
+			      NULL,
+			      NULL);
    
    errCode = NtOpenThread(&ThreadHandle,
 			   dwDesiredAccess,
