@@ -18,13 +18,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/*
- * TODO:
- *	- Implement RegDeleteKey().
- *	- Implement RegQueryMultipleValue().
- *	- Fix RegEnumValue().
- */
-
 #include <freeldr.h>
 #include <mm.h>
 #include <rtl.h>
@@ -37,32 +30,67 @@ static HKEY RootKey;
 
 
 VOID
-RegInitializeRegistry(VOID)
+RegInitializeRegistry (VOID)
 {
-  /* Create root key */
-  RootKey = (HKEY)MmAllocateMemory(sizeof(KEY));
+#if 0
+  HKEY TestKey;
+#endif
 
-  InitializeListHead(&RootKey->SubKeyList);
-  InitializeListHead(&RootKey->ValueList);
-  InitializeListHead(&RootKey->KeyList);
+  /* Create root key */
+  RootKey = (HKEY) MmAllocateMemory (sizeof(KEY));
+
+  InitializeListHead (&RootKey->SubKeyList);
+  InitializeListHead (&RootKey->ValueList);
+  InitializeListHead (&RootKey->KeyList);
+
+  RootKey->SubKeyCount = 0;
+  RootKey->ValueCount = 0;
 
   RootKey->NameSize = 2;
-  RootKey->Name = (PUCHAR)MmAllocateMemory(2);
-  strcpy(RootKey->Name, "\\");
+  RootKey->Name = (PUCHAR)MmAllocateMemory (2);
+  strcpy (RootKey->Name, "\\");
 
   RootKey->DataType = 0;
   RootKey->DataSize = 0;
   RootKey->Data = NULL;
 
-  /* Create SYSTEM key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\SYSTEM",
-	       NULL);
+  /* Create 'SYSTEM' key */
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\SYSTEM",
+		NULL);
 
-  /* Create HARDWARE key */
-  RegCreateKey(RootKey,
-	       "Registry\\Machine\\HARDWARE",
-	       NULL);
+  /* Create 'HARDWARE' key */
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\HARDWARE",
+		NULL);
+
+  /* Create 'HARDWARE\DESCRIPTION' key */
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\HARDWARE\\DESCRIPTION",
+		NULL);
+
+  /* Create 'HARDWARE\DEVICEMAP' key */
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\HARDWARE\\DEVICEMAP",
+		NULL);
+
+  /* Create 'HARDWARE\RESOURCEMAP' key */
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\HARDWARE\\RESOURCEMAP",
+		NULL);
+
+/* Testcode */
+#if 0
+  RegCreateKey (RootKey,
+		"Registry\\Machine\\HARDWARE\\DESCRIPTION\\TestKey",
+		&TestKey);
+
+  RegSetValue (TestKey,
+	       "TestValue",
+	       REG_SZ,
+	       (PUCHAR)"TestString",
+	       11);
+#endif
 }
 
 
@@ -258,11 +286,16 @@ RegCreateKey(HKEY ParentKey,
 	  InitializeListHead(&NewKey->SubKeyList);
 	  InitializeListHead(&NewKey->ValueList);
 
+	  NewKey->SubKeyCount = 0;
+	  NewKey->ValueCount = 0;
+
 	  NewKey->DataType = 0;
 	  NewKey->DataSize = 0;
 	  NewKey->Data = NULL;
 
 	  InsertTailList(&CurrentKey->SubKeyList, &NewKey->KeyList);
+	  CurrentKey->SubKeyCount++;
+
 	  NewKey->NameSize = subkeyLength + 1;
 	  NewKey->Name = (PCHAR)MmAllocateMemory(NewKey->NameSize);
 	  if (NewKey->Name == NULL)
@@ -510,7 +543,10 @@ RegSetValue(HKEY Key,
 	  Value = (PVALUE)MmAllocateMemory(sizeof(VALUE));
 	  if (Value == NULL)
 	    return(ERROR_OUTOFMEMORY);
+
 	  InsertTailList(&Key->ValueList, &Value->ValueList);
+	  Key->ValueCount++;
+
 	  Value->NameSize = strlen(ValueName)+1;
 	  Value->Name = (PCHAR)MmAllocateMemory(Value->NameSize);
 	  if (Value->Name == NULL)
@@ -669,6 +705,7 @@ RegDeleteValue(HKEY Key,
 	return(ERROR_INVALID_PARAMETER);
 
       /* delete value */
+      Key->ValueCount--;
       if (Value->Name != NULL)
 	MmFreeMemory(Value->Name);
       Value->Name = NULL;
@@ -746,13 +783,20 @@ RegEnumValue(HKEY Key,
 }
 
 
-#if 0
-S32
-RegQueryMultipleValue(HKEY Key,
-		      ...)
+U32
+RegGetSubKeyCount (HKEY Key)
 {
-  return(ERROR_SUCCESS);
+  return Key->SubKeyCount;
 }
-#endif
+
+
+U32
+RegGetValueCount (HKEY Key)
+{
+  if (Key->DataSize != 0)
+    return Key->ValueCount + 1;
+
+  return Key->ValueCount;
+}
 
 /* EOF */

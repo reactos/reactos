@@ -21,8 +21,6 @@
 #ifndef __REGISTRY_H
 #define __REGISTRY_H
 
-/* uncomment this line to load and use a binary system hive */
-//#define BINARY_HIVE
 
 #define INVALID_HANDLE_VALUE  NULL
 
@@ -38,6 +36,9 @@ typedef struct _REG_KEY
   LIST_ENTRY KeyList;
   LIST_ENTRY SubKeyList;
   LIST_ENTRY ValueList;
+
+  U32 SubKeyCount;
+  U32 ValueCount;
 
   U32 NameSize;
   PUCHAR Name;
@@ -280,14 +281,25 @@ RegEnumValue(HKEY Key,
 	     PUCHAR Data,
 	     U32* DataSize);
 
+U32
+RegGetSubKeyCount (HKEY Key);
+
+U32
+RegGetValueCount (HKEY Key);
+
 
 BOOL
-RegImportTextHive(PCHAR ChunkBase,
-		  U32 ChunkSize);
+RegImportTextHive (PCHAR ChunkBase,
+		   U32 ChunkSize);
 
 BOOL
-RegImportBinaryHive(PCHAR ChunkBase,
-		    U32 ChunkSize);
+RegImportBinaryHive (PCHAR ChunkBase,
+		     U32 ChunkSize);
+
+BOOL
+RegExportBinaryHive (PCHAR KeyName,
+		     PCHAR ChunkBase,
+		     U32* ChunkSize);
 
 
 #endif /* __REGISTRY_H */

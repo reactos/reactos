@@ -1,3 +1,8 @@
+Changes in v1.8.8 (4/25/2003) (ekohl)
+
+- Added memmove().
+- Added hardware hive export.
+
 Changes in v1.8.7 (4/22/2003) (brianp)
 
 - Added a file system recognizer to get around problems where

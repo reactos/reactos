@@ -517,7 +517,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
 
-        /* recalculate the boot partition for freeldr */
+	/* recalculate the boot partition for freeldr */
 	i = 0;
 	rosPartition = 0;
 	while (1)
@@ -542,7 +542,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		UiMessageBox(MsgBuffer);
 		return;
 	}
-	   
+
 	/* copy ARC path into kernel command line */
 	strcpy(multiboot_kernel_cmdline, value);
 
@@ -638,35 +638,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		return;
 
 	/*
-	 * Find the System hive image name
-	 * and try to load it off the disk
+	 * Load the System hive from disk
 	 */
-#if 0
-	if(IniReadSettingByName(SectionId, "SystemHive", value, 1024))
-	{
-		/*
-		 * Set the name and
-		 */
-		if (value[0] == '\\')
-		{
-			strcpy(szFileName, value);
-		}
-		else
-		{
-			strcpy(szFileName, szBootPath);
-			strcat(szFileName, "SYSTEM32\\CONFIG\\");
-			strcat(szFileName, value);
-		}
-	}
-	else
-	{
-		strcpy(value, "SYSTEM.HIV");
-		strcpy(szFileName, szBootPath);
-		strcat(szFileName, "SYSTEM32\\CONFIG\\");
-		strcat(szFileName, value);
-	}
-#endif
-
 	strcpy(szFileName, szBootPath);
 	strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM");
 
@@ -675,9 +648,6 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	FilePointer = FsOpenFile(szFileName);
 	if (FilePointer == NULL)
 	{
-//		strcat(value, " not found.");
-//		UiMessageBox(value);
-//		return;
 		strcpy(szFileName, szBootPath);
 		strcat(szFileName, "SYSTEM32\\CONFIG\\SYSTEM.HIV");
 
@@ -723,14 +693,17 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
 
 	/*
-	 * Retrieve hardware information and create the hardware hive
+	 * Detect hardware
 	 */
 	DetectHardware();
-#if 0
-	Base = MultiBootCreateModule("HARDWARE.HIV");
-	RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
-	MultiBootCloseModule(Base, Size);
-#endif
+
+	/*
+	 * Export the hardware hive
+	 */
+	Base = MultiBootCreateModule ("HARDWARE");
+	RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", Base, &Size);
+	MultiBootCloseModule (Base, Size);
+
 	UiDrawProgressBarCenter(20, 100, "Loading ReactOS...");
 
 	/*
@@ -749,8 +722,8 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	}
 #endif
 
-  LoadSymbolFile(szBootPath, szKernelName, 25);
-  LoadSymbolFile(szBootPath, szHalName, 25);
+	LoadSymbolFile(szBootPath, szKernelName, 25);
+	LoadSymbolFile(szBootPath, szHalName, 25);
 
 	UiDrawProgressBarCenter(25, 100, "Loading ReactOS...");
 
@@ -766,14 +739,15 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	UiDrawBackdrop();
 	UiDrawStatusText("Press any key to boot");
 
+#if 0
 	/*
 	 * Wait for user
 	 */
 	strcpy(name, "Kernel and Drivers loaded.\nPress any key to boot ");
 	strcat(name, OperatingSystemName);
 	strcat(name, ".");
-	//MessageBox(name);
-
+	MessageBox(name);
+#endif
 
 	UiUnInitialize("Booting ReactOS...");
 

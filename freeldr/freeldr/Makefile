@@ -214,6 +214,7 @@ RTL_OBJS	=	print.o		\
 				list.o		\
 				memcmp.o	\
 				memcpy.o	\
+				memmove.o	\
 				memset.o
 
 FS_OBJS		=	fs.o		\

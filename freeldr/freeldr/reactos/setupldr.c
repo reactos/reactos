@@ -99,6 +99,8 @@ LoadDriver(PCHAR szFileName)
 
 VOID RunLoader(VOID)
 {
+  PVOID Base;
+  U32 Size;
 
   /* Setup multiboot information structure */
   mb_info.flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
@@ -169,16 +171,17 @@ VOID RunLoader(VOID)
     return;
 
 
-  /* Export the system and hardware hives */
-//  Base = MultiBootCreateModule(SYSTEM.HIV);
-//  RegExportHive("\\Registry\\Machine\\SYSTEM", Base, &Size);
-//  MultiBootCloseModule(Base, Size);
+  /* Export the hardware hive */
+  Base = MultiBootCreateModule ("HARDWARE");
+  RegExportBinaryHive ("\\Registry\\Machine\\HARDWARE", Base, &Size);
+  MultiBootCloseModule (Base, Size);
 
-//  Base = MultiBootCreateModule(HARDWARE.HIV);
-//  RegExportHive("\\Registry\\Machine\\HARDWARE", Base, &Size);
-//  MultiBootCloseModule(Base, Size);
-
-
+  printf("Base: %x\n", Base);
+  printf("Size: %u\n", Size);
+#if 0
+  printf("*** System stopped ***\n");
+for(;;);
+#endif
 
 
   /* Load NLS files */
