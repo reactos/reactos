@@ -249,6 +249,7 @@ FS_OBJS		=	fs.o		\
 				fat.o		\
 				iso.o		\
 				ext2.o		\
+				ntfs.o		\
 				fsrec.o
 
 UI_OBJS		=	tui.o		\

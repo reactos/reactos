@@ -719,13 +719,13 @@ DetectMicrosoftMouse(U32 Port)
 {
   CHAR Buffer[4];
   U32 i;
-  U32 TimeOut = 250;
+  U32 TimeOut = 200;
   U8 LineControl;
 
   /* Shutdown mouse or something like that */ 
   LineControl = READ_PORT_UCHAR((PUCHAR)Port + 4);
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, (LineControl & ~0x02) | 0x01);
-  KeStallExecutionProcessor(500000);
+  KeStallExecutionProcessor(100000);
 
   /* Clear buffer */
   while (READ_PORT_UCHAR((PUCHAR)Port + 5) & 0x01)
@@ -812,15 +812,15 @@ GetMousePnpId(U32 Port, char *Buffer)
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x09);
 
   /* Wait 10 milliseconds for the mouse getting ready */
-  KeStallExecutionProcessor(200000);
+  KeStallExecutionProcessor(10000);
 
   WRITE_PORT_UCHAR((PUCHAR)Port + 4, 0x0b);
 
-  KeStallExecutionProcessor(200000);
+  KeStallExecutionProcessor(10000);
 
   for (;;)
     {
-      TimeOut = 250;
+      TimeOut = 200;
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
 	  KeStallExecutionProcessor(1000);
@@ -841,7 +841,7 @@ GetMousePnpId(U32 Port, char *Buffer)
 
   for (;;)
     {
-      TimeOut = 250;
+      TimeOut = 200;
       while (((READ_PORT_UCHAR((PUCHAR)Port + 5) & 1) == 0) && (TimeOut > 0))
 	{
 	  KeStallExecutionProcessor(1000);
@@ -1244,7 +1244,7 @@ DetectPS2AuxPort(VOID)
 	  break;
 	}
 
-      KeStallExecutionProcessor(10000);
+      KeStallExecutionProcessor(1000);
     }
 
   return FALSE;
@@ -1266,7 +1266,7 @@ DetectPS2AuxDevice(VOID)
   WRITE_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_DATA,
 		   0xF2);
 
-  KeStallExecutionProcessor(10000);
+  KeStallExecutionProcessor(1000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)
@@ -1278,7 +1278,7 @@ DetectPS2AuxDevice(VOID)
   if (Scancode != 0xFA)
     return FALSE;
 
-  KeStallExecutionProcessor(10000);
+  KeStallExecutionProcessor(1000);
 
   Status = READ_PORT_UCHAR((PUCHAR)CONTROLLER_REGISTER_STATUS);
   if ((Status & CONTROLLER_STATUS_MOUSE_OUTPUT_BUFFER_FULL) == 0)

@@ -23,6 +23,7 @@
 #include "fat.h"
 #include "iso.h"
 #include "ext2.h"
+#include "ntfs.h"
 #include <disk.h>
 #include <rtl.h>
 #include <arch.h>
@@ -53,6 +54,11 @@ BOOL FsRecognizeVolume(U32 DriveNumber, U32 VolumeStartSector, U8* VolumeType)
 	else if (FsRecIsFat(DriveNumber, VolumeStartSector))
 	{
 		*VolumeType = PARTITION_FAT32;
+		return TRUE;
+	}
+	else if (FsRecIsNtfs(DriveNumber, VolumeStartSector))
+	{
+		*VolumeType = PARTITION_NTFS;
 		return TRUE;
 	}
 
@@ -108,6 +114,23 @@ BOOL FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector)
 	if (strncmp(BootSector->FileSystemType, "FAT12   ", 8) == 0 ||
 		strncmp(BootSector->FileSystemType, "FAT16   ", 8) == 0 ||
 		strncmp(BootSector32->FileSystemType, "FAT32   ", 8) == 0)
+	{
+		return TRUE;
+	}
+
+	return FALSE;
+}
+
+BOOL FsRecIsNtfs(U32 DriveNumber, U32 VolumeStartSector)
+{
+	PNTFS_BOOTSECTOR BootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
+	if (!DiskReadLogicalSectors(DriveNumber, VolumeStartSector, 1, BootSector))
+	{
+		FileSystemError("Failed to read the boot sector.");
+		return FALSE;
+	}
+
+	if (!RtlCompareMemory(BootSector->SystemId, "NTFS", 4))
 	{
 		return TRUE;
 	}

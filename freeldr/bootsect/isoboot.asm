@@ -33,7 +33,7 @@
 ; Note: The Makefile builds one version with DEBUG_MESSAGES automatically.
 ;%define DEBUG_MESSAGES                ; Uncomment to get debugging messages
 
-
+%define WAIT_FOR_KEY
 
 
 ; ---------------------------------------------------------------------------
@@ -139,6 +139,14 @@ relocate:
 	jmp	.kbd_buffer_test
 .kbd_buffer_empty:
 
+	; Check if there is harddisk
+	pusha
+	mov	ax, 0800h
+	mov	dx, 0080h
+	int	13h
+	popa
+	jc	.boot_cdrom
+
 	; Display the 'Press key' message and wait for a maximum of 5 seconds
 	call	crlf
 	mov	si, presskey_msg		; si points to 'Press key' message
@@ -164,6 +172,8 @@ relocate:
 	jmp	.next_second
 
 .boot_harddisk:
+	call	crlf
+
 	; Boot first harddisk (drive 0x80)
 	mov	ax, 0201h
 	mov	dx, 0080h
@@ -998,12 +1008,3 @@ MaxTransfer	dw 2 ;32				; Max sectors per transfer
 
 		times 2046-($-$$) db 0		; Pad to file offset 2046
 		dw 0aa55h			; BootSector signature
-
-
-
-
-
-
-
-
-

@@ -24,5 +24,6 @@ BOOL	FsRecognizeVolume(U32 DriveNumber, U32 VolumeStartSector, U8* VolumeType);
 BOOL	FsRecIsIso9660(U32 DriveNumber);
 BOOL	FsRecIsExt2(U32 DriveNumber, U32 VolumeStartSector);
 BOOL	FsRecIsFat(U32 DriveNumber, U32 VolumeStartSector);
+BOOL	FsRecIsNtfs(U32 DriveNumber, U32 VolumeStartSector);
 
 #endif // #defined __FSREC_H

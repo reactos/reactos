@@ -22,6 +22,7 @@
 #include "fat.h"
 #include "iso.h"
 #include "ext2.h"
+#include "ntfs.h"
 #include "fsrec.h"
 #include <disk.h>
 #include <rtl.h>
@@ -140,6 +141,9 @@ BOOL FsOpenVolume(U32 DriveNumber, U32 PartitionNumber)
 	case PARTITION_EXT2:
 		FileSystemType = FS_EXT2;
 		return Ext2OpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
+	case PARTITION_NTFS:
+		FileSystemType = FS_NTFS;
+		return NtfsOpenVolume(DriveNumber, PartitionTableEntry.SectorCountBeforePartition);
 	default:
 		FileSystemType = 0;
 		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", VolumeType);
@@ -180,6 +184,9 @@ PFILE FsOpenFile(PUCHAR FileName)
 		break;
 	case FS_EXT2:
 		FileHandle = Ext2OpenFile(FileName);
+		break;
+	case FS_NTFS:
+		FileHandle = NtfsOpenFile(FileName);
 		break;
 	default:
 		FileSystemError("Error: Unknown filesystem.");
@@ -241,6 +248,10 @@ BOOL FsReadFile(PFILE FileHandle, U32 BytesToRead, U32* BytesRead, PVOID Buffer)
 		*BytesRead = (U32)BytesReadBig;
 		return Success;
 
+	case FS_NTFS:
+
+		return NtfsReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
+
 	default:
 
 		FileSystemError("Unknown file system.");
@@ -265,6 +276,10 @@ U32 FsGetFileSize(PFILE FileHandle)
 	case FS_EXT2:
 
 		return Ext2GetFileSize(FileHandle);
+
+	case FS_NTFS:
+
+		return NtfsGetFileSize(FileHandle);
 
 	default:
 		FileSystemError("Unknown file system.");
@@ -293,6 +308,11 @@ VOID FsSetFilePointer(PFILE FileHandle, U32 NewFilePointer)
 		Ext2SetFilePointer(FileHandle, NewFilePointer);
 		break;
 
+	case FS_NTFS:
+
+		NtfsSetFilePointer(FileHandle, NewFilePointer);
+		break;
+
 	default:
 		FileSystemError("Unknown file system.");
 		break;
@@ -316,6 +336,11 @@ U32 FsGetFilePointer(PFILE FileHandle)
 	case FS_EXT2:
 
 		return Ext2GetFilePointer(FileHandle);
+		break;
+
+	case FS_NTFS:
+
+		return NtfsGetFilePointer(FileHandle);
 		break;
 
 	default:

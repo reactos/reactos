@@ -92,6 +92,7 @@ typedef struct _MASTER_BOOT_RECORD
 #define PARTITION_FAT32_XINT13          0x0C      // FAT32 using extended int13 services
 #define PARTITION_XINT13                0x0E      // Win95 partition using extended int13 services
 #define PARTITION_XINT13_EXTENDED       0x0F      // Same as type 5 but uses extended int13 services
+#define PARTITION_NTFS                  0x17      // NTFS
 #define PARTITION_PREP                  0x41      // PowerPC Reference Platform (PReP) Boot Partition
 #define PARTITION_LDM                   0x42      // Logical Disk Manager partition
 #define PARTITION_UNIX                  0x63      // Unix

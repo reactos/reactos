@@ -1,3 +1,11 @@
+Changes in v1.8.21 (21/05/2004) (navaraf)
+
+- Experimental NTFS reading support with no boot code yet.
+- Adjusted detection timeouts for PS/2 and RS232 to the minimum
+  allowed by the specifications.
+- Enabled the 'Press any key to boot from CD' message in the ISO 
+  boot code and show it only when some hard disk is present.
+
 Changes in v1.8.20 (21/05/2004) (navaraf)
 
 - Added support for special value "LiveCD" of SystemPath option
