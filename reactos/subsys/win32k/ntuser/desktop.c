@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.20 2004/08/17 21:52:17 weiden Exp $
+ *  $Id: desktop.c,v 1.21 2004/09/15 20:53:43 mf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -667,6 +667,44 @@ NtUserCloseDesktop(HDESK hDesktop)
    return TRUE;
 }
 
+
+static int GetSystemVersionString(LPWSTR buffer)
+{
+  RTL_OSVERSIONINFOEXW versionInfo;
+  int len;
+
+  versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+
+  if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
+	return 0;
+
+  if (versionInfo.dwMajorVersion <= 4)
+	  len = swprintf(buffer,
+			  L"ReactOS Version %d.%d %s Build %d",
+			  versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+			  versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+  else
+	  len = swprintf(buffer,
+			  L"ReactOS %s (Build %d)",
+			  versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+
+  return len;
+}
+
+static NTSTATUS STDCALL PaintDesktopVersionCallback(
+	IN PWSTR ValueName, IN ULONG ValueType,
+	IN PVOID ValueData, IN ULONG ValueLength,
+	IN PVOID Context, IN PVOID EntryContext
+)
+{
+  DPRINT("PaintDesktopVersionCallback ValueType=%d ValueLength=%d\n", ValueType, ValueLength);
+
+  if (ValueType==REG_DWORD && ValueLength==sizeof(DWORD))
+	*((DWORD*)Context) = *(DWORD*)ValueData;
+
+  return STATUS_SUCCESS;
+}
+
 /*
  * NtUserPaintDesktop
  *
@@ -675,7 +713,7 @@ NtUserCloseDesktop(HDESK hDesktop)
  * function is provided primarily for shell desktops.
  *
  * Parameters
- *    hdc 
+ *    hDC 
  *       Handle to the device context. 
  *
  * Status
@@ -688,6 +726,13 @@ NtUserPaintDesktop(HDC hDC)
   RECT Rect;
   HBRUSH DesktopBrush, PreviousBrush;
   HWND hWndDesktop;
+  BOOL doPatBlt = TRUE;
+
+  RTL_QUERY_REGISTRY_TABLE queryTable[2];
+  DWORD displayVersion;
+  NTSTATUS status;
+  int len;
+
   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
   IntGdiGetClipBox(hDC, &Rect);
@@ -728,23 +773,73 @@ NtUserPaintDesktop(HDC hDC)
           NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
           NtGdiSelectObject(hDC, PreviousBrush);
         }
-        
+		else
+		  doPatBlt = FALSE;
+
         hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
         NtGdiBitBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, hWallpaperDC, 0, 0, SRCCOPY);
         NtGdiSelectObject(hWallpaperDC, hOldBitmap);
         
         NtGdiDeleteDC(hWallpaperDC);
-        if(x <= 0 && y <= 0) return TRUE;
       }
     }
   }
 
-  PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
-  NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-  NtGdiSelectObject(hDC, PreviousBrush);
+  if (doPatBlt) {
+	PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
+	NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
+	NtGdiSelectObject(hDC, PreviousBrush);
+  }
+
+  /*
+   * Display system version on the desktop background
+   */
+
+  RtlZeroMemory(queryTable, sizeof(queryTable));
+
+  queryTable[0].QueryRoutine = PaintDesktopVersionCallback;
+  queryTable[0].Name = L"PaintDesktopVersion";
+  queryTable[0].EntryContext = &displayVersion;
+
+  /* query the "PaintDesktopVersion" flag in the "Control Panel\Desktop" key */
+  status = RtlQueryRegistryValues(RTL_REGISTRY_USER, L"Control Panel\\Desktop", queryTable, NULL, NULL);
+
+  if (!NT_SUCCESS(status)) {
+	DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion: status=%x\n", status);
+	displayVersion = 0;
+  }
+  DPRINT("PaintDesktopVersion=%d\n", displayVersion);
+
+  if (displayVersion) {
+	static WCHAR s_wszVersion[256] = {0};
+	RECT rect;
+
+	if (*s_wszVersion)
+	  len = wcslen(s_wszVersion);
+	else
+	  len = GetSystemVersionString(s_wszVersion);
+
+	if (len) {
+	  if (!NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0)) {
+		rect.right = NtUserGetSystemMetrics(SM_CXSCREEN);
+		rect.bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+	  }
+
+	  COLORREF color_old = NtGdiSetTextColor(hDC, RGB(255,255,255));
+	  UINT align_old = NtGdiSetTextAlign(hDC, TA_RIGHT);
+	  int mode_old = NtGdiSetBkMode(hDC, TRANSPARENT);
+
+	  NtGdiTextOut(hDC, rect.right-16, rect.bottom-48, s_wszVersion, len);
+
+	  NtGdiSetBkMode(hDC, mode_old);
+	  NtGdiSetTextAlign(hDC, align_old);
+	  NtGdiSetTextColor(hDC, color_old);
+	}
+  }
 
   return TRUE;
 }
+
 
 /*
  * NtUserSwitchDesktop
