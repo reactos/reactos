@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.17 2002/09/19 16:17:48 ekohl Exp $
+/* $Id: cdrom.c,v 1.18 2002/12/15 14:34:43 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -275,7 +275,6 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
   DPRINT("CdromClassFindDevices() done\n");
 
   return(FoundDevice);
-//  return(TRUE);
 }
 
 
@@ -462,12 +461,18 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
+  /* Initialize lookaside list for SRBs */
+  ScsiClassInitializeSrbLookasideList(DiskDeviceExtension,
+				      4);
+
   /* Get disk geometry */
   DiskDeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
 						     sizeof(DISK_GEOMETRY));
   if (DiskDeviceExtension->DiskGeometry == NULL)
     {
       DPRINT1("Failed to allocate geometry buffer!\n");
+
+      ExDeleteNPagedLookasideList(&DiskDeviceExtension->SrbLookasideListHead);
 
       IoDeleteDevice(DiskDeviceObject);
 
@@ -511,6 +516,7 @@ CdromClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   return(STATUS_SUCCESS);
 }
 
+
 /**********************************************************************
  * NAME
  *	CdromClassReadTocEntry
@@ -543,13 +549,14 @@ CdromClassReadTocEntry(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, 
   Cdb->READ_TOC.AllocationLength[0] = Length >> 8;
   Cdb->READ_TOC.AllocationLength[1] = Length & 0xff;
   Cdb->READ_TOC.Msf = 1;
- 
-  return ScsiClassSendSrbSynchronous(DeviceObject,
+
+  return(ScsiClassSendSrbSynchronous(DeviceObject,
 				     &Srb,
 				     Buffer,
 				     Length,
-				     FALSE);
+				     FALSE));
 }
+
 
 static NTSTATUS
 CdromClassReadLastSession(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffer, UINT Length)
@@ -569,13 +576,14 @@ CdromClassReadLastSession(PDEVICE_OBJECT DeviceObject, UINT TrackNo, PVOID Buffe
   Cdb->READ_TOC.AllocationLength[0] = Length >> 8;
   Cdb->READ_TOC.AllocationLength[1] = Length & 0xff;
   Cdb->READ_TOC.Msf = 0;
- 
-  return ScsiClassSendSrbSynchronous(DeviceObject,
+
+  return(ScsiClassSendSrbSynchronous(DeviceObject,
 				     &Srb,
 				     Buffer,
 				     Length,
-				     FALSE);
+				     FALSE));
 }
+
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -649,62 +657,73 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	  }
 	break;
+
       case IOCTL_CDROM_READ_TOC:
-	  DPRINT("IOCTL_CDROM_READ_TOC\n");
-	  if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(CDROM_TOC))
+	DPRINT("IOCTL_CDROM_READ_TOC\n");
+	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(CDROM_TOC))
 	  {
-	      Status = STATUS_INFO_LENGTH_MISMATCH;
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
 	  }
-	  else
+	else
 	  {
-	      PCDROM_TOC TocBuffer;
-	      USHORT Length;
+	    PCDROM_TOC TocBuffer;
+	    USHORT Length;
 
-	      TocBuffer = Irp->AssociatedIrp.SystemBuffer;
+	    TocBuffer = Irp->AssociatedIrp.SystemBuffer;
 
-	      /* First read the lead out */
-	      Length = 4 + sizeof(TRACK_DATA);
-	      Status = CdromClassReadTocEntry(DeviceObject, 0xaa, TocBuffer, Length);
-
-	      if (NT_SUCCESS(Status))
+	    /* First read the lead out */
+	    Length = 4 + sizeof(TRACK_DATA);
+	    Status = CdromClassReadTocEntry(DeviceObject,
+					    0xAA,
+					    TocBuffer,
+					    Length);
+	    if (NT_SUCCESS(Status))
 	      {
-		 if (TocBuffer->FirstTrack == 0xaa)
-		 {
+		if (TocBuffer->FirstTrack == 0xaa)
+		  {
 		    /* there is an empty cd */
-		    Information = Length; 
-		 }
-		 else
-		 {
+		    Information = Length;
+		  }
+		else
+		  {
 		    /* read the toc */
 		    Length = 4 + sizeof(TRACK_DATA) * (TocBuffer->LastTrack - TocBuffer->FirstTrack + 2);
-	            Status = CdromClassReadTocEntry(DeviceObject, TocBuffer->FirstTrack, TocBuffer, Length);
-	            if (NT_SUCCESS(Status))
-		    {
-		       Information = Length;
-		    }
-		 }
+		    Status = CdromClassReadTocEntry(DeviceObject,
+						    TocBuffer->FirstTrack,
+						    TocBuffer, Length);
+		    if (NT_SUCCESS(Status))
+		      {
+			Information = Length;
+		      }
+		  }
 	      }
 	  }
-	  break;
-      case IOCTL_CDROM_GET_LAST_SESSION:
-	  DPRINT("IOCTL_CDROM_GET_LAST_SESSION\n");
-	  if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < 4 + sizeof(TRACK_DATA))
-	  {
-	      Status = STATUS_INFO_LENGTH_MISMATCH;
-	  }
-	  else
-	  {
-	      USHORT Length;
-	      PCDROM_TOC TocBuffer = Irp->AssociatedIrp.SystemBuffer;
+	break;
 
-	      Length = 4 + sizeof(TRACK_DATA);
-	      Status = CdromClassReadLastSession(DeviceObject, 0, TocBuffer, Length);
-	      if (NT_SUCCESS(Status))
+      case IOCTL_CDROM_GET_LAST_SESSION:
+	DPRINT("IOCTL_CDROM_GET_LAST_SESSION\n");
+	if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < 4 + sizeof(TRACK_DATA))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	else
+	  {
+	    PCDROM_TOC TocBuffer;
+	    USHORT Length;
+
+	    TocBuffer = Irp->AssociatedIrp.SystemBuffer;
+	    Length = 4 + sizeof(TRACK_DATA);
+	    Status = CdromClassReadLastSession(DeviceObject,
+					       0,
+					       TocBuffer,
+					       Length);
+	    if (NT_SUCCESS(Status))
 	      {
-                 Information = Length;
+		Information = Length;
 	      }
 	  }
-	  break;
+	break;
+
       default:
 	/* Call the common device control function */
 	return(ScsiClassDeviceControl(DeviceObject, Irp));

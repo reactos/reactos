@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.27 2002/11/18 22:40:32 ekohl Exp $
+/* $Id: class2.c,v 1.28 2002/12/15 14:33:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -160,9 +160,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   DPRINT("Logical block address: %lu\n", LogicalBlockAddress);
 
   /* Allocate and initialize an SRB */
-  /* FIXME: use lookaside list instead */
-  Srb = ExAllocatePool(NonPagedPool,
-		       sizeof(SCSI_REQUEST_BLOCK));
+  Srb = ExAllocateFromNPagedLookasideList(&DeviceExtension->SrbLookasideListHead);
 
   Srb->SrbFlags = 0;
   Srb->Length = sizeof(SCSI_REQUEST_BLOCK); //SCSI_REQUEST_BLOCK_SIZE;
@@ -929,9 +927,9 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 	}
     }
 
-  /* FIXME: use lookaside list instead */
-  DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
-  ExFreePool(IrpStack->Parameters.Scsi.Srb);
+  /* Free the SRB */
+  ExFreeToNPagedLookasideList(&DeviceExtension->SrbLookasideListHead,
+			      Srb);
 
   Irp->IoStatus.Status = Status;
   if (!NT_SUCCESS(Status))
@@ -1011,9 +1009,9 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 	}
     }
 
-  /* FIXME: use lookaside list instead */
-  DPRINT("Freed SRB %p\n", IrpStack->Parameters.Scsi.Srb);
-  ExFreePool(IrpStack->Parameters.Scsi.Srb);
+  /* Free the SRB */
+  ExFreeToNPagedLookasideList(&DeviceExtension->SrbLookasideListHead,
+			      Srb);
 
   Irp->IoStatus.Status = Status;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.19 2002/09/19 16:18:14 ekohl Exp $
+/* $Id: disk.c,v 1.20 2002/12/15 14:34:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -491,6 +491,10 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   DiskDeviceExtension->TargetId = InquiryData->TargetId;
   DiskDeviceExtension->Lun = InquiryData->Lun;
 
+  /* Initialize the lookaside list for SRBs */
+  ScsiClassInitializeSrbLookasideList(DiskDeviceExtension,
+				      4);
+
   /* zero-out disk data */
   DiskData = (PDISK_DATA)(DiskDeviceExtension + 1);
   RtlZeroMemory(DiskData,
@@ -502,6 +506,8 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   if (DiskDeviceExtension->DiskGeometry == NULL)
     {
       DPRINT("Failed to allocate geometry buffer!\n");
+
+      ExDeleteNPagedLookasideList(&DiskDeviceExtension->SrbLookasideListHead);
 
       IoDeleteDevice(DiskDeviceObject);
 
@@ -552,41 +558,41 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
     }
   else
     {
-  /* Read partition table */
-  Status = IoReadPartitionTable(DiskDeviceObject,
-				DiskDeviceExtension->DiskGeometry->BytesPerSector,
-				TRUE,
-				&PartitionList);
+      /* Read partition table */
+      Status = IoReadPartitionTable(DiskDeviceObject,
+				    DiskDeviceExtension->DiskGeometry->BytesPerSector,
+				    TRUE,
+				    &PartitionList);
 
-  DPRINT("IoReadPartitionTable(): Status: %lx\n", Status);
+      DPRINT("IoReadPartitionTable(): Status: %lx\n", Status);
 
-  if ((!NT_SUCCESS(Status) || PartitionList->PartitionCount == 0) &&
-      DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
-    {
-      if (!NT_SUCCESS(Status))
+      if ((!NT_SUCCESS(Status) || PartitionList->PartitionCount == 0) &&
+	  DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
 	{
-	  /* Drive is not ready. */
-	  DPRINT("Drive not ready\n");
-	  DiskData->DriveNotReady = TRUE;
-	}
-      else
-	{
-	  ExFreePool(PartitionList);
-	}
+	  if (!NT_SUCCESS(Status))
+	    {
+	      /* Drive is not ready. */
+	      DPRINT("Drive not ready\n");
+	      DiskData->DriveNotReady = TRUE;
+	    }
+	  else
+	    {
+	      ExFreePool(PartitionList);
+	    }
 
-      /* Allocate a partition list for a single entry. */
-      PartitionList = ExAllocatePool(NonPagedPool,
-				     sizeof(DRIVE_LAYOUT_INFORMATION));
-      if (PartitionList != NULL)
-	{
-	  RtlZeroMemory(PartitionList,
-			sizeof(DRIVE_LAYOUT_INFORMATION));
-	  PartitionList->PartitionCount = 1;
+	  /* Allocate a partition list for a single entry. */
+	  PartitionList = ExAllocatePool(NonPagedPool,
+					 sizeof(DRIVE_LAYOUT_INFORMATION));
+	  if (PartitionList != NULL)
+	    {
+	      RtlZeroMemory(PartitionList,
+			    sizeof(DRIVE_LAYOUT_INFORMATION));
+	      PartitionList->PartitionCount = 1;
 
-	  Status = STATUS_SUCCESS;
+	      Status = STATUS_SUCCESS;
+	    }
 	}
     }
-  }
 
   if (NT_SUCCESS(Status))
     {
@@ -641,6 +647,10 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      PartitionDeviceExtension->TargetId = InquiryData->TargetId;
 	      PartitionDeviceExtension->Lun = InquiryData->Lun;
 	      PartitionDeviceExtension->SectorShift = DiskDeviceExtension->SectorShift;
+
+	      /* Initialize lookaside list for SRBs */
+	      ScsiClassInitializeSrbLookasideList(PartitionDeviceExtension,
+						  8);
 
 	      DiskData = (PDISK_DATA)(PartitionDeviceExtension + 1);
 	      DiskData->PartitionType = PartitionEntry->PartitionType;
