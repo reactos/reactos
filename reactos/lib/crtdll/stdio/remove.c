@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <io.h>
 
 int remove(const char *fn)
 {

@@ -1,11 +1,10 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-//#include <libc/stubs.h>
 #include <stdio.h>
 #include <io.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-//#include <unistd.h>
+
 #include <libc/file.h>
 
 #ifndef __dj_include_stdio_h_

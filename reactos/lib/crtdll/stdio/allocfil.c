@@ -3,8 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <libc/file.h>
-//#include <libc/local.h>
-//#include <libc/stdiohk.h>
+
 
 FILE *	__alloc_file(void);
 

@@ -14,7 +14,7 @@ puts(const char *s)
   return putchar('\n');
   */
 	int r = 0;
-	if ( !WriteFile(filehnd(stdout->_file),s,strlen(s),&r,NULL) ) 
+	if ( !WriteFile(_get_osfhandle(stdout->_file),s,strlen(s),&r,NULL) ) 
 		return -1;
 
   	return putchar('\n');;
