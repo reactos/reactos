@@ -2093,14 +2093,14 @@ CreateProcessW(
     DWORD dwCreationFlags,
     LPVOID lpEnvironment,
     LPCWSTR lpCurrentDirectory,
-    LPSTARTUPINFO lpStartupInfo,
+    LPSTARTUPINFOW lpStartupInfo,
     LPPROCESS_INFORMATION lpProcessInformation
     );
 
 VOID
 STDCALL
 GetStartupInfoW(
-    LPSTARTUPINFO lpStartupInfo
+    LPSTARTUPINFOW lpStartupInfo
     );
 
 HANDLE
@@ -2999,7 +2999,7 @@ DdeQueryStringW (DWORD, HSZ, LPCWSTR, DWORD, int);
 WINBOOL STDCALL LogonUserW (LPWSTR, LPWSTR, LPWSTR, DWORD, DWORD, HANDLE *);
 WINBOOL STDCALL CreateProcessAsUserW (HANDLE, LPCWSTR, LPWSTR,
 			SECURITY_ATTRIBUTES*, SECURITY_ATTRIBUTES*, WINBOOL,
-			DWORD, LPVOID, LPCWSTR, STARTUPINFO*,
+                        DWORD, LPVOID, LPCWSTR, STARTUPINFOW*,
 			PROCESS_INFORMATION*);
 
 #ifdef __cplusplus

@@ -62,32 +62,22 @@ static NTSTATUS LdrCreatePeb(HANDLE ProcessHandle)
    ULONG		PebSize;
    NT_PEB		Peb;
    ULONG		BytesWritten;
-   
-   
+
    PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
-   Status = ZwAllocateVirtualMemory(ProcessHandle,
-				    &PebBase,
-				    0,
-				    &PebSize,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   
+
    memset(&Peb, 0, sizeof Peb);
-   
-   Peb.StartupInfo = (PPROCESSINFOW) PEB_STARTUPINFO;
+
+   Peb.ProcessInfo = (PPROCESSINFO) PEB_STARTUPINFO;
 
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
 			&Peb,
 			sizeof(Peb),
 			&BytesWritten);
-      
+
+   /* FIXME: Create ProcessInfo block */
+
    return(STATUS_SUCCESS);
 }
 

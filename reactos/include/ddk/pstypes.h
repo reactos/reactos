@@ -13,7 +13,7 @@
 
 typedef NTSTATUS (*PKSTART_ROUTINE)(PVOID StartContext);
 
-typedef struct _STACK_INFORMATION 
+typedef struct _STACK_INFORMATION
 {
 	PVOID 	BaseAddress;
 	PVOID	UpperAddress;
@@ -46,30 +46,31 @@ typedef struct linux_sigcontext {
 
 typedef ULONG THREADINFOCLASS;
 
-typedef struct _STARTUPINFOW { 
-  DWORD   cb; 
-  WCHAR	  WindowTitle[MAX_PATH];
-  WCHAR	  ImageFile[MAX_PATH];	
-  WCHAR	  CommandLine[MAX_PATH];
-  WCHAR	  DllPath[MAX_PATH];
-  WCHAR  Reserved[MAX_PATH]; 
-  WCHAR  Desktop[MAX_PATH]; 
-  WCHAR Title[MAX_PATH]; 
-  DWORD   dwX; 
-  DWORD   dwY; 
-  DWORD   dwXSize; 
-  DWORD   dwYSize; 
-  DWORD   dwXCountChars; 
-  DWORD   dwYCountChars; 
-  DWORD   dwFillAttribute; 
-  DWORD   dwFlags; 
-  WORD    wShowWindow; 
-  WORD    cbReserved2; 
-  unsigned char * lpReserved2; 
-  HANDLE  hStdInput; 
-  HANDLE  hStdOutput; 
-  HANDLE  hStdError; 
-} PROCESSINFOW, *PPROCESSINFOW; 
+typedef struct _PROCESSINFO
+{
+	WCHAR	WindowTitle[MAX_PATH];
+	WCHAR	ImageFile[MAX_PATH];
+	WCHAR	CommandLine[MAX_PATH];
+	WCHAR	DllPath[MAX_PATH];
+	WCHAR	Reserved[MAX_PATH];
+	WCHAR	Desktop[MAX_PATH];
+	WCHAR	Title[MAX_PATH];
+	PVOID	Environment;
+	DWORD	dwX;
+	DWORD	dwY;
+	DWORD	dwXSize;
+	DWORD	dwYSize;
+	DWORD	dwXCountChars;
+	DWORD	dwYCountChars;
+	DWORD	dwFillAttribute;
+	DWORD	dwFlags;
+	WORD	wShowWindow;
+	WORD	cbReserved2;
+	unsigned char	*lpReserved2;
+	HANDLE	hStdInput;
+	HANDLE	hStdOutput;
+	HANDLE	hStdError;
+} PROCESSINFO, *PPROCESSINFO;
 
 
 
@@ -92,7 +93,7 @@ typedef struct _NT_PEB
 	WORD			NumberOfProcessors;         // 11h
 	WORD			NtGlobalFlag;               // 13h
 
-	PPROCESSINFOW		StartupInfo;                // 15h
+	PPROCESSINFO		ProcessInfo;                // 15h
 	HANDLE			ProcessHeap;                // 19h
 	ATOMTABLE		LocalAtomTable;             // 1Dh
 	LPCRITICAL_SECTION	CriticalSection;            // 35h
@@ -100,15 +101,15 @@ typedef struct _NT_PEB
 	WORD			MajorVersion;               // 3Dh
 	WORD			MinorVersion;               // 3Fh
 	WORD			BuildNumber;                // 41h
-	WORD			PlatformId;	            // 43h
-} NT_PEB, *PNT_PEB;	
+	WORD			PlatformId;                 // 43h
+} NT_PEB, *PNT_PEB;
 
-typedef struct _CLIENT_ID 
+typedef struct _CLIENT_ID
 {
     HANDLE UniqueProcess;
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
- 
+
 typedef struct _NT_TIB {
     struct _EXCEPTION_REGISTRATION_RECORD *ExceptionList;  // 00h
     PVOID StackBase;                                       // 04h
@@ -124,25 +125,25 @@ typedef struct _NT_TIB {
 
 typedef struct _NT_TEB
 {
-        NT_TIB                  Tib;              // 00h
-        ULONG                   reserved1;        // 1Ch  ???
-        CLIENT_ID               Cid;              // 20h
-        ULONG                   reserved2;        // 28h  ???
-        ULONG                   reserved3;        // 2Ch  ???
-        NT_PEB                  *Peb;             // 30h 
-        DWORD                   LastErrorCode;    // 34h
+	NT_TIB			Tib;              // 00h
+	ULONG			reserved1;        // 1Ch  ???
+	CLIENT_ID		Cid;              // 20h
+	ULONG			reserved2;        // 28h  ???
+	ULONG			reserved3;        // 2Ch  ???
+	PNT_PEB			Peb;             // 30h 
+	DWORD			LastErrorCode;    // 34h
 
-        HANDLE                  RPCHandle;        // 36
-	PVOID	 		TlsData[TLS_MINIMUM_AVAILABLE]; // 40
-        DWORD                   dwTlsIndex;       // 230
+	HANDLE			RPCHandle;        // 36
+	PVOID			TlsData[TLS_MINIMUM_AVAILABLE]; // 40
+	DWORD			dwTlsIndex;       // 230
 	NTSTATUS		LastStatusValue;  // 242
 	DWORD			LockCount;        // 244
 	UCHAR			HardErrorMode;    // 248
 
-        /* reactos only ??? (Eric Kohl) */
-        PVOID                   StackCommit;
-        PVOID                   StackCommitMax;
-        PVOID                   StackReserved;
+	/* reactos only ??? (Eric Kohl) */
+	PVOID			StackCommit;
+	PVOID			StackCommitMax;
+	PVOID			StackReserved;
 } NT_TEB, *PNT_TEB;
 
 struct _KPROCESS;
@@ -233,9 +234,10 @@ typedef struct _KTHREAD
 // According to documentation the stack should have a commited [ 1 page ] and
 // a reserved part [ 1 M ] but can be specified otherwise in the image file.
 
-typedef struct _INITIAL_TEB {
+typedef struct _INITIAL_TEB
+{
 	PVOID StackBase;
-    	PVOID StackLimit;
+	PVOID StackLimit;
 	PVOID StackCommit;
 	PVOID StackCommitMax;
 	PVOID StackReserved;
@@ -289,7 +291,7 @@ typedef struct _ETHREAD {
 	UCHAR 			LpcExitThreadCalled;
 	UCHAR 			HardErrorsAreDisabled;
 
-   
+
    /*
     * Added by David Welch (welch@cwcom.net)
     */

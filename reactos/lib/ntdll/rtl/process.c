@@ -124,7 +124,6 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 			sizeof(DupSectionHandle),
 			&BytesWritten);
 
-   
    Status = NtCreateThread(&ThreadHandle,
                            THREAD_ALL_ACCESS,
                            &ObjectAttributes,
@@ -230,23 +229,21 @@ RtlpCreatePeb(HANDLE ProcessHandle, PUNICODE_STRING CommandLine)
     ULONG PebSize;
     NT_PEB Peb;
     ULONG BytesWritten;
-    PVOID StartupInfoBase;
-    ULONG StartupInfoSize;
-    PROCESSINFOW StartupInfo;
+    PVOID ProcessInfoBase;
+    ULONG ProcessInfoSize;
+    PROCESSINFO ProcessInfo;
 
     PebBase = (PVOID)PEB_BASE;
     PebSize = 0x1000;
-    Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &PebBase,
-                                     0,
-                                     &PebSize,
-                                     MEM_COMMIT,
-                                     PAGE_READWRITE);
-    if (!NT_SUCCESS(Status))
-	return(Status);
+
+    NtReadVirtualMemory(ProcessHandle,
+                        (PVOID)PEB_BASE,
+                        &Peb,
+                        sizeof(Peb),
+                        &BytesWritten);
 
     memset(&Peb, 0, sizeof(Peb));
-    Peb.StartupInfo = (PPROCESSINFOW)PEB_STARTUPINFO;
+    Peb.ProcessInfo = (PPROCESSINFO)PEB_STARTUPINFO;
 
     NtWriteVirtualMemory(ProcessHandle,
                          (PVOID)PEB_BASE,
@@ -254,25 +251,25 @@ RtlpCreatePeb(HANDLE ProcessHandle, PUNICODE_STRING CommandLine)
                          sizeof(Peb),
                          &BytesWritten);
 
-    StartupInfoBase = (PVOID)PEB_STARTUPINFO;
-    StartupInfoSize = 0x1000;
+    ProcessInfoBase = (PVOID)PEB_STARTUPINFO;
+    ProcessInfoSize = 0x1000;
     Status = NtAllocateVirtualMemory(ProcessHandle,
-                                     &StartupInfoBase,
+                                     &ProcessInfoBase,
                                      0,
-                                     &StartupInfoSize,
+                                     &ProcessInfoSize,
                                      MEM_COMMIT,
                                      PAGE_READWRITE);
     if (!NT_SUCCESS(Status))
 	return(Status);
 
-    memset(&StartupInfo, 0, sizeof(StartupInfo));
-    wcscpy(StartupInfo.CommandLine, CommandLine->Buffer);
+    memset(&ProcessInfo, 0, sizeof(PROCESSINFO));
+    wcscpy(ProcessInfo.CommandLine, CommandLine->Buffer);
 
-    DPRINT("StartupInfoSize %x\n",StartupInfoSize);
+    DPRINT("ProcessInfoSize %x\n",ProcessInfoSize);
     NtWriteVirtualMemory(ProcessHandle,
                          (PVOID)PEB_STARTUPINFO,
-                         &StartupInfo,
-                         StartupInfoSize,
+                         &ProcessInfo,
+                         ProcessInfoSize,
                          &BytesWritten);
 
     return STATUS_SUCCESS;
@@ -283,14 +280,11 @@ NTSTATUS STDCALL
 RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
                      PSECURITY_DESCRIPTOR ProcessSd,
                      PSECURITY_DESCRIPTOR ThreadSd,
-			       WINBOOL bInheritHandles,
-			       DWORD dwCreationFlags,
-//                               LPVOID lpEnvironment,
-//                               LPCWSTR lpCurrentDirectory,
-//                               LPSTARTUPINFO lpStartupInfo,
-                               PCLIENT_ID ClientId,
-                               PHANDLE ProcessHandle,
-                               PHANDLE ThreadHandle)
+                     WINBOOL bInheritHandles,
+                     DWORD dwCreationFlags,
+                     PCLIENT_ID ClientId,
+                     PHANDLE ProcessHandle,
+                     PHANDLE ThreadHandle)
 {
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
@@ -398,3 +392,4 @@ RtlCreateUserProcess(PUNICODE_STRING ApplicationName,
     return STATUS_SUCCESS;
 }
 
+/* EOF */

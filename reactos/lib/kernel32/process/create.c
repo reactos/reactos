@@ -1,4 +1,5 @@
-/*
+/* $Id: create.c,v 1.12 1999/10/13 22:35:55 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/proc/proc.c
@@ -36,7 +37,7 @@ WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
 			       DWORD dwCreationFlags,
 			       LPVOID lpEnvironment,
 			       LPCSTR lpCurrentDirectory,
-			       LPSTARTUPINFO lpStartupInfo,
+			       LPSTARTUPINFOA lpStartupInfo,
 			       LPPROCESS_INFORMATION lpProcessInformation)
 /*
  * FUNCTION: The CreateProcess function creates a new process and its
@@ -65,24 +66,24 @@ WINBOOL STDCALL CreateProcessA(LPCSTR lpApplicationName,
    DPRINT("CreateProcessA\n");
    
    PApplicationNameW = InternalAnsiToUnicode(ApplicationNameW,
-					     lpApplicationName,					     
+					     lpApplicationName,
 					     MAX_PATH);
    PCommandLineW = InternalAnsiToUnicode(CommandLineW,
 					 lpCommandLine,
 					 MAX_PATH);
    PCurrentDirectoryW = InternalAnsiToUnicode(CurrentDirectoryW,
 					      lpCurrentDirectory,
-					      MAX_PATH);	
+					      MAX_PATH);
    return CreateProcessW(PApplicationNameW,
-			 PCommandLineW, 
+			 PCommandLineW,
 			 lpProcessAttributes,
 			 lpThreadAttributes,
 			 bInheritHandles,
 			 dwCreationFlags,
 			 lpEnvironment,
 			 PCurrentDirectoryW,
-			 lpStartupInfo,
-			 lpProcessInformation);				
+			 (LPSTARTUPINFOW)lpStartupInfo,
+			 lpProcessInformation);
 }
 
 #define STACK_TOP (0xb0000000)
@@ -98,7 +99,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
 				 HANDLE NTDllSectionHandle,
 				 HANDLE SectionHandle,
 				 PVOID ImageBase)
-{	
+{
    NTSTATUS Status;
    HANDLE ThreadHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
@@ -109,7 +110,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    PVOID BaseAddress;
    ULONG BytesWritten;
    HANDLE DupNTDllSectionHandle, DupSectionHandle;
-      
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = NULL;
@@ -141,7 +142,6 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
      {
 	return(NULL);
      }
-   
 
    memset(&ThreadContext,0,sizeof(CONTEXT));
    ThreadContext.Eip = (ULONG)lpStartAddress;
@@ -150,7 +150,7 @@ HANDLE STDCALL CreateFirstThread(HANDLE ProcessHandle,
    ThreadContext.SegEs = USER_DS;
    ThreadContext.SegDs = USER_DS;
    ThreadContext.SegCs = USER_CS;
-   ThreadContext.SegSs = USER_DS;        
+   ThreadContext.SegSs = USER_DS;
    ThreadContext.Esp = STACK_TOP - 16;
    ThreadContext.EFlags = (1<<1) + (1<<9);
    
@@ -348,57 +348,50 @@ static NTSTATUS CreatePeb(HANDLE ProcessHandle, PWSTR CommandLine)
    ULONG PebSize;
    NT_PEB Peb;
    ULONG BytesWritten;
-   PVOID StartupInfoBase;
-   ULONG StartupInfoSize;
-   PROCESSINFOW StartupInfo;
-   
+   PVOID ProcessInfoBase;
+   ULONG ProcessInfoSize;
+   PROCESSINFO ProcessInfo;
+
    PebBase = (PVOID)PEB_BASE;
    PebSize = 0x1000;
-   Status = ZwAllocateVirtualMemory(ProcessHandle,
-				    &PebBase,
-				    0,
-				    &PebSize,
-				    MEM_COMMIT,
-				    PAGE_READWRITE);
-   if (!NT_SUCCESS(Status))
-     {
-	return(Status);
-     }
-   
-   
-   memset(&Peb, 0, sizeof(Peb));
-   Peb.StartupInfo = (PPROCESSINFOW)PEB_STARTUPINFO;
 
-   ZwWriteVirtualMemory(ProcessHandle,
+   NtReadVirtualMemory(ProcessHandle,
+		       (PVOID)PEB_BASE,
+		       &Peb,
+		       sizeof(Peb),
+		       &BytesWritten);
+
+   Peb.ProcessInfo = (PPROCESSINFO)PEB_STARTUPINFO;
+
+   NtWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_BASE,
 			&Peb,
 			sizeof(Peb),
 			&BytesWritten);
-   
-   StartupInfoBase = (PVOID)PEB_STARTUPINFO;
-   StartupInfoSize = 0x1000;
-   Status = ZwAllocateVirtualMemory(ProcessHandle,
-				    &StartupInfoBase,
+
+   ProcessInfoBase = (PVOID)PEB_STARTUPINFO;
+   ProcessInfoSize = 0x1000;
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+				    &ProcessInfoBase,
 				    0,
-				    &StartupInfoSize,
+				    &ProcessInfoSize,
 				    MEM_COMMIT,
 				    PAGE_READWRITE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
-   
-   
-   memset(&StartupInfo, 0, sizeof(StartupInfo));
-   wcscpy(StartupInfo.CommandLine, CommandLine);
-   
-   DPRINT("StartupInfoSize %x\n",StartupInfoSize);
+
+   memset(&ProcessInfo, 0, sizeof(PROCESSINFO));
+   wcscpy(ProcessInfo.CommandLine, CommandLine);
+
+   DPRINT("ProcessInfoSize %x\n",ProcessInfoSize);
    ZwWriteVirtualMemory(ProcessHandle,
 			(PVOID)PEB_STARTUPINFO,
-			&StartupInfo,
-			StartupInfoSize,
+			&ProcessInfo,
+			ProcessInfoSize,
 			&BytesWritten);
-      
+
    return(STATUS_SUCCESS);
 }
 
@@ -411,7 +404,7 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 			       DWORD dwCreationFlags,
 			       LPVOID lpEnvironment,
 			       LPCWSTR lpCurrentDirectory,
-			       LPSTARTUPINFO lpStartupInfo,
+			       LPSTARTUPINFOW lpStartupInfo,
 			       LPPROCESS_INFORMATION lpProcessInformation)
 {
    HANDLE hSection, hProcess, hThread;
@@ -500,13 +493,13 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 	SetLastError(RtlNtStatusToDosError(Status));
 	return FALSE;
      }
-   
+
    /*
-    * 
+    * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
    CreatePeb(hProcess, TempCommandLine);
-   
+
    DPRINT("Creating thread for process\n");
    lpStartAddress = (LPTHREAD_START_ROUTINE)
      ((PIMAGE_OPTIONAL_HEADER)OPTHDROFFSET(NTDLL_BASE))->
@@ -526,10 +519,11 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
 
    if ( hThread == NULL )
      return FALSE;
-      
+
    lpProcessInformation->hProcess = hProcess;
    lpProcessInformation->hThread = hThread;
 
-   return TRUE;				
+   return TRUE;
 }
 
+/* EOF */

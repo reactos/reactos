@@ -41,6 +41,6 @@ LPSTR STDCALL GetCommandLineA(VOID)
 
 LPWSTR STDCALL GetCommandLineW(VOID)
 {
-   return(NtCurrentPeb()->StartupInfo->CommandLine);
+   return(NtCurrentPeb()->ProcessInfo->CommandLine);
 }
 

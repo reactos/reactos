@@ -18,6 +18,7 @@
 #include <string.h>
 #include <internal/string.h>
 #include <internal/id.h>
+#include <internal/teb.h>
 
 //#define NDEBUG
 #include <internal/debug.h>
@@ -108,6 +109,44 @@ VOID PiDeleteProcess(PVOID ObjectBody)
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
    (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
 }
+
+
+static NTSTATUS
+PsCreatePeb(HANDLE ProcessHandle)
+{
+   NTSTATUS Status;
+   PVOID PebBase;
+   ULONG PebSize;
+   NT_PEB Peb;
+   ULONG BytesWritten;
+   
+   PebBase = (PVOID)PEB_BASE;
+   PebSize = 0x1000;
+   Status = NtAllocateVirtualMemory(ProcessHandle,
+				    &PebBase,
+				    0,
+				    &PebSize,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   memset(&Peb, 0, sizeof(Peb));
+
+   ZwWriteVirtualMemory(ProcessHandle,
+			(PVOID)PEB_BASE,
+			&Peb,
+			sizeof(Peb),
+			&BytesWritten);
+
+   DbgPrint ("PsCreatePeb: Peb created at %x\n", PebBase);
+//   DPRINT("PsCreatePeb: Peb created at %x\n", PebBase);
+
+   return(STATUS_SUCCESS);
+}
+
 
 PKPROCESS KeGetCurrentProcess(VOID)
 /*
@@ -210,7 +249,15 @@ NtCreateProcess (
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
    InsertHeadList(&PsProcessListHead, &KProcess->ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-   
+
+   Status = PsCreatePeb (*ProcessHandle);
+   if (!NT_SUCCESS(Status))
+     {
+//        DPRINT("NtCreateProcess() Peb creation failed: Status %x\n",Status);
+        DbgPrint ("NtCreateProcess() Peb creation failed: Status %x\n",Status);
+	return(Status);
+     }
+
    /*
     * FIXME: I don't what I'm supposed to know with a section handle
     */

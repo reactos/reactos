@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.21 1999/10/07 23:45:25 ekohl Exp $
+/* $Id: proc.c,v 1.22 1999/10/13 22:35:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,7 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#define UNICODE
+//#define UNICODE
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
@@ -25,7 +25,7 @@
 #include <kernel32/kernel32.h>
 
 /* TYPES *********************************************************************/
-
+/*
 typedef struct _WSTARTUPINFO { 
   DWORD   cb; 
   LPWSTR  lpReserved; 
@@ -45,7 +45,8 @@ typedef struct _WSTARTUPINFO {
   HANDLE  hStdInput; 
   HANDLE  hStdOutput; 
   HANDLE  hStdError; 
-} WSTARTUPINFO, *LPWSTARTUPINFO; 
+} WSTARTUPINFO, *LPWSTARTUPINFO;
+*/
 
 /* GLOBALS *******************************************************************/
 
@@ -113,8 +114,8 @@ GetCurrentThread (VOID)
 DWORD
 STDCALL
 GetCurrentProcessId (VOID)
-{	
-	return (DWORD) (GetTeb()->Cid).UniqueProcess;		
+{
+	return (DWORD) (GetTeb()->Cid).UniqueProcess;
 }
 
 
@@ -186,13 +187,13 @@ InternalAnsiToUnicode (
    else
      {
 	i = 0;
-   	while ((*In)!=0 && i < MaxLength)
+	while ((*In)!=0 && i < MaxLength)
 	  {
 	     Out[i] = *In;
 	     In++;
 	     i++;
 	  }
-   	Out[i] = 0;
+	Out[i] = 0;
 	return(Out);
      }
 }
@@ -245,15 +246,15 @@ WinExec (
 	UINT	uCmdShow
 	)
 {
-   STARTUPINFO StartupInfo;
-   PROCESS_INFORMATION  ProcessInformation; 	
+   STARTUPINFOA StartupInfo;
+   PROCESS_INFORMATION  ProcessInformation;
    HINSTANCE hInst;
    DWORD dosErr;
    
-   StartupInfo.cb = sizeof(STARTUPINFO);
-   StartupInfo.wShowWindow = uCmdShow ;
+   StartupInfo.cb = sizeof(STARTUPINFOA);
+   StartupInfo.wShowWindow = uCmdShow;
    StartupInfo.dwFlags = 0;
-   
+
    hInst = (HINSTANCE)CreateProcessA(NULL,
 				     (PVOID)lpCmdLine,
 				     NULL,
@@ -335,112 +336,89 @@ SleepEx (
 VOID
 STDCALL
 GetStartupInfoW (
-	LPSTARTUPINFO	_lpStartupInfo
+	LPSTARTUPINFOW lpStartupInfo
 	)
 {
    NT_PEB *pPeb = NtCurrentPeb();
-   LPWSTARTUPINFO lpStartupInfo = (LPWSTARTUPINFO)_lpStartupInfo;
-   
+
    if (lpStartupInfo == NULL)
      {
 	SetLastError(ERROR_INVALID_PARAMETER);
 	return;
      }
-   
-   lpStartupInfo->cb = sizeof(STARTUPINFO);
-//   lstrcpyW(lpStartupInfo->lpDesktop, pPeb->StartupInfo->Desktop); 
-//   lstrcpyW(lpStartupInfo->lpTitle, pPeb->StartupInfo->Title);
-   lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
-   lpStartupInfo->dwY = pPeb->StartupInfo->dwY; 
-   lpStartupInfo->dwXSize = pPeb->StartupInfo->dwXSize; 
-   lpStartupInfo->dwYSize = pPeb->StartupInfo->dwYSize; 
-   lpStartupInfo->dwXCountChars = pPeb->StartupInfo->dwXCountChars; 
-   lpStartupInfo->dwYCountChars = pPeb->StartupInfo->dwYCountChars; 
-   lpStartupInfo->dwFillAttribute = pPeb->StartupInfo->dwFillAttribute; 
-   lpStartupInfo->dwFlags = pPeb->StartupInfo->dwFlags; 
-   lpStartupInfo->wShowWindow = pPeb->StartupInfo->wShowWindow; 
-   //lpStartupInfo->cbReserved2 = pPeb->StartupInfo->cbReserved; 
-   //lpStartupInfo->lpReserved = pPeb->StartupInfo->lpReserved1; 
-   //lpStartupInfo->lpReserved2 = pPeb->StartupInfo->lpReserved2; 
-   
-        lpStartupInfo->cb = sizeof(STARTUPINFO);
-    	lstrcpyW(lpStartupInfo->lpDesktop, pPeb->StartupInfo->Desktop); 
-    	lstrcpyW(lpStartupInfo->lpTitle, pPeb->StartupInfo->Title);
-    	lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
-    	lpStartupInfo->dwY = pPeb->StartupInfo->dwY; 
-    	lpStartupInfo->dwXSize = pPeb->StartupInfo->dwXSize; 
-    	lpStartupInfo->dwYSize = pPeb->StartupInfo->dwYSize; 
-    	lpStartupInfo->dwXCountChars = pPeb->StartupInfo->dwXCountChars; 
-    	lpStartupInfo->dwYCountChars = pPeb->StartupInfo->dwYCountChars; 
-    	lpStartupInfo->dwFillAttribute = pPeb->StartupInfo->dwFillAttribute; 
-    	lpStartupInfo->dwFlags = pPeb->StartupInfo->dwFlags; 
-    	lpStartupInfo->wShowWindow = pPeb->StartupInfo->wShowWindow; 
-    	//lpStartupInfo->cbReserved2 = pPeb->StartupInfo->cbReserved; 
-	//lpStartupInfo->lpReserved = pPeb->StartupInfo->lpReserved1; 
-    	//lpStartupInfo->lpReserved2 = pPeb->StartupInfo->lpReserved2; 
-	
-    	lpStartupInfo->hStdInput = pPeb->StartupInfo->hStdInput; 
-    	lpStartupInfo->hStdOutput = pPeb->StartupInfo->hStdOutput; 
-    	lpStartupInfo->hStdError = pPeb->StartupInfo->hStdError; 
-	
-	
-	
-	return;
+
+   lpStartupInfo->cb = sizeof(STARTUPINFOW);
+//   lstrcpyW(lpStartupInfo->lpDesktop, pPeb->ProcessInfo->Desktop);
+//   lstrcpyW(lpStartupInfo->lpTitle, pPeb->ProcessInfo->Title);
+   lpStartupInfo->dwX = pPeb->ProcessInfo->dwX;
+   lpStartupInfo->dwY = pPeb->ProcessInfo->dwY;
+   lpStartupInfo->dwXSize = pPeb->ProcessInfo->dwXSize;
+   lpStartupInfo->dwYSize = pPeb->ProcessInfo->dwYSize;
+   lpStartupInfo->dwXCountChars = pPeb->ProcessInfo->dwXCountChars;
+   lpStartupInfo->dwYCountChars = pPeb->ProcessInfo->dwYCountChars;
+   lpStartupInfo->dwFillAttribute = pPeb->ProcessInfo->dwFillAttribute;
+   lpStartupInfo->dwFlags = pPeb->ProcessInfo->dwFlags;
+   lpStartupInfo->wShowWindow = pPeb->ProcessInfo->wShowWindow;
+//   lpStartupInfo->cbReserved2 = pPeb->ProcessInfo->cbReserved;
+//   lpStartupInfo->lpReserved = pPeb->ProcessInfo->lpReserved1;
+//   lpStartupInfo->lpReserved2 = pPeb->ProcessInfo->lpReserved2;
+
+   lpStartupInfo->hStdInput = pPeb->ProcessInfo->hStdInput;
+   lpStartupInfo->hStdOutput = pPeb->ProcessInfo->hStdOutput;
+   lpStartupInfo->hStdError = pPeb->ProcessInfo->hStdError;
 }
 
 
 VOID
 STDCALL
 GetStartupInfoA (
-	LPSTARTUPINFO	lpStartupInfo
+	LPSTARTUPINFOA   lpStartupInfo
 	)
 {
    NT_PEB *pPeb = NtCurrentPeb();
    ULONG i = 0;
-   
-   if (lpStartupInfo == NULL) 
+
+   if (lpStartupInfo == NULL)
      {
 	SetLastError(ERROR_INVALID_PARAMETER);
 	return;
      }
-	
-   lpStartupInfo->cb = sizeof(STARTUPINFO);
+
+   lpStartupInfo->cb = sizeof(STARTUPINFOA);
+
    i = 0;
-   
-   while ((pPeb->StartupInfo->Desktop[i])!=0 && i < MAX_PATH)
+   while ((pPeb->ProcessInfo->Desktop[i])!=0 && i < MAX_PATH)
      {
 	lpStartupInfo->lpDesktop[i] = (unsigned char)
-	  pPeb->StartupInfo->Desktop[i];
+	  pPeb->ProcessInfo->Desktop[i];
 	i++;
      }
    lpStartupInfo->lpDesktop[i] = 0;
-   
+
    i = 0;
-   while ((pPeb->StartupInfo->Title[i])!=0 && i < MAX_PATH)
+   while ((pPeb->ProcessInfo->Title[i])!=0 && i < MAX_PATH)
      {
-	lpStartupInfo->lpTitle[i] = (unsigned char)pPeb->StartupInfo->Title[i];
+	lpStartupInfo->lpTitle[i] = (unsigned char)pPeb->ProcessInfo->Title[i];
 	i++;
      }
    lpStartupInfo->lpTitle[i] = 0;
-   
-   lpStartupInfo->dwX = pPeb->StartupInfo->dwX; 
-   lpStartupInfo->dwY = pPeb->StartupInfo->dwY; 
-   lpStartupInfo->dwXSize = pPeb->StartupInfo->dwXSize; 
-   lpStartupInfo->dwYSize = pPeb->StartupInfo->dwYSize; 
-   lpStartupInfo->dwXCountChars = pPeb->StartupInfo->dwXCountChars; 
-   lpStartupInfo->dwYCountChars = pPeb->StartupInfo->dwYCountChars; 
-   lpStartupInfo->dwFillAttribute = pPeb->StartupInfo->dwFillAttribute; 
-   lpStartupInfo->dwFlags = pPeb->StartupInfo->dwFlags; 
-   lpStartupInfo->wShowWindow = pPeb->StartupInfo->wShowWindow; 
-   //lpStartupInfo->cbReserved2 = pPeb->StartupInfo->cbReserved; 
-   //lpStartupInfo->lpReserved = pPeb->StartupInfo->lpReserved1; 
-   //lpStartupInfo->lpReserved2 = pPeb->StartupInfo->lpReserved2; 
-   
-   lpStartupInfo->hStdInput = pPeb->StartupInfo->hStdInput; 
-   lpStartupInfo->hStdOutput = pPeb->StartupInfo->hStdOutput; 
-   lpStartupInfo->hStdError = pPeb->StartupInfo->hStdError; 
-   
-   return;
+
+   lpStartupInfo->dwX = pPeb->ProcessInfo->dwX;
+   lpStartupInfo->dwY = pPeb->ProcessInfo->dwY;
+   lpStartupInfo->dwXSize = pPeb->ProcessInfo->dwXSize;
+   lpStartupInfo->dwYSize = pPeb->ProcessInfo->dwYSize;
+   lpStartupInfo->dwXCountChars = pPeb->ProcessInfo->dwXCountChars;
+   lpStartupInfo->dwYCountChars = pPeb->ProcessInfo->dwYCountChars;
+   lpStartupInfo->dwFillAttribute = pPeb->ProcessInfo->dwFillAttribute;
+   lpStartupInfo->dwFlags = pPeb->ProcessInfo->dwFlags;
+   lpStartupInfo->wShowWindow = pPeb->ProcessInfo->wShowWindow;
+//   lpStartupInfo->cbReserved2 = pPeb->ProcessInfo->cbReserved;
+//   lpStartupInfo->lpReserved = pPeb->ProcessInfo->lpReserved1;
+//   lpStartupInfo->lpReserved2 = pPeb->ProcessInfo->lpReserved2;
+
+   lpStartupInfo->hStdInput = pPeb->ProcessInfo->hStdInput;
+   lpStartupInfo->hStdOutput = pPeb->ProcessInfo->hStdOutput;
+   lpStartupInfo->hStdError = pPeb->ProcessInfo->hStdError;
 }
 
 
@@ -515,12 +493,11 @@ FatalAppExitA (
 	i++;
      }
    MessageTextW[i] = 0;
-   
+
    return FatalAppExitW(uAction,MessageTextW);
 }
 
 
-	
 VOID
 STDCALL
 FatalAppExitW (
@@ -528,7 +505,7 @@ FatalAppExitW (
 	LPCWSTR	lpMessageText
 	)
 {
-	return;	
+	return;
 }
 
 

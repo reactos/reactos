@@ -3971,11 +3971,11 @@ typedef struct tagSOUNDSENTRY {
   DWORD iWindowsEffectOrdinal; 
 } SOUNDSENTRY, *LPSOUNDSENTRY; 
  
-typedef struct _STARTUPINFO { 
+typedef struct _STARTUPINFOA {
   DWORD   cb; 
-  LPTSTR  lpReserved; 
-  LPTSTR  lpDesktop; 
-  LPTSTR  lpTitle; 
+  LPSTR   lpReserved; 
+  LPSTR   lpDesktop; 
+  LPSTR   lpTitle; 
   DWORD   dwX; 
   DWORD   dwY; 
   DWORD   dwXSize; 
@@ -3990,7 +3990,36 @@ typedef struct _STARTUPINFO {
   HANDLE  hStdInput; 
   HANDLE  hStdOutput; 
   HANDLE  hStdError; 
-} STARTUPINFO, *LPSTARTUPINFO;
+} STARTUPINFOA, *LPSTARTUPINFOA;
+
+typedef struct _STARTUPINFOW {
+  DWORD   cb; 
+  LPWSTR  lpReserved; 
+  LPWSTR  lpDesktop; 
+  LPWSTR  lpTitle; 
+  DWORD   dwX; 
+  DWORD   dwY; 
+  DWORD   dwXSize; 
+  DWORD   dwYSize; 
+  DWORD   dwXCountChars; 
+  DWORD   dwYCountChars; 
+  DWORD   dwFillAttribute; 
+  DWORD   dwFlags; 
+  WORD    wShowWindow; 
+  WORD    cbReserved2; 
+  LPBYTE  lpReserved2; 
+  HANDLE  hStdInput; 
+  HANDLE  hStdOutput; 
+  HANDLE  hStdError; 
+} STARTUPINFOW, *LPSTARTUPINFOW;
+
+#ifdef UNICODE
+typedef STARTUPINFOW STARTUPINFO;
+typedef LPSTARTUPINFOW LPSTARTUPINFO;
+#else
+typedef STARTUPINFOA STARTUPINFO;
+typedef LPSTARTUPINFOA LPSTARTUPINFO;
+#endif /* UNICODE */
 
 typedef struct tagSTICKYKEYS {  
   DWORD cbSize; 
