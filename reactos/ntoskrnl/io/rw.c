@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.47 2003/11/08 16:43:02 ekohl Exp $
+/* $Id: rw.c,v 1.48 2003/11/08 16:48:36 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -160,7 +160,7 @@ NtReadFile (IN HANDLE FileHandle,
  */
 NTSTATUS STDCALL
 NtWriteFile (IN HANDLE FileHandle,
-	     IN HANDLE EventHandle OPTIONAL,
+	     IN HANDLE Event OPTIONAL,
 	     IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
 	     IN PVOID ApcContext OPTIONAL,
 	     OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -198,9 +198,9 @@ NtWriteFile (IN HANDLE FileHandle,
       ByteOffset = &FileObject->CurrentByteOffset;
     }
 
-  if (EventHandle != NULL)
+  if (Event != NULL)
     {
-      Status = ObReferenceObjectByHandle(EventHandle,
+      Status = ObReferenceObjectByHandle(Event,
 					 SYNCHRONIZE,
 					 ExEventObjectType,
 					 UserMode,
