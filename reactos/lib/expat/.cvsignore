@@ -12,4 +12,5 @@ expat.ncb
 expat.opt
 libexpat.dll
 *.map
+*.sym
 *.dll
