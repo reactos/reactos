@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 2000/07/07 02:14:14 ekohl Exp $
+/* $Id: create.c,v 1.7 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -640,7 +640,7 @@ CHECKPOINT;
 }
 
 
-NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Create or open a file
  */

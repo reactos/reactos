@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.16 1999/12/16 23:08:17 ekohl Exp $ */
+/* $Id: vfat.h,v 1.17 2000/09/12 10:12:13 jean Exp $ */
 
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
@@ -149,13 +149,13 @@ typedef struct __DOSDATE
 
 // functions called by i/o manager :
 NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
-NTSTATUS FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 
 // internal functions in blockdev.c
@@ -225,12 +225,12 @@ ULONG FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
 /*
  * functions from volume.c
  */
-NTSTATUS VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*
  * functions from finfo.c
  */
-NTSTATUS VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS STDCALL VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 /*
  * From create.c

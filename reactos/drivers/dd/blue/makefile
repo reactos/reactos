@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2000/08/20 17:02:09 dwelch Exp $
+# $Id: makefile,v 1.15 2000/09/12 10:12:12 jean Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -36,4 +36,5 @@ dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
 $(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
 
+WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak

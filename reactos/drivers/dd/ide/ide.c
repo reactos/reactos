@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.34 2000/08/25 15:56:24 ekohl Exp $
+/* $Id: ide.c,v 1.35 2000/09/12 10:12:12 jean Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -168,10 +168,10 @@ static int IDEPolledRead(IN WORD Address,
                          IN BYTE DrvHead, 
                          IN BYTE Command, 
                          OUT BYTE *Buffer);
-static NTSTATUS IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static VOID IDEStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static NTSTATUS STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static VOID STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static IO_ALLOCATION_ACTION IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
                                                   IN PIRP Irp, 
                                                   IN PVOID MapRegisterBase, 
@@ -1101,7 +1101,7 @@ IDEPolledRead(IN WORD Address,
 //
 
 static  NTSTATUS  
-IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, 
+STDCALL IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, 
                      IN PIRP Irp) 
 {
   Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -1127,7 +1127,7 @@ IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO,
 //
 
 static  NTSTATUS  
-IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, 
+STDCALL IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, 
                      IN PIRP Irp) 
 {
   ULONG                  IrpInsertKey;
@@ -1212,7 +1212,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
 //
 
 static  NTSTATUS  
-IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
+STDCALL IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
                          IN PIRP Irp) 
 {
   NTSTATUS  RC;
@@ -1299,7 +1299,7 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 //
 
 static  VOID  
-IDEStartIo(IN PDEVICE_OBJECT DeviceObject, 
+STDCALL IDEStartIo(IN PDEVICE_OBJECT DeviceObject, 
            IN PIRP Irp) 
 {
   LARGE_INTEGER              SectorLI;

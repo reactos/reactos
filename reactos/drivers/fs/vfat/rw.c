@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.7 2000/06/29 23:35:51 dwelch Exp $
+/* $Id: rw.c,v 1.8 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -364,7 +364,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    return (STATUS_SUCCESS);
 }
 
-NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Write to a file
  */
@@ -392,7 +392,7 @@ NTSTATUS FsdWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return(Status);
 }
 
-NTSTATUS FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Read from a file
  */

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.21 2000/09/10 13:54:01 ekohl Exp $
+/* $Id: device.c,v 1.22 2000/09/12 10:12:11 jean Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -234,7 +234,7 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
-NTSTATUS IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
+NTSTATUS STDCALL IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
 				    PIRP Irp)
 {
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;

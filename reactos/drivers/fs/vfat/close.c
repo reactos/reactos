@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.1 2000/07/07 02:14:14 ekohl Exp $
+/* $Id: close.c,v 1.2 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -53,7 +53,7 @@ NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
    return STATUS_SUCCESS;
 }
 
-NTSTATUS FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Closes a file
  */

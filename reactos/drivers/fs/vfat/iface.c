@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.42 2000/06/29 23:35:50 dwelch Exp $
+/* $Id: iface.c,v 1.43 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -156,7 +156,7 @@ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: File system control
  */

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.17 2000/08/21 00:15:54 ekohl Exp $
+# $Id: makefile,v 1.18 2000/09/12 10:12:12 jean Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -45,4 +45,5 @@ endif
 $(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
 
 WITH_DEBUGGING=yes
+WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak

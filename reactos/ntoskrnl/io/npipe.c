@@ -85,9 +85,14 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
    StackLoc->Control = 0;
    StackLoc->DeviceObject = FileObject->DeviceObject;
    StackLoc->FileObject = FileObject;
-   StackLoc->Parameters.CreateNamedPipe.CreateDisposition =
-     CreateDisposition;
-   StackLoc->Parameters.CreateNamedPipe.CreateOptions = CreateOptions;
+   StackLoc->Parameters.Create.Options = (CreateOptions & FILE_VALID_OPTION_FLAGS);
+   StackLoc->Parameters.Create.Options |= (CreateDisposition << 24);
+//   StackLoc->Parameters.CreateNamedPipe.CreateDisposition =
+//     CreateDisposition;
+//   StackLoc->Parameters.CreateNamedPipe.CreateOptions = CreateOptions;
+/*
+ FIXME : this informations can't be added in Parameters struct because this struct
+ must be four WORDs long
    StackLoc->Parameters.CreateNamedPipe.ShareAccess = ShareAccess;
    StackLoc->Parameters.CreateNamedPipe.WriteModeMessage = WriteModeMessage;
    StackLoc->Parameters.CreateNamedPipe.ReadModeMessage = ReadModeMessage;
@@ -103,6 +108,7 @@ NTSTATUS STDCALL NtCreateNamedPipeFile(
      {
 	StackLoc->Parameters.CreateNamedPipe.TimeOut.QuadPart = 0;
      }
+*/
    
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status == STATUS_PENDING)

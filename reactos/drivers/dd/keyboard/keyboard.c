@@ -616,7 +616,7 @@ BOOLEAN KbdSynchronizeRoutine(PVOID Context)
    return(FALSE);
 }
 
-VOID KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 #ifndef NDEBUG
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
@@ -636,7 +636,7 @@ VOID KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    DPRINT("KeysRequired %d\n",KeysRequired);     
 }
 
-NTSTATUS KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL KbdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.18 2000/06/29 23:35:11 dwelch Exp $
+/* $Id: iotypes.h,v 1.19 2000/09/12 10:12:10 jean Exp $
  * 
  */
 
@@ -189,6 +189,7 @@ typedef struct _IO_STACK_LOCATION
 	     FILE_INFORMATION_CLASS FileInformationClass;
 	     ULONG FileIndex;
 	  } QueryDirectory;
+/*
 	struct
 	  {
 	     ULONG CreateDisposition;
@@ -202,14 +203,15 @@ typedef struct _IO_STACK_LOCATION
 	     ULONG OutBufferSize;
 	     LARGE_INTEGER TimeOut;
 	  } CreateNamedPipe;
+*/
      } Parameters;
    
+   struct _DEVICE_OBJECT* DeviceObject;
+   struct _FILE_OBJECT* FileObject;
+
    PIO_COMPLETION_ROUTINE CompletionRoutine;
    PVOID CompletionContext;
    
-   struct _DEVICE_OBJECT* DeviceObject;
-   
-   struct _FILE_OBJECT* FileObject;
 } IO_STACK_LOCATION, *PIO_STACK_LOCATION;
 
 typedef struct _IO_STATUS_BLOCK
@@ -313,12 +315,12 @@ typedef struct _IRP
    IO_STATUS_BLOCK IoStatus;
    KPROCESSOR_MODE RequestorMode;
    BOOLEAN PendingReturned;
+   CHAR StackCount;
+   CHAR CurrentLocation;
    BOOLEAN Cancel;
    KIRQL CancelIrql;
-   PDRIVER_CANCEL CancelRoutine;
-   PVOID UserBuffer;
-   PVOID ApcEnvironment;
-   ULONG AllocationFlags;
+   CCHAR ApcEnvironment;// CCHAR or PVOID?
+   UCHAR AllocationFlags;//UCHAR or ULONG?
    PIO_STATUS_BLOCK UserIosb;
    PKEVENT UserEvent;
    union
@@ -330,6 +332,8 @@ typedef struct _IRP
 	  } AsynchronousParameters;
 	LARGE_INTEGER AllocationSize;
      } Overlay;
+   PDRIVER_CANCEL CancelRoutine;
+   PVOID UserBuffer;
    union
      {
 	struct
@@ -344,8 +348,6 @@ typedef struct _IRP
 	KAPC Apc;
 	ULONG CompletionKey;
      } Tail;
-   CHAR StackCount;
-   CHAR CurrentLocation;
    IO_STACK_LOCATION Stack[1];
 } IRP, *PIRP;
 
@@ -404,17 +406,60 @@ typedef struct _DEVICE_OBJECT
 /*
  * Dispatch routine type declaration
  */
-typedef NTSTATUS (*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
+typedef NTSTATUS STDCALL (*PDRIVER_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
+
 
 /*
  * Fast i/o routine type declaration
  */
-typedef NTSTATUS (*PFAST_IO_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
+//typedef NTSTATUS (*PFAST_IO_DISPATCH)(struct _DEVICE_OBJECT*, IRP*);
+//FIXME : this type is ok for read and write, but not for all routines
+typedef BOOLEAN STDCALL (*PFAST_IO_ROUTINE) (
+   IN struct _FILE_OBJECT *FileObject,
+   IN PLARGE_INTEGER FileOffset,
+   IN ULONG Length,
+   IN BOOLEAN Wait,
+   IN ULONG LockKey,
+   OUT PVOID Buffer,
+   OUT PIO_STATUS_BLOCK IoStatus,
+   IN struct _DEVICE_OBJECT *DeviceObject
+ );
+
+typedef struct _FAST_IO_DISPATCH {
+   ULONG SizeOfFastIoDispatch;
+   PFAST_IO_ROUTINE FastIoCheckIfPossible;
+   PFAST_IO_ROUTINE FastIoRead;
+   PFAST_IO_ROUTINE FastIoWrite;
+   PFAST_IO_ROUTINE FastIoQueryBasicInfo;
+   PFAST_IO_ROUTINE FastIoQueryStandardInfo;
+   PFAST_IO_ROUTINE FastIoLock;
+   PFAST_IO_ROUTINE FastIoUnlockSingle;
+   PFAST_IO_ROUTINE FastIoUnlockAll;
+   PFAST_IO_ROUTINE FastIoUnlockAllByKey;
+   PFAST_IO_ROUTINE FastIoDeviceControl;
+   PFAST_IO_ROUTINE AcquireFileForNtCreateSection;
+   PFAST_IO_ROUTINE ReleaseFileForNtCreateSection;
+   PFAST_IO_ROUTINE FastIoDetachDevice;
+   PFAST_IO_ROUTINE FastIoQueryNetworkOpenInfo;
+   PFAST_IO_ROUTINE AcquireForModWrite;
+   PFAST_IO_ROUTINE MdlRead;
+   PFAST_IO_ROUTINE MdlReadComplete;
+   PFAST_IO_ROUTINE PrepareMdlWrite;
+   PFAST_IO_ROUTINE MdlWriteComplete;
+   PFAST_IO_ROUTINE FastIoReadCompressed;
+   PFAST_IO_ROUTINE FastIoWriteCompressed;
+   PFAST_IO_ROUTINE MdlReadCompleteCompressed;
+   PFAST_IO_ROUTINE MdlWriteCompleteCompressed;
+   PFAST_IO_ROUTINE FastIoQueryOpen;
+   PFAST_IO_ROUTINE ReleaseForModWrite;
+   PFAST_IO_ROUTINE AcquireForCcFlush;
+   PFAST_IO_ROUTINE ReleaseForCcFlush;
+} FAST_IO_DISPATCH, *PFAST_IO_DISPATCH;
 
 /*
  * Dispatch routine type declaration
  */
-typedef VOID (*PDRIVER_STARTIO)(struct _DEVICE_OBJECT*, IRP*);
+typedef VOID STDCALL (*PDRIVER_STARTIO)(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 /*
  * Dispatch routine type declaration

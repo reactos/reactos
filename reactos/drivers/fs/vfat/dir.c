@@ -309,7 +309,7 @@ DPRINT("Found %S,RC=%x, sector %x entry %x\n",tmpFcb.ObjectName,RC
 }
 
 
-NTSTATUS FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdDirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: directory control : read/write directory informations
  */

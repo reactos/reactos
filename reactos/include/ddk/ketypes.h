@@ -231,6 +231,7 @@ typedef struct _KDEVICE_QUEUE_ENTRY
 {
    LIST_ENTRY Entry;
    ULONG Key;
+   BOOLEAN Inserted;
 } KDEVICE_QUEUE_ENTRY, *PKDEVICE_QUEUE_ENTRY;
 
 typedef struct _WAIT_CONTEXT_BLOCK

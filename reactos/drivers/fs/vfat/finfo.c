@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.3 2000/06/29 23:35:50 dwelch Exp $
+/* $Id: finfo.c,v 1.4 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -122,7 +122,7 @@ NTSTATUS FsdSetDispositionInformation(PFILE_OBJECT FileObject,
 }
 
 
-NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
@@ -183,7 +183,7 @@ NTSTATUS FsdQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return RC;
 }
 
-NTSTATUS VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */

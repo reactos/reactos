@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.7 2000/07/01 18:23:06 ekohl Exp $
+/* $Id: display.c,v 1.8 2000/09/12 10:12:11 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -130,6 +130,9 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
         ScanLines = (inb_p (CRTC_DATA) & 0x1F) + 1;
         SizeY = SizeY / ScanLines;
 
+#ifdef BOCHS_30ROWS
+SizeY=25;
+#endif
         HalClearDisplay ();
 
         DisplayInitialized = TRUE;

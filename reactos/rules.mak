@@ -3,6 +3,11 @@
 #
 .EXPORT_ALL_VARIABLES:
 
+#HOST = mingw32-windows
+
+# uncomment if you use bochs and it displays only 30 rows
+# BOCHS_30ROWS = yes
+
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 endif
@@ -53,11 +58,16 @@ DEBUGGING_CFLAGS =
 OPTIMIZATIONS = -O2
 endif
 
+
 ifeq ($(WARNINGS_ARE_ERRORS),yes)
 EXTRA_CFLAGS = -Werror
 endif
 
+ifeq ($(BOCHS_30ROWS),yes)
+DEFINES = -DDBG -DBOCHS_30ROWS
+else
 DEFINES = -DDBG
+endif
 
 ifeq ($(WIN32_LEAN_AND_MEAN),yes)
 LEAN_AND_MEAN_DEFINE = -DWIN32_LEAN_AND_MEAN

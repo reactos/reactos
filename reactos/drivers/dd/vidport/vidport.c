@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.14 2000/07/07 11:56:04 ekohl Exp $
+/* $Id: vidport.c,v 1.15 2000/09/12 10:12:13 jean Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -13,9 +13,9 @@
 
 #define VERSION "0.0.0"
 
-static VOID VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-static NTSTATUS VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static NTSTATUS VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static NTSTATUS STDCALL VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
 //  -------------------------------------------------------  Public Interface
 
@@ -716,6 +716,7 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 //
 
 static  NTSTATUS  
+STDCALL
 VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, 
                      IN PIRP Irp) 
 {
@@ -742,6 +743,7 @@ VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
 //
 
 static  VOID  
+STDCALL
 VidStartIo(IN PDEVICE_OBJECT DeviceObject, 
            IN PIRP Irp) 
 {
@@ -764,6 +766,7 @@ VidStartIo(IN PDEVICE_OBJECT DeviceObject,
 //
 
 static  NTSTATUS  
+STDCALL
 VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, 
                          IN PIRP Irp) 
 {

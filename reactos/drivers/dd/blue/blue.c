@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.26 2000/07/11 04:08:43 phreak Exp $
+/* $Id: blue.c,v 1.27 2000/09/12 10:12:12 jean Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -68,7 +68,7 @@ typedef struct _DEVICE_EXTENSION
 /* FUNCTIONS **************************************************************/
 
 NTSTATUS
-ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+STDCALL ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PDEVICE_EXTENSION DeviceExtension;
     PHYSICAL_ADDRESS BaseAddress;
@@ -120,6 +120,9 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
     /* calculate number of text rows */
     DeviceExtension->Rows =
         DeviceExtension->Rows / DeviceExtension->ScanLines;
+#ifdef BOCHS_30ROWS
+    DeviceExtension->Rows = 25;
+#endif
 
     DPRINT ("%d Columns  %d Rows %d Scanlines\n",
             DeviceExtension->Columns,
@@ -154,7 +157,7 @@ ScrCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
 NTSTATUS
-ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+STDCALL ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -278,7 +281,7 @@ ScrWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
 NTSTATUS
-ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+STDCALL ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation (Irp);
     PDEVICE_EXTENSION DeviceExtension;
@@ -574,7 +577,7 @@ ScrIoControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 
 NTSTATUS
-ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+STDCALL ScrDispatch (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION stk = IoGetCurrentIrpStackLocation(Irp);
     NTSTATUS Status;

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.3 2000/06/29 23:35:51 dwelch Exp $
+/* $Id: volume.c,v 1.4 2000/09/12 10:12:13 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -117,7 +117,7 @@ NTSTATUS FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Retrieve the specified file information
  */
