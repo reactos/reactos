@@ -127,6 +127,42 @@ typedef struct _IO_STACK_LOCATION
 	     struct _VPB* Vpb;
 	     struct _DEVICE_OBJECT* DeviceObject;
 	  } Mount;
+        struct {
+            ULONG Length;
+            FILE_INFORMATION_CLASS FileInformationClass;
+        } QueryFile;
+        struct {
+            ULONG Length;
+            FS_INFORMATION_CLASS FileInformationClass;
+        } QueryVolume;
+        struct {
+            ULONG Length;
+            FS_INFORMATION_CLASS FileInformationClass;
+        } SetVolume;
+        struct {
+            ULONG Length;
+            FILE_INFORMATION_CLASS FileInformationClass;
+            struct FILE_OBJECT* FileObject;
+            union {
+                struct {
+                    BOOLEAN ReplaceIfExists;
+                    BOOLEAN AdvanceOnly;
+                } d;
+                ULONG ClusterCount;
+                HANDLE DeleteHandle;
+            } u;
+        } SetFile;
+	
+	/*
+	 * This is a guess
+	 */
+	struct
+	  {
+	     FILE_INFORMATION_CLASS FileInformationClass;
+	     BOOLEAN ReturnSingleEntry;
+	     PUNICODE_STRING FileName;
+	     BOOLEAN RestartScan;
+	  } QueryDirectory;
      } Parameters;
    
    PIO_COMPLETION_ROUTINE CompletionRoutine;

@@ -30,6 +30,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <internal/string.h>
+#include <internal/io.h>
 #include <ddk/ntddk.h>
 
 //#define NDEBUG
@@ -79,7 +80,12 @@ VOID IoMarkIrpPending(PIRP Irp)
  *      Irp = Irp to mark
  */
 {
+   DPRINT("IoGetCurrentIrpStackLocation(Irp) %x\n",
+	  IoGetCurrentIrpStackLocation(Irp));
    IoGetCurrentIrpStackLocation(Irp)->Control |= SL_PENDING_RETURNED;
+   DPRINT("IoGetCurrentIrpStackLocation(Irp)->Control %x\n",
+	  IoGetCurrentIrpStackLocation(Irp)->Control);
+   DPRINT("SL_PENDING_RETURNED %x\n",SL_PENDING_RETURNED);
 }
 
 USHORT IoSizeOfIrp(CCHAR StackSize)
@@ -156,7 +162,6 @@ NTSTATUS IoCallDriver(PDEVICE_OBJECT DevObject, PIRP irp)
    DPRINT("Io stack address %x\n",param);
    DPRINT("Function %d Routine %x\n",param->MajorFunction,
 	  drv->MajorFunction[param->MajorFunction]);
-   DPRINT("IRP_MJ_CREATE %d\n",IRP_MJ_CREATE);
 
    return(drv->MajorFunction[param->MajorFunction](DevObject,irp));
 }
@@ -208,7 +213,7 @@ VOID IoSetCompletionRoutine(PIRP Irp,
    param->CompletionContext=Context;
    if (InvokeOnSuccess)
      {
-	param->Control = SL_INVOKE_ON_SUCCESS;
+	param->Control = param->Control | SL_INVOKE_ON_SUCCESS;
      }
    if (InvokeOnError)
      {
@@ -218,6 +223,16 @@ VOID IoSetCompletionRoutine(PIRP Irp,
      {
 	param->Control = param->Control | SL_INVOKE_ON_CANCEL;
      }
+}
+
+VOID IopCompleteRequest(struct _KAPC* Apc,
+			PKNORMAL_ROUTINE* NormalRoutine,
+			PVOID* NormalContext,
+			PVOID* SystemArgument1,
+			PVOID* SystemArgument2)
+{
+   	IoSecondStageCompletion((PIRP)(*NormalContext),
+				IO_NO_INCREMENT);
 }
 
 VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
@@ -231,20 +246,47 @@ VOID IoCompleteRequest(PIRP Irp, CCHAR PriorityBoost)
  */
 {
    unsigned int i;
+   NTSTATUS Status;
    
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d)\n",
-	  Irp,PriorityBoost);
+                Irp,PriorityBoost);
+
    for (i=0;i<Irp->StackCount;i++)
      {
+	DPRINT("&Irp->Stack[i] %x\n",&Irp->Stack[i]);
 	if (Irp->Stack[i].CompletionRoutine!=NULL)
 	  {
-	     Irp->Stack[i].CompletionRoutine(Irp->Stack[i].DeviceObject,Irp,
+	     Status = Irp->Stack[i].CompletionRoutine(
+					     Irp->Stack[i].DeviceObject,
+					     Irp,
 					     Irp->Stack[i].CompletionContext);
+	     if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+	       {
+		  return;
+	       }
+	  }
+	DPRINT("Irp->Stack[i].Control %x\n",Irp->Stack[i].Control);
+	if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
+	  {
+	     DPRINT("Setting PendingReturned flag\n");
+	     Irp->PendingReturned = TRUE;
 	  }
      }
-   
-   if (Irp->UserEvent!=NULL)
+
+   if (Irp->PendingReturned)
      {
-	KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
+	KeInitializeApc(&Irp->Tail.Apc,
+			&Irp->Tail.Overlay.Thread->Tcb,
+			0,
+			IopCompleteRequest,
+			NULL,
+			NULL,
+			0,
+			Irp);
+	KeInsertQueueApc(&Irp->Tail.Apc,NULL,NULL,0);
+     }
+   else
+     {
+	IoSecondStageCompletion(Irp,PriorityBoost);
      }
 }

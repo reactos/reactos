@@ -78,7 +78,7 @@ static unsigned int get_symbol_value_by_name(module* mod, char* sname,
    for (i=0; i<mod->nsyms; i++)
      {
 	get_symbol_name(mod,i,name);
-//	DPRINT("Scanning %s Value %x\n",name,mod->sym_list[i].e_value);
+	DPRINT("Scanning %s Value %x\n",name,mod->sym_list[i].e_value);
 	if (strcmp(name,sname)==0)
 	  {
 	     DPRINT("Returning %x\n",mod->sym_list[i].e_value);
@@ -368,7 +368,7 @@ BOOLEAN process_boot_module(unsigned int start)
           }
      }
    
-   DPRINT("Allocate base: %x\n",mod->base);
+   DbgPrint("Module base: %x\n",mod->base);
    
    /*
     * Find the entry point

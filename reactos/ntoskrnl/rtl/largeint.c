@@ -14,6 +14,7 @@
 #include <internal/linkage.h>
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 typedef long long int LLI, *PLLI;
@@ -112,9 +113,16 @@ RtlLargeIntegerAdd(LARGE_INTEGER Addend1,
 {
   LLI RC, A1, A2;
 
+  DPRINT("Addend1.LowPart %d Addend1.HighPart %d\n",
+         Addend1.LowPart,Addend1.HighPart);
+  DPRINT("Addend2.LowPart %d Addend2.HighPart %d\n",
+         Addend2.LowPart,Addend2.HighPart);
+
   A1 = LLIFromLI(Addend1);
   A2 = LLIFromLI(Addend2);
   RC = A1 + A2;
+
+  DPRINT("RC %d\n",(unsigned int)RC);
 
   return LIFromLLI(RC);
 }

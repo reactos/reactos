@@ -74,7 +74,7 @@ VOID IoStartNextPacket(PDEVICE_OBJECT DeviceObject, BOOLEAN Cancelable)
    else
      {
         DeviceObject->CurrentIrp = NULL;
-     }   
+     }
 }
 
 VOID IoStartPacket(PDEVICE_OBJECT DeviceObject,

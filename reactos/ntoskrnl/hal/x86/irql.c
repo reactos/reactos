@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/hal/irql.c
+ * FILE:            ntoskrnl/hal/x86/irql.c
  * PURPOSE:         Implements IRQLs
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  */
@@ -118,12 +118,12 @@ VOID KeRaiseIrql(KIRQL NewIrql, PKIRQL OldIrql)
    /*
     * sanity check
     */
-   DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
-	  OldIrql);
+  DPRINT("CurrentIrql %x NewIrql %x OldIrql %x\n",CurrentIrql,NewIrql,
+	 OldIrql);
    if (NewIrql < CurrentIrql)
      {
-	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",__FILE__,__LINE__,
-                 CurrentIrql,NewIrql,OldIrql);
+	DbgPrint("%s:%d CurrentIrql %x NewIrql %x OldIrql %x\n",
+		 __FILE__,__LINE__,CurrentIrql,NewIrql,OldIrql);
 	for(;;);
      }
    

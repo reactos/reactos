@@ -15,7 +15,7 @@ include rules.mak
 #
 # Required to run the system
 #
-COMPONENTS = kernel lib
+COMPONENTS = iface_native ntoskrnl kernel32 ntdll crtdll mingw32
 
 #
 # Select the server(s) you want to build
@@ -30,55 +30,79 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test minix
+KERNEL_SERVICES = parallel keyboard null mouse serial sound ide test sdisk \
+                  minix vfat
 
-all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES)
+APPS = hello shell
+
+all: $(COMPONENTS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
+
+clean: dummy
+	make -C iface/native clean
+
+#
+# Applications
+#
+hello: dummy
+	make -C apps/hello
+
+cmd: dummy
+	make -C apps/cmd
+
+shell: dummy
+	make -C apps/shell
+
+#
+# Interfaces
+#
+iface_native: dummy
+	make -C iface/native
 
 #
 # Device driver rules
 #
+vfat: dummy
+	make -C services/fs/vfat
+	
 sdisk: dummy
-	make -C services/sdisk
+	make -C services/dd/sdisk
 	
 minix: dummy
 	make -C services/fs/minix
+	
+template: dummy
+	make -C services/fs/template
 
 
 ide-test: dummy
-	make -C services/ide-test
+	make -C services/dd/ide-test
 
 ide: dummy
-	make -C services/ide	
+	make -C services/dd/ide	
 
 test: dummy
-	make -C services/test
+	make -C services/dd/test
 
 test1: dummy
-	make -C services/test1
+	make -C services/dd/test1
 
 null: dummy
-	make -C services/null
+	make -C services/dd/null
 
 parallel: dummy
-	make -C services/parallel
+	make -C services/dd/parallel
 
 keyboard: dummy
-	make -C services/keyboard
+	make -C services/dd/keyboard
 
 mouse: dummy
-	make -C services/mouse
+	make -C services/dd/mouse
 	
 serial: dummy
-	make -C services/serial
+	make -C services/dd/serial
 
 sound: dummy
-	make -C services/sound
-
-ide: dummy
-	make -C services/ide
-
-ide-test: dummy
-	make -C services/ide-test
+	make -C services/dd/sound
 
 #
 # Kernel loaders
@@ -91,10 +115,19 @@ dos: dummy
 # Required system components
 #
 
-kernel: dummy
+ntoskrnl: dummy
 	make -C ntoskrnl
 
-lib: dummy
-	make -C lib
+kernel32: dummy
+	make -C lib/kernel32
+
+ntdll: dummy
+	make -C lib/ntdll
+
+crtdll: dummy
+	make -C lib/crtdll
+
+mingw32: dummy
+	make -C lib/mingw32
 
 dummy:

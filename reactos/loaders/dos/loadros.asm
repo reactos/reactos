@@ -567,10 +567,10 @@ l8:
         dw   0x00eb,0x00eb           ; jmp $+2, jmp $+2
         out     0A0h,al                ; and to 8259A-2
         dw   0x00eb,0x00eb
-        mov     al,020h                ; start of hardware int's (0x20)
+        mov     al,040h                ; start of hardware int's (0x20)
         out     021h,al
         dw   0x00eb,0x00eb
-        mov     al,028h                ; start of hardware int's 2 (0x28)
+        mov     al,048h                ; start of hardware int's 2 (0x28)
         out     0A1h,al
         dw   0x00eb,0x00eb
         mov     al,04h                ; 8259-1 is master
@@ -626,6 +626,7 @@ next:
         mov     ss,ax        
         mov     es,ax
         mov     fs,ax
+        mov     gs,ax
 
         ;
         ; Initalize eflags

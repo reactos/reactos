@@ -1,10 +1,13 @@
-
 all: kimage
 
 #
 # Defines $(HAL_OBJECTS)
 #
 include hal/x86/sources
+
+NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
+             nt/evtpair.o nt/ntsem.o nt/mutant.o nt/misc.o nt/plugplay.o \
+	     nt/profile.o
 
 RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
               rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
@@ -14,30 +17,33 @@ RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
              ke/module.o ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
 	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
-	     ke/mutex.o ke/kernel.o
+	     ke/mutex.o ke/kernel.o ke/ldt.o ke/apchelp.o
 
-MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/pageflt.o mm/virtual.o \
-             mm/mdl.o mm/zone.o mm/special.o \
-	     mm/section.o mm/marea.o
-           
+MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/virtual.o \
+             mm/mdl.o mm/zone.o mm/special.o mm/paging.o \
+	     mm/section.o mm/marea.o mm/ppool.o mm/npool.o
+
 
 IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
              io/queue.o io/drvlck.o io/timer.o io/share.o io/errlog.o \
 	     io/shutdown.o io/fdisk.o io/cancel.o io/error.o io/arc.o \
 	     io/dpc.o io/symlink.o io/adapter.o io/cntrller.o io/mdl.o \
 	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o \
-	     io/fs.o io/vpb.o io/buildirp.o
+	     io/fs.o io/vpb.o io/buildirp.o io/flush.o io/dir.o io/iocomp.o \
+	     io/mailslot.o io/npipe.o io/lock.o io/page.o io/cleanup.o
 
 OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o
 
-PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o
+PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o ps/idle.o ps/kill.o \
+             ps/tinfo.o
 
 EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
-             ex/callback.o
+             ex/callback.o ex/napi.o ex/power.o ex/sysinfo.o ex/locale.o \
+	     ex/stamp.o
 
 SE_OBJECTS = se/semgr.o
 
-CFG_OBJECTS = cfg/registry.o
+CM_OBJECTS = cm/registry.o
 
 TST_OBJECTS = tst/test.o tst/sshell.o tst/readline.o
 
@@ -45,10 +51,56 @@ DBG_OBJECTS = dbg/brkpoint.o
 
 LDR_OBJECTS = ldr/loader.o
 
-OBJECTS = $(HAL_OBJECTS) $(KE_OBJECTS) $(RTL_OBJECTS) $(MM_OBJECTS) \
-          $(IO_OBJECTS) $(OB_OBJECTS) $(PS_OBJECTS) $(EX_OBJECTS) \
-	  $(SE_OBJECTS) $(CFG_OBJECTS) $(TST_OBJECTS) $(DBG_OBJECTS) 
+CC_OBJECTS = cc/cacheman.o cc/block.o
 
+objects/hal.o: $(HAL_OBJECTS)
+	$(LD) -r $(HAL_OBJECTS) -o objects/hal.o
+
+objects/io.o: $(IO_OBJECTS)
+	$(LD) -r $(IO_OBJECTS) -o objects/io.o
+
+objects/ke.o: $(KE_OBJECTS)
+	$(LD) -r $(KE_OBJECTS) -o objects/ke.o
+
+objects/rtl.o: $(RTL_OBJECTS)
+	$(LD) -r $(RTL_OBJECTS) -o objects/rtl.o
+
+objects/mm.o: $(MM_OBJECTS)
+	$(LD) -r $(MM_OBJECTS) -o objects/mm.o
+
+objects/ob.o: $(OB_OBJECTS)
+	$(LD) -r $(OB_OBJECTS) -o objects/ob.o
+
+objects/ps.o: $(PS_OBJECTS)
+	$(LD) -r $(PS_OBJECTS) -o objects/ps.o
+
+objects/ex.o: $(EX_OBJECTS)
+	$(LD) -r $(EX_OBJECTS) -o objects/ex.o
+
+objects/se.o: $(SE_OBJECTS)
+	$(LD) -r $(SE_OBJECTS) -o objects/se.o
+
+objects/cm.o: $(CM_OBJECTS)
+	$(LD) -r $(CM_OBJECTS) -o objects/cm.o
+
+objects/tst.o: $(TST_OBJECTS)
+	$(LD) -r $(TST_OBJECTS) -o objects/tst.o
+
+objects/dbg.o: $(DBG_OBJECTS)
+	$(LD) -r $(DBG_OBJECTS) -o objects/dbg.o
+
+objects/nt.o: $(NT_OBJECTS)
+	$(LD) -r $(NT_OBJECTS) -o objects/nt.o
+
+objects/cc.o: $(CC_OBJECTS)
+	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
+
+OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
+          objects/io.o objects/ob.o objects/ps.o objects/ex.o \
+	  objects/se.o objects/cm.o objects/tst.o objects/dbg.o\
+	  objects/nt.o objects/cc.o
+	 	  
+	  
 utils/export/export$(EXE_POSTFIX): utils/export/export.c
 	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
 
@@ -57,10 +109,18 @@ ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
 	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
 
 kimage: $(OBJECTS)
-	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) libgcc.a -o kimage
+	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBGCC) -o kimage
+	$(OBJCOPY) -S --gap-fill=0 -O binary kimage kimage.bin
+
+old_kimage: $(OBJECTS)
+	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) $(LIBGCC) -o kimage
 	$(NM) --numeric-sort kimage > kernel.sym
 	$(OBJCOPY) -S --gap-fill=0 -O binary kimage kimage.bin
 
 dummy:
-	
+
+ex/napi.o: ex/napi.c ../include/ntdll/napi.h
+
+WITH_DEBUGGING = yes
+WIN32_LEAN_AND_MEAN = yes
 include ../rules.mak

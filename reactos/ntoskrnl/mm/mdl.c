@@ -1,4 +1,4 @@
- /*
+/*
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/mdl.c
@@ -12,7 +12,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
 #include <internal/string.h>
 
 #define NDEBUG
@@ -31,7 +31,7 @@ VOID MmUnlockPages(PMDL MemoryDescriptorList)
  * MDL is updated
  */
 {
-   UNIMPLEMENTED;
+   /* It is harmless to leave this one as a stub */
 }
 
 PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
@@ -54,6 +54,7 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 	  PAGE_ROUND_UP(Mdl->ByteCount)/PAGESIZE);
    
    MmCreateMemoryArea(KernelMode,
+		      PsGetCurrentProcess(),
 		      MEMORY_AREA_MDL_MAPPING,
 		      &base,
 		      Mdl->ByteCount + Mdl->ByteOffset,
@@ -61,19 +62,18 @@ PVOID MmMapLockedPages(PMDL Mdl, KPROCESSOR_MODE AccessMode)
 		      &Result);
    CHECKPOINT;
    mdl_pages = (ULONG *)(Mdl + 1);
-   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset)/PAGESIZE); i++)
+   for (i=0; i<(PAGE_ROUND_UP(Mdl->ByteCount+Mdl->ByteOffset)/PAGESIZE); i++)
      {
 	DPRINT("Writing %x with physical address %x\n",
 	       base+(i*PAGESIZE),mdl_pages[i]);
-	DPRINT("&((PULONG)(Mdl+1))[i] %x\n",&mdl_pages[i]);
-	set_page(base+(i*PAGESIZE),PA_READ + PA_SYSTEM,
-		 mdl_pages[i]);
+	set_page(base+(i*PAGESIZE),PA_READ + PA_SYSTEM,mdl_pages[i]);
      }
    DPRINT("base %x\n",base);
+   Mdl->MdlFlags = Mdl->MdlFlags | MDL_MAPPED_TO_SYSTEM_VA;
    return(base + Mdl->ByteOffset);
 }
 
-VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList)
+VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL Mdl)
 /*
  * FUNCTION: Releases a mapping set up by a preceding call to MmMapLockedPages
  * ARGUMENTS:
@@ -81,7 +81,8 @@ VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList)
  *         MemoryDescriptorList = MDL describing the mapped pages
  */
 {
-   (void)MmFreeMemoryArea(BaseAddress,MemoryDescriptorList->ByteCount,FALSE);
+   (void)MmFreeMemoryArea(PsGetCurrentProcess(),BaseAddress-Mdl->ByteOffset,
+			  Mdl->ByteCount,FALSE);
 }
 
 VOID MmPrepareMdlForReuse(PMDL Mdl)
@@ -113,7 +114,8 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    DPRINT("MmProbeAndLockPages(Mdl %x)\n",Mdl);
    DPRINT("StartVa %x\n",Mdl->StartVa);
    
-   marea = MmOpenMemoryAreaByAddress((ULONG)Mdl->StartVa);
+   marea = MmOpenMemoryAreaByAddress(PsGetCurrentProcess(),
+				     (ULONG)Mdl->StartVa);
    DPRINT("marea %x\n",marea);
   
    
@@ -126,36 +128,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
 	printk("Area is invalid\n");
 	ExRaiseStatus(STATUS_INVALID_PARAMETER);
      }
-   
-   /*
-    * Check the permissions
-    */
-   #if 0
-   switch(Operation)
-     {
-      case IoReadAccess:
-	if (marea->access&PAGE_GUARD || marea->access&PAGE_NOACCESS)
-	  {
-	     ExRaiseStatus(STATUS_INVALID_PARAMETER);
-	  }
-	break;
-	
-      case IoWriteAccess:
-      case IoModifyAccess:
-	if (marea->access&PAGE_GUARD || marea->access&PAGE_READONLY)
-	  {
-	     printk("Invalid area protections\n");
-	     ExRaiseStatus(STATUS_INVALID_PARAMETER);
-	  }
-	break;
-	
-      default:
-	printk("Invalid operation type at %s:%d in %s\n",__FILE__,__LINE__,
-	       __FUNCTION__);
-	KeBugCheck(UNEXPECTED_KERNEL_MODE_TRAP);
-     }
-   #endif
-   
+      
    /*
     * Lock the memory area
     * (We can't allow it to be freed while an I/O operation to it is
@@ -169,7 +142,7 @@ VOID MmProbeAndLockPages(PMDL Mdl, KPROCESSOR_MODE AccessMode,
    
    for (i=0;i<(PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGESIZE);i++)
      {
-        Address = Mdl->StartVa + (i*PAGESIZE);
+	Address = Mdl->StartVa + (i*PAGESIZE);
 	mdl_pages[i]=MmGetPhysicalAddress(Address).LowPart;
 	DPRINT("mdl_pages[i] %x\n",mdl_pages[i]);
      }
@@ -244,6 +217,7 @@ VOID MmBuildMdlForNonPagedPool(PMDL Mdl)
  */
 {
    int va;
+   Mdl->MdlFlags = Mdl->MdlFlags | MDL_SOURCE_IS_NONPAGED_POOL;
    for (va=0; va<Mdl->Size; va++)
      {
 	((PULONG)(Mdl + 1))[va] = MmGetPhysicalAddress(

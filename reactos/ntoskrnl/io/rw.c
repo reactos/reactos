@@ -21,39 +21,25 @@
 
 /* FUNCTIONS ***************************************************************/
 
-static VOID IoSecondStageCompletion(PIRP Irp, 
-				    BOOLEAN FromDevice,
-				    PDEVICE_OBJECT DeviceObject,
-				    ULONG Length, 
-				    PVOID Buffer)
-/*
- * FUNCTION: Performs the second stage of irp completion for read/write irps
- * ARGUMENTS:
- *          Irp = Irp to completion
- *          FromDevice = True if the operation transfered data from the device
- */
+NTSTATUS NtReadFile(HANDLE FileHandle,
+                    HANDLE EventHandle,
+		    PIO_APC_ROUTINE ApcRoutine,
+		    PVOID ApcContext,
+		    PIO_STATUS_BLOCK IoStatusBlock,
+		    PVOID Buffer,
+		    ULONG Length,
+		    PLARGE_INTEGER ByteOffset,
+		    PULONG Key)
 {
-   if (Irp->UserIosb!=NULL)
-     {
-	*Irp->UserIosb=Irp->IoStatus;
-     }
-   
-   if (DeviceObject->Flags & DO_BUFFERED_IO && FromDevice)
-     {		
-	memcpy(Buffer,Irp->AssociatedIrp.SystemBuffer,Length);
-     }
-   if (DeviceObject->Flags & DO_DIRECT_IO)
-     {
-	if (Irp->MdlAddress->MappedSystemVa!=NULL)
-	  {	     
-	     MmUnmapLockedPages(Irp->MdlAddress->MappedSystemVa,
-				Irp->MdlAddress);
-	  }
-	MmUnlockPages(Irp->MdlAddress);
-	ExFreePool(Irp->MdlAddress);
-     }
-   
-   IoFreeIrp(Irp);
+   return(ZwReadFile(FileHandle,
+		     EventHandle,
+		     ApcRoutine,
+		     ApcContext,
+		     IoStatusBlock,
+		     Buffer,
+		     Length,
+		     ByteOffset,
+		     Key));
 }
 
 NTSTATUS ZwReadFile(HANDLE FileHandle,
@@ -77,10 +63,15 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 	  "IoStatusBlock %x)\n",
 	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
    
-   if (hdr==NULL)
+   Status = ObReferenceObjectByHandle(FileHandle,
+				      FILE_READ_DATA,
+				      NULL,
+				      UserMode,
+				      &FileObject,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
      {
-	DPRINT("%s() = STATUS_INVALID_HANDLE\n",__FUNCTION__);
-	return(STATUS_INVALID_HANDLE);
+	return(Status);
      }
    
    if (ByteOffset==NULL)
@@ -89,6 +80,7 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
      }
    
    KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   DPRINT("FileObject %x\n",FileObject);
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				      FileObject->DeviceObject,
 				      Buffer,
@@ -136,6 +128,27 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    return(Status);
 }
 
+NTSTATUS NtWriteFile(HANDLE FileHandle,
+		     HANDLE EventHandle,
+		     PIO_APC_ROUTINE ApcRoutine,
+		     PVOID ApcContext,
+		     PIO_STATUS_BLOCK IoStatusBlock,
+		     PVOID Buffer,
+		     ULONG Length,
+		     PLARGE_INTEGER ByteOffset,
+		     PULONG Key)
+{
+   return(ZwWriteFile(FileHandle,
+		      EventHandle,
+		      ApcRoutine,
+		      ApcContext,
+		      IoStatusBlock,
+		      Buffer,
+		      Length,
+		      ByteOffset,
+		      Key));
+}
+
 NTSTATUS ZwWriteFile(HANDLE FileHandle,
 		     HANDLE EventHandle,
 		     PIO_APC_ROUTINE ApcRoutine,
@@ -168,7 +181,7 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
 				      IoStatusBlock);
    DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
-   if (Status==STATUS_PENDING)
+   if (Status==STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
 	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
         Status = Irp->IoStatus.Status;
@@ -176,3 +189,71 @@ NTSTATUS ZwWriteFile(HANDLE FileHandle,
    return(Status);
 }
 
+NTSTATUS STDCALL NtReadFileScatter(IN HANDLE FileHandle, 
+				   IN HANDLE Event OPTIONAL, 
+				   IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+				   IN  PVOID UserApcContext OPTIONAL, 
+				   OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
+				   IN FILE_SEGMENT_ELEMENT BufferDescription[], 
+				   IN ULONG BufferLength, 
+				   IN PLARGE_INTEGER ByteOffset, 
+				   IN PULONG Key OPTIONAL)
+{
+   return(ZwReadFileScatter(FileHandle,
+			    Event,
+			    UserApcRoutine,
+			    UserApcContext,
+			    UserIoStatusBlock,
+			    BufferDescription,
+			    BufferLength,
+			    ByteOffset,
+			    Key));
+}
+
+NTSTATUS STDCALL ZwReadFileScatter(IN HANDLE FileHandle, 
+				   IN HANDLE Event OPTIONAL, 
+				   IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+				   IN  PVOID UserApcContext OPTIONAL, 
+				   OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
+				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
+				   IN ULONG BufferLength, 
+				   IN PLARGE_INTEGER ByteOffset, 
+				   IN PULONG Key OPTIONAL)
+{
+   UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtWriteFileGather(IN HANDLE FileHandle, 
+				   IN HANDLE Event OPTIONAL, 
+				   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+				   IN PVOID ApcContext OPTIONAL, 
+				   OUT PIO_STATUS_BLOCK IoStatusBlock,
+				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
+				   IN ULONG BufferLength, 
+				   IN PLARGE_INTEGER ByteOffset, 
+				   IN PULONG Key OPTIONAL)
+{
+   return(ZwWriteFileGather(FileHandle,
+			    Event,
+			    ApcRoutine,
+			    ApcContext,
+			    IoStatusBlock,
+			    BufferDescription,
+			    BufferLength,
+			    ByteOffset,
+			    Key));
+}
+
+NTSTATUS STDCALL ZwWriteFileGather(IN HANDLE FileHandle, 
+				   IN HANDLE Event OPTIONAL, 
+				   IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+				   IN PVOID ApcContext OPTIONAL, 
+				   OUT PIO_STATUS_BLOCK IoStatusBlock,
+				   IN FILE_SEGMENT_ELEMENT BufferDescription[],
+				   IN ULONG BufferLength, 
+				   IN PLARGE_INTEGER ByteOffset, 
+				   IN PULONG Key OPTIONAL)
+{
+   UNIMPLEMENTED;
+}

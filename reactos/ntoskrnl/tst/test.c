@@ -13,6 +13,10 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/string.h>
+#include <internal/mm.h>
+#include <internal/mmhal.h>
+#include <internal/i386/segment.h>
+#include <internal/ps.h>
 
 //#define NDEBUG
 #include <internal/debug.h>
@@ -49,12 +53,10 @@ NTSTATUS TstFirstThread(PVOID start)
    
    printk("Beginning Thread A\n");
    for (;;)
-//   for (i=0;i<10;i++)
      {     
 	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
 	printk("AAA ");
         KeSetEvent(&event,IO_NO_INCREMENT,FALSE);
-	for (i=0;i<10000;i++);
      }
 }
 
@@ -64,12 +66,10 @@ NTSTATUS TstSecondThread(PVOID start)
    
    printk("Beginning Thread B\n");
    for(;;)
-//   for (i=0;i<10;i++)
      {
 	KeWaitForSingleObject(&event,Executive,KernelMode,FALSE,NULL);
 	printk("BBB ");
         KeSetEvent(&event,IO_NO_INCREMENT,FALSE);
-	for (i=0;i<100000;i++);
      }
 }
 
@@ -84,82 +84,92 @@ NTSTATUS TstThreadSupport()
    for(;;);
 }
 
-void TstGeneralWrite(VOID)
+VOID ExExecuteShell(VOID)
 {
+   HANDLE ShellHandle;
+   HANDLE ThreadHandle;   
+   PVOID BaseAddress;
+   HANDLE SectionHandle;
    OBJECT_ATTRIBUTES attr;
    HANDLE hfile;
-   char buf[512];
    ANSI_STRING afilename;
    UNICODE_STRING ufilename;
+   LARGE_INTEGER SectionOffset;
+   ULONG Size;
+   CONTEXT Context;
    
-   DbgPrint("Opening test device\n");
-   RtlInitAnsiString(&afilename,"\\Device\\SDisk");
+   ZwCreateProcess(&ShellHandle,
+		   PROCESS_ALL_ACCESS,
+		   NULL,
+		   SystemProcessHandle,
+		   FALSE,
+		   NULL,
+		   NULL,
+		   NULL);
+
+   RtlInitAnsiString(&afilename,"\\??\\C:\\reactos\\system\\shell.bin");
    RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
    InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&hfile,0,&attr,NULL,0,0);
+   ZwOpenFile(&hfile,FILE_ALL_ACCESS,&attr,NULL,0,0);
    if (hfile==NULL)
      {
-	DbgPrint("Failed to open test device\n");
+	DbgPrint("Failed to open file\n");
         return;
      }
-   ZwReadFile(hfile,
-	       NULL,
-	       NULL,
-	       NULL,
-	       NULL,
-	       buf,
-	       512,
-	       0,
-	       0);
-   DbgPrint("buf %s\n",buf);
- }
-
-void TstParallelPortWrite(VOID)
-{
-   HANDLE hfile;
    
-   DbgPrint("Opening parallel port\n");
-//   hfile = CreateFile("\\Device\\Parallel",0,0,0,0,0,0);
-   if (hfile==NULL)
-     {
-	DbgPrint("Failed to open parallel port\n");
-     }
- //  WriteFile(hfile,"hello world",strlen("hello world"),NULL,NULL);
+  ZwCreateSection(&SectionHandle,
+		   SECTION_ALL_ACCESS,
+		   NULL,
+		   NULL,
+		   PAGE_READWRITE,
+		   MEM_COMMIT,
+		   hfile);
+   
+   BaseAddress = (PVOID)0x10000;
+   SectionOffset.HighPart = 0;
+   SectionOffset.LowPart = 0;
+   Size = 0x6000;
+   ZwMapViewOfSection(SectionHandle,
+		      ShellHandle,
+		      &BaseAddress,
+		      0,
+                      0x6000,
+		      &SectionOffset,
+		      &Size,
+		      0,
+		      MEM_COMMIT,
+		      PAGE_READWRITE);
+   
+   memset(&Context,0,sizeof(CONTEXT));
+   
+   Context.SegSs = USER_DS;
+   Context.Esp = 0x2000;
+   Context.EFlags = 0x202;
+   Context.SegCs = USER_CS;
+   Context.Eip = 0x10000;
+   Context.SegDs = USER_DS;
+   Context.SegEs = USER_DS;
+   Context.SegFs = USER_DS;
+   Context.SegGs = USER_DS;
+   
+   BaseAddress = 0x1000;
+   ZwAllocateVirtualMemory(ShellHandle,
+			   &BaseAddress,
+			   0,
+			   PAGESIZE,
+			   MEM_COMMIT,
+			   PAGE_READWRITE);
+			   
+   
+   ZwCreateThread(&ThreadHandle,
+		  THREAD_ALL_ACCESS,
+		  NULL,
+		  ShellHandle,
+		  NULL,
+		  &Context,
+		  NULL,
+		  FALSE);
 }
-
-void TstKeyboardRead(VOID)
-{
-   OBJECT_ATTRIBUTES attr;
-   HANDLE hfile;
-   ANSI_STRING afilename;
-   UNICODE_STRING ufilename;
-   KEY_EVENT_RECORD key[2];
-   
-   DbgPrint("Opening keyboard\n");
-   RtlInitAnsiString(&afilename,"\\Device\\Keyboard");
-   RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
-   InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&hfile,0,&attr,NULL,0,0);
-   if (hfile==NULL)
-     {
-	DbgPrint("Failed to open keyboard\n");
-        return;
-     }
-   for(;;)
-     {
-	ZwReadFile(hfile,
-		   NULL,
-		   NULL,
-		   NULL,
-		   NULL,
-		   &key[0],
-		   sizeof(KEY_EVENT_RECORD)*2,
-		   0,
-		   0);
-	DbgPrint("%c",key[0].AsciiChar);
-//	DbgPrint("%c",key[1].AsciiChar);
-     }
- }
 
 /* IDE TEST STUFF ***********************************************************/
 
@@ -203,43 +213,6 @@ typedef struct _ROOT_DIR_ENTRY {
 } __attribute__ ((packed)) ROOT_DIR_ENTRY;
 
 #define ENTRIES_PER_BLOCK (512 / sizeof(ROOT_DIR_ENTRY))
-
-void TstFileRead(VOID)
-{
-   OBJECT_ATTRIBUTES attr;
-   HANDLE hfile;
-   ANSI_STRING afilename;
-   UNICODE_STRING ufilename;
-   char ch;
-   IO_STATUS_BLOCK IoStatusBlock;
-   
-   DbgPrint("Opening file\n");
-   RtlInitAnsiString(&afilename,"\\??\\C:\\my_other_directory\\..\\"
-		     "my_valid_directory\\apc.txt");
-   RtlAnsiStringToUnicodeString(&ufilename,&afilename,TRUE);
-   InitializeObjectAttributes(&attr,&ufilename,0,NULL,NULL);
-   ZwOpenFile(&hfile,0,&attr,NULL,0,0);
-   if (hfile==NULL)
-     {
-	DbgPrint("Failed to open file\n");
-        return;
-     }
-   while (1)
-     {
-//	CHECKPOINT;
-	ZwReadFile(hfile,
-		     NULL,
-		     NULL,
-		     NULL,
-		     &IoStatusBlock,
-		     &ch,
-		     1,
-		     NULL,
-		     NULL);
-	DbgPrint("%c",ch);
-     }
-   CHECKPOINT;
- }
 
 void TstIDERead(void)
 {
@@ -462,11 +435,12 @@ static  char SectorBuffer[512 * 10];
 
 void TstBegin()
 {
+   ExExecuteShell();
 //   TstFileRead();
 //   TstGeneralWrite();
 //   TstThreadSupport();
 //   TstKeyboardRead();
-   TstIDERead();
+//   TstIDERead();
 //   TstKeyboardRead();
 //   TstShell();
 }
