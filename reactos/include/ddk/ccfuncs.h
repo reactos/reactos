@@ -1,14 +1,25 @@
 
 #ifndef _NTOS_CCFUNCS_H
 #define _NTOS_CCFUNCS_H
-/* $Id: ccfuncs.h,v 1.9 2004/06/19 05:04:08 sedwards Exp $ */
+/* $Id: ccfuncs.h,v 1.10 2004/08/21 20:18:07 tamlin Exp $ */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 
 /* exported variables */
 /* these should be in the KPCR */
 
-extern ULONG CcFastMdlReadWait;
-extern ULONG CcFastReadNotPossible;
-extern ULONG CcFastReadWait;
+#ifdef __NTOSKRNL__
+extern ULONG EXPORTED CcFastMdlReadWait;
+extern ULONG EXPORTED CcFastReadNotPossible;
+extern ULONG EXPORTED CcFastReadWait;
+#else
+extern ULONG IMPORTED CcFastMdlReadWait;
+extern ULONG IMPORTED CcFastReadNotPossible;
+extern ULONG IMPORTED CcFastReadWait;
+#endif
 
 BOOLEAN
 STDCALL
@@ -348,6 +359,10 @@ CcZeroData (
 	IN	PLARGE_INTEGER	EndOffset,
 	IN	BOOLEAN		Wait
 	);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
 
