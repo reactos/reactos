@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.11 2001/01/12 21:00:08 dwelch Exp $
+ * $Id: fat.c,v 1.12 2001/01/13 18:38:09 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -13,6 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <wchar.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -268,28 +269,42 @@ VfatRequestDiskPage(PDEVICE_EXTENSION DeviceExt,
   return(STATUS_SUCCESS);
 }
 
-#if 0
+ULONG
+Vfat16FindAvailableClusterInPage (PVOID Page, ULONG Offset, ULONG Length)
+{
+  ULONG j;
+
+  for (j = Offset ; j < Length; j+=2)
+    {
+      if ((*((PUSHORT)(Page + j))) == 0)
+	{
+	  return(j);
+	}
+    }
+  return(0);
+}
+
 ULONG
 FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Finds the first available cluster in a FAT16 table
  */
 {
-  PUSHORT Block;
   ULONG i;
-  PCACHE_SEG CacheSeg;
+  PCACHE_SEGMENT CacheSeg;
   PVOID BaseAddress;
-  BOOLEAN Valid;
   ULONG StartOffset;
   ULONG FatLength;
-  ULONG j;
-  ULONG RCluster;
   ULONG Length;
+  ULONG r;
+  ULONG FatStart;
+  NTSTATUS Status;
 
-  StartOffset = DeviceExt->Boot->FatStart * BLOCKSIZE;
-  FatLength = DevceExt->Boot->FatSectors * BLOCKSIZE;
+  FatStart = DeviceExt->FATStart * BLOCKSIZE;
+  StartOffset = DeviceExt->FATStart * BLOCKSIZE;
+  FatLength = DeviceExt->Boot->FATSectors * BLOCKSIZE;
   
-  if (StartOffset % PAGESIZE) != 0)
+  if ((StartOffset % PAGESIZE) != 0)
     {
       Status = VfatRequestDiskPage(DeviceExt,
 				   PAGE_ROUND_DOWN(StartOffset),
@@ -300,14 +315,13 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt)
 	  return(0);
 	}
       Length = max(PAGESIZE, FatLength);
-      for (j = (StartOffset % PAGESIZE); j < Length; j+=2)
+      r = Vfat16FindAvailableClusterInPage(BaseAddress,
+					   StartOffset % PAGESIZE,
+					   Length);
+      if (r != 0)
 	{
-	  if ((*((PUSHORT)(BaseAddress + j))) == 0)
-	    {
-	      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
-	      return(j);
-	    }
-	}				     
+	  return((r - (StartOffset % PAGESIZE)) / 2);
+	}
       CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, FALSE);
       StartOffset = StartOffset + (Length - (StartOffset % PAGESIZE));
       FatLength = FatLength - (Length - (StartOffset % PAGESIZE));
@@ -322,23 +336,19 @@ FAT16FindAvailableCluster (PDEVICE_EXTENSION DeviceExt)
 	{
 	  return(0);
 	}
-      for (j = 0; j < PAGESIZE; j+=2)
+      r = Vfat16FindAvailableClusterInPage(BaseAddress, 0, PAGESIZE);
+      if (r != 0)
 	{
-	  if (*((PUSHORT)(BaseAddress + j)) == 0)
-	    {
-	      CcReleaseCacheSegment(DeviceExt->StorageBcb,
-				    CacheSeg,
-				    TRUE);
-	      RCluster = 
-		(StartOffset + j) - (DeviceExt->Boot->FatStart * BLOCKSIZE);
-	      RCluster = RCluster / 2;
-	      return(RCluster);
-	    }
+	  return((r + StartOffset - FatStart) / 2);
 	}
+      CcReleaseCacheSegment(DeviceExt->StorageBcb, CacheSeg, TRUE);
+      StartOffset = StartOffset + PAGESIZE;
     }
+
   return(0);
 }
 
+#if 0
 ULONG
 FAT12FindAvailableCluster (PDEVICE_EXTENSION DeviceExt)
 /*
@@ -719,21 +729,24 @@ VFATLoadCluster (PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
   DPRINT ("Finished VFATReadSectors\n");
 }
 
-#if 0
-VOID
-VFATWriteCluster (PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
+NTSTATUS
+VfatWriteCluster (PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster)
 /*
  * FUNCTION: Write a cluster to the physical device
  */
 {
   ULONG Sector;
-  DPRINT ("VFATWriteCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
+  NTSTATUS Status;
+
+  DPRINT ("VfatWriteCluster(DeviceExt %x, Buffer %x, Cluster %d)\n",
 	  DeviceExt, Buffer, Cluster);
 
   Sector = ClusterToSector (DeviceExt, Cluster);
 
   /* FIXME: Check status */
-  VfatWriteSectors (DeviceExt->StorageDevice,
-		    Sector, DeviceExt->Boot->SectorsPerCluster, Buffer);
+  Status = VfatWriteSectors (DeviceExt->StorageDevice,
+			     Sector, DeviceExt->Boot->SectorsPerCluster, 
+			     Buffer);
+  return(Status);
 }
-#endif
+

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.79 2001/01/01 04:42:11 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.80 2001/01/13 18:38:08 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -260,7 +260,7 @@ IoInitializeTimer=IoInitializeTimer@12
 IoIsOperationSynchronous=IoIsOperationSynchronous@4
 IoMakeAssociatedIrp=IoMakeAssociatedIrp@8
 IoOpenDeviceInstanceKey=IoOpenDeviceInstanceKey@20
-IoPageRead=IoPageRead@16
+;IoPageRead=IoPageRead@16
 IoQueryDeviceDescription=IoQueryDeviceDescription@32
 IoQueryDeviceEnumInfo=IoQueryDeviceEnumInfo@8
 IoQueryFileInformation=IoQueryFileInformation@20

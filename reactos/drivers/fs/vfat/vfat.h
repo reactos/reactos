@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.21 2001/01/12 21:00:08 dwelch Exp $ */
+/* $Id: vfat.h,v 1.22 2001/01/13 18:38:09 dwelch Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -185,7 +185,7 @@ VfatOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 NTSTATUS 
 VfatReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     PVOID Buffer, ULONG Length, ULONG ReadOffset,
-             PULONG LengthRead);
+             PULONG LengthRead, ULONG NoCache);
 NTSTATUS 
 VfatWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
               PVOID Buffer, ULONG Length, ULONG WriteOffset);
@@ -197,8 +197,8 @@ BOOLEAN
 IsLastEntry(PVOID Block, ULONG Offset);
 wchar_t* 
 vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
-VOID 
-VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
+NTSTATUS 
+VfatWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
 
 /* internal functions in dirwr.c */
 NTSTATUS 

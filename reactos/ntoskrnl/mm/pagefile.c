@@ -1,4 +1,4 @@
-/* $Id: pagefile.c,v 1.8 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: pagefile.c,v 1.9 2001/01/13 18:38:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -106,7 +106,8 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PMDL Mdl)
    Status = IoPageRead(PagingFileList[i]->FileObject,
 		       Mdl,
 		       &file_offset,
-		       &Iosb);
+		       &Iosb,
+		       TRUE);
    return(Status);
 }
 

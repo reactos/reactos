@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.7 2000/12/28 03:38:07 dwelch Exp $
+/* $Id: io.h,v 1.8 2001/01/13 18:38:08 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,7 +79,8 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PMDL Mdl,
 					 PLARGE_INTEGER StartingOffset,
 					 PKEVENT Event,
-					 PIO_STATUS_BLOCK IoStatusBlock);
+					 PIO_STATUS_BLOCK IoStatusBlock,
+					 ULONG PagingIo);
 
 VOID IoInitShutdownNotification(VOID);
 VOID IoShutdownRegisteredDevices(VOID);
@@ -88,7 +89,8 @@ VOID IoShutdownRegisteredFileSystems(VOID);
 NTSTATUS STDCALL IoPageRead (PFILE_OBJECT		FileObject,
 			     PMDL			Mdl,
 			     PLARGE_INTEGER		Offset,
-			     PIO_STATUS_BLOCK	StatusBlock);
+			     PIO_STATUS_BLOCK	StatusBlock,
+			     ULONG PagingIo);
 NTSTATUS STDCALL IoPageWrite (PFILE_OBJECT		FileObject,
 			      PMDL			Mdl,
 			      PLARGE_INTEGER		Offset,

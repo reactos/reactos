@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.41 2001/01/08 02:14:06 dwelch Exp $
+/* $Id: section.c,v 1.42 2001/01/13 18:38:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -151,7 +151,8 @@ MmUnalignedLoadPageForSection(PMADDRESS_SPACE AddressSpace,
    Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 		       Mdl,
 		       &Offset,
-		       &IoStatus);
+		       &IoStatus,
+		       FALSE);
    if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
      {
        DPRINT("IoPageRead failed (%x)\n", Status);
@@ -430,7 +431,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 			    Mdl,
 			    &Offset,
-			    &IoStatus);
+			    &IoStatus,
+			    FALSE);
 	if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
 	  {
 	     /*
