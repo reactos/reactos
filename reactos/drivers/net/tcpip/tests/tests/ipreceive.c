@@ -27,7 +27,7 @@ static void RunTest() {
 	IPPacket.TotalSize = Packets[i].size;
 	IPReceive( &IF, &IPPacket );
     }
-    _AssertEqualValue(Status,STATUS_SUCCESS);
+    _AssertEqualValue(STATUS_SUCCESS, Status);
 }
 
 _Dispatcher(IpreceiveTest, "IPReceive");

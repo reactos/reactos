@@ -83,7 +83,7 @@ AppendAssertion(char *message)
   if ((__Expected) != (__Actual)) \
     { \
       char _message[100]; \
-      sprintf(_message, "Expected %d/0x%.08x was %d/0x%.08x at %s:%d", \
+      sprintf(_message, "Expected %ld/0x%.08lx was %ld/0x%.08lx at %s:%d", \
         (__Expected), (__Expected), (__Actual), (__Actual), __FILE__, __LINE__); \
       AppendAssertion(_message); \
     } \
@@ -109,7 +109,7 @@ AppendAssertion(char *message)
   if ((__Expected) == (__Actual)) \
     { \
       char _message[100]; \
-      sprintf(_message, "Actual value expected to be different from %d/0x%.08x at %s:%d", \
+      sprintf(_message, "Actual value expected to be different from %ld/0x%.08lx at %s:%d", \
         (__Expected), (__Expected), __FILE__, __LINE__); \
       AppendAssertion(_message); \
     } \

@@ -23,6 +23,7 @@ hal.dll  HalQueryRealTimeClock@4
 hal.dll  HalReadDmaCounter@4
 hal.dll  HalReleaseDisplayOwnership@0
 hal.dll  HalReportResourceUsage@0
+hal.dll  HalRequestIpi@4
 hal.dll  @HalRequestSoftwareInterrupt@4
 hal.dll  HalReturnToFirmware@4
 hal.dll  HalSetEnvironmentVariable@8

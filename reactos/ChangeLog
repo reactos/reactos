@@ -1,3 +1,21 @@
+2004-11-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/net/tcpip/tests/tests/ipreceive.c (RunTest): Switch parameters
+	to _AssertEqualValue.
+	* drivers/net/tcpip/tests/stubs.tst: Add missing stubs.
+	* lib/ws2_32/tests/stubs.tst: Ditto.
+	* ntoskrnl/tests/stubs.tst: Ditto.
+	* regtests/shared/regtests.h: Use unsigned format specifiers.
+
+2004-11-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* config (SEH): Remove.
+	* regtests/shared/regtests.c (_alloca): Remove; Use from malloca.h
+	instead.
+	(PerformTest): Use PSEH to catch exceptions while running tests.
+	* tools/config.mk (CONFIG): Don't add SEH.
+	* tools/helper.mk: Link tests with pseh.a.
+
 2004-11-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/lib/ip/network/arp.c: Assert certain conditions.

@@ -14,5 +14,6 @@ kernel32.dll  LoadLibraryW@4
 kernel32.dll  lstrcpyA@8
 ntdll.dll  ResetEvent@4
 ntdll.dll  SetEvent@4
+kernel32.dll  Sleep@4
 ntdll.dll  WaitForMultipleObjectsEx@20
 kernel32.dll  CloseHandle@4

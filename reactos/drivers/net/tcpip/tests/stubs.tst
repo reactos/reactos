@@ -48,3 +48,5 @@ ntoskrnl.a _imp__KeSetEvent@12
 ntoskrnl.a _imp__IoAcquireCancelSpinLock@4
 ntoskrnl.a _imp__KeInitializeEvent@12
 ntoskrnl.a _imp__ExAllocatePool@8
+ntoskrnl.a _imp_@ExAcquireFastMutex@4
+ntoskrnl.a _imp_@ExReleaseFastMutex@4
