@@ -195,7 +195,7 @@ BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
   UNIMPLEMENTED;
 }
 
-INT  W32kDrawEscape(HDC  hDC,
+INT STDCALL W32kDrawEscape(HDC  hDC,
                     INT  nEscape,
                     INT  cbInput,
                     LPCSTR  lpszInData)
@@ -203,7 +203,7 @@ INT  W32kDrawEscape(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT  W32kEnumObjects(HDC  hDC,
+INT STDCALL W32kEnumObjects(HDC  hDC,
                      INT  ObjectType,
                      GOBJENUMPROC  ObjectFunc,
                      LPARAM  lParam)
@@ -216,7 +216,7 @@ DC_GET_VAL( INT, W32kGetBkMode, w.backgroundMode )
 DC_GET_VAL_EX( W32kGetBrushOrgEx, w.brushOrgX, w.brushOrgY, POINT )
 DC_GET_VAL( HRGN, W32kGetClipRgn, w.hClipRgn )
 
-HGDIOBJ  W32kGetCurrentObject(HDC  hDC,
+HGDIOBJ STDCALL W32kGetCurrentObject(HDC  hDC,
                               UINT  ObjectType)
 {
   UNIMPLEMENTED;
@@ -224,13 +224,13 @@ HGDIOBJ  W32kGetCurrentObject(HDC  hDC,
 
 DC_GET_VAL_EX( W32kGetCurrentPositionEx, w.CursPosX, w.CursPosY, POINT )
 
-BOOL  W32kGetDCOrgEx(HDC  hDC,
+BOOL STDCALL W32kGetDCOrgEx(HDC  hDC,
                      LPPOINT  Point)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kGetDeviceCaps(HDC  hDC,
+INT STDCALL W32kGetDeviceCaps(HDC  hDC,
                        INT  Index)
 {
   UNIMPLEMENTED;
@@ -267,22 +267,22 @@ DC_GET_VAL_EX( W32kGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
 DC_GET_VAL_EX( W32kGetWindowExtEx, wndExtX, wndExtY, SIZE )
 DC_GET_VAL_EX( W32kGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
 
-HDC  W32kResetDC(HDC  hDC, CONST DEVMODE  *InitData)
+HDC STDCALL W32kResetDC(HDC  hDC, CONST DEVMODE  *InitData)
 {
   UNIMPLEMENTED;
 }
 
-BOOL  W32kRestoreDC(HDC  hDC, INT  SavedDC)
+BOOL STDCALL W32kRestoreDC(HDC  hDC, INT  SavedDC)
 {
   UNIMPLEMENTED;
 }
 
-INT  W32kSaveDC(HDC  hDC)
+INT STDCALL W32kSaveDC(HDC  hDC)
 {
   UNIMPLEMENTED;
 }
 
-HGDIOBJ  W32kSelectObject(HDC  hDC, HGDIOBJ  GDIObj)
+HGDIOBJ STDCALL W32kSelectObject(HDC  hDC, HGDIOBJ  GDIObj)
 {
   UNIMPLEMENTED;
 }
