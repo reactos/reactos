@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.18 2004/10/31 21:22:06 navaraf Exp $
+/* $Id: irql.c,v 1.19 2004/11/01 14:37:19 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -9,18 +9,17 @@
 
 /* INCLUDES *****************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
 #include <internal/ps.h>
 #include <ntos/minmax.h>
 #include <hal.h>
+#include <halirq.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/
-
-#define NR_IRQS         (16)
-#define IRQ_BASE        (0x40)
 
 /*
  * PURPOSE: Current irq level
@@ -86,8 +85,8 @@ VOID HalpInitPICs(VOID)
   WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
   WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
   /* Start of hardware irqs (0x24) */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x40);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x48);
+  WRITE_PORT_UCHAR((PUCHAR)0x21, IRQ_BASE);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, IRQ_BASE + 8);
   /* 8259-1 is master */
   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x4);
   /* 8259-2 is slave */
@@ -152,7 +151,7 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	        * For each deferred interrupt execute all the handlers at DIRQL.
 	        */
 	       HalpPendingInterruptCount[i]--;
-	       KiInterruptDispatch2(i, NewIrql);
+	       KiInterruptDispatch2(i + IRQ_BASE, NewIrql);
 	     }
 	   KeGetCurrentKPCR()->Irql--;
 	   HalpEndSystemInterrupt(KeGetCurrentKPCR()->Irql);

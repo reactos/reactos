@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.51 2004/10/31 23:57:15 navaraf Exp $
+/* $Id: irq.c,v 1.52 2004/11/01 14:37:19 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -40,9 +40,7 @@
 #include <../dbg/kdb.h>
 #endif /* KDBG */
 
-#ifdef MP
-#include <internal/hal/mps.h>
-#endif /* MP */
+#include <../hal/halx86/include/halirq.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -50,18 +48,6 @@
 /* GLOBALS *****************************************************************/
 
 #ifdef MP
-
-/* 
- * FIXME: This does not work if we have more than 24 IRQs (ie. more than one 
- * I/O APIC) 
- */
-#define VECTOR2IRQ(vector) (((vector) - FIRST_DEVICE_VECTOR) / 8)
-#define IRQ2VECTOR(vector) ((vector * 8) + FIRST_DEVICE_VECTOR)
-#define VECTOR2IRQL(vector) (DISPATCH_LEVEL /* 2 */ + 1 + VECTOR2IRQ(vector))
-
-
-#define IRQ_BASE  	0x30
-#define NR_IRQS		0x100 - IRQ_BASE
 
 #define __STR(x) #x
 #define STR(x) __STR(x)
@@ -152,9 +138,6 @@ static ULONG irq_handler[NR_IRQS] = {
 
 #else /* MP */
 
-#define NR_IRQS         (16)
-#define IRQ_BASE        (0x40)
-
  void irq_handler_0(void);
  void irq_handler_1(void);
  void irq_handler_2(void);
@@ -217,8 +200,6 @@ KeInitInterrupts (VOID)
 {
    int i;
 
-#ifdef MP
-
    /*
     * Setup the IDT entries to point to the interrupt handlers
     */
@@ -229,27 +210,11 @@ KeInitInterrupts (VOID)
 	                    I486_INTERRUPT_GATE;
 	InitializeListHead(&isr_table[i]);
      }
-
-#else
-
-   /*
-    * Setup the IDT entries to point to the interrupt handlers
-    */
-   for (i=0;i<NR_IRQS;i++)
-     {
-	KiIdt[IRQ_BASE+i].a=(irq_handler[i]&0xffff)+(KERNEL_CS<<16);
-	KiIdt[IRQ_BASE+i].b=(irq_handler[i]&0xffff0000)+PRESENT+
-	                    I486_INTERRUPT_GATE;
-	InitializeListHead(&isr_table[i]);
-     }
-
-#endif
-
 }
 
-VOID
+STATIC VOID 
 KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
-  PKTRAP_FRAME TrapFrame)
+			  PKTRAP_FRAME TrapFrame)
 {
    TrapFrame->Gs     = (USHORT)IrqTrapFrame->Gs;
    TrapFrame->Fs     = (USHORT)IrqTrapFrame->Fs;
@@ -268,9 +233,9 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
    TrapFrame->Eflags = IrqTrapFrame->Eflags;
 }
 
-VOID
+STATIC VOID
 KeTrapFrameToIRQTrapFrame(PKTRAP_FRAME TrapFrame,
-  PKIRQ_TRAPFRAME IrqTrapFrame)
+			  PKIRQ_TRAPFRAME IrqTrapFrame)
 {
    IrqTrapFrame->Gs     = TrapFrame->Gs;
    IrqTrapFrame->Fs     = TrapFrame->Fs;
@@ -307,10 +272,10 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
   /*
    * Iterate the list until one of the isr tells us its device interrupted
    */
-  current = isr_table[vector].Flink;
+  current = isr_table[vector - IRQ_BASE].Flink;
   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
 
-  while (current != &isr_table[vector] && 
+  while (current != &isr_table[vector - IRQ_BASE] && 
          !isr->ServiceRoutine(isr, isr->ServiceContext))
     {
       current = current->Flink;
@@ -318,79 +283,8 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
     }
 }
 
-#ifdef MP
-
-VOID
-KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
-/*
- * FUNCTION: Calls the irq specific handler for an irq
- * ARGUMENTS:
- *         Vector    = Interrupt vector
- *         Trapframe = CPU context
- * NOTES: Interrupts are disabled at this point.
- */
-{
-   KIRQL old_level;
-   KTRAP_FRAME KernelTrapFrame;
-
-   DbgPrint("V(0x%.02x)", Vector);
-
-   /*
-    * Notify the rest of the kernel of the raised irq level
-    */
-   if (!HalBeginSystemInterrupt (Vector,
-			    VECTOR2IRQL(Vector),
-			    &old_level))
-     {
-       return;
-     }
-
-   /*
-    * Mask the related irq
-    */
-   //HalDisableSystemInterrupt (Vector, 0);
-
-   /*
-    * Enable interrupts
-    * NOTE: Only higher priority interrupts will get through
-    */
-   Ke386EnableInterrupts();
-
-   if (Vector == 0)
-     {
-       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-       KeUpdateSystemTime(&KernelTrapFrame, PROFILE_LEVEL);
-     }
-   else
-     {
-       /*
-        * Actually call the ISR.
-        */
-       KiInterruptDispatch2(Vector, old_level);
-     }
-
-   /*
-    * Disable interrupts
-    */
-   Ke386DisableInterrupts();
-
-   /*
-    * Unmask the related irq
-    */
-   //HalEnableSystemInterrupt (Vector, 0, 0);
-
-   //DbgPrint("E(0x%.02x)\n", Vector);
-
-   /*
-    * End the system interrupt.
-    */
-  HalEndSystemInterrupt (old_level, 0);
-}
-
-#else /* MP */
-
 VOID 
-KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
+KiInterruptDispatch (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
 /*
  * FUNCTION: Calls the irq specific handler for an irq
  * ARGUMENTS:
@@ -413,8 +307,8 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     * Notify the rest of the kernel of the raised irq level. For the
     * default HAL this will send an EOI to the PIC and alter the IRQL.
     */
-   if (!HalBeginSystemInterrupt (irq + IRQ_BASE,
-				 (KIRQL)(PROFILE_LEVEL - irq),
+   if (!HalBeginSystemInterrupt (vector,
+				 VECTOR2IRQL(vector),
 				 &old_level))
      {
        return;
@@ -427,21 +321,22 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
     */
    Ke386EnableInterrupts();
 
-
-   if (irq == 0)
+#ifndef MP
+   if (VECTOR2IRQ(vector) == 0)
    {
       KeIRQTrapFrameToTrapFrame(Trapframe, &KernelTrapFrame);
-      KeUpdateSystemTime(&KernelTrapFrame, PROFILE_LEVEL);
+      KeUpdateSystemTime(&KernelTrapFrame, old_level);
 #ifdef KDBG
       KdbProfileInterrupt(Trapframe->Eip);
 #endif /* KDBG */
    }
    else
+#endif
    {
      /*
       * Actually call the ISR.
       */
-     KiInterruptDispatch2(irq, old_level);
+     KiInterruptDispatch2(vector, old_level);
    }
 
    /*
@@ -480,8 +375,6 @@ KiInterruptDispatch (ULONG irq, PKIRQ_TRAPFRAME Trapframe)
      }
 }
 
-#endif /* MP */
-
 static VOID 
 KeDumpIrqList(VOID)
 {
@@ -519,6 +412,12 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 
    Vector = InterruptObject->Vector;
 
+   if (Vector < IRQ_BASE && Vector >= IRQ_BASE + NR_IRQS)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+   Vector -= IRQ_BASE;
+
    /*
     * Acquire the table spinlock
     */
@@ -549,11 +448,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    DPRINT("%x %x\n",isr_table[Vector].Flink,isr_table[Vector].Blink);
    if (IsListEmpty(&isr_table[Vector]))
    {
-#ifdef MP
-    HalEnableSystemInterrupt(Vector, 0, 0);
-#else
-	HalEnableSystemInterrupt(Vector + IRQ_BASE, 0, 0);
-#endif
+      HalEnableSystemInterrupt(Vector + IRQ_BASE, 0, 0);
    }
    InsertTailList(&isr_table[Vector],&InterruptObject->Entry);
    DPRINT("%x %x\n",InterruptObject->Entry.Flink,
@@ -588,13 +483,9 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
    KeRaiseIrql(InterruptObject->SynchLevel,&oldlvl);
    KiAcquireSpinLock(InterruptObject->IrqLock);
    RemoveEntryList(&InterruptObject->Entry);
-   if (IsListEmpty(&isr_table[InterruptObject->Vector]))
+   if (IsListEmpty(&isr_table[InterruptObject->Vector - IRQ_BASE]))
    {
-#ifdef MP
-	  HalDisableSystemInterrupt(InterruptObject->Vector, 0);
-#else
-      HalDisableSystemInterrupt(InterruptObject->Vector + IRQ_BASE, 0);
-#endif
+      HalDisableSystemInterrupt(InterruptObject->Vector, 0);
    }
    KiReleaseSpinLock(InterruptObject->IrqLock);
    KeLowerIrql(oldlvl);
@@ -683,7 +574,7 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
    /*
     * Check the parameters
     */
-   if (Vector >= NR_IRQS)
+   if (Vector < IRQ_BASE || Vector >= NR_IRQS + IRQ_BASE)
      {
 	return(STATUS_INVALID_PARAMETER);
      }

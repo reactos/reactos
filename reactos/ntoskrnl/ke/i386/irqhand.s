@@ -1,5 +1,6 @@
 
 #include <internal/i386/segment.h>
+#include <../hal/halx86/include/halirq.h>
 
 .global _irq_handler_0
 _irq_handler_0:
@@ -18,7 +19,7 @@ _irq_handler_0:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$0
+	pushl	$(IRQ_BASE + 0)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -47,7 +48,7 @@ _irq_handler_1:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$1
+	pushl	$(IRQ_BASE + 1)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -76,7 +77,7 @@ _irq_handler_2:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$2
+	pushl	$(IRQ_BASE + 2)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -105,7 +106,7 @@ _irq_handler_3:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$3
+	pushl	$(IRQ_BASE + 3)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -134,7 +135,7 @@ _irq_handler_4:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$4
+	pushl	$(IRQ_BASE + 4)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -163,7 +164,7 @@ _irq_handler_5:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$5
+	pushl	$(IRQ_BASE + 5)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -192,7 +193,7 @@ _irq_handler_6:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$6
+	pushl	$(IRQ_BASE + 6)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -221,7 +222,7 @@ _irq_handler_7:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$7
+	pushl	$(IRQ_BASE + 7)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -250,7 +251,7 @@ _irq_handler_8:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$8
+	pushl	$(IRQ_BASE + 8)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -279,7 +280,7 @@ _irq_handler_9:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$9
+	pushl	$(IRQ_BASE + 9)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -308,7 +309,7 @@ _irq_handler_10:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$10
+	pushl	$(IRQ_BASE + 10)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -337,7 +338,7 @@ _irq_handler_11:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$11
+	pushl	$(IRQ_BASE + 11)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -366,7 +367,7 @@ _irq_handler_12:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$12
+	pushl	$(IRQ_BASE + 12)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -395,7 +396,7 @@ _irq_handler_13:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$13
+	pushl	$(IRQ_BASE + 13)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -424,7 +425,7 @@ _irq_handler_14:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$14
+	pushl	$(IRQ_BASE + 14)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
@@ -453,7 +454,7 @@ _irq_handler_15:
 	movl	$PCR_SELECTOR, %eax
 	movl	%eax, %fs
 	pushl	%esp
-	pushl	$15
+	pushl	$(IRQ_BASE + 15)
 	call	_KiInterruptDispatch
 	popl	%eax
 	popl	%eax
