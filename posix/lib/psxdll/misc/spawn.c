@@ -1,4 +1,4 @@
-/* $Id: spawn.c,v 1.4 2002/03/11 20:46:38 hyperion Exp $
+/* $Id: spawn.c,v 1.5 2002/03/21 22:43:27 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -33,6 +33,26 @@
 #include <psx/spawn.h>
 #include <psx/stdlib.h>
 
+#include <windows.h>
+
+typedef struct _PORT_MESSAGE {
+ USHORT DataSize;
+ USHORT MessageSize;
+ USHORT MessageType;
+ USHORT VirtualRangesOffset;
+ CLIENT_ID ClientId;
+ ULONG MessageId;
+ ULONG SectionSize;
+ // UCHAR Data[];
+} PORT_MESSAGE, *PPORT_MESSAGE;
+
+NTSTATUS STDCALL CsrClientCallServer(
+ IN PVOID Message,
+ IN PVOID Unknown,
+ IN ULONG Opcode,
+ IN ULONG Size
+);
+
 NTSTATUS STDCALL __PdxSpawnPosixProcess
 (
  OUT PHANDLE ProcessHandle,
@@ -43,20 +63,34 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
  IN __PPDX_PDATA ProcessData
 )
 {
+ struct CSRSS_MESSAGE {
+  ULONG Unknown1;
+  ULONG Opcode;
+  ULONG Status;
+  ULONG Unknown2;
+ };
+
+ struct __tagcsrmsg{
+  PORT_MESSAGE PortMessage;
+  struct CSRSS_MESSAGE CsrssMessage;
+  PROCESS_INFORMATION ProcessInformation;
+  CLIENT_ID Debugger;
+  ULONG CreationFlags;
+  ULONG VdmInfo[2];
+ } csrmsg;
+
  __PPDX_SERIALIZED_PDATA      pspdProcessData;
  IO_STATUS_BLOCK              isbStatus;
  PROCESS_BASIC_INFORMATION    pbiProcessInfo;
- ANSI_STRING                  strStartEntry;
- PVOID                        pStartAddress;
  INITIAL_TEB                  itInitialTeb;
  PRTL_USER_PROCESS_PARAMETERS pppProcessParameters;
+ SECTION_IMAGE_INFORMATION    siiInfo;
  CONTEXT    ctxThreadContext;
  CLIENT_ID  ciClientId;
  NTSTATUS nErrCode;
  HANDLE   hExeFile;
  HANDLE   hExeImage;
  HANDLE   hProcess;
- HANDLE   hThread;
  PVOID    pPdataBuffer = 0;
  PVOID    pParamsBuffer = 0;
  ULONG    nDestBufferSize;
@@ -105,6 +139,24 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
  if(!NT_SUCCESS(nErrCode))
  {
   ERR("NtCreateSection() failed with status 0x%08X\n", nErrCode);
+  return (nErrCode);
+ }
+
+ /* 1.3: get section image information */
+ nErrCode = NtQuerySection
+ (
+  hExeImage,
+  SectionImageInformation,
+  &siiInfo,
+  sizeof(siiInfo),
+  NULL
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtCreateSection() failed with status 0x%08X\n", nErrCode);
+  NtClose(hExeImage);
   return (nErrCode);
  }
 
@@ -241,7 +293,8 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   goto undoPData;
  }
 
- /* 3.6: write the process data */
+ /* 3.6: write data */
+ /* 3.6.1: process data */
  nErrCode = NtWriteVirtualMemory
  (
   hProcess,
@@ -250,6 +303,30 @@ NTSTATUS STDCALL __PdxSpawnPosixProcess
   pspdProcessData->AllocSize,
   NULL
  );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtWriteVirtualMemory() failed with status 0x%08X\n", nErrCode);
+  goto undoPData;
+ }
+
+ /* 3.6.2 process parameters */
+ nErrCode = NtWriteVirtualMemory
+ (
+  hProcess,
+  pParamsBuffer,
+  pppProcessParameters,
+  pppProcessParameters->Length,
+  NULL
+ );
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtWriteVirtualMemory() failed with status 0x%08X\n", nErrCode);
+  goto undoPData;
+ }
 
 undoPData:
   /* deallocate the temporary data block in the current process */
@@ -398,34 +475,12 @@ undoPData:
   }
 
  /* STEP 5: create first thread */
- /* 5.1: get thunk routine's address */
- RtlInitAnsiString(&strStartEntry, "LdrInitializeThunk");
-
-#if 1
- nErrCode = LdrGetProcedureAddress
- (
-  (PVOID)0x78460000, /* NTDLL_BASE */
-  &strStartEntry,
-  0,
-  &pStartAddress
- );
-
- /* failure */
- if(!NT_SUCCESS(nErrCode))
- {
-  ERR("LdrGetProcedureAddress() failed with status 0x%08X\n", nErrCode);
-  goto failProcess;
- }
-#else
- pStartAddress = LdrGetProcedureAddress;
-#endif
-
- /* 5.2: set up the stack */
+ /* 5.1: set up the stack */
  itInitialTeb.StackAllocate = NULL;
  nVirtualSize = 0x100000;
  nCommitSize = 0x100000 - PAGESIZE;
 
- /* 5.2.1: reserve the stack */
+ /* 5.1.1: reserve the stack */
  nErrCode = NtAllocateVirtualMemory
  (
   hProcess,
@@ -449,7 +504,7 @@ undoPData:
  itInitialTeb.StackLimit =
   (PVOID)((ULONG)itInitialTeb.StackBase - nCommitSize);
 
- /* 5.2.2: commit the stack */
+ /* 5.1.2: commit the stack */
  nVirtualSize = nCommitSize + PAGESIZE;
  pCommitBottom =
   (PVOID)((ULONG)itInitialTeb.StackBase - nVirtualSize);
@@ -471,7 +526,7 @@ undoPData:
   goto failProcess;
  }
 
- /* 5.2.3: set up the guard page */
+ /* 5.1.3: set up the guard page */
  nVirtualSize = PAGESIZE;
 
  nErrCode = NtProtectVirtualMemory
@@ -490,22 +545,20 @@ undoPData:
   goto failProcess;
  }
 
- /* 5.3: initialize the thread context */
+ /* 5.2: initialize the thread context */
  memset(&ctxThreadContext, 0, sizeof(ctxThreadContext));
 
- ctxThreadContext.Eip = (ULONG)pStartAddress;
+ ctxThreadContext.Eip = (ULONG)siiInfo.EntryPoint;
  ctxThreadContext.SegGs = USER_DS;
  ctxThreadContext.SegFs = USER_DS;
  ctxThreadContext.SegEs = USER_DS;
  ctxThreadContext.SegDs = USER_DS;
  ctxThreadContext.SegCs = USER_CS;
  ctxThreadContext.SegSs = USER_DS;
- /* skip five doublewords (four - unknown - parameters for LdrInitializeThunk,
-    and the return address) */
- ctxThreadContext.Esp = (ULONG)itInitialTeb.StackBase - 5 * 4;
+ ctxThreadContext.Esp = (ULONG)itInitialTeb.StackBase - 4;
  ctxThreadContext.EFlags = (1 << 1) + (1 << 9);
 
- /* 5.4: create the thread object */
+ /* 5.3: create the thread object */
  nErrCode = NtCreateThread
  (
   ThreadHandle,
@@ -515,13 +568,47 @@ undoPData:
   &ciClientId,
   &ctxThreadContext,
   &itInitialTeb,
-  FALSE
+  TRUE /* FIXME: the thread is only created in suspended state for easier
+          debugging. This behavior is subject to future changes */
  );
 
  /* failure */
  if(!NT_SUCCESS(nErrCode))
  {
   ERR("NtCreateThread() failed with status 0x%08X\n", nErrCode);
+  goto failProcess;
+ }
+
+ /* 6: register the process with the Win32 subsystem (temporary code for
+    debugging purposes) */
+
+ memset(&csrmsg, 0, sizeof(csrmsg));
+
+ //csrmsg.PortMessage = {0};
+ //csrmsg.CsrssMessage = {0};
+ csrmsg.ProcessInformation.hProcess = hProcess;
+ csrmsg.ProcessInformation.hThread = *ThreadHandle;
+ csrmsg.ProcessInformation.dwProcessId = (DWORD)ciClientId.UniqueProcess;
+ csrmsg.ProcessInformation.dwThreadId = (DWORD)ciClientId.UniqueThread;
+ //csrmsg.Debugger = {0};
+ //csrmsg.CreationFlags = 0;
+ //csrmsg.VdmInfo = {0};
+
+ nErrCode = CsrClientCallServer(&csrmsg, 0, 0x10000, 0x24);
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("CsrClientCallServer() failed with status 0x%08X\n", nErrCode);
+  goto failProcess;
+ }
+
+ nErrCode = NtResumeThread(*ThreadHandle, NULL);
+
+ /* failure */
+ if(!NT_SUCCESS(nErrCode))
+ {
+  ERR("NtResumeThread() failed with status 0x%08X\n", nErrCode);
   goto failProcess;
  }
 
