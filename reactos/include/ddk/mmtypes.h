@@ -1,23 +1,36 @@
-/* $Id: mmtypes.h,v 1.10 2001/06/15 11:13:08 ekohl Exp $ */
+/* $Id: mmtypes.h,v 1.11 2001/06/22 12:39:48 ekohl Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
 
+#include <ddk/i386/pagesize.h>
 #include <ntos/mm.h>
 
-#ifdef __NTOSKRNL__
-extern PVOID EXPORTED MmUserProbeAddress;
-extern PVOID EXPORTED MmHighestUserAddress;
-#else
-extern PVOID IMPORTED MmUserProbeAddress;
-extern PVOID IMPORTED MmHighestUserAddress;
-#endif
 
-#ifdef __NTOSKRNL__
-extern POBJECT_TYPE EXPORTED MmSectionObjectType;
-#else
-extern POBJECT_TYPE IMPORTED MmSectionObjectType;
-#endif
+#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
+#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
+
+
+/*
+ * FUNCTION: Determines if the given virtual address is page aligned
+ */
+#define IS_PAGE_ALIGNED(Va) (((ULONG)Va)&0xfff)
+
+/*
+ * PURPOSE: Returns the byte offset of a field within a structure
+ */
+#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
+
+/*
+ * PURPOSE: Returns the base address structure if the caller knows the 
+ * address of a field within the structure
+ * ARGUMENTS:
+ *          Address = address of the field
+ *          Type = Type of the whole structure
+ *          Field = Name of the field whose address is none
+ */
+#define CONTAINING_RECORD(Address,Type,Field) (Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
+
 
 #define   MDL_MAPPED_TO_SYSTEM_VA      (0x1)
 #define   MDL_PAGES_LOCKED             (0x2)

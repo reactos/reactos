@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.22 2001/05/30 19:57:29 ekohl Exp $
+/* $Id: ntddk.h,v 1.23 2001/06/22 12:39:48 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -20,9 +20,11 @@ extern "C"
 /* INCLUDES ***************************************************************/
 
 /* GCC can not handle __fastcall */
-#ifndef FASTCALL
+//#ifdef USE_FASTCALL
+//#define FASTCALL __attribute__((fastcall))
+//#else
 #define FASTCALL STDCALL
-#endif
+//#endif
 #define STATIC static
 
 #include <ntos/types.h>
@@ -49,13 +51,19 @@ extern "C"
 #include <ddk/iotypes.h>
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
+#include <ddk/ldrtypes.h>
 #include <ddk/zwtypes.h>
 #include <ddk/ioctrl.h>
 #include <ddk/rtl.h>
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
 #include <ddk/halddk.h>
+#endif /*__NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ */
 
 #include <ddk/zw.h>
+#include <ddk/dbgfuncs.h>
+#include <ddk/ldrfuncs.h>
 #include <ddk/cmfuncs.h>
+#if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
 #include <ddk/exfuncs.h>
 #include <ddk/mmfuncs.h>
 #include <ddk/kdfuncs.h>
@@ -65,9 +73,8 @@ extern "C"
 #include <ddk/iofuncs.h>
 #include <ddk/psfuncs.h>
 #include <ddk/obfuncs.h>
-#include <ddk/dbgfuncs.h>
 #include <ddk/sefuncs.h>
-#include <ddk/ldrfuncs.h>
+#endif /*__NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ */
 
 #ifdef __cplusplus
 };

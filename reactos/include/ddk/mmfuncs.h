@@ -1,33 +1,23 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.9 2001/03/31 16:02:07 phreak Exp $ */
+/* $Id: mmfuncs.h,v 1.10 2001/06/22 12:39:47 ekohl Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
-#include <ddk/i386/pagesize.h>
 
-#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
-#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
+#ifdef __NTOSKRNL__
+extern PVOID EXPORTED MmUserProbeAddress;
+extern PVOID EXPORTED MmHighestUserAddress;
+#else
+extern PVOID IMPORTED MmUserProbeAddress;
+extern PVOID IMPORTED MmHighestUserAddress;
+#endif
 
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED MmSectionObjectType;
+#else
+extern POBJECT_TYPE IMPORTED MmSectionObjectType;
+#endif
 
-/*
- * FUNCTION: Determines if the given virtual address is page aligned
- */
-#define IS_PAGE_ALIGNED(Va) (((ULONG)Va)&0xfff)
-
-/*
- * PURPOSE: Returns the byte offset of a field within a structure
- */
-#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
-
-/*
- * PURPOSE: Returns the base address structure if the caller knows the 
- * address of a field within the structure
- * ARGUMENTS:
- *          Address = address of the field
- *          Type = Type of the whole structure
- *          Field = Name of the field whose address is none
- */
-#define CONTAINING_RECORD(Address,Type,Field) (Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
 
 /*
  * FUNCTION: Returns the number of pages spanned by an address range
@@ -240,11 +230,6 @@ MmGrowKernelStack (
 	DWORD	Unknown0
 	);
 
-#ifdef __NTOSKRNL__
-extern PVOID EXPORTED MmHighestUserAddress;
-#else
-extern PVOID IMPORTED MmHighestUserAddress;
-#endif
 
 /*
  * VOID

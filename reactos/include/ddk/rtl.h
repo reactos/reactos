@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.52 2001/05/30 19:57:29 ekohl Exp $
+/* $Id: rtl.h,v 1.53 2001/06/22 12:39:48 ekohl Exp $
  * 
  */
 
@@ -94,7 +94,7 @@ struct _LB_RANGE
 typedef struct _RTL_NLS_DATA
 {
 	USHORT			CodePage;
-	USHORT			MaxCharacterSize;
+	USHORT			MaxCharacterSize;  // SBCS = 1, DBCS = 2
 	WCHAR			DefaultCharacter;
 	WCHAR			char1;
 	WCHAR			char2;
@@ -2004,6 +2004,75 @@ WRITE_REGISTER_BUFFER_ULONG (
 	PULONG	Buffer,
 	ULONG	Count
 	);
+
+
+NTSTATUS STDCALL RtlCreateAcl(PACL Acl, ULONG AclSize, ULONG AclRevision);
+NTSTATUS STDCALL RtlQueryInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
+NTSTATUS STDCALL RtlSetInformationAcl (PACL Acl, PVOID Information, ULONG InformationLength, ACL_INFORMATION_CLASS InformationClass);
+BOOLEAN STDCALL RtlValidAcl (PACL Acl);
+
+NTSTATUS STDCALL RtlAddAccessAllowedAce(PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid);
+NTSTATUS STDCALL RtlAddAccessDeniedAce(PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid);
+NTSTATUS STDCALL RtlAddAce(PACL Acl, ULONG Revision, ULONG StartingIndex, PACE AceList, ULONG AceListLength);
+NTSTATUS STDCALL RtlAddAuditAccessAce (PACL Acl, ULONG Revision, ACCESS_MASK AccessMask, PSID Sid, BOOLEAN Success, BOOLEAN Failure);
+NTSTATUS STDCALL RtlDeleteAce(PACL Acl, ULONG AceIndex);
+BOOLEAN STDCALL RtlFirstFreeAce(PACL Acl, PACE* Ace);
+NTSTATUS STDCALL RtlGetAce(PACL Acl, ULONG AceIndex, PACE *Ace);
+
+NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
+NTSTATUS STDCALL RtlMakeSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
+NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
+BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
+ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
+NTSTATUS STDCALL RtlSetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, BOOLEAN DaclPresent, PACL Dacl, BOOLEAN DaclDefaulted);
+NTSTATUS STDCALL RtlGetDaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN DaclPresent, PACL* Dacl, PBOOLEAN DaclDefauted);
+NTSTATUS STDCALL RtlSetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID Owner, BOOLEAN OwnerDefaulted);
+NTSTATUS STDCALL RtlGetOwnerSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Owner, PBOOLEAN OwnerDefaulted);
+NTSTATUS STDCALL RtlSetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID Group, BOOLEAN GroupDefaulted);
+NTSTATUS STDCALL RtlGetGroupSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSID* Group, PBOOLEAN GroupDefaulted);
+NTSTATUS STDCALL RtlGetControlSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PSECURITY_DESCRIPTOR_CONTROL Control, PULONG Revision);
+NTSTATUS STDCALL RtlSetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, BOOLEAN SaclPresent, PACL Sacl, BOOLEAN SaclDefaulted);
+NTSTATUS STDCALL RtlGetSaclSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, PBOOLEAN SaclPresent, PACL* Sacl, PBOOLEAN SaclDefauted);
+NTSTATUS STDCALL RtlSelfRelativeToAbsoluteSD (PSECURITY_DESCRIPTOR RelSD,
+					      PSECURITY_DESCRIPTOR AbsSD,
+					      PDWORD AbsSDSize,
+					      PACL Dacl,
+					      PDWORD DaclSize,
+					      PACL Sacl,
+					      PDWORD SaclSize,
+					      PSID Owner,
+					      PDWORD OwnerSize,
+					      PSID Group,
+					      PDWORD GroupSize);
+
+NTSTATUS STDCALL RtlAllocateAndInitializeSid (PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
+					      UCHAR SubAuthorityCount,
+					      ULONG SubAuthority0,
+					      ULONG SubAuthority1,
+					      ULONG SubAuthority2,
+					      ULONG SubAuthority3,
+					      ULONG SubAuthority4,
+					      ULONG SubAuthority5,
+					      ULONG SubAuthority6,
+					      ULONG SubAuthority7,
+					      PSID *Sid);
+ULONG STDCALL RtlLengthRequiredSid (UCHAR SubAuthorityCount);
+PSID_IDENTIFIER_AUTHORITY STDCALL RtlIdentifierAuthoritySid (PSID Sid);
+NTSTATUS STDCALL RtlInitializeSid (PSID Sid, PSID_IDENTIFIER_AUTHORITY IdentifierAuthority, UCHAR SubAuthorityCount);
+PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
+NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src);
+BOOLEAN STDCALL RtlEqualPrefixSid (PSID Sid1, PSID Sid2);
+BOOLEAN STDCALL RtlEqualSid(PSID Sid1, PSID Sid2);
+PSID STDCALL RtlFreeSid (PSID Sid);
+ULONG STDCALL RtlLengthSid (PSID Sid);
+PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
+PUCHAR STDCALL RtlSubAuthorityCountSid (PSID Sid);
+BOOLEAN STDCALL RtlValidSid (PSID Sid);
+NTSTATUS STDCALL RtlConvertSidToUnicodeString (PUNICODE_STRING String, PSID Sid, BOOLEAN AllocateBuffer);
+
+BOOLEAN STDCALL RtlAreAllAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
+BOOLEAN STDCALL RtlAreAnyAccessesGranted (ACCESS_MASK GrantedAccess, ACCESS_MASK DesiredAccess);
+VOID STDCALL RtlMapGenericMask (PACCESS_MASK AccessMask, PGENERIC_MAPPING GenericMapping);
 
 
 /*  functions exported from NTOSKRNL.EXE which are considered RTL  */

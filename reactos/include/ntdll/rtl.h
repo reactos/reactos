@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.29 2001/06/19 15:08:12 ekohl Exp $
+/* $Id: rtl.h,v 1.30 2001/06/22 12:40:45 ekohl Exp $
  *
  */
 
@@ -513,6 +513,42 @@ RtlpNtSetValueKey (
 	IN	PVOID	Data,
 	IN	ULONG	DataLength
 	);
+
+#ifndef __NTDRIVER__
+LONG
+STDCALL
+InterlockedIncrement (
+	PLONG Addend
+	);
+
+LONG
+STDCALL
+InterlockedDecrement (
+	PLONG lpAddend
+	);
+
+LONG
+STDCALL
+InterlockedExchange (
+	PLONG Target,
+	LONG Value
+	);
+
+PVOID
+STDCALL
+InterlockedCompareExchange (
+	PVOID *Destination,
+	PVOID Exchange,
+	PVOID Comperand
+	);
+
+LONG
+STDCALL
+InterlockedExchangeAdd (
+	PLONG Addend,
+	LONG Increment
+	);
+#endif /* __NTDRIVER__ */
 
 #endif /* __INCLUDE_NTDLL_RTL_H */
 

@@ -888,6 +888,7 @@ WINBOOL STDCALL AccessCheckAndAuditAlarm(
 				 LPBOOL  pfGenerateOnClose
 				 );
 
+#ifndef __NTDRIVER__
 LONG
 STDCALL
 InterlockedIncrement(
@@ -906,13 +907,16 @@ InterlockedExchange(
 		    LPLONG Target,
 		    LONG Value
 		    );
-PVOID 
-STDCALL 
+
+PVOID
+STDCALL
 InterlockedCompareExchange(
-	    PVOID *Destination, 
-	    PVOID Exchange,     
-            PVOID Comperand     );
-  
+	    PVOID *Destination,
+	    PVOID Exchange,
+	    PVOID Comperand
+	    );
+#endif
+
 WINBOOL
 STDCALL
 FreeResource(
