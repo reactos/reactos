@@ -1,3 +1,7 @@
+Changes in v1.8.5 (4/10/2003) (ekohl)
+
+- Added support for binary system hive.
+
 Changes in v1.8.4 (4/5/2003) (chorns)
 
 - Added DOS compatible Master Boot Record (MBR)

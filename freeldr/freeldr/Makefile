@@ -230,6 +230,7 @@ REACTOS_OBJS=	reactos.o	\
 				arcname.o	\
 				hwdetect.o	\
 				reghive.o	\
+				binhive.o	\
 				registry.o
 
 COMM_OBJS	=	rs232.o
