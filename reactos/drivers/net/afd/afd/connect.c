@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.11 2004/12/28 11:41:29 navaraf Exp $
+/* $Id: connect.c,v 1.12 2004/12/28 17:05:19 navaraf Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -193,7 +193,13 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     case SOCKET_STATE_BOUND:
 	FCB->RemoteAddress = 
 	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
-	
+
+	if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
+	{
+	    Status = STATUS_SUCCESS;
+	    break;
+	}
+
 	Status = WarmSocketForConnection( FCB );
 
 	if( !NT_SUCCESS(Status) )

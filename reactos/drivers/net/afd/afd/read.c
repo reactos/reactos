@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.16 2004/12/28 16:53:26 gvg Exp $
+/* $Id: read.c,v 1.17 2004/12/28 17:05:19 navaraf Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -239,6 +239,13 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+
+    if( FCB->Flags & AFD_ENDPOINT_CONNECTIONLESS )
+    {
+	AFD_DbgPrint(MID_TRACE,("Receive on connection-less sockets not implemented\n"));
+	return UnlockAndMaybeComplete( FCB, STATUS_NOT_IMPLEMENTED, 
+				       Irp, 0, NULL, FALSE );
+    }
 
     FCB->EventsFired &= ~AFD_EVENT_RECEIVE;
     PollReeval( FCB->DeviceExt, FCB->FileObject );
