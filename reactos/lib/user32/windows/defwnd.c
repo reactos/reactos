@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.94 2003/10/04 21:18:17 weiden Exp $
+/* $Id: defwnd.c,v 1.95 2003/10/07 15:42:37 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -432,12 +432,14 @@ DrawCaption(
     BOOL result = FALSE;
     RECT r = *lprc;
     UINT VCenter = 0, Padding = 0, Height;
+    ULONG Style;
     WCHAR buffer[256];
     HFONT hFont = NULL;
     HFONT hOldFont = NULL;
     HBRUSH OldBrush = NULL;
     HDC MemDC = NULL;
     int ButtonWidth;
+    COLORREF OldTextColor;
 
 #ifdef DOUBLE_BUFFER_CAPTION
     HBITMAP MemBMP = NULL, OldBMP = NULL;
@@ -506,12 +508,16 @@ DrawCaption(
 
     r.right = (lprc->right - lprc->left);
     ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_SYSMENU)
+    Style = GetWindowLongW(hWnd, GWL_STYLE);
+    if (Style & WS_SYSMENU)
     {
       r.right -= 3 + ButtonWidth;
       if (! (GetWindowLongW(hWnd, GWL_EXSTYLE) & WS_EX_TOOLWINDOW))
       {
-	r.right -= 2 + 2 * ButtonWidth;
+        if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+	      r.right -= 2 + 2 * ButtonWidth;
+        else
+	      r.right -= 2;
       }
     }
     r.right -= 2;
@@ -519,13 +525,8 @@ DrawCaption(
     nclm.cbSize = sizeof(nclm);
     if (! SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICSW), &nclm, 0)) goto cleanup;
 
-    if (uFlags & DC_INBUTTON)
-        SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT]);
-    else
-        SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
-
     SetBkMode( MemDC, TRANSPARENT );
-    if (GetWindowLongW(hWnd, GWL_STYLE) & WS_EX_TOOLWINDOW)
+    if (Style & WS_EX_TOOLWINDOW)
 //    if (uFlags & DC_SMALLCAP) // incorrect
         hFont = CreateFontIndirectW(&nclm.lfSmCaptionFont);
     else
@@ -535,10 +536,15 @@ DrawCaption(
 
     hOldFont = SelectObject(MemDC, hFont);
     if (! hOldFont) goto cleanup;
+    
+    if (uFlags & DC_INBUTTON)
+        OldTextColor = SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_BTNTEXT : COLOR_GRAYTEXT]);
+    else
+        OldTextColor = SetTextColor(MemDC, SysColours[ uFlags & DC_ACTIVE ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
 
     DrawTextW(MemDC, buffer, wcslen(buffer), &r, DT_VCENTER | DT_END_ELLIPSIS);
-    // Old method:
-    // TextOutW(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), lprc->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, wcslen(buffer));
+    
+    SetTextColor(MemDC, OldTextColor);
   }
 
     if (uFlags & DC_BUTTONS)
@@ -587,20 +593,19 @@ UserDrawCaptionNC (
   POINT OldPos;
   HPEN lPen, oPen;
   RECT r = *rect;
-  ULONG Style, ExStyle;
+  ULONG ExStyle;
   UINT capflags = 0;
   SIZE FrameSize;
   
-  Style = GetWindowLongW(hWnd, GWL_STYLE);
   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
   
   capflags = DC_ICON | DC_TEXT;
   capflags |= (active & DC_ACTIVE);
   
-  if(Style & WS_EX_TOOLWINDOW)
+  if(style & WS_EX_TOOLWINDOW)
     capflags |= DC_SMALLCAP;
   
-  UserGetFrameSize(Style, ExStyle, &FrameSize);
+  UserGetFrameSize(style, ExStyle, &FrameSize);
   
   r.left += FrameSize.cx;
   r.top += FrameSize.cy;
@@ -623,7 +628,7 @@ UserDrawCaptionNC (
     r.left += GetSystemMetrics(SM_CXSIZE) + 1;
     UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONCLOSE);
     r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
-    if(Style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX))
+    if((style & (WS_MAXIMIZEBOX | WS_MINIMIZEBOX)) && !(ExStyle & WS_EX_TOOLWINDOW))
     {
       UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
       UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
@@ -687,24 +692,27 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
     {
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYSIZE);
-      rect.top += GetSystemMetrics(SM_CYSIZE) + FrameSize.cy;
+      rect.top += GetSystemMetrics(SM_CYCAPTION) + FrameSize.cy;
+      DbgPrint("1. rect.top == %d\n", rect.top);
       UserDrawCaptionNC(hDC, &r, hWnd, Style, Active);
     }
 
   /*  Draw menu bar.  */
   if (UserHasMenu(hWnd, Style))
-    {
+    {DbgPrint("2. rect.top == %d\n", rect.top);
       RECT r = rect;
       r.bottom = rect.top + GetSystemMetrics(SM_CYMENU);
       r.left += FrameSize.cx;
       r.right -= FrameSize.cx;
       rect.top += MenuDrawMenuBar(hDC, &r, hWnd, FALSE);
+      DbgPrint("3. rect.top == %d\n", rect.top);
     }
 
   /*  Draw scrollbars */
   if((Style & WS_VSCROLL) && (clientrect.right < rect.right - (2 * FrameSize.cx)))
     SCROLL_DrawScrollBar(hWnd, hDC, SB_VERT, TRUE, TRUE);
-  if((Style & WS_HSCROLL) && (clientrect.bottom < rect.bottom - rect.top - (2 * FrameSize.cy)))
+  DbgPrint("HSCROLL: %d < %d - %d - %d\n", clientrect.bottom, rect.bottom, rect.top, FrameSize.cy);
+  if((Style & WS_HSCROLL) && (clientrect.bottom < rect.bottom - rect.top - FrameSize.cy))
     SCROLL_DrawScrollBar(hWnd, hDC, SB_HORZ, TRUE, TRUE);
 
   /* FIXME: Draw size box.*/
@@ -927,7 +935,7 @@ VOID STATIC
 DefWndDoButton(HWND hWnd, WPARAM wParam)
 {
   MSG Msg;
-  BOOL InBtn = TRUE, HasBtn = FALSE;
+  BOOL InBtn, HasBtn = FALSE;
   ULONG Btn, Style;
   WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
   
@@ -953,11 +961,12 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
       return;
   }
   
-  if(!HasBtn)
-    return;
+  InBtn = HasBtn;
   
   SetCapture(hWnd);
-  UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
+  
+  if(HasBtn)
+    UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
   
   while(1)
   {
@@ -975,12 +984,15 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
         }
       case WM_NCMOUSEMOVE:
       case WM_MOUSEMOVE:
-        CurBtn = DefWndHitTestNC(hWnd, Msg.pt);
-        if(InBtn != (CurBtn == OrigBtn))
+        if(HasBtn)
         {
-          UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), (CurBtn == OrigBtn) , Btn);
+          CurBtn = DefWndHitTestNC(hWnd, Msg.pt);
+          if(InBtn != (CurBtn == OrigBtn))
+          {
+            UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), (CurBtn == OrigBtn) , Btn);
+          }
+          InBtn = CurBtn == OrigBtn;
         }
-        InBtn = CurBtn == OrigBtn;
         break;
     }
   }
@@ -1601,36 +1613,23 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 VOID
 DefWndAdjustRect(HWND hWnd, RECT* Rect, ULONG Style, BOOL Menu, ULONG ExStyle)
 {
-  if (Style & WS_ICONIC)
-    {
-      return;
-    }
-
-  if (UserHasThickFrameStyle(Style, ExStyle))
-    {
-      InflateRect(Rect, GetSystemMetrics(SM_CXFRAME),
-		  GetSystemMetrics(SM_CYFRAME));
-    }
-  else if (UserHasDlgFrameStyle(Style, ExStyle))
-    {
-      InflateRect(Rect, GetSystemMetrics(SM_CXDLGFRAME),
-		  GetSystemMetrics(SM_CYDLGFRAME));
-    }
-  else if (UserHasThinFrameStyle(Style, ExStyle))
-    {
-      InflateRect(Rect, GetSystemMetrics(SM_CXBORDER),
-		  GetSystemMetrics(SM_CYBORDER));
-    }
-  if (Style & WS_CAPTION)
-    {
-      Rect->top -= GetSystemMetrics(SM_CYCAPTION);
-    }
-  if (Menu)
-    {
-      //Rect->top -= GetSystemMetrics(SM_CYMENU);
-      Rect->top -= MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left, -Rect->left, -Rect->top);
-      
-    }
+  SIZE FrameSize;
+  
+  if(Style & WS_ICONIC)
+    return;
+  
+  UserGetFrameSize(Style, ExStyle, &FrameSize);
+  
+  InflateRect(Rect, FrameSize.cx, FrameSize.cy);
+  
+  if(Style & WS_CAPTION)
+  {
+    Rect->top -= GetSystemMetrics(SM_CYCAPTION);
+  }
+  if(Menu)
+  {
+    Rect->top -= MenuGetMenuBarHeight(hWnd, Rect->right - Rect->left, -Rect->left, -Rect->top);
+  }
 }
 
 LRESULT STDCALL
@@ -1638,6 +1637,7 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT* Rect)
 {
     LRESULT Result = 0;
     LONG ScrollXY;
+    SIZE FrameSize;
     NCCALCSIZE_PARAMS *SizeStruct = (NCCALCSIZE_PARAMS *)Rect;
     RECT NewRect, TmpRect = {0, 0, 0, 0};
     ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
@@ -1656,7 +1656,13 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT* Rect)
 
     if (!(Style & WS_MINIMIZE))
     {
-        DefWndAdjustRect(hWnd, &TmpRect, Style, UserHasMenu(hWnd, Style), ExStyle);
+        if(!(Style & WS_ICONIC))
+        {
+            UserGetFrameSize(Style, ExStyle, &FrameSize);
+            InflateRect(&TmpRect, FrameSize.cx, FrameSize.cy);
+            if(Style & WS_CAPTION)
+                TmpRect.top -= GetSystemMetrics(SM_CYCAPTION);
+        }
 
         if(CalcSizeStruct)
         {
@@ -1675,6 +1681,9 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT* Rect)
             NewRect.bottom = NewRect.top;
         if(NewRect.left > NewRect.right)
             NewRect.right = NewRect.left;
+            
+        if(UserHasMenu(hWnd, Style))
+            NewRect.top += MenuGetMenuBarHeight(hWnd, NewRect.right - NewRect.left, NewRect.left, NewRect.top);
         
         if (Style & WS_VSCROLL)
         {
