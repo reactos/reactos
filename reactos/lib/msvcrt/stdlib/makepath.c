@@ -1,4 +1,4 @@
-/* $Id: makepath.c,v 1.11 2003/07/11 21:58:09 royce Exp $
+/* $Id: makepath.c,v 1.12 2003/08/08 00:46:20 hbirr Exp $
  */
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -11,8 +11,9 @@ void _makepath(char* path, const char* drive, const char* dir, const char* fname
     int dir_len;
 
     if ((drive != NULL) && (*drive)) {
-        strcpy(path, drive);
-        strcat(path, ":");
+        path[0] = *drive;
+	path[1] = ':';
+	path[2] = 0;
     } else {
         (*path)=0;
     }
