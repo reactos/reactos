@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.18 2000/02/13 16:05:14 dwelch Exp $
+/* $Id: startup.c,v 1.19 2000/02/25 00:35:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -85,6 +85,7 @@ VOID LdrStartup(VOID)
 				 NTHeaders->OptionalHeader.SizeOfHeapReserve,
 				 NULL,
 				 NULL);
+   Peb->ProcessHeap = __ProcessHeap;
    EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL);
 
    if (EntryPoint == NULL)
@@ -103,7 +104,7 @@ VOID LdrStartup(VOID)
      }
    
    DbgPrint("Transferring control to image at %x\n",EntryPoint);
-   Status = EntryPoint(NULL);
+   Status = EntryPoint(Peb);
    ZwTerminateProcess(NtCurrentProcess(),Status);
 }
 
