@@ -34,37 +34,6 @@ extern "C" {
 /****************************************************************************
  *	IDList Functions
  */
-LPITEMIDLIST WINAPI ILClone (LPCITEMIDLIST pidl);
-LPITEMIDLIST WINAPI ILCloneFirst(LPCITEMIDLIST pidl);
-
-LPITEMIDLIST WINAPI ILCombine(
-	LPCITEMIDLIST iil1,
-	LPCITEMIDLIST iil2);
-
-DWORD WINAPI ILGetSize(LPCITEMIDLIST pidl);
-
-LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST pidl);
-LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST pidl);
-BOOL WINAPI ILRemoveLastID(LPCITEMIDLIST pidl);
-
-LPITEMIDLIST WINAPI ILFindChild(
-	LPCITEMIDLIST pidl1,
-	LPCITEMIDLIST pidl2);
-
-LPITEMIDLIST WINAPI ILAppendID(
-	LPITEMIDLIST pidl,
-	LPCSHITEMID lpItemID,
-	BOOL bAddToEnd);
-
-BOOL WINAPI ILIsEqual(
-	LPCITEMIDLIST pidl1,
-	LPCITEMIDLIST pidl2);
-
-BOOL WINAPI ILIsParent(
-	LPCITEMIDLIST pidlParent,
-	LPCITEMIDLIST pidlChild,
-	BOOL bImmediate);
-
 BOOL WINAPI ILGetDisplayName(
 	LPCITEMIDLIST pidl,
 	LPVOID path);
@@ -80,8 +49,6 @@ BOOL WINAPI ILGetDisplayNameEx(
 	LPVOID path,
 	DWORD type);
 
-DWORD WINAPI ILFree(LPITEMIDLIST pidl);
-
 HRESULT WINAPI ILSaveToStream(
 	LPSTREAM pstrm,
 	LPCITEMIDLIST pidl);
@@ -95,7 +62,6 @@ void WINAPI ILGlobalFree(LPITEMIDLIST pidl);
 
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathA (LPCSTR lpszPath);
 LPITEMIDLIST WINAPI SHSimpleIDListFromPathW (LPCWSTR lpszPath);
-LPITEMIDLIST WINAPI SHSimpleIDListFromPathAW (LPCVOID lpszPath);
 
 HRESULT WINAPI SHILCreateFromPathA (
 	LPCSTR path,
@@ -107,35 +73,14 @@ HRESULT WINAPI SHILCreateFromPathW (
 	LPITEMIDLIST * ppidl,
 	DWORD *attributes);
 
-HRESULT WINAPI SHILCreateFromPathAW (
-	LPCVOID path,
-	LPITEMIDLIST * ppidl,
-	DWORD *attributes);
-
 LPITEMIDLIST WINAPI ILCreateFromPathA(LPCSTR path);
 LPITEMIDLIST WINAPI ILCreateFromPathW(LPCWSTR path);
-LPITEMIDLIST WINAPI ILCreateFromPathAW(LPCVOID path);
 
 /*
 	string functions
 */
-HRESULT WINAPI StrRetToStrNA (
-	LPVOID dest,
-	DWORD len,
-	LPSTRRET src,
-	const ITEMIDLIST *pidl);
-
-HRESULT WINAPI StrRetToStrNW (
-	LPVOID dest,
-	DWORD len,
-	LPSTRRET src,
-	const ITEMIDLIST *pidl);
-
-HRESULT WINAPI StrRetToStrNAW (
-	LPVOID dest,
-	DWORD len,
-	LPSTRRET src,
-	const ITEMIDLIST *pidl);
+BOOL WINAPI StrRetToStrNA(LPSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
+BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 
 
 /****************************************************************************
@@ -196,23 +141,9 @@ BOOL WINAPI GetFileNameFromBrowse(
 	LPCSTR lpstrFilter,
 	LPCSTR lpstrTitle);
 
-BOOL WINAPI SHFindFiles(
-	LPCITEMIDLIST pidlRoot,
-	LPCITEMIDLIST pidlSavedSearch);
-
 BOOL WINAPI SHFindComputer(
 	LPCITEMIDLIST pidlRoot,
 	LPCITEMIDLIST pidlSavedSearch);
-
-/* SHObjectProperties flags */
-#define OPF_PRINTERNAME  0x01
-#define OPF_PATHNAME     0x02
-
-BOOL WINAPI SHObjectProperties(
-	HWND hwndOwner,
-	UINT uFlags,
-	LPCSTR lpstrName,
-	LPCSTR lpstrParameters);
 
 void WINAPI SHHandleDiskFull(HWND hwndOwner,
 	UINT uDrive);
@@ -227,30 +158,9 @@ DWORD WINAPI SHNetConnectionDialog(
 	LPCSTR lpstrRemoteName,
 	DWORD dwType);
 
-int WINAPIV ShellMessageBoxA(
-	HINSTANCE hInstance,
-	HWND hWnd,
-	LPCSTR lpText,
-	LPCSTR lpCaption,
-	UINT uType,
-	...);
-
-int WINAPIV ShellMessageBoxW(
-	HINSTANCE hInstance,
-	HWND hWnd,
-	LPCWSTR lpText,
-	LPCWSTR lpCaption,
-	UINT uType,
-	...);
-
-#define ShellMessageBox WINELIB_NAME_AW(ShellMessageBox)
-
 /****************************************************************************
  * Memory Routines
  */
-
-LPVOID WINAPI SHAlloc(ULONG cb);
-void WINAPI SHFree(LPVOID pv);
 
 HANDLE WINAPI SHAllocShared(
 	LPVOID pv,
@@ -310,11 +220,6 @@ HICON WINAPI SHGetFileIcon(
 	LPCSTR lpszPath,
 	DWORD dwFileAttributes,
 	UINT uFlags);
-
-int WINAPI SHMapPIDLToSystemImageListIndex(
-	LPSHELLFOLDER psf,
-	LPCITEMIDLIST pidl,
-	UINT * pOpenIndex);
 
 BOOL WINAPI FileIconInit(BOOL bFullInit);
 
@@ -459,57 +364,13 @@ HRESULT WINAPI SHRegisterDragDrop(
 
 HRESULT WINAPI SHRevokeDragDrop(HWND hWnd);
 
-HRESULT WINAPI SHDoDragDrop(
-	HWND hWnd,
-	LPDATAOBJECT lpDataObject,
-	LPDROPSOURCE lpDropSource,
-	DWORD dwOKEffect,
-	LPDWORD pdwEffect);
-
 BOOL WINAPI DAD_DragEnter(HWND hWnd);
-
-BOOL WINAPI DAD_DragEnterEx(
-	HWND hWnd,
-	POINT pt);
-
-BOOL WINAPI DAD_DragMove(POINT pt);
-
-/* DAD_AutoScroll return values */
-#define DAD_SCROLL_UP    1
-#define DAD_SCROLL_DOWN  2
-#define DAD_SCROLL_LEFT  4
-#define DAD_SCROLL_RIGHT 8
-
-/* DAD_AutoScroll sample structure */
-typedef struct
-{
-	DWORD  dwCount;
-	DWORD  dwLastTime;
-	BOOL   bWrapped;
-	POINT  aptPositions[3];
-	DWORD  adwTimes[3];
-} SCROLLSAMPLES, *LPSCROLLSAMPLES;
-
-DWORD WINAPI DAD_AutoScroll(HWND hWnd,
-	LPSCROLLSAMPLES lpSamples,
-	LPPOINT lppt);
-
-BOOL WINAPI DAD_DragLeave();
 
 BOOL WINAPI DAD_SetDragImageFromListView(
 	HWND hWnd,
 	POINT pt);
 
-BOOL WINAPI DAD_SetDragImage(
-	HIMAGELIST himlTrack,
-	LPPOINT lppt);
-
 BOOL WINAPI DAD_ShowDragImage(BOOL bShow);
-
-HRESULT WINAPI SHCreateStdEnumFmtEtc(
-	DWORD cFormats,
-	const FORMATETC *lpFormats,
-	LPENUMFORMATETC *ppenumFormatetc);
 
 HRESULT WINAPI CIDLData_CreateFromIDArray(
 	LPCITEMIDLIST pidlFolder,
@@ -844,56 +705,11 @@ HRESULT WINAPI SHCreateLinks(
 	UINT uFlags,
 	LPITEMIDLIST *lppidlLinks);
 
-/* SHGetNewLinkInfo flags */
-#define SHGNLI_PIDL        0x01
-#define SHGNLI_PREFIXNAME  0x02
-#define SHGNLI_NOUNIQUE    0x04
-
-BOOL WINAPI SHGetNewLinkInfoA(
-	LPCSTR pszLinkTo,
-	LPCSTR pszDir,
-	LPSTR pszName,
-	BOOL *pfMustCopy,
-	UINT uFlags);
-
-BOOL WINAPI SHGetNewLinkInfoW(
-	LPCWSTR pszLinkTo,
-	LPCWSTR pszDir,
-	LPWSTR pszName,
-	BOOL *pfMustCopy,
-	UINT uFlags);
-#define SHGetNewLinkInfo WINELIB_NAME_AW(SHGetNewLinkInfo)
-
 DWORD WINAPI CheckEscapesA(LPSTR string, DWORD len);
 DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
-
-/* cabinet functions */
-
-#include "pshpack1.h"
-
-typedef struct {
-    WORD cLength;
-    WORD nVersion;
-    BOOL fFullPathTitle:1;
-    BOOL fSaveLocalView:1;
-    BOOL fNotShell:1;
-    BOOL fSimpleDefault:1;
-    BOOL fDontShowDescBar:1;
-    BOOL fNewWindowMode:1;
-    BOOL fShowCompColor:1;
-    BOOL fDontPrettyNames:1;
-    BOOL fAdminsCreateCommonGroups:1;
-    UINT fUnusedFlags:7;
-    UINT fMenuEnumFilter;
-} CABINETSTATE;
-
-#include "poppack.h"
-
-BOOL WINAPI ReadCabinetState(CABINETSTATE *, int);
-BOOL WINAPI WriteCabinetState(CABINETSTATE *);
 
 #ifdef __cplusplus
 } /* extern "C" */

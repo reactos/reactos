@@ -764,10 +764,10 @@ LPITEMIDLIST WINAPI SHLogILFromFSIL(LPITEMIDLIST pidl)
  * NOTES
  *  exported by ordinal
  */
-DWORD WINAPI ILGetSize(LPCITEMIDLIST pidl)
+UINT WINAPI ILGetSize(LPCITEMIDLIST pidl)
 {
 	LPCSHITEMID si = &(pidl->mkid);
-	DWORD  len=0;
+	UINT len=0;
 
 	if (pidl)
 	{ while (si->cb)
@@ -776,7 +776,7 @@ DWORD WINAPI ILGetSize(LPCITEMIDLIST pidl)
 	  }
 	  len += 2;
 	}
-	TRACE("pidl=%p size=%lu\n",pidl, len);
+	TRACE("pidl=%p size=%u\n",pidl, len);
 	return len;
 }
 
@@ -871,13 +871,10 @@ LPITEMIDLIST WINAPI ILAppend(LPITEMIDLIST pidl, LPCITEMIDLIST item, BOOL bEnd)
  * NOTES
  *  exported by ordinal
  */
-DWORD WINAPI ILFree(LPITEMIDLIST pidl)
+void WINAPI ILFree(LPITEMIDLIST pidl)
 {
-	TRACE("(pidl=0x%08lx)\n",(DWORD)pidl);
-
-	if(!pidl) return FALSE;
-	SHFree(pidl);
-	return TRUE;
+	TRACE("(pidl=%p)\n",pidl);
+	if(pidl) SHFree(pidl);
 }
 
 /*************************************************************************

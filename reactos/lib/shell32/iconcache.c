@@ -347,7 +347,7 @@ BOOL PidlToSicIndex (
 	LPCITEMIDLIST pidl,
 	BOOL bBigIcon,
 	UINT uFlags,
-	UINT * pIndex)
+	int * pIndex)
 {
 	IExtractIconA	*ei;
 	char		szIconFile[MAX_PATH];	/* file containing the icon */
@@ -383,11 +383,11 @@ BOOL PidlToSicIndex (
  *
  */
 int WINAPI SHMapPIDLToSystemImageListIndex(
-	LPSHELLFOLDER sh,
+	IShellFolder *sh,
 	LPCITEMIDLIST pidl,
-	UINT * pIndex)
+	int *pIndex)
 {
-	UINT	Index;
+	int Index;
 
 	TRACE("(SF=%p,pidl=%p,%p)\n",sh,pidl,pIndex);
 	pdump(pidl);

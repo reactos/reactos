@@ -1025,7 +1025,7 @@ void WINAPI SHFreeUnusedLibraries (void)
  * DAD_AutoScroll				[SHELL32.129]
  *
  */
-DWORD WINAPI DAD_AutoScroll(HWND hwnd, LPSCROLLSAMPLES samples, LPPOINT pt)
+BOOL WINAPI DAD_AutoScroll(HWND hwnd, AUTO_SCROLL_DATA *samples, LPPOINT pt)
 {
     FIXME("hwnd = %p %p %p\n",hwnd,samples,pt);
     return 0;

@@ -52,7 +52,7 @@ BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
 #define INVALID_INDEX -1
 BOOL SIC_Initialize(void);
 void SIC_Destroy(void);
-BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, UINT * pIndex);
+BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT uFlags, int * pIndex);
 INT SIC_GetIconIndex (LPCSTR sSourceFile, INT dwSourceIndex );
 
 /* Classes Root */

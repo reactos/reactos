@@ -1293,7 +1293,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
                 }
                 else /* LVN_GETDISPINFOW */
                 {
-                    StrRetToStrNW( lpdi->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
+                    StrRetToStrNW( ((NMLVDISPINFOW *)lpdi)->item.pszText, lpdi->item.cchTextMax, &sd.str, NULL);
                     TRACE("-- text=%s\n",debugstr_w((WCHAR*)(lpdi->item.pszText)));
                 }
 	      }

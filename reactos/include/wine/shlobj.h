@@ -34,6 +34,34 @@ extern "C" {
 #include <shobjidl.h>
 
 
+LPVOID       WINAPI SHAlloc(ULONG);
+HRESULT      WINAPI SHCoCreateInstance(LPCWSTR,const CLSID*,IUnknown*,REFIID,LPVOID*);
+HRESULT      WINAPI SHCreateStdEnumFmtEtc(DWORD,const FORMATETC *,IEnumFORMATETC**);
+BOOL         WINAPI SHFindFiles(LPCITEMIDLIST,LPCITEMIDLIST);
+void         WINAPI SHFree(LPVOID);
+BOOL         WINAPI SHGetPathFromIDListA(LPCITEMIDLIST pidl,LPSTR pszPath);
+BOOL         WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl,LPWSTR pszPath);
+#define             SHGetPathFromIDList WINELIB_NAME_AW(SHGetPathFromIDList)
+HRESULT      WINAPI SHILCreateFromPath(LPCWSTR,LPITEMIDLIST*,DWORD*);
+LPITEMIDLIST WINAPI SHSimpleIDListFromPath(LPCWSTR);
+int          WINAPI SHMapPIDLToSystemImageListIndex(IShellFolder*,LPCITEMIDLIST,int*);
+
+LPITEMIDLIST WINAPI ILAppendID(LPITEMIDLIST,LPCSHITEMID,BOOL);
+LPITEMIDLIST WINAPI ILClone(LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILCloneFirst(LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILCreateFromPathA(LPCSTR);
+LPITEMIDLIST WINAPI ILCreateFromPathW(LPCWSTR);
+#define             ILCreateFromPath WINELIB_NAME_AW(ILCreateFromPath)
+LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST,LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILFindChild(LPCITEMIDLIST,LPCITEMIDLIST);
+LPITEMIDLIST WINAPI ILFindLastID(LPCITEMIDLIST);
+void         WINAPI ILFree(LPITEMIDLIST);
+LPITEMIDLIST WINAPI ILGetNext(LPCITEMIDLIST);
+UINT         WINAPI ILGetSize(LPCITEMIDLIST);
+BOOL         WINAPI ILIsEqual(LPCITEMIDLIST,LPCITEMIDLIST);
+BOOL         WINAPI ILIsParent(LPCITEMIDLIST,LPCITEMIDLIST,BOOL);
+BOOL         WINAPI ILRemoveLastID(LPCITEMIDLIST);
+
 HRESULT WINAPI SHCoCreateInstance(LPCWSTR, const CLSID*, LPUNKNOWN, REFIID, LPVOID*);
 
 BOOL WINAPI SHGetPathFromIDListA (LPCITEMIDLIST pidl,LPSTR pszPath);
@@ -870,6 +898,56 @@ struct IFileSystemBindDataVtbl {
     STDMETHOD_(HRESULT,SetFindData)(THIS_ const WIN32_FIND_DATAW* pfd) PURE;
 
 #endif  /* __IFileSystemBindData_INTERFACE_DEFINED__ */
+
+
+/****************************************************************************
+ * Drag And Drop Routines
+ */
+
+/* DAD_AutoScroll sample structure */
+#define NUM_POINTS 3
+typedef struct
+{
+    int   iNextSample;
+    DWORD dwLastScroll;
+    BOOL  bFull;
+    POINT pts[NUM_POINTS];
+    DWORD dwTimes[NUM_POINTS];
+} AUTO_SCROLL_DATA;
+
+BOOL         WINAPI DAD_SetDragImage(HIMAGELIST,LPPOINT);
+BOOL         WINAPI DAD_DragEnterEx(HWND,POINT);
+BOOL         WINAPI DAD_DragEnterEx2(HWND,POINT,IDataObject*);
+BOOL         WINAPI DAD_DragMove(POINT);
+BOOL         WINAPI DAD_DragLeave(void);
+BOOL         WINAPI DAD_AutoScroll(HWND,AUTO_SCROLL_DATA*,LPPOINT);
+HRESULT      WINAPI SHDoDragDrop(HWND,IDataObject*,IDropSource*,DWORD,LPDWORD);
+
+
+/****************************************************************************
+ * Cabinet functions
+ */
+
+typedef struct {
+    WORD cLength;
+    WORD nVersion;
+    BOOL fFullPathTitle:1;
+    BOOL fSaveLocalView:1;
+    BOOL fNotShell:1;
+    BOOL fSimpleDefault:1;
+    BOOL fDontShowDescBar:1;
+    BOOL fNewWindowMode:1;
+    BOOL fShowCompColor:1;
+    BOOL fDontPrettyNames:1;
+    BOOL fAdminsCreateCommonGroups:1;
+    UINT fUnusedFlags:7;
+    UINT fMenuEnumFilter;
+} CABINETSTATE, *LPCABINETSTATE;
+
+#define CABINETSTATE_VERSION 2
+
+BOOL WINAPI ReadCabinetState(CABINETSTATE *, int);
+BOOL WINAPI WriteCabinetState(CABINETSTATE *);
 
 
 #ifdef __cplusplus

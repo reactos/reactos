@@ -332,6 +332,8 @@ static UINT SHELL_ExecuteW(const WCHAR *lpCmd, void *env, BOOL shWait,
         retval = ERROR_BAD_FORMAT;
     }
 
+    TRACE("returning %u\n", retval);
+
     psei_out->hInstApp = (HINSTANCE)retval;
     return retval;
 }
@@ -1260,7 +1262,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
     if (sei_tmp.lpIDList!=psei->lpIDList && sei_tmp.lpIDList)
 	SHFree(sei_tmp.lpIDList);
 
-    TRACE("ShellExecuteExW32 retval=%d\n", retval);
+    TRACE("retval %u\n", retval);
 
     if (retval <= 32)
     {
