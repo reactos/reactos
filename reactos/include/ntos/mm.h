@@ -54,16 +54,6 @@
 #define SECTION_QUERY		(0x1)
 #define SECTION_ALL_ACCESS	(0xf001fL)
 
-typedef struct _MEMORY_BASIC_INFORMATION {
-  PVOID BaseAddress;
-  PVOID AllocationBase;
-  DWORD AllocationProtect;
-  DWORD RegionSize;
-  DWORD State;
-  DWORD Protect;
-  DWORD Type;
-} MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
-
 #define FILE_MAP_ALL_ACCESS	(0xf001fL)
 #define FILE_MAP_READ	(4)
 #define FILE_MAP_WRITE	(2)

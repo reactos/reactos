@@ -995,7 +995,40 @@ struct _SYSTEM_SESSION_PROCESSES_INFORMATION
 
 // memory information
 
-#define MemoryBasicInformation			0
+typedef enum _MEMORY_INFORMATION_CLASS {
+ MemoryBasicInformation,
+ MemoryWorkingSetList,
+ MemorySectionName //,
+ //MemoryBasicVlmInformation //???
+} MEMORY_INFORMATION_CLASS;
+
+typedef struct _MEMORY_BASIC_INFORMATION { // Information Class 0
+ PVOID BaseAddress;
+ PVOID AllocationBase;
+ ULONG AllocationProtect;
+ ULONG RegionSize;
+ ULONG State;
+ ULONG Protect;
+ ULONG Type;
+} MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
+
+typedef struct _MEMORY_WORKING_SET_LIST { // Information Class 1
+ ULONG NumberOfPages;
+ ULONG WorkingSetList[1];
+} MEMORY_WORKING_SET_LIST, *PMEMORY_WORKING_SET_LIST;
+
+// Information Class 2
+#define _MEMORY_SECTION_NAME_STATIC(__bufsize__) \
+ { \
+ UNICODE_STRING SectionFileName; \
+ WCHAR          NameBuffer[(__bufsize__)]; \
+} 
+
+#define MEMORY_SECTION_NAME_STATIC(__bufsize__) \
+ struct _MEMORY_SECTION_NAME_STATIC((__bufsize__) 
+
+typedef struct _MEMORY_SECTION_NAME_STATIC(ANYSIZE_ARRAY)
+ MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
 
 // shutdown action
 
