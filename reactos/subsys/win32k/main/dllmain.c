@@ -178,7 +178,6 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       InitializeListHead(&Win32Thread->WindowListHead);
       ExInitializeFastMutex(&Win32Thread->WindowListLock);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
-      ExInitializeFastMutex(&Win32Thread->W32CallbackListLock);
     }
   else
     {
