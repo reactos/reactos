@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.70 2003/07/17 07:49:15 gvg Exp $
+# $Id: makefile,v 1.71 2003/07/31 23:15:07 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -47,7 +47,7 @@ LDR_OBJECTS = ldr/loader.o
 
 NTUSER_OBJECTS = ntuser/class.o ntuser/guicheck.o ntuser/hook.o \
                  ntuser/message.o ntuser/msgqueue.o ntuser/stubs.o \
-                 ntuser/userobj.o ntuser/window.o ntuser/winsta.o \
+                 ntuser/userobj.o ntuser/window.o ntuser/winsta.o ntuser/menu.o \
 		 ntuser/input.o ntuser/keyboard.o ntuser/callback.o \
 		 ntuser/winpos.o ntuser/painting.o ntuser/metric.o \
 		 ntuser/windc.o ntuser/prop.o ntuser/scrollbar.o \
