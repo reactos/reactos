@@ -82,15 +82,18 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
 			     &hToken);
      ObDereferenceObject(Token);
 
-     _SEH_TRY
+     if(NT_SUCCESS(Status))
      {
-       *TokenHandle = hToken;
+       _SEH_TRY
+       {
+         *TokenHandle = hToken;
+       }
+       _SEH_HANDLE
+       {
+         Status = _SEH_GetExceptionCode();
+       }
+       _SEH_END;
      }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
    }
    
    return Status;
