@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.2 2004/07/13 11:52:09 ekohl Exp $
+/* $Id: security.c,v 1.3 2004/12/14 00:41:24 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,7 +27,9 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
    HANDLE ProcessToken;
    HANDLE ImpersonationToken;
    NTSTATUS Status;
-
+   OBJECT_ATTRIBUTES ObjAttr;
+   SECURITY_QUALITY_OF_SERVICE Sqos;   
+   
    Status = NtOpenProcessToken(NtCurrentProcess(),
                                TOKEN_DUPLICATE,
                                &ProcessToken);
@@ -36,11 +38,26 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
       DPRINT1("NtOpenProcessToken() failed (Status %lx)\n", Status);
       return(Status);
    }
-
+  
+   Sqos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+   Sqos.ImpersonationLevel = ImpersonationLevel;
+   Sqos.ContextTrackingMode = 0;
+   Sqos.EffectiveOnly = FALSE;
+   
+   InitializeObjectAttributes(
+      &ObjAttr,
+      NULL,
+      0,
+      NULL,
+      NULL
+      );
+   
+   ObjAttr.SecurityQualityOfService = &Sqos;
+   
    Status = NtDuplicateToken(ProcessToken,
                              TOKEN_IMPERSONATE,
-                             NULL,
-                             ImpersonationLevel,
+                             &ObjAttr,
+                             Sqos.EffectiveOnly, /* why both here _and_ in Sqos? */
                              TokenImpersonation,
                              &ImpersonationToken);
    if (!NT_SUCCESS(Status))

@@ -1,4 +1,4 @@
-/* $Id: token.c,v 1.43 2004/12/10 16:50:38 navaraf Exp $
+/* $Id: token.c,v 1.44 2004/12/14 00:41:24 gdalsnes Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -914,7 +914,9 @@ NtSetInformationToken(IN HANDLE TokenHandle,
       break;
 
     default:
-      return STATUS_NOT_IMPLEMENTED;
+      DPRINT1("NtSetInformationToken: lying about success (stub)\n");   
+      return STATUS_SUCCESS;  
+
     }
 
   Status = ObReferenceObjectByHandle(TokenHandle,
@@ -965,12 +967,16 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
 /*
  * @implemented
+ *
+ * NOTE: Some sources claim 4th param is ImpersonationLevel, but on W2K
+ * this is certainly NOT true, thou i can't say for sure that EffectiveOnly
+ * is correct either. -Gunnar
  */
 NTSTATUS STDCALL
 NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 		 IN ACCESS_MASK DesiredAccess,
-		 IN POBJECT_ATTRIBUTES ObjectAttributes,
-		 IN BOOLEAN EffectiveOnly,
+       IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL /*is it really optional?*/,
+       IN BOOLEAN EffectiveOnly,
 		 IN TOKEN_TYPE TokenType,
 		 OUT PHANDLE NewTokenHandle)
 {
@@ -996,7 +1002,9 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
 			     ObjectAttributes,
 			     EffectiveOnly,
 			     TokenType,
-			     ObjectAttributes->SecurityQualityOfService->ImpersonationLevel,
+              ObjectAttributes->SecurityQualityOfService ? 
+                  ObjectAttributes->SecurityQualityOfService->ImpersonationLevel : 
+                  0 /*SecurityAnonymous*/,
 			     PreviousMode,
 			     &NewToken);
 
