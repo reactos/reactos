@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.22 2003/09/08 02:14:20 weiden Exp $
+/* $Id: msgqueue.c,v 1.23 2003/09/28 00:26:13 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -206,7 +206,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     return(FALSE);
   }
 
-  if (Msg == WM_LBUTTONDBLCLK || Msg == WM_RBUTTONDBLCLK || Msg == WM_MBUTTONDBLCLK)
+  if (Msg == WM_LBUTTONDBLCLK || Msg == WM_RBUTTONDBLCLK || Msg == WM_MBUTTONDBLCLK || Msg == WM_XBUTTONDBLCLK)
   {
     if (((*HitTest) != HTCLIENT) || !(IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS))
 	{
@@ -227,13 +227,27 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
 
   if ((*HitTest) != HTCLIENT)
   {
-    Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-    Message->Msg.wParam = *HitTest;
+    switch(Msg)
+    {
+      case WM_MOUSEWHEEL:
+        break;
+      case WM_XBUTTONDOWN:
+      case WM_XBUTTONUP:
+      case WM_XBUTTONDBLCLK:
+        return FALSE;
+      default:
+        Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
+        Message->Msg.wParam = *HitTest;
+        break;
+    }
   }
   else
   {
-    Point.x -= Window->ClientRect.left;
-    Point.y -= Window->ClientRect.top;
+    if(Msg != WM_MOUSEWHEEL)
+    {
+      Point.x -= Window->ClientRect.left;
+      Point.y -= Window->ClientRect.top;
+    }
   }
 
   /* FIXME: Check message filter. */

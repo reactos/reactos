@@ -4343,6 +4343,10 @@ extern "C" {
 #define MK_XBUTTON1 (0x0020)
 #define MK_XBUTTON2 (0x0040)
 
+/* XButton values */
+#define XBUTTON1	(0x0001)
+#define XBUTTON2	(0x0002)
+
 /* WNDCLASS structure */
 #define CS_BYTEALIGNCLIENT	(4096)
 #define CS_BYTEALIGNWINDOW	(8192)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.42 2003/09/24 18:39:34 weiden Exp $
+/* $Id: mouse.c,v 1.43 2003/09/28 00:26:13 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -401,11 +401,13 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
   BOOL Moved = FALSE;
   LONG mouse_ox, mouse_oy;
   LONG mouse_cx = 0, mouse_cy = 0;
+  LONG dScroll = 0;
   HDC hDC;
   PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
   RECTL MouseRect;
+  WORD wp;
   MSG Msg;
   LARGE_INTEGER LargeTickCount;
   ULONG TickCount;
@@ -464,9 +466,11 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     
     MouseMoveAdded = FALSE;
     
+    //PrintInputData(i, Data[i]);
+    
     if (Data[i].ButtonFlags != 0)
     {
-
+      wp = 0;
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_DOWN) > 0)
       {
         /* insert WM_MOUSEMOVE messages before Button down messages */
@@ -509,6 +513,41 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       	else
           Msg.message = CurInfo->SwapButtons ? WM_LBUTTONDOWN : WM_RBUTTONDOWN;
       }
+      
+      if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_DOWN) > 0)
+      {
+        /* insert WM_MOUSEMOVE messages before Button down messages */
+        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+        {
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
+      	CurInfo->ButtonsDown |= MK_XBUTTON1;
+      	if(IntDetectDblClick(CurInfo, TickCount))
+      	{
+      	  Msg.message = WM_XBUTTONDBLCLK;
+      	  wp = XBUTTON1;
+   	    }
+      	else
+          Msg.message = WM_XBUTTONDOWN;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_DOWN) > 0)
+      {
+        /* insert WM_MOUSEMOVE messages before Button down messages */
+        if ((0 != Data[i].LastX) || (0 != Data[i].LastY))
+        {
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
+      	CurInfo->ButtonsDown |= MK_XBUTTON2;
+      	if(IntDetectDblClick(CurInfo, TickCount))
+      	{
+      	  Msg.message = WM_XBUTTONDBLCLK;
+      	  wp = XBUTTON2;
+   	    }
+      	else
+          Msg.message = WM_XBUTTONDOWN;
+      }
 
       if ((Data[i].ButtonFlags & MOUSE_LEFT_BUTTON_UP) > 0)
       {
@@ -525,33 +564,53 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       	CurInfo->ButtonsDown &= CurInfo->SwapButtons ? ~MK_LBUTTON : ~MK_RBUTTON;
         Msg.message = CurInfo->SwapButtons ? WM_LBUTTONUP : WM_RBUTTONUP;
       }
-      
-      Moved = (0 != mouse_cx) || (0 != mouse_cy);
-      if(Moved && MouseEnabled)
+      if ((Data[i].ButtonFlags & MOUSE_BUTTON_4_UP) > 0)
       {
-        if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
-            ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
-        {
-          ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
-          SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
-          ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
-          mouse_cx = 0;
-          mouse_cy = 0;
-        }
+      	CurInfo->ButtonsDown &= ~MK_XBUTTON1;
+        Msg.message = WM_XBUTTONUP;
       }
-
-      Msg.wParam = CurInfo->ButtonsDown;
-      MsqInsertSystemMessage(&Msg, FALSE);
-      
-      /* insert WM_MOUSEMOVE messages after Button up messages */
-      if(!MouseMoveAdded && Moved)
+      if ((Data[i].ButtonFlags & MOUSE_BUTTON_5_UP) > 0)
       {
-        Msg.message = WM_MOUSEMOVE;
+      	CurInfo->ButtonsDown &= ~MK_XBUTTON2;
+        Msg.message = WM_XBUTTONUP;
+      }
+      if ((Data[i].ButtonFlags & MOUSE_WHEEL) > 0)
+      {
+        dScroll += (LONG)Data[i].ButtonData;
+      }
+      
+      if (Data[i].ButtonFlags != MOUSE_WHEEL)
+      {
+        Moved = (0 != mouse_cx) || (0 != mouse_cy);
+        if(Moved && MouseEnabled)
+        {
+          if (!CurInfo->SafetySwitch && !CurInfo->SafetySwitch2 &&
+              ((mouse_ox != CurInfo->x) || (mouse_oy != CurInfo->y)))
+          {
+            ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);
+            SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
+            ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
+            mouse_cx = 0;
+            mouse_cy = 0;
+          }
+        }
+        
+        Msg.wParam = CurInfo->ButtonsDown;
         MsqInsertSystemMessage(&Msg, FALSE);
-        MouseMoveAdded = TRUE;
+      
+        /* insert WM_MOUSEMOVE messages after Button up messages */
+        if(!MouseMoveAdded && Moved)
+        {
+          Msg.message = WM_MOUSEMOVE;
+          MsqInsertSystemMessage(&Msg, FALSE);
+          MouseMoveAdded = TRUE;
+        }
       }
     }
   }
+  
+  KeQueryTickCount(&LargeTickCount);
+  TickCount = LargeTickCount.u.LowPart;
 
   /* If the mouse moved then move the pointer. */
   if ((mouse_cx != 0 || mouse_cy != 0) && MouseEnabled)
@@ -559,8 +618,6 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 
     if(!MouseMoveAdded)
     {
-     KeQueryTickCount(&LargeTickCount);
-     TickCount = LargeTickCount.u.LowPart;
       Msg.wParam = CurInfo->ButtonsDown;
       Msg.message = WM_MOUSEMOVE;
       Msg.pt.x = CurInfo->x;
@@ -577,6 +634,18 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
       SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &MouseRect);
       ExReleaseFastMutexUnsafe(&CurInfo->CursorMutex);
     }
+  }
+  
+  /* send WM_MOUSEWHEEL message */
+  if(dScroll && MouseEnabled)
+  {
+    Msg.message = WM_MOUSEWHEEL;
+    Msg.wParam = MAKEWPARAM(CurInfo->ButtonsDown, dScroll);
+    Msg.lParam = MAKELPARAM(CurInfo->x, CurInfo->y);
+    Msg.time = TickCount;
+    Msg.pt.x = CurInfo->x;
+    Msg.pt.y = CurInfo->y;
+    MsqInsertSystemMessage(&Msg, FALSE);
   }
 
   ObDereferenceObject(InputWindowStation);

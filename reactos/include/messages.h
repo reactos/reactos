@@ -1122,7 +1122,7 @@ extern "C" {
 #define WM_KEYFIRST	(256)
 #define WM_KEYLAST	(264)
 #define WM_MOUSEFIRST	(512)
-#define WM_MOUSELAST	(521)
+#define WM_MOUSELAST	(525)
 
 #ifdef __cplusplus
 }
