@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-	
+
 #include <freeldr.h>
 #include <rtl.h>
 #include <fs.h>
@@ -70,14 +70,14 @@ VOID RunLoader(VOID)
 		MachConsGetCh();
 		return;
 	}
-	
+
 
 	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
 	{
 		UiMessageBox("Press ENTER to reboot.\n");
 		goto reboot;
 	}
-	
+
 	if (OperatingSystemCount == 0)
 	{
 		UiMessageBox("There were no operating systems listed in freeldr.ini.\nPress ENTER to reboot.");
@@ -85,7 +85,7 @@ VOID RunLoader(VOID)
 	}
 
 	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemSectionNames, OperatingSystemCount);
-	
+
 	//
 	// Find all the message box settings and run them
 	//
@@ -93,12 +93,13 @@ VOID RunLoader(VOID)
 
 	for (;;)
 	{
-	
+
 		/* If Timeout is 0, don't even bother loading any gui */
 		if (!UserInterfaceUp) {
+			SelectedOperatingSystem = DefaultOperatingSystem;
 			goto NoGui;
 		}
-		
+
 		// Redraw the backdrop
 		UiDrawBackdrop();
 
@@ -108,10 +109,9 @@ VOID RunLoader(VOID)
 			UiMessageBox("Press ENTER to reboot.\n");
 			goto reboot;
 		}
-		
+
 NoGui:
 		TimeOut = -1;
-		DefaultOperatingSystem = SelectedOperatingSystem;
 
 		// Try to open the operating system section in the .ini file
 		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
@@ -153,7 +153,7 @@ NoGui:
 		}
 	}
 
-	
+
 reboot:
 	UiUnInitialize("Rebooting...");
 	return;
