@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.49 2003/08/29 21:53:50 rcampbell Exp $ */
+/* $Id: text.c,v 1.50 2003/08/31 13:24:38 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1034,7 +1034,7 @@ NtGdiTextOut(HDC  hDC,
   // Fixme: Call EngTextOut, which does the real work (calling DrvTextOut where appropriate)
 
   DC *dc = DC_LockDc(hDC);
-  SURFOBJ *SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
+  SURFOBJ *SurfObj;
   int error, glyph_index, n, i;
   FT_Face face;
   FT_GlyphSlot glyph;
@@ -1058,6 +1058,7 @@ NtGdiTextOut(HDC  hDC,
 
   if( !dc )
 	return FALSE;
+  SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
 
   XStart += dc->w.DCOrgX;
   YStart += dc->w.DCOrgY;
