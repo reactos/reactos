@@ -79,18 +79,20 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	new PictureButton(Button(_hwnd, ResString(IDS_START), 2, 2, STARTBUTTON_WIDTH, TASKBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU));
 
+	ClientRect clnt(_hwnd);
+
 	 // create task bar
 	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
 							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
+							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
 	taskbar->_desktop_bar = this;
 
 	 // create tray notification area
 	_hwndNotify = Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
-							BtnWindowClass(CLASSNAME_TRAYNOTIFY), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
+							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							clnt.right-NOTIFYAREA_WIDTH, 1, NOTIFYAREA_WIDTH, clnt.bottom-2, _hwnd);
 
 	NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
 	notify_area->_desktop_bar = this;
@@ -164,7 +166,7 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-NOTIFYAREA_WIDTH, cy, TRUE);
 
 		if (_hwndNotify)
-			MoveWindow(_hwndNotify, clnt.right-NOTIFYAREA_WIDTH, 0, NOTIFYAREA_WIDTH, cy, TRUE);
+			MoveWindow(_hwndNotify, clnt.right-NOTIFYAREA_WIDTH, 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
 		break;}
 
 	  case WM_CLOSE:
@@ -231,7 +233,7 @@ void DesktopBar::CloseStartMenu()
 struct TrayNotifyCDS {
 	DWORD	cookie;
 	DWORD	notify_code;
-	DWORD	offset;
+	NOTIFYICONDATA nicon_data;
 };
 
 LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
@@ -239,12 +241,11 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 	 // Is this a tray notification message?
 	if (pcd->dwData == 1) {
 		TrayNotifyCDS* ptr = (TrayNotifyCDS*) pcd->lpData;
-		NOTIFYICONDATA* pnid = (NOTIFYICONDATA*) (LPBYTE(pcd->lpData)+ptr->offset);
 
 		NotifyArea* notify_area = static_cast<NotifyArea*>(Window::get_window(_hwndNotify));
 
 		if (notify_area)
-			return notify_area->ProcessTrayNotification(ptr->notify_code, pnid);
+			return notify_area->ProcessTrayNotification(ptr->notify_code, &ptr->nicon_data);
 	}
 
 	return 0;
@@ -554,51 +555,77 @@ TaskBarMap::iterator TaskBarMap::find_id(int id)
 }
 
 
+NotifyIconIndex::NotifyIconIndex(NOTIFYICONDATA* pnid)
+{
+	_hWnd = pnid->hWnd;
+
+	 // special case for windows task manager icons
+	_uID = (int)pnid->uID>=0? pnid->uID: 0;
+}
+
+
+NotifyInfo::NotifyInfo()
+{
+	_idx = -1;
+	_hIcon = 0;
+	_dwState = 0;
+}
+
+NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
+{
+	if (pnid->uFlags & NIF_ICON)
+		_hIcon = pnid->hIcon;
+
+#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+	if (pnid->uFlags & NIF_STATE)
+		_dwState = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
+#endif
+
+	return *this;
+}
+
+
 NotifyArea::NotifyArea(HWND hwnd)
  :	super(hwnd)
 {
 	_desktop_bar = NULL;
-}
-
-NotifyArea::~NotifyArea()
-{
-}
-
-LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
-{
-	if (super::Init(pcs))
-		return 1;
-
-	return 0;
+	_next_idx = 0;
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-/*@@
 	switch(nmsg) {
+	  case WM_PAINT:
+		Paint();
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
-*/return super::WndProc(nmsg, wparam, lparam);
 
 	return 0;
 }
 
-int NotifyArea::Command(int id, int code)
-{
-	return super::Command(id, code);
-}
-
 LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid)
 {
+	NotifyIconMap::iterator found = _icon_map.find(pnid);
+
 	switch(notify_code) {
 	  case NIM_ADD:
-		break;
+	  case NIM_MODIFY: {
+		NotifyInfo& entry = _icon_map[pnid] = pnid;
 
-	  case NIM_MODIFY:
-		break;
+		 // a new entry?
+		if (entry._idx == -1)
+			entry._idx = ++_next_idx;
+		Refresh();
+		break;}
 
 	  case NIM_DELETE:
+		if (found != _icon_map.end()) {
+			_icon_map.erase(found);
+			Refresh();
+		}
 		break;
 
 #if NOTIFYICON_VERSION>=3	// currently (as of 21.08.2003) missing in MinGW headers
@@ -611,4 +638,35 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 	}
 
 	return 0;
+}
+
+void NotifyArea::Refresh()
+{
+	_sorted_icons.clear();
+
+	 // sort icon infos by display index
+	for(NotifyIconMap::const_iterator it=_icon_map.begin(); it!=_icon_map.end(); ++it)
+		_sorted_icons.insert(it->second);
+
+	InvalidateRect(_hwnd, NULL, TRUE);	// refresh icon display
+	UpdateWindow(_hwnd);
+}
+
+void NotifyArea::Paint()
+{
+	PaintCanvas canvas(_hwnd);
+
+	 // draw icons
+	int x = 2;
+	int y = 2;
+
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+		if (!(it->_dwState & NIS_HIDDEN))
+#endif
+		{
+			DrawIconEx(canvas, x, y, it->_hIcon, 16, 16, 0, 0, DI_NORMAL);
+			x += 20;
+		}
+	}
 }

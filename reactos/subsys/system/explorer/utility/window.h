@@ -28,6 +28,7 @@
 
 #include <map>
 #include <set>
+#include <list>
 
 
 typedef set<HWND> WindowSet;

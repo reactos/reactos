@@ -88,6 +88,8 @@ struct CommonControlInit
 };
 
 
+ /// wait cursor
+
 struct WaitCursor
 {
 	WaitCursor()
@@ -105,6 +107,8 @@ protected:
 };
 
 
+ // window utilities
+
 struct ClientRect : public RECT
 {
 	ClientRect(HWND hwnd)
@@ -121,7 +125,7 @@ struct WindowRect : public RECT
 	}
 };
 
-struct Point: public POINT
+struct Point : public POINT
 {
 	Point(LONG x_, LONG y_)
 	{
@@ -137,6 +141,40 @@ struct Point: public POINT
 	}
 };
 
+
+struct FullScreenParameters
+{
+	FullScreenParameters()
+	 :	_mode(FALSE)
+	{
+	}
+
+	BOOL	_mode;
+	RECT	_orgPos;
+	BOOL	_wasZoomed;
+};
+
+
+ // drawing utilities
+
+struct PaintCanvas : public PAINTSTRUCT
+{
+	PaintCanvas(HWND hwnd)
+	 :	_hwnd(hwnd)
+	{
+		BeginPaint(hwnd, this);
+	}
+
+	PaintCanvas()
+	{
+		EndPaint(_hwnd, this);
+	}
+
+	operator HDC() const {return hdc;}
+
+protected:
+	HWND	_hwnd;
+};
 
 struct TextColor
 {
@@ -172,18 +210,6 @@ struct SelectedFont
 protected:
 	HDC		_hdc;
 	HFONT	_old_hFont;
-};
-
-
-struct FullScreenParameters {
-	FullScreenParameters()
-	 :	_mode(FALSE)
-	{
-	}
-
-	BOOL	_mode;
-	RECT	_orgPos;
-	BOOL	_wasZoomed;
 };
 
 

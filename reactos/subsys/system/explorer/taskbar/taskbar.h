@@ -34,7 +34,7 @@
 #define	TASKBAR_LEFT			70
 //#define TASKBAR_AT_TOP
 
-#define	NOTIFYAREA_WIDTH		100
+#define	NOTIFYAREA_WIDTH		244
 
 
 #define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
@@ -150,12 +150,35 @@ protected:
 };
 
 
-struct NotifyIconIndex {
-	HWND	hWnd;
-	UINT	uID;
+struct NotifyIconIndex
+{
+	NotifyIconIndex(NOTIFYICONDATA* pnid);
+
+	 // sort operator
+	friend bool operator<(const NotifyIconIndex& a, const NotifyIconIndex& b)
+		{return a._hWnd<b._hWnd || (a._hWnd==b._hWnd && a._uID<b._uID);}
+
+	HWND	_hWnd;
+	UINT	_uID;
 };
 
-typedef map<NotifyIconIndex, int> NotifyIconMap;
+struct NotifyInfo
+{
+	NotifyInfo();
+
+	 // sort operator
+	friend bool operator<(const NotifyInfo& a, const NotifyInfo& b)
+		{return a._idx<b._idx;}
+
+	NotifyInfo& operator=(NOTIFYICONDATA* pnid);
+
+	int		_idx;	// display index
+	HICON	_hIcon;
+	DWORD	_dwState;
+};
+
+typedef map<NotifyIconIndex, NotifyInfo> NotifyIconMap;
+typedef set<NotifyInfo> NotifyIconSet;
 
 
  /// tray notification area aka "tray"
@@ -164,16 +187,18 @@ struct NotifyArea : public Window
 	typedef Window super;
 
 	NotifyArea(HWND hwnd);
-	~NotifyArea();
 
 	DesktopBar*	_desktop_bar;
 
-	LRESULT ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
+	LRESULT	ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid);
 
 protected:
 	NotifyIconMap _icon_map;
+	NotifyIconSet _sorted_icons;
+	int		_next_idx;
 
-	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-	int		Command(int id, int code);
+
+	void	Refresh();
+	void	Paint();
 };

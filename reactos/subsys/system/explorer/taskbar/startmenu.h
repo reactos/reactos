@@ -26,9 +26,6 @@
  //
 
 
-#include <list>
-
-
 #define	CLASSNAME_STARTMENU		_T("ReactosStartmenuClass")
 #define	TITLE_STARTMENU			_T("Start Menu")
 
