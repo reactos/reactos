@@ -150,7 +150,7 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				if (IsWindow(entry._hWnd)) {
 					 // allow SetForegroundWindow() in Client Process
 					DWORD processId;
-					DWORD threadId = GetWindowThreadProcessId(entry._hWnd, &processId);
+					GetWindowThreadProcessId(entry._hWnd, &processId);
 
 #ifndef __WINE__ // currently no AllowSetForegroundWindow() in Wine
 					AllowSetForegroundWindow(processId);
