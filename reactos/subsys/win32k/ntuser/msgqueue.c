@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.97 2004/05/19 18:45:31 weiden Exp $
+/* $Id: msgqueue.c,v 1.98 2004/05/20 21:48:41 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -747,7 +747,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
                           Message->Msg.wParam,
                           Message->Msg.lParam);
 
-  /* remove the message from the dispatching list */
+  /* remove the message from the dispatching list, so lock the sender's message queue */
   IntLockMessageQueue(Message->SenderQueue);
   if(Message->DispatchingListEntry.Flink != NULL)
   {
@@ -832,6 +832,8 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   ASSERT(ThreadQueue != MessageQueue);
   
+  Timeout.QuadPart = uTimeout * -10000;
+  
   /* FIXME - increase reference counter of sender's message queue here */
   
   Result = 0;
@@ -846,7 +848,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   
   /* add it to the list of pending messages */
   IntLockMessageQueue(ThreadQueue);
-  InsertTailList(&MessageQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
+  InsertTailList(&ThreadQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
   IntUnLockMessageQueue(ThreadQueue);
   
   /* queue it in the destination's message queue */
@@ -858,8 +860,6 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   
   /* we can't access the Message anymore since it could have already been deleted! */
   
-  Timeout.QuadPart = uTimeout * -10000;
-  
   if(Block)
   {
     /* don't process messages sent to the thread */
@@ -867,7 +867,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                                        FALSE, (uTimeout ? &Timeout : NULL));
     if(WaitStatus == STATUS_TIMEOUT)
       {
-        /* look up if the message has already been dispatched, if so
+        /* look up if the message has not yet dispatched, if so
            make sure it can't pass a result and it must not set the completion event anymore */
 	IntLockMessageQueue(MessageQueue);
         Entry = MessageQueue->SentMessagesListHead.Flink;
@@ -924,7 +924,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                                               UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
         if(WaitStatus == STATUS_TIMEOUT)
           {
-            /* look up if the message has already been dispatched, if so
+            /* look up if the message has not yet been dispatched, if so
                make sure it can't pass a result and it must not set the completion event anymore */
 	    IntLockMessageQueue(MessageQueue);
             Entry = MessageQueue->SentMessagesListHead.Flink;
