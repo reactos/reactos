@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.117 2003/08/20 15:02:53 ea Exp $
+/* $Id: thread.c,v 1.118 2003/09/30 22:36:29 gvg Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -811,9 +811,9 @@ PsLookupThreadByThreadId(IN PVOID ThreadId,
 				  Tcb.ThreadListEntry);
       if (current->Cid.UniqueThread == (HANDLE)ThreadId)
 	{
+	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  *Thread = current;
           ObReferenceObject(current);
-	  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 	  return(STATUS_SUCCESS);
 	}
 
