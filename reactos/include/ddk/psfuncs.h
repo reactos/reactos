@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.10 2000/07/04 11:11:03 dwelch Exp $
+/* $Id: psfuncs.h,v 1.11 2000/09/06 03:00:10 phreak Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -46,7 +46,7 @@ ULONG PsSuspendThread(struct _ETHREAD* Thread,
 		      ULONG WaitMode);
 ULONG PsResumeThread(struct _ETHREAD* Thread,
 		     PNTSTATUS WaitStatus);
-struct _ETHREAD* PsGetCurrentThread(VOID);
+struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);
 struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);
 PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(struct _ETHREAD* Thread,
 						    PULONG Unknown1,
