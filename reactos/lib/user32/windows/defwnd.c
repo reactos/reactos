@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.120 2003/12/28 16:31:44 weiden Exp $
+/* $Id: defwnd.c,v 1.121 2004/01/12 20:38:59 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1128,7 +1128,7 @@ User32DefWindowProc(HWND hWnd,
         case WM_ACTIVATE:
         {
             /* Check if the window is minimized. */
-            if (LOWORD(lParam) != WA_INACTIVE &&
+            if (LOWORD(wParam) != WA_INACTIVE &&
                 !(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
             {
                 SetFocus(hWnd);
