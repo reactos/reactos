@@ -89,6 +89,7 @@ copy lib\user32\user32.dll %ROS_INSTALL%\system32
 copy lib\version\version.dll %ROS_INSTALL%\system32
 copy lib\winedbgc\winedbgc.dll %ROS_INSTALL%\system32
 copy lib\winmm\winmm.dll %ROS_INSTALL%\system32
+copy lib\winspool\winspool.drv %ROS_INSTALL%\system32
 copy lib\ws2_32\ws2_32.dll %ROS_INSTALL%\system32
 copy lib\ws2help\ws2help.dll %ROS_INSTALL%\system32
 copy lib\wshirda\wshirda.dll %ROS_INSTALL%\system32
