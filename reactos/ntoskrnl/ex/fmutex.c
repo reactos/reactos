@@ -1,4 +1,5 @@
-/*
+/* $Id: fmutex.c,v 1.5 2000/05/01 14:15:02 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/fmutex.c
@@ -16,13 +17,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID ExAcquireFastMutex(PFAST_MUTEX FastMutex)
+/* FIXME: in HAL */
+VOID FASTCALL EXPORTED ExAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
    KeEnterCriticalRegion();
    ExAcquireFastMutexUnsafe(FastMutex);
 }
 
-VOID ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
+VOID FASTCALL EXPORTED ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
    if (InterlockedDecrement(&(FastMutex->Count))==0)
      {
@@ -37,7 +39,8 @@ VOID ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
    FastMutex->Owner=KeGetCurrentThread();
 }
 
-VOID ExInitializeFastMutex(PFAST_MUTEX FastMutex)
+/* FIXME: convert it into a macro */
+VOID FASTCALL ExInitializeFastMutex(PFAST_MUTEX FastMutex)
 {
    FastMutex->Count=1;
    FastMutex->Owner=NULL;
@@ -47,7 +50,7 @@ VOID ExInitializeFastMutex(PFAST_MUTEX FastMutex)
 		     FALSE);
 }
 
-VOID ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
+VOID FASTCALL EXPORTED ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
    assert(FastMutex->Owner == KeGetCurrentThread());
    FastMutex->Owner=NULL;
@@ -58,16 +61,19 @@ VOID ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
    KeSetEvent(&(FastMutex->Event),0,FALSE);
 }
 
-VOID ExReleaseFastMutex(PFAST_MUTEX FastMutex)
+/* FIXME: in HAL */
+VOID FASTCALL EXPORTED ExReleaseFastMutex(PFAST_MUTEX FastMutex)
 {
    ExReleaseFastMutexUnsafe(FastMutex);
    KeLeaveCriticalRegion();
 }
 
-BOOLEAN ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
+
+/* FIXME: in HAL */
+BOOLEAN FASTCALL EXPORTED ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex)
 {
    UNIMPLEMENTED;
 }
 
 
-
+/* EOF */

@@ -8,10 +8,12 @@ ExReleaseResourceLite (
 	PERESOURCE	Resource
 	);
 VOID
+FASTCALL
 ExAcquireFastMutex (
 	PFAST_MUTEX	FastMutex
 	);
 VOID
+FASTCALL
 ExAcquireFastMutexUnsafe (
 	PFAST_MUTEX	FastMutex
 	);
@@ -151,10 +153,13 @@ ULONG
 ExGetSharedWaiterCount (
 	PERESOURCE	Resource
 	);
+/* ReactOS Specific: begin */
 VOID
+FASTCALL
 ExInitializeFastMutex (
 	PFAST_MUTEX	FastMutex
 	);
+/* ReactOS Specific: end */
 VOID
 ExInitializeNPagedLookasideList (
 	PNPAGED_LOOKASIDE_LIST	Lookaside,
@@ -265,11 +270,15 @@ VOID
 ExReinitializeResourceLite (
 	PERESOURCE	Resource
 	);
+/* ReactOS Specific: begin */
 VOID
+FASTCALL
 ExReleaseFastMutex (
 	PFAST_MUTEX	Mutex
 	);
+/* ReactOS Specific: end */
 VOID
+FASTCALL
 ExReleaseFastMutexUnsafe (
 	PFAST_MUTEX	Mutex
 	);
@@ -293,6 +302,7 @@ ExSystemTimeToLocalTime (
 	PLARGE_INTEGER	LocalTime
 	);
 BOOLEAN
+FASTCALL
 ExTryToAcquireFastMutex (
 	PFAST_MUTEX	FastMutex
 	);

@@ -28,7 +28,7 @@ ifeq ($(HOST),mingw32-windows)
 NASM_FORMAT = win32
 PREFIX = 
 EXE_POSTFIX = .exe
-CP = copy
+CP = copy /B
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
 NASM_CMD = nasm
 RM = del

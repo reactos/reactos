@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.68 2000/04/15 23:13:17 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.69 2000/05/01 14:15:02 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -13,6 +13,7 @@ CcReleaseFileCache@8
 DbgBreakPoint@0
 DbgBreakPointWithStatus@4
 DbgPrint
+ExAcquireFastMutexUnsafe@4
 ExAcquireResourceExclusive
 ExAcquireResourceExclusiveLite
 ExAcquireResourceSharedLite
@@ -38,7 +39,8 @@ ExFreeToZone
 ExGetCurrentResourceThread
 ExGetExclusiveWaiterCount
 ExGetSharedWaiterCount
-ExInitializeFastMutex
+;FIXME: ExInitializeFastMutex is a macro!
+ExInitializeFastMutex@4
 ExInitializeNPagedLookasideList
 ExInitializePagedLookasideList
 ExInitializeResource
@@ -72,7 +74,7 @@ ExRaiseAccessViolation@0
 ExRaiseDatatypeMisalignment@0
 ExRaiseStatus@4
 ExReinitializeResourceLite
-ExReleaseFastMutexUnsafe
+ExReleaseFastMutexUnsafe@4
 ExReleaseResource
 ExReleaseResourceLite
 ExReleaseResourceForThread
@@ -777,9 +779,9 @@ RemoveEntryList
 ; exports from hal.dll
 ;
 ;
-ExAcquireFastMutex
-ExReleaseFastMutex
-ExTryToAcquireFastMutex
+ExAcquireFastMutex@4
+ExReleaseFastMutex@4
+ExTryToAcquireFastMutex@4
 HalAcquireDisplayOwnership@4
 HalAdjustResourceList@4
 HalAllProcessorsStarted@0

@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.37 2000/04/23 17:49:07 phreak Exp $
+/* $Id: shell.c,v 1.38 2000/05/01 14:15:01 ea Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -251,22 +251,20 @@ ExecuteKill(char * lpPid)
 
 void ExecuteHelp (void * dummy)
 {
-	debug_printf (
-		"A:\t\t\tCurrent drive is A:\n"
-		"C:\t\t\tCurrent drive is C:\n"
-		"cd [directory]\t\tChange current directory\n"
-		"dir [directory]\t\tList directory\n"
-		"exit\t\t\tTerminate the shell\n"
-		"help\t\t\tPrint this help message\n"
-		"kill [pid]\t\tKill process which PID is pid\n"
-		"md [directory]\t\tCreate a new directory\n"
-		"reboot\t\t\tRestart the system\n"
-		"start [program.exe]\tDetach program.exe\n"
-		"type [file]\t\tPrint the file on console\n"
-		"validate\t\tValidate the process' heap\n"
-		"ver\t\t\tPrint version information\n"
-		"[program.exe]\t\tStart synchronously program.exe\n\n"
-		);
+	debug_printf ("A:\t\t\tCurrent drive is A:\n");
+	debug_printf ("C:\t\t\tCurrent drive is C:\n");
+	debug_printf ("cd [directory]\t\tChange current directory\n");
+	debug_printf ("dir [directory]\t\tList directory\n");
+	debug_printf ("exit\t\t\tTerminate the shell\n");
+	debug_printf ("help\t\t\tPrint this help message\n");
+	debug_printf ("kill [pid]\t\tKill process which PID is pid\n");
+	debug_printf ("md [directory]\t\tCreate a new directory\n");
+	debug_printf ("reboot\t\t\tRestart the system\n");
+	debug_printf ("start [program.exe]\tDetach program.exe\n");
+	debug_printf ("type [file]\t\tPrint the file on console\n");
+	debug_printf ("validate\t\tValidate the process' heap\n");
+	debug_printf ("ver\t\t\tPrint version information\n");
+	debug_printf ("[program.exe]\t\tStart synchronously program.exe\n\n");
 }
 
 void ExecuteCommand(char* line)

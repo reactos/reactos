@@ -17,9 +17,9 @@
 ;  DISCLAMED. This includes but is not limited to warrenties of
 ;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 ;
-; $Revision: 1.12 $
-; $Author: ariadne $
-; $Date: 1999/05/24 15:22:43 $
+; $Revision: 1.13 $
+; $Author: ea $
+; $Date: 2000/05/01 14:15:01 $
 ;
 ; These three functions appear to be name mangled in some way, so GCC is
 ; probably not going to be able to use them in any case.
@@ -35,6 +35,7 @@
 ; _set_new_handler__FPFUi_i
 ;
 ;
+LIBRARY CRTDLL.DLL
 EXPORTS
 __builtin_new
 __builtin_delete
