@@ -1,4 +1,5 @@
 #include <ddk/winddi.h>
+#include <include/inteng.h>
 #include "objects.h"
 #include "../dib/dib.h"
 
@@ -17,27 +18,14 @@ EngLineTo(SURFOBJ *Surface,
 	  RECTL *RectBounds,
 	  MIX mix)
 {
-  BOOLEAN ret;
-  SURFGDI *SurfGDI;
-  LONG x, y, d, deltax, deltay, i, length, xchange, ychange, error, hx, vy;
+  LONG x, y, deltax, deltay, i, length, xchange, ychange, error, hx, vy;
+  ULONG Pixel = Brush->iSolidColor;
 
   // These functions are assigned if we're working with a DIB
   // The assigned functions depend on the bitsPerPixel of the DIB
   PFN_DIB_PutPixel DIB_PutPixel;
   PFN_DIB_HLine    DIB_HLine;
   PFN_DIB_VLine    DIB_VLine;
-
-  SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
-
-  MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
-
-  if(Surface->iType!=STYPE_BITMAP)
-  {
-    // Call the driver's DrvLineTo
-    ret = SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
-    MouseSafetyOnDrawEnd(Surface, SurfGDI);
-    return ret;
-  }
 
   // Assign DIB functions according to bytes per pixel
   switch(BitsPerFormat(Surface->iBitmapFormat))
@@ -54,6 +42,12 @@ EngLineTo(SURFOBJ *Surface,
       DIB_VLine    = (PFN_DIB_VLine)DIB_4BPP_VLine;
       break;
 
+    case 16:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
+      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
+      DIB_VLine    = (PFN_DIB_VLine)DIB_16BPP_VLine;
+      break;
+
     case 24:
       DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
       DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
@@ -63,8 +57,6 @@ EngLineTo(SURFOBJ *Surface,
     default:
       DbgPrint("EngLineTo: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
                BitsPerFormat(Surface->iBitmapFormat));
-
-      MouseSafetyOnDrawEnd(Surface, SurfGDI);
       return FALSE;
   }
 
@@ -96,8 +88,8 @@ EngLineTo(SURFOBJ *Surface,
     vy = y1;
   }
 
-  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
-  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Brush->iSolidColor); MouseSafetyOnDrawEnd(Surface, SurfGDI); return TRUE; }
+  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Pixel); return TRUE; }
+  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Pixel); return TRUE; }
 
   error=0;
   i=0;
@@ -107,7 +99,7 @@ EngLineTo(SURFOBJ *Surface,
     length=deltay+1;
     while(i<length)
     {
-      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
+      DIB_PutPixel(Surface, x, y, Pixel);
       y=y+ychange;
       error=error+deltax;
 
@@ -123,7 +115,7 @@ EngLineTo(SURFOBJ *Surface,
     length=deltax+1;
     while(i<length)
     {
-      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
+      DIB_PutPixel(Surface, x, y, Pixel);
       x=x+xchange;
       error=error+deltay;
       if(error>deltax)
@@ -135,7 +127,45 @@ EngLineTo(SURFOBJ *Surface,
     }
   }
 
+  return TRUE;
+}
+
+BOOL STDCALL
+IntEngLineTo(SURFOBJ *Surface,
+	     CLIPOBJ *Clip,
+	     BRUSHOBJ *Brush,
+	     LONG x1,
+	     LONG y1,
+	     LONG x2,
+	     LONG y2,
+	     RECTL *RectBounds,
+	     MIX mix)
+{
+  BOOLEAN ret;
+  SURFGDI *SurfGDI;
+
+  /* No success yet */
+  ret = FALSE;
+  SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(Surface);
+
+  MouseSafetyOnDrawStart(Surface, SurfGDI, x1, y1, x2, y2);
+
+  if (NULL != SurfGDI->LineTo) {
+    /* Call the driver's DrvLineTo */
+    ret = SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+  }
+
+#if 0
+  if (! ret && NULL != SurfGDI->StrokePath) {
+    /* FIXME: Emulate LineTo using drivers DrvStrokePath and set ret on success */
+  }
+#endif
+
+  if (! ret) {
+    ret = EngLineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+  }
+
   MouseSafetyOnDrawEnd(Surface, SurfGDI);
 
-  return TRUE;
+  return ret;
 }

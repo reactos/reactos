@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.9 2001/08/21 20:13:12 chorns Exp $
+# $Id: makefile,v 1.10 2003/02/15 19:16:33 gvg Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -6,7 +6,7 @@ TARGET_TYPE = driver
 
 TARGET_NAME = vgamp
 
-TARGET_DDKLIBS = vidport.a
+TARGET_DDKLIBS = videoprt.a
 
 TARGET_OBJECTS = \
   initvga.o \

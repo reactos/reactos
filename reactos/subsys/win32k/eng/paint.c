@@ -20,7 +20,7 @@
 #include "brush.h"
 #include "clip.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
@@ -55,6 +55,12 @@ BOOL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
       DIB_VLine    = (PFN_DIB_VLine)DIB_4BPP_VLine;
       break;
 
+    case 16:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
+      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
+      DIB_VLine    = (PFN_DIB_VLine)DIB_16BPP_VLine;
+      break;
+
     case 24:
       DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
       DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
@@ -62,7 +68,7 @@ BOOL FillSolid(SURFOBJ *Surface, PRECTL pRect, ULONG iColor)
       break;
 
     default:
-      DbgPrint("EngLineTo: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
+      DbgPrint("FillSolid: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
                BitsPerFormat(Surface->iBitmapFormat));
 
       MouseSafetyOnDrawEnd(Surface, SurfaceGDI);
@@ -86,6 +92,7 @@ BOOL EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
 {
   RECT_ENUM RectEnum;
   BOOL EnumMore;
+  ULONG i;
 
   DPRINT("ClipRegion->iMode:%d, ClipRegion->iDComplexity: %d\n Color: %d", ClipRegion->iMode, ClipRegion->iDComplexity, iColor);
   switch(ClipRegion->iMode) {
@@ -106,7 +113,9 @@ BOOL EngPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix,
 
       do {
         EnumMore = CLIPOBJ_bEnum(ClipRegion, sizeof(RectEnum), (PVOID) &RectEnum);
-        FillSolid(Surface, &RectEnum.arcl[0], iColor);
+        for (i = 0; i < RectEnum.c; i++) {
+          FillSolid(Surface, RectEnum.arcl + i, iColor);
+        }
       } while (EnumMore);
     }
 

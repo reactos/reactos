@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.16 2003/01/24 23:25:34 ei Exp $
+/* $Id: mouse.c,v 1.17 2003/02/15 19:16:33 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -33,6 +33,9 @@
 #include "../../drivers/input/include/mouse.h"
 #include "objects.h"
 #include "include/msgqueue.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -122,6 +125,9 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   RECTL MouseRect;
   LONG tmp;
 
+  /* Mouse is not allowed to move if GDI is busy drawing */
+  SafetySwitch2 = TRUE;
+
   if (SurfObj == NULL)
     {
       return(FALSE);
@@ -144,12 +150,9 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
   if (((mouse_x + mouse_width) >= HazardX1)  && (mouse_x <= HazardX2) &&
       ((mouse_y + mouse_height) >= HazardY1) && (mouse_y <= HazardY2))
     {
-      SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
       SafetySwitch = TRUE;
+      SurfGDI->MovePointer(SurfObj, -1, -1, &MouseRect);
     }
-
-  /* Mouse is not allowed to move if GDI is busy drawing */
-  SafetySwitch2 = TRUE;
 
   return(TRUE);
 }

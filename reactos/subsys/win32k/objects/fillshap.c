@@ -6,8 +6,9 @@
 #include <win32k/dc.h>
 #include <win32k/pen.h>
 #include <include/object.h>
+#include <include/inteng.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL
@@ -106,33 +107,33 @@ W32kRectangle(HDC  hDC,
     TopRect += dc->w.DCOrgY;
     BottomRect += dc->w.DCOrgY;
 
-    ret = EngLineTo(SurfObj,
-                    NULL, // ClipObj,
-                    BrushObj,
-                    LeftRect, TopRect, RightRect, TopRect,
-                    RectBounds, // Bounding rectangle
-                    dc->w.ROPmode); // MIX
+    ret = IntEngLineTo(SurfObj,
+                       NULL, // ClipObj,
+                       BrushObj,
+                       LeftRect, TopRect, RightRect, TopRect,
+                       RectBounds, // Bounding rectangle
+                       dc->w.ROPmode); // MIX
 
-    ret = EngLineTo(SurfObj,
-                    NULL, // ClipObj,
-                    BrushObj,
-                    RightRect, TopRect, RightRect, BottomRect,
-                    RectBounds, // Bounding rectangle
-                    dc->w.ROPmode); // MIX
+    ret = IntEngLineTo(SurfObj,
+                       NULL, // ClipObj,
+                       BrushObj,
+                       RightRect, TopRect, RightRect, BottomRect,
+                       RectBounds, // Bounding rectangle
+                       dc->w.ROPmode); // MIX
 
-    ret = EngLineTo(SurfObj,
-                    NULL, // ClipObj,
-                    BrushObj,
-                    LeftRect, BottomRect, RightRect, BottomRect,
-                    RectBounds, // Bounding rectangle
-                    dc->w.ROPmode); // MIX
+    ret = IntEngLineTo(SurfObj,
+                       NULL, // ClipObj,
+                       BrushObj,
+                       LeftRect, BottomRect, RightRect, BottomRect,
+                       RectBounds, // Bounding rectangle
+                       dc->w.ROPmode); // MIX
 
-    ret = EngLineTo(SurfObj,
-                    NULL, // ClipObj,
-                    BrushObj,
-                    LeftRect, TopRect, LeftRect, BottomRect,
-                    RectBounds, // Bounding rectangle
-                    dc->w.ROPmode); // MIX */
+    ret = IntEngLineTo(SurfObj,
+                       NULL, // ClipObj,
+                       BrushObj,
+                       LeftRect, TopRect, LeftRect, BottomRect,
+                       RectBounds, // Bounding rectangle
+                       dc->w.ROPmode); // MIX */
 
     // FIXME: BrushObj is obtained above; decide which one is correct
     BrushObj = (BRUSHOBJ*) GDIOBJ_LockObj(dc->w.hBrush, GO_BRUSH_MAGIC);

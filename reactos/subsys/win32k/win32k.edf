@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.7 2002/10/28 15:03:18 robd Exp $
+; $Id: win32k.edf,v 1.8 2003/02/15 19:16:33 gvg Exp $
 ;
 ; win32k.def
 ;
@@ -72,7 +72,7 @@ EngMapFontFile
 EngMapModule
 EngMarkBandingSurface
 EngMovePointer
-EngMulDiv
+EngMulDiv=EngMulDiv@12
 EngMultiByteToUnicodeN
 EngMultiByteToWideChar
 EngPaint=EngPaint@20
@@ -101,7 +101,7 @@ EngTransparentBlt=EngTransparentBlt@32
 EngUnicodeToMultiByteN
 EngUnloadImage
 EngUnlockDriverObj
-EngUnlockSurface
+EngUnlockSurface=EngUnlockSurface@4
 EngUnmapEvent
 EngUnmapFontFile
 ; EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory

@@ -20,6 +20,40 @@
 
 BOOLEAN AlreadyOpened = FALSE;
 
+VOID MouseClassPassiveCallback(PDEVICE_OBJECT ClassDeviceObject, PVOID Context)
+{
+  PDEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
+  MOUSE_INPUT_DATA PortData[MOUSE_BUFFER_SIZE];
+  ULONG InputCount;
+  KIRQL OldIrql;
+
+  assert(NULL != ClassDeviceExtension->GDIInformation.CallBack);
+  KeAcquireSpinLock(&(ClassDeviceExtension->SpinLock), &OldIrql);
+  DPRINT("Entering MouseClassPassiveCallback\n");
+  while (0 != ClassDeviceExtension->InputCount) {
+    ClassDeviceExtension->PortData -= ClassDeviceExtension->InputCount;
+    RtlMoveMemory(PortData, ClassDeviceExtension->PortData,
+                  ClassDeviceExtension->InputCount * sizeof(MOUSE_INPUT_DATA));
+    InputCount = ClassDeviceExtension->InputCount;
+    ClassDeviceExtension->InputCount = 0;
+    KeReleaseSpinLock(&(ClassDeviceExtension->SpinLock), OldIrql);
+
+    DPRINT("MouseClassPassiveCallBack() Calling GDI callback at %p\n",
+           ClassDeviceExtension->GDIInformation.CallBack);
+    /* We're jumping through hoops to get to run at PASSIVE_LEVEL, let's make
+       sure we succeeded */
+    ASSERT_IRQL(PASSIVE_LEVEL);
+    (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
+          (PortData, InputCount);
+
+    KeAcquireSpinLock(&(ClassDeviceExtension->SpinLock), &OldIrql);
+  }
+
+  ClassDeviceExtension->PassiveCallbackQueued = FALSE;
+  DPRINT("Leaving MouseClassPassiveCallback\n");
+  KeReleaseSpinLock(&(ClassDeviceExtension->SpinLock), OldIrql);
+}
+
 BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
 			PMOUSE_INPUT_DATA MouseDataEnd, PULONG InputCount)
 {
@@ -27,11 +61,13 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
    PIRP Irp;
    ULONG ReadSize;
    PIO_STACK_LOCATION Stack;
+   KIRQL OldIrql;
 
    // In classical NT, you would take the input data and pipe it through the IO system, for the GDI to read.
    // In ReactOS, however, we use a GDI callback for increased mouse responsiveness. The reason we don't
    // simply call from the port driver is so that our mouse class driver can support NT mouse port drivers.
 
+   DPRINT("Entering MouseClassCallBack\n");
 /*   if(ClassDeviceExtension->ReadIsPending == TRUE)
    {
       Irp = ClassDeviceObject->CurrentIrp;
@@ -56,6 +92,8 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
   // If we have data from the port driver and a higher service to send the data to
   if((*InputCount>0) && (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL))
   {
+    KeAcquireSpinLock(&(ClassDeviceExtension->SpinLock), &OldIrql);
+
     if(ClassDeviceExtension->InputCount + *InputCount > MOUSE_BUFFER_SIZE)
     {
        ReadSize = MOUSE_BUFFER_SIZE - ClassDeviceExtension->InputCount;
@@ -74,22 +112,26 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
     ClassDeviceExtension->PortData += ReadSize;
     ClassDeviceExtension->InputCount += ReadSize;
 
-    // Throw data up to GDI callback
     if(*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack != NULL) {
-	  DPRINT("MouseClassCallBack() Calling GDI callback at %p\n", ClassDeviceExtension->GDIInformation.CallBack);
-      (*(PGDI_SERVICE_CALLBACK_ROUTINE)ClassDeviceExtension->GDIInformation.CallBack)
-        (ClassDeviceExtension->PortData - ReadSize, ReadSize);
-    } else {
-	  DPRINT("MouseClassCallBack() NO GDI callback installed\n");
+      if (! ClassDeviceExtension->PassiveCallbackQueued) {
+	if (NULL == ClassDeviceExtension->WorkItem) {
+	  ClassDeviceExtension->WorkItem = IoAllocateWorkItem(ClassDeviceObject);
 	}
-
-    ClassDeviceExtension->PortData -= ReadSize;
-    ClassDeviceExtension->InputCount -= ReadSize;
-    ClassDeviceExtension->ReadIsPending = FALSE;
+	if (NULL != ClassDeviceExtension->WorkItem) {
+	  DPRINT("Queueing workitem\n");
+          IoQueueWorkItem(ClassDeviceExtension->WorkItem, MouseClassPassiveCallback, DelayedWorkQueue, NULL);
+	  ClassDeviceExtension->PassiveCallbackQueued = TRUE;
+	}
+      }
+    } else {
+      DPRINT("MouseClassCallBack() NO GDI callback installed\n");
+    }
+    KeReleaseSpinLock(&(ClassDeviceExtension->SpinLock), OldIrql);
   } else {
     DPRINT("MouseClassCallBack() entered, InputCount = %d - DOING NOTHING\n", *InputCount);
   }
 
+  DPRINT("Leaving MouseClassCallBack\n");
   return TRUE;
 }
 
@@ -122,6 +164,9 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    DeviceExtension->PortData = ExAllocatePool(NonPagedPool, MOUSE_BUFFER_SIZE * sizeof(MOUSE_INPUT_DATA));
    DeviceExtension->InputCount = 0;
    DeviceExtension->ReadIsPending = FALSE;
+   DeviceExtension->WorkItem = NULL;
+   KeInitializeSpinLock(&(DeviceExtension->SpinLock));
+   DeviceExtension->PassiveCallbackQueued = FALSE;
 
    // Connect our callback to the port driver
 

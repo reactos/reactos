@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.45 2003/01/25 23:09:40 ei Exp $
+/* $Id: dc.c,v 1.46 2003/02/15 19:16:34 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -20,7 +20,7 @@
 #include <win32k/text.h>
 #include "../eng/handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 static GDIDEVICE PrimarySurface;
@@ -276,9 +276,11 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
                   LPCWSTR  Output,
                   CONST PDEVMODEW  InitData)
 {
-  HDC  hNewDC;
-  PDC  NewDC;
-  HDC  hDC = NULL;
+  HDC      hNewDC;
+  PDC      NewDC;
+  HDC      hDC = NULL;
+  PSURFOBJ SurfObj;
+  PSURFGDI SurfGDI;
 
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -323,13 +325,14 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
   /* FIXME: get mode selection information from somewhere  */
 
   NewDC->DMW.dmLogPixels = 96;
-  NewDC->DMW.dmBitsPerPel = 4;
-  NewDC->DMW.dmPelsWidth = 640;
-  NewDC->DMW.dmPelsHeight = 480;
+  SurfGDI = (PSURFGDI)AccessInternalObject(PrimarySurface.Handle);
+  NewDC->DMW.dmBitsPerPel = SurfGDI->BitsPerPixel;
+  NewDC->DMW.dmPelsWidth = SurfGDI->SurfObj.sizlBitmap.cx;
+  NewDC->DMW.dmPelsHeight = SurfGDI->SurfObj.sizlBitmap.cy;
   NewDC->DMW.dmDisplayFlags = 0;
   NewDC->DMW.dmDisplayFrequency = 0;
 
-  NewDC->w.bitsPerPixel = 4; // FIXME: set this here??
+  NewDC->w.bitsPerPixel = SurfGDI->BitsPerPixel; // FIXME: set this here??
 
   NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
 

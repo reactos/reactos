@@ -14,6 +14,7 @@
 #include "clip.h"
 #include <include/object.h>
 
+#define NDEBUG
 #include <win32k/debug1.h>
 
 VOID IntEngDeleteClipRegion(CLIPOBJ *ClipObj)
@@ -120,16 +121,15 @@ CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
   PENUMRECTS pERects = (PENUMRECTS)EnumRects;
 
   //calculate how many rectangles we should copy
-  nCopy = MIN( ClipGDI->EnumMax-ClipGDI->EnumPos,
-  				MIN( ClipGDI->EnumRects.c, (ObjSize-sizeof(ULONG))/sizeof(RECTL)));
+  nCopy = MIN( ClipGDI->EnumMax - ClipGDI->EnumPos,
+               MIN( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
+                    (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
 
-  RtlCopyMemory( &(pERects->arcl), &(ClipGDI->EnumRects.arcl), nCopy*sizeof(RECTL) );
+  RtlCopyMemory( pERects->arcl, ClipGDI->EnumRects.arcl + ClipGDI->EnumPos,
+                 nCopy * sizeof(RECTL) );
   pERects->c = nCopy;
 
   ClipGDI->EnumPos+=nCopy;
 
-  if(ClipGDI->EnumPos > ClipGDI->EnumRects.c)
-    return FALSE;
-  else
-    return TRUE;
+  return ClipGDI->EnumPos < ClipGDI->EnumRects.c;
 }

@@ -131,7 +131,7 @@ typedef VOID STDCALL (*PFN_Synchronize)(DHPDEV, PRECTL);
 
 typedef VOID STDCALL (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
 
-typedef VOID STDCALL (*PFN_SetPointerShape)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PXLATEOBJ,
+typedef ULONG STDCALL (*PFN_SetPointerShape)(PSURFOBJ, PSURFOBJ, PSURFOBJ, PXLATEOBJ,
 			    LONG, LONG, LONG, LONG, PRECTL, ULONG);
 
 typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
@@ -174,6 +174,14 @@ typedef struct _XLATEGDI {
   HPALETTE SourcePal;
 
   ULONG *translationTable;
+
+  ULONG RedMask;
+  ULONG GreenMask;
+  ULONG BlueMask;
+  INT RedShift;
+  INT GreenShift;
+  INT BlueShift;
+  BOOL UseShiftAndMask;
 } XLATEGDI;
 
 // List of GDI objects

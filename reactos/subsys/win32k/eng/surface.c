@@ -19,7 +19,7 @@
 #include <include/paint.h>
 #include "handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 INT BitsPerFormat(ULONG Format)
@@ -242,4 +242,10 @@ EngLockSurface(IN HSURF Surface)
 {
   // FIXME: Call GDI_LockObject (see subsys/win32k/objects/gdi.c)
   return (SURFOBJ*)AccessUserObject((ULONG)Surface);
+}
+
+VOID STDCALL
+EngUnlockSurface(IN SURFOBJ *Surface)
+{
+  // FIXME: Call GDI_UnlockObject
 }

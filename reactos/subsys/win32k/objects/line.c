@@ -8,9 +8,11 @@
 #include <win32k/path.h>
 #include <win32k/pen.h>
 #include <win32k/region.h>
+#include <include/inteng.h>
 
-// #define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
+
 
 BOOL
 STDCALL
@@ -109,6 +111,9 @@ W32kLineTo(HDC  hDC,
   BOOL ret;
   PPENOBJ   pen;
   PROSRGNDATA  reg;
+#ifndef TODO
+  RECT defaultrect;
+#endif
 
   if(!dc) return FALSE;
 
@@ -120,18 +125,28 @@ W32kLineTo(HDC  hDC,
 
 	ASSERT( pen );
 	// not yet implemented ASSERT( reg );
+#ifndef TODO
+  if (NULL == reg) {
+    defaultrect.left = 0;
+    defaultrect.top = 0;
+    defaultrect.right = 640;
+    defaultrect.bottom = 480;
+
+    reg = &defaultrect;
+  }
+#endif
 
     /* Draw the line according to the DC origin */
-    ret = EngLineTo(SurfObj,
-                    NULL, // ClipObj
-                    PenToBrushObj(dc, pen),
-                    dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
-                    dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
-                    reg, // Bounding rectangle
-                    dc->w.ROPmode); // MIX
+    ret = IntEngLineTo(SurfObj,
+                       NULL, // ClipObj
+                       PenToBrushObj(dc, pen),
+                       dc->w.DCOrgX + dc->w.CursPosX, dc->w.DCOrgY + dc->w.CursPosY,
+                       dc->w.DCOrgX + XEnd,           dc->w.DCOrgY + YEnd,
+                       reg, // Bounding rectangle
+                       dc->w.ROPmode); // MIX
 
-	GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
-	GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
+    GDIOBJ_UnlockObj( dc->w.hGCClipRgn, GO_REGION_MAGIC );
+    GDIOBJ_UnlockObj( dc->w.hPen, GO_PEN_MAGIC);
   }
   if(ret) {
     dc->w.CursPosX = XEnd;

@@ -1,0 +1,4 @@
+vidport.coff
+*.o
+*.sym
+*.sys

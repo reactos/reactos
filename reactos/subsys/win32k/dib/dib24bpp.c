@@ -146,6 +146,28 @@ BOOLEAN DIB_To_24BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       }
       break;
 
+    case 16:
+      SourceBits_16BPP = SourceSurf->pvBits + (SourcePoint->y * SourceSurf->lDelta) + 2 * SourcePoint->x;
+
+      for (j=DestRect->top; j<DestRect->bottom; j++)
+      {
+        SourceLine_16BPP = SourceBits_16BPP;
+        DestLine = DestBits;
+
+        for (i=DestRect->left; i<DestRect->right; i++)
+        {
+          xColor = XLATEOBJ_iXlate(ColorTranslation, *SourceLine_16BPP);
+          *DestLine++ = xColor & 0xff;
+          *(PWORD)DestLine = xColor >> 8;
+          DestLine += 2;
+          SourceLine_16BPP++;
+        }
+
+        SourceBits_16BPP = (PWORD)((PBYTE)SourceBits_16BPP + SourceSurf->lDelta);
+        DestBits += DestSurf->lDelta;
+      }
+      break;
+
     default:
       DbgPrint("DIB_24BPP_Bitblt: Unhandled Source BPP: %u\n", SourceGDI->BitsPerPixel);
       return FALSE;

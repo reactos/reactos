@@ -25,6 +25,15 @@ BOOLEAN DIB_To_4BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
         PRECTL  DestRect,  POINTL  *SourcePoint,
 			     LONG   Delta,     XLATEOBJ *ColorTranslation);
 
+VOID DIB_16BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c);
+ULONG DIB_16BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y);
+VOID DIB_16BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c);
+VOID DIB_16BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c);
+BOOL DIB_To_16BPP_Bitblt(  SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+        SURFGDI *DestGDI,  SURFGDI *SourceGDI,
+        PRECTL  DestRect,  POINTL  *SourcePoint,
+			     LONG   Delta,     XLATEOBJ *ColorTranslation);
+
 PFN_DIB_PutPixel DIB_24BPP_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c);
 PFN_DIB_GetPixel DIB_24BPP_GetPixel(PSURFOBJ SurfObj, LONG x, LONG y);
 PFN_DIB_HLine DIB_24BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c);

@@ -14,11 +14,15 @@
 #include "brush.h"
 #include "clip.h"
 #include "objects.h"
+#include "../dib/dib.h"
 #include <include/mouse.h>
 #include <include/object.h>
 #include <include/dib.h>
 #include <include/surface.h>
 #include <include/copybits.h>
+
+#define NDEBUG
+#include <win32k/debug1.h>
 
 BOOL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
 {
@@ -40,6 +44,120 @@ BOOL EngIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
   return(FALSE);
 }
 
+static BOOL STDCALL
+BltMask(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask, 
+	RECTL *DestRect, POINTL *MaskPoint, BRUSHOBJ* Brush,
+	POINTL* BrushPoint)
+{
+  LONG i, j, dx, dy, c8;
+  BYTE *tMask, *lMask;
+  PFN_DIB_PutPixel DIB_PutPixel;
+  static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
+
+  // Assign DIB functions according to bytes per pixel
+  switch(BitsPerFormat(Dest->iBitmapFormat))
+  {
+    case 1:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_1BPP_PutPixel;
+      break;
+
+    case 4:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_4BPP_PutPixel;
+      break;
+
+    case 16:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_16BPP_PutPixel;
+      break;
+
+    case 24:
+      DIB_PutPixel = (PFN_DIB_PutPixel)DIB_24BPP_PutPixel;
+      break;
+
+    default:
+      DbgPrint("BltMask: unsupported DIB format %u (bitsPerPixel:%u)\n", Dest->iBitmapFormat,
+               BitsPerFormat(Dest->iBitmapFormat));
+      return FALSE;
+  }
+
+  dx = DestRect->right  - DestRect->left;
+  dy = DestRect->bottom - DestRect->top;
+
+  if (Mask != NULL)
+    {
+      tMask = Mask->pvBits;
+      for (j = 0; j < dy; j++)
+	{
+	  lMask = tMask;
+	  c8 = 0;
+	  for (i = 0; i < dx; i++)
+	    {
+	      if (0 != (*lMask & maskbit[c8]))
+		{
+		  DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Brush->iSolidColor);
+		}
+	      c8++;
+	      if (8 == c8)
+		{
+		  lMask++;
+		  c8=0;
+		}
+	    }
+	  tMask += Mask->lDelta;
+	}
+      return TRUE;
+    }
+  else
+    {
+    return FALSE;
+    }
+}
+
+static BOOL STDCALL
+BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask, 
+	   RECTL *DestRect, POINTL *MaskPoint, BRUSHOBJ* Brush,
+	   POINTL* BrushPoint)
+{
+  // These functions are assigned if we're working with a DIB
+  // The assigned functions depend on the bitsPerPixel of the DIB
+  PFN_DIB_HLine    DIB_HLine;
+  LONG y;
+  ULONG LineWidth;
+
+  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+  // Assign DIB functions according to bytes per pixel
+  DPRINT("BPF: %d\n", BitsPerFormat(Dest->iBitmapFormat));
+  switch(BitsPerFormat(Dest->iBitmapFormat))
+  {
+    case 4:
+      DIB_HLine    = (PFN_DIB_HLine)DIB_4BPP_HLine;
+      break;
+
+    case 16:
+      DIB_HLine    = (PFN_DIB_HLine)DIB_16BPP_HLine;
+      break;
+
+    case 24:
+      DIB_HLine    = (PFN_DIB_HLine)DIB_24BPP_HLine;
+      break;
+
+    default:
+      DbgPrint("BltPatCopy: unsupported DIB format %u (bitsPerPixel:%u)\n", Dest->iBitmapFormat,
+               BitsPerFormat(Dest->iBitmapFormat));
+
+      MouseSafetyOnDrawEnd(Dest, DestGDI);
+      return FALSE;
+  }
+
+  LineWidth  = DestRect->right - DestRect->left;
+  for (y = DestRect->top; y < DestRect->bottom; y++)
+  {
+    DIB_HLine(Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
+  }
+  MouseSafetyOnDrawEnd(Dest, DestGDI);
+
+  return TRUE;
+}
+
 INT abs(INT nm);
 
 BOOL STDCALL
@@ -50,7 +168,7 @@ EngBitBlt(SURFOBJ *Dest,
 	  XLATEOBJ *ColorTranslation,
 	  RECTL *DestRect,
 	  POINTL *SourcePoint,
-	  POINTL *MaskRect,
+	  POINTL *MaskOrigin,
 	  BRUSHOBJ *Brush,
 	  POINTL *BrushOrigin,
 	  ROP4 rop4)
@@ -82,7 +200,7 @@ EngBitBlt(SURFOBJ *Dest,
 
   // If we don't have to do anything special, we can punt to DrvCopyBits
   // if it exists
-  if( (Mask == NULL)        && (MaskRect == NULL) && (Brush == NULL) &&
+  if( (Mask == NULL)        && (MaskOrigin == NULL) && (Brush == NULL) &&
       (BrushOrigin == NULL) && (rop4 == 0) )
   {
     canCopyBits = TRUE;
@@ -119,7 +237,7 @@ EngBitBlt(SURFOBJ *Dest,
 
       ret = DestGDI->BitBlt(Dest, TempSurf, Mask, ClipRegion,
                             NULL, DestRect, &TempPoint,
-                            MaskRect, Brush, BrushOrigin, rop4);
+                            MaskOrigin, Brush, BrushOrigin, rop4);
 
       MouseSafetyOnDrawEnd(Source, SourceGDI);
       MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -130,21 +248,21 @@ EngBitBlt(SURFOBJ *Dest,
 
   /* The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
    * paint a brush pattern on the destination. */
-  if(!Source)
+  if(!Source && 0xaacc != rop4 && PATCOPY != rop4)
   {
     DbgPrint("EngBitBlt: A source is currently required, even though not all operations require one (FIXME)\n");
     return FALSE;
   }
 
   // * The source bitmap is not managed by the GDI and we didn't already obtain it using EngCopyBits from the device
-  if(Source->iType != STYPE_BITMAP && SourceGDI->CopyBits == NULL)
+  if(NULL != Source && STYPE_BITMAP != Source->iType && NULL == SourceGDI->CopyBits)
   {
     if (SourceGDI->BitBlt!=NULL)
     {
       // Request the device driver to return the bitmap in a format compatible with the device
       ret = SourceGDI->BitBlt(Dest, Source, Mask, ClipRegion,
                               NULL, DestRect, SourcePoint,
-                              MaskRect, Brush, BrushOrigin, rop4);
+                              MaskOrigin, Brush, BrushOrigin, rop4);
 
       MouseSafetyOnDrawEnd(Source, SourceGDI);
       MouseSafetyOnDrawEnd(Dest, DestGDI);
@@ -162,6 +280,14 @@ EngBitBlt(SURFOBJ *Dest,
   } else {
     clippingType = ClipRegion->iDComplexity;
   }
+
+  if (0xaacc == rop4)
+  {
+    return BltMask(Dest, DestGDI, Mask, DestRect, MaskOrigin, Brush, BrushOrigin);
+  } else if (PATCOPY == rop4) {
+    return BltPatCopy(Dest, DestGDI, Mask, DestRect, MaskOrigin, Brush, BrushOrigin);
+  }
+
 
   // We don't handle color translation just yet [we dont have to.. REMOVE REMOVE REMOVE]
   switch(clippingType)

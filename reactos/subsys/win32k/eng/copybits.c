@@ -44,6 +44,11 @@ BOOLEAN CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                                 DestRect, SourcePoint, Delta, ColorTranslation);
       break;
 
+    case 16:
+      return DIB_To_16BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
+                                 DestRect, SourcePoint, Delta, ColorTranslation);
+      break;
+
     case 24:
       return DIB_To_24BPP_Bitblt(DestSurf, SourceSurf, DestGDI, SourceGDI,
                                  DestRect, SourcePoint, Delta, ColorTranslation);

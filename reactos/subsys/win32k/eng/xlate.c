@@ -17,7 +17,7 @@
 #include <include/object.h>
 #include "handle.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <win32k/debug1.h>
 
 ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
@@ -91,6 +91,71 @@ VOID IndexedToIndexedTranslationTable(ULONG *TranslationTable,
   }
 }
 
+static VOID BitMasksFromPal(USHORT PalType, PPALGDI Palette,
+                            PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
+{
+  switch(PalType)
+  {
+    case PAL_RGB:
+      *RedMask = RGB(255, 0, 0);
+      *GreenMask = RGB(0, 255, 0);
+      *BlueMask = RGB(0, 0, 255);
+      break;
+    case PAL_BGR:
+      *RedMask = RGB(0, 0, 255);
+      *GreenMask = RGB(0, 255, 0);
+      *BlueMask = RGB(255, 0, 0);
+      break;
+    case PAL_BITFIELDS:
+      *RedMask = Palette->RedMask;
+      *BlueMask = Palette->BlueMask;
+      *GreenMask = Palette->GreenMask;
+      break;
+  }
+}
+
+/*
+ * Calculate the number of bits Mask must be shift to the left to get a
+ * 1 in the most significant bit position
+ */
+static INT CalculateShift(ULONG Mask)
+{
+   INT Shift = 0;
+   ULONG LeftmostBit = 1 << (8 * sizeof(ULONG) - 1);
+
+   while (0 == (Mask & LeftmostBit) && Shift < 8 * sizeof(ULONG))
+     {
+     Mask = Mask << 1;
+     Shift++;
+     }
+
+   return Shift;
+}
+
+static ULONG ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
+{
+  ULONG TranslatedColor;
+
+  TranslatedColor = 0;
+  if (XlateGDI->RedShift < 0)
+  {
+    TranslatedColor = (Color >> -(XlateGDI->RedShift)) & XlateGDI->RedMask;
+  } else
+    TranslatedColor = (Color << XlateGDI->RedShift) & XlateGDI->RedMask;
+  if (XlateGDI->GreenShift < 0)
+  {
+    TranslatedColor |= (Color >> -(XlateGDI->GreenShift)) & XlateGDI->GreenMask;
+  } else
+    TranslatedColor |= (Color << XlateGDI->GreenShift) & XlateGDI->GreenMask;
+  if (XlateGDI->BlueShift < 0)
+  {
+    TranslatedColor |= (Color >> -(XlateGDI->BlueShift)) & XlateGDI->BlueMask;
+  } else
+    TranslatedColor |= (Color << XlateGDI->BlueShift) & XlateGDI->BlueMask;
+
+  return TranslatedColor;
+}
+
 XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
                          HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
@@ -101,20 +166,21 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   XLATEGDI *XlateGDI;
   PALGDI   *SourcePalGDI, *DestPalGDI;
   ULONG    IndexedColors;
+  ULONG    SourceRedMask, SourceGreenMask, SourceBlueMask;
+  ULONG    DestRedMask, DestGreenMask, DestBlueMask;
+  UINT     i;
 
   NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ));
   if( !ValidEngHandle( NewXlate ) )
 	return NULL;
 
-  XlateObj = (XLATEOBJ*) AccessUserObject( NewXlate );
-  XlateGDI = (XLATEGDI*) AccessInternalObject( NewXlate );
+  XlateObj = (XLATEOBJ*) AccessUserObject( (ULONG) NewXlate );
+  XlateGDI = (XLATEGDI*) AccessInternalObject( (ULONG) NewXlate );
   ASSERT( XlateObj );
   ASSERT( XlateGDI );
 
-  if(SourcePalType == PAL_INDEXED)
-    SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
-  if(DestPalType == PAL_INDEXED)
-    DestPalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteDest);
+  SourcePalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteSource);
+  DestPalGDI = (PALGDI*)AccessInternalObject((ULONG)PaletteDest);
 
   XlateObj->iSrcType = SourcePalType;
   XlateObj->iDstType = DestPalType;
@@ -125,12 +191,43 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
   XlateObj->flXlate = 0;
 
+  XlateGDI->UseShiftAndMask = FALSE;
+
+  /* Compute bit fiddeling constants unless both palettes are indexed, then we don't need them */
+  if (PAL_INDEXED != SourcePalType || PAL_INDEXED != DestPalType)
+  {
+    BitMasksFromPal(PAL_INDEXED == SourcePalType ? PAL_RGB : SourcePalType,
+                    SourcePalGDI, &SourceRedMask, &SourceBlueMask, &SourceGreenMask);
+    BitMasksFromPal(PAL_INDEXED == DestPalType ? PAL_RGB : DestPalType,
+                    DestPalGDI, &DestRedMask, &DestBlueMask, &DestGreenMask);
+    XlateGDI->RedShift = CalculateShift(SourceRedMask) - CalculateShift(DestRedMask);
+    XlateGDI->RedMask = DestRedMask;
+    XlateGDI->GreenShift = CalculateShift(SourceGreenMask) - CalculateShift(DestGreenMask);
+    XlateGDI->GreenMask = DestGreenMask;
+    XlateGDI->BlueShift = CalculateShift(SourceBlueMask) - CalculateShift(DestBlueMask);
+    XlateGDI->BlueMask = DestBlueMask;
+  }
+
   // If source and destination palettes are the same or if they're RGB/BGR
   if( (PaletteDest == PaletteSource) ||
       ((DestPalType == PAL_RGB) && (SourcePalType == PAL_RGB)) ||
       ((DestPalType == PAL_BGR) && (SourcePalType == PAL_BGR)) )
   {
     XlateObj->flXlate |= XO_TRIVIAL;
+    return XlateObj;
+  }
+
+  /* If source and destination are bitfield based (RGB and BGR are just special bitfields) */
+  if ((PAL_RGB == DestPalType || PAL_BGR == DestPalType || PAL_BITFIELDS == DestPalType) &&
+      (PAL_RGB == SourcePalType || PAL_BGR == SourcePalType || PAL_BITFIELDS == SourcePalType))
+  {
+    if (SourceRedMask == DestRedMask &&
+        SourceBlueMask == DestBlueMask &&
+        SourceGreenMask == DestGreenMask)
+      {
+      XlateObj->flXlate |= XO_TRIVIAL;
+      }
+    XlateGDI->UseShiftAndMask = TRUE;
     return XlateObj;
   }
 
@@ -160,7 +257,7 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
       // Converting from indexed to indexed
       IndexedToIndexedTranslationTable(XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
     } else
-      if(XlateObj->iDstType == PAL_RGB)
+      if (PAL_RGB == XlateObj->iDstType || PAL_BITFIELDS == XlateObj->iDstType )
       {
         // FIXME: Is this necessary? I think the driver has to call this
         // function anyways if pulXlate is NULL and Source is PAL_INDEXED
@@ -170,6 +267,13 @@ XLATEOBJ *EngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
         XLATEOBJ_cGetPalette(XlateObj, XO_SRCPALETTE,
                              SourcePalGDI->NumColors,
                              XlateGDI->translationTable);
+	if (PAL_BITFIELDS == XlateObj->iDstType)
+	{
+	  for (i = 0; i < SourcePalGDI->NumColors; i++)
+	  {
+	  XlateGDI->translationTable[i] = ShiftAndMask(XlateGDI, XlateGDI->translationTable[i]);
+	  }
+	}
       }
 
     XlateObj->pulXlate = XlateGDI->translationTable;
@@ -231,6 +335,10 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   if(XlateObj->flXlate & XO_TRIVIAL)
   {
     return Color;
+  } else
+  if(XlateGDI->UseShiftAndMask)
+  {
+    return ShiftAndMask(XlateGDI, Color);
   } else
   if(XlateObj->iSrcType == PAL_RGB)
   {
