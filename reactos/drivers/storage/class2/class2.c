@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.10 2002/03/08 11:59:49 ekohl Exp $
+/* $Id: class2.c,v 1.11 2002/03/20 19:55:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -144,7 +144,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   StartingOffset = CurrentIrpStack->Parameters.Read.ByteOffset;
 
   /* calculate logical block address */
-  StartingBlock.QuadPart = StartingOffset.QuadPart / 512; // >> deviceExtension->SectorShift;
+  StartingBlock.QuadPart = StartingOffset.QuadPart >> DeviceExtension->SectorShift;
   LogicalBlockAddress = (ULONG)StartingBlock.u.LowPart;
 
   DPRINT("Logical block address: %lu\n", LogicalBlockAddress);
@@ -161,7 +161,7 @@ ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
   Srb->TargetId = DeviceExtension->TargetId;
   Srb->Lun = DeviceExtension->Lun;
   Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb->DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+  Srb->DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
   Srb->DataTransferLength = CurrentIrpStack->Parameters.Read.Length;
   Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
   Srb->QueueSortKey = LogicalBlockAddress;
@@ -480,7 +480,7 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
   PIRP Irp;
 
   *PortCapabilities = NULL;
-  Buffer = ExAllocatePool(NonPagedPool, /* FIXME: use paged pool */
+  Buffer = ExAllocatePool(NonPagedPool,
 			  sizeof(IO_SCSI_CAPABILITIES));
   if (Buffer == NULL)
     {
@@ -541,7 +541,7 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
   KEVENT Event;
   PIRP Irp;
 
-  DPRINT1("ScsiClassGetInquiryData() called\n");
+  DPRINT("ScsiClassGetInquiryData() called\n");
 
   *ConfigInfo = NULL;
   Buffer = ExAllocatePool(NonPagedPool,
@@ -591,7 +591,7 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
       *ConfigInfo = Buffer;
     }
 
-  DPRINT1("ScsiClassGetInquiryData() done\n");
+  DPRINT("ScsiClassGetInquiryData() done\n");
 
   return(Status);
 }
@@ -814,7 +814,7 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
 
   DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-  CapacityBuffer = ExAllocatePool(NonPagedPool, //NonPagedPoolCacheAligned,
+  CapacityBuffer = ExAllocatePool(NonPagedPool,
 				  sizeof(READ_CAPACITY_DATA));
   if (CapacityBuffer == NULL)
     {
@@ -1063,8 +1063,6 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 
   TransferLength = IrpStack->Parameters.Read.Length;
 
-
-
   if ((DeviceObject->Flags & DO_VERIFY_VOLUME) &&
       !(IrpStack->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
@@ -1129,10 +1127,10 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 						 IrpStack->Parameters.Read.Length);
 
 #if 0
-  if (IrpStack->Parameters.Read.Length > maximumTransferLength ||
+  if (TransferLength > maximumTransferLength ||
       TransferPages > DeviceExtension->PortCapabilities->MaximumPhysicalPages)
     {
-
+      /* FIXME: split request */
     }
 #endif
 
