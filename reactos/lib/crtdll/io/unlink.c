@@ -13,7 +13,7 @@
 
 int _unlink( const char *filename )
 {
-	if ( !DeleteFile(filename) )
+	if ( !DeleteFileA(filename) )
 		return -1;
 	return 0;
 }
