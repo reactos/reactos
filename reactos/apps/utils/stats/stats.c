@@ -9,7 +9,7 @@
  */
 #include <windows.h>
 #include <tchar.h>
-#include <stdio.h>
+#include <stdio.h>     
 
 typedef struct _EXTENSION_INFO
 {
@@ -38,9 +38,9 @@ typedef struct _FILE_INFO
 HANDLE FileHandle;
 PEXTENSION_INFO ExtInfoList;
 PFILE_INFO StatInfoList;
-BOOLEAN SkipEmptyLines;
+BOOLEAN SkipEmptyLines, BeSilent;
 
-#define MAX_OPTIONS	1
+#define MAX_OPTIONS	2
 TCHAR *Options[MAX_OPTIONS];
 
 
@@ -362,7 +362,10 @@ ProcessDirectories(LPTSTR Path)
   HANDLE SearchHandle;
   BOOL More;
 
-	_tprintf (_T("Processing %s ...\n"), Path);
+  if(!BeSilent)
+  {
+    _tprintf (_T("Processing %s ...\n"), Path);
+  }
 
   _tcscpy (SearchPath, Path);
   _tcscat (SearchPath, _T("\\*.*"));
@@ -447,12 +450,14 @@ main (int argc, char * argv [])
   TCHAR Path[MAX_PATH + 1];
 #endif
 
-  _tprintf (_T("\nReactOS project statistics generator.\n\n"));
+  _tprintf (_T("ReactOS Project Statistics\n"));
+  _tprintf (_T("==========================\n\n"));
 
   if (argc < 2 || argc > 2 + MAX_OPTIONS)
   {
-    _tprintf(_T("Usage: stats [-e] directory\n"));
-    _tprintf(_T("  -e: don't count empty lines"));
+    _tprintf(_T("Usage: stats [-e] [-s] directory\n"));
+    _tprintf(_T("  -e: don't count empty lines\n"));
+    _tprintf(_T("  -s: be silent, don't print directories while processing\n"));
     return 1;
   }
 
@@ -476,6 +481,7 @@ main (int argc, char * argv [])
   }
   
   SkipEmptyLines = IsOptionSet(_T("-e"));
+  BeSilent = IsOptionSet(_T("-s"));
   
 #if UNICODE
   ZeroMemory(Path, sizeof(Path));
