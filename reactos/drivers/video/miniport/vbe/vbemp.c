@@ -97,7 +97,7 @@ InitializeVideoAddressSpace(VOID)
    if (BaseAddress != (PVOID)0xa0000)
    {
       DPRINT(("VBEMP: Couldn't map physical memory at the right address "
-              "(was %x)(%x)\n", BaseAddress, Address));
+              "(was %x)\n", BaseAddress));
       return FALSE;
    }
 
