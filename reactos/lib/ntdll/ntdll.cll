@@ -1,4 +1,0 @@
-#
-# This defines the kernel entry points used by ntdll
-#
-NtAlertThread  4
