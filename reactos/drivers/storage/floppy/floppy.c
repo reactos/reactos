@@ -115,13 +115,15 @@ VOID NTAPI StartMotor(PDRIVE_INFO DriveInfo)
 
   KdPrint(("floppy: StartMotor called\n"));
 
-  if(DriveInfo->ControllerInfo->StopDpcQueued && 
-     !KeCancelTimer(&DriveInfo->ControllerInfo->MotorTimer))
+  if(DriveInfo->ControllerInfo->StopDpcQueued && !KeCancelTimer(&DriveInfo->ControllerInfo->MotorTimer))
     {
       /* Motor turner-offer is already running; wait for it to finish */
+      KdPrint(("floppy: StartMotor: motor turner-offer is already running; waiting for it\n"));
       KeWaitForSingleObject(&DriveInfo->ControllerInfo->MotorStoppedEvent, Executive, KernelMode, FALSE, NULL);
-      DriveInfo->ControllerInfo->StopDpcQueued = FALSE;
+      KdPrint(("floppy: StartMotor: wait satisfied\n"));
     }
+
+  DriveInfo->ControllerInfo->StopDpcQueued = FALSE;
 
   if(HwTurnOnMotor(DriveInfo) != STATUS_SUCCESS)
     KdPrint(("floppy: StartMotor(): warning: HwTurnOnMotor failed\n"));
@@ -768,7 +770,7 @@ static NTSTATUS NTAPI InitController(PCONTROLLER_INFO ControllerInfo)
   /* Init the stop stuff */
   KeInitializeDpc(&ControllerInfo->MotorStopDpc, MotorStopDpcFunc, ControllerInfo);
   KeInitializeTimer(&ControllerInfo->MotorTimer);
-  KeInitializeEvent(&ControllerInfo->MotorStoppedEvent, SynchronizationEvent, FALSE);
+  KeInitializeEvent(&ControllerInfo->MotorStoppedEvent, NotificationEvent, FALSE);
   ControllerInfo->StopDpcQueued = FALSE;
 
   /* 
