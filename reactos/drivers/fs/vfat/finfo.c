@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.35.12.1 2004/07/26 21:36:47 navaraf Exp $
+/* $Id: finfo.c,v 1.35.12.2 2004/07/26 23:22:16 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -461,24 +461,21 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       {
          return STATUS_DISK_FULL;
       }
-      if (NewSize > ClusterSize)
+      Status = OffsetToCluster(DeviceExt, FirstCluster, 
+                               ROUND_DOWN(NewSize - 1, ClusterSize),
+                               &NCluster, TRUE);
+      if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
       {
-         Status = OffsetToCluster(DeviceExt, FirstCluster, 
-   	         ROUND_DOWN(NewSize - ClusterSize, ClusterSize),
-                    &NCluster, TRUE);
-         if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
+         /* disk is full */
+         NCluster = Cluster = FirstCluster;
+         Status = STATUS_SUCCESS;
+         while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
          {
-            /* disk is full */
-            NCluster = Cluster = FirstCluster;
-            Status = STATUS_SUCCESS;
-            while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
-            {
-               Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
-               WriteCluster (DeviceExt, Cluster, 0);
-               Cluster = NCluster;
-            }
-            return STATUS_DISK_FULL;
+            Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
+            WriteCluster (DeviceExt, Cluster, 0);
+            Cluster = NCluster;
          }
+         return STATUS_DISK_FULL;
       }
       Fcb->entry.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
       Fcb->entry.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
