@@ -506,7 +506,6 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
     
    if (!(Style & WS_MINIMIZE))
    {
-      ULONG menuheight;
       HMENU menu = GetMenu(hWnd);
       
       UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
@@ -529,9 +528,8 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
            CliRect.right -= OrigRect.left;
            CliRect.left -= OrigRect.left;
            CliRect.top -= OrigRect.top;
-           menuheight = (ULONG)MenuDrawMenuBar(hDC, &CliRect, hWnd, TRUE);
+           Rect->top += MenuDrawMenuBar(hDC, &CliRect, hWnd, TRUE);
            ReleaseDC(hWnd, hDC);
-           Rect->top += max(menuheight, GetSystemMetrics(SM_CYMENU));
          }
       }
 
