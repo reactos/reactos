@@ -365,55 +365,6 @@ SOURCE=.\res\config.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\de.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=.\res\documents.ico
 # End Source File
 # Begin Source File
@@ -422,52 +373,8 @@ SOURCE=.\res\drivebar.bmp
 # End Source File
 # Begin Source File
 
-SOURCE=.\en.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
+SOURCE=".\explorer-jp.rc"
 # PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
 # End Source File
 # Begin Source File
 
@@ -575,55 +482,6 @@ SOURCE=.\res\reactos.ico
 # End Source File
 # Begin Source File
 
-SOURCE=.\resource.rc
-
-!IF  "$(CFG)" == "explorer - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Debug Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Release"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 Unicode Debug"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 _NO_COMUTIL"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineRelease"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "explorer - Win32 WineDll"
-
-# PROP BASE Exclude_From_Build 1
-# PROP Exclude_From_Build 1
-
-!ENDIF 
-
-# End Source File
-# Begin Source File
-
 SOURCE=".\res\ros-big.ico"
 # End Source File
 # Begin Source File
@@ -633,10 +491,6 @@ SOURCE=".\res\search-doc.ico"
 # Begin Source File
 
 SOURCE=.\res\search.ico
-# End Source File
-# Begin Source File
-
-SOURCE=.\res\startmenu.bmp
 # End Source File
 # Begin Source File
 
