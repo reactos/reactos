@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.38 1999/11/24 11:51:51 dwelch Exp $
+/* $Id: loader.c,v 1.39 1999/12/04 04:59:38 bpalmer Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -565,19 +565,19 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
 		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
           memcpy(PESectionHeaders[Idx].VirtualAddress + DriverBase,
                  (PVOID)(ModuleLoadBase + PESectionHeaders[Idx].PointerToRawData),
-                 PESectionHeaders[Idx].SizeOfRawData);
+                 PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/);
         }
       else
         {
 	   DPRINT("PESectionHeaders[Idx].VirtualAddress + DriverBase %x\n",
 		  PESectionHeaders[Idx].VirtualAddress + DriverBase);
 	   memset(PESectionHeaders[Idx].VirtualAddress + DriverBase, 
-		  '\0', PESectionHeaders[Idx].SizeOfRawData);
+		  '\0', PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/);
         }
-      CurrentSize += ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+      CurrentSize += ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/,
                               PEOptionalHeader->SectionAlignment);
 //      CurrentBase = (PVOID)((DWORD)CurrentBase + 
-  //      ROUND_UP(PESectionHeaders[Idx].SizeOfRawData,
+  //      ROUND_UP(PESectionHeaders[Idx].Misc.VirtualSize /*SizeOfRawData*/,
     //             PEOptionalHeader->SectionAlignment));
     }
 
