@@ -12,7 +12,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <windows.h>
 #include <ntdll/ldr.h>
 #include <napi/teb.h>
 #include <ntdll/base.h>
