@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.15 2004/07/01 01:52:37 royce Exp $
+/* $Id: syscall.S,v 1.16 2004/07/02 00:47:57 royce Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -94,6 +94,7 @@ L3:
 	pushl $0     /* XXX: TempCS */
 	pushl $0     /* XXX: DebugPointer */
 	pushl $0     /* XXX: DebugArgMark */
+
 #ifdef DBG
 	/* Trick gdb 6 into backtracing over the system call */
 	movl  4(%ebp), %ebx
@@ -260,6 +261,17 @@ KeReturnFromSystemCall:
 	movl  %ebx, KTHREAD_TRAP_FRAME(%esi)
 
 KiRosTrapReturn:
+
+#if 0
+	mov   KTRAP_FRAME_RESERVED1(%ebp), %ax
+	cmp   %ax, SSIDX_NTCONTINUE
+	jnz   KeNoEpilogPrint
+	movl  KTRAP_FRAME_ESP(%ebp), %ecx
+	movl  KTRAP_FRAME_EBP(%ebp), %edx
+	call  @KeRosPrintEspEbp@8
+KeNoEpilogPrint:
+#endif
+
 	/* Skip debug information and unsaved registers */
 	addl  $0x30, %esp
 	popl  %gs
@@ -291,6 +303,11 @@ KiRosTrapReturn:
  */
 .globl @KeRosTrapReturn@8
 @KeRosTrapReturn@8:
+
+	/* point %esp to the trap frame to restore */
+	movl  %ecx, %esp
+	movl  %esp, %ebp
+
 	/* Call the post system call hook and deliver any pending APCs */
 	pushl %esp
 	call  _KiAfterSystemCallHook
@@ -302,6 +319,4 @@ KiRosTrapReturn:
 	/* Restore the old trap frame pointer */
 	movl  %edx, KTHREAD_TRAP_FRAME(%esi)
 
-	/* point %esp to the trap frame to restore */
-	movl  %ecx, %esp
 	jmp   KiRosTrapReturn;
