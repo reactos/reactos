@@ -23,11 +23,11 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
 		     IN POBJECT_ATTRIBUTES ObjectAttributes,
 		     OUT PIO_STATUS_BLOCK IoStatusBlock,
 		     IN ULONG CreateOptions,
-		     IN ULONG Param,			/* FIXME: ??? */
+		     IN ULONG MailslotQuota,
 		     IN ULONG MaxMessageSize,
 		     IN PLARGE_INTEGER TimeOut)
 {
-   IO_MAILSLOT_CREATE_BUFFER Buffer;
+   MAILSLOT_CREATE_PARAMETERS Buffer;
    
    DPRINT("NtCreateMailslotFile(FileHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
@@ -38,14 +38,15 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
    
    if (TimeOut != NULL)
      {
-	Buffer.TimeOut.QuadPart = TimeOut->QuadPart;
+	Buffer.ReadTimeout.QuadPart = TimeOut->QuadPart;
+	Buffer.TimeoutSpecified = TRUE;
      }
    else
      {
-	Buffer.TimeOut.QuadPart = 0;
+	Buffer.TimeoutSpecified = FALSE;
      }
-   Buffer.Param = Param;			/* FIXME: ??? */
-   Buffer.MaxMessageSize = MaxMessageSize;
+   Buffer.MailslotQuota = MailslotQuota;
+   Buffer.MaximumMessageSize = MaxMessageSize;
 
    return IoCreateFile(FileHandle,
 		       DesiredAccess,
