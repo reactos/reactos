@@ -1,6 +1,7 @@
 kernel32.a
 kernel32.dll
 kernel32.lib
+kernel32.coff
 base.tmp
 junk.tmp
 temp.exp

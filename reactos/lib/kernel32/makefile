@@ -55,10 +55,13 @@ INTERNAL_OBJECTS = internal/dprintf.o internal/string.o
 
 EXCEPT_OBJECTS = except/except.o
 
+RESOURCE_OBJECT = kernel32.coff
+
 
 OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
           $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
-          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) 
+          $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS) $(EXCEPT_OBJECTS) \
+	  $(RESOURCE_OBJECT)
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = except\*.o file\*.o internal\*.o mem\*.o misc\*.o nls\*.o  \
@@ -72,6 +75,9 @@ endif
 
 nls/ole2nls.o: nls/ole2nls.c
 	$(CC) $(CFLAGS) -I. nls/ole2nls.c
+
+kernel32.coff: kernel32.rc ../../include/reactos/resource.h
+	windres kernel32.rc kernel32.coff
 
 kernel32.a: $(OBJECTS)
 	$(AR) csr kernel32.a $(OBJECTS)
