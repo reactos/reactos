@@ -52,7 +52,7 @@ static ULONG ulKeyPatchFlags;
 
 void (*old_handle_scancode)(UCHAR,int);
 char tempPatch[256];
-UCHAR ucBreakKey = 'D'; // key that will break into debugger in combination with CTRL
+UCHAR ucBreakKey = 'd'; // key that will break into debugger in combination with CTRL
 
 ////////////////////////////////////////////////////
 // FUNCTIONS

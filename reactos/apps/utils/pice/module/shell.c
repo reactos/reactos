@@ -1015,6 +1015,8 @@ void DebuggerShell(void)
 //*************************************************************************
 void RealIsr(ULONG dwReasonForBreak)
 {
+  BOOLEAN ReinstallPermanentBp = FALSE;
+
 	DPRINT((0,"reason: %u#################################################################\n", dwReasonForBreak));
     ENTER_FUNC();
 
@@ -1231,6 +1233,8 @@ void RealIsr(ULONG dwReasonForBreak)
             {
     			DPRINT((0,"permanent breakpoint\n"));
 
+                ReinstallPermanentBp = TRUE;
+
                 OldCS = CurrentCS;
                 OldEIP = CurrentEIP;
 
@@ -1433,7 +1437,7 @@ void RealIsr(ULONG dwReasonForBreak)
 	}
 
 	// if there was a SW breakpoint at CS:EIP
-    if(NeedToReInstallSWBreakpoints(GetLinearAddress(CurrentCS,CurrentEIP),TRUE))
+    if(NeedToReInstallSWBreakpoints(GetLinearAddress(CurrentCS,CurrentEIP),TRUE) || ReinstallPermanentBp)
     {
         DPRINT((0,"need to reinstall INT3\n"));
 		// remember how we restarted last time

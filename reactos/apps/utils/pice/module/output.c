@@ -136,8 +136,17 @@ ULONG CountArgs(LPSTR fmt)
 //***********************************************************************************
 ULONG PICE_KdpPrintString(PANSI_STRING String)
 {
-	//dummy function
+	ULONG ulRingBufferLock;
+
+  save_flags(ulRingBufferLock);
+  cli();
+
+  /* CH: What is bIsDebugPrint used for? */
+  bIsDebugPrint = FALSE;
+
 	DPRINT((0,"PICE_KdpPrintString\n\n\n"));
+  AddToRingBuffer(String->Buffer);
+  restore_flags(ulRingBufferLock);
 }
 //*************************************************************************
 // PrintkCallback()
@@ -151,11 +160,11 @@ void PrintkCallback(void)
 	ULONG ulAddress;
 	ULONG countArgs,i,len;
 	PANSI_STRING temp;
+  CHAR buf[128];
 
-	DPRINT((0,"In PrintkCallback:1\n"));
+	DPRINT((0,"In PrintkCallback\n"));
 
 	bInPrintk = TRUE;
-	DPRINT((0,"In PrintkCallback:2\n"));
 
 	// get the linear address of stack where string resides
 	ulAddress = GetLinearAddress(CurrentSS,CurrentESP);
@@ -166,12 +175,9 @@ void PrintkCallback(void)
 		{
 			//KdpPrintString has PANSI_STRING as a parameter
 			temp = (PANSI_STRING)*(PULONG)(ulAddress+sizeof(char *));
-			DPRINT((0,"temp: %x\n", temp));
-			fmt = temp->Buffer;
-
-			Print(OUTPUT_WINDOW,fmt);
-			DPRINT((0,"%s\n", fmt));
-			CurrentEIP = (ULONG)PICE_KdpPrintString;
+    	DPRINT((0,"PrintkCallback: %s\n", temp->Buffer));
+      /* Call our version of KdpPrintString() */
+			CurrentEIP = (ULONG_PTR)PICE_KdpPrintString;
 		}
 	}
 	bInPrintk = FALSE;
@@ -251,16 +257,17 @@ void InstallPrintkHook(void)
 	if( bIsPrintkPatched )
 			return;
 
-    DPRINT((0,"installing PrintString hook\n"));
+  DPRINT((0,"installing PrintString hook\n"));
 	ScanExports("_KdpPrintString",(PULONG)&ulPrintk);
 
 	DPRINT((0,"_KdpPrintString @ %x\n", ulPrintk));
 	ASSERT( ulPrintk );                 // temporary
     if(ulPrintk)
     {
-        bIsPrintkPatched = InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);
-		DPRINT((0,"KdpPrintStringTest breakpoint installed? %d\n", bIsPrintkPatched));
+      bIsPrintkPatched = InstallSWBreakpoint(ulPrintk,TRUE,PrintkCallback);
+  		DPRINT((0,"KdpPrintStringTest breakpoint installed? %d\n", bIsPrintkPatched));
     }
+
 	LEAVE_FUNC();
 }
 
@@ -276,8 +283,8 @@ void DeInstallPrintkHook(void)
     if(bIsPrintkPatched && ulPrintk)
     {
 		// will be done on exit debugger
-        if( DeInstallSWBreakpoint(ulPrintk) )
-				bIsPrintkPatched = FALSE;
+        if (DeInstallSWBreakpoint(ulPrintk))
+				  bIsPrintkPatched = FALSE;
     }
     LEAVE_FUNC();
 }
