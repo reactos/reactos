@@ -287,8 +287,7 @@ int NotifyArea::Notify(int id, NMHDR* pnmh)
 		if (found != _sorted_icons.end()) {
 			NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
 
-			if (!entry._tipText.empty())
-				_tcscpy(pdi->szText, entry._tipText);
+			pdi->lpszText = (LPTSTR)entry._tipText.c_str();
 		}
 	}
 
