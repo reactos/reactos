@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.52 2004/11/19 01:30:34 weiden Exp $
+/* $Id: rtl.h,v 1.53 2004/11/29 00:05:31 gdalsnes Exp $
  *
  */
 
@@ -263,10 +263,22 @@ RtlLargeIntegerToChar (
 
 /* Path functions */
 
+typedef enum
+{
+    INVALID_PATH = 0,
+    UNC_PATH,              /* "//foo" */
+    ABSOLUTE_DRIVE_PATH,   /* "c:/foo" */
+    RELATIVE_DRIVE_PATH,   /* "c:foo" */
+    ABSOLUTE_PATH,         /* "/foo" */
+    RELATIVE_PATH,         /* "foo" */
+    DEVICE_PATH,           /* "//./foo" */
+    UNC_DOT_PATH           /* "//." */
+} DOS_PATHNAME_TYPE;
+
 ULONG
 STDCALL
 RtlDetermineDosPathNameType_U (
-	PWSTR Path
+   PCWSTR Path
 	);
 
 BOOLEAN

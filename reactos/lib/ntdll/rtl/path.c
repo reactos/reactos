@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.29 2004/08/25 15:04:19 navaraf Exp $
+/* $Id: path.c,v 1.30 2004/11/29 00:05:31 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -171,46 +171,63 @@ ULONG STDCALL RtlGetLongestNtPathLength (VOID)
 }
 
 
+
+
+/***********************************************************************
+ *             RtlDetermineDosPathNameType_U   (NTDLL.@)
+ */
+DOS_PATHNAME_TYPE WINAPI RtlDetermineDosPathNameType_U( PCWSTR path )
+{
+    if (IS_SEPARATOR(path[0]))
+    {
+        if (!IS_SEPARATOR(path[1])) return ABSOLUTE_PATH;       /* "/foo" */
+        if (path[2] != '.') return UNC_PATH;                    /* "//foo" */
+        if (IS_SEPARATOR(path[3])) return DEVICE_PATH;          /* "//./foo" */
+        if (path[3]) return UNC_PATH;                           /* "//.foo" */
+        return UNC_DOT_PATH;                                    /* "//." */
+    }
+    else
+    {
+        if (!path[0] || path[1] != ':') return RELATIVE_PATH;   /* "foo" */
+        if (IS_SEPARATOR(path[2])) return ABSOLUTE_DRIVE_PATH;  /* "c:/foo" */
+        return RELATIVE_DRIVE_PATH;                             /* "c:foo" */
+    }
+}
+
 /*
  * @implemented
+ *
  */
 ULONG STDCALL
-RtlDetermineDosPathNameType_U(PWSTR Path)
+RtlDetermineDosPathNameType_U(PCWSTR Path)
 {
    DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
 
    if (Path == NULL)
-     {
-	return 0;
-     }
+   {
+      return INVALID_PATH;
+   }
 
    if (IS_PATH_SEPARATOR(Path[0]))
-     {
-	if (!IS_PATH_SEPARATOR(Path[1]))
-	  {
-	     return 4;			/* \xxx   */
-	  }
+   {
+      if (!IS_PATH_SEPARATOR(Path[1])) return ABSOLUTE_PATH;         /* \xxx   */
+      if (Path[2] != L'.') return UNC_PATH;                          /* \\xxx   */
+      if (IS_PATH_SEPARATOR(Path[3])) return DEVICE_PATH;            /* \\.\xxx */
+      if (Path[3]) return UNC_PATH;                                  /* \\.xxxx */
 
-	if (Path[2] != L'.')
-	  return 1;			/* \\xxx   */
-
-	if (IS_PATH_SEPARATOR(Path[3]))
-	  return 6;			/* \\.\xxx */
-
-	if (Path[3])
-	  return 1;			/* \\.xxxx */
-
-	return 7;				/* \\.     */
-     }
+      return UNC_DOT_PATH;                                           /* \\.     */
+   }
    else
-     {
-	if (Path[1] != L':')
-		return 5;			/* xxx     */
+   {
+      /* FIXME: the Wine version of this line reads:
+       * if (!Path[1] || Path[1] != L':')    return RELATIVE_PATH
+       * Should we do this too?
+       * -Gunnar
+       */ 
+      if (Path[1] != L':') return RELATIVE_PATH;                     /* xxx     */
+      if (IS_PATH_SEPARATOR(Path[2])) return ABSOLUTE_DRIVE_PATH;    /* x:\xxx  */
 
-	if (IS_PATH_SEPARATOR(Path[2]))
-		return 2;			/* x:\xxx  */
-
-	return 3;				/* x:xxx   */
+      return RELATIVE_DRIVE_PATH;                                    /* x:xxx   */
    }
 }
 
