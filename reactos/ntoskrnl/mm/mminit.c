@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.37 2002/08/14 20:58:36 dwelch Exp $
+/* $Id: mminit.c,v 1.38 2002/08/17 15:22:33 hbirr Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -321,9 +321,9 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 
    DPRINT("Invalidating between %x and %x\n",
 	  LastKernelAddress,
-	  KERNEL_BASE + PAGE_TABLE_SIZE);
+	  KERNEL_BASE + 2 * PAGE_TABLE_SIZE);
    for (i=(LastKernelAddress); 
-	 i<(KERNEL_BASE + PAGE_TABLE_SIZE); 
+	 i<(KERNEL_BASE + 2 * PAGE_TABLE_SIZE); 
 	 i=i+PAGESIZE)
      {
 	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
