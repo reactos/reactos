@@ -168,6 +168,20 @@ protected:
 };
 
 
+ // declare shell32's "Run..." dialog export function
+typedef	void (WINAPI* RUNFILEDLG)(HWND hwndOwner, HICON hIcon, LPCSTR lpstrDirectory, LPCSTR lpstrTitle, LPCSTR lpstrDescription, UINT uFlags);
+
+ //
+ // Flags for RunFileDlg
+ //
+
+#define	RFF_NOBROWSE		0x01	// Removes the browse button. 
+#define	RFF_NODEFAULT		0x02	// No default item selected. 
+#define	RFF_CALCDIRECTORY	0x04	// Calculates the working directory from the file name.
+#define	RFF_NOLABEL			0x08	// Removes the edit box label. 
+#define	RFF_NOSEPARATEMEM	0x20	// Removes the Separate Memory Space check box (Windows NT only).
+
+
  // Startmenu root window
 struct StartMenuRoot : public StartMenu
 {
@@ -180,6 +194,8 @@ struct StartMenuRoot : public StartMenu
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	int		Command(int id, int code);
+
+	void	ShowLaunchDialog(HWND hwndDesktopBar);
 };
 
 

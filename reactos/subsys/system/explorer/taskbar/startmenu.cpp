@@ -438,11 +438,10 @@ void StartMenu::CloseStartMenu(int id)
 
 int StartMenuButton::GetTextWidth(LPCTSTR title)
 {
-	RECT rect = {0, 0, 0, 0};
-
 	HDC hdc = GetDC(0);
-	SelectedFont font(hdc, GetStockFont(DEFAULT_GUI_FONT));
+	FontSelection font(hdc, GetStockFont(DEFAULT_GUI_FONT));
 
+	RECT rect = {0, 0, 0, 0};
 	DrawText(hdc, title, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 
 	ReleaseDC(0, hdc);
@@ -539,6 +538,7 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// dont't add subfolders
 }
 
+
 HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 {
 	WindowRect pos(hwndDesktopBar);
@@ -546,6 +546,7 @@ HWND StartMenuRoot::Create(HWND hwndDesktopBar)
 	return Window::Create(WINDOW_CREATOR(StartMenuRoot), 0, s_wcStartMenu, TITLE_STARTMENU,
 							WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE, pos.left, pos.top-4, STARTMENU_WIDTH_MIN, 4, hwndDesktopBar);
 }
+
 
 LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 {
@@ -578,6 +579,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	return 0;
 }
 
+
 int StartMenuRoot::Command(int id, int code)
 {
 	switch(id) {
@@ -589,6 +591,12 @@ int StartMenuRoot::Command(int id, int code)
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
 		CloseStartMenu(id);
 		break;
+
+	  case IDC_LAUNCH: {
+		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+		CloseStartMenu(id);
+		ShowLaunchDialog(hwndDesktopBar);
+		break;}
 
 	  case IDC_DOCUMENTS:
 		CreateSubmenu(id, CSIDL_PERSONAL);
@@ -631,6 +639,32 @@ int StartMenuRoot::Command(int id, int code)
 	}
 
 	return 0;
+}
+
+
+void StartMenuRoot::ShowLaunchDialog(HWND hwndDesktopBar)
+{
+	 //TODO: All text phrases should be put into the resources.
+	static LPCSTR szTitle = "Create New Task";
+	static LPCSTR szText = "Type the name of a program, folder, document, or Internet resource, and Task Manager will open it for you.";
+
+	HMODULE hShell32 = GetModuleHandle(_T("SHELL32"));
+	RUNFILEDLG RunFileDlg = (RUNFILEDLG)GetProcAddress(hShell32, (LPCSTR)61);
+
+	 // Show "Run..." dialog
+	if (RunFileDlg) {
+#define	W_VER_NT 0
+		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
+			WCHAR wTitle[40], wText[256];
+
+			MultiByteToWideChar(CP_ACP, 0, szTitle, -1, wTitle, 40);
+			MultiByteToWideChar(CP_ACP, 0, szText, -1, wText, 256);
+
+			RunFileDlg(hwndDesktopBar, 0, NULL, (LPCSTR)wTitle, (LPCSTR)wText, RFF_CALCDIRECTORY);
+		}
+		else
+			RunFileDlg(hwndDesktopBar, 0, NULL, szTitle, szText, RFF_CALCDIRECTORY);
+	}
 }
 
 
