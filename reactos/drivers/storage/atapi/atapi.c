@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2001, 2002, 2003, 2004 ReactOS Team
+ *  Copyright (C) 2001, 2002, 2003, 2004, 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.56 2004/11/18 08:32:32 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -114,7 +114,8 @@ typedef struct _ATAPI_MINIPORT_EXTENSION
 #define DEVICE_DWORD_IO          0x00000008
 #define DEVICE_48BIT_ADDRESS     0x00000010
 #define DEVICE_MEDIA_STATUS      0x00000020
-#define DEVICE_DMA_CMD		 0x00000040
+#define DEVICE_DMA_CMD           0x00000040
+#define DEVICE_NO_FLUSH          0x00000080
 
 
 typedef struct _UNIT_EXTENSION
@@ -125,7 +126,7 @@ typedef struct _UNIT_EXTENSION
 PCI_SLOT_NUMBER LastSlotNumber;
 
 #ifdef ENABLE_NATIVE_PCI
-typedef struct _PCI_NATIVE_CONTROLLER 
+typedef struct _PCI_NATIVE_CONTROLLER
 {
   USHORT VendorID;
   USHORT DeviceID;
@@ -1895,6 +1896,12 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       /* get it from the ATAPI configuration word */
       InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
       DPRINT("Device class: %u\n", InquiryData->DeviceType);
+
+      /* Don't flush CD/DVD drives */
+      if (InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE)
+	{
+	  DeviceExtension->DeviceFlags[Srb->TargetId] |= DEVICE_NO_FLUSH;
+	}
     }
   else
     {
@@ -1931,7 +1938,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     }
 
   InquiryData->AdditionalLength = 31;
-  
+
   DPRINT("VendorId: '%.20s'\n", InquiryData->VendorId);
 
   Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -2223,6 +2230,18 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DPRINT("AtapiFlushCache() called!\n");
   DPRINT("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
 	 Srb->TargetId);
+
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_NO_FLUSH))
+    {
+      /*
+       * NOTE: Don't flush the cache for CD/DVD drives. Although
+       * the ATAPI-6 standard allows that, it has been experimentally
+       * proved that it can damage some broken LG drives. Afterall
+       * it doesn't make sense to flush cache on devices we don't
+       * write to.
+       */
+      return STATUS_SUCCESS;
+    }
 
   /* Wait for BUSY to clear */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
