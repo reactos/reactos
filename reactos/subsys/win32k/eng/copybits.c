@@ -15,21 +15,58 @@
 VOID CopyBitsCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                   SURFGDI *DestGDI,  SURFGDI *SourceGDI,
                   PRECTL  DestRect,  POINTL  *SourcePoint,
-                  ULONG   Delta)
+                  ULONG   Delta,     XLATEOBJ *ColorTranslation)
 {
-   ULONG dy, leftOfSource, leftOfDest, Width;
+   ULONG dy, leftOfSource, leftOfDest, Width, SourceBPP, DestBPP, RGBulong = 0, idxColor, i, TrivialCopy = 0;
+   BYTE  *SourcePos, *SourceInitial, *DestPos, *DestInitial;
 
    // FIXME: Get ColorTranslation passed here and do something with it
+
+   if(ColorTranslation == NULL)
+   {
+      TrivialCopy = 1;
+   } else if(ColorTranslation->flXlate & XO_TRIVIAL)
+   {
+      TrivialCopy = 1;
+   }
 
    leftOfSource = SourcePoint->x * SourceGDI->BytesPerPixel;
    leftOfDest   = DestRect->left * DestGDI->BytesPerPixel;
    Width        = (DestRect->right - DestRect->left) * DestGDI->BytesPerPixel;
 
-   for(dy=DestRect->top; dy<DestRect->bottom; dy++)
+   if(TrivialCopy == 1)
    {
-      memcpy(DestSurf->pvBits+Delta*dy+leftOfDest,
-             SourceSurf->pvBits+Delta*dy+leftOfSource,
-             Width);
+      for(dy=DestRect->top; dy<DestRect->bottom; dy++)
+      {
+         memcpy(DestSurf->pvBits+Delta*dy+leftOfDest,
+                SourceSurf->pvBits+Delta*dy+leftOfSource,
+                Width);
+      }
+   } else
+   if(ColorTranslation->flXlate & XO_TABLE)
+   {
+      SourceBPP = bytesPerPixel(SourceSurf->iBitmapFormat);
+      DestBPP   = bytesPerPixel(DestSurf->iBitmapFormat);
+
+      SourcePos = SourceSurf->pvBits +
+                  (SourcePoint->y * SourceSurf->lDelta) + (SourcePoint->x * SourceBPP);
+      SourceInitial = SourcePos;
+
+      DestPos = DestSurf->pvBits +
+                ((DestRect->bottom - DestRect->top) * DestSurf->lDelta) + (DestRect->left * DestBPP);
+      DestInitial = DestPos;
+
+      for(i=DestRect->left; i<DestRect->right; i++)
+      {
+         memcpy(&RGBulong, SourcePos, SourceBPP);
+         idxColor = XLATEOBJ_iXlate(ColorTranslation, RGBulong);
+         memcpy(DestPos, &idxColor, DestBPP);
+
+         SourcePos+=SourceBPP;
+         DestPos+=DestBPP;
+      }
+      SourcePos = SourceInitial + SourceSurf->lDelta;
+      DestPos   = DestInitial   + DestSurf->lDelta;
    }
 }
 
@@ -70,7 +107,7 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
       // Source surface is device managed
       if(Source->iType!=STYPE_BITMAP)
       {
-         SourceGDI = AccessInternalObjectFromUserObject(Dest);
+         SourceGDI = AccessInternalObjectFromUserObject(Source);
 
          if (SourceGDI->CopyBits!=NULL)
          {
@@ -93,16 +130,19 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
       clippingType = Clip->iDComplexity;
    }
 
-   // We don't handle color translation just yet
-
-   if ((ColorTranslation == NULL) || (ColorTranslation->flXlate & XO_TRIVIAL))
+   // We only handle XO_TABLE translations at the momement
+   if ((ColorTranslation == NULL) || (ColorTranslation->flXlate & XO_TRIVIAL) ||
+       (ColorTranslation->flXlate & XO_TABLE))
    {
+      SourceGDI = AccessInternalObjectFromUserObject(Source);
+      DestGDI   = AccessInternalObjectFromUserObject(Dest);
+
       switch(clippingType)
       {
          case DC_TRIVIAL:
             CopyBitsCopy(Dest,     Source,
                          DestGDI,  SourceGDI,
-                         DestRect, SourcePoint, Source->lDelta);
+                         DestRect, SourcePoint, Source->lDelta, ColorTranslation);
 
             return(TRUE);
 
@@ -117,7 +157,7 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
 
             CopyBitsCopy(Dest,    Source,
                          DestGDI, SourceGDI,
-                         &rclTmp, &ptlTmp, Source->lDelta);
+                         &rclTmp, &ptlTmp, Source->lDelta, ColorTranslation);
 
             return(TRUE);
 
@@ -145,7 +185,7 @@ BOOL EngCopyBits(SURFOBJ *Dest, SURFOBJ *Source,
 
                      CopyBitsCopy(Dest,    Source,
                                   DestGDI, SourceGDI,
-                                  prcl, &ptlTmp, Source->lDelta);
+                                  prcl, &ptlTmp, Source->lDelta, ColorTranslation);
 
                      prcl++;
 

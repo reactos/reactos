@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.4 $
+ * $Revision: 1.5 $
  * $Author: jfilby $
- * $Date: 2000/04/03 19:55:32 $
+ * $Date: 2000/04/10 20:17:32 $
  *
  */
 
@@ -44,6 +44,9 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
                   CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
                   RECTL *DestRect, POINTL *SourcePoint, POINTL *MaskPoint,
                   BRUSHOBJ *Brush, POINTL *BrushPoint, ROP4 rop4);
+BOOL VGADDICopyBits(SURFOBJ *Dest, SURFOBJ *Source,
+                    CLIPOBJ *Clip, XLATEOBJ *ColorTranslation,
+                    PRECTL DestRect, PPOINTL SourcePoint);
 
 DRVFN FuncList[] =
 {
@@ -58,11 +61,11 @@ DRVFN FuncList[] =
   {INDEX_DrvLineTo, (PFN) VGADDILineTo},
   {INDEX_DrvPaint, (PFN) VGADDIPaint},
   {INDEX_DrvBitBlt, (PFN) VGADDIBitBlt},
+//  {INDEX_DrvCopyBits, (PFN) VGADDICopyBits},
 
 #if 0
   /*  Optional Display driver functions  */
   {INDEX_, (PFN) },
-  {INDEX_DrvCopyBits, (PFN) VGADDICopyBits},
   {INDEX_DescribePixelFormat, (PFN) VGADDIDescribePixelFormat},
   {INDEX_DrvDitherColor, (PFN) VGADDIDitherColor},
   {INDEX_DrvFillPath, (PFN) VGADDIFillPath},
@@ -340,8 +343,6 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
   DHSURF dhsurf;
   HSURF hsurf;
 
-  DbgPrint("DrvEnableSurface..\n");
-
   // Initialize the VGA
   if (!InitVGA(ppdev, TRUE))
   {
@@ -379,8 +380,6 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
       goto error_clean;
    } BANKING CODE UNIMPLEMENTED */
 
-  DbgPrint("Calling EngCreateDeviceSurface..\n");
-
   if ((hsurf = EngCreateDeviceSurface(dhsurf, ppdev->sizeSurf, BMF_4BPP)) ==
       (HSURF)0)
   {
@@ -388,11 +387,10 @@ HSURF VGADDIEnableSurface(IN DHPDEV  PDev)
     EngDebugPrint("VGADDI:", "EngCreateDeviceSurface call failed\n", 0);
     goto error_clean;
   }
-DbgPrint("init saved bits.. ");
-  InitSavedBits(ppdev);
-DbgPrint("successful\n");
 
-  if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO))
+  InitSavedBits(ppdev);
+
+  if (EngAssociateSurface(hsurf, ppdev->GDIDevHandle, HOOK_BITBLT | HOOK_PAINT | HOOK_LINETO | HOOK_COPYBITS))
   {
     EngDebugPrint("VGADDI:", "Successfully associated surface\n", 0);
     ppdev->SurfHandle = hsurf;

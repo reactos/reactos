@@ -191,9 +191,7 @@ BOOL EngAssociateSurface(HSURF Surface, HDEV Dev, ULONG Hooks)
    if(Hooks & HOOK_STROKEPATH)        SurfGDI->StrokePath        = Dc->DriverFunctions.StrokePath;
    if(Hooks & HOOK_FILLPATH)          SurfGDI->FillPath          = Dc->DriverFunctions.FillPath;
    if(Hooks & HOOK_STROKEANDFILLPATH) SurfGDI->StrokeAndFillPath = Dc->DriverFunctions.StrokeAndFillPath;
-   if(Hooks & HOOK_LINETO) {           SurfGDI->LineTo            = Dc->DriverFunctions.LineTo;
-DbgPrint("associating LineTo is now %08x\n", SurfGDI->LineTo);
-}
+   if(Hooks & HOOK_LINETO)            SurfGDI->LineTo            = Dc->DriverFunctions.LineTo;
    if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Dc->DriverFunctions.CopyBits;
    if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Dc->DriverFunctions.Synchronize;
    if(Hooks & HOOK_SYNCHRONIZEACCESS) SurfGDI->SynchronizeAccess = TRUE;
@@ -218,7 +216,8 @@ BOOL EngDeleteSurface(HSURF Surface)
 
 SURFOBJ *EngLockSurface(HSURF Surface)
 {
-   // FIXME: Do we need to allocate new memory for this user object??
+   // FIXME: Do we need to allocate new memory for this user object?? Since there's an unlock.. it appears to be so
+   //        probably because win32k is supposed to do some kind of wierd handle\object thing that we don't
 
    return AccessUserObject(Surface);
 }

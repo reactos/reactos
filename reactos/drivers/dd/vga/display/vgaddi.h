@@ -206,3 +206,7 @@ BOOL InitVGA(PPDEV ppdev, BOOL bFirst); // screen.c: initialize VGA mode
 #define DRIVER_OFFSCREEN_REFRESHED  0x04L // if not set, don't use offscreen memory
 #define PLANAR_PELS_PER_CPU_ADDRESS 8
 #define PACKED_PELS_PER_CPU_ADDRESS 2
+
+BOOL VGAtoGDI(
+   SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
+   RECTL   *DestRect, POINTL *SourcePoint);

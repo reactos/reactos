@@ -1,9 +1,20 @@
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
-
+#include <ddk/winddi.h>
 #include "vgavideo.h"
 
 #include <internal/i386/io.h>
+
+INT abs(INT nm)
+{
+   if(nm<0)
+   {
+      return nm * -1;
+   } else
+   {
+      return nm;
+   }
+}
 
 div_t div(int num, int denom)
 {
@@ -29,6 +40,40 @@ int mod(int num, int denom)
 {
    div_t dvt = div(num, denom);
    return dvt.rem;
+}
+
+BYTE bytesPerPixel(ULONG Format)
+{
+   // This function is taken from /subsys/win32k/eng/surface.c
+   // FIXME: GDI bitmaps are supposed to be pixel-packed. Right now if the
+   // pixel size if < 1 byte we expand it to 1 byte for simplicities sake
+
+   if(Format==BMF_1BPP)
+   {
+      return 1;
+   } else
+   if((Format==BMF_4BPP) || (Format==BMF_4RLE))
+   {
+      return 1;
+   } else
+   if((Format==BMF_8BPP) || (Format==BMF_8RLE))
+   {
+      return 1;
+   } else
+   if(Format==BMF_16BPP)
+   {
+      return 2;
+   } else
+   if(Format==BMF_24BPP)
+   {
+      return 3;
+   } else
+   if(Format==BMF_32BPP)
+   {
+      return 4;
+   }
+
+   return 0;
 }
 
 VOID vgaPreCalc()
@@ -84,10 +129,10 @@ VOID vgaPreCalc()
    }
 }
 
-void vgaPutPixel(int x, int y, unsigned char c)
+VOID vgaPutPixel(INT x, INT y, UCHAR c)
 {
-  unsigned offset;
-  unsigned char a;
+  ULONG offset;
+  UCHAR a;
 
   offset = xconv[x]+y80[y];
 
@@ -98,9 +143,9 @@ void vgaPutPixel(int x, int y, unsigned char c)
   WRITE_REGISTER_UCHAR(vidmem + offset, c);
 }
 
-void vgaPutByte(int x, int y, unsigned char c)
+VOID vgaPutByte(INT x, INT y, UCHAR c)
 {
-  unsigned offset;
+  ULONG offset;
 
   offset = xconv[x]+y80[y];
 
@@ -111,30 +156,29 @@ void vgaPutByte(int x, int y, unsigned char c)
   WRITE_REGISTER_UCHAR(vidmem + offset, c);
 }
 
-void vgaGetByte(unsigned offset,
-                unsigned char *b, unsigned char *g,
-                unsigned char *r, unsigned char *i)
+VOID vgaGetByte(ULONG offset,
+                UCHAR *b, UCHAR *g,
+                UCHAR *r, UCHAR *i)
 {
-// fixme: use READ_REGISTER_UCHAR
-
   WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0304);
-  *i = vidmem[offset];
+  *i = READ_REGISTER_UCHAR(vidmem + offset);
   WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0204);
-  *r = vidmem[offset];
+  *r = READ_REGISTER_UCHAR(vidmem + offset);
   WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0104);
-  *g = vidmem[offset];
+  *g = READ_REGISTER_UCHAR(vidmem + offset);
   WRITE_PORT_USHORT((PUSHORT)0x03ce, 0x0004);
-  *b = vidmem[offset];
+  *b = READ_REGISTER_UCHAR(vidmem + offset);
 }
 
-int vgaGetPixel(int x, int y)
+INT vgaGetPixel(INT x, INT y)
 {
-  unsigned char mask, b, g, r, i;
-  unsigned offset;
+  UCHAR mask, b, g, r, i;
+  ULONG offset;
 
   offset = xconv[x]+y80[y];
-  mask=maskbit[x];
   vgaGetByte(offset, &b, &g, &r, &i);
+
+  mask=maskbit[x];
   b=b&mask;
   g=g&mask;
   r=r&mask;
@@ -149,12 +193,12 @@ int vgaGetPixel(int x, int y)
   return(b+2*g+4*r+8*i);
 }
 
-BOOL vgaHLine(int x, int y, int len, unsigned char c)
+BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 {
-  unsigned char a;
-  unsigned int pre1, i;
-  unsigned int orgpre1, orgx, midpre1;
-  unsigned long leftpixs, midpixs, rightpixs, temp;
+  UCHAR a;
+  ULONG pre1, i;
+  ULONG orgpre1, orgx, midpre1;
+  ULONG long leftpixs, midpixs, rightpixs, temp;
 
   orgx=x;
 
@@ -244,10 +288,10 @@ BOOL vgaHLine(int x, int y, int len, unsigned char c)
   return TRUE;
 }
 
-BOOL vgaVLine(int x, int y, int len, unsigned char c)
+BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 {
-  unsigned offset, i;
-  unsigned char a;
+  ULONG offset, i;
+  UCHAR a;
 
   offset = xconv[x]+y80[y];
 
@@ -264,4 +308,26 @@ BOOL vgaVLine(int x, int y, int len, unsigned char c)
   }
 
   return TRUE;
+}
+
+static const RECTL rclEmpty = { 0, 0, 0, 0 };
+
+BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
+{
+   prcDst->left  = max(prcSrc1->left, prcSrc2->left);
+   prcDst->right = min(prcSrc1->right, prcSrc2->right);
+
+   if (prcDst->left < prcDst->right) {
+      prcDst->top = max(prcSrc1->top, prcSrc2->top);
+      prcDst->bottom = min(prcSrc1->bottom, prcSrc2->bottom);
+
+      if (prcDst->top < prcDst->bottom)
+      {
+         return TRUE;
+      }
+   }
+
+   *prcDst = rclEmpty;
+
+   return FALSE;
 }

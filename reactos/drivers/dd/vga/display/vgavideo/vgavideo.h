@@ -28,3 +28,13 @@ typedef struct _VideoMode {
 } VideoMode;
 
 VOID vgaPreCalc();
+VOID vgaPutPixel(INT x, INT y, UCHAR c);
+VOID vgaPutByte(INT x, INT y, UCHAR c);
+VOID vgaGetByte(ULONG offset,
+                UCHAR *b, UCHAR *g,
+                UCHAR *r, UCHAR *i);
+INT vgaGetPixel(INT x, INT y);
+BOOL vgaHLine(INT x, INT y, INT len, UCHAR c);
+BOOL vgaVLine(INT x, INT y, INT len, UCHAR c);
+INT abs(INT nm);
+BOOL VGADDIIntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2);

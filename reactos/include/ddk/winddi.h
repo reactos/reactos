@@ -1035,6 +1035,8 @@ DWORD APIENTRY EngDeviceIoControl(
    DWORD   nOutBufferSize,
    DWORD *lpBytesReturned);
 
+VOID STDCALL EngFreeMem(PVOID Mem);
+
 /*
 EngDeleteClip
 EngDeleteDriverObj
@@ -1049,7 +1051,6 @@ EngEraseSurface
 EngFillPath
 EngFindImageProcAddress
 EngFindResource
-EngFreeMem
 EngFreeModule
 EngFreeUserMem
 EngGetCurrentCodePage

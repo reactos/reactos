@@ -15,7 +15,7 @@ BOOL GDItoVGA(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
    RECTL   *DestRect, POINTL *SourcePoint)
 {
-  ULONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, BPP;
+  LONG i, j, dx, dy, alterx, altery, idxColor, RGBulong = 0, BPP;
   BYTE  *GDIpos, *initial;
 
   BPP = bytesPerPixel(Source->iBitmapFormat);
@@ -30,17 +30,16 @@ BOOL GDItoVGA(
 
   for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
   {
-     initial = GDIpos;
+    initial = GDIpos;
 
-     for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-     {
-        RtlCopyMemory(&RGBulong, GDIpos, BPP);
-        idxColor = XLATEOBJ_iXlate(ColorTranslation, RGBulong);
-
-        vgaPutPixel(i+alterx, j+altery, idxColor);
-        GDIpos+=BPP;
-     }
-     GDIpos = initial + Source->lDelta;
+    for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+    {
+      RtlCopyMemory(&RGBulong, GDIpos, BPP);
+      idxColor = XLATEOBJ_iXlate(ColorTranslation, RGBulong);
+      vgaPutPixel(i+alterx, j+altery, idxColor);
+      GDIpos+=BPP;
+    }
+    GDIpos = initial + Source->lDelta;
   }
 }
 
@@ -48,30 +47,46 @@ BOOL VGAtoGDI(
    SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask, XLATEOBJ *ColorTranslation,
    RECTL   *DestRect, POINTL *SourcePoint)
 {
-  ULONG i, j, dx, dy, idxColor, RGBulong, BPP;
-  BYTE  *GDIpos, *initial;
+  LONG i, j, dx, dy, RGBulong, BPP;
+  BYTE  *GDIpos, *initial, idxColor;
+
+  // FIXME: Optimize to retrieve entire bytes at a time (see /display/vgavideo/vgavideo.c:vgaGetByte)
 
   BPP = bytesPerPixel(Dest->iBitmapFormat);
   GDIpos = Dest->pvBits +
-           DestRect->top * Dest->lDelta + DestRect->left;
+           (DestRect->top * Dest->lDelta) + (DestRect->left * BPP);
 
   dx = DestRect->right  - DestRect->left;
   dy = DestRect->bottom - DestRect->top;
 
-  for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+  if(ColorTranslation == NULL)
   {
-     initial = GDIpos;
-
-     for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
-     {
-        idxColor = vgaGetPixel(i, j);
-
-        RGBulong = XLATEOBJ_iXlate(ColorTranslation, idxColor);
-        RtlCopyMemory(GDIpos, &RGBulong, BPP);
-
-        GDIpos+=BPP;
-     }
-     GDIpos = initial + Dest->lDelta;
+    // No color translation necessary, we assume BPP = 1
+    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+    {
+       initial = GDIpos;
+       for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+       {
+         idxColor = vgaGetPixel(i, j);
+         RtlCopyMemory(GDIpos, &idxColor, 1);
+         GDIpos++;
+       }
+       GDIpos = initial + Dest->lDelta;
+    }
+  } else {
+    // Color translation
+    for(j=SourcePoint->y; j<SourcePoint->y+dy; j++)
+    {
+       initial = GDIpos;
+       for(i=SourcePoint->x; i<SourcePoint->x+dx; i++)
+       {
+         idxColor = vgaGetPixel(i, j);
+         RGBulong = XLATEOBJ_iXlate(ColorTranslation, idxColor);
+         RtlCopyMemory(GDIpos, &RGBulong, BPP);
+         GDIpos+=BPP;
+       }
+       GDIpos = initial + Dest->lDelta;
+    }
   }
 }
 
@@ -200,7 +215,7 @@ BOOL VGADDIBitBlt(SURFOBJ *Dest, SURFOBJ *Source, SURFOBJ *Mask,
          {
             // FIXME: Intersect clip rectangle
 
-            BltOperation(Dest, Source, ColorTranslation, Mask,
+            BltOperation(Dest, Source, Mask, ColorTranslation,
                          DestRect, SourcePoint);
          } else {
 
