@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.5 1999/10/07 23:44:28 ekohl Exp $
+/* $Id: section.c,v 1.6 1999/11/17 21:20:15 ariadne Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -282,6 +282,30 @@ OpenFileMappingW (
 		}
 
 	return SectionHandle;
+}
+
+WINBOOL
+STDCALL
+FlushViewOfFile(
+	LPCVOID	lpBaseAddress,
+	DWORD		dwNumberOfBytesToFlush
+	)
+{
+
+	NTSTATUS Status;
+	ULONG NumberOfBytesFlushed;
+
+	Status = NtFlushVirtualMemory(NtCurrentProcess(),
+	lpBaseAddress, dwNumberOfBytesToFlush,
+	&NumberOfBytesFlushed
+	);
+	
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError(RtlNtStatusToDosError(Status));
+		return FALSE;
+	}
+	return TRUE;
 }
 
 /* EOF */
