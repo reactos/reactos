@@ -831,8 +831,7 @@ VOID STDCALL MiniportDpc(
 
                 NDIS_DbgPrint(MAX_TRACE, ("back from miniport's Send handler\n"));
 
-                if ((NdisStatus != NDIS_STATUS_PENDING) &&
-                    !(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)) 
+                if (NdisStatus != NDIS_STATUS_PENDING) 
                     MiniSendComplete((NDIS_HANDLE)Adapter, (PNDIS_PACKET)WorkItemContext, NdisStatus);
               }
 
@@ -1127,7 +1126,7 @@ NdisMRegisterAdapterShutdownHandler(
   BugcheckContext->CallbackRecord = ExAllocatePool(NonPagedPool, sizeof(KBUGCHECK_CALLBACK_RECORD));
 
   KeRegisterBugCheckCallback(BugcheckContext->CallbackRecord, NdisIBugcheckCallback, 
-      BugcheckContext, sizeof(BugcheckContext), "Ndis Miniport");
+      BugcheckContext, sizeof(BugcheckContext), (PUCHAR)"Ndis Miniport");
 }
 
 
