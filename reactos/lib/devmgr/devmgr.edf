@@ -1,0 +1,30 @@
+LIBRARY devmgr.dll
+
+EXPORTS
+DeviceProperties_RunDLLA=DeviceProperties_RunDLLA@16
+DeviceProperties_RunDLLW=DeviceProperties_RunDLLW@16
+DevicePropertiesA=DevicePropertiesA@20
+DevicePropertiesW=DevicePropertiesW@20
+DeviceManager_ExecuteA=DeviceManager_ExecuteA@16
+DeviceManager_ExecuteW=DeviceManager_ExecuteW@16
+DeviceProblemTextA=DeviceProblemTextA@20
+DeviceProblemTextW=DeviceProblemTextW@20
+DeviceProblemWizardA=DeviceProblemWizardA@12
+DeviceProblemWizardW=DeviceProblemWizardW@12
+DeviceManagerPrintA=DeviceManagerPrintA@20
+DeviceManagerPrintW=DeviceManagerPrintW@20
+DeviceAdvancedPropertiesA=DeviceAdvancedPropertiesA@12
+DeviceAdvancedPropertiesW=DeviceAdvancedPropertiesW@12
+DeviceCreateHardwarePage=DeviceCreateHardwarePage@8
+DeviceCreateHardwarePageEx=DeviceCreateHardwarePageEx@16
+DevicePropertiesExA=DevicePropertiesExA@20
+DevicePropertiesExW=DevicePropertiesExW@20
+DeviceProblemWizard_RunDLLA=DeviceProblemWizard_RunDLLA@16
+DeviceProblemWizard_RunDLLW=DeviceProblemWizard_RunDLLW@16
+
+
+; Export these functions only for the sake of compatibility, they're obviously typos
+DeviceProblenWizard_RunDLLA=DeviceProblemWizard_RunDLLA@16
+DeviceProblenWizard_RunDLLW=DeviceProblemWizard_RunDLLW@16
+
+; EOF

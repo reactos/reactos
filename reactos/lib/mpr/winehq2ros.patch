@@ -1,0 +1,15 @@
+Index: wnet.c
+===================================================================
+RCS file: /home/wine/wine/dlls/mpr/wnet.c,v
+retrieving revision 1.15
+diff -u -r1.15 wnet.c
+--- wnet.c	5 Apr 2004 23:14:26 -0000	1.15
++++ wnet.c	15 Apr 2004 09:36:14 -0000
+@@ -22,6 +22,7 @@
+ #include <stdarg.h>
+ #include "windef.h"
+ #include "winbase.h"
++#include "winuser.h"
+ #include "winnls.h"
+ #include "winnetwk.h"
+ #include "npapi.h"
