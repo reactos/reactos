@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.16 2002/09/08 10:22:45 chorns Exp $
+/* $Id: time.c,v 1.17 2002/09/13 18:53:17 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,51 +37,6 @@ typedef struct __DOSDATE
 } DOSDATE, *PDOSDATE;
 
 #define TICKSPERMIN        600000000
-#define TICKSPERSEC        10000000
-#define TICKSPERMSEC       10000
-#define SECSPERDAY         86400
-#define SECSPERHOUR        3600
-#define SECSPERMIN         60
-#define MINSPERHOUR        60
-#define HOURSPERDAY        24
-#define EPOCHWEEKDAY       0
-#define DAYSPERWEEK        7
-#define EPOCHYEAR          1601
-#define DAYSPERNORMALYEAR  365
-#define DAYSPERLEAPYEAR    366
-#define MONSPERYEAR        12
-
-static const int YearLengths[2] = {DAYSPERNORMALYEAR, DAYSPERLEAPYEAR};
-static const int MonthLengths[2][MONSPERYEAR] =
-{
-	{ 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
-	{ 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
-};
-
-static __inline int IsLeapYear(int Year)
-{
-  return Year % 4 == 0 && (Year % 100 != 0 || Year % 400 == 0) ? 1 : 0;
-}
-
-static __inline void NormalizeTimeFields(WORD *FieldToNormalize,
-                                         WORD *CarryField,
-                                         int Modulus)
-{
-  *FieldToNormalize = (WORD) (*FieldToNormalize - Modulus);
-  *CarryField = (WORD) (*CarryField + 1);
-}
-
-#define LISECOND RtlEnlargedUnsignedMultiply(SECOND,NSPERSEC)
-#define LIMINUTE RtlEnlargedUnsignedMultiply(MINUTE,NSPERSEC)
-#define LIHOUR RtlEnlargedUnsignedMultiply(HOUR,NSPERSEC)
-#define LIDAY RtlEnlargedUnsignedMultiply(DAY,NSPERSEC)
-#define LIYEAR RtlEnlargedUnsignedMultiply(YEAR,NSPERSEC)
-#define LIFOURYEAR RtlEnlargedUnsignedMultiply(FOURYEAR,NSPERSEC)
-#define LICENTURY RtlEnlargedUnsignedMultiply(CENTURY,NSPERSEC) 
-#define LIMILLENIUM RtlEnlargedUnsignedMultiply(CENTURY,10*NSPERSEC)
-
-
-
 
 /* FUNCTIONS ****************************************************************/
 
@@ -186,67 +141,24 @@ SystemTimeToFileTime(
    )
 
 {
-  int CurYear, CurMonth, MonthLength;
-  long long int rcTime;
-  SYSTEMTIME SystemTime;
+  TIME_FIELDS TimeFields;
+  LARGE_INTEGER liTime;
 
-  memcpy (&SystemTime, lpSystemTime, sizeof(SYSTEMTIME));
+  TimeFields.Year = lpSystemTime->wYear;
+  TimeFields.Month = lpSystemTime->wMonth;
+  TimeFields.Day = lpSystemTime->wDay;
+  TimeFields.Hour = lpSystemTime->wHour;
+  TimeFields.Minute = lpSystemTime->wMinute;
+  TimeFields.Second = lpSystemTime->wSecond;
+  TimeFields.Milliseconds = lpSystemTime->wMilliseconds;
 
-  rcTime = 0;
-  
-    /* FIXME: normalize the TIME_FIELDS structure here */
-  while (SystemTime.wSecond >= SECSPERMIN)
-    {
-      NormalizeTimeFields(&SystemTime.wSecond, 
-                          &SystemTime.wMinute, 
-                          SECSPERMIN);
-    }
-  while (SystemTime.wMinute >= MINSPERHOUR)
-    {
-      NormalizeTimeFields(&SystemTime.wMinute, 
-                          &SystemTime.wHour, 
-                          MINSPERHOUR);
-    }
-  while (SystemTime.wHour >= HOURSPERDAY)
-    {
-      NormalizeTimeFields(&SystemTime.wHour, 
-                          &SystemTime.wDay, 
-                          HOURSPERDAY);
-    }
-  MonthLength =
-    MonthLengths[IsLeapYear(SystemTime.wYear)][SystemTime.wMonth - 1];
-  while (SystemTime.wDay > MonthLength)
-    {
-      NormalizeTimeFields(&SystemTime.wDay, 
-                          &SystemTime.wMonth, 
-                          MonthLength);
-    }
-  while (SystemTime.wMonth > MONSPERYEAR)
-    {
-      NormalizeTimeFields(&SystemTime.wMonth, 
-                          &SystemTime.wYear, 
-                          MONSPERYEAR);
-    }
-
-    /* FIXME: handle calendar corrections here */
-  for (CurYear = EPOCHYEAR; CurYear < SystemTime.wYear; CurYear++)
-    {
-      rcTime += YearLengths[IsLeapYear(CurYear)];
-    }
-  for (CurMonth = 1; CurMonth < SystemTime.wMonth; CurMonth++)
-    {
-      rcTime += MonthLengths[IsLeapYear(CurYear)][CurMonth - 1];
-    }
-  rcTime += SystemTime.wDay - 1;
-  rcTime *= SECSPERDAY;
-  rcTime += SystemTime.wHour * SECSPERHOUR +
-            SystemTime.wMinute * SECSPERMIN + SystemTime.wSecond;
-  rcTime *= TICKSPERSEC;
-  rcTime += SystemTime.wMilliseconds * TICKSPERMSEC;
-
-  *lpFileTime = *(FILETIME *)&rcTime;
-
-  return TRUE;
+  if (RtlTimeFieldsToTime (&TimeFields, &liTime))
+  {
+     lpFileTime->dwLowDateTime = liTime.u.LowPart;
+     lpFileTime->dwHighDateTime = liTime.u.LowPart;
+     return TRUE;
+  }
+  return FALSE;
 }
 
 //   dwDayOfWeek = RtlLargeIntegerDivide(FileTime,LIDAY,&dwRemDay);
@@ -261,68 +173,27 @@ FileTimeToSystemTime(
 		     LPSYSTEMTIME lpSystemTime
 		     )
 {
-  const int *Months;
-  int LeapSecondCorrections, SecondsInDay, CurYear;
-  int LeapYear, CurMonth;
-  long int Days;
-  long long int Time = *((long long int*)lpFileTime);
+  TIME_FIELDS TimeFields;
+  LARGE_INTEGER liTime;
 
-    /* Extract millisecond from time and convert time into seconds */
-  lpSystemTime->wMilliseconds = (WORD)((Time % TICKSPERSEC) / TICKSPERMSEC);
-  Time = Time / TICKSPERSEC;
+  liTime.u.LowPart = lpFileTime->dwLowDateTime;
+  liTime.u.HighPart = lpFileTime->dwHighDateTime;
 
-    /* FIXME: Compute the number of leap second corrections here */
-  LeapSecondCorrections = 0;
+  if (liTime.u.HighPart >= 0x80000000)
+  {
+     return FALSE;
+  }
 
-    /* Split the time into days and seconds within the day */
-  Days = Time / SECSPERDAY;
-  SecondsInDay = Time % SECSPERDAY;
+  RtlTimeToTimeFields(&liTime, &TimeFields);
 
-    /* Adjust the values for GMT and leap seconds */
-  SecondsInDay += LeapSecondCorrections;
-  while (SecondsInDay < 0) 
-    {
-      SecondsInDay += SECSPERDAY;
-      Days--;
-    }
-  while (SecondsInDay >= SECSPERDAY) 
-    {
-      SecondsInDay -= SECSPERDAY;
-      Days++;
-    }
-
-    /* compute time of day */
-  lpSystemTime->wHour = (WORD) (SecondsInDay / SECSPERHOUR);
-  SecondsInDay = SecondsInDay % SECSPERHOUR;
-  lpSystemTime->wMinute = (WORD) (SecondsInDay / SECSPERMIN);
-  lpSystemTime->wSecond = (WORD) (SecondsInDay % SECSPERMIN);
-
-    /* FIXME: handle the possibility that we are on a leap second (i.e. Second = 60) */
-
-    /* compute day of week */
-  lpSystemTime->wDayOfWeek = (WORD) ((EPOCHWEEKDAY + Days) % DAYSPERWEEK);
-
-    /* compute year */
-  CurYear = EPOCHYEAR;
-    /* FIXME: handle calendar modifications */
-  while (1)
-    {
-      LeapYear = IsLeapYear(CurYear);
-      if (Days < (long) YearLengths[LeapYear])
-        {
-          break;
-        }
-      CurYear++;
-      Days = Days - (long) YearLengths[LeapYear];
-    }
-  lpSystemTime->wYear = (WORD) CurYear;
-
-    /* Compute month of year */
-  Months = MonthLengths[LeapYear];
-  for (CurMonth = 0; Days >= (long) Months[CurMonth]; CurMonth++)
-    Days = Days - (long) Months[CurMonth];
-  lpSystemTime->wMonth = (WORD) (CurMonth + 1);
-  lpSystemTime->wDay = (WORD) (Days + 1);
+  lpSystemTime->wYear = TimeFields.Year;
+  lpSystemTime->wMonth = TimeFields.Month;
+  lpSystemTime->wDay = TimeFields.Day;
+  lpSystemTime->wHour = TimeFields.Hour;
+  lpSystemTime->wMinute = TimeFields.Minute;
+  lpSystemTime->wSecond = TimeFields.Second;
+  lpSystemTime->wMilliseconds = TimeFields.Milliseconds;
+  lpSystemTime->wDayOfWeek = TimeFields.Weekday;
 
   return TRUE;
 }
