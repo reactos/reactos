@@ -1024,7 +1024,7 @@ unsigned long CCabinet::ExtractFile(char* FileName)
                     BytesToRead = CFData.CompSize;
 
 					DPRINT(MAX_TRACE, ("Read: (0x%lX,0x%lX).\n",
-						(unsigned)CurrentBuffer, (unsigned)Buffer));
+						(long unsigned int)CurrentBuffer, (long unsigned int)Buffer));
 
                     if (((Status = ReadBlock(CurrentBuffer, BytesToRead, &BytesRead)) != 
                         CAB_STATUS_SUCCESS) || (BytesToRead != BytesRead)) {
