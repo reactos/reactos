@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.131 2003/06/01 14:59:02 chorns Exp $
+/* $Id: loader.c,v 1.132 2003/07/20 05:15:34 royce Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1556,7 +1556,7 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
 
   if (ExportAddress == NULL)
     {
-      CPRINT("Export not found for %d:%s\n",
+      DbgPrint("Export not found for %d:%s\n",
 	     Hint,
 	     Name != NULL ? Name : "(Ordinal)");
       KeBugCheck(0);

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.144 2003/07/12 10:24:45 chorns Exp $
+; $Id: ntoskrnl.edf,v 1.145 2003/07/20 05:15:34 royce Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -63,11 +63,11 @@ ExInterlockedExchangeUlong=ExInterlockedExchangeUlong@12
 ExInterlockedExtendZone=ExInterlockedExtendZone@16
 ExInterlockedIncrementLong=ExInterlockedIncrementLong@8
 @ExInterlockedInsertHeadList=@ExInterlockedInsertHeadList@12
-@ExInterlockedInsertTailList=@ExInterlockedInsertTailList@12
+ExInterlockedInsertTailList=@ExInterlockedInsertTailList@12
 @ExInterlockedPopEntryList=@ExInterlockedPopEntryList@8
-@ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
+ExInterlockedPopEntrySList=@ExInterlockedPopEntrySList@8
 @ExInterlockedPushEntryList=@ExInterlockedPushEntryList@12
-@ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
+ExInterlockedPushEntrySList=@ExInterlockedPushEntrySList@12
 @ExInterlockedRemoveHeadList=@ExInterlockedRemoveHeadList@8
 ExIsProcessorFeaturePresent=ExIsProcessorFeaturePresent@4
 ExIsResourceAcquiredExclusiveLite=ExIsResourceAcquiredExclusiveLite@4
