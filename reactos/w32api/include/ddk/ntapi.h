@@ -48,6 +48,12 @@ typedef PVOID POBJECT_TYPE_LIST;
 typedef PVOID PEXECUTION_STATE;
 typedef PVOID PLANGID;
 
+#ifndef NtCurrentProcess
+#define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
+#endif /* NtCurrentProcess */
+#ifndef NtCurrentThread
+#define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
+#endif /* NtCurrentThread */
 
 /* System information and control */
 
