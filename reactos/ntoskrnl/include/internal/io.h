@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.40 2004/03/21 18:58:52 navaraf Exp $
+/* $Id: io.h,v 1.41 2004/03/27 19:41:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <internal/module.h>
 
 
 #ifndef __USE_W32API
@@ -62,7 +63,6 @@ typedef struct _DEVICE_NODE
   struct _DEVICE_NODE *PrevSibling;
   struct _DEVICE_NODE *NextSibling;
   struct _DEVICE_NODE *Child;
-  PDRIVER_OBJECT DriverObject;
   PDEVICE_OBJECT Pdo;
   UNICODE_STRING InstancePath;
   UNICODE_STRING ServiceName;
@@ -266,19 +266,6 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 NTSTATUS
 IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
 
-NTSTATUS
-IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
-		      PUNICODE_STRING ServiceName,
-		      BOOLEAN FileSystemDriver,
-		      PVOID DriverImageStart,
-		      ULONG DriverImageSize);
-NTSTATUS
-IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
-		    PDEVICE_NODE DeviceNode,
-		    BOOLEAN FileSystemDriver,
-		    PVOID DriverImageStart,
-		    ULONG DriverImageSize,
-		    BOOLEAN BootDriver);
 VOID
 IoInitCancelHandling(VOID);
 VOID
@@ -388,37 +375,48 @@ PnpRootCreateDevice(
 
 /* device.c */
 
-NTSTATUS
-IopAttachFilterDrivers(
-  PDEVICE_NODE DeviceNode,
-  BOOLEAN Lower);
-
-NTSTATUS
-IopInitializeService(
-  PDEVICE_NODE DeviceNode,
-  PUNICODE_STRING ServiceName,
-  PUNICODE_STRING ImagePath);
+NTSTATUS FASTCALL
+IopInitializeDevice(
+   PDEVICE_NODE DeviceNode,
+   PDRIVER_OBJECT DriverObject);
 
 /* driver.c */
 
-VOID
-IopInitializeBootDrivers(
-  VOID);
+VOID FASTCALL
+IopInitializeBootDrivers(VOID);
 
-VOID
-IopInitializeSystemDrivers(
-  VOID);
+VOID FASTCALL
+IopInitializeSystemDrivers(VOID);
 
-NTSTATUS
-IopInitializeDeviceNodeService(
-  PDEVICE_NODE DeviceNode,
-  PUNICODE_STRING ServiceName,
-  BOOLEAN BootDriverOnly);
+NTSTATUS FASTCALL
+IopCreateDriverObject(
+   PDRIVER_OBJECT *DriverObject,
+   PUNICODE_STRING ServiceName,
+   BOOLEAN FileSystemDriver,
+   PVOID DriverImageStart,
+   ULONG DriverImageSize);
 
-VOID
+NTSTATUS FASTCALL
+IopLoadServiceModule(
+   IN PUNICODE_STRING ServiceName,
+   OUT PMODULE_OBJECT *ModuleObject);
+
+NTSTATUS FASTCALL
+IopInitializeDriverModule(
+   IN PDEVICE_NODE DeviceNode,
+   IN PMODULE_OBJECT ModuleObject,
+   IN BOOLEAN FileSystemDriver,
+   OUT PDRIVER_OBJECT *DriverObject);
+
+NTSTATUS FASTCALL
+IopAttachFilterDrivers(
+   PDEVICE_NODE DeviceNode,
+   BOOLEAN Lower);
+
+VOID FASTCALL
 IopMarkLastReinitializeDriver(VOID);
 
-VOID
+VOID FASTCALL
 IopReinitializeDrivers(VOID);
 
 /* pnpmgr.c */
@@ -431,7 +429,6 @@ IopInitializePnpServices(
 NTSTATUS
 IopInvalidateDeviceRelations(
    IN PDEVICE_NODE DeviceNode,
-   IN DEVICE_RELATION_TYPE Type,
-   IN BOOLEAN BootDriver);
+   IN DEVICE_RELATION_TYPE Type);
 
 #endif

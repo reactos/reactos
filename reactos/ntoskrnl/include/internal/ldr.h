@@ -35,11 +35,6 @@ LdrInitModuleManagement (
 	);
 
 NTSTATUS
-LdrInitializeBootStartDriver(IN PVOID ModuleLoadBase,
-			     IN PCHAR FileName,
-			     IN ULONG ModuleLength);
-
-NTSTATUS
 LdrpMapSystemDll (
 	HANDLE	ProcessHandle,
 	PVOID	* LdrStartupAddress

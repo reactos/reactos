@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.45 2003/12/31 14:20:26 hbirr Exp $
+/* $Id: iomgr.c,v 1.46 2004/03/27 19:41:32 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/pool.h>
+#include <internal/module.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -367,6 +368,8 @@ VOID INIT_FUNCTION
 IoInit2(VOID)
 {
   PDEVICE_NODE DeviceNode;
+  PDRIVER_OBJECT DriverObject;
+  MODULE_OBJECT ModuleObject;
   NTSTATUS Status;
 
   KeInitializeSpinLock (&IoStatisticsLock);
@@ -383,16 +386,27 @@ IoInit2(VOID)
       return;
     }
 
-  Status = IopInitializeDriver(RawFsDriverEntry,
+  ModuleObject.Base = NULL;
+  ModuleObject.Length = 0;
+  ModuleObject.EntryPoint = RawFsDriverEntry;
+
+  Status = IopInitializeDriverModule(
     DeviceNode,
+    &ModuleObject,
     TRUE,
-    NULL,
-    0,
-    FALSE);
+    &DriverObject);
   if (!NT_SUCCESS(Status))
     {
       IopFreeDeviceNode(DeviceNode);
       CPRINT("IopInitializeDriver() failed with status (%x)\n", Status);
+      return;
+    }
+
+  Status = IopInitializeDevice(DeviceNode, DriverObject);
+  if (!NT_SUCCESS(Status))
+    {
+      IopFreeDeviceNode(DeviceNode);
+      CPRINT("IopInitializeDevice() failed with status (%x)\n", Status);
       return;
     }
 
@@ -401,8 +415,7 @@ IoInit2(VOID)
    */
   IopInvalidateDeviceRelations(
     IopRootDeviceNode,
-    BusRelations,
-    TRUE);
+    BusRelations);
 }
 
 /*

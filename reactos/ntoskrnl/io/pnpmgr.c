@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.27 2004/03/21 18:58:53 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.28 2004/03/27 19:41:32 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1068,15 +1068,28 @@ IopActionInitChildServices(
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED))
    {
-      Status = IopInitializeDeviceNodeService(
-         DeviceNode,
-         &DeviceNode->ServiceName,
-         BootDrivers);
+      PMODULE_OBJECT ModuleObject;
+      PDRIVER_OBJECT DriverObject;
+
+      Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
       if (NT_SUCCESS(Status))
       {
-         IopAttachFilterDrivers(DeviceNode, FALSE);
-         IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-      } else
+         Status = IopInitializeDriverModule(DeviceNode, ModuleObject, FALSE, &DriverObject);
+         if (NT_SUCCESS(Status))
+         {
+            /* Attach lower level filter drivers. */
+            IopAttachFilterDrivers(DeviceNode, TRUE);
+            /* Initialize the function driver for the device node */
+            Status = IopInitializeDevice(DeviceNode, DriverObject);
+            if (NT_SUCCESS(Status))
+            {
+               IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+               /* Attach upper level filter drivers. */
+               IopAttachFilterDrivers(DeviceNode, FALSE);
+            }
+         }
+      }
+      else
       {
          /*
           * Don't disable when trying to load only boot drivers
@@ -1138,6 +1151,7 @@ IopActionInitBootServices(
  * Parameters
  *    DeviceNode
  *       Top device node to start initializing services.
+ *
  *    BootDrivers
  *       When set to TRUE, only drivers marked as boot start will
  *       be loaded. Otherwise, all drivers will be loaded.
@@ -1177,15 +1191,18 @@ IopInitializePnpServices(
 
 NTSTATUS
 IopInvalidateDeviceRelations(
-  IN PDEVICE_NODE DeviceNode,
-  IN DEVICE_RELATION_TYPE Type,
-  IN BOOLEAN BootDriver)
+   IN PDEVICE_NODE DeviceNode,
+   IN DEVICE_RELATION_TYPE Type)
 {
    DEVICETREE_TRAVERSE_CONTEXT Context;
    PDEVICE_RELATIONS DeviceRelations;
    IO_STATUS_BLOCK IoStatusBlock;
    PDEVICE_NODE ChildDeviceNode;
    IO_STACK_LOCATION Stack;
+   BOOL BootDrivers;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING LinkName;
+   HANDLE Handle;
    NTSTATUS Status;
    ULONG i;
 
@@ -1277,11 +1294,38 @@ IopInvalidateDeviceRelations(
    }
 
    /*
+    * Get the state of the system boot. If the \\SystemRoot link isn't
+    * created yet, we will assume that it's possible to load only boot
+    * drivers.
+    */
+
+   RtlInitUnicodeString(&LinkName, L"\\SystemRoot");
+
+   InitializeObjectAttributes(
+      &ObjectAttributes,
+      &LinkName,
+      0,
+      NULL,
+      NULL);
+
+   Status = NtOpenFile(
+      &Handle,
+      FILE_ALL_ACCESS,
+      &ObjectAttributes,
+      &IoStatusBlock,
+      0,
+      0);
+ 
+   BootDrivers = NT_SUCCESS(Status) ? FALSE : TRUE;
+
+   NtClose(Handle);
+
+   /*
     * Initialize services for discovered children. Only boot drivers will
     * be loaded from boot driver!
     */
 
-   Status = IopInitializePnpServices(DeviceNode, BootDriver);
+   Status = IopInitializePnpServices(DeviceNode, BootDrivers);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("IopInitializePnpServices() failed with status (%x)\n", Status);
@@ -1326,8 +1370,8 @@ PnpInit(VOID)
       CPRINT("Insufficient resources\n");
       KEBUGCHECK(PHASE1_INITIALIZATION_FAILED);
    }
+
    IopRootDeviceNode->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-   IopRootDeviceNode->DriverObject = IopRootDriverObject;
    PnpRootDriverEntry(IopRootDriverObject, NULL);
    IopRootDriverObject->DriverExtension->AddDevice(
       IopRootDriverObject,

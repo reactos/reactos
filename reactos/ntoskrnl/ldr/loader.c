@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.140 2004/03/07 11:59:10 navaraf Exp $
+/* $Id: loader.c,v 1.141 2004/03/27 19:41:32 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -446,107 +446,6 @@ LdrUnloadModule(PMODULE_OBJECT ModuleObject)
   ExFreePool(ModuleObject);
 
   return(STATUS_SUCCESS);
-}
-
-
-NTSTATUS INIT_FUNCTION
-LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
-			     PCHAR FileName,
-			     ULONG ModuleLength)
-{
-  PMODULE_OBJECT ModuleObject;
-  UNICODE_STRING ModuleName;
-  PDEVICE_NODE DeviceNode;
-  NTSTATUS Status;
-
-  WCHAR Buffer[MAX_PATH];
-  ULONG Length;
-  LPWSTR Start;
-  LPWSTR Ext;
-  PCHAR FileExt;
-  CHAR TextBuffer [256];
-  ULONG x, y, cx, cy;
-
-  HalQueryDisplayParameters(&x, &y, &cx, &cy);
-  RtlFillMemory(TextBuffer, x, ' ');
-  TextBuffer[x] = '\0';
-  HalSetDisplayParameters(0, y-1);
-  HalDisplayString(TextBuffer);
-
-  sprintf(TextBuffer, "Initializing %s...\n", FileName);
-  HalSetDisplayParameters(0, y-1);
-  HalDisplayString(TextBuffer);
-  HalSetDisplayParameters(cx, cy);
-
-  /*  Split the filename into base name and extension  */
-  FileExt = strrchr(FileName, '.');
-  if (FileExt != NULL)
-    Length = FileExt - FileName;
-  else
-    Length = strlen(FileName);
-
-  if ((FileExt != NULL) && (strcmp(FileExt, ".sym") == 0))
-    {
-      KDB_SYMBOLFILE_HOOK(ModuleLoadBase, FileName, Length);
-      return(STATUS_SUCCESS);
-    }
-  else if ((FileExt != NULL) && !(strcmp(FileExt, ".sys") == 0))
-    {
-      CPRINT("Ignoring non-driver file %s\n", FileName);
-      return STATUS_SUCCESS;
-    }
-
-  /* Use IopRootDeviceNode for now */
-  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
-  if (!NT_SUCCESS(Status))
-    {
-      CPRINT("Driver load failed, status (%x)\n", Status);
-      return(Status);
-    }
-
-  RtlCreateUnicodeStringFromAsciiz(&ModuleName,
-				   FileName);
-  Status = LdrProcessModule(ModuleLoadBase,
-			    &ModuleName,
-			    &ModuleObject);
-  RtlFreeUnicodeString(&ModuleName);
-  if (ModuleObject == NULL)
-    {
-      IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver load failed, status (%x)\n", Status);
-      return(STATUS_UNSUCCESSFUL);
-    }
-
-
-  /* Get the service name from the module name */
-  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
-  if (Start == NULL)
-    Start = ModuleObject->BaseName.Buffer;
-  else
-    Start++;
-
-  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
-  if (Ext != NULL)
-    Length = Ext - Start;
-  else
-    Length = wcslen(Start);
-
-  wcsncpy(Buffer, Start, Length);
-  Buffer[Length] = 0;
-  RtlCreateUnicodeString(&DeviceNode->ServiceName, Buffer);
-
-  Status = IopInitializeDriver(ModuleObject->EntryPoint,
-			       DeviceNode, FALSE,
-			       ModuleObject->Base,
-			       ModuleObject->Length,
-			       TRUE);
-  if (!NT_SUCCESS(Status))
-    {
-      IopFreeDeviceNode(DeviceNode);
-      CPRINT("Driver load failed, status (%x)\n", Status);
-    }
-
-  return(Status);
 }
 
 
