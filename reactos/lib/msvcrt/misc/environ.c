@@ -1,4 +1,4 @@
-/* $Id: environ.c,v 1.11 2004/08/31 14:40:50 hbirr Exp $
+/* $Id: environ.c,v 1.12 2004/12/13 18:30:08 hbirr Exp $
  *
  * dllmain.c
  *
@@ -56,7 +56,7 @@ int BlockEnvToEnvironA(void)
          count++;
    }
 
-   _environ = HeapAlloc(GetProcessHeap(), 0, count * sizeof(char*));
+   _environ = malloc(count * sizeof(char*));
    if (_environ)
    {
       for (ptr = environment_strings, envptr = _environ; count > 1; ptr += len)
@@ -70,7 +70,7 @@ int BlockEnvToEnvironA(void)
                for (envptr--; envptr >= _environ; envptr--);
                   free(*envptr);
                FreeEnvironmentStringsA(environment_strings);
-               HeapFree(GetProcessHeap(), 0, _environ);
+               free(_environ);
                return -1;
             }
             memcpy(*envptr++, ptr, len);
@@ -106,7 +106,7 @@ int BlockEnvToEnvironW(void)
          count++;
    }
 
-   _wenviron = HeapAlloc(GetProcessHeap(), 0, count * sizeof(wchar_t*));
+   _wenviron = malloc(count * sizeof(wchar_t*));
    if (_wenviron)
    {
       for (ptr = environment_strings, envptr = _wenviron; count > 1; ptr += len)
@@ -120,7 +120,7 @@ int BlockEnvToEnvironW(void)
                for (envptr--; envptr >= _wenviron; envptr--);
                   free(*envptr);
                FreeEnvironmentStringsW(environment_strings);
-               HeapFree(GetProcessHeap(), 0, _wenviron);
+               free(_wenviron);
                return -1;
             }
             memcpy(*envptr++, ptr, len * sizeof(wchar_t));
@@ -156,7 +156,7 @@ char **DuplicateEnvironment(char **original_environment, int wide)
    for (envptr = original_environment; *envptr != NULL; envptr++, count++)
       ;
 
-   newenvptr = newenv = HeapAlloc(GetProcessHeap(), 0, count * sizeof(char*));
+   newenvptr = newenv = malloc(count * sizeof(char*));
    if (newenv == NULL)
       return original_environment;
 
@@ -170,7 +170,7 @@ char **DuplicateEnvironment(char **original_environment, int wide)
       {
          for (newenvptr--; newenvptr >= newenv; newenvptr--);
             free(*newenvptr);
-         HeapFree(GetProcessHeap(), 0, newenv);
+         free(newenv);
          return original_environment;
       }      
    }   
@@ -191,7 +191,7 @@ void FreeEnvironment(char **environment)
    char **envptr;
    for (envptr = environment; *envptr != NULL; envptr++)
       free(*envptr);
-   HeapFree(GetProcessHeap(), 0, environment);
+   free(environment);
 }
 
 /**
@@ -260,8 +260,7 @@ int SetEnv(const wchar_t *option)
       free(*wenvptr);
       for (count = index; *wenvptr != NULL; wenvptr++, count++)
          *wenvptr = *(wenvptr + 1);
-      _wenviron = HeapReAlloc(GetProcessHeap(), 0, _wenviron,
-                              count * sizeof(wchar_t*));
+      _wenviron = realloc(_wenviron, count * sizeof(wchar_t*));
 
       /* Remove the option from multibyte environment. We assume
        * the environments are in sync and the option is at the
@@ -269,8 +268,7 @@ int SetEnv(const wchar_t *option)
       free(_environ[index]);
       for (; _environ[index] != NULL; index++)
          _environ[index] = _environ[index + 1];
-      _environ = HeapReAlloc(GetProcessHeap(), 0, _environ,
-                             count * sizeof(char*));
+      _environ = realloc(_environ, count * sizeof(char*));
 
       result = SetEnvironmentVariableW(name, NULL) ? 0 : -1;
    }
@@ -313,8 +311,7 @@ int SetEnv(const wchar_t *option)
             ;
 
          /* Create a new entry. */
-         if ((wnewenv = HeapReAlloc(GetProcessHeap(), 0, _wenviron,
-                                    (count + 2) * sizeof(wchar_t*))) == NULL)
+         if ((wnewenv = realloc(_wenviron, (count + 2) * sizeof(wchar_t*))) == NULL)
          {
             free(name);
             free(mboption);
@@ -322,8 +319,7 @@ int SetEnv(const wchar_t *option)
             return -1;
          }
          _wenviron = wnewenv;
-         if ((mbnewenv = HeapReAlloc(GetProcessHeap(), 0, _environ,
-                                     (count + 2) * sizeof(char*))) == NULL)
+         if ((mbnewenv = realloc(_environ, (count + 2) * sizeof(char*))) == NULL)
          {
             free(name);
             free(mboption);
