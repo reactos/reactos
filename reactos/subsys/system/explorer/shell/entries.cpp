@@ -48,8 +48,8 @@ Entry::Entry(ENTRY_TYPE etype)
 }
 
 Entry::Entry(Entry* parent)
- :	_etype(parent->_etype),
-	_up(parent)
+ :	_up(parent),
+	_etype(parent->_etype)
 {
 	_next = NULL;
 	_down = NULL;

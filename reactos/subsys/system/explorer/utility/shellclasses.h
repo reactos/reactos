@@ -72,7 +72,7 @@ struct COMException
 			LPTSTR pBuf;
 
 			if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER|FORMAT_MESSAGE_FROM_SYSTEM,
-				0, _hr, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (LPSTR)&pBuf, 0, NULL)) {
+				0, _hr, MAKELANGID(LANG_NEUTRAL,SUBLANG_DEFAULT), (LPTSTR)&pBuf, 0, NULL)) {
 				_msg = pBuf;
 				LocalFree(pBuf);
 			 } else {

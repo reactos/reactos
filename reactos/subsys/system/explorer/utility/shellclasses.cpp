@@ -32,7 +32,9 @@
 #include "shellclasses.h"
 
 
+#ifdef _MS_VER
 #pragma comment(lib, "shell32")	// link to shell32.dll
+#endif
 
 
  // helper functions for string copying

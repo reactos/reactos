@@ -61,7 +61,7 @@ typedef list<StartMenuDirectory> StartMenuShellDirs;
 
 struct StartMenuEntry
 {
-	StartMenuEntry() : _entry(NULL), _hIcon(0) {}
+	StartMenuEntry() : _hIcon(0), _entry(NULL) {}
 
 	String	_title;
 	HICON	_hIcon;
@@ -150,7 +150,7 @@ protected:
 	ShellEntryMap _entries;
 	StartMenuShellDirs _dirs;
 
-	UINT	_submenu_id;
+	int		_submenu_id;
 	WindowHandle _submenu;
 
 	int		_border_left;	// left border in pixels

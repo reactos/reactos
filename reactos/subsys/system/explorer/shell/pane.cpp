@@ -113,8 +113,8 @@ Pane::Pane(HWND hparent, int id, int id_header, Entry* root, bool treePane, int 
 			LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
 			0, 0, 0, 0, hparent, (HMENU)id, g_Globals._hInstance, 0)),
 	_root(root),
-	_treePane(treePane),
-	_visible_cols(visible_cols)
+	_visible_cols(visible_cols),
+	_treePane(treePane)
 {
 	 // insert entries into listbox
 	Entry* entry = _root;

@@ -32,6 +32,7 @@ class EnumFormatEtcImpl : public IEnumFORMATETC
    public:
      EnumFormatEtcImpl(const FormatArray& ArrFE);
 	 EnumFormatEtcImpl(const StorageArray& ArrFE);
+	 virtual ~EnumFormatEtcImpl() {}
 
      //IUnknown members
      STDMETHOD(QueryInterface)(REFIID, void**);
@@ -80,7 +81,7 @@ class IDataObjectImpl : public IDataObject//,public IAsyncOperation
 
 public:
 	IDataObjectImpl(IDropSourceImpl* pDropSource);
-	~IDataObjectImpl();
+	virtual ~IDataObjectImpl();
 
 	void CopyMedium(STGMEDIUM* pMedDest, STGMEDIUM* pMedSrc, FORMATETC* pFmtSrc);
 

@@ -71,12 +71,13 @@ struct Pane : public SubclassedWindow
 		
 	WindowHandle _hwndHeader;
 
-	bool	_treePane;
-	int 	_visible_cols;
 	Entry*	_root;
 	Entry*	_cur;
 
 	COLORREF _clrCompressed;
+
+	int 	_visible_cols;
+	bool	_treePane;
 
 	void	init();
 	void	set_header();

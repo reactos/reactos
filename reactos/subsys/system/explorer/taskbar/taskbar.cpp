@@ -165,7 +165,7 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 			if (idx>=0 &&
 				SendMessage(_htoolbar, TB_GETBUTTONINFO, idx, (LPARAM)&btninfo)!=-1 &&
 				(it=_map.find_id(btninfo.idCommand))!=_map.end()) {
-				TaskBarEntry& entry = it->second;
+				//TaskBarEntry& entry = it->second;
 
 				ActivateApp(it, false);
 				ShowAppSystemMenu(it);

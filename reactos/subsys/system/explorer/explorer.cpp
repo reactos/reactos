@@ -153,6 +153,24 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 }
 
 
+ // MinGW does not provide a Unicode startup routine, so we have to implement an own.
+#if defined(__MINGW32__) && defined(UNICODE)
+
+#define _tWinMain wWinMain
+int WINAPI wWinMain(HINSTANCE, HINSTANCE, LPWSTR, int);
+
+int main(int argc, char* argv[])
+{
+	STARTUPINFO startupinfo;
+
+	GetStartupInfo(&startupinfo);
+
+	return wWinMain(GetModuleHandle(NULL), 0, GetCommandLine(), startupinfo.wShowWindow);
+}
+
+#endif	// __MINGW && UNICODE
+
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
 	 // create desktop window and task bar only, if there is no other shell and we are

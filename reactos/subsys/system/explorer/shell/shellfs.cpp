@@ -119,7 +119,7 @@ void ShellEntry::get_path(PTSTR path) const
 {
 	path[0] = TEXT('\0');
 
-	HRESULT hr = path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
+	/*HRESULT hr = */path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH);
 }
 
 
@@ -243,7 +243,7 @@ void ShellDirectory::read_directory()
 			HRESULT hr = _folder->GetAttributesOf(1, (LPCITEMIDLIST*)&pidls[n], &attribs);
 
 			if (SUCCEEDED(hr)) {
-				if (attribs != ~SFGAO_FILESYSTEM)
+				if (attribs != (SFGAOF)~SFGAO_FILESYSTEM)
 					bhfi_valid = fill_w32fdata_shell(pidls[n], attribs, &w32fd, &bhfi);
 				else
 					attribs = 0;

@@ -18,9 +18,9 @@
 // IDataObjectImpl Class
 //////////////////////////////////////////////////////////////////////
 
-IDataObjectImpl::IDataObjectImpl(IDropSourceImpl* pDropSource):
-	m_cRefCount(0),
-	m_pDropSource(pDropSource)
+IDataObjectImpl::IDataObjectImpl(IDropSourceImpl* pDropSource)
+ :	m_pDropSource(pDropSource),
+	m_cRefCount(0)
 {
 }
 
@@ -415,10 +415,12 @@ STDMETHODIMP EnumFormatEtcImpl::Clone(IEnumFORMATETC** ppCloneEnumFormatEtc)
 //////////////////////////////////////////////////////////////////////
 // IDropTargetImpl Class
 //////////////////////////////////////////////////////////////////////
-IDropTargetImpl::IDropTargetImpl(HWND hTargetWnd): 
-	m_hTargetWnd(hTargetWnd),
-	m_cRefCount(0), m_bAllowDrop(false),
-	m_pDropTargetHelper(NULL), m_pSupportedFrmt(NULL)
+IDropTargetImpl::IDropTargetImpl(HWND hTargetWnd)
+ :	m_cRefCount(0),
+	m_bAllowDrop(false),
+	m_pDropTargetHelper(NULL),
+	m_pSupportedFrmt(NULL),
+	m_hTargetWnd(hTargetWnd)
 { 
 	assert(m_hTargetWnd != NULL);
 

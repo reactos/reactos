@@ -7,9 +7,8 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#ifndef _ROS_
-#include "afxres.h"
-#endif
+#include <windows.h>
+
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
 
@@ -50,8 +49,8 @@ BEGIN
     END
     POPUP "&Ajutor"
     BEGIN
-        MENUITEM "&Despre Explorer...",         ID_ABOUT
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&Despre Explorer...",         ID_ABOUT
     END
 END
 
@@ -109,8 +108,8 @@ BEGIN
     IDS_DRIVES              "Discuri"
     IDS_SEARCH_COMPUTER     "Search Computer..."
     IDS_SETTINGS_MENU       "Settings Menu"
-    IDS_PRINTERS            "Printers"
     IDS_CONTROL_PANEL       "Control Panel"
+    IDS_PRINTERS            "Printers"
 END
 
 #endif    // Romanian resources
@@ -311,9 +310,8 @@ END
 
 2 TEXTINCLUDE DISCARDABLE 
 BEGIN
-    "#ifndef _ROS_\r\n"
-    "#include ""afxres.h""\r\n"
-    "#endif\0"
+    "#include <windows.h>\r\n"
+    "\0"
 END
 
 3 TEXTINCLUDE DISCARDABLE 
@@ -370,8 +368,8 @@ BEGIN
     IDS_DRIVES              "Verzeichnisse"
     IDS_SEARCH_COMPUTER     "Suche Computer..."
     IDS_SETTINGS_MENU       "Einstellungen-Menu"
-    IDS_PRINTERS            "Drucker"
     IDS_CONTROL_PANEL       "Systemsteuerung"
+    IDS_PRINTERS            "Drucker"
 END
 
 #endif    // German (Germany) resources
@@ -415,8 +413,8 @@ BEGIN
     END
     POPUP "&Help"
     BEGIN
-        MENUITEM "&About Explorer...",          ID_ABOUT
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
+        MENUITEM "&About Explorer...",          ID_ABOUT
     END
 END
 
@@ -583,8 +581,8 @@ BEGIN
     IDS_DRIVES              "Drives"
     IDS_SEARCH_COMPUTER     "Search Computer..."
     IDS_SETTINGS_MENU       "Settings Menu"
-    IDS_PRINTERS            "Printers"
     IDS_CONTROL_PANEL       "Control Panel"
+    IDS_PRINTERS            "Printers"
 END
 
 #endif    // English (U.S.) resources

@@ -267,7 +267,7 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 	int x = 2;
 
 	for(; it!=_sorted_icons.end(); ++it) {
-		NotifyInfo& entry = const_cast<NotifyInfo&>(*it);	// Why does GCC 3.3 need this additional const_cast ?!
+		//NotifyInfo& entry = const_cast<NotifyInfo&>(*it);	// Why does GCC 3.3 need this additional const_cast ?!
 
 		if (pos.x>=x && pos.x<x+16)
 			break;

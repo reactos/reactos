@@ -35,3 +35,6 @@
 10.09.2003	m. fuchs	compatibility changes for correct desktop windows size on Windows NT
 19.09.2003	m. fuchs	compatibility changes for correct start menu subentries on Windows 9x
 27.09.2003	m. fuchs	moved start menu entries for control panel, etc. into new settings submenu
+						created a Makefile for compiling as standalone project using MinGW
+						eliminated all warnings displayed when using -Wall
+						activated option for compiling as UNICODE version

@@ -41,7 +41,7 @@ CFG=make_explorer - Win32 Debug
 # PROP Use_Debug_Libraries 0
 # PROP Output_Dir "Release"
 # PROP Intermediate_Dir "Release"
-# PROP Cmd_Line "msdevfilt -gcc make"
+# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW UNICODE=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""
@@ -62,7 +62,7 @@ CFG=make_explorer - Win32 Debug
 # PROP Use_Debug_Libraries 1
 # PROP Output_Dir "Debug"
 # PROP Intermediate_Dir "Debug"
-# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make DEBUG=1"
+# PROP Cmd_Line "msdevfilt -gcc -pipe "perl d:\tools\gSTLFilt.pl" make -f Makefile.MinGW UNICODE=1 DEBUG=1"
 # PROP Rebuild_Opt "clean all"
 # PROP Target_File "explorer.exe"
 # PROP Bsc_Name ""
@@ -88,6 +88,10 @@ SOURCE=..\..\..\ChangeLog
 # Begin Source File
 
 SOURCE=.\makefile
+# End Source File
+# Begin Source File
+
+SOURCE=.\Makefile.MinGW
 # End Source File
 # End Target
 # End Project
