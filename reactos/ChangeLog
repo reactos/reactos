@@ -1,14 +1,5 @@
 2004-10-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
-	* ntoskrnl/Makefile: Fix dependencies when PCH is enabled.
-
-2004-10-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
-
-	* tools/helper.mk: Support for kernel TARGET_TYPE.
-	* ntoskrnl/Makefile: Simplified makefile.
-
-2004-10-02  Casper S. Hornstrup  <chorns@users.sourceforge.net>
-
 	* lib/gdiplus/tests/.cvsignore: Ignore _hooks.c and _stubs.S.
 	* lib/gdiplus/tests/Makefile (TARGET_OBJECTS): Remove passthrough.o and
 	add _hooks.o and _stubs.o.
