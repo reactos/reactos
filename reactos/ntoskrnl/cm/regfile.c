@@ -7,7 +7,7 @@
 */
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #include "cm.h"
@@ -634,7 +634,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 
       /* Initialize bitmap */
       RtlInitializeBitMap(&BlockBitMap,
-			  (PVOID)((ULONG)LogHeader + REG_BLOCK_SIZE + sizeof(ULONG)),
+			  (PVOID)((ULONG_PTR)LogHeader + REG_BLOCK_SIZE + sizeof(ULONG)),
 			  BitmapSize * 8);
 
       /* FIXME: Update dirty blocks */
