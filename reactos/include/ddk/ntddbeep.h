@@ -31,6 +31,7 @@
 extern "C" {
 #endif
 
+#pragma pack(push,4)
 
 #define IOCTL_BEEP_SET \
   CTL_CODE(FILE_DEVICE_BEEP,0,METHOD_BUFFERED,FILE_ANY_ACCESS)
@@ -42,6 +43,8 @@ typedef struct tagBEEP_SET_PARAMETERS {
 
 #define BEEP_FREQUENCY_MINIMUM  0x25
 #define BEEP_FREQUENCY_MAXIMUM  0x7FFF
+
+#pragma pack(pop)
 
 #ifdef __cplusplus
 }
