@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.22 2003/07/20 15:16:51 ekohl Exp $
+; $Id: advapi32.edf,v 1.23 2003/07/20 22:11:41 ekohl Exp $
 ;
 ; advapi32.edf
 ;
@@ -11,8 +11,8 @@ EXPORTS
 AbortSystemShutdownA=AbortSystemShutdownA@4
 AbortSystemShutdownW=AbortSystemShutdownW@4
 AccessCheck=AccessCheck@32
-;AccessCheckAndAuditAlarmA=AccessCheckAndAuditAlarmA@44
-;AccessCheckAndAuditAlarmW=AccessCheckAndAuditAlarmW@44
+AccessCheckAndAuditAlarmA=AccessCheckAndAuditAlarmA@44
+AccessCheckAndAuditAlarmW=AccessCheckAndAuditAlarmW@44
 AddAccessAllowedAce=AddAccessAllowedAce@16
 AddAccessDeniedAce=AddAccessDeniedAce@16
 AddAce=AddAce@20
@@ -274,10 +274,10 @@ ObjectCloseAuditAlarmA=ObjectCloseAuditAlarmA@12
 ObjectCloseAuditAlarmW=ObjectCloseAuditAlarmW@12
 ObjectDeleteAuditAlarmA=ObjectDeleteAuditAlarmA@12
 ObjectDeleteAuditAlarmW=ObjectDeleteAuditAlarmW@12
-;ObjectOpenAuditAlarmA=ObjectOpenAuditAlarmA@48
-;ObjectOpenAuditAlarmW=ObjectOpenAuditAlarmW@48
-;ObjectPrivilegeAuditAlarmA=ObjectPrivilegeAuditAlarmA@24
-;ObjectPrivilegeAuditAlarmW=ObjectPrivilegeAuditAlarmW@24
+ObjectOpenAuditAlarmA=ObjectOpenAuditAlarmA@48
+ObjectOpenAuditAlarmW=ObjectOpenAuditAlarmW@48
+ObjectPrivilegeAuditAlarmA=ObjectPrivilegeAuditAlarmA@24
+ObjectPrivilegeAuditAlarmW=ObjectPrivilegeAuditAlarmW@24
 ;OpenBackupEventLogA=OpenBackupEventLogA@8
 ;OpenBackupEventLogW=OpenBackupEventLogW@8
 ;OpenEventLogA=OpenEventLogA@8
@@ -289,8 +289,8 @@ OpenServiceA=OpenServiceA@12
 OpenServiceW=OpenServiceW@12
 OpenThreadToken=OpenThreadToken@16
 PrivilegeCheck=PrivilegeCheck@12
-;PrivilegedServiceAuditAlarmA=PrivilegedServiceAuditAlarmA@20
-;PrivilegedServiceAuditAlarmW=PrivilegedServiceAuditAlarmW@20
+PrivilegedServiceAuditAlarmA=PrivilegedServiceAuditAlarmA@20
+PrivilegedServiceAuditAlarmW=PrivilegedServiceAuditAlarmW@20
 ;ProvAccessRightsToNTAccessMask=ProvAccessRightsToNTAccessMask@8
 QueryServiceConfigA=QueryServiceConfigA@16
 QueryServiceConfigW=QueryServiceConfigW@16

@@ -1,4 +1,4 @@
-/* $Id: audit.c,v 1.1 2003/07/20 00:03:40 ekohl Exp $
+/* $Id: audit.c,v 1.2 2003/07/20 22:11:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,135 @@
 
 
 /* FUNCTIONS ****************************************************************/
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+AccessCheckAndAuditAlarmA (LPCSTR SubsystemName,
+			   LPVOID HandleId,
+			   LPSTR ObjectTypeName,
+			   LPSTR ObjectName,
+			   PSECURITY_DESCRIPTOR SecurityDescriptor,
+			   DWORD DesiredAccess,
+			   PGENERIC_MAPPING GenericMapping,
+			   BOOL ObjectCreation,
+			   LPDWORD GrantedAccess,
+			   LPBOOL AccessStatus,
+			   LPBOOL pfGenerateOnClose)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ObjectTypeNameU;
+  UNICODE_STRING ObjectNameU;
+  NTSTATUS LocalAccessStatus;
+  BOOLEAN GenerateOnClose;
+  NTSTATUS Status;
+
+  RtlCreateUnicodeStringFromAsciiz (&SubsystemNameU,
+				    (PCHAR)SubsystemName);
+  RtlCreateUnicodeStringFromAsciiz (&ObjectTypeNameU,
+				    (PCHAR)ObjectTypeName);
+  RtlCreateUnicodeStringFromAsciiz (&ObjectNameU,
+				    (PCHAR)ObjectName);
+
+  Status = NtAccessCheckAndAuditAlarm (&SubsystemNameU,
+				       HandleId,
+				       &ObjectTypeNameU,
+				       &ObjectNameU,
+				       SecurityDescriptor,
+				       DesiredAccess,
+				       GenericMapping,
+				       ObjectCreation,
+				       GrantedAccess,
+				       &LocalAccessStatus,
+				       &GenerateOnClose);
+  RtlFreeUnicodeString (&SubsystemNameU);
+  RtlFreeUnicodeString (&ObjectTypeNameU);
+  RtlFreeUnicodeString (&ObjectNameU);
+
+  *pfGenerateOnClose = (BOOL)GenerateOnClose;
+
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  if (!NT_SUCCESS (LocalAccessStatus))
+    {
+      *AccessStatus = FALSE;
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  *AccessStatus = TRUE;
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+AccessCheckAndAuditAlarmW (LPCWSTR SubsystemName,
+			   LPVOID HandleId,
+			   LPWSTR ObjectTypeName,
+			   LPWSTR ObjectName,
+			   PSECURITY_DESCRIPTOR SecurityDescriptor,
+			   DWORD DesiredAccess,
+			   PGENERIC_MAPPING GenericMapping,
+			   BOOL ObjectCreation,
+			   LPDWORD GrantedAccess,
+			   LPBOOL AccessStatus,
+			   LPBOOL pfGenerateOnClose)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ObjectTypeNameU;
+  UNICODE_STRING ObjectNameU;
+  NTSTATUS LocalAccessStatus;
+  BOOLEAN GenerateOnClose;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString (&SubsystemNameU,
+			(PWSTR)SubsystemName);
+  RtlInitUnicodeString (&ObjectTypeNameU,
+			(PWSTR)ObjectTypeName);
+  RtlInitUnicodeString (&ObjectNameU,
+			(PWSTR)ObjectName);
+
+  Status = NtAccessCheckAndAuditAlarm (&SubsystemNameU,
+				       HandleId,
+				       &ObjectTypeNameU,
+				       &ObjectNameU,
+				       SecurityDescriptor,
+				       DesiredAccess,
+				       GenericMapping,
+				       ObjectCreation,
+				       GrantedAccess,
+				       &LocalAccessStatus,
+				       &GenerateOnClose);
+
+  *pfGenerateOnClose = (BOOL)GenerateOnClose;
+
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  if (!NT_SUCCESS (LocalAccessStatus))
+    {
+      *AccessStatus = FALSE;
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  *AccessStatus = TRUE;
+
+  return TRUE;
+}
+
 
 /*
  * @implemented
@@ -136,5 +265,246 @@ ObjectDeleteAuditAlarmW (LPCWSTR SubsystemName,
   return TRUE;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ObjectOpenAuditAlarmA (LPCSTR SubsystemName,
+		       LPVOID HandleId,
+		       LPSTR ObjectTypeName,
+		       LPSTR ObjectName,
+		       PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		       HANDLE ClientToken,
+		       DWORD DesiredAccess,
+		       DWORD GrantedAccess,
+		       PPRIVILEGE_SET Privileges,
+		       BOOL ObjectCreation,
+		       BOOL AccessGranted,
+		       LPBOOL GenerateOnClose)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ObjectTypeNameU;
+  UNICODE_STRING ObjectNameU;
+  NTSTATUS Status;
+
+  RtlCreateUnicodeStringFromAsciiz (&SubsystemNameU,
+				    (PCHAR)SubsystemName);
+  RtlCreateUnicodeStringFromAsciiz (&ObjectTypeNameU,
+				    (PCHAR)ObjectTypeName);
+  RtlCreateUnicodeStringFromAsciiz (&ObjectNameU,
+				    (PCHAR)ObjectName);
+
+  Status = NtOpenObjectAuditAlarm (&SubsystemNameU,
+				   HandleId,
+				   &ObjectTypeNameU,
+				   &ObjectNameU,
+				   pSecurityDescriptor,
+				   ClientToken,
+				   DesiredAccess,
+				   GrantedAccess,
+				   Privileges,
+				   ObjectCreation,
+				   AccessGranted,
+				   (PBOOLEAN)GenerateOnClose);
+  RtlFreeUnicodeString (&SubsystemNameU);
+  RtlFreeUnicodeString (&ObjectTypeNameU);
+  RtlFreeUnicodeString (&ObjectNameU);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ObjectOpenAuditAlarmW (LPCWSTR SubsystemName,
+		       LPVOID HandleId,
+		       LPWSTR ObjectTypeName,
+		       LPWSTR ObjectName,
+		       PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		       HANDLE ClientToken,
+		       DWORD DesiredAccess,
+		       DWORD GrantedAccess,
+		       PPRIVILEGE_SET Privileges,
+		       BOOL ObjectCreation,
+		       BOOL AccessGranted,
+		       LPBOOL GenerateOnClose)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ObjectTypeNameU;
+  UNICODE_STRING ObjectNameU;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString (&SubsystemNameU,
+			(PWSTR)SubsystemName);
+  RtlInitUnicodeString (&ObjectTypeNameU,
+			(PWSTR)ObjectTypeName);
+  RtlInitUnicodeString (&ObjectNameU,
+			(PWSTR)ObjectName);
+
+  Status = NtOpenObjectAuditAlarm (&SubsystemNameU,
+				   HandleId,
+				   &ObjectTypeNameU,
+				   &ObjectNameU,
+				   pSecurityDescriptor,
+				   ClientToken,
+				   DesiredAccess,
+				   GrantedAccess,
+				   Privileges,
+				   ObjectCreation,
+				   AccessGranted,
+				   (PBOOLEAN)GenerateOnClose);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ObjectPrivilegeAuditAlarmA (LPCSTR SubsystemName,
+			    LPVOID HandleId,
+			    HANDLE ClientToken,
+			    DWORD DesiredAccess,
+			    PPRIVILEGE_SET Privileges,
+			    BOOL AccessGranted)
+{
+  UNICODE_STRING SubsystemNameU;
+  NTSTATUS Status;
+
+  RtlCreateUnicodeStringFromAsciiz (&SubsystemNameU,
+				    (PCHAR)SubsystemName);
+
+  Status = NtPrivilegeObjectAuditAlarm (&SubsystemNameU,
+					HandleId,
+					ClientToken,
+					DesiredAccess,
+					Privileges,
+					AccessGranted);
+  RtlFreeUnicodeString (&SubsystemNameU);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+ObjectPrivilegeAuditAlarmW (LPCWSTR SubsystemName,
+			    LPVOID HandleId,
+			    HANDLE ClientToken,
+			    DWORD DesiredAccess,
+			    PPRIVILEGE_SET Privileges,
+			    BOOL AccessGranted)
+{
+  UNICODE_STRING SubsystemNameU;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString (&SubsystemNameU,
+			(PWSTR)SubsystemName);
+
+  Status = NtPrivilegeObjectAuditAlarm (&SubsystemNameU,
+					HandleId,
+					ClientToken,
+					DesiredAccess,
+					Privileges,
+					AccessGranted);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+PrivilegedServiceAuditAlarmA (LPCSTR SubsystemName,
+			      LPCSTR ServiceName,
+			      HANDLE ClientToken,
+			      PPRIVILEGE_SET Privileges,
+			      BOOL AccessGranted)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ServiceNameU;
+  NTSTATUS Status;
+
+  RtlCreateUnicodeStringFromAsciiz (&SubsystemNameU,
+				    (PCHAR)SubsystemName);
+  RtlCreateUnicodeStringFromAsciiz (&ServiceNameU,
+				    (PCHAR)ServiceName);
+
+  Status = NtPrivilegedServiceAuditAlarm (&SubsystemNameU,
+					  &ServiceNameU,
+					  ClientToken,
+					  Privileges,
+					  AccessGranted);
+  RtlFreeUnicodeString (&SubsystemNameU);
+  RtlFreeUnicodeString (&ServiceNameU);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+PrivilegedServiceAuditAlarmW (LPCWSTR SubsystemName,
+			      LPCWSTR ServiceName,
+			      HANDLE ClientToken,
+			      PPRIVILEGE_SET Privileges,
+			      BOOL AccessGranted)
+{
+  UNICODE_STRING SubsystemNameU;
+  UNICODE_STRING ServiceNameU;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString (&SubsystemNameU,
+			(PWSTR)SubsystemName);
+  RtlInitUnicodeString (&ServiceNameU,
+			(PWSTR)ServiceName);
+
+  Status = NtPrivilegedServiceAuditAlarm (&SubsystemNameU,
+					  &ServiceNameU,
+					  ClientToken,
+					  Privileges,
+					  AccessGranted);
+  if (!NT_SUCCESS (Status))
+    {
+      SetLastError (RtlNtStatusToDosError (Status));
+      return FALSE;
+    }
+
+  return TRUE;
+}
 
 /* EOF */
