@@ -591,7 +591,7 @@ SetRectEmpty@4
 SetScrollInfo@16
 SetScrollPos@16
 SetScrollRange@20
-;SetShellWindow
+SetShellWindow@4
 ;SetShellWindowEx
 SetSysColors@12
 ;SetSysColorsTemp

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.17 2003/08/05 15:41:03 weiden Exp $
+/* $Id: desktop.c,v 1.18 2003/08/09 08:42:35 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -304,6 +304,35 @@ SwitchDesktop(
   HDESK hDesktop)
 {
   return NtUserSwitchDesktop(hDesktop);
+}
+
+
+ /* globally stored handle to the shell window */
+HWND hwndShellWindow = 0;
+
+
+/*
+ * @implemented
+ */
+HWND STDCALL
+GetShellWindow(VOID)
+{
+	return hwndShellWindow;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetShellWindow(HWND hwnd)
+{
+	if (hwndShellWindow)
+		return FALSE;
+
+	hwndShellWindow = hwnd;
+
+	return TRUE;
 }
 
 /* EOF */

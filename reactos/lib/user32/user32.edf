@@ -324,7 +324,7 @@ GetScrollBarInfo=GetScrollBarInfo@12
 GetScrollInfo=GetScrollInfo@12
 GetScrollPos=GetScrollPos@8
 GetScrollRange=GetScrollRange@16
-;GetShellWindow
+GetShellWindow=GetShellWindow@0
 GetSubMenu=GetSubMenu@8
 GetSysColor=GetSysColor@4
 GetSysColorBrush=GetSysColorBrush@4
@@ -591,7 +591,7 @@ SetRectEmpty=SetRectEmpty@4
 SetScrollInfo=SetScrollInfo@16
 SetScrollPos=SetScrollPos@16
 SetScrollRange=SetScrollRange@20
-;SetShellWindow
+SetShellWindow=SetShellWindow@4
 ;SetShellWindowEx
 SetSysColors=SetSysColors@12
 ;SetSysColorsTemp
