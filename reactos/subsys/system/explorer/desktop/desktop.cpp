@@ -209,9 +209,11 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_SETFOCUS:
-		 // close startup menu and other popup menus like on the tray notification icons
+		 // close startup menu and other popup menus like that of tray notification icons
 		if (wparam)
-			SendMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
+			PostMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
+		else
+			PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
 		goto def;
 
 	  case WM_GETISHELLBROWSER:

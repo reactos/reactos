@@ -161,14 +161,20 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		goto def;
 
 	  case WM_SIZE: {
-		ClientRect clnt(_hwnd);
+		int cx = LOWORD(lparam);
 		int cy = HIWORD(lparam);
 
 		if (_hwndTaskBar)
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), cy, TRUE);
+			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, cx-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), cy, TRUE);
 
 		if (_hwndNotify)
-			MoveWindow(_hwndNotify, clnt.right-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
+			MoveWindow(_hwndNotify, cx-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
+
+		WindowRect rect(_hwnd);
+		int height = rect.bottom-rect.top;
+		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)-(height-1)};
+		SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);
+		PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
 		break;}
 
 	  case WM_CLOSE:
