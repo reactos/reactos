@@ -9,19 +9,20 @@ struct _diskfree_t {
 };
 
 
-int _chdrive( int drive );
-int _getdrive( void );
-char *_getcwd( char *buffer, int maxlen );
-
 int _chdir(const char *_path);
-char *_getcwd(char *, int);
+int _chdrive( int drive );
+char *_getcwd( char *buffer, int maxlen );
+int _getdrive( void );
+unsigned int   _getdiskfree(unsigned int _drive, struct _diskfree_t *_diskspace);
 int  _mkdir(const char *_path);
 int  _rmdir(const char *_path);
-unsigned int   _getdiskfree(unsigned int _drive, struct _diskfree_t *_diskspace);
-#define chdir _chdir
-#define getcwd _getcwd
-#define mkdir _mkdir
-#define rmdir _rmdir
+
+
+#define chdir 		_chdir
+#define chdrive 	_chdrive
+#define getcwd 		_getcwd
+#define mkdir 		_mkdir
+#define rmdir 		_rmdir
 
 
 #endif

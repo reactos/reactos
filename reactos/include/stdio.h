@@ -10,6 +10,7 @@ extern "C" {
 #ifndef __dj_ENFORCE_ANSI_FREESTANDING
 
 #include <sys/djtypes.h>
+
   
 #define _IOFBF    	00001
 #define _IONBF    	00002
@@ -44,7 +45,6 @@ extern "C" {
 
 #include <internal/types.h>
 
-typedef void *va_list;
 
 #ifndef _FILE_DEFINED
 typedef struct {

@@ -59,43 +59,59 @@ enum COLORS {
 
 #define BLINK   0x80    /*  blink bit   */
 
-void    blinkvideo(void);
-char *  cgets(char *_str); 
-void    clreol(void);
-void    clrscr(void);
-int     _conio_kbhit(void); /* checks for ungetch char */
-//int     cprintf(const char *_format, ...) __attribute__((format(printf,1,2)));
-int     cputs(const char *_str);
-//int     cscanf(const char *_format, ...) __attribute__((format(scanf,1,2)));
-void    delline(void);
-int     getch(void);
-int     getche(void);
-int     gettext(int _left, int _top, int _right, int _bottom, void *_destin);
-void    gettextinfo(struct text_info *_r);
-void    gotoxy(int _x, int _y);
-void    gppconio_init(void);
-void    highvideo(void);
-void    insline(void);
-void	intensevideo(void);
-void    lowvideo(void);
-int     movetext(int _left, int _top, int _right, int _bottom, int _destleft, int _desttop);
-void    normvideo(void);
-int     putch(int _c);
-int     puttext(int _left, int _top, int _right, int _bottom, void *_source);
-void    _setcursortype(int _type);
-void    _set_screen_lines(int _nlines);
-void    textattr(int _attr);
-void    textbackground(int _color);
-void    textcolor(int _color);
-void    textmode(int _mode);
-int     ungetch(int); 
-unsigned int     wherex(void);
-unsigned int    wherey(void);
-void    window(int _left, int _top, int _right, int _bottom);
+//void    blinkvideo(void);
+char *  _cgets(char *_str); 
+//void    clreol(void);
+//void    clrscr(void);
+int     _kbhit(void); /* checks for ungetch char */
+int     _cprintf(const char *_format, ...) __attribute__((format(printf,1,2)));
+int     _cputs(const char *_str);
+int     _cscanf(const char *_format, ...) __attribute__((format(scanf,1,2)));
+//void    delline(void);
+int     _getch(void);
+int     _getche(void);
+//int     gettext(int _left, int _top, int _right, int _bottom, void *_destin);
+//void    gettextinfo(struct text_info *_r);
+//void    gotoxy(int _x, int _y);
+//void    gppconio_init(void);
+//void    highvideo(void);
+//void    insline(void);
+//void	intensevideo(void);
+//void    lowvideo(void);
+//int     movetext(int _left, int _top, int _right, int _bottom, int _destleft, int _desttop);
+//void    normvideo(void);
+int     _putch(int _c);
+//int     puttext(int _left, int _top, int _right, int _bottom, void *_source);
+//void    _setcursortype(int _type);
+//void    _set_screen_lines(int _nlines);
+//void    textattr(int _attr);
+//void    textbackground(int _color);
+//void    textcolor(int _color);
+//void    textmode(int _mode);
+int     _ungetch(int); 
+//unsigned int     wherex(void);
+//unsigned int    wherey(void);
+//void    window(int _left, int _top, int _right, int _bottom);
 
-#define kbhit _conio_kbhit /* Who ever includes gppconio.h probably
-                              also wants _conio_kbhit and not kbhit
-                              from libc */
+
+int _inp(unsigned short p);
+unsigned short _inpw(unsigned short p);
+unsigned long _inpd(unsigned short p);
+int _outp(unsigned short p, int i);
+unsigned short _outpw(unsigned short p, unsigned short w);
+unsigned long _outpd(unsigned short p, unsigned long d);
+
+#define cgets		_cgets
+#define cprintf 	_cprintf
+#define cputs		_cputs
+#define cscanf		_cscanf
+#define getch		_getch
+#define getche		_getche
+#define kbhit		_kbhit
+#define putch		_putch
+#define ungetch 	_ungetch
+
+
 
 #endif /* !_POSIX_SOURCE */
 #endif /* !__STRICT_ANSI__ */
