@@ -16,11 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.11 2003/08/19 11:48:50 weiden Exp $ */
+/* $Id: print.c,v 1.12 2004/02/08 16:16:24 navaraf Exp $ */
+
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <win32k/print.h>
+#include <win32k/dc.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -57,16 +59,34 @@ NtGdiEscape(HDC  hDC,
   UNIMPLEMENTED;
 }
 
-INT
-STDCALL
-NtGdiExtEscape(HDC  hDC,
-                   INT  Escape,
-                   INT  InSize,
-                   LPCSTR  InData,
-                   INT  OutSize,
-                   LPSTR  OutData)
+INT STDCALL
+NtGdiExtEscape(
+   HDC hDC,
+   INT Escape,
+   INT InSize,
+   LPCSTR InData,
+   INT OutSize,
+   LPSTR OutData)
 {
-  UNIMPLEMENTED;
+   PDC pDC = DC_LockDc(hDC);
+   INT Result;
+
+   if (pDC == NULL)
+   {
+      return -1;
+   }
+
+   Result = pDC->DriverFunctions.Escape(
+      pDC->Surface,
+      Escape,
+      InSize,
+      (PVOID)InData,
+      OutSize,
+      (PVOID)OutData);
+
+   DC_UnlockDc(hDC);
+
+   return Result;
 }
 
 INT

@@ -907,3 +907,20 @@ RectVisible(
 {
 	return NtGdiRectVisible(a0,(RECT *)a1);
 }
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+ExtEscape(
+	HDC		a0,
+	int		a1,
+	int		a2,
+	LPCSTR		a3,
+	int		a4,
+	LPSTR		a5
+	)
+{
+	return NtGdiExtEscape(a0, a1, a2, a3, a4, a5);
+}

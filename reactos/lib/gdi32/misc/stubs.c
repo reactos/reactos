@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.46 2004/01/24 08:23:12 ekohl Exp $
+/* $Id: stubs.c,v 1.47 2004/02/08 16:16:24 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -155,25 +155,6 @@ Escape(
 	int		a2,
 	LPCSTR		a3,
 	LPVOID		a4
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ExtEscape(
-	HDC		a0,
-	int		a1,
-	int		a2,
-	LPCSTR		a3,
-	int		a4,
-	LPSTR		a5
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
