@@ -44,13 +44,15 @@ extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
+//
 extern HINSTANCE hInst;
-extern HWND hMainWnd;
+extern HWND hFrameWnd;
 extern HWND hStatusBar;
+extern HMENU hMenuFrame;
 
 extern TCHAR szTitle[];
 extern TCHAR szFrameClass[];
-//extern TCHAR szWindowClass[];
+extern TCHAR szChildClass[];
 
 #ifndef _MSC_VER
 typedef struct tagNMITEMACTIVATE{

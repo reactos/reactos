@@ -45,8 +45,6 @@
 // Global Variables:
 //
 
-extern HINSTANCE hInst;
-extern HWND hMainWnd;
 static WNDPROC g_orgListWndProc;
 
 
@@ -57,8 +55,8 @@ static WNDPROC g_orgListWndProc;
 
 
 #define MAX_LIST_COLUMNS (IDS_LIST_COLUMN_LAST - IDS_LIST_COLUMN_FIRST + 1)
-static int default_column_widths[MAX_LIST_COLUMNS] = { 175, 100, 100 };
-static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_RIGHT, LVCFMT_RIGHT };
+static int default_column_widths[MAX_LIST_COLUMNS] = { 200, 175, 400 };
+static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCFMT_LEFT };
 
 static void CreateListColumns(HWND hWndListView)
 {

@@ -32,12 +32,10 @@ extern "C" {
 #endif // _MSC_VER > 1000
 
 
-
-extern HWND hTreeWnd;                   // Tree Control Window
-extern HWND hListWnd;                   // List Control Window
-extern HWND hSplitWnd;                  // Splitter Bar Control Window
-
 LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
+
+void SetupStatusBar(BOOL bResize);
+void UpdateStatusBar(void);
 
 
 #ifdef __cplusplus

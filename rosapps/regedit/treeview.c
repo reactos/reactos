@@ -41,10 +41,6 @@
 #include "treeview.h"
 
 
-// Global Variables:
-extern HINSTANCE hInst;
-extern HWND hMainWnd;
-
 // Global variables and constants 
 // Image_Open, Image_Closed, and Image_Root - integer variables for 
 // indexes of the images. 
@@ -152,12 +148,12 @@ static BOOL InitTreeViewItems(HWND hwndTV)
 { 
     HTREEITEM hItem;
     
-    hItem = AddItemToTree(hwndTV, "My Computer", 1); 
-    AddItemToTree(hwndTV, "HKEY_CLASSES_ROOT", 2); 
-    AddItemToTree(hwndTV, "HKEY_CURRENT_USER", 2); 
-    AddItemToTree(hwndTV, "HKEY_LOCAL_MACHINE", 2); 
-    AddItemToTree(hwndTV, "HKEY_USERS", 2); 
-    AddItemToTree(hwndTV, "HKEY_CURRENT_CONFIG", 2); 
+    hItem = AddItemToTree(hwndTV, _T("My Computer"), 1); 
+    AddItemToTree(hwndTV, _T("HKEY_CLASSES_ROOT"), 2); 
+    AddItemToTree(hwndTV, _T("HKEY_CURRENT_USER"), 2); 
+    AddItemToTree(hwndTV, _T("HKEY_LOCAL_MACHINE"), 2); 
+    AddItemToTree(hwndTV, _T("HKEY_USERS"), 2); 
+    AddItemToTree(hwndTV, _T("HKEY_CURRENT_CONFIG"), 2); 
 
     TreeView_Expand(hwndTV, hItem, TVE_EXPAND);
     return TRUE; 

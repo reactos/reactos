@@ -31,6 +31,7 @@ RCFLAGS = -DGCC -D_WIN32_IE=0x0400
 
 OBJS =	about.o \
         framewnd.o \
+        childwnd.o \
         listview.o \
         treeview.o \
         main.o
