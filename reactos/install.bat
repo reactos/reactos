@@ -65,7 +65,6 @@ copy drivers\storage\cdrom\cdrom.sys %ROS_INSTALL%\system32\drivers
 copy drivers\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
 copy drivers\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
 copy subsys\system\autochk\autochk.exe %ROS_INSTALL%\system32
-copy subsys\system\gstart\gstart.exe %ROS_INSTALL%\system32
 copy subsys\system\cmd\cmd.exe %ROS_INSTALL%\system32
 copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy subsys\system\services\services.exe %ROS_INSTALL%\system32
@@ -143,6 +142,8 @@ copy media\fonts\helb____.ttf %ROS_INSTALL%\media\fonts
 copy media\fonts\timr____.ttf %ROS_INSTALL%\media\fonts
 rem copy media\nls\*.nls %ROS_INSTALL%\system32
 copy ntoskrnl\ntoskrnl.map %ROS_INSTALL%\symbols
+
+tools\mkhive\mkhive bootdata %ROS_INSTALL%\system32\config
 
 if "%ROS_BUILD_EXT%" == "" goto Finish
 
