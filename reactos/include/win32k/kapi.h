@@ -11,6 +11,7 @@
 #include <win32k/icm.h>
 #include <win32k/line.h>
 #include <win32k/metafile.h>
+#include <win32k/misc.h>
 #include <win32k/paint.h>
 #include <win32k/path.h>
 #include <win32k/pen.h>

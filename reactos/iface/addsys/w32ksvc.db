@@ -173,6 +173,7 @@ W32kGetWinMetaFileBits			5
 W32kGetWindowExtEx			2
 W32kGetWindowOrgEx			2
 W32kGetWorldTransform			2
+W32kInitialize				0
 W32kIntersectClipRect			5
 W32kInvertRgn				2
 W32kLPtoDP				3

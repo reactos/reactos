@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.12 2000/02/21 22:44:37 ekohl Exp $
+/* $Id: dllmain.c,v 1.13 2000/02/22 20:53:11 ekohl Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -50,6 +50,16 @@ DllMain (
 
 	DbgPrint("System services added successfully!\n");
 	return STATUS_SUCCESS;
+}
+
+
+BOOLEAN
+STDCALL
+W32kInitialize (VOID)
+{
+	DbgPrint("W32kInitialize called\n");
+
+	return TRUE;
 }
 
 /* EOF */
