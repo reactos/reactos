@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.54 2004/05/25 20:04:13 navaraf Exp $
+/* $Id: file.c,v 1.55 2004/05/28 13:17:32 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -221,7 +221,7 @@ SetFilePointer(HANDLE hFile,
 	       DWORD dwMoveMethod)
 {
    FILE_POSITION_INFORMATION FilePosition;
-   FILE_STANDARD_INFORMATION FileStandart;
+   FILE_STANDARD_INFORMATION FileStandard;
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
    LARGE_INTEGER Distance;
@@ -229,7 +229,11 @@ SetFilePointer(HANDLE hFile,
    DPRINT("SetFilePointer(hFile %x, lDistanceToMove %d, dwMoveMethod %d)\n",
 	  hFile,lDistanceToMove,dwMoveMethod);
 
-   /* FIXME - should fail if hFile is a console handle */
+   if(IsConsoleHandle(hFile))
+   {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return -1;
+   }
 
    Distance.u.LowPart = lDistanceToMove;
    if (lpDistanceToMoveHigh)
@@ -258,15 +262,18 @@ SetFilePointer(HANDLE hFile,
      case FILE_END:
 	NtQueryInformationFile(hFile,
                                &IoStatusBlock,
-                               &FileStandart,
+                               &FileStandard,
                                sizeof(FILE_STANDARD_INFORMATION),
                                FileStandardInformation);
         FilePosition.CurrentByteOffset.QuadPart =
-                  FileStandart.EndOfFile.QuadPart + Distance.QuadPart;
+                  FileStandard.EndOfFile.QuadPart + Distance.QuadPart;
 	break;
      case FILE_BEGIN:
         FilePosition.CurrentByteOffset.QuadPart = Distance.QuadPart;
 	break;
+     default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+	return -1;
    }
    
    if(FilePosition.CurrentByteOffset.QuadPart < 0)
@@ -305,11 +312,15 @@ SetFilePointerEx(HANDLE hFile,
 		 DWORD dwMoveMethod)
 {
    FILE_POSITION_INFORMATION FilePosition;
-   FILE_STANDARD_INFORMATION FileStandart;
+   FILE_STANDARD_INFORMATION FileStandard;
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
 
-   /* FIXME - should fail if hFile is a console handle */
+   if(IsConsoleHandle(hFile))
+   {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return FALSE;
+   }
 
    switch(dwMoveMethod)
    {
@@ -324,15 +335,18 @@ SetFilePointerEx(HANDLE hFile,
      case FILE_END:
 	NtQueryInformationFile(hFile,
                                &IoStatusBlock,
-                               &FileStandart,
+                               &FileStandard,
                                sizeof(FILE_STANDARD_INFORMATION),
                                FileStandardInformation);
         FilePosition.CurrentByteOffset.QuadPart =
-                  FileStandart.EndOfFile.QuadPart + liDistanceToMove.QuadPart;
+                  FileStandard.EndOfFile.QuadPart + liDistanceToMove.QuadPart;
 	break;
      case FILE_BEGIN:
         FilePosition.CurrentByteOffset.QuadPart = liDistanceToMove.QuadPart;
 	break;
+     default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+	return FALSE;
    }
    
    if(FilePosition.CurrentByteOffset.QuadPart < 0)
@@ -593,6 +607,12 @@ GetFileInformationByHandle(HANDLE hFile,
    FILE_STANDARD_INFORMATION FileStandard;
    NTSTATUS errCode;
    IO_STATUS_BLOCK IoStatusBlock;
+
+   if(IsConsoleHandle(hFile))
+   {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return FALSE;
+   }
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
@@ -1043,6 +1063,12 @@ GetFileTime(HANDLE hFile,
    FILE_BASIC_INFORMATION FileBasic;
    NTSTATUS Status;
 
+   if(IsConsoleHandle(hFile))
+   {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return FALSE;
+   }
+
    Status = NtQueryInformationFile(hFile,
 				   &IoStatusBlock,
 				   &FileBasic,
@@ -1077,6 +1103,12 @@ SetFileTime(HANDLE hFile,
    FILE_BASIC_INFORMATION FileBasic;
    IO_STATUS_BLOCK IoStatusBlock;
    NTSTATUS Status;
+
+   if(IsConsoleHandle(hFile))
+   {
+     SetLastError(ERROR_INVALID_HANDLE);
+     return FALSE;
+   }
 
    Status = NtQueryInformationFile(hFile,
 				   &IoStatusBlock,
@@ -1126,6 +1158,12 @@ SetEndOfFile(HANDLE hFile)
 	FILE_ALLOCATION_INFORMATION		FileAllocationInfo;
 	FILE_POSITION_INFORMATION		 FilePosInfo;
 	NTSTATUS Status;
+
+	if(IsConsoleHandle(hFile))
+	{
+		SetLastError(ERROR_INVALID_HANDLE);
+		return FALSE;
+	}
 
 	//get current position
 	Status = NtQueryInformationFile(
@@ -1233,6 +1271,12 @@ SetFileShortNameW(
   IO_STATUS_BLOCK IoStatusBlock;
   PFILE_NAME_INFORMATION FileNameInformation;
   
+  if(IsConsoleHandle(hFile))
+  {
+    SetLastError(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
+  
   if(!lpShortName)
   {
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -1282,6 +1326,12 @@ SetFileShortNameA(
   BOOL Ret;
   ANSI_STRING ShortNameA;
   UNICODE_STRING ShortName;
+  
+  if(IsConsoleHandle(hFile))
+  {
+    SetLastError(ERROR_INVALID_HANDLE);
+    return FALSE;
+  }
   
   if(!lpShortName)
   {

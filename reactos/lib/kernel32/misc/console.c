@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.74 2004/03/14 17:53:26 weiden Exp $
+/* $Id: console.c,v 1.75 2004/05/28 13:17:32 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1030,16 +1030,9 @@ SetStdHandle(DWORD nStdHandle,
 {
   PRTL_USER_PROCESS_PARAMETERS Ppb;
 
+  /* no need to check if hHandle == INVALID_HANDLE_VALUE */
+
   Ppb = NtCurrentPeb()->ProcessParameters;
-
-  /* More checking needed? */
-  if (hHandle == INVALID_HANDLE_VALUE)
-    {
-      SetLastError (ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-
-  SetLastError(ERROR_SUCCESS); /* OK */
 
   switch (nStdHandle)
     {
@@ -1056,7 +1049,8 @@ SetStdHandle(DWORD nStdHandle,
 	return TRUE;
     }
 
-  SetLastError (ERROR_INVALID_PARAMETER);
+  /* windows for whatever reason sets the last error to ERROR_INVALID_HANDLE here */
+  SetLastError (ERROR_INVALID_HANDLE);
   return FALSE;
 }
 
