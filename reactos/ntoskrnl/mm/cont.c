@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.25 2002/11/05 20:35:33 hbirr Exp $
+/* $Id: cont.c,v 1.26 2003/05/17 15:28:58 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -50,6 +50,7 @@ MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
 			       NumberOfBytes,
 			       0,
 			       &MArea,
+			       FALSE,
 			       FALSE);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 

@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *  Copyright (C) 1998, 1999, 2000, 2001, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -188,12 +188,12 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
 	     current_entry->Flink = inserted_entry;
 	     inserted_entry->Flink=ListHead;
 	     inserted_entry->Blink=current_entry;
-	     ListHead->Blink = inserted_entry;	    	     
+	     ListHead->Blink = inserted_entry;
 	     return;
 	  }
 	if (current->BaseAddress < marea->BaseAddress &&
 	    next->BaseAddress > marea->BaseAddress)
-	  {	     
+	  {
 	     inserted_entry->Flink = current_entry->Flink;
 	     inserted_entry->Blink = current_entry;
 	     inserted_entry->Flink->Blink = inserted_entry;
@@ -205,7 +205,8 @@ static VOID MmInsertMemoryArea(PMADDRESS_SPACE AddressSpace,
    InsertTailList(ListHead,inserted_entry);
 }
 
-PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
+
+PVOID MmFindGapBottomUp(PMADDRESS_SPACE AddressSpace, ULONG Length)
 {
    PLIST_ENTRY ListHead;
    PLIST_ENTRY current_entry;
@@ -214,7 +215,7 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
    ULONG Gap;
    PVOID Address;
    
-   DPRINT("MmFindGap(Length %x)\n",Length);
+   DPRINT("MmFindGapBottomUp(Length %x)\n",Length);
    
    ListHead = &AddressSpace->MAreaListHead;
      
@@ -258,6 +259,94 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
    return Address;
 }
 
+
+PVOID MmFindGapTopDown(PMADDRESS_SPACE AddressSpace, ULONG Length)
+{
+  PLIST_ENTRY ListHead;
+  PLIST_ENTRY current_entry;
+  MEMORY_AREA* current;
+  ULONG Gap;
+  PVOID Address;
+  PVOID TopAddress;
+  PVOID BottomAddress;
+  PVOID HighestAddress;
+
+  DPRINT("MmFindGapTopDown(Length %lx)\n",Length);
+
+  if (AddressSpace->LowestAddress < KERNEL_BASE)
+    {
+      HighestAddress = (PVOID)0x7FFE0000;  /* Start below the PEB */
+    }
+  else
+    {
+      HighestAddress = (PVOID)0xFFFFFFFF;
+    }
+
+  TopAddress = HighestAddress;
+
+  ListHead = &AddressSpace->MAreaListHead;
+  current_entry = ListHead->Blink;
+  while (current_entry->Blink != ListHead)
+    {
+      current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
+      BottomAddress = current->BaseAddress + PAGE_ROUND_UP(current->Length);
+      DPRINT("Base %p  Length %lx\n", current->BaseAddress, PAGE_ROUND_UP(current->Length));
+
+      if (BottomAddress < HighestAddress)
+	{
+	  Gap = TopAddress - BottomAddress;
+	  DPRINT("Bottom %p  Top %p  Gap %lx\n", BottomAddress, TopAddress, Gap);
+	  if (Gap >= Length)
+	    {
+	      DPRINT1("Found gap at %p\n", TopAddress - Length);
+	      return(TopAddress - Length);
+	    }
+	  TopAddress = current->BaseAddress;
+	}
+      current_entry = current_entry->Blink;
+    }
+
+  if (current_entry == ListHead)
+    {
+      Address = (PVOID)HighestAddress - Length;
+    }
+  else
+    {
+      Address = TopAddress - Length;
+    }
+
+  /* Check if enough space for the block */
+  if (AddressSpace->LowestAddress < KERNEL_BASE)
+    {
+      if ((ULONG)Address >= KERNEL_BASE || Length > KERNEL_BASE - (ULONG)Address)
+	{
+	  DPRINT("Failed to find gap\n");
+	  return NULL;
+	}
+    }
+   else
+    {
+      if (Length >= 0xFFFFFFFF - (ULONG)Address)
+	{
+	  DPRINT("Failed to find gap\n");
+	  return NULL;
+	}
+    }
+
+  DPRINT("Found gap at %p\n", Address);
+  return Address;
+}
+
+
+PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, BOOL TopDown)
+{
+  if (TopDown)
+    return MmFindGapTopDown(AddressSpace, Length);
+
+  return MmFindGapBottomUp(AddressSpace, Length);
+}
+
+
 NTSTATUS MmInitMemoryAreas(VOID)
 /*
  * FUNCTION: Initialize the memory area list
@@ -286,7 +375,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    MemoryArea = MmOpenMemoryAreaByAddress(AddressSpace,
 					  BaseAddress);
    if (MemoryArea == NULL)
-     {       
+     {
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
      }
@@ -381,7 +470,8 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 			    ULONG Length,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result,
-			    BOOL FixedAddress)
+			    BOOL FixedAddress,
+			    BOOL TopDown)
 /*
  * FUNCTION: Create a memory area
  * ARGUMENTS:
@@ -400,12 +490,13 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	   "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
 	   Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
 
-   if ((*BaseAddress)==0 && !FixedAddress)
+   if ((*BaseAddress) == 0 && !FixedAddress)
      {
-        tmpLength = PAGE_ROUND_UP(Length);
+	tmpLength = PAGE_ROUND_UP(Length);
 	*BaseAddress = MmFindGap(AddressSpace,
-				 PAGE_ROUND_UP(Length) +(PAGE_SIZE*2));
-	if ((*BaseAddress)==0)
+				 PAGE_ROUND_UP(Length) +(PAGE_SIZE*2),
+				 TopDown);
+	if ((*BaseAddress) == 0)
 	  {
 	     DPRINT("No suitable gap\n");
 	     return(STATUS_NO_MEMORY);
@@ -413,9 +504,9 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	(*BaseAddress)=(*BaseAddress)+PAGE_SIZE;
      }
    else
-     { 
+     {
 	tmpLength = (ULONG)*BaseAddress + Length - PAGE_ROUND_DOWN((*BaseAddress));
-        (*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
+	(*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
 	if (MmOpenMemoryAreaByRegion(AddressSpace,
 				     *BaseAddress,
 				     tmpLength)!=NULL)

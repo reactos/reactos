@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.99 2003/05/16 17:37:17 ekohl Exp $
+/* $Id: process.c,v 1.100 2003/05/17 15:29:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -586,9 +586,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     * Now we have created the process proper
     */
    
-   /*
-    * Create the shared data page
-    */
+   /* Create the shared data page */
    MmLockAddressSpace(&Process->AddressSpace);
    BaseAddress = (PVOID)USER_SHARED_DATA;
    Status = MmCreateMemoryArea(Process,
@@ -598,6 +596,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       PAGE_SIZE,
 			       PAGE_READONLY,
 			       &MemoryArea,
+			       FALSE,
 			       FALSE);
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
@@ -605,7 +604,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	DPRINT1("Failed to create shared data page\n");
 	KeBugCheck(0);
      }
-   
+
    /*
     * Map ntdll
     */

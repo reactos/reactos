@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.5 2002/10/01 19:27:25 chorns Exp $
+/* $Id: w32call.c,v 1.6 2003/05/17 15:29:50 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -162,8 +162,9 @@ PsAllocateCallbackStack(ULONG StackSize)
 			      StackSize,
 			      0,
 			      &StackArea,
+			      FALSE,
 			      FALSE);
-  MmUnlockAddressSpace(MmGetKernelAddressSpace());  
+  MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))
     {
       DPRINT("Failed to create thread stack\n");

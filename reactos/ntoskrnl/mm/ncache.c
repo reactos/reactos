@@ -1,4 +1,4 @@
-/* $Id: ncache.c,v 1.23 2002/11/05 20:35:33 hbirr Exp $
+/* $Id: ncache.c,v 1.24 2003/05/17 15:28:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,6 +62,7 @@ MmAllocateNonCachedMemory(IN ULONG NumberOfBytes)
 				NumberOfBytes,
 				0,
 				&marea,
+				FALSE,
 				FALSE);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 

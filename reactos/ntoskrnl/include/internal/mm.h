@@ -126,7 +126,7 @@ typedef struct
   union
   {
     struct
-    {	     
+    {
       SECTION_OBJECT* Section;
       ULONG ViewOffset;
       LIST_ENTRY ViewListEntry;
@@ -169,7 +169,8 @@ NTSTATUS MmCreateMemoryArea(struct _EPROCESS* Process,
 			    ULONG Length,
 			    ULONG Attributes,
 			    MEMORY_AREA** Result,
-			    BOOL FixedAddress);
+			    BOOL FixedAddress,
+			    BOOL TopDown);
 MEMORY_AREA* MmOpenMemoryAreaByAddress(PMADDRESS_SPACE AddressSpace, 
 				       PVOID Address);
 NTSTATUS MmInitMemoryAreas(VOID);
@@ -289,7 +290,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 MEMORY_AREA* MmOpenMemoryAreaByRegion(PMADDRESS_SPACE AddressSpace, 
 				      PVOID Address,
 				      ULONG Length);
-PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length);
+PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length, BOOL TopDown);
 VOID ExUnmapPage(PVOID Addr);
 PVOID ExAllocatePage(VOID);
 

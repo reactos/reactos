@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.58 2003/02/18 22:06:53 chorns Exp $
+/* $Id: view.c,v 1.59 2003/05/17 15:27:34 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -543,6 +543,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 			      Bcb->CacheSegmentSize,
 			      PAGE_READWRITE,
 			      (PMEMORY_AREA*)&current->MemoryArea,
+			      FALSE,
 			      FALSE);
   MmUnlockAddressSpace(MmGetKernelAddressSpace());
   if (!NT_SUCCESS(Status))

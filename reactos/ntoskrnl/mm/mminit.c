@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.44 2003/05/17 13:45:04 hbirr Exp $
+/* $Id: mminit.c,v 1.45 2003/05/17 15:28:58 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -106,6 +106,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      Length,
 		      0,
 		      &kernel_text_desc,
+		      FALSE,
 		      FALSE);
 
    Length = PAGE_ROUND_UP(((ULONG)&_bss_end__)) - 
@@ -120,24 +121,26 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
     * the only thread running.
     */
    MmCreateMemoryArea(NULL,
-		      MmGetKernelAddressSpace(),		      
+		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
 		      &BaseAddress,
 		      Length,
 		      0,
 		      &kernel_data_desc,
+		      FALSE,
 		      FALSE);
    
    BaseAddress = (PVOID)PAGE_ROUND_UP(((ULONG)&_bss_end__));
 //   Length = ParamLength;
    Length = LastKernelAddress - (ULONG)BaseAddress;
    MmCreateMemoryArea(NULL,
-		      MmGetKernelAddressSpace(),		      
+		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
 		      &BaseAddress,
 		      Length,
 		      0,
 		      &kernel_param_desc,
+		      FALSE,
 		      FALSE);
 
    BaseAddress = (PVOID)(LastKernelAddress + PAGE_SIZE);
@@ -149,6 +152,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      Length,
 		      0,
 		      &kernel_pool_desc,
+		      FALSE,
 		      FALSE);
 
    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
@@ -163,6 +167,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      Length,
 		      0,
 		      &MiPagedPoolDescriptor,
+		      FALSE,
 		      FALSE);
    MmInitializePagedPool();
 
@@ -178,6 +183,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      Length,
 		      0,
 		      &kernel_shared_data_desc,
+		      FALSE,
 		      FALSE);
    Status = MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, 
 					&MmSharedDataPagePhysicalAddress);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.112 2003/05/17 13:43:44 hbirr Exp $
+/* $Id: section.c,v 1.113 2003/05/17 15:28:58 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2790,7 +2790,8 @@ MmMapViewOfSegment(PEPROCESS Process,
 		   PVOID* BaseAddress,
 		   ULONG ViewSize,
 		   ULONG Protect,
-		   ULONG ViewOffset)
+		   ULONG ViewOffset,
+		   BOOL TopDown)
 {
   PMEMORY_AREA MArea;
   NTSTATUS Status;
@@ -2803,7 +2804,8 @@ MmMapViewOfSegment(PEPROCESS Process,
 			      ViewSize,
 			      Protect,
 			      &MArea,
-			      FALSE);
+			      FALSE,
+			      TopDown);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
@@ -3280,6 +3282,7 @@ MmAllocateSection (IN ULONG Length)
 				Length,
 				0,
 				&marea,
+				FALSE,
 				FALSE);
    if (!NT_SUCCESS(Status))
      {
@@ -3305,7 +3308,7 @@ MmAllocateSection (IN ULONG Length)
 					TRUE);
        if (!NT_SUCCESS(Status))
 	 {
-	   DbgPrint("Unable to create virtual mapping\n");	  
+	   DbgPrint("Unable to create virtual mapping\n");
 	   KeBugCheck(0);
 	 }
      }
@@ -3420,7 +3423,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	       return(STATUS_UNSUCCESSFUL);
 	     }
 	   /* Otherwise find a gap to map the image. */
-	   ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize));
+	   ImageBase = MmFindGap(AddressSpace, PAGE_ROUND_UP(ImageSize), FALSE);
 	   if (ImageBase == NULL)
 	     {
 	       MmUnlockSection(Section);
@@ -3446,7 +3449,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
 					   &SBaseAddress,
 					   Section->Segments[i].Length,
 					   Section->Segments[i].Protection,
-					   Section->Segments[i].FileOffset);
+					   Section->Segments[i].FileOffset,
+					   FALSE);
 	       MmUnlockSectionSegment(&Section->Segments[i]);
 	       if (!NT_SUCCESS(Status))
 		 {
@@ -3521,7 +3525,8 @@ MmMapViewOfSection(IN PVOID SectionObject,
 				   BaseAddress,
 				   *ViewSize,
 				   Protect,
-				   ViewOffset);
+				   ViewOffset,
+				   (AllocationType & MEM_TOP_DOWN));
        MmUnlockSectionSegment(Section->Segments);
        MmUnlockAddressSpace(AddressSpace);
        if (!NT_SUCCESS(Status))
@@ -3618,7 +3623,8 @@ MmMapViewInSystemSpace (IN	PVOID	SectionObject,
 			      MappedBase,
 			      *ViewSize,
 			      PAGE_READWRITE,
-			      0);
+			      0,
+			      FALSE);
 
   MmUnlockSectionSegment(Section->Segments);
   MmUnlockAddressSpace(AddressSpace);

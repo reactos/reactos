@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: iospace.c,v 1.17 2002/11/05 20:35:33 hbirr Exp $
+/* $Id: iospace.c,v 1.18 2003/05/17 15:28:58 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/iospace.c
@@ -84,6 +84,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
 				NumberOfBytes,
 				0,
 				&marea,
+				FALSE,
 				FALSE);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 

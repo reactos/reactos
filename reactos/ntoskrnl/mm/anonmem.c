@@ -16,14 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.12 2003/04/28 10:37:39 gvg Exp $
+/* $Id: anonmem.c,v 1.13 2003/05/17 15:28:58 ekohl Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
  * PURPOSE:     Implementing anonymous memory.
  * PROGRAMMER:  David Welch
  */
- 
+
 /* INCLUDE *****************************************************************/
 
 #include <ddk/ntddk.h>
@@ -624,8 +624,8 @@ NtAllocateVirtualMemory(IN	HANDLE	ProcessHandle,
 			       RegionSize,
 			       Protect,
 			       &MemoryArea,
-			       PBaseAddress != 0);
-   
+			       PBaseAddress != 0,
+			       (AllocationType & MEM_TOP_DOWN));
    if (!NT_SUCCESS(Status))
      {
 	MmUnlockAddressSpace(AddressSpace);

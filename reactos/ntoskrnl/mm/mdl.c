@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.47 2002/11/10 18:17:42 chorns Exp $
+/* $Id: mdl.c,v 1.48 2003/05/17 15:28:58 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -51,6 +51,7 @@ MmInitializeMdlImplementation(VOID)
 			      MI_MDL_MAPPING_REGION_SIZE,
 			      0,
 			      &Result,
+			      FALSE,
 			      FALSE);
   if (!NT_SUCCESS(Status))
     {
