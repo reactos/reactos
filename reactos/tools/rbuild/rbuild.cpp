@@ -1,6 +1,7 @@
 // rbuild.cpp
 
 #include "pch.h"
+#include <typeinfo>
 
 #include <stdio.h>
 #include <io.h>
@@ -17,14 +18,15 @@ main ( int argc, char** argv )
 	try
 	{
 		string projectFilename ( "ReactOS.xml" );
-		Project* project = new Project( projectFilename );
+		Project project ( projectFilename );
+		project.GenerateOutput();
 
-		Path path;
 		// REM TODO FIXME actually do something with Project object...
-		printf ( "Found %d modules:\n", project->modules.size() );
-		for ( size_t i = 0; i < project->modules.size(); i++ )
+#if 0
+		printf ( "Found %d modules:\n", project.modules.size() );
+		for ( size_t i = 0; i < project.modules.size(); i++ )
 		{
-			Module& m = *project->modules[i];
+			Module& m = *project.modules[i];
 			printf ( "\t%s in folder: %s\n",
 			         m.name.c_str(),
 			         m.path.c_str() );
@@ -49,15 +51,14 @@ main ( int argc, char** argv )
 				printf ( "\t\t%s\n", m.files[j]->name.c_str() );
 			}
 		}
-	
-		delete project;
+#endif
 
 		return 0;
 	}
 	catch (Exception& ex)
 	{
-		printf ( "%s\n",
-		         ex.Message.c_str() );
+		printf ( "%s: %s\n",
+		         typeid(ex).name(), ex.Message.c_str() );
 		return 1;
 	}
 }
