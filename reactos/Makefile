@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.192 2003/12/07 16:46:31 mf Exp $
+# $Id: Makefile,v 1.193 2003/12/15 20:03:13 weiden Exp $
 #
 # Global makefile
 #
@@ -35,7 +35,7 @@ LIB_FSLIB = vfatlib
 LIB_STATIC = string rosrtl epsapi zlib
 
 # Keyboard layout libraries
-DLLS_KBD = kbdus kbdgr kbdfr
+DLLS_KBD = kbdus kbdgr kbdfr kbduk
 
 # User mode libraries
 # advapi32 cards crtdll fmifs gdi32 imagehlp kernel32 libpcap packet msafd msvcrt ntdll

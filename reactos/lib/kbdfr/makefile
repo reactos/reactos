@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 2003/11/07 18:55:50 arty Exp $
+# $Id: makefile,v 1.3 2003/12/15 20:03:13 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,8 @@ TARGET_TYPE = dynlink
 TARGET_NAME = kbdfr
 
 TARGET_BASE = 0x5500000
+
+TARGET_ENTRY = 0x00000000
 
 TARGET_CFLAGS = -I$(PATH_TO_TOP)/ntoskrnl/include
 
