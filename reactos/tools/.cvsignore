@@ -7,3 +7,4 @@ rrmdir
 mkconfig
 rdel
 rsym
+rtouch
