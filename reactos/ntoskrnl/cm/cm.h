@@ -140,8 +140,8 @@ typedef struct _KEY_CELL
   /* Key cell identifier "kn" (0x6b6e) */
   USHORT  Id;
 
-  /* ? */
-  USHORT  Type;
+  /* Flags */
+  USHORT  Flags;
 
   /* Time of last flush */
   FILETIME  LastWriteTime;
@@ -189,14 +189,19 @@ typedef struct _KEY_CELL
   UCHAR  Name[0];
 } __attribute__((packed)) KEY_CELL, *PKEY_CELL;
 
-/* KEY_CELL.Type constants */
-#define  REG_LINK_KEY_CELL_TYPE        0x10
-#define  REG_KEY_CELL_TYPE             0x20
-#define  REG_ROOT_KEY_CELL_TYPE        0x2c
+/* KEY_CELL.Flags constants */
+#define  REG_KEY_ROOT_CELL                 0x0C
+#define  REG_KEY_LINK_CELL                 0x10
+#define  REG_KEY_NAME_PACKED               0x20
 
 
-// hash record :
-// HashValue=four letters of value's name
+/*
+ * Hash record
+ *
+ * HashValue :
+ *	packed name: four letters of value's name
+ *	otherwise: Zero!
+ */
 typedef struct _HASH_RECORD
 {
   BLOCK_OFFSET  KeyOffset;
@@ -210,6 +215,7 @@ typedef struct _HASH_TABLE_CELL
   USHORT  HashTableSize;
   HASH_RECORD  Table[0];
 } __attribute__((packed)) HASH_TABLE_CELL, *PHASH_TABLE_CELL;
+
 
 typedef struct _VALUE_LIST_CELL
 {

@@ -1321,7 +1321,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
   if ((_wcsicmp(ValueName->Buffer, L"SymbolicLinkValue") == 0) &&
       (Type == REG_LINK))
     {
-      KeyCell->Type = REG_LINK_KEY_CELL_TYPE;
+      KeyCell->Flags |= REG_KEY_LINK_CELL;
       CmiMarkBlockDirty(RegistryHive, KeyObject->BlockOffset);
     }
 

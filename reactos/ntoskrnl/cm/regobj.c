@@ -91,7 +91,7 @@ CmiObjectParse(PVOID ParsedObject,
 	  return(STATUS_UNSUCCESSFUL);
 	}
 
-      if ((SubKeyCell->Type == REG_LINK_KEY_CELL_TYPE) &&
+      if ((SubKeyCell->Flags & REG_KEY_LINK_CELL) &&
 	  !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL) /*(end == NULL)*/))
 	{
 	  RtlInitUnicodeString(&LinkPath, NULL);
@@ -156,7 +156,7 @@ CmiObjectParse(PVOID ParsedObject,
     }
   else
     {
-      if ((FoundObject->KeyCell->Type == REG_LINK_KEY_CELL_TYPE) &&
+      if ((FoundObject->KeyCell->Flags & REG_KEY_LINK_CELL) &&
 	  !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)/*(end == NULL)*/))
 	{
 	  DPRINT("Found link\n");

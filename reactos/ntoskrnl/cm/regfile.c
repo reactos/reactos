@@ -80,7 +80,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
   RtlZeroMemory(RootKeyCell, sizeof(KEY_CELL));
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
   RootKeyCell->Id = REG_KEY_CELL_ID;
-  RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
+  RootKeyCell->Flags = REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED;
   NtQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
   RootKeyCell->ParentKeyOffset = 0;
   RootKeyCell->NumberOfSubKeys = 0;
@@ -147,13 +147,7 @@ CmiVerifyKeyCell(PKEY_CELL KeyCell)
       assert(KeyCell->Id == REG_KEY_CELL_ID);
     }
 
-  if ((KeyCell->Type != REG_KEY_CELL_TYPE)
-    && (KeyCell->Type != REG_ROOT_KEY_CELL_TYPE))
-    {
-      DbgPrint("Type is %.08x (should be %.08x or %.08x)\n",
-        KeyCell->Type, REG_KEY_CELL_TYPE, REG_ROOT_KEY_CELL_TYPE);
-      assert(FALSE);
-    }
+  //KeyCell->Flags;
 
   //KeyCell->LastWriteTime;
 
@@ -207,11 +201,11 @@ CmiVerifyRootKeyCell(PKEY_CELL RootKeyCell)
 
   CmiVerifyKeyCell(RootKeyCell);
 
-  if (RootKeyCell->Type != REG_ROOT_KEY_CELL_TYPE)
+  if (!(RootKeyCell->Flags & REG_KEY_ROOT_CELL))
     {
       DbgPrint("Type is %.08x (should be %.08x)\n",
-        RootKeyCell->Type, REG_ROOT_KEY_CELL_TYPE);
-      assert(RootKeyCell->Type == REG_ROOT_KEY_CELL_TYPE);
+        RootKeyCell->Flags, REG_KEY_ROOT_CELL | REG_KEY_NAME_PACKED);
+      assert(!(RootKeyCell->Type & REG_KEY_ROOT_CELL));
     }
 
     }
@@ -2136,7 +2130,7 @@ CmiAddSubKey(PREGISTRY_HIVE RegistryHive,
   else
     {
       NewKeyCell->Id = REG_KEY_CELL_ID;
-      NewKeyCell->Type = REG_KEY_CELL_TYPE;
+      NewKeyCell->Flags = REG_KEY_NAME_PACKED;
       ZwQuerySystemTime((PTIME) &NewKeyCell->LastWriteTime);
       NewKeyCell->ParentKeyOffset = -1;
       NewKeyCell->NumberOfSubKeys = 0;
