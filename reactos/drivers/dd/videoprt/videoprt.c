@@ -1,4 +1,4 @@
-/* $Id: videoprt.c,v 1.13 2003/11/30 19:15:21 gvg Exp $
+/* $Id: videoprt.c,v 1.14 2003/12/03 16:57:22 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -694,7 +694,7 @@ VideoPortInitialize(IN PVOID  Context1,
   return  STATUS_SUCCESS;
 }
 
-
+int dummy;
 /*
  * @implemented
  */
@@ -705,17 +705,22 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   KV86M_REGISTERS Regs;
   NTSTATUS Status;
   PEPROCESS CallingProcess;
-  PEPROCESS OldProcess;
-  PETHREAD CurrentThread;
+  PEPROCESS PrevAttachedProcess;
 
   DPRINT("VideoPortInt10\n");
 
   CallingProcess = PsGetCurrentProcess();
   if (CallingProcess != Csrss)
     {
-      CurrentThread = PsGetCurrentThread();
-      OldProcess = CurrentThread->OldProcess;
-      CurrentThread->OldProcess = NULL;
+      if (NULL != PsGetCurrentThread()->OldProcess)
+        {
+          PrevAttachedProcess = CallingProcess;
+          KeDetachProcess();
+        }
+      else
+        {
+          PrevAttachedProcess = NULL;
+        }
       KeAttachProcess(Csrss);
     }
 
@@ -732,7 +737,10 @@ VideoPortInt10(IN PVOID  HwDeviceExtension,
   if (CallingProcess != Csrss)
     {
       KeDetachProcess();
-      CurrentThread->OldProcess = OldProcess;
+      if (NULL != PrevAttachedProcess)
+        {
+          KeAttachProcess(PrevAttachedProcess);
+        }
     }
 
   return(Status);
