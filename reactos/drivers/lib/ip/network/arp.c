@@ -46,7 +46,7 @@ PNDIS_PACKET PrepareARPPacket(
 
     /* Prepare ARP packet */
     Size = MaxLLHeaderSize +
-	sizeof(ARP_HEADER) + 
+        sizeof(ARP_HEADER) + 
         2 * LinkAddressLength + /* Hardware address length */
         2 * ProtoAddressLength; /* Protocol address length */
     Size = MAX(Size, MinLLFrameSize);
@@ -55,6 +55,7 @@ PNDIS_PACKET PrepareARPPacket(
     if( !NT_SUCCESS(NdisStatus) ) return NULL;
 
     GetDataPtr( NdisPacket, 0, (PCHAR *)&DataBuffer, (PUINT)&Contig );
+    ASSERT(DataBuffer);
 
     RtlZeroMemory(DataBuffer, Size);
     Header = (PARP_HEADER)((ULONG_PTR)DataBuffer + MaxLLHeaderSize);
@@ -155,6 +156,8 @@ BOOLEAN ARPTransmit(
         &Address->Address,               /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
 
+    ASSERT_KM_POINTER(NdisPacket);
+    ASSERT_KM_POINTER(PC(NdisPacket));
     PC(NdisPacket)->DLComplete = ARPTransmitComplete;
 
     TI_DbgPrint(DEBUG_ARP,("Sending ARP Packet\n"));

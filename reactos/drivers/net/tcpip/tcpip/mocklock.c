@@ -21,7 +21,7 @@ VOID TcpipAcquireSpinLock( PKSPIN_LOCK SpinLock, PKIRQL Irql ) {
 }
 
 VOID TcpipAcquireSpinLockAtDpcLevel( PKSPIN_LOCK SpinLock ) {
-    ASSERT(KernelIrql == DPC_LEVEL);
+    ASSERT(KernelIrql == DISPATCH_LEVEL);
 }
 
 VOID TcpipReleaseSpinLock( PKSPIN_LOCK SpinLock, KIRQL Irql ) {
@@ -30,7 +30,7 @@ VOID TcpipReleaseSpinLock( PKSPIN_LOCK SpinLock, KIRQL Irql ) {
 }
 
 VOID TcpipReleaseSpinLockFromDpcLevel( PKSPIN_LOCK SpinLock ) {
-    ASSERT(KernelIrql == DPC_LEVEL);
+    ASSERT(KernelIrql == DISPATCH_LEVEL);
 }
 
 VOID TcpipInterlockedInsertTailList( PLIST_ENTRY ListHead,

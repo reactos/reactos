@@ -43,6 +43,7 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
 }
 
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection ) {
+    TI_DbgPrint(MAX_TRACE,("FIXME: Cancel all pending requests\n"));
     /* XXX Cancel all pending requests */
     ExFreePool( Connection );
 }
@@ -61,6 +62,12 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 						Family,
 						Type,
 						Proto ) );
+
+    ASSERT_KM_POINTER(Connection->SocketContext);
+
+    TI_DbgPrint(MID_TRACE,("Connection->SocketContext %x\n",
+			   Connection->SocketContext));
+
     TcpipRecursiveMutexLeave( &TCPLock );
 
     return Status;
@@ -319,12 +326,22 @@ NTSTATUS TCPListen
   PVOID Context) {
    NTSTATUS Status;
 
+   TI_DbgPrint(MID_TRACE,("TCPListen started\n"));
+
+   TI_DbgPrint(MID_TRACE,("Connection->SocketContext %x\n",
+     Connection->SocketContext));
+
+   ASSERT(Connection);
+   ASSERT_KM_POINTER(Connection->SocketContext);
+
    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
    
    Status =  TCPTranslateError( OskitTCPListen( Connection->SocketContext,
 						Backlog ) );
    
    TcpipRecursiveMutexLeave( &TCPLock );
+
+   TI_DbgPrint(MID_TRACE,("TCPListen finished %x\n", Status));
    
    return Status;
 }
@@ -332,7 +349,12 @@ NTSTATUS TCPListen
 NTSTATUS TCPAccept
 ( PTDI_REQUEST Request,
   VOID **NewSocketContext ) {
-    return STATUS_UNSUCCESSFUL;
+   NTSTATUS Status;
+
+   TI_DbgPrint(MID_TRACE,("TCPAccept started\n"));
+   Status = STATUS_UNSUCCESSFUL;
+   TI_DbgPrint(MID_TRACE,("TCPAccept finished %x\n", Status));
+   return Status;
 }
 
 NTSTATUS TCPReceiveData
@@ -349,6 +371,8 @@ NTSTATUS TCPReceiveData
     PTDI_BUCKET Bucket;
 
     TI_DbgPrint(MID_TRACE,("Called for %d bytes\n", ReceiveLength));
+
+    ASSERT_KM_POINTER(Connection->SocketContext);
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
@@ -402,6 +426,8 @@ NTSTATUS TCPSendData
   PULONG DataUsed,
   ULONG Flags) {
     NTSTATUS Status;
+
+    ASSERT_KM_POINTER(Connection->SocketContext);
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 

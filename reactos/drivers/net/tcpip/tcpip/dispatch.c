@@ -496,7 +496,6 @@ NTSTATUS DispTdiListen(
   PTDI_REQUEST_KERNEL Parameters;
   PTRANSPORT_CONTEXT TranContext;
   PIO_STACK_LOCATION IrpSp;
-  PTDI_REQUEST Request;
   NTSTATUS Status;
 
   TI_DbgPrint(DEBUG_IRP, ("Called.\n"));
@@ -521,7 +520,7 @@ NTSTATUS DispTdiListen(
 
   Parameters = (PTDI_REQUEST_KERNEL)&IrpSp->Parameters;
 
-  Status = TCPListen( Request->Handle.ConnectionContext, 1024 /* BACKLOG */,
+  Status = TCPListen( Connection, 1024 /* BACKLOG */,
 		      DispDataRequestComplete,
 		      Irp );
 

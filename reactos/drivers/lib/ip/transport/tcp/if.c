@@ -17,13 +17,6 @@
 
 #include "precomp.h"
 
-#if 0
-#include <sys/param.h>
-#include <sys/kernel.h>
-#include <oskit/c/assert.h>
-#include <net/if.h>
-#endif
-
 int if_index = 0;
 struct ifaddr **ifnet_addrs;
 

@@ -34,6 +34,9 @@ VOID LoopTransmit(
   
   IPReceive(Context, &IPPacket);
   TI_DbgPrint(MAX_TRACE, ("Finished receive\n"));
+  ASSERT_KM_POINTER(Packet);
+  ASSERT_KM_POINTER(PC(Packet));
+  ASSERT_KM_POINTER(PC(Packet)->DLComplete);
   PC(NdisPacket)->DLComplete(Context, NdisPacket, NDIS_STATUS_SUCCESS);
   TI_DbgPrint(MAX_TRACE, ("Done\n"));
 }

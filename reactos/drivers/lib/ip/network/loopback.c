@@ -30,6 +30,10 @@ VOID LoopTransmit(
 {
   IP_PACKET IPPacket;
 
+  ASSERT_KM_POINTER(NdisPacket);
+  ASSERT_KM_POINTER(PC(NdisPacket));
+  ASSERT_KM_POINTER(PC(NdisPacket)->DLComplete);
+
   TI_DbgPrint(MAX_TRACE, ("Called (NdisPacket = %x)\n", NdisPacket));
 
   IPPacket.NdisPacket = NdisPacket;

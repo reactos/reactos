@@ -181,6 +181,9 @@ VOID STDCALL ProtocolSendComplete(
  */
 {
     TI_DbgPrint(DEBUG_DATALINK, ("Calling completion routine\n"));
+    ASSERT_KM_POINTER(Packet);
+    ASSERT_KM_POINTER(PC(Packet));
+    ASSERT_KM_POINTER(PC(Packet)->DLComplete);
     (*PC(Packet)->DLComplete)( PC(Packet)->Context, Packet, Status);
     TI_DbgPrint(DEBUG_DATALINK, ("Finished\n"));
 }

@@ -1,3 +1,20 @@
+2004-11-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/lib/ip/network/arp.c: Assert certain conditions.
+	* drivers/lib/ip/network/loopback.c: Ditto.
+	* drivers/lib/ip/network/neighbor.c: Ditto.
+	* drivers/lib/ip/transport/tcp/tcp.c: Ditto.
+	* drivers/net/tcpip/datalink/lan.c: Ditto.
+	* drivers/net/tcpip/datalink/loopback.c: Ditto.
+	* drivers/net/tcpip/include/debug.h (ASSERT_KM_POINTER): Define.
+	* drivers/lib/ip/transport/tcp/if.c: Remove disabled code.
+	* drivers/net/afd/afd/main.c (AfdDispatch): Print known unimplemented
+	IOCTLs.
+	* drivers/net/tcpip/include/precomp.h: Include roscfg.h.
+	* drivers/net/tcpip/tcpip/dispatch.c (DispTdiListen): Pass the right
+	connection object to TCPListen.
+	* drivers/net/tcpip/tcpip/mocklock.c: Fix some assertions.
+
 2004-11-13  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apps/utils/net/roshttpd/include/list.h (CList<Item>::Get): Declare i

@@ -17,6 +17,8 @@ VOID NBCompleteSend( PVOID Context,
 		     NDIS_STATUS Status ) {
     PNEIGHBOR_PACKET Packet = (PNEIGHBOR_PACKET)Context;
     TI_DbgPrint(MID_TRACE, ("Called\n"));
+    ASSERT_KM_POINTER(Packet);
+    ASSERT_KM_POINTER(Packet->Complete);
     Packet->Complete( Packet->Context, Packet->Packet, STATUS_SUCCESS );
     TI_DbgPrint(MID_TRACE, ("Completed\n")); 
     PoolFreeBuffer( Packet );
@@ -59,16 +61,21 @@ VOID NBFlushPacketQueue( PNEIGHBOR_CACHE_ENTRY NCE,
 	PacketEntry = RemoveHeadList( &NCE->PacketQueue );
 	Packet = CONTAINING_RECORD
 	    ( PacketEntry, NEIGHBOR_PACKET, Next );
+
+  ASSERT_KM_POINTER(Packet);
 	
 	TI_DbgPrint
 	    (MID_TRACE,
 	     ("PacketEntry: %x, NdisPacket %x\n", 
 	      PacketEntry, Packet->Packet));
 
-	if( CallComplete ) 
+	if( CallComplete )
+    {
+      ASSERT_KM_POINTER(Packet->Complete);
 	    Packet->Complete( Packet->Context,
 			      Packet->Packet,
 			      NDIS_STATUS_REQUEST_ABORTED );
+    }
 	
 	PoolFreeBuffer( Packet );
     }
