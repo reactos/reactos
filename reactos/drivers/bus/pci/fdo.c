@@ -1,4 +1,4 @@
-/* $Id: fdo.c,v 1.6 2004/03/12 19:40:05 navaraf Exp $
+/* $Id: fdo.c,v 1.7 2004/03/14 17:10:43 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            fdo.c
@@ -13,7 +13,7 @@
 #include "pcidef.h"
 #include "pci.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /*** PRIVATE *****************************************************************/
@@ -248,6 +248,11 @@ FdoQueryBusRelations(
       PdoDeviceExtension->Fdo = DeviceObject;
 
       PdoDeviceExtension->BusNumber = Device->BusNumber;
+
+      RtlCopyMemory(
+        &PdoDeviceExtension->SlotNumber,
+        &Device->SlotNumber,
+        sizeof(PCI_SLOT_NUMBER));
 
       /* FIXME: Get device properties (Hardware IDs, etc.) */
 

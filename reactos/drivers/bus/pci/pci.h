@@ -1,4 +1,4 @@
-/* $Id: pci.h,v 1.5 2004/03/12 19:40:05 navaraf Exp $ */
+/* $Id: pci.h,v 1.6 2004/03/14 17:10:43 navaraf Exp $ */
 
 #ifndef __PCI_H
 #define __PCI_H
@@ -58,6 +58,8 @@ typedef struct _PDO_DEVICE_EXTENSION
   PDEVICE_OBJECT Fdo;
   // PCI bus number
   ULONG BusNumber;
+  // PCI slot number
+  PCI_SLOT_NUMBER SlotNumber;
   // Device ID
   UNICODE_STRING DeviceID;
   // Instance ID
@@ -85,8 +87,6 @@ typedef struct _FDO_DEVICE_EXTENSION
   ULONG DeviceListCount;
   // Lock for namespace device list
   KSPIN_LOCK DeviceListLock;
-  // PCI bus number
-/*  ULONG BusNumber;*/
   // Lower device object
   PDEVICE_OBJECT Ldo;
 } __attribute((packed)) FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;

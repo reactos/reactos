@@ -1,4 +1,4 @@
-/* $Id: pdo.c,v 1.3 2004/03/12 19:40:05 navaraf Exp $
+/* $Id: pdo.c,v 1.4 2004/03/14 17:10:43 navaraf Exp $
  *
  * PROJECT:         ReactOS PCI bus driver
  * FILE:            pdo.c
@@ -99,8 +99,29 @@ PdoQueryBusInformation(
     BusInformation->LegacyBusType = PCIBus;
     BusInformation->BusNumber = DeviceExtension->BusNumber;
 
-    return STATUS_INSUFFICIENT_RESOURCES;
+    return STATUS_SUCCESS;
   }
+
+  return STATUS_INSUFFICIENT_RESOURCES;
+}
+
+
+NTSTATUS
+PdoQueryCapabilities(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PDEVICE_CAPABILITIES DeviceCapabilities;
+
+  DPRINT("Called\n");
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
+
+  DeviceCapabilities->Address =
+  DeviceCapabilities->UINumber = DeviceExtension->SlotNumber.u.AsULONG;
 
   return STATUS_SUCCESS;
 }
@@ -176,10 +197,11 @@ PdoPnpControl(
     Status = PdoQueryBusInformation(DeviceObject, Irp, IrpSp);
     break;
 
-#if 0
   case IRP_MN_QUERY_CAPABILITIES:
+    Status = PdoQueryCapabilities(DeviceObject, Irp, IrpSp);
     break;
 
+#if 0
   case IRP_MN_QUERY_DEVICE_RELATIONS:
     /* FIXME: Possibly handle for RemovalRelations */
     break;
@@ -187,9 +209,11 @@ PdoPnpControl(
   case IRP_MN_QUERY_DEVICE_TEXT:
     break;
 #endif
+
   case IRP_MN_QUERY_ID:
     Status = PdoQueryId(DeviceObject, Irp, IrpSp);
     break;
+
 #if 0
   case IRP_MN_QUERY_PNP_DEVICE_STATE:
     break;
