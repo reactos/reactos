@@ -1,10 +1,10 @@
-/* $Id: beep.c,v 1.5 2000/07/02 10:54:12 ekohl Exp $
+/* $Id: beep.c,v 1.6 2000/10/05 19:17:25 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 services/dd/beep/beep.c
  * PURPOSE:              BEEP device driver
- * PROGRAMMER:           Eric Kohl (ekohl@abo.rhein-zeitung.de)
+ * PROGRAMMER:           Eric Kohl (ekohl@rz-online.de)
  * UPDATE HISTORY:
  *                       30/01/99 Created
  *                       16/10/99 Minor fixes
@@ -46,7 +46,8 @@ VOID BeepDPC (PKDPC Dpc, PVOID DeferredContext, PVOID SystemArgument1, PVOID Sys
 }
 
 
-NTSTATUS BeepCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+BeepCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -73,7 +74,8 @@ NTSTATUS BeepCreate (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS BeepClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+BeepClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -103,7 +105,8 @@ NTSTATUS BeepClose(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS BeepCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+BeepCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -130,7 +133,8 @@ NTSTATUS BeepCleanup(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL
+BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -220,15 +224,15 @@ NTSTATUS BeepDeviceControl (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS BeepUnload(PDRIVER_OBJECT DriverObject)
+NTSTATUS STDCALL
+BeepUnload(PDRIVER_OBJECT DriverObject)
 {
     DPRINT ("BeepUnload() called!\n");
     return (STATUS_SUCCESS);
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 /*
  * FUNCTION:  Called by the system to initalize the driver
