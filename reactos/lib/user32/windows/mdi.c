@@ -219,11 +219,11 @@ const struct builtin_class_descr MDICLIENT_builtin_class =
 {
 #ifdef __REACTOS__
     L"MDIClient",            /* name */
-    CS_GLOBALCLASS,         /* style */
-    MDIClientWndProcW,      /* procW */
-    MDIClientWndProcA,      /* procA */
-    sizeof(MDICLIENTINFO),  /* extra */
-    IDC_ARROW,              /* cursor */
+    CS_GLOBALCLASS,          /* style */
+    MDIClientWndProcW,       /* procW */
+    MDIClientWndProcA,       /* procA */
+    sizeof(MDICLIENTINFO *), /* extra */
+    IDC_ARROW,               /* cursor */
     (HBRUSH)(COLOR_APPWORKSPACE+1)    /* brush */
 #else
     "MDIClient",            /* name */
@@ -1340,6 +1340,14 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 
     switch (message)
     {
+#ifdef __REACTOS__
+      case WM_NCCREATE:
+	if (!(ci = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*ci))))
+		return FALSE;
+        SetWindowLongPtrW( hwnd, 0, (LONG_PTR)ci );
+	return TRUE;
+#endif
+      
       case WM_CREATE:
       {
           RECT rect;
@@ -1413,6 +1421,10 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
                   DeleteMenu(ci->hWindowMenu,MF_BYPOSITION,ci->idFirstChild--);
           }
           if (ci->frameTitle) HeapFree( GetProcessHeap(), 0, ci->frameTitle );
+#ifdef __REACTOS__
+          HeapFree( GetProcessHeap(), 0, ci );
+          SetWindowLongPtrW( hwnd, 0, 0 );
+#endif
           return 0;
       }
 

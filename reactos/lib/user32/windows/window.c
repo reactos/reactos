@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.91 2003/12/19 23:20:05 weiden Exp $
+/* $Id: window.c,v 1.92 2003/12/22 11:37:32 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1267,7 +1267,7 @@ IsWindowEnabled(
     // AG: I don't know if child windows are affected if the parent is
     // disabled. I think they stop processing messages but stay appearing
     // as enabled.
-    
+
     return (! (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_DISABLED));
 }
 

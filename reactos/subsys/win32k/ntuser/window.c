@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.169 2003/12/19 23:20:06 weiden Exp $
+/* $Id: window.c,v 1.170 2003/12/22 11:37:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1280,18 +1280,20 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /*
    * Get the size and position of the window.
    */
-#if 0
   if ((dwStyle & WS_THICKFRAME) || !(dwStyle & (WS_POPUP | WS_CHILD)))
     {
+      POINT MaxSize, MaxPos, MinTrack, MaxTrack;
+     
       /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
       WinPosGetMinMaxInfo(WindowObject, &MaxSize, &MaxPos, &MinTrack,
 			  &MaxTrack);
-      x = min(MaxSize.x, y);
-      y = min(MaxSize.y, y);
-      x = max(MinTrack.x, x);
-      y = max(MinTrack.y, y);
+      if (MaxSize.x < nWidth) nWidth = MaxSize.x;
+      if (MaxSize.y < nHeight) nHeight = MaxSize.y;
+      if (nWidth < MinTrack.x ) nWidth = MinTrack.x;
+      if (nHeight < MinTrack.y ) nHeight = MinTrack.y;
+      if (nWidth < 0) nWidth = 0;
+      if (nHeight < 0) nHeight = 0;
     }
-#endif
 
   WindowObject->WindowRect.left = x;
   WindowObject->WindowRect.top = y;
@@ -2662,6 +2664,12 @@ NtUserGetWindowPlacement(HWND hWnd,
   /* FIXME - fill structure */
   Safepl.flags = 0;
   Safepl.showCmd = ((WindowObject->Style & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
+  if (WindowObject->InternalPos)
+  {
+    Safepl.rcNormalPosition = WindowObject->InternalPos->NormalRect;
+    Safepl.ptMinPosition = WindowObject->InternalPos->IconPos;
+    Safepl.ptMaxPosition = WindowObject->InternalPos->MaxPos;
+  }
   
   Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));
   if(!NT_SUCCESS(Status))
@@ -3043,14 +3051,13 @@ NtUserSetWindowPlacement(HWND hWnd,
   PWINDOW_OBJECT WindowObject;
   WINDOWPLACEMENT Safepl;
   NTSTATUS Status;
-  
+
   WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     return FALSE;
   }
-  
   Status = MmCopyFromCaller(&Safepl, lpwndpl, sizeof(WINDOWPLACEMENT));
   if(!NT_SUCCESS(Status))
   {
@@ -3064,9 +3071,24 @@ NtUserSetWindowPlacement(HWND hWnd,
     return FALSE;
   }
   
+  if ((WindowObject->Style & (WS_MAXIMIZE | WS_MINIMIZE)) == 0)
+  {
+     WinPosSetWindowPos(WindowObject->Self, NULL,
+        Safepl.rcNormalPosition.left, Safepl.rcNormalPosition.top,
+        Safepl.rcNormalPosition.right - Safepl.rcNormalPosition.left,
+        Safepl.rcNormalPosition.bottom - Safepl.rcNormalPosition.top,
+        SWP_NOZORDER | SWP_NOACTIVATE);
+  }
+  
   /* FIXME - change window status */
   WinPosShowWindow(WindowObject->Self, Safepl.showCmd);
-  
+
+  if (WindowObject->InternalPos == NULL)
+     WindowObject->InternalPos = ExAllocatePool(PagedPool, sizeof(INTERNALPOS));
+  WindowObject->InternalPos->NormalRect = Safepl.rcNormalPosition;
+  WindowObject->InternalPos->IconPos = Safepl.ptMinPosition;
+  WindowObject->InternalPos->MaxPos = Safepl.ptMaxPosition;
+
   IntReleaseWindowObject(WindowObject);
   return TRUE;
 }

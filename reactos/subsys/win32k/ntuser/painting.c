@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.49 2003/12/18 21:56:44 weiden Exp $
+ *  $Id: painting.c,v 1.50 2003/12/22 11:37:32 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -747,12 +747,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
    NtUserHideCaret(hWnd);
 
    DcxFlags = DCX_INTERSECTUPDATE | DCX_WINDOWPAINT | DCX_USESTYLE;
-   if (IntGetClassLong(Window, GCL_STYLE, FALSE) & CS_PARENTDC)
-   {
-      /* FIXME: Is this correct? */
-      /* Don't clip the output to the update region for CS_PARENTDC window */
-      DcxFlags &= ~DCX_INTERSECTUPDATE;
-   }
    
    lPs->hdc = NtUserGetDCEx(hWnd, 0, DcxFlags);
 

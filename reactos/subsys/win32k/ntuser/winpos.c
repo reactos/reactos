@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.59 2003/12/21 22:38:38 weiden Exp $
+/* $Id: winpos.c,v 1.60 2003/12/22 11:37:32 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -530,7 +530,67 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 HWND FASTCALL
 WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 {
+#if 0
    /* FIXME */
+   return hWndInsertAfter;
+#endif
+   HWND *List = NULL;
+   HWND Owner = NtUserGetWindow(hWnd, GW_OWNER);
+   LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
+   PWINDOW_OBJECT DesktopWindow;
+   int i;
+
+   if ((Style & WS_POPUP) && Owner)
+   {
+      /* Make sure this popup stays above the owner */
+      HWND hWndLocalPrev = HWND_TOP;
+
+      if (hWndInsertAfter != HWND_TOP)
+      {
+         DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+         List = IntWinListChildren(DesktopWindow);
+         IntReleaseWindowObject(DesktopWindow);
+         if (List != NULL)
+         {
+            for (i = 0; List[i]; i++)
+            {
+               if (List[i] == Owner) break;
+               if (List[i] != hWnd) hWndLocalPrev = List[i];
+               if (hWndLocalPrev == hWndInsertAfter) break;
+            }
+            hWndInsertAfter = hWndLocalPrev;
+         }
+      }
+   }
+   else if (Style & WS_CHILD)
+   {
+      return hWndInsertAfter;
+   }
+
+   if (!List)
+   {
+      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      List = IntWinListChildren(DesktopWindow);
+      IntReleaseWindowObject(DesktopWindow);
+   }
+   if (List != NULL)
+   {
+      for (i = 0; List[i]; i++)
+      {
+         DPRINT1("%x\n", List[i]);
+         if (List[i] == hWnd)
+            break;
+         if ((NtUserGetWindowLong(List[i], GWL_STYLE, FALSE) & WS_POPUP) &&
+             NtUserGetWindow(List[i], GW_OWNER) == hWnd)
+         {
+            WinPosSetWindowPos(List[i], hWndInsertAfter, 0, 0, 0, 0,
+               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+            hWndInsertAfter = List[i];
+         }
+      }
+      ExFreePool(List);
+   }
+
    return hWndInsertAfter;
 }
 
