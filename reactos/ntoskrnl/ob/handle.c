@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.58 2004/08/15 16:39:09 chorns Exp $
+/* $Id: handle.c,v 1.59 2004/08/20 23:46:21 navaraf Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -44,7 +44,9 @@ typedef struct
    ACCESS_MASK GrantedAccess;
 } HANDLE_REP, *PHANDLE_REP;
 
-#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
+#define HANDLE_BLOCK_ENTRIES \
+	(((4 * PAGE_SIZE) - \
+	  (sizeof(LIST_ENTRY) + sizeof(ULONG))) / sizeof(HANDLE_REP))
 
 #define OB_HANDLE_FLAG_MASK    0x00000007
 #define OB_HANDLE_FLAG_AUDIT   0x00000004
@@ -58,11 +60,13 @@ typedef struct
   (PVOID)((ULONG_PTR)(Entry) & ~OB_HANDLE_FLAG_MASK)
 
 /*
- * PURPOSE: Defines a page's worth of handles
+ * PURPOSE: Defines a 4 page's worth of handles
  */
 typedef struct
 {
    LIST_ENTRY entry;
+   ULONG allocation_hint;
+   ULONG allocation_count;
    HANDLE_REP handles[HANDLE_BLOCK_ENTRIES];
 } HANDLE_BLOCK, *PHANDLE_BLOCK;
 
@@ -74,7 +78,8 @@ typedef struct
 /* FUNCTIONS ***************************************************************/
 
 
-static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
+static PHANDLE_REP
+ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h, HANDLE_BLOCK **Block)
 /*
  * FUNCTION: Get the data structure for a handle
  * ARGUMENTS:
@@ -105,6 +110,8 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
      }
    
    blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
+   if (Block)
+      *Block = blk;
    DPRINT("object: %p\n",&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
    return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
@@ -124,7 +131,8 @@ ObpQueryHandleAttributes(HANDLE Handle,
 
   KeAcquireSpinLock(&Process->HandleTable.ListLock, &oldIrql);
   HandleRep = ObpGetObjectByHandle(&Process->HandleTable,
-				   Handle);
+				   Handle,
+				   NULL);
   if (HandleRep == NULL)
     {
       KeReleaseSpinLock(&Process->HandleTable.ListLock, oldIrql);
@@ -156,7 +164,8 @@ ObpSetHandleAttributes(HANDLE Handle,
 
   KeAcquireSpinLock(&Process->HandleTable.ListLock, &oldIrql);
   HandleRep = ObpGetObjectByHandle(&Process->HandleTable,
-				   Handle);
+				   Handle,
+				   NULL);
   if (HandleRep == NULL)
     {
       KeReleaseSpinLock(&Process->HandleTable.ListLock, oldIrql);
@@ -196,7 +205,8 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 
   KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
   SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
-					 SourceHandle);
+					 SourceHandle,
+					 NULL);
   if (SourceHandleRep == NULL)
     {
       KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
@@ -317,7 +327,8 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
      {
        KeAcquireSpinLock(&SourceProcess->HandleTable.ListLock, &oldIrql);
        SourceHandleRep = ObpGetObjectByHandle(&SourceProcess->HandleTable,
-					      SourceHandle);
+					      SourceHandle,
+					      NULL);
        if (SourceHandleRep == NULL)
 	 {
 	   KeReleaseSpinLock(&SourceProcess->HandleTable.ListLock, oldIrql);
@@ -539,6 +550,7 @@ ObDeleteHandle(PEPROCESS Process,
    KIRQL oldIrql;
    PHANDLE_TABLE HandleTable;
    POBJECT_HEADER Header;
+   HANDLE_BLOCK *Block;
 
    DPRINT("ObDeleteHandle(Handle %x)\n",Handle);
 
@@ -546,7 +558,7 @@ ObDeleteHandle(PEPROCESS Process,
 
    KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 
-   Rep = ObpGetObjectByHandle(HandleTable, Handle);
+   Rep = ObpGetObjectByHandle(HandleTable, Handle, &Block);
    if (Rep == NULL)
      {
 	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
@@ -577,6 +589,9 @@ ObDeleteHandle(PEPROCESS Process,
 			      UserMode);
    InterlockedDecrement(&Header->HandleCount);
    Rep->ObjectBody = NULL;
+
+   Block->allocation_count--;
+   Block->allocation_hint = (ULONG_PTR)Handle % HANDLE_BLOCK_ENTRIES;
 
    KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
 
@@ -609,7 +624,7 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 {
    LIST_ENTRY* current;
    unsigned int handle=1;
-   unsigned int i;
+   unsigned int Loop, Index, MaxIndex;
    HANDLE_BLOCK* new_blk = NULL;
    PHANDLE_TABLE HandleTable;
    KIRQL oldlvl;
@@ -635,19 +650,35 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 
 	DPRINT("Current %x\n",current);
 
-	for (i=0;i<HANDLE_BLOCK_ENTRIES;i++)
+	if (blk->allocation_count == HANDLE_BLOCK_ENTRIES)
 	  {
-	     DPRINT("Considering slot %d containing %x\n",i,blk->handles[i]);
-	     if (blk->handles[i].ObjectBody == NULL)
-	       {
-		  blk->handles[i].ObjectBody = OB_POINTER_TO_ENTRY(ObjectBody);
-		  if (Inherit)
-		    blk->handles[i].ObjectBody = (PVOID)((ULONG_PTR)blk->handles[i].ObjectBody | OB_HANDLE_FLAG_INHERIT);
-		  blk->handles[i].GrantedAccess = GrantedAccess;
-		  KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
-		  *HandleReturn = (HANDLE)((handle + i) << 2);
-		  return(STATUS_SUCCESS);
-	       }
+            handle = handle + HANDLE_BLOCK_ENTRIES;
+            current = current->Flink;
+            continue;
+	  }
+
+	Index = blk->allocation_hint;
+	MaxIndex = HANDLE_BLOCK_ENTRIES;
+	for (Loop = 0; Loop < 2; Loop++)
+	  {
+            for (Index = 0; Index < MaxIndex; Index++)
+              {
+                DPRINT("Considering slot %d containing %x\n", Index, blk->handles[Index]);
+                if (blk->handles[Index].ObjectBody == NULL)
+                  {
+                    blk->handles[Index].ObjectBody = OB_POINTER_TO_ENTRY(ObjectBody);
+                    if (Inherit)
+                      blk->handles[Index].ObjectBody = (PVOID)((ULONG_PTR)blk->handles[Index].ObjectBody | OB_HANDLE_FLAG_INHERIT);
+                    blk->handles[Index].GrantedAccess = GrantedAccess;
+                    blk->allocation_hint = Index + 1;
+                    blk->allocation_count++;
+                    KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
+                    *HandleReturn = (HANDLE)((handle + Index) << 2);
+                    return(STATUS_SUCCESS);
+                  }
+              }
+            Index = 0;
+            MaxIndex = blk->allocation_hint;
 	  }
 	
 	handle = handle + HANDLE_BLOCK_ENTRIES;
@@ -672,6 +703,8 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
    if (Inherit)
      new_blk->handles[0].ObjectBody = (PVOID)((ULONG_PTR)new_blk->handles[0].ObjectBody | OB_HANDLE_FLAG_INHERIT);
    new_blk->handles[0].GrantedAccess = GrantedAccess;
+   new_blk->allocation_hint = 1;
+   new_blk->allocation_count++;
    KeReleaseSpinLock(&HandleTable->ListLock, oldlvl);
    *HandleReturn = (HANDLE)(handle << 2);
    return(STATUS_SUCCESS);
@@ -695,7 +728,8 @@ ObQueryObjectAuditingByHandle(IN HANDLE Handle,
 
   KeAcquireSpinLock(&Process->HandleTable.ListLock, &oldIrql);
   HandleRep = ObpGetObjectByHandle(&Process->HandleTable,
-				   Handle);
+				   Handle,
+				   NULL);
   if (HandleRep == NULL)
     {
       KeReleaseSpinLock(&Process->HandleTable.ListLock, oldIrql);
@@ -811,7 +845,8 @@ ObReferenceObjectByHandle(HANDLE Handle,
    KeAcquireSpinLock(&PsGetCurrentProcess()->HandleTable.ListLock,
 		     &oldIrql);
    HandleRep = ObpGetObjectByHandle(&PsGetCurrentProcess()->HandleTable,
-				    Handle);
+				    Handle,
+				    NULL);
    if (HandleRep == NULL || HandleRep->ObjectBody == 0)
      {
 	KeReleaseSpinLock(&PsGetCurrentProcess()->HandleTable.ListLock,
