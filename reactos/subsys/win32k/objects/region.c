@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.62 2004/07/14 20:48:58 navaraf Exp $ */
+/* $Id: region.c,v 1.63 2004/12/11 22:39:38 weiden Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -3130,7 +3130,7 @@ IntCreatePolyPolgonRgn(POINT *Pts,
                     tmpPtBlock = ExAllocatePoolWithTag( PagedPool, sizeof(POINTBLOCK), TAG_REGION);
 		    if(!tmpPtBlock) {
 		        DPRINT1("Can't alloc tPB\n");
-		        /* FIXME - free memory */
+			ExFreePool(pETEs);
 			return 0;
 		    }
                     curPtBlock->next = tmpPtBlock;
@@ -3182,7 +3182,7 @@ IntCreatePolyPolgonRgn(POINT *Pts,
 					       sizeof(POINTBLOCK), TAG_REGION );
 			if(!tmpPtBlock) {
 			    DPRINT1("Can't alloc tPB\n");
-			    /* FIXME - free resources */
+			    ExFreePool(pETEs);
 			    NtGdiDeleteObject( hrgn );
 			    return 0;
 			}
