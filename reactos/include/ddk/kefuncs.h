@@ -85,7 +85,7 @@ BOOLEAN STDCALL KeCancelTimer (PKTIMER	Timer);
 
 VOID STDCALL KeClearEvent (PKEVENT	Event);
 
-NTSTATUS STDCALL KeConnectInterrupt(PKINTERRUPT InterruptObject);
+BOOLEAN STDCALL KeConnectInterrupt(PKINTERRUPT InterruptObject);
 
 NTSTATUS STDCALL KeDelayExecutionThread (KPROCESSOR_MODE	WaitMode,
 					 BOOLEAN		Alertable,
