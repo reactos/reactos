@@ -523,7 +523,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 		/* Set kernel command line */
 		sprintf(multiboot_kernel_cmdline,
-		        "multi(0)disk(0)cdrom(%u)\\reactos",
+		        "multi(0)disk(0)cdrom(%u)\\reactos /MININT",
 		        (unsigned int)BootDrive);
 	}
 	else
