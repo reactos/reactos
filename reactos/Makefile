@@ -34,11 +34,16 @@ LOADERS = dos
 #
 # Select the device drivers and filesystems you want
 #
-DEVICE_DRIVERS = blue ide keyboard null parallel serial vidport floppy
+DEVICE_DRIVERS = vga blue ide keyboard null parallel serial vidport
 # DEVICE_DRIVERS = beep event floppy ide_test mouse sound test test1
-FS_DRIVERS = vfat minix
+
+FS_DRIVERS = vfat
 # FS_DRIVERS = minix ext2 template
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS)
+
+# ndis tdi tcpip tditest
+NET_DRIVERS = ndis tcpip tditest
+
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
        pteb consume
@@ -54,7 +59,7 @@ clean: buildno_clean $(COMPONENTS:%=%_clean) $(DLLS:%=%_clean) $(LOADERS:%=%_cle
        
 .PHONY: clean
 
-install_floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
+floppy: make_floppy_dirs autoexec_floppy $(COMPONENTS:%=%_floppy) \
         $(DLLS:%=%_floppy) $(LOADERS:%=%_floppy) \
         $(KERNEL_SERVICES:%=%_floppy) $(SUBSYS:%=%_floppy) \
         $(APPS:%=%_floppy)
@@ -155,6 +160,15 @@ $(FS_DRIVERS:%=%_dist): %_dist:
 
 .PHONY: $(FS_DRIVERS) $(FS_DRIVERS:%=%_clean) $(FS_DRIVERS:%=%_floppy) \
         $(FS_DRIVERS:%=%_dist)
+
+$(NET_DRIVERS): %:
+	make -C services/net/$*
+
+$(NET_DRIVERS:%=%_clean): %_clean:
+	make -C services/net/$* clean
+
+.PHONY: $(NET_DRIVERS) $(NET_DRIVERS:%=%_clean)
+
 
 #
 # Kernel loaders

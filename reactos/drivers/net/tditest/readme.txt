@@ -1,5 +1,5 @@
-Build instructions for TCP/IP protocol driver
----------------------------------------------
+Build instructions for TDITEST driver
+-------------------------------------
 
 Building with Visual C++ and Windows NT DDK:
 
@@ -15,5 +15,4 @@ DDK environment variables must be set! (run setenv.bat)
 
 Building with Mingw32 and ReactOS include files:
 
-    - Build NDIS.SYS (i.e. "make ndis")
-    - Run "make tcpip" FROM THE ReactOS ROOT DIRECTORY to build the driver
+    - Run "make tditest" FROM THE ReactOS ROOT DIRECTORY to build the driver

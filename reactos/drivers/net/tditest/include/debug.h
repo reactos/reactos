@@ -1,6 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
- * PROJECT:     ReactOS TCP/IP protocol driver
+ * PROJECT:     ReactOS TDI test driver
  * FILE:        include/debug.h
  * PURPOSE:     Debugging support macros
  * DEFINES:     DBG     - Enable debug output
@@ -15,15 +15,6 @@
 #define MID_TRACE      0x00000002
 #define MAX_TRACE      0x00000003
 
-#define DEBUG_MEMORY   0x00000100
-#define DEBUG_BUFFER   0x00000200
-#define DEBUG_IRP      0x00000400
-#define DEBUG_REFCOUNT 0x00000800
-#define DEBUG_ADDRFILE 0x00001000
-#define DEBUG_IP       0x00002000
-#define DEBUG_ROUTER   0x00004000
-#define DEBUG_RCACHE   0x00008000
-#define DEBUG_NCACHE   0x00010000
 #define DEBUG_ULTRA    0xFFFFFFFF
 
 #ifdef DBG
@@ -32,7 +23,7 @@ extern DWORD DebugTraceLevel;
 
 #ifdef _MSC_VER
 
-#define TI_DbgPrint(_t_, _x_) \
+#define TDI_DbgPrint(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
         DbgPrint("(%s:%d) ", __FILE__, __LINE__); \
@@ -41,7 +32,7 @@ extern DWORD DebugTraceLevel;
 
 #else /* _MSC_VER */
 
-#define TI_DbgPrint(_t_, _x_) \
+#define TDI_DbgPrint(_t_, _x_) \
     if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
         ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
         DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
@@ -57,14 +48,14 @@ extern DWORD DebugTraceLevel;
 #ifdef NASSERT
 #define ASSERT(x)
 #else /* NASSERT */
-#define ASSERT(x) if (!(x)) { TI_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) { TDI_DbgPrint(MIN_TRACE, ("Assertion "#x" failed at %s:%d\n", __FILE__, __LINE__)); KeBugCheck(0); }
 #endif /* NASSERT */
 
 #define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
 
 #else /* DBG */
 
-#define TI_DbgPrint(_t_, _x_)
+#define TDI_DbgPrint(_t_, _x_)
 
 #define ASSERT_IRQL(x)
 #define ASSERT(x)
@@ -79,20 +70,20 @@ extern DWORD DebugTraceLevel;
 #ifdef _MSC_VER
 
 #define UNIMPLEMENTED \
-    TI_DbgPrint(MIN_TRACE, ("The function at %s:%d is unimplemented, \
+    TDI_DbgPrint(MIN_TRACE, ("The function at %s:%d is unimplemented, \
         but come back another day.\n", __FILE__, __LINE__));
 
 #else /* _MSC_VER */
 
 #define UNIMPLEMENTED \
-    TI_DbgPrint(MIN_TRACE, ("(%s:%d)(%s) is unimplemented, \
-        but come back another day.\n", __FILE__, __LINE__, __FUNCTION__));
+    TDI_DbgPrint(MIN_TRACE, ("%s at %s:%d is unimplemented, \
+        but come back another day.\n", __FUNCTION__, __FILE__, __LINE__));
 
 #endif /* _MSC_VER */
 
 
 #define CHECKPOINT \
-    do { TI_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
+do { TDI_DbgPrint(MIN_TRACE, ("%s:%d\n", __FILE__, __LINE__)); } while(0);
 
 #endif /* __DEBUG_H */
 

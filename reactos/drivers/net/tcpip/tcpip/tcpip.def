@@ -5,9 +5,9 @@ LIBRARY tcpip.sys
 EXPORTS
 ;FreeIprBuff
 ;GetIFAndLink
-IPAddInterface=IPAddInterface@20
+IPAddInterface
 ;IPAllocBuff
-IPDelInterface=IPDelInterface@4
+IPDelInterface
 ;IPDelayedNdisReEnumerateBindings
 ;IPDeregisterARP
 ;IPDisableSniffer
@@ -22,7 +22,7 @@ IPDelInterface=IPDelInterface@4
 ;IPRegisterProtocol
 ;IPSetIPSecStatus
 ;IPTransmit
-LookupRoute=LookupRoute@8
+LookupRoute
 ;LookupRouteInformation
 ;SendICMPErr
 ;SetIPSecPtr
