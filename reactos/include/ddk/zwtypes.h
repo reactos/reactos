@@ -695,5 +695,24 @@ typedef struct _EVENT_BASIC_INFORMATION
 //	SynchronizationTimer
 //} TIMER_TYPE;
 
+typedef 
+struct _LPC_PORT_BASIC_INFORMATION
+{
+	DWORD	Unknown0;
+	DWORD	Unknown1;
+	DWORD	Unknown2;
+	DWORD	Unknown3;
+	DWORD	Unknown4;
+	DWORD	Unknown5;
+	DWORD	Unknown6;
+	DWORD	Unknown7;
+	DWORD	Unknown8;
+	DWORD	Unknown9;
+	DWORD	Unknown10;
+	DWORD	Unknown11;
+	DWORD	Unknown12;
+	DWORD	Unknown13;
+
+} LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
 #endif 
