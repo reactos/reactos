@@ -83,7 +83,12 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
    MmPageArray = (PHYSICAL_PAGE *)LastKernelAddress;
    
    DPRINT("Reserved %d\n", Reserved);
-   
+
+   LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
+   LastKernelAddress = ((ULONG)LastKernelAddress + (Reserved * PAGESIZE));
+   LastPhysKernelAddress = (PVOID)PAGE_ROUND_UP(LastPhysKernelAddress);
+   LastPhysKernelAddress = LastPhysKernelAddress + (Reserved * PAGESIZE);
+     
    MiNrFreePages = 0;
    MiNrUsedPages = 0;
    
@@ -103,8 +108,8 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			    &MmPageArray[i].ListEntry);
 	  }
 	MiNrUsedPages = MiNrUsedPages +
-	  (((0xa0000) / PAGESIZE) - i);
-	for (; i<(0xa0000 / PAGESIZE); i++)
+	  ((((ULONG)LastPhysKernelAddress) / PAGESIZE) - i);
+	for (; i<((ULONG)LastKernelAddress / PAGESIZE); i++)
 	  {
 	     MmPageArray[i].Flags = PHYSICAL_PAGE_INUSE;
 	     MmPageArray[i].ReferenceCount = 1;
@@ -112,6 +117,18 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 			       NotificationEvent,
 			       FALSE);
 	     InsertTailList(&UsedPageListHead,
+			    &MmPageArray[i].ListEntry);
+	  }
+	MiNrFreePages = MiNrFreePages + 
+	  ((0xa0000/PAGESIZE) - i);
+	for (; i<(0xa0000/PAGESIZE); i++)
+	  {
+	     MmPageArray[i].Flags = PHYSICAL_PAGE_FREE;
+	     MmPageArray[i].ReferenceCount = 0;
+	     KeInitializeEvent(&MmPageArray[i].Event,
+			       NotificationEvent,
+			       FALSE);
+	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
 	for (; i<(0x100000 / PAGESIZE); i++)
@@ -185,9 +202,7 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
      }  
-   DPRINT("\nMmInitializePageList() = %x\n",
-	  LastKernelAddress + Reserved * PAGESIZE);
-   return((PVOID)(LastKernelAddress + Reserved * PAGESIZE));
+   return((PVOID)LastKernelAddress);
 }
 
 VOID MmReferencePage(PVOID PhysicalAddress)
