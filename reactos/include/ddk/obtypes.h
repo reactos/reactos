@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_OBTYPES_H
 #define _INCLUDE_DDK_OBTYPES_H
-/* $Id: obtypes.h,v 1.9 2000/08/24 19:06:29 ekohl Exp $ */
+/* $Id: obtypes.h,v 1.10 2001/01/28 15:13:11 ekohl Exp $ */
 struct _DIRECTORY_OBJECT;
 struct _OBJECT_ATTRIBUTES;
 
@@ -12,7 +12,7 @@ typedef struct _OBJECT_HANDLE_INFORMATION {
 } OBJECT_HANDLE_INFORMATION, *POBJECT_HANDLE_INFORMATION;
 
 typedef struct _OBJECT_TYPE
-{   
+{
    /*
     * PURPOSE: Name of the type
     */
@@ -49,6 +49,11 @@ typedef struct _OBJECT_TYPE
    ULONG NonpagedPoolCharge;
    
    /*
+    * PURPOSE: Mapping of generic access rights
+    */
+   PGENERIC_MAPPING Mapping;
+   
+   /*
     * PURPOSE: Dumps the object
     * NOTE: To be defined
     */
@@ -64,24 +69,15 @@ typedef struct _OBJECT_TYPE
     * PURPOSE: Called to close an object if OkayToClose returns true
     */
    VOID (*Close)(PVOID ObjectBody, ULONG HandleCount);
-
+   
    /*
     * PURPOSE: Called to delete an object when the last reference is removed
     */
    VOID (*Delete)(PVOID ObjectBody);
-
+   
    /*
     * PURPOSE: Called when an open attempts to open a file apparently
     * residing within the object
-    * RETURNS: a pointer to the object that corresponds to the child
-    *   child of ParsedObject that is on Path.  Path is modified to
-    *   to point to the remainder of the path after the child. NULL
-    *   should be return when a leaf is reached and Path should be
-    *   left unchanged as a reault.
-    */
-//   PVOID (*Parse)(PVOID ParsedObject, PWSTR* Path);
-
-   /*
     * RETURNS
     *     STATUS_SUCCESS       NextObject was found
     *     STATUS_UNSUCCESSFUL  NextObject not found
@@ -121,13 +117,13 @@ typedef struct _OBJECT_HEADER
 /*
  * PURPOSE: Header for every object managed by the object manager
  */
-{   
+{
    UNICODE_STRING Name;
    LIST_ENTRY Entry;
-   LONG RefCount;   
-   LONG HandleCount;   
-   BOOLEAN Permanent;   
-   struct _DIRECTORY_OBJECT* Parent;   
+   LONG RefCount;
+   LONG HandleCount;
+   BOOLEAN Permanent;
+   struct _DIRECTORY_OBJECT* Parent;
    POBJECT_TYPE ObjectType;
    
    /*
@@ -145,13 +141,14 @@ typedef struct _OBJECT_HEADER
    
 } OBJECT_HEADER, *POBJECT_HEADER;
 
-typedef struct _OBJECT_ATTRIBUTES {
-	ULONG Length;
-	HANDLE RootDirectory;
-	PUNICODE_STRING ObjectName;
-	ULONG Attributes;
-	SECURITY_DESCRIPTOR *SecurityDescriptor;       
-	SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;  
+typedef struct _OBJECT_ATTRIBUTES
+{
+   ULONG Length;
+   HANDLE RootDirectory;
+   PUNICODE_STRING ObjectName;
+   ULONG Attributes;
+   SECURITY_DESCRIPTOR *SecurityDescriptor;
+   SECURITY_QUALITY_OF_SERVICE *SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
 
 typedef struct _HANDLE_TABLE
