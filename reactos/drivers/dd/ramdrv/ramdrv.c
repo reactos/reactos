@@ -3,6 +3,47 @@
 #include <debug.h>
 #include "../../../lib/bzip2/bzlib.h"
 
+NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
+					     PIRP Irp)
+{
+   PIO_STACK_LOCATION IrpStack;
+   ULONG ControlCode, InputLength, OutputLength;
+   NTSTATUS Status;
+
+   DPRINT("RamdrvDispatchDeviceControl\n");
+
+   IrpStack = IoGetCurrentIrpStackLocation(Irp);
+   ControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
+   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
+   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
+
+   switch (ControlCode)
+   {
+      case IOCTL_DISK_GET_DRIVE_GEOMETRY:
+         if (OutputLength < sizeof(DISK_GEOMETRY))
+         {
+            Status = STATUS_INVALID_PARAMETER;
+	 }
+	 else
+	 {
+            PDISK_GEOMETRY Geometry = Irp->AssociatedIrp.SystemBuffer;
+            Geometry->MediaType = F3_1Pt44_512;
+            Geometry->Cylinders.QuadPart = 80;
+            Geometry->TracksPerCylinder = 2 * 18;
+            Geometry->SectorsPerTrack = 18;
+            Geometry->BytesPerSector = 512;
+            Status = STATUS_SUCCESS;
+            Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
+        }
+        break;
+     default:
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+   }
+   Irp->IoStatus.Status = Status;
+   IoCompleteRequest(Irp, NT_SUCCESS(Status) ? IO_DISK_INCREMENT : IO_NO_INCREMENT);	
+   return Status;
+}
+
 NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
@@ -64,8 +105,7 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = RamdrvDispatchOpenClose;
   DriverObject->MajorFunction[IRP_MJ_READ] = RamdrvDispatchReadWrite;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = RamdrvDispatchReadWrite;
-  //   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
-  //   RamdrvDispatchDeviceControl;
+  DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = RamdrvDispatchDeviceControl;
   
   
   // create device and symbolic link
@@ -176,7 +216,9 @@ NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
 				    1,
 				    0 );
   if( err == 0 )
+  {
     DPRINT( "RAMDRV: Image Decompressed\n");
+  }
   else DbgPrint( "RAMDRV: Failed to decomparess image, error: %d\n", err );
   ExFreePool( tbuff );
   NtClose( file );
