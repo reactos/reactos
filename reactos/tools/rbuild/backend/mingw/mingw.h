@@ -28,6 +28,8 @@ private:
 	void GenerateGlobalVariables () const;
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget () const;
+	std::string GetBuildToolDependencies () const;
+	void GenerateInitTarget () const;
 	void CheckAutomaticDependencies ();
 	FILE* fMakefile;
 };

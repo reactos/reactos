@@ -7,15 +7,10 @@
 using std::string;
 using std::vector;
 
-/*Project::Project()
-	: node(NULL), head(NULL)
-{
-}*/
-
 Project::Project ( const string& filename )
-	: xmlfile(filename),
-	  node(NULL),
-	  head(NULL)
+	: xmlfile (filename),
+	  node (NULL),
+	  head (NULL)
 {
 	ReadXml();
 }
@@ -25,26 +20,170 @@ Project::~Project ()
 	size_t i;
 	for ( i = 0; i < modules.size (); i++ )
 		delete modules[i];
-	for ( i = 0; i < includes.size(); i++ )
+	for ( i = 0; i < includes.size (); i++ )
 		delete includes[i];
-	for ( i = 0; i < defines.size(); i++ )
+	for ( i = 0; i < defines.size (); i++ )
 		delete defines[i];
-	for ( i = 0; i < linkerFlags.size(); i++ )
+	for ( i = 0; i < linkerFlags.size (); i++ )
 		delete linkerFlags[i];
-	for ( i = 0; i < properties.size(); i++ )
+	for ( i = 0; i < properties.size (); i++ )
 		delete properties[i];
-	for ( i = 0; i < ifs.size(); i++ )
+	for ( i = 0; i < ifs.size (); i++ )
 		delete ifs[i];
 	delete head;
 }
 
+const Property*
+Project::LookupProperty ( const string& name ) const
+{
+	for ( size_t i = 0; i < properties.size (); i++ )
+	{
+		const Property* property = properties[i];
+		if ( property->name == name )
+			return property;
+	}
+	return NULL;
+}
+
 void
-Project::ReadXml()
+Project::WriteIfChanged ( char* outbuf,
+	                      string filename )
+{
+	FILE* out;
+	unsigned int end;
+	char* cmpbuf;
+	unsigned int stat;
+	
+	out = fopen ( filename.c_str (), "rb" );
+	if ( out == NULL )
+	{
+		out = fopen ( filename.c_str (), "wb" );
+		if ( out == NULL )
+			throw AccessDeniedException ( filename );
+		fputs ( outbuf, out );
+		fclose ( out );
+		return;
+	}
+	
+	fseek ( out, 0, SEEK_END );
+	end = ftell ( out );
+	cmpbuf = (char*) malloc ( end );
+	if ( cmpbuf == NULL )
+	{
+		fclose ( out );
+		throw OutOfMemoryException ();
+	}
+	
+	fseek ( out, 0, SEEK_SET );
+	stat = fread ( cmpbuf, 1, end, out );
+	if ( stat != end )
+	{
+		free ( cmpbuf );
+		fclose ( out );
+		throw AccessDeniedException ( filename );
+	}
+	if ( end == strlen ( outbuf ) && memcmp ( cmpbuf, outbuf, end ) == 0 )
+	{
+		free ( cmpbuf );
+		fclose ( out );
+		return;
+	}
+	
+	free ( cmpbuf );
+	fclose ( out );
+	out = fopen ( filename.c_str (), "wb" );
+	if ( out == NULL )
+	{
+		throw AccessDeniedException ( filename );
+	}
+	
+	stat = fwrite ( outbuf, 1, strlen ( outbuf ), out);
+	if ( strlen ( outbuf ) != stat )
+	{
+		fclose ( out );
+		throw AccessDeniedException ( filename );
+	}
+
+	fclose ( out );
+}
+
+void
+Project::SetConfigurationOption ( char* s,
+	                              string name,
+	                              string* alternativeName )
+{
+	const Property* property = LookupProperty ( name );
+	if ( property != NULL && property->value.length () > 0 )
+	{
+		s = s + sprintf ( s,
+		                  "#define %s=%s\n",
+		                  property->name.c_str (),
+		                  property->value.c_str () );
+	}
+	else if ( property != NULL )
+	{
+		s = s + sprintf ( s,
+		                  "#define %s\n",
+		                  property->name.c_str () );
+	}
+	else if ( alternativeName != NULL )
+	{
+		s = s + sprintf ( s,
+		                  "#define %s\n",
+		                  alternativeName->c_str () );
+	}
+}
+
+void
+Project::SetConfigurationOption ( char* s,
+	                              string name )
+{
+	SetConfigurationOption ( s, name, NULL );
+}
+
+void
+Project::WriteConfigurationFile ()
+{
+	char* buf;
+	char* s;
+
+	buf = (char*) malloc ( 10*1024 );
+	if ( buf == NULL )
+		throw OutOfMemoryException ();
+	
+	s = buf;
+	s = s + sprintf ( s, "/* Automatically generated. " );
+	s = s + sprintf ( s, "Edit config.xml to change configuration */\n" );
+	s = s + sprintf ( s, "#ifndef __INCLUDE_CONFIG_H\n" );
+	s = s + sprintf ( s, "#define __INCLUDE_CONFIG_H\n" );
+
+	SetConfigurationOption ( s, "ARCH" );
+	SetConfigurationOption ( s, "OPTIMIZED" );
+	SetConfigurationOption ( s, "MP", new string ( "UP" ) );
+	SetConfigurationOption ( s, "ACPI" );
+	SetConfigurationOption ( s, "_3GB" );
+
+	s = s + sprintf ( s, "#endif /* __INCLUDE_CONFIG_H */\n" );
+
+	WriteIfChanged ( buf, "include" SSEP "roscfg.h" );
+
+	free ( buf );
+}
+
+void
+Project::ExecuteInvocations ()
+{
+	for ( size_t i = 0; i < modules.size (); i++ )
+		modules[i]->InvokeModule ();
+}
+
+void
+Project::ReadXml ()
 {
 	Path path;
 	head = XMLLoadFile ( xmlfile, path );
 	node = NULL;
-	for ( size_t i = 0; i < head->subElements.size(); i++ )
+	for ( size_t i = 0; i < head->subElements.size (); i++ )
 	{
 		if ( head->subElements[i]->name == "project" )
 		{
@@ -189,7 +328,7 @@ Project::LocateModule ( const string& name ) const
 {
 	for ( size_t i = 0; i < modules.size (); i++ )
 	{
-		if (modules[i]->name == name)
+		if ( modules[i]->name == name )
 			return modules[i];
 	}
 

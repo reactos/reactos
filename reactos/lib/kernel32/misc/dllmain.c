@@ -176,8 +176,6 @@ DllMain(HANDLE hDll,
 	break;
     }
 
-   PREPARE_TESTS
-
    return TRUE;
 }
 

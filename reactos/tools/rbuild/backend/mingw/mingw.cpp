@@ -30,6 +30,7 @@ MingwBackend::Process ()
 	GenerateHeader ();
 	GenerateGlobalVariables ();
 	GenerateAllTarget ();
+	GenerateInitTarget ();
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
@@ -167,6 +168,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
 #ifdef WIN32
+	fprintf ( fMakefile, "nmkdir = mkdir\n" );
 	fprintf ( fMakefile, "rm = del /f /q\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "gpp = g++\n" );
@@ -176,6 +178,7 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "windres = windres\n" );
 #else
+	fprintf ( fMakefile, "nmkdir = mkdir -p\n" );
 	fprintf ( fMakefile, "rm = rm -f\n" );
 	fprintf ( fMakefile, "gcc = mingw32-gcc\n" );
 	fprintf ( fMakefile, "gpp = mingw32-g++\n" );
@@ -233,6 +236,53 @@ MingwBackend::GenerateAllTarget () const
 		}
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
+}
+
+string
+MingwBackend::GetBuildToolDependencies () const
+{
+	string dependencies;
+	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	{
+		Module& module = *ProjectNode.modules[i];
+		if ( module.type == BuildTool )
+		{
+			if ( dependencies.length () > 0 )
+				dependencies += " ";
+			dependencies += module.GetDependencyPath ();
+		}
+	}
+	return dependencies;
+}
+	
+void
+MingwBackend::GenerateInitTarget () const
+{
+	fprintf ( fMakefile,
+	          "init:");
+	fprintf ( fMakefile,
+	          " $(ROS_INTERMEDIATE)." SSEP "tools" );
+	fprintf ( fMakefile,
+	          " %s",
+	          GetBuildToolDependencies ().c_str () );
+	fprintf ( fMakefile,
+	          " %s",
+	          "include" SSEP "reactos" SSEP "buildno.h" );
+	fprintf ( fMakefile,
+	          "\n\t\n\n" );
+
+	fprintf ( fMakefile,
+	          "$(ROS_INTERMEDIATE)." SSEP "tools:\n" );
+	fprintf ( fMakefile,
+	          "ifneq ($(ROS_INTERMEDIATE),)\n" );
+	fprintf ( fMakefile,
+	          "\t${nmkdir} $(ROS_INTERMEDIATE)\n" );
+	fprintf ( fMakefile,
+	          "endif\n" );
+	fprintf ( fMakefile,
+	          "\t${nmkdir} $(ROS_INTERMEDIATE)." SSEP "tools\n" );
+	fprintf ( fMakefile,
+	          "\n" );
 }
 
 void

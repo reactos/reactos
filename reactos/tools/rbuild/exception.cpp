@@ -33,6 +33,12 @@ void Exception::SetMessage ( const char* message,
 }
 
 
+OutOfMemoryException::OutOfMemoryException ()
+	: Exception ( "Out of memory" )
+{
+}
+
+
 InvalidOperationException::InvalidOperationException ( const char* filename,
 	                                                   const int linenumber )
 {
@@ -147,10 +153,22 @@ UnknownBackendException::UnknownBackendException ( const string& name )
 {
 }
 
+
 UnknownModuleTypeException::UnknownModuleTypeException ( const string& location,
                                                          int moduletype )
 	: InvalidBuildFileException ( location,
 	                              "module type requested: %i",
 	                              moduletype )
 {
+}
+
+
+InvocationFailedException::InvocationFailedException ( const std::string& command,
+                                                       int exitcode )
+	: Exception ( "Failed to execute '%s' (exit code %d)",
+	              command.c_str (),
+	              exitcode )
+{
+	Command = command;
+	ExitCode = exitcode;
 }

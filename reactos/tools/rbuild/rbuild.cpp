@@ -30,6 +30,8 @@ main ( int argc, char** argv )
 	{
 		string projectFilename ( "ReactOS.xml" );
 		Project project ( projectFilename );
+		project.WriteConfigurationFile ();
+		project.ExecuteInvocations ();
 		Backend* backend = Backend::Factory::Create ( buildtarget,
 		                                              project );
 		backend->Process ();

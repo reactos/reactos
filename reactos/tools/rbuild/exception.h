@@ -29,6 +29,13 @@ public:
 };
 
 
+class OutOfMemoryException : public Exception
+{
+public:
+	OutOfMemoryException ();
+};
+
+
 class FileNotFoundException : public Exception
 {
 public:
@@ -103,6 +110,16 @@ class UnknownModuleTypeException : public InvalidBuildFileException
 public:
 	UnknownModuleTypeException ( const std::string& location,
 	                             int moduletype );
+};
+
+
+class InvocationFailedException : public Exception
+{
+public:
+	InvocationFailedException ( const std::string& command,
+	                            int exitcode );
+	std::string Command;
+	int ExitCode;
 };
 
 #endif /* __EXCEPTION_H */

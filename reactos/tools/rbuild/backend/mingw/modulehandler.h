@@ -21,6 +21,7 @@ public:
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
 	                                           ModuleType moduletype_ );
 	virtual void Process ( const Module& module ) = 0;
+	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	void GenerateDirectoryTargets () const;
 	static std::string GetObjectFilename ( const std::string& sourceFilename );
 protected:
@@ -46,7 +47,6 @@ protected:
 	                                      const std::string* cflags,
 	                                      const std::string* nasmflags ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
-	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
@@ -149,6 +149,7 @@ private:
 	                                const std::string* clags,
 	                                const std::string* nasmflags ) const;
 	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
+	std::string GetDefaultDependencies ( const Module& module ) const;
 };
 
 

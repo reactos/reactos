@@ -13,6 +13,7 @@
 #include <sys/utime.h>
 #else
 #include <utime.h>
+#include <process.h>
 #endif
 
 #include "ssprintf.h"
@@ -67,10 +68,20 @@ public:
 
 	Project ( const std::string& filename );
 	~Project ();
+	void WriteConfigurationFile ();
+	void ExecuteInvocations ();
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
 private:
+	const Property* LookupProperty ( const std::string& name ) const;
+	void SetConfigurationOption ( char* s,
+	                              std::string name,
+	                              std::string* alternativeName );
+	void SetConfigurationOption ( char* s,
+	                              std::string name );
+	void WriteIfChanged ( char* outbuf,
+	                      std::string filename );
 	void ReadXml ();
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
@@ -139,7 +150,8 @@ public:
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtensions ( const std::string& extension1,
 	                             const std::string& extension2 ) const;
-	void ProcessXML();
+	void InvokeModule () const;
+	void ProcessXML ();
 private:
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
@@ -232,6 +244,7 @@ public:
 
 	void ProcessXML();
 	std::string GetTargets () const;
+	std::string GetParameters () const;
 private:
 	void ProcessXMLSubElement ( const XMLElement& e );
 	void ProcessXMLSubElementInput ( const XMLElement& e );

@@ -257,6 +257,15 @@ MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 	return objectFilenames;
 }
 
+bool
+MingwModuleHandler::IncludeDirectoryTarget ( const string& directory ) const
+{
+	if ( directory == "$(ROS_INTERMEDIATE)." SSEP "tools")
+		return false;
+	else
+		return true;
+}
+
 void
 MingwModuleHandler::GenerateDirectoryTargets () const
 {
@@ -270,7 +279,12 @@ MingwModuleHandler::GenerateDirectoryTargets () const
 	      i != directory_set.end ();
 	      i++ )
 	{
-		fprintf ( fMakefile, " %s", i->c_str () );
+		if ( IncludeDirectoryTarget ( *i ) )
+		{
+			fprintf ( fMakefile,
+			          " %s",
+			          i->c_str () );
+		}
 	}
 
 	fprintf ( fMakefile, "\n\n" );
@@ -279,7 +293,12 @@ MingwModuleHandler::GenerateDirectoryTargets () const
 	      i != directory_set.end ();
 	      i++ )
 	{
-		fprintf ( fMakefile, "%s ", i->c_str () );
+		if ( IncludeDirectoryTarget ( *i ) )
+		{
+			fprintf ( fMakefile,
+			          "%s ",
+			          i->c_str () );
+		}
 	}
 
 	fprintf ( fMakefile, 
@@ -1069,40 +1088,6 @@ MingwModuleHandler::GetInvocationDependencies ( const Module& module ) const
 	return dependencies;
 }
 
-string
-MingwModuleHandler::GetInvocationParameters ( const Invoke& invoke ) const
-{
-	string parameters ( "" );
-	size_t i;
-	for (i = 0; i < invoke.output.size (); i++)
-	{
-		if (parameters.length () > 0)
-			parameters += " ";
-		InvokeFile& invokeFile = *invoke.output[i];
-		if (invokeFile.switches.length () > 0)
-		{
-			parameters += invokeFile.switches;
-			parameters += " ";
-		}
-		parameters += invokeFile.name;
-	}
-
-	for (i = 0; i < invoke.input.size (); i++)
-	{
-		if (parameters.length () > 0)
-			parameters += " ";
-		InvokeFile& invokeFile = *invoke.input[i];
-		if (invokeFile.switches.length () > 0)
-		{
-			parameters += invokeFile.switches;
-			parameters += " ";
-		}
-		parameters += invokeFile.name ;
-	}
-
-	return parameters;
-}
-
 void
 MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 {
@@ -1134,7 +1119,7 @@ MingwModuleHandler::GenerateInvocations ( const Module& module ) const
 		fprintf ( fMakefile,
 		          "\t%s %s\n\n",
 		          FixupTargetFilename ( invoke.invokeModule->GetPath () ).c_str (),
-		          GetInvocationParameters ( invoke ).c_str () );
+		          invoke.GetParameters ().c_str () );
 	}
 }
 
@@ -1145,13 +1130,31 @@ MingwModuleHandler::GetPreconditionDependenciesName ( const Module& module ) con
 	                  module.name.c_str () );
 }
 
+string
+MingwModuleHandler::GetDefaultDependencies ( const Module& module ) const
+{
+	/* Avoid circular dependency */
+	if ( module.type == BuildTool || module.name == "zlib" )
+		return "$(ROS_INTERMEDIATE)." SSEP "tools $(ROS_INTERMEDIATE)." SSEP "lib" SSEP "zlib";
+	else
+		return "init";
+}
+
 void
 MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) const
 {
 	string preconditionDependenciesName = GetPreconditionDependenciesName ( module );
 	string sourceFilenames = GetSourceFilenamesWithoutGeneratedFiles ( module );
-	string dependencies = GetModuleDependencies ( module );
-	string s = GetInvocationDependencies ( module );
+	string dependencies = GetDefaultDependencies ( module );
+	string s = GetModuleDependencies ( module );
+	if ( s.length () > 0 )
+	{
+		if ( dependencies.length () > 0 )
+			dependencies += " ";
+		dependencies += s;
+	}
+
+	s = GetInvocationDependencies ( module );
 	if ( s.length () > 0 )
 	{
 		if ( dependencies.length () > 0 )
@@ -1223,6 +1226,9 @@ string
 MingwModuleHandler::GetDefinitionDependencies ( const Module& module ) const
 {
 	string dependencies;
+	string dkNkmLibNoFixup = "dk/nkm/lib";
+	dependencies += FixupTargetFilename ( dkNkmLibNoFixup );
+	PassThruCacheDirectory ( dkNkmLibNoFixup + SSEP );
 	for ( size_t i = 0; i < module.files.size (); i++ )
 	{
 		File& file = *module.files[i];

@@ -451,6 +451,21 @@ Module::HasFileWithExtensions ( const std::string& extension1,
 	return false;
 }
 
+void
+Module::InvokeModule () const
+{
+	for ( size_t i = 0; i < invocations.size (); i++ )
+	{
+		Invoke& invoke = *invocations[i];
+		string command = invoke.invokeModule->GetPath () + " " + invoke.GetParameters ();
+		printf ( "Executing '%s'\n\n", command.c_str () );
+		int exitcode = system ( command.c_str () );
+		if ( exitcode != 0 )
+			throw InvocationFailedException ( command,
+			                                  exitcode );
+	}
+}
+
 
 File::File ( const string& _name, bool _first )
 	: name(_name), first(_first)
@@ -579,6 +594,40 @@ Invoke::GetTargets () const
 		targets += NormalizeFilename ( file.name );
 	}
 	return targets;
+}
+
+string
+Invoke::GetParameters () const
+{
+	string parameters ( "" );
+	size_t i;
+	for ( i = 0; i < output.size (); i++ )
+	{
+		if ( parameters.length () > 0)
+			parameters += " ";
+		InvokeFile& invokeFile = *output[i];
+		if ( invokeFile.switches.length () > 0 )
+		{
+			parameters += invokeFile.switches;
+			parameters += " ";
+		}
+		parameters += invokeFile.name;
+	}
+
+	for ( i = 0; i < input.size (); i++ )
+	{
+		if ( parameters.length () > 0 )
+			parameters += " ";
+		InvokeFile& invokeFile = *input[i];
+		if ( invokeFile.switches.length () > 0 )
+		{
+			parameters += invokeFile.switches;
+			parameters += " ";
+		}
+		parameters += invokeFile.name ;
+	}
+
+	return parameters;
 }
 
 

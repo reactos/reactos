@@ -330,8 +330,6 @@ DriverEntry (
   CreateStockObjects();
   CreateSysColorObjects();
   
-  PREPARE_TESTS
-
   return STATUS_SUCCESS;
 }
 
