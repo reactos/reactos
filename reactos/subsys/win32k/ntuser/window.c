@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.214 2004/04/13 18:40:00 weiden Exp $
+/* $Id: window.c,v 1.215 2004/04/13 23:12:29 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1233,76 +1233,69 @@ NtUserBuildHwndList(
 /*
  * @implemented
  */
- 
- /* FIXME - NEEDS TO BE FIXED - UNSAFE !!! */
 HWND STDCALL
 NtUserChildWindowFromPointEx(HWND hwndParent,
 			     LONG x,
 			     LONG y,
 			     UINT uiFlags)
 {
-    PWINDOW_OBJECT pParent, pCurrent, pLast, pPar;
-    POINT p = {x,y};
-    RECT rc;
-    BOOL bFirstRun = TRUE; 
-     
-    if(hwndParent)
+  PWINDOW_OBJECT Parent;
+  POINTL Pt;
+  HWND Ret;
+  HWND *List, *phWnd;
+  
+  if(!(Parent = IntGetWindowObject(hwndParent)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return NULL;
+  }
+  
+  Ret = NULL;
+  
+  Pt.x = Parent->WindowRect.left + x;
+  Pt.y = Parent->WindowRect.top + y;
+  
+  if((List = IntWinListChildren(Parent)))
+  {
+    for(phWnd = List; *phWnd; phWnd++)
     {
-        pParent = IntGetWindowObject(hwndParent);
-        if(pParent)
+      PWINDOW_OBJECT Child;
+      if((Child = IntGetWindowObject(*phWnd)))
+      {
+        if(!(Child->Style & WS_VISIBLE) && (uiFlags & CWP_SKIPINVISIBLE))
         {
-            IntLockRelatives(pParent);
-            
-            pLast = IntGetWindowObject(pParent->LastChild->Self);
-            pCurrent = IntGetWindowObject(pParent->FirstChild->Self);
-            
-            do
-            {
-                if (!bFirstRun)
-                {
-                    pCurrent = IntGetWindowObject(pCurrent->NextSibling->Self);
-                    
-                }
-                else
-                    bFirstRun = FALSE;
-                if(!pCurrent)
-                {
-                    IntUnLockRelatives(pParent);
-                    return (HWND)NULL;
-                }
-                if(!(pPar = IntGetWindowObject(pCurrent->Parent)))
-                {
-                    IntUnLockRelatives(pParent);
-                    return (HWND)NULL;
-                }
-                rc.left = pCurrent->WindowRect.left - pPar->ClientRect.left;
-                rc.top = pCurrent->WindowRect.top - pPar->ClientRect.top;
-                rc.right = rc.left + (pCurrent->WindowRect.right - pCurrent->WindowRect.left);
-                rc.bottom = rc.top + (pCurrent->WindowRect.bottom - pCurrent->WindowRect.top);
-                DbgPrint("Rect:  %i,%i,%i,%i\n",rc.left, rc.top, rc.right, rc.bottom);
-                IntReleaseWindowObject(pPar);
-                if (POINT_IN_RECT(p,rc)) /* Found a match */
-                {
-                    if ( (uiFlags & CWP_SKIPDISABLED) && (pCurrent->Style & WS_DISABLED) )
-                        continue;
-                    if( (uiFlags & CWP_SKIPTRANSPARENT) && (pCurrent->ExStyle & WS_EX_TRANSPARENT) )
-                        continue;
-                    if( (uiFlags & CWP_SKIPINVISIBLE) && !(pCurrent->Style & WS_VISIBLE) )
-                        continue;
-
-                    IntUnLockRelatives(pParent);                  
-                    return pCurrent->Self;
-                }
-            }
-            while(pCurrent != pLast);
-            
-            IntUnLockRelatives(pParent);
-            return (HWND)NULL;
+          IntReleaseWindowObject(Child);
+          continue;
         }
-        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        if((Child->Style & WS_DISABLED) && (uiFlags & CWP_SKIPDISABLED))
+        {
+          IntReleaseWindowObject(Child);
+          continue;
+        }
+        if((Child->ExStyle & WS_EX_TRANSPARENT) && (uiFlags & CWP_SKIPTRANSPARENT))
+        {
+          IntReleaseWindowObject(Child);
+          continue;
+        }
+        if(IntPtInWindow(Child, Pt.x, Pt.y))
+        {
+          Ret = Child->Self;
+          IntReleaseWindowObject(Child);
+          break;
+        }
+        IntReleaseWindowObject(Child);
+      }
     }
-
-    return (HWND)NULL;
+    ExFreePool(List);
+  }
+  
+  if((Ret == NULL) && IntPtInWindow(Parent, Pt.x, Pt.y))
+  {
+    Ret = Parent->Self;
+  }
+  
+  IntReleaseWindowObject(Parent);
+  return Ret;
 }
 
 

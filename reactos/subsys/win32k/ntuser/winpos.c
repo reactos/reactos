@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.109 2004/04/09 20:03:19 navaraf Exp $
+/* $Id: winpos.c,v 1.110 2004/04/13 23:12:30 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1385,14 +1385,7 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, BOOL SendHitTestMessage, POINT *Po
       
       if (Current->Style & WS_VISIBLE &&
 	  (!(Current->Style & WS_DISABLED) || (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
-	  (Point->x >= Current->WindowRect.left &&
-           Point->x < Current->WindowRect.right &&
-           Point->y >= Current->WindowRect.top &&
-           Point->y < Current->WindowRect.bottom) &&
-           (!Current->WindowRegion || (Current->Style & WS_MINIMIZE) || 
-            NtGdiPtInRegion(Current->WindowRegion, (INT)(Point->x - Current->WindowRect.left), 
-                            (INT)(Point->y - Current->WindowRect.top)))
-        )
+	  IntPtInWindow(Current, Point->x, Point->y))
 	  {
 	if(*Window)
 	{
