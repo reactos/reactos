@@ -82,7 +82,6 @@ IopInitializeDevice(
           return Status;
       }
 
-#ifdef ACPI
       if (Fdo->DeviceType == FILE_DEVICE_ACPI)
       {
          static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
@@ -94,7 +93,6 @@ IopInitializeDevice(
             SystemPowerDeviceNodeCreated = TRUE;
          }
       }
-#endif /* ACPI */
 
       if (Fdo->DeviceType == FILE_DEVICE_BUS_EXTENDER ||
           Fdo->DeviceType == FILE_DEVICE_ACPI)

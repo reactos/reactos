@@ -492,6 +492,7 @@ typedef struct _ADDRESS_RANGE
 #define MB_FLAGS_BOOT_LOADER_NAME (0x200)
 #define MB_FLAGS_APM_TABLE        (0x400)
 #define MB_FLAGS_GRAPHICS_TABLE   (0x800)
+#define MB_FLAGS_ACPI_TABLE       (0x1000)
 
 typedef struct _LOADER_MODULE
 {

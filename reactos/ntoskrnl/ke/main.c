@@ -528,7 +528,7 @@ ExpInitializeExecutive(VOID)
   ExInit3();
   KdInit1();
   IoInit();
-  PoInit();
+  PoInit(&KeLoaderBlock, FALSE);
   CmInitializeRegistry();
   MmInit3();
   CcInit();

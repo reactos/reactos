@@ -38,11 +38,6 @@ OPTIMIZED := 0
 CONFIG_SMP := 0
 
 #
-# Whether to compile for ACPI compliant systems
-#
-ACPI := 0
-
-#
 # whether to use a 3GB User, 1GB Kernel memory map
 #
 3GB := 0

@@ -18,7 +18,7 @@
 extern PDEVICE_NODE PopSystemPowerDeviceNode;
 
 VOID
-PoInit(VOID);
+PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock, BOOLEAN ForceAcpiDisable);
 
 NTSTATUS
 PopSetSystemPowerState(

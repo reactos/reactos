@@ -580,6 +580,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
  
     extern ULONG PageDirectoryStart;
     extern ULONG PageDirectoryEnd;
+    extern BOOLEAN AcpiPresent;
 
 	//
 	// Open the operating system section
@@ -596,8 +597,9 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	 * Setup multiboot information structure
 	 */
 	LoaderBlock.Flags = MB_INFO_FLAG_MEM_SIZE | MB_INFO_FLAG_BOOT_DEVICE | MB_INFO_FLAG_COMMAND_LINE | MB_INFO_FLAG_MODULES;
-    LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
-    LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
+	if (AcpiPresent) LoaderBlock.Flags |= MB_INFO_FLAG_ACPI_TABLE;
+	LoaderBlock.PageDirectoryStart = (ULONG)&PageDirectoryStart;
+	LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
 	LoaderBlock.BootDevice = 0xffffffff;
 	LoaderBlock.CommandLine = (unsigned long)multiboot_kernel_cmdline;
 	LoaderBlock.ModsCount = 0;
