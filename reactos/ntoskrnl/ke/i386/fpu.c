@@ -66,7 +66,6 @@ KiCheckFPU(VOID)
 	cr0 = cr0 | 0x4;
 	__asm__("movl %0, %%cr0\n\t" :
 		: "a" (cr0));
-	DbgPrint("No FPU detected\n");
 	return;
      }
    /* FIXME: Do fsetpm */
