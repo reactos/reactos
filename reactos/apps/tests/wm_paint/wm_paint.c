@@ -31,8 +31,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-   wc.hbrBackground = 
-      reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
+   wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
    wc.lpszClassName = WndClassName;
 
    if (RegisterClass(&wc))
@@ -70,7 +69,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
       {
          // determine the invalidated area of the window            
          RECT RUpdate;            
-         GetUpdateRect(HWnd, &RUpdate, false);
+         GetUpdateRect(HWnd, &RUpdate, NULL);
 
          // grab a handle to our window's
          // common display device context
@@ -87,11 +86,11 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                               RUpdate.right, RUpdate.bottom);
 
             // fill the client area with the background brush
-            HBRUSH HBrush = 
-               reinterpret_cast<HBRUSH>(
-                  GetClassLong(HWnd, GCL_HBRBACKGROUND)
+            //HBRUSH HBrush = 
+               //reinterpret_cast<HBRUSH>
+                  (HBRUSH)(GetClassLong(HWnd, GCL_HBRBACKGROUND)
                   );
-            FillRect(Hdc, &RClient, HBrush);
+            FillRect(Hdc, &RClient, NULL);
             
             // render the persistent text
             const char* text = "Persistent Text"; 
