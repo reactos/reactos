@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.12 2002/09/08 10:23:32 chorns Exp $
+/* $Id: connect.c,v 1.13 2002/11/03 20:01:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -90,7 +90,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
    */
   RequestMessage->MessageHeader.DataSize = 
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
   RequestMessage->MessageHeader.MessageSize = 
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
@@ -568,20 +568,20 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (LpcMessage != NULL)
     {
-      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE_HEADER));
+      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE));
       memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1), 
 	     LpcMessage->DataSize);
       CReply->MessageHeader.MessageSize =
 	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize;
       CReply->MessageHeader.DataSize = CReply->MessageHeader.MessageSize -
-	sizeof(LPC_MESSAGE_HEADER);
+	sizeof(LPC_MESSAGE);
       CReply->ConnectDataLength = LpcMessage->DataSize;
     }
   else
     {
       CReply->MessageHeader.MessageSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
       CReply->MessageHeader.DataSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
-	sizeof(LPC_MESSAGE_HEADER);
+	sizeof(LPC_MESSAGE);
       CReply->ConnectDataLength = 0;
     }
   if (AcceptIt != 1)

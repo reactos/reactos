@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.93 2002/10/01 19:27:25 chorns Exp $
+/* $Id: process.c,v 1.94 2002/11/03 20:01:07 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -694,7 +694,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 	
 	Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
 	Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) -
-	  sizeof(LPC_MESSAGE_HEADER);
+	  sizeof(LPC_MESSAGE);
 	Message.Type = DBG_EVENT_CREATE_PROCESS;
 	Message.Data.CreateProcess.FileHandle = FileHandle;
 	Message.Data.CreateProcess.Base = ImageBase;

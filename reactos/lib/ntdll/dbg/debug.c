@@ -1,4 +1,4 @@
-/* $Id: debug.c,v 1.6 2002/09/08 10:23:03 chorns Exp $
+/* $Id: debug.c,v 1.7 2002/11/03 20:01:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,7 +24,7 @@ static HANDLE DbgSsReplyPort = NULL;
 
 typedef struct _LPC_DBGSS_MESSAGE
 {
-	LPC_MESSAGE_HEADER Header;
+	LPC_MESSAGE Header;
 	ULONG Unknown1;
 	ULONG Unknown2;
 	ULONG Unknown3;

@@ -1,4 +1,4 @@
-/* $Id: lpc.c,v 1.8 2002/09/08 10:23:02 chorns Exp $
+/* $Id: lpc.c,v 1.9 2002/11/03 20:01:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -97,7 +97,7 @@ CsrClientCallServer(PCSRSS_API_REQUEST Request,
       return (STATUS_UNSUCCESSFUL);
     }
   
-   Request->Header.DataSize = Length - sizeof(LPC_MESSAGE_HEADER);
+   Request->Header.DataSize = Length - sizeof(LPC_MESSAGE);
    Request->Header.MessageSize = Length;
    
    Status = NtRequestWaitReplyPort(WindowsApiPort,

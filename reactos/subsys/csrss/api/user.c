@@ -1,4 +1,4 @@
-/* $Id: user.c,v 1.1 2002/10/20 14:53:43 ekohl Exp $
+/* $Id: user.c,v 1.2 2002/11/03 20:01:07 chorns Exp $
  *
  * reactos/subsys/csrss/api/user.c
  *
@@ -33,7 +33,7 @@ CSR_API(CsrRegisterServicesProcess)
 
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
 
   if (ServicesProcessIdValid == TRUE)
     {
@@ -57,7 +57,7 @@ CSR_API(CsrExitReactos)
 {
   Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
   Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
 
 
 

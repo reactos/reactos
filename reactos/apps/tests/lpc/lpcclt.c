@@ -1,4 +1,4 @@
-/* $Id: lpcclt.c,v 1.11 2002/09/08 10:21:58 chorns Exp $
+/* $Id: lpcclt.c,v 1.12 2002/11/03 20:01:04 chorns Exp $
  *
  * DESCRIPTION: Simple LPC Client
  * PROGRAMMER:  David Welch
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
    ZeroMemory(& Request, sizeof Request);
    strcpy(Request.Data, GetCommandLineA());
    Request.Header.DataSize = strlen(Request.Data);
-   Request.Header.MessageSize = sizeof(LPC_MESSAGE_HEADER) + 
+   Request.Header.MessageSize = sizeof(LPC_MESSAGE) + 
      Request.Header.DataSize;
    
    printf("%s: Sending to port 0x%x message \"%s\"...\n", 

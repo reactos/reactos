@@ -13,7 +13,7 @@
 
 typedef struct _LPC_DBG_MESSAGE
 {
-   LPC_MESSAGE_HEADER Header;
+   LPC_MESSAGE Header;
    ULONG Type;
    ULONG Status;
    union

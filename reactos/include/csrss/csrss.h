@@ -315,7 +315,7 @@ typedef struct
 #define CSRSS_MAX_WRITE_CONSOLE_REQUEST       \
       (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE_REQUEST))
 
-#define CSRSS_MAX_SET_TITLE_REQUEST           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof( LPC_MESSAGE_HEADER ))
+#define CSRSS_MAX_SET_TITLE_REQUEST           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof( LPC_MESSAGE ))
 
 #define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST ))
 
@@ -367,11 +367,11 @@ typedef struct
 
 
 /* Keep in sync with definition below. */
-#define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE_HEADER) + sizeof(ULONG))
+#define CSRSS_REQUEST_HEADER_SIZE (sizeof(LPC_MESSAGE) + sizeof(ULONG))
 
 typedef struct
 {
-  LPC_MESSAGE_HEADER Header;
+  LPC_MESSAGE Header;
   ULONG Type;
   union
   {
@@ -411,7 +411,7 @@ typedef struct
 
 typedef struct
 {
-  LPC_MESSAGE_HEADER Header;
+  LPC_MESSAGE Header;
   NTSTATUS Status;
   union
   {

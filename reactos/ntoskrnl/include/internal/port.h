@@ -43,7 +43,7 @@ typedef struct _EPORT_TERMINATION_REQUEST
 
 typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 {
-  LPC_MESSAGE_HEADER MessageHeader;
+  LPC_MESSAGE MessageHeader;
   PEPROCESS ConnectingProcess;
   struct _SECTION_OBJECT* SendSectionObject;
   LARGE_INTEGER SendSectionOffset;
@@ -54,7 +54,7 @@ typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 
 typedef struct _EPORT_CONNECT_REPLY_MESSAGE
 {
-  LPC_MESSAGE_HEADER MessageHeader;
+  LPC_MESSAGE MessageHeader;
   PVOID SendServerViewBase;
   ULONG ReceiveClientViewSize;
   PVOID ReceiveClientViewBase;

@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.46 2002/10/29 03:49:31 mdill Exp $
+/* $Id: console.c,v 1.47 2002/11/03 20:01:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2052,7 +2052,7 @@ GetConsoleTitleW(
 			& Re.quest,
 			& Re.ply,
 			(sizeof (CSRSS_GET_TITLE_REQUEST) +
-			sizeof (LPC_MESSAGE_HEADER) +
+			sizeof (LPC_MESSAGE) +
 			sizeof (ULONG)),
 			sizeof (CSRSS_API_REPLY)
 			);
@@ -2169,7 +2169,7 @@ SetConsoleTitleW(
 			       &Reply,
 			       sizeof(CSRSS_SET_TITLE_REQUEST) +
 			       c +
-			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( LPC_MESSAGE ) +
 			       sizeof( ULONG ),
 			       sizeof(CSRSS_API_REPLY));
   
@@ -2222,7 +2222,7 @@ SetConsoleTitleA(
 			       &Reply,
 			       sizeof(CSRSS_SET_TITLE_REQUEST) +
 			       c +
-			       sizeof( LPC_MESSAGE_HEADER ) +
+			       sizeof( LPC_MESSAGE ) +
 			       sizeof( ULONG ),
 			       sizeof(CSRSS_API_REPLY));
   

@@ -1,4 +1,4 @@
-/* $Id: reply.c,v 1.11 2002/09/08 10:23:32 chorns Exp $
+/* $Id: reply.c,v 1.12 2002/11/03 20:01:06 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -233,13 +233,13 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    
    if (Request->Message.MessageType == LPC_CONNECTION_REQUEST)
      {
-       LPC_MESSAGE_HEADER Header;
+       LPC_MESSAGE Header;
        PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
 
        CRequest = (PEPORT_CONNECT_REQUEST_MESSAGE)&Request->Message;
-       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE_HEADER));
+       memcpy(&Header, &Request->Message, sizeof(LPC_MESSAGE));
        Header.DataSize = CRequest->ConnectDataLength;
-       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE_HEADER);
+       Header.MessageSize = Header.DataSize + sizeof(LPC_MESSAGE);
        Status = MmCopyToCaller(LpcMessage, &Header, sizeof(LPC_MESSAGE));
        if (!NT_SUCCESS(Status))
 	 {

@@ -49,7 +49,7 @@ DbgkCreateThread(PVOID StartAddress)
 
   Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
   Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) - 
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
   Message.Type = DBG_EVENT_CREATE_THREAD;
   Message.Status = STATUS_SUCCESS;
   Message.Data.CreateThread.Reserved = 0;
@@ -85,7 +85,7 @@ DbgkForwardException(EXCEPTION_RECORD Er, ULONG FirstChance)
 
   Message.Header.MessageSize = sizeof(LPC_DBG_MESSAGE);
   Message.Header.DataSize = sizeof(LPC_DBG_MESSAGE) - 
-    sizeof(LPC_MESSAGE_HEADER);
+    sizeof(LPC_MESSAGE);
   Message.Type = DBG_EVENT_EXCEPTION;
   Message.Status = STATUS_SUCCESS;
   Message.Data.Exception.ExceptionRecord = Er;

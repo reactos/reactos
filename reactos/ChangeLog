@@ -1,3 +1,23 @@
+2002-11-03  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* apps/tests/lpc/lpcclt.c: Change LPC_MESSAGE_HEADER to LPC_MESSAGE.
+	* include/csrss/csrss.h: Ditto.
+	* include/lsass/lsass.h: Ditto.
+	* include/napi/dbg.h: Ditto.
+	* include/napi/lpc.h: Ditto.
+	* lib/kernel32/misc/console.c: Ditto.
+	* lib/ntdll/csr/lpc.c: Ditto.
+	* lib/ntdll/dbg/debug.c: Ditto.
+	* lib/secur32/lsa.c: Ditto.
+	* ntoskrnl/dbg/user.c: Ditto.
+	* ntoskrnl/include/internal/port.h: Ditto.
+	* ntoskrnl/lpc/connect.c: Ditto.
+	* ntoskrnl/lpc/reply.c: Ditto.
+	* ntoskrnl/ps/process.c: Ditto.
+	* subsys/csrss/api/conio.c: Ditto.
+	* subsys/csrss/api/process.c: Ditto.
+	* subsys/csrss/api/user.c: Ditto.
+
 2002-10-26  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* lib/msvcrt/except/seh.s: Fix end-of-line formatting.

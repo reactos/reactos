@@ -1,4 +1,4 @@
-/* $Id: lsa.c,v 1.5 2002/09/08 10:23:08 chorns Exp $
+/* $Id: lsa.c,v 1.6 2002/11/03 20:01:06 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -74,9 +74,9 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
    Reply = (PLSASS_REPLY)RawReply;
    
    Request->Header.DataSize = sizeof(LSASS_REQUEST) + SubmitBufferLength -
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    Request->Header.MessageSize = 
-     Request->Header.DataSize + sizeof(LPC_MESSAGE_HEADER);
+     Request->Header.DataSize + sizeof(LPC_MESSAGE);
    Request->Type = LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE;
    Request->d.CallAuthenticationPackageRequest.AuthenticationPackage =
      AuthenticationPackage;
@@ -129,9 +129,9 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
    
    Request = (PLSASS_REQUEST)RawRequest;
    Request->Header.DataSize = sizeof(LSASS_REQUEST) + PackageName->Length -
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    Request->Header.MessageSize = Request->Header.DataSize +
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    Request->Type = LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE;
    
    Status = NtRequestWaitReplyPort(LsaHandle,
@@ -175,7 +175,7 @@ LsaLogonUser(HANDLE LsaHandle,
    UCHAR RawReply[MAX_MESSAGE_DATA];
    NTSTATUS Status;
    
-   RequestLength = sizeof(LSASS_REQUEST) - sizeof(LPC_MESSAGE_HEADER);
+   RequestLength = sizeof(LSASS_REQUEST) - sizeof(LPC_MESSAGE);
    RequestLength = RequestLength + (OriginName->Length * sizeof(WCHAR));
    RequestLength = RequestLength + AuthenticationInformationLength;
    RequestLength = RequestLength + 
@@ -215,8 +215,8 @@ LsaLogonUser(HANDLE LsaHandle,
    Request->d.LogonUserRequest.SourceContext = *SourceContext;
    
    Request->Type = LSASS_REQUEST_LOGON_USER;
-   Request->Header.DataSize = RequestLength - sizeof(LPC_MESSAGE_HEADER);
-   Request->Header.MessageSize = RequestLength + sizeof(LPC_MESSAGE_HEADER);
+   Request->Header.DataSize = RequestLength - sizeof(LPC_MESSAGE);
+   Request->Header.MessageSize = RequestLength + sizeof(LPC_MESSAGE);
    
    Reply = (PLSASS_REPLY)RawReply;
    
@@ -278,7 +278,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
    
    Request.Type = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
    Request.Header.DataSize = sizeof(LSASS_REQUEST) - 
-     sizeof(LPC_MESSAGE_HEADER);
+     sizeof(LPC_MESSAGE);
    Request.Header.MessageSize = sizeof(LSASS_REQUEST);
    
    Request.d.RegisterLogonProcessRequest.Length = LsaLogonProcessName->Length;

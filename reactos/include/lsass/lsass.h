@@ -1,4 +1,4 @@
-/* $Id: lsass.h,v 1.3 2002/09/08 10:22:30 chorns Exp $
+/* $Id: lsass.h,v 1.4 2002/11/03 20:01:05 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -98,7 +98,7 @@ typedef struct _LSASS_REGISTER_LOGON_PROCESS_REPLY
 
 typedef struct _LSASS_REQUEST
 {
-   LPC_MESSAGE_HEADER Header;
+   LPC_MESSAGE Header;
    ULONG Type;
    union
      {
@@ -114,7 +114,7 @@ typedef struct _LSASS_REQUEST
 
 typedef struct _LSASS_REPLY
 {
-   LPC_MESSAGE_HEADER Header;
+   LPC_MESSAGE Header;
    NTSTATUS Status;
    union
      {
