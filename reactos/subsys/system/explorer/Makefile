@@ -66,6 +66,12 @@ LIBS = gdi32 comctl32 ole32 uuid
 
 all: buildno.h $(TARGET)
 
+docu:
+	doxygen Doxyfile
+
+full-docu:
+	doxygen Doxyfile-all
+
 buildno.h: ../../../include/reactos/buildno.h
 	updatebuildno
 
