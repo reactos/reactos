@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.1 2003/12/07 12:59:34 chorns Exp $
+/* $Id: accelerator.c,v 1.2 2003/12/07 14:21:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,9 +63,53 @@ NtUserCopyAcceleratorTable(
   LPACCEL Entries,
   int EntriesCount)
 {
-  UNIMPLEMENTED
+  PWINSTATION_OBJECT WindowStation;
+  PACCELERATOR_TABLE AcceleratorTable;
+  NTSTATUS Status;
+  int Ret;
+  
+  Status = IntValidateWindowStationHandle(NtUserGetProcessWindowStation(),
+    UserMode,
+	0,
+	&WindowStation);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(STATUS_ACCESS_DENIED);
+    return 0;
+  }
+  
+  Status = ObmReferenceObjectByHandle(WindowStation->HandleTable,
+    Table,
+    otAcceleratorTable,
+    (PVOID*)&AcceleratorTable);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+    ObDereferenceObject(WindowStation);
+    return 0;
+  }
+  
+  if(Entries)
+  {
+    Ret = max(EntriesCount, AcceleratorTable->Count);
+    Status = MmCopyToCaller(Entries, AcceleratorTable->Table, Ret * sizeof(ACCEL));
+    if (!NT_SUCCESS(Status))
+    {
+	  ObmDereferenceObject(AcceleratorTable);
+      ObDereferenceObject(WindowStation);
+      SetLastNtError(Status);
+      return 0;
+    }
+  }
+  else
+  {
+    Ret = AcceleratorTable->Count;
+  }
+  
+  ObmDereferenceObject(AcceleratorTable);
+  ObDereferenceObject(WindowStation);
 
-  return 0;
+  return Ret;
 }
 
 HACCEL
