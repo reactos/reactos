@@ -166,7 +166,7 @@ IoSecondStageCompletion_RundownApcRoutine(
 /*
  * FUNCTION: Performs the second stage of irp completion for read/write irps
  * 
- * Called as a special kernel APC or directly from IofCompleteRequest()
+ * Called as a special kernel APC kernel-routine or directly from IofCompleteRequest()
  */
 VOID STDCALL
 IoSecondStageCompletion(
@@ -186,6 +186,18 @@ IoSecondStageCompletion(
    OriginalFileObject = (PFILE_OBJECT)(*NormalContext);
    Irp = (PIRP)(*SystemArgument1);
    PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
+   
+   /* 
+   Remove synchronous irp's from the threads cleanup list.
+   To synchronize with the code inserting the entry, this code must run 
+   at APC_LEVEL, thou this routine is currently (incorrecly?) called at
+   irql's from 0 to 2.
+   */
+   if (!IsListEmpty(&Irp->ThreadListEntry))
+   {
+     RemoveEntryList(&Irp->ThreadListEntry);
+     InitializeListHead(&Irp->ThreadListEntry);
+   }
    
    IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
    DeviceObject = IoStack->DeviceObject;

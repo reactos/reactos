@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.36 2003/11/16 21:03:59 ekohl Exp $
+/* $Id: buildirp.c,v 1.37 2003/11/19 21:11:47 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -335,6 +335,8 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 	break;
      }
 
+   /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
+   IoQueueThreadIrp(Irp);
    return(Irp);
 }
 
@@ -386,6 +388,8 @@ IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    
    Irp->UserEvent = Event;
 
+   /* synchronous irp's are queued to requestor thread's irp cancel/cleanup list */
+   IoQueueThreadIrp(Irp);
    return(Irp);
 }
 
