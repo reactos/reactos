@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.12 2003/11/09 13:50:03 navaraf Exp $
+/* $Id: winsta.c,v 1.13 2003/12/13 11:34:53 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -96,8 +96,39 @@ WINBOOL STDCALL
 EnumWindowStationsW(ENUMWINDOWSTATIONPROCW lpEnumFunc,
 		    LPARAM lParam)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   PWCHAR Buffer;
+   NTSTATUS Status;
+   ULONG dwRequiredSize;
+   ULONG CurrentEntry, EntryCount;
+
+   Buffer = HeapAlloc(GetProcessHeap(), 0, 200);
+   if (Buffer == NULL)
+   {
+      return FALSE;
+   }
+   Status = NtUserBuildNameList(0, 200, Buffer, &dwRequiredSize);
+   if (Status == STATUS_BUFFER_TOO_SMALL)
+   {
+      Buffer = HeapReAlloc(GetProcessHeap(), 0, Buffer, dwRequiredSize);
+      if (Buffer == NULL)
+      {
+         return FALSE;
+      }
+      Status = NtUserBuildNameList(0, dwRequiredSize, Buffer, &dwRequiredSize);
+   }
+   if (Status != STATUS_SUCCESS)
+   {
+      HeapFree(GetProcessHeap(), 0, Buffer);
+      return FALSE;
+   }
+   EntryCount = *((DWORD *)Buffer);
+   Buffer += sizeof(DWORD) / sizeof(WCHAR);
+   for (CurrentEntry = 0; CurrentEntry < EntryCount; ++CurrentEntry)
+   {
+      (*lpEnumFunc)(Buffer, lParam);
+      Buffer += wcslen(Buffer) + 1;
+   }
+   return TRUE;
 }
 
 

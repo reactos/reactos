@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.51 2003/12/07 23:02:57 gvg Exp $
+ *  $Id: winsta.c,v 1.52 2003/12/13 11:34:53 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -51,6 +51,8 @@
 #include <include/mouse.h>
 #include <include/callback.h>
 #include <include/guicheck.h>
+/* Needed for DIRECTORY_OBJECT */
+#include <internal/ob.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -116,8 +118,9 @@ IntGetFullWindowStationName(
 {
    PWCHAR Buffer;
 
-   FullName->Length = (WINSTA_ROOT_NAME_LENGTH + 1) * sizeof(WCHAR) +
-      WinStaName->Length;
+   FullName->Length = WINSTA_ROOT_NAME_LENGTH * sizeof(WCHAR);
+   if (WinStaName != NULL)
+      FullName->Length += WinStaName->Length + sizeof(WCHAR);
    if (DesktopName != NULL)
       FullName->Length += DesktopName->Length + sizeof(WCHAR);
    FullName->Buffer = ExAllocatePool(NonPagedPool, FullName->Length);
@@ -129,16 +132,19 @@ IntGetFullWindowStationName(
    Buffer = FullName->Buffer;
    memcpy(Buffer, WINSTA_ROOT_NAME, WINSTA_ROOT_NAME_LENGTH * sizeof(WCHAR));
    Buffer += WINSTA_ROOT_NAME_LENGTH;
-   memcpy(Buffer, L"\\", sizeof(WCHAR));
-   Buffer ++;
-   memcpy(Buffer, WinStaName->Buffer, WinStaName->Length);
-
-   if (DesktopName != NULL)
+   if (WinStaName != NULL)
    {
-      Buffer += WinStaName->Length / sizeof(WCHAR);
       memcpy(Buffer, L"\\", sizeof(WCHAR));
       Buffer ++;
-      memcpy(Buffer, DesktopName->Buffer, DesktopName->Length);
+      memcpy(Buffer, WinStaName->Buffer, WinStaName->Length);
+
+      if (DesktopName != NULL)
+      {
+         Buffer += WinStaName->Length / sizeof(WCHAR);
+         memcpy(Buffer, L"\\", sizeof(WCHAR));
+         Buffer ++;
+         memcpy(Buffer, DesktopName->Buffer, DesktopName->Length);
+      }
    }
 
    return TRUE;
@@ -808,9 +814,93 @@ NtUserBuildNameList(
    PVOID lpBuffer,
    PULONG pRequiredSize)
 {
+#if 0
+   NTSTATUS Status;
+   HANDLE DirectoryHandle;
+   ULONG EntryCount = 0;
+   UNICODE_STRING DirectoryNameW;
+   PWCHAR BufferChar;
+   PDIRECTORY_OBJECT DirObj = NULL;
+   PLIST_ENTRY CurrentEntry = NULL;
+   POBJECT_HEADER CurrentObject = NULL;
+	
+   /*
+    * Generate full window station name
+    */
+
+   /* FIXME: Correct this for desktop */
+   if (!IntGetFullWindowStationName(&DirectoryNameW, NULL, NULL))
+   {
+      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+      return 0;
+   }
+
+   /*
+    * Try to open the directory.
+    */
+
+   Status = ObReferenceObjectByName(&DirectoryNameW, 0, NULL, DIRECTORY_QUERY,
+      ObDirectoryType, UserMode, (PVOID*)&DirObj, NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      ExFreePool(DirectoryNameW.Buffer);
+      return Status;
+   }
+
+   /*
+    * Count the required size of buffer.
+    */
+
+   *pRequiredSize = sizeof(DWORD);
+   for (CurrentEntry = DirObj->head.Flink; CurrentEntry != &DirObj->head;
+        CurrentEntry = CurrentEntry->Flink)
+   {
+      CurrentObject = CONTAINING_RECORD(CurrentEntry, OBJECT_HEADER, Entry);
+      *pRequiredSize += CurrentObject->Name.Length + sizeof(UNICODE_NULL);
+      ++EntryCount;
+   }
+
+   DPRINT1("Required size: %d Entry count: %d\n", *pRequiredSize, EntryCount);
+
+   /*
+    * Check if the supplied buffer is large enought.
+    */
+
+   if (*pRequiredSize > dwSize)
+   {
+      ExFreePool(DirectoryNameW.Buffer);
+      ObDereferenceObject(DirectoryHandle);
+      return STATUS_BUFFER_TOO_SMALL;
+   }
+
+   /*
+    * Generate the resulting buffer contents.
+    */
+
+   *((DWORD *)lpBuffer) = EntryCount;
+   BufferChar = (PWCHAR)((INT_PTR)lpBuffer + 4);
+   for (CurrentEntry = DirObj->head.Flink; CurrentEntry != &DirObj->head;
+        CurrentEntry = CurrentEntry->Flink)
+   {
+      CurrentObject = CONTAINING_RECORD(CurrentEntry, OBJECT_HEADER, Entry);
+      wcscpy(BufferChar, CurrentObject->Name.Buffer);
+      DPRINT1("Name: %s\n", BufferChar);
+      BufferChar += (CurrentObject->Name.Length / sizeof(WCHAR)) + 1;
+   }
+
+   /*
+    * Free any resource.
+    */
+
+   ExFreePool(DirectoryNameW.Buffer);
+   ObDereferenceObject(DirectoryHandle);
+
+   return STATUS_SUCCESS;
+#else
    UNIMPLEMENTED
 
-   return STATUS_UNSUCCESSFUL;
+   return STATUS_NOT_IMPLEMENTED;
+#endif
 }
 
 /* EOF */
