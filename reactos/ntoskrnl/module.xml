@@ -1,0 +1,363 @@
+<module name="ntoskrnl" type="kernelmodedll">
+	<include>./include</include>
+	<include>../lib/kjs/include</include>
+	<library>kjs</library>
+	<directory name="cc">
+		<file>cacheman.c</file>
+		<file>copy.c</file>
+		<file>fs.c</file>
+		<file>mdl.c</file>
+		<file>misc.c</file>
+		<file>pin.c</file>
+		<file>view.c</file>
+	</directory>
+	<directory name="cm">
+		<file>import.c</file>
+		<file>ntfunc.c</file>
+		<file>regfile.c</file>
+		<file>registry.c</file>
+		<file>regobj.c</file>
+		<file>rtlfunc.c</file>
+	</directory>
+	<directory name="dbg">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<if property="kdbg" value="true">
+					<group>
+						<file>i386-dis.c</file>
+						<file>kdb_help.S</file>
+					</group>
+				</if>
+			</directory>
+		</if>
+		<if property="kdbg" value="true">
+			<group>
+				<file>kdb.c</file>
+				<file>kdb_keyboard.c</file>
+				<file>kdb_serial.c</file>
+				<file>profile.c</file>
+				<file>rdebug.c</file>
+			</group>
+		</if>
+		<or>
+			<if property="kdbg" value="true">
+				<group>
+					<file>kdb_stabs.c</file>
+					<file>kdb_symbols.c</file>
+				</group>
+			</if>
+			<if property="dbg" value="true">
+				<group>
+					<file>kdb_stabs.c</file>
+					<file>kdb_symbols.c</file>
+				</group>
+			</if>
+		</or>
+		<file>user.c</file>
+		<file>dbgctrl.c</file>
+		<file>errinfo.c</file>
+		<file>print.c</file>
+	</directory>
+	<directory name="ex">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<file>interlck.c</file>
+			</directory>
+		</if>
+		<file>btree.c</file>
+		<file>callback.c</file>
+		<file>fmutex.c</file>
+		<file>hashtab.c</file>
+		<file>init.c</file>
+		<file>interlck.c</file>
+		<file>list.c</file>
+		<file>lookas.c</file>
+		<file>napi.c</file>
+		<file>power.c</file>
+		<file>resource.c</file>
+		<file>rundown.c</file>
+		<file>stree.c</file>
+		<file>synch.c</file>
+		<file>sysinfo.c</file>
+		<file>time.c</file>
+		<file>util.c</file>
+		<file>uuid.c</file>
+		<file>win32k.c</file>
+		<file>work.c</file>
+		<file>zone.c</file>
+	</directory>
+	<directory name="fs">
+		<file>dbcsname.c</file>
+		<file>filelock.c</file>
+		<file>mcb.c</file>
+		<file>mdl.c</file>
+		<file>name.c</file>
+		<file>notify.c</file>
+		<file>oplock.c</file>
+		<file>pool.c</file>
+		<file>tunnel.c</file>
+		<file>unc.c</file>
+		<file>util.c</file>
+	</directory>
+	<directory name="inbv">
+		<if property="arch" value="i386">
+			<directory name="i386">
+			</directory>
+		</if>
+		<file>inbv.c</file>
+	</directory>
+	<directory name="io">
+		<file>adapter.c</file>
+		<file>arcname.c</file>
+		<file>bootlog.c</file>
+		<file>buildirp.c</file>
+		<file>cancel.c</file>
+		<file>cleanup.c</file>
+		<file>cntrller.c</file>
+		<file>create.c</file>
+		<file>device.c</file>
+		<file>deviface.c</file>
+		<file>dir.c</file>
+		<file>driver.c</file>
+		<file>errlog.c</file>
+		<file>error.c</file>
+		<file>event.c</file>
+		<file>file.c</file>
+		<file>flush.c</file>
+		<file>fs.c</file>
+		<file>iocomp.c</file>
+		<file>ioctrl.c</file>
+		<file>iomgr.c</file>
+		<file>iowork.c</file>
+		<file>irp.c</file>
+		<file>irq.c</file>
+		<file>lock.c</file>
+		<file>mailslot.c</file>
+		<file>mdl.c</file>
+		<file>npipe.c</file>
+		<file>page.c</file>
+		<file>parttab.c</file>
+		<file>pnpdma.c</file>
+		<file>pnpmgr.c</file>
+		<file>pnpnotify.c</file>
+		<file>pnpreport.c</file>
+		<file>pnproot.c</file>
+		<file>process.c</file>
+		<file>queue.c</file>
+		<file>rawfs.c</file>
+		<file>remlock.c</file>
+		<file>resource.c</file>
+		<file>rw.c</file>
+		<file>share.c</file>
+		<file>shutdown.c</file>
+		<file>symlink.c</file>
+		<file>timer.c</file>
+		<file>vpb.c</file>
+		<file>wdm.c</file>
+		<file>wmi.c</file>
+		<file>xhaldisp.c</file>
+		<file>xhaldrv.c</file>
+	</directory>
+	<directory name="kd">
+		<file>dlog.c</file>
+		<file>gdbstub.c</file>
+		<file>kdebug.c</file>
+		<file>mda.c</file>
+		<file>service.c</file>
+	</directory>
+	<directory name="ke">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<file>bios.c</file>
+				<file>brkpoint.c</file>
+				<file>bthread.S</file>
+				<file>exp.c</file>
+				<file>fpu.c</file>
+				<file>gdt.c</file>
+				<file>i386-mcount.S</file>
+				<file>idt.c</file>
+				<file>irq.c</file>
+				<file>irqhand.S</file>
+				<file>kernel.c</file>
+				<file>kernel.c</file>
+				<file>ldt.c</file>
+				<file>multiboot.S</file>
+				<file>stkswitch.S</file>
+				<file>syscall.S</file>
+				<file>thread.c</file>
+				<file>tlbflush.S</file>
+				<file>trap.S</file>
+				<file>tskswitch.S</file>
+				<file>tss.c</file>
+				<file>usercall.c</file>
+				<file>usertrap.c</file>
+				<file>v86m.c</file>
+				<file>v86m_sup.S</file>
+			</directory>
+		</if>
+		<file>apc.c</file>
+		<file>bug.c</file>
+		<file>catch.c</file>
+		<file>critical.c</file>
+		<file>device.c</file>
+		<file>dpc.c</file>
+		<file>error.c</file>
+		<file>event.c</file>
+		<file>gmutex.c</file>
+		<file>ipi.c</file>
+		<file>kqueue.c</file>
+		<file>kthread.c</file>
+		<file>main.c</file>
+		<file>mutex.c</file>
+		<file>process.c</file>
+		<file>profile.c</file>
+		<file>queue.c</file>
+		<file>sem.c</file>
+		<file>spinlock.c</file>
+		<file>timer.c</file>
+		<file>wait.c</file>
+	</directory>
+	<directory name="ldr">
+		<file>init.c</file>
+		<file>loader.c</file>
+		<file>resource.c</file>
+		<file>rtl.c</file>
+		<file>sysdll.c</file>
+		<file>userldr.c</file>
+	</directory>
+	<directory name="lpc">
+		<file>close.c</file>
+		<file>complete.c</file>
+		<file>connect.c</file>
+		<file>create.c</file>
+		<file>listen.c</file>
+		<file>port.c</file>
+		<file>query.c</file>
+		<file>queue.c</file>
+		<file>receive.c</file>
+		<file>reply.c</file>
+		<file>send.c</file>
+	</directory>
+	<directory name="mm">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<file>memsafe.s</file>
+				<file>page.c</file>
+				<file>pfault.c</file>
+			</directory>
+		</if>
+		<file>anonmem.c</file>
+		<file>aspace.c</file>
+		<file>balance.c</file>
+		<file>cont.c</file>
+		<file>drvlck.c</file>
+		<file>freelist.c</file>
+		<file>iospace.c</file>
+		<file>kmap.c</file>
+		<file>marea.c</file>
+		<file>mdl.c</file>
+		<file>mm.c</file>
+		<file>mminit.c</file>
+		<file>mpw.c</file>
+		<file>ncache.c</file>
+		<file>npool.c</file>
+		<file>pagefile.c</file>
+		<file>pageop.c</file>
+		<file>pager.c</file>
+		<file>pagfault.c</file>
+		<file>paging.c</file>
+		<file>physical.c</file>
+		<file>pool.c</file>
+		<file>ppool.c</file>
+		<file>region.c</file>
+		<file>rmap.c</file>
+		<file>section.c</file>
+		<file>slab.c</file>
+		<file>verifier.c</file>
+		<file>virtual.c</file>
+		<file>wset.c</file>
+	</directory>
+	<directory name="nt">
+		<file>channel.c</file>
+		<file>efi.c</file>
+		<file>evtpair.c</file>
+		<file>misc.c</file>
+		<file>mutant.c</file>
+		<file>nt.c</file>
+		<file>ntevent.c</file>
+		<file>ntsem.c</file>
+		<file>nttimer.c</file>
+		<file>plugplay.c</file>
+		<file>profile.c</file>
+		<file>vdm.c</file>
+	</directory>
+	<directory name="ob">
+		<file>dirobj.c</file>
+		<file>handle.c</file>
+		<file>namespc.c</file>
+		<file>ntobj.c</file>
+		<file>object.c</file>
+		<file>sdcache.c</file>
+		<file>security.c</file>
+		<file>symlink.c</file>
+	</directory>
+	<directory name="po">
+		<file>power.c</file>
+	</directory>
+	<directory name="ps">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<file>continue.c</file>
+			</directory>
+		</if>
+		<file>cid.c</file>
+		<file>create.c</file>
+		<file>debug.c</file>
+		<file>idle.c</file>
+		<file>job.c</file>
+		<file>kill.c</file>
+		<file>locale.c</file>
+		<file>process.c</file>
+		<file>psmgr.c</file>
+		<file>suspend.c</file>
+		<file>thread.c</file>
+		<file>tinfo.c</file>
+		<file>w32call.c</file>
+		<file>win32.c</file>
+	</directory>
+	<directory name="rtl">
+		<if property="arch" value="i386">
+			<directory name="i386">
+				<file>exception.c</file>
+			</directory>
+		</if>
+		<file>atom.c</file>
+		<file>capture.c</file>
+		<file>ctype.c</file>
+		<file>handle.c</file>
+		<file>libsupp.c</file>
+		<file>message.c</file>
+		<file>nls.c</file>
+		<file>purecall.c</file>
+		<file>rangelist.c</file>
+		<file>regio.c</file>
+		<file>sprintf.c</file>
+		<file>stdlib.c</file>
+		<file>string.c</file>
+		<file>strtok.c</file>
+		<file>swprintf.c</file>
+		<file>wstring.c</file>
+	</directory>
+	<directory name="se">
+		<file>access.c</file>
+		<file>acl.c</file>
+		<file>audit.c</file>
+		<file>lsa.c</file>
+		<file>luid.c</file>
+		<file>priv.c</file>
+		<file>sd.c</file>
+		<file>semgr.c</file>
+		<file>sid.c</file>
+		<file>token.c</file>
+	</directory>
+</module>
