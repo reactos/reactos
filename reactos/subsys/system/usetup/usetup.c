@@ -1699,11 +1699,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	  SetStatusText ("   Done.  Press any key ...");
 	  ConInKey(Ir);
 
-#if 0
 	  return INSTALL_DIRECTORY_PAGE;
-#endif
-
-	  return SELECT_PARTITION_PAGE;
 	}
     }
 
