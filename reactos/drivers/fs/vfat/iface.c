@@ -37,8 +37,8 @@
 
 /* GLOBALS *****************************************************************/
 
-static PDRIVER_OBJECT DriverObject;
-static PVfatFCB pFirstFcb;
+static PDRIVER_OBJECT VFATDriverObject;
+PVfatFCB pFirstFcb;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -332,7 +332,8 @@ ULONG GetNextWriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
         WriteCluster(DeviceExt, NewCluster, 0xFFFFFFFF);
         /* Now, write the AU of the LastCluster with the value of the newly
            found AU */
-        WriteCluster(DeviceExt, CurrentCluster, NewCluster);
+        if(CurrentCluster)
+          WriteCluster(DeviceExt, CurrentCluster, NewCluster);
         /* Return NewCluster as CurrentCluster */
         return NewCluster;
    }
@@ -424,15 +425,13 @@ wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount)
  * FUNCTION: Copy a string for use with long file names
  */
 {
-   int i;
+ int i;
    
    for (i=0;i<wcount;i++)
-     {
-	*dest=src[i];
-	dest++;
-     }
-   dest=dest-wcount;
-
+   {
+     dest[i]=src[i];
+     if(!dest[i]) break;
+   }
    return(dest);
 }
 
@@ -478,10 +477,9 @@ BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset)
  * FUNCTION: Determines if the given entry is a deleted one
  */
 {
-   /* Checks special character (short names) or attrib=0 (long names) */
+   /* Checks special character */
 
-   return ((((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5) ||
-           (((FATDirEntry *)Block)[Offset].Attrib == 0x00));
+   return ((((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5));
 }
 
 BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
@@ -633,6 +631,7 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
        memset(Fcb,0,sizeof(VfatFCB));
        memset(Fcb->entry.Filename,' ',11);
        Fcb->entry.FileSize=DeviceExt->rootDirectorySectors*BLOCKSIZE;
+       Fcb->entry.Attrib=FILE_ATTRIBUTE_DIRECTORY;
        if (DeviceExt->FatType == FAT32)
          Fcb->entry.FirstCluster=2;
        else Fcb->entry.FirstCluster=1;//FIXME : is 1 the good value for mark root?
@@ -684,23 +683,16 @@ NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
            /* In the case of a long filename, the firstcluster is stored in
                          the next record -- where it's short name is */
            if(((FATDirEntry *)block)[i].Attrib==0x0f) i++;
-//           if(DeviceExt->FatType==FAT32)
-//           {
-//             if(((FATDirEntry *)block)[i].FirstCluster==0
-//                   &&((FATDirEntry *)block)[i].FirstClusterHigh==0
-//                       ) i++;
-//           }
-//           else
-//              if(((FATDirEntry *)block)[i].FirstCluster==0) i++;
            if( i==(ENTRIES_PER_SECTOR))
            {// entry is in next sector
              StartingSector++;
+             //FIXME : treat case of next sector fragmented
              VFATReadSectors(DeviceExt->StorageDevice,StartingSector,1,block);
              i=0;
            }
            memcpy(&Fcb->entry,&((FATDirEntry *)block)[i],
                           sizeof(FATDirEntry));
-           vfat_wcsncpy(Fcb->ObjectName,name,261);
+           vfat_wcsncpy(Fcb->ObjectName,name,MAX_PATH);
            ExFreePool(block);
            if(StartSector) *StartSector=StartingSector;
            if(Entry) *Entry=i;
@@ -782,6 +774,7 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
           DeviceExt,
           FileObject,
           FileName);
+  //FIXME : treat relative name
    // try first to find an existing FCB in memory
    for (Fcb=pFirstFcb;Fcb; Fcb=Fcb->nextFcb)
    {
@@ -806,44 +799,39 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    next = &string[0];
    current = next+1;
    
+   if(*next==0) // root
+   {
+     Status = FindFile(DeviceExt,Fcb,ParentFcb,next,NULL,NULL);
+     ParentFcb=Fcb;
+     Fcb=NULL;
+   }
+   else
    while (next!=NULL)
+   {
+     *next = '\\';
+     current = next+1;
+     next = wcschr(next+1,'\\');
+     if (next!=NULL)
+       *next=0;
+     Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
+     if (Status != STATUS_SUCCESS)
      {
-	DPRINT("current %w next %x\n",current,next);
-	
-	*next = '\\';
-	current = next+1;
-	next = wcschr(next+1,'\\');
-	if (next!=NULL)
-	  {
-	     *next=0;
-	  }
-	
-      Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
-	if (Status != STATUS_SUCCESS)
-	  {
-	     if (Fcb != NULL)
-	       {
-		  ExFreePool(Fcb);
-	       }
-	     if (ParentFcb != NULL)
-	       {
-		  ExFreePool(ParentFcb);
-	       }
-	     return(Status);
-	  }
-	Temp = Fcb;
-	if (ParentFcb == NULL)
-	  {
-         Fcb = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
-         memset(Fcb,0,sizeof(VfatFCB));
-         Fcb->ObjectName=Fcb->PathName;
-	  }
-	else
-	  {
-	     Fcb = ParentFcb;
-	  }
-       ParentFcb = Temp;
+       if (Fcb != NULL)
+         ExFreePool(Fcb);
+       if (ParentFcb != NULL)
+         ExFreePool(ParentFcb);
+       return(Status);
      }
+     Temp = Fcb;
+     if (ParentFcb == NULL)
+     {
+       Fcb = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
+       memset(Fcb,0,sizeof(VfatFCB));
+       Fcb->ObjectName=Fcb->PathName;
+     }
+     else Fcb = ParentFcb;
+     ParentFcb = Temp;
+   }
    FileObject->FsContext =(PVOID) &ParentFcb->NTRequiredFCB;
    newCCB = ExAllocatePool(NonPagedPool,sizeof(VfatCCB));
    memset(newCCB,0,sizeof(VfatCCB));
@@ -854,12 +842,12 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    //FIXME : initialize all fields in FCB and CCB
    ParentFcb->nextFcb=pFirstFcb;
    pFirstFcb=ParentFcb;
-   vfat_wcsncpy(ParentFcb->PathName,FileName,261);
-   ParentFcb->ObjectName=Fcb->PathName+(current-string);
+   vfat_wcsncpy(ParentFcb->PathName,FileName,MAX_PATH);
+   ParentFcb->ObjectName=ParentFcb->PathName+(current-FileName);
    ParentFcb->pDevExt=DeviceExt;
    DPRINT("file open, fcb=%x\n",ParentFcb);
    DPRINT("FileSize %d\n",ParentFcb->entry.FileSize);
-   ExFreePool(Fcb);
+   if(Fcb) ExFreePool(Fcb);
    return(STATUS_SUCCESS);
 }
 
@@ -998,22 +986,22 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	    "Length %d, ReadOffset %d)\n",DeviceExt,FileObject,Buffer,
 	    Length,ReadOffset);
    
-   FirstCluster = ReadOffset / DeviceExt->BytesPerCluster;
    Fcb = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
    if (DeviceExt->FatType == FAT32)
 	CurrentCluster = Fcb->entry.FirstCluster
                 +Fcb->entry.FirstClusterHigh*65536;
    else
 	CurrentCluster = Fcb->entry.FirstCluster;
-   if (CurrentCluster<2)
-     return STATUS_UNSUCCESSFUL;// FIXME : root of FAT16 or FAT12
+   FirstCluster=CurrentCluster;
    DPRINT("DeviceExt->BytesPerCluster %x\n",DeviceExt->BytesPerCluster);
    
-   if (ReadOffset >= Fcb->entry.FileSize)
+   if (ReadOffset >= Fcb->entry.FileSize
+       && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
 	return(STATUS_END_OF_FILE);
      }
-   if ((ReadOffset + Length) > Fcb->entry.FileSize)
+   if ((ReadOffset + Length) > Fcb->entry.FileSize
+       && !(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
      {
 	Length = Fcb->entry.FileSize - ReadOffset;
      }
@@ -1021,16 +1009,31 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    /* FIXME: optimize by remembering the last cluster read and using if possible */
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
    if(!Temp) return STATUS_UNSUCCESSFUL;
-   for (FileOffset=0; FileOffset < FirstCluster; FileOffset++)
-   {
-     CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
+   if (FirstCluster==1)
+   {  //root of FAT16 or FAT12
+     CurrentCluster=DeviceExt->rootStart+ReadOffset
+              /(DeviceExt->BytesPerCluster)*DeviceExt->Boot->SectorsPerCluster;
    }
+   else
+     for (FileOffset=0; FileOffset < ReadOffset / DeviceExt->BytesPerCluster
+           ; FileOffset++)
+     {
+       CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
+     }
    CHECKPOINT;
    if ((ReadOffset % DeviceExt->BytesPerCluster)!=0)
-     {
-	VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
-	CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
-	
+   {
+    if (FirstCluster==1)
+    {
+      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+    }
+    else
+    {
+      VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+    }
 	TempLength = min(Length,DeviceExt->BytesPerCluster -
 			 (ReadOffset % DeviceExt->BytesPerCluster));
 	
@@ -1042,11 +1045,19 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	Buffer = Buffer + TempLength;	     
      }
    CHECKPOINT;
-   while (Length > DeviceExt->BytesPerCluster)
-     {
-	VFATLoadCluster(DeviceExt, Buffer, CurrentCluster);
-	CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
-	
+   while (Length >= DeviceExt->BytesPerCluster)
+   {
+    if (FirstCluster==1)
+    {
+      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Buffer);
+      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+    }
+    else
+    {
+      VFATLoadCluster(DeviceExt,Buffer,CurrentCluster);
+      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+    }
     if (CurrentCluster == 0xffffffff)
 	  {
              ExFreePool(Temp);
@@ -1061,7 +1072,17 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    if (Length > 0)
      {
 	(*LengthRead) = (*LengthRead) + Length;
-	VFATLoadCluster(DeviceExt, Temp, CurrentCluster);
+    if (FirstCluster==1)
+    {
+      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+    }
+    else
+    {
+      VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+    }
 	memcpy(Buffer, Temp, Length);
      }
    ExFreePool(Temp);
@@ -1079,25 +1100,42 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    ULONG FirstCluster;
    PVfatFCB  Fcb;
    PVOID Temp;
-   ULONG TempLength;
+   ULONG TempLength,Length2=Length;
 
    /* Locate the first cluster of the file */
-   FirstCluster = WriteOffset / DeviceExt->BytesPerCluster;
    Fcb = ((PVfatCCB)(FileObject->FsContext2))->pFcb;
    if (DeviceExt->FatType == FAT32)
 	CurrentCluster = Fcb->entry.FirstCluster+Fcb->entry.FirstClusterHigh*65536;
    else
 	CurrentCluster = Fcb->entry.FirstCluster;
-
+   FirstCluster=CurrentCluster;
    /* Allocate a buffer to hold 1 cluster of data */
 
    Temp = ExAllocatePool(NonPagedPool,DeviceExt->BytesPerCluster);
 
    /* Find the cluster according to the offset in the file */
 
-   for (FileOffset=0; FileOffset < FirstCluster; FileOffset++)
+   if (CurrentCluster==1)
+   {  //root of FAT16 or FAT12
+     CurrentCluster=DeviceExt->rootStart+WriteOffset
+          /DeviceExt->BytesPerCluster*DeviceExt->Boot->SectorsPerCluster;
+   }
+   else
+   if (CurrentCluster==0)
+   {// file of size 0
+     CurrentCluster=GetNextWriteCluster(DeviceExt,0);
+     if (DeviceExt->FatType == FAT32)
      {
-	CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
+       Fcb->entry.FirstClusterHigh=CurrentCluster>>16;
+       Fcb->entry.FirstCluster=CurrentCluster;
+     }
+     else
+       Fcb->entry.FirstCluster=CurrentCluster;
+   }
+   else
+     for (FileOffset=0; FileOffset < WriteOffset / DeviceExt->BytesPerCluster; FileOffset++)
+     {
+       CurrentCluster = GetNextCluster(DeviceExt,CurrentCluster);
      }
    CHECKPOINT;
 
@@ -1107,61 +1145,94 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    */
 
    if ((WriteOffset % DeviceExt->BytesPerCluster)!=0)
-     {
-	TempLength = min(Length,DeviceExt->BytesPerCluster -
+   {
+     TempLength = min(Length,DeviceExt->BytesPerCluster -
                         (WriteOffset % DeviceExt->BytesPerCluster));
-        /* Read in the existing cluster data */
-        VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+     /* Read in the existing cluster data */
+     if (FirstCluster==1)
+       VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+     else
+       VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
 
-        /* Overwrite the last parts of the data as necessary */
-    memcpy(Temp + (WriteOffset % DeviceExt->BytesPerCluster), Buffer,
+     /* Overwrite the last parts of the data as necessary */
+     memcpy(Temp + (WriteOffset % DeviceExt->BytesPerCluster), Buffer,
 	       TempLength);
 
-        /* Write the cluster back */
-        VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
-	Length = Length - TempLength;
-	Buffer = Buffer + TempLength;	     
+     /* Write the cluster back */
+     if (FirstCluster==1)
+     {
+       VFATWriteSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+       CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
      }
+     else
+     {
+       VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
+       CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+     }
+     Length2 -= TempLength;
+     Buffer = Buffer + TempLength;
+   }
    CHECKPOINT;
 
    /* Write the buffer in chunks of 1 cluster */
 
-   while (Length > DeviceExt->BytesPerCluster)
+   while (Length2 >= DeviceExt->BytesPerCluster)
    {
-     /* Next write cluster */
-     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
      if (CurrentCluster == 0)
      {
         ExFreePool(Temp);
         return(STATUS_UNSUCCESSFUL);
      }
-     VFATWriteCluster(DeviceExt, Buffer, CurrentCluster);
-     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
-	
-	
-	Buffer = Buffer + DeviceExt->BytesPerCluster;
-	Length = Length - DeviceExt->BytesPerCluster;
+     if (FirstCluster==1)
+     {
+       VFATWriteSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Buffer);
+       CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
      }
+     else
+     {
+       VFATWriteCluster(DeviceExt,Buffer,CurrentCluster);
+       CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+     }
+     Buffer = Buffer + DeviceExt->BytesPerCluster;
+     Length2 -= DeviceExt->BytesPerCluster;
+   }
    CHECKPOINT;
 
    /* Write the remainder */
 
-   if (Length > 0)
+   if (Length2 > 0)
    {
-     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
      if (CurrentCluster == 0)
      {
         ExFreePool(Temp);
         return(STATUS_UNSUCCESSFUL);
      }
-     VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
-     memcpy(Temp, Buffer, Length);
-     VFATWriteCluster(DeviceExt, Temp, CurrentCluster);
+     /* Read in the existing cluster data */
+     if (FirstCluster==1)
+       VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+     else
+       VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+     memcpy(Temp, Buffer, Length2);
+     if (FirstCluster==1)
+     {
+       VFATWriteSectors(DeviceExt->StorageDevice,CurrentCluster
+           ,DeviceExt->Boot->SectorsPerCluster,Temp);
+     }
+     else
+       VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
    }
 //FIXME : set  last write time and date
-   if(Fcb->entry.FileSize<WriteOffset+Length)
+   if(Fcb->entry.FileSize<WriteOffset+Length
+       && !(Fcb->entry.Attrib &FILE_ATTRIBUTE_DIRECTORY))
+   {
      Fcb->entry.FileSize=WriteOffset+Length;
-//FIXME : update entry in directory
+     // update entry in directory
+     updEntry(DeviceExt,FileObject);
+   }
    ExFreePool(Temp);
    return(STATUS_SUCCESS);
 }
@@ -1194,27 +1265,35 @@ NTSTATUS FsdCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PFILE_OBJECT FileObject;
    NTSTATUS Status;
    PDEVICE_EXTENSION DeviceExt;
+   ULONG RequestedDisposition,RequestedOptions;
 
    DPRINT("FsdCreate(DeviceObject %08lx, Irp %08lx)\n",
           DeviceObject,
           Irp);
 
    Stack = IoGetCurrentIrpStackLocation(Irp);
-CHECKPOINT;
+   RequestedDisposition = ((Stack->Parameters.Create.Options>>24)&0xff);
+   RequestedOptions=Stack->Parameters.Create.Options&FILE_VALID_OPTION_FLAGS;
+DbgPrint("CROptions=%x\n",Stack->Parameters.Create.Options);
+DbgPrint("REquestedOptions=%x\n",RequestedOptions);
    FileObject = Stack->FileObject;
-CHECKPOINT;
    DeviceExt = DeviceObject->DeviceExtension;
-CHECKPOINT;
    Status = FsdOpenFile(DeviceExt,FileObject,FileObject->FileName.Buffer);
-CHECKPOINT;
+   if(!NT_SUCCESS(Status))
+   {
+      if(RequestedDisposition==FILE_CREATE
+         ||RequestedDisposition==FILE_OPEN_IF
+         ||RequestedDisposition==FILE_OVERWRITE_IF)
+      {
+DbgPrint("try to create file\n");
+         Status=addEntry(DeviceExt,FileObject,RequestedOptions);
+      }
+   }
    
    Irp->IoStatus.Status = Status;
-CHECKPOINT;
    Irp->IoStatus.Information = 0;
-CHECKPOINT;
    
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-CHECKPOINT;
 
    return Status;
 }
@@ -1296,7 +1375,7 @@ NTSTATUS FsdMount(PDEVICE_OBJECT DeviceToMount)
    PDEVICE_OBJECT DeviceObject;
    PDEVICE_EXTENSION DeviceExt;
       
-   IoCreateDevice(DriverObject,
+   IoCreateDevice(VFATDriverObject,
 		  sizeof(DEVICE_EXTENSION),
 		  NULL,
 		  FILE_DEVICE_FILE_SYSTEM,
@@ -1444,11 +1523,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    
    DbgPrint("VFAT 0.0.6\n");
    pFirstFcb=NULL;
-   DriverObject = _DriverObject;
+   VFATDriverObject = _DriverObject;
    
    RtlInitAnsiString(&astr,"\\Device\\VFAT");
    RtlAnsiStringToUnicodeString(&ustr,&astr,TRUE);
-   ret = IoCreateDevice(DriverObject,0,&ustr,
+   ret = IoCreateDevice(VFATDriverObject,0,&ustr,
                         FILE_DEVICE_FILE_SYSTEM,0,FALSE,&DeviceObject);
    if (ret!=STATUS_SUCCESS)
      {
@@ -1456,18 +1535,18 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
      }
 
    DeviceObject->Flags = DO_DIRECT_IO;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = FsdClose;
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = FsdCreate;
-   DriverObject->MajorFunction[IRP_MJ_READ] = FsdRead;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = FsdWrite;
-   DriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
+   VFATDriverObject->MajorFunction[IRP_MJ_CLOSE] = FsdClose;
+   VFATDriverObject->MajorFunction[IRP_MJ_CREATE] = FsdCreate;
+   VFATDriverObject->MajorFunction[IRP_MJ_READ] = FsdRead;
+   VFATDriverObject->MajorFunction[IRP_MJ_WRITE] = FsdWrite;
+   VFATDriverObject->MajorFunction[IRP_MJ_FILE_SYSTEM_CONTROL] =
                       FsdFileSystemControl;
-   DriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
+   VFATDriverObject->MajorFunction[IRP_MJ_QUERY_INFORMATION] =
                       FsdQueryInformation;
-   DriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
+   VFATDriverObject->MajorFunction[IRP_MJ_DIRECTORY_CONTROL] =
                       FsdDirectoryControl;
 
-   DriverObject->DriverUnload = NULL;
+   VFATDriverObject->DriverUnload = NULL;
    
    IoRegisterFileSystem(DeviceObject);
 
