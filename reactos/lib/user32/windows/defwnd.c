@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.96 2003/10/07 22:06:52 gvg Exp $
+/* $Id: defwnd.c,v 1.97 2003/10/08 13:46:34 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -477,6 +477,8 @@ DrawCaption(
         if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
     }
     
+    Style = GetWindowLongW(hWnd, GWL_STYLE);
+    
     /* Windows behaves like this */
     Height = GetSystemMetrics(SM_CYCAPTION) - 1;
 
@@ -488,7 +490,7 @@ DrawCaption(
     r.top = Padding;
     r.bottom = r.top + (Height / 2);
 
-    if (uFlags & DC_ICON)
+    if ((uFlags & DC_ICON) && (Style & WS_SYSMENU))
     {
         // For some reason the icon isn't centered correctly...
         r.top --;
@@ -508,7 +510,7 @@ DrawCaption(
 
     r.right = (lprc->right - lprc->left);
     ButtonWidth = GetSystemMetrics(SM_CXSIZE) - 2;
-    Style = GetWindowLongW(hWnd, GWL_STYLE);
+
     if (Style & WS_SYSMENU)
     {
       r.right -= 3 + ButtonWidth;
