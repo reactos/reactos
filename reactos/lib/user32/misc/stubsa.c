@@ -209,15 +209,6 @@ LoadImageA(
  
 int
 STDCALL
-LoadStringA(
-    HINSTANCE hInstance,
-    UINT uID,
-    LPSTR lpBuffer,
-    int nBufferMax) { return 0; }
- 
-
-int
-STDCALL
 DlgDirListA(
     HWND hDlg,
     LPSTR lpPathSpec,
