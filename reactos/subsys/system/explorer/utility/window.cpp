@@ -144,7 +144,10 @@ Window* Window::get_window(HWND hwnd)
 		CREATORFUNC window_creator = s_window_creator;
 		s_window_creator = NULL;
 
-		wnd = window_creator(hwnd, info);
+		if (info)
+			wnd = window_creator(hwnd, info);
+		else
+			wnd = CREATORFUNC_NO_INFO(window_creator)(hwnd);
 	}
 
 	return wnd;
@@ -244,7 +247,7 @@ ChildWindow::ChildWindow(HWND hwnd)
 }
 
 
-ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC creator, LPCTSTR classname, LPCTSTR title)
+ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC creator, LPCTSTR classname, LPCTSTR title, const void* info)
 {
 	MDICREATESTRUCT mcs;
 
@@ -258,7 +261,7 @@ ChildWindow* ChildWindow::create(HWND hmdiclient, const RECT& rect, CREATORFUNC 
 	mcs.style	= 0;
 	mcs.lParam	= 0;
 
-	return static_cast<ChildWindow*>(create_mdi_child(hmdiclient, mcs, creator));
+	return static_cast<ChildWindow*>(create_mdi_child(hmdiclient, mcs, creator, info));
 }
 
 

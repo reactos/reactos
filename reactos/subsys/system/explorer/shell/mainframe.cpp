@@ -211,13 +211,22 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return (LPARAM)&_menu_info;
 
 	  case PM_OPEN_WINDOW: {
-		TCHAR path[MAX_PATH];
+		TCHAR buffer[MAX_PATH];
+		LPCTSTR path;
+		ShellPath shell_path = DesktopFolder();
 
-		//TODO: read paths and window placements from registry
-		GetCurrentDirectory(MAX_PATH, path);
+		if (lparam) {
+			 // take over path from lparam
+			path = (LPCTSTR)lparam;
+			shell_path = path;	// creates as "rooted" window
+		} else {
+			//TODO: read paths and window placements from registry
+			GetCurrentDirectory(MAX_PATH, buffer);
+			path = buffer;
+		}
 
 		 // Shell Namespace as default view
-		ShellChildWndInfo create_info(path, DesktopFolder());
+		ShellChildWndInfo create_info(path, shell_path);
 
 		create_info._pos.showCmd = SW_SHOWMAXIMIZED;
 		create_info._pos.rcNormalPosition.left = 0;

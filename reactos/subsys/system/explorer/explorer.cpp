@@ -88,14 +88,15 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 	g_Globals._prescan_nodes = false;
 
 	 // create main window
-	g_Globals._hMainWnd = MainFrame::Create();
+	HWND hwndFrame = MainFrame::Create();
 
-	ShowWindow(g_Globals._hMainWnd, cmdshow);
+	g_Globals._hMainWnd = hwndFrame;
 
-	UpdateWindow(g_Globals._hMainWnd);
+	ShowWindow(hwndFrame, cmdshow);
+	UpdateWindow(hwndFrame);
 
-	 // Open the first child window after initialiszing the whole application
-	PostMessage(g_Globals._hMainWnd, PM_OPEN_WINDOW, 0, 0);
+	 // Open the first child window after initializing the whole application
+	PostMessage(hwndFrame, PM_OPEN_WINDOW, 0, 0);
 }
 
 

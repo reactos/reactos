@@ -80,6 +80,7 @@ struct Window : public WindowHandle
 
 
 	typedef Window* (*CREATORFUNC)(HWND, const void*);
+	typedef Window* (*CREATORFUNC_NO_INFO)(HWND);
 
 	static HWND Create(CREATORFUNC creator, DWORD dwExStyle,
 				LPCTSTR lpClassName, LPCTSTR lpWindowName,
@@ -254,7 +255,7 @@ struct ChildWindow : public Window
 	ChildWindow(HWND hwnd);
 
 	static ChildWindow* create(HWND hmdiclient, const RECT& rect,
-				CREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL);
+				CREATORFUNC creator, LPCTSTR classname, LPCTSTR title=NULL, const void* info=NULL);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

@@ -33,13 +33,14 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 {
 	typedef ChildWindow super;
 
-	ShellBrowserChild(HWND hwnd);
+	ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info);
 	~ShellBrowserChild();
 
 	static ShellBrowserChild* create(HWND hmdiclient, const FileChildWndInfo& info)
 	{
 #ifndef _NO_MDI
-		ChildWindow* child = ChildWindow::create(hmdiclient, info._pos.rcNormalPosition, WINDOW_CREATOR(ShellBrowserChild), CLASSNAME_CHILDWND);
+		ChildWindow* child = ChildWindow::create(hmdiclient, info._pos.rcNormalPosition,
+													WINDOW_CREATOR_INFO(ShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL, &info);
 #else
 		//TODO: SDI implementation
 #endif
@@ -102,9 +103,10 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 	STDMETHOD(OnDefaultCommand)(IShellView* ppshv);
 
 protected:
-	Root	_root;
+	Root _root;
 
 	WindowHandle _hWndFrame;
+	ShellChildWndInfo _create_info;
 
 	IShellView*	_pShellView;	// current hosted shellview
 	HIMAGELIST	_himlSmall;		// list

@@ -26,4 +26,6 @@
 						implemented context menus for task bar
 						tool tips for quick launch bar
 24.08.2003	m. fuchs	added reactos logo to startmenu
-						Added romanian translation of Ciobanu Alexander
+						added romanian translation of Ciobanu Alexander
+26.08.2003	m. fuchs	implemented tooltips and launching of date/time control panel applet for clock display
+27.08.2003	m. fuchs	partly implemented control panel window

@@ -56,12 +56,12 @@ FileChildWndInfo::FileChildWndInfo(LPCTSTR path)
 
 
 ShellChildWndInfo::ShellChildWndInfo(LPCTSTR path, const ShellPath& root_shell_path)
- :	FileChildWndInfo(path)
+ :	FileChildWndInfo(path),
+	_shell_path(path),
+	_root_shell_path(root_shell_path)
 {
 	_etype = ET_SHELL;
 	_path = path;
-	_shell_path = path;
-	_root_shell_path = root_shell_path;
 }
 
 

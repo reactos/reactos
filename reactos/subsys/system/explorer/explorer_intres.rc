@@ -107,6 +107,7 @@ BEGIN
     IDS_CONNECTIONS         "Conecþii"
     IDS_DRIVES              "Discuri"
     IDS_SEARCH_COMPUTER     "Search Computer..."
+    IDS_SETTINGS_WND        "Settings Window"
 END
 
 #endif    // Romanian resources
@@ -365,6 +366,7 @@ BEGIN
     IDS_CONNECTIONS         "Verbindungen"
     IDS_DRIVES              "Verzeichnisse"
     IDS_SEARCH_COMPUTER     "Suche Computer..."
+    IDS_SETTINGS_WND        "Einstellungen-Fenster"
 END
 
 #endif    // German (Germany) resources
@@ -574,6 +576,7 @@ BEGIN
     IDS_CONNECTIONS         "Connections"
     IDS_DRIVES              "Drives"
     IDS_SEARCH_COMPUTER     "Search Computer..."
+    IDS_SETTINGS_WND        "Settings Window"
 END
 
 #endif    // English (U.S.) resources

@@ -227,8 +227,14 @@ String ShellFolder::get_name(LPCITEMIDLIST pidl, SHGDNF flags) const
 	TCHAR buffer[MAX_PATH];
 	StrRet strret;
 
-	CheckError(((IShellFolder*)*const_cast<ShellFolder*>(this))->GetDisplayNameOf(pidl, flags, &strret));
-	strret.GetString(pidl->mkid, buffer, MAX_PATH);
+	HRESULT hr = ((IShellFolder*)*const_cast<ShellFolder*>(this))->GetDisplayNameOf(pidl, flags, &strret);
+
+	if (hr == S_OK)
+		strret.GetString(pidl->mkid, buffer, MAX_PATH);
+	else {
+		CheckError(hr);
+		*buffer = _T('\0');
+	}
 
 	return buffer;
 }

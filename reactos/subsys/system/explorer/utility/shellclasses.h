@@ -382,7 +382,7 @@ struct ShellFolder : public IShellFolderPtr	// IShellFolderPtr uses intrinsic ex
 	ShellFolder(LPCITEMIDLIST pidl);
 
 	void	attach(IShellFolder* parent, LPCITEMIDLIST pidl);
-	String	get_name(LPCITEMIDLIST pidl, SHGDNF flags=SHGDN_NORMAL) const;
+	String	get_name(LPCITEMIDLIST pidl=NULL, SHGDNF flags=SHGDN_NORMAL) const;
 
 	bool	empty() const {return !operator bool();}	//NOTE: see SIfacePtr::empty()
 };
@@ -595,6 +595,11 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 	ShellFolder get_folder()
 	{
 		return ShellFolder(_p);
+	}
+
+	ShellFolder get_folder(IShellFolder* parent)
+	{
+		return ShellFolder(parent, _p);
 	}
 
 

@@ -498,23 +498,18 @@ int startup( int argc, char *argv[] )
 
     /* Perform the ops by order, stopping if one fails, skipping if necessary */
     /* Shachar: Sorry for the perl syntax */
-    res=(ops.ntonly || !ops.preboot || wininit())&&
+    res=(ops.ntonly || !ops.preboot || wininit()) &&
         (ops.w9xonly || !ops.preboot || pendingRename()) &&
         (ops.ntonly || !ops.prelogin ||
-         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICESONCE],
-                TRUE, FALSE )) &&
+         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICESONCE], TRUE, FALSE )) &&
         (ops.ntonly || !ops.prelogin || !ops.startup ||
-         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICES],
-                FALSE, FALSE )) &&
+         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNSERVICES], FALSE, FALSE )) &&
         (!ops.postlogin ||
-         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNONCE],
-                TRUE, TRUE )) &&
+         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUNONCE], TRUE, TRUE )) &&
         (!ops.postlogin || !ops.startup ||
-         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN],
-                FALSE, FALSE )) &&
+         ProcessRunKeys( HKEY_LOCAL_MACHINE, runkeys_names[RUNKEY_RUN], FALSE, FALSE )) &&
         (!ops.postlogin || !ops.startup ||
-         ProcessRunKeys( HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN],
-                FALSE, FALSE ));
+         ProcessRunKeys( HKEY_CURRENT_USER, runkeys_names[RUNKEY_RUN], FALSE, FALSE ));
 
     printf("Operation done\n");
 

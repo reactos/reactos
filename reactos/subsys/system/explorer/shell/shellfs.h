@@ -47,17 +47,17 @@ protected:
 
 struct ShellDirectory : public ShellEntry, public Directory
 {
-	ShellDirectory(IShellFolder* shell_root, const ShellPath& shell_path, HWND hwnd)
+	ShellDirectory(ShellFolder& root_folder, const ShellPath& shell_path, HWND hwnd)
 	 :	ShellEntry(shell_path),
-		_folder(shell_root, shell_path),
+		_folder(root_folder, shell_path),
 		_hwnd(hwnd)
 	{
-		lstrcpy(_data.cFileName, ShellFolder(shell_root).get_name(shell_path));
+		lstrcpy(_data.cFileName, root_folder.get_name(shell_path));
 		_data.dwFileAttributes = FILE_ATTRIBUTE_DIRECTORY;
 		_shell_attribs = SFGAO_FOLDER;
 
-		ShellFolder folder(shell_root, shell_path);
-		IShellFolder* pFolder = folder;
+		ShellFolder subfolder(root_folder, shell_path);
+		IShellFolder* pFolder = subfolder;
 		pFolder->AddRef();
 		_path = pFolder;
 	}

@@ -578,6 +578,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
 	AddButton(ResString(IDS_SETTINGS),		0, true, IDC_SETTINGS);
+	AddButton(ResString(IDS_SETTINGS_WND),	0, false, IDC_SETTINGS_WND);
 	AddButton(ResString(IDS_ADMIN),			0, true, IDC_ADMIN);
 	AddButton(ResString(IDS_DRIVES),		0, true, IDC_DRIVES);
 	AddButton(ResString(IDS_NETWORK),		0, true, IDC_NETWORK);
@@ -654,6 +655,13 @@ int StartMenuRoot::Command(int id, int code)
 	  case IDC_SETTINGS:
 		CreateSubmenu(id, CSIDL_CONTROLS);
 		break;
+
+	  case IDC_SETTINGS_WND: {	//TODO: make more object oriented, e.g introduce a class CabinetWindow
+		CloseStartMenu(id);
+		HWND hwndFrame = MainFrame::Create();
+		ShowWindow(hwndFrame, SW_SHOW);
+		SendMessage(hwndFrame, PM_OPEN_WINDOW, 0, (LPARAM)_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
+		break;}
 
 	  case IDC_FAVORITES:
 		CreateSubmenu(id, CSIDL_FAVORITES);
