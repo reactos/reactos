@@ -1,5 +1,5 @@
 cd bootsect
 call install.bat
 cd..
-copy freeldr.sys a:\
-copy freeldr.ini a:\
+copy freeldr.sys a:\FREELDR.SYS
+copy freeldr.ini a:\FREELDR.INI

@@ -17,7 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-	
+
 #include "freeldr.h"
 #include "asmcode.h"
 #include "rosboot.h"
@@ -26,17 +26,24 @@
 #include "tui.h"
 #include "multiboot.h"
 
+
+static BOOL
+DissectArcPath(char *ArcPath, char *BootPath, unsigned int *BootDrive, unsigned int *BootPartition);
+
+
 unsigned long				next_module_load_base = 0;
 
 void LoadAndBootReactOS(char *OperatingSystemName)
 {
-	FILE		file;
-	char		name[1024];
-	char		value[1024];
-	char		szFileName[1024];
+	FILE	file;
+	char	name[1024];
+	char	value[1024];
+	char	szFileName[1024];
+	char	szBootPath[256];
 	int			i;
 	int			nNumDriverFiles=0;
 	int			nNumFilesLoaded=0;
+	char MsgBuffer[256];
 
 	/*
 	 * Setup multiboot information structure
@@ -51,10 +58,47 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	mb_info.mmap_length = 0;
 	mb_info.mmap_addr = 0;
 
+
+	/*
+	 * Make sure the system path is set in the .ini file
+	 */
+	if(!ReadSectionSettingByName(OperatingSystemName, "SystemPath", name, value))
+	{
+		MessageBox("System path not specified for selected operating system.");
+		return;
+	}
+
+	/*
+	 * Verify system path
+	 */
+	if(!DissectArcPath(value, szBootPath, &BootDrive, &BootPartition))
+	{
+		sprintf(MsgBuffer,"Invalid system path: '%s'", value);
+		MessageBox(MsgBuffer);
+		return;
+	}
+
+
+	/* set boot drive and partition */
+	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
+	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
+
+	/* copy ARC path into kernel command line */
+	strcpy(multiboot_kernel_cmdline, value);
+
 	/*
 	 * Read the optional kernel parameters (if any)
 	 */
-	ReadSectionSettingByName(OperatingSystemName, "Options", name, multiboot_kernel_cmdline);
+	if (ReadSectionSettingByName(OperatingSystemName, "Options", name, value))
+	{
+		strcat(multiboot_kernel_cmdline, " ");
+		strcat(multiboot_kernel_cmdline, value);
+	}
+
+	/* append a backslash */
+	if ((strlen(szBootPath)==0) ||
+	    szBootPath[strlen(szBootPath)] != '\\')
+		strcat(szBootPath, "\\");
 
 	/*
 	 * Find the kernel image name
@@ -65,24 +109,6 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 		return;
 	}
 
-	/*
-	 * Get the boot partition
-	 */
-	BootPartition = 0;
-	if (ReadSectionSettingByName(OperatingSystemName, "BootPartition", name, value))
-	{
-		BootPartition = atoi(value);
-	}
-	((char *)(&mb_info.boot_device))[1] = (char)BootPartition;
-	
-	/*
-	 * Make sure the boot drive is set in the .ini file
-	 */
-	if(!ReadSectionSettingByName(OperatingSystemName, "BootDrive", name, value))
-	{
-		MessageBox("Boot drive not specified for selected operating system.");
-		return;
-	}
 
 	DrawBackdrop();
 
@@ -90,10 +116,8 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 	DrawProgressBar(0);
 
 	/*
-	 * Set the boot drive and try to open it
+	 * Try to open boot drive
 	 */
-	BootDrive = atoi(value);
-	((char *)(&mb_info.boot_device))[0] = (char)BootDrive;
 	if (!OpenDiskDrive(BootDrive, BootPartition))
 	{
 		MessageBox("Failed to open boot drive.");
@@ -122,7 +146,8 @@ void LoadAndBootReactOS(char *OperatingSystemName)
 		/*
 		 * Set the name and try to open the PE image
 		 */
-		strcpy(szFileName, value);
+		strcpy(szFileName, szBootPath);
+		strcat(szFileName, value);
 		if (!OpenFile(szFileName, &file))
 		{
 			strcat(value, " not found.");
@@ -334,6 +359,58 @@ BOOL MultiBootLoadModule(FILE *ModuleImage, char *ModuleName)
 
 	next_module_load_base = ROUND_UP(pModule->mod_end, /*PAGE_SIZE*/4096);
 	mb_info.mods_count++;
+
+	return TRUE;
+}
+
+
+static BOOL
+DissectArcPath(char *ArcPath, char *BootPath, unsigned int *BootDrive, unsigned int *BootPartition)
+{
+	char *p;
+
+	if (_strnicmp(ArcPath, "multi(0)disk(0)", 15) != 0)
+		return FALSE;
+
+	p = ArcPath + 15;
+	if (_strnicmp(p, "fdisk(", 6) == 0)
+	{
+		/*
+		 * floppy disk path:
+		 *  multi(0)disk(0)fdisk(x)\path
+		 */
+		p = p + 6;
+		*BootDrive = atoi(p);
+		p = strchr(p, ')');
+		if (p == NULL)
+			return FALSE;
+		p++;
+		*BootPartition = 0;
+	}
+	else if (_strnicmp(p, "rdisk(", 6) == 0)
+	{
+		/*
+		 * hard disk path:
+		 *  multi(0)disk(0)rdisk(x)partition(y)\path
+		 */
+		p = p + 6;
+		*BootDrive = atoi(p) + 0x80;
+		p = strchr(p, ')');
+		if ((p == NULL) || (_strnicmp(p, ")partition(", 11) != 0))
+			return FALSE;
+		p = p + 11;
+		*BootPartition = atoi(p);
+		p = strchr(p, ')');
+		if ((p == NULL) || (*BootPartition == 0))
+			return FALSE;
+		p++;
+	}
+	else
+	{
+		return FALSE;
+	}
+
+	strcpy(BootPath, p);
 
 	return TRUE;
 }

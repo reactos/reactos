@@ -119,11 +119,11 @@ typedef struct memory_map
 #endif /* ! ASM */
 
 
-multiboot_header_t		mb_header;							// Multiboot header structure defined in kernel image file
-multiboot_info_t		mb_info;							// Multiboot info structure passed to kernel
-char					multiboot_kernel_cmdline[255];		// Command line passed to kernel
-module_t				multiboot_modules[64];				// Array to hold boot module info loaded for the kernel
-char					multiboot_module_strings[64][256];	// Array to hold module names
+multiboot_header_t	mb_header;				// Multiboot header structure defined in kernel image file
+multiboot_info_t	mb_info;				// Multiboot info structure passed to kernel
+char			multiboot_kernel_cmdline[255];		// Command line passed to kernel
+module_t		multiboot_modules[64];			// Array to hold boot module info loaded for the kernel
+char			multiboot_module_strings[64][256];	// Array to hold module names
 
 
 #endif // defined __MULTIBOOT_H

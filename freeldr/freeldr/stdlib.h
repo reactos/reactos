@@ -38,29 +38,32 @@ void	showcursor(void);		// Implemented in asmcode.S
 int		wherex(void);			// Implemented in asmcode.S
 int		wherey(void);			// Implemented in asmcode.S
 
-int		strlen(char *str);
+int	strlen(char *str);
 char	*strcpy(char *dest, char *src);
 char	*strcat(char *dest, char *src);
-int		strcmp(const char *string1, const char *string2);
-int		stricmp(const char *string1, const char *string2);
+char	*strchr(const char *s, int c);
+int	strcmp(const char *string1, const char *string2);
+int	stricmp(const char *string1, const char *string2);
+int	_strnicmp(const char *string1, const char *string2, size_t length);
 char	*itoa(int value, char *string, int radix);
-int		toupper(int c);
-int		tolower(int c);
-int		memcmp(const void *buf1, const void *buf2, size_t count);
+int	toupper(int c);
+int	tolower(int c);
+int	memcmp(const void *buf1, const void *buf2, size_t count);
 void	*memcpy(void *dest, const void *src, size_t count);
 void	*memset(void *dest, int c, size_t count);
 char	*fgets(char *string, int n, FILE *stream);
-int		atoi(char *string);
+int	atoi(char *string);
 
 
 void	print(char *str);
 void	printf(char *fmt, ...);
+void	sprintf(char *buffer, char *format, ...);
 
-int		biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
-void	stop_floppy(void);			// Implemented in asmcode.S
-int		get_heads(int drive);		// Implemented in asmcode.S
-int		get_cylinders(int drive);	// Implemented in asmcode.S
-int		get_sectors(int drive);		// Implemented in asmcode.S
+int	biosdisk(int cmd, int drive, int head, int track, int sector, int nsects, void *buffer); // Implemented in asmcode.S
+void	stop_floppy(void);		// Implemented in asmcode.S
+int	get_heads(int drive);		// Implemented in asmcode.S
+int	get_cylinders(int drive);	// Implemented in asmcode.S
+int	get_sectors(int drive);		// Implemented in asmcode.S
 
 /* Values for biosdisk() */
 #define _DISK_RESET		0	// Unimplemented

@@ -116,7 +116,57 @@ void printf(char *format, ... )
 	  }
     }
 }
-	
+
+void sprintf(char *buffer, char *format, ... )
+{
+  int *dataptr = (int *) &format;
+  char c, *ptr, str[16];
+  char *p = buffer;
+
+  dataptr++;
+
+  while ((c = *(format++)))
+    {
+      if (c != '%')
+      {
+	*p = c;
+	p++;
+      }
+      else
+	switch (c = *(format++))
+	  {
+	  case 'd': case 'u': case 'x':
+	    *convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+
+	    ptr = str;
+
+	    while (*ptr)
+	    {
+	      *p = *(ptr++);
+	      p++;
+	    }
+	    break;
+
+	  case 'c':
+	    *p = (*(dataptr++))&0xff;
+	    p++;
+	    break;
+
+	  case 's':
+	    ptr = (char *)(*(dataptr++));
+
+	    while ((c = *(ptr++)))
+	    {
+	      *p = c;
+	      p++;
+	    }
+	    break;
+	  }
+    }
+  *p=0;
+}
+
+
 int strlen(char *str)
 {
 	int	len;
@@ -217,6 +267,20 @@ char *strcat(char *dest, char *src)
 	return ret;
 }
 
+char *strchr(const char *s, int c)
+{
+	char cc = c;
+	while (*s)
+	{
+		if (*s == cc)
+			return (char *)s;
+		s++;
+	}
+	if (cc == 0)
+		return (char *)s;
+	return 0;
+}
+
 int strcmp(const char *string1, const char *string2)
 {
 	while(*string1 == *string2)
@@ -243,6 +307,21 @@ int stricmp(const char *string1, const char *string2)
 	}
 
 	return (int)tolower(*string1) - (int)tolower(*string2);
+}
+
+int _strnicmp(const char *string1, const char *string2, size_t length)
+{
+	if (length == 0)
+		return 0;
+	do
+	{
+		if (toupper(*string1) != toupper(*string2++))
+			return toupper(*(unsigned const char *)string1) - toupper(*(unsigned const char *)--string2);
+		if (*string1++ == 0)
+			break;
+	}
+	while (--length != 0);
+	return 0;
 }
 
 char *fgets(char *string, int n, FILE *stream)
@@ -272,9 +351,8 @@ char *fgets(char *string, int n, FILE *stream)
 
 int atoi(char *string)
 {
-	int		i, j;
-	int		base;
-	int		result = 0;
+	int	base;
+	int	result = 0;
 	char	*str;
 
 	if((string[0] == '0') && (string[1] == 'x'))
@@ -288,18 +366,14 @@ int atoi(char *string)
 		str = string;
 	}
 
-	for(i=strlen(str)-1,j=1; i>=0; i--)
+	while(1)
 	{
-		if((str[i] < '0') || (str[i] > '9'))
+		if((*str < '0') || (*str > '9'))
 			break;
 
-		if(i == (strlen(str)-1))
-			result += (str[i] - '0');
-		else
-		{
-			result += (str[i] - '0') * (j * base);
-			j *= base;
-		}
+		result *= base;
+		result += (*str - '0');
+		str++;
 	}
 
 	return result;
