@@ -57,7 +57,7 @@ REGEDIT4
 "UNC"="\Device\Mup"
 
 [\Registry\Machine\SYSTEM\ControlSet001\Control\Session Manager\Environment]
-"ComSpec"=expand:"%SystemRoot%\system32\shell.exe"
+"ComSpec"=expand:"%SystemRoot%\system32\cmd.exe"
 "OS"=expand:"ReactOS"
 "Path"=expand:"%SystemRoot%\system32;%SystemRoot%"
 "windir"=expand:"%SystemRoot%"
@@ -292,6 +292,7 @@ REGEDIT4
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Vga\Device0]
 "InstalledDisplayDrivers"=multi:"vgaddi"
+
 [\Registry\Machine\SYSTEM\ControlSet001\Services\vmx_svga]
 "ErrorControl"=dword:00000000
 "Group"="Video"
@@ -338,5 +339,5 @@ REGEDIT4
 [\Registry\Machine\SOFTWARE\ReactOS\Windows NT\CurrentVersion]
 
 [\Registry\Machine\SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon]
-"Shell"=expand:"%SystemRoot%\System32\Shell.exe"
+"Shell"=expand:"%SystemRoot%\System32\cmd.exe"
 "StartServices"=dword:00000001
