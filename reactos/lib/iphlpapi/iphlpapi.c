@@ -115,7 +115,9 @@ GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
 /*
  * @unimplemented
  */
-DWORD WINAPI MyGetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
+DWORD
+WINAPI
+GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
 	LONG lErr;
 	DWORD dwSize;
@@ -218,17 +220,17 @@ DWORD WINAPI MyGetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 			//	TODO	UINT DhcpEnabled
 			//	TODO	PIP_ADDR_STRING CurrentIpAddress
 			//	IP_ADDR_STRING IpAddressList
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "IPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "SubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("IPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("SubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
 		if(strstr(pCurrentAdapter->IpAddressList.IpAddress.String, "0.0.0.0") != NULL)
 		{	
-			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpIPAddress", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
-			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
+			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpIPAddress"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpAddress, &dwSize);
+			dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpSubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->IpAddressList.IpMask, &dwSize);
 		}
 			//	TODO	IP_ADDR_STRING GatewayList
 			//	IP_ADDR_STRING DhcpServer
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpServer", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpAddress, &dwSize);
-		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, "DhcpSubnetMask", NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpMask, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpServer"), NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpAddress, &dwSize);
+		dwSize = 16; lErr = RegQueryValueEx(hIpConfig, _T("DhcpSubnetMask"), NULL, NULL, (BYTE*) &pCurrentAdapter->DhcpServer.IpMask, &dwSize);
 			//	TODO	BOOL HaveWins
 			//	TODO	IP_ADDR_STRING PrimaryWinsServer
 			//	TODO	IP_ADDR_STRING SecondaryWinsServer
