@@ -49,8 +49,8 @@
 #define  REG_EXTEND_HASH_TABLE_SIZE    4
 #define  REG_VALUE_LIST_CELL_MULTIPLE  4
 
-#define ROUND_UP(N, S) ((N) + (S) - ((N) % (S)))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+#define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 
