@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.19 2003/10/12 00:39:50 weiden Exp $
+/* $Id: messagebox.c,v 1.20 2003/10/12 10:05:22 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -76,6 +76,8 @@ typedef UINT *LPUINT;
 #define MSGBOXEX_SPACING    (16)
 #define MSGBOXEX_BUTTONSPACING  (6)
 #define MSGBOXEX_MARGIN (12)
+#define MSGBOXEX_MAXBTNSTR  (32)
+#define MSGBOXEX_MAXBTNS    (4)
 
 typedef struct _MSGBOXINFO {
   HICON Icon;
@@ -209,7 +211,7 @@ MessageBoxTimeoutIndirectW(
     DLGTEMPLATE *tpl;
     DLGITEMTEMPLATE *iico, *itxt;
     NONCLIENTMETRICSW nclm;
-    WCHAR capbuf[32], btnbuf[32];
+    WCHAR capbuf[32];
     HMODULE hUser32;
     LPVOID buf;
     BYTE *dest;
@@ -218,9 +220,9 @@ MessageBoxTimeoutIndirectW(
     HICON Icon;
     HDC hDC;
     int bufsize, ret, caplen, textlen, btnlen, i, btnleft, btntop, lmargin, nButtons = 0;
-    LONG Buttons[4];
-    LPWSTR ButtonText[4];
-    DLGITEMTEMPLATE *ibtn[4];
+    LONG Buttons[MSGBOXEX_MAXBTNS];
+    WCHAR ButtonText[MSGBOXEX_MAXBTNS][MSGBOXEX_MAXBTNSTR];
+    DLGITEMTEMPLATE *ibtn[MSGBOXEX_MAXBTNS];
     RECT btnrect, txtrect, rc;
     SIZE btnsize;
     MSGBOXINFO mbi;
@@ -330,51 +332,43 @@ MessageBoxTimeoutIndirectW(
       switch(Buttons[i])
       {
         case IDOK:
-          LoadStringW(hUser32, IDS_OK, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_OK, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDCANCEL:
-          LoadStringW(hUser32, IDS_CANCEL, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_CANCEL, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDYES:
-          LoadStringW(hUser32, IDS_YES, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_YES, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDNO:
-          LoadStringW(hUser32, IDS_NO, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_NO, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDTRYAGAIN:
-          LoadStringW(hUser32, IDS_TRYAGAIN, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_TRYAGAIN, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDCONTINUE:
-          LoadStringW(hUser32, IDS_CONTINUE, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_CONTINUE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDABORT:
-          LoadStringW(hUser32, IDS_ABORT, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_ABORT, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDRETRY:
-          LoadStringW(hUser32, IDS_RETRY, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_RETRY, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDIGNORE:
-          LoadStringW(hUser32, IDS_IGNORE, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_IGNORE, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         case IDHELP:
-          LoadStringW(hUser32, IDS_HELP, &btnbuf[0], 32);
-          ButtonText[i] = &btnbuf[0];
+          LoadStringW(hUser32, IDS_HELP, ButtonText[i], MSGBOXEX_MAXBTNSTR - 1);
           break;
         default:
-          ButtonText[i] = NULL;
+          ButtonText[i][0] = (WCHAR)0;
           break;
       }
-      if(ButtonText[i])
+      if(ButtonText[i][0])
+      {
         bufsize += ((strlenW(ButtonText[i]) + 1) * sizeof(WCHAR));
+      }
     }
     
     if(Icon)
