@@ -23,7 +23,7 @@ winspool.dll reactos/lib/winspool
 ws2_32.dll reactos/lib/ws2_32
 wsock32.dll reactos/lib/wsock32
 videoprt.dll reactos/drivers/dd/videoprt
-ndis.dll reactos/drivers/net/ndis
+ndis.sys reactos/drivers/net/ndis
 tdi.dll reactos/drivers/net/tdi
 class2.sys reactos/drivers/storage/class2
 scsiport.sys reactos/drivers/storage/scsiport
