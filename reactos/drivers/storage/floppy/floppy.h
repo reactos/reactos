@@ -55,6 +55,10 @@ int _cdecl swprintf(const WCHAR *, ...);
 #define PAGED_CODE() {ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);}
 #endif
 
+#ifndef UNREFERENCED_PARAMETER
+#define UNREFERENCED_PARAMETER(x) { (x) = (x); }
+#endif
+
 struct _CONTROLLER_INFO;
 
 typedef struct _DRIVE_INFO
@@ -100,13 +104,6 @@ typedef struct _CONTROLLER_INFO
   KDPC             MotorStopDpc;
   BOOLEAN          StopDpcQueued;
 } CONTROLLER_INFO, *PCONTROLLER_INFO;
-
-NTSTATUS NTAPI ReadWrite(PDEVICE_OBJECT DeviceObject,
-                                PIRP Irp);
-
-VOID NTAPI QueueThread(PVOID Context);
-
-extern KEVENT QueueThreadTerminate;
 
 NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
                            PUNICODE_STRING RegistryPath);

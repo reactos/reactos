@@ -846,7 +846,7 @@ NTSTATUS NTAPI HwGetVersion(PCONTROLLER_INFO ControllerInfo)
   if(Send_Byte(ControllerInfo, COMMAND_VERSION) != STATUS_SUCCESS)
     {
       KdPrint(("floppy: HwGetVersion: unable to write fifo\n"));
-      return STATUS_UNSUCCESSFUL;;
+      return STATUS_UNSUCCESSFUL;
     }
 
   if(Get_Byte(ControllerInfo, &Buffer) != STATUS_SUCCESS)
@@ -1108,6 +1108,8 @@ VOID NTAPI HwDumpRegisters(PCONTROLLER_INFO ControllerInfo)
  *     ControllerInfo: Controller to dump registers from
  */
 {
+  UNREFERENCED_PARAMETER(ControllerInfo);
+
   KdPrint(("floppy: STATUS: "));
   KdPrint(("STATUS_REGISTER_A = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_A)));
   KdPrint(("STATUS_REGISTER_B = 0x%x ", READ_PORT_UCHAR(ControllerInfo->BaseAddress + STATUS_REGISTER_B)));

@@ -77,6 +77,8 @@ static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObjec
  */
 {
   PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO)Context;
+  UNREFERENCED_PARAMETER(DeviceObject);
+  UNREFERENCED_PARAMETER(Irp);
 
   KdPrint(("floppy: MapRegisterCallback Called\n"));
 
@@ -104,13 +106,10 @@ NTSTATUS NTAPI ReadWrite(PDEVICE_OBJECT DeviceObject,
  *       it onto the irp queue
  */
 {
-  PIO_STACK_LOCATION Stack;
   KdPrint(("floppy: ReadWrite called\n"));
 
   ASSERT(DeviceObject);
   ASSERT(Irp);
-
-  Stack = IoGetCurrentIrpStackLocation(Irp);
 
   if(!Irp->MdlAddress)
     {
@@ -502,26 +501,12 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   /* Set up parameters for read or write */
   if(Stack->MajorFunction == IRP_MJ_READ)
     {
-      /*
-      if(Stack->Parameters.Read.Length > PAGE_SIZE * DriveInfo->ControllerInfo->MapRegisters)
-	{
-	  KdPrint(("floppy: ReadWritePassive(): unable to transfer; would have to split\n"));
-	  ASSERT(0);
-	}
-        */
       Length = Stack->Parameters.Read.Length;
       DiskByteOffset = Stack->Parameters.Read.ByteOffset.u.LowPart;
       WriteToDevice = FALSE;
     }
   else
     {
-      /*
-      if(Stack->Parameters.Write.Length > PAGE_SIZE * DriveInfo->ControllerInfo->MapRegisters)
-	{
-	  KdPrint(("floppy: ReadWritePassive(): unable to transfer; would have to split\n"));
-	  ASSERT(0);
-	}
-        */
       Length = Stack->Parameters.Write.Length;
       DiskByteOffset = Stack->Parameters.Write.ByteOffset.u.LowPart;
       WriteToDevice = TRUE;
@@ -660,10 +645,10 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       KdPrint(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
 
       /* 1-based sector number */
-      if( (DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1) < 
+      if( ((DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1) < 
 	  (Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector)
 	{
-	  CurrentTransferSectors = (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack - StartSector + 1;
+	  CurrentTransferSectors = (UCHAR)(DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1;
 	}
       else
 	{

@@ -56,29 +56,30 @@ KSEMAPHORE QueueSemaphore;
  */
 
 
-VOID NTAPI CsqRemoveIrp(PIO_CSQ Csq, 
+VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq, 
                         PIRP Irp)
 /*
  * FUNCTION: Remove an IRP from the queue
  * ARGUMENTS:
- *     Csq: Pointer to CSQ context structure
+ *     UnusedCsq: Pointer to CSQ context structure
  *     Irp: Pointer to the IRP to remove from the queue
  * NOTES:
  *     - Called under the protection of the queue lock
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
   KdPrint(("CSQ: Removing IRP 0x%x\n", Irp));
   RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 }
 
 
-PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq, 
+PIRP NTAPI CsqPeekNextIrp(PIO_CSQ UnusedCsq, 
                           PIRP Irp, 
                           PVOID PeekContext)
 /*
  * FUNCTION: Remove the next IRP from the queue
  * ARGUMENTS:
- *     Csq: Pointer to CSQ context structure
+ *     UnusedCsq: Pointer to CSQ context structure
  *     Irp: Pointer to a starting IRP in the queue (i.e. start search here)
  *     PeekContext: Unused
  * RETURNS:
@@ -88,6 +89,8 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq,
  *     - Called under the protection of the queue lock
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
+  UNREFERENCED_PARAMETER(PeekContext);
   KdPrint(("CSQ: Peeking for next IRP\n"));
 
   if(Irp)
@@ -100,46 +103,49 @@ PIRP NTAPI CsqPeekNextIrp(PIO_CSQ Csq,
 }
 
 
-VOID NTAPI CsqAcquireLock(PIO_CSQ Csq, 
+VOID NTAPI CsqAcquireLock(PIO_CSQ UnusedCsq, 
                           PKIRQL Irql)
 /*
  * FUNCTION: Acquire the queue lock
  * ARGUMENTS:
- *     Csq: Pointer to CSQ context structure
+ *     UnusedCsq: Pointer to CSQ context structure
  *     Irql: Pointer to a variable to store the old irql into
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
   KdPrint(("CSQ: Acquiring spin lock\n"));
   KeAcquireSpinLock(&IrpQueueLock, Irql);
 }
 
 
-VOID NTAPI CsqReleaseLock(PIO_CSQ Csq, 
+VOID NTAPI CsqReleaseLock(PIO_CSQ UnusedCsq, 
                           KIRQL Irql)
 /*
  * FUNCTION: Release the queue lock
  * ARGUMENTS:
- *     Csq: Pointer to CSQ context structure
+ *     UnusedCsq: Pointer to CSQ context structure
  *     Irql: IRQL to lower to on release
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
   KdPrint(("CSQ: Releasing spin lock\n"));
   KeReleaseSpinLock(&IrpQueueLock, Irql);
 }
 
 
-VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ Csq, 
+VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq, 
                                   PIRP Irp)
 /*
  * FUNCTION: Complete a canceled IRP
  * ARGUMENTS:
- *    Csq: Pointer to CSQ context structure
+ *    UnusedCsq: Pointer to CSQ context structure
  *    Irp: IRP to complete
  * NOTES:
  *    - Perhaps we should complete with something besides NO_INCREMENT
  *    - MS misspelled CANCELLED... sigh...
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
   KdPrint(("CSQ: Canceling irp 0x%x\n", Irp));
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
@@ -147,12 +153,12 @@ VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ Csq,
 }
 
 
-VOID NTAPI CsqInsertIrp(PIO_CSQ Csq, 
+VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq, 
                         PIRP Irp)
 /*
  * FUNCTION: Queue an IRP
  * ARGUMENTS:
- *     Csq: Unused
+ *     UnusedCsq: Unused
  *     Irp: IRP to add to the queue
  * NOTES:
  *     - Called under the protection of the queue lock
@@ -164,6 +170,7 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ Csq,
  *       that at least one IRP is canceled at some point
  */
 {
+  UNREFERENCED_PARAMETER(UnusedCsq);
   KdPrint(("CSQ: Inserting IRP 0x%x\n", Irp));
   InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
   KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);

@@ -324,8 +324,6 @@ NTSTATUS NTAPI HwReadIdResult(PCONTROLLER_INFO ControllerInfo,
 NTSTATUS NTAPI HwSetDataRate(PCONTROLLER_INFO ControllerInfo, 
                              UCHAR DataRate);
 
-NTSTATUS NTAPI HwRecalibrateResult(PCONTROLLER_INFO ControllerInfo);
-
 NTSTATUS NTAPI HwReset(PCONTROLLER_INFO Controller);
 
 NTSTATUS NTAPI HwPowerOff(PCONTROLLER_INFO ControllerInfo);

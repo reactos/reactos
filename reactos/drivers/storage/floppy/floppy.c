@@ -64,25 +64,22 @@
  * will probably have only one, with four being a very unlikely maximum, a static
  * global array is easiest to deal with.
  */
-CONTROLLER_INFO gControllerInfo[MAX_CONTROLLERS];
-ULONG gNumberOfControllers = 0;
+static CONTROLLER_INFO gControllerInfo[MAX_CONTROLLERS];
+static ULONG gNumberOfControllers = 0;
 
 /* Queue thread management */
-KEVENT QueueThreadTerminate;
-PVOID ThreadObject;
-
-/* ISR DPC */
-KDPC Dpc;
+static KEVENT QueueThreadTerminate;
+static PVOID ThreadObject;
 
 
-static VOID NTAPI MotorStopDpcFunc(PKDPC Dpc,
+static VOID NTAPI MotorStopDpcFunc(PKDPC UnusedDpc,
 			    PVOID DeferredContext,
 			    PVOID SystemArgument1,
 			    PVOID SystemArgument2)
 /*
  * FUNCTION: Stop the floppy motor
  * ARGUMENTS:
- *     Dpc: DPC object that's going off
+ *     UnusedDpc: DPC object that's going off
  *     DeferredContext: called with DRIVE_INFO for drive to turn off
  *     SystemArgument1: unused
  *     SystemArgument2: unused
@@ -92,6 +89,10 @@ static VOID NTAPI MotorStopDpcFunc(PKDPC Dpc,
  */
 {
   PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO)DeferredContext;
+
+  UNREFERENCED_PARAMETER(SystemArgument1);
+  UNREFERENCED_PARAMETER(SystemArgument2);
+  UNREFERENCED_PARAMETER(UnusedDpc);
 
   ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
   ASSERT(ControllerInfo);
@@ -133,7 +134,8 @@ VOID NTAPI StartMotor(PDRIVE_INFO DriveInfo)
       DriveInfo->ControllerInfo->StopDpcQueued = FALSE;
     }
 
-  HwTurnOnMotor(DriveInfo);
+  if(HwTurnOnMotor(DriveInfo) != STATUS_SUCCESS)
+    KdPrint(("floppy: StartMotor(): warning: HwTurnOnMotor failed\n"));
 }
 
 
@@ -203,6 +205,8 @@ static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
  * TODO: Figure out why this isn't getting called any more, and remove the ASSERT once that happens
  */
 {
+  UNREFERENCED_PARAMETER(DeviceObject);
+
   KdPrint(("floppy: CreateClose called\n"));
 
   Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -239,7 +243,11 @@ static NTSTATUS NTAPI Recalibrate(PDRIVE_INFO DriveInfo)
 
   /* set the data rate */
   KdPrint(("floppy: FIXME: UN-HARDCODE DATA RATE\n"));
-  HwSetDataRate(DriveInfo->ControllerInfo, 0);
+  if(HwSetDataRate(DriveInfo->ControllerInfo, 0) != STATUS_SUCCESS)
+    {
+      KdPrint(("floppy: Recalibrate: HwSetDataRate failed\n"));
+      return STATUS_UNSUCCESSFUL;
+    }
 
   /* clear the event just in case the last call forgot */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
@@ -313,7 +321,11 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
 
   WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
-  HwSenseInterruptStatus(DriveInfo->ControllerInfo);
+  if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
+    {
+      KdPrint(("floppy: ResetChangeFlag(): HwSenseInterruptStatus failed; bailing out\n"));
+      return STATUS_IO_DEVICE_ERROR;
+    }
 
   /* Seek back to 0 */
   if(HwSeek(DriveInfo, 1) != STATUS_SUCCESS)
@@ -324,7 +336,11 @@ NTSTATUS NTAPI ResetChangeFlag(PDRIVE_INFO DriveInfo)
 
   WaitForControllerInterrupt(DriveInfo->ControllerInfo);
 
-  HwSenseInterruptStatus(DriveInfo->ControllerInfo);
+  if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
+    {
+      KdPrint(("floppy: ResetChangeFlag(): HwSenseInterruptStatus #2 failed; bailing\n"));
+      return STATUS_IO_DEVICE_ERROR;
+    }
 
   /* Check the change bit */
   if(HwDiskChanged(DriveInfo, &DiskChanged) != STATUS_SUCCESS)
@@ -354,6 +370,7 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
   ULONG i,j;
 
   PAGED_CODE();
+  UNREFERENCED_PARAMETER(DriverObject);
 
   KdPrint(("floppy: unloading\n"));
 
@@ -380,7 +397,8 @@ static VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
       IoDisconnectInterrupt(gControllerInfo[i].InterruptObject);
 
       /* Power down the controller */
-      HwPowerOff(&gControllerInfo[i]);
+      if(HwPowerOff(&gControllerInfo[i]) != STATUS_SUCCESS)
+	KdPrint(("floppy: unload: warning: HwPowerOff failed\n"));
     }
 }
 
@@ -440,6 +458,13 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
   UCHAR i;
 
   PAGED_CODE();
+  UNREFERENCED_PARAMETER(PeripheralType);
+  UNREFERENCED_PARAMETER(PeripheralNumber);
+  UNREFERENCED_PARAMETER(BusInformation);
+  UNREFERENCED_PARAMETER(Context);
+  UNREFERENCED_PARAMETER(ControllerType);
+  UNREFERENCED_PARAMETER(PathName);
+
 
   KdPrint(("floppy: ConfigCallback called with ControllerNumber %d\n", ControllerNumber));
 
@@ -471,12 +496,19 @@ static NTSTATUS NTAPI ConfigCallback(PVOID Context,
           ULONG AddressSpace = 0x1; /* I/O Port Range */
 
           if(!HalTranslateBusAddress(BusType, BusNumber, PartialDescriptor->u.Port.Start, &AddressSpace, &TranslatedAddress))
-            ASSERT(0);
+	    {
+	      KdPrint(("floppy: HalTranslateBusAddress failed; returning\n"));
+	      return STATUS_IO_DEVICE_ERROR;
+	    }
 
           if(AddressSpace == 0)
-            gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, 8, FALSE); // symbolic constant?
+	    {
+              gControllerInfo[gNumberOfControllers].BaseAddress = MmMapIoSpace(TranslatedAddress, 8, MmNonCached); // symbolic constant?
+	    }
           else
-            gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)TranslatedAddress.u.LowPart;
+	    {
+              gControllerInfo[gNumberOfControllers].BaseAddress = (PUCHAR)TranslatedAddress.u.LowPart;
+	    }
         }
 
       else if(PartialDescriptor->Type == CmResourceTypeDma)
@@ -558,6 +590,8 @@ static BOOLEAN NTAPI Isr(PKINTERRUPT Interrupt,
 {
   PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO)ServiceContext;
 
+  UNREFERENCED_PARAMETER(Interrupt);
+
   ASSERT(ControllerInfo);
 
   KdPrint(("floppy: ISR called\n"));
@@ -575,14 +609,14 @@ static BOOLEAN NTAPI Isr(PKINTERRUPT Interrupt,
 }
 
 
-VOID NTAPI DpcForIsr(PKDPC Dpc,
+VOID NTAPI DpcForIsr(PKDPC UnusedDpc,
                      PVOID Context,
                      PVOID SystemArgument1,
                      PVOID SystemArgument2)
 /*
  * FUNCTION: This DPC gets queued by every ISR.  Does the real per-interrupt work.
  * ARGUMENTS:
- *     Dpc: Pointer to the DPC object that represents our function
+ *     UnusedDpc: Pointer to the DPC object that represents our function
  *     DeviceObject: Device that this DPC is running for
  *     Irp: Unused
  *     Context: Pointer to our ControllerInfo struct 
@@ -597,6 +631,10 @@ VOID NTAPI DpcForIsr(PKDPC Dpc,
  */
 {
   PCONTROLLER_INFO ControllerInfo = (PCONTROLLER_INFO)Context;
+
+  UNREFERENCED_PARAMETER(UnusedDpc);
+  UNREFERENCED_PARAMETER(SystemArgument1);
+  UNREFERENCED_PARAMETER(SystemArgument2);
 
   ASSERT(ControllerInfo);
 
@@ -868,7 +906,7 @@ static BOOLEAN NTAPI AddControllers(PDRIVER_OBJECT DriverObject)
 	   * 14: 3,2
 	   * 15: 3,3 
 	   */ 
-	  DriveNumber = i*4 + j;
+	  DriveNumber = (UCHAR)(i*4 + j); /* loss of precision is OK; there are only 16 of 'em */
 
           swprintf(DeviceNameBuf, L"\\Device\\Floppy%d", DriveNumber);
           RtlInitUnicodeString(&DeviceName, DeviceNameBuf);
@@ -962,7 +1000,7 @@ VOID NTAPI SignalMediaChanged(PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID NTAPI QueueThread(PVOID Context)
+static VOID NTAPI QueueThread(PVOID Context)
 /*
  * FUNCTION: Thread that manages the queue and dispatches any queued requests
  * ARGUMENTS:
@@ -975,6 +1013,7 @@ VOID NTAPI QueueThread(PVOID Context)
   PVOID Objects[2];
 
   PAGED_CODE();
+  UNREFERENCED_PARAMETER(Context);
 
   Objects[0] = &QueueSemaphore;
   Objects[1] = &QueueThreadTerminate;
@@ -1042,6 +1081,8 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
   HANDLE ThreadHandle;
+
+  UNREFERENCED_PARAMETER(RegistryPath);
 
   /*
    * Set up dispatch routines
