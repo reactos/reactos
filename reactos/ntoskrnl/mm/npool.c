@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.67 2003/07/05 18:10:50 hbirr Exp $
+/* $Id: npool.c,v 1.68 2003/07/06 07:36:56 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -1155,10 +1155,10 @@ add_to_free_list(BLOCK_HDR* blk)
   if (blk->AddressList.Blink != &AddressListHead)
     {
       current = CONTAINING_RECORD(blk->AddressList.Blink, BLOCK_HDR, AddressList);
-      if (current->Magic == BLOCK_HDR_FREE_MAGIC)
+      if (current->Magic == BLOCK_HDR_FREE_MAGIC &&
+	  (PVOID)current + current->Size + sizeof(BLOCK_HDR) == (PVOID)blk)
         {
 	  CHECKPOINT;
-	  assert((PVOID)current + current->Size + sizeof(BLOCK_HDR) == (PVOID)blk);
           remove_from_free_list(current);
 	  RemoveEntryList(&blk->AddressList);
 	  current->Size = current->Size + sizeof(BLOCK_HDR) + blk->Size;
@@ -1171,10 +1171,10 @@ add_to_free_list(BLOCK_HDR* blk)
   if (blk->AddressList.Flink != &AddressListHead)
     {
       current = CONTAINING_RECORD(blk->AddressList.Flink, BLOCK_HDR, AddressList);
-      if (current->Magic == BLOCK_HDR_FREE_MAGIC)
+      if (current->Magic == BLOCK_HDR_FREE_MAGIC &&
+	  (PVOID)blk + blk->Size + sizeof(BLOCK_HDR) == (PVOID)current)
         {
 	  CHECKPOINT;
-	  assert((PVOID)blk + blk->Size + sizeof(BLOCK_HDR) == (PVOID)current);
           remove_from_free_list(current);
 	  RemoveEntryList(&current->AddressList);
 	  blk->Size = blk->Size + sizeof(BLOCK_HDR) + current->Size;
@@ -1373,10 +1373,12 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    ULONG nr_pages = PAGE_ROUND_UP(size + sizeof(BLOCK_HDR)) / PAGE_SIZE;
    ULONG start;
    BLOCK_HDR* blk=NULL;
+   BLOCK_HDR* current;
    ULONG i;
    KIRQL oldIrql;
    NTSTATUS Status;
    PVOID block = NULL;
+   PLIST_ENTRY current_entry;
 
    if (size >= PAGE_SIZE)
      {
@@ -1391,6 +1393,7 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
        KeBugCheck(0);
      }
    MiCurrentNonPagedPoolLength += nr_pages * PAGE_SIZE;
+   KeReleaseSpinLock(&MmNpoolLock, oldIrql);
 
    DPRINT("growing heap for block size %d, ",size);
    DPRINT("start %x\n",start);
@@ -1422,7 +1425,22 @@ static void* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
    blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
    memset(block_to_address(blk), 0xcc, blk->Size);
 
-   InsertTailList(&AddressListHead, &blk->AddressList);
+   KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
+   current_entry = AddressListHead.Blink;
+   while (current_entry != &AddressListHead)
+     {
+       current = CONTAINING_RECORD(current_entry, BLOCK_HDR, AddressList);
+       if ((PVOID)current + current->Size < (PVOID)blk)
+         {
+	   InsertHeadList(current_entry, &blk->AddressList);
+	   break;
+	 }
+       current_entry = current_entry->Blink;
+     }
+   if (current_entry == &AddressListHead)
+     {
+       InsertHeadList(&AddressListHead, &blk->AddressList);
+     }
    blk->Magic = BLOCK_HDR_FREE_MAGIC;
    add_to_free_list(blk);
    blk = lookup_block(size);
