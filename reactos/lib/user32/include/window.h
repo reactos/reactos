@@ -10,11 +10,7 @@
 #define IS_ATOM(x) \
   (((ULONG_PTR)(x) > 0x0) && ((ULONG_PTR)(x) < 0x10000))
 
-VOID
-UserSetupInternalPos(VOID);
 BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
-PINTERNALPOS
-UserGetInternalPos(HWND hWnd);
 ULONG
 UserHasDlgFrameStyle(ULONG Style, ULONG ExStyle);
 ULONG

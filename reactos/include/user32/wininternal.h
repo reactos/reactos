@@ -1,13 +1,6 @@
 #ifndef __INCLUDE_USER32_WININTERNAL_H
 #define __INCLUDE_USER32_WININTERNAL_H
 
-typedef struct _INTERNALPOS
-{
-  RECT NormalRect;
-  POINT IconPos;
-  POINT MaxPos;
-} INTERNALPOS, *PINTERNALPOS;
-
 #define WIN_NCACTIVATED  (0x0080)
 
 /* internal DCX flags */

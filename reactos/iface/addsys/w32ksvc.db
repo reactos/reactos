@@ -397,6 +397,7 @@ NtUserGetMenuBarInfo                    4
 NtUserGetMenuIndex                      2
 NtUserGetMenuItemRect                   4
 NtUserGetMessage                        4
+NtUserGetMinMaxInfo                     3
 NtUserGetMouseMovePointsEx              5
 NtUserGetObjectInformation              5
 NtUserGetOpenClipboardWindow            0
@@ -438,7 +439,6 @@ NtUserMenuInfo				3
 NtUserMenuItemFromPoint                 4
 NtUserMenuItemInfo			5
 NtUserMessageCall                       7
-NtUserMinMaximize                       3
 NtUserMNDragLeave                       0
 NtUserMNDragOver                        2
 NtUserModifyUserStartupInfoFlags        2

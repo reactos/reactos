@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.9 2003/12/26 12:37:53 weiden Exp $
+/* $Id: winpos.c,v 1.10 2003/12/26 13:06:34 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -29,63 +29,19 @@ WinPosGetMinMaxInfo(HWND hWnd, POINT* MaxSize, POINT* MaxPos,
 		  POINT* MinTrack, POINT* MaxTrack)
 {
   MINMAXINFO MinMax;
-  INT XInc, YInc;
-  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
-  ULONG ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
+  
+  if(NtUserGetMinMaxInfo(hWnd, &MinMax, TRUE))
+  {
+    MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
+				  MinMax.ptMinTrackSize.x);
+    MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
+				  MinMax.ptMinTrackSize.y);
 
-  /* Get default values. */
-  MinMax.ptMaxSize.x = GetSystemMetrics(SM_CXSCREEN);
-  MinMax.ptMaxSize.y = GetSystemMetrics(SM_CYSCREEN);
-  MinMax.ptMinTrackSize.x = GetSystemMetrics(SM_CXMINTRACK);
-  MinMax.ptMinTrackSize.y = GetSystemMetrics(SM_CYMINTRACK);
-  MinMax.ptMaxTrackSize.x = GetSystemMetrics(SM_CXSCREEN);
-  MinMax.ptMaxTrackSize.y = GetSystemMetrics(SM_CYSCREEN);
-
-  if (UserHasDlgFrameStyle(Style, ExStyle))
-    {
-      XInc = GetSystemMetrics(SM_CXDLGFRAME);
-      YInc = GetSystemMetrics(SM_CYDLGFRAME);
-    }
-  else
-    {
-      XInc = YInc = 0;
-      if (UserHasThickFrameStyle(Style, ExStyle))
-	{
-	  XInc += GetSystemMetrics(SM_CXFRAME);
-	  YInc += GetSystemMetrics(SM_CYFRAME);
-	}
-      if (Style & WS_BORDER)
-	{
-	  XInc += GetSystemMetrics(SM_CXBORDER);
-	  YInc += GetSystemMetrics(SM_CYBORDER);
-	}
-    }
-  MinMax.ptMaxSize.x += 2 * XInc;
-  MinMax.ptMaxSize.y += 2 * YInc;
-
-  //Pos = UserGetInternalPos(hWnd);
-  //if (Pos != NULL)
-   // {
-    //  MinMax.ptMaxPosition = Pos->MaxPos;
-   // }
-  //else
-   // {
-      MinMax.ptMaxPosition.x -= XInc;
-      MinMax.ptMaxPosition.y -= YInc;
-   // }
-
-  SendMessageW(hWnd, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
-
-  MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
-				MinMax.ptMinTrackSize.x);
-  MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
-				MinMax.ptMinTrackSize.y);
-
-  if (MaxSize) *MaxSize = MinMax.ptMaxSize;
-  if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
-  if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
-  if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
-
+    if (MaxSize) *MaxSize = MinMax.ptMaxSize;
+    if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
+    if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
+    if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
+  }
   return 0; //FIXME: what does it return?
 }
 

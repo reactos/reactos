@@ -17,6 +17,13 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 VOID FASTCALL
 WinPosSetupInternalPos(VOID);
 
+typedef struct _INTERNALPOS
+{
+  RECT NormalRect;
+  POINT IconPos;
+  POINT MaxPos;
+} INTERNALPOS, *PINTERNALPOS;
+
 typedef struct _WINDOW_OBJECT
 {
   /* Pointer to the window class. */

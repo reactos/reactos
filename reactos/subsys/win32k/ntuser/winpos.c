@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.70 2003/12/26 12:37:53 weiden Exp $
+/* $Id: winpos.c,v 1.71 2003/12/26 13:06:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -305,11 +305,9 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
   return(SwpFlags);
 }
 
-UINT FASTCALL
-WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
-		    POINT* MinTrack, POINT* MaxTrack)
+VOID FASTCALL
+WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
-  MINMAXINFO MinMax;
   INT XInc, YInc;
   RECT WorkArea;
   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
@@ -318,14 +316,14 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
     WorkArea = *IntGetDesktopWorkArea(Desktop);
   else
     WorkArea = Window->Parent->ClientRect;
-
+  
   /* Get default values. */
-  MinMax.ptMaxSize.x = WorkArea.right - WorkArea.left;
-  MinMax.ptMaxSize.y = WorkArea.bottom - WorkArea.top;
-  MinMax.ptMinTrackSize.x = NtUserGetSystemMetrics(SM_CXMINTRACK);
-  MinMax.ptMinTrackSize.y = NtUserGetSystemMetrics(SM_CYMINTRACK);
-  MinMax.ptMaxTrackSize.x = MinMax.ptMaxSize.x;
-  MinMax.ptMaxTrackSize.y = MinMax.ptMaxSize.y;
+  Info->ptMaxSize.x = WorkArea.right - WorkArea.left;
+  Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top;
+  Info->ptMinTrackSize.x = NtUserGetSystemMetrics(SM_CXMINTRACK);
+  Info->ptMinTrackSize.y = NtUserGetSystemMetrics(SM_CYMINTRACK);
+  Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
+  Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
   if (HAS_DLGFRAME(Window->Style, Window->ExStyle))
     {
@@ -346,19 +344,28 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 	  YInc += NtUserGetSystemMetrics(SM_CYBORDER);
 	}
     }
-  MinMax.ptMaxSize.x += 2 * XInc;
-  MinMax.ptMaxSize.y += 2 * YInc;
+  Info->ptMaxSize.x += 2 * XInc;
+  Info->ptMaxSize.y += 2 * YInc;
 
   if (Window->InternalPos != NULL)
     {
-      MinMax.ptMaxPosition = Window->InternalPos->MaxPos;
+      Info->ptMaxPosition = Window->InternalPos->MaxPos;
     }
   else
     {
-      MinMax.ptMaxPosition.x -= WorkArea.left + XInc;
-      MinMax.ptMaxPosition.y -= WorkArea.top + YInc;
+      Info->ptMaxPosition.x -= WorkArea.left + XInc;
+      Info->ptMaxPosition.y -= WorkArea.top + YInc;
     }
+}
 
+UINT FASTCALL
+WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
+		    POINT* MinTrack, POINT* MaxTrack)
+{
+  MINMAXINFO MinMax;
+  
+  WinPosFillMinMaxInfoStruct(Window, &MinMax);
+  
   IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax, TRUE);
 
   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
@@ -1348,6 +1355,56 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
     }
 
   return(HitTest);
+}
+
+BOOL
+STDCALL
+NtUserGetMinMaxInfo(
+  HWND hwnd,
+  MINMAXINFO *MinMaxInfo,
+  BOOL SendMessage)
+{
+  POINT Size;
+  PINTERNALPOS InternalPos;
+  PWINDOW_OBJECT Window;
+  MINMAXINFO SafeMinMax;
+  NTSTATUS Status;
+  
+  Window = IntGetWindowObject(hwnd);
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+
+  Size.x = Window->WindowRect.left;
+  Size.y = Window->WindowRect.top;
+  InternalPos = WinPosInitInternalPos(Window, Size, 
+				      &Window->WindowRect); 
+  if(InternalPos)
+  {
+    if(SendMessage)
+    {
+      WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition, 
+                          &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
+    }
+    else
+    {
+      WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
+    }
+    Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
+    if(!NT_SUCCESS(Status))
+    {
+      IntReleaseWindowObject(Window);
+      SetLastNtError(Status);
+      return FALSE;
+    }
+    IntReleaseWindowObject(Window);
+    return TRUE;
+  }
+  
+  IntReleaseWindowObject(Window);
+  return FALSE;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.42 2003/12/14 12:39:32 navaraf Exp $
+/* $Id: stubs.c,v 1.43 2003/12/26 13:06:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -508,18 +508,6 @@ NtUserLoadKeyboardLayoutEx(
 DWORD
 STDCALL
 NtUserLockWorkStation(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserMinMaximize(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

@@ -1052,12 +1052,12 @@ NtUserMessageCall(
   DWORD Unknown5,
   DWORD Unknown6);
 
-DWORD
+BOOL
 STDCALL
-NtUserMinMaximize(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+NtUserGetMinMaxInfo(
+  HWND hwnd,
+  MINMAXINFO *MinMaxInfo,
+  BOOL SendMessage);
 
 DWORD
 STDCALL
