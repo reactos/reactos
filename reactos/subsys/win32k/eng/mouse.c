@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.40 2003/08/29 19:17:31 weiden Exp $
+/* $Id: mouse.c,v 1.41 2003/09/10 07:24:31 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -437,8 +437,8 @@ MouseGDICallBack(PMOUSE_INPUT_DATA Data, ULONG InputCount)
     
     CurInfo->x = max(CurInfo->x, 0);
     CurInfo->y = max(CurInfo->y, 0);
-    CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 20);
-    CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 20);
+    CurInfo->x = min(CurInfo->x, SurfObj->sizlBitmap.cx - 1);
+    CurInfo->y = min(CurInfo->y, SurfObj->sizlBitmap.cy - 1);
     
     IntCheckClipCursor(&CurInfo->x, &CurInfo->y, CurInfo);
     
@@ -588,13 +588,8 @@ EnableMouse(HDC hDisplayDC)
     DC_UnlockDc( hDisplayDC );
     
     /* Tell the display driver to set the pointer shape. */
-#if 1
     CurInfo->x = SurfObj->sizlBitmap.cx / 2;
     CurInfo->y = SurfObj->sizlBitmap.cy / 2;
-#else
-    CurInfo->x = 320;
-    CurInfo->y = 240;
-#endif
 
     /* Create the default mouse cursor. */
     MouseSize.cx = SysCursor->cx;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.14 2003/03/11 00:21:40 gvg Exp $
+/* $Id: pointer.c,v 1.15 2003/09/10 07:24:31 gvg Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -39,13 +39,12 @@ VOID VGADDI_ShowCursor(PPDEV ppdev);
 
 VOID
 VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
-		       ULONG SizeY, PUCHAR MaskBits, ULONG MaskOp)
+		       ULONG SizeY, PUCHAR MaskBits, ULONG MaskPitch, ULONG MaskOp)
 {
   ULONG EndX, EndY;
   UCHAR Mask;
   PUCHAR Video;
   PUCHAR Src;
-  ULONG MaskPitch;
   UCHAR SrcValue;
   ULONG i, j;
   ULONG Left;
@@ -53,7 +52,6 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
 
   EndX = StartX + SizeX;
   EndY = StartY + SizeY;
-  MaskPitch = SizeX >> 3;
 
   /* Set write mode zero. */
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 5);
@@ -289,16 +287,17 @@ VOID
 VGADDI_HideCursor(PPDEV ppdev)
 {
   ULONG i, j, cx, cy, bitpos;
-  ULONG SizeX;
+  ULONG SizeX, SizeY;
 
   /* Display what was behind cursor */
-  SizeX = ((oldx + ppdev->pPointerAttributes->Width) + 7) & ~0x7;
+  SizeX = min(((oldx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
   SizeX -= (oldx & ~0x7);
+  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - oldy);
   VGADDI_BltFromSavedScreenBits(oldx & ~0x7,
 				oldy,
 				ImageBehindCursor,
 				SizeX,
-				ppdev->pPointerAttributes->Height);
+				SizeY);
 
   ppdev->pPointerAttributes->Enable = 0;
 }
@@ -307,8 +306,8 @@ VOID
 VGADDI_ShowCursor(PPDEV ppdev)
 {
   ULONG i, j, cx, cy;
-  PUCHAR XorMask;
-  ULONG SizeX;
+  PUCHAR AndMask, XorMask;
+  ULONG SizeX, SizeY;
 
   if (ppdev->pPointerAttributes->Enable != 0)
     {
@@ -320,30 +319,37 @@ VGADDI_ShowCursor(PPDEV ppdev)
   cy = ppdev->xyCursor.y;
 
   /* Used to repaint background */
-  SizeX = ((cx + ppdev->pPointerAttributes->Width) + 7) & ~0x7;
+  SizeX = min(((cx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
   SizeX -= (cx & ~0x7);
+  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
 
   VGADDI_BltToSavedScreenBits(ImageBehindCursor,
 			      cx & ~0x7,
 			      cy,
 			      SizeX,
-			      ppdev->pPointerAttributes->Height);
+			      SizeY);
 
   /* Display the cursor. */
-  XorMask = ppdev->pPointerAttributes->Pixels +
+  SizeX = min(ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - ppdev->xyCursor.x);
+  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - ppdev->xyCursor.y);
+  AndMask = ppdev->pPointerAttributes->Pixels +
+            (ppdev->pPointerAttributes->Height - SizeY) * ppdev->pPointerAttributes->WidthInBytes;
+  VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
+			 ppdev->xyCursor.y,
+			 SizeX,
+			 SizeY,
+			 AndMask,
+			 ppdev->pPointerAttributes->WidthInBytes,
+			 VGA_AND);
+  XorMask = AndMask +
     ppdev->pPointerAttributes->WidthInBytes *
     ppdev->pPointerAttributes->Height;
   VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
 			 ppdev->xyCursor.y,
-			 ppdev->pPointerAttributes->Width,
-			 ppdev->pPointerAttributes->Height,
-			 ppdev->pPointerAttributes->Pixels,
-			 VGA_AND);
-  VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
-			 ppdev->xyCursor.y,
-			 ppdev->pPointerAttributes->Width,
-			 ppdev->pPointerAttributes->Height,
+			 SizeX,
+			 SizeY,
 			 XorMask,
+			 ppdev->pPointerAttributes->WidthInBytes,
 			 VGA_XOR);
 
   /* Save the new cursor location. */
