@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.25 2003/11/19 12:25:03 weiden Exp $
+/* $Id: misc.c,v 1.26 2003/11/19 13:19:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -64,6 +64,14 @@ NtUserCallNoParam(DWORD Routine)
       Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Win32Thread);
       break;
     
+    case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
+      Result = (DWORD)IntInitMessagePumpHook();
+      break;
+
+    case NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP:
+      Result = (DWORD)IntUninitMessagePumpHook();
+      break;
+
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);

@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.27 2003/11/11 20:28:21 gvg Exp $
+/* $Id: message.c,v 1.28 2003/11/19 13:19:39 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -899,7 +899,7 @@ ReleaseCapture(VOID)
  */
 DWORD
 STDCALL
-GetQueueStatus(UINT flags)
+RealGetQueueStatus(UINT flags)
 {
    DWORD ret;
    WORD changed_bits, wake_bits; 
@@ -950,7 +950,126 @@ WINBOOL STDCALL SetMessageQueue(int cMessagesMax)
   /* Function does nothing on 32 bit windows */
   return TRUE;
 }
+typedef DWORD (WINAPI * RealGetQueueStatusProc)(UINT flags);
+typedef DWORD (WINAPI * RealMsgWaitForMultipleObjectsExProc)(DWORD nCount, LPHANDLE lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags);
 
+typedef struct _USER_MESSAGE_PUMP_ADDRESSES {
+	DWORD cbSize;
+	//NtUserRealInternalGetMessageProc NtUserRealInternalGetMessage;
+	//NtUserRealWaitMessageExProc NtUserRealWaitMessageEx;
+	RealGetQueueStatusProc RealGetQueueStatus;
+	RealMsgWaitForMultipleObjectsExProc RealMsgWaitForMultipleObjectsEx;
+} USER_MESSAGE_PUMP_ADDRESSES, * PUSER_MESSAGE_PUMP_ADDRESSES;
 
+DWORD
+STDCALL
+RealMsgWaitForMultipleObjectsEx(
+  DWORD nCount,
+  LPHANDLE pHandles,
+  DWORD dwMilliseconds,
+  DWORD dwWakeMask,
+  DWORD dwFlags);
 
-/* EOF */
+typedef BOOL (WINAPI * MESSAGEPUMPHOOKPROC)(BOOL Unregistering,PUSER_MESSAGE_PUMP_ADDRESSES MessagePumpAddresses);
+
+RTL_CRITICAL_SECTION gcsMPH;
+MESSAGEPUMPHOOKPROC gpfnInitMPH;
+DWORD gcLoadMPH = 0;
+USER_MESSAGE_PUMP_ADDRESSES gmph = {sizeof(USER_MESSAGE_PUMP_ADDRESSES),
+	//NtUserRealInternalGetMessage,
+	//NtUserRealInternalWaitMessageEx,
+	RealGetQueueStatus,
+	RealMsgWaitForMultipleObjectsEx
+};
+
+DWORD gfMessagePumpHook = 0;
+
+BOOL WINAPI IsInsideMessagePumpHook()
+{
+	if(!gfMessagePumpHook)
+		return FALSE;
+	
+	/* Since our TEB doesnt match that of real windows, testing this value is useless until we know what it does
+	PUCHAR NtTeb = (PUCHAR)NtCurrentTeb();
+
+	if(!*(PLONG*)&NtTeb[0x708])
+		return FALSE;
+
+	if(**(PLONG*)&NtTeb[0x708] <= 0)
+		return FALSE;*/
+
+	return TRUE;
+}
+
+void WINAPI ResetMessagePumpHook(PUSER_MESSAGE_PUMP_ADDRESSES Addresses)
+{
+	Addresses->cbSize = sizeof(USER_MESSAGE_PUMP_ADDRESSES);
+	//Addresses->NtUserRealInternalGetMessage = (NtUserRealInternalGetMessageProc)NtUserRealInternalGetMessage;
+	//Addresses->NtUserRealWaitMessageEx = (NtUserRealWaitMessageExProc)NtUserRealInternalWaitMessageEx;
+	Addresses->RealGetQueueStatus = RealGetQueueStatus;
+	Addresses->RealMsgWaitForMultipleObjectsEx = RealMsgWaitForMultipleObjectsEx;
+}
+
+BOOL WINAPI RegisterMessagePumpHook(MESSAGEPUMPHOOKPROC Hook)
+{
+	RtlEnterCriticalSection(&gcsMPH);
+	if(!Hook) {
+		SetLastError(ERROR_INVALID_PARAMETER);
+		RtlLeaveCriticalSection(&gcsMPH);
+		return FALSE;
+	}
+	if(!gcLoadMPH) {
+		USER_MESSAGE_PUMP_ADDRESSES Addresses;
+		gpfnInitMPH = Hook;
+		ResetMessagePumpHook(&Addresses);
+		if(!Hook(FALSE, &Addresses) || !Addresses.cbSize) {
+			RtlLeaveCriticalSection(&gcsMPH);
+			return FALSE;
+		}
+		memcpy(&gmph, &Addresses, Addresses.cbSize);
+	} else {
+		if(gpfnInitMPH != Hook) {
+			RtlLeaveCriticalSection(&gcsMPH);
+			return FALSE;
+		}
+	}
+	if(NtUserCallNoParam(NOPARAM_ROUTINE_INIT_MESSAGE_PUMP)) {
+		RtlLeaveCriticalSection(&gcsMPH);
+		return FALSE;
+	}
+	if (!gcLoadMPH++) {
+		InterlockedExchange(&gfMessagePumpHook, 1);
+	}
+	RtlLeaveCriticalSection(&gcsMPH);
+	return TRUE;
+}
+
+BOOL WINAPI UnregisterMessagePumpHook(VOID)
+{
+	RtlEnterCriticalSection(&gcsMPH);
+	if(gcLoadMPH > 0) {
+		if(NtUserCallNoParam(NOPARAM_ROUTINE_UNINIT_MESSAGE_PUMP)) {
+			gcLoadMPH--;
+			if(!gcLoadMPH) {
+				InterlockedExchange(&gfMessagePumpHook, 0);
+				gpfnInitMPH(TRUE, NULL);
+				ResetMessagePumpHook(&gmph);
+				gpfnInitMPH = 0;
+			}
+			RtlLeaveCriticalSection(&gcsMPH);
+			return TRUE;
+		}
+	}
+	RtlLeaveCriticalSection(&gcsMPH);
+	return FALSE;
+}
+
+DWORD WINAPI GetQueueStatus(UINT flags)
+{
+	return IsInsideMessagePumpHook() ? gmph.RealGetQueueStatus(flags) : RealGetQueueStatus(flags);
+}
+
+DWORD WINAPI MsgWaitForMultipleObjectsEx(DWORD nCount, LPHANDLE lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags)
+{
+	return IsInsideMessagePumpHook() ? gmph.RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags) : RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags);
+}

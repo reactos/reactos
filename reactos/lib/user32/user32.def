@@ -5,7 +5,7 @@ ActivateKeyboardLayout@8
 AdjustWindowRect@12
 AdjustWindowRectEx@16
 AlignRects@16
-;AllowForegroundActivation
+AllowForegroundActivation@0
 AllowSetForegroundWindow@4
 AnimateWindow@12
 AnyPopup@0
@@ -121,7 +121,7 @@ DdeFreeDataHandle@4
 DdeFreeStringHandle@8
 DdeGetData@16
 DdeGetLastError@4
-;DdeGetQualityOfService
+DdeGetQualityOfService@12
 DdeImpersonateClient@4
 DdeInitializeA@16
 DdeInitializeW@16
@@ -399,7 +399,7 @@ InSendMessage@0
 InSendMessageEx@4
 InflateRect@12
 InitializeLpkHooks@4
-;InitializeWin32EntryTable
+InitializeWin32EntryTable@4
 InsertMenuA@20
 InsertMenuItemA@16
 InsertMenuItemW@16
@@ -428,10 +428,10 @@ IsHungAppWindow@4
 IsIconic@4
 IsMenu@4
 IsRectEmpty@4
-;IsServerSideWindow
+IsServerSideWindow@4
 IsWindow@4
 IsWindowEnabled@4
-;IsWindowInDestroy
+IsWindowInDestroy@4
 IsWindowUnicode@4
 IsWindowVisible@4
 IsWinEventHookInstalled@4
@@ -451,7 +451,7 @@ LoadIconW@8
 LoadImageA@24
 LoadImageW@24
 LoadKeyboardLayoutA@8
-;LoadKeyboardLayoutEx
+LoadKeyboardLayoutEx@12
 LoadKeyboardLayoutW@8
 LoadLocalFonts@0
 LoadMenuA@8
@@ -547,12 +547,12 @@ RegisterDeviceNotificationA@12
 RegisterDeviceNotificationW@12
 RegisterHotKey@16
 RegisterLogonProcess@8
-;RegisterMessagePumpHook
+RegisterMessagePumpHook@4
 RegisterRawInputDevices@12
 RegisterServicesProcess@4
 RegisterShellHookWindow@4
 RegisterSystemThread@8
-;RegisterUserApiHook
+RegisterUserApiHook@8
 RegisterTasklist@4
 RegisterWindowMessageA@4
 RegisterWindowMessageW@4
@@ -660,7 +660,7 @@ ShowCaret@4
 ShowCursor@4
 ShowOwnedPopups@8
 ShowScrollBar@12
-;ShowStartGlass
+ShowStartGlass@4
 ShowWindow@8
 ShowWindowAsync@8
 SoftModalMessageBox@4
@@ -697,8 +697,8 @@ UnregisterClassA@8
 UnregisterClassW@8
 UnregisterDeviceNotification@4
 UnregisterHotKey@8
-;UnregisterMessagePumpHook
-;UnregisterUserApiHook
+UnregisterMessagePumpHook@0
+UnregisterUserApiHook@0
 UpdateLayeredWindow@36
 ;UpdatePerUserSystemParameters
 UpdateWindow@4

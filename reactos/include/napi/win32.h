@@ -8,6 +8,7 @@ typedef struct _W32THREAD
   LIST_ENTRY WindowListHead;
   struct _KBDTABLES* KeyboardLayout;
   struct _DESKTOP_OBJECT* Desktop;
+  DWORD MessagePumpHookValue;
 } __attribute__((packed)) W32THREAD, *PW32THREAD;
 
 typedef struct _W32PROCESS

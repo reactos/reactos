@@ -5,7 +5,7 @@ ActivateKeyboardLayout=ActivateKeyboardLayout@8
 AdjustWindowRect=AdjustWindowRect@12
 AdjustWindowRectEx=AdjustWindowRectEx@16
 AlignRects=AlignRects@16
-;AllowForegroundActivation
+AllowForegroundActivation=AllowForegroundActivation@0
 AllowSetForegroundWindow=AllowSetForegroundWindow@4
 AnimateWindow=AnimateWindow@12
 AnyPopup=AnyPopup@0
@@ -121,7 +121,7 @@ DdeFreeDataHandle=DdeFreeDataHandle@4
 DdeFreeStringHandle=DdeFreeStringHandle@8
 DdeGetData=DdeGetData@16
 DdeGetLastError=DdeGetLastError@4
-;DdeGetQualityOfService
+DdeGetQualityOfService=DdeGetQualityOfService@12
 DdeImpersonateClient=DdeImpersonateClient@4
 DdeInitializeA=DdeInitializeA@16
 DdeInitializeW=DdeInitializeW@16
@@ -400,7 +400,7 @@ InSendMessage=InSendMessage@0
 InSendMessageEx=InSendMessageEx@4
 InflateRect=InflateRect@12
 InitializeLpkHooks=InitializeLpkHooks@4
-;InitializeWin32EntryTable
+InitializeWin32EntryTable=InitializeWin32EntryTable@4
 InsertMenuA=InsertMenuA@20
 InsertMenuItemA=InsertMenuItemA@16
 InsertMenuItemW=InsertMenuItemW@16
@@ -429,10 +429,10 @@ IsHungAppWindow=IsHungAppWindow@4
 IsIconic=IsIconic@4
 IsMenu=IsMenu@4
 IsRectEmpty=IsRectEmpty@4
-;IsServerSideWindow
+IsServerSideWindow=IsServerSideWindow@4
 IsWindow=IsWindow@4
 IsWindowEnabled=IsWindowEnabled@4
-;IsWindowInDestroy
+IsWindowInDestroy=IsWindowInDestroy@4
 IsWindowUnicode=IsWindowUnicode@4
 IsWindowVisible=IsWindowVisible@4
 IsWinEventHookInstalled=IsWinEventHookInstalled@4
@@ -452,7 +452,7 @@ LoadIconW=LoadIconW@8
 LoadImageA=LoadImageA@24
 LoadImageW=LoadImageW@24
 LoadKeyboardLayoutA=LoadKeyboardLayoutA@8
-;LoadKeyboardLayoutEx
+LoadKeyboardLayoutEx=LoadKeyboardLayoutEx@12
 LoadKeyboardLayoutW=LoadKeyboardLayoutW@8
 LoadLocalFonts=LoadLocalFonts@0
 LoadMenuA=LoadMenuA@8
@@ -549,12 +549,12 @@ RegisterDeviceNotificationA=RegisterDeviceNotificationA@12
 RegisterDeviceNotificationW=RegisterDeviceNotificationW@12
 RegisterHotKey=RegisterHotKey@16
 RegisterLogonProcess=RegisterLogonProcess@8
-;RegisterMessagePumpHook
+RegisterMessagePumpHook=RegisterMessagePumpHook@4
 RegisterRawInputDevices=RegisterRawInputDevices@12
 RegisterServicesProcess=RegisterServicesProcess@4
 RegisterShellHookWindow=RegisterShellHookWindow@4
 RegisterSystemThread=RegisterSystemThread@8
-;RegisterUserApiHook
+RegisterUserApiHook=RegisterUserApiHook@8
 RegisterTasklist=RegisterTasklist@4
 RegisterWindowMessageA=RegisterWindowMessageA@4
 RegisterWindowMessageW=RegisterWindowMessageW@4
@@ -662,7 +662,7 @@ ShowCaret=ShowCaret@4
 ShowCursor=ShowCursor@4
 ShowOwnedPopups=ShowOwnedPopups@8
 ShowScrollBar=ShowScrollBar@12
-;ShowStartGlass
+ShowStartGlass=ShowStartGlass@4
 ShowWindow=ShowWindow@8
 ShowWindowAsync=ShowWindowAsync@8
 SoftModalMessageBox=SoftModalMessageBox@4
@@ -700,8 +700,8 @@ UnregisterClassA=UnregisterClassA@8
 UnregisterClassW=UnregisterClassW@8
 UnregisterDeviceNotification=UnregisterDeviceNotification@4
 UnregisterHotKey=UnregisterHotKey@8
-;UnregisterMessagePumpHook
-;UnregisterUserApiHook
+UnregisterMessagePumpHook=UnregisterMessagePumpHook@0
+UnregisterUserApiHook=UnregisterUserApiHook@0
 UpdateLayeredWindow=UpdateLayeredWindow@36
 ;UpdatePerUserSystemParameters
 UpdateWindow=UpdateWindow@4

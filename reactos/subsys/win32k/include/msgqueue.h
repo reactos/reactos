@@ -138,7 +138,8 @@ MsqInsertSystemMessage(MSG* Msg, BOOL RemMouseMoveMsg);
 inline BOOL MsqIsSignaled( PUSER_MESSAGE_QUEUE queue );
 inline VOID MsqSetQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
 inline VOID MsqClearQueueBits( PUSER_MESSAGE_QUEUE queue, WORD bits );
-
+BOOL IntInitMessagePumpHook();
+BOOL IntUninitMessagePumpHook();
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
 #endif /* _WIN32K_MSGQUEUE_H */

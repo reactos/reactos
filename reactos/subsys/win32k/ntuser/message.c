@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.32 2003/11/18 20:49:39 navaraf Exp $
+/* $Id: message.c,v 1.33 2003/11/19 13:19:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -591,6 +591,24 @@ NtUserGetQueueStatus(BOOL ClearChanges)
    ExReleaseFastMutex(&Queue->Lock);
 
    return Result;
+}
+
+BOOL STDCALL
+IntInitMessagePumpHook()
+{
+	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue++;
+	return TRUE;
+}
+
+BOOL STDCALL
+IntUninitMessagePumpHook()
+{
+	if (PsGetCurrentThread()->Win32Thread->MessagePumpHookValue <= 0)
+	{
+		return FALSE;
+	}
+	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue--;
+	return TRUE;
 }
 
 /* EOF */

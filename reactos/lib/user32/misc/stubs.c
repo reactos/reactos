@@ -1,6 +1,6 @@
-/* $Id: stubs.c,v 1.52 2003/11/19 12:48:47 weiden Exp $
+/* $Id: stubs.c,v 1.53 2003/11/19 13:19:39 weiden Exp $
  *
- * COPYRIGHT:       See COPYING WINBOOLthe top level directory
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/stubs.c
  * PURPOSE:         User32.dll stubs
@@ -217,9 +217,9 @@ MsgWaitForMultipleObjects(
  */
 DWORD
 STDCALL
-MsgWaitForMultipleObjectsEx(
+RealMsgWaitForMultipleObjectsEx(
   DWORD nCount,
-  CONST HANDLE pHandles,
+  LPHANDLE pHandles,
   DWORD dwMilliseconds,
   DWORD dwWakeMask,
   DWORD dwFlags)
@@ -1092,4 +1092,84 @@ GetAppCompatFlags2(HTASK hTask)
 VOID STDCALL InitializeLpkHooks(FARPROC *hookfuncs)
 {
   UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+WORD STDCALL InitializeWin32EntryTable(UCHAR* EntryTablePlus0x1000)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL IsServerSideWindow(HWND wnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+typedef BOOL (CALLBACK *THEME_HOOK_FUNC) (DWORD state,PVOID arg2); //return type and 2nd parameter unknown
+/*
+ * @unimplemented
+ */
+BOOL STDCALL RegisterUserApiHook(HINSTANCE instance,THEME_HOOK_FUNC proc)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL UnregisterUserApiHook(VOID)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL IsWindowInDestroy(HWND wnd)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+HKL STDCALL LoadKeyboardLayoutEx(DWORD unknown,LPCWSTR pwszKLID,UINT Flags) //1st parameter unknown
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL AllowForegroundActivation(VOID)
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL ShowStartGlass(DWORD unknown)
+{
+  UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY_OF_SERVICE pqosPrev)
+{
+  UNIMPLEMENTED;
+  return FALSE;
 }

@@ -14,6 +14,7 @@ DWORD DebugTraceLevel = MIN_TRACE;
 
 #endif /* DBG */
 
+extern RTL_CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
 
 /* To make the linker happy */
@@ -85,6 +86,7 @@ Init(VOID)
   MenuInit();
 
   RtlInitializeCriticalSection(&U32AccelCacheLock);
+  RtlInitializeCriticalSection(&gcsMPH);
 
   GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
