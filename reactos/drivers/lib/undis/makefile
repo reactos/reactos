@@ -1,14 +1,16 @@
-# $Id: makefile,v 1.1 2004/09/29 04:54:26 arty Exp $
+# $Id: makefile,v 1.2 2004/09/30 05:40:14 arty Exp $
 
 PATH_TO_TOP = ../../..
 
-TARGET_TYPE = library
+TARGET_TYPE = dynlink
 
 TARGET_NAME = undis
 
 TARGET_PCH = include/ndissys.h
 
 TARGET_CFLAGS = -Iinclude -I../../net/ndis/include -DNDIS_WRAPPER -Wall -Werror 
+
+TARGET_SDKLIBS = ntdll.a
 
 #  ndis/io.o 
 #  ndis/time.o

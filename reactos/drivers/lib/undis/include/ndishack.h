@@ -10,109 +10,7 @@ struct _RECURSIVE_MUTEX;
 #undef KeRaiseIrql
 #undef KeLowerIrql
 
-#define NdisAllocateBuffer XNdisAllocateBuffer
-#define NdisAllocatePacket XNdisAllocatePacket
-#define NdisFreeBuffer XNdisFreeBuffer
-#define NdisFreePacket XNdisFreePacket
-#define NDIS_BUFFER_TO_SPAN_PAGES XNDIS_BUFFER_TO_SPAN_PAGES
-#define ExAllocatePool XExAllocatePool
-#define ExFreePool XExFreePool
-#define KeAcquireSpinLock XKeAcquireSpinLock
-#define KeAcquireSpinLockAtDpcLevel XKeAcquireSpinLockAtDpcLevel
-#define KeReleaseSpinLock XKeReleaseSpinLock
-#define KeReleaseSpinLockFromDpcLevel XKeReleaseSpinLockFromDpcLevel
-#define KeInitializeSpinLock XKeInitializeSpinLock
-#define InterlockedIncrement XInterlockedIncrement
-#define InterlockedDecrement XInterlockedDecrement
-#define ExQueueWorkItem XExQueueWorkItem
-#define ExAcquireFastMutex XExAcquireFastMutex
-#define ExReleaseFastMutex XExReleaseFastMutex
-#define KeSetEvent XKeSetEvent
-#define KeBugCheck XKeBugCheck
-#define ExInterlockedInsertTailList XExInterlockedInsertTailList
-#define KeInitializeEvent XKeInitializeEvent
-#define KeRaiseIrql XKeRaiseIrql
-#define KeLowerIrql XKeLowerIrql
-#define ExFreeToNPagedLookasideList XExFreeToNPagedLookasideList
-#define ExAllocateFromNPagedLookasideList XExAllocateFromNPagedLookasideList
-#define ExInitializeNPagedLookasideList XExInitializeNPagedLookasideList
-#define KeInitializeTimer XKeInitializeTimer
-#define KeSetTimer XKeSetTimer
-#define KeSetTimerEx XKeSetTimerEx
-#define KeCancelTimer XKeCancelTimer
-#define KeWaitForSingleObject XKeWaitForSingleObject
-#define KeInitializeDpc XKeInitializeDpc
-
-extern VOID XNdisAllocateBuffer( PNDIS_STATUS Status, PNDIS_BUFFER *Buffer, NDIS_HANDLE BufferPool, PVOID Data, UINT Size );
-extern VOID XNdisFreeBuffer( PNDIS_BUFFER Buffer );
-extern VOID XNdisAllocatePacket( PNDIS_STATUS Status, PNDIS_PACKET *Packet, NDIS_HANDLE PacketPool );
-extern VOID XNdisFreePacket( PNDIS_PACKET Packet );
-extern ULONG XNDIS_BUFFER_TO_SPAN_PAGES(IN  PNDIS_BUFFER    Buffer);
-extern PVOID STDCALL XExAllocatePool( POOL_TYPE Type, ULONG Size );
-extern VOID STDCALL XExFreePool( PVOID Buffer );
-extern VOID STDCALL XKeRaiseIrql( KIRQL NewIrql, PKIRQL OldIrql );
-extern VOID STDCALL XKeLowerIrql( KIRQL NewIrql );
-extern VOID STDCALL XKeAcquireSpinLock( PKSPIN_LOCK Lock, PKIRQL Irql );
-extern VOID STDCALL XKeReleaseSpinLock( PKSPIN_LOCK Lock, KIRQL Irql );
-extern VOID STDCALL XKeAcquireSpinLockAtDpcLevel( PKSPIN_LOCK Lock );
-extern VOID STDCALL XKeReleaseSpinLockFromDpcLevel( PKSPIN_LOCK Lock );
-extern VOID STDCALL XKeInitializeSpinLock( PKSPIN_LOCK Lock );
-extern LONG FASTCALL XInterlockedIncrement( PLONG Addend );
-extern LONG FASTCALL XInterlockedDecrement( PLONG Addend );
-extern VOID STDCALL XExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem, 
-				      WORK_QUEUE_TYPE Type );
-extern VOID STDCALL XExAcquireFastMutex( PFAST_MUTEX Mutex );
-extern VOID STDCALL XExReleaseFastMutex( PFAST_MUTEX Mutex );
-extern LONG STDCALL XKeSetEvent( PKEVENT Event, KPRIORITY Increment, 
-				 BOOLEAN Wiat );
-extern VOID STDCALL XKeBugCheck( ULONG Code );
-extern VOID STDCALL XExInterlockedInsertTailList( PLIST_ENTRY Head,
-						  PLIST_ENTRY Item,
-						  PKSPIN_LOCK Lock );
-extern VOID STDCALL XKeInitializeTimer( PKTIMER Timer );
-extern VOID STDCALL XKeInitializeEvent( PKEVENT Event,
-					EVENT_TYPE	Type,
-					BOOLEAN		State);
-extern VOID STDCALL XKeSetTimer( PKTIMER Timer,
-				 LARGE_INTEGER DueTime,
-				 PKDPC Dpc );
-extern VOID STDCALL XKeSetTimerEx( PKTIMER Timer,
-				   LARGE_INTEGER DueTime,
-				   LONG Period,
-				   PKDPC Dpc );
-extern VOID STDCALL XKeCancelTimer( PKTIMER Timer );
-extern NTSTATUS STDCALL XKeWaitForSingleObject
-( PVOID		Object,
-  KWAIT_REASON	WaitReason,
-  KPROCESSOR_MODE	WaitMode,
-  BOOLEAN		Alertable,
-  PLARGE_INTEGER	Timeout
-    );
-extern VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
-				     PKDEFERRED_ROUTINE	DeferredRoutine,
-				     PVOID			DeferredContext);
-
-
-extern UINT RecursiveMutexEnter( struct _RECURSIVE_MUTEX *RM, BOOLEAN Write );
-extern VOID RecursiveMutexLeave( struct _RECURSIVE_MUTEX *RM );
-extern VOID RecursiveMutexInit( struct _RECURSIVE_MUTEX *RM );
-extern VOID STDCALL ExDeleteNPagedLookasideList
-(PNPAGED_LOOKASIDE_LIST	Lookaside);
-extern VOID STDCALL ExInitializeNPagedLookasideList
-( PNPAGED_LOOKASIDE_LIST	Lookaside,
-  PALLOCATE_FUNCTION	Allocate,
-  PFREE_FUNCTION		Free,
-  ULONG			Flags,
-  ULONG			Size,
-  ULONG			Tag,
-  USHORT			Depth );
-
-
-
-#undef NdisGetFirstBufferFromPacket
-#undef NdisQueryBuffer
-#undef NdisQueryPacket
-
+#if 0
 /*
  * VOID
  * ExFreeToNPagedLookasideList (
@@ -257,7 +155,7 @@ ExAllocateFromNPagedLookasideList (
                 _NdisBuffer != (PNDIS_BUFFER)NULL;                              \
                 _NdisBuffer = _NdisBuffer->Next)                                \
             {                                                                   \
-                _PhysicalBufferCount += XNDIS_BUFFER_TO_SPAN_PAGES(_NdisBuffer); \
+                _PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(_NdisBuffer); \
                 NdisQueryBufferOffset(_NdisBuffer, &_Offset, &_PacketLength);   \
                 _TotalPacketLength += _PacketLength;                            \
                 _Count++;                                                       \
@@ -278,6 +176,7 @@ ExAllocateFromNPagedLookasideList (
             *((PUINT)TotalPacketLength) = (Packet)->Private.TotalLength;        \
     }                                                                           \
 }
+#endif
 
 #endif/*__NTDRIVER__*/
 

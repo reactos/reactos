@@ -16,6 +16,42 @@ KSPIN_LOCK AdapterListLock;
 LIST_ENTRY OrphanAdapterListHead;
 KSPIN_LOCK OrphanAdapterListLock;
 
+static KSPIN_LOCK ExpGlobalListLock = { 0, };
+
+/*
+ * @implemented
+ */
+PLIST_ENTRY FASTCALL
+ExInterlockedInsertTailList(PLIST_ENTRY ListHead,
+			    PLIST_ENTRY ListEntry,
+			    PKSPIN_LOCK Lock)
+/*
+ * FUNCTION: Inserts an entry at the tail of a doubly linked list
+ * ARGUMENTS:
+ *          ListHead  = Points to the head of the list
+ *          ListEntry = Points to the entry to be inserted
+ *          Lock      = Caller supplied spinlock used to synchronize access
+ * RETURNS: The previous head of the list
+ */
+{
+  PLIST_ENTRY Old;
+  KIRQL oldlvl;
+
+  KeAcquireSpinLock(Lock,&oldlvl);
+  if (IsListEmpty(ListHead))
+    {
+      Old = NULL;
+    }
+  else
+    {
+      Old = ListHead->Blink;
+    }
+  InsertTailList(ListHead,ListEntry);
+  KeReleaseSpinLock(Lock,oldlvl);
+
+  return(Old);
+}
+
 VOID STDCALL ExInitializeNPagedLookasideList
 ( PNPAGED_LOOKASIDE_LIST	Lookaside,
   PALLOCATE_FUNCTION	Allocate,
@@ -31,9 +67,93 @@ VOID STDCALL ExInitializeNPagedLookasideList
     Lookaside->Depth = Depth;
 }
 
+#define NTOSAPI
+#define DDKFASTAPI FASTCALL
+
+/*
+ * @implemented
+ */
+PSINGLE_LIST_ENTRY FASTCALL
+ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
+			   IN PKSPIN_LOCK Lock)
+/*
+ * FUNCTION: Removes (pops) an entry from a sequenced list
+ * ARGUMENTS:
+ *          ListHead = Points to the head of the list
+ *          Lock     = Lock for synchronizing access to the list
+ * RETURNS: The removed entry
+ */
+{
+  PSINGLE_LIST_ENTRY ret;
+  KIRQL oldlvl;
+
+  KeAcquireSpinLock(Lock,&oldlvl);
+  ret = PopEntryList(&ListHead->Next);
+  if (ret)
+    {
+      ListHead->Depth--;
+      ListHead->Sequence++;
+    }
+  KeReleaseSpinLock(Lock,oldlvl);
+  return(ret);
+}
+
+/*
+ * @implemented
+ */
+PSINGLE_LIST_ENTRY FASTCALL
+ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
+			    IN PSINGLE_LIST_ENTRY ListEntry,
+			    IN PKSPIN_LOCK Lock)
+/*
+ * FUNCTION: Inserts (pushes) an entry into a sequenced list
+ * ARGUMENTS:
+ *          ListHead  = Points to the head of the list
+ *          ListEntry = Points to the entry to be inserted
+ *          Lock      = Caller supplied spinlock used to synchronize access
+ * RETURNS: The previous head of the list
+ */
+{
+  KIRQL oldlvl;
+  PSINGLE_LIST_ENTRY ret;
+
+  KeAcquireSpinLock(Lock,&oldlvl);
+  ret=ListHead->Next.Next;
+  PushEntryList(&ListHead->Next,ListEntry);
+  ListHead->Depth++;
+  ListHead->Sequence++;
+  KeReleaseSpinLock(Lock,oldlvl);
+  return(ret);
+}
+
+/*
+ * @implemented
+ */
+PSLIST_ENTRY
+FASTCALL
+InterlockedPopEntrySList(IN PSLIST_HEADER ListHead)
+{
+  return (PSLIST_ENTRY) ExInterlockedPopEntrySList(ListHead,
+    &ExpGlobalListLock);
+}
+
+
+/*
+ * @implemented
+ */
+PSLIST_ENTRY
+FASTCALL
+InterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
+  IN PSLIST_ENTRY ListEntry)
+{
+  return (PSLIST_ENTRY) ExInterlockedPushEntrySList(ListHead,
+    ListEntry,
+    &ExpGlobalListLock);
+}
+
 LONG FASTCALL InterlockedIncrement( PLONG Addend ) { return ++(*Addend); }
 LONG FASTCALL InterlockedDecrement( PLONG Addend ) { return --(*Addend); }
-void STDCALL KeBugCheck(ULONG x) { assert(0); }
+VOID STDCALL KeBugCheck(ULONG x) { assert(0); }
 PVOID STDCALL ExAllocatePool( POOL_TYPE Type, ULONG Bytes ) {
     return ExAllocatePoolWithTag( 0, Type, Bytes );
 }
@@ -50,17 +170,20 @@ VOID STDCALL KeAcquireSpinLockAtDpcLevel( PKSPIN_LOCK Lock ) { }
 VOID STDCALL KeReleaseSpinLockFromDpcLevel( PKSPIN_LOCK Lock ) { }
 VOID STDCALL KeRaiseIrql( KIRQL NewIrql, PKIRQL OldIrql ) { }
 VOID STDCALL KeLowerIrql( KIRQL OldIrql ) { }
-VOID STDCALL XExAcquireFastMutex( PFAST_MUTEX Mutex ) { }
-VOID STDCALL XExReleaseFastMutex( PFAST_MUTEX Mutex ) { }
-VOID STDCALL XKeInitializeEvent( PKEVENT Event,
+VOID FASTCALL ExAcquireFastMutex( PFAST_MUTEX Mutex ) { }
+VOID FASTCALL ExReleaseFastMutex( PFAST_MUTEX Mutex ) { }
+VOID STDCALL KeInitializeEvent( PKEVENT Event,
 				 EVENT_TYPE	Type,
 				 BOOLEAN		State ) { }
 
-VOID STDCALL XExInterlockedInsertTailList( PLIST_ENTRY Head,
-					   PLIST_ENTRY Item,
-					   PKSPIN_LOCK Lock ) {
-    InsertTailList( Head, Item );
+#if 0
+PLIST_ENTRY FASTCALL ExInterlockedInsertTailList
+( PLIST_ENTRY Head,
+  PLIST_ENTRY Item,
+  PKSPIN_LOCK Lock ) {
+    return InsertTailList( Head, Item );
 }
+#endif
 
 UINT RecursiveMutexEnter( struct _RECURSIVE_MUTEX *RM, BOOLEAN Write ) {
     return 0;
@@ -70,7 +193,7 @@ VOID RecursiveMutexInit( struct _RECURSIVE_MUTEX *RM ) { }
 
 static LIST_ENTRY WorkQueue = { &WorkQueue, &WorkQueue };
 
-VOID STDCALL XExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem, 
+VOID STDCALL ExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem, 
 			       WORK_QUEUE_TYPE Type ) {
     InsertTailList( &WorkQueue, &WorkItem->List );
 }
@@ -78,24 +201,26 @@ VOID STDCALL XExQueueWorkItem( PWORK_QUEUE_ITEM WorkItem,
 LIST_ENTRY Timers = { &Timers, &Timers };
 LARGE_INTEGER CurTime = { };
 
-VOID STDCALL XKeInitializeTimer( PKTIMER Timer ) {
+VOID STDCALL KeInitializeTimer( PKTIMER Timer ) {
 }
 
-VOID STDCALL XKeSetTimerEx( PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
-			    PKDPC Dpc ) {
+BOOLEAN STDCALL KeSetTimerEx
+( PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period, PKDPC Dpc ) {
     Timer->DueTime.QuadPart = CurTime.QuadPart;
     if( DueTime.QuadPart > 0 ) Timer->DueTime.QuadPart = DueTime.QuadPart;
     else Timer->DueTime.QuadPart -= DueTime.QuadPart;
     Timer->DueTime.QuadPart = DueTime.QuadPart;
     Timer->Dpc = Dpc;
     InsertTailList( &Timers, &Timer->TimerListEntry );
+    return TRUE;
 }
 
-VOID STDCALL XKeSetTimer( PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc ) {
-    XKeSetTimer( Timer, DueTime, Dpc );
+BOOLEAN STDCALL KeSetTimer
+( PKTIMER Timer, LARGE_INTEGER DueTime, PKDPC Dpc ) {
+    return KeSetTimer( Timer, DueTime, Dpc );
 }
 
-VOID STDCALL XKeCancelTimer( PKTIMER Timer ) {
+BOOLEAN STDCALL KeCancelTimer( PKTIMER Timer ) {
     PLIST_ENTRY ListEntry;
 
     for( ListEntry = Timers.Flink; 
@@ -103,9 +228,11 @@ VOID STDCALL XKeCancelTimer( PKTIMER Timer ) {
 	 ListEntry = ListEntry->Flink ) {
 	if( ListEntry == &Timer->TimerListEntry ) {
 	    RemoveEntryList( &Timer->TimerListEntry );
-	    return;
+	    return TRUE;
 	}
     }
+
+    return FALSE;
 }
 
 VOID TimerTick( LARGE_INTEGER Time ) {
@@ -125,7 +252,7 @@ VOID TimerTick( LARGE_INTEGER Time ) {
 	InsertHeadList( &Timers, &Timer->TimerListEntry );
 }
 
-LONG STDCALL XKeSetEvent( PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait ) {
+LONG STDCALL KeSetEvent( PKEVENT Event, KPRIORITY Increment, BOOLEAN Wait ) {
     return 0;
 }
 
@@ -141,7 +268,7 @@ PWORK_QUEUE_ITEM GetWorkQueueItem() {
 VOID STDCALL ExDeleteNPagedLookasideList(PNPAGED_LOOKASIDE_LIST	Lookaside) {
 }
 
-NTSTATUS STDCALL XKeWaitForSingleObject
+NTSTATUS STDCALL KeWaitForSingleObject
 ( PVOID		Object,
   KWAIT_REASON	WaitReason,
   KPROCESSOR_MODE	WaitMode,
@@ -151,7 +278,7 @@ NTSTATUS STDCALL XKeWaitForSingleObject
     return STATUS_SUCCESS;
 }
 
-VOID STDCALL XKeInitializeDpc (PKDPC			Dpc,
+VOID STDCALL KeInitializeDpc (PKDPC			Dpc,
 			      PKDEFERRED_ROUTINE	DeferredRoutine,
 			       PVOID			DeferredContext) {
     Dpc->DeferredRoutine = DeferredRoutine;
@@ -537,8 +664,8 @@ MiniLocateDevice(
 /*
  * @implemented
  */
-ULONG
-XNDIS_BUFFER_TO_SPAN_PAGES(
+ULONG DDKAPI
+NDIS_BUFFER_TO_SPAN_PAGES(
     IN  PNDIS_BUFFER    Buffer)
 /*
  * FUNCTION: Determines how many physical pages a buffer is made of
@@ -546,7 +673,7 @@ XNDIS_BUFFER_TO_SPAN_PAGES(
  *     Buffer = Pointer to NDIS buffer descriptor
  */
 {
-    if (Buffer->Size == 0)
+    if (Buffer->ByteCount == 0)
         return 1;
     
     return ADDRESS_AND_SIZE_TO_SPAN_PAGES(
@@ -557,8 +684,8 @@ XNDIS_BUFFER_TO_SPAN_PAGES(
 /*
  * @implemented
  */
-VOID
-XNdisAllocateBuffer(
+VOID DDKAPI
+NdisAllocateBuffer(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_BUFFER    * Buffer,
     IN  NDIS_HANDLE     PoolHandle,
@@ -628,8 +755,8 @@ XNdisAllocateBuffer(
 /*
  * @implemented
  */
-VOID
-XNdisAllocatePacket(
+VOID DDKAPI
+NdisAllocatePacket(
     OUT PNDIS_STATUS    Status,
     OUT PNDIS_PACKET    * Packet,
     IN  NDIS_HANDLE     PoolHandle)
@@ -670,8 +797,8 @@ XNdisAllocatePacket(
 /*
  * @implemented
  */
-VOID
-XNdisFreeBuffer(
+VOID DDKAPI
+NdisFreeBuffer(
     IN   PNDIS_BUFFER   Buffer)
 /*
  * FUNCTION: Puts an NDIS buffer descriptor back in it's pool
@@ -693,13 +820,34 @@ XNdisFreeBuffer(
     KeReleaseSpinLock(&Pool->SpinLock, OldIrql);
 }
 
-
 /*
  * @implemented
  */
 VOID
-XNdisFreePacket(
-    IN   PNDIS_PACKET   Packet)
+EXPORT
+NdisQueryBuffer(
+    IN  PNDIS_BUFFER    Buffer,
+    OUT PVOID           *VirtualAddress OPTIONAL,
+    OUT PUINT           Length)
+/*
+ * FUNCTION:
+ *     Queries an NDIS buffer for information
+ * ARGUMENTS:
+ *     Buffer         = Pointer to NDIS buffer to query
+ *     VirtualAddress = Address of buffer to place virtual address
+ *     Length         = Address of buffer to place length of buffer
+ */
+{
+	if (VirtualAddress != NULL)
+	    *(PVOID*)VirtualAddress = Buffer->MappedSystemVa;
+
+	*Length = MmGetMdlByteCount(Buffer);
+}
+
+/*
+ * @implemented
+ */
+VOID DDKAPI NdisFreePacket(IN   PNDIS_PACKET   Packet)
 /*
  * FUNCTION: Puts an NDIS packet descriptor back in it's pool
  * ARGUMENTS:
@@ -716,3 +864,6 @@ XNdisFreePacket(
     KeReleaseSpinLock(&Packet->Private.Pool->SpinLock.SpinLock, OldIrql);
 }
 
+PVOID DDKAPI MmMapLockedPages( PMDL Mdl, KPROCESSOR_MODE Mode ) {
+    return Mdl->MappedSystemVa;
+}
