@@ -48,21 +48,51 @@ static PNPFS_FCB
 NpfsFindListeningServerInstance(PNPFS_PIPE Pipe)
 {
   PLIST_ENTRY CurrentEntry;
-  PNPFS_FCB ServerFcb;
+  PNPFS_WAITER_ENTRY Waiter;
 
-  CurrentEntry = Pipe->ServerFcbListHead.Flink;
-  while (CurrentEntry != &Pipe->ServerFcbListHead)
+  CurrentEntry = Pipe->WaiterListHead.Flink;
+  while (CurrentEntry != &Pipe->WaiterListHead)
     {
-      ServerFcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
-      if (ServerFcb->PipeState == FILE_PIPE_LISTENING_STATE)
+      Waiter = CONTAINING_RECORD(CurrentEntry, NPFS_WAITER_ENTRY, Entry);
+      if (Waiter->Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
 	{
-	  DPRINT("Server found! Fcb %p\n", ServerFcb);
-	  return ServerFcb;
+	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
+	  return Waiter->Fcb;
 	}
+
       CurrentEntry = CurrentEntry->Flink;
     }
 
   return NULL;
+}
+
+
+static VOID
+NpfsSignalAndRemoveListeningServerInstance(PNPFS_PIPE Pipe,
+					   PNPFS_FCB Fcb)
+{
+  PLIST_ENTRY CurrentEntry;
+  PNPFS_WAITER_ENTRY Waiter;
+
+  CurrentEntry = Pipe->WaiterListHead.Flink;
+  while (CurrentEntry != &Pipe->WaiterListHead)
+    {
+      Waiter = CONTAINING_RECORD(CurrentEntry, NPFS_WAITER_ENTRY, Entry);
+      if (Waiter->Fcb == Fcb)
+	{
+	  DPRINT("Server found! Fcb %p\n", Waiter->Fcb);
+
+	  KeSetEvent(Waiter->Irp->UserEvent, 0, FALSE);
+	  Waiter->Irp->UserIosb->Status = FILE_PIPE_CONNECTED_STATE;
+	  Waiter->Irp->UserIosb->Information = 0;
+	  IoCompleteRequest(Waiter->Irp, IO_NO_INCREMENT);
+
+	  RemoveEntryList(&Waiter->Entry);
+	  ExFreePool(Waiter);
+	  return;
+	}
+      CurrentEntry = CurrentEntry->Flink;
+    }
 }
 
 
@@ -206,9 +236,8 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
       ClientFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
       ServerFcb->PipeState = FILE_PIPE_CONNECTED_STATE;
 
-      /* Wake server thread */
-      DPRINT("Setting the ConnectEvent for %x\n", ServerFcb);
-      KeSetEvent(&ServerFcb->ConnectEvent, 0, FALSE);
+      /* Signal the server thread and remove it from the waiter list */
+      NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
     }
 
   KeUnlockMutex(&Pipe->FcbListLock);
@@ -318,6 +347,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 
        InitializeListHead(&Pipe->ServerFcbListHead);
        InitializeListHead(&Pipe->ClientFcbListHead);
+       InitializeListHead(&Pipe->WaiterListHead);
        KeInitializeMutex(&Pipe->FcbListLock, 0);
 
        Pipe->PipeType = Buffer->NamedPipeType;

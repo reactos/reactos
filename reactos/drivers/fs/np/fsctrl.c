@@ -18,8 +18,66 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static VOID
+NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
+                           IN PIRP Irp)
+{
+  PNPFS_WAITER_ENTRY Waiter;
+
+  DPRINT1("NpfsListeningCancelRoutine() called\n");
+  /* FIXME: Not tested. */
+
+  Waiter = Irp->Tail.Overlay.DriverContext[0];
+
+  RemoveEntryList(&Waiter->Entry);
+  ExFreePool(Waiter);
+
+  IoReleaseCancelSpinLock(Irp->CancelIrql);
+
+  Irp->IoStatus.Status = STATUS_CANCELLED;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+}
+
+
 static NTSTATUS
-NpfsConnectPipe(PNPFS_FCB Fcb)
+NpfsAddListeningServerInstance(PIRP Irp,
+			       PNPFS_FCB Fcb)
+{
+  PNPFS_WAITER_ENTRY Entry;
+  KIRQL OldIrql;
+
+  Entry = ExAllocatePool(NonPagedPool, sizeof(NPFS_WAITER_ENTRY));
+  if (Entry == NULL)
+    return STATUS_INSUFFICIENT_RESOURCES;
+
+  Entry->Irp = Irp;
+  Entry->Fcb = Fcb;
+  InsertTailList(&Fcb->Pipe->WaiterListHead, &Entry->Entry);
+
+  IoAcquireCancelSpinLock(&OldIrql);
+  if (!Irp->Cancel)
+    {
+      Irp->Tail.Overlay.DriverContext[0] = Entry;
+      IoMarkIrpPending(Irp);
+      IoSetCancelRoutine(Irp, NpfsListeningCancelRoutine);
+      IoReleaseCancelSpinLock(OldIrql);
+      return STATUS_PENDING;
+    }
+  /* IRP has already been cancelled */
+  IoReleaseCancelSpinLock(OldIrql);
+
+  DPRINT1("FIXME: Remove waiter entry!\n");
+  RemoveEntryList(&Entry->Entry);
+  ExFreePool(Entry);
+
+  return STATUS_CANCELLED;
+}
+
+
+static NTSTATUS
+NpfsConnectPipe(PIRP Irp,
+                PNPFS_FCB Fcb)
 {
   PNPFS_PIPE Pipe;
   PLIST_ENTRY current_entry;
@@ -88,29 +146,18 @@ NpfsConnectPipe(PNPFS_FCB Fcb)
       current_entry = current_entry->Flink;
     }
 
-  KeUnlockMutex(&Pipe->FcbListLock);
-
   /* no listening client fcb found */
   DPRINT("No listening client fcb found -- waiting for client\n");
 
   Fcb->PipeState = FILE_PIPE_LISTENING_STATE;
 
-  Status = KeWaitForSingleObject(&Fcb->ConnectEvent,
-				 UserRequest,
-				 KernelMode,
-				 FALSE,
-				 NULL);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT("KeWaitForSingleObject() failed (Status %lx)\n", Status);
-      return Status;
-    }
+  Status = NpfsAddListeningServerInstance(Irp, Fcb);
 
-  Fcb->PipeState = FILE_PIPE_CONNECTED_STATE;
+  KeUnlockMutex(&Pipe->FcbListLock);
 
-  DPRINT("Client Fcb: %p\n", Fcb->OtherSide);
+  DPRINT("NpfsConnectPipe() done (Status %lx)\n", Status);
 
-  return STATUS_PIPE_CONNECTED;
+  return Status;
 }
 
 
@@ -327,7 +374,6 @@ NpfsPeekPipe(PIRP Irp,
 }
 
 
-
 NTSTATUS STDCALL
 NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
@@ -366,7 +412,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 
       case FSCTL_PIPE_LISTEN:
 	DPRINT("Connecting pipe %wZ\n", &Pipe->PipeName);
-	Status = NpfsConnectPipe(Fcb);
+	Status = NpfsConnectPipe(Irp, Fcb);
 	break;
 
       case FSCTL_PIPE_PEEK:
@@ -439,12 +485,15 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	Status = STATUS_UNSUCCESSFUL;
     }
 
-  Irp->IoStatus.Status = Status;
-  Irp->IoStatus.Information = 0;
+  if (Status != STATUS_PENDING)
+    {
+      Irp->IoStatus.Status = Status;
+      Irp->IoStatus.Information = 0;
+ 
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(Status);
+  return Status;
 }
 
 
