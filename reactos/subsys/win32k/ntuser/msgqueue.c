@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.95 2004/05/14 23:57:32 weiden Exp $
+/* $Id: msgqueue.c,v 1.96 2004/05/15 16:17:59 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -145,7 +145,7 @@ MsqInsertSystemMessage(MSG* Msg)
     while (mmov != SystemMessageQueueHead )
     {
       ULONG prev = mmov ? mmov - 1 : SYSTEM_MESSAGE_QUEUE_SIZE - 1;
-      ASSERT(mmov >= 0);
+      ASSERT((LONG) mmov >= 0);
       ASSERT(mmov < SYSTEM_MESSAGE_QUEUE_SIZE);
       SystemMessageQueue[mmov] = SystemMessageQueue[prev];
       mmov = prev;
