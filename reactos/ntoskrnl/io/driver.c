@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.36 2004/03/14 17:10:48 navaraf Exp $
+/* $Id: driver.c,v 1.37 2004/03/19 17:37:57 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1280,7 +1280,10 @@ IoAllocateDriverObjectExtension(
    {
       if (DriverExtensions->ClientIdentificationAddress ==
           ClientIdentificationAddress)
+      {
+         KfLowerIrql(OldIrql);
          return STATUS_OBJECT_NAME_COLLISION;
+      }
    }
 
    DriverObject->DriverSection = NewDriverExtension;
