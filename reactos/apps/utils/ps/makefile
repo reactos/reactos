@@ -10,7 +10,9 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = ps
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_CFLAGS = -DANONYMOUSUNIONS -Werror -Wall
+
+TARGET_SDKLIBS = ntdll.a kernel32.a user32.a
 
 TARGET_OBJECTS = $(TARGET_NAME).o
 
