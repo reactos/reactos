@@ -662,7 +662,7 @@ typedef struct _PALOBJ
 {
   PXLATEOBJ logicalToSystem;
   int *mapping;
-  LOGPALETTE logpalette; // _MUST_ be the last field
+  PLOGPALETTE logpalette; // _MUST_ be the last field
 } PALOBJ, *PPALOBJ;
 
 typedef struct _PATHOBJ
