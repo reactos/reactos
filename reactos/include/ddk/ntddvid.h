@@ -27,12 +27,7 @@
  *  interrupts are handled the same as KM drivers.
  */
 
-typedef enum _VP_STATUS
-{
-  NO_ERROR,
-  ERROR_DEV_NOT_EXIST,
-  ERROR_INVALID_PARAMETER
-} VP_STATUS, *PVP_STATUS;
+typedef LONG VP_STATUS, *PVP_STATUS;
 
 #define VIDEO_MEMORY_SPACE_MEMORY    0x00
 #define VIDEO_MEMORY_SPACE_IO        0x01
@@ -55,8 +50,6 @@ typedef enum _VIDEO_SYNCHRONIZE_PRIORITY
   VpMediumPriority,
   VpHighPriority
 } VIDEO_SYNCHRONIZE_PRIORITY, *PVIDEO_SYNCHRONIZE_PRIORITY;
-
-typedef LONG VP_STATUS, *PVP_STATUS;
 
 typedef struct _STATUS_BLOCK 
 {

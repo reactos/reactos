@@ -117,7 +117,7 @@ VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
 {
   if (InIoSpace)
     {
-      return  MmMapIoSpace(IoAddress, NumberOfUChars, FALSE);
+      return  MmMapIoSpace(IoAddress, NumberOfUchars, FALSE);
     }
   else
     {
@@ -166,16 +166,16 @@ VideoPortInitialize(IN PVOID  Context1,
 {
   UCHAR  Again;
   WCHAR  UnicodeBuffer[18];
-  NTSTATUS  RC;
+  NTSTATUS  Status;
   ANSI_STRING  AnsiName;
   UNICODE_STRING  UnicodeName;
   PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
   PDEVICE_OBJECT  MPDeviceObject;
   VIDEO_PORT_CONFIG_INFO  ConfigInfo;
-  VIDEOPORT_DEVICE_EXTENSION_DATA  ExtensionData;
+  PVIDEOPORT_EXTENSION_DATA  ExtensionData;
 
   /*  Build Dispatch table from passed data  */
-  MPDriverObject->DriverStartIo = HwInitializationData->HwStartIO;
+  MPDriverObject->DriverStartIo = (PDRIVER_STARTIO) HwInitializationData->HwStartIO;
 
   /*  Create a unicode device name  */
   do
@@ -187,18 +187,18 @@ VideoPortInitialize(IN PVOID  Context1,
       RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, FALSE);
 
       /*  Create the device  */
-      RC = IoCreateDevice(MPDriverObject, 
-                          HwInitializationData->HwDeviceExtensionSize +
-                            sizeof VIDEOPORT_EXTENSION_DATA,
-                          &UnicodeName, 
-                          FILE_DEVICE_VIDEO, 
-                          0, 
-                          TRUE, 
-                          &MPDeviceObject);
-      if (!NT_SUCCESS(RC)) 
+      Status = IoCreateDevice(MPDriverObject, 
+                              HwInitializationData->HwDeviceExtensionSize +
+                                sizeof(VIDEOPORT_EXTENSION_DATA),
+                              &UnicodeName, 
+                              FILE_DEVICE_VIDEO, 
+                              0, 
+                              TRUE, 
+                              &MPDeviceObject);
+      if (!NT_SUCCESS(Status)) 
         {
           DbgPrint("IoCreateDevice call failed\n",0);
-          return RC;
+          return Status;
         }
       ExtensionData = 
         (PVIDEOPORT_EXTENSION_DATA) MPDeviceObject->DeviceExtension;

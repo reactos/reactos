@@ -5,7 +5,8 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 
-#include "../include/vectors.h"
+#if 0
+#include "win32k/vectors.h"
 
 PFN Win32kVectors[] =
 {
@@ -289,6 +290,7 @@ PFN Win32kVectors[] =
   (PFN) W32kWidenPath,
   (PFN) W32kgdiPlaySpoolStream
 };
+#endif
 
 WINBOOL STDCALL  DllMain(HANDLE hInst, 
                          ULONG ul_reason_for_call,
@@ -303,6 +305,10 @@ WINBOOL STDCALL  DllMain(HANDLE hInst,
 
 PVOID  W32kGetVectors(VOID)
 {
+  DbgPrint("Unimplemented\n");
+  return 0;
+#if 0
   return Win32kVectors;
+#endif
 }
 
