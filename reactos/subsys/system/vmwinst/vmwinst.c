@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.2 2004/04/12 16:09:45 weiden Exp $
+/* $Id: vmwinst.c,v 1.3 2004/04/12 16:14:54 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -560,7 +560,7 @@ PageConfigProc(
       {
         case PSN_SETACTIVE:
         {
-          PropSheet_SetWizButtons(GetParent(hwndDlg), (StartVMwConfigWizard ? PSWIZB_FINISH | PSWIZB_BACK : PSWIZB_FINISH));
+          PropSheet_SetWizButtons(GetParent(hwndDlg), ((StartVMwConfigWizard || DriverFilesFound) ? PSWIZB_FINISH | PSWIZB_BACK : PSWIZB_FINISH));
           break;
         }
         case PSN_WIZBACK:
