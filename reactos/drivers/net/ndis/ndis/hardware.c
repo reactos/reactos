@@ -61,32 +61,17 @@ NdisMPciAssignResources(
     IN  NDIS_HANDLE             MiniportHandle,
     IN  ULONG                   SlotNumber,
     OUT PNDIS_RESOURCE_LIST     *AssignedResources)
-/*
- * NOTES:
- *     - I think this is fundamentally broken
- */
 {
-  PCM_RESOURCE_LIST ResourceList;
-  NTSTATUS Status;
-  PLOGICAL_ADAPTER Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
+  PNDIS_MINIPORT_BLOCK MiniportBlock = WrapperContext->DeviceObject->DeviceExtension;
 
-  ResourceList = NULL;
-  Status = HalAssignSlotResources (Adapter->Miniport->RegistryPath,
-				   0,
-				   Adapter->Miniport->DriverObject,
-				   0,
-				   PCIBus,
-				   Adapter->NdisMiniportBlock.BusNumber,
-				   SlotNumber,
-				   &ResourceList);
-  if (!NT_SUCCESS (Status))
+  if (MiniportBlock->BusType != PCIBus ||
+      MiniportBlock->AllocatedResources == NULL)
     {
       *AssignedResources = NULL;
       return NDIS_STATUS_FAILURE;
     }
 
-  *AssignedResources = (PNDIS_RESOURCE_LIST)&ResourceList->List[0].PartialResourceList;
-
+  *AssignedResources = MiniportBlock->AllocatedResources;
   return NDIS_STATUS_SUCCESS;
 }
 
@@ -122,7 +107,6 @@ NdisMQueryAdapterResources(
 
   NDIS_DbgPrint(MAX_TRACE, ("Called\n"));
 
-  /* FIXME: We can't do anything in this case. It shouldn't really happen. */
   if (MiniportBlock->AllocatedResources == NULL)
     {
       NDIS_DbgPrint(MIN_TRACE, ("No allocated resources!\n"));
@@ -145,6 +129,7 @@ NdisMQueryAdapterResources(
     }
   else
     {
+      *BufferSize = ResourceListSize;
       *Status = NDIS_STATUS_RESOURCES;
     }
 }
