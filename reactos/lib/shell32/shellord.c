@@ -213,6 +213,8 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
  *  the registry path are for win98 (tested)
  *  and possibly are the same in nt40
  *
+ * FIXME: implement new flags such as SSF_WIN95CLASSIC and SSF_STARTPANELON
+ *
  */
 VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
