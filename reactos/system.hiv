@@ -303,3 +303,18 @@ REGEDIT4
 "OsLoaderPath"="\"
 "SetupType"=dword:00000000
 "SystemPartition"="\Device\HarddiskVolume1"
+
+[\Registry\Machine\SOFTWARE]
+
+[\Registry\Machine\SOFTWARE\Classes]
+
+[\Registry\Machine\SOFTWARE\Classes\WinNT]
+
+[\Registry\Machine\SOFTWARE\Classes\WinNT\Clsid]
+"Default" = "{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
+
+[\Registry\Machine\SOFTWARE\Classes\NDS]
+
+[\Registry\Machine\SOFTWARE\Classes\NDS\Clsid]
+"Default" = "{323991f0-7bad-11cf-b03d-00aa006e0975}"
+
