@@ -241,7 +241,15 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
       /* Have we finished. */
       if ((DestRect->right - DestRect->left) < (8 - (DestRect->left % 8)))
 	{
-	  return(TRUE);
+	  /* Restore write mode 2. */
+	  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x05);
+	  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x02);
+
+	  /* Set up data rotate. */
+	  WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
+	  WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
+
+	  return TRUE;
 	}
     }    
 
@@ -280,7 +288,7 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x03);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0x00);
 
-  return(TRUE);
+  return TRUE;
 }
 
 BOOL STDCALL
