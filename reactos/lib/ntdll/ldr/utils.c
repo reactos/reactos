@@ -618,7 +618,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
                       GENERIC_READ|SYNCHRONIZE,
                       &FileObjectAttributes,
                       &IoStatusBlock,
-                      0,
+                      FILE_SHARE_READ,
                       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
