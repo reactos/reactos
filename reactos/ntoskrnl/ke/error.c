@@ -17,21 +17,20 @@
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS STDCALL NtRaiseHardError(IN NTSTATUS Status,
-                                  ULONG Unknown2,
-                                  ULONG Unknown3,
-                                  ULONG Unknown4,
-                                  ULONG Unknown5,
-                                  ULONG Unknown6)
+NTSTATUS STDCALL 
+NtRaiseHardError(IN NTSTATUS Status,
+		 ULONG Unknown2,
+		 ULONG Unknown3,
+		 ULONG Unknown4,
+		 ULONG Unknown5,
+		 ULONG Unknown6)
 {
-//   UNIMPLEMENTED;
-
-   KeBugCheck(Status);
-
-   return STATUS_SUCCESS;
+  DPRINT1("Hard error %x\n", Status);
+  return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
+NTSTATUS STDCALL 
+NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
    UNIMPLEMENTED;
 }

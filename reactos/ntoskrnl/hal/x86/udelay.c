@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: udelay.c,v 1.5 2000/11/19 15:57:27 ekohl Exp $
+/* $Id: udelay.c,v 1.6 2001/02/20 14:43:46 dwelch Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -105,7 +105,7 @@ __KeStallExecutionProcessor(ULONG Loops)
 
 VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
 {
-   return(__KeStallExecutionProcessor((delay_count*(Microseconds/1000))));
+   return(__KeStallExecutionProcessor((delay_count*Microseconds)/1000));
 }
 
 #define HZ (100)
