@@ -57,9 +57,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(mci);
 
-static	int			MCI_InstalledCount;
-static  LPSTR                   MCI_lpInstallNames /* = NULL */;
-
 WINMM_MapType  (*pFnMciMapMsg16To32A)  (WORD,WORD,DWORD*) /* = NULL */;
 WINMM_MapType  (*pFnMciUnMapMsg16To32A)(WORD,WORD,DWORD) /* = NULL */;
 WINMM_MapType  (*pFnMciMapMsg32ATo16)  (WORD,WORD,DWORD,DWORD*) /* = NULL */;
@@ -67,6 +64,9 @@ WINMM_MapType  (*pFnMciUnMapMsg32ATo16)(WORD,WORD,DWORD,DWORD) /* = NULL */;
 
 /* First MCI valid device ID (0 means error) */
 #define MCI_MAGIC 0x0001
+
+/* MCI settings */
+#define HKLM_MCI "Software\\Microsoft\\Windows NT\\CurrentVersion\\MCI"
 
 /* dup a string and uppercase it */
 inline static LPSTR str_dup_upper( LPCSTR str )
@@ -1435,8 +1435,10 @@ DWORD	MCI_WriteString(LPSTR lpDstStr, DWORD dstSize, LPCSTR lpSrcStr)
  */
 static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSA lpParms)
 {
-    DWORD		ret = MCIERR_INVALID_DEVICE_ID;
+    DWORD		ret = MCIERR_INVALID_DEVICE_ID, cnt = 0;
+    CHAR		buf[2048], *s = buf, *p;
     LPWINE_MCIDRIVER	wmd;
+    HKEY		hKey;
 
     if (lpParms == NULL)			return MCIERR_NULL_PARAMETER_BLOCK;
 
@@ -1445,41 +1447,39 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSA lpParm
 
     switch (dwFlags & ~MCI_SYSINFO_OPEN) {
     case MCI_SYSINFO_QUANTITY:
-	{
-	    DWORD	cnt = 0;
-
-	    if (lpParms->wDeviceType < MCI_DEVTYPE_FIRST ||
-		lpParms->wDeviceType > MCI_DEVTYPE_LAST) {
-		if (dwFlags & MCI_SYSINFO_OPEN) {
-		    TRACE("MCI_SYSINFO_QUANTITY: # of open MCI drivers\n");
-		    EnterCriticalSection(&WINMM_IData->cs);
-		    for (wmd = WINMM_IData->lpMciDrvs; wmd; wmd = wmd->lpNext) {
-			cnt++;
-		    }
-		    LeaveCriticalSection(&WINMM_IData->cs);
-		} else {
-		    TRACE("MCI_SYSINFO_QUANTITY: # of installed MCI drivers\n");
-		    cnt = MCI_InstalledCount;
+	if (lpParms->wDeviceType < MCI_DEVTYPE_FIRST || lpParms->wDeviceType > MCI_DEVTYPE_LAST) {
+	    if (dwFlags & MCI_SYSINFO_OPEN) {
+		TRACE("MCI_SYSINFO_QUANTITY: # of open MCI drivers\n");
+		EnterCriticalSection(&WINMM_IData->cs);
+		for (wmd = WINMM_IData->lpMciDrvs; wmd; wmd = wmd->lpNext) {
+		    cnt++;
 		}
+		LeaveCriticalSection(&WINMM_IData->cs);
 	    } else {
-		if (dwFlags & MCI_SYSINFO_OPEN) {
-		    TRACE("MCI_SYSINFO_QUANTITY: # of open MCI drivers of type %u\n",
-			  lpParms->wDeviceType);
-		    EnterCriticalSection(&WINMM_IData->cs);
-		    for (wmd = WINMM_IData->lpMciDrvs; wmd; wmd = wmd->lpNext) {
-			if (wmd->wType == lpParms->wDeviceType)
-			    cnt++;
-		    }
-		    LeaveCriticalSection(&WINMM_IData->cs);
-		} else {
-		    TRACE("MCI_SYSINFO_QUANTITY: # of installed MCI drivers of type %u\n",
-			  lpParms->wDeviceType);
-		    FIXME("Don't know how to get # of MCI devices of a given type\n");
-		    cnt = 1;
+		TRACE("MCI_SYSINFO_QUANTITY: # of installed MCI drivers\n");
+		if (RegOpenKeyExA( HKEY_LOCAL_MACHINE, HKLM_MCI,
+			  	   0, KEY_QUERY_VALUE, &hKey ) == ERROR_SUCCESS) {
+		    RegQueryInfoKeyA( hKey, 0, 0, 0, &cnt, 0, 0, 0, 0, 0, 0, 0);
+		    RegCloseKey( hKey );
 		}
+		if (GetPrivateProfileStringA("mci", 0, "", buf, sizeof(buf), "system.ini"))
+		    for(s = buf; *s; s += strlen(s) + 1) cnt++;
 	    }
-	    *(DWORD*)lpParms->lpstrReturn = cnt;
+	} else {
+	    if (dwFlags & MCI_SYSINFO_OPEN) {
+		TRACE("MCI_SYSINFO_QUANTITY: # of open MCI drivers of type %u\n", lpParms->wDeviceType);
+		EnterCriticalSection(&WINMM_IData->cs);
+		for (wmd = WINMM_IData->lpMciDrvs; wmd; wmd = wmd->lpNext) {
+		    if (wmd->wType == lpParms->wDeviceType) cnt++;
+		}
+		LeaveCriticalSection(&WINMM_IData->cs);
+	    } else {
+		TRACE("MCI_SYSINFO_QUANTITY: # of installed MCI drivers of type %u\n", lpParms->wDeviceType);
+		FIXME("Don't know how to get # of MCI devices of a given type\n");
+		cnt = 1;
+	    }
 	}
+	*(DWORD*)lpParms->lpstrReturn = cnt;
 	TRACE("(%ld) => '%ld'\n", lpParms->dwNumber, *(DWORD*)lpParms->lpstrReturn);
 	ret = MCI_INTEGER_RETURNED;
 	break;
@@ -1499,14 +1499,30 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSA lpParm
 	if (dwFlags & MCI_SYSINFO_OPEN) {
 	    FIXME("Don't handle MCI_SYSINFO_NAME|MCI_SYSINFO_OPEN (yet)\n");
 	    ret = MCIERR_UNRECOGNIZED_COMMAND;
-	} else if (lpParms->dwNumber > MCI_InstalledCount) {
-	    ret = MCIERR_OUTOFRANGE;
 	} else {
-	    DWORD	count = lpParms->dwNumber;
-	    LPSTR	ptr = MCI_lpInstallNames;
-
-	    while (--count > 0) ptr += strlen(ptr) + 1;
-	    ret = MCI_WriteString(lpParms->lpstrReturn, lpParms->dwRetSize, ptr);
+	    DWORD lRet;
+	    s = 0;
+	    lRet = RegOpenKeyExA( HKEY_LOCAL_MACHINE, HKLM_MCI, 0, KEY_QUERY_VALUE, &hKey );
+	    if (lRet == ERROR_SUCCESS) {
+		lRet = RegQueryInfoKeyA( hKey, 0, 0, 0, &cnt, 0, 0, 0, 0, 0, 0, 0);
+		if (lRet == ERROR_SUCCESS && lpParms->dwNumber <= cnt) {
+    		    DWORD bufLen = sizeof(buf);
+		    lRet = RegEnumKeyExA(hKey, lpParms->dwNumber - 1, buf, &bufLen, 0, 0, 0, 0);
+		    if (lRet == ERROR_SUCCESS) s = buf;
+		}
+	        RegCloseKey( hKey );
+	    }
+	    if (!s) {
+		if (GetPrivateProfileStringA("mci", 0, "", buf, sizeof(buf), "system.ini")) {
+		    for(p = buf; *p; p += strlen(s) + 1, cnt++) {
+			if (cnt == lpParms->dwNumber - 1) {
+			    s = p;
+			    break;
+			}
+		    }
+		}
+	    }
+	    ret = s ? MCI_WriteString(lpParms->lpstrReturn, lpParms->dwRetSize, s) : MCIERR_OUTOFRANGE;
 	}
 	TRACE("(%ld) => '%s'\n", lpParms->dwNumber, lpParms->lpstrReturn);
 	break;
@@ -1723,55 +1739,4 @@ LRESULT		MCI_CleanUp(LRESULT dwRet, UINT wMsg, DWORD dwParam2)
 	break;
     }
     return LOWORD(dwRet);
-}
-
-/**************************************************************************
- * 			MCI_Init			[internal]
- *
- * Initializes the MCI internal variables.
- *
- */
-BOOL MCI_Init(void)
-{
-    LPSTR	ptr1, ptr2;
-    HKEY	hWineConf;
-    HKEY	hkey;
-    DWORD	err;
-    DWORD 	type;
-    DWORD 	count = 2048;
-
-    MCI_InstalledCount = 0;
-    ptr1 = MCI_lpInstallNames = HeapAlloc(GetProcessHeap(), 0, count);
-
-    if (!MCI_lpInstallNames)
-	return FALSE;
-
-    /* FIXME: should do also some registry diving here ? */
-    if (!(err = RegOpenKeyA(HKEY_LOCAL_MACHINE, "Software\\Wine\\Wine\\Config", &hWineConf)) &&
-	!(err = RegOpenKeyA(hWineConf, "options", &hkey))) {
-	err = RegQueryValueExA(hkey, "mci", 0, &type, MCI_lpInstallNames, &count);
-	RegCloseKey(hkey);
-
-    }
-    if (!err) {
-	TRACE("Wine => '%s' \n", ptr1);
-	while ((ptr2 = strchr(ptr1, ':')) != 0) {
-	    *ptr2++ = 0;
-	    TRACE("---> '%s' \n", ptr1);
-	    MCI_InstalledCount++;
-	    ptr1 = ptr2;
-	}
-	MCI_InstalledCount++;
-	TRACE("---> '%s' \n", ptr1);
-	ptr1 += strlen(ptr1) + 1;
-    } else {
-	GetPrivateProfileStringA("mci", NULL, "", MCI_lpInstallNames, count, "SYSTEM.INI");
-	while (strlen(ptr1) > 0) {
-	    TRACE("---> '%s' \n", ptr1);
-	    ptr1 += strlen(ptr1) + 1;
-	    MCI_InstalledCount++;
-	}
-    }
-    RegCloseKey(hWineConf);
-    return TRUE;
 }

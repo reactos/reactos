@@ -28,12 +28,14 @@
 #include "winnls.h"
 
 /* Add your language specific defines here */
+#include "winmm_De.rc"
 #include "winmm_En.rc"
+#include "winmm_Es.rc"
 #include "winmm_Fr.rc"
 #include "winmm_It.rc"
+/* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
 #include "winmm_Nl.rc"
 #include "winmm_Pt.rc"
-#include "winmm_Es.rc"
 #include "winmm_Ru.rc"
 #include "winmm_Si.rc"
 #include "winmm_Sk.rc"

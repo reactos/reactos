@@ -4,7 +4,7 @@ RCS file: /home/wine/wine/dlls/winmm/lolvldrv.c,v
 retrieving revision 1.58
 diff -u -r1.58 lolvldrv.c
 --- lolvldrv.c	1 Jun 2004 19:40:48 -0000	1.58
-+++ lolvldrv.c	16 Jun 2004 18:56:14 -0000
++++ lolvldrv.c	8 Aug 2004 21:46:41 -0000
 @@ -510,10 +510,12 @@
      case DRV_QUERYDEVICEINTERFACESIZE:
          return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
@@ -45,7 +45,7 @@ RCS file: /home/wine/wine/dlls/winmm/time.c,v
 retrieving revision 1.26
 diff -u -r1.26 time.c
 --- time.c	12 Jan 2004 21:03:10 -0000	1.26
-+++ time.c	16 Jun 2004 18:56:14 -0000
++++ time.c	8 Aug 2004 21:46:42 -0000
 @@ -175,14 +175,19 @@
      volatile HANDLE *pActive = (volatile HANDLE *)&TIME_hMMTimer;
      DWORD last_time, cur_time;
@@ -69,11 +69,22 @@ diff -u -r1.26 time.c
 Index: winmm.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/winmm.c,v
-retrieving revision 1.37
-diff -u -r1.37 winmm.c
---- winmm.c	14 Jun 2004 16:53:59 -0000	1.37
-+++ winmm.c	16 Jun 2004 18:56:15 -0000
-@@ -126,10 +126,12 @@
+retrieving revision 1.38
+diff -u -r1.38 winmm.c
+--- winmm.c	30 Jun 2004 18:12:20 -0000	1.38
++++ winmm.c	8 Aug 2004 21:46:43 -0000
+@@ -102,8 +102,9 @@
+ 	 * inside WINMM_IData */
+         CloseHandle(WINMM_IData->psStopEvent);
+         CloseHandle(WINMM_IData->psLastEvent);
++        WINMM_IData->cs.DebugInfo = NULL;
+         DeleteCriticalSection(&WINMM_IData->cs);
+-	HeapFree(GetProcessHeap(), 0, WINMM_IData);
++        HeapFree(GetProcessHeap(), 0, WINMM_IData);
+         WINMM_IData = NULL;
+     }
+ }
+@@ -126,10 +127,12 @@
          loaded = -1;
          if (h)
          {
@@ -86,3 +97,139 @@ diff -u -r1.37 winmm.c
                  loaded = 1;
          }
      }
+@@ -2658,6 +2661,7 @@
+ 				 WAVEHDR* lpWaveOutHdr, UINT uSize)
+ {
+     LPWINE_MLD		wmld;
++    UINT		result;
+ 
+     TRACE("(%p, %p, %u);\n", hWaveOut, lpWaveOutHdr, uSize);
+ 
+@@ -2667,7 +2671,17 @@
+     if ((wmld = MMDRV_Get(hWaveOut, MMDRV_WAVEOUT, FALSE)) == NULL)
+ 	return MMSYSERR_INVALHANDLE;
+ 
+-    return MMDRV_Message(wmld, WODM_PREPARE, (DWORD_PTR)lpWaveOutHdr, uSize, TRUE);
++    if ((result = MMDRV_Message(wmld, WODM_PREPARE, (DWORD_PTR)lpWaveOutHdr,
++                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
++        return result;
++
++    if (lpWaveOutHdr->dwFlags & WHDR_INQUEUE)
++	return WAVERR_STILLPLAYING;
++
++    lpWaveOutHdr->dwFlags |= WHDR_PREPARED;
++    lpWaveOutHdr->dwFlags &= ~WHDR_DONE;
++
++    return MMSYSERR_NOERROR;
+ }
+ 
+ /**************************************************************************
+@@ -2677,6 +2691,7 @@
+ 				   LPWAVEHDR lpWaveOutHdr, UINT uSize)
+ {
+     LPWINE_MLD		wmld;
++    UINT		result;
+ 
+     TRACE("(%p, %p, %u);\n", hWaveOut, lpWaveOutHdr, uSize);
+ 
+@@ -2690,7 +2705,17 @@
+     if ((wmld = MMDRV_Get(hWaveOut, MMDRV_WAVEOUT, FALSE)) == NULL)
+ 	return MMSYSERR_INVALHANDLE;
+ 
+-    return MMDRV_Message(wmld, WODM_UNPREPARE, (DWORD_PTR)lpWaveOutHdr, uSize, TRUE);
++    if ((result = MMDRV_Message(wmld, WODM_UNPREPARE, (DWORD_PTR)lpWaveOutHdr,
++                                uSize, TRUE)) != MMSYSERR_NOTSUPPORTED)
++        return result;
++
++    if (lpWaveOutHdr->dwFlags & WHDR_INQUEUE)
++	return WAVERR_STILLPLAYING;
++
++    lpWaveOutHdr->dwFlags &= ~WHDR_PREPARED;
++    lpWaveOutHdr->dwFlags |= WHDR_DONE;
++
++    return MMSYSERR_NOERROR;
+ }
+ 
+ /**************************************************************************
+@@ -3173,4 +3198,50 @@
+ 
+ 
+     return MMDRV_Message(wmld, uMessage, dwParam1, dwParam2, TRUE);
++}
++
++struct mm_starter
++{
++    LPTASKCALLBACK      cb;
++    DWORD               client;
++    HANDLE              event;
++};
++
++DWORD WINAPI mmTaskRun(void* pmt)
++{
++    struct mm_starter mms;
++
++    memcpy(&mms, pmt, sizeof(struct mm_starter));
++    HeapFree(GetProcessHeap(), 0, pmt);
++    mms.cb(mms.client);
++    if (mms.event) SetEvent(mms.event);
++    return 0;
++}
++
++MMRESULT WINAPI mmTaskCreate(LPTASKCALLBACK cb, HANDLE* ph, DWORD client)
++{
++    HANDLE               hThread;
++    HANDLE               hEvent;
++    struct mm_starter   *mms;
++
++    mms = HeapAlloc(GetProcessHeap(), 0, sizeof(struct mm_starter));
++    if (mms == NULL) { return TASKERR_OUTOFMEMORY; }
++
++    mms->cb = cb;
++    mms->client = client;
++    if (ph) {
++        mms->event = hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
++    } else {
++        mms->event = NULL;
++    }
++
++    hThread = CreateThread(0, 0, mmTaskRun, (LPVOID)mms, 0, NULL);
++    if (!hThread) {
++        HeapFree(GetProcessHeap(), 0, mms);
++        CloseHandle(hEvent);
++        return TASKERR_OUTOFMEMORY;
++    }
++    if (ph) *ph = hEvent;
++    CloseHandle(hThread);
++    return 0;
+ }
+Index: winmm.spec
+===================================================================
+RCS file: /home/wine/wine/dlls/winmm/winmm.spec,v
+retrieving revision 1.20
+diff -u -r1.20 winmm.spec
+--- winmm.spec	15 Sep 2003 20:13:30 -0000	1.20
++++ winmm.spec	8 Aug 2004 21:46:43 -0000
+@@ -135,6 +135,7 @@
+ @ stdcall mmioStringToFOURCCW(wstr long)
+ @ stdcall mmioWrite(long ptr long)
+ @ stdcall mmsystemGetVersion()
++@ stdcall mmTaskCreate(ptr ptr long)
+ @ stdcall sndPlaySoundA(ptr long)
+ @ stdcall sndPlaySoundW(ptr long)
+ @ stdcall timeBeginPeriod(long)
+Index: winmm_res.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/winmm/winmm_res.rc,v
+retrieving revision 1.15
+diff -u -r1.15 winmm_res.rc
+--- winmm_res.rc	13 Jul 2004 23:36:37 -0000	1.15
++++ winmm_res.rc	8 Aug 2004 21:46:43 -0000
+@@ -33,7 +33,7 @@
+ #include "winmm_Es.rc"
+ #include "winmm_Fr.rc"
+ #include "winmm_It.rc"
+-#include "winmm_Ja.rc"
++/* #include "winmm_Ja.rc" */ /* Gives error during ReactOS build */
+ #include "winmm_Nl.rc"
+ #include "winmm_Pt.rc"
+ #include "winmm_Ru.rc"

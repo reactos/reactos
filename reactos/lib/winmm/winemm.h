@@ -243,7 +243,6 @@ BOOL            MMDRV_Is32(unsigned int);
 void            MMDRV_InstallMap(unsigned int, MMDRV_MAPFUNC, MMDRV_UNMAPFUNC,
                                  MMDRV_MAPFUNC, MMDRV_UNMAPFUNC, LPDRVCALLBACK);
 
-BOOL    	MCI_Init(void);
 WINE_MCIDRIVER* MCI_GetDriver(UINT16 uDevID);
 UINT		MCI_GetDriverFromString(LPCSTR str);
 DWORD		MCI_WriteString(LPSTR lpDstStr, DWORD dstSize, LPCSTR lpSrcStr);

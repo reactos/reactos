@@ -185,7 +185,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID fImpLoad)
 
 	if (!WINMM_CreateIData(hInstDLL))
 	    return FALSE;
-        if (!MCI_Init() || !MMDRV_Init()) {
+        if (!MMDRV_Init()) {
             WINMM_DeleteIData();
             return FALSE;
 	}
