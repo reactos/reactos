@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.52 2002/03/12 20:16:53 ekohl Exp $
+/* $Id: ide.c,v 1.53 2002/03/13 01:29:44 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -875,7 +875,7 @@ IDEGetDriveIdentification(IN int CommandPort,
 //    IDECreateDiskDevice
 //
 //  DESCRIPTION:
-//    Creates a device by calling IoCreateDevice and a sylbolic link for Win32
+//    Creates the disk device object
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
@@ -905,9 +905,7 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
                     IN ULONG SectorCount)
 {
   WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
   UNICODE_STRING         DeviceName;
-  UNICODE_STRING         ArcName;
   NTSTATUS               RC;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
@@ -971,20 +969,6 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
   IoInitializeDpcRequest(*DeviceObject,
                          IDEDpcForIsr);
 
-  /* assign arc name */
-  swprintf(ArcNameBuffer,
-           L"\\ArcName\\multi(0)disk(0)rdisk(%d)",
-           DiskNumber);
-  RtlInitUnicodeString(&ArcName,
-                       ArcNameBuffer);
-  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-  RC = IoAssignArcName(&ArcName,
-                       &DeviceName);
-  if (!NT_SUCCESS(RC))
-    {
-      DbgPrint("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, RC);
-    }
-
   return  RC;
 }
 
@@ -992,7 +976,7 @@ IDECreateDiskDevice(IN PDRIVER_OBJECT DriverObject,
 //    IDECreatePartitionDevice
 //
 //  DESCRIPTION:
-//    Creates a device by calling IoCreateDevice and a sylbolic link for Win32
+//    Creates a partition device object
 //
 //  RUN LEVEL:
 //    PASSIVE_LEVEL
@@ -1023,9 +1007,7 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
                          IN PPARTITION_INFORMATION PartitionInfo)
 {
   WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
-  WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
   UNICODE_STRING         DeviceName;
-  UNICODE_STRING         ArcName;
   NTSTATUS               RC;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
@@ -1086,21 +1068,6 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
   DPRINT("%wZ %I64dMB\n",
          &DeviceName,
          DeviceExtension->PartitionLength.QuadPart >> 20);
-
-  /* assign arc name */
-  swprintf(ArcNameBuffer,
-           L"\\ArcName\\multi(0)disk(0)rdisk(%d)partition(%d)",
-           DiskNumber,
-           PartitionInfo->PartitionNumber);
-  RtlInitUnicodeString(&ArcName,
-                       ArcNameBuffer);
-  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-  RC = IoAssignArcName(&ArcName,
-                       &DeviceName);
-  if (!NT_SUCCESS(RC))
-    {
-      DbgPrint("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, RC);
-    }
 
   return  RC;
 }

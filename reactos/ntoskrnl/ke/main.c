@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.114 2002/02/20 20:14:22 ekohl Exp $
+/* $Id: main.c,v 1.115 2002/03/13 01:26:32 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -1125,6 +1125,8 @@ ExpInitializeExecutive(VOID)
 	}
     }
   
+  IoCreateArcNames();
+  
   /* Create the SystemRoot symbolic link */
   CPRINT("CommandLine: %s\n", (PUCHAR)KeLoaderBlock.CommandLine);
 
@@ -1136,8 +1138,6 @@ ExpInitializeExecutive(VOID)
   DebugLogInit2();
 #endif /* DBGPRINT_FILE_LOG */
   
-
-  CmInitializeRegistry2();
 
 #if 0
   CreateDefaultRegistry();
@@ -1243,7 +1243,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    */
   strcpy (KeLoaderCommandLine,
 	  "multi(0)disk(0)rdisk(0)partition(1)\\reactos /DEBUGPORT=SCREEN");
-  strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine);
+/*  strcat (KeLoaderCommandLine, (PUCHAR)KeLoaderBlock.CommandLine); */
   
   KeLoaderBlock.CommandLine = (ULONG)KeLoaderCommandLine;
   strcpy(KeLoaderModuleStrings[0], "ntoskrnl.exe");

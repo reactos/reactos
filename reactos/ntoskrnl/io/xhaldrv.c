@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.15 2001/08/21 20:13:09 chorns Exp $
+/* $Id: xhaldrv.c,v 1.16 2002/03/13 01:27:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,9 +59,9 @@ typedef struct _PARTITION_TABLE
 
 /* FUNCTIONS *****************************************************************/
 
-static NTSTATUS
-xHalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
-		      OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
+NTSTATUS
+xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
+		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo)
 {
    IO_STATUS_BLOCK StatusBlock;
    DISK_GEOMETRY DiskGeometry;
@@ -361,8 +361,8 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	RtlInitUnicodeString(&UnicodeString1,
 			     Buffer1);
 
-	Status = xHalpQueryDriveLayout(&UnicodeString1,
-				       &LayoutArray[i]);
+	Status = xHalQueryDriveLayout(&UnicodeString1,
+				      &LayoutArray[i]);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",

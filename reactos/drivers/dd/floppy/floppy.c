@@ -41,8 +41,6 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    PFLOPPY_CONTROLLER_EXTENSION ControllerExtension;
    PFLOPPY_DEVICE_EXTENSION DeviceExtension;
    UNICODE_STRING DeviceName;
-   UNICODE_STRING arcname;
-   UNICODE_STRING SymlinkName;
    NTSTATUS Status;
    PDEVICE_OBJECT DeviceObject;
    PCONFIGURATION_INFORMATION ConfigInfo;
@@ -241,8 +239,6 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    // Ok, we own the adapter object, from now on we can just IoMapTransfer, and not
    // bother releasing the adapter ever.
 
-   RtlInitUnicodeString( &arcname, L"\\ArcName\\multi(0)disk(0)fdisk(0)" );
-   Status = IoAssignArcName( &arcname, &DeviceName );
    DPRINT( "Floppy drive initialized\n" );
    return TRUE;
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.8 2002/03/08 12:01:26 ekohl Exp $
+/* $Id: disk.c,v 1.9 2002/03/13 01:30:34 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -386,11 +386,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
   ULONG PartitionNumber;
   NTSTATUS Status;
 
-  WCHAR ArcNameBuffer[120];
-  UNICODE_STRING ArcName;
-  ANSI_STRING DeviceNameA;
-  UNICODE_STRING DeviceName;
-
   DPRINT("DiskClassCreateDeviceObject() called\n");
 
   /* Create the harddisk device directory */
@@ -525,30 +520,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
-  /* assign arc name */
-  RtlInitAnsiString(&DeviceNameA,
-		    NameBuffer2);
-  RtlAnsiStringToUnicodeString(&DeviceName,
-			       &DeviceNameA,
-			       TRUE);
-  swprintf(ArcNameBuffer,
-	   L"\\ArcName\\multi(0)disk(0)rdisk(%lu)",
-	   DiskNumber);
-  RtlInitUnicodeString(&ArcName,
-		       ArcNameBuffer);
-  DPRINT("ArcNameBuffer '%S'\n", ArcNameBuffer);
-  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-  Status = IoAssignArcName(&ArcName,
-			   &DeviceName);
-  RtlFreeUnicodeString(&DeviceName);
-
-  if (!NT_SUCCESS(Status))
-    {
-      DbgPrint("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, Status);
-      KeBugCheck(0);
-    }
-
-
   /* Read partition table */
   Status = IoReadPartitionTable(DiskDeviceObject,
 				DiskDeviceExtension->DiskGeometry->BytesPerSector,
@@ -646,32 +617,6 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
 	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
 	      DiskData->DriveNotReady = FALSE;
-
-
-	      /* assign arc name */
-	      RtlInitAnsiString(&DeviceNameA,
-				NameBuffer2);
-	      RtlAnsiStringToUnicodeString(&DeviceName,
-					   &DeviceNameA,
-					   TRUE);
-	      swprintf(ArcNameBuffer,
-		       L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(%lu)",
-		       DiskNumber,
-		       PartitionNumber + 1);
-	      RtlInitUnicodeString(&ArcName,
-				   ArcNameBuffer);
-	      DPRINT("ArcNameBuffer '%S'\n", ArcNameBuffer);
-	      DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
-	      Status = IoAssignArcName(&ArcName,
-				       &DeviceName);
-	      RtlFreeUnicodeString(&DeviceName);
-
-	      if (!NT_SUCCESS(Status))
-		{
-		  DbgPrint("IoAssignArcName (%wZ) failed (Status %x)\n", &ArcName, Status);
-		  KeBugCheck(0);
-		}
-
 	    }
 	  else
 	    {
@@ -795,6 +740,8 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IOCTL_DISK_SET_PARTITION_INFO:
 	DPRINT1("Unhandled IOCTL_DISK_SET_PARTITION_INFO\n");
+	Status = STATUS_INVALID_DEVICE_REQUEST;
+	Information = 0;
 	break;
 
       case IOCTL_DISK_GET_DRIVE_LAYOUT:
@@ -866,20 +813,26 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-//    DiskClassShutdownFlush
-//
-//  DESCRIPTION:
-//    Answer requests for shutdown and flush calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassShutdownFlush
+ *
+ * DESCRIPTION
+ *	Answer requests for shutdown and flush calls.
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DeviceObject
+ *		Pointer to the device.
+ *
+ *	Irp
+ *		Pointer to the IRP
+ *
+ * RETURN VALUE
+ *	Status
+ */
 
 NTSTATUS STDCALL
 DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,

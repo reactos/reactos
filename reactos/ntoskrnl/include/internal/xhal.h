@@ -1,6 +1,10 @@
 #ifndef __INCLUDE_INTERNAL_XHAL_H
 #define __INCLUDE_INTERNAL_XHAL_H
 
+NTSTATUS
+xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
+		     OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo);
+
 VOID FASTCALL
 xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 	       IN ULONG SectorSize,
