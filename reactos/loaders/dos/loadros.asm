@@ -134,7 +134,7 @@ entry:
 	;; Make the argument list into a c string
 	;;
 	mov	di, 081h
-	mov	si, _multiboot_kernel_cmdline
+	mov	si, dos_cmdline
 .next_char
 	mov	al, [di]
 	mov	[si], al
@@ -147,7 +147,7 @@ entry:
 .end_of_command_line:
 	mov	byte [di], 0
 	mov	byte [si], 0
-	mov	[end_cmd_line], di
+	mov	[dos_cmdline_end], di
 	
 	;;
 	;; Make the argument list into a c string
@@ -306,7 +306,7 @@ entry:
 	mov	byte [bx],0		; Zero terminate
 	inc	bx
 	mov	byte [bx],0
-	mov	[end_cmd_line],bx	; Put in cmd_line_length
+	mov	[dos_cmdline_end],bx	; Put in cmd_line_length
 	mov	dx,_lst_name_local; Put this address in di
 	mov	di,dx			; This, too, at the start of the
 					; string
@@ -335,7 +335,7 @@ entry:
 	;; Move onto the next module name in the command line
 	;;
 .next_module
-	cmp	di, [end_cmd_line]
+	cmp	di, [dos_cmdline_end]
 	je	.done_loading
 	cmp	byte [di], 0
 	je	.found_module_name
@@ -587,7 +587,6 @@ entry:
 	mov	ax,04c00h
 	int	21h
 
-end_cmd_line dw 0
 
 ;
 ; Print string in DS:DI
@@ -1160,6 +1159,12 @@ real_stack times 1024 db 0
 real_stack_end:
 
 	;;
+	;; DOS commandline buffer
+	;;
+dos_cmdline times 256 db 0
+dos_cmdline_end dw 0
+
+	;;
 	;; Boot information structure
 	;;
 _multiboot_info_base:
@@ -1208,7 +1213,8 @@ _multiboot_address_ranges:
 	times (64*multiboot_address_range_size) db 0
 
 _multiboot_kernel_cmdline:
-	times 255 db 0
+	db 'multi(0)disk(0)rdisk(0)partition(1)\reactos /DEBUGPORT=SCREEN'
+	times 255-($-_multiboot_kernel_cmdline) db 0
 
 	;;
 	;; Global descriptor table
