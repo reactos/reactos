@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.27 2003/06/06 10:17:44 gvg Exp $
+ * $Id: gdiobj.c,v 1.28 2003/06/07 12:37:01 hbirr Exp $
  *
  */
 
@@ -619,6 +619,7 @@ BOOL STDCALL W32kCleanupForProcess(INT Pid)
     }
 
   KeDetachProcess();
+  ObDereferenceObject(Process);
 
   return TRUE;
 }
