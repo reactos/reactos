@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.81 2004/01/28 20:52:57 gvg Exp $
+/* $Id: create.c,v 1.82 2004/05/01 18:09:53 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -311,6 +311,23 @@ BOOL STDCALL CreateProcessA
  return bRetVal;
 }
 
+
+/*
+ * Private helper function to lookup the module name from a given address.
+ * The address can point to anywhere within the module.
+ */
+static const char*
+_module_name_from_addr(const void* addr, char* psz, size_t nChars)
+{
+   MEMORY_BASIC_INFORMATION mbi;
+   if (VirtualQuery(addr, &mbi, sizeof(mbi)) != sizeof(mbi) ||
+       !GetModuleFileNameA((HMODULE)mbi.AllocationBase, psz, nChars))
+   {
+      psz[0] = '\0';
+   }
+   return psz;
+}
+
 static int _except_recursion_trap = 0;
 
 struct _CONTEXT;
@@ -325,8 +342,14 @@ _except_handler(
     struct _CONTEXT *ContextRecord,
     void * DispatcherContext )
 {
- DPRINT1("Process terminated abnormally due to unhandled exception\n");
- DPRINT1("Address: %x\n", ExceptionRecord->ExceptionAddress);
+#ifdef _X86_
+ char szMod[128] = "";
+#endif
+ DPRINT1("Thread terminated abnormally due to unhandled exception\n");
+ DPRINT1("Address:\n");
+ DPRINT1("%8x    %s\n",
+         ExceptionRecord->ExceptionAddress,
+         _module_name_from_addr(ExceptionRecord->ExceptionAddress, szMod, sizeof(szMod)));
 
 #ifdef _X86_
   {
@@ -335,7 +358,8 @@ _except_handler(
     Frame = (PULONG)((CONTEXT *)ContextRecord)->Ebp;
     while ((PVOID)Frame[1] != NULL && (PULONG)Frame[1] != (PULONG)0xdeadbeef)
        {
-         DPRINT1("%x\n", (PVOID)Frame[1]);
+         _module_name_from_addr((const void*)Frame[1], szMod, sizeof(szMod));
+         DPRINT1("%8x    %s\n", (PVOID)Frame[1], szMod);
          Frame = (PULONG)Frame[0];
        }
   }
