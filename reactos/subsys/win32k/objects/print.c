@@ -93,7 +93,7 @@ IntEngExtEscape(
    if (Escape == 0x1101)
       return 0;
 
-   UNIMPLEMENTED;
+   DPRINT1("IntEngExtEscape is nimplemented. - Keep going and have a nice day\n");
    return -1;
 }
 
