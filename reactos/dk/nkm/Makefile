@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/12/15 11:02:40 ea Exp $
+# $Id: Makefile,v 1.2 2002/06/19 15:45:48 robd Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/nkm/Makefile
@@ -27,6 +27,7 @@ MODULES_DISPLAY=\
 MODULES_NET=\
 	$(TARGET_FOLDER_LIB)/afd.a\
 	$(TARGET_FOLDER_LIB)/ndis.a\
+	$(TARGET_FOLDER_LIB)/packet.a\
 	$(TARGET_FOLDER_LIB)/tcpip.a
 
 MODULES_STORAGE=\
@@ -63,57 +64,63 @@ $(TARGET_FOLDER_LIB)/hal.a: $(PATH_TO_TOP)/ntoskrnl/hal/x86/hal.def
 
 # --- DISPLAY ---
 
-$(TARGET_FOLDER_LIB)/vgaddi.a: $(PATH_TO_TOP)/services/dd/vga/display/vgaddi.def
+$(TARGET_FOLDER_LIB)/vgaddi.a: $(PATH_TO_TOP)/drivers/dd/vga/display/vgaddi.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D vgaddi.dll\
-		-d $(PATH_TO_TOP)/services/dd/vga/display/vgaddi.def
+		-d $(PATH_TO_TOP)/drivers/dd/vga/display/vgaddi.def
 
-$(TARGET_FOLDER_LIB)/vidport.a: $(PATH_TO_TOP)/services/dd/vidport/vidport.def
+$(TARGET_FOLDER_LIB)/vidport.a: $(PATH_TO_TOP)/drivers/dd/vidport/vidport.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D vidport.sys\
-		-d $(PATH_TO_TOP)/services/dd/vidport/vidport.def
+		-d $(PATH_TO_TOP)/drivers/dd/vidport/vidport.def
 
 # --- NET ---
 
-$(TARGET_FOLDER_LIB)/afd.a: $(PATH_TO_TOP)/services/net/afd/afd.def
+$(TARGET_FOLDER_LIB)/afd.a: $(PATH_TO_TOP)/drivers/net/afd/afd.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D afd.sys\
-		-d $(PATH_TO_TOP)/services/net/afd/afd.def
+		-d $(PATH_TO_TOP)/drivers/net/afd/afd.def
 
-$(TARGET_FOLDER_LIB)/ndis.a: $(PATH_TO_TOP)/services/net/ndis/ndis.def
+$(TARGET_FOLDER_LIB)/ndis.a: $(PATH_TO_TOP)/drivers/net/ndis/ndis.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D ndis.sys\
-		-d $(PATH_TO_TOP)/services/net/ndis/ndis.def
+		-d $(PATH_TO_TOP)/drivers/net/ndis/ndis.def
 
-$(TARGET_FOLDER_LIB)/tcpip.a: $(PATH_TO_TOP)/services/net/tcpip/tcpip.def
+$(TARGET_FOLDER_LIB)/tcpip.a: $(PATH_TO_TOP)/drivers/net/tcpip/tcpip.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D tcpip.sys\
-		-d $(PATH_TO_TOP)/services/net/tcpip/tcpip.def
+		-d $(PATH_TO_TOP)/drivers/net/tcpip/tcpip.def
 
-$(TARGET_FOLDER_LIB)/tdi.a: $(PATH_TO_TOP)/services/net/tdi/misc/tdi.def
+$(TARGET_FOLDER_LIB)/packet.a: $(PATH_TO_TOP)/drivers/net/packet/packet.def
+	$(DLLTOOL) \
+		$(DTFLAGS)\
+		-D packet.sys\
+		-d $(PATH_TO_TOP)/drivers/net/packet/packet.def
+
+$(TARGET_FOLDER_LIB)/tdi.a: $(PATH_TO_TOP)/drivers/net/tdi/misc/tdi.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D tdi.sys\
-		-d $(PATH_TO_TOP)/services/net/tdi/misc/tdi.def
+		-d $(PATH_TO_TOP)/drivers/net/tdi/misc/tdi.def
 
 # --- STORAGE ---
 
-$(TARGET_FOLDER_LIB)/class2.a: $(PATH_TO_TOP)/services/storage/class2/class2.def
+$(TARGET_FOLDER_LIB)/class2.a: $(PATH_TO_TOP)/drivers/storage/class2/class2.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D class2.sys\
-		-d $(PATH_TO_TOP)/services/storage/class2/class2.def
+		-d $(PATH_TO_TOP)/drivers/storage/class2/class2.def
 
-$(TARGET_FOLDER_LIB)/scsiport.a: $(PATH_TO_TOP)/services/storage/scsiport/scsiport.def
+$(TARGET_FOLDER_LIB)/scsiport.a: $(PATH_TO_TOP)/drivers/storage/scsiport/scsiport.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D scsiport.sys\
-		-d $(PATH_TO_TOP)/services/storage/scsiport/scsiport.def
+		-d $(PATH_TO_TOP)/drivers/storage/scsiport/scsiport.def
 
 # --- NATIVE ---
 
