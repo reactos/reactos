@@ -220,6 +220,15 @@ SubclassedWindow::SubclassedWindow(HWND hwnd)
 
 LRESULT SubclassedWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
+	if (nmsg == WM_SETFOCUS) {
+		 // close startup menu and other popup menus
+		 // This functionality is for tray notification icons missing in MS Windows.
+		if (wparam)
+			PostMessage((HWND)wparam, WM_CANCELMODE, 0, 0);
+		else
+			PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
+	}
+
 	return CallWindowProc(_orgWndProc, _hwnd, nmsg, wparam, lparam);
 }
 

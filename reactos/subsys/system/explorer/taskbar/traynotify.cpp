@@ -116,16 +116,25 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_TIMER: {
-		Tick();
+		TimerTick();
 
 		ClockWindow* clock_window = static_cast<ClockWindow*>(get_window(_hwndClock));
 
 		if (clock_window)
-			clock_window->Tick();
+			clock_window->TimerTick();
 		break;}
 
 	  default:
 		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
+			 // close startup menu and other popup menus
+			 // This functionality is missing in MS Windows.
+			if (nmsg==WM_LBUTTONDOWN || nmsg==WM_MBUTTONDOWN || nmsg==WM_RBUTTONDOWN
+#ifdef WM_XBUTTONDOWN
+				|| nmsg==WM_XBUTTONDOWN
+#endif
+				)
+				CancelModes(0);
+
 			NotifyIconSet::iterator found = IconHitTest(Point(lparam));
 
 			if (found != _sorted_icons.end()) {
@@ -143,6 +152,18 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
+}
+
+void NotifyArea::CancelModes(HWND hwnd)
+{
+	if (hwnd)
+		PostMessage(hwnd, WM_CANCELMODE, 0, 0);
+	else {
+		PostMessage(HWND_BROADCAST, WM_CANCELMODE, 0, 0);
+
+		for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
+			PostMessage(it->_hWnd, WM_CANCELMODE, 0, 0);
+	}
 }
 
 LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pnid)
@@ -183,8 +204,14 @@ void NotifyArea::Refresh()
 	_sorted_icons.clear();
 
 	 // sort icon infos by display index
-	for(NotifyIconMap::const_iterator it=_icon_map.begin(); it!=_icon_map.end(); ++it)
-		_sorted_icons.insert(it->second);
+	for(NotifyIconMap::const_iterator it=_icon_map.begin(); it!=_icon_map.end(); ++it) {
+		const NotifyInfo& entry = it->second;
+
+#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
+		if (!(entry._dwState & NIS_HIDDEN))
+#endif
+			_sorted_icons.insert(entry);
+	}
 
 	InvalidateRect(_hwnd, NULL, TRUE);	// refresh icon display
 	UpdateWindow(_hwnd);
@@ -198,38 +225,24 @@ void NotifyArea::Paint()
 	int x = 2;
 	int y = 2;
 
-	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
-	{
-		const NotifyInfo& entry = *it;
-
-#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
-		if (!(entry._dwState & NIS_HIDDEN))
-#endif
-		{
-			DrawIconEx(canvas, x, y, entry._hIcon, 16, 16, 0, 0, DI_NORMAL);
-			x += 20;
-		}
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+		DrawIconEx(canvas, x, y, it->_hIcon, 16, 16, 0, 0, DI_NORMAL);
+		x += 20;
 	}
 }
 
-void NotifyArea::Tick()
+void NotifyArea::TimerTick()
 {
 	bool do_refresh = false;
 
 	 // Look for task icons without valid owner window.
 	 // This is an advanced feature, which is missing in MS Windows.
-	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it)
-	{
+	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
 		const NotifyInfo& entry = *it;
 
-#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
-		if (!(entry._dwState & NIS_HIDDEN))
-#endif
-		{
-			if (!IsWindow(entry._hWnd))
-				if (_icon_map.erase(entry))	// delete icons without valid owner window
-					++do_refresh;
-		}
+		if (!IsWindow(entry._hWnd))
+			if (_icon_map.erase(entry))	// delete icons without valid owner window
+				++do_refresh;
 	}
 
 	if (do_refresh)
@@ -246,19 +259,13 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 
 	int x = 2;
 
-	for(; it!=_sorted_icons.end(); ++it)
-	{
+	for(; it!=_sorted_icons.end(); ++it) {
 		NotifyInfo& entry = const_cast<NotifyInfo&>(*it);	// Why does GCC 3.3 need this additional const_cast ?!
 
-#ifdef NIF_STATE	// currently (as of 21.08.2003) missing in MinGW headers
-		if (!(entry._dwState & NIS_HIDDEN))
-#endif
-		{
-			if (pos.x>=x && pos.x<x+16)
-				break;
+		if (pos.x>=x && pos.x<x+16)
+			break;
 
-			x += 20;
-		}
+		x += 20;
 	}
 
 	return it;
@@ -286,7 +293,7 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
-void ClockWindow::Tick()
+void ClockWindow::TimerTick()
 {
 	if (FormatTime())
 		InvalidateRect(_hwnd, NULL, TRUE);	// refresh displayed time

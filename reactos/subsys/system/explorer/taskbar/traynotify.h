@@ -94,7 +94,8 @@ protected:
 
 	void	Refresh();
 	void	Paint();
-	void	Tick();
+	void	TimerTick();
+	void	CancelModes(HWND hwnd);
 
 	NotifyIconSet::iterator IconHitTest(const POINT& pos);
 };
@@ -107,7 +108,7 @@ struct ClockWindow : public Window
 
 	ClockWindow(HWND hwnd);
 
-	void	Tick();
+	void	TimerTick();
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
