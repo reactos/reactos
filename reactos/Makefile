@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.235 2004/07/10 21:44:14 sedwards Exp $
+# $Id: Makefile,v 1.236 2004/07/19 01:33:48 kuehng Exp $
 #
 # Global makefile
 #
@@ -809,6 +809,7 @@ install_clean:
 	$(RM) $(INSTALL_DIR)/symbols/*.*
 	$(RM) $(INSTALL_DIR)/media/fonts/*.*
 	$(RM) $(INSTALL_DIR)/media/*.*
+	$(RM) $(INSTALL_DIR)/inf/*.*
 	$(RM) $(INSTALL_DIR)/bin/*.*
 	$(RM) $(INSTALL_DIR)/*.com
 	$(RM) $(INSTALL_DIR)/*.bat
@@ -818,12 +819,14 @@ install_clean:
 	$(RMDIR) $(INSTALL_DIR)/symbols
 	$(RMDIR) $(INSTALL_DIR)/media/fonts
 	$(RMDIR) $(INSTALL_DIR)/media
+	$(RMDIR) $(INSTALL_DIR)/inf
 	$(RMDIR) $(INSTALL_DIR)/bin
 	$(RMDIR) $(INSTALL_DIR)
 
 install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)
 	$(RMKDIR) $(INSTALL_DIR)/bin
+	$(RMKDIR) $(INSTALL_DIR)/inf
 	$(RMKDIR) $(INSTALL_DIR)/media
 	$(RMKDIR) $(INSTALL_DIR)/media/fonts
 	$(RMKDIR) $(INSTALL_DIR)/symbols
@@ -836,6 +839,7 @@ install_before:
 	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
 	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
 	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
+	$(CP) media/inf $(INSTALL_DIR)/inf
 	$(CP) media/fonts $(INSTALL_DIR)/media/fonts
 	$(CP) media/nls $(INSTALL_DIR)/system32
 	$(CP) media/nls/c_1252.nls $(INSTALL_DIR)/system32/ansi.nls

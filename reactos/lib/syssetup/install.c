@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.13 2004/06/24 09:17:33 gvg Exp $
+/* $Id: install.c,v 1.14 2004/07/19 01:33:14 kuehng Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -31,6 +31,8 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <stdio.h>
+#include <tchar.h>
+#include <stdlib.h>
 
 #include <samlib.h>
 #include <syssetup.h>
@@ -248,6 +250,41 @@ CreateTempDir(LPCWSTR VarName)
   RegCloseKey (hKey);
 }
 
+BOOL ProcessSysSetupInf(void)
+{
+#define SECTIONBUF_SIZE 4096
+	TCHAR *pBuf2;
+	TCHAR pBuf[SECTIONBUF_SIZE];
+	
+	SetLastError(0);
+
+	DWORD dwBufSize = GetPrivateProfileSection(_T("DeviceInfsToInstall"),pBuf,SECTIONBUF_SIZE,_T("Inf\\SYSSETUP.INF"));
+	
+	// fix this first...
+	if(GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
+		return TRUE;
+
+	if(dwBufSize == SECTIONBUF_SIZE-2)
+		return FALSE;
+	if(!dwBufSize)
+		return FALSE;
+	pBuf2=pBuf;
+	while(*pBuf2)
+	{
+		OutputDebugString(_T("Calling Class Installer for "));
+		OutputDebugString(pBuf2);
+		OutputDebugString(_T("\r\n"));
+
+//		Currently unsupported
+//		if(!SetupDiInstallClass(NULL,pBuf2,DI_QUIETINSTALL,NULL))
+//			return FALSE;
+		pBuf2+=_tcslen(pBuf2)+1;
+	}
+
+	return TRUE;
+}
+
+
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
@@ -343,6 +380,11 @@ InstallReactOS (HINSTANCE hInstance)
   CreateTempDir(L"TEMP");
   CreateTempDir(L"TMP");
 
+  if(!ProcessSysSetupInf())
+  {
+      DebugPrint("ProcessSysSetupInf() failed!\n");
+	  return 0;
+  }
 #if 1
   InstallWizard ();
 #endif

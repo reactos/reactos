@@ -1,0 +1,16 @@
+;
+; For Windows, this file controls various aspects of the Installation and
+; Upgrade process. If you know a good documentation about this file,
+; please add a link here.
+; 
+;
+[Version]
+signature="$Reactos$"
+ClassGUID={00000000-0000-0000-0000-000000000000}
+
+
+; These .INFs install the device classes
+[DeviceInfsToInstall]
+; MS uses netnovel.inf as class-installer INF for NICs
+; we use a separate one to keep things clean
+NET_NIC.inf

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.9 2004/05/29 21:24:47 hbirr Exp $
+# $Id: Makefile,v 1.10 2004/07/19 01:33:14 kuehng Exp $
 
 PATH_TO_TOP = ../..
 
@@ -15,7 +15,7 @@ TARGET_CFLAGS = -Wall -Werror -fno-builtin
 TARGET_CFLAGS += -D__USE_W32API -D_WIN32_IE=0x0500
 TARGET_RCFLAGS += -D__USE_W32API -D_WIN32_IE=0x0500
  
-TARGET_LFLAGS = -nostartfiles -nostdlib
+TARGET_LFLAGS = -nostartfiles
 
 TARGET_OBJECTS = dllmain.o install.o logfile.o wizard.o
 
