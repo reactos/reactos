@@ -1,7 +1,7 @@
 1. Build environment
 
 To build the system you need either mingw32 installed on Windows or a mingw32
-cross compiler running on unix.  You may obtain MinGW binaries that build
+cross compiler running on unix. You may obtain MinGW binaries that build
 ReactOS from http://www.reactos.com. 
 
 
@@ -9,7 +9,9 @@ ReactOS from http://www.reactos.com.
 
 To build from Windows run 'make' (wihout the quotes) from the top directory.
 To build from unix, edit rules.mak and change the PREFIX variable to the
-correct value for your cross-compiler, then run 'make'.
+correct value for your cross-compiler. Run 'export HOST=mingw32-linux' to
+tell the ReactOS build system that it is building ReactOS on a linux machine.
+Now run 'make'.
 
 
 3. Installation
@@ -44,7 +46,9 @@ If you are on linux this could be:
     INSTALL_DIR = /mnt/windows/reactos
 
 Save the changes to rules.mak and run 'make install' to install the files to
-the new location.
+the new location. If you don't want to change rules.mak, you can specify the
+installtion directory when invoking make. Run
+'make INSTALL_DIR=c:\reactos install' to install to c:\reactos.
 
 
 3.2 Installation from binany distribution
@@ -56,13 +60,7 @@ to c:\reactos. Remember to extract the files with full paths.
 4. Booting ReactOS
 
 Startup in DOS mode. 'cd' to c:\reactos and type 'boot' and press <enter>.
-ReactOS will now boot and when it has booted, you are asked for a username and
-password. Just press <enter> twice as ReactOS does not currently have user
-validation. A simple shell is started where you can use simple commands like
-'cd' and 'dir'.
-
-You may also want to try running the enhanced shell, cmd.exe, found in
-the rosapps CVS module.
+A simple shell is started where you can use simple commands like 'cd' and 'dir'.
 
 
 5. Help

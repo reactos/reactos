@@ -1,3 +1,7 @@
+2003-07-17  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* INSTALL: Update installation instructions.
+
 2003-07-16  Royce Mitchell III <royce3@ev1.net>
 
 	* modifed strtok & wcstok in msvcrt so that crtdll can use it.
