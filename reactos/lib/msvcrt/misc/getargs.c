@@ -10,18 +10,95 @@ extern char **_environ;
 #undef __argv
 #undef __argc
 
-char *xargv[1024];
-
-char  **__argv = xargv;
+char  **__argv = NULL;
 int   __argc = 0;
 
 extern HANDLE hHeap;
 
+char* strndup(char* name, int len)
+{
+   char *s = malloc(len + 1);
+   if (s != NULL)
+   {
+      strncpy(s, name, len);
+   }
+   return s;
+}
+   
+#define SIZE (4096 / sizeof(char*))
+
+int add(char *name)
+{
+   char** _new;
+   if ((__argc % SIZE) == 0)
+   {
+      _new = malloc(sizeof(char*) * (__argc + SIZE));
+      if (_new == NULL)
+      {
+	 return -1;
+      }
+      if (__argv)
+      {
+	 memcpy(_new, __argv, sizeof(char*) * __argc);
+	 free(__argv);
+      }
+      __argv = _new;
+   }
+   __argv[__argc++] = name;
+}
+
+int expand(char* name)
+{
+   char *s;
+   WIN32_FIND_DATA fd;
+   HANDLE hFile;
+   BOOLEAN first = TRUE;
+   char buffer[256];
+   int pos;
+
+   s = strpbrk(name, "*?");
+   if (s)
+   {
+      hFile = FindFirstFile(name, &fd);
+      if (hFile != INVALID_HANDLE_VALUE)
+      {
+         while(s != name && *s != '/' && *s != '\\')
+            s--;
+         pos = s - name;
+         if (*s == '/' || *s == '\\')
+            pos++;
+	 strncpy(buffer, name, pos);
+         do
+	 {
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+	    {
+               strcpy(&buffer[pos], fd.cFileName);
+	       if (add(strdup(buffer)) < 0)
+	       {
+		  FindClose(hFile);
+		  return -1;
+	       }
+	       first = FALSE;
+	    }
+	 }
+         while(FindNextFile(hFile, &fd));
+         FindClose(hFile);
+      }
+   }
+   if (first)
+   {
+      if (add(name) < 0)
+	 return -1;
+   }
+   else
+      free(name);
+   return 0;
+}
+
 int __getmainargs(int *argc,char ***argv,char ***env,int flag)
 {
    int i,afterlastspace;
-   DWORD   version;
-   
+  
    /* missing threading init */
    
    i=0;
@@ -31,10 +108,7 @@ int __getmainargs(int *argc,char ***argv,char ***env,int flag)
      {
 	if (_acmdln[i]==' ')
 	  {
-	     __argc++;
-	     _acmdln[i]='\0';
-	     __argv[__argc-1] = strdup(_acmdln + afterlastspace);
-       _acmdln[i]=' ';
+             expand(strndup(_acmdln + afterlastspace, i - afterlastspace));
 	     i++;
 	     while (_acmdln[i]==' ')
 	       i++;
@@ -48,10 +122,9 @@ int __getmainargs(int *argc,char ***argv,char ***env,int flag)
    
    if (_acmdln[afterlastspace] != 0)
      {
-	__argc++;
-	_acmdln[i]='\0';
-	__argv[__argc-1] = strdup(_acmdln+afterlastspace);
+	expand(strndup(_acmdln+afterlastspace, i - afterlastspace));
      }
+
    HeapValidate(hHeap,0,NULL);
    
    *argc = __argc;
