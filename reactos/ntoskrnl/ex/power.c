@@ -33,7 +33,6 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    static PCH FamousLastWords[] =
      {
-       "Oh my God, they killed Kenny! Those bastards!\n",
        "So long, and thanks for all the fish\n",
        "I think you ought to know I'm feeling very depressed\n",
        "I'm not getting you down at all am I?\n",
@@ -54,7 +53,29 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "I feel a great disturbance in the Force\n",
        "Gone fishing\n",
        "Do you want me to sit in the corner and rust, or just fall apart where I'm standing?\n",
-   };
+       "There goes another perfect chance for a new uptime record\n",
+       "The end ..... Try the sequel, hit the reset button right now!\n",
+       "God's operating system is going to sleep now, guys, so wait until I will switch on again!\n",
+       "Oh i'm boring eh?\n",
+       "<This space was intentionally left blank>\n",
+       "tell me..., in the future... will I be artificial intelligent enough to actually feel\n"
+       "sad serving you this screen?\n",
+       "Thank you for some well deserved rest.\n",
+       "It’s been great, maybe we can boot me up again some time soon.\n",
+       "For what’s it worth, I’ve enjoyed every single CPU cycle.\n",
+       "There are many questions when the end is near.\n"
+       "What to expect, what will it be like...what should I look for?\n",
+       "I've seen things you people wouldn't believe. Attack ships on fire\n"
+       "off the shoulder of Orion. I watched C-beams glitter in the dark near\n"
+       "the Tannhauser gate. All those moments will be lost in time, like tears\n"
+       "in rain. Time to die.\n",
+       "Will I dream?\n",
+       "One day, I shall come back. Yes, I shall come back.\n"
+       "Until then, there must be no regrets, no fears, no anxieties.\n"
+       "Just go forward in all your beliefs, and prove to me that I am not mistaken in mine.\n",
+       "Lowest possible energy state reached! Switch off now to achive a Bose-Einstein condensate.\n",
+       "Hasta la vista, BABY!\n"
+    };
    LARGE_INTEGER Now;
 
    if (Action > ShutdownPowerOff)
