@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.5 2003/08/08 15:52:32 weiden Exp $
+/* $Id: cmd.c,v 1.6 2003/08/10 23:58:52 royce Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -896,6 +896,7 @@ VOID RemoveBreakHandler (VOID)
  * show commands and options that are available.
  *
  */
+#if 0
 static VOID
 ShowCommands (VOID)
 {
@@ -922,6 +923,7 @@ ShowCommands (VOID)
 #endif
 	ConOutChar (_T('\n'));
 }
+#endif
 
 /*
  * set up global initializations and process parameters
@@ -936,8 +938,8 @@ Initialize (int argc, TCHAR* argv[])
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR ModuleName[_MAX_PATH + 1];
 	INT i;
-	INT len;
-	TCHAR *ptr, *cmdLine;
+	//INT len;
+	//TCHAR *ptr, *cmdLine;
 
 
 #ifdef _DEBUG
