@@ -64,7 +64,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 
 	argv = split (param, &argc);
 	
-	for (i = 1; i < argc; i++)
+	for (i = 0; i < argc; i++)
 	{
 		hFind=FindFirstFile(argv[i],&FindData);
 		
