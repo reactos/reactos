@@ -28,7 +28,8 @@ $(BUILDNO_OBJECTS): %.o : %.cpp include$(SEP)reactos$(SEP)version.h
 buildno_clean:
 	-@$(rm) $(BUILDNO_TARGET) $(BUILDNO_OBJECTS) 2>$(NUL)
 
-BUILDNO_H = include$(SEP)reactos$(SEP)buildno.h
+# BUILDNO_H is defined from the top-level makefile now...
+#BUILDNO_H = .$(SEP)include$(SEP)reactos$(SEP)buildno.h
 
 $(BUILDNO_H): $(BUILDNO_TARGET)
 	$(EXEPREFIX)$(BUILDNO_TARGET) $(BUILDNO_H)

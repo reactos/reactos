@@ -131,6 +131,12 @@ enum ModuleType
 	Iso
 };
 
+enum HostType
+{
+	HostDefault,
+	HostTrue,
+	HostFalse
+};
 
 class Module
 {
@@ -153,6 +159,8 @@ public:
 	std::vector<LinkerFlag*> linkerFlags;
 	PchFile* pch;
 	bool cplusplus;
+	std::string prefix;
+	HostType host;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,

@@ -7,6 +7,10 @@ extern std::string
 ReplaceExtension ( const std::string& filename,
                    const std::string& newExtension );
 
+extern std::string
+PrefixFilename (
+	const std::string& filename,
+	const std::string& prefix );
 
 class MingwModuleHandler
 {
@@ -23,10 +27,10 @@ public:
 	static void SetUsePch ( bool use_pch );
 	static MingwModuleHandler* LookupHandler ( const std::string& location,
 	                                           ModuleType moduletype_ );
+	virtual HostType DefaultHost() = 0;
 	virtual void Process ( const Module& module, string_list& clean_files ) = 0;
 	bool IncludeDirectoryTarget ( const std::string& directory ) const;
 	void GenerateDirectoryTargets () const;
-	static std::string GetObjectFilename ( const std::string& sourceFilename );
 	void GenerateCleanTarget ( const Module& module,
 	                           const string_list& clean_files ) const;
 protected:
@@ -45,14 +49,6 @@ protected:
 	std::string GetSourceFilenamesWithoutGeneratedFiles ( const Module& module ) const;
 
 	std::string GetObjectFilenames ( const Module& module ) const;
-	void GenerateMacrosAndTargetsHost ( const Module& module,
-	                                    string_list& clean_files ) const;
-	void GenerateMacrosAndTargetsTarget ( const Module& module,
-	                                      string_list& clean_files ) const;
-	void GenerateMacrosAndTargetsTarget ( const Module& module,
-	                                      const std::string* cflags,
-	                                      const std::string* nasmflags,
-	                                      string_list& clean_files ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	
@@ -69,6 +65,10 @@ protected:
 	                             const std::string& objectsMacro,
 	                             const std::string& libsMacro,
 	                             string_list& clean_files ) const;
+	void GenerateMacrosAndTargets ( const Module& module,
+	                                const std::string* clags,
+	                                const std::string* nasmflags,
+	                                string_list& clean_files ) const;
 	void GenerateImportLibraryTargetIfNeeded ( const Module& module, string_list& clean_files ) const;
 	std::string GetDefinitionDependencies ( const Module& module ) const;
 	std::string GetLinkingDependencies ( const Module& module ) const;
@@ -90,7 +90,9 @@ private:
 	                     const std::string& macro,
 	                     const IfableData& data,
 	                     const std::vector<CompilerFlag*>* compilerFlags ) const;
-	void GenerateMacros ( const char* op,
+	void GenerateMacros (
+	                      const Module& module,
+	                      const char* op,
 	                      const IfableData& data,
 	                      const std::vector<CompilerFlag*>* compilerFlags,
 	                      const std::vector<LinkerFlag*>* linkerFlags,
@@ -152,18 +154,9 @@ private:
 	                                 const std::string& nasmflagsMacro,
 	                                 const std::string& windresflagsMacro,
 	                                 string_list& clean_files ) const;
-	void GetCleanTargets ( string_list& out,
-	                       const IfableData& data ) const;
 	std::string GenerateArchiveTarget ( const Module& module,
 	                                    const std::string& ar,
 	                                    const std::string& objs_macro ) const;
-	void GenerateMacrosAndTargets ( const Module& module,
-	                                const std::string& cc,
-	                                const std::string& cppc,
-	                                const std::string& ar,
-	                                const std::string* clags,
-	                                const std::string* nasmflags,
-	                                string_list& clean_files ) const;
 	std::string GetSpecObjectDependencies ( const std::string& filename ) const;
 	std::string GetDefaultDependencies ( const Module& module ) const;
 };
@@ -173,6 +166,7 @@ class MingwBuildToolModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBuildToolModuleHandler ();
+	virtual HostType DefaultHost() { return HostTrue; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateBuildToolModuleTarget ( const Module& module, string_list& clean_files );
@@ -183,6 +177,7 @@ class MingwKernelModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateKernelModuleTarget ( const Module& module, string_list& clean_files );
@@ -193,6 +188,7 @@ class MingwStaticLibraryModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwStaticLibraryModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateStaticLibraryModuleTarget ( const Module& module, string_list& clean_files );
@@ -203,6 +199,7 @@ class MingwObjectLibraryModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwObjectLibraryModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateObjectLibraryModuleTarget ( const Module& module, string_list& clean_files );
@@ -213,6 +210,7 @@ class MingwKernelModeDLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModeDLLModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateKernelModeDLLModuleTarget ( const Module& module, string_list& clean_files );
@@ -223,6 +221,7 @@ class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwKernelModeDriverModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateKernelModeDriverModuleTarget ( const Module& module, string_list& clean_files );
@@ -233,6 +232,7 @@ class MingwNativeDLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwNativeDLLModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateNativeDLLModuleTarget ( const Module& module, string_list& clean_files );
@@ -243,6 +243,7 @@ class MingwNativeCUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwNativeCUIModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateNativeCUIModuleTarget ( const Module& module, string_list& clean_files );
@@ -253,6 +254,7 @@ class MingwWin32DLLModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32DLLModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateExtractWineDLLResourcesTarget ( const Module& module, string_list& clean_files );
@@ -264,6 +266,7 @@ class MingwWin32CUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32CUIModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateWin32CUIModuleTarget ( const Module& module, string_list& clean_files );
@@ -274,6 +277,7 @@ class MingwWin32GUIModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwWin32GUIModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateWin32GUIModuleTarget ( const Module& module, string_list& clean_files );
@@ -284,6 +288,7 @@ class MingwBootLoaderModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBootLoaderModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateBootLoaderModuleTarget ( const Module& module, string_list& clean_files );
@@ -294,6 +299,7 @@ class MingwBootSectorModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwBootSectorModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateBootSectorModuleTarget ( const Module& module, string_list& clean_files );
@@ -304,6 +310,7 @@ class MingwIsoModuleHandler : public MingwModuleHandler
 {
 public:
 	MingwIsoModuleHandler ();
+	virtual HostType DefaultHost() { return HostFalse; }
 	virtual void Process ( const Module& module, string_list& clean_files );
 private:
 	void GenerateIsoModuleTarget ( const Module& module, string_list& clean_files );

@@ -312,6 +312,11 @@ MingwBackend::ProcessModule ( Module& module ) const
 		module.node.location,
 		module.type );
 	MingwModuleHandler::string_list clean_files;
+	if ( module.host == HostDefault )
+	{
+		module.host = h->DefaultHost();
+		assert ( module.host != HostDefault );
+	}
 	h->Process ( module, clean_files );
 	h->GenerateCleanTarget ( module, clean_files );
 	h->GenerateDirectoryTargets ();

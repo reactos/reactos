@@ -92,7 +92,8 @@ Module::Module ( const Project& project,
 	  importLibrary (NULL),
 	  bootstrap (NULL),
 	  pch (NULL),
-	  cplusplus (false)
+	  cplusplus (false),
+	  host (HostDefault)
 {
 	if ( node.name != "module" )
 		throw Exception ( "internal tool error: Module created with non-<module> node" );
@@ -127,9 +128,43 @@ Module::Module ( const Project& project,
 
 	att = moduleNode.GetAttribute ( "mangledsymbols", false );
 	if ( att != NULL )
-		mangledSymbols = att->value != "false";
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			mangledSymbols = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			mangledSymbols = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"mangledsymbols",
+				att->value );
+		}
+	}
 	else
 		mangledSymbols = false;
+
+	att = moduleNode.GetAttribute ( "host", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			host = HostTrue;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			host = HostFalse;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"host",
+				att->value );
+		}
+	}
+
+	att = moduleNode.GetAttribute ( "prefix", false );
+	if ( att != NULL )
+		prefix = att->value;
 }
 
 Module::~Module ()
