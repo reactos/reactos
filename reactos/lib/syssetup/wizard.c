@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.18 2004/12/06 09:13:28 rcampbell Exp $
+/* $Id: wizard.c,v 1.19 2004/12/25 11:17:10 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -1398,14 +1398,14 @@ InstallWizard(VOID)
   psp.dwFlags = PSP_DEFAULT | PSP_HIDEHEADER;
   psp.pfnDlgProc = FinishDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_FINISHPAGE);
-  ahpsp[7] = CreatePropertySheetPage(&psp);
+  ahpsp[6] = CreatePropertySheetPage(&psp);
 
   /* Create the property sheet */
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags = PSH_WIZARD97 | PSH_WATERMARK | PSH_HEADER;
   psh.hInstance = hDllInstance;
   psh.hwndParent = NULL;
-  psh.nPages = 8;
+  psh.nPages = 7;
   psh.nStartPage = 0;
   psh.phpage = ahpsp;
   psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
