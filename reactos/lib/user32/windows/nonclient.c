@@ -61,8 +61,8 @@ Already defined in makefile now.
             (((Style) & (WS_BORDER | WS_MINIMIZE)) || (!((Style) & (WS_CHILD | WS_POPUP))))
 
 #define HASSIZEGRIP(Style, ExStyle, ParentStyle, WindowRect, ParentClientRect) \
-            (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD) || \
-             ((Style & WS_CHILD) && !(ParentStyle & WS_MAXIMIZE) && \
+            ((!(Style & WS_CHILD) && (Style & WS_THICKFRAME) && !(Style & WS_MAXIMIZE))  || \
+             ((Style & WS_CHILD) && (ParentStyle & WS_THICKFRAME) && !(ParentStyle & WS_MAXIMIZE) && \
              (WindowRect.right - WindowRect.left == ParentClientRect.right) && \
              (WindowRect.bottom - WindowRect.top == ParentClientRect.bottom)))
 /*
@@ -459,10 +459,6 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
           GetClientRect(Parent, &ParentClientRect);
         if (HASSIZEGRIP(Style, ExStyle, GetWindowLongW(Parent, GWL_STYLE), WindowRect, ParentClientRect))
         {
-           TempRect.top--;
-           TempRect.bottom++;
-           TempRect.left--;
-           TempRect.right++;
            DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
         }
         IntDrawScrollBar(hWnd, hDC, SB_VERT);
