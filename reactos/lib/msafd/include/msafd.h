@@ -460,6 +460,9 @@ VOID SockProcessQueuedAsyncSelect(
 	PIO_STATUS_BLOCK IoStatusBlock
 );
 
+DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
+			    LPDWORD ReturnedBytes );
+
 typedef VOID (*PASYNC_COMPLETION_ROUTINE)(PVOID Context, PIO_STATUS_BLOCK IoStatusBlock);
 
 #endif /* __MSAFD_H */

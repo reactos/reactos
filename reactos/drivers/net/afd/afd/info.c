@@ -1,4 +1,4 @@
-/* $Id: info.c,v 1.4 2004/07/29 04:09:06 arty Exp $
+/* $Id: info.c,v 1.5 2004/12/04 23:29:54 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/info.c
@@ -39,6 +39,10 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    
 	case AFD_INFO_GROUP_ID_TYPE:
 	    InfoReq->Information.Ulong = 0; /* What is group id */
+	    break;
+
+	case AFD_INFO_BLOCKING_MODE:
+	    InfoReq->Information.Ulong = 0;
 	    break;
 	    
 	default:

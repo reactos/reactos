@@ -250,7 +250,7 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n", 
 				  A2S(&NCE->Address), Length));
 	
-	if(Length >= MaskLength && Length > BestLength) {
+	if(Length >= MaskLength && (Length > BestLength || !BestLength)) {
 	    /* This seems to be a better router */
 	    BestNCE    = NCE;
 	    BestLength = Length;
@@ -308,7 +308,7 @@ PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
     }
     
     if( NCE ) 
-	TI_DbgPrint(MID_TRACE,("Interface->MTU: %d\n", NCE->Interface->MTU));
+	TI_DbgPrint(DEBUG_ROUTER,("Interface->MTU: %d\n", NCE->Interface->MTU));
 
     return NCE;
 }

@@ -12,9 +12,9 @@
 #define NDEBUG
 
 #ifndef NDEBUG
-DWORD DebugTraceLevel = DEBUG_TCP;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
 #else
-DWORD DebugTraceLevel = 0; /*DEBUG_IP | DEBUG_PBUFFER | DEBUG_DATALINK;*/
+DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;

@@ -257,6 +257,11 @@ done:
     return (error);    
 }
 
+int OskitTCPShutdown( void *socket, int disconn_type ) {
+    struct socket *so = socket;
+    return soshutdown( socket, disconn_type );
+}
+
 int OskitTCPClose( void *socket ) {
     struct socket *so = socket;
     so->so_connection = 0;
@@ -333,9 +338,6 @@ void OskitTCPSetAddress( void *socket,
     inp->inp_lport = LocalPort;
     inp->inp_faddr.s_addr = RemoteAddress;
     inp->inp_fport = RemotePort;
-    DbgPrint("OSKIT: SET ADDR %x:%x -> %x:%x\n", 
-	     LocalAddress, LocalPort,
-	     RemoteAddress, RemotePort);
 }
 
 void OskitTCPGetAddress( void *socket, 
@@ -350,9 +352,6 @@ void OskitTCPGetAddress( void *socket,
 	*LocalPort = inp->inp_lport;
 	*RemoteAddress = inp->inp_faddr.s_addr;
 	*RemotePort = inp->inp_fport;
-	DbgPrint("OSKIT: GET ADDR %x:%x -> %x:%x\n", 
-		 *LocalAddress, *LocalPort,
-		 *RemoteAddress, *RemotePort);
     }
 }
 

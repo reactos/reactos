@@ -228,8 +228,6 @@ VOID STDCALL LanReceiveWorker( PVOID Context ) {
 		     IPPacket.ContigSize, IPPacket.TotalSize,
 		     BytesTransferred));
 
-	/*OskitDumpBuffer( IPPacket.Header, IPPacket.TotalSize );*/
-
         PacketType = PC(IPPacket.NdisPacket)->PacketType;
 	IPPacket.Position = 0;
 
@@ -574,8 +572,6 @@ VOID LANTransmit(
 		   ((PCHAR)LinkAddress)[4] & 0xff,
 		   ((PCHAR)LinkAddress)[5] & 0xff));
 	}
-
-	/*OskitDumpBuffer( Data, Size );*/
 
 	TcpipAcquireSpinLock( &Adapter->Lock, &OldIrql );
 	TI_DbgPrint(MID_TRACE, ("NdisSend\n"));

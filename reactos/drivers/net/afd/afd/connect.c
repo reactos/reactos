@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.6 2004/11/30 04:49:50 arty Exp $
+/* $Id: connect.c,v 1.7 2004/12/04 23:29:54 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -203,8 +203,9 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    ExFreePool( TargetAddress );
 
 	    AFD_DbgPrint(MID_TRACE,("Queueing IRP %x\n", Irp));
-
-	    return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
+	    
+	    if( Status == STATUS_PENDING ) 
+		return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 	} else Status = STATUS_NO_MEMORY;
 	break;
 

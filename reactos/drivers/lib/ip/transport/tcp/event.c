@@ -66,14 +66,17 @@ int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
 	RemoteAddress.Type = IP_ADDRESS_V4;
 	RemoteAddress.Address.IPv4Address = Header->DstAddr;
     } else {
-	DbgPrint("Don't currently handle IPv6\n");
-	KeBugCheck(4);
+	TI_DbgPrint(MIN_TRACE,("Outgoing packet is not IPv4\n"));
+	OskitDumpBuffer( data, len );
+	return OSK_EINVAL;
     }
 
     RemoteAddress.Type = LocalAddress.Type = IP_ADDRESS_V4;
 
-    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress ))) {
+	TI_DbgPrint(MIN_TRACE,("No route to %s\n", A2S(&RemoteAddress)));
 	return OSK_EADDRNOTAVAIL;
+    }
 
     NdisStatus = AllocatePacketWithBuffer( &Packet.NdisPacket, NULL, 
 					   MaxLLHeaderSize + len );

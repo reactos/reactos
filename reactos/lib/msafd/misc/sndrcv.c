@@ -10,9 +10,11 @@
  *	 Alex 16/07/2004 - Complete Rewrite
  */
 
+#define DBG
 #include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
+#include <debug.h>
 
 INT
 WSPAPI
@@ -101,7 +103,8 @@ WSPRecv(
 	HANDLE						Event;
 	HANDLE                                  SockEvent;
 	PSOCKET_INFORMATION			Socket;
-	
+
+	AFD_DbgPrint(MID_TRACE,("Called\n"));
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -185,45 +188,29 @@ WSPRecv(
 
 	/* Wait for completition of not overlapped */
 	if (Status == STATUS_PENDING && lpOverlapped == NULL) {
-		WaitForSingleObject(SockEvent, 0); // BUGBUG, shouldn wait infintely for receive...
-		Status = IOSB->Status;
+	    /* It's up to the protocol to time out recv.  We must wait
+	     * until the protocol decides it's had enough. */
+	    WaitForSingleObject(SockEvent, INFINITE);
+	    Status = IOSB->Status;
 	}
 
     NtClose( SockEvent );
 
-	/* Return the Flags */
-    	*ReceiveFlags = 0;
+    AFD_DbgPrint(MID_TRACE,("Status %x Information %d\n", 
+			    Status, IOSB->Information));
+
+    /* Return the Flags */
+    *ReceiveFlags = 0;
+
     switch (Status) {
-    case STATUS_CANT_WAIT:
-	return WSAEWOULDBLOCK;
-        
-    case STATUS_SUCCESS:
-	break;
-	
-    case STATUS_PENDING :
-	return WSA_IO_PENDING;
-	
-    case STATUS_BUFFER_OVERFLOW:
-	return WSAEMSGSIZE;
-	
-    case STATUS_RECEIVE_EXPEDITED:
-	*ReceiveFlags = MSG_OOB;
-	break;
-	
-    case STATUS_RECEIVE_PARTIAL_EXPEDITED :
-	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
-	break;
-	
-    case STATUS_RECEIVE_PARTIAL :
-	*ReceiveFlags = MSG_PARTIAL;
-	break;
+    case STATUS_RECEIVE_EXPEDITED: *ReceiveFlags = MSG_OOB; break;
+    case STATUS_RECEIVE_PARTIAL_EXPEDITED: 
+	*ReceiveFlags = MSG_PARTIAL | MSG_OOB; break;
+    case STATUS_RECEIVE_PARTIAL: *ReceiveFlags = MSG_PARTIAL; break;
     }
-    
-    /* Return Number of bytes Read */
-    *lpNumberOfBytesRead = (DWORD)IOSB->Information;
-    
-    /* Success */
-    return STATUS_SUCCESS;
+
+    return MsafdReturnWithErrno
+	( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
 
 int 
@@ -341,39 +328,18 @@ WSPRecvFrom(
 
     NtClose( SockEvent );
 
-	/* Return the Flags */
-    	*ReceiveFlags = 0;
+    /* Return the Flags */
+    *ReceiveFlags = 0;
+
     switch (Status) {
-    case STATUS_CANT_WAIT:
-	return WSAEWOULDBLOCK;
+    case STATUS_RECEIVE_EXPEDITED: *ReceiveFlags = MSG_OOB; break;
+    case STATUS_RECEIVE_PARTIAL_EXPEDITED: 
+	*ReceiveFlags = MSG_PARTIAL | MSG_OOB; break;
+    case STATUS_RECEIVE_PARTIAL: *ReceiveFlags = MSG_PARTIAL; break;
+    }
 
-    case STATUS_SUCCESS:
-	break;
-	
-    case STATUS_PENDING :
-	return WSA_IO_PENDING;
-	
-    case STATUS_BUFFER_OVERFLOW:
-	return WSAEMSGSIZE;
-	
-    case STATUS_RECEIVE_EXPEDITED:
-	*ReceiveFlags = MSG_OOB;
-	break;
-	
-    case STATUS_RECEIVE_PARTIAL_EXPEDITED :
-	*ReceiveFlags = MSG_PARTIAL | MSG_OOB;
-	break;
-	
-    case STATUS_RECEIVE_PARTIAL :
-	*ReceiveFlags = MSG_PARTIAL;
-	break;
-	}
-
-	/* Return Number of bytes Read */
-    *lpNumberOfBytesRead = (DWORD)IOSB->Information;
-
-	/* Success */
-	return STATUS_SUCCESS;
+    return MsafdReturnWithErrno
+	( Status, lpErrno, IOSB->Information, lpNumberOfBytesRead );
 }
 
 
@@ -483,13 +449,10 @@ WSPSend(
 	    return WSA_IO_PENDING;
 	}
 
-	/* Return Number of bytes Sent */
-	*lpNumberOfBytesSent = (DWORD)IOSB->Information;
-
 	AFD_DbgPrint(MID_TRACE,("Leaving (Success, %d)\n", IOSB->Information));
 
-	/* Success */
-	return STATUS_SUCCESS;
+    return MsafdReturnWithErrno
+	( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
 }
 
 int 
@@ -611,11 +574,8 @@ WSPSendTo(
         return WSA_IO_PENDING;
 	}
 
-	/* Return Number of bytes Sent */
-    *lpNumberOfBytesSent = (DWORD)IOSB->Information;
-
-	/* Success */
-	return STATUS_SUCCESS;
+    return MsafdReturnWithErrno
+	( Status, lpErrno, IOSB->Information, lpNumberOfBytesSent );
 }
 INT
 WSPAPI

@@ -259,6 +259,24 @@ error:
 }
 
 
+DWORD MsafdReturnWithErrno( NTSTATUS Status, LPINT Errno, DWORD Received,
+			    LPDWORD ReturnedBytes ) {
+    switch (Status) {
+    case STATUS_CANT_WAIT: *Errno = WSAEWOULDBLOCK; break;
+    case STATUS_TIMEOUT:
+    case STATUS_SUCCESS: 
+	/* Return Number of bytes Read */
+	if( ReturnedBytes ) *ReturnedBytes = Received; break;
+    case STATUS_PENDING: *Errno = WSA_IO_PENDING; break;
+    case STATUS_BUFFER_OVERFLOW: *Errno = WSAEMSGSIZE; break;
+    default: *Errno = WSAEINVAL; break;
+    }
+
+    /* Success */
+    return Status == STATUS_SUCCESS ? 0 : SOCKET_ERROR;
+}
+
+
 INT
 WSPAPI
 WSPCloseSocket(
@@ -357,7 +375,8 @@ WSPBind(
 
 	NtClose( SockEvent );
 
-	return 0;
+	return MsafdReturnWithErrno
+	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
 }
 
 int 
@@ -403,7 +422,8 @@ WSPListen(
 
 	NtClose( SockEvent );
 
-	return 0;
+	return MsafdReturnWithErrno
+	    ( IOSB.Status, lpErrno, IOSB.Information, NULL );
 }
 
 
@@ -430,7 +450,7 @@ WSPSelect(
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 			    NULL, 1, FALSE );
     
-    if( !NT_SUCCESS(Status) ) return -1;
+    if( !NT_SUCCESS(Status) ) return SOCKET_ERROR;
     
     /* Find out how many sockets we have, and how large the buffer needs 
      * to be */
@@ -544,6 +564,7 @@ WSPSelect(
     }
 
     NtClose( SockEvent );
+
     switch( IOSB.Status ) {
     case STATUS_SUCCESS: 
     case STATUS_TIMEOUT: *lpErrno = 0; break;
@@ -913,8 +934,8 @@ WSPConnect(
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 	NtClose( SockEvent );
-
-	return Status;
+    
+    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
 }
 int
 WSPAPI 
@@ -983,7 +1004,7 @@ WSPShutdown(
 
 	NtClose( SockEvent );
 
-	return 0;
+    return MsafdReturnWithErrno( IOSB.Status, lpErrno, 0, NULL );
 }
 
 
@@ -1033,13 +1054,13 @@ WSPIoctl(
 
     switch( dwIoControlCode ) {
     case FIONBIO:
-	if( cbInBuffer < sizeof(INT) ) return -1;
+	if( cbInBuffer < sizeof(INT) ) return SOCKET_ERROR;
 	Socket->SharedData.NonBlocking = *((PINT)lpvInBuffer) ? 1 : 0;
 	AFD_DbgPrint(MID_TRACE,("[%x] Set nonblocking %d\n",
 				Handle, Socket->SharedData.NonBlocking));
 	return 0;
     default:
-	return -1;
+	return SOCKET_ERROR;
     }
 }
 

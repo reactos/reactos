@@ -38,7 +38,7 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     struct sockaddr_in *dstaddr_in = (struct sockaddr_in *)&addr_in[1];
     if( !ifaddr ) return NULL;
 
-    TI_DbgPrint(MID_TRACE,("Called\n"));
+    TI_DbgPrint(DEBUG_TCPIF,("Called\n"));
 
     ifaddr->ifa_dstaddr = (struct sockaddr *)dstaddr_in;
     /* XXX - Point-to-point interfaces not supported yet */
@@ -52,7 +52,7 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     if( !NT_SUCCESS(Status) )
 	addr_in->sin_addr.s_addr = 0;
 
-    TI_DbgPrint(MID_TRACE,("Prepare interface %x : addr %x\n",
+    TI_DbgPrint(DEBUG_TCPIF,("Prepare interface %x : addr %x\n",
 			   IF, addr_in->sin_addr.s_addr));
     
     ifaddr->ifa_flags = 0; /* XXX what goes here? */
@@ -60,7 +60,7 @@ PVOID TCPPrepareInterface( PIP_INTERFACE IF ) {
     ifaddr->ifa_metric = 1; /* We can get it like in ninfo.c, if we want */
     ifaddr->ifa_mtu = IF->MTU;
 
-    TI_DbgPrint(MID_TRACE,("Leaving\n"));
+    TI_DbgPrint(DEBUG_TCPIF,("Leaving\n"));
 
     return ifaddr;
 }
@@ -74,34 +74,34 @@ POSK_IFADDR TCPFindInterface( void *ClientData,
     IP_ADDRESS Destination;
     struct sockaddr_in *addr_in = (struct sockaddr_in *)ReqAddr;
     
-    TI_DbgPrint(MID_TRACE,("called for type %d\n", FindType));
+    TI_DbgPrint(DEBUG_TCPIF,("called for type %d\n", FindType));
 
     if( !ReqAddr ) {
-	TI_DbgPrint(MID_TRACE,("no addr or no ifaddr (%x)\n", ReqAddr));
+	TI_DbgPrint(DEBUG_TCPIF,("no addr or no ifaddr (%x)\n", ReqAddr));
 	return NULL;
     }
 
     Destination.Type = IP_ADDRESS_V4;
     Destination.Address.IPv4Address = addr_in->sin_addr.s_addr;
 
-    TI_DbgPrint(MID_TRACE,("Address is %x\n", addr_in->sin_addr.s_addr));
+    TI_DbgPrint(DEBUG_TCPIF,("Address is %x\n", addr_in->sin_addr.s_addr));
 
-    NCE = RouterGetRoute(&Destination);
+    NCE = RouteGetRouteToDestination(&Destination);
 
     if( !NCE || !NCE->Interface ) {
-	TI_DbgPrint(MID_TRACE,("no neighbor cache or no interface (%x %x)\n",
+	TI_DbgPrint(DEBUG_TCPIF,("no neighbor cache or no interface (%x %x)\n",
 			       NCE, NCE ? NCE->Interface : 0));
 	return NULL;
     }
 
-    TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
-    TI_DbgPrint(MID_TRACE,("NCE->Interface: %x\n", NCE->Interface));
-    TI_DbgPrint(MID_TRACE,("NCE->Interface->TCPContext: %x\n", 
+    TI_DbgPrint(DEBUG_TCPIF,("NCE: %x\n", NCE));
+    TI_DbgPrint(DEBUG_TCPIF,("NCE->Interface: %x\n", NCE->Interface));
+    TI_DbgPrint(DEBUG_TCPIF,("NCE->Interface->TCPContext: %x\n", 
 			   NCE->Interface->TCPContext));
 
     addr_in = (struct sockaddr_in *)
 	((POSK_IFADDR)NCE->Interface->TCPContext)->ifa_addr;
-    TI_DbgPrint(MID_TRACE,("returning addr %x\n", addr_in->sin_addr.s_addr));
+    TI_DbgPrint(DEBUG_TCPIF,("returning addr %x\n", addr_in->sin_addr.s_addr));
     
     return NCE->Interface->TCPContext;
 }
