@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.45 2001/09/09 21:28:05 ekohl Exp $
+/* $Id: ide.c,v 1.46 2001/11/01 00:28:57 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -80,48 +80,6 @@
 #define PARTITION_FIX
 
 //  -------------------------------------------------------  File Static Data
-
-#define PCI_TYPE0_ADDRESSES             6
-#define PCI_TYPE1_ADDRESSES             2
-
-typedef struct _PCI_COMMON_CONFIG
-{
-  USHORT VendorID;                   // (ro)
-  USHORT DeviceID;                   // (ro)
-  USHORT Command;                    // Device control
-  USHORT Status;
-  UCHAR  RevisionID;                 // (ro)
-  UCHAR  ProgIf;                     // (ro)
-  UCHAR  SubClass;                   // (ro)
-  UCHAR  BaseClass;                  // (ro)
-  UCHAR  CacheLineSize;              // (ro+)
-  UCHAR  LatencyTimer;               // (ro+)
-  UCHAR  HeaderType;                 // (ro)
-  UCHAR  BIST;                       // Built in self test
-
-  union
-    {
-      struct _PCI_HEADER_TYPE_0
-        {
-          ULONG  BaseAddresses[PCI_TYPE0_ADDRESSES];
-          ULONG  CIS;
-          USHORT SubVendorID;
-          USHORT SubSystemID;
-          ULONG  ROMBaseAddress;
-          ULONG  Reserved2[2];
-
-          UCHAR  InterruptLine;      //
-          UCHAR  InterruptPin;       // (ro)
-          UCHAR  MinimumGrant;       // (ro)
-          UCHAR  MaximumLatency;     // (ro)
-        } type0;
-
-
-    } u;
-
-  UCHAR  DeviceSpecific[192];
-
-} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
 
 
 typedef struct _IDE_CONTROLLER_PARAMETERS 
@@ -645,6 +603,7 @@ IDEResetController(IN WORD CommandPort,
   return  IDEReadError(CommandPort) == 1;
 }
 
+
 //    IDECreateDevices
 //
 //  DESCRIPTION:
@@ -683,7 +642,6 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   PDEVICE_OBJECT         DiskDeviceObject;
   PDEVICE_OBJECT         PartitionDeviceObject;
   PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
-//  PIDE_DEVICE_EXTENSION  PartitionDeviceExtension;
   UNICODE_STRING         UnicodeDeviceDirName;
   OBJECT_ATTRIBUTES      DeviceDirAttributes;
   HANDLE                 Handle;
@@ -703,7 +661,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Get the Drive Identification Data */
   if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
     {
-      DPRINT("Giving up on drive %d on controller %d...\n", 
+      CHECKPOINT1;
+      DbgPrint("Giving up on drive %d on controller %d...\n", 
              DriveIdx,
              ControllerExtension->Number);
       return  FALSE;
@@ -756,10 +715,6 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Increase number of available physical disk drives */
   IoGetConfigurationInformation()->DiskCount++;
 
-  /* Initialize device extension for the disk device */
-//  DiskDeviceExtension = (PIDE_DEVICE_EXTENSION)DiskDeviceObject->DeviceExtension;
-//  DiskDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
-
   /*
    * Initialize the controller timer here
    * (since it has to be tied to a device)
@@ -809,18 +764,11 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                                         HarddiskIdx,
                                         &DrvParms,
                                         PartitionEntry);
-//                                        PartitionEntry->PartitionNumber,
-//                                        PartitionEntry->StartingOffset.QuadPart / 512 /* DrvParms.BytesPerSector*/,
-//                                        PartitionEntry->PartitionLength.QuadPart / 512 /*DrvParms.BytesPerSector*/);
       if (!NT_SUCCESS(Status))
         {
           DbgPrint("IDECreateDevice() failed\n");
           break;
         }
-
-      /* Initialize pointer to disk device extension */
-//      PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
-//      PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
    }
 
    if (PartitionList != NULL)
@@ -847,15 +795,16 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
 //
 
 BOOLEAN  
-IDEGetDriveIdentification(IN int CommandPort, 
-                          IN int DriveNum, 
-                          OUT PIDE_DRIVE_IDENTIFY DrvParms) 
+IDEGetDriveIdentification(IN int CommandPort,
+                          IN int DriveNum,
+                          OUT PIDE_DRIVE_IDENTIFY DrvParms)
 {
 
     //  Get the Drive Identify block from drive or die
   if (IDEPolledRead(CommandPort, 0, 0, 0, 0, 0, (DriveNum ? IDE_DH_DRV1 : 0),
                     IDE_CMD_IDENT_DRV, (BYTE *)DrvParms) != 0) 
     {
+      CHECKPOINT1;
       return FALSE;
     }
 
@@ -1045,9 +994,6 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
                          IN ULONG DiskNumber,
                          IN PIDE_DRIVE_IDENTIFY DrvParms,
                          IN PPARTITION_INFORMATION PartitionInfo)
-//                         IN ULONG PartitionNumber,
-//                         IN ULONGLONG Offset,
-//                         IN ULONGLONG Size)
 {
   WCHAR                  NameBuffer[IDE_MAX_NAME_LENGTH];
   WCHAR                  ArcNameBuffer[IDE_MAX_NAME_LENGTH + 15];
@@ -1153,31 +1099,32 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
 //    int  0 is success, non 0 is an error code
 //
 
-static int 
-IDEPolledRead(IN WORD Address, 
-              IN BYTE PreComp, 
-              IN BYTE SectorCnt, 
-              IN BYTE SectorNum , 
-              IN BYTE CylinderLow, 
-              IN BYTE CylinderHigh, 
-              IN BYTE DrvHead, 
-              IN BYTE Command, 
-              OUT BYTE *Buffer) 
+static int
+IDEPolledRead(IN WORD Address,
+              IN BYTE PreComp,
+              IN BYTE SectorCnt,
+              IN BYTE SectorNum,
+              IN BYTE CylinderLow,
+              IN BYTE CylinderHigh,
+              IN BYTE DrvHead,
+              IN BYTE Command,
+              OUT BYTE *Buffer)
 {
   BYTE   Status;
   int    RetryCount;
 
   /*  Wait for STATUS.BUSY to clear  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++) 
+  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
-      if (!(Status & IDE_SR_BUSY))
+      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
+//      if (!(Status & IDE_SR_BUSY))
         {
           break;
         }
       KeStallExecutionProcessor(10);
     }
-  if (RetryCount == IDE_MAX_BUSY_RETRIES) 
+  if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
       return IDE_ER_ABRT;
     }
@@ -1185,39 +1132,40 @@ IDEPolledRead(IN WORD Address,
   /*  Write Drive/Head to select drive  */
   IDEWriteDriveHead(Address, IDE_DH_FIXED | DrvHead);
 
-  /*  Wait for STATUS.BUSY to clear and STATUS.DRDY to assert  */
-  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++) 
+  /*  Wait for STATUS.BUSY and STATUS.DRQ to clear  */
+  for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
     {
       Status = IDEReadStatus(Address);
-      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
+      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
         {
           break;
         }
       KeStallExecutionProcessor(10);
     }
-  if (RetryCount == IDE_MAX_BUSY_RETRIES) 
+  if (RetryCount == IDE_MAX_BUSY_RETRIES)
     {
+      CHECKPOINT1;
       return IDE_ER_ABRT;
     }
 
   /*  Issue command to drive  */
-  if (DrvHead & IDE_DH_LBA) 
+  if (DrvHead & IDE_DH_LBA)
     {
       DPRINT("READ:DRV=%d:LBA=1:BLK=%08d:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0, 
+             DrvHead & IDE_DH_DRV1 ? 1 : 0,
              ((DrvHead & 0x0f) << 24) + (CylinderHigh << 16) + (CylinderLow << 8) + SectorNum,
-             SectorCnt, 
+             SectorCnt,
              Command);
-    } 
-  else 
+    }
+  else
     {
       DPRINT("READ:DRV=%d:LBA=0:CH=%02x:CL=%02x:HD=%01x:SN=%02x:SC=%02x:CM=%02x\n",
-             DrvHead & IDE_DH_DRV1 ? 1 : 0, 
-             CylinderHigh, 
-             CylinderLow, 
-             DrvHead & 0x0f, 
-             SectorNum, 
-             SectorCnt, 
+             DrvHead & IDE_DH_DRV1 ? 1 : 0,
+             CylinderHigh,
+             CylinderLow,
+             DrvHead & 0x0f,
+             SectorNum,
+             SectorCnt,
              Command);
     }
 
@@ -1233,23 +1181,21 @@ IDEPolledRead(IN WORD Address,
   IDEWriteCommand(Address, Command);
   KeStallExecutionProcessor(50);
 
-  while (1) 
+  while (1)
     {
-
-        //  wait for DRQ or error
+      /*  wait for DRQ or error  */
       for (RetryCount = 0; RetryCount < IDE_MAX_POLL_RETRIES; RetryCount++)
         {
           Status = IDEReadStatus(Address);
-          if (!(Status & IDE_SR_BUSY)) 
+          if (!(Status & IDE_SR_BUSY))
             {
-              if (Status & IDE_SR_ERR) 
-                {
-                  BYTE  Err = IDEReadError(Address);
-                  return Err;
-                } 
-              else if (Status & IDE_SR_DRQ) 
+              if (Status & IDE_SR_DRQ)
                 {
                   break;
+                }
+              else
+                {
+                  return IDE_ER_ABRT;
                 }
             }
           KeStallExecutionProcessor(10);
@@ -1259,17 +1205,25 @@ IDEPolledRead(IN WORD Address,
           return IDE_ER_ABRT;
         }
 
-        //  Read data into buffer
+      /*  Read data into buffer  */
       IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
       Buffer += IDE_SECTOR_BUF_SZ;
 
-        //  Check for more sectors to read
-      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES &&
-          (IDEReadStatus(Address) & IDE_SR_DRQ); RetryCount++)
-        ;
-      if (!(IDEReadStatus(Address) & IDE_SR_BUSY)) 
+      /*  Check for more sectors to read  */
+      for (RetryCount = 0; RetryCount < IDE_MAX_BUSY_RETRIES; RetryCount++)
         {
-          return 0;
+          Status = IDEReadStatus(Address);
+          if (!(Status & IDE_SR_BUSY))
+            {
+              if (Status & IDE_SR_DRQ)
+                {
+                  break;
+                }
+              else
+                {
+                  return 0;
+                }
+            }
         }
     }
 }

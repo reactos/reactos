@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.2 2001/09/23 22:14:03 chorns Exp $
+/* $Id: haltypes.h,v 1.3 2001/11/01 00:25:28 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -66,6 +66,166 @@ typedef struct _DEVICE_DESCRIPTION
   ULONG MaximumLength;
   ULONG DmaPort;
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
+
+
+/* PCI bus definitions */
+
+#define PCI_TYPE0_ADDRESSES	6
+#define PCI_TYPE1_ADDRESSES	2
+#define PCI_TYPE2_ADDRESSES	5
+
+typedef struct _PCI_COMMON_CONFIG
+{
+  USHORT VendorID;		/* read-only */
+  USHORT DeviceID;		/* read-only */
+  USHORT Command;
+  USHORT Status;
+  UCHAR  RevisionID;		/* read-only */
+  UCHAR  ProgIf;		/* read-only */
+  UCHAR  SubClass;		/* read-only */
+  UCHAR  BaseClass;		/* read-only */
+  UCHAR  CacheLineSize;		/* read-only */
+  UCHAR  LatencyTimer;		/* read-only */
+  UCHAR  HeaderType;		/* read-only */
+  UCHAR  BIST;
+  union
+    {
+      struct _PCI_HEADER_TYPE_0
+	{
+	  ULONG  BaseAddresses[PCI_TYPE0_ADDRESSES];
+	  ULONG  CIS;
+	  USHORT SubVendorID;
+	  USHORT SubSystemID;
+	  ULONG  ROMBaseAddress;
+	  ULONG  Reserved2[2];
+
+	  UCHAR  InterruptLine;
+	  UCHAR  InterruptPin;		/* read-only */
+	  UCHAR  MinimumGrant;		/* read-only */
+	  UCHAR  MaximumLatency;	/* read-only */
+	} type0;
+
+      /* PCI to PCI Bridge */
+      struct _PCI_HEADER_TYPE_1
+	{
+	  ULONG  BaseAddresses[PCI_TYPE1_ADDRESSES];
+	  UCHAR  PrimaryBus;
+	  UCHAR  SecondaryBus;
+	  UCHAR  SubordinateBus;
+	  UCHAR  SecondaryLatency;
+	  UCHAR  IOBase;
+	  UCHAR  IOLimit;
+	  USHORT SecondaryStatus;
+	  USHORT MemoryBase;
+	  USHORT MemoryLimit;
+	  USHORT PrefetchBase;
+	  USHORT PrefetchLimit;
+	  ULONG  PrefetchBaseUpper32;
+	  ULONG  PrefetchLimitUpper32;
+	  USHORT IOBaseUpper16;
+	  USHORT IOLimitUpper16;
+	  UCHAR  CapabilitiesPtr;
+	  UCHAR  Reserved1[3];
+	  ULONG  ROMBaseAddress;
+	  UCHAR  InterruptLine;
+	  UCHAR  InterruptPin;
+	  USHORT BridgeControl;
+	} type1;
+
+      /* PCI to CARDBUS Bridge */
+      struct _PCI_HEADER_TYPE_2
+	{
+	  ULONG  SocketRegistersBaseAddress;
+	  UCHAR  CapabilitiesPtr;
+	  UCHAR  Reserved;
+	  USHORT SecondaryStatus;
+	  UCHAR  PrimaryBus;
+	  UCHAR  SecondaryBus;
+	  UCHAR  SubordinateBus;
+	  UCHAR  SecondaryLatency;
+	  struct
+	    {
+	      ULONG Base;
+	      ULONG Limit;
+	    } Range[PCI_TYPE2_ADDRESSES-1];
+	  UCHAR  InterruptLine;
+	  UCHAR  InterruptPin;
+	  USHORT BridgeControl;
+	} type2;
+    } u;
+  UCHAR DeviceSpecific[192];
+} PCI_COMMON_CONFIG, *PPCI_COMMON_CONFIG;
+
+#define PCI_COMMON_HDR_LENGTH (FIELD_OFFSET (PCI_COMMON_CONFIG, DeviceSpecific))
+
+#define PCI_MAX_DEVICES                     32
+#define PCI_MAX_FUNCTION                    8
+
+#define PCI_INVALID_VENDORID                0xFFFF
+
+
+/* Bit encodings for  PCI_COMMON_CONFIG.HeaderType */
+
+#define PCI_MULTIFUNCTION                   0x80
+#define PCI_DEVICE_TYPE                     0x00
+#define PCI_BRIDGE_TYPE                     0x01
+
+
+/* Bit encodings for PCI_COMMON_CONFIG.Command */
+
+#define PCI_ENABLE_IO_SPACE                 0x0001
+#define PCI_ENABLE_MEMORY_SPACE             0x0002
+#define PCI_ENABLE_BUS_MASTER               0x0004
+#define PCI_ENABLE_SPECIAL_CYCLES           0x0008
+#define PCI_ENABLE_WRITE_AND_INVALIDATE     0x0010
+#define PCI_ENABLE_VGA_COMPATIBLE_PALETTE   0x0020
+#define PCI_ENABLE_PARITY                   0x0040
+#define PCI_ENABLE_WAIT_CYCLE               0x0080
+#define PCI_ENABLE_SERR                     0x0100
+#define PCI_ENABLE_FAST_BACK_TO_BACK        0x0200
+
+
+/* Bit encodings for PCI_COMMON_CONFIG.Status */
+
+#define PCI_STATUS_FAST_BACK_TO_BACK        0x0080
+#define PCI_STATUS_DATA_PARITY_DETECTED     0x0100
+#define PCI_STATUS_DEVSEL                   0x0600  /* 2 bits wide */
+#define PCI_STATUS_SIGNALED_TARGET_ABORT    0x0800
+#define PCI_STATUS_RECEIVED_TARGET_ABORT    0x1000
+#define PCI_STATUS_RECEIVED_MASTER_ABORT    0x2000
+#define PCI_STATUS_SIGNALED_SYSTEM_ERROR    0x4000
+#define PCI_STATUS_DETECTED_PARITY_ERROR    0x8000
+
+
+/* Bit encodes for PCI_COMMON_CONFIG.u.type0.BaseAddresses */
+
+#define PCI_ADDRESS_IO_SPACE                0x00000001
+#define PCI_ADDRESS_MEMORY_TYPE_MASK        0x00000006
+#define PCI_ADDRESS_MEMORY_PREFETCHABLE     0x00000008
+
+#define PCI_TYPE_32BIT      0
+#define PCI_TYPE_20BIT      2
+#define PCI_TYPE_64BIT      4
+
+
+/* Bit encodes for PCI_COMMON_CONFIG.u.type0.ROMBaseAddresses */
+
+#define PCI_ROMADDRESS_ENABLED              0x00000001
+
+
+typedef struct _PCI_SLOT_NUMBER
+{
+  union
+    {
+      struct
+	{
+	  ULONG DeviceNumber:5;
+	  ULONG FunctionNumber:3;
+	  ULONG Reserved:24;
+	} bits;
+      ULONG AsULONG;
+    } u;
+} PCI_SLOT_NUMBER, *PPCI_SLOT_NUMBER;
 
 
 /* Hal dispatch table */
