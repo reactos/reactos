@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.99 2003/11/24 21:20:35 gvg Exp $
+/* $Id: dc.c,v 1.100 2003/11/25 22:11:37 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -47,6 +47,7 @@
 #include <include/inteng.h>
 #include <include/eng.h>
 #include <include/palette.h>
+#include <include/guicheck.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -54,7 +55,6 @@
 #define TAG_DC  TAG('D', 'C', 'D', 'C')
 
 static GDIDEVICE PrimarySurface;
-static BOOL PrimarySurfaceCreated = FALSE;
 
 /* FIXME: DCs should probably be thread safe  */
 
@@ -127,7 +127,7 @@ NtGdiCancelDC(HDC  hDC)
 }
 
 HDC STDCALL
-NtGdiCreateCompatableDC(HDC  hDC)
+NtGdiCreateCompatableDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
   HBITMAP  hBitmap;
@@ -137,30 +137,22 @@ NtGdiCreateCompatableDC(HDC  hDC)
   PSURFGDI SurfGDI;
 
   if (hDC == NULL)
-  {
-    if (! PrimarySurfaceCreated)
-      {
-        DPRINT1("Can't create compatible DC because initialization of primary surface failed\n");
-        return NULL;
-      }
-    OrigDC = NULL;
-    hNewDC = DC_AllocDC(L"DISPLAY");
-  }
-  else
-  {
-    /*  Allocate a new DC based on the original DC's device  */
-    OrigDC = DC_LockDc(hDC);
-    if (NULL == OrigDC)
+    {
+      return NtGdiCreateDC(L"DISPLAY", NULL, NULL, NULL);
+    }
+
+  /*  Allocate a new DC based on the original DC's device  */
+  OrigDC = DC_LockDc(hDC);
+  if (NULL == OrigDC)
     {
       return NULL;
     }
-    hNewDC = DC_AllocDC(OrigDC->DriverName);
-  }
+  hNewDC = DC_AllocDC(OrigDC->DriverName);
 
   if (NULL == hNewDC)
-  {
-    return  NULL;
-  }
+    {
+      return  NULL;
+    }
   NewDC = DC_LockDc( hNewDC );
 
   /* Copy information from original DC to new DC  */
@@ -472,9 +464,8 @@ SetupDevMode(PDEVMODEW DevMode)
   return Valid;
 }
 
-BOOL STDCALL
-NtGdiCreatePrimarySurface(LPCWSTR Driver,
-				      LPCWSTR Device)
+BOOL FASTCALL
+IntCreatePrimarySurface()
 {
   PGD_ENABLEDRIVER GDEnableDriver;
   DRVENABLEDATA DED;
@@ -487,68 +478,68 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   extern void FASTCALL IntInitDesktopWindow(ULONG Width, ULONG Height);
 
   /*  Open the miniport driver  */
-  if ((PrimarySurface.VideoDeviceObject = DRIVER_FindMPDriver(Driver)) == NULL)
-  {
-    DPRINT1("FindMPDriver failed\n");
-    return(FALSE);
-  }
+  if ((PrimarySurface.VideoDeviceObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
+    {
+      DPRINT1("FindMPDriver failed\n");
+      return FALSE;
+    }
 
   /*  Retrieve DDI driver names from registry */
   RtlInitUnicodeString(&DriverFileNames, NULL);
   if (! FindDriverFileNames(&DriverFileNames))
-  {
-    DPRINT1("FindDriverFileNames failed\n");
-    return(FALSE);
-  }
+    {
+      DPRINT1("FindDriverFileNames failed\n");
+      return FALSE;
+    }
 
   /* DriverFileNames may be a list of drivers in REG_SZ_MULTI format, scan all of
      them until a good one found */
   CurrentName = DriverFileNames.Buffer;
   GotDriver = FALSE;
   while (! GotDriver && CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-  {
-    /*  Get the DDI driver's entry point  */
-    GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
-    if (NULL == GDEnableDriver)
     {
-      DPRINT("FindDDIDriver failed for %S\n", CurrentName);
-    }
-    else
-    {
-      /*  Call DDI driver's EnableDriver function  */
-      RtlZeroMemory(&DED, sizeof(DED));
-
-      if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
-      {
-        DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
-      }
+      /*  Get the DDI driver's entry point  */
+      GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+      if (NULL == GDEnableDriver)
+        {
+          DPRINT("FindDDIDriver failed for %S\n", CurrentName);
+        }
       else
-      {
-        GotDriver = TRUE;
-      }
-    }
+        {
+          /*  Call DDI driver's EnableDriver function  */
+          RtlZeroMemory(&DED, sizeof(DED));
 
-    if (! GotDriver)
-    {
-      /* Skip to the next name but never get past the Unicode string */
-      while (L'\0' != *CurrentName &&
-             CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-      {
-	CurrentName++;
-      }
-      if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
-      {
-        CurrentName++;
-      }
+          if (! GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+            {
+              DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
+            }
+          else
+            {
+              GotDriver = TRUE;
+            }
+        }
+
+      if (! GotDriver)
+        {
+          /* Skip to the next name but never get past the Unicode string */
+          while (L'\0' != *CurrentName &&
+                 CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+            {
+              CurrentName++;
+            }
+          if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+            {
+              CurrentName++;
+            }
+        }
     }
-  }
   RtlFreeUnicodeString(&DriverFileNames);
   if (! GotDriver)
-  {
-    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
-    DPRINT1("No suitable DDI driver found\n");
-    return FALSE;
-  }
+    {
+      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+      DPRINT1("No suitable DDI driver found\n");
+      return FALSE;
+    }
 
   DPRINT("Display driver %S loaded\n", CurrentName);
 
@@ -558,12 +549,12 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   RtlZeroMemory(&PrimarySurface.DriverFunctions, sizeof(PrimarySurface.DriverFunctions));
 
   /*  Construct DDI driver function dispatch table  */
-  if (!DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
-  {
-    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
-    DPRINT1("BuildDDIFunctions failed\n");
-    return(FALSE);
-  }
+  if (! DRIVER_BuildDDIFunctions(&DED, &PrimarySurface.DriverFunctions))
+    {
+      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+      DPRINT1("BuildDDIFunctions failed\n");
+      return FALSE;
+    }
 
   /*  Allocate a phyical device handle from the driver  */
   if (SetupDevMode(&PrimarySurface.DMW))
@@ -617,15 +608,15 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
     }
 
   if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
-  {
-    DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
-    PrimarySurface.GDIInfo.ulLogPixelsX = 96;
-  }
+    {
+      DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
+      PrimarySurface.GDIInfo.ulLogPixelsX = 96;
+    }
   if (0 == PrimarySurface.GDIInfo.ulLogPixelsY)
-  {
-    DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
-    PrimarySurface.GDIInfo.ulLogPixelsY = 96;
-  }
+    {
+      DPRINT("Adjusting GDIInfo.ulLogPixelsY\n");
+      PrimarySurface.GDIInfo.ulLogPixelsY = 96;
+    }
   GDIOBJ_MarkObjectGlobal(PrimarySurface.DevInfo.hpalDefault);
 
   DPRINT("calling completePDev\n");
@@ -636,7 +627,7 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
 
   DPRINT("calling DRIVER_ReferenceDriver\n");
 
-  DRIVER_ReferenceDriver (Driver);
+  DRIVER_ReferenceDriver(L"DISPLAY");
 
   DPRINT("calling EnableSurface\n");
 
@@ -658,6 +649,21 @@ NtGdiCreatePrimarySurface(LPCWSTR Driver,
   return TRUE;
 }
 
+VOID FASTCALL
+IntDestroyPrimarySurface()
+  {
+    DRIVER_UnreferenceDriver(L"DISPLAY");
+
+    DPRINT("Reseting display\n" );
+    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
+    PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
+    PrimarySurface.DriverFunctions.DisablePDev(PrimarySurface.PDev);
+
+    DceEmptyCache();
+
+    ObDereferenceObject(PrimarySurface.VideoDeviceObject);
+  }
+
 HDC STDCALL
 NtGdiCreateDC(LPCWSTR  Driver,
              LPCWSTR  Device,
@@ -669,6 +675,15 @@ NtGdiCreateDC(LPCWSTR  Driver,
   HDC      hDC = NULL;
   PSURFGDI SurfGDI;
   HRGN     hVisRgn;
+
+  if (NULL == Driver || 0 == _wcsicmp(Driver, L"DISPLAY"))
+    {
+      if (! IntGraphicsCheck(TRUE))
+        {
+          DPRINT1("Unable to initialize graphics, returning NULL dc\n");
+          return NULL;
+        }
+    }
 
   /*  Check for existing DC object  */
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
@@ -688,17 +703,6 @@ NtGdiCreateDC(LPCWSTR  Driver,
   NewDC = DC_LockDc( hNewDC );
   ASSERT( NewDC );
 
-  if (! PrimarySurfaceCreated)
-    {
-      PrimarySurfaceCreated = TRUE;
-      if (!NtGdiCreatePrimarySurface(Driver, Device))
-	{
-	  PrimarySurfaceCreated = FALSE;
-	  DC_UnlockDc( hNewDC );
-	  DC_FreeDC(hNewDC);
-	  return  NULL;
-	}
-    }
   NewDC->DMW = PrimarySurface.DMW;
   NewDC->DevInfo = &PrimarySurface.DevInfo;
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;
@@ -1918,23 +1922,6 @@ DC_FreeDC(HDC  DCToFree)
 BOOL FASTCALL
 DC_InternalDeleteDC( PDC DCToDelete )
 {
-  if (! (DCToDelete->w.flags & DC_MEMORY)  /* Don't reset the display if its a memory DC */
-      && NULL != DCToDelete->DriverName
-      && ! DRIVER_UnreferenceDriver (DCToDelete->DriverName))
-    {
-      DPRINT( "No more references to driver, reseting display\n" );
-      DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
-      CHECKPOINT;
-      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
-      CHECKPOINT;
-      DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
-
-      DceEmptyCache();
-
-      ObDereferenceObject(PrimarySurface.VideoDeviceObject);
-
-      PrimarySurfaceCreated = FALSE;
-    }
 
   if (NULL != DCToDelete->DriverName)
     {
