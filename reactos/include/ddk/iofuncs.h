@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.40 2003/11/14 15:19:35 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.41 2003/11/19 20:57:22 gdalsnes Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -754,6 +754,13 @@ IoInitializeIrp (
 	USHORT	PacketSize,
 	CCHAR	StackSize
 	);
+  
+VOID STDCALL
+IoReuseIrp(
+  IN OUT PIRP Irp,
+  IN NTSTATUS Status
+  );
+  
 NTSTATUS
 STDCALL
 IoInitializeTimer (

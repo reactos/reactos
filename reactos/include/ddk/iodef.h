@@ -390,6 +390,10 @@ enum
 #define FILE_VALID_MAILSLOT_OPTION_FLAGS        0x00000032
 #define FILE_VALID_SET_FLAGS                    0x00001036
 
+/*
+ * special ByteOffset values
+ */
+#define FILE_USE_FILE_POINTER_POSITION          0xfffffffe
 
 typedef ULONG FS_INFORMATION_CLASS, *PFS_INFORMATION_CLASS;
 
