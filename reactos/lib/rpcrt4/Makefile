@@ -35,7 +35,7 @@ TARGET_CFLAGS += \
 
 TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
-TARGET_SDKLIBS = ntdll.a winedbgc.a
+TARGET_SDKLIBS = libwine.a ntdll.a
 
 TARGET_OBJECTS = \
 rpcrt4_main.o

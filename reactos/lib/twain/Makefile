@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2003/12/01 18:28:54 navaraf Exp $
+# $Id: Makefile,v 1.6 2003/12/02 18:12:05 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,7 +11,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_BASE=0x76380000
 
-TARGET_SDKLIBS = ntdll.a winedbgc.a
+TARGET_SDKLIBS = ntdll.a libwine.a
 
 TARGET_OBJECTS = \
 	capability.o \

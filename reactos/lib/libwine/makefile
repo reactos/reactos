@@ -1,17 +1,14 @@
-# $Id: Makefile,v 1.6 2003/12/01 18:28:54 navaraf Exp $
+# $Id: makefile,v 1.1 2003/12/02 18:12:05 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_DEFONLY = yes
 
-TARGET_TYPE = dynlink
+TARGET_TYPE = library
 
-TARGET_NAME = winedbgc
+TARGET_NAME = libwine
 
-#TARGET_CFLAGS = -fno-rtti -D_ROS_ -D__WINE__
-
-#TARGET_CFLAGS = -g -D__NTDLL__
-TARGET_CFLAGS = -D__NTDLL__
+#TARGET_CFLAGS = -D__NTDLL__
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -Werror -Wall
@@ -20,12 +17,8 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles
 
-TARGET_BASE = 0x77a90000
-
-TARGET_SDKLIBS = ntdll.a kernel32.a
-
 TARGET_OBJECTS = \
-	winedbgc.o
+	debug.o
 
 include $(PATH_TO_TOP)/rules.mak
 

@@ -34,10 +34,8 @@ TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = gdi32.a msvcrt.a kernel32.a user32.a advapi32.a winmm.a ole32.a
-
-# For debugging
-TARGET_SDKLIBS += ntdll.a winedbgc.a
+TARGET_SDKLIBS = libwine.a gdi32.a msvcrt.a kernel32.a user32.a advapi32.a \
+	winmm.a ole32.a ntdll.a
 
 TARGET_BASE = 0x76160000
 

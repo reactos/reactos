@@ -9,7 +9,7 @@ TARGET_BASE = 0x76340000
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -DWM_ALTTABACTIVE=0x0029 -D_DISABLE_TIDENTS -D__USE_W32API -Werror -Wall
 
-TARGET_SDKLIBS = ntdll.a winedbgc.a
+TARGET_SDKLIBS = ntdll.a libwine.a
 
 TARGET_OBJECTS = charlist.o reader.o richedit.o text-writer.o
 

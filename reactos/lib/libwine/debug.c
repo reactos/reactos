@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
-#include "porting.h"
-//#include "trace.h"
 
 /* ---------------------------------------------------------------------- */
 
@@ -62,7 +60,7 @@ static inline void release(void *ptr)
 }
 
 /***********************************************************************
- *              wine_dbgstr_an (NTDLL.@)
+ *              wine_dbgstr_an
  */
 const char *wine_dbgstr_an(const char *src, int n)
 {
@@ -114,7 +112,7 @@ const char *wine_dbgstr_an(const char *src, int n)
 }
 
 /***********************************************************************
- *              wine_dbgstr_wn (NTDLL.@)
+ *              wine_dbgstr_wn
  */
 const char *wine_dbgstr_wn(const WCHAR *src, int n)
 {
@@ -166,7 +164,7 @@ const char *wine_dbgstr_wn(const WCHAR *src, int n)
 }
 
 /***********************************************************************
- *              wine_dbgstr_guid (NTDLL.@)
+ *              wine_dbgstr_guid
  */
 const char *wine_dbgstr_guid(const GUID *id)
 {
@@ -184,9 +182,4 @@ const char *wine_dbgstr_guid(const GUID *id)
                 id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
     }
     return str;
-}
-
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
-{
-   return TRUE;
 }
