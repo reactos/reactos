@@ -1,4 +1,4 @@
-/* $Id: blue.c,v 1.46 2004/05/15 22:45:50 hbirr Exp $
+/* $Id: blue.c,v 1.47 2004/07/20 11:06:47 navaraf Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -493,7 +493,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
           offset = (pCoord->Y * DeviceExtension->Columns * 2) +
                    (pCoord->X * 2) + 1;
 
-          for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.InputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
+          for (dwCount = 0; dwCount < (stk->Parameters.DeviceIoControl.OutputBufferLength - sizeof( COORD )); dwCount++, pAttr++)
             {
               vidmem[offset + (dwCount * 2)] = *pAttr;
             }

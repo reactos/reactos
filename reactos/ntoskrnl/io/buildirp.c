@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.40 2004/06/19 08:53:35 vizzini Exp $
+/* $Id: buildirp.c,v 1.41 2004/07/20 11:06:47 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -277,36 +277,33 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
       case METHOD_IN_DIRECT:
 	DPRINT("Using METHOD_IN_DIRECT!\n");
 	
-	/* build output buffer (control buffer) */
-	if (OutputBuffer && OutputBufferLength)
+	/* build input buffer (control buffer) */
+	if (InputBuffer && InputBufferLength)
 	  {
-	     Irp->AssociatedIrp.SystemBuffer = (PVOID)
-               ExAllocatePoolWithTag(NonPagedPool,OutputBufferLength, 
+            Irp->AssociatedIrp.SystemBuffer = (PVOID)
+               ExAllocatePoolWithTag(NonPagedPool,InputBufferLength, 
 				     TAG_SYS_BUF);
-
-	     if (Irp->AssociatedIrp.SystemBuffer == NULL)
+	     
+	     if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	       {
 		  IoFreeIrp(Irp);
 		  return(NULL);
 	       }
-
-	     RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, OutputBufferLength);
-	     Irp->UserBuffer = OutputBuffer;
+	     
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+			  InputBuffer,
+			  InputBufferLength);
 	  }
 	
-         /* build input buffer (data transfer buffer) */
-	if (InputBuffer && InputBufferLength)
+	/* build output buffer (data transfer buffer) */
+         if (OutputBuffer && OutputBufferLength)
 	  {
-	     Irp->MdlAddress = IoAllocateMdl(InputBuffer,
-					     InputBufferLength,
+	     Irp->MdlAddress = IoAllocateMdl(OutputBuffer,
+					     OutputBufferLength,
 					     FALSE,
 					     FALSE,
-					     Irp);
-	     if(Irp->MdlAddress == NULL) {
-		IoFreeIrp(Irp);
-		return(NULL);
-	     }
-	     MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoReadAccess);
+					    Irp);
+	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
 	  }
 	break;
 	
