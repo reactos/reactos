@@ -37,6 +37,7 @@ struct _GUID;
 extern const char *wine_dbgstr_an( const char * s, int n );
 extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
 extern const char *wine_dbgstr_guid( const struct _GUID *id );
+extern const char *wine_dbgstr_longlong( unsigned long long ll );
 extern const char *wine_dbg_sprintf( const char *format, ... );
 
 inline static const char *debugstr_an( const char * s, int n ) { return wine_dbgstr_an( s, n ); }

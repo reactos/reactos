@@ -25,6 +25,7 @@
 
 #include <wine/config.h>
 #include <wine/port.h>
+#include <wine/debug.h>
 
 /* ---------------------------------------------------------------------- */
 
@@ -201,6 +202,12 @@ const char *wine_dbgstr_guid(const GUID *id)
                 id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7]);
     }
     return str;
+}
+
+const char *wine_dbgstr_longlong( unsigned long long ll )
+{
+    if (ll >> 32) return wine_dbg_sprintf( "%lx%08lx", (unsigned long)(ll >> 32), (unsigned long)ll );
+    else return wine_dbg_sprintf( "%lx", (unsigned long)ll );
 }
 
 /* varargs wrapper for __wine_dbg_vsprintf */
