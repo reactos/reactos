@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.48 2002/09/08 10:23:24 chorns Exp $
+/* $Id: device.c,v 1.49 2002/10/03 19:22:27 robd Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -22,6 +22,7 @@
 #include <roscfg.h>
 
 #define NDEBUG
+//#define DBG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -155,7 +156,8 @@ VOID
 STDCALL
 IoDetachDevice(PDEVICE_OBJECT TargetDevice)
 {
-   UNIMPLEMENTED;
+//   UNIMPLEMENTED;
+   DPRINT("IoDetachDevice(TargetDevice %x) - UNIMPLEMENTED\n", TargetDevice);
 }
 
 
@@ -645,6 +647,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("IoCreateDevice() ObCreateObject failed, status: 0x%08X\n", Status);
 	return(Status);
      }
   
@@ -670,6 +673,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
   if (DeviceExtensionSize > 0 && CreatedDeviceObject->DeviceExtension == NULL)
     {
       ExFreePool(CreatedDeviceObject);
+      DPRINT("IoCreateDevice() ExAllocatePoolWithTag failed, returning: 0x%08X\n", STATUS_INSUFFICIENT_RESOURCES);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
