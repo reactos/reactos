@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.48 2001/09/08 12:06:33 ekohl Exp $
+/* $Id: utils.c,v 1.49 2001/10/31 01:03:04 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -358,6 +358,10 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
     {
       Entrypoint =
 	(PDLLMAIN_FUNC) LdrPEStartup(ImageBase, SectionHandle);
+      if (Entrypoint == NULL)
+	{
+	  return(STATUS_UNSUCCESSFUL);
+	}
     }
   
   /* build module entry */

@@ -351,4 +351,16 @@ SetSecurityDescriptorSacl (
 	return TRUE;
 }
 
+BOOL STDCALL
+GetUserNameA(LPSTR lpBuffer, LPDWORD nSize)
+{
+  return(FALSE);
+}
+
+BOOL STDCALL
+GetUserNameW(LPWSTR lpBuffer, LPDWORD nSize)
+{
+  return(FALSE);
+}
+
 /* EOF */

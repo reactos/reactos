@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.64 2001/10/27 15:55:45 hbirr Exp $
+/* $Id: section.c,v 1.65 2001/10/31 01:03:04 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1725,7 +1725,9 @@ MmMapViewOfSegment(PEPROCESS Process,
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+       DPRINT1("Mapping between 0x%.8X and 0x%.8X failed.\n",
+	       (*BaseAddress), (*BaseAddress) + ViewSize);
+       return(Status);
      }
    
    KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);

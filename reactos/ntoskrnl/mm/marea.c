@@ -420,7 +420,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	if ((*BaseAddress)==0)
 	  {
 	     DPRINT("No suitable gap\n");
-	     return(STATUS_UNSUCCESSFUL);
+	     return(STATUS_NO_MEMORY);
 	  }
 	(*BaseAddress)=(*BaseAddress)+PAGESIZE;
      }
@@ -432,7 +432,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 				     Length)!=NULL)
 	  {
 	     DPRINT("Memory area already occupied\n");
-	     return(STATUS_UNSUCCESSFUL);
+	     return(STATUS_CONFLICTING_ADDRESSES);
 	  }
      }
    
