@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.29 2003/11/23 12:04:54 weiden Exp $
+/* $Id: misc.c,v 1.30 2003/11/23 13:46:33 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -507,6 +507,8 @@ NtUserGetGUIThreadInfo(
   
   if(!Thread || !Desktop)
   {
+    if(idThread && Thread)
+      ObDereferenceObject(Thread);
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return FALSE;
   }
@@ -533,6 +535,9 @@ NtUserGetGUIThreadInfo(
   SafeGui.rcCaret.top = CaretInfo->Pos.y;
   SafeGui.rcCaret.right = SafeGui.rcCaret.left + CaretInfo->Size.cx;
   SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + CaretInfo->Size.cy;
+  
+  if(idThread)
+    ObDereferenceObject(Thread);
   
   Status = MmCopyToCaller(lpgui, &SafeGui, sizeof(GUITHREADINFO));
   if(!NT_SUCCESS(Status))
@@ -572,6 +577,7 @@ NtUserGetGuiResources(
   W32Process = Process->Win32Process;
   if(!W32Process)
   {
+    ObDereferenceObject(Process);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return 0;
   }
