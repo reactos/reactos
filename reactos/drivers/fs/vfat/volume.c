@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.19 2003/07/20 18:36:53 royce Exp $
+/* $Id: volume.c,v 1.20 2003/07/20 23:09:01 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,28 +24,24 @@ FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			  PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
 			  PULONG BufferLength)
 {
-  ULONG LabelLength;
-
   DPRINT("FsdGetFsVolumeInformation()\n");
   DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
 
-  LabelLength = DeviceObject->Vpb->VolumeLabelLength;
-
-  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)));
-  DPRINT("LabelLength %lu\n", LabelLength);
-  DPRINT("Label %S\n", DeviceObject->Vpb->VolumeLabel);
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
+  DPRINT("LabelLength %lu\n", DeviceObject->Vpb->VolumeLabelLength);
+  DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
   if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
-  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)))
+  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
     return STATUS_BUFFER_OVERFLOW;
 
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
-  FsVolumeInfo->VolumeLabelLength = LabelLength * sizeof (WCHAR);
-  wcscpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
+  FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
+  memcpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel, FsVolumeInfo->VolumeLabelLength);
 
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
@@ -53,7 +49,7 @@ FsdGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("Finished FsdGetFsVolumeInformation()\n");
 
-  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength * sizeof(WCHAR));
+  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
 
   DPRINT("BufferLength %lu\n", *BufferLength);
 
