@@ -27,7 +27,7 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#include "ole32.h"
+#include "Ole32.h"
 
 /*WINOLEAPI PropVariantClear(PROPVARIANT *pvar){return S_OK;}
 WINOLEAPI FreePropVariantArray(

@@ -30,7 +30,7 @@ Cambridge, MA 02139, USA.
 #ifndef _OBJBASE
 #define _OBJBASE
 
-#include <ole32\guiddef.h>
+#include <ole32/guiddef.h>
 
 
 #ifndef EXTERN_C

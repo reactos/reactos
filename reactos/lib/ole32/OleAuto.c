@@ -27,7 +27,7 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#include "ole32.h"
+#include "Ole32.h"
 
 /*WINOLEAPI CreateErrorInfo(ICreateErrorInfo  **pperrinfo){return S_OK;}
 WINOLEAPI GetErrorInfo(

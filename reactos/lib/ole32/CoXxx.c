@@ -28,7 +28,7 @@ Cambridge, MA 02139, USA.
 
 ********************************************************************/
 #define INITGUID
-#include "ole32.h"
+#include "Ole32.h"
 
 //
 //	lCOMLockCount is a reference count, when it reaches 0, all COM libraries are freed

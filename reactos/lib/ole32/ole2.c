@@ -27,7 +27,7 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#include "ole32.h"
+#include "Ole32.h"
 
 #if 0
 WINOLEAPI_(DWORD) OleBuildVersion( VOID ){return S_OK;}

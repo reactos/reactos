@@ -35,9 +35,9 @@ Cambridge, MA 02139, USA.
 #include <windows.h>
 //#include <ole32\basetyps.h>
 //#include <ole32\guiddef.h>
-#include <ole32\winerror.h>
+#include <ole32/winerror.h>
 //#include <ole32\unknwn.h>
-#include <ole32\objbase.h>
+#include <ole32/objbase.h>
 
 
 #endif
