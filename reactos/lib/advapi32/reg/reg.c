@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.22 2003/02/02 19:27:16 hyperion Exp $
+/* $Id: reg.c,v 1.23 2003/02/02 22:40:36 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1555,8 +1555,10 @@ RegQueryValueExW(
       ((PWSTR)lpData)[ValueInfo->DataLength / sizeof(WCHAR)] = 0;
     }
   }
-  DPRINT("Type %d  ResultSize %d\n", ValueInfo->Type, ResultSize);
-  *lpcbData = (DWORD)ResultSize;
+  DPRINT("Type %d  Size %d\n", ValueInfo->Type, ValueInfo->DataLength);
+  if (NULL != lpcbData) {
+    *lpcbData = (DWORD)ValueInfo->DataLength;
+  }
   RtlFreeHeap(RtlGetProcessHeap(), 0, ValueInfo);
   return dwError;
 }
