@@ -118,13 +118,11 @@ KdInitSystem(ULONG BootPhase,
 	      if (!_strnicmp(p2, "SCREEN", 6) && BootPhase > 0)
 		{
 		  p2 += 6;
-		  KdDebuggerEnabled = FALSE;
 		  KdDebugState |= KD_DEBUG_SCREEN;
 		}
 	      else if (!_strnicmp(p2, "BOCHS", 5) && BootPhase == 0)
 		{
 		  p2 += 5;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_BOCHS;
 		}
 	      else if (!_strnicmp(p2, "GDB", 3) && BootPhase == 0)
@@ -150,7 +148,6 @@ KdInitSystem(ULONG BootPhase,
 		  Value = (ULONG)atol(p2);
 		  if (Value > 0 && Value < 5)
 		    {
-		      KdDebuggerEnabled = FALSE;
 		      KdDebugState |= KD_DEBUG_SERIAL;
 		      LogPortInfo.ComPort = Value;
 		    }
@@ -158,13 +155,11 @@ KdInitSystem(ULONG BootPhase,
 	      else if (!_strnicmp(p2, "FILE", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
-		  KdDebuggerEnabled = FALSE;
 		  KdDebugState |= KD_DEBUG_FILELOG;
 		}
 	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
 		{
 		  p2 += 3;
-		  KdDebuggerEnabled = TRUE;
 		  KdDebugState |= KD_DEBUG_MDA;
 		}
 	    }
@@ -172,13 +167,11 @@ KdInitSystem(ULONG BootPhase,
       else if (!_strnicmp(p2, "KDSERIAL", 8) && BootPhase > 0)
         {
 	  p2 += 8;
-	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_SERIAL | KD_DEBUG_KDSERIAL;
         }
       else if (!_strnicmp(p2, "KDNOECHO", 8) && BootPhase > 0)
         {
 	  p2 += 8;
-	  KdDebuggerEnabled = TRUE;
 	  KdDebugState |= KD_DEBUG_KDNOECHO;
         }
       else if (!_strnicmp(p2, "DEBUG", 5) && BootPhase == 0)
@@ -265,7 +258,7 @@ VOID INIT_FUNCTION
 KdInit1(VOID)
 {
   /* Initialize kernel debugger (phase 0) */
-  if ((KdDebuggerEnabled == TRUE) &&
+  if ((KdDebuggerEnabled) &&
       (KdDebugState & KD_DEBUG_GDB))
     {
       KdGdbStubInit(0);
@@ -277,7 +270,7 @@ VOID INIT_FUNCTION
 KdInit2(VOID)
 {
   /* Initialize kernel debugger (phase 1) */
-  if ((KdDebuggerEnabled == TRUE) &&
+  if ((KdDebuggerEnabled) &&
       (KdDebugState & KD_DEBUG_GDB))
     {
       KdGdbStubInit(1);
