@@ -7,12 +7,12 @@ Signature="$ReactOS$
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\System32\cmd.exe"
 HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x00010001,0x00000001
 
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"C:\ReactOS\Desktop"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"C:\ReactOS\Desktop"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"C:\ReactOS\Application Data"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"C:\ReactOS\Application Data"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"C:\ReactOS\Start Menu"
-HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"C:\ReactOS\Start Menu"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemRoot%\Desktop"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Desktop",0x00020000,"%SystemRoot%\Desktop"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"%SystemRoot%\Application Data"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","AppData",0x00020000,"%SystemRoot%\Application Data"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"%SystemRoot%\Start Menu"
+HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders","Start Menu",0x00020000,"%SystemRoot%\Start Menu"
 
 ; For Shell32.dll
 HKLM,"SOFTWARE\Classes\CLSID\{00021400-0000-0000-C000-000000000046}","",0x00020000,"Desktop"
