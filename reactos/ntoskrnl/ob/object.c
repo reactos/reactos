@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.66 2003/07/29 14:37:39 ekohl Exp $
+/* $Id: object.c,v 1.67 2003/09/14 10:48:39 hbirr Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -550,6 +550,14 @@ ObReferenceObjectByPointer(IN PVOID Object,
  
    if (Header->CloseInProcess)
    {
+      if (Header->ObjectType == PsProcessType)
+        {
+	  return STATUS_PROCESS_IS_TERMINATING;
+	}
+      if (Header->ObjectType == PsThreadType)
+        {
+	  return STATUS_THREAD_IS_TERMINATING;
+	}
       return(STATUS_UNSUCCESSFUL);
    }
 
