@@ -1,3 +1,21 @@
+/*
+ * Dev-C++ Backend
+ * Copyright (C) 2005  Trevor McCort
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 
 #include <iostream>
 #include <fstream>
@@ -113,10 +131,24 @@ void DevCppBackend::ProcessModules()
 	}
 }
 
+bool FileExists(string &filename)
+{
+	ifstream file(filename.c_str());
+
+	if(!file.is_open())
+		return false;
+
+	file.close();
+	return true;
+}
+
 void DevCppBackend::ProcessFile(string &filepath)
 {
 	// Remove the .\ at the start of the filenames
 	filepath.erase(0, 2);
+
+	if(!FileExists(filepath))
+		return;
 
 	// Change the \ to /
 	for(size_t i = 0; i < filepath.length(); i++)
@@ -195,6 +227,7 @@ void DevCppBackend::OutputFileUnits()
 	{
 		m_devFile << "[Unit" << i + 1 << "]" << endl;
 		
+
 		m_devFile << "FileName="			<< m_fileUnits[i].filename << endl;
 		m_devFile << "CompileCpp=1" 		<< endl;
 		m_devFile << "Folder=" 				<< m_fileUnits[i].folder << endl;
@@ -205,4 +238,3 @@ void DevCppBackend::OutputFileUnits()
 		m_devFile << "BuildCmd="			<< endl << endl;;
 	}
 }
-
