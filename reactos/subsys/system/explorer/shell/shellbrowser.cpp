@@ -528,6 +528,25 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
+int ShellBrowserChild::Command(int id, int code)
+{
+	switch(id) {
+	  case ID_BROWSE_BACK:
+		break;//@todo
+
+	  case ID_BROWSE_FORWARD:
+		break;//@todo
+
+	  case ID_BROWSE_UP:
+		break;//@todo
+
+	  default:
+		return 1;
+	}
+
+	return 0;
+}
+
 int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 {
 	switch(pnmh->code) {

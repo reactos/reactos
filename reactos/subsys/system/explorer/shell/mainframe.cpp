@@ -60,6 +60,7 @@ MainFrame::MainFrame(HWND hwnd)
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
 		{7, ID_BROWSE_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{8, ID_BROWSE_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{9, ID_BROWSE_UP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 	};
 
 	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
@@ -315,6 +316,10 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 int MainFrame::Command(int id, int code)
 {
 	CONTEXT("MainFrame::Command()");
+
+	if (_shellBrowser.get())
+		if (!_shellBrowser->Command(id, code))
+			return 0;
 
 	switch(id) {
 	  case ID_FILE_EXIT:

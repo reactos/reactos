@@ -119,6 +119,7 @@ protected:
 
 public:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
 	int 	Notify(int id, NMHDR* pnmh);
 
 	LRESULT	Init(HWND hWndFrame);
