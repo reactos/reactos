@@ -33,7 +33,6 @@ dibtest \
 dirdlg \
 diskspeed \
 dnsquery \
-dump_shared_data \
 edit \
 enhmetafile \
 enumfonts \
@@ -54,7 +53,6 @@ linetest \
 lpc \
 map_dup_inherit \
 mdi \
-miditest \
 mktime \
 moztest \
 mstest \
@@ -94,6 +92,10 @@ winhello \
 wm_erasebkgnd \
 wm_paint \
 zwcontinue
+
+# Deactivated tests:
+# dump_shared_data
+# miditest
 
 all: $(TEST_APPS)
 

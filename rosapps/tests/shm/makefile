@@ -13,8 +13,8 @@ PROGS= shmsrv.exe shmclt.exe
 
 CFLAGS = $(STD_CFLAGS)
 
-LIBS = $(SDK_PATH_LIB)/kernel32.a \
-  $(SDK_PATH_LIB)/ntdll.a
+LIBS = $(SDK_PATH_LIB)/libkernel32.a \
+  $(SDK_PATH_LIB)/libntdll.a
 
 all: $(PROGS)
 

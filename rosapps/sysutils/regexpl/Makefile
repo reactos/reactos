@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.12 2004/10/11 01:20:13 sedwards Exp $
+# $Id: Makefile,v 1.13 2004/12/29 00:31:45 gvg Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -14,11 +14,11 @@ all: $(TARGET_NAME)$(EXE_POSTFIX)
 ROS_DIR=../../../reactos
 ROS_INC=$(ROS_DIR)/include
 ROS_LIB=$(ROS_DIR)/dk/w32/lib
-IMPORT_NTDLL=$(ROS_LIB)/ntdll.a
-IMPORT_FMIFS=$(ROS_LIB)/fmifs.a
-IMPORT_KERNEL32=$(ROS_LIB)/kernel32.a
-IMPORT_ADVAPI32=$(ROS_LIB)/advapi32.a
-IMPORT_USER32=$(ROS_LIB)/user32.a
+IMPORT_NTDLL=$(ROS_LIB)/libntdll.a
+IMPORT_FMIFS=$(ROS_LIB)/libfmifs.a
+IMPORT_KERNEL32=$(ROS_LIB)/libkernel32.a
+IMPORT_ADVAPI32=$(ROS_LIB)/libadvapi32.a
+IMPORT_USER32=$(ROS_LIB)/libuser32.a
 
 OBJECTS = \
 	ArgumentParser.o		\

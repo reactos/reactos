@@ -13,7 +13,7 @@ PROGS = npserver.exe npclient.exe
 
 CFLAGS = $(STD_CFLAGS)
 
-LIBS = $(SDK_PATH_LIB)/kernel32.a
+LIBS = $(SDK_PATH_LIB)/libkernel32.a
 
 all: $(PROGS)
 
