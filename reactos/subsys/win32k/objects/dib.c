@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.25 2003/08/13 00:50:24 royce Exp $
+ * $Id: dib.c,v 1.26 2003/08/13 20:24:05 chorns Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -59,7 +59,7 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
   if (dc->w.bitsPerPixel <= 8)
   {
     palEntry = palette->logpalette->palPalEntry + StartIndex;
-    if (StartIndex + Entries > (1 << dc->w.bitsPerPixel))
+    if (StartIndex + Entries > (UINT) (1 << dc->w.bitsPerPixel))
       Entries = (1 << dc->w.bitsPerPixel) - StartIndex;
 
     if (StartIndex + Entries > palette->logpalette->palNumEntries)
@@ -329,7 +329,7 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
 	}
       Result = 1;
     }
-  else if (0 == StartScan && Info.bmiHeader.biHeight == StartScan + ScanLines &&
+  else if (0 == StartScan && Info.bmiHeader.biHeight == (LONG) (StartScan + ScanLines) &&
            Info.bmiHeader.biWidth == BitmapObj->bitmap.bmWidth &&
            Info.bmiHeader.biHeight == BitmapObj->bitmap.bmHeight &&
            Info.bmiHeader.biPlanes == BitmapObj->bitmap.bmPlanes &&
@@ -605,7 +605,8 @@ DIB_CreateDIBSection(
 
   // Fill BITMAP32 structure with DIB data
   BITMAPINFOHEADER *bi = &bmi->bmiHeader;
-  INT effHeight, totalSize;
+  INT effHeight;
+  ULONG totalSize;
   UINT Entries = 0;
   BITMAP bm;
 
@@ -617,7 +618,7 @@ DIB_CreateDIBSection(
   bm.bmType = 0;
   bm.bmWidth = bi->biWidth;
   bm.bmHeight = effHeight;
-  bm.bmWidthBytes = ovr_pitch ? ovr_pitch : DIB_GetDIBWidthBytes(bm.bmWidth, bi->biBitCount);
+  bm.bmWidthBytes = ovr_pitch ? ovr_pitch : (ULONG) DIB_GetDIBWidthBytes(bm.bmWidth, bi->biBitCount);
 
   bm.bmPlanes = bi->biPlanes;
   bm.bmBitsPixel = bi->biBitCount;
@@ -626,7 +627,7 @@ DIB_CreateDIBSection(
   // Get storage location for DIB bits.  Only use biSizeImage if it's valid and
   // we're dealing with a compressed bitmap.  Otherwise, use width * height.
   totalSize = bi->biSizeImage && bi->biCompression != BI_RGB
-    ? bi->biSizeImage : bm.bmWidthBytes * effHeight;
+    ? bi->biSizeImage : (ULONG) (bm.bmWidthBytes * effHeight);
 
   if (section)
 /*    bm.bmBits = MapViewOfFile(section, FILE_MAP_ALL_ACCESS,
@@ -868,7 +869,7 @@ RGBQUAD * FASTCALL
 DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
 {
   RGBQUAD *lpRGB;
-  int nNumColors,i;
+  ULONG nNumColors,i;
   DWORD *lpIndex;
   PPALOBJ palObj;
 

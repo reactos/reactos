@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.21 2003/08/04 19:57:05 royce Exp $
+ * $Id: lineto.c,v 1.22 2003/08/13 20:24:04 chorns Exp $
  */
 
 #include <ddk/winddi.h>
@@ -343,7 +343,8 @@ EngLineTo(SURFOBJ *DestObj,
 	  RECTL *RectBounds,
 	  MIX mix)
 {
-  LONG x, y, deltax, deltay, i, xchange, ychange, hx, vy;
+  LONG x, y, deltax, deltay, xchange, ychange, hx, vy;
+  ULONG i;
   ULONG Pixel = Brush->iSolidColor;
   SURFOBJ *OutputObj;
   SURFGDI *OutputGDI;

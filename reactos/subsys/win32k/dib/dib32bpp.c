@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.4 2003/08/12 21:55:47 gvg Exp $ */
+/* $Id: dib32bpp.c,v 1.5 2003/08/13 20:24:04 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -80,7 +80,7 @@ DIB_32BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		        PRECTL  DestRect,  POINTL  *SourcePoint,
 		        XLATEOBJ *ColorTranslation)
 {
-  ULONG     i, j, sx, sy, xColor, f1;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
 

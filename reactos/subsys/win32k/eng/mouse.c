@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.26 2003/08/09 11:59:27 gvg Exp $
+/* $Id: mouse.c,v 1.27 2003/08/13 20:24:04 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -46,7 +46,7 @@ static BOOLEAN SafetySwitch = FALSE;
 static BOOLEAN SafetySwitch2 = FALSE;
 static BOOLEAN MouseEnabled = FALSE;
 static LONG mouse_x, mouse_y;
-static UINT mouse_width = 0, mouse_height = 0;
+static LONG mouse_width = 0, mouse_height = 0;
 static ULONG PointerStatus;
 
 static UCHAR DefaultCursor[256] = {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.41 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: text.c,v 1.42 2003/08/13 20:24:05 chorns Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -543,7 +543,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
   FT_Face face;
   FT_GlyphSlot glyph;
   INT error, n, glyph_index, i, previous;
-  ULONG TotalWidth = 0, MaxHeight = 0;
+  LONG TotalWidth = 0, MaxHeight = 0;
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
 
@@ -1227,7 +1227,7 @@ W32kTranslateCharsetInfo(PDWORD  Src,
 NTSTATUS FASTCALL
 TextIntRealizeFont(HFONT FontHandle)
 {
-  UINT i;
+  LONG i;
   NTSTATUS Status = STATUS_SUCCESS;
   PTEXTOBJ TextObj;
 

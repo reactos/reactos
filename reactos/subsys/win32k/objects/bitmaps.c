@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.31 2003/08/07 16:18:02 royce Exp $ */
+/* $Id: bitmaps.c,v 1.32 2003/08/13 20:24:05 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -357,8 +357,8 @@ LONG STDCALL W32kSetBitmapBits(HBITMAP  hBitmap,
                         DWORD  Bytes,
                         CONST VOID *Bits)
 {
-  DWORD  height, ret;
-  PBITMAPOBJ  bmp;
+  LONG height, ret;
+  PBITMAPOBJ bmp;
 
   bmp = BITMAPOBJ_HandleToPtr (hBitmap);
   if (bmp == NULL || Bits == NULL)
@@ -549,20 +549,20 @@ INT STDCALL BITMAP_GetObject(BITMAPOBJ * bmp, INT count, LPVOID buffer)
 {
   if(bmp->dib)
   {
-    if(count < sizeof(DIBSECTION))
+    if(count < (INT) sizeof(DIBSECTION))
     {
-      if (count > sizeof(BITMAP)) count = sizeof(BITMAP);
+      if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
     }
     else
     {
-      if (count > sizeof(DIBSECTION)) count = sizeof(DIBSECTION);
+      if (count > (INT) sizeof(DIBSECTION)) count = sizeof(DIBSECTION);
     }
     memcpy(buffer, bmp->dib, count);
     return count;
   }
   else
   {
-    if (count > sizeof(BITMAP)) count = sizeof(BITMAP);
+    if (count > (INT) sizeof(BITMAP)) count = sizeof(BITMAP);
     memcpy(buffer, &bmp->bitmap, count);
     return count;
   }

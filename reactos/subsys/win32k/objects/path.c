@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.11 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: path.c,v 1.12 2003/08/13 20:24:05 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -517,7 +517,7 @@ BOOL STDCALL PATH_PolyBezierTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT pt;
-  INT i;
+  ULONG i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -550,7 +550,7 @@ BOOL STDCALL PATH_PolyBezier(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
-  INT     i;
+  ULONG   i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -572,7 +572,7 @@ BOOL STDCALL PATH_Polyline(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
-  INT     i;
+  ULONG   i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -594,7 +594,7 @@ BOOL STDCALL PATH_PolylineTo(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
-  INT     i;
+  ULONG   i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -629,7 +629,7 @@ BOOL STDCALL PATH_Polygon(HDC hdc, const POINT *pts, DWORD cbPoints)
 {
   GdiPath *pPath;
   POINT   pt;
-  INT     i;
+  ULONG   i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -654,7 +654,7 @@ BOOL STDCALL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
 {
   GdiPath *pPath;
   POINT   pt, startpt;
-  INT     poly, point, i;
+  ULONG   poly, point, i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;
@@ -664,7 +664,7 @@ BOOL STDCALL PATH_PolyPolygon( HDC hdc, const POINT* pts, const INT* counts,
     return FALSE;
 
   for(i = 0, poly = 0; poly < polygons; poly++) {
-    for(point = 0; point < counts[poly]; point++, i++) {
+    for(point = 0; point < (ULONG) counts[poly]; point++, i++) {
       pt = pts[i];
       if(!W32kLPtoDP(hdc, &pt, 1))
          return FALSE;
@@ -682,7 +682,7 @@ BOOL STDCALL PATH_PolyPolyline( HDC hdc, const POINT* pts, const DWORD* counts,
 {
   GdiPath *pPath;
   POINT   pt;
-  INT     poly, point, i;
+  ULONG   poly, point, i;
 
   if(!PATH_GetPathFromHDC(hdc, &pPath))
     return FALSE;

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.75 2003/08/13 13:58:11 royce Exp $
+# $Id: makefile,v 1.76 2003/08/13 20:24:04 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -26,8 +26,7 @@ TARGET_CFLAGS =\
  $(CFLAGS_DBG) \
  -I$(PATH_TO_TOP)/ntoskrnl/include \
  -I$(FREETYPE_DIR)/include \
- -DUNICODE \
- -Wall -Werror
+ -DUNICODE
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

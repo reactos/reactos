@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.32 2003/08/13 00:50:25 royce Exp $ */
+/* $Id: region.c,v 1.33 2003/08/13 20:24:05 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -192,7 +192,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
 
     if(xrect)
     {
-      INT i;
+      ULONG i;
 
       if(rgnDst != rgnSrc)
 	  	RtlCopyMemory(rgnDst, rgnSrc, sizeof(ROSRGNDATA));
@@ -227,7 +227,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
   else // region box and clipping rect appear to intersect
   {
     PRECT lpr, rpr;
-    INT i, j, clipa, clipb;
+    ULONG i, j, clipa, clipb;
     INT left = rgnSrc->rdh.rcBound.right + off->x;
     INT right = rgnSrc->rdh.rcBound.left + off->x;
 
@@ -551,14 +551,13 @@ REGION_RegionOp(
     INT ybot;                         /* Bottom of intersection */
     INT ytop;                         /* Top of intersection */
     RECT *oldRects;                   /* Old rects for newReg */
-    INT prevBand;                     /* Index of start of
+    ULONG prevBand;                   /* Index of start of
 						 * previous band in newReg */
-    INT curBand;                      /* Index of start of current
-						 * band in newReg */
+    ULONG curBand;                    /* Index of start of current band in newReg */
     RECT *r1BandEnd;                  /* End of current band in r1 */
     RECT *r2BandEnd;                  /* End of current band in r2 */
-    INT top;                          /* Top of non-overlapping band */
-    INT bot;                          /* Bottom of non-overlapping band */
+    ULONG top;                        /* Top of non-overlapping band */
+    ULONG bot;                        /* Bottom of non-overlapping band */
 
     /*
      * Initialization:
@@ -1643,7 +1642,7 @@ W32kEqualRgn(HRGN  hSrcRgn1,
 {
   PROSRGNDATA rgn1, rgn2;
   PRECT tRect1, tRect2;
-  int i;
+  ULONG i;
   BOOL bRet = FALSE;
 
   if( !(rgn1 = RGNDATA_LockRgn(hSrcRgn1)))
@@ -1899,7 +1898,7 @@ W32kPtInRegion(HRGN  hRgn,
                      INT  Y)
 {
   PROSRGNDATA rgn;
-  int i;
+  ULONG i;
 
   if( (rgn = RGNDATA_LockRgn(hRgn) ) )
 	  return FALSE;

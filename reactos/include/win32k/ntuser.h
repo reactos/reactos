@@ -585,7 +585,7 @@ DWORD
 STDCALL
 NtUserGetClassName(HWND hWnd,
 		   LPWSTR lpClassName,
-		   int nMaxCount);
+		   ULONG nMaxCount);
 
 DWORD
 STDCALL

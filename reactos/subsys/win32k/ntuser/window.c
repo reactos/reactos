@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.89 2003/08/12 22:45:27 weiden Exp $
+/* $Id: window.c,v 1.90 2003/08/13 20:24:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2218,7 +2218,7 @@ NtUserBuildHwndList(
       PUSER_HANDLE_TABLE HandleTable;
       PLIST_ENTRY Current;
       PUSER_HANDLE_BLOCK Block = NULL;
-      int i;
+      ULONG i;
 
       Status = PsLookupThreadByThreadId ( (PVOID)dwThreadId, &Thread );
       if ( !NT_SUCCESS(Status) || !Thread )

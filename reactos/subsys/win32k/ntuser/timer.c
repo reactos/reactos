@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.9 2003/08/11 21:10:49 royce Exp $
+/* $Id: timer.c,v 1.10 2003/08/13 20:24:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -199,7 +199,7 @@ NtUserSetTimer
   /* find a free, handle-less timer id */
   Index = RtlFindClearBitsAndSet(&HandleLessTimersBitMap, 1, HintIndex);
 
-  if(Index == -1)
+  if(Index == (ULONG) -1)
   {
    /* FIXME: set the last error */
    ExReleaseFastMutex(&Mutex);

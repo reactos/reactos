@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.6 2003/08/12 21:55:47 gvg Exp $ */
+/* $Id: dib16bpp.c,v 1.7 2003/08/13 20:24:04 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -250,7 +250,7 @@ DIB_16BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-  ULONG    RoundedRight = DestRect->right - (DestRect->right & 0x1);
+  LONG     RoundedRight = DestRect->right - (DestRect->right & 0x1);
 
   if (Rop4 == SRCCOPY)
     {

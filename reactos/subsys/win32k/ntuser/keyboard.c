@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.7 2003/08/11 21:10:49 royce Exp $
+/* $Id: keyboard.c,v 1.8 2003/08/13 20:24:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -212,7 +212,7 @@ static BOOL TryToTranslateChar( WORD wVirtKey,
     if( !vkPtr->VirtualKey ) return FALSE;
     if( wVirtKey == vkPtr->VirtualKey ) {
       for( j = 0; j < nStates; j++ ) {
-	if( j == ModBits ) { /* OK, we found a wchar with the correct
+	if( j == (int) ModBits ) { /* OK, we found a wchar with the correct
 				shift state and vk */
 	  *pbDead = vkPtr->wch[j] == WCH_DEAD;
 	  *pbLigature = vkPtr->wch[j] == WCH_LGTR;
@@ -391,7 +391,7 @@ NtUserTranslateMessage(LPMSG lpMsg,
       NewMsg.message = (lpMsg->message == WM_KEYDOWN) ? WM_CHAR : WM_SYSCHAR;
       if (dead_char)
         {
-	  int i;
+	  ULONG i;
 	  
 	  if (wp[0] == ' ') wp[0] =  dead_char;
 	  if (dead_char == 0xa2) dead_char = '(';

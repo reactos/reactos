@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.28 2003/08/11 21:10:49 royce Exp $
+/* $Id: class.c,v 1.29 2003/08/13 20:24:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -190,7 +190,7 @@ NtUserGetClassInfo(HINSTANCE hInst,
 ULONG FASTCALL
 W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		   LPWSTR lpClassName,
-		   int nMaxCount)
+		   ULONG nMaxCount)
 {
   ULONG length;
   LPWSTR name;
@@ -247,7 +247,7 @@ DWORD STDCALL
 NtUserGetClassName (
   HWND hWnd,
   LPWSTR lpClassName,
-  int nMaxCount)
+  ULONG nMaxCount)
 {
   PWINDOW_OBJECT WindowObject;
   LONG Ret;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.20 2003/07/11 15:59:37 royce Exp $
+/* $Id: xlate.c,v 1.21 2003/08/13 20:24:04 chorns Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -86,10 +86,11 @@ ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor, ULONG *DestColors,
 {
   PVIDEO_CLUTDATA cSourceColor;
   PVIDEO_CLUTDATA cDestColors;
-  LONG idx = 0, i, rt;
+  LONG idx = 0;
+  ULONG i;
   ULONG SourceRGB;
   ULONG SourceRed, SourceGreen, SourceBlue;
-  ULONG cxRed, cxGreen, cxBlue, BestMatch = 16777215;
+  ULONG cxRed, cxGreen, cxBlue, rt, BestMatch = 16777215;
 
   // Simple cache -- only one value because we don't want to waste time
   // if the colors aren't very sequential
@@ -185,7 +186,7 @@ BitMasksFromPal(USHORT PalType, PPALGDI Palette,
  */
 static INT FASTCALL CalculateShift(ULONG Mask)
 {
-   INT Shift = 0;
+   ULONG Shift = 0;
    ULONG LeftmostBit = 1 << (8 * sizeof(ULONG) - 1);
 
    while (0 == (Mask & LeftmostBit) && Shift < 8 * sizeof(ULONG))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.25 2003/05/18 17:16:17 ea Exp $
+/* $Id: driver.c,v 1.26 2003/08/13 20:24:05 chorns Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -160,7 +160,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED, 
                                PDRIVER_FUNCTIONS  DF)
 {
-  int i;
+  ULONG i;
 
   for (i=0; i<DED->c; i++)
   {

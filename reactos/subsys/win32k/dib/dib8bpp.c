@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.4 2003/08/12 21:55:47 gvg Exp $ */
+/* $Id: dib8bpp.c,v 1.5 2003/08/13 20:24:04 chorns Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -78,7 +78,7 @@ DIB_8BPP_BitBltSrcCopy(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		       PRECTL  DestRect,  POINTL  *SourcePoint,
 		       XLATEOBJ *ColorTranslation)
 {
-  ULONG     i, j, sx, sy, xColor, f1;
+  LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
 
@@ -250,7 +250,7 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   PULONG   DestBits;
   BOOL     UsesSource = ((Rop4 & 0xCC0000) >> 2) != (Rop4 & 0x330000);
   BOOL     UsesPattern = ((Rop4 & 0xF00000) >> 4) != (Rop4 & 0x0F0000);  
-  ULONG    RoundedRight = DestRect->right - (DestRect->right & 0x3);
+  LONG     RoundedRight = DestRect->right - (DestRect->right & 0x3);
 
   if (Rop4 == SRCCOPY)
     {

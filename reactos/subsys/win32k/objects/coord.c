@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.13 2003/07/22 20:02:08 ekohl Exp $
+/* $Id: coord.c,v 1.14 2003/08/13 20:24:05 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -95,7 +95,7 @@ W32kDPtoLP(HDC  hDC,
 	   int  Count)
 {
   PDC Dc;
-  ULONG i;
+  INT i;
   LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
 
   ASSERT(Points);
@@ -180,7 +180,7 @@ BOOL STDCALL
 W32kLPtoDP(HDC hDC, LPPOINT UnsafePoints, INT Count)
 {
   PDC Dc;
-  ULONG i;
+  INT i;
   LPPOINT Points = (LPPOINT) ExAllocatePool( PagedPool, Count*sizeof(POINT));
 
   ASSERT(Points);
