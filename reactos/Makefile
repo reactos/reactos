@@ -51,7 +51,7 @@ $(ROS_INTERMEDIATE):
 endif
 
 include tools/Makefile
--include Makefile.auto
+include Makefile.auto
 
 PREAUTO := \
 	include$(SEP)reactos$(SEP)buildno.h \
@@ -62,7 +62,7 @@ PREAUTO := \
 
 Makefile.auto: $(RMKDIR_TARGET) $(BUILDNO_TARGET) $(NCI_SERVICE_FILES) $(WMC_TARGET) $(CDMAKE_TARGET) $(RBUILD_TARGET) $(PREAUTO)
 	tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
-	$(MAKE) $(MAKECMDGOALS)
+#	$(MAKE) $(MAKECMDGOALS)
 
 
 include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) ntoskrnl$(SEP)ntoskrnl.mc
