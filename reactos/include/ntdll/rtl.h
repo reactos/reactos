@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.28 2001/06/17 22:52:37 ekohl Exp $
+/* $Id: rtl.h,v 1.29 2001/06/19 15:08:12 ekohl Exp $
  *
  */
 
@@ -473,6 +473,15 @@ RtlpNtCreateKey (
 
 NTSTATUS
 STDCALL
+RtlpNtEnumerateSubKey (
+	IN	HANDLE		KeyHandle,
+	OUT	PUNICODE_STRING	SubKeyName,
+	IN	ULONG		Index,
+	IN	ULONG		Unused
+	);
+
+NTSTATUS
+STDCALL
 RtlpNtMakeTemporaryKey (
 	IN	HANDLE	KeyHandle
 	);
@@ -484,6 +493,25 @@ RtlpNtOpenKey (
 	IN	ACCESS_MASK		DesiredAccess,
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes,
 	IN	ULONG			Unused
+	);
+
+NTSTATUS
+STDCALL
+RtlpNtQueryValueKey (
+	IN	HANDLE	KeyHandle,
+	OUT	PULONG	Type		OPTIONAL,
+	OUT	PVOID	Data		OPTIONAL,
+	IN OUT	PULONG	DataLength	OPTIONAL,
+	IN	ULONG	Unused
+	);
+
+NTSTATUS
+STDCALL
+RtlpNtSetValueKey (
+	IN	HANDLE	KeyHandle,
+	IN	ULONG	Type,
+	IN	PVOID	Data,
+	IN	ULONG	DataLength
 	);
 
 #endif /* __INCLUDE_NTDLL_RTL_H */

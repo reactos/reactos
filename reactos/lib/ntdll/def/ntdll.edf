@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.66 2001/06/18 18:37:12 ekohl Exp $
+; $Id: ntdll.edf,v 1.67 2001/06/19 15:09:16 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -593,11 +593,11 @@ RtlWriteRegistryValue=RtlWriteRegistryValue@24
 ;RtlZeroHeap
 RtlZeroMemory=RtlZeroMemory@8
 RtlpNtCreateKey=RtlpNtCreateKey@24
-;RtlpNtEnumerateSubKey
+RtlpNtEnumerateSubKey=RtlpNtEnumerateSubKey@16
 RtlpNtMakeTemporaryKey=RtlpNtMakeTemporaryKey@4
 RtlpNtOpenKey=RtlpNtOpenKey@16
-;RtlpNtQueryValueKey
-;RtlpNtSetValueKey
+RtlpNtQueryValueKey=RtlpNtQueryValueKey@20
+RtlpNtSetValueKey=RtlpNtSetValueKey@16
 ;RtlpUnWaitCriticalSection
 ;RtlpWaitForCriticalSection
 RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4

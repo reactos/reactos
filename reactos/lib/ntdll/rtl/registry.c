@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.5 2001/06/18 18:36:32 ekohl Exp $
+/* $Id: registry.c,v 1.6 2001/06/19 15:08:46 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,8 +13,6 @@
  * TODO:
  *   - finish RtlQueryRegistryValues()
  *   - finish RtlFormatCurrentUserKeyPath()
- *   - implement RtlOpenCurrentUser()
- *   - implement RtlNtXxxx() functions
  */
 
 /* INCLUDES *****************************************************************/
@@ -163,7 +161,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
    ULONG BufferSize;
    ULONG ResultSize;
    
-   DPRINT1("RtlQueryRegistryValues()\n");
+   DPRINT("RtlQueryRegistryValues() called\n");
    
    Status = RtlpGetRegistryHandle(RelativeTo,
 				  Path,
@@ -184,7 +182,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	     break;
 	  }
 
-	DPRINT1("Name: %S\n", QueryEntry->Name);
+	DPRINT("Name: %S\n", QueryEntry->Name);
 
 	if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
 	    (BaseKeyHandle != CurrentKeyHandle))
@@ -195,7 +193,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY)
 	  {
-	     DPRINT1("Open new subkey: %S\n", QueryEntry->Name);
+	     DPRINT("Open new subkey: %S\n", QueryEntry->Name);
 	  
 	     RtlInitUnicodeString(&KeyName,
 				  QueryEntry->Name);
@@ -212,7 +210,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	  }
 	else if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DIRECT)
 	  {
-	     DPRINT1("Query value directly: %S\n", QueryEntry->Name);
+	     DPRINT("Query value directly: %S\n", QueryEntry->Name);
 	  
 	     RtlInitUnicodeString(&KeyName,
 				  QueryEntry->Name);
@@ -269,13 +267,13 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	  }
 	else
 	  {
-	     DPRINT1("Query value via query routine: %S\n", QueryEntry->Name);
+	     DPRINT("Query value via query routine: %S\n", QueryEntry->Name);
 	     
 	  }
 
 	if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
 	  {
-	     DPRINT1("Delete value: %S\n", QueryEntry->Name);
+	     DPRINT("Delete value: %S\n", QueryEntry->Name);
 	     
 	  }
 
@@ -349,6 +347,60 @@ RtlpNtCreateKey(OUT HANDLE KeyHandle,
 
 
 NTSTATUS STDCALL
+RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
+		      OUT PUNICODE_STRING SubKeyName,
+		      IN ULONG Index,
+		      IN ULONG Unused)
+{
+   PKEY_BASIC_INFORMATION KeyInfo = NULL;
+   ULONG BufferLength = 0;
+   ULONG ReturnedLength;
+   NTSTATUS Status;
+
+   if (SubKeyName->MaximumLength != 0)
+     {
+	BufferLength = SubKeyName->MaximumLength +
+		       sizeof(KEY_BASIC_INFORMATION);
+	KeyInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+				  0,
+				  BufferLength);
+	if (KeyInfo == NULL)
+	  return(STATUS_NO_MEMORY);
+     }
+
+   Status = NtEnumerateKey(KeyHandle,
+			   Index,
+			   KeyBasicInformation,
+			   KeyInfo,
+			   BufferLength,
+			   &ReturnedLength);
+   if (NT_SUCCESS(Status))
+     {
+	if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
+	  {
+	     memmove(SubKeyName->Buffer,
+		     KeyInfo->Name,
+		     KeyInfo->NameLength);
+	     SubKeyName->Length = KeyInfo->NameLength;
+	  }
+	else
+	  {
+	     Status = STATUS_BUFFER_OVERFLOW;
+	  }
+     }
+
+   if (KeyInfo != NULL)
+     {
+	RtlFreeHeap(RtlGetProcessHeap(),
+		    0,
+		    KeyInfo);
+     }
+
+   return(Status);
+}
+
+
+NTSTATUS STDCALL
 RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 {
    return(NtDeleteKey(KeyHandle));
@@ -370,6 +422,80 @@ RtlpNtOpenKey(OUT HANDLE KeyHandle,
 		    ObjectAttributes));
 }
 
+
+NTSTATUS STDCALL
+RtlpNtQueryValueKey(IN HANDLE KeyHandle,
+		    OUT PULONG Type OPTIONAL,
+		    OUT PVOID Data OPTIONAL,
+		    IN OUT PULONG DataLength OPTIONAL,
+		    IN ULONG Unused)
+{
+   PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+   UNICODE_STRING ValueName;
+   ULONG BufferLength;
+   ULONG ReturnedLength;
+   NTSTATUS Status;
+
+   RtlInitUnicodeString(&ValueName,
+			NULL);
+
+   BufferLength = sizeof(KEY_VALUE_PARTIAL_INFORMATION);
+   if (DataLength != NULL)
+     BufferLength = *DataLength;
+
+   ValueInfo = RtlAllocateHeap(RtlGetProcessHeap(),
+			       0,
+			       BufferLength);
+   if (ValueInfo == NULL)
+     return(STATUS_NO_MEMORY);
+
+   Status = NtQueryValueKey(KeyHandle,
+			    &ValueName,
+			    KeyValuePartialInformation,
+			    ValueInfo,
+			    BufferLength,
+			   &ReturnedLength);
+   if (NT_SUCCESS(Status))
+     {
+	if (DataLength != NULL)
+	  *DataLength = ValueInfo->DataLength;
+
+	if (Type != NULL)
+	  *Type = ValueInfo->Type;
+
+	if (Data != NULL)
+	  {
+	     memmove(Data,
+		     ValueInfo->Data,
+		     ValueInfo->DataLength);
+	  }
+     }
+
+   RtlFreeHeap(RtlGetProcessHeap(),
+	       0,
+	       ValueInfo);
+
+   return(Status);
+}
+
+
+NTSTATUS STDCALL
+RtlpNtSetValueKey(IN HANDLE KeyHandle,
+		  IN ULONG Type,
+		  IN PVOID Data,
+		  IN ULONG DataLength)
+{
+   UNICODE_STRING ValueName;
+
+   RtlInitUnicodeString(&ValueName,
+			NULL);
+   return(NtSetValueKey(KeyHandle,
+			&ValueName,
+			0,
+			Type,
+			Data,
+			DataLength));
+}
 
 /* INTERNAL FUNCTIONS ******************************************************/
 
