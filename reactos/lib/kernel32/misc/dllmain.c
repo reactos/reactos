@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.32 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: dllmain.c,v 1.33 2004/01/30 21:48:09 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -36,6 +36,7 @@ CRITICAL_SECTION DllLock;
 CRITICAL_SECTION ConsoleLock;
 
 extern BOOL WINAPI DefaultConsoleCtrlHandler(DWORD Event);
+extern BOOL FASTCALL PROFILE_Init();
 
 /* FUNCTIONS *****************************************************************/
 
@@ -131,6 +132,12 @@ DllMain(HANDLE hDll,
 
 	/* Initialize the DLL critical section */
 	RtlInitializeCriticalSection(&DllLock);
+
+	/* Initialize the profile (.ini) routines */
+	if (! PROFILE_Init())
+          {
+            return FALSE;
+          }
 
 	/* Initialize console ctrl handler */
 	RtlInitializeCriticalSection(&ConsoleLock);
