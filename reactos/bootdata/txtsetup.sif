@@ -33,10 +33,10 @@ Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
-OsLoadOptions = "/NOBOOTSCREEN /NODEBUG"
-;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=COM1"
-;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=SCREEN"
-;OsLoadOptions = "/NOBOOTSCREEN /DEBUGPORT=BOCHS"
+OsLoadOptions = "/NOGUIBOOT /NODEBUG"
+;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=COM1"
+;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=SCREEN"
+;OsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
 [NLS]
 AnsiCodepage     = c_1252.nls
