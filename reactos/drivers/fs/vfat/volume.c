@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.25 2003/11/12 15:26:44 ekohl Exp $
+/* $Id: volume.c,v 1.26 2004/08/01 21:57:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -67,7 +67,6 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
   DPRINT("FsdGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
-  DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length));
 
   if (*BufferLength < sizeof (FILE_FS_ATTRIBUTE_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
@@ -82,6 +81,8 @@ FsdGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
     Length = 6;
     pName = L"FAT";
   }
+
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length));
 
   if (*BufferLength < (sizeof(FILE_FS_ATTRIBUTE_INFORMATION) + Length))
     return STATUS_BUFFER_OVERFLOW;

@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.35 2004/05/23 13:34:32 hbirr Exp $
+/* $Id: finfo.c,v 1.36 2004/08/01 21:57:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -178,7 +178,6 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
 			      PFILE_DISPOSITION_INFORMATION DispositionInfo)
 {
   NTSTATUS Status = STATUS_SUCCESS;
-  int count;
 
   PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
 
@@ -199,7 +198,6 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
     {
       if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
         {
-          count = FCB->RefCount;
           if (FCB->RefCount > 1)
             {
 	      DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
@@ -213,10 +211,9 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
         }
       else
         {
-          DPRINT1("MmFlushImageSection returned FALSE\n");
-          Status = STATUS_ACCESS_DENIED;
+          DPRINT("MmFlushImageSection returned FALSE\n");
+          Status = STATUS_CANNOT_DELETE;
         }
-      DPRINT("RefCount:%d\n", count);
       if (NT_SUCCESS(Status) && vfatFCBIsDirectory(FCB))
         {
           if (!VfatIsDirectoryEmpty(FCB))
@@ -453,6 +450,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
     AllocSizeChanged = TRUE;
     if (FirstCluster == 0)
     {
+      Fcb->LastCluster = Fcb->LastOffset = 0;
       Status = NextCluster (DeviceExt, FirstCluster, &FirstCluster, TRUE);
       if (!NT_SUCCESS(Status))
       {
@@ -464,29 +462,44 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
          return STATUS_DISK_FULL;
       }
       Status = OffsetToCluster(DeviceExt, FirstCluster, 
-	         ROUND_DOWN(NewSize - 1, ClusterSize),
-                 &NCluster, TRUE);
+                               ROUND_DOWN(NewSize - 1, ClusterSize),
+                               &NCluster, TRUE);
       if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
       {
-	 /* disk is full */
+         /* disk is full */
          NCluster = Cluster = FirstCluster;
-	 Status = STATUS_SUCCESS;
+         Status = STATUS_SUCCESS;
          while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
-	 {
-	    Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
+         {
+            Status = NextCluster (DeviceExt, FirstCluster, &NCluster, FALSE);
             WriteCluster (DeviceExt, Cluster, 0);
-	    Cluster = NCluster;
-	 }
-	 return STATUS_DISK_FULL;
+            Cluster = NCluster;
+         }
+         return STATUS_DISK_FULL;
       }
       Fcb->entry.FirstCluster = (unsigned short)(FirstCluster & 0x0000FFFF);
       Fcb->entry.FirstClusterHigh = (unsigned short)((FirstCluster & 0xFFFF0000) >> 16);
     }
     else
     {
-       Status = OffsetToCluster(DeviceExt, FirstCluster, 
-	          Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
-		  &Cluster, FALSE);
+       if (Fcb->LastCluster > 0 &&
+           (Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize) > Fcb->LastOffset)
+       {
+          Status = OffsetToCluster(DeviceExt, Fcb->LastCluster, 
+                                   Fcb->RFCB.AllocationSize.u.LowPart -
+                                   ClusterSize - Fcb->LastOffset,
+                                   &Cluster, FALSE);
+       }
+       else
+       {
+          Status = OffsetToCluster(DeviceExt, FirstCluster, 
+                                   Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
+                                   &Cluster, FALSE);
+       }
+
+       Fcb->LastCluster = Cluster;
+       Fcb->LastOffset = Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize;
+
        /* FIXME: Check status */
        /* Cluster points now to the last cluster within the chain */
        Status = OffsetToCluster(DeviceExt, FirstCluster, 
@@ -513,6 +526,8 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
   else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
   {
     AllocSizeChanged = TRUE;
+    /* FIXME: Use the cached cluster/offset better way. */
+    Fcb->LastCluster = Fcb->LastCluster = 0;
     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {

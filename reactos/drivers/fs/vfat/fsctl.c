@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.33 2004/07/05 21:39:02 hbirr Exp $
+/* $Id: fsctl.c,v 1.34 2004/08/01 21:57:18 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -425,6 +425,27 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DeviceExt->LastAvailableCluster = 2;
    ExInitializeResourceLite(&DeviceExt->DirResource);
    ExInitializeResourceLite(&DeviceExt->FatResource);
+
+   switch (DeviceExt->FatInfo.FatType)
+   {
+      case FAT12:
+         DeviceExt->GetNextCluster = FAT12GetNextCluster;
+         DeviceExt->FindAndMarkAvailableCluster = FAT12FindAndMarkAvailableCluster;
+         DeviceExt->WriteCluster = FAT12WriteCluster;
+         break;
+
+      case FAT16:
+         DeviceExt->GetNextCluster = FAT16GetNextCluster;
+         DeviceExt->FindAndMarkAvailableCluster = FAT16FindAndMarkAvailableCluster;
+         DeviceExt->WriteCluster = FAT16WriteCluster;
+         break;
+
+      case FAT32:
+         DeviceExt->GetNextCluster = FAT32GetNextCluster;
+         DeviceExt->FindAndMarkAvailableCluster = FAT32FindAndMarkAvailableCluster;
+         DeviceExt->WriteCluster = FAT32WriteCluster;
+         break;
+   }
 
    InitializeListHead(&DeviceExt->FcbListHead);
    RtlRosInitUnicodeStringFromLiteral(&NameU, L"\\$$Volume$$");

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.70 2004/07/05 21:39:02 hbirr Exp $
+/* $Id: create.c,v 1.71 2004/08/01 21:57:17 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -453,6 +453,7 @@ VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
     }
   Fcb->entry.FirstCluster = 0;
   Fcb->entry.FirstClusterHigh = 0;
+  Fcb->LastOffset = Fcb->LastCluster = 0;
   VfatUpdateEntry (Fcb);
   if (Fcb->RFCB.FileSize.QuadPart > 0)
     {

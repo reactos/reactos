@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.39 2003/10/11 17:51:56 hbirr Exp $
+/* $Id: dirwr.c,v 1.40 2004/08/01 21:57:17 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -203,6 +203,13 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
     {
       return STATUS_UNSUCCESSFUL;
     }
+
+  if (!ExAcquireResourceExclusiveLite(&pDirFcb->MainResource, TRUE))
+    {
+      DPRINT("Failed acquiring lock\n");
+      return STATUS_UNSUCCESSFUL;
+    }
+  
   nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
   Buffer = ExAllocatePool (NonPagedPool, (nbSlots - 1) * sizeof (FATDirEntry));
@@ -247,6 +254,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
         }
       if (i == 100) /* FIXME : what to do after this ? */
         {
+          ExReleaseResourceLite(&pDirFcb->MainResource);
           vfatReleaseFCB(DeviceExt, pDirFcb);
           ExFreePool (Buffer);
 	  CHECKPOINT;
@@ -400,6 +408,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   /* try to find nbSlots contiguous entries frees in directory */
   if (!vfatFindDirSpace(DeviceExt, pDirFcb, nbSlots, &DirContext.StartIndex))
     {
+      ExReleaseResourceLite(&pDirFcb->MainResource);
       vfatReleaseFCB(DeviceExt, pDirFcb);
       ExFreePool (Buffer);
       return STATUS_DISK_FULL;
@@ -407,10 +416,11 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   DirContext.DirIndex = DirContext.StartIndex + nbSlots - 1;
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
-      CurrentCluster = 0xffffffff;
+      CurrentCluster = 0;
       Status = NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
       if (CurrentCluster == 0xffffffff || !NT_SUCCESS(Status))
         {
+          ExReleaseResourceLite(&pDirFcb->MainResource);
           vfatReleaseFCB(DeviceExt, pDirFcb);
           ExFreePool (Buffer);
           if (!NT_SUCCESS(Status))
@@ -495,6 +505,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
       CcSetDirtyPinnedData(Context, NULL);
       CcUnpinData(Context);
     }
+  ExReleaseResourceLite(&pDirFcb->MainResource);
   vfatReleaseFCB (DeviceExt, pDirFcb);
   ExFreePool (Buffer);
   DPRINT ("addentry ok\n");
