@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.34 2002/09/27 15:29:03 hbirr Exp $
+/* $Id: stubs.c,v 1.35 2002/09/30 21:01:32 hbirr Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1385,62 +1385,73 @@ WideCharToMultiByte (
 {
 	int wi, di;  // wide counter, dbcs byte count
 
-	// for now, make no difference but only convert cut the characters to 7Bit
-	switch( CodePage )
+	/*
+	 * Check the parameters.
+	 */
+	if (	/* --- CODE PAGE --- */
+		(	(CP_ACP != CodePage)
+			&& (CP_MACCP != CodePage)
+			&& (CP_OEMCP != CodePage)
+			&& (CP_SYMBOL != CodePage)
+			&& (CP_THREAD_ACP != CodePage)
+			&& (CP_UTF7 != CodePage)
+			&& (CP_UTF8 != CodePage)
+			&& (FALSE == IsInstalledCP (CodePage))
+			)
+		/* --- FLAGS --- */
+		|| (dwFlags & ~(/*WC_NO_BEST_FIT_CHARS
+				|*/ WC_COMPOSITECHECK
+				| WC_DISCARDNS
+				| WC_SEPCHARS
+				| WC_DEFAULTCHAR
+				)
+			)
+		/* --- INPUT BUFFER --- */
+		|| (NULL == lpWideCharStr)
+		)
 	{
-	case CP_ACP:            //ANSI code page         
-	case CP_MACCP:			//Macintosh code page 
-	case CP_OEMCP:			//OEM code page 
-	case CP_SYMBOL:			//Symbol code page (42) 
-	case CP_THREAD_ACP:		//ACP Current thread's ANSI code page 
-	case CP_UTF7:			//Translate using UTF-7 
-	case CP_UTF8:			//Translate using UTF-8 
-		if( cchWideChar == -1 ) // assume its a 0-terminated str
-		{						// and determine its length
-			for( cchWideChar=0; lpWideCharStr[cchWideChar]!=0; )
-				cchWideChar++;
-		}
-
-		// user wants to determine needed space
-		if( cchMultiByte == 0 ) 
-		{
-			SetLastError(ERROR_SUCCESS);
-			return cchWideChar;			// FIXME: determine correct.
-		}
-		// the lpWideCharStr is cchWideChar characters long.
-		for( wi=0, di=0; wi<cchWideChar && di<cchMultiByte; ++wi)
-		{
-			// Flag and a not displayable char    FIXME
-			/*if( (dwFlags&WC_NO_BEST_FIT_CHARS) && (lpWideCharStr[wi] >127) ) 
-			{
-				lpMultiByteStr[di]=
-				*lpUsedDefaultChar = TRUE;
-
-			}*/
-			// FIXME
-			// just cut off the upper 9 Bit, since vals>=128 mean LeadByte.
-			lpMultiByteStr[di] = lpWideCharStr[wi] & 0x007F;
-			++di;
-		}
-		// has MultiByte exceeded but Wide is still in the string?
-		if( wi < cchWideChar && di >= cchMultiByte)
-		{
-			SetLastError(ERROR_INSUFFICIENT_BUFFER);
-			return di;
-		}
-		// else return # of bytes wirtten to MBCSbuffer (di)
-		SetLastError(ERROR_SUCCESS);
-				// FIXME: move that elsewhere
-				if( lpUsedDefaultChar!=NULL ) *lpUsedDefaultChar=FALSE; 
-		return di;
-		break;
-	default:
 		SetLastError(ERROR_INVALID_PARAMETER);
-		return FALSE;
-		break;
+		return 0;
 	}
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
+
+	// for now, make no difference but only convert cut the characters to 7Bit
+	if( cchWideChar == -1 ) // assume its a 0-terminated str
+	{			// and determine its length
+		for( cchWideChar=0; lpWideCharStr[cchWideChar]!=0; cchWideChar++)
+		cchWideChar++;
+	}
+
+	// user wants to determine needed space
+	if( cchMultiByte == 0 ) 
+	{
+		SetLastError(ERROR_SUCCESS);
+		return cchWideChar;			// FIXME: determine correct.
+	}
+	// the lpWideCharStr is cchWideChar characters long.
+	for( wi=0, di=0; wi<cchWideChar && di<cchMultiByte; ++wi, ++di)
+	{
+		// Flag and a not displayable char    FIXME
+		/*if( (dwFlags&WC_NO_BEST_FIT_CHARS) && (lpWideCharStr[wi] >127) ) 
+		{
+			lpMultiByteStr[di]=
+			*lpUsedDefaultChar = TRUE;
+
+		}*/
+		// FIXME
+		// just cut off the upper 9 Bit, since vals>=128 mean LeadByte.
+		lpMultiByteStr[di] = lpWideCharStr[wi] & 0x007F;
+	}
+	// has MultiByte exceeded but Wide is still in the string?
+	if( wi < cchWideChar && di >= cchMultiByte)
+	{
+		SetLastError(ERROR_INSUFFICIENT_BUFFER);
+		return 0;
+	}
+	// else return # of bytes wirtten to MBCSbuffer (di)
+	SetLastError(ERROR_SUCCESS);
+	// FIXME: move that elsewhere
+	if( lpUsedDefaultChar!=NULL ) *lpUsedDefaultChar=FALSE; 
+	return di;
 }
 
 
