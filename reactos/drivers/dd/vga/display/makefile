@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.21 2003/11/14 17:13:25 weiden Exp $
+# $Id: makefile,v 1.22 2003/11/16 12:36:23 gvg Exp $
 
 PATH_TO_TOP = ../../../..
 
@@ -39,5 +39,9 @@ TARGET_CLEAN = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+# Automatic dependency tracking
+DEP_OBJECTS := $(TARGET_OBJECTS)
+include $(PATH_TO_TOP)/tools/depend.mk
 
 # EOF

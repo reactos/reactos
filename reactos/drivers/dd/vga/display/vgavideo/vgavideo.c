@@ -2,6 +2,7 @@
 #include <ddk/ntddvid.h>
 #include <ddk/winddi.h>
 #include <ntos/minmax.h>
+#include <stdlib.h>
 #include "vgavideo.h"
 
 UCHAR PreCalcReverseByte[256];
@@ -569,7 +570,7 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int St
 
 
 /* DIB blt to the VGA. */
-void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelta, PXLATEOBJ Xlate)
+void DIB_BltToVGAWithXlate(int x, int y, int w, int h, void *b, int Source_lDelta, XLATEOBJ* Xlate)
 {
   PBYTE pb, opb = b;
   ULONG i, j;

@@ -7,18 +7,18 @@
 #include "bitblt.h"
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
-typedef BOOL STDCALL (*PBLTRECTFUNC)(PSURFOBJ OutputObj,
-                                     PSURFOBJ InputObj,
-                                     PSURFOBJ Mask,
-                                     PXLATEOBJ ColorTranslation,
-                                     PRECTL OutputRect,
-                                     PPOINTL InputPoint,
-                                     PPOINTL MaskOrigin,
-                                     PBRUSHOBJ Brush,
-                                     PPOINTL BrushOrigin,
+typedef BOOL STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
+                                     SURFOBJ* InputObj,
+                                     SURFOBJ* Mask,
+                                     XLATEOBJ* ColorTranslation,
+                                     RECTL* OutputRect,
+                                     POINTL* InputPoint,
+                                     POINTL* MaskOrigin,
+                                     BRUSHOBJ* Brush,
+                                     POINTL* BrushOrigin,
                                      ROP4 Rop4);
 
-static BOOL FASTCALL VGADDI_IntersectRect(PRECTL prcDst, PRECTL prcSrc1, PRECTL prcSrc2)
+static BOOL FASTCALL VGADDI_IntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
   static const RECTL rclEmpty = { 0, 0, 0, 0 };
 
@@ -168,10 +168,10 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
 }
 
 BOOL STDCALL
-VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
-                PXLATEOBJ ColorTranslation, PRECT DestRect,
-                PPOINTL SourcePoint, PPOINTL MaskPoint,
-		PBRUSHOBJ Brush, PPOINTL BrushPoint, ROP4 Rop4)
+VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
+                XLATEOBJ* ColorTranslation, RECTL* DestRect,
+                POINTL* SourcePoint, POINTL* MaskPoint,
+		BRUSHOBJ* Brush, POINTL* BrushPoint, ROP4 Rop4)
 {
   UCHAR SolidColor = 0;
   ULONG Left;
@@ -292,9 +292,9 @@ VGADDI_BltBrush(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ MaskSurf,
 }
 
 BOOL STDCALL
-VGADDI_BltSrc(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
-              PXLATEOBJ ColorTranslation, PRECTL DestRect, PPOINTL SourcePoint,
-              PPOINTL MaskOrigin, PBRUSHOBJ Brush, PPOINTL BrushOrigin, ROP4 Rop4)
+VGADDI_BltSrc(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
+              XLATEOBJ* ColorTranslation, RECTL* DestRect, POINTL* SourcePoint,
+              POINTL* MaskOrigin, BRUSHOBJ* Brush, POINTL* BrushOrigin, ROP4 Rop4)
 {
   PFN_VGABlt  BltOperation;
   ULONG SourceType;
@@ -332,10 +332,10 @@ VGADDI_BltSrc(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
 }
 
 BOOL STDCALL
-VGADDI_BltMask(PSURFOBJ Dest, PSURFOBJ Source, PSURFOBJ Mask,
-               PXLATEOBJ ColorTranslation, PRECTL DestRect,
-               PPOINTL SourcePoint, PPOINTL MaskPoint, BRUSHOBJ* Brush,
-	       PPOINTL BrushPoint, ROP4 Rop4)
+VGADDI_BltMask(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
+               XLATEOBJ* ColorTranslation, RECTL* DestRect,
+               POINTL* SourcePoint, POINTL* MaskPoint, BRUSHOBJ* Brush,
+	       POINTL* BrushPoint, ROP4 Rop4)
 {
   LONG i, j, dx, dy, c8;
   BYTE *tMask, *lMask;

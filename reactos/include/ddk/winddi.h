@@ -34,6 +34,8 @@
 typedef DWORD PTRDIFF;
 #endif
 
+#define DM_SPECVERSION 0x0320
+
 #define DDI_DRIVER_VERSION_NT4 0x20000
 #define DDI_DRIVER_VERSION_SP3 0x20003
 #define DDI_DRIVER_VERSION_NT5 0x30000
@@ -1009,10 +1011,10 @@ DrvEnablePDEV(IN DEVMODEW *DM,
 	      IN ULONG PatternCount,
 	      OUT HSURF *SurfPatterns,
 	      IN ULONG GDIInfoSize,
-	      OUT GDIINFO *GDIInfo,
+	      OUT ULONG *GDIInfo,
 	      IN ULONG DevInfoSize,
 	      OUT DEVINFO *DevInfo,
-	      IN LPWSTR DevDataFile,
+	      IN HDEV Dev,
 	      IN LPWSTR DeviceName,
 	      IN HANDLE Driver);
 HSURF STDCALL

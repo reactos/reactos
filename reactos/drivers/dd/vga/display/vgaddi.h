@@ -10,7 +10,6 @@
 #define POW2(stride) (!((stride) & ((stride)-1)))   // TRUE if stride is power of 2
 #define BROKEN_RASTERS(stride,cy) ((!(POW2(stride))) && ((stride*cy) > 0x10000))
 
-#define DM_SPECVERSION 1 // FIXME: What is this really?
 #define ENUM_RECT_LIMIT   50
 
 typedef struct _RECT_ENUM
@@ -45,6 +44,7 @@ typedef struct _PDEV
 
   // Cursor
   XYPAIR xyCursor;  // cursor position
+  XYPAIR xyHotSpot; // cursor hotspot
   POINTL ptlExtent; // cursor extent
   ULONG  cExtent;   // effective cursor extent
   ULONG  flCursor;  // cursor status

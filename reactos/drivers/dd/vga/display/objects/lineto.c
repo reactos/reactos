@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.16 2003/11/14 17:13:25 weiden Exp $
+ * $Id: lineto.c,v 1.17 2003/11/16 12:36:24 gvg Exp $
  */
 
 #include "../vgaddi.h"
@@ -26,7 +26,7 @@
  * Draw a line from top-left to bottom-right
  */
 static void FASTCALL
-vgaNWtoSE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay)
+vgaNWtoSE(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay)
 {
   int i;
   int error;
@@ -92,7 +92,7 @@ vgaNWtoSE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
 }
 
 static void FASTCALL
-vgaSWtoNE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay)
+vgaSWtoNE(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay)
 {
   int i;
   int error;
@@ -157,7 +157,7 @@ vgaSWtoNE(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
 }
 
 static void FASTCALL
-vgaNEtoSW(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay)
+vgaNEtoSW(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay)
 {
   int i;
   int error;
@@ -222,7 +222,7 @@ vgaNEtoSW(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG delt
 }
 
 static void FASTCALL
-vgaSEtoNW(PCLIPOBJ Clip, PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay)
+vgaSEtoNW(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay)
 {
   int i;
   int error;

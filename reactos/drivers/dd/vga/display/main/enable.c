@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.29 $
- * $Author: weiden $
- * $Date: 2003/11/14 17:13:25 $
+ * $Revision: 1.30 $
+ * $Author: gvg $
+ * $Date: 2003/11/16 12:36:24 $
  *
  */
 
@@ -196,7 +196,7 @@ DrvEnableDriver(IN ULONG EngineVersion,
 
   DriveEnableData->pdrvfn = FuncList;
   DriveEnableData->c = sizeof(FuncList) / sizeof(DRVFN);
-  DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION;
+  DriveEnableData->iDriverVersion = DDI_DRIVER_VERSION_NT4;
 
   return  TRUE;
 }
@@ -229,9 +229,9 @@ DrvDisableDriver(VOID)
 //    IN ULONG       PatternCount  number of patterns expected
 //    OUT HSURF *    SurfPatterns  array to contain pattern handles
 //    IN ULONG       GDIInfoSize   the size of the GDIInfo object passed in
-//    OUT GDIINFO *  GDIInfo       GDI Info object
+//    OUT ULONG *    GDIInfo       GDI Info object
 //    IN ULONG       DevInfoSize   the size of the DevInfo object passed in
-//    OUT DEVINFO *  DevInfo       Device Info object
+//    OUT ULONG *    DevInfo       Device Info object
 //    IN LPWSTR      DevDataFile   ignore
 //    IN LPWSTR      DeviceName    Device name
 //    IN HANDLE      Driver        handle to KM driver
@@ -244,10 +244,10 @@ DrvEnablePDEV(IN DEVMODEW *DM,
 	      IN ULONG PatternCount,
 	      OUT HSURF *SurfPatterns,
 	      IN ULONG GDIInfoSize,
-	      OUT GDIINFO *GDIInfo,
+	      OUT ULONG *GDIInfo,
 	      IN ULONG DevInfoSize,
 	      OUT DEVINFO *DevInfo,
-	      IN LPWSTR DevDataFile,
+	      IN HDEV Dev,
 	      IN LPWSTR DeviceName,
 	      IN HANDLE Driver)
 {
@@ -283,7 +283,7 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     }
   memcpy(DevInfo, &devinfoVGA, DevInfoSize);
 
-  return(PDev);
+  return (DHPDEV) PDev;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.44 2003/11/10 17:44:49 weiden Exp $
+/* $Id: mouse.c,v 1.45 2003/11/16 12:36:24 gvg Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -42,7 +42,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
 
 #define GETSYSCURSOR(x) ((x) - OCR_NORMAL)
 
@@ -177,8 +176,10 @@ MouseSafetyOnDrawStart(PSURFOBJ SurfObj, PSURFGDI SurfGDI, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  if (((CurInfo->x + Cursor->Size.cx) >= HazardX1)  && (CurInfo->x <= HazardX2) &&
-      ((CurInfo->y + Cursor->Size.cy) >= HazardY1) && (CurInfo->y <= HazardY2))
+  if (CurInfo->x - (INT) Cursor->IconInfo.xHotspot + Cursor->Size.cx >= HazardX1
+      && CurInfo->x - (INT) Cursor->IconInfo.xHotspot <= HazardX2
+      && CurInfo->y - (INT) Cursor->IconInfo.yHotspot + Cursor->Size.cy >= HazardY1
+      && CurInfo->y - (INT) Cursor->IconInfo.yHotspot <= HazardY2)
     {
       /* Mouse is not allowed to move if GDI is busy drawing */
       ExAcquireFastMutexUnsafe(&CurInfo->CursorMutex);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pointer.c,v 1.17 2003/11/14 17:13:25 weiden Exp $
+/* $Id: pointer.c,v 1.18 2003/11/16 12:36:24 gvg Exp $
  *
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
@@ -30,7 +30,7 @@
 
 /* GLOBALS *******************************************************************/
 
-static ULONG oldx, oldy;
+static LONG oldx, oldy;
 static PSAVED_SCREEN_BITS ImageBehindCursor = NULL;
 VOID VGADDI_HideCursor(PPDEV ppdev);
 VOID VGADDI_ShowCursor(PPDEV ppdev);
@@ -38,10 +38,10 @@ VOID VGADDI_ShowCursor(PPDEV ppdev);
 /* FUNCTIONS *****************************************************************/
 
 VOID
-VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
+VGADDI_BltPointerToVGA(LONG StartX, LONG StartY, ULONG SizeX,
 		       ULONG SizeY, PUCHAR MaskBits, ULONG MaskPitch, ULONG MaskOp)
 {
-  ULONG EndX, EndY;
+  ULONG DestX, EndX, DestY, EndY;
   UCHAR Mask;
   PUCHAR Video;
   PUCHAR Src;
@@ -49,7 +49,10 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
   ULONG i, j;
   ULONG Left;
   ULONG Length;
+  LONG Bits;
 
+  DestX = StartX < 0 ? 0 : StartX;
+  DestY = StartY < 0 ? 0 : StartY;
   EndX = StartX + SizeX;
   EndY = StartY + SizeY;
 
@@ -61,11 +64,11 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
   WRITE_PORT_UCHAR((PUCHAR)GRA_I, 3);
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, MaskOp);
 
-  if ((StartX % 8) != 0)
+  if ((DestX % 8) != 0)
     {
       /* Disable writes to pixels outside of the destination rectangle. */
-      Mask = (1 << (8 - (StartX % 8))) - 1;
-      if ((EndX - StartX) < (8 - (StartX % 8)))
+      Mask = (1 << (8 - (DestX % 8))) - 1;
+      if ((EndX - DestX) < (8 - (DestX % 8)))
 	{
 	  Mask &= ~((1 << (8 - (EndX % 8))) - 1);
 	}
@@ -73,12 +76,12 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
       /* Write the mask. */
-      Video = (PUCHAR)vidmem + StartY * 80 + (StartX >> 3);
-      Src = MaskBits + SizeY * MaskPitch;
-      for (i = 0; i < SizeY; i++, Video+=80)
+      Video = (PUCHAR)vidmem + DestY * 80 + (DestX >> 3);
+      Src = MaskBits + (SizeY - (DestY - StartY)) * MaskPitch;
+      for (i = DestY; i < EndY; i++, Video += 80)
 	{
 	  Src -= MaskPitch;
-	  SrcValue = (*Src) >> (StartX % 8);
+	  SrcValue = (*Src) >> (DestX % 8);
 	  (VOID)READ_REGISTER_UCHAR(Video);
 	  WRITE_REGISTER_UCHAR(Video, SrcValue);
 	}
@@ -89,24 +92,30 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
   WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xFF);
 
   /* Have we finished. */
-  if ((EndX - StartX) < (8 - (StartX % 8)))
+  if ((EndX - DestX) < (8 - (DestX % 8)))
     {
       return;
     }
 
   /* Fill any whole rows of eight pixels. */
-  Left = (StartX + 7) & ~0x7;
+  Left = (DestX + 7) & ~0x7;
   Length = (EndX >> 3) - (Left >> 3);
-  for (i = StartY; i < EndY; i++)
+  Bits = StartX;
+  while (Bits < 0)
+    {
+      Bits += 8;
+    }
+  Bits = Bits % 8;
+  for (i = DestY; i < EndY; i++)
     {
       Video = (PUCHAR)vidmem + i * 80 + (Left >> 3);
-      Src = MaskBits + (EndY - i - 1) * MaskPitch;
+      Src = MaskBits + (EndY - i - 1) * MaskPitch + ((DestX - StartX) >> 3);
       for (j = 0; j < Length; j++, Video++, Src++)
 	{
-	  if ((StartX % 8) != 0)
+	  if (Bits != 0)
 	    {
-	      SrcValue = (Src[0] << (8 - (StartX % 8)));
-	      SrcValue |= (Src[1] >> (StartX % 8));
+	      SrcValue = (Src[0] << (8 - Bits));
+	      SrcValue |= (Src[1] >> Bits);
 	    }
 	  else
 	    {
@@ -125,12 +134,12 @@ VGADDI_BltPointerToVGA(ULONG StartX, ULONG StartY, ULONG SizeX,
       WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x8);
       WRITE_PORT_UCHAR((PUCHAR)GRA_D, Mask);
 
-      Video = (PUCHAR)vidmem + StartY * 80 + (EndX >> 3);
-      Src = MaskBits + SizeY * MaskPitch + (SizeX >> 3) - 1;
-      for (i = StartY; i < EndY; i++, Video+=80)
+      Video = (PUCHAR)vidmem + DestY * 80 + (EndX >> 3);
+      Src = MaskBits + (SizeY - (DestY - StartY)) * MaskPitch + (SizeX >> 3) - 1;
+      for (i = DestY; i < EndY; i++, Video+=80)
 	{
 	  Src -= MaskPitch;
-	  SrcValue = (Src[0] << (8 - (StartX % 8)));
+	  SrcValue = (Src[0] << (8 - Bits));
 	  (VOID)READ_REGISTER_UCHAR(Video);
 	  WRITE_REGISTER_UCHAR(Video, SrcValue);
 	}
@@ -177,16 +186,16 @@ BOOL InitPointer(PPDEV ppdev)
   return(TRUE);
 }
 
-
 VOID STDCALL
-DrvMovePointer(IN PSURFOBJ pso,
+DrvMovePointer(IN SURFOBJ* pso,
 	       IN LONG x,
 	       IN LONG y,
 	       IN PRECTL prcl)
 {
   PPDEV ppdev = (PPDEV)pso->dhpdev;
 
-  if (x < 0 )
+
+  if (x < 0 && 0 == (ppdev->flCursor & CURSOR_DOWN))
     {
       /* x < 0 and y < 0 indicates we must hide the cursor */
       VGADDI_HideCursor(ppdev);
@@ -196,7 +205,10 @@ DrvMovePointer(IN PSURFOBJ pso,
   ppdev->xyCursor.x = x;
   ppdev->xyCursor.y = y;
 
-  VGADDI_ShowCursor(ppdev);
+  if (0 == (ppdev->flCursor & CURSOR_DOWN))
+    {
+      VGADDI_ShowCursor(ppdev);
+    }
 
   /* Give feedback on the new cursor rectangle */
   /*if (prcl != NULL) ComputePointerRect(ppdev, prcl);*/
@@ -204,10 +216,10 @@ DrvMovePointer(IN PSURFOBJ pso,
 
 
 ULONG STDCALL
-DrvSetPointerShape(PSURFOBJ pso,
-		   PSURFOBJ psoMask,
-		   PSURFOBJ psoColor,
-		   PXLATEOBJ pxlo,
+DrvSetPointerShape(SURFOBJ* pso,
+		   SURFOBJ* psoMask,
+		   SURFOBJ* psoColor,
+		   XLATEOBJ* pxlo,
 		   LONG xHot,
 		   LONG yHot,
 		   LONG x,
@@ -219,21 +231,23 @@ DrvSetPointerShape(PSURFOBJ pso,
   ULONG NewWidth, NewHeight;
   PUCHAR Src, Dest;
   ULONG i;
-  
-  if(!psoMask)
-  {
-    VGADDI_HideCursor(ppdev);
-    return SPS_ACCEPT_EXCLUDE;
-  }
-
-  NewWidth = psoMask->lDelta << 3;
-  NewHeight = (psoMask->cjBits / psoMask->lDelta) / 2;
 
   /* Hide the cursor */
-  if(ppdev->pPointerAttributes->Enable != 0)
+  if (ppdev->pPointerAttributes->Enable != 0
+      && 0 == (ppdev->flCursor & CURSOR_DOWN))
     {
       VGADDI_HideCursor(ppdev);
     }
+
+  if (! psoMask)
+    {
+      ppdev->flCursor = CURSOR_DOWN;
+      return SPS_ACCEPT_EXCLUDE;
+    }
+  ppdev->flCursor = ppdev->flCursor & (~ CURSOR_DOWN);
+
+  NewWidth = psoMask->lDelta << 3;
+  NewHeight = (psoMask->cjBits / psoMask->lDelta) / 2;
 
   /* Reallocate the space for the cursor if necessary. */
   if (ppdev->pPointerAttributes->Width != NewWidth ||
@@ -282,6 +296,8 @@ DrvSetPointerShape(PSURFOBJ pso,
   /* Set the new cursor position */
   ppdev->xyCursor.x = x;
   ppdev->xyCursor.y = y;
+  ppdev->xyHotSpot.x = xHot;
+  ppdev->xyHotSpot.y = yHot;
 
   /* Show the cursor */
   VGADDI_ShowCursor(ppdev);
@@ -298,8 +314,8 @@ VGADDI_HideCursor(PPDEV ppdev)
   SizeX = min(((oldx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
   SizeX -= (oldx & ~0x7);
   SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - oldy);
-  VGADDI_BltFromSavedScreenBits(oldx & ~0x7,
-				oldy,
+  VGADDI_BltFromSavedScreenBits(max(oldx, 0) & ~0x7,
+				max(oldy, 0),
 				ImageBehindCursor,
 				SizeX,
 				SizeY);
@@ -310,7 +326,7 @@ VGADDI_HideCursor(PPDEV ppdev)
 VOID
 VGADDI_ShowCursor(PPDEV ppdev)
 {
-  ULONG cx, cy;
+  LONG cx, cy;
   PUCHAR AndMask, XorMask;
   ULONG SizeX, SizeY;
 
@@ -320,8 +336,8 @@ VGADDI_ShowCursor(PPDEV ppdev)
     }
 
   /* Capture pixels behind the cursor */
-  cx = ppdev->xyCursor.x;
-  cy = ppdev->xyCursor.y;
+  cx = ppdev->xyCursor.x - ppdev->xyHotSpot.x;
+  cy = ppdev->xyCursor.y - ppdev->xyHotSpot.y;
 
   /* Used to repaint background */
   SizeX = min(((cx + ppdev->pPointerAttributes->Width) + 7) & ~0x7, ppdev->sizeSurf.cx);
@@ -329,18 +345,18 @@ VGADDI_ShowCursor(PPDEV ppdev)
   SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
 
   VGADDI_BltToSavedScreenBits(ImageBehindCursor,
-			      cx & ~0x7,
-			      cy,
+			      max(cx, 0) & ~0x7,
+			      max(cy, 0),
 			      SizeX,
 			      SizeY);
 
   /* Display the cursor. */
-  SizeX = min(ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - ppdev->xyCursor.x);
-  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - ppdev->xyCursor.y);
+  SizeX = min(ppdev->pPointerAttributes->Width, ppdev->sizeSurf.cx - cx);
+  SizeY = min(ppdev->pPointerAttributes->Height, ppdev->sizeSurf.cy - cy);
   AndMask = ppdev->pPointerAttributes->Pixels +
             (ppdev->pPointerAttributes->Height - SizeY) * ppdev->pPointerAttributes->WidthInBytes;
-  VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
-			 ppdev->xyCursor.y,
+  VGADDI_BltPointerToVGA(cx,
+			 cy,
 			 SizeX,
 			 SizeY,
 			 AndMask,
@@ -349,8 +365,8 @@ VGADDI_ShowCursor(PPDEV ppdev)
   XorMask = AndMask +
     ppdev->pPointerAttributes->WidthInBytes *
     ppdev->pPointerAttributes->Height;
-  VGADDI_BltPointerToVGA(ppdev->xyCursor.x,
-			 ppdev->xyCursor.y,
+  VGADDI_BltPointerToVGA(cx,
+			 cy,
 			 SizeX,
 			 SizeY,
 			 XorMask,
@@ -358,8 +374,8 @@ VGADDI_ShowCursor(PPDEV ppdev)
 			 VGA_XOR);
 
   /* Save the new cursor location. */
-  oldx = ppdev->xyCursor.x;
-  oldy = ppdev->xyCursor.y;
+  oldx = cx;
+  oldy = cy;
 
   /* Mark the cursor as currently displayed. */
   ppdev->pPointerAttributes->Enable = 1;

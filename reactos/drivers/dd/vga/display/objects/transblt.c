@@ -7,12 +7,12 @@
 #include "bitblt.h"
 
 BOOL STDCALL
-DrvTransparentBlt(PSURFOBJ Dest,
-		  PSURFOBJ Source,
-		  PCLIPOBJ Clip,
-		  PXLATEOBJ ColorTranslation,
-		  PRECTL DestRect,
-		  PRECTL SourceRect,
+DrvTransparentBlt(SURFOBJ* Dest,
+		  SURFOBJ* Source,
+		  CLIPOBJ* Clip,
+		  XLATEOBJ* ColorTranslation,
+		  RECTL* DestRect,
+		  RECTL* SourceRect,
 		  ULONG TransparentColor,
 		  ULONG Reserved)
 {

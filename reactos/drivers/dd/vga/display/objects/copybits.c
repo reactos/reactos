@@ -5,12 +5,12 @@
 #include <debug.h>
 
 BOOL STDCALL
-DrvCopyBits(OUT PSURFOBJ  DestObj,  
-            IN  PSURFOBJ  SourceObj,  
-            IN  PCLIPOBJ  ClipObj,  
-            IN  PXLATEOBJ XLateObj,  
-            IN  PRECTL    DestRectL,  
-            IN  PPOINTL   SrcPointL)
+DrvCopyBits(OUT SURFOBJ*  DestObj,  
+            IN  SURFOBJ*  SourceObj,  
+            IN  CLIPOBJ*  ClipObj,  
+            IN  XLATEOBJ* XLateObj,  
+            IN  RECTL*    DestRectL,  
+            IN  POINTL*   SrcPointL)
 {
   BOOL Done = FALSE;
 
