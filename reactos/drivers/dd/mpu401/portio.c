@@ -85,7 +85,7 @@ BOOLEAN InitUARTMode(UINT BasePort)
     {
         // Check to make sure the reset was acknowledged:
         for (TimeOut = MPU401_TIMEOUT;
-             Status = (MPU401_READ_DATA(BasePort) & 0xfe) && TimeOut > 0;
+             (Status = (MPU401_READ_DATA(BasePort) & 0xfe) && TimeOut > 0);
              TimeOut --);
     }
 

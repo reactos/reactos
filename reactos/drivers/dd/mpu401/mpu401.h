@@ -77,7 +77,7 @@
 
 typedef struct _DEVICE_EXTENSION
 {
-    PWSTR RegistryPath;
+    PUNICODE_STRING RegistryPath;
     PDRIVER_OBJECT DriverObject;
     UINT Port;
     UINT IRQ;

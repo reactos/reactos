@@ -13,6 +13,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <rosrtl/string.h>
 //#include <ddk/ntddbeep.h>
 
 //#define NDEBUG
@@ -29,14 +30,14 @@ UINT DeviceCount = 0;
 /* FUNCTIONS ***************************************************************/
 
 NTSTATUS InitDevice(
-    IN PWSTR RegistryPath,
+    IN PUNICODE_STRING RegistryPath,
     IN PVOID Context)
 {
 //    PDEVICE_INSTANCE Instance = Context;
     PDEVICE_OBJECT DeviceObject; // = Context;
     PDEVICE_EXTENSION Parameters; // = DeviceObject->DeviceExtension;
-    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\MPU401_Out_0");
-    UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MPU401_Out_0");
+    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\MidiOut0");
+    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\MidiOut0");
 //    CONFIG Config;
     RTL_QUERY_REGISTRY_TABLE Table[2];
     NTSTATUS s;
@@ -144,17 +145,17 @@ MPU401Create(PDEVICE_OBJECT DeviceObject,
 {
     DPRINT("MPU401Create() called!\n");
     
-    // Initialize the MPU-401
+    // Initialize the MPU-401?
     // ... do stuff ...
 
 
     // Play a note to say we're alive:
-//    WaitToSend(MPU401_PORT);
-//    MPU401_WRITE_DATA(MPU401_PORT, 0x90);
-//    WaitToSend(MPU401_PORT);
-//    MPU401_WRITE_DATA(MPU401_PORT, 0x50);
-//    WaitToSend(MPU401_PORT);
-//    MPU401_WRITE_DATA(MPU401_PORT, 0x7f);
+/*    WaitToSend(MPU401_PORT);
+    MPU401_WRITE_DATA(MPU401_PORT, 0x90);
+    WaitToSend(MPU401_PORT);
+    MPU401_WRITE_DATA(MPU401_PORT, 0x50);
+    WaitToSend(MPU401_PORT);
+    MPU401_WRITE_DATA(MPU401_PORT, 0x7f);*/
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
     Irp->IoStatus.Information = 0;

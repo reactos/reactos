@@ -9,7 +9,7 @@
  *                       Sept 27, 2003: Created
  */
 
-#include <ntddk.h>
+//#include <ntddk.h>
 #include <windows.h>
 
 #include "mpu401.h"
@@ -296,7 +296,7 @@ NTSTATUS SaveSettings(
         NT status STATUS_SUCCESS if successful
 */
 {
-    NTSTATUS s;
+//    NTSTATUS s;
 
     DPRINT("SaveSettings() unimplemented\n");
 

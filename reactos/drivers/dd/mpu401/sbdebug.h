@@ -17,7 +17,7 @@
             else if (s == STATUS_ACCESS_DENIED) \
                 DPRINT("NTSTATUS == ACCESS_DENIED\n") \
             else \
-                DPRINT("NTSTATUS == FAILURE (???)\n"); \
+                DPRINT("NTSTATUS == FAILURE (?)\n"); \
         }
 #else
 #define TEST_STATUS(s)
