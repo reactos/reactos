@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.89 2004/10/20 20:51:21 chorns Exp $
+# $Id: helper.mk,v 1.90 2004/10/21 18:04:48 arty Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -270,7 +270,7 @@ ifeq ($(TARGET_TYPE),hal)
   MK_CPPFLAGS := -D__NTHAL__ -I.
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
-  MK_IMPLIBDEFPATH :=
+  MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
   MK_IMPLIB_EXT := .a
   MK_INSTALLDIR := system32
   MK_BOOTCDDIR := .
