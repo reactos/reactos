@@ -109,7 +109,14 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Refresh();
 		return 0;
 
-	  default:
+	  case WM_CONTEXTMENU: {
+		Point pt(lparam);
+		ScreenToClient(_htoolbar, &pt);
+		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>0)
+			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
+		goto def;}
+
+	  default: def:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 
