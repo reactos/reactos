@@ -632,9 +632,12 @@ TOOLBAR_DrawPattern (LPRECT lpRect, NMTBCUSTOMDRAW *tbcd)
     COLORREF clrBkOld;
     INT cx = lpRect->right - lpRect->left;
     INT cy = lpRect->bottom - lpRect->top;
+    INT cxEdge = GetSystemMetrics(SM_CXEDGE);
+    INT cyEdge = GetSystemMetrics(SM_CYEDGE);
     clrTextOld = SetTextColor(hdc, tbcd->clrBtnHighlight);
     clrBkOld = SetBkColor(hdc, tbcd->clrBtnFace);
-    PatBlt (hdc, lpRect->left + 2, lpRect->top + 2, cx - 4, cy - 4, PATCOPY);
+    PatBlt (hdc, lpRect->left + cxEdge, lpRect->top + cyEdge,
+            cx - (2 * cxEdge), cy - (2 * cyEdge), PATCOPY);
     SetBkColor(hdc, clrBkOld);
     SetTextColor(hdc, clrTextOld);
     SelectObject (hdc, hbr);
