@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.30 2003/12/08 11:11:11 fireball Exp $
+/* $Id: bitblt.c,v 1.31 2003/12/08 18:07:56 fireball Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -57,6 +57,17 @@ typedef BOOLEAN STDCALL (*PBLTRECTFUNC)(SURFOBJ* OutputObj,
                                         BRUSHOBJ* Brush,
                                         POINTL* BrushOrigin,
                                         ROP4 Rop4);
+typedef BOOLEAN STDCALL (*PSTRETCHRECTFUNC)(SURFOBJ* OutputObj,
+                                            SURFGDI* OutputGDI,
+                                            SURFOBJ* InputObj,
+                                            SURFGDI* InputGDI,
+                                            SURFOBJ* Mask,
+                                            XLATEOBJ* ColorTranslation,
+                                            RECTL* OutputRect,
+                                            RECTL* InputRect,
+                                            POINTL* MaskOrigin,
+                                            POINTL* BrushOrigin,
+                                            ULONG Mode);
 
 BOOL STDCALL EngIntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
@@ -472,6 +483,230 @@ IntEngBitBlt(SURFOBJ *DestObj,
   return ret;
 }
 
+static BOOLEAN STDCALL
+CallDibStretchBlt(SURFOBJ* OutputObj,
+                  SURFGDI* OutputGDI,
+                  SURFOBJ* InputObj,
+                  SURFGDI* InputGDI,
+                  SURFOBJ* Mask,
+                  XLATEOBJ* ColorTranslation,
+                  RECTL* OutputRect,
+                  RECTL* InputRect,
+                  POINTL* MaskOrigin,
+                  POINTL* BrushOrigin,
+                  ULONG Mode)
+{
+  DPRINT1("CallDibStretchBlt() called...");
+  return OutputGDI->DIB_StretchBlt(OutputObj, InputObj, OutputGDI, InputGDI, OutputRect, InputRect, MaskOrigin, BrushOrigin, ColorTranslation, Mode);
+}
+
+
+BOOL
+STDCALL
+EngStretchBlt(
+	IN SURFOBJ  *DestObj,
+	IN SURFOBJ  *SourceObj,
+	IN SURFOBJ  *Mask,
+	IN CLIPOBJ  *ClipRegion,
+	IN XLATEOBJ  *ColorTranslation,
+	IN COLORADJUSTMENT  *pca,
+	IN POINTL  *BrushOrigin,
+	IN RECTL  *prclDest,
+	IN RECTL  *prclSrc,
+	IN POINTL  *MaskOrigin,
+	IN ULONG  Mode
+	)
+{
+  // www.osr.com/ddk/graphics/gdifncs_0bs7.htm
+  
+  BYTE               clippingType;
+  RECTL              CombinedRect;
+//  RECT_ENUM          RectEnum;
+//  BOOL               EnumMore;
+  SURFGDI*           OutputGDI;
+  SURFGDI*           InputGDI;
+  POINTL             InputPoint;
+  RECTL              InputRect;
+  RECTL              OutputRect;
+  POINTL             Translate;
+  INTENG_ENTER_LEAVE EnterLeaveSource;
+  INTENG_ENTER_LEAVE EnterLeaveDest;
+  SURFOBJ*           InputObj;
+  SURFOBJ*           OutputObj;
+  PSTRETCHRECTFUNC       BltRectFunc;
+  BOOLEAN            Ret;
+  RECTL              ClipRect;
+//  unsigned           i;
+  POINTL             Pt;
+//  ULONG              Direction;
+
+    InputRect.left = prclSrc->left;
+    InputRect.right = prclSrc->right;
+    InputRect.top = prclSrc->top;
+    InputRect.bottom = prclSrc->bottom;
+
+  if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE, &Translate, &InputObj))
+    {
+    return FALSE;
+    }
+
+   InputPoint.x = InputRect.left + Translate.x;
+   InputPoint.y = InputRect.top + Translate.y;
+ 
+  if (NULL != InputObj)
+    {
+    InputGDI = (SURFGDI*) AccessInternalObjectFromUserObject(InputObj);
+    }
+  else
+    {
+      InputGDI = NULL;
+    }
+
+  OutputRect = *prclDest;
+  if (NULL != ClipRegion)
+    {
+      if (OutputRect.left < ClipRegion->rclBounds.left)
+	{
+	  InputRect.left += ClipRegion->rclBounds.left - OutputRect.left;
+	  InputPoint.x += ClipRegion->rclBounds.left - OutputRect.left;
+	  OutputRect.left = ClipRegion->rclBounds.left;
+	}
+      if (ClipRegion->rclBounds.right < OutputRect.right)
+	{
+	  InputRect.right -=  OutputRect.right - ClipRegion->rclBounds.right;
+	  OutputRect.right = ClipRegion->rclBounds.right;
+	}
+      if (OutputRect.top < ClipRegion->rclBounds.top)
+	{
+	  InputRect.top += ClipRegion->rclBounds.top - OutputRect.top;
+	  InputPoint.y += ClipRegion->rclBounds.top - OutputRect.top;
+	  OutputRect.top = ClipRegion->rclBounds.top;
+	}
+      if (ClipRegion->rclBounds.bottom < OutputRect.bottom)
+	{
+	  InputRect.bottom -=  OutputRect.bottom - ClipRegion->rclBounds.bottom;
+	  OutputRect.bottom = ClipRegion->rclBounds.bottom;
+	}
+    }
+
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
+     nothing to do */
+  if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return TRUE;
+    }
+
+  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return FALSE;
+    }
+
+  OutputRect.left = prclDest->left + Translate.x;
+  OutputRect.right = prclDest->right + Translate.x;
+  OutputRect.top = prclDest->top + Translate.y;
+  OutputRect.bottom = prclDest->bottom + Translate.y;
+
+  if (NULL != OutputObj)
+    {
+    OutputGDI = (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj);
+    }
+
+  // Determine clipping type
+  if (ClipRegion == (CLIPOBJ *) NULL)
+  {
+    clippingType = DC_TRIVIAL;
+  } else {
+    clippingType = ClipRegion->iDComplexity;
+  }
+
+  if (Mask != NULL)//(0xaacc == Rop4)
+    {
+      //BltRectFunc = BltMask;
+      DPRINT("EngStretchBlt isn't capable of handling mask yet.\n");
+      IntEngLeave(&EnterLeaveDest);
+      IntEngLeave(&EnterLeaveSource);
+      
+      return FALSE;      
+    }
+  else
+    {
+      BltRectFunc = CallDibStretchBlt;
+    }
+
+
+  switch(clippingType)
+  {
+    case DC_TRIVIAL:
+      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+                          &OutputRect, &InputRect, MaskOrigin, BrushOrigin, Mode);
+      break;
+    case DC_RECT:
+      // Clip the blt to the clip rectangle
+      ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
+      ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
+      ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
+      ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+                           &OutputRect, &InputRect, MaskOrigin, BrushOrigin, Mode);
+      //Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+      //                     &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4);
+      DPRINT("EngStretchBlt() doesn't support DC_RECT clipping yet, so blitting w/o clip.\n");
+      break;
+      // TODO: Complex clipping
+    /*
+    case DC_COMPLEX:
+      Ret = TRUE;
+      if (OutputObj == InputObj)
+	{
+	  if (OutputRect.top < InputPoint.y)
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN;
+	    }
+	  else
+	    {
+	      Direction = OutputRect.left < InputPoint.x ? CD_RIGHTUP : CD_LEFTUP;
+	    }
+	}
+      else
+	{
+	  Direction = CD_ANY;
+	}
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, Direction, ENUM_RECT_LIMIT);
+      do
+	{
+	  EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+
+	  for (i = 0; i < RectEnum.c; i++)
+	    {
+	      ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+	      ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+	      ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+	      ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+	      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+	      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+	      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+	      Ret = (*BltRectFunc)(OutputObj, OutputGDI, InputObj, InputGDI, Mask, ColorTranslation,
+	                           &CombinedRect, &Pt, MaskOrigin, Brush, BrushOrigin, Rop4) &&
+	            Ret;
+	    }
+	}
+      while(EnumMore);
+      break;
+      */
+  }
+
+
+  IntEngLeave(&EnterLeaveDest);
+  IntEngLeave(&EnterLeaveSource);
+
+  return Ret;
+}
+
 BOOL STDCALL
 IntEngStretchBlt(SURFOBJ *DestObj,
              SURFOBJ *SourceObj,
@@ -541,30 +776,18 @@ IntEngStretchBlt(SURFOBJ *DestObj,
   /* Call the driver's DrvStretchBlt if available */
   if (NULL != DestGDI->StretchBlt)
     {
-      /* Drv->StretchBlt params: (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
-      SURFOBJ *psoDest
-      SURFOBJ *psoSrc
-      SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC
-      CLIPOBJ *pco
-      XLATEOBJ *pxlo
-      COLORADJUSTMENT *pca
-      POINTL *pptlHTOrg
-      RECTL *prclDest
-      RECTL *prclSrc
-      POINTL *pptlMask // is it * or not?!
-      ULONG iMode
-      */
-      //DPRINT1("Calling DrvStretchBlt(%x, %x, %x, %x, %x,  ca, %x)...\n", DestObj, SourceObj, Mask, ClipRegion, ColorTranslation, BrushOrigin);
+      /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
+      SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC */
+      // FIXME: MaskOrigin is always NULL !
       ret = DestGDI->StretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode); // FIXME: MaskOrigin is NULL !
+                            &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode);
     }
 
   if (! ret)
     {
-      ret = FALSE;
-      //ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
-      //                &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
-      //                Rop4);
+      // FIXME: see previous fixme
+      ret = EngStretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                          &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode);
     }
 
   MouseSafetyOnDrawEnd(DestObj, DestGDI);
@@ -575,5 +798,4 @@ IntEngStretchBlt(SURFOBJ *DestObj,
 
   return ret;
 }
-
 /* EOF */
