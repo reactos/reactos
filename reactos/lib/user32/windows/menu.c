@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.25 2003/08/15 15:55:02 weiden Exp $
+/* $Id: menu.c,v 1.26 2003/08/20 10:08:53 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -501,15 +501,14 @@ GetMenuCheckMarkDimensions(VOID)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 GetMenuDefaultItem(HMENU hMenu,
 		   UINT fByPos,
 		   UINT gmdiFlags)
 {
-  UNIMPLEMENTED;
-  return -1;
+  return NtUserGetMenuDefaultItem(hMenu, fByPos, gmdiFlags);
 }
 
 

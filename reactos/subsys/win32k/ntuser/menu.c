@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.18 2003/08/19 11:48:49 weiden Exp $
+/* $Id: menu.c,v 1.19 2003/08/20 10:08:53 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -986,6 +986,21 @@ NtUserEndMenu(VOID)
   UNIMPLEMENTED
   
   return 0;
+}
+
+
+/*
+ * @unimplemented
+ */
+UINT STDCALL
+NtUserGetMenuDefaultItem(
+  HMENU hMenu,
+  UINT fByPos,
+  UINT gmdiFlags)
+{
+  UNIMPLEMENTED
+  
+  return -1;
 }
 
 

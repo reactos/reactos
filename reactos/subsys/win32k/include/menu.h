@@ -170,6 +170,13 @@ BOOL
 STDCALL
 NtUserEndMenu(VOID);
 
+UINT
+STDCALL
+NtUserGetMenuDefaultItem(
+  HMENU hMenu,
+  UINT fByPos,
+  UINT gmdiFlags);
+
 BOOL
 STDCALL
 NtUserGetMenuBarInfo(

@@ -379,6 +379,7 @@ NtUserGetCursorFrameInfo                4
 NtUserGetCursorInfo                     1
 NtUserGetDC                             1
 NtUserGetDCEx                           3
+NtUserGetMenuDefaultItem                3
 NtUserGetDoubleClickTime                0
 NtUserGetForegroundWindow               0
 NtUserGetGuiResources                   2

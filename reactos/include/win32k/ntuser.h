@@ -661,6 +661,12 @@ STDCALL
 NtUserGetCursorInfo(
   DWORD Unknown0);
 
+UINT STDCALL
+NtUserGetMenuDefaultItem(
+  HMENU hMenu,
+  UINT fByPos,
+  UINT gmdiFlags);
+
 HDC STDCALL
 NtUserGetDC(HWND hWnd);
 
