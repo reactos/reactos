@@ -2239,7 +2239,7 @@ RtlResetRtlTranslations (IN PNLSTABLEINFO NlsTable);
  *	);
  */
 #define RtlRetrieveUshort(DestAddress,SrcAddress) \
-	if ((ULONG)(SrcAddress) & SHORT_MASK) \
+	if ((ULONG_PTR)(SrcAddress) & SHORT_MASK) \
 	{ \
 		((PUCHAR)(DestAddress))[0]=((PUCHAR)(SrcAddress))[0]; \
 		((PUCHAR)(DestAddress))[1]=((PUCHAR)(SrcAddress))[1]; \
@@ -2347,7 +2347,7 @@ RtlSplay (
  *	);
  */
 #define RtlStoreUlong(Address,Value) \
-	if ((ULONG)(Address) & LONG_MASK) \
+	if ((ULONG_PTR)(Address) & LONG_MASK) \
 	{ \
 		((PUCHAR)(Address))[LONG_LEAST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
 		((PUCHAR)(Address))[LONG_3RD_MOST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
@@ -2356,7 +2356,7 @@ RtlSplay (
 	} \
 	else \
 	{ \
-		*((PULONG)(Address))=(ULONG)(Value); \
+		*((PULONG_PTR)(Address))=(ULONG_PTR)(Value); \
 	}
 
 /*
@@ -2367,7 +2367,7 @@ RtlSplay (
  *	);
  */
 #define RtlStoreUshort(Address,Value) \
-	if ((ULONG)(Address) & SHORT_MASK) \
+	if ((ULONG_PTR)(Address) & SHORT_MASK) \
 	{ \
 		((PUCHAR)(Address))[SHORT_LEAST_SIGNIFICANT_BIT]=(UCHAR)(FIRSTBYTE(Value)); \
 		((PUCHAR)(Address))[SHORT_MOST_SIGNIFICANT_BIT]=(UCHAR)(SECONDBYTE(Value)); \
