@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.58 2003/06/19 19:38:26 ea Exp $
+/* $Id: console.c,v 1.59 2003/07/09 10:43:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1713,21 +1713,62 @@ WriteConsoleOutputCharacterA(HANDLE		hConsoleOutput,
 /*--------------------------------------------------------------
  * 	WriteConsoleOutputCharacterW
  */
-WINBASEAPI
-BOOL
-WINAPI
-WriteConsoleOutputCharacterW(
-	HANDLE		hConsoleOutput,
-	LPCWSTR		lpCharacter,
-	DWORD		nLength,
-	COORD		dwWriteCoord,
-	LPDWORD		lpNumberOfCharsWritten
-	)
+WINBASEAPI BOOL WINAPI
+WriteConsoleOutputCharacterW(HANDLE		hConsoleOutput,
+			     LPCWSTR		lpCharacter,
+			     DWORD		nLength,
+			     COORD		dwWriteCoord,
+			     LPDWORD		lpNumberOfCharsWritten)
 {
-/* TO DO */
-	return FALSE;
-}
+  PCSRSS_API_REQUEST Request;
+  CSRSS_API_REPLY Reply;
+  NTSTATUS Status;
+  WORD Size;
+  
+  Request = RtlAllocateHeap(GetProcessHeap(),
+			    HEAP_ZERO_MEMORY,
+			    sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
+  if( !Request )
+    {
+      SetLastError( ERROR_OUTOFMEMORY );
+      return FALSE;
+    }
+  Request->Type = CSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
+  Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
+  Request->Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
+  if( lpNumberOfCharsWritten )
+    *lpNumberOfCharsWritten = nLength;
+  while( nLength )
+    {
+      Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR : nLength;
+      Request->Data.WriteConsoleOutputCharRequest.Length = Size;
+      Status = RtlUnicodeToOemN (&Request->Data.WriteConsoleOutputCharRequest.String[0],
+				 Size,
+				 NULL,
+				 (PWCHAR)lpCharacter,
+				 Size * sizeof(WCHAR));
+      if (!NT_SUCCESS(Status))
+	{
+	  RtlFreeHeap (GetProcessHeap(), 0, Request);
+	  SetLastErrorByStatus (Status);
+	  return FALSE;
+	}
 
+      Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
+      if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
+	{
+	  RtlFreeHeap( GetProcessHeap(), 0, Request );
+	  SetLastErrorByStatus ( Status );
+	  return FALSE;
+	}
+      nLength -= Size;
+      lpCharacter += Size;
+      Request->Data.WriteConsoleOutputCharRequest.Coord = Reply.Data.WriteConsoleOutputCharReply.EndCoord;
+    }
+  
+  RtlFreeHeap( GetProcessHeap(), 0, Request );
+  return TRUE;
+}
 
 
 /*--------------------------------------------------------------
@@ -2237,7 +2278,7 @@ RemoveConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine)
 }
 
 WINBASEAPI BOOL WINAPI
-SetConsoleCtrlHandler(PHANDLER_ROUTINE	HandlerRoutine,
+SetConsoleCtrlHandler(PHANDLER_ROUTINE HandlerRoutine,
 		      BOOL Add)
 {
   BOOLEAN Ret;
