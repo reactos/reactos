@@ -222,7 +222,7 @@ PVOID MmFindGap(PMADDRESS_SPACE AddressSpace, ULONG Length)
      {
 	current = CONTAINING_RECORD(current_entry,MEMORY_AREA,Entry);
 	next = CONTAINING_RECORD(current_entry->Flink,MEMORY_AREA,Entry);
-	Gap = (next->BaseAddress ) -(current->BaseAddress + current->Length);
+	Gap = next->BaseAddress - (current->BaseAddress + PAGE_ROUND_UP(current->Length));
 	if (Gap >= Length)
 	  {
 	     return(current->BaseAddress + PAGE_ROUND_UP(current->Length));
@@ -274,7 +274,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
    for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGE_SIZE); i++)
      {
        PHYSICAL_ADDRESS PhysAddr = (PHYSICAL_ADDRESS)0LL;
-       BOOL Dirty;
+       BOOL Dirty = FALSE;
        SWAPENTRY SwapEntry = 0;
 
        if (MmIsPageSwapEntry(AddressSpace->Process,
@@ -376,12 +376,14 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
  * NOTES: Lock the address space before calling this function
  */
 {
+   ULONG tmpLength;
    DPRINT("MmCreateMemoryArea(Type %d, BaseAddress %x,"
 	   "*BaseAddress %x, Length %x, Attributes %x, Result %x)\n",
 	   Type,BaseAddress,*BaseAddress,Length,Attributes,Result);
 
    if ((*BaseAddress)==0 && !FixedAddress)
      {
+        tmpLength = PAGE_ROUND_UP(Length);
 	*BaseAddress = MmFindGap(AddressSpace,
 				 PAGE_ROUND_UP(Length) +(PAGE_SIZE*2));
 	if ((*BaseAddress)==0)
@@ -392,11 +394,12 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
 	(*BaseAddress)=(*BaseAddress)+PAGE_SIZE;
      }
    else
-     {
-	(*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
+     { 
+	tmpLength = (ULONG)*BaseAddress + Length - PAGE_ROUND_DOWN((*BaseAddress));
+        (*BaseAddress) = (PVOID)PAGE_ROUND_DOWN((*BaseAddress));
 	if (MmOpenMemoryAreaByRegion(AddressSpace,
 				     *BaseAddress,
-				     Length)!=NULL)
+				     tmpLength)!=NULL)
 	  {
 	     DPRINT("Memory area already occupied\n");
 	     return(STATUS_CONFLICTING_ADDRESSES);
@@ -408,7 +411,7 @@ NTSTATUS MmCreateMemoryArea(PEPROCESS Process,
    RtlZeroMemory(*Result,sizeof(MEMORY_AREA));
    (*Result)->Type = Type;
    (*Result)->BaseAddress = *BaseAddress;
-   (*Result)->Length = Length;
+   (*Result)->Length = tmpLength;
    (*Result)->Attributes = Attributes;
    (*Result)->LockCount = 0;
    (*Result)->Process = Process;
