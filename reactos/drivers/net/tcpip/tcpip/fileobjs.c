@@ -38,6 +38,18 @@ VOID AddrFileFree(
 }
 
 
+VOID ControlChannelFree(
+    PVOID Object)
+/*
+ * FUNCTION: Frees an address file object
+ * ARGUMENTS:
+ *     Object = Pointer to address file object to free
+ */
+{
+    ExFreePool(Object);
+}
+
+
 VOID DeleteAddress(
   PADDRESS_FILE AddrFile)
 /*
@@ -536,9 +548,39 @@ NTSTATUS FileCloseConnection(
  *     Status of operation
  */
 NTSTATUS FileOpenControlChannel(
-  PTDI_REQUEST Request)
+    PTDI_REQUEST Request)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PCONTROL_CHANNEL ControlChannel;
+  TI_DbgPrint(MID_TRACE, ("Called.\n"));
+
+  ControlChannel = ExAllocatePool(NonPagedPool, sizeof(*ControlChannel));
+
+  if (!ControlChannel) {
+    TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  RtlZeroMemory(ControlChannel, sizeof(CONTROL_CHANNEL));
+
+  /* Make sure address is a local unicast address or 0 */
+
+  /* Locate address entry. If specified address is 0, a random address is chosen */
+
+  /* Initialize receive and transmit queues */
+  InitializeListHead(&ControlChannel->ListEntry);
+
+  /* Initialize spin lock that protects the address file object */
+  KeInitializeSpinLock(&ControlChannel->Lock);
+
+  /* Reference the object */
+  ControlChannel->RefCount = 1;
+
+  /* Return address file object */
+  Request->Handle.ControlChannel = ControlChannel;
+
+  TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -552,7 +594,14 @@ NTSTATUS FileOpenControlChannel(
 NTSTATUS FileCloseControlChannel(
   PTDI_REQUEST Request)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PCONTROL_CHANNEL ControlChannel = Request->Handle.ControlChannel;
+  KIRQL OldIrql;
+  NTSTATUS Status = STATUS_SUCCESS;
+
+  ExFreePool(ControlChannel);
+  Request->Handle.ControlChannel = NULL;
+
+  return Status;
 }
 
 /* EOF */

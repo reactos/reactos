@@ -19,7 +19,7 @@
 #include <rosrtl/string.h>
 
 #ifdef DBG
-DWORD DebugTraceLevel = MIN_TRACE;
+DWORD DebugTraceLevel = 0x7fffffff;
 #endif /* DBG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
@@ -28,8 +28,10 @@ PDEVICE_OBJECT IPDeviceObject    = NULL;
 PDEVICE_OBJECT RawIPDeviceObject = NULL;
 NDIS_HANDLE GlobalPacketPool     = NULL;
 NDIS_HANDLE GlobalBufferPool     = NULL;
+KSPIN_LOCK EntityListLock;
 TDIEntityID *EntityList          = NULL;
 ULONG EntityCount                = 0;
+ULONG EntityMax                  = 0;
 UDP_STATISTICS UDPStats;
 
 
@@ -165,10 +167,14 @@ NTSTATUS TiCreateFileObject(
   EaInfo = Irp->AssociatedIrp.SystemBuffer;
 CP
   /* Parameter check */
+  /* No EA information means that we're opening for SET/QUERY_INFORMATION
+   * style calls. */
+#if 0
   if (!EaInfo) {
     TI_DbgPrint(MIN_TRACE, ("No EA information in IRP.\n"));
     return STATUS_INVALID_PARAMETER;
   }
+#endif
 CP
   /* Allocate resources here. We release them again if something failed */
   Context = ExAllocatePool(NonPagedPool, sizeof(TRANSPORT_CONTEXT));
@@ -186,9 +192,11 @@ CP
   Request.RequestContext       = Irp;
 CP
   /* Branch to the right handler */
-  if ((EaInfo->EaNameLength == TDI_TRANSPORT_ADDRESS_LENGTH) && 
-    (RtlCompareMemory(&EaInfo->EaName, TdiTransportAddress,
-     TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
+  if (EaInfo && 
+      (EaInfo->EaNameLength == TDI_TRANSPORT_ADDRESS_LENGTH) && 
+      (RtlCompareMemory
+       (&EaInfo->EaName, TdiTransportAddress,
+	TDI_TRANSPORT_ADDRESS_LENGTH) == TDI_TRANSPORT_ADDRESS_LENGTH)) {
     /* This is a request to open an address */
 CP
 
@@ -232,9 +240,12 @@ CP
       Context->Handle.AddressHandle = Request.Handle.AddressHandle;
     }
 CP
-  } else if ((EaInfo->EaNameLength == TDI_CONNECTION_CONTEXT_LENGTH) && 
-    (RtlCompareMemory(&EaInfo->EaName, TdiConnectionContext,
-     TDI_CONNECTION_CONTEXT_LENGTH) == TDI_CONNECTION_CONTEXT_LENGTH)) {
+  } else if (EaInfo && 
+	     (EaInfo->EaNameLength == TDI_CONNECTION_CONTEXT_LENGTH) && 
+	     (RtlCompareMemory
+	      (&EaInfo->EaName, TdiConnectionContext,
+	       TDI_CONNECTION_CONTEXT_LENGTH) == 
+	      TDI_CONNECTION_CONTEXT_LENGTH)) {
     /* This is a request to open a connection endpoint */
 CP
     /* Parameter checks */
@@ -264,10 +275,11 @@ CP
     }
   } else {
     /* This is a request to open a control connection */
-
-    TI_DbgPrint(MIN_TRACE, ("Control connections are not implemented yet\n"));
-
-    Status = STATUS_NOT_IMPLEMENTED;
+    Status = FileOpenControlChannel(&Request);
+    if (NT_SUCCESS(Status)) {
+      IrpSp->FileObject->FsContext2 = (PVOID)TDI_CONTROL_CHANNEL_FILE;
+      Context->Handle.ControlChannel = Request.Handle.ControlChannel;
+    }
   }
 
   if (!NT_SUCCESS(Status))
@@ -594,10 +606,12 @@ TiDispatch(
     /* See if this request is TCP/IP specific */
     switch (IrpSp->Parameters.DeviceIoControl.IoControlCode) {
     case IOCTL_TCP_QUERY_INFORMATION_EX:
+      TI_DbgPrint(MIN_TRACE, ("TCP_QUERY_INFORMATION_EX\n")); 
       Status = DispTdiQueryInformationEx(Irp, IrpSp);
       break;
 
     case IOCTL_TCP_SET_INFORMATION_EX:
+      TI_DbgPrint(MIN_TRACE, ("TCP_SET_INFORMATION_EX\n")); 
       Status = DispTdiSetInformationEx(Irp, IrpSp);
       break;
 
@@ -813,7 +827,8 @@ DriverEntry(
   }
 
   /* Setup network layer and transport layer entities */
-  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * 2);
+  KeInitializeSpinLock(&EntityListLock);
+  EntityList = ExAllocatePool(NonPagedPool, sizeof(TDIEntityID) * MAX_TDI_ENTITIES );
   if (!NT_SUCCESS(Status)) {
 	  TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
     TiUnload(DriverObject);
@@ -825,6 +840,7 @@ DriverEntry(
   EntityList[1].tei_entity   = CL_TL_ENTITY;
   EntityList[1].tei_instance = 0;
   EntityCount = 2;
+  EntityMax   = MAX_TDI_ENTITIES;
 
   /* Use direct I/O */
   IPDeviceObject->Flags    |= DO_DIRECT_IO;

@@ -44,9 +44,28 @@ typedef struct IPADDR_ENTRY {
 	USHORT Pad;
 } IPADDR_ENTRY, *PIPADDR_ENTRY;
 
+typedef struct IPROUTE_ENTRY {
+    ULONG Dest;
+    ULONG Index;            //matches if_index in IFEntry and iae_index in IPAddrEntry
+    ULONG Metric1;
+    ULONG Metric2;
+    ULONG Metric3;
+    ULONG Metric4;
+    ULONG Gw;
+    ULONG Type; 
+    ULONG Proto;
+    ULONG Age; 
+    ULONG Mask;
+    ULONG Metric5;
+    ULONG Info;
+} IPROUTE_ENTRY, *PIPROUTE_ENTRY;
+
 #define	IP_MIB_STATS_ID           1
 #ifndef IP_MIB_ADDRTABLE_ENTRY_ID
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
+#endif
+#ifndef IP_MIB_ROUTETABLE_ENTRY_ID
+#define IP_MIB_ROUTETABLE_ENTRY_ID 0x103
 #endif
 
 #ifndef MAX_PHYSADDR_SIZE

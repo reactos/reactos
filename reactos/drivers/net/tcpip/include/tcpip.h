@@ -122,6 +122,7 @@ extern LIST_ENTRY AddressFileListHead;
 extern KSPIN_LOCK AddressFileListLock;
 extern NDIS_HANDLE GlobalPacketPool;
 extern NDIS_HANDLE GlobalBufferPool;
+extern KSPIN_LOCK EntityListLock;
 extern TDIEntityID *EntityList;
 extern ULONG EntityCount;
 extern UDP_STATISTICS UDPStats;

@@ -11,8 +11,8 @@
 #include <address.h>
 #include <router.h>
 #include <pool.h>
+#include <info.h>
 #include <arp.h>
-
 
 /* Route Cache Node structure.
  * The primary purpose of the RCN is to cache selected source and

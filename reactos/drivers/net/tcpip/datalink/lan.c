@@ -593,7 +593,7 @@ VOID LANTransmit(
 
 VOID BindAdapter(
     PLAN_ADAPTER Adapter,
-		PNDIS_STRING RegistryPath)
+    PNDIS_STRING RegistryPath)
 /*
  * FUNCTION: Binds a LAN adapter to IP layer
  * ARGUMENTS:

@@ -158,6 +158,21 @@ TDI_STATUS IPTdiQueryInformationEx(
 
             RtlZeroMemory(&SnmpInfo, sizeof(IPSNMP_INFO));
 
+	    /* Count number of interfaces */
+	    Count = 0;
+	    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+
+	    CurrentIFEntry = InterfaceListHead.Flink;
+	    while (CurrentIFEntry != &InterfaceListHead)
+	      {
+		Count++;
+		CurrentIFEntry = CurrentIFEntry->Flink;
+	      }
+	    
+	    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+	    
+	    SnmpInfo.NumIf = Count;
+
             /* Count number of addresses */
             Count = 0;
             KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
@@ -205,8 +220,12 @@ TDI_STATUS InfoTdiQueryInformationEx(
  *   Status of operation
  */
 {
+  PLIST_ENTRY CurrentIFEntry;
+  PLIST_ENTRY CurrentADEEntry;
   PLIST_ENTRY CurrentADFEntry;
   PADDRESS_FILE CurrentADF;
+  PADDRESS_ENTRY CurrentADE;
+  PIP_INTERFACE CurrentIF;
   ADDRESS_INFO Info;
   KIRQL OldIrql;
   UINT BufSize;
@@ -215,6 +234,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
   ULONG Temp;
   UINT Count;
   UINT Size;
+  TDIEntityID EntityId;
 
   Offset = 0;
   BufSize = *BufferSize;
@@ -230,17 +250,43 @@ TDI_STATUS InfoTdiQueryInformationEx(
           return TDI_INVALID_PARAMETER;
         }
 
-      *BufferSize = 0;
+      /* Count Adapters */
+      KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
 
-      Size = EntityCount * sizeof(TDIEntityID);
+      CurrentIFEntry = InterfaceListHead.Flink;
+      Count = EntityCount;
+
+      while( CurrentIFEntry != &InterfaceListHead ) {
+	  Count++;
+	  CurrentIFEntry = CurrentIFEntry->Flink;
+      }
+      
+      KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+      Size = Count * sizeof(TDIEntityID);
+      *BufferSize = Size;
+
       if (BufSize < Size)
         {
           /* The buffer is too small to contain requested data */
           return TDI_BUFFER_TOO_SMALL;
         }
 
+      DbgPrint("About to copy %d TDIEntityIDs (%d bytes) to user\n",
+	       Count, Size);
+
+      KeAcquireSpinLock(&EntityListLock, &OldIrql);
+
+      /* Update entity list */
+      for( Temp = EntityCount; Temp < Count; Temp++ ) {
+	  EntityList[Temp].tei_entity = IF_ENTITY;
+	  EntityList[Temp].tei_instance = Temp - EntityCount;
+      }
+
       /* Return entity list */
       Count = CopyBufferToBufferChain(Buffer, 0, (PUCHAR)EntityList, Size);
+
+      KeReleaseSpinLock(&EntityListLock, OldIrql);
 
       *BufferSize = Size;
 
@@ -378,7 +424,30 @@ TDI_STATUS InfoTdiSetInformationEx(
  *   Status of operation
  */
 {
-  /* FIXME: Set extended information */
+  switch( ID->toi_class ) {
+  case INFO_CLASS_PROTOCOL:
+    switch( ID->toi_type ) {
+    case INFO_TYPE_PROVIDER:
+      switch( ID->toi_id ) {
+      case IP_MIB_ROUTETABLE_ENTRY_ID:
+	if( ID->toi_entity.tei_entity == CL_NL_ENTITY &&
+	    ID->toi_entity.tei_instance == TL_INSTANCE &&
+	    BufferSize >= sizeof(IPROUTE_ENTRY) ) {
+	    /* Add route -- buffer is an IPRouteEntry */
+	    PIPROUTE_ENTRY ire = (PIPROUTE_ENTRY)Buffer;
+	  RouteFriendlyAddRoute( ire );				 
+	} else {
+	    return TDI_INVALID_PARAMETER; 
+	    /* In my experience, we are being over
+	       protective compared to windows */
+	}
+	break;
+      }
+      break;
+    }
+    break;
+  }
 
-  return TDI_INVALID_REQUEST;
+  return TDI_INVALID_PARAMETER;
 }
+    

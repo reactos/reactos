@@ -1022,7 +1022,7 @@ VOID DispTdiQueryInformationExComplete(
     MmUnlockPages(QueryContext->OutputMdl);
     IoFreeMdl(QueryContext->OutputMdl);
 
-    QueryContext->Irp->IoStatus.Information = Count;
+    QueryContext->Irp->IoStatus.Information = ByteCount;
     QueryContext->Irp->IoStatus.Status      = Status;
 
     ExFreePool(QueryContext);

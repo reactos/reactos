@@ -699,4 +699,21 @@ VOID RouteInvalidateNCE(
     KeReleaseSpinLock(&RouteCacheLock, OldIrql);
 }
 
+NTSTATUS
+RouteFriendlyAddRoute( PIPROUTE_ENTRY ire ) {
+    PNET_TABLE_ENTRY Nte;
+    PNEIGHBOR_CACHE_ENTRY Nce;
+    PIP_INTERFACE If;
+    IP_ADDRESS Dest;
+    KIRQL OldIrql;
+    
+
+    /* Find IF */
+    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    //RouteAddRouteToDestination(&Dest,Nte,If,Nce);
+    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+    return STATUS_SUCCESS;
+}
+
 /* EOF */
