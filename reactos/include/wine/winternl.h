@@ -22,6 +22,7 @@
 #define __WINE_WINTERNAL_H
 
 #include <windef.h>
+#include <wine/winnt.h>
 
 #ifdef __cplusplus
 extern "C" {
