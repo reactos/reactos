@@ -369,7 +369,7 @@ NTSTATUS TCPConnect(
   Connection->LocalPort    = Connection->AddressFile->Port;
 
   Status = AddrBuildAddress(
-    (PTA_ADDRESS)ConnInfo->RemoteAddress,
+    (PTA_ADDRESS)(&((PTRANSPORT_ADDRESS)ConnInfo->RemoteAddress)->Address[0]),
     &Connection->RemoteAddress,
     &Connection->RemotePort);
   if (!NT_SUCCESS(Status)) {
