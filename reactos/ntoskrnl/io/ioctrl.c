@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.13 2001/11/02 22:22:33 hbirr Exp $
+/* $Id: ioctrl.c,v 1.14 2002/04/27 19:22:55 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,7 +38,6 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT KEvent;
    PKEVENT ptrEvent;
    IO_STATUS_BLOCK IoSB;
 
@@ -75,21 +74,13 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 	    return Status;
           }
       }
-    else if (FileObject->Flags & FO_SYNCHRONOUS_IO)
-      {
-         ptrEvent = NULL;
-      }
     else
       {
-         KeInitializeEvent (&KEvent, 
-                            NotificationEvent,
-                            FALSE);
-         ptrEvent = &KEvent;
+         KeResetEvent (&FileObject->Event);
+         ptrEvent = &FileObject->Event;
       }
 
    DeviceObject = FileObject->DeviceObject;
-
-   KeInitializeEvent(&KEvent,NotificationEvent,TRUE);
 
    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
 				       DeviceObject,
@@ -113,7 +104,7 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
    Status = IoCallDriver(DeviceObject,Irp);
    if (Event == NULL && Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
    {
-      KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
+      KeWaitForSingleObject(ptrEvent,Executive,KernelMode,FALSE,NULL);
       Status = IoSB.Status;
    }
    if (IoStatusBlock)

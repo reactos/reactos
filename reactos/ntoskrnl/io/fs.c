@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.24 2002/04/19 20:27:20 ekohl Exp $
+/* $Id: fs.c,v 1.25 2002/04/27 19:22:55 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -74,7 +74,7 @@ NtFsControlFile (
    PDEVICE_OBJECT DeviceObject;
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
-   KEVENT KEvent;
+   PKEVENT ptrEvent;
    IO_STATUS_BLOCK IoSB;
 
    DPRINT("NtFsControlFile(DeviceHandle %x EventHandle %x ApcRoutine %x "
@@ -96,10 +96,29 @@ NtFsControlFile (
      {
 	return(Status);
      }
+
+   if (EventHandle != NULL)
+     {
+        Status = ObReferenceObjectByHandle (EventHandle,
+                                            SYNCHRONIZE,
+                                            ExEventObjectType,
+                                            UserMode,
+                                            (PVOID*)&ptrEvent,
+                                            NULL);
+        if (!NT_SUCCESS(Status))
+          {
+            ObDereferenceObject(FileObject);
+	    return Status;
+          }
+      }
+    else
+      {
+         KeResetEvent (&FileObject->Event);
+         ptrEvent = &FileObject->Event;
+      }
+
    
    DeviceObject = FileObject->DeviceObject;
-
-   KeInitializeEvent(&KEvent,NotificationEvent,TRUE);
 
    Irp = IoBuildDeviceIoControlRequest(IoControlCode,
 				       DeviceObject,
@@ -108,7 +127,7 @@ NtFsControlFile (
 				       OutputBuffer,
 				       OutputBufferSize,
 				       FALSE,
-				       &KEvent,
+				       ptrEvent,
 				       &IoSB);
    
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
@@ -125,7 +144,7 @@ NtFsControlFile (
    Status = IoCallDriver(DeviceObject,Irp);
    if (Status == STATUS_PENDING && !(FileObject->Flags & FO_SYNCHRONOUS_IO))
      {
-	KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
+	KeWaitForSingleObject(ptrEvent,Executive,KernelMode,FALSE,NULL);
 	Status = IoSB.Status;
      }
    if (IoStatusBlock)
