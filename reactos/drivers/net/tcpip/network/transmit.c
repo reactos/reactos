@@ -118,7 +118,7 @@ NTSTATUS SendFragments(
     /* Allocate NDIS packet */
     NdisAllocatePacket(&NdisStatus, &IFC->NdisPacket, GlobalPacketPool);
     if (NdisStatus != NDIS_STATUS_SUCCESS) {
-        ExFreePool(Data);
+        //ExFreePool(Data); // RobD - why are we trying to free this here?, not allocated yet!
         ExFreePool(IFC);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
