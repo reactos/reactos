@@ -894,7 +894,7 @@ char	buf[rtfBufSiz];
 int RTFReadCharSetMap(RTF_Info *info, int csId)
 {
         int	*stdCodeArray;
-        int i;
+        unsigned int i;
 
     TRACE("\n");
 
@@ -2620,7 +2620,7 @@ int RTFHexToChar(int i)
 
 int RTFReadOutputMap(RTF_Info *info, char *outMap[], int reinit)
 {
-    int  i;
+    unsigned int  i;
     int  stdCode;
     char *name, *seq;
 
