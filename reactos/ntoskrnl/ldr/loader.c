@@ -680,7 +680,7 @@ LdrLookupPageProtection(PVOID PageStart,
 	    {
 	       Execute = TRUE;
 	    }
-	    if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_LNK_OTHER))
+	    if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_CNT_UNINITIALIZED_DATA))
 	    {
 	       Write = TRUE;
 	    }
@@ -910,7 +910,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	   Protect = PAGE_EXECUTE_READ;
 	}
      }
-     else if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_LNK_OTHER))
+     else if (Characteristics & (IMAGE_SCN_MEM_WRITE|IMAGE_SCN_CNT_UNINITIALIZED_DATA))
      {
         Protect = PAGE_READWRITE;
      }
@@ -1115,7 +1115,7 @@ LdrSafePEProcessModule(PVOID ModuleLoadBase,
 	PageAddress = (PVOID)((ULONG_PTR)PageAddress + PAGE_SIZE);
      }
      if (DriverBase == ModuleLoadBase &&
-	 Characteristics & IMAGE_SCN_LNK_OTHER)
+	 Characteristics & IMAGE_SCN_CNT_UNINITIALIZED_DATA)
      {
         /* For ntoskrnl, we must stop after the bss section */
 	break;
