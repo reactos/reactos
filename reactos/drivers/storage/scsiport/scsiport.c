@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.49 2004/03/23 00:12:24 gvg Exp $
+/* $Id: scsiport.c,v 1.50 2004/03/23 12:30:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -450,23 +450,23 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
     {
       EndAddress = Srb->DataBuffer + Srb->DataTransferLength;
       if (VirtualAddress == NULL)
-        {
+	{
 	  VirtualAddress = Srb->DataBuffer;
 	}
       else if (VirtualAddress < Srb->DataBuffer || VirtualAddress >= EndAddress)
-        {
+	{
 	  PhysicalAddress.QuadPart = 0LL;
 	  return PhysicalAddress;
 	}
-      
+
       PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
       if (PhysicalAddress.QuadPart == 0LL)
-        {
+	{
 	  return PhysicalAddress;
 	}
-     
+
       Offset = (ULONG_PTR)VirtualAddress & (PAGE_SIZE - 1);
-#if 1      
+#if 1
       /* 
        * FIXME:
        *   MmGetPhysicalAddress doesn't return the offset within the page.
@@ -476,7 +476,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 #endif
       BufferLength += PAGE_SIZE - Offset;
       while (VirtualAddress + BufferLength < EndAddress)
-        {
+	{
 	  NextPhysicalAddress = MmGetPhysicalAddress(VirtualAddress + BufferLength);
 	  if (PhysicalAddress.QuadPart + (ULONGLONG)BufferLength != NextPhysicalAddress.QuadPart)
 	    {
@@ -485,7 +485,7 @@ ScsiPortGetPhysicalAddress(IN PVOID HwDeviceExtension,
 	  BufferLength += PAGE_SIZE;
 	}
       if (VirtualAddress + BufferLength >= EndAddress)
-        {
+	{
 	  BufferLength = EndAddress - VirtualAddress;
 	}
     }
@@ -523,7 +523,7 @@ ScsiPortGetUncachedExtension(IN PVOID HwDeviceExtension,
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
   DEVICE_DESCRIPTION DeviceDescription;
 
-  DPRINT1("ScsiPortGetUncachedExtension(%p %p %lu)\n",
+  DPRINT("ScsiPortGetUncachedExtension(%p %p %lu)\n",
 	 HwDeviceExtension, ConfigInfo, NumberOfBytes);
 
   DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
@@ -1111,6 +1111,8 @@ ScsiPortNotification(IN SCSI_NOTIFICATION_TYPE NotificationType,
 
 //	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT_LU;
 
+	  /* Hack! */
+	  DeviceExtension->IrpFlags |= IRP_FLAG_NEXT;
 	}
 	break;
 
@@ -1902,12 +1904,13 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
   Srb.SrbFlags = SRB_FLAGS_DATA_IN;
   Srb.DataBuffer = ExAllocatePool(NonPagedPool, 256);
   Srb.Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb.DataTransferLength = 256;
+  Srb.DataTransferLength = 255; //256;
   Srb.CdbLength = 6;
 
   Cdb = (PCDB) &Srb.Cdb;
 
   Cdb->CDB6INQUIRY.OperationCode = SCSIOP_INQUIRY;
+  Cdb->CDB6INQUIRY.AllocationLength = 255;
 
   for (Bus = 0; Bus < DeviceExtension->PortConfig->NumberOfBuses; Bus++)
     {
@@ -1937,9 +1940,12 @@ SpiScanAdapter (IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 
 	      Status = SpiSendInquiry (DeviceExtension->DeviceObject,
 				       &Srb);
-	      DPRINT("Status %lx  Srb.SrbStatus %lx\n", Status, Srb.SrbStatus);
+	      DPRINT ("Status %lx  Srb.SrbStatus %x\n", Status, Srb.SrbStatus);
 
-	      if (NT_SUCCESS(Status) && Srb.SrbStatus == SRB_STATUS_SUCCESS)
+	      if (NT_SUCCESS(Status) &&
+		  (Srb.SrbStatus == SRB_STATUS_SUCCESS ||
+		   Srb.SrbStatus == SRB_STATUS_DATA_OVERRUN) &&
+		  ((PINQUIRYDATA)Srb.DataBuffer)->DeviceTypeQualifier == 0)
 		{
 		  /* Copy inquiry data */
 		  RtlCopyMemory (&LunExtension->InquiryData,
