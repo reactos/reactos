@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.13 2002/05/25 13:30:28 ekohl Exp $
+/* $Id: disk.c,v 1.14 2002/05/28 09:29:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -534,6 +534,24 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 
   DPRINT("SectorSize: %lu\n", DiskDeviceExtension->DiskGeometry->BytesPerSector);
 
+  if ((DiskDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) &&
+      (DiskDeviceExtension->DiskGeometry->MediaType == RemovableMedia))
+    {
+      /* Allocate a partition list for a single entry. */
+      PartitionList = ExAllocatePool(NonPagedPool,
+				     sizeof(DRIVE_LAYOUT_INFORMATION));
+      if (PartitionList != NULL)
+	{
+	  RtlZeroMemory(PartitionList,
+			sizeof(DRIVE_LAYOUT_INFORMATION));
+	  PartitionList->PartitionCount = 1;
+
+	  DiskData->DriveNotReady = TRUE;
+	  Status = STATUS_SUCCESS;
+	}
+    }
+  else
+    {
   /* Read partition table */
   Status = IoReadPartitionTable(DiskDeviceObject,
 				DiskDeviceExtension->DiskGeometry->BytesPerSector,
@@ -548,7 +566,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
       if (!NT_SUCCESS(Status))
 	{
 	  /* Drive is not ready. */
-	  DPRINT1("Drive not ready\n");
+	  DPRINT("Drive not ready\n");
 	  DiskData->DriveNotReady = TRUE;
 	}
       else
@@ -568,6 +586,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	  Status = STATUS_SUCCESS;
 	}
     }
+  }
 
   if (NT_SUCCESS(Status))
     {
@@ -653,23 +672,22 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 }
 
 
-
-
-
-//    DiskClassDeviceControl
-//
-//  DESCRIPTION:
-//    Answer requests for device control calls
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    Standard dispatch arguments
-//
-//  RETURNS:
-//    NTSTATUS
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassDeviceControl
+ *
+ * DESCRIPTION
+ *	Answer requests for device control calls
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	Standard dispatch arguments
+ *
+ * RETURNS
+ *	Status
+ */
 
 NTSTATUS STDCALL
 DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
@@ -693,7 +711,6 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
   DiskData = (PDISK_DATA)(DeviceExtension + 1);
 
-  /* A huge switch statement in a Windows program?! who would have thought? */
   switch (ControlCode)
     {
       case IOCTL_DISK_GET_DRIVE_GEOMETRY:
@@ -702,22 +719,28 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  {
 	    Status = STATUS_INVALID_PARAMETER;
 	  }
-	else if (DeviceExtension->DiskGeometry == NULL)
-	  {
-	    DPRINT1("No disk geometry available!\n");
-	    Status = STATUS_NO_SUCH_DEVICE;
-	  }
 	else
 	  {
 	    PDISK_GEOMETRY Geometry;
 
-	    Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
-	    RtlMoveMemory(Geometry,
-			  DeviceExtension->DiskGeometry,
-			  sizeof(DISK_GEOMETRY));
+	    if (DeviceExtension->DiskGeometry == NULL)
+	      {
+		DPRINT("No disk geometry available!\n");
+		DeviceExtension->DiskGeometry = ExAllocatePool(NonPagedPool,
+							       sizeof(DISK_GEOMETRY));
+	      }
+	    Status = ScsiClassReadDriveCapacity(DeviceObject);
+	    DPRINT("ScsiClassReadDriveCapacity() returned (Status %lx)\n", Status);
+	    if (NT_SUCCESS(Status))
+	      {
+		Geometry = (PDISK_GEOMETRY)Irp->AssociatedIrp.SystemBuffer;
+		RtlMoveMemory(Geometry,
+			      DeviceExtension->DiskGeometry,
+			      sizeof(DISK_GEOMETRY));
 
-	    Status = STATUS_SUCCESS;
-	    Information = sizeof(DISK_GEOMETRY);
+		Status = STATUS_SUCCESS;
+		Information = sizeof(DISK_GEOMETRY);
+	      }
 	  }
 	break;
 
