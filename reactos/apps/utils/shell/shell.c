@@ -36,7 +36,8 @@ void ExecuteDir(char* cmdline)
    HANDLE shandle;
    WIN32_FIND_DATA FindData;
    int nFile=0, nRep=0;
-//   TIME_FIELDS fTime;
+   FILETIME fTime;
+   SYSTEMTIME sTime;
 
    shandle = FindFirstFile("*",&FindData);
 
@@ -52,10 +53,13 @@ void ExecuteDir(char* cmdline)
           debug_printf("<DIR>       "),nRep++;
 	else
 	  debug_printf(" %10d ",FindData.nFileSizeLow),nFile++;
-	//    RtlTimeToTimeFields(&FindData.ftLastWriteTime  ,&fTime);
-//    debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
-//        ,fTime.Month,fTime.Day,fTime.Year
-//        ,fTime.Hour,fTime.Minute,fTime.Second);
+
+        FileTimeToLocalFileTime(&FindData.ftLastWriteTime ,&fTime);
+        FileTimeToSystemTime(&fTime, &sTime);
+        debug_printf("%02d/%02d/%04d %02d:%02d:%02d "
+            ,sTime.wMonth,sTime.wDay,sTime.wYear
+            ,sTime.wHour,sTime.wMinute,sTime.wSecond);
+
 	debug_printf("%s\n",FindData.cFileName);
      } while(FindNextFile(shandle,&FindData));
    debug_printf("\n    %d files\n    %d directories\n\n",nFile,nRep);
@@ -96,7 +100,7 @@ int ExecuteProcess(char* name, char* cmdline)
 {
    PROCESS_INFORMATION ProcessInformation;
    STARTUPINFO StartupInfo;
-   char arguments;
+//   char arguments;
    BOOL ret;
 
    memset(&StartupInfo,0,sizeof(StartupInfo));
@@ -198,7 +202,7 @@ void ExecuteCommand(char* line)
 
 void ReadLine(char* line)
 {
-   KEY_EVENT_RECORD KeyEvent;
+//   KEY_EVENT_RECORD KeyEvent;
    DWORD Result;
    UCHAR CurrentDir[255];
    char  ch;
@@ -240,7 +244,7 @@ void ReadLine(char* line)
    *line = 0;
 }
 
-void main(void)
+int main(void)
 {
    static char line[255];
 
@@ -257,5 +261,7 @@ void main(void)
 	ReadLine(line);
 	ExecuteCommand(line);
      }
+
+   return 0;
 }
 
