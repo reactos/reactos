@@ -2131,7 +2131,7 @@ BEGIN
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Hjälp ämnen\tF1",            ID_HELP
+        MENUITEM "&Hjälpavsnitt\tF1",            ID_HELP
         MENUITEM "Hjälp &sök...\tF1",         ID_HELP
         MENUITEM "&Använda hjälpen\tF1",             ID_HELP_USING
         MENUITEM SEPARATOR
@@ -2453,7 +2453,7 @@ BEGIN
     IDS_MINIMIZE_ALL        "minimera alla fönster"
     IDS_DESKTOP_NUM         "Skrivbord %d"
     IDS_VOLUME              "Volym"
-    IDS_ITEMS_CUR           "aktuella saker"
+    IDS_ITEMS_CUR           "aktuella meddelanden"
     IDS_ITEMS_CONFIGURED    "konfiguration"
     IDS_ITEMS_VISIBLE       "synlig"
     IDS_ITEMS_HIDDEN        "dold"
