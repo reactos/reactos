@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.36 2003/09/09 09:39:21 gvg Exp $ */
+/* $Id: region.c,v 1.37 2003/09/23 19:33:29 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -1329,36 +1329,40 @@ static void FASTCALL REGION_SubtractRegion(ROSRGNDATA *regD, ROSRGNDATA *regM,
 static void FASTCALL REGION_XorRegion(ROSRGNDATA *dr, ROSRGNDATA *sra,
 							ROSRGNDATA *srb)
 {
-	HRGN htra, htrb;
-    ROSRGNDATA *tra, *trb;
+  HRGN htra, htrb;
+  ROSRGNDATA *tra, *trb;
 
-    if ((! (htra = RGNDATA_AllocRgn(sra->rdh.nCount + 1))) ||
-		(! (htrb = RGNDATA_AllocRgn(srb->rdh.nCount + 1))))
-	return;
-	tra = RGNDATA_LockRgn( htra );
-	if( !tra ){
-		NtGdiDeleteObject( htra );
-		NtGdiDeleteObject( htrb );
-		return;
-	}
-
-	trb = RGNDATA_LockRgn( htrb );
-	if( !trb ){
-		RGNDATA_UnlockRgn( htra );
-		NtGdiDeleteObject( htra );
-		NtGdiDeleteObject( htrb );
-		return;
-	}
-
-    REGION_SubtractRegion(tra,sra,srb);
-    REGION_SubtractRegion(trb,srb,sra);
-    REGION_UnionRegion(dr,tra,trb);
-	RGNDATA_UnlockRgn( htra );
-	RGNDATA_UnlockRgn( htrb );
-
+  if(!(htra = RGNDATA_AllocRgn(sra->rdh.nCount + 1)))
+    return;
+  if(!(htrb = RGNDATA_AllocRgn(srb->rdh.nCount + 1)))
+  {
+    NtGdiDeleteObject( htra );
+    return;
+  }
+  tra = RGNDATA_LockRgn( htra );
+  if(!tra ){
     NtGdiDeleteObject( htra );
     NtGdiDeleteObject( htrb );
     return;
+  }
+
+  trb = RGNDATA_LockRgn( htrb );
+  if( !trb ){
+    RGNDATA_UnlockRgn( htra );
+    NtGdiDeleteObject( htra );
+    NtGdiDeleteObject( htrb );
+    return;
+  }
+
+  REGION_SubtractRegion(tra,sra,srb);
+  REGION_SubtractRegion(trb,srb,sra);
+  REGION_UnionRegion(dr,tra,trb);
+  RGNDATA_UnlockRgn( htra );
+  RGNDATA_UnlockRgn( htrb );
+
+  NtGdiDeleteObject( htra );
+  NtGdiDeleteObject( htrb );
+  return;
 }
 
 
