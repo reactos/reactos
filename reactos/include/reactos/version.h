@@ -1,4 +1,4 @@
-/* $Id: version.h,v 1.26 2004/08/26 21:05:42 gvg Exp $
+/* $Id: version.h,v 1.26.4.1 2004/10/25 01:25:26 ion Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
