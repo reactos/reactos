@@ -1,4 +1,4 @@
-/* $Id: cntrller.c,v 1.5 2001/03/07 16:48:41 dwelch Exp $
+/* $Id: cntrller.c,v 1.6 2001/03/26 05:03:54 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,7 +59,7 @@ IoAllocateController(PCONTROLLER_OBJECT ControllerObject,
    PCONTROLLER_QUEUE_ENTRY entry;
    IO_ALLOCATION_ACTION Result;
    
-   assert_irql(DISPATCH_LEVEL);
+   assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
    
    entry = 
      ExAllocatePoolWithTag(NonPagedPool, sizeof(CONTROLLER_QUEUE_ENTRY),
