@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.174 2003/10/07 07:47:21 gvg Exp $
+# $Id: Makefile,v 1.175 2003/10/15 22:16:43 vizzini Exp $
 #
 # Global makefile
 #
@@ -166,7 +166,6 @@ bootcd_directory_layout: freeldr
 	$(CP) ${FREELDR_DIR}/bootsect/fat32.bin ${BOOTCD_DIR}/loader/fat32.bin
 	$(CP) ${FREELDR_DIR}/bootsect/isoboot.bin ${BOOTCD_DIR}/loader/isoboot.bin
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/freeldr.sys ${BOOTCD_DIR}/loader/freeldr.sys
-	$(CP) ${FREELDR_DIR}/FREELDR.INI ${BOOTCD_DIR}/loader/freeldr.ini
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \

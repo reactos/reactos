@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.40 2003/09/20 22:44:22 weiden Exp $
+/* $Id: class2.c,v 1.41 2003/10/15 22:16:44 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1880,7 +1880,7 @@ ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
   DeviceExtension = DeviceObject->DeviceExtension;
   CurrentStack = IoGetCurrentIrpStackLocation(Irp);
   NextStack = IoGetNextIrpStackLocation(Irp);
-  DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+  DataBuffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
 
   /* Initialize transfer data for first request */
   Offset = CurrentStack->Parameters.Read.ByteOffset;
