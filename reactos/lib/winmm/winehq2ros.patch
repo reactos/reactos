@@ -1,10 +1,10 @@
 Index: lolvldrv.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/lolvldrv.c,v
-retrieving revision 1.59
-diff -u -r1.59 lolvldrv.c
---- lolvldrv.c	20 Aug 2004 20:01:31 -0000	1.59
-+++ lolvldrv.c	19 Sep 2004 11:38:37 -0000
+retrieving revision 1.61
+diff -u -r1.61 lolvldrv.c
+--- lolvldrv.c	22 Sep 2004 04:00:14 -0000	1.61
++++ lolvldrv.c	20 Oct 2004 17:54:30 -0000
 @@ -758,11 +758,18 @@
  {
      TRACE("()\n");
@@ -26,41 +26,14 @@ diff -u -r1.59 lolvldrv.c
  
      return TRUE;
  }
-Index: time.c
-===================================================================
-RCS file: /home/wine/wine/dlls/winmm/time.c,v
-retrieving revision 1.26
-diff -u -r1.26 time.c
---- time.c	12 Jan 2004 21:03:10 -0000	1.26
-+++ time.c	19 Sep 2004 11:38:41 -0000
-@@ -175,14 +175,19 @@
-     volatile HANDLE *pActive = (volatile HANDLE *)&TIME_hMMTimer;
-     DWORD last_time, cur_time;
- 
-+#ifndef __REACTOS__
-     usleep(MMSYSTIME_STDINTERVAL * 1000);
-+#endif /* __REACTOS__ */
-+
-     last_time = GetTickCount();
-     while (*pActive) {
- 	TIME_MMSysTimeCallback(iData);
- 	cur_time = GetTickCount();
- 	while (last_time < cur_time)
- 	    last_time += MMSYSTIME_STDINTERVAL;
-+#ifndef __REACTOS__
- 	usleep((last_time - cur_time) * 1000);
-+#endif /* __REACTOS__ */
-     }
-     return 0;
- }
 Index: winmm.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/winmm.c,v
-retrieving revision 1.42
-diff -u -r1.42 winmm.c
---- winmm.c	16 Aug 2004 23:19:17 -0000	1.42
-+++ winmm.c	19 Sep 2004 11:38:42 -0000
-@@ -83,7 +83,9 @@
+retrieving revision 1.45
+diff -u -r1.45 winmm.c
+--- winmm.c	19 Oct 2004 23:55:15 -0000	1.45
++++ winmm.c	20 Oct 2004 17:54:32 -0000
+@@ -94,7 +94,9 @@
  	return FALSE;
      WINMM_IData->hWinMM32Instance = hInstDLL;
      InitializeCriticalSection(&WINMM_IData->cs);
@@ -70,7 +43,7 @@ diff -u -r1.42 winmm.c
      WINMM_IData->psStopEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
      WINMM_IData->psLastEvent = CreateEventA(NULL, TRUE, FALSE, NULL);
      TRACE("Created IData (%p)\n", WINMM_IData);
-@@ -126,10 +128,12 @@
+@@ -137,10 +139,12 @@
          loaded = -1;
          if (h)
          {
@@ -89,7 +62,7 @@ RCS file: /home/wine/wine/dlls/winmm/winmm_res.rc,v
 retrieving revision 1.17
 diff -u -r1.17 winmm_res.rc
 --- winmm_res.rc	16 Aug 2004 20:02:09 -0000	1.17
-+++ winmm_res.rc	19 Sep 2004 11:38:45 -0000
++++ winmm_res.rc	20 Oct 2004 17:54:32 -0000
 @@ -34,7 +34,7 @@
  #include "winmm_Es.rc"
  #include "winmm_Fr.rc"

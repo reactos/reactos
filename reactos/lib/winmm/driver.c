@@ -468,7 +468,7 @@ HMODULE WINAPI GetDriverModuleHandle(HDRVR hDrvr)
  * 				DefDriverProc			  [WINMM.@]
  * 				DrvDefDriverProc		  [WINMM.@]
  */
-LRESULT WINAPI DefDriverProc(DWORD dwDriverIdentifier, HDRVR hDrv,
+LRESULT WINAPI DefDriverProc(DWORD_PTR dwDriverIdentifier, HDRVR hDrv,
 			     UINT Msg, LPARAM lParam1, LPARAM lParam2)
 {
     switch (Msg) {
