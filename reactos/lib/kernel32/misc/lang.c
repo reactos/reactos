@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.11 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: lang.c,v 1.12 2004/01/28 23:03:59 gdalsnes Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -887,20 +887,88 @@ GetLocaleInfoW (
 }
 
 
-/*
- * @unimplemented
+
+/***********************************************************************
+ *    get_lcid_codepage
+ *
+ * Retrieve the ANSI codepage for a given locale.
  */
-int
-STDCALL
-GetLocaleInfoA (
-    LCID    Locale,
-    LCTYPE  LCType,
-    LPSTR   lpLCData,
-    int cchData
-    )
+inline static UINT get_lcid_codepage( LCID lcid )
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    UINT ret;
+    if (!GetLocaleInfoW( lcid, LOCALE_IDEFAULTANSICODEPAGE|LOCALE_RETURN_NUMBER, (WCHAR *)&ret,
+                         sizeof(ret)/sizeof(WCHAR) )) ret = 0;
+    return ret;
+}
+
+
+
+/*
+ * @implemented
+ *
+ * Get information about an aspect of a locale.
+ *
+ * PARAMS
+ *  lcid   [I] LCID of the locale
+ *  lctype [I] LCTYPE_ flags from "winnls.h"
+ *  buffer [O] Destination for the information
+ *  len    [I] Length of buffer in characters
+ *
+ * RETURNS
+ *  Success: The size of the data requested. If buffer is non-NULL, it is filled
+ *           with the information.
+ *  Failure: 0. Use GetLastError() to determine the cause.
+ *
+ * NOTES
+ *  - LOCALE_NEUTRAL is equal to LOCALE_SYSTEM_DEFAULT
+ *  - The string returned is NUL terminated, except for LOCALE_FONTSIGNATURE,
+ *    which is a bit string.
+ */
+INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
+{
+    WCHAR *bufferW;
+    INT lenW, ret;
+
+    if (len < 0 || (len && !buffer))
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+    if (!len) buffer = NULL;
+
+    if (!(lenW = GetLocaleInfoW( lcid, lctype, NULL, 0 ))) return 0;
+
+    if (!(bufferW = HeapAlloc( GetProcessHeap(), 0, lenW * sizeof(WCHAR) )))
+    {
+        SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+        return 0;
+    }
+    if ((ret = GetLocaleInfoW( lcid, lctype, bufferW, lenW )))
+    {
+        if ((lctype & LOCALE_RETURN_NUMBER) ||
+            ((lctype & ~LOCALE_LOCALEINFOFLAGSMASK) == LOCALE_FONTSIGNATURE))
+        {
+            /* it's not an ASCII string, just bytes */
+            ret *= sizeof(WCHAR);
+            if (buffer)
+            {
+                if (ret <= len) memcpy( buffer, bufferW, ret );
+                else
+                {
+                    SetLastError( ERROR_INSUFFICIENT_BUFFER );
+                    ret = 0;
+                }
+            }
+        }
+        else
+        {
+            UINT codepage = CP_ACP;
+            if (!(lctype & LOCALE_USE_CP_ACP)) codepage = get_lcid_codepage( lcid );
+            ret = WideCharToMultiByte( codepage, 0, bufferW, ret, buffer, len, NULL, NULL );
+        }
+    }
+    HeapFree( GetProcessHeap(), 0, bufferW );
+    return ret;
 }
 
 
