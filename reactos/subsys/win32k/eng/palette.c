@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.17 2003/08/28 12:35:59 gvg Exp $
+/* $Id: palette.c,v 1.18 2003/09/25 14:32:55 fireball Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -70,7 +70,8 @@ PALOBJ_cGetColors(PALOBJ *PalObj,
   ULONG i;
   PALGDI *PalGDI;
 
-  PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj);
+  PalGDI = (PALGDI*)PalObj;
+  //PalGDI = (PALGDI*)AccessInternalObjectFromUserObject(PalObj);
 
   for(i=Start; i<Colors; i++)
   {
