@@ -1,4 +1,4 @@
-/* $Id: genntdll.c,v 1.11 2002/07/04 19:56:33 dwelch Exp $
+/* $Id: genntdll.c,v 1.12 2003/01/03 00:28:07 guido Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -29,7 +29,7 @@
 /* FUNCTIONS ****************************************************************/
 
 void write_syscall_stub(FILE* out, FILE* out3, char* name, char* name2,
-			unsigned int nr_args, unsigned int sys_call_idx)
+			char* nr_args, unsigned int sys_call_idx)
 {
 #ifdef PARAMETERIZED_LIBS
   fprintf(out,"__asm__(\"\\n\\t.global _%s@%s\\n\\t\"\n",name,nr_args);

@@ -5,8 +5,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define NULL ((void*)0)
-
 #define IMAGE_DOS_MAGIC 0x5a4d
 #define IMAGE_PE_MAGIC 0x00004550
 

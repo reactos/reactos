@@ -1,4 +1,4 @@
-/* $Id: irql.c,v 1.8 2003/01/02 16:07:49 hbirr Exp $
+/* $Id: irql.c,v 1.9 2003/01/03 00:28:07 guido Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,7 @@ typedef union
    {
       BYTE master;
       BYTE slave;
-   }
+   };
 }
 PIC_MASK;
    
