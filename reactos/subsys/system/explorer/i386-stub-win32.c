@@ -625,13 +625,10 @@ putpacket (unsigned char *buffer)
   while (getDebugChar () != '+');
 }
 
-void
-debug_error (format, parm)
-	 char *format;
-	 char *parm;
+void debug_error (char* format/*, char* parm*/)
 {
   if (remote_debug)
-	fprintf (stderr, format, parm);
+    fprintf (stderr, format/*, parm*/);
 }
 
 /* Address of a routine to RTE to if we get a memory fault.  */
