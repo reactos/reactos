@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.262 2004/11/21 21:02:03 chorns Exp $
+# $Id: Makefile,v 1.262.2.1 2004/12/08 21:56:46 hyperion Exp $
 #
 # Global makefile
 #
@@ -27,7 +27,7 @@ COMPONENTS = ntoskrnl
 
 # Hardware Abstraction Layers
 # halx86
-HALS = halx86
+HALS = halx86/up halx86/mp
 
 # Bus drivers
 # acpi isapnp pci
@@ -38,10 +38,10 @@ BUS = acpi isapnp pci
 LIB_FSLIB = vfatlib
 
 # Static libraries
-LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns
+LIB_STATIC = string rosrtl epsapi uuid libwine zlib rtl tgetopt pseh adns dxguid 
 
 # Keyboard layout libraries
-DLLS_KBD = kbdda kbddv kbdfr kbdgr kbdse kbduk kbdus
+DLLS_KBD = kbdda kbddv kbdfr kbdgr kbdse kbduk kbdus 
 
 # Control Panels
 DLLS_CPL = cpl
@@ -56,7 +56,7 @@ DLLS = acledit aclui advapi32 advpack cabinet cards comctl32 crtdll comdlg32 d3d
 	msgina msimg32 msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg opengl32 packet psapi \
 	riched20 richedit rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
-	dnsapi \
+	dnsapi dinput dinput8\
 	$(DLLS_KBD) $(DLLS_CPL) $(DLLS_SHELLEXT)
 
 SUBSYS = smss win32k csrss ntvdm
@@ -96,7 +96,7 @@ NET_DEVICE_DRIVERS = ne2000 pcnet
 STORAGE_DRIVERS = atapi cdrom class2 disk floppy scsiport diskdump
 
 # System applications
-# autochk cmd format services setup usetup welcome winlogon
+# autochk cmd format services setup usetup welcome winlogon msiexec 
 SYS_APPS = autochk calc cmd explorer expand format regedt32 regsvr32 \
   services setup taskmgr userinit usetup welcome vmwinst winlogon \
   regedit winefile

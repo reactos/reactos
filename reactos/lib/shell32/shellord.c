@@ -761,7 +761,7 @@ void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 	SHGetPathFromIDListA((LPCITEMIDLIST) pv, doc_name);
     }
     else {
-	lstrcpyA(doc_name, (LPSTR) pv);
+	lstrcpyA(doc_name, (LPCSTR) pv);
     }
     TRACE("full document name %s\n", doc_name);
     PathStripPathA(doc_name);

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.7 2004/11/14 21:28:21 arty Exp $
+# $Id: makefile,v 1.7.2.1 2004/12/08 21:56:49 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -12,6 +12,8 @@ TARGET_PCH = $(PATH_TO_TOP)/drivers/lib/ip/include/precomp.h
 TARGET_CFLAGS = \
 	-D__USE_W32API \
 	-DMEMTRACK \
+	-D__NTDRIVER__ \
+	-D_SEH_NO_NATIVE_NLG \
 	-Wall -Werror \
 	-Iinclude \
 	-I../../net/tcpip/include \
@@ -33,9 +35,7 @@ TARGET_OBJECTS = \
 	network/memtrack.o \
 	network/neighbor.o \
 	network/ports.o \
-	network/prefix.o \
 	network/receive.o \
-	network/route.o \
 	network/router.o \
 	network/routines.o \
 	network/transmit.o \

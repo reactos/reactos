@@ -78,7 +78,7 @@
 **	5.	They might reference tm.TM_ZONE after calling offtime.
 ** What's best to do in the above cases is open to debate;
 ** for now, we just set things up so that in any of the five cases
-** WILDABBR is used.  Another possibility:  initialize tzname[0] to the
+** 4ABBR is used.  Another possibility:  initialize tzname[0] to the
 ** string "tzname[0] used before set", and similarly for the other cases.
 ** And another:  initialize tzname[0] to "ERA", with an explanation in the
 ** manual page of what this "time zone abbreviation" means (doing this so
@@ -88,8 +88,8 @@
 void _set_daylight_export(int);
 void _set_timezone_export(int);
 
-
-static char WILDABBR[] = "   ";
+static char TZ_NAME[16] = "JST";
+static char TZ_DST_NAME[12] = "";
 
 #ifndef TRUE
 #define TRUE		1
@@ -183,8 +183,8 @@ static int lcl_is_set;
 static int gmt_is_set;
 
 char * _tzname[2] = {
-  WILDABBR,
-  WILDABBR
+  TZ_NAME,
+  TZ_DST_NAME
 };
 
 static long
@@ -205,8 +205,8 @@ settzname(void)
   const struct state * CPP_CONST sp = lclptr;
   int i;
 
-  _tzname[0] = WILDABBR;
-  _tzname[1] = WILDABBR;
+  _tzname[0] = TZ_NAME;
+  _tzname[1] = TZ_DST_NAME;
 #ifdef ALL_STATE
   if (sp == NULL)
   {
@@ -1060,7 +1060,7 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
    ** but this is no time for a treasure hunt.
    */
   if (offset != 0)
-    tmp->tm_zone = WILDABBR;
+    tmp->tm_zone = TZ_NAME;
   else
   {
 #ifdef ALL_STATE

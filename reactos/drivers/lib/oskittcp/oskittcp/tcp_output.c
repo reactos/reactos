@@ -576,7 +576,6 @@ send:
 	else
 		ti->ti_seq = htonl(tp->snd_max);
 	ti->ti_ack = htonl(tp->rcv_nxt);
-	printf("ti->ti_ack = %d\n", ti->ti_ack);
 
 	if (optlen) {
 		(void)memcpy(ti + 1, opt, optlen);

@@ -12,6 +12,7 @@ extern PDESKTOP_OBJECT InputDesktop;
 extern HDESK InputDesktopHandle; 
 extern PWNDCLASS_OBJECT DesktopWindowClass;
 extern HDC ScreenDeviceContext;
+extern BOOL g_PaintDesktopVersion;
 
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID);

@@ -971,7 +971,7 @@ typedef struct _FILE_COMPRESSION_INFORMATION {
 
 typedef struct _FILE_COMPLETION_INFORMATION { // Information Class 30
    HANDLE IoCompletionHandle;
-   ULONG CompletionKey;
+   PVOID CompletionKey;
 } FILE_COMPLETION_INFORMATION, *PFILE_COMPLETION_INFORMATION;
 
 typedef struct _FILE_ALL_INFORMATION {

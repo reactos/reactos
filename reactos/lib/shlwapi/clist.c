@@ -51,7 +51,7 @@ HRESULT WINAPI SHAddDataBlock(LPSHLWAPI_CLIST*,LPCSHLWAPI_CLIST);
  */
 inline static LPSHLWAPI_CLIST NextItem(LPCSHLWAPI_CLIST lpList)
 {
-  const char* address = (char*)lpList;
+  const char* address = (const char*)lpList;
   address += lpList->ulSize;
   return (LPSHLWAPI_CLIST)address;
 }

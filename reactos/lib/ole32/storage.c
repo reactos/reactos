@@ -1125,7 +1125,7 @@ HRESULT WINAPI IStream16_fnWrite(
 	ULONG	*byteswritten=pcbWrite,xxwritten;
 	int	oldsize,newsize,i,curoffset=0,lastblocknr,blocknr,cc;
 	HANDLE	hf = This->hf;
-	LPBYTE	pbv = (LPBYTE)pv;
+	const BYTE*     pbv = (const BYTE*)pv;
 
 	if (!pcbWrite) byteswritten=&xxwritten;
 	*byteswritten = 0;

@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.95 2004/11/20 17:48:38 chorns Exp $
+# $Id: helper.mk,v 1.95.2.1 2004/12/08 21:57:41 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -51,6 +51,7 @@
 #   $TARGET_BOOTSTRAP  = Whether this file is needed to bootstrap the installation (no,yes) (optional)
 #   $TARGET_BOOTSTRAP_NAME = Name on the installation medium (optional)
 #   $TARGET_REGTESTS   = This module has regression tests (no,yes) (optional)
+#   $TARGET_INSTALL    = Install the file (no,yes) (optional)
 #   $SUBDIRS           = Subdirs in which to run make (optional)
 
 include $(PATH_TO_TOP)/config
@@ -276,6 +277,8 @@ ifeq ($(TARGET_TYPE),hal)
   MK_BOOTCDDIR := .
   MK_DISTDIR := dlls
   MK_RES_BASE := $(TARGET_NAME)
+  MK_INSTALL_BASENAME := hal
+  MK_INSTALL_FULLNAME := hal.dll
 endif
 
 ifeq ($(TARGET_TYPE),bootpgm)
@@ -373,7 +376,6 @@ ifeq ($(TARGET_TYPE),test)
   MK_RES_BASE :=
   TARGET_OBJECTS := _rtstub.o _regtests.o $(TARGET_OBJECTS)
 endif
-
 
 # can be overidden with $(CXX) for linkage of c++ executables
 LD_CC = $(CC)
@@ -591,16 +593,16 @@ ifeq ($(MK_MODE),user)
     MK_DEFBASE := 0x400000
   endif
   ifneq ($(TARGET_SDKLIBS),)
-    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(TARGET_SDKLIBS))
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/lib, $(TARGET_SDKLIBS))
   else
-    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/, $(MK_SDKLIBS))
+    MK_LIBS := $(addprefix $(SDK_PATH_LIB)/lib, $(MK_SDKLIBS))
   endif
 endif
 
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
-  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
+  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/lib, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
   MK_CFLAGS += -D_SEH_NO_NATIVE_NLG
   MK_CPPFLAGS += -D_SEH_NO_NATIVE_NLG
   MK_LFLAGS += -nostartfiles
@@ -651,18 +653,19 @@ TARGET_LFLAGS += $(MK_LFLAGS) $(STD_LFLAGS)
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
 ifeq ($(MK_MODE),static)
-  MK_FULLNAME := $(MK_LIBPATH)/$(MK_BASENAME)$(MK_EXT)
+  MK_FULLNAME := $(MK_LIBPATH)/lib$(MK_BASENAME)$(MK_EXT)
 else
   MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
 endif
 
 ifeq ($(TARGET_TYPE), kmlibrary)
-  MK_FULLNAME := $(DDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
+  MK_FULLNAME := $(DDK_PATH_LIB)/lib$(MK_BASENAME)$(MK_EXT)
 endif
 
-MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
+MK_IMPLIB_FULLNAME := lib$(MK_BASENAME)$(MK_IMPLIB_EXT)
 
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)
+MK_DEBUGNAME := $(MK_BASENAME).dbg
 
 MK_EXTRADEP := $(filter %.h,$(TARGET_OBJECTS))
 
@@ -689,6 +692,19 @@ else
   MK_REGTESTS_CLEAN :=
 endif
 
+ifeq ($(TARGET_INSTALL),)
+ MK_INSTALL := yes
+else
+ MK_INSTALL := $(TARGET_INSTALL)
+endif
+
+ifeq ($(MK_INSTALL_BASENAME),)
+  MK_INSTALL_BASENAME := $(MK_BASENAME)
+endif
+ifeq ($(MK_INSTALL_FULLNAME),)
+  MK_INSTALL_FULLNAME := $(MK_FULLNAME)
+endif
+
 ifeq ($(MK_IMPLIBONLY),yes)
 
 TARGET_CLEAN += $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
@@ -699,7 +715,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 	$(DLLTOOL) \
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
+		--output-lib $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME) \
 		$(MK_KILLAT)
 
 else # MK_IMPLIBONLY
@@ -911,13 +927,13 @@ depends:
 endif
 
 ifeq ($(MK_IMPLIB),yes)
-$(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
+$(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_DEFNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
-		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
+		--output-lib $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME) \
 		$(MK_KILLAT)
 
-implib: $(MK_IMPLIBPATH)/$(MK_BASENAME).a
+implib: $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME)
 else
 implib: $(SUBDIRS:%=%_implib)
 endif
@@ -963,6 +979,8 @@ ifeq ($(MK_IMPLIBONLY),yes)
 
 # Don't install import libraries
 
+forceinstall:
+
 install:
 
 bootcd:
@@ -973,23 +991,35 @@ else # MK_IMPLIBONLY
 # Don't install static libraries
 ifeq ($(MK_MODE),static)
 
+forceinstall:
+
 install:
 	
 bootcd:	
 
 else # MK_MODE
 
+ifneq ($(MK_INSTALL),no)
+
+install: forceinstall
+
+else # MK_INSTALL
+
+install:
+
+endif # MK_INSTALL
+
 ifeq ($(INSTALL_SYMBOLS),yes)
 
-install: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
-	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
-	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
+	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_INSTALL_BASENAME).sym
 	@echo $(MK_FULLNAME) was successfully installed.
 
 else # INSTALL_SYMBOLS
 
-install: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
-	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
+forceinstall: $(SUBDIRS:%=%_install) $(MK_FULLNAME)
+	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_INSTALL_FULLNAME)
 
 endif # INSTALL_SYMBOLS
 
@@ -1000,7 +1030,7 @@ ifeq ($(TARGET_BOOTSTRAP),yes)
 ifneq ($(TARGET_BOOTSTRAP_NAME),)
 MK_BOOTSTRAP_NAME := $(TARGET_BOOTSTRAP_NAME)
 else # TARGET_BOOTSTRAP_NAME
-MK_BOOTSTRAP_NAME := $(MK_FULLNAME)
+MK_BOOTSTRAP_NAME := $(MK_INSTALL_FULLNAME)
 endif # TARGET_BOOTSTRAP_NAME
 
 bootcd: $(SUBDIRS:%=%_bootcd)
@@ -1076,7 +1106,7 @@ endif
 ifeq ($(TARGET_TYPE),test)
 run: all
 	@$(CC) -nostdlib -o _runtest.exe regtests.a $(TARGET_LIBS) _stubs.o \
-	$(SDK_PATH_LIB)/rtshared.a $(SDK_PATH_LIB)/regtests.a $(SDK_PATH_LIB)/pseh.a \
+	$(SDK_PATH_LIB)/librtshared.a $(SDK_PATH_LIB)/libregtests.a $(SDK_PATH_LIB)/libpseh.a \
 	_hooks.o -lgcc -lmsvcrt -lntdll
 	@$(CP) $(REGTESTS_PATH)/regtests/regtests.dll regtests.dll
 	@_runtest.exe

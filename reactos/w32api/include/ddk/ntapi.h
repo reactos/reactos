@@ -1106,32 +1106,32 @@ NTSTATUS
 NTAPI
 ZwAllocateUserPhysicalPages(
 	IN HANDLE  ProcessHandle,
-	IN PULONG  NumberOfPages,
-	OUT PULONG  PageFrameNumbers);
+	IN OUT PULONG_PTR  NumberOfPages,
+	OUT PULONG_PTR  UserPfnArray);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwFreeUserPhysicalPages(
 	IN HANDLE  ProcessHandle,
-	IN OUT PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN OUT PULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  UserPfnArray);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwMapUserPhysicalPages(
-	IN PVOID  BaseAddress,
-	IN PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN PVOID  VirtualAddress,
+	IN ULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  PageArray  OPTIONAL);
 
 NTOSAPI
 NTSTATUS
 NTAPI
 ZwMapUserPhysicalPagesScatter(
-	IN PVOID  *BaseAddresses,
-	IN PULONG  NumberOfPages,
-	IN PULONG  PageFrameNumbers);
+	IN PVOID  *VirtualAddresses,
+	IN ULONG_PTR  NumberOfPages,
+	IN PULONG_PTR  PageArray  OPTIONAL);
 
 NTOSAPI
 NTSTATUS

@@ -132,7 +132,9 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
   PFN_TYPE PrcPfn;
   PKPCR Pcr;
+  PKPCR BootPcr;
 
+  BootPcr = (PKPCR)KPCR_BASE;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Id * PAGE_SIZE);
 
   MmRequestPageMemoryConsumer(MC_NPPOOL, TRUE, &PrcPfn);
@@ -147,13 +149,13 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->ProcessorNumber = Id;
   Pcr->Tib.Self = &Pcr->Tib;
   Pcr->Self = Pcr;
-  Pcr->Irql = HIGH_LEVEL;
+  Pcr->Irql = SYNCH_LEVEL;
+
+  Pcr->PrcbData.MHz = BootPcr->PrcbData.MHz;
+  Pcr->StallScaleFactor = BootPcr->StallScaleFactor; 
 
   /* Mark the end of the exception handler list */
   Pcr->Tib.ExceptionList = (PVOID)-1;
-
-  KeInitDpc(Pcr);
-
 
   KiGdtPrepareForApplicationProcessorInit(Id);
 }
@@ -172,11 +174,6 @@ KeApplicationProcessorInit(VOID)
      Ke386SetCr4(Ke386GetCr4() | X86_CR4_PGE);
   }
   
-  /* Enable PAE mode */
-  if (Ke386PaeEnabled)
-  {
-     MiEnablePAE(NULL);
-  }
 
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
   Pcr = (PKPCR)((ULONG_PTR)KPCR_BASE + Offset * PAGE_SIZE);
@@ -191,6 +188,8 @@ KeApplicationProcessorInit(VOID)
 
   /* Check FPU/MMX/SSE support. */
   KiCheckFPU();
+
+  KeInitDpc(Pcr);
 
   /*
    * It is now safe to process interrupts
@@ -221,26 +220,16 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    extern USHORT KiBootGdt[];
    extern KTSS KiBootTss;
 
-   /* Get processor information. */
-   Ki386GetCpuId();
-
-   /* Check FPU/MMX/SSE support. */
-   KiCheckFPU();
-
-   KiInitializeGdt (NULL);
-   Ki386BootInitializeTSS();
-   KeInitExceptions ();
-   KeInitInterrupts ();
-
    /*
     * Initialize the initial PCR region. We can't allocate a page
     * with MmAllocPage() here because MmInit1() has not yet been
     * called, so we use a predefined page in low memory 
     */
+
    KPCR = (PKPCR)KPCR_BASE;
    memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = KPCR;
-   KPCR->Irql = HIGH_LEVEL;
+   KPCR->Irql = SYNCH_LEVEL;
    KPCR->Tib.Self  = &KPCR->Tib;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
@@ -249,13 +238,24 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KiPcrInitDone = 1;
    PcrsAllocated++;
 
-   KeInitDpc(KPCR);
+   KiInitializeGdt (NULL);
+   Ki386BootInitializeTSS();
+   Ki386InitializeLdt();
+
+   /* Get processor information. */
+   Ki386GetCpuId();
+
+   /* Check FPU/MMX/SSE support. */
+   KiCheckFPU();
 
    /* Mark the end of the exception handler list */
    KPCR->Tib.ExceptionList = (PVOID)-1;
 
-   Ki386InitializeLdt();
-   
+   KeInitDpc(KPCR);
+
+   KeInitExceptions ();
+   KeInitInterrupts ();
+
    if (KPCR->PrcbData.FeatureBits & X86_FEATURE_PGE)
    {
       ULONG Flags;
@@ -336,55 +336,55 @@ KeInit2(VOID)
 
    if (Pcr->PrcbData.FeatureBits & X86_FEATURE_PAE)
    {
-      DPRINT1("CPU supports PAE mode\n");
+      DPRINT("CPU supports PAE mode\n");
       if (Ke386Pae)
       {
-         DPRINT1("CPU runs in PAE mode\n");
+         DPRINT("CPU runs in PAE mode\n");
          if (Ke386NoExecute)
          {
-            DPRINT1("NoExecute is enabled\n");
+            DPRINT("NoExecute is enabled\n");
          }
       }
       else
       {
-         DPRINT1("CPU doesn't run in PAE mode\n");
+         DPRINT("CPU doesn't run in PAE mode\n");
       }
    }
    if ((Pcr->PrcbData.FeatureBits & (X86_FEATURE_FXSR | X86_FEATURE_MMX | X86_FEATURE_SSE | X86_FEATURE_SSE2)) ||
        (Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3))
       {
-         DPRINT1("CPU supports" "%s%s%s%s%s" ".\n",
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
-                 ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
-                 ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
+         DPRINT("CPU supports" "%s%s%s%s%s" ".\n",
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_FXSR) ? " FXSR" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_MMX) ? " MMX" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE) ? " SSE" : ""),
+                ((Pcr->PrcbData.FeatureBits & X86_FEATURE_SSE2) ? " SSE2" : ""),
+                ((Ke386CpuidFlags2 & X86_EXT_FEATURE_SSE3) ? " SSE3" : ""));
       }
    if (Ke386GetCr4() & X86_CR4_OSFXSR)
       {
-         DPRINT1("SSE enabled.\n");
+         DPRINT("SSE enabled.\n");
       }
    if (Ke386GetCr4() & X86_CR4_OSXMMEXCPT)
       {
-         DPRINT1("Unmasked SIMD exceptions enabled.\n");
+         DPRINT("Unmasked SIMD exceptions enabled.\n");
       }
    if (Pcr->PrcbData.VendorString[0])
    {
-      DPRINT1("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
+      DPRINT("CPU Vendor: %s\n", Pcr->PrcbData.VendorString);
    }
    if (Ke386CpuidModel[0])
    {
-      DPRINT1("CPU Model:  %s\n", Ke386CpuidModel);
+      DPRINT("CPU Model:  %s\n", Ke386CpuidModel);
    }
 
-   DPRINT1("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
+   DPRINT("Ke386CacheAlignment: %d\n", Ke386CacheAlignment);
    if (Ke386L1CacheSize)
    {
-      DPRINT1("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
+      DPRINT("Ke386L1CacheSize: %dkB\n", Ke386L1CacheSize);
    }
    if (Pcr->L2CacheSize)
    {
-      DPRINT1("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
+      DPRINT("Ke386L2CacheSize: %dkB\n", Pcr->L2CacheSize);
    }
 }
 

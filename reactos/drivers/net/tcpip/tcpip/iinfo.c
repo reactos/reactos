@@ -35,7 +35,7 @@ TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIEntityID *ID,
 
     OutData->Index = ID->tei_instance + 1; 
     /* viz: tcpip keeps those indices */
-    OutData->Type = IF ? 1 : 0; /* XXX other -- for now ... */
+    OutData->Type = Interface == Loopback ? IFENT_SOFTWARE_LOOPBACK : 0;
     OutData->Mtu = Interface->MTU;
     TI_DbgPrint(MAX_TRACE, 
 		("Getting interface speed\n"));

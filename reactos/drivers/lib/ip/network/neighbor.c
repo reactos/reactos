@@ -107,11 +107,6 @@ VOID NCETimeout(
             /* Flush packet queue */
 	    NBFlushPacketQueue( NCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
             NCE->EventCount = 0;
-	    
-            /* Remove route cache entries with references to this NCE.
-	       Remember that neighbor cache lock is acquired before the
-	       route cache lock */
-            RouteInvalidateNCE(NCE);
 	}
         else
 	{
@@ -129,7 +124,7 @@ VOID NCETimeout(
         /* FIXME: Probe state */
         TI_DbgPrint(DEBUG_NCACHE, ("NCE probe state.\n"));
         break;
-	
+
     default:
         /* Should not happen since the event timer is not used in the other states */
         TI_DbgPrint(MIN_TRACE, ("Invalid NCE state (%d).\n", NCE->State));
@@ -204,9 +199,6 @@ VOID NBShutdown(VOID)
       CurNCE = NeighborCache[i].Cache;
       while (CurNCE) {
           NextNCE = CurNCE->Next;
-	  
-          /* Remove all references from route cache */
-          RouteInvalidateNCE(CurNCE);
 
           /* Flush wait queue */
 	  NBFlushPacketQueue( CurNCE, FALSE, STATUS_SUCCESS );
@@ -231,38 +223,16 @@ VOID NBSendSolicit(PNEIGHBOR_CACHE_ENTRY NCE)
  *   May be called with lock held on NCE's table
  */
 {
-    PLIST_ENTRY CurrentEntry;
-    PNET_TABLE_ENTRY NTE;
-    
     TI_DbgPrint(DEBUG_NCACHE, ("Called. NCE (0x%X).\n", NCE));
     
     if (NCE->State == NUD_INCOMPLETE)
     {
 	/* This is the first solicitation of this neighbor. Broadcast
 	   a request for the neighbor */
-
-	/* FIXME: Choose first NTE. We might want to give an NTE as argument */
-	if (!NCE->Interface || !NCE->Interface->NTEListHead.Flink) {
-	    TI_DbgPrint(MID_TRACE, 
-			("NCE->Interface: %x, "
-			 "NCE->Interface->NTEListHead.Flink %x\n",
-			 NCE->Interface,
-			 NCE->Interface ? NCE->Interface->NTEListHead.Flink : 0));
-	}
 	
-	TI_DbgPrint(MID_TRACE,("MARK\n"));
 	TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
-	TI_DbgPrint(MID_TRACE,("NCE->Interface: %x\n", NCE->Interface));
 
-	if (!IsListEmpty(&NCE->Interface->NTEListHead)) {
-	    CurrentEntry = NCE->Interface->NTEListHead.Flink;
-	    NTE = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, 
-				    IFListEntry);
-	    ARPTransmit(&NCE->Address, NTE);
-	} else {
-	    TI_DbgPrint(MIN_TRACE, ("Interface at 0x%X has zero NTE.\n", 
-				    NCE->Interface));
-	}
+	ARPTransmit(&NCE->Address, NCE->Interface);
     } else {
 	/* FIXME: Unicast solicitation since we have a cached address */
 	TI_DbgPrint(MIN_TRACE, ("Uninplemented unicast solicitation.\n"));
@@ -301,8 +271,6 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
 	"LinkAddress (0x%X)  LinkAddressLength (%d)  State (0x%X)\n",
 	Interface, Address, LinkAddress, LinkAddressLength, State));
 
-  ASSERT(Address->Type == IP_ADDRESS_V4);
-
   NCE = ExAllocatePool
       (NonPagedPool, sizeof(NEIGHBOR_CACHE_ENTRY) + LinkAddressLength);
   if (NCE == NULL)
@@ -322,6 +290,8 @@ PNEIGHBOR_CACHE_ENTRY NBAddNeighbor(
   NCE->State = State;
   NCE->EventTimer = 0; /* Not in use */
   InitializeListHead( &NCE->PacketQueue );
+
+  TI_DbgPrint(MID_TRACE,("NCE: %x\n", NCE));
 
   HashValue = *(PULONG)&Address->Address;
   HashValue ^= HashValue >> 16;
@@ -523,9 +493,6 @@ VOID NBRemoveNeighbor(
           *PrevNCE = CurNCE->Next;
 
 	  NBFlushPacketQueue( CurNCE, TRUE, NDIS_STATUS_REQUEST_ABORTED );
-
-          /* Remove all references from route cache */
-          RouteInvalidateNCE(CurNCE);
           ExFreePool(CurNCE);
 
 	  break;

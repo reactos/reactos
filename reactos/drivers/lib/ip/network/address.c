@@ -83,6 +83,18 @@ UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
     }
 }
 
+VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source, 
+		       PIP_ADDRESS Netmask ) {
+    if( Netmask->Type == IP_ADDRESS_V4 ) {
+	Network->Address.IPv4Address = 
+	    Source->Address.IPv4Address & Netmask->Address.IPv4Address;
+    } else {
+	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n", 
+				     Netmask->Type));
+	*Network = *Source;
+    }    
+}
+
 VOID IPAddressFree(
     PVOID Object)
 /*
@@ -169,12 +181,11 @@ NTSTATUS AddrGetAddress(
  */
 NTSTATUS AddrBuildAddress(
     PTRANSPORT_ADDRESS TaAddress,
-    PIP_ADDRESS *Address,
+    PIP_ADDRESS Address,
     PUSHORT Port)
 {
   PTDI_ADDRESS_IP ValidAddr;
   PTA_ADDRESS TdiAddress = &TaAddress->Address[0];
-  PIP_ADDRESS IPAddress;
 
   if (TdiAddress->AddressType != TDI_ADDRESS_TYPE_IP) {
       TI_DbgPrint
@@ -191,17 +202,11 @@ NTSTATUS AddrBuildAddress(
 
   ValidAddr = (PTDI_ADDRESS_IP)TdiAddress->Address;
 
-  IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
-  if (!IPAddress)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
-  AddrInitIPv4(IPAddress, ValidAddr->in_addr);
-  *Address = IPAddress;
+  AddrInitIPv4(Address, ValidAddr->in_addr);
   *Port = ValidAddr->sin_port;
 
   return STATUS_SUCCESS;
 }
-
 
 /*
  * FUNCTION: Returns wether two addresses are equal
@@ -290,72 +295,6 @@ BOOLEAN AddrIsEqualIPv4(
     return FALSE;
 }
 
-
-/*
- * FUNCTION: Build an IPv4 style address
- * ARGUMENTS:
- *     Address = Raw IPv4 address (network byte order)
- * RETURNS:
- *     Pointer to IP address structure, NULL if there was not enough free
- *     non-paged memory
- */
-PIP_ADDRESS AddrBuildIPv4(
-    IPv4_RAW_ADDRESS Address)
-{
-    PIP_ADDRESS IPAddress;
-
-    IPAddress = PoolAllocateBuffer(sizeof(IP_ADDRESS));
-    if (IPAddress != NULL) {
-        IPAddress->Type                = IP_ADDRESS_V4;
-        IPAddress->Address.IPv4Address = Address;
-    }
-
-    return IPAddress;
-}
-
-
-/*
- * FUNCTION: Clone an IP address
- * ARGUMENTS:
- *     IPAddress = Pointer to IP address
- * RETURNS:
- *     Pointer to new IP address structure, NULL if there was not enough free
- *     non-paged memory
- */
-PIP_ADDRESS AddrCloneAddress(
-  PIP_ADDRESS Address)
-{
-  if (Address->Type == IP_ADDRESS_V4)
-    {
-      return AddrBuildIPv4(Address->Address.IPv4Address);
-    }
-  else
-    {
-      TI_DbgPrint(MIN_TRACE, ("Cannot clone IPv6 address.\n"));
-      return NULL;
-    }
-}
-
-
-/*
- * FUNCTION: Locates and returns an address entry using IPv4 adress as argument
- * ARGUMENTS:
- *     Address = Raw IPv4 address
- * RETURNS:
- *     Pointer to address entry if found, NULL if not found
- * NOTES:
- *     Only unicast addresses are considered.
- *     If found, the address is referenced
- */
-PADDRESS_ENTRY AddrLocateADEv4(
-    IPv4_RAW_ADDRESS Address)
-{
-    IP_ADDRESS Addr;
-
-    AddrInitIPv4(&Addr, Address);
-
-    return IPLocateADE(&Addr, ADE_UNICAST);
-}
 
 unsigned long PASCAL inet_addr(const char *AddrString)
 /*

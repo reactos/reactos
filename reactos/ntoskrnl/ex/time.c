@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.24 2004/11/06 16:04:58 ekohl Exp $
+/* $Id: time.c,v 1.24.2.1 2004/12/08 21:57:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
+#define NDEBUG
 #include <internal/debug.h>
 
 
@@ -30,6 +31,7 @@ ULONG ExpTimeZoneId;
 VOID INIT_FUNCTION
 ExpInitTimeZoneInfo(VOID)
 {
+  LARGE_INTEGER CurrentTime;
   NTSTATUS Status;
 
   /* Read time zone information from the registry */
@@ -54,6 +56,23 @@ ExpInitTimeZoneInfo(VOID)
   SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
   SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
   SharedUserData->TimeZoneId = ExpTimeZoneId;
+
+  /* Convert boot time from local time to UTC */
+  SystemBootTime.QuadPart += ExpTimeZoneBias.QuadPart;
+
+  /* Convert sytem time from local time to UTC */
+  do
+    {
+      CurrentTime.u.HighPart = SharedUserData->SystemTime.High1Time;
+      CurrentTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    }
+  while (CurrentTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+
+  CurrentTime.QuadPart += ExpTimeZoneBias.QuadPart;
+
+  SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
+  SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
+  SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
 }
 
 
@@ -70,28 +89,21 @@ NTSTATUS STDCALL
 NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 		OUT PLARGE_INTEGER UnsafeOldSystemTime OPTIONAL)
 {
-  NTSTATUS Status;
   LARGE_INTEGER OldSystemTime;
   LARGE_INTEGER NewSystemTime;
   LARGE_INTEGER LocalTime;
   TIME_FIELDS TimeFields;
+  NTSTATUS Status;
 
   /* FIXME: Check for SeSystemTimePrivilege */
-
-  if (UnsafeNewSystemTime == NULL)
-    {
-      /* FIXME: update time zone settings */
-
-      return STATUS_SUCCESS;
-    }
 
   Status = MmCopyFromCaller(&NewSystemTime, UnsafeNewSystemTime,
 			    sizeof(NewSystemTime));
   if (!NT_SUCCESS(Status))
     {
-      return(Status);
+      return Status;
     }
-  
+
   if (UnsafeOldSystemTime != NULL)
     {
       KeQuerySystemTime(&OldSystemTime);
@@ -102,10 +114,8 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 		      &TimeFields);
   HalSetRealTimeClock(&TimeFields);
 
-  /* FIXME: set system time */
-#if 0
-  KeSetSystemTime();
-#endif
+  /* Set system time */
+  KiSetSystemTime(&NewSystemTime);
 
   if (UnsafeOldSystemTime != NULL)
     {
@@ -113,10 +123,11 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
 			      sizeof(OldSystemTime));
       if (!NT_SUCCESS(Status))
 	{
-	  return(Status);
+          return Status;
 	}
     }
-  return(STATUS_SUCCESS);
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -154,10 +165,7 @@ ExLocalTimeToSystemTime (
 	)
 {
   SystemTime->QuadPart =
-    LocalTime->QuadPart;
-#if 0
     LocalTime->QuadPart + ExpTimeZoneBias.QuadPart;
-#endif
 }
 
 
@@ -186,10 +194,7 @@ ExSystemTimeToLocalTime (
 	)
 {
   LocalTime->QuadPart =
-    SystemTime->QuadPart;
-#if 0
     SystemTime->QuadPart - ExpTimeZoneBias.QuadPart;
-#endif
 }
 
 /* EOF */

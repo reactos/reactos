@@ -1,29 +1,26 @@
 Index: Makefile.in
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/Makefile.in,v
-retrieving revision 1.85
-diff -u -r1.85 Makefile.in
---- Makefile.in	29 Sep 2004 21:13:58 -0000	1.85
-+++ Makefile.in	20 Oct 2004 18:43:52 -0000
-@@ -46,9 +46,9 @@
+retrieving revision 1.86
+diff -u -r1.86 Makefile.in
+--- Makefile.in	27 Oct 2004 00:47:53 -0000	1.86
++++ Makefile.in	6 Dec 2004 23:45:47 -0000
+@@ -46,7 +46,7 @@
  	shpolicy.c \
  	shv_bg_cmenu.c \
  	shv_item_cmenu.c \
 -	systray.c
 +	ros-systray.c
  
--RC_SRCS = shres.rc version.rc
-+RC_SRCS = shres.rc
+ RC_SRCS = shres.rc
  RC_BINSRC = shres.rc
- RC_BINARIES = \
- 	cdrom.ico \
 Index: control.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/control.c,v
 retrieving revision 1.20
 diff -u -r1.20 control.c
 --- control.c	12 Jul 2004 19:50:56 -0000	1.20
-+++ control.c	20 Oct 2004 18:43:52 -0000
++++ control.c	6 Dec 2004 23:45:47 -0000
 @@ -464,6 +464,7 @@
  void WINAPI RunDLL_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
                                  LPCSTR cmdline, INT cmdshow )
@@ -49,7 +46,7 @@ RCS file: /home/wine/wine/dlls/shell32/iconcache.c,v
 retrieving revision 1.83
 diff -u -r1.83 iconcache.c
 --- iconcache.c	7 Oct 2004 03:06:48 -0000	1.83
-+++ iconcache.c	20 Oct 2004 18:43:52 -0000
++++ iconcache.c	6 Dec 2004 23:45:47 -0000
 @@ -143,8 +143,22 @@
  {	HICON	hiconLarge=0;
  	HICON	hiconSmall=0;
@@ -75,22 +72,6 @@ diff -u -r1.83 iconcache.c
  
  	if ( !hiconLarge ||  !hiconSmall)
  	{
-@@ -299,6 +313,7 @@
- 
- 	return TRUE;
- }
-+
- /*************************************************************************
-  * PidlToSicIndex			[INTERNAL]
-  *
-@@ -339,7 +354,6 @@
- 	  *pIndex = 0;
- 
- 	return ret;
--
- }
- 
- /*************************************************************************
 @@ -362,8 +376,12 @@
  	pdump(pidl);
  
@@ -126,14 +107,212 @@ diff -u -r1.83 iconcache.c
  	TRACE("%s %i %p %p %i\n", debugstr_w(lpszFile), nIconIndex, phiconLarge, phiconSmall, nIcons);
  
  	return PrivateExtractIconExW(lpszFile, nIconIndex, phiconLarge, phiconSmall, nIcons);
+Index: shell32_Ca.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Ca.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_Ca.rc
+--- shell32_Ca.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_Ca.rc	6 Dec 2004 23:45:47 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Quant a %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "D'Acord", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "D'Acord", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine ha estat construit per:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS ha estat construit per:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Cn.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Cn.rc,v
+retrieving revision 1.4
+diff -u -r1.4 shell32_Cn.rc
+--- shell32_Cn.rc	24 Aug 2004 18:33:03 -0000	1.4
++++ shell32_Cn.rc	6 Dec 2004 23:45:47 -0000
+@@ -24,11 +24,12 @@
+ CAPTION "¹ØÓÚ %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "È·¶¨", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "È·¶¨", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -37,7 +38,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "ÊäÈë³ÌÐò£¬Ä¿Â¼£¬ÎÄ¼þ»òÕßInternet×ÊÔ´Ãû£¬Wine½«ÎªÄú´ò¿ªËü¡£", 12289, 36, 11, 182, 18
++ LTEXT "ÊäÈë³ÌÐò£¬Ä¿Â¼£¬ÎÄ¼þ»òÕßInternet×ÊÔ´Ãû£¬ReactOS½«ÎªÄú´ò¿ªËü¡£", 12289, 36, 11, 182, 18
+  LTEXT "´ò¿ª(&O):", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "È·¶¨", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Cs.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Cs.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Cs.rc
+--- shell32_Cs.rc	24 Aug 2004 18:33:03 -0000	1.8
++++ shell32_Cs.rc	6 Dec 2004 23:45:47 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "O aplikaci %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine je d¡lem:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS je d¡lem:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Zadejte název programu, složky, dokumentu, nebo zdroje v síti Internet a Wine jej pro vás otevøe.", 12289, 36, 11, 182, 18
++ LTEXT "Zadejte název programu, složky, dokumentu, nebo zdroje v síti Internet a ReactOS jej pro vás otevøe.", 12289, 36, 11, 182, 18
+  LTEXT "&Otevøít:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Da.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Da.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_Da.rc
+--- shell32_Da.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_Da.rc	6 Dec 2004 23:45:47 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Om %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine havde ikke været mulig uden hjælp fra disse personer:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS havde ikke været mulig uden hjælp fra disse personer:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_De.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_De.rc,v
+retrieving revision 1.12
+diff -u -r1.12 shell32_De.rc
+--- shell32_De.rc	23 Sep 2004 04:28:04 -0000	1.12
++++ shell32_De.rc	6 Dec 2004 23:45:47 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "Informationen über %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "WINE wurde für Sie gekeltert von:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS wurde Ihnen zur Verfügung gestellt von:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Den Namen eines Programmes, eines Ordners, eines Dokumentes oder einer Internet Ressource eingeben, und Wine wird es für Sie öffnen", 12289, 36, 11, 182, 18
++ LTEXT "Den Namen eines Programmes, eines Ordners, eines Dokumentes oder einer Internet Ressource eingeben, und ReactOS wird es für Sie öffnen", 12289, 36, 11, 182, 18
+  LTEXT "&Öffnen:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -185,5 +186,5 @@
+        IDS_RESTART_TITLE       "Neustarten"
+        IDS_RESTART_PROMPT      "Möchten Sie, dass ein simulierter Windows Neustart durchgeführt wird ?"
+        IDS_SHUTDOWN_TITLE      "Anhalten"
+-       IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle Wine Sitzung beenden ?"
++       IDS_SHUTDOWN_PROMPT     "Möchten Sie die aktuelle ReactOS Sitzung beenden ?"
+ }
 Index: shell32_En.rc
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/shell32_En.rc,v
-retrieving revision 1.17
-diff -u -r1.17 shell32_En.rc
---- shell32_En.rc	23 Sep 2004 04:28:04 -0000	1.17
-+++ shell32_En.rc	20 Oct 2004 18:43:52 -0000
-@@ -181,8 +181,8 @@
+retrieving revision 1.18
+diff -u -r1.18 shell32_En.rc
+--- shell32_En.rc	21 Oct 2004 19:59:46 -0000	1.18
++++ shell32_En.rc	6 Dec 2004 23:45:47 -0000
+@@ -109,11 +109,12 @@
+ CAPTION "About %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -122,7 +123,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -181,10 +182,10 @@
  /* message box strings */
  STRINGTABLE DISCARDABLE
  {
@@ -146,14 +325,697 @@ diff -u -r1.17 shell32_En.rc
 +	IDS_SHUTDOWN_TITLE	"Shutdown"
 +	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
  }
+ 
+ /* shell folder path default values */
+Index: shell32_Eo.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Eo.rc,v
+retrieving revision 1.6
+diff -u -r1.6 shell32_Eo.rc
+--- shell32_Eo.rc	24 Aug 2004 18:33:03 -0000	1.6
++++ shell32_Eo.rc	6 Dec 2004 23:45:47 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Pri %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "Enorde", 1, 153, 130, 50, 12
++ DEFPUSHBUTTON "Enorde", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Es.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Es.rc,v
+retrieving revision 1.11
+diff -u -r1.11 shell32_Es.rc
+--- shell32_Es.rc	23 Sep 2004 04:28:04 -0000	1.11
++++ shell32_Es.rc	6 Dec 2004 23:45:48 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "Acerca de %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "Aceptar", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "Aceptar", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine está disponible gracias a:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS está disponible gracias a:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet, y Wine lo abrirá para usted.", 12289, 36, 11, 182, 18
++ LTEXT "Introduzca el nombre de un programa, carpeta, documento o recurso de Internet, y ReactOS lo abrirá para usted.", 12289, 36, 11, 182, 18
+  LTEXT "&Abrir:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "Aceptar", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -185,5 +186,5 @@
+ 	IDS_RESTART_TITLE	"Reiniciar"
+ 	IDS_RESTART_PROMPT	"¿Desea simular un reinicio de Windows?"
+ 	IDS_SHUTDOWN_TITLE	"Apagar"
+-	IDS_SHUTDOWN_PROMPT	"¿Desea terminar su sesión Wine?"
++	IDS_SHUTDOWN_PROMPT	"¿Desea terminar su sesión ReactOS?"
+ }
+Index: shell32_Fi.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Fi.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_Fi.rc
+--- shell32_Fi.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_Fi.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Tietoja: %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine:n tekijät:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS:n tekijät:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Fr.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Fr.rc,v
+retrieving revision 1.13
+diff -u -r1.13 shell32_Fr.rc
+--- shell32_Fr.rc	27 Oct 2004 21:36:17 -0000	1.13
++++ shell32_Fr.rc	6 Dec 2004 23:45:48 -0000
+@@ -112,11 +112,12 @@
+ CAPTION "À propos de %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine est une réalisation de :", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS est une réalisation de :", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -125,7 +126,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Entrez le nom d'un programme, d'un dossier, d'un document ou d'une ressource Internet, et Wine l'ouvrira pour vous.", 12289, 36, 11, 182, 18
++ LTEXT "Entrez le nom d'un programme, d'un dossier, d'un document ou d'une ressource Internet, et ReactOS l'ouvrira pour vous.", 12289, 36, 11, 182, 18
+  LTEXT "&Ouvrir :", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -187,7 +188,7 @@
+        IDS_RESTART_TITLE       "Redémarrer"
+        IDS_RESTART_PROMPT      "Voulez-vous simuler le redémarrage de Windows?"
+        IDS_SHUTDOWN_TITLE      "Arrêter"
+-       IDS_SHUTDOWN_PROMPT     "Voulez-vous fermer la session Wine?"
++       IDS_SHUTDOWN_PROMPT     "Voulez-vous fermer la session ReactOS?"
+ }
+ 
+ /* shell folder path default values */
+Index: shell32_Hu.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Hu.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_Hu.rc
+--- shell32_Hu.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_Hu.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "A %s-rõl"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "A WINE-t írták:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "A ReactOS-t írták:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_It.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_It.rc,v
+retrieving revision 1.13
+diff -u -r1.13 shell32_It.rc
+--- shell32_It.rc	23 Sep 2004 04:28:04 -0000	1.13
++++ shell32_It.rc	6 Dec 2004 23:45:48 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "Informazioni su %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine è disponibile grazie a:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS è disponibile grazie a:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa internet, e Wine la aprirà.", 12289, 36, 11, 182, 18
++ LTEXT "Digitare il nome del programma, della cartella, del documento o della risorsa internet, e ReactOS la aprirà.", 12289, 36, 11, 182, 18
+  LTEXT "&Apri:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -186,5 +187,5 @@
+        IDS_RESTART_TITLE       "Riavvia"
+        IDS_RESTART_PROMPT      "Vuoi simulare un riavvio do Windows?"
+        IDS_SHUTDOWN_TITLE      "Termina sessione"
+-       IDS_SHUTDOWN_PROMPT     "Vuoi terminare la sessione di Wine?"
++       IDS_SHUTDOWN_PROMPT     "Vuoi terminare la sessione di ReactOS?"
+ }
+Index: shell32_Ja.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Ja.rc,v
+retrieving revision 1.9
+diff -u -r1.9 shell32_Ja.rc
+--- shell32_Ja.rc	23 Sep 2004 04:28:04 -0000	1.9
++++ shell32_Ja.rc	6 Dec 2004 23:45:48 -0000
+@@ -103,11 +103,12 @@
+ CAPTION "%s ‚É‚Â‚¢‚Ä"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -116,7 +117,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Ko.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Ko.rc,v
+retrieving revision 1.6
+diff -u -r1.6 shell32_Ko.rc
+--- shell32_Ko.rc	24 Aug 2004 18:33:03 -0000	1.6
++++ shell32_Ko.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "%s¿¡ °üÇÏ¿©"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "È®ÀÎ", 1, 153, 130, 50, 12
++ DEFPUSHBUTTON "È®ÀÎ", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Nl.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Nl.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_Nl.rc
+--- shell32_Nl.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_Nl.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Info %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine is geschreven door:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS is geschreven door:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_No.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_No.rc,v
+retrieving revision 1.7
+diff -u -r1.7 shell32_No.rc
+--- shell32_No.rc	24 Aug 2004 18:33:03 -0000	1.7
++++ shell32_No.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Om %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Pl.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Pl.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Pl.rc
+--- shell32_Pl.rc	4 Oct 2004 19:31:50 -0000	1.8
++++ shell32_Pl.rc	6 Dec 2004 23:45:48 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "O %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Mo¿esz korzystaæ z Wine'a dziêki:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "Mo¿esz korzystaæ z ReactOS'a dziêki:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Wpisz nazwê programu, katalogu, dokumentu, a Wine otworzy go dla ciebie.", 12289, 36, 11, 182, 18
++ LTEXT "Wpisz nazwê programu, katalogu, dokumentu, a ReactOS otworzy go dla ciebie.", 12289, 36, 11, 182, 18
+  LTEXT "&Otwórz:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -185,5 +186,5 @@
+        IDS_RESTART_TITLE       "Uruchom ponownie"
+        IDS_RESTART_PROMPT      "Czy chcesz zasymulowaæ zrestartowanie Windowsa?"
+        IDS_SHUTDOWN_TITLE      "Wy³¹cz"
+-       IDS_SHUTDOWN_PROMPT     "Czy chcesz wy³¹czyæ sesjê Wine'a?"
++       IDS_SHUTDOWN_PROMPT     "Czy chcesz wy³¹czyæ sesjê ReactOS'a?"
+ }
+Index: shell32_Pt.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Pt.rc,v
+retrieving revision 1.15
+diff -u -r1.15 shell32_Pt.rc
+--- shell32_Pt.rc	23 Sep 2004 04:28:04 -0000	1.15
++++ shell32_Pt.rc	6 Dec 2004 23:45:48 -0000
+@@ -110,11 +110,12 @@
+ CAPTION "Sobre %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine foi disponibilizado por:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS foi disponibilizado por:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -123,7 +124,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o Wine irá abrí-lo para você.", 12289, 36, 11, 182, 18
++ LTEXT "Digite o nome do programa, pasta, documento, ou endereço Internet, que o ReactOS irá abrí-lo para você.", 12289, 36, 11, 182, 18
+  LTEXT "&Abrir:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+@@ -185,5 +186,5 @@
+        IDS_RESTART_TITLE       "Reiniciar"
+        IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
+        IDS_SHUTDOWN_TITLE      "Desligar"
+-       IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no Wine?"
++       IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
+ }
+Index: shell32_Ru.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Ru.rc,v
+retrieving revision 1.9
+diff -u -r1.9 shell32_Ru.rc
+--- shell32_Ru.rc	24 Aug 2004 18:33:03 -0000	1.9
++++ shell32_Ru.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Î %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Ðàçðàáîò÷èêè Wine:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "Ðàçðàáîò÷èêè ReactOS:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Ââåäèòå èìÿ ïðîãðàììû, ïàïêè, äîêóìåíòà èëè ðåñóðñ Èíòåðíåòà, è Wine îòêðîåò èõ.", 12289, 36, 11, 182, 18
++ LTEXT "Ââåäèòå èìÿ ïðîãðàììû, ïàïêè, äîêóìåíòà èëè ðåñóðñ Èíòåðíåòà, è ReactOS îòêðîåò èõ.", 12289, 36, 11, 182, 18
+  LTEXT "&Îòêðûòü:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Si.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Si.rc,v
+retrieving revision 1.5
+diff -u -r1.5 shell32_Si.rc
+--- shell32_Si.rc	24 Aug 2004 18:33:03 -0000	1.5
++++ shell32_Si.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "O %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "V redu", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "V redu", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine so ustvarili:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS so ustvarili:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Vnesite ime programa, mape, dokumenta ali spletne strani, in Wine ga (jo) bo odprl.", 12289, 36, 11, 182, 18
++ LTEXT "Vnesite ime programa, mape, dokumenta ali spletne strani, in ReactOS ga (jo) bo odprl.", 12289, 36, 11, 182, 18
+  LTEXT "&Odpri:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "V redu", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Sk.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Sk.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Sk.rc
+--- shell32_Sk.rc	24 Aug 2004 18:33:03 -0000	1.8
++++ shell32_Sk.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,10 +23,11 @@
+ CAPTION "O programe %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
+  LTEXT "Víno pre vás pripravili:", 98, 8, 55, 137, 10
+ }
+ 
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Sv.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Sv.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Sv.rc
+--- shell32_Sv.rc	24 Aug 2004 18:33:03 -0000	1.8
++++ shell32_Sv.rc	6 Dec 2004 23:45:48 -0000
+@@ -23,11 +23,12 @@
+ CAPTION "Om %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine hade inte varit möjligt utan dessa personer:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS hade inte varit möjligt utan dessa personer:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -36,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Skriv namnet på ett program, en mapp eller ett dokument och wine kommer att öppna det för dig.", 12289, 36, 11, 182, 18
++ LTEXT "Skriv namnet på ett program, en mapp eller ett dokument och ReactOS kommer att öppna det för dig.", 12289, 36, 11, 182, 18
+  LTEXT "&Öppna:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Uk.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Uk.rc,v
+retrieving revision 1.6
+diff -u -r1.6 shell32_Uk.rc
+--- shell32_Uk.rc	23 Sep 2004 04:28:04 -0000	1.6
++++ shell32_Uk.rc	6 Dec 2004 23:45:48 -0000
+@@ -109,11 +109,12 @@
+ CAPTION "Ïðî %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "OK", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Ðîçðîáíèêè Wine:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "Ðîçðîáíèêè ReactOS:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -122,7 +123,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Ââåä³òü ³ì'ÿ ïðîãðàìè, òåêè, äîêóìåíòó ÷è ðåñóðñ ²íòåðíåòó, ³ Wine â³äêðèº ¿õ.", 12289, 36, 11, 182, 18
++ LTEXT "Ââåä³òü ³ì'ÿ ïðîãðàìè, òåêè, äîêóìåíòó ÷è ðåñóðñ ²íòåðíåòó, ³ ReactOS â³äêðèº ¿õ.", 12289, 36, 11, 182, 18
+  LTEXT "&Â³äêðèòè:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Wa.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Wa.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Wa.rc
+--- shell32_Wa.rc	24 Aug 2004 18:33:03 -0000	1.8
++++ shell32_Wa.rc	6 Dec 2004 23:45:48 -0000
+@@ -28,11 +28,12 @@
+ CAPTION "Å dfait di %s"
+ FONT 10, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "I Va", IDOK, 153, 130, 50, 12
++ DEFPUSHBUTTON "I Va", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 189, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine a estu fwait par:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 30, 10, 137, 10
++ LTEXT "", 101, 30, 22, 137, 10
++ LTEXT "ReactOS a estu fwait par:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -41,7 +42,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+Index: shell32_Zh.rc
+===================================================================
+RCS file: /home/wine/wine/dlls/shell32/shell32_Zh.rc,v
+retrieving revision 1.8
+diff -u -r1.8 shell32_Zh.rc
+--- shell32_Zh.rc	24 Aug 2004 18:33:03 -0000	1.8
++++ shell32_Zh.rc	6 Dec 2004 23:45:48 -0000
+@@ -24,11 +24,11 @@
+ CAPTION "êPì¶ %s"
+ FONT 8, "MS Shell Dlg"
+ {
+- DEFPUSHBUTTON "´_¶¨", IDOK, 153, 130, 50, 12, WS_TABSTOP
++ DEFPUSHBUTTON "´_¶¨", IDOK, 153, 133, 50, 12, WS_TABSTOP
+  LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+- ICON "", 1088, 174, 10, 14, 16
+- LTEXT "", 100, 8, 10, 137, 33
+- LTEXT "Wine was brought to you by:", 98, 8, 55, 137, 10
++ ICON "", 1088, 10, 10, 14, 16
++ LTEXT "", 100, 35, 10, 137, 10
++ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+ }
+ 
+ SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+@@ -37,7 +37,7 @@
+ FONT 8, "MS Shell Dlg"
+ {
+  ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+- LTEXT "Type the name of a program, folder, document, or Internet resource, and Wine will open it for you.", 12289, 36, 11, 182, 18
++ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+  LTEXT "&Open:", 12305, 7, 39, 24, 10
+  CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+  DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
 Index: shell32_main.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/shell32_main.c,v
 retrieving revision 1.139
 diff -u -r1.139 shell32_main.c
 --- shell32_main.c	7 Oct 2004 03:06:48 -0000	1.139
-+++ shell32_main.c	20 Oct 2004 18:43:53 -0000
-@@ -959,7 +959,6 @@
++++ shell32_main.c	6 Dec 2004 23:45:49 -0000
+@@ -631,7 +631,8 @@
+     HFONT hFont;
+ } ABOUT_INFO;
+ 
+-#define		IDC_STATIC_TEXT		100
++#define		IDC_STATIC_TEXT1	100
++#define		IDC_STATIC_TEXT2	101
+ #define		IDC_LISTBOX		99
+ #define		IDC_WINE_TEXT		98
+ 
+@@ -754,7 +755,8 @@
+                 GetWindowTextW( hWnd, Template, sizeof(Template)/sizeof(WCHAR) );
+                 sprintfW( AppTitle, Template, info->szApp );
+                 SetWindowTextW( hWnd, AppTitle );
+-                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT), info->szOtherStuff );
++                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT1), info->szApp );
++                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT2), info->szOtherStuff );
+                 hWndCtl = GetDlgItem(hWnd, IDC_LISTBOX);
+                 SendMessageW( hWndCtl, WM_SETREDRAW, 0, 0 );
+                 SendMessageW( hWndCtl, WM_SETFONT, (WPARAM)info->hFont, 0 );
+@@ -959,7 +961,6 @@
  	    InitCommonControlsEx(NULL);
  
  	    SIC_Initialize();
@@ -164,10 +1026,10 @@ diff -u -r1.139 shell32_main.c
 Index: shell32_main.h
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/shell32_main.h,v
-retrieving revision 1.91
-diff -u -r1.91 shell32_main.h
---- shell32_main.h	22 Aug 2004 21:38:46 -0000	1.91
-+++ shell32_main.h	20 Oct 2004 18:43:53 -0000
+retrieving revision 1.92
+diff -u -r1.92 shell32_main.h
+--- shell32_main.h	21 Oct 2004 19:59:46 -0000	1.92
++++ shell32_main.h	6 Dec 2004 23:45:49 -0000
 @@ -128,10 +128,6 @@
  	(((kst) & MK_SHIFT) ? DROPEFFECT_LINK : DROPEFFECT_COPY):\
  	DROPEFFECT_MOVE)
@@ -185,7 +1047,7 @@ RCS file: /home/wine/wine/dlls/shell32/shellfolder.h,v
 retrieving revision 1.10
 diff -u -r1.10 shellfolder.h
 --- shellfolder.h	5 Oct 2004 04:16:21 -0000	1.10
-+++ shellfolder.h	20 Oct 2004 18:43:53 -0000
++++ shellfolder.h	6 Dec 2004 23:45:49 -0000
 @@ -33,7 +33,6 @@
   * Predeclare the interfaces
   */
@@ -197,38 +1059,149 @@ diff -u -r1.10 shellfolder.h
 Index: shellpath.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/shellpath.c,v
-retrieving revision 1.89
-diff -u -r1.89 shellpath.c
---- shellpath.c	4 Oct 2004 20:49:51 -0000	1.89
-+++ shellpath.c	20 Oct 2004 18:43:53 -0000
-@@ -1489,6 +1489,10 @@
-             *ppidl = _ILCreatePrinters();
-             break;
+retrieving revision 1.96
+diff -u -r1.96 shellpath.c
+--- shellpath.c	4 Nov 2004 04:54:08 -0000	1.96
++++ shellpath.c	6 Dec 2004 23:45:50 -0000
+@@ -1502,7 +1502,9 @@
+     return hr;
+ }
  
-+        case CSIDL_FONTS:
-+            FIXME("virtual font folder");
+-/* Attempts to expand environment variables from szSrc into szDest, which is
++/* From the original Wine source:
++ *
++ * Attempts to expand environment variables from szSrc into szDest, which is
+  * assumed to be MAX_PATH characters in length.  Before referring to the
+  * environment, handles a few variables directly, because the environment
+  * variables may not be set when this is called (as during Wine's installation
+@@ -1513,12 +1515,15 @@
+  *   path
+  * If one of the directly handled environment variables is expanded, only
+  * expands a single variable, and only in the beginning of szSrc.
++ *
++ * That's fine for Wine, but it breaks in ReactOS where we have profile paths
++ * like "c:\documents and settings\Administrator.REACTOS". Anyway, we have the
++ * environment variables handy so we'll just use them instead of hacking around
+  */
+ static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest)
+ {
+     HRESULT hr;
+     WCHAR szTemp[MAX_PATH], szProfilesPrefix[MAX_PATH] = { 0 };
+-    HKEY key = NULL;
+ 
+     TRACE("%s, %p\n", debugstr_w(szSrc), szDest);
+ 
+@@ -1531,67 +1536,19 @@
+         hr = S_OK;
+         goto end;
+     }
+-    /* Get the profile prefix, we'll probably be needing it */
+-    hr = _SHOpenProfilesKey(&key);
+-    if (SUCCEEDED(hr))
+-    {
+-        WCHAR szDefaultProfilesPrefix[MAX_PATH];
+-
+-        strcpyW(szDefaultProfilesPrefix, SystemDriveW);
+-        PathAppendW(szDefaultProfilesPrefix, szDefaultProfileDirW);
+-        hr = _SHGetProfilesValue(key, ProfilesDirectoryW, szProfilesPrefix,
+-         szDefaultProfilesPrefix);
+-    }
+ 
+     *szDest = 0;
+     strcpyW(szTemp, szSrc);
+     while (SUCCEEDED(hr) && szTemp[0] == '%')
+     {
+-        if (!strncmpiW(szTemp, AllUsersProfileW, strlenW(AllUsersProfileW)))
+-        {
+-            WCHAR szAllUsers[MAX_PATH];
++        DWORD ret = ExpandEnvironmentStringsW(szSrc, szDest, MAX_PATH);
+ 
+-            strcpyW(szDest, szProfilesPrefix);
+-            hr = _SHGetProfilesValue(key, AllUsersProfileValueW,
+-             szAllUsers, AllUsersW);
+-            PathAppendW(szDest, szAllUsers);
+-            PathAppendW(szDest, szTemp + strlenW(AllUsersProfileW));
+-        }
+-        else if (!strncmpiW(szTemp, UserProfileW, strlenW(UserProfileW)))
+-        {
+-            WCHAR userName[MAX_PATH];
+-            DWORD userLen = MAX_PATH;
+-
+-            strcpyW(szDest, szProfilesPrefix);
+-            GetUserNameW(userName, &userLen);
+-            PathAppendW(szDest, userName);
+-            PathAppendW(szDest, szTemp + strlenW(UserProfileW));
+-        }
+-        else if (!strncmpiW(szTemp, SystemDriveW, strlenW(SystemDriveW)))
+-        {
+-            GetSystemDirectoryW(szDest, MAX_PATH);
+-            if (szDest[1] != ':')
+-            {
+-                FIXME("non-drive system paths unsupported\n");
+-                hr = E_FAIL;
+-            }
+-            else
+-            {
+-                strcpyW(szDest + 3, szTemp + strlenW(SystemDriveW) + 1);
+-                hr = S_OK;
+-            }
+-        }
++        if (ret > MAX_PATH)
++            hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
++        else if (ret == 0)
++            hr = HRESULT_FROM_WIN32(GetLastError());
+         else
+-        {
+-            DWORD ret = ExpandEnvironmentStringsW(szSrc, szDest, MAX_PATH);
+-
+-            if (ret > MAX_PATH)
+-                hr = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
+-            else if (ret == 0)
+-                hr = HRESULT_FROM_WIN32(GetLastError());
+-            else
+-                hr = S_OK;
+-        }
++            hr = S_OK;
+         if (SUCCEEDED(hr) && szDest[0] == '%')
+             strcpyW(szTemp, szDest);
+         else
+@@ -1601,8 +1558,6 @@
+         }
+     }
+ end:
+-    if (key)
+-        RegCloseKey(key);
+     TRACE("returning 0x%08lx (input was %s, output is %s)\n", hr,
+      debugstr_w(szSrc), debugstr_w(szDest));
+     return hr;
+@@ -1639,7 +1594,7 @@
+     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
+     CSIDL_Type type;
+     int        ret;
+-    
++
+     TRACE("%p,%p,nFolder=0x%04x\n", hwndOwner,pszPath,nFolder);
+ 
+     /* Windows always NULL-terminates the resulting path regardless of success
+@@ -2006,6 +1961,10 @@
+ 
+         case CSIDL_PRINTERS:
+             *ppidl = _ILCreatePrinters();
 +            break;
 +
-         case CSIDL_BITBUCKET:
-             *ppidl = _ILCreateBitBucket();
++        case CSIDL_FONTS:
++            FIXME("virtual font folder");
              break;
+ 
+         case CSIDL_BITBUCKET:
 Index: shres.rc
 ===================================================================
 RCS file: /home/wine/wine/dlls/shell32/shres.rc,v
-retrieving revision 1.35
-diff -u -r1.35 shres.rc
---- shres.rc	29 Sep 2004 21:13:58 -0000	1.35
-+++ shres.rc	20 Oct 2004 18:44:03 -0000
-@@ -26,6 +26,8 @@
- #include "shlobj.h"
- #include "shresdef.h"
- 
-+#include "version.rc"
-+
- LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
- 
- shv_accel ACCELERATORS
-@@ -36,89 +38,23 @@
+retrieving revision 1.36
+diff -u -r1.36 shres.rc
+--- shres.rc	27 Oct 2004 00:47:53 -0000	1.36
++++ shres.rc	6 Dec 2004 23:45:59 -0000
+@@ -38,222 +38,162 @@
  /* BINRES document.ico */
  1 ICON document.ico
  /* {
@@ -314,6 +1287,7 @@ diff -u -r1.35 shres.rc
 - 'CC 00 FF FF FF 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 01 00 08 00 20 20 00 00 01 00 08 00 A8 08'
 + '00 00 86 00 00 00 10 10 00 00 01 00 08 00 68 05'
 + '00 00 2E 09 00 00 20 20 00 00 01 00 04 00 E8 02'
@@ -334,7 +1308,6 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -126,131 +62,138 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -393,6 +1366,7 @@ diff -u -r1.35 shres.rc
 - '00 07 FF FF FF FF FF F7 70 00 00 00 00 00 00 00'
 - '00 07 77 77 77 77 77 77 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 C0 17 95 00 00 00 38 00 A8 44'
 + 'F9 77 13 00 00 00 18 0A 38 00 00 00 38 00 18 6C'
 + '38 00 98 17 95 00 00 00 00 00 E0 19 95 00 F0 88'
@@ -401,7 +1375,6 @@ diff -u -r1.35 shres.rc
 + '00 00 B0 18 95 00 00 00 00 00 CB 44 F9 77 38 9F'
 + '07 00 CD 8B F5 77 78 13 05 00 37 90 F5 77 00 00'
 + '00 00 3E 8A F5 77 00 00 00 00 00 00 00 00 00 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
 - 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF'
@@ -469,6 +1442,7 @@ diff -u -r1.35 shres.rc
 - '66 00 FF CC 99 00 FF CC CC 00 FF CC FF 00 FF FF'
 - '00 00 FF FF 33 00 FF FF 66 00 FF FF 99 00 FF FF'
 - 'CC 00 FF FF FF 00 00 00 00 00 00 00 00 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00'
@@ -587,7 +1561,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -264,297 +207,1337 @@
+@@ -267,527 +207,1368 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -604,6 +1578,50 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 56 56'
+- '56 56 56 56 56 56 56 56 56 56 56 56 56 56 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 AC AC'
+- 'AC AC AC AC AC AC AC AC AC AC AC AC AC AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 AC 81 81 81 81 81 81 81 81 AC D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 81 81 81 81 81 81 81 81 81 81 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 81 81 81 81 81 AC 81 81 81 81 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 81 AC 81 81 81 81 81 81 81 81 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 81 81 81 81 81 81 81 81 81 81 D7 AC AC 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 D7 D7 81 81 D7 D7 D7 D7 D7 D7 AC AC 81 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC AC 81 56 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'AC 81 81 81 81 81 81 D7 D7 D7 AC 81 56 56 56 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 56 56 2B 2B 2B 2B 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- '81 81 AC D7 D7 D7 D7 D7 D7 81 D7 AC AC 56 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'AC D7 D7 D7 AC D7 D7 D7 D7 81 AC AC 56 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 81 AC 56 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
+- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 81 56 00 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 81 81 81'
+- '81 81 81 81 81 81 81 81 81 81 00 00 00 00 00 00'
 + '00 00 00 00 00 00 10 00 00 00 00 00 00 00 5A 00'
 + '5C 00 00 EC FD 7F 1A 02 00 00 4C 16 95 00 40 9F'
 + '07 00 FC 15 95 00 FF FF FF FF B4 1A 95 00 45 00'
@@ -658,50 +1676,6 @@ diff -u -r1.35 shres.rc
 + '00 00 80 01 00 00 28 00 00 00 20 00 00 00 40 00'
 + '00 00 01 00 04 00 00 00 00 00 00 02 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 56 56'
-- '56 56 56 56 56 56 56 56 56 56 56 56 56 56 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 AC AC'
-- 'AC AC AC AC AC AC AC AC AC AC AC AC AC AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 AC 81 81 81 81 81 81 81 81 AC D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 81 81 81 81 81 81 81 81 81 81 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 81 81 81 81 81 AC 81 81 81 81 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 81 AC 81 81 81 81 81 81 81 81 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 81 81 81 81 81 81 81 81 81 81 D7 AC AC 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 D7 D7 81 81 D7 D7 D7 D7 D7 D7 AC AC 81 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 D7 AC AC 81 56 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'AC 81 81 81 81 81 81 D7 D7 D7 AC 81 56 56 56 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 56 56 2B 2B 2B 2B 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- '81 81 AC D7 D7 D7 D7 D7 D7 81 D7 AC AC 56 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'AC D7 D7 D7 AC D7 D7 D7 D7 81 AC AC 56 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 81 AC 56 00 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 56 D7 D7'
-- 'D7 D7 D7 D7 D7 D7 D7 D7 D7 81 56 00 00 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 81 81 81'
-- '81 81 81 81 81 81 81 81 81 81 00 00 00 00 00 00'
 + '00 00 80 00 00 00 00 80 00 00 80 80 00 00 00 00'
 + '80 00 80 00 80 00 00 80 80 00 C0 C0 C0 00 80 80'
 + '80 00 FF 00 00 00 00 FF 00 00 FF FF 00 00 00 00'
@@ -773,7 +1747,6 @@ diff -u -r1.35 shres.rc
 + 'CC 00 DD DD DD 00 EE EE EE 00 FF FF FF 00 00 00'
 + '00 00 33 00 32 00 5C 00 64 00 6F 00 63 00 75 00'
 + '6D 00 65 00 6E 00 74 00 2E 00 69 00 63 00 6F 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -913,6 +1886,7 @@ diff -u -r1.35 shres.rc
 - '00 00 80 00 80 00 80 80 00 00 80 80 80 00 C0 C0'
 - 'C0 00 00 00 FF 00 00 FF 00 00 00 FF FF 00 FF 00'
 - '00 00 FF 00 FF 00 FF FF 00 00 FF FF FF 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 C0 17 95 00 00 00 38 00 A8 44'
 + 'F9 77 13 00 00 00 18 0A 38 00 00 00 38 00 18 6C'
 + '38 00 98 17 95 00 00 00 00 00 E0 19 95 00 F0 88'
@@ -963,9 +1937,6 @@ diff -u -r1.35 shres.rc
 + '00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10'
 + '10 10 10 10 10 10 10 10 10 10 10 10 10 10 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-+ '00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10'
-+ '10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 00 3F 33'
 - '33 33 33 33 33 33 33 33 33 33 33 33 33 30 3F FB'
 - 'FB FB FB FB FB FB FB FB FB FB FB FB FB 30 3F BF'
@@ -989,6 +1960,12 @@ diff -u -r1.35 shres.rc
 - 'FB FB FB FB FB FB 30 00 00 00 00 00 00 00 00 03'
 - 'FF FF FF FF FF F3 00 00 00 00 00 00 00 00 00 00'
 - '33 33 33 33 33 30 00 00 00 00 00 00 00 00 00 00'
++ '00 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10'
++ '10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
+- 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF'
+- 'FF FF FF FF FF FF FF FF FF FF 00 00 00 01 00 00'
 + '00 10 10 03 08 08 06 08 08 06 08 06 06 08 06 08'
 + '06 06 06 06 06 06 06 05 06 05 05 01 10 10 10 10'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -1151,9 +2128,6 @@ diff -u -r1.35 shres.rc
 + '00 00 30 00 00 00 60 00 00 00 01 00 20 00 00 00'
 + '00 00 00 24 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
-- 'FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF'
-- 'FF FF FF FF FF FF FF FF FF FF 00 00 00 01 00 00'
 + '00 00 00 00 00 00 00 00 00 04 00 00 00 29 00 00'
 + '00 38 00 00 00 37 00 00 00 37 00 00 00 37 00 00'
 + '00 37 00 00 00 37 00 00 00 37 00 00 00 37 00 00'
@@ -1162,7 +2136,6 @@ diff -u -r1.35 shres.rc
 + '00 37 00 00 00 37 00 00 00 37 00 00 00 37 00 00'
 + '00 37 00 00 00 38 00 00 00 34 00 00 00 19 00 00'
 + '00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00'
@@ -1174,6 +2147,7 @@ diff -u -r1.35 shres.rc
 - 'FF 00 C0 C0 C0 00 A4 A0 A0 00 58 58 58 00 30 30'
 - '30 00 00 00 40 00 00 00 00 00 DC C0 B2 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 01 00 00 00 76 00 00 00 F1 00 00'
 + '00 F9 00 00 00 F7 00 00 00 F7 00 00 00 F7 00 00'
 + '00 F7 00 00 00 F7 00 00 00 F7 00 00 00 F7 00 00'
@@ -1183,9 +2157,9 @@ diff -u -r1.35 shres.rc
 + '00 F7 00 00 00 F8 00 00 00 F2 00 00 00 B2 00 00'
 + '00 49 00 00 00 05 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 00 00 00 63 CE'
 - 'CE 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 5A 00 00 00 FF 01 01 01 FF 06 06'
@@ -1223,8 +2197,8 @@ diff -u -r1.35 shres.rc
 + '00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 00 00 00 00 00 00 00 00 00 9C 9C 00 00 00'
+  '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 84 00 00 00 FF 35 35 35 FF C8 C8'
 + 'C8 FF FA FA FA FF DD DD DD FF DE DE DE FF DE DE'
 + 'DE FF DF DF DF FF DF DF DF FF DF DF DF FF DF DF'
@@ -1333,6 +2307,8 @@ diff -u -r1.35 shres.rc
 + '70 FF 18 18 18 FF 00 00 00 FF 00 00 00 D4 00 00'
 + '00 3F 00 00 00 05 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
+- '00 00 00 00 00 00 00 00 00 00 00 00 00 00 9C FF'
+- 'FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 84 00 00 00 FF 38 38 38 FF CB CB'
 + 'CB FF FC FC FC FF E3 E3 E3 FF E3 E3 E3 FF E3 E3'
 + 'E3 FF E3 E3 E3 FF E4 E4 E4 FF E4 E4 E4 FF E4 E4'
@@ -1537,8 +2513,6 @@ diff -u -r1.35 shres.rc
 + 'FF FF FF FF FF FF EE EE EE FF 82 82 82 FF 05 05'
 + '05 FF 00 00 00 F7 00 00 00 37 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-- '00 00 00 00 00 00 00 00 00 00 00 00 00 00 9C FF'
-- 'FF 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 84 00 00 00 FF 3E 3E 3E FF D3 D3'
 + 'D3 FF FF FF FF FF F7 F7 F7 FF F7 F7 F7 FF F8 F8'
 + 'F8 FF F9 F9 F9 FF F8 F8 F8 FF F8 F8 F8 FF FA FA'
@@ -2134,7 +3108,6 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -562,230 +1545,30 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -2320,14 +3293,6 @@ diff -u -r1.35 shres.rc
 - '00 00 6E 4D 00 00 10 10 00 00 01 00 20 00 68 04'
 - '00 00 16 5E 00 00 28 00 00 00 20 00 00 00 40 00'
 - '00 00 01 00 08 00 00 00 00 00 00 04 00 00 00 00'
-+ '00 00 00 00 00 00 C0 17 95 00 00 00 38 00 A8 44'
-+ 'F9 77 13 00 00 00 18 0A 38 00 00 00 38 00 18 6C'
-+ '38 00 98 17 95 00 00 00 00 00 E0 19 95 00 F0 88'
-+ 'FA 77 70 38 F5 77 FF FF FF FF A8 44 F9 77 70 7D'
-+ 'F5 77 3A 8A F5 77 86 00 00 00 86 00 00 00 08 00'
-+ '00 00 B0 18 95 00 00 00 00 00 CB 44 F9 77 38 9F'
-+ '07 00 CD 8B F5 77 78 13 05 00 37 90 F5 77 00 00'
-+ '00 00 3E 8A F5 77 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 - '00 00 01 01 01 00 02 02 02 00 04 04 04 00 05 05'
 - '05 00 07 07 07 00 09 09 09 00 0A 0A 0A 00 0C 0C'
@@ -2370,6 +3335,15 @@ diff -u -r1.35 shres.rc
 - 'EB 00 EC EC EC 00 ED ED ED 00 F0 F0 F0 00 F2 F2'
 - 'F2 00 F3 F3 F3 00 F9 F9 F9 00 FA FA FA 00 FF FF'
 - 'FF 00 00 00 00 00 01 00 00 00 18 00 00 00 00 00'
++ '00 00 00 00 00 00 C0 17 95 00 00 00 38 00 A8 44'
++ 'F9 77 13 00 00 00 18 0A 38 00 00 00 38 00 18 6C'
++ '38 00 98 17 95 00 00 00 00 00 E0 19 95 00 F0 88'
++ 'FA 77 70 38 F5 77 FF FF FF FF A8 44 F9 77 70 7D'
++ 'F5 77 3A 8A F5 77 86 00 00 00 86 00 00 00 08 00'
++ '00 00 B0 18 95 00 00 00 00 00 CB 44 F9 77 38 9F'
++ '07 00 CD 8B F5 77 78 13 05 00 37 90 F5 77 00 00'
++ '00 00 3E 8A F5 77 00 00 00 00 00 00 00 00 00 00'
++ '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -2385,7 +3359,7 @@ diff -u -r1.35 shres.rc
   '00 00 10 19 95 00 42 00 00 00 00 00 00 00 F4 18'
   '95 00 00 00 00 00 00 00 00 00 00 00 00 00 0C 00'
   '00 00 02 00 00 00 01 01 F5 77 00 EC FD 7F 56 00'
-@@ -798,132 +1581,132 @@
+@@ -800,132 +1581,132 @@
   '00 00 80 00 00 00 00 00 00 00 C0 27 95 00 C4 F5'
   'AF 00 02 00 00 00 44 3A 5C 6F 73 65 78 70 65 72'
   '74 73 5C 72 65 61 63 74 6F 73 5C 6C 69 62 5C 73'
@@ -2634,7 +3608,7 @@ diff -u -r1.35 shres.rc
   '00 00 18 00 00 00 00 00 00 00 10 19 95 00 42 00'
   '00 00 00 00 00 00 F4 18 95 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 0C 00 00 00 02 00 00 00 01 01'
-@@ -937,440 +1720,357 @@
+@@ -939,440 +1720,357 @@
   '00 00 C0 27 95 00 C4 F5 AF 00 02 00 00 00 44 3A'
   '5C 6F 73 65 78 70 65 72 74 73 5C 72 65 61 63 74'
   '6F 73 5C 6C 69 62 5C 73 68 65 6C 6C 33 32 5C 66'
@@ -3212,8 +4186,8 @@ diff -u -r1.35 shres.rc
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 2F 2F 2F 2F 2F 2F 2F 2F 00 00 00'
-+ '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
++ '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
 + '00 00 00 00 00 00 2F 2F 2F 2F 2F 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
 - 'FF FF FF FF 00 00 FF FF FF F0 00 00 00 00 FF FF'
@@ -3374,7 +4348,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -1379,47 +2079,36 @@
+@@ -1381,47 +2079,36 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -3431,7 +4405,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -1427,11 +2116,10 @@
+@@ -1429,11 +2116,10 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -3447,7 +4421,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -1439,36 +2127,2873 @@
+@@ -1441,35 +2127,2872 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -3485,7 +4459,6 @@ diff -u -r1.35 shres.rc
 - 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF FF C0'
 - 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF FF C0'
 - 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF 00 00'
-- '00 00 00 00 00 00 00 00 00 05 00 00 00 69 00 00'
 + '00 20 00 00 00 AC 00 00 00 FD 06 00 00 FF 61 1B'
 + '00 FF D5 9F 86 FF E2 A3 84 FF DB AE 9A FF FD FB'
 + 'FA FF FF FF FF FF FF FF FF FF E9 E3 E4 FF BD 87'
@@ -6339,11 +7312,10 @@ diff -u -r1.35 shres.rc
 + 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF FF C0'
 + 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF FF C0'
 + 'C0 FF FF C0 C0 FF FF C0 C0 FF FF C0 C0 FF 00 00'
-+ '00 00 00 00 00 00 00 00 00 05 00 00 00 69 00 00'
+  '00 00 00 00 00 00 00 00 00 05 00 00 00 69 00 00'
   '00 C5 00 00 00 F7 00 00 00 F7 00 00 00 F7 00 00'
   '00 F7 00 00 00 F7 00 00 00 F7 00 00 00 F7 00 00'
-  '00 F7 00 00 00 F7 00 00 00 F7 00 00 00 F7 00 00'
-@@ -6466,633 +9991,1051 @@
+@@ -6468,633 +9991,1051 @@
   '00 B8 00 00 00 0A 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -7959,7 +8931,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
   'FF 00 FF FF FE 00 FF FF FC 00 FF FF F8 00 FF FF'
-@@ -7103,568 +11046,987 @@
+@@ -7105,568 +11046,987 @@
   '00 01 80 00 00 7F 80 00 00 7F 80 00 00 7F C0 00'
   '00 7F C0 00 00 7F C0 00 00 7F C0 00 00 7F E0 00'
   '00 FF E0 00 00 FF F0 00 03 FF FF FF FF FF 28 00'
@@ -9406,7 +10378,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7672,7 +12034,7 @@
+@@ -7674,7 +12034,7 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 FF FF'
   'FF FF F0 00 00 00 FF FF FF FF E0 00 00 00 FF FF'
   'FF FF C0 00 00 00 FF FF FF FF 80 00 00 00 FF FF'
@@ -9415,7 +10387,7 @@ diff -u -r1.35 shres.rc
   'FF FC 00 00 00 00 F0 00 00 00 00 00 00 00 C0 00'
   '00 00 00 00 00 00 80 00 00 00 00 00 00 00 80 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7681,19 +12043,183 @@
+@@ -7683,19 +12043,183 @@
   '00 00 00 60 00 00 00 00 00 00 00 20 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -9612,7 +10584,7 @@ diff -u -r1.35 shres.rc
   '00 00 30 00 00 00 60 00 00 00 01 00 08 00 00 00'
   '00 00 00 09 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 01 01 01 00 02 02'
-@@ -7701,248 +12227,349 @@
+@@ -7703,248 +12227,349 @@
   '08 00 09 09 09 00 0B 0B 0B 00 0C 0C 0C 00 18 18'
   '18 00 19 19 19 00 1E 1E 1E 00 1F 1F 1F 00 20 20'
   '20 00 21 21 21 00 22 22 22 00 24 24 24 00 26 26'
@@ -10175,7 +11147,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7950,11 +12577,10 @@
+@@ -7952,11 +12577,10 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -10190,7 +11162,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7963,10 +12589,10 @@
+@@ -7965,10 +12589,10 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -10205,7 +11177,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7975,10 +12601,10 @@
+@@ -7977,10 +12601,10 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -10220,7 +11192,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -7986,514 +12612,848 @@
+@@ -7988,514 +12612,848 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -11506,7 +12478,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -8505,1096 +13465,2453 @@
+@@ -8507,1096 +13465,2453 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -14881,7 +15853,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -9610,409 +15927,576 @@
+@@ -9612,409 +15927,576 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -15797,7 +16769,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -10022,18 +16506,59 @@
+@@ -10024,18 +16506,59 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
@@ -15868,7 +16840,7 @@ diff -u -r1.35 shres.rc
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
-@@ -10043,15 +16568,31 @@
+@@ -10045,15 +16568,31 @@
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'
   '00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00'

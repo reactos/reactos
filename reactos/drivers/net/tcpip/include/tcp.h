@@ -81,8 +81,16 @@ typedef struct _SLEEPING_THREAD {
 #define SRF_SYN   TCP_SYN
 #define SRF_FIN   TCP_FIN
 
+extern LONG TCP_IPIdentification;
+extern LIST_ENTRY SignalledConnections;
+extern LIST_ENTRY SleepingThreadsList;
+extern FAST_MUTEX SleepingThreadsLock;
+extern RECURSIVE_MUTEX TCPLock;
+
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext );
 VOID TCPFreeConnectionEndpoint( PCONNECTION_ENDPOINT Connection );
+
+VOID TCPCancelReceiveRequest( PVOID Context );
 
 NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection, 
 		    UINT Family, UINT Type, UINT Proto );
@@ -102,6 +110,14 @@ VOID TCPAddSegment(
 
 NTSTATUS TCPConnect(
   PCONNECTION_ENDPOINT Connection,
+  PTDI_CONNECTION_INFORMATION ConnInfo,
+  PTDI_CONNECTION_INFORMATION ReturnInfo,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context);
+
+NTSTATUS TCPDisconnect(
+  PCONNECTION_ENDPOINT Connection,
+  UINT Flags,
   PTDI_CONNECTION_INFORMATION ConnInfo,
   PTDI_CONNECTION_INFORMATION ReturnInfo,
   PTCP_COMPLETION_ROUTINE Complete,

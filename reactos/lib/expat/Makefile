@@ -1,8 +1,8 @@
-# $Id: Makefile,v 1.3 2004/05/29 21:24:43 hbirr Exp $
+# $Id: Makefile,v 1.3.16.1 2004/12/08 21:57:08 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
-TARGET_NAME = libexpat
+TARGET_NAME = expat
 
 TARGET_TYPE = dynlink
 TARGET_BASE = $(TARGET_BASE_LIB_EXPAT)

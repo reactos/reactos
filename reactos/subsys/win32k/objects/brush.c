@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.40 2004/07/14 20:48:57 navaraf Exp $
+ * $Id: brush.c,v 1.40.10.1 2004/12/08 21:57:41 hyperion Exp $
  */
 #include <w32k.h>
 
@@ -39,6 +39,7 @@ Brush_InternalDelete( PGDIBRUSHOBJ pBrush )
   if(pBrush->flAttrs & (GDIBRUSH_IS_HATCH | GDIBRUSH_IS_BITMAP))
   {
     ASSERT(pBrush->hbmPattern);
+    GDIOBJ_SetOwnership(pBrush->hbmPattern, PsGetCurrentProcess());
     NtGdiDeleteObject(pBrush->hbmPattern);
   }
   
@@ -161,6 +162,9 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
          UNIMPLEMENTED;
    }
 
+   if (hPattern != 0)
+      GDIOBJ_SetOwnership(hPattern, NULL);
+   
    BRUSHOBJ_UnlockBrush(hBrush);
    return hBrush;
 }

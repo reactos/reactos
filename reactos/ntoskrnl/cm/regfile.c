@@ -437,7 +437,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&HiveHandle,
+  Status = ZwCreateFile(&HiveHandle,
 			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -454,7 +454,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
     }
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -465,7 +465,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&LogHandle,
+  Status = ZwCreateFile(&LogHandle,
 			FILE_READ_DATA | FILE_READ_ATTRIBUTES,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -482,7 +482,7 @@ CmiCheckAndFixHive(PREGISTRY_HIVE RegistryHive)
     }
   else if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       NtClose(HiveHandle);
       return(Status);
     }
@@ -904,7 +904,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
 			     NULL);
 
   CreateDisposition = FILE_OPEN_IF;
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoSB,
@@ -919,7 +919,7 @@ CmiInitNonVolatileRegistryHive (PREGISTRY_HIVE RegistryHive,
     {
       RtlFreeUnicodeString(&RegistryHive->HiveFileName);
       RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1428,7 +1428,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1441,7 +1441,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -1605,7 +1605,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1618,7 +1618,7 @@ CmiFinishLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       ExFreePool(Buffer);
       return(Status);
     }
@@ -1706,7 +1706,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1719,7 +1719,7 @@ CmiCleanupLogUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1785,7 +1785,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1798,7 +1798,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 
@@ -1896,7 +1896,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			     NULL,
 			     NULL);
 
-  Status = NtCreateFile(&FileHandle,
+  Status = ZwCreateFile(&FileHandle,
 			FILE_ALL_ACCESS,
 			&ObjectAttributes,
 			&IoStatusBlock,
@@ -1909,7 +1909,7 @@ CmiFinishHiveUpdate(PREGISTRY_HIVE RegistryHive)
 			0);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtCreateFile() failed (Status %lx)\n", Status);
+      DPRINT("ZwCreateFile() failed (Status %lx)\n", Status);
       return(Status);
     }
 

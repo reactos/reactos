@@ -142,7 +142,7 @@ static inline int wcstombs_sbcs( const struct sbcs_table *table,
         ret = -1;
     }
 
-    if (dst <= (char *)src && dst + 16 > (char *)src)
+    if (dst <= (const char *)src && dst + 16 > (const char *)src)
     {
         /* overlapping buffers, do it char by char */
         while (srclen--)

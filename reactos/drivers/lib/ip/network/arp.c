@@ -108,26 +108,20 @@ VOID ARPTransmitComplete(
 }
 
 
-BOOLEAN ARPTransmit(
-    PIP_ADDRESS Address,
-    PNET_TABLE_ENTRY NTE)
+BOOLEAN ARPTransmit(PIP_ADDRESS Address, PIP_INTERFACE Interface)
 /*
  * FUNCTION: Creates an ARP request and transmits it on a network
  * ARGUMENTS:
  *     Address = Pointer to IP address to resolve
- *     NTE     = Pointer to net table entru to use for transmitting request
  * RETURNS:
  *     TRUE if the request was successfully sent, FALSE if not
  */
 {
-    PIP_INTERFACE Interface;
     PNDIS_PACKET NdisPacket;
     UCHAR ProtoAddrLen;
     USHORT ProtoType;
 
     TI_DbgPrint(DEBUG_ARP, ("Called.\n"));
-
-    Interface = NTE->Interface;
 
     switch (Address->Type) {
         case IP_ADDRESS_V4:
@@ -151,7 +145,7 @@ BOOLEAN ARPTransmit(
         (UCHAR)Interface->AddressLength, /* Hardware address length */
         (UCHAR)ProtoAddrLen,             /* Protocol address length */
         Interface->Address,              /* Sender's (local) hardware address */
-        &NTE->Address->Address,          /* Sender's (local) protocol address */
+        &Interface->Unicast.Address.IPv4Address,/* Sender's (local) protocol address */
         NULL,                            /* Don't care */
         &Address->Address,               /* Target's (remote) protocol address */
         ARP_OPCODE_REQUEST);             /* ARP request */
@@ -180,11 +174,10 @@ VOID ARPReceive(
  */
 {
     PARP_HEADER Header;
-    PIP_ADDRESS Address;
+    IP_ADDRESS Address;
     PVOID SenderHWAddress;
     PVOID SenderProtoAddress;
     PVOID TargetProtoAddress;
-    PADDRESS_ENTRY ADE;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PNDIS_PACKET NdisPacket;
     PIP_INTERFACE Interface = (PIP_INTERFACE)Context;
@@ -213,17 +206,16 @@ VOID ARPReceive(
     TargetProtoAddress = (PVOID)((ULONG_PTR)SenderProtoAddress +
         Header->ProtoAddrLen + Header->HWAddrLen);
 
-    Address = AddrBuildIPv4(*((PULONG)TargetProtoAddress));
-    ADE = IPLocateADE(Address, ADE_UNICAST);
-    if (!ADE) {
+    if( !AddrLocateADEv4( *((PIPv4_RAW_ADDRESS)TargetProtoAddress), 
+			  &Address) ) {
         TI_DbgPrint(DEBUG_ARP, ("Target address (0x%X) is not mine.\n", *((PULONG)TargetProtoAddress)));
         return;
     }
 
     /* Check if we know the sender */
 
-    AddrInitIPv4(Address, *((PULONG)SenderProtoAddress));
-    NCE = NBLocateNeighbor(Address);
+    AddrInitIPv4(&Address, *((PULONG)SenderProtoAddress));
+    NCE = NBLocateNeighbor(&Address);
     if (NCE) {
         /* We know the sender. Update the hardware address 
            and state in our neighbor address cache */
@@ -232,13 +224,13 @@ VOID ARPReceive(
         /* The packet had our protocol address as target. The sender
            may want to communicate with us soon, so add his address
            to our address cache */
-        NCE = NBAddNeighbor(Interface, Address, SenderHWAddress,
+        NCE = NBAddNeighbor(Interface, &Address, SenderHWAddress,
             Header->HWAddrLen, NUD_REACHABLE);
     }
 
     if (Header->Opcode != ARP_OPCODE_REQUEST)
         return;
-    
+
     /* This is a request for our address. Swap the addresses and
        send an ARP reply back to the sender */
     NdisPacket = PrepareARPPacket(
@@ -247,7 +239,7 @@ VOID ARPReceive(
         (UCHAR)Interface->AddressLength, /* Hardware address length */
         (UCHAR)Header->ProtoAddrLen,     /* Protocol address length */
         Interface->Address,              /* Sender's (local) hardware address */
-        &ADE->Address.Address,           /* Sender's (local) protocol address */
+        &Interface->Unicast.Address.IPv4Address,/* Sender's (local) protocol address */
         SenderHWAddress,                 /* Target's (remote) hardware address */
         SenderProtoAddress,              /* Target's (remote) protocol address */
         ARP_OPCODE_REPLY);               /* ARP reply */

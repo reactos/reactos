@@ -1992,6 +1992,17 @@ typedef struct _TBBUTTON {
 	int iString;
 } TBBUTTON,*PTBBUTTON,*LPTBBUTTON;
 typedef const TBBUTTON *LPCTBBUTTON;
+typedef struct tagNMTBRESTORE
+{
+	NMHDR hdr;
+	DWORD* pData;
+	DWORD* pCurrent;
+	UINT cbData;
+	int iItem;
+	int cButtons;
+	int cbBytesPerRecord;
+	TBBUTTON tbButton;
+} NMTBRESTORE, *LPNMTBRESTORE;
 #if _WIN32_IE >= 0x400
 typedef struct {
 	UINT cbSize;
@@ -2045,11 +2056,6 @@ typedef struct {
 	int cchText;
 	LPTSTR pszText;
 } TBNOTIFY,*LPTBNOTIFY;
-typedef struct {
-	HKEY hkr;
-	LPCTSTR pszSubKey;
-	LPCTSTR pszValueName;
-} TBSAVEPARAMS;
 typedef struct _IMAGEINFO {
 	HBITMAP hbmImage;
 	HBITMAP hbmMask;
@@ -2246,12 +2252,12 @@ typedef struct tagTBSAVEPARAMSA {
 	HKEY hkr;
 	LPCSTR pszSubKey;
 	LPCSTR pszValueName;
-} TBSAVEPARAMSA;
+} TBSAVEPARAMSA, *LPTBSAVEPARAMSA;
 typedef struct tagTBSAVEPARAMSW {
 	HKEY hkr;
 	LPCWSTR pszSubKey;
 	LPCWSTR pszValueName;
-} TBSAVEPARAMSW;
+} TBSAVEPARAMSW, *LPTBSAVEPARAMSW, *LPTBSAVEPARAMW;
 typedef struct {
 	HINSTANCE hInstOld;
 	UINT nIDOld;

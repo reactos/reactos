@@ -1,11 +1,16 @@
+? Makefile
+? Makefile.ros
+? Makefile.ros-template
+? winehq2ros.patch
+? winmm.spec.def
 Index: lolvldrv.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/lolvldrv.c,v
-retrieving revision 1.61
-diff -u -r1.61 lolvldrv.c
---- lolvldrv.c	22 Sep 2004 04:00:14 -0000	1.61
-+++ lolvldrv.c	20 Oct 2004 17:54:30 -0000
-@@ -758,11 +758,18 @@
+retrieving revision 1.62
+diff -u -r1.62 lolvldrv.c
+--- lolvldrv.c	1 Dec 2004 15:32:19 -0000	1.62
++++ lolvldrv.c	7 Dec 2004 21:01:01 -0000
+@@ -761,11 +761,18 @@
  {
      TRACE("()\n");
      /* first load hardware drivers */
@@ -29,10 +34,10 @@ diff -u -r1.61 lolvldrv.c
 Index: winmm.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/winmm.c,v
-retrieving revision 1.45
-diff -u -r1.45 winmm.c
---- winmm.c	19 Oct 2004 23:55:15 -0000	1.45
-+++ winmm.c	20 Oct 2004 17:54:32 -0000
+retrieving revision 1.46
+diff -u -r1.46 winmm.c
+--- winmm.c	21 Nov 2004 15:37:04 -0000	1.46
++++ winmm.c	7 Dec 2004 21:01:02 -0000
 @@ -94,7 +94,9 @@
  	return FALSE;
      WINMM_IData->hWinMM32Instance = hInstDLL;
@@ -56,13 +61,44 @@ diff -u -r1.45 winmm.c
                  loaded = 1;
          }
      }
+@@ -669,7 +673,7 @@
+ /**************************************************************************
+  * 				mixerMessage		[WINMM.@]
+  */
+-UINT WINAPI mixerMessage(HMIXER hmix, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
++DWORD WINAPI mixerMessage(HMIXER hmix, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+ {
+     LPWINE_MLD		wmld;
+ 
+@@ -2669,8 +2673,8 @@
+  *			waveOutOpen			[WINMM.@]
+  * All the args/structs have the same layout as the win16 equivalents
+  */
+-UINT WINAPI waveOutOpen(LPHWAVEOUT lphWaveOut, UINT uDeviceID,
+-                       const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
++MMRESULT WINAPI waveOutOpen(LPHWAVEOUT lphWaveOut, UINT uDeviceID,
++                       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
+                        DWORD_PTR dwInstance, DWORD dwFlags)
+ {
+     return WAVE_Open((HANDLE*)lphWaveOut, uDeviceID, MMDRV_WAVEOUT, lpFormat,
+@@ -3054,8 +3058,8 @@
+ /**************************************************************************
+  * 				waveInOpen			[WINMM.@]
+  */
+-UINT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
+-		       const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
++MMRESULT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
++		       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
+ 		       DWORD_PTR dwInstance, DWORD dwFlags)
+ {
+     return WAVE_Open((HANDLE*)lphWaveIn, uDeviceID, MMDRV_WAVEIN, lpFormat,
 Index: winmm_res.rc
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/winmm_res.rc,v
 retrieving revision 1.17
 diff -u -r1.17 winmm_res.rc
 --- winmm_res.rc	16 Aug 2004 20:02:09 -0000	1.17
-+++ winmm_res.rc	20 Oct 2004 17:54:32 -0000
++++ winmm_res.rc	7 Dec 2004 21:01:03 -0000
 @@ -34,7 +34,7 @@
  #include "winmm_Es.rc"
  #include "winmm_Fr.rc"

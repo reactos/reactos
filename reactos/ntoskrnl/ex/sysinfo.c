@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.59 2004/11/13 23:08:35 hbirr Exp $
+/* $Id: sysinfo.c,v 1.59.2.1 2004/12/08 21:57:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -355,7 +355,7 @@ QSI_DEF(SystemBasicInformation)
 	}
 	Sbi->Unknown = 0;
 	Sbi->MaximumIncrement = KeMaximumIncrement;
-	Sbi->PhysicalPageSize = PAGE_SIZE; /* FIXME: it should be PAGE_SIZE */
+	Sbi->PhysicalPageSize = PAGE_SIZE;
 	Sbi->NumberOfPhysicalPages = MmStats.NrTotalPages;
 	Sbi->LowestPhysicalPage = 0; /* FIXME */ 
 	Sbi->HighestPhysicalPage = MmStats.NrTotalPages; /* FIXME */
@@ -1202,12 +1202,7 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
       return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-  /* Copy the time zone information struct */
-  memcpy(&ExpTimeZoneInfo,
-	 (TIME_ZONE_INFORMATION *)Buffer,
-	 sizeof(TIME_ZONE_INFORMATION));
-
-  return STATUS_SUCCESS;
+  return ExpSetTimeZoneInformation((PTIME_ZONE_INFORMATION)Buffer);
 }
 
 

@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.71 2004/09/14 01:30:02 weiden Exp $
+/* $Id: menu.c,v 1.71.6.1 2004/12/08 21:57:27 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -4074,7 +4074,7 @@ InsertMenuItemA(
 
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
 
-    if ( CleanHeap ) HEAP_free ( mi.dwTypeData );
+    if ( CleanHeap ) HEAP_free ( MenuText.Buffer );
   }
   return res;
 }
@@ -4094,8 +4094,6 @@ InsertMenuItemW(
   MENUITEMINFOW mi;
   UNICODE_STRING MenuText;
   BOOL res = FALSE;
-  BOOL CleanHeap = FALSE;
-  HANDLE hHeap = GetProcessHeap();
   mi.hbmpItem = (HBITMAP)0;
 
   // while we could just pass 'lpmii' to win32k, we make a copy so that
@@ -4113,20 +4111,13 @@ InsertMenuItemW(
     {
       if(lpmii->cch > 0)
       {
-        if(!RtlCreateUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData))
-        {
-          SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-          return FALSE;
-        }
+        RtlInitUnicodeString(&MenuText, (PWSTR)lpmii->dwTypeData);
         mi.dwTypeData = (LPWSTR)&MenuText;
         mi.cch = MenuText.Length / sizeof(WCHAR);
-        CleanHeap = TRUE;
       }
     };
     
     res = NtUserInsertMenuItem(hMenu, uItem, fByPosition, &mi);
-    
-    if(CleanHeap) RtlFreeHeap (hHeap, 0, mi.dwTypeData);
   }
   return res;
 }
@@ -4437,8 +4428,34 @@ SetMenuItemInfoA(
   BOOL fByPosition,
   LPCMENUITEMINFOA lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW MenuItemInfoW;
+  UNICODE_STRING UnicodeString;
+  ULONG Result;
+
+  RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
+
+  if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
+      (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
+      MenuItemInfoW.dwTypeData)
+  {
+    RtlCreateUnicodeStringFromAsciiz(&UnicodeString,
+                                     (LPSTR)MenuItemInfoW.dwTypeData);
+    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
+  }
+  else
+  {
+    UnicodeString.Buffer = NULL;
+  }
+
+  Result = NtUserMenuItemInfo(hMenu, uItem, fByPosition,
+                              (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
+
+  if (UnicodeString.Buffer != NULL)
+  {
+    RtlFreeUnicodeString(&UnicodeString);
+  }
+
+  return Result;
 }
 
 
@@ -4453,8 +4470,21 @@ SetMenuItemInfoW(
   BOOL fByPosition,
   LPCMENUITEMINFOW lpmii)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  MENUITEMINFOW MenuItemInfoW;
+  UNICODE_STRING UnicodeString;
+
+  RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
+
+  if ((MenuItemInfoW.fMask & (MIIM_TYPE | MIIM_STRING)) &&
+      (MENU_ITEM_TYPE(MenuItemInfoW.fType) == MF_STRING) &&
+      MenuItemInfoW.dwTypeData)
+  {
+    RtlInitUnicodeString(&UnicodeString, MenuItemInfoW.dwTypeData);
+    MenuItemInfoW.dwTypeData = (LPWSTR)&UnicodeString;
+  }
+
+  return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
+                            (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
 }
 
 /*

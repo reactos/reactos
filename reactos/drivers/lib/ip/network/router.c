@@ -153,133 +153,9 @@ UINT CommonPrefixLength(
     for (j = 0; (Addr1[i] & Bitmask) == (Addr2[i] & Bitmask); j++)
         Bitmask >>= 1;
 
+    TI_DbgPrint(DEBUG_ROUTER, ("Returning %d\n", 8 * i + j));
+
     return 8 * i + j;
-}
-
-
-BOOLEAN HasPrefix(
-    PIP_ADDRESS Address,
-    PIP_ADDRESS Prefix,
-    UINT Length)
-/*
- * FUNCTION: Determines wether an address has an given prefix
- * ARGUMENTS:
- *     Address = Pointer to address to use
- *     Prefix  = Pointer to prefix to check for
- *     Length  = Length of prefix
- * RETURNS:
- *     TRUE if the address has the prefix, FALSE if not
- * NOTES:
- *     The two addresses must be of the same type
- */
-{
-    PUCHAR pAddress = (PUCHAR)&Address->Address;
-    PUCHAR pPrefix  = (PUCHAR)&Prefix->Address;
-
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  Prefix (0x%X)  Length (%d).\n", Address, Prefix, Length));
-
-#if 0
-    TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  Prefix (%s).\n",
-        A2S(Address), A2S(Prefix)));
-#endif
-
-    /* Check that initial integral bytes match */
-    while (Length > 8) {
-        if (*pAddress++ != *pPrefix++)
-            return FALSE;
-        Length -= 8;
-    } 
-
-    /* Check any remaining bits */
-    if ((Length > 0) && ((*pAddress >> (8 - Length)) != (*pPrefix >> (8 - Length))))
-        return FALSE;
-
-    return TRUE;
-}
-
-
-PNET_TABLE_ENTRY RouterFindBestNTE(
-    PIP_INTERFACE Interface,
-    PIP_ADDRESS Destination)
-/*
- * FUNCTION: Checks all on-link prefixes to find out if an address is on-link
- * ARGUMENTS:
- *     Interface   = Pointer to interface to use
- *     Destination = Pointer to destination address
- * NOTES:
- *     If found the NTE if referenced
- * RETURNS:
- *     Pointer to NTE if found, NULL if not
- */
-{
-    KIRQL OldIrql;
-    PLIST_ENTRY CurrentEntry;
-    PNET_TABLE_ENTRY Current;
-    UINT Length, BestLength  = 0;
-    PNET_TABLE_ENTRY BestNTE = NULL;
-
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. Interface (0x%X)  Destination (0x%X).\n", Interface, Destination));
-
-    TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s).\n", A2S(Destination)));
-
-    TcpipAcquireSpinLock(&Interface->Lock, &OldIrql);
-
-    CurrentEntry = Interface->NTEListHead.Flink;
-    while (CurrentEntry != &Interface->NTEListHead) {
-	Current = CONTAINING_RECORD(CurrentEntry, NET_TABLE_ENTRY, IFListEntry);
-	TI_DbgPrint(DEBUG_ROUTER, ("Looking at NTE %s\n", A2S(Current->Address)));
-
-        Length = CommonPrefixLength(Destination, Current->Address);
-        if (BestNTE) {
-            if (Length > BestLength) {
-                BestNTE    = Current;
-                BestLength = Length;
-            }
-        } else {
-            BestNTE    = Current;
-            BestLength = Length;
-        }
-        CurrentEntry = CurrentEntry->Flink;
-    }
-
-    TcpipReleaseSpinLock(&Interface->Lock, OldIrql);
-
-    return BestNTE;
-}
-
-
-PIP_INTERFACE RouterFindOnLinkInterface(
-    PIP_ADDRESS Address,
-    PNET_TABLE_ENTRY NTE)
-/*
- * FUNCTION: Checks all on-link prefixes to find out if an address is on-link
- * ARGUMENTS:
- *     Address = Pointer to address to check
- *     NTE     = Pointer to NTE to check (NULL = check all interfaces)
- * RETURNS:
- *     Pointer to interface if address is on-link, NULL if not
- */
-{
-    PLIST_ENTRY CurrentEntry;
-    PPREFIX_LIST_ENTRY Current;
-
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. Address (0x%X)  NTE (0x%X).\n", Address, NTE));
-
-    TI_DbgPrint(DEBUG_ROUTER, ("Address (%s)  NTE (%s).\n",
-			       A2S(Address), NTE ? A2S(NTE->Address) : ""));
-
-    CurrentEntry = PrefixListHead.Flink;
-    while (CurrentEntry != &PrefixListHead) {
-	    Current = CONTAINING_RECORD(CurrentEntry, PREFIX_LIST_ENTRY, ListEntry);
-
-        if (HasPrefix(Address, &Current->Prefix, Current->PrefixLength) &&
-            ((!NTE) || (NTE->Interface == Current->Interface)))
-            return Current->Interface;
-
-        CurrentEntry = CurrentEntry->Flink;
-    }
-
-    return NULL;
 }
 
 
@@ -335,15 +211,11 @@ PFIB_ENTRY RouterAddRoute(
 }
 
 
-PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
-    PIP_ADDRESS Destination,
-    PNET_TABLE_ENTRY NTE)
+PNEIGHBOR_CACHE_ENTRY RouterGetRoute(PIP_ADDRESS Destination)
 /*
  * FUNCTION: Finds a router to use to get to Destination
  * ARGUMENTS:
  *     Destination = Pointer to destination address (NULL means don't care)
- *     NTE         = Pointer to NTE describing net to send on
- *                   (NULL means don't care)
  * RETURNS:
  *     Pointer to NCE for router, NULL if none was found
  * NOTES:
@@ -355,14 +227,12 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
     PLIST_ENTRY NextEntry;
     PFIB_ENTRY Current;
     UCHAR State, BestState = 0;
-    UINT Length, BestLength = 0;
+    UINT Length, BestLength = 0, MaskLength;
     PNEIGHBOR_CACHE_ENTRY NCE, BestNCE = NULL;
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)  NTE (0x%X).\n", Destination, NTE));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called. Destination (0x%X)\n", Destination));
 
     TI_DbgPrint(DEBUG_ROUTER, ("Destination (%s)\n", A2S(Destination)));
-    if( NTE )
-	TI_DbgPrint(DEBUG_ROUTER, ("NTE (%s).\n", A2S(NTE->Address)));
 
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
 
@@ -374,62 +244,131 @@ PNEIGHBOR_CACHE_ENTRY RouterGetRoute(
         NCE   = Current->Router;
         State = NCE->State;
 
-        if ((!NTE) || (NTE->Interface == NCE->Interface)) {
-            if (Destination)
-                Length = CommonPrefixLength(Destination, &NCE->Address);
-            else
-                Length = 0;
+	Length = CommonPrefixLength(Destination, &Current->NetworkAddress);
+	MaskLength = AddrCountPrefixBits(&Current->Netmask);
 
-            if (BestNCE) {
-                if ((State  > BestState)  || 
-                    ((State == BestState) &&
-                    (Length > BestLength))) {
-                    /* This seems to be a better router */
-                    BestNCE    = NCE;
-                    BestLength = Length;
-                    BestState  = State;
-                }
-            } else {
-                /* First suitable router found, save it */
-                BestNCE    = NCE;
-                BestLength = Length;
-                BestState  = State;
-            }
-        }
+	TI_DbgPrint(DEBUG_ROUTER,("This-Route: %s (Sharing %d bits)\n", 
+				  A2S(&NCE->Address), Length));
+	
+	if(Length >= MaskLength && (Length > BestLength || !BestLength)) {
+	    /* This seems to be a better router */
+	    BestNCE    = NCE;
+	    BestLength = Length;
+	    BestState  = State;
+	    TI_DbgPrint(DEBUG_ROUTER,("Route selected\n"));
+	}
+
         CurrentEntry = NextEntry;
     }
 
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
 
+    if( BestNCE ) {
+	TI_DbgPrint(DEBUG_ROUTER,("Routing to %s\n", A2S(&BestNCE->Address)));
+    } else {
+	TI_DbgPrint(DEBUG_ROUTER,("Packet won't be routed\n"));
+    }
+
     return BestNCE;
 }
 
+PNEIGHBOR_CACHE_ENTRY RouteGetRouteToDestination(PIP_ADDRESS Destination)
+/*
+ * FUNCTION: Locates an RCN describing a route to a destination address
+ * ARGUMENTS:
+ *     Destination = Pointer to destination address to find route to
+ *     RCN         = Address of pointer to an RCN
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     The RCN is referenced for the caller. The caller is responsible
+ *     for dereferencing it after use
+ */
+{
+    PNEIGHBOR_CACHE_ENTRY NCE = NULL;
+    PIP_INTERFACE Interface;
 
-VOID RouterRemoveRoute(
-    PFIB_ENTRY FIBE)
+    TI_DbgPrint(DEBUG_RCACHE, ("Called. Destination (0x%X)\n", Destination));
+
+    TI_DbgPrint(DEBUG_RCACHE, ("Destination (%s)\n", A2S(Destination)));
+
+#if 0
+    TI_DbgPrint(MIN_TRACE, ("Displaying tree (before).\n"));
+    PrintTree(RouteCache);
+#endif
+
+    /* Check if the destination is on-link */
+    Interface = FindOnLinkInterface(Destination);
+    if (Interface) {
+	/* The destination address is on-link. Check our neighbor cache */
+	NCE = NBFindOrCreateNeighbor(Interface, Destination);
+    } else {
+	/* Destination is not on any subnets we're on. Find a router to use */
+	NCE = RouterGetRoute(Destination);
+    }
+    
+    if( NCE ) 
+	TI_DbgPrint(DEBUG_ROUTER,("Interface->MTU: %d\n", NCE->Interface->MTU));
+
+    return NCE;
+}
+
+NTSTATUS RouterRemoveRoute(PIP_ADDRESS Target, PIP_ADDRESS Router)
 /*
  * FUNCTION: Removes a route from the Forward Information Base (FIB)
  * ARGUMENTS:
- *     FIBE = Pointer to FIB entry describing route
+ *     Target: The machine or network targeted by the route
+ *     Router: The router used to pass the packet to the destination
+ *
+ * Searches the FIB and removes a route matching the indicated parameters.
  */
 {
     KIRQL OldIrql;
+    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry;
+    PFIB_ENTRY Current;
+    BOOLEAN Found = FALSE;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
-    TI_DbgPrint(DEBUG_ROUTER, ("Called. FIBE (0x%X).\n", FIBE));
+    TI_DbgPrint(DEBUG_ROUTER, ("Called\n"));
     
-    TI_DbgPrint(DEBUG_ROUTER, ("FIBE (%s).\n", A2S(&FIBE->NetworkAddress)));
-
     TcpipAcquireSpinLock(&FIBLock, &OldIrql);
-    DestroyFIBE(FIBE);
+
+    CurrentEntry = FIBListHead.Flink;
+    while (CurrentEntry != &FIBListHead) {
+        NextEntry = CurrentEntry->Flink;
+	    Current = CONTAINING_RECORD(CurrentEntry, FIB_ENTRY, ListEntry);
+
+        NCE   = Current->Router;
+
+	if( AddrIsEqual( &Current->NetworkAddress, Target ) &&
+	    AddrIsEqual( &NCE->Address, Router ) ) {
+	    Found = TRUE;
+	    break;
+	}
+
+	Current = NULL;
+        CurrentEntry = NextEntry;
+    }
+
+    if( Found ) {
+	TI_DbgPrint(DEBUG_ROUTER, ("Deleting route\n"));
+	DestroyFIBE( Current );
+    }
+
     TcpipReleaseSpinLock(&FIBLock, OldIrql);
+    
+    TI_DbgPrint(DEBUG_ROUTER, ("Leaving\n"));
+
+    return Found ? STATUS_NO_SUCH_FILE : STATUS_SUCCESS;
 }
 
 
-PFIB_ENTRY RouterCreateRouteIPv4(
-    IPv4_RAW_ADDRESS NetworkAddress,
-    IPv4_RAW_ADDRESS Netmask,
-    IPv4_RAW_ADDRESS RouterAddress,
-    PNET_TABLE_ENTRY NTE,
+PFIB_ENTRY RouterCreateRoute(
+    PIP_ADDRESS NetworkAddress,
+    PIP_ADDRESS Netmask,
+    PIP_ADDRESS RouterAddress,
+    PIP_INTERFACE Interface,
     UINT Metric)
 /*
  * FUNCTION: Creates a route with IPv4 addresses as parameters
@@ -445,42 +384,18 @@ PFIB_ENTRY RouterCreateRouteIPv4(
  *     for providing this reference
  */
 {
-    PIP_ADDRESS pNetworkAddress;
-    PIP_ADDRESS pNetmask;
-    PIP_ADDRESS pRouterAddress;
     PNEIGHBOR_CACHE_ENTRY NCE;
     PFIB_ENTRY FIBE;
 
-    pNetworkAddress = AddrBuildIPv4(NetworkAddress);
-    if (!pNetworkAddress) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return NULL;
-    }
-
-    pNetmask = AddrBuildIPv4(Netmask);
-    if (!pNetmask) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return NULL;
-    }
-
-    pRouterAddress = AddrBuildIPv4(RouterAddress);
-    if (!pRouterAddress) {
-        TI_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return NULL;
-    }
-
     /* The NCE references RouterAddress. The NCE is referenced for us */
-    NCE = NBAddNeighbor(NTE->Interface,
-                        pRouterAddress,
-                        NULL,
-                        NTE->Interface->AddressLength,
-                        NUD_PROBE);
+    NCE = NBFindOrCreateNeighbor(Interface, RouterAddress);
+
     if (!NCE) {
         /* Not enough free resources */
         return NULL;
     }
 
-    FIBE = RouterAddRoute(pNetworkAddress, pNetmask, NCE, 1);
+    FIBE = RouterAddRoute(NetworkAddress, Netmask, NCE, 1);
     if (!FIBE) {
         /* Not enough free resources */
         NBRemoveNeighbor(NCE);
@@ -504,13 +419,6 @@ NTSTATUS RouterStartup(
     InitializeListHead(&FIBListHead);
     TcpipInitializeSpinLock(&FIBLock);
 
-#if 0
-    /* TEST: Create a test route */
-    /* Network is 10.0.0.0  */
-    /* Netmask is 255.0.0.0 */
-    /* Router is 10.0.0.1   */
-    RouterCreateRouteIPv4(0x0000000A, 0x000000FF, 0x0100000A, NTE?, 1);
-#endif
     return STATUS_SUCCESS;
 }
 

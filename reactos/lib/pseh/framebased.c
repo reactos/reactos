@@ -27,6 +27,7 @@
 #include <pseh/framebased/internal.h>
 #include <pseh/excpt.h>
 #include <excpt.h>
+#include <pseh/framebased.h>
 
 /* Assembly helpers, see i386/framebased.asm */
 extern void __cdecl _SEHCleanHandlerEnvironment(void);

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.13 2004/11/21 20:54:52 arty Exp $
+/* $Id: main.c,v 1.13.2.1 2004/12/08 21:56:51 hyperion Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -47,9 +47,9 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
     PFILE_FULL_EA_INFORMATION EaInfo;
-    PAFD_CREATE_PACKET ConnectInfo;
+    PAFD_CREATE_PACKET ConnectInfo = NULL;
     ULONG EaLength;
-    PWCHAR EaInfoValue;
+    PWCHAR EaInfoValue = NULL;
     UINT Disposition, i;
 
     AFD_DbgPrint(MID_TRACE,
@@ -62,22 +62,18 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     Irp->IoStatus.Information = 0;
     
     EaInfo = Irp->AssociatedIrp.SystemBuffer;
-    ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
-    EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
-
-    if(!EaInfo) {
-	AFD_DbgPrint(MIN_TRACE, ("No EA Info in IRP.\n"));
-	Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
-	IoCompleteRequest( Irp, IO_NO_INCREMENT );
-	return STATUS_INVALID_PARAMETER;
+    
+    if( EaInfo ) {
+	ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+	EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
+	
+	EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
+	    EaInfo->EaNameLength +
+	    EaInfo->EaValueLength;
+	
+	AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n", 
+				EaInfo, EaInfoValue));
     }
-
-    EaLength = sizeof(FILE_FULL_EA_INFORMATION) +
-	EaInfo->EaNameLength +
-	EaInfo->EaValueLength;
-
-    AFD_DbgPrint(MID_TRACE,("EaInfo: %x, EaInfoValue: %x\n", 
-			    EaInfo, EaInfoValue));
 
     AFD_DbgPrint(MID_TRACE,("About to allocate the new FCB\n"));
 
@@ -88,11 +84,11 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return STATUS_NO_MEMORY;
     }
 
-    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo->EndpointFlags));
+    AFD_DbgPrint(MID_TRACE,("Initializing the new FCB @ %x (FileObject %x Flags %x)\n", FCB, FileObject, ConnectInfo ? ConnectInfo->EndpointFlags : 0));
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
-    FCB->Flags = ConnectInfo->EndpointFlags;
+    FCB->Flags = ConnectInfo ? ConnectInfo->EndpointFlags : 0;
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
@@ -111,24 +107,29 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
-    FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
-    FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
-    FCB->TdiDeviceName.Buffer = 
-      ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
-    RtlCopyMemory( FCB->TdiDeviceName.Buffer,
-		   ConnectInfo->TransportName,
-		   FCB->TdiDeviceName.Length );
+    if( ConnectInfo ) {
+	FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
+	FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
+	FCB->TdiDeviceName.Buffer = 
+	    ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
+	RtlCopyMemory( FCB->TdiDeviceName.Buffer,
+		       ConnectInfo->TransportName,
+		       FCB->TdiDeviceName.Length );
 
-    if( !FCB->TdiDeviceName.Buffer ) {
-      ExFreePool(FCB);
-      AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
-      Irp->IoStatus.Status = STATUS_NO_MEMORY;
-      IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-      return STATUS_NO_MEMORY;
+	if( !FCB->TdiDeviceName.Buffer ) {
+	    ExFreePool(FCB);
+	    AFD_DbgPrint(MID_TRACE,("Could not copy target string\n"));
+	    Irp->IoStatus.Status = STATUS_NO_MEMORY;
+	    IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
+	    return STATUS_NO_MEMORY;
+	}
+
+	AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n", 
+				EaInfo->EaName, &FCB->TdiDeviceName));
+    } else {
+	AFD_DbgPrint(MID_TRACE,("Success: Control connection\n"));
     }
 
-    AFD_DbgPrint(MID_TRACE,("Success: %s %wZ\n", 
-			    EaInfo->EaName, &FCB->TdiDeviceName));
     FileObject->FsContext = FCB;
     Irp->IoStatus.Status = STATUS_SUCCESS;
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
@@ -226,6 +227,49 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 NTSTATUS STDCALL
+AfdDisconnect(PDEVICE_OBJECT DeviceObject, PIRP Irp, 
+	      PIO_STACK_LOCATION IrpSp) {
+    PFILE_OBJECT FileObject = IrpSp->FileObject;
+    PAFD_FCB FCB = FileObject->FsContext;
+    PAFD_DISCONNECT_INFO DisReq;
+    IO_STATUS_BLOCK Iosb;
+    PTDI_CONNECTION_INFORMATION ConnInfo;
+    NTSTATUS Status;
+    USHORT Flags = 0;
+
+    if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp, FALSE );
+
+    if( !(DisReq = LockRequest( Irp, IrpSp )) ) 
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+				       Irp, 0, NULL, FALSE );
+
+    Status = TdiBuildNullConnectionInfo
+	( &ConnInfo, FCB->RemoteAddress->Address[0].AddressType );
+
+    if( !NT_SUCCESS(Status) || !ConnInfo ) 
+	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY,
+				       Irp, 0, NULL, TRUE );
+
+    if( DisReq->DisconnectType & AFD_DISCONNECT_SEND )
+	Flags |= TDI_DISCONNECT_RELEASE;
+    if( DisReq->DisconnectType & AFD_DISCONNECT_RECV )
+	Flags |= TDI_DISCONNECT_ABORT;
+
+    Status = TdiDisconnect( FCB->Connection.Object,
+			    &DisReq->Timeout,
+			    Flags,
+			    &Iosb,
+			    NULL, 
+			    NULL,
+			    FCB->AddressFrom,
+			    ConnInfo);
+    
+    ExFreePool( ConnInfo );
+
+    return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL, TRUE );
+}
+
+NTSTATUS STDCALL
 AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -304,44 +348,81 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_SET_CONTEXT:
 	    return AfdSetContext( DeviceObject, Irp, IrpSp );
 
-  case IOCTL_AFD_WAIT_FOR_LISTEN:
+	case IOCTL_AFD_WAIT_FOR_LISTEN:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_WAIT_FOR_LISTEN\n"));
-  case IOCTL_AFD_ACCEPT:
+	    break;
+
+	case IOCTL_AFD_ACCEPT:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_ACCEPT\n"));
-  case IOCTL_AFD_DISCONNECT:
-	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_DISCONNECT\n"));
-  case IOCTL_AFD_GET_TDI_HANDLES:
+	    break;
+
+	case IOCTL_AFD_DISCONNECT:
+	    return AfdDisconnect( DeviceObject, Irp, IrpSp );
+
+	case IOCTL_AFD_GET_TDI_HANDLES:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_TDI_HANDLES\n"));
-  case IOCTL_AFD_SET_INFO:
+	    break;
+
+	case IOCTL_AFD_SET_INFO:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_INFO\n"));
-  case IOCTL_AFD_SET_CONNECT_DATA:
+	    break;
+
+	case IOCTL_AFD_SET_CONNECT_DATA:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_DATA\n"));
-  case IOCTL_AFD_SET_CONNECT_OPTIONS:
+	    break;
+
+	case IOCTL_AFD_SET_CONNECT_OPTIONS:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_OPTIONS\n"));
-  case IOCTL_AFD_SET_DISCONNECT_DATA:
+	    break;
+
+	case IOCTL_AFD_SET_DISCONNECT_DATA:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_DATA\n"));
-  case IOCTL_AFD_SET_DISCONNECT_OPTIONS:
+	    break;
+
+	case IOCTL_AFD_SET_DISCONNECT_OPTIONS:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_OPTIONS\n"));
-  case IOCTL_AFD_GET_CONNECT_DATA:
+	    break;
+
+	case IOCTL_AFD_GET_CONNECT_DATA:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_CONNECT_DATA\n"));
-  case IOCTL_AFD_GET_CONNECT_OPTIONS:
+	    break;
+
+	case IOCTL_AFD_GET_CONNECT_OPTIONS:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_CONNECT_OPTIONS\n"));
-  case IOCTL_AFD_GET_DISCONNECT_DATA:
+	    break;
+
+	case IOCTL_AFD_GET_DISCONNECT_DATA:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_DISCONNECT_DATA\n"));
-  case IOCTL_AFD_GET_DISCONNECT_OPTIONS:
+	    break;
+
+	case IOCTL_AFD_GET_DISCONNECT_OPTIONS:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_DISCONNECT_OPTIONS\n"));
-  case IOCTL_AFD_SET_CONNECT_DATA_SIZE:
+	    break;
+
+	case IOCTL_AFD_SET_CONNECT_DATA_SIZE:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_DATA_SIZE\n"));
-  case IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE:
+	    break;
+
+	case IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_CONNECT_OPTIONS_SIZE\n"));
-  case IOCTL_AFD_SET_DISCONNECT_DATA_SIZE:
+	    break;
+
+	case IOCTL_AFD_SET_DISCONNECT_DATA_SIZE:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_DATA_SIZE\n"));
-  case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
+	    break;
+
+	case IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_SET_DISCONNECT_OPTIONS_SIZE\n"));
-  case IOCTL_AFD_DEFER_ACCEPT:
+	    break;
+
+	case IOCTL_AFD_DEFER_ACCEPT:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_DEFER_ACCEPT\n"));
-  case IOCTL_AFD_GET_PENDING_CONNECT_DATA:
+	    break;
+
+	case IOCTL_AFD_GET_PENDING_CONNECT_DATA:
 	    AFD_DbgPrint(MIN_TRACE, ("IOCTL_AFD_GET_PENDING_CONNECT_DATA\n"));
+	    break;
+
 	default:
 	    Status = STATUS_NOT_IMPLEMENTED;
 	    Irp->IoStatus.Information = 0;

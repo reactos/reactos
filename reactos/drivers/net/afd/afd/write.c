@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.12 2004/11/21 20:54:52 arty Exp $
+/* $Id: write.c,v 1.12.2.1 2004/12/08 21:56:51 hyperion Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -29,6 +29,8 @@ NTSTATUS DDKAPI SendComplete
     AFD_DbgPrint(MID_TRACE,("Called, status %x, %d bytes used\n",
 			    Irp->IoStatus.Status,
 			    Irp->IoStatus.Information));
+
+    ASSERT_IRQL(APC_LEVEL);
 
     if( !SocketAcquireStateLock( FCB ) ) return Status;
 

@@ -286,7 +286,6 @@ NTSTATUS TdiConnect(
   PDEVICE_OBJECT DeviceObject;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
-  KEVENT Event;
 
   AFD_DbgPrint(MAX_TRACE, ("Called\n"));
 
@@ -294,12 +293,10 @@ NTSTATUS TdiConnect(
 
   DeviceObject = IoGetRelatedDeviceObject(ConnectionObject);
 
-  KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
   *Irp = TdiBuildInternalDeviceControlIrp(TDI_CONNECT,             /* Sub function */
 					  DeviceObject,            /* Device object */
 					  ConnectionObject,        /* File object */
-					  &Event,                  /* Event */
+					  NULL,                    /* Event */
 					  &Iosb);                  /* Status */
   if (!*Irp) {
     return STATUS_INSUFFICIENT_RESOURCES;
@@ -314,7 +311,7 @@ NTSTATUS TdiConnect(
                   RemoteAddress,          /* Request connection information */
                   RemoteAddress);         /* Return connection information */
 
-  Status = TdiCall(*Irp, DeviceObject, &Event, &Iosb);
+  Status = TdiCall(*Irp, DeviceObject, NULL, &Iosb);
 
   return Status;
 }
@@ -1085,6 +1082,60 @@ NTSTATUS TdiSendDatagram(
     Status = TdiCall(*Irp, DeviceObject, NULL, Iosb);
     /* Does not block...  The MDL is deleted in the send completion
        routine. */
+
+    return Status;
+}
+
+NTSTATUS TdiDisconnect(
+    PFILE_OBJECT TransportObject,
+    PLARGE_INTEGER Time,
+    USHORT Flags,
+    PIO_STATUS_BLOCK Iosb,
+    PIO_COMPLETION_ROUTINE CompletionRoutine,
+    PVOID CompletionContext,
+    PTDI_CONNECTION_INFORMATION RequestConnectionInfo,
+    PTDI_CONNECTION_INFORMATION ReturnConnectionInfo) {
+    PDEVICE_OBJECT DeviceObject;
+    NTSTATUS Status;
+    KEVENT Event;
+    PIRP Irp;
+
+    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
+
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    AFD_DbgPrint(MID_TRACE,("Called(TransportObject %x)\n", TransportObject));
+
+    DeviceObject = IoGetRelatedDeviceObject(TransportObject);
+    if (!DeviceObject) {
+        AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Irp = TdiBuildInternalDeviceControlIrp
+	( TDI_SEND_DATAGRAM,       /* Sub function */
+	  DeviceObject,            /* Device object */
+	  TransportObject,         /* File object */
+	  &Event,                  /* Event */
+	  Iosb );                  /* Status */
+
+    if (!Irp) {
+        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    TdiBuildDisconnect
+	(Irp,                    /* I/O Request Packet */
+	 DeviceObject,           /* Device object */
+	 TransportObject,        /* File object */
+	 CompletionRoutine,      /* Completion routine */
+	 CompletionContext,      /* Completion context */
+	 Time,                   /* Time */
+	 Flags,                  /* Disconnect flags */
+	 RequestConnectionInfo,  /* Indication of who to disconnect */
+	 ReturnConnectionInfo);  /* Indication of who disconnected */
+
+    Status = TdiCall(Irp, DeviceObject, &Event, Iosb);
 
     return Status;
 }

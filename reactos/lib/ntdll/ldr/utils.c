@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.101 2004/11/19 01:30:35 weiden Exp $
+/* $Id: utils.c,v 1.101.2.1 2004/12/08 21:57:14 hyperion Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -720,6 +720,9 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
   NTSTATUS              Status;
   PLDR_MODULE           Module;
 
+  /* HACKHACK */
+  DbgPrint("LdrLoadDll(%S, %x, %wZ, %p)\n", SearchPath, LoadFlags, Name, BaseAddress);
+
   TRACE_LDR("LdrLoadDll, loading %wZ%s%S\n",
             Name,
             SearchPath ? " from " : "",
@@ -771,6 +774,9 @@ LdrFindEntryForAddress(PVOID Address,
   PLIST_ENTRY ModuleListHead;
   PLIST_ENTRY Entry;
   PLDR_MODULE ModulePtr;
+
+  /* HACKHACK */
+  DbgPrint("LdrFindEntryForAddress(%p, %p)\n", Address, Module);
 
   DPRINT("LdrFindEntryForAddress(Address %p)\n", Address);
 
@@ -836,6 +842,9 @@ LdrFindEntryForName(PUNICODE_STRING Name,
   BOOLEAN ContainsPath;
   UNICODE_STRING AdjustedName;
   unsigned i;
+
+  /* HACKHACK */
+  DbgPrint("LdrFindEntryForName(%wZ, %p, %d)\n", Name, Module, Ref);
 
   DPRINT("LdrFindEntryForName(Name %wZ)\n", Name);
 
@@ -2211,6 +2220,10 @@ LdrUnloadDll (IN PVOID BaseAddress)
    PLDR_MODULE Module;
    NTSTATUS Status;
 
+   /* HACKHACK */
+  DbgPrint("LdrUnloadDll(%p)\n", BaseAddress);
+
+
    if (BaseAddress == NULL)
      return STATUS_SUCCESS;
 
@@ -2233,6 +2246,9 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
     PLIST_ENTRY Entry;
     PLDR_MODULE Module;
     NTSTATUS Status;
+
+   /* HACKHACK */
+   DbgPrint("LdrDisableThreadCalloutsForDll(%p)\n", BaseAddress);
 
     DPRINT("LdrDisableThreadCalloutsForDll (BaseAddress %x)\n", BaseAddress);
 
@@ -2273,6 +2289,9 @@ LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
     PLDR_MODULE Module;
     NTSTATUS Status;
 
+  /* HACKHACK */
+  DbgPrint("LdrGetDllHandle(%S, %x, %wZ, %p)\n", Path, Unknown2, DllName, BaseAddress);
+
     TRACE_LDR("LdrGetDllHandle, searching for %wZ from %S\n", DllName, Path ? Path : L"");
 
     /* NULL is the current executable */
@@ -2305,6 +2324,9 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress)
 {
+  /* HACKHACK */
+  DbgPrint("LdrGetProcedureAddress(%p, %Z, %d, %p)\n", BaseAddress, Name, Ordinal, ProcedureAddress);
+
    if (Name && Name->Length)
      {
        TRACE_LDR("LdrGetProcedureAddress by NAME - %Z\n", Name);
@@ -2505,6 +2527,8 @@ LdrpAttachProcess(VOID)
 NTSTATUS STDCALL
 LdrShutdownProcess (VOID)
 {
+  /* HACKHACK */
+  DbgPrint("LdrShutdownProcess()\n");
   LdrpDetachProcess(TRUE);
   return STATUS_SUCCESS;
 }
@@ -2520,6 +2544,9 @@ LdrpAttachThread (VOID)
   PLIST_ENTRY Entry;
   PLDR_MODULE Module;
   NTSTATUS Status;
+
+  /* HACKHACK */
+  DbgPrint("LdrpAttachThread()\n");
 
   DPRINT("LdrpAttachThread() called for %wZ\n",
          &ExeModule->BaseDllName);
@@ -2569,6 +2596,9 @@ LdrShutdownThread (VOID)
    PLIST_ENTRY ModuleListHead;
    PLIST_ENTRY Entry;
    PLDR_MODULE Module;
+
+  /* HACKHACK */
+  DbgPrint("LdrShutdownThread()\n");
 
    DPRINT("LdrShutdownThread() called for %wZ\n",
           &ExeModule->BaseDllName);
@@ -2805,6 +2835,9 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
   BOOLEAN Result;
   NTSTATUS Status;
 
+  /* HACKHACK */
+  DbgPrint("LdrVerifyImageMatchesChecksum(%p, %x, %x, %x)\n", FileHandle, Unknown1, Unknown2, Unknown3);
+
   DPRINT ("LdrVerifyImageMatchesChecksum() called\n");
 
   Status = NtCreateSection (&SectionHandle,
@@ -2903,6 +2936,9 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
   ULONG ResultSize;
   PWCHAR Ptr;
   NTSTATUS Status;
+
+  /* HACKHACK */
+  DbgPrint("LdrQueryImageFileExecutionOptions(%wZ, %S, %x, %p, %d, %p)\n", SubKey, ValueName, Type, Buffer, BufferSize, ReturnedLength);
 
   wcscpy (NameBuffer,
           L"\\Registry\\Machine\\Software\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\");

@@ -12,6 +12,9 @@
 extern "C" {
 #endif
 #include <objfwd.h>
+#define TARGET_IS_NT50_OR_LATER 1
+#define TARGET_IS_NT40_OR_LATER 1
+#define TARGET_IS_NT351_OR_WIN95_OR_LATER 1
 #define DECLSPEC_UUID(x)
 #define MIDL_INTERFACE(x) struct
 #define NDR_CHAR_REP_MASK (unsigned long)0xFL

@@ -54,7 +54,7 @@ typedef struct _AFD_HANDLE_ {
 typedef struct _AFD_POLL_INFO {
     LARGE_INTEGER		        Timeout;
     ULONG				HandleCount;
-    PAFD_HANDLE                         InternalUse;
+    ULONG                               Exclusive;
     AFD_HANDLE			        Handles[1];
 } AFD_POLL_INFO, *PAFD_POLL_INFO;
 
@@ -325,7 +325,6 @@ typedef struct _FILE_REPLY_SENDTO {
     DWORD NumberOfBytesSent;
 } FILE_REPLY_SENDTO, *PFILE_REPLY_SENDTO;
 
-
 typedef struct _FILE_REQUEST_RECVFROM {
     LPWSABUF Buffers;
     DWORD BufferCount;
@@ -338,29 +337,6 @@ typedef struct _FILE_REPLY_RECVFROM {
     INT Status;
     DWORD NumberOfBytesRecvd;
 } FILE_REPLY_RECVFROM, *PFILE_REPLY_RECVFROM;
-
-
-typedef struct _FILE_REQUEST_SELECT {
-    LPFD_SET ReadFDSet;
-    LPFD_SET WriteFDSet;
-    LPFD_SET ExceptFDSet;
-    TIMEVAL Timeout;
-} FILE_REQUEST_SELECT, *PFILE_REQUEST_SELECT;
-
-typedef struct _FILE_REPLY_SELECT {
-    INT Status;
-    DWORD SocketCount;
-} FILE_REPLY_SELECT, *PFILE_REPLY_SELECT;
-
-
-typedef struct _FILE_REQUEST_EVENTSELECT {
-    WSAEVENT hEventObject;
-    LONG lNetworkEvents;
-} FILE_REQUEST_EVENTSELECT, *PFILE_REQUEST_EVENTSELECT;
-
-typedef struct _FILE_REPLY_EVENTSELECT {
-    INT Status;
-} FILE_REPLY_EVENTSELECT, *PFILE_REPLY_EVENTSELECT;
 
 typedef struct _FILE_REQUEST_RECV {
     LPWSABUF Buffers;

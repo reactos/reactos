@@ -15,7 +15,7 @@ NTSTATUS RawIPSendDatagram(
     PULONG DataUsed);
 
 VOID RawIPReceive(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
 
 NTSTATUS RawIPStartup(

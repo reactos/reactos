@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.105 2004/11/16 16:29:21 blight Exp $
+# $Id: makefile,v 1.105.2.1 2004/12/08 21:57:39 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -44,8 +44,8 @@ TARGET_CFLAGS =\
  $(CFLAGS_OPT)
 
 TARGET_LFLAGS =\
- $(PATH_TO_TOP)/dk/nkm/lib/freetype.a \
- $(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
+ $(PATH_TO_TOP)/dk/nkm/lib/libfreetype.a \
+ $(PATH_TO_TOP)/dk/w32/lib/librosrtl.a \
  --disable-stdcall-fixup
 
 ENG_OBJECTS= eng/debug.o eng/error.o eng/mem.o eng/brush.o eng/bitblt.o \

@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.15 2004/10/30 22:18:17 weiden Exp $
+/* $Id: iocompl.c,v 1.15.2.1 2004/12/08 21:57:10 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,7 +23,7 @@ STDCALL
 CreateIoCompletionPort(
     HANDLE FileHandle,
     HANDLE ExistingCompletionPort,
-    DWORD CompletionKey,
+    ULONG_PTR CompletionKey,
     DWORD NumberOfConcurrentThreads
     )
 {
@@ -34,7 +34,7 @@ CreateIoCompletionPort(
 
    if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE ) 
    {
-      SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
+      SetLastError(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
 
@@ -62,7 +62,7 @@ CreateIoCompletionPort(
    {
 #ifdef __USE_W32API
       CompletionInformation.Port = CompletionPort;
-      CompletionInformation.Key  = CompletionKey;
+      CompletionInformation.Key  = (PVOID)CompletionKey;
 #else
       CompletionInformation.IoCompletionHandle = CompletionPort;
       CompletionInformation.CompletionKey  = CompletionKey;
@@ -98,7 +98,7 @@ STDCALL
 GetQueuedCompletionStatus(
    HANDLE CompletionHandle,
    LPDWORD lpNumberOfBytesTransferred,
-   LPDWORD lpCompletionKey,
+   PULONG_PTR lpCompletionKey,
    LPOVERLAPPED *lpOverlapped,
    DWORD dwMilliseconds
    )
@@ -109,30 +109,22 @@ GetQueuedCompletionStatus(
 
    if (!lpNumberOfBytesTransferred||!lpCompletionKey||!lpOverlapped)
    {
-      return ERROR_INVALID_PARAMETER;
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return FALSE;
    }
 
    if (dwMilliseconds != INFINITE)
    {
-      /*
-       * System time units are 100 nanoseconds (a nanosecond is a billionth of
-       * a second).
-       */
-      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
+      Interval.QuadPart = RELATIVE_TIME(MILLIS_TO_100NS(dwMilliseconds));
    }  
-   else
-   {
-      /* Approximately 292000 years hence */
-      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
-   }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,
-                                  lpCompletionKey,
-                                  lpNumberOfBytesTransferred,
+                                  (PVOID*)lpCompletionKey,
+                                  (PVOID*)lpNumberOfBytesTransferred,
                                   &IoStatus,
-                                  &Interval);
+                                  dwMilliseconds == INFINITE ? NULL : &Interval);
 
-   if (!NT_SUCCESS(errCode) ) {
+   if (!NT_SUCCESS(errCode)) {
       *lpOverlapped = NULL;
       SetLastErrorByStatus(errCode);
       return FALSE;
@@ -142,7 +134,7 @@ GetQueuedCompletionStatus(
 
    if (!NT_SUCCESS(IoStatus.Status)){
       //failed io operation
-      SetLastErrorByStatus (IoStatus.Status);
+      SetLastErrorByStatus(IoStatus.Status);
       return FALSE;
    }
 
@@ -166,10 +158,10 @@ PostQueuedCompletionStatus(
    NTSTATUS errCode;
 
    errCode = NtSetIoCompletion(CompletionHandle,  
-                               dwCompletionKey, 
-                               dwNumberOfBytesTransferred,//CompletionValue 
-                               0,                         //IoStatusBlock->Status
-                               (ULONG)lpOverlapped );     //IoStatusBlock->Information
+                               (PVOID)dwCompletionKey, 
+                               (PVOID)lpOverlapped,//CompletionValue 
+                               STATUS_SUCCESS,                         //IoStatusBlock->Status
+                               dwNumberOfBytesTransferred);     //IoStatusBlock->Information
 
    if ( !NT_SUCCESS(errCode) ) 
    {

@@ -69,7 +69,7 @@ PADDRESS_FILE AddrSearchNext(
     while (CurrentEntry != &AddressFileListHead) {
         Current = CONTAINING_RECORD(CurrentEntry, ADDRESS_FILE, ListEntry);
 
-        IPAddress = &Current->ADE->Address;
+        IPAddress = &Current->Address;
 
         TI_DbgPrint(DEBUG_ADDRFILE, ("Comparing: ((%d, %d, %s), (%d, %d, %s)).\n",
             WN2H(Current->Port),
@@ -226,8 +226,9 @@ NTSTATUS FileOpenAddress(
   USHORT Protocol,
   PVOID Options)
 {
-  PADDRESS_FILE AddrFile;
   IPv4_RAW_ADDRESS IPv4Address;
+  BOOLEAN Matched;
+  PADDRESS_FILE AddrFile;
 
   TI_DbgPrint(MID_TRACE, ("Called (Proto %d).\n", Protocol));
 
@@ -250,18 +251,18 @@ NTSTATUS FileOpenAddress(
   /* FIXME: IPv4 only */
   IPv4Address = Address->Address[0].Address[0].in_addr;
   if (IPv4Address == 0)
-      AddrFile->ADE = IPGetDefaultADE(ADE_UNICAST);
+      Matched = IPGetDefaultAddress(&AddrFile->Address);
   else
-      AddrFile->ADE = AddrLocateADEv4(IPv4Address);
+      Matched = AddrLocateADEv4(IPv4Address, &AddrFile->Address);
 
-  if (!AddrFile->ADE) {
+  if (!Matched) {
     ExFreePool(AddrFile);
     TI_DbgPrint(MIN_TRACE, ("Non-local address given (0x%X).\n", DN2H(IPv4Address)));
     return STATUS_INVALID_PARAMETER;
   }
 
   TI_DbgPrint(MID_TRACE, ("Opening address %s for communication (P=%d U=%d).\n",
-    A2S(&AddrFile->ADE->Address), Protocol, IPPROTO_UDP));
+    A2S(&AddrFile->Address), Protocol, IPPROTO_UDP));
 
   /* Protocol specific handling */
   switch (Protocol) {
@@ -377,15 +378,6 @@ NTSTATUS FileOpenConnection(
   if( !Connection ) return STATUS_NO_MEMORY;
 
   Status = TCPSocket( Connection, AF_INET, SOCK_STREAM, IPPROTO_TCP );
-  DbgPrint("STATUS from OSKITTCP was %08x\n", Status);
-
-  /* Initialize received segments queue */
-  InitializeListHead(&Connection->ReceivedSegments);
-
-TI_DbgPrint(MIN_TRACE, ("X1 cur 0x%x\n", &Connection->ReceivedSegments));
-TI_DbgPrint(MIN_TRACE, ("X1 Flink 0x%x\n", Connection->ReceivedSegments.Flink));
-TI_DbgPrint(MIN_TRACE, ("X1 Blink 0x%x\n", Connection->ReceivedSegments.Blink));
-
 
   /* Return connection endpoint file object */
   Request->Handle.ConnectionContext = Connection;
@@ -416,7 +408,7 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
     KIRQL OldIrql;
     PCONNECTION_ENDPOINT Connection = NULL;
 
-    KeAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
+    TcpipAcquireSpinLock( &ConnectionEndpointListLock, &OldIrql );
 
     for( Entry = ConnectionEndpointListHead.Flink; 
 	 Entry != &ConnectionEndpointListHead;
@@ -427,7 +419,7 @@ PCONNECTION_ENDPOINT FileFindConnectionByContext( PVOID Context ) {
 	else Connection = NULL;
     }
 
-    KeReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
+    TcpipReleaseSpinLock( &ConnectionEndpointListLock, OldIrql );
 
     return Connection;
 }

@@ -25,6 +25,9 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <string.h>
+
+#define COBJMACROS
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -194,9 +197,7 @@ static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 {
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  This->ref++;
-
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 /************************************************************************
@@ -208,24 +209,20 @@ static ULONG WINAPI ConnectionPointImpl_Release(
       IConnectionPoint* iface)
 {
   ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
+  ULONG ref;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
 
   /*
    * Decrease the reference count on this object.
    */
-  This->ref--;
+  ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (This->ref==0)
-  {
-    ConnectionPointImpl_Destroy(This);
+  if (ref == 0) ConnectionPointImpl_Destroy(This);
 
-    return 0;
-  }
-
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************
@@ -473,10 +470,11 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
 static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  ULONG ref;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  This->ref++;
+  ref = InterlockedIncrement(&This->ref);
   IUnknown_AddRef(This->pUnk);
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************
@@ -487,6 +485,7 @@ static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
 {
   EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
+  ULONG ref;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
 
   IUnknown_Release(This->pUnk);
@@ -494,19 +493,14 @@ static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
   /*
    * Decrease the reference count on this object.
    */
-  This->ref--;
+  ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (This->ref==0)
-  {
-    EnumConnectionsImpl_Destroy(This);
+  if (ref == 0) EnumConnectionsImpl_Destroy(This);
 
-    return 0;
-  }
-
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************

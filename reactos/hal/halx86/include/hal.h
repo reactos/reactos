@@ -33,6 +33,12 @@ VOID HalpStartEnumerator (VOID);
 /* dma.c */
 VOID HalpInitDma (VOID);
 
+/* mem.c */
+PVOID HalpMapPhysMemory(ULONG PhysAddr, ULONG Size);
+
+/* Non-generic initialization */
+VOID HalpInitPhase0 (VOID);
+
 /* DMA Page Register Structure  
  080     DMA        RESERVED
  081     DMA        Page Register (channel 2)
@@ -427,8 +433,11 @@ static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
 #error Unknown compiler for inline assembler
 #endif
 
+typedef struct tagHALP_HOOKS
+{
+  void (*InitPciBus)(ULONG BusNumber, PBUS_HANDLER BusHandler);
+} HALP_HOOKS, *PHALP_HOOKS;
 
-
-
+extern HALP_HOOKS HalpHooks;
 
 #endif /* __INTERNAL_HAL_HAL_H */

@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.86 2004/11/21 18:42:58 gdalsnes Exp $
+/* $Id: kill.c,v 1.86.2.1 2004/12/08 21:57:38 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -129,6 +129,8 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
                      (ULONG) CurrentThread);
      }
 
+   KeCancelTimer(&CurrentThread->Tcb.Timer);
+
    KeAcquireSpinLock(&PiThreadLock, &oldIrql);
 
    DPRINT("terminating %x\n",CurrentThread);
@@ -136,13 +138,12 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
    CurrentThread->HasTerminated = TRUE;
    CurrentThread->ExitStatus = ExitStatus;
    KeQuerySystemTime((PLARGE_INTEGER)&CurrentThread->ExitTime);
-   KeCancelTimer(&CurrentThread->Tcb.Timer);
 
    /* If the ProcessoR Control Block's NpxThread points to the current thread
     * unset it.
     */
-   InterlockedCompareExchange((LONG *)&KeGetCurrentKPCR()->PrcbData.NpxThread,
-                              (LONG)NULL, (LONG)ETHREAD_TO_KTHREAD(CurrentThread));
+   InterlockedCompareExchangePointer(&KeGetCurrentKPCR()->PrcbData.NpxThread,
+                                     NULL, ETHREAD_TO_KTHREAD(CurrentThread));
 
    KeReleaseSpinLock(&PiThreadLock, oldIrql);
  
@@ -175,6 +176,7 @@ PsTerminateCurrentThread(NTSTATUS ExitStatus)
          MmReleaseMemoryAreaIfDecommitted(CurrentProcess, &CurrentProcess->AddressSpace, TebBlock);
          MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
        }
+     CurrentThread->Tcb.Teb = NULL;
      ExReleaseFastMutex(&CurrentProcess->TebLock);
    }
 
@@ -257,8 +259,15 @@ PsTerminateOtherThread(PETHREAD Thread,
 
   DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	 Thread, ExitStatus);
-  
+
+  KeAcquireSpinLock(&PiThreadLock, &OldIrql);
+  if (Thread->HasTerminated)
+  {
+     KeReleaseSpinLock(&PiThreadLock, OldIrql);
+     return;
+  }
   Thread->HasTerminated = TRUE;
+  KeReleaseSpinLock(&PiThreadLock, OldIrql);
   Thread->ExitStatus = ExitStatus;
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,

@@ -2245,13 +2245,39 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
  */
 static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
 {
+	RECT ClientRect;
+	LONG_PTR ExStyle;
+
 	CopyRect(&es->format_rect, rc);
-	if (es->style & WS_BORDER) {
-		INT bw = GetSystemMetrics(SM_CXBORDER) + 1;
-		es->format_rect.left += bw;
-		es->format_rect.top += bw;
-		es->format_rect.right -= bw;
-		es->format_rect.bottom -= bw;
+	if (es->style & ES_MULTILINE)
+	{
+		if (es->style & WS_BORDER) {
+			INT bw = GetSystemMetrics(SM_CXBORDER) + 1;
+			es->format_rect.left += bw;
+			es->format_rect.right -= bw;
+			es->format_rect.top += bw;
+			es->format_rect.bottom -= bw;
+		}
+	}
+	else
+	{
+		ExStyle = GetWindowLongPtrW(es->hwndSelf, GWL_EXSTYLE);
+		if (ExStyle & WS_EX_CLIENTEDGE) {
+			if (es->line_height + 2 <=
+			    es->format_rect.bottom - es->format_rect.top) {
+				es->format_rect.top++;
+				es->format_rect.bottom--;
+			}
+		} else if (es->style & WS_BORDER) {
+			INT bw = GetSystemMetrics(SM_CXBORDER) + 1;
+			es->format_rect.left += bw;
+			es->format_rect.right -= bw;
+			if (es->line_height + 2 * bw <=
+			    es->format_rect.bottom - es->format_rect.top) {
+				es->format_rect.top += bw;
+				es->format_rect.bottom -= bw;
+			}
+		}
 	}
 	es->format_rect.left += es->left_margin;
 	es->format_rect.right -= es->right_margin;
@@ -2282,6 +2308,10 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
 	else
 	/* Windows doesn't care to fix text placement for SL controls */
 		es->format_rect.bottom = es->format_rect.top + es->line_height;
+
+	/* Always stay within the client area */
+	GetClientRect(es->hwndSelf, &ClientRect);
+	es->format_rect.bottom = min(es->format_rect.bottom, ClientRect.bottom);
 
 	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL))
 		EDIT_BuildLineDefs_ML(es, 0, strlenW(es->text), 0, NULL);

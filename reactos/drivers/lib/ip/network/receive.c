@@ -273,14 +273,12 @@ __inline VOID Cleanup(
 
 VOID ProcessFragment(
   PIP_INTERFACE IF,
-  PIP_PACKET IPPacket,
-  PNET_TABLE_ENTRY NTE)
+  PIP_PACKET IPPacket)
 /*
  * FUNCTION: Processes an IP datagram or fragment
  * ARGUMENTS:
  *     IF       = Pointer to IP interface packet was receive on
  *     IPPacket = Pointer to IP packet
- *     NTE      = Pointer to NTE packet was received on
  * NOTES:
  *     This routine reassembles fragments and, if a whole datagram can
  *     be assembled, passes the datagram on to the IP protocol dispatcher
@@ -465,7 +463,7 @@ VOID ProcessFragment(
     DISPLAY_IP_PACKET(Datagram);
 
     /* Give the packet to the protocol dispatcher */
-    IPDispatchProtocol(NTE, Datagram);
+    IPDispatchProtocol(IF, Datagram);
 
     /* We're done with this datagram */
     exFreePool(Datagram->Header);
@@ -523,10 +521,6 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
  *     IPPacket = Pointer to IP packet
  */
 {
-    PNEIGHBOR_CACHE_ENTRY NCE;
-    PNET_TABLE_ENTRY NTE;
-    UINT AddressType;
-    
     TI_DbgPrint(DEBUG_IP, ("Received IPv4 datagram.\n"));
     
     IPPacket->HeaderSize = (((PIPv4_HEADER)IPPacket->Header)->VerIHL & 0x0F) << 2;
@@ -567,11 +561,9 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
     /* FIXME: Possibly forward packets with multicast addresses */
     
     /* FIXME: Should we allow packets to be received on the wrong interface? */
-    NTE = IPLocateNTEOnInterface(IF, &IPPacket->DstAddr, &AddressType);
-    
-    if (NTE) {
-	/* This packet is destined for us */
-	ProcessFragment(IF, IPPacket, NTE);
+    /* XXX Find out if this packet is destined for us */
+    ProcessFragment(IF, IPPacket);
+#if 0
     } else {
 	/* This packet is not destined for us. If we are a router,
 	   try to find a route and forward the packet */
@@ -592,6 +584,7 @@ VOID IPv4Receive(PIP_INTERFACE IF, PIP_PACKET IPPacket)
 	    /* FIXME: Send ICMP error code */
 	}
     }
+#endif
 }
 
 

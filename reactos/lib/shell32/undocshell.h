@@ -429,14 +429,6 @@ BOOL WINAPI PathYetAnotherMakeUniqueName(
 	LPCWSTR lpszShortName,
 	LPCWSTR lpszLongName);
 
-/* PathCleanupSpec return values */
-#define PCS_REPLACEDCHARS  0x00000001
-#define PCS_REMOVEDCHARS   0x00000002
-#define PCS_SHORTENED      0x00000004
-#define PCS_PATHTOOLONG    0x80000008
-
-DWORD WINAPI PathCleanupSpecAW(LPCVOID lpszPath, LPVOID lpszFile);
-
 BOOL WINAPI PathQualifyA(LPCSTR path);
 BOOL WINAPI PathQualifyW(LPCWSTR path);
 #define PathQualify WINELIB_NAME_AW(PathQualify)

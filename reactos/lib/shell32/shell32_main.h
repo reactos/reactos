@@ -220,4 +220,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 
 extern WCHAR swShell32Name[MAX_PATH];
 
+/* Default shell folder value registration */
+HRESULT SHELL_RegisterShellFolders(void);
+
 #endif

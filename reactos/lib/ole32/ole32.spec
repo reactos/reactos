@@ -5,7 +5,7 @@
 @ stub CLIPFORMAT_UserUnmarshal
 @ stdcall CLSIDFromProgID(wstr ptr)
 @ stdcall CLSIDFromString(wstr ptr)
-@ stub CoAddRefServerProcess
+@ stdcall CoAddRefServerProcess()
 @ stdcall CoBuildVersion()
 @ stub CoCopyProxy                #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoCreateFreeThreadedMarshaler(ptr ptr)
@@ -44,7 +44,7 @@
 @ stdcall CoIsOle1Class (ptr)
 @ stdcall CoLoadLibrary(wstr long)
 @ stdcall CoLockObjectExternal(ptr long long)
-@ stub CoMarshalHresult           #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoMarshalHresult(ptr long)
 @ stdcall CoMarshalInterThreadInterfaceInStream(ptr ptr ptr)
 @ stdcall CoMarshalInterface(ptr ptr ptr long ptr long)
 @ stub CoQueryAuthenticationServices
@@ -58,7 +58,7 @@
 @ stub CoRegisterPSClsid          #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
 @ stub CoRegisterSurrogate
 @ stdcall CoReleaseMarshalData(ptr)
-@ stub CoReleaseServerProcess     #@ stdcall () return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoReleaseServerProcess()
 @ stdcall CoResumeClassObjects()
 @ stub CoRevertToSelf             #@ stdcall () return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoRevokeClassObject(long)
@@ -73,7 +73,7 @@
 @ stdcall CoTreatAsClass(ptr ptr)
 @ stdcall CoUninitialize()
 @ stub CoUnloadingWOW
-@ stub CoUnmarshalHresult         #@ stdcall (ptr ptr) return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoUnmarshalHresult(ptr ptr)
 @ stdcall CoUnmarshalInterface(ptr ptr ptr)
 @ stdcall CreateAntiMoniker(ptr)
 @ stdcall CreateBindCtx(long ptr)

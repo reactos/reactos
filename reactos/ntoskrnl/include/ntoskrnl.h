@@ -3,6 +3,8 @@
 
 #define __NO_CTYPE_INLINES
 
+/* include the ntoskrnl config.h file */
+#include "config.h"
 
 #include <roscfg.h>
 #include <reactos/version.h>

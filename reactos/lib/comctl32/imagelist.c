@@ -2731,6 +2731,7 @@ _write_bitmap(HBITMAP hBitmap, LPSTREAM pstm, int cx, int cy)
     failed:
     ReleaseDC(0, xdc);
     LocalFree((HLOCAL)lpBitsOrg);
+    LocalFree((HLOCAL)data);
 
     return result;
 }

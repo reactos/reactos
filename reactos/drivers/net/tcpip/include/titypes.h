@@ -174,7 +174,7 @@ typedef struct _ADDRESS_FILE {
     KSPIN_LOCK Lock;                      /* Spin lock to manipulate this structure */
     OBJECT_FREE_ROUTINE Free;             /* Routine to use to free resources for the object */
     USHORT Flags;                         /* Flags for address file (see below) */
-    PADDRESS_ENTRY ADE;                   /* Associated address entry */
+    IP_ADDRESS Address;                   /* Address of this address file */
     USHORT Protocol;                      /* Protocol number */
     USHORT Port;                          /* Network port (network byte order) */
     WORK_QUEUE_ITEM WorkItem;             /* Work queue item handle */
@@ -321,9 +321,12 @@ typedef struct _CONNECTION_ENDPOINT {
     LIST_ENTRY ConnectRequest; /* Queued connect rqueusts */
     LIST_ENTRY ListenRequest;  /* Queued listen requests */
     LIST_ENTRY ReceiveRequest; /* Queued receive requests */
-    
-    /* Queues */
-    LIST_ENTRY ReceivedSegments;/* Segments that are received */
+
+    /* Signals */
+    LIST_ENTRY SignalList;     /* Entry in the list of sockets waiting for
+				* notification service to the client */
+    UINT    SignalState;       /* Active signals from oskit */
+    BOOLEAN Signalled;         /* Are we a member of the signal list */
 } CONNECTION_ENDPOINT, *PCONNECTION_ENDPOINT;
 
 

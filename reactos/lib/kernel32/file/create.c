@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2004/10/12 22:04:51 gvg Exp $
+/* $Id: create.c,v 1.40.2.1 2004/12/08 21:57:10 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -134,7 +134,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 				      NULL))
    {
      DPRINT("Invalid path\n");
-     SetLastError(ERROR_BAD_PATHNAME);
+     SetLastError(ERROR_PATH_NOT_FOUND);
      return INVALID_HANDLE_VALUE;
    }
    
@@ -271,11 +271,25 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    RtlFreeUnicodeString(&NtPathU);
 
    /* error */
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus (Status);
-    return INVALID_HANDLE_VALUE;
-  }
+   if (!NT_SUCCESS(Status))
+   {
+      /* In the case file creation was rejected due to CREATE_NEW flag
+       * was specified and file with that name already exists, correct
+       * last error is ERROR_FILE_EXISTS and not ERROR_ALREADY_EXISTS.
+       * Note: RtlNtStatusToDosError is not the subject to blame here.
+       */
+      if (Status == STATUS_OBJECT_NAME_COLLISION &&
+          dwCreationDisposition == FILE_CREATE)
+      {
+         SetLastError( ERROR_FILE_EXISTS );
+      }
+      else
+      {
+         SetLastErrorByStatus (Status);
+      }
+     
+      return INVALID_HANDLE_VALUE;
+   }
    
   /*
   create with OPEN_ALWAYS (FILE_OPEN_IF) returns info = FILE_OPENED or FILE_CREATED

@@ -12,9 +12,9 @@
 #define NDEBUG
 
 #ifndef NDEBUG
-DWORD DebugTraceLevel = 0x7fffffff;
+DWORD DebugTraceLevel = DEBUG_ULTRA;
 #else
-DWORD DebugTraceLevel = 0; /*DEBUG_IP | DEBUG_PBUFFER | DEBUG_DATALINK;*/
+DWORD DebugTraceLevel = 0;
 #endif /* NDEBUG */
 
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
@@ -29,6 +29,7 @@ ULONG EntityCount                = 0;
 ULONG EntityMax                  = 0;
 UDP_STATISTICS UDPStats;
 
+/* Network timers */
 KTIMER IPTimer;
 KDPC IPTimeoutDpc;
 KSPIN_LOCK IpWorkLock;
@@ -256,6 +257,7 @@ CP
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
+  Irp->IoStatus.Status = Status;
   return Status;
 }
 
@@ -670,7 +672,10 @@ VOID STDCALL IPTimeoutDpcFn(
  *     This routine is dispatched once in a while to do maintainance jobs
  */
 {
-    ExQueueWorkItem( &IpWorkItem, CriticalWorkQueue );
+    if( !IpWorkItemQueued ) {
+	ExQueueWorkItem( &IpWorkItem, CriticalWorkQueue );
+	IpWorkItemQueued = TRUE;
+    }
 }
 
 NTSTATUS

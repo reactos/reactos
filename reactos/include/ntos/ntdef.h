@@ -13,6 +13,32 @@
 
 #define EX_MAXIMUM_WAIT_OBJECTS (64)
 
+#if defined(_MSC_VER) && (_MSC_VER >= 1300) && defined(__cplusplus)
+# define TYPE_ALIGNMENT(t) __alignof(t)
+#elif defined(__GNUC__)
+# define TYPE_ALIGNMENT(t) __alignof__(t)
+#else
+# define TYPE_ALIGNMENT(t) FIELD_OFFSET(struct { char x; t test; }, test)
+#endif
+
+#ifdef _WIN64
+# define PROBE_ALIGNMENT(_s) \
+    (TYPE_ALIGNMENT(_s) > TYPE_ALIGNMENT(DWORD) ? \
+    TYPE_ALIGNMENT(_s) : TYPE_ALIGNMENT(DWORD))
+# define PROBE_ALIGNMENT32(_s) TYPE_ALIGNMENT(DWORD)
+#else
+# define PROBE_ALIGNMENT(_s) TYPE_ALIGNMENT(DWORD)
+#endif
+
+/* Helpers for easy conversion to system time units (100ns) */
+#define ABSOLUTE_TIME(wait) (wait)
+#define RELATIVE_TIME(wait) (-(wait))
+#define NANOS_TO_100NS(nanos) (((LONGLONG)(nanos)) / 100L)
+#define MICROS_TO_100NS(micros) (((LONGLONG)(micros)) * NANOS_TO_100NS(1000L))
+#define MILLIS_TO_100NS(milli) (((LONGLONG)(milli)) * MICROS_TO_100NS(1000L))
+#define SECONDS_TO_100NS(seconds) (((LONGLONG)(seconds)) * MILLIS_TO_100NS(1000L))
+
+
 #ifndef __USE_W32API
 
 #define ANYSIZE_ARRAY	(1)

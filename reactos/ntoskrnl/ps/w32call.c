@@ -1,4 +1,4 @@
-/* $Id: w32call.c,v 1.18 2004/11/20 23:46:37 blight Exp $
+/* $Id: w32call.c,v 1.18.2.1 2004/12/08 21:57:38 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -140,7 +140,6 @@ NtCallbackReturn (PVOID		Result,
   Thread->Tcb.TrapFrame = SavedTrapFrame;
   Thread->Tcb.CallbackStack = SavedCallbackStack;
   KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)SavedExceptionStack;
-  Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS); /* set TS */
   KeStackSwitchAndRet((PVOID)(OldStack + 1));
 
   /* Should never return. */
@@ -288,9 +287,7 @@ NtW32Call (IN ULONG RoutineIndex,
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK,
 					ListEntry);
       NewStack = AssignedStack->BaseAddress;
-
-      MmUpdatePageDir(PsGetCurrentProcess(), NewStack, StackSize);
-
+      memset(NewStack, 0, StackSize);
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
   memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),

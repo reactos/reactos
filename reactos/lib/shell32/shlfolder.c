@@ -143,7 +143,7 @@ LPCWSTR GetNextElementW (LPCWSTR pszNext, LPWSTR pszOut, DWORD dwOut)
     while (*pszTail && (*pszTail != (WCHAR) '\\'))
 	pszTail++;
 
-    dwCopy = (WCHAR *) pszTail - (WCHAR *) pszNext + 1;
+    dwCopy = (const WCHAR *) pszTail - (const WCHAR *) pszNext + 1;
     lstrcpynW (pszOut, pszNext, (dwOut < dwCopy) ? dwOut : dwCopy);
 
     if (*pszTail)

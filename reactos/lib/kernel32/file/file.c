@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.60 2004/10/31 01:36:37 weiden Exp $
+/* $Id: file.c,v 1.60.2.1 2004/12/08 21:57:10 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -993,7 +993,7 @@ GetTempFileNameA(LPCSTR lpPathName,
 			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			       0)) == INVALID_HANDLE_VALUE)
    {
-      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      if (GetLastError() != ERROR_FILE_EXISTS)
       {
          return 0;
       }
@@ -1041,7 +1041,7 @@ GetTempFileNameW(LPCWSTR lpPathName,
 			       CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY,
 			       0)) == INVALID_HANDLE_VALUE)
    {
-      if (GetLastError() != ERROR_ALREADY_EXISTS)
+      if (GetLastError() != ERROR_FILE_EXISTS)
       {
          return 0;
       }

@@ -1,4 +1,4 @@
-#1 stdcall -private DllGetClassObject(ptr ptr ptr) OLEAUT32_DllGetClassObject
+1 stdcall -private DllGetClassObject(ptr ptr ptr) OLEAUT32_DllGetClassObject
 2 stdcall SysAllocString(wstr)
 3 stdcall SysReAllocString(ptr wstr)
 4 stdcall SysAllocStringLen(wstr long)
@@ -142,12 +142,12 @@
 142 stdcall VarAnd(ptr ptr ptr)
 143 stdcall VarDiv(ptr ptr ptr)
 144 stub OACreateTypeLib2
-#146 stdcall DispCallFunc(ptr long long long long ptr ptr ptr)
+146 stdcall DispCallFunc(ptr long long long long ptr ptr ptr)
 147 stdcall VariantChangeTypeEx(ptr ptr long long long)
 148 stdcall SafeArrayPtrOfIndex(ptr ptr ptr)
 149 stdcall SysStringByteLen(ptr)
 150 stdcall SysAllocStringByteLen(ptr long)
-152 stub VarEqv # stdcall (ptr ptr ptr)
+152 stdcall VarEqv(ptr ptr ptr)
 153 stub VarIdiv # stdcall (ptr ptr ptr)
 154 stub VarImp # stdcall (ptr ptr ptr)
 155 stdcall VarMod(ptr ptr ptr)
@@ -155,18 +155,18 @@
 157 stdcall VarOr(ptr ptr ptr)
 158 stdcall VarPow(ptr ptr ptr)
 159 stdcall VarSub(ptr ptr ptr)
-#160 stdcall CreateTypeLib(long wstr ptr)
-#161 stdcall LoadTypeLib (wstr ptr)
-#162 stdcall LoadRegTypeLib (ptr long long long ptr)
-#163 stdcall RegisterTypeLib(ptr wstr wstr)
-#164 stdcall QueryPathOfRegTypeLib(ptr long long long ptr)
+160 stdcall CreateTypeLib(long wstr ptr)
+161 stdcall LoadTypeLib (wstr ptr)
+162 stdcall LoadRegTypeLib (ptr long long long ptr)
+163 stdcall RegisterTypeLib(ptr wstr wstr)
+164 stdcall QueryPathOfRegTypeLib(ptr long long long ptr)
 165 stdcall LHashValOfNameSys(long long wstr)
 166 stdcall LHashValOfNameSysA(long long str)
-167 stub VarXor # stdcall (ptr ptr ptr)
+167 stdcall VarXor(ptr ptr ptr)
 168 stdcall VarAbs(ptr ptr)
 169 stdcall VarFix(ptr ptr)
 170 stdcall OaBuildVersion()
-171 stub ClearCustData
+171 stdcall ClearCustData(ptr)
 172 stdcall VarInt(ptr ptr)
 173 stdcall VarNeg(ptr ptr)
 174 stdcall VarNot(ptr ptr)
@@ -175,13 +175,13 @@
 177 stdcall VarDecAdd(ptr ptr ptr)
 178 stdcall VarDecDiv(ptr ptr ptr)
 179 stdcall VarDecMul(ptr ptr ptr)
-#180 stdcall CreateTypeLib2(long wstr ptr)
+180 stdcall CreateTypeLib2(long wstr ptr)
 181 stdcall VarDecSub(ptr ptr ptr)
 182 stdcall VarDecAbs(ptr ptr)
-#183 stdcall LoadTypeLibEx (wstr long ptr)
+183 stdcall LoadTypeLibEx (wstr long ptr)
 184 stdcall SystemTimeToVariantTime(ptr ptr)
 185 stdcall VariantTimeToSystemTime(double ptr)
-#186 stdcall UnRegisterTypeLib (ptr long long long long)
+186 stdcall UnRegisterTypeLib (ptr long long long long)
 187 stdcall VarDecFix(ptr ptr)
 188 stdcall VarDecInt(ptr ptr)
 189 stdcall VarDecNeg(ptr ptr)
@@ -278,14 +278,14 @@
 280 stdcall VarUI4FromI1(long ptr)
 281 stdcall VarUI4FromUI2(long ptr)
 282 stdcall VarUI4FromDec(ptr ptr)
-#283 stdcall BSTR_UserSize(ptr long ptr)
-#284 stdcall BSTR_UserMarshal(ptr ptr ptr)
-#285 stdcall BSTR_UserUnmarshal(ptr ptr ptr)
-#286 stdcall BSTR_UserFree(ptr ptr)
-#287 stdcall VARIANT_UserSize(ptr long ptr)
-#288 stdcall VARIANT_UserMarshal(ptr ptr ptr)
-#289 stdcall VARIANT_UserUnmarshal(ptr ptr ptr)
-#290 stdcall VARIANT_UserFree(ptr ptr)
+283 stdcall BSTR_UserSize(ptr long ptr)
+284 stdcall BSTR_UserMarshal(ptr ptr ptr)
+285 stdcall BSTR_UserUnmarshal(ptr ptr ptr)
+286 stdcall BSTR_UserFree(ptr ptr)
+287 stdcall VARIANT_UserSize(ptr long ptr)
+288 stdcall VARIANT_UserMarshal(ptr ptr ptr)
+289 stdcall VARIANT_UserUnmarshal(ptr ptr ptr)
+290 stdcall VARIANT_UserFree(ptr ptr)
 291 stub LPSAFEARRAY_UserSize
 292 stub LPSAFEARRAY_UserMarshal
 293 stub LPSAFEARRAY_UserUnmarshal
@@ -311,10 +311,10 @@
 316 stdcall VarR4CmpR8(long double)
 317 stdcall VarR8Round(double long ptr)
 318 stdcall VarCat(ptr ptr ptr)
-319 stub VarDateFromUdateEx # stdcall (ptr long long ptr)
-#320 stdcall -private DllRegisterServer() OLEAUT32_DllRegisterServer
-#321 stdcall -private DllUnregisterServer() OLEAUT32_DllUnregisterServer
-322 stub GetRecordInfoFromGuids # stdcall (ptr long long long ptr ptr)
+319 stdcall VarDateFromUdateEx(ptr long long ptr)
+320 stdcall -private DllRegisterServer() OLEAUT32_DllRegisterServer
+321 stdcall -private DllUnregisterServer() OLEAUT32_DllUnregisterServer
+322 stdcall GetRecordInfoFromGuids(ptr long long long ptr ptr)
 323 stub GetRecordInfoFromTypeInfo # stdcall (ptr ptr)
 325 stub SetVarConversionLocaleSetting
 326 stub GetVarConversionLocaleSetting
@@ -392,7 +392,7 @@
 417 stdcall OleCreatePropertyFrame(ptr long long ptr long ptr long ptr ptr long ptr)
 418 stdcall OleLoadPicture(ptr long long ptr ptr)
 419 stdcall OleCreatePictureIndirect(ptr ptr long ptr)
-#420 stdcall OleCreateFontIndirect(ptr ptr ptr)
+420 stdcall OleCreateFontIndirect(ptr ptr ptr)
 421 stdcall OleTranslateColor(long long long)
 422 stub OleLoadPictureFile
 423 stub OleSavePictureFile

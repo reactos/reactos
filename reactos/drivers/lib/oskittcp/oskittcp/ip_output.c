@@ -361,9 +361,14 @@ sendit:
 	    ip->ip_sum = in_cksum(m, hlen);
 #ifdef __REACTOS__
 	    if( OtcpEvent.PacketSend ) {
-		OS_DbgPrint(OSK_MID_TRACE,("Mark\n"));
+		struct mbuf *new_m;
+		MGET( new_m, M_DONTWAIT, 0 );
+		MCLGET( new_m, M_DONTWAIT );
+		m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
+		new_m->m_len = htons(ip->ip_len);
 		error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-					      m->m_data, m->m_len );
+					      new_m->m_data, new_m->m_len );
+		m_free( new_m );
 		goto done;
 	    }
 #else
@@ -485,9 +490,15 @@ sendorfree:
 			m_freem(m);
 #else
 	if( error == 0 && OtcpEvent.PacketSend ) {
-	    OS_DbgPrint(OSK_MID_TRACE,("Mark\n"));
+	    struct mbuf *new_m;
+	    MGET( new_m, M_DONTWAIT, 0 );
+	    MCLGET( new_m, M_DONTWAIT );
+	    m_copydata( m, 0, htons(ip->ip_len), new_m->m_data );
+	    new_m->m_len = htons(ip->ip_len);
 	    error = OtcpEvent.PacketSend( OtcpEvent.ClientData,
-					  m->m_data, m->m_len );
+					  new_m->m_data, new_m->m_len );
+	    m_free( new_m );
+	    goto done;
 	}
 	
 	OS_DbgPrint(OSK_MID_TRACE,("Error from upper layer: %d\n", error));

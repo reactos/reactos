@@ -32,3 +32,25 @@ _ExitProcess(UINT uExitCode)
 {
   ExitProcess(uExitCode);
 }
+
+HANDLE STDCALL
+_CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes, DWORD dwStackSize,
+              LPTHREAD_START_ROUTINE lpStartAddress, LPVOID lpParameter,
+              DWORD dwCreationFlags, LPDWORD lpThreadId)
+{
+  return CreateThread(lpThreadAttributes, dwStackSize, lpStartAddress,
+                      lpParameter, dwCreationFlags, lpThreadId);
+}
+
+WINBOOL STDCALL
+_TerminateThread(HANDLE hThread, DWORD dwExitCode)
+{
+  return TerminateThread(hThread, dwExitCode);
+}
+
+DWORD STDCALL
+_WaitForSingleObject(HANDLE hHandle, DWORD dwMilliseconds)
+{
+  return WaitForSingleObject(hHandle, dwMilliseconds);
+}
+

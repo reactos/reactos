@@ -101,7 +101,7 @@ static HRESULT WINAPI ObjectStubless(DWORD index)
   ICOM_THIS_MULTI(StdProxyImpl,PVtbl,iface);
 
   PFORMAT_STRING fs = This->stubless->ProcFormatString + This->stubless->FormatStringOffset[index];
-  unsigned bytes = *(WORD*)(fs+8) - STACK_ADJUST;
+  unsigned bytes = *(const WORD*)(fs+8) - STACK_ADJUST;
   TRACE("(%p)->(%ld)([%d bytes]) ret=%08lx\n", iface, index, bytes, *(DWORD*)(args+bytes));
 
   return RPCRT4_NdrClientCall2(This->stubless->pStubDesc, fs, args);
@@ -161,7 +161,7 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
       struct StublessThunk *thunk = &This->thunks[i];
       if (vtbl->Vtbl[i] == (LPVOID)-1) {
         PFORMAT_STRING fs = stubless->ProcFormatString + stubless->FormatStringOffset[i];
-        unsigned bytes = *(WORD*)(fs+8) - STACK_ADJUST;
+        unsigned bytes = *(const WORD*)(fs+8) - STACK_ADJUST;
         TRACE("method %d: stacksize=%d\n", i, bytes);
         FILL_STUBLESS(thunk, i, bytes)
         This->PVtbl[i] = thunk;

@@ -86,7 +86,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
+#include <internal/ps.h>
 
 /************************************************************************/
 /* BUFMAX defines the maximum number of characters in inbound/outbound buffers*/
@@ -1410,11 +1410,12 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           /* reply to the request */
           GspPutPacket (&GspOutBuffer[0]);
         }
+
+      /* not reached */
+      ASSERT(0);
     }
 
-    /* not reached */
-    ASSERT(0);
-    return kdHandleException;
+    return kdDoNotHandleException;
 }
 
 

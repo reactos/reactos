@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.75 2004/11/20 16:46:05 weiden Exp $
+/* $Id: ps.h,v 1.75.2.1 2004/12/08 21:57:33 hyperion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -47,8 +47,6 @@ struct _EJOB;
 #ifndef KeGetCurrentProcessorNumber
 #define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
 #endif
-
-extern HANDLE SystemProcessHandle;
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
@@ -653,7 +651,7 @@ typedef struct _CID_OBJECT
   LONG ref;
   HANDLE Handle;
   LIST_ENTRY Entry;
-  LONG Lock;
+  FAST_MUTEX Lock;
   union
   {
     struct _EPROCESS *Process;

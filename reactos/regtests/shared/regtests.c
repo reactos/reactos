@@ -19,6 +19,13 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef struct _PERFORM_TEST_ARGS
+{
+  TestOutputRoutine OutputRoutine;
+  PROS_TEST Test;
+  LPSTR TestName;
+} PERFORM_TEST_ARGS;
+
 int _Result;
 char *_Buffer;
 
@@ -30,35 +37,17 @@ InitializeTests()
   InitializeListHead(&AllTests);
 }
 
-VOID
-PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
+DWORD WINAPI
+PerformTest(PVOID _arg)
 {
+  PERFORM_TEST_ARGS *Args = (PERFORM_TEST_ARGS *)_arg;
+  TestOutputRoutine OutputRoutine = Args->OutputRoutine;
+  PROS_TEST Test = Args->Test;
+  LPSTR TestName = Args->TestName;
   char OutputBuffer[5000];
   char Buffer[5000];
-  char Name[200];
 
   memset(Buffer, 0, sizeof(Buffer));
-  memset(Name, 0, sizeof(Name));
-
-  _Result = TS_OK;
-  _Buffer = Name;
-  (Test->Routine)(TESTCMD_TESTNAME);
-  if (_Result != TS_OK)
-    {
-      if (TestName != NULL)
-        {
-          return;
-        }
-      strcpy(Name, "Unnamed");
-    }
-
-  if (TestName != NULL)
-    {
-      if (_stricmp(Name, TestName) != 0)
-        {
-          return;
-        }
-    }
 
   _SEH_TRY {
     _Result = TS_OK;
@@ -71,11 +60,11 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
 
   if (_Result != TS_OK)
     {
-      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", Name, Buffer);
+      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (%s)\n", TestName, Buffer);
     }
   else
     {
-      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Success\n", Name);
+      sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Success\n", TestName);
     }
   if (OutputRoutine != NULL)
     {
@@ -85,6 +74,7 @@ PerformTest(TestOutputRoutine OutputRoutine, PROS_TEST Test, LPSTR TestName)
     {
       DbgPrint(OutputBuffer);
     }
+  return 1;
 }
 
 VOID
@@ -93,14 +83,89 @@ PerformTests(TestOutputRoutine OutputRoutine, LPSTR TestName)
   PLIST_ENTRY CurrentEntry;
   PLIST_ENTRY NextEntry;
   PROS_TEST Current;
+  PERFORM_TEST_ARGS Args;
+  HANDLE hThread;
+  char OutputBuffer[1024];
+  char Name[200];
+  DWORD TimeOut;
 
+  Args.OutputRoutine = OutputRoutine;
+  Args.TestName = Name;
+  
   CurrentEntry = AllTests.Flink;
-  while (CurrentEntry != &AllTests)
+  for (; CurrentEntry != &AllTests; CurrentEntry = NextEntry)
     {
       NextEntry = CurrentEntry->Flink;
       Current = CONTAINING_RECORD(CurrentEntry, ROS_TEST, ListEntry);
-      PerformTest(OutputRoutine, Current, TestName);
-      CurrentEntry = NextEntry;
+      Args.Test = Current;
+
+      /* Get name of test */
+      memset(Name, 0, sizeof(Name));
+
+      _Result = TS_OK;
+      _Buffer = Name;
+      (Current->Routine)(TESTCMD_TESTNAME);
+      if (_Result != TS_OK)
+        {
+          if (TestName != NULL)
+            {
+              continue;
+            }
+          strcpy(Name, "Unnamed");
+        }
+
+      if (TestName != NULL)
+        {
+          if (_stricmp(Name, TestName) != 0)
+            {
+              continue;
+            }
+        }
+
+      /* Get timeout for test */
+      TimeOut = 0;
+      _Result = TS_OK;
+      _Buffer = (char *)&TimeOut;
+      (Current->Routine)(TESTCMD_TIMEOUT);
+      if (_Result != TS_OK || TimeOut == INFINITE)
+        {
+          TimeOut = 5000;
+        }
+
+      /* Run test in thread */
+      hThread = _CreateThread(NULL, 0, PerformTest, (PVOID)&Args, 0, NULL);
+      if (hThread == NULL)
+        {
+          sprintf(OutputBuffer,
+                  "ROSREGTEST: |%s| Status: Failed (CreateThread failed: 0x%x)\n",
+                  Name, (unsigned int)GetLastError());
+        }
+      else if (_WaitForSingleObject(hThread, TimeOut) == WAIT_TIMEOUT)
+        {
+          if (!_TerminateThread(hThread, 0))
+            {
+              sprintf(OutputBuffer,
+                      "ROSREGTEST: |%s| Status: Failed (Test timed out - %d ms, TerminateThread failed: 0x%x)\n",
+                      Name, (int)TimeOut, (unsigned int)GetLastError());
+            }
+          else
+            {
+              sprintf(OutputBuffer, "ROSREGTEST: |%s| Status: Failed (Test timed out - %d ms)\n", Name, (int)TimeOut);
+            }
+        }
+      else
+        {
+          continue;
+        }
+
+      if (OutputRoutine != NULL)
+        {
+          (*OutputRoutine)(OutputBuffer);
+        }
+      else
+        {
+          DbgPrint(OutputBuffer);
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/05/29 21:24:47 hbirr Exp $
+# $Id: makefile,v 1.15.16.1 2004/12/08 21:57:28 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -27,7 +27,7 @@ TARGET_RCFLAGS += -D__REACTOS__	-D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 
-TARGET_SDKLIBS = libwine.a kernel32.a ntdll.a 
+TARGET_SDKLIBS = wine.a kernel32.a ntdll.a
 
 TARGET_OBJECTS = \
 	misc/libmain.o \

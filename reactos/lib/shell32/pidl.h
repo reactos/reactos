@@ -71,6 +71,7 @@
 *	net provider	0x46		network
 *	whole network	0x47		network (5)
 *	MSITStore	0x61		htmlhlp (7)
+*	printers/ras connections 	0x70		guid
 *	history/favorites 0xb1		file
 *	share		0xc3		network (6)
 *
@@ -101,7 +102,7 @@
 #define PT_NETPROVIDER  0x46
 #define PT_NETWORK	0x47
 #define PT_IESPECIAL1	0x61
-#define PT_RAS_FOLDER	0x70
+#define PT_YAGUID	0x70 /* yet another guid.. */
 #define PT_IESPECIAL2	0xb1
 #define PT_SHARE	0xc3
 
@@ -200,8 +201,8 @@ BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
  */
 LPITEMIDLIST	_ILAlloc(PIDLTYPE type, size_t size);
 
-/* Creates a PIDL with guid format and type type, which must be either PT_GUID
- * or PT_SHELLEXT.
+/* Creates a PIDL with guid format and type type, which must be one of PT_GUID,
+ * PT_SHELLEXT, or PT_YAGUID.
  */
 LPITEMIDLIST	_ILCreateGuid(PIDLTYPE type, REFIID guid);
 

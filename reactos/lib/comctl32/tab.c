@@ -1659,8 +1659,7 @@ TAB_DrawItemInterior
     dis.hwndItem = hwnd;		/* */
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
-    dis.itemData = 0;
-    memcpy( &dis.itemData, TAB_GetItem(infoPtr, iItem)->extra, min(sizeof(dis.itemData),infoPtr->cbInfo) );
+    dis.itemData = (ULONG_PTR)TAB_GetItem(infoPtr, iItem)->extra;
 
     /*
      * send the draw message

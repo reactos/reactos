@@ -32,11 +32,11 @@ extern "C"
 
 extern char *optarg;
 extern int optind;
-extern int opterr;
+extern int opterr;
 extern int optopt;
 
 extern wchar_t *_woptarg;
-extern int _woptind;
+extern int _woptind;
 extern int _wopterr;
 extern int _woptopt;
 
@@ -74,7 +74,7 @@ extern int _wgetopt_long_only (int argc, wchar_t *const *argv,
 		               const struct _woption *longopts, int *longind);
 
 extern int _getopt_internal (int argc, char *const *argv,
-			     const char *shortopts, const struct option *longopts, int *longind,
+			     const char *shortopts, const struct option *longopts, int *longind,
 			     int long_only);
 
 extern int _wgetopt_internal (int argc, wchar_t *const *argv,
@@ -83,7 +83,7 @@ extern int _wgetopt_internal (int argc, wchar_t *const *argv,
 			       int long_only);
 
 #ifdef	__cplusplus
-}
+}
 #endif
 
 #endif /* _GETOPT_H */

@@ -54,6 +54,15 @@ typedef long RPC_STATUS;
 #define RpcEndFinally }
 #define RpcExceptionCode() GetExceptionCode()
 #define RpcAbnormalTermination() AbnormalTermination()
+#else
+#define RpcTryExcept if (1) {
+#define RpcExcept(x) } else {
+#define RpcEndExcept }
+#define RpcTryFinally if (1) {
+#define RpcFinally } else {
+#define RpcEndFinally }
+#define RpcExceptionCode() 0
+#define RpcAbnormalTermination() AbnormalTermination()
 #endif /* 0 */
 
 RPC_STATUS RPC_ENTRY RpcImpersonateClient(RPC_BINDING_HANDLE);

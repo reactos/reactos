@@ -1394,7 +1394,7 @@ HRESULT WINAPI UrlHashA(LPCSTR pszUrl, unsigned char *lpDest, DWORD nDestLen)
   if (IsBadStringPtrA(pszUrl, -1) || IsBadWritePtr(lpDest, nDestLen))
     return E_INVALIDARG;
 
-  HashData((PBYTE)pszUrl, (int)strlen(pszUrl), lpDest, nDestLen);
+  HashData((const BYTE*)pszUrl, (int)strlen(pszUrl), lpDest, nDestLen);
   return S_OK;
 }
 

@@ -271,8 +271,8 @@ NTSTATUS
 STDCALL
 NtRemoveIoCompletion(
    IN  HANDLE           IoCompletionHandle,
-   OUT PULONG           CompletionKey,
-   OUT PULONG           CompletionValue,
+   OUT PVOID            *CompletionKey,
+   OUT PVOID            *CompletionContext,
    OUT PIO_STATUS_BLOCK IoStatusBlock,
    IN  PLARGE_INTEGER   Timeout OPTIONAL
    )
@@ -302,7 +302,7 @@ NtRemoveIoCompletion(
       Packet = CONTAINING_RECORD(ListEntry, IO_COMPLETION_PACKET, ListEntry);
 
       if (CompletionKey) *CompletionKey = Packet->Key;
-      if (CompletionValue) *CompletionValue = Packet->Overlapped;
+      if (CompletionContext) *CompletionContext = Packet->Context;
       if (IoStatusBlock) *IoStatusBlock = Packet->IoStatus;
 
       ExFreeToNPagedLookasideList(&IoCompletionPacketLookaside, Packet);
@@ -330,8 +330,8 @@ NTSTATUS
 STDCALL
 NtSetIoCompletion(
    IN HANDLE   IoCompletionPortHandle,
-   IN ULONG    CompletionKey,
-   IN ULONG    CompletionValue,
+   IN PVOID    CompletionKey,
+   IN PVOID    CompletionContext,
    IN NTSTATUS CompletionStatus,
    IN ULONG    CompletionInformation
    )
@@ -352,7 +352,7 @@ NtSetIoCompletion(
       Packet = ExAllocateFromNPagedLookasideList(&IoCompletionPacketLookaside);
 
       Packet->Key = CompletionKey;
-      Packet->Overlapped = CompletionValue;
+      Packet->Context = CompletionContext;
       Packet->IoStatus.Status = CompletionStatus;
       Packet->IoStatus.Information = CompletionInformation;
    

@@ -19,15 +19,13 @@
 #include <halirq.h>
 #include <hal.h>
 #include <mps.h>
+#include <apic.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS ******************************************************************/;
 
-
-VOID STDCALL
-KiInterruptDispatch2 (ULONG Irq, KIRQL old_level);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -42,14 +40,16 @@ KIRQL STDCALL KeGetCurrentIrql (VOID)
 
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
-  irql = KeGetCurrentKPCR()->Irql;
-  Ki386RestoreFlags(Flags);
 
+  irql = Ki386ReadFsByte(offsetof(KPCR, Irql));
   if (irql > HIGH_LEVEL)
     {
       DPRINT1 ("CurrentIrql %x\n", irql);
       KEBUGCHECK (0);
-      for(;;);
+    }
+  if (Flags & X86_EFLAGS_IF)
+    {
+      Ki386EnableInterrupts();
     }
   return irql;
 }
@@ -62,41 +62,46 @@ VOID KeSetCurrentIrql (KIRQL NewIrql)
 {
   ULONG Flags;
   if (NewIrql > HIGH_LEVEL)
-    {
-      DPRINT1 ("NewIrql %x\n", NewIrql);
-      KEBUGCHECK (0);
-      for(;;);
-    }
+  {
+    DPRINT1 ("NewIrql %x\n", NewIrql);
+    KEBUGCHECK (0);
+  }
   Ki386SaveFlags(Flags);
   Ki386DisableInterrupts();
-  KeGetCurrentKPCR()->Irql = NewIrql;
-  Ki386RestoreFlags(Flags);
+  Ki386WriteFsByte(offsetof(KPCR, Irql), NewIrql);
+  if (Flags & X86_EFLAGS_IF)
+    {
+      Ki386EnableInterrupts();
+    }
 }
 
-
-
-
 VOID 
-HalpLowerIrql(KIRQL NewIrql)
+HalpLowerIrql(KIRQL NewIrql, BOOL FromHalEndSystemInterrupt)
 {
-  PKPCR Pcr = KeGetCurrentKPCR();
+  ULONG Flags;
   if (NewIrql >= DISPATCH_LEVEL)
     {
       KeSetCurrentIrql (NewIrql);
       APICWrite(APIC_TPR, IRQL2TPR (NewIrql) & APIC_TPR_PRI);
       return;
     }
+  Ki386SaveFlags(Flags);
   if (KeGetCurrentIrql() > APC_LEVEL)
-  {
-    KeSetCurrentIrql (DISPATCH_LEVEL);
-    APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
-    if (Pcr->HalReserved[1])
     {
-      Pcr->HalReserved[1] = 0;
-      KiDispatchInterrupt();
+      KeSetCurrentIrql (DISPATCH_LEVEL);
+      APICWrite(APIC_TPR, IRQL2TPR (DISPATCH_LEVEL) & APIC_TPR_PRI);
+      if (FromHalEndSystemInterrupt || Ki386ReadFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST])))
+        {
+          Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST]), 0);
+          Ki386EnableInterrupts();
+          KiDispatchInterrupt();
+          if (!(Flags & X86_EFLAGS_IF))
+            {
+              Ki386DisableInterrupts();
+            }
+	}
+      KeSetCurrentIrql (APC_LEVEL);
     }
-    KeSetCurrentIrql (APC_LEVEL);
-  }
   if (NewIrql == APC_LEVEL)
     {
       return;
@@ -104,7 +109,12 @@ HalpLowerIrql(KIRQL NewIrql)
   if (KeGetCurrentThread () != NULL && 
       KeGetCurrentThread ()->ApcState.KernelApcPending)
     {
-      KiDeliverApc (0, 0, 0);
+      Ki386EnableInterrupts();
+      KiDeliverApc(KernelMode, NULL, NULL);
+      if (!(Flags & X86_EFLAGS_IF))
+        {
+          Ki386DisableInterrupts();
+        }
     }
   KeSetCurrentIrql (PASSIVE_LEVEL);
 }
@@ -134,10 +144,8 @@ KfLowerIrql (KIRQL	NewIrql)
     {
       DPRINT1 ("NewIrql %x CurrentIrql %x\n", NewIrql, oldIrql);
       KEBUGCHECK (0);
-      for(;;);
     }
-  
-  HalpLowerIrql (NewIrql);
+  HalpLowerIrql (NewIrql, FALSE);
 }
 
 
@@ -186,22 +194,29 @@ KfRaiseIrql (KIRQL	NewIrql)
 {
   KIRQL OldIrql;
   ULONG Flags;
-  
-  if (NewIrql < KeGetCurrentIrql ())
+ 
+  Ki386SaveFlags(Flags);
+  Ki386DisableInterrupts();
+
+  OldIrql = KeGetCurrentIrql ();
+
+  if (NewIrql < OldIrql)
     {
       DPRINT1 ("CurrentIrql %x NewIrql %x\n", KeGetCurrentIrql (), NewIrql);
       KEBUGCHECK (0);
-      for(;;);
     }
-  Ki386SaveFlags(Flags);
-  Ki386DisableInterrupts();
+
+
   if (NewIrql > DISPATCH_LEVEL)
     {
-      APICWrite (APIC_TPR, IRQL2TPR (NewIrql) & APIC_TPR_PRI);
+      APICWrite (APIC_TPR, IRQL2TPR(NewIrql) & APIC_TPR_PRI);
     }
-  OldIrql = KeGetCurrentIrql ();
   KeSetCurrentIrql (NewIrql);
-  Ki386RestoreFlags(Flags);
+  if (Flags & X86_EFLAGS_IF)
+    {
+      Ki386EnableInterrupts();
+    }
+
   return OldIrql;
 }
 
@@ -286,42 +301,43 @@ HalBeginSystemInterrupt (ULONG Vector,
 {
   ULONG Flags;
   DPRINT("Vector (0x%X)  Irql (0x%X)\n", Vector, Irql);
-
+  
   if (KeGetCurrentIrql () >= Irql)
-    {
-      DPRINT1("current irql %d, new irql %d\n", KeGetCurrentIrql(), Irql);
-      KEBUGCHECK(0);
-    }
-
-  if (Vector < FIRST_DEVICE_VECTOR ||
-      Vector >= FIRST_DEVICE_VECTOR + NUMBER_DEVICE_VECTORS) 
   {
-    DPRINT1("Not a device interrupt, vector %x\n", Vector);
-    return FALSE;
+    DPRINT1("current irql %d, new irql %d\n", KeGetCurrentIrql(), Irql);
+    KEBUGCHECK(0);
   }
 
   Ki386SaveFlags(Flags);
-  Ki386DisableInterrupts();
+  if (Flags & X86_EFLAGS_IF)
+  {
+     DPRINT1("HalBeginSystemInterrupt was called with interrupt's enabled\n");
+     KEBUGCHECK(0);
+  }
   APICWrite (APIC_TPR, IRQL2TPR (Irql) & APIC_TPR_PRI);
-
-  APICSendEOI();
-
   *OldIrql = KeGetCurrentIrql ();
   KeSetCurrentIrql (Irql);
-  Ki386RestoreFlags(Flags);
-
   return(TRUE);
 }
 
 
 VOID STDCALL
 HalEndSystemInterrupt (KIRQL Irql,
-	ULONG Unknown2)
+		       ULONG Unknown2)
 /*
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
 {
-  HalpLowerIrql (Irql);
+  ULONG Flags;
+  Ki386SaveFlags(Flags);
+
+  if (Flags & X86_EFLAGS_IF)
+  {
+     DPRINT1("HalEndSystemInterrupt was called with interrupt's enabled\n");
+     KEBUGCHECK(0);
+  }
+  APICSendEOI();
+  HalpLowerIrql (Irql, TRUE);
 }
   
 BOOLEAN STDCALL
@@ -369,21 +385,14 @@ HalEnableSystemInterrupt (ULONG Vector,
 VOID FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Request)
 {
-  ULONG Flags;
   switch (Request)
   {
     case APC_LEVEL:
-      Ki386SaveFlags(Flags);
-      Ki386DisableInterrupts();
-      KeGetCurrentKPCR()->HalReserved[0] = 1;
-      Ki386RestoreFlags(Flags);
+      Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_APC_REQUEST]), 1);
       break;
 
     case DISPATCH_LEVEL:
-      Ki386SaveFlags(Flags);
-      Ki386DisableInterrupts();
-      KeGetCurrentKPCR()->HalReserved[1] = 1;
-      Ki386RestoreFlags(Flags);
+      Ki386WriteFsByte(offsetof(KPCR, HalReserved[HAL_DPC_REQUEST]), 1);
       break;
       
     default:

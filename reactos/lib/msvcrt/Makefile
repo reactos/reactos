@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.48 2004/10/03 14:24:43 weiden Exp $
+# $Id: Makefile,v 1.48.6.1 2004/12/08 21:57:13 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -17,7 +17,7 @@ RM_AT_FROM_SYMBOLS = no
 
 TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
 
-TARGET_SDKLIBS = libwine.a string.a kernel32.a ntdll.a
+TARGET_SDKLIBS = wine.a string.a kernel32.a ntdll.a
 
 TARGET_GCCLIBS = gcc
 

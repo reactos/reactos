@@ -56,6 +56,34 @@
 #define IDS_SHUTDOWN_TITLE     42
 #define IDS_SHUTDOWN_PROMPT    43
 
+#define IDS_PROGRAMS                45
+#define IDS_PERSONAL                46
+#define IDS_FAVORITES               47
+#define IDS_STARTUP                 48
+#define IDS_RECENT                  49
+#define IDS_SENDTO                  50
+#define IDS_STARTMENU               51
+#define IDS_MYMUSIC                 52
+#define IDS_MYVIDEO                 53
+#define IDS_DESKTOPDIRECTORY        54
+#define IDS_NETHOOD                 55
+#define IDS_TEMPLATES               56
+#define IDS_APPDATA                 57
+#define IDS_PRINTHOOD               58
+#define IDS_LOCAL_APPDATA           59
+#define IDS_INTERNET_CACHE          60
+#define IDS_COOKIES                 61
+#define IDS_HISTORY                 62
+#define IDS_PROGRAM_FILES           63
+#define IDS_MYPICTURES              64
+#define IDS_PROGRAM_FILES_COMMON    65
+#define IDS_COMMON_DOCUMENTS        66
+#define IDS_ADMINTOOLS              67
+#define IDS_COMMON_MUSIC            68
+#define IDS_COMMON_PICTURES         69
+#define IDS_COMMON_VIDEO            70
+#define IDS_CDBURN_AREA             71
+
 /* browse for folder dialog box */
 #define IDD_STATUS		0x3743
 #define IDD_TITLE		0x3742

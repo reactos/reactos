@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.15 2004/11/24 23:09:46 ekohl Exp $
+/* $Id: wizard.c,v 1.15.2.1 2004/12/08 21:57:24 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -145,16 +145,15 @@ GplDlgProc(HWND hwndDlg,
         SendMessageA(GetDlgItem(hwndDlg, IDC_GPL_TEXT), WM_SETTEXT, 0, (LPARAM) GplText);
         HeapFree(GetProcessHeap(), 0, GplText);
         SetFocus(GetDlgItem(hwndDlg, IDOK));
-	return FALSE;
-        break;
+        return FALSE;
 
       case WM_CLOSE:
         EndDialog(hwndDlg, IDCANCEL);
         break;
 
       case WM_COMMAND:
-	if (HIWORD(wParam) == BN_CLICKED && IDOK == LOWORD(wParam))
-	  {
+        if (HIWORD(wParam) == BN_CLICKED && IDOK == LOWORD(wParam))
+          {
             EndDialog(hwndDlg, IDOK);
           }
         break;
@@ -251,7 +250,7 @@ AckPageDlgProc(HWND hwndDlg,
         {
           Projects = NULL;
           ProjectsSize = 256;
-	  do
+          do
             {
               Projects = HeapAlloc(GetProcessHeap(), 0, ProjectsSize * sizeof(WCHAR));
               if (NULL == Projects)
@@ -573,6 +572,7 @@ SetKeyboardLayoutName(HWND hwnd)
 #endif
 }
 
+
 static VOID
 RunInputLocalePage(HWND hwnd)
 {
@@ -883,7 +883,7 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
   SetupData->TimeZoneListTail = NULL;
 }
 
-
+#if 0
 static BOOL
 GetTimeZoneListIndex(LPDWORD lpIndex)
 {
@@ -984,6 +984,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 
   return FALSE;
 }
+#endif
 
 
 static VOID
@@ -994,7 +995,10 @@ ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData)
   DWORD dwEntryIndex = 0;
   DWORD dwCount;
 
+#if 0
   GetTimeZoneListIndex(&dwEntryIndex);
+#endif
+  dwEntryIndex = 85; /* GMT time zone */
 
   Entry = SetupData->TimeZoneListHead;
   while (Entry != NULL)
@@ -1381,13 +1385,13 @@ InstallWizard(VOID)
   ahpsp[5] = CreatePropertySheetPage(&psp);
 
 
-  /* Create the Process page */
+  /* Create the Process page 
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
   psp.pfnDlgProc = ProcessPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
-  ahpsp[6] = CreatePropertySheetPage(&psp);
+  ahpsp[6] = CreatePropertySheetPage(&psp); */
 
 
   /* Create the Finish page */

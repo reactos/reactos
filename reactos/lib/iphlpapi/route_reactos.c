@@ -47,6 +47,9 @@
 #include "iphlpapi.h"
 #include "wine/debug.h"
 
+#define IP_FORWARD_ADD 3
+#define IP_FORWARD_DEL 2
+
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
 DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
@@ -78,7 +81,7 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 	rte->ire_mask    = pRoute->dwForwardMask;
 	rte->ire_gw      = pRoute->dwForwardNextHop;
 	rte->ire_index   = pRoute->dwForwardIfIndex;
-	rte->ire_type    = pRoute->dwForwardType;
+	rte->ire_type    = IP_FORWARD_ADD;
 	rte->ire_proto   = pRoute->dwForwardProto;
 	rte->ire_age     = pRoute->dwForwardAge;
 	rte->ire_metric1 = pRoute->dwForwardMetric1;
@@ -142,7 +145,7 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 	rte->ire_mask    = INADDR_NONE;
 	rte->ire_gw      = pRoute->dwForwardNextHop;
 	rte->ire_index   = pRoute->dwForwardIfIndex;
-	rte->ire_type    = 2; /*pRoute->dwForwardType;*/
+	rte->ire_type    = IP_FORWARD_DEL;
 	rte->ire_proto   = pRoute->dwForwardProto;
 	rte->ire_age     = pRoute->dwForwardAge;
 	rte->ire_metric1 = pRoute->dwForwardMetric1;

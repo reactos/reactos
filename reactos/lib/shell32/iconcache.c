@@ -313,7 +313,6 @@ BOOL WINAPI Shell_GetImageList(HIMAGELIST * lpBigList, HIMAGELIST * lpSmallList)
 
 	return TRUE;
 }
-
 /*************************************************************************
  * PidlToSicIndex			[INTERNAL]
  *
@@ -354,6 +353,7 @@ BOOL PidlToSicIndex (
 	  *pIndex = 0;
 
 	return ret;
+
 }
 
 /*************************************************************************

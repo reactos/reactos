@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.15 2004/08/28 22:19:12 navaraf Exp $
+/* $Id: cleanup.c,v 1.15.6.1 2004/12/08 21:56:48 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,7 +35,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
   pFcb = (PVFATFCB) FileObject->FsContext;
   if (pFcb)
     {
-      if (!(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY) &&
+      if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
           FsRtlAreThereCurrentFileLocks(&pFcb->FileLock))
        {
          /* remove all locks this process have on this file */

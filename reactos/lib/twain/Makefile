@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2004/05/29 21:24:47 hbirr Exp $
+# $Id: Makefile,v 1.7.16.1 2004/12/08 21:57:24 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,7 +11,7 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_BASE=$(TARGET_BASE_LIB_TWAIN_32)
 
-TARGET_SDKLIBS = ntdll.a libwine.a
+TARGET_SDKLIBS = ntdll.a wine.a
 
 TARGET_OBJECTS = \
 	capability.o \

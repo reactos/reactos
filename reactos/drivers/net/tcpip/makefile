@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.31 2004/11/13 00:06:32 arty Exp $
+# $Id: makefile,v 1.31.2.1 2004/12/08 21:56:53 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -13,6 +13,7 @@ TARGET_PCH = include/precomp.h
 # -DMEMTRACK
 TARGET_CFLAGS = \
 	-D__USE_W32API \
+	-D_SEH_NO_NATIVE_NLG \
 	-DMEMTRACK \
 	-DNDIS40 \
 	-Wall -Werror \
@@ -21,15 +22,16 @@ TARGET_CFLAGS = \
 	-I$(PATH_TO_TOP)/w32api/include \
 	-I$(PATH_TO_TOP)/include
 
-TARGET_DDKLIBS = \
-	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
-	$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a \
-	$(PATH_TO_TOP)/dk/w32/lib/rosrtl.a \
-	ndis.a
+TARGET_LIBS = \
+	$(PATH_TO_TOP)/dk/w32/lib/libip.a \
+	$(PATH_TO_TOP)/dk/w32/lib/liboskittcp.a \
+	$(PATH_TO_TOP)/dk/w32/lib/librosrtl.a \
+	$(PATH_TO_TOP)/dk/w32/lib/libpseh.a \
+	$(PATH_TO_TOP)/dk/nkm/lib/libndis.a
 
 TARGET_CLEAN = tcpip/*.o datalink/*.o \
-	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
-	$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a 
+	$(PATH_TO_TOP)/dk/w32/lib/libip.a \
+	$(PATH_TO_TOP)/dk/w32/lib/liboskittcp.a
 
 TCPIP_OBJECTS    = tcpip/buffer.o \
 		   tcpip/dispatch.o \
@@ -61,13 +63,13 @@ preall: preclean
 	$(MAKE) $(MOCKOBJS)
 
 preclean:
-	$(RM) 	$(PATH_TO_TOP)/dk/w32/lib/ip.a \
-		$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a
+	$(RM) 	$(PATH_TO_TOP)/dk/w32/lib/libip.a \
+		$(PATH_TO_TOP)/dk/w32/lib/liboskittcp.a
 
-$(PATH_TO_TOP)/dk/w32/lib/oskittcp.a:
+$(PATH_TO_TOP)/dk/w32/lib/liboskittcp.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/oskittcp
 
-$(PATH_TO_TOP)/dk/w32/lib/ip.a:
+$(PATH_TO_TOP)/dk/w32/lib/libip.a:
 	$(MAKE) -C $(PATH_TO_TOP)/drivers/lib/ip
 
 $(TARGET_OBJECTS):: makefile

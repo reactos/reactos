@@ -2003,6 +2003,11 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
 		   CBRollUp( lphc, wParam == VK_RETURN, FALSE );
 		   return TRUE;
 		}
+		else if ((wParam == VK_F4) && !(lphc->wState & CBF_EUI))
+		{
+		   COMBO_FlipListbox( lphc, FALSE, FALSE );
+		   return TRUE;
+		}
 
 		if( lphc->wState & CBF_EDIT )
 		    hwndTarget = lphc->hWndEdit;

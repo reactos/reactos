@@ -35,7 +35,7 @@ VOID SendICMPComplete(
 
 
 PIP_PACKET PrepareICMPPacket(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket,
     PIP_ADDRESS Destination,
     PCHAR Data,
@@ -107,7 +107,7 @@ PIP_PACKET PrepareICMPPacket(
     /* Checksum is 0 (for later calculation of this) */
     IPHeader->Checksum = 0;
     /* Source address */
-    IPHeader->SrcAddr = NTE->Address->Address.IPv4Address;
+    IPHeader->SrcAddr = Interface->Unicast.Address.IPv4Address;
     /* Destination address */
     IPHeader->DstAddr = Destination->Address.IPv4Address;
 
@@ -119,7 +119,7 @@ PIP_PACKET PrepareICMPPacket(
 
 
 VOID ICMPReceive(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives an ICMP packet
@@ -153,7 +153,7 @@ VOID ICMPReceive(
 
     switch (ICMPHeader->Type) {
     case ICMP_TYPE_ECHO_REQUEST:
-	ICMPReply( NTE, IPPacket, ICMP_TYPE_ECHO_REPLY, 0 );
+	ICMPReply( Interface, IPPacket, ICMP_TYPE_ECHO_REPLY, 0 );
         return;
 
     case ICMP_TYPE_ECHO_REPLY:
@@ -170,7 +170,6 @@ VOID ICMPReceive(
 
 
 VOID ICMPTransmit(
-    PNET_TABLE_ENTRY NTE,
     PIP_PACKET IPPacket,
     PIP_TRANSMIT_COMPLETE Complete,
     PVOID Context)
@@ -181,7 +180,7 @@ VOID ICMPTransmit(
  *     IPPacket = Pointer to IP packet to transmit
  */
 {
-    PROUTE_CACHE_NODE RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(DEBUG_ICMP, ("Called.\n"));
 
@@ -190,15 +189,13 @@ VOID ICMPTransmit(
         IPv4Checksum(IPPacket->Data, IPPacket->TotalSize - IPPacket->HeaderSize, 0);
 
     /* Get a route to the destination address */
-    if (RouteGetRouteToDestination(&IPPacket->DstAddr, NULL, &RCN) == IP_SUCCESS) {
+    if ((NCE = RouteGetRouteToDestination(&IPPacket->DstAddr))) {
         /* Send the packet */
-	IPSendDatagram(IPPacket, RCN, Complete, Context);
+	IPSendDatagram(IPPacket, NCE, Complete, Context);
     } else {
-        TI_DbgPrint(MIN_TRACE, ("RCN at (0x%X).\n", RCN));
-
         /* No route to destination (or no free resources) */
         TI_DbgPrint(DEBUG_ICMP, ("No route to destination address 0x%X.\n",
-            IPPacket->DstAddr.Address.IPv4Address));
+				 IPPacket->DstAddr.Address.IPv4Address));
         /* Discard packet */
 	Complete( Context, IPPacket->NdisPacket, NDIS_STATUS_NOT_ACCEPTED );
     }
@@ -206,7 +203,7 @@ VOID ICMPTransmit(
 
 
 VOID ICMPReply(
-    PNET_TABLE_ENTRY NTE,
+    PIP_INTERFACE Interface,
     PIP_PACKET IPPacket,
     UCHAR Type,
     UCHAR Code)
@@ -236,14 +233,14 @@ VOID ICMPReply(
         DataSize = PayloadSize + sizeof(ICMP_HEADER);
     }
     
-    if( !PrepareICMPPacket(NTE, &NewPacket, &IPPacket->SrcAddr, 
+    if( !PrepareICMPPacket(Interface, &NewPacket, &IPPacket->SrcAddr, 
 			   IPPacket->Data, DataSize) ) return;
 
     ((PICMP_HEADER)NewPacket.Data)->Type     = Type;
     ((PICMP_HEADER)NewPacket.Data)->Code     = Code;
     ((PICMP_HEADER)NewPacket.Data)->Checksum = 0;
 
-    ICMPTransmit(NTE, &NewPacket, SendICMPComplete, NULL);
+    ICMPTransmit(&NewPacket, SendICMPComplete, NULL);
 }
 
 /* EOF */

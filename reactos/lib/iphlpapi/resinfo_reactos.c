@@ -1,8 +1,9 @@
 /*
- * iphlpapi dll implementation -- Auxiliary icmp functions
+ * iphlpapi dll implementation -- Setting and storing route information
  *
- * These are stubs for functions that provide a simple ICMP probing API.  They
- * will be operating system specific when implemented.
+ * These are stubs for functions that set routing information on the target
+ * operating system.  They are grouped here because their implementation will
+ * vary widely by operating system.
  *
  * Copyright (C) 2004 Art Yerkes
  * This library is free software; you can redistribute it and/or
@@ -46,20 +47,238 @@
 #include "iphlpapi.h"
 #include "wine/debug.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
+typedef struct _NAME_SERVER_LIST_PRIVATE {
+    UINT NumServers;
+    UINT CurrentName;
+    PIP_ADDRESS_STRING AddrString;
+} NAME_SERVER_LIST_PRIVATE, *PNAME_SERVER_LIST_PRIVATE;
+
+PVOID STDCALL
+RtlAllocateHeap (
+	HANDLE	Heap,
+	ULONG	Flags,
+	ULONG	Size
+	);
+
+BOOLEAN
+STDCALL
+RtlFreeHeap (
+	HANDLE	Heap,
+	ULONG	Flags,
+	PVOID	Address
+	);
+
+NTSTATUS
+STDCALL
+RtlUnicodeToMultiByteN (
+	PCHAR	MbString,
+	ULONG	MbSize,
+	PULONG	ResultSize,
+	PWCHAR	UnicodeString,
+	ULONG	UnicodeSize
+	);
+
+typedef VOID (*EnumNameServersFunc)( PWCHAR Interface,
+				     PWCHAR NameServer,
+				     PVOID Data );
+typedef VOID (*EnumInterfacesFunc)( HKEY ChildKeyHandle,
+				    PWCHAR ChildKeyName,
+				    PVOID Data );
+
+/*
+ * EnumInterfaces
+ *
+ * Call the enumeration function for each name server.
+ */
+
+static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
+  HKEY RegHandle, TcpipHandle;
+  HKEY ChildKeyHandle = 0;
+  PWCHAR RegKeyToEnumerate = 
+      L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces";
+  PWCHAR RegKeyForTcpip = 
+      L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters";
+  PWCHAR ChildKeyName = 0;
+  DWORD CurrentInterface;
+
+  if (OpenChildKeyRead(HKEY_LOCAL_MACHINE,RegKeyToEnumerate,&RegHandle)) {
+    return;
+  }
+
+  for (CurrentInterface = 0; TRUE; CurrentInterface++) {
+      ChildKeyName = GetNthChildKeyName( RegHandle, CurrentInterface );
+      if (!ChildKeyName) break;
+      if (OpenChildKeyRead(RegHandle,ChildKeyName,
+			   &ChildKeyHandle) == 0) {
+	  cb( ChildKeyHandle, ChildKeyName, Data );
+	  RegCloseKey( ChildKeyHandle );
+      }
+      ConsumeChildKeyName( ChildKeyName );
+  }
+}
+
+/*
+ * EnumNameServers
+ */
+
+static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
+			     PVOID Data, EnumNameServersFunc cb ) {
+    PWCHAR NameServerString = 
+	QueryRegistryValueString(RegHandle, L"NameServer");
+    /* Now, count the non-empty comma separated */
+    if (NameServerString) {
+	DWORD ch;
+	DWORD LastNameStart = 0;
+	for (ch = 0; NameServerString[ch]; ch++) {
+	    if (NameServerString[ch] == ',') {
+		if (ch - LastNameStart > 0) { /* Skip empty entries */
+		    PWCHAR NameServer = 
+			malloc(ch - LastNameStart + 1);
+		    if (NameServer) {
+			memcpy(NameServer,NameServerString + LastNameStart,
+			       (ch - LastNameStart));
+			NameServer[ch - LastNameStart] = 0;
+			cb( Interface, NameServer, Data );
+			free(NameServer);
+		    }
+		}	
+		LastNameStart = ch + 1; /* The first one after the comma */
+	    }
+	}
+	if (ch - LastNameStart > 0) { /* A last name? */
+	    PWCHAR NameServer = malloc(ch - LastNameStart + 1);
+	    memcpy(NameServer,NameServerString + LastNameStart,
+		   (ch - LastNameStart));
+	    NameServer[ch - LastNameStart] = 0;
+	    cb( Interface, NameServer, Data );
+	    free(NameServer);
+	}
+	ConsumeRegValueString(NameServerString);
+    }
+}
+
+static void CreateNameServerListEnumNamesFuncCount( PWCHAR Interface,
+						    PWCHAR Server,
+						    PVOID _Data ) {
+    PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+    Data->NumServers++;
+}
+
+static void CreateNameServerListEnumIfFuncCount( HKEY RegHandle,
+						 PWCHAR InterfaceName,
+						 PVOID _Data ) {
+    PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+    EnumNameServers(RegHandle,InterfaceName,Data,
+		    CreateNameServerListEnumNamesFuncCount);
+}
+
+static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
+					       PWCHAR Server,
+					       PVOID _Data ) {
+    PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+    RtlUnicodeToMultiByteN((PCHAR)&Data->AddrString[Data->CurrentName], 
+			   sizeof(Data->AddrString[0]),
+			   NULL,
+			   Server,
+			   wcslen(Server));
+    Data->CurrentName++;
+}
+
+static void CreateNameServerListEnumIfFunc( HKEY RegHandle,
+					    PWCHAR InterfaceName,
+					    PVOID _Data ) {
+    PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+    EnumNameServers(RegHandle,InterfaceName,Data,
+		    CreateNameServerListEnumNamesFunc);
+}
+
+static int CountNameServers( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
+    EnumInterfaces(PrivateData,CreateNameServerListEnumIfFuncCount);
+    return PrivateData->NumServers;
+}
+
+static void MakeNameServerList( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
+    EnumInterfaces(PrivateData,CreateNameServerListEnumIfFunc);
+}
 
 PIPHLP_RES_INFO getResInfo() {
-    PIPHLP_RES_INFO InfoPtr = 
-        (PIPHLP_RES_INFO)HeapAlloc( GetProcessHeap(), 0, 
-                                    sizeof(PIPHLP_RES_INFO) );
-    if( InfoPtr ) {
-        InfoPtr->riCount = 0;
-        InfoPtr->riAddressList = NULL;
+    DWORD result = ERROR_SUCCESS, dwSize, i, ServerCount, ExtraServer;
+    HKEY hKey;
+    LONG errCode;
+    PWCHAR Str;
+    IP_ADDR_STRING AddrString;
+    NAME_SERVER_LIST_PRIVATE PrivateNSEnum = { 0 };
+    PIPHLP_RES_INFO ResInfo;
+    struct sockaddr_in *AddrList;
+    
+    ServerCount = CountNameServers( &PrivateNSEnum );
+  
+    errCode = RegOpenKeyExA(HKEY_LOCAL_MACHINE, 
+			    "SYSTEM\\CurrentControlSet\\Services\\Tcpip\\"
+			    "Parameters", 0, KEY_READ, &hKey);
+    if (errCode != ERROR_SUCCESS) {
+	RegCloseKey( hKey );
+	return NULL;
+    }
+    
+    Str = QueryRegistryValueString( hKey, L"NameServer" );
+    ExtraServer = Str ? 1 : 0;
+
+    ServerCount += ExtraServer;
+
+    PrivateNSEnum.NumServers = ServerCount;
+    PrivateNSEnum.AddrString = 
+	(PIP_ADDRESS_STRING)
+	RtlAllocateHeap( GetProcessHeap(), 0, 
+			 ServerCount * sizeof(IP_ADDRESS_STRING) );
+
+    ResInfo = 
+	(PIPHLP_RES_INFO)RtlAllocateHeap
+	( GetProcessHeap(), 0, 
+	  sizeof(IPHLP_RES_INFO) +
+	  (ServerCount * sizeof(struct sockaddr_in)) );
+
+    if( !ResInfo ) {
+	RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
+	RegCloseKey( hKey );
+	return NULL;
     }
 
-    return InfoPtr;
+    ResInfo->riCount = ServerCount;
+    AddrList = (struct sockaddr_in *)
+	(((PCHAR)ResInfo) + sizeof(IPHLP_RES_INFO));
+    ResInfo->riAddressList = AddrList;
+
+    MakeNameServerList( &PrivateNSEnum );
+
+    if( ExtraServer ) {
+	ULONG ResultSize;
+
+	for( ResultSize = 0; Str[ResultSize]; ResultSize++ ) 
+	    ((PCHAR)&AddrString)[ResultSize] = Str[ResultSize];
+
+	((PCHAR)&AddrString)[ResultSize] = 0;
+	ResInfo->riAddressList[0].sin_family = AF_INET;
+	ResInfo->riAddressList[0].sin_addr.s_addr = 
+	    inet_addr( (PCHAR)&AddrString );
+	ResInfo->riAddressList[0].sin_port = 0;
+	ConsumeRegValueString( Str );
+    }
+
+    for( i = ExtraServer; i < ServerCount; i++ ) {
+	/* Hmm seems that dns servers are always AF_INET but ... */
+	ResInfo->riAddressList[i].sin_family = AF_INET;
+	ResInfo->riAddressList[i].sin_addr.s_addr = 
+	    inet_addr( (PCHAR)&PrivateNSEnum.AddrString[i - ExtraServer] );
+	ResInfo->riAddressList[i].sin_port = 0;
+    }
+    
+    RtlFreeHeap( GetProcessHeap(), 0, PrivateNSEnum.AddrString );
+    RegCloseKey( hKey );
+
+    return ResInfo;
 }
 
 VOID disposeResInfo( PIPHLP_RES_INFO InfoPtr ) {
-    HeapFree( GetProcessHeap(), 0, InfoPtr );
+    RtlFreeHeap( GetProcessHeap(), 0, InfoPtr );
 }

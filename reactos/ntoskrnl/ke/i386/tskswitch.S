@@ -59,6 +59,30 @@ _Ki386ContextSwitch:
 	 * This is a critical section for this processor.
 	 */
 	cli
+	
+#ifdef MP
+	/*
+	 * Get the pointer to the old thread.
+	 */
+	movl	12(%ebp), %ebx
+	/*
+	 * Save FPU state if the thread has used it.
+	 */
+	movl	$0, %fs:KPCR_NPX_THREAD
+	testb	$NPX_STATE_DIRTY, KTHREAD_NPX_STATE(%ebx)
+	jz	3f
+	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
+	cmpl	$0, _FxsrSupport
+	je	1f
+	fxsave	-SIZEOF_FX_SAVE_AREA(%eax)
+	jmp	2f
+1:
+	fnsave	-SIZEOF_FX_SAVE_AREA(%eax)
+2:
+	movb	$NPX_STATE_VALID, KTHREAD_NPX_STATE(%ebx)
+3:
+#endif /* MP */
+
 
 	/*
 	 * Get the pointer to the new thread.
@@ -110,25 +134,6 @@ _Ki386ContextSwitch:
 	 * Get the pointer to the old thread.
 	 */
 	movl	12(%ebp), %ebx
-
-#ifdef MP
-	/*
-	 * Save FPU state if the thread has used it.
-	 */
-	movl	$0, %fs:KPCR_NPX_THREAD
-	testb	$NPX_STATE_DIRTY, KTHREAD_NPX_STATE(%ebx)
-	jz	3f
-	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
-	cmpl	$0, _FxsrSupport
-	je	1f
-	fxsave	-SIZEOF_FX_SAVE_AREA(%eax)
-	jmp	2f
-1:
-	fnsave	-SIZEOF_FX_SAVE_AREA(%eax)
-2:
-	movb	$NPX_STATE_VALID, KTHREAD_NPX_STATE(%ebx)
-3:
-#endif /* MP */
 
 	/*
 	 * FIXME: Save debugging state.

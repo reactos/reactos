@@ -1746,8 +1746,8 @@ static LRESULT PRINTDLG_WMCommandW(HWND hDlg, WPARAM wParam,
 /***********************************************************************
  *           PrintDlgProcA			[internal]
  */
-INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
-			  LPARAM lParam)
+static INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
+                                      LPARAM lParam)
 {
     PRINT_PTRA* PrintStructures;
     INT_PTR res = FALSE;
@@ -1790,8 +1790,8 @@ INT_PTR CALLBACK PrintDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam,
     return res;
 }
 
-INT_PTR CALLBACK PrintDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
-			  LPARAM lParam)
+static INT_PTR CALLBACK PrintDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam,
+                                      LPARAM lParam)
 {
     static const WCHAR propW[] = {'_','_','W','I','N','E','_','P','R','I','N','T','D','L','G','D','A','T','A',0};
     PRINT_PTRW* PrintStructures;

@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.20 2004/06/13 10:35:52 navaraf Exp $
+/* $Id: atom.c,v 1.20.16.1 2004/12/08 21:57:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -45,6 +45,15 @@ GlobalAddAtomA(LPCSTR lpString)
 	return (ATOM)LOWORD((ULONG)lpString);
      }
 
+   if (lstrlenA(lpString) > 255)
+   {
+      /* This limit does not exist with NtAddAtom so the limit is probably 
+       * added for compability. -Gunnar 
+       */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return (ATOM)0;
+   }
+
    RtlCreateUnicodeStringFromAsciiz(&AtomName,
 				    (LPSTR)lpString);
 
@@ -80,6 +89,15 @@ GlobalAddAtomW(LPCWSTR lpString)
 	  }
 	return (ATOM)LOWORD((ULONG)lpString);
      }
+
+   if (lstrlenW(lpString) > 255)
+   {
+      /* This limit does not exist with NtAddAtom so the limit is probably 
+       * added for compability. -Gunnar 
+       */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return (ATOM)0;
+   }
 
    Status = NtAddAtom((LPWSTR)lpString,
                       wcslen(lpString),
@@ -138,6 +156,15 @@ GlobalFindAtomA(LPCSTR lpString)
 	return (ATOM)LOWORD((ULONG)lpString);
      }
 
+   if (lstrlenA(lpString) > 255)
+   {
+      /* This limit does not exist with NtAddAtom so the limit is probably 
+       * added for compability. -Gunnar 
+       */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return (ATOM)0;
+   }
+
    RtlCreateUnicodeStringFromAsciiz(&AtomName,
 				    (LPSTR)lpString);
    Status = NtFindAtom(AtomName.Buffer,
@@ -172,6 +199,15 @@ GlobalFindAtomW(LPCWSTR lpString)
 	  }
 	return (ATOM)LOWORD((ULONG)lpString);
      }
+
+   if (lstrlenW(lpString) > 255)
+   {
+      /* This limit does not exist with NtAddAtom so the limit is probably 
+       * added for compability. -Gunnar 
+       */
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return (ATOM)0;
+   }
 
    Status = NtFindAtom((LPWSTR)lpString,
                        wcslen(lpString),

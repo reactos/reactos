@@ -106,7 +106,7 @@ UINT WINAPI OleUIInsertObjectA(LPOLEUIINSERTOBJECTA lpOleUIInsertObject)
   dlgInfo.lpOleUIInsertObject = lpOleUIInsertObject;
   dlgInfo.bObjListInit = FALSE;
 
-  lRes = DialogBoxIndirectParamA(OLEDLG_hInstance, (LPDLGTEMPLATEA) template,
+  lRes = DialogBoxIndirectParamA(OLEDLG_hInstance, (const DLGTEMPLATE*) template,
       lpOleUIInsertObject->hWndOwner, UIInsertObjectDlgProc,
       (LPARAM) &dlgInfo);
 

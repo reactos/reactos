@@ -13,9 +13,135 @@
 LONG TCP_IPIdentification = 0;
 static BOOLEAN TCPInitialized = FALSE;
 static NPAGED_LOOKASIDE_LIST TCPSegmentList;
+LIST_ENTRY SignalledConnections;
 LIST_ENTRY SleepingThreadsList;
 FAST_MUTEX SleepingThreadsLock;
 RECURSIVE_MUTEX TCPLock;
+
+static VOID HandleSignalledConnection( PCONNECTION_ENDPOINT Connection,
+				       ULONG NewState ) {
+    NTSTATUS Status = STATUS_SUCCESS;
+    PTCP_COMPLETION_ROUTINE Complete;
+    PTDI_BUCKET Bucket;
+    PLIST_ENTRY Entry;
+    BOOLEAN CompletedOne = FALSE;
+
+    /* Things that can happen when we try the initial connection */
+    if( ((NewState & SEL_CONNECT) || (NewState & SEL_FIN)) &&
+
+	!(Connection->State & (SEL_CONNECT | SEL_FIN)) ) {
+	while( !IsListEmpty( &Connection->ConnectRequest ) ) {
+	    Connection->State |= NewState & (SEL_CONNECT | SEL_FIN);
+	    Entry = RemoveHeadList( &Connection->ConnectRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+	    TI_DbgPrint(DEBUG_TCP,
+			("Completing Connect Request %x\n", Bucket->Request));
+	    if( NewState & SEL_FIN ) Status = STATUS_CONNECTION_REFUSED;
+	    Complete( Bucket->Request.RequestContext, Status, 0 );
+	    /* Frees the bucket allocated in TCPConnect */
+	    PoolFreeBuffer( Bucket );
+	}
+    }
+
+    /* Things that happen after we're connected */
+    if( (NewState & SEL_READ) ) {
+	TI_DbgPrint(DEBUG_TCP,("Readable: irp list %s\n",
+			       IsListEmpty(&Connection->ReceiveRequest) ?
+			       "empty" : "nonempty"));
+
+	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
+	    PIRP Irp;
+	    OSK_UINT RecvLen = 0, Received = 0;
+	    OSK_PCHAR RecvBuffer = 0;
+	    PMDL Mdl;
+	    NTSTATUS Status;
+
+	    Entry = RemoveHeadList( &Connection->ReceiveRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+
+	    TI_DbgPrint(DEBUG_TCP,
+			("Readable, Completing read request %x\n", 
+			 Bucket->Request));
+
+	    Irp = Bucket->Request.RequestContext;
+	    Mdl = Irp->MdlAddress;
+
+	    TI_DbgPrint(DEBUG_TCP,
+			("Getting the user buffer from %x\n", Mdl));
+
+	    NdisQueryBuffer( Mdl, &RecvBuffer, &RecvLen );
+
+	    TI_DbgPrint(DEBUG_TCP,
+			("Reading %d bytes to %x\n", RecvLen, RecvBuffer));
+
+	    TI_DbgPrint(DEBUG_TCP, ("Connection: %x\n", Connection));
+	    TI_DbgPrint
+		(DEBUG_TCP, 
+		 ("Connection->SocketContext: %x\n", 
+		  Connection->SocketContext));
+	    TI_DbgPrint(DEBUG_TCP, ("RecvBuffer: %x\n", RecvBuffer));
+	    
+	    Status = TCPTranslateError
+		( OskitTCPRecv( Connection->SocketContext,
+				RecvBuffer,
+				RecvLen,
+				&Received,
+				0 ) );
+
+	    TI_DbgPrint(DEBUG_TCP,("TCP Bytes: %d\n", Received));
+	    
+	    if( Status == STATUS_SUCCESS ) {
+		TI_DbgPrint(DEBUG_TCP,("Received %d bytes with status %x\n",
+				       Received, Status));
+		
+		TI_DbgPrint(DEBUG_TCP,
+			    ("Completing Receive Request: %x\n", 
+			     Bucket->Request));
+
+		Complete( Bucket->Request.RequestContext,
+			  STATUS_SUCCESS, Received );
+		CompletedOne = TRUE;
+	    } else if( Status == STATUS_PENDING ) {
+		InsertHeadList( &Connection->ReceiveRequest,
+				&Bucket->Entry );
+		break;
+	    } else {
+		TI_DbgPrint(DEBUG_TCP,
+			    ("Completing Receive request: %x %x\n",
+			     Bucket->Request, Status));
+		Complete( Bucket->Request.RequestContext, Status, 0 );
+		CompletedOne = TRUE;
+	    }
+	}
+    }
+    if( NewState & SEL_FIN ) {
+	TI_DbgPrint(DEBUG_TCP, ("EOF From socket\n"));
+	
+	while( !IsListEmpty( &Connection->ReceiveRequest ) ) {
+	    Entry = RemoveHeadList( &Connection->ReceiveRequest );
+	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
+	    Complete = Bucket->Request.RequestNotifyObject;
+
+	    Complete( Bucket->Request.RequestContext, STATUS_SUCCESS, 0 );
+	}
+    }
+
+    Connection->Signalled = FALSE;
+}
+
+VOID DrainSignals() {
+    PCONNECTION_ENDPOINT Connection;
+    PLIST_ENTRY ListEntry;
+
+    while( !IsListEmpty( &SignalledConnections ) ) {
+	ListEntry = RemoveHeadList( &SignalledConnections );
+	Connection = CONTAINING_RECORD( ListEntry, CONNECTION_ENDPOINT,
+					SignalList );
+	HandleSignalledConnection( Connection, Connection->SignalState );
+    }
+}
 
 PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     PCONNECTION_ENDPOINT Connection = 
@@ -36,9 +162,6 @@ PCONNECTION_ENDPOINT TCPAllocateConnectionEndpoint( PVOID ClientContext ) {
     /* Save client context pointer */
     Connection->ClientContext = ClientContext;
     
-    /* Initialize received segments queue */
-    InitializeListHead(&Connection->ReceivedSegments);
-    
     return Connection;
 }
 
@@ -52,7 +175,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 		    UINT Family, UINT Type, UINT Proto ) {
     NTSTATUS Status;
 
-    TI_DbgPrint(MID_TRACE,("Called: Connection %x, Family %d, Type %d, "
+    TI_DbgPrint(DEBUG_TCP,("Called: Connection %x, Family %d, Type %d, "
 			   "Proto %d\n",
 			   Connection, Family, Type, Proto));
 
@@ -65,7 +188,7 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
-    TI_DbgPrint(MID_TRACE,("Connection->SocketContext %x\n",
+    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
 			   Connection->SocketContext));
 
     TcpipRecursiveMutexLeave( &TCPLock );
@@ -73,17 +196,16 @@ NTSTATUS TCPSocket( PCONNECTION_ENDPOINT Connection,
     return Status;
 }
 
-VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
+VOID TCPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives and queues TCP data
  * ARGUMENTS:
- *     NTE      = Pointer to net table entry which the packet was received on
  *     IPPacket = Pointer to an IP packet that was received
  * NOTES:
  *     This is the low level interface for receiving TCP data
  */
 {
-    TI_DbgPrint(MID_TRACE,("Sending packet %d (%d) to oskit\n", 
+    TI_DbgPrint(DEBUG_TCP,("Sending packet %d (%d) to oskit\n", 
 			   IPPacket->TotalSize,
 			   IPPacket->HeaderSize));
 
@@ -92,6 +214,8 @@ VOID TCPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
     OskitTCPReceiveDatagram( IPPacket->Header, 
 			     IPPacket->TotalSize, 
 			     IPPacket->HeaderSize );
+
+    DrainSignals();
 
     TcpipRecursiveMutexLeave( &TCPLock );
 }
@@ -142,6 +266,7 @@ NTSTATUS TCPStartup(VOID)
     TcpipRecursiveMutexInit( &TCPLock );
     ExInitializeFastMutex( &SleepingThreadsLock );
     InitializeListHead( &SleepingThreadsList );    
+    InitializeListHead( &SignalledConnections );
 
     RegisterOskitTCPEventHandlers( &EventHandlers );
     InitOskitTCP();
@@ -200,7 +325,7 @@ NTSTATUS TCPTranslateError( int OskitError ) {
     default: Status = STATUS_INVALID_CONNECTION; break;
     }
 
-    TI_DbgPrint(MID_TRACE,("Error %d -> %x\n", OskitError, Status));
+    TI_DbgPrint(DEBUG_TCP,("Error %d -> %x\n", OskitError, Status));
     return Status;
 }
 
@@ -213,7 +338,7 @@ NTSTATUS TCPBind
     PIP_ADDRESS LocalAddress;
     USHORT LocalPort;
 
-    TI_DbgPrint(MID_TRACE,("Called\n"));
+    TI_DbgPrint(DEBUG_TCP,("Called\n"));
 
     Status = AddrBuildAddress
 	((PTA_ADDRESS)ConnInfo->LocalAddress,
@@ -231,7 +356,7 @@ NTSTATUS TCPBind
 			   &AddressToBind, 
 			   sizeof(AddressToBind));
 
-    TI_DbgPrint(MID_TRACE,("Leaving %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP,("Leaving %x\n", Status));
 
     return Status;
 }
@@ -245,7 +370,7 @@ NTSTATUS TCPConnect
   PVOID Context ) {
     NTSTATUS Status;
     SOCKADDR_IN AddressToConnect = { 0 }, AddressToBind = { 0 };
-    PIP_ADDRESS RemoteAddress;
+    IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     PTDI_BUCKET Bucket;
 
@@ -268,11 +393,11 @@ NTSTATUS TCPConnect
 	 &RemotePort);
 
     DbgPrint("Connecting to address %x:%x\n",
-	     RemoteAddress->Address.IPv4Address,
+	     RemoteAddress.Address.IPv4Address,
 	     RemotePort);
 
     if (!NT_SUCCESS(Status)) {
-	TI_DbgPrint(MID_TRACE, ("Could not AddrBuildAddress in TCPConnect\n"));
+	TI_DbgPrint(DEBUG_TCP, ("Could not AddrBuildAddress in TCPConnect\n"));
 	return Status;
     }
     
@@ -285,14 +410,15 @@ NTSTATUS TCPConnect
 		  sizeof(AddressToBind) );
 
     memcpy( &AddressToConnect.sin_addr, 
-	    &RemoteAddress->Address.IPv4Address,
+	    &RemoteAddress.Address.IPv4Address,
 	    sizeof(AddressToConnect.sin_addr) );
     AddressToConnect.sin_port = RemotePort;
 
-    Status = OskitTCPConnect(Connection->SocketContext,
-			     Connection,
-			     &AddressToConnect, 
-			     sizeof(AddressToConnect));
+    Status = TCPTranslateError
+	( OskitTCPConnect( Connection->SocketContext,
+			   Connection,
+			   &AddressToConnect, 
+			   sizeof(AddressToConnect) ) );
 
     TcpipRecursiveMutexLeave( &TCPLock );
     
@@ -302,19 +428,60 @@ NTSTATUS TCPConnect
 	return Status;
 }
 
+NTSTATUS TCPDisconnect
+( PCONNECTION_ENDPOINT Connection,
+  UINT Flags,
+  PTDI_CONNECTION_INFORMATION ConnInfo,
+  PTDI_CONNECTION_INFORMATION ReturnInfo,
+  PTCP_COMPLETION_ROUTINE Complete,
+  PVOID Context ) {
+    NTSTATUS Status;
+    
+    TI_DbgPrint(DEBUG_TCP,("started\n"));
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+
+    switch( Flags & (TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE) ) {
+    case 0:
+    case TDI_DISCONNECT_ABORT:
+	Flags = 0;
+	break;
+
+    case TDI_DISCONNECT_ABORT | TDI_DISCONNECT_RELEASE:
+	Flags = 2;
+	break;
+
+    case TDI_DISCONNECT_RELEASE:
+	Flags = 1;
+	break;
+    }
+
+    Status = TCPTranslateError
+	( OskitTCPShutdown( Connection->SocketContext, Flags ) );
+
+    TcpipRecursiveMutexLeave( &TCPLock );
+    
+    TI_DbgPrint(DEBUG_TCP,("finished %x\n", Status));
+
+    return Status;
+}
+
 NTSTATUS TCPClose
 ( PCONNECTION_ENDPOINT Connection ) {
     NTSTATUS Status;
     
-    TI_DbgPrint(MID_TRACE,("TCPClose started\n"));
+    TI_DbgPrint(DEBUG_TCP,("TCPClose started\n"));
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
     Status = TCPTranslateError( OskitTCPClose( Connection->SocketContext ) );
 
+    if( Connection->Signalled ) 
+	RemoveEntryList( &Connection->SignalList );
+
     TcpipRecursiveMutexLeave( &TCPLock );
     
-    TI_DbgPrint(MID_TRACE,("TCPClose finished %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP,("TCPClose finished %x\n", Status));
 
     return Status;
 }
@@ -326,9 +493,9 @@ NTSTATUS TCPListen
   PVOID Context) {
    NTSTATUS Status;
 
-   TI_DbgPrint(MID_TRACE,("TCPListen started\n"));
+   TI_DbgPrint(DEBUG_TCP,("TCPListen started\n"));
 
-   TI_DbgPrint(MID_TRACE,("Connection->SocketContext %x\n",
+   TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext %x\n",
      Connection->SocketContext));
 
    ASSERT(Connection);
@@ -341,7 +508,7 @@ NTSTATUS TCPListen
    
    TcpipRecursiveMutexLeave( &TCPLock );
 
-   TI_DbgPrint(MID_TRACE,("TCPListen finished %x\n", Status));
+   TI_DbgPrint(DEBUG_TCP,("TCPListen finished %x\n", Status));
    
    return Status;
 }
@@ -351,10 +518,23 @@ NTSTATUS TCPAccept
   VOID **NewSocketContext ) {
    NTSTATUS Status;
 
-   TI_DbgPrint(MID_TRACE,("TCPAccept started\n"));
+   TI_DbgPrint(DEBUG_TCP,("TCPAccept started\n"));
    Status = STATUS_UNSUCCESSFUL;
-   TI_DbgPrint(MID_TRACE,("TCPAccept finished %x\n", Status));
+   TI_DbgPrint(DEBUG_TCP,("TCPAccept finished %x\n", Status));
    return Status;
+}
+
+VOID TCPCancelReceiveRequest( PVOID Context ) {
+    PLIST_ENTRY ListEntry;
+    PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)Context;
+
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
+    for( ListEntry = Connection->ReceiveRequest.Flink; 
+	 ListEntry != &Connection->ReceiveRequest;
+	 ListEntry = ListEntry->Flink ) {
+	
+    }
+    TcpipRecursiveMutexLeave( &TCPLock );
 }
 
 NTSTATUS TCPReceiveData
@@ -370,7 +550,7 @@ NTSTATUS TCPReceiveData
     NTSTATUS Status;
     PTDI_BUCKET Bucket;
 
-    TI_DbgPrint(MID_TRACE,("Called for %d bytes\n", ReceiveLength));
+    TI_DbgPrint(DEBUG_TCP,("Called for %d bytes\n", ReceiveLength));
 
     ASSERT_KM_POINTER(Connection->SocketContext);
 
@@ -378,7 +558,7 @@ NTSTATUS TCPReceiveData
 
     NdisQueryBuffer( Buffer, &DataBuffer, &DataLen );
 
-    TI_DbgPrint(MID_TRACE,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
+    TI_DbgPrint(DEBUG_TCP,("TCP>|< Got an MDL %x (%x:%d)\n", Buffer, DataBuffer, DataLen));
 
     Status = TCPTranslateError
 	( OskitTCPRecv
@@ -387,16 +567,15 @@ NTSTATUS TCPReceiveData
 	    DataLen,
 	    &Received,
 	    ReceiveFlags ) );
-
-    TI_DbgPrint(MID_TRACE,("OskitTCPReceive: %x, %d\n", Status, Received));
+    
+    TI_DbgPrint(DEBUG_TCP,("OskitTCPReceive: %x, %d\n", Status, Received));
 
     /* Keep this request around ... there was no data yet */
-    if( Status == STATUS_PENDING || 
-	(Status == STATUS_SUCCESS && Received == 0) ) {
+    if( Status == STATUS_PENDING ) {
 	/* Freed in TCPSocketState */
 	Bucket = ExAllocatePool( NonPagedPool, sizeof(*Bucket) );
 	if( !Bucket ) {
-	    TI_DbgPrint(MID_TRACE,("Failed to allocate bucket\n"));
+	    TI_DbgPrint(DEBUG_TCP,("Failed to allocate bucket\n"));
 	    TcpipRecursiveMutexLeave( &TCPLock );
 	    return STATUS_NO_MEMORY;
 	}
@@ -404,17 +583,18 @@ NTSTATUS TCPReceiveData
 	Bucket->Request.RequestNotifyObject = Complete;
 	Bucket->Request.RequestContext = Context;
 	*BytesReceived = 0;
+
 	InsertHeadList( &Connection->ReceiveRequest, &Bucket->Entry );
 	Status = STATUS_PENDING;
-	TI_DbgPrint(MID_TRACE,("Queued read irp\n"));
+	TI_DbgPrint(DEBUG_TCP,("Queued read irp\n"));
     } else {
-	TI_DbgPrint(MID_TRACE,("Got status %x, bytes %d\n", Status, Received));
+	TI_DbgPrint(DEBUG_TCP,("Got status %x, bytes %d\n", Status, Received));
 	*BytesReceived = Received;
     }
 
     TcpipRecursiveMutexLeave( &TCPLock );
 
-    TI_DbgPrint(MID_TRACE,("Status %x\n", Status));
+    TI_DbgPrint(DEBUG_TCP,("Status %x\n", Status));
 
     return Status;
 }
@@ -431,8 +611,8 @@ NTSTATUS TCPSendData
 
     TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 
-    TI_DbgPrint(MID_TRACE,("Connection = %x\n", Connection));
-    TI_DbgPrint(MID_TRACE,("Connection->SocketContext = %x\n",
+    TI_DbgPrint(DEBUG_TCP,("Connection = %x\n", Connection));
+    TI_DbgPrint(DEBUG_TCP,("Connection->SocketContext = %x\n",
 			   Connection->SocketContext));
 
     Status = OskitTCPSend( Connection->SocketContext, 
@@ -445,11 +625,12 @@ NTSTATUS TCPSendData
 
 VOID TCPTimeout(VOID) { 
     static int Times = 0;
+    TcpipRecursiveMutexEnter( &TCPLock, TRUE );
     if( (Times++ % 5) == 0 ) {
-	TcpipRecursiveMutexEnter( &TCPLock, TRUE );
 	TimerOskitTCP();
-	TcpipRecursiveMutexLeave( &TCPLock );
     }
+    DrainSignals();
+    TcpipRecursiveMutexLeave( &TCPLock );
 }
 
 /* EOF */

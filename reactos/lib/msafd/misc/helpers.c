@@ -142,8 +142,9 @@ SockGetTdiName(
 
             /* Return the Helper Pointers */
             *HelperDllData = HelperData;
-            HeapFree(GlobalHeap, 0, Transports);
-            HeapFree(GlobalHeap, 0, Mapping);
+	    /* We actually cache these ... the can't be freed yet */
+            /*HeapFree(GlobalHeap, 0, Transports);*/
+            /*HeapFree(GlobalHeap, 0, Mapping);*/
             return NO_ERROR;
         }
         

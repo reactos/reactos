@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.94 2004/10/20 03:46:27 jimtabor Exp $
+/* $Id: stubs.c,v 1.94.2.1 2004/12/08 21:57:11 hyperion Exp $
  *
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
@@ -419,7 +419,7 @@ STDCALL
 AllocateUserPhysicalPages(
     HANDLE hProcess,
     PULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray
+    PULONG_PTR UserPfnArray
     )
 {
     STUB;
@@ -746,7 +746,7 @@ STDCALL
 MapUserPhysicalPages(
     PVOID VirtualAddress,
     ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray OPTIONAL
+    PULONG_PTR PageArray  OPTIONAL
     )
 {
     STUB;
@@ -761,7 +761,7 @@ STDCALL
 MapUserPhysicalPagesScatter(
     PVOID *VirtualAddresses,
     ULONG_PTR NumberOfPages,
-    PULONG_PTR PageArray OPTIONAL
+    PULONG_PTR PageArray  OPTIONAL
     )
 {
     STUB;
@@ -781,21 +781,6 @@ QueryActCtxW(
     PVOID pvBuffer,
     SIZE_T cbBuffer OPTIONAL,
     SIZE_T *pcbWrittenOrRequired OPTIONAL
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-QueueUserAPC(
-    PAPCFUNC pfnAPC,
-    HANDLE hThread,
-    ULONG_PTR dwData
     )
 {
     STUB;
@@ -1331,7 +1316,7 @@ SetDllDirectoryW(
     )
 {
     STUB;
-    return 0;
+    return TRUE;
 }
 
 /*
@@ -1645,7 +1630,7 @@ SetDllDirectoryA(
     )
 {
     STUB;
-    return 0;
+    return TRUE;
 }
 
 /*
@@ -1688,20 +1673,6 @@ VerifyVersionInfoA(
     DWORD dwTypeMask,
     DWORDLONG dwlConditionMask
     )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumSystemLanguageGroupsW(
-    LANGUAGEGROUP_ENUMPROCW lpLanguageGroupEnumProc,
-    DWORD                   dwFlags,
-    LONG_PTR                lParam)
 {
     STUB;
     return 0;

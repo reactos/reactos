@@ -128,7 +128,7 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
     DWORD allocationSizeForEntityArray = entrySize * MAX_TDI_ENTITIES, 
         arraySize = entrySize * MAX_TDI_ENTITIES;
 
-    DPRINT("TdiGetSetOfThings(tcpFile %x,toiClass %x,toiType %x,toiId %x,"
+    DbgPrint("TdiGetSetOfThings(tcpFile %x,toiClass %x,toiType %x,toiId %x,"
            "teiEntity %x,fixedPart %d,entrySize %d)\n",
            (int)tcpFile, 
            (int)toiClass, 
@@ -161,9 +161,8 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                                   0,
                                   &allocationSizeForEntityArray,
                                   NULL );
-        
+
         if( !NT_SUCCESS(status) ) {
-            DPRINT("TdiGetSetOfThings() => %08x\n", (int)status);       
             return status;
         }
         

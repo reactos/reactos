@@ -65,14 +65,13 @@ typedef struct
     IPPART_INFO	Part[4];
 } IPADDRESS_INFO;
 
+static const WCHAR IP_SUBCLASS_PROP[] = 
+    { 'C', 'C', 'I', 'P', '3', '2', 'S', 'u', 'b', 'c', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
+
 #define POS_DEFAULT	0
 #define POS_LEFT	1
 #define POS_RIGHT	2
 #define POS_SELALL	3
-
-#define IP_SUBCLASS_PROP "CCIP32SubclassInfo"
-#define IPADDRESS_GetInfoPtr(hwnd) ((IPADDRESS_INFO *)GetWindowLongPtrW (hwnd, 0))
-
 
 static LRESULT CALLBACK
 IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -125,6 +124,7 @@ static int IPADDRESS_GetPartIndex(IPADDRESS_INFO *infoPtr, HWND hwnd)
 
 static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
 {
+    static const WCHAR dotW[] = { '.', 0 };
     RECT rect, rcPart;
     POINT pt;
     int i;
@@ -143,7 +143,7 @@ static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
 	pt.x = rcPart.left;
 	ScreenToClient(infoPtr->Self, &pt);
 	rect.right = pt.x;
-	DrawTextA(hdc, ".", 1, &rect, DT_SINGLELINE | DT_CENTER | DT_BOTTOM);
+	DrawTextW(hdc, dotW, 1, &rect, DT_SINGLELINE | DT_CENTER | DT_BOTTOM);
     }
 
     return 0;
@@ -152,10 +152,10 @@ static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
 
 static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
 {
+    static const WCHAR EDIT[] = { 'E', 'd', 'i', 't', 0 };
     IPADDRESS_INFO *infoPtr;
     RECT rcClient, edit;
     int i, fieldsize;
-    static const WCHAR EDIT[] = { 'E', 'd', 'i', 't', 0 };
 
     TRACE("\n");
 
@@ -188,7 +188,7 @@ static LRESULT IPADDRESS_Create (HWND hwnd, LPCREATESTRUCTA lpCreate)
                                edit.left, edit.top, edit.right - edit.left,
 			       edit.bottom - edit.top, hwnd, (HMENU) 1,
 			       (HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE), NULL);
-	SetPropA(part->EditHwnd, IP_SUBCLASS_PROP, hwnd);
+	SetPropW(part->EditHwnd, IP_SUBCLASS_PROP, hwnd);
         part->OrigProc = (WNDPROC)
 		SetWindowLongPtrW (part->EditHwnd, GWLP_WNDPROC,
 				(DWORD_PTR)IPADDRESS_SubclassProc);
@@ -419,8 +419,8 @@ static BOOL IPADDRESS_GotoNextField (IPADDRESS_INFO *infoPtr, int cur, int sel)
 LRESULT CALLBACK
 IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND Self = (HWND)GetPropA (hwnd, IP_SUBCLASS_PROP);
-    IPADDRESS_INFO *infoPtr = IPADDRESS_GetInfoPtr (Self);
+    HWND Self = (HWND)GetPropW (hwnd, IP_SUBCLASS_PROP);
+    IPADDRESS_INFO *infoPtr = (IPADDRESS_INFO *)GetWindowLongPtrW (Self, 0);
     CHAR c = (CHAR)wParam;
     INT index, len = 0, startsel, endsel;
     IPPART_INFO *part;
@@ -502,7 +502,7 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static LRESULT WINAPI
 IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    IPADDRESS_INFO *infoPtr = IPADDRESS_GetInfoPtr (hwnd);
+    IPADDRESS_INFO *infoPtr = (IPADDRESS_INFO *)GetWindowLongPtrW (hwnd, 0);
 
     TRACE("(hwnd=%p msg=0x%x wparam=0x%x lparam=0x%lx)\n", hwnd, uMsg, wParam, lParam);
 

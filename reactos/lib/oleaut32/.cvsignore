@@ -1,8 +1,9 @@
 *.coff
 *.dll
-*.sym
-*.o
 *.d
+*.a
+*.o
+*.sym
 *.map
 *.tmp
 Makefile.ros

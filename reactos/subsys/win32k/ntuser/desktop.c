@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.24 2004/11/20 16:46:06 weiden Exp $
+ *  $Id: desktop.c,v 1.24.2.1 2004/12/08 21:57:39 hyperion Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -49,6 +49,8 @@ ObFindHandleForObject(IN PEPROCESS Process,
 PDESKTOP_OBJECT InputDesktop = NULL;
 HDESK InputDesktopHandle = NULL; 
 HDC ScreenDeviceContext = NULL;
+
+BOOL g_PaintDesktopVersion = FALSE;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
@@ -496,7 +498,7 @@ NtUserCreateDesktop(
   CSRSS_API_REQUEST Request;
   CSRSS_API_REPLY Reply;
   
-  DPRINT1("CreateDesktop: %wZ\n", lpszDesktopName);
+  DPRINT("CreateDesktop: %wZ\n", lpszDesktopName);
 
   Status = IntValidateWindowStationHandle(
     hWindowStation,
@@ -880,20 +882,6 @@ static int GetSystemVersionString(LPWSTR buffer)
   return len;
 }
 
-static NTSTATUS STDCALL PaintDesktopVersionCallback(
-	IN PWSTR ValueName, IN ULONG ValueType,
-	IN PVOID ValueData, IN ULONG ValueLength,
-	IN PVOID Context, IN PVOID EntryContext
-)
-{
-  DPRINT("PaintDesktopVersionCallback ValueType=%d ValueLength=%d\n", ValueType, ValueLength);
-
-  if (ValueType==REG_DWORD && ValueLength==sizeof(DWORD))
-	*((DWORD*)EntryContext) = *(DWORD*)ValueData;
-
-  return STATUS_SUCCESS;
-}
-
 /*
  * NtUserPaintDesktop
  *
@@ -916,10 +904,6 @@ NtUserPaintDesktop(HDC hDC)
   HBRUSH DesktopBrush, PreviousBrush;
   HWND hWndDesktop;
   BOOL doPatBlt = TRUE;
-
-  RTL_QUERY_REGISTRY_TABLE queryTable[2];
-  DWORD displayVersion;
-  NTSTATUS status;
   int len;
 
   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
@@ -984,22 +968,7 @@ NtUserPaintDesktop(HDC hDC)
    * Display system version on the desktop background
    */
 
-  RtlZeroMemory(queryTable, sizeof(queryTable));
-
-  queryTable[0].QueryRoutine = PaintDesktopVersionCallback;
-  queryTable[0].Name = L"PaintDesktopVersion";
-  queryTable[0].EntryContext = &displayVersion;
-
-  /* query the "PaintDesktopVersion" flag in the "Control Panel\Desktop" key */
-  status = RtlQueryRegistryValues(RTL_REGISTRY_USER, L"Control Panel\\Desktop", queryTable, NULL, NULL);
-
-  if (!NT_SUCCESS(status)) {
-	DPRINT1("RtlQueryRegistryValues failed for PaintDesktopVersion: status=%x\n", status);
-	displayVersion = 0;
-  }
-  DPRINT("PaintDesktopVersion=%d\n", displayVersion);
-
-  if (displayVersion) {
+  if (g_PaintDesktopVersion) {
 	static WCHAR s_wszVersion[256] = {0};
 	RECT rect;
 

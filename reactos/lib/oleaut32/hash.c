@@ -23,6 +23,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winnls.h"
+#include "objbase.h"
 #include "oaidl.h"
 #include "wine/debug.h"
 
@@ -537,9 +538,7 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
   case LANG_SWEDISH:    case LANG_SYRIAC:     case LANG_TAMIL:
   case LANG_TATAR:      case LANG_TELUGU:     case LANG_THAI:
   case LANG_UKRAINIAN:  case LANG_URDU:       case LANG_UZBEK:
-  case LANG_VIETNAMESE:
-#ifndef __REACTOS__	/* non standard languages */
-  case LANG_GAELIC:     case LANG_MALTESE:
+  case LANG_VIETNAMESE: case LANG_GAELIC:     case LANG_MALTESE:
   case LANG_MAORI:      case LANG_RHAETO_ROMANCE:
   case LANG_SAAMI:      case LANG_SORBIAN:    case LANG_SUTU:
   case LANG_TSONGA:     case LANG_TSWANA:     case LANG_VENDA:
@@ -549,7 +548,6 @@ ULONG WINAPI LHashValOfNameSysA( SYSKIND skind, LCID lcid, LPCSTR lpStr)
     nOffset = 16;
     pnLookup = Lookup_16;
     break;
-#endif /* __REACTOS__ */
   case LANG_CZECH:  case LANG_HUNGARIAN:  case LANG_POLISH:
   case LANG_SLOVAK: case LANG_SPANISH:
     nOffset = 32;

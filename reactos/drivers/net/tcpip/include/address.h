@@ -40,7 +40,7 @@ NTSTATUS AddrGetAddress(
 
 NTSTATUS AddrBuildAddress(
     PTRANSPORT_ADDRESS TdiAddress,
-    PIP_ADDRESS *Address,
+    PIP_ADDRESS Address,
     PUSHORT Port);
 
 BOOLEAN AddrIsEqual(
@@ -55,14 +55,10 @@ BOOLEAN AddrIsEqualIPv4(
     PIP_ADDRESS Address1,
     IPv4_RAW_ADDRESS Address2);
 
-PIP_ADDRESS AddrBuildIPv4(
-    IPv4_RAW_ADDRESS Address);
+BOOLEAN AddrLocateADEv4(
+    IPv4_RAW_ADDRESS MatchAddress, PIP_ADDRESS Address);
 
-PIP_ADDRESS AddrCloneAddress(
-    PIP_ADDRESS Address);
-
-PADDRESS_ENTRY AddrLocateADEv4(
-    IPv4_RAW_ADDRESS Address);
+BOOLEAN IPGetDefaultAddress( PIP_ADDRESS Address );
 
 PADDRESS_FILE AddrSearchFirst(
     PIP_ADDRESS Address,
@@ -78,6 +74,9 @@ unsigned long PASCAL inet_addr(const char*);
 ULONG IPv4NToHl( ULONG Address );
 
 UINT AddrCountPrefixBits( PIP_ADDRESS Netmask );
+
+VOID AddrWidenAddress( PIP_ADDRESS Network, PIP_ADDRESS Source,
+		       PIP_ADDRESS Netmask );
 
 #endif /* __ADDRESS_H */
 

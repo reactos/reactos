@@ -187,3 +187,35 @@ STRINGTABLE DISCARDABLE
 	IDS_SHUTDOWN_TITLE	"Shutdown"
 	IDS_SHUTDOWN_PROMPT	"Do you want to shutdown?"
 }
+
+/* shell folder path default values */
+STRINGTABLE DISCARDABLE
+{
+	IDS_PROGRAMS                "Start Menu\\Programs"
+	IDS_PERSONAL                "My Documents"
+	IDS_FAVORITES               "Favorites"
+	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
+	IDS_RECENT                  "Recent"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Start Menu"
+	IDS_MYMUSIC                 "My Documents\\My Music"
+	IDS_MYVIDEO                 "My Documents\\My Video"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_INTERNET_CACHE          "Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "History"
+	IDS_PROGRAM_FILES           "Program Files"
+	IDS_MYPICTURES              "My Documents\\My Pictures"
+	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
+	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
+	IDS_COMMON_MUSIC            "Documents\\My Music"
+	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+	IDS_COMMON_VIDEO            "Documents\\My Video"
+	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+}

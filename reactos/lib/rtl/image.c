@@ -1,4 +1,4 @@
-/* $Id: image.c,v 1.1 2004/06/20 23:27:21 gdalsnes Exp $
+/* $Id: image.c,v 1.1.14.1 2004/12/08 21:57:21 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,22 +24,39 @@ PIMAGE_NT_HEADERS STDCALL
 RtlImageNtHeader (IN PVOID BaseAddress)
 {
   PIMAGE_NT_HEADERS NtHeader;
-  PIMAGE_DOS_HEADER DosHeader = (PIMAGE_DOS_HEADER)BaseAddress;
+  char * Magic = BaseAddress;
 
-  if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
+  /* HACK: PE executable */
+  if (Magic[0] == 'M' && Magic[1] == 'Z')
     {
-      DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
-      DPRINT1("NtHeader %x\n", (BaseAddress + DosHeader->e_lfanew));
+      PIMAGE_DOS_HEADER DosHeader = BaseAddress;
+      DPRINT("DosHeader %x\n", DosHeader);
+
+      if (DosHeader->e_lfanew == 0L ||
+          *(PULONG)((PUCHAR)BaseAddress + DosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+        {
+          DPRINT("Image has bad header\n");
+          return NULL;
+        }
+
+      NtHeader = (PIMAGE_NT_HEADERS)((PUCHAR)BaseAddress + DosHeader->e_lfanew);
+    }
+  /* HACK: ReactOS ELF executable */
+  else if (Magic[0] == 0x7f &&
+           Magic[1] == 'E' &&
+           Magic[2] == 'L' &&
+           Magic[3] == 'F')
+    {
+      DbgPrint("TODO: ElfGetSymbolAddress()\n");
+      /*NtHeader = ElfGetSymbolAddress(BaseAddress, "nt_header");*/
+    }
+  else
+    {
+      DPRINT("Unknown image format\n");
+      NtHeader = NULL;
     }
 
-  if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
-    {
-      NtHeader = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
-      if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
-	return NtHeader;
-    }
-
-  return NULL;
+  return NtHeader;
 }
 
 

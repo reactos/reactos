@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.90 2004/11/21 18:33:54 gdalsnes Exp $
+/* $Id: timer.c,v 1.90.2.1 2004/12/08 21:57:34 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -68,7 +68,6 @@ EXPORTED ULONG KeMinimumIncrement = 100000;
 static LIST_ENTRY AbsoluteTimerListHead;
 static LIST_ENTRY RelativeTimerListHead;
 static KSPIN_LOCK TimerListLock;
-static KSPIN_LOCK TimerValueLock;
 static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to PROFILE_LEVEL and grab spin lock there, to sync with ISR */
@@ -641,7 +640,6 @@ KeInitializeTimerImpl(VOID)
    InitializeListHead(&AbsoluteTimerListHead);
    InitializeListHead(&RelativeTimerListHead);
    KeInitializeSpinLock(&TimerListLock);
-   KeInitializeSpinLock(&TimerValueLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    /*
     * Calculate the starting time for the system clock
@@ -716,7 +714,7 @@ KeUpdateRunTime(
    {
       InterlockedIncrement((PLONG)&CurrentThread->UserTime);
       InterlockedIncrement((PLONG)&CurrentProcess->UserTime);
-      InterlockedIncrement((PLONG)&Pcr->PrcbData.UserTime);
+      Pcr->PrcbData.UserTime++;
    }
    else
    {
@@ -732,6 +730,7 @@ KeUpdateRunTime(
       {
          InterlockedIncrement((PLONG)&CurrentThread->KernelTime);
          InterlockedIncrement((PLONG)&CurrentProcess->KernelTime);
+	 Pcr->PrcbData.KernelTime++;
       }
    }
 
@@ -796,7 +795,6 @@ KeUpdateSystemTime(
     */
    KeTickCount++;
    SharedUserData->TickCountLowDeprecated++;
-   KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
    Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
@@ -814,8 +812,6 @@ KeUpdateSystemTime(
 
    /* FIXME: Here we should check for remote debugger break-ins */
 
-   KiReleaseSpinLock(&TimerValueLock);
-
    /* Update process and thread times */
    KeUpdateRunTime(TrapFrame, Irql);
 
@@ -823,6 +819,60 @@ KeUpdateSystemTime(
     * Queue a DPC that will expire timers
     */
    KeInsertQueueDpc(&ExpireTimerDpc, (PVOID)TrapFrame->Eip, 0);
+}
+
+
+VOID
+KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
+{
+  LARGE_INTEGER OldSystemTime;
+  LARGE_INTEGER DeltaTime;
+  KIRQL OldIrql;
+  PLIST_ENTRY current_entry = NULL;
+  PKTIMER current = NULL;
+
+  ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+
+  OldIrql = KeAcquireDispatcherDatabaseLock();
+
+  do
+    {
+      OldSystemTime.u.HighPart = SharedUserData->SystemTime.High1Time;
+      OldSystemTime.u.LowPart = SharedUserData->SystemTime.LowPart;
+    }
+  while (OldSystemTime.u.HighPart != SharedUserData->SystemTime.High2Time);
+
+  /* Set the new system time */
+  SharedUserData->SystemTime.LowPart = NewSystemTime->u.LowPart;
+  SharedUserData->SystemTime.High1Time = NewSystemTime->u.HighPart;
+  SharedUserData->SystemTime.High2Time = NewSystemTime->u.HighPart;
+
+  /* Calculate the difference between the new and the old time */
+  DeltaTime.QuadPart = NewSystemTime->QuadPart - OldSystemTime.QuadPart;
+
+  /* Update system boot time */
+  SystemBootTime.QuadPart += DeltaTime.QuadPart;
+
+  /* Update all relative timers */
+  current_entry = RelativeTimerListHead.Flink;
+  ASSERT(current_entry);
+  while (current_entry != &RelativeTimerListHead)
+    {
+      current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
+      ASSERT(current);
+      ASSERT(current_entry != &RelativeTimerListHead);
+      ASSERT(current_entry->Flink != current_entry);
+
+      current->DueTime.QuadPart += DeltaTime.QuadPart;
+
+      current_entry = current_entry->Flink;
+    }
+
+  KeReleaseDispatcherDatabaseLock(OldIrql);
+
+  /*
+   * NOTE: Expired timers will be processed at the next clock tick!
+   */
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.40 2004/08/17 21:47:36 weiden Exp $
+# $Id: Makefile,v 1.40.8.1 2004/12/08 21:57:26 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,7 @@ TARGET_PCH = include/user32.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_USER32)
 
-TARGET_SDKLIBS = libwine.a ntdll.a gdi32.a rosrtl.a kernel32.a advapi32.a
+TARGET_SDKLIBS = wine.a ntdll.a gdi32.a rosrtl.a kernel32.a advapi32.a
 
 TARGET_CFLAGS = \
  -I./include \

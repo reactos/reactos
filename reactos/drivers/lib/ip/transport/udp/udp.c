@@ -197,7 +197,7 @@ NTSTATUS UDPSendDatagram(
     IP_ADDRESS RemoteAddress;
     USHORT RemotePort;
     NTSTATUS Status;
-    PROUTE_CACHE_NODE RCN;
+    PNEIGHBOR_CACHE_ENTRY NCE;
 
     TI_DbgPrint(MID_TRACE,("Sending Datagram(%x %x %x %d)\n",
 			   AddrFile, ConnInfo, BufferData, DataSize));
@@ -218,7 +218,7 @@ NTSTATUS UDPSendDatagram(
     Status = BuildUDPPacket( &Packet,
 			     &RemoteAddress,
 			     RemotePort,
-			     &AddrFile->ADE->Address,
+			     &AddrFile->Address,
 			     AddrFile->Port,
 			     BufferData,
 			     DataSize );
@@ -226,12 +226,10 @@ NTSTATUS UDPSendDatagram(
     if( !NT_SUCCESS(Status) ) 
 	return Status;
 
-    Status = RouteGetRouteToDestination( &RemoteAddress, NULL, &RCN );
+    if(!(NCE = RouteGetRouteToDestination( &RemoteAddress )))
+	return STATUS_UNSUCCESSFUL;
 
-    if( !NT_SUCCESS(Status) )
-	return Status;
-
-    IPSendDatagram( &Packet, RCN, UDPSendPacketComplete, NULL );
+    IPSendDatagram( &Packet, NCE, UDPSendPacketComplete, NULL );
 
     return STATUS_SUCCESS;
 }
@@ -341,7 +339,7 @@ NTSTATUS UDPReceiveDatagram(
 }
 
 
-VOID UDPReceive(PNET_TABLE_ENTRY NTE, PIP_PACKET IPPacket)
+VOID UDPReceive(PIP_INTERFACE Interface, PIP_PACKET IPPacket)
 /*
  * FUNCTION: Receives and queues a UDP datagram
  * ARGUMENTS:

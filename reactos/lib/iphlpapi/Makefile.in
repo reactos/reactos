@@ -4,7 +4,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = iphlpapi.dll
-IMPORTS   = advapi32 kernel32
+IMPORTS   = advapi32 kernel32 rtl
 DELAYIMPORTS = 
 EXTRALIBS = 
 

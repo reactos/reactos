@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.46 2004/10/31 22:21:41 ion Exp $ */
+/* $Id: iofuncs.h,v 1.46.2.1 2004/12/08 21:56:57 hyperion Exp $ */
 
 #ifdef __NTOSKRNL__
 extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
@@ -1206,7 +1206,7 @@ IoMapTransfer (
 	);
 
 NTSTATUS
-STDCALL
+FASTCALL
 IoReadPartitionTable (
 	PDEVICE_OBJECT			DeviceObject,
 	ULONG				SectorSize,
@@ -1215,7 +1215,7 @@ IoReadPartitionTable (
 	);
 
 NTSTATUS
-STDCALL
+FASTCALL
 IoSetPartitionInformation (
 	PDEVICE_OBJECT	DeviceObject,
 	ULONG		SectorSize,
@@ -1224,7 +1224,7 @@ IoSetPartitionInformation (
 	);
 
 NTSTATUS
-STDCALL
+FASTCALL
 IoWritePartitionTable (
 	PDEVICE_OBJECT			DeviceObject,
 	ULONG				SectorSize,

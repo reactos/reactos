@@ -171,6 +171,15 @@ const char* WINMM_ErrorToString(MMRESULT error)
     ERR_TO_STR(MMSYSERR_BADERRNUM);
     ERR_TO_STR(MMSYSERR_INVALFLAG);
     ERR_TO_STR(MMSYSERR_INVALPARAM);
+    ERR_TO_STR(MMSYSERR_HANDLEBUSY);
+    ERR_TO_STR(MMSYSERR_INVALIDALIAS);
+    ERR_TO_STR(MMSYSERR_BADDB);
+    ERR_TO_STR(MMSYSERR_KEYNOTFOUND);
+    ERR_TO_STR(MMSYSERR_READERROR);
+    ERR_TO_STR(MMSYSERR_WRITEERROR);
+    ERR_TO_STR(MMSYSERR_DELETEERROR);
+    ERR_TO_STR(MMSYSERR_VALNOTFOUND);
+    ERR_TO_STR(MMSYSERR_NODRIVERCB);
     ERR_TO_STR(WAVERR_BADFORMAT);
     ERR_TO_STR(WAVERR_STILLPLAYING);
     ERR_TO_STR(WAVERR_UNPREPARED);
@@ -664,7 +673,7 @@ UINT WINAPI mixerSetControlDetails(HMIXEROBJ hmix, LPMIXERCONTROLDETAILS lpmcdA,
 /**************************************************************************
  * 				mixerMessage		[WINMM.@]
  */
-UINT WINAPI mixerMessage(HMIXER hmix, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
+DWORD WINAPI mixerMessage(HMIXER hmix, UINT uMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2)
 {
     LPWINE_MLD		wmld;
 
@@ -2664,8 +2673,8 @@ UINT WINAPI waveOutGetErrorTextW(UINT uError, LPWSTR lpText, UINT uSize)
  *			waveOutOpen			[WINMM.@]
  * All the args/structs have the same layout as the win16 equivalents
  */
-UINT WINAPI waveOutOpen(LPHWAVEOUT lphWaveOut, UINT uDeviceID,
-                       const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
+MMRESULT WINAPI waveOutOpen(LPHWAVEOUT lphWaveOut, UINT uDeviceID,
+                       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
                        DWORD_PTR dwInstance, DWORD dwFlags)
 {
     return WAVE_Open((HANDLE*)lphWaveOut, uDeviceID, MMDRV_WAVEOUT, lpFormat,
@@ -3049,8 +3058,8 @@ UINT WINAPI waveInGetErrorTextW(UINT uError, LPWSTR lpText, UINT uSize)
 /**************************************************************************
  * 				waveInOpen			[WINMM.@]
  */
-UINT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
-		       const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
+MMRESULT WINAPI waveInOpen(HWAVEIN* lphWaveIn, UINT uDeviceID,
+		       LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
 		       DWORD_PTR dwInstance, DWORD dwFlags)
 {
     return WAVE_Open((HANDLE*)lphWaveIn, uDeviceID, MMDRV_WAVEIN, lpFormat,

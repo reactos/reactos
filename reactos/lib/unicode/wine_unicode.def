@@ -1,4 +1,4 @@
-LIBRARY libwine_unicode.dll
+LIBRARY wine_unicode.dll
 
 EXPORTS
     memicmpW

@@ -63,47 +63,28 @@ NDIS_STATUS LoopRegisterAdapter(
  *   Status of operation
  */
 {
-  PIP_ADDRESS Address;
   NDIS_STATUS Status;
+  LLIP_BIND_INFO BindInfo;
 
   Status = NDIS_STATUS_SUCCESS;
 
   TI_DbgPrint(MID_TRACE, ("Called.\n"));
 
-  Address = AddrBuildIPv4(LOOPBACK_ADDRESS_IPv4);
-  if (Address != NULL)
-    {
-      LLIP_BIND_INFO BindInfo;
-
-      /* Bind the adapter to network (IP) layer */
-      BindInfo.Context = NULL;
-      BindInfo.HeaderSize = 0;
-      BindInfo.MinFrameSize = 0;
-      BindInfo.MTU = 16384;
-      BindInfo.Address = NULL;
-      BindInfo.AddressLength = 0;
-      BindInfo.Transmit = LoopTransmit;
-
-      Loopback = IPCreateInterface(&BindInfo);
-
-      if ((Loopback != NULL) && (IPCreateNTE(Loopback, Address, 8)))
-        {
-          IPRegisterInterface(Loopback);
-        }
-      else
-        {
-          Status = NDIS_STATUS_RESOURCES;
-        }
-    }
-  else
-    {
-      Status = NDIS_STATUS_RESOURCES;
-    }
-
-  if (!NT_SUCCESS(Status))
-    {
-      LoopUnregisterAdapter(NULL);
-    }
+  /* Bind the adapter to network (IP) layer */
+  BindInfo.Context = NULL;
+  BindInfo.HeaderSize = 0;
+  BindInfo.MinFrameSize = 0;
+  BindInfo.MTU = 16384;
+  BindInfo.Address = NULL;
+  BindInfo.AddressLength = 0;
+  BindInfo.Transmit = LoopTransmit;
+  
+  Loopback = IPCreateInterface(&BindInfo);
+  
+  AddrInitIPv4(&Loopback->Unicast, LOOPBACK_ADDRESS_IPv4);
+  AddrInitIPv4(&Loopback->Netmask, LOOPBACK_ADDRMASK_IPv4);
+  
+  IPRegisterInterface(Loopback);
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 

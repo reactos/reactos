@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2004/05/29 21:24:43 hbirr Exp $
+# $Id: Makefile,v 1.5.16.1 2004/12/08 21:57:08 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -20,7 +20,7 @@ TARGET_SDKLIBS = adns.a kernel32.a iphlpapi.a ws2_32.a msvcrt.a ntdll.a \
 TARGET_GCCLIBS = gcc
 
 TARGET_CFLAGS = -Werror -Wall -I$(PATH_TO_TOP)/lib/adns/src -Iinclude \
-	-I$(PATH_TO_TOP)/lib/adns/adns_win32  -g
+	-I$(PATH_TO_TOP)/lib/adns/adns_win32  -g -D__USE_W32API
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS -DADNS_JGAA_WIN32
