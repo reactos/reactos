@@ -14,6 +14,8 @@
 
 #include "mmdrv.h"
 
+#define NDEBUG
+#include <debug.h>
 
 #define EXPORT __declspec(dllexport)
 
@@ -22,14 +24,14 @@ CRITICAL_SECTION DriverSection;
 APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
                 LONG Param1, LONG Param2)
 {
-    printf("DriverProc\n");
+    DPRINT("DriverProc\n");
 
 //    HINSTANCE Module;
 
     switch(Message)
     {
         case DRV_LOAD :
-            printf("DRV_LOAD\n");
+            DPRINT("DRV_LOAD\n");
             return TRUE; // dont need to do any more
 /*            
             Module = GetDriverModuleHandle(DriverHandle);
@@ -56,7 +58,7 @@ APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
 //            return 1L;
 
         case DRV_FREE :
-            printf("DRV_FREE\n");
+            DPRINT("DRV_FREE\n");
 
 //            TerminateMidi();
 //            TerminateWave();
@@ -65,35 +67,35 @@ APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
             return 1L;
 
         case DRV_OPEN :
-            printf("DRV_OPEN\n");
+            DPRINT("DRV_OPEN\n");
             return 1L;
 
         case DRV_CLOSE :
-            printf("DRV_CLOSE\n");
+            DPRINT("DRV_CLOSE\n");
             return 1L;
 
         case DRV_ENABLE :
-            printf("DRV_ENABLE\n");
+            DPRINT("DRV_ENABLE\n");
             return 1L;
 
         case DRV_DISABLE :
-            printf("DRV_DISABLE\n");
+            DPRINT("DRV_DISABLE\n");
             return 1L;
 
         case DRV_QUERYCONFIGURE :
-            printf("DRV_QUERYCONFIGURE\n");
+            DPRINT("DRV_QUERYCONFIGURE\n");
             return 0L;
 
         case DRV_CONFIGURE :
-            printf("DRV_CONFIGURE\n");
+            DPRINT("DRV_CONFIGURE\n");
             return 0L;
 
         case DRV_INSTALL :
-            printf("DRV_INSTALL\n");
+            DPRINT("DRV_INSTALL\n");
             return DRVCNF_RESTART;
 
         default :
-            printf("?\n");
+            DPRINT("?\n");
             return DefDriverProc(DriverID, DriverHandle, Message, Param1, Param2);
     };
 }
@@ -101,7 +103,7 @@ APIENTRY LONG DriverProc(DWORD DriverID, HANDLE DriverHandle, UINT Message,
 
 BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
-    printf("DllMain called!\n");
+    DPRINT("DllMain called!\n");
 
     if (Reason == DLL_PROCESS_ATTACH)
     {
