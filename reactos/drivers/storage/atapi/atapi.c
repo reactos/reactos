@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.49 2004/09/03 02:55:50 navaraf Exp $
+/* $Id: atapi.c,v 1.50 2004/09/03 04:19:12 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -56,7 +56,7 @@
 
 #include "atapi.h"
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #define VERSION  "0.0.1"
@@ -169,6 +169,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	     BYTE cmd);
 #endif
 
+#ifdef ENABLE_PCI
 static ULONG STDCALL
 AtapiFindCompatiblePciController(PVOID DeviceExtension,
 				 PVOID HwContext,
@@ -176,7 +177,9 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 				 PCHAR ArgumentString,
 				 PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 				 PBOOLEAN Again);
+#endif
 
+#ifdef ENABLE_ISA
 static ULONG STDCALL
 AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PVOID HwContext,
@@ -184,7 +187,9 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 			  PCHAR ArgumentString,
 			  PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			  PBOOLEAN Again);
+#endif
 
+#ifdef ENABLE_NATIVE_PCI
 static ULONG STDCALL
 AtapiFindNativePciController(PVOID DeviceExtension,
 			     PVOID HwContext,
@@ -192,6 +197,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 			     PCHAR ArgumentString,
 			     PPORT_CONFIGURATION_INFORMATION ConfigInfo,
 			     PBOOLEAN Again);
+#endif
 
 static BOOLEAN STDCALL
 AtapiInitialize(IN PVOID DeviceExtension);
@@ -525,11 +531,11 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
    ConfigInfo->BusInterruptVector = InterruptVector;
    ConfigInfo->InterruptMode = (InterfaceType == Isa) ? Latched : LevelSensitive;
 
-   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F6) && !ConfigInfo->AtdiskPrimaryClaimed)
+   if ((CommandPortBase == 0x1F0 || ControlPortBase == 0x3F4) && !ConfigInfo->AtdiskPrimaryClaimed)
    {
       ConfigInfo->AtdiskPrimaryClaimed = TRUE;
    }
-   if ((CommandPortBase == 0x170 || ControlPortBase == 0x376) && !ConfigInfo->AtdiskSecondaryClaimed)
+   if ((CommandPortBase == 0x170 || ControlPortBase == 0x374) && !ConfigInfo->AtdiskSecondaryClaimed)
    {
       ConfigInfo->AtdiskSecondaryClaimed = TRUE;
    }
