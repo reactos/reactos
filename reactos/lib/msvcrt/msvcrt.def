@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.11 2001/07/06 12:53:03 ekohl Exp $
+; $Id: msvcrt.def,v 1.12 2001/07/06 21:17:36 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -468,7 +468,7 @@ _strnicoll
 _strnset
 _strrev
 _strset
-; _strtime
+_strtime
 _strupr
 _swab
 _sys_errlist DATA
@@ -494,7 +494,7 @@ _utime
 _vsnprintf
 _vsnwprintf
 _waccess
-; _wasctime
+_wasctime
 _wchdir
 _wchmod
 ; _wcmdln
@@ -510,7 +510,7 @@ _wcsnset
 _wcsrev
 _wcsset
 _wcsupr
-; _wctime
+_wctime
 ; _wenviron
 ; _wexecl
 ; _wexecle

@@ -1191,10 +1191,38 @@ asctime(const struct tm *timeptr)
   return result;
 }
 
+wchar_t *
+_wasctime(const struct tm *timeptr)
+{
+  static const wchar_t wday_name[DAYSPERWEEK][3] = {
+    L"Sun", L"Mon", L"Tue", L"Wed", L"Thu", L"Fri", L"Sat"
+  };
+  static const wchar_t mon_name[MONSPERYEAR][3] = {
+    L"Jan", L"Feb", L"Mar", L"Apr", L"May", L"Jun",
+    L"Jul", L"Aug", L"Sep", L"Oct", L"Nov", L"Dec"
+  };
+  static wchar_t result[26];
+
+  (void)swprintf(result, L"%.3s %.3s%3d %02d:%02d:%02d %d\n",
+		 wday_name[timeptr->tm_wday],
+		 mon_name[timeptr->tm_mon],
+		 timeptr->tm_mday, timeptr->tm_hour,
+		 timeptr->tm_min, timeptr->tm_sec,
+		 TM_YEAR_BASE + timeptr->tm_year);
+  return result;
+}
+
+
 char *
 ctime(const time_t * const timep)
 {
   return asctime(localtime(timep));
+}
+
+wchar_t *
+_wctime(const time_t * const timep)
+{
+  return _wasctime(localtime(timep));
 }
 
 /*

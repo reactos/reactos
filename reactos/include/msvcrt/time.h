@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ekohl $
- * $Date: 2001/07/06 12:50:47 $
+ * $Date: 2001/07/06 21:16:28 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -101,7 +101,9 @@ time_t	mktime (struct tm* tmsp);
  * a directory gives 'invalid' times in st_atime etc...
  */
 char*		asctime (const struct tm* tmsp);
+wchar_t*	_wasctime(const struct tm *timeptr);
 char*		ctime (const time_t* tp);
+wchar_t*	_wctime(const time_t * const timep);
 struct tm*	gmtime (const time_t* tm);
 struct tm*	localtime (const time_t* tm);
 
