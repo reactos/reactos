@@ -25,6 +25,7 @@
 
 #include "windef.h"
 #include "winbase.h"
+#include "winnt.h"
 #include "winreg.h"
 #include "winternl.h"
 #include "wingdi.h"
@@ -41,12 +42,27 @@
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Unicode constants */
+static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
+static const WCHAR Class[]  = {'C','l','a','s','s',0};
+static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
+static const WCHAR NoDisplayClass[]  = {'N','o','D','i','s','p','l','a','y','C','l','a','s','s',0};
+static const WCHAR NoInstallClass[]  = {'N','o','I','s','t','a','l','l','C','l','a','s','s',0};
+static const WCHAR NoUseClass[]  = {'N','o','U','s','e','C','l','a','s','s',0};
 static const WCHAR NtExtension[]  = {'.','N','T',0};
 static const WCHAR NtPlatformExtension[]  = {'.','N','T','x','8','6',0};
+static const WCHAR Version[]  = {'V','e','r','s','i','o','n',0};
 static const WCHAR WinExtension[]  = {'.','W','i','n',0};
-static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
-static const WCHAR Class[]  = {'C','l','a','s','s',0};
 
+/* Registry key and value names */
+static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
+                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                  'C','o','n','t','r','o','l','\\',
+                                  'C','l','a','s','s',0};
+
+static const WCHAR DeviceClasses[] = {'S','y','s','t','e','m','\\',
+                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                  'C','o','n','t','r','o','l','\\',
+                                  'D','e','v','i','c','e','C','l','a','s','s','e','s',0};
 
 /***********************************************************************
  *              SetupDiBuildClassInfoList  (SETUPAPI.@)
@@ -57,7 +73,7 @@ BOOL WINAPI SetupDiBuildClassInfoList(
         DWORD ClassGuidListSize,
         PDWORD RequiredSize)
 {
-    TRACE("SetupDiBuildClassInfoList() called\n");
+    TRACE("\n");
     return SetupDiBuildClassInfoListExW(Flags, ClassGuidList,
                                         ClassGuidListSize, RequiredSize,
                                         NULL, NULL);
@@ -97,7 +113,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
     LONG lError;
     DWORD dwGuidListIndex = 0;
 
-    TRACE("SetupDiBuildClassInfoListExW() called\n");
+    TRACE("\n");
 
     if (RequiredSize != NULL)
 	*RequiredSize = 0;
@@ -126,7 +142,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 	TRACE("RegEnumKeyExW() returns %ld\n", lError);
 	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
 	{
-	    TRACE("Key name: %S\n", szKeyName);
+	    TRACE("Key name: %p\n", szKeyName);
 
 	    if (RegOpenKeyExW(hClassesKey,
 			      szKeyName,
@@ -139,7 +155,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 	    }
 
 	    if (!RegQueryValueExW(hClassKey,
-				 L"NoUseClass",
+				  NoUseClass,
 				  NULL,
 				  NULL,
 				  NULL,
@@ -152,7 +168,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    if ((Flags & DIBCI_NOINSTALLCLASS) &&
 		(!RegQueryValueExW(hClassKey,
-				   L"NoInstallClass",
+				   NoInstallClass,
 				   NULL,
 				   NULL,
 				   NULL,
@@ -165,7 +181,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    if ((Flags & DIBCI_NODISPLAYCLASS) &&
 		(!RegQueryValueExW(hClassKey,
-				   L"NoDisplayClass",
+				   NoDisplayClass,
 				   NULL,
 				   NULL,
 				   NULL,
@@ -178,14 +194,14 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
 	    RegCloseKey(hClassKey);
 
-	    TRACE("Guid: %S\n", szKeyName);
+	    TRACE("Guid: %p\n", szKeyName);
 	    if (dwGuidListIndex < ClassGuidListSize)
 	    {
 		if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
 		{
 		    szKeyName[37] = 0;
 		}
-		TRACE("Guid: %S\n", &szKeyName[1]);
+		TRACE("Guid: %p\n", &szKeyName[1]);
 
 		UuidFromStringW(&szKeyName[1],
 				&ClassGuidList[dwGuidListIndex]);
@@ -302,7 +318,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 	TRACE("RegEnumKeyExW() returns %ld\n", lError);
 	if (lError == ERROR_SUCCESS || lError == ERROR_MORE_DATA)
 	{
-	    TRACE("Key name: %S\n", szKeyName);
+	    TRACE("Key name: %p\n", szKeyName);
 
 	    if (RegOpenKeyExW(hClassesKey,
 			      szKeyName,
@@ -322,20 +338,20 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 				  (LPBYTE)szClassName,
 				  &dwLength))
 	    {
-		TRACE("Class name: %S\n", szClassName);
+		TRACE("Class name: %p\n", szClassName);
 
-		if (_wcsicmp(szClassName, ClassName) == 0)
+		if (strcmpiW(szClassName, ClassName) == 0)
 		{
 		    TRACE("Found matching class name\n");
 
-		    TRACE("Guid: %S\n", szKeyName);
+		    TRACE("Guid: %p\n", szKeyName);
 		    if (dwGuidListIndex < ClassGuidListSize)
 		    {
 			if (szKeyName[0] == L'{' && szKeyName[37] == L'}')
 			{
 			    szKeyName[37] = 0;
 			}
-			TRACE("Guid: %S\n", &szKeyName[1]);
+			TRACE("Guid: %p\n", &szKeyName[1]);
 
 			UuidFromStringW(&szKeyName[1],
 					&ClassGuidList[dwGuidListIndex]);
@@ -508,7 +524,7 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
  */
 BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
 {
-  FIXME("%04lx\n", (DWORD)devinfo);
+  FIXME("%p\n", devinfo);
   return FALSE;
 }
 
@@ -571,13 +587,13 @@ BOOL WINAPI SetupDiGetActualSectionToInstallW(
         PWSTR *Extension)
 {
     WCHAR szBuffer[MAX_PATH];
-    OSVERSIONINFO OsVersionInfo;
+    OSVERSIONINFOW OsVersionInfo;
     DWORD dwLength;
     DWORD dwFullLength;
     LONG lLineCount = -1;
 
-    OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-    if (!GetVersionEx(&OsVersionInfo))
+    OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+    if (!GetVersionExW(&OsVersionInfo))
     {
 	return FALSE;
     }
@@ -707,7 +723,7 @@ BOOL WINAPI SetupDiGetClassDescriptionExW(
                                      Reserved);
     if (hKey == INVALID_HANDLE_VALUE)
     {
-	ERR("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
+	WARN("SetupDiOpenClassRegKeyExW() failed (Error %lu)\n", GetLastError());
 	return FALSE;
     }
 
@@ -855,8 +871,8 @@ static HKEY CreateClassKey(HINF hInf)
 
     if (!SetupGetLineTextW(NULL,
 			   hInf,
-			   L"Version",
-			   L"ClassGUID",
+			   Version,
+			   ClassGUID,
 			   Buffer,
 			   MAX_PATH,
 			   &RequiredSize))
@@ -864,7 +880,7 @@ static HKEY CreateClassKey(HINF hInf)
 	return INVALID_HANDLE_VALUE;
     }
 
-    lstrcpyW(FullBuffer, L"System\\CurrentControlSet\\Control\\Class\\");
+    lstrcpyW(FullBuffer, ControlClass);
     lstrcatW(FullBuffer, Buffer);
 
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
@@ -875,8 +891,8 @@ static HKEY CreateClassKey(HINF hInf)
     {
 	if (!SetupGetLineTextW(NULL,
 			       hInf,
-			       L"Version",
-			       L"Class",
+			       Version,
+			       Class,
 			       Buffer,
 			       MAX_PATH,
 			       &RequiredSize))
@@ -900,7 +916,7 @@ static HKEY CreateClassKey(HINF hInf)
     }
 
     if (RegSetValueExW(hClassKey,
-		       L"Class",
+		       Class,
 		       0,
 		       REG_SZ,
 		       (LPBYTE)Buffer,
@@ -931,7 +947,7 @@ BOOL WINAPI SetupDiInstallClassW(
     HKEY hClassKey;
 
 
-    FIXME("Incomplete function.\n");
+    FIXME("\n");
 
     if ((Flags & DI_NOVCP) && (FileQueue == NULL || FileQueue == INVALID_HANDLE_VALUE))
     {
@@ -1001,7 +1017,6 @@ BOOL WINAPI SetupDiInstallClassW(
 
     /* FIXME: More code! */
 
-ByeBye:
     if (bFileQueueCreated)
 	SetupCloseFileQueue(FileQueue);
 
@@ -1051,7 +1066,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
     LPWSTR lpGuidString;
     HKEY hClassesKey;
     HKEY hClassKey;
-    LPWSTR lpKeyName;
+    LPCWSTR lpKeyName;
 
     if (MachineName != NULL)
     {
@@ -1061,11 +1076,11 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
     if (Flags == DIOCR_INSTALLER)
     {
-        lpKeyName = L"SYSTEM\\CurrentControlSet\\Control\\Class";
+        lpKeyName = ControlClass;
     }
     else if (Flags == DIOCR_INTERFACE)
     {
-        lpKeyName = L"SYSTEM\\CurrentControlSet\\Control\\DeviceClasses";
+        lpKeyName = DeviceClasses;
     }
     else
     {
@@ -1108,7 +1123,6 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
     return hClassKey;
 }
-
 
 /***********************************************************************
  *		SetupDiOpenDeviceInterfaceA (SETUPAPI.@)
