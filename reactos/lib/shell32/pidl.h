@@ -208,7 +208,7 @@ LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
-LPITEMIDLIST	_ILCreateDrive		(LPCSTR);
+LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
 
 /*
  * helper functions (getting struct-pointer)

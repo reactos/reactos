@@ -1621,16 +1621,16 @@ HRESULT _ILCreateFromPathA(LPCSTR szPath, LPITEMIDLIST* ppidl)
 	return S_OK;
 }
 
-LPITEMIDLIST _ILCreateDrive( LPCSTR lpszNew)
+LPITEMIDLIST _ILCreateDrive(LPCWSTR lpszNew)
 {
-    char sTemp[4];
+    WCHAR sTemp[4];
     LPITEMIDLIST pidlOut;
 
-    sTemp[0]=lpszNew[0];
+    sTemp[0]=toupperW(lpszNew[0]);
     sTemp[1]=':';
     sTemp[2]='\\';
     sTemp[3]=0x00;
-    TRACE("(%s)\n",sTemp);
+    TRACE("(%s)\n",debugstr_w(sTemp));
 
     /* FIXME: magic #s! */
     if ((pidlOut = _ILCreateWithTypeAndSize(PT_DRIVE, 25)))
@@ -1639,7 +1639,7 @@ LPITEMIDLIST _ILCreateDrive( LPCSTR lpszNew)
 
         if ((pszDest = _ILGetTextPointer(pidlOut)))
         {
-            memcpy(pszDest, sTemp, sizeof(sTemp));
+	    WideCharToMultiByte(CP_ACP, 0, sTemp, sizeof(sTemp)/sizeof(WCHAR), pszDest, sizeof(sTemp)/sizeof(WCHAR), NULL, NULL);
             TRACE("-- create Drive: %s\n", debugstr_a(pszDest));
         }
     }
