@@ -1,22 +1,24 @@
 /*
- *  ReactOS W32 Subsystem
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
+ * $Id: dib.c,v 1.23 2003/06/06 10:17:44 gvg Exp $
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * ReactOS W32 Subsystem
+ * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib.c,v 1.22 2003/05/18 17:16:18 ea Exp $ */
+
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -227,9 +229,19 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
                    UINT  Usage)
 {
   BITMAPINFO Info;
+  BITMAPCOREHEADER *Core;
   PBITMAPOBJ BitmapObj;
   INT Result;
   NTSTATUS Status;
+  PDC DCObj;
+  PPALGDI PalGdi;
+  struct
+    {
+    BITMAPINFO Info;
+    DWORD BitFields[3];
+    } InfoWithBitFields;
+  DWORD *BitField;
+  DWORD InfoSize;
 
   BitmapObj = (PBITMAPOBJ) GDIOBJ_LockObj(hBitmap, GO_BITMAP_MAGIC);
   if (NULL == BitmapObj)
@@ -248,13 +260,18 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
     GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
     return 0;
     }
-  if (sizeof(BITMAPCOREHEADER) != Info.bmiHeader.biSize &&
-      sizeof(BITMAPINFOHEADER) != Info.bmiHeader.biSize)
+
+  /* If the bits are not requested, UnsafeInfo can point to either a
+     BITMAPINFOHEADER or a BITMAPCOREHEADER */
+  if (sizeof(BITMAPINFOHEADER) != Info.bmiHeader.biSize &&
+      (sizeof(BITMAPCOREHEADER) != Info.bmiHeader.biSize ||
+       NULL != Bits))
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
       return 0;
     }
+
   Status = MmCopyFromCaller(&(Info.bmiHeader),
                             &(UnsafeInfo->bmiHeader),
                             Info.bmiHeader.biSize);
@@ -267,18 +284,35 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
 
   if (NULL == Bits)
     {
-      if (0 != Info.bmiHeader.biCompression)
+      if (sizeof(BITMAPINFOHEADER) == Info.bmiHeader.biSize)
 	{
-	  UNIMPLEMENTED;
+	  if (0 != Info.bmiHeader.biBitCount)
+	    {
+	      UNIMPLEMENTED;
+	    }
+
+	  Info.bmiHeader.biWidth = BitmapObj->bitmap.bmWidth;
+	  Info.bmiHeader.biHeight = BitmapObj->bitmap.bmHeight;
+	  Info.bmiHeader.biPlanes = BitmapObj->bitmap.bmPlanes;
+	  Info.bmiHeader.biBitCount = BitmapObj->bitmap.bmBitsPixel;
+	  Info.bmiHeader.biCompression = BI_RGB;
+	  Info.bmiHeader.biSizeImage = BitmapObj->bitmap.bmHeight * BitmapObj->bitmap.bmWidthBytes;
+	}
+      else
+	{
+	  Core = (BITMAPCOREHEADER *)(&Info.bmiHeader);
+	  if (0 != Core->bcBitCount)
+	    {
+	      UNIMPLEMENTED;
+	    }
+
+	  Core->bcWidth = BitmapObj->bitmap.bmWidth;
+	  Core->bcHeight = BitmapObj->bitmap.bmHeight;
+	  Core->bcPlanes = BitmapObj->bitmap.bmPlanes;
+	  Core->bcBitCount = BitmapObj->bitmap.bmBitsPixel;
 	}
 
-      Info.bmiHeader.biWidth = BitmapObj->bitmap.bmWidth;
-      Info.bmiHeader.biHeight = BitmapObj->bitmap.bmHeight;
-      Info.bmiHeader.biPlanes = BitmapObj->bitmap.bmPlanes;
-      Info.bmiHeader.biBitCount = BitmapObj->bitmap.bmBitsPixel;
-      Info.bmiHeader.biCompression = BI_RGB;
-      Info.bmiHeader.biSizeImage = BitmapObj->bitmap.bmHeight * BitmapObj->bitmap.bmWidthBytes;
-      Status = MmCopyToCaller(UnsafeInfo, &Info, UnsafeInfo->bmiHeader.biSize);
+      Status = MmCopyToCaller(UnsafeInfo, &Info, Info.bmiHeader.biSize);
       if (! NT_SUCCESS(Status))
 	{
 	  SetLastNtError(Status);
@@ -286,6 +320,52 @@ INT STDCALL W32kGetDIBits(HDC  hDC,
 	  return 0;
 	}
       Result = 1;
+    }
+  else if (0 == StartScan && Info.bmiHeader.biHeight == StartScan + ScanLines &&
+           Info.bmiHeader.biWidth == BitmapObj->bitmap.bmWidth &&
+           Info.bmiHeader.biHeight == BitmapObj->bitmap.bmHeight &&
+           Info.bmiHeader.biPlanes == BitmapObj->bitmap.bmPlanes &&
+           Info.bmiHeader.biBitCount == BitmapObj->bitmap.bmBitsPixel &&
+           8 < Info.bmiHeader.biBitCount)
+    {
+      Info.bmiHeader.biSizeImage = BitmapObj->bitmap.bmHeight * BitmapObj->bitmap.bmWidthBytes;
+      Status = MmCopyToCaller(Bits, BitmapObj->bitmap.bmBits, Info.bmiHeader.biSizeImage);
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  return 0;
+	}
+      RtlZeroMemory(&InfoWithBitFields, sizeof(InfoWithBitFields));
+      RtlCopyMemory(&(InfoWithBitFields.Info), &Info, sizeof(BITMAPINFO));
+      if (BI_BITFIELDS == Info.bmiHeader.biCompression)
+	{
+	  DCObj = DC_HandleToPtr(hDC);
+	  if (NULL == DCObj)
+	    {
+	      SetLastWin32Error(ERROR_INVALID_HANDLE);
+	      GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	      return 0;
+	    }
+	  PalGdi = (PPALGDI) AccessInternalObject((ULONG) DCObj->w.hPalette);
+	  BitField = (DWORD *) ((char *) &InfoWithBitFields + InfoWithBitFields.Info.bmiHeader.biSize);
+	  BitField[0] = PalGdi->RedMask;
+	  BitField[1] = PalGdi->GreenMask;
+	  BitField[2] = PalGdi->BlueMask;
+	  InfoSize = InfoWithBitFields.Info.bmiHeader.biSize + 3 * sizeof(DWORD);
+	  DC_ReleasePtr(hDC);
+	}
+      else
+	{
+	  InfoSize = Info.bmiHeader.biSize;
+	}
+      Status = MmCopyToCaller(UnsafeInfo, &InfoWithBitFields, InfoSize);
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  GDIOBJ_UnlockObj(hBitmap, GO_BITMAP_MAGIC);
+	  return 0;
+	}
     }
   else
     {
@@ -604,9 +684,12 @@ DIB_CreateDIBSection(
     {
       bmp = BITMAPOBJ_HandleToPtr (res);
       if (bmp)
-      {
-        bmp->dib = (DIBSECTION *) dib;
-      }
+	{
+          bmp->dib = (DIBSECTION *) dib;
+	  /* Install user-mode bits instead of kernel-mode bits */
+	  ExFreePool(bmp->bitmap.bmBits);
+	  bmp->bitmap.bmBits = bm.bmBits;
+	}
     }
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
@@ -637,29 +720,16 @@ DIB_CreateDIBSection(
     if (res) { GDIOBJ_FreeObj(res, GO_BITMAP_MAGIC, GDIOBJFLAG_DEFAULT); res = 0; }
   }
 
-  // Install fault handler, if possible
-/*  if (bm.bmBits)
-  {
-    if (VIRTUAL_SetFaultHandler(bm.bmBits, DIB_FaultHandler, (LPVOID)res))
+  if (bmp)
     {
-      if (section || offset)
-      {
-        DIB_DoProtectDIBSection( bmp, PAGE_READWRITE );
-        if (dib) dib->status = DIB_AppMod;
-      }
-      else
-      {
-        DIB_DoProtectDIBSection( bmp, PAGE_READONLY );
-        if (dib) dib->status = DIB_InSync;
-      }
+      BITMAPOBJ_ReleasePtr(res);
     }
-  } */
-
-  if( bmp )
-	BITMAPOBJ_ReleasePtr(res);
 
   // Return BITMAP handle and storage location
-  if (bm.bmBits && bits) *bits = bm.bmBits;
+  if (NULL != bm.bmBits && NULL != bits)
+    {
+      *bits = bm.bmBits;
+    }
 
   return res;
 }

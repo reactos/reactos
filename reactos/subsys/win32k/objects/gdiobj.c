@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.26 2003/06/03 22:26:52 ekohl Exp $
+ * $Id: gdiobj.c,v 1.27 2003/06/06 10:17:44 gvg Exp $
  *
  */
 
@@ -592,21 +592,35 @@ BOOL STDCALL  W32kDeleteObject(HGDIOBJ hObject)
  * Internal function. Called when the process is destroyed to free the remaining GDI handles.
  * \param	Process - PID of the process that was destroyed.
 */
-BOOL STDCALL W32kCleanupForProcess( INT Process )
+BOOL STDCALL W32kCleanupForProcess(INT Pid)
 {
-	DWORD i;
-  	PGDI_HANDLE_ENTRY handleEntry;
-  	PGDIOBJHDR  objectHeader;
+  DWORD i;
+  PGDI_HANDLE_ENTRY handleEntry;
+  PGDIOBJHDR objectHeader;
+  NTSTATUS Status;
+  PEPROCESS Process;
 
-	for( i=1; i < GDI_HANDLE_NUMBER; i++ ){
-		handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) i & 0xffff);
-		if( handleEntry && handleEntry->wMagic != 0 && handleEntry->hProcessId == Process){
-			objectHeader = (PGDIOBJHDR) handleEntry->pObject;
-			DPRINT("\nW32kCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
-			GDIOBJ_FreeObj( (WORD) i & 0xffff, GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
-		}
+  if (! NT_SUCCESS(PsLookupProcessByProcessId(Pid, &Process)))
+    {
+      return FALSE;
+    }
+  KeAttachProcess(Process);
+
+  for(i = 1; i < GDI_HANDLE_NUMBER; i++)
+    {
+      handleEntry = GDIOBJ_iGetHandleEntryForIndex((WORD) i & 0xffff);
+      if (NULL != handleEntry && 0 != handleEntry->wMagic &&
+          handleEntry->hProcessId == Pid)
+	{
+	  objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	  DPRINT("\nW32kCleanup: %d, magic: %x \n process: %d, locks: %d", i, handleEntry->wMagic, handleEntry->hProcessId, objectHeader->dwCount);
+	  GDIOBJ_FreeObj( (WORD) i & 0xffff, GO_MAGIC_DONTCARE, GDIOBJFLAG_IGNOREPID|GDIOBJFLAG_IGNORELOCK );
 	}
-	return TRUE;
+    }
+
+  KeDetachProcess();
+
+  return TRUE;
 }
 
 /*!

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.28 2003/06/03 22:26:52 ekohl Exp $ */
+/* $Id: bitmaps.c,v 1.29 2003/06/06 10:17:44 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -193,10 +193,29 @@ HBITMAP STDCALL W32kCreateBitmap(INT  Width,
 
 BOOL FASTCALL Bitmap_InternalDelete( PBITMAPOBJ pBmp )
 {
-	ASSERT( pBmp );
-	if( pBmp->bitmap.bmBits )
-		ExFreePool(pBmp->bitmap.bmBits);
-	return TRUE;
+  ASSERT( pBmp );
+
+  if (NULL != pBmp->bitmap.bmBits)
+    {
+      if (NULL != pBmp->dib)
+	{
+	  if (NULL == pBmp->dib->dshSection)
+	    {
+	      EngFreeUserMem(pBmp->bitmap.bmBits);
+	    }
+	  else
+	    {
+	      /* This is a file-mapped section */
+	      UNIMPLEMENTED;
+	    }
+	}
+      else
+	{
+	  ExFreePool(pBmp->bitmap.bmBits);
+	}
+    }
+
+  return TRUE;
 }
 
 

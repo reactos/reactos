@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.8 2003/05/18 17:16:17 ea Exp $
+/* $Id: mem.c,v 1.9 2003/06/06 10:17:44 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,13 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
+
+typedef struct _USERMEMHEADER
+  {
+  ULONG Tag;
+  ULONG MemSize;
+  }
+USERMEMHEADER, *PUSERMEMHEADER;
 
 PVOID STDCALL
 EngAllocMem(ULONG Flags,
@@ -54,20 +61,33 @@ EngFreeMem(PVOID Mem)
 }
 
 PVOID STDCALL
-EngAllocUserMem(ULONG cj, ULONG tag)
+EngAllocUserMem(ULONG cj, ULONG Tag)
 {
-  PVOID newMem = NULL;
-  NTSTATUS status;
+  PVOID NewMem = NULL;
+  NTSTATUS Status;
+  ULONG MemSize = sizeof(USERMEMHEADER) + cj;
+  PUSERMEMHEADER Header;
 
-  status = ZwAllocateVirtualMemory(NtCurrentProcess(), &newMem, 0, &cj, MEM_COMMIT, PAGE_READWRITE);
+  Status = ZwAllocateVirtualMemory(NtCurrentProcess(), &NewMem, 0, &MemSize, MEM_COMMIT, PAGE_READWRITE);
 
-  if(status != STATUS_SUCCESS) return NULL;
-  return newMem;
+  if (! NT_SUCCESS(Status))
+    {
+      return NULL;
+    }
+
+  Header = (PUSERMEMHEADER) NewMem;
+  Header->Tag = Tag;
+  Header->MemSize = cj;
+
+  return (PVOID)(Header + 1);
 }
 
 VOID STDCALL
 EngFreeUserMem(PVOID pv)
 {
-  ZwFreeVirtualMemory (NtCurrentProcess(), &pv, 0, MEM_DECOMMIT);
+  PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
+  ULONG MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
+
+  ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_DECOMMIT);
 }
 /* EOF */
