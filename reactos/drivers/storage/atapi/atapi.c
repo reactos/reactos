@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.39 2003/06/24 12:29:02 ekohl Exp $
+/* $Id: atapi.c,v 1.40 2003/06/24 21:30:08 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1808,6 +1808,30 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	 Srb->TargetId,
 	 Srb->Lun);
 
+  if (Srb->PathId != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
+    }
+
   switch (Srb->Cdb[0])
     {
       case SCSIOP_INQUIRY:
@@ -1865,30 +1889,6 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
 	 DeviceExtension, Srb->TargetId);
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
 
   InquiryData = Srb->DataBuffer;
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
@@ -1956,31 +1956,6 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ULONG LastSector;
 
   DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
-
   CapacityData = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
 
@@ -2031,31 +2006,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Status;
 
   DPRINT("AtapiReadWrite() called!\n");
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
-
   DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
 	 Srb->TargetId);
 
@@ -2254,33 +2204,8 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   ULONG Retries;
   UCHAR Status;
 
-  DPRINT1("AtapiFlushCache() called!\n");
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
-
-  DPRINT1("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
+  DPRINT("AtapiFlushCache() called!\n");
+  DPRINT("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
 	 Srb->TargetId);
 
   /* Wait for BUSY to clear */
@@ -2293,8 +2218,8 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
         }
       ScsiPortStallExecution(10);
     }
-  DPRINT1("Status=%02x\n", Status);
-  DPRINT1("Waited %ld usecs for busy to clear\n", Retries * 10);
+  DPRINT("Status=%02x\n", Status);
+  DPRINT("Waited %ld usecs for busy to clear\n", Retries * 10);
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
       DPRINT1("Drive is BUSY for too long\n");
@@ -2328,7 +2253,7 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   /* Indicate expecting an interrupt. */
   DeviceExtension->ExpectingInterrupt = TRUE;
 
-  DPRINT1("AtapiFlushCache() done!\n");
+  DPRINT("AtapiFlushCache() done!\n");
 
   /* Wait for interrupt. */
   return(SRB_STATUS_PENDING);
@@ -2344,30 +2269,6 @@ AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   UCHAR Error;
 
   DPRINT1("AtapiTestUnitReady() called!\n");
-
-  if (Srb->PathId != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
-      return(SRB_STATUS_INVALID_PATH_ID);
-    }
-
-  if (Srb->TargetId > 1)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
-      return(SRB_STATUS_INVALID_TARGET_ID);
-    }
-
-  if (Srb->Lun != 0)
-    {
-      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
-      return(SRB_STATUS_INVALID_LUN);
-    }
-
-  if (!(DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_PRESENT))
-    {
-      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-      return(SRB_STATUS_NO_DEVICE);
-    }
 
   DPRINT1("SCSIOP_TEST_UNIT_READY: TargetId: %lu\n",
 	 Srb->TargetId);
@@ -2426,12 +2327,14 @@ AtapiTestUnitReady(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       Error = IDEReadError(DeviceExtension->CommandPortBase);
       if (Error == IDE_ER_UNC)
 	{
+CHECKPOINT1;
 	  /* Handle write protection 'error' */
 	  Srb->SrbStatus = SRB_STATUS_SUCCESS;
 	  return(SRB_STATUS_SUCCESS);
 	}
       else
 	{
+CHECKPOINT1;
 	  /* Indicate expecting an interrupt. */
 	  DeviceExtension->ExpectingInterrupt = TRUE;
 	  return(SRB_STATUS_PENDING);
