@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.11 2002/09/03 18:44:18 chorns Exp $
+# $Id: makefile,v 1.12 2003/01/07 18:16:44 robd Exp $
 #
 # ReactOS System Utilities
 #
@@ -44,8 +44,12 @@ TARGET=\
 	pedump.exe \
 	shutdown.exe \
 	chkdsk.exe \
-	format.exe \
-	regexpl/regexpl.exe
+	format.exe 
+
+# Removed due to dependance on C++ compiler
+#
+#	regexpl/regexpl.exe
+#
 
 all: $(TARGET)
 
