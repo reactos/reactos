@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2002/08/23 12:40:56 ea Exp $
+# $Id: Makefile,v 1.5 2002/10/01 20:21:45 ea Exp $
 #
 # Tu run it in Win32 console mode, undefine __SUBSYSTEM_WINDOWS__
 # and pass "console" in the ld's --subsystem option.
@@ -16,7 +16,7 @@ OBJECTS=$(TARGET_NAME).o $(TARGET_NAME).coff
 
 LIBRARIES=\
 	$(PATH_TO_PSX_TOP)/lib/crt0w32.o \
-	$(PATH_TO_TOP)/dk/psx/lib/psxdll.a
+	$(PATH_TO_PSX_TOP)/lib/psxdll/psxdll.a
 
 $(TARGET_NAME): $(OBJECTS) $(LIBRARIES)
 	$(CC) \
