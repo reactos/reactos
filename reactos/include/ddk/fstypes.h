@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.15.8.1 2004/06/27 01:13:11 hyperion Exp $ */
+/* $Id: fstypes.h,v 1.15.8.2 2004/06/30 21:16:02 hyperion Exp $ */
 
 #ifndef __USE_W32API
 

@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = beep blue bootvid debugout floppy ide null serial 
+DRIVERS = beep blue bootvid debugout null serial 
 
 all: $(DRIVERS)
 

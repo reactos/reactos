@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.11.24.1 2004/06/27 01:13:13 hyperion Exp $
+/* $Id: list.c,v 1.11.24.2 2004/06/30 21:16:07 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

@@ -545,7 +545,7 @@ DWORD WINAPI SHCreateDirectory(HWND hWnd, LPCVOID path)
  *  ERROR_ALREADY_EXISTS when the directory already exists
  *  ERROR_FILENAME_EXCED_RANGE if the filename was to long to process
  */
-DWORD WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES sec)
+int WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES sec)
 {
 	WCHAR wPath[MAX_PATH];
 	TRACE("(%p, %s, %p)\n",hWnd, debugstr_a(path), sec);
@@ -557,9 +557,9 @@ DWORD WINAPI SHCreateDirectoryExA(HWND hWnd, LPCSTR path, LPSECURITY_ATTRIBUTES 
 /*************************************************************************
  * SHCreateDirectoryExW      [SHELL32.@]
  */
-DWORD WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
+int WINAPI SHCreateDirectoryExW(HWND hWnd, LPCWSTR path, LPSECURITY_ATTRIBUTES sec)
 {
-	DWORD ret = ERROR_BAD_PATHNAME;
+	int ret = ERROR_BAD_PATHNAME;
 	TRACE("(%p, %s, %p)\n",hWnd, debugstr_w(path), sec);
 
 	if (PathIsRelativeW(path))

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.70.8.1 2004/06/27 01:13:13 hyperion Exp $
+/* $Id: device.c,v 1.70.8.2 2004/06/30 21:16:08 hyperion Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.51.2.1 2004/06/27 01:13:17 hyperion Exp $
+ * $Id: dib.c,v 1.51.2.2 2004/06/30 21:16:12 hyperion Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -1115,15 +1115,15 @@ DIB_CreateDIBSection(
         dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x001f;        break;
 
       case 24:
-        dib->dsBitfields[0] = 0xff;
-        dib->dsBitfields[1] = 0xff00;
-        dib->dsBitfields[2] = 0xff0000;
+        dib->dsBitfields[0] = 0xff0000;
+        dib->dsBitfields[1] = 0x00ff00;
+        dib->dsBitfields[2] = 0x0000ff;
         break;
 
       case 32:
-        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0xff;
-        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0xff00;
-        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0xff0000;
+        dib->dsBitfields[0] = (bi->biCompression == BI_BITFIELDS) ? *(DWORD *)bmi->bmiColors : 0xff0000;
+        dib->dsBitfields[1] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 1) : 0x00ff00;
+        dib->dsBitfields[2] = (bi->biCompression == BI_BITFIELDS) ? *((DWORD *)bmi->bmiColors + 2) : 0x0000ff;
         break;
     }
     dib->dshSection = section;
@@ -1350,27 +1350,6 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
   return lpRGB;
 }
 
-PPALETTEENTRY STDCALL
-DIBColorTableToPaletteEntries (
-	PPALETTEENTRY palEntries,
-	const RGBQUAD *DIBColorTable,
-	ULONG ColorCount
-	)
-{
-  ULONG i;
-
-  for (i = 0; i < ColorCount; i++)
-    {
-      palEntries->peRed   = DIBColorTable->rgbRed;
-      palEntries->peGreen = DIBColorTable->rgbGreen;
-      palEntries->peBlue  = DIBColorTable->rgbBlue;
-      palEntries++;
-      DIBColorTable++;
-    }
-
-  return palEntries;
-}
-
 HPALETTE FASTCALL
 BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 {
@@ -1407,13 +1386,11 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   if (PAL_INDEXED == *paletteType)
     {
-      palEntries = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY)*ColorCount, TAG_COLORMAP);
-      DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
+      hPal = PALETTE_AllocPaletteIndexedRGB(ColorCount, (RGBQUAD*)bmi->bmiColors);
     }
-  hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
-  if (NULL != palEntries)
+  else
     {
-      ExFreePool(palEntries);
+      hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );
     }
 
   return hPal;

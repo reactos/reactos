@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.5.24.1 2004/06/27 01:13:13 hyperion Exp $
+/* $Id: mdl.c,v 1.5.24.2 2004/06/30 21:16:08 hyperion Exp $
  *
  * reactos/ntoskrnl/fs/mdl.c
  *

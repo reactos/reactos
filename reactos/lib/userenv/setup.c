@@ -1,4 +1,4 @@
-/* $Id: setup.c,v 1.4.8.1 2004/06/27 01:13:13 hyperion Exp $ 
+/* $Id: setup.c,v 1.4.8.2 2004/06/30 21:16:07 hyperion Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries

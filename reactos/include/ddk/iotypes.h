@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.62.12.1 2004/06/27 01:13:11 hyperion Exp $
+/* $Id: iotypes.h,v 1.62.12.2 2004/06/30 21:16:02 hyperion Exp $
  *
  */
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.35 2004/05/30 14:01:12 weiden Exp $
+/* $Id: xlate.c,v 1.35.4.1 2004/06/30 21:16:11 hyperion Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,8 +29,6 @@
 #include <w32k.h>
 
 // TODO: Cache XLATEOBJs that are created by EngCreateXlate by checking if the given palettes match a cached list
-
-ULONG CCMLastSourceColor = 0, CCMLastColorMatch = 0;
 
 static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 {
@@ -62,37 +60,17 @@ static ULONG FASTCALL ShiftAndMask(XLATEGDI *XlateGDI, ULONG Color)
 
 // Takes indexed palette and a
 ULONG STDCALL 
-ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor,
+ClosestColorMatch(XLATEGDI *XlateGDI, LPPALETTEENTRY SourceColor,
    PALETTEENTRY *DestColors, ULONG NumColors)
 {
-  LPPALETTEENTRY cSourceColor;
   LONG idx = 0;
   ULONG i;
-  ULONG SourceRGB;
   ULONG SourceRed, SourceGreen, SourceBlue;
   ULONG cxRed, cxGreen, cxBlue, rt, BestMatch = 16777215;
 
-  // Simple cache -- only one value because we don't want to waste time
-  // if the colors aren't very sequential
-
-  if(SourceColor == CCMLastSourceColor)
-  {
-    return CCMLastColorMatch;
-  }
-
-  if (PAL_BITFIELDS == XlateGDI->XlateObj.iSrcType || PAL_BGR == XlateGDI->XlateObj.iSrcType)
-    {
-      /* FIXME: must use bitfields */
-      SourceRGB = ShiftAndMask(XlateGDI, SourceColor);
-      cSourceColor = (LPPALETTEENTRY) &SourceRGB;
-    }
-  else
-    {
-      cSourceColor = (LPPALETTEENTRY)&SourceColor;
-    } 
-  SourceRed = cSourceColor->peRed;
-  SourceGreen = cSourceColor->peGreen;
-  SourceBlue = cSourceColor->peBlue;
+  SourceRed = SourceColor->peRed;
+  SourceGreen = SourceColor->peGreen;
+  SourceBlue = SourceColor->peBlue;
 
   for (i=0; i<NumColors; i++)
   {
@@ -112,9 +90,6 @@ ClosestColorMatch(XLATEGDI *XlateGDI, ULONG SourceColor,
     }
   }
 
-  CCMLastSourceColor = SourceColor;
-  CCMLastColorMatch  = idx;
-
   return idx;
 }
 
@@ -128,7 +103,7 @@ IndexedToIndexedTranslationTable(XLATEGDI *XlateGDI, ULONG *TranslationTable,
   Trivial = TRUE;
   for(i=0; i<PalSource->NumColors; i++)
     {
-      TranslationTable[i] = ClosestColorMatch(XlateGDI, *((ULONG*)&PalSource->IndexedColors[i]), PalDest->IndexedColors, PalDest->NumColors);
+      TranslationTable[i] = ClosestColorMatch(XlateGDI, PalSource->IndexedColors + i, PalDest->IndexedColors, PalDest->NumColors);
       Trivial = Trivial && (TranslationTable[i] == i);
     }
   if (Trivial)
@@ -141,6 +116,10 @@ static VOID STDCALL
 BitMasksFromPal(USHORT PalType, PPALGDI Palette,
                             PULONG RedMask, PULONG BlueMask, PULONG GreenMask)
 {
+  static const union { PALETTEENTRY Color; ULONG Mask; } Red = {{255, 0, 0}};
+  static const union { PALETTEENTRY Color; ULONG Mask; } Green = {{0, 255, 0}};
+  static const union { PALETTEENTRY Color; ULONG Mask; } Blue = {{0, 0, 255}};
+
   switch(PalType)
   {
     case PAL_RGB:
@@ -155,8 +134,13 @@ BitMasksFromPal(USHORT PalType, PPALGDI Palette,
       break;
     case PAL_BITFIELDS:
       *RedMask = Palette->RedMask;
-      *BlueMask = Palette->BlueMask;
       *GreenMask = Palette->GreenMask;
+      *BlueMask = Palette->BlueMask;
+      break;
+    case PAL_INDEXED:
+      *RedMask = Red.Mask;
+      *GreenMask = Green.Mask;
+      *BlueMask = Blue.Mask;
       break;
   }
 }
@@ -201,185 +185,121 @@ VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
   FreeGDIHandle((ULONG)HXlate);
 }
 
-XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
-                            HPALETTE PaletteDest, HPALETTE PaletteSource)
+XLATEOBJ* STDCALL
+IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
+                  HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
-  // FIXME: Add support for BGR conversions
+   ULONG NewXlate;
+   XLATEOBJ *XlateObj;
+   XLATEGDI *XlateGDI;
+   PALGDI *SourcePalGDI = 0;
+   PALGDI *DestPalGDI = 0;
+   ULONG SourceRedMask, SourceGreenMask, SourceBlueMask;
+   ULONG DestRedMask, DestGreenMask, DestBlueMask;
+   ULONG i;
 
-  HPALETTE NewXlate;
-  XLATEOBJ *XlateObj;
-  XLATEGDI *XlateGDI;
-  PALGDI   *SourcePalGDI, *DestPalGDI;
-  ULONG    IndexedColors;
-  ULONG    SourceRedMask, SourceGreenMask, SourceBlueMask;
-  ULONG    DestRedMask, DestGreenMask, DestBlueMask;
-  UINT     i;
+   NewXlate = CreateGDIHandle(sizeof(XLATEGDI), sizeof(XLATEOBJ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
+   if (!ValidEngHandle(NewXlate))
+      return NULL;
 
-  NewXlate = (HPALETTE)CreateGDIHandle(sizeof( XLATEGDI ), sizeof( XLATEOBJ ), (PVOID*)&XlateGDI, (PVOID*)&XlateObj);
-  if ( !ValidEngHandle ( NewXlate ) )
-    return NULL;
+   if (PaletteSource != NULL)
+      SourcePalGDI = PALETTE_LockPalette(PaletteSource);
+   if (PaletteDest == PaletteSource)
+      DestPalGDI = SourcePalGDI;
+   else if (PaletteDest != NULL)
+      DestPalGDI = PALETTE_LockPalette(PaletteDest);
 
-  if (NULL != PaletteSource)
-  {
-    SourcePalGDI = PALETTE_LockPalette(PaletteSource);
-  }
-  if (PaletteDest == PaletteSource)
-  {
-    DestPalGDI = SourcePalGDI;
-  }
-  else if (NULL != PaletteDest)
-  {
-    DestPalGDI = PALETTE_LockPalette(PaletteDest);
-  }
+   XlateObj->iSrcType = SourcePalType;
+   XlateObj->iDstType = DestPalType;
+   XlateObj->flXlate = 0;
 
-  XlateObj->iSrcType = SourcePalType;
-  XlateObj->iDstType = DestPalType;
+   /* Store handles of palettes in internal Xlate GDI object (or NULLs) */
+   XlateGDI->SourcePal = PaletteSource;
+   XlateGDI->DestPal = PaletteDest;
 
-  // Store handles of palettes in internal Xlate GDI object (or NULLs)
-  XlateGDI->DestPal   = PaletteDest;
-  XlateGDI->SourcePal = PaletteSource;
+   XlateGDI->UseShiftAndMask = FALSE;
 
-  XlateObj->flXlate = 0;
+   /*
+    * Compute bit fiddeling constants unless both palettes are indexed, then
+    * we don't need them.
+    */
+   if (SourcePalType != PAL_INDEXED || DestPalType != PAL_INDEXED)
+   {
+      BitMasksFromPal(SourcePalType, SourcePalGDI, &SourceRedMask,
+                      &SourceBlueMask, &SourceGreenMask);
+      BitMasksFromPal(DestPalType, DestPalGDI, &DestRedMask,
+                      &DestBlueMask, &DestGreenMask);
+      XlateGDI->RedShift = CalculateShift(SourceRedMask) - CalculateShift(DestRedMask);
+      XlateGDI->RedMask = DestRedMask;
+      XlateGDI->GreenShift = CalculateShift(SourceGreenMask) - CalculateShift(DestGreenMask);
+      XlateGDI->GreenMask = DestGreenMask;
+      XlateGDI->BlueShift = CalculateShift(SourceBlueMask) - CalculateShift(DestBlueMask);
+      XlateGDI->BlueMask = DestBlueMask;
+   }
 
-  XlateGDI->UseShiftAndMask = FALSE;
-
-  /* Compute bit fiddeling constants unless both palettes are indexed, then we don't need them */
-  if (PAL_INDEXED != SourcePalType || PAL_INDEXED != DestPalType)
-  {
-    BitMasksFromPal(PAL_INDEXED == SourcePalType ? PAL_RGB : SourcePalType,
-                    SourcePalGDI, &SourceRedMask, &SourceBlueMask, &SourceGreenMask);
-    BitMasksFromPal(PAL_INDEXED == DestPalType ? PAL_RGB : DestPalType,
-                    DestPalGDI, &DestRedMask, &DestBlueMask, &DestGreenMask);
-    XlateGDI->RedShift = CalculateShift(SourceRedMask) - CalculateShift(DestRedMask);
-    XlateGDI->RedMask = DestRedMask;
-    XlateGDI->GreenShift = CalculateShift(SourceGreenMask) - CalculateShift(DestGreenMask);
-    XlateGDI->GreenMask = DestGreenMask;
-    XlateGDI->BlueShift = CalculateShift(SourceBlueMask) - CalculateShift(DestBlueMask);
-    XlateGDI->BlueMask = DestBlueMask;
-  }
-
-  // If source and destination palettes are the same or if they're RGB/BGR
-  if( (PaletteDest == PaletteSource) ||
-      ((DestPalType == PAL_RGB) && (SourcePalType == PAL_RGB)) ||
-      ((DestPalType == PAL_BGR) && (SourcePalType == PAL_BGR)) )
-  {
-    XlateObj->flXlate |= XO_TRIVIAL;
-    if (NULL != PaletteSource)
-    {
-      PALETTE_UnlockPalette(PaletteSource);
-    }
-    if (NULL != PaletteDest && PaletteDest != PaletteSource)
-    {
-      PALETTE_UnlockPalette(PaletteDest);
-    }
-    return XlateObj;
-  }
-
-  /* If source and destination are bitfield based (RGB and BGR are just special bitfields) */
-  if ((PAL_RGB == DestPalType || PAL_BGR == DestPalType || PAL_BITFIELDS == DestPalType) &&
-      (PAL_RGB == SourcePalType || PAL_BGR == SourcePalType || PAL_BITFIELDS == SourcePalType))
-  {
-    if (SourceRedMask == DestRedMask &&
-        SourceBlueMask == DestBlueMask &&
-        SourceGreenMask == DestGreenMask)
-      {
+   /* If source and destination palettes are the same or if they're RGB/BGR */
+   if (PaletteDest == PaletteSource ||
+       (DestPalType == PAL_RGB && SourcePalType == PAL_RGB) ||
+       (DestPalType == PAL_BGR && SourcePalType == PAL_BGR))
+   {
       XlateObj->flXlate |= XO_TRIVIAL;
-      }
-    XlateGDI->UseShiftAndMask = TRUE;
-    if (NULL != PaletteSource)
-    {
-      PALETTE_UnlockPalette(PaletteSource);
-    }
-    if (NULL != PaletteDest && PaletteDest != PaletteSource)
-    {
-      PALETTE_UnlockPalette(PaletteDest);
-    }
-    return XlateObj;
-  }
+      goto end;
+   }
 
-  // Prepare the translation table
-  if (PAL_INDEXED == SourcePalType || PAL_RGB == SourcePalType || PAL_BGR == SourcePalType)
-  {
-    XlateObj->flXlate |= XO_TABLE;
-    if ((SourcePalType == PAL_INDEXED) && (DestPalType == PAL_INDEXED))
-    {
-      if(SourcePalGDI->NumColors > DestPalGDI->NumColors)
+   /*
+    * If source and destination are bitfield based (RGB and BGR are just
+    * special bitfields) we can use simple shifting.
+    */
+   if ((DestPalType == PAL_RGB || DestPalType == PAL_BGR ||
+        DestPalType == PAL_BITFIELDS) &&
+       (SourcePalType == PAL_RGB || SourcePalType == PAL_BGR ||
+        SourcePalType == PAL_BITFIELDS))
+   {
+      if (SourceRedMask == DestRedMask &&
+          SourceBlueMask == DestBlueMask &&
+          SourceGreenMask == DestGreenMask)
       {
-        IndexedColors = SourcePalGDI->NumColors;
-      } else
-        IndexedColors = DestPalGDI->NumColors;
-    }
-    else if (SourcePalType == PAL_INDEXED) { IndexedColors = SourcePalGDI->NumColors; }
-    else if (DestPalType   == PAL_INDEXED) { IndexedColors = DestPalGDI->NumColors; }
-
-    XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, 0);
-    if (NULL == XlateGDI->translationTable)
-      {
-	if (NULL != PaletteSource)
-	  {
-	    PALETTE_UnlockPalette(PaletteSource);
-	  }
-	if (NULL != PaletteDest && PaletteDest != PaletteSource)
-	  {
-	    PALETTE_UnlockPalette(PaletteDest);
-	  }
-	EngDeleteXlate(XlateObj);
-	return NULL;
+         XlateObj->flXlate |= XO_TRIVIAL;
       }
-  }
+      XlateGDI->UseShiftAndMask = TRUE;
+      goto end;
+   }
 
-  // Source palette is indexed
-  if(XlateObj->iSrcType == PAL_INDEXED)
-  {
-    if(XlateObj->iDstType == PAL_INDEXED)
-    {
-      // Converting from indexed to indexed
+   /* Indexed -> Indexed */
+   if (SourcePalType == PAL_INDEXED && DestPalType == PAL_INDEXED)
+   {
+      XlateGDI->translationTable = 
+         EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
       IndexedToIndexedTranslationTable(XlateGDI, XlateGDI->translationTable, DestPalGDI, SourcePalGDI);
-    } else
-      if (PAL_RGB == XlateObj->iDstType || PAL_BITFIELDS == XlateObj->iDstType )
-      {
-        // FIXME: Is this necessary? I think the driver has to call this
-        // function anyways if pulXlate is NULL and Source is PAL_INDEXED
+      XlateObj->flXlate |= XO_TABLE;
+      XlateObj->pulXlate = XlateGDI->translationTable;
+      goto end;
+   }
 
-        // Converting from indexed to RGB
+   /* Indexed -> Bitfields/RGB/BGR */
+   if (SourcePalType == PAL_INDEXED)
+   {
+      XlateGDI->translationTable = 
+         EngAllocMem(0, sizeof(ULONG) * SourcePalGDI->NumColors, 0);
+      for (i = 0; i < SourcePalGDI->NumColors; i++)
+         XlateGDI->translationTable[i] =
+            ShiftAndMask(XlateGDI, *((ULONG *)&SourcePalGDI->IndexedColors[i]));
+      XlateObj->flXlate |= XO_TABLE;
+      XlateObj->pulXlate = XlateGDI->translationTable;
+      goto end;
+   }
 
-	RtlCopyMemory(XlateGDI->translationTable, SourcePalGDI->IndexedColors, sizeof(ULONG) * SourcePalGDI->NumColors);
-	if (PAL_BITFIELDS == XlateObj->iDstType)
-	{
-	  for (i = 0; i < SourcePalGDI->NumColors; i++)
-	  {
-	  XlateGDI->translationTable[i] = ShiftAndMask(XlateGDI, XlateGDI->translationTable[i]);
-	  }
-	}
-      }
+   /*
+    * Last case: Bitfields/RGB/BGR -> Indexed
+    * isn't handled here yet and all the logic is in XLATEOBJ_iXlate now.
+    */
 
-    XlateObj->pulXlate = XlateGDI->translationTable;
-  }
-
-  // Source palette is RGB
-  if (PAL_RGB == XlateObj->iSrcType || PAL_BGR == XlateObj->iSrcType)
-  {
-    if(PAL_INDEXED == XlateObj->iDstType)
-    {
-      // FIXME: Is this necessary? I think the driver has to call this
-      // function anyways if pulXlate is NULL and Dest is PAL_INDEXED
-
-      // Converting from RGB to indexed
-      RtlCopyMemory(XlateGDI->translationTable, DestPalGDI->IndexedColors, sizeof(ULONG) * DestPalGDI->NumColors);
-    }
-  }
-
-  // FIXME: Add support for XO_TO_MONO
-  if (NULL != PaletteSource)
-  {
-    PALETTE_UnlockPalette(PaletteSource);
-  }
-  if (NULL != PaletteDest && PaletteDest != PaletteSource)
-  {
-    PALETTE_UnlockPalette(PaletteDest);
-  }
-
-  return XlateObj;
+end:
+   if (PaletteSource != NULL)
+      PALETTE_UnlockPalette(PaletteSource);
+   if (PaletteDest != NULL && PaletteDest != PaletteSource)
+      PALETTE_UnlockPalette(PaletteDest);
+   return XlateObj;
 }
 
 XLATEOBJ * STDCALL IntEngCreateMonoXlate(
@@ -410,10 +330,10 @@ XLATEOBJ * STDCALL IntEngCreateMonoXlate(
          XlateGDI->BackgroundColor = NtGdiGetNearestPaletteIndex(
             PaletteSource, BackgroundColor);
          break;
-      case PAL_RGB:
+      case PAL_BGR:
          XlateGDI->BackgroundColor = BackgroundColor;
          break;
-      case PAL_BGR:
+      case PAL_RGB:
          XlateGDI->BackgroundColor =
             ((BackgroundColor & 0xFF) << 16) |
             ((BackgroundColor & 0xFF0000) >> 16) |
@@ -458,6 +378,7 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 ULONG STDCALL
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 {
+   XLATEGDI *XlateGDI;
    PALGDI *PalGDI;
    ULONG Closest;
 
@@ -466,41 +387,38 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
       return Color;
 
    if (XlateObj->flXlate & XO_TRIVIAL)
-   {
       return Color;
-   } else
+
+   if (XlateObj->flXlate & XO_TABLE)
+      return XlateObj->pulXlate[Color];         
+
+   XlateGDI = (XLATEGDI *)AccessInternalObjectFromUserObject(XlateObj);
+
+   if (XlateObj->flXlate & XO_TO_MONO)
+      return Color == XlateGDI->BackgroundColor;
+
+   if (XlateGDI->UseShiftAndMask)
+      return ShiftAndMask(XlateGDI, Color);
+
+   if (XlateObj->iSrcType == PAL_RGB || XlateObj->iSrcType == PAL_BGR ||
+       XlateObj->iSrcType == PAL_BITFIELDS)
    {
-      XLATEGDI *XlateGDI = (XLATEGDI *)AccessInternalObjectFromUserObject(XlateObj);
+      /* FIXME: should we cache colors used often? */
+      /* FIXME: won't work if destination isn't indexed */
 
-      if (XlateObj->flXlate & XO_TO_MONO)
-      {
-         return Color == XlateGDI->BackgroundColor;
-      } else
-      if (XlateGDI->UseShiftAndMask)
-      {
-         return ShiftAndMask(XlateGDI, Color);
-      } else
-      if (XlateObj->iSrcType == PAL_RGB || XlateObj->iSrcType == PAL_BGR ||
-          XlateObj->iSrcType == PAL_BITFIELDS)
-      {
-         /* FIXME: should we cache colors used often? */
-         /* FIXME: won't work if destination isn't indexed */
+      /* Extract the destination palette. */
+      PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
 
-         /* Extract the destination palette. */
-         PalGDI = PALETTE_LockPalette(XlateGDI->DestPal);
+      /* Convert the source color to the palette RGB format. */
+      Color = ShiftAndMask(XlateGDI, Color);
 
-         /* Return closest match for the given color. */
-         Closest = ClosestColorMatch(XlateGDI, Color, PalGDI->IndexedColors, PalGDI->NumColors);
-         PALETTE_UnlockPalette(XlateGDI->DestPal);
-         return Closest;
-      } else
-      if (XlateObj->iSrcType == PAL_INDEXED)
-      {
-         return XlateGDI->translationTable[Color];
-      }
-  }
+      /* Return closest match for the given color. */
+      Closest = ClosestColorMatch(XlateGDI, (LPPALETTEENTRY)&Color, PalGDI->IndexedColors, PalGDI->NumColors);
+      PALETTE_UnlockPalette(XlateGDI->DestPal);
+      return Closest;
+   }
 
-  return 0;
+   return 0;
 }
 
 /*

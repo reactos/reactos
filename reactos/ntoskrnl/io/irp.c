@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.61.6.1 2004/06/27 01:13:14 hyperion Exp $
+/* $Id: irp.c,v 1.61.6.2 2004/06/30 21:16:08 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

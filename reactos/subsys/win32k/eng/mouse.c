@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.72.2.1 2004/06/27 01:13:17 hyperion Exp $
+/* $Id: mouse.c,v 1.72.2.2 2004/06/30 21:16:10 hyperion Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse

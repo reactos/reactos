@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.29.6.1 2004/06/27 01:13:12 hyperion Exp $
+/* $Id: bitmap.c,v 1.29.6.2 2004/06/30 21:16:07 hyperion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c

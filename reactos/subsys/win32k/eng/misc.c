@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.6.6.1 2004/06/27 01:13:17 hyperion Exp $ */
+/* $Id: misc.c,v 1.6.6.2 2004/06/30 21:16:10 hyperion Exp $ */
 #include <w32k.h>
 
 BOOL STDCALL

@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_LDRFUNCS_H
 #define __INCLUDE_DDK_LDRFUNCS_H
-/* $Id: ldrfuncs.h,v 1.5.22.1 2004/06/27 01:13:11 hyperion Exp $ */
+/* $Id: ldrfuncs.h,v 1.5.22.2 2004/06/30 21:16:02 hyperion Exp $ */
 
 NTSTATUS STDCALL
 LdrAccessResource(IN  PVOID BaseAddress,

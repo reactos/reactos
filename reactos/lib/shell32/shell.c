@@ -611,7 +611,7 @@ DWORD WINAPI RegEnumKey16( HKEY hkey, DWORD index, LPSTR name, DWORD name_len )
 /*************************************************************************
  *           SHELL_Execute16 [Internal]
  */
-static UINT SHELL_Execute16(const WCHAR *lpCmd, void *env, BOOL shWait,
+static UINT SHELL_Execute16(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
 			    LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out)
 {
     UINT ret;

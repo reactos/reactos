@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.15.24.1 2004/06/27 01:13:13 hyperion Exp $
+/* $Id: util.c,v 1.15.24.2 2004/06/30 21:16:08 hyperion Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *

@@ -11,6 +11,8 @@ HKCU,"Control Panel\International",,0x00000012
 HKCU,"Control Panel\International","Locale",0x00000000,"0409"
 
 HKCU,"Environment",,0x00000012
+HKCU,"Environment","TEMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
+HKCU,"Environment","TMP",0x00020000,"%USERPROFILE%\Local Settings\Temp"
 
 HKCU,"SOFTWARE",,0x00000012
 HKCU,"SOFTWARE\Microsoft",,0x00000012

@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.28.8.1 2004/06/27 01:13:16 hyperion Exp $
+/* $Id: pool.c,v 1.28.8.2 2004/06/30 21:16:09 hyperion Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel

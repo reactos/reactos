@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.78.2.1 2004/06/27 01:13:12 hyperion Exp $
+/* $Id: stubs.c,v 1.78.2.2 2004/06/30 21:16:06 hyperion Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.

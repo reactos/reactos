@@ -126,6 +126,12 @@ LdrLoadDll(IN PWSTR SearchPath OPTIONAL,
 	   IN PUNICODE_STRING Name,
 	   OUT PVOID *BaseAddress OPTIONAL);
 
+PIMAGE_BASE_RELOCATION STDCALL
+LdrProcessRelocationBlock(IN PVOID Address,
+			  IN USHORT Count,
+			  IN PUSHORT TypeOffset,
+			  IN ULONG_PTR Delta);
+
 NTSTATUS STDCALL
 LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 				   IN PCWSTR ValueName,

@@ -17,25 +17,23 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.1 2004/06/19 00:11:44 kuehng Exp $
+/* $Id: control.c,v 1.1.2.1 2004/06/30 21:16:04 hyperion Exp $
  *
  * PROJECT:         ReactOS System Control Panel
- * FILE:            lib/cpl/system/control.cpp
+ * FILE:            lib/cpl/system/control.c
  * PURPOSE:         ReactOS System Control Panel
  * PROGRAMMER:      Gero Kuehn (reactos.filter@gkware.com)
  * UPDATE HISTORY:
  *      06-13-2004  Created
  */
+#include <windows.h>
+#include <commctrl.h>
+#include <cpl.h>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <tchar.h>
-#include <windows.h>
-
-#ifdef _MSC_VER
-#include <commctrl.h>
-#include <cpl.h>
-#endif
 
 #include "resource.h"
 
@@ -47,6 +45,22 @@
 #define CTL_DEBUG(x)
 #endif
 
+
+#define MYWNDCLASS _T("CTLPANELCLASS")
+
+typedef LONG (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
+
+typedef struct CPLLISTENTRY
+{
+	TCHAR pszPath[MAX_PATH];
+	HMODULE hDLL;
+	CPLAPPLETFUNC pFunc;
+	CPLINFO CPLInfo;
+	int nIndex;
+} CPLLISTENTRY;
+
+
+HWND hListView;
 HINSTANCE hInst;
 HWND hMainWnd;
 
@@ -60,19 +74,6 @@ void dbgprint(TCHAR *format,...)
 	va_end(va);
 }
 
-#define MYWNDCLASS _T("CTLPANELCLASS")
-HWND hListView;
-
-typedef LONG  (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
-
-typedef struct CPLLISTENTRY{
-	TCHAR pszPath[MAX_PATH];
-	HMODULE hDLL;
-	CPLAPPLETFUNC pFunc;
-	CPLINFO CPLInfo;
-	int nIndex;
-} CPLLISTENTRY;
-
 void PopulateCPLList(HWND hLisCtrl)
 {
 	WIN32_FIND_DATA fd;
@@ -83,8 +84,8 @@ void PopulateCPLList(HWND hLisCtrl)
 	GetSystemDirectory(pszSearchPath,MAX_PATH);
 	_tcscat(pszSearchPath,_T("\\*.cpl"));
 	hFind = FindFirstFile(pszSearchPath,&fd);
-	hImgListSmall = ImageList_Create(16,16,ILC_COLOR,256,1000);
-	hImgListLarge = ImageList_Create(32,32,ILC_COLOR,256,1000);
+	hImgListSmall = ImageList_Create(16,16,ILC_COLOR | ILC_MASK,256,1000);
+	hImgListLarge = ImageList_Create(32,32,ILC_COLOR | ILC_MASK,256,1000);
 	while(hFind != INVALID_HANDLE_VALUE)
 	{
 		CPLLISTENTRY *pEntry;
@@ -99,7 +100,7 @@ void PopulateCPLList(HWND hLisCtrl)
 
 		pEntry->hDLL = LoadLibrary(pEntry->pszPath);
 		CTL_DEBUG((_T("Handle %08X\r\n"),pEntry->hDLL));
-		pEntry->pFunc = (CPLAPPLETFUNC)GetProcAddress(pEntry->hDLL,_T("CPlApplet"));
+		pEntry->pFunc = (CPLAPPLETFUNC)GetProcAddress(pEntry->hDLL,"CPlApplet");
 		CTL_DEBUG((_T("CPLFunc %08X\r\n"),pEntry->pFunc));
 		if(pEntry->pFunc && pEntry->pFunc(hLisCtrl,CPL_INIT,0,0))
 		{
@@ -111,15 +112,16 @@ void PopulateCPLList(HWND hLisCtrl)
 				int index;
 				pEntry->pFunc(hLisCtrl,CPL_INQUIRE,0,(LPARAM)&pEntry->CPLInfo);
 
-				hIcon = LoadIcon(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon));
+				hIcon = LoadImage(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
 				index = ImageList_AddIcon(hImgListSmall,hIcon);
+				DestroyIcon(hIcon);
+				hIcon = LoadImage(pEntry->hDLL,MAKEINTRESOURCE(pEntry->CPLInfo.idIcon),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
 				ImageList_AddIcon(hImgListLarge,hIcon);
+				DestroyIcon(hIcon);
 
-				
 				LoadString(pEntry->hDLL,pEntry->CPLInfo.idName,Name,MAX_PATH);
 				if(_tcslen(Name))
 				{
-				
 				LV_ITEM lvi;
 
 				memset(&lvi,0x00,sizeof(lvi));
@@ -149,41 +151,41 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_CREATE:
-		{		
+		{
 		RECT rect;
 		LV_COLUMN column;
 		GetClientRect(hWnd,&rect);
-		hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
+		hListView = CreateWindow(WC_LISTVIEW,_T(""),LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | WS_VISIBLE | WS_CHILD | WS_TABSTOP,0,0,rect.right ,rect.bottom,hWnd,NULL,hInst,0);
 		CTL_DEBUG((_T("Listview Window %08X\r\n"),hListView));
 
 		memset(&column,0x00,sizeof(column));
 		column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM|LVCF_TEXT;
 		column.fmt=LVCFMT_LEFT;
-		column.cx = 200;
+		column.cx = (rect.right - rect.left) / 3;
 		column.iSubItem = 0;
 		column.pszText = _T("Name");
 		ListView_InsertColumn(hListView,0,&column);
-		column.cx = 200;
+		column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
 		column.iSubItem = 1;
 		column.pszText = _T("Comment");
 		ListView_InsertColumn(hListView,1,&column);
 		PopulateCPLList(hListView);
 		ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
-	    ListView_Update(hListView,0);
+		ListView_Update(hListView,0);
 		}
 		break;
 	case WM_DESTROY:
-		PostQuitMessage(0);	
+		PostQuitMessage(0);
 		break;
 	case WM_SIZE:
-		{		
+		{
 		RECT rect;
 		GetClientRect(hWnd,&rect);
 		MoveWindow(hListView,0,0,rect.right,rect.bottom,TRUE);
 		}
 		break;
 	case WM_NOTIFY:
-		{		
+		{
 		NMHDR *phdr;
 		phdr = (NMHDR*)lParam;
 		switch(phdr->code)
@@ -193,7 +195,7 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			int nSelect;
 			LV_ITEM lvi;
 			CPLLISTENTRY *pEntry;
-			nSelect=SendMessage(hListView,LVM_GETNEXTITEM,(WPARAM)-1,LVNI_FOCUSED); 
+			nSelect=SendMessage(hListView,LVM_GETNEXTITEM,(WPARAM)-1,LVNI_FOCUSED);
 			
 			if(nSelect==-1) // no items
 			{
@@ -219,22 +221,22 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 	case WM_COMMAND:
 		switch(LOWORD(wParam))
 		{
-		case CM_LARGEICONS:
+		case IDM_LARGEICONS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_ICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_SMALLICONS:
+		case IDM_SMALLICONS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_SMALLICON | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_LIST:
+		case IDM_LIST:
 			SetWindowLong(hListView,GWL_STYLE,LVS_LIST | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_DETAILS:
+		case IDM_DETAILS:
 			SetWindowLong(hListView,GWL_STYLE,LVS_REPORT | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL   | WS_VISIBLE | WS_CHILD|WS_BORDER|WS_TABSTOP);
 			break;
-		case CM_CLOSE:
+		case IDM_CLOSE:
 			DestroyWindow(hWnd);
 			break;
-		case CM_ABOUT:
+		case IDM_ABOUT:
 			MessageBox(hWnd,_T("Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"),_T("About the Control Panel"),MB_OK | MB_ICONINFORMATION);
 			break;
 		}
@@ -262,7 +264,7 @@ int WINAPI WinMain(HINSTANCE hInstance,HINSTANCE hPrevInstance,char *lpCmdLine,i
 	wc.lpfnWndProc = MyWindowProc;
 	RegisterClass(&wc);
 	InitCommonControls();
-	hMainWnd = CreateWindow(MYWNDCLASS,_T("Control Panel"),WS_OVERLAPPEDWINDOW,300,300,500,300,NULL,LoadMenu(hInst,MAKEINTRESOURCE(IDM_MAINMENU)),hInst,0);
+	hMainWnd = CreateWindowEx(WS_EX_CLIENTEDGE,MYWNDCLASS,_T("Control Panel"),WS_OVERLAPPEDWINDOW,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,CW_USEDEFAULT,NULL,LoadMenu(hInst,MAKEINTRESOURCE(IDM_MAINMENU)),hInst,0);
 	if(!hMainWnd) {
 		CTL_DEBUG((_T("Unable to create window\r\n")));
 		return -1;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.46.14.1 2004/06/27 01:13:14 hyperion Exp $
+/* $Id: kthread.c,v 1.46.14.2 2004/06/30 21:16:08 hyperion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support

@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.21.16.1 2004/06/27 01:13:11 hyperion Exp $ */
+/* $Id: extypes.h,v 1.21.16.2 2004/06/30 21:16:02 hyperion Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H

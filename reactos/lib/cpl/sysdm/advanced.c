@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: advanced.c,v 1.1 2004/03/08 14:24:47 weiden Exp $
+/* $Id: advanced.c,v 1.1.8.1 2004/06/30 21:16:04 hyperion Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/advanced.c
@@ -27,6 +27,8 @@
  */
 #include <windows.h>
 #include <stdlib.h>
+#include <tchar.h>
+
 #include "resource.h"
 #include "sysdm.h"
 
@@ -39,10 +41,14 @@ AdvancedPageProc(
   LPARAM lParam
 )
 {
-  switch(uMsg)
+  switch (uMsg)
   {
     case WM_INITDIALOG:
       break;
+
+    case WM_COMMAND:
+      break;
+
   }
   return FALSE;
 }

@@ -8,9 +8,6 @@
 typedef struct _ROSRGNDATA {
   RGNDATAHEADER rdh;
   PRECT         Buffer;
-  RECT          BuiltInRect;   /* Testing shows that > 95% of all regions have only 1 rect.
-                                  Including that here saves us from having to do another
-                                  allocation */
 } ROSRGNDATA, *PROSRGNDATA, *LPROSRGNDATA;
 
 

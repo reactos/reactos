@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.79.2.1 2004/06/27 01:13:17 hyperion Exp $
+/* $Id: misc.c,v 1.79.2.2 2004/06/30 21:16:12 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

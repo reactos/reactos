@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.63.6.1 2004/06/27 01:13:11 hyperion Exp $ */
+/* $Id: vfat.h,v 1.63.6.2 2004/06/30 21:16:01 hyperion Exp $ */
 
 #include <ddk/ntifs.h>
 

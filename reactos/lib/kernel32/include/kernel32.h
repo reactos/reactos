@@ -37,6 +37,7 @@ DWORD
 extern BOOL bIsFileApiAnsi;
 extern HANDLE hProcessHeap;
 extern HANDLE hBaseDir;
+extern HMODULE hCurrentModule;
 
 extern CRITICAL_SECTION DllLock;
 

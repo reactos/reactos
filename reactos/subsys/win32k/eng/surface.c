@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.40.4.1 2004/06/27 01:13:17 hyperion Exp $
+/* $Id: surface.c,v 1.40.4.2 2004/06/30 21:16:11 hyperion Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel

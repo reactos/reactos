@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.6.2.1 2004/06/27 01:13:16 hyperion Exp $
+/* $Id: console.c,v 1.6.2.2 2004/06/30 21:16:09 hyperion Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *

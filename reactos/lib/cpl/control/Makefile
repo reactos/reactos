@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/06/18 20:43:44 kuehng Exp $
+# $Id: Makefile,v 1.1.2.1 2004/06/30 21:16:04 hyperion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,9 +10,16 @@ TARGET_INSTALLDIR = system32
 
 TARGET_APPTYPE = windows
 
-MK_CFLAGS = -D_UNICODE -DUNICODE
-MK_CPPFLAGS = -D_UNICODE -DUNICODE
-MK_RCFLAGS = -D_UNICODE -DUNICODE
+TARGET_CFLAGS = \
+ -D_WIN32_IE=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
+ -DUNICODE \
+ -D_UNICODE \
+ -D__REACTOS__ \
+ -D__USE_W32API \
+ -Wall \
+ -Werror \
+ -fno-builtin
 
 TARGET_SDKLIBS = kernel32.a user32.a comctl32.a
 

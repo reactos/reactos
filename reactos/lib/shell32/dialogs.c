@@ -379,7 +379,7 @@ void FillList (HWND hCb, char *pszLatest)
 
 
 /*************************************************************************
- * RestartWindowsDialog				[SHELL32.730]
+ * RestartDialogEx				[SHELL32.730]
  */
 
 int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UINT uReason)
@@ -410,27 +410,12 @@ int WINAPI RestartDialogEx(HWND hwndOwner, LPCWSTR lpwstrReason, UINT uFlags, UI
 
 
 /*************************************************************************
- * RestartWindowsDialog				[SHELL32.59]
+ * RestartDialog				[SHELL32.59]
  */
 
-int WINAPI RestartDialog(HWND hwndOwner, LPCSTR lpstrReason, UINT uFlags)
+int WINAPI RestartDialog(HWND hwndOwner, LPCWSTR lpstrReason, UINT uFlags)
 {
-    LPWSTR lpwcsReason;
-    int len, ret;
-
-    if (lpstrReason) {
-	len = MultiByteToWideChar(CP_ACP, 0, lpstrReason, -1, NULL, 0);
-	lpwcsReason = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-	MultiByteToWideChar(CP_ACP, 0, lpstrReason, -1, lpwcsReason, len);
-    } else
-	lpwcsReason = NULL;
-
-    ret = RestartDialogEx(hwndOwner, lpwcsReason, uFlags, 0);
-
-    if (lpwcsReason)
-	HeapFree(GetProcessHeap(), 0, lpwcsReason);
-
-    return ret;
+    return RestartDialogEx(hwndOwner, lpstrReason, uFlags, 0);
 }
 
 
