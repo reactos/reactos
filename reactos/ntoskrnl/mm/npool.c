@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.82 2004/03/04 00:07:01 navaraf Exp $
+/* $Id: npool.c,v 1.83 2004/03/15 00:03:31 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -35,7 +35,7 @@
  * end of the range so any accesses beyond the end of block are to invalid
  * memory locations. 
  */
-/*#define WHOLE_PAGE_ALLOCATIONS*/
+#define WHOLE_PAGE_ALLOCATIONS
 
 #ifdef ENABLE_VALIDATE_POOL
 #define VALIDATE_POOL validate_kernel_pool()
@@ -1678,6 +1678,7 @@ ExAllocateWholePageBlock(ULONG Size)
     }
 
   MiCurrentNonPagedPoolLength = max(MiCurrentNonPagedPoolLength, (Base + NrPages) * PAGE_SIZE);
+  Size = (Size + 7) & ~7;
   return((PVOID)((PUCHAR)Address + (NrPages * PAGE_SIZE) - Size));
 }
 
