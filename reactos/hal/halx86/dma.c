@@ -1,10 +1,10 @@
-/* $Id: dma.c,v 1.5 2003/08/20 04:18:31 royce Exp $
+/* $Id: dma.c,v 1.6 2003/09/04 06:45:38 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/hal/x86/dma.c
  * PURPOSE:         DMA functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -26,10 +26,10 @@ ADAPTER_OBJECT AdapterObjects[] = {
 /* FUNCTIONS *****************************************************************/
 
 PVOID STDCALL
-HalAllocateCommonBuffer (PADAPTER_OBJECT		AdapterObject,
-			 ULONG			Length,
-			 PPHYSICAL_ADDRESS	LogicalAddress,
-			 BOOLEAN			CacheEnabled)
+HalAllocateCommonBuffer (PADAPTER_OBJECT    AdapterObject,
+			 ULONG              Length,
+			 PPHYSICAL_ADDRESS  LogicalAddress,
+			 BOOLEAN            CacheEnabled)
 /*
  * FUNCTION: Allocates memory that is visible to both the processor(s) and
  * a dma device
@@ -42,9 +42,25 @@ HalAllocateCommonBuffer (PADAPTER_OBJECT		AdapterObject,
  *         CacheEnabled = Specifies if the memory can be cached
  * RETURNS: The base virtual address of the memory allocated
  *          NULL on failure
+ * NOTES:
+ *      CacheEnabled is ignored - it's all cache-disabled (like in NT)
  */
 {
-   UNIMPLEMENTED;
+  PHYSICAL_ADDRESS HighestAddress;
+  PVOID BaseAddress;
+ 
+  HighestAddress.u.HighPart = 0;
+  HighestAddress.u.LowPart = -1;
+
+  BaseAddress = MmAllocateContiguousMemory(Length, HighestAddress);
+  if (!BaseAddress)
+    return 0;
+
+  *LogicalAddress = MmGetPhysicalAddress(BaseAddress);
+
+  /* is this supposed to be tracked in the adapter object? */
+
+  return BaseAddress;
 }
 
 BOOLEAN STDCALL
@@ -83,12 +99,15 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
  *                                     allocate for DMA transfer operations
  * RETURNS: The allocated adapter object on success
  *          NULL on failure
+ * TODO:
+ *    Figure out what to do with the commented-out cases
  */
 {
   /* Validate parameters in device description, and return a pointer to
      the adapter object for the requested dma channel */
   if( DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION )
     return NULL;
+  /*
   if( DeviceDescription->Master )
     return NULL;
   if( DeviceDescription->ScatterGather )
@@ -99,6 +118,7 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
     return NULL;
   if( DeviceDescription->InterfaceType != Isa )
      return NULL;
+     */
   /*  if( DeviceDescription->DmaWidth != Width8Bits )
       return NULL;*/
   *NumberOfMapRegisters = 0x10;
