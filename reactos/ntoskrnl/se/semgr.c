@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.31 2004/07/12 12:04:17 ekohl Exp $
+/* $Id: semgr.c,v 1.32 2004/07/13 16:59:35 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -201,21 +201,6 @@ NtAllocateUuids(PULARGE_INTEGER Time,
 }
 
 
-NTSTATUS STDCALL
-NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-	      IN HANDLE ClientToken,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN PGENERIC_MAPPING GenericMapping,
-	      OUT PPRIVILEGE_SET PrivilegeSet,
-	      OUT PULONG ReturnLength,
-	      OUT PACCESS_MASK GrantedAccess,
-	      OUT PNTSTATUS AccessStatus)
-{
-  UNIMPLEMENTED;
-  return(STATUS_NOT_IMPLEMENTED);
-}
-
-
 /*
  * @implemented
  */
@@ -404,46 +389,35 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 #endif
 }
 
-BOOLEAN SepSidInToken(PACCESS_TOKEN Token,
-		      PSID Sid)
+
+static BOOLEAN
+SepSidInToken(PACCESS_TOKEN Token,
+	      PSID Sid)
 {
-   ULONG i;
-   
-   if (Token->UserAndGroupCount == 0)
-     {
-	return(FALSE);
-     }
-   
-   for (i=0; i<Token->UserAndGroupCount; i++)
-     {
-	if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
-	  {
-	     if (i == 0 ||
-		 (!(Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED)))
-	       {
-		  return(TRUE);
-	       }
-	     return(FALSE);
-	  }
-     }
-   return(FALSE);
+  ULONG i;
+
+  if (Token->UserAndGroupCount == 0)
+  {
+    return FALSE;
+  }
+
+  for (i=0; i<Token->UserAndGroupCount; i++)
+  {
+    if (RtlEqualSid(Sid, Token->UserAndGroups[i].Sid))
+    {
+      if (Token->UserAndGroups[i].Attributes & SE_GROUP_ENABLED)
+      {
+        return TRUE;
+      }
+
+      return FALSE;
+    }
+  }
+
+  return FALSE;
 }
 
 
-/*
- * @implemented
- */
-BOOLEAN STDCALL
-SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-	      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
-	      IN BOOLEAN SubjectContextLocked,
-	      IN ACCESS_MASK DesiredAccess,
-	      IN ACCESS_MASK PreviouslyGrantedAccess,
-	      OUT PPRIVILEGE_SET* Privileges,
-	      IN PGENERIC_MAPPING GenericMapping,
-	      IN KPROCESSOR_MODE AccessMode,
-	      OUT PACCESS_MODE GrantedAccess,
-	      OUT PNTSTATUS AccessStatus)
 /*
  * FUNCTION: Determines whether the requested access rights can be granted
  * to an object protected by a security descriptor and an object owner
@@ -459,7 +433,20 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
  *      GrantedAccess (OUT) = On return specifies the access granted
  *      AccessStatus (OUT) = Status indicating why access was denied
  * RETURNS: If access was granted, returns TRUE
+ *
+ * @implemented
  */
+BOOLEAN STDCALL
+SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
+	      IN BOOLEAN SubjectContextLocked,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN ACCESS_MASK PreviouslyGrantedAccess,
+	      OUT PPRIVILEGE_SET* Privileges,
+	      IN PGENERIC_MAPPING GenericMapping,
+	      IN KPROCESSOR_MODE AccessMode,
+	      OUT PACCESS_MASK GrantedAccess,
+	      OUT PNTSTATUS AccessStatus)
 {
    ULONG i;
    PACL Dacl;
@@ -473,10 +460,6 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
    CurrentAccess = PreviouslyGrantedAccess;
 
    /*
-    * Ignore the SACL for now
-    */
-
-   /*
     * Check the DACL
     */
    Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
@@ -485,7 +468,8 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 					 &Defaulted);
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+	*AccessStatus = Status;
+	return FALSE;
      }
 
    CurrentAce = (PACE)(Dacl + 1);
@@ -501,12 +485,12 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 		  return(STATUS_SUCCESS);
 	       }
 	  }
+
 	if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
 	  {
 	     if (SepSidInToken(SubjectSecurityContext->ClientToken, Sid))
 	       {
-		  CurrentAccess = CurrentAccess | 
-		    CurrentAce->AccessMask;
+		  CurrentAccess |= CurrentAce->AccessMask;
 	       }
 	  }
      }
@@ -521,7 +505,152 @@ SeAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
      }
    *GrantedAccess = CurrentAccess;
 
-   return(STATUS_SUCCESS);
+   return TRUE;
+}
+
+
+NTSTATUS STDCALL
+NtAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	      IN HANDLE TokenHandle,
+	      IN ACCESS_MASK DesiredAccess,
+	      IN PGENERIC_MAPPING GenericMapping,
+	      OUT PPRIVILEGE_SET PrivilegeSet,
+	      OUT PULONG ReturnLength,
+	      OUT PACCESS_MASK GrantedAccess,
+	      OUT PNTSTATUS AccessStatus)
+{
+  KPROCESSOR_MODE PreviousMode;
+  PACCESS_TOKEN Token;
+  BOOLEAN Present;
+  BOOLEAN Defaulted;
+  PACE CurrentAce;
+  PACL Dacl;
+  PSID Sid;
+  ACCESS_MASK CurrentAccess;
+  ULONG i;
+  NTSTATUS Status;
+
+  DPRINT("NtAccessCheck() called\n");
+
+  PreviousMode = KeGetPreviousMode();
+  if (PreviousMode == KernelMode)
+    {
+      *GrantedAccess = DesiredAccess;
+      *AccessStatus = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
+    }
+
+  Status = ObReferenceObjectByHandle(TokenHandle,
+				     TOKEN_QUERY,
+				     SepTokenObjectType,
+				     PreviousMode,
+				     (PVOID*)&Token,
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Failed to reference token (Status %lx)\n", Status);
+      return Status;
+    }
+
+  /* Check token type */
+  if (Token->TokenType != TokenImpersonation)
+    {
+      DPRINT1("No impersonation token\n");
+      ObDereferenceObject(Token);
+      return STATUS_ACCESS_VIOLATION;
+    }
+
+  /* Check impersonation level */
+  if (Token->ImpersonationLevel < SecurityAnonymous)
+    {
+      DPRINT1("Invalid impersonation level\n");
+      ObDereferenceObject(Token);
+      return STATUS_ACCESS_VIOLATION;
+    }
+
+  /* Get the DACL */
+  Status = RtlGetDaclSecurityDescriptor(SecurityDescriptor,
+					&Present,
+					&Dacl,
+					&Defaulted);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlGetDaclSecurityDescriptor() failed (Status %lx)\n", Status);
+      ObDereferenceObject(Token);
+      return Status;
+   }
+
+  /* RULE 1: Grant desired access if the object is unprotected */
+  if (Dacl == NULL)
+    {
+      *GrantedAccess = DesiredAccess;
+      *AccessStatus = STATUS_SUCCESS;
+      return STATUS_SUCCESS;
+    }
+
+  CurrentAccess = 0;
+
+  /* FIXME: RULE 2: Check token for 'take ownership' privilege */
+
+  /* RULE 3: Check whether the token is the owner */
+  Status = RtlGetOwnerSecurityDescriptor(SecurityDescriptor,
+					 &Sid,
+					 &Defaulted);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("RtlGetOwnerSecurityDescriptor() failed (Status %lx)\n", Status);
+      ObDereferenceObject(Token);
+      return Status;
+   }
+
+  if (SepSidInToken(Token, Sid))
+    {
+      CurrentAccess |= (READ_CONTROL | WRITE_DAC);
+      if (DesiredAccess == CurrentAccess)
+	{
+	  *AccessStatus = STATUS_SUCCESS;
+	  *GrantedAccess = CurrentAccess;
+	  return STATUS_SUCCESS;
+	}
+    }
+
+  /* RULE 4: Grant rights according to the DACL */
+  CurrentAce = (PACE)(Dacl + 1);
+  for (i = 0; i < Dacl->AceCount; i++)
+    {
+      Sid = (PSID)(CurrentAce + 1);
+      if (CurrentAce->Header.AceType == ACCESS_DENIED_ACE_TYPE)
+	{
+	  if (SepSidInToken(Token, Sid))
+	    {
+	      *AccessStatus = STATUS_ACCESS_DENIED;
+	      *GrantedAccess = 0;
+	      return STATUS_SUCCESS;
+	    }
+	}
+
+      if (CurrentAce->Header.AceType == ACCESS_ALLOWED_ACE_TYPE)
+	{
+	  if (SepSidInToken(Token, Sid))
+	    {
+	      CurrentAccess |= CurrentAce->AccessMask;
+	    }
+	}
+    }
+
+  DPRINT("CurrentAccess %08lx\n DesiredAccess %08lx\n",
+         CurrentAccess, DesiredAccess);
+
+  ObDereferenceObject(Token);
+
+  *GrantedAccess = CurrentAccess & DesiredAccess;
+
+  *AccessStatus =
+    (*GrantedAccess == DesiredAccess) ? STATUS_SUCCESS : STATUS_ACCESS_DENIED;
+
+  DPRINT("NtAccessCheck() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 /* EOF */
