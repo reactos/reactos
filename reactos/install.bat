@@ -131,6 +131,7 @@ copy apps\tests\winhello\winhello.exe %ROS_INSTALL%\bin
 copy apps\tests\sectest\sectest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\isotest\isotest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\regtest\regtest.exe %ROS_INSTALL_TESTS%
+copy apps\tests\hivetest\hivetest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\restest\restest.exe %ROS_INSTALL_TESTS%
 copy apps\tests\tokentest\tokentest.exe %ROS_INSTALL_TESTS%
 copy apps\testsets\msvcrt\fileio\fileio.exe %ROS_INSTALL_TESTS%
