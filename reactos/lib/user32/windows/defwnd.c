@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.139 2004/05/21 12:46:59 weiden Exp $
+/* $Id: defwnd.c,v 1.140 2004/05/26 18:59:21 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -466,15 +466,8 @@ UserDrawWindowFrame(HDC hdc, const RECT *rect,
 }
 
 VOID STATIC
-UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe, HRGN ClipRgn)
+UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe)
 {
-  HGDIOBJ OldObj;
-  
-  if(ClipRgn)
-  {
-    OldObj = SelectObject(hdc, ClipRgn);
-  }
-  
   if(thickframe)
   {
     UserDrawWindowFrame(hdc, rect, GetSystemMetrics(SM_CXFRAME), GetSystemMetrics(SM_CYFRAME));
@@ -482,11 +475,6 @@ UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe, HRGN ClipRgn)
   else
   {
     UserDrawWindowFrame(hdc, rect, 1, 1);
-  }
-  
-  if(ClipRgn)
-  {
-    SelectObject(hdc, OldObj);
   }
 }
 
@@ -628,6 +616,8 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DesktopRgn = CreateRectRgnIndirect(&clipRect);
     }
   
+  SelectObject(hdc, DesktopRgn);
+  
   if( iconic ) /* create a cursor for dragging */
     {
       HICON hIcon = (HICON)GetClassLongW(hwnd, GCL_HICON);
@@ -639,7 +629,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   /* invert frame if WIN31_LOOK to indicate mouse click on caption */
   if( !iconic && !DragFullWindows)
     {
-      UserDrawMovingFrame( hdc, &sizingRect, thickframe, DesktopRgn );
+      UserDrawMovingFrame( hdc, &sizingRect, thickframe);
     }
   
   for(;;)
@@ -655,9 +645,9 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       
       if (msg.message == WM_PAINT)
         {
-	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe, DesktopRgn );
+	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  UpdateWindow( msg.hwnd );
-	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe, DesktopRgn );
+	  if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	  continue;
         }
       
@@ -706,7 +696,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      else if (ON_RIGHT_BORDER(hittest)) newRect.right += dx;
 	      if (ON_TOP_BORDER(hittest)) newRect.top += dy;
 	      else if (ON_BOTTOM_BORDER(hittest)) newRect.bottom += dy;
-	      if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe, DesktopRgn );
+	      if(!iconic && !DragFullWindows) UserDrawMovingFrame( hdc, &sizingRect, thickframe );
 	      capturePoint = pt;
 	      
 	      /* determine the hit location */
@@ -717,7 +707,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
 	      if (!iconic)
 		{
 		  if(!DragFullWindows)
-		    UserDrawMovingFrame( hdc, &newRect, thickframe, DesktopRgn );
+		    UserDrawMovingFrame( hdc, &newRect, thickframe );
 		  else {
 		    /* To avoid any deadlocks, all the locks on the windows
 		       structures must be suspended before the SetWindowPos */
@@ -744,7 +734,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       DestroyCursor( hDragCursor );
     }
   else if(!DragFullWindows)
-      UserDrawMovingFrame( hdc, &sizingRect, thickframe, DesktopRgn );
+      UserDrawMovingFrame( hdc, &sizingRect, thickframe );
   
   if (Style & WS_CHILD)
     ReleaseDC( hWndParent, hdc );
