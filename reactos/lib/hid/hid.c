@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: hid.c,v 1.4 2004/08/14 00:46:54 weiden Exp $
+/* $Id: hid.c,v 1.5 2004/09/28 15:14:04 weiden Exp $
  *
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/hid.c
@@ -371,7 +371,7 @@ ULONG DDKAPI
 HidD_Hello(OUT PCHAR Buffer,
            IN ULONG BufferLength)
 {
-  const PCHAR const HelloString = "Hello\n";
+  const PCHAR HelloString = "Hello\n";
   ULONG StrSize = (lstrlenA(HelloString) + 1) * sizeof(CHAR);
   
   if(BufferLength > 0)
