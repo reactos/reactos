@@ -1136,7 +1136,7 @@ static HRESULT WINAPI SysMouseAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
     SysMouseImpl *This = (SysMouseImpl *)iface;
     
-    TRACE("(this=%p,%s,%p): stub!\n",
+    TRACE("(this=%p,%s,%p)\n",
 	  iface, debugstr_guid(rguid), pdiph);
     
     if (TRACE_ON(dinput))
