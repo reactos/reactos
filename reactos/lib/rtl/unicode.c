@@ -504,18 +504,24 @@ NTSTATUS STDCALL
 RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
                        IN PCWSTR SourceString)
 {
-   ULONG Length = 0;
+   ULONG Length;
 
    if (SourceString != NULL)
    {
       Length = wcslen(SourceString) * sizeof(WCHAR);
       if (Length > 0xFFFC)
          return STATUS_NAME_TOO_LONG;
-   }
 
-   DestinationString->Length = Length;
-   DestinationString->MaximumLength = Length + sizeof(WCHAR);
-   DestinationString->Buffer = (PWSTR)SourceString;
+      DestinationString->Length = Length;
+      DestinationString->MaximumLength = Length + sizeof(WCHAR);
+      DestinationString->Buffer = (PWSTR)SourceString;
+   }
+   else
+   {
+      DestinationString->Length = 0;
+      DestinationString->MaximumLength = 0;
+      DestinationString->Buffer = NULL;
+   }
 
    return STATUS_SUCCESS;
 }
