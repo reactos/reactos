@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.73 2003/12/18 09:51:08 gvg Exp $
+/* $Id: create.c,v 1.74 2003/12/23 22:01:10 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -674,6 +674,116 @@ static NTSTATUS KlInitPeb
 }
 
 
+/*************************************************************************
+ *               GetFileName
+ *
+ * Helper for CreateProcessW: retrieve the file name to load from the
+ * app name and command line. Store the file name in buffer, and
+ * return a possibly modified command line.
+ */
+static LPWSTR FASTCALL
+GetFileName(LPCWSTR AppName, LPWSTR CmdLine, LPWSTR Buffer,
+            unsigned BufLen)
+{
+  WCHAR *Name, *Pos, *Ret = NULL;
+  const WCHAR *p;
+
+  /* if we have an app name, everything is easy */
+
+  if (NULL != AppName)
+    {
+      /* use the unmodified app name as file name */
+      wcsncpy(Buffer, AppName, BufLen );
+      Ret = CmdLine;
+      if (NULL == Ret || L'\0' == CmdLine[0])
+        {
+          /* no command-line, create one */
+          Ret = RtlAllocateHeap(GetProcessHeap(), 0, (wcslen(AppName) + 3) * sizeof(WCHAR));
+          if (NULL != Ret)
+            {
+              Ret[0] = L'"';
+              wcscpy(Ret + 1, AppName);
+              wcscat(Ret, L"\"");
+            }
+        }
+        return Ret;
+    }
+
+  if (NULL == CmdLine)
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return NULL;
+    }
+
+  /* first check for a quoted file name */
+  if (L'"' == CmdLine[0] && NULL != (p = wcschr(CmdLine + 1, L'"')))
+    {
+      int Len = p - CmdLine - 1;
+      /* extract the quoted portion as file name */
+      Name = RtlAllocateHeap(GetProcessHeap(), 0, (Len + 1) * sizeof(WCHAR));
+      if (NULL == Name)
+        {
+          return NULL;
+        }
+      memcpy(Name, CmdLine + 1, Len * sizeof(WCHAR));
+      Name[Len] = L'\0';
+
+      if (SearchPathW(NULL, Name, L".exe", BufLen, Buffer, NULL))
+        {
+          Ret = CmdLine;  /* no change necessary */
+        }
+
+      RtlFreeHeap(GetProcessHeap(), 0, Name);
+      return Ret;
+    }
+
+  /* now try the command-line word by word */
+  Name = RtlAllocateHeap(GetProcessHeap(), 0, (wcslen(CmdLine) + 1) * sizeof(WCHAR));
+  if (NULL == Name)
+    {
+      return NULL;
+    }
+  Pos = Name;
+  p = CmdLine;
+
+  while (L'\0' != *p)
+    {
+      do
+        {
+          *Pos++ = *p++;
+        }
+      while (L'\0' != *p && L' ' != *p);
+      *Pos = 0;
+      if (SearchPathW(NULL, Name, L".exe", BufLen, Buffer, NULL))
+        {
+          Ret = CmdLine;
+          break;
+        }
+    }
+
+  if (NULL == Ret || NULL == wcschr(Name, L' '))
+    {
+      RtlFreeHeap(GetProcessHeap(), 0, Name); /* no change necessary */
+      return Ret;
+    }
+
+  /* now build a new command-line with quotes */
+  Ret = RtlAllocateHeap(GetProcessHeap(), 0, (wcslen(CmdLine) + 3) * sizeof(WCHAR));
+  if (NULL == Ret)
+    {
+      RtlFreeHeap(GetProcessHeap(), 0, Name); /* no change necessary */
+      return NULL;
+    }
+  Ret[0] = L'"';
+  wcscpy(Ret + 1, Name);
+  wcscat(Ret, L"\"");
+  wcscat(Ret, p);
+
+  RtlFreeHeap(GetProcessHeap(), 0, Name);
+  return Ret;
+}
+
+
 /*
  * @implemented
  */
@@ -714,74 +824,48 @@ CreateProcessW
    PVOID ImageBaseAddress;
    BOOL InputSet, OutputSet, ErrorSet;
    BOOL InputDup, OutputDup, ErrorDup;
+   WCHAR Name[MAX_PATH];
+   WCHAR *TidyCmdLine;
 
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
 	   lpApplicationName, lpCommandLine);
 
-   if (lpApplicationName != NULL && lpApplicationName[0] != 0)
-   {
-      wcscpy (TempApplicationNameW, lpApplicationName);
-      i = wcslen(TempApplicationNameW);
-      if (TempApplicationNameW[i - 1] == L'.')
-      {
-         TempApplicationNameW[i - 1] = 0;
-      }
-      else
-      {
-         s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
-         if (s == NULL)
-         {
-            s = TempApplicationNameW;
-         }
-	 else
-	 {
-	    s++;
-	 }
-         e = wcsrchr(s, L'.');
-         if (e == NULL)
-         {
-            wcscat(s, L".exe");
-            e = wcsrchr(s, L'.');
-         }
-      }
-   }
-   else if (lpCommandLine != NULL && lpCommandLine[0] != 0)
-   {
-      if (lpCommandLine[0] == L'"')
-      {
-         wcscpy(TempApplicationNameW, lpCommandLine + 1);
-         s = wcschr(TempApplicationNameW, L'"');
-         if (s == NULL)
-         {
-           return FALSE;
-         }
-         *s = 0;
-      }
-      else
-      {
-         wcscpy(TempApplicationNameW, lpCommandLine);
-         s = wcschr(TempApplicationNameW, L' ');
-         if (s != NULL)
-         {
-           *s = 0;
-         }
-      }
-      s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
-      if (s == NULL)
-      {
-         s = TempApplicationNameW;
-      }
-      s = wcsrchr(s, L'.');
-      if (s == NULL)
-	 wcscat(TempApplicationNameW, L".exe");
-   }
+   TidyCmdLine = GetFileName(lpApplicationName, lpCommandLine, Name,
+                             sizeof(Name) / sizeof(WCHAR));
+   if (NULL == TidyCmdLine)
+     {
+        return FALSE;
+     }
+
+   if (L'"' == TidyCmdLine[0])
+     {
+        wcscpy(TempApplicationNameW, TidyCmdLine + 1);
+        s = wcschr(TempApplicationNameW, L'"');
+        if (NULL == s)
+          {
+            return FALSE;
+          }
+        *s = L'\0';
+     }
    else
-   {
-      return FALSE;
-   }
-
-   DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
-	   lpApplicationName, lpCommandLine);
+     {
+        wcscpy(TempApplicationNameW, TidyCmdLine);
+        s = wcschr(TempApplicationNameW, L' ');
+        if (NULL != s)
+          {
+            *s = L'\0';
+          }
+     }
+   s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
+   if (NULL == s)
+     {
+        s = TempApplicationNameW;
+     }
+   s = wcsrchr(s, L'.');
+   if (NULL == s)
+     {
+        wcscat(TempApplicationNameW, L".exe");
+     }
 
    if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName)/sizeof(WCHAR), ImagePathName, &s))
    {
