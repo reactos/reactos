@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: irq.c,v 1.24 2002/09/08 10:23:29 chorns Exp $
+/* $Id: irq.c,v 1.25 2002/12/09 18:40:45 robd Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/i386/irq.c
@@ -290,6 +290,41 @@ KeIRQTrapFrameToTrapFrame(PKIRQ_TRAPFRAME IrqTrapFrame,
 
 #ifdef MP
 
+VOID STDCALL
+KiInterruptDispatch2 (ULONG Irq, KIRQL old_level)
+/*
+ * FUNCTION: Calls all the interrupt handlers for a given irq.
+ * ARGUMENTS:
+ *        Irq - The number of the irq to call handlers for.
+ *        old_level - The irql of the processor when the irq took place.
+ * NOTES: Must be called at DIRQL.
+ */
+{
+  PKINTERRUPT isr;
+  PLIST_ENTRY current;
+
+   DPRINT("\nWARNING - KiInterruptDispatch2 copied directly from UP version for build\npurposes only, please review\n\n");
+
+  if (Irq == 0)
+    {
+      KiUpdateSystemTime(old_level, 0);
+    }
+  else
+    {
+      /*
+       * Iterate the list until one of the isr tells us its device interrupted
+       */
+      current = isr_table[Irq].Flink;
+      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+      while (current != &isr_table[Irq] && 
+	     !isr->ServiceRoutine(isr, isr->ServiceContext))
+	{
+	  current = current->Flink;
+	  isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+	}
+   }
+}
+
 VOID
 KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 /*
@@ -378,7 +413,8 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 
  	if (KeGetCurrentThread() != NULL)
 	  {
-	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
+        // FIXME TODO - What happend to LastEip definition?
+        //KeGetCurrentThread()->LastEip = Trapframe->Eip;
 	  }
 	KiDispatchInterrupt();
 	if (KeGetCurrentThread() != NULL &&
