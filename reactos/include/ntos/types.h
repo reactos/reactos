@@ -211,6 +211,8 @@ typedef struct _UNICODE_STRING
 
 typedef const UNICODE_STRING* PCUNICODE_STRING;
 
+#define UNICODE_NULL ((WCHAR)0)
+
 typedef struct _FLOATING_SAVE_AREA
 {
   DWORD   ControlWord;
