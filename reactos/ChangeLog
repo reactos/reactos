@@ -1,3 +1,5 @@
+27/5/00:       Fixed issue with closing non-existent or already closed handle
+
 26/1/99:       ZwCreateProcess now maps ntdll rather than the user-mode code
 
 9/6/99:        Implemented ZwOpenProcess

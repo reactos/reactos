@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.21 2000/05/09 21:30:06 ekohl Exp $
+/* $Id: handle.c,v 1.22 2000/05/27 12:48:59 dwelch Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -336,21 +336,35 @@ PVOID ObDeleteHandle(PEPROCESS Process, HANDLE Handle)
    KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
    
    Rep = ObpGetObjectByHandle(HandleTable, Handle);
-   ObjectBody = Rep->ObjectBody;
-   Header = BODY_TO_HEADER(ObjectBody);
-   BODY_TO_HEADER(ObjectBody)->HandleCount--;
-   ObReferenceObjectByPointer(ObjectBody,
-			      GENERIC_ALL,
-			      NULL,
-			      UserMode);
-   Rep->ObjectBody = NULL;
-   
-   KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
-   
-   if ((Header->ObjectType != NULL) &&
-       (Header->ObjectType->Close != NULL))
+   if (Rep == NULL)
      {
-	Header->ObjectType->Close(ObjectBody, Header->HandleCount);
+	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);	
+	return(NULL);
+     }
+   
+   ObjectBody = Rep->ObjectBody;
+   DPRINT("ObjectBody %x\n", ObjectBody);
+   if (ObjectBody != NULL)
+     {     
+	Header = BODY_TO_HEADER(ObjectBody);
+	BODY_TO_HEADER(ObjectBody)->HandleCount--;
+	ObReferenceObjectByPointer(ObjectBody,
+				   GENERIC_ALL,
+				   NULL,
+				   UserMode);
+	Rep->ObjectBody = NULL;
+     
+	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
+   
+	if ((Header->ObjectType != NULL) &&
+	    (Header->ObjectType->Close != NULL))
+	  {
+	     Header->ObjectType->Close(ObjectBody, Header->HandleCount);
+	  }
+     }
+   else
+     {
+	KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);	
      }
    
    DPRINT("Finished ObDeleteHandle()\n");
@@ -576,13 +590,17 @@ NTSTATUS STDCALL NtClose(HANDLE Handle)
    DPRINT("NtClose(Handle %x)\n",Handle);
    
    ObjectBody = ObDeleteHandle(PsGetCurrentProcess(), Handle);
-
+   if (ObjectBody == NULL)
+     {
+	return(STATUS_HANDLES_CLOSED);
+     }
+   
    Header = BODY_TO_HEADER(ObjectBody);
    
    DPRINT("Dereferencing %x\n", ObjectBody);
    ObDereferenceObject(ObjectBody);
    
-   return STATUS_SUCCESS;
+   return(STATUS_SUCCESS);
 }
 
 

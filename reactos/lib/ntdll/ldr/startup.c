@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.24 2000/05/25 15:51:16 ekohl Exp $
+/* $Id: startup.c,v 1.25 2000/05/27 12:48:59 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 
