@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.29 2003/12/14 11:36:42 gvg Exp $
+/* $Id: message.c,v 1.30 2003/12/14 14:01:38 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -759,6 +759,14 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
             {
               return FALSE;
             }
+        }
+    }
+  else
+    {
+      /* Message sent by kernel. Convert back to Ansi */
+      if (! MsgiAnsiToUnicodeReply(&UcMsg, &AnsiMsg, &Result))
+        {
+          return FALSE;
         }
     }
 
