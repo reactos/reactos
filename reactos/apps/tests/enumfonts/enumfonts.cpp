@@ -124,7 +124,7 @@ void AddScreenFonts()
       // enumerate the current screen fonts        
       EnumFontFamiliesEx(
          hScreenDC, &lf, 
-         MyEnumFontFamExProc,
+         (FONTENUMPROC)MyEnumFontFamExProc,
          0, 0
          );                         
    }    
@@ -168,7 +168,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
          // test the identifier of the control that
          // the message is meant for
-         if (lpmis->CtlID == ID_LISTBOX)
+         if ((int)lpmis->CtlID == ID_LISTBOX)
          {
             // adjust the height
             lpmis->itemHeight = 25;
@@ -185,7 +185,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
          // test the identifier of the control that
          // the message is meant for
-         if (lpdis->CtlID == ID_LISTBOX)
+         if ((int)lpdis->CtlID == ID_LISTBOX)
          {
             COLORREF OldColor = GetTextColor(lpdis->hDC);
             int stock = WHITE_BRUSH;
@@ -204,7 +204,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                static_cast<HBRUSH>(GetStockObject(stock))
                );
 
-            if (lpdis->itemID != -1)
+            if ((int)lpdis->itemID != -1)
             {
                // extract the item's text
                char text[MAX_PATH];
