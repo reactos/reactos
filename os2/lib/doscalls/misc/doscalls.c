@@ -1,4 +1,4 @@
-/* $Id: doscalls.c,v 1.3 2002/03/24 18:55:38 ea Exp $
+/* $Id: doscalls.c,v 1.4 2002/04/18 23:49:42 robertk Exp $
 */
 /*
  *
@@ -58,6 +58,85 @@ IN ULONG CreateOptions,
 IN PVOID EaBuffer OPTIONAL,
 IN ULONG EaLength
 );*/
+
+
+
+	   OBJECT_ATTRIBUTES ObjectAttributes;
+   IO_STATUS_BLOCK IoStatusBlock;
+   UNICODE_STRING NtPathU;
+   HANDLE FileHandle;
+   NTSTATUS Status;
+   ULONG Flags = 0;
+
+   switch (dwCreationDisposition)
+     {
+      case CREATE_NEW:
+	dwCreationDisposition = FILE_CREATE;
+	break;
+	
+      case CREATE_ALWAYS:
+	dwCreationDisposition = FILE_OVERWRITE_IF;
+	break;
+	
+      case OPEN_EXISTING:
+	dwCreationDisposition = FILE_OPEN;
+	break;
+	
+      case OPEN_ALWAYS:
+	dwCreationDisposition = OPEN_ALWAYS;
+	break;
+
+      case TRUNCATE_EXISTING:
+	dwCreationDisposition = FILE_OVERWRITE;
+     }
+   
+   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
+   
+   if (dwDesiredAccess & GENERIC_READ)
+     dwDesiredAccess |= FILE_GENERIC_READ;
+   
+   if (dwDesiredAccess & GENERIC_WRITE)
+     dwDesiredAccess |= FILE_GENERIC_WRITE;
+   
+   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
+     {
+	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
+     }
+   
+   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+				      &NtPathU,
+				      NULL,
+				      NULL))
+     return INVALID_HANDLE_VALUE;
+   
+   DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
+   
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.ObjectName = &NtPathU;
+   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
+   ObjectAttributes.SecurityDescriptor = NULL;
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   Status = NtCreateFile (&FileHandle,
+			  dwDesiredAccess,
+			  &ObjectAttributes,
+			  &IoStatusBlock,
+			  NULL,
+			  dwFlagsAndAttributes,
+			  dwShareMode,
+			  dwCreationDisposition,
+			  Flags,
+			  NULL,
+			  0);
+   if (!NT_SUCCESS(Status))
+     {
+	SetLastErrorByStatus (Status);
+	return INVALID_HANDLE_VALUE;
+     }
+   
+   return FileHandle;
+
 	return 0;
 }
 
@@ -175,6 +254,23 @@ APIRET STDCALL Dos32Beep(ULONG freq, ULONG dur)
 	if( freq<0x25 || freq>0x7FFF )
 		return 395;	// ERROR_INVALID_FREQUENCY
 
+	HANDLE	hBeep;
+	IO_STATUS_BLOCK ComplStatus;
+	//UNICODE_STRING
+	OBJECT_ATTRIBUTES oa = {sizeof oa, 0, {8,8,"\\\\.\\Beep"l}, OBJ_CASE_INSENSITIVE};
+	NTSTATUS stat;
+	stat = NtOpenFile( &hBeep,
+				FILE_READ_DATA | FILE_WRITE_DATA,
+				&oa,
+				&ComplStatus,
+				0,	// no sharing
+				FILE_OPEN );
+	
+	if (!NT_SUCCESS(stat))
+	{
+	}
+
+		   if( ComplStatus-> 
   /*  HANDLE hBeep;
     BEEP_SET_PARAMETERS BeepSetParameters;
     DWORD dwReturned;

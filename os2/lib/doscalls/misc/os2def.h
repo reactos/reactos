@@ -1,11 +1,11 @@
-/* $Id: os2def.h,v 1.2 2002/03/24 18:55:39 ea Exp $ */
+/* $Id: os2def.h,v 1.3 2002/04/18 23:49:42 robertk Exp $ */
 /* This file conains common OS/2 types that are needed to build this dll */ 
 /* this file should have temporal character until a better idea is born */
 
 #ifndef __OS2DEF__
 #define __OS2DEF__
 
-typedef unsigned long  APIRET;
+typedef unsigned long __stdcall  APIRET;
 #define APIENTRY
 typedef char *PSZ;
 typedef char *NPSZ;
