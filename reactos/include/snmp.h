@@ -115,7 +115,7 @@ typedef struct {
 
 #define SNMPAPI INT
 #ifndef SNMP_FUNC_TYPE
-#define SNMP_FUNC_TYPE
+#define SNMP_FUNC_TYPE	STDCALL
 #endif
 
 //LPVOID SNMP_FUNC_TYPE SnmpUtilMemAlloc(UINT nBytes);
