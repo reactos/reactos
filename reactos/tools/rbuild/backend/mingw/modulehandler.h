@@ -23,7 +23,6 @@ public:
 	virtual void Process ( const Module& module ) = 0;
 	void GenerateDirectoryTargets () const;
 	static std::string GetObjectFilename ( const std::string& sourceFilename );
-	static std::string GetDirectory ( const std::string& filename );
 protected:
 	const std::string &PassThruCacheDirectory ( const std::string &f ) const;
 	std::string GetWorkingDirectory () const;

@@ -19,3 +19,6 @@
 <directory name="winebuild">
 	<xi:include href="winebuild/winebuild.xml" />
 </directory>
+<module name="rmkdir" type="buildtool">
+	<file>rmkdir.c</file>
+</module>

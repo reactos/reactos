@@ -53,10 +53,10 @@ MingwModuleHandler::~MingwModuleHandler()
 }
 
 const string &
-MingwModuleHandler::PassThruCacheDirectory( const string &file ) const 
+MingwModuleHandler::PassThruCacheDirectory ( const string &file ) const 
 {
-    directory_set.insert( ReplaceExtension( GetDirectory( file ), "" ) );
-    return file;
+	directory_set.insert ( GetDirectory ( file ) );
+	return file;
 }
 
 void
@@ -87,20 +87,10 @@ MingwModuleHandler::GetWorkingDirectory () const
 }
 
 string
-MingwModuleHandler::GetDirectory ( const string& filename )
-{
-	size_t index = filename.find_last_of ( CSEP );
-	if (index == string::npos)
-		return ".";
-	else
-		return filename.substr ( 0, index );
-}
-
-string
 MingwModuleHandler::GetBasename ( const string& filename ) const
 {
 	size_t index = filename.find_last_of ( '.' );
-	if (index != string::npos)
+	if ( index != string::npos )
 		return filename.substr ( 0, index );
 	return "";
 }
@@ -111,7 +101,7 @@ MingwModuleHandler::GetActualSourceFilename ( const string& filename ) const
 	string extension = GetExtension ( filename );
 	if ( extension == ".spec" || extension == "SPEC" )
 	{
-		string basename = GetBasename( filename );
+		string basename = GetBasename ( filename );
 		return basename + ".stubs.c";
 	}
 	else
@@ -187,7 +177,7 @@ MingwModuleHandler::GetAllDependencies ( const Module& module ) const
 {
 	string dependencies = GetImportLibraryDependencies ( module );
 	string s = GetModuleDependencies ( module );
-	if (s.length () > 0)
+	if ( s.length () > 0 )
 	{
 		dependencies += " ";
 		dependencies += s;
@@ -208,13 +198,13 @@ MingwModuleHandler::GetSourceFilenames ( const Module& module,
 			sourceFilenames += " " + GetActualSourceFilename ( module.files[i]->name );
 	}
 	vector<If*> ifs = module.ifs;
-	for ( i = 0; i < ifs.size(); i++ )
+	for ( i = 0; i < ifs.size (); i++ )
 	{
 		size_t j;
 		If& rIf = *ifs[i];
-		for ( j = 0; j < rIf.ifs.size(); j++ )
+		for ( j = 0; j < rIf.ifs.size (); j++ )
 			ifs.push_back ( rIf.ifs[j] );
-		for ( j = 0; j < rIf.files.size(); j++ )
+		for ( j = 0; j < rIf.files.size (); j++ )
 		{
 			if ( includeGeneratedFiles || !IsGeneratedFile ( *rIf.files[j] ) )
 				sourceFilenames += " " + GetActualSourceFilename ( rIf.files[j]->name );
@@ -248,8 +238,7 @@ MingwModuleHandler::GetObjectFilename ( const string& sourceFilename )
 		newExtension = ".stubs.o";
 	else
 		newExtension = ".o";
-	return FixupTargetFilename (
-			ReplaceExtension ( sourceFilename, newExtension ) );
+	return FixupTargetFilename ( ReplaceExtension ( sourceFilename, newExtension ) );
 }
 
 string
@@ -269,34 +258,34 @@ MingwModuleHandler::GetObjectFilenames ( const Module& module ) const
 }
 
 void
-MingwModuleHandler::GenerateDirectoryTargets() const 
+MingwModuleHandler::GenerateDirectoryTargets () const
 {
+	if ( directory_set.size () == 0 )
+		return;
+	
 	set_string::iterator i;
-	fprintf( fMakefile, "ifneq ($(ROS_INTERMEDIATE),)\ndirectories::" );
+	fprintf ( fMakefile, "directories::" );
 
-	for ( i = directory_set.begin();
-	      i != directory_set.end();
+	for ( i = directory_set.begin ();
+	      i != directory_set.end ();
 	      i++ )
 	{
-		fprintf ( fMakefile, " %s", i->c_str() );
+		fprintf ( fMakefile, " %s", i->c_str () );
 	}
 
-	fprintf( fMakefile, "\n\n" );
+	fprintf ( fMakefile, "\n\n" );
 
-	for ( i = directory_set.begin();
-	      i != directory_set.end();
+	for ( i = directory_set.begin ();
+	      i != directory_set.end ();
 	      i++ )
 	{
-		fprintf ( fMakefile, "%s ", i->c_str() );
+		fprintf ( fMakefile, "%s ", i->c_str () );
 	}
 
 	fprintf ( fMakefile, 
-	          "::\n\t${mkdir} $@\n\n"
-	          "else\n"
-	          "directories::\n\n"
-	          "endif\n\n" );
+	          "::\n\t${mkdir} $@\n\n" );
 
-	directory_set.clear();
+	directory_set.clear ();
 }
 
 string
@@ -351,7 +340,7 @@ MingwModuleHandler::GenerateGccIncludeParametersFromVector ( const vector<Includ
 	for ( size_t i = 0; i < includes.size (); i++ )
 	{
 		Include& include = *includes[i];
-		if (parameters.length () > 0)
+		if ( parameters.length () > 0 )
 			parameters += " ";
 		parameters += "-I" + include.directory;
 	}
@@ -1264,6 +1253,8 @@ MingwModuleHandler::GetLinkingDependencies ( const Module& module ) const
 bool
 MingwModuleHandler::IsCPlusPlusModule ( const Module& module ) const
 {
+	if ( module.HasFileWithExtensions ( ".cc", ".CC" ) )
+		return true;
 	if ( module.HasFileWithExtensions ( ".cxx", ".CXX" ) )
 		return true;
 	if ( module.HasFileWithExtensions ( ".cpp", ".CPP" ) )
@@ -1949,28 +1940,37 @@ MingwIsoModuleHandler::Process ( const Module& module )
 void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 {
-	string isoboot = "$(ROS_INTERMEDIATE)" + FixupTargetFilename ( "boot/freeldr/bootsect/isoboot.o" );
+	string bootcdDirectory = "cd";
+	string isoboot = FixupTargetFilename ( "boot/freeldr/bootsect/isoboot.o" );
+	string bootcdReactosNoFixup = bootcdDirectory + "/reactos";
+	string bootcdReactos = FixupTargetFilename ( bootcdReactosNoFixup );
+	PassThruCacheDirectory ( bootcdReactos + SSEP );
+	string reactosInf = FixupTargetFilename ( bootcdReactosNoFixup + "/reactos.inf" );
+	string reactosDff = NormalizeFilename ( "bootdata/packages/reactos.dff" );
 
 	fprintf ( fMakefile, ".PHONY: %s\n\n",
 		      module.name.c_str ());
 	fprintf ( fMakefile,
-	          "%s: all %s\n",
+	          "%s: all %s %s\n",
 	          module.name.c_str (),
-	          isoboot.c_str () );
+	          isoboot.c_str (),
+	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cabman} /C %s /L $(ROS_INTERMEDIATE)%s /I\n",
-	          FixupTargetFilename ( "bootdata/packages/reactos.dff" ).c_str (),
-	          FixupTargetFilename ( "bootcd/reactos" ).c_str () );
+	          "\t${cabman} /C %s /L %s /I\n",
+	          reactosDff.c_str (),
+	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cabman} /C %s /RC $(ROS_INTERMEDIATE)%s /L $(BOOTCD_DIR)reactos /N\n",
-	          FixupTargetFilename ( "bootdata/packages/reactos.dff" ).c_str (),
-	          FixupTargetFilename ( "bootcd/reactos/reactos.inf" ).c_str () );
+	          "\t${cabman} /C %s /RC %s /L %s /N\n",
+	          reactosDff.c_str (),
+	          reactosInf.c_str (),
+	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
-	          "\t- ${rm} $(ROS_INTERMEDIATE)%s\n",
-	          FixupTargetFilename ( "bootcd/reactos/reactos.inf" ).c_str () );
+	          "\t- ${rm} %s\n",
+	          reactosInf.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cdmake} -v -m -b %s $(ROS_INTERMEDIATE)bootcd REACTOS ReactOS.iso\n",
-	          isoboot.c_str () );
+	          "\t${cdmake} -v -m -b %s %s REACTOS ReactOS.iso\n",
+	          isoboot.c_str (),
+	          bootcdDirectory.c_str () );
 	fprintf ( fMakefile,
 	          "\n" );
 }

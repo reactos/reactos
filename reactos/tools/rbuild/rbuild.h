@@ -440,6 +440,9 @@ extern std::string
 GetExtension ( const std::string& filename );
 
 extern std::string
+GetDirectory ( const std::string& filename );
+
+extern std::string
 NormalizeFilename ( const std::string& filename );
 
 #endif /* __RBUILD_H */

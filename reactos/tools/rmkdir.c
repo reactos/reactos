@@ -10,14 +10,12 @@
 #include <sys/types.h>
 #endif
 
-#ifdef UNIX_PATHS
-#define DIR_SEPARATOR_CHAR '/'
-#define DIR_SEPARATOR_STRING "/"
-#else
-#ifdef DOS_PATHS
+#if defined(WIN32)
 #define DIR_SEPARATOR_CHAR '\\'
 #define DIR_SEPARATOR_STRING "\\"
-#endif	
+#else
+#define DIR_SEPARATOR_CHAR '/'
+#define DIR_SEPARATOR_STRING "/"
 #endif	
 
 char* convert_path(char* origpath)

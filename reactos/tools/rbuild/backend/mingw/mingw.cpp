@@ -161,12 +161,12 @@ MingwBackend::GenerateProjectLFLAGS () const
 void
 MingwBackend::GenerateGlobalVariables () const
 {
-#ifdef WIN32
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
 	fprintf ( fMakefile, "host_gpp = g++\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );
 	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
+#ifdef WIN32
 	fprintf ( fMakefile, "rm = del /f /q\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "gpp = g++\n" );
@@ -176,11 +176,6 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "dlltool = dlltool\n" );
 	fprintf ( fMakefile, "windres = windres\n" );
 #else
-	fprintf ( fMakefile, "host_gcc = gcc\n" );
-	fprintf ( fMakefile, "host_gpp = g++\n" );
-	fprintf ( fMakefile, "host_ld = ld\n" );
-	fprintf ( fMakefile, "host_ar = ar\n" );
-	fprintf ( fMakefile, "host_objcopy = objcopy\n" );
 	fprintf ( fMakefile, "rm = rm -f\n" );
 	fprintf ( fMakefile, "gcc = mingw32-gcc\n" );
 	fprintf ( fMakefile, "gpp = mingw32-g++\n" );
@@ -190,12 +185,12 @@ MingwBackend::GenerateGlobalVariables () const
 	fprintf ( fMakefile, "dlltool = mingw32-dlltool\n" );
 	fprintf ( fMakefile, "windres = mingw32-windres\n" );
 #endif
-	fprintf ( fMakefile, "mkdir = tools%crmkdir\n", CSEP );
+	fprintf ( fMakefile, "mkdir = tools" SSEP "rmkdir" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "NUL=NUL\n" );
-	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild\n" );
-	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res\n" );
-	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman\n" );
-	fprintf ( fMakefile, "cdmake = tools" SSEP "cdmake" SSEP "cdmake\n" );
+	fprintf ( fMakefile, "winebuild = tools" SSEP "winebuild" SSEP "winebuild" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "bin2res = tools" SSEP "bin2res" SSEP "bin2res" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cabman = tools" SSEP "cabman" SSEP "cabman" EXEPOSTFIX "\n" );
+	fprintf ( fMakefile, "cdmake = tools" SSEP "cdmake" SSEP "cdmake" EXEPOSTFIX "\n" );
 	fprintf ( fMakefile, "\n" );
 	GenerateGlobalCFlagsAndProperties (
 		"=",

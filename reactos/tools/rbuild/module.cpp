@@ -32,6 +32,16 @@ GetExtension ( const string& filename )
 }
 
 string
+GetDirectory ( const string& filename )
+{
+	size_t index = filename.find_last_of ( CSEP );
+	if ( index == string::npos )
+		return filename;
+	else
+		return filename.substr ( 0, index );
+}
+
+string
 NormalizeFilename ( const string& filename )
 {
 	Path path;
