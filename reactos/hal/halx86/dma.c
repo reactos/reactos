@@ -1,4 +1,4 @@
-/* $Id: dma.c,v 1.7 2003/09/11 11:45:28 ekohl Exp $
+/* $Id: dma.c,v 1.8 2003/10/23 09:03:51 vizzini Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,9 @@
 #include <internal/debug.h>
 #include <hal.h>
 
+/* XXX This initialization is out of date - ADAPTER_OBJECT has changed */
+/* NOTE: The following initializations have to be kept in synch with ADAPTER_OBJECT in hal.h */
+/* FIXME: we need the 16-bit dma channels */
 ADAPTER_OBJECT IsaSlaveAdapterObjects[] = {
   { Isa, FALSE, 0, (PVOID)0x87, (PVOID)0x1, (PVOID)0x0, 0, NULL },
   { Isa, FALSE, 1, (PVOID)0x83, (PVOID)0x3, (PVOID)0x2, 0, NULL },
@@ -25,6 +28,8 @@ ADAPTER_OBJECT IsaSlaveAdapterObjects[] = {
 ADAPTER_OBJECT PciBusMasterAdapterObjects[] = {
   { PCIBus, TRUE, 0, (PVOID)0, (PVOID)0, (PVOID)0x0, 0, NULL } };
 
+/* Global flag to tell whether or not the adapter's device queue should be initialized (first call only) */
+BOOLEAN AdaptersInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -112,6 +117,17 @@ HalGetAdapter (PDEVICE_DESCRIPTION	DeviceDescription,
  *    Figure out what to do with the commented-out cases
  */
 {
+  /* TODO: find a better home for this */
+  if(!AdaptersInitialized)
+    {
+      KeInitializeDeviceQueue(&PciBusMasterAdapterObjects[0].DeviceQueue);
+      KeInitializeDeviceQueue(&IsaSlaveAdapterObjects[0].DeviceQueue);
+      KeInitializeDeviceQueue(&IsaSlaveAdapterObjects[1].DeviceQueue);
+      KeInitializeDeviceQueue(&IsaSlaveAdapterObjects[2].DeviceQueue);
+      KeInitializeDeviceQueue(&IsaSlaveAdapterObjects[3].DeviceQueue);
+      AdaptersInitialized = TRUE;
+    }
+
   /* Validate parameters in device description, and return a pointer to
      the adapter object for the requested dma channel */
   if( DeviceDescription->Version != DEVICE_DESCRIPTION_VERSION )

@@ -363,9 +363,8 @@ NdisMAllocateMapRegisters(
 
   Description.Version = DEVICE_DESCRIPTION_VERSION;
   Description.Master = TRUE;                         /* implied by calling this function */
-  Description.ScatterGather = TRUE;                  /* All BM DMA are S/G (ms seems to do this) */
+  Description.ScatterGather = TRUE;                  /* XXX UNTRUE: All BM DMA are S/G (ms seems to do this) */
   Description.Dma32BitAddresses = DmaSize;
-  Description.Dma64BitAddresses = 0;                 /* FIXME figure this out based on input */
   Description.BusNumber = Adapter->BusNumber;
   Description.InterfaceType = Adapter->BusType;
   Description.DmaChannel = DmaChannel;
@@ -373,6 +372,7 @@ NdisMAllocateMapRegisters(
 
   if(Adapter->NdisMiniportBlock.AdapterType == Isa)
     {
+      /* system dma */
       if(DmaChannel < 4)
         Description.DmaWidth = Width8Bits;
       else
@@ -382,7 +382,6 @@ NdisMAllocateMapRegisters(
     }
   else if(Adapter->NdisMiniportBlock.AdapterType == PCIBus)
     {
-      /* Width and Speed are automatically determined on PCI */
       if(DmaSize == NDIS_DMA_64BITS)
         Description.Dma64BitAddresses = TRUE;
       else
@@ -393,12 +392,6 @@ NdisMAllocateMapRegisters(
       NDIS_DbgPrint(MIN_TRACE, ("Unsupported bus type\n"));
       ASSERT(0);
     }
-
-  Description.Reserved1 = 0;                         /* Must Be Zero (ref DDK) */
-  Description.DemandMode = 0;                        /* unused due to bus master */
-  Description.AutoInitialize = 0;                    /* unused due to bus master */
-  Description.IgnoreCount = 0;                       /* unused due to bus master */
-  Description.DmaPort = 0;                           /* unused due to bus type */
 
   AvailableMapRegisters = MapRegistersRequired;
   AdapterObject = HalGetAdapter(&Description, &AvailableMapRegisters);

@@ -57,8 +57,8 @@ struct _ADAPTER_OBJECT {
   PVOID MapRegisterBase;
   ULONG AllocatedMapRegisters;
   PWAIT_CONTEXT_BLOCK WaitContextBlock;
-  PKDEVICE_QUEUE DeviceQueue;
-  BOOLEAN UsesPhysicalMapRegisters;
+  KDEVICE_QUEUE DeviceQueue;
+  BOOLEAN ScatterGather;
 };
 
 /* sysinfo.c */
