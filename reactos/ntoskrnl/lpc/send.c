@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.13 2003/12/14 17:44:02 hbirr Exp $
+/* $Id: send.c,v 1.14 2004/01/07 21:13:22 ea Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,6 +23,7 @@
 
 /**********************************************************************
  * NAME
+ *	LpcSendTerminationPort/2
  *
  * DESCRIPTION
  *
@@ -38,7 +39,10 @@ LpcSendTerminationPort (IN PEPORT Port,
 {
   NTSTATUS Status;
   LPC_TERMINATION_MESSAGE Msg;
-   
+  
+#ifdef __USE_NT_LPC__
+  Msg.Header.MessageType = LPC_NEW_MESSAGE;
+#endif
   Msg.CreationTime = CreationTime;
   Status = LpcRequestPort (Port, &Msg.Header);
   return(Status);
@@ -47,6 +51,7 @@ LpcSendTerminationPort (IN PEPORT Port,
 
 /**********************************************************************
  * NAME
+ *	LpcSendDebugMessagePort/3
  *
  * DESCRIPTION
  *
@@ -100,7 +105,8 @@ LpcSendDebugMessagePort (IN PEPORT Port,
 
 /**********************************************************************
  * NAME
- *
+ *	LpcRequestPort/2
+ *	
  * DESCRIPTION
  *
  * ARGUMENTS
@@ -108,6 +114,11 @@ LpcSendDebugMessagePort (IN PEPORT Port,
  * RETURN VALUE
  *
  * REVISIONS
+ *	2002-03-01 EA
+ *	I investigated this function a bit more in depth.
+ *	It looks like the legal values for the MessageType field in the 
+ *	message to send are in the range LPC_NEW_MESSAGE .. LPC_CLIENT_DIED,
+ *	but LPC_DATAGRAM is explicitly forbidden.
  *
  * @implemented
  */
@@ -116,8 +127,29 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 {
    NTSTATUS Status;
    
-   DPRINT("LpcRequestPort(PortHandle %x LpcMessage %x)\n", Port, LpcMessage);
-   
+   DPRINT("LpcRequestPort(PortHandle %08x, LpcMessage %08x)\n", Port, LpcMessage);
+
+#ifdef __USE_NT_LPC__
+   /* Check the message's type */
+   if (LPC_NEW_MESSAGE == LpcMessage->MessageType)
+   {
+      LpcMessage->MessageType = LPC_DATAGRAM;
+   }
+   else if (LPC_DATAGRAM == LpcMessage->MessageType)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+   else if (LpcMessage->MessageType > LPC_CLIENT_DIED)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+   /* Check the range offset */
+   if (0 != LpcMessage->VirtualRangesOffset)
+   {
+      return STATUS_INVALID_PARAMETER;
+   }
+#endif
+
    Status = EiReplyOrRequestPort(Port, 
 				 LpcMessage, 
 				 LPC_DATAGRAM,
@@ -130,6 +162,7 @@ NTSTATUS STDCALL LpcRequestPort (IN	PEPORT		Port,
 
 /**********************************************************************
  * NAME
+ *	NtRequestPort/2
  *
  * DESCRIPTION
  *
@@ -172,6 +205,7 @@ NTSTATUS STDCALL NtRequestPort (IN	HANDLE		PortHandle,
 
 /**********************************************************************
  * NAME
+ *	NtRequestWaitReplyPort/3
  *
  * DESCRIPTION
  *
@@ -308,7 +342,8 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
 
 /**********************************************************************
  * NAME
- *
+ *	NtWriteRequestData/6
+ *	
  * DESCRIPTION
  *
  * ARGUMENTS
