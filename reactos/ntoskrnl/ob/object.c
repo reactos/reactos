@@ -39,6 +39,256 @@ POBJECT_HEADER BODY_TO_HEADER(PVOID body)
   return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
 }
 
+NTSTATUS
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                           IN POBJECT_TYPE ObjectType,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN BOOLEAN CaptureIfKernel,
+                           OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
+                           OUT PUNICODE_STRING ObjectName  OPTIONAL)
+{
+  OBJECT_ATTRIBUTES AttributesCopy;
+  NTSTATUS Status = STATUS_SUCCESS;
+  
+  /* at least one output parameter must be != NULL! */
+  ASSERT((ULONG_PTR)SecureObjectInformation ^ (ULONG_PTR)ObjectName != 0);
+  
+  if(ObjectAttributes == NULL)
+  {
+failbasiccleanup:
+    if(ObjectName != NULL)
+    {
+      RtlInitUnicodeString(ObjectName, NULL);
+    }
+    if(CapturedObjectAttributes != NULL)
+    {
+      RtlZeroMemory(CapturedObjectAttributes, sizeof(CAPTURED_OBJECT_ATTRIBUTES));
+    }
+    return Status; /* STATUS_SUCCESS */
+  }
+  
+  if(AccessMode != KernelMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForRead(ObjectAttributes,
+                   sizeof(ObjectAttributes),
+                   sizeof(ULONG));
+      /* make a copy on the stack */
+      AttributesCopy = *ObjectAttributes;
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
+  else if(AccessMode == KernelMode && !CaptureIfKernel)
+  {
+    if(AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
+    {
+      if(ObjectName != NULL)
+      {
+        *ObjectName = *ObjectAttributes->ObjectName;
+      }
+      if(CapturedObjectAttributes != NULL)
+      {
+        CapturedObjectAttributes->RootDirectory = ObjectAttributes->RootDirectory;
+        CapturedObjectAttributes->Attributes = ObjectAttributes->Attributes;
+        CapturedObjectAttributes->SecurityDescriptor = ObjectAttributes->SecurityDescriptor;
+      }
+    }
+    else
+    {
+      Status = STATUS_INVALID_PARAMETER;
+      goto failbasiccleanup;
+    }
+
+    return STATUS_SUCCESS;
+  }
+  else
+  {
+    AttributesCopy = *ObjectAttributes;
+  }
+  
+  /* if Length isn't as expected, bail with an invalid parameter status code so
+     the caller knows he passed garbage... */
+  if(AttributesCopy.Length != sizeof(OBJECT_ATTRIBUTES))
+  {
+    Status = STATUS_INVALID_PARAMETER;
+    goto failbasiccleanup;
+  }
+  
+  if(CapturedObjectAttributes != NULL)
+  {
+    CapturedObjectAttributes->RootDirectory = AttributesCopy.RootDirectory;
+    CapturedObjectAttributes->Attributes = AttributesCopy.Attributes;
+
+    if(AttributesCopy.SecurityDescriptor != NULL)
+    {
+      Status = SeCaptureSecurityDescriptor(AttributesCopy.SecurityDescriptor,
+                                           AccessMode,
+                                           PagedPool,
+                                           TRUE,
+                                           &CapturedObjectAttributes->SecurityDescriptor);
+      if(!NT_SUCCESS(Status))
+      {
+        DPRINT1("Unable to capture the security descriptor!!!\n");
+        goto failbasiccleanup;
+      }
+    }
+    else
+    {
+      CapturedObjectAttributes->SecurityDescriptor = NULL;
+    }
+  }
+  
+  if(ObjectName != NULL)
+  {
+    if(AttributesCopy.ObjectName != NULL)
+    {
+      UNICODE_STRING OriginalCopy;
+      
+      if(AccessMode != KernelMode)
+      {
+        _SEH_TRY
+        {
+          /* probe the ObjectName structure and make a local stack copy of it */
+          ProbeForRead(AttributesCopy.ObjectName,
+                       sizeof(UNICODE_STRING),
+                       sizeof(ULONG));
+          OriginalCopy = *AttributesCopy.ObjectName;
+          if(OriginalCopy.Length > 0)
+          {
+            ProbeForRead(OriginalCopy.Buffer,
+                         OriginalCopy.Length,
+                         sizeof(ULONG));
+          }
+        }
+        _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if(OriginalCopy.Length > 0)
+        {
+          ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
+          ObjectName->Buffer = ExAllocatePool(NonPagedPool,
+                                              ObjectName->MaximumLength);
+          if(ObjectName->Buffer != NULL)
+          {
+            _SEH_TRY
+            {
+              /* no need to probe OriginalCopy.Buffer again, we already did that
+                 when capturing the UNICODE_STRING structure itself */
+              RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
+              ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
+            }
+            _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+          }
+          else
+          {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+          }
+        }
+        else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
+        {
+          /* if the caller specified a root directory, there must be an object name! */
+          Status = STATUS_OBJECT_NAME_INVALID;
+        }
+
+        if(!NT_SUCCESS(Status))
+        {
+failallocatedcleanup:
+          if(ObjectName->Buffer)
+          {
+            ExFreePool(ObjectName->Buffer);
+          }
+          if(CapturedObjectAttributes != NULL)
+          {
+            /* cleanup allocated resources */
+            SeReleaseSecurityDescriptor(CapturedObjectAttributes->SecurityDescriptor,
+                                        AccessMode,
+                                        TRUE);
+          }
+          goto failbasiccleanup;
+        }
+      }
+      else /* AccessMode == KernelMode */
+      {
+        OriginalCopy = *AttributesCopy.ObjectName;
+        
+        if(OriginalCopy.Length > 0)
+        {
+          ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
+          ObjectName->Buffer = ExAllocatePool(NonPagedPool,
+                                              ObjectName->MaximumLength);
+          if(ObjectName->Buffer != NULL)
+          {
+            RtlCopyMemory(ObjectName->Buffer, OriginalCopy.Buffer, OriginalCopy.Length);
+            ObjectName->Buffer[OriginalCopy.Length / sizeof(WCHAR)] = L'\0';
+          }
+          else
+          {
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+          }
+        }
+        else if(AttributesCopy.RootDirectory != NULL /* && OriginalCopy.Length == 0 */)
+        {
+          /* if the caller specified a root directory, there must be an object name! */
+          Status = STATUS_OBJECT_NAME_INVALID;
+        }
+        
+        if(!NT_SUCCESS(Status))
+        {
+          goto failallocatedcleanup;
+        }
+      }
+    }
+    else
+    {
+      RtlInitUnicodeString(ObjectName, NULL);
+    }
+  }
+  
+  return Status;
+}
+
+VOID
+ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
+                           IN PUNICODE_STRING ObjectName  OPTIONAL,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN BOOLEAN CaptureIfKernel)
+{
+  /* WARNING - You need to pass the same parameters to this function as you passed
+               to ObpCaptureObjectAttributes() to avoid memory leaks */
+  if(AccessMode != KernelMode ||
+     (AccessMode == KernelMode && CaptureIfKernel))
+  {
+    if(CapturedObjectAttributes != NULL &&
+       CapturedObjectAttributes->SecurityDescriptor != NULL)
+    {
+      ExFreePool(CapturedObjectAttributes->SecurityDescriptor);
+      CapturedObjectAttributes->SecurityDescriptor = NULL;
+    }
+    if(ObjectName != NULL &&
+       ObjectName->Length > 0)
+    {
+      ExFreePool(ObjectName->Buffer);
+    }
+  }
+}
+
 
 /**********************************************************************
  * NAME							PRIVATE
@@ -344,6 +594,27 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
   SECURITY_SUBJECT_CONTEXT SubjectContext;
 
   ASSERT_IRQL(APC_LEVEL);
+  
+  if(AccessMode == UserMode)
+  {
+    Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
+      ProbeForRead(ObjectAttributes,
+                   sizeof(OBJECT_ATTRIBUTES),
+                   sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   DPRINT("ObCreateObject(Type %p ObjectAttributes %p, Object %p)\n",
 	 Type, ObjectAttributes, Object);

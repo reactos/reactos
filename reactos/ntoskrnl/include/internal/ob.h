@@ -315,5 +315,29 @@ ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 VOID
 ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+/* Secure object information functions */
+
+typedef struct _CAPTURED_OBJECT_ATTRIBUTES
+{
+  HANDLE RootDirectory;
+  ULONG Attributes;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  /* PVOID SecurityQualityOfService; */
+} CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
+
+NTSTATUS
+ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+                           IN POBJECT_TYPE ObjectType,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN BOOLEAN CaptureIfKernel,
+                           OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
+                           OUT PUNICODE_STRING ObjectName  OPTIONAL);
+
+VOID
+ObpReleaseObjectAttributes(IN PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
+                           IN PUNICODE_STRING ObjectName  OPTIONAL,
+                           IN KPROCESSOR_MODE AccessMode,
+                           IN BOOLEAN CaptureIfKernel);
+
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */
