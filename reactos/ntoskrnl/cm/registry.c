@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.64 2001/08/30 20:38:18 dwelch Exp $
+/* $Id: registry.c,v 1.65 2001/09/08 09:02:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,6 +33,7 @@ KSPIN_LOCK  CmiKeyListLock;
 static PKEY_OBJECT  CmiRootKey = NULL;
 static PKEY_OBJECT  CmiMachineKey = NULL;
 static PKEY_OBJECT  CmiUserKey = NULL;
+static PKEY_OBJECT  CmiHardwareKey = NULL;
 
 static GENERIC_MAPPING CmiKeyMapping =
 	{KEY_READ, KEY_WRITE, KEY_EXECUTE, KEY_ALL_ACCESS};
@@ -159,6 +160,110 @@ DPRINT("Creating HKU\n");
    CmiAddKeyToList(CmiRootKey,NewKey);
    CmiUserKey=NewKey;
 
+  /* Create '\\Registry\\Machine\\HARDWARE' key. */
+  RtlInitUnicodeString(&RootKeyName, REG_HARDWARE_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  Status=ObCreateObject(&KeyHandle,
+                        STANDARD_RIGHTS_REQUIRED,
+                        &ObjectAttributes,
+                        CmiKeyType,
+                        (PVOID*)&NewKey);
+  Status = CmiAddSubKey(CmiVolatileFile,
+                        CmiMachineKey,
+                        NewKey,
+                        L"HARDWARE",
+                        16,
+                        0,
+                        NULL,
+                        0);
+  NewKey->RegistryFile = CmiVolatileFile;
+  NewKey->Flags = 0;
+  NewKey->NumberOfSubKeys=0;
+  NewKey->SubKeys= NULL;
+  NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
+  NewKey->Name=ExAllocatePool(PagedPool,strlen("HARDWARE"));
+  NewKey->NameSize=strlen("HARDWARE");
+  memcpy(NewKey->Name,"HARDWARE",strlen("HARDWARE"));
+  CmiAddKeyToList(CmiMachineKey,NewKey);
+  CmiHardwareKey=NewKey;
+
+  /* Create '\\Registry\\Machine\\HARDWARE\\DESCRIPTION' key. */
+  RtlInitUnicodeString(&RootKeyName, REG_DESCRIPTION_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  Status=ObCreateObject(&KeyHandle,
+                        STANDARD_RIGHTS_REQUIRED,
+                        &ObjectAttributes,
+                        CmiKeyType,
+                        (PVOID*)&NewKey);
+  Status = CmiAddSubKey(CmiVolatileFile,
+                        CmiHardwareKey,
+                        NewKey,
+                        L"DESCRIPTION",
+                        16,
+                        0,
+                        NULL,
+                        0);
+  NewKey->RegistryFile = CmiVolatileFile;
+  NewKey->Flags = 0;
+  NewKey->NumberOfSubKeys=0;
+  NewKey->SubKeys= NULL;
+  NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
+  NewKey->Name=ExAllocatePool(PagedPool,strlen("DESCRIPTION"));
+  NewKey->NameSize=strlen("DESCRIPTION");
+  memcpy(NewKey->Name,"DESCRIPTION",strlen("DESCRIPTION"));
+  CmiAddKeyToList(CmiHardwareKey,NewKey);
+
+  /* Create '\\Registry\\Machine\\HARDWARE\\DEVICEMAP' key. */
+  RtlInitUnicodeString(&RootKeyName, REG_DEVICEMAP_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  Status=ObCreateObject(&KeyHandle,
+                        STANDARD_RIGHTS_REQUIRED,
+                        &ObjectAttributes,
+                        CmiKeyType,
+                        (PVOID*)&NewKey);
+  Status = CmiAddSubKey(CmiVolatileFile,
+                        CmiHardwareKey,
+                        NewKey,
+                        L"DEVICEMAP",
+                        18,
+                        0,
+                        NULL,
+                        0);
+  NewKey->RegistryFile = CmiVolatileFile;
+  NewKey->Flags = 0;
+  NewKey->NumberOfSubKeys=0;
+  NewKey->SubKeys= NULL;
+  NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
+  NewKey->Name=ExAllocatePool(PagedPool,strlen("DEVICEMAP"));
+  NewKey->NameSize=strlen("DEVICEMAP");
+  memcpy(NewKey->Name,"DEVICEMAP",strlen("DEVICEMAP"));
+  CmiAddKeyToList(CmiHardwareKey,NewKey);
+
+  /* Create '\\Registry\\Machine\\HARDWARE\\RESOURCEMAP' key. */
+  RtlInitUnicodeString(&RootKeyName, REG_RESOURCEMAP_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &RootKeyName, 0, NULL, NULL);
+  Status=ObCreateObject(&KeyHandle,
+                        STANDARD_RIGHTS_REQUIRED,
+                        &ObjectAttributes,
+                        CmiKeyType,
+                        (PVOID*)&NewKey);
+  Status = CmiAddSubKey(CmiVolatileFile,
+                        CmiHardwareKey,
+                        NewKey,
+                        L"RESOURCEMAP",
+                        22,
+                        0,
+                        NULL,
+                        0);
+  NewKey->RegistryFile = CmiVolatileFile;
+  NewKey->Flags = 0;
+  NewKey->NumberOfSubKeys=0;
+  NewKey->SubKeys= NULL;
+  NewKey->SizeOfSubKeys= NewKey->KeyBlock->NumberOfSubKeys;
+  NewKey->Name=ExAllocatePool(PagedPool,strlen("RESOURCEMAP"));
+  NewKey->NameSize=strlen("RESOURCEMAP");
+  memcpy(NewKey->Name,"RESOURCEMAP",strlen("RESOURCEMAP"));
+  CmiAddKeyToList(CmiHardwareKey,NewKey);
 
   /* FIXME: create remaining structure needed for default handles  */
   /* FIXME: load volatile registry data from ROSDTECT  */

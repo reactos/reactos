@@ -1010,13 +1010,12 @@ NtQueryValueKey (
 }
 
 
-NTSTATUS 
-STDCALL
+NTSTATUS STDCALL
 NtSetValueKey (
-	IN	HANDLE			KeyHandle, 
+	IN	HANDLE			KeyHandle,
 	IN	PUNICODE_STRING		ValueName,
 	IN	ULONG			TitleIndex,
-	IN	ULONG			Type, 
+	IN	ULONG			Type,
 	IN	PVOID			Data,
 	IN	ULONG			DataSize
 	)
@@ -1032,7 +1031,7 @@ NtSetValueKey (
  PHEAP_BLOCK pHeap;
 // KIRQL  OldIrql;
 
-  DPRINT1("KeyHandle %x  ValueName %S  Type %d\n",
+  DPRINT("KeyHandle %x  ValueName %S  Type %d\n",
     KeyHandle, ValueName->Buffer, Type);
 
   wcstombs(ValueName2,ValueName->Buffer,ValueName->Length>>1);
@@ -1045,7 +1044,6 @@ NtSetValueKey (
                                      UserMode,
                                      (PVOID *)&KeyObject,
                                      NULL);
-  DPRINT1("Status 0x%X\n", Status);
   if (!NT_SUCCESS(Status))
     return  Status;
 
@@ -1131,7 +1129,7 @@ NtSetValueKey (
 //  KeReleaseSpinLock(&RegistryFile->RegLock, OldIrql);
   ObDereferenceObject (KeyObject);
   
-  DPRINT1("Return Status 0x%X\n", Status);
+  DPRINT("Return Status 0x%X\n", Status);
 
   return  Status;
 }
