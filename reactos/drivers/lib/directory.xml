@@ -1,3 +1,9 @@
 <directory name="csq">
 	<xi:include href="csq/csq.xml" />
 </directory>
+<directory name="ip">
+	<xi:include href="ip/ip.xml" />
+</directory>
+<directory name="oskittcp">
+	<xi:include href="oskittcp/oskittcp.xml" />
+</directory>
