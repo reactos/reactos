@@ -25,7 +25,7 @@ int getc(FILE *fp)
 
 	if(fp->_cnt > 0) {
 		fp->_cnt--;
-		c =  (int)*fp->_ptr++;
+		c =  (int)(*fp->_ptr++ & 0377);
 	} 
 	else {
 		c =  _filbuf(fp);

@@ -1,4 +1,4 @@
-/* $Id: getc.c,v 1.7 2002/12/08 16:11:59 robd Exp $
+/* $Id: getc.c,v 1.8 2003/01/11 22:40:24 gvg Exp $
  *
  *  ReactOS msvcrt library
  *
@@ -51,7 +51,7 @@ int getc(FILE *fp)
 	}
 	if(fp->_cnt > 0) {
 		fp->_cnt--;
-		c =  (int)*fp->_ptr++;
+		c =  (int)(*fp->_ptr++ & 0377);
 	} else {
 		c =  _filbuf(fp);
 	}
@@ -95,7 +95,7 @@ wint_t getwc(FILE *fp)
         do {
             if (fp->_cnt > 0) {
                 fp->_cnt--;
-                mbchar[mb_cnt] = *fp->_ptr++;
+                mbchar[mb_cnt] = *fp->_ptr++ & 0377;
             } else {
                 mbchar[mb_cnt] = _filbuf(fp);
             }
@@ -119,7 +119,7 @@ wint_t getwc(FILE *fp)
 #else
         if (fp->_cnt > 0) {
             fp->_cnt--;
-            c = *fp->_ptr++;
+            c = *fp->_ptr++ &0377;
         } else {
             c = _filbuf(fp);
         }
