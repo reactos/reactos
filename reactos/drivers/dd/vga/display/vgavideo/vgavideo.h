@@ -64,3 +64,31 @@ static unsigned char saved_GC_mask;	/* 0x08 */
 static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
+
+static void
+get_masks(int x, int w)
+{
+	register int tmp;
+
+	leftMask = rightMask = 0;
+	byteCounter = w;
+	/* right margin */
+	tmp = (x+w) & 7;
+	if (tmp) {
+		byteCounter -= tmp;
+		rightMask = (unsigned char)(0xff00 >> tmp);
+	}
+	/* left margin */
+	tmp = x & 7;
+	if (tmp) {
+		byteCounter -= (8 - tmp);
+		leftMask = (0xff >> tmp);
+	}
+	/* too small ? */
+	if (byteCounter < 0) {
+		leftMask &= rightMask;
+		rightMask = 0;
+		byteCounter = 0;
+	}
+	byteCounter /= 8;
+}
