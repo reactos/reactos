@@ -29,14 +29,6 @@
 
 #include "arch/ke.h"
 
-
-#ifndef __ASM__
-extern LARGE_INTEGER SystemBootTime;
-extern volatile ULONG KiKernelTime;
-extern volatile ULONG KiUserTime;
-extern volatile ULONG KiDpcTime;
-#endif
-
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
 #ifdef __USE_W32API
@@ -105,6 +97,12 @@ KiDeliverNormalApc(VOID);
 
 BOOLEAN STDCALL KeRemoveQueueApc (PKAPC Apc);
 PLIST_ENTRY STDCALL KeRundownQueue(IN PKQUEUE Queue);
+
+extern LARGE_INTEGER SystemBootTime;
+extern volatile ULONGLONG KiKernelTime;
+extern volatile ULONGLONG KiUserTime;
+extern volatile ULONGLONG KiDpcTime;
+
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 

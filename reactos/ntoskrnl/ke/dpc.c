@@ -18,7 +18,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dpc.c,v 1.31 2004/06/23 22:31:51 ion Exp $
+/* $Id: dpc.c,v 1.32 2004/07/29 23:28:31 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -42,18 +42,27 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern volatile ULONGLONG KeTickCount;
+
 /* TYPES *******************************************************************/
 
 /* GLOBALS ******************************************************************/
 
 static LIST_ENTRY DpcQueueHead; /* Head of the list of pending DPCs */
 static KSPIN_LOCK DpcQueueLock; /* Lock for the above list */
+static ULONGLONG DpcTimeInside = 0;
+
 /*
  * Number of pending DPCs. This is inspected by
  * the idle thread to determine if the queue needs to
  * be run down
  */
 ULONG DpcQueueSize = 0;
+
+/*
+ * Number of DPC's Processed.
+ */
+ULONG DpcCount = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -102,6 +111,9 @@ KiDispatchInterrupt(VOID)
    KeRaiseIrql(HIGH_LEVEL, &oldlvl);
    KiAcquireSpinLock(&DpcQueueLock);
 
+   DpcTimeInside = KeTickCount;
+   DpcCount = DpcCount + DpcQueueSize;
+   
    while (!IsListEmpty(&DpcQueueHead))
    {
       current_entry = RemoveHeadList(&DpcQueueHead);
@@ -120,6 +132,8 @@ KiDispatchInterrupt(VOID)
       KeRaiseIrql(HIGH_LEVEL, &oldlvl);
       KiAcquireSpinLock(&DpcQueueLock);
    }
+   KiDpcTime += (KeTickCount - DpcTimeInside);
+
    KiReleaseSpinLock(&DpcQueueLock);
    KeLowerIrql(oldlvl);
 }

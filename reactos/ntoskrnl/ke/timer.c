@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.74 2004/06/23 22:31:51 ion Exp $
+/* $Id: timer.c,v 1.75 2004/07/29 23:28:31 jimtabor Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -27,6 +27,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* GLOBALS ****************************************************************/
 
 /*
@@ -39,9 +40,9 @@ LARGE_INTEGER SystemBootTime = { 0 };
 #endif
 
 CHAR KiTimerSystemAuditing = 0;
-volatile ULONG KiKernelTime;
-volatile ULONG KiUserTime;
-volatile ULONG KiDpcTime;
+volatile ULONGLONG KiKernelTime;
+volatile ULONGLONG KiUserTime;
+volatile ULONGLONG KiDpcTime;
 
 /*
  * Number of timer interrupts since initialisation
@@ -72,7 +73,6 @@ static KDPC ExpireTimerDpc;
 
 extern ULONG PiNrRunnableThreads;
 extern HANDLE PsIdleThreadHandle;
-
 
 #define MICROSECONDS_PER_TICK (10000)
 #define TICKS_TO_CALIBRATE (1)
@@ -644,7 +644,6 @@ KiUpdateSystemTime(KIRQL oldIrql,
     */
    KeTickCount++;
    SharedUserData->TickCountLow++;
-
    KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
@@ -717,8 +716,8 @@ KiUpdateProcessThreadTime(VOID)
  *  Make sure no counting can take place until Processes and Threads are
  *  running!
  */
-   if ((PsInitialSystemProcess == NULL) || 
-              (PsIdleThreadHandle == NULL) || (KiTimerSystemAuditing == 0))
+   if ((PsInitialSystemProcess == NULL) || (PsIdleThreadHandle == NULL) || 
+        (KiTimerSystemAuditing == 0))
      {
        return;
      }
@@ -728,18 +727,22 @@ KiUpdateProcessThreadTime(VOID)
    
    DPRINT("KiKernelTime  %u, KiUserTime %u \n", KiKernelTime, KiUserTime);
 
+   /* Over kill with locks. */
    KiAcquireSpinLock(&TimeLock);
 
    if (CurrentThread->PreviousMode == UserMode)
      {
-       ++CurrentThread->UserTime;       
-       ++CurrentProcess->UserTime;
+       /*  Lock the process & thread time. This should lock everything
+        *  all the way down to the process & thread stuct.
+        */
+       InterlockedIncrement((LONG *)&CurrentProcess->UserTime);
+       InterlockedIncrement((LONG *)&CurrentThread->UserTime);
        ++KiUserTime;
      }
    if (CurrentThread->PreviousMode == KernelMode)
      {
-       ++CurrentProcess->KernelTime;
-       ++CurrentThread->KernelTime;
+       InterlockedIncrement((LONG *)&CurrentProcess->KernelTime);
+       InterlockedIncrement((LONG *)&CurrentThread->KernelTime);
        ++KiKernelTime;
      }
 
@@ -777,8 +780,8 @@ KeUpdateRunTime(
 STDCALL
 VOID 
 KeUpdateSystemTime(
-	IN PKTRAP_FRAME   	TrapFrame,
-	IN ULONG  			Increment
+	IN PKTRAP_FRAME TrapFrame,
+	IN ULONG        Increment
 )
 {
 	UNIMPLEMENTED;
