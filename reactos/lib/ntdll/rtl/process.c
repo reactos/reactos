@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.21 2000/10/08 16:32:52 dwelch Exp $
+/* $Id: process.c,v 1.22 2000/12/09 04:34:52 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -312,7 +312,8 @@ RtlCreateUserProcess (
    Status = RtlpMapFile(Ppb,
 			&hSection,
 			ImageFileName);
-   
+   if( !NT_SUCCESS( Status ) )
+     return Status;
    /*
     * Create a new process
     */
