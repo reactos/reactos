@@ -76,7 +76,6 @@ RTL_OBJECTS = \
 	rtl/message.o \
 	rtl/misc.o \
 	rtl/path.o \
-	rtl/ppb.o \
 	rtl/process.o \
 	rtl/propvar.o \
 	rtl/rangelist.o \

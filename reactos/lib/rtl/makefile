@@ -18,6 +18,7 @@ endif
 
 TARGET_OBJECTS = \
 	acl.o \
+	ppb.o \
 	bit.o \
 	bitmap.o \
 	bootdata.o \

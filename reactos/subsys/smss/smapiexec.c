@@ -81,6 +81,9 @@ SmCreateUserProcess (LPWSTR ImagePath,
 				       NULL,
 				       NULL,
 				       pProcessInfo);
+                   
+   RtlDestroyProcessParameters (ProcessParameters);
+   
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("SM: %s: Running \"%S\" failed (Status=0x%08lx)\n",
@@ -88,7 +91,8 @@ SmCreateUserProcess (LPWSTR ImagePath,
 		return Status;
 	}
 
-	RtlDestroyProcessParameters (ProcessParameters);
+   NtResumeThread(pProcessInfo->ThreadHandle, NULL);
+
 
 	/* Wait for process termination */
 	if(WaitForIt)
