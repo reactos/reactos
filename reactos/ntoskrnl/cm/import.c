@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.3 2001/09/04 21:05:26 ekohl Exp $
+/* $Id: import.c,v 1.4 2001/11/25 18:28:00 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -218,6 +218,14 @@ getKeyValueTypeFromChunk (PCHAR  regChunk, PCHAR  dataFormat, int *keyValueType)
     if (*regChunk == ':')
       regChunk++;
   }
+  else if (strncmp (regChunk, "dword", 5) == 0)
+  {
+    strcpy (dataFormat, "dword");
+    *keyValueType = REG_DWORD;
+    regChunk += 5;
+    if (*regChunk == ':')
+      regChunk++;
+  }
   else
   {
     UNIMPLEMENTED;
@@ -261,6 +269,14 @@ computeKeyValueDataSize (PCHAR  regChunk, PCHAR  dataFormat)
       }
     }
   }
+  else if (strcmp (dataFormat, "dword") == 0)
+  {
+    dataSize = sizeof(DWORD);
+    while (*regChunk != 0 && isxdigit(*regChunk))
+    {
+      regChunk++;
+    }
+  }
   else
   {
     UNIMPLEMENTED;
@@ -287,6 +303,7 @@ static PCHAR
 getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
 {
   char  dataValue;
+  ULONG ulValue;
   PWCHAR ptr;
   
   if (strcmp (dataFormat, "string") == 0)
@@ -322,6 +339,18 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
         }
       }
     }
+  }
+  else if (strcmp (dataFormat, "dword") == 0)
+  {
+    ulValue = 0;
+    while (*regChunk != 0 && isxdigit(*regChunk))
+    {
+      dataValue = (isdigit (*regChunk) ? *regChunk - '0' : 
+        tolower(*regChunk) - 'a');
+      ulValue = (ulValue << 4) + dataValue;
+      regChunk++;
+    }
+    memcpy(data, &ulValue, sizeof(ULONG));
   }
   else
   {
