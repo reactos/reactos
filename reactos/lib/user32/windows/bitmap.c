@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.32 2004/08/15 21:36:28 chorns Exp $
+/* $Id: bitmap.c,v 1.33 2004/10/05 22:08:56 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -180,7 +180,8 @@ LoadCursorImage(HINSTANCE hinst, LPCWSTR lpszName, UINT fuLoad)
 
       IconDIR = MapViewOfFile(hSection, FILE_MAP_READ, 0, 0, 0);
       CloseHandle(hSection);
-      if (IconDIR == NULL)
+      if (IconDIR == NULL || 0 != IconDIR->idReserved
+          || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
       {
          return NULL;
       }
@@ -377,7 +378,8 @@ LoadIconImage(HINSTANCE hinst, LPCWSTR lpszName, INT width, INT height, UINT fuL
 				 0,
 				 0);
 
-      if (IconDIR == NULL)
+      if (IconDIR == NULL || 0 != IconDIR->idReserved
+          || (IMAGE_ICON != IconDIR->idType && IMAGE_CURSOR != IconDIR->idType))
 	  {
 	    CloseHandle(hFile);
 	    CloseHandle(hSection);
