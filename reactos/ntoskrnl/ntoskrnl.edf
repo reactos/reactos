@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.163 2004/03/07 20:31:53 navaraf Exp $
+; $Id: ntoskrnl.edf,v 1.164 2004/03/08 08:05:27 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -778,6 +778,7 @@ RtlGetDefaultCodePage=RtlGetDefaultCodePage@8
 ;RtlGetElementGenericTable
 RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
+RtlGetVersion=RtlGetVersion@4
 RtlImageNtHeader=RtlImageNtHeader@4
 RtlImageDirectoryEntryToData=RtlImageDirectoryEntryToData@16
 RtlInitAnsiString=RtlInitAnsiString@8

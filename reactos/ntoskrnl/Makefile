@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.116 2004/03/02 22:36:17 dwelch Exp $
+# $Id: Makefile,v 1.117 2004/03/08 08:05:27 navaraf Exp $
 #
 # ReactOS Operating System
 #
@@ -121,6 +121,7 @@ OBJECTS_RTL = \
 	rtl/time.o \
 	rtl/timezone.o \
 	rtl/unicode.o \
+	rtl/version.o \
 	rtl/wstring.o \
 	rtl/capture.o
 

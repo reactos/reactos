@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.11 2004/03/08 04:41:20 jimtabor Exp $
+ * $Id: videoprt.c,v 1.12 2004/03/08 08:05:26 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -1266,6 +1266,9 @@ InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
   PVOID MappedAddress;
   PLIST_ENTRY Entry;
 
+  DPRINT("- IoAddress: %lx\n", IoAddress.u.LowPart);
+  DPRINT("- NumberOfUchars: %lx\n", NumberOfUchars);
+  DPRINT("- InIoSpace: %c\n", InIoSpace);
   if (0 != (InIoSpace & VIDEO_MEMORY_SPACE_P6CACHE))
     {
       DPRINT("VIDEO_MEMORY_SPACE_P6CACHE not supported, turning off\n");
@@ -1411,7 +1414,7 @@ VideoPortAllocateBuffer(IN PVOID  HwDeviceExtension,
 {
   DPRINT("VideoPortAllocateBuffer()\n");
   
-  Buffer = ExAllocatePool (NonPagedPool, Size) ;
+  Buffer = ExAllocatePool(PagedPool, Size);
   return STATUS_SUCCESS;
       
 }
@@ -1605,25 +1608,24 @@ STDCALL
 VideoPortGetVersion ( IN PVOID HwDeviceExtension,
 		      IN OUT PVPOSVERSIONINFO VpOsVersionInfo )
 {
-  PPEB Peb;
-  
-  DPRINT1("VideoPortGetVersion()\n");
-  if(KeGetCurrentIrql() == PASSIVE_LEVEL)
-  {
-     if(VpOsVersionInfo->Size >= sizeof(VPOSVERSIONINFO))
-     {
-	Peb = NtCurrentPeb();
-	VpOsVersionInfo->MajorVersion = Peb->OSMajorVersion;
-	VpOsVersionInfo->MinorVersion = Peb->OSMinorVersion;
-	VpOsVersionInfo->BuildNumber = Peb->OSBuildNumber;
-	VpOsVersionInfo->ServicePackMajor = Peb->SPMajorVersion;
-	VpOsVersionInfo->ServicePackMinor = Peb->SPMinorVersion;
-	return STATUS_SUCCESS;
-      }	
-     else
-	return ERROR_INVALID_PARAMETER;
-  }
-  return STATUS_UNSUCCESSFUL;
+   RTL_OSVERSIONINFOEXW Version;
+
+   Version.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+   if (VpOsVersionInfo->Size >= sizeof(VPOSVERSIONINFO))
+   {
+      if (NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&Version)))
+      {
+         VpOsVersionInfo->MajorVersion = Version.dwMajorVersion;
+         VpOsVersionInfo->MinorVersion = Version.dwMinorVersion;
+         VpOsVersionInfo->BuildNumber = Version.dwBuildNumber;
+         VpOsVersionInfo->ServicePackMajor = Version.wServicePackMajor;
+         VpOsVersionInfo->ServicePackMinor = Version.wServicePackMinor;
+         return STATUS_SUCCESS;
+      }
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   return ERROR_INVALID_PARAMETER;
 }
 
 PVOID
