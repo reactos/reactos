@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.24 2003/08/31 07:56:24 gvg Exp $
+/* $Id: xlate.c,v 1.25 2003/09/26 10:45:44 gvg Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -202,6 +202,28 @@ static INT FASTCALL CalculateShift(ULONG Mask)
    return Shift;
 }
 
+VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
+{
+  XLATEGDI *XlateGDI;
+  HANDLE HXlate;
+
+  if (NULL == XlateObj)
+    {
+      DPRINT1("Trying to delete NULL XLATEOBJ\n");
+      return;
+    }
+
+  XlateGDI = (XLATEGDI *) AccessInternalObjectFromUserObject(XlateObj);
+  HXlate = (HANDLE) AccessHandleFromUserObject(XlateObj);
+
+  if(NULL != XlateGDI->translationTable)
+    {
+      EngFreeMem(XlateGDI->translationTable);
+    }
+
+  FreeGDIHandle((ULONG)HXlate);
+}
+
 XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
                             HPALETTE PaletteDest, HPALETTE PaletteSource)
 {
@@ -319,6 +341,19 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
     else if (DestPalType   == PAL_INDEXED) { IndexedColors = DestPalGDI->NumColors; }
 
     XlateGDI->translationTable = EngAllocMem(FL_ZERO_MEMORY, sizeof(ULONG)*IndexedColors, 0);
+    if (NULL == XlateGDI->translationTable)
+      {
+	if (NULL != PaletteSource)
+	  {
+	    PALETTE_UnlockPalette(PaletteSource);
+	  }
+	if (NULL != PaletteDest && PaletteDest != PaletteSource)
+	  {
+	    PALETTE_UnlockPalette(PaletteDest);
+	  }
+	EngDeleteXlate(XlateObj);
+	return NULL;
+      }
   }
 
   // Source palette is indexed
@@ -373,19 +408,6 @@ XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
   }
 
   return XlateObj;
-}
-
-VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
-{
-  HANDLE HXlate    = (HANDLE)AccessHandleFromUserObject(XlateObj);
-  XLATEGDI *XlateGDI = (XLATEGDI*)AccessInternalObject((ULONG)HXlate);
-
-  if(XlateGDI->translationTable!=NULL)
-  {
-    EngFreeMem(XlateGDI->translationTable);
-  }
-
-  FreeGDIHandle((ULONG)HXlate);
 }
 
 /*

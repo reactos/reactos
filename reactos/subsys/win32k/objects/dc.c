@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.81 2003/09/21 06:44:51 gvg Exp $
+/* $Id: dc.c,v 1.82 2003/09/26 10:45:45 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -42,6 +42,7 @@
 #include <win32k/text.h>
 #include "../eng/clip.h"
 #include "../eng/handle.h"
+#include <include/error.h>
 #include <include/inteng.h>
 #include <include/eng.h>
 #include <include/palette.h>
@@ -1486,13 +1487,17 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     case GDI_OBJECT_TYPE_BITMAP:
       // must be memory dc to select bitmap
       if (!(dc->w.flags & DC_MEMORY)) return NULL;
+      pb = BITMAPOBJ_LockBitmap(hGDIObj);
+      if (NULL == pb)
+	{
+	  SetLastWin32Error(ERROR_INVALID_HANDLE);
+	  return NULL;
+	}
       objOrg = (HGDIOBJ)dc->w.hBitmap;
 
       /* Release the old bitmap, lock the new one and convert it to a SURF */
       EngDeleteSurface(dc->Surface);
       dc->w.hBitmap = hGDIObj;
-      pb = BITMAPOBJ_LockBitmap(hGDIObj);
-      ASSERT(pb);
       dc->Surface = BitmapToSurf(pb);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]

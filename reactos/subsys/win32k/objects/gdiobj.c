@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.43 2003/09/24 16:01:32 weiden Exp $
+ * $Id: gdiobj.c,v 1.44 2003/09/26 10:45:45 gvg Exp $
  *
  */
 
@@ -41,9 +41,15 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+/*! Size of the GDI handle table
+ * http://www.windevnet.com/documents/s=7290/wdj9902b/9902b.htm
+ * gdi handle table can hold 0x4000 handles
+*/
+#define GDI_HANDLE_COUNT 0x4000
+
 #define GDI_GLOBAL_PROCESS ((HANDLE) 0xffffffff)
 
-#define GDI_HANDLE_INDEX_MASK 0x00003fff
+#define GDI_HANDLE_INDEX_MASK (GDI_HANDLE_COUNT - 1)
 #define GDI_HANDLE_TYPE_MASK  0x007f0000
 #define GDI_HANDLE_STOCK_MASK 0x00800000
 
@@ -139,12 +145,6 @@ static HGDIOBJ *StockObjects[NB_STOCK_OBJECTS];
 static PGDI_HANDLE_TABLE  HandleTable = 0;
 static FAST_MUTEX  HandleTableMutex;
 static FAST_MUTEX  RefCountHandling;
-
-/*! Size of the GDI handle table
- * http://www.windevnet.com/documents/s=7290/wdj9902b/9902b.htm
- * gdi handle table can hold 0x4000 handles
-*/
-#define GDI_HANDLE_NUMBER  0x4000
 
 /*!
  * Allocate GDI object table.
@@ -471,7 +471,7 @@ InitGdiObjectHandleTable (VOID)
   ExInitializeFastMutex (&HandleTableMutex);
   ExInitializeFastMutex (&RefCountHandling);
 
-  HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_NUMBER);
+  HandleTable = GDIOBJ_iAllocHandleTable (GDI_HANDLE_COUNT);
   DPRINT("HandleTable: %x\n", HandleTable );
 
   InitEngHandleTable();

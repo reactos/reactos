@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.11 2003/07/11 15:59:37 royce Exp $
+/* $Id: mem.c,v 1.12 2003/09/26 10:45:44 gvg Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -53,7 +53,7 @@ EngAllocMem(ULONG Flags,
 
   newMem = ExAllocatePoolWithTag(NonPagedPool, MemSize, Tag); // FIXME: Use PagedPool when it is implemented
 
-  if(Flags == FL_ZERO_MEMORY)
+  if (Flags == FL_ZERO_MEMORY && NULL != newMem)
   {
     RtlZeroMemory(newMem, MemSize);
   }

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.33 2003/09/25 14:40:42 fireball Exp $
+ * $Id: dib.c,v 1.34 2003/09/26 10:45:45 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -164,9 +164,28 @@ NtGdiSetDIBits(
 
   // Source palette obtained from the BITMAPINFO
   DIB_Palette = BuildDIBPalette ( (PBITMAPINFO)bmi, (PINT)&DIB_Palette_Type );
+  if (NULL == DIB_Palette)
+    {
+      EngDeleteSurface(SourceBitmap);
+      EngDeleteSurface(DestBitmap);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+    }
 
   // Determine XLATEOBJ for color translation
   XlateObj = IntEngCreateXlate(DDB_Palette_Type, DIB_Palette_Type, DDB_Palette, DIB_Palette);
+  if (NULL == XlateObj)
+    {
+      PALETTE_FreePalette(DIB_Palette);
+      EngDeleteSurface(SourceBitmap);
+      EngDeleteSurface(DestBitmap);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return 0;
+    }
 
   // Zero point
   ZeroPoint.x = 0;
