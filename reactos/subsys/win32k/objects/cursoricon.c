@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.39 2003/12/14 13:26:20 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.40 2003/12/18 23:04:54 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -1082,7 +1082,7 @@ NtUserDrawIconEx(
   COLORREF oldFg, oldBg;
   HDC hdcMem, hdcOff = (HDC)0;
   HBITMAP hbmOff = (HBITMAP)0;
-  HGDIOBJ hOldOff, hOldMem;
+  HGDIOBJ hOldOffBrush, hOldOffBmp, hOldMem;
   BOOL Ret = FALSE;
   #if CANSTRETCHBLT
   INT nStretchMode;
@@ -1152,7 +1152,8 @@ NtUserDrawIconEx(
         NtGdiDeleteDC(hdcOff);
         goto done;
       }
-      hOldOff = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+      hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+      hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
       NtGdiPatBlt(hdcOff, 0, 0, r.right, r.bottom, PATCOPY);
       NtGdiSelectObject(hdcOff, hbmOff);
     }
@@ -1223,7 +1224,8 @@ NtUserDrawIconEx(
     if(DoFlickerFree)
     {
       
-      NtGdiSelectObject(hdcOff, hOldOff);
+      NtGdiSelectObject(hdcOff, hOldOffBmp);
+      NtGdiSelectObject(hdcOff, hOldOffBrush);
       NtGdiDeleteObject(hbmOff);
       NtGdiDeleteDC(hdcOff);
     }
