@@ -29,11 +29,11 @@
  // launch start programs
 extern int startup(int argc, char *argv[]);
 
- // explorer main routine
-extern int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow);
+ // winefile main routine
+extern int winefile_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow);
 
- // display explorer/file manager window
-extern void explorer_show_frame(HWND hwndDesktop, int cmdshow);
+ // display winefile/file manager window
+extern void winefile_show_frame(HWND hwndDesktop, int cmdshow);
 
  // test for already running desktop instance
 extern BOOL IsAnyDesktopRunning();

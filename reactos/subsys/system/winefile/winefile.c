@@ -3600,7 +3600,7 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-void explorer_show_frame(HWND hwndParent, int cmdshow)
+void show_frame(HWND hwndParent, int cmdshow)
 {
 	TCHAR path[MAX_PATH];
 	ChildWnd* child;
@@ -3794,7 +3794,7 @@ int find_window_class(LPCTSTR classname)
 }
 
 
-int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
+int winefile_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 {
 	MSG msg;
 
@@ -3806,7 +3806,7 @@ int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 		cmdshow = SW_MAXIMIZE;
 #endif
 
-	explorer_show_frame(hwndParent, cmdshow);
+	show_frame(hwndParent, cmdshow);
 
 	while(GetMessage(&msg, 0, 0, 0)) {
 		if (Globals.hmdiclient && TranslateMDISysAccel(Globals.hmdiclient, &msg))
@@ -3835,7 +3835,7 @@ int APIENTRY WinMain(HINSTANCE hinstance,
 		return 1;
 #endif
 
-	explorer_main(hinstance, 0, cmdshow);
+	winefile_main(hinstance, 0, cmdshow);
 
 	return 0;
 }
