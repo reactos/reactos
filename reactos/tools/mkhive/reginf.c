@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: reginf.c,v 1.4 2003/07/27 22:00:26 sedwards Exp $
+/* $Id: reginf.c,v 1.5 2003/07/27 22:27:36 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/reginf.h
@@ -89,92 +89,78 @@ GetRootKey (PCHAR Name)
 
 
 /***********************************************************************
- *            append_multi_sz_value
+ * AppendMultiSzValue
  *
  * Append a multisz string to a multisz registry value.
  */
-#if 0
-static void
-append_multi_sz_value (HANDLE hkey,
-		       const WCHAR *value,
-		       const WCHAR *strings,
-		       DWORD str_size )
+static VOID
+AppendMultiSzValue (HKEY KeyHandle,
+		    PCHAR ValueName,
+		    PCHAR Strings,
+		    ULONG StringSize)
 {
-    DWORD size, type, total;
-    WCHAR *buffer, *p;
+  ULONG Size;
+  ULONG Type;
+  ULONG Total;
+  PCHAR Buffer;
+  PCHAR p;
+  int len;
+  LONG Error;
 
-    if (RegQueryValueExW( hkey, value, NULL, &type, NULL, &size )) return;
-    if (type != REG_MULTI_SZ) return;
+  Error = RegQueryValue (KeyHandle,
+			 ValueName,
+			 &Type,
+			 NULL,
+			 &Size);
+  if ((Error != ERROR_SUCCESS) ||
+      (Type != REG_MULTI_SZ))
+    return;
 
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, (size + str_size) * sizeof(WCHAR) ))) return;
-    if (RegQueryValueExW( hkey, value, NULL, NULL, (BYTE *)buffer, &size )) goto done;
+  Buffer = malloc (Size + StringSize);
+  if (Buffer == NULL)
+     return;
 
-    /* compare each string against all the existing ones */
-    total = size;
-    while (*strings)
+  Error = RegQueryValue (KeyHandle,
+			 ValueName,
+			 NULL,
+			 (PUCHAR)Buffer,
+			 &Size);
+  if (Error != ERROR_SUCCESS)
+     goto done;
+
+  /* compare each string against all the existing ones */
+  Total = Size;
+  while (*Strings != 0)
     {
-        int len = strlenW(strings) + 1;
+      len = strlen (Strings) + 1;
 
-        for (p = buffer; *p; p += strlenW(p) + 1)
-            if (!strcmpiW( p, strings )) break;
+      for (p = Buffer; *p != 0; p += strlen (p) + 1)
+        if (!strcasecmp (p, Strings))
+          break;
 
-        if (!*p)  /* not found, need to append it */
+      if (*p == 0)  /* not found, need to append it */
         {
-            memcpy( p, strings, len * sizeof(WCHAR) );
-            p[len] = 0;
-            total += len;
+          memcpy (p, Strings, len);
+          p[len] = 0;
+          Total += len;
         }
-        strings += len;
+      Strings += len;
     }
-    if (total != size)
-    {
-        TRACE( "setting value %s to %s\n", debugstr_w(value), debugstr_w(buffer) );
-        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ, (BYTE *)buffer, total );
-    }
- done:
-    HeapFree( GetProcessHeap(), 0, buffer );
-}
-#endif
 
-/***********************************************************************
- *            delete_multi_sz_value
- *
- * Remove a string from a multisz registry value.
- */
-#if 0
-static void delete_multi_sz_value( HKEY hkey, const WCHAR *value, const WCHAR *string )
-{
-    DWORD size, type;
-    WCHAR *buffer, *src, *dst;
+  if (Total != Size)
+    {
+      DPRINT ("setting value %s to %s\n", ValueName, Buffer);
+      RegSetValue (KeyHandle,
+		   ValueName,
+		   REG_MULTI_SZ,
+		   (PUCHAR)Buffer,
+		   Total);
+    }
 
-    if (RegQueryValueExW( hkey, value, NULL, &type, NULL, &size )) return;
-    if (type != REG_MULTI_SZ) return;
-    /* allocate double the size, one for value before and one for after */
-    if (!(buffer = HeapAlloc( GetProcessHeap(), 0, size * 2 * sizeof(WCHAR) ))) return;
-    if (RegQueryValueExW( hkey, value, NULL, NULL, (BYTE *)buffer, &size )) goto done;
-    src = buffer;
-    dst = buffer + size;
-    while (*src)
-    {
-        int len = strlenW(src) + 1;
-        if (strcmpiW( src, string ))
-        {
-            memcpy( dst, src, len * sizeof(WCHAR) );
-            dst += len;
-        }
-        src += len;
-    }
-    *dst++ = 0;
-    if (dst != buffer + 2*size)  /* did we remove something? */
-    {
-        TRACE( "setting value %s to %s\n", debugstr_w(value), debugstr_w(buffer + size) );
-        RegSetValueExW( hkey, value, 0, REG_MULTI_SZ,
-                        (BYTE *)(buffer + size), dst - (buffer + size) );
-    }
- done:
-    HeapFree( GetProcessHeap(), 0, buffer );
+done:
+  free (Buffer);
 }
-#endif
+
 
 /***********************************************************************
  *            do_reg_operation
@@ -190,36 +176,42 @@ do_reg_operation(HKEY KeyHandle,
   CHAR EmptyStr = (CHAR)0;
   ULONG Type;
   ULONG Size;
-//  NTSTATUS Status;
+  LONG Error;
 
   if (Flags & FLG_ADDREG_DELVAL)  /* deletion */
     {
-#if 0
       if (ValueName)
 	{
-	  RegDeleteValueW( hkey, value );
+	  RegDeleteValue (KeyHandle,
+			  ValueName);
 	}
       else
 	{
-	  RegDeleteKeyW( hkey, NULL );
+	  RegDeleteKey (KeyHandle,
+			NULL);
 	}
-#endif
+
       return TRUE;
     }
 
   if (Flags & FLG_ADDREG_KEYONLY)
     return TRUE;
 
-#if 0
   if (Flags & (FLG_ADDREG_NOCLOBBER | FLG_ADDREG_OVERWRITEONLY))
     {
-      BOOL exists = !RegQueryValueExW( hkey, value, NULL, NULL, NULL, NULL );
-      if (exists && (flags & FLG_ADDREG_NOCLOBBER))
+      Error = RegQueryValue (KeyHandle,
+			     ValueName,
+			     NULL,
+			     NULL,
+			     NULL);
+      if ((Error == ERROR_SUCCESS) &&
+	  (Flags & FLG_ADDREG_NOCLOBBER))
 	return TRUE;
-      if (!exists & (flags & FLG_ADDREG_OVERWRITEONLY))
+
+      if ((Error != ERROR_SUCCESS) &&
+	  (Flags & FLG_ADDREG_OVERWRITEONLY))
 	return TRUE;
     }
-#endif
 
   switch (Flags & FLG_ADDREG_TYPE_MASK)
     {
@@ -276,7 +268,10 @@ do_reg_operation(HKEY KeyHandle,
 	      if (Str == NULL)
 		return TRUE;
 
-//	      append_multi_sz_value( hkey, value, str, size );
+	      AppendMultiSzValue (KeyHandle,
+				  ValueName,
+				  Str,
+				  Size);
 
 	      free (Str);
 	      return TRUE;
@@ -312,7 +307,7 @@ do_reg_operation(HKEY KeyHandle,
 	}
       else
 	{
-	  DPRINT ("setting value %wZ to %S\n", ValueName, Str);
+	  DPRINT ("setting value %s to %s\n", ValueName, Str);
 
 	  if (Str)
 	    {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.4 2003/05/18 12:12:07 ekohl Exp $
+/* $Id: registry.c,v 1.5 2003/07/27 22:27:36 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -236,11 +236,10 @@ RegDeleteKey(HKEY Key,
 	     PCHAR Name)
 {
 
-
   if (strchr(Name, '\\') != NULL)
     return(ERROR_INVALID_PARAMETER);
 
-
+  DPRINT1("FIXME!\n");
 
   return(ERROR_SUCCESS);
 }
