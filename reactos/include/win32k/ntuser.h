@@ -575,11 +575,11 @@ NtUserGetCaretPos(
   DWORD Unknown0);
 
 DWORD STDCALL
-NtUserGetClassInfo(IN LPWSTR ClassName,
-		   IN ULONG InfoClass,
-		   OUT PVOID Info,
-		   IN ULONG InfoLength,
-		   OUT PULONG ReturnedLength);
+NtUserGetClassInfo(HINSTANCE hInst,
+		   LPCWSTR str,
+		   LPWNDCLASSEXW wcex,
+		   BOOL Ansi,
+		   DWORD unknown3);
 
 DWORD
 STDCALL

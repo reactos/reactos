@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.53 2003/08/08 02:57:54 royce Exp $
+/* $Id: window.c,v 1.54 2003/08/09 07:09:57 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1318,7 +1318,7 @@ IsWindow(HWND hWnd)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 IsWindowUnicode(HWND hWnd)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.25 2003/08/08 02:57:54 royce Exp $
+/* $Id: class.c,v 1.26 2003/08/09 07:09:57 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -151,14 +151,44 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 }
 
 DWORD STDCALL
-NtUserGetClassInfo(IN LPWSTR ClassName,
-		   IN ULONG InfoClass,
-		   OUT PVOID Info,
-		   IN ULONG InfoLength,
-		   OUT PULONG ReturnedLength)
+NtUserGetClassInfo(HINSTANCE hInst,
+		   LPCWSTR str,
+		   LPWNDCLASSEXW wcex,
+		   BOOL Ansi,
+		   DWORD unknown3)
 {
-  UNIMPLEMENTED;
-  return(0);
+	PWNDCLASS_OBJECT Class;
+	NTSTATUS Status;
+	Status = ClassReferenceClassByNameOrAtom(&Class,(LPWSTR)str);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastNtError(Status);
+		return 0;
+	}
+	if (Class->hInstance != hInst)
+	{
+		return 0;
+	}
+	wcex->cbSize = sizeof(LPWNDCLASSEXW);
+	wcex->style = Class->style;
+	if (Ansi)
+	{
+		wcex->lpfnWndProc = Class->lpfnWndProcA;
+	}
+	else
+	{
+		wcex->lpfnWndProc = Class->lpfnWndProcW;
+	}
+	wcex->cbClsExtra = Class->cbClsExtra;
+	wcex->cbWndExtra = Class->cbWndExtra;
+	wcex->hInstance = Class->hInstance;
+	wcex->hIcon = Class->hIcon;
+	wcex->hCursor = Class->hCursor;
+	wcex->hbrBackground = Class->hbrBackground;
+	wcex->lpszMenuName = (LPCWSTR)Class->lpszMenuName;
+	wcex->lpszClassName = (LPCWSTR)Class->lpszClassName;
+	wcex->hIconSm = Class->hIconSm;
+	return 1;
 }
 
 ULONG FASTCALL
@@ -166,18 +196,43 @@ W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
 		   LPWSTR lpClassName,
 		   int nMaxCount)
 {
-  int length;
-  LPCWSTR name;
+  ULONG length;
+  LPWSTR name;
+  BOOL free;
+  PWINSTATION_OBJECT WinStaObject;
+  NTSTATUS Status;
   if (IS_ATOM(WindowObject->Class->lpszClassName))
   {
-    /* FIXME find the string from the atom */
-    name = L"\0";
-    length = wcslen(name);
+	DPRINT("About to open window station handle (0x%X)\n", 
+	PROCESS_WINDOW_STATION());
+	Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+	KernelMode,
+	0,
+	&WinStaObject);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Validation of window station handle (0x%X) failed\n",
+		PROCESS_WINDOW_STATION());
+		return((RTL_ATOM)0);
+	}
+	length = 0;
+	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
+    name = ExAllocatePool(PagedPool,length+1);
+	free = TRUE;
+	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("Validation of window station handle (0x%X) failed\n",
+		PROCESS_WINDOW_STATION());
+		return((RTL_ATOM)0);
+	}
+	ObDereferenceObject(WinStaObject);
   }
   else
   {
     name = WindowObject->Class->lpszClassName->Buffer;
     length = WindowObject->Class->lpszClassName->Length / sizeof(WCHAR);
+	free = FALSE;
   }
   if (length > nMaxCount)
   {
@@ -185,6 +240,10 @@ W32kGetClassName(struct _WINDOW_OBJECT *WindowObject,
   }
   *(lpClassName+length) = 0;
   wcsncpy(lpClassName,name,length);
+  if (free)
+  {
+	ExFreePool(name);
+  }
   return length;
 }
 
@@ -445,10 +504,12 @@ W32kSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL
 	  if (Ansi)
 	  {
 		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
+		WindowObject->Class->lpfnWndProcW = (WNDPROC)0xCCCCCCCC;
 	  }
 	  else
 	  {
 		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
+		WindowObject->Class->lpfnWndProcA = (WNDPROC)0xCCCCCCCC;
 	  }
       break;
     }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.81 2003/08/08 02:57:54 royce Exp $
+/* $Id: window.c,v 1.82 2003/08/09 07:09:57 jimtabor Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1828,11 +1828,13 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	  {
 	    OldValue = (LONG) WindowObject->WndProcA;
 	    WindowObject->WndProcA = (WNDPROC) NewValue;
+		WindowObject->WndProcW = (WNDPROC)0xCCCCCCCC;
 	  }
 	  else
 	  {
 	    OldValue = (LONG) WindowObject->WndProcW;
 	    WindowObject->WndProcW = (WNDPROC) NewValue;
+		WindowObject->WndProcA = (WNDPROC)0xCCCCCCCC;
 	  }
 	  break;
 

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.27 2003/08/08 02:57:54 royce Exp $
+/* $Id: class.c,v 1.28 2003/08/09 07:09:57 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -17,22 +17,7 @@
 #include <strpool.h>
 
 /*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-GetClassInfoA(
-  HINSTANCE hInstance,
-  LPCSTR lpClassName,
-  LPWNDCLASSA lpWndClass)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -41,13 +26,35 @@ GetClassInfoExA(
   LPCSTR lpszClass,
   LPWNDCLASSEXA lpwcx)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPWSTR str;
+  PUNICODE_STRING str2;
+  WNDCLASSEXW w;
+  BOOL retval;
+  NTSTATUS Status;
+  Status = HEAP_strdupAtoW (&str, lpszClass, NULL);
+  if ( !NT_SUCCESS (Status) )
+  {
+    SetLastError (RtlNtStatusToDosError(Status));
+    return 0;
+  }
+  retval = (BOOL)NtUserGetClassInfo(hinst,str,&w,TRUE,0);
+  if (str)
+  {
+	HEAP_free(str);
+  }
+  RtlCopyMemory (&w,lpwcx,sizeof(WNDCLASSEXW));
+  if (!IS_INTRESOURCE(w.lpszMenuName))
+  {
+	str = (LPWSTR)w.lpszMenuName;
+	str2 = (PUNICODE_STRING)str;
+    lpwcx->lpszMenuName = heap_string_poolA (str2->Buffer, str2->Length);
+  }
+  return retval;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -56,13 +63,46 @@ GetClassInfoExW(
   LPCWSTR lpszClass,
   LPWNDCLASSEXW lpwcx)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  LPWSTR str;
+  PUNICODE_STRING str2;
+  WNDCLASSEXW w;
+  WINBOOL retval;
+  str = HEAP_strdupW (lpszClass, wcslen(lpszClass) );
+  retval = (BOOL)NtUserGetClassInfo(hinst,lpszClass,&w,FALSE,0);
+  if (str)
+  {
+	HEAP_free(str);
+  }
+  RtlCopyMemory (&w,lpwcx,sizeof(WNDCLASSEXW));
+  if (!IS_INTRESOURCE(w.lpszMenuName) )
+  {
+	str = (LPWSTR)w.lpszMenuName;
+	str2 = (PUNICODE_STRING)str;
+    lpwcx->lpszMenuName = heap_string_poolW (str2->Buffer, str2->Length);
+  }
+  return retval;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+WINBOOL
+STDCALL
+GetClassInfoA(
+  HINSTANCE hInstance,
+  LPCSTR lpClassName,
+  LPWNDCLASSA lpWndClass)
+{
+	WNDCLASSEXA w;
+	WINBOOL retval;
+	retval = GetClassInfoExA(hInstance,lpClassName,&w);
+    RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSA));
+	return retval;
+}
+
+/*
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -71,8 +111,11 @@ GetClassInfoW(
   LPCWSTR lpClassName,
   LPWNDCLASSW lpWndClass)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+	WNDCLASSEXW w;
+	WINBOOL retval;
+	retval = GetClassInfoExW(hInstance,lpClassName,&w);
+    RtlCopyMemory (lpWndClass,&w.style,sizeof(WNDCLASSW));
+	return retval;
 }
 
 
@@ -224,22 +267,22 @@ GetWindowWord(HWND hWnd, int nIndex)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
 RealGetWindowClassW(
   HWND  hwnd,
-  LPSTR pszType,
+  LPWSTR pszType,
   UINT  cchType)
 {
-  UNIMPLEMENTED;
-  return 0;
+	/* FIXME: Implement correct functionality of RealGetWindowClass */
+	return GetClassNameW(hwnd,pszType,cchType);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
@@ -248,8 +291,8 @@ RealGetWindowClassA(
   LPSTR pszType,
   UINT  cchType)
 {
-  UNIMPLEMENTED;
-  return 0;
+	/* FIXME: Implement correct functionality of RealGetWindowClass */
+	return GetClassNameA(hwnd,pszType,cchType);
 }
 
 /*
