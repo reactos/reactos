@@ -660,7 +660,6 @@ NTSTATUS DispTdiReceive(
 	  Irp);
       if (Status != STATUS_PENDING)
       {
-	  ASSERT(0);
           DispDataRequestComplete(Irp, Status, BytesReceived);
       }
     }
