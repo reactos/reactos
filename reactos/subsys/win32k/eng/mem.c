@@ -15,7 +15,7 @@ PVOID STDCALL EngAllocMem(ULONG Flags, ULONG MemSize, ULONG Tag)
 {
    PVOID newMem;
 
-   newMem = ExAllocatePoolWithTag(PagedPool, MemSize, Tag);
+   newMem = ExAllocatePoolWithTag(NonPagedPool, MemSize, Tag); // FIXME: Use PagedPool when it is implemented
 
    if(Flags == FL_ZERO_MEMORY)
    {
