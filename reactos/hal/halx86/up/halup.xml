@@ -1,0 +1,9 @@
+<module name="halup" type="kernelmodedll">
+	<bootstrap base="reactos" nameoncd="hal.dll" />
+	<include base="hal_generic">../include</include>
+	<include base="ntoskrnl">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="__NTHAL__" />
+	<file>halinit_up.c</file>
+	<file>halup.rc</file>
+</module>
