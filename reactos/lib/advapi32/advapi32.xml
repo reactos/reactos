@@ -44,4 +44,5 @@
 		<file>privilege.c</file>
 		<file>token.c</file>
 	</directory>
+	<file>advapi32.rc</file>
 </module>

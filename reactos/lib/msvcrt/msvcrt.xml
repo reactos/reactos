@@ -440,4 +440,5 @@
 		<file>wcsxfrm.c</file>
 		<file>wlasttok.c</file>
 	</directory>
+	<file>msvcrt.rc</file>
 </module>

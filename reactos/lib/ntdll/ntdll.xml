@@ -104,5 +104,8 @@
 		<file>strupr.c</file>
 		<file>wstring.c</file>
 	</directory>
+	<directory name="def">
+		<file>ntdll.rc</file>
+	</directory>
 	<file>napi.c</file>
 </module>

@@ -32,4 +32,5 @@
 		<file>region.c</file>
 		<file>text.c</file>
 	</directory>
+	<file>gdi32.rc</file>
 </module>

@@ -1,6 +1,7 @@
 <module name="user32" type="win32dll">
 	<dependency>addsys</dependency>
 	<importlibrary definition="user32.def" />
+	<include base="user32">.</include>
 	<include base="user32">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UNICODE" />
@@ -71,4 +72,5 @@
 		<file>window.c</file>
 		<file>winpos.c</file>
 	</directory>
+	<file>user32.rc</file>
 </module>

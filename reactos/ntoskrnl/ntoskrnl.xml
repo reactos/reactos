@@ -378,4 +378,5 @@
 		<file>sid.c</file>
 		<file>token.c</file>
 	</directory>
+	<file>ntoskrnl.rc</file>
 </module>
