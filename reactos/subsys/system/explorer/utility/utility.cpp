@@ -460,7 +460,7 @@ BOOL RegSetDWORDValue(HKEY root, LPCTSTR path, LPCTSTR valueName, DWORD value)
 	BOOL ret = FALSE;
 
 	if (!RegOpenKey(root, path, &hkey)) {
-		ret = RegSetValueEx(hkey, valueName, 0, NULL, (LPBYTE)&value, sizeof(value));
+		ret = RegSetValueEx(hkey, valueName, 0, REG_DWORD, (LPBYTE)&value, sizeof(value));
 
 		RegCloseKey(hkey);
 	}
