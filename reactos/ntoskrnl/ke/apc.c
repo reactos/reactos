@@ -23,7 +23,10 @@
 
 /* GLOBALS *******************************************************************/
 
-static KSPIN_LOCK PiApcLock;
+KSPIN_LOCK PiApcLock;
+extern KSPIN_LOCK PiThreadListLock;
+
+VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -58,49 +61,58 @@ BOOLEAN KiTestAlert(PKTHREAD Thread,
    KIRQL oldlvl;
    CONTEXT SavedContext;
    ULONG Top;
+   BOOL ret = FALSE;
    
    DPRINT("KiTestAlert(Thread %x, UserContext %x)\n");
-   KeAcquireSpinLock(&PiApcLock, &oldlvl);
-   current_entry = Thread->ApcState.ApcListHead[1].Flink;
-   
-   if (current_entry == &Thread->ApcState.ApcListHead[1])
+   while(1)
      {
-	KeReleaseSpinLock(&PiApcLock, oldlvl);
-	return(FALSE);
+       KeAcquireSpinLock(&PiApcLock, &oldlvl);
+       current_entry = Thread->ApcState.ApcListHead[1].Flink;
+       
+       if (current_entry == &Thread->ApcState.ApcListHead[1])
+	 {
+	   KeReleaseSpinLock(&PiApcLock, oldlvl);
+	   break;
+	 }
+       ret = TRUE;
+       current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
+       Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
+       
+       DPRINT("Esp %x\n", Esp);
+       DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
+       DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
+       DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
+       DPRINT("UserContext->Eip %x\n", UserContext->Eip);
+       
+       Esp = (PULONG)UserContext->Esp;
+       
+       memcpy(&SavedContext, UserContext, sizeof(CONTEXT));
+       
+       Esp = Esp - (sizeof(CONTEXT) + (5 * sizeof(ULONG)));
+       memcpy(Esp, &SavedContext, sizeof(CONTEXT));
+       Top = sizeof(CONTEXT) / 4;
+       Esp[Top] = (ULONG)Apc->NormalRoutine;
+       Esp[Top + 1] = (ULONG)Apc->NormalContext;
+       Esp[Top + 2] = (ULONG)Apc->SystemArgument1;
+       Esp[Top + 3] = (ULONG)Apc->SystemArgument2;
+       Esp[Top + 4] = (ULONG)Esp - sizeof(CONTEXT);
+       UserContext->Eip = 0;  // KiUserApcDispatcher
+       
+       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       
+       /*
+	* Now call for the kernel routine for the APC, which will free
+	* the APC data structure
+	*/
+       KeCallKernelRoutineApc(Apc);
      }
-   
-   current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
-   Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
-	
-   DPRINT("Esp %x\n", Esp);
-   DPRINT("Apc->NormalContext %x\n", Apc->NormalContext);
-   DPRINT("Apc->SystemArgument1 %x\n", Apc->SystemArgument1);
-   DPRINT("Apc->SystemArgument2 %x\n", Apc->SystemArgument2);
-   DPRINT("UserContext->Eip %x\n", UserContext->Eip);
-   
-   Esp = (PULONG)UserContext->Esp;
-   
-   memcpy(&SavedContext, UserContext, sizeof(CONTEXT));
-      
-   Esp = Esp - (sizeof(CONTEXT) + (5 * sizeof(ULONG)));
-   memcpy(Esp, &SavedContext, sizeof(CONTEXT));
-   Top = sizeof(CONTEXT) / 4;
-   Esp[Top] = (ULONG)Apc->NormalRoutine;
-   Esp[Top + 1] = (ULONG)Apc->NormalContext;
-   Esp[Top + 2] = (ULONG)Apc->SystemArgument1;
-   Esp[Top + 3] = (ULONG)Apc->SystemArgument2;
-   Esp[Top + 4] = (ULONG)Esp - sizeof(CONTEXT);
-   UserContext->Eip = 0;  // KiUserApcDispatcher
-   
-   KeReleaseSpinLock(&PiApcLock, oldlvl);
-   
-   /*
-    * Now call for the kernel routine for the APC, which will free
-    * the APC data structure
-    */
-   KeCallKernelRoutineApc(Apc);
-   
-   return(TRUE);
+   KeAcquireSpinLock( &PiThreadListLock, &oldlvl );
+   if( (CONTAINING_RECORD( Thread, ETHREAD, Tcb ))->DeadThread )
+     {
+       KeReleaseSpinLock( &PiThreadListLock, oldlvl );
+       PsTerminateCurrentThread( (CONTAINING_RECORD( Thread, ETHREAD, Tcb ))->ExitStatus );
+     }
+   return ret;
 }
 
 VOID KeCallApcsThread(VOID)
