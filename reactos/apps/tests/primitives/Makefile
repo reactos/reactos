@@ -1,69 +1,37 @@
-# Makefile - Proj_Listing5_1.dsp
+#
+#  ReactOS explorer
+#
+#  Makefile
+#
 
-ifndef CFG
-CFG=Proj_Listing5_1 - Win32 Debug
-endif
-CC=gcc
-CFLAGS=
-CXX=g++
-CXXFLAGS=$(CFLAGS)
-RC=windres -O COFF
-ifeq "$(CFG)"  "Proj_Listing5_1 - Win32 Release"
-CFLAGS+=-fexceptions -O2 -DWIN32 -DNDEBUG -D_WINDOWS -D_MBCS -W
-LD=$(CXX) $(CXXFLAGS)
-LDFLAGS=
-LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32
-else
-ifeq "$(CFG)"  "Proj_Listing5_1 - Win32 Debug"
-CFLAGS+=-fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W
-LD=$(CXX) $(CXXFLAGS)
-LDFLAGS=
-LDFLAGS+=-Wl,--subsystem,windows
-LIBS+=-lkernel32 -luser32 -lgdi32
-endif
-endif
+PATH_TO_TOP = ../../..
 
-ifndef TARGET
-TARGET=primitives.exe
-endif
+TARGET_TYPE = program
 
-.PHONY: all
-all: $(TARGET)
+TARGET_APPTYPE = windows
 
-%.o: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_NAME = primitives
 
-%.o: %.cc
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_NORC = yes
 
-%.o: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_CFLAGS = -fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W -D__USE_W32API
+	
+TARGET_CPPFLAGS = -fexceptions -g -O0 -DWIN32 -D_DEBUG -D_WINDOWS -D_MBCS -W -D__USE_W32API
 
-%.o: %.cxx
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ -c $<
+TARGET_SDKLIBS = \
+	kernel32.a \
+	user32.a \
+	gdi32.a
 
-%.res: %.rc
-	$(RC) $(CPPFLAGS) -o $@ -i $<
+TARGET_OBJECTS = \
+	primitives.o \
+	mk_font.o
 
-SOURCE_FILES= \
-	mk_font.cpp \
-	primitives.cpp
+include $(PATH_TO_TOP)/rules.mak
 
-HEADER_FILES=
+include $(TOOLS_PATH)/helper.mk
 
-RESOURCE_FILES=
+# overide LD_CC to use g++ for linking of the executable
+LD_CC = $(CXX)
 
-SRCS=$(SOURCE_FILES) $(HEADER_FILES) $(RESOURCE_FILES) 
-
-OBJS=$(patsubst %.rc,%.res,$(patsubst %.cxx,%.o,$(patsubst %.cpp,%.o,$(patsubst %.cc,%.o,$(patsubst %.c,%.o,$(filter %.c %.cc %.cpp %.cxx %.rc,$(SRCS)))))))
-
-$(TARGET): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
-
-.PHONY: clean
-clean:
-	-del $(OBJS) $(TARGET)
-
-
-
+# EOF
