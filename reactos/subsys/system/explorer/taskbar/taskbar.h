@@ -45,6 +45,9 @@
 #define	IDW_TASKTOOLBAR	100
 
 
+#define	PM_GET_LAST_ACTIVE	(WM_APP+0x1D)
+
+
  /// internal task bar button management entry
 struct TaskBarEntry
 {	

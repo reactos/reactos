@@ -182,6 +182,7 @@ typedef pair<HWND, DWORD> MinimizeStruct;
 struct Desktop
 {
 	set<HWND> _windows;
+	WindowHandle _hwndForeground;
 	list<MinimizeStruct> _minimized;
 };
 typedef Desktop DesktopRef;
