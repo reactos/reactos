@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.4 2004/07/11 23:08:31 weiden Exp $
+/* $Id: misc.c,v 1.5 2004/07/12 10:33:04 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -94,18 +94,15 @@ GetUserSidFromToken (HANDLE hToken,
 /* Dynamic DLL loading interface **********************************************/
 
 /* OLE32.DLL import table */
-LPSTR Ole32Imports[] =
-{
-  "CoInitialize",
-  "CoCreateInstance",
-  "CoUninitialize",
-};
-
 DYN_MODULE DynOle32 = 
 {
   L"ole32.dll",
-  sizeof(Ole32Imports) / sizeof(LPSTR),
-  Ole32Imports
+  {
+    "CoInitialize",
+    "CoCreateInstance",
+    "CoUninitialize",
+    NULL
+  }
 };
 
 /*
@@ -118,7 +115,7 @@ DYN_MODULE DynOle32 =
 BOOL
 LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs)
 {
-  int i;
+  LPSTR *fname;
   PVOID *fn;
   
   ZeroMemory(DynFuncs, sizeof(DYN_FUNCS));
@@ -132,9 +129,9 @@ LoadDynamicImports(PDYN_MODULE Module, PDYN_FUNCS DynFuncs)
   fn = &DynFuncs->fn.foo;
   
   /* load the imports */
-  for(i = 0; i < Module->nFunctions; i++)
+  for(fname = Module->Functions; *fname != NULL; fname++)
   {
-    *fn = GetProcAddress(DynFuncs->hModule, Module->Functions[i]);
+    *fn = GetProcAddress(DynFuncs->hModule, *fname);
     if(*fn == NULL)
     {
       FreeLibrary(DynFuncs->hModule);

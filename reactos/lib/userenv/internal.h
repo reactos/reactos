@@ -1,4 +1,4 @@
-/* $Id: internal.h,v 1.7 2004/07/11 22:35:07 weiden Exp $ 
+/* $Id: internal.h,v 1.8 2004/07/12 10:33:04 weiden Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -55,8 +55,7 @@ typedef struct _DYN_FUNCS
 typedef struct _DYN_MODULE
 {
   LPWSTR Library;    /* dll file name */
-  int nFunctions;    /* number of functions in the Functions array */
-  LPSTR *Functions;  /* function names */
+  LPSTR Functions[]; /* function names */
 } DYN_MODULE, *PDYN_MODULE;
 
 extern DYN_MODULE DynOle32;

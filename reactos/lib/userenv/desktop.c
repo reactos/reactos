@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.7 2004/07/11 22:35:07 weiden Exp $
+/* $Id: desktop.c,v 1.8 2004/07/12 10:33:04 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -218,7 +218,11 @@ AddDesktopItemW (BOOL bCommonDesktop,
   DPRINT ("szArguments: '%S'\n", szArguments);
 
   /* dynamically load ole32.dll */
-  LoadDynamicImports(&DynOle32, &Ole32);
+  if(!LoadDynamicImports(&DynOle32, &Ole32))
+  {
+    DPRINT1("USERENV: Unable to load OLE32.DLL\n");
+    return FALSE;
+  }
 
   Ole32.fn.CoInitialize(NULL);
 
@@ -508,7 +512,11 @@ AddItemW (LPCWSTR lpGroupName,
   DPRINT ("szArguments: '%S'\n", szArguments);
 
   /* dynamically load ole32.dll */
-  LoadDynamicImports(&DynOle32, &Ole32);
+  if(!LoadDynamicImports(&DynOle32, &Ole32))
+  {
+    DPRINT1("USERENV: Unable to load OLE32.DLL\n");
+    return FALSE;
+  }
 
   Ole32.fn.CoInitialize(NULL);
 
