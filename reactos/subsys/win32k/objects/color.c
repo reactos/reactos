@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.41 2004/05/16 19:42:32 navaraf Exp $ */
+/* $Id: color.c,v 1.42 2004/05/22 22:07:42 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -306,6 +306,15 @@ A logical palette is a buffer between color-intensive applications and the syste
 */
 UINT STDCALL NtGdiRealizePalette(HDC hDC)
 {
+  /*
+   * This function doesn't do any real work now and there's plenty
+   * of bugd in it (calling SetPalette for high/true-color modes,
+   * using DEFAULT_PALETTE instead of the device palette, ...).
+   */
+#if 1
+  DPRINT1("NtGdiRealizePalette is unimplemented\n");
+  return 0;
+#else
   PALOBJ *palPtr, *sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
@@ -370,6 +379,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   DC_UnlockDc(hDC);
 
   return realized;
+#endif
 }
 
 BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
