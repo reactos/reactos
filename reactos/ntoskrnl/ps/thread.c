@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.123 2003/12/14 18:02:33 hbirr Exp $
+/* $Id: thread.c,v 1.123.2.1 2003/12/17 01:32:47 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -454,6 +454,8 @@ PsInitThreadManagment(VOID)
    NTSTATUS Status;
    
    KeInitializeSpinLock(&PiThreadListLock);
+   ExInitializeFastMutex(&PiThreadNotifyRoutineLock);
+ 
    for (i=0; i < MAXIMUM_PRIORITY; i++)
      {
 	InitializeListHead(&PriorityListHead[i]);
