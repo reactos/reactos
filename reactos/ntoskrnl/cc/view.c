@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.55 2003/01/11 15:24:38 hbirr Exp $
+/* $Id: view.c,v 1.56 2003/01/30 18:30:53 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -69,7 +69,7 @@
  * over a bitmap. If CACHE_BITMAP is used, the size of the mdl mapping region 
  * must be reduced (ntoskrnl\mm\mdl.c, MI_MDLMAPPING_REGION_SIZE).
  */
-// #define CACHE_BITMAP
+//#define CACHE_BITMAP
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) (((N) % (S)) ? ROUND_UP(N, S) - S : N)
@@ -82,6 +82,7 @@ static LIST_ENTRY DirtySegmentListHead;
 static LIST_ENTRY CacheSegmentListHead;
 static LIST_ENTRY CacheSegmentLRUListHead;
 static LIST_ENTRY ClosedListHead;
+static ULONG DirtyPageCount=0;
 
 static FAST_MUTEX ViewLock;
 
@@ -123,6 +124,7 @@ CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
       KeAcquireSpinLock(&CacheSegment->Bcb->BcbLock, &oldIrql);
       CacheSegment->Dirty = FALSE;
       RemoveEntryList(&CacheSegment->DirtySegmentListEntry);
+      DirtyPageCount -= CacheSegment->Bcb->CacheSegmentSize / PAGE_SIZE;
       CacheSegment->ReferenceCount--;
       KeReleaseSpinLock(&CacheSegment->Bcb->BcbLock, oldIrql);
       ExReleaseFastMutex(&ViewLock);
@@ -141,12 +143,35 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
   ULONG PagesPerSegment;
   BOOLEAN Locked;
   NTSTATUS Status;
+  static ULONG WriteCount[4] = {0, 0, 0, 0};
+  ULONG NewTarget;
 
   DPRINT("CcRosFlushDirtyPages(Target %d)\n", Target);
 
   (*Count) = 0;
 
   ExAcquireFastMutex(&ViewLock);
+
+  WriteCount[0] = WriteCount[1];
+  WriteCount[1] = WriteCount[2];
+  WriteCount[2] = WriteCount[3];
+  WriteCount[3] = 0;
+
+  NewTarget = WriteCount[0] + WriteCount[1] + WriteCount[2];
+
+  if (NewTarget < DirtyPageCount)
+  {
+     NewTarget = (DirtyPageCount - NewTarget + 3) / 4;
+     WriteCount[0] += NewTarget;
+     WriteCount[1] += NewTarget;
+     WriteCount[2] += NewTarget;
+     WriteCount[3] += NewTarget;
+  }
+
+  NewTarget = WriteCount[0];
+  
+  Target = max(NewTarget, Target);
+
   current_entry = DirtySegmentListHead.Flink;
   if (current_entry == &DirtySegmentListHead)
   {
@@ -184,6 +209,10 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
       ExAcquireFastMutex(&ViewLock);
       current_entry = DirtySegmentListHead.Flink;
     }
+  if (*Count < NewTarget)
+  {
+     WriteCount[1] += (NewTarget - *Count);
+  }
   ExReleaseFastMutex(&ViewLock);
   DPRINT("CcRosFlushDirtyPages() finished\n");
 
@@ -276,6 +305,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
   if (!WasDirty && CacheSeg->Dirty)
     {
       InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+      DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
     }
   RemoveEntryList(&CacheSeg->CacheSegmentLRUListEntry);
   InsertTailList(&CacheSegmentLRUListHead, &CacheSeg->CacheSegmentLRUListEntry);
@@ -351,6 +381,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
     {
       ExAcquireFastMutex(&ViewLock);
       InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+      DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
       ExReleaseFastMutex(&ViewLock);
     }
   else
@@ -395,6 +426,7 @@ CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
   {
      ExAcquireFastMutex(&ViewLock);
      InsertTailList(&DirtySegmentListHead, &CacheSeg->DirtySegmentListEntry);
+     DirtyPageCount += Bcb->CacheSegmentSize / PAGE_SIZE;
      ExReleaseFastMutex(&ViewLock);
   }
 
@@ -754,6 +786,8 @@ CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
   if (CacheSeg->Dirty)
   {
      RemoveEntryList(&CacheSeg->DirtySegmentListEntry);
+     DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
+
   }
   KeReleaseSpinLock(&Bcb->BcbLock, oldIrql);
   ExReleaseFastMutex(&ViewLock);
@@ -883,6 +917,7 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
          if (current->Dirty)
 	 {
             RemoveEntryList(&current->DirtySegmentListEntry);
+            DirtyPageCount -= Bcb->CacheSegmentSize / PAGE_SIZE;
 	    DPRINT1("Freeing dirty segment\n");
 	 }
          InsertHeadList(&FreeList, &current->BcbSegmentListEntry);
