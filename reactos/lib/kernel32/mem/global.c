@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.6 2001/04/05 01:54:16 ekohl Exp $
+/* $Id: global.c,v 1.7 2001/07/22 19:55:21 ea Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -218,7 +218,39 @@ GlobalLock(HGLOBAL hMem)
 VOID STDCALL
 GlobalMemoryStatus(LPMEMORYSTATUS lpBuffer)
 {
-   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	NTSTATUS		Status;
+	SYSTEM_PERFORMANCE_INFO	Spi;
+	QUOTA_LIMITS		Ql;
+	VM_COUNTERS		Vmc;
+	PIMAGE_NT_HEADERS	ImageNtHeader;
+
+	RtlZeroMemory (lpBuffer, sizeof (MEMORYSTATUS));
+	lpBuffer->dwLength = sizeof (MEMORYSTATUS);
+	Status = NtQuerySystemInformation (
+			SystemPerformanceInformation,
+			& Spi,
+			sizeof Spi,
+			NULL
+			);
+	/* FIXME: perform computations and fill lpBuffer fields */
+	Status = NtQueryInformationProcess (
+			GetCurrentProcess(),
+			ProcessQuotaLimits,
+			& Ql,
+			sizeof Ql,
+			NULL
+			);
+	/* FIXME: perform computations and fill lpBuffer fields */
+	Status = NtQueryInformationProcess (
+			GetCurrentProcess(),
+			ProcessVmCounters,
+			& Vmc,
+			sizeof Vmc,
+			NULL
+			);
+	/* FIXME: perform computations and fill lpBuffer fields */
+	ImageNtHeader = RtlImageNtHeader ((PVOID)NtCurrentPeb()->ImageBaseAddress);
+	/* FIXME: perform computations and fill lpBuffer fields */
 }
 
 
