@@ -546,6 +546,11 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    cr2 = Ke386GetCr2();
    Tf->DebugPointer = (PVOID)cr2;
 
+   if (ExceptionNr == 14 && Tf->Eflags & FLAG_IF)
+   {
+     Ke386EnableInterrupts();
+   }
+
    /*
     * If this was a V86 mode exception then handle it specially
     */
@@ -573,10 +578,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= KERNEL_BASE)
 	{
            KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
-	}
-        if (Tf->Eflags & FLAG_IF)
-	{
-	  Ke386EnableInterrupts();
 	}
 	Status = MmPageFault(Tf->Cs&0xffff,
 			     &Tf->Eip,
