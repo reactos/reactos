@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.54 2004/03/10 20:36:19 silverblade Exp $
+/* $Id: menu.c,v 1.55 2004/03/14 16:39:49 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -4200,41 +4200,50 @@ SetSystemMenu (
 BOOL
 STDCALL
 TrackPopupMenu(
-  HMENU hMenu,
-  UINT uFlags,
+  HMENU Menu,
+  UINT Flags,
   int x,
   int y,
-  int nReserved,
-  HWND hWnd,
-  CONST RECT *prcRect)
+  int Reserved,
+  HWND Wnd,
+  CONST RECT *Rect)
 {
-  TPMPARAMS tpm;
-  
-  if(prcRect)
-  {
-    tpm.cbSize = sizeof(TPMPARAMS);
-    tpm.rcExclude = *prcRect;
-  }
-  
-  return (BOOL)NtUserTrackPopupMenuEx(hMenu, uFlags, x, y, hWnd, 
-                                         (prcRect ? &tpm : NULL));
+  BOOL ret = FALSE;
+
+  MenuInitTracking(Wnd, Menu, TRUE, Flags);
+
+  /* Send WM_INITMENUPOPUP message only if TPM_NONOTIFY flag is not specified */
+  if (0 == (Flags & TPM_NONOTIFY))
+    {
+      SendMessageW(Wnd, WM_INITMENUPOPUP, (WPARAM) Menu, 0);
+    }
+
+  if (MenuShowPopup(Wnd, Menu, 0, x, y, 0, 0 ))
+    {
+      ret = MenuTrackMenu(Menu, Flags | TPM_POPUPMENU, 0, 0, Wnd, Rect);
+    }
+  MenuExitTracking(Wnd);
+
+  return ret;
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
 TrackPopupMenuEx(
-  HMENU hmenu,
-  UINT fuFlags,
+  HMENU Menu,
+  UINT Flags,
   int x,
   int y,
-  HWND hwnd,
-  LPTPMPARAMS lptpm)
+  HWND Wnd,
+  LPTPMPARAMS Tpm)
 {
-  return (BOOL)NtUserTrackPopupMenuEx(hmenu, fuFlags, x, y, hwnd, lptpm);
+  /* Not fully implemented */
+  return TrackPopupMenu(Menu, Flags, x, y, 0, Wnd,
+                        NULL != Tpm ? &Tpm->rcExclude : NULL);
 }
 
 
