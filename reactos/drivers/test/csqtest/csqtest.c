@@ -28,6 +28,9 @@ IO_CSQ Csq;
 LIST_ENTRY IrpQueue;
 KSPIN_LOCK IrpQueueLock;
 
+/* Device object */
+PDEVICE_OBJECT DeviceObject;
+
 /* 
  * CSQ Callbacks 
  */
@@ -155,7 +158,18 @@ NTSTATUS NTAPI DispatchIoctl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 VOID NTAPI Unload(PDRIVER_OBJECT DriverObject)
+/*
+ * Function: called by the OS to release resources before unload
+ */
 {
+	UNICODE_STRING LinkName;
+
+	RtlInitUnicodeString(&LinkName, DOS_DEVICE_NAME);
+
+	IoDeleteSymbolicLink(&LinkName);
+
+	if(DeviceObject)
+		IoDeleteDevice(DeviceObject);
 }
 
 /*
@@ -167,7 +181,6 @@ NTSTATUS NTAPI DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING Registry
 	NTSTATUS Status;
 	UNICODE_STRING NtName;
 	UNICODE_STRING DosName;
-	PDEVICE_OBJECT DeviceObject;
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = (PDRIVER_DISPATCH)DispatchCreateCloseCleanup;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = (PDRIVER_DISPATCH)DispatchCreateCloseCleanup;
