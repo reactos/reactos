@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.179 2003/11/19 03:20:25 rcampbell Exp $
+# $Id: Makefile,v 1.180 2003/11/24 14:25:28 weiden Exp $
 #
 # Global makefile
 #
@@ -43,7 +43,7 @@ DLLS_KBD = kbdus kbdgr kbdfr
 # imagehlp
 DLLS = advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpand msafd \
        msvcrt ntdll psapi richedit rpcrt4 secur32 syssetup twain user32 version winedbgc \
-       winspool ws2help ws2_32 wsock32 wshirda iphlpapi mswsock msimg32 d3d8thk \
+       winspool ws2help ws2_32 wsock32 wshirda iphlpapi msgina mswsock msimg32 d3d8thk \
        $(DLLS_KBD)
 
 SUBSYS = smss win32k csrss ntvdm
