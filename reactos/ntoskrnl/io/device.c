@@ -126,7 +126,7 @@ IopCreateDevice(
       ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath + 1, '\\') != NULL)
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_OBJECT_PATH_NOT_FOUND;
    
    return STATUS_SUCCESS;
 }
@@ -168,8 +168,11 @@ IoAttachDeviceToDeviceStackSafe(
     OUT PDEVICE_OBJECT *AttachedToDeviceObject
     )
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+   /* FIXME: IoAttachDeviceToDeviceStackSafe must not call
+    * IoAttachDeviceToDeviceStack, but the other way around! */
+   DPRINT1("IoAttachDeviceToDeviceStackSafe() badly implemented!\n");
+   *AttachedToDeviceObject = IoAttachDeviceToDeviceStack(SourceDevice, TargetDevice);
+   return STATUS_SUCCESS;
 }
 
 /*
