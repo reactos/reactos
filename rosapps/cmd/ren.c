@@ -185,12 +185,12 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
 	    continue;
 
 	  /* do not rename hidden or system files */
-	  if (f.dwAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM))
+	  if (f.dwFileAttributes & (FILE_ATTRIBUTE_HIDDEN | FILE_ATTRIBUTE_SYSTEM))
 	    continue;
 
 	  /* do not rename directories when the destination pattern contains
 	   * wildcards, unless option /S is used */
-	  if ((f.dwAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	  if ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	      && bDstWildcard
 	      && !(dwFlags & REN_SUBDIR))
 	    continue;
