@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.49 2004/05/17 16:38:57 navaraf Exp $
+/* $Id: class.c,v 1.50 2004/07/03 17:40:23 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -587,8 +587,9 @@ SetClassLongA (
   int nIndex,
   LONG dwNewLong)
 {
+  UNICODE_STRING str2buf;
   PUNICODE_STRING str;
-  PUNICODE_STRING str2;
+  PUNICODE_STRING str2 = &str2buf;
 
   if ( nIndex != GCL_MENUNAME )
   {
@@ -600,7 +601,7 @@ SetClassLongA (
   }
   else
   {
-    RtlCreateUnicodeString ( str2, (LPWSTR)dwNewLong );
+    RtlCreateUnicodeStringFromAsciiz ( &str2buf,(LPSTR)dwNewLong );
   }
 
   str = (PUNICODE_STRING)NtUserSetClassLong(hWnd, nIndex, (DWORD)str2, TRUE);
@@ -630,8 +631,9 @@ SetClassLongW(
   int nIndex,
   LONG dwNewLong)
 {
+  UNICODE_STRING str2buf;
   PUNICODE_STRING str;
-  PUNICODE_STRING str2;
+  PUNICODE_STRING str2 = &str2buf;
 
   if (nIndex != GCL_MENUNAME )
   {
@@ -643,7 +645,7 @@ SetClassLongW(
   }
   else
   {
-    RtlCreateUnicodeStringFromAsciiz ( str2,(LPSTR)dwNewLong );
+    RtlCreateUnicodeString ( &str2buf, (LPWSTR)dwNewLong );
   }
 
   str = (PUNICODE_STRING)NtUserSetClassLong(hWnd, nIndex, (DWORD)str2, TRUE);

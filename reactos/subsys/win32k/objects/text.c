@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.101 2004/07/03 13:55:37 navaraf Exp $ */
+/* $Id: text.c,v 1.102 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -1993,7 +1993,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    FT_Face face;
    FT_CharMap charmap, found = NULL;
    UINT i, glyph_index, BufferSize;
-   HFONT hFont;
+   HFONT hFont = 0;
 
    if (LastChar < FirstChar)
    {

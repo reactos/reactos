@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.30 2004/07/03 13:55:35 navaraf Exp $ */
+/* $Id: dib1bpp.c,v 1.31 2004/07/03 17:40:24 navaraf Exp $ */
 #include <w32k.h>
 
 VOID
@@ -346,17 +346,17 @@ DIB_1BPP_BitBlt(
 	XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    ULONG X, Y, SourceX, SourceY, k;
-   ULONG Dest, Source, Pattern = 0;
+   ULONG Dest, Source = 0, Pattern = 0;
    PULONG DestBits;
    BOOL UsesSource;
    BOOL UsesPattern;
    ULONG RoundedRight;
    BYTE NoBits;
    /* Pattern brushes */
-   PGDIBRUSHOBJ GdiBrush;
+   PGDIBRUSHOBJ GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
-   SURFOBJ *PatternObj;
-   ULONG PatternWidth, PatternHeight;
+   SURFOBJ *PatternObj = NULL;
+   ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
 
    if (Rop4 == SRCCOPY)
    {
@@ -403,8 +403,6 @@ DIB_1BPP_BitBlt(
    
    for (Y = DestRect->top; Y < DestRect->bottom; Y++)
    {
-      ULONG PatternY;
-      
       SourceX = SourcePoint->x;
       DestBits = (PULONG)(
          DestSurf->pvScan0 +

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.47 2004/07/03 13:55:36 navaraf Exp $ */
+/* $Id: color.c,v 1.48 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -440,7 +440,7 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
                             BOOL  ForceBackground)
 {
   PDC dc;
-  HPALETTE oldPal;
+  HPALETTE oldPal = NULL;
   PPALGDI PalGDI;
 
   // FIXME: mark the palette as a [fore\back]ground pal

@@ -389,7 +389,7 @@ DrvBitBlt(SURFOBJ *Dest,
 {
   PBLTRECTFUNC BltRectFunc;
   RECTL CombinedRect;
-  BOOL Ret;
+  BOOL Ret = FALSE;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   unsigned i;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.28 2004/05/09 14:50:50 hbirr Exp $
+/* $Id: cdrom.c,v 1.29 2004/07/03 17:40:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -233,7 +233,7 @@ CdromClassFindDevices(IN PDRIVER_OBJECT DriverObject,
   PCHAR Buffer;
   ULONG Bus;
   ULONG DeviceCount;
-  BOOLEAN FoundDevice;
+  BOOLEAN FoundDevice = FALSE;
   NTSTATUS Status;
 
   DPRINT("CdromClassFindDevices() called.\n");

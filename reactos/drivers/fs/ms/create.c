@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.4 2002/09/08 10:22:10 chorns Exp $
+/* $Id: create.c,v 1.5 2004/07/03 17:40:20 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -139,7 +139,6 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
    if (!RtlCreateUnicodeString(&Mailslot->Name, FileObject->FileName.Buffer))
      {
 	ExFreePool(Mailslot);
-	ExFreePool(Fcb);
 
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = 0;

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.25 2004/06/26 22:30:34 navaraf Exp $
+ * $Id: videoprt.c,v 1.26 2004/07/03 17:40:21 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -180,7 +180,7 @@ IntVideoPortFindAdapter(
    WCHAR SymlinkBuffer[20];
    UNICODE_STRING SymlinkName;
    PDEVICE_OBJECT DeviceObject;
-   BOOL LegacyDetection;
+   BOOL LegacyDetection = FALSE;
 
    /*
     * Find the first free device number that can be used for video device

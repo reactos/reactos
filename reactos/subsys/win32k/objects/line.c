@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.34 2004/07/03 13:55:37 navaraf Exp $ */
+/* $Id: line.c,v 1.35 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -52,7 +52,7 @@ IntGdiLineTo(DC  *dc,
              int YEnd)
 {
   BITMAPOBJ *BitmapObj;
-  BOOL      Ret;
+  BOOL      Ret = TRUE;
   PGDIBRUSHOBJ PenBrushObj;
   RECTL     Bounds;
   POINT     Points[2];

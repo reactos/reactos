@@ -772,7 +772,6 @@ NTSTATUS AfdDispRecv(
   UINT OutputBufferLength;
   PFILE_REQUEST_RECVFROM Request;
   PFILE_REPLY_RECVFROM Reply;
-  DWORD NumberOfBytesRecvd;
   PAFDFCB FCB;
 
   AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
@@ -794,7 +793,7 @@ NTSTATUS AfdDispRecv(
       Request,
       Reply,
       TRUE);
-    Reply->NumberOfBytesRecvd = NumberOfBytesRecvd;
+    Reply->NumberOfBytesRecvd = 0; /* FIXME */
     Reply->Status = NO_ERROR;
   } else {
     Status = STATUS_INVALID_PARAMETER;
@@ -818,7 +817,7 @@ NTSTATUS AfdDispSend(
  *     Status of operation
  */
 {
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   UINT InputBufferLength;
   UINT OutputBufferLength;
   PFILE_REQUEST_SEND Request;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib8bpp.c,v 1.27 2004/07/03 13:55:35 navaraf Exp $ */
+/* $Id: dib8bpp.c,v 1.28 2004/07/03 17:40:24 navaraf Exp $ */
 #include <w32k.h>
 
 VOID
@@ -265,16 +265,16 @@ DIB_8BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 		 XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
    LONG i, j, k, sx, sy;
-   ULONG Dest, Source, Pattern = 0, PatternY;
+   ULONG Dest, Source = 0, Pattern = 0;
    PULONG DestBits;
    BOOL UsesSource;
    BOOL UsesPattern;
    LONG RoundedRight;
    /* Pattern brushes */
-   PGDIBRUSHOBJ GdiBrush;
+   PGDIBRUSHOBJ GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
-   SURFOBJ *PatternObj;
-   ULONG PatternWidth, PatternHeight;
+   SURFOBJ *PatternObj = NULL;
+   ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
 
    if (Rop4 == SRCCOPY)
    {

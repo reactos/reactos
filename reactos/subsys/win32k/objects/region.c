@@ -113,7 +113,7 @@ SOFTWARE.
  * the y-x-banding that's so nice to have...
  */
 
-/* $Id: region.c,v 1.60 2004/07/03 13:55:37 navaraf Exp $ */
+/* $Id: region.c,v 1.61 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -2209,14 +2209,8 @@ NtGdiExtCreateRegion(CONST PXFORM  Xform,
                           DWORD  Count,
                           CONST PROSRGNDATA  RgnData)
 {
-  HRGN hRgn;
-
-  // FIXME: Apply Xform transformation to the regional data
-  if(Xform != NULL) {
-
-  }
-
-  return hRgn;
+  UNIMPLEMENTED;
+  return 0;
 }
 
 BOOL

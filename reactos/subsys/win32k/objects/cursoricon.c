@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.58 2004/07/03 13:55:36 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.59 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 
 PCURICON_OBJECT FASTCALL
@@ -1077,7 +1077,7 @@ NtUserDrawIconEx(
   COLORREF oldFg, oldBg;
   HDC hdcMem, hdcOff = (HDC)0;
   HBITMAP hbmOff = (HBITMAP)0;
-  HGDIOBJ hOldOffBrush, hOldOffBmp, hOldMem;
+  HGDIOBJ hOldOffBrush = 0, hOldOffBmp = 0, hOldMem;
   BOOL Ret = FALSE;
   #if CANSTRETCHBLT
   INT nStretchMode;

@@ -1,6 +1,7 @@
 #define _WIN32_WINNT 0x0501
 #define __USE_W32API
 #define NTOS_MODE_USER
+#define __NO_CTYPE_INLINES
 #include <ntos.h>
 #include <stdarg.h>
 #include <stdio.h>

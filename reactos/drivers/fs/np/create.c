@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.21 2004/05/10 19:58:10 navaraf Exp $
+/* $Id: create.c,v 1.22 2004/07/03 17:40:20 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -203,7 +203,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    PNPFS_PIPE Pipe;
    PNPFS_FCB Fcb;
    PLIST_ENTRY current_entry;
-   PNPFS_PIPE current;
+   PNPFS_PIPE current = NULL;
    PIO_PIPE_CREATE_BUFFER Buffer;
    
    DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);

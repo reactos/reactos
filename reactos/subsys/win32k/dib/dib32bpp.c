@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.28 2004/07/03 13:55:35 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.29 2004/07/03 17:40:24 navaraf Exp $ */
 #include <w32k.h>
 
 VOID
@@ -292,15 +292,15 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 {
    ULONG X, Y;
    ULONG SourceX, SourceY;
-   ULONG Dest, Source, Pattern = 0, wd;
+   ULONG Dest, Source = 0, Pattern = 0, wd;
    PULONG DestBits;
    BOOL UsesSource;
    BOOL UsesPattern;
    /* Pattern brushes */
-   PGDIBRUSHOBJ GdiBrush;
+   PGDIBRUSHOBJ GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
-   SURFOBJ *PatternObj;
-   ULONG PatternWidth, PatternHeight;
+   SURFOBJ *PatternObj = NULL;
+   ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
 
    if (Rop4 == SRCCOPY)
    {
@@ -351,7 +351,6 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    
    for (Y = DestRect->top; Y < DestRect->bottom; Y++)
    {
-      ULONG PatternY;
       SourceX = SourcePoint->x;
       
       if(UsesPattern)

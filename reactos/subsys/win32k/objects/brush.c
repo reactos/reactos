@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: brush.c,v 1.38 2004/07/03 13:55:36 navaraf Exp $
+ * $Id: brush.c,v 1.39 2004/07/03 17:40:27 navaraf Exp $
  */
 #include <w32k.h>
 
@@ -50,7 +50,7 @@ IntGdiCreateBrushIndirect(PLOGBRUSH LogBrush)
 {
    PGDIBRUSHOBJ BrushObject;
    HBRUSH hBrush;
-   HBITMAP hPattern;
+   HBITMAP hPattern = 0;
    
    switch (LogBrush->lbStyle)
    {
@@ -129,7 +129,7 @@ IntPatBlt(
    RECTL DestRect;
    BITMAPOBJ *BitmapObj;
    POINTL BrushOrigin;
-   BOOL ret;
+   BOOL ret = TRUE;
 
    BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
    if (BitmapObj == NULL)
@@ -354,7 +354,7 @@ NtGdiPolyPatBlt(
    INT cRects,
    ULONG Reserved)
 {
-   PPATRECT rb;
+   PPATRECT rb = NULL;
    NTSTATUS Status;
    BOOL Ret;
     

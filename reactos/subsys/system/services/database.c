@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.16 2004/04/12 17:20:47 navaraf Exp $
+/* $Id: database.c,v 1.17 2004/07/03 17:40:24 navaraf Exp $
  *
  * service control manager
  * 
@@ -680,7 +680,7 @@ ScmAutoStartServices(VOID)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-      if ((CurrentGroup->GroupName.Length > 0) &&
+      if ((CurrentService->ServiceGroup.Length == 0) &&
 	  (CurrentService->Start == SERVICE_AUTO_START) &&
 	  (CurrentService->ServiceVisited == FALSE))
 	{
@@ -698,7 +698,7 @@ ScmAutoStartServices(VOID)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-      if ((CurrentGroup->GroupName.Length == 0) &&
+      if ((CurrentService->ServiceGroup.Length == 0) &&
 	  (CurrentService->Start == SERVICE_AUTO_START) &&
 	  (CurrentService->ServiceVisited == FALSE))
 	{

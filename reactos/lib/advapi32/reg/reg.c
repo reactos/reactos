@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.49 2004/07/03 14:46:39 gvg Exp $
+/* $Id: reg.c,v 1.50 2004/07/03 17:40:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -865,7 +865,7 @@ RegEnumKeyExA (HKEY hKey,
   ANSI_STRING StringA;
   LONG ErrorCode = ERROR_SUCCESS;
   DWORD NameLength;
-  DWORD ClassLength;
+  DWORD ClassLength = 0;
   DWORD BufferSize;
   DWORD ResultSize;
   HANDLE KeyHandle;
@@ -1042,7 +1042,7 @@ RegEnumKeyExW (HKEY hKey,
   ULONG BufferSize;
   ULONG ResultSize;
   ULONG NameLength;
-  ULONG ClassLength;
+  ULONG ClassLength = 0;
   HANDLE KeyHandle;
   LONG ErrorCode = ERROR_SUCCESS;
   NTSTATUS Status;
@@ -1193,7 +1193,7 @@ RegEnumValueA (HKEY hKey,
 
   ULONG NameLength;
   ULONG BufferSize;
-  ULONG DataLength;
+  ULONG DataLength = 0;
   ULONG ResultSize;
   HANDLE KeyHandle;
   LONG ErrorCode;
@@ -1360,7 +1360,7 @@ RegEnumValueW (HKEY hKey,
 
   ULONG NameLength;
   ULONG BufferSize;
-  ULONG DataLength;
+  ULONG DataLength = 0;
   ULONG ResultSize;
   HANDLE KeyHandle;
   LONG ErrorCode;
@@ -1997,7 +1997,7 @@ RegQueryInfoKeyW (HKEY hKey,
   KEY_FULL_INFORMATION FullInfoBuffer;
   PKEY_FULL_INFORMATION FullInfo;
   ULONG FullInfoSize;
-  ULONG ClassLength;
+  ULONG ClassLength = 0;
   HANDLE KeyHandle;
   NTSTATUS Status;
   LONG ErrorCode = ERROR_SUCCESS;

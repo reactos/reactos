@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.4 2004/04/25 14:46:54 weiden Exp $
+/* $Id: font.c,v 1.5 2004/07/03 17:40:22 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -206,7 +206,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
   int FontFamilyCount;
   unsigned FontFamilySize;
   PFONTFAMILYINFO Info;
-  int Ret;
+  int Ret = 0;
   unsigned i;
   ENUMLOGFONTEXA EnumLogFontExA;
   NEWTEXTMETRICEXA NewTextMetricExA;

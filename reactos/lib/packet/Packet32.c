@@ -1289,7 +1289,7 @@ BOOLEAN PacketGetStatsEx(LPADAPTER AdapterObject,struct bpf_stat *s)
 BOOLEAN PacketRequest(LPADAPTER  AdapterObject,BOOLEAN Set,PPACKET_OID_DATA  OidData)
 {
 	//DWORD BytesReturned;
-    BOOLEAN Result;
+    BOOLEAN Result = 0;
 	/*commented out since its broken & needs fixing*/
     /*Result=DeviceIoControl(AdapterObject->hFile,(DWORD) Set ? pBIOCSETOID : pBIOCQUERYOID,
                            OidData,sizeof(PACKET_OID_DATA)-1+OidData->Length,OidData,

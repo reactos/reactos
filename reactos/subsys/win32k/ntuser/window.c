@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.241 2004/06/22 12:43:49 royce Exp $
+/* $Id: window.c,v 1.242 2004/07/03 17:40:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -456,7 +456,7 @@ IntSetMenu(
    HMENU Menu,
    BOOL *Changed)
 {
-  PMENU_OBJECT OldMenuObject, NewMenuObject;
+  PMENU_OBJECT OldMenuObject, NewMenuObject = NULL;
 
   *Changed = (WindowObject->IDMenu != (UINT) Menu);
   if (! *Changed)
@@ -3153,7 +3153,7 @@ LONG STDCALL
 NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 {
    PWINDOW_OBJECT WindowObject, Parent;
-   LONG Result;
+   LONG Result = 0;
 
    DPRINT("NtUserGetWindowLong(%x,%d,%d)\n", hWnd, (INT)Index, Ansi);
 
@@ -4193,7 +4193,7 @@ DWORD
 IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 {
 	WORD i;
-	WORD FreeSpot;
+	WORD FreeSpot = 0;
 	BOOL found;
 	WndProcHandle *OldArray;
 	WORD OldArraySize;

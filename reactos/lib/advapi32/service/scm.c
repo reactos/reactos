@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.21 2004/04/12 17:20:47 navaraf Exp $
+/* $Id: scm.c,v 1.22 2004/07/03 17:40:21 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -82,11 +82,9 @@ BOOL
 STDCALL
 CloseServiceHandle(SC_HANDLE hSCObject)
 {
-    HANDLE hPipe;
     DPRINT("CloseServiceHandle() - called.\n");
-//    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 
-    if (!CloseHandle(hPipe)) {
+    if (!CloseHandle(hSCObject)) {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }

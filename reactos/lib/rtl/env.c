@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.1 2004/05/31 19:29:02 gdalsnes Exp $
+/* $Id: env.c,v 1.2 2004/07/03 17:40:23 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,8 +18,6 @@
 
 #define NDEBUG
 #include <ntdll/ntdll.h>
-
-
 
 /* FUNCTIONS *****************************************************************/
 

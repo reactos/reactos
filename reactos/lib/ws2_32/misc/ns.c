@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+#define __NO_CTYPE_INLINES
 #include <ctype.h>
 #include <ws2_32.h>
 

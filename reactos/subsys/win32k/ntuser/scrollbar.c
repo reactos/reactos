@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.33 2004/05/12 09:47:16 gvg Exp $
+/* $Id: scrollbar.c,v 1.34 2004/07/03 17:40:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -805,6 +805,7 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
        Style = WS_HSCROLL | WS_VSCROLL;
        break;
      case SB_CTL:
+       Style = 0;
        break;
      default:
        IntReleaseWindowObject(Window);

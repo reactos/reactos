@@ -27,6 +27,7 @@
 #include <ntdll/rtl.h>
 
 #include <ntos/minmax.h>
+#define __NO_CTYPE_INLINES
 #include <ctype.h>
 
 #define NDEBUG

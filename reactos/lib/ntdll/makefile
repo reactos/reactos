@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.104 2004/07/01 02:40:22 hyperion Exp $
+# $Id: makefile,v 1.105 2004/07/03 17:40:23 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -19,7 +19,7 @@ TARGET_LFLAGS = -Wl,--file-alignment,0x1000 \
   -Wl,--section-alignment,0x1000 \
   -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = string.a rosrtl.a rtl.a
+TARGET_SDKLIBS = rosrtl.a rtl.a string.a
 
 TARGET_GCCLIBS = gcc
 

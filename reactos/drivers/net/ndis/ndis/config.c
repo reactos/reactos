@@ -864,7 +864,7 @@ NdisOpenConfigurationKeyByName(
     NDIS_HANDLE RegKeyHandle;
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, 0);
-    *Status = ZwOpenKey(RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
+    *Status = ZwOpenKey(&RegKeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
     if(*Status != STATUS_SUCCESS)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.56 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: bitblt.c,v 1.57 2004/07/03 17:40:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -88,10 +88,10 @@ BltMask(SURFOBJ* Dest,
    BYTE *tMask, *lMask;
    static BYTE maskbit[8] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
    /* Pattern brushes */
-   PGDIBRUSHOBJ GdiBrush;
+   PGDIBRUSHOBJ GdiBrush = NULL;
    HBITMAP PatternSurface = NULL;
-   SURFOBJ *PatternObj;
-   ULONG PatternWidth, PatternHeight, PatternY;
+   SURFOBJ *PatternObj = NULL;
+   ULONG PatternWidth = 0, PatternHeight = 0, PatternY = 0;
   
    if (Mask == NULL)
    {
@@ -243,7 +243,7 @@ EngBitBlt(SURFOBJ *DestObj,
   SURFOBJ*           InputObj;
   SURFOBJ*           OutputObj;
   PBLTRECTFUNC       BltRectFunc;
-  BOOLEAN            Ret;
+  BOOLEAN            Ret = TRUE;
   RECTL              ClipRect;
   unsigned           i;
   POINTL             Pt;
@@ -846,7 +846,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   INTENG_ENTER_LEAVE EnterLeaveDest;
   SURFOBJ*           InputObj;
   SURFOBJ*           OutputObj;
-  BOOLEAN            Ret;
+  BOOLEAN            Ret = TRUE;
   RECTL              ClipRect;
   unsigned           i;
   POINTL             Pt;

@@ -342,6 +342,9 @@ IntDrawScrollBar(HWND Wnd, HDC DC, INT Bar)
       case SB_CTL:
         Vertical = (GetWindowLongW(Wnd, GWL_STYLE) & SBS_VERT) != 0;
         break;
+
+      default:
+        return;
     }
   if (! IntGetScrollBarInfo(Wnd, Bar, &Info))
     {

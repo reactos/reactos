@@ -68,7 +68,7 @@ AfdWrite(
 {
     PIO_STACK_LOCATION IoSp = IoGetCurrentIrpStackLocation(Irp);
     PFILE_OBJECT FileObject = IoSp->FileObject;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
     ULONG Length;
     PVOID Buffer;
     ULONG Offset;

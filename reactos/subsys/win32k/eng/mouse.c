@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.74 2004/07/03 13:55:35 navaraf Exp $
+/* $Id: mouse.c,v 1.75 2004/07/03 17:40:25 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -630,6 +630,7 @@ EngSetPointerShape(
          case BMF_16BPP: lDelta = Size.cx << 1; break;
          case BMF_24BPP: lDelta = Size.cx * 3; break; 
          case BMF_32BPP: lDelta = Size.cx << 2; break;
+         default: lDelta = 0; break;
       }
 
       ppdev->PointerSaveSurface = (HSURF)EngCreateBitmap(

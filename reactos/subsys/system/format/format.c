@@ -265,7 +265,7 @@ BOOLEAN LoadFMIFSEntryPoints()
 int wmain( int argc, WCHAR *argv[] )
 {
 	int badArg;
-	DWORD media;
+	DWORD media = FMIFS_HARDDISK;
 	DWORD driveType;
 	WCHAR fileSystem[1024];
 	WCHAR volumeName[1024];
@@ -326,10 +326,6 @@ int wmain( int argc, WCHAR *argv[] )
 		fgetws( input, sizeof(input)/2, stdin );
 
 		media = FMIFS_FLOPPY;
-
-
-		driveType = DRIVE_FIXED;
-		media = FMIFS_HARDDISK;
 	}
 
 	//

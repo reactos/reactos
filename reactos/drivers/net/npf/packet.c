@@ -623,12 +623,12 @@ NPF_Unload(IN PDRIVER_OBJECT DriverObject)
 		}
 
         IoDeleteDevice(OldDeviceObject);
-    }
 
 	NdisDeregisterProtocol(
         &Status,
         NdisProtocolHandle
         );
+    }
 
 	// Free the adapters names
 	ExFreePool( bindP );

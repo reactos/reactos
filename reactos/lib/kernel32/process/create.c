@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.85 2004/05/15 20:25:09 hbirr Exp $
+/* $Id: create.c,v 1.86 2004/07/03 17:40:22 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -829,7 +829,7 @@ CreateProcessW
    UNICODE_STRING RuntimeInfo_U;
    PVOID ImageBaseAddress;
    BOOL InputSet, OutputSet, ErrorSet;
-   BOOL InputDup, OutputDup, ErrorDup;
+   BOOL InputDup = FALSE, OutputDup = FALSE, ErrorDup = FALSE;
    WCHAR Name[MAX_PATH];
    WCHAR *TidyCmdLine;
    BOOL IsBatchFile = FALSE;

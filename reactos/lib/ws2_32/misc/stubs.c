@@ -377,7 +377,7 @@ WSADuplicateSocketW(
   Error = Provider->ProcTable.lpWSPDuplicateSocket(s,
                                                    dwProcessId,
                                                    lpProtocolInfo,
-                                                   &Error);
+                                                   &Errno);
   DereferenceProviderByPointer(Provider);                                              
   
   if (Error == SOCKET_ERROR)
@@ -434,7 +434,6 @@ WSAGetOverlappedResult(
     OUT LPDWORD lpdwFlags)
 {
   INT Errno;
-  int Error;
   BOOL Success;
   PCATALOG_ENTRY Provider;
 
@@ -455,7 +454,7 @@ WSAGetOverlappedResult(
                                                         lpcbTransfer,
                                                         fWait,
                                                         lpdwFlags,
-                                                        &Error);
+                                                        &Errno);
   DereferenceProviderByPointer(Provider);                                              
   
   if (Success == FALSE)

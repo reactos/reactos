@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.96 2004/06/27 12:20:33 ekohl Exp $
+/* $Id: utils.c,v 1.97 2004/07/03 17:40:22 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1629,7 +1629,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptor;
    PIMAGE_BOUND_IMPORT_DESCRIPTOR BoundImportDescriptorCurrent;
    PIMAGE_TLS_DIRECTORY TlsDirectory;
-   ULONG TlsSize;
+   ULONG TlsSize = 0;
    NTSTATUS Status;
    PLDR_MODULE ImportedModule;
    PCHAR ImportedName;

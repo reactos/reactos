@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.9 2004/04/30 16:52:41 navaraf Exp $
+/* $Id: dir.c,v 1.10 2004/07/03 17:40:24 navaraf Exp $
  *
  *  DIR.C - dir internal command.
  *
@@ -862,7 +862,7 @@ DirList (LPTSTR szPath, LPTSTR szFilespec, LPINT pLine, DWORD dwFlags)
 	TCHAR  buffer[32];
 	ULONG filecount = 0;
 	ULONG dircount = 0;
-	INT count;
+	INT count = 0;
 	USHORT screenwidth;
 	INT longestfname = 0;
 

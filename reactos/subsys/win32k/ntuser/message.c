@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.70 2004/06/16 06:09:40 gvg Exp $
+/* $Id: message.c,v 1.71 2004/07/03 17:40:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -287,7 +287,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
   NTSTATUS Status;
   NTUSERDISPATCHMESSAGEINFO MsgInfo;
   PWINDOW_OBJECT WindowObject;
-  LRESULT Result;
+  LRESULT Result = TRUE;
 
   Status = MmCopyFromCaller(&MsgInfo, UnsafeMsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
   if (! NT_SUCCESS(Status))
@@ -1397,7 +1397,7 @@ IntDoSendMessage(HWND Wnd,
 		 PDOSENDMESSAGE dsm,
 	         PNTUSERSENDMESSAGEINFO UnsafeInfo)
 {
-  LRESULT Result;
+  LRESULT Result = TRUE;
   NTSTATUS Status;
   PWINDOW_OBJECT Window;
   NTUSERSENDMESSAGEINFO Info;

@@ -1,4 +1,4 @@
-/* $Id: isapnp.c,v 1.9 2004/02/10 16:22:54 navaraf Exp $
+/* $Id: isapnp.c,v 1.10 2004/07/03 17:40:20 navaraf Exp $
  *
  * PROJECT:         ReactOS ISA PnP Bus driver
  * FILE:            isapnp.c
@@ -584,7 +584,7 @@ static NTSTATUS AddIrqResource(
 {
   PISAPNP_DESCRIPTOR Descriptor;
 	UCHAR tmp[3];
-  ULONG irq, i, last;
+  ULONG irq, i, last = 0;
   BOOLEAN found;
   NTSTATUS Status;
 
@@ -639,7 +639,7 @@ static NTSTATUS AddDmaResource(
 {
   PISAPNP_DESCRIPTOR Descriptor;
 	UCHAR tmp[2];
-  ULONG dma, flags, i, last;
+  ULONG dma, flags, i, last = 0;
   BOOLEAN found;
   NTSTATUS Status;
 
@@ -1424,7 +1424,7 @@ ISAPNPQueryBusRelations(
   PISAPNP_LOGICAL_DEVICE LogicalDevice;
   PDEVICE_RELATIONS Relations;
   PLIST_ENTRY CurrentEntry;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   ULONG Size;
   ULONG i;
 

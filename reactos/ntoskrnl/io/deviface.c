@@ -109,11 +109,11 @@ IoGetDeviceInterfaces(
    HANDLE SubKey;
    HANDLE SymbolicLinkKey;
    PKEY_FULL_INFORMATION fip;
-   PKEY_FULL_INFORMATION bfip;
+   PKEY_FULL_INFORMATION bfip = NULL;
    PKEY_BASIC_INFORMATION bip;
-   PKEY_VALUE_PARTIAL_INFORMATION vpip;
+   PKEY_VALUE_PARTIAL_INFORMATION vpip = NULL;
    PWCHAR SymLinkList = NULL;
-   ULONG SymLinkListSize;
+   ULONG SymLinkListSize = 0;
    NTSTATUS Status;
    ULONG Size = 0;
    ULONG i = 0;

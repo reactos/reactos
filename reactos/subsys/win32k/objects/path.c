@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.22 2004/06/20 00:45:37 navaraf Exp $ */
+/* $Id: path.c,v 1.23 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 #include <win32k/float.h>
 
@@ -403,7 +403,6 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
    INT xStart, INT yStart, INT xEnd, INT yEnd)
 {
   GdiPath *pPath;
-  DC      *pDC;
   double  angleStart, angleEnd, angleStartQuadrant, angleEndQuadrant=0.0;
           /* Initialize angleEndQuadrant to silence gcc's warning */
   double  x, y;
@@ -442,10 +441,10 @@ PATH_Arc ( PDC dc, INT x1, INT y1, INT x2, INT y2,
   pointStart.y=(FLOAT)yStart;
   pointEnd.x=(FLOAT)xEnd;
   pointEnd.y=(FLOAT)yEnd;
-  INTERNAL_LPTODP_FLOAT(pDC, corners);
-  INTERNAL_LPTODP_FLOAT(pDC, corners+1);
-  INTERNAL_LPTODP_FLOAT(pDC, &pointStart);
-  INTERNAL_LPTODP_FLOAT(pDC, &pointEnd);
+  INTERNAL_LPTODP_FLOAT(dc, corners);
+  INTERNAL_LPTODP_FLOAT(dc, corners+1);
+  INTERNAL_LPTODP_FLOAT(dc, &pointStart);
+  INTERNAL_LPTODP_FLOAT(dc, &pointEnd);
 
   /* Make sure first corner is top left and second corner is bottom right */
   if ( corners[0].x > corners[1].x )

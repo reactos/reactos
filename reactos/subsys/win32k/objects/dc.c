@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.142 2004/07/03 13:55:36 navaraf Exp $
+/* $Id: dc.c,v 1.143 2004/07/03 17:40:27 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -940,6 +940,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
       break;
     case OBJ_PAL:
       DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_PAL not supported yet!\n");
+      SelObject = NULL;
       break;
     case OBJ_FONT:
       SelObject = dc->w.hFont;
@@ -949,6 +950,7 @@ NtGdiGetCurrentObject(HDC  hDC, UINT  ObjectType)
       break;
     case OBJ_COLORSPACE:
       DPRINT1("FIXME: NtGdiGetCurrentObject() ObjectType OBJ_COLORSPACE not supported yet!\n");
+      SelObject = NULL;
       break;
     default:
       SelObject = NULL;
@@ -1742,7 +1744,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   PPALGDI PalGDI;
   DWORD objectType;
   COLORREF MonoColorMap[2];
-  ULONG NumColors;
+  ULONG NumColors = 0;
   HRGN hVisRgn;
   USHORT Mode;
 
@@ -2187,7 +2189,7 @@ IntGetDCColor(HDC hDC, ULONG Object)
   PGDIBRUSHOBJ pen;
   PGDIBRUSHOBJ brush;
   XLATEOBJ *XlateObj;
-  HPALETTE Pal;
+  HPALETTE Pal = 0;
   USHORT Mode;
   ULONG iColor;
   
@@ -2279,7 +2281,7 @@ IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
   PGDIBRUSHOBJ pen;
   PGDIBRUSHOBJ brush;
   XLATEOBJ *XlateObj;
-  HPALETTE Pal;
+  HPALETTE Pal = 0;
   USHORT Mode;
   ULONG iColor;
   

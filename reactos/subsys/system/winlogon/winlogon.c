@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.30 2004/05/25 15:53:16 navaraf Exp $
+/* $Id: winlogon.c,v 1.31 2004/07/03 17:40:24 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -805,7 +805,7 @@ DoLogin(PWLSESSION Session)
   DWORD WlxAction, Options;
   WLX_MPR_NOTIFY_INFO MprNotifyInfo;
   PWLX_PROFILE_V2_0 Profile;
-  PSID LogonSid;
+  PSID LogonSid = NULL;
   HANDLE Token;
   
   /* FIXME - Create a Logon Sid

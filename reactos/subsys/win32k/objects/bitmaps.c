@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.76 2004/07/03 13:55:36 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.77 2004/07/03 17:40:27 navaraf Exp $ */
 #include <w32k.h>
 
 #define IN_RECT(r,x,y) \
@@ -47,7 +47,7 @@ NtGdiBitBlt(
 	BOOL Status;
 	PPALGDI PalDestGDI, PalSourceGDI;
 	XLATEOBJ *XlateObj = NULL;
-	HPALETTE SourcePalette, DestPalette;
+	HPALETTE SourcePalette = 0, DestPalette = 0;
 	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);
@@ -266,11 +266,11 @@ NtGdiTransparentBlt(
   RECTL rcDest, rcSrc;
   BITMAPOBJ *BitmapDest, *BitmapSrc;
   XLATEOBJ *XlateObj;
-  HPALETTE SourcePalette, DestPalette;
+  HPALETTE SourcePalette = 0, DestPalette = 0;
   PPALGDI PalDestGDI, PalSourceGDI;
   USHORT PalDestMode, PalSrcMode;
-  ULONG TransparentColor;
-  BOOL Ret;
+  ULONG TransparentColor = 0;
+  BOOL Ret = FALSE;
   
   if(!(DCDest = DC_LockDc(hdcDst)))
   {
@@ -582,7 +582,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	BOOL bInRect = FALSE;
 	BITMAPOBJ *BitmapObject;
 	SURFOBJ *SurfaceObject;
-	HPALETTE Pal;
+	HPALETTE Pal = 0;
 	PPALGDI PalGDI;
 	USHORT PalMode;
 	XLATEOBJ *XlateObj;
@@ -1046,7 +1046,7 @@ NtGdiStretchBlt(
 	BOOL Status;
 	PPALGDI PalDestGDI, PalSourceGDI;
 	XLATEOBJ *XlateObj = NULL;
-	HPALETTE SourcePalette, DestPalette;
+	HPALETTE SourcePalette = 0, DestPalette = 0;
 	ULONG SourceMode, DestMode;
 	PGDIBRUSHOBJ BrushObj;
 	BOOL UsesSource = ((ROP & 0xCC0000) >> 2) != (ROP & 0x330000);

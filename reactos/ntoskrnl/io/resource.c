@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: resource.c,v 1.16 2004/06/20 04:50:02 vizzini Exp $
+/* $Id: resource.c,v 1.17 2004/07/03 17:40:24 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/resource.c
@@ -125,7 +125,7 @@ IopQueryDeviceDescription(
    ULONG Bus,
    PKEY_VALUE_FULL_INFORMATION *BusInformation) 
 {
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    /* Controller Stuff */
    UNICODE_STRING ControllerString;
@@ -481,13 +481,13 @@ IopQueryBusDescription(
    UNICODE_STRING SubRootRegName;
    UNICODE_STRING BusString;
    UNICODE_STRING SubBusString;
-   ULONG LenBasicInformation;
+   ULONG LenBasicInformation = 0;
    ULONG LenFullInformation;
    ULONG LenKeyFullInformation;
    ULONG LenKey;
    HANDLE SubRootKeyHandle;
    PKEY_FULL_INFORMATION FullInformation;
-   PKEY_BASIC_INFORMATION BasicInformation;
+   PKEY_BASIC_INFORMATION BasicInformation = NULL;
    OBJECT_ATTRIBUTES ObjectAttributes;
    PKEY_VALUE_FULL_INFORMATION BusInformation[3] = {NULL, NULL, NULL};
 

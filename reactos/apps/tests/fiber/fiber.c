@@ -1,4 +1,4 @@
-/* $Id: fiber.c,v 1.2 2004/03/07 20:07:04 hyperion Exp $
+/* $Id: fiber.c,v 1.3 2004/07/03 17:40:19 navaraf Exp $
 */
 
 #include <assert.h>
@@ -180,7 +180,7 @@ void Fbt_Dispatch(struct FiberData * pfdCur, int bExit)
   int k;
   int b;
   int bResume;
-  PLIST_ENTRY ple;
+  PLIST_ENTRY ple = NULL;
 
   bResume = 0;
   i = 0;

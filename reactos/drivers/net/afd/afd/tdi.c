@@ -1044,7 +1044,7 @@ NTSTATUS TdiReceiveDatagram(
  */
 {
     PTDI_CONNECTION_INFORMATION ReceiveInfo;
-    PTDI_CONNECTION_INFORMATION ReturnInfo;
+    TDI_CONNECTION_INFORMATION ReturnInfo;
     PDEVICE_OBJECT DeviceObject;
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
@@ -1111,12 +1111,12 @@ NTSTATUS TdiReceiveDatagram(
                             Mdl,                    /* Data buffer */
                             *BufferSize,            /* Size of data buffer */
                             ReceiveInfo,            /* Connection information */
-                            ReturnInfo,             /* Connection information */
+                            &ReturnInfo,            /* Connection information */
                             TDI_RECEIVE_NORMAL);    /* Flags */
     Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
     if (NT_SUCCESS(Status)) {
         *BufferSize = Iosb.Information;
-        TdiBuildName(Address, TdiGetRemoteAddress(ReturnInfo));
+        TdiBuildName(Address, TdiGetRemoteAddress(&ReturnInfo));
     }
 
     MmUnlockPages(Mdl);

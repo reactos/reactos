@@ -7,7 +7,7 @@ TARGET_NAME = rtl
 
 include $(PATH_TO_TOP)/config
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -Wall -Werror -ffreestanding
 
 # require os code to explicitly request A/W version of structs/functions
 TARGET_CFLAGS += -D_DISABLE_TIDENTS

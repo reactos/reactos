@@ -41,7 +41,6 @@ main(int argc, char *argv[])
   
   while (z < 50)
     {
-      TerminateThread(thread, 0);
       z++;
       thread=CreateThread(NULL,
 			  0x1000,
@@ -69,6 +68,7 @@ main(int argc, char *argv[])
       SuspendThread(thread);
       printf("R");
       ResumeThread(thread);      
+      TerminateThread(thread, 0);
     }
 
   ExitProcess(0);

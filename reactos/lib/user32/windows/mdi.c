@@ -1316,7 +1316,7 @@ static void MDI_UpdateFrameText( HWND frame, HWND hClient,
 static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
                                         WPARAM wParam, LPARAM lParam, BOOL unicode )
 {
-    MDICLIENTINFO *ci;
+    MDICLIENTINFO *ci = NULL;
 
     if (WM_NCCREATE != message && WM_CREATE != message
         && NULL == (ci = get_client_info(hwnd)))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: misc.c,v 1.8 2004/07/03 13:55:35 navaraf Exp $ */
+/* $Id: misc.c,v 1.9 2004/07/03 17:40:25 navaraf Exp $ */
 #include <w32k.h>
 
 BOOL STDCALL
@@ -134,7 +134,7 @@ BOOL STDCALL
 IntEngLeave(PINTENG_ENTER_LEAVE EnterLeave)
 {
   POINTL SrcPoint;
-  BOOL Result;
+  BOOL Result = TRUE;
 
   if (EnterLeave->OutputObj != EnterLeave->DestObj && NULL != EnterLeave->OutputObj)
     {

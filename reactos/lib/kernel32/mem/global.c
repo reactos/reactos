@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.25 2004/06/13 20:04:55 navaraf Exp $
+/* $Id: global.c,v 1.26 2004/07/03 17:40:22 navaraf Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -671,7 +671,7 @@ GlobalUnlock(HGLOBAL hMem)
 {
 
    PGLOBAL_HANDLE	phandle;
-   BOOL			    locked;
+   BOOL			    locked = FALSE;
 
    DPRINT("GlobalUnlock( 0x%lX )\n", (ULONG)hMem);
 

@@ -20,8 +20,8 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 
   // fixme CreatePipe
 
-//  if ( !CreatePipe(&hReadPipe,&hWritePipe,NULL,1024))
-//		return NULL;	
+  if ( !CreatePipe(&hReadPipe,&hWritePipe,NULL,1024))
+		return NULL;	
 
   StartupInfo.cb = sizeof(StartupInfo);
   if ( md == "r" ) {

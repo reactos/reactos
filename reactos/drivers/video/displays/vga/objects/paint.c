@@ -11,10 +11,8 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   ULONG offset, j, pre1;
   ULONG orgpre1, orgx, midpre1, tmppre1;
   ULONG ileftpix, imidpix, irightpix;
-  double leftpix, midpix, rightpix;
+/*  double leftpix, midpix, rightpix;*/
   UCHAR a;
-
-  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
 
   // Swap dimensions so that x, y are at topmost left
   if ( Dimensions.right < Dimensions.left )
@@ -42,6 +40,8 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   w = x2 - x;
   h = y2 - y;
 
+  DPRINT("VGADDIFillSolid: x:%d, y:%d, w:%d, h:%d\n", x, y, w, h);
+
   // Calculate the starting offset
   offset = xconv[x]+y80[y];
 
@@ -50,12 +50,8 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 
   // Calculate the left mask pixels, middle bytes and right mask pixel
   ileftpix = 7 - mod8(x-1);
-  rightpix = mod8(x+w);
-  midpix = (w-leftpix-rightpix) / 8;
-
-  ileftpix = leftpix;
-  irightpix = rightpix;
-  imidpix = midpix;
+  irightpix = mod8(x+w);
+  imidpix = (w-ileftpix-irightpix) / 8;
 
   pre1 = xconv[(x-1)&~7] + y80[y];
   orgpre1=pre1;

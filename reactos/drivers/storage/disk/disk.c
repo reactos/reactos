@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.42 2004/06/21 21:03:12 hbirr Exp $
+/* $Id: disk.c,v 1.43 2004/07/03 17:40:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -218,7 +218,7 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
   PCHAR Buffer;
   ULONG Bus;
   ULONG DeviceCount;
-  BOOLEAN FoundDevice;
+  BOOLEAN FoundDevice = FALSE;
   NTSTATUS Status;
 
   DPRINT("DiskClassFindDevices() called.\n");

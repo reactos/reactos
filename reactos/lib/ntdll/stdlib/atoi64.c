@@ -1,4 +1,4 @@
-/* $Id: atoi64.c,v 1.4 2003/07/11 13:50:23 royce Exp $
+/* $Id: atoi64.c,v 1.5 2004/07/03 17:40:23 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -7,6 +7,7 @@
  */
 
 #include <stdlib.h>
+#define __NO_CTYPE_INLINES
 #include <ctype.h>
 
 /*

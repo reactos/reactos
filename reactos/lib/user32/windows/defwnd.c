@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.140 2004/05/26 18:59:21 weiden Exp $
+/* $Id: defwnd.c,v 1.141 2004/07/03 17:40:23 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -496,7 +496,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   BOOL moved = FALSE;
   DWORD dwPoint = GetMessagePos();
   BOOL DragFullWindows = FALSE;
-  HWND hWndParent;
+  HWND hWndParent = NULL;
 
   SystemParametersInfoA(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
   

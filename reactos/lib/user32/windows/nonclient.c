@@ -900,7 +900,7 @@ DefWndDoButton(HWND hWnd, WPARAM wParam)
   BOOL InBtn, HasBtn = FALSE;
   ULONG Btn, Style;
   WPARAM SCMsg, CurBtn = wParam, OrigBtn = wParam;
-  HDC WindowDC;
+  HDC WindowDC = NULL;
   
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   switch(wParam)

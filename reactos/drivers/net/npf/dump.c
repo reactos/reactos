@@ -46,7 +46,7 @@ NPF_OpenDumpFile(POPEN_INSTANCE Open , PUNICODE_STRING fileName, BOOLEAN Append)
     NTSTATUS ntStatus;
     IO_STATUS_BLOCK IoStatus;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    PWCHAR PathPrefix;
+    PWCHAR PathPrefix = NULL;
     USHORT PathLen;
     UNICODE_STRING FullFileName;
     ULONG FullFileNameLength;
