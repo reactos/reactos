@@ -143,5 +143,6 @@ STDCALL
 W32kGetRegionData(HRGN hrgn,
 						DWORD count,
 						LPRGNDATA rgndata);
+HRGN REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lpPt);
 #endif
 
