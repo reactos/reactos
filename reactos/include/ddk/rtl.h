@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.28 2000/03/03 00:38:15 ekohl Exp $
+/* $Id: rtl.h,v 1.29 2000/03/08 01:52:52 ekohl Exp $
  * 
  */
 
@@ -262,6 +262,22 @@ RtlAppendUnicodeToString (
 	PWSTR		Source
 	);
 
+BOOLEAN
+STDCALL
+RtlAreBitsClear (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		StartingIndex,
+	ULONG		Length
+	);
+
+BOOLEAN
+STDCALL
+RtlAreBitsSet (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		StartingIndex,
+	ULONG		Length
+	);
+
 NTSTATUS
 STDCALL
 RtlCharToInteger (
@@ -497,6 +513,66 @@ RtlFillMemoryUlong (
 	PVOID	Destination,
 	ULONG	Length,
 	ULONG	Fill
+	);
+
+ULONG
+STDCALL
+RtlFindClearBits (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
+	);
+
+ULONG
+STDCALL
+RtlFindClearBitsAndSet (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
+	);
+
+ULONG
+STDCALL
+RtlFindFirstRunClear (
+	PRTL_BITMAP	BitMapHeader,
+	PULONG		StartingIndex
+	);
+
+ULONG
+STDCALL
+RtlFindFirstRunSet (
+	PRTL_BITMAP	BitMapHeader,
+	PULONG		StartingIndex
+	);
+
+ULONG
+STDCALL
+RtlFindLongestRunClear (
+	PRTL_BITMAP	BitMapHeader,
+	PULONG		StartingIndex
+	);
+
+ULONG
+STDCALL
+RtlFindLongestRunSet (
+	PRTL_BITMAP	BitMapHeader,
+	PULONG		StartingIndex
+	);
+
+ULONG
+STDCALL
+RtlFindSetBits (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
+	);
+
+ULONG
+STDCALL
+RtlFindSetBitsAndClear (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		NumberToFind,
+	ULONG		HintIndex
 	);
 
 VOID
@@ -841,6 +917,18 @@ RtlNtStatusToPsxErrno (
 
 ULONG
 STDCALL
+RtlNumberOfClearBits (
+	PRTL_BITMAP	BitMapHeader
+	);
+
+ULONG
+STDCALL
+RtlNumberOfSetBits (
+	PRTL_BITMAP	BitMapHeader
+	);
+
+ULONG
+STDCALL
 RtlOemStringToUnicodeSize (
 	POEM_STRING	AnsiString
 	);
@@ -914,6 +1002,14 @@ RtlSetAllBits (
 	IN	PRTL_BITMAP	BitMapHeader
 	);
 
+VOID
+STDCALL
+RtlSetBits (
+	PRTL_BITMAP	BitMapHeader,
+	ULONG		StartingIndex,
+	ULONG		NumberToSet
+	);
+
 NTSTATUS
 STDCALL
 RtlSetDaclSecurityDescriptor (
@@ -930,15 +1026,6 @@ RtlSizeHeap (
 	DWORD	flags,
 	PVOID	pmem
 	);
-
-#if 0
-PWSTR
-RtlStrtok (
-	PUNICODE_STRING	_string,
-	PWSTR		_sep,
-	PWSTR		* temp
-	);
-#endif
 
 VOID
 RtlStoreLong (

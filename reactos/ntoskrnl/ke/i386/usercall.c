@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.9 2000/02/25 00:33:30 ekohl Exp $
+/* $Id: usercall.c,v 1.10 2000/03/08 01:53:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,9 +21,6 @@
 
 #include <ddk/defines.h>
 
-
-extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable[];
-extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTableShadow[];
 
 
 #define _STR(x) #x
@@ -92,6 +89,7 @@ ULONG KiAfterSystemCallHook(ULONG NtStatus, PCONTEXT Context)
 // TableIndex is 0 based
 // ServiceCountTable its not used at the moment
 BOOLEAN
+STDCALL
 KeAddSystemServiceTable (
 	PSSDT	SSDT,
 	PULONG	ServiceCounterTable,
@@ -285,3 +283,5 @@ void interrupt_handler2e(void);
 	   "popl %ebp\n\t"       /* Ebp */
 
            "iret\n\t");
+
+/* EOF */

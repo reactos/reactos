@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.53 2000/03/06 01:02:30 ea Exp $
+; $Id: ntoskrnl.def,v 1.54 2000/03/08 01:55:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -187,7 +187,7 @@ IofCompleteRequest@8
 KdDebuggerEnabled		DATA
 KdDebuggerNotPresent	DATA
 KdPollBreakIn@0
-KeAddSystemServiceTable
+KeAddSystemServiceTable@20
 KeBugCheck
 KeBugCheckEx
 KeClearEvent
@@ -203,17 +203,18 @@ KeInsertQueueDpc
 KeQuerySystemTime
 KeReadStateEvent
 KeResetEvent
+KeServiceDescriptorTable	DATA
 KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
 KeWaitForSingleObject
 MmGetSystemAddressForMdl
 MmMapIoSpace
-NlsAnsiCodePage DATA
-NlsLeadByteInfo DATA
-NlsMbCodePageTag DATA
-NlsMbOemCodePageTag DATA
-NlsOemLeadByteInfo DATA
+NlsAnsiCodePage	DATA
+NlsLeadByteInfo	DATA
+NlsMbCodePageTag	DATA
+NlsMbOemCodePageTag	DATA
+NlsOemLeadByteInfo	DATA
 NtAddAtom@8
 NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId@4
@@ -287,8 +288,8 @@ RtlAppendUnicodeStringToString@8
 RtlAppendUnicodeToString@8
 ;RtlAreAllAccessesGranted
 ;RtlAreAnyAccessesGranted
-;RtlAreBitsClear
-;RtlAreBitsSet
+RtlAreBitsClear@12
+RtlAreBitsSet@12
 ;RtlAssert
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
@@ -342,15 +343,15 @@ RtlExtendedLargeIntegerDivide@16
 RtlExtendedMagicDivide@20
 RtlFillMemory@12
 RtlFillMemoryUlong@12
-;RtlFindClearBits
-;RtlFindClearBitsAndSet
-;RtlFindFirstRunClear
-;RtlFindFirstRunSet
-;RtlFindLongestRunClear
-;RtlFindLongestRunSet
+RtlFindClearBits@12
+RtlFindClearBitsAndSet@12
+RtlFindFirstRunClear@8
+RtlFindFirstRunSet@8
+RtlFindLongestRunClear@8
+RtlFindLongestRunSet@8
 ;RtlFindMessage
-;RtlFindSetBits
-;RtlFindSetBitsAndClear
+RtlFindSetBits@12
+RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
 ;RtlFormatCurrentUserKeyPath
 RtlFreeAnsiString@4
@@ -399,8 +400,8 @@ RtlMultiByteToUnicodeSize@12
 ;RtlNtStatusToDosError
 ;RtlNtStatusToDosErrorNoTeb
 ;RtlNumberGenericTableElements
-;RtlNumberOfClearBits
-;RtlNumberOfSetBits
+RtlNumberOfClearBits@4
+RtlNumberOfSetBits@4
 RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
@@ -721,4 +722,3 @@ WRITE_PORT_ULONG@8
 WRITE_PORT_USHORT@8
 InsertTailList
 RemoveEntryList
-_KeServiceDescriptorTable	DATA

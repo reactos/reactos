@@ -29,7 +29,25 @@ typedef struct t_KeServiceDescriptorTableEntry {
 
 #pragma pack()
 
+
+/* --- NTOSKRNL.EXE --- */
+#if defined(__NTOSKRNL__)
+extern
+KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllexport);
+#else
+extern
+KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+KeServiceDescriptorTable[SSDT_MAX_ENTRIES] __declspec(dllimport);
+#endif
+
+extern
+KE_SERVICE_DESCRIPTOR_TABLE_ENTRY
+KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+
+
 BOOLEAN
+STDCALL
 KeAddSystemServiceTable (
 	PSSDT	SSDT,
 	PULONG	ServiceCounterTable,
