@@ -102,7 +102,7 @@ VOID PsInitProcessManagment(VOID)
 				  PROCESS_ALL_ACCESS,
 				  NULL,
 				  PsProcessType);
-   SystemProcess->Pcb.BasePriority = NORMAL_PRIORITY_CLASS;
+   SystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
    KeInitializeDispatcherHeader(&SystemProcess->Pcb.DispatcherHeader,
 				InternalProcessType,
 				sizeof(EPROCESS),
@@ -267,7 +267,7 @@ NtCreateProcess (
 				FALSE);
    KProcess = &(Process->Pcb);
    
-   KProcess->BasePriority = NORMAL_PRIORITY_CLASS;
+   KProcess->BasePriority = PROCESS_PRIO_NORMAL;
    InitializeListHead(&(KProcess->MemoryAreaList));
    Process->UniqueProcessId = InterlockedIncrement(&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = ParentProcess->UniqueProcessId;
