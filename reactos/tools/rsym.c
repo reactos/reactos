@@ -442,7 +442,8 @@ ConvertStabs(ULONG *SymbolsCount, PROSSYM_ENTRY *SymbolsBase,
         {
           case N_SO:
             Name = (char *) StabStringsBase + StabEntry[i].n_strx;
-            if ('\0' == *Name || '/' == Name[strlen(Name) - 1]
+            if (StabStringsLength < StabEntry[i].n_strx
+                ||'\0' == *Name || '/' == Name[strlen(Name) - 1]
                 || '\\' == Name[strlen(Name) - 1]
                 || StabEntry[i].n_value < ImageBase)
               {
