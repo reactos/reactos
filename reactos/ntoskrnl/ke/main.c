@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.68 2000/12/23 02:37:40 dwelch Exp $
+/* $Id: main.c,v 1.69 2000/12/26 05:32:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,7 +25,7 @@
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 #include <napi/shared_data.h>
-
+#include <internal/v86m.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -361,7 +361,66 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-void 
+extern NTSTATUS STDCALL
+Ke386CallBios(UCHAR Int, KV86M_REGISTERS* Regs);
+
+struct __attribute__((packed)) vesa_info
+{
+  UCHAR Signature[4];
+  USHORT Version;
+  ULONG OEMName;
+  ULONG Capabilities;
+  ULONG SupportedModes;
+  USHORT TotalVideoMemory;
+  USHORT OEMVersion;
+  ULONG VendorName;
+  ULONG ProductName;
+  ULONG ProductRevisionString;
+  UCHAR Reserved[478];
+};
+
+VOID
+TestV86Mode(VOID)
+{
+  ULONG i;
+  extern UCHAR OrigIVT[1024];
+  KV86M_REGISTERS regs;
+  NTSTATUS Status;
+  struct vesa_info* vi;
+
+  for (i = 0; i < (640 / 4); i++)
+    {
+      MmCreateVirtualMapping(NULL,
+			     (PVOID)(i * 4096),
+			     PAGE_EXECUTE_READWRITE,
+			     (ULONG)MmAllocPage(0));
+    }
+  for (; i < (1024 / 4); i++)
+    {
+      MmCreateVirtualMapping(NULL,
+			     (PVOID)(i * 4096),
+			     PAGE_EXECUTE_READ,
+			     i * 4096);
+    }
+  vi = (struct vesa_info*)0x20000;
+  vi->Signature[0] = 'V';
+  vi->Signature[1] = 'B';
+  vi->Signature[2] = 'E';
+  vi->Signature[3] = '2';
+  memset(&regs, 0, sizeof(regs));
+  regs.Eax = 0x4F00;  
+  regs.Es = 0x2000;
+  regs.Edi = 0x0;
+  memcpy((PVOID)0x0, OrigIVT, 1024);
+  Status = Ke386CallBios(0x10, &regs);
+  DbgPrint("Finished (Status %x, CS:EIP %x:%x)\n", Status, regs.Cs,
+	   regs.Eip);
+  DbgPrint("Eax %x\n", regs.Eax);
+  DbgPrint("Signature %.4s\n", vi->Signature);
+  DbgPrint("TotalVideoMemory %dKB\n", vi->TotalVideoMemory * 64);
+}
+
+VOID
 _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
@@ -412,23 +471,28 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    KeLowerIrql(DISPATCH_LEVEL);
 
    {
-    char tmpbuf[80];
-     sprintf(tmpbuf,"system with %d MB extended memory\n"
-	,(unsigned int)(KeLoaderBlock.MemLower)/1024);
+     char tmpbuf[80];
+     sprintf(tmpbuf,"system with %d MB extended memory\n",
+	     (unsigned int)(KeLoaderBlock.MemLower)/1024);
      HalDisplayString(tmpbuf);
    }
+
    /*
     * Display version number and copyright/warranty message
     */
-   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "KERNEL_VERSION_BUILD_STR")\n");
+   HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
+		    KERNEL_VERSION_BUILD_STR")\n");
    HalDisplayString("Copyright 2000 (So who owns the copyright?).\n");
-   HalDisplayString("ReactOS is free software, covered by the GNU General Public License, and you\n");
-   HalDisplayString("are welcome to change it and/or distribute copies of it under certain\n"); 
+   HalDisplayString("ReactOS is free software, covered by the GNU General "
+		    "Public License, and you\n");
+   HalDisplayString("are welcome to change it and/or distribute copies of it "
+		    "under certain\n"); 
    HalDisplayString("conditions.\n");
    HalDisplayString("There is absolutely no warranty for ReactOS.\n");
    
    last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
-
+   
+   NtEarlyInitVdm();
    MmInit1(KeLoaderModules[0].ModStart - 0xc0000000 + 0x200000,
 	   last_kernel_address - 0xc0000000 + 0x200000,
 	   last_kernel_address);
@@ -521,8 +585,12 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    /*
     *  Launch initial process
     */
+#if 0
    LdrLoadInitialProcess();
-   
+#endif
+
+   TestV86Mode();
+
    DbgPrint("Finished main()\n");
    PsTerminateSystemThread(STATUS_SUCCESS);
 }

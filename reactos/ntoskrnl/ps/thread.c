@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.63 2000/12/24 03:35:54 dwelch Exp $
+/* $Id: thread.c,v 1.64 2000/12/26 05:32:44 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -627,8 +627,9 @@ NtCallbackReturn (PVOID		Result,
 		  ULONG		ResultLength,
 		  NTSTATUS	Status)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
+
 
 NTSTATUS STDCALL
 NtW32Call (IN ULONG RoutineIndex,
@@ -637,7 +638,7 @@ NtW32Call (IN ULONG RoutineIndex,
 	   OUT PVOID* Result OPTIONAL,
 	   OUT PULONG ResultLength OPTIONAL)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 NTSTATUS STDCALL 

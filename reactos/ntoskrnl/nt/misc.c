@@ -31,10 +31,4 @@ NtDisplayString(IN PUNICODE_STRING DisplayString)
    return(STATUS_SUCCESS);
 }
 
-
-NTSTATUS STDCALL NtVdmControl(VOID)
-{
-   UNIMPLEMENTED;
-}
-
 /* EOF */

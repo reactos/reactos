@@ -1,4 +1,4 @@
-/* $Id: vidport.c,v 1.15 2000/09/12 10:12:13 jean Exp $
+/* $Id: vidport.c,v 1.16 2000/12/26 05:32:44 dwelch Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
@@ -6,6 +6,8 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/ntddvid.h>
+
+#include "../../../ntoskrnl/include/internal/v86m.h"
 
 #include "vidport.h"
 
@@ -317,12 +319,26 @@ VideoPortInitialize(IN PVOID  Context1,
   return  STATUS_SUCCESS;
 }
 
-VP_STATUS 
-STDCALL
+VP_STATUS STDCALL
 VideoPortInt10(IN PVOID  HwDeviceExtension,
                IN PVIDEO_X86_BIOS_ARGUMENTS  BiosArguments)
 {
-  UNIMPLEMENTED;
+  KV86M_REGISTERS Regs;
+  NTSTATUS Status;
+   
+  /* FIXME: Attach to csrss */
+  /* FIXME: Check address space is set up */
+   
+  memset(&Regs, 0, sizeof(Regs));
+  Regs.Eax = BiosArguments->Eax;
+  Regs.Ebx = BiosArguments->Ebx;
+  Regs.Ecx = BiosArguments->Ecx;
+  Regs.Edx = BiosArguments->Edx;
+  Regs.Esi = BiosArguments->Esi;
+  Regs.Edi = BiosArguments->Edi;
+  Regs.Ebp = BiosArguments->Ebp;
+  Status = Ke386CallBios(0x10, &Regs);
+  return(Status);
 }
 
 VOID 

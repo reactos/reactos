@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.5 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: spinlock.c,v 1.6 2000/12/26 05:32:44 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -72,6 +72,12 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
  */
 {
    ULONG i;
+   
+   if (!(SpinLock->Lock == 0 || SpinLock->Lock == 1))
+     {
+	DbgPrint("Lock %x has bad value %x\n", SpinLock, i);
+	KeBugCheck(0);
+     }
    
    while ((i = InterlockedExchange(&SpinLock->Lock, 1)) == 1)
      {

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.5 2000/12/23 02:37:38 dwelch Exp $
+# $Id: Makefile,v 1.6 2000/12/26 05:32:43 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -34,7 +34,8 @@ OBJECTS_NT = \
 	nt/nttimer.o \
 	nt/plugplay.o \
 	nt/profile.o \
-	nt/zw.o
+	nt/zw.o \
+	nt/vdm.o
 	
 # Run-Time Library (Rtl)
 OBJECTS_RTL = \
@@ -97,7 +98,8 @@ OBJECTS_KE_I386 = \
 	ke/i386/syscall.o \
 	ke/i386/tskswitch.o \
 	ke/i386/v86m.o \
-	ke/i386/v86m_sup.o
+	ke/i386/v86m_sup.o \
+	ke/i386/bios.o
  
 # Memory Manager (Mm)
 OBJECTS_MM = \

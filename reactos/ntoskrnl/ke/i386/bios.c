@@ -35,13 +35,16 @@
 
 #define TRAMPOLINE_BASE    (0x10000)
 
+extern VOID Ki386RetToV86Mode(PKV86M_REGISTERS InRegs,
+			      PKV86M_REGISTERS OutRegs);
+
 /* FUNCTIONS *****************************************************************/
 
-VOID
+NTSTATUS STDCALL
 Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
 {
   PUCHAR Ip;
-  KVM86_REGISTERS ORegs;
+  KV86M_REGISTERS ORegs;
   NTSTATUS Status;
 
   /*
@@ -80,8 +83,8 @@ Ke386CallBios(UCHAR Int, PKV86M_REGISTERS Regs)
   /*
    * Copy the return values back to the caller
    */
-  memcpy(Regs, &ORegs, sizeof(Regs));
-
+  memcpy(Regs, &ORegs, sizeof(KV86M_REGISTERS));
+   
   return(Status);
 }
 

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.76 2000/10/08 12:43:56 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.77 2000/12/26 05:32:43 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -308,7 +308,7 @@ IofCompleteRequest=IofCompleteRequest@8
 KdDebuggerEnabled DATA
 KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
-;Ke386CallBios
+Ke386CallBios=Ke386CallBios@8
 ;Ke386IoSetAccessProcess
 ;Ke386QueryIoAccessMap
 ;Ke386SetIoAccessMap

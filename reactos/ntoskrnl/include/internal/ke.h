@@ -102,5 +102,7 @@ VOID KeInit1(VOID);
 VOID KeInit2(VOID);
 
 BOOLEAN KiDeliverUserApc(PKTRAP_FRAME TrapFrame);
+VOID
+NtEarlyInitVdm(VOID);
 
 #endif

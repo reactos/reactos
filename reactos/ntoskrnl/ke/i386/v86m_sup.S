@@ -71,6 +71,7 @@ _Ki386RetToV86Mode:
 	 * will be the current stack adjusted so we don't overwrite the 
 	 * existing stack frames
 	 */
+	movl    $_KiTss, %esi
 	movl	%esp, KTSS_ESP0(%esi)
 
 	/*
@@ -120,10 +121,12 @@ _KiV86Complete:
 	popl    KV86M_REGISTERS_EDI(%ebx)
 	popl    KV86M_REGISTERS_ESI(%ebx)
 	popl	KV86M_REGISTERS_EBP(%ebx)
+	addl    $4, %esp         /* Ignore ring0 esp */
 	popl	KV86M_REGISTERS_EBX(%ebx)
 	popl	KV86M_REGISTERS_EDX(%ebx)
 	popl	KV86M_REGISTERS_ECX(%ebx)
 	popl	KV86M_REGISTERS_EAX(%ebx)
+	addl    $4,  %esp       /* Ignore trap code */
 	addl	$16, %esp	/* Ignore 32-bit segment registers */
 	addl	$4, %esp	/* Ignore error code */
 
