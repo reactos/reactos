@@ -132,7 +132,7 @@ typedef struct _DISPATCHER_HEADER
    UCHAR      Inserted;
    LONG       SignalState;
    LIST_ENTRY WaitListHead;
-} DISPATCHER_HEADER;
+} __attribute__((packed)) DISPATCHER_HEADER;
 
 
 typedef struct _KQUEUE
@@ -154,19 +154,6 @@ typedef struct _KTIMER
     struct _KDPC* Dpc;
     LONG Period;
 } KTIMER, *PKTIMER;
-
-/*
-typedef struct _KTIMER
-{
-   LIST_ENTRY entry;
-   signed long long expire_time;
-   struct _KDPC* dpc;
-   BOOLEAN signaled;
-   BOOLEAN running;
-   TIMER_TYPE type;
-   ULONG period;
-} KTIMER, *PKTIMER;
-*/
 
 struct _KSPIN_LOCK;
 
@@ -225,7 +212,7 @@ typedef struct _KSEMAPHORE
 {
    DISPATCHER_HEADER Header;
    LONG Limit;
-} KSEMAPHORE, *PKSEMAPHORE;
+} __attribute__((packed)) KSEMAPHORE, *PKSEMAPHORE;
 
 typedef struct _KEVENT
 {
@@ -270,7 +257,7 @@ typedef struct _KDPC
    PVOID SystemArgument1;
    PVOID SystemArgument2;
    PULONG Lock;
-} KDPC, *PKDPC;
+} __attribute__((packed)) KDPC, *PKDPC;
 
 
 

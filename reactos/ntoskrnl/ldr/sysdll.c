@@ -25,10 +25,20 @@
 
 static PVOID SystemDllEntryPoint = NULL;
 static PVOID SystemDllApcDispatcher = NULL;
-//static PVOID SystemDllCallbackDispatcher = NULL;
-//static PVOID SystemDllExceptionDispatcher = NULL;
+static PVOID SystemDllCallbackDispatcher = NULL;
+static PVOID SystemDllExceptionDispatcher = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+PVOID LdrpGetSystemDllExceptionDispatcher(VOID)
+{
+  return(SystemDllExceptionDispatcher);
+}
+
+PVOID LdrpGetSystemDllCallbackDispatcher(VOID)
+{
+  return(SystemDllCallbackDispatcher);
+}
 
 PVOID LdrpGetSystemDllEntryPoint(VOID)
 {
@@ -242,7 +252,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    *LdrStartupAddr = SystemDllEntryPoint;
 
    /*
-    * FIXME: retrieve the offset of the APC dispatcher from NTDLL
+    * Retrieve the offset of the APC dispatcher from NTDLL
     */
    RtlInitAnsiString (&ProcedureName,
 		      "KiUserApcDispatcher");
@@ -259,6 +269,42 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
 	return (Status);
      }
 
+   /*
+    * Retrieve the offset of the exception dispatcher from NTDLL
+    */
+   RtlInitAnsiString (&ProcedureName,
+		      "KiUserExceptionDispatcher");
+   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+				    &ProcedureName,
+				    0,
+				    &SystemDllExceptionDispatcher);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	KeDetachProcess();
+	ObDereferenceObject(Process);
+	ZwClose(NTDllSectionHandle);
+	return (Status);
+     }
+   
+   /*
+    * Retrieve the offset of the callback dispatcher from NTDLL
+    */
+   RtlInitAnsiString (&ProcedureName,
+		      "KiUserCallbackDispatcher");
+   Status = LdrGetProcedureAddress ((PVOID)ImageBase,
+				    &ProcedureName,
+				    0,
+				    &SystemDllCallbackDispatcher);
+   if (!NT_SUCCESS(Status))
+     {
+	DbgPrint ("LdrGetProcedureAddress failed (Status %x)\n", Status);
+	KeDetachProcess();
+	ObDereferenceObject(Process);
+	ZwClose(NTDllSectionHandle);
+	return (Status);
+     }
+   
    KeDetachProcess();
    ObDereferenceObject(Process);
 

@@ -38,7 +38,7 @@ VOID HalpInitPICs(VOID)
    /* Initialization sequence */
    WRITE_PORT_UCHAR((PUCHAR)0x20, 0x11);
    WRITE_PORT_UCHAR((PUCHAR)0xa0, 0x11);
-   /* Start of hardware irqs (0x20) */
+   /* Start of hardware irqs (0x24) */
    WRITE_PORT_UCHAR((PUCHAR)0x21, 0x40);
    WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x48);
    /* 8259-1 is master */

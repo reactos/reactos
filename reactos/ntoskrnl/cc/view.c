@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.11 2000/12/10 23:42:00 dwelch Exp $
+/* $Id: view.c,v 1.12 2000/12/23 02:37:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -72,7 +72,7 @@ CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
 			 KernelMode,
 			 FALSE,
 			 NULL);
-   /* Build an IRP_MJ_WRITE and send it to the filesystem */
+   /* FIXME: Build an IRP_MJ_WRITE and send it to the filesystem */
    KeSetEvent(&CacheSeg->Lock, IO_NO_INCREMENT, 0);
    return(STATUS_NOT_IMPLEMENTED);
 }
@@ -256,12 +256,9 @@ CcInitializeFileCache(PFILE_OBJECT FileObject,
  * NOTE
  * 	Used by CcMdlReadComplete@8 and FsRtl
  */
-VOID
-STDCALL
-CcMdlReadCompleteDev (
-	IN	PMDL		MdlChain,
-	IN	PDEVICE_OBJECT	DeviceObject
-	)
+VOID STDCALL
+CcMdlReadCompleteDev (IN	PMDL		MdlChain,
+		      IN	PDEVICE_OBJECT	DeviceObject)
 {
 	UNIMPLEMENTED;
 }
@@ -281,21 +278,16 @@ CcMdlReadCompleteDev (
  * NOTE
  * 	From Bo Branten's ntifs.h v13.
  */
-VOID
-STDCALL
-CcMdlReadComplete (
-	IN	PFILE_OBJECT	FileObject,
-	IN	PMDL		MdlChain
-	)
+VOID STDCALL
+CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
+		   IN	PMDL		MdlChain)
 {
-	PDEVICE_OBJECT	DeviceObject = NULL;
-
-	DeviceObject = IoGetRelatedDeviceObject (FileObject);
-	/* FIXME: try fast I/O first */
-	CcMdlReadCompleteDev (
-		MdlChain,
-		DeviceObject
-		);
+   PDEVICE_OBJECT	DeviceObject = NULL;
+   
+   DeviceObject = IoGetRelatedDeviceObject (FileObject);
+   /* FIXME: try fast I/O first */
+   CcMdlReadCompleteDev (MdlChain,
+			 DeviceObject);
 }
 
 

@@ -37,7 +37,7 @@
 /*
  * FIXME: We actually have one TSS per thread
  */
-#define RESERVED_FOR_TSS     (0x28)
+#define TSS_SELECTOR         (0x28)
 #define PCR_SELECTOR         (0x30)
 #define TEB_SELECTOR         (0x38 + 0x3)
 #define RESERVED1_SELECTOR   (0x40)

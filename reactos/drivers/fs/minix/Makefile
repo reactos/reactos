@@ -1,16 +1,15 @@
-# $Id: Makefile,v 1.1 2000/12/10 23:42:01 dwelch Exp $
+# $Id: Makefile,v 1.2 2000/12/23 02:37:41 dwelch Exp $
 #
 #
 PATH_TO_TOP = ../../..
 
-TARGET = minixfs
+TARGET=minixfs
 
-BASE_CFLAGS = -I../../../include
+OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
-OBJECTS = block.o rw.o inode.o dir.o mount.o blockdev.o cache.o bitops.o \
-          $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+CFLAGS = -I. -g
 
-all: $(TARGET).sys $(TARGET).sys.unstripped
+all: $(TARGET).sys
 
 .phony: all
 
@@ -35,7 +34,12 @@ dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 ../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGET).sys $(TARGET).sys.unstripped: $(OBJECTS)
+MOBJECTS = block.o blockdev.o cache.o dir.o inode.o mount.o rw.o bitops.o
 
-WARNINGS_ARE_ERRORS = yes
+minixfs.o: $(MOBJECTS)
+	$(LD) -r -o minixfs.o $(MOBJECTS)
+
+$(TARGET).sys: $(OBJECTS)
+
+WITH_DEBUGGING=yes
 include ../../../rules.mak

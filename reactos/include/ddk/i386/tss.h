@@ -5,54 +5,51 @@
 #ifndef __INCLUDE_DDK_I386_TSS_H
 #define __INCLUDE_DDK_I386_TSS_H
 
-typedef struct
+#define KTSS_ESP0 (0x4)
+
+#ifndef __ASM__
+
+typedef struct _KTSS
 {
-   unsigned short previous_task;
-   unsigned short reserved1;
-   unsigned long esp0;
-   unsigned short ss0;
-   unsigned short reserved2;
-   unsigned long esp1;
-   unsigned short ss1;
-   unsigned short reserved3;
-   unsigned long esp2;
-   unsigned short ss2;
-   unsigned short reserved4;
-   unsigned long cr3;
-   unsigned long eip;
-   unsigned long eflags;
-   unsigned long eax;
-   unsigned long ecx;
-   unsigned long edx;
-   unsigned long ebx;
-   unsigned long esp;
-   unsigned long ebp;
-   unsigned long esi;
-   unsigned long edi;
-   unsigned short es;
-   unsigned short reserved5;
-   unsigned short cs;
-   unsigned short reserved6;
-   unsigned short ss;
-   unsigned short reserved7;
-   unsigned short ds;
-   unsigned short reserved8;
-   unsigned short fs;
-   unsigned short reserved9;
-   unsigned short gs;
-   unsigned short reserved10;
-   unsigned short ldt;
-   unsigned short reserved11;
-   unsigned short trap;
-   unsigned short iomap_base;
+  USHORT PreviousTask;
+  USHORT Reserved1;
+  ULONG Esp0;
+  USHORT Ss0;
+  USHORT Reserved2;
+  ULONG Esp1;
+  USHORT Ss1;
+  USHORT Reserved3;
+  ULONG Esp2;
+  USHORT Ss2;
+  USHORT Reserved4;
+  ULONG Cr3;
+  ULONG Eip;
+  ULONG Eflags;
+  ULONG Eax;
+  ULONG Ecx;
+  ULONG Edx;
+  ULONG Ebx;
+  ULONG Esp;
+  ULONG Ebp;
+  ULONG Esi;
+  ULONG Edi;
+  USHORT Es;
+  USHORT Reserved5;
+  USHORT Cs;
+  USHORT Reserved6;
+  USHORT Ss;
+  USHORT Reserved7;
+  USHORT Fs;
+  USHORT Reserved8;
+  USHORT Gs;
+  USHORT Reserved9;
+  USHORT Ldt;
+  USHORT Reserved10;
+  USHORT Trap;
+  USHORT IoMapBase;
+  UCHAR IoBitmap[1];
+} KTSS;
 
-   unsigned short nr;
-   PVOID KernelStackBase;
-   PVOID SavedKernelEsp;
-   PVOID SavedKernelStackBase;
-   
-   unsigned char io_bitmap[1];
-} hal_thread_state;
-
+#endif /* not __ASM__ */
 
 #endif /* __INCLUDE_DDK_I386_TSS_H */

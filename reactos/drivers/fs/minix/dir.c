@@ -120,7 +120,7 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
    
    current_ino = MINIX_ROOT_INO;
    
-   while (next!=NULL && current_ino!=0)
+   while (next != NULL && current_ino != 0)
      {	
 	MinixReadInode(DeviceObject,DeviceExt,current_ino,&current_dir);
 
@@ -139,7 +139,7 @@ NTSTATUS MinixOpen(PDEVICE_OBJECT DeviceObject,
 				     &current_dir,
 				     current);
      }
-   if (next==NULL && current_ino!=0)
+   if (next == NULL && current_ino != 0)
      {
 	MinixReadInode(DeviceObject,DeviceExt,current_ino,&current_dir);       
      }
@@ -215,7 +215,7 @@ NTSTATUS MinixCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    if (NT_SUCCESS(Status))
      {
-	FileObject->FsContext=result;
+	FileObject->FsContext = result;
      }
    
    Irp->IoStatus.Status = Status;

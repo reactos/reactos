@@ -3,33 +3,7 @@
 #define __MODULE_H
 
 #include <ddk/ntddk.h>
-#include <coff.h>
 #include <pe.h>
-
-/* FIXME: replace this struct with struct below in all code  */
-typedef struct _module
-{
-   unsigned int nsyms;
-        unsigned int text_base;
-        unsigned int data_base;
-        unsigned int bss_base;
-        SCNHDR* scn_list;
-        char* str_tab;
-        SYMENT* sym_list;
-        unsigned int size;
-
-        /*
-         * Base address of the module in memory
-         */
-        unsigned int base;
-
-        /*
-         * Offset of the raw data in memory
-         */
-        unsigned int raw_data_off;
-} module;
-
-typedef SCNHDR COFF_SECTION_HEADER, *PCOFF_SECTION_HEADER;
 
 typedef struct _MODULE_OBJECT
 {
@@ -37,22 +11,12 @@ typedef struct _MODULE_OBJECT
   CSHORT  ObjectSize;
   PVOID  Base;
   ULONG Length;
-  unsigned int  Flags;
+  ULONG Flags;
   PVOID  EntryPoint;
   LIST_ENTRY ListEntry;
   UNICODE_STRING Name;
   union
     {
-      struct
-        {
-          unsigned int NumberOfSyms;
-          PVOID TextBase;
-          PVOID DataBase;
-          PVOID BSSBase;
-          SCNHDR *SectionList;
-          char *StringTable;
-          SYMENT *SymbolList;
-        } COFF;
       struct
         {
           PIMAGE_FILE_HEADER FileHeader;

@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.10 2000/10/22 16:36:49 ekohl Exp $
+/* $Id: print.c,v 1.11 2000/12/23 02:37:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,7 +34,8 @@ __asm__ ("\n\t.global _DbgService\n\t"
  *       You'll only break the serial/bochs debugging feature!!!
  */
 
-ULONG DbgPrint(PCH Format, ...)
+ULONG 
+DbgPrint(PCH Format, ...)
 {
    ANSI_STRING DebugString;
    CHAR Buffer[512];
@@ -54,28 +55,25 @@ ULONG DbgPrint(PCH Format, ...)
 }
 
 
-VOID
-STDCALL
-DbgPrompt (
-	PCH OutputString,
-	PCH InputString,
-	USHORT InputSize
-	)
+VOID STDCALL
+DbgPrompt (PCH OutputString,
+	   PCH InputString,
+	   USHORT InputSize)
 {
-	ANSI_STRING Output;
-	ANSI_STRING Input;
+   ANSI_STRING Output;
+   ANSI_STRING Input;
+   
+   Input.Length = 0;
+   Input.MaximumLength = InputSize;
+   Input.Buffer = InputString;
+   
+   Output.Length = strlen (OutputString);
+   Output.MaximumLength = Output.Length + 1;
+   Output.Buffer = OutputString;
 
-	Input.Length = 0;
-	Input.MaximumLength = InputSize;
-	Input.Buffer = InputString;
-
-	Output.Length = strlen (OutputString);
-	Output.MaximumLength = Output.Length + 1;
-	Output.Buffer = OutputString;
-
-	/* FIXME: Not implemented yet! */
-//	KdpPromptString (&Output,
-//	                 &Input);
+   /* FIXME: Not implemented yet! */
+   //	KdpPromptString (&Output,
+   //	                 &Input);
 }
 
 /* EOF */

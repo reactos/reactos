@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.25 2000/12/22 13:37:41 ekohl Exp $
+/* $Id: create.c,v 1.26 2000/12/23 02:37:40 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -82,7 +82,8 @@ PsAssignImpersonationToken(PETHREAD Thread,
    return(STATUS_SUCCESS);
 }
 
-VOID STDCALL PsRevertToSelf(PETHREAD Thread)
+VOID STDCALL 
+PsRevertToSelf(PETHREAD Thread)
 {
    if (Thread->ActiveImpersonationInfo != 0)
      {
@@ -91,11 +92,12 @@ VOID STDCALL PsRevertToSelf(PETHREAD Thread)
      }
 }
 
-VOID STDCALL PsImpersonateClient(PETHREAD Thread,
-				 PACCESS_TOKEN Token,
-				 UCHAR b,
-				 UCHAR c,
-				 SECURITY_IMPERSONATION_LEVEL Level)
+VOID STDCALL 
+PsImpersonateClient(PETHREAD Thread,
+		    PACCESS_TOKEN Token,
+		    UCHAR b,
+		    UCHAR c,
+		    SECURITY_IMPERSONATION_LEVEL Level)
 {
    if (Token == 0)
      {
@@ -126,10 +128,11 @@ VOID STDCALL PsImpersonateClient(PETHREAD Thread,
    Thread->ActiveImpersonationInfo = 1;
 }
 
-PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
-					PTOKEN_TYPE TokenType,
-					PUCHAR b,
-					PSECURITY_IMPERSONATION_LEVEL Level)
+PACCESS_TOKEN 
+PsReferenceEffectiveToken(PETHREAD Thread,
+			  PTOKEN_TYPE TokenType,
+			  PUCHAR b,
+			  PSECURITY_IMPERSONATION_LEVEL Level)
 {
    PEPROCESS Process;
    PACCESS_TOKEN Token;
@@ -151,10 +154,11 @@ PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
    return(Token);
 }
 
-NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
-				      IN HANDLE ThreadToImpersonateHandle,
-				      IN PSECURITY_QUALITY_OF_SERVICE	
-				      SecurityQualityOfService)
+NTSTATUS STDCALL 
+NtImpersonateThread (IN HANDLE ThreadHandle,
+		     IN HANDLE ThreadToImpersonateHandle,
+		     IN PSECURITY_QUALITY_OF_SERVICE	
+		     SecurityQualityOfService)
 {
    PETHREAD Thread;
    PETHREAD ThreadToImpersonate;
@@ -203,10 +207,11 @@ NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtOpenThreadToken(IN	HANDLE		ThreadHandle,  
-				   IN	ACCESS_MASK	DesiredAccess,  
-				   IN	BOOLEAN		OpenAsSelf,     
-				   OUT	PHANDLE		TokenHandle)
+NTSTATUS STDCALL 
+NtOpenThreadToken(IN	HANDLE		ThreadHandle,  
+		  IN	ACCESS_MASK	DesiredAccess,  
+		  IN	BOOLEAN		OpenAsSelf,     
+		  OUT	PHANDLE		TokenHandle)
 {
 #if 0
    PETHREAD Thread;
@@ -230,11 +235,11 @@ NTSTATUS STDCALL NtOpenThreadToken(IN	HANDLE		ThreadHandle,
    return(STATUS_UNSUCCESSFUL);
 }
 
-PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(PETHREAD Thread,
-						    PULONG Unknown1,
-						    PULONG Unknown2,
-						    SECURITY_IMPERSONATION_LEVEL* 
-						    Level)
+PACCESS_TOKEN STDCALL 
+PsReferenceImpersonationToken(PETHREAD Thread,
+			      PULONG Unknown1,
+			      PULONG Unknown2,
+			      SECURITY_IMPERSONATION_LEVEL* Level)
 {
    if (Thread->ActiveImpersonationInfo == 0)
      {
@@ -251,10 +256,11 @@ PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(PETHREAD Thread,
    return(Thread->ImpersonationInfo->Token);
 }
 
-VOID PiTimeoutThread(struct _KDPC *dpc, 
-		      PVOID Context, 
-		      PVOID arg1, 
-		      PVOID arg2)
+VOID 
+PiTimeoutThread(struct _KDPC *dpc, 
+		PVOID Context, 
+		PVOID arg1, 
+		PVOID arg2)
 {
    // wake up the thread, and tell it it timed out
    NTSTATUS Status = STATUS_TIMEOUT;
@@ -264,23 +270,27 @@ VOID PiTimeoutThread(struct _KDPC *dpc,
    KeRemoveAllWaitsThread((PETHREAD)Context, Status);
 }
 
-VOID PiBeforeBeginThread(CONTEXT c)
+VOID 
+PiBeforeBeginThread(CONTEXT c)
 {
    DPRINT("PiBeforeBeginThread(Eip %x)\n", c.Eip);
    //KeReleaseSpinLock(&PiThreadListLock, PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
 }
 
-VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
+#if 0
+VOID 
+PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 {
    NTSTATUS Ret;
    
-//   KeReleaseSpinLock(&PiThreadListLock,PASSIVE_LEVEL);
+   //   KeReleaseSpinLock(&PiThreadListLock,PASSIVE_LEVEL);
    KeLowerIrql(PASSIVE_LEVEL);
    Ret = StartRoutine(StartContext);
    PsTerminateSystemThread(Ret);
    KeBugCheck(0);
 }
+#endif
 
 VOID PiDeleteThread(PVOID ObjectBody)
 {
@@ -313,7 +323,8 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			    PETHREAD* ThreadPtr,
 			    PHANDLE ThreadHandle,
 			    ACCESS_MASK	DesiredAccess,
-			    POBJECT_ATTRIBUTES ThreadAttributes)
+			    POBJECT_ATTRIBUTES ThreadAttributes,
+			    BOOLEAN First)
 {
    PETHREAD Thread;
    NTSTATUS Status;
@@ -358,7 +369,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
    
    PiNrThreads++;
    
-   KeInitializeThread(&Process->Pcb, &Thread->Tcb);
+   KeInitializeThread(&Process->Pcb, &Thread->Tcb, First);
    Thread->ThreadsProcess = Process;
    /*
     * FIXME: What lock protects this?
@@ -418,6 +429,7 @@ static NTSTATUS PsCreateTeb (HANDLE ProcessHandle,
 	     DbgPrint("NtQueryVirtualMemory (Status %x)\n", Status);
 	     KeBugCheck(0);
 	  }
+	/* FIXME: Race between this and the above check */
 	if (Info.State == MEM_FREE)
 	  {
 	     /* The TEB must reside in user space */
@@ -517,7 +529,7 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
 	  ThreadHandle,ThreadContext);
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
-			       DesiredAccess,ObjectAttributes);
+			       DesiredAccess,ObjectAttributes, FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
@@ -537,7 +549,8 @@ NTSTATUS STDCALL NtCreateThread (PHANDLE		ThreadHandle,
    ThreadContext->Eip = LdrpGetSystemDllEntryPoint;
 #endif   
    
-   Status = HalInitTaskWithContext(Thread,ThreadContext);
+   //   Status = HalInitTaskWithContext(Thread,ThreadContext);
+   Status = Ke386InitThreadWithContext(&Thread->Tcb, ThreadContext);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
@@ -630,14 +643,15 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
 	    ThreadHandle,ProcessHandle);
    
    Status = PsInitializeThread(ProcessHandle,&Thread,ThreadHandle,
-			       DesiredAccess,ObjectAttributes);
+			       DesiredAccess,ObjectAttributes, FALSE);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);
      }
    
    Thread->StartAddress=StartRoutine;
-   Status = HalInitTask(Thread,StartRoutine,StartContext);
+   //   Status = HalInitTask(Thread,StartRoutine,StartContext);
+   Status = Ke386InitThread(&Thread->Tcb, StartRoutine, StartContext);
    if (!NT_SUCCESS(Status))
      {
 	return(Status);

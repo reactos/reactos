@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.24 2000/12/10 19:15:45 ekohl Exp $
+/* $Id: device.c,v 1.25 2000/12/23 02:37:39 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -205,8 +205,7 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
    return(Current);
 }
 
-PDEVICE_OBJECT
-STDCALL
+PDEVICE_OBJECT STDCALL
 IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 			    PDEVICE_OBJECT TargetDevice)
 {
@@ -223,8 +222,7 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
    return(AttachedDevice);
 }
 
-VOID
-STDCALL
+VOID STDCALL
 IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
 				 PDRIVER_REINITIALIZE ReinitRoutine,
 				 PVOID Context)
@@ -232,8 +230,9 @@ IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
-				    PIRP Irp)
+NTSTATUS STDCALL 
+IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
+			   PIRP Irp)
 {
    Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
    Irp->IoStatus.Information = 0;
@@ -242,7 +241,8 @@ NTSTATUS STDCALL IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
    return(STATUS_NOT_IMPLEMENTED);
 }
 
-NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
+NTSTATUS 
+IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS:
@@ -277,8 +277,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
    return(Status);
 }
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
 	       PUNICODE_STRING TargetDevice,
 	       PDEVICE_OBJECT* AttachedDevice)
@@ -293,10 +292,11 @@ IoAttachDevice(PDEVICE_OBJECT SourceDevice,
    UNIMPLEMENTED;
 }
 
-NTSTATUS IopCreateDevice(PVOID ObjectBody,
-			 PVOID Parent,
-			 PWSTR RemainingPath,
-			 POBJECT_ATTRIBUTES ObjectAttributes)
+NTSTATUS 
+IopCreateDevice(PVOID ObjectBody,
+		PVOID Parent,
+		PWSTR RemainingPath,
+		POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
    DPRINT("IopCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
@@ -315,15 +315,14 @@ NTSTATUS IopCreateDevice(PVOID ObjectBody,
 }
 
 
-NTSTATUS
-STDCALL
+NTSTATUS STDCALL
 IoCreateDevice(PDRIVER_OBJECT DriverObject,
-			ULONG DeviceExtensionSize,
-			PUNICODE_STRING DeviceName,
-			DEVICE_TYPE DeviceType,
-			ULONG DeviceCharacteristics,
-			BOOLEAN Exclusive,
-			PDEVICE_OBJECT* DeviceObject)
+	       ULONG DeviceExtensionSize,
+	       PUNICODE_STRING DeviceName,
+	       DEVICE_TYPE DeviceType,
+	       ULONG DeviceCharacteristics,
+	       BOOLEAN Exclusive,
+	       PDEVICE_OBJECT* DeviceObject)
 /*
  * FUNCTION: Allocates memory for and intializes a device object for use for
  * a driver

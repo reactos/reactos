@@ -26,7 +26,6 @@ STUB(CsrProbeForWrite)
 STUB(CsrSetPriorityClass)
 
 STUB(KiRaiseUserExceptionDispatcher)
-STUB(KiUserExceptionDispatcher)
 
 STUB(LdrEnumResources)
 STUB(LdrFindEntryForAddress)

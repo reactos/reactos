@@ -30,9 +30,15 @@
 /*
  * Defines for accessing KPCR and KTHREAD structure members
  */
+#define KTHREAD_INITIAL_STACK     0x18
+#define KTHREAD_TEB               0x20
 #define KTHREAD_KERNEL_STACK      0x28
 #define KTHREAD_PREVIOUS_MODE     0x137
 #define KTHREAD_TRAP_FRAME        0x128
+
+#define ETHREAD_THREADS_PROCESS   0x258
+
+#define KPROCESS_PAGE_TABLE_DIRECTORY 0x10
 
 #define KPCR_BASE                 0xFFDFF000
 
@@ -138,8 +144,8 @@ typedef struct _KTHREAD
    UCHAR             LargeStack;          /* 135 */
    UCHAR             ResourceIndex;       /* 136 */
    UCHAR             PreviousMode;        /* 137 */
-   TIME              KernelTime;          /* 138 */
-   TIME              UserTime;            /* 13C */
+   ULONG             KernelTime;          /* 138 */
+   ULONG             UserTime;            /* 13C */
    KAPC_STATE        SavedApcState;       /* 140 */
    UCHAR             Alertable;           /* 158 */
    UCHAR             ApcStateIndex;       /* 159 */
@@ -159,16 +165,13 @@ typedef struct _KTHREAD
     */
    
    /* Added by Phillip Susi for list of threads in a process */
-   LIST_ENTRY        ProcessThreadListEntry;         
+   LIST_ENTRY        ProcessThreadListEntry;         /* 1B0 */
 
-
-   /* Provisionally added by David Welch */
-   hal_thread_state                   Context;
    /* Added by Phillip Susi for internal KeAddThreadTimeout() implementation */
+   KDPC              TimerDpc;		             /* 1B8 */
 
-   KDPC              TimerDpc;		       
    /* Record the last EIP value when the thread is suspended */
-   ULONG             LastEip;
+   ULONG             LastEip;                        /* 1D8 */
 } __attribute__((packed)) KTHREAD, *PKTHREAD;
 
 // According to documentation the stack should have a commited [ 1 page ] and
@@ -208,51 +211,61 @@ struct _WIN32THREADDATA;
 
 typedef struct _ETHREAD
 {
-   KTHREAD Tcb;
-   TIME CreateTime;
-   TIME ExitTime;
-   NTSTATUS ExitStatus;
-   LIST_ENTRY PostBlockList;
-   LIST_ENTRY TerminationPortList;
-   KSPIN_LOCK ActiveTimerListLock;
-   PVOID ActiveTimerListHead;
-   CLIENT_ID Cid;
-   PLARGE_INTEGER LpcReplySemaphore;
-   PVOID LpcReplyMessage;
-   PLARGE_INTEGER LpcReplyMessageId;
-   PPS_IMPERSONATION_INFO ImpersonationInfo;
-   LIST_ENTRY IrpList;
-   TOP_LEVEL_IRP TopLevelIrp;
-   PDEVICE_OBJECT DeviceToVerify;
-   ULONG ReadClusterSize;
-   UCHAR ForwardClusterOnly;
-   UCHAR DisablePageFaultClustering;
-   UCHAR DeadThread;
-   UCHAR HasTerminated;
-   ACCESS_MASK GrantedAccess;
-   struct _EPROCESS* ThreadsProcess;
-   PKSTART_ROUTINE StartAddress;
-   LPTHREAD_START_ROUTINE Win32StartAddress;
-   UCHAR LpcExitThreadCalled;
-   UCHAR HardErrorsAreDisabled;
-   UCHAR LpcReceivedMsgIdValid;
-   UCHAR ActiveImpersonationInfo;
-   ULONG PerformanceCountHigh;
+  KTHREAD Tcb;                                      /* 000 */
+  TIME CreateTime;                                  /* 1B0/1DC */
+  union
+  {
+    TIME ExitTime;                                  /* 1B8/1E4 */
+    LIST_ENTRY LpcReplyChain;                       /* 1B8/1E4 */
+  } u1;
+  NTSTATUS ExitStatus;                              /* 1C0/1EC */
+  LIST_ENTRY PostBlockList;                         /* 1C4/1F0 */
+  LIST_ENTRY TerminationPortList;                   /* 1CC/1F8 */
+  KSPIN_LOCK ActiveTimerListLock;                   /* 1D4/200 */
+  LIST_ENTRY ActiveTimerListHead;                   /* 1D8/204 */
+  CLIENT_ID Cid;                                    /* 1E0/20C */
+  KSEMAPHORE LpcReplySemaphore;                     /* 1E8/214 */
+  PVOID LpcReplyMessage;                            /* 1FC/228 */
+  PLARGE_INTEGER LpcReplyMessageId;                 /* 200/22C */
+  ULONG PerformanceCounterLow;                      /* 204/230 */
+  PPS_IMPERSONATION_INFO ImpersonationInfo;         /* 208/234 */
+  LIST_ENTRY IrpList;                               /* 20C/238 */
+  TOP_LEVEL_IRP* TopLevelIrp;                       /* 214/240 */
+  PDEVICE_OBJECT DeviceToVerify;                    /* 218/244 */
+  ULONG ReadClusterSize;                            /* 21C/248 */
+  UCHAR ForwardClusterOnly;                         /* 220/24C */
+  UCHAR DisablePageFaultClustering;                 /* 221/24D */
+  UCHAR DeadThread;                                 /* 222/24E */
+  UCHAR HasTerminated;                              /* 223/24F */
+  PVOID EventPair;                                  /* 224/250 */
+  ACCESS_MASK GrantedAccess;                        /* 228/254 */
+  struct _EPROCESS* ThreadsProcess;                 /* 22C/258 */
+  PKSTART_ROUTINE StartAddress;                     /* 230/25C */
+  union
+  {
+    LPTHREAD_START_ROUTINE Win32StartAddress;       /* 234/260 */
+    ULONG LpcReceiveMessageId;                      /* 234/260 */
+  } u2;
+  UCHAR LpcExitThreadCalled;                        /* 238/264 */
+  UCHAR HardErrorsAreDisabled;                      /* 239/265 */
+  UCHAR LpcReceivedMsgIdValid;                      /* 23A/266 */
+  UCHAR ActiveImpersonationInfo;                    /* 23B/267 */
+  ULONG PerformanceCountHigh;                       /* 23C/268 */
 
-   /*
-    * Added by David Welch (welch@cwcom.net)
-    */
-   struct _EPROCESS* OldProcess;
-   struct _WIN32THREADDATA *Win32ThreadData; // Pointer to win32 private thread data
-
-} ETHREAD, *PETHREAD;
+  /*
+   * Added by David Welch (welch@cwcom.net)
+   */
+  struct _EPROCESS* OldProcess;                     /* 240/26C */
+  struct _WIN32THREADDATA *Win32ThreadData; // Pointer to win32 private thread data
+  
+} __attribute__((packed)) ETHREAD, *PETHREAD;
 
 
 typedef struct _KPROCESS 
 {
-   DISPATCHER_HEADER 	DispatcherHeader;
-   PVOID		PageTableDirectory; // FIXME: I should point to a PTD
-   TIME			ElapsedTime;
+  DISPATCHER_HEADER 	DispatcherHeader;             /* 000 */
+  PVOID		PageTableDirectory;           /* 010 */ 
+   TIME			ElapsedTime;  
    TIME			KernelTime;
    TIME			UserTime;
    LIST_ENTRY		InMemoryList;  
@@ -367,11 +380,13 @@ VOID PiInitApcManagement(VOID);
 VOID PiDeleteThread(PVOID ObjectBody);
 VOID PiCloseThread(PVOID ObjectBody, ULONG HandleCount);
 VOID PsReapThreads(VOID);
-NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
-			    PETHREAD* ThreadPtr,
-			    PHANDLE ThreadHandle,
-			    ACCESS_MASK DesiredAccess,
-			    POBJECT_ATTRIBUTES ObjectAttributes);
+NTSTATUS 
+PsInitializeThread(HANDLE ProcessHandle,
+		   PETHREAD* ThreadPtr,
+		   PHANDLE ThreadHandle,
+		   ACCESS_MASK DesiredAccess,
+		   POBJECT_ATTRIBUTES ObjectAttributes,
+		   BOOLEAN First);
 
 PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
 					PTOKEN_TYPE TokenType,
@@ -412,16 +427,16 @@ ULONG PsResumeThread(PETHREAD Thread);
 #define PROCESS_PRIO_HIGH			13
 #define PROCESS_PRIO_RT				18
 
-/*
- * Functions the HAL must provide
- */
 
-VOID KeInitializeThread(PKPROCESS Process, PKTHREAD Thread);
+VOID 
+KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
 
 VOID HalInitFirstTask(PETHREAD thread);
-NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
+NTSTATUS 
+Ke386InitThread(PKTHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
 VOID HalTaskSwitch(PKTHREAD thread);
-NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
+NTSTATUS 
+Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context);
 NTSTATUS HalReleaseTask(PETHREAD Thread);
 VOID PiDeleteProcess(PVOID ObjectBody);
 VOID PsReapThreads(VOID);
@@ -430,6 +445,8 @@ VOID PsFreezeOtherThread(PETHREAD Thread);
 VOID PsFreezeProcessThreads(PEPROCESS Process);
 VOID PsUnfreezeProcessThreads(PEPROCESS Process);
 PEPROCESS PsGetNextProcess(PEPROCESS OldProcess);
+VOID
+Ki386ContextSwitch(PKTHREAD NewThread, PKTHREAD OldThread);
 
 #endif /* ASSEMBLER */
 

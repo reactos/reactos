@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.33 2000/10/22 16:36:50 ekohl Exp $
+/* $Id: create.c,v 1.34 2000/12/23 02:37:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,102 +57,90 @@ NtDeleteFile (IN	POBJECT_ATTRIBUTES	ObjectAttributes)
  * 
  */
 NTSTATUS
-IopCreateFile (
-	PVOID			ObjectBody,
-	PVOID			Parent,
-	PWSTR			RemainingPath,
-	POBJECT_ATTRIBUTES	ObjectAttributes
-	)
+IopCreateFile (PVOID			ObjectBody,
+	       PVOID			Parent,
+	       PWSTR			RemainingPath,
+	       POBJECT_ATTRIBUTES	ObjectAttributes)
 {
-	PDEVICE_OBJECT	DeviceObject = (PDEVICE_OBJECT) Parent;
-	PFILE_OBJECT	FileObject = (PFILE_OBJECT) ObjectBody;
-	NTSTATUS	Status;
+   PDEVICE_OBJECT	DeviceObject = (PDEVICE_OBJECT) Parent;
+   PFILE_OBJECT	FileObject = (PFILE_OBJECT) ObjectBody;
+   NTSTATUS	Status;
    
-	DPRINT(
-		"IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
-		ObjectBody,
-		Parent,
-		RemainingPath
-		);
+   DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+	  ObjectBody,
+	  Parent,
+	  RemainingPath);
    
-	if (NULL == DeviceObject)
-	{
-		DPRINT("DeviceObject was NULL\n");
-		return (STATUS_SUCCESS);
-	}
+   if (NULL == DeviceObject)
+     {
+	DPRINT("DeviceObject was NULL\n");
+	return (STATUS_SUCCESS);
+     }
    if (IoDeviceObjectType != BODY_TO_HEADER(Parent)->ObjectType)
      {
 	DPRINT ("Parent is not a device type\n");
 	return (STATUS_UNSUCCESSFUL);
      }
-   Status = ObReferenceObjectByPointer (
-			DeviceObject,
-			STANDARD_RIGHTS_REQUIRED,
-			IoDeviceObjectType,
-			UserMode
-			);
-	if (STATUS_SUCCESS != Status)
-	{
-		CHECKPOINT;
-		return (Status);
-	}
-
-	DeviceObject = IoGetAttachedDevice (DeviceObject);
+   Status = ObReferenceObjectByPointer (DeviceObject,
+					STANDARD_RIGHTS_REQUIRED,
+					IoDeviceObjectType,
+					UserMode);
+   if (STATUS_SUCCESS != Status)
+     {
+	CHECKPOINT;
+	return (Status);
+     }
    
-	DPRINT ("DeviceObject %x\n", DeviceObject);
+   DeviceObject = IoGetAttachedDevice (DeviceObject);
    
-	if (NULL == RemainingPath)
-	{
+   DPRINT ("DeviceObject %x\n", DeviceObject);
+   
+   if (NULL == RemainingPath)
+     {
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-				   (ObjectAttributes->ObjectName->Length+1)*2);
+						     (ObjectAttributes->ObjectName->Length+1)*2);
 	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
 	FileObject->FileName.MaximumLength = 
           ObjectAttributes->ObjectName->MaximumLength;
 	RtlCopyUnicodeString(&(FileObject->FileName),
 			     ObjectAttributes->ObjectName);
-	}
-	else
-	{
-		if (	(DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
-			&& (DeviceObject->DeviceType != FILE_DEVICE_DISK)
-			)
-		{
-			DPRINT ("Device was wrong type\n");
-			return (STATUS_UNSUCCESSFUL);
-		}
-		if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-		{
-			DPRINT("Trying to mount storage device\n");
-			Status = IoTryToMountStorageDevice (DeviceObject);
-			DPRINT("Status %x\n", Status);
-			if (!NT_SUCCESS(Status))
-			{
-				DPRINT(
-					"Failed to mount storage device (statux %x)\n",
-					Status
-					);
-				return (Status);
-			}
-			DeviceObject = IoGetAttachedDevice(DeviceObject);
-		}
-		RtlCreateUnicodeString(&(FileObject->FileName),
-				       RemainingPath);
-	}
-	DPRINT(
-		"FileObject->FileName.Buffer %S\n",
-		FileObject->FileName.Buffer
-		);
-	FileObject->DeviceObject = DeviceObject;
-	DPRINT(
-		"FileObject %x DeviceObject %x\n",
-		FileObject,
-		DeviceObject
-		);
-	FileObject->Vpb = DeviceObject->Vpb;
-	FileObject->Type = InternalFileType;
-     
-	return (STATUS_SUCCESS);
+     }
+   else
+     {
+	if (	(DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM)
+	    && (DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	    )
+	  {
+	     DPRINT ("Device was wrong type\n");
+	     return (STATUS_UNSUCCESSFUL);
+	  }
+	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+	  {
+	     DPRINT("Trying to mount storage device\n");
+	     Status = IoTryToMountStorageDevice (DeviceObject);
+	     DPRINT("Status %x\n", Status);
+	     if (!NT_SUCCESS(Status))
+	       {
+		  DPRINT("Failed to mount storage device (statux %x)\n",
+			 Status);
+		  return (Status);
+	       }
+	     DeviceObject = IoGetAttachedDevice(DeviceObject);
+	  }
+	RtlCreateUnicodeString(&(FileObject->FileName),
+			       RemainingPath);
+     }
+   DPRINT("FileObject->FileName.Buffer %S\n",
+	  FileObject->FileName.Buffer);
+   FileObject->DeviceObject = DeviceObject;
+   DPRINT("FileObject %x DeviceObject %x\n",
+	  FileObject,
+	  DeviceObject);
+   FileObject->Vpb = DeviceObject->Vpb;
+   FileObject->Type = InternalFileType;
+   
+   return (STATUS_SUCCESS);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: exception.c,v 1.1 2000/05/13 13:50:57 dwelch Exp $
+/* $Id: exception.c,v 1.2 2000/12/23 02:37:38 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,12 +12,11 @@
 #include <ddk/ntddk.h>
 #include <string.h>
 
-#include <internal/debug.h>
-
 /* FUNCTIONS ***************************************************************/
 
-VOID KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
-			       PCONTEXT Context)
+VOID STDCALL
+KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
+			  PCONTEXT Context)
 {
    
 }

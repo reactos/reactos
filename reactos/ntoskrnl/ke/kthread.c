@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2000 David Welch <welch@cwcom.net>
+ *  Copyright (C) 2000  David Welch <welch@cwcom.net>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -42,12 +42,14 @@ PiTimeoutThread(struct _KDPC Dpc, PVOID Context, PVOID Arg1, PVOID Arg2);
 /* FUNCTIONS *****************************************************************/
 
 VOID 
-KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
+KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 /*
  * FUNCTION: Initialize the microkernel state of the thread
  */
 {
    PVOID KernelStack;
+   extern unsigned int init_stack_top;
+   extern unsigned int init_stack;
 
 #if 0   
    DbgPrint("Thread %x &Thread->MutantListHead %x &Thread->TrapFrame %x "
@@ -61,15 +63,26 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
                                 sizeof(ETHREAD),
                                 FALSE);
    InitializeListHead(&Thread->MutantListHead);
-   KernelStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
-   Thread->InitialStack = KernelStack + MM_STACK_SIZE;
-   Thread->StackLimit = (ULONG)KernelStack;
+   if (!First)
+     {
+       KernelStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
+       Thread->InitialStack = KernelStack + MM_STACK_SIZE;
+       Thread->StackBase = KernelStack + MM_STACK_SIZE;
+       Thread->StackLimit = (ULONG)KernelStack;
+       Thread->KernelStack = KernelStack + MM_STACK_SIZE;
+     }
+   else
+     {
+       Thread->InitialStack = (PVOID)&init_stack_top;
+       Thread->StackBase = (PVOID)&init_stack_top;
+       Thread->StackLimit = (ULONG)&init_stack;
+       Thread->KernelStack = (PVOID)&init_stack;
+     }
    /* 
     * The Native API function will initialize the TEB field later 
     */
    Thread->Teb = NULL;
    Thread->TlsArray = NULL;
-   Thread->KernelStack = KernelStack + MM_STACK_SIZE;
    Thread->DebugActive = 0;
    Thread->State = THREAD_STATE_SUSPENDED;
    Thread->Alerted[0] = 0;
@@ -127,8 +140,8 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
    Thread->LargeStack = 0;
    Thread->ResourceIndex = 0;
    Thread->PreviousMode = KernelMode;
-   Thread->KernelTime.QuadPart = 0;
-   Thread->UserTime.QuadPart = 0;
+   Thread->KernelTime = 0;
+   Thread->UserTime = 0;
    memset(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
    Thread->Alertable = 1;
    Thread->ApcStateIndex = 0;
@@ -156,3 +169,4 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread)
     */
          
 }
+

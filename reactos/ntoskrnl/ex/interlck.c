@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.5 2000/07/04 01:27:58 ekohl Exp $
+/* $Id: interlck.c,v 1.6 2000/12/23 02:37:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,12 +16,12 @@
 
 /* FUNCTIONS *****************************************************************/
 
-INTERLOCKED_RESULT
-STDCALL
-ExInterlockedDecrementLong (
-	PLONG		Addend,
-	PKSPIN_LOCK	Lock
-	)
+INTERLOCKED_RESULT STDCALL
+ExInterlockedDecrementLong (PLONG		Addend,
+			    PKSPIN_LOCK	Lock)
+/*
+ * Obsolete, use InterlockedDecrement instead
+ */
 {
         KIRQL oldlvl;
         LONG  oldval;
@@ -37,13 +37,13 @@ ExInterlockedDecrementLong (
 }
 
 
-ULONG
-STDCALL
-ExInterlockedExchangeUlong (
-	PULONG		Target,
-	ULONG		Value,
-	PKSPIN_LOCK	Lock
-	)
+ULONG STDCALL
+ExInterlockedExchangeUlong (PULONG		Target,
+			    ULONG		Value,
+			    PKSPIN_LOCK	Lock)
+/*
+ * Obsolete, use InterlockedExchange instead
+ */
 {
         KIRQL oldlvl;
         LONG  oldval;
@@ -59,13 +59,25 @@ ExInterlockedExchangeUlong (
 }
 
 
-ULONG
-STDCALL
-ExInterlockedAddUlong (
-	PULONG		Addend,
-	ULONG		Increment,
-	PKSPIN_LOCK	Lock
-	)
+ULONG STDCALL
+ExInterlockedAddUlong (PULONG		Addend,
+		       ULONG		Increment,
+		       PKSPIN_LOCK	Lock)
+/*
+ * ExInterlockedAddUlong adds an unsigned long value to a given unsigned
+ * integer as an atomic operation.
+ * 
+ * ADDEND = Points to an unsigned long integer whose value is to be adjusted
+ * by the Increment value.
+ * 
+ * INCREMENT = Is an unsigned long integer to be added.
+ * 
+ * LOCK = Points to a spinlock to be used to synchronize access to ADDEND.
+ * 
+ * Returns: 
+ * 
+ * The original value of the unsigned integer pointed to by ADDEND.
+ */
 {
         KIRQL oldlvl;
         ULONG oldval;
@@ -80,13 +92,23 @@ ExInterlockedAddUlong (
         return oldval;
 }
 
-LARGE_INTEGER
-STDCALL
-ExInterlockedAddLargeInteger (
-        PLARGE_INTEGER Addend,
-        LARGE_INTEGER Increment,
-        PKSPIN_LOCK Lock
-        )
+LARGE_INTEGER STDCALL
+ExInterlockedAddLargeInteger (PLARGE_INTEGER Addend,
+			      LARGE_INTEGER Increment,
+			      PKSPIN_LOCK Lock)
+/*
+ * Adds two large integer values as an atomic operation.
+ * 
+ * ADDEND = Pointer to a large integer value that will have INCREMENT added.
+ * 
+ * INCREMENT = Value to be added.
+ * 
+ * LOCK = Spinlock used to synchronize access to ADDEND.
+ * 
+ * Returns:
+ * 
+ * The original value of the large integer pointed to by ADDEND.
+ */
 {
         KIRQL oldlvl;
         LARGE_INTEGER oldval;
@@ -103,12 +125,12 @@ ExInterlockedAddLargeInteger (
         return oldval;
 }
 
-INTERLOCKED_RESULT
-STDCALL
-ExInterlockedIncrementLong (
-	PLONG		Addend,
-	PKSPIN_LOCK	Lock
-	)
+INTERLOCKED_RESULT STDCALL
+ExInterlockedIncrementLong (PLONG		Addend,
+			    PKSPIN_LOCK	Lock)
+/*
+ * Obsolete, use InterlockedIncrement instead.
+ */
 {
         KIRQL oldlvl;
         LONG  oldval;
@@ -123,24 +145,24 @@ ExInterlockedIncrementLong (
         return oldval;
 }
 
-VOID
-FASTCALL
-ExInterlockedAddLargeStatistic (
-	IN	PLARGE_INTEGER	Addend,
-	IN	ULONG		Increment
-	)
+VOID FASTCALL
+ExInterlockedAddLargeStatistic (IN	PLARGE_INTEGER	Addend,
+				IN	ULONG		Increment)
+/*
+ * Undocumented in DDK.
+ */
 {
 	Addend->QuadPart += Increment;
 }
 
-LONGLONG
-FASTCALL
-ExInterlockedCompareExchange64 (
-	IN OUT	PLONGLONG	Destination,
-	IN	PLONGLONG	Exchange,
-	IN	PLONGLONG	Comparand,
-	IN	PKSPIN_LOCK	Lock
-	)
+LONGLONG FASTCALL
+ExInterlockedCompareExchange64 (IN OUT	PLONGLONG	Destination,
+				IN	PLONGLONG	Exchange,
+				IN	PLONGLONG	Comparand,
+				IN	PKSPIN_LOCK	Lock)
+/*
+ * Undocumented in DDK.
+ */
 {
 	KIRQL oldlvl;
 	LONGLONG oldval;

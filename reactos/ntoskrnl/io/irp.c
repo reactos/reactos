@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.32 2000/12/10 19:15:45 ekohl Exp $
+/* $Id: irp.c,v 1.33 2000/12/23 02:37:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -337,7 +337,7 @@ IoSetTopLevelIrp (
 	PETHREAD Thread;
 
 	Thread = PsGetCurrentThread ();
-	Thread->TopLevelIrp.TopLevelIrp = Irp;
+	Thread->TopLevelIrp->TopLevelIrp = Irp;
 }
 
 
@@ -347,7 +347,7 @@ IoGetTopLevelIrp (
 	VOID
 	)
 {
-	return (PsGetCurrentThread ()->TopLevelIrp.TopLevelIrp);
+	return (PsGetCurrentThread ()->TopLevelIrp->TopLevelIrp);
 }
 
 

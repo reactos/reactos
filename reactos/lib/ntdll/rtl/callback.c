@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.2 2000/06/29 23:35:29 dwelch Exp $
+/* $Id: callback.c,v 1.3 2000/12/23 02:37:38 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -20,9 +20,10 @@ typedef NTSTATUS (*CALLBACK_FUNCTION)(PVOID Argument, ULONG ArgumentLength);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KiUserCallbackDispatcher(ULONG RoutineIndex,
-			      PVOID Argument,
-			      ULONG ArgumentLength)
+VOID STDCALL
+KiUserCallbackDispatcher(ULONG RoutineIndex,
+			 PVOID Argument,
+			 ULONG ArgumentLength)
 {
    PPEB Peb;
    NTSTATUS Status;

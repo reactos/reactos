@@ -24,13 +24,16 @@
  *                  Created 09/10/00
  */
 
-#include <internal/vm86.h>
-
+#include <internal/v86m.h>
+#include <ddk/i386/tss.h>
+#include <internal/trap.h>
+		
 .globl _Ki386RetToV86Mode
-
+.globl _KiV86Complete
+	
 	/*
-	 * NTSTATUS Ki386RetToV86Mode(KV86M_REGISTERS* in_regs,
-	 *                            KV86M_REGISTERS* out_regs);
+	 * VOID Ki386RetToV86Mode(KV86M_REGISTERS* InRegs,
+	 *	                  KV86M_REGISTERS* OutRegs);
 	 *
 	 * Starts in v86 mode with the registers set to the
 	 * specified values.
@@ -58,35 +61,41 @@ _Ki386RetToV86Mode:
 	pushl   %ebp
 	
 	/*
+	 * Save a pointer to IN_REGS which the v86m exception handler will
+	 * use to handle exceptions
+	 */
+	pushl	%ebx
+	
+	/*
 	 * The stack used for handling exceptions from v86 mode in this thread
 	 * will be the current stack adjusted so we don't overwrite the 
 	 * existing stack frames
 	 */
-	movl	%esp, TSS_ESP0(%esi)
+	movl	%esp, KTSS_ESP0(%esi)
 
 	/*
 	 * Create the stack frame for an iret to v86 mode
 	 */
-	pushl	GS(%ebx)
-	pushl	FS(%ebx)
-	pushl	DS(%ebx)
-	pushl	ES(%ebx)
-	pushl	SS(%ebx)
-	pushl	ESP(%ebx)
-	pushl	EFLAGS(%ebx)
-	pushl	CS(%ebx)
-	pushl	EIP(%ebx)
+	pushl	KV86M_REGISTERS_GS(%ebx)
+	pushl	KV86M_REGISTERS_FS(%ebx)
+	pushl	KV86M_REGISTERS_DS(%ebx)
+	pushl	KV86M_REGISTERS_ES(%ebx)
+	pushl	KV86M_REGISTERS_SS(%ebx)
+	pushl	KV86M_REGISTERS_ESP(%ebx)
+	pushl	KV86M_REGISTERS_EFLAGS(%ebx)
+	pushl	KV86M_REGISTERS_CS(%ebx)
+	pushl	KV86M_REGISTERS_EIP(%ebx)
 
 	/*
 	 * Setup the CPU registers
 	 */
-	movl	EAX(%ebx), %eax
-	movl	ECX(%ebx), %ecx
-	movl	EDX(%ebx), %edx
-	movl	ESI(%ebx), %esi
-	movl	EDI(%ebx), %edi
-	movl	EBP(%ebx), %ebp
-	movl	EBX(%ebx), %ebx
+	movl	KV86M_REGISTERS_EAX(%ebx), %eax
+	movl	KV86M_REGISTERS_ECX(%ebx), %ecx
+	movl	KV86M_REGISTERS_EDX(%ebx), %edx
+	movl	KV86M_REGISTERS_ESI(%ebx), %esi
+	movl	KV86M_REGISTERS_EDI(%ebx), %edi
+	movl	KV86M_REGISTERS_EBP(%ebx), %ebp
+	movl	KV86M_REGISTERS_EBX(%ebx), %ebx
 
 	/*
 	 * Go to v86 mode
@@ -98,41 +107,42 @@ _Ki386RetToV86Mode:
 	 * an exception handler with the registers at the point of the
 	 * exception on the stack.
 	 */
-_vm86_complete:
-        addl    $4, %esp        /* Ignore pointer to registers */    
-	addl	$4, %esp	/* Ignore exception number */
+_KiV86Complete:
+        addl    $4, %esp        /* Ignore pointer to trap frame */    
+
+	/* Restore the original ebp */
+	movl	TF_ORIG_EBP(%esp), %ebp
 	
-	/* Get a pointer to the vm86_registers structure */
-	movl    _vm86_old_ebp, %ebp
-	movl    8(%ebp), %ebx
+	/* Get a pointer to the OUT_REGS structure */
+	movl	12(%ebp), %ebx
 	
-	/* Save the vm86 registers into the vm86_registers structure */
-	popl    EBP(%ebx)
-	popl    EDI(%ebx)
-	popl	ESI(%ebx)
-	popl	EDX(%ebx)
-	popl	ECX(%ebx)
-	popl	EBX(%ebx)
-	popl	EAX(%ebx)
+	/* Save the vm86 registers into the OUT_REGS structure */
+	popl    KV86M_REGISTERS_EDI(%ebx)
+	popl    KV86M_REGISTERS_ESI(%ebx)
+	popl	KV86M_REGISTERS_EBP(%ebx)
+	popl	KV86M_REGISTERS_EBX(%ebx)
+	popl	KV86M_REGISTERS_EDX(%ebx)
+	popl	KV86M_REGISTERS_ECX(%ebx)
+	popl	KV86M_REGISTERS_EAX(%ebx)
 	addl	$16, %esp	/* Ignore 32-bit segment registers */
 	addl	$4, %esp	/* Ignore error code */
 
-	popl	EIP(%ebx)
-	popl	CS(%ebx)
-	popl	EFLAGS(%ebx)
-	popl	ESP(%ebx)
-	popl	SS(%ebx)
-	popl	ES(%ebx)
-	popl	DS(%ebx)
-	popl	FS(%ebx)
-	popl	GS(%ebx)
+	popl	KV86M_REGISTERS_EIP(%ebx)
+	popl	KV86M_REGISTERS_CS(%ebx)
+	popl	KV86M_REGISTERS_EFLAGS(%ebx)
+	popl	KV86M_REGISTERS_ESP(%ebx)
+	popl	KV86M_REGISTERS_SS(%ebx)
+	popl	KV86M_REGISTERS_ES(%ebx)
+	popl	KV86M_REGISTERS_DS(%ebx)
+	popl	KV86M_REGISTERS_FS(%ebx)
+	popl	KV86M_REGISTERS_GS(%ebx)
 
-	/* Swap back to the stack */
-	cli
-	movl	_vm86_old_esp, %esp
-	sti
-	movl	_vm86_old_ebp, %ebp
-
+	/* Ignore IN_REGS pointer */
+	addl	$4, %esp
+	
+	/* Ignore ebp restored above */
+	addl	$4, %esp
+	
 	/* Return to caller */
 	popa
 	movl	%ebp, %esp	
@@ -140,3 +150,7 @@ _vm86_complete:
 	ret
 	
 		
+
+
+
+

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2000/12/10 23:41:59 dwelch Exp $
+# $Id: Makefile,v 1.5 2000/12/23 02:37:38 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -94,7 +94,10 @@ OBJECTS_KE_I386 = \
 	ke/i386/usercall.o \
 	ke/i386/trap.o \
 	ke/i386/bthread.o \
-	ke/i386/syscall.o
+	ke/i386/syscall.o \
+	ke/i386/tskswitch.o \
+	ke/i386/v86m.o \
+	ke/i386/v86m_sup.o
  
 # Memory Manager (Mm)
 OBJECTS_MM = \

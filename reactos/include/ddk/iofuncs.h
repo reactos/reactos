@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.21 2000/12/11 18:20:02 ekohl Exp $ */
+/* $Id: iofuncs.h,v 1.22 2000/12/23 02:37:36 dwelch Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -917,12 +917,9 @@ IoReportResourceUsage (
 			param->Control |= SL_INVOKE_ON_CANCEL; \
 	} 
 
-VOID
-STDCALL
-IoSetDeviceToVerify (
-	IN	struct _ETHREAD*	Thread,
-	IN	PDEVICE_OBJECT		DeviceObject
-	);
+VOID STDCALL
+IoSetDeviceToVerify (IN struct _ETHREAD* Thread,
+		     IN PDEVICE_OBJECT DeviceObject);
 VOID
 STDCALL
 IoSetHardErrorOrVerifyDevice (

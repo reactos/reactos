@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.38 2000/10/11 13:20:33 jean Exp $
+/* $Id: zw.h,v 1.39 2000/12/23 02:37:36 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5248,11 +5248,12 @@ NtVdmControl (
 
 /* --- WIN32 --- */
 
-NTSTATUS
-STDCALL
-NtW32Call (
-	VOID
-	);
+NTSTATUS STDCALL
+NtW32Call(IN ULONG RoutineIndex,
+	  IN PVOID Argument,
+	  IN ULONG ArgumentLength,
+	  OUT PVOID* Result OPTIONAL,
+	  OUT PULONG ResultLength OPTIONAL);
 
 /* --- CHANNELS --- */
 

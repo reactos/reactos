@@ -1,18 +1,19 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/dbg/brkpoints.c
- * PURPOSE:         Handles breakpoints
+ * FILE:            ntoskrnl/dbg/errinfo.c
+ * PURPOSE:         Print information descriptions of error messages
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
 
 static PCHAR SeverityCodes[] = {"SUC", "INF", "ERR", "WRN"};
 
@@ -172,7 +173,10 @@ static struct _ERRLIST
   {0, NULL, NULL}
 };
 
-VOID DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags)
+/* FUNCTIONS *****************************************************************/
+
+VOID 
+DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags)
 {
   int i;
   char TempBuf[255], NumBuf[32];
@@ -247,7 +251,8 @@ VOID DbgGetErrorText(NTSTATUS ErrorCode, PUNICODE_STRING ErrorText, ULONG Flags)
   RtlAnsiStringToUnicodeString(ErrorText, &AnsiString, TRUE);
 }
 
-VOID DbgPrintErrorMessage(NTSTATUS ErrorCode)
+VOID 
+DbgPrintErrorMessage(NTSTATUS ErrorCode)
 {
   UNICODE_STRING ErrorText;
 

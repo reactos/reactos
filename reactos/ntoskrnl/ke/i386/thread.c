@@ -23,81 +23,26 @@
 
 /* GLOBALS ***************************************************************/
 
-#define NR_TASKS 128
-
-#define FIRST_TSS_SELECTOR (KERNEL_DS + 0x8)
-#define FIRST_TSS_OFFSET (FIRST_TSS_SELECTOR / 8)
-
 static char KiNullLdt[8] = {0,};
-static unsigned int KiNullLdtSel = 0;
 static PETHREAD FirstThread = NULL;
 
 extern ULONG KeSetBaseGdtSelector(ULONG Entry, PVOID Base);
 
-/* FUNCTIONS **************************************************************/
+KTSS KiTss;
 
-VOID HalTaskSwitch(PKTHREAD thread)
-/*
- * FUNCTION: Switch tasks
- * ARGUMENTS:
- *         thread = Thread to switch to
- * NOTE: This function will not return until the current thread is scheduled
- * again (possibly never)
- */
-{
-   if (KeGetCurrentIrql() != DISPATCH_LEVEL)
-     {
-	DPRINT1("HalTaskSwitch: Bad IRQL on entry\n");
-	KeBugCheck(0);
-     }
-   
-   /*
-    * This sequence must be atomic with respect to interrupts on the local
-    * processor because an interrupt handler might want to use current thread
-    * information in the PCR. We wouldn't switch processors because we are
-    * at DISPATCH_LEVEL.
-    */
-   __asm__("cli\n\t");
-   
-   /* 
-    * Set the base of the TEB selector to the base of the TEB for the
-    * new thread. This can't be done on the other side of the TSS jump
-    * because the new thread might be starting at different point.
-    */
-   KeSetBaseGdtSelector(TEB_SELECTOR, thread->Teb);
-   /*
-    * Set the current thread information in the PCR. 
-    */
-   CURRENT_KPCR->CurrentThread = (PVOID)thread;
-   /* Switch to the new thread's context and stack */
-   __asm__("ljmp %0\n\t"
-	   : /* No outputs */
-	   : "m" (*(((unsigned char *)(&(thread->Context.nr)))-4) )
-	   : "ax","dx");
-   /* 
-    * Load the PCR selector. 
-    */
-   __asm__("movw %0, %%ax\n\t"
-	   "movw %%ax, %%fs\n\t"
-	   : /* No outputs */
-	   : "i" (PCR_SELECTOR)
-	   : "ax");
-   /*
-    * Allow the new thread to use the FPU
-    */
-   __asm__("clts\n\t");
-   /*
-    * Allow local interrupts again
-    */
-   __asm__("sti\n\t");
-}
+extern USHORT KiGdt[];
+
+extern unsigned int init_stack_top;
+
+/* FUNCTIONS **************************************************************/
 
 #define FLAG_NT (1<<14)
 #define FLAG_VM (1<<17)
 #define FLAG_IF (1<<9)
 #define FLAG_IOPL ((1<<12)+(1<<13))
 
-NTSTATUS KeValidateUserContext(PCONTEXT Context)
+NTSTATUS 
+KeValidateUserContext(PCONTEXT Context)
 /*
  * FUNCTION: Validates a processor context
  * ARGUMENTS:
@@ -143,13 +88,15 @@ NTSTATUS KeValidateUserContext(PCONTEXT Context)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS HalReleaseTask(PETHREAD Thread)
+NTSTATUS 
+HalReleaseTask(PETHREAD Thread)
 /*
  * FUNCTION: Releases the resource allocated for a thread by
  * HalInitTaskWithContext or HalInitTask
  * NOTE: The thread had better not be running when this is called
  */
 {
+#if 0
    extern BYTE init_stack[MM_STACK_SIZE];
    
    KeFreeGdtSelector(Thread->Tcb.Context.nr / 8);
@@ -161,186 +108,65 @@ NTSTATUS HalReleaseTask(PETHREAD Thread)
      {
 	ExFreePool(Thread->Tcb.Context.SavedKernelStackBase);
      }
+#endif
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
-/*
- * FUNCTION: Initialize a task with a user mode context
- * ARGUMENTS:
- *        Thread = Thread to initialize
- *        Context = Processor context to initialize it with
- * RETURNS: Status
- */
+NTSTATUS
+Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
 {
-   unsigned int desc;
-   unsigned int length;
-   unsigned int base;
-   PVOID kernel_stack;
-   NTSTATUS Status;
-   PVOID stack_start;
-   ULONG GdtDesc[2];
-   
-   DPRINT("HalInitTaskWithContext(Thread %x, Context %x)\n",
-          Thread,Context);
-
-   assert(sizeof(hal_thread_state)>=0x68);
-   
-   if ((Status=KeValidateUserContext(Context))!=STATUS_SUCCESS)
-     {
-	return(Status);
-     }
-      
-   length = sizeof(hal_thread_state) - 1;
-   base = (unsigned int)(&(Thread->Tcb.Context));
-   kernel_stack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
-   
-   /*
-    * Setup a TSS descriptor
-    */
-   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
-   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
-                 | (base & 0xff000000);
-   desc = KeAllocateGdtSelector(GdtDesc);
-   if (desc == 0)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   stack_start = kernel_stack + MM_STACK_SIZE - sizeof(CONTEXT);
-   
-   DPRINT("stack_start %x kernel_stack %x\n",
-	  stack_start, kernel_stack);
-   
-   Context->SegFs = TEB_SELECTOR;
-   memcpy(stack_start, Context, sizeof(CONTEXT));
-   
-   /*
-    * Initialize the thread context
-    */
-   memset(&Thread->Tcb.Context,0,sizeof(hal_thread_state));
-   Thread->Tcb.Context.ldt = KiNullLdtSel;
-   Thread->Tcb.Context.eflags = (1<<1) + (1<<9);
-   Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   Thread->Tcb.Context.esp0 = (ULONG)stack_start;
-   Thread->Tcb.Context.ss0 = KERNEL_DS;
-   Thread->Tcb.Context.esp = (ULONG)stack_start;
-   Thread->Tcb.Context.ss = KERNEL_DS;
-   Thread->Tcb.Context.cs = KERNEL_CS;
-   Thread->Tcb.Context.eip = (ULONG)PsBeginThreadWithContextInternal;
-   Thread->Tcb.Context.io_bitmap[0] = 0xff;
-   Thread->Tcb.Context.cr3 = (ULONG)
-     Thread->ThreadsProcess->Pcb.PageTableDirectory;
-   Thread->Tcb.Context.ds = KERNEL_DS;
-   Thread->Tcb.Context.es = KERNEL_DS;
-   Thread->Tcb.Context.fs = KERNEL_DS;
-   Thread->Tcb.Context.gs = KERNEL_DS;
-
-   Thread->Tcb.Context.nr = desc * 8;
-   Thread->Tcb.Context.KernelStackBase = kernel_stack;
-   Thread->Tcb.Context.SavedKernelEsp = 0;
-   Thread->Tcb.Context.SavedKernelStackBase = NULL;
-   
-   return(STATUS_SUCCESS);
-}
-
-PULONG KeGetStackTopThread(PETHREAD Thread)
-{
-   return((PULONG)(Thread->Tcb.Context.KernelStackBase + MM_STACK_SIZE));
-}
-
-NTSTATUS HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
-/*
- * FUNCTION: Initializes the HAL portion of a thread object
- * ARGUMENTS:
- *       thread = Object describes the thread
- *       fn = Entrypoint for the thread
- *       StartContext = parameter to pass to the thread entrypoint
- * RETURNS: True if the function succeeded
- */
-{
-   unsigned int desc;
-   unsigned int length = sizeof(hal_thread_state) - 1;
-   unsigned int base = (unsigned int)(&(thread->Tcb.Context));
    PULONG KernelStack;
-   ULONG GdtDesc[2];
-   extern BYTE init_stack[16384];
-   
-   DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
-          thread,fn,StartContext);
-   DPRINT("thread->ThreadsProcess %x\n",thread->ThreadsProcess);
-   
-   if (fn != NULL)
-     {
-	KernelStack = ExAllocatePool(NonPagedPool, MM_STACK_SIZE);
-     }
-   else
-     {
-	KernelStack = (PULONG)init_stack;
-     }
-   
-   /*
-    * Make sure
-    */
-   assert(sizeof(hal_thread_state)>=0x68);
-   
-   /*
-    * Setup a TSS descriptor
-    */
-   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
-   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
-                 | (base & 0xff000000);
-   desc = KeAllocateGdtSelector(GdtDesc);
-   if (desc == 0)
-     {
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   
-//   DPRINT("sizeof(descriptor) %d\n",sizeof(descriptor));
-//   DPRINT("desc %d\n",desc);
-   
-   /*
-    * Initialize the stack for the thread (including the two arguments to 
-    * the general start routine).					   
-    */
-   if (fn != NULL)
-     {
-	KernelStack[3071] = (unsigned int)StartContext;
-	KernelStack[3070] = (unsigned int)fn;
-	KernelStack[3069] = 0;
-     }
-   
-   /*
-    * Initialize the thread context
-    */
-   memset(&thread->Tcb.Context,0,sizeof(hal_thread_state));
-   thread->Tcb.Context.ldt = KiNullLdtSel;
-   thread->Tcb.Context.eflags = (1<<1)+(1<<9);
-   thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   thread->Tcb.Context.esp0 = (ULONG)&KernelStack[3069];
-   thread->Tcb.Context.ss0 = KERNEL_DS;
-   thread->Tcb.Context.esp = (ULONG)&KernelStack[3069];
-   thread->Tcb.Context.ss = KERNEL_DS;
-   thread->Tcb.Context.cs = KERNEL_CS;
-   thread->Tcb.Context.eip = (ULONG)PsBeginThread;
-   thread->Tcb.Context.io_bitmap[0] = 0xff;
-   thread->Tcb.Context.cr3 = (ULONG)
-     thread->ThreadsProcess->Pcb.PageTableDirectory;
-   thread->Tcb.Context.ds = KERNEL_DS;
-   thread->Tcb.Context.es = KERNEL_DS;
-   thread->Tcb.Context.fs = KERNEL_DS;
-   thread->Tcb.Context.gs = KERNEL_DS;
-   thread->Tcb.Context.nr = desc * 8;
-   thread->Tcb.Context.KernelStackBase = KernelStack;
-   thread->Tcb.Context.SavedKernelEsp = 0;
-   thread->Tcb.Context.SavedKernelStackBase = NULL;
-   DPRINT("Allocated %x\n",desc*8);
-   
-   return(STATUS_SUCCESS);
+
+  /*
+   * Setup a stack frame for exit from the task switching routine
+   */
+  
+  KernelStack = (PULONG)(Thread->KernelStack - ((4 * 5) + sizeof(CONTEXT)));
+  /* FIXME: Add initial floating point information */
+  /* FIXME: Add initial debugging information */
+  KernelStack[0] = 0;      /* EDI */
+  KernelStack[1] = 0;      /* ESI */
+  KernelStack[2] = 0;      /* EBX */
+  KernelStack[3] = 0;      /* EBP */
+  KernelStack[4] = (ULONG)PsBeginThreadWithContextInternal;   /* EIP */
+  memcpy((VOID*)&KernelStack[5], (VOID*)Context, sizeof(CONTEXT));
+  Thread->KernelStack = (VOID*)KernelStack;
+
+  return(STATUS_SUCCESS);
 }
 
-void HalInitFirstTask(PETHREAD thread)
+NTSTATUS
+Ke386InitThread(PKTHREAD Thread, 
+		PKSTART_ROUTINE StartRoutine, 
+		PVOID StartContext)
+     /*
+      * Initialize a thread
+      */
+{
+  PULONG KernelStack;
+
+  /*
+   * Setup a stack frame for exit from the task switching routine
+   */
+  
+  KernelStack = (PULONG)(Thread->KernelStack - (8*4));
+  /* FIXME: Add initial floating point information */
+  /* FIXME: Add initial debugging information */
+  KernelStack[0] = 0;      /* EDI */
+  KernelStack[1] = 0;      /* ESI */
+  KernelStack[2] = 0;      /* EBX */
+  KernelStack[3] = 0;      /* EBP */
+  KernelStack[4] = (ULONG)PsBeginThread;   /* EIP */
+  KernelStack[5] = 0;     /* Return EIP */
+  KernelStack[6] = (ULONG)StartRoutine; /* First argument to PsBeginThread */
+  KernelStack[7] = (ULONG)StartContext; /* Second argument to PsBeginThread */
+  Thread->KernelStack = (VOID*)KernelStack;
+
+  return(STATUS_SUCCESS);
+}
+
+VOID 
+HalInitFirstTask(PETHREAD thread)
 /*
  * FUNCTION: Called to setup the HAL portion of a thread object for the 
  * initial thread
@@ -348,28 +174,52 @@ void HalInitFirstTask(PETHREAD thread)
 {
    ULONG base;
    ULONG length;
-   ULONG desc;
-   ULONG GdtDesc[2];
    
+   /*
+    * Set up an a descriptor for the LDT
+    */
    memset(KiNullLdt, 0, sizeof(KiNullLdt));
    base = (unsigned int)&KiNullLdt;
    length = sizeof(KiNullLdt) - 1;
-   GdtDesc[0] = (length & 0xffff) | ((base & 0xffff) << 16);
-   GdtDesc[1] = ((base & 0xff0000)>>16) | 0x8200 | (length & 0xf0000)
-                | (base & 0xff000000);
-   desc = KeAllocateGdtSelector(GdtDesc);
-   KiNullLdtSel = desc*8;
+   
+   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
+   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+     ((base & 0xFF000000) >> 16);
+
+   /*
+    * Set up a descriptor for the TSS
+    */
+   memset(&KiTss, 0, sizeof(KiTss));
+   base = (unsigned int)&KiTss;
+   length = sizeof(KiTss) - 1;
+         
+   KiGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
+   KiGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
+   KiGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
+     ((base & 0xFF000000) >> 16);
    
    /*
-    * Initialize the thread context
+    * Initialize the TSS
     */
-   HalInitTask(thread,NULL,NULL);
+   KiTss.Esp0 = (ULONG)&init_stack_top;
+   KiTss.Ss0 = KERNEL_DS;
+   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
+   KiTss.IoBitmap[0] = 0xFF;
+   KiTss.Ldt = LDT_SELECTOR;
 
    /*
     * Load the task register
     */
    __asm__("ltr %%ax" 
 	   : /* no output */
-           : "a" (thread->Tcb.Context.nr));
+           : "a" (TSS_SELECTOR));
    FirstThread = thread;
 }
+
+
+
+
+

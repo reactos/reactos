@@ -1,3 +1,33 @@
+2000-12-23  David Welch  <welch@cwcom.net>
+
+	* All task switching is done in software.
+	* Beginnings of v86 mode support.
+
+2000-12-22  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/ps/kill.c (PiTerminateProcessThreads): Drop 
+	PiThreadListLock before calling PsTerminateOtherThread
+
+2000-12-16  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/ex/fmutex.c (ExReleaseFastMutexUnsafe): Only set the
+	fast mutex's owner back to NULL if it is being released
+
+2000-12-10  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/ke/i386/vm86_sup.S (Ki386RetToV86Mode): Added function
+	to do the raw switch to v86 mode.
+	* ntoskrnl/include/internal/vm86.h: Definitions for the v86 mode
+	support.
+
+2000-12-10  David Welch  <welch@cwcom.net>
+
+	* ntoskrnl/ke/i386/trap.s (PsBeginThreadWithContextInternal): Moved
+	to ntoskrnl/ke/i386/bswitch.S.
+	* ntoskrnl/ke/i386/trap.s (interrupt_handler2e): Moved to
+	ntoskrnl/ke/i386/syscall.S.
+	* ntoskrnl/ke/i386/trap.s (old_interrupt_handler2e): Removed.
+
 2000-12-04  David Welch  <welch@cwcom.net>
 
 	* ntoskrnl/ke/i386/irq.c (KiInterruptDispatch): Record the last PC 
@@ -50,3 +80,13 @@
 	  APC).
 	       
 	* Disabled broken code in kernel32.
+
+
+
+
+
+
+
+
+
+	

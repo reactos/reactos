@@ -17,39 +17,61 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /*
- * FILE:            ntoskrnl/ke/i386/vm86_sup.S
+ * FILE:            ntoskrnl/include/internal/v86m.h
  * PURPOSE:         V86 mode support
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 10/12/00
  */
 
-#ifndef __NTOSKRNL_INCLUDE_INTERNAL_VM86_H
-#define __NTOSKRNL_INCLUDE_INTERNAL_VM86_H
+#ifndef __NTOSKRNL_INCLUDE_INTERNAL_V86M_H
+#define __NTOSKRNL_INCLUDE_INTERNAL_V86M_H
 
-#ifndef ASSEMBLER
+#ifndef __ASM__
 
-typedef struct
+/* Emulate cli/sti instructions */
+#define KV86M_EMULATE_CLI_STI          (0x1)
+/* Allow the v86 mode code to access i/o ports */
+#define KV86M_ALLOW_IO_PORT_ACCESS      (0x2)
+
+typedef struct _KV86M_REGISTERS
 {
-   ULONG Ebp;
-   ULONG Edi;
-   ULONG Esi;
-   ULONG Edx;
-   ULONG Ecx;
-   ULONG Ebx;
-   ULONG Eax;
-   ULONG Ds;
-   ULONG Es;
-   ULONG Fs;
-   ULONG Gs;
-   ULONG Eip;
-   ULONG Cs;
-   ULONG Eflags;
-   ULONG Esp;
-   ULONG Ss;
+  /*
+   * General purpose registers
+   */
+
+  ULONG Ebp;
+  ULONG Edi;
+  ULONG Esi;
+  ULONG Edx;
+  ULONG Ecx;
+  ULONG Ebx;
+  ULONG Eax;
+  ULONG Ds;
+  ULONG Es;
+  ULONG Fs;
+  ULONG Gs;
+
+  /*
+   * Control registers 
+   */
+  ULONG Eip;
+  ULONG Cs;
+  ULONG Eflags;
+  ULONG Esp;
+  ULONG Ss;
+
+  /*
+   * Control structures
+   */
+  ULONG RecoveryAddress;
+  UCHAR RecoveryInstruction[4];
+  ULONG Vif;                  
+  ULONG Flags;
+  PNTSTATUS PStatus;
 } KV86M_REGISTERS;
 
-#else
+#else /* ASSEMBLER */
 
 /*
  * Definitions for the offsets of members in the KV86M_REGISTERS
@@ -73,4 +95,4 @@ typedef struct
 
 #endif /* ASSEMBLER */
 
-#endif /* __NTOSKRNL_INCLUDE_INTERNAL_VM86_H */
+#endif /* __NTOSKRNL_INCLUDE_INTERNAL_V86M_H */

@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.4 2000/07/04 01:27:58 ekohl Exp $
+/* $Id: callback.c,v 1.5 2000/12/23 02:37:39 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -64,42 +64,6 @@ ExUnregisterCallback (
 	)
 {
 	return;
-}
-
-/*
- * FIXME:
- *	The following functions don't belong here.
- *	Move them somewhere else.
- */
-
-#if 0
-VOID ExCallUserCallBack(PVOID fn)
-/*
- * FUNCTION: Transfer control to a user callback
- */
-{
-   UNIMPLEMENTED;
-}
-#endif
-
-NTSTATUS
-STDCALL
-NtCallbackReturn (
-	PVOID		Result,
-	ULONG		ResultLength,
-	NTSTATUS	Status
-	)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS
-STDCALL
-NtW32Call (
-	VOID
-	)
-{
-   UNIMPLEMENTED;
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.67 2000/12/20 18:43:13 jean Exp $
+/* $Id: main.c,v 1.68 2000/12/23 02:37:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -361,7 +361,8 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
-void _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
+void 
+_main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
 /*
  * FUNCTION: Called by the boot loader to start the kernel
  * ARGUMENTS:

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/brkpoints.c
  * PURPOSE:         Handles breakpoints
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      
  * UPDATE HISTORY:
  *                  Created 22/05/98
  */
@@ -16,17 +16,20 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtSystemDebugControl(VOID)
+NTSTATUS STDCALL 
+NtSystemDebugControl(VOID)
 {
    UNIMPLEMENTED;
 }
 
-VOID STDCALL DbgBreakPoint(VOID)
+VOID STDCALL 
+DbgBreakPoint(VOID)
 {
    __asm__("int $3\n\t");
 }
 
-VOID STDCALL DbgBreakPointWithStatus(ULONG Status)
+VOID STDCALL 
+DbgBreakPointWithStatus(ULONG Status)
 {
    __asm__("mov %0, %%eax\n\t"
            "int $3\n\t"

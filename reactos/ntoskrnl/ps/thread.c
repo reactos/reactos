@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.61 2000/12/22 13:37:41 ekohl Exp $
+/* $Id: thread.c,v 1.62 2000/12/23 02:37:40 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -53,25 +53,11 @@ static PETHREAD CurrentThread = NULL;
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-#if 0   
-   if (CurrentThread != NULL)
-     {
-	DbgPrint("KeGetCurrentThread() called before initialization\n");
-	KeBugCheck(0);
-     }
-#endif
    return(&(CurrentThread->Tcb));
 }
 
 PETHREAD STDCALL PsGetCurrentThread(VOID)
 {
-#if 0
-   if (CurrentThread != NULL)
-     {
-	DbgPrint("PsGetCurrentThread() called before initialization\n");
-	KeBugCheck(0);
-     }
-#endif
    return(CurrentThread);
 }
 
@@ -122,7 +108,7 @@ VOID PsDumpThreads(VOID)
 	  }
 	DbgPrint("current %x current->Tcb.State %d eip %x/%x ",
 		current, current->Tcb.State,
-		current->Tcb.Context.eip, current->Tcb.LastEip);
+		0, current->Tcb.LastEip);
 //	KeDumpStackFrames((PVOID)current->Tcb.Context.esp0, 
 //			  16);
 	DbgPrint("PID %d ", current->ThreadsProcess->UniqueProcessId);
@@ -182,14 +168,18 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	  }
 	if (Candidate != NULL)
 	  {	
+	    PETHREAD OldThread;
+
 	     DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
 	     
 	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
 	    	     
+	     OldThread = CurrentThread;
 	     CurrentThread = Candidate;
 	     
 	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
-	     HalTaskSwitch(&CurrentThread->Tcb);
+	     //	     HalTaskSwitch(&CurrentThread->Tcb);
+	     Ki386ContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
 	     PsReapThreads();
 	     return;
 	  }
@@ -217,7 +207,8 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
 }
 
 /*
- * Suspend and resume may only be called to suspend the current thread, except by apc.c
+ * Suspend and resume may only be called to suspend the current thread, except
+ * by apc.c
  */
 
 ULONG PsUnfreezeThread(PETHREAD Thread, PNTSTATUS WaitStatus)
@@ -352,7 +343,8 @@ ULONG PsSuspendThread(PETHREAD Thread)
    return PreviousSuspendCount;
 }
 
-VOID PsInitThreadManagment(VOID)
+VOID 
+PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment
  */
@@ -389,7 +381,7 @@ VOID PsInitThreadManagment(VOID)
    PsThreadType->Create = NULL;
    
    PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
-		      THREAD_ALL_ACCESS,NULL);
+		      THREAD_ALL_ACCESS,NULL, TRUE);
    HalInitFirstTask(FirstThread);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
@@ -479,16 +471,18 @@ NTSTATUS STDCALL NtAlertThread (IN HANDLE ThreadHandle)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS STDCALL NtOpenThread(OUT	PHANDLE ThreadHandle,
-			      IN	ACCESS_MASK DesiredAccess,
-			      IN	POBJECT_ATTRIBUTES ObjectAttributes,
-			      IN	PCLIENT_ID ClientId)
+NTSTATUS STDCALL 
+NtOpenThread(OUT PHANDLE ThreadHandle,
+	     IN	ACCESS_MASK DesiredAccess,
+	     IN	POBJECT_ATTRIBUTES ObjectAttributes,
+	     IN	PCLIENT_ID ClientId)
 {
 	UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
-				 IN	PULONG	SuspendCount)
+NTSTATUS STDCALL 
+NtResumeThread (IN	HANDLE	ThreadHandle,
+		IN	PULONG	SuspendCount)
 /*
  * FUNCTION: Decrements a thread's resume count
  * ARGUMENTS: 
@@ -528,8 +522,9 @@ NTSTATUS STDCALL NtResumeThread (IN	HANDLE	ThreadHandle,
 }
 
 
-NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
-				  IN PULONG PreviousSuspendCount)
+NTSTATUS STDCALL 
+NtSuspendThread (IN HANDLE ThreadHandle,
+		 IN PULONG PreviousSuspendCount)
 /*
  * FUNCTION: Increments a thread's suspend count
  * ARGUMENTS: 
@@ -570,12 +565,35 @@ NTSTATUS STDCALL NtSuspendThread (IN HANDLE ThreadHandle,
    return STATUS_SUCCESS;
 }
 
+NTSTATUS STDCALL
+NtCallbackReturn (PVOID		Result,
+		  ULONG		ResultLength,
+		  NTSTATUS	Status)
+{
+   UNIMPLEMENTED;
+}
 
-NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
-			    IN BOOLEAN TestAlert)
+NTSTATUS STDCALL
+NtW32Call (IN ULONG RoutineIndex,
+	   IN PVOID Argument,
+	   IN ULONG ArgumentLength,
+	   OUT PVOID* Result OPTIONAL,
+	   OUT PULONG ResultLength OPTIONAL)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL 
+NtContinue(IN PCONTEXT	Context,
+	   IN BOOLEAN TestAlert)
 {
    PKTRAP_FRAME TrapFrame;
    
+   /*
+    * Copy the supplied context over the register information that was saved
+    * on entry to kernel mode, it will then be restored on exit
+    * FIXME: Validate the context
+    */
    TrapFrame = KeGetCurrentThread()->TrapFrame;
    if (TrapFrame == NULL)
      {
@@ -587,8 +605,8 @@ NTSTATUS STDCALL NtContinue(IN PCONTEXT	Context,
 }
 
 
-NTSTATUS STDCALL NtYieldExecution(VOID)
-{
+NTSTATUS STDCALL 
+NtYieldExecution(VOID)
    PsDispatchThread(THREAD_STATE_RUNNABLE);
    return(STATUS_SUCCESS);
 }

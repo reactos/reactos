@@ -343,11 +343,11 @@ entry:
 	mov	cx, 0600h
 	int	10h
 
-	mov	ah, 6		; SCROLL ACTIVE PAGE UP
-	mov	al, 32h		; CLEAR 50 LINES
-	mov	cx, 0		; UPPER LEFT OF SCROLL
-	mov	dx, 314fh	; LOWER RIGHT OF SCROLL
-	mov	bh, 1*10h+1	; USE NORMAL ATTRIBUTE ON BLANKED LINE
+	mov	ah, 6		; Scroll active page up
+	mov	al, 32h		; Clear 50 lines
+	mov	cx, 0		; Upper left of scroll
+	mov	dx, 314fh	; Lower right of scroll
+	mov	bh, 1*10h+1	; Use normal attribute on blanked lines
 	int	10h
 
 	mov	dx, 0
@@ -581,77 +581,9 @@ e_res2:		resw	10
 e_lfanew:	resd	1
 ENDSTRUC
 
-STRUC	pe_filehdr
-nth_sig:	resd	1
-ntf_mach:	resw	1
-ntf_num_secs:	resw	1
-ntf_timestamp:	resd	1
-ntf_symtab_ptr:	resd	1
-ntf_num_syms:	resd	1
-ntf_opt_hdr_sz:	resw	1
-ntf_chars:	resw	1
-
-nto_magic:	resw	1
-nto_mjr_lnk_vr:	resb	1
-nto_mnr_lnk_vr:	resb	1
-nto_code_sz:	resd	1
-nto_data_sz:	resd	1
-nto_bss_sz:	resd	1
-nto_entry_offs:	resd	1
-nto_code_offs:	resd	1
-nto_data_offs:	resd	1
-nto_image_base:	resd	1
-nto_sec_align:	resd	1
-nto_file_align:	resd	1
-nto_mjr_os_ver:	resw	1
-nto_Mnr_os_ver:	resw	1
-nto_mjr_img_vr:	resw	1
-nto_Mnr_img_vr:	resw	1
-nto_mjr_subsys:	resw	1
-nto_mnr_subsys:	resw	1
-nto_w32_ver:	resd	1
-nto_image_sz:	resd	1
-nto_hdr_sz:	resd	1
-nto_chksum:	resd	1
-nto_subsys:	resw	1
-nto_dll_chars:	resw	1
-nto_stk_res_sz:	resd	1
-nto_stk_cmt_sz:	resd	1
-nto_hp_res_sz:	resd	1
-nto_hp_cmt_sz:	resd	1
-nto_ldr_flags:	resd	1
-nto_dir_cnt:	resd	1
-nto_dir_ent:	resq	16
-ENDSTRUC
-
-STRUC	DATA_DIR
-dd_rva:		resd	1
-dd_sz:		resd	1
-ENDSTRUC
-
-STRUC	pe_scnhdr
-se_name:	resb	8
-se_vsz:		resd	1
-se_vaddr:	resd	1
-se_rawsz:	resd	1
-se_raw_ofs:	resd	1
-se_reloc_ofs:	resd	1
-se_lnum_ofs:	resd	1
-se_num_relocs:	resw	1
-se_num_lnums:	resw	1
-se_chars:	resd	1
-ENDSTRUC
-
+	
 _cpe_doshdr:
 	times pe_doshdr_size db 0
-_cpe_filehdr
-	times pe_filehdr_size db 0
-_cpe_scnhdr:
-	times pe_scnhdr_size db 0
-_cscn:
-	dw 0
-_cscn_offset:
-	dd 0
 _current_filehandle:
 	dw 0
 _current_size:
@@ -783,7 +715,7 @@ pe_load_module:
 
 .read_tail
 	;;
-	;; Read in the tailing part of the section data
+	;; Read in the tailing part of the file data
 	;;
 	push	ds
 	mov	eax, [_current_size]
@@ -794,11 +726,11 @@ pe_load_module:
 	mov	ds, dx
 	mov	dx, 0
 	int	0x21
-	jnc	.section_read_last_data_succeeded
+	jnc	.read_last_data_succeeded
 	pop	ds
 	mov	dx, error_file_read_failed
 	jmp	.error
-.section_read_last_data_succeeded:
+.read_last_data_succeeded:
 	mov	ah,02h
 	mov	dl,'#'
 	int	021h

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.5 2000/07/04 08:52:40 dwelch Exp $
+/* $Id: process.c,v 1.6 2000/12/23 02:37:40 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -21,11 +21,8 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
-STDCALL
-KeAttachProcess (
-	PEPROCESS	Process
-	)
+VOID STDCALL
+KeAttachProcess (PEPROCESS Process)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
@@ -46,7 +43,6 @@ KeAttachProcess (
    CurrentThread->OldProcess = PsGetCurrentProcess();
    CurrentThread->ThreadsProcess = Process;
    PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.PageTableDirectory;
-   CurrentThread->Tcb.Context.cr3 = PageDir;
    DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
@@ -56,11 +52,8 @@ KeAttachProcess (
    KeLowerIrql(oldlvl);
 }
 
-VOID
-STDCALL
-KeDetachProcess (
-	VOID
-	)
+VOID STDCALL
+KeDetachProcess (VOID)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
@@ -81,7 +74,6 @@ KeDetachProcess (
    CurrentThread->ThreadsProcess = CurrentThread->OldProcess;
    CurrentThread->OldProcess = NULL;
    PageDir = (ULONG)CurrentThread->ThreadsProcess->Pcb.PageTableDirectory;
-   CurrentThread->Tcb.Context.cr3 = PageDir;
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
 	   : "r" (PageDir));

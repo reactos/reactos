@@ -32,7 +32,8 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
 
 /* FUNCTIONS *****************************************************************/
 
-VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
+VOID 
+PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
 {
    KIRQL oldlvl;
    PLIST_ENTRY current_entry;
@@ -46,19 +47,30 @@ VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
    current_entry = Process->ThreadListHead.Flink;
    while (current_entry != &Process->ThreadListHead)
      {
-	current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.ProcessThreadListEntry);
-	if (current != PsGetCurrentThread())
+	current = CONTAINING_RECORD(current_entry, ETHREAD,
+				    Tcb.ProcessThreadListEntry);
+	if (current != PsGetCurrentThread() &&
+	    current->DeadThread == 0)
 	  {
-	     DPRINT("Terminating %x, current thread: %x, thread's process: %x\n", current, PsGetCurrentThread(), current->ThreadsProcess );
+	     DPRINT("Terminating %x, current thread: %x, "
+		    "thread's process: %x\n", current, PsGetCurrentThread(), 
+		    current->ThreadsProcess);
+	     KeReleaseSpinLock(&PiThreadListLock, oldlvl);
 	     PsTerminateOtherThread(current, ExitStatus);
+	     KeAcquireSpinLock(&PiThreadListLock, &oldlvl);
+	     current_entry = Process->ThreadListHead.Flink;
 	  }
-	current_entry = current_entry->Flink;
+	else
+	  {
+	     current_entry = current_entry->Flink;
+	  }
      }
    KeReleaseSpinLock(&PiThreadListLock, oldlvl);
    DPRINT("Finished PiTerminateProcessThreads()\n");
 }
 
-VOID PsReapThreads(VOID)
+VOID 
+PsReapThreads(VOID)
 {
    PLIST_ENTRY current_entry;
    PETHREAD current;
@@ -127,26 +139,27 @@ VOID PsTerminateCurrentThread(NTSTATUS ExitStatus)
    KeBugCheck(0);
 }
 
-VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
+VOID 
+PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 /*
  * FUNCTION: Terminate a thread when calling from another thread's context
+ * NOTES: This function must be called with PiThreadListLock held
  */
 {
-   KIRQL oldIrql;
-   
    DPRINT("PsTerminateOtherThread(Thread %x, ExitStatus %x)\n",
 	  Thread, ExitStatus);
    
-   KeAcquireSpinLock( &PiThreadListLock, &oldIrql );
    Thread->DeadThread = 1;
    Thread->ExitStatus = ExitStatus;
-   if( Thread->Tcb.State == THREAD_STATE_FROZEN && (Thread->Tcb.Alertable || Thread->Tcb.WaitMode == UserMode) )
-     KeRemoveAllWaitsThread( Thread, STATUS_ALERTED );
-   KeReleaseSpinLock( &PiThreadListLock, oldIrql );
+   if (Thread->Tcb.State == THREAD_STATE_FROZEN && 
+       (Thread->Tcb.Alertable || Thread->Tcb.WaitMode == UserMode))
+     {
+	KeRemoveAllWaitsThread(Thread, STATUS_ALERTED);
+     }
 }
 
-NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
-				    NTSTATUS ExitStatus)
+NTSTATUS STDCALL 
+PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus)
 {
    DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) RC %d HC %d\n",
 	   Process, ExitStatus, ObGetReferenceCount(Process),

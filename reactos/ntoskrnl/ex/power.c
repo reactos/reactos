@@ -20,13 +20,15 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL NtSetSystemPowerState(VOID)
+NTSTATUS STDCALL 
+NtSetSystemPowerState(VOID)
 {
    UNIMPLEMENTED;
 }
 
 
-NTSTATUS STDCALL NtShutdownSystem(IN SHUTDOWN_ACTION Action)
+NTSTATUS STDCALL 
+NtShutdownSystem(IN SHUTDOWN_ACTION Action)
 {
    if (Action > ShutdownPowerOff)
      return STATUS_INVALID_PARAMETER;

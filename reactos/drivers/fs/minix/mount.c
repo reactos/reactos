@@ -1,5 +1,22 @@
 /*
- * COPYRIGHT:        See COPYING in the top level directory
+ *  ReactOS kernel
+ *  Copyright (C) 2000  David Welch <welch@cwcom.net>
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/minix/minix.c
  * PURPOSE:          Minix FSD
@@ -105,14 +122,19 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,
    DriverObject = _DriverObject;
    
    RtlInitUnicodeString(&ustr, L"\\Device\\Minix");
-   ret = IoCreateDevice(DriverObject,0,&ustr,
-                        FILE_DEVICE_PARALLEL_PORT,0,FALSE,&DeviceObject);
-   if (ret!=STATUS_SUCCESS)
+   ret = IoCreateDevice(DriverObject,
+			0,
+			&ustr,
+                        FILE_DEVICE_FILE_SYSTEM,
+			0,
+			FALSE,
+			&DeviceObject);
+   if (!NT_SUCCESS(ret))
      {
 	return(ret);
      }
 
-   DeviceObject->Flags=0;
+   DeviceObject->Flags = 0;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = MinixClose;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MinixCreate;
    DriverObject->MajorFunction[IRP_MJ_READ] = MinixRead;

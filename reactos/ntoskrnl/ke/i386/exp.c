@@ -18,6 +18,7 @@
 #include <internal/module.h>
 #include <internal/mm.h>
 #include <internal/ps.h>
+#include <internal/trap.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -72,7 +73,7 @@ static void print_address(PVOID address)
 	if (address >= current->Base &&
 	    address < (current->Base + current->Length))
 	  {
-	     DbgPrint("<%S: %x>", current->Name, 
+	     DbgPrint("<%wZ: %x>", &current->Name, 
 		      address - current->Base);
 	     return;
 	  }
@@ -82,20 +83,8 @@ static void print_address(PVOID address)
    DbgPrint("<%x>", address);
 }
 
- void exception_handler(unsigned int edi,
-                                  unsigned int esi, unsigned int ebp,
-                                  unsigned int esp, unsigned int ebx,
-                                  unsigned int edx, unsigned int ecx,
-                                  ULONG eax,
-                                  unsigned int type,
-				  unsigned int ds,
-				  unsigned int es,
-                                  unsigned int fs,
-				  unsigned int gs,
-                                  unsigned int error_code,
-                                  ULONG eip,
-                                  unsigned int cs, unsigned int eflags,
-                                  unsigned int esp0, unsigned int ss0)
+ULONG
+exception_handler(struct trap_frame* tf)
 /*
  * FUNCTION: Called by the lowlevel execption handlers to print an amusing 
  * message and halt the computer
@@ -133,46 +122,55 @@ static void print_address(PVOID address)
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
    
+   if (tf->eflags & (1 << 17))
+     {
+       return(KeV86Exception(tf, cr2));
+     }
+
    if (PsGetCurrentThread() != NULL &&
-       esp < (ULONG)PsGetCurrentThread()->Tcb.Context.KernelStackBase)
+       tf->esp < (ULONG)PsGetCurrentThread()->Tcb.StackLimit)
      {
 	DbgPrint("Stack underflow\n");
-	type = 12;
+	tf->type = 12;
      }
    
-   if (type == 14)
+   if (tf->type == 14)
      {
 	__asm__("sti\n\t");
-	Status = MmPageFault(cs&0xffff,
-			     &eip,
-			     &eax,
+	Status = MmPageFault(tf->cs&0xffff,
+			     &tf->eip,
+			     &tf->eax,
 			     cr2,
-			     error_code);
+			     tf->error_code);
 	if (NT_SUCCESS(Status))
 	  {
-	     return;
+	     return(0);
 	  }
      }
-   if (type==1)
+   
+   /*
+    * FIXME: Something better
+    */
+   if (tf->type==1)
      {
-	DbgPrint("Trap at CS:EIP %x:%x\n",cs&0xffff,eip);
-	return;
+	DbgPrint("Trap at CS:EIP %x:%x\n",tf->cs&0xffff,tf->eip);
+	return(0);
      }
    
    /*
     * Print out the CPU registers
     */
-   if (type < 19)
+   if (tf->type < 19)
      {
-	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[type],type,
-		 error_code&0xffff);
+	DbgPrint("%s Exception: %d(%x)\n",TypeStrings[tf->type],tf->type,
+		 tf->error_code&0xffff);
      }
    else
      {
-	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
+	DbgPrint("Exception: %d(%x)\n",tf->type,tf->error_code&0xffff);
      }
-   DbgPrint("CS:EIP %x:%x ",cs&0xffff,eip);
-   print_address((PVOID)eip);
+   DbgPrint("CS:EIP %x:%x ",tf->cs&0xffff,tf->eip);
+   print_address((PVOID)tf->eip);
    DbgPrint("\n");
    __asm__("movl %%cr3,%0\n\t"
 	   : "=d" (cr3));
@@ -191,29 +189,29 @@ static void print_address(PVOID address)
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
    DbgPrint("\n");
-   DbgPrint("DS %x ES %x FS %x GS %x\n",ds&0xffff,es&0xffff,fs&0xffff,
-	    gs&0xfff);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n",eax,ebx,ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n",edx,ebp,esi);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x ",edi,eflags);
-   if ((cs&0xffff) == KERNEL_CS)
+   DbgPrint("DS %x ES %x FS %x GS %x\n", tf->ds&0xffff, tf->es&0xffff,
+	    tf->fs&0xffff, tf->gs&0xfff);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", tf->eax, tf->ebx, tf->ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", tf->edx, tf->ebp, tf->esi);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", tf->edi, tf->eflags);
+   if ((tf->cs&0xffff) == KERNEL_CS)
      {
-	DbgPrint("kESP %.8x ",esp);
+	DbgPrint("kESP %.8x ", tf->esp);
 	if (PsGetCurrentThread() != NULL)
 	  {
 	     DbgPrint("kernel stack base %x\n",
-		      PsGetCurrentThread()->Tcb.Context.KernelStackBase);
+		      PsGetCurrentThread()->Tcb.StackLimit);
 		      	     
 	  }
      }
    else
      {
-	DbgPrint("kernel ESP %.8x\n",esp);
+	DbgPrint("kernel ESP %.8x\n", tf->esp);
      }
-  if ((cs & 0xffff) == KERNEL_CS)
+  if ((tf->cs & 0xffff) == KERNEL_CS)
     {
-       DbgPrint("ESP %x\n",esp);
-       stack = (PULONG) (esp + 24);
+       DbgPrint("ESP %x\n", tf->esp);
+       stack = (PULONG) (tf->esp + 24);
        stack = (PULONG)(((ULONG)stack) & (~0x3));
        
        DbgPrint("stack<%p>: ", stack);
@@ -242,8 +240,8 @@ static void print_address(PVOID address)
    else
      {
 #if 1
-	DbgPrint("SS:ESP %x:%x\n",ss0,esp0);
-        stack=(PULONG)(esp0);
+	DbgPrint("SS:ESP %x:%x\n", tf->ss0, tf->esp0);
+        stack=(PULONG)(tf->esp0);
        
         DbgPrint("Stack:\n");
         for (i=0; i<64; i++)
@@ -258,11 +256,11 @@ static void print_address(PVOID address)
 	     }
         }
 	
-	if (MmIsPagePresent(NULL, (PVOID)eip))
+	if (MmIsPagePresent(NULL, (PVOID)tf->eip))
 	  {
 	     char instrs[512];
 	     
-	     memcpy(instrs, (PVOID)eip, 512);
+	     memcpy(instrs, (PVOID)tf->eip, 512);
 	     
 	     DbgPrint("Instrs: ");
 	     
@@ -275,13 +273,13 @@ static void print_address(PVOID address)
      }
    
    DbgPrint("\n");
-   if ((cs&0xffff) == USER_CS &&
-       eip < KERNEL_BASE)
+   if ((tf->cs&0xffff) == USER_CS &&
+       tf->eip < KERNEL_BASE)
      {
 	DbgPrint("Killing current task\n");
 	//   for(;;);
 	KeLowerIrql(PASSIVE_LEVEL);
-	if ((cs&0xffff) == USER_CS)
+	if ((tf->cs&0xffff) == USER_CS)
 	  {
 	     ZwTerminateProcess(NtCurrentProcess(),
 				STATUS_NONCONTINUABLE_EXCEPTION);
@@ -300,7 +298,7 @@ VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
    if (PsGetCurrentThread() != NULL)
      {
 	DbgPrint("kernel stack base %x\n",
-		 PsGetCurrentThread()->Tcb.Context.KernelStackBase);
+		 PsGetCurrentThread()->Tcb.StackLimit);
      }
    
    DbgPrint("Frames:\n");
@@ -324,18 +322,18 @@ VOID KeDumpStackFrames(PVOID _Stack, ULONG NrFrames)
 static void set_system_call_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("sel %x %d\n",sel,sel);
-        KiIdt[sel].a = (((int)func)&0xffff) +
-                           (KERNEL_CS << 16);
-        KiIdt[sel].b = 0xef00 + (((int)func)&0xffff0000);
+   KiIdt[sel].a = (((int)func)&0xffff) +
+     (KERNEL_CS << 16);
+   KiIdt[sel].b = 0xef00 + (((int)func)&0xffff0000);
    DPRINT("idt[sel].b %x\n",KiIdt[sel].b);
 }
 
 static void set_interrupt_gate(unsigned int sel, unsigned int func)
 {
    DPRINT("set_interrupt_gate(sel %d, func %x)\n",sel,func);
-        KiIdt[sel].a = (((int)func)&0xffff) +
-                           (KERNEL_CS << 16);
-        KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
+   KiIdt[sel].a = (((int)func)&0xffff) +
+     (KERNEL_CS << 16);
+   KiIdt[sel].b = 0x8f00 + (((int)func)&0xffff0000);         
 }
 
 void KeInitExceptions(void)

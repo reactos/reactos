@@ -45,7 +45,9 @@ USHORT KiGdt[(8 + NR_TASKS) * 4] =
  0x0, 0x0, 0xf200, 0xcc,          /* User DS */
  0x0, 0x0, 0x0, 0x0,              /* TSS */
  0x1000, 0xf000, 0x92df, 0xff00,  /* PCR */
- 0x1000, 0x0, 0xf200, 0x0};       /* TEB */
+ 0x1000, 0x0, 0xf200, 0x0,        /* TEB */
+ 0x0, 0x0, 0x0, 0x0,              /* Reserved */
+ 0x0, 0x0, 0x0, 0x0};             /* LDT */
 
 static KSPIN_LOCK GdtLock;
 
@@ -113,6 +115,7 @@ VOID KeDumpGdtSelector(ULONG Entry)
    DbgPrint("G: %d\n", (d & 0x80) >> 7);
 }
 
+#if 0
 VOID KeFreeGdtSelector(ULONG Entry)
 /*
  * FUNCTION: Free a gdt selector
@@ -137,7 +140,9 @@ VOID KeFreeGdtSelector(ULONG Entry)
    KiGdt[Entry*4 + 3] = 0;
    KeReleaseSpinLock(&GdtLock, oldIrql);
 }
+#endif
 
+#if 0
 ULONG KeAllocateGdtSelector(ULONG Desc[2])
 /*
  * FUNCTION: Allocate a gdt selector
@@ -170,3 +175,4 @@ ULONG KeAllocateGdtSelector(ULONG Desc[2])
    KeReleaseSpinLock(&GdtLock, oldIrql);
    return(0);
 }
+#endif
