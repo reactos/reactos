@@ -1,4 +1,4 @@
-/* $Id: limits.h,v 1.2 2002/02/20 09:17:54 hyperion Exp $
+/* $Id: limits.h,v 1.3 2002/05/17 01:47:13 hyperion Exp $
  */
 /*
  * limits.h
@@ -34,6 +34,9 @@
 /* CONSTANTS */
 /* TODO */
 #define OPEN_MAX (256)
+#define NAME_MAX (255)
+#define ARG_MAX  (255)
+#define PATH_MAX (32768)
 
 /* PROTOTYPES */
 

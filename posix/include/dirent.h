@@ -1,4 +1,4 @@
-/* $Id: dirent.h,v 1.3 2002/03/22 01:26:28 hyperion Exp $
+/* $Id: dirent.h,v 1.4 2002/05/17 01:47:13 hyperion Exp $
  */
 /*
  * dirent.h
@@ -33,17 +33,19 @@
 /* TYPES */
 typedef void DIR;
 
+#define NAME_MAX (255)
+
 struct dirent
 {
  ino_t d_ino;               /* file serial number */
- char d_name[NAME_MAX + 1]; /* name of entry */
+ char * d_name /* [NAME_MAX + 1] */; /* name of entry */
 };
 
 /* for Unicode filenames */
 struct _Wdirent
 {
  ino_t    d_ino;               /* file serial number */
- wchar_t d_name[NAME_MAX + 1]; /* name of entry */
+ wchar_t * d_name/* [NAME_MAX + 1] */; /* name of entry */
 };
 
 /* CONSTANTS */

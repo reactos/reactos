@@ -1,4 +1,4 @@
-/* $Id: time.h,v 1.2 2002/02/20 09:17:55 hyperion Exp $
+/* $Id: time.h,v 1.3 2002/05/17 01:47:13 hyperion Exp $
  */
 /*
  * time.h
@@ -30,7 +30,7 @@
 #include <sys/types.h>
 
 /* OBJECTS */
-//extern static int getdate_err; /* FIXME */
+/* extern static int getdate_err; */ /* FIXME */
 extern int       daylight;
 extern long int  timezone;
 extern char     *tzname[];
