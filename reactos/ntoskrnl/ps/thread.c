@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.128 2004/07/19 06:08:21 ion Exp $
+/* $Id: thread.c,v 1.129 2004/07/21 01:05:26 ion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -80,7 +80,7 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG
 STDCALL
@@ -88,12 +88,11 @@ PsGetThreadFreezeCount(
 	PETHREAD Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->Tcb.FreezeCount;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 STDCALL
@@ -101,12 +100,11 @@ PsGetThreadHardErrorsAreDisabled(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return FALSE;	
+	return Thread->HardErrorsAreDisabled;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -114,12 +112,11 @@ PsGetThreadId(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->Cid.UniqueThread;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PEPROCESS
 STDCALL
@@ -127,12 +124,11 @@ PsGetThreadProcess(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->ThreadsProcess;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -140,12 +136,11 @@ PsGetThreadProcessId(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->Cid.UniqueProcess;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HANDLE
 STDCALL
@@ -153,12 +148,11 @@ PsGetThreadSessionId(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (HANDLE)Thread->ThreadsProcess->SessionId;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PTEB
 STDCALL
@@ -166,12 +160,11 @@ PsGetThreadTeb(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->Tcb.Teb;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -179,11 +172,10 @@ PsGetThreadWin32Thread(
     PETHREAD	Thread
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return Thread->Win32Thread;
 }
 /*
- * @unimplemented
+ * @implemented
  */
 KPROCESSOR_MODE
 STDCALL
@@ -191,12 +183,11 @@ PsGetCurrentThreadPreviousMode (
     	VOID
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (KPROCESSOR_MODE)PsGetCurrentThread()->Tcb.PreviousMode;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -204,12 +195,11 @@ PsGetCurrentThreadStackBase (
     	VOID
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return PsGetCurrentThread()->Tcb.StackBase;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 PVOID
 STDCALL
@@ -217,8 +207,7 @@ PsGetCurrentThreadStackLimit (
     	VOID
 	)
 {
-	UNIMPLEMENTED;
-	return 0;	
+	return (PVOID)PsGetCurrentThread()->Tcb.StackLimit;
 }
 
 /*
@@ -616,20 +605,20 @@ PsSetLegoNotifyRoutine(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
 PsSetThreadHardErrorsAreDisabled(
-    PEPROCESS	Process,
+    PETHREAD	Thread,
     BOOLEAN	HardErrorsAreDisabled
 	)
 {
-	UNIMPLEMENTED;
+	Thread->HardErrorsAreDisabled = HardErrorsAreDisabled;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */                       
 VOID
 STDCALL
@@ -638,7 +627,7 @@ PsSetThreadWin32Thread(
     PVOID	Win32Thread
 	)
 {
-	UNIMPLEMENTED;
+	Thread->Win32Thread = Win32Thread;
 }
 
 VOID

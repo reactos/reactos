@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.30 2004/07/20 23:58:34 ion Exp $
+/* $Id: psfuncs.h,v 1.31 2004/07/21 01:05:26 ion Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -340,7 +340,7 @@ STDCALL PsSetProcessWin32WindowStation(
 
 VOID
 STDCALL PsSetThreadHardErrorsAreDisabled(
-    PEPROCESS	Process,
+    struct _ETHREAD*	Thread,
     BOOLEAN	HardErrorsAreDisabled
 	);
 
