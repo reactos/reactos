@@ -8,8 +8,6 @@
 #include <windows.h>
 #include <stdio.h>
 
-#include "../utility/utility.h"
-
 #include "ex_bar.h"
 
 HFONT tf;

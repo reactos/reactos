@@ -47,3 +47,6 @@ extern int LoadAvailablePlugIns(HWND ExplWnd);
  // shut down plugins
 extern int ReleaseAvailablePlugIns();
 
+ // search for windows of a specific classname
+extern int find_window_class(LPCTSTR classname);
+

@@ -8,9 +8,13 @@
 #include <stdio.h>
 #include <windows.h>
 
-#include "../utility/utility.h"
-
 #include "externals.h"
+
+ // Unicode support
+#ifdef UNICODE
+#define	_UNICODE
+#endif
+#include <tchar.h>
 
 
 /* GetShellWindow is already present in the header files
