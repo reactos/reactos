@@ -127,7 +127,7 @@ SeCaptureSecurityDescriptor(
   ULONG OwnerSAC = 0, GroupSAC = 0;
   ULONG OwnerSize = 0, GroupSize = 0;
   ULONG SaclSize = 0, DaclSize = 0;
-  ULONG DescriptorSize;
+  ULONG DescriptorSize = sizeof(SECURITY_DESCRIPTOR);
   NTSTATUS Status = STATUS_SUCCESS;
   
   if(OriginalSecurityDescriptor != NULL)
@@ -212,6 +212,7 @@ SeCaptureSecurityDescriptor(
                        1);                                                     \
           SidType##SAC = SidType->SubAuthorityCount;                           \
           SidType##Size = RtlLengthRequiredSid(SidType##SAC);                  \
+          DescriptorSize += ROUND_UP(SidType##Size, sizeof(ULONG));            \
           ProbeForRead(SidType,                                                \
                        SidType##Size,                                          \
                        sizeof(ULONG));                                         \
@@ -235,6 +236,7 @@ SeCaptureSecurityDescriptor(
       {                                                                        \
         SidType##SAC = SidType->SubAuthorityCount;                             \
         SidType##Size = RtlLengthRequiredSid(SidType##SAC);                    \
+        DescriptorSize += ROUND_UP(SidType##Size, sizeof(ULONG));              \
       }                                                                        \
     }                                                                          \
     } while(0)
@@ -259,6 +261,7 @@ SeCaptureSecurityDescriptor(
                        sizeof(AclType->AclSize),                               \
                        1);                                                     \
           AclType##Size = AclType->AclSize;                                    \
+          DescriptorSize += ROUND_UP(AclType##Size, sizeof(ULONG));            \
           ProbeForRead(AclType,                                                \
                        AclType##Size,                                          \
                        sizeof(ULONG));                                         \
@@ -281,6 +284,7 @@ SeCaptureSecurityDescriptor(
       else                                                                     \
       {                                                                        \
         AclType##Size = AclType->AclSize;                                      \
+        DescriptorSize += ROUND_UP(AclType##Size, sizeof(ULONG));              \
       }                                                                        \
     }                                                                          \
     else                                                                       \
@@ -294,12 +298,6 @@ SeCaptureSecurityDescriptor(
     
     /* allocate enough memory to store a complete copy of a self-relative
        security descriptor */
-    DescriptorSize = sizeof(SECURITY_DESCRIPTOR) +
-                     ROUND_UP(OwnerSize, sizeof(ULONG)) +
-                     ROUND_UP(GroupSize, sizeof(ULONG)) +
-                     ROUND_UP(SaclSize, sizeof(ULONG)) +
-                     ROUND_UP(DaclSize, sizeof(ULONG));
-
     NewDescriptor = ExAllocatePool(PoolType,
                                    DescriptorSize);
     if(NewDescriptor != NULL)
@@ -310,30 +308,28 @@ SeCaptureSecurityDescriptor(
       NewDescriptor->Sbz1 = DescriptorCopy.Sbz1;
       NewDescriptor->Control = DescriptorCopy.Control | SE_SELF_RELATIVE;
       
-      /* setup the offsets to the SIDs and ACLs */
-      NewDescriptor->Owner = (PVOID)Offset;
-      Offset += ROUND_UP(OwnerSize, sizeof(ULONG));
-      NewDescriptor->Group = (PVOID)Offset;
-      Offset += ROUND_UP(GroupSize, sizeof(ULONG));
-      NewDescriptor->Sacl = (PVOID)Offset;
-      Offset += ROUND_UP(SaclSize, sizeof(ULONG));
-      NewDescriptor->Dacl = (PVOID)Offset;
-      
       _SEH_TRY
       {
-        /* copy the SIDs and ACLs to the new self-relative security descriptor */
-        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Owner),
-                      DescriptorCopy.Owner,
-                      OwnerSize);
-        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Group),
-                      DescriptorCopy.Group,
-                      GroupSize);
-        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Sacl),
-                      DescriptorCopy.Sacl,
-                      SaclSize);
-        RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor + (ULONG_PTR)NewDescriptor->Dacl),
-                      DescriptorCopy.Dacl,
-                      DaclSize);
+        /* setup the offsets and copy the SIDs and ACLs to the new
+           self-relative security descriptor. Probing the pointers is not
+           neccessary anymore as we did that when collecting the sizes! */
+#define CopySIDOrACL(Type)                                                     \
+        do {                                                                   \
+        if(DescriptorCopy.Type != NULL)                                        \
+        {                                                                      \
+          NewDescriptor->Type = (PVOID)Offset;                                 \
+          RtlCopyMemory((PVOID)((ULONG_PTR)NewDescriptor +                     \
+                                (ULONG_PTR)NewDescriptor->Type),               \
+                        DescriptorCopy.Type,                                   \
+                        Type##Size);                                           \
+          Offset += ROUND_UP(Type##Size, sizeof(ULONG));                       \
+        }                                                                      \
+        } while(0)
+        
+        CopySIDOrACL(Owner);
+        CopySIDOrACL(Group);
+        CopySIDOrACL(Sacl);
+        CopySIDOrACL(Dacl);
       }
       _SEH_HANDLE
       {
