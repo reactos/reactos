@@ -32,6 +32,8 @@ void TCPRecvNotify( PCONNECTION_ENDPOINT Connection, UINT Flags ) {
     PTDI_IND_DISCONNECT DisconnectHandler;
     PVOID HandlerContext;
     SOCKADDR Addr;
+
+    TI_DbgPrint(MID_TRACE,("XX> Called\n"));
     
     do { 
 	error = OskitTCPRecv( Connection->SocketContext,
@@ -94,6 +96,8 @@ void TCPRecvNotify( PCONNECTION_ENDPOINT Connection, UINT Flags ) {
 	    break;
 	}
     } while( error == 0 && BytesRead > 0 && BytesTaken > 0 );
+
+    TI_DbgPrint(MID_TRACE,("XX> Leaving\n"));
 }
 
 void TCPCloseNotify( PCONNECTION_ENDPOINT Connection ) {

@@ -26,15 +26,24 @@ NTSTATUS AfdpDispRecvFrom(
  */
 {
     PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    AFD_READ_REQUEST ReadRequest;
+    LPWSABUF InBuffers;
+    UINT i;
+    
+    /* We will discard the WSABUFs as we go, reusing the memory */
+    InBuffers = (LPWSABUF)(Request + 1);
+
+    for( i = 0; i < Request->BufferCount; i++ ) {
+	InBuffers[i].buf = 
+	    (PCHAR)IoAllocateMdl( InBuffers[i].buf,
+				  InBuffers[i].len,
+				  FALSE,
+				  FALSE,
+				  Irp );
+    }
     
     AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
-    
-    ReadRequest.Recv.Request = Request;
-    ReadRequest.Recv.Reply = Reply;
-    
-    return AfdpMakeWork( AFD_OP_RECV_REQUEST, Irp, IrpSp, 
-			 (PCHAR)&ReadRequest, sizeof(ReadRequest) );
+
+    return AfdpMakeWork( AFD_OP_RECV_REQUEST, Irp, IrpSp, NULL, 0 );
 }
 
 NTSTATUS AfdDispBind(
@@ -264,6 +273,24 @@ NTSTATUS AfdpDispSendTo(
  * RETURNS:
  *     Status of operation
  */
+    LPWSABUF InBuffers;
+    PFILE_REQUEST_SENDTO Request = 
+	(PFILE_REQUEST_SENDTO)Irp->AssociatedIrp.SystemBuffer;
+    UINT i;
+    
+    InBuffers = (LPWSABUF)(Request + 1);
+
+    for( i = 0; i < Request->BufferCount; i++ ) {
+	InBuffers[i].buf = 
+	    (PCHAR)IoAllocateMdl( InBuffers[i].buf,
+				  InBuffers[i].len,
+				  FALSE,
+				  FALSE,
+				  Irp );
+    }
+    
+    AFD_DbgPrint(MAX_TRACE, ("Queueing read request.\n"));
+
     return AfdpMakeWork( AFD_OP_SEND_REQUEST, Irp, IrpSp, 
 			 (PCHAR)&WithAddr, sizeof(WithAddr) );
 }

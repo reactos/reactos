@@ -57,15 +57,6 @@ typedef struct _AFD_BUFFER {
   WSABUF Buffer;
 } AFD_BUFFER, *PAFD_BUFFER;
 
-typedef struct _AFD_READ_REQUEST {
-  union {
-    struct {
-      PFILE_REQUEST_RECVFROM Request;
-      PFILE_REPLY_RECVFROM Reply;
-    } RecvFrom, Recv;
-  };
-} AFD_READ_REQUEST, *PAFD_READ_REQUEST;
-
 typedef struct _AFD_ACCEPT_REQUEST {
     PTDI_CONNECTION_INFORMATION RequestConnectionInfo;
     IO_STATUS_BLOCK Iosb;

@@ -16,7 +16,7 @@ VOID RegisterFCBForWork( PAFDFCB FCB ) {
 	if( FCB->WorkItem ) 
 	    IoQueueWorkItem( FCB->WorkItem,
 			     AfdpWork,
-			     DelayedWorkQueue,
+			     CriticalWorkQueue,
 			     FCB );
     }
 }
@@ -72,8 +72,9 @@ VOID WorkCancelSend( PAFD_WORK_REQUEST WorkRequest ) {
 }
 
 VOID WorkCancelRecv( PAFD_WORK_REQUEST WorkRequest ) {
-    PAFD_READ_REQUEST ReadRequest = (PAFD_READ_REQUEST)WorkRequest->Payload;
-    ReadRequest->Recv.Reply->Status = WSAENOTSOCK;
+    PFILE_REPLY_RECVFROM Reply =
+	(PFILE_REPLY_RECVFROM)WorkRequest->Irp->AssociatedIrp.SystemBuffer;
+    Reply->Status = WSAENOTSOCK;
     WorkRequest->Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
 }
 
@@ -139,11 +140,26 @@ BOOL AfdpTryToSatisfyAcceptRequest( PAFDFCB FCB,
 
 BOOL AfdpTryToSatisfyRecvRequest( PAFDFCB FCB, 
 				  PAFD_WORK_REQUEST WorkRequest ) {
-    PAFD_READ_REQUEST ReadRequest = (PAFD_READ_REQUEST)WorkRequest->Payload;
     KIRQL RROldIrql;
+    PFILE_REQUEST_RECVFROM Request;
+    PFILE_REPLY_RECVFROM Reply;
     NTSTATUS Status = STATUS_PENDING;
-    ULONG Count = 0;
+    ULONG Count = 0, i;
     BOOL Complete = FALSE;
+    LPWSABUF Buffers;
+
+    Request = 
+	(PFILE_REQUEST_RECVFROM)WorkRequest->Irp->AssociatedIrp.SystemBuffer;
+    Reply = 
+	(PFILE_REPLY_RECVFROM)WorkRequest->Irp->AssociatedIrp.SystemBuffer;
+    Buffers = (LPWSABUF)(Request + 1);
+
+    AFD_DbgPrint(MAX_TRACE, ("Locking pages\n"));
+    /* Lock the regions */
+    for( i = 0; i < Request->BufferCount; i++ ) {
+	MmProbeAndLockPages( (PMDL)Buffers[i].buf, KernelMode, IoWriteAccess );
+    }
+    AFD_DbgPrint(MAX_TRACE, ("Unlocking pages\n"));
 
     KeAcquireSpinLock(&FCB->ReceiveQueueLock, &RROldIrql);
     
@@ -152,28 +168,34 @@ BOOL AfdpTryToSatisfyRecvRequest( PAFDFCB FCB,
 	
 	Status = FillWSABuffers
 	    (FCB,
-	     ReadRequest->Recv.Request->Buffers,
-	     ReadRequest->Recv.Request->BufferCount,
+	     Buffers,
+	     Request->BufferCount,
 	     &Count);
 	
 	AFD_DbgPrint(MAX_TRACE,
-		     ("FillWSABuffers: %x %d\n", Status, Count));
+		     ("FillMdls: %x %d\n", Status, Count));
 	
 	if( Status == STATUS_SUCCESS && Count > 0 ) {
-	    ReadRequest->Recv.Reply->NumberOfBytesRecvd = Count;
-	    ReadRequest->Recv.Reply->Status = NO_ERROR;
+	    Reply->NumberOfBytesRecvd = Count;
+	    Reply->Status = NO_ERROR;
 	    WorkRequest->Irp->IoStatus.Status = Status;
 	    Complete = TRUE;
 	} else {
-	    ReadRequest->Recv.Reply->NumberOfBytesRecvd = Count;
-	    ReadRequest->Recv.Reply->Status = Status;
-	    WorkRequest->Irp->IoStatus.Information = 
-		sizeof(*ReadRequest->Recv.Reply);
+	    Reply->NumberOfBytesRecvd = Count;
+	    Reply->Status = Status;
+	    WorkRequest->Irp->IoStatus.Information = sizeof(*Reply);
 	    WorkRequest->Irp->IoStatus.Status = Status;
 	}
     }
     
     KeReleaseSpinLock(&FCB->ReceiveQueueLock, RROldIrql);
+
+    AFD_DbgPrint(MAX_TRACE, ("Unlocking pages\n"));
+
+    for( i = 0; i < Request->BufferCount; i++ ) {
+	MmUnlockPages( (PMDL)Buffers[i].buf );
+	IoFreeMdl( (PMDL)Buffers[i].buf );
+    }
 
     AFD_DbgPrint(MAX_TRACE, ("Leaving.\n"));
     
@@ -190,15 +212,17 @@ BOOL AfdpTryToSatisfySendRequest( PAFDFCB FCB,
     PIRP Irp;
     PIO_STACK_LOCATION IrpSp;
     BOOL WithAddr;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
     UINT InputBufferLength;
     UINT OutputBufferLength;
     PFILE_REQUEST_SENDTO Request;
     PFILE_REPLY_SENDTO Reply;
     PVOID SystemVirtualAddress;
     PVOID DataBufferAddress;
+    LPWSABUF Buffers;
     ULONG BufferSize;
     ULONG BytesCopied;
+    ULONG i;
     PMDL Mdl;
     
     Irp = WorkRequest->Irp;
@@ -211,162 +235,181 @@ BOOL AfdpTryToSatisfySendRequest( PAFDFCB FCB,
 	IrpSp->Parameters.DeviceIoControl.OutputBufferLength;
     
     /* Validate parameters */
-    if ((InputBufferLength >= sizeof(FILE_REQUEST_SENDTO)) &&
-	(OutputBufferLength >= sizeof(FILE_REPLY_SENDTO))) {
-	
-	AFD_DbgPrint(MAX_TRACE, ("FileObject at (0x%X).\n", IrpSp->FileObject));
-	AFD_DbgPrint(MAX_TRACE, ("FCB at (0x%X).\n", IrpSp->FileObject->FsContext));
-	AFD_DbgPrint(MAX_TRACE, ("CCB at (0x%X).\n", IrpSp->FileObject->FsContext2));
-	
-	Request = (PFILE_REQUEST_SENDTO)Irp->AssociatedIrp.SystemBuffer;
-	Reply   = (PFILE_REPLY_SENDTO)Irp->AssociatedIrp.SystemBuffer;
-	
-	/* Since we're using bufferred I/O */
-	Request->Buffers = (LPWSABUF)(Request + 1);
-	BufferSize = WSABufferSize(Request->Buffers, Request->BufferCount);
+    AFD_DbgPrint(MAX_TRACE, ("FileObject at (0x%X).\n", IrpSp->FileObject));
+    AFD_DbgPrint(MAX_TRACE, ("FCB at (0x%X).\n", IrpSp->FileObject->FsContext));
+    AFD_DbgPrint(MAX_TRACE, ("CCB at (0x%X).\n", IrpSp->FileObject->FsContext2));
+
+    Request = (PFILE_REQUEST_SENDTO)Irp->AssociatedIrp.SystemBuffer;
+    Reply   = (PFILE_REPLY_SENDTO)Irp->AssociatedIrp.SystemBuffer;
+    
+    AFD_DbgPrint(MAX_TRACE, ("Got Request->Buffers @ %x\n", 
+			     Request->Buffers));
+
+    /* Since we're using bufferred I/O */
+    Buffers = (LPWSABUF)(Request + 1);
+    BufferSize = WSABufferSize(Buffers, Request->BufferCount);
+    
+    /* FIXME: Should we handle special cases here? */
+    if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET)) {
+	BufferSize += sizeof(IPv4_HEADER);
+    }
+        
+    if (BufferSize != 0) {
+	AFD_DbgPrint(MAX_TRACE, ("Allocating %d bytes for send buffer.\n", BufferSize));
+	SystemVirtualAddress = ExAllocatePool(NonPagedPool, BufferSize);
+	if (!SystemVirtualAddress) {
+	    for( i = 0; i < Request->BufferCount; i++ ) {
+		MmUnlockPages( (PMDL)Buffers[i].buf );
+		IoFreeMdl( (PMDL)Buffers[i].buf );
+	    }
+	    return STATUS_INSUFFICIENT_RESOURCES;
+	}
 	
 	/* FIXME: Should we handle special cases here? */
-	if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET)) {
-	    BufferSize += sizeof(IPv4_HEADER);
-	}
-	
-	
-	if (BufferSize != 0) {
-	    AFD_DbgPrint(MAX_TRACE, ("Allocating %d bytes for send buffer.\n", BufferSize));
-	    SystemVirtualAddress = ExAllocatePool(NonPagedPool, BufferSize);
-	    if (!SystemVirtualAddress)
-		return STATUS_INSUFFICIENT_RESOURCES;
+	if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET) && 
+	    WithAddr) {
+	    DataBufferAddress = ((PCHAR)SystemVirtualAddress) + sizeof(IPv4_HEADER);
 	    
-	    /* FIXME: Should we handle special cases here? */
-	    if ((FCB->SocketType == SOCK_RAW) && (FCB->AddressFamily == AF_INET) && 
-		WithAddr) {
-		DataBufferAddress = ((PCHAR)SystemVirtualAddress) + sizeof(IPv4_HEADER);
-		
-		/* FIXME: Should TCP/IP driver assign source address for raw sockets? */
-		((PSOCKADDR_IN)&FCB->SocketName)->sin_addr.S_un.S_addr = 0x0100007F;
-		
-		BuildIPv4Header(
-		    (PIPv4_HEADER)SystemVirtualAddress,
-		    BufferSize,
-		    FCB->Protocol,
-		    &FCB->SocketName,
-		    &Request->To);
-	    } else {
-		DataBufferAddress = SystemVirtualAddress;
-	    }
+	    /* FIXME: Should TCP/IP driver assign source address for raw 
+	     * sockets? */
+	    ((PSOCKADDR_IN)&FCB->SocketName)->sin_addr.S_un.S_addr = 0x0100007F;
 	    
-	    Status = MergeWSABuffers(
-		Request->Buffers,
-		Request->BufferCount,
-		DataBufferAddress,
+	    BuildIPv4Header(
+		(PIPv4_HEADER)SystemVirtualAddress,
 		BufferSize,
-		&BytesCopied);
-	    if (!NT_SUCCESS(Status)) {
-		AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
-		Irp->IoStatus.Status = WSAENOBUFS;
-		return TRUE;
-	    }
+		FCB->Protocol,
+		&FCB->SocketName,
+		&Request->To);
 	} else {
-	    SystemVirtualAddress = NULL;
-	    BytesCopied = 0;
+	    DataBufferAddress = SystemVirtualAddress;
 	}
 	
-	Mdl = IoAllocateMdl(
-	    SystemVirtualAddress,   /* Virtual address of buffer */
-	    BufferSize,             /* Length of buffer */
-	    FALSE,                  /* Not secondary */
-	    FALSE,                  /* Don't charge quota */
-	    NULL);                  /* Don't use IRP */
-	if (!Mdl) {
-	    ExFreePool(SystemVirtualAddress);
+	Status = MergeWSABuffers(
+	    Request->Buffers,
+	    Request->BufferCount,
+	    DataBufferAddress,
+	    BufferSize,
+	    &BytesCopied);
+
+	if (!NT_SUCCESS(Status)) {
+	    AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 	    Irp->IoStatus.Status = WSAENOBUFS;
 	    return TRUE;
 	}
-	
-	MmBuildMdlForNonPagedPool(Mdl);
-	
-	AFD_DbgPrint(MAX_TRACE, ("System virtual address is (0x%X).\n", SystemVirtualAddress));
-	AFD_DbgPrint(MAX_TRACE, ("MDL for data buffer is at (0x%X).\n", Mdl));
-	
-	AFD_DbgPrint(MAX_TRACE, ("AFD.SYS: NDIS data buffer is at (0x%X).\n", Mdl));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer MdlFlags is (0x%X).\n", Mdl->MdlFlags));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer Next is at (0x%X).\n", Mdl->Next));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer Size is (0x%X).\n", Mdl->Size));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer MappedSystemVa is (0x%X).\n", Mdl->MappedSystemVa));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer StartVa is (0x%X).\n", Mdl->StartVa));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteCount is (0x%X).\n", Mdl->ByteCount));
-	AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteOffset is (0x%X).\n", Mdl->ByteOffset));
-	
+    } else {
+	SystemVirtualAddress = NULL;
+	BytesCopied = 0;
+    }
+
+    for( i = 0; i < Request->BufferCount; i++ ) {
+	MmUnlockPages( (PMDL)Buffers[i].buf );
+	IoFreeMdl( (PMDL)Buffers[i].buf );
+    }
+    
+    /* Note: By this point, we should have unlocked the mdls to the user pages
+     * we've been keeping 
+     * Any branches above that return early should loop over the buffers array
+     * and unlock the mdls. */
+
+    Mdl = IoAllocateMdl(
+	SystemVirtualAddress,   /* Virtual address of buffer */
+	BufferSize,             /* Length of buffer */
+	FALSE,                  /* Not secondary */
+	FALSE,                  /* Don't charge quota */
+	NULL);                  /* Don't use IRP */
+    if (!Mdl) {
+	ExFreePool(SystemVirtualAddress);
+	Irp->IoStatus.Status = WSAENOBUFS;
+	return TRUE;
+    }
+
+    MmProbeAndLockPages(Mdl, KernelMode, IoReadAccess);
+    /* MmBuildMdlForNonPagedPool(Mdl); */
+    
+    AFD_DbgPrint(MAX_TRACE, ("System virtual address is (0x%X).\n", SystemVirtualAddress));
+    AFD_DbgPrint(MAX_TRACE, ("MDL for data buffer is at (0x%X).\n", Mdl));
+    
+    AFD_DbgPrint(MAX_TRACE, ("AFD.SYS: NDIS data buffer is at (0x%X).\n", Mdl));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer MdlFlags is (0x%X).\n", Mdl->MdlFlags));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer Next is at (0x%X).\n", Mdl->Next));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer Size is (0x%X).\n", Mdl->Size));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer MappedSystemVa is (0x%X).\n", Mdl->MappedSystemVa));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer StartVa is (0x%X).\n", Mdl->StartVa));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteCount is (0x%X).\n", Mdl->ByteCount));
+    AFD_DbgPrint(MAX_TRACE, ("NDIS data buffer ByteOffset is (0x%X).\n", Mdl->ByteOffset));
+    
 #if 0
 #ifdef _MSC_VER
-	try {
+    try {
 #endif
-	    MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+	MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
 #ifdef _MSC_VER
-	} except(EXCEPTION_EXECUTE_HANDLER) {
-	    AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-	    IoFreeMdl(Mdl);
-	    if (BufferSize != 0) {
-		ExFreePool(SystemVirtualAddress);
-	    }
-	    return STATUS_UNSUCCESSFUL;
-	}
-#endif
-#endif
-	
-	if (!FCB->TdiAddressObject) {
-	    struct sockaddr_in BindName;
-	    
-	    RtlZeroMemory(&BindName,sizeof(BindName));
-	    BindName.sin_family = AF_INET;
-	    
-	    Status = TdiOpenAddressFile
-		(&FCB->TdiDeviceName,
-		 (SOCKADDR *)&BindName,
-		 &FCB->TdiAddressObjectHandle,
-		 &FCB->TdiAddressObject);
-	    
-	    if (NT_SUCCESS(Status)) {
-		AfdRegisterEventHandlers(FCB);
-		FCB->State = SOCKET_STATE_BOUND;
-		Reply->Status = NO_ERROR;
-	    } else {
-		//FIXME: WSAEADDRNOTAVAIL
-		Reply->Status = WSAEINVAL;
-		MmUnlockPages(Mdl);
-		IoFreeMdl(Mdl);
-		return Status;
-	    }
-	}
-	
-	if( WithAddr ) {
-	    Status = TdiSendDatagram(FCB->TdiAddressObject,
-				     &Request->To,
-				     Mdl,
-				     BufferSize);
-	} else {
-	    Status = TdiSend(FCB->TdiAddressObject,
-			     Mdl,
-			     BufferSize);
-	    
-	    /* FIXME: Assumes synchronous operation */
-#if 0
-	    MmUnlockPages(Mdl);
-#endif
-	}
-	
+    } except(EXCEPTION_EXECUTE_HANDLER) {
+	AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
 	IoFreeMdl(Mdl);
-	
 	if (BufferSize != 0) {
 	    ExFreePool(SystemVirtualAddress);
 	}
+	return STATUS_UNSUCCESSFUL;
+    }
+#endif
+#endif
+    
+    if (!FCB->TdiAddressObject) {
+	struct sockaddr_in BindName;
 	
-	AfdpKickFCB( FCB, FD_WRITE_BIT, NO_ERROR );
-	Reply->NumberOfBytesSent = BufferSize;
-	Reply->Status = NO_ERROR;
-	Irp->IoStatus.Status = Status;
+	AFD_DbgPrint(MID_TRACE,("Binding socket on first send.\n"));
+	
+	RtlZeroMemory(&BindName,sizeof(BindName));
+	BindName.sin_family = AF_INET;
+	
+	Status = TdiOpenAddressFile
+	    (&FCB->TdiDeviceName,
+	     (SOCKADDR *)&BindName,
+	     &FCB->TdiAddressObjectHandle,
+	     &FCB->TdiAddressObject);
+	
+	if (NT_SUCCESS(Status)) {
+	    AfdRegisterEventHandlers(FCB);
+	    FCB->State = SOCKET_STATE_BOUND;
+	    Reply->Status = NO_ERROR;
+	} else {
+	    //FIXME: WSAEADDRNOTAVAIL
+	    Reply->Status = WSAEINVAL;
+	    MmUnlockPages(Mdl);
+	    IoFreeMdl(Mdl);
+	    return Status;
+	}
     }
     
+    if( WithAddr ) {
+	Status = TdiSendDatagram(FCB->TdiAddressObject,
+				 &Request->To,
+				 Mdl,
+				 BufferSize);
+    } else {
+	Status = TdiSend(FCB->TdiAddressObject,
+			 Mdl,
+			 BufferSize);
+	
+	/* FIXME: Assumes synchronous operation */
+#if 0
+	MmUnlockPages(Mdl);
+#endif
+    }
+    
+    IoFreeMdl(Mdl);
+    
+    if (BufferSize != 0) {
+	ExFreePool(SystemVirtualAddress);
+    }
+    
+    AfdpKickFCB( FCB, FD_WRITE_BIT, NO_ERROR );
+    Reply->NumberOfBytesSent = BufferSize;
+    Reply->Status = NO_ERROR;
+    WorkRequest->Irp->IoStatus.Information = sizeof(*Reply);
+    Irp->IoStatus.Status = Status;
+
     AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
 
     return TRUE;
@@ -463,6 +506,7 @@ VOID AfdpWork( PDEVICE_OBJECT DriverObject, PVOID Data ) {
     }
     
     AfdpWorkOnFcb( FCB );
+    FCB->WorkItem = 0;
     
     AFD_DbgPrint(MID_TRACE, ("... Done\n"));
 }

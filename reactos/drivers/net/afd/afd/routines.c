@@ -67,12 +67,13 @@ NTSTATUS MergeWSABuffers(
       /* Don't copy out of bounds */
       Length = MaxLength;
 
-    RtlCopyMemory(Destination, p->buf, Length);
-    Destination += Length;
     AFD_DbgPrint(MAX_TRACE, ("Destination is 0x%X\n", Destination));
-    p++;
     AFD_DbgPrint(MAX_TRACE, ("p is 0x%X\n", p));
+    RtlCopyMemory(Destination, MmGetSystemAddressForMdl((PMDL)p->buf), Length);
+    Destination += Length;
+    p++;
 
+    AFD_DbgPrint(MAX_TRACE, ("Setting BytesCopied to %d\n", Length));
     *BytesCopied += Length;
 
     MaxLength -= Length;
@@ -84,9 +85,6 @@ NTSTATUS MergeWSABuffers(
   return STATUS_SUCCESS;
 }
 
-/*
- * NOTES: ReceiveQueueLock must be acquired for the FCB when called
- */
 NTSTATUS FillWSABuffers(
     PAFDFCB FCB,
     LPWSABUF Buffers,
@@ -114,7 +112,7 @@ NTSTATUS FillWSABuffers(
   SrcData = SrcBuffer->Buffer.buf + SrcBuffer->ConsumedThisBuffer;
   SrcSize = SrcBuffer->Buffer.len - SrcBuffer->ConsumedThisBuffer;
   
-  DstData = Buffers->buf;
+  DstData = MmGetSystemAddressForMdl((PMDL)Buffers->buf);
   DstSize = Buffers->len;
 
   /* Copy the data */
@@ -128,6 +126,7 @@ NTSTATUS FillWSABuffers(
     AFD_DbgPrint(MAX_TRACE, ("DstData (0x%X) SrcData (0x%X) Count (0x%X).\n",
       DstData, SrcData, Count));
 
+    
     RtlCopyMemory((PVOID)DstData, (PVOID)SrcData, Count); /* XXX */
 
     Total += Count;
@@ -307,7 +306,7 @@ VOID AfdpKickFCB( PAFDFCB FCB, UINT BitToSet, UINT BitErrorCode ) {
     if (FCB->EventObject != NULL) {
 	FCB->NetworkEvents.lNetworkEvents |= (1 << BitToSet);
 	FCB->NetworkEvents.iErrorCode[BitToSet] = NO_ERROR;
-	KeSetEvent(FCB->EventObject, EVENT_INCREMENT, FALSE);
+	KePulseEvent(FCB->EventObject, EVENT_INCREMENT, FALSE);
     }
 }
 /* EOF */

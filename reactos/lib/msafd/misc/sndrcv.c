@@ -39,7 +39,7 @@ WSPRecv(
     OUT     LPINT lpErrno)
 {
   PFILE_REQUEST_RECV Request;
-  FILE_REPLY_RECV Reply;
+  PFILE_REPLY_RECV Reply;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
   DWORD Size;
@@ -49,7 +49,8 @@ WSPRecv(
   Size = dwBufferCount * sizeof(WSABUF);
 
   Request = (PFILE_REQUEST_RECV)HeapAlloc
-      (GlobalHeap, 0, sizeof(FILE_REQUEST_RECV) + Size);
+      (GlobalHeap, 0, sizeof(FILE_REQUEST_RECV) + sizeof(FILE_REPLY_RECV) + 
+       Size);
   if (!Request) {
       AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
       *lpErrno = WSAENOBUFS;
@@ -57,13 +58,14 @@ WSPRecv(
   }
 
   /* Put buffer pointers after request structure */
-  Request->Buffers     = (LPWSABUF)(Request + 1);
+  Reply = (PFILE_REPLY_RECV)(Request + 1);
+  Request->Buffers     = (LPWSABUF)(Reply + 1);
   Request->BufferCount = dwBufferCount;
   Request->Flags       = lpFlags;
 
   RtlCopyMemory(Request->Buffers, lpBuffers, Size);
 
-  Reply.NumberOfBytesRecvd = 0x12345678;
+  Reply->NumberOfBytesRecvd = 0x12345678;
 
   Status = NtDeviceIoControlFile
       ((HANDLE)s,
@@ -74,19 +76,20 @@ WSPRecv(
        IOCTL_AFD_RECV,
        Request,
        sizeof(FILE_REQUEST_RECV) + Size,
-       &Reply,
+       Reply,
        sizeof(FILE_REPLY_RECV));
   
-  HeapFree(GlobalHeap, 0, Request);
-
   AFD_DbgPrint(MIN_TRACE, ("Status is %x, (Reply: Status %x Bytes %d)\n",
-			   Status, Reply.Status, Reply.NumberOfBytesRecvd));
+			   Status, Reply->Status, Reply->NumberOfBytesRecvd));
 
   if (Status == STATUS_PENDING) {
     AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
     /* FIXME: Wait only for blocking sockets */
     Status = NtWaitForSingleObject((HANDLE)s, FALSE, NULL);
   }
+
+  *lpNumberOfBytesRecvd = Reply->NumberOfBytesRecvd;
+  HeapFree(GlobalHeap, 0, Request);
 
   if (!NT_SUCCESS(Status)) {
       AFD_DbgPrint(MAX_TRACE, ("Status (0x%X).\n", Status));
@@ -95,9 +98,7 @@ WSPRecv(
   }
 
   AFD_DbgPrint(MAX_TRACE, ("Receive successful (0x%X).\n",
-			   Reply.NumberOfBytesRecvd));
-
-  *lpNumberOfBytesRecvd = Reply.NumberOfBytesRecvd;
+			   *lpNumberOfBytesRecvd));
   //*lpFlags = 0;
 
   return 0;
@@ -212,7 +213,7 @@ WSPSend(
     OUT LPINT lpErrno)
 {
     PFILE_REQUEST_SENDTO Request;
-    FILE_REPLY_SENDTO Reply;
+    FILE_REPLY_SENDTO Reply = { 0 };
     IO_STATUS_BLOCK Iosb;
     NTSTATUS Status;
     DWORD Size;
@@ -222,7 +223,7 @@ WSPSend(
     Size = dwBufferCount * sizeof(WSABUF);
     
     Request = (PFILE_REQUEST_SENDTO)HeapAlloc(
-	GlobalHeap, 0, sizeof(FILE_REQUEST_SEND) + Size);
+	GlobalHeap, 0, sizeof(FILE_REQUEST_SENDTO) + Size);
     if (!Request) {
 	*lpErrno = WSAENOBUFS;
 	return SOCKET_ERROR;
@@ -235,6 +236,9 @@ WSPSend(
     
     RtlCopyMemory(Request->Buffers, lpBuffers, Size);
     
+    AFD_DbgPrint(MAX_TRACE, ("Request buffers @ %x\n", Request->Buffers));
+    AFD_DbgPrint(MAX_TRACE, ("Reply @ %x\n", &Reply));
+
     Status = NtDeviceIoControlFile(
 	(HANDLE)s,
 	NULL,
@@ -243,9 +247,9 @@ WSPSend(
 	&Iosb,
 	IOCTL_AFD_SEND,
 	Request,
-	sizeof(FILE_REQUEST_SEND) + Size,
+	sizeof(FILE_REQUEST_SENDTO) + Size,
 	&Reply,
-	sizeof(FILE_REPLY_SEND));
+	sizeof(FILE_REPLY_SENDTO));
     
     HeapFree(GlobalHeap, 0, Request);
     
