@@ -456,14 +456,14 @@ KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   Frame = (PULONG)Tf->Ebp;
   while (Frame != NULL)
     {
-      Status = MmCopyToCaller(&ReturnAddress, &Frame[1], sizeof(ULONG));
+      Status = MmCopyFromCaller(&ReturnAddress, &Frame[1], sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("????????\n");
 	  break;
 	}
       print_address((PVOID)ReturnAddress);
-      Status = MmCopyToCaller(&NextFrame, &Frame[0], sizeof(ULONG));
+      Status = MmCopyFromCaller(&NextFrame, &Frame[0], sizeof(ULONG));
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("Frame is inaccessible.\n");
