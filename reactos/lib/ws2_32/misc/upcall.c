@@ -131,7 +131,7 @@ WPUModifyIFSHandle(
   PCATALOG_ENTRY Provider;
   SOCKET Socket;
 
-  WS_DbgPrint(MAX_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
+  WS_DbgPrint(MID_TRACE, ("dwCatalogEntryId (%d)  ProposedHandle (0x%X).\n",
     dwCatalogEntryId, ProposedHandle));
 
   Provider = LocateProviderById(dwCatalogEntryId);

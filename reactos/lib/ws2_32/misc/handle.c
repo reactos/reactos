@@ -161,6 +161,8 @@ CreateProviderHandleTable(
   NewBlock = (PPROVIDER_HANDLE_BLOCK)HeapAlloc(
       GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
 
+  WS_DbgPrint(MID_TRACE,("using table entry %x\n", NewBlock));
+
   if (!NewBlock)
       return (HANDLE)0;
 
@@ -209,11 +211,13 @@ ReferenceProviderByHandle(
 {
   PPROVIDER_HANDLE ProviderHandle;
 
-	WS_DbgPrint(MAX_TRACE, ("Handle (0x%X)  Provider (0x%X).\n", Handle, Provider));
+  WS_DbgPrint(MID_TRACE, ("Handle (0x%X)  Provider (0x%X).\n", Handle, Provider));
 
   EnterCriticalSection(&ProviderHandleTableLock);
 
   ProviderHandle = GetProviderByHandle(ProviderHandleTable, Handle);
+
+  WS_DbgPrint(MID_TRACE, ("ProviderHanddle is %x\n", ProviderHandle));
 
   LeaveCriticalSection(&ProviderHandleTableLock);
 
@@ -255,6 +259,8 @@ InitProviderHandleTable(VOID)
     HeapAlloc(GlobalHeap, 0, sizeof(PROVIDER_HANDLE_BLOCK));
   if (!ProviderHandleTable)
     return FALSE;
+
+  WS_DbgPrint(MID_TRACE,("Called\n"));
 
   ZeroMemory(ProviderHandleTable, sizeof(PROVIDER_HANDLE_BLOCK));
 

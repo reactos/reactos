@@ -668,6 +668,7 @@ DllMain(HANDLE hInstDll,
 
     p->LastErrorValue = NO_ERROR;
     p->Getservbyname  = NULL;
+    p->Getservbyport  = NULL;
 
     NtCurrentTeb()->WinSockData = p;
     break;

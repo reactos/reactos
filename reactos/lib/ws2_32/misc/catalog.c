@@ -188,7 +188,7 @@ INT LoadProvider(
 {
   INT Status;
 
-  WS_DbgPrint(MAX_TRACE, ("Loading provider at (0x%X)  Name (%wZ).\n",
+  WS_DbgPrint(MID_TRACE, ("Loading provider at (0x%X)  Name (%wZ).\n",
     Provider, &Provider->LibraryName));
 
   if (NULL == Provider->hModule)
@@ -221,7 +221,7 @@ INT LoadProvider(
   } else
     Status = NO_ERROR;
 
-  WS_DbgPrint(MAX_TRACE, ("Status (%d).\n", Status));
+  WS_DbgPrint(MID_TRACE, ("Status (%d).\n", Status));
 
   return Status;
 }
