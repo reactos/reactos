@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.57 2003/11/24 00:22:52 arty Exp $
+/* $Id: conio.c,v 1.58 2003/11/24 14:04:36 gvg Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -1548,16 +1548,16 @@ CsrpProcessKey(MSG *msg, PCSRSS_CONSOLE Console)
   if (ConInRec->NotChar)
     LastVirtualKey = msg->wParam;
 
-  DbgPrint("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
-	   Down ? "down" : "up  ",
-	   (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
-	   "char" : "key ",
-	   ConInRec->Fake ? "fake" : "real",
-	   ConInRec->NotChar ? "notc" : "char",
-	   VirtualScanCode,
-	   VirtualKeyCode,
-	   (AsciiChar >= ' ') ? AsciiChar : '.',
-	   ShiftState);
+  DPRINT("csrss: %s %s %s %s %02x %02x '%c' %04x\n",
+	 Down ? "down" : "up  ",
+	 (msg->message == WM_CHAR || msg->message == WM_SYSCHAR) ?
+	 "char" : "key ",
+	 ConInRec->Fake ? "fake" : "real",
+	 ConInRec->NotChar ? "notc" : "char",
+	 VirtualScanCode,
+	 VirtualKeyCode,
+	 (AsciiChar >= ' ') ? AsciiChar : '.',
+	 ShiftState);
     
   if (!ConInRec->Fake || !ConInRec->NotChar)
     CsrpProcessChar(Console, ConInRec);
