@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.34 2003/12/25 10:21:02 navaraf Exp $
+/* $Id: bitblt.c,v 1.35 2003/12/25 10:49:30 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -825,7 +825,7 @@ AlphaBltMask(SURFOBJ* Dest,
 
   if (Mask != NULL)
     {
-      BrushColor = XLATEOBJ_iXlate(ColorTranslation, Brush->iSolidColor);
+      BrushColor = XLATEOBJ_iXlate(SrcColorTranslation, Brush->iSolidColor);
       r = (int)GetRValue(BrushColor);
       g = (int)GetGValue(BrushColor);
       b = (int)GetBValue(BrushColor);
