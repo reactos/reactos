@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.42 2001/06/07 21:18:01 ekohl Exp $
+/* $Id: ide.c,v 1.43 2001/08/13 16:43:36 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -464,9 +464,10 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   int                    CommandPort;
   NTSTATUS               Status;
   IDE_DRIVE_IDENTIFY     DrvParms;
-  PDEVICE_OBJECT         RawDeviceObject;
+  PDEVICE_OBJECT         DiskDeviceObject;
   PDEVICE_OBJECT         PartitionDeviceObject;
-  PIDE_DEVICE_EXTENSION  RawDeviceExtension;
+  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
+  PIDE_DEVICE_EXTENSION  PartitionDeviceExtension;
   UNICODE_STRING         UnicodeDeviceDirName;
   OBJECT_ATTRIBUTES      DeviceDirAttributes;
   HANDLE                 Handle;
@@ -524,7 +525,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   DPRINT("SectorCount %lu\n", SectorCount);
 
   Status = IDECreateDevice(DriverObject,
-                           &RawDeviceObject,
+                           &DiskDeviceObject,
                            ControllerObject,
                            DriveIdx,
                            HarddiskIdx,
@@ -541,7 +542,9 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Increase number of available physical disk drives */
   IoGetConfigurationInformation()->DiskCount++;
 
-  RawDeviceExtension = (PIDE_DEVICE_EXTENSION)RawDeviceObject->DeviceExtension;
+  /* Initialize device extension for the disk device */
+  DiskDeviceExtension = (PIDE_DEVICE_EXTENSION)DiskDeviceObject->DeviceExtension;
+  DiskDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
 
   /*
    * Initialize the controller timer here
@@ -551,8 +554,8 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
     {
       ControllerExtension->TimerState = IDETimerIdle;
       ControllerExtension->TimerCount = 0;
-      ControllerExtension->TimerDevice = RawDeviceObject;
-      IoInitializeTimer(RawDeviceObject,
+      ControllerExtension->TimerDevice = DiskDeviceObject;
+      IoInitializeTimer(DiskDeviceObject,
                         IDEIoTimer,
                         ControllerExtension);
     }
@@ -560,7 +563,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
    DPRINT("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
 
   /* Read partition table */
-  Status = IoReadPartitionTable(RawDeviceObject,
+  Status = IoReadPartitionTable(DiskDeviceObject,
                                 DrvParms.BytesPerSector,
                                 TRUE,
                                 &PartitionList);
@@ -598,12 +601,14 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
           DbgPrint("IDECreateDevice() failed\n");
           break;
         }
+
+      /* Initialize pointer to disk device extension */
+      PartitionDeviceExtension = (PIDE_DEVICE_EXTENSION)PartitionDeviceObject->DeviceExtension;
+      PartitionDeviceExtension->DiskExtension = (PVOID)DiskDeviceExtension;
    }
 
    if (PartitionList != NULL)
      ExFreePool(PartitionList);
-
-//for (;;);
 
   return  TRUE;
 }
@@ -747,6 +752,7 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
   DeviceExtension = (PIDE_DEVICE_EXTENSION) (*DeviceObject)->DeviceExtension;
   DeviceExtension->DeviceObject = (*DeviceObject);
   DeviceExtension->ControllerObject = ControllerObject;
+  DeviceExtension->DiskExtension = NULL;
   DeviceExtension->UnitNumber = UnitNumber;
   DeviceExtension->LBASupported = 
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
@@ -1075,7 +1081,7 @@ DPRINT("AdjOffset:%ld:%ld + Length:%ld = AdjExtent:%ld:%ld\n",
 //    NTSTATUS
 //
 
-static  NTSTATUS STDCALL
+static NTSTATUS STDCALL
 IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                          IN PIRP Irp)
 {
@@ -1083,6 +1089,8 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   ULONG     ControlCode, InputLength, OutputLength;
   PIO_STACK_LOCATION     IrpStack;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
+  PIDE_DEVICE_EXTENSION  DiskDeviceExtension;
+  CCHAR Increment;
 
   RC = STATUS_SUCCESS;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1090,6 +1098,8 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   InputLength = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
   OutputLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
   DeviceExtension = (PIDE_DEVICE_EXTENSION) DeviceObject->DeviceExtension;
+  DiskDeviceExtension = (PIDE_DEVICE_EXTENSION)DeviceExtension->DiskExtension;
+  Increment = IO_NO_INCREMENT;
 
     //  A huge switch statement in a Windows program?! who would have thought?
   switch (ControlCode)
@@ -1104,13 +1114,13 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
           PDISK_GEOMETRY Geometry;
 
           Geometry = (PDISK_GEOMETRY) Irp->AssociatedIrp.SystemBuffer;
+
           Geometry->MediaType = FixedMedia;
-              // FIXME: should report for RawDevice even on partition
-          Geometry->Cylinders.QuadPart = DeviceExtension->LogicalCylinders;
-          Geometry->TracksPerCylinder = DeviceExtension->SectorsPerLogTrk /
-              DeviceExtension->SectorsPerLogCyl;
-          Geometry->SectorsPerTrack = DeviceExtension->SectorsPerLogTrk;
-          Geometry->BytesPerSector = DeviceExtension->BytesPerSector;
+          Geometry->Cylinders.QuadPart = DiskDeviceExtension->LogicalCylinders;
+          Geometry->TracksPerCylinder = DiskDeviceExtension->SectorsPerLogTrk /
+              DiskDeviceExtension->SectorsPerLogCyl;
+          Geometry->SectorsPerTrack = DiskDeviceExtension->SectorsPerLogTrk;
+          Geometry->BytesPerSector = DiskDeviceExtension->BytesPerSector;
 
           Irp->IoStatus.Status = STATUS_SUCCESS;
           Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
@@ -1119,7 +1129,55 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
     case IOCTL_DISK_GET_PARTITION_INFO:
     case IOCTL_DISK_SET_PARTITION_INFO:
+      RC = STATUS_INVALID_DEVICE_REQUEST;
+      Irp->IoStatus.Status = RC;
+      Irp->IoStatus.Information = 0;
+      break;
+
     case IOCTL_DISK_GET_DRIVE_LAYOUT:
+      if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength <
+          sizeof(DRIVE_LAYOUT_INFORMATION))
+        {
+          Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+        }
+      else
+        {
+          PDRIVE_LAYOUT_INFORMATION PartitionList;
+
+          RC = IoReadPartitionTable(DiskDeviceExtension->DeviceObject,
+                                    DiskDeviceExtension->BytesPerSector,
+                                    FALSE,
+                                    &PartitionList);
+          if (!NT_SUCCESS(RC))
+            {
+              Irp->IoStatus.Status = RC;
+            }
+          else
+            {
+              ULONG BufferSize;
+
+              BufferSize = FIELD_OFFSET(DRIVE_LAYOUT_INFORMATION,
+                                        PartitionEntry[0]);
+              BufferSize += PartitionList->PartitionCount * sizeof(PARTITION_INFORMATION);
+
+              if (BufferSize > IrpStack->Parameters.DeviceIoControl.OutputBufferLength)
+                {
+                  Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+                }
+              else
+                {
+                  RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer,
+                                PartitionList,
+                                BufferSize);
+                  Irp->IoStatus.Status = STATUS_SUCCESS;
+                  Irp->IoStatus.Information = BufferSize;
+                }
+              ExFreePool(PartitionList);
+            }
+        }
+        Increment = IO_DISK_INCREMENT;
+        break;
+
     case IOCTL_DISK_SET_DRIVE_LAYOUT:
     case IOCTL_DISK_VERIFY:
     case IOCTL_DISK_FORMAT_TRACKS:
@@ -1141,7 +1199,7 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
       break;
     }
 
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  IoCompleteRequest(Irp, Increment);
 
   return  RC;
 }
