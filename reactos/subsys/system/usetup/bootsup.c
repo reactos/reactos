@@ -1190,8 +1190,10 @@ InstallFat16BootCodeToDisk(PWSTR SrcPath,
     return(Status);
   }
 
-  /* Adjust bootsector (copy a part of the FAT BPB) */
-  memcpy((NewBootSector + 11), (OrigBootSector + 11), 51 /*fat BPB length*/);
+  /* Adjust bootsector (copy a part of the FAT16 BPB) */
+  memcpy((NewBootSector + 3),
+	 (OrigBootSector + 3),
+	 59);  /* FAT16 BPB length*/
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
