@@ -256,8 +256,10 @@ NTSTATUS TdiCall(
     NTSTATUS Status;
 
     AFD_DbgPrint(MAX_TRACE, ("Called\n"));
-
+    
     Status = IoCallDriver(DeviceObject, Irp);
+    AFD_DbgPrint(MAX_TRACE, ("IoCallDriver: %08x\n", Status));
+
     if ((Status == STATUS_PENDING) && (Event != NULL)) {
         AFD_DbgPrint(MAX_TRACE, ("Waiting on transport.\n"));
         KeWaitForSingleObject(
@@ -1108,11 +1110,16 @@ NTSTATUS TdiSendDatagram(
     KEVENT Event;
     PIRP Irp;
 
+    AFD_DbgPrint(MAX_TRACE, ("Called.\n"));
+
     DeviceObject = IoGetRelatedDeviceObject(TransportObject);
     if (!DeviceObject) {
         AFD_DbgPrint(MIN_TRACE, ("Bad device object.\n"));
         return STATUS_INVALID_PARAMETER;
     }
+
+    AFD_DbgPrint(MAX_TRACE, 
+		 ("TdiSendDatagram: TansportObject = %08x\n", TransportObject));
 
     TdiAddressSize = TdiAddressSizeFromName(Address);
 
@@ -1123,17 +1130,27 @@ NTSTATUS TdiSendDatagram(
     if (!ConnectInfo)
         return STATUS_INSUFFICIENT_RESOURCES;
 
+    AFD_DbgPrint(MAX_TRACE,
+		 ("TdiAddressSize = %d, sizeof(TDI_CONNECTION_INFORMATION) = %d\n",
+		  TdiAddressSize, sizeof(TDI_CONNECTION_INFORMATION)));
+
     RtlZeroMemory(ConnectInfo,
         sizeof(TDI_CONNECTION_INFORMATION) +
         TdiAddressSize);
 
     ConnectInfo->RemoteAddressLength = TdiAddressSize;
     ConnectInfo->RemoteAddress       = (PVOID)
-        (ConnectInfo + sizeof(TDI_CONNECTION_INFORMATION));
+        (((PCHAR)ConnectInfo) + sizeof(TDI_CONNECTION_INFORMATION));
+
+    AFD_DbgPrint(MAX_TRACE, ("Point A\n"));
 
     TdiBuildAddress(ConnectInfo->RemoteAddress, Address);
 
+    AFD_DbgPrint(MAX_TRACE, ("Point B\n"));
+
     KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    AFD_DbgPrint(MAX_TRACE, ("Point 0\n"));
 
     Irp = TdiBuildInternalDeviceControlIrp(TDI_SEND_DATAGRAM,   /* Sub function */
                                            DeviceObject,        /* Device object */
@@ -1145,6 +1162,8 @@ NTSTATUS TdiSendDatagram(
         ExFreePool(ConnectInfo);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    AFD_DbgPrint(MAX_TRACE, ("Point 1\n"));
 
 #if 0
     Mdl = IoAllocateMdl(Buffer,     /* Virtual address of buffer */
@@ -1172,6 +1191,7 @@ NTSTATUS TdiSendDatagram(
 #endif
 #endif
 
+    AFD_DbgPrint(MAX_TRACE, ("TdiBuildSendDatagram()\n"));
     TdiBuildSendDatagram(Irp,               /* I/O Request Packet */
                          DeviceObject,      /* Device object */
                          TransportObject,   /* File object */
@@ -1180,8 +1200,10 @@ NTSTATUS TdiSendDatagram(
                          Mdl,               /* Descriptor for data buffer */
                          BufferSize,        /* Size of data to send */
                          ConnectInfo);      /* Connection information */
+    AFD_DbgPrint(MAX_TRACE, ("Returned from TdiBuildSendDatagram\n"));
 
     Status = TdiCall(Irp, DeviceObject, &Event, &Iosb);
+    AFD_DbgPrint(MAX_TRACE, ("Returned from TdiCall\n"));
 
 #if 0
     MmUnlockPages(Mdl);
@@ -1190,6 +1212,7 @@ NTSTATUS TdiSendDatagram(
 #endif
 
     ExFreePool(ConnectInfo);
+    AFD_DbgPrint(MAX_TRACE, ("Leaving %08x.\n", Status));
 
     return Status;
 }

@@ -368,21 +368,46 @@ NTSTATUS AfdDispSendTo(
 
 #if 0
 #ifdef _MSC_VER
-  try {
+    try {
 #endif
-      MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
+	MmProbeAndLockPages(Mdl, KernelMode, IoModifyAccess);
 #ifdef _MSC_VER
-  } except(EXCEPTION_EXECUTE_HANDLER) {
-      AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
-      IoFreeMdl(Mdl);
-      if (BufferSize != 0) {
-          ExFreePool(SystemVirtualAddress);
-      }
-      return STATUS_UNSUCCESSFUL;
-  }
+    } except(EXCEPTION_EXECUTE_HANDLER) {
+	AFD_DbgPrint(MIN_TRACE, ("MmProbeAndLockPages() failed.\n"));
+	IoFreeMdl(Mdl);
+	if (BufferSize != 0) {
+	    ExFreePool(SystemVirtualAddress);
+	}
+	return STATUS_UNSUCCESSFUL;
+    }
 #endif
 #endif
+    
+    if (!FCB->TdiAddressObject) {
+	struct sockaddr_in BindName;
 
+	RtlZeroMemory(&BindName,sizeof(BindName));
+	BindName.sin_family = AF_INET;
+
+	Status = TdiOpenAddressFile
+	    (&FCB->TdiDeviceName,
+	     (SOCKADDR *)&BindName,
+	     &FCB->TdiAddressObjectHandle,
+	     &FCB->TdiAddressObject);
+
+	if (NT_SUCCESS(Status)) {
+	    AfdRegisterEventHandlers(FCB);
+	    FCB->State = SOCKET_STATE_BOUND;
+	    Reply->Status = NO_ERROR;
+	} else {
+	    //FIXME: WSAEADDRNOTAVAIL
+	    Reply->Status = WSAEINVAL;
+	    MmUnlockPages(Mdl);
+	    IoFreeMdl(Mdl);
+	    return Status;
+	}
+    }
+    
     Status = TdiSendDatagram(FCB->TdiAddressObject,
         &Request->To,
         Mdl,
