@@ -6,77 +6,94 @@ PATH_TO_TOP = ../../reactos
 
 include $(PATH_TO_TOP)/rules.mak
 
+# Broken tests 
+# dnsapi iptest lan regdump subclass
+# polytest - Needs a mingw makefile
+
 TEST_APPS = \
-	accelerator \
-	alive \
-	alphablend \
-	apc \
-	apc2 \
-	args \
-	atomtest \
-	bench \
-	bitblt \
-	button \
-	button2 \
-	capclock \
-	carets \
-	combo \
-	consume \
-	copymove \
-	count \
-	dibtest \
-	dirdlg \
-	dump_shared_data \
-	edit \
-	enhmetafile \
-	enumwnd \
-	enumws \
-	event \
-	eventpair \
-	fiber \
-	global_mem \
-	gradient \
-	guithreadinfo \
-	hello \
-	mdi \
-	hivetest \
-	icontest \
-	isotest \
-	lineclip \
-	linetest \
-	lpc \
-	map_dup_inherit \
-	mktime \
-	mstest \
-	multithrdwin \
-	multiwin \
-	mutex \
-	nptest \
-	patblt \
-	popupmenu \
-	primitives \
-	pteb \
-	p_dup_handle \
-	regtest \
-	sectest \
-	sertest \
-	shaptest \
-	shm \
-	statst \
-	statst2 \
-	stretchblt \
-	suspend \
-	tcpsvr \
-	terminate \
-	txtscale \
-	thread \
-	thread_msg \
-	threadwait \
-	tokentest \
-	vmtest \
-	winhello \
-	wm_erasebkgnd \
-	wm_paint
+accelerator \
+alive \
+alphablend \
+apc \
+apc2 \
+args \
+atomtest \
+bench \
+bitblt \
+button \
+button2 \
+capclock \
+carets \
+combo \
+consume \
+copymove \
+count \
+create-links \
+dibtest \
+dirdlg \
+diskspeed \
+dnsquery \
+dump_shared_data \
+edit \
+enhmetafile \
+enumfonts \
+enumwnd \
+enumws \
+event \
+eventpair \
+fiber \
+global_mem \
+gradient \
+guithreadinfo \
+hello \
+hivetest \
+icontest \
+isotest \
+lineclip \
+linetest \
+lpc \
+map_dup_inherit \
+mdi \
+miditest \
+mktime \
+moztest \
+mstest \
+multithrdwin \
+multiwin \
+mutex \
+nameserverlist \
+noexecute \
+nptest \
+oskittcp \
+p_dup_handle \
+palbitblt \
+patblt \
+popupmenu \
+primitives \
+pteb \
+regqueryvalue \
+regtest \
+sectest \
+sertest \
+shaptest \
+shm \
+statst \
+statst2 \
+stretchblt \
+suspend \
+tcpsvr \
+terminate \
+thread \
+thread_msg \
+threadwait \
+tmrqueue \
+tokentest \
+txtscale \
+vmtest \
+winhello \
+wm_erasebkgnd \
+wm_paint \
+zwcontinue
 
 all: $(TEST_APPS)
 
