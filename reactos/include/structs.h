@@ -83,16 +83,6 @@ typedef struct tagACCESSTIMEOUT {
   DWORD iTimeOutMSec;
 } ACCESSTIMEOUT;
 
-typedef struct _ACL_REVISION_INFORMATION {
-  DWORD   AclRevision;
-} ACL_REVISION_INFORMATION;
-
-typedef struct _ACL_SIZE_INFORMATION {
-  DWORD   AceCount;
-  DWORD   AclBytesInUse;
-  DWORD   AclBytesFree;
-} ACL_SIZE_INFORMATION;
-
 typedef struct _ACTION_HEADER {
   ULONG   transport_id;
   USHORT  action_code;

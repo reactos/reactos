@@ -206,6 +206,24 @@ typedef struct _ACL
   USHORT Sbz2;
 } ACL, *PACL;
 
+typedef struct _ACL_REVISION_INFORMATION
+{
+  ULONG AclRevision;
+} ACL_REVISION_INFORMATION, *PACL_REVISION_INFORMATION;
+
+typedef struct _ACL_SIZE_INFORMATION
+{
+  ULONG AceCount;
+  ULONG AclBytesInUse;
+  ULONG AclBytesFree;
+} ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
+
+typedef enum _ACL_INFORMATION_CLASS
+{
+  AclRevisionInformation = 1,
+  AclSizeInformation
+} ACL_INFORMATION_CLASS;
+
 typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
 
 typedef struct _SECURITY_DESCRIPTOR_CONTEXT
@@ -314,12 +332,6 @@ typedef struct _PRIVILEGE_SET
   DWORD Control;
   LUID_AND_ATTRIBUTES Privilege[ANYSIZE_ARRAY];
 } PRIVILEGE_SET, *PPRIVILEGE_SET, *LPPRIVILEGE_SET;
-
-typedef enum _ACL_INFORMATION_CLASS
-{
-  AclRevisionInformation = 1,
-  AclSizeInformation
-} ACL_INFORMATION_CLASS;
 
 typedef struct _SECURITY_ATTRIBUTES
 {
