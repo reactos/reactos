@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.11 2002/03/20 19:55:08 ekohl Exp $
+/* $Id: class2.c,v 1.12 2002/03/22 20:34:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -839,38 +839,56 @@ ScsiClassReadDriveCapacity(IN PDEVICE_OBJECT DeviceObject)
   DPRINT("Srb: %p\n", &Srb);
   if (NT_SUCCESS(Status))
     {
-	SectorSize = (((PUCHAR)&CapacityBuffer->BytesPerBlock)[0] << 24) |
-		     (((PUCHAR)&CapacityBuffer->BytesPerBlock)[1] << 16) |
-		     (((PUCHAR)&CapacityBuffer->BytesPerBlock)[2] << 8) |
-		      ((PUCHAR)&CapacityBuffer->BytesPerBlock)[3];
+      SectorSize = (((PUCHAR)&CapacityBuffer->BytesPerBlock)[0] << 24) |
+		   (((PUCHAR)&CapacityBuffer->BytesPerBlock)[1] << 16) |
+		   (((PUCHAR)&CapacityBuffer->BytesPerBlock)[2] << 8) |
+		    ((PUCHAR)&CapacityBuffer->BytesPerBlock)[3];
 
 
-	LastSector = (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[0] << 24) |
-		     (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[1] << 16) |
-		     (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[2] << 8) |
-		      ((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[3];
+      LastSector = (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[0] << 24) |
+		   (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[1] << 16) |
+		   (((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[2] << 8) |
+		    ((PUCHAR)&CapacityBuffer->LogicalBlockAddress)[3];
 
-	DeviceExtension->DiskGeometry->BytesPerSector = SectorSize;
+      DeviceExtension->DiskGeometry->BytesPerSector = SectorSize;
 
-	DeviceExtension->PartitionLength.QuadPart = (LONGLONG)(LastSector + 1);
-	WHICH_BIT(DeviceExtension->DiskGeometry->BytesPerSector,
-		  DeviceExtension->SectorShift);
-	DeviceExtension->PartitionLength.QuadPart =
-	  (DeviceExtension->PartitionLength.QuadPart << DeviceExtension->SectorShift);
+      DeviceExtension->PartitionLength.QuadPart = (LONGLONG)(LastSector + 1);
+      WHICH_BIT(DeviceExtension->DiskGeometry->BytesPerSector,
+		DeviceExtension->SectorShift);
+      DeviceExtension->PartitionLength.QuadPart =
+	(DeviceExtension->PartitionLength.QuadPart << DeviceExtension->SectorShift);
 
-	if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
-	  {
-	    DeviceExtension->DiskGeometry->MediaType = RemovableMedia;
-	  }
-	else
-	  {
-	    DeviceExtension->DiskGeometry->MediaType = FixedMedia;
-	  }
-	DeviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)((LastSector + 1)/(32 * 64));
-	DeviceExtension->DiskGeometry->SectorsPerTrack = 32;
-	DeviceExtension->DiskGeometry->TracksPerCylinder = 64;
+      if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+	{
+	  DeviceExtension->DiskGeometry->MediaType = RemovableMedia;
+	}
+      else
+	{
+	  DeviceExtension->DiskGeometry->MediaType = FixedMedia;
+	}
+      DeviceExtension->DiskGeometry->Cylinders.QuadPart = (LONGLONG)((LastSector + 1)/(32 * 64));
+      DeviceExtension->DiskGeometry->SectorsPerTrack = 32;
+      DeviceExtension->DiskGeometry->TracksPerCylinder = 64;
 
-	DPRINT("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
+      DPRINT("SectorSize: %lu  SectorCount: %lu\n", SectorSize, LastSector + 1);
+    }
+  else
+    {
+      /* Use default values if disk geometry cannot be read */
+      RtlZeroMemory(&DeviceExtension->DiskGeometry,
+		    sizeof(DISK_GEOMETRY));
+      DeviceExtension->DiskGeometry->BytesPerSector = 512;
+      DeviceExtension->SectorShift = 9;
+      DeviceExtension->Partitionlength.QuadPart = 0;
+
+      if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA)
+	{
+	  DeviceExtension->DiskGeometry->MediaType = RemovableMedia;
+	}
+      else
+	{
+	  DeviceExtension->DiskGeometry->MediaType = FixedMedia;
+	}
     }
 
   ExFreePool(CapacityBuffer);
@@ -1077,8 +1095,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
       return(STATUS_VERIFY_REQUIRED);
     }
 
-#if 0
-  /* let the class driver perform its verification */
+  /* Class driver verifies the IRP */
   Status = DeviceExtension->ClassReadWriteVerification(DeviceObject,
 						       Irp);
   if (!NT_SUCCESS(Status))
@@ -1092,9 +1109,8 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
       IoMarkIrpPending(Irp);
       return(STATUS_PENDING);
     }
-#endif
 
-  /* Finish a zero-byte transfer. */
+  /* Finish a zero-byte transfer */
   if (TransferLength == 0)
     {
       Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -1122,7 +1138,7 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   /* Adjust partition-relative starting offset to absolute offset */
   IrpStack->Parameters.Read.ByteOffset.QuadPart += DeviceExtension->StartingOffset.QuadPart;
 
-  /* Calculate number of pages in this transfer. */
+  /* Calculate number of pages in this transfer */
   TransferPages = ADDRESS_AND_SIZE_TO_SPAN_PAGES(MmGetMdlVirtualAddress(Irp->MdlAddress),
 						 IrpStack->Parameters.Read.Length);
 
