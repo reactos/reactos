@@ -306,6 +306,9 @@ HWND GetConsoleWindow (VOID)
 	TCHAR temp[256];
 	HWND h=0;
 
+	if(h)
+		return h;
+
 	GetConsoleTitle (original, sizeof(original));
 
 	_tcscpy (temp, original);

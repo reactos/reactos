@@ -159,8 +159,8 @@ VOID add_at_bottom(LPTSTR string)
 
 
 		
-		/*fill bottom with string*/
-		Bottom->string=malloc(_tclen(string));
+		/*fill bottom with string*/		
+		Bottom->string=malloc(_tcslen(string)+1);
 		_tcscpy(Bottom->string,string);		
 
 		/*save Bottom value*/
