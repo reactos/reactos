@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/mdl.c
  * PURPOSE:         Io manager mdl functions
- * 
+ *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
@@ -32,7 +32,7 @@ IoAllocateMdl(PVOID VirtualAddress,
 		   PIRP Irp)
 {
    PMDL Mdl;
-   
+
    if (ChargeQuota)
      {
 //	Mdl = ExAllocatePoolWithQuota(NonPagedPool,
@@ -48,27 +48,27 @@ IoAllocateMdl(PVOID VirtualAddress,
 				    TAG_MDL);
      }
    MmInitializeMdl(Mdl, (char*)VirtualAddress, Length);
-   
+
    if (Irp)
    {
       if (SecondaryBuffer)
       {
          ASSERT(Irp->MdlAddress);
-         
+
          /* FIXME: add to end of list maybe?? */
          Mdl->Next = Irp->MdlAddress->Next;
          Irp->MdlAddress->Next = Mdl;
       }
       else
       {
-         /* 
+         /*
           * What if there's allready an mdl at Irp->MdlAddress?
           * Is that bad and should we do something about it?
           */
          Irp->MdlAddress = Mdl;
       }
    }
-   
+
    return(Mdl);
 }
 
@@ -122,13 +122,16 @@ IoBuildPartialMdl(PMDL SourceMdl,
  */
 VOID STDCALL
 IoFreeMdl(PMDL Mdl)
-{   
-   /* 
+{
+   /*
     * This unmaps partial mdl's from kernel space but also asserts that non-partial
     * mdl's isn't still mapped into kernel space.
     */
+   ASSERT(Mdl);
+   ASSERT_IRQL(DISPATCH_LEVEL);
+
    MmPrepareMdlForReuse(Mdl);
-   
+
    ExFreePool(Mdl);
 }
 
