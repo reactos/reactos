@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.19 1999/10/07 23:33:22 ekohl Exp $
+/* $Id: registry.c,v 1.20 1999/10/26 04:52:38 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -361,6 +361,12 @@ CHECKPOINT;
 #endif
 }
 
+VOID 
+CmImportHive(PCHAR  Chunk)
+{
+  /*  FIXME: implemement this  */
+  return; 
+}
 
 NTSTATUS 
 STDCALL

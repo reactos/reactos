@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.26 1999/10/16 21:08:07 ekohl Exp $
+/* $Id: main.c,v 1.27 1999/10/26 04:52:38 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -189,17 +189,31 @@ asmlinkage void _main(boot_param* _bp)
     * Initalize services loaded at boot time
     */
    DPRINT("%d files loaded\n",bp.nr_files);
-    
-   start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
-//   start1 = start+PAGE_ROUND_UP(bp.module_length[1]);
-   start1 = start + bp.module_length[1];
-   for (i=1;i<bp.nr_files;i++)
-     {
-        DPRINT("process module at %08lx\n", start);
-      	LdrProcessDriver((PVOID)start);
-//        start=start+PAGE_ROUND_UP(bp.module_length[i]);
-        start = start + bp.module_length[i];
-     }
+
+  /*  Pass 1: load registry chunks passed in  */
+  start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+  for (i = 1; i < bp.nr_files; i++)
+    {
+      if (!strcmp ((PCHAR) start, "REGEDIT4"))
+        {
+          DPRINT("process registry chunk at %08lx\n", start);
+          CmImportHive((PCHAR) start);
+        }
+      start = start + bp.module_length[i];
+    }
+
+  /*  Pass 2: process boot loaded drivers  */
+  start = KERNEL_BASE + PAGE_ROUND_UP(bp.module_length[0]);
+  start1 = start + bp.module_length[1];
+  for (i=1;i<bp.nr_files;i++)
+    {
+      if (strcmp ((PCHAR) start, "REGEDIT4"))
+        {
+          DPRINT("process module at %08lx\n", start);
+          LdrProcessDriver((PVOID)start);
+        }
+      start = start + bp.module_length[i];
+    }
    
    /*
     * Load Auto configured drivers

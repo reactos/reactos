@@ -85,6 +85,7 @@ VOID PsInit(VOID);
 VOID TstBegin(VOID);
 VOID KeInit(VOID);
 VOID CmInitializeRegistry(VOID);
+VOID CmImportHive(PCHAR);
 VOID DbgInit(VOID);
 
 #endif

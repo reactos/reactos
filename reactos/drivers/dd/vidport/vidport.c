@@ -179,6 +179,7 @@ VideoPortInitialize(IN PVOID  Context1,
   MPDriverObject->DriverStartIo = (PDRIVER_STARTIO) HwInitializationData->HwStartIO;
 
   /*  Create a unicode device name  */
+  Again = FALSE;
   do
     {
       /* FIXME: Need to add a device index for multiple adapters  */
@@ -261,7 +262,7 @@ VideoPortInitialize(IN PVOID  Context1,
           
         }
     }
-  while (&Again);
+  while (Again);
 
   /* FIXME: initialize timer routine for MP Driver  */
   if (HwInitializationData->HwTimer != NULL)
