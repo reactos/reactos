@@ -3,12 +3,8 @@
  */
 
 #include <windows.h>
-//#include <winioctl.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-//#define DUMP_DATA
-#define DUMP_SIZE_INFO
 
 
 typedef struct _CM_PNP_BIOS_DEVICE_NODE
@@ -37,52 +33,218 @@ typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
   ULONG ProtectedModeDataBaseAddress;
 } PACKED CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
 
+typedef struct _PNP_ID_NAME_
+{
+  char *PnpId;
+  char *DeviceName;
+} PNP_ID_NAME, *PPNP_ID_NAME;
+
 
 static char Hex[] = "0123456789ABCDEF";
 
-
-#ifdef DUMP_DATA
-void HexDump(char *buffer, ULONG size)
+static PNP_ID_NAME PnpName[] =
 {
-  ULONG offset = 0;
-  unsigned char *ptr;
+  /* Interrupt Controllers */
+  {"PNP0000", "AT Interrupt Controller"},
+  {"PNP0001", "EISA Interrupt Controller"},
+  {"PNP0002", "MCA Interrupt Controller"},
+  {"PNP0003", "APIC"},
+  {"PNP0004", "Cyrix SLiC MP Interrupt Controller"},
 
-  while (offset < (size & ~15))
+  /* Timers */
+  {"PNP0100", "AT Timer"},
+  {"PNP0101", "EISA Timer"},
+  {"PNP0102", "MCA Timer"},
+
+  /* DMA Controllers */
+  {"PNP0200", "AT DMA Controller"},
+  {"PNP0201", "EISA DMA Controller"},
+  {"PNP0202", "MCA DMA Controller"},
+
+  /* Keyboards */
+  {"PNP0300", "IBM PC/XT Keyboard (83 keys)"},
+  {"PNP0301", "IBM PC/AT Keyboard (86 keys)"},
+  {"PNP0302", "IBM PC/XT Keyboard (84 keys)"},
+  {"PNP0303", "IBM Enhanced (101/102 keys)"},
+  {"PNP0304", "Olivetti Keyboard (83 keys)"},
+  {"PNP0305", "Olivetti Keyboard (102 keys)"},
+  {"PNP0306", "Olivetti Keyboard (86 keys)"},
+  {"PNP0307", "Microsoft Windows(R) Keyboard"},
+  {"PNP0308", "General Input Device Emulation Interface (GIDEI) legacy"},
+  {"PNP0309", "Olivetti Keyboard (A101/102 key)"},
+  {"PNP030A", "AT&T 302 keyboard"},
+  {"PNP030B", "Reserved by Microsoft"},
+  {"PNP0320", "Japanese 101-key keyboard"},
+  {"PNP0321", "Japanese AX keyboard"},
+  {"PNP0322", "Japanese 106-key keyboard A01"},
+  {"PNP0323", "Japanese 106-key keyboard 002/003"},
+  {"PNP0324", "Japanese 106-key keyboard 001"},
+  {"PNP0325", "Japanese Toshiba Desktop keyboard"},
+  {"PNP0326", "Japanese Toshiba Laptop keyboard"},
+  {"PNP0327", "Japanese Toshiba Notebook keyboard"},
+  {"PNP0340", "Korean 84-key keyboard"},
+  {"PNP0341", "Korean 86-key keyboard"},
+  {"PNP0342", "Korean Enhanced keyboard"},
+  {"PNP0343", "Korean Enhanced keyboard 101b"},
+  {"PNP0343", "Korean Enhanced keyboard 101c"},
+  {"PNP0344", "Korean Enhanced keyboard 103"},
+
+  /* Parallel Ports */
+  {"PNP0400", "Standard LPT printer port"},
+  {"PNP0401", "ECP printer port"},
+
+  /* Serial Ports */
+  {"PNP0500", "Standard PC COM port"},
+  {"PNP0501", "16550A-compatible COM port"},
+  {"PNP0510", "Generic IRDA-compatible port"},
+
+  /* Harddisk Controllers */
+  {"PNP0600", "Generic ESDI/ATA/IDE harddisk controller"},
+  {"PNP0601", "Plus Hardcard II"},
+  {"PNP0602", "Plus Hardcard IIXL/EZ"},
+  {"PNP0603", "Generic IDE supporting Microsoft Device Bay Specification"},
+
+  /* Floppy Controllers */
+  {"PNP0700", "PC standard floppy disk controller"},
+  {"PNP0701", "Standard floppy controller supporting MS Device Bay Specification"},
+
+  /* obsolete devices */
+  {"PNP0800", "Microsoft Sound System compatible device"},
+
+  /* Display Adapters */
+  {"PNP0900", "VGA Compatible"},
+  {"PNP0901", "Video Seven VRAM/VRAM II/1024i"},
+  {"PNP0902", "8514/A Compatible"},
+  {"PNP0903", "Trident VGA"},
+  {"PNP0904", "Cirrus Logic Laptop VGA"},
+  {"PNP0905", "Cirrus Logic VGA"},
+  {"PNP0906", "Tseng ET4000"},
+  {"PNP0907", "Western Digital VGA"},
+  {"PNP0908", "Western Digital Laptop VGA"},
+  {"PNP0909", "S3 Inc. 911/924"},
+  {"PNP090A", "ATI Ultra Pro/Plus (Mach 32)"},
+  {"PNP090B", "ATI Ultra (Mach 8)"},
+  {"PNP090C", "XGA Compatible"},
+  {"PNP090D", "ATI VGA Wonder"},
+  {"PNP090E", "Weitek P9000 Graphics Adapter"},
+  {"PNP090F", "Oak Technology VGA"},
+  {"PNP0910", "Compaq QVision"},
+  {"PNP0911", "XGA/2"},
+  {"PNP0912", "Tseng Labs W32/W32i/W32p"},
+  {"PNP0913", "S3 Inc. 801/928/964"},
+  {"PNP0914", "Cirrus Logic 5429/5434 (memory mapped)"},
+  {"PNP0915", "Compaq Advanced VGA (AVGA)"},
+  {"PNP0916", "ATI Ultra Pro Turbo (Mach64)"},
+  {"PNP0917", "Reserved by Microsoft"},
+  {"PNP0918", "Matrox MGA"},
+  {"PNP0919", "Compaq QVision 2000"},
+  {"PNP091A", "Tseng W128"},
+  {"PNP0930", "Chips & Technologies Super VGA"},
+  {"PNP0931", "Chips & Technologies Accelerator"},
+  {"PNP0940", "NCR 77c22e Super VGA"},
+  {"PNP0941", "NCR 77c32blt"},
+  {"PNP09FF", "Plug and Play Monitors (VESA DDC)"},
+
+  /* Peripheral Buses */
+  {"PNP0A00", "ISA Bus"},
+  {"PNP0A01", "EISA Bus"},
+  {"PNP0A02", "MCA Bus"},
+  {"PNP0A03", "PCI Bus"},
+  {"PNP0A04", "VESA/VL Bus"},
+  {"PNP0A05", "Generic ACPI Bus"},
+  {"PNP0A06", "Generic ACPI Extended-IO Bus (EIO bus)"},
+
+  /* System devices */
+  {"PNP0800", "AT-style speaker sound"},
+  {"PNP0B00", "AT Real-Time Clock"},
+  {"PNP0C00", "Plug and Play BIOS (only created by the root enumerator)"},
+  {"PNP0C01", "System Board"},
+  {"PNP0C02", "General Plug and Play motherboard registers."},
+  {"PNP0C03", "Plug and Play BIOS Event Notification Interrupt"},
+  {"PNP0C04", "Math Coprocessor"},
+  {"PNP0C05", "APM BIOS (Version independent)"},
+  {"PNP0C06", "Reserved for identification of early Plug and Play BIOS implementation"},
+  {"PNP0C07", "Reserved for identification of early Plug and Play BIOS implementation"},
+  {"PNP0C08", "ACPI system board hardware"},
+  {"PNP0C09", "ACPI Embedded Controller"},
+  {"PNP0C0A", "ACPI Control Method Battery"},
+  {"PNP0C0B", "ACPI Fan"},
+  {"PNP0C0C", "ACPI power button device"},
+  {"PNP0C0D", "ACPI lid device"},
+  {"PNP0C0E", "ACPI sleep button device"},
+  {"PNP0C0F", "PCI interrupt link device"},
+  {"PNP0C10", "ACPI system indicator device"},
+  {"PNP0C11", "ACPI thermal zone"},
+  {"PNP0C12", "Device Bay Controller"},
+
+  /* PCMCIA Controllers */
+  {"PNP0E00", "Intel 82365-Compatible PCMCIA Controller"},
+  {"PNP0E01", "Cirrus Logic CL-PD6720 PCMCIA Controller"},
+  {"PNP0E02", "VLSI VL82C146 PCMCIA Controller"},
+  {"PNP0E03", "Intel 82365-compatible CardBus controller"},
+
+  /* Mice */
+  {"PNP0F00", "Microsoft Bus Mouse"},
+  {"PNP0F01", "Microsoft Serial Mouse"},
+  {"PNP0F02", "Microsoft InPort Mouse"},
+  {"PNP0F03", "Microsoft PS/2-style Mouse"},
+  {"PNP0F04", "Mouse Systems Mouse"},
+  {"PNP0F05", "Mouse Systems 3-Button Mouse (COM2)"},
+  {"PNP0F06", "Genius Mouse (COM1)"},
+  {"PNP0F07", "Genius Mouse (COM2)"},
+  {"PNP0F08", "Logitech Serial Mouse"},
+  {"PNP0F09", "Microsoft BallPoint Serial Mouse"},
+  {"PNP0F0A", "Microsoft Plug and Play Mouse"},
+  {"PNP0F0B", "Microsoft Plug and Play BallPoint Mouse"},
+  {"PNP0F0C", "Microsoft-compatible Serial Mouse"},
+  {"PNP0F0D", "Microsoft-compatible InPort-compatible Mouse"},
+  {"PNP0F0E", "Microsoft-compatible PS/2-style Mouse"},
+  {"PNP0F0F", "Microsoft-compatible Serial BallPoint-compatible Mouse"},
+  {"PNP0F10", "Texas Instruments QuickPort Mouse"},
+  {"PNP0F11", "Microsoft-compatible Bus Mouse"},
+  {"PNP0F12", "Logitech PS/2-style Mouse"},
+  {"PNP0F13", "PS/2 Port for PS/2-style Mice"},
+  {"PNP0F14", "Microsoft Kids Mouse"},
+  {"PNP0F15", "Logitech bus mouse"},
+  {"PNP0F16", "Logitech SWIFT device"},
+  {"PNP0F17", "Logitech-compatible serial mouse"},
+  {"PNP0F18", "Logitech-compatible bus mouse"},
+  {"PNP0F19", "Logitech-compatible PS/2-style Mouse"},
+  {"PNP0F1A", "Logitech-compatible SWIFT Device"},
+  {"PNP0F1B", "HP Omnibook Mouse"},
+  {"PNP0F1C", "Compaq LTE Trackball PS/2-style Mouse"},
+  {"PNP0F1D", "Compaq LTE Trackball Serial Mouse"},
+  {"PNP0F1E", "Microsoft Kids Trackball Mouse"},
+  {"PNP0F1F", "Reserved by Microsoft Input Device Group"},
+  {"PNP0F20", "Reserved by Microsoft Input Device Group"},
+  {"PNP0F21", "Reserved by Microsoft Input Device Group"},
+  {"PNP0F22", "Reserved by Microsoft Input Device Group"},
+  {"PNP0F23", "Reserved by Microsoft Input Device Group"},
+  {"PNP0FFF", "Reserved by Microsoft Systems"},
+
+  /* List Terminator */
+  {NULL, NULL}
+};
+
+
+/* FUNCTIONS ****************************************************************/
+
+static char *
+GetDeviceName(char *PnpId)
+{
+  PPNP_ID_NAME IdName;
+
+  IdName = PnpName;
+  while (IdName->PnpId != NULL)
     {
-      ptr = (unsigned char*)((ULONG)buffer + offset);
-      printf("%08lx  %02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx-%02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx\n",
-	     offset,
-	     ptr[0],
-	     ptr[1],
-	     ptr[2],
-	     ptr[3],
-	     ptr[4],
-	     ptr[5],
-	     ptr[6],
-	     ptr[7],
-	     ptr[8],
-	     ptr[9],
-	     ptr[10],
-	     ptr[11],
-	     ptr[12],
-	     ptr[13],
-	     ptr[14],
-	     ptr[15]);
-      offset += 16;
+      if (!strcmp(IdName->PnpId, PnpId))
+	return IdName->DeviceName;
+
+      IdName++;
     }
 
-  ptr = (unsigned char*)((ULONG)buffer + offset);
-  printf("%08lx ", offset);
-  while (offset < size)
-    {
-      printf(" %02hx", *ptr);
-      offset++;
-      ptr++;
-    }
-
-  printf("\n\n\n");
+  return "Unknown Device";
 }
-#endif
 
 
 LONG
@@ -409,8 +571,8 @@ void PrintDeviceData (PCM_PNP_BIOS_DEVICE_NODE DeviceNode)
   PnpId[6] = Hex[Id[3] & 0x0F];
   PnpId[7] = 0;
 
-  printf("  '%s'\n",
-	 PnpId);
+  printf("  '%s' (%s)\n",
+	 PnpId, GetDeviceName(PnpId));
 
   if (DeviceNode->Size > sizeof(CM_PNP_BIOS_DEVICE_NODE))
     {
@@ -641,3 +803,5 @@ return 0;
 
   return 0;
 }
+
+/* EOF */
