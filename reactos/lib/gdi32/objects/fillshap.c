@@ -26,3 +26,4 @@ Rectangle(HDC  hDC,
 {
    return W32kRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
 }
+

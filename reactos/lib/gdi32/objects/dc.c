@@ -225,3 +225,4 @@ SetPolyFillMode(
 {
 	return W32kSetPolyFillMode(a0, a1);
 }
+
