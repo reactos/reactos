@@ -1,7 +1,3 @@
-# We have to put rmkdir in $(INTERMEDIATE) and not $(INTERMEDIATE)tools
-# since GNU make will always remake directory targets and we can't do the
-# .created file trick for rmkdir due to circular dependencies
-
 RMKDIR_BASE = tools
 
 RMKDIR_TARGET = \
@@ -17,11 +13,11 @@ RMKDIR_HOST_CFLAGS = -g -Werror -Wall
 
 RMKDIR_HOST_LFLAGS = -g
 
-$(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
+$(RMKDIR_TARGET): $(INTERMEDIATE_NO_SLASH) $(RMKDIR_OBJECTS)
 	$(ECHO_LD)
 	${host_gcc} $(RMKDIR_OBJECTS) $(RMKDIR_HOST_LFLAGS) -o $(RMKDIR_TARGET)
 
-$(INTERMEDIATE)rmkdir.o: $(RMKDIR_BASE)$(SEP)rmkdir.c
+$(INTERMEDIATE)rmkdir.o: $(INTERMEDIATE_NO_SLASH) $(RMKDIR_BASE)$(SEP)rmkdir.c
 	$(ECHO_CC)
 	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $(RMKDIR_BASE)$(SEP)rmkdir.c -o $(INTERMEDIATE)rmkdir.o
 
@@ -59,7 +55,9 @@ rsym_clean:
 	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
 clean: rsym_clean
 
+include tools/bin2res/bin2res.mak
 include tools/buildno/buildno.mak
+include tools/cabman/cabman.mak
 include tools/cdmake/cdmake.mak
 include tools/nci/nci.mak
 include tools/rbuild/rbuild.mak
@@ -68,3 +66,4 @@ include tools/winebuild/winebuild.mak
 include tools/wmc/wmc.mak
 include tools/wpp/wpp.mak
 include tools/wrc/wrc.mak
+include lib/zlib/zlib.mak

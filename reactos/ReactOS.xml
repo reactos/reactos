@@ -35,9 +35,6 @@
 	<directory name="drivers">
 		<xi:include href="drivers/directory.xml" />
 	</directory>
-	<directory name="tools">
-		<xi:include href="tools/tools.xml" />
-	</directory>
 	<directory name="hal">
 		<xi:include href="hal/directory.xml" />
 	</directory>

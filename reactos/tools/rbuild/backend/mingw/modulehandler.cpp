@@ -90,12 +90,6 @@ MingwModuleHandler::PassThruCacheDirectory ( const string &file )
 	return file;
 }
 
-const string
-MingwModuleHandler::GetDirectoryDependency ( const string& file )
-{
-	return backend->GetDirectoryDependency ( GetDirectory ( file ) );
-}
-
 void
 MingwModuleHandler::SetMakefile ( FILE* f )
 {
@@ -733,7 +727,7 @@ MingwModuleHandler::GenerateGccCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectoryDependency ( objectFilename ).c_str (),
+	          objectFilename.c_str (),
 	          deps.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CC)\n" );
 	fprintf ( fMakefile,
@@ -755,7 +749,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectoryDependency ( objectFilename ).c_str (),
+	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_GAS)\n" );
 	fprintf ( fMakefile,
@@ -776,7 +770,7 @@ MingwModuleHandler::GenerateNasmCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s\n",
 	          objectFilename.c_str (),
-	          GetDirectoryDependency ( objectFilename ).c_str (),
+	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_NASM)\n" );
 	fprintf ( fMakefile,
@@ -801,7 +795,7 @@ MingwModuleHandler::GenerateWindresCommand ( const Module& module,
 	fprintf ( fMakefile,
 	          "%s: %s %s $(WRC_TARGET)\n",
 	          objectFilename.c_str (),
-	          GetDirectoryDependency ( objectFilename ).c_str (),
+	          objectFilename.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WRC)\n" );
 	fprintf ( fMakefile,
@@ -1375,7 +1369,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded (
 		string definitionDependencies = GetDefinitionDependencies ( module );
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          library_target.c_str (),
-		          GetDirectoryDependency ( library_target ).c_str (),
+		          library_target.c_str (),
 		          definitionDependencies.c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
@@ -2191,7 +2185,7 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 			string targetDirecctory = bootcdDirectory + SSEP + m.bootstrap->base;
 			if ( directories.size () > 0 )
 				directories += " ";
-			directories += GetDirectoryDependency ( PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) ) );
+			directories += PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) );
 		}
 	}
 	return directories;
@@ -2208,7 +2202,7 @@ MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string& bootcdDirectory
 		string targetDirecctory = bootcdDirectory + SSEP + cdfile.base;
 		if ( directories.size () > 0 )
 			directories += " ";
-		directories += GetDirectoryDependency ( PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) ) );
+		directories += PassThruCacheDirectory ( FixupTargetFilename ( targetDirecctory ) );
 	}
 	return directories;
 }
@@ -2280,7 +2274,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module, string_li
 	          "%s: all %s %s %s %s ${CABMAN_TARGET} ${CDMAKE_TARGET}\n",
 	          module.name.c_str (),
 	          isoboot.c_str (),
-	          GetDirectoryDependency ( PassThruCacheDirectory ( bootcdReactos ) ).c_str (),
+	          PassThruCacheDirectory ( bootcdReactos ).c_str (),
 	          cdDirectories.c_str (),
 	          cdFiles.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_CABMAN)\n" );

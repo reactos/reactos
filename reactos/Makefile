@@ -133,11 +133,9 @@ else
 endif
 
 mkdir = $(Q)$(INTERMEDIATE)rmkdir
-CREATED = .created
 
-directories:
-	-${nmkdir} $(INTERMEDIATE_NO_SLASH)
-	-${nmkdir} $(OUTPUT_NO_SLASH)
+$(INTERMEDIATE_NO_SLASH):
+	${nmkdir} $(INTERMEDIATE_NO_SLASH)
 
 NTOSKRNL_MC = .$(SEP)ntoskrnl$(SEP)ntoskrnl.mc
 KERNEL32_MC = .$(SEP)lib$(SEP)kernel32$(SEP)kernel32.mc
@@ -158,7 +156,7 @@ PREAUTO := \
 	$(ERRCODES_RC) \
 	$(NCI_SERVICE_FILES)
 
-makefile.auto: $(RMKDIR_TARGET) $(WINEBUILD_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
+makefile.auto: $(RMKDIR_TARGET) $(BIN2RES_TARGET) $(WINEBUILD_TARGET) $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
 	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
 

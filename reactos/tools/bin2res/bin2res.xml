@@ -1,6 +1,0 @@
-<module name="bin2res" type="buildtool">
-	<include base="ReactOS">include/wine</include>
-	<define name="__REACTOS__" />
-	<file>bin2res.c</file>
-	<file>mkstemps.c</file>
-</module>

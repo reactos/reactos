@@ -1,7 +1,3 @@
 <module name="zlib" type="staticlibrary">
 	<xi:include href="zlib_common.xml" />
 </module>
-
-<module name="hostzlib" type="staticlibrary" host="true" prefix="host_">
-	<xi:include href="zlib_common.xml" />
-</module>

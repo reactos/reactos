@@ -1,6 +1,0 @@
-<directory name="bin2res">
-	<xi:include href="bin2res/bin2res.xml" />
-</directory>
-<directory name="cabman">
-	<xi:include href="cabman/cabman.xml" />
-</directory>

@@ -32,12 +32,6 @@ MingwBackend::CreateDirectoryTargetIfNotYetCreated ( const string& directory )
 	directories.insert ( directory );
 }
 
-const string
-MingwBackend::GetDirectoryDependency ( const string& directory )
-{
-	return directory + SSEP "$(CREATED)";
-}
-
 
 void
 MingwBackend::Process ()
@@ -343,7 +337,7 @@ MingwBackend::GenerateDirectoryTargets ()
 		{
 			fprintf ( fMakefile,
 			          "%s:\n",
-			          GetDirectoryDependency ( *i ).c_str () );
+			          i->c_str () );
 			fprintf ( fMakefile, 
 			          "\t${mkdir} %s\n\n",
 			          i->c_str () );

@@ -11,7 +11,6 @@ public:
 	virtual ~MingwBackend () { };
 	virtual void Process ();
 	void CreateDirectoryTargetIfNotYetCreated ( const std::string& directory );
-	const std::string GetDirectoryDependency ( const std::string& directory );
 private:
 	void ProcessModule ( Module& module );
 	void CreateMakefile ();
