@@ -66,7 +66,7 @@ VOID  VGAUnshareVideoMemory(IN PVIDEO_MEMORY  MemoryToUnshare,
 //  RETURNS:
 //    VP_STATUS
 
-STDCALL VP_STATUS
+VP_STATUS STDCALL
 DriverEntry(IN PVOID Context1, 
             IN PVOID Context2) 
 {
