@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-DRIVERS = bzip2 csq
+DRIVERS = bzip2 csq oskittcp ip
 
 all: $(DRIVERS)
 
