@@ -250,7 +250,7 @@ KeWaitForSingleObject(PVOID Object,
                 /* It has a normal signal state, so unwait it and return */
                 KiSatisfyObjectWait(CurrentObject, CurrentThread);
                 Status = STATUS_WAIT_0;
-                goto WaitDone;
+                break;
                     
             } else {
                     
@@ -285,7 +285,7 @@ KeWaitForSingleObject(PVOID Object,
                 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                break;
             }
                        
             /* Point to Timer Wait Block and Thread Timer */
@@ -311,7 +311,7 @@ KeWaitForSingleObject(PVOID Object,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                break;
             }    
         }
 
@@ -344,7 +344,6 @@ KeWaitForSingleObject(PVOID Object,
     
     } while (TRUE);
     
-WaitDone:
     /* Release the Lock, we are done */
     DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
@@ -369,7 +368,7 @@ KeWaitForMultipleObjects(ULONG Count,
     PKWAIT_BLOCK TimerWaitBlock;
     PKTIMER ThreadTimer;
     PKTHREAD CurrentThread = KeGetCurrentThread();
-    ULONG AllObjectsSignaled;
+    BOOLEAN AllObjectsSignaled;
     ULONG WaitIndex;
     NTSTATUS Status;
     NTSTATUS WaitStatus;
@@ -507,7 +506,7 @@ KeWaitForMultipleObjects(ULONG Count,
             /* Satisfy their Waits and return to the caller */
             KiSatisifyMultipleObjectWaits(WaitBlock);
             Status = STATUS_WAIT_0;
-            goto WaitDone;
+            break;
         }
    
         /* Make sure we can satisfy the Alertable request */
@@ -524,7 +523,7 @@ KeWaitForMultipleObjects(ULONG Count,
                 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                break;
             }
             
             /* Point to Timer Wait Block and Thread Timer */
@@ -549,22 +548,20 @@ KeWaitForMultipleObjects(ULONG Count,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                break;
             }
         }
 
         /* Insert into Object's Wait List*/
-        WaitBlock = CurrentThread->WaitBlockList;
-        while (WaitBlock) {
+        for (WaitBlock = CurrentThread->WaitBlockList;
+             WaitBlock != NULL;
+             WaitBlock = WaitBlock->NextWaitBlock) {
             
             /* Get the Current Object */
             CurrentObject = WaitBlock->Object;
     
             /* Link the Object to this Wait Block */
             InsertTailList(&CurrentObject->WaitListHead, &WaitBlock->WaitListEntry);
-            
-            /* Move to the next Wait Block */
-            WaitBlock = WaitBlock->NextWaitBlock;
         }
         
         /* Handle Kernel Queues */
@@ -660,8 +657,10 @@ KiWaitTest(PDISPATCHER_HEADER Object,
     /* Loop the Wait Entries */
     DPRINT("KiWaitTest for Object: %x\n", Object);
     WaitList = &Object->WaitListHead;
-    WaitEntry = WaitList->Flink;
-    while ((WaitEntry != WaitList) && (Object->SignalState > 0)) {
+
+    for (WaitEntry = WaitList->Flink;
+         (WaitEntry != WaitList) && (Object->SignalState > 0);
+         WaitEntry = WaitEntry->Flink) {
         
         /* Get the current wait block */
         CurrentWaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
@@ -678,21 +677,19 @@ KiWaitTest(PDISPATCHER_HEADER Object,
         
             /* Everything must be satisfied */
             DPRINT("Checking for a Wait All\n");
-            NextWaitBlock = CurrentWaitBlock->NextWaitBlock;
             
             /* Loop first to make sure they are valid */
-            while (NextWaitBlock) {
+            for (NextWaitBlock = CurrentWaitBlock->NextWaitBlock;
+                 NextWaitBlock != NULL;
+                 NextWaitBlock = NextWaitBlock->NextWaitBlock) {
             
                 /* Check if the object is signaled */
                 if (!KiIsObjectSignaled(Object, CurrentWaitBlock->Thread)) {
                 
                     /* It's not, move to the next one */
                     DPRINT1("One of the object is non-signaled, sorry.\n");
-                    goto SkipUnwait;
+                    continue;
                 }
-                
-                /* Go to the next Wait block */
-                NextWaitBlock = NextWaitBlock->NextWaitBlock;
             }
                        
             /* All the objects are signaled, we can satisfy */
@@ -704,10 +701,6 @@ KiWaitTest(PDISPATCHER_HEADER Object,
         /* All waits satisfied, unwait the thread */
         DPRINT("Unwaiting the Thread\n");
         KiAbortWaitThread(CurrentWaitBlock->Thread, CurrentWaitBlock->WaitKey, Increment);
-
-SkipUnwait:
-        /* Next entry */
-        WaitEntry = WaitEntry->Flink;
     }
     
     DPRINT("Done\n");
@@ -728,15 +721,14 @@ KiAbortWaitThread(PKTHREAD Thread,
 
     /* Remove the Wait Blocks from the list */
     DPRINT("Removing waits\n");
-    WaitBlock = Thread->WaitBlockList;
-    while (WaitBlock) {
+
+    for (WaitBlock = Thread->WaitBlockList;
+         WaitBlock != NULL;
+         WaitBlock = WaitBlock->NextWaitBlock) {
         
         /* Remove it */
         DPRINT("Removing Waitblock: %x, %x\n", WaitBlock, WaitBlock->NextWaitBlock);
         RemoveEntryList(&WaitBlock->WaitListEntry);
-        
-        /* Go to the next one */
-        WaitBlock = WaitBlock->NextWaitBlock;
     };
     
     /* Check if there's a Thread Timer */
