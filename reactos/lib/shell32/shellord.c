@@ -69,6 +69,25 @@ extern INT    WINAPI AddMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData);
 extern INT    WINAPI FindMRUData(HANDLE hList, LPCVOID lpData, DWORD cbData, LPINT lpRegNum);
 extern INT    WINAPI EnumMRUListA(HANDLE hList, INT nItemPos, LPVOID lpBuffer, DWORD nBufferSize);
 
+
+/* Get a function pointer from a DLL handle */
+#define GET_FUNC(func, module, name, fail) \
+  do { \
+    if (!func) { \
+      if (!SHELL32_h##module && !(SHELL32_h##module = LoadLibraryA(#module ".dll"))) return fail; \
+      func = (void*)GetProcAddress(SHELL32_h##module, name); \
+      if (!func) return fail; \
+    } \
+  } while (0)
+
+/* Function pointers for GET_FUNC macro */
+static HMODULE SHELL32_hshlwapi=NULL;
+static HANDLE (WINAPI *pSHAllocShared)(LPCVOID,DWORD,DWORD);
+static LPVOID (WINAPI *pSHLockShared)(HANDLE,DWORD);
+static BOOL   (WINAPI *pSHUnlockShared)(LPVOID);
+static BOOL   (WINAPI *pSHFreeShared)(HANDLE,DWORD);
+
+
 /*************************************************************************
  * ParseFieldA					[internal]
  *
@@ -1192,70 +1211,45 @@ HRESULT WINAPI IsUserAdmin(void)
 /*************************************************************************
  * SHAllocShared				[SHELL32.520]
  *
- * NOTES
- *  parameter1 is return value from HeapAlloc
- *  parameter2 is equal to the size allocated with HeapAlloc
- *  parameter3 is return value from GetCurrentProcessId
- *
- *  the return value is posted as lParam with 0x402 (WM_USER+2) to somewhere
- *  WM_USER+2 could be the undocumented CWM_SETPATH
- *  the allocated memory contains a pidl
+ * See shlwapi.SHAllocShared
  */
-HGLOBAL WINAPI SHAllocShared(LPVOID psrc, DWORD size, DWORD procID)
-{	HGLOBAL hmem;
-	LPVOID pmem;
-
-	TRACE("ptr=%p size=0x%04lx procID=0x%04lx\n",psrc,size,procID);
-	hmem = GlobalAlloc(GMEM_FIXED, size);
-	if (!hmem)
-	  return 0;
-
-	pmem =  GlobalLock (hmem);
-
-	if (! pmem)
-	  return 0;
-
-	memcpy (pmem, psrc, size);
-	GlobalUnlock(hmem);
-	return hmem;
+HANDLE WINAPI SHAllocShared(LPVOID lpvData, DWORD dwSize, DWORD dwProcId)
+{
+    GET_FUNC(pSHAllocShared, shlwapi, (char*)7, NULL);
+    return pSHAllocShared(lpvData, dwSize, dwProcId);
 }
+
 /*************************************************************************
  * SHLockShared					[SHELL32.521]
  *
- * NOTES
- *  parameter1 is return value from SHAllocShared
- *  parameter2 is return value from GetCurrentProcessId
- *  the receiver of (WM_USER+2) tries to lock the HANDLE (?)
- *  the return value seems to be a memory address
+ * See shlwapi.SHLockShared
  */
-LPVOID WINAPI SHLockShared(HANDLE hmem, DWORD procID)
-{	TRACE("handle=%p procID=0x%04lx\n",hmem,procID);
-	return GlobalLock(hmem);
+LPVOID WINAPI SHLockShared(HANDLE hShared, DWORD dwProcId)
+{
+    GET_FUNC(pSHLockShared, shlwapi, (char*)8, NULL);
+    return pSHLockShared(hShared, dwProcId);
 }
+
 /*************************************************************************
  * SHUnlockShared				[SHELL32.522]
  *
- * NOTES
- *  parameter1 is return value from SHLockShared
+ * See shlwapi.SHUnlockShared
  */
-BOOL WINAPI SHUnlockShared(LPVOID pv)
+BOOL WINAPI SHUnlockShared(LPVOID lpView)
 {
-	TRACE("%p\n",pv);
-	return GlobalUnlock((HANDLE)pv);
+    GET_FUNC(pSHUnlockShared, shlwapi, (char*)9, FALSE);
+    return pSHUnlockShared(lpView);
 }
+
 /*************************************************************************
  * SHFreeShared					[SHELL32.523]
  *
- * NOTES
- *  parameter1 is return value from SHAllocShared
- *  parameter2 is return value from GetCurrentProcessId
+ * See shlwapi.SHFreeShared
  */
-BOOL WINAPI SHFreeShared(
-	HANDLE hMem,
-	DWORD pid)
+BOOL WINAPI SHFreeShared(HANDLE hShared, DWORD dwProcId)
 {
-	TRACE("handle=%p 0x%04lx\n",hMem,pid);
-	return (BOOL)GlobalFree(hMem);
+    GET_FUNC(pSHFreeShared, shlwapi, (char*)10, FALSE);
+    return pSHFreeShared(hShared, dwProcId);
 }
 
 /*************************************************************************
