@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.27 2003/03/05 22:51:48 ekohl Exp $
+/* $Id: dllmain.c,v 1.28 2003/08/16 06:19:15 jimtabor Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -33,6 +33,7 @@ DllMain(HANDLE hInst,
 
 /* Critical section for various kernel32 data structures */
 CRITICAL_SECTION DllLock;
+CRITICAL_SECTION ConsoleLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -128,6 +129,7 @@ DllMain(HANDLE hDll,
 
 	/* Initialize the DLL critical section */
 	RtlInitializeCriticalSection(&DllLock);
+	RtlInitializeCriticalSection(&ConsoleLock);
 
 	/* Insert more dll attach stuff here! */
 
@@ -141,6 +143,7 @@ DllMain(HANDLE hDll,
 	    /* Insert more dll detach stuff here! */
 
 	    /* Delete DLL critical section */
+	    RtlDeleteCriticalSection (&ConsoleLock);
 	    RtlDeleteCriticalSection (&DllLock);
 
 	    /* Close object base directory */
