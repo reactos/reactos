@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.28 2004/11/20 22:21:35 arty Exp $
+/* $Id: kd.h,v 1.29 2004/12/09 14:20:06 royce Exp $
  *
  * kernel debugger prototypes
  */
@@ -108,7 +108,7 @@ KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 VOID KdInitializeMda(VOID);
 VOID KdPrintMda(PCH pch);
 
-#ifndef KDBG
+#if !defined(KDBG) && !defined(DBG)
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD) do { } while (0)
 # define KDB_DELETEPROCESS_HOOK(PROCESS) do { } while (0)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE) do { } while (0)
@@ -160,7 +160,7 @@ KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                           PKTRAP_FRAME TrapFrame,
 			  BOOLEAN HandleAlways);
 
-#endif /* KDBG */
+#endif /* KDBG || DBG */
 
 VOID
 DebugLogDumpMessages(VOID);
