@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.52 2003/01/04 02:07:18 hbirr Exp $
+/* $Id: rw.c,v 1.53 2003/01/11 16:01:28 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1021,13 +1021,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 		    	           &Fcb->entry.UpdateTime);
          Fcb->entry.AccessDate = Fcb->entry.UpdateDate;
          // update dates/times and length
-	 if (OldAllocationSize != Fcb->RFCB.AllocationSize.u.LowPart)
-	 {
-	    VfatUpdateEntry (IrpContext->DeviceExt, IrpContext->FileObject);
-	    Fcb->Flags &= ~FCB_UPDATE_DIRENTRY;
-	 }
-	 else
-	    Fcb->Flags |= FCB_UPDATE_DIRENTRY;
+         VfatUpdateEntry (IrpContext->DeviceExt, IrpContext->FileObject);
       }
    }
 
