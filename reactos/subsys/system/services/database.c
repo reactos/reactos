@@ -1,4 +1,4 @@
-/* $Id: database.c,v 1.19 2004/10/10 21:00:59 navaraf Exp $
+/* $Id$
  *
  * service control manager
  * 
@@ -521,13 +521,15 @@ static NTSTATUS
 ScmStartService(PSERVICE Service,
 		PSERVICE_GROUP Group)
 {
+#if 0
   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
   PROCESS_INFORMATION ProcessInformation;
   STARTUPINFOW StartupInfo;
   UNICODE_STRING ImagePath;
-  NTSTATUS Status;
   ULONG Type;
   BOOL Result;
+#endif
+  NTSTATUS Status;
 
   DPRINT("ScmStartService() called\n");
 
@@ -544,6 +546,7 @@ ScmStartService(PSERVICE Service,
     }
   else
     {
+#if 0
       RtlInitUnicodeString(&ImagePath, NULL);
 
       /* Get service data */
@@ -653,9 +656,13 @@ ScmStartService(PSERVICE Service,
 	      CloseHandle(ProcessInformation.hProcess);
 	    }
 	}
+#endif
+      Status = STATUS_SUCCESS;
     }
 
+#if 0
 Done:
+#endif
   if (NT_SUCCESS(Status))
     {
       if (Group != NULL)
