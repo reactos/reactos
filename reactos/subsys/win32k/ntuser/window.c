@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.91 2003/08/14 01:38:19 royce Exp $
+/* $Id: window.c,v 1.92 2003/08/15 02:51:53 silverblade Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -677,9 +677,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->Class = ClassObject;
   WindowObject->ExStyle = dwExStyle;
   WindowObject->Style = dwStyle;
+  DbgPrint("1: Style is now %d\n", WindowObject->Style);
+
   if (0 == (dwStyle & WS_CHILD))
     {
+      WindowObject->Flags |= WIN_NCACTIVATED;
+
+    // THIS MESSES UP BUTTONS: WIN_NCACTIVATED == BS_BITMAP !
       WindowObject->Style = WindowObject->Style | WIN_NCACTIVATED;
+      DbgPrint("2: Style is now %d\n", WindowObject->Style);
     }
   WindowObject->x = x;
   WindowObject->y = y;
@@ -726,9 +732,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if (!(dwStyle & WS_CHILD))
     {
       WindowObject->Style |= WS_CLIPSIBLINGS;
+      DbgPrint("3: Style is now %d\n", WindowObject->Style);
       if (!(dwStyle & WS_POPUP))
 	{
 	  WindowObject->Style |= WS_CAPTION;
+      DbgPrint("4: Style is now %d\n", WindowObject->Style);
 	  /* FIXME: Note the window needs a size. */ 
 	}
     }
@@ -791,6 +799,15 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.lpszName = lpWindowName->Buffer;
   Cs.lpszClass = lpClassName->Buffer;
   Cs.dwExStyle = dwExStyle;
+
+    // AG: For some reason these don't get set already. This might need moving
+    // elsewhere... What is actually done with WindowObject anyway, to retain
+    // its data?
+  DbgPrint("[win32k.window] NtUserCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
+//  NtUserSetWindowLong(Handle, GWL_STYLE, WindowObject->Style, TRUE);
+//  NtUserSetWindowLong(Handle, GWL_EXSTYLE, WindowObject->ExStyle, TRUE);
+  // Any more?
+
   DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
   Result = W32kSendNCCREATEMessage(WindowObject->Self, &Cs);
   if (!Result)
@@ -1616,7 +1633,8 @@ NtUserRedrawWindow
    return FALSE;
   }
  }
- 
+
+
  Status = PaintRedrawWindow
  (
   Wnd,
@@ -1625,6 +1643,7 @@ NtUserRedrawWindow
   flags,
   0
  );
+
 
  if(!NT_SUCCESS(Status))
  {

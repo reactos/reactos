@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.17 2003/08/14 18:30:27 silverblade Exp $
+/* $Id: draw.c,v 1.18 2003/08/15 02:51:53 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -30,6 +30,8 @@
 
 #include <windows.h>
 #include <user32.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -1638,6 +1640,8 @@ DrawStateW(
     // AG: Experimental, unfinished, and most likely buggy! I haven't been
     // able to test this - my intention was to implement some things needed
     // by the button control.
+    
+    DbgPrint("[draw.c] In DrawState()\n");
 
     if ((! lpOutputFunc) && (fuFlags &  DST_COMPLEX))
         return FALSE;
@@ -1647,8 +1651,13 @@ DrawStateW(
 
     HBITMAP MemBMP = CreateCompatibleBitmap(hdc, cx, cy);
     HDC MemDC = CreateCompatibleDC(hdc);
-    
+
     HBITMAP OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
+
+    // Does this work?    
+    SetBkColor(MemDC, GetBkColor(hdc));
+    // Test stuff...
+    FillRect(MemDC, &r, WHITE_BRUSH);
 
     // Do drawing first
 
@@ -1674,6 +1683,8 @@ DrawStateW(
     SelectObject(MemDC, OldBMP);
     DeleteObject(MemBMP);
     DeleteDC(MemDC);
+    
+    DbgPrint("[draw.c] Success!\n");
 
     return TRUE;
 }

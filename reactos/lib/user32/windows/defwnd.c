@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.63 2003/08/07 04:03:24 royce Exp $
+/* $Id: defwnd.c,v 1.64 2003/08/15 02:51:53 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -464,7 +464,8 @@ DefWndDoPaintNC(HWND hWnd, HRGN clip)
   ULONG ExStyle;
   int wFrame = 0;
 
-  Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
+    // This won't work because it conflicts with BS_BITMAP :
+//  Active = GetWindowLongW(hWnd, GWL_STYLE) & WIN_NCACTIVATED;
   Style = GetWindowLongW(hWnd, GWL_STYLE);
   ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
 
