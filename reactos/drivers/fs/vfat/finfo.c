@@ -15,6 +15,54 @@
 #define NDEBUG
 #include "vfat.h"
 
+/* GLOBALS ******************************************************************/
+
+const char* FileInformationClassNames[] = 
+{
+  "??????",
+  "FileDirectoryInformation",
+  "FileFullDirectoryInformation",
+  "FileBothDirectoryInformation",
+  "FileBasicInformation",
+  "FileStandardInformation",
+  "FileInternalInformation",
+  "FileEaInformation",
+  "FileAccessInformation",
+  "FileNameInformation",
+  "FileRenameInformation",
+  "FileLinkInformation",
+  "FileNamesInformation",
+  "FileDispositionInformation",
+  "FilePositionInformation",
+  "FileFullEaInformation",
+  "FileModeInformation",
+  "FileAlignmentInformation",
+  "FileAllInformation",
+  "FileAllocationInformation",
+  "FileEndOfFileInformation",
+  "FileAlternateNameInformation",
+  "FileStreamInformation",
+  "FilePipeInformation",
+  "FilePipeLocalInformation",
+  "FilePipeRemoteInformation",
+  "FileMailslotQueryInformation",
+  "FileMailslotSetInformation",
+  "FileCompressionInformation",
+  "FileObjectIdInformation",
+  "FileCompletionInformation",
+  "FileMoveClusterInformation",
+  "FileQuotaInformation",
+  "FileReparsePointInformation",
+  "FileNetworkOpenInformation",
+  "FileAttributeTagInformation",
+  "FileTrackingInformation",
+  "FileIdBothDirectoryInformation",
+  "FileIdFullDirectoryInformation",
+  "FileValidDataLengthInformation",
+  "FileShortNameInformation",
+  "FileMaximumInformation"
+};
+
 /* FUNCTIONS ****************************************************************/
 
 static NTSTATUS
@@ -248,9 +296,9 @@ VfatSetDispositionInformation(PFILE_OBJECT FileObject,
     {
       if (MmFlushImageSection (FileObject->SectionObjectPointer, MmFlushForDelete))
         {
-          if (FCB->RefCount > 1)
+          if (FCB->OpenHandleCount > 1)
             {
-	      DPRINT1("%d %x\n", FCB->RefCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
+	      DPRINT1("%d %x\n", FCB->OpenHandleCount, CcGetFileObjectFromSectionPtrs(FileObject->SectionObjectPointer));
               Status = STATUS_ACCESS_DENIED;
             }
           else
@@ -650,6 +698,10 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
   FileInformationClass = IrpContext->Stack->Parameters.QueryFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
 
+  DPRINT("VfatQueryInformation is called for '%s'\n", 
+         FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[FileInformationClass]);
+
+
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
   BufferLength = IrpContext->Stack->Parameters.QueryFile.Length;
 
@@ -754,6 +806,9 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
     IrpContext->Stack->Parameters.SetFile.FileInformationClass;
   FCB = (PVFATFCB) IrpContext->FileObject->FsContext;
   SystemBuffer = IrpContext->Irp->AssociatedIrp.SystemBuffer;
+
+  DPRINT("VfatSetInformation is called for '%s'\n", 
+         FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[ FileInformationClass]);
   
   DPRINT("FileInformationClass %d\n", FileInformationClass);
   DPRINT("SystemBuffer %x\n", SystemBuffer);
