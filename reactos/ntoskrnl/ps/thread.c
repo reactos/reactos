@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.84 2002/01/13 22:52:07 dwelch Exp $
+/* $Id: thread.c,v 1.85 2002/01/15 00:43:18 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -509,7 +509,17 @@ NtW32Call (IN ULONG RoutineIndex,
 	   OUT PVOID* Result OPTIONAL,
 	   OUT PULONG ResultLength OPTIONAL)
 {
-  UNIMPLEMENTED;
+  PKTRAP_FRAME TrapFrame;
+  PETHREAD Thread;
+  PULONG OldStack;
+
+  Thread = PsGetCurrentThread();
+  if (Thread->Tcb.CallbackStack != NULL)
+    {
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+
 }
 
 NTSTATUS STDCALL 

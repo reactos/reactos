@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.3 2000/12/23 02:37:38 dwelch Exp $
+/* $Id: callback.c,v 1.4 2002/01/15 00:43:17 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -16,7 +16,8 @@
 
 /* TYPES *********************************************************************/
 
-typedef NTSTATUS (*CALLBACK_FUNCTION)(PVOID Argument, ULONG ArgumentLength);
+typedef NTSTATUS STDCALL (*CALLBACK_FUNCTION)(PVOID Argument, 
+					      ULONG ArgumentLength);
 
 /* FUNCTIONS *****************************************************************/
 
