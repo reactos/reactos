@@ -259,6 +259,9 @@ LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPAR
 		  case WM_NOTIFY:
 			return pThis->Notify(wparam, (NMHDR*)lparam);
 
+		  case WM_NOTIFYFORMAT:
+			return NFR_CURRENT;
+
 		  case WM_CREATE:
 			return pThis->Init((LPCREATESTRUCT)lparam);
 
@@ -330,6 +333,9 @@ LRESULT CALLBACK SubclassedWindow::SubclassedWndProc(HWND hwnd, UINT nmsg, WPARA
 
 		  case WM_NOTIFY:
 			return pThis->Notify(wparam, (NMHDR*)lparam);
+
+		  case WM_NOTIFYFORMAT:
+			return NFR_CURRENT;
 
 		  case WM_CREATE:
 			return pThis->Init((LPCREATESTRUCT)lparam);
@@ -676,6 +682,9 @@ INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM 
 		  case WM_NOTIFY:
 			pThis->Notify(wparam, (NMHDR*)lparam);
 			return TRUE;	// message has been processed
+
+		  case WM_NOTIFYFORMAT:
+			return NFR_CURRENT;
 
 		  case WM_NCDESTROY:
 			delete pThis;
@@ -1354,6 +1363,9 @@ INT_PTR CALLBACK PropSheetPageDlg::DialogProc(HWND hwnd, UINT nmsg, WPARAM wpara
 		  case WM_NOTIFY:
 			pThis->Notify(wparam, (NMHDR*)lparam);
 			return TRUE;	// message has been processed
+
+		  case WM_NOTIFYFORMAT:
+			return NFR_CURRENT;
 
 		  case WM_NCDESTROY:
 			delete pThis;

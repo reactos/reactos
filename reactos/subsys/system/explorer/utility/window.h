@@ -138,6 +138,12 @@ protected:
 	static WindowSet s_dialogs;
 };
 
+#ifdef UNICODE
+#define	NFR_CURRENT	NFR_UNICODE
+#else
+#define	NFR_CURRENT	NFR_ANSI
+#endif
+
 
 #ifdef _MSC_VER
 template<typename CLASS> struct GetWindowHelper
@@ -845,27 +851,40 @@ struct ToolTip : public WindowHandle
 	void add(HWND hparent, HWND htool, LPCTSTR txt=LPSTR_TEXTCALLBACK, LPARAM lparam=0)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND/*|TTF_TRANSPARENT*/, hparent, (UINT)htool,
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_IDISHWND|TTF_TRANSPARENT, hparent, (UINT)htool,
 			{0,0,0,0}, 0, (LPTSTR)txt, lparam
 		};
 
-		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+#ifdef UNICODE	///@todo Why is it neccesary to try both TTM_ADDTOOLW and TTM_ADDTOOLW ?!
+		if (!SendMessage(_hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti))
+			SendMessage(_hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti);
+#else
+		if (!SendMessage(_hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti))
+			SendMessage(_hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+#endif
 	}
 
 	void add(HWND hparent, UINT id, const RECT& rect, LPCTSTR txt=LPSTR_TEXTCALLBACK, LPARAM lparam=0)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_SUBCLASS/*|TTF_TRANSPARENT*/, hparent, id,
+			sizeof(TOOLINFO), TTF_SUBCLASS|TTF_TRANSPARENT, hparent, id,
 			{rect.left,rect.top,rect.right,rect.bottom}, 0, (LPTSTR)txt, lparam
 		};
 
-		SendMessage(_hwnd, TTM_ADDTOOL, 0, (LPARAM)&ti);
+#ifdef UNICODE
+		if (!SendMessage(_hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti))
+			SendMessage(_hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti);
+#else
+		if (!SendMessage(_hwnd, TTM_ADDTOOLA, 0, (LPARAM)&ti))
+			SendMessage(_hwnd, TTM_ADDTOOLW, 0, (LPARAM)&ti);
+#endif
 	}
 
 	void remove(HWND hparent, HWND htool)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), TTF_IDISHWND, hparent, (UINT)htool, {0,0,0,0}, 0, 0, 0
+			sizeof(TOOLINFO), TTF_IDISHWND, hparent, (UINT)htool,
+			{0,0,0,0}, 0, 0, 0
 		};
 
 		SendMessage(_hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);
@@ -874,7 +893,8 @@ struct ToolTip : public WindowHandle
 	void remove(HWND hparent, UINT id)
 	{
 		TOOLINFO ti = {
-			sizeof(TOOLINFO), 0, hparent, id, {0,0,0,0}, 0, 0, 0
+			sizeof(TOOLINFO), 0, hparent, id,
+			{0,0,0,0}, 0, 0, 0
 		};
 
 		SendMessage(_hwnd, TTM_DELTOOL, 0, (LPARAM)&ti);

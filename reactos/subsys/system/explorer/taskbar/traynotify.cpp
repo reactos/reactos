@@ -95,24 +95,20 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 
 	 // store tool tip text
 	if (pnid->uFlags & NIF_TIP)
-		if (pnid->cbSize==NID_SIZE_W6 || pnid->cbSize==NID_SIZE_W5 || pnid->cbSize==NID_SIZE_W3)
-		{ // UNICODE version of NOTIFYICONDATA structure
+		if (pnid->cbSize==NID_SIZE_W6 || pnid->cbSize==NID_SIZE_W5 || pnid->cbSize==NID_SIZE_W3) {
+			 // UNICODE version of NOTIFYICONDATA structure
 			LPCWSTR txt = (LPCWSTR)pnid->szTip;
-
-			 // get string length
 			int max_len = pnid->cbSize==NID_SIZE_W3? 64: 128;
 
+			 // get tooltip string length
 			int l = 0;
 			for(; l<max_len; ++l)
 				if (!txt[l])
 					break;
 
 			_tipText.assign(txt, l);
-		} else if (pnid->cbSize==NID_SIZE_A6 || pnid->cbSize==NID_SIZE_A5 || pnid->cbSize==NID_SIZE_A3)
-		{ // ANSI version of NOTIFYICONDATA structure
+		} else if (pnid->cbSize==NID_SIZE_A6 || pnid->cbSize==NID_SIZE_A5 || pnid->cbSize==NID_SIZE_A3) {
 			LPCSTR txt = (LPCSTR)pnid->szTip;
-
-			 // get string length
 			int max_len = pnid->cbSize==NID_SIZE_A3? 64: 128;
 
 			int l = 0;
@@ -378,9 +374,10 @@ void NotifyArea::Refresh()
 	 // sync tooltip areas to current icon number
 	if (_sorted_icons.size() != _last_icon_count) {
 		RECT rect = {2, 3, 2+16, 3+16};
-		size_t tt_idx = 0;
+		size_t icon_cnt = _sorted_icons.size();
 
-		for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
+		size_t tt_idx = 0;
+		while(tt_idx < icon_cnt) {
 			_tooltip.add(_hwnd, tt_idx++, rect);
 
 			rect.left += NOTIFYICON_DIST;
