@@ -15,6 +15,7 @@
 #define DIALOG_CLASS_NAME_A     "DialogA"
 #define WINSWITCH_CLASS_NAME 	L"WinSwitch"
 #define ICONTITLE_CLASS_NAME 	L"IconTitle"
+#define ICONTITLE_CLASS_NAME_A 	"IconTitle"
 #define SCROLLBAR_CLASS_NAME 	L"ScrollBar"
 #define BUTTON_CLASS_NAME 	L"Button"
 #define EDIT_CLASS_NAME 	L"Edit"

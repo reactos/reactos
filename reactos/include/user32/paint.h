@@ -25,3 +25,7 @@ HBRUSH PAINT_GetControlBrush( HWND hParent, HWND hWnd, HDC hDC, UINT ctlType );
 
 HBRUSH GetControlBrush( HWND hwnd, HDC hdc, UINT ctlType );
 
+void  PaintRect( HWND hwndParent, HWND hwnd, HDC hdc,
+                       HBRUSH hbrush, const RECT *rect);
+
+void  FillWindow( HWND hwndParent, HWND hwnd, HDC hdc, HBRUSH hbrush );

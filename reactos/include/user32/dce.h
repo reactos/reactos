@@ -50,7 +50,7 @@ typedef struct tagDCE
 
 
 void  DCE_Init(void);
-DCE*  DCE_AllocDCE( HWND hWnd, DCE_TYPE type );
+DCE*  DCE_AllocDCE(  struct tagWND * wndPtr, DCE_TYPE type );
 DCE*  DCE_FreeDCE( DCE *dce );
 void  DCE_FreeWindowDCE( struct tagWND* );
 INT DCE_ExcludeRgn( HDC, struct tagWND*, HRGN );
