@@ -86,59 +86,21 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          return Status;
       }
       PartitionInfoIsValid = TRUE;
-      DPRINT("Partition Information:\n");
-      DPRINT("StartingOffset      %u\n", PartitionInfo.StartingOffset.QuadPart  / 512);
-      DPRINT("PartitionLength     %u\n", PartitionInfo.PartitionLength.QuadPart / 512);
-      DPRINT("HiddenSectors       %u\n", PartitionInfo.HiddenSectors);
-      DPRINT("PartitionNumber     %u\n", PartitionInfo.PartitionNumber);
-      DPRINT("PartitionType       %u\n", PartitionInfo.PartitionType);
-      DPRINT("BootIndicator       %u\n", PartitionInfo.BootIndicator);
-      DPRINT("RecognizedPartition %u\n", PartitionInfo.RecognizedPartition);
-      DPRINT("RewritePartition    %u\n", PartitionInfo.RewritePartition);
-      if (PartitionInfo.PartitionType)
-      {
-         if (PartitionInfo.PartitionType == PARTITION_FAT_12       ||
-             PartitionInfo.PartitionType == PARTITION_FAT_16       ||
-             PartitionInfo.PartitionType == PARTITION_HUGE         ||
-             PartitionInfo.PartitionType == PARTITION_FAT32        ||
-             PartitionInfo.PartitionType == PARTITION_FAT32_XINT13 ||
-             PartitionInfo.PartitionType == PARTITION_XINT13)
-         {
-            *RecognizedFS = TRUE;
-         }
-      }
-      else if (DiskGeometry.MediaType == RemovableMedia &&
-               PartitionInfo.PartitionNumber > 0 &&
-               PartitionInfo.StartingOffset.QuadPart == 0LL &&
-               PartitionInfo.PartitionLength.QuadPart > 0LL)
-      {
-         /* This is possible a removable media formated as super floppy */
-         *RecognizedFS = TRUE;
-      }
    }
-   /*
-    * Floppy disk driver can return Unknown as media type if it
-    * doesn't know yet what floppy in the drive really is. This is
-    * perfectly correct to do under Windows.
-    */
-   if (DiskGeometry.MediaType == Unknown)
+   else if (DiskGeometry.MediaType == Unknown)
    {
+      /*
+       * Floppy disk driver can return Unknown as media type if it
+       * doesn't know yet what floppy in the drive really is. This is
+       * perfectly correct to do under Windows.
+       */
       *RecognizedFS = TRUE;
       DiskGeometry.BytesPerSector = 512;
-   }
-   if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType < RemovableMedia )
-   {
-      *RecognizedFS = TRUE;
-   }
-   if (*RecognizedFS == FALSE)
-   {
-      return STATUS_SUCCESS;
    }
 
    Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
    if (Boot == NULL)
    {
-      *RecognizedFS=FALSE;
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -148,17 +110,11 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
+      *RecognizedFS = TRUE;
+
       if (Boot->Signatur1 != 0xaa55)
       {
-         BootFatX = (struct _BootSectorFatX *) Boot;
-         if (BootFatX->SysType[0] != 'F' ||
-             BootFatX->SysType[1] != 'A' ||
-             BootFatX->SysType[2] != 'T' ||
-             BootFatX->SysType[3] != 'X')
-         {
-            DPRINT1("Signature %04x\n", Boot->Signatur1);
-         }
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
       if (*RecognizedFS &&
 	       Boot->BytesPerSector != 512 &&
@@ -167,7 +123,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 	       Boot->BytesPerSector != 4096)
       {
          DPRINT1("BytesPerSector %d\n", Boot->BytesPerSector);
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
 
       if (*RecognizedFS &&
@@ -175,7 +131,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 	       Boot->FATCount != 2)
       {
          DPRINT1("FATCount %d\n", Boot->FATCount);
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
 
       if (*RecognizedFS &&
@@ -190,7 +146,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
           Boot->Media != 0xff)
       {
          DPRINT1("Media             %02x\n", Boot->Media);
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
 
       if (*RecognizedFS &&
@@ -204,14 +160,14 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
           Boot->SectorsPerCluster != 128)
       {
          DPRINT1("SectorsPerCluster %02x\n", Boot->SectorsPerCluster);
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
 
       if (*RecognizedFS &&
           Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
       {
          DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
-         *RecognizedFS=FALSE;
+         *RecognizedFS = FALSE;
       }
 
       if (*RecognizedFS)
