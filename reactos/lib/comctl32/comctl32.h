@@ -188,4 +188,7 @@ BOOL WINAPI DPA_Merge (const HDPA, const HDPA, DWORD, PFNDPACOMPARE, PFNDPAMERGE
 
 #define DPA_GetPtrCount(hdpa)  (*(INT*)(hdpa))
 
+LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet);
+BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2);
+
 #endif  /* __WINE_COMCTL32_H */

@@ -34,13 +34,12 @@
  *   - Messages:
  *     o PSM_GETRESULT
  *     o PSM_IDTOINDEX
- *     o PSM_INDEXTOID
- *     o PSM_INDEXTOPAGE
  *     o PSM_INSERTPAGE
- *     o PSM_PAGETOINDEX
  *     o PSM_RECALCPAGESIZES
  *     o PSM_SETHEADERSUBTITLE
  *     o PSM_SETHEADERTITLE
+ *     o WM_HELP
+ *     o WM_CONTEXTMENU
  *   - Notifications:
  *     o PSN_GETOBJECT
  *     o PSN_QUERYINITIALFOCUS
@@ -48,10 +47,8 @@
  *   - Styles:
  *     o PSH_WIZARDHASFINISH
  *     o PSH_RTLREADING
- *     o PSH_WIZARDCONTEXTHELP
  *     o PSH_STRETCHWATERMARK
  *     o PSH_USEPAGELANG
- *     o PSH_NOCONTEXTHELP
  *     o PSH_USEPSTARTPAGE
  *   - Page styles:
  *     o PSP_USEFUSIONCONTEXT
@@ -237,18 +234,14 @@ static VOID PROPSHEET_UnImplementedFlags(DWORD dwFlags)
    * unhandled header flags:
    *  PSH_WIZARDHASFINISH    0x00000010
    *  PSH_RTLREADING         0x00000800
-   *  PSH_WIZARDCONTEXTHELP  0x00001000
    *  PSH_STRETCHWATERMARK   0x00040000
    *  PSH_USEPAGELANG        0x00200000
-   *  PSH_NOCONTEXTHELP      0x02000000      also not in .h
    */
 
     add_flag(PSH_WIZARDHASFINISH);
     add_flag(PSH_RTLREADING);
-    add_flag(PSH_WIZARDCONTEXTHELP);
     add_flag(PSH_STRETCHWATERMARK);
     add_flag(PSH_USEPAGELANG);
-    add_flag(PSH_NOCONTEXTHELP);
     if (string[0] != '\0')
 	FIXME("%s\n", string);
 }
@@ -689,9 +682,29 @@ int PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
 
   memcpy(temp, template, resSize);
 
+  if (psInfo->ppshheader.dwFlags & PSH_NOCONTEXTHELP)
+  {
+    if (((MyDLGTEMPLATEEX*)temp)->signature == 0xFFFF)
+      ((MyDLGTEMPLATEEX*)temp)->style &= ~DS_CONTEXTHELP;
+    else
+      ((DLGTEMPLATE*)temp)->style &= ~DS_CONTEXTHELP;
+  }
+  if ((psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD) &&
+      (psInfo->ppshheader.dwFlags & PSH_WIZARDCONTEXTHELP))
+  {
+    if (((MyDLGTEMPLATEEX*)temp)->signature == 0xFFFF)
+      ((MyDLGTEMPLATEEX*)temp)->style |= DS_CONTEXTHELP;
+    else
+      ((DLGTEMPLATE*)temp)->style |= DS_CONTEXTHELP;
+  }
+
   if (psInfo->useCallback)
     (*(psInfo->ppshheader.pfnCallback))(0, PSCB_PRECREATE, (LPARAM)temp);
 
+  /* NOTE: MSDN states "Returns a positive value if successful, or -1
+   * otherwise for modal property sheets.", but this is wrong. The
+   * actual return value is either TRUE (success), FALSE (cancel) or
+   * -1 (error). */
   if( psInfo->unicode )
   {
     if (!(psInfo->ppshheader.dwFlags & PSH_MODELESS))
@@ -2568,7 +2581,16 @@ static LRESULT PROPSHEET_IndexToHwnd(HWND hwndDlg, int iPageIndex)
  */
 static LRESULT PROPSHEET_PageToIndex(HWND hwndDlg, HPROPSHEETPAGE hPage)
 {
-    FIXME("(%p, %p): stub\n", hwndDlg, hPage);
+    int index;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+
+    TRACE("(%p, %p)\n", hwndDlg, hPage);
+
+    for (index = 0; index < psInfo->nPages; index++)
+        if (psInfo->proppage[index].hpage == hPage)
+            return index;
+    WARN("%p not found\n", hPage);
     return -1;
 }
 
@@ -2577,8 +2599,14 @@ static LRESULT PROPSHEET_PageToIndex(HWND hwndDlg, HPROPSHEETPAGE hPage)
  */
 static LRESULT PROPSHEET_IndexToPage(HWND hwndDlg, int iPageIndex)
 {
-    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
-    return 0;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+    TRACE("(%p, %d)\n", hwndDlg, iPageIndex);
+    if (iPageIndex<0 || iPageIndex>=psInfo->nPages) {
+        WARN("%d out of range.\n", iPageIndex);
+	return 0;
+    }
+    return (LRESULT)psInfo->proppage[iPageIndex].hpage;
 }
 
 /******************************************************************************
@@ -2595,8 +2623,19 @@ static LRESULT PROPSHEET_IdToIndex(HWND hwndDlg, int iPageId)
  */
 static LRESULT PROPSHEET_IndexToId(HWND hwndDlg, int iPageIndex)
 {
-    FIXME("(%p, %d): stub\n", hwndDlg, iPageIndex);
-    return 0;
+    PropSheetInfo * psInfo = (PropSheetInfo*) GetPropW(hwndDlg,
+                                                       PropSheetInfoStr);
+    LPCPROPSHEETPAGEW psp;
+    TRACE("(%p, %d)\n", hwndDlg, iPageIndex);
+    if (iPageIndex<0 || iPageIndex>=psInfo->nPages) {
+        WARN("%d out of range.\n", iPageIndex);
+	return 0;
+    }
+    psp = (LPCPROPSHEETPAGEW)psInfo->proppage[iPageIndex].hpage;
+    if (psp->dwFlags & PSP_DLGINDIRECT || HIWORD(psp->u.pszTemplate)) {
+        return 0;
+    }
+    return (LRESULT)psp->u.pszTemplate;
 }
 
 /******************************************************************************
@@ -3374,6 +3413,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
           PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd, PropSheetInfoStr);
 
+          if (!psInfo)
+              return FALSE;
+
           /* No default handler, forward notification to active page */
           if (psInfo->activeValid && psInfo->active_page != -1)
           {
@@ -3408,6 +3450,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd,
                                                         PropSheetInfoStr);
       HWND hwndPage = 0;
+
+      if (!psInfo)
+        return FALSE;
 
       if (psInfo->activeValid && psInfo->active_page != -1)
         hwndPage = psInfo->proppage[psInfo->active_page].hwndPage;
@@ -3470,6 +3515,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd,
                                                         PropSheetInfoStr);
 
+      if (!psInfo)
+        return FALSE;
+
       psInfo->restartWindows = TRUE;
       return TRUE;
     }
@@ -3478,6 +3526,9 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
       PropSheetInfo* psInfo = (PropSheetInfo*) GetPropW(hwnd,
                                                         PropSheetInfoStr);
+
+      if (!psInfo)
+        return FALSE;
 
       psInfo->rebootSystem = TRUE;
       return TRUE;

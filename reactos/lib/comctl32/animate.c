@@ -119,7 +119,7 @@ static BOOL ANIMATE_LoadResA(ANIMATE_INFO *infoPtr, HINSTANCE hInst, LPSTR lpNam
     mminfo.cchBuffer = SizeofResource(hInst, hrsrc);
     infoPtr->hMMio = mmioOpenA(NULL, &mminfo, MMIO_READ);
     if (!infoPtr->hMMio) {
-	GlobalFree((HGLOBAL)lpAvi);
+	FreeResource(infoPtr->hRes);
 	return FALSE;
     }
 
@@ -414,8 +414,8 @@ static LRESULT ANIMATE_Play(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	return FALSE;
 
     if (infoPtr->hThread || infoPtr->uTimer) {
-	FIXME("Already playing ? what should I do ??\n");
-	ANIMATE_DoStop(infoPtr);
+	TRACE("Already playing\n");
+	return TRUE;
     }
 
     infoPtr->nFromFrame = (INT)LOWORD(lParam);
@@ -443,10 +443,8 @@ static LRESULT ANIMATE_Play(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
         if(GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
         {
-            HDC hDC = GetDC(hWnd);
             infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
                                                      WM_CTLCOLORSTATIC, 0, (LPARAM)hWnd);
-            ReleaseDC(hWnd,hDC);
         }
 
 	TRACE("Using an animation thread\n");
@@ -804,7 +802,7 @@ static LRESULT ANIMATE_Create(HWND hWnd, WPARAM wParam, LPARAM lParam)
 
     InitializeCriticalSection(&infoPtr->cs);
 
-    return 0;
+    return TRUE;
 }
 
 
@@ -860,8 +858,10 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
     case ACM_OPENA:
 	return ANIMATE_OpenA(hWnd, wParam, lParam);
 
-	/*	case ACM_OPEN32W: FIXME!! */
-	/*	    return ANIMATE_Open32W(hWnd, wParam, lParam); */
+    case ACM_OPENW:
+	FIXME("ACM_OPENW: stub!\n");
+	/* return ANIMATE_Open32W(hWnd, wParam, lParam); */
+	return 0;
 
     case ACM_PLAY:
 	return ANIMATE_Play(hWnd, wParam, lParam);
@@ -870,19 +870,16 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	return ANIMATE_Stop(hWnd, wParam, lParam);
 
     case WM_NCCREATE:
-	ANIMATE_Create(hWnd, wParam, lParam);
-	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+	return ANIMATE_Create(hWnd, wParam, lParam);
 
     case WM_NCHITTEST:
 	return HTTRANSPARENT;
 
     case WM_DESTROY:
-	ANIMATE_Destroy(hWnd, wParam, lParam);
-	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+	return ANIMATE_Destroy(hWnd, wParam, lParam);
 
     case WM_ERASEBKGND:
-	ANIMATE_EraseBackground(hWnd, wParam, lParam);
-	break;
+	return ANIMATE_EraseBackground(hWnd, wParam, lParam);
 
     /*	case WM_STYLECHANGED: FIXME shall we do something ?? */
 
@@ -895,10 +892,6 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 						     wParam, (LPARAM)hWnd);
         }
 	return ANIMATE_DrawFrame(ANIMATE_GetInfoPtr(hWnd));
-
-    case WM_CLOSE:
-	ANIMATE_Free(ANIMATE_GetInfoPtr(hWnd));
-	return TRUE;
 
     case WM_PAINT:
         {
@@ -940,8 +933,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 	break;
 
     case WM_SIZE:
-	ANIMATE_Size(hWnd, wParam, lParam);
-	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+	return ANIMATE_Size(hWnd, wParam, lParam);
 
     default:
 	if ((uMsg >= WM_USER) && (uMsg < WM_APP))

@@ -41,7 +41,7 @@
  *   -- ICC_DATE_CLASSES
  *   -- ICC_HOTKEY_CLASS
  *   -- ICC_INTERNET_CLASSES
- *   -- ICC_LINK_CLASS (not yet implemented)
+ *   -- ICC_LINK_CLASS
  *   -- ICC_LISTVIEW_CLASSES
  *   -- ICC_NATIVEFNTCTL_CLASS
  *   -- ICC_PAGESCROLLER_CLASS
@@ -1484,4 +1484,68 @@ void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark
     PolyPolyline(hDC, aptInsertMark, adwPolyPoints, sizeof(adwPolyPoints)/sizeof(adwPolyPoints[0]));
     SelectObject(hDC, hOldPen);
     DeleteObject(hPen);
+}
+
+/***********************************************************************
+ * MirrorIcon [COMCTL32.414]
+ *
+ * Mirrors an icon so that it will appear correctly on a mirrored DC.
+ *
+ * PARAMS
+ *     phicon1 [I/O] Icon.
+ *     phicon2 [I/O] Icon.
+ *
+ * RETURNS
+ *     Success: TRUE.
+ *     Failure: FALSE.
+ */
+BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2)
+{
+    FIXME("(%p, %p): stub\n", phicon1, phicon2);
+    return FALSE;
+}
+
+static inline int IsDelimiter(WCHAR c)
+{
+    switch(c)
+    {
+	case '/':
+	case '\\':
+	case '.':
+	case ' ':
+	    return TRUE;
+    }
+    return FALSE;
+}
+
+static int CALLBACK PathWordBreakProc(LPWSTR lpch, int ichCurrent, int cch, int code)
+{
+    if (code == WB_ISDELIMITER)
+        return IsDelimiter(lpch[ichCurrent]);
+    else
+    {
+        int dir = (code == WB_LEFT) ? -1 : 1;
+        for(; 0 <= ichCurrent && ichCurrent < cch; ichCurrent += dir)
+            if (IsDelimiter(lpch[ichCurrent])) return ichCurrent;
+    }
+    return ichCurrent;
+}
+
+/***********************************************************************
+ * SetPathWordBreakProc [COMCTL32.384]
+ *
+ * Sets the word break procedure for an edit control to one that understands
+ * paths so that the user can jump over directories.
+ *
+ * PARAMS
+ *     hwnd [I] Handle to edit control.
+ *     bSet [I] If this is TRUE then the word break proc is set, otherwise it is removed.
+ *
+ * RETURNS
+ *     Result from EM_SETWORDBREAKPROC message.
+ */
+LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet)
+{
+    return SendMessageW(hwnd, EM_SETWORDBREAKPROC, 0,
+        (LPARAM)(bSet ? PathWordBreakProc : NULL));
 }

@@ -89,13 +89,13 @@
 377 stdcall -noname IntlStrEqWorkerW(long wstr wstr long)
 382 stdcall -noname SmoothScrollWindow(ptr)
 383 stub -noname DoReaderMode
-384 stub -noname SetPathWordBreakProc
+384 stdcall -noname SetPathWordBreakProc(ptr long)
 385 stdcall -noname DPA_EnumCallback(long long long)
 386 stdcall -noname DPA_DestroyCallback(ptr ptr long)
 387 stdcall -noname DSA_EnumCallback(ptr ptr long)
 388 stdcall -noname DSA_DestroyCallback(ptr ptr long)
 389 stub -noname SHGetProcessDword
-390 stub -noname ImageList_SetColorTable
+390 stdcall -noname ImageList_SetColorTable(ptr long long ptr)
 400 stdcall -noname CreateMRUListW(ptr)
 401 stdcall -noname AddMRUStringW(long wstr)
 402 stdcall -noname FindMRUStringW(long wstr ptr)
@@ -105,7 +105,7 @@
 411 stdcall GetWindowSubclass(long ptr long ptr)
 412 stdcall RemoveWindowSubclass(long ptr long)
 413 stdcall DefSubclassProc(long long long long)
-414 stub -noname MirrorIcon
+414 stdcall -noname MirrorIcon(ptr ptr)
 415 stdcall DrawTextWrap(long wstr long ptr long) user32.DrawTextW
 416 stdcall DrawTextExPrivWrap(long wstr long ptr long ptr) user32.DrawTextExW
 417 stdcall ExtTextOutWrap(long long long long ptr wstr long ptr) gdi32.ExtTextOutW

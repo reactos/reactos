@@ -45,6 +45,7 @@
  *     - TB_GETMETRICS
  *     - TB_GETOBJECT
  *     - TB_INSERTMARKHITTEST
+ *     - TB_SAVERESTORE
  *     - TB_SETMETRICS
  *   - Notifications:
  *     - NM_CHAR
@@ -1570,14 +1571,14 @@ TOOLBAR_CalcToolbar (HWND hwnd)
 	/* Set the toolTip only for non-hidden, non-separator button */
 	if (infoPtr->hwndToolTip && !(btnPtr->fsStyle & BTNS_SEP ))
 	{
-	    TTTOOLINFOA ti;
+	    TTTOOLINFOW ti;
 
-	    ZeroMemory (&ti, sizeof(TTTOOLINFOA));
-	    ti.cbSize = sizeof(TTTOOLINFOA);
+	    ZeroMemory (&ti, sizeof(ti));
+	    ti.cbSize = sizeof(ti);
 	    ti.hwnd = hwnd;
 	    ti.uId = btnPtr->idCommand;
 	    ti.rect = btnPtr->rect;
-	    SendMessageA (infoPtr->hwndToolTip, TTM_NEWTOOLRECTA,
+	    SendMessageW (infoPtr->hwndToolTip, TTM_NEWTOOLRECTW,
 			    0, (LPARAM)&ti);
 	}
 
@@ -1760,7 +1761,7 @@ TOOLBAR_RelayEvent (HWND hwndTip, HWND hwndMsg, UINT uMsg,
     msg.pt.x = LOWORD(GetMessagePos ());
     msg.pt.y = HIWORD(GetMessagePos ());
 
-    SendMessageA (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
+    SendMessageW (hwndTip, TTM_RELAYEVENT, 0, (LPARAM)&msg);
 }
 
 /* keeps available button list box sorted by button id */
@@ -1771,50 +1772,51 @@ static void TOOLBAR_Cust_InsertAvailButton(HWND hwnd, PCUSTOMBUTTON btnInfoNew)
     PCUSTOMBUTTON btnInfo;
     HWND hwndAvail = GetDlgItem(hwnd, IDC_AVAILBTN_LBOX);
 
-    ERR("button %s, idCommand %d\n", debugstr_w(btnInfoNew->text), btnInfoNew->btn.idCommand);
+    TRACE("button %s, idCommand %d\n", debugstr_w(btnInfoNew->text), btnInfoNew->btn.idCommand);
 
-    count = SendMessageA(hwndAvail, LB_GETCOUNT, 0, 0);
+    count = SendMessageW(hwndAvail, LB_GETCOUNT, 0, 0);
 
     /* position 0 is always separator */
     for (i = 1; i < count; i++)
     {
-        btnInfo = (PCUSTOMBUTTON)SendMessageA(hwndAvail, LB_GETITEMDATA, i, 0);
+        btnInfo = (PCUSTOMBUTTON)SendMessageW(hwndAvail, LB_GETITEMDATA, i, 0);
         if (btnInfoNew->btn.idCommand < btnInfo->btn.idCommand)
         {
-            i = SendMessageA(hwndAvail, LB_INSERTSTRING, i, 0);
-            SendMessageA(hwndAvail, LB_SETITEMDATA, i, (LPARAM)btnInfoNew);
+            i = SendMessageW(hwndAvail, LB_INSERTSTRING, i, 0);
+            SendMessageW(hwndAvail, LB_SETITEMDATA, i, (LPARAM)btnInfoNew);
             return;
         }
     }
     /* id higher than all others add to end */
-    i = SendMessageA(hwndAvail, LB_ADDSTRING, 0, 0);
-    SendMessageA(hwndAvail, LB_SETITEMDATA, i, (LPARAM)btnInfoNew);
+    i = SendMessageW(hwndAvail, LB_ADDSTRING, 0, 0);
+    SendMessageW(hwndAvail, LB_SETITEMDATA, i, (LPARAM)btnInfoNew);
 }
 
 static void TOOLBAR_Cust_MoveButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT nIndexFrom, INT nIndexTo)
 {
-    NMTOOLBARA nmtb;
+    NMTOOLBARW nmtb;
 
 	TRACE("index from %d, index to %d\n", nIndexFrom, nIndexTo);
 
     if (nIndexFrom == nIndexTo)
         return;
 
-    /* send TBN_QUERYINSERT notification */
-    nmtb.iItem = nIndexFrom; /* FIXME: this doesn't look right */
+    /* MSDN states that iItem is the index of the button, rather than the
+     * command ID as used by every other NMTOOLBAR notification */
+    nmtb.iItem = nIndexFrom;
     if (TOOLBAR_SendNotify((NMHDR *)&nmtb, custInfo->tbInfo, TBN_QUERYINSERT))
     {
         PCUSTOMBUTTON btnInfo;
         NMHDR hdr;
         HWND hwndList = GetDlgItem(hwnd, IDC_TOOLBARBTN_LBOX);
-        int count = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
+        int count = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
 
-        btnInfo = (PCUSTOMBUTTON)SendMessageA(hwndList, LB_GETITEMDATA, nIndexFrom, 0);
+        btnInfo = (PCUSTOMBUTTON)SendMessageW(hwndList, LB_GETITEMDATA, nIndexFrom, 0);
 
-        SendMessageA(hwndList, LB_DELETESTRING, nIndexFrom, 0);
-        SendMessageA(hwndList, LB_INSERTSTRING, nIndexTo, 0);
-        SendMessageA(hwndList, LB_SETITEMDATA, nIndexTo, (LPARAM)btnInfo);
-        SendMessageA(hwndList, LB_SETCURSEL, nIndexTo, 0);
+        SendMessageW(hwndList, LB_DELETESTRING, nIndexFrom, 0);
+        SendMessageW(hwndList, LB_INSERTSTRING, nIndexTo, 0);
+        SendMessageW(hwndList, LB_SETITEMDATA, nIndexTo, (LPARAM)btnInfo);
+        SendMessageW(hwndList, LB_SETCURSEL, nIndexTo, 0);
 
         if (nIndexTo <= 0)
             EnableWindow(GetDlgItem(hwnd,IDC_MOVEUP_BTN), FALSE);
@@ -1827,8 +1829,8 @@ static void TOOLBAR_Cust_MoveButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT nInde
         else
             EnableWindow(GetDlgItem(hwnd,IDC_MOVEDN_BTN), TRUE);
 
-        SendMessageA(custInfo->tbHwnd, TB_DELETEBUTTON, nIndexFrom, 0);
-        SendMessageA(custInfo->tbHwnd, TB_INSERTBUTTONA, nIndexTo, (LPARAM)&(btnInfo->btn));
+        SendMessageW(custInfo->tbHwnd, TB_DELETEBUTTON, nIndexFrom, 0);
+        SendMessageW(custInfo->tbHwnd, TB_INSERTBUTTONW, nIndexTo, (LPARAM)&(btnInfo->btn));
 
         TOOLBAR_SendNotify(&hdr, custInfo->tbInfo, TBN_TOOLBARCHANGE);
     }
@@ -1836,30 +1838,31 @@ static void TOOLBAR_Cust_MoveButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT nInde
 
 static void TOOLBAR_Cust_AddButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT nIndexAvail, INT nIndexTo)
 {
-    NMTOOLBARA nmtb;
+    NMTOOLBARW nmtb;
 
     TRACE("Add: nIndexAvail %d, nIndexTo %d\n", nIndexAvail, nIndexTo);
 
-    /* send TBN_QUERYINSERT notification */
-    nmtb.iItem = nIndexAvail; /* FIXME: this doesn't look right */
+    /* MSDN states that iItem is the index of the button, rather than the
+     * command ID as used by every other NMTOOLBAR notification */
+    nmtb.iItem = nIndexAvail;
     if (TOOLBAR_SendNotify((NMHDR *)&nmtb, custInfo->tbInfo, TBN_QUERYINSERT))
     {
         PCUSTOMBUTTON btnInfo;
         NMHDR hdr;
         HWND hwndList = GetDlgItem(hwnd, IDC_TOOLBARBTN_LBOX);
         HWND hwndAvail = GetDlgItem(hwnd, IDC_AVAILBTN_LBOX);
-        int count = SendMessageA(hwndAvail, LB_GETCOUNT, 0, 0);
+        int count = SendMessageW(hwndAvail, LB_GETCOUNT, 0, 0);
 
-        btnInfo = (PCUSTOMBUTTON)SendMessageA(hwndAvail, LB_GETITEMDATA, nIndexAvail, 0);
+        btnInfo = (PCUSTOMBUTTON)SendMessageW(hwndAvail, LB_GETITEMDATA, nIndexAvail, 0);
 
         if (nIndexAvail != 0) /* index == 0 indicates separator */
         {
             /* remove from 'available buttons' list */
-            SendMessageA(hwndAvail, LB_DELETESTRING, nIndexAvail, 0);
+            SendMessageW(hwndAvail, LB_DELETESTRING, nIndexAvail, 0);
             if (nIndexAvail == count-1)
-                SendMessageA(hwndAvail, LB_SETCURSEL, nIndexAvail-1 , 0);
+                SendMessageW(hwndAvail, LB_SETCURSEL, nIndexAvail-1 , 0);
             else
-                SendMessageA(hwndAvail, LB_SETCURSEL, nIndexAvail , 0);
+                SendMessageW(hwndAvail, LB_SETCURSEL, nIndexAvail , 0);
         }
         else
         {
@@ -1872,10 +1875,10 @@ static void TOOLBAR_Cust_AddButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT nIndex
         }
 
         /* insert into 'toolbar button' list */
-        SendMessageA(hwndList, LB_INSERTSTRING, nIndexTo, 0);
-        SendMessageA(hwndList, LB_SETITEMDATA, nIndexTo, (LPARAM)btnInfo);
+        SendMessageW(hwndList, LB_INSERTSTRING, nIndexTo, 0);
+        SendMessageW(hwndList, LB_SETITEMDATA, nIndexTo, (LPARAM)btnInfo);
 
-        SendMessageA(custInfo->tbHwnd, TB_INSERTBUTTONA, nIndexTo, (LPARAM)&(btnInfo->btn));
+        SendMessageW(custInfo->tbHwnd, TB_INSERTBUTTONW, nIndexTo, (LPARAM)&(btnInfo->btn));
 
         TOOLBAR_SendNotify(&hdr, custInfo->tbInfo, TBN_TOOLBARCHANGE);
     }
@@ -1888,17 +1891,17 @@ static void TOOLBAR_Cust_RemoveButton(PCUSTDLG_INFO custInfo, HWND hwnd, INT ind
 
     TRACE("Remove: index %d\n", index);
 
-    btnInfo = (PCUSTOMBUTTON)SendMessageA(hwndList, LB_GETITEMDATA, index, 0);
+    btnInfo = (PCUSTOMBUTTON)SendMessageW(hwndList, LB_GETITEMDATA, index, 0);
 
     /* send TBN_QUERYDELETE notification */
     if (TOOLBAR_IsButtonRemovable(custInfo->tbInfo, index, btnInfo))
     {
         NMHDR hdr;
 
-        SendMessageA(hwndList, LB_DELETESTRING, index, 0);
-        SendMessageA(hwndList, LB_SETCURSEL, index , 0);
+        SendMessageW(hwndList, LB_DELETESTRING, index, 0);
+        SendMessageW(hwndList, LB_SETCURSEL, index , 0);
 
-        SendMessageA(custInfo->tbHwnd, TB_DELETEBUTTON, index, 0);
+        SendMessageW(custInfo->tbHwnd, TB_DELETEBUTTON, index, 0);
 
         /* insert into 'available button' list */
         if (!(btnInfo->btn.fsStyle & BTNS_SEP))
@@ -1919,7 +1922,7 @@ static LRESULT TOOLBAR_Cust_ToolbarDragListNotification(PCUSTDLG_INFO custInfo, 
     case DL_BEGINDRAG:
     {
         INT nCurrentItem = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
+        INT nCount = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
         /* no dragging for last item (separator) */
         if (nCurrentItem >= (nCount - 1)) return FALSE;
         return TRUE;
@@ -1927,7 +1930,7 @@ static LRESULT TOOLBAR_Cust_ToolbarDragListNotification(PCUSTDLG_INFO custInfo, 
     case DL_DRAGGING:
     {
         INT nCurrentItem = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
+        INT nCount = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
         /* no dragging past last item (separator) */
         if ((nCurrentItem >= 0) && (nCurrentItem < (nCount - 1)))
         {
@@ -1954,8 +1957,8 @@ static LRESULT TOOLBAR_Cust_ToolbarDragListNotification(PCUSTDLG_INFO custInfo, 
     case DL_DROPPED:
     {
         INT nIndexTo = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nIndexFrom = SendMessageA(hwndList, LB_GETCURSEL, 0, 0);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
+        INT nIndexFrom = SendMessageW(hwndList, LB_GETCURSEL, 0, 0);
+        INT nCount = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
         if ((nIndexTo >= 0) && (nIndexTo < (nCount - 1)))
         {
             /* clear drag arrow */
@@ -1975,13 +1978,13 @@ static LRESULT TOOLBAR_Cust_ToolbarDragListNotification(PCUSTDLG_INFO custInfo, 
         }
         break;
     }
-	case DL_CANCELDRAG:
+    case DL_CANCELDRAG:
         /* Clear drag arrow */
         DrawInsert(hwnd, hwndList, -1);
         break;
     }
 
-	return 0;
+    return 0;
 }
 
 /* drag list notification function for available buttons list box */
@@ -1991,19 +1994,13 @@ static LRESULT TOOLBAR_Cust_AvailDragListNotification(PCUSTDLG_INFO custInfo, HW
     switch (pDLI->uNotification)
     {
     case DL_BEGINDRAG:
-    {
-        INT nCurrentItem = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
-        /* no dragging for last item (separator) */
-        if (nCurrentItem >= (nCount - 1)) return FALSE;
         return TRUE;
-    }
     case DL_DRAGGING:
     {
         INT nCurrentItem = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
+        INT nCount = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
         /* no dragging past last item (separator) */
-        if ((nCurrentItem >= 0) && (nCurrentItem < (nCount - 1)))
+        if ((nCurrentItem >= 0) && (nCurrentItem < nCount))
         {
             DrawInsert(hwnd, hwndList, nCurrentItem);
             /* FIXME: native uses "move button" cursor */
@@ -2028,9 +2025,9 @@ static LRESULT TOOLBAR_Cust_AvailDragListNotification(PCUSTDLG_INFO custInfo, HW
     case DL_DROPPED:
     {
         INT nIndexTo = LBItemFromPt(hwndList, pDLI->ptCursor, TRUE);
-        INT nCount = SendMessageA(hwndList, LB_GETCOUNT, 0, 0);
-        INT nIndexFrom = SendDlgItemMessageA(hwnd, IDC_AVAILBTN_LBOX, LB_GETCURSEL, 0, 0);
-        if ((nIndexTo >= 0) && (nIndexTo < (nCount - 1)))
+        INT nCount = SendMessageW(hwndList, LB_GETCOUNT, 0, 0);
+        INT nIndexFrom = SendDlgItemMessageW(hwnd, IDC_AVAILBTN_LBOX, LB_GETCURSEL, 0, 0);
+        if ((nIndexTo >= 0) && (nIndexTo < nCount))
         {
             /* clear drag arrow */
             DrawInsert(hwnd, hwndList, -1);
@@ -2038,12 +2035,12 @@ static LRESULT TOOLBAR_Cust_AvailDragListNotification(PCUSTDLG_INFO custInfo, HW
             TOOLBAR_Cust_AddButton(custInfo, hwnd, nIndexFrom, nIndexTo);
         }
     }
-	case DL_CANCELDRAG:
+    case DL_CANCELDRAG:
         /* Clear drag arrow */
         DrawInsert(hwnd, hwndList, -1);
         break;
-	}
-	return 0;
+    }
+    return 0;
 }
 
 extern UINT uDragListMessage;
@@ -2102,11 +2099,11 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    /* send TBN_QUERYDELETE notification */
                     btnInfo->bRemovable = TOOLBAR_IsButtonRemovable(infoPtr, i, btnInfo);
 
-		    index = (int)SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_ADDSTRING, 0, 0);
-		    SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
+		    index = (int)SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_ADDSTRING, 0, 0);
+		    SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
 		}
 
-		SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMHEIGHT, 0, infoPtr->nBitmapHeight + 8);
+		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMHEIGHT, 0, infoPtr->nBitmapHeight + 8);
 
 		/* insert separator button into 'available buttons' list */
 		btnInfo = (PCUSTOMBUTTON)Alloc(sizeof(CUSTOMBUTTON));
@@ -2115,8 +2112,8 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		btnInfo->bVirtual = FALSE;
 		btnInfo->bRemovable = TRUE;
 		LoadStringW (COMCTL32_hModule, IDS_SEPARATOR, btnInfo->text, 64);
-		index = (int)SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_ADDSTRING, 0, (LPARAM)btnInfo);
-		SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
+		index = (int)SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_ADDSTRING, 0, (LPARAM)btnInfo);
+		SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
 
 		/* insert all buttons into dsa */
 		for (i = 0;; i++)
@@ -2150,7 +2147,7 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		    }
 		    else
 		    {
-                        btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageA (hwnd, 
+                        btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageW (hwnd, 
                             IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, index, 0);
                     }
 
@@ -2171,10 +2168,10 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			TOOLBAR_Cust_InsertAvailButton(hwnd, btnInfo);
 		}
 
-		SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMHEIGHT, 0, infoPtr->nBitmapHeight + 8);
+		SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMHEIGHT, 0, infoPtr->nBitmapHeight + 8);
 
 		/* select first item in the 'available' list */
-		SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_SETCURSEL, 0, 0);
+		SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_SETCURSEL, 0, 0);
 
 		/* append 'virtual' separator button to the 'toolbar buttons' list */
 		btnInfo = (PCUSTOMBUTTON)Alloc(sizeof(CUSTOMBUTTON));
@@ -2183,18 +2180,18 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		btnInfo->bVirtual = TRUE;
 		btnInfo->bRemovable = FALSE;
 		LoadStringW (COMCTL32_hModule, IDS_SEPARATOR, btnInfo->text, 64);
-		index = (int)SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_ADDSTRING, 0, (LPARAM)btnInfo);
-		SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
+		index = (int)SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_ADDSTRING, 0, (LPARAM)btnInfo);
+		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, index, (LPARAM)btnInfo);
 
 		/* select last item in the 'toolbar' list */
-		SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETCURSEL, index, 0);
-		SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETTOPINDEX, index, 0);
+		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETCURSEL, index, 0);
+		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETTOPINDEX, index, 0);
 
         MakeDragList(GetDlgItem(hwnd, IDC_TOOLBARBTN_LBOX));
         MakeDragList(GetDlgItem(hwnd, IDC_AVAILBTN_LBOX));
 
 		/* set focus and disable buttons */
-		PostMessageA (hwnd, WM_USER, 0, 0);
+		PostMessageW (hwnd, WM_USER, 0, 0);
 	    }
 	    return TRUE;
 
@@ -2220,8 +2217,8 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int count;
 			int index;
 
-			count = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCOUNT, 0, 0);
-			index = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
+			count = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCOUNT, 0, 0);
+			index = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
 
 			/* send TBN_QUERYINSERT notification */
 			nmtb.iItem = index;
@@ -2229,7 +2226,7 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 					TBN_QUERYINSERT);
 
 			/* get list box item */
-			btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, index, 0);
+			btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, index, 0);
 
 			if (index == (count - 1))
 			{
@@ -2261,21 +2258,21 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		case IDC_MOVEUP_BTN:
 		    {
-			int index = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
+			int index = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
 			TOOLBAR_Cust_MoveButton(custInfo, hwnd, index, index-1);
 		    }
 		    break;
 
 		case IDC_MOVEDN_BTN: /* move down */
 		    {
-			int index = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
+			int index = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
 			TOOLBAR_Cust_MoveButton(custInfo, hwnd, index, index+1);
 		    }
 		    break;
 
 		case IDC_REMOVE_BTN: /* remove button */
 		    {
-			int index = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
+			int index = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
 
 			if (LB_ERR == index)
 				break;
@@ -2295,8 +2292,8 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			int index;
 			int indexto;
 
-			index = SendDlgItemMessageA(hwnd, IDC_AVAILBTN_LBOX, LB_GETCURSEL, 0, 0);
-			indexto = SendDlgItemMessageA(hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
+			index = SendDlgItemMessageW(hwnd, IDC_AVAILBTN_LBOX, LB_GETCURSEL, 0, 0);
+			indexto = SendDlgItemMessageW(hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCURSEL, 0, 0);
 
 			TOOLBAR_Cust_AddButton(custInfo, hwnd, index, indexto);
 		    }
@@ -2314,25 +2311,25 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		int i;
 
 		/* delete items from 'toolbar buttons' listbox*/
-		count = SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCOUNT, 0, 0);
+		count = SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETCOUNT, 0, 0);
 		for (i = 0; i < count; i++)
 		{
-		    btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, i, 0);
+		    btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_GETITEMDATA, i, 0);
 		    Free(btnInfo);
-		    SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, 0, 0);
+		    SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_SETITEMDATA, 0, 0);
 		}
-		SendDlgItemMessageA (hwnd, IDC_TOOLBARBTN_LBOX, LB_RESETCONTENT, 0, 0);
+		SendDlgItemMessageW (hwnd, IDC_TOOLBARBTN_LBOX, LB_RESETCONTENT, 0, 0);
 
 
 		/* delete items from 'available buttons' listbox*/
-		count = SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_GETCOUNT, 0, 0);
+		count = SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_GETCOUNT, 0, 0);
 		for (i = 0; i < count; i++)
 		{
-		    btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_GETITEMDATA, i, 0);
+		    btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_GETITEMDATA, i, 0);
 		    Free(btnInfo);
-		    SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMDATA, i, 0);
+		    SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_SETITEMDATA, i, 0);
 		}
-		SendDlgItemMessageA (hwnd, IDC_AVAILBTN_LBOX, LB_RESETCONTENT, 0, 0);
+		SendDlgItemMessageW (hwnd, IDC_AVAILBTN_LBOX, LB_RESETCONTENT, 0, 0);
             }
 	    return TRUE;
 
@@ -2348,7 +2345,7 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		COLORREF oldBk = 0;
 
 		/* get item data */
-		btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageA (hwnd, wParam, LB_GETITEMDATA, (WPARAM)lpdis->itemID, 0);
+		btnInfo = (PCUSTOMBUTTON)SendDlgItemMessageW (hwnd, wParam, LB_GETITEMDATA, (WPARAM)lpdis->itemID, 0);
 		if (btnInfo == NULL)
 		{
 		    FIXME("btnInfo invalid!\n");
@@ -2476,17 +2473,17 @@ TOOLBAR_AddBitmap (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    /* FIXME: on windows the size of the images is 25x24 but the size of the bitmap
              * in rsrc is only 24x24. Fix the bitmap (how?) and then fix this
              */
-	    SendMessageA (hwnd, TB_SETBITMAPSIZE, 0,
+	    SendMessageW (hwnd, TB_SETBITMAPSIZE, 0,
 			  MAKELPARAM((WORD)24, (WORD)24));
-	    SendMessageA (hwnd, TB_SETBUTTONSIZE, 0,
+	    SendMessageW (hwnd, TB_SETBUTTONSIZE, 0,
 			  MAKELPARAM((WORD)31, (WORD)30));
 	}
 	else
 	{
 	    /* small icons */
-	    SendMessageA (hwnd, TB_SETBITMAPSIZE, 0,
+	    SendMessageW (hwnd, TB_SETBITMAPSIZE, 0,
 			  MAKELPARAM((WORD)16, (WORD)16));
-	    SendMessageA (hwnd, TB_SETBUTTONSIZE, 0,
+	    SendMessageW (hwnd, TB_SETBUTTONSIZE, 0,
 			  MAKELPARAM((WORD)22, (WORD)22));
 	}
 
@@ -2704,16 +2701,16 @@ TOOLBAR_AddButtonsA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	btnPtr->bHot      = FALSE;
 
 	if ((infoPtr->hwndToolTip) && !(btnPtr->fsStyle & BTNS_SEP)) {
-	    TTTOOLINFOA ti;
+	    TTTOOLINFOW ti;
 
-	    ZeroMemory (&ti, sizeof(TTTOOLINFOA));
-	    ti.cbSize   = sizeof (TTTOOLINFOA);
+	    ZeroMemory (&ti, sizeof(ti));
+	    ti.cbSize   = sizeof(ti);
 	    ti.hwnd     = hwnd;
 	    ti.uId      = btnPtr->idCommand;
 	    ti.hinst    = 0;
-	    ti.lpszText = LPSTR_TEXTCALLBACKA;
+	    ti.lpszText = LPSTR_TEXTCALLBACKW;
 
-	    SendMessageA (infoPtr->hwndToolTip, TTM_ADDTOOLA,
+	    SendMessageW (infoPtr->hwndToolTip, TTM_ADDTOOLW,
 			    0, (LPARAM)&ti);
 	}
     }
@@ -3168,16 +3165,16 @@ TOOLBAR_Customize (HWND hwnd)
     TOOLBAR_SendNotify ((NMHDR *) &nmhdr, infoPtr,
 		    TBN_BEGINADJUST);
 
-    if (!(hRes = FindResourceA (COMCTL32_hModule,
-                                MAKEINTRESOURCEA(IDD_TBCUSTOMIZE),
-                                (LPSTR)RT_DIALOG)))
+    if (!(hRes = FindResourceW (COMCTL32_hModule,
+                                MAKEINTRESOURCEW(IDD_TBCUSTOMIZE),
+                                (LPWSTR)RT_DIALOG)))
 	return FALSE;
 
     if(!(template = (LPVOID)LoadResource (COMCTL32_hModule, hRes)))
 	return FALSE;
 
-    ret = DialogBoxIndirectParamA ((HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE),
-                                   (LPDLGTEMPLATEA)template,
+    ret = DialogBoxIndirectParamW ((HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE),
+                                   (LPDLGTEMPLATEW)template,
                                    hwnd,
                                    TOOLBAR_CustomizeDialogProc,
                                    (LPARAM)&custInfo);
@@ -3196,24 +3193,31 @@ TOOLBAR_DeleteButton (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     INT nIndex = (INT)wParam;
     NMTOOLBARW nmtb;
+    TBUTTON_INFO *btnPtr = &infoPtr->buttons[nIndex];
 
     if ((nIndex < 0) || (nIndex >= infoPtr->nNumButtons))
-	return FALSE;
+        return FALSE;
 
     memset(&nmtb, 0, sizeof(nmtb));
-    nmtb.iItem = nIndex;
+    nmtb.iItem = btnPtr->idCommand;
+    nmtb.tbButton.iBitmap = btnPtr->iBitmap;
+    nmtb.tbButton.idCommand = btnPtr->idCommand;
+    nmtb.tbButton.fsState = btnPtr->fsState;
+    nmtb.tbButton.fsStyle = btnPtr->fsStyle;
+    nmtb.tbButton.dwData = btnPtr->dwData;
+    nmtb.tbButton.iString = btnPtr->iString;
     TOOLBAR_SendNotify((NMHDR *)&nmtb, infoPtr, TBN_DELETINGBUTTON);
 
     if ((infoPtr->hwndToolTip) &&
-	!(infoPtr->buttons[nIndex].fsStyle & BTNS_SEP)) {
-	TTTOOLINFOA ti;
+	!(btnPtr->fsStyle & BTNS_SEP)) {
+	TTTOOLINFOW ti;
 
-	ZeroMemory (&ti, sizeof(TTTOOLINFOA));
-	ti.cbSize   = sizeof (TTTOOLINFOA);
+	ZeroMemory (&ti, sizeof(ti));
+	ti.cbSize   = sizeof(ti);
 	ti.hwnd     = hwnd;
 	ti.uId      = infoPtr->buttons[nIndex].idCommand;
 
-	SendMessageA (infoPtr->hwndToolTip, TTM_DELTOOLA, 0, (LPARAM)&ti);
+	SendMessageW (infoPtr->hwndToolTip, TTM_DELTOOLW, 0, (LPARAM)&ti);
     }
 
     if (infoPtr->nNumButtons == 1) {
@@ -3733,7 +3737,7 @@ TOOLBAR_GetUnicodeFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
 
-    TRACE("%s hwnd=%p stub!\n",
+    TRACE("%s hwnd=%p\n",
 	   infoPtr->bUnicode ? "TRUE" : "FALSE", hwnd);
 
     return infoPtr->bUnicode;
@@ -3879,16 +3883,16 @@ TOOLBAR_InsertButtonA (HWND hwnd, WPARAM wParam, LPARAM lParam)
         infoPtr->buttons[nIndex].iString   = lpTbb->iString;
 
     if ((infoPtr->hwndToolTip) && !(lpTbb->fsStyle & BTNS_SEP)) {
-	TTTOOLINFOA ti;
+	TTTOOLINFOW ti;
 
-	ZeroMemory (&ti, sizeof(TTTOOLINFOA));
-	ti.cbSize   = sizeof (TTTOOLINFOA);
+	ZeroMemory (&ti, sizeof(ti));
+	ti.cbSize   = sizeof (ti);
 	ti.hwnd     = hwnd;
 	ti.uId      = lpTbb->idCommand;
 	ti.hinst    = 0;
-	ti.lpszText = LPSTR_TEXTCALLBACKA;
+	ti.lpszText = LPSTR_TEXTCALLBACKW;
 
-	SendMessageA (infoPtr->hwndToolTip, TTM_ADDTOOLA,
+	SendMessageW (infoPtr->hwndToolTip, TTM_ADDTOOLW,
 			0, (LPARAM)&ti);
     }
 
@@ -5104,7 +5108,7 @@ TOOLBAR_SetUnicodeFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
     BOOL bTemp;
 
-    TRACE("%s hwnd=%p stub!\n",
+    TRACE("%s hwnd=%p\n",
 	   ((BOOL)wParam) ? "TRUE" : "FALSE", hwnd);
 
     bTemp = infoPtr->bUnicode;
@@ -5361,12 +5365,12 @@ TOOLBAR_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->nNumStrings = 0;
 
     infoPtr->bCaptured = FALSE;
-    infoPtr->bUnicode = IsWindowUnicode (hwnd);
     infoPtr->nButtonDown = -1;
     infoPtr->nButtonDrag = -1;
     infoPtr->nOldHit = -1;
     infoPtr->nHotItem = -1;
     infoPtr->hwndNotify = ((LPCREATESTRUCTW)lParam)->hwndParent;
+    infoPtr->bUnicode = IsWindowUnicode (infoPtr->hwndNotify);
     infoPtr->bBtnTranspnt = (dwStyle & (TBSTYLE_FLAT | TBSTYLE_LIST));
     infoPtr->dwDTFlags = (dwStyle & TBSTYLE_LIST) ? DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_END_ELLIPSIS: DT_CENTER | DT_END_ELLIPSIS;
     infoPtr->bAnchor = FALSE; /* no anchor highlighting */
@@ -5508,11 +5512,11 @@ TOOLBAR_EraseBackground (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	parent = GetParent(hwnd);
 	MapWindowPoints(hwnd, parent, &pt, 1);
 	OffsetWindowOrgEx (hdc, pt.x, pt.y, &ptorig);
-	ret = SendMessageA (parent, WM_ERASEBKGND, wParam, lParam);
+	ret = SendMessageW (parent, WM_ERASEBKGND, wParam, lParam);
 	SetWindowOrgEx (hdc, ptorig.x, ptorig.y, 0);
     }
     if (!ret)
-	ret = DefWindowProcA (hwnd, WM_ERASEBKGND, wParam, lParam);
+	ret = DefWindowProcW (hwnd, WM_ERASEBKGND, wParam, lParam);
 
     if ((infoPtr->dwStyle & TBSTYLE_CUSTOMERASE) &&
 	(infoPtr->dwBaseCustDraw & CDRF_NOTIFYPOSTERASE)) {
@@ -5857,7 +5861,7 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 	if (btnPtr->fsState & TBSTATE_ENABLED)
 	{
-	    SendMessageA (infoPtr->hwndNotify, WM_COMMAND,
+	    SendMessageW (infoPtr->hwndNotify, WM_COMMAND,
 	      MAKEWPARAM(infoPtr->buttons[nHit].idCommand, 0), (LPARAM)hwnd);
         }
     }
@@ -6064,7 +6068,7 @@ inline static LRESULT
 TOOLBAR_NCActivate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
 /*    if (wndPtr->dwStyle & CCS_NODIVIDER) */
-	return DefWindowProcA (hwnd, WM_NCACTIVATE, wParam, lParam);
+	return DefWindowProcW (hwnd, WM_NCACTIVATE, wParam, lParam);
 /*    else */
 /*	return TOOLBAR_NCPaint (wndPtr, wParam, lParam); */
 }
@@ -6076,7 +6080,7 @@ TOOLBAR_NCCalcSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (!(GetWindowLongW(hwnd, GWL_STYLE) & CCS_NODIVIDER))
 	((LPRECT)lParam)->top += GetSystemMetrics(SM_CYEDGE);
 
-    return DefWindowProcA (hwnd, WM_NCCALCSIZE, wParam, lParam);
+    return DefWindowProcW (hwnd, WM_NCCALCSIZE, wParam, lParam);
 }
 
 
@@ -6153,7 +6157,7 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	SetWindowLongW (hwnd, GWL_STYLE, cs->style | styleadd);
     }
 
-    return DefWindowProcA (hwnd, WM_NCCREATE, wParam, lParam);
+    return DefWindowProcW (hwnd, WM_NCCREATE, wParam, lParam);
 }
 
 
@@ -6167,7 +6171,7 @@ TOOLBAR_NCPaint (HWND hwnd, WPARAM wParam, LPARAM lParam)
     if (dwStyle & WS_MINIMIZE)
 	return 0; /* Nothing to do */
 
-    DefWindowProcA (hwnd, WM_NCPAINT, wParam, lParam);
+    DefWindowProcW (hwnd, WM_NCPAINT, wParam, lParam);
 
     if (!(hdc = GetDCEx (hwnd, 0, DCX_USESTYLE | DCX_WINDOW)))
 	return 0;
@@ -6389,7 +6393,7 @@ TOOLBAR_NotifyFormat(TOOLBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
         return NFR_UNICODE;
 
     if (lParam == NF_REQUERY) {
-	i = SendMessageA(infoPtr->hwndNotify,
+	i = SendMessageW(infoPtr->hwndNotify,
 			 WM_NOTIFYFORMAT, (WPARAM)infoPtr->hwndSelf, NF_QUERY);
 	if ((i < NFR_ANSI) || (i > NFR_UNICODE)) {
 	    ERR("wrong response to WM_NOTIFYFORMAT (%d), assuming ANSI\n",
@@ -6638,7 +6642,7 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	  hwnd, uMsg, /* SPY_GetMsgName(uMsg), */ wParam, lParam);
 
     if (!TOOLBAR_GetInfoPtr(hwnd) && (uMsg != WM_NCCREATE))
-	return DefWindowProcA( hwnd, uMsg, wParam, lParam );
+	return DefWindowProcW( hwnd, uMsg, wParam, lParam );
 
     switch (uMsg)
     {
@@ -7018,17 +7022,17 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_DRAWITEM:
 	case WM_MEASUREITEM:
 	case WM_VKEYTOITEM:
-            return SendMessageA (infoPtr->hwndNotify, uMsg, wParam, lParam);
+            return SendMessageW (infoPtr->hwndNotify, uMsg, wParam, lParam);
 
 	/* We see this in Outlook Express 5.x and just does DefWindowProc */
         case PGM_FORWARDMOUSE:
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
 
 	default:
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
 		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
 		     uMsg, wParam, lParam);
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
@@ -7037,25 +7041,25 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 TOOLBAR_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS;
-    wndClass.lpfnWndProc   = (WNDPROC)ToolbarWindowProc;
+    wndClass.lpfnWndProc   = ToolbarWindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(TOOLBAR_INFO *);
-    wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
-    wndClass.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
-    wndClass.lpszClassName = TOOLBARCLASSNAMEA;
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
+    wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wndClass.lpszClassName = TOOLBARCLASSNAMEW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 }
 
 
 VOID
 TOOLBAR_Unregister (void)
 {
-    UnregisterClassA (TOOLBARCLASSNAMEA, NULL);
+    UnregisterClassW (TOOLBARCLASSNAMEW, NULL);
 }
 
 static HIMAGELIST TOOLBAR_InsertImageList(PIMLENTRY **pies, INT *cies, HIMAGELIST himl, INT id)
@@ -7172,10 +7176,12 @@ static BOOL TOOLBAR_GetButtonInfo(TOOLBAR_INFO *infoPtr, NMTOOLBARW *nmtb)
 static BOOL TOOLBAR_IsButtonRemovable(TOOLBAR_INFO *infoPtr,
 	int iItem, PCUSTOMBUTTON btnInfo)
 {
-    NMTOOLBARA nmtb;
+    NMTOOLBARW nmtb;
 
+    /* MSDN states that iItem is the index of the button, rather than the
+     * command ID as used by every other NMTOOLBAR notification */
     nmtb.iItem = iItem;
     memcpy(&nmtb.tbButton, &btnInfo->btn, sizeof(TBBUTTON));
 
-    return TOOLBAR_SendNotify ((NMHDR *) &nmtb, infoPtr, TBN_QUERYDELETE);
+    return TOOLBAR_SendNotify(&nmtb.hdr, infoPtr, TBN_QUERYDELETE);
 }
