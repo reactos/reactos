@@ -1,4 +1,4 @@
-/* $Id: wtoi64.c,v 1.2 2000/01/06 00:26:15 dwelch Exp $
+/* $Id: wtoi64.c,v 1.3 2002/07/18 18:12:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -8,9 +8,6 @@
 
 #include <stdlib.h>
 #include <ctype.h>
-
-typedef long long __int64;
-typedef unsigned long long __uint64;
 
 __int64
 _wtoi64 (const wchar_t *nptr)

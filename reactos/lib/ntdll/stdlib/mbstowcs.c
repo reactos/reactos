@@ -1,4 +1,4 @@
-/* $Id: mbstowcs.c,v 1.1 1999/12/30 14:38:54 ekohl Exp $
+/* $Id: mbstowcs.c,v 1.2 2002/07/18 18:12:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel

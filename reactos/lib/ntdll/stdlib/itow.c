@@ -11,16 +11,13 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <stdlib.h>
 
-typedef long long __int64;
-typedef unsigned long long __uint64;
-
 wchar_t *
 _i64tow(__int64 value, wchar_t *string, int radix)
 {
   wchar_t tmp[65];
   wchar_t *tp = tmp;
   __int64 i;
-  __uint64 v;
+  unsigned __int64 v;
   __int64 sign;
   wchar_t *sp;
 
@@ -33,7 +30,7 @@ _i64tow(__int64 value, wchar_t *string, int radix)
   if (sign)
     v = -value;
   else
-    v = (__uint64)value;
+    v = (unsigned __int64)value;
   while (v || tp == tmp)
   {
     i = v % radix;
