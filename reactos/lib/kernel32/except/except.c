@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.20 2004/12/12 23:03:56 weiden Exp $
+/* $Id: except.c,v 1.21 2004/12/13 13:32:23 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -88,10 +88,11 @@ _dump_context(PCONTEXT pc)
 LONG STDCALL
 UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
+#if 0
    DWORD RetValue;
+#endif
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
-   static int RecursionTrap = 3;
 
 #if 0
    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
@@ -104,36 +105,23 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    }
 #endif
 
-   if (RecursionTrap > 0)
+   /* Is there a debugger running ? */
+   ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
+                                       &DebugPort, sizeof(HANDLE), NULL);
+   if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
    {
-      /* Is there a debugger running ? */
-      ErrCode = NtQueryInformationProcess(NtCurrentProcess(), ProcessDebugPort,
-                                          &DebugPort, sizeof(HANDLE), NULL);
-      if (!NT_SUCCESS(ErrCode) && ErrCode != STATUS_NOT_IMPLEMENTED)
-      {
-         SetLastErrorByStatus(ErrCode);
-         return EXCEPTION_EXECUTE_HANDLER;
-      }
-
-      if (DebugPort)
-      {
-         /* Pass the exception to debugger. */
-         DPRINT("Passing exception to debugger\n");
-         return EXCEPTION_CONTINUE_SEARCH;
-      }
-
-      /* Run unhandled exception handler. */
-      if (GlobalTopLevelExceptionFilter != NULL)
-      {
-         RetValue = GlobalTopLevelExceptionFilter(ExceptionInfo);
-         if (RetValue == EXCEPTION_EXECUTE_HANDLER)
-            return EXCEPTION_EXECUTE_HANDLER;
-         if (RetValue == EXCEPTION_CONTINUE_EXECUTION) 
-            return EXCEPTION_CONTINUE_EXECUTION;
-      }
+      SetLastErrorByStatus(ErrCode);
+      return EXCEPTION_EXECUTE_HANDLER;
    }
 
-   if (RecursionTrap-- > 0 && (GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
+   if (DebugPort)
+   {
+      /* Pass the exception to debugger. */
+      DPRINT("Passing exception to debugger\n");
+      return EXCEPTION_CONTINUE_SEARCH;
+   }
+
+   if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
    {
 #ifdef _X86_
       PULONG Frame;

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.89 2004/11/21 21:09:42 weiden Exp $
+/* $Id: create.c,v 1.90 2004/12/13 13:32:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
+#include <pseh/framebased.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -291,19 +292,29 @@ _except_handler(EXCEPTION_RECORD *ExceptionRecord,
 {
    EXCEPTION_POINTERS ExceptionInfo;
    EXCEPTION_DISPOSITION ExceptionDisposition;
+
    ExceptionInfo.ExceptionRecord = ExceptionRecord;
    ExceptionInfo.ContextRecord = ContextRecord;
-   ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
-   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
+
+   if (GlobalTopLevelExceptionFilter != NULL)
    {
-      /* FIXME */
-#if 0
-      if (_BaseRunningInServerProcess)
-         ExitThread(ExceptionRecord->ExceptionCode);
-      else
-#endif
-         ExitProcess(ExceptionRecord->ExceptionCode);
+      _SEH_TRY
+      {
+         ExceptionDisposition = GlobalTopLevelExceptionFilter(&ExceptionInfo);
+      }
+      _SEH_HANDLE
+      {
+         ExceptionDisposition = UnhandledExceptionFilter(&ExceptionInfo);
+      }
+      _SEH_END;
    }
+   else 
+   {
+      ExceptionDisposition = EXCEPTION_EXECUTE_HANDLER;
+   }
+
+   if (ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER)
+      ExitProcess(ExceptionRecord->ExceptionCode);
 
    /* translate EXCEPTION_XXX defines into EXCEPTION_DISPOSITION enum values */
    if (ExceptionDisposition == EXCEPTION_CONTINUE_EXECUTION)
@@ -327,6 +338,8 @@ BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
    {
       uExitCode = (lpStartAddress)((PVOID)lpParameter);
    } __except1
+
+   ExitProcess(uExitCode);
 }
 
 
