@@ -10,7 +10,7 @@ TEST_APPS = alive apc args atomtest bench bitblt button button2 \
 combo consume copymove count dump_shared_data edit event file \
 gditest hello isotest lineclip lpc messagebox mstest mutex nptest pteb \
 regtest sectest shm thread tokentest vmtest winhello dibtest lock \
-hivetest shaptest wm_paint multiwin icontest suspend tests/volinfo
+hivetest shaptest wm_paint multiwin icontest suspend tests/volinfo terminate
 
 TEST_MISC = 
 
