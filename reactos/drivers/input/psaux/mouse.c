@@ -1,8 +1,5 @@
-// All or parts of this file are from CHAOS (http://www.se.chaosdev.org/).
-// CHAOS is also under the GNU General Public License.
-
 #include <ddk/ntddk.h>
-
+#include "../include/mouse.h"
 #include "controller.h"
 #include "mouse.h"
 #include "psaux.h"

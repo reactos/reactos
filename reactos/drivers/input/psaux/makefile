@@ -1,11 +1,11 @@
-# $Id: makefile,v 1.2 2000/10/25 13:09:05 jfilby Exp $
+# $Id: makefile,v 1.1 2000/10/25 13:09:05 jfilby Exp $
 #
 #
-TARGET = mouclass
+TARGET = psaux
 
 PATH_TO_TOP = ../../..
 
-OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o  controller.o mouse.o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 CFLAGS = -O2 -I.
 
@@ -19,7 +19,7 @@ clean:
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) mouclass.sys
+	- $(RM) psaux.sys
 
 .phony: clean
 
