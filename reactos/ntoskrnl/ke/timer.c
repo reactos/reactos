@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.56 2003/01/11 15:32:40 hbirr Exp $
+/* $Id: timer.c,v 1.57 2003/02/02 16:55:56 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -97,7 +97,18 @@ NTSTATUS STDCALL
 NtQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 			  IN PLARGE_INTEGER Frequency)
 {
-  UNIMPLEMENTED;
+  LARGE_INTEGER PerfCounter;
+  LARGE_INTEGER PerfFrequency;
+
+  PerfCounter = KeQueryPerformanceCounter(&PerfFrequency);
+
+  if (Counter != NULL)
+    Counter->QuadPart = PerfCounter.QuadPart;
+
+  if (Frequency != NULL)
+    Frequency->QuadPart = PerfFrequency.QuadPart;
+
+  return(STATUS_SUCCESS);
 }
 
 
