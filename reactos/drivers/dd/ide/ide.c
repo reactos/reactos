@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.48 2001/11/01 17:48:13 ekohl Exp $
+/* $Id: ide.c,v 1.49 2001/11/03 16:34:58 ekohl Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -76,6 +76,9 @@
 #include "partitio.h"
 
 #define  VERSION  "V0.1.5"
+
+/* uncomment the following line to enable the secondary ide channel */
+//#define ENABLE_SECONDARY_IDE_CHANNEL
 
 //  -------------------------------------------------------  File Static Data
 
@@ -345,6 +348,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 		      DPRINT("Primary channel: not programmable\n");
 		    }
 
+#ifdef ENABLE_SECONDARY_IDE_CHANNEL
 		  if (PciConfig.ProgIf & 0x04)
 		    {
 		      DPRINT("Secondary channel: PCI native mode\n");
@@ -395,6 +399,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 		    {
 		      DPRINT("BaseAddress: 0x%08X\n", PciConfig.u.type0.BaseAddresses[i]);
 		    }
+#endif
 		}
 	    }
 	}
@@ -423,6 +428,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
     }
 
   /* Search for ISA IDE controller if no secondary controller was found */
+#ifdef ENABLE_SECONDARY_IDE_CHANNEL
   if (ConfigInfo->AtDiskSecondaryAddressClaimed == FALSE)
     {
       DPRINT("Searching for secondary ISA IDE controller!\n");
@@ -443,6 +449,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 	    }
 	}
     }
+#endif
 
   DPRINT("IdeFindControllers() done!\n");
 
@@ -667,11 +674,15 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
   /* Get the Drive Identification Data */
   if (!IDEGetDriveIdentification(CommandPort, DriveIdx, &DrvParms))
     {
-      DbgPrint("No ATA drive %d found on controller %d...\n", 
+      DbgPrint("No ATA drive %d found on controller %d...\n",
              DriveIdx,
              ControllerExtension->Number);
       return(FALSE);
     }
+
+  DbgPrint("Found ATA drive %d on controller %d...\n",
+           DriveIdx,
+           ControllerExtension->Number);
 
   /* Create the harddisk device directory */
   swprintf (NameBuffer,
@@ -734,7 +745,7 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
                         ControllerExtension);
     }
 
-   DPRINT("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
+  DPRINT1("DrvParms.BytesPerSector %ld\n",DrvParms.BytesPerSector);
 
   /* Read partition table */
   Status = IoReadPartitionTable(DiskDeviceObject,
@@ -774,10 +785,10 @@ IDECreateDevices(IN PDRIVER_OBJECT DriverObject,
           DbgPrint("IDECreateDevice() failed\n");
           break;
         }
-   }
+    }
 
-   if (PartitionList != NULL)
-     ExFreePool(PartitionList);
+  if (PartitionList != NULL)
+    ExFreePool(PartitionList);
 
   return  TRUE;
 }
@@ -1011,7 +1022,7 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
   NTSTATUS               RC;
   PIDE_DEVICE_EXTENSION  DeviceExtension;
 
-    // Create a unicode device name
+  /* Create a unicode device name */
   swprintf(NameBuffer,
            L"\\Device\\Harddisk%d\\Partition%d",
            DiskNumber,
@@ -1019,7 +1030,7 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
   RtlInitUnicodeString(&DeviceName,
                        NameBuffer);
 
-    // Create the device
+  /* Create the device */
   RC = IoCreateDevice(DriverObject, sizeof(IDE_DEVICE_EXTENSION),
       &DeviceName, FILE_DEVICE_DISK, 0, TRUE, DeviceObject);
   if (!NT_SUCCESS(RC))
@@ -1028,33 +1039,30 @@ IDECreatePartitionDevice(IN PDRIVER_OBJECT DriverObject,
       return  RC;
     }
 
-    //  Set the buffering strategy here...
+  /* Set the buffering strategy here... */
   (*DeviceObject)->Flags |= DO_DIRECT_IO;
   (*DeviceObject)->AlignmentRequirement = FILE_WORD_ALIGNMENT;
 
-    //  Fill out Device extension data
-  DeviceExtension = (PIDE_DEVICE_EXTENSION) (*DeviceObject)->DeviceExtension;
+  /* Fill out Device extension data */
+  DeviceExtension = (PIDE_DEVICE_EXTENSION)(*DeviceObject)->DeviceExtension;
   DeviceExtension->DeviceObject = (*DeviceObject);
   DeviceExtension->ControllerObject = ControllerObject;
   DeviceExtension->DiskDeviceExtension = DiskDeviceExtension;
   DeviceExtension->UnitNumber = UnitNumber;
-  DeviceExtension->LBASupported = 
+  DeviceExtension->LBASupported =
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
-  DeviceExtension->DMASupported = 
+  DeviceExtension->DMASupported =
     (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
-    // FIXME: deal with bizarre sector sizes
-  DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
+  DeviceExtension->BytesPerSector = DrvParms->BytesPerSector;
   DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads *
       DrvParms->SectorsPerTrack;
   DeviceExtension->SectorsPerLogTrk = DrvParms->SectorsPerTrack;
   DeviceExtension->LogicalHeads = DrvParms->LogicalHeads;
-  DeviceExtension->LogicalCylinders = 
+  DeviceExtension->LogicalCylinders =
     (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? DrvParms->TMCylinders : DrvParms->LogicalCyls;
-//  DeviceExtension->Offset = Offset;
-//  DeviceExtension->Size = Size;
 
-  DeviceExtension->Offset = PartitionInfo->StartingOffset.QuadPart / 512; /* DrvParms.BytesPerSector*/
-  DeviceExtension->Size = PartitionInfo->PartitionLength.QuadPart / 512; /*DrvParms.BytesPerSector*/
+  DeviceExtension->Offset = PartitionInfo->StartingOffset.QuadPart / 512; /* DrvParms->BytesPerSector */
+  DeviceExtension->Size = PartitionInfo->PartitionLength.QuadPart / 512; /* DrvParms->BytesPerSector */
 
   DPRINT("%wZ: offset %lu size %lu \n",
          &DeviceName,
@@ -1196,7 +1204,11 @@ IDEPolledRead(IN WORD Address,
           Status = IDEReadStatus(Address);
           if (!(Status & IDE_SR_BUSY))
             {
-              if (Status & IDE_SR_DRQ)
+              if (Status & IDE_SR_ERR)
+                {
+                  DPRINT1("IDE_SR_ERR asserted!\n");
+                }
+              if ((Status & IDE_SR_DRQ) && !(Status & IDE_SR_ERR))
                 {
                   break;
                 }
@@ -1222,6 +1234,10 @@ IDEPolledRead(IN WORD Address,
           Status = IDEReadStatus(Address);
           if (!(Status & IDE_SR_BUSY))
             {
+              if (Status & IDE_SR_ERR)
+                {
+                  DPRINT1("IDE_SR_ERR asserted!\n");
+                }
               if (Status & IDE_SR_DRQ)
                 {
                   break;
@@ -1403,7 +1419,7 @@ IDEDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
               DiskDeviceExtension->SectorsPerLogTrk;
           Geometry->SectorsPerTrack = DiskDeviceExtension->SectorsPerLogTrk;
           Geometry->BytesPerSector = DiskDeviceExtension->BytesPerSector;
-
+DPRINT1("DiskDeviceExtension->BytesPerSector %lu\n", DiskDeviceExtension->BytesPerSector);
           Irp->IoStatus.Status = STATUS_SUCCESS;
           Irp->IoStatus.Information = sizeof(DISK_GEOMETRY);
         }
@@ -1690,7 +1706,8 @@ IDEStartController(IN OUT PVOID Context)
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
     {
       Status = IDEReadStatus(ControllerExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY)) 
+//      if (!(Status & IDE_SR_BUSY) && (Status & IDE_SR_DRDY))
+      if (!(Status & IDE_SR_BUSY) && !(Status & IDE_SR_DRQ))
         {
           break;
         }
