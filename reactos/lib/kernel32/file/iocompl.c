@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.10 2003/07/10 18:50:51 chorns Exp $
+/* $Id: iocompl.c,v 1.11 2003/09/21 14:02:29 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -112,13 +112,12 @@ GetQueuedCompletionStatus(
        * System time units are 100 nanoseconds (a nanosecond is a billionth of
        * a second).
        */
-      Interval.QuadPart = dwMilliseconds;
-      Interval.QuadPart = -(Interval.QuadPart * 10000);
+      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
    }  
    else
    {
       /* Approximately 292000 years hence */
-      Interval.QuadPart = -0x7FFFFFFFFFFFFFFF;
+      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
    }
 
    errCode = NtRemoveIoCompletion(CompletionHandle,

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.56 2003/08/28 19:37:00 gvg Exp $
+/* $Id: proc.c,v 1.57 2003/09/21 14:02:30 mf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -451,13 +451,12 @@ SleepEx(DWORD dwMilliseconds,
        * System time units are 100 nanoseconds (a nanosecond is a billionth of
        * a second).
        */
-      Interval.QuadPart = dwMilliseconds;
-      Interval.QuadPart = -(Interval.QuadPart * 10000);
+      Interval.QuadPart = -((ULONGLONG)dwMilliseconds * 10000);
     }  
   else
     {
       /* Approximately 292000 years hence */
-      Interval.QuadPart = -0x7FFFFFFFFFFFFFFF;
+      Interval.QuadPart = -0x7FFFFFFFFFFFFFFFLL;
     }
 
   errCode = NtDelayExecution (bAlertable, &Interval);
