@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.41 2001/02/10 22:51:08 dwelch Exp $
+/* $Id: utils.c,v 1.42 2001/03/26 16:33:10 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -516,18 +516,18 @@ LdrFixupForward(PCHAR ForwardName)
 				 0,
 				 &DllName,
 				 &BaseAddress);
-	     RtlFreeUnicodeString (&DllName);
 	     if (!NT_SUCCESS(Status))
 	       {
 		  DbgPrint("LdrFixupForward: failed to load %wZ\n", &DllName);
+		  RtlFreeUnicodeString (&DllName);
 		  return NULL;
 	       }
 	  }
 
-	  RtlFreeUnicodeString (&DllName);
-	  DPRINT("BaseAddress: %p\n", BaseAddress);
-
-	  return LdrGetExportByName(BaseAddress, p+1, -1);
+	RtlFreeUnicodeString (&DllName);
+	DPRINT("BaseAddress: %p\n", BaseAddress);
+	
+	return LdrGetExportByName(BaseAddress, p+1, -1);
      }
 
    return NULL;

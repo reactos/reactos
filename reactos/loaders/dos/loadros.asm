@@ -284,16 +284,28 @@ entry:
 	mov	[_multiboot_mem_lower],ebx
         mov	ax, 0xe801
         int	015h
-	cmp	ebx,ebx
-	jz	.oldstylemem
+	jc	.oldstylemem
+	cmp	ax, 0
+	je	.cmem
 
         and	ebx, 0xffff
-	shl	 ebx,6
+	shl	ebx,6
 	mov	[_multiboot_mem_upper],ebx
         and	eax,0xffff
         add	dword [_multiboot_mem_upper],eax
 	jmp	.done_mem
 
+.cmem
+	cmp	cx, 0
+	je	.oldstylemem
+
+	add	edx, 0xFFFF
+	shl	edx, 6
+	mov	[_multiboot_mem_upper], edx
+	and	ecx, 0xFFFF
+	add	dword [_multiboot_mem_upper], ecx
+	jmp	.done_mem
+	
 .oldstylemem:
 	;; int 15h opt e801 don't work , try int 15h, option 88h
         mov	ah, 088h
