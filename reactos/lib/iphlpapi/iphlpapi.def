@@ -9,6 +9,8 @@ CreateIpForwardEntry @9
 GetAdaptersInfo 
 GetNetworkParams @43
 GetNumberOfInterfaces @44
+GetIfEntry@4
+GetIfTable@12
 GetInterfaceInfo @34
 GetTcpStatistics @47
 GetTcpTable @49

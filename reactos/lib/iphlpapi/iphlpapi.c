@@ -490,4 +490,51 @@ FlushIpNetTable(DWORD dwIfIndex)
     return result;
 }
 
+/******************************************************************
+ *    GetIfEntry (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  pIfRow [In/Out]
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
+DWORD
+WINAPI 
+GetIfEntry(PMIB_IFROW pIfRow)
+{
+    DWORD result = NO_ERROR;
+
+    return result;
+}
+
+
+/******************************************************************
+ *    GetIfTable (IPHLPAPI.@)
+ *
+ *
+ * PARAMS
+ *
+ *  pIfTable [In/Out]
+ *  pdwSize [In/Out]
+ *  bOrder [In]
+ *
+ * RETURNS
+ *
+ *  DWORD
+ *
+ */
+DWORD
+WINAPI
+GetIfTable(PMIB_IFTABLE pIfTable, PULONG pdwSize, BOOL bOrder)
+{
+    DWORD result = NO_ERROR;
+
+    return result;
+}
+
 /* EOF */
