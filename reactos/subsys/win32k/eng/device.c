@@ -11,40 +11,33 @@
 #include <ddk/ntddk.h>
 
 DWORD STDCALL EngDeviceIoControl(
-   HANDLE  hDevice,
-   DWORD   dwIoControlCode,
-   LPVOID  lpInBuffer,
-   DWORD   nInBufferSize,
-   LPVOID  lpOutBuffer,
-   DWORD   nOutBufferSize,
-   DWORD *lpBytesReturned)
+  HANDLE  hDevice,
+  DWORD   dwIoControlCode,
+  LPVOID  lpInBuffer,
+  DWORD   nInBufferSize,
+  LPVOID  lpOutBuffer,
+  DWORD   nOutBufferSize,
+  DWORD *lpBytesReturned)
 {
-   PIRP Irp;
-   NTSTATUS Status;
-   KEVENT Event;
-   IO_STATUS_BLOCK Iosb;
-   PDRIVER_OBJECT DriverObject;
+  PIRP Irp;
+  NTSTATUS Status;
+  KEVENT Event;
+  IO_STATUS_BLOCK Iosb;
+  PDRIVER_OBJECT DriverObject;
 
-   DriverObject = hDevice;
+  DriverObject = hDevice;
 
-   KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
+  KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
 
-   Irp = IoBuildDeviceIoControlRequest(dwIoControlCode,
-                                       DriverObject->DeviceObject,
-                                       lpInBuffer,
-                                       nInBufferSize,
-                                       lpOutBuffer,
-                                       nOutBufferSize,
-                                       FALSE,
-                                       &Event,
-                                       &Iosb);
+  Irp = IoBuildDeviceIoControlRequest(dwIoControlCode, DriverObject->DeviceObject, lpInBuffer, nInBufferSize,
+                                      lpOutBuffer, nOutBufferSize, FALSE, &Event, &Iosb);
 
-   Status = IoCallDriver(DriverObject->DeviceObject, Irp);
+  Status = IoCallDriver(DriverObject->DeviceObject, Irp);
 
-   if (Status == STATUS_PENDING)
-   {
-     (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
-   }
+  if (Status == STATUS_PENDING)
+  {
+    (void) KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, 0);
+  }
 
-   return (Status);
+  return (Status);
 }

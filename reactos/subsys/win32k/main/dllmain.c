@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.17 2000/09/08 19:39:31 ekohl Exp $
+/* $Id: dllmain.c,v 1.18 2001/03/31 15:35:08 jfilby Exp $
  * 
  *  Entry Point for win32k.sys
  */
@@ -25,31 +25,26 @@
 NTSTATUS
 STDCALL
 DllMain (
-	IN	PDRIVER_OBJECT	DriverObject,
-	IN	PUNICODE_STRING	RegistryPath
-	)
+  IN	PDRIVER_OBJECT	DriverObject,
+  IN	PUNICODE_STRING	RegistryPath)
 {
-	BOOLEAN Result;
+  BOOLEAN Result;
 
-	DbgPrint("Win32 kernel mode driver\n");
+  DbgPrint("Win32 kernel mode driver\n");
 
-	/*
-	 * Register user mode call interface
-	 * (system service table index = 1)
-	 */
-	Result = KeAddSystemServiceTable (Win32kSSDT,
-	                                  NULL,
-	                                  NUMBER_OF_SYSCALLS,
-	                                  Win32kSSPT,
-	                                  1);
-	if (Result == FALSE)
-	{
-		DbgPrint("Adding system services failed!\n");
-		return STATUS_UNSUCCESSFUL;
-	}
+  /*
+   * Register user mode call interface
+   * (system service table index = 1)
+   */
+  Result = KeAddSystemServiceTable (Win32kSSDT, NULL, NUMBER_OF_SYSCALLS, Win32kSSPT, 1);
+  if (Result == FALSE)
+  {
+    DbgPrint("Adding system services failed!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
 
-	DbgPrint("System services added successfully!\n");
-	return STATUS_SUCCESS;
+  DbgPrint("System services added successfully!\n");
+  return STATUS_SUCCESS;
 }
 
 
@@ -57,14 +52,19 @@ BOOLEAN
 STDCALL
 W32kInitialize (VOID)
 {
+  // FIXME: Retrieve name from registry
+  EngLoadImage(L"\\SystemRoot\\system32\\drivers\\vidport.sys");
 
-	// FIXME: Retrieve name from registry
-	EngLoadImage(L"\\SystemRoot\\system32\\drivers\\vidport.sys");
+  // Create surface used to draw the internal font onto
+  CreateCellCharSurface();
 
-	// Create surface used to draw the internal font onto
-	CreateCellCharSurface();
+  // Create stock objects, ie. precreated objects commonly used by win32 applications
+  CreateStockObjects();
 
-	return TRUE;
+  // Initialize FreeType library
+  if(!InitFontSupport()) return FALSE;
+
+  return TRUE;
 }
 
 /* EOF */

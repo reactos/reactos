@@ -1,111 +1,118 @@
 #include <ddk/winddi.h>
 #include "objects.h"
+#include "../dib/dib.h"
 
 // POSSIBLE FIXME: Switch X and Y's so that drawing a line doesn't try to draw from 150 to 50 (negative dx)
-
-VOID LinePoint(SURFOBJ *Surface, SURFGDI *SurfGDI,
-               LONG x, LONG y, ULONG iColor)
-{
-   ULONG offset;
-
-   offset = (Surface->lDelta*y)+(x*SurfGDI->BytesPerPixel);
-
-   memcpy(Surface->pvBits+offset,
-          &iColor, SurfGDI->BytesPerPixel);
-}
-
-BOOL EngHLine(SURFOBJ *Surface, SURFGDI *SurfGDI,
-              LONG x, LONG y, LONG len, ULONG iColor)
-{
-   ULONG offset, ix;
-
-   offset = (Surface->lDelta*y)+(x*SurfGDI->BytesPerPixel);
-
-   for(ix=0; ix<len*SurfGDI->BytesPerPixel; ix+=SurfGDI->BytesPerPixel)
-      memcpy(Surface->pvBits+offset+ix,
-             &iColor, SurfGDI->BytesPerPixel);
-
-   return TRUE;
-}
 
 BOOL EngLineTo(SURFOBJ *Surface, CLIPOBJ *Clip, BRUSHOBJ *Brush,
                LONG x1, LONG y1, LONG x2, LONG y2,
                RECTL *RectBounds, MIX mix)
 {
-   SURFGDI *SurfGDI;
-   LONG x, y, d, deltax, deltay, i, length, xchange, ychange, error;
+  SURFGDI *SurfGDI;
+  LONG x, y, d, deltax, deltay, i, length, xchange, ychange, error, hx, vy;
 
-   SurfGDI = AccessInternalObjectFromUserObject(Surface);
+  // These functions are assigned if we're working with a DIB
+  // The assigned functions depend on the bitsPerPixel of the DIB
+  PFN_DIB_PutPixel DIB_PutPixel;
+  PFN_DIB_HLine    DIB_HLine;
+  PFN_DIB_VLine    DIB_VLine;
 
-   if(Surface->iType!=STYPE_BITMAP)
-   {
-      // Call the driver's DrvLineTo
-      return SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2,
-                             RectBounds, mix);
-   }
+  SurfGDI = AccessInternalObjectFromUserObject(Surface);
 
-   // FIXME: Implement clipping
+  if(Surface->iType!=STYPE_BITMAP)
+  {
+    // Call the driver's DrvLineTo
+    return SurfGDI->LineTo(Surface, Clip, Brush, x1, y1, x2, y2, RectBounds, mix);
+  }
 
-   if(y1==y2) return EngHLine(Surface, SurfGDI, x1, y1, (x2-x1), Brush->iSolidColor);
+  // Assign DIB functions according to bytes per pixel
+  switch(BitsPerFormat(Surface->iBitmapFormat))
+  {
+    case 4:
+      DIB_PutPixel = DIB_4BPP_PutPixel;
+      DIB_HLine    = DIB_4BPP_HLine;
+      DIB_VLine    = DIB_4BPP_VLine;
+      break;
 
-   x=x1;
-   y=y1;
-   deltax=x2-x1;
-   deltay=y2-y1;
+    case 24:
+      DIB_PutPixel = DIB_24BPP_PutPixel;
+      DIB_HLine    = DIB_24BPP_HLine;
+      DIB_VLine    = DIB_24BPP_VLine;
+      break;
 
-   if(deltax<0)
-   {
-      xchange=-1;
-      deltax=-deltax;
-   } else
-   {
-      xchange=1;
-   }
+    default:
+      DbgPrint("EngLineTo: unsupported DIB format %u (bitsPerPixel:%u)\n", Surface->iBitmapFormat,
+               BitsPerFormat(Surface->iBitmapFormat));
+      return FALSE;
+  }
 
-   if(deltay<0)
-   {
-      ychange=-1;
-      deltay=-deltay;
-   } else
-   {
-      ychange=1;
-   };
+  // FIXME: Implement clipping
+
+  x=x1;
+  y=y1;
+  deltax=x2-x1;
+  deltay=y2-y1;
+
+  if(deltax<0)
+  {
+    xchange=-1;
+    deltax=-deltax;
+    hx = x2;
+  } else
+  {
+    xchange=1;
+    hx = x1;
+  }
+
+  if(deltay<0)
+  {
+    ychange=-1;
+    deltay=-deltay;
+    vy = y2;
+  } else
+  {
+    ychange=1;
+    vy = y1;
+  }
+
+  if(y1==y2) { DIB_HLine(Surface, hx, hx + deltax, y1, Brush->iSolidColor); return TRUE; }
+  if(x1==x2) { DIB_VLine(Surface, x1, vy, vy + deltay, Brush->iSolidColor); return TRUE; }
 
   error=0;
   i=0;
 
   if(deltax<deltay)
   {
-     length=deltay+1;
-     while(i<length)
-     {
-        LinePoint(Surface, SurfGDI, x, y, Brush->iSolidColor);
-        y=y+ychange;
-        error=error+deltax;
+    length=deltay+1;
+    while(i<length)
+    {
+      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
+      y=y+ychange;
+      error=error+deltax;
 
-        if(error>deltay)
-        {
-           x=x+xchange;
-           error=error-deltay;
-        }
-        i=i+1;
-     }
+      if(error>deltay)
+      {
+        x=x+xchange;
+        error=error-deltay;
+      }
+      i=i+1;
+    }
   } else
   {
     length=deltax+1;
     while(i<length)
     {
-         LinePoint(Surface, SurfGDI, x, y, Brush->iSolidColor);
-         x=x+xchange;
-         error=error+deltay;
-         if(error>deltax)
-         {
-            y=y+ychange;
-            error=error-deltax;
-         }
-         i=i+1;
+      DIB_PutPixel(Surface, x, y, Brush->iSolidColor);
+      x=x+xchange;
+      error=error+deltay;
+      if(error>deltax)
+      {
+        y=y+ychange;
+        error=error-deltax;
       }
-   }
+      i=i+1;
+    }
+  }
 
-   return TRUE;
+  return TRUE;
 }

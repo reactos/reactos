@@ -41,8 +41,8 @@
  * */
 
 #define BEZIERMIDDLE(Mid, P1, P2) \
-    (Mid).x=((P1).x+(P2).x + 1)/2;\
-    (Mid).y=((P1).y+(P2).y + 1)/2;
+  (Mid).x=((P1).x+(P2).x + 1)/2;\
+  (Mid).y=((P1).y+(P2).y + 1)/2;
     
 /**********************************************************
 * BezierCheck helper function to check
@@ -54,55 +54,46 @@
 */
 static BOOL BezierCheck( int level, POINT *Points)
 { 
-    INT dx, dy;
-    dx=Points[3].x-Points[0].x;
-    dy=Points[3].y-Points[0].y;
-    if(abs(dy)<=abs(dx)){/* shallow line */
-        /* check that control points are between begin and end */
-        if(Points[1].x < Points[0].x){
-            if(Points[1].x < Points[3].x)
-                return FALSE;
-        }else
-            if(Points[1].x > Points[3].x)
-                return FALSE;
-        if(Points[2].x < Points[0].x){
-            if(Points[2].x < Points[3].x)
-                return FALSE;
-        }else
-            if(Points[2].x > Points[3].x)
-                return FALSE;
-        dx=BEZIERSHIFTDOWN(dx);
-        if(!dx) return TRUE;
-        if(abs(Points[1].y-Points[0].y-(dy/dx)*
-                BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
-           abs(Points[2].y-Points[0].y-(dy/dx)*
-                   BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL )
-            return FALSE;
-        else
-            return TRUE;
-    }else{ /* steep line */
-        /* check that control points are between begin and end */
-        if(Points[1].y < Points[0].y){
-            if(Points[1].y < Points[3].y)
-                return FALSE;
-        }else
-            if(Points[1].y > Points[3].y)
-                return FALSE;
-        if(Points[2].y < Points[0].y){
-            if(Points[2].y < Points[3].y)
-                return FALSE;
-        }else
-            if(Points[2].y > Points[3].y)
-                return FALSE;
-        dy=BEZIERSHIFTDOWN(dy);
-        if(!dy) return TRUE;
-        if(abs(Points[1].x-Points[0].x-(dx/dy)*
-                BEZIERSHIFTDOWN(Points[1].y-Points[0].y)) > BEZIERPIXEL ||
-           abs(Points[2].x-Points[0].x-(dx/dy)*
-                   BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL )
-            return FALSE;
-        else
-            return TRUE;
+  INT dx, dy;
+
+  dx=Points[3].x-Points[0].x;
+  dy=Points[3].y-Points[0].y;
+  if(abs(dy)<=abs(dx)) {/* shallow line */
+    /* check that control points are between begin and end */
+    if(Points[1].x < Points[0].x){
+      if(Points[1].x < Points[3].x) return FALSE;
+    }else
+    if(Points[1].x > Points[3].x) return FALSE;
+    if(Points[2].x < Points[0].x) {
+      if(Points[2].x < Points[3].x) return FALSE;
+    } else
+      if(Points[2].x > Points[3].x) return FALSE;
+      dx=BEZIERSHIFTDOWN(dx);
+      if(!dx) return TRUE;
+      if(abs(Points[1].y-Points[0].y-(dy/dx)*
+        BEZIERSHIFTDOWN(Points[1].x-Points[0].x)) > BEZIERPIXEL ||
+        abs(Points[2].y-Points[0].y-(dy/dx)*
+        BEZIERSHIFTDOWN(Points[2].x-Points[0].x)) > BEZIERPIXEL) return FALSE;
+      else
+        return TRUE;
+    } else{ /* steep line */
+      /* check that control points are between begin and end */
+      if(Points[1].y < Points[0].y){
+        if(Points[1].y < Points[3].y) return FALSE;
+      } else
+        if(Points[1].y > Points[3].y) return FALSE;
+      if(Points[2].y < Points[0].y){
+        if(Points[2].y < Points[3].y) return FALSE;
+      } else
+        if(Points[2].y > Points[3].y) return FALSE;
+      dy=BEZIERSHIFTDOWN(dy);
+      if(!dy) return TRUE;
+      if(abs(Points[1].x-Points[0].x-(dx/dy)*
+        BEZIERSHIFTDOWN(Points[1].y-Points[0].y)) > BEZIERPIXEL ||
+        abs(Points[2].x-Points[0].x-(dx/dy)*
+        BEZIERSHIFTDOWN(Points[2].y-Points[0].y)) > BEZIERPIXEL ) return FALSE;
+      else
+        return TRUE;
     }
 }
     
@@ -112,37 +103,37 @@ static BOOL BezierCheck( int level, POINT *Points)
 static void GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
 				INT *nPtsOut, INT level )
 {
-    if(*nPtsOut == *dwOut) {
-        *dwOut *= 2;
-	*PtsOut = ExAllocatePool(NonPagedPool, *dwOut * sizeof(POINT));
+  if(*nPtsOut == *dwOut) {
+    *dwOut *= 2;
+    *PtsOut = ExAllocatePool(NonPagedPool, *dwOut * sizeof(POINT));
+  }
+
+  if(!level || BezierCheck(level, Points)) {
+    if(*nPtsOut == 0) {
+      (*PtsOut)[0].x = BEZIERSHIFTDOWN(Points[0].x);
+      (*PtsOut)[0].y = BEZIERSHIFTDOWN(Points[0].y);
+       *nPtsOut = 1;
     }
+    (*PtsOut)[*nPtsOut].x = BEZIERSHIFTDOWN(Points[3].x);
+    (*PtsOut)[*nPtsOut].y = BEZIERSHIFTDOWN(Points[3].y);
+    (*nPtsOut) ++;
+  } else {
+    POINT Points2[4]; /* for the second recursive call */
+    Points2[3]=Points[3];
+    BEZIERMIDDLE(Points2[2], Points[2], Points[3]);
+    BEZIERMIDDLE(Points2[0], Points[1], Points[2]);
+    BEZIERMIDDLE(Points2[1],Points2[0],Points2[2]);
 
-    if(!level || BezierCheck(level, Points)) {
-        if(*nPtsOut == 0) {
-            (*PtsOut)[0].x = BEZIERSHIFTDOWN(Points[0].x);
-            (*PtsOut)[0].y = BEZIERSHIFTDOWN(Points[0].y);
-            *nPtsOut = 1;
-        }
-	(*PtsOut)[*nPtsOut].x = BEZIERSHIFTDOWN(Points[3].x);
-        (*PtsOut)[*nPtsOut].y = BEZIERSHIFTDOWN(Points[3].y);
-        (*nPtsOut) ++;
-    } else {
-        POINT Points2[4]; /* for the second recursive call */
-        Points2[3]=Points[3];
-        BEZIERMIDDLE(Points2[2], Points[2], Points[3]);
-        BEZIERMIDDLE(Points2[0], Points[1], Points[2]);
-        BEZIERMIDDLE(Points2[1],Points2[0],Points2[2]);
+    BEZIERMIDDLE(Points[1], Points[0],  Points[1]);
+    BEZIERMIDDLE(Points[2], Points[1], Points2[0]);
+    BEZIERMIDDLE(Points[3], Points[2], Points2[1]);
 
-        BEZIERMIDDLE(Points[1], Points[0],  Points[1]);
-        BEZIERMIDDLE(Points[2], Points[1], Points2[0]);
-        BEZIERMIDDLE(Points[3], Points[2], Points2[1]);
+    Points2[0]=Points[3];
 
-        Points2[0]=Points[3];
-
-        /* do the two halves */
-        GDI_InternalBezier(Points, PtsOut, dwOut, nPtsOut, level-1);
-        GDI_InternalBezier(Points2, PtsOut, dwOut, nPtsOut, level-1);
-    }
+    /* do the two halves */
+    GDI_InternalBezier(Points, PtsOut, dwOut, nPtsOut, level-1);
+    GDI_InternalBezier(Points2, PtsOut, dwOut, nPtsOut, level-1);
+  }
 }
 
 /***********************************************************************
@@ -171,23 +162,23 @@ static void GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOut,
  */
 POINT *GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
 {
-    POINT *out;
-    INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;
+  POINT *out;
+  INT Bezier, dwOut = BEZIER_INITBUFSIZE, i;
 
-    if((count - 1) % 3 != 0) {
-	return NULL;
+  if((count - 1) % 3 != 0) {
+    return NULL;
+  }
+  *nPtsOut = 0;
+  out = ExAllocatePool(NonPagedPool, dwOut * sizeof(POINT));
+  for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
+    POINT ptBuf[4];
+    memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);
+    for(i = 0; i < 4; i++) {
+      ptBuf[i].x = BEZIERSHIFTUP(ptBuf[i].x);
+      ptBuf[i].y = BEZIERSHIFTUP(ptBuf[i].y);
     }
-    *nPtsOut = 0;
-    out = ExAllocatePool(NonPagedPool, dwOut * sizeof(POINT));
-    for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
-	POINT ptBuf[4];
-	memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);
-	for(i = 0; i < 4; i++) {
-	    ptBuf[i].x = BEZIERSHIFTUP(ptBuf[i].x);
-	    ptBuf[i].y = BEZIERSHIFTUP(ptBuf[i].y);
-	}
-        GDI_InternalBezier( ptBuf, &out, &dwOut, nPtsOut, BEZIERMAXDEPTH );
-    }
+    GDI_InternalBezier( ptBuf, &out, &dwOut, nPtsOut, BEZIERMAXDEPTH );
+  }
 
-    return out;
+  return out;
 }

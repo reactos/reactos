@@ -9,9 +9,9 @@
  */
 
 typedef struct _GDI_HANDLE {
-   ULONG Handle;
-   PVOID InternalObject;
-   PVOID UserObject;
+  ULONG Handle;
+  PVOID InternalObject;
+  PVOID UserObject;
 } GDI_HANDLE, *PGDI_HANDLE;
 
 #define INVALID_HANDLE  0

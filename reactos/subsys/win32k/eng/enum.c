@@ -16,19 +16,19 @@ ULONG CLIPOBJ_cEnumStart(IN PCLIPOBJ  ClipObj,
                          IN ULONG  BuildOrder,
                          IN ULONG  MaxRects)
 {
-   // Sets the parameters for enumerating rectables in the given clip region
+  // Sets the parameters for enumerating rectables in the given clip region
 
-   ULONG enumCount = 0;
-   ENUMRECTS enumRects;
+  ULONG enumCount = 0;
+  ENUMRECTS enumRects;
 
-   // MUCH WORK TO DO HERE
+  // MUCH WORK TO DO HERE
 
-   // Return the number of rectangles enumerated
-   if(enumCount>MaxRects)
-   {
-     enumCount = 0xFFFFFFFF;
-   }
-   return enumCount;
+  // Return the number of rectangles enumerated
+  if(enumCount>MaxRects)
+  {
+    enumCount = 0xFFFFFFFF;
+  }
+  return enumCount;
 }
 
 BOOL CLIPOBJ_bEnum(IN PCLIPOBJ  ClipObj,

@@ -18,52 +18,50 @@
 
 ULONG CreateGDIHandle(PVOID InternalObject, PVOID UserObject)
 {
-   ULONG NewHandle = HandleCounter++;
+  ULONG NewHandle = HandleCounter++;
 
-   GDIHandles[NewHandle].InternalObject = InternalObject;
-   GDIHandles[NewHandle].UserObject     = UserObject;
+  GDIHandles[NewHandle].InternalObject = InternalObject;
+  GDIHandles[NewHandle].UserObject     = UserObject;
 
-   return NewHandle;
+  return NewHandle;
 }
 
 VOID FreeGDIHandle(ULONG Handle)
 {
-   GDIHandles[Handle].InternalObject = NULL;
-   GDIHandles[Handle].UserObject     = NULL;
+  GDIHandles[Handle].InternalObject = NULL;
+  GDIHandles[Handle].UserObject     = NULL;
 }
 
 PVOID AccessInternalObject(ULONG Handle)
 {
-   return GDIHandles[Handle].InternalObject;
+  return GDIHandles[Handle].InternalObject;
 }
 
 PVOID AccessUserObject(ULONG Handle)
 {
-   return GDIHandles[Handle].UserObject;
+  return GDIHandles[Handle].UserObject;
 }
 
 PVOID AccessInternalObjectFromUserObject(PVOID UserObject)
 {
-   ULONG i;
+  ULONG i;
 
-   for(i=0; i<MAX_GDI_HANDLES; i++)
-   {
-      if(GDIHandles[i].UserObject == UserObject)
-         return GDIHandles[i].InternalObject;
-   }
+  for(i=0; i<MAX_GDI_HANDLES; i++)
+  {
+    if(GDIHandles[i].UserObject == UserObject) return GDIHandles[i].InternalObject;
+  }
 
-   return NULL;
+  return NULL;
 }
 
 ULONG AccessHandleFromUserObject(PVOID UserObject)
 {
-   ULONG i;
+  ULONG i;
 
-   for(i=0; i<MAX_GDI_HANDLES; i++)
-   {
-      if(GDIHandles[i].UserObject == UserObject)
-         return i;
-   }
+  for(i=0; i<MAX_GDI_HANDLES; i++)
+  {
+    if(GDIHandles[i].UserObject == UserObject) return i;
+  }
 
-   return INVALID_HANDLE;
+  return INVALID_HANDLE;
 }

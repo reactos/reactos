@@ -17,23 +17,17 @@ BOOL STDCALL W32kCombineTransform(LPXFORM  XFormResult,
     
   /* Check for illegal parameters */
   if (!XFormResult || !xform1 || !xform2)
-    {
-      return  FALSE;
-    }
+  {
+    return  FALSE;
+  }
   /* Create the result in a temporary XFORM, since xformResult may be
    * equal to xform1 or xform2 */
-  xformTemp.eM11 = xform1->eM11 * xform2->eM11 +
-    xform1->eM12 * xform2->eM21;
-  xformTemp.eM12 = xform1->eM11 * xform2->eM12 +
-    xform1->eM12 * xform2->eM22;
-  xformTemp.eM21 = xform1->eM21 * xform2->eM11 +
-    xform1->eM22 * xform2->eM21;
-  xformTemp.eM22 = xform1->eM21 * xform2->eM12 +
-    xform1->eM22 * xform2->eM22;
-  xformTemp.eDx  = xform1->eDx  * xform2->eM11 +
-    xform1->eDy  * xform2->eM21 + xform2->eDx;
-  xformTemp.eDy  = xform1->eDx  * xform2->eM12 +
-    xform1->eDy  * xform2->eM22 + xform2->eDy;
+  xformTemp.eM11 = xform1->eM11 * xform2->eM11 + xform1->eM12 * xform2->eM21;
+  xformTemp.eM12 = xform1->eM11 * xform2->eM12 + xform1->eM12 * xform2->eM22;
+  xformTemp.eM21 = xform1->eM21 * xform2->eM11 + xform1->eM22 * xform2->eM21;
+  xformTemp.eM22 = xform1->eM21 * xform2->eM12 + xform1->eM22 * xform2->eM22;
+  xformTemp.eDx  = xform1->eDx  * xform2->eM11 + xform1->eDy  * xform2->eM21 + xform2->eDx;
+  xformTemp.eDy  = xform1->eDx  * xform2->eM12 + xform1->eDy  * xform2->eM22 + xform2->eDy;
 
   /* Copy the result to xformResult */
   *XFormResult = xformTemp;
@@ -57,9 +51,9 @@ W32kGetGraphicsMode(HDC  hDC)
   
   dc = DC_HandleToPtr (hDC);
   if (!dc) 
-    {
-      return  0;
-    }
+  {
+    return  0;
+  }
   
   GraphicsMode = dc->w.GraphicsMode;
   DC_UnlockDC (hDC);
@@ -76,13 +70,13 @@ W32kGetWorldTransform(HDC  hDC,
   
   dc = DC_HandleToPtr (hDC);
   if (!dc)
-    {
-      return  FALSE;
-    }
+  {
+    return  FALSE;
+  }
   if (!XForm)
-    {
-      return  FALSE;
-    }
+  {
+    return  FALSE;
+  }
   *XForm = dc->w.xformWorld2Wnd;
   DC_UnlockDC (hDC);
     
@@ -108,22 +102,22 @@ W32kModifyWorldTransform(HDC  hDC,
   
   dc = DC_HandleToPtr (hDC);
   if (!dc)
-    {
-//      SetLastError( ERROR_INVALID_HANDLE );
-      return  FALSE;
-    }
+  {
+//    SetLastError( ERROR_INVALID_HANDLE );
+    return  FALSE;
+  }
   if (!XForm)
-    {
-      return FALSE;
-    }
+  {
+    return FALSE;
+  }
     
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode!=GM_ADVANCED)
-    {
-      return FALSE;
-    }
+  {
+    return FALSE;
+  }
   switch (Mode)
-    {
+  {
     case MWT_IDENTITY:
       dc->w.xformWorld2Wnd.eM11 = 1.0f;
       dc->w.xformWorld2Wnd.eM12 = 0.0f;
@@ -134,20 +128,16 @@ W32kModifyWorldTransform(HDC  hDC,
       break;
       
     case MWT_LEFTMULTIPLY:
-      W32kCombineTransform(&dc->w.xformWorld2Wnd, 
-                           XForm,
-                           &dc->w.xformWorld2Wnd );
+      W32kCombineTransform(&dc->w.xformWorld2Wnd, XForm, &dc->w.xformWorld2Wnd );
       break;
       
     case MWT_RIGHTMULTIPLY:
-      W32kCombineTransform(&dc->w.xformWorld2Wnd, 
-                           &dc->w.xformWorld2Wnd,
-                           XForm);
+      W32kCombineTransform(&dc->w.xformWorld2Wnd, &dc->w.xformWorld2Wnd, XForm);
       break;
       
     default:
       return FALSE;
-    }
+  }
   DC_UpdateXforms (dc);
   DC_UnlockDC (hDC);
 
@@ -208,9 +198,9 @@ W32kSetGraphicsMode(HDC  hDC,
   
   dc = DC_HandleToPtr (hDC);
   if (!dc)
-    {
-      return 0;
-    }
+  {
+    return 0;
+  }
 
   /* One would think that setting the graphics mode to GM_COMPATIBLE
    * would also reset the world transformation matrix to the unity
@@ -219,9 +209,9 @@ W32kSetGraphicsMode(HDC  hDC,
    */
   
   if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED)) 
-    {
-      return 0;
-    }
+  {
+    return 0;
+  }
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
   DC_UnlockDC (hDC);
@@ -286,20 +276,20 @@ W32kSetWorldTransform(HDC  hDC,
   
   dc = DC_HandleToPtr (hDC);
   if (!dc)
-    {
-//      SetLastError( ERROR_INVALID_HANDLE );
-      return  FALSE;
-    }
+  {
+//    SetLastError( ERROR_INVALID_HANDLE );
+    return  FALSE;
+  }
   if (!XForm)
-    {
-      return  FALSE;
-    }
+  {
+    return  FALSE;
+  }
     
   /* Check that graphics mode is GM_ADVANCED */
   if (dc->w.GraphicsMode != GM_ADVANCED)
-    {
-      return  FALSE;
-    }
+  {
+    return  FALSE;
+  }
   dc->w.xformWorld2Wnd = *XForm;
   DC_UpdateXforms (dc);
   DC_UnlockDC (hDC);

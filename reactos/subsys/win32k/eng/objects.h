@@ -13,18 +13,18 @@ typedef struct _BRUSHGDI {
 } BRUSHGDI;
 
 typedef struct _CLIPGDI {
-   ULONG NumRegionRects;
-   ULONG NumIntersectRects;
-   RECTL *RegionRects;
-   RECTL *IntersectRects;
+  ULONG NumRegionRects;
+  ULONG NumIntersectRects;
+  RECTL *RegionRects;
+  RECTL *IntersectRects;
 
-   ULONG EnumPos;
-   ENUMRECTS EnumRects;
+  ULONG EnumPos;
+  ENUMRECTS EnumRects;
 } CLIPGDI, *PCLIPGDI;
 
 typedef struct _DRVFUNCTIONSGDI {
-   HDEV  hdev;
-   DRVFN Functions[INDEX_LAST];
+  HDEV  hdev;
+  DRVFN Functions[INDEX_LAST];
 } DRVFUNCTIONSGDI;
 
 typedef struct _FLOATGDI {
@@ -36,12 +36,12 @@ typedef struct _FONTGDI {
 } FONTGDI;
 
 typedef struct _PALGDI {
-   ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
-   ULONG NumColors;
-   ULONG *IndexedColors;
-   ULONG RedMask;
-   ULONG GreenMask;
-   ULONG BlueMask;
+  ULONG Mode; // PAL_INDEXED, PAL_BITFIELDS, PAL_RGB, PAL_BGR
+  ULONG NumColors;
+  ULONG *IndexedColors;
+  ULONG RedMask;
+  ULONG GreenMask;
+  ULONG BlueMask;
 } PALGDI, *PPALGDI;
 
 typedef struct _PATHGDI {
@@ -88,21 +88,24 @@ typedef VOID (*PFN_MovePointer)(PSURFOBJ, LONG, LONG, PRECTL);
 
 typedef HBITMAP (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 
-typedef struct _SURFGDI {
-   BYTE  BytesPerPixel;
+typedef BOOL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
-   PFN_BitBlt BitBlt;
-   PFN_StretchBlt StretchBlt;
-   PFN_TextOut TextOut;
-   PFN_Paint Paint;
-   PFN_StrokePath StrokePath;
-   PFN_FillPath FillPath;
-   PFN_StrokeAndFillPath StrokeAndFillPath;
-   PFN_LineTo LineTo;
-   PFN_CopyBits CopyBits;
-   PFN_Synchronize Synchronize;
-   BOOL SynchronizeAccess;
-   PFN_CreateDeviceBitmap CreateDeviceBitmap;
+typedef struct _SURFGDI {
+  INT BitsPerPixel;
+
+  PFN_BitBlt BitBlt;
+  PFN_StretchBlt StretchBlt;
+  PFN_TextOut TextOut;
+  PFN_Paint Paint;
+  PFN_StrokePath StrokePath;
+  PFN_FillPath FillPath;
+  PFN_StrokeAndFillPath StrokeAndFillPath;
+  PFN_LineTo LineTo;
+  PFN_CopyBits CopyBits;
+  PFN_Synchronize Synchronize;
+  BOOL SynchronizeAccess;
+  PFN_CreateDeviceBitmap CreateDeviceBitmap;
+  PFN_SetPalette SetPalette;
 } SURFGDI, *PSURFGDI;
 
 typedef struct _XFORMGDI {
@@ -110,10 +113,10 @@ typedef struct _XFORMGDI {
 } XFORMGDI;
 
 typedef struct _XLATEGDI {
-   HPALETTE DestPal;
-   HPALETTE SourcePal;
+  HPALETTE DestPal;
+  HPALETTE SourcePal;
 
-   ULONG *translationTable;
+  ULONG *translationTable;
 } XLATEGDI;
 
 // List of GDI objects

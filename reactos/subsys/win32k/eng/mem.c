@@ -13,35 +13,34 @@
 
 PVOID STDCALL EngAllocMem(ULONG Flags, ULONG MemSize, ULONG Tag)
 {
-   PVOID newMem;
+  PVOID newMem;
 
-   newMem = ExAllocatePoolWithTag(NonPagedPool, MemSize, Tag); // FIXME: Use PagedPool when it is implemented
+  newMem = ExAllocatePoolWithTag(NonPagedPool, MemSize, Tag); // FIXME: Use PagedPool when it is implemented
 
-   if(Flags == FL_ZERO_MEMORY)
-   {
-     RtlZeroMemory(newMem, MemSize);
-   }
+  if(Flags == FL_ZERO_MEMORY)
+  {
+    RtlZeroMemory(newMem, MemSize);
+  }
 
-   return newMem;
+  return newMem;
 }
 
 VOID STDCALL EngFreeMem(PVOID Mem)
 {
-   ExFreePool(Mem);
+  ExFreePool(Mem);
 }
 
 PVOID STDCALL EngAllocUserMem(ULONG cj, ULONG tag)
 {
-/*   PVOID newMem;
+/*  PVOID newMem;
 
-   return ZwAllocateVirtualMemory(mycurrentprocess, newMem, 0, cj,
-     MEM_COMMIT, PAGE_READWRITE); */
+  return ZwAllocateVirtualMemory(mycurrentprocess, newMem, 0, cj,
+    MEM_COMMIT, PAGE_READWRITE); */
 
-   return NULL;
+  return NULL;
 }
 
 VOID STDCALL EngFreeUserMem(PVOID pv)
 {
-/*   ZwFreeVirtualMemory (mycurrentprocess, pv, 0, MEM_DECOMMIT); */
+/*  ZwFreeVirtualMemory (mycurrentprocess, pv, 0, MEM_DECOMMIT); */
 }
-

@@ -285,9 +285,11 @@ void CreateCellCharSurface()
    surfgdi         = ExAllocatePool(NonPagedPool, sizeof(SURFGDI));
 
    hCharCellBitmap = W32kCreateBitmap(8, 8, 1, 8, NULL); // 8x8, 1 plane, 8 bits per pel
+
    pbo = BITMAPOBJ_HandleToPtr(hCharCellBitmap);
 
-   BitmapToSurf(surfgdi, CharCellSurfObj, pbo); // Make the bitmap a surface
+// VOID BitmapToSurf(HDC hdc, PSURFGDI SurfGDI, PSURFOBJ SurfObj, PBITMAPOBJ Bitmap)
+   BitmapToSurf(0, surfgdi, CharCellSurfObj, pbo); // Make the bitmap a surface
 }
 
 void  grWriteCellChar(PSURFOBJ  target,

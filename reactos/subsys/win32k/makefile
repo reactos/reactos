@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.27 2000/11/20 19:59:14 ekohl Exp $
+# $Id: makefile,v 1.28 2001/03/31 15:35:07 jfilby Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -6,7 +6,12 @@ PATH_TO_TOP = ../..
 
 TARGET=win32k
 
+# from atheos appserver makefile
+COPTS   = -pipe -O3 -I./freetype2-beta8/include -c -Wall
+
 CFLAGS = -I.
+
+#define FT_FLAT_COMPILE
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o eng/copybits.o \
 		 eng/device.o eng/handle.o eng/lineto.o eng/paint.o eng/palette.o \
@@ -20,14 +25,19 @@ OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/line.o objects/metafile.o objects/paint.o  \
                   objects/path.o objects/pen.o objects/print.o  \
                   objects/region.o objects/text.o objects/wingl.o \
-                  objects/bezier.o objects/objconv.o
-FREETYPE_OBJECTS =	freetype/grfont.o
-
+                  objects/bezier.o objects/objconv.o objects/dib.o objects/palette.o
+DIB_OBJECTS = dib/dib4bpp.o dib/dib24bpp.o
+FREETYPE_OBJECTS = freetype/grfont.o freetype/ctype.o \
+	freetype/ftsystem.o freetype/ftdebug.o freetype/ftinit.o freetype/ftbase.o \
+	freetype/ftglyph.o freetype/ftmm.o freetype/autohint.o freetype/cff.o \
+	freetype/type1cid.o freetype/psnames.o freetype/raster1.o freetype/sfnt.o \
+	freetype/smooth.o freetype/truetype.o freetype/winfnt.o freetype/type1z.o
 RESOURCE_OBJECT = $(TARGET).coff
 STUBS_OBJECTS = stubs/stubs.o
 
 OBJECTS = $(ENG_OBJECTS) $(MAIN_OBJECTS) $(MISC_OBJECTS) $(LDR_OBJECTS) $(OBJECTS_OBJECTS)  \
-          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS)
+          $(RESOURCE_OBJECT) $(STUBS_OBJECTS) $(MATH_OBJECTS) $(FLOAT_OBJECTS) $(FREETYPE_OBJECTS) \
+          $(DIB_OBJECTS)
 
 all: $(TARGET).sys
 
@@ -116,4 +126,3 @@ $(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 #WIN32_LEAN_AND_MEAN = yes
 #WARNINGS_ARE_ERRORS = yes
 include ../../rules.mak
-
