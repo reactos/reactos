@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.158 2004/08/15 16:39:08 chorns Exp $
+/* $Id: section.c,v 1.159 2004/08/18 02:29:37 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -2007,6 +2007,15 @@ MmpDeleteSection(PVOID ObjectBody)
       ULONG RefCount;
       PMM_SECTION_SEGMENT SectionSegments;
 
+      /*
+       * NOTE: Section->ImageSection can be NULL for short time
+       * during the section creating. If we fail for some reason
+       * until the image section is properly initialized we shouldn't
+       * process further here.
+       */
+      if (Section->ImageSection == NULL)
+         return;
+
       SectionSegments = Section->ImageSection->Segments;
       NrSegments = Section->ImageSection->NrSegments;
 
@@ -2029,6 +2038,13 @@ MmpDeleteSection(PVOID ObjectBody)
    }
    else
    {
+      /*
+       * NOTE: Section->Segment can be NULL for short time
+       * during the section creating.
+       */
+      if (Section->Segment == NULL)
+         return;
+
       if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
       {
          MmpFreePageFileSegment(Section->Segment);
@@ -2173,15 +2189,6 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    MaximumSize = *UMaximumSize;
 
    /*
-    * Check the protection
-    */
-   if ((SectionPageProtection & PAGE_FLAGS_VALID_FROM_USER_MODE) !=
-         SectionPageProtection)
-   {
-      return(STATUS_INVALID_PAGE_PROTECTION);
-   }
-
-   /*
     * Create the section
     */
    Status = ObCreateObject(ExGetPreviousMode(),
@@ -2203,6 +2210,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
     */
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
+   Section->Segment = NULL;
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
@@ -2253,15 +2261,8 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    IO_STATUS_BLOCK Iosb;
    LARGE_INTEGER Offset;
    CHAR Buffer;
+   FILE_STANDARD_INFORMATION FileInfo;
 
-   /*
-    * Check the protection
-    */
-   if ((SectionPageProtection & PAGE_FLAGS_VALID_FROM_USER_MODE) !=
-         SectionPageProtection)
-   {
-      return(STATUS_INVALID_PAGE_PROTECTION);
-   }
    /*
     * Create the section
     */
@@ -2284,6 +2285,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
     */
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
+   Section->Segment = NULL;
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
 
@@ -2316,14 +2318,21 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    }
 
    /*
-    * We can't do memory mappings if the file system doesn't support the
-    * standard FCB
+    * FIXME: This is propably not entirely correct. We can't look into
+    * the standard FCB header because it might not be initialized yet
+    * (as in case of the EXT2FS driver by Manoj Paul Joseph where the
+    * standard file information is filled on first request).
     */
-   if (!(FileObject->Flags & FO_FCB_IS_VALID))
+   Status = NtQueryInformationFile(FileHandle,
+                                   &Iosb,
+                                   &FileInfo,
+                                   sizeof(FILE_STANDARD_INFORMATION),
+                                   FileStandardInformation);
+   if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(Section);
       ObDereferenceObject(FileObject);
-      return(STATUS_INVALID_FILE_FOR_SECTION);
+      return Status;
    }
 
    /*
@@ -2336,12 +2345,10 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    }
    else
    {
-      MaximumSize =
-         ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize;
+      MaximumSize = FileInfo.EndOfFile;
    }
 
-   if (MaximumSize.QuadPart >
-         ((PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)->FileSize.QuadPart)
+   if (MaximumSize.QuadPart > FileInfo.EndOfFile.QuadPart)
    {
       Status = NtSetInformationFile(FileHandle,
                                     &Iosb,
@@ -2515,14 +2522,6 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
    ULONG Size;
    ULONG Characteristics;
    ULONG FileAccess = 0;
-   /*
-    * Check the protection
-    */
-   if ((SectionPageProtection & PAGE_FLAGS_VALID_FROM_USER_MODE) !=
-         SectionPageProtection)
-   {
-      return(STATUS_INVALID_PAGE_PROTECTION);
-   }
 
    /*
     * Specifying a maximum size is meaningless for an image section
@@ -2673,6 +2672,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
        */
       Section->SectionPageProtection = SectionPageProtection;
       Section->AllocationAttributes = AllocationAttributes;
+      Section->ImageSection = NULL;
       InitializeListHead(&Section->ViewListHead);
       KeInitializeSpinLock(&Section->ViewListLock);
 
@@ -2686,18 +2686,6 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
       else
       {
          FileAccess = FILE_READ_DATA;
-      }
-
-      /*
-       * We can't do memory mappings if the file system doesn't support the
-       * standard FCB
-       */
-      if (!(FileObject->Flags & FO_FCB_IS_VALID))
-      {
-         ObDereferenceObject(Section);
-         ObDereferenceObject(FileObject);
-         ExFreePool(ImageSections);
-         return(STATUS_INVALID_FILE_FOR_SECTION);
       }
 
       /*
@@ -2926,6 +2914,15 @@ NtCreateSection (OUT PHANDLE SectionHandle,
 {
    PSECTION_OBJECT SectionObject;
    NTSTATUS Status;
+
+   /*
+    * Check the protection
+    */
+   if ((SectionPageProtection & PAGE_FLAGS_VALID_FROM_USER_MODE) !=
+         SectionPageProtection)
+   {
+      return(STATUS_INVALID_PAGE_PROTECTION);
+   }
 
    Status = MmCreateSection(&SectionObject,
                             DesiredAccess,
