@@ -152,7 +152,7 @@ void RegDirectory::read_directory(int scan_flags)
 					entry->_content = _tcsdup(value);
 				else if (type == REG_DWORD) {
 					TCHAR b[32];
-					_stprintf(b, TEXT("%d"), *(DWORD*)&value);
+					_stprintf(b, TEXT("%ld"), *(DWORD*)&value);
 					entry->_content = _tcsdup(b);
 				}
 			}
