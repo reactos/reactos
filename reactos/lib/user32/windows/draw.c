@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.27 2003/08/22 01:55:36 royce Exp $
+/* $Id: draw.c,v 1.28 2003/09/27 12:32:52 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1689,29 +1689,43 @@ DrawAnimatedRects(
 WINBOOL
 STDCALL
 DrawFocusRect(
-  HDC hDC,
-  CONST RECT *lprc)
+  HDC hdc,
+  CONST RECT *rect)
 {
-    HBRUSH hOldBrush;
-    HPEN hOldPen, hNewPen;
-    INT oldDrawMode, oldBkMode;
+#if 0 /* FIXME PS_ALTERNATE and R2_XORPEN not yet implemented */
+  HBRUSH hOldBrush;
+  HPEN hOldPen, hNewPen;
+  INT oldDrawMode, oldBkMode;
 
-    hOldBrush = SelectObject(hDC, GetStockObject(NULL_BRUSH));
-    hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
-    hOldPen = SelectObject(hDC, hNewPen);
-    oldDrawMode = SetROP2(hDC, R2_XORPEN);
-    oldBkMode = SetBkMode(hDC, TRANSPARENT);
+  hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+  hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
+  hOldPen = SelectObject(hdc, hNewPen);
+  oldDrawMode = SetROP2(hdc, R2_XORPEN);
+  oldBkMode = SetBkMode(hdc, TRANSPARENT);
 
-    Rectangle(hDC, lprc->left, lprc->top, lprc->right, lprc->bottom);
+  Rectangle(hdc, rect->left, rect->top, rect->right, rect->bottom);
 
-    SetBkMode(hDC, oldBkMode);
-    SetROP2(hDC, oldDrawMode);
-    SelectObject(hDC, hOldPen);
-    DeleteObject(hNewPen);
-    SelectObject(hDC, hOldBrush);
+  SetBkMode(hdc, oldBkMode);
+  SetROP2(hdc, oldDrawMode);
+  SelectObject(hdc, hOldPen);
+  DeleteObject(hNewPen);
+  SelectObject(hdc, hOldBrush);
 
-    return TRUE;
+  return TRUE;
+#else
+  HBRUSH hbrush = SelectObject(hdc, GetStockObject(GRAY_BRUSH));
+  PatBlt(hdc, rect->left, rect->top,
+	 rect->right - rect->left - 1, 1, PATINVERT);
+  PatBlt(hdc, rect->left, rect->top + 1, 1,
+	 rect->bottom - rect->top - 1, PATINVERT);
+  PatBlt(hdc, rect->left + 1, rect->bottom - 1,
+	 rect->right - rect->left - 1, -1, PATINVERT);
+  PatBlt(hdc, rect->right - 1, rect->top, -1,
+	 rect->bottom - rect->top - 1, PATINVERT);
+  SelectObject(hdc, hbrush);
 
+  return TRUE;
+#endif
 }
 
 
