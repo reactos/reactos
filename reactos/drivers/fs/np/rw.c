@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.10 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: rw.c,v 1.11 2004/04/10 16:20:59 navaraf Exp $
  *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
@@ -76,8 +76,6 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
   Information = 0;
 
   Buffer = MmGetSystemAddressForMdl(Irp->MdlAddress);
-  DPRINT("Length %d Buffer %x\n",Length,Buffer);
-
   KeAcquireSpinLock(&ReadFcb->DataListLock, &OldIrql);
   while (1)
     {
@@ -156,6 +154,18 @@ NpfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	     /* Truncate the message if the receive buffer is too small */
 	     CopyLength = RtlRosMin(ReadFcb->ReadDataAvailable, Length);
 	     memcpy(Buffer, ReadFcb->Data, CopyLength);
+
+#ifndef NDEBUG
+             DPRINT("Length %d Buffer %x\n",CopyLength,Buffer);
+             {
+                DbgPrint("------\n");
+                ULONG X;
+                for (X = 0; X < CopyLength; X++)
+                   DbgPrint("%02x ", ((PUCHAR)Buffer)[X]);
+                DbgPrint("\n");
+                DbgPrint("------\n");
+             }
+#endif
 
 	     Information = CopyLength;
 	     ReadFcb->ReadDataAvailable = 0;
@@ -237,7 +247,17 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
 
   Status = STATUS_SUCCESS;
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
+#ifndef NDEBUG
   DPRINT("Length %d Buffer %x Offset %x\n",Length,Buffer,Offset);
+  {
+     DbgPrint("------\n");
+     ULONG X;
+     for (X = 0; X < Length; X++)
+        DbgPrint("%02x ", Buffer[X]);
+     DbgPrint("\n");
+     DbgPrint("------\n");
+  }
+#endif
 
   KeAcquireSpinLock(&Fcb->DataListLock, &OldIrql);
   while(1)
@@ -303,7 +323,7 @@ NpfsWrite(PDEVICE_OBJECT DeviceObject,
           if (Length > 0)
 	    {
               CopyLength = RtlRosMin(Length, Fcb->WriteQuotaAvailable);
-	      memcpy(Buffer, Fcb->Data, CopyLength);
+	      memcpy(Fcb->Data, Buffer, CopyLength);
 
 	      Information = CopyLength;
 	      Fcb->ReadDataAvailable = CopyLength;
