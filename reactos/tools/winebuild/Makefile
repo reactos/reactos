@@ -15,7 +15,8 @@ OBJECTS = \
 	res16.o \
 	res32.o \
 	spec32.o \
-	utils.o
+	utils.o \
+	mkstemps.o
 
 CLEAN_FILES = *.o $(TARGET)
 

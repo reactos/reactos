@@ -32,6 +32,8 @@
 
 #if defined(WIN32)
 #include <windows.h>
+#else
+#include <limits.h>
 #endif
 
 #include "build.h"
@@ -651,7 +653,7 @@ static const char *ldcombine_files( char **argv )
 #else
 	if (output_file_name && output_file_name[0])
     {
-        ld_tmp_file = xmalloc( MAX_PATH);
+        ld_tmp_file = xmalloc( PATH_MAX );
         strcpy( ld_tmp_file, output_file_name );
         strcat( ld_tmp_file, ".XXXXXX.o" );
     }

@@ -388,7 +388,7 @@ int main(int argc, char **argv)
         switch (SpecType)
         {
             case SPEC_WIN16:
-#if defined(WIN32)
+#if defined(__REACTOS__)
                 fatal_error( "Win16 specs are not supported in ReactOS version of winebuild\n" );
 #else
                 if (argv[0])
@@ -419,7 +419,7 @@ int main(int argc, char **argv)
         BuildDebugFile( output_file, current_src_dir, argv );
         break;
     case MODE_RELAY16:
-#if defined(WIN32)
+#if defined(__REACTOS__)
         fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
 #else
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
@@ -427,7 +427,7 @@ int main(int argc, char **argv)
 #endif
         break;
     case MODE_RELAY32:
-#if defined(WIN32)
+#if defined(__REACTOS__)
         fatal_error( "Win32 relays are not supported in ReactOS version of winebuild\n" );
 #else
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );

@@ -21,6 +21,10 @@
 #include "config.h"
 #include "wine/port.h"
 
+#if !defined(WIN32)
+#undef strdup
+#endif
+
 #include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
