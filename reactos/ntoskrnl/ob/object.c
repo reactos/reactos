@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.70 2003/10/04 20:26:45 ekohl Exp $
+/* $Id: object.c,v 1.71 2003/10/30 21:34:54 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -23,6 +23,13 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+
+typedef struct _RETENTION_CHECK_PARAMS
+{
+  WORK_QUEUE_ITEM WorkItem;
+  POBJECT_HEADER ObjectHeader;
+} RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
 
 /* FUNCTIONS ************************************************************/
@@ -472,8 +479,8 @@ ObReferenceObjectByPointer(IN PVOID Object,
 {
    POBJECT_HEADER Header;
 
-//   DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
-//	  Object,ObjectType);
+   DPRINT("ObReferenceObjectByPointer(Object %x, ObjectType %x)\n",
+	  Object,ObjectType);
    
    Header = BODY_TO_HEADER(Object);
    
@@ -559,64 +566,34 @@ ObOpenObjectByPointer(IN POBJECT Object,
 static NTSTATUS
 ObpPerformRetentionChecks(POBJECT_HEADER Header)
 {
-//  DPRINT("ObPerformRetentionChecks(Header %x), RefCount %d, HandleCount %d\n",
-//	  Header,Header->RefCount,Header->HandleCount);
-  if(KeGetCurrentIrql() != PASSIVE_LEVEL)
-  {
-    DPRINT("ObpPerformRetentionChecks called at an unsupported IRQL.  Use ObpPerformRetentionChecksDpcLevel instead.\n");
-	KEBUGCHECK(0);
-  }
+  DPRINT("ObPerformRetentionChecks(Header %p)\n", Header);
+  if (KeGetCurrentIrql() != PASSIVE_LEVEL)
+    {
+      DPRINT("ObpPerformRetentionChecks called at an unsupported IRQL.  Use ObpPerformRetentionChecksDpcLevel instead.\n");
+      KEBUGCHECK(0);
+    }
 
-  
-  if (Header->RefCount < 0)
+  if (Header->ObjectType != NULL &&
+      Header->ObjectType->Delete != NULL)
     {
-      CPRINT("Object %x/%x has invalid reference count (%d)\n",
-	     Header, HEADER_TO_BODY(Header), Header->RefCount);
-      KEBUGCHECK(0);
+      Header->ObjectType->Delete(HEADER_TO_BODY(Header));
     }
-  if (Header->HandleCount < 0)
+
+  if (Header->Name.Buffer != NULL)
     {
-      CPRINT("Object %x/%x has invalid handle count (%d)\n",
-	     Header, HEADER_TO_BODY(Header), Header->HandleCount);
-      KEBUGCHECK(0);
+      ObpRemoveEntryDirectory(Header);
+      RtlFreeUnicodeString(&Header->Name);
     }
-  
-  if (Header->RefCount == 0 &&
-      Header->HandleCount == 0 &&
-      Header->Permanent == FALSE)
-    {
-      if (Header->CloseInProcess)
-      {
-	 KEBUGCHECK(0);
-	 return STATUS_UNSUCCESSFUL;
-      }
-      Header->CloseInProcess = TRUE;
-      if (Header->ObjectType != NULL &&
-	  Header->ObjectType->Delete != NULL)
-	{
-	  Header->ObjectType->Delete(HEADER_TO_BODY(Header));
-	}
-      if (Header->Name.Buffer != NULL)
-	{
-	  ObpRemoveEntryDirectory(Header);
-	  RtlFreeUnicodeString(&Header->Name);
-	}
-      DPRINT("ObPerformRetentionChecks() = Freeing object\n");
-      ExFreePool(Header);
-    }
+
+  DPRINT("ObPerformRetentionChecks() = Freeing object\n");
+  ExFreePool(Header);
+
   return(STATUS_SUCCESS);
 }
 
-typedef struct _RETENTION_CHECK_PARAMS {
-  WORK_QUEUE_ITEM WorkItem;
-  POBJECT_HEADER ObjectHeader;
-} RETENTION_CHECK_PARAMS, *PRETENTION_CHECK_PARAMS;
 
-VOID
-STDCALL
-ObpPerformRetentionChecksWorkRoutine(
-  IN PVOID Parameter
-  )
+VOID STDCALL
+ObpPerformRetentionChecksWorkRoutine (IN PVOID Parameter)
 {
   PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
   /* ULONG Tag; */ /* See below */
@@ -631,33 +608,70 @@ ObpPerformRetentionChecksWorkRoutine(
   /* ExFreePoolWithTag(Params, Tag); */
 }
 
+
 static NTSTATUS
 ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader)
 {
-  switch(KeGetCurrentIrql()) {
+  if (ObjectHeader->RefCount < 0)
+    {
+      CPRINT("Object %p/%p has invalid reference count (%d)\n",
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), ObjectHeader->RefCount);
+      KEBUGCHECK(0);
+    }
 
-	case PASSIVE_LEVEL:
-        return ObpPerformRetentionChecks(ObjectHeader);
+  if (ObjectHeader->HandleCount < 0)
+    {
+      CPRINT("Object %p/%p has invalid handle count (%d)\n",
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), ObjectHeader->HandleCount);
+      KEBUGCHECK(0);
+    }
 
-	case APC_LEVEL:
-	case DISPATCH_LEVEL:
-        {
-		  /* Can we get rid of this NonPagedPoolMustSucceed call and still be a 'must succeed' function?  I don't like to bugcheck on no memory! */
-          PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)ExAllocatePoolWithTag(NonPagedPoolMustSucceed, sizeof(RETENTION_CHECK_PARAMS),
-			  ObjectHeader->ObjectType->Tag);
-		  Params->ObjectHeader = ObjectHeader;
-		  ExInitializeWorkItem(&Params->WorkItem, ObpPerformRetentionChecksWorkRoutine, (PVOID)Params);
-		  ExQueueWorkItem(&Params->WorkItem, CriticalWorkQueue);
-        }
-        return STATUS_PENDING;
+  if (ObjectHeader->RefCount == 0 &&
+      ObjectHeader->HandleCount == 0 &&
+      ObjectHeader->Permanent == FALSE)
+    {
+      if (ObjectHeader->CloseInProcess)
+	{
+	  KEBUGCHECK(0);
+	  return STATUS_UNSUCCESSFUL;
+	}
+      ObjectHeader->CloseInProcess = TRUE;
 
-	default:
-        DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported IRQL %u!\n", KeGetCurrentIrql());
-        KEBUGCHECK(0);
-        return STATUS_UNSUCCESSFUL;
+      switch (KeGetCurrentIrql ())
+	{
+	  case PASSIVE_LEVEL:
+	    return ObpPerformRetentionChecks (ObjectHeader);
 
-  }
+	  case APC_LEVEL:
+	  case DISPATCH_LEVEL:
+	    {
+	      PRETENTION_CHECK_PARAMS Params;
 
+	      /*
+	       * Can we get rid of this NonPagedPoolMustSucceed call and still be a
+	       * 'must succeed' function?  I don't like to bugcheck on no memory!
+	       */
+	      Params = (PRETENTION_CHECK_PARAMS)ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
+								      sizeof(RETENTION_CHECK_PARAMS),
+								      ObjectHeader->ObjectType->Tag);
+	      Params->ObjectHeader = ObjectHeader;
+	      ExInitializeWorkItem(&Params->WorkItem,
+				   ObpPerformRetentionChecksWorkRoutine,
+				   (PVOID)Params);
+	      ExQueueWorkItem(&Params->WorkItem,
+			      CriticalWorkQueue);
+	    }
+	    return STATUS_PENDING;
+
+	  default:
+	    DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported IRQL %u!\n",
+		   KeGetCurrentIrql());
+	    KEBUGCHECK(0);
+	    return STATUS_UNSUCCESSFUL;
+	}
+    }
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -687,9 +701,9 @@ ObfReferenceObject(IN PVOID Object)
   Header = BODY_TO_HEADER(Object);
 
   if (Header->CloseInProcess)
-  {
+    {
       KEBUGCHECK(0);
-  }
+    }
   InterlockedIncrement(&Header->RefCount);
 
   ObpPerformRetentionChecksDpcLevel(Header);
@@ -728,15 +742,16 @@ ObfDereferenceObject(IN PVOID Object)
 	     Object, Header->RefCount, PsProcessType);
       DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
     }
+
   if (Header->ObjectType == PsThreadType)
     {
       DPRINT("Deref t 0x%x with refcount %d type %x ",
 	     Object, Header->RefCount, PsThreadType);
       DPRINT("eip %x\n", ((PULONG)&Object)[-1]);
     }
-  
+
   InterlockedDecrement(&Header->RefCount);
-  
+
   ObpPerformRetentionChecksDpcLevel(Header);
 }
 
