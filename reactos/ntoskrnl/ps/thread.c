@@ -684,8 +684,8 @@ PsInitThreadManagment(VOID)
    PsThreadType->Tag = TAG('T', 'H', 'R', 'T');
    PsThreadType->TotalObjects = 0;
    PsThreadType->TotalHandles = 0;
-   PsThreadType->MaxObjects = 0;
-   PsThreadType->MaxHandles = 0;
+   PsThreadType->PeakObjects = 0;
+   PsThreadType->PeakHandles = 0;
    PsThreadType->PagedPoolCharge = 0;
    PsThreadType->NonpagedPoolCharge = sizeof(ETHREAD);
    PsThreadType->Mapping = &PiThreadMapping;

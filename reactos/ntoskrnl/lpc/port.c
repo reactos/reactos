@@ -44,8 +44,8 @@ NiInitPort (VOID)
     RtlRosInitUnicodeStringFromLiteral(&LpcPortObjectType->TypeName,L"Port");
    
    LpcPortObjectType->Tag = TAG('L', 'P', 'R', 'T');
-   LpcPortObjectType->MaxObjects = ULONG_MAX;
-   LpcPortObjectType->MaxHandles = ULONG_MAX;
+   LpcPortObjectType->PeakObjects = 0;
+   LpcPortObjectType->PeakHandles = 0;
    LpcPortObjectType->TotalObjects = 0;
    LpcPortObjectType->TotalHandles = 0;
    LpcPortObjectType->PagedPoolCharge = 0;

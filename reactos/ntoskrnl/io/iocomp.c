@@ -123,8 +123,8 @@ IopInitIoCompletionImplementation(VOID)
    RtlCreateUnicodeString(&ExIoCompletionType->TypeName, L"IoCompletion");
    
    ExIoCompletionType->Tag = IOC_TAG;
-   ExIoCompletionType->MaxObjects = ULONG_MAX;
-   ExIoCompletionType->MaxHandles = ULONG_MAX;
+   ExIoCompletionType->PeakObjects = 0;
+   ExIoCompletionType->PeakHandles = 0;
    ExIoCompletionType->TotalObjects = 0;
    ExIoCompletionType->TotalHandles = 0;
    ExIoCompletionType->PagedPoolCharge = 0;

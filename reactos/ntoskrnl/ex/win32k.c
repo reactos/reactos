@@ -297,8 +297,8 @@ ExpWin32kInit(VOID)
   ExWindowStationObjectType->Tag = TAG('W', 'I', 'N', 'S');
   ExWindowStationObjectType->TotalObjects = 0;
   ExWindowStationObjectType->TotalHandles = 0;
-  ExWindowStationObjectType->MaxObjects = ULONG_MAX;
-  ExWindowStationObjectType->MaxHandles = ULONG_MAX;
+  ExWindowStationObjectType->PeakObjects = 0;
+  ExWindowStationObjectType->PeakHandles = 0;
   ExWindowStationObjectType->PagedPoolCharge = 0;
   ExWindowStationObjectType->NonpagedPoolCharge = sizeof(WINSTATION_OBJECT);
   ExWindowStationObjectType->Mapping = &ExpWindowStationMapping;
@@ -327,8 +327,8 @@ ExpWin32kInit(VOID)
   ExDesktopObjectType->Tag = TAG('D', 'E', 'S', 'K');
   ExDesktopObjectType->TotalObjects = 0;
   ExDesktopObjectType->TotalHandles = 0;
-  ExDesktopObjectType->MaxObjects = ULONG_MAX;
-  ExDesktopObjectType->MaxHandles = ULONG_MAX;
+  ExDesktopObjectType->PeakObjects = 0;
+  ExDesktopObjectType->PeakHandles = 0;
   ExDesktopObjectType->PagedPoolCharge = 0;
   ExDesktopObjectType->NonpagedPoolCharge = sizeof(DESKTOP_OBJECT);
   ExDesktopObjectType->Mapping = &ExpDesktopMapping;

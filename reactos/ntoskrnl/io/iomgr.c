@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.55 2004/12/21 18:37:28 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -395,8 +395,8 @@ IoInit (VOID)
   IoDeviceObjectType->Tag = TAG_DEVICE_TYPE;
   IoDeviceObjectType->TotalObjects = 0;
   IoDeviceObjectType->TotalHandles = 0;
-  IoDeviceObjectType->MaxObjects = ULONG_MAX;
-  IoDeviceObjectType->MaxHandles = ULONG_MAX;
+  IoDeviceObjectType->PeakObjects = 0;
+  IoDeviceObjectType->PeakHandles = 0;
   IoDeviceObjectType->PagedPoolCharge = 0;
   IoDeviceObjectType->NonpagedPoolCharge = sizeof (DEVICE_OBJECT);
   IoDeviceObjectType->Mapping = &IopFileMapping;
@@ -424,8 +424,8 @@ IoInit (VOID)
   IoFileObjectType->Tag = TAG_FILE_TYPE;
   IoFileObjectType->TotalObjects = 0;
   IoFileObjectType->TotalHandles = 0;
-  IoFileObjectType->MaxObjects = ULONG_MAX;
-  IoFileObjectType->MaxHandles = ULONG_MAX;
+  IoFileObjectType->PeakObjects = 0;
+  IoFileObjectType->PeakHandles = 0;
   IoFileObjectType->PagedPoolCharge = 0;
   IoFileObjectType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
   IoFileObjectType->Mapping = &IopFileMapping;
@@ -451,8 +451,8 @@ IoInit (VOID)
 				       sizeof (OBJECT_TYPE));
   RtlZeroMemory(IoAdapterObjectType, sizeof(OBJECT_TYPE));
   IoAdapterObjectType->Tag = TAG_ADAPTER_TYPE;
-  IoAdapterObjectType->MaxObjects = ULONG_MAX;
-  IoAdapterObjectType->MaxHandles = ULONG_MAX;
+  IoAdapterObjectType->PeakObjects = 0;
+  IoAdapterObjectType->PeakHandles = 0;
   IoDeviceObjectType->Mapping = &IopFileMapping;
   RtlRosInitUnicodeStringFromLiteral(&IoAdapterObjectType->TypeName, L"Adapter");
   ObpCreateTypeObject(IoAdapterObjectType);

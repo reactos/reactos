@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.26 2004/10/24 16:49:49 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -119,8 +119,8 @@ NtInitializeTimerImplementation(VOID)
    RtlCreateUnicodeString(&ExTimerType->TypeName, L"Timer");
 
    ExTimerType->Tag = TAG('T', 'I', 'M', 'T');
-   ExTimerType->MaxObjects = ULONG_MAX;
-   ExTimerType->MaxHandles = ULONG_MAX;
+   ExTimerType->PeakObjects = 0;
+   ExTimerType->PeakHandles = 0;
    ExTimerType->TotalObjects = 0;
    ExTimerType->TotalHandles = 0;
    ExTimerType->PagedPoolCharge = 0;

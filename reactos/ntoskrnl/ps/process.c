@@ -258,8 +258,8 @@ PsInitProcessManagment(VOID)
    PsProcessType->Tag = TAG('P', 'R', 'O', 'C');
    PsProcessType->TotalObjects = 0;
    PsProcessType->TotalHandles = 0;
-   PsProcessType->MaxObjects = ULONG_MAX;
-   PsProcessType->MaxHandles = ULONG_MAX;
+   PsProcessType->PeakObjects = 0;
+   PsProcessType->PeakHandles = 0;
    PsProcessType->PagedPoolCharge = 0;
    PsProcessType->NonpagedPoolCharge = sizeof(EPROCESS);
    PsProcessType->Mapping = &PiProcessMapping;

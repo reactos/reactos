@@ -2148,8 +2148,8 @@ MmInitSectionImplementation(VOID)
    MmSectionObjectType->Tag = TAG('S', 'E', 'C', 'T');
    MmSectionObjectType->TotalObjects = 0;
    MmSectionObjectType->TotalHandles = 0;
-   MmSectionObjectType->MaxObjects = ULONG_MAX;
-   MmSectionObjectType->MaxHandles = ULONG_MAX;
+   MmSectionObjectType->PeakObjects = 0;
+   MmSectionObjectType->PeakHandles = 0;
    MmSectionObjectType->PagedPoolCharge = 0;
    MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
    MmSectionObjectType->Mapping = &MmpSectionMapping;

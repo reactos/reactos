@@ -81,8 +81,8 @@ NtInitializeMutantImplementation(VOID)
   RtlCreateUnicodeString(&ExMutantObjectType->TypeName, L"Mutant");
 
   ExMutantObjectType->Tag = TAG('M', 'T', 'N', 'T');
-  ExMutantObjectType->MaxObjects = ULONG_MAX;
-  ExMutantObjectType->MaxHandles = ULONG_MAX;
+  ExMutantObjectType->PeakObjects = 0;
+  ExMutantObjectType->PeakHandles = 0;
   ExMutantObjectType->TotalObjects = 0;
   ExMutantObjectType->TotalHandles = 0;
   ExMutantObjectType->PagedPoolCharge = 0;

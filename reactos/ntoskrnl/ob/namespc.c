@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.50 2004/11/21 10:59:10 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -376,8 +376,8 @@ ObInit(VOID)
   ObDirectoryType->Tag = TAG('D', 'I', 'R', 'T');
   ObDirectoryType->TotalObjects = 0;
   ObDirectoryType->TotalHandles = 0;
-  ObDirectoryType->MaxObjects = ULONG_MAX;
-  ObDirectoryType->MaxHandles = ULONG_MAX;
+  ObDirectoryType->PeakObjects = 0;
+  ObDirectoryType->PeakHandles = 0;
   ObDirectoryType->PagedPoolCharge = 0;
   ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
   ObDirectoryType->Mapping = &ObpDirectoryMapping;
@@ -401,8 +401,8 @@ ObInit(VOID)
   ObTypeObjectType->Tag = TAG('T', 'y', 'p', 'T');
   ObTypeObjectType->TotalObjects = 0;
   ObTypeObjectType->TotalHandles = 0;
-  ObTypeObjectType->MaxObjects = ULONG_MAX;
-  ObTypeObjectType->MaxHandles = ULONG_MAX;
+  ObTypeObjectType->PeakObjects = 0;
+  ObTypeObjectType->PeakHandles = 0;
   ObTypeObjectType->PagedPoolCharge = 0;
   ObTypeObjectType->NonpagedPoolCharge = sizeof(TYPE_OBJECT);
   ObTypeObjectType->Mapping = &ObpTypeMapping;

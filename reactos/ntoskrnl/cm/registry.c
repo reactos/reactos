@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.129 2004/12/12 22:36:10 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,8 +259,8 @@ CmInitializeRegistry(VOID)
   CmiKeyType->Tag = TAG('R', 'e', 'g', 'K');
   CmiKeyType->TotalObjects = 0;
   CmiKeyType->TotalHandles = 0;
-  CmiKeyType->MaxObjects = LONG_MAX;
-  CmiKeyType->MaxHandles = LONG_MAX;
+  CmiKeyType->PeakObjects = 0;
+  CmiKeyType->PeakHandles = 0;
   CmiKeyType->PagedPoolCharge = 0;
   CmiKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
   CmiKeyType->Mapping = &CmiKeyMapping;

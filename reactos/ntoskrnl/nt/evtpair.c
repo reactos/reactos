@@ -1,4 +1,4 @@
-/* $Id: evtpair.c,v 1.23 2004/09/28 15:02:29 weiden Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -66,8 +66,8 @@ NtInitializeEventPairImplementation(VOID)
    
    RtlCreateUnicodeString(&ExEventPairObjectType->TypeName, L"EventPair");
    ExEventPairObjectType->Tag = TAG('E', 'v', 'P', 'a');
-   ExEventPairObjectType->MaxObjects = ULONG_MAX;
-   ExEventPairObjectType->MaxHandles = ULONG_MAX;
+   ExEventPairObjectType->PeakObjects = 0;
+   ExEventPairObjectType->PeakHandles = 0;
    ExEventPairObjectType->TotalObjects = 0;
    ExEventPairObjectType->TotalHandles = 0;
    ExEventPairObjectType->PagedPoolCharge = 0;

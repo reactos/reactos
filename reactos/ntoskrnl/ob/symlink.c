@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.12 2004/10/25 14:22:21 blight Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -165,8 +165,8 @@ ObInitSymbolicLinkImplementation (VOID)
   ObSymbolicLinkType->Tag = TAG('S', 'Y', 'M', 'T');
   ObSymbolicLinkType->TotalObjects = 0;
   ObSymbolicLinkType->TotalHandles = 0;
-  ObSymbolicLinkType->MaxObjects = ULONG_MAX;
-  ObSymbolicLinkType->MaxHandles = ULONG_MAX;
+  ObSymbolicLinkType->PeakObjects = 0;
+  ObSymbolicLinkType->PeakHandles = 0;
   ObSymbolicLinkType->PagedPoolCharge = 0;
   ObSymbolicLinkType->NonpagedPoolCharge = sizeof(SYMLINK_OBJECT);
   ObSymbolicLinkType->Mapping = &ObpSymbolicLinkMapping;

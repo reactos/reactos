@@ -70,8 +70,8 @@ NtInitializeEventImplementation(VOID)
    RtlCreateUnicodeString(&ExEventObjectType->TypeName, L"Event");
    
    ExEventObjectType->Tag = TAG('E', 'V', 'T', 'T');
-   ExEventObjectType->MaxObjects = ULONG_MAX;
-   ExEventObjectType->MaxHandles = ULONG_MAX;
+   ExEventObjectType->PeakObjects = 0;
+   ExEventObjectType->PeakHandles = 0;
    ExEventObjectType->TotalObjects = 0;
    ExEventObjectType->TotalHandles = 0;
    ExEventObjectType->PagedPoolCharge = 0;

@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.24 2004/12/26 17:48:19 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -52,8 +52,8 @@ NtInitializeSemaphoreImplementation(VOID)
    RtlCreateUnicodeString(&ExSemaphoreObjectType->TypeName, L"Semaphore");
    
    ExSemaphoreObjectType->Tag = TAG('S', 'E', 'M', 'T');
-   ExSemaphoreObjectType->MaxObjects = ULONG_MAX;
-   ExSemaphoreObjectType->MaxHandles = ULONG_MAX;
+   ExSemaphoreObjectType->PeakObjects = 0;
+   ExSemaphoreObjectType->PeakHandles = 0;
    ExSemaphoreObjectType->TotalObjects = 0;
    ExSemaphoreObjectType->TotalHandles = 0;
    ExSemaphoreObjectType->PagedPoolCharge = 0;

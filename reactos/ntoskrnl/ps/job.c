@@ -47,8 +47,8 @@ PsInitJobManagment(VOID)
   PsJobType->Tag = TAG('E', 'J', 'O', 'B');
   PsJobType->TotalObjects = 0;
   PsJobType->TotalHandles = 0;
-  PsJobType->MaxObjects = ULONG_MAX;
-  PsJobType->MaxHandles = ULONG_MAX;
+  PsJobType->PeakObjects = 0;
+  PsJobType->PeakHandles = 0;
   PsJobType->PagedPoolCharge = 0;
   PsJobType->NonpagedPoolCharge = sizeof(EJOB);
   PsJobType->Mapping = &PiJobMapping;

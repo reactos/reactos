@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.13 2004/10/30 14:02:04 navaraf Exp $
+/* $Id$
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
@@ -72,8 +72,8 @@ ExpInitializeCallbacks(VOID)
    ExCallbackObjectType->Tag = CALLBACK_TAG;
    ExCallbackObjectType->TotalObjects = 0;
    ExCallbackObjectType->TotalHandles = 0;
-   ExCallbackObjectType->MaxObjects = 0xFFFFFFFF;
-   ExCallbackObjectType->MaxHandles = 0xFFFFFFFF;
+   ExCallbackObjectType->PeakObjects = 0;
+   ExCallbackObjectType->PeakHandles = 0;
    ExCallbackObjectType->PagedPoolCharge = 0;
    ExCallbackObjectType->Dump = NULL;
    ExCallbackObjectType->Open = NULL;

@@ -97,8 +97,8 @@ IopInitDriverImplementation(VOID)
    IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'R');
    IoDriverObjectType->TotalObjects = 0;
    IoDriverObjectType->TotalHandles = 0;
-   IoDriverObjectType->MaxObjects = ULONG_MAX;
-   IoDriverObjectType->MaxHandles = ULONG_MAX;
+   IoDriverObjectType->PeakObjects = 0;
+   IoDriverObjectType->PeakHandles = 0;
    IoDriverObjectType->PagedPoolCharge = 0;
    IoDriverObjectType->NonpagedPoolCharge = sizeof(DRIVER_OBJECT);
    IoDriverObjectType->Dump = NULL;

@@ -538,8 +538,8 @@ SepInitializeTokenImplementation(VOID)
   SepTokenObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
 
   SepTokenObjectType->Tag = TAG('T', 'O', 'K', 'T');
-  SepTokenObjectType->MaxObjects = ULONG_MAX;
-  SepTokenObjectType->MaxHandles = ULONG_MAX;
+  SepTokenObjectType->PeakObjects = 0;
+  SepTokenObjectType->PeakHandles = 0;
   SepTokenObjectType->TotalObjects = 0;
   SepTokenObjectType->TotalHandles = 0;
   SepTokenObjectType->PagedPoolCharge = 0;

@@ -371,8 +371,8 @@ NtInitializeProfileImplementation(VOID)
   RtlCreateUnicodeString(&ExProfileObjectType->TypeName, L"Profile");
   
   ExProfileObjectType->Tag = TAG('P', 'R', 'O', 'F');
-  ExProfileObjectType->MaxObjects = ULONG_MAX;
-  ExProfileObjectType->MaxHandles = ULONG_MAX;
+  ExProfileObjectType->PeakObjects = 0;
+  ExProfileObjectType->PeakHandles = 0;
   ExProfileObjectType->TotalObjects = 0;
   ExProfileObjectType->TotalHandles = 0;
   ExProfileObjectType->PagedPoolCharge = 0;
