@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.36 2003/06/07 10:14:39 chorns Exp $
+/* $Id: ntddk.h,v 1.37 2003/10/17 05:36:39 robd Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,8 +19,7 @@
 #define __NTDDK_H
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
 /* INCLUDES ***************************************************************/
@@ -86,7 +85,7 @@ extern "C"
 #endif /*__NTOSKRNL__ || __NTDRIVER__ || __NTHAL__ */
 
 #ifdef __cplusplus
-};
+}
 #endif
 
 #endif /* __NTDDK_H */
