@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.82 2003/11/18 23:33:31 weiden Exp $
+/* $Id: window.c,v 1.83 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -702,8 +702,7 @@ GetDesktopWindow(VOID)
 HWND STDCALL
 GetForegroundWindow(VOID)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+   return NtUserGetForegroundWindow();
 }
 
 
@@ -1351,8 +1350,7 @@ RealChildWindowFromPoint(HWND hwndParent,
 WINBOOL STDCALL
 SetForegroundWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   return NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW);
 }
 
 
@@ -1663,14 +1661,13 @@ GetSystemMenu(
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
 GetFocus(VOID)
 {
-  UNIMPLEMENTED;
-  return (HWND)0;
+  return (HWND)NtUserGetThreadState(0);
 }
 
 /*

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.48 2003/11/26 21:48:35 gvg Exp $
+ *  $Id: winsta.c,v 1.49 2003/11/30 20:03:47 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -326,30 +326,6 @@ PDESKTOP_OBJECT FASTCALL
 IntGetActiveDesktop(VOID)
 {
    return InputDesktop;
-}
-
-PWINDOW_OBJECT FASTCALL
-IntGetCaptureWindow(VOID)
-{
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
-   if (!pdo)
-   {
-      DPRINT("No active desktop\n");
-      return NULL;
-   }
-   return pdo->CaptureWindow;
-}
-
-VOID FASTCALL
-IntSetCaptureWindow(PWINDOW_OBJECT Window)
-{
-   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
-   if (!pdo)
-   {
-      DPRINT("No active desktop\n");
-      return;
-   }
-   pdo->CaptureWindow = Window;
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL

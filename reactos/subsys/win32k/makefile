@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.83 2003/11/23 11:39:48 navaraf Exp $
+# $Id: makefile,v 1.84 2003/11/30 20:03:47 navaraf Exp $
 
 PATH_TO_TOP = ../..
 
@@ -48,13 +48,13 @@ MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 
 LDR_OBJECTS = ldr/loader.o
 
-NTUSER_OBJECTS = ntuser/callback.o ntuser/caret.o ntuser/class.o ntuser/guicheck.o \
-                 ntuser/hook.o ntuser/hotkey.o ntuser/input.o ntuser/keyboard.o \
-                 ntuser/menu.o ntuser/message.o ntuser/metric.o ntuser/misc.o \
-                 ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o ntuser/scrollbar.o \
-                 ntuser/stubs.o ntuser/timer.o ntuser/userobj.o ntuser/vis.o \
-                 ntuser/windc.o ntuser/window.o ntuser/winlock.o ntuser/winpos.o \
-                 ntuser/winsta.o
+NTUSER_OBJECTS = ntuser/callback.o ntuser/caret.o ntuser/class.o ntuser/focus.o \
+                 ntuser/guicheck.o ntuser/hook.o ntuser/hotkey.o ntuser/input.o \
+                 ntuser/keyboard.o ntuser/menu.o ntuser/message.o ntuser/metric.o \
+                 ntuser/misc.o ntuser/msgqueue.o ntuser/painting.o ntuser/prop.o \
+                 ntuser/scrollbar.o ntuser/stubs.o ntuser/timer.o ntuser/userobj.o \
+                 ntuser/vis.o ntuser/windc.o ntuser/window.o ntuser/winlock.o \
+                 ntuser/winpos.o ntuser/winsta.o
 
 OBJECTS_OBJECTS = objects/bitmaps.o objects/brush.o objects/cliprgn.o  \
                   objects/color.o objects/coord.o objects/dc.o  \

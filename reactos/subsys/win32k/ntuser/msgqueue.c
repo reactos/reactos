@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.38 2003/11/24 00:22:53 arty Exp $
+/* $Id: msgqueue.c,v 1.39 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/object.h>
 #include <include/input.h>
 #include <include/cursoricon.h>
+#include <include/focus.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -239,12 +240,12 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
               case MA_NOACTIVATE:
                   break;
               case MA_ACTIVATEANDEAT:
-                  IntSetFocusWindow(Wnd);
+                  NtUserSetFocus(Wnd);
                   return TRUE;
 /*              case MA_ACTIVATE:
               case 0:*/
               default:
-                  IntSetFocusWindow(Wnd);
+                  NtUserSetFocus(Wnd);
                   break;
           }
         }
@@ -259,12 +260,13 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   
   CaptureWin = IntGetCaptureWindow();
 
-  if ((Window = CaptureWin) == NULL)
+  if (CaptureWin == NULL)
   {
     *HitTest = WinPosWindowFromPoint(ScopeWin, Message->Msg.pt, &Window);
   }
   else
   {
+    Window = IntGetWindowObject(CaptureWin);
     *HitTest = HTCLIENT;
   }
 
@@ -513,6 +515,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     if (FocusMessageQueue->FocusWindow != (HWND)0)
       {
 	Msg.hwnd = FocusMessageQueue->FocusWindow;
+        DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 	Message = MsqCreateMessage(&Msg);
 	MsqPostMessage(FocusMessageQueue, Message);
       }

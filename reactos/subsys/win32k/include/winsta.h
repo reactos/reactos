@@ -52,11 +52,13 @@ IntInitializeDesktopGraphics(VOID);
 VOID FASTCALL
 IntEndDesktopGraphics(VOID);
 
+/*
 struct _WINDOW_OBJECT* FASTCALL
 IntGetCaptureWindow(VOID);
 
 VOID FASTCALL
 IntSetCaptureWindow(struct _WINDOW_OBJECT* Window);
+*/
 
 PUSER_MESSAGE_QUEUE FASTCALL
 IntGetFocusMessageQueue(VOID);

@@ -135,12 +135,6 @@ IntIsChildWindow (HWND Parent, HWND Child);
 HWND FASTCALL
 IntGetDesktopWindow (VOID);
 
-HWND FASTCALL
-IntGetFocusWindow (VOID);
-
-HWND FASTCALL
-IntSetFocusWindow (HWND hWnd);
-
 BOOL FASTCALL
 IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
 

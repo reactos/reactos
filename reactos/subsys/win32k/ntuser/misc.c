@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.31 2003/11/24 16:19:58 gvg Exp $
+/* $Id: misc.c,v 1.32 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,6 +21,7 @@
 #include <include/winsta.h>
 #include <include/caret.h>
 #include <include/object.h>
+#include <include/focus.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -275,6 +276,54 @@ NtUserCallTwoParam(
   return 0;
 }
 
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtUserCallHwndLock(
+  HWND hWnd,
+  DWORD Routine)
+{
+   BOOL Ret = 0;
+   PWINDOW_OBJECT Window;
+
+   Window = IntGetWindowObject(hWnd);
+   if (Window == 0)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+   }
+
+   /* FIXME: Routine can be 0x53 - 0x5E */
+   switch (Routine)
+   {
+      case HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS:
+         /* FIXME */
+         break;
+
+      case HWNDLOCK_ROUTINE_DRAWMENUBAR:
+         /* FIXME */
+         break;
+
+      case HWNDLOCK_ROUTINE_REDRAWFRAME:
+         /* FIXME */
+         break;
+
+      case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:         
+         Ret = IntSetForegroundWindow(Window);
+         break;
+
+      case HWNDLOCK_ROUTINE_UPDATEWINDOW:
+         /* FIXME */
+         break;
+   }
+
+   IntReleaseWindowObject(Window);
+
+   return Ret;
+}
+
 HWND
 STDCALL
 NtUserCallHwndOpt(
@@ -292,6 +341,21 @@ NtUserCallHwndOpt(
          break;
    }
 
+   return 0;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL
+NtUserGetThreadState(
+  DWORD Routine)
+{
+   switch (Routine)
+   {
+      case 0:
+         return (DWORD)IntGetThreadFocusWindow();
+   }
    return 0;
 }
 

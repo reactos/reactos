@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.47 2003/11/24 21:01:20 navaraf Exp $
+/* $Id: winpos.c,v 1.48 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -42,6 +42,7 @@
 #include <include/painting.h>
 #include <include/dce.h>
 #include <include/vis.h>
+#include <include/focus.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -129,9 +130,7 @@ void FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   HWND hwndTo;
-#if 0
   HWND fg;
-#endif
 
   if ((NtUserGetWindowLong(Window->Self, GWL_STYLE, FALSE) & WS_POPUP)
       && (hwndTo = NtUserGetWindow(Window->Self, GW_OWNER)))
@@ -154,17 +153,18 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     }
 
 done:
-#ifdef TODO
   fg = NtUserGetForegroundWindow();
 /*    TRACE("win = %p fg = %p\n", hwndTo, fg); */
-  if (! fg || (hwnd == fg))
+  if (! fg || (hwndTo == fg))
     {
-      if (NtUserSetForegroundWindow(hwndTo))
+      PWINDOW_OBJECT ToWindow = IntGetWindowObject(hwndTo);
+      if (IntSetForegroundWindow(ToWindow))
         {
+          IntReleaseWindowObject(ToWindow);
           return;
         }
+      IntReleaseWindowObject(Window);
     }
-#endif
 
   if (! NtUserSetActiveWindow(hwndTo))
     {
@@ -423,6 +423,7 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   return 0; //FIXME: what does it return?
 }
 
+#if 0
 BOOL STATIC FASTCALL
 WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
 {
@@ -434,16 +435,20 @@ WinPosChangeActiveWindow(HWND hWnd, BOOL MouseMsg)
       return FALSE;
     }
 
+#if 0
   NtUserSendMessage(hWnd,
     WM_ACTIVATE,
 	  MAKELONG(MouseMsg ? WA_CLICKACTIVE : WA_CLICKACTIVE,
       (WindowObject->Style & WS_MINIMIZE) ? 1 : 0),
       (LPARAM)IntGetDesktopWindow());  /* FIXME: Previous active window */
+#endif
+  IntSetForegroundWindow(WindowObject);
 
   IntReleaseWindowObject(WindowObject);
 
   return TRUE;
 }
+#endif
 
 LONG STATIC STDCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
@@ -641,14 +646,11 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
       WinPos->flags |= SWP_NOMOVE;    
    }
 
-   /* FIXME: We don't have NtUserGetForegroundWindow yet. */
-#if 0
    if (WinPos->hwnd == NtUserGetForegroundWindow())
    {
       WinPos->flags |= SWP_NOACTIVATE;   /* Already active */
    }
    else
-#endif
    if ((Window->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
    {
       /* Bring to the top when activating */
@@ -864,11 +866,6 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       Window->Style |= WS_VISIBLE;
    }
 
-   if (!(WinPos.flags & SWP_NOACTIVATE))
-   {
-      WinPosChangeActiveWindow(WinPos.hwnd, FALSE);
-   }
-
    /* Determine the new visible region */
    VisAfter = VIS_ComputeVisibleRegion(
       PsGetWin32Thread()->Desktop, Window, FALSE, FALSE, TRUE);
@@ -1017,6 +1014,18 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       IntRedrawWindow(Window, NULL, 0, RDW_ALLCHILDREN | RDW_ERASENOW);
    }
 
+   if (!(WinPos.flags & SWP_NOACTIVATE))
+   {
+      if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+      {
+         NtUserSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
+      }
+      else
+      {
+         IntSetForegroundWindow(Window);
+      }
+   }
+
    /* FIXME: Check some conditions before doing this. */
    IntSendWINDOWPOSCHANGEDMessage(WinPos.hwnd, &WinPos);
 
@@ -1139,7 +1148,6 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        */
     }
 
-#if 1
   /* We can't activate a child window */
   if ((Window->Style & WS_CHILD) &&
       !(Window->ExStyle & WS_EX_MDICHILD))
@@ -1157,16 +1165,16 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
        * asynchronously.
        */
 
-      if (Window->Self == IntGetActiveWindow())
+      if (Window->Self == NtUserGetActiveWindow())
         {
           WinPosActivateOtherWindow(Window);
         }
 
       /* Revert focus to parent */
-      if (Wnd == IntGetFocusWindow() ||
-          IntIsChildWindow(Wnd, IntGetFocusWindow()))
+      if (Wnd == IntGetThreadFocusWindow() ||
+          IntIsChildWindow(Wnd, IntGetThreadFocusWindow()))
         {
-          IntSetFocusWindow(Window->Parent->Self);
+          NtUserSetFocus(Window->Parent->Self);
         }
     }
 
@@ -1176,58 +1184,6 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     {
       WinPosShowIconTitle(Window, TRUE);
     }
-#else
-  if (Window->Style & WS_CHILD &&
-      !IntIsWindowVisible(Window->Parent->Self) &&
-      (Swp & (SWP_NOSIZE | SWP_NOMOVE)) == (SWP_NOSIZE | SWP_NOMOVE))
-    {
-      if (Cmd == SW_HIDE)
-	{
-	  VisibleRgn = VIS_ComputeVisibleRegion(PsGetWin32Thread()->Desktop, Window,
-	                                        FALSE, FALSE, FALSE);
-	  Window->Style &= ~WS_VISIBLE;
-	  VIS_WindowLayoutChanged(PsGetWin32Thread()->Desktop, Window, VisibleRgn);
-	  NtGdiDeleteObject(VisibleRgn);
-	}
-      else
-	{
-	  Window->Style |= WS_VISIBLE;
-	}
-    }
-  else
-    {
-      if (Window->Style & WS_CHILD &&
-	  !(Window->ExStyle & WS_EX_MDICHILD))
-	{
-	  Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-	}
-      if (!(Swp & MINMAX_NOSWP))
-	{
-	  WinPosSetWindowPos(Wnd, HWND_TOP, NewPos.left, NewPos.top,
-			     NewPos.right, NewPos.bottom, LOWORD(Swp));
-	  if (Cmd == SW_HIDE)
-	    {
-	      /* Hide the window. */
-	      if (Wnd == IntGetActiveWindow())
-		{
-		  WinPosActivateOtherWindow(Window);
-		}
-	      /* Revert focus to parent. */
-	      if (Wnd == IntGetFocusWindow() ||
-		  IntIsChildWindow(Wnd, IntGetFocusWindow()))
-		{
-		  IntSetFocusWindow(Window->Parent->Self);
-		}
-	    }
-	}
-      /* FIXME: Check for window destruction. */
-      /* Show title for minimized windows. */
-      if (Window->Style & WS_MINIMIZE)
-	{
-	  WinPosShowIconTitle(Window, TRUE);
-	}
-    }
-#endif
 
   if (Window->Flags & WINDOWOBJECT_NEED_SIZE)
     {
@@ -1254,10 +1210,12 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
     }
 
   /* Activate the window if activation is not requested and the window is not minimized */
+/*
   if (!(Swp & (SWP_NOACTIVATE | SWP_HIDEWINDOW)) && !(Window->Style & WS_MINIMIZE))
     {
       WinPosChangeActiveWindow(Wnd, FALSE);
     }
+*/
 
   ObmDereferenceObject(Window);
   return(WasVisible);
@@ -1364,121 +1322,5 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
 
   return(HitTest);
 }
-
-BOOL
-WinPosSetActiveWindow(PWINDOW_OBJECT Window, BOOL Mouse, BOOL ChangeFocus)
-{
-  PUSER_MESSAGE_QUEUE ActiveQueue;
-  HWND PrevActive;
-
-  ActiveQueue = IntGetFocusMessageQueue();
-  if (ActiveQueue != NULL)
-    {
-      PrevActive = ActiveQueue->ActiveWindow;
-    }
-  else
-    {
-      PrevActive = NULL;
-    }
-
-  if (Window->Self == IntGetActiveDesktop() || Window->Self == PrevActive)
-    {
-      return(FALSE);
-    }
-  if (PrevActive != NULL)
-    {
-      PWINDOW_OBJECT PrevActiveWindow = IntGetWindowObject(PrevActive);
-      if(PrevActiveWindow)
-      {
-        WORD Iconised = HIWORD(PrevActiveWindow->Style & WS_MINIMIZE);
-        if (!IntSendMessage(PrevActive, WM_NCACTIVATE, FALSE, 0, TRUE))
-	      {
-	        /* FIXME: Check if the new window is system modal. */
-	        return(FALSE);
-	      }
-        IntSendMessage(PrevActive, 
-		        WM_ACTIVATE, 
-		        MAKEWPARAM(WA_INACTIVE, Iconised), 
-		        (LPARAM)Window->Self,
-		        TRUE);
-        /* FIXME: Check if anything changed while processing the message. */
-        IntReleaseWindowObject(PrevActiveWindow);
-      }
-      else
-      {
-        if(ActiveQueue)
-          ActiveQueue->ActiveWindow = NULL;
-        PrevActive = NULL;
-      }
-    }
-
-  if (Window != NULL)
-    {
-      Window->MessageQueue->ActiveWindow = Window->Self;
-    }
-  else if (ActiveQueue != NULL)
-    {
-      ActiveQueue->ActiveWindow = NULL;
-    }
-  /* FIXME:  Unset this flag for inactive windows */
-  //if ((Window->Style) & WS_CHILD) Window->Flags |= WIN_NCACTIVATED;
-
-  /* FIXME: Send palette messages. */
-
-  /* FIXME: Redraw icon title of previously active window. */
-
-  /* FIXME: Bring the window to the top. */  
-
-  /* FIXME: Send WM_ACTIVATEAPP */
-  
-  IntSetFocusMessageQueue(Window->MessageQueue);
-
-  /* FIXME: Send activate messages. */
-
-  /* FIXME: Change focus. */
-
-  /* FIXME: Redraw new window icon title. */
-
-  return(TRUE);
-}
-
-HWND STDCALL
-NtUserGetActiveWindow(VOID)
-{
-  PUSER_MESSAGE_QUEUE ActiveQueue;
-
-  ActiveQueue = IntGetFocusMessageQueue();
-  if (ActiveQueue == NULL)
-    {
-      return(NULL);
-    }
-  return(ActiveQueue->ActiveWindow);
-}
-
-HWND STDCALL
-NtUserSetActiveWindow(HWND hWnd)
-{
-  PWINDOW_OBJECT Window;
-  PUSER_MESSAGE_QUEUE ThreadQueue;
-  HWND Prev;
-
-  Window = IntGetWindowObject(hWnd);
-  if (Window == NULL || (Window->Style & (WS_DISABLED | WS_CHILD)))
-    {
-      IntReleaseWindowObject(Window);
-      return(0);
-    }
-  ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-  if (Window->MessageQueue != ThreadQueue)
-    {
-      IntReleaseWindowObject(Window);
-      return(0);
-    }
-  Prev = Window->MessageQueue->ActiveWindow;
-  WinPosSetActiveWindow(Window, FALSE, FALSE);
-  IntReleaseWindowObject(Window);
-  return(Prev);
-}
-
 
 /* EOF */

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.148 2003/11/25 22:06:31 gvg Exp $
+/* $Id: window.c,v 1.149 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -48,6 +48,7 @@
 #include <include/vis.h>
 #include <include/menu.h>
 #include <include/hotkey.h>
+#include <include/focus.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -407,23 +408,6 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
 }
 
 
-
-HWND FASTCALL
-IntGetActiveWindow(VOID)
-{
-  PUSER_MESSAGE_QUEUE Queue;
-  Queue = (PUSER_MESSAGE_QUEUE)IntGetActiveDesktop()->ActiveMessageQueue;
-  if (Queue == NULL)
-    {
-      return(NULL);
-    }
-  else
-    {
-      return(Queue->ActiveWindow);
-    }
-}
-
-
 /*!
  * Internal function.
  * Returns client window rectangle relative to the upper-left corner of client area.
@@ -449,6 +433,7 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 }
 
 
+#if 0
 HWND FASTCALL
 IntGetFocusWindow(VOID)
 {
@@ -465,6 +450,7 @@ IntGetFocusWindow(VOID)
   else
       return(Queue->FocusWindow);
 }
+#endif
 
 PWINDOW_OBJECT FASTCALL
 IntGetParent(PWINDOW_OBJECT Wnd)
@@ -714,184 +700,6 @@ IntLinkWindow(
   }
 
 }
-
-/*****************************************************************
- *              set_focus_window
- *
- * Change the focus window, sending the WM_SETFOCUS and WM_KILLFOCUS messages
- */
-#if 0
-static HWND FASTCALL
-set_focus_window(HWND New, PWINDOW_OBJECT Window, HWND Previous)
-{
-  PDESKTOP_OBJECT Desktop;
-
-  ASSERT(NULL == Window || New == Window->Self);
-
-  Desktop = IntGetActiveDesktop();
-  ASSERT(NULL != Desktop);
-
-  if (Window != NULL)
-    {
-      Window->MessageQueue->FocusWindow = New;
-      (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue =
-        Window->MessageQueue;
-    }
-  else
-    {
-      (PUSER_MESSAGE_QUEUE) Desktop->ActiveMessageQueue = NULL;
-    }
-
-  if (Previous == New)
-    {
-      return Previous;
-    }
-
-  if (NULL != Previous)
-    {
-      NtUserSendMessage(Previous, WM_KILLFOCUS, (WPARAM) New, 0);
-
-      if ((NULL == Desktop->ActiveMessageQueue && NULL != New)
-          || (NULL != Desktop->ActiveMessageQueue
-              && ((PUSER_MESSAGE_QUEUE)(Desktop->ActiveMessageQueue))->FocusWindow != New))
-        {
-          /* changed by the message */
-          return Previous;
-        }
-    }
-
-  if (IntIsWindow(New))
-    {
-      NtUserSendMessage(New, WM_SETFOCUS, (WPARAM) Previous, 0);
-    }
-
-  return Previous;
-}
-#endif
-
-HWND FASTCALL
-IntSetFocusWindow(HWND hWnd)
-{
-#if 0
-  PUSER_MESSAGE_QUEUE OldMessageQueue;
-  PDESKTOP_OBJECT DesktopObject;
-  PWINDOW_OBJECT WindowObject;
-  HWND hWndOldFocus;
-  HWND hWndTop;
-
-  DPRINT("IntSetFocusWindow(hWnd 0x%x)\n", hWnd);
-
-  if (hWnd != (HWND)0)
-    {
-      WindowObject = IntGetWindowObject(hWnd);
-      if (!WindowObject || IntIsDesktopWindow(WindowObject))
-        {
-          DPRINT("Bad window handle 0x%x\n", hWnd);
-          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      	  return (HWND)0;
-        }
-    }
-  else
-    {
-      WindowObject = NULL;
-    }
-
-  DesktopObject = IntGetActiveDesktop();
-  if (! DesktopObject)
-    {
-      DPRINT("No active desktop\n");
-      if (WindowObject != NULL)
-        {
-          IntReleaseWindowObject(WindowObject);
-        }
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return (HWND)0;
-    }
-
-  hWndOldFocus = (HWND)0;
-  OldMessageQueue = (PUSER_MESSAGE_QUEUE)DesktopObject->ActiveMessageQueue;
-  if (OldMessageQueue != NULL)
-    {
-      hWndOldFocus = OldMessageQueue->FocusWindow;
-    }
-
-  if (hWndOldFocus == hWnd)
-    {
-      /* Nothing to do */
-      IntReleaseWindowObject(WindowObject);
-      return hWndOldFocus;
-    }
-
-  if (NULL != WindowObject)
-    {
-      hWndTop = hWnd;
-      for (;;)
-        {
-          LONG style = NtUserGetWindowLong(hWndTop, GWL_STYLE, FALSE);
-          if (style & (WS_MINIMIZE | WS_DISABLED))
-            {
-              IntReleaseWindowObject(WindowObject);
-              return NULL;
-            }
-          if (! (style & WS_CHILD))
-            {
-              break;
-            }
-          hWndTop = NtUserGetAncestor(hWndTop, GA_PARENT);
-        }
-
-#if 0 /* FIXME */
-      /* call hooks */
-      if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
-        {
-          IntReleaseWindowObject(WindowObject);
-          return NULL;
-        }
-#endif
-
-      /* activate hWndTop if needed. */
-      if (hWndTop != NtUserGetActiveWindow())
-        {
-#ifdef TODO
-          if (! set_active_window(hWndTop, NULL, FALSE, FALSE))
-            {
-              return NULL;
-            }
-#endif
-#if 0 /* FIXME */
-          if (! NtUserIsWindow(hWnd))
-            {
-              /* Abort if window destroyed */
-              return NULL;
-            }
-#endif
-        }
-    }
-#if 0 /* FIXME */
-  else
-    {
-      /* call hooks */
-      if (HOOK_CallHooks(WH_CBT, HCBT_SETFOCUS, (WPARAM)hwnd, (LPARAM)previous, TRUE))
-        {
-          IntReleaseWindowObject(WindowObject);
-          return NULL;
-        }
-    }
-#endif
-
-  hWndOldFocus = set_focus_window(hWnd, WindowObject, hWndOldFocus);
-  if (WindowObject != NULL)
-    {
-      IntReleaseWindowObject(WindowObject);
-    }
-
-  DPRINT("hWndOldFocus = 0x%x\n", hWndOldFocus);
-
-  return hWndOldFocus;
-#endif
-  return 0;
-}
-
 
 HWND FASTCALL
 IntSetOwner(HWND hWnd, HWND hWndNewOwner)
@@ -1230,21 +1038,6 @@ NtUserBuildHwndList(
     }
 
   return dwCount;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-NtUserCallHwndLock(
-  HWND hWnd,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-  /* DrawMenuBar() calls it with Unknown1==0x55 */
-  return 0;
 }
 
 
@@ -1638,7 +1431,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	SW_MAXIMIZE;
       WinPosMinMaximize(WindowObject, SwFlag, &NewPos);
       SwFlag = 
-	((WindowObject->Style & WS_CHILD) || IntGetActiveWindow()) ?
+	((WindowObject->Style & WS_CHILD) || NtUserGetActiveWindow()) ?
 	SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
 	SWP_NOZORDER | SWP_FRAMECHANGED;
       DPRINT("NtUserCreateWindow(): About to minimize/maximize\n");
@@ -1662,9 +1455,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
       DPRINT("NtUserCreateWindow(): About to show window\n");
       WinPosShowWindow(WindowObject->Self, dwShowMode);
     }
-  /* FIXME:  Should code be reworked to accomodate the following line? */
-	DPRINT("Setting Active Window to %d\n\n\n",WindowObject->Self);
-  NtUserSetActiveWindow(WindowObject->Self);
+  else if (NtUserGetActiveWindow() == NULL)
+    {
+      NtUserSetActiveWindow(WindowObject->Self);
+    }
+
   DPRINT("NtUserCreateWindow(): = %X\n", Handle);
   DPRINT("WindowObject->SystemMenu = 0x%x\n", WindowObject->SystemMenu);
   return((HWND)Handle);
@@ -1698,7 +1493,6 @@ NtUserDestroyWindow(HWND Wnd)
 {
   PWINDOW_OBJECT Window;
   BOOLEAN isChild;
-  HWND hWndFocus;
 
   Window = IntGetWindowObject(Wnd);
   if (Window == NULL)
@@ -1717,16 +1511,7 @@ NtUserDestroyWindow(HWND Wnd)
   /* Look whether the focus is within the tree of windows we will
    * be destroying.
    */
-  hWndFocus = IntGetFocusWindow();
-  if (hWndFocus == Wnd || IntIsChildWindow(Wnd, hWndFocus))
-    {
-      HWND Parent = NtUserGetAncestor(Wnd, GA_PARENT);
-      if (Parent == IntGetDesktopWindow())
-      	{
-      	  Parent = NULL;
-      	}
-      IntSetFocusWindow(Parent);
-    }
+  WinPosActivateOtherWindow(Window);
 
   /* Call hooks */
 #if 0 /* FIXME */
@@ -2069,26 +1854,6 @@ NtUserGetAncestor(HWND hWnd, UINT Type)
 }
 
 
-/*
- * @implemented
- */
-HWND
-STDCALL
-NtUserGetCapture(VOID)
-{
-  PWINDOW_OBJECT Window;
-  Window = IntGetCaptureWindow();
-  if (Window != NULL)
-    {
-      return(Window->Self);
-    }
-  else
-    {
-      return(NULL);
-    }
-}
-
-
 /*!
  * Returns client window rectangle relative to the upper-left corner of client area.
  *
@@ -2132,18 +1897,6 @@ HWND STDCALL
 NtUserGetDesktopWindow()
 {
    return IntGetDesktopWindow();
-}
-
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-NtUserGetForegroundWindow(VOID)
-{
-  UNIMPLEMENTED
-
-  return 0;
 }
 
 
@@ -3097,43 +2850,6 @@ NtUserScrollWindowEx(DWORD Unknown0,
   UNIMPLEMENTED
 
   return 0;
-}
-
-
-/*
- * @implemented
- */
-HWND STDCALL
-NtUserSetCapture(HWND Wnd)
-{
-  PWINDOW_OBJECT Window;
-  PWINDOW_OBJECT Prev;
-
-  Prev = IntGetCaptureWindow();
-
-  if (Prev != NULL)
-    {
-      IntSendMessage(Prev->Self, WM_CAPTURECHANGED, 0L, (LPARAM)Wnd, FALSE);
-    }
-
-  if (Wnd == NULL)
-    {
-      IntSetCaptureWindow(NULL);
-    }
-  else  
-    {
-      Window = IntGetWindowObject(Wnd);
-      IntSetCaptureWindow(Window);
-      IntReleaseWindowObject(Window);
-    }
-  if (Prev != NULL)
-    {
-      return(Prev->Self);
-    }
-  else
-    {
-      return(NULL);
-    }
 }
 
 

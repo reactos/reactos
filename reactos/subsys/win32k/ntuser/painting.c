@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.39 2003/11/25 23:46:23 gvg Exp $
+ *  $Id: painting.c,v 1.40 2003/11/30 20:03:47 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -694,7 +694,12 @@ IntGetPaintMessage(PWINDOW_OBJECT Wnd, PW32THREAD Thread, MSG *Message,
 
    if (Message->hwnd == NULL)
    {
+#if 0
       DPRINT1("PAINTING BUG: Thread marked as containing dirty windows, but no dirty windows found!\n");
+      /* FIXME: Lock the queue! */
+      MessageQueue->PaintPosted = 0;
+      MessageQueue->PaintCount = 0;
+#endif
       return FALSE;
    }
 

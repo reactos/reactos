@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.22 2003/11/24 16:15:00 gvg Exp $
+/* $Id: input.c,v 1.23 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -172,15 +172,20 @@ KeyboardThreadMain(PVOID StartContext)
 	    msg.message = WM_KEYUP;
 
 	  /* Find the target thread whose locale is in effect */
-	  FocusQueue = IntGetFocusMessageQueue();
-	  if (!FocusQueue) {
-	    FocusQueue = W32kGetPrimitiveMessageQueue();
-	  }
+	  if (!IntGetScreenDC())
+	    {
+	      FocusQueue = W32kGetPrimitiveMessageQueue();
+	    }
+	  else
+	    {
+      	      FocusQueue = IntGetFocusMessageQueue();
+	    }
+
+	  if (!FocusQueue) continue;
 
 	  msg.wParam = KeyEvent.wVirtualKeyCode;
 	  msg.lParam = lParam;
-
-	  if (!FocusQueue) continue;
+	  msg.hwnd = FocusQueue->FocusWindow;
 
 	  FocusThread = FocusQueue->Thread;
 

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.39 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: stubs.c,v 1.40 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -563,16 +563,6 @@ STDCALL
 NtUserGetPriorityClipboardFormat(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserGetThreadState(
-  DWORD Unknown0)
 {
   UNIMPLEMENTED
 

@@ -330,7 +330,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    }
 
    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-   Active = (GetActiveWindow() == hWnd);
+   Active = (GetForegroundWindow() == hWnd);
    GetWindowRect(hWnd, &WindowRect);
    GetClientRect(hWnd, &ClientRect);
 

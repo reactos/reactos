@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.18 2003/11/25 22:28:00 gvg Exp $
+/* $Id: keyboard.c,v 1.19 2003/11/30 20:03:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -668,12 +668,6 @@ NtUserTranslateMessage(LPMSG lpMsg,
 
   KeReleaseSpinLock(&QueueStateLock, OldIrql);
   return Result;
-}
-
-HWND STDCALL
-NtUserSetFocus(HWND hWnd)
-{
-  return IntSetFocusWindow(hWnd);
 }
 
 DWORD
