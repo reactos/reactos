@@ -1887,10 +1887,10 @@ NtNotifyChangeKey(
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
+	IN BOOLEAN WatchSubtree,
+	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
+	IN BOOLEAN Asynchronous
 	);
 
 NTSTATUS
@@ -1902,10 +1902,10 @@ ZwNotifyChangeKey(
 	IN PVOID ApcContext OPTIONAL, 
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG CompletionFilter,
-	IN BOOLEAN Asynchroneous, 
-	OUT PVOID ChangeBuffer,
+	IN BOOLEAN WatchSubtree,
+	OUT PVOID Buffer,
 	IN ULONG Length,
-	IN BOOLEAN WatchSubtree
+	IN BOOLEAN Asynchronous
 	);
 
 /*
