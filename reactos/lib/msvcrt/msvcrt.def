@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.37 2004/12/18 22:15:07 gvg Exp $
+; $Id: msvcrt.def,v 1.38 2004/12/20 17:32:04 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -119,9 +119,9 @@ __initenv DATA
 __isascii
 __iscsym
 __iscsymf
-;__lc_codepage
+__lc_codepage
 __lc_collate_cp
-;__lc_handle
+__lc_handle
 ;__lconv_init
 __mb_cur_max DATA
 __p___argc
@@ -156,14 +156,14 @@ __p__winver
 __pioinfo
 ;__pxcptinfoptrs
 __set_app_type
-;__setlc_active
+__setlc_active DATA
 __setusermatherr
 __threadhandle
 __threadid
 __toascii
 __unDName
 ;__unDNameEx
-;__unguarded_readlc_active
+__unguarded_readlc_active DATA
 __wargv
 __wgetmainargs
 __winitenv
