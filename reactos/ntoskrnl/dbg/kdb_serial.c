@@ -20,11 +20,14 @@ extern KD_PORT_INFORMATION LogPortInfo;
 
 
 CHAR
-KdbpTryGetCharSerial()
+KdbpTryGetCharSerial(UINT Retry)
 {
-  UCHAR Result;
+  CHAR Result = -1;
 
-  while( !KdPortGetByteEx (&LogPortInfo, &Result) );
+  if (Retry == 0)
+     while (!KdPortGetByteEx(&LogPortInfo, (PUCHAR)&Result));
+  else
+     while (!KdPortGetByteEx(&LogPortInfo, (PUCHAR)&Result) && Retry-- > 0);
 
   return Result;
 }

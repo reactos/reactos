@@ -216,8 +216,8 @@ bootcd_install_before:
 	$(CP) media/nls/l_intl.nls $(BOOTCD_DIR)/reactos/l_intl.nls
 	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/services to $(BOOTCD_DIR)/reactos/services
 	$(CP) media/drivers/etc/services $(BOOTCD_DIR)/reactos/services
-	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/KDB.init to $(BOOTCD_DIR)/reactos/KDB.init
-	$(CP) media/drivers/etc/KDB.init $(BOOTCD_DIR)/reactos/KDB.init
+	$(HALFVERBOSEECHO) [COPY]    media/drivers/etc/KDBinit to $(BOOTCD_DIR)/reactos/KDBinit
+	$(CP) media/drivers/etc/KDBinit $(BOOTCD_DIR)/reactos/KDBinit
 
 bootcd_basic: bootcd_directory_layout bootcd_bootstrap_files bootcd_install_before
 
@@ -1045,8 +1045,8 @@ install_before:
 	$(CP) media/nls/l_intl.nls $(INSTALL_DIR)/system32/casemap.nls
 	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/services to $(INSTALL_DIR)/system32/drivers/etc/services
 	$(CP) media/drivers/etc/services $(INSTALL_DIR)/system32/drivers/etc/services
-	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/KDB.init to $(INSTALL_DIR)/system32/drivers/etc/KDB.init
-	$(CP) media/drivers/etc/KDB.init $(INSTALL_DIR)/system32/drivers/etc/KDB.init
+	$(HALFVERBOSEECHO) [INSTALL] media/drivers/etc/KDBinit to $(INSTALL_DIR)/system32/drivers/etc/KDBinit
+	$(CP) media/drivers/etc/KDBinit $(INSTALL_DIR)/system32/drivers/etc/KDBinit
 
 .PHONY: install_clean install_dirs install_before
 
