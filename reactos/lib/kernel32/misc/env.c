@@ -276,14 +276,14 @@ GetVersionExW(
                flag set so we don't screw applications that might depend on a
                certain string */
 
-    ln = wcslen(lpVersionInformation->szCSDVersion);
+    ln = wcslen(lpVersionInformation->szCSDVersion) + 1;
     maxlen = (sizeof(lpVersionInformation->szCSDVersion) / sizeof(lpVersionInformation->szCSDVersion[0]) - 1);
     if(maxlen > ln)
     {
       PWCHAR szVer = lpVersionInformation->szCSDVersion + ln;
       RtlZeroMemory(szVer, (maxlen - ln + 1) * sizeof(WCHAR));
       wcsncpy(szVer,
-              L" ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
+              L"ReactOS " KERNEL_VERSION_STR L" (Build " KERNEL_VERSION_BUILD_STR L")",
               maxlen - ln);
     }
     
