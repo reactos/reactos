@@ -18,7 +18,9 @@ GetSecurityDescriptorLength (
 	PSECURITY_DESCRIPTOR	pSecurityDescriptor
 	)
 {
+#if 0
         return RtlLengthSecurityDescriptor(pSecurityDescriptor);
+   #endif
 }
 
 

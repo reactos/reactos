@@ -1,4 +1,11 @@
 
+PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
+					PTOKEN_TYPE TokenType,
+					PUCHAR b,
+					PSECURITY_IMPERSONATION_LEVEL Level);
+
+NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
+			      PACCESS_TOKEN* Token);
 
 HANDLE PsGetCurrentProcessId(VOID);
 HANDLE PsGetCurrentThreadId(VOID);
@@ -41,3 +48,11 @@ PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
 					    SECURITY_IMPERSONATION_LEVEL* 
 					    Level);
 PACCESS_TOKEN PsReferencePrimaryToken(PEPROCESS Process);
+NTSTATUS PsAssignImpersonationToken(PETHREAD Thread,
+				    HANDLE TokenHandle);
+
+VOID PsImpersonateClient(PETHREAD Thread,
+			 PACCESS_TOKEN Token,
+			 UCHAR b,
+			 UCHAR c,
+			 SECURITY_IMPERSONATION_LEVEL Level);

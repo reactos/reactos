@@ -1,4 +1,4 @@
-/* $Id: acl.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+/* $Id: acl.c,v 1.3 2000/01/05 21:57:00 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -94,7 +94,7 @@ NTSTATUS RtlpAddKnownAce(PACL Acl,
    Ace->Header.AceType = Type;
    Ace->Header.AceSize = RtlLengthSid(Sid) + sizeof(ACE);
    Ace->Header.AccessMask = AccessMask;
-   RtlCopySid(RtlLengthSid(Sid), Sid, (PSID)Ace + 1);
+   RtlCopySid(RtlLengthSid(Sid), (PSID)Ace + 1, Sid);
    Acl->AceCount++;
    Acl->AclRevision = Revision;
    return(STATUS_SUCCESS);

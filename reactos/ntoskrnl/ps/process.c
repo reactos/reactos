@@ -36,6 +36,28 @@ static ULONG PiNextProcessUniqueId = 0;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS STDCALL NtOpenProcessToken(IN	HANDLE		ProcessHandle,
+				    IN	ACCESS_MASK	DesiredAccess,  
+				    OUT	PHANDLE		TokenHandle)
+{
+   PACCESS_TOKEN Token;
+   NTSTATUS Status;
+   
+   Status = PsOpenTokenOfProcess(ProcessHandle,
+				 &Token);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   Status = ObCreateHandle(PsGetCurrentProcess(),
+			   Token,
+			   DesiredAccess,
+			   FALSE,
+			   ProcessHandle);
+   ObDereferenceObject(Token);
+   return(Status);
+}
+
 PACCESS_TOKEN PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,

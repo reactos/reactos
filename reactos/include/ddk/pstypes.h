@@ -271,30 +271,31 @@ typedef struct _TOP_LEVEL_IRP
 
 typedef struct
 {
-   PACCESS_TOKEN Token;
-   UCHAR Unknown1;
-   UCHAR Unknown2;
-   UCHAR Pad[2];
-   SECURITY_IMPERSONATION_LEVEL Level;
-} IMPERSONATION_INFO, *PIMPERSONATION_INFO;
+   PACCESS_TOKEN Token;                              // 0x0
+   UCHAR Unknown1;                                   // 0x4
+   UCHAR Unknown2;                                   // 0x5
+   UCHAR Pad[2];                                     // 0x6
+   SECURITY_IMPERSONATION_LEVEL Level;               // 0x8
+} PS_IMPERSONATION_INFO, *PPS_IMPERSONATION_INFO;
 
-typedef struct _ETHREAD {
-	KTHREAD			Tcb;
-	TIME			CreateTime;
-	TIME			ExitTime;
-	NTSTATUS		ExitStatus;
-	LIST_ENTRY		PostBlockList;
-	LIST_ENTRY		TerminationPortList;  
-	ULONG			ActiveTimerListLock;
-	PVOID			ActiveTimerListHead;
-	CLIENT_ID		Cid;
-	PLARGE_INTEGER		LpcReplySemaphore;
-	PVOID			LpcReplyMessage;
-	PLARGE_INTEGER		LpcReplyMessageId;
-	PIMPERSONATION_INFO     ImpersonationInfo;
-	LIST_ENTRY		IrpList; //
-	TOP_LEVEL_IRP		TopLevelIrp;
-	ULONG			ReadClusterSize;
+typedef struct _ETHREAD 
+{
+   KTHREAD			Tcb;
+   TIME			CreateTime;
+   TIME			ExitTime;
+   NTSTATUS		ExitStatus;
+   LIST_ENTRY		PostBlockList;
+   LIST_ENTRY		TerminationPortList;  
+   ULONG			ActiveTimerListLock;
+   PVOID			ActiveTimerListHead;
+   CLIENT_ID		Cid;
+   PLARGE_INTEGER		LpcReplySemaphore;
+   PVOID			LpcReplyMessage;
+   PLARGE_INTEGER		LpcReplyMessageId;
+   PPS_IMPERSONATION_INFO     ImpersonationInfo;
+   LIST_ENTRY		IrpList; //
+   TOP_LEVEL_IRP		TopLevelIrp;
+   ULONG			ReadClusterSize;
 	UCHAR			ForwardClusterOnly;
 	UCHAR			DisablePageFaultClustering;
 	UCHAR			DeadThread;

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_SEFUNCS_H
 #define _INCLUDE_DDK_SEFUNCS_H
-/* $Id: sefuncs.h,v 1.3 1999/12/26 17:22:18 ea Exp $ */
+/* $Id: sefuncs.h,v 1.4 2000/01/05 21:56:58 dwelch Exp $ */
 NTSTATUS STDCALL RtlCreateSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor, ULONG Revision);
 BOOLEAN STDCALL RtlValidSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
 ULONG STDCALL RtlLengthSecurityDescriptor (PSECURITY_DESCRIPTOR SecurityDescriptor);
@@ -16,7 +16,7 @@ PULONG STDCALL RtlSubAuthoritySid (PSID Sid, ULONG SubAuthority);
 BOOLEAN STDCALL RtlEqualSid(PSID Sid1, PSID Sid2);
 NTSTATUS STDCALL RtlAbsoluteToSelfRelativeSD (PSECURITY_DESCRIPTOR AbsSD, PSECURITY_DESCRIPTOR RelSD, PULONG BufferLength);
 BOOLEAN STDCALL SeAccessCheck (IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-		      IN PSECURITY_DESCRIPTOR_CONTEXT SubjectSecurityContext,
+		      IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext,
 		      IN BOOLEAN SubjectContextLocked,
 		      IN ACCESS_MASK DesiredAccess,
 		      IN ACCESS_MASK PreviouslyGrantedAccess,
@@ -35,4 +35,14 @@ NTSTATUS STDCALL SeDeassignSecurity (PSECURITY_DESCRIPTOR* SecurityDescriptor);
 BOOLEAN STDCALL SeSinglePrivilegeCheck (LUID PrivilegeValue, KPROCESSOR_MODE PreviousMode);
 ULONG STDCALL RtlLengthSid (PSID Sid);
 NTSTATUS STDCALL RtlCopySid(ULONG BufferLength, PSID Src, PSID Dest);
+
+VOID SeImpersonateClient(PSE_SOME_STRUCT2 a,
+			 PETHREAD Thread);
+
+NTSTATUS SeCreateClientSecurity(PETHREAD Thread,
+				PSECURITY_QUALITY_OF_SERVICE Qos,
+				ULONG e,
+				PSE_SOME_STRUCT2 f);
+
+
 #endif /* ndef _INCLUDE_DDK_SEFUNCS_H */

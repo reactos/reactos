@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.2 1999/12/26 17:22:19 ea Exp $
+/* $Id: sid.c,v 1.3 2000/01/05 21:57:00 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -79,8 +79,7 @@ ULONG STDCALL RtlLengthSid (PSID Sid)
    return(sizeof(SID) + (Sid->SubAuthorityCount-1)*4);
 }
 
-
-NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Src, PSID Dest)
+NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src)
 {
    if (BufferLength < RtlLengthSid(Src))
      {

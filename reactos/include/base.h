@@ -88,17 +88,6 @@ typedef CHAR *PCH;
 typedef void *HANDLE;
 typedef char CCHAR;
 
-typedef enum _SECURITY_IMPERSONATION_LEVEL {
-    SecurityAnonymous, 
-    SecurityIdentification, 
-    SecurityImpersonation, 
-    SecurityDelegation 
-} SECURITY_IMPERSONATION_LEVEL; 
-
-typedef enum tagTOKEN_TYPE {
-    TokenPrimary = 1, 
-    TokenImpersonation 
-} TOKEN_TYPE; 
 
 #define FALSE 0
 #define TRUE 1
@@ -403,21 +392,6 @@ typedef enum _SID_NAME_USE {
     SidTypeUnknown 
 } SID_NAME_USE, *PSID_NAME_USE; 
  
-#define TOKEN_INFORMATION_CLASS_DEFINED 1
-
-typedef enum _TOKEN_INFORMATION_CLASS {
-    TokenUser = 1, 
-    TokenGroups, 
-    TokenPrivileges, 
-    TokenOwner, 
-    TokenPrimaryGroup, 
-    TokenDefaultDacl, 
-    TokenSource, 
-    TokenType, 
-    TokenImpersonationLevel, 
-    TokenStatistics 
-} TOKEN_INFORMATION_CLASS; 
-  
 #endif /* ! defined (RC_INVOKED) */
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.6 1999/12/26 15:50:51 dwelch Exp $
+/* $Id: create.c,v 1.7 2000/01/05 21:57:00 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -42,6 +42,193 @@ extern ULONG PiNrThreads;
 extern LIST_ENTRY PiThreadListHead;
 
 /* FUNCTIONS ***************************************************************/
+
+NTSTATUS PsAssignImpersonationToken(PETHREAD Thread,
+				    HANDLE TokenHandle)
+{
+   PACCESS_TOKEN Token;
+   SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;
+   NTSTATUS Status;
+   
+   if (TokenHandle != NULL)
+     {
+	Status = ObReferenceObjectByHandle(TokenHandle,
+					   0,
+					   SeTokenType,
+					   UserMode,
+					   (PVOID*)&Token,
+					   NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+	ImpersonationLevel = Token->ImpersonationLevel;
+     }
+   else
+     {
+	Token = NULL;
+	ImpersonationLevel = 0;
+     }
+   
+   PsImpersonateClient(Thread,
+		       Token,
+		       0,
+		       0,
+		       ImpersonationLevel);
+   if (Token != NULL)
+     {
+	ObDereferenceObject(Token);
+     }
+   return(STATUS_SUCCESS);
+}
+
+VOID PsRevertToSelf(PETHREAD Thread)
+{
+   if (Thread->ActiveImpersonationInfo != 0)
+     {
+	Thread->ActiveImpersonationInfo = 0;
+	ObDereferenceObject(Thread->ImpersonationInfo->Token);
+     }
+}
+
+VOID PsImpersonateClient(PETHREAD Thread,
+			 PACCESS_TOKEN Token,
+			 UCHAR b,
+			 UCHAR c,
+			 SECURITY_IMPERSONATION_LEVEL Level)
+{
+   if (Token == 0)
+     {
+	if (Thread->ActiveImpersonationInfo != 0)
+	  {
+	     Thread->ActiveImpersonationInfo = 0;
+	     if (Thread->ImpersonationInfo->Token != NULL)
+	       {
+		  ObDereferenceObject(Thread->ImpersonationInfo->Token);
+	       }
+	  }
+	return;
+     }
+   if (Thread->ActiveImpersonationInfo == 0 ||
+       Thread->ImpersonationInfo == NULL)
+     {
+	Thread->ImpersonationInfo = ExAllocatePool(NonPagedPool,
+      					   sizeof(PS_IMPERSONATION_INFO));	
+     }
+   Thread->ImpersonationInfo->Level = Level;
+   Thread->ImpersonationInfo->Unknown2 = c;
+   Thread->ImpersonationInfo->Unknown1 = b;
+   Thread->ImpersonationInfo->Token = Token;
+   ObReferenceObjectByPointer(Token,
+			      0,
+			      SeTokenType,
+			      KernelMode);
+   Thread->ActiveImpersonationInfo = 1;
+}
+
+PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
+					PTOKEN_TYPE TokenType,
+					PUCHAR b,
+					PSECURITY_IMPERSONATION_LEVEL Level)
+{
+   PEPROCESS Process;
+   PACCESS_TOKEN Token;
+   
+   if (Thread->ActiveImpersonationInfo == 0)
+     {
+	Process = Thread->ThreadsProcess;
+	*TokenType = TokenPrimary;
+	*b = 0;
+	Token = Process->Token;
+     }
+   else
+     {
+	Token = Thread->ImpersonationInfo->Token;
+	*TokenType = TokenImpersonation;
+	*b = Thread->ImpersonationInfo->Unknown2;
+	*Level = Thread->ImpersonationInfo->Level;	
+     }
+   return(Token);
+}
+
+NTSTATUS STDCALL NtImpersonateThread (IN HANDLE ThreadHandle,
+				      IN HANDLE ThreadToImpersonateHandle,
+				      IN PSECURITY_QUALITY_OF_SERVICE	
+				      SecurityQualityOfService)
+{
+   PETHREAD Thread;
+   PETHREAD ThreadToImpersonate;
+   NTSTATUS Status;
+   SE_SOME_STRUCT2 b;
+   
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      0,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   Status = ObReferenceObjectByHandle(ThreadToImpersonateHandle,
+				      0,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&ThreadToImpersonate,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(Thread);
+	return(Status);
+     }
+   
+   Status = SeCreateClientSecurity(ThreadToImpersonate,
+				   SecurityQualityOfService,
+				   0,
+				   &b);
+   if (!NT_SUCCESS(Status))
+     {
+	ObDereferenceObject(Thread);
+	ObDereferenceObject(ThreadToImpersonate);
+	return(Status);
+     }
+   
+   SeImpersonateClient(&b, Thread);
+   if (b.Token != NULL)
+     {
+	ObDereferenceObject(b.Token);
+     }
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL NtOpenThreadToken(IN	HANDLE		ThreadHandle,  
+				   IN	ACCESS_MASK	DesiredAccess,  
+				   IN	BOOLEAN		OpenAsSelf,     
+				   OUT	PHANDLE		TokenHandle)
+{
+#if 0
+   PETHREAD Thread;
+   NTSTATUS Status;
+   PACCESS_TOKEN Token;
+   
+   Status = ObReferenceObjectByHandle(ThreadHandle,
+				      0,
+				      PsThreadType,
+				      UserMode,
+				      (PVOID*)&Thread,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   Token = PsReferencePrimaryToken(Thread->ThreadsProcess);
+   SepCreateImpersonationTokenDacl(Token);
+#endif
+   return(STATUS_UNSUCCESSFUL);
+}
 
 PACCESS_TOKEN PsReferenceImpersonationToken(PETHREAD Thread,
 					    PULONG Unknown1,

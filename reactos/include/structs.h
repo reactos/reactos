@@ -53,7 +53,7 @@ typedef union _ULARGE_INTEGER
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
 
-#include <ddk/setypes.h>
+#include <security.h>
 
 typedef struct _LIST_ENTRY { 
   struct _LIST_ENTRY *Flink; 
@@ -3880,15 +3880,6 @@ typedef struct _SHNAMEMAPPING {
   int   cchNewPath; 
 } SHNAMEMAPPING,   *LPSHNAMEMAPPING; 
  
-typedef struct _SID_AND_ATTRIBUTES { 
-  PSID  Sid; 
-  DWORD Attributes; 
-} SID_AND_ATTRIBUTES ; 
- 
-typedef SID_AND_ATTRIBUTES SID_AND_ATTRIBUTES_ARRAY[ANYSIZE_ARRAY];
-typedef SID_AND_ATTRIBUTES_ARRAY *PSID_AND_ATTRIBUTES_ARRAY;
-
- 
 typedef struct tagSOUNDSENTRY {  
   UINT cbSize; 
   DWORD dwFlags; 
@@ -4155,46 +4146,7 @@ typedef struct _TOKEN_CONTROL {
   LUID ModifiedId; 
   TOKEN_SOURCE TokenSource; 
 } TOKEN_CONTROL, *PTOKEN_CONTROL ; 
- 
-typedef struct _TOKEN_DEFAULT_DACL {  
-  PACL DefaultDacl; 
-} TOKEN_DEFAULT_DACL, *PTOKEN_DEFAULT_DACL;
- 
-typedef struct _TOKEN_GROUPS { 
-  DWORD GroupCount; 
-  SID_AND_ATTRIBUTES Groups[ANYSIZE_ARRAY]; 
-} TOKEN_GROUPS, *PTOKEN_GROUPS, *LPTOKEN_GROUPS; 
- 
-typedef struct _TOKEN_OWNER { 
-  PSID Owner; 
-} TOKEN_OWNER, *PTOKEN_OWNER; 
- 
-typedef struct _TOKEN_PRIMARY_GROUP { 
-  PSID PrimaryGroup; 
-} TOKEN_PRIMARY_GROUP, *PTOKEN_PRIMARY_GROUP; 
- 
-typedef struct _TOKEN_PRIVILEGES { 
-  DWORD PrivilegeCount; 
-  LUID_AND_ATTRIBUTES Privileges[ANYSIZE_ARRAY]; 
-} TOKEN_PRIVILEGES, *PTOKEN_PRIVILEGES, *LPTOKEN_PRIVILEGES; 
- 
-typedef struct _TOKEN_STATISTICS { 
-  LUID  TokenId; 
-  LUID  AuthenticationId; 
-  LARGE_INTEGER ExpirationTime; 
-  TOKEN_TYPE    TokenType; 
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
-  DWORD DynamicCharged; 
-  DWORD DynamicAvailable; 
-  DWORD GroupCount; 
-  DWORD PrivilegeCount; 
-  LUID  ModifiedId; 
-} TOKEN_STATISTICS, *PTOKEN_STATISTICS; 
- 
-typedef struct _TOKEN_USER { 
-  SID_AND_ATTRIBUTES User; 
-} TOKEN_USER, *PTOKEN_USER; 
- 
+     
 typedef struct {  
   UINT      cbSize;    
   UINT      uFlags;    

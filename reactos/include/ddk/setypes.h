@@ -1,4 +1,4 @@
-/* $Id: setypes.h,v 1.3 1999/12/26 17:22:18 ea Exp $
+/* $Id: setypes.h,v 1.4 2000/01/05 21:56:58 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory for details
  * PROJECT:           ReactOS kernel
@@ -11,6 +11,8 @@
 
 #ifndef __INCLUDE_DDK_SETYPES_H
 #define __INCLUDE_DDK_SETYPES_H
+
+#include <security.h>
 
 /* SID */
 #define SECURITY_NULL_RID	(0L)
@@ -82,93 +84,24 @@
 #define SE_PRIVILEGE_USED_FOR_ACCESS	(0x80000000L)
 #define PRIVILEGE_SET_ALL_NECESSARY	(0x1)
 
-typedef ULONG ACCESS_MASK;
-typedef ULONG ACCESS_MODE, *PACCESS_MODE;
-
-typedef struct _SECURITY_QUALITY_OF_SERVICE { 
-  DWORD Length; 
-  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel; 
-  /* SECURITY_CONTEXT_TRACKING_MODE ContextTrackingMode; */
-  WINBOOL ContextTrackingMode; 
-  BOOLEAN EffectiveOnly; 
-} SECURITY_QUALITY_OF_SERVICE; 
-
-typedef SECURITY_QUALITY_OF_SERVICE* PSECURITY_QUALITY_OF_SERVICE;
-
-typedef struct _ACE_HEADER
-{
-   CHAR AceType;
-   CHAR AceFlags;
-   USHORT AceSize;
-   ACCESS_MASK AccessMask;
-} ACE_HEADER, *PACE_HEADER;
-
-typedef struct
-{
-   ACE_HEADER Header;
-} ACE, *PACE;
-
-typedef struct _SID_IDENTIFIER_AUTHORITY
-{
-   BYTE Value[6];
-} SID_IDENTIFIER_AUTHORITY, *PSID_IDENTIFIER_AUTHORITY;
-
-#define SECURITY_WORLD_SID_AUTHORITY      {0,0,0,0,0,1}
-
-typedef struct _SID 
-{
-   UCHAR  Revision;
-   UCHAR  SubAuthorityCount;
-   SID_IDENTIFIER_AUTHORITY IdentifierAuthority;
-   ULONG SubAuthority[1];
-} SID, *PSID;
-
-typedef struct _ACL {
-  UCHAR AclRevision; 
-  UCHAR Sbz1; 
-  USHORT AclSize; 
-  USHORT AceCount; 
-  USHORT Sbz2; 
-} ACL, *PACL; 
-
-typedef USHORT SECURITY_DESCRIPTOR_CONTROL, *PSECURITY_DESCRIPTOR_CONTROL;
-
-typedef struct _SECURITY_DESCRIPTOR_CONTEXT
-{
-} SECURITY_DESCRIPTOR_CONTEXT, *PSECURITY_DESCRIPTOR_CONTEXT;
-
-typedef LARGE_INTEGER LUID, *PLUID;
-
-typedef struct _LUID_AND_ATTRIBUTES 
-{   
-   LUID  Luid; 
-   DWORD Attributes; 
-} LUID_AND_ATTRIBUTES, *PLUID_AND_ATTRIBUTES;
-
-typedef struct _TOKEN_SOURCE 
-{
-   CHAR SourceName[8]; 
-   LARGE_INTEGER Unknown;
-   LUID SourceIdentifier; 
-} TOKEN_SOURCE, *PTOKEN_SOURCE; 
-
-
 typedef struct _ACCESS_TOKEN 
 {
    TOKEN_SOURCE			TokenSource;               // 0x00
+   LUID                         TokenId;                   // 0x10
    LUID				AuthenticationId;          // 0x18
-   LARGE_INTEGER			ExpirationTime;            // 0x20
+   LARGE_INTEGER		ExpirationTime;            // 0x20
    LUID				ModifiedId;                // 0x28
-   ULONG				UserAndGroupCount;         // 0x30
-   ULONG				PrivilegeCount;            // 0x34
-   ULONG				VariableLength;            // 0x38
-   ULONG				DynamicCharged;            // 0x3C
-   ULONG				DynamicAvailable;          // 0x40
-   ULONG				DefaultOwnerIndex;         // 0x44
-   ULONG                        Unknown[2];                        // 0x48
-   PLUID_AND_ATTRIBUTES         Privileges;                        // 0x50
-   ULONG                        Unknown1;                          // 0x54
-   PACL				DefaultDacl;                       // 0x58
+   ULONG			UserAndGroupCount;         // 0x30
+   ULONG			PrivilegeCount;            // 0x34
+   ULONG			VariableLength;            // 0x38
+   ULONG			DynamicCharged;            // 0x3C
+   ULONG			DynamicAvailable;          // 0x40
+   ULONG                        DefaultOwnerIndex;         // 0x44
+   PSID_AND_ATTRIBUTES          UserAndGroups;             // 0x48
+   PSID                         PrimaryGroup;              // 0x4C
+   PLUID_AND_ATTRIBUTES         Privileges;                // 0x50
+   ULONG                        Unknown1;                  // 0x54
+   PACL				DefaultDacl;               // 0x58
    TOKEN_TYPE			TokenType;                         // 0x5C
    SECURITY_IMPERSONATION_LEVEL 	ImpersonationLevel;        // 0x60
    UCHAR				TokenFlags;                // 0x64
@@ -188,23 +121,28 @@ typedef struct _SECURITY_SUBJECT_CONTEXT
    PVOID ProcessAuditId;                                   // 0xC
 } SECURITY_SUBJECT_CONTEXT, *PSECURITY_SUBJECT_CONTEXT;
 
-
-typedef struct _SECURITY_DESCRIPTOR {
-  UCHAR  Revision;
-  UCHAR  Sbz1;
-  SECURITY_DESCRIPTOR_CONTROL Control;
-  PSID Owner;
-  PSID Group;
-  PACL Sacl;
-  PACL Dacl;
-} SECURITY_DESCRIPTOR, *PSECURITY_DESCRIPTOR;
-
 BOOLEAN STDCALL RtlValidSid (PSID Sid);
-
 /*
  * from ntoskrnl/se/token.c:
  */
 extern struct _OBJECT_TYPE* SeTokenType;
+
+typedef struct
+{
+   ULONG Unknown1;                                 // 0x0
+   SECURITY_IMPERSONATION_LEVEL Level;             // 0x4
+   UCHAR ContextTrackingMode;                      // 0x8
+   UCHAR EffectiveOnly;                            // 0x9
+   UCHAR Unknown5;                                 // 0xa
+   UCHAR Unknown6;                                 // 0xb
+   PACCESS_TOKEN Token;                            // 0xc
+   UCHAR Unknown8;                                 // 0x10
+   UCHAR Unknown9;                                 // 0x11
+   UCHAR Unknown10;                                // 0x12
+   UCHAR Pad[1];                                   // 0x13
+   ULONG Unknown11;                                // 0x14
+} SE_SOME_STRUCT2, *PSE_SOME_STRUCT2;
+
 
 
 #endif
