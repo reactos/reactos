@@ -256,6 +256,7 @@ DWORD		MCI_SendCommandFrom16(UINT wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwP
 UINT		MCI_SetCommandTable(void *table, UINT uDevType);
 
 BOOL            WINMM_CheckForMMSystem(void);
+const char*     WINMM_ErrorToString(MMRESULT error);
 
 UINT            MIXER_Open(LPHMIXER lphMix, UINT uDeviceID, DWORD dwCallback,
                            DWORD dwInstance, DWORD fdwOpen, BOOL bFrom32);

@@ -95,6 +95,7 @@ void    MMDRV_InstallMap(unsigned int drv,
  */
 BOOL            MMDRV_Is32(unsigned int idx)
 {
+    TRACE("(%d)\n", idx);
     return MMDrvs[idx].bIs32;
 }
 
@@ -114,6 +115,7 @@ static	BOOL	MMDRV_GetDescription32(const char* fname, char* buf, int buflen)
     FARPROC pGetFileVersionInfoA;
     FARPROC pVerQueryValueA;
     HMODULE hmodule = 0;
+    TRACE("(%p, %p, %d)\n", fname, buf, buflen);
 
 #define E(_x)	do {TRACE _x;goto theEnd;} while(0)
 
@@ -164,6 +166,7 @@ theEnd:
  */
 UINT	MMDRV_GetNum(UINT type)
 {
+    TRACE("(%04x)\n", type);
     assert(type < MMDRV_MAX);
     return llTypes[type].wMaxId;
 }
@@ -218,7 +221,7 @@ DWORD  MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1,
 	    TRACE("Calling message(dev=%u msg=%u usr=0x%08lx p1=0x%08lx p2=0x%08lx)\n",
 		  mld->uDeviceID, wMsg, mld->dwDriverInstance, dwParam1, dwParam2);
             ret = part->u.fnMessage32(mld->uDeviceID, wMsg, mld->dwDriverInstance, dwParam1, dwParam2);
-	    TRACE("=> %lu\n", ret);
+	    TRACE("=> %s\n", WINMM_ErrorToString(ret));
 	} else {
 	    map = llType->Map16To32A(wMsg, &mld->dwDriverInstance, &dwParam1, &dwParam2);
 	    switch (map) {
@@ -235,7 +238,7 @@ DWORD  MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1,
 		      mld->uDeviceID, wMsg, mld->dwDriverInstance, dwParam1, dwParam2);
 		ret = part->u.fnMessage32(mld->uDeviceID, wMsg, mld->dwDriverInstance,
 					  dwParam1, dwParam2);
-		TRACE("=> %lu\n", ret);
+	        TRACE("=> %s\n", WINMM_ErrorToString(ret));
 		if (map == WINMM_MAP_OKMEM)
 		    llType->UnMap16To32A(wMsg, &mld->dwDriverInstance, &dwParam1, &dwParam2, ret);
 		break;
@@ -265,7 +268,7 @@ DWORD  MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1,
 		ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16, 
                                          mld->uDeviceID, wMsg, mld->dwDriverInstance, 
                                          dwParam1, dwParam2);
-		TRACE("=> %lu\n", ret);
+	        TRACE("=> %s\n", WINMM_ErrorToString(ret));
 		if (map == WINMM_MAP_OKMEM)
 		    llType->UnMap32ATo16(wMsg, &mld->dwDriverInstance, &dwParam1, &dwParam2, ret);
 		break;
@@ -280,7 +283,7 @@ DWORD  MMDRV_Message(LPWINE_MLD mld, UINT wMsg, DWORD_PTR dwParam1,
             ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16, 
                                      mld->uDeviceID, wMsg, mld->dwDriverInstance, 
                                      dwParam1, dwParam2);
-	    TRACE("=> %lu\n", ret);
+	    TRACE("=> %s\n", WINMM_ErrorToString(ret));
 	}
     }
     return ret;
@@ -294,6 +297,8 @@ LPWINE_MLD	MMDRV_Alloc(UINT size, UINT type, LPHANDLE hndl, DWORD* dwFlags,
 {
     LPWINE_MLD	mld;
     UINT i;
+    TRACE("(%d, %04x, %p, %p, %p, %p, %c)\n",
+          size, type, hndl, dwFlags, dwCallback, dwInstance, bFrom32?'Y':'N');
 
     mld = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, size);
     if (!mld)	return NULL;
@@ -338,6 +343,8 @@ LPWINE_MLD	MMDRV_Alloc(UINT size, UINT type, LPHANDLE hndl, DWORD* dwFlags,
  */
 void	MMDRV_Free(HANDLE hndl, LPWINE_MLD mld)
 {
+    TRACE("(%p, %p)\n", hndl, mld);
+
     if ((UINT)hndl & 0x8000) {
 	unsigned idx = (UINT)hndl & ~0x8000;
 	if (idx < sizeof(MM_MLDrvs) / sizeof(MM_MLDrvs[0])) {
@@ -357,6 +364,7 @@ DWORD	MMDRV_Open(LPWINE_MLD mld, UINT wMsg, DWORD dwParam1, DWORD dwFlags)
     DWORD		dwRet = MMSYSERR_BADDEVICEID;
     DWORD		dwInstance;
     WINE_LLTYPE*	llType = &llTypes[mld->type];
+    TRACE("(%p, %04x, 0x%08lx, 0x%08lx)\n", mld, wMsg, dwParam1, dwFlags);
 
     mld->dwDriverInstance = (DWORD)&dwInstance;
 
@@ -398,6 +406,7 @@ DWORD	MMDRV_Open(LPWINE_MLD mld, UINT wMsg, DWORD dwParam1, DWORD dwFlags)
  */
 DWORD	MMDRV_Close(LPWINE_MLD mld, UINT wMsg)
 {
+    TRACE("(%p, %04x)\n", mld, wMsg);
     return MMDRV_Message(mld, wMsg, 0L, 0L, TRUE);
 }
 
@@ -406,6 +415,7 @@ DWORD	MMDRV_Close(LPWINE_MLD mld, UINT wMsg)
  */
 LPWINE_MLD	MMDRV_GetByID(UINT uDevID, UINT type)
 {
+    TRACE("(%04x, %04x)\n", uDevID, type);
     if (uDevID < llTypes[type].wMaxId)
 	return &llTypes[type].lpMlds[uDevID];
     if ((uDevID == (UINT16)-1 || uDevID == (UINT)-1) && llTypes[type].nMapper != -1)
@@ -420,6 +430,7 @@ LPWINE_MLD	MMDRV_Get(HANDLE _hndl, UINT type, BOOL bCanBeID)
 {
     LPWINE_MLD	mld = NULL;
     UINT        hndl = (UINT)_hndl;
+    TRACE("(%p, %04x, %c)\n", _hndl, type, bCanBeID ? 'Y' : 'N');
 
     assert(type < MMDRV_MAX);
 
@@ -448,6 +459,8 @@ LPWINE_MLD	MMDRV_GetRelated(HANDLE hndl, UINT srcType,
 				 BOOL bSrcCanBeID, UINT dstType)
 {
     LPWINE_MLD		mld;
+    TRACE("(%p, %04x, %c, %04x)\n",
+          hndl, srcType, bSrcCanBeID ? 'Y' : 'N', dstType);
 
     if ((mld = MMDRV_Get(hndl, srcType, bSrcCanBeID)) != NULL) {
 	WINE_MM_DRIVER_PART*	part = &MMDrvs[mld->mmdIndex].parts[dstType];
@@ -520,6 +533,7 @@ static  BOOL	MMDRV_InitPerType(LPWINE_MM_DRIVER lpDrv, UINT type, UINT wMsg)
     DWORD			ret;
     UINT			count = 0;
     int				i, k;
+    TRACE("(%p, %04x, %04x)\n", lpDrv, type, wMsg);
 
     part->nIDMin = part->nIDMax = 0;
 
@@ -528,7 +542,7 @@ static  BOOL	MMDRV_InitPerType(LPWINE_MM_DRIVER lpDrv, UINT type, UINT wMsg)
 
     if (lpDrv->bIs32 && part->u.fnMessage32) {
 	ret = part->u.fnMessage32(0, DRVM_INIT, 0L, 0L, 0L);
-	TRACE("DRVM_INIT => %08lx\n", ret);
+	TRACE("DRVM_INIT => %s\n", WINMM_ErrorToString(ret));
 #if 0
 	ret = part->u.fnMessage32(0, DRVM_ENABLE, 0L, 0L, 0L);
 	TRACE("DRVM_ENABLE => %08lx\n", ret);
@@ -537,7 +551,7 @@ static  BOOL	MMDRV_InitPerType(LPWINE_MM_DRIVER lpDrv, UINT type, UINT wMsg)
     } else if (!lpDrv->bIs32 && part->u.fnMessage16 && pFnCallMMDrvFunc16) {
         ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16,
                                  0, DRVM_INIT, 0L, 0L, 0L);
-	TRACE("DRVM_INIT => %08lx\n", ret);
+	TRACE("DRVM_INIT => %s\n", WINMM_ErrorToString(ret));
 #if 0
 	ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16,
                                  0, DRVM_ENABLE, 0L, 0L, 0L);
@@ -709,6 +723,7 @@ static BOOL	MMDRV_InitFromRegistry(void)
     char*	p2;
     DWORD	type, size;
     BOOL	ret = FALSE;
+    TRACE("()\n");
 
     if (RegCreateKeyA(HKEY_LOCAL_MACHINE, "Software\\Wine\\Wine\\Config\\WinMM", &hKey)) {
 	TRACE("Cannot open WinMM config key\n");
@@ -744,6 +759,7 @@ static BOOL	MMDRV_InitFromRegistry(void)
  */
 static BOOL	MMDRV_InitHardcoded(void)
 {
+    TRACE("()\n");
     /* first load hardware drivers */
 #ifndef __REACTOS__
     MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
@@ -766,6 +782,7 @@ static BOOL	MMDRV_InitHardcoded(void)
  */
 BOOL	MMDRV_Init(void)
 {
+    TRACE("()\n");
     /* FIXME: MMDRV_InitFromRegistry shall be MMDRV_Init in a near future */
     return MMDRV_InitFromRegistry() || MMDRV_InitHardcoded();
 }
@@ -779,6 +796,7 @@ static  BOOL	MMDRV_ExitPerType(LPWINE_MM_DRIVER lpDrv, UINT type)
 {
     WINE_MM_DRIVER_PART*	part = &lpDrv->parts[type];
     DWORD			ret;
+    TRACE("(%p, %04x)\n", lpDrv, type);
 
     if (lpDrv->bIs32 && part->u.fnMessage32) {
 #if 0
@@ -786,7 +804,7 @@ static  BOOL	MMDRV_ExitPerType(LPWINE_MM_DRIVER lpDrv, UINT type)
 	TRACE("DRVM_DISABLE => %08lx\n", ret);
 #endif
 	ret = part->u.fnMessage32(0, DRVM_EXIT, 0L, 0L, 0L);
-	TRACE("DRVM_EXIT => %08lx\n", ret);
+	TRACE("DRVM_EXIT => %s\n", WINMM_ErrorToString(ret));
     } else if (!lpDrv->bIs32 && part->u.fnMessage16 && pFnCallMMDrvFunc16) {
 #if 0
 	ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16,
@@ -795,7 +813,7 @@ static  BOOL	MMDRV_ExitPerType(LPWINE_MM_DRIVER lpDrv, UINT type)
 #endif
         ret = pFnCallMMDrvFunc16((DWORD)part->u.fnMessage16,
                                  0, DRVM_EXIT, 0L, 0L, 0L);
-	TRACE("DRVM_EXIT => %08lx\n", ret);
+	TRACE("DRVM_EXIT => %s\n", WINMM_ErrorToString(ret));
     } else {
 	return FALSE;
     }
@@ -811,6 +829,7 @@ static  BOOL	MMDRV_ExitPerType(LPWINE_MM_DRIVER lpDrv, UINT type)
 void    MMDRV_Exit(void)
 {
     int i;
+    TRACE("()\n");
 
     for (i = 0; i < sizeof(MM_MLDrvs) / sizeof(MM_MLDrvs[0]); i++)
     {

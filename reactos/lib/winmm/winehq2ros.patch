@@ -1,11 +1,11 @@
 Index: lolvldrv.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/lolvldrv.c,v
-retrieving revision 1.56
-diff -u -r1.56 lolvldrv.c
---- lolvldrv.c	5 May 2004 01:00:54 -0000	1.56
-+++ lolvldrv.c	8 May 2004 14:17:20 -0000
-@@ -497,10 +497,12 @@
+retrieving revision 1.58
+diff -u -r1.58 lolvldrv.c
+--- lolvldrv.c	1 Jun 2004 19:40:48 -0000	1.58
++++ lolvldrv.c	16 Jun 2004 18:56:14 -0000
+@@ -510,10 +510,12 @@
      case DRV_QUERYDEVICEINTERFACESIZE:
          return MMDRV_Message(mld, uMsg, dwParam1, dwParam2, TRUE);
  
@@ -18,9 +18,9 @@ diff -u -r1.56 lolvldrv.c
  
      default:
  	WARN("Unknown call %04x\n", uMsg);
-@@ -743,11 +745,18 @@
- static BOOL	MMDRV_InitHardcoded(void)
+@@ -759,11 +761,18 @@
  {
+     TRACE("()\n");
      /* first load hardware drivers */
 +#ifndef __REACTOS__
      MMDRV_Install("wineoss.drv",   	"wineoss.drv",	FALSE);
@@ -45,7 +45,7 @@ RCS file: /home/wine/wine/dlls/winmm/time.c,v
 retrieving revision 1.26
 diff -u -r1.26 time.c
 --- time.c	12 Jan 2004 21:03:10 -0000	1.26
-+++ time.c	8 May 2004 14:17:20 -0000
++++ time.c	16 Jun 2004 18:56:14 -0000
 @@ -175,14 +175,19 @@
      volatile HANDLE *pActive = (volatile HANDLE *)&TIME_hMMTimer;
      DWORD last_time, cur_time;
@@ -69,11 +69,11 @@ diff -u -r1.26 time.c
 Index: winmm.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/winmm/winmm.c,v
-retrieving revision 1.33
-diff -u -r1.33 winmm.c
---- winmm.c	27 Feb 2004 21:29:32 -0000	1.33
-+++ winmm.c	8 May 2004 14:17:21 -0000
-@@ -125,10 +125,12 @@
+retrieving revision 1.37
+diff -u -r1.37 winmm.c
+--- winmm.c	14 Jun 2004 16:53:59 -0000	1.37
++++ winmm.c	16 Jun 2004 18:56:15 -0000
+@@ -126,10 +126,12 @@
          loaded = -1;
          if (h)
          {

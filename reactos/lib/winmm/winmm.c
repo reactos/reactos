@@ -28,6 +28,7 @@
  *      99/9	added support for loadable low level drivers
  */
 
+#include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
 
@@ -135,6 +136,36 @@ BOOL WINMM_CheckForMMSystem(void)
         }
     }
     return loaded > 0;
+}
+
+/******************************************************************
+ *             WINMM_ErrorToString
+ */
+const char* WINMM_ErrorToString(MMRESULT error)
+{
+#define ERR_TO_STR(dev) case dev: return #dev
+    static char unknown[32];
+    switch (error) {
+    ERR_TO_STR(MMSYSERR_NOERROR);
+    ERR_TO_STR(MMSYSERR_ERROR);
+    ERR_TO_STR(MMSYSERR_BADDEVICEID);
+    ERR_TO_STR(MMSYSERR_NOTENABLED);
+    ERR_TO_STR(MMSYSERR_ALLOCATED);
+    ERR_TO_STR(MMSYSERR_INVALHANDLE);
+    ERR_TO_STR(MMSYSERR_NODRIVER);
+    ERR_TO_STR(MMSYSERR_NOMEM);
+    ERR_TO_STR(MMSYSERR_NOTSUPPORTED);
+    ERR_TO_STR(MMSYSERR_BADERRNUM);
+    ERR_TO_STR(MMSYSERR_INVALFLAG);
+    ERR_TO_STR(MMSYSERR_INVALPARAM);
+    ERR_TO_STR(WAVERR_BADFORMAT);
+    ERR_TO_STR(WAVERR_STILLPLAYING);
+    ERR_TO_STR(WAVERR_UNPREPARED);
+    ERR_TO_STR(WAVERR_SYNC);
+    }
+    sprintf(unknown, "Unknown(0x%08x)", error);
+    return unknown;
+#undef ERR_TO_STR
 }
 
 /**************************************************************************
@@ -1985,7 +2016,7 @@ static	BOOL	MMSYSTEM_MidiStream_MessageHandler(WINE_MIDIStream* lpMidiStrm, LPWI
 	lpMidiHdr = (LPMIDIHDR)msg->lParam;
 	lpMidiHdr->lpNext = 0;
 	lpMidiHdr->dwFlags |= MHDR_INQUEUE;
-	lpMidiHdr->dwFlags &= MHDR_DONE;
+	lpMidiHdr->dwFlags &= ~MHDR_DONE;
 	lpMidiHdr->dwOffset = 0;
 
 	break;
@@ -2427,19 +2458,29 @@ UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
 	  lphndl, (int)uDeviceID, (uType==MMDRV_WAVEOUT)?"Out":"In", lpFormat, dwCallback,
 	  dwInstance, dwFlags, bFrom32?32:16);
 
-    if (dwFlags & WAVE_FORMAT_QUERY)	TRACE("WAVE_FORMAT_QUERY requested !\n");
+    if (dwFlags & WAVE_FORMAT_QUERY)
+        TRACE("WAVE_FORMAT_QUERY requested !\n");
 
-    if (lpFormat == NULL) return WAVERR_BADFORMAT;
-    if ((dwFlags & WAVE_MAPPED) && (uDeviceID == (UINT)-1))
+    if (lpFormat == NULL) {
+        WARN("bad format\n");
+        return WAVERR_BADFORMAT;
+    }
+
+    if ((dwFlags & WAVE_MAPPED) && (uDeviceID == (UINT)-1)) {
+        WARN("invalid parameter\n");
 	return MMSYSERR_INVALPARAM;
+    }
 
-    TRACE("wFormatTag=%u, nChannels=%u, nSamplesPerSec=%lu, nAvgBytesPerSec=%lu, nBlockAlign=%u, wBitsPerSample=%u, cbSize=%u\n",
+    /* may have a PCMWAVEFORMAT rather than a WAVEFORMATEX so don't read cbSize */
+    TRACE("wFormatTag=%u, nChannels=%u, nSamplesPerSec=%lu, nAvgBytesPerSec=%lu, nBlockAlign=%u, wBitsPerSample=%u\n",
 	  lpFormat->wFormatTag, lpFormat->nChannels, lpFormat->nSamplesPerSec,
-	  lpFormat->nAvgBytesPerSec, lpFormat->nBlockAlign, lpFormat->wBitsPerSample, lpFormat->cbSize);
+	  lpFormat->nAvgBytesPerSec, lpFormat->nBlockAlign, lpFormat->wBitsPerSample);
 
     if ((wmld = MMDRV_Alloc(sizeof(WINE_WAVE), uType, &handle,
-			    &dwFlags, &dwCallback, &dwInstance, bFrom32)) == NULL)
+			    &dwFlags, &dwCallback, &dwInstance, bFrom32)) == NULL) {
+        WARN("no memory\n");
 	return MMSYSERR_NOMEM;
+    }
 
     wod.hWave = handle;
     wod.lpFormat = lpFormat;  /* should the struct be copied iso pointer? */
@@ -2461,11 +2502,12 @@ UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
         dwRet = MMDRV_Open(wmld, (uType == MMDRV_WAVEOUT) ? WODM_OPEN : WIDM_OPEN, 
                            (DWORD)&wod, dwFlags);
 
+        TRACE("dwRet = %s\n", WINMM_ErrorToString(dwRet));
         if (dwRet != WAVERR_BADFORMAT ||
-            (dwFlags & (WAVE_MAPPED|WAVE_FORMAT_DIRECT)) != 0) break;
+            ((dwFlags & (WAVE_MAPPED|WAVE_FORMAT_DIRECT)) != 0) || (uDeviceID == WAVE_MAPPER)) break;
         /* if we ask for a format which isn't supported by the physical driver, 
          * let's try to map it through the wave mapper (except, if we already tried
-         * or user didn't allow us to use acm codecs)
+         * or user didn't allow us to use acm codecs or the device is already the mapper)
          */
         dwFlags |= WAVE_MAPPED;
         /* we shall loop only one */
@@ -2477,7 +2519,7 @@ UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
     }
 
     if (lphndl != NULL) *lphndl = handle;
-    TRACE("=> %ld hWave=%p\n", dwRet, handle);
+    TRACE("=> %s hWave=%p\n", WINMM_ErrorToString(dwRet), handle);
 
     return dwRet;
 }
@@ -2859,12 +2901,15 @@ UINT WINAPI waveOutMessage(HWAVEOUT hWaveOut, UINT uMessage,
 	if ((wmld = MMDRV_Get(hWaveOut, MMDRV_WAVEOUT, TRUE)) != NULL) {
 	    return MMDRV_PhysicalFeatures(wmld, uMessage, dwParam1, dwParam2);
 	}
+        WARN("invalid handle\n");
 	return MMSYSERR_INVALHANDLE;
     }
 
     /* from M$ KB */
-    if (uMessage < DRVM_IOCTL || (uMessage >= DRVM_IOCTL_LAST && uMessage < DRVM_MAPPER))
+    if (uMessage < DRVM_IOCTL || (uMessage >= DRVM_IOCTL_LAST && uMessage < DRVM_MAPPER)) {
+        WARN("invalid parameter\n");
 	return MMSYSERR_INVALPARAM;
+    }
 
     return MMDRV_Message(wmld, uMessage, dwParam1, dwParam2, TRUE);
 }
