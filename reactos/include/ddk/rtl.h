@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.25 2000/02/05 16:04:52 ekohl Exp $
+/* $Id: rtl.h,v 1.26 2000/02/18 00:47:28 ekohl Exp $
  * 
  */
 
@@ -537,16 +537,6 @@ RtlInitAnsiString (
 	PCSZ		SourceString
 	);
 
-NTSTATUS
-STDCALL
-RtlInitializeContext (
-	IN	HANDLE			ProcessHandle,
-	IN	PCONTEXT		Context,
-	IN	PVOID			Parameter,
-	IN	PTHREAD_START_ROUTINE	StartAddress,
-	IN OUT	PINITIAL_TEB		InitialTeb
-	);
-
 VOID
 STDCALL
 RtlInitString (
@@ -559,6 +549,16 @@ STDCALL
 RtlInitUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PCWSTR		SourceString
+	);
+
+NTSTATUS
+STDCALL
+RtlInitializeContext (
+	IN	HANDLE			ProcessHandle,
+	IN	PCONTEXT		Context,
+	IN	PVOID			Parameter,
+	IN	PTHREAD_START_ROUTINE	StartAddress,
+	IN OUT	PINITIAL_TEB		InitialTeb
 	);
 
 NTSTATUS
@@ -576,6 +576,14 @@ RtlIntegerToUnicodeString (
 	IN	ULONG		Value,
 	IN	ULONG		Base,
 	IN OUT	PUNICODE_STRING	String
+	);
+
+BOOLEAN
+STDCALL
+RtlIsNameLegalDOS8Dot3 (
+	IN	PUNICODE_STRING	UnicodeName,
+	IN OUT	PANSI_STRING	AnsiName,
+	IN OUT	PBOOLEAN	SpacesFound
 	);
 
 LARGE_INTEGER

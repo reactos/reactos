@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20 2000/02/13 16:05:13 dwelch Exp $
+/* $Id: create.c,v 1.21 2000/02/18 00:50:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -275,7 +275,55 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
    ULONG PpbSize;
    ULONG BytesWritten;
    ULONG Offset;
-   
+   PVOID ParentEnv = NULL;
+   PVOID EnvPtr = NULL;
+   ULONG EnvSize = 0;
+
+   /* create the Environment */
+   if (Ppb->Environment != NULL)
+	ParentEnv = Ppb->Environment;
+   else if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
+	ParentEnv = NtCurrentPeb()->ProcessParameters->Environment;
+
+   if (ParentEnv != NULL)
+     {
+	MEMORY_BASIC_INFORMATION MemInfo;
+
+	Status = NtQueryVirtualMemory (NtCurrentProcess (),
+	                               ParentEnv,
+	                               MemoryBasicInformation,
+	                               &MemInfo,
+	                               sizeof(MEMORY_BASIC_INFORMATION),
+	                               NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return Status;
+	  }
+	EnvSize = MemInfo.RegionSize;
+     }
+   DPRINT("EnvironmentSize %ld\n", EnvSize);
+
+   /* allocate and initialize new environment block */
+   if (EnvSize != 0)
+     {
+	Status = NtAllocateVirtualMemory(ProcessHandle,
+					 &EnvPtr,
+					 0,
+					 &EnvSize,
+					 MEM_COMMIT,
+					 PAGE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	     return(Status);
+	  }
+
+	NtWriteVirtualMemory(ProcessHandle,
+			     EnvPtr,
+			     ParentEnv,
+			     EnvSize,
+			     &BytesWritten);
+     }
+
    /* create the PPB */
    PpbBase = (PVOID)PEB_STARTUPINFO;
    PpbSize = Ppb->TotalSize;
@@ -297,13 +345,18 @@ static NTSTATUS KlInitPeb (HANDLE ProcessHandle,
 			Ppb->TotalSize,
 			&BytesWritten);
 
-
-   /* create the PPB */
-   
-   Offset = FIELD_OFFSET(PEB, ProcessParameters);
-   
+   /* write pointer to environment */
+   Offset = FIELD_OFFSET(RTL_USER_PROCESS_PARAMETERS, Environment);
    NtWriteVirtualMemory(ProcessHandle,
-			PEB_BASE + Offset,
+			(PVOID)(PpbBase + Offset),
+			&EnvPtr,
+			sizeof(EnvPtr),
+			&BytesWritten);
+
+   /* write pointer to process parameter block */
+   Offset = FIELD_OFFSET(PEB, ProcessParameters);
+   NtWriteVirtualMemory(ProcessHandle,
+			(PVOID)(PEB_BASE + Offset),
 			&PpbBase,
 			sizeof(PpbBase),
 			&BytesWritten);
@@ -327,12 +380,12 @@ WINBOOL STDCALL CreateProcessW(LPCWSTR lpApplicationName,
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
    WCHAR TempCommandLine[256];
-   PVOID BaseAddress;
-   LARGE_INTEGER SectionOffset;
-   IMAGE_NT_HEADERS Headers;
-   IMAGE_DOS_HEADER DosHeader;
-   HANDLE NTDllSection;
-   ULONG InitialViewSize;
+//   PVOID BaseAddress;
+//   LARGE_INTEGER SectionOffset;
+//   IMAGE_NT_HEADERS Headers;
+//   IMAGE_DOS_HEADER DosHeader;
+//   HANDLE NTDllSection;
+//   ULONG InitialViewSize;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
    ULONG retlen;
    DWORD len = 0;

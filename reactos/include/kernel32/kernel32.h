@@ -23,6 +23,14 @@
 #define FIELD_OFFSET(type,fld)	((LONG)&(((type *)0)->fld))
 #endif
 
+
+/* GLOBAL VARIABLES ***********************************************************/
+
+extern WINBOOL bIsFileApiAnsi;
+
+
+/* FUNCTION PROTOTYPES ********************************************************/
+
 BOOL __ErrorReturnFalse(ULONG ErrorCode);
 PVOID __ErrorReturnNull(ULONG ErrorCode);
 

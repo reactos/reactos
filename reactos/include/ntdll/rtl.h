@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.8 2000/02/05 16:06:09 ekohl Exp $
+/* $Id: rtl.h,v 1.9 2000/02/18 00:48:25 ekohl Exp $
  *
  */
 
@@ -87,14 +87,6 @@ ULONG
 STDCALL
 RtlIsDosDeviceName_U (
 	PWSTR DeviceName
-	);
-
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3 (
-	PUNICODE_STRING	us,
-	PANSI_STRING	as,
-	PBOOLEAN	pb
 	);
 
 NTSTATUS
@@ -208,10 +200,10 @@ RtlCreateProcessParameters (
 	IN	PUNICODE_STRING	Title,
 	IN	PUNICODE_STRING	Desktop,
 	IN	PUNICODE_STRING	Reserved,
-	IN	PVOID		Reserved2
+	IN	PUNICODE_STRING	Reserved2
 	);
 
-VOID
+PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlDeNormalizeProcessParams (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
@@ -223,7 +215,7 @@ RtlDestroyProcessParameters (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
-VOID
+PRTL_USER_PROCESS_PARAMETERS
 STDCALL
 RtlNormalizeProcessParams (
 	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters

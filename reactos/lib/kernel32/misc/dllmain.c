@@ -42,7 +42,6 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 	  {     
 	     DPRINT("DLL_PROCESS_ATTACH\n");
 	     AllocConsole();
-	     SetCurrentDirectoryA("C:\\");
 	     break;
 	  }
     	case DLL_THREAD_ATTACH:
@@ -70,6 +69,3 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
     }
    return TRUE;  
 }
-
-
-

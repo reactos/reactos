@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.23 2000/01/20 22:55:37 ekohl Exp $
+/* $Id: dir.c,v 1.24 2000/02/18 00:49:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,6 +16,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntdll/rtl.h>
 #include <windows.h>
 #include <string.h>
 #include <wchar.h>
@@ -317,276 +318,107 @@ WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
 }
 
 
-static DWORD GetDotSequenceLengthA (PSTR p)
+DWORD
+STDCALL
+GetFullPathNameA (
+	LPCSTR	lpFileName,
+	DWORD	nBufferLength,
+	LPSTR	lpBuffer,
+	LPSTR	*lpFilePart
+	)
 {
-    DWORD dwCount = 0;
+	UNICODE_STRING FileNameU;
+	UNICODE_STRING FullNameU;
+	ANSI_STRING FileName;
+	ANSI_STRING FullName;
+	PWSTR FilePartU;
+	ULONG BufferLength;
+	ULONG Offset;
 
-    for (;;)
-    {
-	if (*p == '.')
-	    dwCount++;
-	else if ((*p == '\\' || *p == '\0') && dwCount)
-	    return dwCount;
+	DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
+	       "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+
+	RtlInitAnsiString (&FileName,
+	                   (LPSTR)lpFileName);
+
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&FileNameU,
+		                              &FileName,
+		                              TRUE);
 	else
-	    return 0;
-	p++;
-    }
-    return 0;
-}
+		RtlOemStringToUnicodeString (&FileNameU,
+		                             &FileName,
+		                             TRUE);
 
-DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
-			       DWORD nBufferLength,
-			       LPSTR lpBuffer,
-			       LPSTR *lpFilePart)
-{
-   PSTR p;
-   PSTR prev = NULL;
+	BufferLength = nBufferLength * sizeof(WCHAR);
 
-   DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
-          "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+	FullNameU.MaximumLength = BufferLength;
+	FullNameU.Length = 0;
+	FullNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+	                                    0,
+	                                    BufferLength);
 
-   if (!lpFileName || !lpBuffer)
-        return 0;
+	FullNameU.Length = RtlGetFullPathName_U (FileNameU.Buffer,
+	                                         BufferLength,
+	                                         FullNameU.Buffer,
+	                                         &FilePartU);
 
-   if (isalpha(lpFileName[0]) && lpFileName[1] == ':')
-     {
-        if (lpFileName[2] == '\\')
-          {
-             lstrcpyA(lpBuffer, lpFileName);
-          }
-        else
-          {
-             CHAR  szRoot[4] = "A:\\";
-             DWORD len;
+	RtlFreeUnicodeString (&FileNameU);
 
-             szRoot[0] = lpFileName[0];
-             len = GetCurrentDirectoryA(nBufferLength, lpBuffer);
-             if (lpBuffer[len - 1] != '\\')
-               {
-                  lpBuffer[len] = '\\';
-                  lpBuffer[len + 1] = 0;
-               }
-             lstrcatA(lpBuffer, &lpFileName[2]);
-          }
-     }
-   else if (lpFileName[0] == '\\')
-     {
-        GetCurrentDirectoryA(nBufferLength, lpBuffer);
-        lstrcpyA(&lpBuffer[2], lpFileName);
-     }
-   else
-     {
-        DWORD len;
-        len = GetCurrentDirectoryA(nBufferLength, lpBuffer);
-        if (lpBuffer[len - 1] != '\\')
-          {
-             lpBuffer[len] = '\\';
-             lpBuffer[len + 1] = 0;
-          }
-        lstrcatA(lpBuffer, lpFileName);
-     }
+	FullName.MaximumLength = nBufferLength;
+	FullName.Length = 0;
+	FullName.Buffer = lpBuffer;
 
-   DPRINT("lpBuffer %s\n",lpBuffer);
-
-   p = lpBuffer + 2;
-   prev = p;
-
-   while ((*p) != 0 || ((*p) == '\\' && (*(p+1)) == 0))
-     {
-         DWORD dwDotLen;
-
-         dwDotLen = GetDotSequenceLengthA (p+1);
-         DPRINT("DotSequenceLength %u\n", dwDotLen);
-         DPRINT("prev %s p %s\n",prev,p);
-
-         if (dwDotLen == 0)
-           {
-              prev = p;
-              do
-                {
-                   p++;
-                }
-              while ((*p) != 0 && (*p) != '\\');
-           }
-         else if (dwDotLen == 1)
-           {
-              lstrcpyA(p, p+2);
-           }
-         else
-           {
-              if (dwDotLen > 2)
-                {
-                   int n = dwDotLen - 2;
-
-                   while (n > 0 && prev > (lpBuffer+2))
-                     {
-                        prev--;
-                        if ((*prev) == '\\')
-                             n--;
-                     }
-                }
-
-              if (*(p+dwDotLen+1) == 0)
-                   *(prev+1) = 0;
-              else
-                   lstrcpyA (prev, p+dwDotLen+1);
-              p = prev;
-              if (prev > (lpBuffer+2))
-		{
-                   prev--;
-                   while ((*prev) != '\\')
-                     {
-                        prev--;
-                     }
-		}
-           }
-     }
-   
-   if (lpFilePart != NULL)
-     {
-	(*lpFilePart) = prev + 1;
-     }
-   
-   DPRINT("lpBuffer %s\n",lpBuffer);
-
-   return strlen(lpBuffer);
-}
-
-
-static DWORD GetDotSequenceLengthW (PWSTR p)
-{
-   DWORD dwCount = 0;
-
-   for (;;)
-     {
-	if (*p == '.')
-             dwCount++;
-	else if ((*p == '\\' || *p == '\0') && dwCount)
-             return dwCount;
+	/* convert unicode to ansi (or oem) */
+	if (bIsFileApiAnsi)
+		RtlUnicodeStringToAnsiString (&FullName,
+		                              &FullNameU,
+		                              FALSE);
 	else
-             return 0;
-	p++;
-     }
-   return 0;
+		RtlUnicodeStringToOemString (&FullName,
+		                             &FullNameU,
+		                             FALSE);
+
+	if (lpFilePart != NULL)
+	{
+		Offset = (ULONG)(FilePartU - FullNameU.Buffer);
+		*lpFilePart = FullName.Buffer + Offset;
+	}
+
+	RtlFreeHeap (RtlGetProcessHeap (),
+	             0,
+	             FullNameU.Buffer);
+
+	DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
+	       lpBuffer, lpFilePart, FullName.Length);
+
+	return FullName.Length;
 }
 
 
-DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
-			       DWORD nBufferLength,
-			       LPWSTR lpBuffer,
-			       LPWSTR *lpFilePart)
+DWORD
+STDCALL
+GetFullPathNameW (
+	LPCWSTR	lpFileName,
+	DWORD	nBufferLength,
+	LPWSTR	lpBuffer,
+	LPWSTR	*lpFilePart
+	)
 {
-   PWSTR p;
-   PWSTR prev = NULL;
+	ULONG Length;
 
-   DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
-          "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+	DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
+	       "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-   if (!lpFileName || !lpBuffer)
-        return 0;
+	Length = RtlGetFullPathName_U ((LPWSTR)lpFileName,
+	                               nBufferLength * sizeof(WCHAR),
+	                               lpBuffer,
+	                               lpFilePart);
 
-   if (isalpha(lpFileName[0]) && lpFileName[1] == L':')
-     {
-        if (lpFileName[2] == L'\\')
-          {
-             lstrcpyW(lpBuffer, lpFileName);
-          }
-        else
-          {
-             WCHAR szRoot[4] = L"A:\\";
-             DWORD len;
+	DPRINT("lpBuffer %S lpFilePart %S Length %ld\n",
+	       lpBuffer, lpFilePart, Length / sizeof(WCHAR));
 
-             szRoot[0] = lpFileName[0];
-             len = GetCurrentDirectoryW(nBufferLength, lpBuffer);
-             if (lpBuffer[len - 1] != L'\\')
-               {
-                  lpBuffer[len] = L'\\';
-                  lpBuffer[len + 1] = 0;
-               }
-             lstrcatW(lpBuffer, &lpFileName[2]);
-          }
-     }
-   else if (lpFileName[0] == L'\\')
-     {
-        GetCurrentDirectoryW(nBufferLength, lpBuffer);
-        lstrcpyW(&lpBuffer[2], lpFileName);
-     }
-   else
-     {
-        DWORD len;
-        len = GetCurrentDirectoryW(nBufferLength, lpBuffer);
-        if (lpBuffer[len - 1] != L'\\')
-          {
-             lpBuffer[len] = L'\\';
-             lpBuffer[len + 1] = 0;
-          }
-        lstrcatW(lpBuffer, lpFileName);
-     }
-
-   DPRINT("lpBuffer %S\n",lpBuffer);
-
-   p = lpBuffer + 2;
-   prev = p;
-
-   while ((*p) != 0 || ((*p) == L'\\' && (*(p+1)) == 0)) 
-     {
-        DWORD dwDotLen;
-
-        dwDotLen = GetDotSequenceLengthW (p+1);
-        DPRINT("DotSequenceLength %u\n", dwDotLen);
-        DPRINT("prev %S p %S\n",prev,p);
-
-        if (dwDotLen == 0)
-          {
-             prev = p;
-             do
-               {
-                  p++;
-               }
-             while ((*p) != 0 && (*p) != L'\\');
-          }
-        else if (dwDotLen == 1)
-          {
-             lstrcpyW(p, p+2);
-          }
-        else
-          {
-             if (dwDotLen > 2)
-               {
-                  int n = dwDotLen - 2;
-
-                  while (n > 0 && prev > (lpBuffer+2))
-                    {
-                       prev--;
-                       if ((*prev) == L'\\')
-                            n--;
-                    }
-               }
-
-             if (*(p+dwDotLen+1) == 0)
-                  *(prev+1) = 0;
-             else
-                  lstrcpyW (prev, p+dwDotLen+1);
-             p = prev;
-             if (prev > (lpBuffer+2))
-               {
-                  prev--;
-                  while ((*prev) != L'\\')
-                    {
-                       prev--;
-                    }
-               }
-          }
-     }
- 
-   if (lpFilePart != NULL)
-     {
-        (*lpFilePart) = prev + 1;
-     }
-
-   DPRINT("lpBuffer %S\n",lpBuffer);
-
-   return wcslen(lpBuffer);
+	return (Length / sizeof(WCHAR));
 }
 
 
@@ -678,11 +510,11 @@ SearchPathA(
 	return RetValue;
 }
 
-DWORD STDCALL SearchPathW(LPCWSTR lpPath,	 
-			  LPCWSTR lpFileName,	 
-			  LPCWSTR lpExtension, 
-			  DWORD nBufferLength, 
-			  LPWSTR lpBuffer,	
+DWORD STDCALL SearchPathW(LPCWSTR lpPath,
+			  LPCWSTR lpFileName,
+			  LPCWSTR lpExtension,
+			  DWORD nBufferLength,
+			  LPWSTR lpBuffer,
 			  LPWSTR *lpFilePart)
 /*
  * FUNCTION: Searches for the specified file
@@ -734,7 +566,8 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 
 	DPRINT("SearchPath\n");
 
-	if ( lpPath == NULL )  {
+	if ( lpPath == NULL )
+	{
 		// check the directory from which the application loaded
 
 		if ( GetCurrentDirectoryW( MAX_PATH, BufferW ) > 0 ) {
@@ -772,107 +605,52 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 
 		HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
 
-//   WCHAR BufferW[MAX_PATH];
-//   WCHAR FileAndExtensionW[MAX_PATH];
-//   WCHAR *EnvironmentBufferW = NULL;
-   
-//   UNICODE_STRING PathString;
-//   OBJECT_ATTRIBUTES ObjectAttributes;
-//   IO_STATUS_BLOCK IoStatusBlock;
-
-   DPRINT("SearchPath\n");
-
-   if (lpPath == NULL)
-     {
-      // check the directory from which the application loaded
-
-	if (GetCurrentDirectoryW(MAX_PATH, BufferW) > 0)
-	  {
-	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
-	     if ( retCode != 0 )
-	       return retCode;
-	  }
-	if ( GetSystemDirectoryW(BufferW, MAX_PATH) > 0 ) 
-	  {
-	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength,  lpBuffer,	 lpFilePart 	 );
-	     if ( retCode != 0 )
-	       return retCode;
-	  }
-	
-	if ( GetWindowsDirectoryW(BufferW, MAX_PATH) > 0 ) 
-	  {
-	     retCode = SearchPathW(BufferW,lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
-	     if ( retCode != 0  )
-	       return retCode;
-	  }
-	
-	j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,0);
-	EnvironmentBufferW = (WCHAR *) HeapAlloc(GetProcessHeap(),HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY,(j+1)*sizeof(WCHAR));
-	
-	j = GetEnvironmentVariableW(L"Path",EnvironmentBufferW,j+1);
-	
-	for(i=0;i<j;i++) {
-	   if ( EnvironmentBufferW[i] == L';' )
-	     EnvironmentBufferW[i] = 0;
+		return retCode;
 	}
-	i = 0;
-	while ( retCode == 0  && i < j ) {
-	   if (  EnvironmentBufferW[i] != 0 )
-	     retCode = SearchPathW(&EnvironmentBufferW[i],lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
-	   i += lstrlenW(&EnvironmentBufferW[i]) + 1;
-	}
+	else
+	{
+		FileAndExtensionW[0] = 0;
+		lpBuffer[0] = 0;
+		i = lstrlenW(lpFileName);
+		j = lstrlenW(lpPath);
 
-	HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
+		if ( i + j + 8 < nBufferLength )
+			return i + j + 9;
 
-	return retCode;
-     }
-   else {
-
-      FileAndExtensionW[0] = 0;
-      lpBuffer[0] = 0;
-      i = lstrlenW(lpFileName);
-      j = lstrlenW(lpPath);
-
-      if ( i + j + 8 < nBufferLength )
-	return i + j + 9;
-
-      if ( lpExtension != NULL ) {
+		if ( lpExtension != NULL )
+		{
 			if ( lpFileName[i-4] != L'.' ) {
 			   wcscpy(FileAndExtensionW,lpFileName);
 			   wcscat(FileAndExtensionW,lpExtension);
 			}
 			else
-	   wcscpy(FileAndExtensionW,lpFileName);
-      }
-      else
-	wcscpy(FileAndExtensionW,lpFileName);
-      
-		
-      
-      
-      lstrcatW(BufferW,L"\\??\\");
-      lstrcatW(BufferW,lpPath);
-      
-      
-      //printf("%S\n",FileAndExtensionW);
-
-      
-      i = wcslen(BufferW);
-      if ( BufferW[i-1] != L'\\' ) {
-	 BufferW[i] = L'\\';
-	 BufferW[i+1] = 0;
-      }
-      if ( lpFilePart != NULL )
-	{
-	*lpFilePart = &BufferW[wcslen(BufferW)+1];
-				wcscpy(FileAndExtensionW,lpFileName);
+			   wcscpy(FileAndExtensionW,lpFileName);
 		}
 		else
 			wcscpy(FileAndExtensionW,lpFileName);
 
 		lstrcatW(BufferW,L"\\??\\");
 		lstrcatW(BufferW,lpPath);
-	   
+
+		//printf("%S\n",FileAndExtensionW);
+
+		i = wcslen(BufferW);
+		if ( BufferW[i-1] != L'\\' )
+		{
+			BufferW[i] = L'\\';
+			BufferW[i+1] = 0;
+		}
+		if ( lpFilePart != NULL )
+		{
+			*lpFilePart = &BufferW[wcslen(BufferW)+1];
+			wcscpy(FileAndExtensionW,lpFileName);
+		}
+		else
+			wcscpy(FileAndExtensionW,lpFileName);
+
+		lstrcatW(BufferW,L"\\??\\");
+		lstrcatW(BufferW,lpPath);
+
 		//printf("%S\n",FileAndExtensionW);
 
 		i = wcslen(BufferW);
@@ -883,7 +661,8 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 		if ( lpFilePart != NULL )
 			*lpFilePart = &BufferW[wcslen(BufferW)+1];
 		wcscat(BufferW,FileAndExtensionW);
-      //printf("%S\n",lpBuffer);
+
+		//printf("%S\n",lpBuffer);
 
 		PathString.Buffer = BufferW;
 		PathString.Length = lstrlenW(PathString.Buffer)*sizeof(WCHAR);
@@ -914,8 +693,8 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 			*lpFilePart = wcsrchr(lpBuffer,'\\')+1;
 		}
 
-	return lstrlenW(lpBuffer);
-   }
+		return lstrlenW(lpBuffer);
 	}
 }
 
+/* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.29 2000/02/05 16:07:10 ekohl Exp $
+; $Id: ntdll.edf,v 1.30 2000/02/18 00:48:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -459,6 +459,10 @@ RtlDeNormalizeProcessParams=RtlDeNormalizeProcessParams@4
 RtlDestroyEnvironment=RtlDestroyEnvironment@4
 RtlDestroyHeap=RtlDestroyHeap@4
 RtlDestroyProcessParameters=RtlDestroyProcessParameters@4
+RtlDetermineDosPathNameType_U=RtlDetermineDosPathNameType_U@4
+RtlDoesFileExists_U=RtlDoesFileExists_U@4
+RtlDosPathNameToNtPathName_U=RtlDosPathNameToNtPathName_U@16
+RtlDosSearchPath_U=RtlDosSearchPath_U@24
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply=RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide=RtlEnlargedUnsignedDivide@16
@@ -476,15 +480,19 @@ RtlFreeHeap=RtlFreeHeap@12
 RtlFreeUnicodeString=RtlFreeUnicodeString@4
 RtlGetCurrentDirectory_U=RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor=RtlGetDaclSecurityDescriptor@16
+RtlGetFullPathName_U=RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor=RtlGetGroupSecurityDescriptor@12
+RtlGetLongestNtPathLength=RtlGetLongestNtPathLength@0
 RtlGetOwnerSecurityDescriptor=RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap=RtlGetProcessHeap@0
 RtlInitAnsiString=RtlInitAnsiString@8
-RtlInitializeContext=RtlInitializeContext@20
 RtlInitString=RtlInitString@8
 RtlInitUnicodeString=RtlInitUnicodeString@8
+RtlInitializeContext=RtlInitializeContext@20
 RtlIntegerToChar=RtlIntegerToChar@16
 RtlIntegerToUnicodeString=RtlIntegerToUnicodeString@12
+RtlIsDosDeviceName_U=RtlIsDosDeviceName_U@4
+RtlIsNameLegalDOS8Dot3=RtlIsNameLegalDOS8Dot3@12
 RtlLargeIntegerAdd=RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift=RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide=RtlLargeIntegerDivide@20
@@ -515,9 +523,13 @@ RtlSizeHeap=RtlSizeHeap@12
 RtlUnlockHeap=RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize=RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString=RtlUnicodeStringToAnsiString@12
+RtlUnicodeStringToCountedOemString=RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger=RtlUnicodeStringToInteger@12
+RtlUnicodeStringToOemSize=RtlUnicodeStringToOemSize@4
+RtlUnicodeStringToOemString=RtlUnicodeStringToOemString@12
 RtlUnicodeToMultiByteN=RtlUnicodeToMultiByteN@20
 RtlUnicodeToMultiByteSize=RtlUnicodeToMultiByteSize@12
+RtlUnicodeToOemN=RtlUnicodeToOemN@20
 RtlUnwind=RtlUnwind@0
 RtlUpcaseUnicodeChar=RtlUpcaseUnicodeChar@4
 RtlUpcaseUnicodeString=RtlUpcaseUnicodeString@12

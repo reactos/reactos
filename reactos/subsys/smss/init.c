@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.10 2000/02/13 16:05:19 dwelch Exp $
+/* $Id: init.c,v 1.11 2000/02/18 00:51:03 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -74,8 +74,11 @@ InitSessionManager (
 	UNICODE_STRING UnicodeString;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING CmdLineW;
+	UNICODE_STRING CurrentDirectoryW;
 	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
 
+	UNICODE_STRING EnvVariable;
+	UNICODE_STRING EnvValue;
 
 	/* Create the "\SmApiPort" object (LPC) */
 	RtlInitUnicodeString (&UnicodeString,
@@ -133,9 +136,18 @@ InitSessionManager (
 	DisplayString (L"SM: System Environment created\n");
 #endif
 
+	RtlInitUnicodeString (&EnvVariable,
+	                      L"OS");
+	RtlInitUnicodeString (&EnvValue,
+	                      L"Reactos 0.0.15");
+
+	RtlSetEnvironmentVariable (SmSystemEnvironment,
+	                           &EnvVariable,
+	                           &EnvValue);
+
 //	RtlSetCurrentEnvironment (SmSystemEnvironment,
 //	                          NULL);
-   
+
 #ifndef NDEBUG
 	DisplayString (L"System Environment set\n");
 #endif
@@ -206,23 +218,27 @@ InitSessionManager (
    RtlDestroyProcessParameters (ProcessParameters);
 
 #endif
-   
-   /* Start the simple shell (shell.exe) */
-   DisplayString (L"SM: Executing shell\n");
-   RtlInitUnicodeString (&UnicodeString,
-			 L"\\??\\C:\\reactos\\system32\\shell.exe");
+
+	/* Start the simple shell (shell.exe) */
+	DisplayString (L"SM: Executing shell\n");
+	RtlInitUnicodeString (&UnicodeString,
+	                      L"\\??\\C:\\reactos\\system32\\shell.exe");
 #if 0
 	/* Start the logon process (winlogon.exe) */
 	RtlInitUnicodeString (&CmdLineW,
 	                      L"\\??\\C:\\reactos\\system32\\winlogon.exe");
 #endif
 
+	/* initialize current directory (trailing backslash!!)*/
+	RtlInitUnicodeString (&CurrentDirectoryW,
+	                      L"C:\\reactos\\");
+
 	RtlCreateProcessParameters (&ProcessParameters,
 	                            &UnicodeString,
 	                            NULL,
+	                            &CurrentDirectoryW,
 	                            NULL,
-	                            NULL,
-	                            NULL,
+	                            SmSystemEnvironment,
 	                            NULL,
 	                            NULL,
 	                            NULL,

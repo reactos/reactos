@@ -28,6 +28,9 @@ typedef struct _PEB_FREE_BLOCK
    ULONG Size;
 } PEB_FREE_BLOCK, *PPEB_FREE_BLOCK;
 
+/* RTL_USER_PROCESS_PARAMETERS.Flags */
+#define PPF_NORMALIZED	(1)
+
 typedef struct _RTL_USER_PROCESS_PARAMETERS
 {
    ULONG		TotalSize;		//  00h

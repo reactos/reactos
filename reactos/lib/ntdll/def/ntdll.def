@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.39 2000/02/05 16:07:10 ekohl Exp $
+; $Id: ntdll.def,v 1.40 2000/02/18 00:48:50 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -464,6 +464,10 @@ RtlDeNormalizeProcessParams@4
 RtlDestroyEnvironment@4
 RtlDestroyHeap@4
 RtlDestroyProcessParameters@4
+RtlDetermineDosPathNameType_U@4
+RtlDoesFileExists_U@4
+RtlDosPathNameToNtPathName_U@16
+RtlDosSearchPath_U@24
 RtlDowncaseUnicodeString@12
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16
@@ -482,15 +486,19 @@ RtlFreeOemString@4
 RtlFreeUnicodeString@4
 RtlGetCurrentDirectory_U@8
 RtlGetDaclSecurityDescriptor@16
+RtlGetFullPathName_U@16
 RtlGetGroupSecurityDescriptor@12
+RtlGetLongestNtPathLength@0
 RtlGetOwnerSecurityDescriptor@12
 RtlGetProcessHeap@0
 RtlInitAnsiString@8
-RtlInitializeContext@20
 RtlInitString@8
 RtlInitUnicodeString@8
+RtlInitializeContext@20
 RtlIntegerToChar@16
 RtlIntegerToUnicodeString@12
+RtlIsDosDeviceName_U@4
+RtlIsNameLegalDOS8Dot3@12
 RtlLargeIntegerAdd@16
 RtlLargeIntegerArithmeticShift@12
 RtlLargeIntegerDivide@20
@@ -521,6 +529,7 @@ RtlSizeHeap@12
 RtlUnlockHeap@4
 RtlUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
+RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
 RtlUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12

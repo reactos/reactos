@@ -21,15 +21,17 @@
 
 #define LPPROGRESS_ROUTINE void*
 
+
 /* GLOBALS ******************************************************************/
 
-static BOOLEAN  bIsFileApiAnsi; // set the file api to ansi or oem
+WINBOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
+
 
 /* FUNCTIONS ****************************************************************/
 
 VOID STDCALL SetFileApisToOEM(VOID)
 {
-   bIsFileApiAnsi = FALSE;	
+   bIsFileApiAnsi = FALSE;
 }
 
 
@@ -41,7 +43,7 @@ VOID STDCALL SetFileApisToANSI(VOID)
 
 WINBOOL STDCALL AreFileApisANSI(VOID)
 {
-   return(bIsFileApiAnsi);
+   return (bIsFileApiAnsi);
 }
 
 
@@ -430,7 +432,7 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
    HANDLE hFile;
    NTSTATUS errCode;
    
-   hFile = CreateFileW(lpFileName,	
+   hFile = CreateFileW(lpFileName,
 		       FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
 		       FILE_SHARE_READ,	
 		       NULL,	

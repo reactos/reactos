@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.6 2000/02/13 16:05:16 dwelch Exp $
+/* $Id: env.c,v 1.7 2000/02/18 00:49:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include <internal/teb.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -31,7 +31,7 @@ RtlCreateEnvironment (
 	MEMORY_BASIC_INFORMATION MemInfo;
 	PVOID EnvPtr = NULL;
 	NTSTATUS Status = STATUS_SUCCESS;
-	ULONG RegionSize = 1;
+	ULONG RegionSize = PAGESIZE;
 
 	if (Initialize == FALSE)
 	{
@@ -77,7 +77,6 @@ RtlCreateEnvironment (
 	}
 	else
 	{
-		RegionSize = 1;
 		Status = NtAllocateVirtualMemory (NtCurrentProcess (),
 		                                  &EnvPtr,
 		                                  0,
@@ -85,7 +84,10 @@ RtlCreateEnvironment (
 		                                  MEM_COMMIT,
 		                                  PAGE_READWRITE);
 		if (NT_SUCCESS(Status))
+		{
+			memset (EnvPtr, 0, RegionSize);
 			*Environment = EnvPtr;
+		}
 	}
 
 	return Status;
@@ -112,61 +114,67 @@ NTSTATUS
 STDCALL
 RtlExpandEnvironmentStrings_U (
 	PVOID		Environment,
-	PUNICODE_STRING	src,
-	PUNICODE_STRING	dst,
+	PUNICODE_STRING	Source,
+	PUNICODE_STRING	Destination,
 	PULONG		Length
 	)
 {
-	UNICODE_STRING var,val;
-	int            src_len, dst_max, tail;
-	WCHAR          *s,*d,*w;
-	BOOLEAN        flag = FALSE;
+	UNICODE_STRING var;
+	UNICODE_STRING val;
 	NTSTATUS Status = STATUS_SUCCESS;
+	BOOLEAN flag = FALSE;
+	PWSTR s;
+	PWSTR d;
+	PWSTR w;
+	int src_len;
+	int dst_max;
+	int tail;
 
-	src_len = src->Length / 2;
-	s       = src->Buffer;
-	dst_max = dst->MaximumLength / 2;
-	d       = dst->Buffer;
+	src_len = Source->Length / sizeof(WCHAR);
+	s = Source->Buffer;
+	dst_max = Destination->MaximumLength / sizeof(WCHAR);
+	d = Destination->Buffer;
 
-	while( src_len )
+	while (src_len)
 	{
-		if( *s == L'%' )
+		if (*s == L'%')
 		{
-			if( flag )
+			if (flag)
 			{
 				flag = FALSE;
 				goto copy;
 			}
-			w = s + 1; tail = src_len - 1;
-			while( *w != L'%' && tail )
+			w = s + 1;
+			tail = src_len - 1;
+			while (*w != L'%' && tail)
 			{
 				w++;
 				tail--;
 			}
-			if( !tail )
+			if (!tail)
 				goto copy;
 
-			var.Length        = ( w - ( s + 1 ) ) * 2;
+			var.Length = (w - ( s + 1)) * sizeof(WCHAR);
 			var.MaximumLength = var.Length;
-			var.Buffer        = s + 1;
+			var.Buffer = s + 1;
 
-			val.Length        = 0;
-			val.MaximumLength = dst_max * 2;
-			val.Buffer        = d;
-			Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val );
-			if( Status >= 0 )
+			val.Length = 0;
+			val.MaximumLength = dst_max * sizeof(WCHAR);
+			val.Buffer = d;
+			Status = RtlQueryEnvironmentVariable_U (Environment, &var, &val);
+			if (!NT_SUCCESS(Status))
 			{
-				d       += val.Length / 2;
-				dst_max -= val.Length / 2;
-				s       = w + 1;
+				d += val.Length / sizeof(WCHAR);
+				dst_max -= val.Length / sizeof(WCHAR);
+				s = w + 1;
 				src_len = tail - 1;
 				continue;
 			}
 			/* variable not found or buffer too small, just copy %var% */
 			flag = TRUE;
 		}
-copy:;
-		if( !dst_max )
+copy:
+		if (!dst_max)
 		{
 			Status = STATUS_BUFFER_TOO_SMALL;
 			break;
@@ -176,11 +184,11 @@ copy:;
 		dst_max--;
 		src_len--;
 	}
-	dst->Length = ( d - dst->Buffer ) * 2;
-	if (Length)
-		*Length = dst->Length;
-	if( dst_max )
-		dst->Buffer[ dst->Length / 2 ] = 0;
+	Destination->Length = (d - Destination->Buffer) * sizeof(WCHAR);
+	if (Length != NULL)
+		*Length = Destination->Length;
+	if (dst_max)
+		Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
 
 	return Status;
 }
@@ -209,70 +217,24 @@ RtlSetCurrentEnvironment (
 	RtlReleasePebLock ();
 }
 
-#if 0
+
 NTSTATUS
 STDCALL
 RtlSetEnvironmentVariable (
 	PVOID		*Environment,
 	PUNICODE_STRING	Name,
-	PUNICODE_STRING	Value
-	)
+	PUNICODE_STRING	Value)
 {
-	NTSTATUS Status;
-	PWSTR EnvPtr;
-	PWSTR EndPtr;
-	ULONG EnvLength;
-
-	Status = STATUS_VARIABLE_NOT_FOUND;
-
-	if (Environment != NULL)
-	{
-		EnvPtr = *Environment
-	}
-	else
-	{
-		RtlAcquirePebLock ();
-		EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
-	}
-
-	if (EnvPtr != NULL)
-	{
-		/* get environment length */
-		EndPtr = EnvPtr;
-		while (*EndPtr)
-		{
-			while (*EndPtr++)
-				;
-			EndPtr++;
-		}
-		EnvLen = EndPtr - EnvPtr;
-
-		/* FIXME: add missing stuff */
-
-	}
-
-	if (EnvPtr != *Environment)
-		RtlReleasePebLock ();
-
-	return Status;
-}
-#endif
-
-
-NTSTATUS
-WINAPI
-RtlSetEnvironmentVariable (
-	PVOID		*Environment,
-	UNICODE_STRING	*varname,
-	UNICODE_STRING	*value)
-{
-	UNICODE_STRING           var;
 	MEMORY_BASIC_INFORMATION mbi;
+	UNICODE_STRING var;
 	int     hole_len, new_len, env_len = 0;
 	WCHAR   *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
 	ULONG   size = 0, new_size;
 	LONG    f = 1;
 	NTSTATUS Status = STATUS_SUCCESS;
+
+	DPRINT ("RtlSetEnvironmentVariable Environment %p Name %wZ Value %wZ\n",
+	        Environment, Name, Value);
 
 	if (Environment)
 	{
@@ -284,26 +246,30 @@ RtlSetEnvironmentVariable (
 		env = NtCurrentPeb()->ProcessParameters->Environment;
 	}
 
-	if( env )
+	if (env)
 	{
 		/* get environment length */
 		wcs = env_end = env;
-		while( *env_end ) while( *env_end++ ); env_end++;
+		while (*env_end)
+			while (*env_end++)
+				;
+		env_end++;
 		env_len = env_end - env;
+		DPRINT ("environment length %ld characters\n", env_len);
 
 		/* find where to insert */
-		while( *wcs )
+		while (*wcs)
 		{
 			for (var.Buffer = wcs++; *wcs && *wcs != L'='; wcs++);
-			if( *wcs )
+			if (*wcs)
 			{
-				var.Length        = ( wcs - var.Buffer ) * 2;
+				var.Length        = (wcs - var.Buffer) * sizeof(WCHAR);
 				var.MaximumLength = var.Length;
 				for ( val = ++wcs; *wcs; wcs++);
-				f = RtlCompareUnicodeString( &var, varname, TRUE );
-				if( f >= 0 )
+				f = RtlCompareUnicodeString (&var, Name, TRUE);
+				if (f >= 0)
 				{
-					if( f ) /* Insert before found */
+					if (f) /* Insert before found */
 					{
 						hole = tail = var.Buffer;
 					}
@@ -320,25 +286,33 @@ RtlSetEnvironmentVariable (
 		hole = tail = wcs; /* Append to environment */
 	}
 
-found:;
-	if( value )
+found:
+	if (Value->Length > 0)
 	{
 		hole_len = tail - hole;
 		/* calculate new environment size */
-		new_size = value->Length + 2;
-		if( f )
-			new_size += varname->Length + 2; /* adding new variable */
-		new_len = new_size / 2;
+		new_size = Value->Length + sizeof(WCHAR);
+		/* adding new variable */
+		if (f)
+			new_size += Name->Length + sizeof(WCHAR);
+		new_len = new_size / sizeof(WCHAR);
 		if (hole_len < new_len)
 		{
-			/* we must enlarge environment size, let's check the size of available
-			 * memory */
-			new_size += ( env_len - hole_len ) * 2;
+			/* we must enlarge environment size */
+			/* let's check the size of available memory */
+			new_size += (env_len - hole_len) * sizeof(WCHAR);
+			new_size = ROUNDUP(new_size, PAGESIZE);
 			mbi.RegionSize = 0;
+			DPRINT("new_size %lu\n", new_size);
 
 			if (env)
 			{
-				Status = NtQueryVirtualMemory( (HANDLE)-1, env, 0, &mbi, sizeof(mbi), NULL );
+				Status = NtQueryVirtualMemory (NtCurrentProcess (),
+				                               env,
+				                               0,
+				                               &mbi,
+				                               sizeof(mbi),
+				                               NULL);
 				if (!NT_SUCCESS(Status))
 				{
 					RtlReleasePebLock ();
@@ -349,7 +323,12 @@ found:;
 			if (new_size > mbi.RegionSize)
 			{
 				/* reallocate memory area */
-				Status = NtAllocateVirtualMemory( (HANDLE)-1, (VOID**)&new_env, 0, &new_size, MEM_COMMIT, PAGE_READWRITE );
+				Status = NtAllocateVirtualMemory (NtCurrentProcess (),
+				                                  (VOID**)&new_env,
+				                                  0,
+				                                  &new_size,
+				                                  MEM_COMMIT,
+				                                  PAGE_READWRITE);
 				if (!NT_SUCCESS(Status))
 				{
 					RtlReleasePebLock ();
@@ -358,8 +337,10 @@ found:;
 
 				if (env)
 				{
-					memmove( new_env, env, ( hole - env ) * 2 );
-					hole = new_env + ( hole - env );
+					memmove (new_env,
+					         env,
+					         (hole - env) * sizeof(WCHAR));
+					hole = new_env + (hole - env);
 				}
 				else
 				{
@@ -372,8 +353,9 @@ found:;
 		}
 
 		/* move tail */
-		memmove ( hole + new_len, tail, ( env_end - tail ) * 2 );
-		if( new_env )
+		memmove (hole + new_len, tail, (env_end - tail) * sizeof(WCHAR));
+
+		if (new_env)
 		{
 			/* we reallocated environment, let's free the old one */
 			if (Environment)
@@ -383,64 +365,79 @@ found:;
 
 			if (env)
 			{
-				NtFreeVirtualMemory (NtCurrentProcess(),
+				size = 0;
+CHECKPOINT;
+DPRINT ("env %x\n", env);
+DPRINT ("&env %x\n", &env);
+				NtFreeVirtualMemory (NtCurrentProcess (),
 				                     (VOID**)&env,
 				                     &size,
 				                     MEM_RELEASE);
+CHECKPOINT;
 			}
 		}
 
 		/* and now copy given stuff */
-		if( f )
+		if (f)
 		{
-			/* copy variable name and '=' sign */
-			memmove (hole, varname->Buffer, varname->Length);
-			hole += varname->Length / 2; *hole++ = L'=';
+			/* copy variable name and '=' character */
+			memmove (hole, Name->Buffer, Name->Length);
+			hole += Name->Length / sizeof(WCHAR);
+			*hole++ = L'=';
 		}
 
 		/* copy value */
-		memmove( hole, value->Buffer, value->Length );
-		hole += value->Length / 2; *hole = 0;
+		memmove (hole, Value->Buffer, Value->Length);
+		hole += Value->Length / sizeof(WCHAR);
+		*hole = 0;
 	}
 	else
 	{
-		if (!f)
-			memmove (hole, tail, ( env_end - tail ) * 2 ); /* remove it */
+		/* remove the environment variable */
+		if (f == 0)
+			memmove (hole,
+			         tail,
+			         (env_end - tail) * sizeof(WCHAR));
 		else
-			Status = STATUS_VARIABLE_NOT_FOUND; /* notingh to remove*/
+			Status = STATUS_VARIABLE_NOT_FOUND;
 	}
 
 	RtlReleasePebLock ();
 	return Status;
 }
-//#endif
 
 
 NTSTATUS
 STDCALL
 RtlQueryEnvironmentVariable_U (
-	PVOID		env,
-	UNICODE_STRING	*varname,
-	UNICODE_STRING	*value
+	PVOID		Environment,
+	PUNICODE_STRING	Name,
+	PUNICODE_STRING	Value
 	)
 {
-	NTSTATUS Status = STATUS_VARIABLE_NOT_FOUND;
-	WCHAR    *wcs,*var,*val;
-	int      varlen, len;
+	NTSTATUS Status;
+	PWSTR wcs;
+	PWSTR var;
+	PWSTR val;
+	int varlen;
+	int len;
 
-	if (!env)
-		env = NtCurrentPeb()->ProcessParameters->Environment;
+	DPRINT("RtlQueryEnvironmentVariable_U Environment %p Variable %wZ Value %p\n",
+	       Environment, varname, Value);
 
-	if (!env)
-		return Status;
+	if (!Environment)
+		Environment = NtCurrentPeb()->ProcessParameters->Environment;
 
-	value->Length = 0;
-	if (env == NtCurrentPeb()->ProcessParameters->Environment)
+	if (!Environment)
+		return STATUS_VARIABLE_NOT_FOUND;
+
+	Value->Length = 0;
+	if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
 		RtlAcquirePebLock();
 
-	wcs = env;
-	len = varname->Length / 2;
-	while( *wcs )
+	wcs = Environment;
+	len = Name->Length / sizeof(WCHAR);
+	while (*wcs)
 	{
 		for (var = wcs++; *wcs && *wcs != L'='; wcs++)
 			;
@@ -450,13 +447,15 @@ RtlQueryEnvironmentVariable_U (
 			varlen = wcs - var;
 			for (val = ++wcs; *wcs; wcs++)
 				;
+
 			if (varlen == len &&
-			    !_wcsnicmp (var, varname->Buffer, len))
+			    !_wcsnicmp (var, Name->Buffer, len))
 			{
-				value->Length = (wcs - val) * sizeof(WCHAR);
-				if (value->Length < value->MaximumLength)
+				Value->Length = (wcs - val) * sizeof(WCHAR);
+				if (Value->Length < Value->MaximumLength)
 				{
-					wcscpy (value->Buffer, val);
+					wcscpy (Value->Buffer, val);
+					DPRINT("Value %S\n", val);
 					Status = STATUS_SUCCESS;
 				}
 				else
@@ -464,7 +463,7 @@ RtlQueryEnvironmentVariable_U (
 					Status = STATUS_BUFFER_TOO_SMALL;
 				}
 
-				if (env == NtCurrentPeb()->ProcessParameters->Environment)
+				if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
 					RtlReleasePebLock ();
 
 				return Status;
@@ -473,10 +472,10 @@ RtlQueryEnvironmentVariable_U (
 		wcs++;
 	}
 
-	if (env == NtCurrentPeb()->ProcessParameters->Environment)
+	if (Environment == NtCurrentPeb()->ProcessParameters->Environment)
 		RtlReleasePebLock ();
 
-	return Status;
+	return STATUS_VARIABLE_NOT_FOUND;
 }
 
 /* EOF */
