@@ -188,16 +188,59 @@ NTSTATUS STDCALL NtImpersonateThread(IN HANDLE ThreadHandle,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtCreateToken(VOID)
+NTSTATUS
+STDCALL
+NtCreateToken(
+	OUT PHANDLE TokenHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN TOKEN_TYPE TokenType,
+	IN PLUID AuthenticationId,
+	IN PLARGE_INTEGER ExpirationTime,
+	IN PTOKEN_USER TokenUser,
+	IN PTOKEN_GROUPS TokenGroups,
+	IN PTOKEN_PRIVILEGES TokenPrivileges,
+	IN PTOKEN_OWNER TokenOwner,
+	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
+	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+	IN PTOKEN_SOURCE TokenSource
+	)
 {
-   UNIMPLEMENTED;
+	return ZwCreateToken(TokenHandle,
+	DesiredAccess,
+	ObjectAttributes,
+	TokenType,
+	AuthenticationId,
+	ExpirationTime,
+	TokenUser,
+	TokenGroups,
+	TokenPrivileges,
+	TokenOwner,
+	TokenPrimaryGroup,
+	TokenDefaultDacl,
+	TokenSource
+	);
 }
 
-NTSTATUS STDCALL NtDeleteObjectAuditAlarm(IN PUNICODE_STRING SubsystemName, 
-					  IN PVOID HandleId, 
-					  IN BOOLEAN GenerateOnClose)
+NTSTATUS
+STDCALL
+ZwCreateToken(
+	OUT PHANDLE TokenHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN TOKEN_TYPE TokenType,
+	IN PLUID AuthenticationId,
+	IN PLARGE_INTEGER ExpirationTime,
+	IN PTOKEN_USER TokenUser,
+	IN PTOKEN_GROUPS TokenGroups,
+	IN PTOKEN_PRIVILEGES TokenPrivileges,
+	IN PTOKEN_OWNER TokenOwner,
+	IN PTOKEN_PRIMARY_GROUP TokenPrimaryGroup,
+	IN PTOKEN_DEFAULT_DACL TokenDefaultDacl,
+	IN PTOKEN_SOURCE TokenSource
+	)
 {
-   UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
@@ -311,6 +354,35 @@ NTSTATUS STDCALL ZwAccessCheck(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 			       OUT PBOOLEAN AccessStatus)
 {
    UNIMPLEMENTED;
+}
+
+
+NTSTATUS
+STDCALL
+NtDeleteObjectAuditAlarm ( 
+	IN PUNICODE_STRING SubsystemName, 
+	IN PVOID HandleId, 
+	IN BOOLEAN GenerateOnClose 
+	)
+{
+
+return ZwDeleteObjectAuditAlarm ( 
+	SubsystemName, 
+	HandleId, 
+	GenerateOnClose 
+	);
+}
+
+
+NTSTATUS
+STDCALL
+ZwDeleteObjectAuditAlarm ( 
+	IN PUNICODE_STRING SubsystemName, 
+	IN PVOID HandleId, 
+	IN BOOLEAN GenerateOnClose 
+	)
+{
+ UNIMPLEMENTED;
 }
 
 NTSTATUS RtlCreateSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
