@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.33 2002/01/26 17:59:25 ekohl Exp $
+/* $Id: iotypes.h,v 1.34 2002/03/17 17:53:34 hbirr Exp $
  * 
  */
 
@@ -205,32 +205,32 @@ typedef struct
 	  {
 	     PHYSICAL_ADDRESS Start;
 	     ULONG Length;
-	  } Port;
+	  } __attribute__((packed)) Port;
 	struct
 	  {
 	     ULONG Level;
 	     ULONG Vector;
 	     ULONG Affinity;
-	  } Interrupt;
+	  } __attribute__((packed))Interrupt;
 	struct
 	  {
 	     PHYSICAL_ADDRESS Start;
 	     ULONG Length;
-	  } Memory;
+	  } __attribute__((packed))Memory;
 	struct
 	  {
 	     ULONG Channel;
 	     ULONG Port;
 	     ULONG Reserved1;
-	  } Dma;
+	  } __attribute__((packed))Dma;
 	struct
 	  {
 	     ULONG DataSize;
 	     ULONG Reserved1;
 	     ULONG Reserved2;
-	  } DeviceSpecificData;
-     } u;
-} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+	  } __attribute__((packed))DeviceSpecificData;
+     } __attribute__((packed)) u;
+} __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 
 typedef struct
 {
@@ -238,14 +238,14 @@ typedef struct
    USHORT Revision;
    ULONG Count;
    CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} CM_PARTIAL_RESOURCE_LIST;
+} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST;
 
 typedef struct
 {
    INTERFACE_TYPE InterfaceType;
    ULONG BusNumber;
    CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} CM_FULL_RESOURCE_DESCRIPTOR;
+} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR;
 
 typedef struct
 {
