@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.40 2004/08/15 16:39:12 chorns Exp $
+/* $Id: semgr.c,v 1.41 2004/08/28 22:22:39 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,7 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 #define TAG_SXPT   TAG('S', 'X', 'P', 'T')
@@ -335,7 +335,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   ULONG SaclLength = 0;
   ULONG Length = 0;
   ULONG Control = 0;
-  ULONG Current;
+  ULONG_PTR Current;
   PSID Owner = NULL;
   PSID Group = NULL;
   PACL Dacl = NULL;
@@ -501,14 +501,14 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
   Descriptor->Control = Control | SE_SELF_RELATIVE;
 
-  Current = (ULONG)Descriptor + sizeof(SECURITY_DESCRIPTOR);
+  Current = (ULONG_PTR)Descriptor + sizeof(SECURITY_DESCRIPTOR);
 
   if (SaclLength != 0)
     {
       RtlCopyMemory((PVOID)Current,
 		    Sacl,
 		    SaclLength);
-      Descriptor->Sacl = (PACL)((ULONG)Current - (ULONG)Descriptor);
+      Descriptor->Sacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += SaclLength;
     }
 
@@ -517,7 +517,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       RtlCopyMemory((PVOID)Current,
 		    Dacl,
 		    DaclLength);
-      Descriptor->Dacl = (PACL)((ULONG)Current - (ULONG)Descriptor);
+      Descriptor->Dacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += DaclLength;
     }
 
@@ -526,7 +526,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       RtlCopyMemory((PVOID)Current,
 		    Owner,
 		    OwnerLength);
-      Descriptor->Owner = (PSID)((ULONG)Current - (ULONG)Descriptor);
+      Descriptor->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
       Current += OwnerLength;
     }
 
@@ -535,7 +535,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
       memmove((PVOID)Current,
               Group,
               GroupLength);
-      Descriptor->Group = (PSID)((ULONG)Current - (ULONG)Descriptor);
+      Descriptor->Group = (PSID)((ULONG_PTR)Current - (ULONG_PTR)Descriptor);
     }
 
    /* FIXME: Unlock subject context */

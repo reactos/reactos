@@ -1,4 +1,4 @@
-/* $Id: sd.c,v 1.3 2004/08/07 19:13:25 ion Exp $
+/* $Id: sd.c,v 1.4 2004/08/28 22:22:39 navaraf Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -59,8 +59,8 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Owner = SecurityDescriptor->Owner;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Owner = (PSID)((ULONG)Owner +
-                        (ULONG)SecurityDescriptor);
+         Owner = (PSID)((ULONG_PTR)Owner +
+                        (ULONG_PTR)SecurityDescriptor);
       }
       Length = Length + ((sizeof(SID) + (Owner->SubAuthorityCount - 1) *
                           sizeof(ULONG) + 3) & 0xfc);
@@ -71,10 +71,10 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Group = SecurityDescriptor->Group;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Group = (PSID)((ULONG)Group + (ULONG)SecurityDescriptor);
+         Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
       }
       Length = Length + ((sizeof(SID) + (Group->SubAuthorityCount - 1) *
-                          sizeof(ULONG) + 3) & 0xfc);
+                          sizeof(ULONG_PTR) + 3) & 0xfc);
    }
 
    if (SecurityDescriptor->Control & SE_DACL_PRESENT &&
@@ -83,7 +83,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Dacl = (PACL)((ULONG)Dacl + (PVOID)SecurityDescriptor);
+         Dacl = (PACL)((ULONG_PTR)Dacl + (ULONG_PTR)SecurityDescriptor);
       }
       Length = Length + ((Dacl->AclSize + 3) & 0xfc);
    }
@@ -94,7 +94,7 @@ RtlLengthSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Sacl = (PACL)((ULONG)Sacl + (PVOID)SecurityDescriptor);
+         Sacl = (PACL)((ULONG_PTR)Sacl + (ULONG_PTR)SecurityDescriptor);
       }
       Length = Length + ((Sacl->AclSize + 3) & 0xfc);
    }
@@ -130,8 +130,8 @@ RtlGetDaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Dacl = (PACL)((ULONG)SecurityDescriptor->Dacl +
-                        (PVOID)SecurityDescriptor);
+         *Dacl = (PACL)((ULONG_PTR)SecurityDescriptor->Dacl +
+                        (ULONG_PTR)SecurityDescriptor);
       }
       else
       {
@@ -202,7 +202,7 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    Owner = SecurityDescriptor->Owner;
    if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
    {
-      Owner = (PSID)((ULONG)Owner + (ULONG)SecurityDescriptor);
+      Owner = (PSID)((ULONG_PTR)Owner + (ULONG_PTR)SecurityDescriptor);
    }
 
    if (!RtlValidSid(Owner))
@@ -213,7 +213,7 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
    Group = SecurityDescriptor->Group;
    if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
    {
-      Group = (PSID)((ULONG)Group + (ULONG)SecurityDescriptor);
+      Group = (PSID)((ULONG_PTR)Group + (ULONG_PTR)SecurityDescriptor);
    }
 
    if (!RtlValidSid(Group))
@@ -227,7 +227,7 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Dacl = (PACL)((ULONG)Dacl + (ULONG)SecurityDescriptor);
+         Dacl = (PACL)((ULONG_PTR)Dacl + (ULONG_PTR)SecurityDescriptor);
       }
 
       if (!RtlValidAcl(Dacl))
@@ -242,7 +242,7 @@ RtlValidSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor)
       Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         Sacl = (PACL)((ULONG)Sacl + (ULONG)SecurityDescriptor);
+         Sacl = (PACL)((ULONG_PTR)Sacl + (ULONG_PTR)SecurityDescriptor);
       }
 
       if (!RtlValidAcl(Sacl))
@@ -296,8 +296,8 @@ RtlGetOwnerSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Owner = (PSID)((ULONG)SecurityDescriptor->Owner +
-                         (PVOID)SecurityDescriptor);
+         *Owner = (PSID)((ULONG_PTR)SecurityDescriptor->Owner +
+                         (ULONG_PTR)SecurityDescriptor);
       }
       else
       {
@@ -360,8 +360,8 @@ RtlGetGroupSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Group = (PSID)((ULONG)SecurityDescriptor->Group +
-                         (PVOID)SecurityDescriptor);
+         *Group = (PSID)((ULONG_PTR)SecurityDescriptor->Group +
+                         (ULONG_PTR)SecurityDescriptor);
       }
       else
       {
@@ -400,7 +400,7 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       *Owner = SecurityDescriptor->Owner;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Owner = (PSID)((ULONG)*Owner + (ULONG)SecurityDescriptor);
+         *Owner = (PSID)((ULONG_PTR)*Owner + (ULONG_PTR)SecurityDescriptor);
       }
    }
    else
@@ -423,7 +423,7 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       *Dacl = SecurityDescriptor->Dacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Dacl = (PACL)((ULONG)*Dacl + (ULONG)SecurityDescriptor);
+         *Dacl = (PACL)((ULONG_PTR)*Dacl + (ULONG_PTR)SecurityDescriptor);
       }
    }
    else
@@ -445,7 +445,7 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       *Group = SecurityDescriptor->Group;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Group = (PSID)((ULONG)*Group + (ULONG)SecurityDescriptor);
+         *Group = (PSID)((ULONG_PTR)*Group + (ULONG_PTR)SecurityDescriptor);
       }
    }
    else
@@ -468,7 +468,7 @@ RtlpQuerySecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
       *Sacl = SecurityDescriptor->Sacl;
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Sacl = (PACL)((ULONG)*Sacl + (ULONG)SecurityDescriptor);
+         *Sacl = (PACL)((ULONG_PTR)*Sacl + (ULONG_PTR)SecurityDescriptor);
       }
    }
    else
@@ -504,7 +504,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
    ULONG SaclLength;
    ULONG DaclLength;
    ULONG TotalLength;
-   ULONG Current;
+   ULONG_PTR Current;
 
    RtlpQuerySecurityDescriptor(AbsSD,
                                &Owner,
@@ -527,14 +527,14 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
    memmove(RelSD,
            AbsSD,
            sizeof(SECURITY_DESCRIPTOR));
-   Current = (ULONG)RelSD + sizeof(SECURITY_DESCRIPTOR);
+   Current = (ULONG_PTR)RelSD + sizeof(SECURITY_DESCRIPTOR);
 
    if (SaclLength != 0)
    {
       memmove((PVOID)Current,
               Sacl,
               SaclLength);
-      RelSD->Sacl = (PACL)((ULONG)Current - (ULONG)RelSD);
+      RelSD->Sacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)RelSD);
       Current += SaclLength;
    }
 
@@ -543,7 +543,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
       memmove((PVOID)Current,
               Dacl,
               DaclLength);
-      RelSD->Dacl = (PACL)((ULONG)Current - (ULONG)RelSD);
+      RelSD->Dacl = (PACL)((ULONG_PTR)Current - (ULONG_PTR)RelSD);
       Current += DaclLength;
    }
 
@@ -552,7 +552,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
       memmove((PVOID)Current,
               Owner,
               OwnerLength);
-      RelSD->Owner = (PSID)((ULONG)Current - (ULONG)RelSD);
+      RelSD->Owner = (PSID)((ULONG_PTR)Current - (ULONG_PTR)RelSD);
       Current += OwnerLength;
    }
 
@@ -561,7 +561,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
       memmove((PVOID)Current,
               Group,
               GroupLength);
-      RelSD->Group = (PSID)((ULONG)Current - (ULONG)RelSD);
+      RelSD->Group = (PSID)((ULONG_PTR)Current - (ULONG_PTR)RelSD);
    }
 
    RelSD->Control |= SE_SELF_RELATIVE;
@@ -636,8 +636,8 @@ RtlGetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
    {
       if (SecurityDescriptor->Control & SE_SELF_RELATIVE)
       {
-         *Sacl = (PACL)((ULONG)SecurityDescriptor->Sacl +
-                        (PVOID)SecurityDescriptor);
+         *Sacl = (PACL)((ULONG_PTR)SecurityDescriptor->Sacl +
+                        (ULONG_PTR)SecurityDescriptor);
       }
       else
       {
