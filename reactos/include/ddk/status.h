@@ -3,7 +3,19 @@
 
 #ifndef __ASM__
 
+/* 
+NT_SUCCESS return TRUE for a SUCCESS or INFORMATION error code.
+NT_SUCCESS return FALSE for a WARNING or ERROR error code.
+Note that !NT_SUCCESS(errCode) is NOT the same as NT_ERROR(errCode)
+*/
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
+
+#define NT_INFORMATION(StatCode)  ((ULONG)(StatCode) >> 30 == 1)
+
+#define NT_WARNING(StatCode)  ((ULONG)(StatCode) >> 30 == 2)
+
+#define NT_ERROR(StatCode)  ((ULONG)(StatCode) >> 30 == 3)
+
 
 /*
  * Possible status codes
