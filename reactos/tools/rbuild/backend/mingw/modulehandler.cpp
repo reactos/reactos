@@ -1449,7 +1449,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 		clean_files );
 
 	string linker;
-	if ( IsCPlusPlusModule ( module ) )
+	if ( module.cplusplus )
 		linker = "${host_gpp}";
 	else
 		linker = "${host_gcc}";

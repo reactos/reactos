@@ -18,6 +18,8 @@
 .PHONY: clean
 all: makefile.auto
 
+.SUFFIXES:
+
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
 HOST=mingw32-windows
@@ -40,6 +42,7 @@ else
 endif
 endif
 ifeq ($(HALFVERBOSEECHO),yes)
+  ECHO_MKDIR  =@echo [MKDIR]   $@
   ECHO_INVOKE =@echo [INVOKE]  $<
   ECHO_PCH    =@echo [PCH]     $@
   ECHO_CC     =@echo [CC]      $<
@@ -59,6 +62,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_CDMAKE =@echo [CDMAKE]  $@
   ECHO_TEST   =@echo [TEST]    $@
 else
+  ECHO_MKDIR  =
   ECHO_INVOKE =
   ECHO_PCH    =
   ECHO_CC     =
@@ -89,7 +93,7 @@ ifeq ($(HOST),mingw32-linux)
 	EXEPREFIX = ./
 	EXEPOSTFIX =
 	SEP = /
-	nmkdir = $(Q)mkdir -p
+	nmkdir = -$(Q)mkdir -p
 	gcc = $(Q)mingw32-gcc
 	gpp = $(Q)mingw32-g++
 	ld = $(Q)mingw32-ld
@@ -105,7 +109,7 @@ else # mingw32-windows
 	EXEPOSTFIX = .exe
 	ROS_EMPTY =
 	SEP = \$(ROS_EMPTY)
-	nmkdir = $(Q)mkdir
+	nmkdir = -$(Q)mkdir
 	gcc = $(Q)gcc
 	gpp = $(Q)g++
 	ld = $(Q)ld
@@ -134,18 +138,21 @@ else
   OUTPUT_NO_SLASH = obj-i386
 endif
 
-mkdir = $(Q)$(INTERMEDIATE)rmkdir
+mkdir = -$(Q)$(INTERMEDIATE)rmkdir
+EXISTS = .exists
+INTERMEDIATE_EXISTS = $(INTERMEDIATE)$(EXISTS)
 
-$(INTERMEDIATE_NO_SLASH):
+$(INTERMEDIATE_EXISTS):
 	${nmkdir} $(INTERMEDIATE_NO_SLASH)
+	@echo . > $@
 
-NTOSKRNL_MC = .$(SEP)ntoskrnl$(SEP)ntoskrnl.mc
-KERNEL32_MC = .$(SEP)lib$(SEP)kernel32$(SEP)kernel32.mc
-BUILDNO_H = .$(SEP)include$(SEP)reactos$(SEP)buildno.h
-BUGCODES_H = .$(SEP)include$(SEP)reactos$(SEP)bugcodes.h
-BUGCODES_RC = .$(SEP)ntoskrnl$(SEP)bugcodes.rc
-ERRCODES_H = .$(SEP)include$(SEP)reactos$(SEP)errcodes.h
-ERRCODES_RC = .$(SEP)lib$(SEP)kernel32$(SEP)errcodes.rc
+NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
+KERNEL32_MC = lib$(SEP)kernel32$(SEP)kernel32.mc
+BUILDNO_H = include$(SEP)reactos$(SEP)buildno.h
+BUGCODES_H = include$(SEP)reactos$(SEP)bugcodes.h
+BUGCODES_RC = ntoskrnl$(SEP)bugcodes.rc
+ERRCODES_H = include$(SEP)reactos$(SEP)errcodes.h
+ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 
 include tools/tools.mak
 -include makefile.auto
@@ -160,7 +167,7 @@ PREAUTO := \
 
 makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)
-	$(Q)tools$(SEP)rbuild$(SEP)rbuild$(EXEPOSTFIX) mingw
+	$(Q)$(RBUILD_TARGET) mingw
 
 
 $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)

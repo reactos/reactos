@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
-#ifdef _MSC_VER
+#ifdef WIN32
 #include <direct.h>
 #else
 #include <unistd.h>
@@ -32,10 +32,10 @@ convert_path(char* origpath)
 {
 	char* newpath;
 	int i;
-	
+
 	newpath=malloc(strlen(origpath)+1);
 	strcpy(newpath,origpath);
-	
+
 	i = 0;
 	while (newpath[i] != 0)
 	{
@@ -74,15 +74,15 @@ int main(int argc, char* argv[])
 	char* path1;
 	char* csec;
 	char buf[256];
-	
+
 	if (argc != 2)
 	{
 		fprintf(stderr, "Too many arguments\n");
 		exit(1);
 	}
-	
+
 	path1 = convert_path(argv[1]);
-	
+
 	if (isalpha(path1[0]) && path1[1] == ':' && path1[2] == DIR_SEPARATOR_CHAR)
 	{
 		csec = strtok(path1, DIR_SEPARATOR_STRING);
@@ -99,12 +99,12 @@ int main(int argc, char* argv[])
 	{
 		csec = strtok(path1, DIR_SEPARATOR_STRING);
 	}
-	
+
 	while (csec != NULL)
 	{
 		mkdir_p(csec);
 		csec = strtok(NULL, DIR_SEPARATOR_STRING);
 	}
-	
+
 	exit(0);
 }

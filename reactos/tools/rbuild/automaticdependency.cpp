@@ -21,9 +21,9 @@ SourceFile::SourceFile ( AutomaticDependency* automaticDependency,
 	  isNonAutomaticDependency ( isNonAutomaticDependency ),
 	  youngestLastWriteTime ( 0 )
 {
-  	if ( parent != NULL )
+	if ( parent != NULL )
 		parents.push_back ( parent );
-  	GetDirectoryAndFilenameParts ();
+	GetDirectoryAndFilenameParts ();
 }
 
 void
@@ -41,7 +41,7 @@ SourceFile::GetDirectoryAndFilenameParts ()
 		filenamePart = filename;
 	}
 }
-	  	
+
 void
 SourceFile::Close ()
 {

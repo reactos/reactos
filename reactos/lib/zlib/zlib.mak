@@ -2,6 +2,7 @@ ZLIB_BASE = lib$(SEP)zlib
 
 ZLIB_BASE_DIR = $(INTERMEDIATE)$(ZLIB_BASE)
 
+
 #$(ZLIB_BASE_DIR): $(INTERMEDIATE_NO_SLASH) $(RMKDIR_TARGET)
 #	${mkdir} $(INTERMEDIATE)$(ZLIB_BASE)
 
@@ -9,8 +10,6 @@ ZLIB_HOST_TARGET = \
 	$(INTERMEDIATE)$(ZLIB_BASE)$(SEP)zlib.host.a
 
 ZLIB_HOST_SOURCES = \
-	$(ZLIB_BASE)$(SEP)cdmake.c \
-	$(ZLIB_BASE)$(SEP)llmosrt.c \
 	$(ZLIB_BASE)$(SEP)adler32.c \
 	$(ZLIB_BASE)$(SEP)compress.c \
 	$(ZLIB_BASE)$(SEP)crc32.c \
@@ -31,6 +30,9 @@ ZLIB_HOST_OBJECTS = \
 
 ZLIB_HOST_CFLAGS = -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
   -Wstrict-prototypes -Wmissing-prototypes
+
+.PHONY: zlib_host
+zlib_host: $(ZLIB_HOST_TARGET)
 
 $(ZLIB_HOST_TARGET): $(ZLIB_HOST_BASE_DIR) $(ZLIB_HOST_OBJECTS)
 	$(ECHO_AR)

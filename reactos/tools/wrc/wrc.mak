@@ -1,30 +1,39 @@
-WRC_BASE = tools$(SEP)wrc
+WRC_BASE = $(TOOLS_BASE)$(SEP)wrc
 
 WRC_BASE_DIR = $(INTERMEDIATE)$(WRC_BASE)
+WRC_BASE_DIR_EXISTS = $(WRC_BASE_DIR)$(SEP)$(EXISTS)
 
-$(WRC_BASE_DIR): $(INTERMEDIATE_NO_SLASH) $(RMKDIR_TARGET)
-	${mkdir} $(INTERMEDIATE)$(WRC_BASE)
+$(WRC_BASE_DIR_EXISTS): $(TOOLS_BASE_DIR_EXISTS)
+	$(ECHO_MKDIR)
+	${mkdir} $(WRC_BASE_DIR)
+	@echo . > $@
 
-WRC_BASE_PORT_DIR = $(INTERMEDIATE)$(WRC_BASE)$(SEP)port
+WRC_PORT_BASE = $(WRC_BASE)$(SEP)port
 
-$(WRC_BASE_PORT_DIR): $(RMKDIR_TARGET) $(WRC_BASE_DIR)
-	${mkdir} $(INTERMEDIATE)$(WRC_BASE)$(SEP)port
+WRC_PORT_BASE_DIR = $(INTERMEDIATE)$(WRC_PORT_BASE)
+WRC_PORT_BASE_DIR_EXISTS = $(WRC_PORT_BASE_DIR)$(SEP)$(EXISTS)
+
+$(WRC_PORT_BASE_DIR_EXISTS): $(WRC_BASE_DIR_EXISTS)
+	$(ECHO_MKDIR)
+	${mkdir} $(WRC_PORT_BASE_DIR)
+	@echo . > $@
 
 WRC_TARGET = \
-	$(INTERMEDIATE)$(WRC_BASE)$(SEP)wrc$(EXEPOSTFIX)
+	$(WRC_BASE_DIR)$(SEP)wrc$(EXEPOSTFIX)
 
-WRC_SOURCES = \
-	$(WRC_BASE)$(SEP)dumpres.c \
-	$(WRC_BASE)$(SEP)genres.c \
-	$(WRC_BASE)$(SEP)newstruc.c \
-	$(WRC_BASE)$(SEP)readres.c \
-	$(WRC_BASE)$(SEP)translation.c \
-	$(WRC_BASE)$(SEP)utils.c \
-	$(WRC_BASE)$(SEP)wrc.c \
-	$(WRC_BASE)$(SEP)writeres.c \
-	$(WRC_BASE)$(SEP)y.tab.c \
-	$(WRC_BASE)$(SEP)lex.yy.c \
-	$(WRC_BASE)$(SEP)port$(SEP)mkstemps.o
+WRC_SOURCES = $(addprefix $(WRC_BASE)$(SEP), \
+	dumpres.c \
+	genres.c \
+	newstruc.c \
+	readres.c \
+	translation.c \
+	utils.c \
+	wrc.c \
+	writeres.c \
+	y.tab.c \
+	lex.yy.c \
+	port$(SEP)mkstemps.c \
+	)
 
 WRC_OBJECTS = \
   $(addprefix $(INTERMEDIATE), $(WRC_SOURCES:.c=.o))
@@ -40,53 +49,53 @@ WRC_HOST_LFLAGS = -g
 .PHONY: wrc
 wrc: $(WRC_TARGET)
 
-$(WRC_TARGET): $(WRC_BASE_DIR) $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET)
+$(WRC_TARGET): $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET)
 	$(ECHO_LD)
-	${host_gcc} $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET) $(WRC_HOST_LFLAGS) -o $(WRC_TARGET)
+	${host_gcc} $(WRC_OBJECTS) $(UNICODE_TARGET) $(WPP_TARGET) $(WRC_HOST_LFLAGS) -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)dumpres.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)dumpres.c
+$(WRC_BASE_DIR)$(SEP)dumpres.o: $(WRC_BASE)$(SEP)dumpres.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)dumpres.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)dumpres.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)genres.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)genres.c
+$(WRC_BASE_DIR)$(SEP)genres.o: $(WRC_BASE)$(SEP)genres.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)genres.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)genres.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)newstruc.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)newstruc.c
+$(WRC_BASE_DIR)$(SEP)newstruc.o: $(WRC_BASE)$(SEP)newstruc.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)newstruc.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)newstruc.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)readres.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)readres.c
+$(WRC_BASE_DIR)$(SEP)readres.o: $(WRC_BASE)$(SEP)readres.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)readres.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)readres.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)translation.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)translation.c
+$(WRC_BASE_DIR)$(SEP)translation.o: $(WRC_BASE)$(SEP)translation.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)translation.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)translation.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)utils.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)utils.c
+$(WRC_BASE_DIR)$(SEP)utils.o: $(WRC_BASE)$(SEP)utils.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)utils.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)utils.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)wrc.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)wrc.c
+$(WRC_BASE_DIR)$(SEP)wrc.o: $(WRC_BASE)$(SEP)wrc.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)wrc.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)wrc.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)writeres.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)writeres.c
+$(WRC_BASE_DIR)$(SEP)writeres.o: $(WRC_BASE)$(SEP)writeres.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)writeres.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)writeres.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)y.tab.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)y.tab.c
+$(WRC_BASE_DIR)$(SEP)y.tab.o: $(WRC_BASE)$(SEP)y.tab.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)y.tab.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)y.tab.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)lex.yy.o: $(WRC_BASE_DIR) $(WRC_BASE)$(SEP)lex.yy.c
+$(WRC_BASE_DIR)$(SEP)lex.yy.o: $(WRC_BASE)$(SEP)lex.yy.c $(WRC_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)lex.yy.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)lex.yy.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(INTERMEDIATE)$(WRC_BASE)$(SEP)port$(SEP)mkstemps.o: $(WRC_BASE_PORT_DIR) $(WRC_BASE)$(SEP)port$(SEP)mkstemps.c
+$(WRC_PORT_BASE_DIR)$(SEP)mkstemps.o: $(WRC_PORT_BASE)$(SEP)mkstemps.c $(WRC_PORT_BASE_DIR_EXISTS)
 	$(ECHO_CC)
-	${host_gcc} $(WRC_HOST_CFLAGS) -c $(WRC_BASE)$(SEP)port$(SEP)mkstemps.c -o $(INTERMEDIATE)$(WRC_BASE)$(SEP)port$(SEP)mkstemps.o
+	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
 .PHONY: wrc_clean
 wrc_clean:
