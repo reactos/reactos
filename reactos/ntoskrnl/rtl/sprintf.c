@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.5 2001/05/30 14:36:52 ekohl Exp $
+/* $Id: sprintf.c,v 1.6 2002/02/18 18:39:31 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -240,9 +240,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				if (sw == NULL)
 					sw = L"<NULL>";
 
-				len = wcslen (sw);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
+				for (len = 0; (unsigned int)len < (unsigned int)precision && sw[len]; len++);
 
 				if (!(flags & LEFT))
 					while (len < field_width--)
@@ -257,9 +255,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				if (s == NULL)
 					s = "<NULL>";
 
-				len = strlen (s);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
+				for (len = 0; (unsigned int)len < (unsigned int)precision && s[len]; len++);
 
 				if (!(flags & LEFT))
 					while (len < field_width--)
@@ -278,9 +274,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				if (s == NULL)
 					s = "<NULL>";
 
-				len = strlen (s);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
+				for (len = 0; (unsigned int)len < (unsigned int)precision && s[len]; len++);
 
 				if (!(flags & LEFT))
 					while (len < field_width--)
@@ -295,9 +289,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				if (sw == NULL)
 					sw = L"<NULL>";
 
-				len = wcslen (sw);
-				if ((unsigned int)len > (unsigned int)precision)
-					len = precision;
+				for (len = 0; (unsigned int)len < (unsigned int)precision && sw[len]; len++);
 
 				if (!(flags & LEFT))
 					while (len < field_width--)
