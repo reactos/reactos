@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.73 2004/08/02 15:04:24 navaraf Exp $
+# $Id: helper.mk,v 1.74 2004/08/02 15:51:23 navaraf Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -880,13 +880,39 @@ else
 implib: $(SUBDIRS:%=%_implib)
 endif
 
+# Precompiled header support
+# When using PCHs, use dependency tracking to keep the .pch files up-to-date.
+
+MK_PCHNAME =
+ifeq ($(ROS_USE_PCH),yes)
+ifneq ($(TARGET_PCH),)
+MK_PCHNAME = $(TARGET_PCH).pch
+
+# GCC generates wrong dependencies for header files.
+MK_PCHFAKE = $(TARGET_PCH:.h=.o)
+$(MK_PCHFAKE):
+	- $(RTOUCH) $(MK_PCHFAKE)
+
+$(MK_PCHNAME): depend.d
+	- $(RTOUCH) $(MK_PCHNAME)
+	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH)
+
+depend.d: $(MK_PCHFAKE)
+	- $(RTOUCH) depend.d
+	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
+
+include depend.d
+
+endif # TARGET_PCH
+endif # ROS_USE_PCH
+
 # Be carefull not to clean non-object files
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
 MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
 MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
 clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
-	- $(RM) *.o depend.d *.pch *.gch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
+	- $(RM) *.o depend.d $(MK_PCHNAME) *.gch $(MK_BASENAME).sym $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_GENERATED_MAKEFILE) \
 	  $(TARGET_CLEAN)
@@ -1013,33 +1039,6 @@ $(SUBDIRS:%=%_bootcd): %_bootcd:
         $(SUBDIRS:%=%_clean) $(SUBDIRS:%=%_install) $(SUBDIRS:%=%_dist) \
         $(SUBDIRS:%=%_bootcd)
 endif
-
-# Precompiled header support
-# When using PCHs, use dependency tracking to keep the .pch files up-to-date.
-
-MK_PCHNAME =
-ifeq ($(ROS_USE_PCH),yes)
-ifneq ($(TARGET_PCH),)
-MK_PCHNAME = $(TARGET_PCH).pch
-
-# GCC generates wrong dependencies for header files.
-MK_PCHFAKE = $(TARGET_PCH:.h=.o)
-$(MK_PCHFAKE):
-	- $(RTOUCH) $(MK_PCHFAKE)
-
-$(MK_PCHNAME): depend.d
-	- $(RTOUCH) $(MK_PCHNAME)
-	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH)
-
-depend.d: $(MK_PCHFAKE)
-	- $(RTOUCH) depend.d
-	- $(CC) $(TARGET_CFLAGS) $(TARGET_PCH) -M -MF depend.d
-
-include depend.d
-
-endif # TARGET_PCH
-endif # ROS_USE_PCH
-
 
 ifeq ($(TARGET_REGTESTS),yes)
 ifeq ($(TARGET_BUILDENV_TEST),yes)
