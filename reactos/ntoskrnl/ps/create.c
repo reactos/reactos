@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.48 2002/08/08 17:54:16 dwelch Exp $
+/* $Id: create.c,v 1.49 2002/08/09 17:23:57 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -590,15 +590,13 @@ NtCreateThread(PHANDLE ThreadHandle,
     {
       return(Status);
     }
-
-  /* Attention: TebBase is in user memory space */
   Thread->Tcb.Teb = TebBase;
 
-  Thread->StartAddress=NULL;
+  Thread->StartAddress = NULL;
 
   if (Client != NULL)
     {
-      *Client=Thread->Cid;
+      *Client = Thread->Cid;
     }
 
   /*
@@ -615,6 +613,10 @@ NtCreateThread(PHANDLE ThreadHandle,
    * If the thread is to be created suspended then queue an APC to
    * do the suspend before we run any userspace code.
    */
+  if (CreateSuspended)
+    {
+      PsSuspendThread(Thread, NULL);
+    }
 
   /*
    * Queue an APC to the thread that will execute the ntdll startup
@@ -680,7 +682,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 	return(Status);
      }
    
-   Thread->StartAddress=StartRoutine;
+   Thread->StartAddress = StartRoutine;
    Status = Ke386InitThread(&Thread->Tcb,
 			    StartRoutine,
 			    StartContext);
@@ -689,7 +691,7 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 	return(Status);
      }
 
-   if (ClientId!=NULL)
+   if (ClientId != NULL)
      {
 	*ClientId=Thread->Cid;
      }

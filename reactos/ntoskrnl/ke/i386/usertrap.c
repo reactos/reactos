@@ -92,7 +92,7 @@ print_user_address(PVOID address)
        return(TRUE);
      }
 
-   Status = MmSafeCopyFromUser(&Ldr, Peb->Ldr, sizeof(PPEB_LDR_DATA));
+   Status = MmSafeCopyFromUser(&Ldr, &Peb->Ldr, sizeof(PPEB_LDR_DATA));
    if (!NT_SUCCESS(Status))
      {
        DbgPrint("<%x>", address);

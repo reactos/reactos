@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: sem.c,v 1.8 2001/03/16 23:04:59 dwelch Exp $
+/* $Id: sem.c,v 1.9 2002/08/09 17:23:57 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/sem.c
@@ -81,30 +81,28 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
  *          object is Not-Signaled.
  */
 {
-   ULONG initState = Semaphore->Header.SignalState;
+   ULONG InitialState;
   
    DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, "
 	  "Wait %d)\n", Semaphore, Increment, Adjustment, Wait);
    
    KeAcquireDispatcherDatabaseLock(Wait);
    
-   if (Semaphore->Limit < initState+Adjustment
-       || initState > initState+Adjustment)
+   InitialState = Semaphore->Header.SignalState;
+   if (Semaphore->Limit < InitialState + Adjustment ||
+       InitialState > InitialState + Adjustment)
      {
 	ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
      }
    
-   Semaphore->Header.SignalState+=Adjustment;
-   DPRINT("initState %d\n", initState);
-   if(initState == 0)
+   Semaphore->Header.SignalState += Adjustment;
+   if (InitialState == 0)
      {
-	//  wake up SignalState waiters
-	DPRINT("Waking waiters\n");
-	KeDispatcherObjectWake(&Semaphore->Header);
+       KeDispatcherObjectWake(&Semaphore->Header);
      }
    
   KeReleaseDispatcherDatabaseLock(Wait);
-  return initState;
+  return(InitialState);
 }
 
 /* EOF */

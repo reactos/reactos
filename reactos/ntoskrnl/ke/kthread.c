@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.30 2002/08/08 17:54:14 dwelch Exp $
+/* $Id: kthread.c,v 1.31 2002/08/09 17:23:57 dwelch Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -224,7 +224,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
 		  PiSuspendThreadNormalRoutine,
 		  KernelMode,
 		  NULL);
-  KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 255);
+  KeInitializeSemaphore(&Thread->SuspendSemaphore, 0, 128);
   Thread->ThreadListEntry.Flink = NULL;
   Thread->ThreadListEntry.Blink = NULL;
   Thread->FreezeCount = 0;

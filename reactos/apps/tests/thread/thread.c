@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.7 2001/02/06 00:11:17 dwelch Exp $
+/* $Id: thread.c,v 1.8 2002/08/09 17:23:56 dwelch Exp $
  *
  *
  *
@@ -44,7 +44,7 @@ int main (int argc, char* argv[])
    DWORD i=0;
    DWORD id;
    ULONG nr;
-   
+   HANDLE ThreadHandle[NR_THREADS];
 
    // The user must supply one argument (the seed). if he/she doesn't
    // then we show the help.
@@ -60,16 +60,30 @@ int main (int argc, char* argv[])
    printf("Creating %d threads...\n",NR_THREADS*2);
    for (i=0;i<NR_THREADS;i++)
      {
-	CreateThread(NULL,
-		     0,
-		     thread_main1,
-		     (LPVOID)i,
-		     0,
-		     &id);
+       ThreadHandle[i] = CreateThread(NULL,
+				      0,
+				      thread_main1,
+				      (LPVOID)i,
+				      CREATE_SUSPENDED,
+				      &id);
 
      }
 
+   for (i=0;i<NR_THREADS;i++)
+     {
+       ResumeThread(ThreadHandle[i]);
+     }
+
+   for (i=0;i<NR_THREADS;i++)
+     {
+       SuspendThread(ThreadHandle[i]);
+     }
+
+   for (i=0;i<NR_THREADS;i++)
+     {
+       ResumeThread(ThreadHandle[i]);
+     }
+
    printf("All threads created...\n");
-   for(;;);
    return 0;
 }

@@ -90,32 +90,35 @@ KiDeliverNormalApc(VOID)
 
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
    while(!IsListEmpty(&(Thread->Tcb.ApcState.ApcListHead[0])))
-   {
-     current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
-     Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
-     if (Apc->NormalRoutine != NULL)
-       {
-	 (VOID)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
-	 Thread->Tcb.ApcState.KernelApcInProgress++;
-	 Thread->Tcb.ApcState.KernelApcPending--;
-
-	 KeReleaseSpinLock(&PiApcLock, oldlvl);
-	 
-	 NormalRoutine = Apc->NormalRoutine;
-	 NormalContext = Apc->NormalContext;
-	 SystemArgument1 = Apc->SystemArgument1;
-	 SystemArgument2 = Apc->SystemArgument2;
-	 Apc->KernelRoutine(Apc,
-			    &NormalRoutine,
-			    &NormalContext,
-			    &SystemArgument1,
-			    &SystemArgument2);
-	 NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
-
-	 KeAcquireSpinLock(&PiApcLock, &oldlvl);
-	 Thread->Tcb.ApcState.KernelApcInProgress--;
-       }
-   }
+     {
+       current = Thread->Tcb.ApcState.ApcListHead[0].Blink;
+       Apc = CONTAINING_RECORD(current, KAPC, ApcListEntry);
+       if (Apc->NormalRoutine == NULL)
+	 {
+	   DbgPrint("Exiting kernel with kernel APCs pending.\n");
+	   KeBugCheck(0);
+	 }
+       (VOID)RemoveTailList(&Thread->Tcb.ApcState.ApcListHead[0]);
+       Apc->Inserted = FALSE;
+       Thread->Tcb.ApcState.KernelApcInProgress++;
+       Thread->Tcb.ApcState.KernelApcPending--;
+       
+       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       
+       NormalRoutine = Apc->NormalRoutine;
+       NormalContext = Apc->NormalContext;
+       SystemArgument1 = Apc->SystemArgument1;
+       SystemArgument2 = Apc->SystemArgument2;
+       Apc->KernelRoutine(Apc,
+			  &NormalRoutine,
+			  &NormalContext,
+			  &SystemArgument1,
+			  &SystemArgument2);
+       NormalRoutine(NormalContext, SystemArgument1, SystemArgument2);
+       
+       KeAcquireSpinLock(&PiApcLock, &oldlvl);
+       Thread->Tcb.ApcState.KernelApcInProgress--;
+     }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
@@ -161,8 +164,9 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    while (!IsListEmpty(&Thread->ApcState.ApcListHead[1]))
      {
        current_entry = RemoveHeadList(&Thread->ApcState.ApcListHead[1]);
-       KeReleaseSpinLock(&PiApcLock, oldlvl);
        Apc = CONTAINING_RECORD(current_entry, KAPC, ApcListEntry);
+       Apc->Inserted = FALSE;
+       KeReleaseSpinLock(&PiApcLock, oldlvl);       
        
        /*
 	* Save the thread's current context (in other words the registers
@@ -259,6 +263,7 @@ KiDeliverApc(ULONG Unknown1,
        if (Apc->NormalRoutine == NULL)
 	 {
 	   current_entry = current_entry->Flink;
+	   Apc->Inserted = FALSE;
 	   RemoveEntryList(&Apc->ApcListEntry);
 	   Thread->Tcb.ApcState.KernelApcInProgress++;
 	   Thread->Tcb.ApcState.KernelApcPending--;

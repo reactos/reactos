@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.7 2002/07/10 15:17:35 ekohl Exp $
+/* $Id: suspend.c,v 1.8 2002/08/09 17:23:57 dwelch Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -38,6 +38,10 @@
 /* NOTES **********************************************************************
  *
  */
+
+/* GLOBALS *******************************************************************/
+
+static FAST_MUTEX SuspendMutex;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -62,20 +66,36 @@ PiSuspendThreadNormalRoutine(PVOID NormalContext,
 			     PVOID SystemArgument1,
 			     PVOID SystemArgument2)
 {
-  KeWaitForSingleObject(&PsGetCurrentThread()->Tcb.SuspendSemaphore,
-			0,
-			UserMode,
-			TRUE,
-			NULL);
+  PETHREAD CurrentThread = PsGetCurrentThread();
+  while (CurrentThread->Tcb.SuspendCount > 0)
+    {
+      KeWaitForSingleObject(&CurrentThread->Tcb.SuspendSemaphore,
+			    0,
+			    UserMode,
+			    TRUE,
+			    NULL);
+    }
 }
 
 
 NTSTATUS
 PsResumeThread(PETHREAD Thread, PULONG SuspendCount)
 {
-  *SuspendCount = InterlockedDecrement((PULONG)&Thread->Tcb.SuspendCount);
-  KeReleaseSemaphore(&Thread->Tcb.SuspendSemaphore, IO_NO_INCREMENT, 1, FALSE);
-
+  ExAcquireFastMutex(&SuspendMutex);
+  if (SuspendCount != NULL)
+    {
+      *SuspendCount = Thread->Tcb.SuspendCount;
+    }
+  if (Thread->Tcb.SuspendCount > 0)
+    {
+      Thread->Tcb.SuspendCount--;
+      if (Thread->Tcb.SuspendCount == 0)
+	{
+	  KeReleaseSemaphore(&Thread->Tcb.SuspendSemaphore, IO_NO_INCREMENT, 
+			     1, FALSE);
+	}      
+    }
+  ExReleaseFastMutex(&SuspendMutex);
   return(STATUS_SUCCESS);
 }
 
@@ -85,19 +105,21 @@ PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
 {
   ULONG OldValue;
 
-  OldValue = InterlockedIncrement((PULONG)&Thread->Tcb.SuspendCount);
-  if (OldValue == 0)
+  ExAcquireFastMutex(&SuspendMutex);
+  OldValue = Thread->Tcb.SuspendCount;
+  Thread->Tcb.SuspendCount++;
+  if (!Thread->Tcb.SuspendApc.Inserted)
     {
       KeInsertQueueApc(&Thread->Tcb.SuspendApc,
 		       NULL,
 		       NULL,
 		       0);
     }
-  else
+  ExReleaseFastMutex(&SuspendMutex);
+  if (PreviousSuspendCount != NULL)
     {
-      InterlockedDecrement(&Thread->Tcb.SuspendSemaphore.Header.SignalState);
+      *PreviousSuspendCount = OldValue;
     }
-
   return(STATUS_SUCCESS);
 }
 
@@ -184,6 +206,12 @@ NtSuspendThread(IN HANDLE ThreadHandle,
   ObDereferenceObject((PVOID)Thread);
 
   return(STATUS_SUCCESS);
+}
+
+VOID
+PsInitialiseSuspendImplementation(VOID)
+{
+  ExInitializeFastMutex(&SuspendMutex);
 }
 
 /* EOF */

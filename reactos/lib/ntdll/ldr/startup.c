@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.39 2002/08/08 17:54:13 dwelch Exp $
+/* $Id: startup.c,v 1.40 2002/08/09 17:23:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,11 +62,14 @@ LdrInitializeThunk (ULONG Unknown1,
        PDLLMAIN_FUNC Entrypoint;
        PLDR_MODULE current;
 
-       current_entry = NtCurrentPeb()->Ldr->InLoadOrderModuleList.Flink;
-       while (current_entry != &NtCurrentPeb()->Ldr->InLoadOrderModuleList)
+       RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
+       current_entry = 
+	 NtCurrentPeb()->Ldr->InInitializationOrderModuleList.Flink;
+       while (current_entry != 
+	      &NtCurrentPeb()->Ldr->InInitializationOrderModuleList)
 	 {
 	   current = CONTAINING_RECORD(current_entry, LDR_MODULE, 
-				       InLoadOrderModuleList);
+				       InInitializationOrderModuleList);
 	   Entrypoint = (PDLLMAIN_FUNC)current->EntryPoint;
 	   if (Entrypoint != NULL &&
 	       current->BaseAddress != NtCurrentPeb()->ImageBaseAddress)
@@ -75,6 +78,7 @@ LdrInitializeThunk (ULONG Unknown1,
 	     }
 	   current_entry = current_entry->Flink;
 	 }
+       RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
        return;
      }
 

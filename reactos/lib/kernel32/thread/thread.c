@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.26 2001/08/15 20:35:39 ea Exp $
+/* $Id: thread.c,v 1.27 2002/08/09 17:23:56 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,16 +26,6 @@
 
 static VOID ThreadAttachDlls (VOID);
 
-/* Type for a DLL's entry point */
-typedef
-WINBOOL
-STDCALL
-(* PDLLMAIN_FUNC) (
-	HANDLE	hInst,
-	ULONG	ul_reason_for_call,
-	LPVOID	lpReserved
-	);
-
 /* FUNCTIONS *****************************************************************/
 
 static VOID STDCALL
@@ -44,49 +34,11 @@ ThreadStartup (LPTHREAD_START_ROUTINE lpStartAddress,
 {
    UINT uExitCode;
 
-   ThreadAttachDlls ();
-
    /* FIXME: notify csrss of thread creation ?? */
 
    uExitCode = (lpStartAddress)(lpParameter);
 
    ExitThread(uExitCode);
-}
-
-static VOID
-ThreadAttachDlls (VOID)
-{
-   PLIST_ENTRY ModuleListHead;
-   PLIST_ENTRY Entry;
-   PLDR_MODULE Module;
-
-   DPRINT("ThreadAttachDlls() called\n");
-
-   RtlEnterCriticalSection (NtCurrentPeb()->LoaderLock);
-
-   ModuleListHead = &NtCurrentPeb()->Ldr->InInitializationOrderModuleList;
-   Entry = ModuleListHead->Blink;
-
-   while (Entry != ModuleListHead)
-     {
-	Module = CONTAINING_RECORD(Entry, LDR_MODULE, InInitializationOrderModuleList);
-
-	if (Module->EntryPoint != 0)
-	  {
-	     PDLLMAIN_FUNC Entrypoint = (PDLLMAIN_FUNC)Module->EntryPoint;
-
-	     DPRINT("Calling entry point at 0x%08x\n", Entrypoint);
-	     Entrypoint (Module->BaseAddress,
-			 DLL_THREAD_ATTACH,
-			 NULL);
-	  }
-
-	Entry = Entry->Blink;
-     }
-
-   RtlLeaveCriticalSection (NtCurrentPeb()->LoaderLock);
-
-   DPRINT("ThreadAttachDlls() done\n");
 }
 
 HANDLE STDCALL CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
