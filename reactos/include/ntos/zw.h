@@ -108,12 +108,12 @@ typedef struct _FILE_USER_QUOTA_INFORMATION {
 
 #ifndef __USE_NT_LPC__
 NTSTATUS STDCALL
-NtAcceptConnectPort (PHANDLE PortHandle,
-		     HANDLE NamedPortHandle,
-		     PLPC_MESSAGE ServerReply,
-		     BOOLEAN AcceptIt,
-		     PLPC_SECTION_WRITE WriteMap,
-		     PLPC_SECTION_READ ReadMap);
+NtAcceptConnectPort (OUT PHANDLE PortHandle,
+		     IN  PVOID Context,
+		     IN  PLPC_MESSAGE ServerReply,
+		     IN  BOOLEAN AcceptIt,
+		     IN  PLPC_SECTION_WRITE WriteMap,
+		     IN  PLPC_SECTION_READ ReadMap);
 #else
 NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE PortHandle,
