@@ -130,7 +130,7 @@ HWND DesktopWindow::Create()
 					0, 0, width, height, 0);
 
 	 // work around to display desktop bar in Wine
-//@@disabled	ShowWindow(GET_WINDOW(DesktopWindow, hwndDesktop)->_desktopBar, SW_SHOW);
+	ShowWindow(GET_WINDOW(DesktopWindow, hwndDesktop)->_desktopBar, SW_SHOW);
 
 	 // work around for Windows NT, Win 98, ...
 	 // Without this the desktop has mysteriously only a size of 800x600 pixels.
