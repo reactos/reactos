@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.40 2004/02/08 21:37:53 weiden Exp $ */
+/* $Id: fillshap.c,v 1.41 2004/02/19 21:12:10 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -34,6 +34,7 @@
 #include <include/palette.h>
 #include <include/eng.h>
 #include <include/intgdi.h>
+#include <include/tags.h>
 #include <internal/safe.h>
 
 #define NDEBUG
@@ -700,7 +701,7 @@ NtGdiPie(HDC  hDC,
   /* Number of points for the circle is 4 * sqrt(2) * Radius, start
      and end line have at most Radius points, so allocate at least
      that much */
-  ShapePoints = ExAllocatePool(PagedPool, 8 * (Right - Left + 1) / 2 * sizeof(SHAPEPOINT));
+  ShapePoints = ExAllocatePoolWithTag(PagedPool, 8 * (Right - Left + 1) / 2 * sizeof(SHAPEPOINT), TAG_SHAPE);
   if (NULL == ShapePoints)
     {
       BRUSHOBJ_UnlockBrush(dc->w.hBrush);
@@ -850,7 +851,7 @@ NtGdiPolygon(HDC          hDC,
   
   if(Count >= 2)
   {
-    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -905,7 +906,7 @@ NtGdiPolyPolygon(HDC           hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePool(NonPagedPool, (sizeof(POINT) + sizeof(INT)) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, (sizeof(POINT) + sizeof(INT)) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -1474,7 +1475,7 @@ NtGdiGradientFill(
       return FALSE;
   }
 
-  if(!(SafeVertex = ExAllocatePool(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh)))
+  if(!(SafeVertex = ExAllocatePoolWithTag(PagedPool, (uVertex * sizeof(TRIVERTEX)) + SizeMesh, TAG_SHAPE)))
   {
     DC_UnlockDc(hdc);
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

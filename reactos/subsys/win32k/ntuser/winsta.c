@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: winsta.c,v 1.55 2004/01/15 16:29:10 gvg Exp $
+ *  $Id: winsta.c,v 1.56 2004/02/19 21:12:10 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -52,6 +52,7 @@
 #include <include/callback.h>
 #include <include/guicheck.h>
 #include <include/intgdi.h>
+#include <include/tags.h>
 /* Needed for DIRECTORY_OBJECT */
 #include <internal/ob.h>
 
@@ -124,7 +125,7 @@ IntGetFullWindowStationName(
       FullName->Length += WinStaName->Length + sizeof(WCHAR);
    if (DesktopName != NULL)
       FullName->Length += DesktopName->Length + sizeof(WCHAR);
-   FullName->Buffer = ExAllocatePool(NonPagedPool, FullName->Length);
+   FullName->Buffer = ExAllocatePoolWithTag(NonPagedPool, FullName->Length, TAG_STRING);
    if (FullName->Buffer == NULL)
    {
       return FALSE;

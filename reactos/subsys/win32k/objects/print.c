@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.13 2004/02/18 02:37:18 royce Exp $ */
+/* $Id: print.c,v 1.14 2004/02/19 21:12:10 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -24,6 +24,7 @@
 #include <win32k/print.h>
 #include <win32k/dc.h>
 #include <include/error.h>
+#include <include/tags.h>
 #include <internal/safe.h>
 
 #define NDEBUG
@@ -131,7 +132,7 @@ NtGdiExtEscape(
 
    if ( InSize && UnsafeInData )
    {
-      SafeInData = ExAllocatePool ( NonPagedPool, InSize );
+      SafeInData = ExAllocatePoolWithTag ( NonPagedPool, InSize, TAG_PRINT );
       if ( !SafeInData )
       {
          DC_UnlockDc(hDC);
@@ -150,7 +151,7 @@ NtGdiExtEscape(
 
    if ( OutSize && UnsafeOutData )
    {
-      SafeOutData = ExAllocatePool ( NonPagedPool, OutSize );
+      SafeOutData = ExAllocatePoolWithTag ( NonPagedPool, OutSize, TAG_PRINT );
       if ( !SafeOutData )
       {
          if ( SafeInData )

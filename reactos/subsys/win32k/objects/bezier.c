@@ -16,10 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bezier.c,v 1.4 2003/08/11 21:10:49 royce Exp $ */
+/* $Id: bezier.c,v 1.5 2004/02/19 21:12:10 weiden Exp $ */
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <math.h>
+#include <include/tags.h>
 
 /******************************************************************
  * 
@@ -154,7 +155,7 @@ static void STDCALL GDI_InternalBezier( POINT *Points, POINT **PtsOut, INT *dwOu
 {
   if(*nPtsOut == *dwOut) {
     *dwOut *= 2;
-    *PtsOut = ExAllocatePool(NonPagedPool, *dwOut * sizeof(POINT));
+    *PtsOut = ExAllocatePoolWithTag(NonPagedPool, *dwOut * sizeof(POINT), TAG_BEZIER);
   }
 
   if(!level || BezierCheck(level, Points)) {
@@ -218,7 +219,7 @@ POINT * FASTCALL GDI_Bezier( const POINT *Points, INT count, INT *nPtsOut )
     return NULL;
   }
   *nPtsOut = 0;
-  out = ExAllocatePool(NonPagedPool, dwOut * sizeof(POINT));
+  out = ExAllocatePoolWithTag(NonPagedPool, dwOut * sizeof(POINT), TAG_BEZIER);
   for(Bezier = 0; Bezier < (count-1)/3; Bezier++) {
     POINT ptBuf[4];
     memcpy(ptBuf, Points + Bezier * 3, sizeof(POINT) * 4);

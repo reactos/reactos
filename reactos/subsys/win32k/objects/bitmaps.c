@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.54 2004/02/12 21:50:19 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.55 2004/02/19 21:12:10 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -32,6 +32,7 @@
 #include <include/error.h>
 #include <include/surface.h>
 #include <include/palette.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -290,7 +291,7 @@ HBITMAP STDCALL NtGdiCreateBitmap(INT  Width,
   bmp->dib = NULL;
 
   // Allocate memory for bitmap bits
-  bmp->bitmap.bmBits = ExAllocatePool(PagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight);
+  bmp->bitmap.bmBits = ExAllocatePoolWithTag(PagedPool, bmp->bitmap.bmWidthBytes * bmp->bitmap.bmHeight, TAG_BITMAP);
 
   BITMAPOBJ_UnlockBitmap( hBitmap );
 
@@ -729,7 +730,7 @@ LONG STDCALL NtGdiSetBitmapBits(HBITMAP  hBitmap,
       /* FIXME: Alloc enough for entire bitmap */
       if (bmp->bitmap.bmBits == NULL)
       {
-        bmp->bitmap.bmBits = ExAllocatePool (PagedPool, Bytes);
+        bmp->bitmap.bmBits = ExAllocatePoolWithTag(PagedPool, Bytes, TAG_BITMAP);
       }
       if(!bmp->bitmap.bmBits)
       {
@@ -1060,7 +1061,7 @@ HBITMAP FASTCALL BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
   {
     char *buf;
 
-    buf = ExAllocatePool (NonPagedPool, bm.bmWidthBytes * bm.bmHeight);
+    buf = ExAllocatePoolWithTag (NonPagedPool, bm.bmWidthBytes * bm.bmHeight, TAG_BITMAP);
     NtGdiGetBitmapBits (hBitmap, bm.bmWidthBytes * bm.bmHeight, buf);
     NtGdiSetBitmapBits (res, bm.bmWidthBytes * bm.bmHeight, buf);
     ExFreePool (buf);

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.52 2004/02/16 11:16:06 rcampbell Exp $
+/* $Id: misc.c,v 1.53 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -27,6 +27,7 @@
 #include <include/msgqueue.h>
 #include <include/desktop.h>
 #include <include/text.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -787,7 +788,7 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
   {
     Src = Dest->Buffer;
     
-    Dest->Buffer = ExAllocatePool(NonPagedPool, Dest->MaximumLength);
+    Dest->Buffer = ExAllocatePoolWithTag(NonPagedPool, Dest->MaximumLength, TAG_STRING);
     if(!Dest->Buffer)
     {
       return STATUS_NO_MEMORY;

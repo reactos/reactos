@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.22 2004/02/10 18:11:12 navaraf Exp $
+/* $Id: timer.c,v 1.23 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,6 +39,7 @@
 #include <include/window.h>
 #include <include/error.h>
 #include <include/timer.h>
+#include <include/tags.h>
 #include <messages.h>
 #include <napi/win32.h>
 
@@ -259,7 +260,7 @@ IntSetTimer(HWND hWnd, UINT_PTR nIDEvent, UINT uElapse, TIMERPROC lpTimerFunc, B
   else
   {
     /* FIXME: use lookaside? */
-    NewTimer = ExAllocatePool(PagedPool, sizeof(MSG_TIMER_ENTRY));
+    NewTimer = ExAllocatePoolWithTag(PagedPool, sizeof(MSG_TIMER_ENTRY), TAG_TIMER);
     if(!NewTimer)
     {
       ExReleaseFastMutex(&Mutex);
@@ -436,8 +437,8 @@ TimerThreadMain(PVOID StartContext)
           break;
     }
 
-    ThreadsToDereference = (PETHREAD *)ExAllocatePool(
-       NonPagedPool, ThreadsToDereferenceCount * sizeof(PETHREAD));
+    ThreadsToDereference = (PETHREAD *)ExAllocatePoolWithTag(
+       NonPagedPool, ThreadsToDereferenceCount * sizeof(PETHREAD), TAG_TIMERTD);
 
     EnumEntry = TimerListHead.Flink;
     while (EnumEntry != &TimerListHead)
@@ -573,7 +574,7 @@ InitTimerImpl(VOID)
   KeInitializeTimer(&Timer);
   ExInitializeFastMutex(&Mutex);
   
-  HandleLessTimersBitMapBuffer = ExAllocatePool(PagedPool, BitmapBytes);
+  HandleLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
   RtlInitializeBitMap(&HandleLessTimersBitMap,
                       HandleLessTimersBitMapBuffer,
                       BitmapBytes * 8);

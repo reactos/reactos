@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.184 2004/02/15 20:50:56 gvg Exp $
+/* $Id: window.c,v 1.185 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -52,12 +52,11 @@
 #include <include/focus.h>
 #include <include/hook.h>
 #include <include/useratom.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
 #include <debug.h>
-
-#define TAG_WNAM  TAG('W', 'N', 'A', 'M')
 
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
@@ -76,7 +75,7 @@ static WORD WndProcHandlesArraySize = 0;
 NTSTATUS FASTCALL
 InitWindowImpl(VOID)
 {
-   WndProcHandlesArray = ExAllocatePool(PagedPool,WPH_SIZE * sizeof(WndProcHandle));
+   WndProcHandlesArray = ExAllocatePoolWithTag(PagedPool,WPH_SIZE * sizeof(WndProcHandle), TAG_WINPROCLST);
    WndProcHandlesArraySize = WPH_SIZE;
    return STATUS_SUCCESS;
 }
@@ -227,7 +226,7 @@ IntWinListChildren(PWINDOW_OBJECT Window)
   
    if (NumChildren != 0)
    {
-      List = ExAllocatePool(PagedPool, (NumChildren + 1) * sizeof(HWND));
+      List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), TAG_WINLIST);
       if (List != NULL)
       {
          for (Child = Window->FirstChild, Index = 0;
@@ -3201,7 +3200,7 @@ NtUserSetWindowPlacement(HWND hWnd,
   WinPosShowWindow(WindowObject->Self, Safepl.showCmd);
 
   if (WindowObject->InternalPos == NULL)
-     WindowObject->InternalPos = ExAllocatePool(PagedPool, sizeof(INTERNALPOS));
+     WindowObject->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
   WindowObject->InternalPos->NormalRect = Safepl.rcNormalPosition;
   WindowObject->InternalPos->IconPos = Safepl.ptMinPosition;
   WindowObject->InternalPos->MaxPos = Safepl.ptMaxPosition;
@@ -3584,7 +3583,7 @@ IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode)
 	{
 		OldArray = WndProcHandlesArray;
 		OldArraySize = WndProcHandlesArraySize;
-        WndProcHandlesArray = ExAllocatePool(PagedPool,(OldArraySize + WPH_SIZE) * sizeof(WndProcHandle));
+        WndProcHandlesArray = ExAllocatePoolWithTag(PagedPool,(OldArraySize + WPH_SIZE) * sizeof(WndProcHandle), TAG_WINPROCLST);
 		WndProcHandlesArraySize = OldArraySize + WPH_SIZE;
 		RtlCopyMemory(WndProcHandlesArray,OldArray,OldArraySize * sizeof(WndProcHandle));
 		ExFreePool(OldArray);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: path.c,v 1.17 2003/12/13 10:18:01 weiden Exp $ */
+/* $Id: path.c,v 1.18 2004/02/19 21:12:10 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -31,6 +31,7 @@
 #include <include/object.h>
 #include <include/path.h>
 #include <include/intgdi.h>
+#include <include/tags.h>
 
 #include <math.h>
 #include <float.h>
@@ -858,7 +859,7 @@ PATH_PathToRegion ( const GdiPath *pPath, INT nPolyFillMode, HRGN *pHrgn )
       numStrokes++;
 
   /* Allocate memory for number-of-points-in-stroke array */
-  pNumPointsInStroke=(int *)ExAllocatePool(NonPagedPool, sizeof(int) * numStrokes);
+  pNumPointsInStroke=(int *)ExAllocatePoolWithTag(NonPagedPool, sizeof(int) * numStrokes, TAG_PATH);
   if(!pNumPointsInStroke)
   {
 //    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -981,10 +982,10 @@ PATH_ReserveEntries ( GdiPath *pPath, INT numEntries )
        numEntriesToAllocate=numEntries;
 
     /* Allocate new arrays */
-    pPointsNew=(POINT *)ExAllocatePool(NonPagedPool, numEntriesToAllocate * sizeof(POINT));
+    pPointsNew=(POINT *)ExAllocatePoolWithTag(NonPagedPool, numEntriesToAllocate * sizeof(POINT), TAG_PATH);
     if(!pPointsNew)
       return FALSE;
-    pFlagsNew=(BYTE *)ExAllocatePool(NonPagedPool, numEntriesToAllocate * sizeof(BYTE));
+    pFlagsNew=(BYTE *)ExAllocatePoolWithTag(NonPagedPool, numEntriesToAllocate * sizeof(BYTE), TAG_PATH);
     if(!pFlagsNew)
     {
       ExFreePool(pPointsNew);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.91 2004/02/19 15:27:55 weiden Exp $
+/* $Id: winpos.c,v 1.92 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -45,6 +45,7 @@
 #include <include/dce.h>
 #include <include/vis.h>
 #include <include/focus.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -172,7 +173,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       else
         WorkArea = WindowObject->Parent->ClientRect;
       
-      WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
+      WindowObject->InternalPos = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
       {
         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);

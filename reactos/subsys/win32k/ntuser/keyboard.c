@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.23 2004/02/19 06:59:50 arty Exp $
+/* $Id: keyboard.c,v 1.24 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -40,6 +40,7 @@
 #include <include/error.h>
 #include <include/object.h>
 #include <include/winsta.h>
+#include <include/tags.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -376,8 +377,9 @@ NTSTATUS NTAPI AppendUnicodeString(PUNICODE_STRING ResultFirst,
 				   BOOL Deallocate) {
     NTSTATUS Status;
     PWSTR new_string = 
-	ExAllocatePool(PagedPool,
-		       (ResultFirst->Length + Second->Length + sizeof(WCHAR)));
+	ExAllocatePoolWithTag(PagedPool,
+		              (ResultFirst->Length + Second->Length + sizeof(WCHAR)),
+			      TAG_STRING);
     if( !new_string ) {
 	return STATUS_NO_MEMORY;
     }
@@ -436,7 +438,7 @@ static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
     
     ResLength += sizeof( *KeyValuePartialInfo );
     KeyValuePartialInfo = 
-	ExAllocatePool(PagedPool, ResLength);
+	ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
     Length = ResLength;
     
     if( !KeyValuePartialInfo ) {
@@ -533,9 +535,9 @@ void InitKbdLayout( PVOID *pkKeyboardLayout ) {
 
 	RtlFreeUnicodeString(&LayoutFile);
 
-	KeyboardLayoutWSTR = ExAllocatePool(PagedPool,
-					    (FullLayoutPath.Length + 1) * 
-					    sizeof(WCHAR));
+	KeyboardLayoutWSTR = ExAllocatePoolWithTag(PagedPool,
+						   (FullLayoutPath.Length + 1) * 
+						   sizeof(WCHAR), TAG_STRING);
 
 	if( !KeyboardLayoutWSTR ) {
 	  DPRINT1("Couldn't allocate a string for the keyboard layout name.\n");
@@ -837,7 +839,7 @@ NtUserToUnicodeEx(
     DPRINT1( "Couldn't copy key state from caller.\n" );
     return 0;
   }
-  OutPwszBuff = ExAllocatePool(NonPagedPool,sizeof(WCHAR) * cchBuff);
+  OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
   if( !OutPwszBuff ) {
     DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
     return 0;

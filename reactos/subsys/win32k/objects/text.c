@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.73 2004/02/11 21:52:28 sedwards Exp $ */
+/* $Id: text.c,v 1.74 2004/02/19 21:12:10 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -40,6 +40,7 @@
 #include <include/text.h>
 #include <include/eng.h>
 #include <include/palette.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -155,7 +156,7 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
 
   //  Allocate nonpageable memory for driver
   size = FileStdInfo.EndOfFile.u.LowPart;
-  buffer = ExAllocatePool(NonPagedPool, size);
+  buffer = ExAllocatePoolWithTag(NonPagedPool, size, TAG_GDITEXT);
 
   if (buffer == NULL)
   {
@@ -197,7 +198,7 @@ IntGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
     return 0;
   }
   
-  entry = ExAllocatePool(NonPagedPool, sizeof(FONT_ENTRY));
+  entry = ExAllocatePoolWithTag(NonPagedPool, sizeof(FONT_ENTRY), TAG_FONT);
   if(!entry)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -284,7 +285,7 @@ BOOL FASTCALL InitFontSupport(VOID)
                 pBuff = ExAllocatePool(NonPagedPool,0x4000);
                 RtlInitUnicodeString(&cchFilename,0);
                 cchFilename.MaximumLength = 0x1000;
-                cchFilename.Buffer = ExAllocatePool(PagedPool,cchFilename.MaximumLength);
+                cchFilename.Buffer = ExAllocatePoolWithTag(PagedPool,cchFilename.MaximumLength, TAG_STRING);
  
                 cchFilename.Length = 0;
 				    
@@ -382,7 +383,7 @@ NtGdiAddFontResource(PUNICODE_STRING Filename, DWORD fl)
   }
   
   src = SafeFileName.Buffer;
-  SafeFileName.Buffer = (PWSTR)ExAllocatePool(PagedPool, SafeFileName.MaximumLength);
+  SafeFileName.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, SafeFileName.MaximumLength, TAG_STRING);
   if(!SafeFileName.Buffer)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -916,7 +917,7 @@ NtGdiGetCharWidth32(HDC  hDC,
    }
 
    BufferSize = (LastChar - FirstChar) * sizeof(INT);
-   SafeBuffer = ExAllocatePool(PagedPool, BufferSize);
+   SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
    if (SafeBuffer == NULL)
    {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -1219,7 +1220,7 @@ NtGdiGetTextExtentExPoint(HDC hDC,
       return TRUE;
     }
 
-  String = ExAllocatePool(PagedPool, Count * sizeof(WCHAR));
+  String = ExAllocatePoolWithTag(PagedPool, Count * sizeof(WCHAR), TAG_GDITEXT);
   if (NULL == String)
     {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -1228,7 +1229,7 @@ NtGdiGetTextExtentExPoint(HDC hDC,
 
   if (NULL != UnsafeDx)
     {
-      Dx = ExAllocatePool(PagedPool, Count * sizeof(INT));
+      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
       if (NULL == Dx)
 	{
 	  ExFreePool(String);

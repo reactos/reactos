@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.6 2003/11/20 15:35:33 weiden Exp $
+/* $Id: prop.c,v 1.7 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,6 +41,7 @@
 #include <include/callback.h>
 #include <include/msgqueue.h>
 #include <include/rect.h>
+#include <include/tags.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -215,7 +216,7 @@ IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
 
   if (Prop == NULL)
   {
-    Prop = ExAllocatePool(PagedPool, sizeof(PROPERTY));
+    Prop = ExAllocatePoolWithTag(PagedPool, sizeof(PROPERTY), TAG_WNDPROP);
     if (Prop == NULL)
     {
       return FALSE;

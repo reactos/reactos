@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.66 2004/02/19 15:27:55 weiden Exp $
+/* $Id: msgqueue.c,v 1.67 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -43,14 +43,13 @@
 #include <include/cursoricon.h>
 #include <include/focus.h>
 #include <include/caret.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
-
-#define TAG_MSGQ TAG('M', 'S', 'G', 'Q')
 
 #define SYSTEM_MESSAGE_QUEUE_SIZE           (256)
 
@@ -788,8 +787,8 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   /* Notify the sender if they specified a callback. */
   if (Message->CompletionCallback != NULL)
     {
-      NotifyMessage = ExAllocatePool(NonPagedPool,
-				     sizeof(USER_SENT_MESSAGE_NOTIFY));
+      NotifyMessage = ExAllocatePoolWithTag(NonPagedPool,
+					    sizeof(USER_SENT_MESSAGE_NOTIFY), TAG_USRMSG);
       NotifyMessage->CompletionCallback =
 	Message->CompletionCallback;
       NotifyMessage->CompletionCallbackContext =
@@ -828,7 +827,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
   KeInitializeEvent(&CompletionEvent, NotificationEvent, FALSE);
 
-  Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_MSGQ);
+  Message = ExAllocatePoolWithTag(PagedPool, sizeof(USER_SENT_MESSAGE), TAG_USRMSG);
   Message->Msg.hwnd = Wnd;
   Message->Msg.message = Msg;
   Message->Msg.wParam = wParam;
@@ -980,8 +979,9 @@ MsqCreateMessageQueue(struct _ETHREAD *Thread)
 {
   PUSER_MESSAGE_QUEUE MessageQueue;
 
-  MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePool(PagedPool,
-				   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO));
+  MessageQueue = (PUSER_MESSAGE_QUEUE)ExAllocatePoolWithTag(PagedPool,
+				   sizeof(USER_MESSAGE_QUEUE) + sizeof(THRDCARETINFO),
+				   TAG_MSGQ);
   if (!MessageQueue)
     {
       return NULL;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.31 2004/01/15 21:03:05 gvg Exp $
+/* $Id: brush.c,v 1.32 2004/02/19 21:12:10 weiden Exp $
  */
 
 
@@ -30,6 +30,7 @@
 #include <include/object.h>
 #include <include/inteng.h>
 #include <include/error.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -335,7 +336,7 @@ BOOL STDCALL NtGdiPolyPatBlt(HDC hDC,
     
 	if(cRects > 0)
 	{
-	  rb = ExAllocatePool(PagedPool, sizeof(PATRECT) * cRects);
+	  rb = ExAllocatePoolWithTag(PagedPool, sizeof(PATRECT) * cRects, TAG_PATBLT);
 	  if(!rb)
 	  {
 	    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.45 2004/02/19 19:44:39 weiden Exp $
+/* $Id: menu.c,v 1.46 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,12 +38,11 @@
 #include <include/guicheck.h>
 #include <include/window.h>
 #include <include/color.h>
+#include <include/tags.h>
 #include <internal/safe.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define TAG_MENU TAG('M', 'E', 'N', 'U')
 
 /* INTERNAL ******************************************************************/
 
@@ -327,7 +326,7 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
     Old = NewMenuItem;
     if(NewMenuItem)
       NewMenuItem->Next = MenuItem;
-    NewMenuItem = ExAllocatePoolWithTag(PagedPool, sizeof(MENU_ITEM), TAG_MENU);
+    NewMenuItem = ExAllocatePoolWithTag(PagedPool, sizeof(MENU_ITEM), TAG_MENUITEM);
     if(!NewMenuItem)
       break;
     NewMenuItem->fType = MenuItem->fType;
@@ -343,7 +342,7 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
       {
         NewMenuItem->Text.Length = 0;
         NewMenuItem->Text.MaximumLength = MenuItem->Text.MaximumLength;
-        NewMenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, MenuItem->Text.MaximumLength, TAG_MENU);
+        NewMenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, MenuItem->Text.MaximumLength, TAG_STRING);
         if(!NewMenuItem->Text.Buffer)
         {
           ExFreePool(NewMenuItem);
@@ -748,7 +747,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       Source = (PUNICODE_STRING)lpmii->dwTypeData;
       FreeMenuText(MenuItem);
       copylen = min((UINT)Source->MaximumLength, (lpmii->cch + 1) * sizeof(WCHAR));
-      MenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, copylen, TAG_MENU);
+      MenuItem->Text.Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, copylen, TAG_STRING);
       if(MenuItem->Text.Buffer)
       {
         MenuItem->Text.Length = 0;
@@ -812,7 +811,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
       pos = -1;
     }
   
-  MenuItem = ExAllocatePoolWithTag(PagedPool, sizeof(MENU_ITEM), TAG_MENU);
+  MenuItem = ExAllocatePoolWithTag(PagedPool, sizeof(MENU_ITEM), TAG_MENUITEM);
   if (NULL == MenuItem)
     {
       SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

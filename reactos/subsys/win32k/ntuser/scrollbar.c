@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.26 2004/01/14 22:18:35 gvg Exp $
+/* $Id: scrollbar.c,v 1.27 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,6 +41,7 @@
 #include <include/rect.h>
 #include <include/scroll.h>
 #include <include/painting.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -485,7 +486,7 @@ IntCreateScrollBar(PWINDOW_OBJECT Window, LONG idObject)
   LRESULT Result;
   INT i;
 
-  psbi = ExAllocatePool(PagedPool, sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO));
+  psbi = ExAllocatePoolWithTag(PagedPool, sizeof(SCROLLBARINFO) + sizeof(SCROLLINFO), TAG_SBARINFO);
   if(!psbi)
     return FALSE;
     

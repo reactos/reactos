@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.14 2003/12/20 10:31:32 navaraf Exp $ */
+/* $Id: palette.c,v 1.15 2004/02/19 21:12:10 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -29,6 +29,7 @@
 #include <include/palette.h>
 #include <include/object.h>
 #include <include/color.h>
+#include <include/tags.h>
 
 static int           PALETTE_firstFree = 0; 
 static unsigned char PALETTE_freeList[256];
@@ -81,7 +82,7 @@ PALETTE_AllocPalette(ULONG Mode,
 
   if (NULL != Colors)
     {
-      PalGDI->IndexedColors = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY) * NumColors);
+      PalGDI->IndexedColors = ExAllocatePoolWithTag(NonPagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
       if (NULL == PalGDI->IndexedColors)
 	{
 	  PALETTE_UnlockPalette(NewPalette);
@@ -117,7 +118,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
   const PALETTEENTRY* __sysPalTemplate = (const PALETTEENTRY*)COLOR_GetSystemPaletteTemplate();
 
   // create default palette (20 system colors)
-  palPtr = ExAllocatePool(NonPagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)));
+  palPtr = ExAllocatePoolWithTag(NonPagedPool, sizeof(LOGPALETTE) + (NB_RESERVED_COLORS * sizeof(PALETTEENTRY)), TAG_PALETTE);
   if (!palPtr) return FALSE;
 
   palPtr->palVersion = 0x300;
@@ -201,7 +202,7 @@ INT STDCALL PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapO
   //mapping = HeapReAlloc( GetProcessHeap(), 0, palPtr->mapping,
   //                       sizeof(int)*palPtr->logpalette->palNumEntries);
   ExFreePool(palPtr->mapping);
-  mapping = ExAllocatePool(NonPagedPool, sizeof(int)*palGDI->NumColors);
+  mapping = ExAllocatePoolWithTag(NonPagedPool, sizeof(int)*palGDI->NumColors, TAG_PALETTEMAP);
 
   palPtr->mapping = mapping;
 

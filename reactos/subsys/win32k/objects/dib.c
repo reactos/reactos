@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.41 2004/02/11 17:56:29 navaraf Exp $
+ * $Id: dib.c,v 1.42 2004/02/19 21:12:10 weiden Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -34,6 +34,7 @@
 #include <internal/safe.h>
 #include <include/surface.h>
 #include <include/palette.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -993,7 +994,7 @@ DIB_CreateDIBSection(
   // Allocate Memory for DIB and fill structure
   if (bm.bmBits)
   {
-    dib = ExAllocatePool(PagedPool, sizeof(DIBSECTION));
+    dib = ExAllocatePoolWithTag(PagedPool, sizeof(DIBSECTION), TAG_DIB);
     RtlZeroMemory(dib, sizeof(DIBSECTION));
   }
 
@@ -1058,7 +1059,7 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 4) { Entries = 16; } else
     if(bi->biBitCount == 8) { Entries = 256; }
 
-    bmp->ColorMap = ExAllocatePool(NonPagedPool, sizeof(RGBQUAD)*Entries);
+    bmp->ColorMap = ExAllocatePoolWithTag(NonPagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
     RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
   }
 
@@ -1236,7 +1237,7 @@ DIB_MapPaletteColors(PDC dc, CONST BITMAPINFO* lpbmi)
       nNumColors = min(nNumColors, lpbmi->bmiHeader.biClrUsed);
     }
 
-  lpRGB = (RGBQUAD *)ExAllocatePool(NonPagedPool, sizeof(RGBQUAD) * nNumColors);
+  lpRGB = (RGBQUAD *)ExAllocatePoolWithTag(NonPagedPool, sizeof(RGBQUAD) * nNumColors, TAG_COLORMAP);
   lpIndex = (DWORD *)&lpbmi->bmiColors[0];
 
   for (i = 0; i < nNumColors; i++)
@@ -1309,7 +1310,7 @@ BuildDIBPalette (PBITMAPINFO bmi, PINT paletteType)
 
   if (PAL_INDEXED == *paletteType)
     {
-      palEntries = ExAllocatePool(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount);
+      palEntries = ExAllocatePoolWithTag(NonPagedPool, sizeof(PALETTEENTRY)*ColorCount, TAG_COLORMAP);
       DIBColorTableToPaletteEntries(palEntries, bmi->bmiColors, ColorCount);
     }
   hPal = PALETTE_AllocPalette( *paletteType, ColorCount, (ULONG*)palEntries, 0, 0, 0 );

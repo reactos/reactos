@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.26 2003/12/13 10:57:29 weiden Exp $ */
+/* $Id: line.c,v 1.27 2004/02/19 21:12:10 weiden Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -34,6 +34,7 @@
 #include <include/object.h>
 #include <include/path.h>
 #include <include/intgdi.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -180,7 +181,7 @@ IntGdiPolyBezierTo(DC      *dc,
   else /* We'll do it using PolyBezier */
   {
     POINT *npt;
-    npt = ExAllocatePool(NonPagedPool, sizeof(POINT) * (Count + 1));
+    npt = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * (Count + 1), TAG_BEZIER);
     if ( npt )
     {
       npt[0].x = dc->w.CursPosX;
@@ -222,7 +223,7 @@ IntGdiPolyline(DC      *dc,
   //FIXME: Do somthing with reg...
 
   //Allocate "Count" bytes of memory to hold a safe copy of pt
-  pts = (POINT*)ExAllocatePool ( NonPagedPool, sizeof(POINT)*Count );
+  pts = (POINT*)ExAllocatePoolWithTag ( NonPagedPool, sizeof(POINT)*Count, TAG_SHAPE );
   if ( pts )
   {
     // safely copy pt to local version
@@ -269,7 +270,7 @@ IntGdiPolylineTo(DC      *dc,
   }
   else /* do it using Polyline */
   {
-    POINT *pts = ExAllocatePool(NonPagedPool, sizeof(POINT) * (Count + 1));
+    POINT *pts = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * (Count + 1), TAG_SHAPE);
     if ( pts )
     {
       pts[0].x = dc->w.CursPosX;
@@ -540,7 +541,7 @@ NtGdiPolyBezier(HDC           hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -591,7 +592,7 @@ NtGdiPolyBezierTo(HDC  hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_BEZIER);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -652,7 +653,7 @@ NtGdiPolyline(HDC            hDC,
   
   if(Count >= 2)
   {
-    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -703,7 +704,7 @@ NtGdiPolylineTo(HDC            hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePool(NonPagedPool, sizeof(POINT) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, sizeof(POINT) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);
@@ -756,7 +757,7 @@ NtGdiPolyPolyline(HDC            hDC,
   
   if(Count > 0)
   {
-    Safept = ExAllocatePool(NonPagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count);
+    Safept = ExAllocatePoolWithTag(NonPagedPool, (sizeof(POINT) + sizeof(DWORD)) * Count, TAG_SHAPE);
     if(!Safept)
     {
       DC_UnlockDc(hDC);

@@ -31,6 +31,8 @@
 #include <include/cleanup.h>
 #include <include/error.h>
 #include <include/useratom.h>
+#include <include/tags.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -152,7 +154,7 @@ NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
   }
   
   /* Allocate memory for the string */
-  Buf = ExAllocatePool(NonPagedPool, cchMaxCount * sizeof(WCHAR));
+  Buf = ExAllocatePoolWithTag(NonPagedPool, cchMaxCount * sizeof(WCHAR), TAG_STRING);
   if(!Buf)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

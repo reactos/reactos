@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.59 2004/02/01 09:58:30 mf Exp $
+ * $Id: gdiobj.c,v 1.60 2004/02/19 21:12:10 weiden Exp $
  *
  */
 
@@ -39,6 +39,7 @@
 #include <win32k/cursoricon.h>
 #include <include/palette.h>
 #include <include/intgdi.h>
+#include <include/tags.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -169,9 +170,9 @@ GDIOBJ_iAllocHandleTable (WORD Size)
   /* prevent APC delivery for the *FastMutexUnsafe calls */
   const KIRQL PrevIrql = KfRaiseIrql(APC_LEVEL);
   ExAcquireFastMutexUnsafe (&HandleTableMutex);
-  handleTable = ExAllocatePool(PagedPool,
-                               sizeof(GDI_HANDLE_TABLE) +
-                               sizeof(PGDIOBJ) * Size);
+  handleTable = ExAllocatePoolWithTag(PagedPool,
+	                              sizeof(GDI_HANDLE_TABLE) +
+        	                      sizeof(PGDIOBJ) * Size, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   memset (handleTable,
           0,
@@ -261,7 +262,7 @@ GDIOBJ_AllocObj(WORD Size, DWORD ObjectType, GDICLEANUPPROC CleanupProc)
     }
 
   DPRINT("GDIOBJ_AllocObj: handle: %d, size: %d, type: 0x%08x\n", Index, Size, ObjectType);
-  newObject = ExAllocatePool(PagedPool, Size + sizeof (GDIOBJHDR));
+  newObject = ExAllocatePoolWithTag(PagedPool, Size + sizeof (GDIOBJHDR), TAG_GDIOBJ);
   if (newObject == NULL)
   {
     DPRINT1("GDIOBJ_AllocObj: failed\n");

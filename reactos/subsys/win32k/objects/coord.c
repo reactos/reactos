@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: coord.c,v 1.21 2004/01/04 21:26:59 weiden Exp $
+/* $Id: coord.c,v 1.22 2004/02/19 21:12:10 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -33,6 +33,7 @@
 #include <win32k/coord.h>
 #include <win32k/dc.h>
 #include <include/error.h>
+#include <include/tags.h>
 #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -155,7 +156,7 @@ NtGdiDPtoLP(HDC  hDC,
    
    Size = Count * sizeof(POINT);
    
-   Points = (LPPOINT)ExAllocatePool(PagedPool, Size);
+   Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
    if(!Points)
    {
      DC_UnlockDc(hDC);
@@ -304,7 +305,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    
    Size = Count * sizeof(POINT);
    
-   Points = (LPPOINT)ExAllocatePool(PagedPool, Size);
+   Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
    if(!Points)
    {
      DC_UnlockDc(hDC);

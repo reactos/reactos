@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.60 2004/02/08 09:27:39 navaraf Exp $
+/* $Id: mouse.c,v 1.61 2004/02/19 21:12:09 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -43,6 +43,7 @@
 #include "include/palette.h"
 #include "include/inteng.h"
 #include "include/eng.h"
+#include "include/tags.h"
 #include <include/mouse.h>
 
 #define NDEBUG
@@ -538,8 +539,6 @@ EnableMouse(HDC hDisplayDC)
 
 /* SOFTWARE MOUSE POINTER IMPLEMENTATION **************************************/
 
-#define MOUSE_TAG		TAG('M', 'O', 'U', 'S')
-
 VOID FASTCALL
 IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
 {
@@ -753,7 +752,7 @@ EngSetPointerShape(
 
       Size.cx = ppdev->PointerAttributes.Width;
       Size.cy = ppdev->PointerAttributes.Height;
-      Bits = EngAllocMem(0, psoColor->cjBits, MOUSE_TAG);
+      Bits = EngAllocMem(0, psoColor->cjBits, TAG_MOUSE);
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
       ppdev->PointerColorSurface = (HSURF)EngCreateBitmap(Size,
@@ -770,7 +769,7 @@ EngSetPointerShape(
 
       Size.cx = ppdev->PointerAttributes.Width;
       Size.cy = ppdev->PointerAttributes.Height << 1;
-      Bits = EngAllocMem(0, psoMask->cjBits, MOUSE_TAG);
+      Bits = EngAllocMem(0, psoMask->cjBits, TAG_MOUSE);
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
       ppdev->PointerMaskSurface = (HSURF)EngCreateBitmap(Size,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.49 2004/02/05 20:09:10 gvg Exp $
+/* $Id: message.c,v 1.50 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,12 +41,11 @@
 #include <include/painting.h>
 #include <include/input.h>
 #include <include/desktop.h>
+#include <include/tags.h>
 #include <internal/safe.h>
 
 #define NDEBUG
 #include <debug.h>
-
-#define TAG_MSG TAG('M', 'E', 'S', 'G')
 
 /* FUNCTIONS *****************************************************************/
 

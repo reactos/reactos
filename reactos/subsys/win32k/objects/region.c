@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.41 2004/02/11 17:56:29 navaraf Exp $ */
+/* $Id: region.c,v 1.42 2004/02/19 21:12:10 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -31,6 +31,7 @@
 #include <include/object.h>
 #include <include/inteng.h>
 #include <include/error.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -71,7 +72,7 @@ IntEngPaint(IN SURFOBJ *Surface,IN CLIPOBJ *ClipRegion,IN BRUSHOBJ *Brush,IN POI
 static inline int xmemcheck(ROSRGNDATA *reg, LPRECT *rect, LPRECT *firstrect ) {
 	if ( (reg->rdh.nCount+1)*sizeof( RECT ) >= reg->rdh.nRgnSize ) {
 		PRECT temp;
-		temp = ExAllocatePool( PagedPool, (2 * (reg->rdh.nRgnSize)));
+		temp = ExAllocatePoolWithTag( PagedPool, (2 * (reg->rdh.nRgnSize)), TAG_REGION);
 
 		if (temp == 0)
 		    return 0;
@@ -136,7 +137,7 @@ static BOOL FASTCALL REGION_CopyRegion(PROSRGNDATA dst, PROSRGNDATA src)
     {
 	  PCHAR temp;
 
-	  temp = ExAllocatePool(PagedPool, src->rdh.nCount * sizeof(RECT) );
+	  temp = ExAllocatePoolWithTag(PagedPool, src->rdh.nCount * sizeof(RECT), TAG_REGION );
 	  if( !temp )
 		return FALSE;
 
@@ -214,7 +215,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
         return TRUE;
     }
     else{
-      xrect = ExAllocatePool(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT));
+      xrect = ExAllocatePoolWithTag(PagedPool, rgnSrc->rdh.nCount * sizeof(RECT), TAG_REGION);
 	  if( rgnDst->Buffer )
 	  	ExFreePool( rgnDst->Buffer ); //free the old buffer. will be assigned to xrect below.
 	}
@@ -274,7 +275,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
     if((rgnDst != rgnSrc) && (rgnDst->rdh.nCount < (i = (clipb - clipa))))
     {
 	  PCHAR temp;
-	  temp = ExAllocatePool( PagedPool, i * sizeof(RECT) );
+	  temp = ExAllocatePoolWithTag( PagedPool, i * sizeof(RECT), TAG_REGION );
       if(!temp)
 	      return FALSE;
 
@@ -339,7 +340,7 @@ static BOOL FASTCALL REGION_CropAndOffsetRegion(const PPOINT off, const PRECT re
 empty:
 	if(!rgnDst->Buffer)
 	{
-	  rgnDst->Buffer = (char*)ExAllocatePool(PagedPool, RGN_DEFAULT_RECTS * sizeof(RECT));
+	  rgnDst->Buffer = (char*)ExAllocatePoolWithTag(PagedPool, RGN_DEFAULT_RECTS * sizeof(RECT), TAG_REGION);
 	  if(rgnDst->Buffer){
 	    rgnDst->rdh.nCount = RGN_DEFAULT_RECTS;
 		rgnDst->rdh.nRgnSize = RGN_DEFAULT_RECTS * sizeof(RECT);
@@ -619,7 +620,7 @@ REGION_RegionOp(
      */
     newReg->rdh.nRgnSize = max(reg1->rdh.nCount,reg2->rdh.nCount) * 2 * sizeof(RECT);
 
-    if (! (newReg->Buffer = ExAllocatePool( PagedPool, newReg->rdh.nRgnSize )))
+    if (! (newReg->Buffer = ExAllocatePoolWithTag( PagedPool, newReg->rdh.nRgnSize, TAG_REGION )))
     {
 		newReg->rdh.nRgnSize = 0;
 		return;
@@ -809,7 +810,7 @@ REGION_RegionOp(
 		if (REGION_NOT_EMPTY(newReg))
 		{
 		    RECT *prev_rects = (PRECT)newReg->Buffer;
-		    newReg->Buffer = ExAllocatePool( PagedPool, newReg->rdh.nCount*sizeof(RECT) );
+		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, newReg->rdh.nCount*sizeof(RECT), TAG_REGION );
 
 		    if (! newReg->Buffer)
 				newReg->Buffer = (char*)prev_rects;
@@ -827,7 +828,7 @@ REGION_RegionOp(
 		     */
 		    newReg->rdh.nRgnSize = sizeof(RECT);
 		    ExFreePool( newReg->Buffer );
-		    newReg->Buffer = ExAllocatePool( PagedPool, sizeof(RECT) );
+		    newReg->Buffer = ExAllocatePoolWithTag( PagedPool, sizeof(RECT), TAG_REGION );
 			ASSERT( newReg->Buffer );
 		}
     }
@@ -1476,7 +1477,7 @@ HRGN FASTCALL RGNDATA_AllocRgn(INT n)
                                    (GDICLEANUPPROC) RGNDATA_InternalDelete))){
 	if( (pReg = RGNDATA_LockRgn(hReg)) ){
 
-      if ((pReg->Buffer = ExAllocatePool(PagedPool, n * sizeof(RECT)))){
+      if ((pReg->Buffer = ExAllocatePoolWithTag(PagedPool, n * sizeof(RECT), TAG_REGION))){
       	EMPTY_REGION(pReg);
       	pReg->rdh.dwSize = sizeof(RGNDATAHEADER);
       	pReg->rdh.nCount = n;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hook.c,v 1.4 2003/12/14 22:34:47 gvg Exp $
+/* $Id: hook.c,v 1.5 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -37,13 +37,12 @@
 #include <include/object.h>
 #include <include/msgqueue.h>
 #include <include/winsta.h>
+#include <include/tags.h>
 #include <internal/ps.h>
 #include <internal/safe.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
-
-#define TAG_HOOK TAG('W', 'N', 'H', 'K')
 
 #define HOOKID_TO_INDEX(HookId) (HookId - WH_MINHOOK)
 

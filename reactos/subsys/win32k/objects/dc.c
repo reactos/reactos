@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.120 2004/02/01 15:45:41 gvg Exp $
+/* $Id: dc.c,v 1.121 2004/02/19 21:12:10 weiden Exp $
  *
  * DC.C - Device context functions
  *
@@ -52,11 +52,10 @@
 #include <include/desktop.h>
 #include <include/intgdi.h>
 #include <include/cleanup.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
-
-#define TAG_DC  TAG('D', 'C', 'D', 'C')
 
 static GDIDEVICE PrimarySurface;
 
@@ -1455,7 +1454,7 @@ NtGdiGetObject(HANDLE handle, INT count, LPVOID buffer)
     return 0;
   }
   
-  SafeBuf = ExAllocatePool(NonPagedPool, count);
+  SafeBuf = ExAllocatePoolWithTag(NonPagedPool, count, TAG_GDIOBJ);
   if(!SafeBuf)
   {
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);

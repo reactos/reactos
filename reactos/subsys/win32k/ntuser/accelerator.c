@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: accelerator.c,v 1.8 2004/02/02 15:16:53 gvg Exp $
+/* $Id: accelerator.c,v 1.9 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -59,6 +59,7 @@
 #include <include/guicheck.h>
 #include <include/window.h>
 #include <include/focus.h>
+#include <include/tags.h>
 #include <include/accelerator.h>
 
 #define NDEBUG
@@ -175,7 +176,7 @@ NtUserCreateAcceleratorTable(
   AcceleratorTable->Count = EntriesCount;
   if (AcceleratorTable->Count > 0)
   {
-	AcceleratorTable->Table = ExAllocatePool(PagedPool, EntriesCount * sizeof(ACCEL));
+	AcceleratorTable->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
 	if (AcceleratorTable->Table == NULL)
 	{
 		ObmCloseHandle(WindowStation->HandleTable, Handle);

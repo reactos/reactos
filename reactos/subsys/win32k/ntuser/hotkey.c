@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.6 2004/01/26 23:29:23 gvg Exp $
+/* $Id: hotkey.c,v 1.7 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,6 +36,7 @@
 #include <include/error.h>
 #include <include/msgqueue.h>
 #include <include/hotkey.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -243,8 +244,7 @@ NtUserRegisterHotKey(HWND hWnd,
     return FALSE;
   }
 
-  HotKeyItem = ExAllocatePool (PagedPool,
-			       sizeof(HOT_KEY_ITEM));
+  HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), TAG_HOTKEY);
   if (HotKeyItem == NULL)
     {
       ExReleaseFastMutex (&WinStaObject->HotKeyListLock);

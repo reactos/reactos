@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.46 2004/02/11 17:56:29 navaraf Exp $
+/* $Id: class.c,v 1.47 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,6 +38,7 @@
 #include <include/guicheck.h>
 #include <include/window.h>
 #include <include/color.h>
+#include <include/tags.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -215,7 +216,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, Name, &Length);
-   Name = ExAllocatePool(NonPagedPool, Length + sizeof(UNICODE_NULL));
+   Name = ExAllocatePoolWithTag(NonPagedPool, Length + sizeof(UNICODE_NULL), TAG_STRING);
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
       WindowObject->Class->Atom, NULL, NULL, Name, &Length);
    if (!NT_SUCCESS(Status))
@@ -335,7 +336,7 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 	}
 	else
 	{		
-		ClassObject->lpszMenuName = ExAllocatePool(NonPagedPool,sizeof(UNICODE_STRING));
+		ClassObject->lpszMenuName = ExAllocatePoolWithTag(NonPagedPool,sizeof(UNICODE_STRING), TAG_STRING);
 		RtlCreateUnicodeString(ClassObject->lpszMenuName,(LPWSTR)lpwcx->lpszMenuName);
 	}
 	/* Extra class data */
@@ -548,7 +549,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
     case GCL_MENUNAME:
 	  if (!IS_INTRESOURCE(dwNewLong))
 	  {
-	    str = ExAllocatePool(PagedPool,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length);
+	    str = ExAllocatePoolWithTag(PagedPool,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length, TAG_STRING);
 	    memcpy(str,(PUNICODE_STRING)dwNewLong,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length);
         WindowObject->Class->lpszMenuName = str;
 	  }

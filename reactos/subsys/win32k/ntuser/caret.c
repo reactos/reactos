@@ -1,4 +1,4 @@
-/* $Id: caret.c,v 1.10 2003/12/26 22:52:11 gvg Exp $
+/* $Id: caret.c,v 1.11 2004/02/19 21:12:09 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -17,6 +17,7 @@
 #include <include/caret.h>
 #include <include/timer.h>
 #include <include/callback.h>
+#include <include/tags.h>
 #include <rosrtl/string.h>
 
 #define NDEBUG
@@ -122,7 +123,7 @@ IntQueryCaretBlinkRate(VOID)
   }
   
   ResLength += sizeof(KEY_VALUE_PARTIAL_INFORMATION);
-  KeyValuePartialInfo = ExAllocatePool(PagedPool, ResLength);
+  KeyValuePartialInfo = ExAllocatePoolWithTag(PagedPool, ResLength, TAG_STRING);
   Length = ResLength;
   
   if(!KeyValuePartialInfo)
