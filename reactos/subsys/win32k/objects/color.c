@@ -271,8 +271,7 @@ UINT STDCALL W32kGetSystemPaletteUse(HDC  hDC)
   UNIMPLEMENTED;
 }
 
-UINT STDCALL W32kRealizePalette(HDC  hDC)
-/*
+/*!
 The RealizePalette function modifies the palette for the device associated with the specified device context. If the device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device context is a display DC, the physical palette for that device is modified.
 
 A logical palette is a buffer between color-intensive applications and the system, allowing these applications to use as many colors as needed without interfering with colors displayed by other windows.
@@ -287,16 +286,19 @@ A logical palette is a buffer between color-intensive applications and the syste
    the dc palette.
 -- If it is an RGB palette, then an XLATEOBJ is created between the RGB values and the dc palette.
 */
+UINT STDCALL W32kRealizePalette(HDC  hDC)
 {
   PPALOBJ palPtr, sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
-  PDC dc = (PDC)AccessUserObject(hDC);
+  PDC dc;
   HPALETTE systemPalette;
   PSURFGDI SurfGDI;
   BOOLEAN success;
 
-  if (!dc) return 0;
+  dc = DC_HandleToPtr(hDC);
+  if (!dc)
+  	return 0;
 
   palPtr = (PPALOBJ)AccessUserObject(dc->w.hPalette);
   SurfGDI = (PSURFGDI)AccessInternalObjectFromUserObject(dc->Surface);
@@ -381,17 +383,31 @@ BOOL STDCALL W32kResizePalette(HPALETTE  hpal,
   UNIMPLEMENTED;
 }
 
+/*!
+ * Select logical palette into device context.
+ * \param	hDC 				handle to the device context
+ * \param	hpal				handle to the palette
+ * \param	ForceBackground 	If this value is FALSE the logical palette will be copied to the device palette only when the applicatioon
+ * 								is in the foreground. If this value is TRUE then map the colors in the logical palette to the device
+ * 								palette colors in the best way.
+ * \return	old palette
+ *
+ * \todo	implement ForceBackground == TRUE
+*/
 HPALETTE STDCALL W32kSelectPalette(HDC  hDC,
                             HPALETTE  hpal,
                             BOOL  ForceBackground)
 {
-  PDC dc = (PDC)AccessUserObject(hDC);
+  PDC dc;
   HPALETTE oldPal;
 
-  oldPal = dc->w.hPalette;
-  dc->w.hPalette = hpal;
-
   // FIXME: mark the palette as a [fore\back]ground pal
+  dc = DC_HandleToPtr(hDC);
+  if( dc ){
+  	oldPal = dc->w.hPalette;
+  	dc->w.hPalette = hpal;
+  	DC_ReleasePtr( hDC );
+  }
 
   return oldPal;
 }
