@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.47 2004/12/25 22:59:10 navaraf Exp $
+/* $Id: message.c,v 1.48 2004/12/27 16:48:29 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2075,10 +2075,35 @@ RealMsgWaitForMultipleObjectsEx(
    return Result;
 }
 
-DWORD WINAPI MsgWaitForMultipleObjectsEx(DWORD nCount, CONST HANDLE *lpHandles, DWORD dwMilliseconds, DWORD dwWakeMask, DWORD dwFlags)
+/*
+ * @implemented
+ */
+DWORD WINAPI
+MsgWaitForMultipleObjectsEx(
+   DWORD nCount,
+   CONST HANDLE *lpHandles,
+   DWORD dwMilliseconds,
+   DWORD dwWakeMask,
+   DWORD dwFlags)
 {
-	return IsInsideMessagePumpHook() ? gmph.RealMsgWaitForMultipleObjectsEx(nCount, lpHandles, dwMilliseconds, dwWakeMask, dwFlags) : RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags);
+   return IsInsideMessagePumpHook() ? gmph.RealMsgWaitForMultipleObjectsEx(nCount, lpHandles, dwMilliseconds, dwWakeMask, dwFlags) : RealMsgWaitForMultipleObjectsEx(nCount, lpHandles,dwMilliseconds, dwWakeMask, dwFlags);
 }
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+MsgWaitForMultipleObjects(
+   DWORD nCount,
+   CONST HANDLE *lpHandles,
+   BOOL fWaitAll,
+   DWORD dwMilliseconds,
+   DWORD dwWakeMask)
+{
+   return MsgWaitForMultipleObjectsEx(nCount, lpHandles, dwMilliseconds,
+                                      dwWakeMask, fWaitAll ? MWMO_WAITALL : 0);
+}
+
 
 BOOL FASTCALL MessageInit()
 {
