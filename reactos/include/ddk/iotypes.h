@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.63 2004/06/23 21:43:19 ion Exp $
+/* $Id: iotypes.h,v 1.64 2004/10/19 20:36:52 navaraf Exp $
  *
  */
 
@@ -30,8 +30,8 @@ struct _IO_TIMER;
 
 enum
 {
+   KeepObject = 1,
    DeallocateObject,
-   KeepObject,
    DeallocateObjectKeepRegisters
 };
 
@@ -224,6 +224,11 @@ typedef struct
    USHORT Flags;
    union
      {
+	struct
+	  {
+	     PHYSICAL_ADDRESS Start;
+	     ULONG Length;
+	  } Generic;
 	struct
 	  {
 	     PHYSICAL_ADDRESS Start;
