@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.31 2004/11/11 22:23:52 ion Exp $
+/* $Id: process.c,v 1.32 2004/11/27 16:42:50 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -35,6 +35,21 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static inline void
+UpdatePageDirs(PKTHREAD Thread, PKPROCESS Process)
+{
+   /* The stack and the thread structure of the current process may be 
+      located in a page which is not present in the page directory of 
+      the process we're attaching to. That would lead to a page fault 
+      when this function returns. However, since the processor can't 
+      call the page fault handler 'cause it can't push EIP on the stack, 
+      this will show up as a stack fault which will crash the entire system.
+      To prevent this, make sure the page directory of the process we're
+      attaching to is up-to-date. */
+   MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
+   MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
+}
+
 /*
  * @implemented
  */
@@ -46,7 +61,9 @@ KeAttachProcess(PKPROCESS Process)
 	PKTHREAD Thread = KeGetCurrentThread();
 	
 	DPRINT("KeAttachProcess: %x\n", Process);
-	
+
+	UpdatePageDirs(Thread, Process);
+
 	/* Lock Dispatcher */
 	OldIrql = KeAcquireDispatcherDatabaseLock();
 	
@@ -72,17 +89,6 @@ KiAttachProcess(PKTHREAD Thread, PKPROCESS Process, KIRQL ApcLock, PRKAPC_STATE 
   
 	DPRINT("KiAttachProcess(Thread: %x, Process: %x, SavedApcState: %x\n", Thread, Process, SavedApcState);
    
-	/* The stack and the thread structure of the current process may be 
-	   located in a page which is not present in the page directory of 
-	   the process we're attaching to. That would lead to a page fault 
-	   when this function returns. However, since the processor can't 
-	   call the page fault handler 'cause it can't push EIP on the stack, 
-	   this will show up as a stack fault which will crash the entire system.
-	   To prevent this, make sure the page directory of the process we're
-	   attaching to is up-to-date. */
-	MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread->StackLimit, MM_STACK_SIZE);
-	MmUpdatePageDir((PEPROCESS)Process, (PVOID)Thread, sizeof(ETHREAD));
-	
 	/* Increase Stack Count */
 	Process->StackCount++;
 	
@@ -153,7 +159,9 @@ KeStackAttachProcess (
 {
 	KIRQL OldIrql;
 	PKTHREAD Thread = KeGetCurrentThread();
-	
+
+	UpdatePageDirs(Thread, Process);
+
 	OldIrql = KeAcquireDispatcherDatabaseLock();
 	
 	/* Crash system if DPC is being executed! */
