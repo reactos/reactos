@@ -81,8 +81,8 @@ VOID vgaPreCalc()
 
 void vgaSetWriteMode(char mode)
 {
-  VideoPortWritePortUchar((PUCHAR)0x03ce, 0x03);
-  VideoPortWritePortUchar((PUCHAR)0x03cf, mode);
+  VideoPortWritePortUchar((PUCHAR)GRA_I, 0x03);
+  VideoPortWritePortUchar((PUCHAR)GRA_D, mode);
 }
 
 void vgaSetColor(int cindex, int red, int green, int blue)

@@ -48,76 +48,82 @@ BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
   // Make a note of original x
   orgx = x;
 
-  // If width is less than 8, draw using vertical lines
-  if ( w < 8 )
-  {
-    for (i=x; i<x+w; i++)
-      vgaVLine(i, y, h, iColor);
+  // Calculate the left mask pixels, middle bytes and right mask pixel
+  ileftpix = 7 - mod8(x-1);
+  rightpix = mod8(x+w);
+  midpix = (w-leftpix-rightpix) / 8;
 
-  // Otherwise, use the optimized code
+  ileftpix = leftpix;
+  irightpix = rightpix;
+  imidpix = midpix;
+
+  pre1 = xconv[(x-1)&~7] + y80[y];
+  orgpre1=pre1;
+
+  // check for overlap ( very horizontally skinny rect )
+  if ( (ileftpix+irightpix) > w )
+  {
+    int mask = startmasks[ileftpix] & endmasks[irightpix];
+
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D,mask);
+
+    tmppre1 = pre1;
+    for ( j = y; j < y+h; j++ )
+    {
+      a = READ_REGISTER_UCHAR ( vidmem+tmppre1 );
+      WRITE_REGISTER_UCHAR ( vidmem+tmppre1, iColor );
+      tmppre1 += 80;
+    }
+    return TRUE;
   }
-  else
+
+  if ( ileftpix > 0 )
   {
+    // Write left pixels
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D,startmasks[ileftpix]);
 
-    // Calculate the left mask pixels, middle bytes and right mask pixel
-    ileftpix = 7 - mod8(x-1);
-    rightpix = mod8(x+w);
-    midpix = (w-leftpix-rightpix) / 8;
-
-    ileftpix = leftpix;
-    irightpix = rightpix;
-    imidpix = midpix;
-
-    pre1 = xconv[(x-1)&~7] + y80[y];
-    orgpre1=pre1;
-
-    if ( ileftpix > 0 )
+    tmppre1 = pre1;
+    for ( j = y; j < y+h; j++ )
     {
-      // Write left pixels
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
-
-      tmppre1 = pre1;
-      for ( j = y; j < y+h; j++ )
-      {
-        a = READ_REGISTER_UCHAR(vidmem + tmppre1);
-        WRITE_REGISTER_UCHAR(vidmem + tmppre1, iColor);
-        tmppre1 += 80;
-      }
-
-      // Prepare new x for the middle
-      x = orgx + 8;
+      a = READ_REGISTER_UCHAR(vidmem + tmppre1);
+      WRITE_REGISTER_UCHAR(vidmem + tmppre1, iColor);
+      tmppre1 += 80;
     }
 
-    if ( imidpix > 0 )
-    {
-      midpre1=xconv[x] + y80[y];
+    // Prepare new x for the middle
+    x = orgx + 8;
+  }
 
-      // Set mask to all pixels in byte
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
+  if ( imidpix > 0 )
+  {
+    midpre1=xconv[x] + y80[y];
 
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
+    // Set mask to all pixels in byte
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);
 
-      for ( j = y; j < y+h; j++ )
-      {
-        memset(vidmem+midpre1, iColor, imidpix); // write middle pixels, no need to read in latch because of the width
-        midpre1 += 80;
-      }
-    }
-
-    x = orgx + w - irightpix;
-    pre1 = xconv[x] + y80[y];
-
-    // Write right pixels
-    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
-    WRITE_PORT_UCHAR((PUCHAR)0x3cf,endmasks[irightpix]);
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D, 0xff);
 
     for ( j = y; j < y+h; j++ )
     {
-      a = READ_REGISTER_UCHAR(vidmem + pre1);
-      WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
-      pre1 += 80;
+      memset(vidmem+midpre1, iColor, imidpix); // write middle pixels, no need to read in latch because of the width
+      midpre1 += 80;
     }
+  }
+
+  x = orgx + w - irightpix;
+  pre1 = xconv[x] + y80[y];
+
+  // Write right pixels
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask bits
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,endmasks[irightpix]);
+
+  for ( j = y; j < y+h; j++ )
+  {
+    a = READ_REGISTER_UCHAR(vidmem + pre1);
+    WRITE_REGISTER_UCHAR(vidmem + pre1, iColor);
+    pre1 += 80;
   }
 
   return TRUE;

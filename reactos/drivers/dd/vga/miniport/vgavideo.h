@@ -21,6 +21,13 @@ char* vidmem;
 #define ATTRIB   0x3c0
 #define STATUS   0x3da
 
+#define SEQ_I   0x3C4           /* Sequencer Index */
+#define SEQ_D   0x3C5           /* Sequencer Data Register */
+
+#define GRA_I   0x3CE           /* Graphics Controller Index */
+#define GRA_D   0x3CF           /* Graphics Controller Data Register */
+
+
 typedef struct _VideoMode {
   unsigned short VidSeg;
   unsigned char  Misc;

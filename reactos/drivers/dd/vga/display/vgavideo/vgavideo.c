@@ -274,15 +274,15 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   ULONG orgpre1, orgx, midpre1;
   ULONG ileftpix, imidpix, irightpix;
 
-  orgx=x;
+  orgx = x;
 
-  if(len<8)
+  /*if ( len < 8 )
   {
-    for (i=x; i<x+len; i++)
-      vgaPutPixel(i, y, c);
+    for (i = x; i < x+len; i++ )
+      vgaPutPixel ( i, y, c );
 
     return TRUE;
-  }
+  }*/
 
   // Calculate the left mask pixels, middle bytes and right mask pixel
   ileftpix = 7 - mod8(x-1);
@@ -291,6 +291,20 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 
   pre1 = xconv[(x-1)&~7] + y80[y];
   orgpre1=pre1;
+
+  // check for overlap ( very short line )
+  if ( (ileftpix+irightpix) > len )
+  {
+    int mask = startmasks[ileftpix] & endmasks[irightpix];
+    // Write left pixels
+    WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)GRA_D,mask);
+
+    a = READ_REGISTER_UCHAR(vidmem + pre1);
+    WRITE_REGISTER_UCHAR(vidmem + pre1, c);
+
+    return TRUE;
+  }
 
   // Left
   if ( ileftpix > 0 )
@@ -528,8 +542,8 @@ void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta)
       pb = opb;
       offset = xconv[i] + y80[y];
 
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);       // set the mask
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf, maskbit[i]);
+      WRITE_PORT_UCHAR((PUCHAR)GRA_I, 0x08);       // set the mask
+      WRITE_PORT_UCHAR((PUCHAR)GRA_D, maskbit[i]);
 
       if (0 == ((i - x) % 2))
 	{

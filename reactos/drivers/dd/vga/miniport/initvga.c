@@ -82,13 +82,13 @@ void InitVGAMode()
   setMode(Mode12);
 
   // Get the VGA into the mode we want to work with
-  WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // Set
-  WRITE_PORT_UCHAR((PUCHAR)0x3cf,0);        // the MASK
-  WRITE_PORT_USHORT((PUSHORT)0x3ce,0x0205); // write mode = 2 (bits 0,1) read mode = 0  (bit 3)
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);     // Set
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,0);        // the MASK
+  WRITE_PORT_USHORT((PUSHORT)GRA_I,0x0205); // write mode = 2 (bits 0,1) read mode = 0  (bit 3)
   i = READ_REGISTER_UCHAR(vidmem);          // Update bit buffer
   WRITE_REGISTER_UCHAR(vidmem, 0);          // Write the pixel
-  WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);
-  WRITE_PORT_UCHAR((PUCHAR)0x3cf,0xff);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_I,0x08);
+  WRITE_PORT_UCHAR((PUCHAR)GRA_D,0xff);
 
   // Zero out video memory (clear a possibly trashed screen)
   RtlZeroMemory(vidmem, 64000);
