@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.40 2001/08/27 01:22:21 ekohl Exp $
+/* $Id: create.c,v 1.41 2001/11/21 18:44:25 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -82,17 +82,21 @@ PsAssignImpersonationToken(PETHREAD Thread,
    return(STATUS_SUCCESS);
 }
 
-VOID STDCALL 
-PsRevertToSelf(PETHREAD Thread)
+VOID STDCALL
+PsRevertToSelf(VOID)
 {
+   PETHREAD Thread;
+
+   Thread = PsGetCurrentThread();
+
    if (Thread->ActiveImpersonationInfo != 0)
      {
-	Thread->ActiveImpersonationInfo = 0;
 	ObDereferenceObject(Thread->ImpersonationInfo->Token);
+	Thread->ActiveImpersonationInfo = 0;
      }
 }
 
-VOID STDCALL 
+VOID STDCALL
 PsImpersonateClient(PETHREAD Thread,
 		    PACCESS_TOKEN Token,
 		    UCHAR b,
@@ -128,7 +132,7 @@ PsImpersonateClient(PETHREAD Thread,
    Thread->ActiveImpersonationInfo = 1;
 }
 
-PACCESS_TOKEN 
+PACCESS_TOKEN
 PsReferenceEffectiveToken(PETHREAD Thread,
 			  PTOKEN_TYPE TokenType,
 			  PUCHAR b,

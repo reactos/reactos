@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.104 2001/11/04 00:16:13 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.105 2001/11/21 18:44:50 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -608,7 +608,7 @@ PsProcessType DATA
 PsReferenceImpersonationToken=PsReferenceImpersonationToken@16
 PsReferencePrimaryToken=PsReferencePrimaryToken@4
 ;PsReturnPoolQuota
-PsRevertToSelf=PsRevertToSelf@4
+PsRevertToSelf=PsRevertToSelf@0
 ;PsSetCreateProcessNotifyRoutine
 ;PsSetCreateThreadNotifyRoutine
 ;PsSetLegoNotifyRoutine

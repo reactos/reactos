@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.14 2001/08/21 20:13:05 chorns Exp $
+/* $Id: psfuncs.h,v 1.15 2001/11/21 18:44:09 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -54,7 +54,7 @@ VOID STDCALL PsImpersonateClient(struct _ETHREAD* Thread,
 				 UCHAR b,
 				 UCHAR c,
 				 SECURITY_IMPERSONATION_LEVEL Level);
-VOID STDCALL PsRevertToSelf(struct _ETHREAD* Thread);
+VOID STDCALL PsRevertToSelf(VOID);
 
 BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 			      PULONG		MinorVersion	OPTIONAL,

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.118 2001/11/04 00:16:13 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.119 2001/11/21 18:44:50 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -608,8 +608,7 @@ PsProcessType DATA
 PsReferenceImpersonationToken@16
 PsReferencePrimaryToken@4
 ;PsReturnPoolQuota@12
-;PsRevertToSelf@0 <-- This is the original size
-PsRevertToSelf@4
+PsRevertToSelf@0
 ;PsSetCreateProcessNotifyRoutine@8
 ;PsSetCreateThreadNotifyRoutine@4
 ;PsSetLegoNotifyRoutine@4
