@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.35 2004/12/12 23:09:13 ekohl Exp $
+/* $Id: ppool.c,v 1.36 2004/12/13 20:11:08 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,6 +62,9 @@ typedef struct _MM_PPOOL_USED_BLOCK_HEADER
 #endif//MM_PPOOL_REDZONE_BYTES
    struct _MM_PPOOL_USED_BLOCK_HEADER* NextUsed;
    ULONG Tag;
+#if MM_PPOOL_REDZONE_BYTES
+   ULONG LastOwnerStack[MM_PPOOL_LASTOWNER_ENTRIES];    
+#endif//MM_PPOOL_REDZONE_BYTES
 }
 MM_PPOOL_USED_BLOCK_HEADER, *PMM_PPOOL_USED_BLOCK_HEADER;
 
@@ -196,13 +199,32 @@ MmpRedZoneCheck ( PMM_PPOOL_USED_BLOCK_HEADER pUsed, PUCHAR Addr, const char* fi
          violation = "High-side";
       DbgPrint("%s(%i): %s redzone violation detected for paged pool address 0x%x\n",
                file, line, violation, Addr );
-      DbgPrint ( "UsedMagic 0x%x, LoZone ", pUsed->UsedMagic );
+
+      DbgPrint ( "UsedMagic 0x%x, Tag 0x%x, LoZone ", 
+		 pUsed->UsedMagic,
+		 pUsed->Tag);
+
       for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
          DbgPrint ( "%02x", Addr[i] );
       DbgPrint ( ", HiZone " );
       for ( i = 0; i < MM_PPOOL_REDZONE_BYTES; i++ )
          DbgPrint ( "%02x", AddrEnd[i] );
       DbgPrint ( "\n" );
+
+      DbgPrint ( "First Free Stack Frames:" );
+      for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+      {
+	  if ( pUsed->LastOwnerStack[i] != 0xDEADBEEF )
+	  {
+	      DbgPrint(" ");
+	      if (!KeRosPrintAddress ((PVOID)pUsed->LastOwnerStack[i]) )
+	      {
+		  DbgPrint("<%X>", pUsed->LastOwnerStack[i] );
+	      }
+	  }
+      }
+      DbgPrint ( "\n" );
+
       KEBUGCHECK(BAD_POOL_HEADER);
    }
 }
@@ -346,7 +368,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
             ASSERT ( BestAlignedAddr > Addr );
             NewFreeBlock->Size = (char*)Addr + BestBlock->Size - (char*)BestAlignedAddr;
 #if MM_PPOOL_REDZONE_BYTES
-            NewFreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
+	    NewFreeBlock->FreeMagic = MM_PPOOL_FREEMAGIC;
 #endif//MM_PPOOL_REDZONE_BYTES
             ASSERT_SIZE(NewFreeBlock->Size);
             BestBlock->Size = (size_t)NewFreeBlock - (size_t)Addr;
@@ -454,7 +476,30 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
       //DPRINT(".");
       NewBlock->Size = BlockSize;
 #if MM_PPOOL_REDZONE_BYTES
-      NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+      {
+	  PULONG Frame;
+	  int i;
+#if defined __GNUC__
+	  __asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+	  __asm mov [Frame], ebp
+#endif
+
+	  NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+	  
+	  Frame = (PULONG)Frame[0]; // step out of ExFreePagedPool
+	  for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+	  {
+	      if ( Frame == 0 || (ULONG)Frame == 0xDEADBEEF )
+		  NewBlock->LastOwnerStack[i] = 0xDEADBEEF;
+	      else
+	      {
+		  //DbgPrint ( " 0x%x", Frame[1] );
+		  NewBlock->LastOwnerStack[i] = Frame[1];
+		  Frame = (PULONG)Frame[0];
+	      }
+	  }
+      }
 #endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_SIZE ( NewBlock->Size );
       //DPRINT(".\n");
@@ -482,7 +527,30 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
       NewBlock = (PMM_PPOOL_USED_BLOCK_HEADER)BestBlock;
       NewBlock->Size = NewSize;
 #if MM_PPOOL_REDZONE_BYTES
-      NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+      {
+	  PULONG Frame;
+	  int i;
+#if defined __GNUC__
+	  __asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+#elif defined(_MSC_VER)
+	  __asm mov [Frame], ebp
+#endif
+
+	  NewBlock->UsedMagic = MM_PPOOL_USEDMAGIC;
+	  
+	  Frame = (PULONG)Frame[0]; // step out of ExFreePagedPool
+	  for ( i = 0; i < MM_PPOOL_LASTOWNER_ENTRIES; i++ )
+	  {
+	      if ( Frame == 0 || (ULONG)Frame == 0xDEADBEEF )
+		  NewBlock->LastOwnerStack[i] = 0xDEADBEEF;
+	      else
+	      {
+		  //DbgPrint ( " 0x%x", Frame[1] );
+		  NewBlock->LastOwnerStack[i] = Frame[1];
+		  Frame = (PULONG)Frame[0];
+	      }
+	  }
+      }
 #endif//MM_PPOOL_REDZONE_BYTES
       ASSERT_SIZE ( NewBlock->Size );
    }
