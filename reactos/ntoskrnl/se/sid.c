@@ -1,4 +1,4 @@
-/* $Id: sid.c,v 1.4 2000/04/15 23:14:32 ekohl Exp $
+/* $Id: sid.c,v 1.5 2000/10/08 12:50:13 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -87,6 +87,79 @@ NTSTATUS STDCALL RtlCopySid (ULONG BufferLength, PSID Dest, PSID Src)
      }
    memmove(Dest, Src, RtlLengthSid(Src));
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS STDCALL
+RtlConvertSidToUnicodeString(PUNICODE_STRING String,
+			     PSID Sid,
+			     BOOLEAN AllocateString)
+{
+   WCHAR Buffer[256];
+   PWSTR Ptr;
+   ULONG Length;
+   ULONG i;
+
+   if (!RtlValidSid(Sid))
+     return STATUS_INVALID_SID;
+
+   Ptr = Bufer;
+   Ptr += swprintf (Ptr,
+		    L"S-%u-",
+		    Sid->Revision);
+
+   if(!Sid->IdentifierAuthority.Value[0] &&
+      !Sid->IdentifierAuthority.Value[1])
+      {
+	Ptr += swprintf(Ptr,
+			L"%u",
+			(ULONG)Sid->IdentifierAuthority.Value[2] << 24 |
+			(ULONG)Sid->IdentifierAuthority.Value[3] << 16 |
+			(ULONG)Sid->IdentifierAuthority.Value[4] << 8 |
+			(ULONG)Sid->IdentifierAuthority.Value[5]);
+     }
+   else
+     {
+	Ptr += swprintf(Ptr,
+			L"0x%02hx%02hx%02hx%02hx%02hx%02hx",
+			Sid->IdentifierAuthority.Value[0],
+			Sid->IdentifierAuthority.Value[1],
+			Sid->IdentifierAuthority.Value[2],
+			Sid->IdentifierAuthority.Value[3],
+			Sid->IdentifierAuthority.Value[4],
+			Sid->IdentifierAuthority.Value[5]);
+     }
+
+   for (i = 0; i < Sid->SubAuthorityCount; i++)
+     {
+	Ptr += swprintf(Ptr,
+			L"-%u",
+			Sid->SubAuthority[i]);
+     }
+
+   Length = (Ptr - Buffer) * sizeof(WCHAR);
+
+   if (AllocateString)
+     {
+	String->Buffer = ExAllocatePool(NonPagedPool,
+					Length + sizeof(WCHAR));
+	if (String->Buffer == NULL)
+	  return STATUS_NO_MEMORY;
+
+	String->MaximumLength = Length + sizeof(WCHAR);
+     }
+   else
+     {
+	if (Length > String->MaximumLength)
+	  return STATUS_BUFFER_TOO_SMALL;
+     }
+   String->Length = Length;
+   memmove(String->Buffer,
+	   Buffer,
+	   Length);
+   if (Length < String->MaximumLength)
+     String->Buffer[Length] = 0;
+
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

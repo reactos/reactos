@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.10 2000/10/07 13:41:50 dwelch Exp $
+/* $Id: display.c,v 1.11 2000/10/08 12:46:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,8 +12,6 @@
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
 
-/* only needed for screen synchronization */
-#include <internal/halio.h>
 
 #define SCREEN_SYNCHRONIZATION
 
@@ -118,17 +116,17 @@ HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock)
         CursorY = 0;
 
         /* read screen size from the crtc */
-        /* FIXME: screen size should be read from the boot paramseters */
-        outb_p (CRTC_COMMAND, CRTC_COLUMNS);
-        SizeX = inb_p (CRTC_DATA) + 1;
-        outb_p (CRTC_COMMAND, CRTC_ROWS);
-        SizeY = inb_p (CRTC_DATA);
-        outb_p (CRTC_COMMAND, CRTC_OVERFLOW);
-        Data = inb_p (CRTC_DATA);
+        /* FIXME: screen size should be read from the boot parameters */
+        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_COLUMNS);
+        SizeX = READ_PORT_UCHAR((PUCHAR)CRTC_DATA) + 1;
+        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_ROWS);
+        SizeY = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_OVERFLOW);
+        Data = READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
         SizeY |= (((Data & 0x02) << 7) | ((Data & 0x40) << 3));
         SizeY++;
-        outb_p (CRTC_COMMAND, CRTC_SCANLINES);
-        ScanLines = (inb_p (CRTC_DATA) & 0x1F) + 1;
+        WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_SCANLINES);
+        ScanLines = (READ_PORT_UCHAR((PUCHAR)CRTC_DATA) & 0x1F) + 1;
         SizeY = SizeY / ScanLines;
 
 #ifdef BOCHS_30ROWS
@@ -209,10 +207,10 @@ HalDisplayString (
     }
 
 #ifdef SCREEN_SYNCHRONIZATION
-    outb_p(CRTC_COMMAND, CRTC_CURHI);
-    offset = inb_p(CRTC_DATA)<<8;
-    outb_p(CRTC_COMMAND, CRTC_CURLO);
-    offset += inb_p(CRTC_DATA);
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
+    offset = READ_PORT_UCHAR((PUCHAR)CRTC_DATA)<<8;
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
+    offset += READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
 
     CursorY = offset / SizeX;
     CursorX = offset % SizeX;
@@ -249,11 +247,10 @@ HalDisplayString (
 #ifdef SCREEN_SYNCHRONIZATION
     offset = (CursorY * SizeX) + CursorX;
 
-    outb_p(CRTC_COMMAND, CRTC_CURLO);
-    outb_p(CRTC_DATA, offset);
-    outb_p(CRTC_COMMAND, CRTC_CURHI);
-    offset >>= 8;
-    outb_p(CRTC_DATA, offset);
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, offset & 0xff);
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
+    WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, (offset >> 8) & 0xff);
 #endif
 }
 

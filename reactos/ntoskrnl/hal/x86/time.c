@@ -9,7 +9,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/halio.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -39,9 +38,9 @@ HalQueryCMOS (BYTE Reg)
 
     Reg |= 0x80;
     __asm__("cli\n");  // AP unsure as to whether to do this here
-    outb (0x70, Reg);
-    Val=inb (0x71);
-    outb (0x70, 0);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
+    Val = READ_PORT_UCHAR((PUCHAR)0x71);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
     __asm__("sti\n");  // AP unsure about this too..
 
     return(Val);
@@ -53,9 +52,9 @@ HalSetCMOS (BYTE Reg, BYTE Val)
 {
     Reg |= 0x80;
     __asm__("cli\n");  // AP unsure as to whether to do this here
-    outb (0x70, Reg);
-    outb (0x71, Val);
-    outb (0x70, 0);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, Reg);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, Val);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0);
     __asm__("sti\n");  // AP unsure about this too..
 }
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2000/10/07 13:41:50 dwelch Exp $
+# $Id: Makefile,v 1.2 2000/10/08 12:43:56 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -64,7 +64,7 @@ OBJECTS_RTL = \
 # Kernel (Ke)
 # Note: head.o MUST be the first file!!!
 OBJECTS_KE = \
-         ke/multiboot.o \
+	ke/multiboot.o \
 	ke/apc.o \
 	ke/bug.o \
 	ke/catch.o \
@@ -446,7 +446,7 @@ endif
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 	$(CC) \
-	        -Wl,-T,ntoskrnl.lnk \
+		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
@@ -479,7 +479,8 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 	$(STRIP) \
 		--strip-debug \
 		$(TARGETNAME).o
-	$(CC)   -Wl,-T,ntoskrnl.lnk \
+	$(CC) \
+		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
@@ -496,7 +497,8 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		--def $(TARGETNAME).edf \
 		--kill-at
 	- $(RM) base.tmp
-	$(CC)   -Wl,-T,ntoskrnl.lnk \
+	$(CC) \
+		-Wl,-T,ntoskrnl.lnk \
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
@@ -534,7 +536,7 @@ install: $(FLOPPY_DIR)/$(TARGETNAME).exe
 $(FLOPPY_DIR)/$(TARGETNAME).exe: $(TARGETNAME).exe
 	$(CP) $(TARGETNAME).exe $(FLOPPY_DIR)/$(TARGETNAME).exe
 
-.PHONY: dist
+.PHONY: install
 
 dist: ../$(DIST_DIR)/$(TARGETNAME).exe
 

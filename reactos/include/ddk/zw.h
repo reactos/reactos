@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.36 2000/10/06 22:53:22 ekohl Exp $
+/* $Id: zw.h,v 1.37 2000/10/08 12:42:24 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -901,8 +901,8 @@ NtCreateSemaphore(
 	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG InitialCount,
-	IN ULONG MaximumCount
+	IN LONG InitialCount,
+	IN LONG MaximumCount
 	);
 
 NTSTATUS
@@ -911,8 +911,8 @@ ZwCreateSemaphore(
 	OUT PHANDLE SemaphoreHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN ULONG InitialCount,
-	IN ULONG MaximumCount
+	IN LONG InitialCount,
+	IN LONG MaximumCount
 	);
 
 /*
@@ -982,6 +982,7 @@ ZwCreateThread(
 	IN PINITIAL_TEB InitialTeb,
 	IN BOOLEAN CreateSuspended
 	);
+
 /*
  * FUNCTION: Creates a waitable timer.
  * ARGUMENTS:
@@ -994,23 +995,22 @@ ZwCreateThread(
  *       corresponding fields in OBJECT_ATTRIBUTES structure. 
  * RETURNS: Status
  */
-
 NTSTATUS
-STDCALL 
+STDCALL
 NtCreateTimer(
 	OUT PHANDLE TimerHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN CINT TimerType
+	IN TIMER_TYPE TimerType
 	);
 
 NTSTATUS
-STDCALL 
+STDCALL
 ZwCreateTimer(
 	OUT PHANDLE TimerHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN CINT TimerType
+	IN TIMER_TYPE TimerType
 	);
 
 /*
@@ -3266,26 +3266,26 @@ ZwQuerySecurityObject(
  *	  SemaphoreInformation = Caller supplies storage for the semaphore information structure
  *	  Length = Size of the infomation structure
  */
-
 NTSTATUS
 STDCALL
 NtQuerySemaphore(
-	HANDLE SemaphoreHandle,
-	CINT SemaphoreInformationClass,
-	OUT PVOID SemaphoreInformation,
-	ULONG Length,
-	PULONG ReturnLength
+	IN	HANDLE				SemaphoreHandle,
+	IN	SEMAPHORE_INFORMATION_CLASS	SemaphoreInformationClass,
+	OUT	PVOID				SemaphoreInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ReturnLength
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySemaphore(
-	HANDLE SemaphoreHandle,
-	CINT SemaphoreInformationClass,
-	OUT PVOID SemaphoreInformation,
-	ULONG Length,
-	PULONG ReturnLength
+	IN	HANDLE				SemaphoreHandle,
+	IN	SEMAPHORE_INFORMATION_CLASS	SemaphoreInformationClass,
+	OUT	PVOID				SemaphoreInformation,
+	IN	ULONG				Length,
+	OUT	PULONG				ReturnLength
 	);
+
 
 /*
  * FUNCTION: Queries the information of a symbolic link object.
@@ -3297,7 +3297,7 @@ ZwQuerySemaphore(
  *
 */
 NTSTATUS
-STDCALL 
+STDCALL
 NtQuerySymbolicLinkObject(
 	IN HANDLE               SymLinkObjHandle,
 	OUT PUNICODE_STRING     LinkTarget,
@@ -3305,7 +3305,7 @@ NtQuerySymbolicLinkObject(
 	);
 
 NTSTATUS
-STDCALL 
+STDCALL
 ZwQuerySymbolicLinkObject(
 	IN HANDLE               SymLinkObjHandle,
 	OUT PUNICODE_STRING     LinkName,
@@ -3790,7 +3790,6 @@ ZwReadVirtualMemory(
  *       TerminationPort = Port on which the debugger likes to be notified.
  * RETURNS: Status
  */
-
 NTSTATUS
 STDCALL	
 NtRegisterThreadTerminatePort(
@@ -3801,6 +3800,7 @@ STDCALL
 ZwRegisterThreadTerminatePort(
 	HANDLE TerminationPort
 	);
+
 /*
  * FUNCTION: Releases a mutant
  * ARGUMENTS: 
@@ -3821,8 +3821,9 @@ ZwReleaseMutant(
 	IN HANDLE MutantHandle,
 	IN PULONG ReleaseCount OPTIONAL
 	);
+
 /*
- * FUNCTION: Releases a semaphore 
+ * FUNCTION: Releases a semaphore
  * ARGUMENTS: 
  *       SemaphoreHandle = Handle to the semaphore object
  *       ReleaseCount = Number to decrease the semaphore count
@@ -3832,18 +3833,19 @@ ZwReleaseMutant(
 NTSTATUS
 STDCALL
 NtReleaseSemaphore(
-	IN HANDLE SemaphoreHandle,
-	IN ULONG ReleaseCount,
-	IN PULONG PreviousCount
+	IN	HANDLE	SemaphoreHandle,
+	IN	LONG	ReleaseCount,
+	OUT	PLONG	PreviousCount
 	);
 
 NTSTATUS
 STDCALL
 ZwReleaseSemaphore(
-	IN HANDLE SemaphoreHandle,
-	IN ULONG ReleaseCount,
-	IN PULONG PreviousCount
+	IN	HANDLE	SemaphoreHandle,
+	IN	LONG	ReleaseCount,
+	OUT	PLONG	PreviousCount
 	);
+
 /*
  * FUNCTION: Removes an io completion
  * ARGUMENTS:

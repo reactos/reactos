@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.75 2000/09/06 02:08:00 phreak Exp $
+; $Id: ntoskrnl.edf,v 1.76 2000/10/08 12:43:56 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -614,7 +614,7 @@ READ_REGISTER_BUFFER_USHORT=READ_REGISTER_BUFFER_USHORT@12
 RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce=RtlAddAccessAllowedAce@16
 RtlAddAce=RtlAddAce@20
-;RtlAddAtomToAtomTable
+RtlAddAtomToAtomTable=RtlAddAtomToAtomTable@12
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHeap
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
@@ -641,14 +641,14 @@ RtlCompareUnicodeString=RtlCompareUnicodeString@12
 ;RtlCompressBuffer
 ;RtlCompressChunks
 RtlConvertLongToLargeInteger=RtlConvertLongToLargeInteger@4
-;RtlConvertSidToUnicodeString
+RtlConvertSidToUnicodeString=RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger=RtlConvertUlongToLargeInteger@4
 RtlCopyLuid=RtlCopyLuid@8
 RtlCopySid=RtlCopySid@12
 RtlCopyString=RtlCopyString@8
 RtlCopyUnicodeString=RtlCopyUnicodeString@8
 RtlCreateAcl=RtlCreateAcl@12
-;RtlCreateAtomTable
+RtlCreateAtomTable=RtlCreateAtomTable@8
 ;RtlCreateHeap
 RtlCreateRegistryKey=RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor=RtlCreateSecurityDescriptor@8
@@ -658,12 +658,12 @@ RtlCustomCPToUnicodeN=RtlCustomCPToUnicodeN@24
 ;RtlDecompressChunks
 ;RtlDecompressFragment
 ;RtlDelete
-;RtlDeleteAtomFromAtomTable
+RtlDeleteAtomFromAtomTable=RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue=RtlDeleteRegistryValue@12
 ;RtlDescribeChunk
-;RtlDestroyAtomTable
+RtlDestroyAtomTable=RtlDestroyAtomTable@4
 ;RtlDestroyHeap
 RtlDowncaseUnicodeString=RtlDowncaseUnicodeString@12
 ;RtlEmptyAtomTable
@@ -691,7 +691,7 @@ RtlFindLongestRunSet=RtlFindLongestRunSet@8
 RtlFindSetBits=RtlFindSetBits@12
 RtlFindSetBitsAndClear=RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
-;RtlFormatCurrentUserKeyPath
+RtlFormatCurrentUserKeyPath=RtlFormatCurrentUserKeyPath@4
 RtlFreeAnsiString=RtlFreeAnsiString@4
 ;RtlFreeHeap
 RtlFreeOemString=RtlFreeOemString@4
@@ -728,7 +728,7 @@ RtlLargeIntegerSubtract=RtlLargeIntegerSubtract@16
 RtlLengthRequiredSid=RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor=RtlLengthSecurityDescriptor@4
 RtlLengthSid=RtlLengthSid@4
-;RtlLookupAtomInAtomTable
+RtlLookupAtomInAtomTable=RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMapGenericMask=RtlMapGenericMask@8
 RtlMoveMemory=RtlMoveMemory@12
@@ -743,7 +743,7 @@ RtlNumberOfSetBits=RtlNumberOfSetBits@4
 RtlOemStringToCountedUnicodeString=RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
-;RtlPinAtomInAtomTable
+RtlPinAtomInAtomTable=RtlPinAtomInAtomTable@8
 RtlPrefixString=RtlPrefixString@12
 RtlPrefixUnicodeString=RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
@@ -1079,8 +1079,8 @@ KeGetCurrentIrql=KeGetCurrentIrql@0
 KeLowerIrql=KeLowerIrql@4
 KeQueryPerformanceCounter=KeQueryPerformanceCounter@4
 KeRaiseIrql=KeRaiseIrql@8
-;KeRaiseIrqlToDpcLevel=KeRaiseIrqlToDpcLevel@0
-;KeRaiseIrqlToSynchLevel=KeRaiseIrqlToSynchLevel@0
+KeRaiseIrqlToDpcLevel=KeRaiseIrqlToDpcLevel@0
+KeRaiseIrqlToSynchLevel=KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock=KeReleaseSpinLock@8
 KeStallExecutionProcessor=KeStallExecutionProcessor@4
 ;KfAcquireSpinLock=@KfAcquireSpinLock@4

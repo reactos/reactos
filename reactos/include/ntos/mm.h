@@ -38,19 +38,20 @@
 #define MEM_TOP_DOWN	(1048576)
 #define EXCEPTION_GUARD_PAGE	(0x80000001L)
 #define SECTION_EXTEND_SIZE	(0x10)
+#define SECTION_MAP_EXECUTE	(0x8)
 #define SECTION_MAP_READ	(0x4)
 #define SECTION_MAP_WRITE	(0x2)
-#define SECTION_QUERY	(0x1)
+#define SECTION_QUERY		(0x1)
 #define SECTION_ALL_ACCESS	(0xf001fL)
 
-typedef struct _MEMORY_BASIC_INFORMATION { 
+typedef struct _MEMORY_BASIC_INFORMATION {
   PVOID BaseAddress;
-  PVOID AllocationBase; 
-  DWORD AllocationProtect; 
-  DWORD RegionSize; 
-  DWORD State; 
-  DWORD Protect; 
-  DWORD Type; 
+  PVOID AllocationBase;
+  DWORD AllocationProtect;
+  DWORD RegionSize;
+  DWORD State;
+  DWORD Protect;
+  DWORD Type;
 } MEMORY_BASIC_INFORMATION, *PMEMORY_BASIC_INFORMATION;
 
 #define FILE_MAP_ALL_ACCESS	(0xf001fL)

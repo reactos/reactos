@@ -31,7 +31,7 @@ NTSTATUS NtpCreateEvent(PVOID ObjectBody,
 			POBJECT_ATTRIBUTES ObjectAttributes)
 {
    
-   DPRINT("NtpCreateDevice(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+   DPRINT("NtpCreateEvent(ObjectBody %x, Parent %x, RemainingPath %S)\n",
 	  ObjectBody, Parent, RemainingPath);
    
    if (RemainingPath != NULL && wcschr(RemainingPath+1, '\\') != NULL)
@@ -48,12 +48,9 @@ NTSTATUS NtpCreateEvent(PVOID ObjectBody,
 
 VOID NtInitializeEventImplementation(VOID)
 {
-   ANSI_STRING AnsiName;
-   
    ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   RtlInitAnsiString(&AnsiName,"Event");
-   RtlAnsiStringToUnicodeString(&ExEventObjectType->TypeName,&AnsiName,TRUE);
+   RtlCreateUnicodeString(&ExEventObjectType->TypeName, L"Event");
    
    ExEventObjectType->MaxObjects = ULONG_MAX;
    ExEventObjectType->MaxHandles = ULONG_MAX;

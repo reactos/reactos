@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.41 2000/10/07 18:44:06 dwelch Exp $
+/* $Id: registry.c,v 1.42 2000/10/08 12:44:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -22,9 +22,6 @@
 
 
 /*  -----------------------------------------------------  Typedefs  */
-
-#define RTL_REGISTRY_MAXIMUM 0
-#define RTL_REGISTRY_HANDLE 0
 
 //#define LONG_MAX 0x7fffffff
 

@@ -12,8 +12,9 @@
 
 #include <ddk/ntddk.h>
 
-//#include <internal/debug.h>
-#include <internal/i386/io.h>
+#define NDEBUG
+#include <internal/debug.h>
+
 
 /* CONSTANTS *****************************************************************/
 
@@ -44,8 +45,8 @@ HalMakeBeep (
             "cli\n\t");
 
     /* speaker off */
-    b = inb_p(PORT_B);
-    outb_p(PORT_B, b & 0xFC);
+    b = READ_PORT_UCHAR((PUCHAR)PORT_B);
+    WRITE_PORT_UCHAR((PUCHAR)PORT_B, b & 0xFC);
 
     if (Frequency)
     {
@@ -60,12 +61,12 @@ HalMakeBeep (
         }
 
         /* set timer divider */
-        outb_p(TIMER3, 0xB6);
-        outb_p(TIMER2, (UCHAR)(Divider & 0xFF));
-        outb_p(TIMER2, (UCHAR)((Divider>>8) & 0xFF));
+        WRITE_PORT_UCHAR((PUCHAR)TIMER3, 0xB6);
+        WRITE_PORT_UCHAR((PUCHAR)TIMER2, (UCHAR)(Divider & 0xFF));
+        WRITE_PORT_UCHAR((PUCHAR)TIMER2, (UCHAR)((Divider>>8) & 0xFF));
 
         /* speaker on */
-        outb_p(PORT_B, inb_p(PORT_B) | 0x03);
+        WRITE_PORT_UCHAR((PUCHAR)PORT_B, READ_PORT_UCHAR((PUCHAR)PORT_B) | 0x03);
     }
 
     /* restore flags */

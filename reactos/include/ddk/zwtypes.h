@@ -4,8 +4,6 @@
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
 #define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
 
-typedef PVOID RTL_ATOM;
-
 #ifdef __NTOSKRNL__
 extern ULONG EXPORTED NtBuildNumber;
 #else
@@ -83,9 +81,20 @@ extern ULONG IMPORTED NtBuildNumber;
 #define ObjectAllInformation			3
 #define ObjectDataInformation			4
 
+
 // semaphore information
 
-#define SemaphoreBasicInformation		0
+typedef enum _SEMAPHORE_INFORMATION_CLASS
+{
+	SemaphoreBasicInformation		= 0
+} SEMAPHORE_INFORMATION_CLASS;
+
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
+	LONG CurrentCount;
+	LONG MaximumCount;
+} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
+
 
 // event information
 
@@ -93,6 +102,13 @@ typedef enum _EVENT_INFORMATION_CLASS
 {
 	EventBasicInformation			= 0
 } EVENT_INFORMATION_CLASS;
+
+typedef struct _EVENT_BASIC_INFORMATION
+{
+	EVENT_TYPE EventType;
+	LONG EventState;
+} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
+
 
 // system information
 // {Nt|Zw}{Query|Set}SystemInformation
@@ -1178,22 +1194,6 @@ typedef struct _MOVEFILE_DESCRIPTOR
 	ULONG             Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
 
-
-// semaphore information
-
-typedef struct _SEMAPHORE_BASIC_INFORMATION
-{
-	ULONG CurrentCount;
-	ULONG MaximumCount;
-} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
-
-// event information
-
-typedef struct _EVENT_BASIC_INFORMATION
-{
-	EVENT_TYPE EventType;
-	LONG EventState;
-} EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 
 //typedef enum _TIMER_TYPE 

@@ -1,4 +1,4 @@
-/* $Id: reboot.c,v 1.5 2000/08/12 19:33:20 dwelch Exp $
+/* $Id: reboot.c,v 1.6 2000/10/08 12:46:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/hal.h>
-#include <internal/i386/io.h>
 
 
 static VOID
@@ -31,20 +30,20 @@ HalReboot (VOID)
     __asm__("cli\n");
 
     /* disable periodic interrupt (RTC) */
-    outb_p (0x70, 0x0b);
-    data = inb_p (0x71);
-    outb_p (0x71, data & 0xbf);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x0b);
+    data = READ_PORT_UCHAR((PUCHAR)0x71);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, data & 0xbf);
 
     /* */
-    outb_p (0x70, 0x0a);
-    data = inb_p (0x71);
-    outb_p (0x71, (data & 0xf0) | 0x06);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x0a);
+    data = READ_PORT_UCHAR((PUCHAR)0x71);
+    WRITE_PORT_UCHAR((PUCHAR)0x71, (data & 0xf0) | 0x06);
 
     /* */
-    outb_p (0x70, 0x15);
+    WRITE_PORT_UCHAR((PUCHAR)0x70, 0x15);
 
     /* generate RESET signal via keyboard controller */
-    outb_p (0x64, 0xfe);
+    WRITE_PORT_UCHAR((PUCHAR)0x64, 0xfe);
 
     /* stop the processor */
 #if 1

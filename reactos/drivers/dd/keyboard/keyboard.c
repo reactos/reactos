@@ -12,7 +12,6 @@
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <ntos/keyboard.h>
-#include "../../../ntoskrnl/include/internal/i386/io.h"
 #include <ntos/minmax.h>
 
 #define NDEBUG
@@ -120,9 +119,9 @@ static void KbdWrite(int addr,BYTE data)
 
    do
    {
-      status=inb_p(KBD_CTRL_PORT);     // Wait until input buffer empty
+      status=READ_PORT_UCHAR((PUCHAR)KBD_CTRL_PORT); // Wait until input buffer empty
    } while(status & KBD_IBF);
-   outb_p(addr,data);
+   WRITE_PORT_UCHAR((PUCHAR)addr,data);
 }
 
 static int KbdReadData(void)
@@ -136,10 +135,10 @@ static int KbdReadData(void)
    i=500000;
    do
    {
-      status=inb_p(KBD_CTRL_PORT);
+      status=READ_PORT_UCHAR((PUCHAR)KBD_CTRL_PORT);
       if (!(status & KBD_OBF))      // Check if data available
          continue;
-      data=inb_p(KBD_DATA_PORT);
+      data=READ_PORT_UCHAR((PUCHAR)KBD_DATA_PORT);
       if (status & (KBD_GTO | KBD_PERR))  // Check for timeout error
          continue;
       return data;
@@ -428,7 +427,7 @@ static BOOLEAN KeyboardHandler(PKINTERRUPT Interrupt, PVOID Context)
    CHECKPOINT;
 
    // Read scan code
-   thisKey=inb_p(KBD_DATA_PORT);
+   thisKey=READ_PORT_UCHAR((PUCHAR)KBD_DATA_PORT);
    if ((thisKey==0xE0)||(thisKey==0xE1))   // Extended key
    {
       extKey=1;         // Wait for next byte

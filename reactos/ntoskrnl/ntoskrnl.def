@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.88 2000/09/06 02:08:00 phreak Exp $
+; $Id: ntoskrnl.def,v 1.89 2000/10/08 12:43:56 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -615,7 +615,7 @@ READ_REGISTER_BUFFER_USHORT@12
 RtlAbsoluteToSelfRelativeSD@12
 RtlAddAccessAllowedAce@16
 RtlAddAce@20
-;RtlAddAtomToAtomTable
+RtlAddAtomToAtomTable@12
 ;RtlAllocateAndInitializeSid
 ;RtlAllocateHeap
 RtlAnsiCharToUnicodeChar@4
@@ -642,14 +642,14 @@ RtlCompareUnicodeString@12
 ;RtlCompressBuffer
 ;RtlCompressChunks
 RtlConvertLongToLargeInteger@4
-;RtlConvertSidToUnicodeString
+RtlConvertSidToUnicodeString@12
 RtlConvertUlongToLargeInteger@4
 RtlCopyLuid@8
 RtlCopySid@12
 RtlCopyString@8
 RtlCopyUnicodeString@8
 RtlCreateAcl@12
-;RtlCreateAtomTable
+RtlCreateAtomTable@8
 ;RtlCreateHeap
 RtlCreateRegistryKey@8
 RtlCreateSecurityDescriptor@8
@@ -659,12 +659,12 @@ RtlCustomCPToUnicodeN@24
 ;RtlDecompressChunks
 ;RtlDecompressFragment
 ;RtlDelete
-;RtlDeleteAtomFromAtomTable
+RtlDeleteAtomFromAtomTable@8
 ;RtlDeleteElementGenericTable
 ;RtlDeleteNoSplay
 RtlDeleteRegistryValue@12
 ;RtlDescribeChunk
-;RtlDestroyAtomTable
+RtlDestroyAtomTable@4
 ;RtlDestroyHeap
 RtlDowncaseUnicodeString@12
 ;RtlEmptyAtomTable
@@ -692,7 +692,7 @@ RtlFindLongestRunSet@8
 RtlFindSetBits@12
 RtlFindSetBitsAndClear@12
 ;RtlFindUnicodePrefix
-;RtlFormatCurrentUserKeyPath
+RtlFormatCurrentUserKeyPath@4
 RtlFreeAnsiString@4
 ;RtlFreeHeap
 RtlFreeOemString@4
@@ -729,7 +729,7 @@ RtlLargeIntegerSubtract@16
 RtlLengthRequiredSid@4
 RtlLengthSecurityDescriptor@4
 RtlLengthSid@4
-;RtlLookupAtomInAtomTable
+RtlLookupAtomInAtomTable@12
 ;RtlLookupElementGenericTable
 RtlMapGenericMask@8
 RtlMoveMemory@12
@@ -745,7 +745,7 @@ RtlOemStringToCountedUnicodeString@12
 RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
-;RtlPinAtomInAtomTable
+RtlPinAtomInAtomTable@8
 RtlPrefixString@12
 RtlPrefixUnicodeString@12
 ;RtlQueryAtomInAtomTable
@@ -1078,8 +1078,8 @@ KeGetCurrentIrql@0
 KeLowerIrql@4
 KeQueryPerformanceCounter@4
 KeRaiseIrql@8
-;KeRaiseIrqlToDpcLevel@0
-;KeRaiseIrqlToSynchLevel@0
+KeRaiseIrqlToDpcLevel@0
+KeRaiseIrqlToSynchLevel@0
 KeReleaseSpinLock@8
 KeStallExecutionProcessor@4
 ;@KfAcquireSpinLock@4

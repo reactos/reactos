@@ -10,7 +10,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/bitops.h>
-#include <internal/halio.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
 
@@ -59,8 +58,8 @@ static unsigned int HiGetCurrentPICMask(void)
 {
    unsigned int mask;
    
-   mask = inb_p(0x21);
-   mask = mask | (inb_p(0xa1)<<8);
+   mask = READ_PORT_UCHAR((PUCHAR)0x21);
+   mask = mask | (READ_PORT_UCHAR((PUCHAR)0xa1)<<8);
 
    return mask;
 }
@@ -68,8 +67,8 @@ static unsigned int HiGetCurrentPICMask(void)
 
 static unsigned int HiSetCurrentPICMask(unsigned int mask)
 {
-   outb_p(0x21,mask & 0xff);
-   outb_p(0xa1,(mask >> 8) & 0xff);
+   WRITE_PORT_UCHAR((PUCHAR)0x21,mask & 0xff);
+   WRITE_PORT_UCHAR((PUCHAR)0xa1,(mask >> 8) & 0xff);
 
    return mask;
 }
@@ -368,10 +367,10 @@ BOOLEAN STDCALL HalBeginSystemInterrupt (ULONG Vector,
 	return FALSE;
 
    /* Send EOI to the PICs */
-   outb(0x20,0x20);
+   WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
    if ((Vector-IRQ_BASE)>=8)
      {
-	outb(0xa0,0x20);
+	WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
      }
 
    *OldIrql = KeGetCurrentIrql();
@@ -403,11 +402,11 @@ BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
    irq = Vector - IRQ_BASE;
    if (irq<8)
      {
-	outb(0x21,inb(0x21)|(1<<irq));
+	WRITE_PORT_UCHAR((PUCHAR)0x21, READ_PORT_UCHAR((PUCHAR)0x21)|(1<<irq));
      }
    else
      {
-	outb(0xa1,inb(0xa1)|(1<<(irq-8)));
+	WRITE_PORT_UCHAR((PUCHAR)0xa1, READ_PORT_UCHAR((PUCHAR)0xa1)|(1<<(irq-8)));
      }
 
    return TRUE;
@@ -426,11 +425,11 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
    irq = Vector - IRQ_BASE;
    if (irq<8)
      {
-	outb(0x21,inb(0x21)&(~(1<<irq)));
+	WRITE_PORT_UCHAR((PUCHAR)0x21, READ_PORT_UCHAR((PUCHAR)0x21)&(~(1<<irq)));
      }
    else
      {
-	outb(0xa1,inb(0xa1)&(~(1<<(irq-8))));
+	WRITE_PORT_UCHAR((PUCHAR)0xa1, READ_PORT_UCHAR((PUCHAR)0xa1)&(~(1<<(irq-8))));
      }
 
    return TRUE;

@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.41 2000/10/07 13:41:46 dwelch Exp $
+/* $Id: rtl.h,v 1.42 2000/10/08 12:42:24 ekohl Exp $
  * 
  */
 
@@ -77,6 +77,14 @@ typedef struct {
 	ULONG		Unknown[11];
 } RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 
+typedef USHORT RTL_ATOM, *PRTL_ATOM;
+
+typedef struct _RTL_ATOM_TABLE
+{
+	ULONG Dummy;
+
+} RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
+
 struct _LB_RANGE
 {
 	ULONG dummy;
@@ -136,17 +144,17 @@ typedef struct _RTL_QUERY_REGISTRY_TABLE
  * PURPOSE: Used with RtlCheckRegistryKey, RtlCreateRegistryKey, 
  * RtlDeleteRegistryKey
  */
-enum
-{
-   RTL_REGISTRY_ABSOLUTE,
-   RTL_REGISTRY_SERVICES,
-   RTL_REGISTRY_CONTROL,
-   RTL_REGISTRY_WINDOWS_NT,
-   RTL_REGISTRY_DEVICEMAP,
-   RTL_REGISTRY_USER,
-   RTL_REGISTRY_OPTIONAL,
-   RTL_REGISTRY_VALUE,
-};
+#define RTL_REGISTRY_ABSOLUTE   0
+#define RTL_REGISTRY_SERVICES   1
+#define RTL_REGISTRY_CONTROL    2
+#define RTL_REGISTRY_WINDOWS_NT 3
+#define RTL_REGISTRY_DEVICEMAP  4
+#define RTL_REGISTRY_USER       5
+#define RTL_REGISTRY_MAXIMUM    6
+
+#define RTL_REGISTRY_HANDLE     0x40000000
+#define RTL_REGISTRY_OPTIONAL   0x80000000
+
 
 #define SHORT_SIZE	(sizeof(USHORT))
 #define SHORT_MASK	(SHORT_SIZE-1)
@@ -513,6 +521,14 @@ RemoveTailList (
 }
 
 
+NTSTATUS
+STDCALL
+RtlAddAtomToAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+	IN	PWSTR		AtomName,
+	OUT	PRTL_ATOM	Atom
+	);
+
 PVOID STDCALL
 RtlAllocateHeap (
 	HANDLE	Heap,
@@ -648,13 +664,21 @@ RtlCompareUnicodeString (
 LARGE_INTEGER
 STDCALL
 RtlConvertLongToLargeInteger (
-	LONG	SignedInteger
+	IN	LONG	SignedInteger
+	);
+
+NTSTATUS
+STDCALL
+RtlConvertSidToUnicodeString (
+	IN OUT	PUNICODE_STRING	String,
+	IN	PSID		Sid,
+	IN	BOOLEAN		AllocateString
 	);
 
 LARGE_INTEGER
 STDCALL
 RtlConvertUlongToLargeInteger (
-	ULONG	UnsignedInteger
+	IN	ULONG	UnsignedInteger
 	);
 
 #if 0
@@ -690,6 +714,13 @@ STDCALL
 RtlCopyUnicodeString (
 	PUNICODE_STRING	DestinationString,
 	PUNICODE_STRING	SourceString
+	);
+
+NTSTATUS
+STDCALL
+RtlCreateAtomTable (
+	IN	ULONG TableSize,
+	IN OUT	PRTL_ATOM_TABLE *AtomTable
 	);
 
 HANDLE
@@ -744,10 +775,23 @@ RtlCustomCPToUnicodeN (
 
 NTSTATUS
 STDCALL
+RtlDeleteAtomFromAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+	IN	RTL_ATOM	Atom
+	);
+
+NTSTATUS
+STDCALL
 RtlDeleteRegistryValue (
 	ULONG	RelativeTo,
 	PWSTR	Path,
 	PWSTR	ValueName
+	);
+
+NTSTATUS
+STDCALL
+RtlDestroyAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable
 	);
 
 BOOL
@@ -899,6 +943,12 @@ RtlFindSetBitsAndClear (
 	PRTL_BITMAP	BitMapHeader,
 	ULONG		NumberToFind,
 	ULONG		HintIndex
+	);
+
+NTSTATUS
+STDCALL
+RtlFormatCurrentUserKeyPath (
+	IN OUT	PUNICODE_STRING	KeyPath
 	);
 
 VOID
@@ -1235,6 +1285,14 @@ RtlLockHeap (
 	HANDLE	hheap
 	);
 
+NTSTATUS
+STDCALL
+RtlLookupAtomInAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+	IN	PUNICODE_STRING	AtomName,
+	OUT	PRTL_ATOM	Atom
+	);
+
 VOID
 STDCALL
 RtlMoveMemory (
@@ -1313,6 +1371,19 @@ RtlOemToUnicodeN (
 	PULONG	ResultSize,
 	PCHAR	OemString,
 	ULONG	OemSize
+	);
+
+NTSTATUS
+STDCALL
+RtlOpenCurrentUser (
+	IN	ACCESS_MASK	DesiredAccess,
+	OUT	PHANDLE		KeyHandle
+	);
+
+NTSTATUS STDCALL
+RtlPinAtomInAtomTable (
+	IN	PRTL_ATOM_TABLE	AtomTable,
+	IN	PRTL_ATOM	Atom
 	);
 
 BOOLEAN

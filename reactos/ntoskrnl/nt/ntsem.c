@@ -47,13 +47,9 @@ NTSTATUS NtpCreateSemaphore(PVOID ObjectBody,
 
 VOID NtInitializeSemaphoreImplementation(VOID)
 {
-   UNICODE_STRING TypeName;
-   
    ExSemaphoreType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
    
-   RtlInitUnicodeString(&TypeName, L"Event");
-   
-   ExSemaphoreType->TypeName = TypeName;
+   RtlCreateUnicodeString(&ExSemaphoreType->TypeName, L"Semaphore");
    
    ExSemaphoreType->MaxObjects = ULONG_MAX;
    ExSemaphoreType->MaxHandles = ULONG_MAX;
@@ -75,8 +71,8 @@ VOID NtInitializeSemaphoreImplementation(VOID)
 NTSTATUS STDCALL NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 				   IN ACCESS_MASK DesiredAccess,
 				   IN POBJECT_ATTRIBUTES ObjectAttributes,
-				   IN ULONG InitialCount,
-				   IN ULONG MaximumCount)
+				   IN LONG InitialCount,
+				   IN LONG MaximumCount)
 {
    PKSEMAPHORE Semaphore;
    
@@ -98,8 +94,7 @@ NTSTATUS STDCALL NtOpenSemaphore(IN HANDLE SemaphoreHandle,
 				 IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
    NTSTATUS Status;
-   PKSEMAPHORE Semaphore;   
-
+   PKSEMAPHORE Semaphore;
    
    Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
 				    ObjectAttributes->Attributes,
@@ -125,18 +120,46 @@ NTSTATUS STDCALL NtOpenSemaphore(IN HANDLE SemaphoreHandle,
 }
 
 
-NTSTATUS STDCALL NtQuerySemaphore(HANDLE	SemaphoreHandle,
-				  CINT	SemaphoreInformationClass,
+NTSTATUS STDCALL NtQuerySemaphore(IN	HANDLE	SemaphoreHandle,
+				  IN	SEMAPHORE_INFORMATION_CLASS SemaphoreInformationClass,
 				  OUT	PVOID	SemaphoreInformation,
-				  ULONG	Length,
-				  PULONG	ReturnLength)
+				  IN	ULONG	SemaphoreInformationLength,
+				  OUT	PULONG	ReturnLength)
 {
-   UNIMPLEMENTED;
+   PSEMAPHORE_BASIC_INFORMATION Info;
+   PKSEMAPHORE Semaphore;
+   NTSTATUS Status;
+
+   Info = (PSEMAPHORE_BASIC_INFORMATION)SemaphoreInformation;
+
+   if (SemaphoreInformationClass > SemaphoreBasicInformation)
+     return STATUS_INVALID_INFO_CLASS;
+
+   if (SemaphoreInformationLength < sizeof(SEMAPHORE_BASIC_INFORMATION))
+     return STATUS_INFO_LENGTH_MISMATCH;
+
+   Status = ObReferenceObjectByHandle(SemaphoreHandle,
+				      SEMAPHORE_QUERY_STATE,
+				      ExSemaphoreType,
+				      UserMode,
+				      (PVOID*)&Semaphore,
+				      NULL);
+   if (!NT_SUCCESS(Status))
+     return Status;
+
+   Info->CurrentCount = KeReadStateSemaphore(Semaphore);
+   Info->MaximumCount = Semaphore->Limit;
+
+   *ReturnLength = sizeof(SEMAPHORE_BASIC_INFORMATION);
+
+   ObDereferenceObject(Semaphore);
+
+   return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL NtReleaseSemaphore(IN	HANDLE	SemaphoreHandle,
-				    IN	ULONG	ReleaseCount,
-				    IN	PULONG	PreviousCount)
+				    IN	LONG	ReleaseCount,
+				    OUT	PLONG	PreviousCount)
 {
    PKSEMAPHORE Semaphore;
    NTSTATUS Status;
