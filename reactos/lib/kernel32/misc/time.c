@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.20 2003/02/12 00:39:31 hyperion Exp $
+/* $Id: time.c,v 1.21 2003/07/09 20:19:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -334,9 +334,7 @@ GetCurrentTime(VOID)
 DWORD STDCALL
 GetTickCount(VOID)
 {
-  ULONG UpTime;
-  NtGetTickCount(&UpTime);
-  return UpTime;
+  return (DWORD)((ULONGLONG)SharedUserData->TickCountLow * SharedUserData->TickCountMultiplier / 16777216);
 }
 
 
