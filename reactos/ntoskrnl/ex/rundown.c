@@ -41,6 +41,8 @@ ExAcquireRundownProtectionEx (
 {
     ULONG_PTR PrevCount, Current;
     
+    PAGED_CODE();
+    
     Count <<= EX_RUNDOWN_COUNT_SHIFT;
     
     /* Loop until successfully incremented the counter */
@@ -74,6 +76,8 @@ ExInitializeRundownProtection (
     IN PEX_RUNDOWN_REF RunRef
     )
 {
+    PAGED_CODE();
+    
     /* Set the count to zero */
     RunRef->Count = 0;
 }
@@ -87,6 +91,8 @@ ExReInitializeRundownProtection (
     IN PEX_RUNDOWN_REF RunRef
     )
 {
+    PAGED_CODE();
+    
     /* Reset the count */
 #ifdef _WIN64
     InterlockedExchangeAdd64((LONGLONG*)&RunRef->Count, 0LL);
@@ -106,6 +112,8 @@ ExReleaseRundownProtectionEx (
     IN ULONG Count
     )
 {
+    PAGED_CODE();
+
     Count <<= EX_RUNDOWN_COUNT_SHIFT;
     
     for (;;)
@@ -200,7 +208,9 @@ ExRundownCompleted (
     IN PEX_RUNDOWN_REF RunRef
     )
 {
-    /* mark the  */
+    PAGED_CODE();
+    
+    /* mark the counter as active */
 #ifdef _WIN64
     InterlockedExchange64((LONGLONG*)&RunRef->Count, (LONGLONG)EX_RUNDOWN_ACTIVE);
 #else
@@ -219,6 +229,8 @@ ExWaitForRundownProtectionRelease (
 {
     ULONG_PTR PrevCount, NewPtr, PrevPtr;
     RUNDOWN_DESCRIPTOR RundownDescriptor;
+    
+    PAGED_CODE();
     
     PrevCount = RunRef->Count;
     

@@ -101,6 +101,8 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(PreviousMode != KernelMode)
@@ -245,6 +247,8 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   ANSI_STRING AName, AValue;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
   
@@ -1371,6 +1375,8 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   PVOID SystemInformation;
   NTSTATUS Status;
   NTSTATUS FStatus;
+  
+  PAGED_CODE();
 
 /*	DPRINT("NtQuerySystemInformation Start. Class:%d\n",
 					SystemInformationClass );
@@ -1448,6 +1454,8 @@ NtSetSystemInformation (
 	IN	ULONG				SystemInformationLength
 	)
 {
+        PAGED_CODE();
+        
 	/*
 	 * If called from user mode, check 
 	 * possible unsafe arguments.
@@ -1496,6 +1504,8 @@ NtFlushInstructionCache (
 	IN	UINT	NumberOfBytesToFlush
 	)
 {
+        PAGED_CODE();
+        
 	__asm__("wbinvd\n");
 	return STATUS_SUCCESS;
 }

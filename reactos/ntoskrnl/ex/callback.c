@@ -171,6 +171,8 @@ ExCreateCallback(
    PINT_CALLBACK_OBJECT Callback;
    NTSTATUS    Status;
    HANDLE     Handle;
+   
+   PAGED_CODE();
 
    /* Open a handle to the callback if it exists */
    if (ObjectAttributes->ObjectName)
@@ -346,6 +348,8 @@ ExRegisterCallback(
    PINT_CALLBACK_OBJECT CallbackObject = (PINT_CALLBACK_OBJECT)OpaqueCallbackObject;
    PCALLBACK_REGISTRATION  CallbackRegistration = NULL;
    KIRQL     OldIrql;
+   
+   PAGED_CODE();
 
    /* Create reference to Callback Object */
    ObReferenceObject (CallbackObject);
@@ -411,6 +415,8 @@ ExUnregisterCallback(
    PCALLBACK_REGISTRATION  CallbackRegistration;
    PINT_CALLBACK_OBJECT    CallbackObject;
    KIRQL                   OldIrql;
+   
+   PAGED_CODE();
 
    /* Convert Handle to valid Structure Pointer */
    CallbackRegistration = (PCALLBACK_REGISTRATION) CallbackRegistrationHandle;

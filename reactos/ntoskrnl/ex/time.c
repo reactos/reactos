@@ -151,6 +151,8 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
   
+  PAGED_CODE();
+  
   PreviousMode = ExGetPreviousMode();
   
   if(PreviousMode != KernelMode)
@@ -233,6 +235,8 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
 {
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   PreviousMode = ExGetPreviousMode();
 

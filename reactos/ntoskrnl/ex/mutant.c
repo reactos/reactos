@@ -104,27 +104,29 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
   PKMUTEX Mutant;
   NTSTATUS Status = STATUS_SUCCESS;
   
-   PreviousMode = ExGetPreviousMode();
+  PAGED_CODE();
+  
+  PreviousMode = ExGetPreviousMode();
 
-   if(PreviousMode == UserMode)
-   {
-     _SEH_TRY
-     {
-       ProbeForWrite(MutantHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
+  if(PreviousMode == UserMode)
+  {
+    _SEH_TRY
+    {
+      ProbeForWrite(MutantHandle,
+                    sizeof(HANDLE),
+                    sizeof(ULONG));
+    }
+    _SEH_HANDLE
+    {
+      Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
      
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
-   }
+    if(!NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+  }
 
   Status = ObCreateObject(PreviousMode,
 			  ExMutantObjectType,
@@ -177,6 +179,8 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
   HANDLE hMutant;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
+  
+  PAGED_CODE();
 
   DPRINT("NtOpenMutant(0x%x, 0x%x, 0x%x)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
@@ -240,6 +244,8 @@ NtQueryMutant(IN HANDLE MutantHandle,
    PKMUTANT Mutant;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    PreviousMode = ExGetPreviousMode();
 
@@ -311,6 +317,8 @@ NtReleaseMutant(IN HANDLE MutantHandle,
    PKMUTANT Mutant;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
+   
+   PAGED_CODE();
 
    DPRINT("NtReleaseMutant(MutantHandle 0%x PreviousCount 0%x)\n",
 	  MutantHandle, PreviousCount);
