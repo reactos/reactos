@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.10 2004/09/26 18:33:30 royce Exp $
+/* $Id: window.c,v 1.244.2.11 2004/09/27 01:13:52 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -600,10 +600,10 @@ IntSetParent(PWINDOW_OBJECT Window, PWINDOW_OBJECT WndNewParent)
     */
    
    /*
-    * Validate that the old parent still exist, since it migth have been
+    * Validate that the old parent still exist, since it might have been
     * destroyed during the last callbacks to user-mode 
     */
-   if(WndOldParent && IntIsWindow(WndOldParent->Handle))
+   if(WndOldParent && IntIsWindow(WndOldParent))
    {
      return WndOldParent;
    }
