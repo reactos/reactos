@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.120 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: process.c,v 1.120.6.1 2003/12/17 01:32:47 hyperion Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -56,6 +56,8 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 
 static PCREATE_PROCESS_NOTIFY_ROUTINE
 PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
+
+FAST_MUTEX PiProcessNotifyRoutineLock;
 
 typedef struct
 {
@@ -237,6 +239,8 @@ PsInitProcessManagment(VOID)
    KIRQL oldIrql;
    NTSTATUS Status;
    
+   ExInitializeFastMutex(&PiProcessNotifyRoutineLock);
+ 
    /*
     * Register the process object type
     */
@@ -328,10 +332,6 @@ PsInitProcessManagment(VOID)
 VOID STDCALL
 PiDeleteProcessWorker(PVOID pContext)
 {
-  KIRQL oldIrql;
-  ULONG i;
-  PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
-  ULONG NotifyRoutineCount;
   PDEL_CONTEXT Context;
   PEPROCESS CurrentProcess;
   PEPROCESS Process;
@@ -345,29 +345,6 @@ PiDeleteProcessWorker(PVOID pContext)
   if (CurrentProcess != Process)
     {
       KeAttachProcess(Process);
-    }
-
-  /* Terminate Win32 Process */
-  PsTerminateWin32Process (Process);
-
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-  NotifyRoutineCount = 0;
-  for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
-    {
-      if (PiProcessNotifyRoutine[i])
-	{
-	  NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];
-	}
-    }
-  RemoveEntryList(&Process->ProcessListEntry);
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-
-  for (i = 0;i < NotifyRoutineCount; i++)
-    {
-      /* must be called below DISPATCH_LVL */
-      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-		       (HANDLE)Process->UniqueProcessId,
-		       FALSE);
     }
 
   /* KDB hook */
@@ -579,16 +556,12 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PEPROCESS ParentProcess;
    PKPROCESS KProcess;
    NTSTATUS Status;
-   KIRQL oldIrql;
    PVOID LdrStartupAddr;
    PVOID ImageBase;
    PEPORT DebugPort;
    PEPORT ExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
-   ULONG i;
-   PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
-   ULONG NotifyRoutineCount;
 
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -650,6 +623,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    Process->UniqueProcessId = InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
    Process->InheritedFromUniqueProcessId = 
      (HANDLE)ParentProcess->UniqueProcessId;
+   InitializeListHead(&Process->ThreadListHead);
+   Process->ThreadCount = 0;
    ObCreateHandleTable(ParentProcess,
 		       InheritObjectTable,
 		       Process);
@@ -694,27 +669,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
      {
        Process->Win32Desktop = (HANDLE)0;
      }
-
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   NotifyRoutineCount = 0;
-   for (i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; i++)
-   {
-      if (PiProcessNotifyRoutine[i])
-      {
-         NotifyRoutine[NotifyRoutineCount++] = PiProcessNotifyRoutine[i];   
-      }
-   }
-   InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
-   InitializeListHead(&Process->ThreadListHead);
-   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
-
-   for (i = 0;i < NotifyRoutineCount; i++)
-   {
-      //must be called below DISPATCH_LVL
-      NotifyRoutine[i](Process->InheritedFromUniqueProcessId,
-                       (HANDLE)Process->UniqueProcessId,
-                       TRUE);
-   }
 
    Process->Pcb.State = PROCESS_STATE_ACTIVE;
    
@@ -1581,6 +1535,36 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
   return(STATUS_INVALID_PARAMETER);
 }
 
+static VOID STDCALL PspAcquireProcessNotifyRoutineLock(VOID)
+{
+ KeEnterCriticalRegion();
+ ExAcquireFastMutexUnsafe(&PiProcessNotifyRoutineLock);
+}
+
+static VOID STDCALL PspReleaseProcessNotifyRoutineLock(VOID)
+{
+ ExReleaseFastMutexUnsafe(&PiProcessNotifyRoutineLock);
+ KeLeaveCriticalRegion();
+}
+
+VOID STDCALL PspRunProcessNotifyRoutines
+(
+ PEPROCESS Process,
+ BOOLEAN Create
+)
+{
+ ULONG i;
+ HANDLE Pid = (HANDLE)Process->UniqueProcessId;
+ HANDLE ParentPid = Process->InheritedFromUniqueProcessId;
+
+ PspAcquireProcessNotifyRoutineLock();
+
+ for(i = 0; i < MAX_PROCESS_NOTIFY_ROUTINE_COUNT; ++ i)
+  if(PiProcessNotifyRoutine[i])
+   PiProcessNotifyRoutine[i](Pid, ParentPid, Create);
+
+ PspReleaseProcessNotifyRoutineLock();
+}
 
 /*
  * @implemented
@@ -1589,10 +1573,9 @@ NTSTATUS STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
 				IN BOOLEAN Remove)
 {
-  KIRQL oldIrql;
   ULONG i;
 
-  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  PspAcquireProcessNotifyRoutineLock();
 
   if (Remove)
   {
@@ -1605,7 +1588,7 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
         }
      }
 
-     KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+     PspReleaseProcessNotifyRoutineLock();
      return(STATUS_SUCCESS);
   }
 
@@ -1619,7 +1602,7 @@ PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
      }
   }
 
-  KeReleaseSpinLock(&PsProcessListLock, oldIrql);
+  PspReleaseProcessNotifyRoutineLock();
 
   if (i == MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
   {
