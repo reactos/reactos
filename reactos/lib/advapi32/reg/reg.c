@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.39 2003/12/28 08:47:28 arty Exp $
+/* $Id: reg.c,v 1.40 2003/12/28 09:28:39 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2149,7 +2149,7 @@ RegQueryValueExW (HKEY hKey,
     {
       /* Return ERROR_SUCCESS and the buffer space needed for a successful call */
       MaxCopy = 0;
-      ErrorCode = ERROR_MORE_DATA;
+      ErrorCode = lpData ? ERROR_MORE_DATA : ERROR_SUCCESS;
     }
   else if (!NT_SUCCESS(Status))
     {
