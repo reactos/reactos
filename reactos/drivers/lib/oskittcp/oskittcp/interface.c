@@ -249,20 +249,13 @@ int OskitTCPClose( void *socket ) {
 
 int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len, 
 		  OSK_UINT *OutLen, OSK_UINT flags ) {
-    struct mbuf mb;
-    /*struct uio uio = { 0 };*/
+    struct mbuf* m = m_devget( Data, Len, 0, NULL, NULL );
     int error = 0;
+	if ( !m )
+		return ENOBUFS;
     OskitDumpBuffer( Data, Len );
-    /*uio.uio_resid = Len;*/
-    mb.m_data = Data;
-    mb.m_len  = Len;
-    mb.m_flags = M_EOR;
-	mb.m_pkthdr.len = Len;
-	mb.m_next = 0;
-	mb.m_nextpkt = 0;
-    error = sosend( socket, NULL, NULL /*&uio*/, (struct mbuf *)&mb, NULL, 0 );
-    /*printf("uio.uio_resid = %d\n", uio.uio_resid);*/
-    *OutLen = Len /*uio.uio_resid*/;
+    error = sosend( socket, NULL, NULL, m, NULL, 0 );
+    *OutLen = Len;
     return error;
 }
 
@@ -292,7 +285,7 @@ void OskitTCPReceiveDatagram( OSK_PCHAR Data, OSK_UINT Len,
     
     if( !Ip ) return; /* drop the segment */
 
-    memcpy( Ip->m_data, Data, Len );
+    //memcpy( Ip->m_data, Data, Len );
     Ip->m_pkthdr.len = IpHeaderLen;
 
     /* Do the transformations on the header that tcp_input expects */
