@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.12 2001/06/28 02:56:27 rex Exp $
+/* $Id: xhaldrv.c,v 1.13 2001/06/29 11:09:48 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -27,12 +27,6 @@
 #define  SIGNATURE_OFFSET   0x01b8
 #define  PARTITION_TBL_SIZE 4
 
-/*
-#define IsUsablePartition(P)  \
-    ((P) != PTEmpty && \
-     (P) != PTDosExtended && \
-     (P) < PTWin95ExtendedLBA)
-*/
 
 #define IsUsablePartition(P)  \
     ((P) == PTDOS3xPrimary  || \
@@ -41,6 +35,7 @@
      (P) == PTWin95FAT32    || \
      (P) == PTWin95FAT32LBA || \
      (P) == PTWin95FAT16LBA)
+
 
 typedef struct _PARTITION
 {
@@ -89,7 +84,7 @@ xHalpQueryDriveLayout(IN PUNICODE_STRING DeviceName,
      {
 	DPRINT("Status %x\n",Status);
 	return Status;
-	}
+     }
 
    KeInitializeEvent(&Event,
 		     NotificationEvent,
@@ -289,7 +284,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			 OUT PUCHAR NtSystemPath,
 			 OUT PSTRING NtSystemPathString)
 {
-   PDRIVE_LAYOUT_INFORMATION LayoutInfo;
+   PDRIVE_LAYOUT_INFORMATION *LayoutArray;
    PCONFIGURATION_INFORMATION ConfigInfo;
    OBJECT_ATTRIBUTES ObjectAttributes;
    IO_STATUS_BLOCK StatusBlock;
@@ -353,10 +348,11 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 	  }
      }
 
-   /* Assign pre-assigned (registry) partitions */
-
-   /* Assign bootable partitions */
-   DPRINT("Assigning bootable partitions:\n");
+   /* Initialize layout array */
+   LayoutArray = ExAllocatePool(NonPagedPool,
+				ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
+   RtlZeroMemory(LayoutArray,
+		 ConfigInfo->DiskCount * sizeof(PDRIVE_LAYOUT_INFORMATION));
    for (i = 0; i < ConfigInfo->DiskCount; i++)
      {
 	swprintf(Buffer1,
@@ -366,35 +362,58 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 			     Buffer1);
 
 	Status = xHalpQueryDriveLayout(&UnicodeString1,
-				       &LayoutInfo);
+				       &LayoutArray[i]);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
 		      Status);
+	     LayoutArray[i] = NULL;
 	     continue;
 	  }
+     }
+
+#ifndef NDEBUG
+   /* Dump layout array */
+   for (i = 0; i < ConfigInfo->DiskCount; i++)
+     {
+	DPRINT("Harddisk %d:\n",
+	       i);
+
+	if (LayoutArray[i] == NULL)
+	  continue;
 
 	DPRINT("Logical partitions: %d\n",
-	       LayoutInfo->PartitionCount);
+	       LayoutArray[i]->PartitionCount);
 
-	/* search for bootable partitions */
-	for (j = 0; j < LayoutInfo->PartitionCount; j++)
+	for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
 	  {
-	     DPRINT("  %d: nr:%x boot:%x type:%x startblock:%lu count:%lu\n",
+	     DPRINT("  %d: nr:%x boot:%x type:%x startblock:%I64u count:%I64u\n",
 		    j,
-		    LayoutInfo->PartitionEntry[j].PartitionNumber,
-		    LayoutInfo->PartitionEntry[j].BootIndicator,
-		    LayoutInfo->PartitionEntry[j].PartitionType,
-		    LayoutInfo->PartitionEntry[j].StartingOffset.u.LowPart,
-		    LayoutInfo->PartitionEntry[j].PartitionLength.u.LowPart);
+		    LayoutArray[i]->PartitionEntry[j].PartitionNumber,
+		    LayoutArray[i]->PartitionEntry[j].BootIndicator,
+		    LayoutArray[i]->PartitionEntry[j].PartitionType,
+		    LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart,
+		    LayoutArray[i]->PartitionEntry[j].PartitionLength.QuadPart);
+	  }
+     }
+#endif
 
-	     if ((LayoutInfo->PartitionEntry[j].BootIndicator == TRUE) &&
-		 IsUsablePartition(LayoutInfo->PartitionEntry[j].PartitionType))
+   /* Assign pre-assigned (registry) partitions */
+
+   /* Assign bootable partitions */
+   DPRINT("Assigning bootable primary partitions:\n");
+   for (i = 0; i < ConfigInfo->DiskCount; i++)
+     {
+	/* search for bootable partitions */
+	for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
+	  {
+	     if ((LayoutArray[i]->PartitionEntry[j].BootIndicator == TRUE) &&
+		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
 	       {
 		  swprintf(Buffer2,
 			   L"\\Device\\Harddisk%d\\Partition%d",
 			   i,
-			   LayoutInfo->PartitionEntry[j].PartitionNumber);
+			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
 		  RtlInitUnicodeString(&UnicodeString2,
 				       Buffer2);
 
@@ -406,51 +425,22 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				  AUTO_DRIVE);
 	       }
 	  }
-
-	ExFreePool (LayoutInfo);
      }
 
-   /* Assign remaining primary partitions */
-   DPRINT("Assigning primary partitions:\n");
+   /* Assign non-bootable primary partitions */
+   DPRINT("Assigning non-bootable primary partitions:\n");
    for (i = 0; i < ConfigInfo->DiskCount; i++)
      {
-	swprintf(Buffer1,
-		 L"\\Device\\Harddisk%d\\Partition0",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
-
-	Status = xHalpQueryDriveLayout(&UnicodeString1,
-				       &LayoutInfo);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("xHalpQueryDriveLayout(%wZ) failed (Status = 0x%lx)\n",
-		      &UnicodeString1,
-		      Status);
-	     continue;
-	  }
-
-	DPRINT("Logical partitions: %d\n",
-	       LayoutInfo->PartitionCount);
-
 	/* search for primary (non-bootable) partitions */
 	for (j = 0; j < PARTITION_TBL_SIZE; j++)
 	  {
-	     DPRINT("  %d: nr:%x boot:%x type:%x startblock:%lu count:%lu\n",
-		    j,
-		    LayoutInfo->PartitionEntry[j].PartitionNumber,
-		    LayoutInfo->PartitionEntry[j].BootIndicator,
-		    LayoutInfo->PartitionEntry[j].PartitionType,
-		    LayoutInfo->PartitionEntry[j].StartingOffset.u.LowPart,
-		    LayoutInfo->PartitionEntry[j].PartitionLength.u.LowPart);
-
-	     if ((LayoutInfo->PartitionEntry[j].BootIndicator == FALSE) &&
-		 IsUsablePartition(LayoutInfo->PartitionEntry[j].PartitionType))
+	     if ((LayoutArray[i]->PartitionEntry[j].BootIndicator == FALSE) &&
+		 IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
 	       {
 		  swprintf(Buffer2,
 			   L"\\Device\\Harddisk%d\\Partition%d",
 			   i,
-			   LayoutInfo->PartitionEntry[j].PartitionNumber);
+			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
 		  RtlInitUnicodeString(&UnicodeString2,
 				       Buffer2);
 
@@ -462,50 +452,22 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				  AUTO_DRIVE);
 	       }
 	  }
-
-	ExFreePool(LayoutInfo);
      }
 
    /* Assign extended (logical) partitions */
    DPRINT("Assigning extended (logical) partitions:\n");
    for (i = 0; i < ConfigInfo->DiskCount; i++)
      {
-	swprintf(Buffer1,
-		 L"\\Device\\Harddisk%d\\Partition0",
-		 i);
-	RtlInitUnicodeString(&UnicodeString1,
-			     Buffer1);
-
-	Status = xHalpQueryDriveLayout(&UnicodeString1,
-				       &LayoutInfo);
-	if (!NT_SUCCESS(Status))
-	  {
-	     DbgPrint("xHalpQueryDriveLayout() failed (Status = 0x%lx)\n",
-		      Status);
-	     continue;
-	  }
-
-	DPRINT("Logical partitions: %d\n",
-	       LayoutInfo->PartitionCount);
-
 	/* search for extended partitions */
-	for (j = PARTITION_TBL_SIZE; j < LayoutInfo->PartitionCount; j++)
+	for (j = PARTITION_TBL_SIZE; j < LayoutArray[i]->PartitionCount; j++)
 	  {
-	     DPRINT("  %d: nr:%x boot:%x type:%x startblock:%lu count:%lu\n",
-		    j,
-		    LayoutInfo->PartitionEntry[j].PartitionNumber,
-		    LayoutInfo->PartitionEntry[j].BootIndicator,
-		    LayoutInfo->PartitionEntry[j].PartitionType,
-		    LayoutInfo->PartitionEntry[j].StartingOffset.u.LowPart,
-		    LayoutInfo->PartitionEntry[j].PartitionLength.u.LowPart);
-
-	     if (IsUsablePartition(LayoutInfo->PartitionEntry[j].PartitionType) &&
-		 (LayoutInfo->PartitionEntry[j].PartitionNumber != 0))
+	     if (IsUsablePartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
+		 (LayoutArray[i]->PartitionEntry[j].PartitionNumber != 0))
 	       {
 		  swprintf(Buffer2,
 			   L"\\Device\\Harddisk%d\\Partition%d",
 			   i,
-			   LayoutInfo->PartitionEntry[j].PartitionNumber);
+			   LayoutArray[i]->PartitionEntry[j].PartitionNumber);
 		  RtlInitUnicodeString(&UnicodeString2,
 				       Buffer2);
 
@@ -517,9 +479,15 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				  AUTO_DRIVE);
 	       }
 	  }
-
-	ExFreePool(LayoutInfo);
      }
+
+   /* Free layout array */
+   for (i = 0; i < ConfigInfo->DiskCount; i++)
+     {
+	if (LayoutArray[i] != NULL)
+	  ExFreePool(LayoutArray[i]);
+     }
+   ExFreePool(LayoutArray);
 
    /* Assign floppy drives */
    DPRINT("Floppy drives: %d\n", ConfigInfo->FloppyCount);
