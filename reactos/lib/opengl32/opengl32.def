@@ -1,13 +1,14 @@
-; $Id: opengl32.def,v 1.2 2004/02/05 04:28:11 royce Exp $
+; $Id: opengl32.def,v 1.3 2004/02/06 18:17:18 royce Exp $
 ;
-; opengl32.edf
+; opengl32.def
 ;
 ; ReactOS Operating System
 ;
 LIBRARY opengl32.dll
 EXPORTS
-;DllInitialize
 
+DllMain
+;DllInitialize
 glAccum
 glAlphaFunc
 glAreTexturesResident
@@ -374,28 +375,28 @@ glVertex4sv
 glVertexPointer
 glViewport
 
-wglChoosePixelFormat
-wglCopyContext
-wglCreateContext
-wglCreateLayerContext
-wglDeleteContext
-wglDescribeLayerPlane
-wglDescribePixelFormat
-wglGetCurrentContext
-wglGetCurrentDC
+wglChoosePixelFormat=rosglChoosePixelFormat
+wglCopyContext=rosglCopyContext
+wglCreateContext=rosglCreateContext
+wglCreateLayerContext=rosglCreateLayerContext
+wglDeleteContext=rosglDeleteContext
+wglDescribeLayerPlane=rosglDescribeLayerPlane
+wglDescribePixelFormat=rosglDescribePixelFormat
+wglGetCurrentContext=rosglGetCurrentContext
+wglGetCurrentDC=rosglGetCurrentDC
 ;wglGetDefaultProcAddress
-wglGetLayerPaletteEntries
-wglGetPixelFormat
-wglGetProcAddress
-wglMakeCurrent
-wglRealizeLayerPalette
-wglSetLayerPaletteEntries
-wglSetPixelFormat
-wglShareLists
-wglSwapBuffers
-wglSwapLayerBuffers
-;wglSwapMultipleBuffers
-wglUseFontBitmapsA
-wglUseFontBitmapsW
-wglUseFontOutlinesA
-wglUseFontOutlinesW
+wglGetLayerPaletteEntries=rosglGetLayerPaletteEntries
+wglGetPixelFormat=rosglGetPixelFormat
+wglGetProcAddress=rosglGetProcAddress
+wglMakeCurrent=rosglMakeCurrent
+wglRealizeLayerPalette=rosglRealizeLayerPalette
+wglSetLayerPaletteEntries=rosglSetLayerPaletteEntries
+wglSetPixelFormat=rosglSetPixelFormat
+wglShareLists=rosglShareLists
+wglSwapBuffers=rosglSwapBuffers
+wglSwapLayerBuffers=rosglSwapLayerBuffers
+;wglSwapMultipleBuffers=rosglSwapMultipleBuffers
+wglUseFontBitmapsA=rosglUseFontBitmapsA
+wglUseFontBitmapsW=rosglUseFontBitmapsW
+wglUseFontOutlinesA=rosglUseFontOutlinesA
+wglUseFontOutlinesW=rosglUseFontOutlinesW

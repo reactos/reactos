@@ -10,17 +10,23 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <ntos/types.h>
-#include <napi/teb.h>
-#include <GL/gl.h>
-
+#include "teb.h"
 #include "opengl32.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif//__cplusplus
+
+#ifdef _MSC_VER
+#define UNIMPLEMENTED
+#endif//_MSC_VER
 
 /* FUNCTION: Append OpenGL Rendering Context (GLRC) to list
  * ARGUMENTS: [IN] glrc: GLRC to append to list
  */
-static void WGL_AppendContext( GLRC *glrc )
+static
+void
+WGL_AppendContext( GLRC *glrc )
 {
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
@@ -49,7 +55,9 @@ static void WGL_AppendContext( GLRC *glrc )
 /* FUNCTION: Remove OpenGL Rendering Context (GLRC) from list
  * ARGUMENTS: [IN] glrc: GLRC to remove from list
  */
-static void WGL_RemoveContext( GLRC *glrc )
+static
+void
+WGL_RemoveContext( GLRC *glrc )
 {
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
@@ -84,7 +92,9 @@ static void WGL_RemoveContext( GLRC *glrc )
 /* FUNCTION: Check wether a GLRC is in the list
  * ARGUMENTS: [IN] glrc: GLRC to remove from list
  */
-static BOOL WGL_ContainsContext( GLRC *glrc )
+static
+BOOL
+WGL_ContainsContext( GLRC *glrc )
 {
 	GLRC *p;
 
@@ -119,7 +129,9 @@ static BOOL WGL_ContainsContext( GLRC *glrc )
  *                        functions)
  * RETURNS: unkown
  */
-DWORD CALLBACK WGL_SetContextCallBack( const ICDTable *table )
+DWORD
+CALLBACK
+WGL_SetContextCallBack( const ICDTable *table )
 {
 /*	UINT i;*/
 	TEB *teb;
@@ -171,7 +183,9 @@ DWORD CALLBACK WGL_SetContextCallBack( const ICDTable *table )
 }
 
 
-int APIENTRY rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
+int
+APIENTRY
+rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -184,7 +198,9 @@ int APIENTRY rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
  *            [IN]  mask Bitfield like given to glPushAttrib()
  * RETURN: TRUE on success, FALSE on failure
  */
-BOOL APIENTRY rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
+BOOL
+APIENTRY
+rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 {
 	GLRC *src = (GLRC *)hsrc;
 	GLRC *dst = (GLRC *)hdst;
@@ -213,24 +229,15 @@ BOOL APIENTRY rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 }
 
 
-/* FUNCTION: Create a new GL Rendering Context for the given DC.
- * ARGUMENTS: [IN] hdc  Handle for DC for which to create context
- * RETURNS: NULL on failure, new GLRC on success
- */
-HGLRC APIENTRY rosglCreateLayerContext( HDC hdc, int layer );
-HGLRC APIENTRY rosglCreateContext( HDC hdc )
-{
-	return rosglCreateLayerContext( hdc, 0 );
-}
-
-
 /* FUNCTION: Create a new GL Rendering Context for the given plane on
  *           the given DC.
  * ARGUMENTS: [IN] hdc   Handle for DC for which to create context
  *            [IN] layer Layer number to bind (draw?) to
  * RETURNS: NULL on failure, new GLRC on success
  */
-HGLRC APIENTRY rosglCreateLayerContext( HDC hdc, int layer )
+HGLRC
+APIENTRY
+rosglCreateLayerContext( HDC hdc, int layer )
 {
 /*	LONG ret;
 	WCHAR driver[256];
@@ -336,11 +343,25 @@ HGLRC APIENTRY rosglCreateLayerContext( HDC hdc, int layer )
 }
 
 
+/* FUNCTION: Create a new GL Rendering Context for the given DC.
+ * ARGUMENTS: [IN] hdc  Handle for DC for which to create context
+ * RETURNS: NULL on failure, new GLRC on success
+ */
+HGLRC
+APIENTRY
+rosglCreateContext( HDC hdc )
+{
+	return rosglCreateLayerContext( hdc, 0 );
+}
+
+
 /* FUNCTION: Delete an OpenGL context
  * ARGUMENTS: [IN] hglrc  Handle to GLRC to delete; must not be a threads RC!
  * RETURNS: TRUE on success, FALSE otherwise
  */
-BOOL APIENTRY rosglDeleteContext( HGLRC hglrc )
+BOOL
+APIENTRY
+rosglDeleteContext( HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
 
@@ -377,7 +398,9 @@ BOOL APIENTRY rosglDeleteContext( HGLRC hglrc )
 }
 
 
-BOOL APIENTRY rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
+BOOL
+APIENTRY
+rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
                                    UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
 	UNIMPLEMENTED;
@@ -385,7 +408,9 @@ BOOL APIENTRY rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlan
 }
 
 
-int APIENTRY rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
+int
+APIENTRY
+rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
                                    LPPIXELFORMATDESCRIPTOR pfd )
 {
 	int ret = 0;
@@ -406,7 +431,9 @@ int APIENTRY rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
 /* FUNCTION: Return the current GLRC
  * RETURNS: Current GLRC (NULL if none was set current)
  */
-HGLRC APIENTRY rosglGetCurrentContext()
+HGLRC
+APIENTRY
+rosglGetCurrentContext()
 {
 	return (HGLRC)(OPENGL32_threaddata->glrc);
 }
@@ -415,7 +442,9 @@ HGLRC APIENTRY rosglGetCurrentContext()
 /* FUNCTION: Return the current DC
  * RETURNS: NULL on failure, current DC otherwise
  */
-HDC APIENTRY rosglGetCurrentDC()
+HDC
+APIENTRY
+rosglGetCurrentDC()
 {
 	/* FIXME: is it correct to return NULL when there is no current GLRC or
 	   is there another way to find out the wanted HDC? */
@@ -425,7 +454,9 @@ HDC APIENTRY rosglGetCurrentDC()
 }
 
 
-int APIENTRY rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+int
+APIENTRY
+rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                                int cEntries, COLORREF *pcr )
 {
 	UNIMPLEMENTED;
@@ -433,7 +464,9 @@ int APIENTRY rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
 }
 
 
-int APIENTRY rosglGetPixelFormat( HDC hdc )
+int
+WINAPI
+rosglGetPixelFormat( HDC hdc )
 {
 	UNIMPLEMENTED;
 	return 0;
@@ -444,7 +477,9 @@ int APIENTRY rosglGetPixelFormat( HDC hdc )
  * ARGUMENTS: [IN] proc:  Name of the function to look for
  * RETURNS: The address of the proc or NULL on failure.
  */
-PROC APIENTRY rosglGetProcAddress( LPCSTR proc )
+PROC
+APIENTRY
+rosglGetProcAddress( LPCSTR proc )
 {
 	if (OPENGL32_threaddata->glrc == NULL)
 	{
@@ -484,7 +519,9 @@ PROC APIENTRY rosglGetProcAddress( LPCSTR proc )
  *            [IN] hglrc Handle for a GLRC to make current
  * RETURNS: TRUE on success, FALSE otherwise
  */
-BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc )
+BOOL
+APIENTRY
+rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 {
 	GLRC *glrc = (GLRC *)hglrc;
 
@@ -537,23 +574,28 @@ BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 }
 
 
-BOOL APIENTRY rosglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
+BOOL
+APIENTRY
+rosglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-int APIENTRY rosglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
-                                      int cEntries, CONST COLORREF *pcr )
+int
+APIENTRY
+rosglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
+                               int cEntries, CONST COLORREF *pcr )
 {
 	UNIMPLEMENTED;
 	return 0;
 }
 
 
-BOOL APIENTRY rosglSetPixelFormat( HDC hdc, int iFormat,
-                               CONST PIXELFORMATDESCRIPTOR *pfd )
+BOOL
+WINAPI
+rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 {
 	GLDRIVERDATA *icd;
 
@@ -576,7 +618,9 @@ BOOL APIENTRY rosglSetPixelFormat( HDC hdc, int iFormat,
  *            [IN] hglrc2 GLRC number 2
  * RETURNS: TRUR on success, FALSE on failure
  */
-BOOL APIENTRY rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
+BOOL
+APIENTRY
+rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 {
 	GLRC *glrc1 = (GLRC *)hglrc1;
 	GLRC *glrc2 = (GLRC *)hglrc2;
@@ -609,7 +653,9 @@ BOOL APIENTRY rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
  * ARGUMENTS: [IN] hdc  Handle to device context to swap buffers for
  * RETURNS: TRUE on success, FALSE on failure
  */
-BOOL APIENTRY rosglSwapBuffers( HDC hdc )
+BOOL
+APIENTRY
+rosglSwapBuffers( HDC hdc )
 {
 #if 0
 	/* check if there is a current GLRC */
@@ -648,28 +694,36 @@ BOOL APIENTRY rosglSwapBuffers( HDC hdc )
 }
 
 
-BOOL APIENTRY rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
+BOOL
+APIENTRY
+rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL APIENTRY rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL
+APIENTRY
+rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL APIENTRY rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
+BOOL
+APIENTRY
+rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
 
 
-BOOL APIENTRY rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+BOOL
+APIENTRY
+rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {
@@ -678,12 +732,18 @@ BOOL APIENTRY rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD li
 }
 
 
-BOOL APIENTRY rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
+BOOL
+APIENTRY
+rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                           FLOAT deviation, FLOAT extrusion, int  format,
                           LPGLYPHMETRICSFLOAT  lpgmf )
 {
 	UNIMPLEMENTED;
 	return FALSE;
 }
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif//__cplusplus
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: opengl32.h,v 1.10 2004/02/06 17:22:55 royce Exp $
+/* $Id: opengl32.h,v 1.11 2004/02/06 18:17:18 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -11,6 +11,10 @@
 
 #ifndef OPENGL32_PRIVATE_H
 #define OPENGL32_PRIVATE_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif//__cplusplus
 
 /* gl function list */
 #include "glfuncs.h"
@@ -27,13 +31,17 @@
 #endif /* !NDEBUG */
 
 /* debug macros */
-#ifdef DEBUG_OPENGL32 /* FIXME: DPRINT wants DbgPrint - where is it? */
-ULONG DbgPrint(PCH Format,...);
-# include <debug.h>
-# define DBGPRINT( fmt, args... ) \
-         DPRINT( "OpenGL32.DLL: %s: "fmt"\n", __FUNCTION__, ##args )
+#ifdef _MSC_VER
+inline void DBGPRINT ( ... ) {}
 #else
-# define DBGPRINT( ... ) do {} while (0)
+# ifdef DEBUG_OPENGL32
+ULONG DbgPrint(PCH Format,...);
+#  include <debug.h>
+#  define DBGPRINT( fmt, args... ) \
+          DPRINT( "OpenGL32.DLL: %s: "fmt"\n", __FUNCTION__, ##args )
+# else
+#  define DBGPRINT( ... ) do {} while (0)
+# endif
 #endif
 
 #ifdef DEBUG_OPENGL32_BRKPTS
@@ -46,8 +54,29 @@ ULONG DbgPrint(PCH Format,...);
 # endif
 #endif
 
-#if 0
+/* function/data attributes */
+#define EXPORT __declspec(dllexport)
+#ifdef _MSC_VER
+#  define NAKED __declspec(naked)
+#  define SHARED
+#  ifndef STDCALL
+#    define STDCALL __stdcall
+#  endif/*STDCALL*/
+#else /* GCC */
+#  define NAKED __attribute__((naked))
+#  define SHARED __attribute__((section("shared"), shared))
+#endif
+
+#ifdef APIENTRY
+#undef APIENTRY
+#endif//APIENTRY
+#define APIENTRY EXPORT __stdcall
+
+/* gl function list */
+#include "glfuncs.h"
+
 /* table indices for funcnames and function pointers */
+#if 0
 enum glfunc_indices
 {
 	GLIDX_INVALID = -1,
@@ -59,7 +88,25 @@ enum glfunc_indices
 
 /* function name table */
 extern const char* OPENGL32_funcnames[GLIDX_COUNT];
-#endif
+#endif//0
+
+/* GL data types - x86 typedefs */
+typedef unsigned int GLenum;
+typedef unsigned char GLboolean;
+typedef unsigned int GLbitfield;
+typedef signed char GLbyte;
+typedef short GLshort;
+typedef int GLint;
+typedef int GLsizei;
+typedef unsigned char GLubyte;
+typedef unsigned short GLushort;
+typedef unsigned int GLuint;
+typedef unsigned short GLhalf;
+typedef float GLfloat;
+typedef float GLclampf;
+typedef double GLdouble;
+typedef double GLclampd;
+typedef void GLvoid;
 
 /* Called by the driver to set the dispatch table */
 typedef DWORD (CALLBACK * SetContextCallBack)( const ICDTable * );
@@ -159,6 +206,14 @@ int STDCALL glEmptyFunc52( long, long, long, long, long, long, long, long,
                            long, long, long, long, long );
 int STDCALL glEmptyFunc56( long, long, long, long, long, long, long, long,
                            long, long, long, long, long, long );
+
+#define X(func,ret,typeargs,args,icdidx,tebidx,stack) EXPORT ret STDCALL func typeargs;
+GLFUNCS_MACRO
+#undef X
+
+#ifdef __cplusplus
+}; // extern "C"
+#endif//__cplusplus
 
 #endif//OPENGL32_PRIVATE_H
 

@@ -22,28 +22,9 @@
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
-#include <ntos/types.h>
-#include <napi/teb.h>
+#include "teb.h"
 
 #include "opengl32.h"
-
-/* GL data types - x86 typedefs */
-typedef unsigned int GLenum;
-typedef unsigned char GLboolean;
-typedef unsigned int GLbitfield;
-typedef signed char GLbyte;
-typedef short GLshort;
-typedef int GLint;
-typedef int GLsizei;
-typedef unsigned char GLubyte;
-typedef unsigned short GLushort;
-typedef unsigned int GLuint;
-typedef unsigned short GLhalf;
-typedef float GLfloat;
-typedef float GLclampf;
-typedef double GLdouble;
-typedef double GLclampd;
-typedef void GLvoid;
 
 int STDCALL glEmptyFunc0() { return 0; }
 int STDCALL glEmptyFunc4( long l1 ) { return 0; }
@@ -77,7 +58,7 @@ int STDCALL glEmptyFunc56( long l1, long l2, long l3, long l4, long l5,
                            long l11, long l12, long l13, long l14 )
                            { return 0; }
 
-
+#if !defined(_M_IX86)
 # define X(func, ret, typeargs, args, icdidx, tebidx, stack)          \
 ret STDCALL func typeargs                                             \
 {                                                                     \
@@ -98,6 +79,14 @@ ret STDCALL func typeargs                                             \
 
 GLFUNCS_MACRO
 
+#undef X
+#endif//non-x86 architectures
+
+/* FIXME - change this code to lookup slow table and jump - probably needs to go in nasm */
+#define X(func,ret,typeargs,args,icdidx,stack) EXPORT ret STDCALL func typeargs { return 0; }
+#define XVOID(func,typeargs,args,icdidx,stack) EXPORT void STDCALL func typeargs {}
+#include "slowlist.h"
+#undef XVOID
 #undef X
 
 /* EOF */

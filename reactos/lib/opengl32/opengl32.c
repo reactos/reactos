@@ -1,4 +1,4 @@
-/* $Id: opengl32.c,v 1.11 2004/02/06 17:22:55 royce Exp $
+/* $Id: opengl32.c,v 1.12 2004/02/06 18:17:18 royce Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -12,8 +12,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <winreg.h>
-#include <ntos/types.h>
-#include <napi/teb.h>
+#include "teb.h"
 
 #include <string.h>
 #include "opengl32.h"
@@ -40,7 +39,9 @@ DWORD OPENGL32_tls;
 GLPROCESSDATA OPENGL32_processdata;
 
 
-static void OPENGL32_ThreadDetach()
+static
+void
+OPENGL32_ThreadDetach()
 {
 	/* FIXME - do we need to release some HDC or something? */
 	GLTHREADDATA* lpData = NULL;
@@ -54,7 +55,9 @@ static void OPENGL32_ThreadDetach()
 }
 
 
-BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
+BOOL
+WINAPI
+DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 {
 	GLTHREADDATA* lpData = NULL;
 	ICDTable *dispatchTable = NULL;
@@ -154,7 +157,9 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to append to list
  * NOTES: Only call this when you hold the driver_mutex
  */
-static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
+static
+void
+OPENGL32_AppendICD( GLDRIVERDATA *icd )
 {
 	if (OPENGL32_processdata.driver_list == NULL)
 		OPENGL32_processdata.driver_list = icd;
@@ -172,7 +177,9 @@ static void OPENGL32_AppendICD( GLDRIVERDATA *icd )
  * ARGUMENTS: [IN] icd: GLDRIVERDATA to remove from list
  * NOTES: Only call this when you hold the driver_mutex
  */
-static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
+static
+void
+OPENGL32_RemoveICD( GLDRIVERDATA *icd )
 {
 	if (icd == OPENGL32_processdata.driver_list)
 		OPENGL32_processdata.driver_list = icd->next;
@@ -199,7 +206,9 @@ static void OPENGL32_RemoveICD( GLDRIVERDATA *icd )
  *
  * TODO: call SetLastError() where appropriate
  */
-static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR driver )
+static
+GLDRIVERDATA*
+OPENGL32_LoadDriver( LPCWSTR driver )
 {
 	LONG ret;
 	GLDRIVERDATA *icd;
@@ -256,14 +265,16 @@ static GLDRIVERDATA *OPENGL32_LoadDriver( LPCWSTR driver )
  * RETURNS:   error code; ERROR_SUCCESS on success
  */
 #define LOAD_DRV_PROC( icd, proc, required ) \
-	((FARPROC)(icd->proc)) = GetProcAddress( icd->handle, #proc ); \
+	*(char**)&icd->proc = (char*)GetProcAddress( icd->handle, #proc ); \
 	if (required && icd->proc == NULL) { \
 		DBGPRINT( "Error: GetProcAddress(\"%s\") failed!", #proc ); \
 		FreeLibrary( icd->handle ); \
 		return GetLastError(); \
 	}
 
-static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
+static
+DWORD
+OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 {
 	/* check version */
 	if (icd->version > 2)
@@ -329,7 +340,9 @@ static DWORD OPENGL32_InitializeDriver( GLDRIVERDATA *icd )
 /* FUNCTION: Unload loaded ICD.
  * RETURNS:  TRUE on success, FALSE otherwise.
  */
-static BOOL OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
+static
+BOOL
+OPENGL32_UnloadDriver( GLDRIVERDATA *icd )
 {
 	BOOL allOk = TRUE;
 
@@ -387,7 +400,8 @@ GLDRIVERDATA *OPENGL32_LoadICDForHDC( HDC hdc )
 /* FUNCTION: Load ICD (shared ICD data)
  * RETURNS:  GLDRIVERDATA pointer on success, NULL otherwise.
  */
-GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver )
+GLDRIVERDATA*
+OPENGL32_LoadICD ( LPCWSTR driver )
 {
 	GLDRIVERDATA *icd;
 
@@ -430,7 +444,8 @@ GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver )
 /* FUNCTION: Unload ICD (shared ICD data)
  * RETURNS:  TRUE on success, FALSE otherwise.
  */
-BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd )
+BOOL
+OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 {
 	BOOL ret = TRUE;
 
@@ -463,11 +478,12 @@ BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd )
  * RETURNS: Error code (ERROR_NO_MORE_ITEMS at end of list); On failure all
  *          OUT vars are left untouched.
  */
-DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
+DWORD
+OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
 {
 	HKEY hKey;
-	LPCWSTR subKey = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                  "CurrentVersion\\OpenGLDrivers\\";
+	LPCWSTR subKey =
+		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
 	DWORD size;
 	WCHAR driver[256];
@@ -510,11 +526,13 @@ DWORD OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
  *                        driver_version and flags.
  * RETURNS: Error code; On failure all OUT vars are left untouched.
  */
-DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
+/*static*/
+DWORD
+OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
 {
 	HKEY hKey;
-	WCHAR subKey[1024] = L"SOFTWARE\\Microsoft\\Windows NT\\"
-	                      "CurrentVersion\\OpenGLDrivers\\";
+	WCHAR subKey[1024] =
+		L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\";
 	LONG ret;
 	DWORD type, size;
 

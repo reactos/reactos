@@ -14,13 +14,14 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS -Wall -Werror
 
 TARGET_LFLAGS = -lgdi32 -lntdll
 
-TARGET_SDKLIBS = opengl32.a gdi32.a ntdll.a
+TARGET_SDKLIBS = gdi32.a ntdll.a
 # ntdll.a gdi32.a - may still need these
 
 TARGET_OBJECTS = \
 	gl.o \
 	opengl32.o \
-	wgl.o
+	wgl.o \
+	tebimports.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
