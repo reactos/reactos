@@ -715,7 +715,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
   LONG ProcId;
   ULONG Index = RESERVE_ENTRIES_COUNT;
 
-  DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Pid);
+  DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Process->UniqueProcessId);
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
     {
@@ -761,7 +761,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
       KeDetachProcess();
     }
 
-  DPRINT("Completed cleanup for process %d\n", Pid);
+  DPRINT("Completed cleanup for process %d\n", Process->UniqueProcessId);
 
   return TRUE;
 }

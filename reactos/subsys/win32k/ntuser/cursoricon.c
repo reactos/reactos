@@ -961,8 +961,6 @@ NtUserGetClipCursor(
   WinStaObject = IntGetWinStaObj();
   if (WinStaObject == NULL)
   {
-    DPRINT("Validation of window station handle (0x%X) failed\n",
-      PROCESS_WINDOW_STATION());
     return FALSE;
   }
   
