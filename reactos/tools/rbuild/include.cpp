@@ -8,10 +8,9 @@ using std::vector;
 
 Include::Include ( const Project& project_,
                    const XMLElement& includeNode )
-	: project(project_),
-	  module(NULL),
-	  node(includeNode),
-	  base(NULL)
+	: project (project_),
+	  module (NULL),
+	  node (includeNode)
 {
 	Initialize();
 }
@@ -19,10 +18,9 @@ Include::Include ( const Project& project_,
 Include::Include ( const Project& project_,
 	               const Module* module_,
 	               const XMLElement& includeNode )
-	: project(project_),
-	  module(module_),
-	  node(includeNode),
-	  base(NULL)
+	: project (project_),
+	  module (module_),
+	  node (includeNode)
 {
 	Initialize();
 }
@@ -48,13 +46,27 @@ Include::ProcessXML()
 			throw InvalidBuildFileException (
 				node.location,
 				"'base' attribute illegal from global <include>" );
-		base = project.LocateModule ( att->value );
-		if ( !base )
+		bool referenceResolved = false;
+		if ( att->value == project.name )
+		{
+			basePath = ".";
+			referenceResolved = true;
+		}
+		else
+		{
+			const Module* base = project.LocateModule ( att->value );
+			if ( base != NULL )
+			{
+				basePath = base->GetBasePath ();
+				referenceResolved = true;
+			}
+		}
+		if ( !referenceResolved )
 			throw InvalidBuildFileException (
 				node.location,
-				"<include> attribute 'base' references non-existant module '%s'",
+				"<include> attribute 'base' references non-existant project or module '%s'",
 				att->value.c_str() );
-		directory = FixSeparator ( base->GetBasePath() + "/" + node.value );
+		directory = FixSeparator ( basePath + "/" + node.value );
 	}
 	else
 		directory = FixSeparator ( node.value );

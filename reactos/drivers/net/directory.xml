@@ -1,0 +1,3 @@
+<directory name="afd">
+	<xi:include href="afd/afd.xml" />
+</directory>

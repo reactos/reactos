@@ -214,6 +214,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return Kernel;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
+	if ( attribute.value == "kernelmodedriver" )
+		return KernelModeDriver;
 	if ( attribute.value == "nativedll" )
 		return NativeDLL;
 	if ( attribute.value == "win32dll" )
@@ -241,6 +243,8 @@ Module::GetDefaultModuleExtension () const
 		case NativeDLL:
 		case Win32DLL:
 			return ".dll";
+		case KernelModeDriver:
+			return ".sys";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );

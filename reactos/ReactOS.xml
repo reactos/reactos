@@ -19,6 +19,7 @@
 
 	<include>include</include>
 	<include>w32api/include</include>
+	<include>w32api/include/ddk</include>
 
 	<directory name="drivers">
 		<xi:include href="drivers/directory.xml" />

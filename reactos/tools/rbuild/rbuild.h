@@ -73,6 +73,7 @@ enum ModuleType
 	StaticLibrary,
 	Kernel,
 	KernelModeDLL,
+	KernelModeDriver,
 	NativeDLL,
 	Win32DLL,
 	Win32GUI
@@ -128,7 +129,7 @@ public:
 	const Module* module;
 	const XMLElement& node;
 	std::string directory;
-	const Module* base;
+	std::string basePath;
 
 	Include ( const Project& project,
 	          const XMLElement& includeNode );

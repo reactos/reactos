@@ -32,16 +32,20 @@ protected:
 	std::string GetObjectFilenames ( const Module& module ) const;
 	void GenerateMacrosAndTargetsHost ( const Module& module ) const;
 	void GenerateMacrosAndTargetsTarget ( const Module& module ) const;
+	void GenerateMacrosAndTargetsTarget ( const Module& module,
+	                                      const std::string* clags ) const;
 	std::string GetInvocationDependencies ( const Module& module ) const;
 	std::string GetInvocationParameters ( const Invoke& invoke ) const;
 	void GenerateInvocations ( const Module& module ) const;
 	void GeneratePreconditionDependencies ( const Module& module ) const;
+	std::string GetCFlagsMacro ( const Module& module ) const;
 	std::string GetObjectsMacro ( const Module& module ) const;
 	std::string GetLinkerMacro ( const Module& module ) const;
 	std::string GenerateLinkerCommand ( const Module& module,
 	                                    const std::string& linker,
 	                                    const std::string& linkerParameters,
 	                                    const std::string& objectFilenames ) const;
+	void GenerateImportLibraryTargetIfNeeded ( const Module& module ) const;
 	static FILE* fMakefile;
 private:
 	std::string ConcatenatePaths ( const std::string& path1,
@@ -115,7 +119,8 @@ private:
 	                                    const std::string& objs_macro ) const;
 	void GenerateMacrosAndTargets ( const Module& module,
 	                                const std::string& cc,
-	                                const std::string& ar ) const;
+	                                const std::string& ar,
+	                                const std::string* clags ) const;
 	std::string GetPreconditionDependenciesName ( const Module& module ) const;
 };
 
@@ -157,6 +162,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateKernelModeDLLModuleTarget ( const Module& module );
+};
+
+
+class MingwKernelModeDriverModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwKernelModeDriverModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateKernelModeDriverModuleTarget ( const Module& module );
 };
 
 

@@ -1,4 +1,5 @@
 <module name="ntoskrnl" type="kernel">
+	<importlibrary definition="ntoskrnl.def" />
 	<dependency>buildno</dependency>
 	<dependency>genntdll</dependency>
 	<dependency>wmc</dependency>

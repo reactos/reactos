@@ -641,6 +641,13 @@ MingwModuleHandler::GenerateArchiveTarget ( const Module& module,
 }
 
 string
+MingwModuleHandler::GetCFlagsMacro ( const Module& module ) const
+{
+	return ssprintf ( "$(%s_CFLAGS)",
+	                  module.name.c_str () );
+}
+
+string
 MingwModuleHandler::GetObjectsMacro ( const Module& module ) const
 {
 	return ssprintf ( "$(%s_OBJS)",
@@ -658,7 +665,8 @@ void
 MingwModuleHandler::GenerateMacrosAndTargets (
 	const Module& module,
 	const string& cc,
-	const string& ar ) const
+	const string& ar,
+	const string* cflags ) const
 {
 	string cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	string nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
@@ -673,12 +681,20 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	                linkerFlagsMacro,
 	                objectsMacro );
 
+	if ( cflags != NULL )
+	{
+		fprintf ( fMakefile,
+		          "%s += %s\n\n",
+		          cflagsMacro.c_str (),
+		          cflags->c_str () );
+	}
+	
 	// generate phony target for module name
 	fprintf ( fMakefile, ".PHONY: %s\n",
-		module.name.c_str() );
+		module.name.c_str () );
 	fprintf ( fMakefile, "%s: %s\n\n",
-		module.name.c_str(),
-		module.GetPath().c_str() );
+		module.name.c_str (),
+		module.GetPath ().c_str () );
 
 	// future references to the macros will be to get their values
 	cflagsMacro = ssprintf ("$(%s)", cflagsMacro.c_str ());
@@ -710,13 +726,21 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 void
 MingwModuleHandler::GenerateMacrosAndTargetsHost ( const Module& module ) const
 {
-	GenerateMacrosAndTargets ( module, "${host_gcc}", "${host_ar}" );
+	GenerateMacrosAndTargets ( module, "${host_gcc}", "${host_ar}", NULL );
 }
 
 void
 MingwModuleHandler::GenerateMacrosAndTargetsTarget ( const Module& module ) const
 {
-	GenerateMacrosAndTargets ( module, "${gcc}", "${ar}" );
+	GenerateMacrosAndTargetsTarget ( module,
+	                                 NULL );
+}
+
+void
+MingwModuleHandler::GenerateMacrosAndTargetsTarget ( const Module& module,
+	                                                 const string* clags ) const
+{
+	GenerateMacrosAndTargets ( module, "${gcc}", "${ar}", clags );
 }
 
 string
@@ -857,6 +881,22 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 	fprintf ( fMakefile, "\n" );
 }
 
+void
+MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ( const Module& module ) const
+{
+	if ( module.importLibrary != NULL )
+	{
+		fprintf ( fMakefile, "%s:\n",
+		          module.GetDependencyPath ().c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          module.GetTargetName ().c_str (),
+		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+	}
+}
+
 
 static MingwBuildToolModuleHandler buildtool_handler;
 
@@ -921,6 +961,8 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	                              module.GetBasePath ().c_str () );
 
 	GenerateMacrosAndTargetsTarget ( module );
+
+	GenerateImportLibraryTargetIfNeeded ( module );
 
 	fprintf ( fMakefile, "%s: %s %s\n",
 	          target.c_str (),
@@ -1005,21 +1047,68 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
-	if (module.importLibrary != NULL)
-	{
-		fprintf ( fMakefile, "%s:\n",
-		          module.GetDependencyPath ().c_str () );
+	GenerateImportLibraryTargetIfNeeded ( module );
 
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
-		          module.GetTargetName ().c_str (),
-		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
-	}
-
-	if (module.files.size () > 0)
+	if ( module.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module );
+
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+
+		string linkerParameters ( "-Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll" );
+		string linkerCommand = GenerateLinkerCommand ( module,
+                                                       "${gcc}",
+                                                       linkerParameters,
+                                                       archiveFilename );
+		fprintf ( fMakefile,
+		          "\t%s\n\n",
+		          linkerCommand.c_str () );
+	}
+	else
+	{
+		fprintf ( fMakefile, "%s:\n",
+		          target.c_str ());
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+	}
+}
+
+
+static MingwKernelModeDriverModuleHandler kernelmodedriver_handler;
+
+MingwKernelModeDriverModuleHandler::MingwKernelModeDriverModuleHandler ()
+	: MingwModuleHandler ( KernelModeDriver )
+{
+}
+
+void
+MingwKernelModeDriverModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateKernelModeDriverModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	GenerateImportLibraryTargetIfNeeded ( module );
+
+	if ( module.files.size () > 0 )
+	{
+		string* cflags = new string ( "-D__NTDRIVER__" );
+		GenerateMacrosAndTargetsTarget ( module,
+		                                 cflags );
+		delete cflags;
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
@@ -1068,20 +1157,10 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	string workingDirectory = GetWorkingDirectory ( );
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+	
+	GenerateImportLibraryTargetIfNeeded ( module );
 
-	if (module.importLibrary != NULL)
-	{
-		fprintf ( fMakefile, "%s:\n",
-		          module.GetDependencyPath ().c_str () );
-
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
-		          module.GetTargetName ().c_str (),
-		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
-	}
-
-	if (module.files.size () > 0)
+	if ( module.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module );
 
@@ -1133,19 +1212,9 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	string archiveFilename = GetModuleArchiveFilename ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
-	if (module.importLibrary != NULL)
-	{
-		fprintf ( fMakefile, "%s:\n",
-		          module.GetDependencyPath ().c_str () );
+	GenerateImportLibraryTargetIfNeeded ( module );
 
-		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
-		          module.GetTargetName ().c_str (),
-		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
-		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
-	}
-
-	if (module.files.size () > 0)
+	if ( module.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module );
 
@@ -1197,7 +1266,9 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 	string objectFilenames = GetObjectFilenames ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
-	if (module.files.size () > 0)
+	GenerateImportLibraryTargetIfNeeded ( module );
+
+	if ( module.files.size () > 0 )
 	{
 		GenerateMacrosAndTargetsTarget ( module );
 
