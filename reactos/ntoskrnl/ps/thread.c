@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.76 2001/04/17 04:11:01 dwelch Exp $
+/* $Id: thread.c,v 1.77 2001/04/17 23:39:26 dwelch Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -48,8 +48,6 @@ static PETHREAD IdleThreads[MAXIMUM_PROCESSORS];
 ULONG PiNrThreads = 0;
 ULONG PiNrRunnableThreads = 0;
 
-PETHREAD CurrentThread = NULL;
-
 static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 					  THREAD_WRITE,
 					  THREAD_EXECUTE,
@@ -59,12 +57,13 @@ static GENERIC_MAPPING PiThreadMapping = {THREAD_READ,
 
 PKTHREAD STDCALL KeGetCurrentThread(VOID)
 {
-   return(&(CurrentThread->Tcb));
+   return(KeGetCurrentKPCR()->CurrentThread);
 }
 
 PETHREAD STDCALL PsGetCurrentThread(VOID)
 {
-   return(CurrentThread);
+  PKTHREAD CurrentThread = KeGetCurrentKPCR()->CurrentThread;
+  return(CONTAINING_RECORD(CurrentThread, ETHREAD, Tcb));
 }
 
 HANDLE STDCALL PsGetCurrentThreadId(VOID)
@@ -144,8 +143,13 @@ static PETHREAD PsScanThreadList (KPRIORITY Priority, ULONG Affinity)
      {
        current = CONTAINING_RECORD(current_entry, ETHREAD,
 				   Tcb.QueueListEntry);
+       assert(current->Tcb.State == THREAD_STATE_RUNNABLE);
+       DPRINT("current->Tcb.UserAffinity %x Affinity %x PID %d %d\n",
+	       current->Tcb.UserAffinity, Affinity, current->Cid.UniqueThread,
+	       Priority);
        if (current->Tcb.UserAffinity & Affinity)
 	 {
+	   RemoveEntryList(&current->Tcb.QueueListEntry);
 	   return(current);
 	 }
        current_entry = current_entry->Flink;
@@ -160,6 +164,11 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
    KPRIORITY CurrentPriority;
    PETHREAD Candidate;
    ULONG Affinity;
+   PKTHREAD KCurrentThread = KeGetCurrentKPCR()->CurrentThread;
+   PETHREAD CurrentThread = CONTAINING_RECORD(KCurrentThread, ETHREAD, Tcb);
+
+   DPRINT("PsDispatchThread() %d/%d\n", KeGetCurrentProcessorNumber(),
+	   CurrentThread->Cid.UniqueThread);
    
    CurrentThread->Tcb.State = NewThreadStatus;
    if (CurrentThread->Tcb.State == THREAD_STATE_RUNNABLE)
@@ -184,24 +193,25 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 	  {	
 	    PETHREAD OldThread;
 
-	     DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
+	    DPRINT("Scheduling %x(%d)\n",Candidate, CurrentPriority);
+	    
+	    Candidate->Tcb.State = THREAD_STATE_RUNNING;
+	    
+	    OldThread = CurrentThread;
+	    CurrentThread = Candidate;
 	     
-	     Candidate->Tcb.State = THREAD_STATE_RUNNING;
-	    	     
-	     OldThread = CurrentThread;
-	     CurrentThread = Candidate;
-	     
-	     KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
-	     Ki386ContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
-	     PsReapThreads();
-	     return;
+	    KeReleaseSpinLockFromDpcLevel(&PiThreadListLock);
+	    Ki386ContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
+	    PsReapThreads();
+	    return;
 	  }
      }
    DbgPrint("CRITICAL: No threads are runnable\n");
    KeBugCheck(0);
 }
 
-VOID PsDispatchThread(ULONG NewThreadStatus)
+VOID 
+PsDispatchThread(ULONG NewThreadStatus)
 {
    KIRQL oldIrql;
    
@@ -214,7 +224,7 @@ VOID PsDispatchThread(ULONG NewThreadStatus)
    /*
     * Save wait IRQL
     */
-   CurrentThread->Tcb.WaitIrql = oldIrql;
+   KeGetCurrentKPCR()->CurrentThread->WaitIrql = oldIrql;
    PsDispatchThreadNoLock(NewThreadStatus);
    KeLowerIrql(oldIrql);
 }
@@ -316,6 +326,8 @@ PsPrepareForApplicationProcessorInit(ULONG Id)
   IdleThreads[Id] = IdleThread;
 
   NtClose(IdleThreadHandle);
+  DbgPrint("IdleThread for Processor %d has PID %d\n",
+	   Id, IdleThread->Cid.UniqueThread);
 }
 
 VOID 
@@ -363,7 +375,6 @@ PsInitThreadManagment(VOID)
    HalInitFirstTask(FirstThread);
    FirstThread->Tcb.State = THREAD_STATE_RUNNING;
    FirstThread->Tcb.FreezeCount = 0;
-   CurrentThread = FirstThread;
    KeGetCurrentKPCR()->CurrentThread = (PVOID)FirstThread;
    NtClose(FirstThreadHandle);
    

@@ -32,20 +32,21 @@ PsIdleThreadMain(PVOID Context)
    
    for(;;)
      {
-	if (DpcQueueSize > 0)
-	  {
-	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
-	     KiDispatchInterrupt();
-	     KeLowerIrql(oldlvl);
-	  }
-	NtYieldExecution();
+       if (DpcQueueSize > 0)
+	 {
+	   KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);
+	   KiDispatchInterrupt();
+	   KeLowerIrql(oldlvl);
+	 }
+       NtYieldExecution();
      }
 }
 
 VOID PsInitIdleThread(VOID)
 {
    KPRIORITY Priority;
-   
+   ULONG Affinity;
+
    PsCreateSystemThread(&PsIdleThreadHandle,
 			THREAD_ALL_ACCESS,
 			NULL,
@@ -59,4 +60,9 @@ VOID PsInitIdleThread(VOID)
 			  ThreadPriority,
 			  &Priority,
 			  sizeof(Priority));
+   Affinity = 1 << 0;
+   NtSetInformationThread(PsIdleThreadHandle,
+			  ThreadAffinityMask,
+			  &Affinity,
+			  sizeof(Affinity));
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.92 2001/04/17 04:11:00 dwelch Exp $
+/* $Id: main.c,v 1.93 2001/04/17 23:39:25 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -455,8 +455,11 @@ ExpInitializeExecutive(VOID)
 
   while (!HalAllProcessorsStarted())
     {
-      KePrepareForApplicationProcessorInit(KeNumberProcessors);
-      PsPrepareForApplicationProcessorInit(KeNumberProcessors);
+      if (KeNumberProcessors != 0)
+	{
+	  KePrepareForApplicationProcessorInit(KeNumberProcessors);
+	  PsPrepareForApplicationProcessorInit(KeNumberProcessors);
+	}
       HalInitializeProcessor(KeNumberProcessors);
       KeNumberProcessors++;
     }
@@ -493,7 +496,7 @@ ExpInitializeExecutive(VOID)
 #ifdef KDBG
   KdbEnter();
 #endif /* KDBG */
-  
+
   /*
    * Initalize services loaded at boot time
    */

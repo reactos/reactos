@@ -75,7 +75,7 @@ _Ki386RetToV86Mode:
 	/*
 	 * Save the old initial stack
 	 */
-	movl	_CurrentThread, %esi	
+	movl	%fs:KPCR_CURRENT_THREAD, %esi
 	movl	KTHREAD_INITIAL_STACK(%esi), %edi
 	pushl	%edi
 
@@ -187,7 +187,7 @@ _KiV86Complete:
 	/*
 	 * We also need to set the stack in the kthread structure
 	 */
-	movl	$_CurrentThread, %esi
+	movl	%fs:KPCR_CURRENT_THREAD, %esi
 	movl	KTHREAD_INITIAL_STACK(%esi), %edi
 	movl	%eax, KTHREAD_INITIAL_STACK(%esi)	
 

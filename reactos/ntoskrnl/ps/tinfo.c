@@ -74,7 +74,7 @@ NtSetInformationThread(HANDLE		ThreadHandle,
 	break;
 	
       case ThreadAffinityMask:
-	Status = STATUS_NOT_IMPLEMENTED;
+	Thread->Tcb.UserAffinity = *((PULONG)ThreadInformation);
 	break;
 	
       case ThreadImpersonationToken:

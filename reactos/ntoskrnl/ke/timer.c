@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.44 2001/04/13 16:12:25 chorns Exp $
+/* $Id: timer.c,v 1.45 2001/04/17 23:39:25 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -422,8 +422,6 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
  * FUNCTION: Handles a timer interrupt
  */
 {
-   char* vidmem=(char *)physical_to_linear(0xb8000 + 160 - 2);
-   
    KiRawTicks++;
    
    if (TimerInitDone == FALSE)
@@ -436,16 +434,6 @@ KiUpdateSystemTime (KIRQL oldIrql, ULONG Eip)
    KiTimerTicks++;
    system_time = system_time + CLOCK_INCREMENT;
    
-   vidmem[0] = ' ';
-   if (oldIrql < DISPATCH_LEVEL)
-     {
-       vidmem[1] = 0x17;
-     }
-   else
-     {
-       vidmem[1] = 0x27;
-     }
-
    /*
     * Queue a DPC that will expire timers
     */

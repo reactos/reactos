@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.10 2001/04/16 23:29:54 dwelch Exp $
+/* $Id: mp.c,v 1.11 2001/04/17 23:39:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -227,59 +227,60 @@ VOID IOAPICUnmaskIrq(
   IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
 }
 
-static VOID IOAPICSetupIds(
-  VOID)
+static VOID 
+IOAPICSetupIds(VOID)
 {
-	ULONG tmp, apic, i;
-	UCHAR old_id;
-
-	/*
-	 * Set the IOAPIC ID to the value stored in the MPC table.
-	 */
-	for (apic = 0; apic < IOAPICCount; apic++) {
-
-		/* Read the register 0 value */
+  ULONG tmp, apic, i;
+  UCHAR old_id;
+  
+  /*
+   * Set the IOAPIC ID to the value stored in the MPC table.
+   */
+  for (apic = 0; apic < IOAPICCount; apic++) {
+    
+    /* Read the register 0 value */
     tmp = IOAPICRead(apic, IOAPIC_ID);
-		
-		old_id = IOAPICMap[apic].ApicId;
-
-		if (IOAPICMap[apic].ApicId >= 0xf) {
-			DPRINT1("BIOS bug, IO-APIC#%d ID is %d in the MPC table!...\n",
-				apic, IOAPICMap[apic].ApicId);
-			DPRINT1("... fixing up to %d. (tell your hw vendor)\n", GET_IOAPIC_ID(tmp));
+    
+    old_id = IOAPICMap[apic].ApicId;
+    
+    if (IOAPICMap[apic].ApicId >= 0xf) {
+      DPRINT1("BIOS bug, IO-APIC#%d ID is %d in the MPC table!...\n",
+	      apic, IOAPICMap[apic].ApicId);
+      DPRINT1("... fixing up to %d. (tell your hw vendor)\n", 
+	      GET_IOAPIC_ID(tmp));
       IOAPICMap[apic].ApicId = GET_IOAPIC_ID(tmp);
-		}
-
-		/*
-		 * We need to adjust the IRQ routing table
-		 * if the ID changed.
-		 */
-		if (old_id != IOAPICMap[apic].ApicId)
-			for (i = 0; i < IRQCount; i++)
-				if (IRQMap[i].DstApicId == old_id)
-					IRQMap[i].DstApicId = IOAPICMap[apic].ApicId;
-
-		/*
-		 * Read the right value from the MPC table and
-		 * write it into the ID register.
-	 	 */
-		DPRINT("Changing IO-APIC physical APIC ID to %d\n",
-					IOAPICMap[apic].ApicId);
-
-		tmp &= ~IOAPIC_ID_MASK;
+    }
+    
+    /*
+     * We need to adjust the IRQ routing table
+     * if the ID changed.
+     */
+    if (old_id != IOAPICMap[apic].ApicId)
+      for (i = 0; i < IRQCount; i++)
+	if (IRQMap[i].DstApicId == old_id)
+	  IRQMap[i].DstApicId = IOAPICMap[apic].ApicId;
+    
+    /*
+     * Read the right value from the MPC table and
+     * write it into the ID register.
+     */
+    DPRINT("Changing IO-APIC physical APIC ID to %d\n",
+	   IOAPICMap[apic].ApicId);
+    
+    tmp &= ~IOAPIC_ID_MASK;
     tmp |= SET_IOAPIC_ID(IOAPICMap[apic].ApicId);
-
-		IOAPICWrite(apic, IOAPIC_ID, tmp);
-
-		/*
-		 * Sanity check
-		 */
-		tmp = IOAPICRead(apic, 0);
-		if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) {
-			DPRINT1("Could not set I/O APIC ID!\n");
+    
+    IOAPICWrite(apic, IOAPIC_ID, tmp);
+    
+    /*
+     * Sanity check
+     */
+    tmp = IOAPICRead(apic, 0);
+    if (GET_IOAPIC_ID(tmp) != IOAPICMap[apic].ApicId) {
+      DPRINT1("Could not set I/O APIC ID!\n");
       KeBugCheck(0);
-     }
-	}
+    }
+  }
 }
 
 

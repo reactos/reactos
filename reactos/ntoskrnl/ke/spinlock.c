@@ -1,4 +1,4 @@
-/* $Id: spinlock.c,v 1.7 2001/04/17 04:11:01 dwelch Exp $
+/* $Id: spinlock.c,v 1.8 2001/04/17 23:39:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,10 +73,14 @@ KeAcquireSpinLockAtDpcLevel (PKSPIN_LOCK	SpinLock)
  */
 {
    ULONG i;
-   
-   if (!(SpinLock->Lock == 0 || SpinLock->Lock == 1))
+
+   /*
+    * FIXME: This depends on gcc assembling this test to a single load from
+    * the spinlock's value.
+    */
+   if ((ULONG)SpinLock->Lock >= 2)
      {
-	DbgPrint("Lock %x has bad value %x\n", SpinLock, i);
+	DbgPrint("Lock %x has bad value %x\n", SpinLock, SpinLock->Lock);
 	KeBugCheck(0);
      }
    

@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.12 2001/03/16 18:11:21 dwelch Exp $
+/* $Id: display.c,v 1.13 2001/04/17 23:39:25 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -179,11 +179,8 @@ HalAcquireDisplayOwnership (
 }
 
 
-VOID
-STDCALL
-HalDisplayString (
-	IN	PCH	String
-	)
+VOID STDCALL
+HalDisplayString (IN	PCH	String)
 /*
  * FUNCTION: Switches the screen to HAL console mode (BSOD) if not there
  * already and displays a string
@@ -193,64 +190,70 @@ HalDisplayString (
  * mode
  */
 {
-    PCH pch;
+  PCH pch;
 #ifdef SCREEN_SYNCHRONIZATION
-    int offset;
+  int offset;
 #endif
+  static KSPIN_LOCK Lock;
 
-    pch = String;
+  pch = String;
 
-    if (HalOwnsDisplay == FALSE)
+  __asm__ ("cli\n\t");
+  KeAcquireSpinLockAtDpcLevel(&Lock);
+  
+  if (HalOwnsDisplay == FALSE)
     {
-        HalResetDisplay ();
+      HalResetDisplay ();
     }
-
+  
 #ifdef SCREEN_SYNCHRONIZATION
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
-    offset = READ_PORT_UCHAR((PUCHAR)CRTC_DATA)<<8;
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
-    offset += READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
-
-    CursorY = offset / SizeX;
-    CursorX = offset % SizeX;
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
+  offset = READ_PORT_UCHAR((PUCHAR)CRTC_DATA)<<8;
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
+  offset += READ_PORT_UCHAR((PUCHAR)CRTC_DATA);
+  
+  CursorY = offset / SizeX;
+  CursorX = offset % SizeX;
 #endif
-
-    while (*pch != 0)
+  
+  while (*pch != 0)
     {
-        if (*pch == '\n')
+      if (*pch == '\n')
         {
-            CursorY++;
-            CursorX = 0;
+	  CursorY++;
+	  CursorX = 0;
         }
-        else
+      else
         {
-            HalPutCharacter (*pch);
-            CursorX++;
-
-            if (CursorX >= SizeX)
+	  HalPutCharacter (*pch);
+	  CursorX++;
+	  
+	  if (CursorX >= SizeX)
             {
-                CursorY++;
-                CursorX = 0;
+	      CursorY++;
+	      CursorX = 0;
             }
         }
-
-        if (CursorY >= SizeY)
+      
+      if (CursorY >= SizeY)
         {
-            HalScrollDisplay ();
-            CursorY = SizeY - 1;
+	  HalScrollDisplay ();
+	  CursorY = SizeY - 1;
         }
-
-        pch++;
+      
+      pch++;
     }
-
+  
 #ifdef SCREEN_SYNCHRONIZATION
-    offset = (CursorY * SizeX) + CursorX;
-
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, offset & 0xff);
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
-    WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, (offset >> 8) & 0xff);
+  offset = (CursorY * SizeX) + CursorX;
+  
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURLO);
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, offset & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_COMMAND, CRTC_CURHI);
+  WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, (offset >> 8) & 0xff);
 #endif
+  KeReleaseSpinLockFromDpcLevel(&Lock);
+  __asm__ ("sti\n\t");
 }
 
 
