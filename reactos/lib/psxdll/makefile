@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 1999/11/07 08:03:26 ea Exp $
+# $Id: makefile,v 1.5 1999/12/26 16:36:44 ea Exp $
 #
 # ReactOS psxdll.dll makefile
 #
@@ -19,15 +19,29 @@ BASE_CFLAGS = -I../../include
 all: $(DLLTARGET)
 
 
+OBJECTS_LIBC_IO = libc/io/dup.o libc/io/dup2.o libc/io/fcntl.o
+
 OBJECTS_LIBC_STDLIB = libc/stdlib/exit.o
 
-OBJECTS_LIBC = $(OBJECTS_LIBC_STDLIB)
+OBJECTS_LIBC_SYS = libc/sys/uname.o
+
+OBJECTS_LIBC_TIME = libc/time/gettimeofday.o libc/time/time.o
+
+OBJECTS_LIBC = \
+	$(OBJECTS_LIBC_IO) \
+	$(OBJECTS_LIBC_STDLIB) \
+	$(OBJECTS_LIBC_SYS) \
+	$(OBJECTS_LIBC_TIME)
 
 OBJECTS_MISC = misc/dllmain.o misc/special.o misc/heap.o misc/rtl.o
 
 OBJECTS_RESOURCE = $(TARGETNAME).coff
 
-OBJECTS = $(OBJECTS_LIBC) $(OBJECTS_LIBM) $(OBJECTS_MISC) $(OBJECTS_RESOURCE)
+OBJECTS = \
+	$(OBJECTS_LIBC) \
+	$(OBJECTS_LIBM) \
+	$(OBJECTS_MISC) \
+	$(OBJECTS_RESOURCE)
 
 DEFS=$(TARGETNAME).def $(TARGETNAME).edf
 

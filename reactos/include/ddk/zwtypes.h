@@ -130,9 +130,13 @@ typedef struct _LPCMESSAGE
 
 // system information
 
-#define SystemPerformanceInformation		5
+#define SystemInformation0			0
+#define SystemInformation1			1
+#define SystemPerformanceInformation		2
+#define SystemInformation3			3
+#define SystemProcessInformation		5
 #define SystemDriverInformation			11
-#define SystemIdentityInformation		12
+#define SystemPageFileInformation		18
 #define SystemCacheInformation			21
 #define SystemTimeAdjustmentInformation		28
 #define SystemTimeZoneInformation		44
@@ -304,6 +308,32 @@ typedef struct _OBJECT_TYPE_INFORMATION
 
 // system information
 
+#if 0
+#pragma pack(2)
+typedef struct _SYSTEM_THREAD_INFORMATION
+{
+	PVOID	StartAddress;
+	DWORD	ParentPid;
+	DWORD	Tid;
+	
+} SYSTEM_THREAD_INFORMATION, * PSYSTEM_THREAD_INFORMATION;
+
+
+typedef struct _SYSTEM_PROCESS_INFORMATION
+{
+	WORD	Unknown0;
+	DWORD	Unknown1;
+	DWORD	Unknown2;
+	ULONG	ThreadCount;
+	DWORD	Unknown3 [10];
+	DWORD	Pid;
+	DWORD	Unknown4 [32];
+	WCHAR	ImageName [16]; /* always ImageName[15] == L'\0' */
+
+} SYSTEM_PROCESS_INFORMATION, * PSYSTEM_PROCESS_INFORMATION;
+#endif
+
+#pragma pack(4)
 typedef struct _SYSTEM_DRIVER_INFO
 {
 	PVOID BaseAddress;
@@ -311,8 +341,9 @@ typedef struct _SYSTEM_DRIVER_INFO
 	DWORD Unknown2;
 	DWORD EntryIndex;
 	DWORD Unknown4;
-	CHAR DriverName[MAX_PATH+1];
-} SYSTEM_DRIVER_INFO, *PSYSTEM_DRIVER_INFO;
+	CHAR  DriverName [256];
+
+} SYSTEM_DRIVER_INFO, * PSYSTEM_DRIVER_INFO;
 
 typedef struct _SYSTEM_DRIVERS_INFO
 {
@@ -320,11 +351,12 @@ typedef struct _SYSTEM_DRIVERS_INFO
 	SYSTEM_DRIVER_INFO DriverInfo[1];
 } SYSTEM_DRIVERS_INFO, *PSYSTEM_DRIVERS_INFO;
 
-
+#pragma pack(4)
 typedef struct _SYSTEM_TIME_ADJUSTMENT
 {
-	ULONG TimeAdjustment;
-	BOOL  TimeAdjustmentDisabled;
+	TIME	TimeAdjustment;
+	BOOL	TimeAdjustmentDisabled;
+
 } SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
 
 typedef struct _SYSTEM_CONFIGURATION_INFO {
@@ -345,6 +377,14 @@ typedef struct _SYSTEM_CONFIGURATION_INFO {
 	WORD   ProcessorLevel; 
 	WORD   ProcessorRevision; 
 } SYSTEM_CONFIGURATION_INFO, *PSYSTEM_CONFIGURATION_INFO; 
+
+
+typedef struct _SYSTEM_PAGEFILE_INFORMATION
+{
+	DWORD	Unknown [6];
+	WCHAR	PagefileName [16];
+
+} SYSTEM_PAGEFILE_INFORMATION, * PSYSTEM_PAGEFILE_INFORMATION;
 
 
 typedef struct _SYSTEM_CACHE_INFORMATION

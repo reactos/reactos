@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.19 1999/12/11 21:14:48 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.20 1999/12/26 16:36:44 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -75,6 +75,28 @@ ExReleaseResourceForThread
 ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
+FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
+FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
+FsRtlGetNextLargeMcbEntry=FsRtlGetNextLargeMcbEntry@20
+FsRtlGetNextMcbEntry=FsRtlGetNextMcbEntry@20
+FsRtlInitializeLargeMcb=FsRtlInitializeLargeMcb@8
+FsRtlInitializeMcb=FsRtlInitializeMcb@8
+FsRtlIsNtstatusExpected=FsRtlIsNtstatusExpected@4
+FsRtlIsTotalDeviceFailure=FsRtlIsTotalDeviceFailure@4
+FsRtlLookupLargeMcbEntry=FsRtlLookupLargeMcbEntry@32
+FsRtlLookupLastLargeMcbEntry=FsRtlLookupLastLargeMcbEntry@12
+FsRtlLookupLastMcbEntry=FsRtlLookupLastMcbEntry@12
+FsRtlLookupMcbEntry=FsRtlLookupMcbEntry@20
+FsRtlNormalizeNtstatus=FsRtlNormalizeNtstatus@8
+FsRtlNumberOfRunsInLargeMcb=FsRtlNumberOfRunsInLargeMcb@4
+FsRtlNumberOfRunsInMcb=FsRtlNumberOfRunsInMcb@4
+FsRtlRemoveLargeMcbEntry=FsRtlRemoveLargeMcbEntry@20
+FsRtlRemoveMcbEntry=FsRtlRemoveMcbEntry@12
+FsRtlSplitLargeMcb=FsRtlSplitLargeMcb@20
+FsRtlTruncateLargeMcb=FsRtlTruncateLargeMcb@12
+FsRtlTruncateMcb=FsRtlTruncateMcb@8
+FsRtlUninitializeLargeMcb=FsRtlUninitializeLargeMcb@4
+FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 HalRegisterServiceTable
 IoAllocateController
 IoAttachDeviceToDeviceStack
@@ -175,6 +197,9 @@ NtUnlockFile=NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject=NtWaitForSingleObject@12
 NtWriteFile=NtWriteFile@36
+PoQueryPowerSequence=PoQueryPowerSequence@0
+PoRequestPowerChange=PoRequestPowerChange@12
+PoSetDeviceIdleDetection=PoSetDeviceIdleDetection@8
 RtlAnsiCharToUnicodeChar=RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize=RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString=RtlAnsiStringToUnicodeString@12

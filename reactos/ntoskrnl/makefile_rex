@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.41 1999/12/26 15:50:47 dwelch Exp $
+# $Id: makefile_rex,v 1.42 1999/12/26 16:36:44 ea Exp $
 #
 # ReactOS Operating System
 #
@@ -55,13 +55,21 @@ EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o \
              ex/callback.o ex/napi.o ex/power.o ex/sysinfo.o ex/locale.o \
              ex/stamp.o ex/init.o
 
+FS_OBJECTS = fs/mcb.o fs/util.o
+
 SE_OBJECTS = se/semgr.o se/acl.o se/sid.o se/sd.o se/token.o se/luid.o
+
+SE_OBJECTS = se/semgr.o
 
 CM_OBJECTS = cm/registry.o
 
 DBG_OBJECTS = dbg/brkpoint.o dbg/errinfo.o dbg/print.o
 
 LDR_OBJECTS = ldr/loader.o ldr/init.o ldr/syspath.o
+
+NLS_OBJECTS = nls/nls.o
+
+PO_OBJECTS = po/power.o
 
 CC_OBJECTS = cc/cacheman.o cc/view.o
 
@@ -96,6 +104,9 @@ objects/ps.o: $(PS_OBJECTS)
 objects/ex.o: $(EX_OBJECTS)
 	$(LD) -r $(EX_OBJECTS) -o objects/ex.o
 
+objects/fs.o: $(FS_OBJECTS)
+	$(LD) -r $(FS_OBJECTS) -o objects/fs.o
+
 objects/se.o: $(SE_OBJECTS)
 	$(LD) -r $(SE_OBJECTS) -o objects/se.o
 
@@ -108,8 +119,14 @@ objects/dbg.o: $(DBG_OBJECTS)
 objects/ldr.o: $(LDR_OBJECTS)
 	$(LD) -r $(LDR_OBJECTS) -o objects/ldr.o
 
+objects/nls.o: $(NLS_OBJECTS)
+	$(LD) -r $(NLS_OBJECTS) -o objects/nls.o
+
 objects/nt.o: $(NT_OBJECTS)
 	$(LD) -r $(NT_OBJECTS) -o objects/nt.o
+
+objects/po.o: $(PO_OBJECTS)
+	$(LD) -r $(PO_OBJECTS) -o objects/po.o
 
 objects/cc.o: $(CC_OBJECTS)
 	$(LD) -r $(CC_OBJECTS) -o objects/cc.o
@@ -123,19 +140,20 @@ $(TARGET).coff: $(TARGET).rc ../include/reactos/resource.h
 OBJECTS = objects/hal.o objects/ke.o objects/rtl.o objects/mm.o \
           objects/io.o objects/ob.o objects/ps.o objects/ex.o \
           objects/se.o objects/cm.o objects/dbg.o objects/nt.o \
-          objects/cc.o objects/kd.o objects/ldr.o \
+          objects/cc.o objects/kd.o objects/ldr.o objects/fs.o \
+	  objects/po.o objects/nls.o \
           $(TARGET).coff
 
 ifeq ($(DOSCLI),yes)
 CLEAN_FILES = objects\*.o cc\*.o cm\*.o dbg\*.o ex\*.o hal\x86\*.o io\*.o \
               ke\*.o ldr\*.o mm\*.o nt\*.o ob\*.o ps\*.o rtl\*.o se\*.o \
-	      ke\i386\*.o mm\i386\*.o \
+	      ke\i386\*.o mm\i386\*.o fs\*.o po\*.o nls\*.o \
               kd\*.o utils\export\export.exe $(TARGET).o $(TARGET).a junk.tmp \
               base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 else
 CLEAN_FILES = objects/*.o cc/*.o cm/*.o dbg/*.o ex/*.o hal/x86/*.o io/*.o \
               ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o rtl/*.o se/*.o \
-	      ke/i386/*.o mm/i386/*.o \
+	      ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
               kd/*.o utils/export/export $(TARGET).o $(TARGET).a junk.tmp \
               base.tmp temp.exp $(TARGET).exe $(TARGET).sym $(TARGET).coff
 endif

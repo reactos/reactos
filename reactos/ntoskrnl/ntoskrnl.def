@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.32 1999/12/11 21:14:47 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.33 1999/12/26 16:36:44 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -75,6 +75,28 @@ ExReleaseResourceForThread
 ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
+FsRtlAddLargeMcbEntry@28
+FsRtlAddMcbEntry@16
+FsRtlGetNextLargeMcbEntry@20
+FsRtlGetNextMcbEntry@20
+FsRtlInitializeLargeMcb@8
+FsRtlInitializeMcb@8
+FsRtlIsNtstatusExpected@4
+FsRtlIsTotalDeviceFailure@4
+FsRtlLookupLargeMcbEntry@32
+FsRtlLookupLastLargeMcbEntry@12
+FsRtlLookupLastMcbEntry@12
+FsRtlLookupMcbEntry@20
+FsRtlNormalizeNtstatus@8
+FsRtlNumberOfRunsInLargeMcb@4
+FsRtlNumberOfRunsInMcb@4
+FsRtlRemoveLargeMcbEntry@20
+FsRtlRemoveMcbEntry@12
+FsRtlSplitLargeMcb@20
+FsRtlTruncateLargeMcb@12
+FsRtlTruncateMcb@8
+FsRtlUninitializeLargeMcb@4
+FsRtlUninitializeMcb@4
 HalRegisterServiceTable
 IoAllocateController
 IoAttachDeviceToDeviceStack
@@ -175,6 +197,9 @@ NtUnlockFile@20
 ;NtVdmControl@8 <--- ?
 NtWaitForSingleObject@12
 NtWriteFile@36
+PoQueryPowerSequence@0
+PoRequestPowerChange@12
+PoSetDeviceIdleDetection@8
 RtlAnsiCharToUnicodeChar@4
 RtlAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString@12
