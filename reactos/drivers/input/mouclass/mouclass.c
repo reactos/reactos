@@ -119,7 +119,7 @@ BOOLEAN MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA M
 	}
 	if (NULL != ClassDeviceExtension->WorkItem) {
 	  DPRINT("Queueing workitem\n");
-          IoQueueWorkItem(ClassDeviceExtension->WorkItem, MouseClassPassiveCallback, DelayedWorkQueue, NULL);
+          IoQueueWorkItem(ClassDeviceExtension->WorkItem, MouseClassPassiveCallback, CriticalWorkQueue, NULL);
 	  ClassDeviceExtension->PassiveCallbackQueued = TRUE;
 	}
       }
