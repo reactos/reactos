@@ -1266,6 +1266,13 @@ ZwTerminateThread(
 NTOSAPI
 NTSTATUS
 NTAPI
+NtTerminateThread(
+	IN HANDLE  ThreadHandle  OPTIONAL,
+	IN NTSTATUS  ExitStatus);
+
+NTOSAPI
+NTSTATUS
+NTAPI
 NtQueryInformationThread(
   IN HANDLE  ThreadHandle,
   IN THREADINFOCLASS  ThreadInformationClass,
