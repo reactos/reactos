@@ -1,4 +1,4 @@
-# $Id: Makefile.ros-template,v 1.1 2004/12/16 17:42:10 sedwards Exp $
+# $Id: Makefile.ros-template,v 1.2 2004/12/16 18:37:28 sedwards Exp $
 
 TARGET_NAME = dbghelp
 
@@ -6,7 +6,7 @@ TARGET_OBJECTS = @C_SRCS@
 
 TARGET_CFLAGS = @EXTRADEFS@ -D__REACTOS__
 
-TARGET_SDKLIBS = @IMPORTS@ winmm.a wine.a wine_uuid.a ntdll.a
+TARGET_SDKLIBS = @IMPORTS@ wine.a pseh.a ntdll.a
 
 TARGET_BASE = $(TARGET_BASE_LIB_COMCTL32)
 

@@ -30,8 +30,9 @@
 #include <limits.h>
 #include <sys/types.h>
 #include <assert.h>
+#define HAVE_REGEX_H 1
 #ifdef HAVE_REGEX_H
-# include <regex.h>
+# include "regex.h"
 #endif
 
 #include "wine/debug.h"

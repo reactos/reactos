@@ -21,7 +21,8 @@ C_SRCS = \
 	stack.c \
 	storage.c \
 	symbol.c \
-	type.c
+	type.c \
+	regex.c # ReactOS Port
 
 @MAKE_DLL_RULES@
 
