@@ -59,6 +59,8 @@
 #define _MAX_PATH	260
 #endif
 
+#define	W_VER_NT 0	// constant for HIWORD(GetVersion())>>14
+
 
 #ifdef __cplusplus
 extern "C" {

@@ -1952,7 +1952,6 @@ void StartMenuHandler::ShowLaunchDialog(HWND hwndOwner)
 	 // Show "Run..." dialog
 	if (RunFileDlg) {
 #ifndef _ROS_ /* FIXME: our shell32 always expects Ansi strings */
-#define	W_VER_NT 0
 		if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 			WCHAR wTitle[40], wText[256];
 

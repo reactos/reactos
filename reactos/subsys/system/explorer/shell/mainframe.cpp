@@ -736,7 +736,6 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	extraBtns.idCommand = ID_WEB_WINDOW;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
-#define	W_VER_NT 0
 	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 		 // insert NT object namespace button
 		extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));

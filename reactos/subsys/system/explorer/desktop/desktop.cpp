@@ -436,7 +436,7 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_DESTROY:
 
 		///@todo use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
-		
+
 		if (SetShellWindow)
 			SetShellWindow(0);
 		break;
