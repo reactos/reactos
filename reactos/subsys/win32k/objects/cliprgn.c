@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cliprgn.c,v 1.27 2003/12/13 12:12:41 weiden Exp $ */
+/* $Id: cliprgn.c,v 1.28 2003/12/15 20:47:57 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -224,9 +224,27 @@ BOOL STDCALL NtGdiPtVisible(HDC  hDC,
 }
 
 BOOL STDCALL NtGdiRectVisible(HDC  hDC,
-                      CONST PRECT  rc)
+                      CONST PRECT  UnsafeRect)
 {
-  UNIMPLEMENTED;
+   PDC dc = DC_LockDc(hDC);
+   BOOL Result = FALSE;
+   RECT Rect;
+
+   if (!dc)
+   {
+      return FALSE;
+   }
+
+   MmCopyFromCaller(&Rect, UnsafeRect, sizeof(RECT));
+
+   if (dc->w.hGCClipRgn)
+   {
+      IntLPtoDP(dc, (LPPOINT)&Rect, 2);
+      Result = UnsafeIntRectInRegion(dc->w.hGCClipRgn, &Rect);
+   }
+   DC_UnlockDc(hDC);
+
+   return Result;
 }
 
 BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,

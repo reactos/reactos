@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.41 2003/12/12 14:22:36 gvg Exp $
+/* $Id: stubs.c,v 1.42 2003/12/15 20:47:57 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -537,21 +537,6 @@ PtVisible(
 	HDC	a0,
 	int	a1,
 	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RectVisible(
-	HDC		a0,
-	CONST RECT	*a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -894,3 +894,16 @@ GetDCOrgEx(
 {
 	return NtGdiGetDCOrgEx(a0,a1);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RectVisible(
+	HDC		a0,
+	CONST RECT	*a1
+	)
+{
+	return NtGdiRectVisible(a0,(RECT *)a1);
+}
