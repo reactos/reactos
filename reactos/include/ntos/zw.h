@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.7 2003/02/27 15:39:10 gdalsnes Exp $
+/* $Id: zw.h,v 1.8 2003/02/27 22:49:06 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4966,21 +4966,21 @@ ZwQueryObject(
 NTSTATUS
 STDCALL
 NtQuerySecurityObject(
-	IN HANDLE Object,
-	IN CINT SecurityObjectInformationClass,
-	OUT PVOID SecurityObjectInformation,
+	IN HANDLE Handle,
+	IN SECURITY_INFORMATION SecurityInformation,
+	OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN ULONG Length,
-	OUT PULONG ReturnLength
+	OUT PULONG ResultLength
 	);
 
 NTSTATUS
 STDCALL
 ZwQuerySecurityObject(
-	IN HANDLE Object,
-	IN CINT SecurityObjectInformationClass,
-	OUT PVOID SecurityObjectInformation,
+	IN HANDLE Handle,
+	IN SECURITY_INFORMATION SecurityInformation,
+	OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
 	IN ULONG Length,
-	OUT PULONG ReturnLength
+	OUT PULONG ResultLength
 	);
 
 /*
