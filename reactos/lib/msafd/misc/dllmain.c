@@ -244,6 +244,8 @@ WSPSocket(
 	return (SOCKET)Sock;
 
 error:
+	AFD_DbgPrint(MID_TRACE,("Ending\n"));
+
 	return 0;
 }
 
@@ -740,6 +742,8 @@ WSPConnect(
 	UINT						BindAddressLength;
 	PSOCKADDR					BindAddress;
 
+	AFD_DbgPrint(MID_TRACE,("Called\n"));
+
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
 
@@ -828,6 +832,8 @@ WSPConnect(
 										lpCalleeData->len);
 	 }
 
+	AFD_DbgPrint(MID_TRACE,("Ending\n"));
+
 	return STATUS_SUCCESS;
 }
 int
@@ -842,6 +848,8 @@ WSPShutdown(
 	AFD_DISCONNECT_INFO			DisconnectInfo;
 	PSOCKET_INFORMATION			Socket = NULL;
 	NTSTATUS					Status;
+
+	AFD_DbgPrint(MID_TRACE,("Called\n"));
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -884,6 +892,8 @@ WSPShutdown(
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, 0);
 	}
+
+	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
 	return 0;
 }

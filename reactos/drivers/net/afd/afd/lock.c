@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.1.2.2 2004/07/15 03:21:47 arty Exp $
+/* $Id: lock.c,v 1.1.2.3 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -17,6 +17,9 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, BOOLEAN Write ) {
     /* Copy the buffer array so we don't lose it */
     UINT Size = sizeof(AFD_WSABUF) * Count;
     PAFD_WSABUF NewBuf = ExAllocatePool( PagedPool, Size * 2 );
+    PMDL NewMdl;
+
+    AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     if( NewBuf ) {
 	PAFD_MAPBUF MapBuf = (PAFD_MAPBUF)(NewBuf + Count);
@@ -26,17 +29,31 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count, BOOLEAN Write ) {
 	    AFD_DbgPrint(MID_TRACE,("Locking buffer %d (%x:%d)\n",
 				    i, NewBuf[i].buf, NewBuf[i].len));
 
-	    MapBuf[i].Mdl = IoAllocateMdl( NewBuf[i].buf, 
-					   NewBuf[i].len,
-					   FALSE,
-					   FALSE,
-					   NULL );
+	    if( NewBuf[i].len ) {
+		NewMdl = IoAllocateMdl( NewBuf[i].buf, 
+					NewBuf[i].len,
+					FALSE,
+					FALSE,
+					NULL );
+	    } else {
+		MapBuf[i].Mdl = NULL;
+		continue;
+	    }
+
+	    AFD_DbgPrint(MID_TRACE,("NewMdl @ %x\n", NewMdl));
+
+	    MapBuf[i].Mdl = NewMdl;
+
 	    if( MapBuf[i].Mdl ) {
+		AFD_DbgPrint(MID_TRACE,("Probe and lock pages\n"));
 		MmProbeAndLockPages( MapBuf[i].Mdl, KernelMode, 
 				     Write ? IoModifyAccess : IoReadAccess );
+		AFD_DbgPrint(MID_TRACE,("MmProbeAndLock finished\n"));
 	    }
 	}
     }
+
+    AFD_DbgPrint(MID_TRACE,("Leaving %x\n", NewBuf));
 
     return NewBuf;
 }

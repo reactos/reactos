@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
+/* $Id: read.c,v 1.1.2.4 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -69,6 +69,7 @@ NTSTATUS DDKAPI ReceiveComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
+    PIO_STACK_LOCATION NextIrpSp;
     PAFD_RECV_INFO RecvReq;
     UINT TotalBytesCopied = 0;
 
@@ -96,7 +97,8 @@ NTSTATUS DDKAPI ReceiveComplete
 		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
 	    NextIrp = 
 		CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-	    RecvReq = NextIrp->AssociatedIrp.SystemBuffer;
+	    NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	    RecvReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 
 	    AFD_DbgPrint(MID_TRACE,("RecvReq @ %x\n", RecvReq));
 
@@ -164,7 +166,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_RECV_INFO RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_RECV_INFO RecvReq = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     UINT TotalBytesCopied = 0;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
@@ -291,7 +294,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_RECV_INFO RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_RECV_INFO RecvReq = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     PLIST_ENTRY ListEntry;
     PAFD_STORED_DATAGRAM DatagramRecv;
 

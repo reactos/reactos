@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
+/* $Id: connect.c,v 1.1.2.4 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -126,7 +126,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_CONNECT_INFO ConnectReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_CONNECT_INFO ConnectReq = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );

@@ -1,4 +1,4 @@
-/* $Id: info.c,v 1.1.2.2 2004/07/16 14:35:21 arty Exp $
+/* $Id: info.c,v 1.1.2.3 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/info.c
@@ -16,7 +16,7 @@ NTSTATUS STDCALL
 AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	    PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_INFO InfoReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_INFO InfoReq = IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
@@ -50,4 +50,3 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
 }
-

@@ -35,6 +35,8 @@ SockGetTdiName(
     PLIST_ENTRY	        Helpers;
     INT                 Status;
 
+    AFD_DbgPrint(MID_TRACE,("Called\n"));
+
     /* Check in our Current Loaded Helpers */
     for (Helpers = SockHelpersListHead.Flink;
          Helpers != &SockHelpersListHead; 
@@ -160,6 +162,8 @@ SockLoadTransportMapping(
     ULONG               MappingSize;
     LONG                Status;
 
+    AFD_DbgPrint(MID_TRACE,("Called: TransportName %ws\n", TransportName));
+
     /* Allocate a Buffer */
     TransportKey = HeapAlloc(GlobalHeap, 0, (54 + wcslen(TransportName)) * sizeof(WCHAR));
 
@@ -227,6 +231,8 @@ SockLoadTransportList(
     HKEY	KeyHandle;
     LONG	Status;
 
+    AFD_DbgPrint(MID_TRACE,("Called\n"));
+    
     /* Open the Transports Key */
     Status = RegOpenKeyExW (HKEY_LOCAL_MACHINE,
                             L"SYSTEM\\CurrentControlSet\\Services\\Winsock\\Parameters",  
@@ -486,15 +492,25 @@ SockIsTripleInMapping(
     /* The Windows version returns more detailed information on which of the 3 parameters failed...we should do this later */
     ULONG    Row;
     
+    AFD_DbgPrint(MID_TRACE,("Called, Mapping rows = %d\n", Mapping->Rows));
+
     /* Loop through Mapping to Find a matching one */
     for (Row = 0; Row < Mapping->Rows; Row++) {
+	AFD_DbgPrint(MID_TRACE,("Examining: row %d: AF %d type %d proto %d\n",
+				Row,
+				(INT)Mapping->Mapping[Row].AddressFamily,
+				(INT)Mapping->Mapping[Row].SocketType,
+				(INT)Mapping->Mapping[Row].Protocol));
+
         /* Check of all three values Match */
         if (((INT)Mapping->Mapping[Row].AddressFamily == AddressFamily) && 
             ((INT)Mapping->Mapping[Row].SocketType == SocketType) && 
             ((INT)Mapping->Mapping[Row].Protocol == Protocol)) {
+	    AFD_DbgPrint(MID_TRACE,("Found\n"));
             return TRUE;
         }
     }
+    AFD_DbgPrint(MID_TRACE,("Not found\n"));
     return FALSE;
 }
 

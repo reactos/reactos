@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.1.2.5 2004/07/16 14:35:21 arty Exp $
+/* $Id: write.c,v 1.1.2.6 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -21,6 +21,7 @@ NTSTATUS DDKAPI SendComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp = NULL;
+    PIO_STACK_LOCATION NextIrpSp;
     PAFD_SEND_INFO SendReq;
     PAFD_MAPBUF Map;
     UINT TotalBytesCopied = 0, SpaceAvail, i, CopySize = 0;
@@ -39,7 +40,8 @@ NTSTATUS DDKAPI SendComplete
 		RemoveHeadList(&FCB->PendingIrpList[FUNCTION_SEND]);
 	    NextIrp = 
 		CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-	    SendReq = NextIrp->AssociatedIrp.SystemBuffer;
+	    NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	    SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 
 	    UnlockBuffers( SendReq->BufferArray,
 			   SendReq->BufferCount );
@@ -66,7 +68,8 @@ NTSTATUS DDKAPI SendComplete
 	    RemoveHeadList(&FCB->PendingIrpList[FUNCTION_RECV]);
 	NextIrp = 
 	    CONTAINING_RECORD(NextIrpEntry, IRP, Tail.Overlay.ListEntry);
-	SendReq = NextIrp->AssociatedIrp.SystemBuffer;
+	NextIrpSp = IoGetCurrentIrpStackLocation( NextIrp );
+	SendReq = NextIrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
 	Map = (PAFD_MAPBUF)(SendReq->BufferArray + SendReq->BufferCount);
 
 	AFD_DbgPrint(MID_TRACE,("SendReq @ %x\n", SendReq));
@@ -137,7 +140,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_SEND_INFO SendReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_SEND_INFO SendReq = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
     UINT TotalBytesCopied = 0, i, CopySize = 0, 
 	SpaceAvail = 0, TotalBytesEncountered = 0;
 
@@ -159,7 +163,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					SendReq->BufferCount,
 					FALSE );
     
-    AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", FCB->Send.BytesUsed));
+    AFD_DbgPrint(MID_TRACE,("FCB->Send.BytesUsed = %d\n", 
+			    FCB->Send.BytesUsed));
 
     if( !FCB->Send.BytesUsed ) {
 	SpaceAvail = FCB->Send.Size - FCB->Send.BytesUsed;
@@ -231,7 +236,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_SEND_INFO_UDP SendReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_SEND_INFO_UDP SendReq = 
+	IrpSp->Parameters.DeviceIoControl.Type3InputBuffer;
    
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 

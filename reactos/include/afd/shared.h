@@ -13,8 +13,8 @@
 /* Extra definition of WSABUF for AFD so that I don't have to include any
  * userland winsock headers. */
 typedef struct _AFD_WSABUF {
-    PCHAR buf;
     UINT  len;
+    PCHAR buf;
 } AFD_WSABUF, *PAFD_WSABUF;
 
 typedef struct _AFD_CREATE_PACKET {

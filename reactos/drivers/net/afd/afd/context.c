@@ -1,4 +1,4 @@
-/* $Id: context.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: context.c,v 1.1.2.2 2004/07/18 22:03:49 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/context.c
@@ -25,7 +25,7 @@ AfdGetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->ContextSize < ContextSize ) ContextSize = FCB->ContextSize;
     
     if( FCB->Context ) {
-	RtlCopyMemory( Irp->AssociatedIrp.SystemBuffer,
+	RtlCopyMemory( Irp->UserBuffer,
 		       FCB->Context,
 		       ContextSize );
 	Status = STATUS_SUCCESS;
@@ -58,7 +58,7 @@ AfdSetContext( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->Context ) {
 	Status = STATUS_SUCCESS;
 	RtlCopyMemory( FCB->Context, 
-		       Irp->AssociatedIrp.SystemBuffer,
+		       IrpSp->Parameters.DeviceIoControl.Type3InputBuffer,
 		       IrpSp->Parameters.DeviceIoControl.InputBufferLength );
     }
 
