@@ -36,12 +36,12 @@
 
 #define CAB_SEARCH_SIZE (32*1024)
 
-typedef unsigned char  cab_UBYTE; /* 8 bits  */
-typedef unsigned short cab_UWORD; /* 16 bits */
-typedef unsigned int   cab_ULONG; /* 32 bits */
-typedef signed int     cab_LONG;  /* 32 bits */
+typedef unsigned char cab_UBYTE; /* 8 bits  */
+typedef UINT16        cab_UWORD; /* 16 bits */
+typedef UINT32        cab_ULONG; /* 32 bits */
+typedef INT32         cab_LONG;  /* 32 bits */
 
-typedef unsigned int   cab_off_t;
+typedef UINT32        cab_off_t;
 
 /* number of bits in a ULONG */
 #ifndef CHAR_BIT
