@@ -95,8 +95,3 @@ DEQUEUE_BOILERPLATE
    IoCompleteRequest(Irp, IO_NO_INCREMENT);
  
 }
-
-
-
-
- 
