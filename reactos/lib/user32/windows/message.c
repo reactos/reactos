@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.6 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: message.c,v 1.7 2002/06/18 21:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -60,28 +60,105 @@ SetMessageExtraInfo(
 {
   return (LPARAM)0;
 }
-LRESULT
-STDCALL
-CallWindowProcA(
-  WNDPROC lpPrevWndFunc,
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
+
+VOID STATIC
+User32FreeAsciiConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
 {
-  return (LRESULT)0;
+  switch(Msg)
+    {
+    case WM_NCCREATE:
+      {
+	CREATESTRUCTA* Cs;
+
+	Cs = (CREATESTRUCTA*)lParam;
+	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszName);
+	RtlFreeHeap(RtlGetProcessHeap(), 0, (LPSTR)Cs->lpszClass);
+	break;
+      }
+    }
 }
 
-LRESULT
-STDCALL
-CallWindowProcW(
-  WNDPROC lpPrevWndFunc,
-  HWND hWnd,
-  UINT Msg,
-  WPARAM wParam,
-  LPARAM lParam)
+VOID STATIC
+User32ConvertToAsciiMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
 {
-  return (LRESULT)0;
+  switch((*Msg))
+    {
+    case WM_NCCREATE:
+      {
+	CREATESTRUCTA* CsA;
+	CREATESTRUCTW* CsW;
+	UNICODE_STRING UString;
+	ANSI_STRING AString;
+
+	CsW = (CREATESTRUCTW*)lParam;
+	CsA = User32AllocHeap(sizeof(CREATESTRUCTA));
+	memcpy(CsW, CsA, sizeof(CREATESTRUCTW));
+
+	RtlInitUnicodeString(&UString, CsW->lpszName);
+	RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+	CsA->lpszName = AString.Buffer;
+
+	RtlInitUnicodeString(&UString, CsW->lpszClass);
+	RtlUnicodeStringToAnsiString(&AString, &UString, TRUE);
+	CsA->lpszClass = AString.Buffer;
+
+	(*lParam) = (LPARAM)CsA;
+	break;
+      }
+    }
+  return;
+}
+
+VOID STATIC
+User32FreeUnicodeConvertedMessage(UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+}
+
+VOID STATIC
+User32ConvertToUnicodeMessage(UINT* Msg, WPARAM* wParam, LPARAM* lParam)
+{
+}
+
+LRESULT STDCALL
+CallWindowProcA(WNDPROC lpPrevWndFunc,
+		HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM lParam)
+{
+  if (IsWindowUnicode(hWnd))
+    {
+      LRESULT Result;
+      User32ConvertToUnicodeMessage(&Msg, &wParam, &lParam);
+      Result = lpPrevWndFunc(hWnd, Msg, wParam, lParam);
+      User32FreeUnicodeConvertedMessage(Msg, wParam, lParam);
+      return(Result);
+    }
+  else
+    {
+      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+    }
+}
+
+LRESULT STDCALL
+CallWindowProcW(WNDPROC lpPrevWndFunc,
+		HWND hWnd,
+		UINT Msg,
+		WPARAM wParam,
+		LPARAM lParam)
+{
+  if (!IsWindowUnicode(hWnd))
+    {
+      LRESULT Result;
+      User32ConvertToAsciiMessage(&Msg, &wParam, &lParam);
+      Result = lpPrevWndFunc(hWnd, Msg, wParam, lParam);
+      User32FreeAsciiConvertedMessage(Msg, wParam, lParam);
+      return(Result);
+    }
+  else
+    {
+      return(lpPrevWndFunc(hWnd, Msg, wParam, lParam));
+    }
 }
 
 
@@ -323,12 +400,10 @@ SendNotifyMessageW(
   return FALSE;
 }
 
-WINBOOL
-STDCALL
-TranslateMessage(
-  CONST MSG *lpMsg)
+WINBOOL STDCALL
+TranslateMessage(CONST MSG *lpMsg)
 {
-  return NtUserTranslateMessage((LPMSG)lpMsg, 0);
+  return(NtUserTranslateMessage((LPMSG)lpMsg, 0));
 }
 
 WINBOOL

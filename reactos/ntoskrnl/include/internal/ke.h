@@ -208,8 +208,7 @@ Ki386InitializeLdt(VOID);
 ULONG
 KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2);
 VOID STDCALL
-KePushAndStackSwitchAndSysRet(ULONG A, ULONG B, ULONG C, ULONG D, ULONG E,
-			      ULONG F, PVOID NewStack);
+KePushAndStackSwitchAndSysRet(ULONG Push, PVOID NewStack);
 VOID STDCALL
 KeStackSwitchAndRet(PVOID NewStack);
 VOID STDCALL

@@ -1,6 +1,53 @@
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* tools/helper.mk: Make an import library a proper target
+	depending on the .def file.
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* subsys/win32k/ntuser/window.c (NtUserGetWindowLong): Began
+	implementation.
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* subsys/win32k/misc/object.c (ObmCreateHandle): Return the
+	correct handle value.
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* subsys/win32k/makefile: Make win32k depend on the file containing
+	the service table. 
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* ntoskrnl/ke/i386/stkswitch.S (KeSwitchStackAndRet,
+	KePushAndStackSwitchAndSysRet): Push one value only.
+	* ntoskrnl/ps/w32call.c (NtCallbackReturn, NtW32Call): Moved
+	these functions to a new file. Restore the old trap frame after
+	returning from a callback.
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* lib/user32/windows/message.c (CallWindowProcA, CallWindowProcW):
+	Convert message to Unicode or ASCII if necessary.
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* include/user32/callback.h: Added WM_CREATE and WM_NCCALCSIZE
+	callbacks.
+	* lib/user32/windows/window.c (User32SendCREATEMessageForKernel,
+	User32SendNCCREATEMessageForKernel): Implemented.
+	* subsys/win32k/ntuser/callback.c (W32kSendCREATEMessage):
+	Implemented.	
+
+2002-06-18  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
+
+	* include/structs.h: Added Unicode and ASCII versions of
+	CREATESTRUCT.
+
 2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
 
-	* tools/help.mk: Make the install target depend on all the
+	* tools/helper.mk: Make the install target depend on all the
 	files to be installed.
 
 2002-06-16  David Welch  <welch@whitehall1-5.seh.ox.ac.uk>
@@ -9,7 +56,7 @@
 	top of the old stack.
 	* ntoskrnl/ps/thread.c (NtW32Call): Set TSS.Esp0 to the top of
 	the new stack. Free the callback stack correctly. Don't copy
-	portion of the trap frame that doesn't exist in none v86-mode
+	portion of the trap frame that doesn't exist in non-v86-mode
 	interrupts.
 	* ntoskrnl/ps/thread.c (PsFreeCallbackStack): New function to
 	free a stack allocated with PsAllocateCallbackStack.

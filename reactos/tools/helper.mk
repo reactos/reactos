@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.16 2002/06/16 21:41:16 dwelch Exp $
+# $Id: helper.mk,v 1.17 2002/06/18 21:51:11 dwelch Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -539,12 +539,16 @@ endif # MK_IMPLIBONLY
 
 $(MK_FULLRES): $(PATH_TO_TOP)/include/reactos/buildno.h $(TARGET_PATH)/$(MK_RES_BASE).rc
 
-implib:
 ifeq ($(MK_IMPLIB),yes)
+$(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
 		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
 		--kill-at
+
+implib: $(MK_IMPLIBPATH)/$(MK_BASENAME).a
+else
+implib:
 endif
 
 # Be carefull not to clean non-object files

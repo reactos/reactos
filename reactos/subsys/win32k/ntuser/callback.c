@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.2 2002/05/06 22:20:32 dwelch Exp $
+/* $Id: callback.c,v 1.3 2002/06/18 21:51:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -43,6 +43,26 @@ W32kSendNCCALCSIZEMessage(HWND Wnd, BOOL Validate, RECT Rect1,
 LRESULT STDCALL
 W32kSendCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
 {
+  SENDCREATEMESSAGE_CALLBACK_ARGUMENTS Arguments;
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  DWORD ResultLength;
+
+  Arguments.Wnd = Wnd;
+  Arguments.CreateStruct = *CreateStruct;
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_SENDCREATE,
+		     &Arguments,
+		     sizeof(SENDCREATEMESSAGE_CALLBACK_ARGUMENTS),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return(0);
+    }
+  return(Result);
 }
 
 LRESULT STDCALL
@@ -58,9 +78,9 @@ W32kSendNCCREATEMessage(HWND Wnd, CREATESTRUCT* CreateStruct)
   Arguments.CreateStruct = *CreateStruct;
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
-  Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
+  Status = NtW32Call(USER32_CALLBACK_SENDNCCREATE,
 		     &Arguments,
-		     sizeof(WINDOWPROC_CALLBACK_ARGUMENTS),
+		     sizeof(SENDNCCREATEMESSAGE_CALLBACK_ARGUMENTS),
 		     &ResultPointer,
 		     &ResultLength);
   if (!NT_SUCCESS(Status))

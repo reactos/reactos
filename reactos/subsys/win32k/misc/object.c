@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.3 2002/01/27 03:25:45 dwelch Exp $
+/* $Id: object.c,v 1.4 2002/06/18 21:51:10 dwelch Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -367,7 +367,8 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
     }
   
   ObmpLockHandleTable(HandleTable);
-  
+
+  Handle = 1;
   Current = HandleTable->ListHead.Flink;
   /*
    * Scan through the currently allocated Handle blocks looking for a free
@@ -377,8 +378,7 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
     {
       PUSER_HANDLE_BLOCK Block = 
 	CONTAINING_RECORD(Current, USER_HANDLE_BLOCK, ListEntry);
-      
-      Handle = 1;
+           
       for (i = 0; i < HANDLE_BLOCK_ENTRIES; i++)
 	{
 	  if (!Block->Handles[i].ObjectBody)

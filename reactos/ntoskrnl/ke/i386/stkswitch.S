@@ -32,6 +32,12 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * FUNCTION:	 KeStackSwitchAndRet
+ * PURPOSE:	 Switch to a new stack and return from the first frame on
+ *               the new stack which was assumed to a stdcall function with
+ *               8 bytes of arguments and which saved edi, esi and ebx.
+ */
 .globl _KeStackSwitchAndRet@4
 _KeStackSwitchAndRet@4:
 	pushl	%ebp
@@ -48,10 +54,10 @@ _KeStackSwitchAndRet@4:
 	popl	%ebx
 
 	popl	%ebp
-	ret	$28
+	ret	$8
 
-.globl _KePushAndStackSwitchAndSysRet@28
-_KePushAndStackSwitchAndSysRet@28:
+.globl _KePushAndStackSwitchAndSysRet@8
+_KePushAndStackSwitchAndSysRet@8:
 	pushl	%ebp
 	movl	%esp, %ebp
 
@@ -62,15 +68,10 @@ _KePushAndStackSwitchAndSysRet@28:
 	cli
 
 	pushl	8(%ebp)
-	pushl	12(%ebp)
-	pushl	16(%ebp)
-	pushl	20(%ebp)
-	pushl	24(%ebp)
-	pushl	28(%ebp)
 
 	movl	%fs:KPCR_CURRENT_THREAD, %ebx
 	movl	%esp, KTHREAD_CALLBACK_STACK(%ebx)
-	movl	32(%ebp), %esp
+	movl	12(%ebp), %esp
 
 	sti
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.70 2002/06/10 08:45:40 ekohl Exp $
+# $Id: Makefile,v 1.71 2002/06/18 21:51:09 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -220,7 +220,8 @@ OBJECTS_PS = \
 	ps/tinfo.o \
 	ps/debug.o \
 	ps/suspend.o \
-	ps/win32.o
+	ps/win32.o \
+	ps/w32call.o
 
 # Executive Subsystem (Ex)
 OBJECTS_EX = \
@@ -629,12 +630,14 @@ bugcodes.rc: ntoskrnl.mc
 		-o bugcodes.rc \
 		$(TARGETNAME).mc
 
-implib:
+$(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
 	- $(DLLTOOL) \
 		--dllname $(TARGETNAME).exe \
 		--def $(TARGETNAME).def \
 		--output-lib $(DDK_PATH_LIB)/$(TARGETNAME).a \
 		--kill-at
+
+implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 
 clean: 
 	- $(RM) $(CLEAN_FILES)

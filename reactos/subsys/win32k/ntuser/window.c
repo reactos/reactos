@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.6 2002/05/06 22:20:32 dwelch Exp $
+/* $Id: window.c,v 1.7 2002/06/18 21:51:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -22,7 +22,7 @@
 #include <include/callback.h>
 #include <include/msgqueue.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -105,7 +105,10 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   POINT MaxSize, MaxPos, MinTrack, MaxTrack;
   CREATESTRUCT Cs;
   LRESULT Result;
+  
+  DPRINT("NtUserCreateWindowEx\n");
 
+  /* Initialize gui state if necessary. */
   W32kGuiCheck();
 
   if (!RtlCreateUnicodeString(&WindowName, lpWindowName->Buffer))
@@ -142,6 +145,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject = (PWINDOW_OBJECT) 
     ObmCreateObject(PsGetWin32Process()->HandleTable, &Handle, otWindow, 
 		    sizeof(WINDOW_OBJECT));
+  DPRINT("Created object with handle %X\n", Handle);
   if (!WindowObject) 
     {
       ObDereferenceObject(WinStaObject);
@@ -246,16 +250,19 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   Cs.lpszName = lpWindowName->Buffer;
   Cs.lpszClass = lpClassName->Buffer;
   Cs.dwExStyle = dwExStyle;
+  DPRINT("NtUserCreateWindowEx(): About to send NCCREATE message.\n");
   Result = W32kSendNCCREATEMessage(WindowObject->Self, &Cs);
   if (!Result)
     {
       /* FIXME: Cleanup. */
+      DPRINT("NtUserCreateWindowEx(): NCCREATE message failed.\n");
       return(NULL);
     }
  
   /* Calculate the non-client size. */
   MaxPos.x = WindowObject->WindowRect.left;
   MaxPos.y = WindowObject->WindowRect.top;
+  DPRINT("NtUserCreateWindowEx(): About to get non-client size.\n");
   Result = WinPosGetNonClientSize(WindowObject->Self, 
 				  &WindowObject->WindowRect,
 				  &WindowObject->ClientRect);
@@ -264,10 +271,12 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		 MaxPos.y - WindowObject->WindowRect.top);
 
   /* Send the CREATE message. */
+  DPRINT("NtUserCreateWindowEx(): about to send CREATE message.\n");
   Result = W32kSendCREATEMessage(WindowObject->Self, &Cs);
-  if (!Result)
+  if (Result == (LRESULT)-1)
     {
       /* FIXME: Cleanup. */
+      DPRINT("NtUserCreateWindowEx(): send CREATE message failed.\n");
       return(NULL);
     } 
 
@@ -281,11 +290,13 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 		  WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.bottom - 
 		  WindowObject->ClientRect.top);
+      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
       W32kCallWindowProc(NULL, WindowObject->Self, WM_SIZE, SIZE_RESTORED, 
 			 lParam);
       lParam = 
 	MAKE_LONG(WindowObject->ClientRect.left,
 		  WindowObject->ClientRect.top);
+      DPRINT("NtUserCreateWindow(): About to send WM_SIZE\n");
       W32kCallWindowProc(NULL, WindowObject->Self, WM_MOVE, 0, lParam);
     }
 
@@ -302,6 +313,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 	((WindowObject->Style & WS_CHILD) || W32kGetActiveWindow()) ?
 	SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
 	SWP_NOZORDER | SWP_FRAMECHANGED;
+      DPRINT("NtUserCreateWindow(): About to minimize/maximize\n");
       WinPosSetWindowPos(WindowObject->Self, 0, NewPos.left, NewPos.top,
 			 NewPos.right, NewPos.bottom, SwFlag);
     }
@@ -310,6 +322,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   if ((WindowObject->Style & WS_CHILD) ||
       (!(WindowObject->ExStyle & WS_EX_NOPARENTNOTIFY)))
     {
+      DPRINT("NtUserCreateWindow(): About to notify parent\n");
       W32kCallWindowProc(NULL, WindowObject->Parent->Self,
 			 WM_PARENTNOTIFY, 
 			 MAKEWPARAM(WM_CREATE, WindowObject->IDMenu),
@@ -318,9 +331,11 @@ NtUserCreateWindowEx(DWORD dwExStyle,
 
   if (dwStyle & WS_VISIBLE)
     {
+      DPRINT("NtUserCreateWindow(): About to show window\n");
       WinPosShowWindow(WindowObject->Self, dwShowMode);
     }
 
+  DPRINT("NtUserCreateWindow(): = %X\n", Handle);
   return((HWND)Handle);
 }
 
@@ -614,6 +629,60 @@ NtUserSetWindowFNID(DWORD Unknown0,
   UNIMPLEMENTED
 
   return 0;
+}
+
+DWORD STDCALL
+NtUserGetWindowLong(HWND hWnd, DWORD Index)
+{
+  PWINDOW_OBJECT WindowObject;
+  NTSTATUS Status;
+  DWORD Result;
+
+  DPRINT("NtUserGetWindowLong(hWnd %X, Index %d)\n", hWnd, Index);
+  
+  W32kGuiCheck();
+
+  Status = ObmReferenceObjectByHandle(PsGetWin32Process()->HandleTable,
+				      hWnd,
+				      otWindow,
+				      (PVOID*)&WindowObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtUserGetWindowLong(): Bad handle.\n");
+      return(0);
+    }
+
+  switch (Index)
+    {
+    case GWL_EXSTYLE:
+      {
+	Result = (DWORD)WindowObject->ExStyle;
+	break;
+      }
+
+    case GWL_STYLE:
+      {
+	Result = (DWORD)WindowObject->Style;
+	break;
+      }
+
+    case GWL_WNDPROC:
+      {
+	Result = (DWORD)WindowObject->Class->Class.lpfnWndProc;	
+	break;
+      }
+
+    default:
+      {
+	DPRINT1("NtUserGetWindowLong(): Unsupported index %d\n", Index);
+	Result = 0;
+	break;
+      }
+    }
+
+  ObmDereferenceObject(WindowObject);
+  DPRINT("NtUserGetWindowLong(): %X\n", Result);
+  return(Result);
 }
 
 DWORD STDCALL

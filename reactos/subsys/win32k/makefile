@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.44 2002/06/11 22:09:03 dwelch Exp $
+# $Id: makefile,v 1.45 2002/06/18 21:51:10 dwelch Exp $
 
 PATH_TO_TOP = ../..
 
@@ -70,6 +70,8 @@ TARGET_CLEAN = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
+
+main/dllmain.o: main/svctab.c
 
 .dummy:
 

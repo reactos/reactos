@@ -1,4 +1,4 @@
-/* $Id: callback.c,v 1.4 2002/01/15 00:43:17 dwelch Exp $
+/* $Id: callback.c,v 1.5 2002/06/18 21:51:09 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -32,6 +32,9 @@ KiUserCallbackDispatcher(ULONG RoutineIndex,
    
    Peb = NtCurrentPeb();
    Callback = (CALLBACK_FUNCTION)Peb->KernelCallbackTable[RoutineIndex];
+   DbgPrint("KiUserCallbackDispatcher(%d, %x, %d)\n", RoutineIndex,
+	    Argument, ArgumentLength);
    Status = Callback(Argument, ArgumentLength);
+   DbgPrint("KiUserCallbackDispatcher() finished.\n");
    ZwCallbackReturn(NULL, 0, Status);
 }

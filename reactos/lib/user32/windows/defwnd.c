@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.2 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: defwnd.c,v 1.3 2002/06/18 21:51:09 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -773,7 +773,13 @@ DefWindowProcA(HWND hWnd,
     {
     case WM_NCCREATE:
       {
-	
+	CREATESTRUCTA* Cs = (CREATESTRUCTA*)lParam;
+	if (HIWORD(Cs->lpszName))
+	  {
+	    /* FIXME: Set the window title. */
+	  }
+	Result = 1;
+	break;
       }
 
     case WM_NCCALCSIZE:
@@ -820,7 +826,13 @@ DefWindowProcW(HWND hWnd,
     {
     case WM_NCCREATE:
       {
-	
+	CREATESTRUCTW* Cs = (CREATESTRUCTW*)lParam;
+	if (HIWORD(Cs->lpszName))
+	  {
+	    /* FIXME: Set the window title. */
+	  }
+	Result = 1;
+	break;
       }
 
     case WM_NCCALCSIZE:

@@ -1,6 +1,9 @@
 #ifndef __WIN32K_NTUSER_H
 #define __WIN32K_NTUSER_H
 
+DWORD STDCALL
+NtUserGetWindowLong(HWND hWnd, DWORD Index);
+
 NTSTATUS
 STDCALL
 NtUserAcquireOrReleaseInputOwnership(

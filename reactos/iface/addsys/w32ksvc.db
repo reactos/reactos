@@ -401,6 +401,7 @@ NtUserGetUpdateRect                     3
 NtUserGetUpdateRgn                      3
 NtUserGetWindowDC                       1
 NtUserGetWindowPlacement                2
+NtUserGetWindowLong			2
 NtUserGetWOWClass                       2
 NtUserHideCaret                         1
 NtUserHiliteMenuItem                    4

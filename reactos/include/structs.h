@@ -364,6 +364,36 @@ typedef struct tagCREATESTRUCT {
   DWORD     dwExStyle;       
 } CREATESTRUCT, *LPCREATESTRUCT; 
  
+typedef struct tagCREATESTRUCTA { 
+  LPVOID    lpCreateParams;  
+  HINSTANCE hInstance;       
+  HMENU     hMenu;           
+  HWND      hwndParent;      
+  int       cy;              
+  int       cx;              
+  int       y;               
+  int       x;               
+  LONG      style;           
+  LPCSTR   lpszName;        
+  LPCSTR   lpszClass;       
+  DWORD     dwExStyle;       
+} CREATESTRUCTA, *LPCREATESTRUCTA; 
+
+typedef struct tagCREATESTRUCTW { 
+  LPVOID    lpCreateParams;  
+  HINSTANCE hInstance;       
+  HMENU     hMenu;           
+  HWND      hwndParent;      
+  int       cy;              
+  int       cx;              
+  int       y;               
+  int       x;               
+  LONG      style;           
+  LPCWSTR   lpszName;        
+  LPCWSTR   lpszClass;       
+  DWORD     dwExStyle;       
+} CREATESTRUCTW, *LPCREATESTRUCTW; 
+
 typedef struct tagCBT_CREATEWND {
   LPCREATESTRUCT lpcs; 
   HWND           hwndInsertAfter; 
