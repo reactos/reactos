@@ -514,9 +514,8 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
-; NIC drivers are like any other drivers - but no card-specific info here.  bind/route/export
-; should have one entry per child device object. 
-; Comment the networking stuff out if you don't have hte card and don't want to see errors
+; NIC drivers are like any other drivers - but no card-specific info here.
+; Comment the networking stuff out if you don't have the card and don't want to see errors
 ; NE2000 NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
@@ -524,12 +523,21 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Bind",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Export",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Linkage","Route",0x00010000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","0",0x00000000,"Root\POSVPN\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","NextInstance",0x00010001,0x00000001
+
+; Configuration Entries for the NE2000 Adapter
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Characteristics",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","DriverDesc",0x00000000,"Device Name(from Inffile)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","ProviderName",0x00000000,"Provider Name(from Inffile)"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","NetCfgInstanceId",0x00000000,"{RANDOMCFGGUIDFOR_NE20001}"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","Export",0x00000000,"\Device\Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","RootDevice",0x00000000,"Ne20001"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","UpperBind",0x00000000,"Tcpip"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Port",0x00000000,"280"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Irq",0x00000000,"9"
+HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","NetworkAddress",0x00000000,"001122334455"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
+HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; one day this will happen automatically; until then we need this since ndis5 drivers
 ; rely on the fact that their resources are handed to them by ndis, so we have to find
@@ -537,26 +545,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","NextInstance",0x00010001,0
 ;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
 ;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
 ;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-
-; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
-; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
-; for the parent driver plus a globally-increasing serial number (i.e. across all ndis miniports)
-; TODO: create this with NDI
-; NE2000 Adapter 1
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001","Type",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Bind",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Export",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Linkage","Route",0x00010000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Port",0x00000000,"280"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","Irq",0x00000000,"9"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","DwordTest",0x00000000,"baadf00d"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","StringTest",0x00000000,"StringTest"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters","NetworkAddress",0x00000000,"001122334455"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"10.0.0.1"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"10.0.0.100"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"255.255.255.0"
 
 ; PCI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
