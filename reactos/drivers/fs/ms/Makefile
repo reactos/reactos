@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2001/05/05 15:11:57 ekohl Exp $
+# $Id: Makefile,v 1.2 2001/05/06 19:28:50 ea Exp $
 #
 # Mailslot File System
 #
@@ -8,7 +8,7 @@ TARGETNAME=msfs
 
 OBJECTS = create.o finfo.o fsctrl.o msfs.o rw.o msfs.coff
 
-LIBS = ../../../ntoskrnl/ntoskrnl.a
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 all: $(TARGETNAME).sys
 
@@ -20,6 +20,14 @@ clean:
 	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
+
+$(FLOPPY_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys $(FLOPPY_DIR)/drivers/$(TARGETNAME).sys
+
+dist: $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
+
+$(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys: $(TARGETNAME).sys
+	$(CP) $(TARGETNAME).sys $(PATH_TO_TOP)/$(DIST_DIR)/drivers/$(TARGETNAME).sys
 
 $(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 	$(CC) \
@@ -50,6 +58,6 @@ $(TARGETNAME).sys: $(OBJECTS) $(LIBS)
 	$(RM) temp.exp
 	$(NM) --numeric-sort msfs.sys > msfs.sym
 
-msfs.coff: ../../../include/reactos/buildno.h msfs.rc
+msfs.coff: $(PATH_TO_TOP)/include/reactos/buildno.h msfs.rc
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak
