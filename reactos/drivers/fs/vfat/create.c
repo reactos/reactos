@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.57 2003/06/07 11:34:36 chorns Exp $
+/* $Id: create.c,v 1.58 2003/06/16 19:15:57 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -667,8 +667,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  return(STATUS_NOT_A_DIRECTORY);
 	}
 
-      if ((PagingFileCreate && !(pFcb->Flags & FCB_IS_PAGE_FILE)) ||
-	  (!PagingFileCreate && (pFcb->Flags & FCB_IS_PAGE_FILE)))
+      if (PagingFileCreate)
         {
 	  /* FIXME:
 	   *   Do more checking for page files. It is possible, 
@@ -678,8 +677,26 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	   *   is held in memory. Try to remove the fileobject 
 	   *   from cache manager and use the fcb.
 	   */
-	  VfatCloseFile(DeviceExt, FileObject);
-	  return(STATUS_INVALID_PARAMETER);
+          if (pFcb->RefCount > 1)
+	    {
+	      if(!(pFcb->Flags & FCB_IS_PAGE_FILE))
+	        {
+	          VfatCloseFile(DeviceExt, FileObject);
+	          return(STATUS_INVALID_PARAMETER);
+		}
+	    }
+	  else
+	    {
+	      pFcb->Flags |= FCB_IS_PAGE_FILE;
+	    }
+	}
+      else
+        {
+	  if (pFcb->Flags & FCB_IS_PAGE_FILE)
+	    {
+	      VfatCloseFile(DeviceExt, FileObject);
+	      return(STATUS_INVALID_PARAMETER);
+	    }
 	}
         
 
