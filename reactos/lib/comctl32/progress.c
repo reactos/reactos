@@ -121,15 +121,16 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
     else
         hbrBar = CreateSolidBrush (infoPtr->ColorBar);
 
-    if (infoPtr->ColorBk == CLR_DEFAULT)
-        hbrBk = GetSysColorBrush(COLOR_3DFACE);
-    else
-        hbrBk = CreateSolidBrush(infoPtr->ColorBk);
-
-    /* get client rectangle */
+    /* Draw the border */
     GetClientRect (infoPtr->Self, &rect);
-    FrameRect( hdc, &rect, hbrBk );
-    InflateRect(&rect, -1, -1);
+    SelectObject( hdc,  CreateSolidBrush( RGB(96, 96, 96) ) );
+    PatBlt( hdc, rect.left, rect.top, rect.right - rect.left, 1, PATCOPY );
+    PatBlt( hdc, rect.left, rect.top, 1, rect.bottom - rect.top, PATCOPY );
+    
+    SelectObject( hdc, CreateSolidBrush(RGB(255,255,255) ));
+    PatBlt( hdc, rect.left, rect.bottom-1, rect.right - rect.left, 1, PATCOPY );
+    PatBlt( hdc, rect.right-1, rect.top, 1, rect.bottom - rect.top, PATCOPY );
+    InflateRect(&rect, -2, -2);
 
     /* get the window style */
     dwStyle = GetWindowLongW (infoPtr->Self, GWL_STYLE);
@@ -151,7 +152,7 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
         rightMost = rect.right;
     }
 
-    /* now draw the bar */
+  
     if (dwStyle & PBS_SMOOTH)
     {
         if (dwStyle & PBS_VERTICAL)
