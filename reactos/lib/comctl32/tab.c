@@ -1060,7 +1060,7 @@ static void TAB_SetupScrolling(
  * list and ignores scrolling and selection.
  * It also uses the current font to determine the height of the tab row and
  * it checks if all the tabs fit in the client area of the window. If they
- * dont, a scrolling control is added.
+ * don't, a scrolling control is added.
  */
 static void TAB_SetItemBounds (HWND hwnd)
 {

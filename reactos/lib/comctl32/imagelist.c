@@ -1652,7 +1652,7 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
 
     if (uType == IMAGE_BITMAP) {
         BITMAP bmp;
-        GetObjectA (handle, sizeof(BITMAP), &bmp);
+        GetObjectW (handle, sizeof(BITMAP), &bmp);
 
         /* To match windows behavior, if cx is set to zero and
          the flag DI_DEFAULTSIZE is specified, cx becomes the

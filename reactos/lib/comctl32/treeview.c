@@ -1161,7 +1161,7 @@ TREEVIEW_DoSetItemT(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 static LRESULT
 TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL isW)
 {
-    const TVITEMEXW *tvItem = &ptdi->DUMMYUNIONNAME.itemex;
+    const TVITEMEXW *tvItem = &ptdi->u.itemex;
     HTREEITEM insertAfter;
     TREEVIEW_ITEM *newItem, *parentItem;
     BOOL bTextUpdated = FALSE;
@@ -1440,8 +1440,7 @@ TREEVIEW_RemoveTree(TREEVIEW_INFO *infoPtr)
 static LRESULT
 TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM wineItem)
 {
-    TREEVIEW_ITEM *oldSelection = infoPtr->selectedItem;
-    TREEVIEW_ITEM *newSelection = oldSelection;
+    TREEVIEW_ITEM *newSelection = NULL;
     TREEVIEW_ITEM *newFirstVisible = NULL;
     TREEVIEW_ITEM *parent, *prev = NULL;
     BOOL visible = FALSE;
@@ -1476,6 +1475,9 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM wineItem)
 		newSelection = wineItem->nextSibling;
 	    else if (wineItem->parent != infoPtr->root)
 		newSelection = wineItem->parent;
+            else
+                newSelection = wineItem->prevSibling;
+            TRACE("newSelection = %p\n", newSelection);
 	}
 
 	if (infoPtr->firstVisible == wineItem)
@@ -1494,13 +1496,11 @@ TREEVIEW_DeleteItem(TREEVIEW_INFO *infoPtr, HTREEITEM wineItem)
 	TREEVIEW_RemoveItem(infoPtr, wineItem);
     }
 
-    /* Don't change if somebody else already has. */
-    if (oldSelection == infoPtr->selectedItem)
+    /* Don't change if somebody else already has (infoPtr->selectedItem is cleared by FreeItem). */
+    if (!infoPtr->selectedItem && newSelection)
     {
 	if (TREEVIEW_ValidItem(infoPtr, newSelection))
 	    TREEVIEW_DoSelectItem(infoPtr, TVGN_CARET, newSelection, TVC_UNKNOWN);
-	else
-	    infoPtr->selectedItem = 0;
     }
 
     /* Validate insertMark dropItem.

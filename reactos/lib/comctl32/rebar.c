@@ -2090,25 +2090,42 @@ REBAR_ValidateBand (REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
 
 }
 
-static void
+static BOOL
 REBAR_CommonSetupBand (HWND hwnd, LPREBARBANDINFOA lprbbi, REBAR_BAND *lpBand)
      /* Function:  This routine copies the supplied values from   */
      /*  user input (lprbbi) to the internal band structure.      */
+     /*  It returns true if something changed and false if not.   */
 {
+    BOOL bChanged = FALSE;
+
     lpBand->fMask |= lprbbi->fMask;
 
-    if (lprbbi->fMask & RBBIM_STYLE)
+    if( (lprbbi->fMask & RBBIM_STYLE) &&
+        (lpBand->fStyle != lprbbi->fStyle ) )
+    {
 	lpBand->fStyle = lprbbi->fStyle;
-
-    if (lprbbi->fMask & RBBIM_COLORS) {
-	lpBand->clrFore = lprbbi->clrFore;
-	lpBand->clrBack = lprbbi->clrBack;
+        bChanged = TRUE;
     }
 
-    if (lprbbi->fMask & RBBIM_IMAGE)
-	lpBand->iImage = lprbbi->iImage;
+    if( (lprbbi->fMask & RBBIM_COLORS) &&
+       ( ( lpBand->clrFore != lprbbi->clrFore ) ||
+         ( lpBand->clrBack != lprbbi->clrBack ) ) )
+    {
+	lpBand->clrFore = lprbbi->clrFore;
+	lpBand->clrBack = lprbbi->clrBack;
+        bChanged = TRUE;
+    }
 
-    if (lprbbi->fMask & RBBIM_CHILD) {
+    if( (lprbbi->fMask & RBBIM_IMAGE) &&
+       ( lpBand->iImage != lprbbi->iImage ) )
+    {
+	lpBand->iImage = lprbbi->iImage;
+        bChanged = TRUE;
+    }
+
+    if( (lprbbi->fMask & RBBIM_CHILD) &&
+       (lprbbi->hwndChild != lpBand->hwndChild ) )
+    {
 	if (lprbbi->hwndChild) {
 	    lpBand->hwndChild = lprbbi->hwndChild;
 	    lpBand->hwndPrevParent =
@@ -2123,9 +2140,21 @@ REBAR_CommonSetupBand (HWND hwnd, LPREBARBANDINFOA lprbbi, REBAR_BAND *lpBand)
 	    lpBand->hwndChild = 0;
 	    lpBand->hwndPrevParent = 0;
 	}
+        bChanged = TRUE;
     }
 
-    if (lprbbi->fMask & RBBIM_CHILDSIZE) {
+    if( (lprbbi->fMask & RBBIM_CHILDSIZE) &&
+        ( (lpBand->cxMinChild != lprbbi->cxMinChild) ||
+          (lpBand->cyMinChild != lprbbi->cyMinChild ) ||
+          ( (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) &&
+            ( (lpBand->cyChild    != lprbbi->cyChild ) ||
+              (lpBand->cyMaxChild != lprbbi->cyMaxChild ) ||
+              (lpBand->cyIntegral != lprbbi->cyIntegral ) ) ) ||
+          ( (lprbbi->cbSize < sizeof (REBARBANDINFOA)) &&
+            ( (lpBand->cyChild || 
+               lpBand->cyMaxChild || 
+               lpBand->cyIntegral ) ) ) ) )
+    {
 	lpBand->cxMinChild = lprbbi->cxMinChild;
 	lpBand->cyMinChild = lprbbi->cyMinChild;
 	if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
@@ -2139,28 +2168,55 @@ REBAR_CommonSetupBand (HWND hwnd, LPREBARBANDINFOA lprbbi, REBAR_BAND *lpBand)
 	    lpBand->cyMaxChild = 0;
 	    lpBand->cyIntegral = 0;
 	}
+        bChanged = TRUE;
     }
 
-    if (lprbbi->fMask & RBBIM_SIZE)
+    if( (lprbbi->fMask & RBBIM_SIZE) &&
+        (lpBand->cx != lprbbi->cx ) )
+    {
 	lpBand->cx = lprbbi->cx;
+        bChanged = TRUE;
+    }
 
-    if (lprbbi->fMask & RBBIM_BACKGROUND)
+    if( (lprbbi->fMask & RBBIM_BACKGROUND) &&
+       ( lpBand->hbmBack != lprbbi->hbmBack ) )
+    {
 	lpBand->hbmBack = lprbbi->hbmBack;
+        bChanged = TRUE;
+    }
 
-    if (lprbbi->fMask & RBBIM_ID)
+    if( (lprbbi->fMask & RBBIM_ID) &&
+        (lpBand->wID != lprbbi->wID ) )
+    {
 	lpBand->wID = lprbbi->wID;
+        bChanged = TRUE;
+    }
 
     /* check for additional data */
     if (lprbbi->cbSize >= sizeof (REBARBANDINFOA)) {
-	if (lprbbi->fMask & RBBIM_IDEALSIZE)
+	if( (lprbbi->fMask & RBBIM_IDEALSIZE) &&
+            ( lpBand->cxIdeal != lprbbi->cxIdeal ) )
+        {
 	    lpBand->cxIdeal = lprbbi->cxIdeal;
+            bChanged = TRUE;
+        }
 
-	if (lprbbi->fMask & RBBIM_LPARAM)
+	if( (lprbbi->fMask & RBBIM_LPARAM) &&
+            (lpBand->lParam != lprbbi->lParam ) )
+        {
 	    lpBand->lParam = lprbbi->lParam;
+            bChanged = TRUE;
+        }
 
-	if (lprbbi->fMask & RBBIM_HEADERSIZE)
+	if( (lprbbi->fMask & RBBIM_HEADERSIZE) &&
+            (lpBand->cxHeader != lprbbi->cxHeader ) )
+        {
 	    lpBand->cxHeader = lprbbi->cxHeader;
+            bChanged = TRUE;
+        }
     }
+
+    return bChanged;
 }
 
 static LRESULT
@@ -3430,11 +3486,19 @@ REBAR_MoveBand (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 }
 
 
+/* return TRUE if two strings are different */
+static BOOL
+REBAR_strdifW( LPCWSTR a, LPCWSTR b )
+{
+    return ( (a && !b) || (b && !a) || (a && b && lstrcmpW(a, b) ) );
+}
+
 static LRESULT
 REBAR_SetBandInfoA (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     LPREBARBANDINFOA lprbbi = (LPREBARBANDINFOA)lParam;
     REBAR_BAND *lpBand;
+    BOOL bChanged;
 
     if (lprbbi == NULL)
 	return FALSE;
@@ -3449,27 +3513,39 @@ REBAR_SetBandInfoA (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     /* set band information */
     lpBand = &infoPtr->bands[(UINT)wParam];
 
-    REBAR_CommonSetupBand (infoPtr->hwndSelf, lprbbi, lpBand);
+    bChanged = REBAR_CommonSetupBand (infoPtr->hwndSelf, lprbbi, lpBand);
     if (lprbbi->fMask & RBBIM_TEXT) {
-	if (lpBand->lpText) {
-	    Free (lpBand->lpText);
-	    lpBand->lpText = NULL;
-	}
-	if (lprbbi->lpText) {
-            INT len = MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, NULL, 0 );
+        LPWSTR wstr = NULL;
+
+        if (lprbbi->lpText)
+        {
+            INT len;
+            len = MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, NULL, 0 );
             if (len > 1)
-            {
-                lpBand->lpText = (LPWSTR)Alloc (len*sizeof(WCHAR));
-                MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, lpBand->lpText, len );
-            }
-	}
+                wstr = (LPWSTR)Alloc (len*sizeof(WCHAR));
+            if (wstr)
+                MultiByteToWideChar( CP_ACP, 0, lprbbi->lpText, -1, wstr, len );
+        }
+        if (REBAR_strdifW(lpBand->lpText, wstr)) {
+	    if (lpBand->lpText) {
+	        Free (lpBand->lpText);
+	        lpBand->lpText = NULL;
+	    }
+	    if (wstr) {
+                lpBand->lpText = wstr;
+                wstr = NULL;
+	    }
+            bChanged = TRUE;
+        }
+        if (wstr)
+	    Free (wstr);
     }
 
     REBAR_ValidateBand (infoPtr, lpBand);
 
     REBAR_DumpBand (infoPtr);
 
-    if (lprbbi->fMask & (RBBIM_CHILDSIZE | RBBIM_SIZE)) {
+    if (bChanged && (lprbbi->fMask & (RBBIM_CHILDSIZE | RBBIM_SIZE))) {
 	  REBAR_Layout (infoPtr, NULL, TRUE, FALSE);
 	  InvalidateRect(infoPtr->hwndSelf, 0, 1);
     }
@@ -3477,12 +3553,12 @@ REBAR_SetBandInfoA (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     return TRUE;
 }
 
-
 static LRESULT
 REBAR_SetBandInfoW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
     LPREBARBANDINFOW lprbbi = (LPREBARBANDINFOW)lParam;
     REBAR_BAND *lpBand;
+    BOOL bChanged;
 
     if (lprbbi == NULL)
 	return FALSE;
@@ -3497,8 +3573,9 @@ REBAR_SetBandInfoW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     /* set band information */
     lpBand = &infoPtr->bands[(UINT)wParam];
 
-    REBAR_CommonSetupBand (infoPtr->hwndSelf, (LPREBARBANDINFOA)lprbbi, lpBand);
-    if (lprbbi->fMask & RBBIM_TEXT) {
+    bChanged = REBAR_CommonSetupBand (infoPtr->hwndSelf, (LPREBARBANDINFOA)lprbbi, lpBand);
+    if( (lprbbi->fMask & RBBIM_TEXT) && 
+        REBAR_strdifW( lpBand->lpText, lprbbi->lpText ) ) {
 	if (lpBand->lpText) {
 	    Free (lpBand->lpText);
 	    lpBand->lpText = NULL;
@@ -3511,13 +3588,14 @@ REBAR_SetBandInfoW (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	        strcpyW (lpBand->lpText, lprbbi->lpText);
 	    }
 	}
+        bChanged = TRUE;
     }
 
     REBAR_ValidateBand (infoPtr, lpBand);
 
     REBAR_DumpBand (infoPtr);
 
-    if (lprbbi->fMask & (RBBIM_CHILDSIZE | RBBIM_SIZE)) {
+    if ( bChanged && (lprbbi->fMask & (RBBIM_CHILDSIZE | RBBIM_SIZE)) ) {
       REBAR_Layout (infoPtr, NULL, TRUE, FALSE);
       InvalidateRect(infoPtr->hwndSelf, 0, 1);
     }

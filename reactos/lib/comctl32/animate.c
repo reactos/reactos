@@ -899,10 +899,15 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
         {
             ANIMATE_INFO* infoPtr = ANIMATE_GetInfoPtr(hWnd);
 
-            /* the animation isn't playing, don't paint */
-	    if(!infoPtr->uTimer && !infoPtr->hThread)
-		/* default paint handling */
-	    	return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+            /* the animation isn't playing, or has not decompressed
+             * (and displayed) the first frame yet, don't paint
+             */
+            if ((!infoPtr->uTimer && !infoPtr->hThread) ||
+                !infoPtr->hbmPrevFrame)
+            {
+                /* default paint handling */
+                return DefWindowProcA(hWnd, uMsg, wParam, lParam);
+            }
 
             if (GetWindowLongA(hWnd, GWL_STYLE) & ACS_TRANSPARENT)
                 infoPtr->hbrushBG = (HBRUSH)SendMessageA(infoPtr->hwndNotify,
