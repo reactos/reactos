@@ -294,9 +294,9 @@ void SaveGraphicsStateVga(void)
 {
 #ifdef LOCAL_CONSOLE
     // copy the screen content to temp area
-    memcpy(pScreenBufferTempVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferTempVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
     // copy the console to the screen
-    memcpy(pScreenBufferHardwareVga,pScreenBufferVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferVga,FRAMEBUFFER_SIZE);
     // save original pointer
     pScreenBufferSaveVga = pScreenBufferVga;
     // pScreenBufferVga now points to screen
@@ -330,9 +330,9 @@ void RestoreGraphicsStateVga(void)
 #ifdef LOCAL_CONSOLE
     pScreenBufferVga = pScreenBufferSaveVga;
     // copy screen to the console
-    memcpy(pScreenBufferVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferVga,pScreenBufferHardwareVga,FRAMEBUFFER_SIZE);
     // copy the temp area to the screen
-    memcpy(pScreenBufferHardwareVga,pScreenBufferTempVga,FRAMEBUFFER_SIZE);
+    PICE_memcpy(pScreenBufferHardwareVga,pScreenBufferTempVga,FRAMEBUFFER_SIZE);
 
     // restore video RAM start address
     outb_p(0xc,0x3d4);

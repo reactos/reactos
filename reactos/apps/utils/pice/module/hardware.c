@@ -244,7 +244,7 @@ BOOLEAN AddToRingBuffer(LPSTR p)
     // reduce to maximum
     if( (len+j) > sizeof(aBuffers[0])-2 )
     {
-        memcpy(temp,p,sizeof(aBuffers[0])-2);
+        PICE_memcpy(temp,p,sizeof(aBuffers[0])-2);
         p = temp;
         // assume we end in NEWLINE
         p[sizeof(aBuffers[0])-2]='\n';
@@ -916,7 +916,7 @@ void RestoreGraphicsState(void)
 //*************************************************************************
 void SetWindowGeometry(PVOID pWindow)
 {
-    memcpy(wWindow,pWindow,sizeof(wWindow));
+    PICE_memcpy(wWindow,pWindow,sizeof(wWindow));
 }
 
 // INPUT handlers

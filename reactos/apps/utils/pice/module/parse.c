@@ -1828,7 +1828,7 @@ COMMAND_PROTOTYPE(Unassemble)
             {
                 LONG len = PICE_strlen(tempCmd);
                 if(ulWindowOffset < len)
-                    memcpy(tempCmd,&tempCmd[ulWindowOffset],len-ulWindowOffset);
+                    PICE_memcpy(tempCmd,&tempCmd[ulWindowOffset],len-ulWindowOffset);
                 else
                     tempCmd[0]='\n';
             }

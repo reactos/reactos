@@ -31,10 +31,8 @@ Copyright notice:
 #define FRAMEBUFFER_SIZE (0x8000)
 #define LINES_IN_BUFFER (2048)
 
-#define REAL_LINUX_VERSION_CODE LINUX_VERSION_CODE
-
 #include "retypes.h"
-#include <asm/segment.h>
+//#include <asm/segment.h>
 #include "../shared/shared.h"
 #include "debug.h"
 #include "hardware.h" 

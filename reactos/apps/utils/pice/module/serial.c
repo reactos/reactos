@@ -307,7 +307,7 @@ PSERIAL_PACKET AssemblePacket(PUCHAR pData,ULONG ulSize)
     ulCheckSum = (ULONG)CheckSum((PUCHAR)p,sizeof(SERIAL_PACKET_HEADER));
     p->header.packet_header_chksum = ulCheckSum;
     // attach data to packet
-    memcpy(p->data,pData,ulSize); 
+    PICE_memcpy(p->data,pData,ulSize); 
         
     return p;
 }

@@ -196,9 +196,9 @@ char* PICE_strncpy(char* s1,char* s2,int len)
 	ULONG len2 =  PICE_strlen(s2);
 
 	if(len<len2)
-		memcpy(s1,s2,len2+1);
+		PICE_memcpy(s1,s2,len2+1);
 	else
-		memcpy(s1,s2,len);
+		PICE_memcpy(s1,s2,len);
 	
 	return s1;
 }
@@ -211,7 +211,7 @@ char* PICE_strcpy(char* s1,char* s2)
 {
 	ULONG len2 =  PICE_strlen(s2);
 
-	memcpy(s1,s2,len2+1);
+	PICE_memcpy(s1,s2,len2+1);
 	
 	return s1;
 }
@@ -225,7 +225,7 @@ char* PICE_strcat(char* s1,char* s2)
 	ULONG len1 = PICE_strlen(s1);
 	ULONG len2 = PICE_strlen(s2);
 
-	memcpy(&s1[len1],s2,len2+1);
+	PICE_memcpy(&s1[len1],s2,len2+1);
 	
 	return s1;
 }
