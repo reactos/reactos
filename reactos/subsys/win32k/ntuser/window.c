@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.119 2003/10/25 22:57:34 navaraf Exp $
+/* $Id: window.c,v 1.120 2003/10/28 12:21:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2845,7 +2845,8 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 	return FALSE;
 
     /* move shell window into background */
-    if (hwndListView && hwndListView!=hwndShell) {
+    if (hwndListView && hwndListView!=hwndShell)
+    {
         WinPosSetWindowPos(hwndListView, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
 	if (NtUserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
@@ -2853,7 +2854,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
     }
 
     if (NtUserGetWindowLong(hwndShell, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
-	return FALSE;
+        return FALSE;
 
     WinPosSetWindowPos(hwndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 

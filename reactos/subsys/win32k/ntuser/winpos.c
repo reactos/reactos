@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.36 2003/10/23 09:07:54 gvg Exp $
+/* $Id: winpos.c,v 1.37 2003/10/28 12:21:36 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -662,7 +662,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       flags |= SWP_NOMOVE;
     }
-  if (Window->Style & WIN_NCACTIVATED)
+  if (Window->Flags & WIN_NCACTIVATED)
     {
       flags |= SWP_NOACTIVATE;
     }
@@ -682,7 +682,23 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
   if (WndInsertAfter != HWND_TOP && WndInsertAfter != HWND_BOTTOM)
     {
-      /* FIXME: Find the window to insert after. */
+      if (NtUserGetAncestor(WndInsertAfter, GA_PARENT) != Window->Parent)
+        {
+          SetLastWin32Error(ERROR_INVALID_PARAMETER);
+          return FALSE;
+        }
+      else
+        {
+          /*
+           * Don't need to change the Zorder of hwnd if it's already inserted
+           * after hwndInsertAfter or when inserting hwnd after itself.
+           */
+           if (Wnd == WndInsertAfter ||
+               Wnd == NtUserGetWindow(WndInsertAfter, GW_HWNDNEXT))
+             {
+               flags |= SWP_NOZORDER;
+             }
+        }
     }
 
   WinPos.hwnd = Wnd;
@@ -701,9 +717,12 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
   if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
-      SWP_NOZORDER)
+      SWP_NOZORDER &&
+      NtUserGetAncestor(WinPos.hwnd, GA_PARENT) ==
+      PsGetWin32Thread()->Desktop->DesktopWindow)
     {
-      /* FIXME: SWP_DoOwnedPopups. */
+/* FIXME */
+/*      WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);*/
     }
   
   /* FIXME: Adjust flags based on WndInsertAfter */
@@ -737,46 +756,29 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
   /*
    * FIXME: Relink windows. (also take into account shell window in hwndShellWindow)
    */
-  if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwndInsertAfter != WinPos.hwnd)
+  if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwndInsertAfter != WinPos.hwnd &&
+      Window->Self != NtUserGetShellWindow())
     {
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT InsertAfterWindow;
 
       ParentWindow = IntGetWindowObject(Window->ParentHandle);
-      if (WndInsertAfter == HWND_TOP)
-      {
-         InsertAfterWindow = NULL;
-      }
-      else if (WndInsertAfter != HWND_BOTTOM)
-      {
-         InsertAfterWindow = ParentWindow->LastChild;
-      }
-      else
-      {
-         InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
-      }
-
-      if (InsertAfterWindow != NULL &&
-          InsertAfterWindow->ParentHandle != Window->ParentHandle)
+      if (ParentWindow)
         {
-          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          IntUnlinkWindow(Window);
-          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          ParentWindow = IntGetWindowObject(InsertAfterWindow->ParentHandle);
-          ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-          IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
-          ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
-        }
-      else
-        {
+          if (WndInsertAfter == HWND_TOP)
+            InsertAfterWindow = NULL;
+          else if (WndInsertAfter == HWND_BOTTOM)
+            InsertAfterWindow = ParentWindow->LastChild;
+          else
+            InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
           ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
           IntUnlinkWindow(Window);
           IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
           ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
+          IntReleaseWindowObject(ParentWindow);
+          if (InsertAfterWindow != NULL)
+            IntReleaseWindowObject(InsertAfterWindow);
         }
-
-      IntReleaseWindowObject(ParentWindow);
-      IntReleaseWindowObject(InsertAfterWindow);
     }
 
   /* FIXME: Reset active DCEs */
