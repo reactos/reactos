@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.38 2004/10/30 14:02:01 navaraf Exp $
+/* $Id: rtl.h,v 1.39 2004/11/25 19:22:07 ekohl Exp $
  * 
  */
 #ifndef __DDK_RTL_H
@@ -383,13 +383,10 @@ RtlAppendUnicodeToString (
 	PWSTR		Source
 	);
 
-ULONG
-STDCALL
-RtlCompareMemory (
-	PVOID	Source1,
-	PVOID	Source2,
-	ULONG	Length
-	);
+SIZE_T STDCALL
+RtlCompareMemory(IN const VOID *Source1,
+                 IN const VOID *Source2,
+                 IN SIZE_T Length);
 
 BOOLEAN
 STDCALL
@@ -722,11 +719,10 @@ RtlClearBits (
 	IN	ULONG		NumberToClear
 	);
 
-DWORD
-STDCALL
+ULONG STDCALL
 RtlCompactHeap (
-	HANDLE	hheap,
-	DWORD	flags
+	HANDLE Heap,
+	ULONG	Flags
 	);
 
 LONG
@@ -964,7 +960,7 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 NTSTATUS STDCALL
 RtlDestroyAtomTable (IN PRTL_ATOM_TABLE AtomTable);
 
-BOOL STDCALL
+BOOLEAN STDCALL
 RtlDestroyHeap (HANDLE hheap);
 
 NTSTATUS
@@ -1951,11 +1947,8 @@ RtlLockBootStatusData(
 	HANDLE Filehandle
 	);
 
-BOOL
-STDCALL
-RtlLockHeap (
-	HANDLE	hheap
-	);
+BOOLEAN STDCALL
+RtlLockHeap (IN HANDLE Heap);
 
 NTSTATUS STDCALL
 RtlLookupAtomInAtomTable (IN PRTL_ATOM_TABLE AtomTable,
@@ -2159,7 +2152,8 @@ RtlQueryTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
 VOID STDCALL
 RtlRaiseException (IN PEXCEPTION_RECORD ExceptionRecord);
 
-VOID STDCALL RtlRaiseStatus(NTSTATUS Status);
+VOID STDCALL
+RtlRaiseStatus(NTSTATUS Status);
 
 ULONG STDCALL
 RtlRandom (PULONG Seed);
@@ -2182,13 +2176,12 @@ RtlRealSuccessor (
 	PRTL_SPLAY_LINKS Links
 	);
 
-LPVOID
-STDCALL
+PVOID STDCALL
 RtlReAllocateHeap (
-	HANDLE	hheap,
-	DWORD	flags,
-	LPVOID	ptr,
-	DWORD	size
+	HANDLE Heap,
+	ULONG Flags,
+	PVOID Ptr,
+	ULONG Size
 	);
 
 VOID
@@ -2326,8 +2319,7 @@ RtlSetInformationAcl (PACL Acl,
 NTSTATUS STDCALL
 RtlSetTimeZoneInformation (IN OUT PTIME_ZONE_INFORMATION TimeZoneInformation);
 
-ULONG
-STDCALL
+ULONG STDCALL
 RtlSizeHeap(
 	IN PVOID HeapHandle, 
 	IN ULONG Flags, 
@@ -2538,11 +2530,8 @@ RtlUnicodeToOemN (
 ULONG STDCALL
 RtlUniform (PULONG Seed);
 
-BOOL
-STDCALL
-RtlUnlockHeap (
-	HANDLE	hheap
-	);
+BOOLEAN STDCALL
+RtlUnlockHeap (IN HANDLE Heap);
 
 NTSTATUS
 STDCALL
@@ -2641,11 +2630,10 @@ RtlUshortByteSwap (IN USHORT Source);
 BOOLEAN STDCALL
 RtlValidAcl (PACL Acl);
 
-BOOL
-STDCALL
+BOOLEAN STDCALL
 RtlValidateHeap (
-	HANDLE	hheap,
-	DWORD	flags,
+	HANDLE Heap,
+	ULONG	Flags,
 	PVOID	pmem
 	);
 
@@ -2688,8 +2676,7 @@ RtlWalkFrameChain (
 	IN ULONG Flags
 	);
 
-ULONG
-STDCALL
+BOOLEAN STDCALL
 RtlZeroHeap(
     IN PVOID HeapHandle,
     IN ULONG Flags
