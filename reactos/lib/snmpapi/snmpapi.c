@@ -7,7 +7,29 @@
  * REVISIONS:
  *   RDD August 18, 2002 Created
  */
-#include "snmpapi.h"
+//#include "snmpapi.h"
+
+
+#ifdef __GNUC__
+#include <wsahelp.h>
+#else
+#include <winsock2.h>
+#endif
+#include <windows.h>
+
+#ifdef __GNUC__
+#define SNMP_FUNC_TYPE STDCALL
+#endif
+#include <snmp.h>
+#include "debug.h"
+
+
+#ifdef __GNUC__
+#define EXPORT STDCALL
+#else
+#define EXPORT CALLBACK
+#endif
+
 
 #ifdef DBG
 
