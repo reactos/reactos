@@ -628,6 +628,7 @@ HRESULT WINAPI StringFromCLSID(
             *idstr = IMalloc_Alloc( mllc, len * sizeof(WCHAR) );
             MultiByteToWideChar( CP_ACP, 0, buf, -1, *idstr, len );
 	}
+	IMalloc_Release ( mllc );
 	return ret;
 }
 
