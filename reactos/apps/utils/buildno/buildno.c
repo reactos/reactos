@@ -1,16 +1,18 @@
-/* $Id: buildno.c,v 1.2 1999/12/26 20:21:02 ea Exp $
+/* $Id: buildno.c,v 1.3 2000/01/22 14:25:48 ea Exp $
  *
  * buildno - Generate the build number for ReactOS
  *
- * Copyright (c) 1999 Emanuele Aliberti
+ * Copyright (c) 1999,2000 Emanuele Aliberti
  *
+ * License: GNU GPL
  *
  * It assumes the last release date is defined in
  * <reactos/version.h> as a macro named
  *
  * KERNEL_RELEASE_DATE
  *
- * as a 32-bit unsigned long YYYYMMDD (UTC).
+ * as a 32-bit unsigned long YYYYMMDD (UTC;
+ * MM=01-12; DD=01-31).
  *
  * The build number is the number of full days
  * elapsed since the last release date (UTC).
@@ -18,8 +20,15 @@
  * The build number is stored in the file
  * <reactos/buildno.h> as a set of macros:
  *
- * KERNEL_VERSION_BUILD
- * KERNEL_VERSION_BUILD_STR
+ * KERNEL_VERSION_BUILD		base 10 number
+ * KERNEL_VERSION_BUILD_STR	C string
+ * KERNEL_VERSION_BUILD_RC	RC string
+ *
+ * REVISIONS
+ * ---------
+ * 2000-01-22 (ea)
+ * 	Fixed bugs: tm_year is (current_year - 1900),
+ * 	tm_month is 0-11 not 1-12 and code ignored TZ.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,6 +42,22 @@
 #define BUILDNO_INCLUDE_FILE "../../include/reactos/buildno.h"
 
 static char * argv0 = "";
+
+#ifdef DBG
+void
+tm_dump (const char *tag, struct tm * t)
+{
+	printf ("%s->tm_sec   = %d\n", tag, t->tm_sec);
+	printf ("%s->tm_min   = %d\n", tag, t->tm_min);
+	printf ("%s->tm_hour  = %d\n", tag, t->tm_hour);
+	printf ("%s->tm_mday  = %d\n", tag, t->tm_mday);
+	printf ("%s->tm_mon   = %d\n", tag, t->tm_mon);
+	printf ("%s->tm_year  = %d\n", tag, t->tm_year);
+	printf ("%s->tm_wday  = %d\n", tag, t->tm_wday);
+	printf ("%s->tm_yday  = %d\n", tag, t->tm_yday);
+	printf ("%s->tm_isdst = %d\n\n", tag, t->tm_isdst);
+}
+#endif
 
 
 int
@@ -131,7 +156,7 @@ usage (void)
 {
 	fprintf (
 		stderr,
-		"Usage: %s [-q]\n",
+		"Usage: %s [-q]\n\n  -q  quiet mode\n",
 		argv0
 		);
 	exit (EXIT_SUCCESS);
@@ -180,6 +205,10 @@ main (int argc, char * argv [])
 			usage ();
 	}
 	/*
+	 * Set TZ information.
+	 */
+	tzset ();
+	/*
 	 * We are building TODAY!
 	 */
 	time (& t0);
@@ -209,25 +238,50 @@ Last release: %4d-%02d-%02d\n",
 			day
 			);
 	}
-	t0_tm.tm_year = year - ((year > 1999) ? 2000 : 1900);
-	t0_tm.tm_mon = month;
+#ifdef DBG
+	tm_dump ("t0", & t0_tm);
+#endif
+	t0_tm.tm_year = (year - 1900);
+	t0_tm.tm_mon = --month; /* 0-11 */
 	t0_tm.tm_mday = day;
+	t0_tm.tm_hour = 0;
+	t0_tm.tm_min = 0;
+	t0_tm.tm_sec = 1;
+	t0_tm.tm_isdst = -1;
 	
-	t0 = mktime (& t0_tm);
+#ifdef DBG
+	tm_dump ("t0", & t0_tm);
+#endif
+
+	if (-1 == (t0 = mktime (& t0_tm)))
+	{
+		fprintf (
+			stderr,
+			"%s: can not convert release date!\n",
+			argv[0]
+			);
+		return EXIT_FAILURE;
+	}
 
 	time (& t1); /* current build time */
 	t1_tm = gmtime (& t1);
 
+#ifdef DBG
+	tm_dump ("t1", t1_tm);
+#endif
 	t1_tm->tm_year +=
 		(t1_tm->tm_year < 70)
 		? 2000
 		: 1900;
+#ifdef DBG
+	tm_dump ("t1", t1_tm);
+#endif
 	if (FALSE == quiet)
 	{
 		printf ( 
 			"Current date: %4d-%02d-%02d\n\n",
 			t1_tm->tm_year,
-			t1_tm->tm_mon,
+			(t1_tm->tm_mon + 1),
 			t1_tm->tm_mday
 			);
 	}
