@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.2 1999/05/23 07:41:33 ea Exp $
+# $Id: makefile,v 1.3 1999/05/24 20:04:44 ea Exp $
 #
 # Makefile for ReactOS gdi32.dll
 #
@@ -18,7 +18,7 @@ all: $(DLLTARGET)
 
 MAIN_OBJECTS = main/dllmain.o
 
-MISC_OBJECTS = misc/stubs.o
+MISC_OBJECTS = misc/stubs.o misc/stubsa.o misc/stubsw.o
 
 RESOURCE_OBJECTS = $(TARGET).coff
 
@@ -33,11 +33,11 @@ $(TARGET).coff: $(TARGET).rc
 $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 	$(LD) -r $(OBJECTS) -o $(TARGET).o
 	$(DLLTOOL) \
-		--dllname $(TARGET).dll 	
+		--dllname $(TARGET).dll \
 		--def $(TARGET).def \
 		--output-lib $(TARGET).a
 	$(CC) $(TARGET).o \
-		../ntdll/ntdll.a\
+		../kernel32/kernel32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
@@ -50,16 +50,30 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).def
 	- $(RM) base.tmp
 	$(CC) $(TARGET).o \
-		../ntdll/ntdll.a \
+		../kernel32/kernel32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
-		-o $(TARGET).dll 
+		-o $(TARGET).dll \
 		-Wl,--image-base,0x70000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,temp.exp
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET).dll > $(TARGET).sym
+
+ifeq ($(DOSCLI),yes)
+CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main\*.o misc\*.o
+else
+CLEAN_FILES = *.o *.coff *.sym *.tmp *.dll main/*.o misc/*.o
+endif
+
+clean: $(CLEAN_FILES:%=%_clean)
+
+$(CLEAN_FILES:%=%_clean): %_clean:
+	- $(RM) $*
+
+.PHONY: clean $(CLEAN_FILES:%=%_clean)
+
 
 include ../../rules.mak
 

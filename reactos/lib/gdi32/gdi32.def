@@ -1,4 +1,4 @@
-; $Id: gdi32.def,v 1.1 1999/05/23 07:41:33 ea Exp $
+; $Id: gdi32.def,v 1.2 1999/05/24 20:04:44 ea Exp $
 ;
 ; gdi32.def
 ;
@@ -79,9 +79,8 @@ EXPORTS
 	DeleteMetaFile		= DeleteMetaFile@4
 	DeleteObject		= DeleteObject@4
 	DescribePixelFormat	= DescribePixelFormat@16
-	DeviceCapabilitiesEx	= DeviceCapabilitiesEx@24
-	DeviceCapabilitiesExA	= DeviceCapabilitiesExA@24
-	DeviceCapabilitiesExW	= DeviceCapabilitiesExW@24
+	DeviceCapabilitiesExA	= DeviceCapabilitiesExA@20
+	DeviceCapabilitiesExW	= DeviceCapabilitiesExW@20
 	DrawEscape		= DrawEscape@16
 	Ellipse			= Ellipse@20
 	EndDoc			= EndDoc@4
@@ -164,14 +163,14 @@ EXPORTS
 	GetFontLanguageInfo	= GetFontLanguageInfo@4
 	GetFontResourceInfo	= GetFontResourceInfo@16
 	GetFontResourceInfoW	= GetFontResourceInfoW@16
-	GetGlyphOutline		= GetGlyphOutline@28
+	GetGlyphOutline		= GetGlyphOutlineA@28
 	GetGlyphOutlineA	= GetGlyphOutlineA@28
 	GetGlyphOutlineW	= GetGlyphOutlineW@28
 	GetGlyphOutlineWow	= GetGlyphOutlineWow@28
 	GetGraphicsMode		= GetGraphicsMode@4
 	GetICMProfileA		= GetICMProfileA@12
 	GetICMProfileW		= GetICMProfileW@12
-	GetKerningPairs		= GetKerningPairs@12
+	GetKerningPairs		= GetKerningPairsA@12
 	GetKerningPairsA	= GetKerningPairsA@12
 	GetKerningPairsW	= GetKerningPairsW@12
 	GetLogColorSpaceA	= GetLogColorSpaceA@12
@@ -336,6 +335,7 @@ EXPORTS
 	TranslateCharsetInfo	= TranslateCharsetInfo@12
 	UnrealizeObject		= UnrealizeObject@4
 	UpdateColors		= UpdateColors@4
+	UpdateICMRegKey		= UpdateICMRegKeyA@16
 	UpdateICMRegKeyA	= UpdateICMRegKeyA@16
 	UpdateICMRegKeyW	= UpdateICMRegKeyW@16
 	WidenPath		= WidenPath@4
