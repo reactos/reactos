@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.13 2002/11/03 20:01:06 chorns Exp $
+/* $Id: connect.c,v 1.14 2002/11/05 20:27:56 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -517,9 +517,15 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   KIRQL		oldIrql;
   PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
   PEPORT_CONNECT_REPLY_MESSAGE CReply;
+  ULONG Size;
 
-  CReply = ExAllocatePool(NonPagedPool, 
-		 sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize);
+  Size = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
+  if (LpcMessage)
+  {
+     Size += LpcMessage->DataSize;
+  }
+
+  CReply = ExAllocatePool(NonPagedPool, Size);
   if (CReply == NULL)
     {
       return(STATUS_NO_MEMORY);
@@ -540,7 +546,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   /*
    * Create a port object for our side of the connection
    */
-  if (AcceptIt == 1)
+  if (AcceptIt)
     {
       Status = ObCreateObject(ServerPortHandle,
 			      PORT_ALL_ACCESS,
@@ -549,6 +555,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 			      (PVOID*)&OurPort);
       if (!NT_SUCCESS(Status))
 	{
+	  ExFreePool(CReply);
 	  ObDereferenceObject(NamedPort);
 	  return(Status);
 	}
@@ -584,7 +591,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	sizeof(LPC_MESSAGE);
       CReply->ConnectDataLength = 0;
     }
-  if (AcceptIt != 1)
+  if (!AcceptIt)
     {	
       EiReplyOrRequestPort(ConnectionRequest->Sender,
 			   &CReply->MessageHeader,
@@ -707,6 +714,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		       LPC_REPLY,
 		       OurPort);
   ExFreePool(ConnectionRequest);
+  ExFreePool(CReply);
    
   ObDereferenceObject(OurPort);
   ObDereferenceObject(NamedPort);
