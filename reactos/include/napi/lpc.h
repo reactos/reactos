@@ -52,6 +52,51 @@ typedef struct _LPC_TERMINATION_MESSAGE
    TIME CreationTime;
 } LPC_TERMINATION_MESSAGE, *PLPC_TERMINATION_MESSAGE;
 
+typedef struct _LPC_DEBUG_MESSAGE
+{
+   LPC_MESSAGE_HEADER Header;
+   ULONG EventCode;
+   ULONG Status;
+   union {
+      struct {
+         EXCEPTION_RECORD ExceptionRecord;
+         ULONG FirstChance;
+      } Exception;
+      struct {
+         ULONG Reserved;
+         PVOID StartAddress;
+      } CreateThread;
+      struct {
+         ULONG Reserved;
+	 HANDLE FileHandle;
+	 PVOID Base;
+	 ULONG PointerToSymbolTable;
+	 ULONG NumberOfSymbols;
+	 ULONG Reserved2;
+	 PVOID EntryPoint;
+      } CreateProcess;
+      struct {
+	 ULONG ExitCode;
+      } ExitThread;
+      struct {
+	 ULONG ExitCode;
+      } ExitProcess;
+      struct {
+	 HANDLE FileHandle;
+	 PVOID Base;
+	 ULONG PointerToSymbolTable;
+	 ULONG NumberOfSymbols;
+      } LoadDll;
+      struct {
+	 PVOID Base;
+      } UnloadDll;
+#ifdef ANONYMOUSUNIONS
+   };
+#else
+   } u;
+#endif
+} LPC_DEBUG_MESSAGE, * PLPC_DEBUG_MESSAGE;
+
 typedef LPC_MESSAGE_HEADER LPC_MESSAGE, *PLPC_MESSAGE;
 
 typedef struct _LPC_MAX_MESSAGE
