@@ -23,7 +23,8 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL SwapButtons;
   UINT ButtonsDown;
   LONG x, y;
-  BOOL SafetySwitch, SafetySwitch2;
+  BOOL SafetySwitch;
+  UINT SafetyRemoveCount;
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   PVOID CurIconHandleTable;
