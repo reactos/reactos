@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.30 2000/05/13 13:51:05 dwelch Exp $
+/* $Id: section.c,v 1.31 2000/05/24 22:29:38 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -56,6 +56,8 @@ VOID MmSetPageEntrySection(PSECTION_OBJECT Section,
 	Table = 
 	  Section->PageDirectory.PageTables[DirectoryOffset] =
 	  ExAllocatePool(NonPagedPool, sizeof(SECTION_PAGE_TABLE));
+	memset(Table, 0, sizeof(SECTION_PAGE_TABLE));
+	DPRINT("Table %x\n", Table);
      }
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
    Table->Pages[TableOffset] = Entry;
@@ -69,8 +71,11 @@ PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
    ULONG DirectoryOffset;
    ULONG TableOffset;
    
+   DPRINT("MmGetPageEntrySection(Offset %x)\n", Offset);
+   
    DirectoryOffset = PAGE_TO_SECTION_PAGE_DIRECTORY_OFFSET(Offset);
    Table = Section->PageDirectory.PageTables[DirectoryOffset];
+   DPRINT("Table %x\n", Table);
    if (Table == NULL)
      {
 	return(NULL);
@@ -78,6 +83,70 @@ PVOID MmGetPageEntrySection(PSECTION_OBJECT Section,
    TableOffset = PAGE_TO_SECTION_PAGE_TABLE_OFFSET(Offset);
    Entry = Table->Pages[TableOffset];
    return(Entry);
+}
+
+NTSTATUS MmOldLoadPageForSection(PMADDRESS_SPACE AddressSpace,
+				 MEMORY_AREA* MemoryArea,
+				 PVOID Address)
+{
+   LARGE_INTEGER Offset;
+   IO_STATUS_BLOCK IoStatus;
+   PMDL Mdl;
+   PVOID Page;
+   NTSTATUS Status;
+   ULONG PAddress;
+   PSECTION_OBJECT Section;
+   
+   DPRINT("MmOldLoadPageForSection(MemoryArea %x, Address %x)\n",
+	   MemoryArea,Address);
+   
+   if (MmIsPagePresent(NULL, Address))
+     {
+	DPRINT("Page is already present\n");
+	return(STATUS_SUCCESS);
+     }
+   
+   PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
+   Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
+     MemoryArea->Data.SectionData.ViewOffset;
+   
+   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
+   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
+	   MemoryArea->Data.SectionData.ViewOffset);
+   DPRINT("Got offset %x\n", Offset.QuadPart);
+   
+   Section = MemoryArea->Data.SectionData.Section;
+   
+   DPRINT("Section %x\n", Section);
+   
+   MmLockSection(Section);
+   
+   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   MmBuildMdlFromPages(Mdl);
+   Page = MmGetMdlPageAddress(Mdl, 0);
+   MmUnlockSection(Section);
+   MmUnlockAddressSpace(AddressSpace);
+   DPRINT("Reading file offset %x\n", Offset.QuadPart);
+   Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
+		       Mdl,
+		       &Offset,
+		       &IoStatus);
+   if (!NT_SUCCESS(Status))
+     {
+	return(Status);
+     }
+   
+   MmLockAddressSpace(AddressSpace);
+   MmLockSection(Section);
+   
+   MmSetPage(NULL,
+	     Address,
+	     MemoryArea->Attributes,
+	     (ULONG)Page);
+   MmUnlockSection(Section);
+   
+   return(STATUS_SUCCESS);
+
 }
 
 NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
@@ -98,6 +167,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    
    if (MmIsPagePresent(NULL, Address))
      {
+	DPRINT("Page is already present\n");
 	return(STATUS_SUCCESS);
      }
    
@@ -105,11 +175,25 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
      MemoryArea->Data.SectionData.ViewOffset;
    
+   if ((MemoryArea->Data.SectionData.ViewOffset % PAGESIZE) != 0)
+     {
+	return(MmOldLoadPageForSection(AddressSpace, MemoryArea, Address));
+     }
+   
+   DPRINT("MemoryArea->BaseAddress %x\n", MemoryArea->BaseAddress);
+   DPRINT("MemoryArea->Data.SectionData.ViewOffset %x\n",
+	   MemoryArea->Data.SectionData.ViewOffset);
+   DPRINT("Got offset %x\n", Offset.QuadPart);
+   
    Section = MemoryArea->Data.SectionData.Section;
+   
+   DPRINT("Section %x\n", Section);
    
    MmLockSection(Section);
    
-   Entry = MmGetPageEntrySection(Section, Offset.QuadPart);
+   Entry = MmGetPageEntrySection(Section, Offset.u.LowPart);
+   
+   DPRINT("Entry %x\n", Entry);
    
    if (Entry == NULL)
      {   
@@ -118,6 +202,7 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	Page = MmGetMdlPageAddress(Mdl, 0);
 	MmUnlockSection(Section);
 	MmUnlockAddressSpace(AddressSpace);
+	DPRINT("Reading file offset %x\n", Offset.QuadPart);
 	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 			    Mdl,
 			    &Offset,
@@ -294,6 +379,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
    InitializeListHead(&Section->ViewListHead);
    KeInitializeSpinLock(&Section->ViewListLock);
    KeInitializeMutex(&Section->Lock, 0);
+   memset(&Section->PageDirectory, 0, sizeof(Section->PageDirectory));
    
    if (FileHandle != (HANDLE)0xffffffff)
      {

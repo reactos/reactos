@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.22 2000/03/22 18:35:51 dwelch Exp $
+/* $Id: startup.c,v 1.23 2000/05/24 22:29:35 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -18,7 +18,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/csr.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* GLOBALS *******************************************************************/
@@ -57,7 +57,7 @@ VOID LdrStartup(VOID)
    if (ImageBase <= (PVOID)0x1000)
      {
 	DPRINT("ImageBase is null\n");
-	for(;;);
+	ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
 
    NtGlobalFlag = Peb->NtGlobalFlag;
@@ -70,7 +70,7 @@ VOID LdrStartup(VOID)
        *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
      {
 	DbgPrint("Image has bad header\n");
-	ZwTerminateProcess(NULL, STATUS_UNSUCCESSFUL);
+	ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
 
    /* normalize process parameters */

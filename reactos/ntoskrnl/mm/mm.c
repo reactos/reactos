@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.29 2000/05/13 13:51:05 dwelch Exp $
+/* $Id: mm.c,v 1.30 2000/05/24 22:29:36 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -146,7 +146,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    MEMORY_AREA* MemoryArea;
    NTSTATUS Status;
    
-   DPRINT1("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
+   DPRINT("MmNotPresentFault(Mode %d, Address %x)\n", Mode, Address);
    
    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
      {

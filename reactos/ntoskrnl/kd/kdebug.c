@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.10 2000/04/08 19:09:30 ekohl Exp $
+/* $Id: kdebug.c,v 1.11 2000/05/24 22:29:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@ KdDebuggerNotPresent = TRUE;		/* EXPORTED */
 
 static BOOLEAN KdpBreakPending = FALSE;
 static BOOLEAN KdpBreakRecieved = FALSE;
-static ULONG KdpDebugType = 0;
+static ULONG KdpDebugType = BochsDebug;
 
 
 /* PRIVATE FUNCTIONS ********************************************************/
@@ -134,7 +134,7 @@ KdInitSystem (
 			if (Value > 0)
 			{
 				KdDebuggerEnabled = TRUE;
-				KdpDebugType = SerialDebug;
+				KdpDebugType = KdpDebugType | SerialDebug;
 				PortInfo.BaudRate = Value;
 			}
 			break;
@@ -152,7 +152,7 @@ KdInitSystem (
 		{
 			p2 += 5;
 			KdDebuggerEnabled = TRUE;
-			KdpDebugType = SerialDebug;
+			KdpDebugType = KdpDebugType | SerialDebug;
 			break;
 		}
 		p1 = p2;

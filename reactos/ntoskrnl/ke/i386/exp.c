@@ -339,6 +339,20 @@ asmlinkage void exception_handler(unsigned int edi,
 		  }
 	     }
         }
+	
+	if (MmIsPagePresent(NULL, (PVOID)eip))
+	  {
+	     char instrs[512];
+	     
+	     memcpy(instrs, (PVOID)eip, 512);
+	     
+	     DbgPrint("Instrs: ");
+	     
+	     for (i=0; i<10; i++)
+	       {
+		  DbgPrint("%x ", instrs[i]);
+	       }
+	  }
 #endif
      }
    

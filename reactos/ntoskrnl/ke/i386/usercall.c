@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.11 2000/05/13 13:51:05 dwelch Exp $
+/* $Id: usercall.c,v 1.12 2000/05/24 22:29:36 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -57,7 +57,7 @@ void PsBeginThreadWithContextInternal(void);
 
 VOID KiSystemCallHook(ULONG Nr, ...)
 {
-#if 1
+#if 0
    va_list ap;
    ULONG i;
 
