@@ -42,6 +42,7 @@ copy ..\wine\programs\progman\progman.exe		%ROS_INSTALL%\bin
 copy ..\wine\programs\uninstaller\uninstaller.exe	%ROS_INSTALL%\bin
 copy ..\wine\programs\view\view.exe			%ROS_INSTALL%\bin
 copy ..\wine\programs\wcmd\wcmd.exe			%ROS_INSTALL%\bin
+copy ..\wine\programs\winefile\winefile.exe		%ROS_INSTALL%\bin
 copy ..\wine\programs\winemine\winmine.exe		%ROS_INSTALL%\bin
 copy ..\wine\programs\winver\winver.exe			%ROS_INSTALL%\bin
 
