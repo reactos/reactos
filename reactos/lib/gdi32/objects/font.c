@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.5 2004/07/03 17:40:22 navaraf Exp $
+/* $Id: font.c,v 1.6 2004/07/09 20:28:20 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -403,4 +403,21 @@ GetCharWidth32W(
 	)
 {
   return NtGdiGetCharWidth32 ( hdc, iFirstChar, iLastChar, lpBuffer );
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetFontData(
+	HDC	a0,
+	DWORD	a1,
+	DWORD	a2,
+	LPVOID	a3,
+	DWORD	a4
+	)
+{
+	return NtGdiGetFontData(a0, a1, a2, a3, a4);
 }

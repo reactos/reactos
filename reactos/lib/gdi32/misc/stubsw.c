@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.28 2004/04/09 20:03:13 navaraf Exp $
+/* $Id: stubsw.c,v 1.29 2004/07/09 20:28:20 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -13,6 +13,8 @@
 #endif//UNICODE
 #include <windows.h>
 #include <win32k/kapi.h>
+
+#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 /*
  * @implemented
@@ -106,6 +108,7 @@ DeviceCapabilitiesExW(
 				  pOutput,
 				  pDevMode );
 #else
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 #endif
@@ -127,6 +130,7 @@ EnumFontsW(
 #if 0
   return NtGdiEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
 #else
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 #endif
@@ -211,6 +215,7 @@ GetOutlineTextMetricsW(
 	LPOUTLINETEXTMETRICW	lpOTM
 	)
 {
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -250,6 +255,7 @@ GetCharacterPlacementW(
 	DWORD		a5
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -307,13 +313,14 @@ PolyTextOutW(
 	int			a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -323,8 +330,7 @@ GetTextFaceW(
 	LPWSTR	a2
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return NtGdiGetTextFace(a0, a1, a2);
 }
 
 
@@ -339,6 +345,7 @@ GetKerningPairsW(
 	LPKERNINGPAIR	a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -355,6 +362,7 @@ GetLogColorSpaceW(
 	DWORD			a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -368,6 +376,7 @@ CreateColorSpaceW(
 	LPLOGCOLORSPACEW	a0
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -384,6 +393,7 @@ GetICMProfileW(
 	LPWSTR		a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -399,6 +409,7 @@ SetICMProfileW(
 	LPWSTR	a1
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -424,6 +435,7 @@ EnumICMProfilesW(
    * and call the user's callback function until we run out of strings or
    * the user returns FALSE
    */
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -441,6 +453,7 @@ wglUseFontBitmapsW(
 	DWORD		a3
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -462,6 +475,7 @@ wglUseFontOutlinesW(
 	LPGLYPHMETRICSFLOAT	a7
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -479,6 +493,7 @@ UpdateICMRegKeyW(
 	UINT	a3
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -502,6 +517,7 @@ GetFontResourceInfoW(
 	DWORD	a3
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }

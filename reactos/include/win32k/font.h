@@ -1,4 +1,4 @@
-/* $Id: font.h,v 1.1 2004/03/23 00:18:54 gvg Exp $
+/* $Id: font.h,v 1.2 2004/07/09 20:28:19 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,5 +22,6 @@ typedef struct tagFONTFAMILYINFO
 
 int STDCALL NtGdiGetFontFamilyInfo(HDC Dc, LPLOGFONTW LogFont, PFONTFAMILYINFO Info, DWORD Size);
 BOOL STDCALL NtGdiTranslateCharsetInfo(PDWORD Src, LPCHARSETINFO CSI, DWORD Flags);
+DWORD STDCALL NtGdiGetFontData(HDC,DWORD,DWORD,LPVOID,DWORD);
 
 #endif /* WIN32K_FONT_H_INCLUDED */

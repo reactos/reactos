@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.31 2004/04/09 20:03:13 navaraf Exp $
+/* $Id: stubsa.c,v 1.32 2004/07/09 20:28:20 navaraf Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -22,6 +22,8 @@
 #include <rosrtl/devmode.h>
 #include <rosrtl/logfont.h>
 #include <internal/heap.h>
+
+#define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
 
 /*
  * @implemented
@@ -172,6 +174,7 @@ DeviceCapabilitiesExA(
 	CONST DEVMODEA	*pDevMode
 	)
 {
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -189,6 +192,7 @@ EnumFontsA (
 	LPARAM  lParam
 	)
 {
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 #if 0
@@ -291,6 +295,7 @@ GetOutlineTextMetricsA(
 	LPOUTLINETEXTMETRICA	lpOTM
 	)
 {
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -344,6 +349,7 @@ GetCharacterPlacementA(
 	DWORD		a5
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -404,6 +410,7 @@ StartDocA(
 	CONST DOCINFOA	*a1
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -420,6 +427,7 @@ PolyTextOutA(
 	int			a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -436,6 +444,7 @@ GetTextFaceA(
 	LPSTR	a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -452,6 +461,7 @@ GetKerningPairsA(
 	LPKERNINGPAIR	a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -468,6 +478,7 @@ GetLogColorSpaceA(
 	DWORD			a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -482,6 +493,7 @@ CreateColorSpaceA(
 	LPLOGCOLORSPACEA	a0
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
@@ -498,6 +510,7 @@ GetICMProfileA(
 	LPSTR		a2
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -513,6 +526,7 @@ SetICMProfileA(
 	LPSTR	a1
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -539,6 +553,7 @@ EnumICMProfilesA(
    * until we run out of strings or the user returns FALSE
    */
 
+  UNIMPLEMENTED;
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -556,6 +571,7 @@ wglUseFontBitmapsA(
 	DWORD		a3
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -577,6 +593,7 @@ wglUseFontOutlinesA(
 	LPGLYPHMETRICSFLOAT	a7
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
@@ -594,6 +611,7 @@ UpdateICMRegKeyA(
 	UINT	a3
 	)
 {
+	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
