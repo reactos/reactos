@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.116 2004/05/16 13:57:49 weiden Exp $
+/* $Id: winpos.c,v 1.116.4.1 2004/06/20 22:27:54 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -107,6 +107,7 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
+  int TryTopmost;
   
   if (!Window || IntIsDesktopWindow(Window))
   {
@@ -132,25 +133,30 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     
     if((List = IntWinListChildren(Wnd)))
     {
-      for(phWnd = List; *phWnd; phWnd++)
+      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
       {
-        PWINDOW_OBJECT Child;
-        
-        if((*phWnd) == Window->Self)
+        for(phWnd = List; *phWnd; phWnd++)
         {
-          continue;
-        }
+          PWINDOW_OBJECT Child;
         
-        if((Child = IntGetWindowObject(*phWnd)))
-        {
-          if(IntSetForegroundWindow(Child))
+          if((*phWnd) == Window->Self)
           {
-            ExFreePool(List);
-            IntReleaseWindowObject(Wnd);
-            IntReleaseWindowObject(Child);
-            return;
+            continue;
           }
-          IntReleaseWindowObject(Child);
+        
+          if((Child = IntGetWindowObject(*phWnd)))
+          {
+            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
+                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
+               && IntSetForegroundWindow(Child))
+            {
+              ExFreePool(List);
+              IntReleaseWindowObject(Wnd);
+              IntReleaseWindowObject(Child);
+              return;
+            }
+            IntReleaseWindowObject(Child);
+          }
         }
       }
       ExFreePool(List);
@@ -188,7 +194,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
       else
         IntGetDesktopWorkArea(Desktop, &WorkArea);
       
-      WindowObject->InternalPos = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
+      WindowObject->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
       {
         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
