@@ -7,6 +7,7 @@ md %BOOTCD_DIR%\disk\bootdisk
 md %BOOTCD_DIR%\disk\install
 md %BOOTCD_DIR%\disk\reactos
 md %BOOTCD_DIR%\disk\reactos\system32
+
 copy /Y ntoskrnl\ntoskrnl.exe %BOOTCD_DIR%\disk\reactos
 copy /Y hal\halx86\hal.dll %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\fs\vfat\vfatfs.sys %BOOTCD_DIR%\disk\reactos
@@ -22,3 +23,5 @@ copy /Y drivers\storage\disk\disk.sys %BOOTCD_DIR%\disk\reactos
 copy /Y drivers\storage\class2\class2.sys %BOOTCD_DIR%\disk\reactos
 copy /Y lib\ntdll\ntdll.dll %BOOTCD_DIR%\disk\reactos\system32
 copy /Y subsys\system\usetup\usetup.exe %BOOTCD_DIR%\disk\reactos\system32\smss.exe
+
+copy /Y txtsetup.sif %BOOTCD_DIR%\disk\install

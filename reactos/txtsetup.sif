@@ -1,0 +1,8 @@
+[Version]
+Signature = "$ReactOS$"
+
+[Directories]
+1 = "\"
+2 = system32
+3 = system32\drivers
+4 = system32\config
