@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.13 2004/04/12 10:19:43 mf Exp $
+/* $Id: lang.c,v 1.14 2004/04/12 10:49:48 mf Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -1259,10 +1259,10 @@ STDCALL
 GetTimeFormatW (
     LCID            Locale,
     DWORD           dwFlags,
-    CONST SYSTEMTIME    * lpTime,
+    CONST SYSTEMTIME* lpTime,
     LPCWSTR         lpFormat,
     LPWSTR          lpTimeStr,
-    int         cchTime
+    int             cchTime
     )
 {
 	WCHAR Buffer[40];
@@ -1311,16 +1311,16 @@ STDCALL
 GetTimeFormatA (
     LCID            Locale,
     DWORD           dwFlags,
-    CONST SYSTEMTIME    * lpTime,
+    CONST SYSTEMTIME* lpTime,
     LPCSTR          lpFormat,
     LPSTR           lpTimeStr,
-    int         cchTime
+    int             cchTime
     )
 {
 	LPWSTR lpFormatU = NULL;
-	LPWSTR  lpTimeStrU;
+	LPWSTR lpTimeStrU;
 	int numCharsU;
-	int retVal;
+	int retVal = 0;
 
 	if (lpFormat != NULL) {
 		/* First just determine the number of necessary bytes 
@@ -1352,31 +1352,28 @@ GetTimeFormatA (
 	   Unicode output */
 	numCharsU = GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,NULL,0);
 
-	if (numCharsU == 0) {
-		if (lpFormatU != NULL)
-			HeapFree(GetProcessHeap(),0,lpFormatU);
-		return 0;
+	if (numCharsU != 0) {
+		lpTimeStrU = HeapAlloc(GetProcessHeap(),0,numCharsU*sizeof(WCHAR));
+		if (lpTimeStrU == NULL) {
+			if (lpFormatU != NULL) 
+				HeapFree(GetProcessHeap(),0,lpFormatU);
+			return 0;
+		}
+
+		if (GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,lpTimeStrU,numCharsU))
+			/* Convert the output string to ANSI */
+			retVal = WideCharToMultiByte(CP_ACP,
+							0,
+							lpTimeStrU,
+							numCharsU,
+							lpTimeStr,
+							cchTime,
+							NULL,
+							NULL);
+
+		HeapFree(GetProcessHeap(),0,lpTimeStrU);
 	}
 
-	lpTimeStrU = HeapAlloc(GetProcessHeap(),0,numCharsU*sizeof(WCHAR));
-	if (lpTimeStrU == NULL) {
-		if (lpFormatU != NULL) 
-			HeapFree(GetProcessHeap(),0,lpFormatU);
-		return 0;
-	}
-
-	if (GetTimeFormatW(Locale,dwFlags,lpTime,lpFormatU,lpTimeStrU,numCharsU))
-		/* Convert the output string to ANSI */
-		retVal = WideCharToMultiByte(CP_ACP,
-						0,
-						lpTimeStrU,
-						numCharsU,
-						lpTimeStr,
-						cchTime,
-						NULL,
-						NULL);
-
-	HeapFree(GetProcessHeap(),0,lpTimeStrU);
 	if (lpFormatU != NULL)
 		HeapFree(GetProcessHeap(),0,lpFormatU);
 
