@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.35 2002/02/19 00:09:24 ekohl Exp $
+/* $Id: handle.c,v 1.36 2002/04/07 09:24:36 sedwards Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -259,6 +259,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		  current->handles[i].ObjectBody = NULL;
 		  
 		  KeReleaseSpinLock(&HandleTable->ListLock, oldIrql);
+   KeDetachProcess();
 		  
 		  if ((Header->ObjectType != NULL) &&
 		      (Header->ObjectType->Close != NULL))
@@ -268,6 +269,7 @@ VOID ObCloseAllHandles(PEPROCESS Process)
 		    }
 		  
 		  ObDereferenceObject(ObjectBody);
+   KeAttachProcess( Process );
 		  KeAcquireSpinLock(&HandleTable->ListLock, &oldIrql);
 		  current_entry = &HandleTable->ListHead;
 		  break;
