@@ -39,12 +39,15 @@ typedef unsigned long long *PULONGLONG;
 #define __volatile
 
 #define inline __inline
-#define __asm__
+#define __asm__ #error
 #define __volatile__(a)
 #define __attribute__(a)
+#if 0
+/* TMN: What on earth do these structures do in a user-mode header?! */
 struct _KTHREAD { int foobar; };
 struct _ETHREAD { int foobar; };
 struct _EPROCESS { int foobar; };
+#endif
 
 #ifndef _DEBUG
 #pragma function(_disable,_enable)
