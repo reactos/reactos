@@ -62,6 +62,18 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
+// Icons
+//
+
+32512 ICON "resources/oic_sample.ico"
+32513 ICON "resources/oic_hand.ico"
+32514 ICON "resources/oic_ques.ico"
+32515 ICON "resources/oic_bang.ico"
+32516 ICON "resources/oic_note.ico"
+32517 ICON "resources/oic_reactos.ico"
+
+/////////////////////////////////////////////////////////////////////////////
+//
 // Bitmaps
 //
 
@@ -127,18 +139,15 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 
 SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
-  POPUP ""
-  BEGIN
-    MENUITEM "&Restore", 61728
-    MENUITEM "&Move", 61456
-    MENUITEM "&Size", 61440
-    MENUITEM "Mi&nimize", 61472
-    MENUITEM "Ma&ximize", 61488
-    MENUITEM SEPARATOR
-    MENUITEM "&Close\tAlt-F4", 61536
-//  MENUITEM SEPARATOR
-//  MENUITEM "&Switch to ...\tCtrl-Esc", 61744
-//  MENUITEM SEPARATOR
-//  MENUITEM "&About ReactOS ...", 61761
-  END
+  MENUITEM "&Restore", 61728
+  MENUITEM "&Move", 61456
+  MENUITEM "&Size", 61440
+  MENUITEM "Mi&nimize", 61472
+  MENUITEM "Ma&ximize", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Close\tAlt-F4", 61536
+//MENUITEM SEPARATOR
+//MENUITEM "&Switch to ...\tCtrl-Esc", 61744
+//MENUITEM SEPARATOR
+//MENUITEM "&About ReactOS ...", 61761
 }
