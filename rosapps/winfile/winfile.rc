@@ -1,0 +1,337 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "windows.h"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// English (U.S.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_WINFILE             ICON    DISCARDABLE     "winfile.ICO"
+IDI_SMALL               ICON    DISCARDABLE     "SMALL.ICO"
+
+IDB_OPEN_FILE           BITMAP	DISCARDABLE     "folder1.bmp"
+IDB_CLOSED_FILE         BITMAP	DISCARDABLE     "folder2.bmp"
+IDB_ROOT                BITMAP	DISCARDABLE     "folder3.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDC_WINFILE MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About ...",                  IDM_ABOUT
+    END
+END
+
+IDR_WINFILE_MENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open",                       ID_VIEW_REFRESH
+        MENUITEM "&Move...\tF8",                ID_VIEW_REFRESH
+        MENUITEM "&Copy...\tF9",                ID_VIEW_REFRESH
+        MENUITEM "Copy to Clip&board...\tF9",   ID_VIEW_REFRESH
+        MENUITEM "&Delete...\tDel",             ID_VIEW_REFRESH
+        MENUITEM "Re&name...\t",                ID_VIEW_REFRESH
+        MENUITEM "Proper&ties...\tAlt+Enter",   ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Compre&ss...\t",              ID_VIEW_REFRESH
+        MENUITEM "&Uncompress...\t",            ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Run...\t",                   ID_VIEW_REFRESH
+        MENUITEM "&Print...\t",                 ID_VIEW_REFRESH
+        MENUITEM "&Associate...\t",             ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Cr&eate directory...\t",      ID_VIEW_REFRESH
+        MENUITEM "Searc&h...\t",                ID_VIEW_REFRESH
+        MENUITEM "Select &Files...\t",          ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit",                       IDM_EXIT
+    END
+    POPUP "&Disk"
+    BEGIN
+        MENUITEM "&Copy Disk...\t",             ID_VIEW_REFRESH
+        MENUITEM "&Label Disk...\t",            ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Format Disk..\t",            ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "Connect &Network Drive...",   ID_VIEW_STATUSBAR
+        MENUITEM "&Disconnect Network Drive...",ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Share &As...",                ID_VIEW_STATUSBAR
+        MENUITEM "S&top Sharing...",            ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "&Select Drive...\t",          ID_VIEW_REFRESH
+    END
+    POPUP "&Tree"
+    BEGIN
+        MENUITEM "E&xpand One Level\t+",        ID_VIEW_REFRESH
+        MENUITEM "Expand &Branch\t*",           ID_VIEW_REFRESH
+        MENUITEM "Expand &All\tCtrl+*",         ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Indicate Expandable Branches",ID_VIEW_REFRESH
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "T&ree and Directory",          ID_VIEW_STATUSBAR
+        MENUITEM "Tr&ee Only",                   ID_VIEW_STATUSBAR
+        MENUITEM "Directory &Only",              ID_VIEW_STATUSBAR
+        MENUITEM SEPARATOR
+        MENUITEM "Sp&lit",                       ID_VIEW_SPLIT
+        MENUITEM SEPARATOR
+        MENUITEM "&Name",                        ID_VIEW_REFRESH
+        MENUITEM "&All File Details",            ID_VIEW_REFRESH
+        MENUITEM "&Partial Details...",          ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Sort by Name",                ID_VIEW_REFRESH
+        MENUITEM "Sort &by Type",                ID_VIEW_REFRESH
+        MENUITEM "Sort by Si&ze",                ID_VIEW_REFRESH
+        MENUITEM "Sort by &Date",                ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "By File &Type...",            ID_VIEW_REFRESH
+    END
+    POPUP "&Options"
+    BEGIN
+        MENUITEM "&Confirmation...",            ID_VIEW_REFRESH
+        MENUITEM "&Font...",                    ID_VIEW_REFRESH
+        MENUITEM "Customise Tool&bar...",       ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Toolbar...",                 ID_VIEW_REFRESH
+        MENUITEM "&Drivebar...",                ID_VIEW_REFRESH
+        MENUITEM "&Statusbar...",               ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+        MENUITEM "&Open New Window on Connect", ID_VIEW_REFRESH
+        MENUITEM "&Minimise on Use",            ID_VIEW_REFRESH
+        MENUITEM "&Save Settings on Exit",      ID_VIEW_REFRESH
+    END
+    POPUP "&Security"
+    BEGIN
+        MENUITEM "&Permissions...",             ID_VIEW_REFRESH, GRAYED
+        MENUITEM "&Auditing...",                ID_VIEW_REFRESH, GRAYED
+        MENUITEM "&Owner...",                   ID_VIEW_REFRESH, GRAYED
+    END
+    POPUP "&Window"
+    BEGIN
+        MENUITEM "&New Window",                 ID_VIEW_REFRESH
+        MENUITEM "&Cascade",                    ID_VIEW_REFRESH
+        MENUITEM "Tile &Horizontally",          ID_VIEW_REFRESH
+        MENUITEM "&Tile Vertically",            ID_VIEW_REFRESH
+        MENUITEM "&Arrange Icons",              ID_VIEW_REFRESH
+        MENUITEM "&Refresh",                    ID_VIEW_REFRESH
+        MENUITEM SEPARATOR
+    END
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&Contents",                   ID_HELP_HELPTOPICS
+        MENUITEM "&Search for Help on",         ID_HELP_HELPTOPICS
+        MENUITEM "&How to Use Help",            ID_HELP_HELPTOPICS
+        MENUITEM SEPARATOR
+        MENUITEM "&About File Manager",         IDM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 230, 75
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+CAPTION "About"
+FONT 8, "System"
+BEGIN
+    ICON            IDI_WINFILE,IDI_WINFILE,14,9,16,16
+    LTEXT           "ReactOS winfile Version 1.0",IDC_STATIC,49,10,119,8,
+                    SS_NOPREFIX
+    LTEXT           "Copyright (C) 2002 ReactOS Team",IDC_STATIC,49,20,119,8
+    DEFPUSHBUTTON   "OK",IDOK,195,6,30,11,WS_GROUP
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+2 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""windows.h""\r\n"
+    "#undef APSTUDIO_HIDDEN_SYMBOLS\r\n"
+    "#include ""resource.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_APP_TITLE           "ReactOS File Manager"
+    IDS_HELLO               "Hello World!"
+
+    ID_FILE_MENU            "Commands for working with files"
+    ID_DISK_MENU            "Commands for working with disk"
+    ID_TREE_MENU            "Commands for working in the tree window"
+    ID_VIEW_MENU            "Commands for determining how information is displayed"
+	ID_OPTIONS_MENU         "Commands for setting options"
+    ID_SECURITY_MENU        "Commands for manipulating file and directory security"
+    ID_WINDOW_MENU          "Commands for manipulating windows"
+    ID_HELP_MENU            "Commands for displaying help and information about file manager"
+
+    IDM_EXIT                "Quits the file manager"
+
+    ID_EDIT_DELETE          "Deletes the selection"
+    ID_EDIT_RENAME          "Renames the selection"
+    ID_EDIT_COPYKEYNAME     "Copies the name of the selected key to the clipboard"
+    ID_EDIT_FIND            "Finds a text string in a key, value or data"
+    ID_EDIT_FINDNEXT        "Finds next occurrence of text specified in previous search"
+
+    ID_VIEW_STATUSBAR       "Shows or hides the status bar"
+    ID_VIEW_SPLIT           "Change position of split between two panes"
+    ID_VIEW_REFRESH         "Refreshes the window"
+
+	ID_HELP_HELPTOPICS      "Opens file manager help"
+    IDM_ABOUT               "Displays program information, version number and copyright"
+
+    IDC_WINFILE             "WINFILE"
+    IDC_WINFILE_FRAME       "WINFILE_FRAME"
+END
+
+#endif    // English (U.S.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+/////////////////////////////////////////////////////////////////////////////
+// English (Australia) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENA)
+#ifdef _WIN32
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_AUS
+#pragma code_page(1252)
+#endif //_WIN32
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
+END
+
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE DISCARDABLE 
+BEGIN
+    "resource.h\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_DIALOG1, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 179
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 88
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    ID_HELP_HELPTOPICS      "Opens File Manager Help."
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDM_ABOUT               "Displays program information, version number, and copyright."
+END
+
+#endif    // English (Australia) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
