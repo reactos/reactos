@@ -1,4 +1,4 @@
-/* Based on GvG's static control test. */
+/* Based on Radoslaw Sokol's static control test. */
 #include <windows.h>
 
 static LPSTR BUTTON_CLASS   = "BUTTON";
@@ -75,7 +75,7 @@ int STDCALL WinMain(
    if (Result == 0) {
       DPRINT("Error registering class.");
       MessageBox(0, "Error registering test window class.",
-         "Static control test", MB_ICONSTOP | MB_OK);
+         "Button control test", MB_ICONSTOP | MB_OK);
       ExitProcess(0);
    }
    // Create main window.
