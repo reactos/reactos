@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: virtual.c,v 1.72 2004/04/10 22:35:26 gdalsnes Exp $
+/* $Id: virtual.c,v 1.73 2004/05/05 02:00:01 tamlin Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -157,6 +157,15 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
             {
                Info->State = MEM_FREE;
                Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
+               Info->AllocationBase = 0;
+               Info->AllocationProtect = 0;
+               /* TODO: Find the next memory area and set RegionSize! */
+               /* Since programs might depend on RegionSize for
+                * iteration, we for now just make up a value.
+                */
+               Info->RegionSize = (Address > (PVOID)0x70000000) ? 0 : 0x10000;
+               Info->Protect = PAGE_NOACCESS;
+               Info->Type = 0;
                Status = STATUS_SUCCESS;
                ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
             }
