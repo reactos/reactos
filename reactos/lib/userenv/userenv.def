@@ -5,6 +5,8 @@ CreateGroupA@8 @101 NONAME
 CreateGroupW@8 @102 NONAME
 DeleteGroupA@8 @103 NONAME
 DeleteGroupW@8 @104 NONAME
+DeleteItemA@16 @107 NONAME
+DeleteItemW@16 @108 NONAME
 CreateUserProfileA@8 @109 NONAME
 CreateUserProfileW@8 @110 NONAME
 AddDesktopItemA@32 @113 NONAME

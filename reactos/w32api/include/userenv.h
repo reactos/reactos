@@ -48,6 +48,8 @@ BOOL WINAPI CreateGroupA (LPCSTR, BOOL);
 BOOL WINAPI CreateGroupW (LPCWSTR, BOOL);
 BOOL WINAPI DeleteGroupA (LPCSTR, BOOL);
 BOOL WINAPI DeleteGroupW (LPCWSTR, BOOL);
+BOOL WINAPI DeleteItemA (LPCSTR, BOOL, LPCSTR, BOOL);
+BOOL WINAPI DeleteItemW (LPCWSTR, BOOL, LPCWSTR, BOOL);
 /* end private */
 BOOL WINAPI LoadUserProfileA (HANDLE, LPPROFILEINFOA);
 BOOL WINAPI LoadUserProfileW (HANDLE, LPPROFILEINFOW);
@@ -74,6 +76,7 @@ typedef LPPROFILEINFOW LPPROFILEINFO;
 #define DeleteDesktopItem  DeleteDesktopItemW
 #define CreateGroup  CreateGroupW
 #define DeleteGroup  DeleteGroupW
+#define DeleteItem  DeleteItemW
 /* end private */
 #define LoadUserProfile  LoadUserProfileW
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryW
@@ -89,6 +92,7 @@ typedef LPPROFILEINFOA LPPROFILEINFO;
 #define DeleteDesktopItem  DeleteDesktopItemA
 #define CreateGroup  CreateGroupA
 #define DeleteGroup  DeleteGroupA
+#define DeleteItem  DeleteItemA
 /* end private */
 #define LoadUserProfile  LoadUserProfileA
 #define GetAllUsersProfileDirectory  GetAllUsersProfileDirectoryA

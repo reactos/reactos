@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.3 2004/05/03 12:05:44 ekohl Exp $
+/* $Id: desktop.c,v 1.4 2004/05/04 13:11:22 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -141,7 +141,7 @@ AddDesktopItemA (BOOL bCommonItem,
 
 
 BOOL WINAPI
-AddDesktopItemW (BOOL bCommonItem,
+AddDesktopItemW (BOOL bCommonDesktop,
 		 LPCWSTR lpItemName,
 		 LPCWSTR lpArguments,
 		 LPCWSTR lpIconLocation,
@@ -164,7 +164,7 @@ AddDesktopItemW (BOOL bCommonItem,
 
   bResult = FALSE;
 
-  if (!GetDesktopPath (bCommonItem, szLinkPath))
+  if (!GetDesktopPath (bCommonDesktop, szLinkPath))
     {
       DPRINT1 ("GetDesktopPath() failed\n");
       return FALSE;
@@ -379,6 +379,70 @@ DeleteGroupW (LPCWSTR lpGroupName,
   /* FIXME: Notify the shell */
 
   DPRINT ("DeleteGroupW() done\n");
+
+  return TRUE;
+}
+
+
+BOOL WINAPI
+DeleteItemA (LPCSTR lpGroupName,
+	     BOOL bCommonGroup,
+	     LPCSTR lpItemName,
+	     BOOL bDeleteGroup)
+{
+  DPRINT1 ("DeleteItemA() not implemented!\n");
+  return FALSE;
+}
+
+
+BOOL WINAPI
+DeleteItemW (LPCWSTR lpGroupName,
+	     BOOL bCommonGroup,
+	     LPCWSTR lpItemName,
+	     BOOL bDeleteGroup)
+{
+  WCHAR szItemPath[MAX_PATH];
+  LPWSTR Ptr;
+
+  DPRINT ("DeleteItemW() called\n");
+
+  if (!GetProgramsPath (bCommonGroup, szItemPath))
+    {
+      DPRINT1 ("GetProgramsPath() failed\n");
+      return FALSE;
+    }
+  DPRINT ("Programs path: '%S'\n", szItemPath);
+
+  if (lpGroupName != NULL && *lpGroupName != 0)
+    {
+      wcscat (szItemPath, L"\\");
+      wcscat (szItemPath, lpGroupName);
+    }
+
+  wcscat (szItemPath, L"\\");
+  wcscat (szItemPath, lpItemName);
+  wcscat (szItemPath, L".lnk");
+  DPRINT ("Item path: '%S'\n", szItemPath);
+
+  if (!DeleteFileW (szItemPath))
+    return FALSE;
+
+  /* FIXME: Notify the shell */
+
+  if (bDeleteGroup)
+    {
+      Ptr = wcsrchr (szItemPath, L'\\');
+      if (Ptr == NULL)
+	return TRUE;
+
+      *Ptr = 0;
+      if (RemoveDirectoryW (szItemPath))
+	{
+	  /* FIXME: Notify the shell */
+	}
+    }
+
+  DPRINT ("DeleteItemW() done\n");
 
   return TRUE;
 }
