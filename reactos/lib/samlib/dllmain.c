@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.1 2004/01/23 10:33:21 ekohl Exp $
+/* $Id: dllmain.c,v 1.2 2004/02/04 17:57:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -28,7 +28,11 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
+#include <stdio.h>
 
+#include "debug.h"
+
+//#define LOG_DEBUG_MESSAGES
 
 /* GLOBALS *******************************************************************/
 
@@ -42,6 +46,52 @@ DllMain (HINSTANCE hInstance,
 {
 
   return TRUE;
+}
+
+
+void
+DebugPrint (char* fmt,...)
+{
+#ifdef LOG_DEBUG_MESSAGES
+  char FileName[MAX_PATH];
+  HANDLE hLogFile;
+  DWORD dwBytesWritten;
+#endif
+  char buffer[512];
+  va_list ap;
+
+  va_start (ap, fmt);
+  vsprintf (buffer, fmt, ap);
+  va_end (ap);
+
+  OutputDebugStringA (buffer);
+
+#ifdef LOG_DEBUG_MESSAGES
+  strcpy (FileName, "C:\\reactos\\samlib.log");
+  hLogFile = CreateFileA (FileName,
+			  GENERIC_WRITE,
+			  0,
+			  NULL,
+			  OPEN_ALWAYS,
+			  FILE_ATTRIBUTE_NORMAL,
+			  NULL);
+  if (hLogFile == INVALID_HANDLE_VALUE)
+    return;
+
+  if (SetFilePointer(hLogFile, 0, NULL, FILE_END) == 0xFFFFFFFF)
+    {
+      CloseHandle (hLogFile);
+      return;
+    }
+
+  WriteFile (hLogFile,
+	     buffer,
+	     strlen(buffer),
+	     &dwBytesWritten,
+	     NULL);
+
+  CloseHandle (hLogFile);
+#endif
 }
 
 /* EOF */

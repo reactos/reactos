@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: samlib.c,v 1.1 2004/01/23 10:33:21 ekohl Exp $
+/* $Id: samlib.c,v 1.2 2004/02/04 17:57:56 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -28,10 +28,13 @@
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <samlib.h>
+
+
+#define NDEBUG
+#include "debug.h"
 
 
 /* GLOBALS *******************************************************************/
@@ -39,17 +42,25 @@
 
 /* FUNCTIONS *****************************************************************/
 
-void
-DebugPrint(char* fmt,...)
+
+static BOOL
+CreateBuiltinAliases (HKEY hAliasesKey)
 {
-  char buffer[512];
-  va_list ap;
+  return TRUE;
+}
 
-  va_start(ap, fmt);
-  vsprintf(buffer, fmt, ap);
-  va_end(ap);
 
-  OutputDebugStringA(buffer);
+static BOOL
+CreateBuiltinGroups (HKEY hGroupsKey)
+{
+  return TRUE;
+}
+
+
+static BOOL
+CreateBuiltinUsers (HKEY hUsersKey)
+{
+  return TRUE;
 }
 
 
@@ -65,6 +76,8 @@ SamInitializeSAM (VOID)
   HKEY hGroupsKey;
   HKEY hUsersKey;
 
+  DPRINT1("SamInitializeSAM() called\n");
+
   if (RegCreateKeyExW (HKEY_LOCAL_MACHINE,
 		       L"SAM\\SAM",
 		       0,
@@ -75,9 +88,7 @@ SamInitializeSAM (VOID)
 		       &hSamKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Sam' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Sam' key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
@@ -91,9 +102,7 @@ SamInitializeSAM (VOID)
 		       &hDomainsKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Domains' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Domains' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hSamKey);
       return FALSE;
     }
@@ -111,9 +120,7 @@ SamInitializeSAM (VOID)
 		       &hAccountKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Domains\\Account' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Domains\\Account' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hDomainsKey);
       return FALSE;
     }
@@ -130,9 +137,7 @@ SamInitializeSAM (VOID)
 		       &hAliasesKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Account\\Aliases' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Account\\Aliases' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hAccountKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
@@ -152,9 +157,7 @@ SamInitializeSAM (VOID)
 		       &hGroupsKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Account\\Groups' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Account\\Groups' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hAccountKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
@@ -174,9 +177,7 @@ SamInitializeSAM (VOID)
 		       &hUsersKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Account\\Users' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Account\\Users' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hAccountKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
@@ -198,9 +199,7 @@ SamInitializeSAM (VOID)
 		       &hBuiltinKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create Builtin key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create Builtin key! (Error %lu)\n", GetLastError());
       RegCloseKey (hDomainsKey);
       return FALSE;
     }
@@ -217,15 +216,21 @@ SamInitializeSAM (VOID)
 		       &hAliasesKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Builtin\\Aliases' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Builtin\\Aliases' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hBuiltinKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
     }
 
-  /* FIXME: Create builtin aliases */
+  /* Create builtin aliases */
+  if (!CreateBuiltinAliases (hAliasesKey))
+    {
+      DPRINT1 ("Failed to create builtin aliases!\n");
+      RegCloseKey (hAliasesKey);
+      RegCloseKey (hBuiltinKey);
+      RegCloseKey (hDomainsKey);
+      return FALSE;
+    }
 
   RegCloseKey (hAliasesKey);
 
@@ -241,15 +246,21 @@ SamInitializeSAM (VOID)
 		       &hGroupsKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Builtin\\Groups' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Builtin\\Groups' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hBuiltinKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
     }
 
-  /* FIXME: Create builtin groups */
+  /* Create builtin groups */
+  if (!CreateBuiltinGroups (hGroupsKey))
+    {
+      DPRINT1 ("Failed to create builtin groups!\n");
+      RegCloseKey (hGroupsKey);
+      RegCloseKey (hBuiltinKey);
+      RegCloseKey (hDomainsKey);
+      return FALSE;
+    }
 
   RegCloseKey (hGroupsKey);
 
@@ -265,21 +276,29 @@ SamInitializeSAM (VOID)
 		       &hUsersKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create 'Builtin\\Users' key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to create 'Builtin\\Users' key! (Error %lu)\n", GetLastError());
       RegCloseKey (hBuiltinKey);
       RegCloseKey (hDomainsKey);
       return FALSE;
     }
 
-  /* FIXME: Create builtin users */
+  /* Create builtin users */
+  if (!CreateBuiltinUsers (hUsersKey))
+    {
+      DPRINT1 ("Failed to create builtin users!\n");
+      RegCloseKey (hUsersKey);
+      RegCloseKey (hBuiltinKey);
+      RegCloseKey (hDomainsKey);
+      return FALSE;
+    }
 
   RegCloseKey (hUsersKey);
 
   RegCloseKey (hBuiltinKey);
 
   RegCloseKey (hDomainsKey);
+
+  DPRINT1 ("SamInitializeSAM() done\n");
 
   return TRUE;
 }
@@ -288,6 +307,8 @@ SamInitializeSAM (VOID)
 BOOL STDCALL
 SamGetDomainSid (PSID *Sid)
 {
+  DPRINT1 ("SamGetDomainSid() called\n");
+
   return FALSE;
 }
 
@@ -297,15 +318,15 @@ SamSetDomainSid (PSID Sid)
 {
   HKEY hAccountKey;
 
+  DPRINT1 ("SamSetDomainSid() called\n");
+
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
 		     L"SAM\\SAM\\Domains\\Account",
 		     0,
 		     KEY_ALL_ACCESS,
 		     &hAccountKey))
     {
-//#if 0
-      DebugPrint ("Failed to open the Account key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to open the Account key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
@@ -316,14 +337,14 @@ SamSetDomainSid (PSID Sid)
 		      (LPBYTE)Sid,
 		      RtlLengthSid (Sid)))
     {
-//#if 0
-      DebugPrint ("Failed to set Domain-SID value! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to set Domain-SID value! (Error %lu)\n", GetLastError());
       RegCloseKey (hAccountKey);
       return FALSE;
     }
 
   RegCloseKey (hAccountKey);
+
+  DPRINT1 ("SamSetDomainSid() called\n");
 
   return TRUE;
 }
@@ -338,28 +359,26 @@ SamCreateUser (PWSTR UserName,
 	       PSID UserSid)
 {
   DWORD dwDisposition;
-  HKEY hAccountKey;
+  HKEY hUsersKey;
   HKEY hUserKey;
 
-  DebugPrint ("SamCreateUser() called\n");
+  DPRINT1 ("SamCreateUser() called\n");
 
   /* FIXME: Check whether the SID is a real user sid */
 
-  /* Open the Account key */
+  /* Open the Users key */
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
+		     L"SAM\\SAM\\Domains\\Account\\Users",
 		     0,
 		     KEY_ALL_ACCESS,
-		     &hAccountKey))
+		     &hUsersKey))
     {
-//#if 0
-      DebugPrint ("Failed to open Account key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to open Account key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
   /* Create user name key */
-  if (RegCreateKeyExW (hAccountKey,
+  if (RegCreateKeyExW (hUsersKey,
 		       UserName,
 		       0,
 		       NULL,
@@ -369,20 +388,16 @@ SamCreateUser (PWSTR UserName,
 		       &hUserKey,
 		       &dwDisposition))
     {
-//#if 0
-      DebugPrint ("Failed to create/open the user key! (Error %lu)\n", GetLastError());
-//#endif
-      RegCloseKey (hAccountKey);
+      DPRINT1 ("Failed to create/open the user key! (Error %lu)\n", GetLastError());
+      RegCloseKey (hUsersKey);
       return FALSE;
     }
 
-  RegCloseKey (hAccountKey);
+  RegCloseKey (hUsersKey);
 
   if (dwDisposition == REG_OPENED_EXISTING_KEY)
     {
-//#if 0
-      DebugPrint ("User alredy exists!\n");
-//#endif
+      DPRINT1 ("User alredy exists!\n");
       RegCloseKey (hUserKey);
       SetLastError (ERROR_USER_EXISTS);
       return FALSE;
@@ -397,9 +412,7 @@ SamCreateUser (PWSTR UserName,
 		      (LPBYTE)UserName,
 		      (wcslen (UserName) + 1) * sizeof (WCHAR)))
     {
-//#if 0
-      DebugPrint ("Failed to set the user name value! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to set the user name value! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -412,9 +425,7 @@ SamCreateUser (PWSTR UserName,
 		      (LPBYTE)UserPassword,
 		      (wcslen (UserPassword) + 1) * sizeof (WCHAR)))
     {
-//#if 0
-      DebugPrint ("Failed to set the user name value! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to set the user name value! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -427,14 +438,14 @@ SamCreateUser (PWSTR UserName,
 		      (LPBYTE)UserSid,
 		      RtlLengthSid (UserSid)))
     {
-//#if 0
-      DebugPrint ("Failed to set the user SID value! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to set the user SID value! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
 
   RegCloseKey (hUserKey);
+
+  DPRINT1 ("SamCreateUser() done\n");
 
   return TRUE;
 }
@@ -450,24 +461,24 @@ SamCheckUserPassword (PWSTR UserName,
 {
   WCHAR szPassword[256];
   DWORD dwLength;
-  HKEY hAccountKey;
+  HKEY hUsersKey;
   HKEY hUserKey;
 
-  /* Open the Account key */
+  DPRINT1 ("SamCheckUserPassword() called\n");
+
+  /* Open the Users key */
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
+		     L"SAM\\SAM\\Domains\\Account\\Users",
 		     0,
 		     KEY_READ,
-		     &hAccountKey))
+		     &hUsersKey))
     {
-//#if 0
-      DebugPrint ("Failed to open Account key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
   /* Open the user key */
-  if (RegOpenKeyExW (hAccountKey,
+  if (RegOpenKeyExW (hUsersKey,
 		     UserName,
 		     0,
 		     KEY_READ,
@@ -475,25 +486,21 @@ SamCheckUserPassword (PWSTR UserName,
     {
       if (GetLastError () == ERROR_FILE_NOT_FOUND)
 	{
-//#if 0
-	  DebugPrint ("Invalid user name!\n");
-//#endif
+	  DPRINT1 ("Invalid user name!\n");
 	  SetLastError (ERROR_NO_SUCH_USER);
 	}
       else
 	{
-//#if 0
-	  DebugPrint ("Failed to open user key! (Error %lu)\n", GetLastError());
-//#endif
+	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
 	}
 
-      RegCloseKey (hAccountKey);
+      RegCloseKey (hUsersKey);
       return FALSE;
     }
 
-  RegCloseKey (hAccountKey);
+  RegCloseKey (hUsersKey);
 
-  /* Get profiles path */
+  /* Get the password */
   dwLength = 256 * sizeof(WCHAR);
   if (RegQueryValueExW (hUserKey,
 			L"Password",
@@ -502,9 +509,7 @@ SamCheckUserPassword (PWSTR UserName,
 			(LPBYTE)szPassword,
 			&dwLength))
     {
-//#if 0
-      DebugPrint ("Failed to read the password! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to read the password! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -515,9 +520,12 @@ SamCheckUserPassword (PWSTR UserName,
   if ((wcslen (szPassword) != wcslen (UserPassword)) ||
       (wcscmp (szPassword, UserPassword) != 0))
     {
+      DPRINT1 ("Wrong password!\n");
       SetLastError (ERROR_WRONG_PASSWORD);
       return FALSE;
     }
+
+  DPRINT1 ("SamCheckUserPassword() done\n");
 
   return TRUE;
 }
@@ -529,27 +537,27 @@ SamGetUserSid (PWSTR UserName,
 {
   PSID lpSid;
   DWORD dwLength;
-  HKEY hAccountKey;
+  HKEY hUsersKey;
   HKEY hUserKey;
+
+  DPRINT1 ("SamGetUserSid() called\n");
 
   if (Sid != NULL)
     *Sid = NULL;
 
-  /* Open the Account key */
+  /* Open the Users key */
   if (RegOpenKeyExW (HKEY_LOCAL_MACHINE,
-		     L"SAM\\SAM\\Domains\\Account",
+		     L"SAM\\SAM\\Domains\\Account\\Users",
 		     0,
 		     KEY_READ,
-		     &hAccountKey))
+		     &hUsersKey))
     {
-//#if 0
-      DebugPrint ("Failed to open Account key! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to open Users key! (Error %lu)\n", GetLastError());
       return FALSE;
     }
 
   /* Open the user key */
-  if (RegOpenKeyExW (hAccountKey,
+  if (RegOpenKeyExW (hUserKey,
 		     UserName,
 		     0,
 		     KEY_READ,
@@ -557,23 +565,19 @@ SamGetUserSid (PWSTR UserName,
     {
       if (GetLastError () == ERROR_FILE_NOT_FOUND)
 	{
-//#if 0
-	  DebugPrint ("Invalid user name!\n");
-//#endif
+	  DPRINT1 ("Invalid user name!\n");
 	  SetLastError (ERROR_NO_SUCH_USER);
 	}
       else
 	{
-//#if 0
-	  DebugPrint ("Failed to open user key! (Error %lu)\n", GetLastError());
-//#endif
+	  DPRINT1 ("Failed to open user key! (Error %lu)\n", GetLastError());
 	}
 
-      RegCloseKey (hAccountKey);
+      RegCloseKey (hUsersKey);
       return FALSE;
     }
 
-  RegCloseKey (hAccountKey);
+  RegCloseKey (hUsersKey);
 
   /* Get SID size */
   dwLength = 0;
@@ -584,26 +588,19 @@ SamGetUserSid (PWSTR UserName,
 			NULL,
 			&dwLength))
     {
-//#if 0
-      DebugPrint ("Failed to read the SID size! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to read the SID size! (Error %lu)\n", GetLastError());
       RegCloseKey (hUserKey);
       return FALSE;
     }
 
-  /* FIXME: Allocate sid buffer */
-//#if 0
-  DebugPrint ("Required SID buffer size: %lu\n", dwLength);
-//#endif
-
+  /* Allocate sid buffer */
+  DPRINT1 ("Required SID buffer size: %lu\n", dwLength);
   lpSid = (PSID)RtlAllocateHeap (RtlGetProcessHeap (),
 				 0,
 				 dwLength);
   if (lpSid == NULL)
     {
-//#if 0
-      DebugPrint ("Failed to allocate SID buffer!\n");
-//#endif
+      DPRINT1 ("Failed to allocate SID buffer!\n");
       RegCloseKey (hUserKey);
       return FALSE;
     }
@@ -616,9 +613,7 @@ SamGetUserSid (PWSTR UserName,
 			(LPBYTE)lpSid,
 			&dwLength))
     {
-//#if 0
-      DebugPrint ("Failed to read the SID! (Error %lu)\n", GetLastError());
-//#endif
+      DPRINT1 ("Failed to read the SID! (Error %lu)\n", GetLastError());
       RtlFreeHeap (RtlGetProcessHeap (),
 		   0,
 		   lpSid);
@@ -629,6 +624,8 @@ SamGetUserSid (PWSTR UserName,
   RegCloseKey (hUserKey);
 
   *Sid = lpSid;
+
+  DPRINT1 ("SamGetUserSid() done\n");
 
   return TRUE;
 }
