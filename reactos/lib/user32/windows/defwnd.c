@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.77 2003/09/06 14:30:21 weiden Exp $
+/* $Id: defwnd.c,v 1.78 2003/09/06 16:59:30 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -889,6 +889,9 @@ DefWndDoButtonHandle(HWND hWnd, WPARAM wParam)
     default:
       return;
   }
+  
+  if(!HasBtn)
+    return;
   
   SetCapture(hWnd);
   UserDrawCaptionButton( hWnd, GetWindowDC(hWnd), HasBtn , Btn);
