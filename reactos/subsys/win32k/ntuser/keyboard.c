@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.30 2004/07/04 17:08:40 navaraf Exp $
+/* $Id: keyboard.c,v 1.31 2004/07/08 12:55:01 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -88,6 +88,13 @@ static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down) {
   if (vk == VK_CAPITAL || vk == VK_NUMLOCK) {
     if (down) QueueKeyStateTable[vk] ^= KS_LOCK_BIT;
   } 
+
+  if (ext && vk == VK_LSHIFT)
+    vk = VK_RSHIFT;
+  if (ext && vk == VK_LCONTROL)
+    vk = VK_RCONTROL;
+  if (ext && vk == VK_LMENU)
+    vk = VK_RMENU;
 
   if (down)
     QueueKeyStateTable[vk] |= KS_DOWN_BIT;
