@@ -297,7 +297,7 @@ PsTerminateOtherThread(PETHREAD Thread,
   if (THREAD_STATE_BLOCKED == Thread->Tcb.State && UserMode == Thread->Tcb.WaitMode)
     {
       DPRINT("Unblocking thread\n");
-      KiAbortWaitThread((PKTHREAD)Thread, STATUS_THREAD_IS_TERMINATING);
+      KiAbortWaitThread((PKTHREAD)Thread, STATUS_THREAD_IS_TERMINATING, IO_NO_INCREMENT);
     }
   KeReleaseDispatcherDatabaseLock(OldIrql); 
 }

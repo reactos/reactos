@@ -4,7 +4,7 @@
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
  * 
- * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) - Commented, reorganized some stuff, fixed/implemented some functions.
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  David Welch (welch@cwcom.net)
  */
 
@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#define THREAD_ALERT_INCREMENT 2
 /* FUNCTIONS *****************************************************************/
 
 ULONG
@@ -36,7 +37,7 @@ KeAlertResumeThread(IN PKTHREAD Thread)
         if (Thread->State == THREAD_STATE_BLOCKED &&  Thread->Alertable) {
             
             DPRINT("Aborting Wait\n");
-            KiAbortWaitThread(Thread, STATUS_ALERTED);
+            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
        
         } else {
            
@@ -89,7 +90,7 @@ KeAlertThread(PKTHREAD Thread,
             Thread->Alertable) {
             
             DPRINT("Aborting Wait\n");
-            KiAbortWaitThread(Thread, STATUS_ALERTED);
+            KiAbortWaitThread(Thread, STATUS_ALERTED, THREAD_ALERT_INCREMENT);
        
         } else {
            

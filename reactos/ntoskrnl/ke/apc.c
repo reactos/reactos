@@ -276,7 +276,7 @@ KeInsertQueueApc(PKAPC Apc,
                  (Apc->NormalRoutine == NULL)) {
           
             DPRINT("Waking up Thread for Kernel-Mode APC Delivery \n");
-            KiAbortWaitThread(Thread, STATUS_KERNEL_APC);
+            KiAbortWaitThread(Thread, STATUS_KERNEL_APC, PriorityBoost);
         }
         
    } else if ((Thread->State == THREAD_STATE_BLOCKED) && 
@@ -285,7 +285,7 @@ KeInsertQueueApc(PKAPC Apc,
        
         DPRINT("Waking up Thread for User-Mode APC Delivery \n");
         Thread->ApcState.UserApcPending = TRUE;
-        KiAbortWaitThread(Thread, STATUS_USER_APC);
+        KiAbortWaitThread(Thread, STATUS_USER_APC, PriorityBoost);
     }
 
     /* Return Sucess if we are here */

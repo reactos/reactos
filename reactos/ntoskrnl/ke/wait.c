@@ -702,7 +702,7 @@ KiWaitTest(PDISPATCHER_HEADER Object,
         
         /* All waits satisfied, unwait the thread */
         DPRINT("Unwaiting the Thread\n");
-        KiAbortWaitThread(CurrentWaitBlock->Thread, CurrentWaitBlock->WaitKey);
+        KiAbortWaitThread(CurrentWaitBlock->Thread, CurrentWaitBlock->WaitKey, Increment);
 
 SkipUnwait:
         /* Next entry */
@@ -716,7 +716,8 @@ SkipUnwait:
 VOID
 FASTCALL 
 KiAbortWaitThread(PKTHREAD Thread, 
-                  NTSTATUS WaitStatus)
+                  NTSTATUS WaitStatus,
+                  KPRIORITY Increment)
 {
     PKWAIT_BLOCK WaitBlock;
 

@@ -1,11 +1,12 @@
-/* $Id$
+/*
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/event.c
  * PURPOSE:         Implements events
  * 
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/
@@ -203,7 +204,7 @@ KeSetEvent(PKEVENT Event,
         
             /* We can satisfy wait simply by waking the thread, since our signal state is 0 now */        
             DPRINT("WaitAny or Sync Event, just unwait the thread\n");
-            KiAbortWaitThread(WaitBlock->Thread, WaitBlock->WaitKey);
+            KiAbortWaitThread(WaitBlock->Thread, WaitBlock->WaitKey, Increment);
         }
     }
     
@@ -259,7 +260,7 @@ KeSetEventBoostPriority(IN PKEVENT Event,
 
         /* Reset the Quantum and Unwait the Thread */
         WaitingThread->Quantum = WaitingThread->ApcState.Process->ThreadQuantum;
-        KiAbortWaitThread(WaitingThread, STATUS_SUCCESS);
+        KiAbortWaitThread(WaitingThread, STATUS_SUCCESS, EVENT_INCREMENT);
     }
    
     /* Release the Dispatcher Database Lock */

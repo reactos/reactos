@@ -160,7 +160,11 @@ VOID inline FASTCALL KeInitializeDispatcherHeader(DISPATCHER_HEADER* Header, ULO
 VOID KeDumpStackFrames(PULONG Frame);
 BOOLEAN KiTestAlert(VOID);
 
-VOID FASTCALL KiAbortWaitThread(struct _KTHREAD* Thread, NTSTATUS WaitStatus);
+VOID
+FASTCALL 
+KiAbortWaitThread(PKTHREAD Thread, 
+                  NTSTATUS WaitStatus,
+                  KPRIORITY Increment);
  
 BOOLEAN STDCALL KiInsertTimer(PKTIMER Timer, LARGE_INTEGER DueTime);
 

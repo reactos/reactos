@@ -1,11 +1,12 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
  * PURPOSE:         Implements kernel queues
  * 
- * PROGRAMMERS:     Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
+ *                  Eric Kohl (ekohl@rz-online.de)
  */
 
 /* INCLUDES *****************************************************************/
@@ -409,7 +410,7 @@ KiWakeQueue(IN PKQUEUE Queue)
             /* Unwait the Thread */
             DPRINT("Unwaiting Thread\n");
             WaitBlock = CONTAINING_RECORD(WaitEntry, KWAIT_BLOCK, WaitListEntry);
-            KiAbortWaitThread(WaitBlock->Thread, (NTSTATUS)QueueEntry);
+            KiAbortWaitThread(WaitBlock->Thread, (NTSTATUS)QueueEntry, IO_NO_INCREMENT);
         }
     }    
 }
