@@ -1281,23 +1281,20 @@ MingwModuleHandler::GenerateRules ()
 		module.name.c_str (),
 		GetTargetMacro ( module ).c_str () );
 
-	string ar_target;
 	if ( module.type != ObjectLibrary )
-		ar_target = GenerateArchiveTarget ( ar, objectsMacro );
+	{
+		string ar_target ( GenerateArchiveTarget ( ar, objectsMacro ) );
+		if ( targetMacro != ar_target )
+		{
+			CLEAN_FILE ( ar_target );
+		}
+	}
 
 	GenerateObjectFileTargets ( cc,
 								cppc,
 								cflagsMacro,
 								nasmflagsMacro,
 								windresflagsMacro );
-
-	if ( module.type != ObjectLibrary )
-	{
-		if ( targetMacro != ar_target )
-		{
-			CLEAN_FILE ( ar_target );
-		}
-	}
 }
 
 void
