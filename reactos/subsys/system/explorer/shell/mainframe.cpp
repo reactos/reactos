@@ -611,7 +611,7 @@ int MainFrame::Command(int id, int code)
 	  break;}
 
 	  case ID_WEB_WINDOW:
-		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://www.reactos.com")));	//@@
+		create_webchildwindow(_hmdiclient, WebChildWndInfo(TEXT("http://localhost")));	// http://www.reactos.com //@@
 		break;
 
 	///@todo There are even more menu items!

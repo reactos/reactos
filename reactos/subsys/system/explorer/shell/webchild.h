@@ -1361,4 +1361,6 @@ struct WebChildWindow : public IPCtrlWindow<ChildWindow, SIfacePtr<IWebBrowser2>
 protected:
 	DWebBrowserEventsHandler* _evt_handler1;
 	DWebBrowserEvents2Handler* _evt_handler2;
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam);
 };

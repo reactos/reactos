@@ -190,7 +190,7 @@ WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
 	_evt_handler1(NULL),
 	_evt_handler2(NULL)
 {
-	 // first try to create MS IE web control
+	 // first try to create a web control with MS IE's CLASSID
 	HRESULT hr = create_control(hwnd, CLSID_WebBrowser, IID_IWebBrowser2);
 
 	 // If this failed, try to use Mozilla's web control
@@ -219,4 +219,24 @@ WebChildWindow::~WebChildWindow()
 {
 	delete _evt_handler2;
 	delete _evt_handler1;
+}
+
+LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+{
+	if (message == WM_ERASEBKGND) {
+		if (!_control) {
+			HDC hdc = (HDC)wparam;
+			ClientRect rect(_hwnd);
+
+			HBRUSH hbrush = CreateSolidBrush(RGB(200,200,235));
+			BkMode mode(hdc, TRANSPARENT);
+			TextColor color(hdc, RGB(200,40,40));
+			FillRect(hdc, &rect, hbrush);
+			DrawText(hdc, TEXT("Sorry - no web browser control could be loaded."), -1, &rect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+			DeleteObject(hbrush);
+		}
+
+		return TRUE;
+	} else
+		return super::WndProc(message, wparam, lparam);
 }
