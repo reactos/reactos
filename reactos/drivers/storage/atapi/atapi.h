@@ -58,6 +58,7 @@ extern "C" {
 #define  IDE_REG_STATUS           0x0007
 #define    IDE_SR_BUSY              0x80
 #define    IDE_SR_DRDY              0x40
+#define    IDE_SR_WERR              0x20
 #define    IDE_SR_DRQ               0x08
 #define    IDE_SR_ERR               0x01
 #define  IDE_REG_COMMAND          0x0007
@@ -71,6 +72,8 @@ extern "C" {
 #define    IDE_CMD_PACKET           0xA0
 #define    IDE_CMD_READ_MULTIPLE    0xC4
 #define    IDE_CMD_WRITE_MULTIPLE   0xC5
+#define    IDE_CMD_READ_DMA         0xC8
+#define    IDE_CMD_WRITE_DMA        0xCA
 #define    IDE_CMD_FLUSH_CACHE      0xE7
 #define    IDE_CMD_FLUSH_CACHE_EXT  0xEA
 #define    IDE_CMD_IDENT_ATA_DRV    0xEC
@@ -109,6 +112,16 @@ extern "C" {
   (ScsiPortReadPortUchar((PUCHAR)((Address) + IDE_REG_STATUS)))
 #define IDEWriteCommand(Address, Data) \
   (ScsiPortWritePortUchar((PUCHAR)((Address) + IDE_REG_COMMAND), (Data)))
+#define IDEReadDMACommand(Address) \
+  (ScsiPortReadPortUchar((PUCHAR)((Address))))
+#define IDEWriteDMACommand(Address, Data) \
+  (ScsiPortWritePortUchar((PUCHAR)((Address)), (Data)))
+#define IDEReadDMAStatus(Address) \
+  (ScsiPortReadPortUchar((PUCHAR)((Address) + 2)))
+#define IDEWriteDMAStatus(Address, Data) \
+  (ScsiPortWritePortUchar((PUCHAR)((Address) + 2), (Data)))
+#define IDEWritePRDTable(Address, Data) \
+  (ScsiPortWritePortUlong((PULONG)((Address) + 4), (Data)))  
 
 
 //
