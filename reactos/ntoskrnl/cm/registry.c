@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.121 2004/02/07 17:30:14 hbirr Exp $
+/* $Id: registry.c,v 1.122 2004/03/07 19:59:36 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -260,6 +260,7 @@ CmInitializeRegistry(VOID)
   /*  Initialize the Key object type  */
   CmiKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
   assert(CmiKeyType);
+  CmiKeyType->Tag = TAG('R', 'e', 'g', 'K');
   CmiKeyType->TotalObjects = 0;
   CmiKeyType->TotalHandles = 0;
   CmiKeyType->MaxObjects = LONG_MAX;
