@@ -24,9 +24,7 @@ struct _EPROCESS;
 #define PA_SYSTEM          (0)
 #endif
 
-// #define PAGE_SIZE (4096)
 
-PULONG MmGetPageEntry(PVOID Address);
 
 #define KERNEL_BASE        (0xc0000000)
 
@@ -40,6 +38,13 @@ PULONG MmGetPageEntry(PVOID Address);
 			    : "=r" (tmp)	\
 			    :: "memory");	\
 		    }
+
+#define FLUSH_TLB_ONE(addr) __asm__ __volatile__(		\
+			    "invlpg %0"				\
+			    :					\
+			    : "m" (*(volatile long *) (addr)))
+
+
 
 #elif defined(_MSC_VER)
 /* TODO: Need some way to tell the compiler this is a memory barrier. */
