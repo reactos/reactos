@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib16bpp.c,v 1.27 2004/04/07 15:37:49 weiden Exp $ */
+/* $Id: dib16bpp.c,v 1.28 2004/04/07 22:09:09 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -643,7 +643,7 @@ DIB_16BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       Source = DIB_GetSourceIndex(SourceSurf, SourceGDI, SourceX, SourceY);
       if(Source != iTransColor)
       {
-        *((USHORT*)DestBits) = (USHORT)(XLATEOBJ_iXlate(ColorTranslation, Source) << 16);
+        *((USHORT*)DestBits) = (USHORT)XLATEOBJ_iXlate(ColorTranslation, Source);
       }
       
       DestBits = (PULONG)((ULONG_PTR)DestBits + 2);
