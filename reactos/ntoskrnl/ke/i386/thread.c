@@ -37,15 +37,6 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS ***************************************************************/
-
-KTSS KiTss;
-KTSS KiTrapTss;
-
-extern USHORT KiGdt[];
-
-extern unsigned int init_stack_top;
-
 /* FUNCTIONS **************************************************************/
 
 #define FLAG_NT (1<<14)

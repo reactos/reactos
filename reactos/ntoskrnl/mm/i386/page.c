@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.27 2001/04/16 02:02:05 dwelch Exp $
+/* $Id: page.c,v 1.28 2001/04/16 23:29:55 dwelch Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -661,16 +661,16 @@ MmCreateVirtualMapping(PEPROCESS Process,
 		       ULONG flProtect,
 		       ULONG PhysicalAddress)
 {
-	 if (!MmIsUsablePage((PVOID)PhysicalAddress))
-     {
-       DPRINT1("Page at address %x not usable\n", PhysicalAddress);
-       KeBugCheck(0);
-     }
-
-   return(MmCreateVirtualMappingUnsafe(Process,
-				       Address,
-				       flProtect,
-				       PhysicalAddress));
+  if (!MmIsUsablePage((PVOID)PhysicalAddress))
+    {
+      DPRINT1("Page at address %x not usable\n", PhysicalAddress);
+      KeBugCheck(0);
+    }
+  
+  return(MmCreateVirtualMappingUnsafe(Process,
+				      Address,
+				      flProtect,
+				      PhysicalAddress));
 }
 
 ULONG

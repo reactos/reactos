@@ -339,11 +339,11 @@ KiDoubleFaultHandler(VOID)
   ULONG StackLimit;
   ULONG Esp0;
   ULONG ExceptionNr = 8;
-  extern KTSS KiTss;
-
+  KTSS* OldTss;
   
   /* Use the address of the trap frame as approximation to the ring0 esp */
-  Esp0 = KiTss.Esp0;
+  OldTss = KeGetCurrentKPCR()->TSS;
+  Esp0 = OldTss->Esp0;
   
   /* Get CR2 */
   __asm__("movl %%cr2,%0\n\t" : "=d" (cr2));
@@ -371,10 +371,10 @@ KiDoubleFaultHandler(VOID)
      {
        DbgPrint("Exception: %d(%x)\n", ExceptionNr, 0);
      }
-   DbgPrint("CS:EIP %x:%x ", KiTss.Cs, KiTss.Eip);
-   print_address((PVOID)KiTss.Eip);
+   DbgPrint("CS:EIP %x:%x ", OldTss->Cs, OldTss->Eip);
+   print_address((PVOID)OldTss->Eip);
    DbgPrint("\n");
-   DbgPrint("cr2 %x cr3 %x ", cr2, KiTss.Cr3);
+   DbgPrint("cr2 %x cr3 %x ", cr2, OldTss->Cr3);
    DbgPrint("Proc: %x ",PsGetCurrentProcess());
    if (PsGetCurrentProcess() != NULL)
      {
@@ -388,14 +388,14 @@ KiDoubleFaultHandler(VOID)
 		 PsGetCurrentThread()->Cid.UniqueThread);
      }
    DbgPrint("\n");
-   DbgPrint("DS %x ES %x FS %x GS %x\n", KiTss.Ds, KiTss.Es,
-	    KiTss.Fs, KiTss.Gs);
-   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", KiTss.Eax, KiTss.Ebx, 
-	    KiTss.Ecx);
-   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", KiTss.Edx, KiTss.Ebp, 
-	    KiTss.Esi);
-   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", KiTss.Edi, KiTss.Eflags);
-   if (KiTss.Cs == KERNEL_CS)
+   DbgPrint("DS %x ES %x FS %x GS %x\n", OldTss->Ds, OldTss->Es,
+	    OldTss->Fs, OldTss->Gs);
+   DbgPrint("EAX: %.8x   EBX: %.8x   ECX: %.8x\n", OldTss->Eax, OldTss->Ebx, 
+	    OldTss->Ecx);
+   DbgPrint("EDX: %.8x   EBP: %.8x   ESI: %.8x\n", OldTss->Edx, OldTss->Ebp, 
+	    OldTss->Esi);
+   DbgPrint("EDI: %.8x   EFLAGS: %.8x ", OldTss->Edi, OldTss->Eflags);
+   if (OldTss->Cs == KERNEL_CS)
      {
 	DbgPrint("kESP %.8x ", Esp0);
 	if (PsGetCurrentThread() != NULL)
@@ -407,9 +407,9 @@ KiDoubleFaultHandler(VOID)
      }
    else
      {
-	DbgPrint("User ESP %.8x\n", KiTss.Esp);
+	DbgPrint("User ESP %.8x\n", OldTss->Esp);
      }
-  if ((KiTss.Cs & 0xffff) == KERNEL_CS)
+  if ((OldTss->Cs & 0xffff) == KERNEL_CS)
     {
        DbgPrint("ESP %x\n", Esp0);
        stack = (PULONG) (Esp0 + 24);
@@ -528,7 +528,8 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      {
 	DbgPrint("Exception: %d(%x)\n", ExceptionNr, Tf->ErrorCode&0xffff);
      }
-   DbgPrint("CS:EIP %x:%x ", Tf->Cs&0xffff, Tf->Eip);
+   DbgPrint("Processor: %d CS:EIP %x:%x ", KeGetCurrentProcessorNumber(),
+	    Tf->Cs&0xffff, Tf->Eip);
    print_address((PVOID)Tf->Eip);
    DbgPrint("\n");
    __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
@@ -665,14 +666,8 @@ void KeInitExceptions(void)
    int i;
    ULONG base, length;
    extern USHORT KiBootGdt[];
-   extern unsigned int trap_stack_top;   
-   extern KTSS KiTss;
-   extern KTSS KiTrapTss;
-   ULONG cr3;
 
    DPRINT("KeInitExceptions()\n",0);
-
-   __asm__("movl %%cr3,%0\n\t" : "=d" (cr3));
 
    /*
     * Set up an a descriptor for the LDT
@@ -686,64 +681,6 @@ void KeInitExceptions(void)
    KiBootGdt[(LDT_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8200;
    KiBootGdt[(LDT_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
      ((base & 0xFF000000) >> 16);
-
-   /*
-    * Set up a descriptor for the TSS
-    */
-   memset(&KiTss, 0, sizeof(KiTss));
-   base = (unsigned int)&KiTss;
-   length = sizeof(KiTss) - 1;
-         
-   KiBootGdt[(TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiBootGdt[(TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiBootGdt[(TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-   KiBootGdt[(TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-     ((base & 0xFF000000) >> 16);
-   
-   /*
-    * Initialize the TSS
-    */
-   KiTss.Esp0 = (ULONG)&init_stack_top;
-   KiTss.Ss0 = KERNEL_DS;
-   //   KiTss.IoMapBase = FIELD_OFFSET(KTSS, IoBitmap);
-   KiTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-   KiTss.IoBitmap[0] = 0xFF;   
-   KiTss.Ldt = LDT_SELECTOR;
-  
-   /*
-    * Load the task register
-    */
-   __asm__("ltr %%ax" 
-	   : /* no output */
-           : "a" (TSS_SELECTOR));
-
-   /*
-    * Set up the TSS for handling double faults
-    */
-   memset(&KiTrapTss, 0, sizeof(KiTrapTss));
-   base = (unsigned int)&KiTrapTss;
-   length = sizeof(KiTrapTss) - 1;
-         
-   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 0] = (length & 0xFFFF);
-   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 1] = (base & 0xFFFF);
-   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 2] = ((base & 0xFF0000) >> 16) | 0x8900;
-   KiBootGdt[(TRAP_TSS_SELECTOR / 2) + 3] = ((length & 0xF0000) >> 16) |
-     ((base & 0xFF000000) >> 16);
-
-   KiTrapTss.Eflags = 0;
-   KiTrapTss.Esp0 = (ULONG)&trap_stack_top;
-   KiTrapTss.Ss0 = KERNEL_DS;
-   KiTrapTss.Esp = (ULONG)&trap_stack_top;
-   KiTrapTss.Cs = KERNEL_CS;
-   KiTrapTss.Eip = (ULONG)KiTrap8;
-   KiTrapTss.Ss = KERNEL_DS;
-   KiTrapTss.Ds = KERNEL_DS;
-   KiTrapTss.Es = KERNEL_DS;
-   KiTrapTss.Fs = PCR_SELECTOR;
-   KiTrapTss.IoMapBase = 0xFFFF; /* No i/o bitmap */
-   KiTrapTss.IoBitmap[0] = 0xFF;   
-   KiTrapTss.Ldt = LDT_SELECTOR;
-   KiTrapTss.Cr3 = cr3;
 
    /*
     * Set up the other gates

@@ -30,6 +30,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
+#include <internal/i386/segment.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -64,11 +65,18 @@ static KSPIN_LOCK GdtLock;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KiInitializeGdt(ULONG Id, PKPCR Pcr)
+KiInitializeGdt(PKPCR Pcr)
 {
   PUSHORT Gdt;
+  struct
+  {
+    USHORT Length;
+    ULONG Base;
+  } __attribute__((packed)) Descriptor;
+  ULONG Entry;
+  ULONG Base;  
 
-  if (Id == 0)
+  if (Pcr == NULL)
     {
       KiGdtArray[0] = KiBootGdt;
       return;
@@ -89,8 +97,45 @@ KiInitializeGdt(ULONG Id, PKPCR Pcr)
    * We will be initializing these later so their current values are
    * irrelevant.
    */
-  memcpy(Gdt, KiGdtArray, sizeof(USHORT) * 4 * 11);
-  KiGdtArray[Id] = Gdt;
+  memcpy(Gdt, KiBootGdt, sizeof(USHORT) * 4 * 11);
+  KiGdtArray[Pcr->ProcessorNumber] = Gdt;
+  Pcr->GDT = Gdt;
+
+  /*
+   * Set the base address of the PCR 
+   */
+  Base = (ULONG)Pcr;
+  Entry = PCR_SELECTOR / 2;
+  Gdt[Entry + 1] = ((ULONG)Base) & 0xffff;
+  
+  Gdt[Entry + 2] = Gdt[Entry + 2] & ~(0xff);
+  Gdt[Entry + 2] = Gdt[Entry + 2] | ((((ULONG)Base) & 0xff0000) >> 16);
+   
+  Gdt[Entry + 3] = Gdt[Entry + 3] & ~(0xff00);
+  Gdt[Entry + 3] = Gdt[Entry + 3] | ((((ULONG)Base) & 0xff000000) >> 16);
+
+  /*
+   * Load the GDT
+   */
+  Descriptor.Length = 8 * 11;
+  Descriptor.Base = (ULONG)Gdt;
+  __asm__ ("lgdt %0\n\t" : /* no output */ : "m" (Descriptor));
+  
+  /*
+   * Reload the selectors
+   */
+  __asm__ ("movl %0, %%ds\n\t"
+	   "movl %0, %%es\n\t"
+	   "movl %1, %%fs\n\t"
+	   "movl %0, %%gs\n\t"
+	   : /* no output */
+	   : "a" (KERNEL_DS), "b" (PCR_SELECTOR));
+  __asm__ ("pushl %0\n\t"
+	   "pushl $.l4\n\t"
+	   "lret\n\t"
+	   ".l4:\n\t"
+	   : /* no output */
+	   : "a" (KERNEL_CS));
 }
 
 VOID 

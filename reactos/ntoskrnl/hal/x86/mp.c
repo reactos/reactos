@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.9 2001/04/16 16:29:01 dwelch Exp $
+/* $Id: mp.c,v 1.10 2001/04/16 23:29:54 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,6 +43,7 @@ typedef struct __attribute__((packed)) _COMMON_AREA_INFO
    ULONG Debug[16];  /* For debugging */
 } COMMON_AREA_INFO, *PCOMMON_AREA_INFO;
 
+extern PVOID Ki386InitialStackArray[MAXIMUM_PROCESSORS];
 
 CPU_INFO CPUMap[MAX_CPU];          /* Map of all CPUs in the system */
 ULONG CPUCount;                    /* Total number of CPUs */
@@ -1636,6 +1637,7 @@ HalInitializeProcessor (
 
       /* Write the location of the AP stack */
       Common->Stack = (ULONG)ExAllocatePool(NonPagedPool, MM_STACK_SIZE) + MM_STACK_SIZE;
+      Ki386InitialStackArray[CPU] = (PVOID)(Common->Stack - MM_STACK_SIZE);
 
       DPRINT("CPU %d got stack at 0x%X\n", CPU, Common->Stack);
 #if 0
@@ -2020,9 +2022,8 @@ HaliReadMPConfigTable(
      {
        PUCHAR pc = (PUCHAR)&Table->Signature;
        
-       DbgPrint("Bad MP configuration block signature: %c%c%c%c/%x/%x\n", 
-		pc[0], pc[1], pc[2], pc[3], MPC_SIGNATURE, 
-		(ULONG)Table->Signature);
+       DbgPrint("Bad MP configuration block signature: %c%c%c%c\n", 
+		pc[0], pc[1], pc[2], pc[3]);
        KeBugCheck(0);
        return;
      }
@@ -2054,7 +2055,6 @@ HaliReadMPConfigTable(
    Count = 0;
    while (Count < (Table->Length - sizeof(MP_CONFIGURATION_TABLE)))
    {
-     DbgPrint("Scanning entry %x/%x Count %x\n", Entry, *Entry, Count);
      /* Switch on type */
      switch (*Entry)
        {

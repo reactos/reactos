@@ -197,7 +197,7 @@ _multiboot_entry:
 	 * Load the GDTR and IDTR with new tables located above
 	 * 0xc0000000
 	 */
-	 
+	
 	/* FIXME: Application processors should have their own GDT/IDT */
 	lgdt	_KiGdtDescriptor
 	lidt	_KiIdtDescriptor
@@ -236,12 +236,12 @@ _multiboot_entry:
 	pushl	$KERNEL_CS
 	pushl	$_KiSystemStartup
 	lret
-	popl	%eax
 
 	/*
 	 * Catch illegal returns from KiSystemStartup
 	 */
 .l7:
+	popl	%eax	
 	pushl	$0
 	call	_KeBugCheck@4
 	popl	%eax
@@ -274,14 +274,14 @@ _multiboot_entry:
 	pushl	$KERNEL_CS
 	pushl	$__main
 	lret
-	popl	%eax
-	popl	%eax
 	
 	/*
 	 * Catch illegal returns from main, try bug checking the system,
 	 * if that fails then loop forever.
 	 */
 .l5:
+	popl	%eax
+	popl	%eax
 	pushl	$0
 	call	_KeBugCheck@4
 	popl	%eax

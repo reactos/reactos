@@ -18,7 +18,7 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/kernel.c
+ * FILE:            ntoskrnl/ke/i386/kernel.c
  * PURPOSE:         Initializes the kernel
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -39,17 +39,52 @@
 /* GLOBALS *******************************************************************/
 
 ULONG KiPcrInitDone = 0;
+static ULONG PcrsAllocated = 0;
 
 /* FUNCTIONS *****************************************************************/
+
+VOID
+KeApplicationProcessorInit()
+{
+  PKPCR KPCR;
+  ULONG Offset;
+
+  /*
+   * Create a PCR for this processor
+   */
+  Offset = InterlockedIncrement(&PcrsAllocated);
+  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGESIZE));
+  MmCreateVirtualMapping(NULL,
+			 (PVOID)KPCR,
+			 PAGE_READWRITE,
+			 (ULONG)MmAllocPage(0));
+  memset(KPCR, 0, PAGESIZE);
+  KPCR->ProcessorNumber = Offset;
+  KPCR->Self = KPCR;
+  KPCR->Irql = HIGH_LEVEL;
+
+  /*
+   * Initialize the GDT
+   */
+  KiInitializeGdt(KPCR);
+
+  /*
+   * Initialize the TSS
+   */
+  Ki386ApplicationProcessorInitializeTSS();
+}
 
 VOID 
 KeInit1(VOID)
 {
    PKPCR KPCR;
    extern USHORT KiBootGdt[];
+   extern KTSS KiBootTss;
 
    KiCheckFPU();
-
+   
+   KiInitializeGdt (NULL);
+   Ki386BootInitializeTSS();
    KeInitExceptions ();
    KeInitInterrupts ();
 
@@ -64,7 +99,10 @@ KeInit1(VOID)
    KPCR->Irql = HIGH_LEVEL;
    KPCR->GDT = (PUSHORT)&KiBootGdt;
    KPCR->IDT = (PUSHORT)&KiIdt;
+   KPCR->TSS = &KiBootTss;
+   KPCR->ProcessorNumber = 0;
    KiPcrInitDone = 1;
+   PcrsAllocated++;
 }
 
 VOID 

@@ -89,7 +89,7 @@ _Ki386RetToV86Mode:
 	 * will be the current stack adjusted so we don't overwrite the 
 	 * existing stack frames
 	 */
-	movl    $_KiTss, %esi
+	movl    %fs:KPCR_TSS, %esi
 	movl	%esp, KTSS_ESP0(%esi)
 	
 	/*
@@ -181,7 +181,7 @@ _KiV86Complete:
 	 * Restore the initial stack
 	 */
 	popl	%eax
-	movl    $_KiTss, %esi
+	movl    %fs:KPCR_TSS, %esi
 	movl	%eax, KTSS_ESP0(%esi)
 
 	/*

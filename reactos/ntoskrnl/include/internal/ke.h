@@ -190,6 +190,15 @@ KiDispatchException(PEXCEPTION_RECORD Er,
 		    BOOLEAN SearchFrames);
 VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
 			  PCONTEXT Context);
+struct _KPCR;
+VOID
+KiInitializeGdt(struct _KPCR* Pcr);
+VOID
+KeApplicationProcessorInit();
+VOID
+Ki386ApplicationProcessorInitializeTSS(VOID);
+VOID
+Ki386BootInitializeTSS(VOID);
 
 #endif /* not __ASM__ */
 

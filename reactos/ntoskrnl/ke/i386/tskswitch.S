@@ -80,7 +80,7 @@ _Ki386ContextSwitch:
 	/*
 	 * Set the current thread information in the PCR
 	 */
-  movl	%ebx, %fs:KPCR_CURRENT_THREAD
+	 movl	%ebx, %fs:KPCR_CURRENT_THREAD
 
 	/*
 	 * FIXME: Save debugging state.
@@ -102,7 +102,8 @@ _Ki386ContextSwitch:
 	 * Set the stack pointer in this processors TSS
 	 */
 	movl	KTHREAD_INITIAL_STACK(%ebx), %eax
-	movl	%eax, (_KiTss + KTSS_ESP0)
+	movl	%fs:KPCR_TSS, %esi
+	movl	%eax, KTSS_ESP0(%esi)
 
 	/*
 	 * Change the address space

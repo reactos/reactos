@@ -44,6 +44,7 @@
 
 #define KPCR_EXCEPTION_LIST       0x0
 #define KPCR_SELF                 0x18
+#define KPCR_TSS                  0x28
 #define KPCR_CURRENT_THREAD       0x124	
 
 #ifndef __ASM__
@@ -62,20 +63,21 @@ struct _KTRAPFRAME;
  */
 typedef struct _KPCR
 {
-   PVOID ExceptionList;               /* 00 */
-   PVOID StackBase;                   /* 04 */
-   PVOID StackLimit;                  /* 08 */
-   PVOID SubSystemTib;                /* 0C */
-   PVOID Reserved1;                   /* 10 */
-   PVOID ArbitraryUserPointer;        /* 14 */
-   struct _KPCR* Self;                /* 18 */
-   UCHAR ProcessorNumber;             /* 1C */
-   KIRQL Irql;                        /* 1D */
-   UCHAR Reserved2[0x2];              /* 1E */
-   PUSHORT IDT;                       /* 20 */
-   PUSHORT GDT;                       /* 24 */
-   UCHAR Reserved3[0xFC];             /* 28 */
-   struct _KTHREAD* CurrentThread;    /* 124 */
+  PVOID ExceptionList;               /* 00 */
+  PVOID StackBase;                   /* 04 */
+  PVOID StackLimit;                  /* 08 */
+  PVOID SubSystemTib;                /* 0C */
+  PVOID Reserved1;                   /* 10 */
+  PVOID ArbitraryUserPointer;        /* 14 */
+  struct _KPCR* Self;                /* 18 */
+  UCHAR ProcessorNumber;             /* 1C */
+  KIRQL Irql;                        /* 1D */
+  UCHAR Reserved2[0x2];              /* 1E */
+  PUSHORT IDT;                       /* 20 */
+  PUSHORT GDT;                       /* 24 */
+  KTSS* TSS;                         /* 28 */
+  UCHAR Reserved3[0xF8];             /* 2C */
+  struct _KTHREAD* CurrentThread;    /* 124 */
 } __attribute__((packed)) KPCR, *PKPCR;
 
 static inline PKPCR KeGetCurrentKPCR(VOID)

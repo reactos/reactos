@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.90 2001/04/16 16:29:02 dwelch Exp $
+/* $Id: main.c,v 1.91 2001/04/16 23:29:54 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -576,6 +576,7 @@ KiSystemStartup(BOOLEAN BootProcessor)
       KeBugCheck(0);
     }
   /* Do application processor initialization */
+  KeApplicationProcessorInit();
   for(;;);
 }
 
