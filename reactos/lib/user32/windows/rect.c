@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.14 2004/01/23 23:38:26 ekohl Exp $
+/* $Id: rect.c,v 1.15 2004/05/14 17:02:40 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -51,22 +51,16 @@ CopyRect(LPRECT lprcDst, CONST RECT *lprcSrc)
 /*
  * @implemented
  */
-BOOL
-STDCALL
+BOOL STDCALL
 EqualRect(
-  CONST RECT *lprc1,
-  CONST RECT *lprc2)
+   CONST RECT *lprc1,
+   CONST RECT *lprc2)
 {
-  if ((lprc1->left   == lprc2->left)
-   && (lprc1->top    == lprc2->top)
-   && (lprc1->right  == lprc2->right)
-   && (lprc1->bottom == lprc2->bottom))
-  {
-    return TRUE;
-  }
-  /* TODO: return the correct error code. */
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
+   if (lprc1 == NULL || lprc2 == NULL)
+      return FALSE;
+  
+   return (lprc1->left == lprc2->left) && (lprc1->top == lprc2->top) &&
+          (lprc1->right == lprc2->right) && (lprc1->bottom == lprc2->bottom);
 }
 
 
@@ -182,8 +176,13 @@ SubtractRect(LPRECT lprcDst, CONST RECT *lprcSrc1, CONST RECT *lprcSrc2)
   CopyRect(lprcDst, lprcSrc1);
   
   if(!IntersectRect(&tempRect, lprcSrc1, lprcSrc2))
-    return(FALSE);
+    return(TRUE);
   
+  if (EqualRect(&tempRect, lprcDst))
+  {
+    SetRectEmpty(lprcDst);
+    return FALSE;
+  }
   if(lprcDst->top == tempRect.top && lprcDst->bottom == tempRect.bottom)
   {
     if(lprcDst->left == tempRect.left)
