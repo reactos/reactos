@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.49 2004/04/09 22:13:26 gvg Exp $
+/* $Id: bitblt.c,v 1.50 2004/04/09 22:27:39 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -370,9 +370,14 @@ EngBitBlt(SURFOBJ *DestObj,
   OutputRect.right = DestRect->right + Translate.x;
   OutputRect.top = DestRect->top + Translate.y;
   OutputRect.bottom = DestRect->bottom + Translate.y;
-
-  AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
-  AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  
+  if(BrushOrigin)
+  {
+    AdjustedBrushOrigin.x = BrushOrigin->x + Translate.x;
+    AdjustedBrushOrigin.y = BrushOrigin->y + Translate.y;
+  }
+  else
+    AdjustedBrushOrigin = Translate;
 
   if (NULL != OutputObj)
     {
