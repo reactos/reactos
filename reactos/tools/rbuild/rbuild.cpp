@@ -280,6 +280,12 @@ XMLElement* XMLParse(XMLFile& f,
 	return e;
 }
 
+Project::~Project()
+{
+	for ( size_t i = 0; i < modules.size(); i++ )
+		delete modules[i];
+}
+
 void Project::ProcessXML ( const XMLElement& e, const string& path )
 {
 	const XMLAttribute *att;

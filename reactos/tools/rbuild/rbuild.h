@@ -59,6 +59,7 @@ public:
 	std::string name;
 	std::vector<Module*> modules;
 
+	~Project();
 	void ProcessXML ( const XMLElement& e, const std::string& path );
 };
 
