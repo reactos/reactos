@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.17 2002/09/13 18:53:17 hbirr Exp $
+/* $Id: time.c,v 1.18 2002/09/30 20:59:39 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -155,7 +155,7 @@ SystemTimeToFileTime(
   if (RtlTimeFieldsToTime (&TimeFields, &liTime))
   {
      lpFileTime->dwLowDateTime = liTime.u.LowPart;
-     lpFileTime->dwHighDateTime = liTime.u.LowPart;
+     lpFileTime->dwHighDateTime = liTime.u.HighPart;
      return TRUE;
   }
   return FALSE;
