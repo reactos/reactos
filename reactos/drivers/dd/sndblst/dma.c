@@ -92,7 +92,7 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
     Desc.Dma32BitAddresses = FALSE; // I don't think we can
     Desc.IgnoreCount = FALSE; // Should be OK
     Desc.Reserved1 = 0;
-    Desc.Reserved2 = 0;
+//    Desc.Reserved2 = 0;
     Desc.BusNumber = 0;
     Desc.DmaChannel = Device->DMA;    // Our channel :)
     Desc.InterfaceType = Isa;   // (BusType == MicroChannel) ? MicroChannel : Isa;

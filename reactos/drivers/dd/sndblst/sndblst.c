@@ -16,6 +16,7 @@
 
 //#define NDEBUG
 #include <debug.h>
+#include <rosrtl/string.h>
 
 #include "sndblst.h"
 
@@ -34,8 +35,9 @@ NTSTATUS InitDevice(
 //    PDEVICE_INSTANCE Instance = Context;
     PDEVICE_OBJECT DeviceObject; // = Context;
     PDEVICE_EXTENSION Parameters; // = DeviceObject->DeviceExtension;
-    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\SoundBlaster_Out_0");
-    UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\SoundBlaster_Out_0");
+    UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\WaveOut");   // CHANGE THESE!
+    UNICODE_STRING SymlinkName = ROS_STRING_INITIALIZER(L"\\??\\WaveOut");
+
 //    CONFIG Config;
     RTL_QUERY_REGISTRY_TABLE Table[2];
     NTSTATUS s;
@@ -43,7 +45,7 @@ NTSTATUS InitDevice(
     UCHAR DSP_Major = 0, DSP_Minor = 0;
 
     // This is TEMPORARY, to ensure that we don't process more than 1 device.
-    // I'll remove this limitation in the future.
+    // This limitation should be removed in future.
     if (DeviceCount > 0)
     {
         DPRINT("Sorry - only 1 device supported by Sound Blaster driver at present :(\n");
@@ -256,7 +258,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
  * RETURNS: Success or failure
  */
 {
-/*    PIO_STACK_LOCATION Stack;
+    PIO_STACK_LOCATION Stack;
     PDEVICE_EXTENSION DeviceExtension;
     UINT ByteCount;
     PBYTE Data;
@@ -268,7 +270,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
 
     switch(Stack->Parameters.DeviceIoControl.IoControlCode)
     {
-        case IOCTL_MIDI_PLAY :
+/*        case IOCTL_MIDI_PLAY :
         {
             DPRINT("Received IOCTL_MIDI_PLAY\n");
             Data = (PBYTE) Irp->AssociatedIrp.SystemBuffer;
@@ -289,6 +291,7 @@ BlasterDeviceControl(PDEVICE_OBJECT DeviceObject,
             
             return(STATUS_SUCCESS);
         }
+*/
     }
     
     return(STATUS_SUCCESS);
