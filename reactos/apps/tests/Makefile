@@ -11,11 +11,11 @@ include $(PATH_TO_TOP)/rules.mak
 # alive apc args atomtest bench bitblt consume copymove count dump_shared_data
 # event file gditest hello isotest lpc messagebox mstest mutex nptest
 # patblt pteb regtest sectest shm thread vmtest winhello shaptest
-TEST_APPS = alive apc args atomtest bench consume copymove count \
+TEST_APPS = alive apc args atomtest bench bitblt consume copymove count \
             dump_shared_data event file gditest hello isotest lpc messagebox \
             mstest mutex event file gditest hello isotest lpc messagebox mstest \
             mutex nptest pteb regtest sectest shm thread tokentest vmtest \
-            winhello dibtest lock hivetest shaptest
+            winhello dibtest lock hivetest shaptest wm_paint
 
 TEST_MISC = 
 
