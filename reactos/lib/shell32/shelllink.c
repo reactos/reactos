@@ -634,7 +634,7 @@ static HRESULT Stream_WriteString( IStream* stm, LPCWSTR str )
     return S_OK;
 }
 
-static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCSTR filename )
+static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR filename )
 {
     LOCATION_INFO loc;
     ULONG count;
@@ -659,9 +659,10 @@ static HRESULT WINAPI IPersistStream_fnSave(
 	IStream*         stm,
 	BOOL             fClearDirty)
 {
+    static const WCHAR wOpen[] = {'o','p','e','n',0};
+
     LINK_HEADER header;
-    char    buffer[MAX_PATH];
-    char    exePath[MAX_PATH];
+    WCHAR   exePath[MAX_PATH];
     ULONG   count;
     HRESULT r;
 
@@ -671,11 +672,8 @@ static HRESULT WINAPI IPersistStream_fnSave(
 
     *exePath = '\0';
 
-    if (This->sPath) {
-	WideCharToMultiByte(CP_ACP, 0, This->sPath, -1, buffer, MAX_PATH, 0, 0);
-
-	SHELL_FindExecutable(NULL, buffer, "open", exePath, NULL, NULL, NULL);
-    }
+    if (This->sPath)
+	SHELL_FindExecutable(NULL, This->sPath, wOpen, exePath, NULL, NULL, NULL);
 
     /* if there's no PIDL, generate one */
     if( ! This->pPidl )
@@ -683,7 +681,7 @@ static HRESULT WINAPI IPersistStream_fnSave(
         if( !*exePath )
             return E_FAIL;
 
-        This->pPidl = ILCreateFromPathA(exePath);
+        This->pPidl = ILCreateFromPathW(exePath);
     }
 
     memset(&header, 0, sizeof(header));
