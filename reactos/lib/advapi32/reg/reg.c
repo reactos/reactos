@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.40 2003/12/28 09:28:39 arty Exp $
+/* $Id: reg.c,v 1.41 2003/12/28 23:22:30 arty Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2215,8 +2215,8 @@ RegQueryValueExA(
   UNICODE_STRING ValueData;
   ANSI_STRING AnsiString;
   LONG ErrorCode;
-  DWORD Type;
   DWORD Length;
+  DWORD Type;
 
   if ((lpData) && (!lpcbData))
     {
@@ -2226,11 +2226,12 @@ RegQueryValueExA(
 
   if (lpData)
     {
-      ValueData.Length = ValueData.MaximumLength = *lpcbData * sizeof(WCHAR);
+      ValueData.Length = *lpcbData * sizeof(WCHAR);
+      ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
       ValueData.Buffer = RtlAllocateHeap(
         ProcessHeap,
         0,
-        ValueData.Length);
+        ValueData.MaximumLength);
       if (!ValueData.Buffer)
         {
           SetLastError(ERROR_OUTOFMEMORY);
@@ -2240,22 +2241,22 @@ RegQueryValueExA(
   else
     {
       ValueData.Buffer = NULL;
+      ValueData.Length = 0;
+      ValueData.MaximumLength = 0;
     }
 
   RtlCreateUnicodeStringFromAsciiz(&ValueName, (LPSTR)lpValueName);
 
   /* Convert length from USHORT to DWORD */
-  Length = ValueData.Length;
-  ErrorCode = RegQueryValueExW(
-    hKey,
-    ValueName.Buffer,
-    lpReserved,
-    &Type,
-    (LPBYTE)ValueData.Buffer,
-    &Length);
+  Length = ValueData.Length / sizeof(WCHAR);
+  ErrorCode = RegQueryValueExW
+    (hKey,
+     ValueName.Buffer,
+     lpReserved,
+     &Type,
+     (LPBYTE)ValueData.Buffer,
+     &Length);
   if (lpType) *lpType = Type;
-  ValueData.Length = Length;
-
   if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL))
     {
       if ((Type == REG_SZ) || (Type == REG_MULTI_SZ) || (Type == REG_EXPAND_SZ))
@@ -2263,13 +2264,16 @@ RegQueryValueExA(
           RtlInitAnsiString(&AnsiString, NULL);
           AnsiString.Buffer = lpData;
           AnsiString.MaximumLength = *lpcbData;
+	  ValueData.Length = Length * sizeof(WCHAR);
+	  ValueData.MaximumLength = ValueData.Length + sizeof(WCHAR);
           RtlUnicodeStringToAnsiString(&AnsiString, &ValueData, FALSE);
-          *lpcbData = ValueData.Length / sizeof(WCHAR);
         } else {
-          RtlMoveMemory(lpData, ValueData.Buffer, *lpcbData);
-          *lpcbData = ValueData.Length;
+          RtlMoveMemory(lpData, ValueData.Buffer, 
+			min(*lpcbData,Length));
         }
-      }
+    }
+  
+  *lpcbData = Length;
 
   if (ValueData.Buffer)
     {
