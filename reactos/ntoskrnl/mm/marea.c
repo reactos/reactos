@@ -367,6 +367,7 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 {
    MEMORY_AREA* MemoryArea;
    ULONG i;
+   PEPROCESS CurrentProcess = PsGetCurrentProcess();
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
 	   "FreePageContext %d)\n",AddressSpace,BaseAddress,Length,
@@ -378,6 +379,11 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      {
 	KeBugCheck(0);
 	return(STATUS_UNSUCCESSFUL);
+     }
+   if (AddressSpace->Process != NULL && 
+       AddressSpace->Process != CurrentProcess)
+     {
+       KeAttachProcess(AddressSpace->Process);
      }
    for (i=0; i<(PAGE_ROUND_UP(MemoryArea->Length)/PAGE_SIZE); i++)
      {
@@ -406,7 +412,11 @@ MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 		    SwapEntry, Dirty);
 	 }
      }
-   
+   if (AddressSpace->Process != NULL &&
+       AddressSpace->Process != CurrentProcess)
+     {
+       KeDetachProcess();
+     }
    RemoveEntryList(&MemoryArea->Entry);
    ExFreePool(MemoryArea);
    
