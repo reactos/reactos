@@ -1,6 +1,0 @@
-/* $Id: chklib.rc,v 1.3 2004/10/16 22:30:18 gvg Exp $ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"Tool to check a dynamic library for a symbol\0"
-#define REACTOS_STR_INTERNAL_NAME	"chklib\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"chklib.exe\0"
-#include <reactos/version.rc>
