@@ -136,8 +136,8 @@ InterlockedExchange(LPLONG target, LONG value )
                   "lock\n\txchgl %0,(%1)"
                   :"=r" (ret):"r" (target), "0" (value):"memory" );
 #elif defined(_M_PPC)
-        ret = *target;
-        while( InterlockedCompareExchange( target, value, ret ) != value );
+        ret = *(volatile LONG *)target;
+        while( InterlockedCompareExchange( target, value, ret ) != ret );
 #endif
 	return ret;
 }
@@ -202,9 +202,11 @@ InterlockedExchangeAdd(
                   :"r" (Addend), "0" (Increment)
                   :"memory" );
 #elif defined(_M_PPC)
-        do
-            ret = *Addend;
-        while (!InterlockedCompareExchange(Addend, ret, ret + Increment));
+        LONG newval;
+        do {
+            ret = *(volatile LONG *)Addend;
+            newval = ret + Increment;
+        } while (InterlockedCompareExchange(Addend, ret, newval) != ret);
 #endif
 	return ret;
 }
