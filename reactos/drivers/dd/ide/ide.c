@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.53 2002/03/13 01:29:44 ekohl Exp $
+/* $Id: ide.c,v 1.54 2002/04/07 18:28:49 phreak Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -78,7 +78,7 @@
 #define  VERSION  "V0.1.5"
 
 /* uncomment the following line to enable the secondary ide channel */
-#define ENABLE_SECONDARY_IDE_CHANNEL
+//#define ENABLE_SECONDARY_IDE_CHANNEL
 
 //  -------------------------------------------------------  File Static Data
 
@@ -415,7 +415,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 	{
 	  Status = IdeCreateController(DriverObject,
 				       &Controllers[0],
-				       ControllerIdx);
+				       0);
 	  if (NT_SUCCESS(Status))
 	    {
 	      DPRINT("  Found primary ISA IDE controller!\n");
@@ -438,7 +438,7 @@ IdeFindControllers(IN PDRIVER_OBJECT DriverObject)
 	{
 	  Status = IdeCreateController(DriverObject,
 				       &Controllers[1],
-				       ControllerIdx);
+				       1);
 	  if (NT_SUCCESS(Status))
 	    {
 	      DPRINT("  Found secondary ISA IDE controller!\n");
@@ -2136,14 +2136,16 @@ IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension)
                          FALSE, 
                          DeviceExtension->StartingSector);
 
-  //  Issue completion of the current packet
-  IoCompleteRequest(Irp, IO_DISK_INCREMENT);
-
   //  Flush cache if necessary
   if (Operation == IRP_MJ_READ) 
     {
       KeFlushIoBuffers(Irp->MdlAddress, TRUE, FALSE);
     }
+  //  Issue completion of the current packet
+  //  return status information too
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = DeviceExtension->SectorsTransferred * DeviceExtension->BytesPerSector;
+  IoCompleteRequest(Irp, IO_DISK_INCREMENT);
 }
 
 //    IDEIoTimer
