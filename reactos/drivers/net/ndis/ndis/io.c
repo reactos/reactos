@@ -129,7 +129,7 @@ NdisGetCacheFillSize(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -138,12 +138,12 @@ NdisImmediateReadPortUchar(
     IN  ULONG       Port,
     OUT PUCHAR      Data)
 {
-    UNIMPLEMENTED
+    *Data = READ_PORT_UCHAR((PUCHAR)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -152,12 +152,12 @@ NdisImmediateReadPortUlong(
     IN  ULONG       Port,
     OUT PULONG      Data)
 {
-    UNIMPLEMENTED
+    *Data = READ_PORT_ULONG((PULONG)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -166,12 +166,12 @@ NdisImmediateReadPortUshort(
     IN  ULONG       Port,
     OUT PUSHORT     Data)
 {
-    UNIMPLEMENTED
+    *Data = READ_PORT_USHORT((PUSHORT)Port); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -180,12 +180,12 @@ NdisImmediateWritePortUchar(
     IN  ULONG       Port,
     IN  UCHAR       Data)
 {
-    UNIMPLEMENTED
+    WRITE_PORT_UCHAR((PUCHAR)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 EXPORT
@@ -194,7 +194,7 @@ NdisImmediateWritePortUlong(
     IN  ULONG       Port,
     IN  ULONG       Data)
 {
-    UNIMPLEMENTED
+    WRITE_PORT_ULONG((PULONG)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
@@ -208,7 +208,7 @@ NdisImmediateWritePortUshort(
     IN  ULONG       Port,
     IN  USHORT      Data)
 {
-    UNIMPLEMENTED
+    WRITE_PORT_USHORT((PUSHORT)Port, Data); // FIXME: What to do with WrapperConfigurationContext?
 }
 
 
