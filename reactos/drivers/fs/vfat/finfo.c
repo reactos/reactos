@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.25 2003/01/19 01:06:09 gvg Exp $
+/* $Id: finfo.c,v 1.26 2003/01/28 16:48:03 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -385,6 +385,29 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
+VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG ClusterSize)
+{
+   if (Size > 0)
+   {
+      Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(Size, ClusterSize);
+   }
+   else
+   {
+      Fcb->RFCB.AllocationSize.QuadPart = 0LL;
+   }
+   if (!vfatFCBIsDirectory(Fcb))
+   {
+      Fcb->entry.FileSize = Size;  
+   }
+   Fcb->RFCB.FileSize.QuadPart = Size;
+   Fcb->RFCB.ValidDataLength.QuadPart = Size;
+
+   if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
+   {
+      CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+   }
+}
+
 NTSTATUS
 VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
 				 PVFATFCB Fcb,
@@ -421,7 +444,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       Status = NextCluster (DeviceExt, Fcb, FirstCluster, &FirstCluster, TRUE);
       if (!NT_SUCCESS(Status))
       {
-	DPRINT1("NextCluster failed.\n");
+	DPRINT1("NextCluster failed. Status = %x\n", Status);
 	return Status;
       }
       if (FirstCluster == 0xffffffff)
@@ -431,13 +454,14 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
       Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
 	         ROUND_DOWN(NewSize - 1, ClusterSize),
                  &NCluster, TRUE);
-      if (NCluster == 0xffffffff)
+      if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
       {
 	 /* disk is full */
          NCluster = Cluster = FirstCluster;
-         while (Cluster != 0xffffffff)
+	 Status = STATUS_SUCCESS;
+         while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
 	 {
-	    NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+	    Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
             WriteCluster (DeviceExt, Cluster, 0);
 	    Cluster = NCluster;
 	 }
@@ -451,29 +475,32 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
        Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
 	          Fcb->RFCB.AllocationSize.u.LowPart - ClusterSize,
 		  &Cluster, FALSE);
+       /* FIXME: Check status */
        /* Cluster points now to the last cluster within the chain */
        Status = OffsetToCluster(DeviceExt, Fcb, FirstCluster, 
 	         ROUND_DOWN(NewSize - 1, ClusterSize),
                  &NCluster, TRUE);
-       if (NCluster == 0xffffffff)
+       if (NCluster == 0xffffffff || !NT_SUCCESS(Status))
        {
 	  /* disk is full */
 	  NCluster = Cluster; 
-          NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+          Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
 	  WriteCluster(DeviceExt, Cluster, 0xffffffff);
 	  Cluster = NCluster;
-          while (Cluster != 0xffffffff)
+          while (NT_SUCCESS(Status) && Cluster != 0xffffffff && Cluster > 1)
 	  {
-	     NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
-             WriteCluster (DeviceExt, Cluster, 0);
-	     Cluster = NCluster;
+	    Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
+            WriteCluster (DeviceExt, Cluster, 0);
+	    Cluster = NCluster;
 	  }
 	  return STATUS_DISK_FULL;
        }
     }
+    UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
   }
   else if (NewSize + ClusterSize <= Fcb->RFCB.AllocationSize.u.LowPart)
   {
+    UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
     if (NewSize > 0)
     {
       Status = OffsetToCluster(DeviceExt, Fcb, Cluster, 
@@ -481,41 +508,28 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 		  &Cluster, FALSE);
 
       NCluster = Cluster;
-      Status = NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+      Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
       WriteCluster(DeviceExt, Cluster, 0xffffffff);
       Cluster = NCluster;
     }
     else
     {
-      Cluster = FirstCluster;
+      Fcb->entry.FirstCluster = 0;
+      Fcb->entry.FirstClusterHigh = 0;
+
+      NCluster = Cluster = FirstCluster;
+      Status = STATUS_SUCCESS;
     }
-    while (0xffffffff != Cluster && 0 != Cluster)
+    while (NT_SUCCESS(Status) && 0xffffffff != Cluster && Cluster > 1)
     {
-       NextCluster (DeviceExt, Fcb, Cluster, &NCluster, FALSE);
+       Status = NextCluster (DeviceExt, Fcb, FirstCluster, &NCluster, FALSE);
        WriteCluster (DeviceExt, Cluster, 0);
        Cluster = NCluster;
     }
   }
-  if (!vfatFCBIsDirectory(Fcb))
-  {
-    Fcb->entry.FileSize = NewSize;  
-  }
-  if (NewSize > 0)
-  {
-    Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(NewSize - 1, ClusterSize);
-  }
   else
   {
-    Fcb->RFCB.AllocationSize.QuadPart = 0LL;
-    Fcb->entry.FirstCluster = 0;
-    Fcb->entry.FirstClusterHigh = 0;
-  }
-  Fcb->RFCB.FileSize.QuadPart = NewSize;
-  Fcb->RFCB.ValidDataLength.QuadPart = NewSize;
-
-  if (FileObject->SectionObjectPointers->SharedCacheMap != NULL)
-  {
-     CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
+     UpdateFileSize(FileObject, Fcb, NewSize, ClusterSize);
   }
   /* Update the on-disk directory entry */
   VfatUpdateEntry(DeviceExt, FileObject);
