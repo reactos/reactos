@@ -26,7 +26,7 @@ export NASM_CMD	= nasm
 
 .PHONY : clean
 
-all: fat.bin fat32.bin bin2c.exe
+all: fat.bin fat32.bin isoboot.bin bin2c.exe
 
 fat.bin: fat.asm bin2c.exe
 	$(NASM_CMD) -o fat.bin -f bin fat.asm
@@ -36,6 +36,9 @@ fat.bin: fat.asm bin2c.exe
 fat32.bin: fat32.asm bin2c.exe
 	$(NASM_CMD) -o fat32.bin -f bin fat32.asm
 	bin2c fat32.bin fat32.h fat32_data
+
+isoboot.bin: isoboot.asm
+	$(NASM_CMD) -o isoboot.bin -f bin isoboot.asm
 
 bin2c.exe: bin2c.c
 	$(CC) -o bin2c.exe bin2c.c
