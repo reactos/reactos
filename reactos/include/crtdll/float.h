@@ -27,9 +27,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/14 07:10:15 $
  *
  */
 
@@ -182,7 +182,10 @@ double	_scalb		(double x, long n);
 int	_finite		(double x);
 int	_fpclass	(double x);
 int	_isnan		(double x);
+int	_isinf		(double x); // not exported
 
+#define isnan(x)	_isnan(x)
+#define isinf(x)	_isinf(x)
 
 #endif	/* Not __STRICT_ANSI__ */
 

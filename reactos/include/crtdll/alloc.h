@@ -25,9 +25,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.1 $
+ * $Revision: 1.2 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/14 07:10:15 $
  *
  */
 
@@ -56,10 +56,13 @@ typedef	struct _heapinfo
 } _HEAPINFO;
 
 int	_heapwalk (_HEAPINFO* pHeapinfo);
+void  * _alloca(size_t size);
+
 
 
 #ifndef	_NO_OLDNAMES
-int	heapwalk (_HEAPINFO* pHeapinfo);
+#define heapwalk(x)	_heapwalk(x)
+#define alloca(s)	_alloca(s)
 #endif	/* Not _NO_OLDNAMES */
 
 #ifdef	__cplusplus

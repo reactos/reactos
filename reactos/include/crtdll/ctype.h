@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/14 07:10:15 $
  *
  */
 #ifndef _LINUX_CTYPE_H
@@ -127,10 +127,10 @@ int	__iscsymf (int c);	/* Valid first character in C symbol */
 int	__iscsym (int c);	/* Valid character in C symbol (after first) */
 
 #ifndef	_NO_OLDNAMES
-int	isascii (int c);
-int	toascii (int c);
-int	iscsymf (int c);
-int	iscsym (int c);
+#define	isascii(c)	__isascii(c)
+#define	toascii(c)	_toascii(c)
+#define	iscsymf(c)	__iscsymf(c)
+#define	iscsym(c)	__iscsym(c)
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not __STRICT_ANSI__ */

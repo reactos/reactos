@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/04/02 21:42:06 $
+ * $Date: 1999/04/14 07:10:15 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -52,6 +52,8 @@ extern char***	_environ_dll;
 #define __need_wchar_t
 #define __need_NULL
 #include <crtdll/stddef.h>
+
+#include <crtdll/mbstring.h>
 
 #ifndef  __ATTRIB_NORETURN
 #ifdef	__GNUC__
@@ -167,6 +169,14 @@ char*	_gcvt (double dValue, int nDec, char* caBuf);
 char*	_fullpath (char* caBuf, const char* szPath, size_t sizeMax);
 
 void	_swab (const char* caFrom, char* caTo, size_t sizeToCopy);
+
+unsigned int _rotl( unsigned int value, int shift );
+unsigned int _rotr( unsigned int value, int shift );
+unsigned long _lrotl( unsigned long value, int shift );
+unsigned long _lrotr( unsigned long value, int shift );
+
+
+
 
 #ifndef	_NO_OLDNAMES
 #define	 beep 		_beep

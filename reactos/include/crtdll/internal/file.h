@@ -55,11 +55,6 @@ time_t FileTimeToUnixTime( const FILETIME *filetime, DWORD *remainder );
 #ifndef __dj_ENFORCE_FUNCTION_CALLS
 #endif /* !__dj_ENFORCE_FUNCTION_CALLS */
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* __dj_include_libc_file_h__ */
 
 #define __FILE_REC_MAX 20
 typedef struct __file_rec 
@@ -70,4 +65,14 @@ typedef struct __file_rec
 } __file_rec;
 
 extern __file_rec *__file_rec_list;
+
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif /* __dj_include_libc_file_h__ */
+
+
 

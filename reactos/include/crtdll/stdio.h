@@ -22,9 +22,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
- * $Author: dwelch $
- * $Date: 1999/04/14 00:46:22 $
+ * $Revision: 1.7 $
+ * $Author: ariadne $
+ * $Date: 1999/04/14 07:10:15 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -42,6 +42,7 @@ extern "C" {
 #define __need_size_t
 #define __need_NULL
 #define __need_wchar_t
+#define __need_wint_t
 #include <crtdll/stddef.h>
 
 
@@ -85,6 +86,7 @@ typedef struct {
   int   _ungotchar;
   int   _bufsiz;
   char *_name_to_remove;
+  int 	_fillsize;
 } FILE;
 #define _FILE_DEFINED
 #endif
@@ -241,9 +243,13 @@ int	puts (const char* szOutput);
 int	ungetc (int c, FILE* fileWasRead);
 
 /* Wide character versions */
-int	fgetwc (FILE* fileRead);
-int	fputwc (wchar_t wc, FILE* fileWrite);
-int	ungetwc (wchar_t wc, FILE* fileWasRead);
+wint_t	fgetwc (FILE* fileRead);
+wint_t	fputwc (wchar_t wc, FILE* fileWrite);
+wint_t  getwc(FILE *fileRead); // not exported
+wint_t	ungetwc (wchar_t wc, FILE* fileWasRead);
+
+wint_t	_filwbuf(FILE *f);
+wint_t	_flswbuf(wchar_t c, FILE *f); 
 
 /*
  * Not exported by CRTDLL.DLL included for reference purposes.
