@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.221 2004/05/03 15:29:01 sedwards Exp $
+# $Id: Makefile,v 1.222 2004/05/29 00:16:39 sedwards Exp $
 #
 # Global makefile
 #
@@ -63,8 +63,8 @@ SERVERS = win32
 LOADERS = dos
 
 # Driver support libraries
-#bzip2 zlib
-DRIVERS_LIB = bzip2
+#bzip2 zlib oskittcp
+DRIVERS_LIB = bzip2 oskittcp
 
 # Kernel mode device drivers
 # Obsolete: ide
