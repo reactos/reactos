@@ -1,35 +1,36 @@
-# $Id: Makefile,v 1.3 1999/11/24 23:06:24 ea Exp $
+# $Id: Makefile,v 1.1 1999/11/24 23:06:23 ea Exp $
 #
-# TDI.SYS build spec
+# NDIS.SYS build spec
 #
 
-TARGETNAME=tdi
+TARGETNAME=
 
 BASE_CFLAGS = -I../../../include
 
-OBJECTS_CTE = cte/stubs.o cte/string.o
-OBJECTS_TDI = tdi/stubs.o tdi/obsolete.o tdi/handler.o
+OBJECTS_ARC = arc/stubs.o
+OBJECTS_ETH = eth/stubs.o
+OBJECTS_FDDI = fddi/stubs.o
+OBJECTS_NDIS = ndis/stubs.o
+OBJECTS_TR = tr/stubs.o
 
-OBJECTS_MISC = misc/main.o misc/$(TARGETNAME).coff
+OBJECTS_MISC = misc/dllmain.o misc/driver.o misc/stubs.o \
+	misc/$(TARGETNAME).coff
 
-OBJECTS = $(OBJECTS_CTE) $(OBJECTS_TDI) $(OBJECTS_MISC)
+OBJECTS = $(OBJECTS_ARC) $(OBJECTS_ETH) $(OBJECTS_FDDI) $(OBJECTS_NDIS)  \
+          $(OBJECTS_TR)
 
 all: $(TARGETNAME).sys
 
-misc/$(TARGETNAME).coff: misc/$(TARGETNAME).rc ../../include/reactos/resource.h
+$(TARGETNAME).coff: $(TARGETNAME).rc ../../../include/reactos/resource.h
 
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = \
-		cte\*.o tdi\*.o misc\*.o misc\*.coff \
-		$(TARGETNAME).o $(TARGETNAME).a \
-		junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
+CLEAN_FILES = arc\*.o eth\*.o fddi\*.o ndis\*.o tr\*.o \
+              misc\*.o misc\*.coff $(TARGETNAME).o $(TARGETNAME).a \
+              junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 else
-CLEAN_FILES = \
-		cte/*.o tdi/*.o misc/*.o misc/*.coff \
-		$(TARGETNAME).o $(TARGETNAME).a \
-		junk.tmp base.tmp temp.exp \
-		$(TARGETNAME).sys $(TARGETNAME).sym
+CLEAN_FILES = arc/*.o eth/*.o fddi/*.o ndis/*.o tr/*.o \
+              misc/*.o misc/*.coff $(TARGETNAME).o $(TARGETNAME).a \
+              junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 endif
 
 $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
