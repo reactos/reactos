@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.11 2004/08/28 11:08:50 ekohl Exp $
+# $Id: Makefile,v 1.12 2004/11/12 15:42:36 ekohl Exp $
 
 PATH_TO_TOP = ../..
 
@@ -13,8 +13,8 @@ TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a gdi32.a user32.a samlib.a userenv
 
 TARGET_CFLAGS = -Wall -Werror -fno-builtin
 
-TARGET_CFLAGS += -D__USE_W32API -D_WIN32_IE=0x0500
-TARGET_RCFLAGS += -D__USE_W32API -D_WIN32_IE=0x0500
+TARGET_CFLAGS += -D__USE_W32API -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DUNICODE -D_UNICODE
+TARGET_RCFLAGS += -D__USE_W32API -D_WIN32_IE=0x0600  -D_WIN32_WINNT=0x0501 -DUNICODE -D_UNICODE
 
 TARGET_LFLAGS = -nostartfiles
 

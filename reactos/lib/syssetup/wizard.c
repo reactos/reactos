@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.12 2004/11/11 12:23:43 ekohl Exp $
+/* $Id: wizard.c,v 1.13 2004/11/12 15:42:36 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -31,7 +31,6 @@
 #include <commctrl.h>
 
 #include <string.h>
-#include <tchar.h>
 #include <setupapi.h>
 
 #include <syssetup.h>
@@ -86,7 +85,7 @@ CreateTitleFont(VOID)
 
   LogFont = ncm.lfMessageFont;
   LogFont.lfWeight = FW_BOLD;
-  _tcscpy(LogFont.lfFaceName, TEXT("MS Shell Dlg"));
+  wcscpy(LogFont.lfFaceName, L"MS Shell Dlg");
 
   hdc = GetDC(NULL);
   FontSize = 12;
@@ -170,8 +169,8 @@ OwnerPageDlgProc(HWND hwndDlg,
                  WPARAM wParam,
                  LPARAM lParam)
 {
-  TCHAR OwnerName[51];
-  TCHAR OwnerOrganization[51];
+  WCHAR OwnerName[51];
+  WCHAR OwnerOrganization[51];
   HKEY hKey;
   LPNMHDR lpnm;
 
@@ -179,8 +178,8 @@ OwnerPageDlgProc(HWND hwndDlg,
     {
       case WM_INITDIALOG:
         {
-          SendDlgItemMessage(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
-          SendDlgItemMessage(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
+          SendDlgItemMessageW(hwndDlg, IDC_OWNERNAME, EM_LIMITTEXT, 50, 0);
+          SendDlgItemMessageW(hwndDlg, IDC_OWNERORGANIZATION, EM_LIMITTEXT, 50, 0);
 
           /* Set focus to owner name */
           SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
@@ -203,38 +202,38 @@ OwnerPageDlgProc(HWND hwndDlg,
                 OwnerName[0] = 0;
                 if (GetDlgItemText(hwndDlg, IDC_OWNERNAME, OwnerName, 50) == 0)
                 {
-                  MessageBox(hwndDlg,
-                             _T("Setup cannot continue until you enter your name."),
-                             _T("ReactOS Setup"),
+                  MessageBoxW(hwndDlg,
+                              L"Setup cannot continue until you enter your name.",
+                              L"ReactOS Setup",
                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
 
                 OwnerOrganization[0] = 0;
-                GetDlgItemText(hwndDlg, IDC_OWNERORGANIZATION, OwnerOrganization, 50);
+                GetDlgItemTextW(hwndDlg, IDC_OWNERORGANIZATION, OwnerOrganization, 50);
 
-                RegOpenKeyEx(HKEY_LOCAL_MACHINE,
-                             _T("Software\\Microsoft\\Windows NT\\CurrentVersion"),
-                             0,
-                             KEY_ALL_ACCESS,
-                             &hKey);
+                RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                              L"Software\\Microsoft\\Windows NT\\CurrentVersion",
+                              0,
+                              KEY_ALL_ACCESS,
+                              &hKey);
                 /* FIXME: check error code */
 
-                RegSetValueEx(hKey,
-                              _T("RegisteredOwner"),
-                              0,
-                              REG_SZ,
-                              OwnerName,
-                              (_tcslen(OwnerName) + 1) * sizeof(TCHAR));
+                RegSetValueExW(hKey,
+                               L"RegisteredOwner",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)OwnerName,
+                               (wcslen(OwnerName) + 1) * sizeof(WCHAR));
                 /* FIXME: check error code */
 
-                RegSetValueEx(hKey,
-                              _T("RegisteredOrganization"),
-                              0,
-                              REG_SZ,
-                              OwnerOrganization,
-                              (_tcslen(OwnerOrganization) + 1) * sizeof(TCHAR));
+                RegSetValueExW(hKey,
+                               L"RegisteredOrganization",
+                               0,
+                               REG_SZ,
+                               (LPBYTE)OwnerOrganization,
+                               (wcslen(OwnerOrganization) + 1) * sizeof(WCHAR));
                 /* FIXME: check error code */
 
                 RegCloseKey(hKey);
@@ -260,9 +259,9 @@ ComputerPageDlgProc(HWND hwndDlg,
                     WPARAM wParam,
                     LPARAM lParam)
 {
-  TCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
-  TCHAR Password1[15];
-  TCHAR Password2[15];
+  WCHAR ComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+  WCHAR Password1[15];
+  WCHAR Password2[15];
   DWORD Length;
   LPNMHDR lpnm;
 
@@ -275,12 +274,12 @@ ComputerPageDlgProc(HWND hwndDlg,
           GetComputerName(ComputerName, &Length);
 
           /* Display current computer name */
-          SetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName);
+          SetDlgItemTextW(hwndDlg, IDC_COMPUTERNAME, ComputerName);
 
           /* Set text limits */
-          SendDlgItemMessage(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
-          SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
-          SendDlgItemMessage(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
+          SendDlgItemMessageW(hwndDlg, IDC_COMPUTERNAME, EM_LIMITTEXT, 64, 0);
+          SendDlgItemMessageW(hwndDlg, IDC_ADMINPASSWORD1, EM_LIMITTEXT, 14, 0);
+          SendDlgItemMessageW(hwndDlg, IDC_ADMINPASSWORD2, EM_LIMITTEXT, 14, 0);
 
           /* Set focus to computer name */
           SetFocus(GetDlgItem(hwndDlg, IDC_COMPUTERNAME));
@@ -302,10 +301,10 @@ ComputerPageDlgProc(HWND hwndDlg,
               case PSN_WIZNEXT:
                 if (GetDlgItemText(hwndDlg, IDC_COMPUTERNAME, ComputerName, 64) == 0)
                 {
-                  MessageBox(hwndDlg,
-                             _T("Setup cannot continue until you enter the name of your computer."),
-                             _T("ReactOS Setup"),
-                             MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg,
+                              L"Setup cannot continue until you enter the name of your computer.",
+                              L"ReactOS Setup",
+                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
@@ -314,23 +313,23 @@ ComputerPageDlgProc(HWND hwndDlg,
 
                 if (!SetComputerName(ComputerName))
                 {
-                  MessageBox(hwndDlg,
-                             _T("Setup failed to set the computer name."),
-                             _T("ReactOS Setup"),
-                             MB_ICONERROR | MB_OK);
+                  MessageBoxW(hwndDlg,
+                              L"Setup failed to set the computer name.",
+                              L"ReactOS Setup",
+                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
 
                 /* Check admin passwords */
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
-                GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
-                if (_tcscmp(Password1, Password2))
+                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
+                GetDlgItemTextW(hwndDlg, IDC_ADMINPASSWORD2, Password2, 15);
+                if (wcscmp(Password1, Password2))
                 {
-                  MessageBox(hwndDlg,
-                             _T("The passwords you entered do not match. Please enter "\
-                                "the desired password again."),
-                             _T("ReactOS Setup"),
+                  MessageBoxW(hwndDlg,
+                              L"The passwords you entered do not match. Please enter "\
+                               "the desired password again.",
+                              L"ReactOS Setup",
                              MB_ICONERROR | MB_OK);
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
@@ -412,37 +411,38 @@ SetKeyboardLayoutName(HWND hwnd)
 }
 
 static VOID
-RunLocalePage(VOID)
+RunInputLocalePage(HWND hwnd)
 {
-  PROPSHEETPAGE psp;
-  PROPSHEETHEADER psh;
+  PROPSHEETPAGEW psp;
+  PROPSHEETHEADERW psh;
   HMODULE hDll;
-//  TCHAR Caption[256];
+//  WCHAR Caption[256];
 
   hDll = LoadLibraryW(L"intl.cpl");
+  if (hDll == NULL)
+    return;
 
-  ZeroMemory(&psp, sizeof(PROPSHEETPAGE));
-  psp.dwSize = sizeof(PROPSHEETPAGE);
+  ZeroMemory(&psp, sizeof(PROPSHEETPAGEW));
+  psp.dwSize = sizeof(PROPSHEETPAGEW);
   psp.dwFlags = PSP_DEFAULT;
   psp.hInstance = hDll;
-  psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
+  psp.pszTemplate = MAKEINTRESOURCEW(105); /* IDD_LOCALEPAGE from intl.cpl */
   psp.pfnDlgProc = GetProcAddress(hDll, "LocalePageProc");
-
 
 //  LoadString(hDll, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(TCHAR));
 
-  ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
-  psh.dwSize = sizeof(PROPSHEETHEADER);
-  psh.dwFlags =  PSH_PROPSHEETPAGE; // | PSH_PROPTITLE;
-  psh.hwndParent = NULL;
-  psh.hInstance = hDll;
+  ZeroMemory(&psh, sizeof(PROPSHEETHEADERW));
+  psh.dwSize = sizeof(PROPSHEETHEADERW);
+  psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_PROPTITLE;
+//  psh.hwndParent = hwnd;
+//  psh.hInstance = hDll;
 //  psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_CPLICON));
-//  psh.pszCaption = Caption;
+  psh.pszCaption = L"Title"; //Caption;
   psh.nPages = 1;
   psh.nStartPage = 0;
   psh.ppsp = &psp;
 
-  PropertySheet(&psh);
+  PropertySheetW(&psh);
 
   FreeLibrary(hDll);
 }
@@ -480,7 +480,14 @@ LocalePageDlgProc(HWND hwndDlg,
 	      {
 		case IDC_CUSTOMLOCALE:
 		  {
-		    RunLocalePage();
+		    RunInputLocalePage(hwndDlg);
+		    /* FIXME: Update input locale name */
+		  }
+		  break;
+
+		case IDC_CUSTOMLAYOUT:
+		  {
+//		    RunKeyboardLayoutControlPanel(hwndDlg);
 		  }
 		  break;
 	      }
