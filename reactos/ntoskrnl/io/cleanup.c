@@ -256,7 +256,7 @@ IoSecondStageCompletion(
 
       KeInitializeApc(  &Irp->Tail.Apc,
                         KeGetCurrentThread(),
-                        0,
+                        OriginalApcEnvironment,
                         IoSecondStageCompletion_KernelApcRoutine,
                         IoSecondStageCompletion_RundownApcRoutine,
                         UserApcRoutine,
@@ -266,7 +266,7 @@ IoSecondStageCompletion(
       KeInsertQueueApc( &Irp->Tail.Apc,
                         Irp,
                         NULL,
-                        KernelMode);
+                        PriorityBoost);
 
       //NOTE: kernel (or rundown) routine frees the IRP
 

@@ -1,4 +1,4 @@
-/* $Id: nttimer.c,v 1.17 2003/02/27 15:41:54 gdalsnes Exp $
+/* $Id: nttimer.c,v 1.18 2003/06/05 23:36:48 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -99,7 +99,7 @@ NtpTimerDpcRoutine(PKDPC Dpc,
 	KeInsertQueueApc(&Timer->Apc,
 			 SystemArgument1,
 			 SystemArgument2,
-			 KernelMode);
+			 IO_NO_INCREMENT);
      }
 }
 
@@ -335,7 +335,7 @@ NtSetTimer(IN HANDLE TimerHandle,
    if( TimerApcRoutine )
       KeInitializeApc(&Timer->Apc,
 		      KeGetCurrentThread(),
-		      0,
+            OriginalApcEnvironment,
 		      (PKKERNEL_ROUTINE)NtpTimerApcKernelRoutine,
 		      (PKRUNDOWN_ROUTINE)NULL,
 		      (PKNORMAL_ROUTINE)TimerApcRoutine,

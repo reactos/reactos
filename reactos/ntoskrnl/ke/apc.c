@@ -291,7 +291,7 @@ BOOLEAN STDCALL
 KeInsertQueueApc (PKAPC	Apc,
 		  PVOID	SystemArgument1,
 		  PVOID	SystemArgument2,
-		  UCHAR	Mode)
+        KPRIORITY PriorityBoost)
 /*
  * FUNCTION: Queues an APC for execution
  * ARGUMENTS:
@@ -305,8 +305,8 @@ KeInsertQueueApc (PKAPC	Apc,
    PKTHREAD TargetThread;
    
    DPRINT("KeInsertQueueApc(Apc %x, SystemArgument1 %x, "
-	  "SystemArgument2 %x, Mode %d)\n",Apc,SystemArgument1,
-	  SystemArgument2,Mode);
+	  "SystemArgument2 %x)\n",Apc,SystemArgument1,
+	  SystemArgument2);
    
    KeAcquireSpinLock(&PiApcLock, &oldlvl);
    
@@ -443,11 +443,11 @@ KeRemoveQueueApc (PKAPC Apc)
 VOID STDCALL
 KeInitializeApc(PKAPC			Apc,
 		PKTHREAD		Thread,
-		UCHAR			StateIndex,
+      KAPC_ENVIRONMENT Environment,
 		PKKERNEL_ROUTINE	KernelRoutine,
 		PKRUNDOWN_ROUTINE	RundownRoutine,
 		PKNORMAL_ROUTINE	NormalRoutine,
-		UCHAR			Mode,
+      KPROCESSOR_MODE   Mode,
 		PVOID			Context)
 /*
  * FUNCTION: Initialize an APC object
@@ -463,9 +463,9 @@ KeInitializeApc(PKAPC			Apc,
  *       Context = Parameter to be passed to the APC routine
  */
 {
-   DPRINT("KeInitializeApc(Apc %x, Thread %x, StateIndex %d, "
+   DPRINT("KeInitializeApc(Apc %x, Thread %x, Environment %d, "
 	  "KernelRoutine %x, RundownRoutine %x, NormalRoutine %x, Mode %d, "
-	  "Context %x)\n",Apc,Thread,StateIndex,KernelRoutine,RundownRoutine,
+	  "Context %x)\n",Apc,Thread,Environment,KernelRoutine,RundownRoutine,
 	  NormalRoutine,Mode,Context);
 
    memset(Apc, 0, sizeof(KAPC));
@@ -477,7 +477,16 @@ KeInitializeApc(PKAPC			Apc,
    Apc->NormalRoutine = NormalRoutine;
    Apc->NormalContext = Context;
    Apc->Inserted = FALSE;
-   Apc->ApcStateIndex = StateIndex;
+
+   if (Environment == CurrentApcEnvironment)
+   {
+      Apc->ApcStateIndex = Thread->ApcStateIndex;
+   }
+   else
+   {
+      Apc->ApcStateIndex = Environment;   
+   }
+
    if (Apc->NormalRoutine != NULL)
      {
 	Apc->ApcMode = Mode;
@@ -535,7 +544,7 @@ NtQueueApcThread(HANDLE			ThreadHandle,
    
    KeInitializeApc(Apc,
 		   &Thread->Tcb,
-		   0,
+         OriginalApcEnvironment,
 		   NtQueueApcKernelRoutine,
 		   NtQueueApcRundownRoutine,
 		   ApcRoutine,
@@ -544,7 +553,7 @@ NtQueueApcThread(HANDLE			ThreadHandle,
    KeInsertQueueApc(Apc,
 		    SystemArgument1,
 		    SystemArgument2,
-		    UserMode);
+		    IO_NO_INCREMENT);
    
    ObDereferenceObject(Thread);
    return(STATUS_SUCCESS);

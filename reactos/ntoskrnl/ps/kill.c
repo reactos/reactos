@@ -1,4 +1,4 @@
-/* $Id: kill.c,v 1.59 2003/05/01 22:00:31 gvg Exp $
+/* $Id: kill.c,v 1.60 2003/06/05 23:36:35 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -235,7 +235,7 @@ PsTerminateOtherThread(PETHREAD Thread,
   Apc = ExAllocatePoolWithTag(NonPagedPool, sizeof(KAPC), TAG_TERMINATE_APC);
   KeInitializeApc(Apc,
 		  &Thread->Tcb,
-		  0,
+        OriginalApcEnvironment,
 		  PiTerminateThreadKernelRoutine,
 		  PiTerminateThreadRundownRoutine,
 		  PiTerminateThreadNormalRoutine,
@@ -244,7 +244,7 @@ PsTerminateOtherThread(PETHREAD Thread,
   KeInsertQueueApc(Apc,
 		   NULL,
 		   NULL,
-		   KernelMode);
+		   IO_NO_INCREMENT);
   if (THREAD_STATE_BLOCKED == Thread->Tcb.State && UserMode == Thread->Tcb.WaitMode)
     {
       DPRINT("Unblocking thread\n");

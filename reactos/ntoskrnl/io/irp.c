@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.50 2003/05/22 00:47:04 gdalsnes Exp $
+/* $Id: irp.c,v 1.51 2003/06/05 23:37:10 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -270,7 +270,7 @@ IofCompleteRequest(PIRP Irp,
       DPRINT("Dispatching APC\n");
       KeInitializeApc(  &Irp->Tail.Apc,
                         &Irp->Tail.Overlay.Thread->Tcb,
-                        0,
+                        OriginalApcEnvironment,
                         IoSecondStageCompletion,
                         NULL,
                         (PKNORMAL_ROUTINE) NULL,
@@ -280,7 +280,7 @@ IofCompleteRequest(PIRP Irp,
       bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
                                  (PVOID)Irp,
                                  (PVOID)(ULONG)PriorityBoost,
-                                 KernelMode);
+                                 PriorityBoost);
 
       if (bStatus == FALSE)
       {

@@ -87,11 +87,11 @@ ULONG STDCALL KeGetPreviousMode (VOID);
 
 VOID STDCALL KeInitializeApc (PKAPC			Apc,
 			      struct _KTHREAD*		Thread,
-			      UCHAR			StateIndex,
+               KAPC_ENVIRONMENT Environment,
 			      PKKERNEL_ROUTINE	KernelRoutine,
 			      PKRUNDOWN_ROUTINE	RundownRoutine,
 			      PKNORMAL_ROUTINE	NormalRoutine,
-			      UCHAR			Mode,
+               KPROCESSOR_MODE         Mode,
 			      PVOID			Context);
 
 /*
@@ -172,7 +172,7 @@ KeInsertQueue(IN PKQUEUE Queue,
 BOOLEAN STDCALL KeInsertQueueApc (PKAPC	Apc,
 			       PVOID	SystemArgument1,
 			       PVOID	SystemArgument2,
-			       UCHAR	Mode);
+                KPRIORITY PriorityBoost);
 
 BOOLEAN STDCALL KeInsertQueueDpc (PKDPC	Dpc,
 				  PVOID	SystemArgument1,

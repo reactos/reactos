@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kthread.c,v 1.37 2003/05/17 15:28:06 ekohl Exp $
+/* $Id: kthread.c,v 1.38 2003/06/05 23:37:00 gdalsnes Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Microkernel thread support
@@ -214,7 +214,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->AutoAlignment = 0;
   KeInitializeApc(&Thread->SuspendApc,
 		  Thread,
-		  0,
+        OriginalApcEnvironment,
 		  PiSuspendThreadKernelRoutine,
 		  PiSuspendThreadRundownRoutine,
 		  PiSuspendThreadNormalRoutine,

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.7 2002/12/22 11:35:15 gvg Exp $
+/* $Id: debug.c,v 1.8 2003/06/05 23:36:35 gdalsnes Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -236,7 +236,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 	
 	KeInitializeApc(&Apc,
 			&Thread->Tcb,
-			0,
+         OriginalApcEnvironment,
 			KeGetContextKernelRoutine,
 			KeGetContextRundownRoutine,
 			NULL,
@@ -245,7 +245,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 	KeInsertQueueApc(&Apc,
 			 (PVOID)&Event,
 			 (PVOID)&AStatus,
-			 0);
+			 IO_NO_INCREMENT);
 	Status = KeWaitForSingleObject(&Event,
 				       0,
 				       UserMode,

@@ -44,6 +44,12 @@ typedef VOID STDCALL_FUNC
 typedef VOID STDCALL_FUNC
 (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);
 
+typedef enum _KAPC_ENVIRONMENT {
+    OriginalApcEnvironment,
+    AttachedApcEnvironment,
+    CurrentApcEnvironment
+} KAPC_ENVIRONMENT;
+
 struct _DISPATCHER_HEADER;
 
 typedef struct _KWAIT_BLOCK

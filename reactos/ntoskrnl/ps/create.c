@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.59 2003/06/05 22:45:38 gdalsnes Exp $
+/* $Id: create.c,v 1.60 2003/06/05 23:36:35 gdalsnes Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -626,10 +626,10 @@ NtCreateThread(PHANDLE ThreadHandle,
    * routine.
    */
   LdrInitApc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
-  KeInitializeApc(LdrInitApc, &Thread->Tcb, 0, LdrInitApcKernelRoutine,
+  KeInitializeApc(LdrInitApc, &Thread->Tcb, OriginalApcEnvironment, LdrInitApcKernelRoutine,
 		  LdrInitApcRundownRoutine, LdrpGetSystemDllEntryPoint(), 
 		  UserMode, NULL);
-  KeInsertQueueApc(LdrInitApc, NULL, NULL, UserMode);
+  KeInsertQueueApc(LdrInitApc, NULL, NULL, IO_NO_INCREMENT);
 
   /*
    * Start the thread running and force it to execute the APC(s) we just
