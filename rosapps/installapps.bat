@@ -24,6 +24,7 @@ copy net\arp\arp.exe	 		%ROS_INSTALL%\bin
 copy net\echo\echo.exe	 		%ROS_INSTALL%\bin
 copy net\finger\finger.exe 		%ROS_INSTALL%\bin
 copy net\ipconfig\ipconfig.exe 		%ROS_INSTALL%\bin
+copy net\ipecho\ipecho.exe 		%ROS_INSTALL%\bin
 copy net\ncftp\ncftp.exe 		%ROS_INSTALL%\bin
 copy net\netstat\netstat.exe 		%ROS_INSTALL%\bin
 copy net\niclist\niclist.exe 		%ROS_INSTALL%\bin

@@ -32,4 +32,4 @@ void				PerformancePage_OnViewShowKernelTimes(void);
 void				PerformancePage_OnViewCPUHistoryOneGraphAll(void);
 void				PerformancePage_OnViewCPUHistoryOneGraphPerCPU(void);
 
-#endif // defined __PERFORMANCEPAGE_H
+#endif // __PERFORMANCEPAGE_H

@@ -1,1 +1,17 @@
-*.mak *.coff
+*.mak
+*.sys
+*.exe
+*.dll
+*.cpl
+*.a
+*.o
+*.d
+*.coff
+*.dsp
+*.dsw
+*.aps
+*.ncb
+*.opt
+*.sym
+*.plg
+*.bak

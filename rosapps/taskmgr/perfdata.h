@@ -409,4 +409,4 @@ ULONG	PerfDataGetSystemHandleCount(void);
 
 ULONG	PerfDataGetTotalThreadCount(void);
 
-#endif // defined __PERFDATA_H
+#endif // __PERFDATA_H

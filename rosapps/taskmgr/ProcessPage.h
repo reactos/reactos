@@ -32,4 +32,4 @@ extern	HWND		hProcessPageShowAllProcessesButton;	// Process Show All Processes c
 LRESULT CALLBACK	ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 void				RefreshProcessPage(void);
 
-#endif // defined __PROCESSPAGE_H
+#endif // __PROCESSPAGE_H

@@ -69,10 +69,10 @@ void            ApplicationPageShowContextMenu1(void);
 void            ApplicationPageShowContextMenu2(void);
 int CALLBACK    ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
 
-void SwitchToThisWindow (
-HWND hWnd,   // Handle to the window that should be activated
-BOOL bRestore // Restore the window if it is minimized
-);
+//void SwitchToThisWindow (
+//HWND hWnd,   // Handle to the window that should be activated
+//BOOL bRestore // Restore the window if it is minimized
+//);
 
 LRESULT CALLBACK ApplicationPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -972,7 +972,7 @@ void ApplicationPage_OnGotoProcess(void)
     LPAPPLICATION_PAGE_LIST_ITEM pAPLI = NULL;
     LV_ITEM item;
     int i;
-    NMHDR nmhdr;
+    //NMHDR nmhdr;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++)
     {

@@ -109,4 +109,3 @@ LRESULT CALLBACK GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 
 
 #endif /* __GRAPH_CTRL_H__ */
-/////////////////////////////////////////////////////////////////////////////

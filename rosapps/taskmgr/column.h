@@ -56,4 +56,4 @@ void AddColumns(void);
 void SaveColumnSettings(void);
 void UpdateColumnDataHints(void);
 
-#endif // __COlUMN_H
+#endif // __COLUMN_H

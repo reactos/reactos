@@ -38,8 +38,8 @@
 #include "perfdata.h"
 
 PROCNTQSI						NtQuerySystemInformation = NULL;
-PROCGGR							GetGuiResources = NULL;
-PROCGPIC						GetProcessIoCounters = NULL;
+PROCGGR							pGetGuiResources = NULL;
+PROCGPIC						pGetProcessIoCounters = NULL;
 CRITICAL_SECTION				PerfDataCriticalSection;
 PPERFDATA						pPerfDataOld = NULL;	// Older perf data (saved to establish delta values)
 PPERFDATA						pPerfData = NULL;		// Most recent copy of perf data
@@ -62,8 +62,8 @@ BOOL PerfDataInitialize(void)
 	LONG	status;
 
 	NtQuerySystemInformation = (PROCNTQSI)GetProcAddress(GetModuleHandle("ntdll.dll"), "NtQuerySystemInformation");
-	GetGuiResources = (PROCGGR)GetProcAddress(GetModuleHandle("user32.dll"), "GetGuiResources");
-	GetProcessIoCounters = (PROCGPIC)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetProcessIoCounters");
+	pGetGuiResources = (PROCGGR)GetProcAddress(GetModuleHandle("user32.dll"), "GetGuiResources");
+	pGetProcessIoCounters = (PROCGPIC)GetProcAddress(GetModuleHandle("kernel32.dll"), "GetProcessIoCounters");
 	
 	InitializeCriticalSection(&PerfDataCriticalSection);
 	
@@ -313,13 +313,13 @@ void PerfDataRefresh(void)
 				CloseHandle(hProcessToken);
 			}
 			
-			if (GetGuiResources)
+			if (pGetGuiResources)
 			{
-				pPerfData[Idx].USERObjectCount = GetGuiResources(hProcess, GR_USEROBJECTS);
-				pPerfData[Idx].GDIObjectCount = GetGuiResources(hProcess, GR_GDIOBJECTS);
+				pPerfData[Idx].USERObjectCount = pGetGuiResources(hProcess, GR_USEROBJECTS);
+				pPerfData[Idx].GDIObjectCount = pGetGuiResources(hProcess, GR_GDIOBJECTS);
 			}
-			if (GetProcessIoCounters)
-				GetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
+			if (pGetProcessIoCounters)
+				pGetProcessIoCounters(hProcess, &pPerfData[Idx].IOCounters);
 			
 			CloseHandle(hProcess);
 		}

@@ -55,25 +55,36 @@ TCHAR* GetNodeTypeName(int nNodeType)
 
 void ShowNetworkFixedInfo()
 {
-    FIXED_INFO FixedInfo;
-    ULONG OutBufLen = sizeof(FIXED_INFO);
+    FIXED_INFO* pFixedInfo = NULL;
+    ULONG OutBufLen = 0;
     DWORD result;
 
+    result = GetNetworkParams(NULL, &OutBufLen);
+    if (result == ERROR_BUFFER_OVERFLOW) {
+        pFixedInfo = (FIXED_INFO*)malloc(OutBufLen);
+        if (!pFixedInfo) {
+            _tprintf(_T("ERROR: failed to allocate 0x%08X bytes of memory\n"), OutBufLen);
+            return;
+        }
+    } else {
+        _tprintf(_T("ERROR: GetNetworkParams() failed to report required buffer size.\n"));
+        return;
+    }
 
-    result = GetNetworkParams(&FixedInfo, &OutBufLen);
+    result = GetNetworkParams(pFixedInfo, &OutBufLen);
     if (result == ERROR_SUCCESS) {
-             printf("\tHostName. . . . . . . . . . . : %s\n",  FixedInfo.HostName);
-             printf("\tDomainName. . . . . . . . . . : %s\n",  FixedInfo.DomainName);
-        _tprintf(_T("\tNodeType. . . . . . . . . . . : %d (%s)\n"), FixedInfo.NodeType, GetNodeTypeName(FixedInfo.NodeType));
-             printf("\tScopeId . . . . . . . . . . . : %s\n",  FixedInfo.ScopeId);
-        _tprintf(_T("\tEnableRouting . . . . . . . . : %s\n"), FixedInfo.EnableRouting ? _T("yes") : _T("no"));
-        _tprintf(_T("\tEnableProxy . . . . . . . . . : %s\n"), FixedInfo.EnableProxy ? _T("yes") : _T("no"));
-        _tprintf(_T("\tEnableDns . . . . . . . . . . : %s\n"), FixedInfo.EnableDns ? _T("yes") : _T("no"));
+             printf("\tHostName. . . . . . . . . . . : %s\n",  pFixedInfo->HostName);
+             printf("\tDomainName. . . . . . . . . . : %s\n",  pFixedInfo->DomainName);
+        _tprintf(_T("\tNodeType. . . . . . . . . . . : %d (%s)\n"), pFixedInfo->NodeType, GetNodeTypeName(pFixedInfo->NodeType));
+             printf("\tScopeId . . . . . . . . . . . : %s\n",  pFixedInfo->ScopeId);
+        _tprintf(_T("\tEnableRouting . . . . . . . . : %s\n"), pFixedInfo->EnableRouting ? _T("yes") : _T("no"));
+        _tprintf(_T("\tEnableProxy . . . . . . . . . : %s\n"), pFixedInfo->EnableProxy ? _T("yes") : _T("no"));
+        _tprintf(_T("\tEnableDns . . . . . . . . . . : %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
         _tprintf(_T("\n"));
         //_tprintf(_T("\n"), );
         //_tprintf(_T("GetNetworkParams() returned with %d\n"), pIfTable->NumAdapters);
 
-//      _tprintf(_T("\tConnection specific DNS suffix: %s\n"), FixedInfo.EnableDns ? _T("yes") : _T("no"));
+//      _tprintf(_T("\tConnection specific DNS suffix: %s\n"), pFixedInfo->EnableDns ? _T("yes") : _T("no"));
 
     } else {
         switch (result) {
@@ -199,6 +210,9 @@ void usage(void)
 
 int main(int argc, char *argv[])
 {
+
+    // 10.0.0.100    // As of build 0.0.20 this is hardcoded in the ip stack
+
     if (argc > 1) {
         usage();
         return 1;

@@ -25,4 +25,4 @@
 
 void	OnAbout(void);
 
-#endif // defined __ABOUT_H
+#endif // __ABOUT_H

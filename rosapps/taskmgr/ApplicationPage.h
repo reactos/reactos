@@ -47,4 +47,4 @@ void				ApplicationPage_OnSwitchTo(void);
 void				ApplicationPage_OnEndTask(void);
 void				ApplicationPage_OnGotoProcess(void);
 
-#endif // defined __APPLICATIONPAGE_H
+#endif // __APPLICATIONPAGE_H

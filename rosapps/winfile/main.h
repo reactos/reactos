@@ -190,7 +190,7 @@ extern TCHAR szChildClass[];
 void SetupStatusBar(BOOL bResize);
 void UpdateStatusBar(void);
 
-#ifndef _MSC_VER
+#if __MINGW32_MAJOR_VERSION == 1
 typedef struct tagNMITEMACTIVATE{
     NMHDR   hdr;
     int     iItem;

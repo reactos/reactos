@@ -27,6 +27,7 @@ APPS = 	calc \
 	net\arp \
 	net\finger \
 	net\ipconfig \
+	net\ipecho \
 	net\ncftp \
 	net\netstat \
 	net\niclist \

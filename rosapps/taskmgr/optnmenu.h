@@ -21,17 +21,15 @@
  */
 	
 //
-// options.h
-//
 // Menu item handlers for the options menu.
 //
 
-#ifndef __OPTIONS_H
-#define __OPTIONS_H
+#ifndef __OPTNMENU_H
+#define __OPTNMENU_H
 
 void TaskManager_OnOptionsAlwaysOnTop(void);
 void TaskManager_OnOptionsMinimizeOnUse(void);
 void TaskManager_OnOptionsHideWhenMinimized(void);
 void TaskManager_OnOptionsShow16BitTasks(void);
 
-#endif // __OPTIONS_H
+#endif // __OPTNMENU_H
