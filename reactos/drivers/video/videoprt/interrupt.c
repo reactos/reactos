@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.1.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: interrupt.c,v 1.1.2.2 2004/03/17 20:16:22 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -26,7 +26,7 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 BOOLEAN STDCALL
-VideoPortInterruptRoutine(
+IntVideoPortInterruptRoutine(
    IN struct _KINTERRUPT *Interrupt,
    IN PVOID ServiceContext)
 {
@@ -41,6 +41,69 @@ VideoPortInterruptRoutine(
 
    return DriverExtension->InitializationData.HwInterrupt(
       DeviceExtension->MiniPortDeviceExtension);
+}
+
+BOOLEAN STDCALL
+IntVideoPortSetupInterrupt(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   IN PVIDEO_PORT_CONFIG_INFO ConfigInfo)
+{
+   NTSTATUS Status;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   if ((ConfigInfo->BusInterruptVector != 0 ||
+        ConfigInfo->BusInterruptLevel != 0) &&
+       DriverExtension->InitializationData.HwInterrupt != NULL)
+   {
+      ULONG InterruptVector;
+      KIRQL Irql;
+      KAFFINITY Affinity;
+
+      if (ConfigInfo->BusInterruptVector != 0)
+         DeviceExtension->InterruptVector = ConfigInfo->BusInterruptVector;
+
+      if (ConfigInfo->BusInterruptLevel != 0)
+         DeviceExtension->InterruptLevel = ConfigInfo->BusInterruptLevel;
+
+      InterruptVector = HalGetInterruptVector(
+         ConfigInfo->AdapterInterfaceType,
+         ConfigInfo->SystemIoBusNumber,
+         ConfigInfo->BusInterruptLevel,
+         ConfigInfo->BusInterruptVector,
+         &Irql,
+         &Affinity);
+
+      if (InterruptVector == 0)
+      {
+         DPRINT("HalGetInterruptVector failed\n");
+         return FALSE;
+      }
+
+      KeInitializeSpinLock(&DeviceExtension->InterruptSpinLock);
+      Status = IoConnectInterrupt(
+         &DeviceExtension->InterruptObject,
+         IntVideoPortInterruptRoutine,
+         DeviceExtension,
+         &DeviceExtension->InterruptSpinLock,
+         InterruptVector,
+         Irql,
+         Irql,
+         ConfigInfo->InterruptMode,
+         FALSE,
+         Affinity,
+         FALSE);
+
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("IoConnectInterrupt failed with status 0x%08x\n", Status);
+         return FALSE;
+      }
+   }
+
+   return TRUE;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

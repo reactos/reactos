@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: timer.c,v 1.1.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: timer.c,v 1.1.2.2 2004/03/17 20:16:22 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -26,7 +26,7 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 VOID STDCALL
-VideoPortTimerRoutine(
+IntVideoPortTimerRoutine(
    IN PDEVICE_OBJECT DeviceObject,
    IN PVOID ServiceContext)
 {
@@ -41,6 +41,35 @@ VideoPortTimerRoutine(
 
    DriverExtension->InitializationData.HwTimer(
       DeviceExtension->MiniPortDeviceExtension);
+}
+
+BOOLEAN STDCALL
+IntVideoPortSetupTimer(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension)
+{
+   NTSTATUS Status;
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   if (DriverExtension->InitializationData.HwTimer != NULL)
+   {
+      DPRINT("Initializing timer\n");
+
+      Status = IoInitializeTimer(
+         DeviceObject,
+         IntVideoPortTimerRoutine,
+         DeviceExtension);
+
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);          
+         return FALSE;
+      }
+   }
+
+   return TRUE;
 }
 
 /* PUBLIC FUNCTIONS ***********************************************************/

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: resource.c,v 1.1.2.3 2004/03/16 20:36:54 navaraf Exp $
+ * $Id: resource.c,v 1.1.2.4 2004/03/17 20:16:22 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -26,7 +26,7 @@
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PVOID STDCALL
-InternalMapMemory(
+IntVideoPortMapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
    IN PHYSICAL_ADDRESS IoAddress,
    IN ULONG NumberOfUchars,
@@ -138,7 +138,7 @@ InternalMapMemory(
 }
 
 VOID STDCALL
-InternalUnmapMemory(
+IntVideoPortUnmapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
    IN PVOID MappedAddress)
 {
@@ -186,7 +186,7 @@ VideoPortGetDeviceBase(
    IN UCHAR InIoSpace)
 {
    DPRINT("VideoPortGetDeviceBase\n");
-   return InternalMapMemory(
+   return IntVideoPortMapMemory(
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension),
       IoAddress,
       NumberOfUchars,
@@ -204,7 +204,7 @@ VideoPortFreeDeviceBase(
    IN PVOID MappedAddress)
 {
    DPRINT("VideoPortFreeDeviceBase\n");
-   InternalUnmapMemory(
+   IntVideoPortUnmapMemory(
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension),
       MappedAddress);
 }
@@ -248,7 +248,7 @@ VideoPortMapMemory(
    DPRINT("VideoPortMapMemory\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-   *VirtualAddress = InternalMapMemory(
+   *VirtualAddress = IntVideoPortMapMemory(
       DeviceExtension,
       PhysicalAddress,
       *Length,
@@ -270,7 +270,7 @@ VideoPortUnmapMemory(
 {
    DPRINT("VideoPortFreeDeviceBase\n");
 
-   InternalUnmapMemory(
+   IntVideoPortUnmapMemory(
       VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension),
       VirtualAddress);
 

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.21.2.3 2004/03/16 20:36:54 navaraf Exp $
+ * $Id: videoprt.c,v 1.21.2.4 2004/03/17 20:16:22 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -40,7 +40,7 @@ DriverEntry(
 }
 
 PVOID STDCALL
-VideoPortImageDirectoryEntryToData(
+IntVideoPortImageDirectoryEntryToData(
    PVOID BaseAddress,
    ULONG Directory)
 {
@@ -62,7 +62,7 @@ VideoPortImageDirectoryEntryToData(
 }
 
 PVOID STDCALL
-VideoPortGetProcAddress(
+IntVideoPortGetProcAddress(
    IN PVOID HwDeviceExtension,
    IN PUCHAR FunctionName)
 {
@@ -91,7 +91,7 @@ VideoPortGetProcAddress(
    BaseAddress = GdiDriverInfo.ModuleBase;
 
    /* Get the pointer to the export directory */
-   ExportDir = (PIMAGE_EXPORT_DIRECTORY)VideoPortImageDirectoryEntryToData(
+   ExportDir = (PIMAGE_EXPORT_DIRECTORY)IntVideoPortImageDirectoryEntryToData(
       BaseAddress,
       IMAGE_DIRECTORY_ENTRY_EXPORT);
 
@@ -115,6 +115,333 @@ VideoPortGetProcAddress(
    DPRINT("VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
 
    return NULL;
+}
+
+VOID STDCALL
+IntVideoPortDeferredRoutine(
+   IN PKDPC Dpc,
+   IN PVOID DeferredContext,
+   IN PVOID SystemArgument1,
+   IN PVOID SystemArgument2)
+{
+   PVOID HwDeviceExtension = 
+      ((PVIDEO_PORT_DEVICE_EXTENSION)DeferredContext)->MiniPortDeviceExtension;
+   ((PMINIPORT_DPC_ROUTINE)SystemArgument1)(HwDeviceExtension, SystemArgument2);
+}
+
+ULONG STDCALL
+IntVideoPortAllocateDeviceNumber(VOID)
+{
+   NTSTATUS Status;
+   ULONG DeviceNumber;
+   WCHAR SymlinkBuffer[20];
+   UNICODE_STRING SymlinkName;
+
+   for (DeviceNumber = 0;;)
+   {
+      OBJECT_ATTRIBUTES Obj;
+      HANDLE ObjHandle;
+
+      swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+      RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+      InitializeObjectAttributes(&Obj, &SymlinkName, 0, NULL, NULL);
+      Status = ZwOpenSymbolicLinkObject(&ObjHandle, GENERIC_READ, &Obj);
+      if (NT_SUCCESS(Status))
+      {
+         ZwClose(ObjHandle);
+         DeviceNumber++;
+         continue;
+      }
+      else if (Status == STATUS_NOT_FOUND || Status == STATUS_UNSUCCESSFUL)
+         break;
+      else
+         return 0xFFFFFFFF;
+   }
+
+   return DeviceNumber;
+}
+
+NTSTATUS STDCALL
+IntVideoPortFindAdapter(
+   IN PDRIVER_OBJECT DriverObject,
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   IN PDEVICE_OBJECT PhysicalDeviceObject)
+{
+   WCHAR DeviceVideoBuffer[20];
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+   ULONG DeviceNumber;
+   ULONG Size;
+   NTSTATUS Status;
+   VIDEO_PORT_CONFIG_INFO ConfigInfo;
+   SYSTEM_BASIC_INFORMATION SystemBasicInfo;
+   UCHAR Again = FALSE;
+   WCHAR DeviceBuffer[20];
+   UNICODE_STRING DeviceName;
+   WCHAR SymlinkBuffer[20];
+   UNICODE_STRING SymlinkName;
+   PDEVICE_OBJECT DeviceObject;
+   BOOL LegacyDetection;
+
+   /*
+    * Find the first free device number that can be used for video device
+    * object names and symlinks.
+    */
+
+   DeviceNumber = IntVideoPortAllocateDeviceNumber();
+   if (DeviceNumber == 0xFFFFFFFF)
+   {
+      DPRINT("Can't find free device number\n");
+      return STATUS_UNSUCCESSFUL;
+   }
+
+   /*
+    * Create the device object, we need it even for calling HwFindAdapter :(
+    */
+
+   /* Create a unicode device name. */
+   swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
+   RtlInitUnicodeString(&DeviceName, DeviceBuffer);
+
+   /* Create the device object. */
+   Status = IoCreateDevice(
+      DriverObject,
+      sizeof(VIDEO_PORT_DEVICE_EXTENSION) +
+      DriverExtension->InitializationData.HwDeviceExtensionSize,
+      &DeviceName,
+      FILE_DEVICE_VIDEO,
+      0,
+      TRUE,
+      &DeviceObject);
+
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IoCreateDevice call failed with status 0x%08x\n", Status);
+      return Status;
+   }
+
+   /* 
+    * Set the buffering strategy here. If you change this, remember
+    * to change VidDispatchDeviceControl too.
+    */
+
+   DeviceObject->Flags |= DO_BUFFERED_IO;
+
+   /*
+    * Initialize device extension.
+    */
+
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+   DeviceExtension->PhysicalDeviceObject = PhysicalDeviceObject;
+   DeviceExtension->FunctionalDeviceObject = DeviceObject;
+   DeviceExtension->SystemIoBusNumber = ConfigInfo.SystemIoBusNumber;
+   DeviceExtension->AdapterInterfaceType = ConfigInfo.AdapterInterfaceType;
+
+   DeviceExtension->RegistryPath.Length = 
+   DeviceExtension->RegistryPath.MaximumLength = 
+      DriverExtension->RegistryPath.Length + (8 * sizeof(WCHAR));
+   DeviceExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(
+      PagedPool,
+      DeviceExtension->RegistryPath.MaximumLength,
+      TAG_VIDEO_PORT);      
+   swprintf(DeviceExtension->RegistryPath.Buffer, L"%s\\Device0",
+      DriverExtension->RegistryPath.Buffer);
+
+   if (PhysicalDeviceObject == NULL)
+   {
+      LegacyDetection = TRUE;
+   }
+   else
+   {
+      /* Get bus number from the upper level bus driver. */
+      Size = sizeof(ULONG);
+      Status = IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyBusNumber,
+         Size,
+         &DeviceExtension->SystemIoBusNumber,
+         &Size);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT("Couldn't get an information from bus driver. We will try to\n"
+                "use legacy detection method, but even that doesn't mean that\n"
+                "it will work.\n");
+         DeviceExtension->PhysicalDeviceObject = NULL;
+         LegacyDetection = TRUE;
+      }
+   }
+
+   DeviceExtension->AdapterInterfaceType = 
+      DriverExtension->InitializationData.AdapterInterfaceType;
+
+   if (PhysicalDeviceObject != NULL)
+   {
+      /* Get bus type from the upper level bus driver. */
+      Size = sizeof(ULONG);
+      IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyLegacyBusType,
+         Size,
+         &DeviceExtension->AdapterInterfaceType,
+         &Size);
+
+      /* Get bus device address from the upper level bus driver. */
+      Size = sizeof(ULONG);
+      IoGetDeviceProperty(
+         PhysicalDeviceObject,
+         DevicePropertyAddress,
+         Size,
+         &DeviceExtension->SystemIoSlotNumber,
+         &Size);   
+   }
+
+   InitializeListHead(&DeviceExtension->AddressMappingListHead);
+   KeInitializeDpc(
+      &DeviceExtension->DpcObject,
+      IntVideoPortDeferredRoutine,
+      DeviceExtension);
+
+   /*
+    * Uff, the DeviceExtension is setup. Now it's needed to setup
+    * a ConfigInfo structure that we will pass to HwFindAdapter.
+    */
+
+   RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
+   ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
+   ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
+   if (ConfigInfo.AdapterInterfaceType == PCIBus)
+      ConfigInfo.InterruptMode = LevelSensitive;
+   else
+      ConfigInfo.InterruptMode = Latched;
+   ConfigInfo.DriverRegistryPath = DriverExtension->RegistryPath.Buffer;
+   ConfigInfo.VideoPortGetProcAddress = IntVideoPortGetProcAddress;
+
+   Size = sizeof(SystemBasicInfo);
+   Status = ZwQuerySystemInformation(
+      SystemBasicInformation,
+      &SystemBasicInfo,
+      Size,
+      &Size);
+
+   if (NT_SUCCESS(Status))
+   {
+      ConfigInfo.SystemMemorySize =
+         SystemBasicInfo.NumberOfPhysicalPages * 
+         SystemBasicInfo.PhysicalPageSize;
+   }
+
+   /*
+    * Call miniport HwVidFindAdapter entry point to detect if
+    * particular device is present. There are two possible code
+    * paths. The first one is for Legacy drivers (NT4) and cases
+    * when we don't have information about what bus we're on. The
+    * second case is the standard one for Plug & Play drivers.
+    */
+    
+   if (LegacyDetection)
+   {
+      ULONG BusNumber, MaxBuses;
+
+      MaxBuses = DeviceExtension->AdapterInterfaceType == PCIBus ? 8 : 1;
+
+      for (BusNumber = 0; BusNumber < MaxBuses; BusNumber++)
+      {
+         DeviceExtension->SystemIoBusNumber =
+         ConfigInfo.SystemIoBusNumber = BusNumber;
+
+         /* FIXME: Need to figure out what string to pass as param 3. */
+         Status = DriverExtension->InitializationData.HwFindAdapter(
+            &DeviceExtension->MiniPortDeviceExtension,
+            DriverExtension->HwContext,
+            NULL,
+            &ConfigInfo,
+            &Again);
+
+         if (Status == ERROR_DEV_NOT_EXIST)
+         {
+            continue;
+         }
+         else if (Status == NO_ERROR)
+         {
+            break;
+         }
+         else
+         {
+            DPRINT("HwFindAdapter call failed with error %X\n", Status);
+            IoDeleteDevice(DeviceObject);
+
+            return Status;
+         }
+      }
+   }
+   else
+   {
+      /* FIXME: Need to figure out what string to pass as param 3. */
+      Status = DriverExtension->InitializationData.HwFindAdapter(
+         &DeviceExtension->MiniPortDeviceExtension,
+         DriverExtension->HwContext,
+         NULL,
+         &ConfigInfo,
+         &Again);
+   }
+
+   if (Status != NO_ERROR)
+   {
+      DPRINT("HwFindAdapter call failed with error %X\n", Status);
+      IoDeleteDevice(DeviceObject);
+
+      return Status;
+   }
+
+   /*
+    * Now we know the device is present, so let's do all additional tasks
+    * such as creating symlinks or setting up interrupts and timer.
+    */
+
+   /* Create symbolic link "\??\DISPLAYx" */
+   swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber + 1);
+   RtlInitUnicodeString(&SymlinkName, SymlinkBuffer);
+   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+
+   /* Add entry to DEVICEMAP\VIDEO key in registry. */
+   swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
+   RtlWriteRegistryValue(
+      RTL_REGISTRY_DEVICEMAP,
+      L"VIDEO",
+      DeviceVideoBuffer,
+      REG_SZ,
+      DeviceExtension->RegistryPath.Buffer,
+      DeviceExtension->RegistryPath.Length + sizeof(WCHAR));
+
+   /* FIXME: Allocate hardware resources for device. */
+
+   /*
+    * Allocate interrupt for device.
+    */
+
+   if (!IntVideoPortSetupInterrupt(DeviceObject, DriverExtension, &ConfigInfo))
+   {
+      IoDeleteDevice(DeviceObject);
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   /*
+    * Allocate timer for device.
+    */
+
+   if (!IntVideoPortSetupTimer(DeviceObject, DriverExtension))
+   {
+      if (DeviceExtension->InterruptObject != NULL)
+         IoDisconnectInterrupt(DeviceExtension->InterruptObject);
+      IoDeleteDevice(DeviceObject);
+      DPRINT("STATUS_INSUFFICIENT_RESOURCES\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   if (PhysicalDeviceObject != NULL)
+      IoAttachDeviceToDeviceStack(DeviceObject, PhysicalDeviceObject);
+
+   DPRINT("STATUS_SUCCESS\n");
+   return STATUS_SUCCESS;
 }
 
 VOID FASTCALL 
@@ -230,10 +557,10 @@ VideoPortInitialize(
          return STATUS_UNSUCCESSFUL;
    }
 
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = VideoPortDispatchOpen;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = VideoPortDispatchClose;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VideoPortDispatchDeviceControl;
-   DriverObject->DriverUnload = VideoPortUnload;
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
+   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IntVideoPortDispatchDeviceControl;
+   DriverObject->DriverUnload = IntVideoPortUnload;
 
    /*
     * Plug & Play drivers registers the device in AddDevice routine. For
@@ -242,13 +569,15 @@ VideoPortInitialize(
 
    if (LegacyDetection)
    {
-      return VideoPortAddDevice(DriverObject, NULL);
+      Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, NULL);
+      DPRINT("IntVideoPortFindAdapter returned 0x%x\n", Status);
+      return Status;
    }
    else
    {
-      DriverObject->DriverExtension->AddDevice = VideoPortAddDevice;
-      DriverObject->MajorFunction[IRP_MJ_PNP] = VideoPortDispatchPnp;
-      DriverObject->MajorFunction[IRP_MJ_POWER] = VideoPortDispatchPower;
+      DriverObject->DriverExtension->AddDevice = IntVideoPortAddDevice;
+      DriverObject->MajorFunction[IRP_MJ_PNP] = IntVideoPortDispatchPnp;
+      DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
 
       return STATUS_SUCCESS;
    }
@@ -389,7 +718,7 @@ VideoPortSetRegistryParameters(
    IN PVOID ValueData,
    IN ULONG ValueLength)
 {
-   DPRINT("VideoSetRegistryParameters\n");
+   DPRINT("VideoPortSetRegistryParameters\n");
    assert_irql(PASSIVE_LEVEL);
    return RtlWriteRegistryValue(
       RTL_REGISTRY_ABSOLUTE,

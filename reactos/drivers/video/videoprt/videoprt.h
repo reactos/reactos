@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.h,v 1.6.2.2 2004/03/15 17:02:14 navaraf Exp $
+ * $Id: videoprt.h,v 1.6.2.3 2004/03/17 20:16:22 navaraf Exp $
  */
 
 #ifndef VIDEOPRT_H
@@ -64,6 +64,7 @@ typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
    ULONG SystemIoSlotNumber;
    LIST_ENTRY AddressMappingListHead;
    KDPC DpcObject;
+   ULONG OpenReferenceCount;
    CHAR MiniPortDeviceExtension[1];
 } VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
 
@@ -83,51 +84,52 @@ typedef struct _VIDEO_PORT_DRIVER_EXTENSION
 /* dispatch.c */
 
 NTSTATUS STDCALL
-VideoPortAddDevice(
+IntVideoPortAddDevice(
    IN PDRIVER_OBJECT DriverObject,
    IN PDEVICE_OBJECT PhysicalDeviceObject);
 
 NTSTATUS STDCALL
-VideoPortDispatchOpen(
+IntVideoPortDispatchOpen(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
 NTSTATUS STDCALL
-VideoPortDispatchClose(
+IntVideoPortDispatchClose(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
 NTSTATUS STDCALL
-VideoPortDispatchDeviceControl(
+IntVideoPortDispatchDeviceControl(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
 NTSTATUS STDCALL
-VideoPortDispatchPnp(
+IntVideoPortDispatchPnp(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
 NTSTATUS STDCALL
-VideoPortDispatchPower(
+IntVideoPortDispatchPower(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
 VOID STDCALL
-VideoPortUnload(PDRIVER_OBJECT DriverObject);
+IntVideoPortUnload(PDRIVER_OBJECT DriverObject);
 
 /* timer.c */
 
-VOID STDCALL
-VideoPortTimerRoutine(
+BOOLEAN STDCALL
+IntVideoPortSetupTimer(
    IN PDEVICE_OBJECT DeviceObject,
-   IN PVOID ServiceContext);
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension);
 
 /* interrupt.c */
 
 BOOLEAN STDCALL
-VideoPortInterruptRoutine(
-   IN struct _KINTERRUPT *Interrupt,
-   IN PVOID ServiceContext);
+IntVideoPortSetupInterrupt(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   IN PVIDEO_PORT_CONFIG_INFO ConfigInfo);
 
 /* videoprt.c */
 
@@ -144,6 +146,12 @@ IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
 
 VOID FASTCALL 
 IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+
+NTSTATUS STDCALL
+IntVideoPortFindAdapter(
+   IN PDRIVER_OBJECT DriverObject,
+   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   IN PDEVICE_OBJECT PhysicalDeviceObject);
 
 /* int10.c */
 
