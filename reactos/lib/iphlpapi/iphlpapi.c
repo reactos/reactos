@@ -20,6 +20,8 @@
 #include <iphlpapi.h>
 #include <icmpapi.h>
 
+#include "ipprivate.h"
+#include "ipregprivate.h"
 #include "debug.h"
 //#include "trace.h"
 
@@ -142,7 +144,8 @@ GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 		return ERROR_INVALID_PARAMETER;
 	ZeroMemory(pAdapterInfo, *pOutBufLen);
 
-	lErr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Adapters", 0, KEY_READ, &hAdapters);
+	lErr = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+			     L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Adapters", 0, KEY_READ, &hAdapters);
 	if(lErr != ERROR_SUCCESS)
 		return lErr;
 
@@ -309,7 +312,7 @@ GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
     int i = 0;
 
     if ((errCode = GetNumberOfInterfaces(&dwNumIf)) != NO_ERROR) {
-        _tprintf(_T("GetInterfaceInfo() failed with code 0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), errCode);
+        _tprintf(_T("GetInterfaceInfo() failed with code 0x%08X - Use FormatMessage to obtain the message string for the returned error\n"), (int)errCode);
         return errCode;
     }
     if (dwNumIf == 0) return ERROR_NO_DATA; // No adapter information exists for the local computer
@@ -347,6 +350,123 @@ GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
     return result;
 }
 
+/*
+ * EnumNameServers
+ */
+
+static void EnumNameServers( HANDLE RegHandle, PWCHAR Interface,
+			     PVOID Data, EnumNameServersFunc cb ) {
+  PWCHAR NameServerString = QueryRegistryValueString(RegHandle, L"NameServer");
+  /* Now, count the non-empty comma separated */
+  if (NameServerString) {
+    DWORD ch;
+    DWORD LastNameStart = 0;
+    for (ch = 0; NameServerString[ch]; ch++) {
+      if (NameServerString[ch] == ',') {
+	if (ch - LastNameStart > 0) { /* Skip empty entries */
+	  PWCHAR NameServer = malloc(sizeof(WCHAR) * (ch - LastNameStart + 1));
+	  if (NameServer) {
+	    memcpy(NameServer,NameServerString + LastNameStart,
+		   (ch - LastNameStart) * sizeof(WCHAR));
+	    NameServer[ch - LastNameStart] = 0;
+	    cb( Interface, NameServer, Data );
+	    free(NameServer);
+	  }
+	}	
+	LastNameStart = ch + 1; /* The first one after the comma */
+      }
+    }
+    if (ch - LastNameStart > 0) { /* A last name? */
+      PWCHAR NameServer = malloc(sizeof(WCHAR) * (ch - LastNameStart + 1));
+      memcpy(NameServer,NameServerString + LastNameStart,
+	     (ch - LastNameStart) * sizeof(WCHAR));
+      NameServer[ch - LastNameStart] = 0;
+      cb( Interface, NameServer, Data );
+      free(NameServer);
+    }
+    ConsumeRegValueString(NameServerString);
+  }
+}
+
+/*
+ * EnumInterfaces
+ *
+ * Call the enumeration function for each name server.
+ */
+
+static void EnumInterfaces( PVOID Data, EnumInterfacesFunc cb ) {
+  HANDLE RegHandle;
+  HANDLE ChildKeyHandle = 0;
+  PWCHAR RegKeyToEnumerate = 
+    L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters\\Interfaces";
+  PWCHAR ChildKeyName = 0;
+  DWORD CurrentInterface;
+
+  if (OpenChildKeyRead(HKEY_LOCAL_MACHINE,RegKeyToEnumerate,&RegHandle)) {
+    return;
+  }
+
+  for (CurrentInterface = 0; TRUE; CurrentInterface++) {
+    ChildKeyName = GetNthChildKeyName( RegHandle, CurrentInterface );
+    if (!ChildKeyName) break;
+    if (OpenChildKeyRead(RegHandle,ChildKeyName,
+			 &ChildKeyHandle) == 0) {
+      cb( ChildKeyHandle, ChildKeyName, Data );
+      RegCloseKey( ChildKeyHandle );
+    }
+    ConsumeChildKeyName( ChildKeyName );
+  }
+}
+
+static void CreateNameServerListEnumNamesFuncCount( PWCHAR Interface,
+						    PWCHAR Server,
+						    PVOID _Data ) {
+  PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+  Data->NumServers++;
+}
+
+static void CreateNameServerListEnumIfFuncCount( HANDLE RegHandle,
+						 PWCHAR InterfaceName,
+						 PVOID _Data ) {
+  PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+  EnumNameServers(RegHandle,InterfaceName,Data,
+		  CreateNameServerListEnumNamesFuncCount);
+}
+
+static void CreateNameServerListEnumNamesFunc( PWCHAR Interface,
+					       PWCHAR Server,
+					       PVOID _Data ) {
+  PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+  wcstombs(Data->AddrString[Data->CurrentName].IpAddress.String,
+	   Server,
+	   sizeof(IP_ADDRESS_STRING));
+  strcpy(Data->AddrString[Data->CurrentName].IpMask.String,"0.0.0.0");
+  Data->AddrString[Data->CurrentName].Context = 0;
+  if (Data->CurrentName < Data->NumServers - 1) {
+    Data->AddrString[Data->CurrentName].Next = 
+      &Data->AddrString[Data->CurrentName+1];
+  } else
+    Data->AddrString[Data->CurrentName].Next = 0;
+
+  Data->CurrentName++;
+}
+
+static void CreateNameServerListEnumIfFunc( HANDLE RegHandle,
+					    PWCHAR InterfaceName,
+					    PVOID _Data ) {
+  PNAME_SERVER_LIST_PRIVATE Data = (PNAME_SERVER_LIST_PRIVATE)_Data;
+  EnumNameServers(RegHandle,InterfaceName,Data,
+		  CreateNameServerListEnumNamesFunc);
+}
+
+static int CountNameServers( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
+  EnumInterfaces(PrivateData,CreateNameServerListEnumIfFuncCount);
+  return PrivateData->NumServers;
+}
+
+static void MakeNameServerList( PNAME_SERVER_LIST_PRIVATE PrivateData ) {
+  EnumInterfaces(PrivateData,CreateNameServerListEnumIfFunc);
+}
 
 /*
  * @implemented
@@ -359,17 +479,23 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   DWORD dwSize;
   HKEY hKey;
   LONG errCode;
+  NAME_SERVER_LIST_PRIVATE PrivateNSEnum = { 0 };
 
-  if (pFixedInfo == NULL || pOutBufLen == NULL) return ERROR_INVALID_PARAMETER;
+  CountNameServers( &PrivateNSEnum );
+
+  if (pOutBufLen == NULL) return ERROR_INVALID_PARAMETER;
 
   if (*pOutBufLen < sizeof(FIXED_INFO))
   {
-    *pOutBufLen = sizeof(FIXED_INFO);
+    *pOutBufLen = sizeof(FIXED_INFO) + 
+      ((PrivateNSEnum.NumServers - 1) * sizeof(IP_ADDR_STRING));
     return ERROR_BUFFER_OVERFLOW;
   }
+  if (pFixedInfo == NULL) return ERROR_INVALID_PARAMETER;
   memset(pFixedInfo, 0, sizeof(FIXED_INFO));
 
-  errCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ, &hKey);
+  errCode = RegOpenKeyExW(HKEY_LOCAL_MACHINE, 
+			  L"SYSTEM\\CurrentControlSet\\Services\\Tcpip\\Parameters", 0, KEY_READ, &hKey);
   if (errCode == ERROR_SUCCESS)
   {
     dwSize = sizeof(pFixedInfo->HostName);
@@ -384,6 +510,51 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     dwSize = sizeof(pFixedInfo->EnableRouting);
     errCode = RegQueryValueExW(hKey, L"IPEnableRouter", NULL, NULL, (LPBYTE)&pFixedInfo->EnableRouting, &dwSize);
     RegCloseKey(hKey);
+
+    /* Get the number of name servers */
+    PIP_ADDR_STRING AddressAfterFixedInfo;
+    AddressAfterFixedInfo = (PIP_ADDR_STRING)&pFixedInfo[1];
+    DWORD NumberOfServersAllowed = 0, CurrentServer = 0;
+
+    while( &AddressAfterFixedInfo[NumberOfServersAllowed] < 
+	   (PIP_ADDR_STRING)(((PCHAR)pFixedInfo) + *pOutBufLen) ) 
+      NumberOfServersAllowed++;
+
+    NumberOfServersAllowed++; /* One struct is built in */
+
+    /* Since the first part of the struct is built in, we have to do some
+       fiddling */
+    PrivateNSEnum.AddrString = 
+      malloc(NumberOfServersAllowed * sizeof(IP_ADDR_STRING));
+    if (PrivateNSEnum.NumServers > NumberOfServersAllowed) 
+      PrivateNSEnum.NumServers = NumberOfServersAllowed;
+    MakeNameServerList( &PrivateNSEnum );
+
+    /* Now we have the name servers, place the first one in the struct,
+       and follow it with the rest */
+    if (!PrivateNSEnum.NumServers)
+      RtlZeroMemory( &pFixedInfo->DnsServerList, sizeof(IP_ADDR_STRING) );
+    else
+      memcpy( &pFixedInfo->DnsServerList, &PrivateNSEnum.AddrString[0],
+	      sizeof(PrivateNSEnum.AddrString[0]) );
+    pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
+    if (PrivateNSEnum.NumServers > 1) 
+      memcpy( &AddressAfterFixedInfo[0],
+	      &PrivateNSEnum.AddrString[1],
+	      sizeof(IP_ADDR_STRING) * NumberOfServersAllowed - 1 );
+    else
+      pFixedInfo->CurrentDnsServer->Next = 0;
+
+    for( CurrentServer = 0; 
+	 CurrentServer < PrivateNSEnum.NumServers - 1;
+	 CurrentServer++ ) {
+      pFixedInfo->CurrentDnsServer->Next = &AddressAfterFixedInfo[CurrentServer];
+      pFixedInfo->CurrentDnsServer = &AddressAfterFixedInfo[CurrentServer];
+      pFixedInfo->CurrentDnsServer->Next = 0;
+    }
+    /* For now, set the first server as the current server */
+    pFixedInfo->CurrentDnsServer = &pFixedInfo->DnsServerList;
+    free(PrivateNSEnum.AddrString);
   }
   else
   {
