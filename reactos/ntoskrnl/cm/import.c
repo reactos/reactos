@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.8 2002/09/08 10:23:17 chorns Exp $
+/* $Id: import.c,v 1.9 2002/10/20 13:55:09 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -381,10 +381,10 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
     while (*regChunk != 0 && isxdigit (*regChunk))
     {
       dataValue = (isdigit (*regChunk) ? *regChunk - '0' : 
-        tolower(*regChunk) - 'a') << 4;
+        tolower(*regChunk) - 'a' + 10) << 4;
       regChunk++;
       dataValue += (isdigit (*regChunk) ? *regChunk - '0' : 
-        tolower(*regChunk) - 'a');
+        tolower(*regChunk) - 'a' + 10);
       regChunk++;
       *data++ = dataValue;
       if (*regChunk == ',')
@@ -404,7 +404,7 @@ getKeyValueDataFromChunk (PCHAR  regChunk, PCHAR  dataFormat, PCHAR data)
     while (*regChunk != 0 && isxdigit(*regChunk))
     {
       dataValue = (isdigit (*regChunk) ? *regChunk - '0' : 
-        tolower(*regChunk) - 'a');
+        tolower(*regChunk) - 'a' + 10);
       ulValue = (ulValue << 4) + dataValue;
       regChunk++;
     }
