@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: gradient.c,v 1.3 2004/02/09 16:37:59 weiden Exp $
+/* $Id: gradient.c,v 1.4 2004/02/09 22:16:50 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -212,6 +212,109 @@ IntEngGradientFillRect(
   return IntEngLeave(&EnterLeave);
 }
 
+/* Fill triangle with solid color */
+#define S_FILLLINE(linefrom,lineto) \
+  if(sx[lineto] < sx[linefrom]) \
+    OutputGDI->DIB_HLine(OutputObj, max(sx[lineto], FillRect.left), min(sx[linefrom], FillRect.right), sy, Color); \
+  else \
+    OutputGDI->DIB_HLine(OutputObj, max(sx[linefrom], FillRect.left), min(sx[lineto], FillRect.right), sy, Color);
+#define S_DOLINE(a,b,line) \
+  ex[line] += dx[line]; \
+  while(ex[line] > 0 && x[line] != destx[line]) \
+  { \
+    x[line] += incx[line]; \
+    sx[line] += incx[line]; \
+    ex[line] -= dy[line]; \
+  } 
+#define S_GOLINE(a,b,line) \
+  if(y >= a->y && y <= b->y) \
+  {
+#define S_ENDLINE(a,b,line) \
+  }
+#define S_INITLINE(a,b,line) \
+  x[line] = a->x; \
+  sx[line] =  a->x + pptlDitherOrg->x; \
+  dx[line] = abs(b->x - a->x); \
+  dy[line] = abs(b->y - a->y); \
+  incx[line] = LINC[b->x > a->x]; \
+  ex[line] = -(dy[line]>>1); \
+  destx[line] = b->x
+
+/* Fill triangle with gradient */
+#define INITCOL(a,b,line,col,id) \
+  c[line][id] = a->col >> 8; \
+  dc[line][id] = abs((b->col >> 8) - c[line][id]); \
+  ec[line][id] = -(dy[line]>>1); \
+  ic[line][id] = LINC[(b->col >> 8) > c[line][id]]
+#define STEPCOL(a,b,line,col,id) \
+  ec[line][id] += dc[line][id]; \
+  while(ec[line][id] > 0) \
+  { \
+    c[line][id] += ic[line][id]; \
+    ec[line][id] -= dy[line]; \
+  }
+#define FINITCOL(linefrom,lineto,colid) \
+  gc[colid] = c[linefrom][colid]; \
+  gd[colid] = abs(c[lineto][colid] - gc[colid]); \
+  ge[colid] = -(gx >> 1); \
+  gi[colid] = LINC[c[lineto][colid] > gc[colid]]
+#define FDOCOL(linefrom,lineto,colid) \
+  ge[colid] += gd[colid]; \
+  while(ge[colid] > 0) \
+  { \
+    gc[colid] += gi[colid]; \
+    ge[colid] -= gx; \
+  }
+#define FILLLINE(linefrom,lineto) \
+  gx = abs(sx[lineto] - sx[linefrom]); \
+  gxi = LINC[sx[linefrom] < sx[lineto]]; \
+  FINITCOL(linefrom, lineto, 0); \
+  FINITCOL(linefrom, lineto, 1); \
+  FINITCOL(linefrom, lineto, 2); \
+  for(g = sx[linefrom]; g != sx[lineto]; g += gxi) \
+  { \
+    if(g >= FillRect.left && g < FillRect.right) \
+    { \
+      Color = XLATEOBJ_iXlate(pxlo, RGB(gc[0], gc[1], gc[2])); \
+      OutputGDI->DIB_PutPixel(OutputObj, g, sy, Color); \
+    } \
+    FDOCOL(linefrom, lineto, 0); \
+    FDOCOL(linefrom, lineto, 1); \
+    FDOCOL(linefrom, lineto, 2); \
+  }
+#define DOLINE(a,b,line) \
+  STEPCOL(a, b, line, Red, 0); \
+  STEPCOL(a, b, line, Green, 1); \
+  STEPCOL(a, b, line, Blue, 2); \
+  ex[line] += dx[line]; \
+  while(ex[line] > 0 && x[line] != destx[line]) \
+  { \
+    x[line] += incx[line]; \
+    sx[line] += incx[line]; \
+    ex[line] -= dy[line]; \
+  } 
+#define GOLINE(a,b,line) \
+  if(y >= a->y && y <= b->y) \
+  {
+#define ENDLINE(a,b,line) \
+  }
+#define INITLINE(a,b,line) \
+  x[line] = a->x; \
+  sx[line] =  a->x + pptlDitherOrg->x; \
+  dx[line] = abs(b->x - a->x); \
+  dy[line] = abs(b->y - a->y); \
+  incx[line] = LINC[b->x > a->x]; \
+  ex[line] = -(dy[line]>>1); \
+  destx[line] = b->x
+#define DOINIT(a, b, line) \
+  INITLINE(a, b, line); \
+  INITCOL(a, b, line, Red, 0); \
+  INITCOL(a, b, line, Green, 1); \
+  INITCOL(a, b, line, Blue, 2);
+#define SMALLER(a,b)     (a->y < b->y) || (a->y == b->y && a->x < b->x)
+#define SWAP(a,b,c)  c = a;\
+                     a = b;\
+                     a = c
 #define NLINES 3
 BOOL FASTCALL
 IntEngGradientFillTriangle(
@@ -224,77 +327,138 @@ IntEngGradientFillTriangle(
     IN RECTL  *prclExtents,
     IN POINTL  *pptlDitherOrg)
 {
+  SURFOBJ *OutputObj;
+  SURFGDI *OutputGDI;
   PTRIVERTEX v1, v2, v3;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
   ULONG i;
   POINTL Translate;
   INTENG_ENTER_LEAVE EnterLeave;
+  RECT FillRect;
+  ULONG Color;
+  
+  BOOL sx[NLINES];
+  LONG x[NLINES], dx[NLINES], dy[NLINES], incx[NLINES], ex[NLINES], destx[NLINES];
+  LONG c[NLINES][3], dc[NLINES][3], ec[NLINES][3], ic[NLINES][3]; /* colors on lines */
+  LONG g, gx, gxi, gc[3], gd[3], ge[3], gi[3]; /* colors in triangle */
+  LONG sy, y, bt;
   
   v1 = (pVertex + gTriangle->Vertex1);
   v2 = (pVertex + gTriangle->Vertex2);
   v3 = (pVertex + gTriangle->Vertex3);
   
-  /* sort */
-  if(v1->y > v2->y)
+  /* bubble sort */
+  if(SMALLER(v2,v1))
   {
     TRIVERTEX *t;
-    t = v1;
-    v1 = v2;
-    v2 = t;
+    SWAP(v1,v2,t);
   }
-  if(v2->y > v3->y)
+  if(SMALLER(v3,v2))
   {
     TRIVERTEX *t;
-    t = v2;
-    v2 = v3;
-    v3 = t;
-    if(v1->y > v2->y)
+    SWAP(v2,v3,t);
+    if(SMALLER(v2,v1))
     {
-      t = v1;
-      v1 = v2;
-      v2 = t;
+      SWAP(v1,v2,t);
     }
   }
   
   DbgPrint("Triangle: (%i,%i) (%i,%i) (%i,%i)\n", v1->x, v1->y, v2->x, v2->y, v3->x, v3->y);
+  
+  if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
+  {
+    return FALSE;
+  }
+  OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
   
   if(VCMPCLRS(v1, v2, v3))
   {
     CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
     do
     {
-      RECT FillRect;
-      SURFOBJ *OutputObj;
-      SURFGDI *OutputGDI;
-      
       EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
-      for (i = 0; i < RectEnum.c; i++)
+      for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
       {
         if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
         {
-          if(!IntEngEnter(&EnterLeave, psoDest, &FillRect, FALSE, &Translate, &OutputObj))
-          {
-            return FALSE;
-          }
-          OutputGDI = AccessInternalObjectFromUserObject(OutputObj);
+          DOINIT(v1, v3, 0);
+          DOINIT(v1, v2, 1);
+          DOINIT(v2, v3, 2);
           
-          /* FIXME - Render gradient triangle */
+          y = v1->y;
+          sy = v1->y + pptlDitherOrg->y;
+          bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
           
-          if(!IntEngLeave(&EnterLeave))
+          while(sy < bt)
           {
-            return FALSE;
+            GOLINE(v1, v3, 0);
+            DOLINE(v1, v3, 0);
+            ENDLINE(v1, v3, 0);
+            
+            GOLINE(v1, v2, 1);
+            DOLINE(v1, v2, 1);
+            FILLLINE(0, 1);
+            ENDLINE(v1, v2, 1);
+            
+            GOLINE(v2, v3, 2);
+            DOLINE(v2, v3, 2);
+            FILLLINE(0, 2);
+            ENDLINE(23, v3, 2);
+            
+            y++;
+            sy++;
           }
         }
       }
     } while(EnumMore);
     
-    return TRUE;
+    return IntEngLeave(&EnterLeave);
   }
   
-  /* FIXME - fill triangle with one solid color */
+  /* fill triangle with one solid color */
   
-  return FALSE;
+  Color = XLATEOBJ_iXlate(pxlo, RGB(v1->Red >> 8, v1->Green >> 8, v1->Blue >> 8));
+  CLIPOBJ_cEnumStart(pco, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
+  do
+  {
+    EnumMore = CLIPOBJ_bEnum(pco, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+    for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= prclExtents->bottom; i++)
+    {
+      if(NtGdiIntersectRect(&FillRect, &RectEnum.arcl[i], prclExtents))
+      {
+        S_INITLINE(v1, v3, 0);
+        S_INITLINE(v1, v2, 1);
+        S_INITLINE(v2, v3, 2);
+        
+        y = v1->y;
+        sy = v1->y + pptlDitherOrg->y;
+        bt = min(v3->y + pptlDitherOrg->y, FillRect.bottom);
+        
+        while(sy < bt)
+        {
+          S_GOLINE(v1, v3, 0);
+          S_DOLINE(v1, v3, 0);
+          S_ENDLINE(v1, v3, 0);
+          
+          S_GOLINE(v1, v2, 1);
+          S_DOLINE(v1, v2, 1);
+          S_FILLLINE(0, 1);
+          S_ENDLINE(v1, v2, 1);
+          
+          S_GOLINE(v2, v3, 2);
+          S_DOLINE(v2, v3, 2);
+          S_FILLLINE(0, 2);
+          S_ENDLINE(23, v3, 2);
+          
+          y++;
+          sy++;
+        }
+      }
+    }
+  } while(EnumMore);
+  
+  return IntEngLeave(&EnterLeave);
 }
 
 
