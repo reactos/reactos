@@ -1,3 +1,16 @@
+2004-11-21  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* Makefile (DLLS_KBD): Add kbdda.
+	* bootdata/txtsetup.sif: Add Danish language 406.
+	* bootdata/hivesys.inf: Add kbdda.dll for Danish language 406.
+	* bootdata/packages/reactos.dff: Ditto.
+	* lib/kbdda: New directory.
+	* lib/kbdda/.cvsignore: New file.
+	* lib/kbdda/kbdda.c: Ditto.
+	* lib/kbdda/kbdda.def: Ditto.
+	* lib/kbdda/kbdda.rc: Ditto.
+	* lib/kbdda/makefile: Ditto.
+
 2004-11-20  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* drivers/net/tcpip/tests/tests/ipreceive.c (RunTest): Switch parameters

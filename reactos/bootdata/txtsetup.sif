@@ -63,14 +63,16 @@ vbe = "VBE Display"
 Default = "XT-, AT- or extended keyboard (83-105 keys)"
 
 [KeyboardLayout]
+00000406 = "Danish (Denmark)"
 00000809 = "English (United Kingdom)"
 00000409 = "English (USA)"
 00010409 = "English (USA-Dvorak)"
 0000040C = "French (France)"
 00000407 = "German (Germany)"
-0000041D = "Swedish"
+0000041D = "Swedish (Sweden)"
 
 [Files.KeyboardLayout]
+00000406 = kbdda.dll
 00000407 = kbdgr.dll
 00000409 = kbdus.dll
 00010409 = kbddv.dll

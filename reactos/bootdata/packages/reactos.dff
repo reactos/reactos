@@ -75,6 +75,7 @@ lib\gdiplus\gdiplus.dll                 1
 lib\imagehlp\imagehlp.dll               1
 lib\imm32\imm32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
+lib\kbdda\kbdda.dll                     1
 lib\kbddv\kbddv.dll                     1
 lib\kbdfr\kbdfr.dll                     1
 lib\kbdgr\kbdgr.dll                     1
