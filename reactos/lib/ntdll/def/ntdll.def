@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.106 2003/07/27 11:40:01 ekohl Exp $
+; $Id: ntdll.def,v 1.107 2003/08/22 13:46:55 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -490,7 +490,6 @@ RtlMultiByteToUnicodeSize@12
 ;RtlNewSecurityObject
 RtlNormalizeProcessParams@4
 RtlNtStatusToDosError@4
-RtlNtStatusToPsxErrno@4
 ;RtlNumberGenericTableElements
 RtlNumberOfClearBits@4
 RtlNumberOfSetBits@4

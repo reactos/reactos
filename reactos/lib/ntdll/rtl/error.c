@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.13 2003/07/11 13:50:23 royce Exp $
+/* $Id: error.c,v 1.14 2003/08/22 13:45:34 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -7,7 +7,6 @@
  * PROGRAMER:         Eric Kohl
  * REVISION HISTORY:
  *                    22/07/99: Added RtlNtStatusToDosError.
- *	1999-11-30: Added RtlNtStatusToPsxErrno.
  *	1999-12-18: STDCALL RtlNtStatusToDosError
  */
 
@@ -931,38 +930,4 @@ RtlNtStatusToDosError(NTSTATUS Status)
     }
   return RtlNtStatusToDosErrorNoTeb(Status);
 }
-
-
-/**********************************************************************
- * NAME							EXPORTED
- * 	RtlNtStatusToPsxErrno
- *
- * DESCRIPTION
- *	Convert an Executive status ID into a POSIX error number
- *	(errno.h).
- *	
- * NOTE
- * 	Not present in the legacy WNT (a ReactOS extension to support
- * 	the POSIX+ subsystem).
- * 	
- * ARGUMENTS
- *	Status	The Executive status ID to convert.
- *
- * RETURN VALUE
- *	errno as in errno.h
- *	
- * REVISIONS
- * 	1999-11-30 ea
- */
-INT STDCALL
-RtlNtStatusToPsxErrno(IN NTSTATUS Status)
-{
-#if 0
-  switch (Status)
-    {
-    }
-#endif
-  return -1; /* generic POSIX error */
-}
-
 /* EOF */

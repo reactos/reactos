@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.95 2003/07/27 11:40:01 ekohl Exp $
+; $Id: ntdll.edf,v 1.96 2003/08/22 13:46:55 ea Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -489,7 +489,6 @@ RtlMultiByteToUnicodeSize=RtlMultiByteToUnicodeSize@12
 ;RtlNewSecurityObject
 RtlNormalizeProcessParams=RtlNormalizeProcessParams@4
 RtlNtStatusToDosError=RtlNtStatusToDosError@4
-RtlNtStatusToPsxErrno=RtlNtStatusToPsxErrno@4
 ;RtlNumberGenericTableElements
 RtlNumberOfClearBits=RtlNumberOfClearBits@4
 RtlNumberOfSetBits=RtlNumberOfSetBits@4
