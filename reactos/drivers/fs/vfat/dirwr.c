@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.44 2004/12/25 11:18:38 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -183,10 +183,11 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 FATAddEntry (PDEVICE_EXTENSION DeviceExt,
-	      PUNICODE_STRING PathNameU,
-	      PFILE_OBJECT pFileObject,
-	      ULONG RequestedOptions,
-	      UCHAR ReqAttr)
+	     PUNICODE_STRING NameU,
+	     PVFATFCB* Fcb,
+	     PVFATFCB ParentFcb, 
+	     ULONG RequestedOptions,
+	     UCHAR ReqAttr)
 /*
   create a new FAT entry
 */
@@ -198,11 +199,9 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   PUCHAR Buffer;
   BOOLEAN needTilde = FALSE, needLong = FALSE;
   BOOLEAN lCaseBase = FALSE, uCaseBase, lCaseExt = FALSE, uCaseExt;
-  PVFATFCB newFCB;
   ULONG CurrentCluster;
   LARGE_INTEGER SystemTime, FileOffset;
   NTSTATUS Status = STATUS_SUCCESS;
-  PVFATFCB pDirFcb;
   ULONG size;
   long i;
   
@@ -212,33 +211,20 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   BOOLEAN SpacesFound;
 
   VFAT_DIRENTRY_CONTEXT DirContext;
-  UNICODE_STRING DirNameU;
   WCHAR LongNameBuffer[MAX_PATH];
   WCHAR ShortNameBuffer[13];
 
-  DPRINT ("addEntry: Pathname='%wZ'\n", PathNameU);
+  DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
 
-  vfatSplitPathName(PathNameU, &DirNameU, &DirContext.LongNameU);
-  if (DirNameU.Length > sizeof(WCHAR))
-    {
-      DirNameU.Length -= sizeof(WCHAR);
-    }
-
-  pDirFcb = vfatGrabFCBFromTable(DeviceExt, &DirNameU);
-  if (pDirFcb == NULL)
-    {
-      return STATUS_UNSUCCESSFUL;
-    }
-
-  if (!ExAcquireResourceExclusiveLite(&pDirFcb->MainResource, TRUE))
-    {
-      DPRINT("Failed acquiring lock\n");
-      return STATUS_UNSUCCESSFUL;
-    }
+  DirContext.LongNameU = *NameU;
   
   nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
   Buffer = ExAllocatePool (NonPagedPool, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY));
+  if (Buffer == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }		
   RtlZeroMemory (Buffer, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY));
   pSlots = (slot *) Buffer;
 
@@ -254,7 +240,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 
   IsNameLegal = RtlIsNameLegalDOS8Dot3(&DirContext.LongNameU, &NameA, &SpacesFound);
 
-  if (IsNameLegal == FALSE || SpacesFound != FALSE)
+  if (!IsNameLegal || SpacesFound)
     {
       GENERATE_NAME_CONTEXT NameContext;
       VFAT_DIRENTRY_CONTEXT SearchContext;
@@ -272,7 +258,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
           RtlGenerate8dot3Name(&DirContext.LongNameU, FALSE, &NameContext, &DirContext.ShortNameU);
           DirContext.ShortNameU.Buffer[DirContext.ShortNameU.Length / sizeof(WCHAR)] = 0;
 	  SearchContext.DirIndex = 0;
-          Status = FindFile (DeviceExt, pDirFcb, &DirContext.ShortNameU, &SearchContext, TRUE);
+          Status = FindFile (DeviceExt, ParentFcb, &DirContext.ShortNameU, &SearchContext, TRUE);
           if (!NT_SUCCESS(Status))
             {
 	      break;
@@ -280,8 +266,6 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
         }
       if (i == 100) /* FIXME : what to do after this ? */
         {
-          ExReleaseResourceLite(&pDirFcb->MainResource);
-          vfatReleaseFCB(DeviceExt, pDirFcb);
           ExFreePool (Buffer);
           CHECKPOINT;
           return STATUS_UNSUCCESSFUL;
@@ -386,6 +370,16 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
   /* set dates and times */
   KeQuerySystemTime (&SystemTime);
+#if 0
+  {
+    TIME_FIELDS tf;
+    RtlTimeToTimeFields (&SystemTime, &tf);
+    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%wZ'\n", 
+	    tf.Day, tf.Month, tf.Year, tf.Hour, 
+	    tf.Minute, tf.Second, tf.Milliseconds,
+	    NameU);
+  }
+#endif
   FsdSystemTimeToDosDateTime (DeviceExt, &SystemTime, &DirContext.DirEntry.Fat.CreationDate,
                               &DirContext.DirEntry.Fat.CreationTime);
   DirContext.DirEntry.Fat.UpdateDate = DirContext.DirEntry.Fat.CreationDate;
@@ -421,10 +415,8 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 	}
     }
   /* try to find nbSlots contiguous entries frees in directory */
-  if (!vfatFindDirSpace(DeviceExt, pDirFcb, nbSlots, &DirContext.StartIndex))
+  if (!vfatFindDirSpace(DeviceExt, ParentFcb, nbSlots, &DirContext.StartIndex))
     {
-      ExReleaseResourceLite(&pDirFcb->MainResource);
-      vfatReleaseFCB(DeviceExt, pDirFcb);
       ExFreePool (Buffer);
       return STATUS_DISK_FULL;
     }
@@ -435,8 +427,6 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       Status = NextCluster (DeviceExt, 0, &CurrentCluster, TRUE);
       if (CurrentCluster == 0xffffffff || !NT_SUCCESS(Status))
         {
-          ExReleaseResourceLite(&pDirFcb->MainResource);
-          vfatReleaseFCB(DeviceExt, pDirFcb);
           ExFreePool (Buffer);
           if (!NT_SUCCESS(Status))
             {
@@ -458,7 +448,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
     {
       /* one cluster */
       CHECKPOINT;
-      CcMapData (pDirFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY),
+      CcMapData (ParentFcb->FileObject, &FileOffset, nbSlots * sizeof(FAT_DIR_ENTRY),
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (nbSlots > 1)
         {
@@ -473,13 +463,13 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       size = DeviceExt->FatInfo.BytesPerCluster -
              (DirContext.StartIndex * sizeof(FAT_DIR_ENTRY)) % DeviceExt->FatInfo.BytesPerCluster;
       i = size / sizeof(FAT_DIR_ENTRY);
-      CcMapData (pDirFcb->FileObject, &FileOffset, size, TRUE,
+      CcMapData (ParentFcb->FileObject, &FileOffset, size, TRUE,
                  &Context, (PVOID*)&pFatEntry);
       RtlCopyMemory(pFatEntry, Buffer, size);
       CcSetDirtyPinnedData(Context, NULL);
       CcUnpinData(Context);
       FileOffset.u.LowPart += size;
-      CcMapData (pDirFcb->FileObject, &FileOffset,
+      CcMapData (ParentFcb->FileObject, &FileOffset,
                  nbSlots * sizeof(FAT_DIR_ENTRY) - size,
                  TRUE, &Context, (PVOID*)&pFatEntry);
       if (nbSlots - 1 > i)
@@ -492,16 +482,15 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   CcUnpinData(Context);
 
   /* FIXME: check status */
-  vfatMakeFCBFromDirEntry (DeviceExt, pDirFcb, &DirContext, &newFCB);
-  vfatAttachFCBToFileObject (DeviceExt, newFCB, pFileObject);
+  vfatMakeFCBFromDirEntry (DeviceExt, ParentFcb, &DirContext, Fcb);
 
-  DPRINT ("new : entry=%11.11s\n", newFCB->entry.Fat.Filename);
+  DPRINT ("new : entry=%11.11s\n", (*Fcb)->entry.Fat.Filename);
   DPRINT ("new : entry=%11.11s\n", DirContext.DirEntry.Fat.Filename);
 
   if (RequestedOptions & FILE_DIRECTORY_FILE)
     {
       FileOffset.QuadPart = 0;
-      CcMapData (pFileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
+      CcMapData ((*Fcb)->FileObject, &FileOffset, DeviceExt->FatInfo.BytesPerCluster, TRUE,
                  &Context, (PVOID*)&pFatEntry);
       /* clear the new directory cluster */
       RtlZeroMemory (pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
@@ -510,9 +499,9 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       RtlCopyMemory (pFatEntry[0].Filename, ".          ", 11);
       RtlCopyMemory (&pFatEntry[1].Attrib, &DirContext.DirEntry.Fat.Attrib, sizeof(FAT_DIR_ENTRY) - 11);
       RtlCopyMemory (pFatEntry[1].Filename, "..         ", 11);
-      pFatEntry[1].FirstCluster = pDirFcb->entry.Fat.FirstCluster;
-      pFatEntry[1].FirstClusterHigh = pDirFcb->entry.Fat.FirstClusterHigh;
-      if (vfatFCBIsRoot(pDirFcb))
+      pFatEntry[1].FirstCluster = ParentFcb->entry.Fat.FirstCluster;
+      pFatEntry[1].FirstClusterHigh = ParentFcb->entry.Fat.FirstClusterHigh;
+      if (vfatFCBIsRoot(ParentFcb))
         {
           pFatEntry[1].FirstCluster = 0;
           pFatEntry[1].FirstClusterHigh = 0;
@@ -520,8 +509,6 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       CcSetDirtyPinnedData(Context, NULL);
       CcUnpinData(Context);
     }
-  ExReleaseResourceLite(&pDirFcb->MainResource);
-  vfatReleaseFCB (DeviceExt, pDirFcb);
   ExFreePool (Buffer);
   DPRINT ("addentry ok\n");
   return STATUS_SUCCESS;
@@ -529,8 +516,9 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 
 NTSTATUS
 FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
-	      PUNICODE_STRING PathNameU,
-	      PFILE_OBJECT pFileObject,
+	      PUNICODE_STRING NameU,
+	      PVFATFCB* Fcb,
+	      PVFATFCB ParentFcb,
 	      ULONG RequestedOptions,
 	      UCHAR ReqAttr)
 /*
@@ -538,21 +526,14 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
 */
 {
    PVOID Context = NULL;
-   PVFATFCB newFCB;
    LARGE_INTEGER SystemTime, FileOffset;
-   PVFATFCB pDirFcb;
    OEM_STRING NameA;
    VFAT_DIRENTRY_CONTEXT DirContext;
    PFATX_DIR_ENTRY pFatXDirEntry;
-   UNICODE_STRING DirNameU;
    
-   DPRINT ("addEntry: Pathname='%wZ'\n", PathNameU);
+   DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
    
-   vfatSplitPathName(PathNameU, &DirNameU, &DirContext.LongNameU);
-   if (DirNameU.Length > sizeof(WCHAR))
-   {
-      DirNameU.Length -= sizeof(WCHAR);
-   }
+   DirContext.LongNameU = *NameU;
    
    if (DirContext.LongNameU.Length / sizeof(WCHAR) > 42)
    {
@@ -561,27 +542,13 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
       return STATUS_NAME_TOO_LONG;
    }
    
-   pDirFcb = vfatGrabFCBFromTable(DeviceExt, &DirNameU);
-   if (pDirFcb == NULL)
-   {
-      return STATUS_UNSUCCESSFUL;
-   }
-   
-   if (!ExAcquireResourceExclusiveLite(&pDirFcb->MainResource, TRUE))
-   {
-      DPRINT("Failed acquiring lock\n");
-      return STATUS_UNSUCCESSFUL;
-   }
-   
    /* try to find 1 entry free in directory */
-   if (!vfatFindDirSpace(DeviceExt, pDirFcb, 1, &DirContext.StartIndex))
+   if (!vfatFindDirSpace(DeviceExt, ParentFcb, 1, &DirContext.StartIndex))
    {
-      ExReleaseResourceLite(&pDirFcb->MainResource);
-      vfatReleaseFCB(DeviceExt, pDirFcb);
       return STATUS_DISK_FULL;
    }
    DirContext.DirIndex = DirContext.StartIndex;
-   if (!vfatFCBIsRoot(pDirFcb))
+   if (!vfatFCBIsRoot(ParentFcb))
    {
       DirContext.DirIndex += 2;
    }
@@ -620,33 +587,31 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    /* add entry into parent directory */
    FileOffset.u.HighPart = 0;
    FileOffset.u.LowPart = DirContext.StartIndex * sizeof(FATX_DIR_ENTRY);
-   CcMapData(pDirFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY),
-                 TRUE, &Context, (PVOID*)&pFatXDirEntry);
+   CcMapData(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY),
+             TRUE, &Context, (PVOID*)&pFatXDirEntry);
    RtlCopyMemory(pFatXDirEntry, &DirContext.DirEntry.FatX, sizeof(FATX_DIR_ENTRY));
    CcSetDirtyPinnedData(Context, NULL);
    CcUnpinData(Context);
    
    /* FIXME: check status */
-   vfatMakeFCBFromDirEntry(DeviceExt, pDirFcb, &DirContext, &newFCB);
-   vfatAttachFCBToFileObject(DeviceExt, newFCB, pFileObject);
+   vfatMakeFCBFromDirEntry(DeviceExt, ParentFcb, &DirContext, Fcb);
    
-   ExReleaseResourceLite(&pDirFcb->MainResource);
-   vfatReleaseFCB(DeviceExt, pDirFcb);
    DPRINT("addentry ok\n");
    return STATUS_SUCCESS;
 }
 
 NTSTATUS
 VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
-	      PUNICODE_STRING PathNameU,
-	      PFILE_OBJECT pFileObject,
+	      PUNICODE_STRING NameU,
+	      PVFATFCB *Fcb,
+	      PVFATFCB ParentFcb,
 	      ULONG RequestedOptions,
 	      UCHAR ReqAttr)
 {
    if (DeviceExt->Flags & VCB_IS_FATX)
-      return FATXAddEntry(DeviceExt, PathNameU, pFileObject, RequestedOptions, ReqAttr);
+      return FATXAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr);
    else
-      return FATAddEntry(DeviceExt, PathNameU, pFileObject, RequestedOptions, ReqAttr);
+      return FATAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr);
 }
 
 NTSTATUS

@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.72 2004/12/05 16:31:51 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -642,7 +642,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       Resource = &Fcb->MainResource;
    }
    if (!ExAcquireResourceSharedLite(Resource,
-                                    (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
+                                    IrpContext->Flags & IRPCONTEXT_CANWAIT ? TRUE : FALSE))
    {
       Resource = NULL;
       Status = STATUS_PENDING;

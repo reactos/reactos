@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.70 2004/12/05 16:31:51 gvg Exp $ */
+/* $Id$ */
 
 #include <ddk/ntifs.h>
 
@@ -457,7 +457,7 @@ NTSTATUS VfatCreate (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatOpenFile (PDEVICE_EXTENSION DeviceExt,
                        PFILE_OBJECT FileObject,
-                       PUNICODE_STRING FileNameU);
+		       PVFATFCB* parentFcb);
 
 NTSTATUS FindFile (PDEVICE_EXTENSION DeviceExt,
                    PVFATFCB Parent,
@@ -507,7 +507,8 @@ NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
 
 NTSTATUS VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
 		       PUNICODE_STRING PathNameU,
-		       PFILE_OBJECT pFileObject,
+		       PVFATFCB* Fcb,
+		       PVFATFCB ParentFcb,
 		       ULONG RequestedOptions,
 		       UCHAR ReqAttr);
 

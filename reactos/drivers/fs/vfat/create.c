@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.78 2004/12/25 11:18:38 navaraf Exp $
+/* $Id$
  *
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
@@ -314,45 +314,29 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 }
 
 NTSTATUS
-VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-	      PUNICODE_STRING FileNameU)
+VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, PVFATFCB* ParentFcb)
 /*
  * FUNCTION: Opens a file
  */
 {
-  PVFATFCB ParentFcb;
   PVFATFCB Fcb;
   NTSTATUS Status;
+  UNICODE_STRING PathNameU;
+  WCHAR Buffer[260];
 
-
-//  PDEVICE_OBJECT DeviceObject = DeviceExt->StorageDevice->Vpb->DeviceObject;
-  
   DPRINT ("VfatOpenFile(%08lx, %08lx, '%wZ')\n", DeviceExt, FileObject, &FileObject->FileName);
 
   if (FileObject->RelatedFileObject)
     {
-      DPRINT ("Converting relative filename to absolute filename\n");
+      DPRINT ("'%wZ'\n", &FileObject->RelatedFileObject->FileName);
 
-      Fcb = FileObject->RelatedFileObject->FsContext;
-      RtlCopyUnicodeString(FileNameU, &Fcb->PathNameU);
-      if (!vfatFCBIsRoot(Fcb))
-        {
-	  RtlAppendUnicodeToString(FileNameU, L"\\");
-	}
-      RtlAppendUnicodeStringToString(FileNameU, &FileObject->FileName);
+      *ParentFcb = FileObject->RelatedFileObject->FsContext;
+      (*ParentFcb)->RefCount++;
     }
   else
     {
-      RtlCopyUnicodeString(FileNameU, &FileObject->FileName);
+      *ParentFcb = NULL;
     }
-  if (FileNameU->Length > sizeof(WCHAR) &&
-      FileNameU->Buffer[FileNameU->Length / sizeof(WCHAR) - 1] == L'\\')
-    {
-      FileNameU->Length -= sizeof(WCHAR);
-    }
-  FileNameU->Buffer[FileNameU->Length / sizeof(WCHAR)] = 0;
-
-  DPRINT ("PathName to open: '%wZ'\n", FileNameU);
 
   if (!DeviceExt->FatInfo.FixedMedia)
     {
@@ -382,40 +366,47 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT ("Status %lx\n", Status);
+	  *ParentFcb = NULL;
 	  return Status;
 	}
     }
 
+  if (*ParentFcb)
+  {
+     (*ParentFcb)->RefCount++;
+  }
+
+  PathNameU.Buffer = Buffer;
+  PathNameU.Length = 0;
+  PathNameU.MaximumLength = sizeof(Buffer);
+  RtlCopyUnicodeString(&PathNameU, &FileObject->FileName);
+  if (PathNameU.Length > sizeof(WCHAR) &&
+      PathNameU.Buffer[PathNameU.Length / sizeof(WCHAR) - 1] == L'\\')
+    {
+      PathNameU.Length -= sizeof(WCHAR);
+    }
+  PathNameU.Buffer[PathNameU.Length / sizeof(WCHAR)] = 0;
 
   /*  try first to find an existing FCB in memory  */
   DPRINT ("Checking for existing FCB in memory\n");
-  Fcb = vfatGrabFCBFromTable (DeviceExt, FileNameU);
-  if (Fcb == NULL)
-    {
-      DPRINT ("No existing FCB found, making a new one if file exists.\n");
-      Status = vfatGetFCBForFile (DeviceExt, &ParentFcb, &Fcb, FileNameU);
-      if (ParentFcb != NULL)
-        {
-          vfatReleaseFCB (DeviceExt, ParentFcb);
-        }
-      if (!NT_SUCCESS (Status))
-        {
-          DPRINT ("Could not make a new FCB, status: %x\n", Status);
-          return  Status;
-	}
-    }
-  else
-    {
-      RtlCopyUnicodeString(FileNameU, &Fcb->PathNameU);
-    }
+
+  Status = vfatGetFCBForFile (DeviceExt, ParentFcb, &Fcb, &PathNameU);
+  if (!NT_SUCCESS (Status))
+  {
+     DPRINT ("Could not make a new FCB, status: %x\n", Status);
+     return  Status;
+  }
   if (Fcb->Flags & FCB_DELETE_PENDING)
-    {
-      vfatReleaseFCB (DeviceExt, Fcb);
-      return STATUS_DELETE_PENDING;
-    }
+  {
+     vfatReleaseFCB (DeviceExt, Fcb);
+     return STATUS_DELETE_PENDING;
+  }
   DPRINT ("Attaching FCB to fileObject\n");
   Status = vfatAttachFCBToFileObject (DeviceExt, Fcb, FileObject);
-
+  if (!NT_SUCCESS(Status))
+  {
+     vfatReleaseFCB (DeviceExt, Fcb);
+  }
   return  Status;
 }
 
@@ -481,12 +472,12 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   ULONG RequestedDisposition, RequestedOptions;
   PVFATCCB pCcb;
   PVFATFCB pFcb;
+  PVFATFCB ParentFcb;
   PWCHAR c, last;
   BOOLEAN PagingFileCreate = FALSE;
   LARGE_INTEGER AllocationSize;
   BOOLEAN Dots;
-  UNICODE_STRING NameU;
-  WCHAR NameW[MAX_PATH];
+  UNICODE_STRING FileNameU;
   
   /* Unpack the various parameters. */
   Stack = IoGetCurrentIrpStackLocation (Irp);
@@ -563,12 +554,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
     }
 
-  NameU.Buffer = NameW;
-  NameU.Length = 0;
-  NameU.MaximumLength = sizeof(NameW);
-
   /* Try opening the file. */
-  Status = VfatOpenFile (DeviceExt, FileObject, &NameU);
+  Status = VfatOpenFile (DeviceExt, FileObject, &ParentFcb);
 
   /*
    * If the directory containing the file to open doesn't exist then
@@ -578,6 +565,10 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       Status == STATUS_INVALID_PARAMETER ||
       Status == STATUS_DELETE_PENDING)
     {
+      if (ParentFcb)
+      {
+         vfatReleaseFCB (DeviceExt, ParentFcb);
+      }
       return(Status);
     }
 
@@ -593,12 +584,15 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	{
 	  ULONG Attributes;
 	  Attributes = Stack->Parameters.Create.FileAttributes;
-	  Status = VfatAddEntry (DeviceExt, &NameU, FileObject, RequestedOptions, 
+          
+          vfatSplitPathName(&FileObject->FileName, NULL, &FileNameU);
+	  Status = VfatAddEntry (DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions, 
 				 (UCHAR)(Attributes & FILE_ATTRIBUTE_VALID_FLAGS));
+          vfatReleaseFCB (DeviceExt, ParentFcb);
 	  if (NT_SUCCESS (Status))
 	    {
-	      pFcb = FileObject->FsContext;
-        
+              vfatAttachFCBToFileObject (DeviceExt, pFcb, FileObject);
+      
 	      Irp->IoStatus.Information = FILE_CREATED;
         
 	      VfatSetAllocationSizeInformation(FileObject, 
@@ -621,11 +615,16 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
       else
 	{
+          vfatReleaseFCB (DeviceExt, ParentFcb);
 	  return(Status);
 	}
     }
   else
     {
+      if (ParentFcb)
+      {
+         vfatReleaseFCB (DeviceExt, ParentFcb);
+      }
       /* Otherwise fail if the caller wanted to create a new file  */
       if (RequestedDisposition == FILE_CREATE)
 	{
