@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.3 2002/06/06 18:59:50 ekohl Exp $
+/* $Id: dos8dot3.c,v 1.4 2002/08/17 15:23:50 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -116,6 +116,10 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 	      ExtBuffer[ExtLength++] = RtlUpcaseUnicodeChar(Name->Buffer[i]);
 	    }
 	}
+    }
+  else
+    {
+      ExtLength = 0;
     }
   DPRINT("ExtBuffer: '%.04S'\n", ExtBuffer);
   DPRINT("ExtLength: %hu\n", ExtLength);
