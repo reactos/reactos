@@ -37,19 +37,23 @@
  *
  */
 
-#include <stdio.h>
-#include <string.h>
-
-#include <windows.h>
-#include <user32.h>
+#define NDEBUG
 #include <debug.h>
-
-#include "user32/regcontrol.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "windows.h"
 #include "controls.h"
+#include "user32/regcontrol.h"
+#include "user32.h"
 
-/* Rip the fun and easy to use and fun WINE unicode string manipulation routines. 
+/* Rip the fun and easy WINE unicode string manipulation routines. 
  * Of course I didnt copy the ASM code because we want this to be portable 
  * and it needs to go away.
+ *
+ * Move to the WINE unicode header soon or replace with Windows functions
+ * move vote is to move to the WINE unicode header so we can keep
+ * source the same.
  */
 
 static inline unsigned int strlenW( const WCHAR *str )
@@ -2795,11 +2799,10 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
     }
     if (es->style & ES_MULTILINE)
     {
-        //INT s = min(es->selection_start, es->selection_end);
-        OutputDebugStringA("DoublePlus Ungood - If you are expecting es->style & ES_MULTILINE forget it\n");
-        //hrgn = CreateRectRgn(0, 0, 0, 0);
-        //EDIT_BuildLineDefs_ML(es, s, s + strl,
-        //		strl - abs(es->selection_end - es->selection_start), hrgn);
+        INT s = min(es->selection_start, es->selection_end);
+        hrgn = CreateRectRgn(0, 0, 0, 0);
+        EDIT_BuildLineDefs_ML(es, s, s + strl,
+        		strl - abs(es->selection_end - es->selection_start), hrgn);
     }
     else
         EDIT_CalcLineWidth_SL(es);
