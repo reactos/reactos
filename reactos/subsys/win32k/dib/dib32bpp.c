@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib32bpp.c,v 1.18 2004/04/05 21:26:24 navaraf Exp $ */
+/* $Id: dib32bpp.c,v 1.19 2004/04/06 17:54:32 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -304,7 +304,7 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 {
    ULONG X, Y;
    ULONG SourceX, SourceY;
-   ULONG Dest, Source, Pattern;
+   ULONG Dest, Source, Pattern, wd;
    PULONG DestBits;
    BOOL UsesSource;
    BOOL UsesPattern;
@@ -359,7 +359,8 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       DestSurf->pvScan0 +
       (DestRect->left << 2) +
       DestRect->top * DestSurf->lDelta);
-
+   wd = ((DestRect->right - DestRect->left) << 2) - DestSurf->lDelta;
+   
    for (Y = DestRect->top; Y < DestRect->bottom; Y++)
    {
       SourceX = SourcePoint->x;
@@ -390,9 +391,7 @@ DIB_32BPP_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
       SourceY++;
       DestBits = (PULONG)(
-         (ULONG_PTR)DestBits -
-         ((DestRect->right - DestRect->left) << 2) +
-         DestSurf->lDelta);
+         (ULONG_PTR)DestBits - wd);
    }
 
    if (PatternSurface != NULL)
@@ -564,6 +563,47 @@ BOOLEAN DIB_32BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
   
     
+  return TRUE;
+}
+
+BOOLEAN 
+DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                         PSURFGDI DestGDI,  PSURFGDI SourceGDI,
+                         RECTL*  DestRect,  POINTL  *SourcePoint,
+                         XLATEOBJ *ColorTranslation, ULONG iTransColor)
+{
+  ULONG X, Y;
+  ULONG SourceX, SourceY, Source, wd;
+  PULONG DestBits;
+  
+  SourceY = SourcePoint->y;
+  DestBits = (PULONG)(DestSurf->pvScan0 +
+                      (DestRect->left << 2) +
+                      DestRect->top * DestSurf->lDelta);
+  wd = ((DestRect->right - DestRect->left) << 2) - DestSurf->lDelta;
+  
+  for(Y = DestRect->top; Y < DestRect->bottom; Y++)
+  {
+    SourceX = SourcePoint->x;
+    for(X = DestRect->left; X < DestRect->right; X++, DestBits++, SourceX++)
+    {
+      Source = DIB_GetOriginalSource(SourceSurf, SourceGDI, SourceX, SourceY);
+      if(Source == iTransColor)
+      {
+        /* Skip transparent pixels */
+        continue;
+      }
+      
+      if(ColorTranslation)
+        *DestBits = XLATEOBJ_iXlate(ColorTranslation, Source);
+      else
+        *DestBits = Source;
+    }
+    
+    SourceY++;
+    DestBits = (PULONG)((ULONG_PTR)DestBits - wd);
+  }
+  
   return TRUE;
 }
 

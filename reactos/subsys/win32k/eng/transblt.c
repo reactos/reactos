@@ -16,15 +16,15 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: transblt.c,v 1.13 2004/04/03 21:25:20 weiden Exp $
+/* $Id: transblt.c,v 1.14 2004/04/06 17:54:32 weiden Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI TransparentBlt Function
  * FILE:             subsys/win32k/eng/transblt.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * REVISION HISTORY:
- *        4/6/2001: Created
+ *        4/6/2004: Created
  */
 
 #include <ddk/winddi.h>
@@ -53,22 +53,178 @@ EngTransparentBlt(PSURFOBJ Dest,
 		  PXLATEOBJ ColorTranslation,
 		  PRECTL DestRect,
 		  PRECTL SourceRect,
-		  ULONG TransparentColor,
+		  ULONG iTransColor,
 		  ULONG Reserved)
 {
-  DPRINT1("EngTransparentBlt() unimplemented!\n");
-  return FALSE;
+  BOOL Ret;
+  BYTE ClippingType;
+  INTENG_ENTER_LEAVE EnterLeaveSource, EnterLeaveDest;
+  SURFOBJ *InputObj, *OutputObj;
+  SURFGDI *InputGDI, *OutputGDI;
+  RECTL OutputRect, InputRect;
+  POINTL Translate, InputPoint;
+  
+  InputRect.left = 0;
+  InputRect.right = DestRect->right - DestRect->left;
+  InputRect.top = 0;
+  InputRect.bottom = DestRect->bottom - DestRect->top;
+  
+  if(!IntEngEnter(&EnterLeaveSource, Source, &InputRect, TRUE, &Translate, &InputObj))
+  {
+    return FALSE;
+  }
+  
+  InputPoint.x = SourceRect->left + Translate.x;
+  InputPoint.y = SourceRect->top + Translate.y;
+  
+  InputGDI = (InputObj ? (SURFGDI*)AccessInternalObjectFromUserObject(InputObj) : NULL);
+  ASSERT(InputGDI);
+  
+  OutputRect = *DestRect;
+  if(Clip)
+  {
+    if(OutputRect.left < Clip->rclBounds.left)
+    {
+      InputRect.left += Clip->rclBounds.left - OutputRect.left;
+      InputPoint.x += Clip->rclBounds.left - OutputRect.left;
+      OutputRect.left = Clip->rclBounds.left;
+    }
+    if(Clip->rclBounds.right < OutputRect.right)
+    {
+      InputRect.right -=  OutputRect.right - Clip->rclBounds.right;
+      OutputRect.right = Clip->rclBounds.right;
+    }
+    if(OutputRect.top < Clip->rclBounds.top)
+    {
+      InputRect.top += Clip->rclBounds.top - OutputRect.top;
+      InputPoint.y += Clip->rclBounds.top - OutputRect.top;
+      OutputRect.top = Clip->rclBounds.top;
+    }
+    if(Clip->rclBounds.bottom < OutputRect.bottom)
+    {
+      InputRect.bottom -=  OutputRect.bottom - Clip->rclBounds.bottom;
+      OutputRect.bottom = Clip->rclBounds.bottom;
+    }
+  }
+  
+  /* Check for degenerate case: if height or width of OutputRect is 0 pixels there's
+     nothing to do */
+  if(OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
+  {
+    IntEngLeave(&EnterLeaveSource);
+    return TRUE;
+  }
+  
+  if(!IntEngEnter(&EnterLeaveDest, Dest, &OutputRect, FALSE, &Translate, &OutputObj))
+  {
+    IntEngLeave(&EnterLeaveSource);
+    return FALSE;
+  }
+  
+  OutputRect.left = DestRect->left + Translate.x;
+  OutputRect.right = DestRect->right + Translate.x;
+  OutputRect.top = DestRect->top + Translate.y;
+  OutputRect.bottom = DestRect->bottom + Translate.y;
+  
+  OutputGDI = (OutputObj ? (SURFGDI*)AccessInternalObjectFromUserObject(OutputObj) : NULL);
+  ASSERT(OutputGDI);
+  
+  ClippingType = (Clip ? Clip->iDComplexity : DC_TRIVIAL);
+  
+  switch(ClippingType)
+  {
+    case DC_TRIVIAL:
+    {
+      Ret = OutputGDI->DIB_TransparentBlt(OutputObj, InputObj, OutputGDI, InputGDI, &OutputRect, 
+                                         &InputPoint, ColorTranslation, iTransColor);
+      break;
+    }
+    case DC_RECT:
+    {
+      RECTL ClipRect, CombinedRect;
+      POINTL Pt;
+      
+      ClipRect.left = Clip->rclBounds.left + Translate.x;
+      ClipRect.right = Clip->rclBounds.right + Translate.x;
+      ClipRect.top = Clip->rclBounds.top + Translate.y;
+      ClipRect.bottom = Clip->rclBounds.bottom + Translate.y;
+      EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+      Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+      Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+      Ret = OutputGDI->DIB_TransparentBlt(OutputObj, InputObj, OutputGDI, InputGDI, &CombinedRect, 
+                                         &Pt, ColorTranslation, iTransColor);
+      break;
+    }
+    case DC_COMPLEX:
+    {
+      ULONG Direction, i;
+      RECT_ENUM RectEnum;
+      BOOL EnumMore;
+      POINTL Pt;
+      
+      if(OutputObj == InputObj)
+      {
+        if(OutputRect.top < InputPoint.y)
+        {
+          Direction = OutputRect.left < (InputPoint.x ? CD_RIGHTDOWN : CD_LEFTDOWN);
+        }
+        else
+        {
+          Direction = OutputRect.left < (InputPoint.x ? CD_RIGHTUP : CD_LEFTUP);
+        }
+      }
+      else
+      {
+        Direction = CD_ANY;
+      }
+      
+      CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, Direction, 0);
+      do
+      {
+        EnumMore = CLIPOBJ_bEnum(Clip, sizeof(RectEnum), (PVOID)&RectEnum);
+        for (i = 0; i < RectEnum.c; i++)
+        {
+          RECTL ClipRect, CombinedRect;
+          
+          ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+          ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+          ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+          ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+          EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect);
+          Pt.x = InputPoint.x + CombinedRect.left - OutputRect.left;
+          Pt.y = InputPoint.y + CombinedRect.top - OutputRect.top;
+          Ret = OutputGDI->DIB_TransparentBlt(OutputObj, InputObj, OutputGDI, InputGDI, &CombinedRect, 
+                                              &Pt, ColorTranslation, iTransColor);
+          if(!Ret)
+          {
+            break;
+          }
+        }
+      } while(EnumMore && Ret);
+      break;
+    }
+    default:
+    {
+      Ret = FALSE;
+      break;
+    }
+  }
+  
+  IntEngLeave(&EnterLeaveDest);
+  IntEngLeave(&EnterLeaveSource);
+  
+  return Ret;
 }
 
 BOOL FASTCALL
-IntTransparentBlt(PSURFOBJ Dest,
-                  PSURFOBJ Source,
-                  PCLIPOBJ Clip,
-                  PXLATEOBJ ColorTranslation,
-                  PRECTL DestRect,
-                  PRECTL SourceRect,
-                  ULONG TransparentColor,
-                  ULONG Reserved)
+IntEngTransparentBlt(PSURFOBJ Dest,
+                     PSURFOBJ Source,
+                     PCLIPOBJ Clip,
+                     PXLATEOBJ ColorTranslation,
+                     PRECTL DestRect,
+                     PRECTL SourceRect,
+                     ULONG iTransColor,
+                     ULONG Reserved)
 {
   BOOL Ret;
   RECTL OutputRect, InputClippedRect;
@@ -115,8 +271,10 @@ IntTransparentBlt(PSURFOBJ Dest,
   
   if(SurfGDIDest->TransparentBlt)
   {
+    IntLockGDIDriver(SurfGDIDest);
     Ret = SurfGDIDest->TransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
-                                      SourceRect, TransparentColor, Reserved);
+                                      SourceRect, iTransColor, Reserved);
+    IntUnLockGDIDriver(SurfGDIDest);
   }
   else
     Ret = FALSE;
@@ -124,7 +282,7 @@ IntTransparentBlt(PSURFOBJ Dest,
   if(!Ret)
   {
     Ret = EngTransparentBlt(Dest, Source, Clip, ColorTranslation, &OutputRect, 
-                            SourceRect, TransparentColor, Reserved);
+                            SourceRect, iTransColor, Reserved);
   }
   
   MouseSafetyOnDrawEnd(Dest, SurfGDIDest);

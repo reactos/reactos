@@ -67,4 +67,14 @@ BOOL STDCALL IntEngPolyline(SURFOBJ *DestSurf,
 CLIPOBJ* STDCALL IntEngCreateClipRegion(ULONG count,
 					 PRECTL pRect,
 					 RECTL rcBounds);
+
+BOOL FASTCALL
+IntEngTransparentBlt(PSURFOBJ Dest,
+                     PSURFOBJ Source,
+                     PCLIPOBJ Clip,
+                     PXLATEOBJ ColorTranslation,
+                     PRECTL DestRect,
+                     PRECTL SourceRect,
+                     ULONG iTransColor,
+                     ULONG Reserved);
 #endif /* _WIN32K_INTENG_H */

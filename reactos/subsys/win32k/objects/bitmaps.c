@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.67 2004/04/05 21:26:25 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.68 2004/04/06 17:54:32 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -307,6 +307,12 @@ NtGdiTransparentBlt(
     DCSrc = DCDest;
   }
   
+  /* Offset positions */
+  xDst += DCDest->w.DCOrgX;
+  yDst += DCDest->w.DCOrgY;
+  xSrc += DCSrc->w.DCOrgX;
+  ySrc += DCSrc->w.DCOrgY;
+  
   if(DCDest->w.hPalette)
     DestPalette = DCDest->w.hPalette;
   else
@@ -344,16 +350,15 @@ NtGdiTransparentBlt(
   }
   PALETTE_UnlockPalette(SourcePalette);
   
-  if((XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette)))
+  /* Translate Transparent (RGB) Color to the source palette */
+  if((XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalSrcMode, PAL_RGB, SourcePalette, NULL)))
   {
-    /* FIXME - is color translation right? */
     TransparentColor = XLATEOBJ_iXlate(XlateObj, (ULONG)TransColor);
+    EngDeleteXlate(XlateObj);
   }
-  else
-  {
-    /* FIXME - what should be done here? */
-    TransparentColor = (ULONG)TransColor;
-  }
+  
+  /* Create the XLATE object to convert colors between source and destination */
+  XlateObj = (PXLATEOBJ)IntEngCreateXlate(PalDestMode, PalSrcMode, DestPalette, SourcePalette);
   
   SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
   ASSERT(SurfDest);
@@ -371,13 +376,12 @@ NtGdiTransparentBlt(
   
   if((cxDst != cxSrc) || (cyDst != cySrc))
   {
-    /* FIXME - Create a temporary bitmap and stretchblt it */
-    DPRINT1("TransparentBlt() does not support stretching!\n");
+    DPRINT1("TransparentBlt() does not support stretching at the moment!\n");
     goto done;
   }
   
-  Ret = IntTransparentBlt(SurfDest, SurfSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc, 
-                          TransparentColor, 0);
+  Ret = IntEngTransparentBlt(SurfDest, SurfSrc, DCDest->CombinedClip, XlateObj, &rcDest, &rcSrc, 
+                             TransparentColor, 0);
   
 done:
   DC_UnlockDc(hdcSrc);

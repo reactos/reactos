@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.35 2004/03/20 17:33:10 navaraf Exp $
+/* $Id: surface.c,v 1.36 2004/04/06 17:54:32 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -126,6 +126,14 @@ static BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return FALSE;
 }
 
+static BOOLEAN Dummy_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
+                                    PSURFGDI DestGDI,  PSURFGDI SourceGDI,
+                                    RECTL*  DestRect,  POINTL  *SourcePoint,
+                                    XLATEOBJ *ColorTranslation, ULONG iTransColor)
+{
+  return FALSE;
+}
+
 
 #define SURF_METHOD(c,n) DIB_##c##_##n
 #define SET_SURFGDI(c)\
@@ -134,7 +142,8 @@ static BOOLEAN Dummy_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
  SurfGDI->DIB_HLine=SURF_METHOD(c,HLine);\
  SurfGDI->DIB_VLine=SURF_METHOD(c,VLine);\
  SurfGDI->DIB_BitBlt=SURF_METHOD(c,BitBlt);\
- SurfGDI->DIB_StretchBlt=SURF_METHOD(c,StretchBlt);
+ SurfGDI->DIB_StretchBlt=SURF_METHOD(c,StretchBlt);\
+ SurfGDI->DIB_TransparentBlt=SURF_METHOD(c,TransparentBlt);
 
 VOID FASTCALL InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
 {
@@ -160,12 +169,13 @@ VOID FASTCALL InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
       DPRINT1("InitializeFuncs: unsupported DIB format %d\n",
                BitmapFormat);
 
-      SurfGDI->DIB_PutPixel     = Dummy_PutPixel;
-      SurfGDI->DIB_GetPixel     = Dummy_GetPixel;
-      SurfGDI->DIB_HLine        = Dummy_HLine;
-      SurfGDI->DIB_VLine        = Dummy_VLine;
-      SurfGDI->DIB_BitBlt       = Dummy_BitBlt;
-      SurfGDI->DIB_StretchBlt   = Dummy_StretchBlt;
+      SurfGDI->DIB_PutPixel       = Dummy_PutPixel;
+      SurfGDI->DIB_GetPixel       = Dummy_GetPixel;
+      SurfGDI->DIB_HLine          = Dummy_HLine;
+      SurfGDI->DIB_VLine          = Dummy_VLine;
+      SurfGDI->DIB_BitBlt         = Dummy_BitBlt;
+      SurfGDI->DIB_StretchBlt     = Dummy_StretchBlt;
+      SurfGDI->DIB_TransparentBlt = Dummy_TransparentBlt;
       break;
     }
 }

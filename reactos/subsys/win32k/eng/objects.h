@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.28 2004/02/08 21:37:52 weiden Exp $
+/* $Id: objects.h,v 1.29 2004/04/06 17:54:32 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -150,20 +150,23 @@ typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTE
 /* Forward declare (circular reference) */
 typedef struct _SURFGDI *PSURFGDI;
 
-typedef VOID    (*PFN_DIB_PutPixel)(SURFOBJ *, LONG, LONG, ULONG);
-typedef ULONG   (*PFN_DIB_GetPixel)(SURFOBJ *, LONG, LONG);
-typedef VOID    (*PFN_DIB_HLine)   (SURFOBJ *, LONG, LONG, LONG, ULONG);
-typedef VOID    (*PFN_DIB_VLine)   (SURFOBJ *, LONG, LONG, LONG, ULONG);
-typedef BOOLEAN (*PFN_DIB_BitBlt)  (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
-                                    PSURFGDI DestGDI,  PSURFGDI SourceGDI,
-                                    RECTL *  DestRect, POINTL *  SourcePoint,
-				                    BRUSHOBJ *BrushObj, POINTL * BrushOrigin,
-                                    XLATEOBJ *ColorTranslation, ULONG Rop4);
-typedef BOOLEAN (*PFN_DIB_StretchBlt)  (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
-                                    PSURFGDI DestGDI,  PSURFGDI SourceGDI,
-                                    RECTL *  DestRect, RECTL *  SourceRect,
-				                    POINTL *MaskOrigin, POINTL * BrushOrigin,
-                                    XLATEOBJ *ColorTranslation, ULONG Mode);
+typedef VOID    (*PFN_DIB_PutPixel)       (SURFOBJ *, LONG, LONG, ULONG);
+typedef ULONG   (*PFN_DIB_GetPixel)       (SURFOBJ *, LONG, LONG);
+typedef VOID    (*PFN_DIB_HLine)          (SURFOBJ *, LONG, LONG, LONG, ULONG);
+typedef VOID    (*PFN_DIB_VLine)          (SURFOBJ *, LONG, LONG, LONG, ULONG);
+typedef BOOLEAN (*PFN_DIB_BitBlt)         (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
+                                           PSURFGDI DestGDI,  PSURFGDI SourceGDI,
+                                           RECTL *  DestRect, POINTL *  SourcePoint,
+				           BRUSHOBJ *BrushObj, POINTL * BrushOrigin,
+                                           XLATEOBJ *ColorTranslation, ULONG Rop4);
+typedef BOOLEAN (*PFN_DIB_StretchBlt)     (SURFOBJ * DestSurf, SURFOBJ * SourceSurf,
+                                           PSURFGDI DestGDI,  PSURFGDI SourceGDI,
+                                           RECTL *  DestRect, RECTL *  SourceRect,
+				           POINTL *MaskOrigin, POINTL * BrushOrigin,
+                                           XLATEOBJ *ColorTranslation, ULONG Mode);
+typedef BOOLEAN (*PFN_DIB_TransparentBlt) (SURFOBJ *, SURFOBJ *, PSURFGDI, PSURFGDI,
+                                           RECTL*  ,  POINTL  *, XLATEOBJ  *,ULONG);
+
 
 typedef struct _SURFGDI {
   ENGOBJ 		Header;
@@ -191,12 +194,13 @@ typedef struct _SURFGDI {
   PFN_GradientFill GradientFill;
 
   /* DIB functions */
-  PFN_DIB_PutPixel   DIB_PutPixel;
-  PFN_DIB_GetPixel   DIB_GetPixel;
-  PFN_DIB_HLine      DIB_HLine;
-  PFN_DIB_VLine      DIB_VLine;
-  PFN_DIB_BitBlt     DIB_BitBlt;
-  PFN_DIB_StretchBlt DIB_StretchBlt;
+  PFN_DIB_PutPixel       DIB_PutPixel;
+  PFN_DIB_GetPixel       DIB_GetPixel;
+  PFN_DIB_HLine          DIB_HLine;
+  PFN_DIB_VLine          DIB_VLine;
+  PFN_DIB_BitBlt         DIB_BitBlt;
+  PFN_DIB_StretchBlt     DIB_StretchBlt;
+  PFN_DIB_TransparentBlt DIB_TransparentBlt;
 
   /* misc */
   ULONG       PointerStatus;
