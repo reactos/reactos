@@ -1,3 +1,12 @@
+
+#ifndef PWORD
+typedef WORD *PWORD;
+#endif
+
+#ifndef PDWORD
+typedef DWORD *PDWORD;
+#endif
+
 typedef struct _IMAGE_DOS_HEADER {      // DOS .EXE header
     WORD   e_magic;                     // Magic number
     WORD   e_cblp;                      // Bytes on last page of file
@@ -329,15 +338,15 @@ typedef struct _IMAGE_NORMAL_MENU_ITEM{
 	WCHAR  szItemText[1];
 } IMAGE_NORMAL_MENU_ITEM, *PIMAGE_NORMAL_MENU_ITEM;
 
-#define GRAYED       0x0001 // GRAYED keyword
-#define INACTIVE     0x0002 // INACTIVE keyword
-#define BITMAP       0x0004 // BITMAP keyword
-#define OWNERDRAW    0x0100 // OWNERDRAW keyword
-#define CHECKED      0x0008 // CHECKED keyword
-#define POPUP        0x0010 // used internally
-#define MENUBARBREAK 0x0020 // MENUBARBREAK keyword
-#define MENUBREAK    0x0040 // MENUBREAK keyword
-#define ENDMENU      0x0080 // used internally
+#define MI_GRAYED       0x0001 // GRAYED keyword
+#define MI_INACTIVE     0x0002 // INACTIVE keyword
+#define MI_BITMAP       0x0004 // BITMAP keyword
+#define MI_OWNERDRAW    0x0100 // OWNERDRAW keyword
+#define MI_CHECKED      0x0008 // CHECKED keyword
+#define MI_POPUP        0x0010 // used internally
+#define MI_MENUBARBREAK 0x0020 // MENUBARBREAK keyword
+#define MI_MENUBREAK    0x0040 // MENUBREAK keyword
+#define MI_ENDMENU      0x0080 // used internally
 
 
 // Dialog Box Resources	.................. added by sang cho.

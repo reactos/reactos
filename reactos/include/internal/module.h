@@ -31,5 +31,7 @@ typedef struct
 
 BOOLEAN process_boot_module(unsigned int start);
 
+NTSTATUS InitalizeLoadedDriver(PDRIVER_INITIALIZE entry);
+
 #endif
 
