@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.91 2004/06/25 18:50:48 ekohl Exp $
+/* $Id: utils.c,v 1.92 2004/06/25 19:05:20 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1227,7 +1227,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
   USHORT NumberOfEntries;
   PUSHORT pValue16;
   ULONG RelocationRVA;
-  LONG Delta32;
+  ULONG Delta32;
   ULONG Offset;
   PULONG pValue32;
   PRELOCATION_DIRECTORY RelocationDir;
