@@ -48,9 +48,6 @@ int DRIVE_IsValid( int drive )
 }
 
 
-
-
-
 DWORD
 STDCALL
 GetLogicalDriveStringsA(
@@ -154,34 +151,37 @@ GetDiskFreeSpaceW(
     LPDWORD lpTotalNumberOfClusters
     )
 {
-	FILE_FS_SIZE_INFORMATION FileFsSize;
-	IO_STATUS_BLOCK IoStatusBlock;
-	HANDLE hFile;
-	NTSTATUS errCode;
+    FILE_FS_SIZE_INFORMATION FileFsSize;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE hFile;
+    NTSTATUS errCode;
 	
-	hFile = CreateFileW(
-  		lpRootPathName,	
-    		GENERIC_READ,	
-    		FILE_SHARE_READ,	
-    		NULL,	
-    		OPEN_EXISTING,	
-    		FILE_ATTRIBUTE_NORMAL,	
-    		NULL 
-   	);
+    hFile = CreateFileW(lpRootPathName,
+                        FILE_READ_ATTRIBUTES,
+                        FILE_SHARE_READ,
+                        NULL,
+                        OPEN_EXISTING,
+                        FILE_ATTRIBUTE_NORMAL,
+                        NULL);
 
-	errCode = NtQueryVolumeInformationFile(hFile,&IoStatusBlock,&FileFsSize, sizeof(FILE_FS_SIZE_INFORMATION),FileFsSizeInformation);
-	if ( !NT_SUCCESS(errCode) ) {
-		CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
+    errCode = NtQueryVolumeInformationFile(hFile,
+                                           &IoStatusBlock,
+                                           &FileFsSize,
+                                           sizeof(FILE_FS_SIZE_INFORMATION),
+                                           FileFsSizeInformation);
+    if (!NT_SUCCESS(errCode))
+    {
+        CloseHandle(hFile);
+        SetLastError(RtlNtStatusToDosError(errCode));
+        return FALSE;
+    }
 
-	*lpBytesPerSector = FileFsSize.BytesPerSector;
-	*lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
-        *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
-        *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
-	CloseHandle(hFile);
-	return TRUE;
+    *lpBytesPerSector = FileFsSize.BytesPerSector;
+    *lpSectorsPerCluster = FileFsSize.SectorsPerAllocationUnit;
+    *lpNumberOfFreeClusters = FileFsSize.AvailableAllocationUnits.LowPart;
+    *lpTotalNumberOfClusters = FileFsSize.TotalAllocationUnits.LowPart;
+    CloseHandle(hFile);
+    return TRUE;
 }
 
 UINT

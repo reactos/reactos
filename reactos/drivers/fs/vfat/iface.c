@@ -196,6 +196,81 @@ ULONG FAT32FindAvailableCluster(PDEVICE_EXTENSION DeviceExt)
    return 0;
 }
 
+ULONG FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+/*
+ * FUNCTION: Counts free cluster in a FAT12 table
+ */
+{
+   ULONG FATOffset;
+   ULONG Entry;
+   PUCHAR CBlock=DeviceExt->FAT;
+   ULONG ulCount = 0;
+   ULONG i;
+
+   for(i=2;i<((DeviceExt->Boot->FATSectors*512*8)/12) ;i++)
+   {
+     FATOffset = (i * 12)/8;
+     if ((i % 2) == 0)
+     {
+       Entry = CBlock[FATOffset];
+       Entry |= ((CBlock[FATOffset + 1] & 0xf)<<8);
+     }
+     else
+     {
+       Entry = (CBlock[FATOffset] >> 4);
+       Entry |= (CBlock[FATOffset + 1] << 4);
+     }
+     if(Entry==0)
+         ulCount++;
+   }
+   return ulCount;
+}
+
+ULONG FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+/*
+ * FUNCTION: Counts free clusters in a FAT16 table
+ */
+{
+   PUSHORT Block;
+   ULONG ulCount = 0;
+   ULONG i;
+
+   Block=(PUSHORT)DeviceExt->FAT;
+   for(i=2;i<(DeviceExt->Boot->FATSectors*256) ;i++)
+     if(Block[i]==0)
+       ulCount++;
+   return ulCount;
+}
+
+ULONG FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
+/*
+ * FUNCTION: Counts free clusters in a FAT32 table
+ */
+{
+   ULONG sector;
+   PULONG Block;
+   ULONG ulCount = 0;
+   ULONG i;
+
+   Block = ExAllocatePool(NonPagedPool,BLOCKSIZE);
+   for(sector=0
+       ;sector<  ((struct _BootSector32*)(DeviceExt->Boot))->FATSectors32
+       ;sector++)
+   {
+     VFATReadSectors(DeviceExt->StorageDevice
+        ,(ULONG)(DeviceExt->FATStart+sector), 1,(UCHAR*) Block);
+
+     for(i=0; i<512; i++)
+     {
+       if(Block[i]==0)
+         ulCount++;
+     }
+   }
+   /* Give an error message (out of disk space) if we reach here) */
+   ExFreePool(Block);
+   return ulCount;
+}
+
 void  FAT12WriteCluster(PDEVICE_EXTENSION DeviceExt, ULONG ClusterToWrite,
                         ULONG NewValue)
 /*
@@ -1812,10 +1887,7 @@ NTSTATUS FsdGetFsVolumeInformation(PFILE_OBJECT FileObject,
 }
 
 
-NTSTATUS FsdGetFsAttributeInformation(PFILE_OBJECT FileObject,
-                                      PVfatFCB FCB,
-                                      PDEVICE_OBJECT DeviceObject,
-                                      PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo)
+NTSTATUS FsdGetFsAttributeInformation(PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo)
 {
     DPRINT("FsdGetFsAttributeInformation()\n");
     DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
@@ -1833,6 +1905,56 @@ NTSTATUS FsdGetFsAttributeInformation(PFILE_OBJECT FileObject,
     return(STATUS_SUCCESS);
 }
 
+NTSTATUS FsdGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
+                                 PFILE_FS_SIZE_INFORMATION FsSizeInfo)
+{
+    PDEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
+
+    DPRINT("FsdGetFsSizeInformation()\n");
+    DPRINT("FsSizeInfo = %p\n", FsSizeInfo);
+
+    if (!FsSizeInfo)
+        return(STATUS_SUCCESS);
+
+    if (DeviceExt->FatType == FAT32)
+    {
+        struct _BootSector32 *BootSect = (struct _BootSector32 *)DeviceExt->Boot;
+
+        if (BootSect->Sectors)
+            FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->Sectors;
+        else
+            FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
+
+        FsSizeInfo->AvailableAllocationUnits.QuadPart =
+            FAT32CountAvailableClusters(DeviceExt);
+
+        FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
+        FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
+    }
+    else
+    {
+        struct _BootSector *BootSect = (struct _BootSector *)DeviceExt->Boot;
+
+        if (BootSect->Sectors)
+            FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->Sectors;
+        else
+            FsSizeInfo->TotalAllocationUnits.QuadPart = BootSect->SectorsHuge;
+
+        if (DeviceExt->FatType == FAT16)
+            FsSizeInfo->AvailableAllocationUnits.QuadPart =
+                FAT16CountAvailableClusters(DeviceExt);
+        else
+            FsSizeInfo->AvailableAllocationUnits.QuadPart =
+                FAT12CountAvailableClusters(DeviceExt);
+
+        FsSizeInfo->SectorsPerAllocationUnit = BootSect->SectorsPerCluster;
+        FsSizeInfo->BytesPerSector = BootSect->BytesPerSector;
+    }
+
+    DPRINT("Finished FsdGetFsSizeInformation()\n");
+
+    return(STATUS_SUCCESS);
+}
 
 
 NTSTATUS FsdQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -1875,21 +1997,25 @@ NTSTATUS FsdQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    DPRINT("FileInformationClass %d\n",FileInformationClass);
    DPRINT("SystemBuffer %x\n",SystemBuffer);
 
-   switch(FileInformationClass) {
+   switch (FileInformationClass)
+   {
       case FileFsVolumeInformation:
          RC = FsdGetFsVolumeInformation(FileObject,
                                         FCB,
                                         DeviceObject,
                                         SystemBuffer);
-      break;
+         break;
+
       case FileFsAttributeInformation:
-         RC = FsdGetFsAttributeInformation(FileObject,
-                                           FCB, 
-                                           DeviceObject, 
-                                           SystemBuffer);
-      break;
+         RC = FsdGetFsAttributeInformation(SystemBuffer);
+         break;
+
+      case FileFsSizeInformation:
+         RC = FsdGetFsSizeInformation(DeviceObject, SystemBuffer);
+         break;
+
       default:
-       RC=STATUS_NOT_IMPLEMENTED;
+         RC=STATUS_NOT_IMPLEMENTED;
    }
 
    Irp->IoStatus.Status = RC;
