@@ -24,6 +24,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 {
 	TCHAR szFullName[MAX_PATH];
 	BOOL bWait = FALSE;
+	TCHAR *param;
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
@@ -49,15 +50,24 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 		return 0;
 	}
-
+	if( !*rest )
+	  {
+	    // FIXME: use comspec instead
+	    rest = "cmd";
+	  }
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	if (!SearchForExecutable (first, szFullName))
+	param = strchr( rest, ' ' );  // skip program name to reach parameters
+	if( param )
+	  {
+	    *param = 0;
+	    param++;
+	  }
+	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
 		return 1;
 	}
-
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
 		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
@@ -78,9 +88,12 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
 #endif
 		/* build command line for CreateProcess() */
-		_tcscpy (szFullCmdLine, szFullName);
-		_tcscat (szFullCmdLine, _T(" "));
-		_tcscat (szFullCmdLine, rest);
+		_tcscpy (szFullCmdLine, first);
+		if( param )
+		  {
+		    _tcscat(szFullCmdLine, " " );
+		    _tcscat (szFullCmdLine, param);
+		  }
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -88,8 +101,8 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
 			
-		if (CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
-						   0, NULL, NULL, &stui, &prci))
+		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+						   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
 		{
 			if (bWait)
 			{

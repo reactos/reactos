@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.26 2001/05/06 17:12:44 cnettel Exp $
+/* $Id: cmd.c,v 1.27 2001/06/18 02:55:47 phreak Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -226,21 +226,17 @@ Execute (LPTSTR first, LPTSTR rest)
 	else
 	{
 		/* exec the program */
-#ifndef __REACTOS__
 		TCHAR szFullCmdLine [CMDLINE_LENGTH];
-#endif
 		PROCESS_INFORMATION prci;
 		STARTUPINFO stui;
 
 #ifdef _DEBUG
 		DebugPrintf ("[EXEC: %s %s]\n", szFullName, rest);
 #endif
-#ifndef __REACTOS__
 		/* build command line for CreateProcess() */
-		_tcscpy (szFullCmdLine, szFullName);
+		_tcscpy (szFullCmdLine, first);
 		_tcscat (szFullCmdLine, _T(" "));
 		_tcscat (szFullCmdLine, rest);
-#endif
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
@@ -248,8 +244,11 @@ Execute (LPTSTR first, LPTSTR rest)
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
 
-#ifndef __REACTOS__
-		if (CreateProcess (NULL,
+		// return console to standard mode
+		SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
+				  ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+		
+		if (CreateProcess (szFullName,
 		                   szFullCmdLine,
 		                   NULL,
 		                   NULL,
@@ -259,18 +258,6 @@ Execute (LPTSTR first, LPTSTR rest)
 		                   NULL,
 		                   &stui,
 		                   &prci))
-#else
-		if (CreateProcess (szFullName,
-		                   rest,
-		                   NULL,
-		                   NULL,
-		                   FALSE,
-		                   0,
-		                   NULL,
-		                   NULL,
-		                   &stui,
-		                   &prci))
-#endif
 		{
 			/* FIXME: Protect this with critical section */
 			bChildProcessRunning = TRUE;
@@ -291,6 +278,9 @@ Execute (LPTSTR first, LPTSTR rest)
 			ErrorMessage (GetLastError (),
 			              "Error executing CreateProcess()!!\n");
 		}
+		// restore console mode
+		SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
+				ENABLE_PROCESSED_INPUT );
 	}
 
 #ifndef __REACTOS__
@@ -942,7 +932,6 @@ Initialize (int argc, char *argv[])
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
 	hIn  = GetStdHandle (STD_INPUT_HANDLE);
 
-	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
@@ -957,6 +946,7 @@ Initialize (int argc, char *argv[])
 		               "  /T:bf       Sets the background/foreground color (see COLOR command)."));
 		ExitProcess (0);
 	}
+	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
 
 #ifdef INCLUDE_CMD_CHDIR
 	InitLastPath ();
@@ -1140,6 +1130,8 @@ static VOID Cleanup (int argc, char *argv[])
 
 	/* remove ctrl break handler */
 	RemoveBreakHandler ();
+	SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
+			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
 }
 
 
