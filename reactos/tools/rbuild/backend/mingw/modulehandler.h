@@ -17,7 +17,8 @@ public:
 	virtual void Process ( const Module& module ) = 0;
 
 protected:
-	std::string MingwModuleHandler::GetWorkingDirectory () const;
+	std::string GetWorkingDirectory () const;
+	std::string GetExtension ( const std::string& filename ) const;
 	std::string ReplaceExtension ( const std::string& filename,
 	                               const std::string& newExtension ) const;
 	std::string GetModuleArchiveFilename ( const Module& module ) const;
@@ -46,6 +47,15 @@ private:
 	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
+	std::string GenerateGccCommand ( const Module& module,
+	                                 const std::string& sourceFilename,
+	                                 const std::string& cc ) const;
+	std::string GenerateGccAssemblerCommand ( const Module& module,
+	                                          const std::string& sourceFilename,
+	                                          const std::string& cc ) const;
+	std::string GenerateCommand ( const Module& module,
+	                              const std::string& sourceFilename,
+	                              const std::string& cc ) const;
 	void GenerateObjectFileTargets ( const Module& module,
 	                                 const std::string& cc ) const;
 	void GenerateArchiveTarget ( const Module& module,

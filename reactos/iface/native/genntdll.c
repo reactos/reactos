@@ -359,31 +359,31 @@ int main(int argc, char* argv[])
 		return(1);
 	}
 
-	in = fopen(argv[1],"rb");
-	if (in == NULL)
-	{
-		perror("Failed to open input file (system calls database)");
-		return(1);
-	}
-
-	out1 = fopen(argv[2],"wb");
+	out1 = fopen(argv[1],"wb");
 	if (out1 == NULL)
 	{
 		perror("Failed to open output file (NTDLL stubs)");
 		return(1);
 	}
 
-	out2 = fopen(argv[3],"wb");
+	out2 = fopen(argv[2],"wb");
 	if (out2 == NULL)
 	{
 		perror("Failed to open output file (NTOSKRNL service table)");
 		return(1);
 	}
 
-	out3 = fopen(argv[4],"wb");
+	out3 = fopen(argv[3],"wb");
 	if (out3 == NULL)
 	{
 		perror("Failed to open output file (NTOSKRNL Zw stubs)");
+		return(1);
+	}
+
+	in = fopen(argv[4],"rb");
+	if (in == NULL)
+	{
+		perror("Failed to open input file (system calls database)");
 		return(1);
 	}
 

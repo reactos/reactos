@@ -51,6 +51,15 @@ MingwModuleHandler::GetWorkingDirectory () const
 }
 
 string
+MingwModuleHandler::GetExtension ( const string& filename ) const
+{
+	size_t index = filename.find_last_of ( '.' );
+	if (index != string::npos)
+		return filename.substr ( index );
+	return "";
+}
+
+string
 MingwModuleHandler::ReplaceExtension ( const string& filename,
 	                                   const string& newExtension ) const
 {
@@ -245,6 +254,54 @@ MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 	return parameters;
 }
 
+string
+MingwModuleHandler::GenerateGccCommand ( const Module& module,
+	                                     const string& sourceFilename,
+	                                     const string& cc ) const
+{
+	string objectFilename = GetObjectFilename ( sourceFilename );
+	return ssprintf ( "%s -c %s -o %s %s\n",
+		              cc.c_str (),
+		              sourceFilename.c_str (),
+		              objectFilename.c_str (),
+		              GenerateGccParameters ( module ).c_str () );
+}
+
+string
+MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
+	                                              const string& sourceFilename,
+	                                              const string& cc ) const
+{
+	string objectFilename = GetObjectFilename ( sourceFilename );
+	return ssprintf ( "%s -x assembler-with-cpp -c %s -o %s -D__ASM__ %s\n",
+		              cc.c_str (),
+		              sourceFilename.c_str (),
+		              objectFilename.c_str (),
+		              GenerateGccParameters ( module ).c_str () );
+}
+
+string
+MingwModuleHandler::GenerateCommand ( const Module& module,
+	                                  const string& sourceFilename,
+	                                  const string& cc ) const
+{
+	string extension = GetExtension ( sourceFilename );
+	if ( extension == ".c" || extension == ".C" )
+		return GenerateGccCommand ( module,
+		                            sourceFilename,
+		                            cc );
+	else if ( extension == ".s" || extension == ".S" )
+		return GenerateGccAssemblerCommand ( module,
+		                                     sourceFilename,
+		                                     cc );
+
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__,
+	                                  "Unsupported filename extension '%s' in file '%s'",
+	                                  extension.c_str (),
+	                                  sourceFilename.c_str () );
+}
+
 void
 MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 	                                            const string& cc) const
@@ -263,11 +320,10 @@ MingwModuleHandler::GenerateObjectFileTargets ( const Module& module,
 		          objectFilename.c_str (),
 		          sourceFilename.c_str () );
 		fprintf ( fMakefile,
-		          "\t%s -c %s -o %s %s\n",
-		          cc.c_str (),
-		          sourceFilename.c_str (),
-		          objectFilename.c_str (),
-		          GenerateGccParameters ( module ).c_str () );
+		          "\t%s\n",
+		          GenerateCommand ( module,
+		                            sourceFilename,
+		                            cc ).c_str () );
 	}
 	
 	fprintf ( fMakefile, "\n" );
@@ -502,7 +558,8 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${gcc} -Wl,--base-file,%s -o %s %s %s\n",
+	          "\t${gcc} -Wl,--entry,_NtProcessStartup -Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -Wl,--base-file,%s -nostartfiles -o %s %s %s\n",
+	          module.GetBasePath ().c_str (),
 	          base_tmp.c_str (),
 	          junk_tmp.c_str (),
 	          archiveFilename.c_str (),

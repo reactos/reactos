@@ -22,6 +22,10 @@ class InvalidOperationException : public Exception
 public:
 	InvalidOperationException ( const char* filename,
 	                            const int linenumber);
+	InvalidOperationException ( const char* filename,
+	                            const int linenumber,
+	                            const char* message,
+	                            ... );
 };
 
 

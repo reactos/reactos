@@ -34,11 +34,29 @@ void Exception::SetMessage ( const char* message,
 
 
 InvalidOperationException::InvalidOperationException ( const char* filename,
-	                                                   const int linenumber)
+	                                                   const int linenumber )
 {
 	Message = ssprintf ( "%s:%d",
 	                     filename,
 	                     linenumber );
+}
+
+InvalidOperationException::InvalidOperationException ( const char* filename,
+	                                                   const int linenumber,
+	                                                   const char* message,
+	                                                   ... )
+{
+	string errorMessage;
+	va_list args;
+	va_start ( args,
+	           message );
+	errorMessage = ssvprintf ( message,
+	                           args );
+	va_end ( args );
+	Message = ssprintf ( "%s:%d %s",
+	                     filename,
+	                     linenumber,
+	                     errorMessage.c_str () );
 }
 
 

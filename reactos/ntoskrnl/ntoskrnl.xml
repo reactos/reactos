@@ -1,11 +1,13 @@
 <module name="ntoskrnl" type="kernelmodedll" extension=".exe">
 	<dependency>buildno</dependency>
+	<dependency>genntdll</dependency>
 	<dependency>wmc</dependency>
 	<define name="_SEH_NO_NATIVE_NLG" />
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="__3GB__" />
-	<include base="kjs">./include</include>
+	<define name="__ELF_WORD_SIZE">32</define>
+	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
 	<library>kjs</library>
 	<invoke module="wmc">
@@ -34,6 +36,7 @@
 		<file>rtlfunc.c</file>
 	</directory>
 	<directory name="dbg">
+		<!--
 		<if property="arch" value="i386">
 			<directory name="i386">
 				<if property="kdbg" value="true">
@@ -44,6 +47,8 @@
 				</if>
 			</directory>
 		</if>
+		-->
+		<!--
 		<if property="kdbg" value="true">
 			<group>
 				<file>kdb.c</file>
@@ -53,6 +58,7 @@
 				<file>profile.c</file>
 			</group>
 		</if>
+		-->
 		<or>
 			<!--
 			<if property="kdbg" value="true">
@@ -62,12 +68,14 @@
 				</group>
 			</if>
 			-->
+			<!--
 			<if property="dbg" value="true">
 				<group>
 					<file>kdb_stabs.c</file>
 					<file>kdb_symbols.c</file>
 				</group>
 			</if>
+			-->
 		</or>
 		<file>dbgctrl.c</file>
 		<file>errinfo.c</file>
@@ -75,11 +83,13 @@
 		<file>user.c</file>
 	</directory>
 	<directory name="ex">
+		<!--
 		<if property="arch" value="i386">
 			<directory name="i386">
 				<file>interlck.c</file>
 			</directory>
 		</if>
+		-->
 		<file>btree.c</file>
 		<file>callback.c</file>
 		<file>fmutex.c</file>

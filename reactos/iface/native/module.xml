@@ -1,4 +1,14 @@
 <module name="genntdll" type="buildtool">
 	<include base="genntdll">.</include>
 	<file>genntdll.c</file>
+	<invoke>
+		<input>
+			<inputfile>sysfuncs.lst</inputfile>
+		</input>
+		<output>
+			<outputfile>../../lib/ntdll/napi.c</outputfile>
+			<outputfile>../../include/ntdll/napi.h</outputfile>
+			<outputfile>../../ntoskrnl/nt/zw.c</outputfile>
+		</output>
+	</invoke>
 </module>
