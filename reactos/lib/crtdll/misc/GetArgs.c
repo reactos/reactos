@@ -36,8 +36,37 @@ char ***__argv_dll = &__argv;
 char **_environ;
 #undef _environ_dll
 char *** _environ_dll = &_environ;    
+static int envAlloced = 0;
  
         
+int BlockEnvToEnviron()
+{
+char * ptr;
+int i;
+  if (!envAlloced)
+  {
+    envAlloced = 50;
+    _environ = malloc (envAlloced * sizeof (char **));
+    if (!_environ) return -1;
+    _environ[0] =NULL;
+  }
+  ptr = (char *)GetEnvironmentStringsA();
+  if (!ptr) return -1;
+  for (i = 0 ; *ptr ; i++)
+  {
+    if(i>envAlloced-2)
+    {
+      envAlloced = i+3;
+      _environ = realloc (_environ,envAlloced * sizeof (char **));
+    }
+    _environ[i] = ptr;
+    while(*ptr) ptr++;
+    ptr++;
+  }
+  _environ[i] =0;
+  return 0;
+}
+
 int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
 {
    int i,afterlastspace;
@@ -56,6 +85,7 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
    
    i=0;
    afterlastspace=0;
+   __argc=0;
    
    while (_acmdln_dll[i]) 
      {
@@ -83,7 +113,8 @@ int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
      }
    HeapValidate(GetProcessHeap(),0,NULL);
    
-   _environ = (char **)GetEnvironmentStringsA();;
+   if( BlockEnvToEnviron() )
+	return FALSE;
    _environ_dll = &_environ;    
     
    *argc = __argc;
