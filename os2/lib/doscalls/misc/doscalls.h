@@ -33,15 +33,15 @@
 #define DosExit					Dos32Exit
    
 
-APIRET APIENTRY Dos32Sleep(ULONG msec);
+APIRET STDCALL Dos32Sleep(ULONG msec);
 
-APIRET APIENTRY Dos32CreateThread(PTID ptid,
+APIRET STDCALL Dos32CreateThread(PTID ptid,
                                PFNTHREAD pfn,
                                ULONG param,
                                ULONG flag,
                                ULONG cbStack);
 
-APIRET APIENTRY  Dos32Open(PSZ    pszFileName,
+APIRET STDCALL  Dos32Open(PSZ    pszFileName,
                         PHFILE pHf,
                         PULONG pulAction,
                         ULONG  cbFile,
@@ -50,27 +50,27 @@ APIRET APIENTRY  Dos32Open(PSZ    pszFileName,
                         ULONG  fsOpenMode,
                         PVOID reserved );  //ULONGPEAOP2 peaop2)
 
-APIRET APIENTRY  Dos32Close(HFILE hFile);
+APIRET STDCALL  Dos32Close(HFILE hFile);
 
-APIRET APIENTRY  Dos32Read(HFILE hFile,
+APIRET STDCALL  Dos32Read(HFILE hFile,
                         PVOID pBuffer,
                         ULONG cbRead,
                         PULONG pcbActual);
 
-APIRET APIENTRY  Dos32Write(HFILE hFile,
+APIRET STDCALL  Dos32Write(HFILE hFile,
                          PVOID pBuffer,
                          ULONG cbWrite,
                          PULONG pcbActual);
 
-APIRET APIENTRY Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
+APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
 							PVOID pParams,ULONG cbParmLenMax,PULONG pcbParmLen,
 							PVOID pData,ULONG cbDataLenMax,PULONG pcbDataLen);
 
 
-APIRET APIENTRY Dos32Beep(ULONG freq,
+APIRET STDCALL Dos32Beep(ULONG freq,
                        ULONG dur);
 
-VOID APIENTRY Dos32Exit(ULONG action,
+VOID STDCALL Dos32Exit(ULONG action,
                      ULONG result);
 
 

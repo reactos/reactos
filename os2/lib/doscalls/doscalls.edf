@@ -1,0 +1,21 @@
+; Def for doscalls.dll - part of the OS/2-sub system
+; for ReactOS. Provides Access to OS/2 kernel services.
+
+LIBRARY doscalls.dll 
+
+DESCRIPTION "Part of the ReactOS OS/2 sub system, provides base kernel services to OS/2-apps"
+
+EXPORTS
+; FIXME: fill in all exports
+
+Dos32Sleep=Dos32Sleep@4 			@229
+Dos32Close=Dos32Close@4				@257
+Dos32Open=Dos32Open@32				@273
+Dos32Read=Dos32Read@16				@281
+Dos32Write=Dos32Write@16			@282
+Dos32DevIOCtl=Dos32DevIOCtl@36			@284
+Dos32Beep=Dos32Beep@8				@286
+Dos32Exit=Dos32Exit@8				@234
+Dos32CreateThread=Dos32CreateThread@20		@311
+
+; EOF

@@ -23,7 +23,7 @@ DWORD PROC_Pid;			// contains the current processes pid. (or is it also in PEB)
 
 
 /* Implementation of the system calls */
-APIRET APIENTRY Dos32Sleep(ULONG msec)
+APIRET STDCALL Dos32Sleep(ULONG msec)
 {
 	NTSTATUS stat;
 	TIME Interv;
@@ -32,14 +32,14 @@ APIRET APIENTRY Dos32Sleep(ULONG msec)
 	return 0;
 }
 
-APIRET APIENTRY Dos32CreateThread(PTID ptid, PFNTHREAD pfn,
+APIRET STDCALL Dos32CreateThread(PTID ptid, PFNTHREAD pfn,
                                    ULONG param, ULONG flag, ULONG cbStack)
 {
 	return 0;
 }
 
 
-APIRET APIENTRY  Dos32Open(PSZ    pszFileName,  PHFILE pHf,
+APIRET STDCALL  Dos32Open(PSZ    pszFileName,  PHFILE pHf,
                             PULONG pulAction,  ULONG  cbFile,
                             ULONG  ulAttribute,  ULONG  fsOpenFlags,
                             ULONG  fsOpenMode,  PVOID reserved )  //ULONGPEAOP2 peaop2)
@@ -63,7 +63,7 @@ IN ULONG EaLength
 
 
 /* close a Handle. seems finished */
-APIRET APIENTRY  Dos32Close(HFILE hFile)
+APIRET STDCALL  Dos32Close(HFILE hFile)
 {
 	NTSTATUS   nErrCode;
 	nErrCode = NtClose( (HANDLE)hFile );
@@ -82,7 +82,7 @@ APIRET APIENTRY  Dos32Close(HFILE hFile)
 
 
 
-APIRET APIENTRY  Dos32Read(HFILE hFile, PVOID pBuffer,
+APIRET STDCALL  Dos32Read(HFILE hFile, PVOID pBuffer,
                             ULONG cbRead, PULONG pcbActual)
 {
 	NTSTATUS        nErrCode;
@@ -103,7 +103,7 @@ APIRET APIENTRY  Dos32Read(HFILE hFile, PVOID pBuffer,
 }
 
 /* Generic write to a stream given by hFile */
-APIRET APIENTRY  Dos32Write(HFILE hFile, PVOID pBuffer,
+APIRET STDCALL  Dos32Write(HFILE hFile, PVOID pBuffer,
                              ULONG cbWrite, PULONG pcbActual)
 { 
 	NTSTATUS        nErrCode;
@@ -161,7 +161,7 @@ APIRET APIENTRY  Dos32Write(HFILE hFile, PVOID pBuffer,
       165       ERROR_MONITORS_NOT_SUPPORTED 
  
 */
-APIRET APIENTRY Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
+APIRET STDCALL Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
         PVOID pParams,ULONG cbParmLenMax,PULONG pcbParmLen,
         PVOID pData,ULONG cbDataLenMax,PULONG pcbDataLen)
 {
@@ -170,7 +170,7 @@ APIRET APIENTRY Dos32DevIOCtl(HFILE hDevice, ULONG category, ULONG function,
 
 
  
-APIRET APIENTRY Dos32Beep(ULONG freq, ULONG dur)
+APIRET STDCALL Dos32Beep(ULONG freq, ULONG dur)
 {
 	if( freq<0x25 || freq>0x7FFF )
 		return 395;	// ERROR_INVALID_FREQUENCY
@@ -215,7 +215,7 @@ APIRET APIENTRY Dos32Beep(ULONG freq, ULONG dur)
 /* Terminates the current thread or the current Process.
 	Decission is made by action 
 	FIXME:	move this code to OS2.EXE */
-VOID APIENTRY Dos32Exit(ULONG action, ULONG result)
+VOID STDCALL Dos32Exit(ULONG action, ULONG result)
 {
 	// decide what to do
 	if( action == EXIT_THREAD)
@@ -230,7 +230,7 @@ VOID APIENTRY Dos32Exit(ULONG action, ULONG result)
 
 
 
-BOOL APIENTRY DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
+BOOL STDCALL DllMain( HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
 {
 	switch (ul_reason_for_call)
 	{
