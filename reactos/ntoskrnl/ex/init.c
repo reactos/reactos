@@ -47,12 +47,12 @@ ExInit (VOID)
 
 
 BOOLEAN STDCALL
-ExIsProcessorFeaturePresent (IN	ULONG	ProcessorFeature)
+ExIsProcessorFeaturePresent(IN ULONG ProcessorFeature)
 {
-  if (ProcessorFeature >= 32)
-    return FALSE;
-  
-  return FALSE;
+  if (ProcessorFeature >= PROCESSOR_FEATURES_MAX)
+    return(FALSE);
+
+  return(SharedUserData->ProcessorFeatures[ProcessorFeature]);
 }
 
 
