@@ -19,9 +19,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/02/21 17:43:45 $
+ * $Date: 1999/02/25 22:51:47 $
  *
  */
 
@@ -40,20 +40,20 @@ int	_cprintf (const char* szFormat, ...);
 int	_cputs (const char* szString);
 int	_cscanf (char* szFormat, ...);
 
-int	_getch ();
-int	_getche ();
-int	_kbhit ();
+int	_getch (void);
+int	_getche (void);
+int	_kbhit (void);
 int	_putch (int cPut);
 int	_ungetch (int cUnget);
 
 
 #ifndef	_NO_OLDNAMES
 
-int	getch ();
-int	getche ();
-int	kbhit ();
-int	putch (int cPut);
-int	ungetch (int cUnget);
+#define	getch 	_getch
+#define	getche  _getche
+#define	kbhit 	_kbhit
+#define	putch 	_putch
+#define	ungetch _ungetch
 
 #endif	/* Not _NO_OLDNAMES */
 

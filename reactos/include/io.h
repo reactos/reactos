@@ -18,9 +18,9 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
+ * $Revision: 1.4 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Date: 1999/02/25 22:51:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -107,25 +107,25 @@ size_t		_write(int _fd, const void *_buf, size_t _nbyte);
  * These functions live in libmoldname.a.
  */
 
-int		access (const char* szFileName, int nAccessMode);
-int		chsize (int nHandle, long lnNewSize);
-int		close (int nHandle);
-int		creat (const char* szFileName, int nAccessMode);
-int		dup (int nHandle);
-int		dup2 (int nOldHandle, int nNewHandle);
-int		eof (int nHandle);
-long		filelength (int nHandle);
-int		fileno (FILE* fileGetHandle);
-int		isatty (int nHandle);
-long		lseek (int nHandle, long lnOffset, int nOrigin);
-int		open (const char* szFileName, int nFlags, ...);
-int		read (int nHandle, void* caBuffer, unsigned int nToRead);
-int		sopen (char* szFileName, int nAccess, int nFlag, int nMode);
-long		tell (int nHandle);
-unsigned	umask (unsigned unMode);
-int		unlink (const char* szFileName);
-int		write (int nHandle, const void* caBuffer,
-		       unsigned int nToWrite);
+#define access 		_access
+#define chsize 		_chsize 
+#define close		_close
+#define creat 		_creat
+#define	dup 		_dup
+#define	dup2 		_dup2
+#define	eof		_eof
+#define	filelength 	_filelength
+#define	fileno 		_fileno
+#define	isatty 		_isatty
+#define	lseek 		_lseek
+#define	open 		_open
+#define	read 		_read
+#define	sopen 		_sopen
+#define	tell 		_tell
+#define	umask 		_umask
+#define	unlink		_unlink
+#define	write 		_write
+		
 
 #endif	/* Not _NO_OLDNAMES */
 

@@ -18,12 +18,13 @@
  *  DISCLAMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.2 $
+ * $Revision: 1.3 $
  * $Author: ariadne $
- * $Date: 1999/02/21 13:29:56 $
+ * $Date: 1999/02/25 22:51:47 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
+/* added splitpath */
 #ifndef _STDLIB_H_
 #define _STDLIB_H_
 
@@ -100,8 +101,8 @@ void	abort	(void) _ATTRIB_NORETURN;
 void	exit	(int nStatus) _ATTRIB_NORETURN;
 int	atexit	(void (*pfuncExitProcessing)(void));
 
-int	system	(const char* szCommand);
-char*	getenv	(const char* szVarName);
+int	system	(const char* szCommand); // impl in process
+char*	getenv	(const char* szVarName); // impl in stdio
 
 typedef	int (*_pfunccmp_t)(const void*, const void*);
 
@@ -146,6 +147,9 @@ int	_putenv	(const char* szNameEqValue);
 void	_searchenv (const char* szFileName, const char* szVar,
 		char* szFullPathBuf);
 
+void _splitpath( const char *path, char *drive, char *dir,
+		 char *fname, char *ext );
+
 char*	_itoa (int nValue, char* sz, int nRadix);
 char*	_ltoa (long lnValue, char* sz, int nRadix);
 
@@ -156,20 +160,19 @@ char*	_gcvt (double dValue, int nDec, char* caBuf);
 char*	_fullpath (char* caBuf, const char* szPath, size_t sizeMax);
 
 #ifndef	_NO_OLDNAMES
-void	beep (unsigned int, unsigned int);
-void	seterrormode (int nMode);
-void	sleep (unsigned long ulTime);
+#define	 beep 		_beep
+#define  seterrormode 	_seterrormode 
+#define  sleep		_sleep
+#define  putenv 	_putenv
+#define  searchenv 	_searchenv
+#define  splitpath      _splitpath
 
-int	putenv (const char* szNameEqValue);
-void	searchenv (const char* szFileName, const char* szVar,
-		char* szFullPathBuf);
+#define  itoa		_itoa
+#define  ltoa 		_ltoa
 
-char*	itoa (int nValue, char* sz, int nRadix);
-char*	ltoa (long lnValue, char* sz, int nRadix);
-
-char*	ecvt (double dValue, int nDig, int* pnDec, int* pnSign);
-char*	fcvt (double dValue, int nDig, int* pnDec, int* pnSign);
-char*	gcvt (double dValue, int nDec, char* caBuf);
+#define  ecvt		_ecvt
+#define  fcvt		_fcvt
+#define  gcvt		_gcvt
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not __STRICT_ANSI__ */
