@@ -1927,12 +1927,6 @@ extern "C" {
 #define TIME_NOTIMEMARKER	(4)
 #define TIME_FORCE24HOURFORMAT	(8)
 
-/* GetTimeZoneInformation */
-#define TIME_ZONE_ID_INVALID	((DWORD) -1)
-#define TIME_ZONE_ID_UNKNOWN	(0)
-#define TIME_ZONE_ID_STANDARD	(1)
-#define TIME_ZONE_ID_DAYLIGHT	(2)
-
 /* GetUserObjectInformation */
 #define UOI_FLAGS	(1)
 #define UOI_NAME	(2)

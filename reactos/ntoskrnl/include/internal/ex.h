@@ -75,7 +75,10 @@ typedef VOID (*PLOOKASIDE_MINMAX_ROUTINE)(
 
 /* GLOBAL VARIABLES *********************************************************/
 
-TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+extern TIME_ZONE_INFORMATION ExpTimeZoneInfo;
+extern LARGE_INTEGER ExpTimeZoneBias;
+extern ULONG ExpTimeZoneId;
+
 extern POBJECT_TYPE ExEventPairObjectType;
 
 

@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.87 2004/10/31 21:22:06 navaraf Exp $
+/* $Id: timer.c,v 1.88 2004/11/06 16:05:49 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -18,6 +18,7 @@
 /* INCLUDES ***************************************************************/
 
 #include <ntoskrnl.h>
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -204,24 +205,23 @@ KeQueryTimeIncrement(VOID)
 
 
 /*
- * @implemented
- */
-VOID STDCALL
-KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
-/*
  * FUNCTION: Gets the current system time
  * ARGUMENTS:
  *          CurrentTime (OUT) = The routine stores the current time here
  * NOTE: The time is the number of 100-nanosecond intervals since the
  * 1st of January, 1601.
+ *
+ * @implemented
  */
+VOID STDCALL
+KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
 {
   do
     {
-      CurrentTime->u.HighPart = SharedUserData->SystemTime.High1Part;
+      CurrentTime->u.HighPart = SharedUserData->SystemTime.High1Time;
       CurrentTime->u.LowPart = SharedUserData->SystemTime.LowPart;
     }
-  while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Part);
+  while (CurrentTime->u.HighPart != SharedUserData->SystemTime.High2Time);
 }
 
 ULONGLONG STDCALL
@@ -231,10 +231,10 @@ KeQueryInterruptTime(VOID)
 
   do
     {
-      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Part;
+      CurrentTime.u.HighPart = SharedUserData->InterruptTime.High1Time;
       CurrentTime.u.LowPart = SharedUserData->InterruptTime.LowPart;
     }
-  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Part);
+  while (CurrentTime.u.HighPart != SharedUserData->InterruptTime.High2Time);
 
   return CurrentTime.QuadPart;
 }
@@ -651,12 +651,12 @@ KeInitializeTimerImpl(VOID)
 
    SharedUserData->TickCountLow = 0;
    SharedUserData->TickCountMultiplier = 167783691; // 2^24 * 1193182 / 119310
-   SharedUserData->InterruptTime.High2Part = 0;
+   SharedUserData->InterruptTime.High2Time = 0;
    SharedUserData->InterruptTime.LowPart = 0;
-   SharedUserData->InterruptTime.High1Part = 0;
-   SharedUserData->SystemTime.High2Part = SystemBootTime.u.HighPart;
+   SharedUserData->InterruptTime.High1Time = 0;
+   SharedUserData->SystemTime.High2Time = SystemBootTime.u.HighPart;
    SharedUserData->SystemTime.LowPart = SystemBootTime.u.LowPart;
-   SharedUserData->SystemTime.High1Part = SystemBootTime.u.HighPart;
+   SharedUserData->SystemTime.High1Time = SystemBootTime.u.HighPart;
 
    TimerInitDone = TRUE;
    DPRINT("Finished KeInitializeTimerImpl()\n");
@@ -799,18 +799,18 @@ KeUpdateSystemTime(
    KiAcquireSpinLock(&TimerValueLock);
 
    Time.u.LowPart = SharedUserData->InterruptTime.LowPart;
-   Time.u.HighPart = SharedUserData->InterruptTime.High1Part;
+   Time.u.HighPart = SharedUserData->InterruptTime.High1Time;
    Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->InterruptTime.High2Part = Time.u.HighPart;
+   SharedUserData->InterruptTime.High2Time = Time.u.HighPart;
    SharedUserData->InterruptTime.LowPart = Time.u.LowPart;
-   SharedUserData->InterruptTime.High1Part = Time.u.HighPart;
+   SharedUserData->InterruptTime.High1Time = Time.u.HighPart;
 
    Time.u.LowPart = SharedUserData->SystemTime.LowPart;
-   Time.u.HighPart = SharedUserData->SystemTime.High1Part;
+   Time.u.HighPart = SharedUserData->SystemTime.High1Time;
    Time.QuadPart += CLOCK_INCREMENT;
-   SharedUserData->SystemTime.High2Part = Time.u.HighPart;
+   SharedUserData->SystemTime.High2Time = Time.u.HighPart;
    SharedUserData->SystemTime.LowPart = Time.u.LowPart;
-   SharedUserData->SystemTime.High1Part = Time.u.HighPart;
+   SharedUserData->SystemTime.High1Time = Time.u.HighPart;
 
    /* FIXME: Here we should check for remote debugger break-ins */
 

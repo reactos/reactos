@@ -25,8 +25,8 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
 typedef struct _KSYSTEM_TIME
 {
    ULONG LowPart;
-   LONG High1Part;
-   LONG High2Part;
+   LONG High1Time;
+   LONG High2Time;
 } KSYSTEM_TIME, *PKSYSTEM_TIME;
 
 typedef struct _KUSER_SHARED_DATA
@@ -71,6 +71,13 @@ typedef struct _KUSER_SHARED_DATA
 #define DOSDEVICE_DRIVE_CDROM		5
 #define DOSDEVICE_DRIVE_RAMDISK		6
 
+/* Values for TimeZoneId */
+#ifndef __USE_W32API
+#define TIME_ZONE_ID_INVALID		((ULONG) -1)
+#define TIME_ZONE_ID_UNKNOWN		(0)
+#define TIME_ZONE_ID_STANDARD		(1)
+#define TIME_ZONE_ID_DAYLIGHT		(2)
+#endif
 
 #define KERNEL_SHARED_DATA	(0xFFDF0000)
 #define USER_SHARED_DATA	(0x7FFE0000)

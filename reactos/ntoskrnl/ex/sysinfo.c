@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.57 2004/11/06 01:42:04 weiden Exp $
+/* $Id: sysinfo.c,v 1.58 2004/11/06 16:04:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -383,7 +383,7 @@ QSI_DEF(SystemProcessorInformation)
 	if (Size < sizeof (SYSTEM_PROCESSOR_INFORMATION))
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
-	}	
+	}
 	Spi->ProcessorArchitecture = 0; /* Intel Processor */
 	Spi->ProcessorLevel	   = ((Ke386Cpuid >> 8) & 0xf);
 	Spi->ProcessorRevision	   = (Ke386Cpuid & 0xf) | ((Ke386Cpuid << 4) & 0xf00);
@@ -525,29 +525,27 @@ QSI_DEF(SystemPerformanceInformation)
 /* Class 3 - Time Of Day Information */
 QSI_DEF(SystemTimeOfDayInformation)
 {
-	LARGE_INTEGER CurrentTime;
+  PSYSTEM_TIMEOFDAY_INFORMATION Sti;
+  LARGE_INTEGER CurrentTime;
 
-	PSYSTEM_TIMEOFDAY_INFORMATION Sti
-		= (PSYSTEM_TIMEOFDAY_INFORMATION) Buffer;
+  Sti = (PSYSTEM_TIMEOFDAY_INFORMATION)Buffer;
+  *ReqSize = sizeof (SYSTEM_TIMEOFDAY_INFORMATION);
 
-	*ReqSize = sizeof (SYSTEM_TIMEOFDAY_INFORMATION);
-	/*
-	 * Check user buffer's size 
-	 */
-	if (Size < sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
-	{
-		return (STATUS_INFO_LENGTH_MISMATCH);
-	}
+  /* Check user buffer's size */
+  if (Size < sizeof (SYSTEM_TIMEOFDAY_INFORMATION))
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
 
-	KeQuerySystemTime(&CurrentTime);
+  KeQuerySystemTime(&CurrentTime);
 
-	Sti->BootTime= SystemBootTime;
-	Sti->CurrentTime = CurrentTime;
-	Sti->TimeZoneBias.QuadPart = 0; /* FIXME */
-	Sti->TimeZoneId = 0;		/* FIXME */
-	Sti->Reserved = 0;		/* FIXME */
+  Sti->BootTime= SystemBootTime;
+  Sti->CurrentTime = CurrentTime;
+  Sti->TimeZoneBias.QuadPart = ExpTimeZoneBias.QuadPart;
+  Sti->TimeZoneId = ExpTimeZoneId;
+  Sti->Reserved = 0;
 
-	return (STATUS_SUCCESS);
+  return STATUS_SUCCESS;
 }
 
 /* Class 4 - Path Information */
