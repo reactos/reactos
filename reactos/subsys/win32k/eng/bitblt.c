@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.33 2003/12/25 00:28:09 weiden Exp $
+/* $Id: bitblt.c,v 1.34 2003/12/25 10:21:02 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -816,8 +816,8 @@ AlphaBltMask(SURFOBJ* Dest,
 	POINTL* BrushPoint)
 {
   LONG i, j, dx, dy;
-  int r[2], g[2], b[2];
-  ULONG Background, BrushColor;
+  int r, g, b;
+  ULONG Background, BrushColor, NewColor;
   BYTE *tMask, *lMask;
 
   dx = DestRect->right  - DestRect->left;
@@ -826,11 +826,11 @@ AlphaBltMask(SURFOBJ* Dest,
   if (Mask != NULL)
     {
       BrushColor = XLATEOBJ_iXlate(ColorTranslation, Brush->iSolidColor);
-      r[0] = (int)GetRValue(BrushColor);
-      g[0] = (int)GetGValue(BrushColor);
-      b[0] = (int)GetBValue(BrushColor);
+      r = (int)GetRValue(BrushColor);
+      g = (int)GetGValue(BrushColor);
+      b = (int)GetBValue(BrushColor);
       
-      tMask = Mask->pvBits + SourcePoint->y * Mask->lDelta;
+      tMask = Mask->pvBits + MaskPoint->y * Mask->lDelta + MaskPoint->x;
       for (j = 0; j < dy; j++)
 	{
 	  lMask = tMask;
@@ -845,12 +845,13 @@ AlphaBltMask(SURFOBJ* Dest,
 			else
 			{
 				Background = DIB_GetSource(Dest, DestGDI, DestRect->left + i, DestRect->top + j, SrcColorTranslation);
+
+				NewColor = 
+				     RGB((*lMask * (r - GetRValue(Background)) >> 8) + GetRValue(Background),
+				         (*lMask * (g - GetGValue(Background)) >> 8) + GetGValue(Background),
+				         (*lMask * (b - GetBValue(Background)) >> 8) + GetBValue(Background));
 				
-				r[1] = (((int)GetRValue(Background) - r[0]) * (255 - (int)*lMask)) /255 + r[0];
-				g[1] = (((int)GetGValue(Background) - g[0]) * (255 - (int)*lMask)) /255 + g[0];
-				b[1] = (((int)GetBValue(Background) - b[0]) * (255 - (int)*lMask)) /255 + b[0];
-				
-				Background = XLATEOBJ_iXlate(ColorTranslation, RGB((UCHAR)r[1], (UCHAR)g[1], (UCHAR)b[1]));
+				Background = XLATEOBJ_iXlate(ColorTranslation, NewColor);
 				DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j, Background);
 			}
 		}
