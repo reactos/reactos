@@ -171,7 +171,7 @@ VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus)
 NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process,
 				    NTSTATUS ExitStatus)
 {
-   DPRINT1("PiTerminateProcess(Process %x, ExitStatus %x) RC %d HC %d\n",
+   DPRINT("PiTerminateProcess(Process %x, ExitStatus %x) RC %d HC %d\n",
 	   Process, ExitStatus, ObGetReferenceCount(Process),
 	   ObGetHandleCount(Process));
    
