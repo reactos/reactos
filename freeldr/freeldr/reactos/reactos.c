@@ -349,7 +349,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 
 
 static BOOL
-LoadNlsFiles(PCHAR szSystemRoot)
+LoadNlsFiles(PCHAR szSystemRoot, PCHAR szErrorOut)
 {
   S32 rc = ERROR_SUCCESS;
   HKEY hKey;
@@ -362,77 +362,96 @@ LoadNlsFiles(PCHAR szSystemRoot)
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage",
 		  &hKey);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "Couldn't open CodePage registry key");
+      return(FALSE);
+  }
 
 
   /* get ANSI codepage */
   BufferSize = 80;
   rc = RegQueryValue(hKey, "ACP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "Couldn't get ACP NLS setting");
+      return(FALSE);
+  }
 
   BufferSize = 80;
   rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
-
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "ACP NLS Setting exists, but isn't readable");
+      return(FALSE);
+  }
 
   /* load ANSI codepage table */
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
   DbgPrint((DPRINT_REACTOS, "ANSI file: %s\n", szFileName));
-  if (!LoadNlsFile(szFileName, "ansi.nls"))
-    return(FALSE);
-
+  if (!LoadNlsFile(szFileName, "ansi.nls")) {
+      strcpy(szErrorOut, "Couldn't load ansi.nls");
+      return(FALSE);
+  }
 
   /* get OEM codepage */
   BufferSize = 80;
   rc = RegQueryValue(hKey, "OEMCP", NULL, (PUCHAR)szIdBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "Couldn't get OEMCP NLS setting");
+      return(FALSE);
+  }
 
   BufferSize = 80;
   rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "OEMCP NLS setting exists, but isn't readable");
+      return(FALSE);
+  }
 
   /* load OEM codepage table */
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
   DbgPrint((DPRINT_REACTOS, "Oem file: %s\n", szFileName));
-  if (!LoadNlsFile(szFileName, "oem.nls"))
-    return(FALSE);
-
+  if (!LoadNlsFile(szFileName, "oem.nls")) {
+      strcpy(szErrorOut, "Couldn't load oem.nls");
+      return(FALSE);
+  }
 
   /* open the language key */
   rc = RegOpenKey(NULL,
 		  "\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language",
 		  &hKey);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
-
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "Couldn't open Language registry key");
+      return(FALSE);
+  }
 
   /* get the Unicode case table */
   BufferSize = 80;
   rc = RegQueryValue(hKey, "Default", NULL, (PUCHAR)szIdBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, "Couldn't get Language Default setting");
+      return(FALSE);
+  }
 
   BufferSize = 80;
   rc = RegQueryValue(hKey, szIdBuffer, NULL, (PUCHAR)szNameBuffer, &BufferSize);
-  if (rc != ERROR_SUCCESS)
-    return(FALSE);
+  if (rc != ERROR_SUCCESS) {
+      strcpy(szErrorOut, 
+	     "Language Default setting exists, but isn't readable");
+      return(FALSE);
+  }
 
   /* load Unicode case table */
   strcpy(szFileName, szSystemRoot);
   strcat(szFileName, "system32\\");
   strcat(szFileName, szNameBuffer);
   DbgPrint((DPRINT_REACTOS, "Casemap file: %s\n", szFileName));
-  if (!LoadNlsFile(szFileName, "casemap.nls"))
-    return(FALSE);
+  if (!LoadNlsFile(szFileName, "casemap.nls")) {
+      strcpy(szErrorOut, "casemap.nls");
+      return(FALSE);
+  }
 
   return(TRUE);
 }
@@ -731,9 +750,9 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * Load NLS files
 	 */
-	if (!LoadNlsFiles(szBootPath))
+	if (!LoadNlsFiles(szBootPath, MsgBuffer))
 	{
-		UiMessageBox("Could not load the NLS files!\n");
+	        UiMessageBox(MsgBuffer);
 		return;
 	}
 	UiDrawProgressBarCenter(25, 100, "Loading ReactOS...");
