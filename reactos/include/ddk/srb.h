@@ -1,4 +1,4 @@
-/* $Id: srb.h,v 1.3 2003/08/25 01:37:47 sedwards Exp $
+/* $Id: srb.h,v 1.4 2003/09/18 13:45:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -95,6 +95,10 @@ typedef struct _PORT_CONFIGURATION_INFORMATION
 } PORT_CONFIGURATION_INFORMATION, *PPORT_CONFIGURATION_INFORMATION;
 
 #define CONFIG_INFO_VERSION_2 sizeof(PORT_CONFIGURATION_INFORMATION)
+
+/* uninitialized flag values */
+#define SP_UNINITIALIZED_VALUE ((ULONG)~0)
+#define SP_UNTAGGED            ((ULONG)~0)
 
 
 typedef struct _SCSI_REQUEST_BLOCK
