@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.150 2003/12/02 19:58:54 navaraf Exp $
+/* $Id: window.c,v 1.151 2003/12/07 10:31:22 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3106,7 +3106,7 @@ static BOOL IsStaticClass(PWINDOW_OBJECT Window)
     BOOL rc = FALSE;
 
     ASSERT(0 != Window->Class);
-    ASSERT(0 != Window->Class->lpszClassName);
+    ASSERT(0 != Window->Class->Atom);
     
     DbgPrint("FIXME: Update IsStatic to really check if a window is a static\n");
     /*

@@ -21,7 +21,7 @@ typedef struct _WNDCLASS_OBJECT
   HCURSOR hCursor;
   HBRUSH  hbrBackground;
   PUNICODE_STRING lpszMenuName;
-  PUNICODE_STRING lpszClassName;
+  RTL_ATOM Atom;
   HICON   hIconSm;
   BOOL Unicode;
   LIST_ENTRY ListEntry;
@@ -36,7 +36,7 @@ CleanupClassImpl(VOID);
 
 NTSTATUS STDCALL
 ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
-			  LPWSTR ClassName);
+			  LPCWSTR ClassName);
 
 NTSTATUS FASTCALL
 ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
@@ -44,7 +44,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT *Class,
 
 NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
-				LPWSTR ClassNameOrAtom);
+				LPCWSTR ClassNameOrAtom);
 PWNDCLASS_OBJECT FASTCALL
 IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 		BOOL bUnicodeClass,

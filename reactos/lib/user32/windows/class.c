@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.39 2003/11/11 20:28:21 gvg Exp $
+/* $Id: class.c,v 1.40 2003/12/07 10:31:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -353,21 +353,7 @@ GetClassNameW(
   LPWSTR lpClassName,
   int nMaxCount)
 {
-  int result;
-  LPWSTR ClassNameW;
-  
-  if(!lpClassName)
-    return 0;
-
-  ClassNameW = HEAP_alloc ( (nMaxCount+1) * sizeof(WCHAR) );
-
-  result = NtUserGetClassName ( hWnd, ClassNameW, nMaxCount );
-
-  RtlCopyMemory ( lpClassName, ClassNameW, result );
-
-  HEAP_free ( ClassNameW );
-
-  return result;
+   return NtUserGetClassName(hWnd, lpClassName, nMaxCount);
 }
 
 

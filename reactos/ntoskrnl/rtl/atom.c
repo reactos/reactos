@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.7 2003/10/28 17:43:42 navaraf Exp $
+/* $Id: atom.c,v 1.8 2003/12/07 10:31:21 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -578,6 +578,7 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 {
    ULONG Length;
    PRTL_ATOM_ENTRY AtomEntry;
+   WCHAR TempAtomName[12];
 
    if (Atom == 0)
      {
@@ -596,10 +597,19 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 	     *PinCount = 1;
 	  }
 
-	if ((AtomName != NULL) && (NameLength != NULL) && (NameLength > 0))
+	Length = swprintf(TempAtomName, L"#%lu", (ULONG)Atom);	
+
+	if (NameLength != NULL)
 	  {
-	     Length = swprintf(AtomName, L"#%lu", (ULONG)Atom);
 	     *NameLength = Length * sizeof(WCHAR);
+	     if (AtomName != NULL && *NameLength >= Length)
+	       {
+	          wcscpy(AtomName, TempAtomName);
+	       }
+	     else
+	       {
+	          return STATUS_BUFFER_TOO_SMALL;
+	       }
 	  }
 
 	return STATUS_SUCCESS;
@@ -629,17 +639,18 @@ RtlQueryAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 	*PinCount = (ULONG)AtomEntry->Locked;
      }
 
-   if ((AtomName != NULL) && (NameLength != NULL))
+   if (NameLength != NULL)
      {
-	if (*NameLength < AtomEntry->Name.Length)
+	*NameLength = AtomEntry->Name.Length;
+	if (AtomName != NULL && *NameLength >= AtomEntry->Name.Length)
 	  {
-	     *NameLength = AtomEntry->Name.Length;
+	     memcpy(AtomName, AtomEntry->Name.Buffer, AtomEntry->Name.Length);
+          }
+        else
+          {
 	     RtlpUnlockAtomTable(AtomTable);
 	     return STATUS_BUFFER_TOO_SMALL;
 	  }
-
-	memcpy(AtomName, AtomEntry->Name.Buffer, AtomEntry->Name.Length);
-	*NameLength = AtomEntry->Name.Length;
      }
 
    RtlpUnlockAtomTable(AtomTable);

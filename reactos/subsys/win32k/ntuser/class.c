@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.41 2003/11/24 16:15:00 gvg Exp $
+/* $Id: class.c,v 1.42 2003/12/07 10:31:21 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -71,7 +71,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
     {
     Current = CONTAINING_RECORD(CurrentEntry, WNDCLASS_OBJECT, ListEntry);
       
-	if (Current->lpszClassName == (PUNICODE_STRING)(ULONG)Atom)
+	if (Current->Atom == Atom)
 	{
 	*Class = Current;
 	ObmReferenceObject(Current);
@@ -88,7 +88,7 @@ ClassReferenceClassByAtom(PWNDCLASS_OBJECT* Class,
 
 NTSTATUS STDCALL
 ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
-			  PWSTR ClassName)
+			  LPCWSTR ClassName)
 {
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
@@ -111,7 +111,7 @@ ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
     }
 
   Status  = RtlLookupAtomInAtomTable(WinStaObject->AtomTable,
-				     ClassName,
+				     (LPWSTR)ClassName,
 				     &ClassAtom);
 
   if (!NT_SUCCESS(Status))
@@ -128,7 +128,7 @@ ClassReferenceClassByName(PWNDCLASS_OBJECT *Class,
 
 NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
-				LPWSTR ClassNameOrAtom)
+				LPCWSTR ClassNameOrAtom)
 {
   NTSTATUS Status;
 
@@ -152,112 +152,85 @@ ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 }
 
 DWORD STDCALL
-NtUserGetClassInfo(HINSTANCE hInst,
-		   LPCWSTR str,
-		   LPWNDCLASSEXW wcex,
-		   BOOL Ansi,
-		   DWORD unknown3)
+NtUserGetClassInfo(HINSTANCE hInstance, LPCWSTR lpClassName,
+   LPWNDCLASSEXW lpWndClassEx, BOOL Ansi, DWORD unknown3)
 {
-	PWNDCLASS_OBJECT Class;
-	NTSTATUS Status;
-	Status = ClassReferenceClassByNameOrAtom(&Class,(LPWSTR)str);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastNtError(Status);
-		return 0;
-	}
-	wcex->cbSize = sizeof(LPWNDCLASSEXW);
-	wcex->style = Class->style;
-	if (Ansi)
-	{
-		wcex->lpfnWndProc = Class->lpfnWndProcA;
-	}
-	else
-	{
-		wcex->lpfnWndProc = Class->lpfnWndProcW;
-	}
-	wcex->cbClsExtra = Class->cbClsExtra;
-	wcex->cbWndExtra = Class->cbWndExtra;
-	wcex->hInstance = Class->hInstance;
-	wcex->hIcon = Class->hIcon;
-	wcex->hCursor = Class->hCursor;
-	wcex->hbrBackground = Class->hbrBackground;
-	if(Class->lpszMenuName)
-	{
-	  if(!IS_INTRESOURCE((LPCWSTR)Class->lpszMenuName))
-  	    RtlCopyUnicodeString((PUNICODE_STRING)wcex->lpszMenuName, Class->lpszMenuName);
+   PWNDCLASS_OBJECT Class;
+   NTSTATUS Status;
+
+   Status = ClassReferenceClassByNameOrAtom(&Class, lpClassName);
+   if (!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return 0;
+   }
+   lpWndClassEx->cbSize = sizeof(LPWNDCLASSEXW);
+   lpWndClassEx->style = Class->style;
+   if (Ansi)
+      lpWndClassEx->lpfnWndProc = Class->lpfnWndProcA;
+   else
+      lpWndClassEx->lpfnWndProc = Class->lpfnWndProcW;
+   lpWndClassEx->cbClsExtra = Class->cbClsExtra;
+   lpWndClassEx->cbWndExtra = Class->cbWndExtra;
+   lpWndClassEx->hInstance = Class->hInstance;
+   lpWndClassEx->hIcon = Class->hIcon;
+   lpWndClassEx->hCursor = Class->hCursor;
+   lpWndClassEx->hbrBackground = Class->hbrBackground;
+   if (Class->lpszMenuName)
+   {
+      if (!IS_INTRESOURCE((LPCWSTR)Class->lpszMenuName))
+         RtlCopyUnicodeString((PUNICODE_STRING)lpWndClassEx->lpszMenuName, Class->lpszMenuName);
       else
-        wcex->lpszMenuName = (LPCWSTR)Class->lpszMenuName;
-    }
-    else
-      wcex->lpszMenuName = (LPCWSTR)NULL;
-	if(Class->lpszClassName)
-	{
-	  if(!IS_ATOM((LPCWSTR)Class->lpszClassName))
-  	    RtlCopyUnicodeString((PUNICODE_STRING)wcex->lpszClassName, Class->lpszClassName);
-      else
-        wcex->lpszClassName = (LPCWSTR)Class->lpszClassName;
-    }
-    else
-      wcex->lpszClassName = (LPCWSTR)NULL;
-	wcex->hIconSm = Class->hIconSm;
-	return 1;
+         lpWndClassEx->lpszMenuName = (LPCWSTR)Class->lpszMenuName;
+   }
+   else
+      lpWndClassEx->lpszMenuName = (LPCWSTR)NULL;
+   lpWndClassEx->lpszClassName = lpClassName;
+   lpWndClassEx->hIconSm = Class->hIconSm;
+
+   return Class->Atom;
 }
 
 ULONG FASTCALL
-IntGetClassName(struct _WINDOW_OBJECT *WindowObject,
-		   LPWSTR lpClassName,
-		   ULONG nMaxCount)
+IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
+   ULONG nMaxCount)
 {
-  ULONG length;
-  LPWSTR name;
-  BOOL free;
-  PWINSTATION_OBJECT WinStaObject;
-  NTSTATUS Status;
-  if (IS_ATOM(WindowObject->Class->lpszClassName))
-  {
-	DPRINT("About to open window station handle (0x%X)\n", 
-	PROCESS_WINDOW_STATION());
-	Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
-	KernelMode,
-	0,
-	&WinStaObject);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Validation of window station handle (0x%X) failed\n",
-		PROCESS_WINDOW_STATION());
-		return((RTL_ATOM)0);
-	}
-	length = 0;
-	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
-        name = ExAllocatePool(PagedPool,length+sizeof(WCHAR));
-	free = TRUE;
-	Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,(RTL_ATOM)(size_t)WindowObject->Class->lpszClassName,NULL,NULL,name,&length);
-	if (!NT_SUCCESS(Status))
-	{
-		DPRINT("Validation of window station handle (0x%X) failed\n",
-		PROCESS_WINDOW_STATION());
-		return((RTL_ATOM)0);
-	}
-	ObDereferenceObject(WinStaObject);
-  }
-  else
-  {
-    name = WindowObject->Class->lpszClassName->Buffer;
-    length = WindowObject->Class->lpszClassName->Length / sizeof(WCHAR);
-	free = FALSE;
-  }
-  if (length > nMaxCount)
-  {
-    length = nMaxCount;
-  }
-  *(lpClassName+length) = 0;
-  wcsncpy(lpClassName,name,length);
-  if (free)
-  {
-	ExFreePool(name);
-  }
-  return length;
+   ULONG Length;
+   LPWSTR Name;
+   PWINSTATION_OBJECT WinStaObject;
+   NTSTATUS Status;
+
+   Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+      KernelMode, 0, &WinStaObject);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("Validation of window station handle (0x%X) failed\n",
+         PROCESS_WINDOW_STATION());
+      return 0;
+   }
+   Length = 0;
+   Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
+      WindowObject->Class->Atom, NULL, NULL, Name, &Length);
+   Name = ExAllocatePool(NonPagedPool, Length + sizeof(UNICODE_NULL));
+   Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
+      WindowObject->Class->Atom, NULL, NULL, Name, &Length);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IntGetClassName: RtlQueryAtomInAtomTable failed\n");
+      return 0;
+   }
+   Length /= sizeof(WCHAR);
+   if (Length > nMaxCount)
+   {
+      Length = nMaxCount;
+   }
+   wcsncpy(lpClassName, Name, Length);
+   /* FIXME: Check buffer size before doing this! */
+   *(lpClassName + Length) = 0;
+   ExFreePool(Name);
+   ObDereferenceObject(WinStaObject);
+
+   return Length;
 }
 
 DWORD STDCALL
@@ -266,18 +239,18 @@ NtUserGetClassName (
   LPWSTR lpClassName,
   ULONG nMaxCount)
 {
-  PWINDOW_OBJECT WindowObject;
-  LONG Ret;
+   PWINDOW_OBJECT WindowObject;
+   LONG Length;
 
-  WindowObject = IntGetWindowObject(hWnd);
-  if (WindowObject == NULL)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return 0;
-  }
-  Ret = IntGetClassName(WindowObject, lpClassName, nMaxCount);
-  IntReleaseWindowObject(WindowObject);
-  return(Ret);
+   WindowObject = IntGetWindowObject(hWnd);
+   if (WindowObject == NULL)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return 0;
+   }
+   Length = IntGetClassName(WindowObject, lpClassName, nMaxCount);
+   IntReleaseWindowObject(WindowObject);
+   return Length;
 }
 
 DWORD STDCALL
@@ -326,7 +299,7 @@ IntCreateClass(CONST WNDCLASSEXW *lpwcx,
 	ClassObject->hbrBackground = lpwcx->hbrBackground;
 	ClassObject->Unicode = bUnicodeClass;
 	ClassObject->hIconSm = lpwcx->hIconSm;
-	ClassObject->lpszClassName = (PUNICODE_STRING)(ULONG)Atom;
+	ClassObject->Atom = Atom;
 	if (wpExtra == 0) {
 	if (bUnicodeClass)
 	{
