@@ -4,6 +4,9 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="CONFIG_SMP" />
 	<define name="__NTHAL__" />
+	<library>hal_generic</library>
+	<library>hal_generic_pc</library>
+	<library>ntoskrnl</library>
 	<file>apic.c</file>
 	<file>halinit_mp.c</file>
 	<file>ipi_mp.c</file>

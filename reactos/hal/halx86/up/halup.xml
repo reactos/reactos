@@ -4,6 +4,10 @@
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTHAL__" />
+	<library>hal_generic</library>
+	<library>hal_generic_up</library>
+	<library>hal_generic_pc</library>
+	<library>ntoskrnl</library>
 	<file>halinit_up.c</file>
 	<file>halup.rc</file>
 </module>

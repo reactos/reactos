@@ -25,11 +25,6 @@
 		<file>irp.c</file>
 		<file>lock.c</file>
 		<file>main.c</file>
-		<file>mockbuffer.c</file>
-		<file>mockbug.c</file>
-		<file>mocklock.c</file>
-		<file>mockpool.c</file>
-		<file>mockwait.c</file>
 		<file>ninfo.c</file>
 		<file>pool.c</file>
 		<file>proto.c</file>

@@ -4,6 +4,9 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UP" />
 	<define name="__NTHAL__" />
+	<library>hal_generic</library>
+	<library>hal_generic_up</library>
+	<library>ntoskrnl</library>
 	<file>display_xbox.c</file>
 	<file>font.c</file>
 	<file>halinit_xbox.c</file>

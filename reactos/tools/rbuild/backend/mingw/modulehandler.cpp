@@ -481,7 +481,7 @@ MingwModuleHandler::GenerateMacros (
 {
 	size_t i;
 
-	if ( includes.size() || defines.size() )
+	if ( includes.size () > 0 || defines.size () > 0 )
 	{
 		GenerateMacro ( assignmentOperation,
 		                cflags_macro,
@@ -509,9 +509,9 @@ MingwModuleHandler::GenerateMacros (
 		}
 	}
 	
-	if ( files.size() )
+	if ( files.size () > 0 )
 	{
-		for ( i = 0; i < files.size(); i++ )
+		for ( i = 0; i < files.size (); i++ )
 		{
 			if ( files[i]->first )
 			{
@@ -525,14 +525,11 @@ MingwModuleHandler::GenerateMacros (
 		fprintf (
 			fMakefile,
 			"%s %s",
-			objs_macro.c_str(),
+			objs_macro.c_str (),
 			assignmentOperation );
 		for ( i = 0; i < files.size(); i++ )
 		{
-			string extension = GetExtension ( files[i]->name );
-			if ( extension != ".spec"
-			  && extension != ".SPEC"
-			  && !files[i]->first )
+			if ( !files[i]->first )
 			{
 				fprintf (
 					fMakefile,
@@ -1308,7 +1305,7 @@ void
 MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& module )
 {
 	string target ( FixupTargetFilename ( module.GetPath () ) );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
 	GenerateMacrosAndTargetsHost ( module );
@@ -1321,14 +1318,14 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 	
 	fprintf ( fMakefile, "%s: %s %s\n",
 	          target.c_str (),
-	          archiveFilename.c_str (),
+	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
 	          "\t%s %s -o %s %s %s\n\n",
 	          linker.c_str (),
 	          GetLinkerMacro ( module ).c_str (),
 	          target.c_str (),
-	          archiveFilename.c_str (),
+	          objectsMacro.c_str (),
 	          importLibraryDependencies.c_str () );
 }
 
@@ -1473,7 +1470,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1484,7 +1481,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          archiveFilename.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
@@ -1493,7 +1490,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
-		                        archiveFilename );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1526,8 +1523,8 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 {
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( PassThruCacheDirectory( FixupTargetFilename ( module.GetPath () ) ) );
-	string workingDirectory = GetWorkingDirectory ( );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string workingDirectory = GetWorkingDirectory ();
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1542,7 +1539,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          archiveFilename.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
@@ -1551,7 +1548,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
-		                        archiveFilename );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1584,8 +1581,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectFilenames = GetObjectFilenames ( module );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 	
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1596,7 +1592,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          archiveFilename.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
@@ -1605,7 +1601,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
-		                        objectFilenames );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1638,8 +1634,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectFilenames = GetObjectFilenames ( module );
-	string archiveFilename = GetModuleArchiveFilename ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 	
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1654,7 +1649,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          archiveFilename.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
@@ -1663,7 +1658,7 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
-		                        objectFilenames );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1718,7 +1713,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectFilenames = GetObjectFilenames ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string linkingDependencies = GetLinkingDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1728,7 +1723,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 	
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          objectFilenames.c_str (),
+		          objectsMacro.c_str (),
 		          linkingDependencies.c_str () );
 
 		string linker;
@@ -1743,7 +1738,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,
-		                        objectFilenames );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1776,7 +1771,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module 
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectFilenames = GetObjectFilenames ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1787,7 +1782,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module 
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          objectFilenames.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linker;
@@ -1802,7 +1797,7 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module 
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,
-		                        objectFilenames );
+		                        objectsMacro );
 	}
 	else
 	{
@@ -1835,7 +1830,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 	static string ros_junk ( "$(ROS_TEMPORARY)" );
 	string target ( FixupTargetFilename ( module.GetPath () ) );
 	string workingDirectory = GetWorkingDirectory ( );
-	string objectFilenames = GetObjectFilenames ( module );
+	string objectsMacro = GetObjectsMacro ( module );
 	string importLibraryDependencies = GetImportLibraryDependencies ( module );
 
 	GenerateImportLibraryTargetIfNeeded ( module );
@@ -1846,7 +1841,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 
 		fprintf ( fMakefile, "%s: %s %s\n",
 		          target.c_str (),
-		          objectFilenames.c_str (),
+		          objectsMacro.c_str (),
 		          importLibraryDependencies.c_str () );
 
 		string linker;
@@ -1861,7 +1856,7 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,
-		                        objectFilenames );
+		                        objectsMacro );
 	}
 	else
 	{
