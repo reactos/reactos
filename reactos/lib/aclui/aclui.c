@@ -16,7 +16,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* $Id: aclui.c,v 1.5 2004/08/14 00:46:54 weiden Exp $
+/* $Id: aclui.c,v 1.6 2004/08/14 11:50:25 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/aclui.c
@@ -28,6 +28,7 @@
  */
 #define INITGUID
 #include <windows.h>
+#include <commctrl.h>
 #include <prsht.h>
 #include <aclui.h>
 #include <rosrtl/resstr.h>
@@ -36,38 +37,39 @@
 
 HINSTANCE hDllInstance;
 
-
-
-BOOL STDCALL
-DllMain(HINSTANCE hinstDLL,
-        DWORD dwReason,
-        LPVOID lpvReserved)
-{
-  switch (dwReason)
-  {
-    case DLL_PROCESS_ATTACH:
-      hDllInstance = hinstDLL;
-      break;
-    case DLL_THREAD_ATTACH:
-      break;
-    case DLL_THREAD_DETACH:
-      break;
-    case DLL_PROCESS_DETACH:
-      break;
-  }
-  return TRUE;
-}
-
-
 UINT CALLBACK
 SecurityPageCallback(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
 {
   switch(uMsg)
   {
     case PSPCB_CREATE:
-      return TRUE;
-    case PSPCB_RELEASE:
+    {
+      PSECURITY_PAGE sp;
+
+      sp = LocalAlloc(LHND, sizeof(SECURITY_PAGE));
+      if(sp != NULL)
+      {
+        /* save the pointer to the ISecurityInformation interface */
+        sp->psi = (LPSECURITYINFO)ppsp->lParam;
+        /* set the lParam to the allocated structure */
+        ppsp->lParam = (LPARAM)sp;
+        return TRUE;
+      }
       return FALSE;
+    }
+    case PSPCB_RELEASE:
+    {
+      if(ppsp->lParam != 0)
+      {
+        PSECURITY_PAGE sp = (PSECURITY_PAGE)ppsp->lParam;
+        if(sp->hiUsrs != NULL)
+        {
+          ImageList_Destroy(sp->hiUsrs);
+        }
+        LocalFree((HLOCAL)sp);
+      }
+      return FALSE;
+    }
   }
 
   return FALSE;
@@ -77,6 +79,42 @@ SecurityPageCallback(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
 INT_PTR CALLBACK
 SecurityPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+  PSECURITY_PAGE sp;
+  
+  switch(uMsg)
+  {
+    case WM_INITDIALOG:
+    {
+      sp = (PSECURITY_PAGE)lParam;
+      if(sp != NULL)
+      {
+        LV_COLUMN lvc;
+        RECT rcLvClient;
+        
+        sp->hWnd = hwndDlg;
+        sp->hWndUsrList = GetDlgItem(hwndDlg, IDC_ACELIST);
+        sp->hiUsrs = ImageList_LoadBitmap(hDllInstance, MAKEINTRESOURCE(IDB_USRGRPIMAGES), 16, 3, 0);
+        
+        /* save the pointer to the structure */
+        SetWindowLong(hwndDlg, DWL_USER, (LONG)sp);
+        
+        GetClientRect(sp->hWndUsrList, &rcLvClient);
+        
+        /* setup the listview control */
+        ListView_SetExtendedListViewStyleEx(sp->hWndUsrList, LVS_EX_FULLROWSELECT, LVS_EX_FULLROWSELECT);
+        ListView_SetImageList(sp->hWndUsrList, sp->hiUsrs, LVSIL_SMALL);
+
+        /* add a column to the list view */
+        lvc.mask = LVCF_FMT | LVCF_WIDTH;
+        lvc.fmt = LVCFMT_LEFT;
+        lvc.cx = rcLvClient.right;
+        ListView_InsertColumn(sp->hWndUsrList, 0, &lvc);
+        
+        /* FIXME - hide controls in case the flags aren't present */
+      }
+      break;
+    }
+  }
   return 0;
 }
 
@@ -207,5 +245,25 @@ EditSecurity(HWND hwndOwner, LPSECURITYINFO psi)
   }
   
   return Ret;
+}
+
+BOOL STDCALL
+DllMain(HINSTANCE hinstDLL,
+        DWORD dwReason,
+        LPVOID lpvReserved)
+{
+  switch (dwReason)
+  {
+    case DLL_PROCESS_ATTACH:
+      hDllInstance = hinstDLL;
+      break;
+    case DLL_THREAD_ATTACH:
+      break;
+    case DLL_THREAD_DETACH:
+      break;
+    case DLL_PROCESS_DETACH:
+      break;
+  }
+  return TRUE;
 }
 

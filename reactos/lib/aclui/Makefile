@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2004/08/11 01:21:52 weiden Exp $
+# $Id: Makefile,v 1.4 2004/08/14 11:50:25 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -16,6 +16,7 @@ TARGET_CFLAGS = \
  -DUNICODE \
  -D_UNICODE \
  -D__REACTOS__ \
+ -D_WIN32_IE=0x0500 \
  -D_WIN32_WINNT=0x501 \
  -DWINVER=0x600 \
  -Wall \
