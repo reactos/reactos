@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.14 2004/06/06 08:58:56 hbirr Exp $
+/* $Id: cmd.c,v 1.15 2004/06/06 17:33:13 hbirr Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -497,6 +497,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	INT  num = 0;
 	INT  nRedirFlags = 0;
 	INT  Length;
+	UINT Attributes;
 
 	HANDLE hOldConIn;
 	HANDLE hOldConOut;
@@ -518,6 +519,15 @@ VOID ParseCommandLine (LPTSTR cmd)
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
 	Length = GetTempPath (MAX_PATH, szTempPath);
+	if (Length > 0 && Length < MAX_PATH)
+	{
+		Attributes = GetFileAttributes(szTempPath);
+		if (Attributes == 0xffffffff ||
+		    !(Attributes & FILE_ATTRIBUTE_DIRECTORY))
+		{
+			Length = 0;
+		}
+	}
 	if (Length == 0 || Length >= MAX_PATH)
 	{
 		_tcscpy(szTempPath, _T(".\\"));
