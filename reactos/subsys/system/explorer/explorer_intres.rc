@@ -146,8 +146,8 @@ IDB_LOGOV256            BITMAP  DISCARDABLE     "res/logov256.bmp"
 
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
-    "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
+    VK_X,            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
+    VK_S,            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
 END
 
