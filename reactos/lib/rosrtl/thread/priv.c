@@ -73,12 +73,17 @@ RosEnableThreadPrivileges(HANDLE *hPreviousToken,
     LocalFree((HLOCAL)privs);
     
     /* Perform the impersonation */
-    Ret = SetThreadToken(NULL, hToken);
+    Ret = SetThreadToken(NULL, hNewToken);
     
     if(Ret)
     {
       /* only copy the previous token handle on success */
       *hPreviousToken = hToken;
+    }
+    else
+    {
+      /* We don't return the previous token handle on failure, so close it here */
+      CloseHandle(hToken);
     }
     
     /* We don't need the handle to the new token anymore */
