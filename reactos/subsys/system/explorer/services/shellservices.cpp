@@ -66,29 +66,31 @@ int SSOThread::Run()
 		RegCloseKey(hkey);
 	}
 
-	MSG msg;
-
-	while(_alive) {
-		if (MsgWaitForMultipleObjects(1, &_evtFinish, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0+0)
-			break;	// _evtFinish has been set.
+	if (!sso_ptrs.empty()) {
+		MSG msg;
 
 		while(_alive) {
-			if (!PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
-				break;
+			if (MsgWaitForMultipleObjects(1, &_evtFinish, FALSE, INFINITE, QS_ALLINPUT) == WAIT_OBJECT_0+0)
+				break;	// _evtFinish has been set.
 
-			if (msg.message == WM_QUIT)
-				break;
+			while(_alive) {
+				if (!PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
+					break;
 
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+				if (msg.message == WM_QUIT)
+					break;
+
+				TranslateMessage(&msg);
+				DispatchMessage(&msg);
+			}
 		}
-	}
 
-	 // shutdown all running Shell Service Objects
-	for(SSOVector::iterator it=sso_ptrs.begin(); it!=sso_ptrs.end(); ++it) {
-		SIfacePtr<IOleCommandTarget>* sso_ptr = *it;
-		(*sso_ptr)->Exec(&CGID_ShellServiceObject, OLECMDID_SAVE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
-		delete sso_ptr;
+		 // shutdown all running Shell Service Objects
+		for(SSOVector::iterator it=sso_ptrs.begin(); it!=sso_ptrs.end(); ++it) {
+			SIfacePtr<IOleCommandTarget>* sso_ptr = *it;
+			(*sso_ptr)->Exec(&CGID_ShellServiceObject, OLECMDID_SAVE, OLECMDEXECOPT_DODEFAULT, NULL, NULL);
+			delete sso_ptr;
+		}
 	}
 
 	return 0;
