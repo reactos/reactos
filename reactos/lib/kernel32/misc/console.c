@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.28 2001/01/25 05:37:03 phreak Exp $
+/* $Id: console.c,v 1.29 2001/01/31 02:23:52 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -685,7 +685,7 @@ WriteConsoleOutputCharacterA(
 
    Request = HeapAlloc(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
-		       sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
+		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR);
    if( !Request )
      {
        SetLastError( ERROR_OUTOFMEMORY );
@@ -703,7 +703,7 @@ WriteConsoleOutputCharacterA(
 	 memcpy( &Request->Data.WriteConsoleOutputCharRequest.String[0],
 		 lpCharacter,
 		 Size );
-	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
+	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + Size, sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
@@ -755,10 +755,11 @@ WriteConsoleOutputAttribute(
    CSRSS_API_REPLY Reply;
    NTSTATUS Status;
    WORD Size;
+   int c;
 
    Request = HeapAlloc(GetProcessHeap(),
 		       HEAP_ZERO_MEMORY,
-		       sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB);
+		       sizeof(CSRSS_API_REQUEST) + CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB);
    if( !Request )
      {
        SetLastError( ERROR_OUTOFMEMORY );
@@ -773,10 +774,9 @@ WriteConsoleOutputAttribute(
       {
 	 Size = nLength > CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB ? CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB : nLength;
 	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
-	 memcpy( &Request->Data.WriteConsoleOutputAttribRequest.String[0],
-		 lpAttribute,
-		 Size * 2 );
-	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB_REQUEST ) + (Size * 2), sizeof( CSRSS_API_REPLY ) );
+	 for( c = 0; c < ( Size * 2 ); c++ )
+	   Request->Data.WriteConsoleOutputAttribRequest.String[c] = (char)lpAttribute[c];
+	 Status = CsrClientCallServer( Request, &Reply, sizeof( CSRSS_API_REQUEST ) + (Size * 2), sizeof( CSRSS_API_REPLY ) );
 	 if( !NT_SUCCESS( Status ) || !NT_SUCCESS( Status = Reply.Status ) )
 	    {
 	       SetLastErrorByStatus ( Status );
