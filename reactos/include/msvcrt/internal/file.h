@@ -70,6 +70,8 @@ extern __file_rec* __file_rec_list;
 
 void _dosmaperr(unsigned long oserrcode);
 
+extern int __fmode;
+
 #ifdef __cplusplus
 }
 #endif
