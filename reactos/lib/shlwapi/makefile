@@ -41,8 +41,6 @@ TARGET_BASE = 0x76120000
 
 TARGET_NORC = yes
 
-TARGET_DEFONLY = yes
-
 TARGET_OBJECTS = \
 	assoc.o \
 	clist.o \

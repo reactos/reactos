@@ -195,7 +195,7 @@ EXPORTS
   ColorAdjustLuma@12 @554
   ColorHLSToRGB@12 @555
   ColorRGBToHLS@16 @556
-  DllGetVersion@4=SHLWAPI_DllGetVersion@4 @557
+  DllGetVersion@4 @557
   GetMenuPosFromID@8 @558
   HashData@16 @559
   PathAddBackslashA@4 @562
