@@ -427,7 +427,7 @@ VfatFormat(
   BootSector.FATSectors = 0;
   BootSector.SectorsPerTrack = DiskGeometry.SectorsPerTrack;
   BootSector.Heads = DiskGeometry.TracksPerCylinder;
-  BootSector.HiddenSectors = 63; /* FIXME: */
+  BootSector.HiddenSectors = PartitionInfo.HiddenSectors;
   BootSector.SectorsHuge = PartitionInfo.PartitionLength.QuadPart >>
     GetShiftCount(BootSector.BytesPerSector); /* Use shifting to avoid 64-bit division */
   BootSector.FATSectors32 = 0; /* Set later */
@@ -436,7 +436,7 @@ VfatFormat(
   BootSector.RootCluster = 2;
   BootSector.FSInfoSector = 1;
   BootSector.BootBackup = 6;
-  BootSector.Drive = 0xff; /* No BIOS boot drive available */ //0x80; /* FIXME: */
+  BootSector.Drive = 0xff; /* No BIOS boot drive available */
   BootSector.ExtBootSignature = 0x29;
   BootSector.VolumeID = 0x45768798; /* FIXME: */
   if ((Label == NULL) || (Label->Buffer == NULL))

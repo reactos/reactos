@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.9 2003/04/28 19:44:13 chorns Exp $
+/* $Id: partlist.c,v 1.10 2003/05/11 18:31:09 chorns Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -1245,9 +1245,11 @@ CreateSelectedPartition(PPARTLIST List,
 
       li.QuadPart = PartEntry->StartingOffset;
       LayoutBuffer->PartitionEntry[PartEntryNumber].StartingOffset = li;
+      /* FIXME: Adjust PartitionLength so the partition will end on the last sector of a track */
       li.QuadPart = NewPartSize;
       LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionLength = li;
-      LayoutBuffer->PartitionEntry[PartEntryNumber].HiddenSectors = 0;  /* FIXME: ? */
+      LayoutBuffer->PartitionEntry[PartEntryNumber].HiddenSectors =
+        PartEntry->StartingOffset / DiskEntry->BytesPerSector;
       LayoutBuffer->PartitionEntry[PartEntryNumber].PartitionType = PartType;
       LayoutBuffer->PartitionEntry[PartEntryNumber].RecognizedPartition = TRUE;
       LayoutBuffer->PartitionEntry[PartEntryNumber].RewritePartition = TRUE;

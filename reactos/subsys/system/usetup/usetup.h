@@ -27,9 +27,6 @@
 #ifndef __USETUP_H__
 #define __USETUP_H__
 
-// Define to allow creating a new partition and format it
-//#define ENABLE_FORMAT
-
 #define DPRINT1(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
@@ -38,18 +35,15 @@
 
 typedef enum
 {
-#ifdef ENABLE_FORMAT
   FsFat = 0,
   FsKeep = 1
-#else
-  FsKeep = 0
-#endif
 } FILE_SYSTEM;
 
 typedef struct _FILE_SYSTEM_LIST
 {
   SHORT Left;
   SHORT Top;
+  BOOLEAN ForceFormat;
   FILE_SYSTEM CurrentFileSystem;
   ULONG FileSystemCount;
 } FILE_SYSTEM_LIST, *PFILE_SYSTEM_LIST;

@@ -812,20 +812,16 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
 	{
-#ifdef ENABLE_FORMAT
 	  /* Don't destroy the parition list here */;
 	  return(CREATE_PARTITION_PAGE);
-#endif
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
 	{
-#ifdef ENABLE_FORMAT
 	  if (ConfirmDeletePartition(Ir) == TRUE)
 	    {
 	      (BOOLEAN) DeleteSelectedPartition(CurrentPartitionList);
 	    }
 	  return(SELECT_PARTITION_PAGE);
-#endif
 	}
 
       /* FIXME: Update status text */
@@ -1151,11 +1147,8 @@ CreateFileSystemList(SHORT Left,
   List->Left = Left;
   List->Top = Top;
 
-#ifdef ENABLE_FORMAT
+  List->ForceFormat = ForceFormat;
   List->FileSystemCount = 1;
-#else
-  List->FileSystemCount = 0;
-#endif
   if (ForceFormat)
     {
       List->CurrentFileSystem = ForceFileSystem;
@@ -1185,7 +1178,6 @@ DrawFileSystemList(PFILE_SYSTEM_LIST List)
 
   index = 0;
 
-#ifdef ENABLE_FORMAT
   coPos.X = List->Left;
   coPos.Y = List->Top + index;
   FillConsoleOutputAttribute(0x17,
@@ -1206,26 +1198,28 @@ DrawFileSystemList(PFILE_SYSTEM_LIST List)
       SetTextXY(List->Left, List->Top + index, " Format partition as FAT file system ");
     }
   index++;
-#endif
 
-  coPos.X = List->Left;
-  coPos.Y = List->Top + index;
-  FillConsoleOutputAttribute(0x17,
-			     50,
-			     coPos,
-			     &Written);
-  FillConsoleOutputCharacter(' ',
-			     50,
-			     coPos,
-			     &Written);
-
-  if (List->CurrentFileSystem == FsKeep)
+  if (!List->ForceFormat)
     {
-      SetInvertedTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
-    }
-  else
-    {
-      SetTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
+      coPos.X = List->Left;
+      coPos.Y = List->Top + index;
+      FillConsoleOutputAttribute(0x17,
+    			     50,
+    			     coPos,
+    			     &Written);
+      FillConsoleOutputCharacter(' ',
+    			     50,
+    			     coPos,
+    			     &Written);
+    
+      if (List->CurrentFileSystem == FsKeep)
+        {
+          SetInvertedTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
+        }
+      else
+        {
+          SetTextXY(List->Left, List->Top + index, " Keep current file system (no changes) ");
+        }
     }
 }
 
@@ -1256,6 +1250,7 @@ static PAGE_NUMBER
 SelectFileSystemPage(PINPUT_RECORD Ir)
 {
   PFILE_SYSTEM_LIST FileSystemList;
+  BOOLEAN ForceFormat;
   ULONGLONG DiskSize;
   ULONGLONG PartSize;
   PCHAR DiskUnit;
@@ -1342,7 +1337,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
   SetTextXY(8, 21, "\xfa  Press ENTER to format the partition.");
   SetTextXY(8, 23, "\xfa  Press ESC to select another partition.");
 
-  FileSystemList = CreateFileSystemList(6, 26, FALSE, FsKeep);
+  ForceFormat = (PartData.PartType == PARTITION_ENTRY_UNUSED);
+  FileSystemList = CreateFileSystemList(6, 26, ForceFormat, FsFat);
   if (FileSystemList == NULL)
     {
       /* FIXME: show an error dialog */
@@ -1429,11 +1425,9 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     switch (CurrentFileSystemList->CurrentFileSystem)
       {
-#ifdef ENABLE_FORMAT
         case FsFat:
           PartType = PARTITION_FAT32_XINT13;
           break;
-#endif
         case FsKeep:
           break;
         default:
@@ -1453,7 +1447,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
     switch (CurrentFileSystemList->CurrentFileSystem)
       {
-#ifdef ENABLE_FORMAT
         case FsFat:
           Status = FormatPartition(&DestinationRootPath);
           if (!NT_SUCCESS(Status))
@@ -1463,7 +1456,6 @@ FormatPartitionPage(PINPUT_RECORD Ir)
               return(QUIT_PAGE);
             }
           break;
-#endif
         case FsKeep:
           break;
         default:

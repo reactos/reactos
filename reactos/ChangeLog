@@ -1,5 +1,21 @@
 2003-05-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* lib/fslib/vfatlib/vfatlib.c (VfatFormat): Set hidden sectors.
+	* ntoskrnl/io/xhaldrv.c (xHalIoWritePartitionTable): Implement support
+	for primary partitions.
+	* subsys/system/usetup/partlist.c (CreateSelectedPartition): Compute
+	hidden sectors.
+	* subsys/system/usetup/usetup.c (SelectPartitionPage,
+	DrawFileSystemList, FormatPartitionPage): Don't use conditional define
+	ENABLE_FORMAT.
+	(CreateFileSystemList): Don't draw "Keep current file system" option if
+	formatting is needed.
+	(SelectFileSystemPage): Figure out if partition must be formatted.
+	* subsys/system/usetup/usetup.h (ENABLE_FORMAT): Remove.
+	(FILE_SYSTEM_LIST): Add ForceFormat field.
+
+2003-05-11  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/user32/windows/font.c (TEXT_PathEllipsify, TEXT_Reprefix): Fix
 	unsigned/signed warning.
 	* ntoskrnl/mm/pagefile.c (MmWriteToSwapPage, MmReadFromSwapPage,

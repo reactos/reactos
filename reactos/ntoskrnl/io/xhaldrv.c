@@ -1,10 +1,11 @@
-/* $Id: xhaldrv.c,v 1.31 2003/04/28 21:15:07 ekohl Exp $
+/* $Id: xhaldrv.c,v 1.32 2003/05/11 18:31:09 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/xhaldrv.c
  * PURPOSE:         Hal drive routines
  * PROGRAMMER:      Eric Kohl (ekohl@rz-online.de)
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:
  *                  Created 19/06/2000
  */
@@ -831,8 +832,9 @@ xHalIoReadPartitionTable(PDEVICE_OBJECT DeviceObject,
 		  (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
 		     PartitionSector->Partition[i].StartingCylinder,
 		  PartitionSector->Partition[i].EndingHead,
-		  PartitionSector->Partition[i].EndingSector,
-		  PartitionSector->Partition[i].EndingCylinder,
+		  PartitionSector->Partition[i].EndingSector & 0x3f,
+		  (((PartitionSector->Partition[i].EndingSector) & 0xc0) << 2) +
+		     PartitionSector->Partition[i].EndingCylinder,
 		  PartitionSector->Partition[i].StartingBlock,
 		  PartitionSector->Partition[i].SectorCount);
 	}
@@ -949,10 +951,22 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status;
   ULONG i;
 
-  DPRINT("xHalIoWritePartitionTable(%p %lu %lu %p)\n",
+  ULONG StartBlock;
+  ULONG SectorCount;
+  ULONG StartCylinder;
+  ULONG StartSector;
+  ULONG StartHead;
+  ULONG EndCylinder;
+  ULONG EndSector;
+  ULONG EndHead;
+  ULONG lba;
+  ULONG x;
+
+  DPRINT("xHalIoWritePartitionTable(%p %lu %lu %lu %p)\n",
 	 DeviceObject,
 	 SectorSize,
 	 SectorsPerTrack,
+   NumberOfHeads,
 	 PartitionBuffer);
 
   assert(DeviceObject);
@@ -1005,28 +1019,75 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
       return Status;
     }
 
-  DPRINT1("WARNING: Only 'BootFlags' is implemented\n");
-
-
   for (i = 0; i < PartitionBuffer->PartitionCount; i++)
     {
-      //= PartitionBuffer->PartitionEntry[i].StartingOffset;
-      //= PartitionBuffer->PartitionEntry[i].PartitionLength;
-      //= PartitionBuffer->PartitionEntry[i].HiddenSectors;
-      //= PartitionBuffer->PartitionEntry[i].PartitionType;
-      //= PartitionBuffer->PartitionEntry[i].PartitionType;
-
-      if (PartitionBuffer->PartitionEntry[i].BootIndicator)
+      if (PartitionBuffer->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED)
         {
-          PartitionSector->Partition[i].BootFlags |= 0x80;
+          /*
+           * CHS formulas:
+           * x = LBA DIV SectorsPerTrack
+           * cylinder = x DIV NumberOfHeads
+           * head = x MOD NumberOfHeads
+           * sector = (LBA MOD SectorsPerTrack) + 1
+           */
+
+          if (PartitionBuffer->PartitionEntry[i].BootIndicator)
+            {
+              PartitionSector->Partition[i].BootFlags |= 0x80;
+            }
+          else
+            {
+              PartitionSector->Partition[i].BootFlags &= ~0x80;
+            }
+    
+          PartitionSector->Partition[i].PartitionType = PartitionBuffer->PartitionEntry[i].PartitionType;
+
+          /* Compute starting CHS values */
+          lba = (PartitionBuffer->PartitionEntry[i].StartingOffset.QuadPart / SectorSize);
+          StartBlock = lba; /* Save this for later */
+          x = lba / SectorsPerTrack;
+          StartCylinder = x / NumberOfHeads;
+          StartHead = x % NumberOfHeads;
+          StartSector = (lba % SectorsPerTrack) + 1;
+          DPRINT("StartingOffset (LBA:%d  C:%d  H:%d  S:%d)\n", lba, StartCylinder, StartHead, StartSector);
+
+          /* Compute ending CHS values */
+          lba = (PartitionBuffer->PartitionEntry[i].StartingOffset.QuadPart
+            + (PartitionBuffer->PartitionEntry[i].PartitionLength.QuadPart - 1)) / SectorSize;
+          SectorCount = lba - StartBlock; /* Save this for later */
+          x = lba / SectorsPerTrack;
+          EndCylinder = x / NumberOfHeads;
+          EndHead = x % NumberOfHeads;
+          EndSector = (lba % SectorsPerTrack) + 1;
+          DPRINT("EndingOffset (LBA:%d  C:%d  H:%d  S:%d)\n", lba, EndCylinder, EndHead, EndSector);
+
+          /* Set startsector and sectorcount */
+          PartitionSector->Partition[i].StartingBlock = StartBlock;
+          PartitionSector->Partition[i].SectorCount = SectorCount;
+
+          /* Set starting CHS values */
+          PartitionSector->Partition[i].StartingCylinder = StartCylinder & 0xff;
+          PartitionSector->Partition[i].StartingHead = StartHead;
+          PartitionSector->Partition[i].StartingSector = ((StartCylinder & 0x0300) >> 2) + (StartSector & 0x3f);
+
+          /* Set ending CHS values */
+          PartitionSector->Partition[i].EndingCylinder = EndCylinder & 0xff;
+          PartitionSector->Partition[i].EndingHead = EndHead;
+          PartitionSector->Partition[i].EndingSector = ((EndCylinder & 0x0300) >> 2) + (EndSector & 0x3f);
         }
       else
         {
-          PartitionSector->Partition[i].BootFlags &= ~0x80;
+          PartitionSector->Partition[i].BootFlags = 0;
+          PartitionSector->Partition[i].PartitionType = PARTITION_ENTRY_UNUSED;
+          PartitionSector->Partition[i].StartingHead = 0;
+          PartitionSector->Partition[i].StartingSector = 0;
+          PartitionSector->Partition[i].StartingCylinder = 0;
+          PartitionSector->Partition[i].EndingHead = 0;
+          PartitionSector->Partition[i].EndingSector = 0;
+          PartitionSector->Partition[i].EndingCylinder = 0;
+          PartitionSector->Partition[i].StartingBlock = 0;
+          PartitionSector->Partition[i].SectorCount = 0;
         }
-
-      //= PartitionBuffer->PartitionEntry[i].RecognizedPartition;
-      //= PartitionBuffer->PartitionEntry[i].RewritePartition;
     }
 
 
@@ -1054,8 +1115,9 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 		  (((PartitionSector->Partition[i].StartingSector) & 0xc0) << 2) +
 		     PartitionSector->Partition[i].StartingCylinder,
 		  PartitionSector->Partition[i].EndingHead,
-		  PartitionSector->Partition[i].EndingSector,
-		  PartitionSector->Partition[i].EndingCylinder,
+		  PartitionSector->Partition[i].EndingSector & 0x3f,
+		  (((PartitionSector->Partition[i].EndingSector) & 0xc0) << 2) +
+		     PartitionSector->Partition[i].EndingCylinder,
 		  PartitionSector->Partition[i].StartingBlock,
 		  PartitionSector->Partition[i].SectorCount);
 	}
