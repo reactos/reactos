@@ -523,6 +523,9 @@ int MainFrame::Command(int id, int code)
 		break;}
 
 	  case ID_DRIVE_NTOBJ_NS: {
+		if (activate_fs_window(TEXT("NTOBJ")))
+			break;
+
 #ifndef _NO_MDI
 		FileChildWindow::create(_hmdiclient, NtObjChildWndInfo(TEXT("\\")));
 #else
@@ -533,10 +536,8 @@ int MainFrame::Command(int id, int code)
 	  case ID_DRIVE_DESKTOP: {
 		TCHAR path[MAX_PATH];
 
-	/*TODO
 		if (activate_fs_window(TEXT("Desktop")))
 			break;
-	*/
 
 		GetCurrentDirectory(MAX_PATH, path);
 
@@ -768,6 +769,19 @@ bool MainFrame::activate_fs_window(LPCTSTR filesys)
 					ShowWindow(child_wnd, SW_SHOWNORMAL);
 
 				return true;
+			}
+		} else {
+			ShellBrowserChild* shell_child = (ShellBrowserChild*) SendMessage(child_wnd, PM_GET_SHELLBROWSER_PTR, 0, 0);
+
+			if (shell_child) {
+				if (!lstrcmpi(shell_child->get_root()._fs, filesys)) {
+					SendMessage(_hmdiclient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);
+
+					if (IsMinimized(child_wnd))
+						ShowWindow(child_wnd, SW_SHOWNORMAL);
+
+					return true;
+				}
 			}
 		}
 	}

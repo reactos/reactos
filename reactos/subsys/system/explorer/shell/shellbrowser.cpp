@@ -117,7 +117,7 @@ void ShellBrowserChild::InitializeTree()
 	_root._drive_type = DRIVE_UNKNOWN;
 	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
 	_root._fs_flags = 0;
-	lstrcpy(_root._fs, TEXT("Shell"));
+	lstrcpy(_root._fs, TEXT("Desktop"));
 
 //@@	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME/*_sortOrder*/);
 
@@ -405,6 +405,9 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	switch(nmsg) {
 	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
 		return (LRESULT)static_cast<IShellBrowser*>(this);
+
+	  case PM_GET_SHELLBROWSER_PTR:
+		return (LRESULT)this;
 
 	  case PM_DISPATCH_COMMAND: {
 		switch(LOWORD(wparam)) {

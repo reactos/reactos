@@ -101,6 +101,8 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 		return E_NOTIMPL;
 	}
 
+	const Root& get_root() const {return _root;}
+
 protected:
 	Root _root;
 

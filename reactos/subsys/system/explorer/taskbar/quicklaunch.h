@@ -31,7 +31,7 @@
 
 #define	IDW_QUICKLAUNCHBAR	101
 
-#define	PM_REFRESH			(WM_APP+0x16)
+#define	PM_REFRESH			(WM_APP+0x1B)
 
 #define	IDC_FIRST_QUICK_ID	0x4000
 
