@@ -1,4 +1,4 @@
-/* $Id: hardlink.c,v 1.2 2004/03/14 10:16:18 weiden Exp $
+/* $Id: hardlink.c,v 1.3 2004/10/02 20:56:54 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,22 +25,16 @@
  * @implemented
  */
 BOOL STDCALL
-CreateHardLinkW(
-  LPCWSTR lpFileName,
-  LPCWSTR lpExistingFileName,
-  LPSECURITY_ATTRIBUTES lpSecurityAttributes
-)
+CreateHardLinkW(LPCWSTR lpFileName,
+                LPCWSTR lpExistingFileName,
+                LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  UNICODE_STRING LinkTarget, LinkName, CheckDrive, LinkDrive, LanManager;
-  LPWSTR lpNtLinkTarget, lpFilePart;
-  ULONG NeededSize;
+  UNICODE_STRING LinkTarget, LinkName;
   LPVOID lpSecurityDescriptor;
-  WCHAR wCheckDrive[10];
-  OBJECT_ATTRIBUTES ObjectAttribues;
   PFILE_LINK_INFORMATION LinkInformation;
   IO_STATUS_BLOCK IoStatus;
-  HANDLE hFile, hTarget;
   NTSTATUS Status;
+  BOOL Ret = FALSE;
   
   if(!lpFileName || !lpExistingFileName)
   {
@@ -58,141 +52,144 @@ CreateHardLinkW(
     return FALSE;
   }
   
-  if(!RtlDosPathNameToNtPathName_U((LPWSTR)lpExistingFileName, &LinkTarget, NULL, NULL))
+  if(RtlDosPathNameToNtPathName_U((LPWSTR)lpExistingFileName, &LinkTarget, NULL, NULL))
+  {
+    ULONG NeededSize = RtlGetFullPathName_U((LPWSTR)lpExistingFileName, 0, NULL, NULL);
+    if(NeededSize > 0)
+    {
+      LPWSTR lpNtLinkTarget = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize * sizeof(WCHAR));
+      if(lpNtLinkTarget != NULL)
+      {
+        LPWSTR lpFilePart;
+        
+        if(RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart) &&
+           (*lpNtLinkTarget) != L'\0')
+        {
+          UNICODE_STRING CheckDrive, LinkDrive;
+          WCHAR wCheckDrive[10];
+          
+          swprintf(wCheckDrive, L"\\??\\%c:", (WCHAR)(*lpNtLinkTarget));
+          RtlInitUnicodeString(&CheckDrive, wCheckDrive);
+          
+          RtlZeroMemory(&LinkDrive, sizeof(UNICODE_STRING));
+          
+          LinkDrive.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, (MAX_PATH + 1) * sizeof(WCHAR));
+          if(LinkDrive.Buffer != NULL)
+          {
+            HANDLE hFile, hTarget;
+            OBJECT_ATTRIBUTES ObjectAttributes;
+            
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &CheckDrive,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+
+            Status = NtOpenSymbolicLinkObject(&hFile, 1, &ObjectAttributes);
+            if(NT_SUCCESS(Status))
+            {
+              UNICODE_STRING LanManager;
+              
+              RtlInitUnicodeString(&LanManager, L"\\Device\\LanmanRedirector\\");
+              
+              NtQuerySymbolicLinkObject(hFile, &LinkDrive, NULL);
+              
+              if(!RtlPrefixUnicodeString(&LanManager, &LinkDrive, TRUE))
+              {
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &LinkTarget,
+                                           OBJ_CASE_INSENSITIVE,
+                                           NULL,
+                                           lpSecurityDescriptor);
+                Status = NtOpenFile(&hTarget,
+                                    SYNCHRONIZE | DELETE,
+                                    &ObjectAttributes,
+                                    &IoStatus,
+                                    FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                                    FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
+                if(NT_SUCCESS(Status))
+                {
+                  if(RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName, &LinkName, NULL, NULL))
+                  {
+                    NeededSize = sizeof(FILE_LINK_INFORMATION) + LinkName.Length + sizeof(WCHAR);
+                    LinkInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize);
+                    if(LinkInformation != NULL)
+                    {
+                      LinkInformation->ReplaceIfExists = FALSE;
+                      LinkInformation->RootDirectory = 0;
+                      LinkInformation->FileNameLength = LinkName.Length;
+                      RtlCopyMemory(LinkInformation->FileName, LinkName.Buffer, LinkName.Length);
+                      
+                      Status = NtSetInformationFile(hTarget, &IoStatus, LinkInformation, NeededSize, FileLinkInformation);
+                      if(NT_SUCCESS(Status))
+                      {
+                        Ret = TRUE;
+                      }
+                      else
+                      {
+                        SetLastErrorByStatus(Status);
+                      }
+
+                      RtlFreeHeap(RtlGetProcessHeap(), 0, LinkInformation);
+                    }
+                    else
+                    {
+                      SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                    }
+                  }
+                  else
+                  {
+                    SetLastError(ERROR_PATH_NOT_FOUND);
+                  }
+                  NtClose(hTarget);
+                }
+                else
+                {
+                  DPRINT1("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
+                  SetLastErrorByStatus(Status);
+                }
+              }
+              else
+              {
+                DPRINT1("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
+                SetLastError(ERROR_INVALID_NAME);
+              }
+              
+              NtClose(hFile);
+            }
+            else
+            {
+              SetLastErrorByStatus(Status);
+            }
+          }
+          else
+          {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+          }
+        }
+        else
+        {
+          SetLastError(ERROR_INVALID_NAME);
+        }
+        RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
+      }
+      else
+      {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+      }
+    }
+    else
+    {
+      SetLastError(ERROR_INVALID_NAME);
+    }
+    RtlFreeUnicodeString(&LinkTarget);
+  }
+  else
   {
     SetLastError(ERROR_PATH_NOT_FOUND);
-    return FALSE;
   }
-  
-  if(!(NeededSize = RtlGetFullPathName_U((LPWSTR)lpExistingFileName, 0, NULL, NULL)))
-  {
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-  
-  NeededSize += 2;
-  if(!(lpNtLinkTarget = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize * sizeof(WCHAR))))
-  {
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return FALSE;
-  }
-  
-  if(!RtlGetFullPathName_U((LPWSTR)lpExistingFileName, NeededSize, lpNtLinkTarget, &lpFilePart) ||
-     (*lpNtLinkTarget) == L'\0')
-  {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-  
-  swprintf(wCheckDrive, L"\\??\\%c:", (WCHAR)(*lpNtLinkTarget));
-  RtlInitUnicodeString(&CheckDrive, wCheckDrive);
-  
-  RtlZeroMemory(&LinkDrive, sizeof(UNICODE_STRING));
-  if(!(LinkDrive.Buffer = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, 
-                                          (MAX_PATH + 1) * sizeof(WCHAR))))
-  {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return FALSE;
-  }
-  
-  InitializeObjectAttributes(&ObjectAttribues,
-                             &CheckDrive,
-                             OBJ_CASE_INSENSITIVE,
-                             NULL,
-                             NULL);
-  
-  Status = ZwOpenSymbolicLinkObject(&hFile, 1, &ObjectAttribues);
-  if(!NT_SUCCESS(Status))
-  {
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastErrorByStatus(Status);
-    return FALSE;
-  }
-  
-  RtlInitUnicodeString(&LanManager, L"\\Device\\LanmanRedirector\\");
-  
-  ZwQuerySymbolicLinkObject(hFile, &LinkDrive, NULL);
-  
-  if(RtlPrefixUnicodeString(&LanManager, &LinkDrive, TRUE))
-  {
-    ZwClose(hFile);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    DPRINT1("Path \"%wZ\" must not be a mapped drive!\n", &LinkDrive);
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-  
-  InitializeObjectAttributes(&ObjectAttribues,
-                             &LinkTarget,
-                             OBJ_CASE_INSENSITIVE,
-                             NULL,
-                             lpSecurityDescriptor);
-  
-  Status = ZwOpenFile(&hTarget, SYNCHRONIZE | DELETE, &ObjectAttribues, &IoStatus,
-                      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                      FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_FOR_BACKUP_INTENT | FILE_OPEN_REPARSE_POINT);
-  if(!NT_SUCCESS(Status))
-  {
-    ZwClose(hFile);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    DPRINT1("Unable to open link destination \"%wZ\"!\n", &LinkTarget);
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-  
-  if(!RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName, &LinkName, NULL, NULL))
-  {
-    ZwClose(hTarget);
-    ZwClose(hFile);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_INVALID_NAME);
-    return FALSE;
-  }
-  
-  NeededSize = sizeof(FILE_LINK_INFORMATION) + LinkName.Length + sizeof(WCHAR);
-  if(!(LinkInformation = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, NeededSize)))
-  {
-    ZwClose(hTarget);
-    ZwClose(hFile);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-    RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-    RtlFreeUnicodeString(&LinkTarget);
-    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-    return FALSE;
-  }
-  
-  LinkInformation->ReplaceIfExists = FALSE;
-  LinkInformation->RootDirectory = 0;
-  LinkInformation->FileNameLength = LinkName.Length;
-  RtlCopyMemory(LinkInformation->FileName, LinkName.Buffer, LinkName.Length);
-  
-  Status = ZwSetInformationFile(hTarget, &IoStatus, LinkInformation, NeededSize, FileLinkInformation);
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastErrorByStatus(Status);
-  }
-  
-  ZwClose(hTarget);
-  ZwClose(hFile);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, LinkInformation);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, LinkDrive.Buffer);
-  RtlFreeHeap(RtlGetProcessHeap(), 0, lpNtLinkTarget);
-  RtlFreeUnicodeString(&LinkTarget);
-  return NT_SUCCESS(Status);
+
+  return Ret;
 }
 
 
@@ -200,11 +197,9 @@ CreateHardLinkW(
  * @implemented
  */
 BOOL STDCALL
-CreateHardLinkA(
-  LPCSTR lpFileName,
-  LPCSTR lpExistingFileName,
-  LPSECURITY_ATTRIBUTES lpSecurityAttributes
-)
+CreateHardLinkA(LPCSTR lpFileName,
+                LPCSTR lpExistingFileName,
+                LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
   ANSI_STRING FileNameA, ExistingFileNameA;
   UNICODE_STRING FileName, ExistingFileName;
