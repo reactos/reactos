@@ -505,13 +505,13 @@ static UINT ICO_ExtractIconExW(
 	  }
 
 	  /* assure we don't get too much */
-	  if( nIcons > iconDirCount - nIconIndex )
-	    nIcons = iconDirCount - nIconIndex;
+	  if( nIcons / 2 > iconDirCount - nIconIndex )
+	    nIcons = 2 * (iconDirCount - nIconIndex);
 
 	  /* starting from specified index */
 	  xresent = (PIMAGE_RESOURCE_DIRECTORY_ENTRY)(icongroupresdir+1) + nIconIndex;
 
-	  for (i=0; i < nIcons; i++,xresent++)
+	  for (i=0; i < nIcons; i++)
 	  {
 	    const IMAGE_RESOURCE_DIRECTORY *resdir;
 
@@ -546,6 +546,7 @@ static UINT ICO_ExtractIconExW(
 	      goto end;	/* failure */
 	    }
 	    pIconId[i] = LookupIconIdFromDirectoryEx(igdata, TRUE, (i & 1) ? cx2 : cx1, (i & 1) ? cy2 : cy1, flags);
+	    if (i & 1) xresent++;
 	  }
 
 	  if (!(iconresdir=find_entry_by_id(rootresdir,LOWORD(RT_ICON),rootresdir)))
@@ -665,7 +666,7 @@ UINT WINAPI PrivateExtractIconExW (
 	UINT nIcons )
 {
 	DWORD cyicon, cysmicon, cxicon, cxsmicon;
-	UINT ret = 0;
+	INT ret = 0;
 
 	TRACE("%s %d %p %p %d\n",
 	debugstr_w(lpwstrFile),nIndex,phIconLarge, phIconSmall, nIcons);
@@ -684,8 +685,8 @@ UINT WINAPI PrivateExtractIconExW (
 
 	  ret = ICO_ExtractIconExW(lpwstrFile, (HICON*) &hIcon, nIndex, 2, cxicon | (cxsmicon<<16),
 	                           cyicon | (cysmicon<<16), NULL, LR_DEFAULTCOLOR);
-	  *phIconLarge = hIcon[0];
-	  *phIconSmall = hIcon[1];
+	  *phIconLarge = (1 <= ret ? hIcon[0] : NULL);
+	  *phIconSmall = (2 <= ret ? hIcon[1] : NULL);
  	  return ret;
 	}
 
