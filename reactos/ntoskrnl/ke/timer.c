@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.53 2002/09/08 10:23:29 chorns Exp $
+/* $Id: timer.c,v 1.54 2002/12/09 20:15:25 hbirr Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -35,8 +35,8 @@
 /*
  * Current time
  */
-static unsigned long long boot_time = 0;
-static unsigned long long system_time = 0;
+static LARGE_INTEGER boot_time = (LARGE_INTEGER)0LL;
+static LARGE_INTEGER system_time = (LARGE_INTEGER)0LL;
 
 /*
  * Number of timer interrupts since initialisation
@@ -58,6 +58,7 @@ volatile ULONG KiRawTicks = 0;
  */
 static LIST_ENTRY TimerListHead;
 static KSPIN_LOCK TimerListLock;
+static KSPIN_LOCK TimerValueLock;
 static KDPC ExpireTimerDpc;
 
 /* must raise IRQL to HIGH_LEVEL and grab spin lock there, to sync with ISR */
@@ -166,7 +167,12 @@ KeQuerySystemTime(PLARGE_INTEGER CurrentTime)
  * 1st of January, 1601.
  */
 {
-  CurrentTime->QuadPart = system_time;
+  KIRQL oldIrql;
+
+  KeRaiseIrql(PROFILE_LEVEL, &oldIrql);
+  KeAcquireSpinLockAtDpcLevel(&TimerValueLock);
+  *CurrentTime = system_time;
+  KeReleaseSpinLock(&TimerValueLock, oldIrql);
 }
 
 
@@ -221,14 +227,23 @@ KeSetTimerEx (PKTIMER		Timer,
  */
 {
    KIRQL oldlvl;
+   LARGE_INTEGER SystemTime;
    
    DPRINT("KeSetTimerEx(Timer %x), DueTime: \n",Timer);
-   KeAcquireSpinLock( &TimerListLock, &oldlvl );
-   
+
+   KeRaiseIrql(PROFILE_LEVEL, &oldlvl);
+   KeAcquireSpinLockAtDpcLevel(&TimerValueLock);
+
+   SystemTime = system_time;
+
+   KeReleaseSpinLock(&TimerValueLock, DISPATCH_LEVEL);
+   KeAcquireSpinLockAtDpcLevel(&TimerListLock);
+
    Timer->Dpc = Dpc;
    if (DueTime.QuadPart < 0)
      {
-	Timer->DueTime.QuadPart = system_time - DueTime.QuadPart;
+        
+	Timer->DueTime.QuadPart = SystemTime.QuadPart - DueTime.QuadPart;
      }
    else
      {
@@ -261,8 +276,7 @@ KeCancelTimer (PKTIMER	Timer)
    
    DPRINT("KeCancelTimer(Timer %x)\n",Timer);
    
-   KeRaiseIrql(HIGH_LEVEL, &oldlvl);
-   KeAcquireSpinLockAtDpcLevel( &TimerListLock );
+   KeAcquireSpinLock(&TimerListLock, &oldlvl);
 		     
    if (Timer->TimerListEntry.Flink == NULL)
      {
@@ -380,20 +394,34 @@ KeExpireTimers(PKDPC Dpc,
    PLIST_ENTRY current_entry = NULL;
    PKTIMER current = NULL;
    ULONG Eip = (ULONG)Arg1;
+   KIRQL oldIrql;
+   LARGE_INTEGER SystemTime;
 
    DPRINT("KeExpireTimers()\n");
-   
-   current_entry = TimerListHead.Flink;
-   
+
+   KeRaiseIrql(PROFILE_LEVEL, &oldIrql);
+   KeAcquireSpinLockAtDpcLevel(&TimerValueLock);
+
+   SystemTime = system_time;
+
+   KeReleaseSpinLock(&TimerValueLock, oldIrql);
    KeAcquireSpinLockAtDpcLevel(&TimerListLock);
-   
+
+   if (KeGetCurrentIrql() > DISPATCH_LEVEL)
+   {
+       DPRINT1("-----------------------------\n");
+       KeBugCheck(0);
+   }
+
+
+   current_entry = TimerListHead.Flink;
+
    while (current_entry != &TimerListHead)
      {
        current = CONTAINING_RECORD(current_entry, KTIMER, TimerListEntry);
 	
        current_entry = current_entry->Flink;
-       
-       if (system_time >= current->DueTime.QuadPart)
+       if (SystemTime.QuadPart >= current->DueTime.QuadPart)
 	 {
 	   HandleExpiredTimer(current);
 	 }
@@ -412,6 +440,9 @@ KiUpdateSystemTime(KIRQL oldIrql,
  * FUNCTION: Handles a timer interrupt
  */
 {
+
+   assert(KeGetCurrentIrql() == PROFILE_LEVEL);
+
    KiRawTicks++;
    
    if (TimerInitDone == FALSE)
@@ -423,7 +454,10 @@ KiUpdateSystemTime(KIRQL oldIrql,
     */
    KeTickCount++;
    SharedUserData->TickCountLow++;
-   system_time = system_time + CLOCK_INCREMENT;
+
+   KeAcquireSpinLockAtDpcLevel(&TimerValueLock);
+   system_time.QuadPart += CLOCK_INCREMENT;
+   KeReleaseSpinLockFromDpcLevel(&TimerValueLock);
    
    /*
     * Queue a DPC that will expire timers
@@ -445,6 +479,7 @@ KeInitializeTimerImpl(VOID)
    DPRINT("KeInitializeTimerImpl()\n");
    InitializeListHead(&TimerListHead);
    KeInitializeSpinLock(&TimerListLock);
+   KeInitializeSpinLock(&TimerValueLock);
    KeInitializeDpc(&ExpireTimerDpc, KeExpireTimers, 0);
    TimerInitDone = TRUE;
    /*
@@ -452,7 +487,7 @@ KeInitializeTimerImpl(VOID)
     */
    HalQueryRealTimeClock(&TimeFields);
    RtlTimeFieldsToTime(&TimeFields, &SystemBootTime);
-   boot_time=SystemBootTime.QuadPart;
+   boot_time=SystemBootTime;
    system_time=boot_time;
 
    DPRINT("Finished KeInitializeTimerImpl()\n");
