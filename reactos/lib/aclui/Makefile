@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/08/10 15:47:54 weiden Exp $
+# $Id: Makefile,v 1.3 2004/08/11 01:21:52 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -32,7 +32,7 @@ TARGET_PCH =
 
 TARGET_CLEAN = 
 
-TARGET_OBJECTS = aclui.o stubs.o
+TARGET_OBJECTS = aclui.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: aclui.c,v 1.3 2004/08/10 15:47:54 weiden Exp $
+/* $Id: aclui.c,v 1.4 2004/08/11 01:21:53 weiden Exp $
  *
  * PROJECT:         ReactOS Access Control List Editor
  * FILE:            lib/aclui/aclui.c
@@ -57,6 +57,81 @@ DllMain(HINSTANCE hinstDLL,
   }
   return TRUE;
 }
+
+
+UINT CALLBACK
+SecurityPageCallback(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE ppsp)
+{
+  switch(uMsg)
+  {
+    case PSPCB_CREATE:
+      return TRUE;
+    case PSPCB_RELEASE:
+      return FALSE;
+  }
+
+  return FALSE;
+}
+
+
+INT_PTR CALLBACK
+SecurityPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+  return 0;
+}
+
+
+/*
+ * CreateSecurityPage							EXPORTED
+ *
+ * @implemented
+ */
+HPROPSHEETPAGE
+WINAPI
+CreateSecurityPage(LPSECURITYINFO psi)
+{
+  PROPSHEETPAGE psp;
+  SI_OBJECT_INFO ObjectInfo;
+  HRESULT hRet;
+
+  if(psi == NULL)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+
+    DPRINT("No ISecurityInformation class passed!\n");
+    return NULL;
+  }
+
+  /* get the object information from the client interface */
+  hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
+
+  if(FAILED(hRet))
+  {
+    SetLastError(hRet);
+
+    DPRINT("CreateSecurityPage() failed!\n");
+    return NULL;
+  }
+
+  psp.dwSize = sizeof(PROPSHEETPAGE);
+  psp.dwFlags = PSP_DEFAULT | PSP_USECALLBACK;
+  psp.hInstance = hDllInstance;
+  psp.pszTemplate = MAKEINTRESOURCE(IDD_SECPAGE);
+  psp.pfnDlgProc = SecurityPageProc;
+  psp.lParam = (LPARAM)psi;
+  psp.pfnCallback = SecurityPageCallback;
+
+  if((ObjectInfo.dwFlags & SI_PAGE_TITLE) != 0 &&
+     ObjectInfo.pszPageTitle != NULL && ObjectInfo.pszPageTitle[0] != L'\0')
+  {
+    /* Set the page title if the flag is present and the string isn't empty */
+    psp.pszTitle = ObjectInfo.pszPageTitle;
+    psp.dwFlags |= PSP_USETITLE;
+  }
+
+  return CreatePropertySheetPage(&psp);
+}
+
 
 /*
  * EditSecurity								EXPORTED
