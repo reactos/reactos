@@ -83,6 +83,7 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
+	void	Resize(int cx, int cy);
 	void	RegisterHotkeys();
 	void	ProcessHotKey(int id_hotkey);
 	void	ShowStartMenu();

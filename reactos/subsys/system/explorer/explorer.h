@@ -46,6 +46,9 @@
 #define	PM_GET_FILEWND_PTR		(WM_APP+0x05)
 #define	PM_GET_CONTROLWINDOW	(WM_APP+0x06)
 
+#define	PM_RESIZE_CHILDREN		(WM_APP+0x17)
+#define	PM_GET_WIDTH			(WM_APP+0x18)
+
 
 #define CLASSNAME_FRAME 		TEXT("CabinetWClass")	// same class name for frame window as in MS Explorer
 

@@ -32,7 +32,7 @@
 #include "../globals.h"
 
 #include "taskbar.h"
-#include "traynotify.h"	// for NOTIFYAREA_WIDTH
+#include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
 
 
 TaskBarEntry::TaskBarEntry()
@@ -73,7 +73,7 @@ HWND TaskBar::Create(HWND hwndParent)
 
 	return Window::Create(WINDOW_CREATOR(TaskBar), 0,
 							BtnWindowClass(CLASSNAME_TASKBAR), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH+1), clnt.bottom, hwndParent);
+							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT-(NOTIFYAREA_WIDTH_DEF+1), clnt.bottom, hwndParent);
 }
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)

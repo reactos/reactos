@@ -55,14 +55,14 @@ QuickLaunchBar::QuickLaunchBar(HWND hwnd)
 	CONTEXT("QuickLaunchBar::QuickLaunchBar()");
 
 	_dir = NULL;
-
 	_next_id = IDC_FIRST_QUICK_ID;
+	_btn_dist = 20;
 
 	HWND hwndToolTip = (HWND) SendMessage(hwnd, TB_GETTOOLTIPS, 0, 0);
 
 	SetWindowStyle(hwndToolTip, GetWindowStyle(hwndToolTip)|TTS_ALWAYSTIP);
 
-	 // delay refresh to some tome later
+	 // delay refresh to some time later
 	PostMessage(hwnd, PM_REFRESH, 0, 0);
 }
 
@@ -147,6 +147,9 @@ void QuickLaunchBar::AddShortcuts()
 				SendMessage(_hwnd, TB_INSERTBUTTON, idx, (LPARAM)&btn);
 			}
 	}
+
+	_btn_dist = LOWORD(SendMessage(_hwnd, TB_GETBUTTONSIZE, 0, 0));
+	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
 }
 
 LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -155,6 +158,9 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_REFRESH:
 		AddShortcuts();
 		break;
+
+	  case PM_GET_WIDTH:
+		return _entries.size()*_btn_dist;
 
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);

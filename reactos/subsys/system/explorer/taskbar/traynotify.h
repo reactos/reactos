@@ -31,7 +31,9 @@
 
 #define	CLASSNAME_CLOCKWINDOW	TEXT("TrayClockWClass")
 
-#define	NOTIFYAREA_WIDTH		64
+#define	NOTIFYAREA_WIDTH_DEF	75
+#define	NOTIFYICON_DIST			20
+#define	NOTIFYAREA_SPACE		10
 
 
  /// NotifyIconIndex is used for maintaining the order of notification icons.
@@ -89,6 +91,7 @@ protected:
 	int		_next_idx;
 
 	WindowHandle _hwndClock;
+	int		_clock_width;
 
 	LRESULT Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);

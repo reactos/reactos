@@ -26,11 +26,12 @@
  //
 
 
-#define	QUICKLAUNCH_WIDTH	64
+#define	QUICKLAUNCH_WIDTH_DEF	70
+#define	QUICKLAUNCH_WIDTH_DEF	70
 
 #define	IDW_QUICKLAUNCHBAR	101
 
-#define	PM_REFRESH			(WM_APP+0x14)
+#define	PM_REFRESH			(WM_APP+0x16)
 
 #define	IDC_FIRST_QUICK_ID	0x4000
 
@@ -74,6 +75,7 @@ protected:
 
 	int				_next_id;
 	QuickLaunchMap	_entries;
+	int				_btn_dist;
 
 	void	AddShortcuts();
 };

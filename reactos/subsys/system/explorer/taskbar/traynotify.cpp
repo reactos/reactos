@@ -85,6 +85,7 @@ NotifyArea::NotifyArea(HWND hwnd)
  :	super(hwnd)
 {
 	_next_idx = 0;
+	_clock_width = 0;
 }
 
 LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
@@ -98,6 +99,11 @@ LRESULT NotifyArea::Init(LPCREATESTRUCT pcs)
 	{
 		 // create clock window
 		_hwndClock = ClockWindow::Create(_hwnd);
+
+		if (_hwndClock) {
+			ClientRect clock_size(_hwndClock);
+			_clock_width = clock_size.right;
+		}
 
 		SetTimer(_hwnd, 0, 1000, NULL);
 	}
@@ -116,7 +122,7 @@ HWND NotifyArea::Create(HWND hwndParent)
 
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
 							BtnWindowClass(CLASSNAME_TRAYNOTIFY,CS_DBLCLKS), TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
-							clnt.right-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, clnt.bottom-2, hwndParent);
+							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -134,6 +140,14 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (clock_window)
 			clock_window->TimerTick();
 		break;}
+
+	  case WM_SIZE: {
+		int cx = LOWORD(lparam);
+		SetWindowPos(_hwndClock, 0, cx-_clock_width, 0, 0, 0, SWP_NOSIZE|SWP_NOZORDER|SWP_NOACTIVATE);
+		break;}
+
+	  case PM_GET_WIDTH:
+		return _sorted_icons.size()*NOTIFYICON_DIST + NOTIFYAREA_SPACE + _clock_width;
 
 	  default:
 		if (nmsg>=WM_MOUSEFIRST && nmsg<=WM_MOUSELAST) {
@@ -231,6 +245,8 @@ void NotifyArea::Refresh()
 			_sorted_icons.insert(entry);
 	}
 
+	SendMessage(GetParent(_hwnd), PM_RESIZE_CHILDREN, 0, 0);
+
 	InvalidateRect(_hwnd, NULL, FALSE);	// refresh icon display
 	UpdateWindow(_hwnd);
 }
@@ -248,7 +264,8 @@ void NotifyArea::Paint()
 
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
 		DrawIconEx(canvas, x, y, it->_hIcon, 16, 16, 0, 0, DI_NORMAL);
-		x += 20;
+
+		x += NOTIFYICON_DIST;
 	}
 }
 
@@ -286,7 +303,7 @@ NotifyIconSet::iterator NotifyArea::IconHitTest(const POINT& pos)
 		if (pos.x>=x && pos.x<x+16)
 			break;
 
-		x += 20;
+		x += NOTIFYICON_DIST;
 	}
 
 	return it;

@@ -49,8 +49,8 @@
 #define	PM_STARTENTRY_FOCUSED	(WM_APP+0x13)
 #endif
 
-#define	PM_UPDATE_ICONS			(WM_APP+0x15)
-#define	PM_SELECT_ENTRY			(WM_APP+0x16)
+#define	PM_UPDATE_ICONS			(WM_APP+0x14)
+#define	PM_SELECT_ENTRY			(WM_APP+0x15)
 
 
  /// StartMenuDirectory is used to store the base directory of start menus.

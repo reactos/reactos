@@ -160,23 +160,13 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			ShowStartMenu();
 		goto def;
 
-	  case WM_SIZE: {
-		int cx = LOWORD(lparam);
-		int cy = HIWORD(lparam);
+	  case WM_SIZE:
+		Resize(LOWORD(lparam), HIWORD(lparam));
+		break;
 
-		if (_hwndTaskBar)
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT+QUICKLAUNCH_WIDTH, 0, cx-TASKBAR_LEFT-QUICKLAUNCH_WIDTH-(NOTIFYAREA_WIDTH+1), cy, TRUE);
-
-		if (_hwndNotify)
-			MoveWindow(_hwndNotify, cx-(NOTIFYAREA_WIDTH+1), 1, NOTIFYAREA_WIDTH, cy-2, TRUE);
-
-		if (_hwndQuickLaunch)
-			MoveWindow(_hwndQuickLaunch, TASKBAR_LEFT, 1, QUICKLAUNCH_WIDTH, cy-2, TRUE);
-
-		WindowRect rect(_hwnd);
-		RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), rect.top};
-		SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);	// don't use SPIF_SENDCHANGE because then we have to wait for any message being delivered
-		PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
+	  case PM_RESIZE_CHILDREN: {
+		ClientRect size(_hwnd);
+		Resize(size.right, size.bottom);
 		break;}
 
 	  case WM_CLOSE:
@@ -195,6 +185,32 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	}
 
 	return 0;
+}
+
+
+void DesktopBar::Resize(int cx, int cy)
+{
+	///@todo general children resizing algorithm
+	int quicklaunch_width = SendMessage(_hwndQuickLaunch, PM_GET_WIDTH, 0, 0);
+	int notifyarea_width = SendMessage(_hwndNotify, PM_GET_WIDTH, 0, 0);
+
+	HDWP hdwp = BeginDeferWindowPos(3);
+
+	if (_hwndTaskBar)
+		DeferWindowPos(hdwp, _hwndTaskBar, 0, TASKBAR_LEFT+quicklaunch_width, 0, cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+
+	if (_hwndNotify)
+		DeferWindowPos(hdwp, _hwndNotify, 0, cx-(notifyarea_width+1), 1, notifyarea_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
+
+	if (_hwndQuickLaunch)
+		DeferWindowPos(hdwp, _hwndQuickLaunch, 0, TASKBAR_LEFT, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
+
+	EndDeferWindowPos(hdwp);
+
+	WindowRect rect(_hwnd);
+	RECT work_area = {0, 0, GetSystemMetrics(SM_CXSCREEN), rect.top};
+	SystemParametersInfo(SPI_SETWORKAREA, 0, &work_area, 0);	// don't use SPIF_SENDCHANGE because then we have to wait for any message being delivered
+	PostMessage(HWND_BROADCAST, WM_SETTINGCHANGE, SPI_SETWORKAREA, 0);
 }
 
 
