@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.9 2003/07/10 18:50:51 chorns Exp $
+/* $Id: lock.c,v 1.10 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,7 +24,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 LockFile(
 	 HANDLE hFile,
@@ -49,7 +49,7 @@ LockFile(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 LockFileEx(
 	   HANDLE hFile,
@@ -114,7 +114,7 @@ LockFileEx(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 UnlockFile(
 	   HANDLE hFile,
@@ -137,7 +137,7 @@ UnlockFile(
 /*
  * @implemented
  */
-WINBOOL 
+BOOL 
 STDCALL 
 UnlockFileEx(
 	HANDLE hFile,

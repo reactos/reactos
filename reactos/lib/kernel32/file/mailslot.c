@@ -1,4 +1,4 @@
-/* $Id: mailslot.c,v 1.8 2003/07/10 18:50:51 chorns Exp $
+/* $Id: mailslot.c,v 1.9 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -106,7 +106,7 @@ CreateMailslotW(LPCWSTR lpName,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetMailslotInfo(HANDLE hMailslot,
 		LPDWORD lpMaxMessageSize,
 		LPDWORD lpNextSize,
@@ -153,7 +153,7 @@ GetMailslotInfo(HANDLE hMailslot,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetMailslotInfo(HANDLE hMailslot,
 		DWORD lReadTimeout)
 {

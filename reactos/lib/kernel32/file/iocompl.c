@@ -1,4 +1,4 @@
-/* $Id: iocompl.c,v 1.12 2003/11/18 05:16:31 royce Exp $
+/* $Id: iocompl.c,v 1.13 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -85,7 +85,7 @@ CreateIoCompletionPort(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetQueuedCompletionStatus(
    HANDLE CompletionHandle,
@@ -146,7 +146,7 @@ GetQueuedCompletionStatus(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 PostQueuedCompletionStatus(
    HANDLE CompletionHandle,

@@ -1,4 +1,4 @@
-/* $Id: tape.c,v 1.5 2003/07/10 18:50:51 chorns Exp $
+/* $Id: tape.c,v 1.6 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -44,7 +44,7 @@ STDCALL
 EraseTape (
 	HANDLE	hDevice,
 	DWORD	dwEraseType,
-	WINBOOL	bImmediate
+	BOOL	bImmediate
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -90,7 +90,7 @@ STDCALL
 PrepareTape (
 	HANDLE	hDevice,
 	DWORD	dwOperation,
-	WINBOOL	bImmediate
+	BOOL	bImmediate
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -125,7 +125,7 @@ SetTapePosition (
 	DWORD	dwPartition,
 	DWORD	dwOffsetLow,
 	DWORD	dwOffsetHigh,
-	WINBOOL	bImmediate
+	BOOL	bImmediate
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -142,7 +142,7 @@ WriteTapemark (
 	HANDLE	hDevice,
 	DWORD	dwTapemarkType,
 	DWORD	dwTapemarkCount,
-	WINBOOL	bImmediate
+	BOOL	bImmediate
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

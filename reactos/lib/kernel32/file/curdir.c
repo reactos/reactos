@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.39 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: curdir.c,v 1.40 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -97,7 +97,7 @@ GetCurrentDirectoryW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetCurrentDirectoryA (
 	LPCSTR	lpPathName
@@ -137,7 +137,7 @@ SetCurrentDirectoryA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetCurrentDirectoryW (
 	LPCWSTR	lpPathName

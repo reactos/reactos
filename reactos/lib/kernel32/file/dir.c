@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.42 2004/01/21 23:20:46 ekohl Exp $
+/* $Id: dir.c,v 1.43 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,7 +26,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateDirectoryA (
 	LPCSTR			lpPathName,
@@ -42,7 +42,7 @@ CreateDirectoryA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateDirectoryExA (
 	LPCSTR			lpTemplateDirectory,
@@ -53,7 +53,7 @@ CreateDirectoryExA (
 	UNICODE_STRING NewDirU;
 	ANSI_STRING TmplDir;
 	ANSI_STRING NewDir;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitUnicodeString (&TmplDirU,
 	                      NULL);
@@ -114,7 +114,7 @@ CreateDirectoryExA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateDirectoryW (
 	LPCWSTR			lpPathName,
@@ -130,7 +130,7 @@ CreateDirectoryW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CreateDirectoryExW (
 	LPCWSTR			lpTemplateDirectory,
@@ -208,7 +208,7 @@ CreateDirectoryExW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 RemoveDirectoryA (
 	LPCSTR	lpPathName
@@ -216,7 +216,7 @@ RemoveDirectoryA (
 {
 	UNICODE_STRING PathNameU;
 	ANSI_STRING PathName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&PathName,
 	                   (LPSTR)lpPathName);
@@ -244,7 +244,7 @@ RemoveDirectoryA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 RemoveDirectoryW (
 	LPCWSTR	lpPathName

@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.15 2003/07/10 18:50:51 chorns Exp $
+/* $Id: npipe.c,v 1.16 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -591,7 +591,7 @@ DisconnectNamedPipe(HANDLE hNamedPipe)
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetNamedPipeHandleStateW(HANDLE hNamedPipe,
 			 LPDWORD lpState,
 			 LPDWORD lpCurInstances,
@@ -646,7 +646,7 @@ GetNamedPipeHandleStateW(HANDLE hNamedPipe,
 /*
  * @unimplemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 			 LPDWORD lpState,
 			 LPDWORD lpCurInstances,
@@ -663,7 +663,7 @@ GetNamedPipeHandleStateA(HANDLE hNamedPipe,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetNamedPipeInfo(HANDLE hNamedPipe,
 		 LPDWORD lpFlags,
 		 LPDWORD lpOutBufferSize,

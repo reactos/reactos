@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.13 2003/11/27 00:57:57 gdalsnes Exp $
+/* $Id: deviceio.c,v 1.14 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,7 +19,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeviceIoControl(
 		HANDLE hDevice,
@@ -37,7 +37,7 @@ DeviceIoControl(
 	PIO_STATUS_BLOCK IoStatusBlock;
 	IO_STATUS_BLOCK IIosb;
 
-	WINBOOL bFsIoControlCode = FALSE;
+	BOOL bFsIoControlCode = FALSE;
 
     DPRINT("DeviceIoControl(hDevice %x dwIoControlCode %d lpInBuffer %x "
           "nInBufferSize %d lpOutBuffer %x nOutBufferSize %d "
@@ -136,13 +136,13 @@ DeviceIoControl(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 GetOverlappedResult (
   IN HANDLE   hFile,
 	IN LPOVERLAPPED	lpOverlapped,
 	OUT LPDWORD		lpNumberOfBytesTransferred,
-	IN WINBOOL		bWait
+	IN BOOL		bWait
 	)
 {
 	DWORD WaitStatus;

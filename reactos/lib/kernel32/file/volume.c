@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.36 2004/01/17 23:04:28 gvg Exp $
+/* $Id: volume.c,v 1.37 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -162,7 +162,7 @@ GetLogicalDrives(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetDiskFreeSpaceA (
 	LPCSTR	lpRootPathName,
 	LPDWORD	lpSectorsPerCluster,
@@ -173,7 +173,7 @@ GetDiskFreeSpaceA (
 {
 	UNICODE_STRING RootPathNameU;
 	ANSI_STRING RootPathName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&RootPathName,
 	                   (LPSTR)lpRootPathName);
@@ -214,7 +214,7 @@ GetDiskFreeSpaceA (
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetDiskFreeSpaceW(
     LPCWSTR lpRootPathName,
     LPDWORD lpSectorsPerCluster,
@@ -270,7 +270,7 @@ GetDiskFreeSpaceW(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetDiskFreeSpaceExA (
 	LPCSTR		lpDirectoryName,
 	PULARGE_INTEGER	lpFreeBytesAvailableToCaller,
@@ -280,7 +280,7 @@ GetDiskFreeSpaceExA (
 {
 	UNICODE_STRING DirectoryNameU;
 	ANSI_STRING DirectoryName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&DirectoryName,
 	                   (LPSTR)lpDirectoryName);
@@ -320,7 +320,7 @@ GetDiskFreeSpaceExA (
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetDiskFreeSpaceExW(
     LPCWSTR lpDirectoryName,
     PULARGE_INTEGER lpFreeBytesAvailableToCaller,
@@ -453,7 +453,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetVolumeInformationA(
 	LPCSTR	lpRootPathName,
 	LPSTR	lpVolumeNameBuffer,
@@ -471,7 +471,7 @@ GetVolumeInformationA(
   ANSI_STRING RootPathName;
   ANSI_STRING VolumeName;
   ANSI_STRING FileSystemName;
-  WINBOOL Result;
+  BOOL Result;
 
   RtlInitAnsiString (&RootPathName,
 	             (LPSTR)lpRootPathName);
@@ -590,7 +590,7 @@ GetVolumeInformationA(
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetVolumeInformationW(
     LPCWSTR lpRootPathName,
     LPWSTR lpVolumeNameBuffer,
@@ -706,7 +706,7 @@ GetVolumeInformationW(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 SetVolumeLabelA (
 	LPCSTR	lpRootPathName,
@@ -717,7 +717,7 @@ SetVolumeLabelA (
 	ANSI_STRING RootPathName;
 	UNICODE_STRING VolumeNameU;
 	ANSI_STRING VolumeName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&RootPathName,
 	                   (LPSTR)lpRootPathName);
@@ -761,7 +761,7 @@ SetVolumeLabelA (
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetVolumeLabelW(LPCWSTR lpRootPathName,
 		LPCWSTR lpVolumeName)
 {

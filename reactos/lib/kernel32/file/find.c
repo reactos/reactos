@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.41 2003/12/09 23:37:59 gvg Exp $
+/* $Id: find.c,v 1.42 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -38,7 +38,7 @@ typedef struct _KERNEL32_FIND_FILE_DATA
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 InternalFindNextFile (
 	HANDLE	hFindFile
@@ -406,7 +406,7 @@ FindFirstFileA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextFileA (
 	HANDLE hFindFile,
@@ -563,7 +563,7 @@ FindFirstFileW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextFileW (
 	HANDLE			hFindFile,

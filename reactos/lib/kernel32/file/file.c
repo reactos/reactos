@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.47 2003/12/08 19:50:31 hbirr Exp $
+/* $Id: file.c,v 1.48 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,7 +20,7 @@
 
 /* GLOBALS ******************************************************************/
 
-WINBOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
+BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
 
 /* FUNCTIONS ****************************************************************/
@@ -48,7 +48,7 @@ SetFileApisToANSI(VOID)
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 AreFileApisANSI(VOID)
 {
    return bIsFileApiAnsi;
@@ -163,7 +163,7 @@ OpenFile(LPCSTR lpFileName,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 FlushFileBuffers(HANDLE hFile)
 {
    NTSTATUS errCode;
@@ -446,7 +446,7 @@ GetCompressedFileSizeW(LPCWSTR lpFileName,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetFileInformationByHandle(HANDLE hFile,
 			   LPBY_HANDLE_FILE_INFORMATION lpFileInformation)
 {
@@ -692,13 +692,13 @@ GetFileAttributesW(LPCWSTR lpFileName)
   return Result ? FileAttributeData.dwFileAttributes : 0xffffffff;
 }
 
-WINBOOL STDCALL
+BOOL STDCALL
 SetFileAttributesA(LPCSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
   UNICODE_STRING FileNameU;
   ANSI_STRING FileName;
-  WINBOOL Result;
+  BOOL Result;
 
   RtlInitAnsiString (&FileName,
 		     (LPSTR)lpFileName);
@@ -725,7 +725,7 @@ SetFileAttributesA(LPCSTR lpFileName,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetFileAttributesW(LPCWSTR lpFileName,
 		   DWORD dwFileAttributes)
 {
@@ -902,7 +902,7 @@ GetTempFileNameW(LPCWSTR lpPathName,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 GetFileTime(HANDLE hFile,
 	    LPFILETIME lpCreationTime,
 	    LPFILETIME lpLastAccessTime,
@@ -937,7 +937,7 @@ GetFileTime(HANDLE hFile,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetFileTime(HANDLE hFile,
 	    CONST FILETIME *lpCreationTime,
 	    CONST FILETIME *lpLastAccessTime,
@@ -987,7 +987,7 @@ SetFileTime(HANDLE hFile,
  *
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 SetEndOfFile(HANDLE hFile)
 {
 	IO_STATUS_BLOCK  IoStatusBlock;

@@ -1,4 +1,4 @@
-/* $Id: cnotify.c,v 1.8 2003/07/15 10:49:52 gvg Exp $
+/* $Id: cnotify.c,v 1.9 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,7 +17,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 FindCloseChangeNotification (HANDLE hChangeHandle)
 {
    NtClose(hChangeHandle);
@@ -32,7 +32,7 @@ HANDLE
 STDCALL
 FindFirstChangeNotificationA (
 	LPCSTR	lpPathName,
-	WINBOOL	bWatchSubtree,
+	BOOL	bWatchSubtree,
 	DWORD	dwNotifyFilter
 	)
 {
@@ -74,7 +74,7 @@ HANDLE
 STDCALL
 FindFirstChangeNotificationW (
 	LPCWSTR	lpPathName,
-	WINBOOL	bWatchSubtree,
+	BOOL	bWatchSubtree,
 	DWORD	dwNotifyFilter
 	)
 {
@@ -141,7 +141,7 @@ FindFirstChangeNotificationW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 FindNextChangeNotification (
 	HANDLE	hChangeHandle

@@ -1,4 +1,4 @@
-/* $Id: dosdev.c,v 1.9 2003/09/03 22:28:40 ekohl Exp $
+/* $Id: dosdev.c,v 1.10 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DefineDosDeviceA(
     DWORD dwFlags,
@@ -69,7 +69,7 @@ DefineDosDeviceA(
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 DefineDosDeviceW(
     DWORD dwFlags,

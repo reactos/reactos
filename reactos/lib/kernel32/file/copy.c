@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.16 2003/09/12 17:51:47 vizzini Exp $
+/* $Id: copy.c,v 1.17 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -28,8 +28,8 @@ CopyLoop (
 	LARGE_INTEGER		SourceFileSize,
 	LPPROGRESS_ROUTINE	lpProgressRoutine,
 	LPVOID			lpData,
-	WINBOOL			*pbCancel,
-	WINBOOL                 *KeepDest
+	BOOL			*pbCancel,
+	BOOL                 *KeepDest
 	)
 {
    NTSTATUS errCode;
@@ -39,7 +39,7 @@ CopyLoop (
    LARGE_INTEGER BytesCopied;
    DWORD CallbackReason;
    DWORD ProgressResult;
-   WINBOOL EndOfFileFound;
+   BOOL EndOfFileFound;
 
    *KeepDest = FALSE;
    errCode = NtAllocateVirtualMemory(NtCurrentProcess(),
@@ -194,14 +194,14 @@ SetLastWriteTime(
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CopyFileExW (
 	LPCWSTR			lpExistingFileName,
 	LPCWSTR			lpNewFileName,
 	LPPROGRESS_ROUTINE	lpProgressRoutine,
 	LPVOID			lpData,
-	WINBOOL			*pbCancel,
+	BOOL			*pbCancel,
 	DWORD			dwCopyFlags
 	)
 {
@@ -210,8 +210,8 @@ CopyFileExW (
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_STANDARD_INFORMATION FileStandard;
    FILE_BASIC_INFORMATION FileBasic;
-   WINBOOL RC = FALSE;
-   WINBOOL KeepDestOnError = FALSE;
+   BOOL RC = FALSE;
+   BOOL KeepDestOnError = FALSE;
    DWORD SystemError;
 
    FileHandleSource = CreateFileW(lpExistingFileName,
@@ -310,14 +310,14 @@ CopyFileExW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CopyFileExA (
 	LPCSTR			lpExistingFileName,
 	LPCSTR			lpNewFileName,
 	LPPROGRESS_ROUTINE	lpProgressRoutine,
 	LPVOID			lpData,
-	WINBOOL			*pbCancel,
+	BOOL			*pbCancel,
 	DWORD			dwCopyFlags
 	)
 {
@@ -325,7 +325,7 @@ CopyFileExA (
 	UNICODE_STRING NewFileNameU;
 	ANSI_STRING ExistingFileName;
 	ANSI_STRING NewFileName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&ExistingFileName,
 	                   (LPSTR)lpExistingFileName);
@@ -374,12 +374,12 @@ CopyFileExA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CopyFileA (
 	LPCSTR	lpExistingFileName,
 	LPCSTR	lpNewFileName,
-	WINBOOL	bFailIfExists
+	BOOL	bFailIfExists
 	)
 {
 	return CopyFileExA (lpExistingFileName,
@@ -394,12 +394,12 @@ CopyFileA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 CopyFileW (
 	LPCWSTR	lpExistingFileName,
 	LPCWSTR	lpNewFileName,
-	WINBOOL	bFailIfExists
+	BOOL	bFailIfExists
 	)
 {
 	return CopyFileExW (lpExistingFileName,

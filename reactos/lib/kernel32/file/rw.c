@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.23 2003/11/30 19:50:42 gdalsnes Exp $
+/* $Id: rw.c,v 1.24 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,7 @@
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
 			  DWORD nNumberOfBytesToWrite,
@@ -101,7 +101,7 @@ WriteFile(HANDLE hFile,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ReadFile(
   HANDLE hFile,
   LPVOID lpBuffer,
@@ -204,7 +204,7 @@ ApcRoutine(PVOID ApcContext,
 /*
  * @implemented
  */
-WINBOOL STDCALL 
+BOOL STDCALL 
 WriteFileEx (HANDLE				hFile,
 	     LPCVOID				lpBuffer,
 	     DWORD				nNumberOfBytesToWrite,
@@ -259,7 +259,7 @@ WriteFileEx (HANDLE				hFile,
 /*
  * @implemented
  */
-WINBOOL STDCALL
+BOOL STDCALL
 ReadFileEx(HANDLE hFile,
 			   LPVOID lpBuffer,
 			   DWORD nNumberOfBytesToRead,

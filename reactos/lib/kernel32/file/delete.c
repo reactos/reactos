@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.14 2003/07/10 18:50:51 chorns Exp $
+/* $Id: delete.c,v 1.15 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteFileA (
 	LPCSTR	lpFileName
@@ -30,7 +30,7 @@ DeleteFileA (
 {
 	UNICODE_STRING FileNameU;
 	ANSI_STRING FileName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&FileName,
 	                   (LPSTR)lpFileName);
@@ -58,7 +58,7 @@ DeleteFileA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 DeleteFileW (
 	LPCWSTR	lpFileName

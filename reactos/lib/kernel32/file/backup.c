@@ -1,4 +1,4 @@
-/* $Id: backup.c,v 1.5 2003/07/10 18:50:51 chorns Exp $
+/* $Id: backup.c,v 1.6 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,15 +17,15 @@
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BackupRead (
 	HANDLE	hFile,
 	LPBYTE	lpBuffer,
 	DWORD	nNumberOfBytesToRead,
 	LPDWORD	lpNumberOfBytesRead,
-	WINBOOL	bAbort,
-	WINBOOL	bProcessSecurity,
+	BOOL	bAbort,
+	BOOL	bProcessSecurity,
 	LPVOID	* lpContext
 	)
 {
@@ -37,7 +37,7 @@ BackupRead (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BackupSeek (
 	HANDLE	hFile,
@@ -56,15 +56,15 @@ BackupSeek (
 /*
  * @unimplemented
  */
-WINBOOL
+BOOL
 STDCALL
 BackupWrite (
 	HANDLE	hFile,
 	LPBYTE	lpBuffer,
 	DWORD	nNumberOfBytesToWrite,
 	LPDWORD	lpNumberOfBytesWritten,
-	WINBOOL	bAbort,
-	WINBOOL	bProcessSecurity,
+	BOOL	bAbort,
+	BOOL	bProcessSecurity,
 	LPVOID	* lpContext
 	)
 {

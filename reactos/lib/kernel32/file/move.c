@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.11 2003/11/18 05:16:31 royce Exp $
+/* $Id: move.c,v 1.12 2004/01/23 16:37:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,7 +25,7 @@
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileA (
 	LPCSTR	lpExistingFileName,
@@ -41,7 +41,7 @@ MoveFileA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileExA (
 	LPCSTR	lpExistingFileName,
@@ -60,7 +60,7 @@ MoveFileExA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileWithProgressA (
 	LPCSTR			lpExistingFileName,
@@ -74,7 +74,7 @@ MoveFileWithProgressA (
 	UNICODE_STRING NewFileNameU;
 	ANSI_STRING ExistingFileName;
 	ANSI_STRING NewFileName;
-	WINBOOL Result;
+	BOOL Result;
 
 	RtlInitAnsiString (&ExistingFileName,
 	                   (LPSTR)lpExistingFileName);
@@ -122,7 +122,7 @@ MoveFileWithProgressA (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileW (
 	LPCWSTR	lpExistingFileName,
@@ -138,7 +138,7 @@ MoveFileW (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileExW (
 	LPCWSTR	lpExistingFileName,
@@ -154,7 +154,7 @@ MoveFileExW (
 }
 
 
-static WINBOOL
+static BOOL
 AdjustFileAttributes (
 	LPCWSTR ExistingFileName,
 	LPCWSTR NewFileName
@@ -166,7 +166,7 @@ AdjustFileAttributes (
 	HANDLE hFile;
 	DWORD Attributes;
 	NTSTATUS errCode;
-	WINBOOL Result = FALSE;
+	BOOL Result = FALSE;
 
 	hFile = CreateFileW (ExistingFileName,
 	                     FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
@@ -284,7 +284,7 @@ AdjustFileAttributes (
 /*
  * @implemented
  */
-WINBOOL
+BOOL
 STDCALL
 MoveFileWithProgressW (
 	LPCWSTR			lpExistingFileName,
@@ -300,7 +300,7 @@ MoveFileWithProgressW (
 	USHORT Buffer[FILE_RENAME_SIZE];
 	NTSTATUS errCode;
 	DWORD err;
-	WINBOOL Result;
+	BOOL Result;
 
 	hFile = CreateFileW (lpExistingFileName,
 	                     GENERIC_ALL,
