@@ -85,15 +85,15 @@ int fflush(FILE *f)
 // possibly commit the flushed data
 // better open the file in write through mode
 
-    do {
+    while (rn > 0) {
       n = _write(fileno(f), base, rn);
       if (n <= 0) {
-	f->_flag |= _IOERR;
-	return EOF;
+	    f->_flag |= _IOERR;
+	    return EOF;
       }
       rn -= n;
       base += n;
-    } while (rn > 0);
+    };
     f->_flag &= ~_IODIRTY;
 
   }
