@@ -442,7 +442,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				Entry* entry = *it;
 
 				if (entry) {
-					CHECKERROR(entry->do_context_menu(_hwnd, screen_pt));	// may close start menu because of focus loss
+					CHECKERROR(entry->do_context_menu(_hwnd, screen_pt, _cm_ifs));	// may close start menu because of focus loss
 					break;	///@todo handle context menu for more than one entry
 				}
 			}

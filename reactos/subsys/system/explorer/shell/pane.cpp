@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -491,9 +491,9 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 	 // output type/class name
 	if (visible_cols & COL_TYPE) {
 		if (calcWidthCol == -1)
-			_out_wrkr.output_text(dis, _positions, col, entry->_type_name&&entry->_type_name!=LPSTR_TEXTCALLBACK? entry->_type_name: TEXT(""), 0);
+			_out_wrkr.output_text(dis, _positions, col, entry->_type_name? entry->_type_name: TEXT(""), 0);
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-			calc_width(dis, col, entry->_type_name&&entry->_type_name!=LPSTR_TEXTCALLBACK? entry->_type_name: TEXT(""));
+			calc_width(dis, col, entry->_type_name? entry->_type_name: TEXT(""));
 	}
 	++col;
 
@@ -623,9 +623,9 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 	 // output content / symbolic link target / comment
 	if (visible_cols & COL_CONTENT) {
 		if (calcWidthCol == -1)
-			_out_wrkr.output_text(dis, _positions, col, entry->_content&&entry->_content!=LPSTR_TEXTCALLBACK? entry->_content: TEXT(""), 0);
+			_out_wrkr.output_text(dis, _positions, col, entry->_content? entry->_content: TEXT(""), 0);
 		else if (calcWidthCol==col || calcWidthCol==COLUMNS)
-			calc_width(dis, col, entry->_content&&entry->_content!=LPSTR_TEXTCALLBACK? entry->_content: TEXT(""));
+			calc_width(dis, col, entry->_content? entry->_content: TEXT(""));
 	}
 }
 

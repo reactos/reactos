@@ -1564,7 +1564,7 @@ void SDIMainFrame::update_shell_browser()
 	}
 
 	_shellBrowser = auto_ptr<ShellBrowser>(new ShellBrowser(_hwnd, _left_hwnd, _right_hwnd,
-												_shellpath_info, _himlSmall, this));
+												_shellpath_info, _himlSmall, this, _cm_ifs));
 
 	_shellBrowser->Init(_hwnd);
 

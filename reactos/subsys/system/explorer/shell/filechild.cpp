@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -123,7 +123,7 @@ INT_PTR CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPA
  // FileChildWindow
 
 FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
- :	ChildWindow(hwnd, info)
+ :	super(hwnd, info)
 {
 	CONTEXT("FileChildWindow::FileChildWindow()");
 
@@ -433,7 +433,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			if (dis->CtlID == IDW_TREE_LEFT)
 				_left->draw_item(dis, entry);
-			else
+			else if (dis->CtlID == IDW_TREE_RIGHT)
 				_right->draw_item(dis, entry);
 
 			return TRUE;}
@@ -507,7 +507,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (idx != -1) {
 				Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
 
-				CHECKERROR(entry->do_context_menu(_hwnd, pt_screen));
+				CHECKERROR(entry->do_context_menu(_hwnd, pt_screen, _cm_ifs));
 			}
 			break;}
 

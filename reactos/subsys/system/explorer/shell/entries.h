@@ -112,7 +112,7 @@ public:
 	virtual ShellPath	create_absolute_pidl() const {return (LPCITEMIDLIST)NULL;}
 	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
-	virtual HRESULT		do_context_menu(HWND hwnd, const POINT& pos);
+	virtual HRESULT		do_context_menu(HWND hwnd, const POINT& pos, CtxMenuInterfaces& cm_ifs);
 };
 
 

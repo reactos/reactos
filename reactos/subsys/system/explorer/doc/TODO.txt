@@ -24,4 +24,7 @@
 - hide desktop bar when showing full screen applications
 - new start menu entry "Filemanager" close to "Explore" -> display C: and D: drive in MDI window
 - Startmenu: You can open the start menu by pressing Win-key, but can't close with another hit of Win-key.
+- Export von Bookmarks für IE (+ Mozilla)
+
+- Search Programs -> performance monitor.msv -> Abort
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2003, 2004, 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -1003,4 +1003,77 @@ protected:
 	LPIDA _pIDList;
 };
 
-extern HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl, LPCITEMIDLIST* ppidl, int x, int y);
+
+struct CtxMenuInterfaces
+{
+	CtxMenuInterfaces()
+	{
+		reset();
+	}
+
+	void	reset();
+	bool	HandleMenuMsg(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	IContextMenu* query_interfaces(IContextMenu* pcm1);
+
+	IContextMenu2*	_pctxmenu2;
+
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+	IContextMenu3*	_pctxmenu3;
+#endif
+};
+
+template<typename BASE> struct ExtContextMenuHandlerT
+ : public BASE
+{
+	typedef BASE super;
+
+	ExtContextMenuHandlerT(HWND hwnd)
+	 :	super(hwnd)
+	{
+	}
+
+	template<typename PARA> ExtContextMenuHandlerT(HWND hwnd, const PARA& info)
+	 :	super(hwnd, info)
+	{
+	}
+
+	LRESULT WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+	{
+		switch(nmsg) {
+		  case WM_DRAWITEM:
+		  case WM_MEASUREITEM:
+			if (!wparam)	// Is the message menu-related?
+				if (_cm_ifs.HandleMenuMsg(nmsg, wparam, lparam))
+					return TRUE;
+
+			break;
+
+		  case WM_INITMENUPOPUP:
+			if (_cm_ifs.HandleMenuMsg(nmsg, wparam, lparam))
+				return 0;
+
+			break;
+
+#ifndef __MINGW32__	// IContextMenu3 missing in MinGW (as of 6.2.2005)
+		  case WM_MENUCHAR:	// only supported by IContextMenu3
+		   if (_cm_ifs._pctxmenu3) {
+			   LRESULT lResult = 0;
+
+			   _cm_ifs._pctxmenu3->HandleMenuMsg2(nmsg, wparam, lparam, &lResult);
+
+			   return lResult;
+		   }
+
+		   return 0;
+#endif
+		}
+
+		return super::WndProc(nmsg, wparam, lparam);
+	}
+
+protected:
+	CtxMenuInterfaces _cm_ifs;
+};
+
+extern HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParent, int cidl,
+										LPCITEMIDLIST* ppidl, int x, int y, CtxMenuInterfaces& cm_ifs);

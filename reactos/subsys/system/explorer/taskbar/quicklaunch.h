@@ -57,9 +57,9 @@ struct QuickLaunchMap : public map<int, QuickLaunchEntry>
 
 
  /// quick launch bar window
-struct QuickLaunchBar : public SubclassedWindow
+struct QuickLaunchBar : public ExtContextMenuHandlerT<SubclassedWindow>
 {
-	typedef SubclassedWindow super;
+	typedef ExtContextMenuHandlerT<SubclassedWindow> super;
 
 	QuickLaunchBar(HWND hwnd);
 	~QuickLaunchBar();
