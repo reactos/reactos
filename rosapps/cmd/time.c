@@ -143,11 +143,14 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("Displays or sets the system time.\n\n"
-					   "TIME [/T][time]\n\n"
-					   "  /T    display only\n\n"
-					   "Type TIME with no parameters to display the current time setting and a prompt\n"
-					   "for a new one.  Press ENTER to keep the same time."));
+		ConOutPuts (_T("Displays or sets the system time.\n"
+		               "\n"
+		               "TIME [/T][time]\n"
+		               "\n"
+		               "  /T    display only\n"
+		               "\n"
+		               "Type TIME with no parameters to display the current time setting and a prompt\n"
+		               "for a new one.  Press ENTER to keep the same time."));
 		return 0;
 	}
 
@@ -159,6 +162,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 	{
 		if (_tcsicmp (arg[i], _T("/t")) == 0)
 			bPrompt = FALSE;
+
 		if ((*arg[i] != _T('/')) && (nTimeString == -1))
 			nTimeString = i;
 	}
@@ -203,8 +207,8 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 				return 0;
 			}
 
-                        /* force input the next time around. */
-                        nTimeString = -1;
+			/* force input the next time around. */
+			nTimeString = -1;
 		}
 		ConErrPuts (_T("Invalid time."));
 	}

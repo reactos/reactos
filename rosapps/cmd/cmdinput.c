@@ -365,7 +365,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
 #else
 				ch = ir.Event.KeyEvent.uChar.AsciiChar;
-                                if (ch >= 32 && (charcount != (maxlen - 2)))
+				if (ch >= 32 && (charcount != (maxlen - 2)))
 #endif /* _UNICODE */
 				{
 					/* insert character into string... */

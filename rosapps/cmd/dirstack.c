@@ -121,7 +121,7 @@ INT GetDirectoryStackDepth (VOID)
 /*
  * pushd command
  */
-INT cmd_pushd (LPTSTR first, LPTSTR rest)
+VOID CommandPushd (LPTSTR first, LPTSTR rest)
 {
 	TCHAR curPath[MAX_PATH];
 	TCHAR newPath[MAX_PATH];
@@ -133,7 +133,7 @@ INT cmd_pushd (LPTSTR first, LPTSTR rest)
 			  "changes to the specified directory.\n\n"
 			  "PUSHD [path | ..]\n\n"
 			  "  path        Specifies the directory to make the current directory"));
-		return 0;
+		return;
 	}
 
 	if (rest[0] != _T('\0'))
@@ -144,12 +144,12 @@ INT cmd_pushd (LPTSTR first, LPTSTR rest)
 
 	GetCurrentDirectory (MAX_PATH, curPath);
 	if (PushDirectory (curPath))
-		return -1;
+		return;
 
 	if (bChangePath)
 		SetCurrentDirectory (newPath);
 
-	return 0;
+	return;
 }
 
 

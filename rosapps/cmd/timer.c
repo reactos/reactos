@@ -1,4 +1,4 @@
-/* 
+/*
  * TIMER.C - timer internal command.
  *
  * clone from 4nt timer command
@@ -62,38 +62,38 @@ PrintElapsedTime (DWORD time,INT format)
 		time /=60;
 		m = time % 60;		
 		h = time / 60;
-                ConOutPrintf("Elapsed %02d%c%02d%c%02d%c%02d\n",
-                        h,cTimeSeparator,
-			m,cTimeSeparator,
-                        s,cDecimalSeparator,ms/10);
-                break;
+		ConOutPrintf("Elapsed %02d%c%02d%c%02d%c%02d\n",
+		             h,cTimeSeparator,
+		             m,cTimeSeparator,
+		             s,cDecimalSeparator,ms/10);
+		break;
 	}
 }
 
 
 INT CommandTimer (LPTSTR cmd, LPTSTR param)
 {
-        //here are kept all timers
+	// all timers are kept
 	static DWORD clksT[10];
 	
-	//timers status
-        //set all the clocks off by default
+	// timers status
+	// set all the clocks off by default
 	static BOOL clksS[10]={FALSE,FALSE,FALSE,FALSE,
 		FALSE,FALSE,FALSE,FALSE,FALSE,FALSE};
 
-	//TRUE if /S in command line
+	// TRUE if /S in command line
 	BOOL bS = FALSE;
 	
-	//avoid to set clk_n more than once
+	// avoid to set clk_n more than once
 	BOOL bCanNSet = TRUE;
 
 	INT NewClkStatus = NCS_NOT_SPECIFIED;
 
-	//the clock number specified on the command line
-        //1 by default
+	// the clock number specified on the command line
+	// 1 by default
 	INT clk_n=1;
 
-        // output format
+	// output format
 	INT iFormat=1;
 	
 	
@@ -105,37 +105,37 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-                ConOutPrintf(_T(
-                               "allow the use of ten stopwaches.\n"
-                               "\n"
-                               "TIMER  [ON|OFF] [/S] [/n] [/Fn]\n"
-                               "\n"							   
-                               "  ON          set stopwach ON\n"
-                               "  OFF         set stopwach OFF\n"
-                               "  /S          Split time. Return stopwach split\n"
-                               "              time without changing its value\n"                                                       
-                               "  /n          Specifiy the stopwach number.\n"
-                               "              Stopwaches avaliable are 0 to 10\n" 
-                               "              If it is not specified default is 1\n"
-                               "  /Fn         Format for output\n"
-                               "              n can be:\n"
-                               "                    0    milliseconds\n"
-                               "                    1    hh%cmm%css%cdd\n"
-                               "\n"),
-                               cTimeSeparator,cTimeSeparator,cDecimalSeparator);
+		ConOutPrintf(_T(
+		                "allow the use of ten stopwaches.\n"
+		                "\n"
+		                "TIMER  [ON|OFF] [/S] [/n] [/Fn]\n"
+		                "\n"
+		                "  ON          set stopwach ON\n"
+		                "  OFF         set stopwach OFF\n"
+		                "  /S          Split time. Return stopwach split\n"
+		                "              time without changing its value\n"
+		                "  /n          Specifiy the stopwach number.\n"
+		                "              Stopwaches avaliable are 0 to 10\n" 
+		                "              If it is not specified default is 1\n"
+		                "  /Fn         Format for output\n"
+		                "              n can be:\n"
+		                "                    0    milliseconds\n"
+		                "                    1    hh%cmm%css%cdd\n"
+		                "\n"),
+		                cTimeSeparator,cTimeSeparator,cDecimalSeparator);
 
-                ConOutPrintf(_T(
-                               "if none of ON, OFF or /S is specified the command\n"
-                               "will toggle stopwach state\n"
-                               "\n"));
+		ConOutPrintf(_T(
+		                "if none of ON, OFF or /S is specified the command\n"
+		                "will toggle stopwach state\n"
+		                "\n"));
 		return 0;
 	}
 
 
-        p = split (param,&argc);
+	p = split (param,&argc);
 
-//read options
-        for (i = 0; i < argc; i++)
+	//read options
+	for (i = 0; i < argc; i++)
 	{
 		//set timer on
 		if (!(_tcsicmp(&p[i][0],"on"))  && NewClkStatus == NCS_NOT_SPECIFIED)
@@ -151,11 +151,11 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 			continue;
 		}
 
-		//other options
+		// other options
 		if (p[i][0] == _T('/'))
 		{
 
-			//set timer number
+			// set timer number
 			if (_istdigit(p[i][1]) && bCanNSet)
 			{
 				clk_n = p[i][1] - _T('0');
@@ -163,31 +163,29 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 				continue;
 			}
 			
-			//set s(plit) option
+			// set s(plit) option
 			if (_totupper(p[i][1]) == _T('S'))
 			{
 				bS = TRUE;
 				continue;
 			}
 			
-			//specify format
+			// specify format
 			if(_totupper(p[i][1]) == _T('F'))
 			{
 				iFormat = p[i][2] - _T('0');
 				continue;
-
 			}
 		}
 	}
 
-
-        //do stuff (start/stop/read timer)
+	// do stuff (start/stop/read timer)
 	if(NewClkStatus == NCS_ON)
 	{
 		cT=GetTickCount();
 		cS=TRUE;
 		PS;
-                freep(p);
+		freep(p);
 		return 0;
 	}
 
@@ -196,54 +194,53 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		if(cS)
 		{	
 			PS;
-                        PrintElapsedTime(GetTickCount()-cT, iFormat);
-                        freep(p);
+			PrintElapsedTime(GetTickCount()-cT, iFormat);
+			freep(p);
 			return 0;
 		}
-		
+
 		cT=GetTickCount();
 		cS=TRUE;
 		PS;
-                freep(p);
-		return 0;		
+		freep(p);
+		return 0;
 	}
 
-        if(NewClkStatus == NCS_NOT_SPECIFIED)
+	if(NewClkStatus == NCS_NOT_SPECIFIED)
 	{	
 		if(cS){
 			cS=FALSE;
 			PS;
-                        PrintElapsedTime(GetTickCount()-cT, iFormat);
-                        freep(p);
+			PrintElapsedTime(GetTickCount()-cT, iFormat);
+			freep(p);
 			return 0;
 		}
 
 		cT=GetTickCount();
 		cS=TRUE;
 		PS;
-                freep(p);
+		freep(p);
 		return 0;
 	}
 
 
-        if(NewClkStatus == NCS_OFF)
+	if(NewClkStatus == NCS_OFF)
 	{
 		if(cS)
 		{
 			cS=FALSE;
 			PS;
-                        PrintElapsedTime(GetTickCount()-cT, iFormat);
-                        freep(p);
+			PrintElapsedTime(GetTickCount()-cT, iFormat);
+			freep(p);
 			return 0;
 		}
-		PS;		
-                freep(p);
+		PS;
+		freep(p);
 		return 0;
 	}
 
 	freep(p);
-        return 0;
+	return 0;
 }
 
 #endif /* INCLUDE_CMD_TIMER */
-

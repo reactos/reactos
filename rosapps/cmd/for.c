@@ -4,20 +4,23 @@
  *
  *  History:
  *
- *    16 Jul 1998 (Hans B Pufal)
- *        started.
+ *    16-Jul-1998 (Hans B Pufal)
+ *        Started.
  *
- *    16 Jul 1998 (John P Price)
+ *    16-Jul-1998 (John P Price)
  *        Seperated commands into individual files.
  *
- *    19 Jul 1998 (Hans B Pufal) [HBP_001]
- *        Implementation of FOR
+ *    19-Jul-1998 (Hans B Pufal)
+ *        Implementation of FOR.
  *
  *    27-Jul-1998 (John P Price <linux-guru@gcfl.net>)
- *        added config.h include
+ *        Added config.h include.
  *
- *    20-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *    20-Jan-1999 (Eric Kohl)
  *        Unicode and redirection safe!
+ *
+ *    01-Sep-1999 (Eric Kohl)
+ *        Added help text.
  */
 
 #include "config.h"
@@ -58,14 +61,24 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts ("FOR :");
+		ConOutPuts (_T("Runs a specified command for each file in a set of files\n"
+		               "\n"
+		               "FOR %variable IN (set) DO command [parameters]\n"
+		               "\n"
+		               "  %variable  Specifies a replaceable parameter.\n"
+		               "  (set)      Specifies a set of one or more files. Wildcards may be used.\n"
+		               "  command    Specifies the command to carry out for each file.\n"
+		               "  parameters Specifies parameters or switches for the specified command.\n"
+		               "\n"
+		               "To user the FOR comamnd in a batch program, specify %%variable instead of\n"
+		               "%variable."));
 		return 0;
 	}
 
 	/* Check that first element is % then an alpha char followed by space */
 	if ((*param != _T('%')) || !_istalpha (*(param + 1)) || !_istspace (*(param + 2)))
 	{
-		error_syntax (_T("bad varable specification."));
+		error_syntax (_T("bad variable specification."));
 		return 1;
 	}
 
@@ -132,3 +145,5 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 
 	return 0;
 }
+
+/* EOF */

@@ -19,10 +19,9 @@
 #include <string.h>
 
 #include "cmd.h"
-#include "chcp.h"
 
 
-INT CommandChcp (LPTSTR cmd, LPTSTR param)
+VOID CommandChcp (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR *arg;
 	INT    args;
@@ -31,10 +30,10 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Displays or sets the active code page number.\n\n"
-					   "CHCP [nnn]\n\n"
-					   "  nnn   Specifies the active code page number.\n\n"
-					   "Type CHCP without a parameter to display the active code page number."));
-		return 0;
+		               "CHCP [nnn]\n\n"
+		               "  nnn   Specifies the active code page number.\n\n"
+		               "Type CHCP without a parameter to display the active code page number."));
+		return;
 	}
 
 	/* get parameters */
@@ -83,7 +82,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 
 	freep (arg);
 
-	return 0;
+	return;
 }
 
 #endif /* INCLUDE_CMD_CHCP */

@@ -105,7 +105,7 @@ DeleteAlias (LPTSTR pszName)
 }
 
 
-static INT
+static VOID
 AddAlias (LPTSTR name, LPTSTR subst)
 {
 	LPALIAS ptr = lpFirst;
@@ -120,20 +120,20 @@ AddAlias (LPTSTR name, LPTSTR subst)
 			if (!s)
 			{
 				error_out_of_memory ();
-				return 1;
+				return;
 			}
 
 			free (ptr->lpSubst);
 			ptr->lpSubst = s;
 			_tcscpy (ptr->lpSubst, subst);
-			return 0;
+			return;
 		}
 		ptr = ptr->next;
 	}
 
 	ptr = (LPALIAS)malloc (sizeof (ALIAS));
 	if (!ptr)
-		return 1;
+		return;
 
 	ptr->next = 0;
 
@@ -142,7 +142,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 	{
 		error_out_of_memory ();
 		free (ptr);
-		return 1;
+		return;
 	}
 	_tcscpy (ptr->lpName, name);
 
@@ -152,7 +152,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 		error_out_of_memory ();
 		free (ptr->lpName);
 		free (ptr);
-		return 1;
+		return;
 	}
 	_tcscpy (ptr->lpSubst, subst);
 
@@ -189,7 +189,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 				ptr->next = entry;
 				lpFirst = ptr;
 			}
-			return 0;
+			return;
 		}
 		prev = entry;
 		entry = entry->next;
@@ -204,7 +204,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 		lpLast->next = ptr;
 	lpLast = ptr;
 
-	return 0;
+	return;
 }
 
 
@@ -275,20 +275,19 @@ VOID ExpandAlias (LPTSTR cmd, INT maxlen)
 }
 
 
-INT cmd_alias (LPTSTR cmd, LPTSTR param)
+VOID CommandAlias (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR ptr;
-	INT n = 0;
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Sets, removes or shows aliases.\n"
-					   "\n"
-					   "ALIAS [alias=[command]]\n"
-					   "\n"
-					   "  alias    Name for an alias.\n"
-					   "  command  Text to be substituted for an alias.\n"
-					   "\n"
+		               "\n"
+		               "ALIAS [alias=[command]]\n"
+		               "\n"
+		               "  alias    Name for an alias.\n"
+		               "  command  Text to be substituted for an alias.\n"
+		               "\n"
 //					   "For example:\n"
 					   "To list all aliases:\n"
 					   "  ALIAS\n\n"
@@ -298,18 +297,18 @@ INT cmd_alias (LPTSTR cmd, LPTSTR param)
 					   "  ALIAS da="
 //					   "Type ALIAS without a parameter to display the alias list.\n"
 					   ));
-		return 0;
+		return;
 	}
 
 	if (param[0] == _T('\0'))
 	{
 		PrintAlias ();
-		return 0;
+		return;
 	}
 
 	/* error if no '=' found */
 	if ((ptr = _tcschr (param, _T('='))) == 0)
-		return -1;
+		return;
 
 	/* Split rest into name and substitute */
 	*ptr++ = _T('\0');
@@ -319,8 +318,8 @@ INT cmd_alias (LPTSTR cmd, LPTSTR param)
 	if (ptr[0] == _T('\0'))
 		DeleteAlias (param);
 	else
-		n = AddAlias (param, ptr);
+		AddAlias (param, ptr);
 
-	return n;
+	return;
 }
 #endif

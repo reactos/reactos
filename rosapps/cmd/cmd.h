@@ -79,7 +79,6 @@ extern SHORT  maxy;
 extern OSVERSIONINFO osvi;
 
 
-// VOID Execute (char *, char *);
 void command(char *);
 VOID ParseCommandLine (LPTSTR);
 int  c_brk(void);
@@ -89,7 +88,7 @@ int  c_brk(void);
 
 /* Prototypes for ALIAS.C */
 VOID ExpandAlias (LPTSTR, INT);
-INT  cmd_alias (LPTSTR, LPTSTR);
+VOID CommandAlias (LPTSTR, LPTSTR);
 
 
 /* Prototypes for ATTRIB.C */
@@ -102,6 +101,10 @@ INT cmd_beep (LPTSTR, LPTSTR);
 
 /* Prototypes for CALL.C */
 INT cmd_call (LPTSTR, LPTSTR);
+
+
+/* Prototypes for CHCP.C */
+VOID CommandChcp (LPTSTR, LPTSTR);
 
 
 /* Prototypes for CHOICE.C */
@@ -173,6 +176,10 @@ INT cmd_date (LPTSTR, LPTSTR);
 INT cmd_del (LPTSTR, LPTSTR);
 
 
+/* Prototypes for DELAY.C */
+INT CommandDelay (LPTSTR, LPTSTR);
+
+
 /* Prototypes for DIR.C */
 //int incline(int *line, unsigned flags);
 INT cmd_dir (LPTSTR, LPTSTR);
@@ -182,7 +189,7 @@ INT cmd_dir (LPTSTR, LPTSTR);
 VOID InitDirectoryStack (VOID);
 VOID DestroyDirectoryStack (VOID);
 INT  GetDirectoryStackDepth (VOID);
-INT  cmd_pushd (LPTSTR, LPTSTR);
+VOID CommandPushd (LPTSTR, LPTSTR);
 INT  cmd_popd (LPTSTR, LPTSTR);
 
 
@@ -222,6 +229,10 @@ INT  ShowCompletionMatches (LPTSTR, INT);
 INT cmd_for (LPTSTR, LPTSTR);
 
 
+/* Prototypes for FREE.C */
+INT CommandFree (LPTSTR, LPTSTR);
+
+
 /* Prototypes for GOTO.C */
 INT cmd_goto (LPTSTR, LPTSTR);
 
@@ -239,8 +250,8 @@ INT  cmd_chdir (LPTSTR, LPTSTR);
 INT  cmd_mkdir (LPTSTR, LPTSTR);
 INT  cmd_rmdir (LPTSTR, LPTSTR);
 INT  internal_exit (LPTSTR, LPTSTR);
-INT  cmd_rem (LPTSTR, LPTSTR);
-INT  cmd_showcommands (LPTSTR, LPTSTR);
+VOID CommandRem (LPTSTR, LPTSTR);
+VOID CommandShowCommands (LPTSTR, LPTSTR);
 
 
 /* Prototypes for LABEL.C */
@@ -260,6 +271,10 @@ extern INT   nNumberGroups;
 VOID InitLocale (VOID);
 VOID PrintDate (VOID);
 VOID PrintTime (VOID);
+
+
+/* Prototypes for MEMORY.C */
+INT CommandMemory (LPTSTR, LPTSTR);
 
 
 /* Prototypes for MISC.C */
@@ -302,6 +317,10 @@ INT GetRedirection (LPTSTR, LPTSTR, LPTSTR, LPTSTR, LPINT);
 
 /* Prototypes for REN.C */
 INT cmd_rename (LPTSTR, LPTSTR);
+
+
+/* Prototypes for SCREEN.C */
+INT CommandScreen (LPTSTR, LPTSTR);
 
 
 /* Prototypes for SET.C */

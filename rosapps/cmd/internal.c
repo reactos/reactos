@@ -338,6 +338,12 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 			dir = p[0];
 	}
 
+	if (!dir)
+	{
+		ConErrPrintf (_T("Required parameter missing\n"));
+		return 1;
+	}
+
 	/* remove trailing \ if any, but ONLY if dir is not the root dir */
 	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
 		dir[_tcslen(dir) - 1] = _T('\0');
@@ -405,6 +411,12 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 			dir = p[0];
 	}
 
+	if (!dir)
+	{
+		ConErrPrintf (_T("Required parameter missing\n"));
+		return 1;
+	}
+
 	/* remove trailing \ if any, but ONLY if dir is not the root dir */
 	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
 		dir[_tcslen(dir) - 1] = _T('\0');
@@ -448,20 +460,20 @@ INT internal_exit (LPTSTR cmd, LPTSTR param)
  * does nothing
  *
  */
-INT cmd_rem (LPTSTR cmd, LPTSTR param)
+VOID CommandRem (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutPuts (_T("Starts a comment line in a batch file.\n\n"
-					   "REM [Comment]"));
+		               "REM [Comment]"));
 	}
 
-	return 0;
+	return;
 }
-#endif
+#endif /* INCLUDE_CMD_REM */
 
 
-INT cmd_showcommands (LPTSTR cmd, LPTSTR param)
+VOID CommandShowCommands (LPTSTR cmd, LPTSTR param)
 {
 	LPCOMMAND cmdptr;
 	INT y;
@@ -484,5 +496,7 @@ INT cmd_showcommands (LPTSTR cmd, LPTSTR param)
 	if (y != 0)
 		ConOutChar (_T('\n'));
 
-	return 0;
+	return;
 }
+
+/* EOF */

@@ -10,7 +10,7 @@
  */
 
 /* undefine only if used under ReactOS */
-#define __REACTOS__
+//#define __REACTOS__
 
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
@@ -47,8 +47,8 @@
 
 
 /* Define one of these to select the used locale. */
-/*  (date and time formats etc.) used in DATE, TIME */
-/*  DIR and PROMPT. */
+/*  (date and time formats etc.) used in DATE, TIME, */
+/*  DIR, PROMPT etc. */
 #ifdef __REACTOS__
 #define LOCALE_DEFAULT
 #else
@@ -68,8 +68,11 @@
 /*#define INCLUDE_CMD_CTTY*/
 #define INCLUDE_CMD_DATE
 #define INCLUDE_CMD_DEL
+#define INCLUDE_CMD_DELAY
 #define INCLUDE_CMD_DIR
+#define INCLUDE_CMD_FREE
 #define INCLUDE_CMD_LABEL
+#define INCLUDE_CMD_MEMORY
 #define INCLUDE_CMD_MKDIR
 #define INCLUDE_CMD_MOVE
 #ifndef __REACTOS__
@@ -79,6 +82,7 @@
 #define INCLUDE_CMD_PROMPT
 #define INCLUDE_CMD_RMDIR
 #define INCLUDE_CMD_RENAME
+#define INCLUDE_CMD_SCREEN
 #define INCLUDE_CMD_SET
 #define INCLUDE_CMD_START
 #define INCLUDE_CMD_TIME

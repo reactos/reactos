@@ -35,12 +35,14 @@ echo.c          Implements echo command
 error.c         Error Message Routines
 filecomp.c      Filename completion functions
 for.c           Implements for command
+free.c          Implements free command
 goto.c          Implements goto command
 history.c       Command-line history handling
 if.c            Implements if command
 internal.c      Internal commands (DIR, RD, etc)
 label.c         Implements label command
 locale.c        Locale handling code
+memory.c        Implements memory command
 misc.c          Misc. Functions
 msgbox.c        Implements msgbox command
 move.c          Implements move command

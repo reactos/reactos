@@ -51,12 +51,24 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
 	INT i;
 
+	if (_tcsstr (param, _T("/?")) != NULL)
+	{
+		ConOutPuts (_T("Displays shell version information\n"
+		               "\n"
+		               "VER [/C][/R][/W]\n"
+		               "\n"
+		               "  /C  Displays credits.\n"
+		               "  /R  Displays redistribution information.\n"
+		               "  /W  Displays warranty information."));
+		return 0;
+	}
+
 	ConOutPuts (_T("\n"
 				   SHELLINFO "\n"
 				   SHELLVER "\n"
 				   "\n"
 				   "Copyright (C) 1994-1998 Tim Norman and others."));
-	ConOutPuts (_T("Copyright (C) 1998,1999 Eric Kohl."));
+	ConOutPuts (_T("Copyright (C) 1998,1999 Eric Kohl and others."));
 
 	/* Basic copyright notice */
 	if (param[0] == _T('\0'))
@@ -69,13 +81,6 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		/* MS-DOS ver prints just help if /? is alone or not */
-		if (_tcsstr (param, _T("/?")) != NULL)
-		{
-			ConOutPuts (_T("\ndisplay shell version info\n\nVER [/C/R/W/?]"));
-			return 0;
-		}
-
 		for (i = 0; param[i]; i++)
 		{
 			/* skip spaces */
@@ -112,15 +117,18 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 			else if (_totupper (param[i]) == _T('C'))
 			{
 				/* Developer listing */
-				ConOutPuts (_T("\nFreeDOS version written by:\n"
+				ConOutPuts (_T("\n"
+							   "FreeDOS version written by:\n"
 							   "    Tim Norman      Matt Rains\n"
 							   "    Evan Jeffrey    Steffen Kaiser\n"
 							   "    Svante Frey     Oliver Mueller\n"
 							   "    Aaron Kaufman   Marc Desrochers\n"
 							   "    Rob Lake        John P Price\n"
 							   "    Hans B Pufal\n"
-							   "\nReactOS version written by:\n"
-							   "    Eric Kohl       Emanuele Aliberti\n"));
+							   "\n"
+							   "ReactOS version written by:\n"
+							   "    Eric Kohl       Emanuele Aliberti\n"
+							   "    Dr. Faustus\n"));
 			}
 			else
 			{
@@ -130,9 +138,9 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 		}
 	}
 
-	ConOutPuts (_T("\nSend bug reports to <ekohl@abo.rhein-zeitung.de>.\n"
+	ConOutPuts (_T("\nSend bug reports to <ekohl@abo.rhein-zeitung.de>."
 /*
-				   "Updates are available at http://www.sid-dis.com/reactos"
+				   "\nUpdates are available at http://www.reactos.com"
 */
 			   ));
 	return 0;

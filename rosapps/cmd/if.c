@@ -18,6 +18,9 @@
  *
  *    21-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Unicode and redirection ready!
+ *
+ *    01-Sep-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
+ *        Fixed help text.
  */
 
 #include "config.h"
@@ -46,7 +49,20 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutPuts (_T("IF :"));
+		ConOutPuts (_T("Performs conditional processing in batch programs.\n"
+		               "\n"
+		               "  IF [NOT] ERRORLEVEL number command\n"
+		               "  IF [NOT] string1==string2 command\n"
+		               "  IF [NOT] EXIST filename command\n"
+		               "\n"
+		               "NOT               Specifies that CMD should carry out the command only if\n"
+		               "                  the condition is false\n"
+		               "ERRORLEVEL number Specifies a true condition if the last program run returned\n"
+		               "                  an exit code equal or greater than the number specified.\n"
+		               "command           Specifies the command to carry out if the condition is met.\n"
+		               "string1==string2  Specifies a true condition if the specified text strings\n"
+		               "                  match.\n"
+		               "EXIST filename    Specifies a true condition if the specified filename exists."));
 		return 0;
 	}
 

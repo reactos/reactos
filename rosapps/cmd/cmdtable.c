@@ -24,25 +24,16 @@
 
 #include "cmd.h"
 
-#include "chcp.h"
-
-
 /* a list of all the internal commands, associating their command names */
 /* to the functions to process them                                     */
 
-/* Lines marked
- *
- * $$ are external commands
- * !! internal commands which are not yet implemented
- * ** special FREEDOS specific implementation
- */
 
 COMMAND cmds[] =
 {
-	{_T("?"),        0, cmd_showcommands},
+	{_T("?"), 0, CommandShowCommands},
 
 #ifdef FEATURE_ALIASES
-	{_T("alias"),    0, cmd_alias},
+	{_T("alias"), 0, CommandAlias},
 #endif
 
 #ifdef INCLUDE_CMD_ATTRIB
@@ -65,16 +56,16 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_CHCP
-	{_T("chcp"),     0, CommandChcp},
+	{_T("chcp"), 0, CommandChcp},
 #endif
 
 #ifdef INCLUDE_CMD_CHOICE
-        {_T("choice"),     0, CommandChoice},
+	{_T("choice"), 0, CommandChoice},
 #endif
 
 
 #ifdef INCLUDE_CMD_CLS
-	{_T("cls"),      0, cmd_cls},
+	{_T("cls"), 0, cmd_cls},
 #endif
 
 #ifdef INCLUDE_CMD_COLOR
@@ -100,19 +91,27 @@ COMMAND cmds[] =
 	{_T("delete"),   0, cmd_del},
 #endif
 
+#ifdef INCLUDE_CMD_DELAY
+	{_T("delay"), 0, CommandDelay},
+#endif
+
 #ifdef INCLUDE_CMD_DIR
 	{_T("dir"), CMD_SPECIAL, cmd_dir},
 #endif
 
-	{_T("echo"),     0, cmd_echo},
+	{_T("echo"), 0, cmd_echo},
 
 #ifdef INCLUDE_CMD_DEL
-	{_T("erase"),    0, cmd_del},
+	{_T("erase"), 0, cmd_del},
 #endif
 
 	{_T("exit"), 0, internal_exit},
 
 	{_T("for"), 0, cmd_for},
+
+#ifdef INCLUDE_CMD_FREE
+	{_T("free"), 0, CommandFree},
+#endif
 
 	{_T("goto"), CMD_BATCHONLY, cmd_goto},
 
@@ -122,18 +121,21 @@ COMMAND cmds[] =
 	{_T("label"), 0, cmd_label},
 #endif
 
+#ifdef INCLUDE_CMD_MEMORY
+	{_T("memory"), 0, CommandMemory},
+#endif
+
 #ifdef INCLUDE_CMD_MKDIR
 	{_T("md"), CMD_SPECIAL, cmd_mkdir},
 	{_T("mkdir"), CMD_SPECIAL, cmd_mkdir},
 #endif
 
 #ifdef INCLUDE_CMD_MOVE
-	{_T("move"),     0, cmd_move},
+	{_T("move"), 0, cmd_move},
 #endif
 
-
 #ifdef INCLUDE_CMD_MSGBOX
-        {_T("msgbox"),     0, CommandMsgbox},
+	{_T("msgbox"), 0, CommandMsgbox},
 #endif
 
 #ifdef INCLUDE_CMD_PATH
@@ -145,7 +147,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef FEATURE_DIRECTORY_STACK
-	{_T("popd"),   0, cmd_popd},
+	{_T("popd"), 0, cmd_popd},
 #endif
 
 #ifdef INCLUDE_CMD_PROMPT
@@ -153,7 +155,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef FEATURE_DIRECTORY_STACK
-	{_T("pushd"),  0, cmd_pushd},
+	{_T("pushd"), 0, CommandPushd},
 #endif
 
 #ifdef INCLUDE_CMD_RMDIR
@@ -161,7 +163,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_REM
-	{_T("rem"), 0, cmd_rem},
+	{_T("rem"), 0, CommandRem},
 #endif
 
 #ifdef INCLUDE_CMD_RENAME
@@ -171,6 +173,10 @@ COMMAND cmds[] =
 
 #ifdef INCLUDE_CMD_RMDIR
 	{_T("rmdir"), CMD_SPECIAL, cmd_rmdir},
+#endif
+
+#ifdef INCLUDE_CMD_SCREEN
+	{_T("screen"), 0, CommandScreen},
 #endif
 
 #ifdef INCLUDE_CMD_SET
@@ -188,7 +194,7 @@ COMMAND cmds[] =
 #endif
 
 #ifdef INCLUDE_CMD_TIMER
-        {_T("timer"), 0, CommandTimer},
+	{_T("timer"), 0, CommandTimer},
 #endif
 
 #ifdef INCLUDE_CMD_TITLE
@@ -214,48 +220,4 @@ COMMAND cmds[] =
 	{NULL, 0, NULL}
 };
 
-/*    append,                             $$    */
-/*    assign,                             $$    */
-/*    attrib,                             **    */
-/*    backup,                             $$    */
-/*    chkdsk,                             $$    */
-/*    comp,                               $$    */
-/*    debug,                              $$    */
-/*    diskcomp,                           $$    */
-/*    diskcopy,                           $$    */
-/*    doskey,                             **    */
-/*    dosshell,                           $$    */
-/*    edit,                               $$    */
-/*    edlin,                              $$    */
-/*    emm386,                             $$    */
-/*    exe2bin,                            $$    */
-/*    expand,                             $$    */
-/*    fastopen,                           $$    */
-/*    fc,                                 $$    */
-/*    fdisk,                              $$    */
-/*    find,                               $$    */
-/*    format,                             $$    */
-/*    graftabl,                           $$    */
-/*    graphics,                           $$    */
-/*    help,                               $$    */
-/*    join,                               $$    */
-/*    keyb,                               $$    */
-/*    mem,                                $$    */
-/*    mirror,                             $$    */
-/*    mode,                               $$    */
-/*    more,                               $$    */
-/*    nlsfunc,                            $$    */
-/*    print,                              $$    */
-/*    qbasic,                             $$    */
-/*    recover,                            $$    */
-/*    replace,                            $$    */
-/*    restore,                            $$    */
-/*    setver,                             $$    */
-/*    share,                              $$    */
-/*    sort,                               $$    */
-/*    subst,                              $$    */
-/*    sys,                                $$    */
-/*    tree,                               $$    */
-/*    undelete,                           $$    */
-/*    unformat,                           $$    */
-/*    xcopy,                              $$    */
+/* EOF */
