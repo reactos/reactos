@@ -1,4 +1,4 @@
-/* $Id: wait.c,v 1.10 2000/03/16 21:50:11 ekohl Exp $
+/* $Id: wait.c,v 1.11 2000/03/18 02:39:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,7 +27,7 @@ CreateSemaphoreA (
 	HANDLE Handle;
 
 	RtlInitAnsiString (&Name,
-	                   lpName);
+	                   (LPSTR)lpName);
 	RtlAnsiStringToUnicodeString (&NameU,
 	                              &Name,
 	                              TRUE);
@@ -104,7 +104,7 @@ CreateMutexA (
 	HANDLE Handle;
 
 	RtlInitAnsiString (&Name,
-	                   lpName);
+	                   (LPSTR)lpName);
 	RtlAnsiStringToUnicodeString (&NameU,
 	                              &Name,
 	                              TRUE);

@@ -7,6 +7,7 @@
 // #include <crtdll/locale.h>
 
 void __ecvround (char *, char *, const char *, int *);
+char *ecvtbuf (double, int, int *, int *, char *);
 
 char *
 fcvtbuf (double value, int ndigits, int *decpt, int *sign, char *buf)

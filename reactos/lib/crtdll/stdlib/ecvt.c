@@ -2,6 +2,8 @@
 #include <crtdll/stdlib.h>
 #include <crtdll/float.h>
 
+char *ecvtbuf (double, int, int *, int *, char *);
+
 char *
 _ecvt (double value, int ndigits, int *decpt, int *sign)
 {

@@ -3,6 +3,7 @@
 #include <crtdll/stdio.h>
 #include <crtdll/string.h>
 #include <crtdll/float.h>
+#include <crtdll/alloc.h>
 // #include <crtdll/locale.h>
 
 void __ecvround (char *, char *, const char *, int *);
