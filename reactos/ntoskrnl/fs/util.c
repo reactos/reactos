@@ -1,4 +1,4 @@
-/* $Id: util.c,v 1.5 2000/02/24 23:38:26 ea Exp $
+/* $Id: util.c,v 1.6 2000/03/12 01:15:09 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
@@ -72,7 +72,7 @@ FsRtlIsNtstatusExpected (
 		(STATUS_DATATYPE_MISALIGNMENT == NtStatus)
 		|| (STATUS_ACCESS_VIOLATION == NtStatus)
 		|| (STATUS_ILLEGAL_INSTRUCTION == NtStatus)
-		|| (STATUS_UNKNOWN_C00000AA == NtStatus)  /* FIXME */
+		|| (STATUS_INSTRUCTION_MISALIGNMENT == NtStatus)
 		)
 		? TRUE
 		: FALSE;
