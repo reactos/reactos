@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.84 2004/12/17 00:44:46 gdalsnes Exp $
+/* $Id: console.c,v 1.85 2004/12/18 00:28:16 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1271,7 +1271,7 @@ IntReadConsole(HANDLE hConsoleInput,
     nNumberOfCharsToRead -= Reply->Data.ReadConsoleReply.NrCharactersRead;
     memcpy((PVOID)((ULONG_PTR)lpBuffer + (ULONG_PTR)(CharsRead * CharSize)),
            Reply->Data.ReadConsoleReply.Buffer,
-           Reply->Data.ReadConsoleReply.NrCharactersRead);
+           Reply->Data.ReadConsoleReply.NrCharactersRead * CharSize);
     CharsRead += Reply->Data.ReadConsoleReply.NrCharactersRead;
     
     if(Reply->Status == STATUS_NOTIFY_CLEANUP)
