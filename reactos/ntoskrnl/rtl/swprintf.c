@@ -1,8 +1,8 @@
-/* $Id: swprintf.c,v 1.3 2000/01/14 02:22:02 ekohl Exp $
+/* $Id: swprintf.c,v 1.1 2000/01/14 02:23:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/stdio/swprintf.c
+ * FILE:            ntoskrnl/rtl/swprintf.c
  * PURPOSE:         unicode sprintf functions
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl

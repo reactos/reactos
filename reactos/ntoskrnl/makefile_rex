@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.45 2000/01/10 22:46:37 ea Exp $
+# $Id: makefile_rex,v 1.46 2000/01/14 02:22:40 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -17,12 +17,12 @@ NT_OBJECTS = nt/port.o nt/channel.o nt/ntevent.o nt/nttimer.o nt/atom.o \
              nt/evtpair.o nt/ntsem.o nt/mutant.o nt/misc.o nt/plugplay.o \
              nt/profile.o nt/nt.o nt/zw.o
 
-RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/time.o \
-              rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
-              rtl/list.o rtl/slist.o rtl/interlck.o rtl/return.o \
-              rtl/wstring.o rtl/memcpy.o rtl/memmove.o rtl/memset.o \
-              rtl/memchr.o rtl/nls.o rtl/string.o rtl/stdlib.o \
-              rtl/regio.o
+RTL_OBJECTS = rtl/ctype.o rtl/interlck.o rtl/largeint.o  rtl/list.o \
+              rtl/lookas.o rtl/mem.o rtl/memchr.o rtl/memcpy.o \
+              rtl/memmove.o rtl/memset.o  rtl/nls.o rtl/regio.o \
+              rtl/return.o rtl/slist.o rtl/sprintf.o rtl/swprintf.o \
+              rtl/stdlib.o rtl/string.o rtl/time.o rtl/unalign.o \
+              rtl/unicode.o rtl/wstring.o
 
 KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o \
              ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \

@@ -1,16 +1,14 @@
-/* $Id: vsprintf.c,v 1.6 2000/01/11 17:29:17 ekohl Exp $
+/* $Id: sprintf.c,v 1.1 2000/01/14 02:22:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/stdio/vsprintf.c
- * PURPOSE:         Single byte printf functions
+ * FILE:            lib/ntdll/stdio/sprintf.c
+ * PURPOSE:         Single byte sprintf functions
  * PROGRAMMERS:     David Welch
  *                  Eric Kohl
  *
  * TODO:
  *	- Implement maximum length (cnt) in _vsnprintf().
- *	- Add MS specific types 'C', 'S', 'Z'...
- *	- Add MS specific qualifier 'I64'.
  */
 
 /*
@@ -32,20 +30,6 @@
 
 #include <internal/debug.h>
 
-extern size_t strnlen(const char* string, size_t maxlen);
-
-
-/* we use this so that we can do without the ctype library */
-#define is_digit(c)	((c) >= '0' && (c) <= '9')
-
-static int skip_atoi(const char **s)
-{
-	int i=0;
-
-	while (is_digit(**s))
-		i = i*10 + *((*s)++) - '0';
-	return i;
-}
 
 #define ZEROPAD	1		/* pad with zero */
 #define SIGN	2		/* unsigned/signed long */
@@ -55,14 +39,26 @@ static int skip_atoi(const char **s)
 #define SPECIAL	32		/* 0x */
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
+
 #define do_div(n,base) ({ \
 int __res; \
-__res = ((unsigned long) n) % (unsigned) base; \
-n = ((unsigned long) n) / (unsigned) base; \
+__res = ((unsigned long long) n) % (unsigned) base; \
+n = ((unsigned long long) n) / (unsigned) base; \
 __res; })
 
+
+static int skip_atoi(const char **s)
+{
+	int i=0;
+
+	while (isdigit(**s))
+		i = i*10 + *((*s)++) - '0';
+	return i;
+}
+
+
 static char *
-number (char * str, long num, int base, int size, int precision, int type)
+number (char * str, long long num, int base, int size, int precision, int type)
 {
 	char c,sign,tmp[66];
 	const char *digits="0123456789abcdefghijklmnopqrstuvwxyz";
@@ -132,21 +128,22 @@ number (char * str, long num, int base, int size, int precision, int type)
 	return str;
 }
 
+
 int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 {
 	int len;
-	unsigned long num;
+	unsigned long long num;
 	int i, base;
 	char * str;
 	const char *s;
-	const short int* sw;
+	const wchar_t *sw;
 
 	int flags;		/* flags to number() */
 
 	int field_width;	/* width of output field */
 	int precision;		/* min. # of digits for integers; max
 				   number of chars for from string */
-	int qualifier;		/* 'h', 'l', or 'L' for integer fields */
+	int qualifier;		/* 'h', 'l', 'L', 'I' or 'w' for integer fields */
 
 	for (str=buf ; *fmt ; ++fmt) {
 		if (*fmt != '%') {
@@ -168,7 +165,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		/* get field width */
 		field_width = -1;
-		if (is_digit(*fmt))
+		if (isdigit(*fmt))
 			field_width = skip_atoi(&fmt);
 		else if (*fmt == '*') {
 			++fmt;
@@ -184,7 +181,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 		precision = -1;
 		if (*fmt == '.') {
 			++fmt;
-			if (is_digit(*fmt))
+			if (isdigit(*fmt))
 				precision = skip_atoi(&fmt);
 			else if (*fmt == '*') {
 				++fmt;
@@ -197,21 +194,23 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' /*|| *fmt == 'w'*/ ||
-		    (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4')) {
+		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' || *fmt == 'w') {
 			qualifier = *fmt;
 			++fmt;
+		} else if (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4') {
+			qualifier = *fmt;
+			fmt += 3;
 		}
 
 		/* default base */
 		base = 10;
 
 		switch (*fmt) {
-		case 'c':
+		case 'c': /* finished */
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
-			if (qualifier == 'l' /*|| qualifier == 'w'*/)
+			if (qualifier == 'l' || qualifier == 'w')
 				*str++ = (unsigned char) va_arg(args, wchar_t);
 			else
 				*str++ = (unsigned char) va_arg(args, int);
@@ -219,7 +218,7 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				*str++ = ' ';
 			continue;
 
-		case 'C':
+		case 'C': /* finished */
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
@@ -231,57 +230,108 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				*str++ = ' ';
 			continue;
 
-		case 'w':
-			sw = va_arg(args,short int *);
-//			DPRINT("L %x\n",sw);
-			if (sw==NULL) {
-//				CHECKPOINT;
-				s = "<NULL>";
-				while ((*s)!=0)
-					*str++ = *s++;
-//				CHECKPOINT;
-//				DbgPrint("str %x\n",str);
-			} else {
-				while ((*sw)!=0)
-					*str++ = (char)(*sw++);
-			}
-//			CHECKPOINT;
-			continue;
+		case 's': /* finished */
+			if (qualifier == 'l' || qualifier == 'w') {
+				/* print unicode string */
+				sw = va_arg(args, wchar_t *);
+				if (sw == NULL)
+					sw = L"<NULL>";
 
-		case 's':
-			s = va_arg(args, char *);
-			if (!s)
-				s = "<NULL>";
+				len = wcslen (sw);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
 
-			len = strnlen(s, precision);
-
-			if (!(flags & LEFT))
+				if (!(flags & LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
+					*str++ = (unsigned char)(*sw++);
 				while (len < field_width--)
 					*str++ = ' ';
-			for (i = 0; i < len; ++i)
-				*str++ = *s++;
-			while (len < field_width--)
-				*str++ = ' ';
+			} else {
+				/* print ascii string */
+				s = va_arg(args, char *);
+				if (s == NULL)
+					s = "<NULL>";
+
+				len = strlen (s);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
+
+				if (!(flags & LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
+					*str++ = *s++;
+				while (len < field_width--)
+					*str++ = ' ';
+			}
 			continue;
 
 		case 'S':
-			sw = va_arg(args,short int *);
-			if (sw==NULL) {
-				s = "<NULL>";
-				while ((*s)!=0)
+			if (qualifier == 'h') {
+				/* print ascii string */
+				s = va_arg(args, char *);
+				if (s == NULL)
+					s = "<NULL>";
+
+				len = strlen (s);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
+
+				if (!(flags & LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
 					*str++ = *s++;
+				while (len < field_width--)
+					*str++ = ' ';
 			} else {
-				while ((*sw)!=0)
-					*str++ = (char)(*sw++);
+				/* print unicode string */
+				sw = va_arg(args, wchar_t *);
+				if (sw == NULL)
+					sw = L"<NULL>";
+
+				len = wcslen (sw);
+				if ((unsigned int)len > (unsigned int)precision)
+					len = precision;
+
+				if (!(flags & LEFT))
+					while (len < field_width--)
+						*str++ = ' ';
+				for (i = 0; i < len; ++i)
+					*str++ = (unsigned char)(*sw++);
+				while (len < field_width--)
+					*str++ = ' ';
 			}
 			continue;
 
 		case 'Z':
 			if (qualifier == 'w') {
+				/* print counted unicode string */
+				PUNICODE_STRING pus = va_arg(args, PUNICODE_STRING);
+				if (pus == NULL) {
+					s = "<NULL>";
+					while ((*s) != 0)
+						*str++ = *s++;
+				} else {
+					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
+						*str++ = (unsigned char)(pus->Buffer[i]);
+				}
 			} else {
+				/* print counted ascii string */
+				PANSI_STRING pus = va_arg(args, PANSI_STRING);
+				if (pus == NULL) {
+					s = "<NULL>";
+					while ((*s) != 0)
+						*str++ = *s++;
+				} else {
+					for (i = 0; pus->Buffer[i] && i < pus->Length; i++)
+						*str++ = pus->Buffer[i];
+				}
 			}
-			continue; 	
-			
+			continue;
+
 		case 'p':
 			if (field_width == -1) {
 				field_width = 2 * sizeof(void *);
@@ -332,22 +382,29 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				--fmt;
 			continue;
 		}
-		if (qualifier == 'l')
+
+		if (qualifier == 'I')
+			num = va_arg(args, unsigned long long);
+		else if (qualifier == 'l')
 			num = va_arg(args, unsigned long);
-		else if (qualifier == 'h')
+		else if (qualifier == 'h') {
 			if (flags & SIGN)
 				num = va_arg(args, short);
 			else
 				num = va_arg(args, unsigned short);
-		else if (flags & SIGN)
-			num = va_arg(args, int);
-		else
-			num = va_arg(args, unsigned int);
+		}
+		else {
+			if (flags & SIGN)
+				num = va_arg(args, int);
+			else
+				num = va_arg(args, unsigned int);
+		}
 		str = number(str, num, base, field_width, precision, flags);
 	}
 	*str = '\0';
 	return str-buf;
 }
+
 
 int sprintf(char * buf, const char *fmt, ...)
 {
@@ -360,6 +417,7 @@ int sprintf(char * buf, const char *fmt, ...)
 	return i;
 }
 
+
 int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
 {
 	va_list args;
@@ -370,6 +428,7 @@ int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
 	va_end(args);
 	return i;
 }
+
 
 int vsprintf(char *buf, const char *fmt, va_list args)
 {

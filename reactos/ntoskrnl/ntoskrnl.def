@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.39 2000/01/12 19:01:56 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.40 2000/01/14 02:22:40 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -393,7 +393,7 @@ _itoa
 ;_local_unwind2
 ;_purecall
 _snprintf
-;_snwprintf
+_snwprintf
 _stricmp
 _strlwr
 _strnicmp
@@ -437,7 +437,7 @@ strcpy
 strrchr
 strspn
 strstr
-;swprintf
+swprintf
 tolower
 toupper
 towlower
