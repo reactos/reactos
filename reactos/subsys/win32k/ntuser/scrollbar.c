@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.25 2004/01/13 17:14:38 navaraf Exp $
+/* $Id: scrollbar.c,v 1.26 2004/01/14 22:18:35 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -231,6 +231,11 @@ IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
   {
     lpsi->nMin = psi->nMin;
     lpsi->nMax = psi->nMax;
+  }
+
+  if(Mask & SIF_TRACKPOS)
+  {
+    lpsi->nTrackPos = psi->nTrackPos;
   }
   
   return TRUE;
@@ -649,7 +654,7 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
   DWORD sz;
   BOOL Ret;
   
-  Status = MmCopyFromCaller(&psi, lpsi, sizeof(SCROLLINFO) - sizeof(psi.nTrackPos));
+  Status = MmCopyFromCaller(&psi.cbSize, &(lpsi->cbSize), sizeof(UINT));
   if(!NT_SUCCESS(Status) || 
      !((psi.cbSize == sizeof(SCROLLINFO)) || (psi.cbSize == sizeof(SCROLLINFO) - sizeof(psi.nTrackPos))))
   {
@@ -657,6 +662,12 @@ NtUserGetScrollInfo(HWND hwnd, int fnBar, LPSCROLLINFO lpsi)
     return FALSE;
   }
   sz = psi.cbSize;
+  Status = MmCopyFromCaller(&psi, lpsi, sz);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
   
   Window = IntGetWindowObject(hwnd);
 
