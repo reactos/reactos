@@ -33,18 +33,23 @@ OUTPUT_DIR	=	$(OBJDIR)/$(TARGET)
 #############################################
 # COMPILER AND LINKER PROGRAMS
 #
+TOOLSDIR	= $(SRCDIR)/../tools
+
 CC			= gcc
 LD			= ld
 AR			= ar
 NM			= nm
-RM			= cmd /C del
-CP			= cmd /C copy
-MKDIR		= cmd /C md
-RMDIR		= cmd /C rd
+RM			= $(TOOLSDIR)/rdel
+CP			= $(TOOLSDIR)/rcopy
+MKDIR		= $(TOOLSDIR)/rmkdir
+RMDIR		= $(TOOLSDIR)/rrmdir
 NASM_CMD	= nasm
 OBJCOPY		= objcopy
-DEPTOOL		= $(SRCDIR)/../tools/deptool
-TOOLSDIR	= $(SRCDIR)/../tools
+DEPTOOL		= $(TOOLSDIR)/deptool
+HOSTTOOL	= $(TOOLSDIR)/hosttype
+TOOLS		= $(DEPTOOL) $(HOSTTOOL)
+
+HOST		= $(shell $(HOSTTOOL))
 
 #-----------------------------------------------------------------------------------------------------
 # TEST IF WE ARE IN THE TARGET DIRECTORY
@@ -52,6 +57,8 @@ TOOLSDIR	= $(SRCDIR)/../tools
 #-----------------------------------------------------------------------------------------------------
 #ifeq (,$(filter $(CURDIR)/$(OUTPUT_DIR),$(notdir $(CURDIR))))
 ifneq ($(CURDIR), $(SRCDIR)/$(OUTPUT_DIR))
+
+SRCDIR		= $(CURDIR)
 
 .SUFFIXES:
 
@@ -63,6 +70,7 @@ MAKETARGET	= $(MAKE) --no-print-directory -C $(OUTPUT_DIR) \
 
 .PHONY: CHANGE_TO_TARGET
 CHANGE_TO_TARGET: $(OBJDIR) $(OBJDIR)/$(TARGET)
+	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
 	@echo Calculating source file dependencies...
 	+@$(MAKETARGET)
 
@@ -71,8 +79,9 @@ $(OBJDIR):
 	@$(MKDIR) $(OBJDIR)
 
 $(OBJDIR)/$(TARGET): $(OBJDIR)
-	@echo Creating directory: $(OBJDIR)\$(TARGET)
-	@$(MKDIR) $(OBJDIR)\$(TARGET)
+	@echo Creating directory: $(OBJDIR)/$(TARGET)
+	@$(MKDIR) $(OBJDIR)/$(TARGET)
+
 
 Makefile : ;
 
@@ -82,10 +91,11 @@ Makefile : ;
 
 .PHONY : clean
 clean:
-	@echo Cleaning directory $(OBJDIR)\$(TARGET)
-	@-$(RM) /Q $(OBJDIR)\$(TARGET)\*.*
-	@echo Removing directory $(OBJDIR)\$(TARGET)
-	@-$(RMDIR) $(OBJDIR)\$(TARGET)
+	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
+	@echo Cleaning directory $(OBJDIR)/$(TARGET)
+	@-$(RM) $(OBJDIR)/$(TARGET)/*
+	@echo Removing directory $(OBJDIR)/$(TARGET)
+	@-$(RMDIR) $(OBJDIR)/$(TARGET)
 	@-$(RMDIR) $(OBJDIR)
 	@echo Clean ALL done.
 
@@ -129,9 +139,22 @@ CFLAGS	=	$(COMPILER_OPTIONS)		\
 LINKER_OPTIONS = -N -Ttext=0x8000 -s
 
 #############################################
-# LINKERS FLAGS
+# LINKER FLAGS
 #
 LFLAGS	=	$(LINKER_OPTIONS)
+
+#############################################
+# NASM FLAGS
+#
+ifeq ($(HOST), dos)
+	NASMFLAGS	=	-f coff
+else
+	ifeq ($(HOST), win32)
+		NASMFLAGS	=	-f win32
+	else
+		NASMFLAGS	=	-f elf
+	endif
+endif
 
 #############################################
 # LIST ALL THE OBJECT FILE GROUPS
@@ -235,13 +258,8 @@ VPATH		=	$(SRCDIR)/					\
 
 #############################################
 
-all : $(DEPTOOL) freeldr.sys
+all : freeldr.sys
 	@echo Make ALL done.
-
-#############################################
-
-$(DEPTOOL) :
-	@$(MAKE) --no-print-directory -C $(TOOLSDIR)
 
 #############################################
 
@@ -265,7 +283,7 @@ freeldr.sys : $(OBJS)
 
 %.o :: %.asm
 	@echo ===================================================== Assembling $*
-	@$(NASM_CMD) -o $@ -f coff $<
+	@$(NASM_CMD) $(NASMFLAGS) -o $@ $<
 
 #############################################
 

@@ -22,16 +22,24 @@
 # PROGRAMS
 #
 CC			= gcc
-RM			= cmd /C del
+RM			= rdel
 
 #############################################
 
 TOOLS	=	deptool	\
-			bin2c
+			bin2c \
+			hosttype \
+			rdel \
+			rcopy \
+			rmkdir \
+			rrmdir
 
 #############################################
 
 all : $(TOOLS)
+	@echo Tools are up to date.
+
+% :: all
 
 #############################################
 
