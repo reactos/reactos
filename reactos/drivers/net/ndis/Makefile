@@ -1,84 +1,64 @@
-# $Id: Makefile,v 1.2 2000/03/08 22:37:01 ea Exp $
-#
-# NDIS.SYS build spec
-#
+# NDIS.SYS - NDIS library
 
-TARGETNAME=
+TARGETNAME=ndis
 
-BASE_CFLAGS = -I../../../include
+BASE_CFLAGS = -I./include -I../../../include -DNDIS_WRAPPER -DBINARY_COMPATIBLE=1
 
-OBJECTS_ARC = arc/stubs.o
-OBJECTS_ETH = eth/stubs.o
-OBJECTS_FDDI = fddi/stubs.o
-OBJECTS_NDIS = ndis/stubs.o
-OBJECTS_TR = tr/stubs.o
+RESOURCE_OBJECT = $(TARGETNAME).coff
+NDIS_OBJECTS    = ndis/main.o ndis/40gone.o ndis/50gone.o ndis/buffer.o ndis/cl.o \
+                  ndis/cm.o ndis/co.o ndis/control.o ndis/hardware.o \
+                  ndis/io.o ndis/memory.o ndis/miniport.o \
+				  ndis/protocol.o ndis/string.o ndis/stubs.o ndis/time.o
 
-OBJECTS_MISC = misc/dllmain.o misc/driver.o misc/stubs.o \
-	misc/$(TARGETNAME).coff
+all: objects $(TARGETNAME).sys
 
-OBJECTS = $(OBJECTS_ARC) $(OBJECTS_ETH) $(OBJECTS_FDDI) $(OBJECTS_NDIS)  \
-          $(OBJECTS_TR)
-
-all: $(TARGETNAME).sys
+objects:
+	mkdir objects
 
 $(TARGETNAME).coff: $(TARGETNAME).rc ../../../include/reactos/resource.h
 
+OBJECTS = $(NDIS_OBJECTS) $(RESOURCE_OBJECT) ../../../ntoskrnl/ntoskrnl.a
+
+
 ifeq ($(DOSCLI),yes)
-CLEAN_FILES = arc\*.o eth\*.o fddi\*.o ndis\*.o tr\*.o \
-              misc\*.o misc\*.coff $(TARGETNAME).o $(TARGETNAME).a \
+CLEAN_FILES = *.o objects\*.o ndis\*.o $(TARGETNAME).coff $(TARGETNAME).o $(TARGETNAME).a \
               junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 else
-CLEAN_FILES = arc/*.o eth/*.o fddi/*.o ndis/*.o tr/*.o \
-              misc/*.o misc/*.coff $(TARGETNAME).o $(TARGETNAME).a \
+CLEAN_FILES = *.o objects/*.o ndis/*.o $(TARGETNAME).coff $(TARGETNAME).o $(TARGETNAME).a \
               junk.tmp base.tmp temp.exp $(TARGETNAME).sys $(TARGETNAME).sym
 endif
 
-$(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
-	$(LD) -r $(OBJECTS) -o $(TARGETNAME).o
+$(TARGETNAME).sys: $(OBJECTS)
 	$(DLLTOOL) \
 		--dllname $(TARGETNAME).sys \
-		--def misc/$(TARGETNAME).def \
-		--output-lib $(TARGETNAME).a \
-		--kill-at
+		--def $(TARGETNAME).def \
+		--kill-at \
+		--output-lib $(TARGETNAME).a
 	$(CC) \
-		--subsystem=native \
 		-mdll \
-		--dll \
-		-e _DriverEntry@8 \
-		-o junk.tmp \
-		-Wl,--image-base,0x0 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--defsym,_end=end \
+		-specs=../../svc_specs \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,--base-file,base.tmp \
+		-Wl,--defsym,_end=end  \
 		-Wl,--defsym,_edata=__data_end__ \
 		-Wl,--defsym,_etext=etext \
-		-Wl,--base-file,base.tmp $(TARGETNAME).o \
-		-specs=../../../specs \
-		../../../ntoskrnl/ntoskrnl.a
+        $(OBJECTS) \
+        -o junk.tmp
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
-		--dllname $(TARGETNAME).sys \
-		--base-file base.tmp \
-		--output-exp temp.exp \
-		--def misc/$(TARGETNAME).edf \
-		--kill-at
+        --dllname $(TARGETNAME).sys \
+        --base-file base.tmp \
+        --output-exp temp.exp \
+        --def $(TARGETNAME).edf
 	- $(RM) base.tmp
 	$(CC) \
-		--subsystem=native \
 		-mdll \
-		--dll \
-		-e _DllMain@8 \
-		-o $(TARGETNAME).sys \
-		$(TARGETNAME).o \
-		../../../ntoskrnl/ntoskrnl.a \
-		-Wl,--image-base,0x0 \
-		-Wl,--file-alignment,0x1000 \
-		-Wl,--section-alignment,0x1000 \
-		-Wl,--defsym,_end=end \
-		-Wl,--defsym,_edata=__data_end__ \
-		-Wl,--defsym,_etext=etext \
+		-specs=../../svc_specs \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
 		-Wl,temp.exp \
-		-specs=../../../specs
+        $(OBJECTS) \
+        -o $(TARGETNAME).sys
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGETNAME).sys > $(TARGETNAME).sym
 
@@ -107,8 +87,7 @@ else
 	$(CP) $(TARGETNAME).sys ../../$(DIST_DIR)/drivers/$(TARGETNAME).sys
 endif
 
-#WITH_DEBUGGING = yes
+#WITH_DEBUGGING      = yes
 #WIN32_LEAN_AND_MEAN = yes
 #WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak
-

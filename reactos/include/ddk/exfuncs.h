@@ -379,12 +379,12 @@ ExInitializeResourceLite (
  *	Routine = Routine to be called by the worker thread
  *	Context = Parameter to be passed to the callback
  */
-#define ExInitializeWorkItem(Item, Routine, Context) \
+#define ExInitializeWorkItem(Item, WorkerRoutine, RoutineContext) \
 	ASSERT_IRQL(DISPATCH_LEVEL); \
-	(Item)->Routine = (Routine); \
-	(Item)->Context = (Context); \
-	(Item)->List.Flink = NULL; \
-	(Item)->List.Blink = NULL;
+	(Item)->Routine = (WorkerRoutine); \
+	(Item)->Context = (RoutineContext); \
+	(Item)->Entry.Flink = NULL; \
+	(Item)->Entry.Blink = NULL;
 
 NTSTATUS
 STDCALL
