@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.13 2001/09/01 15:36:43 chorns Exp $
+/* $Id: reg.c,v 1.14 2001/09/03 23:11:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -771,8 +771,8 @@ RegEnumKeyExA(
 
   if ((lpClass) && (!lpcbClass))
   {
-  	SetLastError(ERROR_INVALID_PARAMETER);
-	  return ERROR_INVALID_PARAMETER;
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return ERROR_INVALID_PARAMETER;
   }
 
   RtlInitUnicodeString(&UnicodeStringName, NULL);
@@ -882,10 +882,10 @@ RegEnumKeyExW(
 	  if (KeyInfo == NULL)
     {
       SetLastError(ERROR_OUTOFMEMORY);
-	  	return ERROR_OUTOFMEMORY;
+      return ERROR_OUTOFMEMORY;
     }
 
-	  Status = NtEnumerateKey(
+    Status = NtEnumerateKey(
       KeyHandle,
 	  	(ULONG)dwIndex,
 	  	KeyNodeInformation,
@@ -897,7 +897,7 @@ RegEnumKeyExW(
 
     if (Status == STATUS_BUFFER_OVERFLOW)
     {
-  	  RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
+      RtlFreeHeap(RtlGetProcessHeap(), 0, KeyInfo);
       BufferSize = ResultSize;
       continue;
     }
@@ -1043,11 +1043,20 @@ RegEnumValueW(
 	DWORD dwError = ERROR_SUCCESS;
 	ULONG BufferSize;
 	ULONG ResultSize;
+  HANDLE KeyHandle;
 
-	BufferSize = sizeof (KEY_VALUE_FULL_INFORMATION) +
+  Status = MapDefaultKey(&KeyHandle, hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      dwError = RtlNtStatusToDosError(Status);
+      SetLastError(dwError);
+      return(dwError);
+    }
+
+  BufferSize = sizeof (KEY_VALUE_FULL_INFORMATION) +
 		*lpcbValueName * sizeof(WCHAR);
   if (lpcbData)
-		BufferSize += *lpcbData;
+    BufferSize += *lpcbData;
 
   /* We don't know the exact size of the data returned, so call
      NtEnumerateValueKey() with a buffer size determined from parameters
@@ -1065,7 +1074,7 @@ RegEnumValueW(
     }
 
 	  Status = NtEnumerateValueKey(
-      hKey,
+		KeyHandle,
 	  	(ULONG)dwIndex,
 	  	KeyValueFullInformation,
 	  	ValueInfo,
@@ -1865,9 +1874,18 @@ RegQueryValueExW(
 	DWORD dwError = ERROR_SUCCESS;
 	ULONG BufferSize;
 	ULONG ResultSize;
+  HANDLE KeyHandle;
 
   DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
     hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
+
+  Status = MapDefaultKey(&KeyHandle, hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      dwError = RtlNtStatusToDosError(Status);
+      SetLastError(dwError);
+      return(dwError);
+    }
 
   if ((lpData) && (!lpcbData))
   {
@@ -2082,34 +2100,99 @@ RegRestoreKeyW(
 /************************************************************************
  *	RegSaveKeyA
  */
-LONG
-STDCALL
-RegSaveKeyA(
-	HKEY			hKey,
-	LPCSTR			lpFile,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
+LONG STDCALL
+RegSaveKeyA(HKEY hKey,
+	    LPCSTR lpFile,
+	    LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  UNICODE_STRING FileName;
+  LONG ErrorCode;
+
+  RtlCreateUnicodeStringFromAsciiz(&FileName,
+				   (LPSTR)lpFile);
+  ErrorCode = RegSaveKeyW(hKey,
+			  FileName.Buffer,
+			  lpSecurityAttributes);
+  RtlFreeUnicodeString(&FileName);
+
+  return(ErrorCode);
 }
 
 
 /************************************************************************
  *	RegSaveKeyW
  */
-LONG
-STDCALL
-RegSaveKeyW(
-	HKEY			hKey,
-	LPCWSTR			lpFile,
-	LPSECURITY_ATTRIBUTES	lpSecurityAttributes
-	)
+LONG STDCALL
+RegSaveKeyW(HKEY hKey,
+	    LPCWSTR lpFile,
+	    LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-  UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+  PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING NtName;
+  IO_STATUS_BLOCK IoStatusBlock;
+  HANDLE FileHandle;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+  LONG ErrorCode;
+
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpFile,
+				    &NtName,
+				    NULL,
+				    NULL))
+    {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return(ERROR_INVALID_PARAMETER);
+    }
+
+  if (lpSecurityAttributes != NULL)
+    SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &NtName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     SecurityDescriptor);
+
+  Status = NtCreateFile(&FileHandle,
+			GENERIC_WRITE | SYNCHRONIZE,
+			&ObjectAttributes,
+			&IoStatusBlock,
+			NULL,
+			FILE_ATTRIBUTE_NORMAL,
+			FILE_SHARE_READ,
+			FILE_CREATE,
+			FILE_OPEN_FOR_BACKUP_INTENT | FILE_SYNCHRONOUS_IO_NONALERT,
+			NULL,
+			0);
+  RtlFreeUnicodeString(&NtName);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  Status = NtSaveKey(KeyHandle,
+		     FileHandle);
+  NtClose(FileHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      ErrorCode = RtlNtStatusToDosError(Status);
+      SetLastError(ErrorCode);
+      return(ErrorCode);
+    }
+
+  return(ERROR_SUCCESS);
 }
 
 
