@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.22 2004/08/15 17:03:15 chorns Exp $
+/* $Id: misc.c,v 1.23 2004/09/06 22:12:25 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -57,31 +57,117 @@ AreAnyAccessesGranted(DWORD GrantedAccess,
  *  The information returned is constrained by the callers access rights and
  *  privileges.
  *
- * @unimplemented
+ * @implemented
  */
 BOOL WINAPI
-GetFileSecurityA (LPCSTR lpFileName,
-		  SECURITY_INFORMATION RequestedInformation,
-		  PSECURITY_DESCRIPTOR pSecurityDescriptor,
-		  DWORD nLength,
-		  LPDWORD lpnLengthNeeded)
+GetFileSecurityA(LPCSTR lpFileName,
+		 SECURITY_INFORMATION RequestedInformation,
+		 PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		 DWORD nLength,
+		 LPDWORD lpnLengthNeeded)
 {
-  DPRINT1("GetFileSecurityA: stub\n");
+  UNICODE_STRING FileName;
+  NTSTATUS Status;
+  BOOL bResult;
+
+  Status = RtlCreateUnicodeStringFromAsciiz(&FileName,
+					    (LPSTR)lpFileName);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
+  bResult = GetFileSecurityW(FileName.Buffer,
+			     RequestedInformation,
+			     pSecurityDescriptor,
+			     nLength,
+			     lpnLengthNeeded);
+
+  RtlFreeUnicodeString(&FileName);
+
+  return bResult;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL WINAPI
+GetFileSecurityW(LPCWSTR lpFileName,
+		 SECURITY_INFORMATION RequestedInformation,
+		 PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		 DWORD nLength,
+		 LPDWORD lpnLengthNeeded)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  IO_STATUS_BLOCK StatusBlock;
+  UNICODE_STRING FileName;
+  ULONG AccessMask = 0;
+  HANDLE FileHandle;
+  NTSTATUS Status;
+
+  DPRINT("GetFileSecurityW() called\n");
+
+  if (RequestedInformation &
+      (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
+    {
+      AccessMask |= STANDARD_RIGHTS_READ;
+    }
+
+  if (RequestedInformation & SACL_SECURITY_INFORMATION)
+    {
+      AccessMask |= ACCESS_SYSTEM_SECURITY;
+    }
+
+  if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpFileName,
+				    &FileName,
+				    NULL,
+				    NULL))
+    {
+      DPRINT("Invalid path\n");
+      SetLastError(ERROR_BAD_PATHNAME);
+      return FALSE;
+    }
+
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &FileName,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+
+  Status = NtOpenFile(&FileHandle,
+		      AccessMask,
+		      &ObjectAttributes,
+		      &StatusBlock,
+		      FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		      0);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenFile() failed (Status %lx)\n", Status);
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
+  RtlFreeUnicodeString(&FileName);
+
+  Status = NtQuerySecurityObject(FileHandle,
+				 RequestedInformation,
+				 pSecurityDescriptor,
+				 nLength,
+				 lpnLengthNeeded);
+  NtClose(FileHandle);
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtQuerySecurityObject() failed (Status %lx)\n", Status);
+      SetLastError(RtlNtStatusToDosError(Status));
+      return FALSE;
+    }
+
   return TRUE;
 }
 
-/*
- * @unimplemented
- */
-BOOL WINAPI
-GetFileSecurityW (LPCWSTR lpFileName,
-                  SECURITY_INFORMATION RequestedInformation,
-                  PSECURITY_DESCRIPTOR pSecurityDescriptor,
-                  DWORD nLength, LPDWORD lpnLengthNeeded)
-{
-  DPRINT1("GetFileSecurityW: stub\n");
-  return TRUE;
-}
 
 /*
  * @implemented
@@ -684,6 +770,39 @@ GetSecurityInfo(HANDLE handle,
 {
   DPRINT1("GetSecurityInfo: stub\n");
   return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/**********************************************************************
+ * ImpersonateNamedPipeClient			EXPORTED
+ *
+ * @implemented
+ */
+BOOL STDCALL
+ImpersonateNamedPipeClient(HANDLE hNamedPipe)
+{
+  IO_STATUS_BLOCK StatusBlock;
+  NTSTATUS Status;
+
+  DPRINT("ImpersonateNamedPipeClient() called\n");
+
+  Status = NtFsControlFile(hNamedPipe,
+			   NULL,
+			   NULL,
+			   NULL,
+			   &StatusBlock,
+			   FSCTL_PIPE_IMPERSONATE,
+			   NULL,
+			   0,
+			   NULL,
+			   0);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 /* EOF */
