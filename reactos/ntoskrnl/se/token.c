@@ -1632,7 +1632,7 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 {
 //  PLUID_AND_ATTRIBUTES Privileges;
   KPROCESSOR_MODE PreviousMode;
-//  ULONG PrivilegeCount;
+  ULONG PrivilegeCount;
   PTOKEN Token;
 //  ULONG Length;
   ULONG i;
@@ -1690,6 +1690,12 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 		       &c);
 #endif
 
+  PrivilegeCount = (BufferLength - FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges)) /
+                   sizeof(LUID_AND_ATTRIBUTES);
+
+  if (PreviousState != NULL)
+    PreviousState->PrivilegeCount = 0;
+
   k = 0;
   if (DisableAllPrivileges == TRUE)
     {
@@ -1700,11 +1706,22 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 	      DPRINT ("Attributes differ\n");
 
 	      /* Save current privilege */
-	      if (PreviousState != NULL && k < PreviousState->PrivilegeCount)
+	      if (PreviousState != NULL)
 		{
-		  PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
-		  PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
-		  k++;
+                  if (k < PrivilegeCount)
+                    {
+                      PreviousState->PrivilegeCount++;
+                      PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
+                      PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
+                    }
+                  else
+                    {
+                      /* FIXME: Should revert all the changes, calculate how
+                       * much space would be needed, set ResultLength
+                       * accordingly and fail.
+                       */
+                    }
+                  k++;
 		}
 
 	      /* Update current privlege */
@@ -1734,11 +1751,22 @@ NtAdjustPrivilegesToken (IN HANDLE TokenHandle,
 			      NewState->Privileges[j].Attributes);
 
 		      /* Save current privilege */
-		      if (PreviousState != NULL && k < PreviousState->PrivilegeCount)
+		      if (PreviousState != NULL)
 			{
-			  PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
-			  PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
-			  k++;
+                          if (k < PrivilegeCount)
+                            {
+                              PreviousState->PrivilegeCount++;
+                              PreviousState->Privileges[k].Luid = Token->Privileges[i].Luid;
+                              PreviousState->Privileges[k].Attributes = Token->Privileges[i].Attributes;
+                            }
+                          else
+                            {
+                              /* FIXME: Should revert all the changes, calculate how
+                               * much space would be needed, set ResultLength
+                               * accordingly and fail.
+                               */
+                            }
+                          k++;
 			}
 
 		      /* Update current privlege */
