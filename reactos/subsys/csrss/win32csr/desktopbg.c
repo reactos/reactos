@@ -1,4 +1,4 @@
-/* $Id: desktopbg.c,v 1.4 2003/12/27 15:09:51 navaraf Exp $
+/* $Id: desktopbg.c,v 1.5 2004/01/11 17:31:16 gvg Exp $
  *
  * reactos/subsys/csrss/win32csr/desktopbg.c
  *
@@ -32,6 +32,7 @@ typedef struct tagDTBG_THREAD_DATA
 } DTBG_THREAD_DATA, *PDTBG_THREAD_DATA;
 
 static BOOL Initialized = FALSE;
+static HWND VisibleDesktopWindow = NULL;
 
 static LRESULT CALLBACK
 DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
@@ -68,6 +69,7 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                                 (int)(short) HIWORD(lParam),
                                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_SHOWWINDOW | SWP_NOREDRAW);
         UpdateWindow(Wnd);
+        VisibleDesktopWindow = Wnd;
         break;
       case PM_HIDE_DESKTOP:
         Result = ! SetWindowPos(Wnd,
@@ -75,6 +77,7 @@ DtbgWindowProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
                                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOMOVE | SWP_NOSIZE |
                                 SWP_HIDEWINDOW);
         UpdateWindow(Wnd);
+        VisibleDesktopWindow = NULL;
         break;
       default:
         Result = 0;
@@ -95,12 +98,12 @@ DtbgInit()
   WindowStation = OpenWindowStationW(L"WinSta0", FALSE, GENERIC_ALL);
   if (NULL == WindowStation)
     {
-      DPRINT1("Win32Csr: failed to open window station\n");
+      DPRINT1("Failed to open window station\n");
       return FALSE;
     }
   if (! SetProcessWindowStation(WindowStation))
     {
-      DPRINT1("Win32Csr: failed to set process window station\n");
+      DPRINT1("Failed to set process window station\n");
       return FALSE;
     }
 
@@ -121,10 +124,11 @@ DtbgInit()
   ClassAtom = RegisterClassExW(&Class);
   if ((ATOM) 0 == ClassAtom)
     {
-      DPRINT1("Win32Csr: Unable to register desktop background class (error %d)\n",
+      DPRINT1("Unable to register desktop background class (error %d)\n",
               GetLastError());
       return FALSE;
     }
+  VisibleDesktopWindow = NULL;
 
   return TRUE;
 }
@@ -138,7 +142,7 @@ DtbgDesktopThread(PVOID Data)
 
   if (! SetThreadDesktop(ThreadData->Desktop))
     {
-      DPRINT1("Win32Csr: failed to set thread desktop\n");
+      DPRINT1("Failed to set thread desktop\n");
       ThreadData->Status = STATUS_UNSUCCESSFUL;
       SetEvent(ThreadData->Event);
       return 1;
@@ -156,7 +160,7 @@ DtbgDesktopThread(PVOID Data)
                                 NULL);
   if (NULL == BackgroundWnd)
     {
-      DPRINT1("Win32Csr: failed to create desktop background window\n");
+      DPRINT1("Failed to create desktop background window\n");
       ThreadData->Status = STATUS_UNSUCCESSFUL;
       SetEvent(ThreadData->Event);
       return 1;
@@ -198,7 +202,7 @@ CSR_API(CsrCreateDesktop)
                          0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
     {
-      DPRINT1("Win32Csr: failed to open desktop %S\n",
+      DPRINT1("Failed to open desktop %S\n",
               Request->Data.CreateDesktopRequest.DesktopName);
       return Reply->Status = STATUS_UNSUCCESSFUL;
     }
@@ -207,7 +211,7 @@ CSR_API(CsrCreateDesktop)
   ThreadData.Event = CreateEventW(NULL, FALSE, FALSE, NULL);
   if (NULL == ThreadData.Event)
     {
-      DPRINT1("Win32Csr: Failed to create event (error %d)\n", GetLastError());
+      DPRINT1("Failed to create event (error %d)\n", GetLastError());
       return Reply->Status = STATUS_UNSUCCESSFUL;
     }
   ThreadHandle = CreateThread(NULL,
@@ -219,7 +223,7 @@ CSR_API(CsrCreateDesktop)
   if (NULL == ThreadHandle)
     {
       CloseHandle(ThreadData.Event);
-      DPRINT1("Win32Csr: Failed to create desktop window thread.\n");
+      DPRINT1("Failed to create desktop window thread.\n");
       return Reply->Status = STATUS_UNSUCCESSFUL;
     }
   CloseHandle(ThreadHandle);
@@ -261,6 +265,17 @@ CSR_API(CsrHideDesktop)
                   ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
   return Reply->Status;
+}
+
+BOOL FASTCALL
+DtbgIsDesktopVisible(VOID)
+{
+  if (NULL != VisibleDesktopWindow && ! IsWindowVisible(VisibleDesktopWindow))
+    {
+      VisibleDesktopWindow = NULL;
+    }
+
+  return NULL != VisibleDesktopWindow;
 }
 
 /* EOF */

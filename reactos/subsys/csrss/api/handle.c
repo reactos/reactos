@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.15 2003/12/02 11:38:47 gvg Exp $
+/* $Id: handle.c,v 1.16 2004/01/11 17:31:15 gvg Exp $
  *
  * reactos/subsys/csrss/api/handle.c
  *
@@ -60,21 +60,21 @@ CsrRegisterObjectDefinitions(PCSRSS_OBJECT_DEFINITION NewDefinitions)
 
 NTSTATUS STDCALL CsrGetObject( PCSRSS_PROCESS_DATA ProcessData, HANDLE Handle, Object_t **Object )
 {
-   ULONG h = (((ULONG)Handle) >> 2) - 1;
-   DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
+  ULONG h = (((ULONG)Handle) >> 2) - 1;
+  DPRINT("CsrGetObject, Object: %x, %x, %x\n", Object, Handle, ProcessData ? ProcessData->HandleTableSize : 0);
 
-   if (ProcessData == NULL)
-   {
+  if (ProcessData == NULL)
+    {
       return STATUS_INVALID_PARAMETER;
-   }
-   if( h >= ProcessData->HandleTableSize )
-     {
-       DPRINT("CsrGetObject returning invalid handle\n");
-       return STATUS_INVALID_HANDLE;
-     }
-   *Object = ProcessData->HandleTable[h];
-   //   DbgPrint( "CsrGetObject returning\n" );
-   return *Object ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
+    }
+  if (ProcessData->HandleTableSize <= h)
+    {
+      DPRINT1("CsrGetObject returning invalid handle\n");
+      return STATUS_INVALID_HANDLE;
+    }
+  *Object = ProcessData->HandleTable[h];
+  //   DbgPrint( "CsrGetObject returning\n" );
+  return *Object ? STATUS_SUCCESS : STATUS_INVALID_HANDLE;
 }
 
 

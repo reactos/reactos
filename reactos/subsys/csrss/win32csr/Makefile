@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2003/12/07 23:02:57 gvg Exp $
+# $Id: Makefile,v 1.3 2004/01/11 17:31:15 gvg Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -15,7 +15,7 @@ TARGET_LFLAGS = -nostartfiles -nostdlib
 
 TARGET_SDKLIBS = ntdll.a kernel32.a user32.a gdi32.a
 
-TARGET_OBJECTS = dllmain.o conio.o guiconsole.o desktopbg.o
+TARGET_OBJECTS = dllmain.o conio.o desktopbg.o guiconsole.o tuiconsole.o
 
 TARGET_ENTRY = _DllMain@12
 

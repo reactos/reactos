@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.31 2003/12/18 09:51:08 gvg Exp $
+/* $Id: process.c,v 1.32 2004/01/11 17:31:15 gvg Exp $
  *
  * reactos/subsys/csrss/api/process.c
  *
@@ -14,6 +14,7 @@
 #include <csrss/csrss.h>
 #include <ntdll/rtl.h>
 #include "api.h"
+#include "conio.h"
 
 #define NDEBUG
 #include <debug.h>

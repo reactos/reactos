@@ -1,9 +1,9 @@
-/* $Id: guiconsole.c,v 1.6 2003/12/31 20:16:39 gvg Exp $
+/* $Id: guiconsole.c,v 1.7 2004/01/11 17:31:16 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            subsys/csrss/win32csr/dllmain.c
- * PURPOSE:         Initialization 
+ * FILE:            subsys/csrss/win32csr/guiconsole.c
+ * PURPOSE:         Implementation of gui-mode consoles
  */
 
 /* INCLUDES ******************************************************************/
@@ -12,6 +12,9 @@
 #include "conio.h"
 #include "guiconsole.h"
 #include "win32csr.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* Not defined in any header file */
 extern VOID STDCALL PrivateCsrssManualGuiCheck(LONG Check);
@@ -38,6 +41,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
 
 #define CURSOR_BLINK_TIME 500
 
+static BOOL Initialized = FALSE;
 static HWND NotifyWnd;
 
 /* FUNCTIONS *****************************************************************/
@@ -46,7 +50,7 @@ static VOID FASTCALL
 GuiConsoleGetDataPointers(HWND hWnd, PCSRSS_CONSOLE *Console, PGUI_CONSOLE_DATA *GuiData)
 {
   *Console = (PCSRSS_CONSOLE) GetWindowLongW(hWnd, GWL_USERDATA);
-  *GuiData = (NULL == *Console ? NULL : (*Console)->GuiConsoleData);
+  *GuiData = (NULL == *Console ? NULL : (*Console)->PrivateData);
 }
 
 static BOOL FASTCALL
@@ -64,7 +68,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
                       (Console->Size.X + 1) * sizeof(WCHAR));
   if (NULL == GuiData)
     {
-      DbgPrint("GuiConsoleNcCreate: HeapAlloc failed\n");
+      DPRINT1("GuiConsoleNcCreate: HeapAlloc failed\n");
       return FALSE;
     }
   GuiData->LineBuffer = (PWCHAR)(GuiData + 1);
@@ -76,28 +80,28 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
                               L"Bitstream Vera Sans Mono");
   if (NULL == GuiData->Font)
     {
-      DbgPrint("GuiConsoleNcCreate: CreateFont failed\n");
+      DPRINT1("GuiConsoleNcCreate: CreateFont failed\n");
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   Dc = GetDC(hWnd);
   if (NULL == Dc)
     {
-      DbgPrint("GuiConsoleNcCreate: GetDC failed\n");
+      DPRINT1("GuiConsoleNcCreate: GetDC failed\n");
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   OldFont = SelectObject(Dc, GuiData->Font);
   if (NULL == OldFont)
     {
-      DbgPrint("GuiConsoleNcCreate: SelectObject failed\n");
+      DPRINT1("GuiConsoleNcCreate: SelectObject failed\n");
       ReleaseDC(hWnd, Dc);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
       return FALSE;
     }
   if (! GetTextMetricsW(Dc, &Metrics))
     {
-      DbgPrint("GuiConsoleNcCreate: GetTextMetrics failed\n");
+      DPRINT1("GuiConsoleNcCreate: GetTextMetrics failed\n");
       SelectObject(Dc, OldFont);
       ReleaseDC(hWnd, Dc);
       HeapFree(Win32CsrApiHeap, 0, GuiData);
@@ -110,7 +114,7 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   GuiData->CursorBlinkOn = TRUE;
   GuiData->ForceCursorOff = FALSE;
 
-  Console->GuiConsoleData = GuiData;
+  Console->PrivateData = GuiData;
   SetWindowLongW(hWnd, GWL_USERDATA, (LONG) Console);
 
   GetWindowRect(hWnd, &Rect);
@@ -178,13 +182,13 @@ GuiConsoleHandlePaint(HWND hWnd)
   if (NULL != Console && NULL != GuiData && NULL != Console->ActiveBuffer)
     {
       Buff = Console->ActiveBuffer;
-      EnterCriticalSection(&(Buff->Lock));
+      EnterCriticalSection(&(Buff->Header.Lock));
 
       Dc = BeginPaint(hWnd, &Ps);
       if (Ps.rcPaint.right <= Ps.rcPaint.left || Ps.rcPaint.bottom <= Ps.rcPaint.top)
         {
           EndPaint(hWnd, &Ps);
-          LeaveCriticalSection(&(Buff->Lock));
+          LeaveCriticalSection(&(Buff->Header.Lock));
           return;
         }
       OldFont = SelectObject(Dc, GuiData->Font);
@@ -220,7 +224,8 @@ GuiConsoleHandlePaint(HWND hWnd)
                   Attribute = *(From + 1);
                   if (Attribute != LastAttribute)
                     {
-                      GuiConsoleSetTextColors(Dc, LastAttribute);
+                      GuiConsoleSetTextColors(Dc, Attribute);
+                      LastAttribute = Attribute;
                     }
                 }  
               *((PBYTE) To) = *From;
@@ -258,7 +263,7 @@ GuiConsoleHandlePaint(HWND hWnd)
         }
       EndPaint(hWnd, &Ps);
 
-      LeaveCriticalSection(&(Buff->Lock));
+      LeaveCriticalSection(&(Buff->Header.Lock));
     }
   else
     {
@@ -280,7 +285,7 @@ GuiConsoleHandleKey(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
   Message.wParam = wParam;
   Message.lParam = lParam;
 
-  CsrProcessKey(&Message, Console);
+  ConioProcessKey(&Message, Console, FALSE);
 }
 
 static VOID FASTCALL
@@ -378,22 +383,148 @@ GuiConsoleHandleCopyRegion(HWND hWnd, PRECT Source, PRECT Dest)
 }
 
 static VOID FASTCALL
+GuiIntDrawRegion(PGUI_CONSOLE_DATA GuiData, HWND Wnd, RECT *Region)
+{
+  RECT RegionRect;
+
+  RegionRect.left = Region->left * GuiData->CharWidth;
+  RegionRect.top = Region->top * GuiData->CharHeight;
+  RegionRect.right = (Region->right + 1) * GuiData->CharWidth;
+  RegionRect.bottom = (Region->bottom + 1) * GuiData->CharHeight;
+
+  InvalidateRect(Wnd, &RegionRect, FALSE);
+}
+
+static VOID STDCALL
+GuiDrawRegion(PCSRSS_CONSOLE Console, RECT *Region)
+{
+  PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
+
+  if (NULL == Console->hWindow || NULL == GuiData)
+    {
+      return;
+    }
+
+  GuiIntDrawRegion(GuiData, Console->hWindow, Region);
+}
+
+static VOID FASTCALL
+GuiInvalidateCell(PGUI_CONSOLE_DATA GuiData, HWND Wnd, UINT x, UINT y)
+{
+  RECT CellRect;
+
+  CellRect.left = x;
+  CellRect.top = y;
+  CellRect.right = x;
+  CellRect.bottom = y;
+
+  GuiIntDrawRegion(GuiData, Wnd, &CellRect);
+}
+
+static VOID STDCALL
+GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, UINT CursorStartX, UINT CursorStartY,
+               UINT ScrolledLines, CHAR *Buffer, UINT Length)
+{
+  PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
+  PCSRSS_SCREEN_BUFFER Buff = Console->ActiveBuffer;
+  LONG CursorEndX, CursorEndY;
+  RECT Source, Dest;
+
+  if (NULL == Console->hWindow || NULL == GuiData)
+    {
+      return;
+    }
+
+  if (0 != ScrolledLines)
+    {
+      Source.left = 0;
+      Source.top = ScrolledLines;
+      Source.right = Console->Size.X - 1;
+      Source.bottom = ScrolledLines + Region->top - 1;
+      Dest.left = 0;
+      Dest.top = 0;
+      Dest.right = Console->Size.X - 1;
+      Dest.bottom = Region->top - 1;
+
+      GuiConsoleCopyRegion(Console, &Source, &Dest);
+    }
+
+  GuiIntDrawRegion(GuiData, Console->hWindow, Region);
+
+  if (CursorStartX < Region->left || Region->right < CursorStartX
+      || CursorStartY < Region->top || Region->bottom < CursorStartY)
+    {
+      GuiInvalidateCell(GuiData, Console->hWindow, CursorStartX, CursorStartY);
+    }
+
+  ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
+                         &CursorEndX, &CursorEndY);
+  if ((CursorEndX < Region->left || Region->right < CursorEndX
+       || CursorEndY < Region->top || Region->bottom < CursorEndY)
+      && (CursorEndX != CursorStartX || CursorEndY != CursorStartY))
+    {
+      GuiInvalidateCell(GuiData, Console->hWindow, CursorEndX, CursorEndY);
+    }
+}
+
+static BOOL STDCALL
+GuiSetCursorInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
+{
+  RECT UpdateRect;
+
+  if (Console->ActiveBuffer == Buff)
+    {
+      ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
+                             &UpdateRect.left, &UpdateRect.top);
+      UpdateRect.right = UpdateRect.left;
+      UpdateRect.bottom = UpdateRect.top;
+      ConioDrawRegion(Console, &UpdateRect);
+    }
+
+  return TRUE;
+}
+
+static BOOL STDCALL
+GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCursorX, UINT OldCursorY)
+{
+  RECT UpdateRect;
+
+  if (Console->ActiveBuffer == Buff)
+    {
+      /* Redraw char at old position (removes cursor) */
+      UpdateRect.left = OldCursorX;
+      UpdateRect.top = OldCursorY;
+      UpdateRect.right = OldCursorX;
+      UpdateRect.bottom = OldCursorY;
+      ConioDrawRegion(Console, &UpdateRect);
+      /* Redraw char at new position (shows cursor) */
+      ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY,
+                             &(UpdateRect.left), &(UpdateRect.top));
+      UpdateRect.right = UpdateRect.left;
+      UpdateRect.bottom = UpdateRect.top;
+      ConioDrawRegion(Console, &UpdateRect);
+    }
+
+  return TRUE;
+}
+
+static VOID FASTCALL
 GuiConsoleHandleTimer(HWND hWnd)
 {
   PCSRSS_CONSOLE Console;
   PGUI_CONSOLE_DATA GuiData;
-  SMALL_RECT CursorRect;
+  RECT CursorRect;
   ULONG CursorX, CursorY;
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   GuiData->CursorBlinkOn = ! GuiData->CursorBlinkOn;
 
   GuiConsoleGetLogicalCursorPos(Console->ActiveBuffer, &CursorX, &CursorY);
-  CursorRect.Left = CursorX;
-  CursorRect.Top = CursorY;
-  CursorRect.Right = CursorX;
-  CursorRect.Bottom = CursorY;
-  GuiConsoleDrawRegion(Console, CursorRect);
+  CursorRect.left = CursorX;
+  CursorRect.top = CursorY;
+  CursorRect.right = CursorX;
+  CursorRect.bottom = CursorY;
+  GuiDrawRegion(Console, &CursorRect);
 }
 
 static VOID FASTCALL
@@ -410,7 +541,7 @@ GuiConsoleHandleNcDestroy(HWND hWnd)
 
   GuiConsoleGetDataPointers(hWnd, &Console, &GuiData);
   KillTimer(hWnd, 1);
-  Console->GuiConsoleData = NULL;
+  Console->PrivateData = NULL;
   HeapFree(Win32CsrApiHeap, 0, GuiData);
 }
 
@@ -546,8 +677,8 @@ GuiConsoleGuiThread(PVOID Data)
   return 1;
 }
 
-VOID FASTCALL
-GuiConsoleInitConsoleSupport(VOID)
+static BOOL FASTCALL
+GuiInit(VOID)
 {
   HDESK Desktop;
   NTSTATUS Status;
@@ -556,8 +687,8 @@ GuiConsoleInitConsoleSupport(VOID)
   Desktop = OpenDesktopW(L"Default", 0, FALSE, GENERIC_ALL);
   if (NULL == Desktop)
     {
-      DbgPrint("Win32Csr: failed to open desktop\n");
-      return;
+      DPRINT1("Failed to open desktop\n");
+      return FALSE;
     }
   Status = NtSetInformationProcess(NtCurrentProcess(),
                                    ProcessDesktop,
@@ -565,13 +696,13 @@ GuiConsoleInitConsoleSupport(VOID)
                                    sizeof(Desktop));
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint("Win32Csr: cannot set default desktop.\n");
-      return;
+      DPRINT1("Cannot set default desktop.\n");
+      return FALSE;
     }
   if (! SetThreadDesktop(Desktop))
     {
-      DbgPrint("Win32Csr: failed to set thread desktop\n");
-      return;
+      DPRINT1("Failed to set thread desktop\n");
+      return FALSE;
     }
 
   wc.lpszClassName = L"Win32CsrCreateNotify";
@@ -586,7 +717,8 @@ GuiConsoleInitConsoleSupport(VOID)
   wc.cbWndExtra = 0;
   if (RegisterClassW(&wc) == 0)
     {
-      return;
+      DPRINT1("Failed to register notify wndproc\n");
+      return FALSE;
     }
 
   wc.lpszClassName = L"Win32CsrConsole";
@@ -601,16 +733,61 @@ GuiConsoleInitConsoleSupport(VOID)
   wc.cbWndExtra = 0;
   if (RegisterClassW(&wc) == 0)
     {
-      return;
+      DPRINT1("Failed to register console wndproc\n");
+      return FALSE;
     }
+
+  return TRUE;
 }
 
-BOOL STDCALL
-GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
+static VOID STDCALL
+GuiInitScreenBuffer(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buffer)
+{
+  Buffer->DefaultAttrib = 0x0f;
+}
+
+STATIC BOOL STDCALL
+GuiChangeTitle(PCSRSS_CONSOLE Console)
+{
+  SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Console->Title.Buffer);
+
+  return TRUE;
+}
+
+static VOID STDCALL
+GuiCleanupConsole(PCSRSS_CONSOLE Console)
+{
+  SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM) Console);
+}
+
+static CSRSS_CONSOLE_VTBL GuiVtbl =
+{
+  GuiInitScreenBuffer,
+  GuiWriteStream,
+  GuiDrawRegion,
+  GuiSetCursorInfo,
+  GuiSetScreenInfo,
+  GuiChangeTitle,
+  GuiCleanupConsole
+};
+
+NTSTATUS FASTCALL
+GuiInitConsole(PCSRSS_CONSOLE Console)
 {
   HANDLE GraphicsStartupEvent;
   HANDLE ThreadHandle;
 
+  if (! Initialized)
+    {
+      Initialized = TRUE;
+      if (! GuiInit())
+        {
+          Initialized = FALSE;
+          return STATUS_UNSUCCESSFUL;
+        }
+    }
+
+  Console->Vtbl = &GuiVtbl;
   Console->Size.X = 80;
   Console->Size.Y = 25;
   if (NULL == NotifyWnd)
@@ -618,7 +795,7 @@ GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
       GraphicsStartupEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
       if (NULL == GraphicsStartupEvent)
         {
-          return FALSE;
+          return STATUS_UNSUCCESSFUL;
         }
 
       ThreadHandle = CreateThread(NULL,
@@ -630,8 +807,8 @@ GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
       if (NULL == ThreadHandle)
         {
           NtClose(GraphicsStartupEvent);
-          DbgPrint("Win32Csr: Failed to create graphics console thread. Expect problems\n");
-          return FALSE;
+          DPRINT1("Win32Csr: Failed to create graphics console thread. Expect problems\n");
+          return STATUS_UNSUCCESSFUL;
         }
       CloseHandle(ThreadHandle);
 
@@ -640,33 +817,14 @@ GuiConsoleInitConsole(PCSRSS_CONSOLE Console)
 
       if (NULL == NotifyWnd)
         {
-          DbgPrint("Win32Csr: Failed to create notification window.\n");
-          return FALSE;
+          DPRINT1("Win32Csr: Failed to create notification window.\n");
+          return STATUS_UNSUCCESSFUL;
         }
     }
 
   PostMessageW(NotifyWnd, PM_CREATE_CONSOLE, 0, (LPARAM) Console);
 
-  return TRUE;
-}
-
-VOID STDCALL
-GuiConsoleDrawRegion(PCSRSS_CONSOLE Console, SMALL_RECT Region)
-{
-  PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->GuiConsoleData;
-  RECT RegionRect;
-
-  if (NULL == Console->hWindow || NULL == GuiData)
-    {
-      return;
-    }
-
-  RegionRect.left = Region.Left * GuiData->CharWidth;
-  RegionRect.top = Region.Top * GuiData->CharHeight;
-  RegionRect.right = (Region.Right + 1) * GuiData->CharWidth;
-  RegionRect.bottom = (Region.Bottom + 1) * GuiData->CharHeight;
-
-  InvalidateRect(Console->hWindow, &RegionRect, FALSE);
+  return STATUS_SUCCESS;
 }
 
 VOID STDCALL
@@ -674,21 +832,9 @@ GuiConsoleCopyRegion(PCSRSS_CONSOLE Console,
                      RECT *Source,
                      RECT *Dest)
 {
-  LeaveCriticalSection(&(Console->ActiveBuffer->Lock));
+  LeaveCriticalSection(&(Console->ActiveBuffer->Header.Lock));
   SendMessageW(Console->hWindow, PM_COPY_REGION, (WPARAM) Source, (LPARAM) Dest);
-  EnterCriticalSection(&(Console->ActiveBuffer->Lock));
-}
-
-VOID STDCALL
-GuiConsoleChangeTitle(PCSRSS_CONSOLE Console)
-{
-  SendMessageW(Console->hWindow, WM_SETTEXT, 0, (LPARAM) Console->Title.Buffer);
-}
-
-VOID STDCALL
-GuiConsoleDeleteConsole(PCSRSS_CONSOLE Console)
-{
-  SendMessageW(NotifyWnd, PM_DESTROY_CONSOLE, 0, (LPARAM) Console);
+  EnterCriticalSection(&(Console->ActiveBuffer->Header.Lock));
 }
 
 /* EOF */

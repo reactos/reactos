@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.2 2003/12/07 23:02:57 gvg Exp $
+/* $Id: dllmain.c,v 1.3 2004/01/11 17:31:16 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -82,9 +82,11 @@ DllMain(HANDLE hDll,
 
 NTSTATUS FASTCALL
 Win32CsrInsertObject(PCSRSS_PROCESS_DATA ProcessData,
-                    PHANDLE Handle,
-                    Object_t *Object)
+                     PHANDLE Handle,
+                     Object_t *Object)
 {
+  InitializeCriticalSection(&(Object->Lock));
+
   return (CsrExports.CsrInsertObjectProc)(ProcessData, Handle, Object);
 }
 
@@ -94,6 +96,36 @@ Win32CsrGetObject(PCSRSS_PROCESS_DATA ProcessData,
                  Object_t **Object)
 {
   return (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+}
+
+NTSTATUS FASTCALL
+Win32CsrLockObject(PCSRSS_PROCESS_DATA ProcessData,
+                   HANDLE Handle,
+                   Object_t **Object,
+                   LONG Type)
+{
+  NTSTATUS Status;
+
+  Status = (CsrExports.CsrGetObjectProc)(ProcessData, Handle, Object);
+  if (! NT_SUCCESS(Status))
+    {
+      return Status;
+    }
+
+  if ((*Object)->Type != Type)
+    {
+      return STATUS_INVALID_HANDLE;
+    }
+
+  EnterCriticalSection(&((*Object)->Lock));
+
+  return STATUS_SUCCESS;
+}
+
+VOID FASTCALL
+Win32CsrUnlockObject(Object_t *Object)
+{
+  LeaveCriticalSection(&(Object->Lock));
 }
 
 NTSTATUS FASTCALL
