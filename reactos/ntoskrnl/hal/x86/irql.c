@@ -99,7 +99,7 @@ static VOID HiSwitchIrql(KIRQL oldIrql)
 		__asm__("sti\n\t");
 		return;
 	}
-   if( CurrentIrql == PASSIVE_LEVEL && CurrentThread->ApcState.KernelApcPending )
+   if( CurrentIrql == PASSIVE_LEVEL && CurrentThread && CurrentThread->ApcState.KernelApcPending )
    {
 	   KeSetCurrentIrql( APC_LEVEL );
 	   KeApcProlog2();
