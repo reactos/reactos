@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.68 2003/12/30 00:12:47 hyperion Exp $
+/* $Id: create.c,v 1.69 2003/12/30 22:13:45 fireball Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -455,7 +455,7 @@ PsCreateTeb(HANDLE ProcessHandle,
 	       }
 	  }
 	     
-	TebBase = TebBase - TebSize;
+	TebBase = (char *)TebBase - TebSize;
      }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.121 2003/12/30 00:12:47 hyperion Exp $
+/* $Id: process.c,v 1.122 2003/12/30 22:18:12 fireball Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -301,8 +301,18 @@ PsInitProcessManagment(VOID)
    MmInitializeAddressSpace(PsInitialSystemProcess,
 			    &PsInitialSystemProcess->AddressSpace);
    ObCreateHandleTable(NULL,FALSE,PsInitialSystemProcess);
+
+#if defined(__GNUC__)
    KProcess->DirectoryTableBase = 
      (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
+#else
+   {
+     LARGE_INTEGER dummy;
+     dummy.QuadPart = (LONGLONG)(ULONG)MmGetPageDirectory();
+     KProcess->DirectoryTableBase = dummy;
+   }
+#endif
+
    PsInitialSystemProcess->UniqueProcessId = 
      InterlockedIncrement((LONG *)&PiNextProcessUniqueId);
    PsInitialSystemProcess->Win32WindowStation = (HANDLE)0;
@@ -420,7 +430,11 @@ PsCreatePeb(HANDLE ProcessHandle,
   DPRINT("Peb %p  PebSize %lu\n", Peb, PebSize);
 
   ViewSize = 0;
+#if defined(__GNUC__)
   SectionOffset.QuadPart = 0LL;
+#else
+  SectionOffset.QuadPart = 0;
+#endif
   TableBase = NULL;
   Status = MmMapViewOfSection(NlsSectionObject,
 			      Process,
@@ -450,9 +464,9 @@ PsCreatePeb(HANDLE ProcessHandle,
   Peb->OSBuildNumber = 0;
   Peb->OSPlatformId = 2; //VER_PLATFORM_WIN32_NT;
 
-  Peb->AnsiCodePageData = TableBase + NlsAnsiTableOffset;
-  Peb->OemCodePageData = TableBase + NlsOemTableOffset;
-  Peb->UnicodeCaseTableData = TableBase + NlsUnicodeTableOffset;
+  Peb->AnsiCodePageData = (char *)TableBase + NlsAnsiTableOffset;
+  Peb->OemCodePageData = (char *)TableBase + NlsOemTableOffset;
+  Peb->UnicodeCaseTableData = (char *)TableBase + NlsUnicodeTableOffset;
 
   Process->Peb = Peb;
   KeDetachProcess();
@@ -766,7 +780,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 #endif
 
    /* Protect the 60KB above the shared user page */
-   BaseAddress = (PVOID)USER_SHARED_DATA + PAGE_SIZE;
+   BaseAddress = (char *)USER_SHARED_DATA + PAGE_SIZE;
    Status = MmCreateMemoryArea(Process,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_NO_ACCESS,
