@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.89 2004/11/21 21:09:42 weiden Exp $
+/* $Id: create.c,v 1.89.2.1 2004/12/13 05:55:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1373,11 +1373,11 @@ CreateProcessW
     * Create the thread for the kernel
     */
    DPRINT("Creating thread for process (EntryPoint = 0x%.08x)\n",
-    ImageBaseAddress + (ULONG)Sii.EntryPoint);
+    ImageBaseAddress + Sii.EntryPoint);
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
           &Sii,
-          ImageBaseAddress + (ULONG)Sii.EntryPoint,
+          ImageBaseAddress + Sii.EntryPoint,
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == INVALID_HANDLE_VALUE)

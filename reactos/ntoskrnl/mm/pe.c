@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pe.c,v 1.1.2.2 2004/12/09 19:31:26 hyperion Exp $
+/* $Id: pe.c,v 1.1.2.3 2004/12/13 05:55:32 hyperion Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pe.c
@@ -223,8 +223,8 @@ NTSTATUS NTAPI PeFmtCreateSection
  IN PFILE_OBJECT File,
  OUT PMM_IMAGE_SECTION_OBJECT ImageSectionObject,
  OUT PULONG Flags,
- IN PEXEFMT_LOADER_READ_FILE ReadFileFunc,
- IN PEXEFMT_LOADER_ALLOCATE_SEGMENTS AllocateSegmentsFunc
+ IN PEXEFMT_CB_READ_FILE ReadFileCb,
+ IN PEXEFMT_CB_ALLOCATE_SEGMENTS AllocateSegmentsCb
 )
 {
  NTSTATUS nStatus;
@@ -251,8 +251,8 @@ NTSTATUS NTAPI PeFmtCreateSection
  ASSERT(FileHeaderSize > 0);
  ASSERT(File);
  ASSERT(ImageSectionObject);
- ASSERT(ReadFileFunc);
- ASSERT(AllocateSegmentsFunc);
+ ASSERT(ReadFileCb);
+ ASSERT(AllocateSegmentsCb);
  
  ASSERT(Intsafe_CanOffsetPointer(FileHeader, FileHeaderSize));
 
@@ -327,7 +327,7 @@ l_ReadHeaderFromFile:
   lnOffset.QuadPart = pidhDosHeader->e_lfanew;
 
   /* read the header from the file */
-  nStatus = ReadFileFunc
+  nStatus = ReadFileCb
   (
    File,
    pBuffer,
@@ -637,7 +637,7 @@ l_ReadHeaderFromFile:
   lnOffset.QuadPart = cbSectionHeadersOffset;
 
   /* read the header from the file */
-  nStatus = ReadFileFunc
+  nStatus = ReadFileCb
   (
    File,
    pBuffer,
@@ -659,7 +659,7 @@ l_ReadHeaderFromFile:
  /* SEGMENTS */
  /* allocate the segments */
  nStatus = STATUS_INSUFFICIENT_RESOURCES;
- ImageSectionObject->Segments = AllocateSegmentsFunc(ImageSectionObject->NrSegments);
+ ImageSectionObject->Segments = AllocateSegmentsCb(ImageSectionObject->NrSegments);
 
  if(ImageSectionObject->Segments == NULL)
   goto l_Return;

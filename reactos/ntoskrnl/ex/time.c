@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.24.2.1 2004/12/08 21:57:32 hyperion Exp $
+/* $Id: time.c,v 1.24.2.2 2004/12/13 05:55:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,6 +73,62 @@ ExpInitTimeZoneInfo(VOID)
   SharedUserData->SystemTime.LowPart = CurrentTime.u.LowPart;
   SharedUserData->SystemTime.High1Time = CurrentTime.u.HighPart;
   SharedUserData->SystemTime.High2Time = CurrentTime.u.HighPart;
+}
+
+
+NTSTATUS
+ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+{
+  LARGE_INTEGER LocalTime;
+  LARGE_INTEGER SystemTime;
+  TIME_FIELDS TimeFields;
+
+  DPRINT("ExpSetTimeZoneInformation() called\n");
+
+  DPRINT("Old time zone bias: %d minutes\n",
+	 ExpTimeZoneInfo.Bias);
+  DPRINT("Old time zone standard bias: %d minutes\n",
+	 ExpTimeZoneInfo.StandardBias);
+
+  DPRINT("New time zone bias: %d minutes\n",
+	 TimeZoneInformation->Bias);
+  DPRINT("New time zone standard bias: %d minutes\n",
+	 TimeZoneInformation->StandardBias);
+
+  /* Get the local time */
+  HalQueryRealTimeClock(&TimeFields);
+  RtlTimeFieldsToTime(&TimeFields,
+		      &LocalTime);
+
+  /* FIXME: Calculate transition dates */
+
+  ExpTimeZoneBias.QuadPart =
+    ((LONGLONG)(TimeZoneInformation->Bias + TimeZoneInformation->StandardBias)) * TICKSPERMINUTE;
+  ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+
+  memcpy(&ExpTimeZoneInfo,
+	 TimeZoneInformation,
+	 sizeof(TIME_ZONE_INFORMATION));
+
+  /* Set the new time zone information */
+  SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+  SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
+  SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+  SharedUserData->TimeZoneId = ExpTimeZoneId;
+
+  DPRINT("New time zone bias: %I64d minutes\n",
+	 ExpTimeZoneBias.QuadPart / TICKSPERMINUTE);
+
+  /* Calculate the new system time */
+  ExLocalTimeToSystemTime(&LocalTime,
+			  &SystemTime);
+
+  /* Set the new system time */
+  KiSetSystemTime(&SystemTime);
+
+  DPRINT("ExpSetTimeZoneInformation() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 

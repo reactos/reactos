@@ -71,6 +71,26 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 						 PAGE_NOACCESS | \
 						 PAGE_NOCACHE)
 
+#define PAGE_IS_READABLE (PAGE_READONLY | \
+                          PAGE_READWRITE | \
+                          PAGE_WRITECOPY | \
+                          PAGE_EXECUTE_READ | \
+                          PAGE_EXECUTE_READWRITE | \
+                          PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_WRITABLE (PAGE_READWRITE | \
+                          PAGE_WRITECOPY | \
+                          PAGE_EXECUTE_READWRITE | \
+                          PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_EXECUTABLE (PAGE_EXECUTE | \
+                            PAGE_EXECUTE_READ | \
+                            PAGE_EXECUTE_READWRITE | \
+                            PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_WRITECOPY (PAGE_WRITECOPY | \
+                           PAGE_EXECUTE_WRITECOPY)
+
 typedef struct
 {
   ULONG Entry[NR_SECTION_PAGE_ENTRIES];
@@ -89,32 +109,31 @@ typedef struct
 typedef struct _MM_SECTION_SEGMENT
 {
   ULONG FileOffset;
-  ULONG Protection;
-  ULONG Length;
   ULONG RawLength;
-  FAST_MUTEX Lock;
-  LONG ReferenceCount;/* WRONG TYPE */
-  SECTION_PAGE_DIRECTORY PageDirectory;
-  /*ULONG Flags;*/ /* USELESS */
-  ULONG VirtualAddress;/* WRONG TYPE */
+  ULONG_PTR VirtualAddress;
+  SIZE_T Length;
+  ULONG Protection;
+  LONG ReferenceCount;
+  ULONG Flags;
   ULONG Characteristics;
-  /*BOOLEAN WriteCopy;*/ /* USELESS */
+  FAST_MUTEX Lock;
+  SECTION_PAGE_DIRECTORY PageDirectory;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-  ULONG_PTR ImageBase;/* WRONG TYPE */
-  ULONG EntryPoint;/* WRONG TYPE */
-  ULONG_PTR StackReserve;/* WRONG TYPE */
-  ULONG_PTR StackCommit;/* WRONG TYPE */
+  ULONG_PTR ImageBase;
+  ULONG_PTR StackReserve;
+  ULONG_PTR StackCommit;
+  ULONG EntryPoint;
   ULONG Subsystem;
   ULONG ImageCharacteristics;
-  USHORT MinorSubsystemVersion;/* WRONG TYPE */
-  USHORT MajorSubsystemVersion;/* WRONG TYPE */
+  USHORT MinorSubsystemVersion;
+  USHORT MajorSubsystemVersion;
   USHORT Machine;
   BOOLEAN Executable;
   ULONG NrSegments;
-  PMM_SECTION_SEGMENT Segments;/* WRONG TYPE */
+  PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 typedef struct _SECTION_OBJECT

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.59.2.1 2004/12/08 21:57:32 hyperion Exp $
+/* $Id: sysinfo.c,v 1.59.2.2 2004/12/13 05:55:32 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
