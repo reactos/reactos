@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rangelist.c,v 1.6 2004/05/23 11:56:16 ekohl Exp $
+/* $Id: rangelist.c,v 1.7 2004/05/24 12:03:24 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -62,7 +62,7 @@ typedef struct _RTL_RANGE_ENTRY
  *	Status
  *
  * TODO:
- *   - Check for overlapping ranges.
+ *   - Support shared ranges.
  *
  * @implemented
  */
@@ -579,13 +579,80 @@ RtlInitializeRangeList (IN OUT PRTL_RANGE_LIST RangeList)
  * RETURN VALUE
  *	Status
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlInvertRangeList (OUT PRTL_RANGE_LIST InvertedRangeList,
 		    IN PRTL_RANGE_LIST RangeList)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  PRTL_RANGE_ENTRY Previous;
+  PRTL_RANGE_ENTRY Current;
+  PLIST_ENTRY Entry;
+  NTSTATUS Status;
+
+  /* Don't invert an empty range list */
+  if (IsListEmpty(&RangeList->ListHead))
+    {
+      return STATUS_SUCCESS;
+    }
+
+  /* Add leading and intermediate ranges */
+  Previous = NULL;
+  Entry = RangeList->ListHead.Flink;
+  while (Entry != &RangeList->ListHead)
+    {
+      Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
+
+      if (Previous == NULL)
+	{
+	  if (Current->Range.Start != (ULONGLONG)0)
+	    {
+	      Status = RtlAddRange (InvertedRangeList,
+				    (ULONGLONG)0,
+				    Current->Range.Start - 1,
+				    0,
+				    0,
+				    NULL,
+				    NULL);
+	      if (!NT_SUCCESS(Status))
+	        return Status;
+	    }
+	}
+      else
+	{
+	  if (Previous->Range.End + 1 != Current->Range.Start)
+	    {
+	      Status = RtlAddRange (InvertedRangeList,
+				    Previous->Range.End + 1,
+				    Current->Range.Start - 1,
+				    0,
+				    0,
+				    NULL,
+				    NULL);
+	      if (!NT_SUCCESS(Status))
+	        return Status;
+	    }
+	}
+
+      Previous = Current;
+      Entry = Entry->Flink;
+    }
+
+  /* Add trailing range */
+  if (Previous->Range.End + 1 != (ULONGLONG)-1)
+    {
+      Status = RtlAddRange (InvertedRangeList,
+			    Previous->Range.End + 1,
+			    (ULONGLONG)-1,
+			    0,
+			    0,
+			    NULL,
+			    NULL);
+      if (!NT_SUCCESS(Status))
+        return Status;
+    }
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -670,7 +737,7 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
  * RETURN VALUE
  *	Status
  *
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 RtlMergeRangeLists (OUT PRTL_RANGE_LIST MergedRangeList,
@@ -678,7 +745,43 @@ RtlMergeRangeLists (OUT PRTL_RANGE_LIST MergedRangeList,
 		    IN PRTL_RANGE_LIST RangeList2,
 		    IN ULONG Flags)
 {
-  return STATUS_NOT_IMPLEMENTED;
+  RTL_RANGE_LIST_ITERATOR Iterator;
+  PRTL_RANGE Range;
+  NTSTATUS Status;
+
+  /* Copy range list 1 to the merged range list */
+  Status = RtlCopyRangeList (MergedRangeList,
+			     RangeList1);
+  if (!NT_SUCCESS(Status))
+    return Status;
+
+  /* Add range list 2 entries to the merged range list */
+  Status = RtlGetFirstRange (RangeList2,
+			     &Iterator,
+			     &Range);
+  if (!NT_SUCCESS(Status))
+    return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
+
+  while (TRUE)
+    {
+      Status = RtlAddRange (MergedRangeList,
+			    Range->Start,
+			    Range->End,
+			    Range->Attributes,
+			    Range->Flags | Flags,
+			    Range->UserData,
+			    Range->Owner);
+      if (!NT_SUCCESS(Status))
+        break;
+
+      Status = RtlGetNextRange (&Iterator,
+				&Range,
+				TRUE);
+      if (!NT_SUCCESS(Status))
+        break;
+    }
+
+  return (Status == STATUS_NO_MORE_ENTRIES) ? STATUS_SUCCESS : Status;
 }
 
 /* EOF */
