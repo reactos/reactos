@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.26 2003/11/23 12:08:00 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.27 2003/12/03 21:38:14 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -381,7 +381,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HCURSOR hCursor)
   PSYSTEM_CURSORINFO CurInfo;
   
   if(!hCursor)
-    goto fail;
+    return FALSE;
   
   CurInfo = &WinStaObject->SystemCursor;
   ExAcquireFastMutex(&CurInfo->CurIcons.LockHandles);
@@ -426,7 +426,6 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HCURSOR hCursor)
     }
   }
   
-  fail:
   ExReleaseFastMutex(&CurInfo->CurIcons.LockHandles);
   return FALSE;
 }
