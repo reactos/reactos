@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.52 2004/02/02 22:09:05 gvg Exp $
+/* $Id: windc.c,v 1.53 2004/02/02 23:28:17 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -232,6 +232,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 {
   HANDLE hRgnVisible = NULL;
   ULONG DcxFlags;
+  PWINDOW_OBJECT DesktopWindow;
 
   if (Flags & DCX_PARENTCLIP)
     {
@@ -260,9 +261,22 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
           hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
         }
     }
+  else if (NULL == Window)
+    {
+      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      if (NULL != DesktopWindow)
+        {
+          hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
+          IntReleaseWindowObject(DesktopWindow);
+        }
+      else
+        {
+          hRgnVisible = NULL;
+        }
+    }
   else
     {
-      hRgnVisible = DceGetVisRgn(NULL != Window ? Window->Self : NULL, Flags, 0, 0);
+      hRgnVisible = DceGetVisRgn(Window->Self, Flags, 0, 0);
     }
 
   if (0 != (Flags & DCX_INTERSECTRGN))
