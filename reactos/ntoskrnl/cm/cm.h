@@ -443,12 +443,10 @@ NTSTATUS
 CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive);
 
 ULONG
-CmiGetMaxNameLength(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell);
+CmiGetMaxNameLength(IN PKEY_OBJECT KeyObject);
 
 ULONG
-CmiGetMaxClassLength(IN PREGISTRY_HIVE  RegistryHive,
-  IN PKEY_CELL  KeyCell);
+CmiGetMaxClassLength(IN PKEY_OBJECT KeyObject);
 
 ULONG
 CmiGetMaxValueNameLength(IN PREGISTRY_HIVE  RegistryHive,
