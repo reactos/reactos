@@ -1,4 +1,4 @@
-/* $Id: shell.c,v 1.36 2000/03/22 18:35:45 dwelch Exp $
+/* $Id: shell.c,v 1.37 2000/04/23 17:49:07 phreak Exp $
  *
  * PROJECT    : ReactOS Operating System
  * DESCRIPTION: ReactOS' Native Shell
@@ -144,8 +144,8 @@ int ExecuteProcess(char* name, char* cmdline, BOOL detached)
 			NULL,
 			FALSE,
 			((TRUE == detached)
-			 ? DETACHED_PROCESS
-			: CREATE_NEW_CONSOLE
+			 ? CREATE_NEW_CONSOLE
+			: 0
 			),
 			NULL,
 			NULL,
@@ -392,7 +392,7 @@ void ExecuteCommand(char* line)
      {
 	return;
      }
-   debug_printf("Unknown command\n");
+   debug_printf("Unknown command '%s'\n", cmd);
 }
 
 void ReadLine(char* line)
@@ -428,8 +428,8 @@ void ReadLine(char* line)
               break;
 
             default:
-              debug_printf("%c", ch);
-              *line = ch; 
+              *line = ch;
+	      debug_printf( "%c", ch );
               line++;
               length++;
           }
