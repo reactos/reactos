@@ -1,0 +1,7 @@
+; $Id: wininet.def,v 1.1 2004/02/01 21:33:56 gvg Exp $
+LIBRARY WININET.DLL
+EXPORTS
+InternetAutodial@8
+InternetAttemptConnect@4
+InternetGetConnectedState@8
+InternetAutodialHangup@4
