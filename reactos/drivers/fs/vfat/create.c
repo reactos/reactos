@@ -231,7 +231,12 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
       rcFcb = vfatGrabFCBFromTable(DeviceExt, &PathNameU);
       if (rcFcb)
         {
-	  if(rcFcb->startIndex >= DirContext->DirIndex)
+	  ULONG startIndex = rcFcb->startIndex;
+	  if ((rcFcb->Flags & FCB_IS_FATX_ENTRY) && !vfatFCBIsRoot(Parent))
+	    {
+	      startIndex += 2;
+	    }
+	  if(startIndex >= DirContext->DirIndex)
 	    {
 	      RtlCopyUnicodeString(&DirContext->LongNameU, &rcFcb->LongNameU);
 	      RtlCopyUnicodeString(&DirContext->ShortNameU, &rcFcb->ShortNameU);
@@ -239,7 +244,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 	      DirContext->StartIndex = rcFcb->startIndex;
 	      DirContext->DirIndex = rcFcb->dirIndex;
               DPRINT("FindFile: new Name %wZ, DirIndex %d (%d)\n",
-		     &DirContext->LongNameU, DirContext->DirIndex, DirContext->StartIndex);
+	             &DirContext->LongNameU, DirContext->DirIndex, DirContext->StartIndex);
 	      Status = STATUS_SUCCESS;
 	    }
           else
@@ -426,55 +431,6 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, PVFATFCB* Pa
      vfatReleaseFCB (DeviceExt, Fcb);
   }
   return  Status;
-}
-
-VOID STATIC
-VfatSupersedeFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-		  PVFATFCB Fcb)
-{
-  ULONG Cluster, NextCluster;
-  NTSTATUS Status;
-  
-  if (Fcb->Flags & FCB_IS_FATX_ENTRY)
-  {
-    Fcb->entry.FatX.FileSize = 0;
-    Cluster = Fcb->entry.FatX.FirstCluster;
-    Fcb->entry.FatX.FirstCluster = 0;
-  }
-  else
-  {
-    Fcb->entry.Fat.FileSize = 0;
-    if (DeviceExt->FatInfo.FatType == FAT32)
-      {
-        Cluster = Fcb->entry.Fat.FirstCluster + Fcb->entry.Fat.FirstClusterHigh * 65536;
-      }
-    else
-      {
-        Cluster = Fcb->entry.Fat.FirstCluster;
-      }
-    Fcb->entry.Fat.FirstCluster = 0;
-    Fcb->entry.Fat.FirstClusterHigh = 0;
-  }
-  Fcb->LastOffset = Fcb->LastCluster = 0;
-  VfatUpdateEntry (Fcb);
-  if (Fcb->RFCB.FileSize.QuadPart > 0)
-    {
-      Fcb->RFCB.AllocationSize.QuadPart = 0;
-      Fcb->RFCB.FileSize.QuadPart = 0;
-      Fcb->RFCB.ValidDataLength.QuadPart = 0;
-      /* Notify cache manager about the change in file size if caching is
-         initialized on the file stream */
-      if (FileObject->SectionObjectPointer->SharedCacheMap != NULL)
-        {
-          CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&Fcb->RFCB.AllocationSize);
-        }
-    }
-  while (Cluster != 0xffffffff && Cluster > 1)
-    {
-      Status = GetNextCluster (DeviceExt, Cluster, &NextCluster);
-      WriteCluster (DeviceExt, Cluster, 0);
-      Cluster = NextCluster;
-    }
 }
 
 NTSTATUS
@@ -734,7 +690,9 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       /* Supersede the file */
       if (RequestedDisposition == FILE_SUPERSEDE)
 	{
-	  VfatSupersedeFile(DeviceExt, FileObject, pFcb);
+	  LARGE_INTEGER AllocationSize;
+	  AllocationSize.QuadPart = 0LL;
+          VfatSetAllocationSizeInformation(FileObject, pFcb, DeviceExt, &AllocationSize);
 	  Irp->IoStatus.Information = FILE_SUPERSEDED;
 	}
       else if (RequestedDisposition == FILE_OVERWRITE || RequestedDisposition == FILE_OVERWRITE_IF)
