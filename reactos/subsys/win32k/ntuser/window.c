@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.8 2004/09/14 01:00:44 weiden Exp $
+/* $Id: window.c,v 1.244.2.9 2004/09/24 18:35:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2033,6 +2033,14 @@ IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, WCHAR *Buffer, INT nMaxCou
   }
   
   return Result;
+}
+
+PMENU_OBJECT INTERNAL_CALL
+IntGetWindowMenu(PWINDOW_OBJECT WindowObject)
+{
+  ASSERT(WindowObject);
+  
+  return WindowObject->Menu;
 }
 
 /* WINPROC ********************************************************************/

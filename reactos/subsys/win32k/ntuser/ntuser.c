@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.10 2004/09/13 21:28:17 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.11 2004/09/24 18:35:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -251,6 +251,74 @@ NtUserCallNoParam(DWORD Routine)
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
       NTUSER_FAIL_ERROR(ERROR_INVALID_PARAMETER);
       break;
+  }
+  
+  END_NTUSER();
+}
+
+DWORD STDCALL
+NtUserCallOneParam(DWORD Param,
+                   DWORD Routine)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  NTUSER_USER_OBJECT(MENU, Menu);
+  BEGIN_NTUSER(DWORD, 0);
+  
+  switch(Routine)
+  {
+    case ONEPARAM_ROUTINE_GETMENU:
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param, Window);
+      Menu = IntGetWindowMenu(Window);
+      Result = (DWORD)(Menu ? Menu->Handle : NULL);
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param, Window);
+      Result = (DWORD)IntIsWindowUnicode(Window);
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_WINDOWFROMDC:
+      ENTER_CRITICAL_SHARED();
+      Window = IntWindowFromDC((HDC)Param);
+      Result = (DWORD)(Window ? Window->Handle : NULL);
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param, Window);
+      Result = Window->ContextHelpId;
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param, Window);
+      Result = (DWORD)Window->Instance;
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
+      ENTER_CRITICAL_SHARED();
+      VALIDATE_USER_OBJECT(WINDOW, (HWND)Param, Window);
+      /* FIXME */
+      LEAVE_CRITICAL();
+      break;
+
+    case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
+    case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
+    case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
+    case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
+    case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
+    case ONEPARAM_ROUTINE_GETCURSORPOSITION:
+    case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
+    default:
+      DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam\n", Routine);
+      NTUSER_FAIL_ERROR(ERROR_INVALID_PARAMETER);
   }
   
   END_NTUSER();

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.6 2004/09/12 19:21:07 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.7 2004/09/24 18:35:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1240,17 +1240,6 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 /*
  * Miscellaneous
  */
-
-
-DWORD
-STDCALL
-NtUserCallOneParam(
-  DWORD Param,
-  DWORD Routine)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
 
 
 BOOL

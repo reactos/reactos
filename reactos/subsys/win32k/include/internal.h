@@ -389,6 +389,8 @@ typedef struct _MENU_ITEM
 
 typedef struct _MENU_OBJECT
 {
+  HANDLE Handle;
+  
   PW32PROCESS W32Process;
   LIST_ENTRY ListEntry;
   FAST_MUTEX MenuItemsLock;
@@ -807,6 +809,9 @@ VOID INTERNAL_CALL VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN Uncovered
 #define IntGetParentObject(WndObj) \
   ((WndObj)->Parent)
 
+#define IntIsWindowUnicode(WndObj) \
+  ((WndObj)->Unicode)
+
 #define IntIsWindow(WndObj) \
   ((WndObj) != NULL && ObmObjectDeleted(WndObj) == FALSE)
 
@@ -893,6 +898,7 @@ typedef struct _WINDOW_OBJECT
   ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
+  PMENU_OBJECT Menu;
   LONG UserData;
   BOOL Unicode;
   WNDPROC WndProcA;
@@ -934,6 +940,7 @@ ULONG          INTERNAL_CALL IntGetWindowThreadProcessId(PWINDOW_OBJECT Window, 
 PWINDOW_OBJECT INTERNAL_CALL IntGetWindow(PWINDOW_OBJECT Window, UINT uCmd);
 BOOL           INTERNAL_CALL IntDefSetText(PWINDOW_OBJECT WindowObject, PUNICODE_STRING WindowText);
 INT            INTERNAL_CALL IntInternalGetWindowText(PWINDOW_OBJECT WindowObject, LPWSTR lpString, INT nMaxCount);
+PMENU_OBJECT   INTERNAL_CALL IntGetWindowMenu(PWINDOW_OBJECT WindowObject);
 BOOL           INTERNAL_CALL IntDereferenceWndProcHandle(WNDPROC wpHandle, WndProcHandle *Data);
 DWORD          INTERNAL_CALL IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD          INTERNAL_CALL IntRemoveProcessWndProcHandles(HANDLE ProcessID);
