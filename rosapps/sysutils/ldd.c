@@ -1,4 +1,4 @@
-/* $Id: ldd.c,v 1.3 2001/01/13 18:17:17 ea Exp $
+/* $Id$
  *
  * FILE  : ldd.c
  * AUTHOR: Emanuele ALIBERTI
@@ -6,9 +6,13 @@
  * DESC  : List DOS devices, i.e. symbolic links created
  *         in the \?? object manager's name space.
  */
-#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
+
 
 #include <reactos/buildno.h>
 

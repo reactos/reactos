@@ -1,9 +1,12 @@
-/* $Id: wmain.c,v 1.1 1999/05/16 07:27:35 ea Exp $
+/* $Id$
  *
  * Entry point for programs that use wmain()
  */
-#include <windows.h>
 #include <stdio.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
 
 int wmain(int argc,wchar_t *argv[]);
 
