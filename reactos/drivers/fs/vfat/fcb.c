@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.39 2004/07/18 17:38:17 greatlrd Exp $
+/* $Id: fcb.c,v 1.39.2.1 2004/07/26 21:36:47 navaraf Exp $
  *
  *
  * FILE:             drivers/fs/vfat/fcb.c
@@ -110,6 +110,7 @@ vfatNewFCB(PUNICODE_STRING pFileNameU)
   ExInitializeResourceLite(&rcFCB->PagingIoResource);
   ExInitializeResourceLite(&rcFCB->MainResource);
   FsRtlInitializeFileLock(&rcFCB->FileLock, NULL, NULL); 
+  ExInitializeFastMutex(&rcFCB->LastMutex);
   return  rcFCB;
 }
 

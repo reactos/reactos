@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.65.4.1 2004/07/26 17:10:20 navaraf Exp $ */
+/* $Id: vfat.h,v 1.65.4.2 2004/07/26 21:36:47 navaraf Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -249,6 +249,14 @@ typedef struct _VFATFCB
   /* List of byte-range locks for this file */
   FILE_LOCK FileLock;
 
+  /*
+   * Optimalization: caching of last read/write cluster+offset pair. Can't
+   * be in VFATCCB because it must be reset everytime the allocated clusters
+   * change.
+   */
+  FAST_MUTEX LastMutex;
+  ULONG LastCluster;
+  ULONG LastOffset;
 } VFATFCB, *PVFATFCB;
 
 typedef struct _VFATCCB
@@ -258,11 +266,6 @@ typedef struct _VFATCCB
   ULONG Entry;
   /* for DirectoryControl */
   UNICODE_STRING SearchPattern;
-
-#ifdef TODO
-  ULONG LastCluster;
-  ULONG LastOffset;
-#endif
 } VFATCCB, *PVFATCCB;
 
 #ifndef TAG

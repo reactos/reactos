@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.44.26.1 2004/07/26 17:10:20 navaraf Exp $
+ * $Id: fat.c,v 1.44.26.2 2004/07/26 21:36:47 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -144,52 +144,48 @@ FAT16FindAndMarkAvailableCluster(PDEVICE_EXTENSION DeviceExt,
   ULONG ChunkSize;
   PVOID Context = 0;
   LARGE_INTEGER Offset;
-  PUSHORT Block = NULL;
+  PUSHORT Block;
+  PUSHORT BlockEnd;
 
   ChunkSize = CACHEPAGESIZE(DeviceExt);
-  FatLength = (DeviceExt->FatInfo.NumberOfClusters +2 ) * 2;
+  FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2);
   *Cluster = 0;
   StartCluster = DeviceExt->LastAvailableCluster;
 
   for (j = 0; j < 2; j++)
   {
-    /* FIXME: This is hardly optimized, look at the FAT32 version. */
-    for (i = StartCluster * 2; i < FatLength; i += 2, Block++)
+    for (i = StartCluster; i < FatLength; )
     {
-      if ((i % ChunkSize) == 0 || Context == NULL)
+      Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
+      if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
       {
-        Offset.QuadPart = ROUND_DOWN(i, ChunkSize);
-        if (Context != NULL)
+        DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
+        return STATUS_UNSUCCESSFUL;
+      }
+      Block = (PUSHORT)((ULONG_PTR)BaseAddress + (i * 2) % ChunkSize);
+      BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + ChunkSize);
+
+      /* Now process the whole block */
+      while (Block < BlockEnd && i < FatLength)
+      {
+        if (*Block == 0)
         {
+          DPRINT("Found available cluster 0x%x\n", i);
+          DeviceExt->LastAvailableCluster = *Cluster = i;
+          *Block = 0xffff;
+          CcSetDirtyPinnedData(Context, NULL);
           CcUnpinData(Context);
+          return(STATUS_SUCCESS);
         }
-        CHECKPOINT;
-        if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
-        {
-          DPRINT1("CcMapData(Offset %x, Length %d) failed\n", (ULONG)Offset.QuadPart, ChunkSize);
-          return STATUS_UNSUCCESSFUL;
-        }
-        CHECKPOINT;
-	Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
+
+        Block++;
+        i++;
       }
 
-      if (*Block == 0)
-	   {
-	     DPRINT("Found available cluster 0x%x\n", i / 2);
-	     DeviceExt->LastAvailableCluster = *Cluster = i / 2;
-	     *Block = 0xFFFF;
-	     CcSetDirtyPinnedData(Context, NULL);
-	     CcUnpinData(Context);
-	     return(STATUS_SUCCESS);
-	   }
-    }
-    FatLength = StartCluster * 2;
-    StartCluster = 2;
-    if (Context != NULL)
-    {
       CcUnpinData(Context);
-      Context =NULL;
     }
+    FatLength = StartCluster;
+    StartCluster = 2;
   }
   return(STATUS_DISK_FULL);
 }
@@ -364,7 +360,8 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
  * FUNCTION: Counts free clusters in a FAT16 table
  */
 {
-  PUSHORT Block = NULL;
+  PUSHORT Block;
+  PUSHORT BlockEnd;
   PVOID BaseAddress = NULL;
   ULONG ulCount = 0;
   ULONG i;
@@ -374,31 +371,32 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
   ULONG FatLength;
 
   ChunkSize = CACHEPAGESIZE(DeviceExt);
-  FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2) * 2;
+  FatLength = (DeviceExt->FatInfo.NumberOfClusters + 2);
 
-  for (i = 4; i< FatLength; i += 2, Block++)
+  for (i = 2; i < FatLength; )
   {
-    if ((i % ChunkSize) == 0 || Context == NULL)
+    Offset.QuadPart = ROUND_DOWN(i * 2, ChunkSize);
+    if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
     {
-		DPRINT("%d\n", i/2);
-		if (Context)
-	{
-			CcUnpinData(Context);
-	}
-		Offset.QuadPart = ROUND_DOWN(i, ChunkSize);
-		if(!CcMapData(DeviceExt->FATFileObject, &Offset, ChunkSize, 1, &Context, &BaseAddress))
-	{
-			return STATUS_UNSUCCESSFUL;
-		}
-		Block = (PUSHORT)((char*)BaseAddress + i % ChunkSize);
-	}
-	if (*Block == 0)
-	    ulCount++;
-	}
+      return STATUS_UNSUCCESSFUL;
+    }
+    Block = (PUSHORT)((ULONG_PTR)BaseAddress + i % ChunkSize);
+    BlockEnd = (PUSHORT)((ULONG_PTR)BaseAddress + i % ChunkSize);
+
+    /* Now process the whole block */
+    while (Block < BlockEnd && i < FatLength)
+    {
+      if (*Block == 0)
+        ulCount++;
+      Block++;
+      i++;
+    }
+
+    CcUnpinData(Context);
+  }
 
   DeviceExt->AvailableClusters = ulCount;
   DeviceExt->AvailableClustersValid = TRUE;
-  CcUnpinData(Context);
 
   return(STATUS_SUCCESS);
 }
