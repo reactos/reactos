@@ -41,8 +41,8 @@ POBJECT_HEADER BODY_TO_HEADER(PVOID body)
 
 NTSTATUS
 ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-                           IN POBJECT_TYPE ObjectType,
                            IN KPROCESSOR_MODE AccessMode,
+                           IN POOL_TYPE PoolType,
                            IN BOOLEAN CaptureIfKernel,
                            OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
                            OUT PUNICODE_STRING ObjectName  OPTIONAL)
@@ -135,7 +135,7 @@ failbasiccleanup:
     {
       Status = SeCaptureSecurityDescriptor(AttributesCopy.SecurityDescriptor,
                                            AccessMode,
-                                           PagedPool,
+                                           PoolType,
                                            TRUE,
                                            &CapturedObjectAttributes->SecurityDescriptor);
       if(!NT_SUCCESS(Status))
@@ -183,7 +183,7 @@ failbasiccleanup:
           if(OriginalCopy.Length > 0)
           {
             ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-            ObjectName->Buffer = ExAllocatePool(NonPagedPool,
+            ObjectName->Buffer = ExAllocatePool(PoolType,
                                                 ObjectName->MaximumLength);
             if(ObjectName->Buffer != NULL)
             {
@@ -237,7 +237,7 @@ failallocatedcleanup:
         if(OriginalCopy.Length > 0)
         {
           ObjectName->MaximumLength = OriginalCopy.Length + sizeof(WCHAR);
-          ObjectName->Buffer = ExAllocatePool(NonPagedPool,
+          ObjectName->Buffer = ExAllocatePool(PoolType,
                                               ObjectName->MaximumLength);
           if(ObjectName->Buffer != NULL)
           {

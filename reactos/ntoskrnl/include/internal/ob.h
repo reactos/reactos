@@ -327,8 +327,8 @@ typedef struct _CAPTURED_OBJECT_ATTRIBUTES
 
 NTSTATUS
 ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-                           IN POBJECT_TYPE ObjectType,
                            IN KPROCESSOR_MODE AccessMode,
+                           IN POOL_TYPE PoolType,
                            IN BOOLEAN CaptureIfKernel,
                            OUT PCAPTURED_OBJECT_ATTRIBUTES CapturedObjectAttributes  OPTIONAL,
                            OUT PUNICODE_STRING ObjectName  OPTIONAL);
