@@ -115,5 +115,8 @@ FASTCALL
 ExfpInterlockedExchange64(LONGLONG volatile * Destination,
                           PLONGLONG Exchange);
 
+NTSTATUS
+ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
+
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_EXECUTIVE_H */

@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.33 2004/11/29 15:02:33 ekohl Exp $
+/* $Id: time.c,v 1.34 2004/12/01 14:24:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -379,11 +379,20 @@ SetTimeZoneInformation(CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
    Status = RtlSetTimeZoneInformation(&TimeZoneInformation);
    if (!NT_SUCCESS(Status))
      {
+	DPRINT1("RtlSetTimeZoneInformation() failed (Status %lx)\n", Status);
 	SetLastErrorByStatus(Status);
 	return FALSE;
      }
 
-   NtSetSystemTime(0,0);
+   Status = NtSetSystemInformation(SystemCurrentTimeZoneInformation,
+				   (PVOID)&TimeZoneInformation,
+				   sizeof(TIME_ZONE_INFORMATION));
+   if (!NT_SUCCESS(Status))
+     {
+	DPRINT1("NtSetSystemInformation() failed (Status %lx)\n", Status);
+	SetLastErrorByStatus(Status);
+	return FALSE;
+     }
 
    return TRUE;
 }

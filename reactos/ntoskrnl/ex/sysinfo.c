@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.59 2004/11/13 23:08:35 hbirr Exp $
+/* $Id: sysinfo.c,v 1.60 2004/12/01 14:28:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1202,12 +1202,7 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
       return STATUS_INFO_LENGTH_MISMATCH;
     }
 
-  /* Copy the time zone information struct */
-  memcpy(&ExpTimeZoneInfo,
-	 (TIME_ZONE_INFORMATION *)Buffer,
-	 sizeof(TIME_ZONE_INFORMATION));
-
-  return STATUS_SUCCESS;
+  return ExpSetTimeZoneInformation((PTIME_ZONE_INFORMATION)Buffer);
 }
 
 

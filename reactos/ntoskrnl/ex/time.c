@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.26 2004/11/29 15:00:46 ekohl Exp $
+/* $Id: time.c,v 1.27 2004/12/01 14:28:54 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,6 +75,62 @@ ExpInitTimeZoneInfo(VOID)
 }
 
 
+NTSTATUS
+ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation)
+{
+  LARGE_INTEGER LocalTime;
+  LARGE_INTEGER SystemTime;
+  TIME_FIELDS TimeFields;
+
+  DPRINT("ExpSetTimeZoneInformation() called\n");
+
+  DPRINT("Old time zone bias: %d minutes\n",
+	 ExpTimeZoneInfo.Bias);
+  DPRINT("Old time zone standard bias: %d minutes\n",
+	 ExpTimeZoneInfo.StandardBias);
+
+  DPRINT("New time zone bias: %d minutes\n",
+	 TimeZoneInformation->Bias);
+  DPRINT("New time zone standard bias: %d minutes\n",
+	 TimeZoneInformation->StandardBias);
+
+  /* Get the local time */
+  HalQueryRealTimeClock(&TimeFields);
+  RtlTimeFieldsToTime(&TimeFields,
+		      &LocalTime);
+
+  /* FIXME: Calculate transition dates */
+
+  ExpTimeZoneBias.QuadPart =
+    ((LONGLONG)(TimeZoneInformation->Bias + TimeZoneInformation->StandardBias)) * TICKSPERMINUTE;
+  ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
+
+  memcpy(&ExpTimeZoneInfo,
+	 TimeZoneInformation,
+	 sizeof(TIME_ZONE_INFORMATION));
+
+  /* Set the new time zone information */
+  SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
+  SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
+  SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
+  SharedUserData->TimeZoneId = ExpTimeZoneId;
+
+  DPRINT("New time zone bias: %I64d minutes\n",
+	 ExpTimeZoneBias.QuadPart / TICKSPERMINUTE);
+
+  /* Calculate the new system time */
+  ExLocalTimeToSystemTime(&LocalTime,
+			  &SystemTime);
+
+  /* Set the new system time */
+  KiSetSystemTime(&SystemTime);
+
+  DPRINT("ExpSetTimeZoneInformation() done\n");
+
+  return STATUS_SUCCESS;
+}
+
+
 /*
  * FUNCTION: Sets the system time.
  * PARAMETERS:
@@ -95,55 +151,6 @@ NtSetSystemTime(IN PLARGE_INTEGER UnsafeNewSystemTime,
   NTSTATUS Status;
 
   /* FIXME: Check for SeSystemTimePrivilege */
-
-  if (UnsafeNewSystemTime == NULL)
-    {
-#if 0
-      TIME_ZONE_INFORMATION TimeZoneInfo;
-
-      /*
-       * Update the system time after the time zone was changed
-       */
-
-      /* Get the current time zone information */
-      Status = RtlQueryTimeZoneInformation(&ExpTimeZoneInfo);
-      if (!NT_SUCCESS(Status))
-        {
-          return Status;
-        }
-
-      /* Get the local time */
-      HalQueryRealTimeClock(&TimeFields);
-      RtlTimeFieldsToTime(&TimeFields,
-			  &LocalTime);
-
-      /* FIXME: Calculate transition dates */
-
-      /* Update the local time zone information */
-      memcpy(&ExpTimeZoneInfo,
-	     &TimeZoneInfo,
-	     sizeof(TIME_ZONE_INFORMATION));
-
-      ExpTimeZoneBias.QuadPart =
-	((LONGLONG)(ExpTimeZoneInfo.Bias + ExpTimeZoneInfo.StandardBias)) * TICKSPERMINUTE;
-      ExpTimeZoneId = TIME_ZONE_ID_STANDARD;
-
-      /* Set the new time zone information */
-      SharedUserData->TimeZoneBias.High1Time = ExpTimeZoneBias.u.HighPart;
-      SharedUserData->TimeZoneBias.High2Time = ExpTimeZoneBias.u.HighPart;
-      SharedUserData->TimeZoneBias.LowPart = ExpTimeZoneBias.u.LowPart;
-      SharedUserData->TimeZoneId = ExpTimeZoneId;
-
-      /* Calculate the new system time */
-      ExLocalTimeToSystemTime(&LocalTime,
-			      &NewSystemTime);
-
-      /* Set the new system time */
-      KiSetSystemTime(&NewSystemTime);
-#endif
-
-      return STATUS_SUCCESS;
-    }
 
   Status = MmCopyFromCaller(&NewSystemTime, UnsafeNewSystemTime,
 			    sizeof(NewSystemTime));
