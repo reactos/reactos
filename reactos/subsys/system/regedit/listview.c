@@ -368,6 +368,22 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
             return CallWindowProc(g_orgListWndProc, hWnd, message, wParam, lParam);
         }
         break;
+    case WM_CONTEXTMENU:
+    {
+      POINTS pt;
+      int cnt;
+      pt = MAKEPOINTS(lParam);
+      cnt = ListView_GetNextItem(hWnd, -1, LVNI_FOCUSED | LVNI_SELECTED);
+      if(cnt == -1)
+      {
+        TrackPopupMenu(GetSubMenu(hPopupMenus, PM_NEW), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
+      }
+      else
+      {
+        TrackPopupMenu(GetSubMenu(hPopupMenus, PM_MODIFYVALUE), TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
+      }
+      break;
+    }
     case WM_KEYDOWN:
         if (wParam == VK_TAB) {
             /*TODO: SetFocus(Globals.hDriveBar) */

@@ -102,6 +102,29 @@ BEGIN
     END
 END
 
+IDR_POPUP_MENUS MENU DISCARDABLE
+BEGIN
+  POPUP ""
+  BEGIN
+	MENUITEM "&Modify",                     ID_EDIT_MODIFY
+	MENUITEM "Modify Binary Data",          ID_EDIT_MODIFY_BIN
+	MENUITEM SEPARATOR
+	MENUITEM "&Delete\tDel",                ID_EDIT_DELETE
+	MENUITEM "&Rename",                     ID_EDIT_RENAME
+  END
+  POPUP ""
+  BEGIN
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Key",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+        END
+  END
+END
+
 
 /*
  * Dialog

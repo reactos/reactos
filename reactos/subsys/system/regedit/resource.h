@@ -42,6 +42,7 @@
 #define IDI_ROOT                        134
 #define IDI_STRING                      135
 #define IDI_BIN                         136
+#define IDR_POPUP_MENUS                 137
 #define IDC_LICENSE_EDIT                1029
 #define ID_REGISTRY_EXIT                32770
 #define ID_FAVOURITES_ADDTOFAVOURITES   32772
@@ -107,6 +108,7 @@
 #define IDS_BAD_VALUE			32837
 #define IDS_UNSUPPORTED_TYPE		32838
 #define IDS_TOO_BIG_VALUE		32839
+#define ID_EDIT_MODIFY_BIN		32840
 
 #define IDD_EDIT_STRING			2000
 #define IDC_VALUE_NAME			2001

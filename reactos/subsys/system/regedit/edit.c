@@ -159,7 +159,7 @@ BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName)
         }
         if (DialogBox(0, MAKEINTRESOURCE(IDD_EDIT_STRING), hwnd, modify_string_dlgproc) == IDOK) {
             if(stringValueData)
-            {MessageBox(0, stringValueData, valueName, 0);
+            {
               lRet = RegSetValueEx(hKey, valueName, 0, type, stringValueData, lstrlen(stringValueData) + 1);
             }
             else

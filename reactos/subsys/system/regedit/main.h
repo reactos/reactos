@@ -33,6 +33,9 @@
 
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
+#define PM_MODIFYVALUE  0
+#define PM_NEW          1
+
 extern HINSTANCE hInst;
 
 /******************************************************************************/
@@ -65,6 +68,7 @@ extern HINSTANCE hInst;
 extern HWND      hFrameWnd;
 extern HMENU     hMenuFrame;
 extern HWND      hStatusBar;
+extern HMENU     hPopupMenus;
 extern HFONT     hFont;
 extern enum OPTION_FLAGS Options;
 
