@@ -1,4 +1,4 @@
-/* $Id: atom.c,v 1.5 2003/07/11 13:50:23 royce Exp $
+/* $Id: atom.c,v 1.6 2004/05/13 20:48:31 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -433,6 +433,8 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 	Current = Current->Flink;
      }
+
+   RtlpUnlockAtomTable(AtomTable);
 
    return STATUS_OBJECT_NAME_NOT_FOUND;
 }
