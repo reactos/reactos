@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.8 2002/04/10 17:02:22 ekohl Exp $
+/* $Id: cdrom.c,v 1.9 2002/05/25 13:29:58 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -553,10 +553,8 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       default:
-	DPRINT1("Unhandled control code: %lx\n", ControlCode);
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	Information = 0;
-	break;
+	/* Call the common device control function */
+	return(ScsiClassDeviceControl(DeviceObject, Irp));
     }
 
 

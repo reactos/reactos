@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.12 2002/03/22 23:07:40 ekohl Exp $
+/* $Id: disk.c,v 1.13 2002/05/25 13:30:28 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,8 +111,8 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 {
   CLASS_INIT_DATA InitData;
 
-  DbgPrint("Disk Class Driver %s\n",
-	   VERSION);
+  DPRINT("Disk Class Driver %s\n",
+	 VERSION);
   DPRINT("RegistryPath '%wZ'\n",
 	 RegistryPath);
 
@@ -217,7 +217,7 @@ DiskClassFindDevices(PDRIVER_OBJECT DriverObject,
 					      AdapterBusInfo);
   if (DeviceCount == 0)
     {
-      DPRINT1("No unclaimed devices!\n");
+      DPRINT("No unclaimed devices!\n");
       return(FALSE);
     }
 
@@ -449,7 +449,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 				       InitializationData);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
+      DPRINT("ScsiClassCreateDeviceObject() failed (Status %x)\n", Status);
 
       /* Release (unclaim) the disk */
       ScsiClassClaimDevice(PortDeviceObject,
@@ -501,7 +501,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 						     sizeof(DISK_GEOMETRY));
   if (DiskDeviceExtension->DiskGeometry == NULL)
     {
-      DPRINT1("Failed to allocate geometry buffer!\n");
+      DPRINT("Failed to allocate geometry buffer!\n");
 
       IoDeleteDevice(DiskDeviceObject);
 
@@ -810,13 +810,15 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
       case IOCTL_DISK_HISTOGRAM_RESET:
       case IOCTL_DISK_REQUEST_STRUCTURE:
       case IOCTL_DISK_REQUEST_DATA:
-
-      /* If we get here, something went wrong.  inform the requestor */
-      default:
+	/* If we get here, something went wrong.  inform the requestor */
 	DPRINT1("Unhandled control code: %lx\n", ControlCode);
 	Status = STATUS_INVALID_DEVICE_REQUEST;
 	Information = 0;
 	break;
+
+      default:
+	/* Call the common device control function */
+	return(ScsiClassDeviceControl(DeviceObject, Irp));
     }
 
   Irp->IoStatus.Status = Status;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.17 2002/04/27 19:01:24 ekohl Exp $
+/* $Id: class2.c,v 1.18 2002/05/25 13:30:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -96,7 +96,7 @@ NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject,
 	    IN PUNICODE_STRING RegistryPath)
 {
-  DbgPrint("Class Driver %s\n", VERSION);
+  DPRINT("Class Driver %s\n", VERSION);
   return(STATUS_SUCCESS);
 }
 
@@ -412,7 +412,66 @@ NTSTATUS STDCALL
 ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
 		       PIRP Irp)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION Stack;
+  ULONG IoControlCode;
+  ULONG OutputBufferLength;
+
+  DPRINT1("ScsiClassDeviceControl() called\n");
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  Stack = IoGetCurrentIrpStackLocation(Irp);
+
+  IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
+  OutputBufferLength = Stack->Parameters.DeviceIoControl.OutputBufferLength;
+
+  if (IoControlCode == IOCTL_SCSI_GET_ADDRESS)
+    {
+      PSCSI_ADDRESS ScsiAddress;
+
+      if (OutputBufferLength < sizeof(SCSI_ADDRESS))
+	{
+	  Irp->IoStatus.Information = 0;
+	  Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	  return(STATUS_BUFFER_TOO_SMALL);
+	}
+
+      ScsiAddress = Irp->AssociatedIrp.SystemBuffer;
+      ScsiAddress->Length = sizeof(SCSI_ADDRESS);
+      ScsiAddress->PortNumber = DeviceExtension->PortNumber;
+      ScsiAddress->PathId = DeviceExtension->PathId;
+      ScsiAddress->TargetId = DeviceExtension->TargetId;
+      ScsiAddress->Lun = DeviceExtension->Lun;
+
+      Irp->IoStatus.Information = sizeof(SCSI_ADDRESS);
+      Irp->IoStatus.Status = STATUS_SUCCESS;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+      return(STATUS_SUCCESS);
+    }
+
+  if (IoControlCode == IOCTL_SCSI_PASS_THROUGH ||
+      IoControlCode == IOCTL_SCSI_PASS_THROUGH_DIRECT)
+    {
+      DPRINT1("Fixme: IOCTL_SCSI_PASS_THROUGH/IOCTL_SCSI_PASS_THROUGH_DIRECT\n");
+
+
+      Irp->IoStatus.Information = 0;
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+      return(STATUS_UNSUCCESSFUL);
+    }
+
+  DPRINT1("Fixme: unknown device io control code\n");
+
+  Irp->IoStatus.Information = 0;
+  Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(STATUS_UNSUCCESSFUL);
 }
 
 
@@ -437,7 +496,7 @@ ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
   ULONG UnclaimedDevices = 0;
   NTSTATUS Status;
 
-  DPRINT("ScsiClassFindUnclaimedDevices() called!\n");
+  DPRINT("ScsiClassFindUnclaimedDevices() called\n");
 
   DPRINT("NumberOfBuses: %lu\n",AdapterInformation->NumberOfBuses);
   Buffer = (PUCHAR)AdapterInformation;
@@ -890,7 +949,7 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
   ExFreePool(IrpStack->Parameters.Scsi.Srb);
 
   Irp->IoStatus.Status = Status;
-#if 0
+//#if 0
   if (!NT_SUCCESS(Status))
     {
       Irp->IoStatus.Information = 0;
@@ -900,7 +959,8 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
 				       DeviceObject);
 	}
     }
-
+//#endif
+#if 0
   if (Irp->PendingReturned)
     {
       IoMarkIrpPending(Irp);

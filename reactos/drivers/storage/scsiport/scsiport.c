@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.13 2002/05/07 23:13:24 hbirr Exp $
+/* $Id: scsiport.c,v 1.14 2002/05/25 13:30:53 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -705,7 +705,8 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   ULONG DataSize = 0;
 
 
-  DPRINT("ScsiPortDispatchScsi()\n");
+  DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n",
+	 DeviceObject, Irp);
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -749,6 +750,7 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 
   DPRINT("Srb: %p\n", Srb);
   DPRINT("Srb->Function: %lu\n", Srb->Function);
+  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
   switch (Srb->Function)
     {
@@ -765,10 +767,16 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	  PINQUIRYDATA InquiryData;
 
 	  DPRINT("  SRB_FUNCTION_CLAIM_DEVICE\n");
+	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
+
+	  Srb->DataBuffer = NULL;
 
 	  if (DeviceExtension->PortBusInfo != NULL)
 	    {
 	      AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
+
+	      if (AdapterInfo->BusData[Srb->PathId].NumberOfLogicalUnits == 0)
+		break;
 
 	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
 		AdapterInfo->BusData[Srb->PathId].InquiryDataOffset);
@@ -783,6 +791,10 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		    {
 		      UnitInfo->DeviceClaimed = TRUE;
 		      DPRINT("Claimed device!\n");
+
+		      /* FIXME: Hack!!!!! */
+		      Srb->DataBuffer = DeviceObject;
+
 		      break;
 		    }
 
@@ -792,9 +804,6 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		  UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo + UnitInfo->NextInquiryDataOffset);
 		}
 	    }
-
-	  /* FIXME: Hack!!!!! */
-	  Srb->DataBuffer = DeviceObject;
 	}
 	break;
 
@@ -805,14 +814,17 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 	  PINQUIRYDATA InquiryData;
 
 	  DPRINT("  SRB_FUNCTION_RELEASE_DEVICE\n");
+	  DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
 
 	  if (DeviceExtension->PortBusInfo != NULL)
 	    {
 	      AdapterInfo = (PSCSI_ADAPTER_BUS_INFO)DeviceExtension->PortBusInfo;
 
+	      if (AdapterInfo->BusData[Srb->PathId].NumberOfLogicalUnits == 0)
+		break;
+
 	      UnitInfo = (PSCSI_INQUIRY_DATA)((PUCHAR)AdapterInfo +
 		AdapterInfo->BusData[Srb->PathId].InquiryDataOffset);
-
 
 	      while (AdapterInfo->BusData[Srb->PathId].InquiryDataOffset)
 		{
@@ -1235,9 +1247,12 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	{
 	  Srb.TargetId = Target;
 	  Srb.Lun = 0;
+	  Srb.SrbStatus = SRB_STATUS_SUCCESS;
 
 	  Result = DeviceExtension->HwStartIo(&DeviceExtension->MiniPortDeviceExtension,
 					      &Srb);
+	  DPRINT("Result: %s  Srb.SrbStatus %lx\n", (Result)?"True":"False", Srb.SrbStatus);
+
 	  if (Result == TRUE && Srb.SrbStatus == SRB_STATUS_SUCCESS)
 	    {
 	      UnitInfo->PathId = Bus;
@@ -1254,7 +1269,10 @@ ScsiPortInquire(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 	      UnitCount++;
 	    }
 	}
+      DPRINT("UnitCount: %lu\n", UnitCount);
       AdapterInfo->BusData[Bus].NumberOfLogicalUnits = UnitCount;
+      if (UnitCount == 0)
+	AdapterInfo->BusData[Bus].InquiryDataOffset = 0;
     }
   DataSize = (ULONG)((PUCHAR)UnitInfo-(PUCHAR)AdapterInfo);
 

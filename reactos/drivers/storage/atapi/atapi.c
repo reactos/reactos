@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.21 2002/05/24 22:27:48 ekohl Exp $
+/* $Id: atapi.c,v 1.22 2002/05/25 13:28:42 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -254,7 +254,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
   HW_INITIALIZATION_DATA InitData;
   NTSTATUS Status;
 
-  DbgPrint("ATAPI Driver %s\n", VERSION);
+  DPRINT("ATAPI Driver %s\n", VERSION);
 
   /* Initialize data structure */
   RtlZeroMemory(&InitData,
@@ -496,7 +496,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
   if (ConfigInfo->AtdiskPrimaryClaimed == FALSE)
     {
       /* Both channels unclaimed: Claim primary channel */
-      DPRINT1("Primary channel!\n");
+      DPRINT("Primary channel!\n");
 
       DevExt->CommandPortBase = 0x01F0;
       DevExt->ControlPortBase = 0x03F6;
@@ -520,7 +520,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
   else if (ConfigInfo->AtdiskSecondaryClaimed == FALSE)
     {
       /* Primary channel already claimed: claim secondary channel */
-      DPRINT1("Secondary channel!\n");
+      DPRINT("Secondary channel!\n");
 
       DevExt->CommandPortBase = 0x0170;
       DevExt->ControlPortBase = 0x0376;
@@ -916,8 +916,9 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
       if (Retries >= 20000)
 	{
-	  DbgPrint("Timeout on drive %lu\n", UnitNumber);
-	  return(DeviceFound);
+	  DPRINT("Timeout on drive %lu\n", UnitNumber);
+	  DeviceExtension->DevicePresent[UnitNumber] = FALSE;
+	  continue;
 	}
 
       High = IDEReadCylinderHigh(CommandPortBase);
@@ -966,7 +967,8 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	}
     }
 
-  DPRINT("AtapiFindDrives() done\n");
+
+  DPRINT("AtapiFindDrives() done (DeviceFound %s)\n", (DeviceFound) ? "TRUE" : "FALSE");
 
   return(DeviceFound);
 }
@@ -1012,13 +1014,10 @@ AtapiResetController(IN ULONG CommandPort,
       ScsiPortStallExecution(10);
     }
 
-  CHECKPOINT;
   if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
     {
       return(FALSE);
     }
-
-  CHECKPOINT;
 
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
@@ -1070,8 +1069,8 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 		      (Atapi ? IDE_CMD_IDENT_ATAPI_DRV : IDE_CMD_IDENT_ATA_DRV),
 		      (BYTE *)DrvParms) != 0)
     {
-      DPRINT1("IDEPolledRead() failed\n");
-      return FALSE;
+      DPRINT("IDEPolledRead() failed\n");
+      return(FALSE);
     }
 
   /*  Report on drive parameters if debug mode  */
@@ -1114,7 +1113,8 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
   if (DrvParms->BytesPerSector == 0)
     DrvParms->BytesPerSector = 512;
-  return TRUE;
+
+  return(TRUE);
 }
 
 
@@ -1312,12 +1312,28 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("AtapiSendAtapiCommand() called!\n");
 
-  if ((Srb->PathId != 0) ||
-      (Srb->TargetId > 1) ||
-      (Srb->Lun != 0) ||
-      (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE))
+  if (Srb->PathId != 0)
     {
-      return(SRB_STATUS_SELECTION_TIMEOUT);
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
     }
 
   DPRINT("AtapiSendAtapiCommand(): TargetId: %lu\n",
@@ -1514,15 +1530,31 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   PINQUIRYDATA InquiryData;
   ULONG i;
 
-  DPRINT1("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
-	  DeviceExtension, Srb->TargetId);
+  DPRINT("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
+	 DeviceExtension, Srb->TargetId);
 
-  if ((Srb->PathId != 0) ||
-      (Srb->TargetId > 1) ||
-      (Srb->Lun != 0) ||
-      (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE))
+  if (Srb->PathId != 0)
     {
-      return(SRB_STATUS_SELECTION_TIMEOUT);
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
     }
 
   InquiryData = Srb->DataBuffer;
@@ -1575,8 +1607,9 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	((PUCHAR)DeviceParams->FirmwareRev)[i+1];
     }
 
-  DPRINT1("VendorId: '%.20s'\n", InquiryData->VendorId);
+  DPRINT("VendorId: '%.20s'\n", InquiryData->VendorId);
 
+  Srb->SrbStatus = SRB_STATUS_SUCCESS;
   return(SRB_STATUS_SUCCESS);
 }
 
@@ -1591,14 +1624,29 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("SCSIOP_READ_CAPACITY: TargetId: %lu\n", Srb->TargetId);
 
-  if ((Srb->PathId != 0) ||
-      (Srb->TargetId > 1) ||
-      (Srb->Lun != 0) ||
-      (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE))
+  if (Srb->PathId != 0)
     {
-      return(SRB_STATUS_SELECTION_TIMEOUT);
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
     }
 
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
+    }
 
   CapacityData = (PREAD_CAPACITY_DATA)Srb->DataBuffer;
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
@@ -1629,6 +1677,7 @@ AtapiReadCapacity(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	 LastSector,
 	 CapacityData->LogicalBlockAddress);
 
+  Srb->SrbStatus = SRB_STATUS_SUCCESS;
   return(SRB_STATUS_SUCCESS);
 }
 
@@ -1650,12 +1699,28 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 
   DPRINT("AtapiReadWrite() called!\n");
 
-  if ((Srb->PathId != 0) ||
-      (Srb->TargetId > 1) ||
-      (Srb->Lun != 0) ||
-      (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE))
+  if (Srb->PathId != 0)
     {
-      return(SRB_STATUS_SELECTION_TIMEOUT);
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
     }
 
   DPRINT("SCSIOP_WRITE: TargetId: %lu\n",
@@ -1898,7 +1963,7 @@ AtapiErrorToScsi(PVOID DeviceExtension,
   UCHAR ScsiStatus;
   UCHAR SrbStatus;
 
-  DPRINT1("AtapiErrorToScsi() called\n");
+  DPRINT("AtapiErrorToScsi() called\n");
 
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
 
@@ -2008,7 +2073,7 @@ AtapiErrorToScsi(PVOID DeviceExtension,
 
   Srb->ScsiStatus = ScsiStatus;
 
-  DPRINT1("AtapiErrorToScsi() done\n");
+  DPRINT("AtapiErrorToScsi() done\n");
 
   return(SrbStatus);
 }

@@ -1,4 +1,4 @@
-/* $Id: ntddscsi.h,v 1.2 2002/01/14 01:44:18 ekohl Exp $
+/* $Id: ntddscsi.h,v 1.3 2002/05/25 13:30:39 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -75,6 +75,17 @@ typedef struct _SCSI_INQUIRY_DATA
   UCHAR InquiryData[1];
 }SCSI_INQUIRY_DATA, *PSCSI_INQUIRY_DATA;
 
+
+/* Used by IOCTL_SCSI_GET_ADDRESS */
+
+typedef struct _SCSI_ADDRESS
+{
+  ULONG Length;
+  UCHAR PortNumber;
+  UCHAR PathId;
+  UCHAR TargetId;
+  UCHAR Lun;
+} SCSI_ADDRESS, *PSCSI_ADDRESS;
 
 #endif /* __STORAGE_INCLUDE_NTDDSCSI_H */
 
