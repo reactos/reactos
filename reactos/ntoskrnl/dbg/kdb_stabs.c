@@ -210,12 +210,20 @@ KdbPrintAddress(PVOID address)
 }
 
 VOID
-KdbFreeSymbolsProcess(PPEB Peb)
+KdbFreeSymbolsProcess(PEPROCESS Process)
 {
   PLIST_ENTRY CurrentEntry;
   PLDR_MODULE Current;
   PIMAGE_SYMBOL_INFO SymbolInfo;
+  PEPROCESS CurrentProcess;
+  PPEB Peb;
 
+  CurrentProcess = PsGetCurrentProcess();
+  if (CurrentProcess != Process)
+  {
+    KeAttachProcess(Process);
+  }
+  Peb = Process->Peb;
   assert (Peb);
   assert (Peb->Ldr);
 
@@ -231,6 +239,10 @@ KdbFreeSymbolsProcess(PPEB Peb)
 
       CurrentEntry = CurrentEntry->Flink;
     }
+  if (CurrentProcess != Process)
+  {
+    KeDetachProcess();
+  }
 }
 
 VOID
@@ -456,6 +468,7 @@ LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
             Length = strlen(Symbol->Name.Buffer);
 
           strncpy(FunctionName, Symbol->Name.Buffer, Length);
+	  FunctionName[Length]=0;
           return STATUS_SUCCESS;
         }
       Symbol = NextSymbol;
@@ -783,6 +796,11 @@ KdbLdrLoadUserModuleSymbols(PLDR_MODULE LdrModule)
       RtlCreateUnicodeString(&CacheEntry->FullName, LdrModule->FullDllName.Buffer);
       assert(CacheEntry->FullName.Buffer);
       LdrpLoadModuleSymbols(&LdrModule->FullDllName, &LdrModule->SymbolInfo);
+      CacheEntry->FileBuffer = LdrModule->SymbolInfo.FileBuffer;
+      CacheEntry->SymbolsBase = LdrModule->SymbolInfo.SymbolsBase;
+      CacheEntry->SymbolsLength = LdrModule->SymbolInfo.SymbolsLength;
+      CacheEntry->SymbolStringsBase = LdrModule->SymbolInfo.SymbolStringsBase;
+      CacheEntry->SymbolStringsLength = LdrModule->SymbolInfo.SymbolStringsLength;
       InsertTailList(&SymbolListHead, &CacheEntry->ListEntry);
     }
 }

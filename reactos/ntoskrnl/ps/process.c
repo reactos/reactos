@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.94 2002/11/03 20:01:07 chorns Exp $
+/* $Id: process.c,v 1.95 2003/01/19 01:46:32 hbirr Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -299,12 +299,12 @@ PiDeleteProcess(PVOID ObjectBody)
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
    /* KDB hook */
-   KDB_DELETEPROCESS_HOOK(Process->Peb);
+   KDB_DELETEPROCESS_HOOK(Process);
 
    ObDereferenceObject(Process->Token);
+   ObDeleteHandleTable(Process);
 
    (VOID)MmReleaseMmInfo(Process);
-   ObDeleteHandleTable(Process);
 }
 
 

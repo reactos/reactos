@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.16 2002/09/08 10:23:21 chorns Exp $
+/* $Id: kd.h,v 1.17 2003/01/19 01:46:33 hbirr Exp $
  *
  * kernel debugger prototypes
  */
@@ -96,7 +96,7 @@ KdbUnloadDriver(PMODULE_OBJECT ModuleObject);
 VOID
 KdbLoadDriver(PUNICODE_STRING Filename, PMODULE_OBJECT Module);
 VOID
-KdbFreeSymbolsProcess(PPEB Peb);
+KdbFreeSymbolsProcess(PEPROCESS Process);
 BOOLEAN
 KdbPrintAddress(PVOID address);
 KD_CONTINUE_TYPE
