@@ -1,4 +1,4 @@
-/* $Id: toolhelp.c,v 1.3 2003/07/10 18:50:51 chorns Exp $
+/* $Id: toolhelp.c,v 1.4 2004/08/28 22:06:02 navaraf Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -283,41 +283,14 @@ Toolhelp32ReadProcessMemory(DWORD th32ProcessID,
 }
 
 
-#define TL_DEV_NAME L"\\??\\TlHelpDevice"
-
 /*
  * @unimplemented
  */
 HANDLE STDCALL
 CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
 {
-    // return open handle to snapshot on success, -1 on failure
-    // the snapshot handle behavies like an object handle
-    SECURITY_ATTRIBUTES sa;
-    HANDLE hSnapshot = (HANDLE)-1;
-
-    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
-
-    if (dwFlags & TH32CS_INHERIT) {
-    }
-    if (dwFlags & TH32CS_SNAPHEAPLIST) {
-    }
-    if (dwFlags & TH32CS_SNAPMODULE) {
-    }
-    if (dwFlags & TH32CS_SNAPPROCESS) {
-    }
-    if (dwFlags & TH32CS_SNAPTHREAD) {
-    }
-    hSnapshot = CreateFileW(TL_DEV_NAME,
-                           GENERIC_READ, FILE_SHARE_READ + FILE_SHARE_WRITE,
-                           &sa, OPEN_EXISTING, 0L/*FILE_ATTRIBUTE_SYSTEM*/, 0);
-    if (hSnapshot != INVALID_HANDLE_VALUE) {
-
-    }
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-
-    // caller must use CloseHandle to destroy the returned snapshot handle
-    return hSnapshot;
+    return INVALID_HANDLE_VALUE;
 }
 
 
