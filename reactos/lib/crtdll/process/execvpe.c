@@ -3,13 +3,10 @@
 
 #include <process.h>
 
-int execvpe(const char *path,const char * const argv[],const char * const envp[])
-{
-  return spawnvpe(P_OVERLAY, path, argv, envp);
-}
-
-
 int _execvpe(const char *path,const char * const argv[],const char * const envp[])
 {
-  return spawnvpe(P_OVERLAY, path, argv, envp);
+  return _spawnvpe(P_OVERLAY, path, argv, envp);
 }
+
+
+

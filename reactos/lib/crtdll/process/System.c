@@ -1,7 +1,7 @@
 #include <process.h>
 #include <windows.h>
 
-int system(const char *command)
+int _system(const char *command)
 {
 	char CmdLine[MAX_PATH];
 	char *comspec = getenv("COMSPEC");

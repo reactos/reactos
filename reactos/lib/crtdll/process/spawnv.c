@@ -2,9 +2,9 @@
 
 #include <process.h>
 
-extern char **_environ;
+extern char *_environ[];
 
-int spawnv(int mode, const char *path,const char *const argv[])
+int _spawnv(int mode, const char *path,const char *const argv[])
 {
-  return spawnve(mode, path, (char * const *)argv, _environ);
+  return _spawnve(mode, path, (const char * const *)argv,(const char * const *) _environ);
 }
