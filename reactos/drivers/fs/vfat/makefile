@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.14 2000/01/19 07:05:04 rex Exp $
+# $Id: makefile,v 1.15 2000/06/04 17:15:47 ekohl Exp $
 #
 #
 TARGET=vfatfs
@@ -14,10 +14,7 @@ all: $(TARGET).sys
 
 clean:
 ifeq ($(DOSCLI),yes)
-	- $(RM) blockdev.o
-	- $(RM) dir.o
-	- $(RM) dirwr.o
-	- $(RM) iface.o
+	- $(RM) *.o
 	- $(RM) $(TARGET).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
