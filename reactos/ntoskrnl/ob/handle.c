@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.31 2001/05/05 19:13:10 chorns Exp $
+/* $Id: handle.c,v 1.32 2001/09/08 08:57:59 ekohl Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -88,6 +88,7 @@ static PHANDLE_REP ObpGetObjectByHandle(PHANDLE_TABLE HandleTable, HANDLE h)
      }
    
    blk = CONTAINING_RECORD(current,HANDLE_BLOCK,entry);
+   DPRINT("object: %p\n",&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
    return(&(blk->handles[handle%HANDLE_BLOCK_ENTRIES]));
 }
 
@@ -475,13 +476,13 @@ NTSTATUS ObCreateHandle(PEPROCESS Process,
 }
 
 
-NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
-					   ACCESS_MASK DesiredAccess,
-					   POBJECT_TYPE ObjectType,
-					   KPROCESSOR_MODE AccessMode,
-					   PVOID* Object,
-					   POBJECT_HANDLE_INFORMATION 
-					           HandleInformationPtr)
+NTSTATUS STDCALL
+ObReferenceObjectByHandle(HANDLE Handle,
+			  ACCESS_MASK DesiredAccess,
+			  POBJECT_TYPE ObjectType,
+			  KPROCESSOR_MODE AccessMode,
+			  PVOID* Object,
+			  POBJECT_HANDLE_INFORMATION HandleInformationPtr)
 /*
  * FUNCTION: Increments the reference count for an object and returns a 
  * pointer to its body
@@ -558,6 +559,9 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
 	return(STATUS_INVALID_HANDLE);
      }
    ObjectBody = HandleRep->ObjectBody;
+   DPRINT("ObjectBody %p\n",ObjectBody);
+   ObjectHeader = BODY_TO_HEADER(ObjectBody);
+   DPRINT("ObjectHeader->RefCount %lu\n",ObjectHeader->RefCount);
    ObReferenceObjectByPointer(ObjectBody,
 			      0,
 			      NULL,
@@ -567,6 +571,7 @@ NTSTATUS STDCALL ObReferenceObjectByHandle(HANDLE Handle,
 		     oldIrql);
    
    ObjectHeader = BODY_TO_HEADER(ObjectBody);
+   DPRINT("ObjectHeader->RefCount %lu\n",ObjectHeader->RefCount);
 
    if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
      {
