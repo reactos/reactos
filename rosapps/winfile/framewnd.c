@@ -247,7 +247,7 @@ HWND CreateChildWindow(int drv_id)
     return 0;
 }
 
-BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
+static BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
 {
     if (!GetWindow(hWnd, GW_OWNER)) {
         SendMessage(GetParent(hWnd), WM_MDIRESTORE, (WPARAM)hWnd, 0);
@@ -258,7 +258,7 @@ BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
     return 1;
 }
 
-void OnEnterMenuLoop(HWND hWnd)
+static void OnEnterMenuLoop(HWND hWnd)
 {
     int nParts;
 
@@ -269,7 +269,7 @@ void OnEnterMenuLoop(HWND hWnd)
     SendMessage(Globals.hStatusBar, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
 }
 
-void OnExitMenuLoop(HWND hWnd)
+static void OnExitMenuLoop(HWND hWnd)
 {
     RECT  rc;
     int   nParts[3];
@@ -286,7 +286,7 @@ void OnExitMenuLoop(HWND hWnd)
 	UpdateStatusBar();
 }
 
-void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
+static void OnMenuSelect(HWND hWnd, UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
     TCHAR str[100];
 
@@ -363,8 +363,6 @@ static void toggle_child(HWND hWnd, UINT cmd, HWND hchild)
 #endif
 	resize_frame_client(hWnd);
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////
 //
@@ -571,7 +569,7 @@ static TBBUTTON tbButtonNew[] = {
 	{0, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON},
 };
         
-LRESULT MsgNotify(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
+static LRESULT MsgNotify(HWND hwnd, UINT uMessage, WPARAM wparam, LPARAM lparam)
 {
     LPNMHDR     lpnmhdr;
 

@@ -41,21 +41,19 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////
-// Global Variables:
+// Globals and Variables:
 //
 
 BOOL bInMenuLoop = FALSE;        // Tells us if we are in the menu loop
 
+static HHOOK hcbthook;
+static ChildWnd* newchild = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////
 // Local module support methods
 //
 
-////////////////////////////////////////////////////////////////////////////////
-static HHOOK hcbthook;
-static ChildWnd* newchild = NULL;
-
-LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK CBTProc(int code, WPARAM wParam, LPARAM lParam)
 {
     if (code == HCBT_CREATEWND && newchild) {
         ChildWnd* pChildWnd = newchild;
@@ -102,7 +100,8 @@ static HWND InitChildWindow(LPTSTR param)
 	}
     return 0;
 }
-BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
+
+static BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
 {
     if (!GetWindow(hWnd, GW_OWNER)) {
         SendMessage(GetParent(hWnd), WM_MDIRESTORE, (WPARAM)hWnd, 0);
@@ -113,27 +112,18 @@ BOOL CALLBACK CloseEnumProc(HWND hWnd, LPARAM lParam)
     return 1;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
-//
-//  PURPOSE:  Processes WM_COMMAND messages for the main frame window.
-//
-//
-
-LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+static LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND hChildWnd;
-    if (1) {
-        switch (LOWORD(wParam)) {
-        case ID_WINDOW_CLOSEALL:
-            EnumChildWindows(hMDIClient, &CloseEnumProc, 0);
-            break;
-        case ID_WINDOW_CLOSE:
-            hChildWnd = (HWND) SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
-            if (!SendMessage(hChildWnd, WM_QUERYENDSESSION, 0, 0))
-                SendMessage(hMDIClient, WM_MDIDESTROY, (WPARAM)hChildWnd, 0);
-            break;
+    switch (LOWORD(wParam)) {
+    case ID_WINDOW_CLOSEALL:
+        EnumChildWindows(hMDIClient, &CloseEnumProc, 0);
+        break;
+    case ID_WINDOW_CLOSE:
+        hChildWnd = (HWND) SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
+        if (!SendMessage(hChildWnd, WM_QUERYENDSESSION, 0, 0))
+            SendMessage(hMDIClient, WM_MDIDESTROY, (WPARAM)hChildWnd, 0);
+        break;
 //        case ID_FILE_EXIT:
 //            SendMessage(hWnd, WM_CLOSE, 0, 0);
 //            break;
@@ -141,45 +131,44 @@ LRESULT _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 //            DestroyWindow(hWnd);
 //            break;
 //        case ID_FILE_OPEN:
-        case ID_REGISTRY_PRINTERSETUP:
-            //PRINTDLG pd;
-            //PrintDlg(&pd);
-            //PAGESETUPDLG psd;
-            //PageSetupDlg(&psd);
-            break;
-        case ID_REGISTRY_OPENLOCAL:
-        case ID_WINDOW_NEW_WINDOW:
-            InitChildWindow("Child Window");
-            return 0;
-        case ID_WINDOW_CASCADE:
-            SendMessage(hMDIClient, WM_MDICASCADE, 0, 0);
-            break;
-        case ID_WINDOW_TILE_HORZ:
-            SendMessage(hMDIClient, WM_MDITILE, MDITILE_HORIZONTAL, 0);
-            break;
-        case ID_WINDOW_TILE_VERT:
-            SendMessage(hMDIClient, WM_MDITILE, MDITILE_VERTICAL, 0);
-            break;
-        case ID_WINDOW_ARRANGE_ICONS:
-            SendMessage(hMDIClient, WM_MDIICONARRANGE, 0, 0);
-            break;
-        case ID_HELP_ABOUT:
-//            ShowAboutBox(hWnd);
-            {
-            HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
-            ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
-            //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
-            }
-            break;
-        default:
-            hChildWnd = (HWND)SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
-            if (IsWindow(hChildWnd))
-                SendMessage(hChildWnd, WM_COMMAND, wParam, lParam);
-            else
-			    return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
+    case ID_REGISTRY_PRINTERSETUP:
+        //PRINTDLG pd;
+        //PrintDlg(&pd);
+        //PAGESETUPDLG psd;
+        //PageSetupDlg(&psd);
+        break;
+    case ID_REGISTRY_OPENLOCAL:
+    case ID_WINDOW_NEW_WINDOW:
+        InitChildWindow("Child Window");
+        return 0;
+    case ID_WINDOW_CASCADE:
+        SendMessage(hMDIClient, WM_MDICASCADE, 0, 0);
+        break;
+    case ID_WINDOW_TILE_HORZ:
+        SendMessage(hMDIClient, WM_MDITILE, MDITILE_HORIZONTAL, 0);
+        break;
+    case ID_WINDOW_TILE_VERT:
+        SendMessage(hMDIClient, WM_MDITILE, MDITILE_VERTICAL, 0);
+        break;
+    case ID_WINDOW_ARRANGE_ICONS:
+        SendMessage(hMDIClient, WM_MDIICONARRANGE, 0, 0);
+        break;
+    case ID_HELP_ABOUT:
+//        ShowAboutBox(hWnd);
+        {
+        HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
+        ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
+        //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
         }
+        break;
+    default:
+        hChildWnd = (HWND)SendMessage(hMDIClient, WM_MDIGETACTIVE, 0, 0);
+        if (IsWindow(hChildWnd))
+            SendMessage(hChildWnd, WM_COMMAND, wParam, lParam);
+        else
+            return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
     }
-	return 0;
+    return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -212,14 +201,14 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-        case WM_QUERYENDSESSION:
-        case WM_CLOSE:
-            SendMessage(hWnd, WM_COMMAND, ID_WINDOW_CLOSEALL, 0);
-            if (GetWindow(hMDIClient, GW_CHILD) != NULL)
-                return 0;
+    case WM_QUERYENDSESSION:
+    case WM_CLOSE:
+        SendMessage(hWnd, WM_COMMAND, ID_WINDOW_CLOSEALL, 0);
+        if (GetWindow(hMDIClient, GW_CHILD) != NULL)
+            return 0;
         // else fall thru...
     default:
-            return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
+        return DefFrameProc(hWnd, hMDIClient, message, wParam, lParam);
     }
     return 0;
 }
