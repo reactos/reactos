@@ -18,7 +18,6 @@ DEFINE_GUID(GUID_SERENUM_BUS_ENUMERATOR, 0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1
 #endif
 #define NDEBUG
 #include <internal/debug.h>
-#define ASSERT assert
 
 /* FUNCTIONS *****************************************************************/
 
