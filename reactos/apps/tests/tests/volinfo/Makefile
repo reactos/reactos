@@ -1,7 +1,7 @@
 #
 #
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS = volinfo
 
@@ -33,4 +33,4 @@ volinfo.exe: $(OBJECTS)
 	$(CC) $(CFLAGS) -Wl,--subsystem,windows $(OBJECTS) $(LIBS) -o volinfo.exe
 	$(NM) --numeric-sort volinfo.exe > volinfo.sym
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

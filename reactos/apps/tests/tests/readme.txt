@@ -4,7 +4,7 @@ work great under Win9x,NT,2k and XP. I've fixed and renamed a few
 of these because the old names didn't really describe them.
 
 If you feel like messing with this just type make_install and 
-everything will be installed to C:\tests
+everything will be installed to C:\reactos\bin\tests
 
 TESTS -
 GetSystemInfo: Reads from kernel32.dll

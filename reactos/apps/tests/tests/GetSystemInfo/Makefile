@@ -1,7 +1,7 @@
 #
 #
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS = GetSystemInfo
 
@@ -23,4 +23,4 @@ GetSystemInfo.exe: $(OBJECTS)
 	$(CC) $(CFLAGS) $(OBJECTS) $(LIBS) -o GetSystemInfo.exe
 	$(NM) --numeric-sort GetSystemInfo.exe > GetSystemInfo.sym
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

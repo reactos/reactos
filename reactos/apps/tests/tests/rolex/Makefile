@@ -1,13 +1,13 @@
 #
 #
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS = rolex
 
 OBJECTS = rolex.o
 
-LIBS = ../../../dk/w32/lib/gdi32.a 
+LIBS = $(PATH_TO_TOP)/dk/w32/lib/gdi32.a 
 CFLAGS =
 
 all: $(PROGS:%=%.exe)
@@ -36,4 +36,4 @@ rolex.exe: $(OBJECTS)
 #%.coff: %.rc
 #	$(RC) $(RCINC) $< -o $@
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

@@ -1,13 +1,13 @@
 #
 #
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS = guitest
 
 OBJECTS = guitest.o 
 
-LIBS = ../../../dk/w32/lib/gdi32.a 
+LIBS = $(PATH_TO_TOP)/dk/w32/lib/gdi32.a 
 CFLAGS =
 
 all: $(PROGS:%=%.exe)
@@ -33,4 +33,4 @@ guitest.exe: $(OBJECTS)
 	$(CC) $(CFLAGS) -Wl,--subsystem,windows $(OBJECTS) $(LIBS) -o guitest.exe
 	$(NM) --numeric-sort guitest.exe > guitest.sym
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

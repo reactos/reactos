@@ -2,7 +2,7 @@
 # Mutex Benchmarks from the Wineserver Linux Kernel Module
 #
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS =  fivemutex rapidmutex 
 
@@ -23,4 +23,4 @@ rapidmutex.exe: rapidmutex.c
 	$(CC) rapidmutex.c -lkernel32 -o rapidmutex.exe
 	$(NM) --numeric-sort rapidmutex.exe > rapidmutex.sym
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak

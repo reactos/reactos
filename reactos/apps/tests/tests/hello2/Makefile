@@ -1,7 +1,7 @@
 #
 #
 #
-PATH_TO_TOP = ../../..
+PATH_TO_TOP = ../../../..
 
 PROGS = hello2
 
@@ -23,4 +23,4 @@ hello2.exe: $(OBJECTS)
 	$(CC) $(CFLAGS) -Wl,--subsystem,windows $(OBJECTS) $(LIBS) -o hello2.exe
 	$(NM) --numeric-sort hello2.exe > hello2.sym
 
-include ../../../rules.mak
+include $(PATH_TO_TOP)/rules.mak
