@@ -1,4 +1,4 @@
-/* $Id: security.c,v 1.4 2001/11/21 22:30:45 ekohl Exp $
+/* $Id: security.c,v 1.5 2002/02/02 17:14:40 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
   Status = NtDuplicateToken(ProcessToken,
 			    TOKEN_IMPERSONATE,
 			    &ObjectAttributes,
-			    NULL,
+			    0,
 			    TokenImpersonation,
 			    &ImpersonationToken);
   if (!NT_SUCCESS(Status))
