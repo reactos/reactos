@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.54 2004/08/15 17:03:14 chorns Exp $
+/* $Id: reg.c,v 1.55 2004/09/13 08:51:40 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,7 +20,7 @@
 
 #define MAX_DEFAULT_HANDLES   6
 #define REG_MAX_NAME_SIZE     256
-#define REG_MAX_DATA_SIZE     2048	
+#define REG_MAX_DATA_SIZE     2048
 
 /* GLOBALS ******************************************************************/
 
@@ -1507,47 +1507,45 @@ RegFlushKey(HKEY hKey)
 /************************************************************************
  *  RegGetKeySecurity
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
-RegGetKeySecurity (HKEY hKey,
-		   SECURITY_INFORMATION SecurityInformation,
-		   PSECURITY_DESCRIPTOR pSecurityDescriptor,
-		   LPDWORD lpcbSecurityDescriptor)
+RegGetKeySecurity(HKEY hKey,
+		  SECURITY_INFORMATION SecurityInformation,
+		  PSECURITY_DESCRIPTOR pSecurityDescriptor,
+		  LPDWORD lpcbSecurityDescriptor)
 {
-#if 0
-  HKEY KeyHandle;
+  HANDLE KeyHandle;
   LONG ErrorCode;
   NTSTATUS Status;
 
-  if (hKey = HKEY_PERFORMANCE_DATA)
+  if (hKey == HKEY_PERFORMANCE_DATA)
     {
       return ERROR_INVALID_HANDLE;
     }
 
-  Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+  Status = MapDefaultKey(&KeyHandle,
+			 hKey);
   if (!NT_SUCCESS(Status))
     {
-      ErrorCode = RtlNtStatusToDosError (Status);
-      SetLastError (ErrorCode);
+      ErrorCode = RtlNtStatusToDosError(Status);
+      SetLastError(ErrorCode);
       return ErrorCode;
     }
 
-  Status = NtQuerySecurityObject ()
+  Status = NtQuerySecurityObject(hKey,
+				 SecurityInformation,
+				 pSecurityDescriptor,
+				 *lpcbSecurityDescriptor,
+				 lpcbSecurityDescriptor);
   if (!NT_SUCCESS(Status))
     {
-      ErrorCode = RtlNtStatusToDosError (Status);
-      SetLastError (ErrorCode);
+      ErrorCode = RtlNtStatusToDosError(Status);
+      SetLastError(ErrorCode);
       return ErrorCode;
     }
 
   return ERROR_SUCCESS;
-#endif
-
-  UNIMPLEMENTED;
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
