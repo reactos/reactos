@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -62,7 +62,7 @@ VOID KbdDisableMouse()
 }
 
 CHAR
-KdbTryGetCharKeyboard(PULONG ScanCode)
+KdbpTryGetCharKeyboard(PULONG ScanCode)
 {
     static byte_t last_key = 0;
     static byte_t shift = 0;
@@ -305,7 +305,7 @@ static char keymap[128][2] = {
  * Yes, this is horrible.
  */
 ULONG
-KdbTryGetCharKeyboard(VOID)
+KdbpTryGetCharKeyboard(VOID)
 {
 	static unsigned shift_state, ctrl_state, meta_state;
 	unsigned scan_code, ch;

@@ -26,7 +26,9 @@
 
 /* INCLUDES ******************************************************************/
 	
+#include <roscfg.h>
 #include <ddk/status.h>
+#include <internal/i386/ke.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 #include <ddk/defines.h>
@@ -74,6 +76,29 @@ _KiTrapRet:
 	popl	%edi
 	popl	%esi
 	popl	%ebx
+
+#ifdef DBG
+        /*
+         * Cleanup the stack which was used to setup a trapframe with SS:ESP when called
+         * from kmode.
+         */
+        movw    0xC(%esp), %bp             /* Get CS from trapframe */
+        cmpw    $KERNEL_CS, %bp
+        jne     0f
+
+        /* Copy EBP, CS:EIP and EFLAGS from the trapframe back onto the top of our stack. */
+        movl    0x00(%esp), %ebp            /* EBP */
+        movl    %ebp, 0x24(%esp)
+        movl    0x08(%esp), %ebp            /* EIP */
+        movl    %ebp, 0x2C(%esp)
+        movl    0x0C(%esp), %ebp            /* CS */
+        movl    %ebp, 0x30(%esp)
+        movl    0x10(%esp), %ebp            /* EFLAGS */
+        movl    %ebp, 0x34(%esp)
+
+        addl    $0x24, %esp
+0:
+#endif /* DBG */
 	popl	%ebp
 	addl	$0x4, %esp  /* Ignore error code */
 		
@@ -81,10 +106,32 @@ _KiTrapRet:
 
 .globl _KiTrapProlog
 _KiTrapProlog:	
+#ifdef DBG
+        /*
+         * If we were called from kmode we start setting up a new trapframe (with SS:ESP at the end)
+         */
+        movw    0x14(%esp), %bx             /* Get old CS */
+        cmpw    $KERNEL_CS, %bx
+        
+        jne     0f
+
+        leal    0x1C(%esp), %ebp
+        pushl   %ss                          /* Old SS */
+        pushl   %ebp                         /* Old ESP */
+        pushl   0x20(%esp)                   /* Old EFLAGS */
+        pushl   0x20(%esp)                   /* Old CS */
+        pushl   0x20(%esp)                   /* Old EIP */
+        pushl   0x20(%esp)                   /* ErrorCode */
+        pushl   0x20(%esp)                   /* Ebp */
+        pushl   0x20(%esp)                   /* Ebx */
+        pushl   0x20(%esp)                   /* Esi */
+0:
+#endif /* DBG */
+
 	pushl	%edi
 	pushl	%fs
 
-	/* 
+	/*
 	 * Check that the PCR exists, very early in the boot process it may 
 	 * not 
 	 */

@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,7 @@ extern KD_PORT_INFORMATION LogPortInfo;
 
 
 CHAR
-KdbTryGetCharSerial()
+KdbpTryGetCharSerial()
 {
   UCHAR Result;
 

@@ -1,29 +1,19 @@
 #include <internal/ke.h>
 #include <internal/i386/segment.h>
 
-	.data
-_KdbEipTemp:
-	.int	0
+.text
 
-	.text
-.globl _KdbEnter	
+.globl _KdbEnter
 _KdbEnter:
-	/*
-	 * Record when we are inside the debugger.
-	 */
-	incl	_KdbEntryCount
-
-	/*
-	 * Save the callers eip.
-	 */
-	popl	_KdbEipTemp
-		
 	/*
 	 * Set up a trap frame
 	 */
+                                /* Ss - space already reserved by return EIP */
+        pushl   %esp            /* Esp */
 	pushfl			/* Eflags */
 	pushl	%cs		/* Cs */
-	pushl	_KdbEipTemp	/* Eip */
+	pushl	12(%esp)	/* Eip */
+	movl    %ss, 16(%esp)   /* Save Ss */
 	pushl	$0		/* ErrorCode */
 	pushl	%ebp		/* Ebp */
 	pushl	%ebx		/* Ebx */
@@ -56,34 +46,35 @@ _KdbEnter:
 	pushl	$0		/* TempEip */
 	pushl	$0		/* TempCs */
 	pushl	$0		/* DebugPointer */
-	pushl	$0		/* DebugArgMark */
-	pushl	_KdbEipTemp	/* DebugEip */
+	pushl	$3       	/* DebugArgMark (Exception number) */
+	pushl	0x60(%esp)	/* DebugEip */
 	pushl	%ebp		/* DebugEbp */
-
-	/*
-	 * Push a pointer to the trap frame
-	 */
-	pushl	%esp
 
 	/*
 	 * Call KDB
 	 */
-	call	_KdbInternalEnter
+	movl	%esp, %eax
+	pushl	$1		/* FirstChance */
+	pushl	%eax		/* Push a pointer to the trap frame */
+	pushl	$0		/* Context */
+	pushl	$0		/* PreviousMode (KernelMode) */
+	pushl	$0		/* ExceptionRecord */
+	call	_KdbEnterDebuggerException
 
 	/*
-	 * Pop the argument
+	 * Pop the arguments and unused portions of the trap frame:
+	 *   DebugEbp
+	 *   DebugEip
+	 *   DebugArgMark
+	 *   DebugPointer
+	 *   TempCs
+	 *   TempEip
 	 */
-	popl	%eax	
+	addl	$(11*4), %esp
 
 	/*
-	 * Ignore unused portions of the trap frame.
+	 * Restore/update debugging registers.
 	 */
-	popl	%eax		/* DebugEbp */
-	popl	%eax		/* DebugEip */
-	popl	%eax		/* DebugArgMark */
-	popl	%eax		/* DebugPointer */
-	popl	%eax		/* TempCs */
-	popl	%eax		/* TempEip */
 	popl	%eax		/* Dr0 */
 	movl	%eax, %dr0
 	popl	%eax		/* Dr1 */
@@ -113,13 +104,17 @@ _KdbEnter:
 	popl	%edi		/* Edi */
 	popl	%esi		/* Esi */
 	popl	%ebx		/* Ebx */
-	popl	%ebp		/* Ebp */
-	addl	$4, %esp	/* ErrorCode */
 
-	/*
-	 * Record when we are in the debugger.
-	 */
-	decl	_KdbEntryCount
+        /* Remove SS:ESP from the stack */
+        movl    16(%esp), %ebp
+        movl    %ebp, 24(%esp)
+        movl    12(%esp), %ebp
+        movl    %ebp, 20(%esp)
+        movl    8(%esp), %ebp
+        movl    %ebp, 16(%esp)
+        
+	popl	%ebp		/* Ebp */
+	addl	$12, %esp	/* ErrorCode and SS:ESP */
 
 	/*
 	 * Return to the caller.
@@ -127,5 +122,26 @@ _KdbEnter:
 	iret
 
 
+.globl _KdbpStackSwitchAndCall@8
+_KdbpStackSwitchAndCall@8:
+        pushl   %ebp
+        movl    %esp, %ebp
+        
+        movl    0x8(%esp), %eax         /* New stack */
+        movl    0xC(%esp), %ecx         /* Function to call */
+        movl    %esp, %edx              /* Old stack */
 
-	
+        /* Switch stack */
+        movl    %eax, %esp
+        pushl   %edx
+
+        /* Call function */
+        call    *%ecx
+
+        /* Switch back to old stack */
+        popl    %esp
+
+        /* Return */
+        popl    %ebp
+        ret     $8
+

@@ -69,9 +69,11 @@
 #define KTRAP_FRAME_RESERVED9      (0x8A)
 #define KTRAP_FRAME_SIZE           (0x8C)
 
+#define X86_EFLAGS_TF           0x00000100 /* Trap flag */
 #define X86_EFLAGS_IF           0x00000200 /* Interrupt Enable flag */
 #define X86_EFLAGS_IOPL         0x00003000 /* I/O Privilege Level bits */
 #define X86_EFLAGS_NT           0x00004000 /* Nested Task flag */
+#define X86_EFLAGS_RF           0x00010000 /* Resume flag */
 #define X86_EFLAGS_VM           0x00020000 /* Virtual Mode */
 #define X86_EFLAGS_ID           0x00200000 /* CPUID detection flag */
 

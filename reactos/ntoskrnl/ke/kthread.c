@@ -236,10 +236,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->Alerted[0] = 0;
   Thread->Alerted[1] = 0;
   Thread->Iopl = 0;
-  /*
-   * FIXME: Think how this might work
-   */
-  Thread->NpxState = 0;
+  Thread->NpxState = NPX_STATE_INVALID;
   
   Thread->Saturation = 0;
   Thread->Priority = Process->BasePriority; 
@@ -262,7 +259,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->DecrementCount = 0;
   Thread->PriorityDecrement = 0;
   Thread->Quantum = Process->ThreadQuantum;
-  memset(Thread->WaitBlock, 0, sizeof(KWAIT_BLOCK)*4);
+  RtlZeroMemory(Thread->WaitBlock, sizeof(KWAIT_BLOCK)*4);
   Thread->LegoData = 0; 
   Thread->UserAffinity = Process->Affinity;
   Thread->SystemAffinityActive = 0;
@@ -271,7 +268,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->ServiceTable = KeServiceDescriptorTable;
   Thread->Queue = NULL;
   KeInitializeSpinLock(&Thread->ApcQueueLock);
-  memset(&Thread->Timer, 0, sizeof(KTIMER));
+  RtlZeroMemory(&Thread->Timer, sizeof(KTIMER));
   KeInitializeTimer(&Thread->Timer);
   Thread->QueueListEntry.Flink = NULL;
   Thread->QueueListEntry.Blink = NULL;
@@ -291,7 +288,7 @@ KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First)
   Thread->PreviousMode = KernelMode;
   Thread->KernelTime = 0;
   Thread->UserTime = 0;
-  memset(&Thread->SavedApcState, 0, sizeof(KAPC_STATE));
+  RtlZeroMemory(&Thread->SavedApcState, sizeof(KAPC_STATE));
    
   Thread->ApcStateIndex = OriginalApcEnvironment;
   Thread->ApcQueueable = TRUE;

@@ -697,6 +697,7 @@ ExpInitializeExecutive(VOID)
   }
 
 #if defined(KDBG) || defined(DBG)
+  KdbInit();
   KdbInitProfiling2();
 #endif /* KDBG */
 

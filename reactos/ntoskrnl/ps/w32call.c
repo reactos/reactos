@@ -120,7 +120,7 @@ NtCallbackReturn (PVOID		Result,
       else
 	{
 	  *CallerResultLength = min(ResultLength, *CallerResultLength);
-	  memcpy(*CallerResult, Result, *CallerResultLength);
+	  RtlCopyMemory(*CallerResult, Result, *CallerResultLength);
 	}
     }
 
@@ -131,9 +131,9 @@ NtCallbackReturn (PVOID		Result,
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
       ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
     {
-      memcpy((char*)InitialStack - sizeof(FX_SAVE_AREA),
-             (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),
-             sizeof(FX_SAVE_AREA));
+      RtlCopyMemory((char*)InitialStack - sizeof(FX_SAVE_AREA),
+                    (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),
+                    sizeof(FX_SAVE_AREA));
     }
   Thread->Tcb.InitialStack = InitialStack;
   Thread->Tcb.StackBase = StackBase;
@@ -289,11 +289,11 @@ NtW32Call (IN ULONG RoutineIndex,
       AssignedStack = CONTAINING_RECORD(StackEntry, NTW32CALL_CALLBACK_STACK,
 					ListEntry);
       NewStack = AssignedStack->BaseAddress;
-      memset(NewStack, 0, StackSize);
+      RtlZeroMemory(NewStack, StackSize);
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
-  memcpy((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),
-         Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
+  RtlCopyMemory((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),
+                Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
   /* We need the stack pointer to remain 4-byte aligned */
   NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
@@ -303,7 +303,7 @@ NtW32Call (IN ULONG RoutineIndex,
   UserEsp[1] = RoutineIndex;
   UserEsp[2] = (ULONG)&UserEsp[4];
   UserEsp[3] = ArgumentLength;
-  memcpy((PVOID)&UserEsp[4], Argument, ArgumentLength);
+  RtlCopyMemory((PVOID)&UserEsp[4], Argument, ArgumentLength);
 
   /* Switch to the new environment and return to user-mode. */
   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
@@ -319,9 +319,9 @@ NtW32Call (IN ULONG RoutineIndex,
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
       ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentKPCR()->PrcbData.NpxThread)
     {
-      memcpy((char*)NewStack + StackSize - sizeof(FX_SAVE_AREA),
-             (char*)SavedState.SavedInitialStack - sizeof(FX_SAVE_AREA),
-             sizeof(FX_SAVE_AREA));
+      RtlCopyMemory((char*)NewStack + StackSize - sizeof(FX_SAVE_AREA),
+                    (char*)SavedState.SavedInitialStack - sizeof(FX_SAVE_AREA),
+                    sizeof(FX_SAVE_AREA));
     }
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;

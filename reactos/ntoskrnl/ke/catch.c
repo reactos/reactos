@@ -81,7 +81,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
 #ifdef KDBG
 	      Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
-	                                          Context, Tf, FALSE);
+	                                          Context, Tf, TRUE);
               if (Action == kdContinue)
                 {
                   return;
@@ -131,7 +131,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
 #ifdef KDBG
 	  Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
-	                                      Context, Tf, TRUE);
+	                                      Context, Tf, FALSE);
           if (Action == kdContinue)
             {
               return;
@@ -147,7 +147,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	  /* PreviousMode == KernelMode */
 #ifdef KDBG
 	  Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
-	                                      Context, Tf, FALSE);
+	                                      Context, Tf, TRUE);
           if (Action == kdContinue)
             {
               return;
@@ -168,7 +168,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 		     ExceptionRecord->ExceptionAddress );
 #ifdef KDBG
               Action = KdbEnterDebuggerException (ExceptionRecord, PreviousMode,
-                                                  Context, Tf, TRUE);
+                                                  Context, Tf, FALSE);
               if (Action == kdContinue)
                 {
                   return;

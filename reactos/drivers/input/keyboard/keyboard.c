@@ -38,6 +38,7 @@ static BYTE capsDown,numDown,scrollDown;
 static DWORD ctrlKeyState;
 static PKINTERRUPT KbdInterrupt;
 static KDPC KbdDpc;
+static PIO_WORKITEM KbdWorkItem = NULL;
 static BOOLEAN AlreadyOpened = FALSE;
 
 /*
@@ -408,6 +409,24 @@ static WORD ScanToVirtual(BYTE scanCode)
 
 
 /*
+ * Debug request handler
+ */
+
+static VOID STDCALL
+KbdWorkItemRoutine(IN PDEVICE_OBJECT DeviceObject,
+                   IN PVOID Context)
+{
+   LONG Debug;
+
+   Debug = InterlockedExchange(&DoSystemDebug, -1);
+   if (Debug != -1)
+     {
+       KdSystemDebugControl(Debug);
+     }
+}
+
+
+/*
  * Keyboard IRQ handler
  */
 
@@ -419,14 +438,21 @@ KbdDpcRoutine(PKDPC Dpc,
 {
    PIRP Irp = (PIRP)SystemArgument2;
    PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)SystemArgument1;
-   
+
    if (SystemArgument1 == NULL && DoSystemDebug != -1)
      {
-       KdSystemDebugControl(DoSystemDebug);
-       DoSystemDebug = -1;
+       if (KbdWorkItem != NULL)
+         {
+           IoQueueWorkItem(KbdWorkItem, (PIO_WORKITEM_ROUTINE)KbdWorkItemRoutine, DelayedWorkQueue, NULL);
+         }
+       else
+         {
+           KdSystemDebugControl(DoSystemDebug);
+           DoSystemDebug = -1;
+         }
        return;
      }
-
+     
    CHECKPOINT;
    DPRINT("KbdDpcRoutine(DeviceObject %x, Irp %x)\n",
 	    DeviceObject,Irp);
@@ -435,6 +461,7 @@ KbdDpcRoutine(PKDPC Dpc,
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
    IoStartNextPacket(DeviceObject,FALSE);
 }
+
 
 static BOOLEAN STDCALL
 KeyboardHandler(PKINTERRUPT Interrupt,
@@ -538,7 +565,7 @@ KeyboardHandler(PKINTERRUPT Interrupt,
    else if (InSysRq == TRUE && ScanToVirtual(thisKey) >= VK_A &&
 	    ScanToVirtual(thisKey) <= VK_Z && isDown)
      {
-       DoSystemDebug = ScanToVirtual(thisKey) - VK_A;
+       InterlockedExchange(&DoSystemDebug, ScanToVirtual(thisKey) - VK_A);
        KeInsertQueueDpc(&KbdDpc, NULL, NULL);
        return(TRUE);
      }
@@ -659,6 +686,11 @@ static int InitializeKeyboard(PDEVICE_OBJECT DeviceObject)
    KbdClearInput();
    KeyboardConnectInterrupt(DeviceObject);
    KeInitializeDpc(&KbdDpc,KbdDpcRoutine,NULL);
+   KbdWorkItem = IoAllocateWorkItem(DeviceObject);
+   if (KbdWorkItem == NULL)
+     {
+        DPRINT("Warning: Couldn't allocate work item!\n");
+     }
    return 0;
 }
 
