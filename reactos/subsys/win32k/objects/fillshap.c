@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.27 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: fillshap.c,v 1.28 2003/08/20 20:24:35 royce Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -353,7 +353,8 @@ IntRectangle(PDC dc,
     }
   }
 
-  // FIXME: Move current position in DC?
+  // Move current position in DC?
+  // MSDN: The current position is neither used nor updated by Rectangle.
   RGNDATA_UnlockRgn(dc->w.hGCClipRgn);
   return TRUE;
 }
@@ -388,6 +389,17 @@ NtGdiRoundRect(HDC  hDC,
                     int  Width,
                     int  Height)
 {
-  UNIMPLEMENTED;
+  // FIXME - drawing a rectangle until someone can implement
+  // RoundRect properly...
+  DC   *dc = DC_LockDc(hDC);
+  BOOL  ret = FALSE; // default to failure
+
+  if ( dc )
+  {
+    ret = IntRectangle ( dc, LeftRect, TopRect, RightRect, BottomRect );
+    DC_UnlockDc ( hDC );
+  }
+
+  return ret;
 }
 /* EOF */
