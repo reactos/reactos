@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.22 2004/02/29 17:43:41 navaraf Exp $
+ * $Id: vis.c,v 1.23 2004/03/14 20:31:55 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -47,7 +47,7 @@ VIS_ComputeVisibleRegion(
 
    if (!(Window->Style & WS_VISIBLE))
    {
-      return NULL;
+      return NtGdiCreateRectRgn(0, 0, 0, 0);
    }
 
    if (ClientArea)
