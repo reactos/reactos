@@ -225,7 +225,7 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     FCB->PollState |= AFD_EVENT_CLOSE;
     PollReeval( FCB->DeviceExt, FileObject );
-    KillSelectsForFCB( FCB->DeviceExt, FileObject );
+    KillSelectsForFCB( FCB->DeviceExt, FileObject, FALSE );
 
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
