@@ -523,7 +523,14 @@ bool ShellBrowserChild::expand_folder(ShellDirectory* entry)
 }
 
 
-void ShellBrowserChild::jump_to(void* path)
+void ShellBrowserChild::jump_to(LPCTSTR path)
+{
+	///@todo implement "file://", ... parsing
+	jump_to(ShellPath(path));
+}
+
+
+void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
 
 //@@
