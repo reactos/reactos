@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.26 2003/08/29 09:29:11 gvg Exp $
+/* $Id: brush.c,v 1.27 2003/10/04 21:09:29 gvg Exp $
  */
 
 
@@ -288,18 +288,24 @@ BOOL STDCALL NtGdiPatBlt(HDC  hDC,
   DC *dc = DC_LockDc(hDC);
   BOOL ret;
 
-  if (dc == NULL)
+  if (NULL == dc)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return(FALSE);
+      return FALSE;
     }
 
   BrushObj = BRUSHOBJ_LockBrush(dc->w.hBrush);
+  if (NULL == BrushObj)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+
   ret = IntPatBlt(dc,XLeft,YLeft,Width,Height,ROP,BrushObj);
 
   BRUSHOBJ_UnlockBrush(dc->w.hBrush);
-  DC_UnlockDc( hDC );
-  return(ret);
+  DC_UnlockDc(hDC);
+  return ret;
 }
 
 BOOL STDCALL NtGdiSetBrushOrgEx(HDC  hDC,

@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.34 2003/09/26 10:45:45 gvg Exp $
+ * $Id: dib.c,v 1.35 2003/10/04 21:09:29 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -158,6 +158,15 @@ NtGdiSetDIBits(
 
   // Destination palette obtained from the hDC
   hDCPalette = PALETTE_LockPalette(dc->DevInfo->hpalDefault);
+  if (NULL == hDCPalette)
+    {
+      EngDeleteSurface(SourceBitmap);
+      EngDeleteSurface(DestBitmap);
+      BITMAPOBJ_UnlockBitmap(hBitmap);
+      DC_UnlockDc(hDC);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return 0;
+    }
   DDB_Palette_Type = hDCPalette->Mode;
   DDB_Palette = dc->DevInfo->hpalDefault;
   PALETTE_UnlockPalette(dc->DevInfo->hpalDefault);

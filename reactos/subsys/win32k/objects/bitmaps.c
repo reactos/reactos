@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.39 2003/09/27 15:09:26 navaraf Exp $ */
+/* $Id: bitmaps.c,v 1.40 2003/10/04 21:09:29 gvg Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -27,6 +27,7 @@
 #include "../eng/handle.h"
 #include <include/inteng.h>
 #include <include/eng.h>
+#include <include/error.h>
 #include <include/surface.h>
 #include <include/palette.h>
 
@@ -55,7 +56,7 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   POINTL SourcePoint;
   //PBITMAPOBJ DestBitmapObj;
   //PBITMAPOBJ SrcBitmapObj;
-  BOOL Status, SurfDestAlloc, SurfSrcAlloc;
+  BOOL Status;
   PPALGDI PalDestGDI, PalSourceGDI;
   PXLATEOBJ XlateObj = NULL;
   HPALETTE SourcePalette, DestPalette;
@@ -87,9 +88,6 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   SourcePoint.x = XSrc;
   SourcePoint.y = YSrc;
 
-  SurfDestAlloc = FALSE;
-  SurfSrcAlloc  = FALSE;
-
   // Determine surfaces to be used in the bitblt
   SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
   SurfSrc  = (PSURFOBJ)AccessUserObject((ULONG)DCSrc->Surface);
@@ -116,8 +114,15 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
     }
 
   PalSourceGDI = PALETTE_LockPalette(SourcePalette);
+  if (NULL == PalSourceGDI)
+    {
+      GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock) / sizeof(Lock[0]));
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
   SourceMode = PalSourceGDI->Mode;
   PALETTE_UnlockPalette(SourcePalette);
+
   if (DestPalette == SourcePalette)
     {
       DestMode = SourceMode;
@@ -125,19 +130,28 @@ BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
   else
     {
       PalDestGDI = PALETTE_LockPalette(DestPalette);
+      if (NULL == PalDestGDI)
+        {
+          GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock) / sizeof(Lock[0]));
+          SetLastWin32Error(ERROR_INVALID_HANDLE);
+          return FALSE;
+        }
       DestMode = PalDestGDI->Mode;
       PALETTE_UnlockPalette(DestPalette);
     }
 
   XlateObj = (PXLATEOBJ)IntEngCreateXlate(DestMode, SourceMode, DestPalette, SourcePalette);
+  if (NULL == XlateObj)
+    {
+      GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock) / sizeof(Lock[0]));
+      SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+      return FALSE;
+    }
 
-  // Perform the bitblt operation
-
+  /* Perform the bitblt operation */
   Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
   EngDeleteXlate(XlateObj);
-  if (SurfDestAlloc) ExFreePool(SurfDest);
-  if (SurfSrcAlloc) ExFreePool(SurfSrc);
 
   GDIOBJ_UnlockMultipleObj(Lock, sizeof(Lock) / sizeof(Lock[0]));
 

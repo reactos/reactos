@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.26 2003/10/03 18:04:37 gvg Exp $
+/* $Id: windc.c,v 1.27 2003/10/04 21:09:29 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,7 +32,6 @@
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
 #include <win32k/region.h>
-#include <win32k/userobj.h>
 #include <include/class.h>
 #include <include/error.h>
 #include <include/winsta.h>
@@ -41,6 +40,7 @@
 #include <include/rect.h>
 #include <include/dce.h>
 #include <include/vis.h>
+#include <include/object.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -136,6 +136,7 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
   if (NULL == defaultDCstate)
     {
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
+      GDIOBJ_MarkObjectGlobal(defaultDCstate);
     }
   Dce->hwndCurrent = hWnd;
   Dce->hClipRgn = NULL;

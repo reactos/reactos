@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.44 2003/09/26 10:45:45 gvg Exp $
+ * $Id: gdiobj.c,v 1.45 2003/10/04 21:09:29 gvg Exp $
  *
  */
 
@@ -66,7 +66,7 @@
 #define GDI_VALID_OBJECT(h, obj, t, f) \
   (NULL != (obj) \
    && (GDI_MAGIC_TO_TYPE((obj)->Magic) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
-   && (GDI_HANDLE_GET_TYPE((h)) == (t) || GDI_OBJECT_TYPE_DONTCARE == (t)) \
+   && (GDI_HANDLE_GET_TYPE((h)) == GDI_MAGIC_TO_TYPE((obj)->Magic)) \
    && (((obj)->hProcessId == PsGetCurrentProcessId()) \
        || (GDI_GLOBAL_PROCESS == (obj)->hProcessId) \
        || ((f) & GDIOBJFLAG_IGNOREPID)))
@@ -450,7 +450,8 @@ GDIOBJ_GetObjectType(HGDIOBJ ObjectHandle)
   PGDIOBJHDR ObjHdr;
 
   ObjHdr = GDIOBJ_iGetObjectForIndex(GDI_HANDLE_GET_INDEX(ObjectHandle));
-  if (NULL == ObjHdr)
+  if (NULL == ObjHdr
+      || ! GDI_VALID_OBJECT(ObjectHandle, ObjHdr, GDI_MAGIC_TO_TYPE(ObjHdr->Magic), 0))
     {
       DPRINT1("Invalid ObjectHandle 0x%08x\n", ObjectHandle);
       return 0;
@@ -572,8 +573,8 @@ CleanupForProcess (struct _EPROCESS *Process, INT Pid)
           (INT) objectHeader->hProcessId == Pid)
 	{
 	  DPRINT("CleanupForProcess: %d, process: %d, locks: %d, magic: 0x%x", i, objectHeader->hProcessId, objectHeader->dwCount, objectHeader->Magic);
-	  GDIOBJ_FreeObj(GDI_HANDLE_CREATE(i, GDI_OBJECT_TYPE_DONTCARE),
-	                 GDI_OBJECT_TYPE_DONTCARE,
+	  GDIOBJ_FreeObj(GDI_HANDLE_CREATE(i, GDI_MAGIC_TO_TYPE(objectHeader->Magic)),
+	                 GDI_MAGIC_TO_TYPE(objectHeader->Magic),
 	                 GDIOBJFLAG_IGNOREPID | GDIOBJFLAG_IGNORELOCK);
 	}
     }
