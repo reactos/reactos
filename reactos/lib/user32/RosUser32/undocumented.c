@@ -1,4 +1,4 @@
-/* $Id: undocumented.c,v 1.1 2003/06/30 22:17:37 rcampbell Exp $
+/* $Id: undocumented.c,v 1.2 2003/07/01 01:03:49 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -25,6 +25,9 @@ TranslateMDISysAccel
 TranslateAccelerator
 TranslateAcceleratorA
 TranslateAcceleratorW
+TileChildWindows
 
+Next function:
+SystemParametersInfoA/W
 
 */

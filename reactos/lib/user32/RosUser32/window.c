@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.1 2003/06/30 22:17:37 rcampbell Exp $
+/* $Id: window.c,v 1.2 2003/07/01 01:03:49 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -30,6 +30,16 @@ UpdateWindow( HWND hWnd )
 
 BOOL STDCALL
 UnhookWindowsHookEx( HHOOK hhk )
+{
+	UNIMPLEMENTED;
+}
+
+WORD STDCALL
+TileWindows( HWND hwndParent,
+			 UINT wHow,
+			 RECT *lpRect,
+			 UINT cKids,
+			 const HWND *lpKids )
 {
 	UNIMPLEMENTED;
 }
