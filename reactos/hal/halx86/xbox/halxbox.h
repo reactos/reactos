@@ -1,4 +1,4 @@
-/* $Id: halxbox.h,v 1.2 2004/12/04 22:52:59 gvg Exp $
+/* $Id: halxbox.h,v 1.3 2004/12/08 11:42:28 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Xbox HAL
@@ -15,6 +15,7 @@
 extern BYTE XboxFont8x16[256 * 16];
 
 void HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler);
+void HalpXboxInitPartIo(void);
 
 #endif /* HALXBOX_H_INCLUDED */
 

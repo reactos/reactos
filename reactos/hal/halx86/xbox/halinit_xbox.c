@@ -1,4 +1,4 @@
-/* $Id: halinit_xbox.c,v 1.2 2004/12/04 22:52:59 gvg Exp $
+/* $Id: halinit_xbox.c,v 1.3 2004/12/08 11:42:28 gvg Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -29,6 +29,8 @@ HalpInitPhase0(VOID)
 
   /* Setup busy waiting */
   HalpCalibrateStallExecution();
+
+  HalpXboxInitPartIo();
 }
 
 /* EOF */

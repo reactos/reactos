@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.9 2004/11/21 06:51:17 ion Exp $
+/* $Id: haltypes.h,v 1.10 2004/12/08 11:42:28 gvg Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -363,7 +363,7 @@ typedef enum _RESOURCE_TRANSLATION_DIRECTION {
     TranslateParentToChild
 } RESOURCE_TRANSLATION_DIRECTION;
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PTRANSLATE_RESOURCE_HANDLER)(IN PVOID Context,
     IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Source,
     IN RESOURCE_TRANSLATION_DIRECTION Direction,
@@ -373,7 +373,7 @@ typedef NTSTATUS STDCALL
     OUT PCM_PARTIAL_RESOURCE_DESCRIPTOR Target
 );
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*PTRANSLATE_RESOURCE_REQUIREMENTS_HANDLER)(IN PVOID Context,
     IN PIO_RESOURCE_DESCRIPTOR Source,
     IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -470,7 +470,7 @@ typedef struct _PM_DISPATCH_TABLE {
 typedef VOID STDCALL_FUNC
 (*PDEVICE_CONTROL_COMPLETION)(IN PDEVICE_CONTROL_CONTEXT ControlContext);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalDeviceControl)(IN PDEVICE_HANDLER_OBJECT DeviceHandler,
 		     IN PDEVICE_OBJECT DeviceObject,
 		     IN ULONG ControlCode,
@@ -479,76 +479,76 @@ typedef NTSTATUS STDCALL
 		     IN PVOID Context,
 		     IN PDEVICE_CONTROL_COMPLETION CompletionRoutine);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalExamineMBR)(IN PDEVICE_OBJECT DeviceObject,
 		  IN ULONG SectorSize,
 		  IN ULONG MBRTypeIdentifier,
 		  OUT PVOID *Buffer);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalIoAssignDriveLetters)(IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
 			    IN PSTRING NtDeviceName,
 			    OUT PUCHAR NtSystemPath,
 			    OUT PSTRING NtSystemPathString);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoReadPartitionTable)(IN PDEVICE_OBJECT DeviceObject,
 			    IN ULONG SectorSize,
 			    IN BOOLEAN ReturnRecognizedPartitions,
 			    OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoSetPartitionInformation)(IN PDEVICE_OBJECT DeviceObject,
 				 IN ULONG SectorSize,
 				 IN ULONG PartitionNumber,
 				 IN ULONG PartitionType);
 
-typedef NTSTATUS FASTCALL
+typedef NTSTATUS FASTCALL_FUNC
 (*pHalIoWritePartitionTable)(IN PDEVICE_OBJECT DeviceObject,
 			     IN ULONG SectorSize,
 			     IN ULONG SectorsPerTrack,
 			     IN ULONG NumberOfHeads,
 			     IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
 
-typedef PBUS_HANDLER FASTCALL
+typedef PBUS_HANDLER FASTCALL_FUNC
 (*pHalHandlerForBus)(IN INTERFACE_TYPE InterfaceType,
 		     IN ULONG BusNumber);
 
-typedef VOID FASTCALL
+typedef VOID FASTCALL_FUNC
 (*pHalReferenceBusHandler)(IN PBUS_HANDLER BusHandler);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalQuerySystemInformation)(IN HAL_QUERY_INFORMATION_CLASS InformationClass,
 			      IN ULONG BufferSize,
 			      IN OUT PVOID Buffer,
 			      OUT PULONG ReturnedLength);
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalSetSystemInformation)(IN HAL_SET_INFORMATION_CLASS InformationClass,
 			    IN ULONG BufferSize,
 			    IN PVOID Buffer);
 
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalQueryBusSlots)(IN PBUS_HANDLER BusHandler,
 		     IN ULONG BufferSize,
 		     OUT PULONG SlotNumbers,
 		     OUT PULONG ReturnedLength);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalInitPnpDriver)(VOID);
  
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalInitPowerManagement)(IN PPM_DISPATCH_TABLE  PmDriverDispatchTable,
     			   OUT PPM_DISPATCH_TABLE *PmHalDispatchTable);
 
-typedef struct _DMA_ADAPTER * STDCALL
+typedef struct _DMA_ADAPTER * STDCALL_FUNC
 (*pHalGetDmaAdapter)(IN PVOID Context,
     		     IN struct _DEVICE_DESCRIPTION *DeviceDescriptor,
     		     OUT PULONG NumberOfMapRegisters);
 		     
-typedef NTSTATUS STDCALL 
+typedef NTSTATUS STDCALL_FUNC
 (*pHalGetInterruptTranslator)(IN INTERFACE_TYPE ParentInterfaceType,
 			      IN ULONG ParentBusNumber,
 			      IN INTERFACE_TYPE BridgeInterfaceType,
@@ -557,19 +557,21 @@ typedef NTSTATUS STDCALL
 			      OUT PTRANSLATOR_INTERFACE Translator,
 			      OUT PULONG BridgeBusNumber);
 
-typedef NTSTATUS STDCALL (*pHalStartMirroring)(VOID);
+typedef NTSTATUS STDCALL_FUNC
+(*pHalStartMirroring)(VOID);
 
-typedef NTSTATUS STDCALL (*pHalEndMirroring)(IN ULONG PassNumber);
+typedef NTSTATUS STDCALL_FUNC
+(*pHalEndMirroring)(IN ULONG PassNumber);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalMirrorPhysicalMemory)(IN PHYSICAL_ADDRESS PhysicalAddress,
     IN LARGE_INTEGER NumberOfBytes);
 
-typedef NTSTATUS STDCALL
+typedef NTSTATUS STDCALL_FUNC
 (*pHalMirrorVerify)(IN PHYSICAL_ADDRESS PhysicalAddress,
     IN LARGE_INTEGER NumberOfBytes);
 
-typedef VOID STDCALL
+typedef VOID STDCALL_FUNC
 (*pHalEndOfBoot)(VOID);
         
 

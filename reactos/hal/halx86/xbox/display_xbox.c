@@ -1,4 +1,4 @@
-/* $Id: display_xbox.c,v 1.1 2004/12/04 21:43:37 gvg Exp $
+/* $Id: display_xbox.c,v 1.2 2004/12/08 11:42:28 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -205,6 +205,9 @@ HalReleaseDisplayOwnership(VOID)
 
   HalOwnsDisplay = TRUE;
   HalpXboxClearScreenColor(DEFAULT_BG_COLOR);
+
+  CursorX = 0;
+  CursorY = 0;
 }
 
 
