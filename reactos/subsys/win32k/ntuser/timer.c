@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.13 2003/10/15 19:28:57 weiden Exp $
+/* $Id: timer.c,v 1.14 2003/10/16 22:07:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,6 +38,7 @@
 #include <include/msgqueue.h>
 #include <include/window.h>
 #include <include/error.h>
+#include <include/timer.h>
 #include <messages.h>
 #include <napi/win32.h>
 
@@ -58,15 +59,6 @@ static PVOID          HandleLessTimersBitMapBuffer;
 static ULONG          HintIndex = 0;
 static HANDLE        MsgTimerThreadHandle;
 static CLIENT_ID     MsgTimerThreadId;
-
-
-typedef struct _MSG_TIMER_ENTRY{
-   LIST_ENTRY     ListEntry;
-   LARGE_INTEGER  Timeout;
-   HANDLE          ThreadID;
-   UINT           Period;
-   MSG            Msg;
-} MSG_TIMER_ENTRY, *PMSG_TIMER_ENTRY;
 
 
 /* FUNCTIONS *****************************************************************/

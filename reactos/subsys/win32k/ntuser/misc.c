@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.19 2003/10/09 06:13:05 gvg Exp $
+/* $Id: misc.c,v 1.20 2003/10/16 22:07:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,6 +19,7 @@
 #include <include/dce.h>
 #include <include/mouse.h>
 #include <include/winsta.h>
+#include <include/caret.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -49,22 +50,30 @@ DWORD
 STDCALL
 NtUserCallNoParam(DWORD Routine)
 {
-  DWORD Result;
+  DWORD Result = 0;
 
-  switch(Routine) {
-  case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
-    W32kRegisterPrimitiveMessageQueue();
-    Result = TRUE;
-    break;
-
-  default:
-    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n");
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    Result = 0;
-    break;
-    }
-    return 0;
+  switch(Routine)
+  {
+    case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
+      W32kRegisterPrimitiveMessageQueue();
+      Result = (DWORD)TRUE;
+      break;
+    
+    case NOPARAM_ROUTINE_DESTROY_CARET:
+      Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Win32Thread);
+      break;
+    
+    case NOPARAM_ROUTINE_SWITCHCARETSHOWING:
+      Result = (DWORD)IntSwitchCaretShowing();
+      break;
+    
+    default:
+      DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam\n");
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      break;
   }
+  return Result;
+}
 
 /*
  * @implemented
@@ -121,6 +130,7 @@ NtUserCallOneParam(
       
       IntReleaseWindowObject(WindowObject);
       return Result;
+    
     case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
       Status = ValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
                                            KernelMode,
@@ -133,6 +143,9 @@ NtUserCallOneParam(
 
       ObDereferenceObject(WinStaObject);
       return Result;
+    
+    case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
+      return (DWORD)IntSetCaretBlinkTime((UINT)Param);
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param=0x%x\n", 
@@ -244,7 +257,9 @@ NtUserCallTwoParam(
       ObDereferenceObject(WinStaObject);
       
       return (DWORD)TRUE;
-
+    
+    case TWOPARAM_ROUTINE_SETCARETPOS:
+      return (DWORD)IntSetCaretPos((int)Param1, (int)Param2);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param1=0x%x Parm2=0x%x\n",
           Routine, Param1, Param2);

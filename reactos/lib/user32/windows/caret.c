@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: caret.c,v 1.1 2003/07/20 00:06:16 ekohl Exp $
+/* $Id: caret.c,v 1.2 2003/10/16 22:07:37 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/caret.c
@@ -35,7 +35,7 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 CreateCaret(HWND hWnd,
@@ -43,86 +43,78 @@ CreateCaret(HWND hWnd,
 	    int nWidth,
 	    int nHeight)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserCreateCaret(hWnd, hBitmap, nWidth, nHeight);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 DestroyCaret(VOID)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserCallNoParam(NOPARAM_ROUTINE_DESTROY_CARET);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT STDCALL
 GetCaretBlinkTime(VOID)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return NtUserGetCaretBlinkTime();
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 GetCaretPos(LPPOINT lpPoint)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserGetCaretPos(lpPoint);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 HideCaret(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserHideCaret(hWnd);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 SetCaretBlinkTime(UINT uMSeconds)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserCallOneParam(ONEPARAM_ROUTINE_SETCARETBLINKTIME, (DWORD)uMSeconds);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 SetCaretPos(int X,
 	    int Y)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserCallTwoParam(TWOPARAM_ROUTINE_SETCARETPOS, (DWORD)X, (DWORD)Y);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 ShowCaret(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (WINBOOL)NtUserShowCaret(hWnd);
 }
 
 /* EOF */

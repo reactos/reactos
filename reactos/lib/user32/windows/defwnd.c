@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.97 2003/10/08 13:46:34 weiden Exp $
+/* $Id: defwnd.c,v 1.98 2003/10/16 22:07:37 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -2264,6 +2264,19 @@ User32DefWindowProc(HWND hWnd,
                 SendMessageA(GetParent(hWnd), Msg, wParam, lParam);
             }
             break;
+        }
+        
+        case WM_SYSTIMER:
+        {
+          switch(wParam)
+          {
+            case 0xffff: /* Caret timer */
+              /* switch showing byte in win32k */
+              NtUserCallNoParam(NOPARAM_ROUTINE_SWITCHCARETSHOWING);
+              /* FIXME - get the caret information and draw the caret */
+              break;
+          }
+          break;
         }
 
         case WM_QUERYOPEN:

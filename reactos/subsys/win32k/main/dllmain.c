@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.45 2003/10/09 06:13:04 gvg Exp $
+/* $Id: dllmain.c,v 1.46 2003/10/16 22:07:37 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -38,6 +38,7 @@
 #include <include/input.h>
 #include <include/timer.h>
 #include <include/text.h>
+#include <include/caret.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -125,6 +126,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
       DbgPrint ("  Create thread\n");
 #endif
 
+      IntDestroyCaret(Win32Thread);
       Win32Thread->MessageQueue = MsqCreateMessageQueue();
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       InitializeListHead(&Win32Thread->WindowListHead);
@@ -197,7 +199,7 @@ DllMain (
 			    Win32kThreadCallback,
 			    0,
 			    0,
-			    sizeof(W32THREAD),
+			    sizeof(W32THREAD) + sizeof(THRDCARETINFO),
 			    sizeof(W32PROCESS));
 
   WinPosSetupInternalPos();
