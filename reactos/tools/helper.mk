@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.49 2004/01/02 19:49:47 gvg Exp $
+# $Id: helper.mk,v 1.50 2004/02/09 07:03:16 vizzini Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -7,9 +7,10 @@
 #                        proglib = Executable program that have exported functions
 #                        dynlink = Dynamic Link Library (DLL)
 #                        library = Library that will be linked with other code
-#                        driver_library = Import library for a driver
 #                        driver = Kernel mode driver
 #                        export_driver = Kernel mode driver that have exported functions
+#                        driver_library = Import library for a driver
+#                        kmlibrary = Static kernel-mode library
 #                        hal = Hardware Abstraction Layer
 #                        bootpgm = Boot program
 #                        miniport = Kernel mode driver that does not link with ntoskrnl.exe or hal.dll
@@ -77,6 +78,38 @@ endif
 ifeq ($(MK_ARCH_ID),)
  MK_ARCH_ID := _M_UNKNOWN
 endif
+
+#
+# VARIABLES IN USE BY VARIOUS TARGETS
+#
+# MK_BOOTCDDIR     = Directory on the ReactOS ISO CD in which to place the file (subdir of reactos/)
+# MK_CFLAGS        = C compiler command-line flags for this target
+# MK_CPPFLAGS      = C++ compiler command-line flags for this target
+# MK_DDKLIBS       = Import libraries from the ReactOS DDK to link with
+# MK_DEFENTRY      = Module entry point: 
+#                    _WinMain@16 for windows EXE files that are export libraries
+#                    _DriverEntry@8 for .SYS files 
+#                    _DllMain@12 for .DLL files
+#                    _DrvEnableDriver@12 for GDI drivers
+#                    _WinMainCRTStartup for Win32 EXE files 
+#                    _NtProcessStartup@4 for Native EXE files
+#                    _mainCRTStartup for Console EXE files
+# MK_DEFEXT        = Extension to give compiled modules (.EXE, .DLL, .SYS, .a)
+# MK_DISTDIR       = (unused?)
+# MK_EXETYPE       = Compiler option packages based on type of PE file (exe, dll)
+# MK_IMPLIB        = Whether or not to generate a DLL import stub library (yes, no)
+# MK_IMPLIB_EXT    = Extension to give import libraries (.a always)
+# MK_IMPLIBDEFPATH = Default place to put the import stub library when built
+# MK_IMPLIBONLY    = Whether the target is only an import library (yes, no; used only by generic hal)
+# MK_INSTALLDIR    = Where "make install" should put the target, relative to reactos/
+# MK_MODE          = Mode the target's code is intended to run in
+#                    user - User-mode compiler settings
+#                    kernel - Kernel-mode compiler settings
+#                    static - Static library compiler settings
+# MK_RCFLAGS       = Flags to add to resource compiler command line
+# MK_RES_BASE      = Base name of resource files
+# MK_SDKLIBS       = Default SDK libriaries to link with
+#
 
 ifeq ($(TARGET_TYPE),program)
   MK_MODE := user
@@ -179,6 +212,18 @@ ifeq ($(TARGET_TYPE),library)
   MK_RES_BASE :=
 endif
 
+ifeq ($(TARGET_TYPE),kmlibrary)
+  TARGET_NORC := yes
+  MK_MODE := static
+  MK_DEFEXT := .a
+  MK_CFLAGS := -I./ -I$(DDK_PATH_INC)
+  MK_CPPFLAGS := -I./ -I$(DDK_PATH_INC)
+  MK_RCFLAGS := --include-dir $(SDK_PATH_INC)
+  MK_IMPLIB := no
+  MK_IMPLIBONLY := no
+  MK_IMPLIBDEFPATH := $(DDK_PATH_LIB)
+  #MK_IMPLIB_EXT :=
+endif
 ifeq ($(TARGET_TYPE),driver_library)
   MK_MODE := kernel
   MK_EXETYPE := dll
@@ -510,7 +555,7 @@ endif
 
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
-  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(MK_DDKLIBS) $(TARGET_DDKLIBS))
+  MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
 endif
 
 
@@ -556,10 +601,14 @@ TARGET_NFLAGS += $(MK_NFLAGS)
 
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
-ifeq ($(MK_MODE),static)
+ifeq ($(TARGET_TYPE), library)
   MK_FULLNAME := $(SDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
 else
   MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
+endif
+
+ifeq ($(TARGET_TYPE), kmlibrary)
+  MK_FULLNAME := $(DDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
 endif
 
 MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
