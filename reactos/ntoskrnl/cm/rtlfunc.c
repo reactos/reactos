@@ -28,12 +28,9 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 }
 
 
-NTSTATUS
-STDCALL
-RtlCreateRegistryKey (
-	IN	ULONG	RelativeTo,
-	IN	PWSTR	Path
-	)
+NTSTATUS STDCALL
+RtlCreateRegistryKey(IN ULONG RelativeTo,
+		     IN PWSTR Path)
 {
    HANDLE KeyHandle;
    NTSTATUS Status;
@@ -51,13 +48,10 @@ RtlCreateRegistryKey (
 }
 
 
-NTSTATUS
-STDCALL
-RtlDeleteRegistryValue (
-	IN	ULONG	RelativeTo,
-	IN	PWSTR	Path,
-	IN	PWSTR	ValueName
-	)
+NTSTATUS STDCALL
+RtlDeleteRegistryValue(IN ULONG RelativeTo,
+		       IN PWSTR Path,
+		       IN PWSTR ValueName)
 {
    HANDLE KeyHandle;
    NTSTATUS Status;
@@ -82,30 +76,63 @@ RtlDeleteRegistryValue (
 }
 
 
-NTSTATUS
-STDCALL
-RtlQueryRegistryValues (
-	IN	ULONG				RelativeTo,
-	IN	PWSTR				Path,
-	IN	PRTL_QUERY_REGISTRY_TABLE	QueryTable,
-	IN	PVOID				Context,
-	IN	PVOID				Environment
-	)
+NTSTATUS STDCALL
+RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
+		   OUT PHANDLE KeyHandle)
+{
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING KeyPath;
+   NTSTATUS Status;
+
+   Status = RtlFormatCurrentUserKeyPath(&KeyPath);
+   if (NT_SUCCESS(Status))
+     {
+	InitializeObjectAttributes(&ObjectAttributes,
+				   &KeyPath,
+				   OBJ_CASE_INSENSITIVE,
+				   NULL,
+				   NULL);
+	Status = NtOpenKey(KeyHandle,
+			   DesiredAccess,
+			   &ObjectAttributes);
+	RtlFreeUnicodeString(&KeyPath);
+	if (NT_SUCCESS(Status))
+	  return STATUS_SUCCESS;
+     }
+
+   RtlInitUnicodeString(&KeyPath,
+			L"\\Registry\\User\\.Default");
+
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &KeyPath,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+   Status = NtOpenKey(KeyHandle,
+		      DesiredAccess,
+		      &ObjectAttributes);
+   return(Status);
+}
+
+
+NTSTATUS STDCALL
+RtlQueryRegistryValues(IN ULONG RelativeTo,
+		       IN PWSTR Path,
+		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
+		       IN PVOID Context,
+		       IN PVOID Environment)
 {
 	UNIMPLEMENTED;
 }
 
 
-NTSTATUS
-STDCALL
-RtlWriteRegistryValue (
-	IN	ULONG	RelativeTo,
-	IN	PWSTR	Path,
-	IN	PWSTR	ValueName,
-	IN	ULONG	ValueType,
-	IN	PVOID	ValueData,
-	IN	ULONG	ValueLength
-	)
+NTSTATUS STDCALL
+RtlWriteRegistryValue(IN ULONG RelativeTo,
+		      IN PWSTR Path,
+		      IN PWSTR ValueName,
+		      IN ULONG ValueType,
+		      IN PVOID ValueData,
+		      IN ULONG ValueLength)
 {
    HANDLE KeyHandle;
    NTSTATUS Status;
@@ -136,7 +163,11 @@ RtlWriteRegistryValue (
 NTSTATUS STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath)
 {
-   return STATUS_UNSUCCESSFUL;
+   /* FIXME: !!! */
+   RtlCreateUnicodeString(KeyPath,
+			  L"\\Registry\\User\\.Default");
+
+   return STATUS_SUCCESS;
 }
 
 /*  ------------------------------------------  Private Implementation  */

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.65 2001/06/17 22:53:14 ekohl Exp $
+; $Id: ntdll.edf,v 1.66 2001/06/18 18:37:12 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -490,7 +490,7 @@ RtlNumberOfSetBits=RtlNumberOfSetBits@4
 RtlOemStringToUnicodeSize=RtlOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString=RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN=RtlOemToUnicodeN@20
-;RtlOpenCurrentUser
+RtlOpenCurrentUser=RtlOpenCurrentUser@8
 ;RtlPcToFileHeader
 RtlPinAtomInAtomTable=RtlPinAtomInAtomTable@8
 RtlPrefixString=RtlPrefixString@12
