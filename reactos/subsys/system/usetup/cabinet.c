@@ -205,7 +205,7 @@ SeekInFile(HANDLE hFile,
   PNTSTATUS Status)
 {
   FILE_POSITION_INFORMATION FilePosition;
-  FILE_STANDARD_INFORMATION FileStandart;
+  FILE_STANDARD_INFORMATION FileStandard;
   NTSTATUS errCode;
   IO_STATUS_BLOCK IoStatusBlock;
   LARGE_INTEGER Distance;
@@ -240,11 +240,11 @@ SeekInFile(HANDLE hFile,
     {
       NtQueryInformationFile(hFile,
         &IoStatusBlock,
-        &FileStandart,
+        &FileStandard,
         sizeof(FILE_STANDARD_INFORMATION),
         FileStandardInformation);
         FilePosition.CurrentByteOffset.QuadPart =
-        FileStandart.EndOfFile.QuadPart + Distance.QuadPart;
+        FileStandard.EndOfFile.QuadPart + Distance.QuadPart;
     }
   else if ( dwMoveMethod == SEEK_BEGIN )
     {
