@@ -92,7 +92,7 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 			DWORD error = GetLastError();
 
 			if (error != ERROR_SEEK) {
-				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);
+				BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx);	// terminate BackupRead() loop
 				THROW_EXCEPTION(error);
 				//break;
 			}
@@ -103,7 +103,7 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 			BYTE buffer[4096];
 
 			while(hdr.Size.QuadPart > 0) {
-				if (!BackupRead(hFile, buffer, sizeof(buffer), &read, FALSE, FALSE, &ctx))
+				if (!BackupRead(hFile, buffer, sizeof(buffer), &read, FALSE, FALSE, &ctx) || read!=sizeof(buffer))
 					break;
 
 				hdr.Size.QuadPart -= read;
@@ -111,7 +111,7 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 		}
 	}
 
-	if (!BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx))
+	if (!BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx))	// terminate BackupRead() loop
 		THROW_EXCEPTION(GetLastError());
 
 	return cnt;
