@@ -1,4 +1,4 @@
-/* $Id: font.c,v 1.6 2004/07/09 20:28:20 navaraf Exp $
+/* $Id: font.c,v 1.7 2004/07/23 20:41:09 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,6 +20,7 @@
 #include <win32k/font.h>
 #include <win32k/text.h>
 #include <internal/font.h>
+#include <wine/unicode.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -420,4 +421,86 @@ GetFontData(
 	)
 {
 	return NtGdiGetFontData(a0, a1, a2, a3, a4);
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetCharacterPlacementW(
+	HDC hdc,
+	LPCWSTR lpString,
+	INT uCount,
+	INT nMaxExtent,
+	GCP_RESULTSW *lpResults,
+	DWORD dwFlags
+	)
+{
+  DWORD ret=0;
+  SIZE size;
+  UINT i, nSet;
+
+  if(dwFlags&(~GCP_REORDER)) DPRINT("flags 0x%08lx ignored\n", dwFlags);
+  if(lpResults->lpClass) DPRINT("classes not implemented\n");
+  if (lpResults->lpCaretPos && (dwFlags & GCP_REORDER))
+    DPRINT("Caret positions for complex scripts not implemented\n");
+
+  nSet = (UINT)uCount;
+  if(nSet > lpResults->nGlyphs)
+    nSet = lpResults->nGlyphs;
+
+  /* return number of initialized fields */
+  lpResults->nGlyphs = nSet;
+
+/*if((dwFlags&GCP_REORDER)==0 || !BidiAvail)
+  {*/
+    /* Treat the case where no special handling was requested in a fastpath way */
+    /* copy will do if the GCP_REORDER flag is not set */
+    if(lpResults->lpOutString)
+      strncpyW( lpResults->lpOutString, lpString, nSet );
+
+    if(lpResults->lpGlyphs)
+      strncpyW( lpResults->lpGlyphs, lpString, nSet );
+
+    if(lpResults->lpOrder)
+    {
+      for(i = 0; i < nSet; i++)
+      lpResults->lpOrder[i] = i;
+    }
+/*} else
+  {
+      BIDI_Reorder( lpString, uCount, dwFlags, WINE_GCPW_FORCE_LTR, lpResults->lpOutString,
+                    nSet, lpResults->lpOrder );
+  }*/
+
+  /* FIXME: Will use the placement chars */
+  if (lpResults->lpDx)
+  {
+    int c;
+    for (i = 0; i < nSet; i++)
+    {
+      if (GetCharWidth32W(hdc, lpString[i], lpString[i], &c))
+        lpResults->lpDx[i]= c;
+    }
+  }
+
+  if (lpResults->lpCaretPos && !(dwFlags & GCP_REORDER))
+  {
+    int pos = 0;
+       
+    lpResults->lpCaretPos[0] = 0;
+    for (i = 1; i < nSet; i++)
+      if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
+        lpResults->lpCaretPos[i] = (pos += size.cx);
+  }
+   
+  /*if(lpResults->lpGlyphs)
+    GetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
+
+  if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
+    ret = MAKELONG(size.cx, size.cy);
+
+  return ret;
 }

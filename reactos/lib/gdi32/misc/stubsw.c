@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.29 2004/07/09 20:28:20 navaraf Exp $
+/* $Id: stubsw.c,v 1.30 2004/07/23 20:41:08 jfilby Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -238,26 +238,6 @@ GetTextExtentExPointW(
 {
   return NtGdiGetTextExtentExPoint (
     hdc, lpszStr, cchString, nMaxExtent, lpnFit, alpDx, lpSize );
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetCharacterPlacementW(
-	HDC		hDc,
-	LPCWSTR		a1,
-	int		a2,
-	int		a3,
-	LPGCP_RESULTSW	a4,
-	DWORD		a5
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
