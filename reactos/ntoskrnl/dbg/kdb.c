@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.34 2004/11/10 23:16:16 blight Exp $
+/* $Id: kdb.c,v 1.35 2004/11/18 02:10:28 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -58,6 +58,8 @@ static ULONG KdbBreakPointCount = 0;
 static KDB_ACTIVE_BREAKPOINT 
  KdbActiveBreakPoints[KDB_MAXIMUM_BREAKPOINT_COUNT];
 
+static BOOLEAN KdbHandleUmode = FALSE;
+static BOOLEAN KdbHandleHandled = FALSE;
 static BOOLEAN KdbIgnoreNextSingleStep = FALSE;
 
 static ULONG KdbLastSingleStepFrom = 0xFFFFFFFF;
@@ -70,6 +72,8 @@ VOID
 PsDumpThreads(BOOLEAN System);
 ULONG 
 DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
+ULONG 
+DbgStopCondition(ULONG Aargc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG
 DbgEchoToggle(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf);
 ULONG 
@@ -124,6 +128,8 @@ struct
 } DebuggerCommands[] = {
   {"cont", "cont", "Exit the debugger", DbgContCommand},
   {"echo", "echo", "Toggle serial echo", DbgEchoToggle},
+  {"condition", "condition [all|umode|kmode]", "Kdbg enter condition", DbgStopCondition},
+   
   {"regs", "regs", "Display general purpose registers", DbgRegsCommand},
   {"dregs", "dregs", "Display debug registers", DbgDRegsCommand},
   {"cregs", "cregs", "Display control registers", DbgCRegsCommand},
@@ -1329,6 +1335,24 @@ DbgContCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 }
 
 ULONG
+DbgStopCondition(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
+{
+    if( Argc == 1 ) {
+	if( KdbHandleHandled ) DbgPrint("all\n");
+	else if( KdbHandleUmode ) DbgPrint("umode\n");
+	else DbgPrint("kmode\n");
+    } 
+    else if( !strcmp(Argv[1],"all") ) 
+    { KdbHandleHandled = TRUE; KdbHandleUmode = TRUE; }
+    else if( !strcmp(Argv[1],"umode") )
+    { KdbHandleHandled = FALSE; KdbHandleUmode = TRUE; }
+    else if( !strcmp(Argv[1],"kmode") )
+    { KdbHandleHandled = FALSE; KdbHandleUmode = FALSE; }
+
+    return(TRUE);
+}
+
+ULONG
 DbgEchoToggle(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 {
   KbdEchoOn = !KbdEchoOn;
@@ -1624,11 +1648,25 @@ KdbInternalEnter(PKTRAP_FRAME Tf)
 
 KD_CONTINUE_TYPE
 KdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
+			  KPROCESSOR_MODE PreviousMode,
 			  PCONTEXT Context,
-			  PKTRAP_FRAME TrapFrame)
+			  PKTRAP_FRAME TrapFrame,
+			  BOOLEAN AlwaysHandle)
 {
   LONG BreakPointNr;
   ULONG ExpNr = (ULONG)TrapFrame->DebugArgMark;
+
+  DbgPrint( ":KDBG:Entered:%s:%s\n", 
+	    PreviousMode==KernelMode ? "kmode" : "umode",
+	    AlwaysHandle ? "always" : "if-unhandled" );
+  
+  /* If we aren't handling umode exceptions then return */
+  if( PreviousMode == UserMode && !KdbHandleUmode && !AlwaysHandle )
+      return kdContinue;
+
+  /* If the exception would be unhandled (and we care) then handle it */
+  if( PreviousMode == KernelMode && !KdbHandleHandled && !AlwaysHandle )
+      return kdContinue;
 
   /* Exception inside the debugger? Game over. */
   if (KdbEntryCount > 0)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: catch.c,v 1.53 2004/11/14 16:00:02 blight Exp $
+/* $Id: catch.c,v 1.54 2004/11/18 02:10:28 arty Exp $
  *
  * PROJECT:              ReactOS kernel
  * FILE:                 ntoskrnl/ke/catch.c
@@ -76,17 +76,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     {
       Action = KdEnterDebuggerException (ExceptionRecord, Context, Tf);
     }
-#ifdef KDBG
-  else if (KdDebuggerEnabled && KdDebugState & KD_DEBUG_KDB)
-    {
-      Action = KdbEnterDebuggerException (ExceptionRecord, Context, Tf);
-    }
-#endif /* KDBG */
-  if (Action == kdContinue)
-    {
-      return;
-    }
-  else if (Action != kdDoNotHandleException)
+
+  if (Action != kdDoNotHandleException)
     {
       if (PreviousMode == UserMode)
 	{
@@ -97,6 +88,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	      char temp_space[12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)]; /* FIXME: HACKHACK */
 	      PULONG pNewUserStack = (PULONG)(Tf->Esp - (12 + sizeof(EXCEPTION_RECORD) + sizeof(CONTEXT)));
 	      NTSTATUS StatusOfCopy;
+
+#ifdef KDBG
+	      KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
+					 Context, Tf, FALSE);
+#endif
 
 	      /* FIXME: Forward exception to user mode debugger */
 
@@ -139,17 +135,23 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
 	  /* FIXME: Forward the exception to the process exception port */
 
+#ifdef KDBG
+	  KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
+				     Context, Tf, TRUE);
+#endif
+
 	  /* Terminate the offending thread */
 	  DPRINT1("Unhandled UserMode exception, terminating thread\n");
 	  ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
-
-	  /* If that fails then bugcheck */
-	  DPRINT1("Could not terminate thread\n");
-	  KEBUGCHECK(KMODE_EXCEPTION_NOT_HANDLED);
 	}
       else
 	{
 	  /* PreviousMode == KernelMode */
+#ifdef KDBG
+	  KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
+				     Context, Tf, FALSE);
+#endif
+
 	  Value = RtlpDispatchException (ExceptionRecord, Context);
 	  
 	  DPRINT("RtlpDispatchException() returned with 0x%X\n", Value);
@@ -162,7 +164,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 	    {
 	      DPRINT("ExceptionRecord->ExceptionAddress = 0x%x\n",
 		     ExceptionRecord->ExceptionAddress );
-              KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
+#ifdef KDBG
+	      KdbEnterDebuggerException (ExceptionRecord, PreviousMode, 
+					 Context, Tf, TRUE); 
+#endif
+	      KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED, 0, 0, 0, 0, Tf);
 	    }
 	}
     }
