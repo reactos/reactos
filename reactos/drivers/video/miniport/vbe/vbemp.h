@@ -31,26 +31,67 @@
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
 
-/* For Ke386CallBios */
-#include "internal/v86m.h"
-
-/* FIXME: Missing define in w32api! */
-#ifndef NtCurrentProcess
-#define NtCurrentProcess() ((HANDLE)(LONG_PTR)-1)
-#endif
-
 #ifdef DBG
 #define DPRINT(arg) DbgPrint arg;
 #else
 #define DPRINT(arg)
 #endif
 
+/*
+ * Compile-time define to get VBE 1.2 support. The implementation
+ * is far from complete now and so it's left undefined.
+ */
+
+/* #define VBE12_SUPPORT */
+
 #include <pshpack1.h>
 
 /*
- * VBE specification defined structure for general adapter info
- * returned by function 0x4F00.
+ * VBE Command Definitions
  */
+
+#define VBE_GET_CONTROLLER_INFORMATION       0x4F00
+#define VBE_GET_MODE_INFORMATION             0x4F01
+#define VBE_SET_VBE_MODE                     0x4F02
+#define VBE_GET_CURRENT_VBE_MODE             0x4F03
+#define VBE_SAVE_RESTORE_STATE               0x4F04
+#define VBE_DISPLAY_WINDOW_CONTROL           0x4F05
+#define VBE_SET_GET_LOGICAL_SCAN_LINE_LENGTH 0x4F06
+#define VBE_SET_GET_DISPLAY_START            0x4F07 
+#define VBE_SET_GET_DAC_PALETTE_FORMAT       0x4F08
+#define VBE_SET_GET_PALETTE_DATA             0x4F09
+
+/* VBE 2.0+ */
+#define VBE_RETURN_PROTECTED_MODE_INTERFACE  0x4F0A 
+#define VBE_GET_SET_PIXEL_CLOCK              0x4F0B
+
+/* Extensions */
+#define VBE_POWER_MANAGEMENT_EXTENSIONS      0x4F10
+#define VBE_FLAT_PANEL_INTERFACE_EXTENSIONS  0x4F11
+#define VBE_AUDIO_INTERFACE_EXTENSIONS       0x4F12 
+#define VBE_OEM_EXTENSIONS                   0x4F13
+#define VBE_DISPLAY_DATA_CHANNEL             0x4F14
+
+/*
+ * VBE Video Mode Information Attributes
+ */
+
+#define VBE_MODEATTR_LINEAR                    0x80
+
+/*
+ * VBE Return Codes
+ */
+
+#define VBE_SUCCESS                            0x4F 
+#define VBE_UNSUCCESSFUL                      0x14F
+#define VBE_NOT_SUPPORTED                     0x24F
+#define VBE_FUNCTION_INVALID                  0x34F
+
+/*
+ * VBE specification defined structure for general adapter info
+ * returned by function VBE_GET_CONTROLLER_INFORMATION command.
+ */
+
 typedef struct
 {
    CHAR Signature[4];
@@ -69,9 +110,11 @@ typedef struct
 
 /*
  * VBE specification defined structure for specific video mode
- * info returned by function 0x4F01.
+ * info returned by function VBE_GET_MODE_INFORMATION command.
  */
-typedef struct {
+
+typedef struct
+{
    /* Mandatory information for all VBE revisions */
    WORD ModeAttributes;
    BYTE WinAAttributes;
@@ -129,21 +172,19 @@ typedef struct {
    CHAR Reserved4[189];
 } VBE_MODEINFO, *PVBE_MODEINFO;
 
-#define VBE_MODEATTR_LINEAR 0x80
-
 #include <poppack.h>
 
-typedef struct {
-   /* Trampoline memory for communication with VBE real-mode interface. */
-   PHYSICAL_ADDRESS PhysicalAddress;
-   PVOID TrampolineMemory;
+typedef struct
+{
+   /* Interface to Int10 calls */
+   VIDEO_PORT_INT10_INTERFACE Int10Interface;
 
-   /* Pointer to mapped frame buffer memory */
-   PVOID FrameBufferMemory;
+   /* Trampoline memory for communication with VBE real-mode interface */
+   USHORT TrampolineMemorySegment;
+   USHORT TrampolineMemoryOffset;
 
    /* General controller/BIOS information */
-   BOOL VGACompatible;
-   WORD VBEVersion;
+   VBE_INFO VbeInfo;
 
    /* Saved information about video modes */
    ULONG ModeCount;
@@ -207,6 +248,7 @@ VBEMapVideoMemory(
 BOOL FASTCALL
 VBEUnmapVideoMemory(
    PVBE_DEVICE_EXTENSION DeviceExtension,
+   PVIDEO_MEMORY VideoMemory,
    PSTATUS_BLOCK StatusBlock);
 
 BOOL FASTCALL
