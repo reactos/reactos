@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: infcache.c,v 1.8 2003/11/14 17:13:36 weiden Exp $
+/* $Id: infcache.c,v 1.9 2004/12/30 16:02:12 royce Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/infcache.c
@@ -57,7 +57,7 @@ typedef struct _INFCACHELINE
   struct _INFCACHELINE *Next;
   struct _INFCACHELINE *Prev;
 
-  LONG FieldCount;
+  ULONG FieldCount;
 
   PCHAR Key;
 
@@ -437,7 +437,7 @@ inline static int is_eol( struct parser *parser, const CHAR *ptr )
 /* push data from current token start up to pos into the current token */
 static int push_token( struct parser *parser, const CHAR *pos )
 {
-  int len = pos - parser->start;
+  ULONG len = pos - parser->start;
   const CHAR *src = parser->start;
   CHAR *dst = parser->token + parser->token_len;
 

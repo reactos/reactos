@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.c,v 1.5 2004/11/15 19:20:23 gdalsnes Exp $
+/* $Id: mkhive.c,v 1.6 2004/12/30 16:02:12 royce Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.c
@@ -32,6 +32,11 @@
 #include "registry.h"
 #include "reginf.h"
 #include "binhive.h"
+
+#ifdef _MSC_VER
+#include <stdlib.h>
+#define PATH_MAX _MAX_PATH
+#endif//_MSC_VER
 
 #ifndef WIN32
 #ifndef PATH_MAX

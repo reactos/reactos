@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.10 2004/06/04 23:47:04 navaraf Exp $
+/* $Id: registry.c,v 1.11 2004/12/30 16:02:12 royce Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -126,7 +126,7 @@ RegCreateKey(HKEY ParentKey,
   int subkeyLength;
   int stringLength;
 
-  DPRINT ("KeyName '%s'\n", KeyName);
+  DPRINT ("RegCreateKey('%s')\n", KeyName);
 
   if (*KeyName == '\\')
     {
@@ -687,7 +687,7 @@ RegEnumValue(HKEY Key,
 }
 
 
-ULONG
+USHORT
 RegGetSubKeyCount (HKEY Key)
 {
   return Key->SubKeyCount;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mkhive.h,v 1.2 2003/04/16 15:06:33 ekohl Exp $
+/* $Id: mkhive.h,v 1.3 2004/12/30 16:02:12 royce Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/mkhive.h
@@ -65,12 +65,38 @@ typedef int BOOL, *PBOOL;
 
 /* Debugging macros */
 
+#ifdef _MSC_VER
+#include <stdio.h>
+#include <stdarg.h>
+static void DPRINT1(const char* fmt, ... )
+{
+	va_list args;
+	va_start ( args, fmt );
+	vprintf ( fmt, args );
+	va_end ( args );
+}
+static void DPRINT ( const char* fmt, ... )
+{
+}
+#else
 #define DPRINT1(args...) do { printf("(%s:%d) ",__FILE__,__LINE__); printf(args); } while(0);
+#define DPRINT(args...)
+#endif//_MSC_VER
 #define CHECKPOINT1 do { printf("%s:%d\n",__FILE__,__LINE__); } while(0);
 
-#define DPRINT(args...)
 #define CHECKPOINT
 
+#ifdef WIN32
+#define strncasecmp strnicmp
+#define strcasecmp stricmp
+#endif//WIN32
+
+#ifdef _MSC_VER
+#define GCC_PACKED
+#define inline
+#else//_MSC_VER
+#define GCC_PACKED __attribute__((packed))
+#endif//_MSC_VER
 
 #endif /* __MKHIVE_H__ */
 
