@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2002/04/07 14:21:13 ea Exp $
+# $Id: Makefile,v 1.3 2002/08/23 12:41:55 ea Exp $
 #
 # PROJECT    : ReactOS Operating System
 # FILE       : reactos/dk/w32/Makefile
@@ -9,11 +9,13 @@
 #
 PATH_TO_TOP=../..
 
+PATH_TO_PSX_TOP=$(PATH_TO_TOP)/../posix
+
 include $(PATH_TO_TOP)/rules.mak
 
 
-TARGET_FOLDER_LIB=lib
-TARGET_FOLDER_INC=include
+TARGET_FOLDER_LIB=$(PATH_TO_TOP)/dk/psx/lib
+TARGET_FOLDER_INC=$(PATH_TO_TOP)/dk/psx/include
 
 DTFLAGS = -k -l $@
 
@@ -31,13 +33,13 @@ all: $(MODULES)
 
 # --- CORE ---
 
-$(TARGET_FOLDER_LIB)/psxdll.a: $(PATH_TO_TOP)/subsys/psx/lib/psxdll/psxdll.def
+$(TARGET_FOLDER_LIB)/psxdll.a: $(PATH_TO_PSX_TOP)/lib/psxdll/psxdll.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D psxdll.dll\
 		-d $<
 	
-$(TARGET_FOLDER_LIB)/psxx.a: $(PATH_TO_TOP)/subsys/psx/lib/psxx/misc/psxx.def
+$(TARGET_FOLDER_LIB)/psxx.a: $(PATH_TO_PSX_TOP)/lib/psxx/misc/psxx.def
 	$(DLLTOOL) \
 		$(DTFLAGS)\
 		-D psxx.dll\
