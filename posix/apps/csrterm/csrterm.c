@@ -1,4 +1,4 @@
-/* $Id: csrterm.c,v 1.1 2002/03/17 22:15:39 ea Exp $
+/* $Id: csrterm.c,v 1.2 2002/04/06 16:00:46 ea Exp $
  *
  * PROJECT    : ReactOS Operating System / POSIX+ Environment Subsystem
  * DESCRIPTION: CSRTERM - A DEC VT-100 terminal emulator for the PSX subsystem
@@ -58,7 +58,15 @@
 /*** GLOBALS *********************************************************/
 
 PRIVATE LPCSTR MyName = "CSRTERM";
-PRIVATE CSRTERM_SESSION  Session;
+PRIVATE CSRTERM_SESSION  Session =
+{
+    0, //Identifier
+    {  //ServerPort
+        {0,0,NULL},
+        L"\\"PSX_NS_SUBSYSTEM_DIRECTORY_NAME"\\"PSX_NS_API_PORT_NAME,
+        INVALID_HANDLE_VALUE
+    }
+};
 
 /*** PRIVATE FUNCTIONS ***********************************************/
 VOID STDCALL Debug_Print (LPCSTR Format, ...)
@@ -219,6 +227,7 @@ PRIVATE NTSTATUS STDCALL CreateSessionObjects (DWORD Pid)
     NTSTATUS          Status;
     ULONG             Id = 0;
     OBJECT_ATTRIBUTES Oa;
+    LARGE_INTEGER     SectionSize =  {65536L,0};
 
 TRACE;
 
@@ -240,6 +249,7 @@ TRACE;
         PSX_NS_SESSION_DIRECTORY_NAME,
         Pid
         );
+    OutputDebugStringW(Session.Port.NameBuffer);
     RtlInitUnicodeString (& Session.Port.Name, Session.Port.NameBuffer);
     InitializeObjectAttributes (& Oa, & Session.Port.Name, 0, NULL, NULL);
     Status = NtCreatePort (& Session.Port.Handle, & Oa, 0, 0, 0x10000);
@@ -276,55 +286,56 @@ TRACE;
         PSX_NS_SESSION_DIRECTORY_NAME,
         Pid
     );
+    OutputDebugStringW(Session.Section.NameBuffer);
     RtlInitUnicodeString (& Session.Section.Name, Session.Section.NameBuffer); 
     InitializeObjectAttributes (& Oa, & Session.Section.Name, 0, 0, 0);
     Status = NtCreateSection (
                 & Session.Section.Handle,
-                0, /* DesiredAccess */
+                SECTION_ALL_ACCESS, /* DesiredAccess */
                 & Oa,
-                NULL, /* SectionSize OPTIONAL */
+                & SectionSize,
                 PAGE_READWRITE, /* Protect 4 */
                 SEC_COMMIT, /* Attributes */
                 0 /* FileHandle: 0=pagefile.sys */
                 );
     if (!NT_SUCCESS(Status))
-	{
-		NtClose (Session.Port.Handle);
-		NtTerminateThread (Session.Port.Thread.Handle, Status);
-		RtlDeleteCriticalSection (& Session.Lock);
-		vtprintf ("%s: %s: NtCreateSection failed with %08x\n",
-                    MyName, __FUNCTION__, Status);
-		return Status;
-	}
-	Session.Section.BaseAddress = NULL;
-	Session.Section.ViewSize = 0;
-	Status = NtMapViewOfSection (
-			Session.Section.Handle,
-			NtCurrentProcess(),
-			& Session.Section.BaseAddress,
-			0, /* ZeroBits */
-			0, /* Commitsize */
-			0, /* SectionOffset */
-			& Session.Section.ViewSize,
-			ViewUnmap,
-			0, /* AllocationType */
-			PAGE_READWRITE /* Protect 4 */
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		NtClose (Session.Port.Handle);
-		NtTerminateThread (Session.Port.Thread.Handle, Status);
-		NtClose (Session.Section.Handle);
-		RtlDeleteCriticalSection (& Session.Lock);
-		vtprintf ("%s: %s: NtMapViewOfSection failed with %08x\n",
-                    MyName, __FUNCTION__, Status);
-		return Status;
-	}
-	return Status;
+    {
+        NtClose (Session.Port.Handle);
+        NtTerminateThread (Session.Port.Thread.Handle, Status);
+        RtlDeleteCriticalSection (& Session.Lock);
+        vtprintf ("%s: %s: NtCreateSection failed with %08x\n",
+            MyName, __FUNCTION__, Status);
+        return Status;
+    }
+    Session.Section.BaseAddress = NULL;
+    Session.Section.ViewSize = 0;
+    Status = NtMapViewOfSection (
+                Session.Section.Handle,
+                NtCurrentProcess(),
+                & Session.Section.BaseAddress,
+                0, /* ZeroBits */
+                0, /* Commitsize */
+                0, /* SectionOffset */
+                & Session.Section.ViewSize,
+                ViewUnmap,
+                0, /* AllocationType */
+                PAGE_READWRITE /* Protect 4 */
+                );
+    if (!NT_SUCCESS(Status))
+    {
+        NtClose (Session.Port.Handle);
+        NtTerminateThread (Session.Port.Thread.Handle, Status);
+        NtClose (Session.Section.Handle);
+        RtlDeleteCriticalSection (& Session.Lock);
+        vtprintf ("%s: %s: NtMapViewOfSection failed with %08x\n",
+        MyName, __FUNCTION__, Status);
+        return Status;
+    }
+    return Status;
 }
 
 /**********************************************************************
- *	CreateTerminalToPsxChannel/0					PRIVATE
+ *	CreateTerminalToPsxChannel/0				PRIVATE
  *
  * DESCRIPTION
  *
@@ -348,6 +359,8 @@ TRACE;
     /*
      * Try connecting to \POSIX+\SessionPort.
      */
+    RtlInitUnicodeString (& Session.ServerPort.Name, Session.ServerPort.NameBuffer);
+    OutputDebugStringW(Session.ServerPort.Name.Buffer);
     Status = NtConnectPort (
                 & Session.ServerPort.Handle,
                 & Session.ServerPort.Name,
