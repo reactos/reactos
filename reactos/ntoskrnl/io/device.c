@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.35 2002/02/19 00:09:22 ekohl Exp $
+/* $Id: device.c,v 1.36 2002/03/24 15:30:44 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -700,6 +700,10 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
    CreatedDeviceObject->StackSize = 1;
    CreatedDeviceObject->AlignmentRequirement = 1;
    KeInitializeDeviceQueue(&CreatedDeviceObject->DeviceQueue);
+   
+   KeInitializeEvent(&CreatedDeviceObject->DeviceLock,
+		     SynchronizationEvent,
+		     TRUE);
    
    if (CreatedDeviceObject->DeviceType == FILE_DEVICE_DISK)
      {
