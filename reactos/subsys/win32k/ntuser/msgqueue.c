@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.85 2004/04/14 17:35:47 weiden Exp $
+/* $Id: msgqueue.c,v 1.86 2004/04/14 19:06:02 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -249,6 +249,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   PWINDOW_OBJECT Window = NULL;
   HWND CaptureWin;
   POINT Point;
+  BOOL BtnClick;
   
   ThreadQueue = PsGetWin32Thread()->MessageQueue;
   
@@ -504,9 +505,10 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       Message->Msg.lParam = MAKELONG(Point.x, Point.y);
     }
   
-  /* remove the reference to the current WM_MOUSEMOVE message, if this message
+  /* remove the reference to the current WM_(NC)MOUSEMOVE message, if this message
      is it */
-  if (Message->Msg.message == WM_MOUSEMOVE)
+  if (Message->Msg.message == WM_MOUSEMOVE ||
+      Message->Msg.message == WM_NCMOUSEMOVE)
   {
     if(FromGlobalQueue)
     {
@@ -516,7 +518,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
       IntLockHardwareMessageQueue(Window->MessageQueue);
       if(Window->MessageQueue->MouseMoveMsg)
       {
-        /* delete the WM_MOUSEMOVE message in the private queue, we're dealing
+        /* delete the WM_(NC)MOUSEMOVE message in the private queue, we're dealing
            with one that's been sent later */
         RemoveEntryList(&Window->MessageQueue->MouseMoveMsg->ListEntry);
         ExFreePool(Window->MessageQueue->MouseMoveMsg);
