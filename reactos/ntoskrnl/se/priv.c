@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security manager
- * FILE:              kernel/se/priv.c
- * PROGRAMER:         ?
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/se/priv.c
+ * PURPOSE:         Security manager
+ * 
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/fs.c
  * PURPOSE:         Filesystem functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

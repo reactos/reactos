@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/mdl.c
- * PURPOSE:      Manipulates MDLs
- * PROGRAMMER:   David Welch (welch@cwcom.net)
- * UPDATE HISTORY: 
- *               27/05/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/mdl.c
+ * PURPOSE:         Manipulates MDLs
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ****************************************************************/

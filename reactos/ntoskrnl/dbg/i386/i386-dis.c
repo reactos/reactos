@@ -1,3 +1,13 @@
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/dbg/i386/i386-dis.c
+ * PURPOSE:         No purpose listed.
+ *
+ * PROGRAMMERS:     No programmer listed.
+ */
+
 #include <stdarg.h>
 
 /* ReactOS compatibility stuff. */

@@ -1,12 +1,11 @@
-/* $Id $
+/* $Id:$
  *
- * COPYRIGHT:  See COPYING in the top directory
- * PROJECT:    ReactOS kernel v0.0.2
- * FILE:       ntoskrnl/ke/error.c
- * PURPOSE:    Error reason setting/getting
- * PROGRAMMER: David Welch
- * UPDATE HISTORY:
- *             16/4/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ke/error.c
+ * PURPOSE:         Error reason setting/getting
+ *
+ * PROGRAMMERS:     David Welch
  */
 
 /* INCLUDE *****************************************************************/

@@ -1,13 +1,12 @@
-/*
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS project
- * FILE:                 ntoskrnl/ke/wait.c
- * PURPOSE:              Manages non-busy waiting
- * PROGRAMMER:           David Welch (welch@mcmail.com)
- * REVISION HISTORY:
- *           21/07/98: Created
- *	     12/1/99:  Phillip Susi: Fixed wake code in KeDispatcherObjectWake
- *		   so that things like KeWaitForXXX() return the correct value
+/* $Id:$
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS project
+ * FILE:            ntoskrnl/ke/wait.c
+ * PURPOSE:         Manages non-busy waiting
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
  */
 
 /* NOTES ********************************************************************

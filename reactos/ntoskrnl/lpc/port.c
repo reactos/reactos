@@ -4,12 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/lpc/port.c
  * PURPOSE:         Communication mechanism
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *
- *	2000-06-04 (ea)
- *		ntoskrnl/nt/port.c moved in ntoskrnl/lpc/port.c
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/

@@ -2,11 +2,10 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/cont.c
+ * FILE:            ntoskrnl/mm/ncache.c
  * PURPOSE:         Manages non-cached memory
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/

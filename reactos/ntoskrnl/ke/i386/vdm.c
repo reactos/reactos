@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/nt/vdm.c
+ * FILE:            ntoskrnl/ke/i386/vdm.c
  * PURPOSE:         Virtual DOS machine support
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

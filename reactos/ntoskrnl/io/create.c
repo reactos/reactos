@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/create.c
  * PURPOSE:         Handling file create/open apis
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  24/05/98: Created
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ***************************************************************/

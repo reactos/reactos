@@ -1,12 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/bug.c
- * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
-		    Changed NtCreateMailslotFile
+ * FILE:            ntoskrnl/io/mailslot.c
+ * PURPOSE:         No purpose listed.
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

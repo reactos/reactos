@@ -4,8 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/nls.c
  * PURPOSE:         Bitmap functions
- * UPDATE HISTORY:
- *                  20/08/99 Created by Eric Kohl
+ *
+ * PROGRAMMERS:     Eric Kohl
  */
 
 #include <ntoskrnl.h>

@@ -1,12 +1,12 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/timer.c
- * PURPOSE:         io timers
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Reimplemented 05/11/04 - Alex Ionescu (alex@relsoft.net)
+ * PURPOSE:         IO timers
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/

@@ -4,9 +4,8 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/inbv/inbv.c
  * PURPOSE:        Boot video support
- * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *  12-07-2003 CSH Created
+ * 
+ * PROGRAMMERS:    Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/

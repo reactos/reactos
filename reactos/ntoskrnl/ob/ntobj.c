@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          ntoskrnl/ob/ntobj.c
- * PURPOSE:       User mode interface to object manager
- * PROGRAMMER:    David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *               10/06/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ob/ntobj.c
+ * PURPOSE:         User mode interface to object manager
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/device.c
- * PURPOSE:        Manage devices
- * PROGRAMMER:     David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                 15/05/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/device.c
+ * PURPOSE:         Manage devices
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *******************************************************************/

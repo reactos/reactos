@@ -4,11 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/wstring.c
  * PURPOSE:         Wide string functions
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *   1998/12/04  RJJ    Cleaned up and added i386 def checks.
- *   1999/07/29  ekohl  Added missing functions.
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/

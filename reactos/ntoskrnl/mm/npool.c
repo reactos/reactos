@@ -1,17 +1,13 @@
 /* $Id$
  *
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/npool.c
- * PURPOSE:      Implements the kernel memory pool
- * PROGRAMMER:   David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *               27/05/98: Created
- *               10/06/98: Bug fixes by Iwan Fatahi (i_fatahi@hotmail.com)
- *                         in take_block (if current bigger than required)
- *                         in remove_from_used_list 
- *                         in ExFreePool
- *               23/08/98: Fixes from Robert Bergkvist (fragdance@hotmail.com)
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/npool.c
+ * PURPOSE:         Implements the kernel memory pool
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Iwan Fatahi (i_fatahi@hotmail.com)
+ *                  Robert Bergkvist (fragdance@hotmail.com)
  */
 
 /* INCLUDES ****************************************************************/

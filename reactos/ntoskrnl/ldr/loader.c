@@ -4,21 +4,11 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/loader.c
  * PURPOSE:         Loaders for PE executables
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  *                  Jason Filby (jasonfilby@yahoo.com)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *   DW   22/05/98   Created
- *   RJJ  10/12/98   Completed image loader function and added hooks for MZ/PE
- *   RJJ  10/12/98   Built driver loader function and added hooks for PE/COFF
- *   RJJ  10/12/98   Rolled in David's code to load COFF drivers
- *   JM   14/12/98   Built initial PE user module loader
- *   RJJ  06/03/99   Moved user PE loader into NTDLL
- *   JF   26/01/2000 Recoded some parts to retrieve export details correctly
- *   DW   27/06/2000 Removed redundant header files
- *   CSH  11/04/2001 Added automatic loading of module symbols if they exist
- *   KJK  02/04/2003 Nebbet-ized a couple of type names
  */
 
 

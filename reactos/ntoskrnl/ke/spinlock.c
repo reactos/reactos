@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/spinlock.c
  * PURPOSE:         Implements spinlocks
- * PROGRAMMER:      David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *                  3/6/98: Created
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /*

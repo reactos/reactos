@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/irp.c
  * PURPOSE:         Handle IRPs
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
- *                  24/05/98: Created 
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* NOTES *******************************************************************

@@ -1,11 +1,11 @@
-/*
+/* $Id:$
  *
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/ntoskrnl/rtl/libsup.c
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/rtl/libsupp.c
  * PURPOSE:         Rtl library support routines
- * UPDATE HISTORY:
  *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES ******************************************************************/

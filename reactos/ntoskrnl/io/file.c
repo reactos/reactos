@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/file.c
  * PURPOSE:         Graceful system shutdown if a bug is detected
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

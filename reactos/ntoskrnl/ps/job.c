@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ps/jobs.c
+ * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 16/07/04
+ * 
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* Note: Jobs are only supported on Win2K+ */

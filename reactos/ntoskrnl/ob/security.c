@@ -1,11 +1,11 @@
-/*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security manager
- * FILE:              ntoskrnl/ob/security.c
- * PROGRAMER:         ?
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ob/security.c
+ * PURPOSE:         Security manager
+ * 
+ * PROGRAMERS:      No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/physical.c
  * PURPOSE:         Physical Memory Manipulation functions
- * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  Created 16/07/04
+ * 
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/

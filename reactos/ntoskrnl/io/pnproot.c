@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/pnproot.c
- * PURPOSE:        PnP manager root device
- * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *  16/04/2001 CSH Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/pnproot.c
+ * PURPOSE:         PnP manager root device
+ * 
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/

@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/stdlib.c
  * PURPOSE:         Standard library functions
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
- * UPDATE HISTORY:
- *   1999/07/29  ekohl   Created
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 /* INCLUDES *****************************************************************/

@@ -4,9 +4,8 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/dirobj.c
  * PURPOSE:        Interface functions to directory object
- * PROGRAMMER:     David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                 22/05/98: Created
+ * 
+ * PROGRAMMERS:    David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ***************************************************************/

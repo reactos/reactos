@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/pnpmgr.c
- * PURPOSE:        Initializes the PnP manager
- * PROGRAMMER:     Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *  16/04/2001 CSH Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/pnpmgr.c
+ * PURPOSE:         Initializes the PnP manager
+ * 
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES ******************************************************************/

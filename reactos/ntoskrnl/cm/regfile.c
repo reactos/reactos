@@ -1,10 +1,12 @@
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/regfile.c
- * PURPOSE:          Registry file manipulation routines
- * UPDATE HISTORY:
-*/
+/* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/cm/regfile.c
+ * PURPOSE:         Registry file manipulation routines
+ *
+ * PROGRAMMERS:     No programmer listed.
+ */
 
 #include <ntoskrnl.h>
 #define NDEBUG

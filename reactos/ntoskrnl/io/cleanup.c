@@ -1,11 +1,11 @@
-/*
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/cleanup.c
- * PURPOSE:        IRP cleanup
- * PROGRAMMER:     David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                 30/05/98: Created
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/cleanup.c
+ * PURPOSE:         IRP cleanup
+ *
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ****************************************************************/

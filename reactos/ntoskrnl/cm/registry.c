@@ -4,11 +4,10 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/registry.c
  * PURPOSE:         Registry functions
+ *
  * PROGRAMMERS:     Rex Jolliff
  *                  Matt Pyne
  *                  Jean Michault
- * UPDATE HISTORY:
- *                  Created 22/05/98
  */
 
 #include <ntoskrnl.h>

@@ -1,14 +1,12 @@
 /* $Id$
  * 
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          ntoskrnl/ob/object.c
- * PURPOSE:       Implements generic object managment functions
- * PROGRAMMERS    David Welch (welch@cwcom.net), Skywing (skywing@valhallalegends.com)
- * UPDATE HISTORY:
- *               10/06/98: Created
- *               09/13/03: Fixed various ObXxx routines to not call retention
- *                         checks directly at a raised IRQL.
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ob/object.c
+ * PURPOSE:         Implements generic object managment functions
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Skywing (skywing@valhallalegends.com)
  */
 
 /* INCLUDES *****************************************************************/

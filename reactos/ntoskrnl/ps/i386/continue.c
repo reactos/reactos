@@ -1,12 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:              See COPYING in the top level directory
- * PROJECT:                ReactOS kernel
- * FILE:                   ntoskrnl/ps/i386/continue.c
- * PURPOSE:                i386 implementation of NtContinue()
- * PROGRAMMER:             Royce Mitchell III, kjk_hyperion
- * REVISION HISTORY:
- *               29/06/04: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/i386/continue.c
+ * PURPOSE:         i386 implementation of NtContinue()
+ *
+ * PROGRAMMERS:     Royce Mitchell III,
+ *                  kjk_hyperion
  */
 
 /* INCLUDES ****************************************************************/

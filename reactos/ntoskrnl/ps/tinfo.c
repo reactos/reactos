@@ -4,11 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ps/tinfo.c
  * PURPOSE:         Getting/setting thread information
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Updated 09/08/2003 by Skywing (skywing@valhallalegends.com)
- *                   to suppport thread-eventpairs.
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Skywing (skywing@valhallalegends.com)
  */
 
 /* INCLUDES *****************************************************************/

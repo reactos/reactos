@@ -1,13 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/driver.c
- * PURPOSE:        Loading and unloading of drivers
- * PROGRAMMER:     David Welch (welch@cwcom.net)
- *                 Filip Navara (xnavara@volny.cz)
- * UPDATE HISTORY:
- *                 15/05/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/driver.c
+ * PURPOSE:         Loading and unloading of drivers
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Filip Navara (xnavara@volny.cz)
  */
 
 /* INCLUDES *******************************************************************/

@@ -1,9 +1,11 @@
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/regobj.c
- * PURPOSE:          Registry object manipulation routines.
- * UPDATE HISTORY:
+/* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/cm/regobj.c
+ * PURPOSE:         Registry object manipulation routines.
+ *
+ * PROGRAMMERS:     No programmer listed.
 */
 
 #include <ntoskrnl.h>

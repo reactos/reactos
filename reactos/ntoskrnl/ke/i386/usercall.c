@@ -2,11 +2,10 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/hal/x86/usercall.c
+ * FILE:            ntoskrnl/ke/i386/usercall.c
  * PURPOSE:         2E interrupt handler
- * PROGRAMMER:      David Welch (david.welch@seh.ox.ac.uk)
- * UPDATE HISTORY:
- *                  ???
+ * 
+ * PROGRAMMERS:     David Welch (david.welch@seh.ox.ac.uk)
  */
 
 /* INCLUDES ******************************************************************/

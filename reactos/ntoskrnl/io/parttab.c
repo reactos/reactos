@@ -4,11 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/parttab.c
  * PURPOSE:         Handling fixed disks (partition table functions)
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- * 2000-03-25 (ea)
- * 	Moved here from ntoskrnl/io/fdisk.c
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,12 +1,12 @@
-/*
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/devintrf.c
- * PURPOSE:        Device interface functions
- * PROGRAMMER:     Filip Navara (xnavara@volny.cz)
- *                 Matthew Brace (ismarc@austin.rr.com)
- * UPDATE HISTORY:
- *    22/09/2003 FiN Created
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/deviface.c
+ * PURPOSE:         Device interface functions
+ * 
+ * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
+ *                  Matthew Brace (ismarc@austin.rr.com)
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:            See COPYING in the top level directory
- * PROJECT:              ReactOS kernel
- * FILE:                 ntoskrnl/io/iomgr.c
- * PURPOSE:              Initializes the io manager
- * PROGRAMMER:           David Welch (welch@mcmail.com)
- * REVISION HISTORY:
- *             29/07/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/iomgr.c
+ * PURPOSE:         Initializes the io manager
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ****************************************************************/

@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:   See COPYING in the top directory
- * PROJECT:     ReactOS kernel 
- * FILE:        ntoskrnl/mm/mminit.c
- * PURPOSE:     kernel memory managment initialization functions
- * PROGRAMMER:  David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              Created 9/4/98
+ * COPYRIGHT:       See COPYING in the top directory
+ * PROJECT:         ReactOS kernel 
+ * FILE:            ntoskrnl/mm/mminit.c
+ * PURPOSE:         Kernel memory managment initialization functions
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES *****************************************************************/

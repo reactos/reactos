@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security manager
- * FILE:              kernel/se/acl.c
- * PROGRAMER:         David Welch <welch@cwcom.net>
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/se/acl.c
+ * PURPOSE:         Security manager
+ * 
+ * PROGRAMMERS:     David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *****************************************************************/

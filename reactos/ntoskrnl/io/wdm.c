@@ -1,9 +1,11 @@
-/*
+/* $Id:$
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/wdm.c
  * PURPOSE:         Various Windows Driver Model routines
- * PROGRAMMER:      Filip Navara (xnavara@volny.cz)
+ * 
+ * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
 #include <ntoskrnl.h>

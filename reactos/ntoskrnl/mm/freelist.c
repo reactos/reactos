@@ -1,12 +1,12 @@
-/*
- * COPYRIGHT:    See COPYING in the top level directory
- * PROJECT:      ReactOS kernel
- * FILE:         ntoskrnl/mm/freelist.c
- * PURPOSE:      Handle the list of free physical pages
- * PROGRAMMER:   David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *               27/05/98: Created
- *               18/08/98: Added a fix from Robert Bergkvist
+/* $Id$
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/mm/freelist.c
+ * PURPOSE:         Handle the list of free physical pages
+ * 
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
+ *                  Robert Bergkvist
  */
 
 /* INCLUDES ****************************************************************/

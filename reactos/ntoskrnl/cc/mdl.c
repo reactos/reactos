@@ -1,10 +1,11 @@
-/* COPYRIGHT:       See COPYING in the top level directory
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/fs.c
  * PURPOSE:         Implements MDL Cache Manager Functions
- * PROGRAMMER:      Alex Ionescu
- * UPDATE HISTORY:
- *                  Created 20/06/04
+ *
+ * PROGRAMMERS:     Alex Ionescu
  */
 
 /* INCLUDES ******************************************************************/

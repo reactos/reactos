@@ -1,13 +1,12 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/ke/timer.c
- * PURPOSE:        Handle timers
- * PROGRAMMER:     David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                 28/05/98: Created
- *                 12/3/99:  Phillip Susi: enabled the timers, fixed spin lock
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ke/timer.c
+ * PURPOSE:         Handle timers
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
  */
 
 /* NOTES ******************************************************************/

@@ -1,9 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/irq.c
  * PURPOSE:         IRQ handling
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

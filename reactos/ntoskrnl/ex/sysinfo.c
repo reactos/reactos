@@ -4,12 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/sysinfo.c
  * PURPOSE:         System information functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  20/03/2003: implemented querying SystemProcessInformation,
- *                              no more copying to-from the caller (Aleksey
- *                              Bragin <aleksey@studiocerebral.com>)
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Aleksey Bragin (aleksey@studiocerebral.com)
  */
 
 /* INCLUDES *****************************************************************/

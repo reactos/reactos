@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/copy.c
  * PURPOSE:         Implements cache managers copy interface
- * PROGRAMMER:      Hartmut Birr
- * UPDATE HISTORY:
- *                  Created 05.10.2001
+ *
+ * PROGRAMMERS:     Hartmut Birr
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,38 +1,12 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001, 2002 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
 /* $Id$
  *
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/init.c
  * PURPOSE:         Loaders for PE executables
+ * 
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
- * UPDATE HISTORY:
- *   DW   22/05/98  Created
- *   RJJ  10/12/98  Completed image loader function and added hooks for MZ/PE
- *   RJJ  10/12/98  Built driver loader function and added hooks for PE/COFF
- *   RJJ  10/12/98  Rolled in David's code to load COFF drivers
- *   JM   14/12/98  Built initial PE user module loader
- *   RJJ  06/03/99  Moved user PE loader into NTDLL
- *   EA   19990717  LdrGetSystemDirectory()
- *   EK   20000618  Using SystemRoot link instead of LdrGetSystemDirectory()
- *   EK   20021119  Create a process parameter block for the initial process.
  */
 
 /* INCLUDES *****************************************************************/

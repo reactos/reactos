@@ -1,12 +1,11 @@
-/* $Id$
+/* $Id:$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Various functions
- * FILE:              lib/ntoskrnl/rtl/misc.c
- * PROGRAMER:         Hartmut Birr
- * REVISION HISTORY:
- *                    01/03/2005: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/rtl/misc.c
+ * PURPOSE:         Various functions
+ * 
+ * PROGRAMMERS:     Hartmut Birr
  */
 
 /* INCLUDES *****************************************************************/

@@ -4,9 +4,8 @@
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/ob/namespc.c
  * PURPOSE:        Manages the system namespace
- * PROGRAMMER:     David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                 22/05/98: Created
+ * 
+ * PROGRAMMERS:    David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES ***************************************************************/

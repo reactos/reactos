@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Access rights handling functions
- * FILE:              ntoskrnl/se/access.c
- * PROGRAMER:         Eric Kohl <ekohl@rz-online.de>
- * REVISION HISTORY:
- *                    07/04/2000: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/se/access.c
+ * PURPOSE:         Access rights handling functions
+ * 
+ * PROGRAMMERS:     Eric Kohl <ekohl@rz-online.de>
  */
 
 /* INCLUDES *****************************************************************/

@@ -4,6 +4,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cm/import.c
  * PURPOSE:         Registry-Hive import functions
+ *
  * PROGRAMMERS:     Eric Kohl
  */
 

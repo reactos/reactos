@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/string.c
  * PURPOSE:         Ascii string functions
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
- * UPDATE HISTORY:
- *   1999/07/29  ekohl   Created
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 /* INCLUDES *****************************************************************/

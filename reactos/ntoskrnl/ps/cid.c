@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * FILE:              ntoskrnl/ps/clientid.c
- * PURPOSE:           Client ID (CID) management
- * PROGRAMMER:        Thomas Weidenmueller <w3seek@reactos.com>
- * REVISION HISTORY:
- *              9/20/2004: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/cid.c
+ * PURPOSE:         Client ID (CID) management
+ *
+ * PROGRAMMERS:     Thomas Weidenmueller <w3seek@reactos.com>
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,12 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * FILE:              ntoskrnl/ps/process.c
- * PURPOSE:           Process managment
- * PROGRAMMER:        David Welch (welch@cwcom.net)
- * REVISION HISTORY:
- *              21/07/98: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/process.c
+ * PURPOSE:         Process managment
+ *
+ * PROGRAMMERS:     David Welch (welch@cwcom.net)
  */
 
 /* INCLUDES ******************************************************************/

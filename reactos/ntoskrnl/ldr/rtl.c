@@ -2,8 +2,9 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ldr/loader.c
+ * FILE:            ntoskrnl/ldr/rtl.c
  * PURPOSE:         Loader utilities
+ *
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
  */

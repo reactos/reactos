@@ -1,14 +1,13 @@
 /* $Id$
  *
- * COPYRIGHT:              See COPYING in the top level directory
- * PROJECT:                ReactOS kernel
- * FILE:                   ntoskrnl/ps/thread.c
- * PURPOSE:                Thread managment
- * PROGRAMMER:             David Welch (welch@mcmail.com)
- * REVISION HISTORY: 
- *               23/06/98: Created
- *               12/10/99: Phillip Susi:  Thread priorities, and APC work
- *               09/08/03: Skywing:       ThreadEventPair support (delete)
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ps/create.c
+ * PURPOSE:         Thread managment
+ * 
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Phillip Susi
+ *                  Skywing
  */
 
 /*

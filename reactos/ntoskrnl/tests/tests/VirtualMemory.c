@@ -1,3 +1,13 @@
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/tests/tests/VirtualMemory.c
+ * PURPOSE:         No purpose listed.
+ *
+ * PROGRAMMERS:     No programmer listed.
+ */
+
 #include <ntoskrnl.h>
 #include "regtests.h"
 

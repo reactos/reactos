@@ -1,13 +1,13 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ldr/sysdll.c
  * PURPOSE:         Loaders for PE executables
+ * 
  * PROGRAMMERS:     Jean Michault
  *                  Rex Jolliff (rex@lvcablemodem.com)
- * UPDATE HISTORY:
- *   DW   26/01/00  Created
- *   Skywing 09/11/2003 Added support for KiRaiseUserExceptionDispatcher
+ *                  Skywing
  */
 
 /* INCLUDES *****************************************************************/

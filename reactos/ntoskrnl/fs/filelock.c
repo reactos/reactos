@@ -1,7 +1,11 @@
 /* $Id$
  *
- * reactos/ntoskrnl/fs/filelock.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/fs/filelock.c
+ * PURPOSE:         No purpose listed.
  *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 #include <ntoskrnl.h>

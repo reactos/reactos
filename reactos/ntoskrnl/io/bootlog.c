@@ -1,10 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/bootlog.c
- * PURPOSE:        Boot log file support
- * PROGRAMMER:     Eric Kohl
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/bootlog.c
+ * PURPOSE:         Boot log file support
+ * 
+ * PROGRAMMERS:     Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/

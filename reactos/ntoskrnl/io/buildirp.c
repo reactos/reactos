@@ -4,10 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/buildirp.c
  * PURPOSE:         Building various types of irp
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Fixed IO method handling 04/03/99
+ *
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,11 +1,11 @@
-/*
+/* $Id:$
+ * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/kd/kdebug.c
  * PURPOSE:         Kernel debugger
- * PROGRAMMER:      Eric Kohl (ekohl@abo.rhein-zeitung.de)
- * UPDATE HISTORY:
- *                  21/10/99: Created
+ * 
+ * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  */
 
 #include <ntoskrnl.h>

@@ -1,11 +1,11 @@
-/*
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/remlock.c
- * PURPOSE:        Remove Lock functions
- * PROGRAMMER:     Filip Navara (xnavara@volny.cz)
- * UPDATE HISTORY:
- *  22/09/2003 FiN Created
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/remlock.c
+ * PURPOSE:         Remove Lock functions
+ * 
+ * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
 /* INCLUDES ******************************************************************/

@@ -1,10 +1,12 @@
-/*
- * COPYRIGHT:        See COPYING in the top level directory
- * PROJECT:          ReactOS kernel
- * FILE:             ntoskrnl/cm/ntfunc.c
- * PURPOSE:          Ntxxx function for registry access
- * UPDATE HISTORY:
-*/
+/* $Id$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/cm/ntfunc.c
+ * PURPOSE:         Ntxxx function for registry access
+ *
+ * PROGRAMMERS:     No programmer listed.
+ */
 
 /* INCLUDES *****************************************************************/
 

@@ -1,11 +1,11 @@
-/*
- * COPYRIGHT:      See COPYING in the top level directory
- * PROJECT:        ReactOS kernel
- * FILE:           ntoskrnl/io/pnpmgr/report.c
- * PURPOSE:        Device Changes Reporting functions
- * PROGRAMMER:     Filip Navara (xnavara@volny.cz)
- * UPDATE HISTORY:
- *  22/09/2003 FiN Created
+/* $Id:$
+ * 
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/io/pnpreport.c
+ * PURPOSE:         Device Changes Reporting functions
+ * 
+ * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */
 
 /* INCLUDES ******************************************************************/

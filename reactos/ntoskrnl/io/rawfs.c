@@ -4,9 +4,8 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/rawfs.c
  * PURPOSE:         Raw filesystem driver
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *                  Created 13/04/2003
+ *
+ * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/

@@ -1,9 +1,11 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           UUID generator
- * FILE:              kernel/ex/uuid.c
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/ex/uuid.c
+ * PURPOSE:         UUID generator
+ *
+ * PROGRAMMERS:     No programmer listed.
  */
 
 /* INCLUDES *****************************************************************/

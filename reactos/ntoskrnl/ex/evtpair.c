@@ -4,13 +4,9 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/evtpair.c
  * PURPOSE:         Support for event pairs
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *                  Updated 09/08/2003 by Skywing (skywing@valhallalegends.com)
- *                   to correctly maintain ownership of the dispatcher lock
- *                   between KeSetEvent and KeWaitForSingleObject calls.
- *                   Additionally, implemented the thread-eventpair routines.
+ *
+ * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ *                  Skywing (skywing@valhallalegends.com)
  */
 
 /* INCLUDES *****************************************************************/
