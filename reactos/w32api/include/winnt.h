@@ -176,10 +176,32 @@ typedef DWORD FLONG;
 #define COMPRESSION_ENGINE_STANDARD     (0x0000)
 #define COMPRESSION_ENGINE_MAXIMUM      (0x0100)
 #define COMPRESSION_ENGINE_HIBER        (0x0200)
-#define ACCESS_ALLOWED_ACE_TYPE         (0x0)
-#define ACCESS_DENIED_ACE_TYPE          (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE           (0x2)
-#define SYSTEM_ALARM_ACE_TYPE           (0x3)
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
+
 /*end ntifs.h */
 #define ANYSIZE_ARRAY 1
 #define OBJECT_INHERIT_ACE	1
@@ -1413,13 +1435,17 @@ typedef struct _ACL {
 } ACL,*PACL;
 typedef struct _ACL_REVISION_INFORMATION {
 	DWORD AclRevision;
-} ACL_REVISION_INFORMATION;
+} ACL_REVISION_INFORMATION, *PACL_REVISION_INFORMATION;
 typedef struct _ACL_SIZE_INFORMATION {
 	DWORD   AceCount;
 	DWORD   AclBytesInUse;
 	DWORD   AclBytesFree;
-} ACL_SIZE_INFORMATION;
-
+} ACL_SIZE_INFORMATION, *PACL_SIZE_INFORMATION;
+typedef enum _ACL_INFORMATION_CLASS
+{
+  AclRevisionInformation = 1,
+  AclSizeInformation
+} ACL_INFORMATION_CLASS;
 /* FIXME: add more machines */
 #ifdef _X86_
 #define SIZE_OF_80387_REGISTERS	80

@@ -827,10 +827,6 @@ typedef enum _FINDEX_SEARCH_OPS {
 	FindExSearchLimitToDevices,
 	FindExSearchMaxSearchOp
 } FINDEX_SEARCH_OPS;
-typedef enum _ACL_INFORMATION_CLASS {
-	AclRevisionInformation=1,
-	AclSizeInformation
-} ACL_INFORMATION_CLASS;
 typedef struct tagHW_PROFILE_INFOA {
 	DWORD dwDockInfo;
 	CHAR szHwProfileGuid[HW_PROFILE_GUIDLEN];

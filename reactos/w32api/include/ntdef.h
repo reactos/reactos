@@ -26,6 +26,7 @@
 #endif
 #define NT_WARNING(x) ((ULONG)(x)>>30==2)
 #define NT_ERROR(x) ((ULONG)(x)>>30==3)
+#define INVALID_HANDLE_VALUE ((HANDLE)-1)
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
 typedef struct _UNICODE_STRING {
@@ -44,6 +45,7 @@ typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
 typedef STRING OEM_STRING;
 typedef PSTRING POEM_STRING;
+typedef CONST STRING* PCOEM_STRING;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 typedef enum _SECTION_INHERIT {
   ViewShare = 1,
@@ -58,6 +60,11 @@ typedef struct _OBJECT_ATTRIBUTES {
   PVOID SecurityDescriptor;              
   PVOID SecurityQualityOfService;
 } OBJECT_ATTRIBUTES, *POBJECT_ATTRIBUTES;
+typedef enum _NT_PRODUCT_TYPE {
+	NtProductWinNt = 1,
+	NtProductLanManNt,
+	NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 #endif
 #define NOTHING
 #endif /* _NTDEF_H */
