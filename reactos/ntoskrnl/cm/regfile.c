@@ -1998,40 +1998,78 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
 
 
 ULONG
-CmiGetMaxNameLength(PREGISTRY_HIVE  RegistryHive,
-		    PKEY_CELL  KeyCell)
+CmiGetMaxNameLength(PKEY_OBJECT KeyObject)
 {
   PHASH_TABLE_CELL HashBlock;
+  PKEY_OBJECT CurKey;
   PKEY_CELL CurSubKeyCell;
+  PKEY_CELL KeyCell;
   ULONG MaxName;
+  ULONG NameSize;
   ULONG i;
 
+  VERIFY_KEY_OBJECT(KeyObject);
+
+  KeyCell = KeyObject->KeyCell;
   VERIFY_KEY_CELL(KeyCell);
 
   MaxName = 0;
-  HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+  HashBlock = CmiGetBlock(KeyObject->RegistryHive, 
+                          KeyCell->HashTableOffset, 
+			  NULL);
   if (HashBlock == NULL)
     {
       DPRINT("CmiGetBlock() failed\n");
-      return 0;
     }
-
-  for (i = 0; i < HashBlock->HashTableSize; i++)
+  else
     {
-      if (HashBlock->Table[i].KeyOffset != 0)
-	{
-	  CurSubKeyCell = CmiGetBlock(RegistryHive,
-				      HashBlock->Table[i].KeyOffset,
-				      NULL);
-	  if (CurSubKeyCell == NULL)
+      for (i = 0; i < HashBlock->HashTableSize; i++)
+        {
+          if (HashBlock->Table[i].KeyOffset != 0)
 	    {
-	      DPRINT("CmiGetBlock() failed\n");
-	      return 0;
+	      CurSubKeyCell = CmiGetBlock(KeyObject->RegistryHive,
+				          HashBlock->Table[i].KeyOffset,
+				          NULL);
+	      if (CurSubKeyCell == NULL)
+	        {
+	          DPRINT("CmiGetBlock() failed\n");
+	          continue;
+	        }
+              NameSize = CurSubKeyCell->NameSize;
+	      if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	        {
+	          NameSize *= sizeof(WCHAR);
+	        }
+	      if (MaxName < NameSize)
+	        {
+	          MaxName = NameSize;
+	        }
 	    }
-
-	  if (MaxName < CurSubKeyCell->NameSize)
+	}
+    }
+  if (KeyObject->RegistryHive != CmiVolatileHive)
+    {
+      DPRINT("KeyObject->NumberOfSubKeys %d\n", KeyObject->NumberOfSubKeys);
+      for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
+        {
+	  CurKey = KeyObject->SubKeys[i];
+	  if (CurKey->RegistryHive == CmiVolatileHive)
 	    {
-	      MaxName = CurSubKeyCell->NameSize;
+	      CurSubKeyCell = CurKey->KeyCell;
+	      if (CurSubKeyCell == NULL)
+	        {
+                  DPRINT("CmiGetBlock() failed\n");
+	          continue;
+	        }
+              NameSize = CurSubKeyCell->NameSize;
+	      if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
+	        {
+	          NameSize *= sizeof(WCHAR);
+	        }
+	      if (MaxName < NameSize)
+	        {
+	          MaxName = NameSize;
+	        }
 	    }
 	}
     }
@@ -2041,40 +2079,68 @@ CmiGetMaxNameLength(PREGISTRY_HIVE  RegistryHive,
 
 
 ULONG
-CmiGetMaxClassLength(PREGISTRY_HIVE  RegistryHive,
-		     PKEY_CELL  KeyCell)
+CmiGetMaxClassLength(PKEY_OBJECT  KeyObject)
 {
   PHASH_TABLE_CELL HashBlock;
+  PKEY_OBJECT CurKey;
   PKEY_CELL CurSubKeyCell;
+  PKEY_CELL KeyCell;
   ULONG MaxClass;
   ULONG i;
 
+  VERIFY_KEY_OBJECT(KeyObject);
+
+  KeyCell = KeyObject->KeyCell;
   VERIFY_KEY_CELL(KeyCell);
 
   MaxClass = 0;
-  HashBlock = CmiGetBlock(RegistryHive, KeyCell->HashTableOffset, NULL);
+  HashBlock = CmiGetBlock(KeyObject->RegistryHive, 
+                          KeyCell->HashTableOffset, 
+			  NULL);
   if (HashBlock == NULL)
     {
       DPRINT("CmiGetBlock() failed\n");
-      return 0;
     }
-
-  for (i = 0; i < HashBlock->HashTableSize; i++)
+  else
     {
-      if (HashBlock->Table[i].KeyOffset != 0)
-	{
-	  CurSubKeyCell = CmiGetBlock(RegistryHive,
-				      HashBlock->Table[i].KeyOffset,
-				      NULL);
-	  if (CurSubKeyCell == NULL)
+      for (i = 0; i < HashBlock->HashTableSize; i++)
+        {
+          if (HashBlock->Table[i].KeyOffset != 0)
 	    {
-	      DPRINT("CmiGetBlock() failed\n");
-	      return 0;
-	    }
+	      CurSubKeyCell = CmiGetBlock(KeyObject->RegistryHive,
+				          HashBlock->Table[i].KeyOffset,
+				          NULL);
+	      if (CurSubKeyCell == NULL)
+	        {
+	          DPRINT("CmiGetBlock() failed\n");
+	          continue;
+	        }
 
-	  if (MaxClass < CurSubKeyCell->ClassSize)
+	      if (MaxClass < CurSubKeyCell->ClassSize)
+	        {
+	          MaxClass = CurSubKeyCell->ClassSize;
+	        }
+	    }
+	}
+    }
+  if (KeyObject->RegistryHive != CmiVolatileHive)
+    {
+      DPRINT("KeyObject->NumberOfSubKeys %d\n", KeyObject->NumberOfSubKeys);
+      for (i = 0; i < KeyObject->NumberOfSubKeys; i++)
+        {
+	  CurKey = KeyObject->SubKeys[i];
+	  if (CurKey->RegistryHive == CmiVolatileHive)
 	    {
-	      MaxClass = CurSubKeyCell->ClassSize;
+	      CurSubKeyCell = CurKey->KeyCell;
+	      if (CurSubKeyCell == NULL)
+	        {
+                  DPRINT("CmiGetBlock() failed\n");
+	          continue;
+	        }
+	      if (MaxClass < CurSubKeyCell->ClassSize)
+	        {
+	          MaxClass = CurSubKeyCell->ClassSize;
+	        }
 	    }
 	}
     }
@@ -2090,6 +2156,7 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
   ULONG MaxValueName;
+  ULONG Size;
   ULONG i;
 
   VERIFY_KEY_CELL(KeyCell);
@@ -2114,10 +2181,17 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
 	  DPRINT("CmiGetBlock() failed\n");
 	}
 
-      if (CurValueCell != NULL &&
-          MaxValueName < CurValueCell->NameSize)
+      if (CurValueCell != NULL)
         {
-          MaxValueName = CurValueCell->NameSize;
+	  Size = CurValueCell->NameSize;
+	  if (CurValueCell->Flags & REG_VALUE_NAME_PACKED)
+	    {
+	      Size *= sizeof(WCHAR);
+	    }
+          if (MaxValueName < Size)
+            {
+              MaxValueName = Size;
+	    }
         }
     }
 
@@ -2519,7 +2593,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
   if (ParentKey->KeyCell->HashTableOffset != (BLOCK_OFFSET) -1)
     {
       DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
-      HashBlock = CmiGetBlock(RegistryHive,
+      HashBlock = CmiGetBlock(ParentKey->RegistryHive,
 			      ParentKey->KeyCell->HashTableOffset,
 			      NULL);
       if (HashBlock == NULL)
@@ -2530,10 +2604,10 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
       DPRINT("ParentKey HashBlock %p\n", HashBlock)
       if (HashBlock != NULL)
 	{
-	  CmiRemoveKeyFromHashTable(RegistryHive,
+	  CmiRemoveKeyFromHashTable(ParentKey->RegistryHive,
 				    HashBlock,
 				    SubKey->BlockOffset);
-	  CmiMarkBlockDirty(RegistryHive,
+	  CmiMarkBlockDirty(ParentKey->RegistryHive,
 			    ParentKey->KeyCell->HashTableOffset);
 	}
     }
@@ -2570,7 +2644,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
       if (ParentKey->KeyCell->NumberOfSubKeys == 0)
 	{
 	  DPRINT("ParentKey HashTableOffset %lx\n", ParentKey->KeyCell->HashTableOffset)
-	  HashBlock = CmiGetBlock(RegistryHive,
+	  HashBlock = CmiGetBlock(ParentKey->RegistryHive,
 				  ParentKey->KeyCell->HashTableOffset,
 				  NULL);
 	  if (HashBlock == NULL)
@@ -2581,7 +2655,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	  DPRINT("ParentKey HashBlock %p\n", HashBlock)
 	  if (HashBlock != NULL)
 	    {
-	      CmiDestroyBlock(RegistryHive,
+	      CmiDestroyBlock(ParentKey->RegistryHive,
 			      HashBlock,
 			      ParentKey->KeyCell->HashTableOffset);
 	      ParentKey->KeyCell->HashTableOffset = -1;
@@ -2589,7 +2663,7 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 	}
 
       NtQuerySystemTime(&ParentKey->KeyCell->LastWriteTime);
-      CmiMarkBlockDirty(RegistryHive,
+      CmiMarkBlockDirty(ParentKey->RegistryHive,
 			ParentKey->BlockOffset);
     }
 
