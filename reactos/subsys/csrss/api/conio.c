@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.15 2001/01/21 00:11:54 phreak Exp $
+/* $Id: conio.c,v 1.16 2001/01/24 05:13:12 phreak Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -747,14 +747,14 @@ VOID Console_Api( DWORD RefreshEvent )
 	     ActiveConsole->WaitingLines++;
 	}
       KeyEventRecord->Echoed = FALSE;
-      if( ActiveConsole->Mode & ENABLE_PROCESSED_INPUT && KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' )
+      if( ActiveConsole->Mode & ENABLE_PROCESSED_INPUT && KeyEventRecord->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' && KeyEventRecord->InputEvent.Event.KeyEvent.bKeyDown )
 	 {
 	    // walk the input queue looking for a char to backspace
 	    for( TempInput = (ConsoleInput *)ActiveConsole->InputEvents.Blink;
 		 TempInput != (ConsoleInput *)&ActiveConsole->InputEvents &&
 		 (TempInput->InputEvent.EventType != KEY_EVENT ||
-		 (TempInput->InputEvent.Event.KeyEvent.bKeyDown == FALSE &&
-		  TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' ));
+		 TempInput->InputEvent.Event.KeyEvent.bKeyDown == FALSE ||
+		 TempInput->InputEvent.Event.KeyEvent.uChar.AsciiChar == '\b' );
 		 TempInput = (ConsoleInput *)TempInput->ListEntry.Blink );
 	    // if we found one, delete it, otherwise, wake the client
 	    if( TempInput != (ConsoleInput *)&ActiveConsole->InputEvents )
@@ -871,7 +871,6 @@ NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_
    Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
    Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) -
      sizeof(LPC_MESSAGE_HEADER);
-
    RtlEnterCriticalSection( &ActiveConsoleLock );
    if( !NT_SUCCESS( CsrGetObject( ProcessData, Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle, (Object_t **)&Buff ) ) || Buff->Header.Type != CSRSS_SCREEN_BUFFER_MAGIC )
       {
@@ -880,6 +879,8 @@ NTSTATUS CsrWriteConsoleOutputChar( PCSRSS_PROCESS_DATA ProcessData, PCSRSS_API_
       }
    X = Buff->CurrentX;
    Y = Buff->CurrentY;
+   Buff->CurrentX = Request->Data.WriteConsoleOutputCharRequest.Coord.X;
+   Buff->CurrentY = Request->Data.WriteConsoleOutputCharRequest.Coord.Y;
    CsrpWriteConsole( Buff, Buffer, Request->Data.WriteConsoleOutputCharRequest.Length, TRUE );
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.X = Buff->CurrentX - Buff->ShowX;
    Reply->Data.WriteConsoleOutputCharReply.EndCoord.Y = (Buff->CurrentY + Buff->MaxY - Buff->ShowY) % Buff->MaxY;
