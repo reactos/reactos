@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: settings.c,v 1.5 2004/08/15 22:29:50 chorns Exp $
+/* $Id: settings.c,v 1.6 2004/11/15 14:41:25 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/settings.c
@@ -574,41 +574,6 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 			  REG_SZ,
 			  (PVOID)(LanguageId + 4),
 			  8);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-      NtClose(KeyHandle);
-      return FALSE;
-    }
-
-  NtClose(KeyHandle);
-
-  /* Open the nls locale key */
-  RtlInitUnicodeString(&KeyName,
-		       L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Locale");
-  InitializeObjectAttributes(&ObjectAttributes,
-			     &KeyName,
-			     OBJ_CASE_INSENSITIVE,
-			     NULL,
-			     NULL);
-  Status =  NtOpenKey(&KeyHandle,
-		      KEY_ALL_ACCESS,
-		      &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    {
-      DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
-      return FALSE;
-    }
-
-  /* Set default locale */
-  RtlInitUnicodeString(&ValueName,
-		       L"(Default)");
-  Status = NtSetValueKey (KeyHandle,
-			  &ValueName,
-			  0,
-			  REG_SZ,
-			  (PVOID)LanguageId,
-			  16);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
