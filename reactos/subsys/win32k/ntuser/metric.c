@@ -1,4 +1,4 @@
-/* $Id: metric.c,v 1.4 2002/09/03 22:44:21 dwelch Exp $
+/* $Id: metric.c,v 1.5 2002/09/28 22:13:28 jfilby Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -58,6 +58,9 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CXSIZE:
     case SM_CYSIZE:
       return(18);
+    case SM_CXSMSIZE:
+    case SM_CYSMSIZE:
+      return(14);
     default:
       return(0xFFFFFFFF);
     }

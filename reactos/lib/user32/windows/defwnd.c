@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.12 2002/09/25 21:21:36 dwelch Exp $
+/* $Id: defwnd.c,v 1.13 2002/09/28 22:13:28 jfilby Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -240,8 +240,8 @@ static void UserDrawMaxButton( HWND hwnd, HDC hdc, BOOL down )
     SelectObject( hdcMem,  (IsZoomed(hwnd) 
 			    ? (down ? hbitmapRestoreD : hbitmapRestore)
 			    : (down ? hbitmapMaximizeD : hbitmapMaximize)) );
-    BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSIZE) - 1, rect.top,
-	    GetSystemMetrics(SM_CXSIZE) + 1, GetSystemMetrics(SM_CYSIZE), hdcMem, 0, 0,
+    BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
+	    GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), hdcMem, 0, 0,
 	    SRCCOPY );
     DeleteDC( hdcMem );
 }
@@ -256,10 +256,10 @@ static void UserDrawMinButton( HWND hwnd, HDC hdc, BOOL down)
   SelectObject(hdcMem, (down ? hbitmapMinimizeD : hbitmapMinimize));
   if (GetWindowLong(hwnd, GWL_STYLE) & WS_MAXIMIZEBOX) 
     {
-      rect.right -= GetSystemMetrics(SM_CXSIZE)+1;
+      rect.right -= GetSystemMetrics(SM_CXSMSIZE)+1;
     }
-  BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSIZE) - 1, rect.top,
-	  GetSystemMetrics(SM_CXSIZE) + 1, GetSystemMetrics(SM_CYSIZE), 
+  BitBlt( hdc, rect.right - GetSystemMetrics(SM_CXSMSIZE) - 1, rect.top,
+	  GetSystemMetrics(SM_CXSMSIZE) + 1, GetSystemMetrics(SM_CYSMSIZE), 
 	  hdcMem, 0, 0,
 	  SRCCOPY );
   DeleteDC( hdcMem );
@@ -306,12 +306,12 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
   if (style & WS_MAXIMIZEBOX)
     {
       UserDrawMaxButton( hwnd, hdc, FALSE );
-      r.right -= GetSystemMetrics(SM_CXSIZE) + 1;
+      r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     }
   if (style & WS_MINIMIZEBOX)
     {
       UserDrawMinButton( hwnd, hdc, FALSE );
-      r.right -= GetSystemMetrics(SM_CXSIZE) + 1;
+      r.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
     }
   
   FillRect( hdc, &r, GetSysColorBrush(active ? COLOR_ACTIVECAPTION :
@@ -598,7 +598,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MAXIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {
@@ -607,7 +607,7 @@ DefWndHitTestNC(HWND hWnd, POINT Point)
 
 	  if (Style & WS_MINIMIZEBOX)
 	    {
-	      WindowRect.right -= GetSystemMetrics(SM_CXSIZE) + 1;
+	      WindowRect.right -= GetSystemMetrics(SM_CXSMSIZE) + 1;
 	    }
 	  if (Point.x >= WindowRect.right)
 	    {
