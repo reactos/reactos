@@ -52,7 +52,7 @@ char tempGP[1024];
 //*************************************************************************
 void HandleGPFault(FRAME* ptr)
 {
-    DPRINT((0,"HandleGPFault(): ptr = %x at eip: %x\n",ptr, ptr->eip));
+	DPRINT((0,"HandleGPFault(): ptr = %x at eip: %x\n",ptr, ptr->eip));
 }
 
 //*************************************************************************
@@ -67,24 +67,33 @@ NewGPFaultHandler:\n\t \
         pushal\n\t \
 	    pushl %ds\n\t \
 \n\t \
-	    // setup default data selectors\n\t \
+		// test for v86 mode.
+ 		testl $0x20000,40(%esp)\n\t \
+		jnz notv86\n\t \
+		popl %ds\n\t \
+        popal\n\t \
+		popfl\n\t \
+		.byte 0x2e\n\t \
+		jmp *_OldGPFaultHandler\n\t \
+notv86:\n\t \
+		// setup default data selectors\n\t \
 	    movw %ss,%ax\n\t \
 	    movw %ax,%ds\n\t \
 \n\t \
         // get frame ptr\n\t \
         lea 40(%esp),%eax\n\t \
-        pushl %eax\n\t \
+		pushl %eax\n\t \
         call _HandleGPFault\n\t \
         addl $4,%esp\n\t \
-\n\t \
-	    popl %ds\n\t \
+\n \t \
+		popl %ds\n\t \
         popal\n\t \
 		popfl\n\t \
 		// remove error code from stack and replace with reason code\n\t \
         movl $" STR(REASON_GP_FAULT) ",(%esp)\n\t \
 		// call debugger loop\n\t \
-		jmp NewInt31Handler");
-
+		jmp NewInt31Handler\n\t \
+		");
 
 //*************************************************************************
 // InstallGPFaultHook()
