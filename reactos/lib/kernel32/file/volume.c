@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.40 2004/02/25 09:55:30 gvg Exp $
+/* $Id: volume.c,v 1.41 2004/08/24 17:15:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -448,7 +448,25 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 		return 0;	
 	}
 	CloseHandle(hFile);
-	return (UINT)FileFsDevice.DeviceType;
+
+        switch (FileFsDevice.DeviceType)
+        {
+		case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
+			return DRIVE_CDROM;
+	        case FILE_DEVICE_VIRTUAL_DISK:
+	        	return DRIVE_RAMDISK;
+	        case FILE_DEVICE_NETWORK_FILE_SYSTEM:
+	        	return DRIVE_REMOTE;
+	        case FILE_DEVICE_DISK:
+	        case FILE_DEVICE_DISK_FILE_SYSTEM:
+			if (FileFsDevice.Characteristics & FILE_REMOTE_DEVICE)
+				return DRIVE_REMOTE;
+			if (FileFsDevice.Characteristics & FILE_REMOVABLE_MEDIA)
+				return DRIVE_REMOVABLE;
+			return DRIVE_FIXED;
+        }
+
+	return DRIVE_UNKNOWN;
 }
 
 

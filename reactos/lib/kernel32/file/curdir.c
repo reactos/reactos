@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.43 2004/06/06 17:29:57 hbirr Exp $
+/* $Id: curdir.c,v 1.44 2004/08/24 17:15:42 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -270,10 +270,10 @@ GetSystemDirectoryA (
 	ULONG Length;
 	NTSTATUS Status;
 
-	if (lpBuffer == NULL)
-		return 0;
-
 	Length = RtlUnicodeStringToAnsiSize (&SystemDirectory);	  //len of ansi str incl. nullchar
+
+	if (lpBuffer == NULL)
+		return Length;
 
 	if (uSize >= Length){
 		String.Length = 0;
@@ -312,10 +312,11 @@ GetSystemDirectoryW (
 {
 	ULONG Length;
 
-	if (lpBuffer == NULL)
-		return 0;
-
 	Length = SystemDirectory.Length / sizeof (WCHAR);
+
+	if (lpBuffer == NULL)
+		return Length + 1;
+
 	if (uSize > Length)	{
 		memmove (lpBuffer,
 		         SystemDirectory.Buffer,
@@ -342,11 +343,11 @@ GetWindowsDirectoryA (
 	ULONG Length;
 	NTSTATUS Status;
 
-	if (lpBuffer == NULL)
-		return 0;
-
 	Length = RtlUnicodeStringToAnsiSize (&WindowsDirectory); //len of ansi str incl. nullchar
 	
+	if (lpBuffer == NULL)
+		return Length;
+
 	if (uSize >= Length){
 
 		String.Length = 0;
@@ -385,10 +386,11 @@ GetWindowsDirectoryW (
 {
 	ULONG Length;
 
-	if (lpBuffer == NULL)
-		return 0;
-
 	Length = WindowsDirectory.Length / sizeof (WCHAR);
+
+	if (lpBuffer == NULL)
+		return Length + 1;
+
 	if (uSize > Length)
 	{
 		memmove (lpBuffer,
