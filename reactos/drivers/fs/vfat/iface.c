@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.57 2001/07/20 08:00:20 ekohl Exp $
+/* $Id: iface.c,v 1.58 2001/10/10 22:18:58 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -8,14 +8,14 @@
  * UPDATE HISTORY:
  *    ??           Created
  *   24-10-1998   Fixed bugs in long filename support
- *                Fixed a bug that prevented unsuccessful file open requests 
+ *                Fixed a bug that prevented unsuccessful file open requests
  *                being reported
- *                Now works with long filenames that span over a sector 
+ *                Now works with long filenames that span over a sector
  *                boundary
  *   28-10-1998   Reads entire FAT into memory
  *                VFatReadSector modified to read in more than one sector at a
  *                time
- *   7-11-1998    Fixed bug that assumed that directory data could be 
+ *   7-11-1998    Fixed bug that assumed that directory data could be
  *                fragmented
  *   8-12-1998    Added FAT32 support
  *                Added initial writability functions
@@ -46,7 +46,7 @@ static NTSTATUS
 VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 		  PBOOLEAN RecognizedFS)
 /*
- * FUNCTION: Tests if the device contains a filesystem that can be mounted 
+ * FUNCTION: Tests if the device contains a filesystem that can be mounted
  *           by this fsd
  */
 {
@@ -162,6 +162,8 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
   PDEVICE_EXTENSION DeviceExt;
   BOOLEAN RecognizedFS;
   NTSTATUS Status;
+  PVFATFCB Fcb;
+  PVFATCCB Ccb;
 
   Status = VfatHasFileSystem (DeviceToMount, &RecognizedFS);
   if (!NT_SUCCESS(Status))
@@ -227,34 +229,65 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
 	       ((struct _BootSector32*)(DeviceExt->Boot))->BootBackup);
     }
 #endif
-
   DeviceObject->Vpb->Flags |= VPB_MOUNTED;
   DeviceExt->StorageDevice = IoAttachDeviceToDeviceStack(DeviceObject,
 							 DeviceToMount);
-  DeviceExt->StreamStorageDevice = IoCreateStreamFileObject(NULL,
-							    DeviceExt->StorageDevice);
-  Status = CcRosInitializeFileCache(DeviceExt->StreamStorageDevice,
-				    &DeviceExt->StorageBcb,
-				    CACHEPAGESIZE(DeviceExt));
-  if (!NT_SUCCESS(Status))
-    {
-      /* FIXME: delete device object */
-      return(Status);
-    }
 
-  if (DeviceExt->FatType == FAT12)
+  DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
+  Fcb = vfatNewFCB(NULL);
+  if (Fcb == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  Ccb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
+  if (Ccb == NULL)
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
+  memset(Ccb, 0, sizeof (VFATCCB));
+  DeviceExt->FATFileObject->Flags = DeviceExt->FATFileObject->Flags | FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
+  DeviceExt->FATFileObject->FsContext = (PVOID) &Fcb->RFCB;
+  DeviceExt->FATFileObject->FsContext2 = Ccb;
+  Ccb->pFcb = Fcb;
+  Ccb->PtrFileObject = DeviceExt->FATFileObject;
+  Fcb->FileObject = DeviceExt->FATFileObject;
+  Fcb->pDevExt = (PDEVICE_EXTENSION)DeviceExt->StorageDevice;
+
+  Fcb->Flags = FCB_IS_FAT;
+
+  if (DeviceExt->FatType == FAT32)
+  {
+    Fcb->RFCB.FileSize.QuadPart = ((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32 * BLOCKSIZE;
+    Fcb->RFCB.ValidDataLength.QuadPart = ((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32 * BLOCKSIZE;
+    Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(((struct _BootSector32 *)DeviceExt->Boot)->FATSectors32 * BLOCKSIZE, CACHEPAGESIZE(DeviceExt));
+    Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, CACHEPAGESIZE(DeviceExt));
+  }
+  else
+  {
+    if (DeviceExt->FatType == FAT16)
     {
-      DeviceExt->Fat12StorageDevice =
-	IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
-      Status = CcRosInitializeFileCache(DeviceExt->Fat12StorageDevice,
-				        &DeviceExt->Fat12StorageBcb,
-				        PAGESIZE * 3);
-      if (!NT_SUCCESS(Status))
-	{
-	  /* FIXME: delete device object */
-	  return(Status);
-	}
+      Fcb->RFCB.FileSize.QuadPart = DeviceExt->Boot->FATSectors * BLOCKSIZE;
+      Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->Boot->FATSectors * BLOCKSIZE;
+      Fcb->RFCB.AllocationSize.QuadPart = ROUND_UP(DeviceExt->Boot->FATSectors * BLOCKSIZE, CACHEPAGESIZE(DeviceExt));
+      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, CACHEPAGESIZE(DeviceExt));
     }
+    else
+    {
+      Fcb->RFCB.FileSize.QuadPart = DeviceExt->Boot->FATSectors * BLOCKSIZE;
+      Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->Boot->FATSectors * BLOCKSIZE;
+      Fcb->RFCB.AllocationSize.QuadPart = 2 * PAGESIZE;
+      Status = CcRosInitializeFileCache(DeviceExt->FATFileObject, &Fcb->RFCB.Bcb, 2 * PAGESIZE);
+    }
+  }
+  if (!NT_SUCCESS (Status))
+  {
+     DbgPrint ("CcRosInitializeFileCache failed\n");
+//     KeBugCheck (0);
+     // FIXME: delete device object
+     return(Status);
+  }
+
+
   ExInitializeResourceLite(&DeviceExt->DirResource);
   ExInitializeResourceLite(&DeviceExt->FatResource);
 
@@ -270,8 +303,7 @@ VfatMount (PDEVICE_OBJECT DeviceToMount)
       ((struct _BootSector32 *) (DeviceExt->Boot))->VolumeID;
 
   /* read volume label */
-  ReadVolumeLabel(DeviceExt,
-		  DeviceObject->Vpb);
+  ReadVolumeLabel(DeviceExt,  DeviceObject->Vpb);
 
   return(STATUS_SUCCESS);
 }
