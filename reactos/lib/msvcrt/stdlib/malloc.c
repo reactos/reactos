@@ -11,7 +11,7 @@ static int MSVCRT_new_mode;
 /* ??2@YAPAXI@Z (MSVCRT.@) */
 void* MSVCRT_operator_new(unsigned long size)
 {
-  void *retval = HeapAlloc(GetProcessHeap(), 0, size);
+  void *retval = HeapAlloc(hHeap, 0, size);
 
 /*  FIXME: LOCK_HEAP; */
   if(!retval && MSVCRT_new_handler)
@@ -24,7 +24,7 @@ void* MSVCRT_operator_new(unsigned long size)
 /* ??3@YAXPAX@Z (MSVCRT.@) */
 void MSVCRT_operator_delete(void *mem)
 {
-  HeapFree(GetProcessHeap(), 0, mem);
+  HeapFree(hHeap, 0, mem);
 }
 
 /* ?_set_new_handler@@YAP6AHI@ZP6AHI@Z@Z (MSVCRT.@) */
@@ -75,7 +75,7 @@ void* realloc(void* _ptr, size_t _size)
  */
 void* _expand(void* _ptr, size_t _size)
 {
-   return HeapReAlloc(GetProcessHeap(), HEAP_REALLOC_IN_PLACE_ONLY, _ptr, _size);
+   return HeapReAlloc(hHeap, HEAP_REALLOC_IN_PLACE_ONLY, _ptr, _size);
 }
 
 /*
@@ -83,7 +83,7 @@ void* _expand(void* _ptr, size_t _size)
  */
 size_t _msize(void* _ptr)
 {
-   return HeapSize(GetProcessHeap(), 0, _ptr);
+   return HeapSize(hHeap, 0, _ptr);
 }
 
 /* ?_set_new_mode@@YAHH@Z (MSVCRT.@) */
@@ -102,7 +102,7 @@ int MSVCRT__set_new_mode(int mode)
  */
 int	_heapchk(void)
 {
-	if (!HeapValidate(GetProcessHeap(), 0, NULL))
+	if (!HeapValidate(hHeap, 0, NULL))
 		return -1;
 	return 0;
 }
@@ -112,7 +112,7 @@ int	_heapchk(void)
  */
 int	_heapmin(void)
 {
-	if (!HeapCompact(GetProcessHeap(), 0))
+	if (!HeapCompact(hHeap, 0))
 		return -1;
 	return 0;
 }
