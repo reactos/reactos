@@ -220,7 +220,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                                                         NewCursor->IconInfo.yHotspot,
                                                         CurInfo->x, 
                                                         CurInfo->y, 
-                                                        NULL,
+                                                        &(GDIDEV(SurfObj)->Pointer.Exclude),
                                                         SPS_CHANGE);
       DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
          GDIDEV(SurfObj)->Pointer.Status);
@@ -238,7 +238,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                          NewCursor->IconInfo.yHotspot,
                          CurInfo->x, 
                          CurInfo->y, 
-                         NULL,
+                         &(GDIDEV(SurfObj)->Pointer.Exclude),
                          SPS_CHANGE);
       GDIDEV(SurfObj)->Pointer.MovePointer = EngMovePointer;
     }
