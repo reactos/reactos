@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.38 2003/08/05 15:41:03 weiden Exp $ */
+/* $Id: text.c,v 1.39 2003/08/09 12:03:10 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -682,6 +682,18 @@ W32kGetTextExtentExPoint(HDC hDC,
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
+  if (0 == Count)
+    {
+      Size.cx = 0;
+      Size.cy = 0;
+      Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+      return TRUE;
+    }
 
   String = ExAllocatePool(PagedPool, Count * sizeof(WCHAR));
   if (NULL == String)
@@ -806,6 +818,18 @@ W32kGetTextExtentPoint32(HDC hDC,
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
+    }
+  if (0 == Count)
+    {
+      Size.cx = 0;
+      Size.cy = 0;
+      Status = MmCopyToCaller(UnsafeSize, &Size, sizeof(SIZE));
+      if (! NT_SUCCESS(Status))
+	{
+	  SetLastNtError(Status);
+	  return FALSE;
+	}
+      return TRUE;
     }
 
   String = ExAllocatePool(PagedPool, Count * sizeof(WCHAR));
