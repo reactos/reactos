@@ -1,8 +1,0 @@
-unix-def.mk
-unix-cc.mk
-config.status
-config.cache
-config.log
-libtool
-ftconfig.h
-freetype-config
