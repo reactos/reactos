@@ -59,6 +59,7 @@ VOID	MmAllocatePagesInLookupTable(PVOID PageLookupTable, ULONG StartPage, ULONG 
 ULONG	MmCountFreePagesInLookupTable(PVOID PageLookupTable, ULONG TotalPageCount);	// Returns the number of free pages in the lookup table
 ULONG	MmFindAvailablePagesFromEnd(PVOID PageLookupTable, ULONG TotalPageCount, ULONG PagesNeeded);	// Returns the page number of the first available page range from the end of memory
 VOID	MmFixupSystemMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32], PULONG MapCount);	// Removes entries in the memory map that describe memory above 4G
-VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCountVOID);	// Sets the LastFreePageHint to the last usable page of memory
+VOID	MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount);	// Sets the LastFreePageHint to the last usable page of memory
+BOOL	MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount);	// Returns TRUE if the specified pages of memory are available, otherwise FALSE
 
 #endif // defined __MEM_H

@@ -86,6 +86,58 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 	return MemPointer;
 }
 
+PVOID MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress)
+{
+	ULONG	PagesNeeded;
+	ULONG	StartPageNumber;
+	PVOID	MemPointer;
+
+	if (MemorySize == 0)
+	{
+		DbgPrint((DPRINT_MEMORY, "MmAllocateMemoryAtAddress() called for 0 bytes. Returning NULL.\n"));
+		UiMessageBoxCritical("Memory allocation failed: MmAllocateMemoryAtAddress() called for 0 bytes.");
+		return NULL;
+	}
+
+	// Find out how many blocks it will take to
+	// satisfy this allocation
+	PagesNeeded = ROUND_UP(MemorySize, MM_PAGE_SIZE) / MM_PAGE_SIZE;
+
+	// Get the starting page number
+	StartPageNumber = MmGetPageNumberFromAddress(DesiredAddress);
+
+	// If we don't have enough available mem
+	// then return NULL
+	if (FreePagesInLookupTable < PagesNeeded)
+	{
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		return NULL;
+	}
+
+	if (MmAreMemoryPagesAvailable(PageLookupTableAddress, TotalPagesInLookupTable, DesiredAddress, PagesNeeded) == FALSE)
+	{
+		DbgPrint((DPRINT_MEMORY, "Memory allocation failed. Not enough free memory to allocate %d bytes. AllocationCount: %d\n", MemorySize, AllocationCount));
+		UiMessageBoxCritical("Memory allocation failed: out of memory.");
+		return NULL;
+	}
+
+	MmAllocatePagesInLookupTable(PageLookupTableAddress, StartPageNumber, PagesNeeded);
+
+	FreePagesInLookupTable -= PagesNeeded;
+	MemPointer = (PVOID)(StartPageNumber * MM_PAGE_SIZE);
+
+#ifdef DEBUG
+	IncrementAllocationCount();
+	DbgPrint((DPRINT_MEMORY, "Allocated %d bytes (%d pages) of memory starting at page %d. AllocCount: %d\n", MemorySize, PagesNeeded, StartPageNumber, AllocationCount));
+	DbgPrint((DPRINT_MEMORY, "Memory allocation pointer: 0x%x\n", MemPointer));
+	//VerifyHeap();
+#endif // DEBUG
+
+	// Now return the pointer
+	return MemPointer;
+}
+
 VOID MmFreeMemory(PVOID MemoryPointer)
 {
 	ULONG						PageNumber;

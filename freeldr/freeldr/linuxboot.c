@@ -41,6 +41,8 @@ UCHAR				LinuxInitrdName[260];
 BOOL				LinuxHasInitrd = FALSE;
 UCHAR				LinuxCommandLine[260] = "";
 ULONG				LinuxCommandLineSize = 0;
+PVOID				LinuxKernelLoadAddress = NULL;
+PVOID				LinuxInitrdLoadAddress = NULL;
 
 VOID LoadAndBootLinux(PUCHAR OperatingSystemName)
 {
@@ -150,9 +152,19 @@ LinuxBootFailed:
 	{
 		MmFreeMemory(LinuxSetupSector);
 	}
+	if (LinuxKernelLoadAddress != NULL)
+	{
+		MmFreeMemory(LinuxKernelLoadAddress);
+	}
+	if (LinuxInitrdLoadAddress != NULL)
+	{
+		MmFreeMemory(LinuxInitrdLoadAddress);
+	}
 
 	LinuxBootSector = NULL;
 	LinuxSetupSector = NULL;
+	LinuxKernelLoadAddress = NULL;
+	LinuxInitrdLoadAddress = NULL;
 	SetupSectorSize = 0;
 	NewStyleLinuxKernel = FALSE;
 	LinuxKernelSize = 0;
@@ -320,9 +332,9 @@ BOOL LinuxReadSetupSector(PFILE LinuxKernelFile)
 
 BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 {
-	PVOID	LoadAddress = (PVOID)LINUX_KERNEL_LOAD_ADDRESS;
 	ULONG	BytesLoaded;
 	UCHAR	StatusText[260];
+	PVOID	LoadAddress;
 
 	sprintf(StatusText, "Loading %s", LinuxKernelName);
 	UiDrawStatusText(StatusText);
@@ -330,6 +342,15 @@ BOOL LinuxReadKernel(PFILE LinuxKernelFile)
 
 	// Calc kernel size
 	LinuxKernelSize = GetFileSize(LinuxKernelFile) - (512 + SetupSectorSize);
+
+	// Allocate memory for Linux kernel
+	LinuxKernelLoadAddress = MmAllocateMemoryAtAddress(LinuxKernelSize, (PVOID)LINUX_KERNEL_LOAD_ADDRESS);
+	if (LinuxKernelLoadAddress != (PVOID)LINUX_KERNEL_LOAD_ADDRESS)
+	{
+		return FALSE;
+	}
+
+	LoadAddress = LinuxKernelLoadAddress;
 
 	// Read linux kernel to 0x100000 (1mb)
 	SetFilePointer(LinuxKernelFile, 512 + SetupSectorSize);
@@ -391,7 +412,6 @@ BOOL LinuxReadInitrd(VOID)
 	PFILE	LinuxInitrdFile;
 	UCHAR	TempString[260];
 	ULONG	LinuxInitrdSize;
-	ULONG	LinuxInitrdLoadAddress;
 	ULONG	BytesLoaded;
 	UCHAR	StatusText[260];
 
@@ -411,19 +431,15 @@ BOOL LinuxReadInitrd(VOID)
 	// Get the file size
 	LinuxInitrdSize = GetFileSize(LinuxInitrdFile);
 
-	// Calculate the load address
-	if (GetExtendedMemorySize() < 0x4000)
+	// Allocate memory for the ramdisk
+	LinuxInitrdLoadAddress = MmAllocateMemory(LinuxInitrdSize);
+	if (LinuxInitrdLoadAddress == NULL)
 	{
-		LinuxInitrdLoadAddress = GetExtendedMemorySize() * 1024; // Load at end of memory
+		return FALSE;
 	}
-	else
-	{
-		LinuxInitrdLoadAddress = 0x4000 * 1024; // Load at end of 16mb
-	}
-	LinuxInitrdLoadAddress -= ROUND_UP(LinuxInitrdSize, 4096);
 
 	// Set the information in the setup struct
-	LinuxSetupSector->RamdiskAddress = LinuxInitrdLoadAddress;
+	LinuxSetupSector->RamdiskAddress = (ULONG)LinuxInitrdLoadAddress;
 	LinuxSetupSector->RamdiskSize = LinuxInitrdSize;
 
 	// Read in the ramdisk

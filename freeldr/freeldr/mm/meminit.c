@@ -400,3 +400,31 @@ VOID MmUpdateLastFreePageHint(PVOID PageLookupTable, ULONG TotalPageCount)
 		}
 	}
 }
+
+BOOL MmAreMemoryPagesAvailable(PVOID PageLookupTable, ULONG TotalPageCount, PVOID PageAddress, ULONG PageCount)
+{
+	PPAGE_LOOKUP_TABLE_ITEM		RealPageLookupTable = (PPAGE_LOOKUP_TABLE_ITEM)PageLookupTable;
+	ULONG						StartPage;
+	ULONG						Index;
+
+	StartPage = MmGetPageNumberFromAddress(PageAddress);
+
+	// Make sure they aren't trying to go past the
+	// end of availabe memory
+	if ((StartPage + PageCount) > TotalPageCount)
+	{
+		return FALSE;
+	}
+
+	for (Index=StartPage; Index<(StartPage + PageCount); Index++)
+	{
+		// If this page is allocated then there obviously isn't
+		// memory availabe so return FALSE
+		if (RealPageLookupTable[Index].PageAllocated != 0)
+		{
+			return FALSE;
+		}
+	}
+
+	return TRUE;
+}

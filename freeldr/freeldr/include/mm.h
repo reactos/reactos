@@ -48,19 +48,12 @@ ULONG	GetBiosMemoryMap(BIOS_MEMORY_MAP BiosMemoryMap[32]);	// Fills mem_map stru
 
 
 
-
-
-
-
-
-
-
 //BOOL	MmInitializeMemoryManager(ULONG LowMemoryStart, ULONG LowMemoryLength);
 BOOL	MmInitializeMemoryManager(VOID);
 PVOID	MmAllocateMemory(ULONG MemorySize);
 VOID	MmFreeMemory(PVOID MemoryPointer);
 //PVOID	MmAllocateLowMemory(ULONG MemorySize);
 //VOID	MmFreeLowMemory(PVOID MemoryPointer);
-//PVOID	MmAllocateMemoryFrom1Mb(ULONG MemorySize);
+PVOID	MmAllocateMemoryAtAddress(ULONG MemorySize, PVOID DesiredAddress);
 
 #endif // defined __MEMORY_H
