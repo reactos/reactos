@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dispatch.c,v 1.6 2004/06/20 16:05:47 navaraf Exp $
+ * $Id: dispatch.c,v 1.7 2004/12/19 15:56:53 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -132,7 +132,7 @@ IntVideoPortDispatchOpen(
    {
       Irp->IoStatus.Status = STATUS_SUCCESS;
 
-      InterlockedIncrement(&DeviceExtension->DeviceOpened);
+      InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
 
       /*
        * Storing the device extension pointer in a static variable is an
@@ -177,7 +177,7 @@ IntVideoPortDispatchClose(
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    if (DeviceExtension->DeviceOpened >= 1 &&
-       InterlockedDecrement(&DeviceExtension->DeviceOpened) == 0)
+       InterlockedDecrement((PLONG)&DeviceExtension->DeviceOpened) == 0)
    {
       ResetDisplayParametersDeviceExtension = DeviceExtension;
       HalReleaseDisplayOwnership();

@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.29 2004/12/19 15:51:51 navaraf Exp $
+ * $Id: videoprt.c,v 1.30 2004/12/19 15:56:53 navaraf Exp $
  */
 
 #include "videoprt.h"
@@ -104,8 +104,8 @@ IntVideoPortGetProcAddress(
       ((ULONG_PTR)BaseAddress + (ULONG_PTR)ExportDir->AddressOfNames);
    for (i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
    {
-      if (!_strnicmp(FunctionName, (char*)(BaseAddress + *NamePtr),
-                     strlen(FunctionName)))
+      if (!_strnicmp((PCHAR)FunctionName, (PCHAR)(BaseAddress + *NamePtr),
+                     strlen((PCHAR)FunctionName)))
       {
          return (PVOID)((ULONG_PTR)BaseAddress + 
                         (ULONG_PTR)AddressPtr[*OrdinalPtr]);	  
@@ -841,7 +841,7 @@ VideoPortScanRom(
 
    DPRINT("VideoPortScanRom RomBase %p RomLength 0x%x String %s\n", RomBase, RomLength, String);
 
-   StringLength = strlen(String);
+   StringLength = strlen((PCHAR)String);
    Found = FALSE;
    SearchLocation = RomBase;
    for (SearchLocation = RomBase;
