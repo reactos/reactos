@@ -359,8 +359,8 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 	if (pLastShellView)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
-		fs.ViewMode = FWF_SNAPTOGRID;
-		fs.fFlags = FVM_DETAILS;
+		fs.ViewMode = FVM_DETAILS;
+		fs.fFlags = 0;
 	}
 
 	HRESULT hr = folder->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);

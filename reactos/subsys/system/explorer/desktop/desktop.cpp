@@ -101,33 +101,40 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_CREATE: {
 			HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
 
-			HWND hWndListView = 0;
+			HWND hWndView = 0;
 
 			if (SUCCEEDED(hr)) {
 				FOLDERSETTINGS fs;
 
-				fs.ViewMode = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOSUBFOLDERS|FWF_BESTFITWINDOW|FWF_ABBREVIATEDNAMES;
-				fs.fFlags = FVM_ICON;
+				fs.ViewMode = FVM_ICON;
+				fs.fFlags = FWF_DESKTOP|FWF_TRANSPARENT|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
 
 				RECT rect;
 				GetClientRect(_hwnd, &rect);
 
-				hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndListView);
+				hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
+
+				//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state
 
 				if (SUCCEEDED(hr)) {
-					HWND hwndFolderView = ::GetNextWindow(hWndListView, GW_CHILD);
+					_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
+
+					HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
 
 					ShowWindow(hwndFolderView, SW_SHOW);
 				}
 			}
-
-			if (hWndListView && SetShellWindowEx)
-				SetShellWindowEx(_hwnd, hWndListView);
+ 
+			if (hWndView && SetShellWindowEx)
+				SetShellWindowEx(_hwnd, hWndView);
 			else if (SetShellWindow)
 				SetShellWindow(_hwnd);
 			break;}
 
 		case WM_DESTROY:
+
+			//TODO: use IShellBrowser::GetViewStateStream() and _pShellView->SaveViewState() to store view state
+			
 			if (SetShellWindow)
 				SetShellWindow(0);
 			break;
