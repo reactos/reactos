@@ -1,0 +1,86 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+#ifndef MS_COMPILER
+#include <reactos/resource.h>
+#include <defines.h>
+#else
+#include <../../../include/reactos/resource.h>
+#include <../../../include/defines.h>
+#endif
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDM_MAINMENU MENU DISCARDABLE 
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Close",                      CM_CLOSE
+    END
+    POPUP "&View"
+    BEGIN
+        MENUITEM "Large Icons",                 CM_LARGEICONS
+        MENUITEM "Small Icons",                 CM_SMALLICONS
+        MENUITEM "List",                        CM_LIST
+        MENUITEM "Details",                     CM_DETAILS
+    END
+    POPUP "Help"
+    BEGIN
+        MENUITEM "About",                       CM_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_MAINICON            ICON    DISCARDABLE     "resources\config.ico"
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD	
+	FILEFLAGSMASK	0x3fL
+#ifdef _DEBUG
+	FILEFLAGS	0x1L
+#else
+	FILEFLAGS	0x0L
+#endif
+	FILEOS		0x40004L
+	FILETYPE	0x2L
+	FILESUBTYPE	0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",	RES_STR_COMPANY_NAME
+            VALUE "FileDescription",	"ReactOS System Control Panel\0"
+            VALUE "FileVersion",	RES_STR_FILE_VERSION
+            VALUE "InternalName",	"control\0"
+            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalFilename",	"control.exe\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+

@@ -1,0 +1,14 @@
+*.coff
+*.cpl
+*.d
+*.a
+*.o
+*.sym
+*.map
+*.tmp
+
+*.ncb
+*.opt
+*.plg
+Debug
+Release

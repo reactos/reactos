@@ -1,0 +1,77 @@
+#include "resource.h"
+#ifdef _MSC_VER
+#include <../../../include/reactos/resource.h>
+#include <../../../include/defines.h>
+#else
+#include <reactos/resource.h>
+#include <defines.h>
+#endif
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+VS_VERSION_INFO VERSIONINFO
+	FILEVERSION	RES_UINT_FV_MAJOR,RES_UINT_FV_MINOR,RES_UINT_FV_REVISION,RES_UINT_FV_BUILD
+	PRODUCTVERSION	RES_UINT_PV_MAJOR,RES_UINT_PV_MINOR,RES_UINT_PV_REVISION,RES_UINT_PV_BUILD	
+	FILEFLAGSMASK	0x3fL
+#ifdef _DEBUG
+	FILEFLAGS	0x1L
+#else
+	FILEFLAGS	0x0L
+#endif
+	FILEOS		0x40004L
+	FILETYPE	0x2L
+	FILESUBTYPE	0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904b0"
+        BEGIN
+            VALUE "CompanyName",	RES_STR_COMPANY_NAME
+            VALUE "FileDescription",	"ReactOS Software Control Panel\0"
+            VALUE "FileVersion",	RES_STR_FILE_VERSION
+            VALUE "InternalName",	"appwiz\0"
+            VALUE "LegalCopyright",	RES_STR_LEGAL_COPYRIGHT
+            VALUE "OriginalFilename",	"appwiz.cpl\0"
+            VALUE "ProductName",	RES_STR_PRODUCT_NAME
+            VALUE "ProductVersion",	RES_STR_PRODUCT_VERSION
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
+
+IDI_CPLSYSTEM ICON "resources/applet.ico"
+
+IDD_PROPPAGEINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Install/Uninstall"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+
+  ICON            IDI_CPLSYSTEM,-1,PROPSHEETPADDING,18,16,16
+  LTEXT "To install a new program, click Install",-1,36,18,PROPSHEETWIDTH-48,8
+  PUSHBUTTON "&Install...", IDC_INSTALL, PROPSHEETWIDTH-(72), 36, 60, 14
+  LTEXT "", -1, PROPSHEETPADDING, 63, PROPSHEETWIDTH-12, 1, NOT WS_GROUP | SS_SUNKEN
+  
+  ICON            IDI_CPLSYSTEM,-1,PROPSHEETPADDING,76,16,16
+  LTEXT "The following Software can be automatically removed. To remove a program or to modify its installed components, select it from the list and click Add/Remove.",-1,36,72,PROPSHEETWIDTH-48,32
+  LISTBOX IDC_SOFTWARELIST, PROPSHEETPADDING, 105, PROPSHEETWIDTH-12, 88, LBS_STANDARD | WS_TABSTOP
+  PUSHBUTTON "Add/&Remove", IDC_ADDREMOVE, PROPSHEETWIDTH-72, 198, 60, 14
+END
+
+IDD_PROPPAGEROSSETUP DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Reactos Setup"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+
+END
+
+
+STRINGTABLE 
+BEGIN
+  IDS_CPLSYSTEMNAME "Add/Remove Programs"
+  IDS_CPLSYSTEMDESCRIPTION "Sets up programs and creates shortcuts."
+END
