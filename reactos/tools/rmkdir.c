@@ -2,6 +2,16 @@
 #include <string.h>
 #include <stdlib.h>
 
+#ifdef UNIX_PATHS
+#define DIR_SEPARATOR_CHAR '/'
+#define DIR_SEPARATOR_STRING "/"
+#else
+#ifdef DOS_PATHS
+#define DIR_SEPARATOR_CHAR '\\'
+#define DIR_SEPARATOR_STRING "\\"
+#endif	
+#endif	
+
 char* convert_path(char* origpath)
 {
    char* newpath;
@@ -76,26 +86,26 @@ int main(int argc, char* argv[])
    
    path1 = convert_path(argv[1]);
    
-   if (isalpha(path1[0]) && path1[1] == ':' && path1[2] == '/')
+   if (isalpha(path1[0]) && path1[1] == ':' && path1[2] == DIR_SEPARATOR_CHAR)
      {
-	csec = strtok(path1, "/");
+	csec = strtok(path1, DIR_SEPARATOR_STRING);
 	chdir(csec);
-	csec = strtok(NULL, "/");
+	csec = strtok(NULL, DIR_SEPARATOR_STRING);
      }
-   else if (path1[0] == '/')
+   else if (path1[0] == DIR_SEPARATOR_CHAR)
      {
-	chdir("/");
-	csec = strtok(path1, "/");
+	chdir(DIR_SEPARATOR_STRING);
+	csec = strtok(path1, DIR_SEPARATOR_STRING);
      }
    else
      {
-	csec = strtok(path1, "/");
+	csec = strtok(path1, DIR_SEPARATOR_STRING);
      }
    
    while (csec != NULL)
      {
 	mkdir_p(csec);
-	csec = strtok(NULL, "/");
+	csec = strtok(NULL, DIR_SEPARATOR_STRING);
      }
    
    exit(0);
