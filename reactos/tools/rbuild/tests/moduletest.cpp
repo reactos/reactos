@@ -2,5 +2,5 @@
 
 void ModuleTest::Run()
 {
-	IsTrue(false);
+	IS_TRUE(false);
 }

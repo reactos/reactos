@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "rbuild.h"
 #include "test.h"
 
@@ -10,69 +11,68 @@ BaseTest::~BaseTest()
 {
 }
 
-void BaseTest::Assert(char *message)
+void BaseTest::Assert(const char *message, ...)
 {
-	printf(message);
+	va_list args;
+	va_start ( args, message );
+	vprintf(message, args);
+	va_end ( args );
 	Fail();
 }
 
-void BaseTest::IsTrue(bool condition)
+void BaseTest::IsTrue(bool condition,
+                      const char* file,
+                      int line)
 {
 	if (!condition)
 	{
-		char message[100];
-		sprintf(message,
-		        "Condition was not true at %s:%d",
-		        __FILE__,
-		        __LINE__);
-		Assert(message);
+		Assert("Condition was not true at %s:%d\n",
+		       file,
+		       line);
 	}
 }
 
-void BaseTest::IsFalse(bool condition)
+void BaseTest::IsFalse(bool condition,
+                       const char* file,
+                       int line)
 {
 	if (condition)
 	{
-		char message[100];
-		sprintf(message,
-		        "Condition was not false at %s:%d",
-		        __FILE__,
-		        __LINE__);
-		Assert(message);
+		Assert("Condition was not false at %s:%d\n",
+		       file,
+		       line);
 	}
 }
 
 void BaseTest::AreEqual(int expected,
-                        int actual)
+                        int actual,
+                        const char* file,
+                        int line)
 {
 	if (actual != expected)
 	{
-		char message[100];
-		sprintf(message,
-		        "Expected %d/0x%.08x was %d/0x%.08x at %s:%d",
-		        expected,
-		        expected,
-		        actual,
-		        actual,
-		        __FILE__,
-		        __LINE__);
-		Assert(message);
+		Assert("Expected %d/0x%.08x was %d/0x%.08x at %s:%d\n",
+		       expected,
+		       expected,
+		       actual,
+		       actual,
+		       file,
+		       line);
 	}
 }
 
 void BaseTest::AreNotEqual(int expected,
-                           int actual)
+                           int actual,
+                           const char* file,
+                           int line)
 {
 	if (actual == expected)
 	{
-		char message[100];
-		sprintf(message,
-		        "Actual value expected to be different from %d/0x%.08x at %s:%d",
-		        expected,
-		        expected,
-		        __FILE__,
-		        __LINE__);
-		Assert(message);
+		Assert("Actual value expected to be different from %d/0x%.08x at %s:%d\n",
+		       expected,
+		       expected,
+		       file,
+		       line);
 	}
 }
 
@@ -99,11 +99,12 @@ public:
 	void Run()
 	{
 		int numberOfFailedTests = 0;
-		BaseTestList tests = GetTests();
+		BaseTestList tests;
+		GetTests(tests);
 		for (size_t i = 0; i < tests.size(); i++)
 		{
 			BaseTest& test = *tests[i];
-			/*test.Run();*/
+			test.Run();
 			if (test.Failed)
 				numberOfFailedTests++;
 		}
@@ -116,11 +117,9 @@ public:
 	}
 
 private:
-	BaseTestList GetTests()
+	void GetTests ( BaseTestList& tests )
 	{
-		BaseTestList tests;
 		tests.push_back(new ModuleTest());
-		return tests;
 	}
 };
 
@@ -128,7 +127,7 @@ private:
 int main(int argc,
          char** argv)
 {
-	TestDispatcher testDispatcher = TestDispatcher();
+	TestDispatcher testDispatcher;
 	testDispatcher.Run();
 	return 0;
 };
