@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.31 2000/09/12 10:43:28 jean Exp $
+/* $Id: registry.c,v 1.32 2000/09/13 09:51:58 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,8 +38,15 @@
 #define  REG_ROOT_KEY_BLOCK_TYPE  0x2c
 
 #define  REG_ROOT_KEY_NAME  L"\\Registry"
-#define  SYSTEM_REG_FILE  L"\\SystemRoot\\System32\\Config\\SYSTEM.DAT"
+#define  REG_MACHINE_KEY_NAME  L"\\Registry\\Machine"
+#define  REG_SYSTEM_KEY_NAME  L"\\Registry\\Machine\\System"
+#define  REG_SOFTWARE_KEY_NAME  L"\\Registry\\Machine\\Software"
+#define  REG_USERS_KEY_NAME  L"\\Registry\\User"
+#define  REG_USER_KEY_NAME  L"\\Registry\\User\\CurrentUser"
 
+#define  SYSTEM_REG_FILE  L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define  SOFTWARE_REG_FILE  L"\\SystemRoot\\System32\\Config\\SOFTWARE"
+#define  USER_REG_FILE  L"\\SystemRoot\\System32\\Config\\USER"
 
 // BLOCK_OFFSET = offset in file after header block
 typedef DWORD  BLOCK_OFFSET;
@@ -142,7 +149,7 @@ typedef struct _REGISTRY_FILE
   PHEADER_BLOCK  HeaderBlock;
   ULONG  NumberOfBlocks;
   ULONG  BlockListSize;
-  PIN_MEMORY_BLOCK  *BlockList;
+  PHEAP_BLOCK  *BlockList;
 
   NTSTATUS  (*Extend)(ULONG NewSize);
   PVOID  (*Flush)(VOID);
@@ -159,6 +166,7 @@ typedef struct _KEY_OBJECT
   PREGISTRY_FILE  RegistryFile;
   PKEY_BLOCK  KeyBlock;
   struct _KEY_OBJECT  *NextKey;
+  struct _KEY_OBJECT  *SubKey;
 } KEY_OBJECT, *PKEY_OBJECT;
 
 #define  KO_MARKED_FOR_DELETE  0x00000001
@@ -242,8 +250,6 @@ static NTSTATUS  CmiAllocateKeyBlock(IN PREGISTRY_FILE  RegistryFile,
                                      IN ULONG  TitleIndex,
                                      IN PWSTR  Class,
                                     IN ULONG  CreateOptions);
-static PKEY_BLOCK  CmiGetKeyBlock(PREGISTRY_FILE  RegistryFile,
-                                  BLOCK_OFFSET  KeyBlockOffset);
 static NTSTATUS  CmiDestroyKeyBlock(PREGISTRY_FILE  RegistryFile,
                                     PKEY_BLOCK  KeyBlock);
 static NTSTATUS  CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
@@ -371,6 +377,51 @@ CHECKPOINT;
   /* FIXME: load volatile registry data from ROSDTECT  */
 
 #endif
+}
+
+VOID
+CmInitializeRegistry2(VOID)
+{
+#ifdef xxx
+ OBJECT_ATTRIBUTES  ObjectAttributes;
+ PKEY_OBJECT  NewKey;
+ HANDLE  KeyHandle;
+ UNICODE_STRING  KeyName;
+  /* FIXME : delete temporary \Registry\Machine\System */
+  RtlInitUnicodeString(&KeyName, REG_SYSTEM_KEY_NAME);
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
+  NewKey=ObCreateObject(&KeyHandle,
+                 STANDARD_RIGHTS_REQUIRED,
+                 &ObjectAttributes,
+                 CmiKeyType);
+CHECKPOINT;
+  CmiSystemFile = CmiCreateRegistry(SYSTEM_REG_FILE);
+  if( CmiSystemFile )
+  {
+    NewKey->RegistryFile = CmiSystemFile;
+    NewKey->KeyBlock = CmiGetBlock(CmiSystemFile,32);
+    NewKey->Flags = 0;
+    NewKey->NextKey = NULL;
+    NewKey->Name = NewKey->KeyBlock->Name;
+  }
+CHECKPOINT;
+#endif
+/*
+ {
+//  HANDLE HKey;
+  NTSTATUS Status;
+  PKEY_BLOCK SubKeyBlock;
+  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Windows");
+  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
+      Status = CmiScanForSubKey(CmiSystemFile, 
+                                NewKey->KeyBlock, 
+                                &SubKeyBlock,
+                                L"Windows",
+                                KEY_READ);
+//  Status = NtOpenKey ( &HKey, KEY_READ , &ObjectAttributes);
+  
+ }
+*/
 }
 
 VOID 
@@ -1396,7 +1447,7 @@ static NTSTATUS CmiObjectParse(PVOID ParsedObject,
       return Status;
     }
 
-  CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
+  CurKeyBlock = CmiGetBlock(RegistryFile, 
                                RegistryFile->HeaderBlock->RootKeyBlock);
 
   /*  Loop through each key level and find the needed subkey  */
@@ -1686,12 +1737,44 @@ CmiCreateRegistry(PWSTR  Filename)
 
   RegistryFile = ExAllocatePool(NonPagedPool, sizeof(REGISTRY_FILE));
   if (Filename != NULL)
-    {
-      UNIMPLEMENTED;
-      /* FIXME:  Duplicate Filename  */
+   {
+     UNICODE_STRING TmpFileName;
+     OBJECT_ATTRIBUTES  ObjectAttributes;
+     NTSTATUS Status;
+
+      /* Duplicate Filename  */
+      RegistryFile->Filename = ExAllocatePool(NonPagedPool, MAX_PATH);
+      wcscpy(RegistryFile->Filename , Filename);
       /* FIXME:  if file does not exist, create new file  */
-      /* FIXME:  else attempt to map the file  */
-    }
+      /* else attempt to map the file  */
+      RtlInitUnicodeString (&TmpFileName, Filename);
+      InitializeObjectAttributes(&ObjectAttributes,
+                             &TmpFileName,
+                             0,
+                             NULL,
+                             NULL);
+      Status = ZwOpenFile(&RegistryFile->FileHandle,
+                      FILE_ALL_ACCESS,
+                      &ObjectAttributes,
+                      NULL, 0, 0);
+      /* FIXME:  if file does not exist, create new file  */
+      if( !NT_SUCCESS(Status) )
+      {
+	DPRINT("registry file not found\n");
+	ExFreePool(RegistryFile->Filename);
+	RegistryFile->Filename = NULL;
+	return NULL;
+      }
+      RegistryFile->HeaderBlock = (PHEADER_BLOCK) 
+        ExAllocatePool(NonPagedPool, sizeof(HEADER_BLOCK));
+      Status = ZwReadFile(RegistryFile->FileHandle, 
+                      0, 0, 0, 0, 
+                      RegistryFile->HeaderBlock, 
+                      sizeof(HEADER_BLOCK), 
+                      0, 0);
+      RegistryFile->BlockListSize = 0;
+      RegistryFile->BlockList = NULL;
+   }
   else
     {
       RegistryFile->Filename = NULL;
@@ -1754,7 +1837,7 @@ CHECKPOINT;
   /*  Loop through each key level and find or build the needed subkey  */
   Status = STATUS_SUCCESS;
   /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
-  CurKeyBlock = CmiGetKeyBlock(RegistryFile, 
+  CurKeyBlock = CmiGetBlock(RegistryFile, 
                                RegistryFile->HeaderBlock->RootKeyBlock);
 CHECKPOINT;
   Remainder = KeyNameBuf;
@@ -1862,7 +1945,7 @@ CmiFindKey(IN PREGISTRY_FILE  RegistryFile,
   /*  Loop through each key level and find the needed subkey  */
   Status = STATUS_SUCCESS;
   /* FIXME: this access of RootKeyBlock should be guarded by spinlock  */
-  CurKeyBlock = CmiGetKeyBlock(RegistryFile, RegistryFile->HeaderBlock->RootKeyBlock);
+  CurKeyBlock = CmiGetBlock(RegistryFile, RegistryFile->HeaderBlock->RootKeyBlock);
   Remainder = KeyNameBuf;
   while (NT_SUCCESS(Status) &&
          (NextSlash = wcschr(Remainder, L'\\')) != NULL)
@@ -1933,7 +2016,7 @@ CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
     {
       if (HashBlock->Table[Idx].KeyOffset != 0)
         {
-          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+          CurSubKeyBlock = CmiGetBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset);
           if (MaxName < CurSubKeyBlock->NameSize)
             {
@@ -1966,7 +2049,7 @@ CmiGetMaxClassLength(PREGISTRY_FILE  RegistryFile,
     {
       if (HashBlock->Table[Idx].KeyOffset != 0)
         {
-          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+          CurSubKeyBlock = CmiGetBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset);
           if (MaxClass < CurSubKeyBlock->ClassSize)
             {
@@ -2067,7 +2150,7 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
       if (HashBlock->Table[Idx].KeyOffset != 0 &&
           !wcsncmp(KeyName, (PWSTR) &HashBlock->Table[Idx].HashValue, 4))
         {
-          CurSubKeyBlock = CmiGetKeyBlock(RegistryFile,
+          CurSubKeyBlock = CmiGetBlock(RegistryFile,
                                           HashBlock->Table[Idx].KeyOffset);
           if (!wcscmp(KeyName, CurSubKeyBlock->Name))
             {
@@ -2368,26 +2451,6 @@ DPRINT ("NewKeySize: %lu\n", NewKeySize);
     }
 
   return  Status;
-}
-
-static PKEY_BLOCK
-CmiGetKeyBlock(PREGISTRY_FILE  RegistryFile,
-               BLOCK_OFFSET  KeyBlockOffset)
-{
-  PKEY_BLOCK  KeyBlock;
-
-  if (RegistryFile->Filename == NULL)
-    {
-      CmiLockBlock(RegistryFile, (PVOID) KeyBlockOffset);
-
-      KeyBlock = (PKEY_BLOCK) KeyBlockOffset;
-    }
-  else
-    {
-      UNIMPLEMENTED;
-    }
-
-  return  KeyBlock;
 }
 
 static NTSTATUS
@@ -2704,6 +2767,8 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
             BLOCK_OFFSET  BlockOffset)
 {
   PVOID  Block;
+  long i;
+  NTSTATUS Status;
 
   Block = NULL;
   if (RegistryFile->Filename == NULL)
@@ -2714,7 +2779,61 @@ CmiGetBlock(PREGISTRY_FILE  RegistryFile,
     }
   else
     {
-      UNIMPLEMENTED;
+	PHEAP_BLOCK * tmpBlockList;
+	HEAP_BLOCK tmpHeap;
+	LARGE_INTEGER fileOffset;
+	// search in the heap blocks currently in memory
+	for (i=0; i < RegistryFile->BlockListSize ; i++)
+      {
+	  if (  RegistryFile->BlockList[i]->BlockOffset <= BlockOffset 
+	      && (RegistryFile->BlockList[i]->BlockOffset
+                   +RegistryFile->BlockList[i]->BlockSize > BlockOffset ))
+	    return ((char *)RegistryFile->BlockList[i]
+			+(BlockOffset - RegistryFile->BlockList[i]->BlockOffset));
+      }
+	// not in memory : read from file
+	tmpBlockList=ExAllocatePool(NonPagedPool,
+				   sizeof(PHEAP_BLOCK *)*(i+1));
+	if (tmpBlockList == NULL)
+	  {
+	     KeBugCheck(0);
+	     return(FALSE);
+	  }
+	if(RegistryFile->BlockListSize > 0)
+        {
+          memcpy(tmpBlockList,RegistryFile->BlockList,
+	       sizeof(PHEAP_BLOCK *)*(RegistryFile->BlockListSize ));
+	  ExFreePool(RegistryFile->BlockList);
+        }
+	RegistryFile->BlockList = tmpBlockList;
+	fileOffset.u.LowPart = (BlockOffset & 0xfffff000)+REG_BLOCK_SIZE;
+	fileOffset.u.HighPart = 0;
+        Status = ZwReadFile(RegistryFile->FileHandle, 
+                      0, 0, 0, 0, 
+                      &tmpHeap, 
+                      sizeof(HEAP_BLOCK), 
+                      &fileOffset, 0);
+        /* FIXME : better is to start from previous block */
+	while (tmpHeap.BlockId != 0x6e696268 && fileOffset.u.LowPart  >= REG_BLOCK_SIZE)
+	{
+	   fileOffset.u.LowPart  -= REG_BLOCK_SIZE;
+         Status = ZwReadFile(RegistryFile->FileHandle, 
+                      0, 0, 0, 0, 
+                      &tmpHeap, 
+                      sizeof(HEAP_BLOCK), 
+                      &fileOffset, 0);
+	}
+	if (tmpHeap.BlockId != 0x6e696268 )
+		return NULL;
+	RegistryFile->BlockList [RegistryFile->BlockListSize ++]
+	   = ExAllocatePool(NonPagedPool,tmpHeap.BlockSize);
+      Status = ZwReadFile(RegistryFile->FileHandle, 
+                      0, 0, 0, 0, 
+                      RegistryFile->HeaderBlock, 
+                      tmpHeap.BlockSize,
+                      &fileOffset, 0);
+      return ((char *)RegistryFile->BlockList[i]
+			+(BlockOffset - RegistryFile->BlockList[i]->BlockOffset));
     }
 
   return  Block;
@@ -2744,7 +2863,7 @@ CmiLockBlock(PREGISTRY_FILE  RegistryFile,
 {
   if (RegistryFile->Filename != NULL)
     {
-      UNIMPLEMENTED;
+      /* FIXME : implement */
     }
 }
 
