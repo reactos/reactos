@@ -18,7 +18,10 @@ clean:
 	- $(RM) lpcsrv.o
 	- $(RM) lpcsrv.exe
 	- $(RM) lpcsrv.sym
-
+	- $(RM) lpcclt.o
+	- $(RM) lpcclt.exe
+	- $(RM) lpcsrv.sym
+	
 .phony: clean
 
 floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)

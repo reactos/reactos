@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.47 2000/05/13 14:21:43 dwelch Exp $
+# $Id: makefile,v 1.48 2000/05/14 13:10:00 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -50,7 +50,7 @@ CLEAN_FILES = napi.o ldr\*.o rtl\*.o stdio\*.o stdlib\*.o string\*.o stubs\*.o \
               $(TARGET).a main\dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
               base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 else
-CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o \
+CLEAN_FILES = napi.o ldr/*.o rtl/*.o stdio/*.o stdlib/*.o string/*.o stubs/*.o csr/*.o dbg/*.o \
               $(TARGET).a main/dllmain.o $(TARGET).o $(TARGET).dll junk.tmp \
               base.tmp temp.exp $(TARGET).sym $(TARGET).coff
 endif

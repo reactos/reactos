@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.17 2000/05/14 09:31:04 ea Exp $
+/* $Id: stubs.c,v 1.18 2000/05/14 13:09:59 dwelch Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -3401,6 +3401,7 @@ SetMailslotInfo (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
+
 
 
 

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2000/03/17 21:49:32 jfilby Exp $
+# $Id: makefile,v 1.20 2000/05/14 13:10:01 dwelch Exp $
 #
 # WIN32K.SYS build spec
 #
@@ -35,7 +35,7 @@ CLEAN_FILES = eng\*.o main\*.o misc\*.o ldr\*.o stubs\*.o objects\*.o  \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 else
 CLEAN_FILES = eng/*.o main/*.o ldr\*.o misc/*.o stubs/*.o objects/*.o  \
-              $(TARGET).coff $(TARGET).o $(TARGET).a  \
+              $(TARGET).coff $(TARGET).o $(TARGET).a ldr/*.o \
               junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sym
 endif
 

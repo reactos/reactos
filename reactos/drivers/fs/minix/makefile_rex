@@ -1,4 +1,4 @@
-# $Id: makefile_rex,v 1.9 2000/05/13 17:34:15 ekohl Exp $
+# $Id: makefile_rex,v 1.10 2000/05/14 13:10:00 dwelch Exp $
 #
 # Minix IFS Driver makefile
 #
@@ -18,6 +18,8 @@ clean:
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
+	- $(RM) cache.o
+	- $(RM) minix.coff
 	- $(RM) $(TARGETNAME).sys
 
 .phony: clean
