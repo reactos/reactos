@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.94 2002/06/04 15:26:58 dwelch Exp $
+/* $Id: thread.c,v 1.95 2002/06/15 11:27:28 jfilby Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -571,7 +571,7 @@ NtCallbackReturn (PVOID		Result,
 PVOID STATIC
 PsAllocateCallbackStack(ULONG StackSize)
 {
-  PVOID KernelStack;
+  PVOID KernelStack = NULL;
   NTSTATUS Status;
   PMEMORY_AREA StackArea;
   ULONG i;
