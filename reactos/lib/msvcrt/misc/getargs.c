@@ -89,15 +89,33 @@ int expand(char* name, int flag)
 
 int __getmainargs(int* argc, char*** argv, char*** env, int flag)
 {
-    int i, afterlastspace;
+    int i, afterlastspace, ignorespace, len;
 
     /* missing threading init */
 
     i = 0;
     afterlastspace = 0;
+    ignorespace = 0;
+    len = strlen(_acmdln);
 
     while (_acmdln[i]) {
-        if (_acmdln[i] == ' ') {
+	if (_acmdln[i] == '"') {
+	    if (_acmdln[i + 1] == '"') {
+		memmove(_acmdln + i, _acmdln + i + 1, len - i);
+		len--;
+	    } else {
+		if(ignorespace) {
+		    ignorespace = 0;
+		} else {
+		    ignorespace = 1;
+		}
+		memmove(_acmdln + i, _acmdln + i + 1, len - i);
+		len--;
+		continue;
+	    }
+	}
+
+        if (_acmdln[i] == ' ' && !ignorespace) {
             expand(strndup(_acmdln + afterlastspace, i - afterlastspace), flag);
             i++;
             while (_acmdln[i]==' ')
