@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.31 2004/01/07 10:11:03 hbirr Exp $
+/* $Id: unicode.c,v 1.32 2004/01/23 19:49:07 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1836,6 +1836,40 @@ ULONG STDCALL
 RtlxUnicodeStringToOemSize (IN PUNICODE_STRING UnicodeString)
 {
   return RtlUnicodeStringToAnsiSize (UnicodeString);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+RtlStringFromGUID(
+    IN REFGUID Guid,
+    OUT PUNICODE_STRING GuidString
+    )
+{
+	if( Guid == NULL )
+	{
+		return FALSE;
+	}
+	PWCHAR Buffer;
+	PWCHAR String4;
+	PWCHAR String4a;
+	PWCHAR String4b;
+	
+	wcsncpy( String4a, String4, 4 );
+	wcsncpy( String4b, String4+4, wcslen(String4) );
+	
+	swprintf( Buffer, L"{%X-%X-%X-%X-%X}",
+					  Guid->Data1,
+					  Guid->Data2,
+					  Guid->Data3,
+					  String4a,
+					  String4b );
+		
+	RtlInitUnicodeString( GuidString, Buffer );
+	
+	return(TRUE);
 }
 
 /* EOF */
