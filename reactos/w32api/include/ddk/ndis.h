@@ -2026,6 +2026,48 @@ NdisFreeBuffer(
   } \
 }
 
+/*
+ * VOID
+ * NdisQueryPacketLength(
+ *   IN PNDIS_PACKET  Packet,
+ *   OUT PUINT  PhysicalBufferCount  OPTIONAL,
+ *   OUT PUINT  BufferCount  OPTIONAL,
+ *   OUT PNDIS_BUFFER  *FirstBuffer  OPTIONAL,
+ *   OUT PUINT  TotalPacketLength  OPTIONAL);
+ */
+#define NdisQueryPacketLength(Packet,                                     \
+                              TotalPacketLength)                          \
+{                                                                         \
+  if ((TotalPacketLength))                                                \
+  {                                                                       \
+    if (!(Packet)->Private.ValidCounts) {                                 \
+      UINT _Offset;                                                       \
+      UINT _PacketLength;                                                 \
+      PNDIS_BUFFER _NdisBuffer;                                           \
+      UINT _PhysicalBufferCount = 0;                                      \
+      UINT _TotalPacketLength   = 0;                                      \
+      UINT _Count               = 0;                                      \
+                                                                          \
+      for (_NdisBuffer = (Packet)->Private.Head;                          \
+        _NdisBuffer != (PNDIS_BUFFER)NULL;                                \
+        _NdisBuffer = _NdisBuffer->Next)                                  \
+      {                                                                   \
+        _PhysicalBufferCount += NDIS_BUFFER_TO_SPAN_PAGES(_NdisBuffer);   \
+        NdisQueryBufferOffset(_NdisBuffer, &_Offset, &_PacketLength);     \
+        _TotalPacketLength += _PacketLength;                              \
+        _Count++;                                                         \
+      }                                                                   \
+      (Packet)->Private.PhysicalCount = _PhysicalBufferCount;             \
+      (Packet)->Private.TotalLength   = _TotalPacketLength;               \
+      (Packet)->Private.Count         = _Count;                           \
+      (Packet)->Private.ValidCounts   = TRUE;                             \
+  }                                                                       \
+                                                                          \
+  if (TotalPacketLength)                                                  \
+      *((PUINT)TotalPacketLength) = (Packet)->Private.TotalLength;        \
+  } \
+}
+
 
 /*
  * VOID
