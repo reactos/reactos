@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.134 2004/04/15 23:36:02 weiden Exp $
+/* $Id: defwnd.c,v 1.135 2004/05/01 11:43:52 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -480,7 +480,9 @@ UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe, HRGN ClipRgn)
     UserDrawWindowFrame(hdc, rect, GetSystemMetrics(SM_CXFRAME), GetSystemMetrics(SM_CYFRAME));
   }
   else
-    DrawFocusRect( hdc, rect );
+  {
+    UserDrawWindowFrame(hdc, rect, 1, 1);
+  }
   
   if(ClipRgn)
   {
