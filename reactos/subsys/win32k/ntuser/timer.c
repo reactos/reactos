@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.33.4.1 2004/07/15 20:07:18 weiden Exp $
+/* $Id: timer.c,v 1.33.4.2 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -97,7 +97,7 @@ IntRemoveTimer(PWINDOW_OBJECT Window, UINT_PTR IDEvent, HANDLE ThreadID, BOOL Sy
     MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
     EnumEntry = EnumEntry->Flink;
       
-    if (MsgTimer->Msg.hwnd == (Window ? Window->Handle : NULL) && 
+    if (MsgTimer->Msg.Window == Window &&
         MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
         MsgTimer->ThreadID == ThreadID &&
         (MsgTimer->Msg.message == WM_SYSTIMER) == SysTimer)
@@ -130,7 +130,7 @@ RemoveTimersThread(HANDLE ThreadID)
     
     if (MsgTimer->ThreadID == ThreadID)
     {
-      if (MsgTimer->Msg.hwnd == NULL)
+      if (MsgTimer->Msg.Window == NULL)
       {
         RtlClearBits(&WindowLessTimersBitMap, ((UINT_PTR)MsgTimer->Msg.wParam) - 1, 1);   
       }
@@ -161,7 +161,7 @@ RemoveTimersWindow(PWINDOW_OBJECT Window)
     MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
     EnumEntry = EnumEntry->Flink;
     
-    if (MsgTimer->Msg.hwnd == Window->Handle)
+    if (MsgTimer->Msg.Window == Window)
     {
       RemoveEntryList(&MsgTimer->ListEntry);
       ExFreePool(MsgTimer);
@@ -256,7 +256,7 @@ IntSetTimer(PWINDOW_OBJECT WindowObject, UINT_PTR nIDEvent, UINT uElapse, TIMERP
       return 0;
     }
     
-    NewTimer->Msg.hwnd = (WindowObject ? WindowObject->Handle : NULL);
+    NewTimer->Msg.Window = WindowObject;
     NewTimer->Msg.message = (SystemTimer ? WM_SYSTIMER : WM_TIMER);
     NewTimer->Msg.wParam = (WPARAM)nIDEvent;
     NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;

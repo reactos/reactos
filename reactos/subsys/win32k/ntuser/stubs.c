@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.45.12.2 2004/08/27 15:56:05 weiden Exp $
+/* $Id: stubs.c,v 1.45.12.3 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -683,28 +683,6 @@ NtUserMessageCall(
 }
 
 
-BOOL STDCALL
-NtUserPostMessage(HWND Wnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
-BOOL STDCALL
-NtUserPostThreadMessage(DWORD idThread,
-			UINT Msg,
-			WPARAM wParam,
-			LPARAM lParam)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-
 DWORD STDCALL
 NtUserQuerySendMessage(DWORD Unknown0)
 {
@@ -722,18 +700,6 @@ NtUserSendMessageTimeout(HWND hWnd,
 			 UINT uTimeout,
 			 ULONG_PTR *uResult,
 	                 PNTUSERSENDMESSAGEINFO UnsafeInfo)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-
-LRESULT STDCALL
-NtUserSendMessage(HWND Wnd,
-		  UINT Msg,
-		  WPARAM wParam,
-		  LPARAM lParam,
-                  PNTUSERSENDMESSAGEINFO UnsafeInfo)
 {
    UNIMPLEMENTED;
    return 0;

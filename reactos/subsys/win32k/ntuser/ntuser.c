@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.4 2004/08/28 20:15:45 gvg Exp $
+/* $Id: ntuser.c,v 1.1.4.5 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -488,7 +488,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   NTUSER_COPY_BUFFER_NTERROR(&SafeClassName, UnsafeClassName, sizeof(UNICODE_STRING));
   if(!IS_ATOM(SafeClassName.Buffer))
   {
-    Status = IntSafeCopyUnicodeString(&SafeClassName, UnsafeClassName);
+    Status = IntSafeCopyUnicodeStringTerminateNULL(&SafeClassName, UnsafeClassName);
     if(!NT_SUCCESS(Status))
     {
       NTUSER_FAIL_NTERROR(Status);
@@ -1054,7 +1054,8 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     PVOID UserMem;
     NTSTATUS Status;
     
-    Info.Msg = Msg.Msg;
+    MsgCopyKMsgToMsg(&(Info.Msg), &(Msg.Msg));
+    
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
     if (NULL == MsgMemoryEntry)
@@ -1379,7 +1380,8 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     PVOID UserMem;
     NTSTATUS Status;
     
-    Info.Msg = Msg.Msg;
+    MsgCopyKMsgToMsg(&(Info.Msg), &(Msg.Msg));
+    
     /* See if this message type is present in the table */
     MsgMemoryEntry = FindMsgMemory(Info.Msg.message);
     if (NULL == MsgMemoryEntry)
@@ -1421,6 +1423,62 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
     NTUSER_COPY_BUFFER_BACK_NTERROR(UnsafeInfo, &Info, sizeof(NTUSERGETMESSAGEINFO));
   }
   
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserPostMessage(HWND Wnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(LRESULT, 0);
+
+  /* don't handle HWND_BROADCAST in kmode, SendMessage() should obtain a list
+     of handles and then call NtUserSendMessage() for each window */
+  NTUSER_FAIL_INVALID_PARAMETER(Wnd, HWND_BROADCAST);
+  NTUSER_FAIL_INVALID_PARAMETER(Wnd, 0);
+
+  ENTER_CRITICAL_SHARED();
+  VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
+  LEAVE_CRITICAL();
+
+  END_NTUSER();
+}
+
+BOOL STDCALL
+NtUserPostThreadMessage(DWORD idThread,
+			UINT Msg,
+			WPARAM wParam,
+			LPARAM lParam)
+{
+  NTSTATUS Status;
+  PETHREAD peThread;
+  BEGIN_NTUSER(BOOL, FALSE);
+  
+  /* lookup the thread */
+  Status = PsLookupThreadByThreadId((PVOID)idThread, &peThread);
+  if(!NT_SUCCESS(Status))
+  {
+    NTUSER_FAIL_NTERROR(Status);
+  }
+  
+  if(peThread->Win32Thread == NULL)
+  {
+    /* we try to send a message to a non-win32 thread... */
+    ObDereferenceObject(peThread);
+    NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED); /* FIXME - right error code?! */
+  }
+  
+  ENTER_CRITICAL_SHARED();
+  Result = IntPostThreadMessage(peThread->Win32Thread,
+                                Msg,
+                                wParam,
+                                lParam);
+  LEAVE_CRITICAL();
+  
+  ObDereferenceObject(peThread);
   END_NTUSER();
 }
 
@@ -1544,6 +1602,61 @@ NtUserSendInput(UINT nInputs,
   /* we don't have to do this atomic, message queues are thread-safe */
   Result = IntSendInput(nInputs, pInput, cbSize);
    
+  END_NTUSER();
+}
+
+LRESULT STDCALL
+NtUserSendMessage(HWND Wnd,
+		  UINT Msg,
+		  WPARAM wParam,
+		  LPARAM lParam,
+                  PNTUSERSENDMESSAGEINFO UnsafeInfo)
+{
+  NTUSER_USER_OBJECT(WINDOW, Window);
+  BEGIN_NTUSER(LRESULT, 0);
+  
+  /* don't handle HWND_BROADCAST in kmode, SendMessage() should obtain a list
+     of handles and then call NtUserSendMessage() for each window */
+  NTUSER_FAIL_INVALID_PARAMETER(Wnd, HWND_BROADCAST);
+  NTUSER_FAIL_INVALID_PARAMETER(Wnd, 0);
+  
+  /* FIXME - probe UnsafeInfo */
+  
+  UnsafeInfo->HandledByKernel = TRUE;
+  
+  ENTER_CRITICAL_SHARED();
+  VALIDATE_USER_OBJECT(WINDOW, Wnd, Window);
+  
+  if(Window->MessageQueue->Thread == PsGetCurrentThread())
+  {
+    /* return to user mode and call the window proc there */
+    if(0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
+    {
+      if(0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
+      {
+        /* Both Unicode and Ansi winprocs are real, see what usermode prefers */
+        UnsafeInfo->Proc = (UnsafeInfo->Ansi ? Window->WndProcA : Window->WndProcW);
+      }
+      else
+      {
+        /* Real Unicode winproc */
+        UnsafeInfo->Ansi = FALSE;
+        UnsafeInfo->Proc = Window->WndProcW;
+      }
+    }
+    else
+    {
+      /* Must have real Ansi winproc */
+      UnsafeInfo->Ansi = TRUE;
+      UnsafeInfo->Proc = Window->WndProcA;
+    }
+    LEAVE_CRITICAL();
+    
+    UnsafeInfo->HandledByKernel = FALSE;
+    return TRUE;
+  }
+  LEAVE_CRITICAL();
+  
   END_NTUSER();
 }
 
@@ -1865,14 +1978,26 @@ BOOL STDCALL
 NtUserTranslateMessage(LPMSG lpMsg,
 		       HKL dwhkl)
 {
-  MSG SafeMsg;
-  BEGIN_BUFFERS();
+  KMSG KMsg;
+  NTUSER_USER_OBJECT(WINDOW, Window);
   BEGIN_NTUSER(BOOL, FALSE);
   
-  NTUSER_COPY_BUFFER_NTERROR(&SafeMsg, lpMsg, sizeof(MSG));
+  /* FIXME - probe lpMsg */
   
   /* FIXME - lock stuff here... */
-  Result = IntTranslateKbdMessage(&SafeMsg, dwhkl);
+  ENTER_CRITICAL_SHARED();
+  if(lpMsg->hwnd != NULL)
+  {
+    VALIDATE_USER_OBJECT(WINDOW, lpMsg->hwnd, Window);
+  }
+  else
+  {
+    Window = NULL;
+  }
+  MsgCopyMsgToKMsg(&KMsg, lpMsg, Window);
+  /* FIXME - put this outside of the lock? */
+  Result = IntTranslateKbdMessage(&KMsg, dwhkl);
+  LEAVE_CRITICAL();
   
   END_NTUSER();
 }

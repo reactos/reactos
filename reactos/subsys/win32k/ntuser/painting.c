@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.84.2.1 2004/07/15 20:07:18 weiden Exp $
+ *  $Id: painting.c,v 1.84.2.2 2004/08/31 11:38:56 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -555,7 +555,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Parent, PW32THREAD Thread)
 
 BOOL FASTCALL
 IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
-                   PW32THREAD Thread, MSG *Message, BOOL Remove)
+                   PW32THREAD Thread, PKMSG Message, BOOL Remove)
 {
    PWINDOW_OBJECT RepaintWnd;
    
@@ -574,7 +574,7 @@ IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
    {
       RepaintWnd = IntFindWindowToRepaint(IntGetDesktopWindow(), PsGetWin32Thread());
    }
-   Message->hwnd = (RepaintWnd ? RepaintWnd->Handle : NULL);
+   Message->Window = RepaintWnd;
 
    if (RepaintWnd == NULL)
    {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.100.12.2 2004/08/27 15:56:05 weiden Exp $
+/* $Id: msgqueue.c,v 1.100.12.3 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -39,7 +39,7 @@
 
 #define SYSTEM_MESSAGE_QUEUE_SIZE           (256)
 
-static MSG SystemMessageQueue[SYSTEM_MESSAGE_QUEUE_SIZE];
+static KMSG SystemMessageQueue[SYSTEM_MESSAGE_QUEUE_SIZE];
 static ULONG SystemMessageQueueHead = 0;
 static ULONG SystemMessageQueueTail = 0;
 static ULONG SystemMessageQueueCount = 0;
@@ -124,7 +124,7 @@ MsqInitializeImpl(VOID)
 }
 
 VOID FASTCALL
-MsqInsertSystemMessage(MSG* Msg)
+MsqInsertSystemMessage(PKMSG Msg)
 {
   LARGE_INTEGER LargeTickCount;
   KIRQL OldIrql;
@@ -171,7 +171,7 @@ MsqInsertSystemMessage(MSG* Msg)
 }
 
 BOOL FASTCALL
-MsqIsDblClk(LPMSG Msg, BOOL Remove)
+MsqIsDblClk(PKMSG Msg, BOOL Remove)
 {
    /* FIXME */
    return FALSE;
@@ -313,7 +313,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT Filter
   }
   
   /* FIXME - only assign if removing? */
-  Message->Msg.hwnd = Window->Handle;
+  Message->Msg.Window = Window;
   Message->Msg.message = Msg;
   Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
   
@@ -418,7 +418,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, PWINDOW_OBJECT FilterWi
   while (SystemMessageQueueCount > 0)
     {
       PUSER_MESSAGE UserMsg;
-      MSG Msg;
+      KMSG Msg;
 
       ASSERT(SystemMessageQueueHead < SYSTEM_MESSAGE_QUEUE_SIZE);
       Msg = SystemMessageQueue[SystemMessageQueueHead];
@@ -519,12 +519,12 @@ VOID FASTCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
-  MSG Msg;
+  KMSG Msg;
 
   DPRINT("MsqPostKeyboardMessage(uMsg 0x%x, wParam 0x%x, lParam 0x%x)\n",
     uMsg, wParam, lParam);
 
-  Msg.hwnd = 0;
+  Msg.Window = 0;
   Msg.message = uMsg;
   Msg.wParam = wParam;
   Msg.lParam = lParam;
@@ -544,8 +544,8 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     
     if (FocusMessageQueue->FocusWindow != NULL)
       {
-	Msg.hwnd = FocusMessageQueue->FocusWindow->Handle;
-        DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+	Msg.Window = FocusMessageQueue->FocusWindow;
+        DPRINT("Msg.Window = %x\n", Msg.Window);
 	MsqPostMessage(FocusMessageQueue, &Msg, FALSE);
       }
     else
@@ -560,7 +560,7 @@ MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM 
 {
   PW32THREAD Win32Thread;
   PW32PROCESS Win32Process;
-  MSG Mesg;
+  KMSG Mesg;
   NTSTATUS Status;
 
   ASSERT(Window);
@@ -586,7 +586,7 @@ MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM 
       return;
     }
 
-  Mesg.hwnd = Window->Handle;
+  Mesg.Window = Window;
   Mesg.message = WM_HOTKEY;
   Mesg.wParam = wParam;
   Mesg.lParam = lParam;
@@ -607,7 +607,7 @@ MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM 
 }
 
 PUSER_MESSAGE FASTCALL
-MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam)
+MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
 
@@ -618,7 +618,7 @@ MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam)
     }
 
   Message->FreeLParam = FreeLParam;
-  RtlMoveMemory(&Message->Msg, Msg, sizeof(MSG));
+  Message->Msg = *Msg;
 
   return Message;
 }
@@ -644,10 +644,10 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
     IntUnLockMessageQueue(MessageQueue);
 
     IntCallSentMessageCallback(Message->CompletionCallback,
-				Message->hWnd,
-				Message->Msg,
-				Message->CompletionCallbackContext,
-				Message->Result);
+                               Message->Window,
+                               Message->Msg,
+                               Message->CompletionCallbackContext,
+                               Message->Result);
     
     IntLockMessageQueue(MessageQueue);
   }
@@ -663,7 +663,6 @@ MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 BOOLEAN FASTCALL
 MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
-  PWINDOW_OBJECT Window;
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
   LRESULT Result;
@@ -687,19 +686,16 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 		 &Message->ListEntry);
   
   IntUnLockMessageQueue(MessageQueue);
-  
-  Window = IntGetUserObject(WINDOW, Message->Msg.hwnd);
-  ASSERT(Window);
-  
-  ObmReferenceObject(Window);
+
+  ObmReferenceObject(Message->Msg.Window);
   
   /* Call the window procedure. */
-  Result = IntSendMessage(Window,
+  Result = IntSendMessage(Message->Msg.Window,
                           Message->Msg.message,
                           Message->Msg.wParam,
                           Message->Msg.lParam);
   
-  ObmDereferenceObject(Window);
+  ObmDereferenceObject(Message->Msg.Window);
   
   /* remove the message from the local dispatching list, because it doesn't need
      to be cleaned up on thread termination anymore */
@@ -748,7 +744,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       NotifyMessage->CompletionCallbackContext =
 	Message->CompletionCallbackContext;
       NotifyMessage->Result = Result;
-      NotifyMessage->hWnd = Message->Msg.hwnd;
+      NotifyMessage->Window = Message->Msg.Window;
       NotifyMessage->Msg = Message->Msg.message;
       MsqSendNotifyMessage(Message->SenderQueue, NotifyMessage);
     }
@@ -758,6 +754,7 @@ Notified:
   {
     /* only dereference our message queue if the message has not been timed out */
     IntDereferenceMessageQueue(MessageQueue);
+    IntDereferenceMessageQueue(Message->SenderQueue);
   }
   
   /* only free the message if not freed already */
@@ -807,12 +804,13 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   /* FIXME - increase reference counter of sender's message queue here */
   
   Result = 0;
-  Message->Msg.hwnd = Window->Handle;
+  Message->Msg.Window = Window;
   Message->Msg.message = Msg;
   Message->Msg.wParam = wParam;
   Message->Msg.lParam = lParam;
   Message->CompletionEvent = &CompletionEvent;
   Message->Result = &Result;
+  IntReferenceMessageQueue(ThreadQueue);
   Message->SenderQueue = ThreadQueue;
   Message->CompletionCallback = NULL;
   
@@ -877,6 +875,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                 Message->Result = NULL;
                 RemoveEntryList(&Message->DispatchingListEntry);
                 IntDereferenceMessageQueue(MessageQueue);
+                IntDereferenceMessageQueue(ThreadQueue);
                 break;
               }
             Entry = Entry->Flink;
@@ -935,6 +934,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                     Message->Result = NULL;
                     RemoveEntryList(&Message->DispatchingListEntry);
                     IntDereferenceMessageQueue(MessageQueue);
+                    IntDereferenceMessageQueue(ThreadQueue);
                     break;
                   }
                 Entry = Entry->Flink;
@@ -956,7 +956,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 VOID FASTCALL
-MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam)
+MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam)
 {
   PUSER_MESSAGE Message;
   
@@ -1008,7 +1008,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
     {
       CurrentMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
 					 ListEntry);
-      if ((FilterWindow == NULL || FilterWindow->Handle == CurrentMessage->Msg.hwnd) &&
+      if ((FilterWindow == NULL || FilterWindow == CurrentMessage->Msg.Window) &&
 	  ((MsgFilterLow == 0 && MsgFilterHigh == 0) ||
 	   (MsgFilterLow <= CurrentMessage->Msg.message &&
 	    MsgFilterHigh >= CurrentMessage->Msg.message)))
@@ -1141,6 +1141,17 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       
       /* free the message */
       ExFreePool(CurrentSentMessage);
+    }
+  
+  /* tell other threads not to bother returning any info to us */
+  while (! IsListEmpty(&MessageQueue->DispatchingMessagesHead))
+    {
+      CurrentEntry = RemoveHeadList(&MessageQueue->DispatchingMessagesHead);
+      CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
+                                             DispatchingListEntry);
+      CurrentSentMessage->CompletionEvent = NULL;
+      CurrentSentMessage->Result = NULL;
+      IntDereferenceMessageQueue(MessageQueue);
     }
   
   IntUnLockMessageQueue(MessageQueue);

@@ -12,10 +12,10 @@ IntCallWindowProc(WNDPROC Proc,
 
 VOID STDCALL
 IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
-			    HWND hWnd,
-			    UINT Msg,
-			    ULONG_PTR CompletionCallbackContext,
-			    LRESULT Result);
+			   PWINDOW_OBJECT Window,
+			   UINT Msg,
+			   ULONG_PTR CompletionCallbackContext,
+			   LRESULT Result);
 
 
 HMENU STDCALL

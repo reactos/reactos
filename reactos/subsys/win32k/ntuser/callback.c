@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.25.8.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: callback.c,v 1.25.8.2 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -125,16 +125,16 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 
 VOID STDCALL
 IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
-			    HWND hWnd,
-			    UINT Msg,
-			    ULONG_PTR CompletionCallbackContext,
-			    LRESULT Result)
+			   PWINDOW_OBJECT Window,
+			   UINT Msg,
+			   ULONG_PTR CompletionCallbackContext,
+			   LRESULT Result)
 {
   SENDASYNCPROC_CALLBACK_ARGUMENTS Arguments;
   NTSTATUS Status;
 
   Arguments.Callback = CompletionCallback;
-  Arguments.Wnd = hWnd;
+  Arguments.Wnd = (Window != NULL ? Window->Handle : NULL);
   Arguments.Msg = Msg;
   Arguments.Context = CompletionCallbackContext;
   Arguments.Result = Result;

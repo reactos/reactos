@@ -440,17 +440,43 @@ typedef struct _MENU_OBJECT
 
 #define MAKE_LONG(x, y) ((((y) & 0xFFFF) << 16) | ((x) & 0xFFFF))
 
+#define MsgCopyKMsgToMsg(msg, kmsg) \
+ (msg)->hwnd = ((kmsg)->Window ? (kmsg)->Window->Handle : NULL); \
+ (msg)->message = (kmsg)->message; \
+ (msg)->wParam = (kmsg)->wParam; \
+ (msg)->lParam = (kmsg)->lParam; \
+ (msg)->time = (kmsg)->time; \
+ (msg)->pt = (kmsg)->pt
+
+#define MsgCopyMsgToKMsg(kmsg, msg, MsgWindow) \
+ (kmsg)->Window = (MsgWindow); \
+ (kmsg)->message = (msg)->message; \
+ (kmsg)->wParam = (msg)->wParam; \
+ (kmsg)->lParam = (msg)->lParam; \
+ (kmsg)->time = (msg)->time; \
+ (kmsg)->pt = (msg)->pt
+
+typedef struct _KMSG
+{
+  PWINDOW_OBJECT Window;
+  UINT message;
+  WPARAM wParam;
+  LPARAM lParam;
+  DWORD time;
+  POINT pt;
+} KMSG, *PKMSG;
+
 typedef struct _USER_MESSAGE
 {
   LIST_ENTRY ListEntry;
   BOOLEAN FreeLParam;
-  MSG Msg;
+  KMSG Msg;
 } USER_MESSAGE;
 
 typedef struct _USER_SENT_MESSAGE
 {
   LIST_ENTRY ListEntry;
-  MSG Msg;
+  KMSG Msg;
   PKEVENT volatile CompletionEvent;
   LRESULT volatile * volatile Result;
   struct _USER_MESSAGE_QUEUE* SenderQueue;
@@ -465,7 +491,7 @@ typedef struct _USER_SENT_MESSAGE_NOTIFY
   SENDASYNCPROC CompletionCallback;
   ULONG_PTR CompletionCallbackContext;
   LRESULT Result;
-  HWND hWnd;
+  PWINDOW_OBJECT Window;
   UINT Msg;
   LIST_ENTRY ListEntry;
 } USER_SENT_MESSAGE_NOTIFY;
@@ -554,9 +580,9 @@ BOOL                FASTCALL MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS            FASTCALL MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                                             PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam,
                                             UINT uTimeout, BOOL Block, ULONG_PTR *uResult);
-PUSER_MESSAGE       FASTCALL MsqCreateMessage(LPMSG Msg, BOOLEAN FreeLParam);
+PUSER_MESSAGE       FASTCALL MsqCreateMessage(PKMSG Msg, BOOLEAN FreeLParam);
 VOID                FASTCALL MsqDestroyMessage(PUSER_MESSAGE Message);
-VOID                FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam);
+VOID                FASTCALL MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, PKMSG Msg, BOOLEAN FreeLParam);
 VOID                FASTCALL MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN             FASTCALL MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
                                             IN BOOLEAN Hardware,
@@ -577,13 +603,14 @@ NTSTATUS            FASTCALL MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQu
 VOID                FASTCALL MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue, PUSER_SENT_MESSAGE_NOTIFY NotifyMessage);
 VOID                FASTCALL MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID                FASTCALL MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
-NTSTATUS            FASTCALL CopyMsgToKernelMem(MSG *KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry);
-NTSTATUS            FASTCALL CopyMsgToUserMem(MSG *UserModeMsg, MSG *KernelModeMsg);
+NTSTATUS            FASTCALL CopyMsgToKernelMem(PKMSG KernelModeMsg, MSG *UserModeMsg, PMSGMEMORY MsgMemoryEntry, PWINDOW_OBJECT MsgWindow);
+NTSTATUS            FASTCALL CopyMsgToUserMem(MSG *UserModeMsg, PKMSG KernelModeMsg);
 LRESULT             FASTCALL IntSendMessage(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam);
 LRESULT             FASTCALL IntSendMessageTimeout(PWINDOW_OBJECT Window, UINT Msg, WPARAM wParam, LPARAM lParam, 
                                                    UINT uFlags, UINT uTimeout, ULONG_PTR *uResult);
+BOOL                FASTCALL IntPostThreadMessage(PW32THREAD W32Thread, UINT Msg, WPARAM wParam, LPARAM lParam);
 BOOL                FASTCALL IntWaitMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax);
-BOOL                FASTCALL IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
+BOOL                FASTCALL IntTranslateKbdMessage(PKMSG lpMsg, HKL dwhkl);
 inline VOID                  MsqSetQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
 inline VOID                  MsqClearQueueBits(PUSER_MESSAGE_QUEUE queue, WORD bits);
 BOOL                         IntInitMessagePumpHook(VOID);
@@ -597,8 +624,7 @@ LPARAM              FASTCALL MsqGetMessageExtraInfo(VOID);
 
 BOOL       FASTCALL IntPeekMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
                                    UINT MsgFilterMin, UINT MsgFilterMax, UINT RemoveMsg);
-BOOL       FASTCALL IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PWINDOW_OBJECT MsgWindow,
-                                             LPMSG Msg, USHORT *HitTest, BOOL Remove);
+BOOL       FASTCALL IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, PKMSG Msg, USHORT *HitTest, BOOL Remove);
 PMSGMEMORY FASTCALL FindMsgMemory(UINT Msg);
 UINT       FASTCALL MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam);
 BOOL       FASTCALL IntGetMessage(PUSER_MESSAGE Msg, PWINDOW_OBJECT FilterWindow,
@@ -609,8 +635,8 @@ LRESULT    FASTCALL IntDispatchMessage(PNTUSERDISPATCHMESSAGEINFO MsgInfo, PWIND
 
 VOID           FASTCALL MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID           FASTCALL MsqPostHotKeyMessage(PVOID Thread, PWINDOW_OBJECT Window, WPARAM wParam, LPARAM lParam);
-VOID           FASTCALL MsqInsertSystemMessage(MSG* Msg);
-BOOL           FASTCALL MsqIsDblClk(LPMSG Msg, BOOL Remove);
+VOID           FASTCALL MsqInsertSystemMessage(PKMSG Msg);
+BOOL           FASTCALL MsqIsDblClk(PKMSG Msg, BOOL Remove);
 PWINDOW_OBJECT FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULONG Type, PWINDOW_OBJECT Window);
 
 /* PAINTING *******************************************************************/
@@ -653,7 +679,7 @@ PWINDOW_OBJECT FASTCALL MsqSetStateWindow(PUSER_MESSAGE_QUEUE MessageQueue, ULON
 VOID FASTCALL IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
 BOOL FASTCALL IntRedrawWindow(PWINDOW_OBJECT Window, LPRECT UpdateRect, HRGN UpdateRgn, UINT Flags);
 BOOL FASTCALL IntGetPaintMessage(PWINDOW_OBJECT Window, UINT MsgFilterMin, UINT MsgFilterMax,
-                                 PW32THREAD Thread, MSG *Message, BOOL Remove);
+                                 PW32THREAD Thread, PKMSG Message, BOOL Remove);
 HDC  FASTCALL IntBeginPaint(PWINDOW_OBJECT Window, PAINTSTRUCT* lPs);
 BOOL FASTCALL IntEndPaint(PWINDOW_OBJECT Window, CONST PAINTSTRUCT* lPs);
 BOOL FASTCALL IntGetUpdateRect(PWINDOW_OBJECT Window, LPRECT Rect, BOOL Erase);
@@ -706,7 +732,7 @@ typedef struct _MSG_TIMER_ENTRY{
    LARGE_INTEGER  Timeout;
    HANDLE         ThreadID;
    UINT           Period;
-   MSG            Msg;
+   KMSG           Msg;
 } MSG_TIMER_ENTRY;
 
 NTSTATUS         FASTCALL InitTimerImpl(VOID);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.3 2004/08/27 15:56:05 weiden Exp $
+/* $Id: input.c,v 1.36.4.4 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -472,7 +472,7 @@ IntMouseInput(MOUSEINPUT *mi)
   PSYSTEM_CURSORINFO CurInfo;
   PWINSTATION_OBJECT WinSta;
   BOOL DoMove, SwapButtons;
-  MSG Msg;
+  KMSG Msg;
   HBITMAP hBitmap;
   BITMAPOBJ *BitmapObj;
   SURFOBJ *SurfObj;

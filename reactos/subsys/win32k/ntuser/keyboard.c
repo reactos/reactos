@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: keyboard.c,v 1.31.2.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: keyboard.c,v 1.31.2.2 2004/08/31 11:38:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -601,13 +601,13 @@ W32kGetDefaultKeyLayout(VOID) {
 }
 
 BOOL FASTCALL
-IntTranslateKbdMessage(LPMSG lpMsg,
+IntTranslateKbdMessage(PKMSG lpMsg,
                        HKL dwhkl)
 {
   static INT dead_char = 0;
   LONG UState = 0;
   WCHAR wp[2] = { 0 };
-  MSG NewMsg = { 0 };
+  KMSG NewMsg = { 0 };
   PKBDTABLES keyLayout;
   BOOL Result = FALSE;
   DWORD ScanCode = 0;
@@ -653,14 +653,14 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 	}
       if (dead_char) 
 	{
-	  NewMsg.hwnd = lpMsg->hwnd;
+	  NewMsg.Window = lpMsg->Window;
 	  NewMsg.wParam = dead_char;
 	  NewMsg.lParam = lpMsg->lParam;
 	  dead_char = 0;
 	  MsqPostMessage(PsGetWin32Thread()->MessageQueue, &NewMsg, FALSE);
 	}
       
-      NewMsg.hwnd = lpMsg->hwnd;
+      NewMsg.Window = lpMsg->Window;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       DPRINT( "CHAR='%c' %04x %08x\n", wp[0], wp[0], lpMsg->lParam );
@@ -671,7 +671,7 @@ IntTranslateKbdMessage(LPMSG lpMsg,
     {
       NewMsg.message = 
 	(lpMsg->message == WM_KEYDOWN) ? WM_DEADCHAR : WM_SYSDEADCHAR;
-      NewMsg.hwnd = lpMsg->hwnd;
+      NewMsg.Window = lpMsg->Window;
       NewMsg.wParam = wp[0];
       NewMsg.lParam = lpMsg->lParam;
       dead_char = wp[0];
