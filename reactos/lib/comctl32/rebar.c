@@ -3443,7 +3443,7 @@ REBAR_MoveBand (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     /* save one to be moved */
     memcpy (&holder, &oldBands[uFrom], sizeof(REBAR_BAND));
 
-    /* close up rest of bands (psuedo delete) */
+    /* close up rest of bands (pseudo delete) */
     if (uFrom < infoPtr->uNumBands - 1) {
 	memcpy (&oldBands[uFrom], &oldBands[uFrom+1],
 		(infoPtr->uNumBands - uFrom - 1) * sizeof(REBAR_BAND));
