@@ -72,10 +72,10 @@ VOID ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 {
    KIRQL oldlvl;
    POBJECT_HEADER Header = BODY_TO_HEADER(Object);
-   
+
    RtlInitUnicodeString(&Header->Name, wcsdup(Name));
    Header->Parent = Parent;
-   
+
    KeAcquireSpinLock(&Parent->Lock, &oldlvl);
    InsertTailList(&Parent->head, &Header->Entry);
    KeReleaseSpinLock(&Parent->Lock, oldlvl);
@@ -108,7 +108,7 @@ PVOID ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
 	DPRINT("Scanning %w %w\n",current_obj->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
-	     if (wcsicmp(current_obj->Name.Buffer, Name)==0)
+	     if (_wcsicmp(current_obj->Name.Buffer, Name)==0)
 	       {
 		  DPRINT("Found it %x\n",HEADER_TO_BODY(current_obj));
 		  return(HEADER_TO_BODY(current_obj));

@@ -404,6 +404,13 @@ NTSTATUS RtlIntegerToUnicodeString(IN ULONG Value, IN ULONG Base,               
         return STATUS_SUCCESS;
 }
 
+
+ULONG RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
+{
+        return UnicodeString->Length/2;
+}
+
+
 NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
                                       IN PUNICODE_STRING SourceString,
                                       IN BOOLEAN AllocateDestinationString)
@@ -430,7 +437,8 @@ NTSTATUS RtlUnicodeStringToAnsiString(IN OUT PANSI_STRING DestinationString,
         SourceString->Buffer-=SourceString->Length;
 
         return STATUS_SUCCESS;
-};
+}
+
 
 NTSTATUS RtlUnicodeStringToInteger(IN PUNICODE_STRING String, IN ULONG Base,
                                    OUT PULONG Value)

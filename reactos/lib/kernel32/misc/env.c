@@ -66,7 +66,7 @@ GetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-		if ( wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+                if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
 			lstrcpynW(lpBuffer,Environment[i].Value.Buffer,min(nSize,Environment[i].Value.Length/sizeof(WCHAR)));
 			
 			return lstrlenW(Environment[i].Value.Buffer);
@@ -130,7 +130,7 @@ SetEnvironmentVariableW(
 
 	while (i < nEnvVar) 
 	{
-		if ( wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
+                if ( _wcsnicmp(Environment[i].Name.Buffer,lpName,min(NameLen,Environment[i].Name.Length/sizeof(WCHAR))) != 0 ) {
 			if ( lpValue != NULL ) {
 				lstrcpynW(Environment[i].Value.Buffer,lpValue,min(ValueLen,Environment[i].Value.MaximumLength/sizeof(WCHAR)));
 				return TRUE;

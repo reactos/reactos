@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.20 1999/07/22 21:31:39 ekohl Exp $
+# $Id: makefile,v 1.21 1999/07/29 21:14:02 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -27,12 +27,14 @@ RTL_OBJECTS = rtl/critical.o rtl/error.o rtl/heap.o rtl/largeint.o \
 STDLIB_OBJECTS = stdlib/atoi.o stdlib/atol.o stdlib/splitp.o \
                  stdlib/strtol.o stdlib/strtoul.o
 
-STRING_OBJECTS = string/ctype.o string/memcpy.o string/memmove.o \
-                 string/memset.o string/strcat.o string/strchr.o \
-                 string/strcmp.o string/strcspn.o \
-                 string/strcpy.o string/stricmp.o string/strlen.o string/strlwr.o \
-                 string/strncat.o string/strncmp.o string/strncpy.o \
-                 string/strnicmp.o string/strnlen.o string/strrchr.o \
+STRING_OBJECTS = string/ctype.o string/memccpy.o string/memchr.o \
+                 string/memcmp.o string/memcpy.o string/memicmp.o\
+                 string/memmove.o string/memset.o string/strcat.o \
+                 string/strchr.o string/strcmp.o string/strcspn.o \
+                 string/strcpy.o string/stricmp.o string/strlen.o \
+                 string/strlwr.o string/strncat.o string/strncmp.o \
+                 string/strncpy.o string/strnicmp.o string/strnlen.o \
+                 string/strpbrk.o string/strrchr.o string/strspn.o \
                  string/strstr.o string/strupr.o string/wstring.o
 
 OBJECTS = napi.o ldr/startup.o $(RTL_OBJECTS) \

@@ -6,7 +6,8 @@
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *                  Created 22/05/98
- *   1998/12/04  RJJ  Cleaned up and added i386 def checks
+ *   1998/12/04  RJJ    Cleaned up and added i386 def checks.
+ *   1999/07/29  ekohl  Added missing functions.
  */
 
 /* INCLUDES *****************************************************************/
@@ -18,20 +19,90 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS *****************************************************************/
-
-wchar_t * ___wcstok = NULL;
-
 /* FUNCTIONS *****************************************************************/
 
-wchar_t* wcsdup(wchar_t* src)
+int _wcsicmp (const wchar_t* cs, const wchar_t* ct)
 {
-   wchar_t* dest;
-   
-   dest = ExAllocatePool(NonPagedPool, (wcslen(src)+1)*2);
-   wcscpy(dest,src);
-   return(dest);
+	while (*cs != '\0' && *ct != '\0' && towupper(*cs) == towupper(*ct))
+	{
+		cs++;
+		ct++;
+	}
+	return *cs - *ct;
 }
+
+wchar_t * _wcslwr (wchar_t *x)
+{
+	wchar_t  *y=x;
+
+	while (*y)
+	{
+		*y=towlower(*y);
+		y++;
+	}
+	return x;
+}
+
+
+int _wcsnicmp (const wchar_t * cs,const wchar_t * ct,size_t count)
+{
+   wchar_t *save = (wchar_t *)cs;
+   while (towlower(*cs) == towlower(*ct) && (int)(cs - save) < count)
+     {
+	if (*cs == 0)
+	   return 0;
+	cs++;
+	ct++;
+     }
+   return towlower(*cs) - towlower(*ct);
+}
+
+
+wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
+{
+	wchar_t *t = wsToFill;
+	int i = 0;
+	while( *wsToFill != 0 && i < sizeMaxFill)
+	{
+		*wsToFill = wcFill;
+		wsToFill++;
+		i++;
+	}
+	return t;
+}
+
+
+wchar_t * _wcsrev(wchar_t *s) 
+{
+	wchar_t  *e;
+	wchar_t   a;
+	e=s;
+	while (*e)
+		e++;
+	while (s<e)
+	{
+		a=*s;
+		*s=*e;
+		*e=a;
+		s++;
+		e--;
+	}
+	return s;
+}
+
+
+wchar_t *_wcsupr(wchar_t *x)
+{
+	wchar_t *y=x;
+
+	while (*y)
+	{
+		*y=towupper(*y);
+		y++;
+	}
+	return x;
+}
+
 
 wchar_t * wcscat(wchar_t *dest, const wchar_t *src)
 {
@@ -48,8 +119,7 @@ wchar_t * wcscat(wchar_t *dest, const wchar_t *src)
   return dest;
 }
 
-wchar_t * 
-wcschr(const wchar_t *str, wchar_t ch)
+wchar_t * wcschr(const wchar_t *str, wchar_t ch)
 {
   while ((*str) != ((wchar_t) 0))
     {
@@ -63,15 +133,6 @@ wcschr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-int wcsicmp(const wchar_t* cs, const wchar_t* ct)
-{
-   while (*cs != '\0' && *ct != '\0' && towupper(*cs) == towupper(*ct))
-     {
-	cs++;
-	ct++;
-     }
-   return *cs - *ct;
-}
 
 int wcscmp(const wchar_t *cs, const wchar_t *ct)
 {
@@ -82,6 +143,7 @@ int wcscmp(const wchar_t *cs, const wchar_t *ct)
     }
   return *cs - *ct;
 }
+
 
 wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 {
@@ -97,10 +159,37 @@ wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
    return(str1);
 }
 
-size_t wcscspn(const wchar_t *cs, const wchar_t *ct)
+
+size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 {
-   UNIMPLEMENTED;
+	wchar_t *s;
+	wchar_t *t;
+	s=(wchar_t *)str;
+	do {
+		t=(wchar_t *)reject;
+		while (*t) { 
+			if (*t==*s) 
+				break;
+			t++;
+		}
+		if (*t) 
+			break;
+		s++;
+	} while (*s);
+	return s-str; /* nr of wchars */
 }
+
+
+/* this function is NOT exported */
+wchar_t* wcsdup(wchar_t* src)
+{
+	wchar_t* dest;
+
+	dest = ExAllocatePool (NonPagedPool, (wcslen (src)+1)*2);
+	wcscpy (dest,src);
+	return (dest);
+}
+
 
 size_t wcslen(const wchar_t *s)
 {
@@ -114,8 +203,8 @@ size_t wcslen(const wchar_t *s)
   return len;
 }
 
-wchar_t * 
-wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
+
+wchar_t * wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
 {
   int i, j;
    
@@ -134,8 +223,8 @@ wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
   return dest;
 }
 
-int 
-wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count)
+
+int wcsncmp(const wchar_t *cs, const wchar_t *ct, size_t count)
 {
   while (*cs != '\0' && *ct != '\0' && *cs == *ct && --count)
     {
@@ -165,14 +254,7 @@ wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 }
 
 
-int wcsnicmp(const wchar_t *cs, const wchar_t *ct, size_t count)
-{
-   UNIMPLEMENTED;
-}
-
-
-wchar_t * 
-wcsrchr(const wchar_t *str, wchar_t ch)
+wchar_t * wcsrchr(const wchar_t *str, wchar_t ch)
 {
   unsigned int len = 0;
   while (str[len] != ((wchar_t)0))
@@ -191,20 +273,50 @@ wcsrchr(const wchar_t *str, wchar_t ch)
   return NULL;
 }
 
-size_t 
-wcsspn(const wchar_t *cs, const wchar_t *ct)
+
+size_t wcsspn(const wchar_t *str,const wchar_t *accept)
 {
-UNIMPLEMENTED;
+	wchar_t  *s;
+	wchar_t  *t;
+	s=(wchar_t *)str;
+	do
+	{
+		t=(wchar_t *)accept;
+		while (*t)
+		{
+			if (*t==*s)
+				break;
+			t++;
+		}
+		if (!*t)
+			break;
+		s++;
+	} while (*s);
+	return s-str; /* nr of wchars */
 }
 
-wchar_t * wcsstr(const wchar_t *cs, const wchar_t *ct)
+
+wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
 {
-UNIMPLEMENTED;
+	wchar_t *x;
+	wchar_t *y;
+	wchar_t *c;
+	x=(wchar_t *)s;
+	while (*x)
+	{
+		if (*x==*b)
+		{
+			y=x;
+			c=(wchar_t *)b;
+			while (*y && *c && *y==*c)
+			{
+				c++;
+				y++;
+			}
+			if (!*c)
+				return x;
+		}
+		x++;
+	}
+	return NULL;
 }
-
-wchar_t * wcstok(wchar_t * s,const wchar_t * ct)
-{
-UNIMPLEMENTED;
-}
-
-

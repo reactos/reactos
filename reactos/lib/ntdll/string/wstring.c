@@ -20,13 +20,55 @@
 
 /* FUNCTIONS *****************************************************************/
 
-int wcsnicmp(const wchar_t* ws1, const wchar_t* ws2, size_t size)
+int _wcsicmp(const wchar_t* cs,const wchar_t * ct)  
 {
+	while (towlower(*cs) == towlower(*ct))
+	{
+    		if (*cs == 0)
+      			return 0;
+    		cs++;
+    		ct++;
+	}
+	return towlower(*cs) - towlower(*ct);
 }
 
-int wcsicmp(const wchar_t* ws1, const wchar_t* ws2)
+
+wchar_t* _wcslwr(wchar_t *x)
 {
+	wchar_t  *y=x;
+
+	while (*y) {
+		*y=towlower(*y);
+		y++;
+	}
+	return x;
 }
+
+int _wcsnicmp(const wchar_t * cs,const wchar_t * ct,size_t count)
+{
+  wchar_t *save = (wchar_t *)cs;
+  while (towlower(*cs) == towlower(*ct) && (int)(cs - save) < count)
+  {
+    if (*cs == 0)
+      return 0;
+    cs++;
+    ct++;
+  }
+  return towlower(*cs) - towlower(*ct);
+}
+
+
+wchar_t *_wcsupr(wchar_t *x)
+{
+	wchar_t  *y=x;
+
+	while (*y) {
+		*y=towupper(*y);
+		y++;
+	}
+	return x;
+}
+
 
 wchar_t* wcscat(wchar_t *dest, const wchar_t *src)
 {
@@ -81,6 +123,26 @@ wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 }
 
 
+size_t wcscspn(const wchar_t *str,const wchar_t *reject)
+{
+	wchar_t *s;
+	wchar_t *t;
+	s=(wchar_t *)str;
+	do {
+		t=(wchar_t *)reject;
+		while (*t) { 
+			if (*t==*s) 
+				break;
+			t++;
+		}
+		if (*t) 
+			break;
+		s++;
+	} while (*s);
+	return s-str; /* nr of wchars */
+}
+
+
 size_t wcslen(const wchar_t *s)
 {
   unsigned int len = 0;
@@ -114,6 +176,19 @@ wcsncat(wchar_t *dest, const wchar_t *src, size_t count)
 }
 
 
+int wcsncmp(const wchar_t * cs,const wchar_t * ct,size_t count)
+{
+  while ((*cs) == (*ct) && count > 0)
+  {
+    if (*cs == 0)
+      return 0;
+    cs++;
+    ct++;
+    count--;
+  }
+  return (*cs) - (*ct);
+}
+
 
 wchar_t* wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 {
@@ -133,8 +208,24 @@ wchar_t* wcsncpy(wchar_t *dest, const wchar_t *src, size_t count)
 }
 
 
-wchar_t * 
-wcsrchr(const wchar_t *str, wchar_t ch)
+wchar_t *wcspbrk(const wchar_t *s1, const wchar_t *s2)
+{
+  const wchar_t *scanp;
+  int c, sc;
+
+  while ((c = *s1++) != 0)
+  {
+    for (scanp = s2; (sc = *scanp++) != 0;)
+      if (sc == c)
+      {
+        return (wchar_t *)(--s1);
+      }
+  }
+  return 0;
+}
+
+
+wchar_t * wcsrchr(const wchar_t *str, wchar_t ch)
 {
   unsigned int len = 0;
   while (str[len] != ((wchar_t)0))
@@ -154,4 +245,44 @@ wcsrchr(const wchar_t *str, wchar_t ch)
 }
 
 
+size_t wcsspn(const wchar_t *str,const wchar_t *accept)
+{
+	wchar_t  *s;
+	wchar_t  *t;
+	s=(wchar_t *)str;
+	do {
+		t=(wchar_t *)accept;
+		while (*t) { 
+			if (*t==*s) 
+				break;
+			t++;
+		}
+		if (!*t) 
+			break;
+		s++;
+	} while (*s);
+	return s-str; /* nr of wchars */
+}
 
+
+wchar_t *wcsstr(const wchar_t *s,const wchar_t *b)
+{
+	wchar_t *x;
+	wchar_t *y;
+	wchar_t *c;
+	x=(wchar_t *)s;
+	while (*x) {
+		if (*x==*b) {
+			y=x;
+			c=(wchar_t *)b;
+			while (*y && *c && *y==*c) { 
+				c++;
+				y++; 
+			}
+			if (!*c)
+				return x;
+		}
+		x++;
+	}
+	return NULL;
+}

@@ -383,19 +383,12 @@ int wsprintfW(unsigned short * buf, const unsigned short *fmt, ...)
 }
 #endif
 
-unsigned short towupper(unsigned short w)
-{
-	if ( w < L'A' )
-		return w + 'A';
-	else
-		return w;
-}
-
+#if 0
 int iswlower(wint_t w)
 {
 	if ( w < L'A' )
 		return 1;
 	else
-		return 0;	
+		return 0;
 }
-		
+#endif

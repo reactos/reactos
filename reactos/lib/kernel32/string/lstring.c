@@ -89,8 +89,7 @@ lstrcmpiW(
     LPCWSTR lpString2
     )
 {
-	return wcsicmp(lpString1,lpString2);
-
+        return _wcsicmp(lpString1,lpString2);
 }
 
 LPWSTR
@@ -133,10 +132,5 @@ lstrlenW(
 	return wcslen(lpString);
 	
 }
-
-
-
-
-
 
 
