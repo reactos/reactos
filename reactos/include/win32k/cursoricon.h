@@ -15,27 +15,50 @@ typedef struct _ICONIMAGE
    BYTE            icAND[1];      // DIB bits for AND mask
 } ICONIMAGE, *LPICONIMAGE __attribute__((packed));
 
+typedef struct _CURSORIMAGE
+{
+   BITMAPINFOHEADER   icHeader;      // DIB header
+   RGBQUAD         icColors[1];   // Color table
+   BYTE            icXOR[1];      // DIB bits for XOR mask
+   BYTE            icAND[1];      // DIB bits for AND mask
+} CURSORIMAGE, *LPCURSORIMAGE __attribute__((packed));
+
+typedef struct
+{
+    BYTE   bWidth;
+    BYTE   bHeight;
+    BYTE   bColorCount;
+    BYTE   bReserved;
+} ICONRESDIR __attribute__((packed));
+
+typedef struct
+{
+    WORD   wWidth;
+    WORD   wHeight;
+} CURSORRESDIR __attribute__((packed));
+
+typedef struct
+{
+    WORD   wPlanes;				// Number of Color Planes in the XOR image
+    WORD   wBitCount;			// Bits per pixel in the XOR image
+} ICONDIR __attribute__((packed));
+
+typedef struct
+{
+    WORD   wXHotspot;				// Number of Color Planes in the XOR image
+    WORD   wYHotspot;			// Bits per pixel in the XOR image
+} CURSORDIR __attribute__((packed));
+
 typedef struct
 {
     BYTE   bWidth;				// Width, in pixels, of the icon image
     BYTE   bHeight;				// Height, in pixels, of the icon image
     BYTE   bColorCount;			// Number of colors in image (0 if >=8bpp)
     BYTE   bReserved;			// Reserved ( must be 0)
-} ICONDIR __attribute__((packed));
-
-typedef struct
-{
-    WORD   wWidth;				//Width, in pixels of the cursor image
-    WORD   wHeight;				//Hight, in pixles of the cursor image
-} CURSORDIR __attribute__((packed));
-
-typedef struct
-{   union
+	union
     { ICONDIR icon;
       CURSORDIR  cursor;
     } Info;
-    WORD   wPlanes;				// Number of Color Planes in the XOR image
-    WORD   wBitCount;			// Bits per pixel in the XOR image
     DWORD  dwBytesInRes;		// How many bytes in this resource?
     DWORD  dwImageOffset;		// Where in the file is this image?
 } CURSORICONDIRENTRY __attribute__((packed));
@@ -49,23 +72,24 @@ typedef struct
 } CURSORICONDIR __attribute__((packed));
 
 typedef struct
-{  union
-   { ICONDIR icon;
-     CURSORDIR  cursor;
-   } Info;
-   WORD   wPlanes;              // Color Planes
-   WORD   wBitCount;            // Bits per pixel
-   DWORD  dwBytesInRes;         // how many bytes in this resource?
-   WORD   nID;                  // the ID
-} GRPICONDIRENTRY __attribute__((packed));
+{  
+	union
+    { ICONRESDIR icon;
+      CURSORRESDIR  cursor;
+    } ResInfo;
+	WORD   wPlanes;              // Color Planes
+	WORD   wBitCount;            // Bits per pixel
+	DWORD  dwBytesInRes;         // how many bytes in this resource?
+	WORD   nID;                  // the ID
+} GRPCURSORICONDIRENTRY __attribute__((packed));
 
 typedef struct 
 {
    WORD            idReserved;   // Reserved (must be 0)
    WORD            idType;       // Resource type (1 for icons)
    WORD            idCount;      // How many images?
-   GRPICONDIRENTRY   idEntries[1] __attribute__((packed)); // The entries for each image
-} GRPICONDIR __attribute__((packed));
+   GRPCURSORICONDIRENTRY   idEntries[1] __attribute__((packed)); // The entries for each image
+} GRPCURSORICONDIR __attribute__((packed));
 
 /* GDI logical Icon/Cursor object */
 typedef struct _ICONCURSOROBJ

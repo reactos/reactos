@@ -441,8 +441,7 @@ LockWindowUpdate@4
 LockWorkStation@0
 LookupIconIdFromDirectory@8
 LookupIconIdFromDirectoryEx@20
-;MBToWCSEx
-;MB_GetString
+MBToWCSEx@24
 MapDialogRect@8
 MapVirtualKeyA@8
 MapVirtualKeyExA@12
@@ -680,7 +679,7 @@ VkKeyScanA@4
 VkKeyScanExA@8
 VkKeyScanExW@8
 VkKeyScanW@4
-;WCSToMBEx
+WCSToMBEx@24
 ;WINNLSEnableIME
 ;WINNLSGetEnableStatus
 ;WINNLSGetIMEHotkey

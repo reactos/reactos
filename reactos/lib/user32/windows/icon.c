@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.8 2003/08/19 11:48:49 weiden Exp $
+/* $Id: icon.c,v 1.9 2003/08/20 14:08:19 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -37,7 +37,7 @@
 /* FUNCTIONS *****************************************************************/
 
 HICON
-ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired)
+ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
 {
   HANDLE hXORBitmap;
   HANDLE hANDBitmap;
@@ -87,8 +87,8 @@ ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDe
   RtlFreeHeap(RtlGetProcessHeap(), 0, bwBIH);
 
   IconInfo.fIcon = TRUE;
-  IconInfo.xHotspot = cxDesired/2;
-  IconInfo.yHotspot = cyDesired/2;
+  IconInfo.xHotspot = xHotspot;
+  IconInfo.yHotspot = yHotspot;
   IconInfo.hbmColor = hXORBitmap;
   IconInfo.hbmMask = hANDBitmap;
 
@@ -179,8 +179,24 @@ CreateIconFromResourceEx(
   ULONG ColourCount;
   PVOID Data;
   HDC hScreenDc;
+  WORD wXHotspot;
+  WORD wYHotspot;
 
-  DPRINT("fIcon, dwVersion, cxDesired, cyDesired are all ignored in this implementation!\n");
+  DPRINT("dwVersion, cxDesired, cyDesired are all ignored in this implementation!\n");
+
+  if (!fIcon)
+  {
+	  wXHotspot = (WORD)*pbIconBits;
+	  pbIconBits+=2;
+	  wYHotspot = (WORD)*pbIconBits;
+	  pbIconBits+=2;
+	  cbIconBits-=4;
+  }
+  else
+  {
+	  wXHotspot = cxDesired / 2;
+	  wYHotspot = cyDesired / 2;
+  }
 
   //get an safe copy of the icon data
   SafeIconImage = RtlAllocateHeap(RtlGetProcessHeap(), 0, cbIconBits);
@@ -213,7 +229,7 @@ CreateIconFromResourceEx(
      return(NULL);
   }
 
-  hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired);
+  hIcon = ICON_CreateIconFromData(hScreenDc, Data, SafeIconImage, cxDesired, cyDesired, wXHotspot, wYHotspot);
   RtlFreeHeap(RtlGetProcessHeap(), 0, SafeIconImage);
   return hIcon;
 }
@@ -497,8 +513,8 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
     iColorDiff = 0xFFFFFFFF;
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
     {
-		iTempXDiff = abs(width - entry->Info.icon.bWidth);
-		iTempYDiff = abs(height - entry->Info.icon.bHeight);
+		iTempXDiff = abs(width - entry->bWidth);
+		iTempYDiff = abs(height - entry->bHeight);
 
         if(iTotalDiff > (iTempXDiff + iTempYDiff))
         {
@@ -511,10 +527,10 @@ CURSORICON_FindBestCursor( CURSORICONDIR *dir, int width, int height, int colors
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
     {
-        if(abs(width - entry->Info.icon.bWidth) == (int) iXDiff &&
-            abs(height - entry->Info.icon.bHeight) == (int) iYDiff)
+        if(abs(width - entry->bWidth) == (int) iXDiff &&
+            abs(height - entry->bHeight) == (int) iYDiff)
         {
-            iTempColorDiff = abs(colors - entry->Info.icon.bColorCount);
+            iTempColorDiff = abs(colors - entry->bColorCount);
 
             if(iColorDiff > iTempColorDiff)
         	{
@@ -549,9 +565,9 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
     iColorDiff = 0xFFFFFFFF;
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
       {
-	iTempXDiff = abs(width - entry->Info.icon.bWidth);
+	iTempXDiff = abs(width - entry->bWidth);
 
-	iTempYDiff = abs(height - entry->Info.icon.bHeight);
+	iTempYDiff = abs(height - entry->bHeight);
 
         if(iTotalDiff > (iTempXDiff + iTempYDiff))
         {
@@ -564,10 +580,10 @@ CURSORICON_FindBestIcon( CURSORICONDIR *dir, int width, int height, int colors)
     /* Find Best Colors for Best Fit */
     for (i = 0, entry = &dir->idEntries[0]; i < dir->idCount; i++,entry++)
       {
-        if(abs(width - entry->Info.icon.bWidth) == (int) iXDiff &&
-           abs(height - entry->Info.icon.bHeight) == (int) iYDiff)
+        if(abs(width - entry->bWidth) == (int) iXDiff &&
+           abs(height - entry->bHeight) == (int) iYDiff)
         {
-            iTempColorDiff = abs(colors - entry->Info.icon.bColorCount);
+            iTempColorDiff = abs(colors - entry->bColorCount);
             if(iColorDiff > iTempColorDiff)
             {
                 bestEntry = entry;
@@ -592,12 +608,12 @@ LookupIconIdFromDirectoryEx(
   int cyDesired,
   UINT Flags)
 {
-    GRPICONDIR *dir = (GRPICONDIR*)presbits;
+    GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)presbits;
     UINT retVal = 0;
 
     if( dir && !dir->idReserved && (dir->idType & 3) )
     {
-	GRPICONDIRENTRY* entry;
+	GRPCURSORICONDIRENTRY* entry;
 	HDC hdc;
 	UINT palEnts;
 	int colors;
@@ -612,7 +628,7 @@ LookupIconIdFromDirectoryEx(
 
 	ReleaseDC(0, hdc);
 
-	entry = (GRPICONDIRENTRY*)CURSORICON_FindBestIcon( (CURSORICONDIR*)dir,
+	entry = (GRPCURSORICONDIRENTRY*)CURSORICON_FindBestIcon( (CURSORICONDIR*)dir,
 	                                                   cxDesired,
 	                                                   cyDesired,
 	                                                   colors );
