@@ -37,7 +37,18 @@ GetProcessAffinityMask (HANDLE hProcess,
 			LPDWORD lpSystemAffinityMask)
 {
   PROCESS_BASIC_INFORMATION ProcessInfo;
+  SYSTEM_BASIC_INFORMATION SystemInfo;
   NTSTATUS Status;
+  
+  Status = NtQuerySystemInformation(SystemBasicInformation,
+                                    &SystemInfo,
+                                    sizeof(SystemInfo),
+                                    NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
 
   Status = NtQueryInformationProcess (hProcess,
 				      ProcessBasicInformation,
@@ -51,9 +62,7 @@ GetProcessAffinityMask (HANDLE hProcess,
     }
 
   *lpProcessAffinityMask = (DWORD)ProcessInfo.AffinityMask;
-
-  /* FIXME */
-  *lpSystemAffinityMask  = 0x00000001;
+  *lpSystemAffinityMask = (DWORD)SystemInfo.ActiveProcessors;
 
   return TRUE;
 }
