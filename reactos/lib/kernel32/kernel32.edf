@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.17 2002/12/27 23:50:20 gvg Exp $
+; $Id: kernel32.edf,v 1.18 2003/01/04 18:33:18 robd Exp $
 ;
 ; kernel32.edf
 ;
@@ -102,6 +102,7 @@ CreateSemaphoreA=CreateSemaphoreA@16
 CreateSemaphoreW=CreateSemaphoreW@16
 CreateTapePartition=CreateTapePartition@16
 CreateThread=CreateThread@24
+CreateToolhelp32Snapshot=CreateToolhelp32Snapshot@8
 CreateVirtualBuffer=CreateVirtualBuffer@12
 CreateWaitableTimerA=CreateWaitableTimerA@12
 CreateWaitableTimerW=CreateWaitableTimerW@12
@@ -481,6 +482,10 @@ PeekNamedPipe=PeekNamedPipe@24
 PostQueuedCompletionStatus=PostQueuedCompletionStatus@16
 PrepareTape=PrepareTape@12
 ProcessIdToSessionId=ProcessIdToSessionId@8
+Process32First=Process32First@8
+Process32FirstW=Process32FirstW@8
+Process32Next=Process32Next@8
+Process32NextW=Process32NextW@8
 PulseEvent=PulseEvent@4
 PurgeComm=PurgeComm@8
 QueryDosDeviceA=QueryDosDeviceA@12

@@ -99,6 +99,7 @@ CreateSemaphoreA@16
 CreateSemaphoreW@16
 CreateTapePartition@16
 CreateThread@24
+CreateToolhelp32Snapshot@8
 CreateVirtualBuffer@12
 CreateWaitableTimerA@12
 CreateWaitableTimerW@12
@@ -477,6 +478,10 @@ PeekNamedPipe@24
 PostQueuedCompletionStatus@16
 PrepareTape@12
 ProcessIdToSessionId@8
+Process32First@8
+Process32FirstW@8
+Process32Next@8
+Process32NextW@8
 PulseEvent@4
 PurgeComm@8
 QueryDosDeviceA@12
