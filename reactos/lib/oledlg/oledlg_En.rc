@@ -1,0 +1,55 @@
+/*
+ * Copyright 2003 Ulrich Czekalla for CodeWeavers
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+UIINSERTOBJECT DIALOG DISCARDABLE  0, 0, 294, 151
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Insert Object"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_OBJTYPELIST,82,19,131,66,LBS_SORT |
+                    LBS_NOINTEGRALHEIGHT | WS_VISIBLE | WS_VSCROLL |
+                    WS_TABSTOP
+    LTEXT           "Object Type:",IDC_OBJTYPELBL,82,7,53,8,WS_VISIBLE
+    DEFPUSHBUTTON   "OK",IDOK,221,7,66,14
+    PUSHBUTTON      "Cancel",IDCANCEL,221,24,66,14
+    GROUPBOX        "Result",IDC_RESULT,7,103,208,41
+    CONTROL         "Create New",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_GROUP,7,20,62,10
+    CONTROL         "Create Control",IDC_CREATECONTROL,"Button",
+                    BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
+    CONTROL         "Create From File",IDC_CREATEFROMFILE,"Button",
+                    BS_AUTORADIOBUTTON,7,37,67,10
+    LTEXT           "",IDC_RESULTDESC,49,112,159,23
+    PUSHBUTTON      "&Add Control...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
+    CONTROL         "Display As Icon",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
+    PUSHBUTTON      "Browse...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
+    LTEXT           "File:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE
+    EDITTEXT        IDC_FILE,83,37,132,13,ES_AUTOHSCROLL | NOT WS_VISIBLE
+END
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_RESULTOBJDESC	"Insert a new %s object into your document"
+  IDS_RESULTFILEOBJDESC	"Insert the contents of the file as an object into your document so that you may activate it using the program which created it."
+  IDS_BROWSE            "Browse"
+  IDS_NOTOLEMOD         "File does not appear to be a valid OLE module. Unable to register OLE control."
+  IDS_NOTOLEMODCAPTION  "Add Control"
+}
