@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.6 2000/06/12 14:57:10 ekohl Exp $
+/* $Id: process.c,v 1.7 2000/07/01 22:37:41 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,16 +16,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS *****************************************************************/
-
-PEPROCESS
-STDCALL
-IoGetCurrentProcess (
-	VOID
-	)
-{
-	return (PsGetCurrentProcess());
-}
-
 
 PVOID
 STDCALL

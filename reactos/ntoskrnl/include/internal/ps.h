@@ -35,6 +35,22 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes);
 
+PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
+					PTOKEN_TYPE TokenType,
+					PUCHAR b,
+					PSECURITY_IMPERSONATION_LEVEL Level);
+
+NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
+			      PACCESS_TOKEN* Token);
+
+ULONG PsSuspendThread(PETHREAD Thread,
+		      PNTSTATUS WaitStatus,
+		      UCHAR Alertable,
+		      ULONG WaitMode);
+ULONG PsResumeThread(PETHREAD Thread,
+		     PNTSTATUS WaitStatus);
+
+
 #define THREAD_STATE_INVALID      (0)
 #define THREAD_STATE_RUNNABLE     (1)
 #define THREAD_STATE_RUNNING      (2)

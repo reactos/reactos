@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.46 2000/06/29 23:35:44 dwelch Exp $
+/* $Id: process.c,v 1.47 2000/07/01 22:37:28 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -285,10 +285,14 @@ HANDLE STDCALL PsGetCurrentProcessId(VOID)
    return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
 
-struct _EPROCESS* PsGetCurrentProcess(VOID)
 /*
  * FUNCTION: Returns a pointer to the current process
  */
+PEPROCESS
+STDCALL
+IoGetCurrentProcess (
+	VOID
+	)
 {
    if (PsGetCurrentThread() == NULL || 
        PsGetCurrentThread()->ThreadsProcess == NULL)

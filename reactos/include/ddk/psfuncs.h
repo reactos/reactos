@@ -1,18 +1,15 @@
-/* $Id: psfuncs.h,v 1.7 2000/06/03 21:33:57 ekohl Exp $
+/* $Id: psfuncs.h,v 1.8 2000/07/01 22:36:53 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
 
-PACCESS_TOKEN PsReferenceEffectiveToken(PETHREAD Thread,
-					PTOKEN_TYPE TokenType,
-					PUCHAR b,
-					PSECURITY_IMPERSONATION_LEVEL Level);
 
-NTSTATUS PsOpenTokenOfProcess(HANDLE ProcessHandle,
-			      PACCESS_TOKEN* Token);
-
-HANDLE STDCALL PsGetCurrentProcessId(VOID);
-HANDLE STDCALL PsGetCurrentThreadId(VOID);
+NTSTATUS
+STDCALL
+PsAssignImpersonationToken (
+	PETHREAD	Thread,
+	HANDLE		TokenHandle
+	);
 
 /*
  * FUNCTION: Creates a thread which executes in kernel mode
@@ -30,37 +27,47 @@ HANDLE STDCALL PsGetCurrentThreadId(VOID);
  *                     execution
  * RETURNS: Success or failure status
  */
-NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
-				      ACCESS_MASK DesiredAccess,
-				      POBJECT_ATTRIBUTES ObjectAttributes,
-				      HANDLE ProcessHandle,
-				      PCLIENT_ID ClientId,
-				      PKSTART_ROUTINE StartRoutine,
-				      PVOID StartContext);
-NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus);
-ULONG PsSuspendThread(PETHREAD Thread,
-		      PNTSTATUS WaitStatus,
-		      UCHAR Alertable,
-		      ULONG WaitMode);
-ULONG PsResumeThread(PETHREAD Thread,
-		     PNTSTATUS WaitStatus);
-PETHREAD PsGetCurrentThread(VOID);
-struct _EPROCESS* PsGetCurrentProcess(VOID);
-PACCESS_TOKEN STDCALL PsReferenceImpersonationToken(PETHREAD Thread,
-						    PULONG Unknown1,
-						    PULONG Unknown2,
-						    SECURITY_IMPERSONATION_LEVEL* 
-						    Level);
-PACCESS_TOKEN STDCALL PsReferencePrimaryToken(PEPROCESS Process);
-NTSTATUS STDCALL PsAssignImpersonationToken(PETHREAD Thread,
-					    HANDLE TokenHandle);
+NTSTATUS
+STDCALL
+PsCreateSystemThread (
+	PHANDLE			ThreadHandle,
+	ACCESS_MASK		DesiredAccess,
+	POBJECT_ATTRIBUTES	ObjectAttributes,
+	HANDLE			ProcessHandle,
+	PCLIENT_ID		ClientId,
+	PKSTART_ROUTINE		StartRoutine,
+	PVOID			StartContext
+	);
 
-VOID STDCALL PsImpersonateClient(PETHREAD Thread,
-				 PACCESS_TOKEN Token,
-				 UCHAR b,
-				 UCHAR c,
-				 SECURITY_IMPERSONATION_LEVEL Level);
-VOID STDCALL PsRevertToSelf(PETHREAD Thread);
+/*
+ * PEPROCESS
+ * PsGetCurrentProcess (
+ *	VOID
+ *	);
+ */
+#define PsGetCurrentProcess() \
+	(IoGetCurrentProcess ())
+
+HANDLE
+STDCALL
+PsGetCurrentProcessId (
+	VOID
+	);
+
+/*
+ * PETHREAD
+ * PsGetCurrentThread (
+ *	VOID
+ *	);
+*/
+#define PsGetCurrentThread() \
+	((PETHREAD)KeGetCurrentThread ())
+
+HANDLE
+STDCALL
+PsGetCurrentThreadId (
+	VOID
+	);
 
 BOOLEAN
 STDCALL
@@ -69,6 +76,52 @@ PsGetVersion (
 	PULONG		MinorVersion	OPTIONAL,
 	PULONG		BuildNumber	OPTIONAL,
 	PUNICODE_STRING	CSDVersion	OPTIONAL
+	);
+
+VOID
+STDCALL
+PsImpersonateClient (
+	PETHREAD			Thread,
+	PACCESS_TOKEN			Token,
+	UCHAR				b,
+	UCHAR				c,
+	SECURITY_IMPERSONATION_LEVEL	Level
+	);
+
+PACCESS_TOKEN
+STDCALL
+PsReferenceImpersonationToken (
+	PETHREAD			Thread,
+	PULONG				Unknown1,
+	PULONG				Unknown2,
+	SECURITY_IMPERSONATION_LEVEL	* Level
+	);
+
+PACCESS_TOKEN
+STDCALL
+PsReferencePrimaryToken (
+	PEPROCESS	Process
+	);
+
+#if 0
+/* FIXME: This is the correct prototype */
+VOID
+STDCALL
+PsRevertToSelf (
+	VOID
+	);
+#endif
+
+VOID
+STDCALL
+PsRevertToSelf (
+	PETHREAD	Thread
+	);
+
+NTSTATUS
+STDCALL
+PsTerminateSystemThread (
+	NTSTATUS	ExitStatus
 	);
 
 #endif
