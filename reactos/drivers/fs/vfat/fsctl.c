@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.27 2004/01/28 20:53:46 ekohl Exp $
+/* $Id: fsctl.c,v 1.28 2004/03/16 08:30:28 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -127,40 +127,47 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    Status = VfatReadDisk(DeviceToMount, &Offset, DiskGeometry.BytesPerSector, (PUCHAR) Boot, FALSE);
    if (NT_SUCCESS(Status))
    {
-      FatInfo.VolumeID = Boot->VolumeID;
-      FatInfo.FATStart = Boot->ReservedSectors;
-      FatInfo.FATCount = Boot->FATCount;
-      FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
-      FatInfo.BytesPerSector = Boot->BytesPerSector;
-      FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
-      FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
-      FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
-      FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
-      FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
-      FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
-      Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
-      FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
-      if (FatInfo.NumberOfClusters < 4085)
+      if (Boot->BytesPerSector != 0)
       {
-         DPRINT("FAT12\n");
-         FatInfo.FatType = FAT12;
-      }
-      else if (FatInfo.NumberOfClusters >= 65525)
-      {
-         DPRINT("FAT32\n");
-         FatInfo.FatType = FAT32;
-         FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
-         FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
-         FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+         FatInfo.VolumeID = Boot->VolumeID;
+         FatInfo.FATStart = Boot->ReservedSectors;
+         FatInfo.FATCount = Boot->FATCount;
+         FatInfo.FATSectors = Boot->FATSectors ? Boot->FATSectors : ((struct _BootSector32*) Boot)->FATSectors32;
+         FatInfo.BytesPerSector = Boot->BytesPerSector;
+         FatInfo.SectorsPerCluster = Boot->SectorsPerCluster;
+         FatInfo.BytesPerCluster = FatInfo.BytesPerSector * FatInfo.SectorsPerCluster;
+         FatInfo.rootDirectorySectors = ((Boot->RootEntries * 32) + Boot->BytesPerSector - 1) / Boot->BytesPerSector;
+         FatInfo.rootStart = FatInfo.FATStart + FatInfo.FATCount * FatInfo.FATSectors;
+         FatInfo.dataStart = FatInfo.rootStart + FatInfo.rootDirectorySectors;
+         FatInfo.Sectors = Sectors = Boot->Sectors ? Boot->Sectors : Boot->SectorsHuge;
+         Sectors -= Boot->ReservedSectors + FatInfo.FATCount * FatInfo.FATSectors + FatInfo.rootDirectorySectors;
+         FatInfo.NumberOfClusters = Sectors / Boot->SectorsPerCluster;
+         if (FatInfo.NumberOfClusters < 4085)
+         {
+            DPRINT("FAT12\n");
+            FatInfo.FatType = FAT12;
+         }
+         else if (FatInfo.NumberOfClusters >= 65525)
+         {
+            DPRINT("FAT32\n");
+            FatInfo.FatType = FAT32;
+            FatInfo.RootCluster = ((struct _BootSector32*) Boot)->RootCluster;
+            FatInfo.rootStart = FatInfo.dataStart + ((FatInfo.RootCluster - 2) * FatInfo.SectorsPerCluster);
+            FatInfo.VolumeID = ((struct _BootSector32*) Boot)->VolumeID;
+         }
+         else
+         {
+            DPRINT("FAT16\n");
+            FatInfo.FatType = FAT16;
+         }
+         if (pFatInfo)
+         {
+            *pFatInfo = FatInfo;
+         }
       }
       else
       {
-         DPRINT("FAT16\n");
-         FatInfo.FatType = FAT16;
-      }
-      if (pFatInfo)
-      {
-         *pFatInfo = FatInfo;
+      	Status = STATUS_INSUFFICIENT_RESOURCES;
       }
    }
    ExFreePool(Boot);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.18 2004/03/08 08:51:26 ekohl Exp $
+/* $Id: fsctl.c,v 1.19 2004/03/16 08:30:28 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -83,7 +83,7 @@ CdfsGetPVDData(PUCHAR Buffer,
       *pw++ = (WCHAR)*pc++;
     }
   *pw = 0;
-  CdInfo->VolumeLabelLength = i;
+  CdInfo->VolumeLabelLength = i * sizeof(WCHAR);
 
   CdInfo->VolumeSpaceSize = Pvd->VolumeSpaceSizeL;
   CdInfo->RootStart = Pvd->RootDirRecord.ExtentLocationL;
