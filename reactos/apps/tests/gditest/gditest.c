@@ -10,6 +10,7 @@ int main (void)
 	HDC	Desktop, MyDC;
         HPEN	RedPen, GreenPen;
 	HBITMAP	MyBitmap;
+	DWORD shit;
 
 	GdiDllInitialize (NULL, DLL_PROCESS_ATTACH, NULL);
 
@@ -17,7 +18,7 @@ int main (void)
 	Desktop = CreateDCA("DISPLAY", NULL, NULL, NULL);
 
 	// Create a red pen and select it into the DC
-	RedPen = CreatePen(PS_SOLID, 1, 0xff0000);
+	RedPen = CreatePen(PS_SOLID, 8, 0x0000ff);
 	SelectObject(Desktop, RedPen);
 
 	// Draw a shap on the DC
@@ -32,22 +33,22 @@ int main (void)
 	SelectObject(MyDC, MyBitmap);
 
 	// Bitblt from the DISPLAY DC to MyDC and then back again in a different location
-	BitBlt(MyDC, 0, 0, 151, 251, Desktop, 50, 50, 0);
+	BitBlt(MyDC, 0, 0, 151, 251, Desktop, 50, 50, SRCCOPY);
 
         // Draw a rectangle on the memory DC before bltting back with a green pen
-	GreenPen = CreatePen(PS_SOLID, 1, 0x00ff00);
+	GreenPen = CreatePen(PS_SOLID, 3, 0x00ff00);
 	SelectObject(MyDC, GreenPen);
         Rectangle(MyDC, 10, 10, 50, 50);
 
-	BitBlt(Desktop, 400, 100, 151, 251, MyDC, 0, 0, 0);
+	BitBlt(Desktop, 400, 100, 151, 251, MyDC, 0, 0, SRCCOPY);
 
 	TextOutA(Desktop, 200, 0, "ReactOS", 7);
 	TextOutA(Desktop, 200, 9, "This is a test of the ReactOS GDI functionality", 47);
 	TextOutA(Desktop, 200, 18, "The font being used is an internal static one", 45);
-
+	Sleep( 10000 );
 	// Free up everything
-/*	ReleaseDC(Desktop);
-	ReleaseDC(MyDC); */
-
+	DeleteDC(Desktop);
+	DeleteDC(MyDC);
 	return 0;
 }
+
