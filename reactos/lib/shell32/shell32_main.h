@@ -213,13 +213,13 @@ inline static WCHAR * __SHCloneStrAtoW(WCHAR ** target, const char * source)
 #define HINSTANCE_32(h16)	((HINSTANCE)(ULONG_PTR)(h16))
 #define HINSTANCE_16(h32)	(LOWORD(h32))
 
-typedef UINT (*SHELL_ExecuteW32)(const WCHAR *lpCmd, void *env, BOOL shWait,
-			    LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out);
+typedef UINT (*SHELL_ExecuteW32)(const WCHAR *lpCmd, WCHAR *env, BOOL shWait,
+			    LPSHELLEXECUTEINFOW sei, LPSHELLEXECUTEINFOW sei_out);
 
-BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfunc);
+BOOL WINAPI ShellExecuteExW32(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc);
 
 UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
-                          LPWSTR lpResult, int resultLen, LPWSTR key, void **env, LPITEMIDLIST pidl, LPCWSTR args);
+                          LPWSTR lpResult, int resultLen, LPWSTR key, WCHAR **env, LPITEMIDLIST pidl, LPCWSTR args);
 
 extern WCHAR swShell32Name[MAX_PATH];
 
