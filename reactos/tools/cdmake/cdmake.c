@@ -1,4 +1,4 @@
-/* $Id: cdmake.c,v 1.9 2003/11/19 05:43:14 vizzini Exp $ */
+/* $Id: cdmake.c,v 1.10 2004/01/13 19:25:03 hbirr Exp $ */
 /* CD-ROM Maker
    by Philip J. Erdelsky
    pje@acm.org
@@ -426,7 +426,7 @@ static void convert_date_and_time(PDATE_AND_TIME dt, time_t *time)
   dt->minute = timedef->tm_min;
   dt->hour = timedef->tm_hour;
   dt->day = timedef->tm_mday;
-  dt->month = timedef->tm_mon;
+  dt->month = timedef->tm_mon + 1;
   dt->year = timedef->tm_year + 1900;
 }
 
@@ -536,7 +536,7 @@ new_directory_record (struct _finddata_t *f,
   d->parent = parent;
   parse_filename_into_dirrecord ( f->name, d );
 
-  convert_date_and_time(&d->date_and_time, &f->time_create);
+  convert_date_and_time(&d->date_and_time, &f->time_write);
   if (f->attrib & _A_SUBDIR)
   {
     if (d->extension[0] != 0)
@@ -672,7 +672,7 @@ make_directory_records (PDIR_RECORD d)
 	    {
 	      if (strcmp(f.name, DIRECTORY_TIMESTAMP) == 0)
 		{
-		  convert_date_and_time(&d->date_and_time, &f.time_create);
+		  convert_date_and_time(&d->date_and_time, &f.time_write);
 		}
 	      else
 		{
