@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.20 2004/09/05 04:26:30 arty Exp $
+/* $Id: afd.h,v 1.21 2004/11/12 07:34:56 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -21,6 +21,7 @@
 #include <shared.h>
 
 #ifndef _MSC_VER
+#include <roscfg.h>
 #include <rosrtl/string.h>
 #include <winsock2.h>
 #include <ddk/tdi.h>
@@ -109,7 +110,7 @@ typedef struct _AFD_STORED_DATAGRAM {
 } AFD_STORED_DATAGRAM, *PAFD_STORED_DATAGRAM;
 
 typedef struct _AFD_FCB {
-    BOOLEAN Locked;
+    BOOLEAN Locked, Critical;
     UINT State, Flags;
     KIRQL OldIrql;
     UINT LockCount;
@@ -182,6 +183,8 @@ VOID SocketStateUnlock( PAFD_FCB FCB );
 NTSTATUS LostSocket( PIRP Irp, BOOL ShouldUnlockIrp );
 PVOID LockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
 VOID UnlockRequest( PIRP Irp, PIO_STACK_LOCATION IrpSp );
+VOID SocketCalloutEnter( PAFD_FCB FCB );
+VOID SocketCalloutLeave( PAFD_FCB FCB );
 
 /* main.c */
 

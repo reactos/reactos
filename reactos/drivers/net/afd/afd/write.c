@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.9 2004/10/03 21:16:27 arty Exp $
+/* $Id: write.c,v 1.10 2004/11/12 07:34:56 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -109,6 +109,9 @@ NTSTATUS DDKAPI SendComplete
     /* Some data is still waiting */
     if( FCB->Send.BytesUsed ) {
 	FCB->PollState &= ~AFD_EVENT_SEND;
+
+	SocketCalloutEnter( FCB );
+
 	Status = TdiSend( &FCB->SendIrp.InFlightRequest,
 			  IrpSp->FileObject,
 			  0,
@@ -117,6 +120,8 @@ NTSTATUS DDKAPI SendComplete
 			  &FCB->SendIrp.Iosb,
 			  SendComplete,
 			  FCB );
+
+	SocketCalloutLeave( FCB );
     } else {
 	FCB->PollState |= AFD_EVENT_SEND;
 	PollReeval( FCB->DeviceExt, FCB->FileObject );
@@ -219,6 +224,10 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( TotalBytesCopied > 0 ) {
 	    UnlockBuffers( SendReq->BufferArray, SendReq->BufferCount );
 
+	    FCB->SendIrp.InFlightRequest = (PVOID)1; /* Placeholder */
+
+	    SocketCalloutEnter( FCB );
+
 	    Status = TdiSend( &FCB->SendIrp.InFlightRequest,
 			      FCB->Connection.Object,
 			      0,
@@ -228,6 +237,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			      SendComplete,
 			      FCB );
 	    
+	    SocketCalloutLeave( FCB );
+
 	    if( Status == STATUS_PENDING )
 		Status = STATUS_SUCCESS;
 	    
@@ -265,6 +276,8 @@ NTSTATUS DDKAPI PacketSocketSendComplete
 	return STATUS_SUCCESS;
     }
 
+    SocketStateUnlock( FCB );
+
     return STATUS_SUCCESS;
 }
 
@@ -301,6 +314,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     /* Check the size of the Address given ... */
 
     if( TargetAddress ) {
+	SocketCalloutEnter( FCB );
+
 	Status = TdiSendDatagram
 	    ( &FCB->SendIrp.InFlightRequest,
 	      FCB->AddressFile.Object,
@@ -311,6 +326,8 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	      PacketSocketSendComplete,
 	      FCB );
     
+	SocketCalloutLeave( FCB );
+
 	ExFreePool( TargetAddress );
     } else Status = STATUS_NO_MEMORY;
 

@@ -1,4 +1,4 @@
-/* $Id: lock.c,v 1.3 2004/09/23 06:42:16 arty Exp $
+/* $Id: lock.c,v 1.4 2004/11/12 07:34:56 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/lock.c
@@ -100,7 +100,8 @@ VOID UnlockBuffers( PAFD_WSABUF Buf, UINT Count ) {
 UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID CurrentThread = KeGetCurrentThread();
-    KIRQL CurrentIrql = KeGetCurrentIrql();
+
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
     AFD_DbgPrint(MAX_TRACE,("Called on %x, attempting to lock\n", FCB));
 
@@ -122,37 +123,36 @@ UINT SocketAcquireStateLock( PAFD_FCB FCB ) {
     }
 
 
-    if( CurrentIrql == PASSIVE_LEVEL ) {
-	ExAcquireFastMutex( &FCB->Mutex );
-	while( FCB->Locked ) {
-	    AFD_DbgPrint
-		(MID_TRACE,("FCB %x is locked, waiting for notification\n",
-			    FCB));
-	    ExReleaseFastMutex( &FCB->Mutex );
-	    Status = KeWaitForSingleObject( &FCB->StateLockedEvent,
-					    UserRequest,
-					    KernelMode,
-					    FALSE,
-					    NULL );
-	    ExAcquireFastMutex( &FCB->Mutex );
-	    if( Status == STATUS_SUCCESS ) break;
-	}
-	FCB->Locked = TRUE;
-	FCB->CurrentThread = CurrentThread;
-	FCB->LockCount++;
+    ExAcquireFastMutex( &FCB->Mutex );
+
+    while( FCB->Locked ) {
+	AFD_DbgPrint
+	    (MID_TRACE,("FCB %x is locked, waiting for notification\n",
+			FCB));
 	ExReleaseFastMutex( &FCB->Mutex );
-    } else { /* Nothing since we're not at PASSIVE_LEVEL */
-	FCB->Locked = TRUE;
-	FCB->CurrentThread = CurrentThread;
-	FCB->LockCount++;
+	Status = KeWaitForSingleObject( &FCB->StateLockedEvent,
+					UserRequest,
+					KernelMode,
+					FALSE,
+					NULL );
+	ExAcquireFastMutex( &FCB->Mutex );
     }
+    FCB->Locked = TRUE;
+    FCB->CurrentThread = CurrentThread;
+    FCB->LockCount++;
+    ExReleaseFastMutex( &FCB->Mutex );
+
     AFD_DbgPrint(MAX_TRACE,("Got lock (%d).\n", FCB->LockCount));
 
     return TRUE;
 }
 
 VOID SocketStateUnlock( PAFD_FCB FCB ) {
+    PVOID CurrentThread = KeGetCurrentThread();
     ASSERT(FCB->LockCount > 0);
+    ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
+
+    ExAcquireFastMutex( &FCB->Mutex );
     FCB->LockCount--;
 
     if( !FCB->LockCount ) {
@@ -162,8 +162,10 @@ VOID SocketStateUnlock( PAFD_FCB FCB ) {
 	AFD_DbgPrint(MAX_TRACE,("Unlocked.\n"));
 	KePulseEvent( &FCB->StateLockedEvent, IO_NETWORK_INCREMENT, FALSE );
     } else {
-	AFD_DbgPrint(MID_TRACE,("Lock count %d\n", FCB->LockCount));
+	AFD_DbgPrint(MAX_TRACE,("New lock count: %d (Thr: %x)\n", 
+				FCB->LockCount, CurrentThread));
     }
+    ExReleaseFastMutex( &FCB->Mutex );
 }
 
 NTSTATUS DDKAPI UnlockAndMaybeComplete
@@ -204,3 +206,13 @@ NTSTATUS LeaveIrpUntilLater( PAFD_FCB FCB, PIRP Irp, UINT Function ) {
     return UnlockAndMaybeComplete( FCB, STATUS_PENDING, Irp, 0, NULL, FALSE );
 }
 
+VOID SocketCalloutEnter( PAFD_FCB FCB ) {
+    ASSERT(FCB->Locked);
+    FCB->Critical = TRUE;
+    SocketStateUnlock( FCB );
+}
+
+VOID SocketCalloutLeave( PAFD_FCB FCB ) {
+    FCB->Critical = FALSE;
+    SocketAcquireStateLock( FCB );
+}

@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.7 2004/10/03 20:36:45 arty Exp $
+/* $Id: read.c,v 1.8 2004/11/12 07:34:56 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -139,6 +139,8 @@ NTSTATUS DDKAPI ReceiveComplete
 	    AFD_DbgPrint(MID_TRACE,
 			 ("Exhausted our buffer.  Requesting new: %x\n", FCB));
 
+	    SocketCalloutEnter( FCB );
+	    
 	    Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
 				 IrpSp->FileObject,
 				 TDI_RECEIVE_NORMAL,
@@ -147,6 +149,8 @@ NTSTATUS DDKAPI ReceiveComplete
 				 &FCB->ReceiveIrp.Iosb,
 				 ReceiveComplete,
 				 FCB );
+
+	    SocketCalloutLeave( FCB );
 	}
     } else {
 	while( !IsListEmpty( &FCB->PendingIrpList[FUNCTION_RECV] ) ) {
@@ -204,6 +208,9 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	FCB->Recv.Content = 0;
 	FCB->Recv.BytesUsed = 0;
 	AFD_DbgPrint(MID_TRACE,("Replenishing buffer\n"));
+
+	SocketCalloutEnter( FCB );
+
 	Status = TdiReceive( &FCB->ReceiveIrp.InFlightRequest,
 			     FCB->Connection.Object,
 			     TDI_RECEIVE_NORMAL,
@@ -212,6 +219,8 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 			     &FCB->ReceiveIrp.Iosb,
 			     ReceiveComplete,
 			     FCB );
+
+	SocketCalloutLeave( FCB );
     } else Status = STATUS_SUCCESS;
 
     if( NT_SUCCESS(Status) ) 
@@ -346,6 +355,8 @@ PacketSocketRecvComplete(
 
     if( NT_SUCCESS(Irp->IoStatus.Status) ) {
 	/* Now relaunch the datagram request */
+	SocketCalloutEnter( FCB );
+
 	Status = TdiReceiveDatagram
 	    ( &FCB->ReceiveIrp.InFlightRequest,
 	      FCB->AddressFile.Object,
@@ -356,6 +367,8 @@ PacketSocketRecvComplete(
 	      &FCB->ReceiveIrp.Iosb,
 	      PacketSocketRecvComplete,
 	      FCB );
+
+	SocketCalloutLeave( FCB );
     }
 
     SocketStateUnlock( FCB );
@@ -381,8 +394,8 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete
 	    ( FCB, STATUS_UNSUCCESSFUL, Irp, 0, NULL, FALSE );
     if( !(RecvReq = LockRequest( Irp, IrpSp )) ) 
-	return UnlockAndMaybeComplete( FCB, STATUS_NO_MEMORY, 
-				       Irp, 0, NULL, FALSE );
+	return UnlockAndMaybeComplete
+	    ( FCB, STATUS_NO_MEMORY, Irp, 0, NULL, FALSE );
 
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 	ListEntry = RemoveHeadList( &FCB->DatagramList );

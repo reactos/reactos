@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.7 2004/09/23 06:42:16 arty Exp $
+/* $Id: main.c,v 1.8 2004/11/12 07:34:56 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -151,7 +151,8 @@ VOID DestroySocket( PAFD_FCB FCB ) {
     InFlightRequest[2] = &FCB->SendIrp;
 
     /* Return early here because we might be called in the mean time. */
-    if( FCB->ListenIrp.InFlightRequest || 
+    if( FCB->Critical ||
+	FCB->ListenIrp.InFlightRequest || 
 	FCB->ReceiveIrp.InFlightRequest || 
 	FCB->SendIrp.InFlightRequest ) {
 	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
