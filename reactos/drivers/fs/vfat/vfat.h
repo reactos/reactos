@@ -1,6 +1,8 @@
 
 
 
+
+
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
   unsigned char  OEMName[8];
@@ -66,43 +68,6 @@ typedef struct _slot slot;
 
 #define BLOCKSIZE 512
 
-// Put the rest in struct.h
-/*
-typedef unsigned int uint32;
-
-typedef struct _SFsdIdentifier {
-  uint32 NodeType;
-  uint32 NodeSize;
-} SFsdIdentifier, *PtrSFsdIdentifier;
-
-typedef struct _SFsdNTRequiredFCB {
-  FSRTL_COMMON_FCB_HEADER CommonFCBHeader;
-  SECTION_OBJECT_POINTERS SectionObject;
-  ERESOURCE               MainResource;
-  ERESOURCE               PagingIoResource;
-} SFsdNTRequiredFCB, *PtrSFsdNTRequiredFCB;
-
-typedef struct _SFsdFileControlBlock {
-  SFsdIdentifier        NodeIdentifier;
-  SFsdNTRequiredFCB     NTRequiredFCB;
-  SFsdDiskDependentFCB  DiskDependentFCB;
-  struct _SFsdVolumeControlBlock   *PtrVCB;
-  LIST_ENTRY   NextFCB;
-  uint32       FCBFlags;
-  LIST_ENTRY   NextCCB;
-  SHARE_ACCESS FCBShareAccess;
-  uint32       LazyWriterThreadID;
-  uint32       ReferenceCount;
-  uint32       OpenHandleCount;
-  PtrSFsdObjectName FCBName;
-  LARGE_INTEGER     CreationTime;
-  LARGE_INTEGER     LastAccessTime;
-  LARGE_INTEGER     LastWriteTime;
-  SFsdFileLockAnchorFCB ByteRangeLock;
-  OPLOCK  FCBOplock;
-} SFsdFCB, *PtrSFsdFCB;
-
-*/
 #define FAT16 (1)
 #define FAT12 (2)
 #define FAT32 (3)
@@ -118,13 +83,47 @@ typedef struct
    unsigned char* FAT;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+typedef struct _FSRTL_COMMON_FCB_HEADER{
+  char  IsFastIoPossible;//is char the realtype ?
+  ERESOURCE Resource;
+  ERESOURCE PagingIoResource;
+  ULONG  Flags;// is long the real type ?
+  LARGE_INTEGER AllocationSize;
+  LARGE_INTEGER FileSize;
+  LARGE_INTEGER ValidDataLength;
+  // other fields ??
+} FSRTL_COMMON_FCB_HEADER;
+
+typedef struct _SFsdNTRequiredFCB {
+  FSRTL_COMMON_FCB_HEADER CommonFCBHeader;
+  SECTION_OBJECT_POINTERS SectionObject;
+  ERESOURCE               MainResource;
+  ERESOURCE               PagingIoResource;
+} SFsdNTRequiredFCB, *PtrSFsdNTRequiredFCB;
+
+struct _VfatFCB;
+typedef struct _VfatFCB
+{
+  SFsdNTRequiredFCB     NTRequiredFCB;
+   FATDirEntry entry;
+   WCHAR *ObjectName; // point on filename (250 chars max) in PathName
+   WCHAR PathName[261];// path+filename 260 max
+   long RefCount;
+   PDEVICE_EXTENSION pDevExt;
+   struct _VfatFCB * nextFcb, *prevFcb;
+   struct _VfatFCB * parentFcb;
+} VfatFCB, *PVfatFCB;
+
 typedef struct
 {
-   FATDirEntry entry;
-   WCHAR ObjectName[251];// filename has 250 characters max
-   ULONG StartSector;
-   ULONG StartEntry;//for DirectoryControl
-} FCB, *PFCB;
+  VfatFCB *   pFcb;
+  LIST_ENTRY     NextCCB;
+  PFILE_OBJECT   PtrFileObject;
+  LARGE_INTEGER  CurrentByteOffset;
+  ULONG StartSector; // for DirectoryControl
+  ULONG StartEntry;  //for DirectoryControl
+//    PSTRING DirectorySearchPattern;// for DirectoryControl ?
+} VfatCCB, *PVfatCCB;
 
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
@@ -154,8 +153,8 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 			 IN UCHAR*	Buffer);
 
 //internal functions in iface.c :
-NTSTATUS FsdGetStandardInformation(PFCB FCB, PDEVICE_OBJECT DeviceObject,
+NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
                                    PFILE_STANDARD_INFORMATION StandardInfo);
-NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PFCB Fcb,
-          PFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
+NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
+          PVfatFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
 wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
