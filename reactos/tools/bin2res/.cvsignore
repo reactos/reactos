@@ -4,3 +4,4 @@
 *.coff
 *.sym
 *.map
+bin2res
