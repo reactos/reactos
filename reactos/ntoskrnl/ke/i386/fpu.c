@@ -1,4 +1,4 @@
-/* $Id: fpu.c,v 1.14 2004/11/20 23:46:36 blight Exp $
+/* $Id: fpu.c,v 1.15 2004/11/21 11:58:55 mf Exp $
  *
  *  ReactOS kernel
  *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
@@ -411,6 +411,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
       PFX_SAVE_AREA FxSaveArea;
       KIRQL oldIrql;
       
+      cr0 = cr0; /* avoid "unused variable" warning */
       ASSERT((cr0 & X86_CR0_TS) == X86_CR0_TS);
       ASSERT((Tf->Eflags & X86_EFLAGS_VM) == 0);
       ASSERT((cr0 & X86_CR0_EM) == 0);
