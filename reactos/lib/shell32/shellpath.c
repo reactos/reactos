@@ -515,14 +515,14 @@ BOOL WINAPI PathMakeUniqueNameAW(
  * NOTES
  *     exported by ordinal
  */
-BOOL WINAPI PathYetAnotherMakeUniqueNameA(
-	LPSTR lpszBuffer,
-	LPCSTR lpszPathName,
-	LPCSTR lpszShortName,
-	LPCSTR lpszLongName)
+BOOL WINAPI PathYetAnotherMakeUniqueName(
+	LPWSTR lpszBuffer,
+	LPCWSTR lpszPathName,
+	LPCWSTR lpszShortName,
+	LPCWSTR lpszLongName)
 {
-    FIXME("(%p,%p, %p ,%p):stub.\n",
-     lpszBuffer, lpszPathName, lpszShortName, lpszLongName);
+    FIXME("(%p, %p ,%p):stub.\n",
+     debugstr_w(lpszPathName), debugstr_w(lpszShortName), debugstr_w(lpszLongName));
     return TRUE;
 }
 

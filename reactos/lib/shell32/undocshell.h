@@ -568,11 +568,11 @@ BOOL WINAPI PathMakeUniqueNameAW(
 	LPCVOID lpszLongName,
 	LPCVOID lpszPathName);
 
-BOOL WINAPI PathYetAnotherMakeUniqueNameA(
-	LPSTR lpszBuffer,
-	LPCSTR lpszPathName,
-	LPCSTR lpszShortName,
-	LPCSTR lpszLongName);
+BOOL WINAPI PathYetAnotherMakeUniqueName(
+	LPWSTR lpszBuffer,
+	LPCWSTR lpszPathName,
+	LPCWSTR lpszShortName,
+	LPCWSTR lpszLongName);
 
 /* PathCleanupSpec return values */
 #define PCS_REPLACEDCHARS  0x00000001
