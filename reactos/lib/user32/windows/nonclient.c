@@ -376,7 +376,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    }
 
    /* Now the other bit of the frame */
-   if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
+   if (Style & (WS_DLGFRAME | WS_BORDER) || ExStyle & WS_EX_DLGMODALFRAME)
    {
       DWORD Width = GetSystemMetrics(SM_CXBORDER);
       DWORD Height = GetSystemMetrics(SM_CYBORDER);
