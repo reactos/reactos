@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.79 2002/03/03 19:47:58 ekohl Exp $
+/* $Id: section.c,v 1.80 2002/05/07 22:53:05 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -526,6 +526,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
        if (!MmIsPagePresent(NULL, Address))
 	 {
 	   Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
+	   if (Entry == 0)
+	   {
+		MmUnlockSectionSegment(Segment);
+		MmUnlockSection(Section);
+	        MmReleasePageOp(PageOp);
+	        return(STATUS_MM_RESTART_OPERATION);
+	   } 
 
 	   Page = (PVOID)(PAGE_FROM_SSE(Entry));
 	   MmReferencePage(Page);	
@@ -2283,7 +2290,6 @@ MmCreateImageSection(PHANDLE SectionHandle,
 
       FileObject->SectionObjectPointers->ImageSectionObject = 
 	(PVOID)ImageSectionObject;       
-      ExFreePool(ImageSections);
     }
   else
     {
@@ -2303,6 +2309,7 @@ MmCreateImageSection(PHANDLE SectionHandle,
 	}
 
     }
+  ExFreePool(ImageSections);
   KeSetEvent((PVOID)&FileObject->Lock, IO_NO_INCREMENT, FALSE);
   Section->FileObject = FileObject;
 
@@ -2970,8 +2977,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 		 {
 		   MmUnlockSection(Section);
 		   MmUnlockAddressSpace(AddressSpace);
-		   ObDereferenceObject(Section);
-		   ObDereferenceObject(Process);
 		   return(Status);
 		 }
 	     }
@@ -2993,8 +2998,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	 {
 	   MmUnlockSection(Section);
 	   MmUnlockAddressSpace(AddressSpace);
-	   ObDereferenceObject(Section);
-	   ObDereferenceObject(Process);
 	   return(STATUS_MAPPED_ALIGNMENT);
 	 }
 
@@ -3017,8 +3020,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 	 {
 	   MmUnlockSection(Section);
 	   MmUnlockAddressSpace(AddressSpace);
-	   ObDereferenceObject(Section);
-	   ObDereferenceObject(Process);
 	   return(Status);
 	 }
      }
