@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.43 2002/02/04 13:08:58 sedwards Exp $
+/* $Id: create.c,v 1.44 2002/04/01 22:09:59 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -59,6 +59,7 @@ CreateProcessA (LPCSTR			lpApplicationName,
  *     lpProcessInformation = Pointer to process information
  */
 {
+	PWCHAR lpEnvironmentW = NULL;
 	UNICODE_STRING ApplicationNameU;
 	UNICODE_STRING CurrentDirectoryU;
 	UNICODE_STRING CommandLineU;
@@ -68,8 +69,53 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	WINBOOL Result;
 	CHAR TempCurrentDirectoryA[256];
 
-	DPRINT("CreateProcessA\n");
+	DPRINT("CreateProcessA(%s)\n", lpApplicationName);
+	DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, lpStartupInfo %x, lpProcessInformation %x\n",   
+		dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 
+	if (lpEnvironment)
+	{
+		PCHAR ptr = lpEnvironment;
+		ULONG len = 0;
+		UNICODE_STRING EnvironmentU;
+		ANSI_STRING EnvironmentA;
+		while (*ptr)
+		{
+			RtlInitAnsiString(&EnvironmentA, ptr);
+			if (bIsFileApiAnsi)
+				len += RtlAnsiStringToUnicodeSize(&EnvironmentA) + sizeof(WCHAR);
+			else
+				len += RtlOemStringToUnicodeSize(&EnvironmentA) + sizeof(WCHAR);
+			ptr += EnvironmentA.MaximumLength;
+		}
+		len += sizeof(WCHAR);
+		lpEnvironmentW = (PWCHAR)RtlAllocateHeap(GetProcessHeap(),
+			                                 HEAP_GENERATE_EXCEPTIONS|HEAP_ZERO_MEMORY, 
+							 len);
+		if (lpEnvironmentW == NULL)
+		{
+			return FALSE;
+		}
+		ptr = lpEnvironment;
+		EnvironmentU.Buffer = lpEnvironmentW;
+		EnvironmentU.Length = 0;
+		EnvironmentU.MaximumLength = len;
+		while (*ptr)
+		{
+			RtlInitAnsiString(&EnvironmentA, ptr);
+			if (bIsFileApiAnsi)
+				RtlAnsiStringToUnicodeString(&EnvironmentU, &EnvironmentA, FALSE);
+			else
+				RtlOemStringToUnicodeString(&EnvironmentU, &EnvironmentA, FALSE);
+			ptr += EnvironmentA.MaximumLength;
+			EnvironmentU.Buffer += (EnvironmentU.Length / sizeof(WCHAR) + 1);
+			EnvironmentU.MaximumLength -= (EnvironmentU.Length + sizeof(WCHAR));
+			EnvironmentU.Length = 0;
+		}
+
+		EnvironmentU.Buffer[0] = 0;	
+	}
+    
 	RtlInitAnsiString (&CommandLine,
 	                   lpCommandLine);
 	RtlInitAnsiString (&ApplicationName,
@@ -79,37 +125,21 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	    RtlInitAnsiString (&CurrentDirectory,
 			       (LPSTR)lpCurrentDirectory);
 	  }
-	else
-	  {
-	    GetCurrentDirectoryA(256, TempCurrentDirectoryA);
-	    RtlInitAnsiString (&CurrentDirectory,
-			       TempCurrentDirectoryA);
-	  }
 
 	/* convert ansi (or oem) strings to unicode */
 	if (bIsFileApiAnsi)
 	{
-		RtlAnsiStringToUnicodeString (&CommandLineU,
-		                              &CommandLine,
-		                              TRUE);
-		RtlAnsiStringToUnicodeString (&ApplicationNameU,
-		                              &ApplicationName,
-		                              TRUE);
-		RtlAnsiStringToUnicodeString (&CurrentDirectoryU,
-		                              &CurrentDirectory,
-		                              TRUE);
+		RtlAnsiStringToUnicodeString (&CommandLineU, &CommandLine, TRUE);
+		RtlAnsiStringToUnicodeString (&ApplicationNameU, &ApplicationName, TRUE);
+		if (lpCurrentDirectory != NULL)
+			RtlAnsiStringToUnicodeString (&CurrentDirectoryU, &CurrentDirectory, TRUE);
 	}
 	else
 	{
-		RtlOemStringToUnicodeString (&CommandLineU,
-		                             &CommandLine,
-		                             TRUE);
-		RtlOemStringToUnicodeString (&ApplicationNameU,
-		                             &ApplicationName,
-		                             TRUE);
-		RtlOemStringToUnicodeString (&CurrentDirectoryU,
-		                             &CurrentDirectory,
-		                             TRUE);
+		RtlOemStringToUnicodeString (&CommandLineU, &CommandLine, TRUE);
+		RtlOemStringToUnicodeString (&ApplicationNameU, &ApplicationName, TRUE);
+		if (lpCurrentDirectory != NULL)  
+			RtlOemStringToUnicodeString (&CurrentDirectoryU, &CurrentDirectory, TRUE);
 	}
 
 	Result = CreateProcessW (ApplicationNameU.Buffer,
@@ -118,14 +148,20 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	                         lpThreadAttributes,
 	                         bInheritHandles,
 	                         dwCreationFlags,
-	                         lpEnvironment,
+	                         lpEnvironmentW,
 	                         (lpCurrentDirectory == NULL) ? NULL : CurrentDirectoryU.Buffer,
 	                         (LPSTARTUPINFOW)lpStartupInfo,
 	                         lpProcessInformation);
 
 	RtlFreeUnicodeString (&ApplicationNameU);
 	RtlFreeUnicodeString (&CommandLineU);
-	RtlFreeUnicodeString (&CurrentDirectoryU);
+	if (lpCurrentDirectory != NULL)
+		RtlFreeUnicodeString (&CurrentDirectoryU);
+
+	if (lpEnvironmentW)
+	{
+		RtlFreeHeap(GetProcessHeap(), 0, lpEnvironmentW);
+	}
 
 	return Result;
 }
@@ -192,13 +228,13 @@ KlCreateFirstThread(HANDLE ProcessHandle,
       return(NULL);
     }
 
-  DPRINT("StackDeallocation: %p ReserveSize: 0x%lX\n",
-	 InitialTeb.StackDeallocation, InitialTeb.StackReserve);
+  DPRINT("StackAllocate: %p ReserveSize: 0x%lX\n",
+	 InitialTeb.StackAllocate, InitialTeb.StackReserve);
 
   InitialTeb.StackBase = (PVOID)((ULONG)InitialTeb.StackAllocate + InitialTeb.StackReserve);
   InitialTeb.StackLimit = (PVOID)((ULONG)InitialTeb.StackBase - InitialTeb.StackCommit);
 
-  DPRINT("StackBase: %p\nStackCommit: %p\n",
+  DPRINT("StackBase: %p StackCommit: %p\n",
 	 InitialTeb.StackBase, InitialTeb.StackCommit);
 
   /* Commit stack page(s) */
@@ -364,17 +400,25 @@ KlInitPeb (HANDLE ProcessHandle,
    ULONG Offset;
    PVOID ParentEnv = NULL;
    PVOID EnvPtr = NULL;
-   ULONG EnvSize = 0;
+   PWCHAR ptr;
+   ULONG EnvSize = 0, EnvSize1 = 0;
 
    /* create the Environment */
    if (Ppb->Environment != NULL)
-	ParentEnv = Ppb->Environment;
+   {
+      ParentEnv = Ppb->Environment;
+      ptr = ParentEnv;
+      while (*ptr)
+      {
+	  while(*ptr++);
+      }
+      ptr++;
+      EnvSize = (PVOID)ptr - ParentEnv;
+   }
    else if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
-	ParentEnv = NtCurrentPeb()->ProcessParameters->Environment;
-
-   if (ParentEnv != NULL)
-     {
-	MEMORY_BASIC_INFORMATION MemInfo;
+   {
+      MEMORY_BASIC_INFORMATION MemInfo;
+      ParentEnv = NtCurrentPeb()->ProcessParameters->Environment;
 
 	Status = NtQueryVirtualMemory (NtCurrentProcess (),
 	                               ParentEnv,
@@ -393,10 +437,11 @@ KlInitPeb (HANDLE ProcessHandle,
    /* allocate and initialize new environment block */
    if (EnvSize != 0)
      {
+	EnvSize1 = EnvSize;
 	Status = NtAllocateVirtualMemory(ProcessHandle,
 					 &EnvPtr,
 					 0,
-					 &EnvSize,
+					 &EnvSize1,
 					 MEM_RESERVE | MEM_COMMIT,
 					 PAGE_READWRITE);
 	if (!NT_SUCCESS(Status))
@@ -467,7 +512,6 @@ CreateProcessW(LPCWSTR lpApplicationName,
    HANDLE hSection, hProcess, hThread;
    NTSTATUS Status;
    LPTHREAD_START_ROUTINE  lpStartAddress = NULL;
-   WCHAR TempCommandLine[256];
    WCHAR ImagePathName[256];
    UNICODE_STRING ImagePathName_U;
    PROCESS_BASIC_INFORMATION ProcessBasicInfo;
@@ -477,29 +521,88 @@ CreateProcessW(LPCWSTR lpApplicationName,
    CSRSS_API_REQUEST CsrRequest;
    CSRSS_API_REPLY CsrReply;
    CHAR ImageFileName[8];
-   PWCHAR s;
-   PWCHAR e;
-   ULONG i;
+   PWCHAR s, e;
+   ULONG i, len;
    ANSI_STRING ProcedureName;
-   UNICODE_STRING CurrentDirectoryW;
+   UNICODE_STRING CurrentDirectory_U;
    SECTION_IMAGE_INFORMATION Sii;
    WCHAR TempCurrentDirectoryW[256];
-   
+   WCHAR TempApplicationNameW[256];
+
    DPRINT("CreateProcessW(lpApplicationName '%S', lpCommandLine '%S')\n",
-	   lpApplicationName,lpCommandLine);
+	   lpApplicationName, lpCommandLine);
+
+   if (lpApplicationName != NULL && lpApplicationName[0] != 0)
+   {
+      wcscpy (TempApplicationNameW, lpApplicationName);
+      i = wcslen(TempApplicationNameW);
+      if (TempApplicationNameW[i - 1] == L'.')
+      {
+         TempApplicationNameW[i - 1] = 0;
+      }
+      else
+      {
+         s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
+         if (s == NULL)
+         {
+            s = TempApplicationNameW;
+         }
+	 else
+	 {
+	    s++;
+	 }
+         e = wcsrchr(s, L'.');
+         if (e == NULL)
+         {
+            wcscat(s, L".exe");
+            e = wcsrchr(s, L'.');
+         }
+      }
+   }
+   else if (lpCommandLine != NULL && lpCommandLine[0] != 0)
+   {
+      if (lpCommandLine[0] == L'"')
+      {
+         wcscpy(TempApplicationNameW, &lpCommandLine[0]);
+         s = wcschr(TempApplicationNameW, L'"');
+         if (s == NULL)
+         {
+           return FALSE;
+         }
+         *s = 0;
+      }
+      else
+      {
+         wcscpy(TempApplicationNameW, lpCommandLine);
+         s = wcschr(TempApplicationNameW, L' ');
+         if (s != NULL)
+         {
+           *s = 0;
+         }
+      }
+      s = max(wcsrchr(TempApplicationNameW, L'\\'), wcsrchr(TempApplicationNameW, L'/'));
+      if (s == NULL)
+      {
+         s = TempApplicationNameW;
+      }
+      s = wcsrchr(TempApplicationNameW, L'.');
+      if (s == NULL)
+	 wcscat(TempApplicationNameW, L".exe");
+   }
+   else
+   {
+      return FALSE;
+   }
+
+   if (!SearchPathW(NULL, TempApplicationNameW, NULL, sizeof(ImagePathName), ImagePathName, &s))
+   {
+     return FALSE;
+   }
+
 
    /*
     * Store the image file name for the process
     */
-   s = wcsrchr(lpApplicationName, '\\');
-   if (s == NULL)
-     {
-	s = (PWCHAR)lpApplicationName;
-     }
-   else
-     {
-	s++;
-     }
    e = wcschr(s, '.');
    if (e != NULL)
      {
@@ -517,45 +620,32 @@ CreateProcessW(LPCWSTR lpApplicationName,
    /*
     * Process the application name and command line
     */
-
-   RtlGetFullPathName_U ((LPWSTR)lpApplicationName,
-                         256 * sizeof(WCHAR),
-                         TempCommandLine,
-                         NULL);
-   wcscpy(ImagePathName, TempCommandLine);
    RtlInitUnicodeString(&ImagePathName_U, ImagePathName);
+   RtlInitUnicodeString(&CommandLine_U, lpCommandLine);
 
-   if (lpCommandLine != NULL)
-     {
-	wcscat(TempCommandLine, L" ");
-	wcscat(TempCommandLine, lpCommandLine);
-     }
+   DPRINT("ImagePathName_U %S\n", ImagePathName_U.Buffer);
+   DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
 
    /* Initialize the current directory string */
    if (lpCurrentDirectory != NULL)
      {
-       RtlInitUnicodeString(&CurrentDirectoryW,
+       RtlInitUnicodeString(&CurrentDirectory_U,
 			    lpCurrentDirectory);
      }
    else
      {
        GetCurrentDirectoryW(256, TempCurrentDirectoryW);
-       RtlInitUnicodeString(&CurrentDirectoryW,
+       RtlInitUnicodeString(&CurrentDirectory_U,
 			    TempCurrentDirectoryW);
      }
 
    /*
     * Create the PPB
     */
-   
-   RtlInitUnicodeString(&CommandLine_U, lpCommandLine);
-
-   DPRINT("CommandLine_U %S\n", CommandLine_U.Buffer);
-
    RtlCreateProcessParameters(&Ppb,
 			      &ImagePathName_U,
 			      NULL,
-			      (lpCurrentDirectory == NULL) ? NULL : &CurrentDirectoryW,
+			      lpCurrentDirectory ? &CurrentDirectory_U : NULL,
 			      &CommandLine_U,
 			      lpEnvironment,
 			      NULL,
@@ -567,7 +657,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
     * Create a section for the executable
     */
    
-   hSection = KlMapFile (lpApplicationName, lpCommandLine);
+   hSection = KlMapFile (ImagePathName, lpCommandLine);
    if (hSection == NULL)
    {
 	RtlDestroyProcessParameters (Ppb);
@@ -585,6 +675,31 @@ CreateProcessW(LPCWSTR lpApplicationName,
 			    hSection,
 			    NULL,
 			    NULL);
+
+   /*
+    * Translate some handles for the new process
+    */
+   if (Ppb->CurrentDirectory.Handle)
+   {
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+	                 Ppb->CurrentDirectory.Handle,
+			 hProcess,
+			 &Ppb->CurrentDirectory.Handle,
+			 0,
+			 FALSE,
+			 DUPLICATE_SAME_ACCESS);
+   }
+
+   if (Ppb->ConsoleHandle)
+   {
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+	                 Ppb->ConsoleHandle,
+			 hProcess,
+			 &Ppb->ConsoleHandle,
+			 0,
+			 FALSE,
+			 DUPLICATE_SAME_ACCESS);
+   }
 
    /*
     * Get some information about the executable
@@ -611,31 +726,64 @@ CreateProcessW(LPCWSTR lpApplicationName,
    DPRINT("ProcessBasicInfo.UniqueProcessId %d\n",
 	  ProcessBasicInfo.UniqueProcessId);
    lpProcessInformation->dwProcessId = ProcessBasicInfo.UniqueProcessId;
+
+#if 0   
+   if (bInheritHandles && lpStartupInfo->dwFlags & STARTF_USESTDHANDLES)
+   {
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+				  lpStartupInfo->hStdInput,
+				  hProcess,
+				  &Ppb->InputHandle,
+				  0,
+				  TRUE,
+				  DUPLICATE_SAME_ACCESS);
+
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+				  lpStartupInfo->hStdOutput,
+				  hProcess,
+				  &Ppb->OutputHandle,
+				  0,
+				  TRUE,
+				  DUPLICATE_SAME_ACCESS);
+
+      Status = NtDuplicateObject (NtCurrentProcess(), 
+				  lpStartupInfo->hStdError,
+				  hProcess,
+				  &Ppb->ErrorHandle,
+				  0,
+				  TRUE,
+				  DUPLICATE_SAME_ACCESS);
+     
+   }
+   else
+#endif
+   {
+	/*
+	 * Tell the csrss server we are creating a new process
+	 */
+	CsrRequest.Type = CSRSS_CREATE_PROCESS;
+	CsrRequest.Data.CreateProcessRequest.NewProcessId = 
+		ProcessBasicInfo.UniqueProcessId;
+	CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
+	Status = CsrClientCallServer(&CsrRequest, 
+				     &CsrReply,
+				     sizeof(CSRSS_API_REQUEST),
+				     sizeof(CSRSS_API_REPLY));
+	if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+	{
+		DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
+	}
    
-   /*
-    * Tell the csrss server we are creating a new process
-    */
-   CsrRequest.Type = CSRSS_CREATE_PROCESS;
-   CsrRequest.Data.CreateProcessRequest.NewProcessId = 
-     ProcessBasicInfo.UniqueProcessId;
-   CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
-   Status = CsrClientCallServer(&CsrRequest, 
-				&CsrReply,
-				sizeof(CSRSS_API_REQUEST),
-				sizeof(CSRSS_API_REPLY));
-   if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
-     {
-	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
-     }
-   
+	Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
+	Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;;
+	Ppb->ErrorHandle = Ppb->OutputHandle;
+   }
+
    /*
     * Create Process Environment Block
     */
    DPRINT("Creating peb\n");
-   
-   Ppb->InputHandle = CsrReply.Data.CreateProcessReply.InputHandle;
-   Ppb->OutputHandle = CsrReply.Data.CreateProcessReply.OutputHandle;;
-   Ppb->ErrorHandle = Ppb->OutputHandle;
+
    KlInitPeb(hProcess, Ppb);
 
    RtlDestroyProcessParameters (Ppb);
