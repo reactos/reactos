@@ -103,6 +103,44 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	_hwndQuickLaunch = QuickLaunchBar::Create(_hwnd);
 
+	 // create rebar window to manage task and quick launch bar
+#ifndef _NO_REBAR
+	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
+					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
+					RBS_VARHEIGHT|RBS_AUTOSIZE|RBS_DBLCLKTOGGLE|	//|RBS_REGISTERDROP
+					CCS_NODIVIDER|CCS_NOPARENTALIGN,
+					0, 0, 0, 0, _hwnd, 0, g_Globals._hInstance, 0);
+
+	REBARBANDINFO rbBand;
+
+	rbBand.cbSize = sizeof(REBARBANDINFO);
+	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE;
+#ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
+#define RBBS_HIDETITLE	0x400
+#endif
+	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
+
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = 0;
+	rbBand.cyChild = 0;
+	rbBand.cyMaxChild = 0;
+	rbBand.cyIntegral = DESKTOPBARBAR_HEIGHT;
+
+	rbBand.lpText = TEXT("Quicklaunchbar");
+	rbBand.hwndChild = _hwndQuickLaunch;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = HIWORD(SendMessage(_hwndQuickLaunch, TB_GETBUTTONSIZE, 0, 0)) + 2;
+	rbBand.cx = 250;
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+
+	rbBand.lpText = TEXT("Taskbar");
+	rbBand.hwndChild = _hwndTaskBar;
+	rbBand.cxMinChild = 0;
+	rbBand.cyMinChild = ClientRect(_hwndTaskBar).bottom + 2;
+	rbBand.cx = 200;	//pcs->cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1);
+	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
+#endif
+
 	RegisterHotkeys();
 
 	 // notify all top level windows about the successfully created desktop bar
@@ -204,14 +242,18 @@ void DesktopBar::Resize(int cx, int cy)
 
 	HDWP hdwp = BeginDeferWindowPos(3);
 
-	if (_hwndTaskBar)
-		DeferWindowPos(hdwp, _hwndTaskBar, 0, TASKBAR_LEFT+quicklaunch_width, 0, cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+	if (_hwndrebar)
+		DeferWindowPos(hdwp, _hwndrebar, 0, TASKBAR_LEFT, 0, cx-TASKBAR_LEFT-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+	else {
+		if (_hwndQuickLaunch)
+			DeferWindowPos(hdwp, _hwndQuickLaunch, 0, TASKBAR_LEFT, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
+
+		if (_hwndTaskBar)
+			DeferWindowPos(hdwp, _hwndTaskBar, 0, TASKBAR_LEFT+quicklaunch_width, 0, cx-TASKBAR_LEFT-quicklaunch_width-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+	}
 
 	if (_hwndNotify)
 		DeferWindowPos(hdwp, _hwndNotify, 0, cx-(notifyarea_width+1), 1, notifyarea_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
-
-	if (_hwndQuickLaunch)
-		DeferWindowPos(hdwp, _hwndQuickLaunch, 0, TASKBAR_LEFT, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
 

@@ -65,7 +65,6 @@ QuickLaunchBar::QuickLaunchBar(HWND hwnd)
 
 	SetWindowStyle(hwndToolTip, GetWindowStyle(hwndToolTip)|TTS_ALWAYSTIP);
 
-	 // delay refresh to some time later
 	PostMessage(hwnd, PM_REFRESH, 0, 0);
 }
 
@@ -81,7 +80,8 @@ HWND QuickLaunchBar::Create(HWND hwndParent)
 	ClientRect clnt(hwndParent);
 
 	HWND hwnd = CreateToolbarEx(hwndParent,
-								WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_NORESIZE|
+								WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
+								CCS_TOP|CCS_NODIVIDER|CCS_NOPARENTALIGN|CCS_NORESIZE|
 								TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_FLAT,
 								IDW_QUICKLAUNCHBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 

@@ -65,3 +65,4 @@ If you search for more information, look into the CVS repository.
 16.02.2004	m. fuchs	lean explorer version without additional bells and whistles -> see CVS branch "lean-explorer"
 23.02.2004	m. fuchs	start menu navigation using first characters of entry names
 						fixes for leaking GDI handles
+25.02.2004	m. fuchs	rebar control for desktop bar
