@@ -1019,6 +1019,7 @@ VideoPortEnumerateChildren(
          break;
       }
 
+#ifndef NDEBUG
       if (ChildType == Monitor)
       {
          INT j;
@@ -1039,6 +1040,7 @@ VideoPortEnumerateChildren(
       {
          DPRINT("HwGetVideoChildDescriptor returned unsupported type: %d\n", ChildType);
       }
+#endif /* NDEBUG */
 
    }
 
