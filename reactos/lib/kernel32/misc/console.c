@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.86 2004/12/18 13:26:57 weiden Exp $
+/* $Id: console.c,v 1.87 2004/12/18 13:33:09 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -3422,6 +3422,7 @@ BOOL STDCALL SetConsoleIcon(HICON hicon)
 BOOL STDCALL
 SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
 {
+  BOOL Ret = FALSE;
   int lenName = lstrlenW(lpInputExeName);
 
   if(lenName < 1 ||
@@ -3433,11 +3434,25 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
   }
   
   RtlEnterCriticalSection(&ConsoleLock);
-  RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
-  InputExeName[lenName] = L'\0';
+  /* wrap copying into SEH as we may copy from invalid buffer and in case of an
+     exception the console lock would've never been released, which would cause
+     further calls (if the exception was handled by the caller) to recursively
+     acquire the lock... */
+  _SEH_TRY
+  {
+    RtlCopyMemory(InputExeName, lpInputExeName, lenName * sizeof(WCHAR));
+    InputExeName[lenName] = L'\0';
+    Ret = TRUE;
+  }
+  _SEH_HANDLE
+  {
+    lenName = 0;
+    SetLastErrorByStatus(_SEH_GetExceptionCode());
+  }
+  _SEH_END;
   RtlLeaveCriticalSection(&ConsoleLock);
   
-  return TRUE;
+  return Ret;
 }
 
 
