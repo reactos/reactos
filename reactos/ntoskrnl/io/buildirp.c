@@ -230,6 +230,7 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 {
    PIRP Irp;
    PIO_STACK_LOCATION StackPtr;
+   ULONG BufferLength;
 
    DPRINT("IoBuildDeviceIoRequest(IoControlCode %x, DeviceObject %x, "
       "InputBuffer %x, InputBufferLength %x, OutputBuffer %x, "
@@ -259,93 +260,94 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
    StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
    StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
 
-   if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_BUFFERED)
+   switch (IO_METHOD_FROM_CTL_CODE(IoControlCode))
    {
-      ULONG BufferLength;
-      DPRINT("Using METHOD_BUFFERED!\n");
+      case METHOD_BUFFERED:
+         DPRINT("Using METHOD_BUFFERED!\n");
 
-      BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
-      if (BufferLength)
-      {
-         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+         BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
+         if (BufferLength)
+         {
+            Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,BufferLength);
 
-         if (Irp->AssociatedIrp.SystemBuffer==NULL)
-         {
-            IoFreeIrp(Irp);
-            return(NULL);
+            if (Irp->AssociatedIrp.SystemBuffer==NULL)
+            {
+               IoFreeIrp(Irp);
+               return(NULL);
+            }
          }
-      }
 
-      if (InputBuffer && InputBufferLength)
-      {
-         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
-               InputBuffer,
-               InputBufferLength);
-      }
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_IN_DIRECT)
-   {
-      DPRINT("Using METHOD_IN_DIRECT!\n");
+         if (InputBuffer && InputBufferLength)
+         {
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                  InputBuffer,
+                  InputBufferLength);
+         }
+         break;
 
-      /* build input buffer (control buffer) */
-      if (InputBuffer && InputBufferLength)
-      {
-         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+      case METHOD_IN_DIRECT:
+         DPRINT("Using METHOD_IN_DIRECT!\n");
+
+         /* build input buffer (control buffer) */
+         if (InputBuffer && InputBufferLength)
+         {
+            Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,InputBufferLength);
 
-         if (Irp->AssociatedIrp.SystemBuffer==NULL)
-         {
-            IoFreeIrp(Irp);
-            return(NULL);
-         }
+            if (Irp->AssociatedIrp.SystemBuffer==NULL)
+            {
+               IoFreeIrp(Irp);
+               return(NULL);
+            }
 
-         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
                InputBuffer,
                InputBufferLength);
-      }
+         }
 
-      /* build output buffer (data transfer buffer) */
-      if (OutputBuffer && OutputBufferLength)
-      {
-         PMDL Mdl = IoAllocateMdl (OutputBuffer,OutputBufferLength, FALSE, FALSE, Irp);
-         MmProbeAndLockPages (Mdl, UserMode,IoReadAccess);
-      }
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_OUT_DIRECT)
-   {
-      DPRINT("Using METHOD_OUT_DIRECT!\n");
+         /* build output buffer (data transfer buffer) */
+         if (OutputBuffer && OutputBufferLength)
+         {
+            Irp->MdlAddress = IoAllocateMdl (OutputBuffer,OutputBufferLength,FALSE,FALSE,Irp);
+            MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoReadAccess);
+         }
+         break;
 
-      /* build input buffer (control buffer) */
-      if (InputBuffer && InputBufferLength)
-      {
-         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+      case METHOD_OUT_DIRECT:
+         DPRINT("Using METHOD_OUT_DIRECT!\n");
+
+         /* build input buffer (control buffer) */
+         if (InputBuffer && InputBufferLength)
+         {
+            Irp->AssociatedIrp.SystemBuffer = (PVOID)
                ExAllocatePool(NonPagedPool,InputBufferLength);
 
-         if (Irp->AssociatedIrp.SystemBuffer==NULL)
-         {
-            IoFreeIrp(Irp);
-            return(NULL);
-         }
+            if (Irp->AssociatedIrp.SystemBuffer==NULL)
+            {
+               IoFreeIrp(Irp);
+               return(NULL);
+            }
 
-         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
                InputBuffer,
                InputBufferLength);
-      }
+         }
 
-      /* build output buffer (data transfer buffer) */
-      if (OutputBuffer && OutputBufferLength)
-      {
-         PMDL Mdl = IoAllocateMdl (OutputBuffer,OutputBufferLength, FALSE, FALSE, Irp);
-         MmProbeAndLockPages (Mdl, UserMode,IoWriteAccess);
-      }
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_NEITHER)
-   {
-      DPRINT("Using METHOD_NEITHER!\n");
+         /* build output buffer (data transfer buffer) */
+         if (OutputBuffer && OutputBufferLength)
+         {
+            Irp->MdlAddress = IoAllocateMdl (OutputBuffer,OutputBufferLength,FALSE,FALSE,Irp);
+            MmProbeAndLockPages (Irp->MdlAddress,UserMode,IoWriteAccess);
+         }
+         break;
 
-      Irp->UserBuffer = OutputBuffer;
-      StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
+      case METHOD_NEITHER:
+         DPRINT("Using METHOD_NEITHER!\n");
+
+         Irp->UserBuffer = OutputBuffer;
+         StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
+         break;
    }
 
    return(Irp);

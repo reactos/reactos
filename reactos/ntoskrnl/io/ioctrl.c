@@ -119,57 +119,58 @@ ZwDeviceIoControlFile(
    StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferSize;
 
    Status = IoCallDriver(DeviceObject,Irp);
-   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
+   if (Status == STATUS_PENDING)
    {
       KeWaitForSingleObject(&KEvent,Executive,KernelMode,FALSE,NULL);
       return(IoStatusBlock->Status);
    }
 
-   if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_BUFFERED)
+   switch  (IO_METHOD_FROM_CTL_CODE(IoControlCode))
    {
-      DPRINT ("Using METHOD_BUFFERED!\n");
+      case METHOD_BUFFERED:
+         DPRINT ("Using METHOD_BUFFERED!\n");
 
-      /* copy output buffer back and free it */
-      if (Irp->AssociatedIrp.SystemBuffer)
-      {
-         if (OutputBuffer && OutputBufferSize)
+         /* copy output buffer back and free it */
+         if (Irp->AssociatedIrp.SystemBuffer)
          {
-            RtlCopyMemory(OutputBuffer,
+            if (OutputBuffer && OutputBufferSize)
+            {
+               RtlCopyMemory(OutputBuffer,
                           Irp->AssociatedIrp.SystemBuffer,
                           OutputBufferSize);
+            }
+            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
          }
-         ExFreePool (Irp->AssociatedIrp.SystemBuffer);
-      }
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_IN_DIRECT)
-   {
-      DPRINT ("Using METHOD_IN_DIRECT!\n");
+         break;
 
-      /* free input buffer (control buffer) */
-      if (Irp->AssociatedIrp.SystemBuffer)
-         ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+      case METHOD_IN_DIRECT:
+         DPRINT ("Using METHOD_IN_DIRECT!\n");
 
-      /* free output buffer (data transfer buffer) */
-      if (Irp->MdlAddress)
-         IoFreeMdl (Irp->MdlAddress);
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_OUT_DIRECT)
-   {
-      DPRINT ("Using METHOD_OUT_DIRECT!\n");
+         /* free input buffer (control buffer) */
+         if (Irp->AssociatedIrp.SystemBuffer)
+            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
 
-      /* free input buffer (control buffer) */
-      if (Irp->AssociatedIrp.SystemBuffer)
-         ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+         /* free output buffer (data transfer buffer) */
+         if (Irp->MdlAddress)
+            IoFreeMdl (Irp->MdlAddress);
+         break;
 
-      /* free output buffer (data transfer buffer) */
-      if (Irp->MdlAddress)
-         IoFreeMdl (Irp->MdlAddress);
-   }
-   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_NEITHER)
-   {
-      DPRINT ("Using METHOD_NEITHER!\n");
+      case METHOD_OUT_DIRECT:
+         DPRINT ("Using METHOD_OUT_DIRECT!\n");
 
-      /* nothing to do */
+         /* free input buffer (control buffer) */
+         if (Irp->AssociatedIrp.SystemBuffer)
+            ExFreePool (Irp->AssociatedIrp.SystemBuffer);
+
+         /* free output buffer (data transfer buffer) */
+         if (Irp->MdlAddress)
+            IoFreeMdl (Irp->MdlAddress);
+         break;
+
+      case METHOD_NEITHER:
+         DPRINT ("Using METHOD_NEITHER!\n");
+         /* nothing to do */
+         break;
    }
 
    return(Status);
