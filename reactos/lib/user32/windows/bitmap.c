@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.7 2002/11/05 20:58:20 hbirr Exp $
+/* $Id: bitmap.c,v 1.8 2002/12/26 17:21:27 robd Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -242,7 +242,7 @@ LoadImageW(HINSTANCE hinst,
       }
     case IMAGE_CURSOR:
       {
-	DbgPrint("FIXME: Need support for loading cursors.\n");
+	DbgPrint("FIXME: Need support for loading cursor images.\n");
 	return(NULL);
       }
     default:

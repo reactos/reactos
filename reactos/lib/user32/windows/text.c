@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.4 2002/09/17 23:46:23 dwelch Exp $
+/* $Id: text.c,v 1.5 2002/12/26 17:21:27 robd Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -202,19 +202,30 @@ IsCharAlphaA(
   return FALSE;
 }
 
+const char IsCharAlphaNumericA_lookup_table[] = { 
+    0x00,  0x00,  0x00,  0x00,  0x00,  0x00,  0xff,  0x03,
+    0xfe,  0xff,  0xff,  0x07,  0xfe,  0xff,  0xff,  0x07,
+    0x08,  0x54,  0x00,  0xd4,  0x00,  0x00,  0x0c,  0x02,
+    0xff,  0xff,  0x7f,  0xff,  0xff,  0xff,  0x7f,  0xff
+};
+
 WINBOOL
 STDCALL
-IsCharAlphaNumericA(
-  CHAR ch)
+IsCharAlphaNumericA(CHAR ch)
 {
-  return FALSE;
+//    return (IsCharAlphaNumericA_lookup_table[ch / 8] & (1 << (ch % 8))) ? 1 : 0;
+
+    WCHAR wch;
+    MultiByteToWideChar(CP_ACP, 0, &ch, 1, &wch, 1);
+    return IsCharAlphaNumericW(wch);
+  //return FALSE;
 }
 
 WINBOOL
 STDCALL
-IsCharAlphaNumericW(
-  WCHAR ch)
+IsCharAlphaNumericW(WCHAR ch)
 {
+    //return (get_char_typeW(ch) & (C1_ALPHA|C1_DIGIT)) != 0;
   return FALSE;
 }
 
