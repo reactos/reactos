@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.132 2004/08/15 16:39:10 chorns Exp $
+/* $Id: thread.c,v 1.133 2004/08/19 21:56:17 hbirr Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -429,6 +429,9 @@ VOID PsDispatchThreadNoLock (ULONG NewThreadStatus)
 		PiWakeupReaperThread();
 	      }
 #endif
+
+	    MmUpdatePageDir(PsGetCurrentProcess(),(PVOID)CurrentThread->ThreadsProcess, sizeof(EPROCESS));
+
 	    KiArchContextSwitch(&CurrentThread->Tcb, &OldThread->Tcb);
 	    return;
 	  }
