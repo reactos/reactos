@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.9 2002/02/05 15:42:41 ekohl Exp $
+/* $Id: registry.c,v 1.10 2002/02/10 13:55:45 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -12,6 +12,9 @@
 /*
  * TODO:
  *   - finish RtlQueryRegistryValues()
+ *	- expand REG_EXPAND_SZ
+ *	- support RTL_QUERY_REGISTRY_DELETE
+ *
  *   - finish RtlFormatCurrentUserKeyPath()
  */
 
@@ -162,6 +165,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   ULONG BufferSize;
   ULONG ResultSize;
   ULONG Index;
+  ULONG StringLen;
+  PWSTR StringPtr;
 
   DPRINT("RtlQueryRegistryValues() called\n");
 
@@ -272,6 +277,12 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		}
 	    }
 
+	  if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
+	    {
+	      DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
+
+	    }
+
 	  RtlFreeHeap(RtlGetProcessHeap(),
 		      0,
 		      ValueInfo);
@@ -309,6 +320,31 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 						    Context,
 						    QueryEntry->EntryContext);
 		}
+	      else if ((ValueInfo->Type == REG_MULTI_SZ) &&
+		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		{
+		  DPRINT("Expand REG_MULTI_SZ type\n");
+		  StringPtr = (PWSTR)ValueInfo->Data;
+		  while (*StringPtr != 0)
+		    {
+		      StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
+		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+							REG_SZ,
+							(PVOID)StringPtr,
+							StringLen,
+							Context,
+							QueryEntry->EntryContext);
+		      if(!NT_SUCCESS(Status))
+			break;
+		      StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
+		    }
+		}
+	      else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
+		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		{
+		  DPRINT1("FIXME: expand REG_EXPAND_SZ\n");
+
+		}
 	      else
 		{
 		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
@@ -318,6 +354,13 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 						    Context,
 						    QueryEntry->EntryContext);
 		}
+
+	      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
+		{
+		  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
+
+		}
+
 	      RtlFreeHeap(RtlGetProcessHeap(),
 			  0,
 			  ValueInfo);
@@ -361,19 +404,58 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 					       &ResultSize);
 		  if (!NT_SUCCESS(Status))
 		    {
-		      if (Status == STATUS_NO_MORE_ENTRIES)
-			Status = STATUS_SUCCESS;
+		      if ((Status == STATUS_NO_MORE_ENTRIES) &&
+			  (Index == 0) &&
+			  (QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
+			{
+			  Status = STATUS_OBJECT_NAME_NOT_FOUND;
+			}
+		      else if (Status == STATUS_NO_MORE_ENTRIES)
+			{
+			  Status = STATUS_SUCCESS;
+			}
 		      break;
 		    }
 
-		  Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
-						    FullValueInfo->Type,
-						    (PVOID)FullValueInfo + FullValueInfo->DataOffset,
-						    FullValueInfo->DataLength,
-						    Context,
-						    QueryEntry->EntryContext);
+		  if ((ValueInfo->Type == REG_MULTI_SZ) &&
+		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		    {
+		      DPRINT("Expand REG_MULTI_SZ type\n");
+		      StringPtr = (PWSTR)ValueInfo->Data;
+		      while (*StringPtr != 0)
+			{
+			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
+			  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+							    REG_SZ,
+							    (PVOID)StringPtr,
+							    StringLen,
+							    Context,
+							    QueryEntry->EntryContext);
+			  if(!NT_SUCCESS(Status))
+			    break;
+			  StringPtr = (PWSTR)((PUCHAR)StringPtr + StringLen);
+			}
+		    }
+		  else if ((ValueInfo->Type == REG_EXPAND_SZ) &&
+			   !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
+		    {
+		      DPRINT1("FIXME: expand REG_EXPAND_SZ\n");
+		
+		    }
+		  else
+		    {
+		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
+							FullValueInfo->Type,
+							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
+							FullValueInfo->DataLength,
+							Context,
+							QueryEntry->EntryContext);
+		    }
+
 		  if (!NT_SUCCESS(Status))
 		    break;
+
+		  /* FIXME: How will these be deleted? */
 
 		  Index++;
 		}
@@ -385,12 +467,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      if (!NT_SUCCESS(Status))
 		break;
 	    }
-	}
-
-      if (QueryEntry->Flags & RTL_QUERY_REGISTRY_DELETE)
-	{
-	  DPRINT1("FIXME: Delete value: %S\n", QueryEntry->Name);
-
 	}
 
       QueryEntry++;
@@ -491,11 +567,12 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 			  &ReturnedLength);
   if (NT_SUCCESS(Status))
     {
-      if (KeyInfo->NameLength <= SubKeyName->MaximumLength)
+      if (KeyInfo->NameLength + sizeof(WCHAR) <= SubKeyName->MaximumLength)
 	{
 	  memmove(SubKeyName->Buffer,
 		  KeyInfo->Name,
 		  KeyInfo->NameLength);
+	  SubKeyName->Buffer[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
 	  SubKeyName->Length = KeyInfo->NameLength;
 	}
       else
@@ -624,9 +701,9 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
   WCHAR KeyBuffer[MAX_PATH];
   OBJECT_ATTRIBUTES ObjectAttributes;
   NTSTATUS Status;
-  
+
   DPRINT("RtlpGetRegistryHandle()\n");
-  
+
   if (RelativeTo & RTL_REGISTRY_HANDLE)
     {
       Status = NtDuplicateObject(NtCurrentProcess(),
@@ -643,7 +720,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
     RelativeTo &= ~RTL_REGISTRY_OPTIONAL;
 
   if (RelativeTo >= RTL_REGISTRY_MAXIMUM)
-    return STATUS_INVALID_PARAMETER;
+    return(STATUS_INVALID_PARAMETER);
 
   KeyName.Length = 0;
   KeyName.MaximumLength = MAX_PATH;
@@ -680,7 +757,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
       case RTL_REGISTRY_USER:
 	Status = RtlFormatCurrentUserKeyPath(&KeyName);
 	if (!NT_SUCCESS(Status))
-	  return Status;
+	  return(Status);
 	break;
 
       /* ReactOS specific */
@@ -689,6 +766,8 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 				 L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
 	break;
     }
+
+  DPRINT("KeyName %wZ\n", &KeyName);
 
   if (Path[0] == L'\\')
     {
