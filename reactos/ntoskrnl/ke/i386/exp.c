@@ -632,10 +632,11 @@ KeDumpStackFrames(PULONG Frame)
 	DbgPrint("Frames: ");
 	while ( MmIsAddressValid(Frame) )
 	{
-		if (!KeRosPrintAddress((PVOID)Frame[1]))
-		{
-			DbgPrint("<%X>", (PVOID)Frame[1]);
-		}
+		ULONG Addr = Frame[1];
+		if (!KeRosPrintAddress((PVOID)Addr))
+			DbgPrint("<%X>", Addr);
+		if ( Addr == 0 || Addr == 0xDEADBEEF )
+			break;
 		Frame = (PULONG)Frame[0];
 		DbgPrint(" ");
 	}
@@ -661,13 +662,9 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 	{
 		ULONG Addr = Frame[1];
 		if (!KeRosPrintAddress((PVOID)Addr))
-		{
 			DbgPrint("<%X>", Addr);
-		}
 		if ( Addr == 0 || Addr == 0xDEADBEEF )
-		{
 			break;
-		}
 		Frame = (PULONG)Frame[0];
 		DbgPrint(" ");
 	}
