@@ -1,4 +1,4 @@
-/* $Id: io.h,v 1.4 2000/08/24 19:07:49 ekohl Exp $
+/* $Id: io.h,v 1.5 2000/09/10 13:52:55 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -60,6 +60,9 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PKEVENT Event,
 					 PIO_STATUS_BLOCK IoStatusBlock);
 VOID IoShutdownIoManager(VOID);
+VOID IoInitShutdownNotification(VOID);
+VOID IoShutdownRegisteredDevices(VOID);
+
 NTSTATUS STDCALL IoPageRead (PFILE_OBJECT		FileObject,
 			     PMDL			Mdl,
 			     PLARGE_INTEGER		Offset,

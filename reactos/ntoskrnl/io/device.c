@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.20 2000/08/19 01:20:52 ekohl Exp $
+/* $Id: device.c,v 1.21 2000/09/10 13:54:01 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -86,7 +86,36 @@ VOID
 STDCALL
 IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
 {
-	UNIMPLEMENTED;
+	PDEVICE_OBJECT Previous;
+
+	if (DeviceObject->Flags & DO_SHUTDOWN_REGISTERED)
+		IoUnregisterShutdownNotification(DeviceObject);
+
+	/* remove the timer if it exists */
+	if (DeviceObject->Timer)
+	{
+		IoStopTimer(DeviceObject);
+		ExFreePool(DeviceObject->Timer);
+	}
+
+	/* free device extension */
+	if (DeviceObject->DeviceObjectExtension)
+		ExFreePool (DeviceObject->DeviceObjectExtension);
+
+	/* remove device from driver device list */
+	Previous = DeviceObject->DriverObject->DeviceObject;
+	if (Previous == DeviceObject)
+	{
+		DeviceObject->DriverObject->DeviceObject = DeviceObject->NextDevice;
+	}
+	else
+	{
+		while (Previous->NextDevice != DeviceObject)
+			Previous = Previous->NextDevice;
+		Previous->NextDevice = DeviceObject->NextDevice;
+	}
+
+	ObDereferenceObject (DeviceObject);
 }
 
 
@@ -181,7 +210,7 @@ IoGetAttachedDevice(PDEVICE_OBJECT DeviceObject)
 PDEVICE_OBJECT
 STDCALL
 IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
-					   PDEVICE_OBJECT TargetDevice)
+			    PDEVICE_OBJECT TargetDevice)
 {
    PDEVICE_OBJECT AttachedDevice;
    
@@ -199,8 +228,8 @@ IoAttachDeviceToDeviceStack(PDEVICE_OBJECT SourceDevice,
 VOID
 STDCALL
 IoRegisterDriverReinitialization(PDRIVER_OBJECT DriverObject,
-				      PDRIVER_REINITIALIZE ReinitRoutine,
-				      PVOID Context)
+				 PDRIVER_REINITIALIZE ReinitRoutine,
+				 PVOID Context)
 {
    UNIMPLEMENTED;
 }
@@ -253,8 +282,8 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry)
 NTSTATUS
 STDCALL
 IoAttachDevice(PDEVICE_OBJECT SourceDevice,
-			PUNICODE_STRING TargetDevice,
-			PDEVICE_OBJECT* AttachedDevice)
+	       PUNICODE_STRING TargetDevice,
+	       PDEVICE_OBJECT* AttachedDevice)
 /*
  * FUNCTION: Layers a device over the highest device in a device stack
  * ARGUMENTS:
@@ -313,7 +342,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
  *         Success or failure
  *         DeviceObject : Contains a pointer to allocated device object
  *                        if the call succeeded
- * NOTES: See the DDK documentation for more information        
+ * NOTES: See the DDK documentation for more information
  */
 {
    PDEVICE_OBJECT CreatedDeviceObject;
@@ -347,7 +376,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 					     NULL,
 					     IoDeviceObjectType);
      }
-					      
+   
    *DeviceObject = NULL;
    
    if (CreatedDeviceObject == NULL)
@@ -367,7 +396,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
      }
    
    CreatedDeviceObject->Type = DeviceType;
-   CreatedDeviceObject->DriverObject = DriverObject; 
+   CreatedDeviceObject->DriverObject = DriverObject;
    CreatedDeviceObject->CurrentIrp = NULL;
    CreatedDeviceObject->Flags = 0;
 

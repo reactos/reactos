@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.14 2000/08/24 19:09:12 ekohl Exp $
+/* $Id: iomgr.c,v 1.15 2000/09/10 13:54:01 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -101,6 +101,10 @@ VOID IopDeleteFile(PVOID ObjectBody)
 
 VOID IoShutdownIoManager(VOID)
 {
+   /* shut down all registered devices */
+   IoShutdownRegisteredDevices();
+
+
 }
 
 
@@ -236,6 +240,7 @@ VOID IoInit (VOID)
 	IoInitSymbolicLinkImplementation ();
 	IoInitFileSystemImplementation ();
 	IoInitVpbImplementation ();
+	IoInitShutdownNotification ();
 
 	/*
 	 * Create link from '\DosDevices' to '\??' directory
