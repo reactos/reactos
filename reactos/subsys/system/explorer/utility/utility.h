@@ -186,9 +186,6 @@ protected:
 	HWND	_hwnd;
 };
 
-
- // double buffering classes
-
 struct Canvas
 {
 	Canvas(HDC hdc) : _hdc(hdc) {}
@@ -198,6 +195,20 @@ struct Canvas
 protected:
 	HDC _hdc;
 };
+
+struct WindowCanvas : public Canvas
+{
+	WindowCanvas(HWND hwnd)
+	 :	Canvas(GetDC(hwnd)), _hwnd(hwnd) {}
+
+	~WindowCanvas() {ReleaseDC(_hwnd, _hdc);}
+
+protected:
+	HWND	_hwnd;
+};
+
+
+ // double buffering classes
 
 struct MemCanvas : public Canvas
 {

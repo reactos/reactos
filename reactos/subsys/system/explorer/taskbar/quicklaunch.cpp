@@ -96,7 +96,7 @@ void QuickLaunchBar::AddShortcuts()
 	_dir->smart_scan();
 
 	ShellFolder desktop_folder;
-	HDC hdc_wnd = GetDC(_hwnd);
+	WindowCanvas canvas(_hwnd);
 
 	TBBUTTON btn = {-2/*I_IMAGENONE*/, 0, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0};
 
@@ -110,7 +110,7 @@ void QuickLaunchBar::AddShortcuts()
 				ShellEntry* shell_entry = static_cast<ShellEntry*>(entry);
 
 				const String& entry_name = desktop_folder.get_name(shell_entry->_pidl);
-				HBITMAP hbmp = create_bitmap_from_icon(shell_entry->_hIcon, GetSysColorBrush(COLOR_BTNFACE), hdc_wnd);
+				HBITMAP hbmp = create_bitmap_from_icon(shell_entry->_hIcon, GetSysColorBrush(COLOR_BTNFACE), canvas);
 
 				TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 				int bmp_idx = SendMessage(_hwnd, TB_ADDBITMAP, 1, (LPARAM)&ab);
@@ -132,8 +132,6 @@ void QuickLaunchBar::AddShortcuts()
 				SendMessage(_hwnd, TB_INSERTBUTTON, idx, (LPARAM)&btn);
 			}
 	}
-
-	ReleaseDC(_hwnd, hdc_wnd);
 }
 
 LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)

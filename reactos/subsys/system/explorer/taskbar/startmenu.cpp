@@ -304,7 +304,7 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, 
 	}
 
 	 // widen window, if it is too small
-	int width = StartMenuButton::GetTextWidth(title) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
+	int width = StartMenuButton::GetTextWidth(title,_hwnd) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
 
 	ClientRect clnt(_hwnd);
 	if (width > clnt.right)
@@ -436,15 +436,13 @@ void StartMenu::CloseStartMenu(int id)
 }
 
 
-int StartMenuButton::GetTextWidth(LPCTSTR title)
+int StartMenuButton::GetTextWidth(LPCTSTR title, HWND hwnd)
 {
-	HDC hdc = GetDC(0);
-	FontSelection font(hdc, GetStockFont(DEFAULT_GUI_FONT));
+	WindowCanvas canvas(hwnd);
+	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 
 	RECT rect = {0, 0, 0, 0};
-	DrawText(hdc, title, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-
-	ReleaseDC(0, hdc);
+	DrawText(canvas, title, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
 
 	return rect.right-rect.left;
 }

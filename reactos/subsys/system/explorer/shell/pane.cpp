@@ -841,28 +841,22 @@ int Pane::Notify(int id, NMHDR* pnmh)
 
 OutputWorker::OutputWorker()
 {
-	HDC hdc = GetDC(0);
-
-	_hfont = CreateFont(-MulDiv(8,GetDeviceCaps(hdc,LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("MS Sans Serif"));
-
-	ReleaseDC(0, hdc);
+	_hfont = CreateFont(-MulDiv(8,GetDeviceCaps(WindowCanvas(0),LOGPIXELSY),72), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, TEXT("MS Sans Serif"));
 }
 
 void OutputWorker::init_output(HWND hwnd)
 {
 	TCHAR b[16];
-	HFONT old_font;
-	HDC hdc = GetDC(hwnd);
+
+	WindowCanvas canvas(hwnd);
 
 	if (GetNumberFormat(LOCALE_USER_DEFAULT, 0, TEXT("1000"), 0, b, 16) > 4)
 		_num_sep = b[1];
 	else
 		_num_sep = TEXT('.');
 
-	old_font = SelectFont(hdc, _hfont);
-	GetTextExtentPoint32(hdc, TEXT(" "), 1, &_spaceSize);
-	SelectFont(hdc, old_font);
-	ReleaseDC(hwnd, hdc);
+	FontSelection font(canvas, _hfont);
+	GetTextExtentPoint32(canvas, TEXT(" "), 1, &_spaceSize);
 }
 
 

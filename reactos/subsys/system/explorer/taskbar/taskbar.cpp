@@ -236,9 +236,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 				found->second._id = pThis->_next_id++;
 		} else {
 			HICON hIcon = get_window_icon(hwnd);
-			HDC hdc_wnd = GetDC(pThis->_htoolbar);
-			HBITMAP hbmp = create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), hdc_wnd);
-			ReleaseDC(pThis->_htoolbar, hdc_wnd);
+			HBITMAP hbmp = create_bitmap_from_icon(hIcon, GetSysColorBrush(COLOR_BTNFACE), WindowCanvas(pThis->_htoolbar));
 
 			TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 			int bmp_idx = SendMessage(pThis->_htoolbar, TB_ADDBITMAP, 1, (LPARAM)&ab);

@@ -44,7 +44,14 @@
 struct StartMenuDirectory
 {
 	StartMenuDirectory(const ShellDirectory& dir, bool subfolders=true)
-	 :	_dir(dir), _subfolders(subfolders) {}
+	 :	_dir(dir), _subfolders(subfolders)
+	{
+	}
+
+	~StartMenuDirectory()
+	{
+		_dir.free_subentries();
+	}
 
 	ShellDirectory _dir;
 	bool	_subfolders;
@@ -72,7 +79,7 @@ struct StartMenuButton : public OwnerdrawnButton
 	StartMenuButton(HWND hwnd, HICON hIcon, bool hasSubmenu)
 	 :	super(hwnd), _hIcon(hIcon), _hasSubmenu(hasSubmenu) {}
 
-	static int GetTextWidth(LPCTSTR title);
+	static int GetTextWidth(LPCTSTR title, HWND hwnd);
 
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
