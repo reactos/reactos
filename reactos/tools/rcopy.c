@@ -32,7 +32,7 @@ make_absolute(char *absolute, char *path)
     }
   else
     {
-      getcwd(absolute, sizeof(absolute));
+      getcwd(absolute, MAX_PATH);
       strcat(absolute, DIR_SEPARATOR_STRING);
       strcat(absolute, path);
     }
