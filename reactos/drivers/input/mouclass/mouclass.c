@@ -1,0 +1,228 @@
+/*
+
+ ** Mouse class driver 0.0.1
+ ** Written by Jason Filby (jasonfilby@yahoo.com)
+ ** For ReactOS (www.reactos.com)
+
+ ** The class driver between win32k and the various mouse port drivers
+
+ ** TODO: Change interface to win32k to a callback instead of ReadFile IO
+          Add support for multiple port devices
+
+*/
+
+#include <ddk/ntddk.h>
+#include "..\include\mouse.h"
+#include "mouclass.h"
+
+BOOLEAN AlreadyOpened = FALSE;
+
+VOID MouseClassCallBack(PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
+			PMOUSE_INPUT_DATA MouseDataEnd, PULONG InputCount)
+{
+   PDEVICE_EXTENSION ClassDeviceExtension = ClassDeviceObject->DeviceExtension;
+   PIRP Irp;
+   ULONG ReadSize;
+   PIO_STACK_LOCATION Stack;
+
+   if(ClassDeviceExtension->ReadIsPending == TRUE)
+   {
+      Irp = ClassDeviceObject->CurrentIrp;
+      ClassDeviceObject->CurrentIrp = NULL;
+      Stack = IoGetCurrentIrpStackLocation(Irp);
+
+      ReadSize = sizeof(MOUSE_INPUT_DATA) * (*InputCount);
+
+      // A read request is waiting for input, so go straight to it
+      RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer, (PCHAR)MouseDataStart, ReadSize);
+
+      // Go to next packet and complete this request with STATUS_SUCCESS
+      Irp->IoStatus.Status = STATUS_SUCCESS;
+      Irp->IoStatus.Information = ReadSize;
+      Stack->Parameters.Read.Length = ReadSize;
+
+      IoStartNextPacket(ClassDeviceObject, FALSE);
+      IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);      
+      ClassDeviceExtension->ReadIsPending = FALSE;
+   }
+   if(InputCount>0)
+   {
+      // FIXME: If we exceed the buffer, mouse data gets thrown away.. better solution?
+
+      if(ClassDeviceExtension->InputCount + *InputCount > MOUSE_BUFFER_SIZE)
+      {
+         ReadSize = MOUSE_BUFFER_SIZE - ClassDeviceExtension->InputCount;
+      } else {
+         ReadSize = *InputCount;
+      }
+
+      // Move the mouse input data from the port data queue to our class data queue
+      RtlMoveMemory(ClassDeviceExtension->PortData, (PCHAR)MouseDataStart,
+                    sizeof(MOUSE_INPUT_DATA) * ReadSize);
+
+      // Move the pointer and counter up
+      ClassDeviceExtension->PortData += ReadSize;
+      ClassDeviceExtension->InputCount += ReadSize;
+   }
+}
+
+NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
+{
+   PDEVICE_OBJECT PortDeviceObject = NULL;
+   PFILE_OBJECT FileObject = NULL;
+   NTSTATUS status;
+   UNICODE_STRING PortName;
+   IO_STATUS_BLOCK ioStatus;
+   KEVENT event;
+   PIRP irp;
+   CLASS_INFORMATION ClassInformation;
+   PDEVICE_EXTENSION DeviceExtension = ClassDeviceObject->DeviceExtension;
+
+   // Get the port driver's DeviceObject
+   // FIXME: The name might change.. find a way to be more dynamic?
+
+   RtlInitUnicodeString(&PortName, L"\\Device\\Mouse");
+   status = IoGetDeviceObjectPointer(&PortName, FILE_READ_ATTRIBUTES, &FileObject, &PortDeviceObject);
+
+   if(status != STATUS_SUCCESS)
+   {
+      DbgPrint("MOUCLASS: Could not connect to mouse port driver\n");
+      return status;
+   }
+
+   DeviceExtension->PortDeviceObject = PortDeviceObject;
+   DeviceExtension->PortData = ExAllocatePool(NonPagedPool, MOUSE_BUFFER_SIZE * sizeof(MOUSE_INPUT_DATA));
+   DeviceExtension->InputCount = 0;
+   DeviceExtension->ReadIsPending = FALSE;
+
+   // Connect our callback to the port driver
+
+   KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+   ClassInformation.DeviceObject = ClassDeviceObject;
+   ClassInformation.CallBack     = MouseClassCallBack;
+
+   irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_MOUSE_CONNECT,
+      PortDeviceObject, &ClassInformation, sizeof(CLASS_INFORMATION), NULL, 0, TRUE, &event, &ioStatus);
+
+   status = IoCallDriver(DeviceExtension->PortDeviceObject, irp);
+
+   if (status == STATUS_PENDING) {
+      KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
+   } else {
+      ioStatus.Status = status;
+   }
+
+   return ioStatus.Status;
+}
+
+NTSTATUS MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   NTSTATUS Status;
+
+   switch (Stack->MajorFunction)
+     {
+      case IRP_MJ_CREATE:
+	if (AlreadyOpened == TRUE)
+	  {
+	     Status = STATUS_SUCCESS;
+	  }
+	else
+	  {
+	     Status = STATUS_SUCCESS;
+	     AlreadyOpened = TRUE;
+	  }
+	break;
+	
+      case IRP_MJ_CLOSE:
+        Status = STATUS_SUCCESS;
+	break;
+
+      case IRP_MJ_READ:
+
+       if (Stack->Parameters.Read.Length == 0) {
+           Status = STATUS_SUCCESS;
+        } else {
+	   Status = STATUS_PENDING;
+        }
+	break;
+
+      default:
+        DbgPrint("NOT IMPLEMENTED\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+	break;
+     }
+
+   Irp->IoStatus.Status = Status;
+   Irp->IoStatus.Information = 0;
+   if (Status==STATUS_PENDING)
+   {
+      IoMarkIrpPending(Irp);
+      IoStartPacket(DeviceObject, Irp, NULL, NULL);
+   } else {
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+   }
+   return(Status);
+}
+
+VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+   PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+   PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
+   ULONG ReadSize;
+
+   if(DeviceExtension->InputCount>0)
+   {
+      // FIXME: We should not send to much input data.. depends on the max buffer size of the win32k
+      ReadSize = DeviceExtension->InputCount * sizeof(MOUSE_INPUT_DATA);
+
+      // Bring the PortData back to base so that it can be copied
+      DeviceExtension->PortData -= DeviceExtension->InputCount;
+      DeviceExtension->InputCount = 0;
+      DeviceExtension->ReadIsPending = FALSE;
+
+      RtlMoveMemory(Irp->AssociatedIrp.SystemBuffer, (PCHAR)DeviceExtension->PortData, ReadSize);
+
+      // Go to next packet and complete this request with STATUS_SUCCESS
+      Irp->IoStatus.Status = STATUS_SUCCESS;
+
+      Irp->IoStatus.Information = ReadSize;
+      Stack->Parameters.Read.Length = ReadSize;
+
+      IoStartNextPacket(DeviceObject, FALSE);
+      IoCompleteRequest(Irp, IO_MOUSE_INCREMENT);
+   } else {
+      DeviceExtension->ReadIsPending = TRUE;
+   }
+}
+
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
+{
+   PDEVICE_OBJECT DeviceObject;
+   UNICODE_STRING DeviceName;
+   UNICODE_STRING SymlinkName;
+
+   DbgPrint("Mouse Class Driver 0.0.1\n");
+
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
+   DriverObject->MajorFunction[IRP_MJ_READ]   = MouseClassDispatch;
+   DriverObject->DriverStartIo                = MouseClassStartIo;
+
+   RtlInitUnicodeString(&DeviceName, L"\\Device\\MouseClass");
+   IoCreateDevice(DriverObject,
+		  sizeof(DEVICE_EXTENSION),
+		  &DeviceName,
+		  FILE_DEVICE_MOUSE,
+		  0,
+		  TRUE,
+		  &DeviceObject);
+   DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
+
+   RtlInitUnicodeString(&SymlinkName, L"\\??\\MouseClass");
+   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+
+   return ConnectMousePortDriver(DeviceObject);
+}
