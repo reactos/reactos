@@ -164,6 +164,46 @@ protected:
 };
 
 
+ /// Thread base class
+
+struct Thread
+{
+	Thread()
+	 :	_alive(true)
+	{
+		_hThread = INVALID_HANDLE_VALUE;
+	}
+
+	virtual ~Thread()
+	{
+		Stop();
+
+		CloseHandle(_hThread);
+	}
+
+	void Start()
+	{
+		_hThread = CreateThread(NULL, 0, ThreadProc, this, 0, NULL);
+	}
+
+	void Stop()
+	{
+		_alive = false;
+
+		 // wait for finishing
+		WaitForSingleObject(_hThread, INFINITE);
+	}
+
+	virtual int Run() = 0;
+
+protected:
+	static DWORD WINAPI ThreadProc(void* para);
+
+	HANDLE	_hThread;
+	bool	_alive;
+};
+
+
  // window utilities
 
 struct ClientRect : public RECT
@@ -203,6 +243,13 @@ struct Point : public POINT
 
 	operator LPPOINT() {return this;}
 };
+
+
+inline void ClientToScreen(HWND hwnd, RECT* prect)
+ {::ClientToScreen(hwnd,(LPPOINT)&prect->left); ::ClientToScreen(hwnd,(LPPOINT)&prect->right);}
+
+inline void ScreenToClient(HWND hwnd, RECT* prect)
+ {::ScreenToClient(hwnd,(LPPOINT)&prect->left); ::ScreenToClient(hwnd,(LPPOINT)&prect->right);}
 
 
 struct FullScreenParameters
@@ -489,6 +536,7 @@ extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR*
 #define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
 #define	SetWindowStyle(hwnd, val) (DWORD)SetWindowLong(hwnd, GWL_STYLE, val)
 #define	SetWindowExStyle(h, val) (DWORD)SetWindowLong(hwnd, GWL_EXSTYLE, val)
+#define	Window_SetIcon(hwnd, type, hicon) (HICON)SendMessage(hwnd, WM_SETICON, type, (LPARAM)(hicon))
 
 
  // display 

@@ -743,9 +743,9 @@ struct SpecialFolderPath : public ShellPath
 	}
 };
 
-struct DesktopFolder : public SpecialFolderPath
+struct DesktopFolderPath : public SpecialFolderPath
 {
-	DesktopFolder()
+	DesktopFolderPath()
 	 :	SpecialFolderPath(CSIDL_DESKTOP, 0)
 	{
 	}
@@ -757,6 +757,10 @@ struct SpecialFolder : public ShellFolder
 	 :	ShellFolder(Desktop(), SpecialFolderPath(folder, hwnd))
 	{
 	}
+};
+
+struct DesktopFolder : public ShellFolder
+{
 };
 
 

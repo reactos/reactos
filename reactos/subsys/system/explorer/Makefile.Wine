@@ -33,7 +33,8 @@ CPP_SRCS = \
 	taskbar/taskbar.cpp \
 	taskbar/startmenu.cpp \
 	taskbar/traynotify.cpp \
-	taskbar/quicklaunch.cpp
+	taskbar/quicklaunch.cpp \
+	dialogs/searchprogram.cpp
 
 RC_SRCS = rsrc.rc
 EXTRARCFLAGS = -D__WRC__ -D_WIN32

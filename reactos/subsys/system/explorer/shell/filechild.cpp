@@ -82,7 +82,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._fs, TEXT("Shell"));
 
 		const ShellChildWndInfo& shell_info = static_cast<const ShellChildWndInfo&>(info);
-		_root._entry = new ShellDirectory(Desktop(), DesktopFolder(), hwnd);
+		_root._entry = new ShellDirectory(Desktop(), DesktopFolderPath(), hwnd);
 		entry = _root._entry->read_tree((LPCTSTR)&*shell_info._shell_path, SORT_NAME/*_sortOrder*/);
 	}
 	else
@@ -338,7 +338,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			switch(LOWORD(wparam)) {
 			  case ID_WINDOW_NEW:
 				if (_root._entry->_etype == ET_SHELL)
-					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, ShellChildWndInfo(_path,DesktopFolder()));
+					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, ShellChildWndInfo(_path,DesktopFolderPath()));
 				else
 					FileChildWindow::create(GetParent(_hwnd)/*_hmdiclient*/, FileChildWndInfo(_path));
 				break;

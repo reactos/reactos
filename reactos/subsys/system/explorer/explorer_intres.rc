@@ -111,6 +111,7 @@ BEGIN
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
     IDS_BROWSE              "Browse Files..."
+    IDS_SEARCH_PRG          "Search Programm..."
 END
 
 #endif    // Romanian resources
@@ -146,6 +147,11 @@ BEGIN
     "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
     "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
                                                     NOINVERT
+END
+
+IDA_SEARCH_PROGRAM ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END
 
 #endif    // Neutral resources
@@ -372,6 +378,7 @@ BEGIN
     IDS_CONTROL_PANEL       "Systemsteuerung"
     IDS_PRINTERS            "Drucker"
     IDS_BROWSE              "Dateien..."
+    IDS_SEARCH_PRG          "Suche Programm..."
 END
 
 #endif    // German (Germany) resources
@@ -551,6 +558,37 @@ BEGIN
     PUSHBUTTON      "&Help",254,158,43,47,14
 END
 
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 144, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Search Program in Startmenu"
+FONT 8, "MS Sans Serif"
+BEGIN
+    EDITTEXT        IDC_TOPIC,7,7,130,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_MAILS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,25,130,33
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE 
+BEGIN
+    IDD_SEARCH_PROGRAM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 137
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 58
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -586,6 +624,7 @@ BEGIN
     IDS_CONTROL_PANEL       "Control Panel"
     IDS_PRINTERS            "Printers"
     IDS_BROWSE              "Browse Files..."
+    IDS_SEARCH_PRG          "Search Programm..."
 END
 
 #endif    // English (U.S.) resources

@@ -32,6 +32,14 @@
 #include <time.h>
 
 
+DWORD WINAPI Thread::ThreadProc(void* para)
+{
+	Thread* pThis = (Thread*) para;
+
+	return pThis->Run();
+}
+
+
 void display_error(HWND hwnd, DWORD error)
 {
 	PTSTR msg;

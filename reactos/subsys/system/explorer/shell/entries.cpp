@@ -62,6 +62,32 @@ Entry::Entry(Entry* parent)
 	_display_name = _data.cFileName;
 }
 
+Entry::Entry(const Entry& other)
+{
+	_next = NULL;
+	_down = NULL;
+	_up = NULL;
+
+	assert(!other._next);
+	assert(!other._down);
+	assert(!other._up);
+
+	_expanded = other._expanded;
+	_scanned = other._scanned;
+	_level = other._level;
+
+	_data = other._data;
+
+	_shell_attribs = other._shell_attribs;
+	_display_name = other._display_name==other._data.cFileName? _data.cFileName: _tcsdup(other._display_name);
+
+	_etype = other._etype;
+	_hIcon = other._hIcon;
+
+	_bhfi = other._bhfi;
+	_bhfi_valid = other._bhfi_valid;
+}
+
  // free a directory entry
 Entry::~Entry()
 {

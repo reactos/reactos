@@ -68,6 +68,8 @@ protected:
 	HICON	_hIcon;
 };
 
+extern void SetWindowIcon(HWND hwnd, UINT nid);
+
 struct ResBitmap
 {
 	ResBitmap(UINT nid);

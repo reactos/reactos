@@ -64,16 +64,17 @@ struct Window : public WindowHandle
 	static HWND Create(CREATORFUNC creator, DWORD dwExStyle,
 				LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
-				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
+				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
 	static HWND Create(CREATORFUNC creator, const void* info,
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
-				HWND hwndParent=0, HMENU hMenu=0, LPVOID lpParam=0);
+				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
 
 	static Window* create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CREATORFUNC creator, const void* info=NULL);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
+	static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 	static Window* get_window(HWND hwnd);
 #ifndef _MSC_VER
@@ -103,6 +104,8 @@ protected:
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);							// WM_COMMAND processing
 	virtual int		Notify(int id, NMHDR* pnmh);						// WM_NOTIFY processing
+
+	static Window* create_controller(HWND hwnd);
 
 
 	static WindowMap	s_wnd_map;
@@ -304,9 +307,23 @@ struct PreTranslateWindow : public Window
 
 
  /**
-	The class Dialog implements modeless dialogs, which are managed by
+	The class DialogWindow implements modeless dialogs, which are managed by
 	Window::dispatch_dialog_msg() in Window::MessageLoop().
-	A Dialog object should be constructed by calling Window::Create()
+	A DialogWindow object should be constructed by calling Window::Create()
+	and specifying the class using the WINDOW_CREATOR() macro.
+ */
+struct DialogWindow : public Window
+{
+	typedef Window super;
+
+	DialogWindow(HWND);
+	~DialogWindow();
+};
+
+
+ /**
+	The class Dialog implements modal dialogs.
+	A DialogWindow object should be constructed by calling Dialog::DoModal()
 	and specifying the class using the WINDOW_CREATOR() macro.
  */
 struct Dialog : public Window
@@ -315,6 +332,126 @@ struct Dialog : public Window
 
 	Dialog(HWND);
 	~Dialog();
+
+	static int DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent);
+	static int DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent);
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
+};
+
+
+#define	PM_FRM_CALC_CLIENT		(WM_APP+0x03)
+#define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, PM_FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
+
+
+ // Layouting of resizable windows
+
+enum RESIZE_FLAGS {
+	MOVE_LEFT	= 0x1,
+	MOVE_RIGHT	= 0x2,
+	MOVE_TOP	= 0x4,
+	MOVE_BOTTOM	= 0x8,
+
+	MOVE_X	=  MOVE_LEFT | MOVE_RIGHT,
+	MOVE_Y	=  MOVE_TOP | MOVE_BOTTOM,
+	RESIZE_X=  MOVE_RIGHT,
+	RESIZE_Y=  MOVE_BOTTOM,
+
+	MOVE	= MOVE_X   | MOVE_Y,
+	RESIZE	= RESIZE_X | RESIZE_Y
+};
+
+struct ResizeEntry
+{
+	ResizeEntry(UINT id, int flags)
+	 : _id(id), _flags(flags) {}
+
+	ResizeEntry(HWND hwnd, int flags)
+	 : _id(GetDlgCtrlID(hwnd)), _flags(flags) {}
+
+	UINT	_id;
+	int		_flags;
+};
+
+struct ResizeManager : public std::list<ResizeEntry>
+{
+	typedef std::list<ResizeEntry> super;
+
+	ResizeManager(HWND hwnd);
+
+	void Add(UINT id, int flags)
+		{push_back(ResizeEntry(id, flags));}
+
+	void Add(HWND hwnd, int flags)
+		{push_back(ResizeEntry(hwnd, flags));}
+
+	void HandleSize(int cx, int cy);
+	void Resize(int dx, int dy);
+
+	void SetMinMaxInfo(LPMINMAXINFO lpmmi)
+	{
+		lpmmi->ptMinTrackSize.x = _min_wnd_size.cx;
+		lpmmi->ptMinTrackSize.y = _min_wnd_size.cy;
+	}
+
+	SIZE	_min_wnd_size;
+
+protected:
+	HWND	_hwnd;
+	SIZE	_last_size;
+};
+
+template<typename BASE> struct ResizeController : public BASE
+{
+	typedef BASE super;
+
+	ResizeController(HWND hwnd)
+	 :	super(hwnd),
+		_resize_mgr(hwnd)
+	{
+	}
+
+	LRESULT WndProc(UINT message, WPARAM wparam, LPARAM lparam)
+	{
+		switch(message) {
+		  case PM_FRM_CALC_CLIENT:
+			GetClientSpace((PRECT)lparam);
+			return TRUE;
+
+		  case WM_SIZE:
+			if (wparam != SIZE_MINIMIZED)
+				_resize_mgr.HandleSize(LOWORD(lparam), HIWORD(lparam));
+			goto def;
+
+		  case WM_GETMINMAXINFO:
+			_resize_mgr.SetMinMaxInfo((LPMINMAXINFO)lparam);
+			goto def;
+
+		  default: def:
+			return super::WndProc(message, wparam, lparam);
+		}
+	}
+
+	virtual void GetClientSpace(PRECT prect)
+	{
+		 if (!IsIconic(_hwnd)) {
+			GetClientRect(_hwnd, prect);
+		 } else {
+			WINDOWPLACEMENT wp;
+			GetWindowPlacement(_hwnd, &wp);
+			prect->left = prect->top = 0;
+			prect->right = wp.rcNormalPosition.right-wp.rcNormalPosition.left-
+				2*(GetSystemMetrics(SM_CXSIZEFRAME)+GetSystemMetrics(SM_CXEDGE));
+			prect->bottom = wp.rcNormalPosition.bottom-wp.rcNormalPosition.top-
+				2*(GetSystemMetrics(SM_CYSIZEFRAME)+GetSystemMetrics(SM_CYEDGE))-
+				GetSystemMetrics(SM_CYCAPTION)-GetSystemMetrics(SM_CYMENUSIZE);
+		}   
+	}
+
+protected:
+	ResizeManager _resize_mgr;
 };
 
 
@@ -345,7 +482,7 @@ struct Static : public WindowHandle
 /*
  // control color message routing for ColorStatic and HyperlinkCtrl
 
-#define	PM_DISPATCH_CTLCOLOR	(WM_APP+0x07)
+#define	PM_DISPATCH_CTLCOLOR	(WM_APP+0x08)
 
 template<typename BASE> struct CtlColorParent : public BASE
 {
@@ -376,7 +513,7 @@ template<typename BASE> struct CtlColorParent : public BASE
 
  // owner draw message routing for ColorButton and PictureButton 
 
-#define	PM_DISPATCH_DRAWITEM	(WM_APP+0x08)
+#define	PM_DISPATCH_DRAWITEM	(WM_APP+0x09)
 
 template<typename BASE> struct OwnerDrawParent : public BASE
 {

@@ -79,6 +79,16 @@ SmallIcon::SmallIcon(UINT nid)
 }
 
 
+void SetWindowIcon(HWND hwnd, UINT nid)
+{
+	HICON hIcon = ResIcon(nid);
+	Window_SetIcon(hwnd, ICON_BIG, hIcon);
+
+	HICON hIconSmall = SmallIcon(nid);
+	Window_SetIcon(hwnd, ICON_SMALL, hIconSmall);
+}
+
+
 ResBitmap::ResBitmap(UINT nid)
 {
 	_hBmp = LoadBitmap(g_Globals._hInstance, MAKEINTRESOURCE(nid));

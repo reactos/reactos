@@ -289,7 +289,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case PM_OPEN_WINDOW: {
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath shell_path = DesktopFolder();
+		ShellPath shell_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
@@ -467,7 +467,7 @@ int MainFrame::Command(int id, int code)
 		GetCurrentDirectory(MAX_PATH, path);
 
 #ifndef _NO_MDI
-		FileChildWindow::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolder()));
+		FileChildWindow::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
 #else
 		//TODO: SDI implementation
 #endif
@@ -483,7 +483,7 @@ int MainFrame::Command(int id, int code)
 
 		GetCurrentDirectory(MAX_PATH, path);
 
-		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolder()));
+		ShellBrowserChild::create(_hmdiclient, ShellChildWndInfo(path,DesktopFolderPath()));
 		break;}
 
 	//TODO: There are even more menu items!

@@ -105,7 +105,7 @@ bool ShellDirectory::fill_w32fdata_shell(LPCITEMIDLIST pidl, SFGAOF attribs, WIN
 }
 
 
-ShellPath ShellEntry::create_absolute_pidl()
+ShellPath ShellEntry::create_absolute_pidl() const
 {
 	if (_up/* && _up->_etype==ET_SHELL*/) {
 		ShellDirectory* dir = static_cast<ShellDirectory*>(_up);

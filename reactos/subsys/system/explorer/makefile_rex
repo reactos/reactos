@@ -28,6 +28,7 @@ VPATH += shell
 VPATH += utility
 VPATH += taskbar
 VPATH += desktop
+VPATH += dialogs
 
 WINE_MODE = yes
 
@@ -71,7 +72,8 @@ TARGET_OBJECTS = \
 	taskbar.o \
 	startmenu.o \
 	traynotify.o \
-	quicklaunch.o
+	quicklaunch.o \
+	searchprogram.o
 
 include $(PATH_TO_TOP)/rules.mak
 

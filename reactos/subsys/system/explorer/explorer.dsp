@@ -547,6 +547,18 @@ SOURCE=.\shell\winfs.cpp
 SOURCE=.\shell\winfs.h
 # End Source File
 # End Group
+# Begin Group "dialogs"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=.\dialogs\searchprogram.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\dialogs\searchprogram.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=.\buildno.h

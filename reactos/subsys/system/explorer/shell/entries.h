@@ -46,6 +46,7 @@ struct Entry
 protected:
 	Entry(ENTRY_TYPE etype);
 	Entry(Entry* parent);
+	Entry(const Entry&);
 
 public:
 	virtual ~Entry();

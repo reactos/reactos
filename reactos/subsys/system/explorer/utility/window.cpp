@@ -92,7 +92,7 @@ Window::~Window()
 HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
-					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
+					HWND hwndParent, HMENU hMenu/*, LPVOID lpParam*/)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
@@ -107,7 +107,7 @@ HWND Window::Create(CREATORFUNC creator, DWORD dwExStyle,
 HWND Window::Create(CREATORFUNC creator, const void* info, DWORD dwExStyle,
 					LPCTSTR lpClassName, LPCTSTR lpWindowName,
 					DWORD dwStyle, int x, int y, int w, int h,
-					HWND hwndParent, HMENU hMenu, LPVOID lpParam)
+					HWND hwndParent, HMENU hMenu/*, LPVOID lpParam*/)
 {
 	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
@@ -149,8 +149,13 @@ Window* Window::create_mdi_child(HWND hmdiclient, const MDICREATESTRUCT& mcs, CR
 LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 {
 	if (code == HCBT_CREATEWND) {
+		HWND hwnd = (HWND)wparam;
+
 		 // create Window controller and associate it with the window handle
-		Window* child = get_window((HWND)wparam);
+		Window* child = get_window(hwnd);
+
+		if (!child)
+			child = create_controller(hwnd);
 
 		if (child)
 			s_new_child_wnd = child;
@@ -160,8 +165,7 @@ LRESULT CALLBACK Window::CBTHookProc(int code, WPARAM wparam, LPARAM lparam)
 }
 
 
- // get window controller from window handle
- // if not already present, create a new controller
+ /// get window controller from window handle
 
 Window* Window::get_window(HWND hwnd)
 {
@@ -174,6 +178,14 @@ Window* Window::get_window(HWND hwnd)
 			return found->second;
 	}
 
+	return NULL;
+}
+
+
+ /// create controller for a new window
+
+Window* Window::create_controller(HWND hwnd)
+{
 	if (s_window_creator) {	// protect for recursion
 		Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
 
@@ -202,6 +214,9 @@ LRESULT	Window::Init(LPCREATESTRUCT pcs)
 LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	Window* pThis = get_window(hwnd);
+
+	if (!pThis)
+		pThis = create_controller(hwnd);
 
 	if (pThis) {
 		switch(nmsg) {
@@ -536,6 +551,18 @@ PreTranslateWindow::~PreTranslateWindow()
 }
 
 
+DialogWindow::DialogWindow(HWND hwnd)
+ :	super(hwnd)
+{
+	register_dialog(hwnd);
+}
+
+DialogWindow::~DialogWindow()
+{
+	unregister_dialog(_hwnd);
+}
+
+
 Dialog::Dialog(HWND hwnd)
  :	super(hwnd)
 {
@@ -545,6 +572,149 @@ Dialog::Dialog(HWND hwnd)
 Dialog::~Dialog()
 {
 	unregister_dialog(_hwnd);
+}
+
+int Dialog::DoModal(UINT nid, CREATORFUNC creator, HWND hwndParent)
+{
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
+
+	s_window_creator = creator;
+	s_new_info = NULL;
+
+	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
+}
+
+int Dialog::DoModal(UINT nid, CREATORFUNC creator, const void* info, HWND hwndParent)
+{
+	Lock lock(GetStaticWindowData()._create_crit_sect);	// protect access to s_window_creator and s_new_info
+
+	s_window_creator = creator;
+	s_new_info = NULL;
+
+	return DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(nid), hwndParent, DialogProc, 0/*lpParam*/);
+}
+
+INT_PTR CALLBACK Window::DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	Window* pThis = get_window(hwnd);
+
+	if (pThis) {
+		switch(nmsg) {
+		  case WM_COMMAND:
+			pThis->Command(LOWORD(wparam), HIWORD(wparam));
+			return TRUE;	// message has been processed
+
+		  case WM_NOTIFY:
+			pThis->Notify(wparam, (NMHDR*)lparam);
+			return TRUE;	// message has been processed
+
+		  case WM_NCDESTROY:
+			delete pThis;
+			return TRUE;	// message has been processed
+
+		  default:
+			return pThis->WndProc(nmsg, wparam, lparam);
+		}
+	} else if (nmsg == WM_INITDIALOG) {
+		pThis = create_controller(hwnd);
+
+		if (pThis)
+			return pThis->Init(NULL);
+	}
+
+	return FALSE;	// message has not been processed
+}
+
+LRESULT Dialog::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	return FALSE;	// message has not been processed
+}
+
+int Dialog::Command(int id, int code)
+{
+	if (code == BN_CLICKED) {
+		EndDialog(_hwnd, id);
+		return TRUE;	// message has been processed
+	}
+
+	return FALSE;
+}
+
+
+ResizeManager::ResizeManager(HWND hwnd)
+ :	_hwnd(hwnd)
+{
+	ClientRect clnt(hwnd);
+	_last_size.cx = clnt.right;
+	_last_size.cy = clnt.bottom;
+
+	WindowRect rect(hwnd);
+	_min_wnd_size.cx = rect.right - rect.left;
+	_min_wnd_size.cy = rect.bottom - rect.top;
+}
+
+void ResizeManager::HandleSize(int cx, int cy)
+{
+	ClientRect clnt_rect(_hwnd);
+	SIZE new_size = {cx, cy};
+
+	int dx = new_size.cx - _last_size.cx;
+	int dy = new_size.cy - _last_size.cy;
+
+	if (!dx && !dy)
+		return;
+
+	_last_size = new_size;
+
+	HDWP hDWP = BeginDeferWindowPos(size());
+
+	for(ResizeManager::const_iterator it=begin(); it!=end(); ++it) {
+		const ResizeEntry& e = *it;
+		RECT move = {0};
+
+		if (e._flags & MOVE_LEFT)	// Die verschiedenen Transformationsmatrizen in move ließen sich eigentlich
+			move.left += dx;		// cachen oder vorausberechnen, da sie nur von _flags und der Größenänderung abhängig sind.
+
+		if (e._flags & MOVE_RIGHT)
+			move.right += dx;
+
+		if (e._flags & MOVE_TOP)
+			move.top += dy;
+
+		if (e._flags & MOVE_BOTTOM)
+			move.bottom += dy;
+
+		UINT flags = 0;
+
+		if (!move.left && !move.top)
+			flags = SWP_NOMOVE;
+
+		if (move.right==move.left && move.bottom==move.top)
+			flags |= SWP_NOSIZE;
+
+		if (flags != (SWP_NOMOVE|SWP_NOSIZE)) {
+			HWND hwnd = GetDlgItem(_hwnd, e._id);
+			WindowRect rect(hwnd);
+			ScreenToClient(_hwnd, rect);
+
+			rect.left	+= move.left;
+			rect.right	+= move.right;
+			rect.top	+= move.top;
+			rect.bottom	+= move.bottom;
+
+			hDWP = DeferWindowPos(hDWP, hwnd, 0, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, flags|SWP_NOACTIVATE|SWP_NOZORDER);
+		}
+	}
+
+	EndDeferWindowPos(hDWP);
+}
+
+void ResizeManager::Resize(int dx, int dy)
+{
+	::SetWindowPos(_hwnd, 0, 0, 0, _min_wnd_size.cx+dx, _min_wnd_size.cy+dy, SWP_NOMOVE|SWP_NOACTIVATE);
+
+	ClientRect clnt_rect(_hwnd);
+	HandleSize(clnt_rect.right, clnt_rect.bottom);
 }
 
 

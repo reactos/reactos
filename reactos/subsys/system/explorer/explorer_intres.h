@@ -25,12 +25,14 @@
 #define IDS_CONTROL_PANEL               21
 #define IDS_PRINTERS                    22
 #define IDS_BROWSE                      23
+#define IDS_SEARCH_PRG                  24
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
 #define IDB_TOOLBAR                     103
 #define IDA_EXPLORER                    104
 #define ID_ACTIVATE                     105
+#define IDD_SEARCH_PROGRAM              105
 #define IDB_DRIVEBAR                    106
 #define IDB_IMAGES                      107
 #define IDD_EXECUTE                     108
@@ -43,12 +45,15 @@
 #define IDI_ARROW                       125
 #define IDI_ARROW_SELECTED              126
 #define IDB_LOGOV                       129
+#define IDA_SEARCH_PROGRAM              133
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
 #define ID_VIEW_STATUSBAR               503
 #define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
+#define IDC_TOPIC                       1017
+#define IDC_MAILS_FOUND                 1018
 #define ID_REFRESH                      1704
 #define ID_ABOUT                        1803
 #define IDC_FILETREE                    10001
@@ -75,8 +80,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         40001
+#define _APS_NEXT_RESOURCE_VALUE        134
+#define _APS_NEXT_COMMAND_VALUE         40002
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -43,11 +43,7 @@
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 
 
-#define	PM_GET_FILEWND_PTR		(WM_APP+0x03)
-
-#define	PM_FRM_CALC_CLIENT		(WM_APP+0x04)
-#define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, PM_FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
-
+#define	PM_GET_FILEWND_PTR		(WM_APP+0x05)
 #define	PM_GET_CONTROLWINDOW	(WM_APP+0x06)
 
 

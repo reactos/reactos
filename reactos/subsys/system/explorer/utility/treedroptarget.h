@@ -59,7 +59,7 @@ public:
 	{
 		TVHITTESTINFO hit;
 		hit.pt = (POINT&)pt;
-		ScreenToClient(m_hTargetWnd,&hit.pt);
+		ScreenToClient(m_hTargetWnd, &hit.pt);
 		hit.flags = TVHT_ONITEM;
 		HTREEITEM hItem = TreeView_HitTest(m_hTargetWnd,&hit);
 

@@ -35,7 +35,7 @@ struct ShellEntry : public Entry
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
 
 	IShellFolder* get_parent_folder() const;
-	ShellPath create_absolute_pidl();
+	ShellPath create_absolute_pidl() const;
 
 	ShellPath	_pidl;	// parent relative PIDL
 

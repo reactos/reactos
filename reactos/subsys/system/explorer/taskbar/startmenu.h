@@ -125,9 +125,9 @@ typedef map<UINT, StartMenuEntry> ShellEntryMap;
  /**
 	Startmenu window
  */
-struct StartMenu : public OwnerDrawParent<Dialog>
+struct StartMenu : public OwnerDrawParent<DialogWindow>
 {
-	typedef OwnerDrawParent<Dialog> super;
+	typedef OwnerDrawParent<DialogWindow> super;
 
 	StartMenu(HWND hwnd);
 	StartMenu(HWND hwnd, const StartMenuFolders& info);
@@ -214,6 +214,8 @@ protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 
+	SIZE	_logo_size;
+
 	void	AddEntries();
 	int		Command(int id, int code);
 
@@ -222,8 +224,6 @@ protected:
 	static void	ShowRestartDialog(HWND hwndOwner, UINT flags);
 	static void	ShowSearchDialog();
 	static void	ShowSearchComputer();
-
-	SIZE	_logo_size;
 };
 
 

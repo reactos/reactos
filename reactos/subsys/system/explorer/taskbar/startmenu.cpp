@@ -37,6 +37,7 @@
 
 #include "desktopbar.h"
 #include "startmenu.h"
+#include "../dialogs/searchprogram.h"
 
 
 StartMenu::StartMenu(HWND hwnd)
@@ -65,8 +66,8 @@ StartMenu::~StartMenu()
 }
 
 
- // We need this wrapper function for s_wcStartMenu, it calls to the WIN32 API
- // through static C++ initializers are not allowed for Winelib applications.
+ // We need this wrapper function for s_wcStartMenu, it calls the WIN32 API,
+ // though static C++ initializers are not allowed for Winelib applications.
 BtnWindowClass& StartMenu::GetWndClasss()
 {
 	static BtnWindowClass s_wcStartMenu(CLASSNAME_STARTMENU);
@@ -403,16 +404,12 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUN
 	StartMenuFolders new_folders;
 
 	try {
-		SpecialFolderPath folder1(folder_id1, _hwnd);
-
-		new_folders.push_back(folder1);
+		new_folders.push_back(SpecialFolderPath(folder_id1, _hwnd));
 	} catch(COMException&) {
 	}
 
 	try {
-		SpecialFolderPath folder2(folder_id2, _hwnd);
-
-		new_folders.push_back(folder2);
+		new_folders.push_back(SpecialFolderPath(folder_id2, _hwnd));
 	} catch(COMException&) {
 	}
 
@@ -673,6 +670,7 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	 // insert hard coded start entries
 	AddButton(ResString(IDS_PROGRAMS),		0, true, IDC_PROGRAMS);
+	AddButton(ResString(IDS_SEARCH_PRG),	0, false, IDC_SEARCH_PROGRAM);
 	AddButton(ResString(IDS_DOCUMENTS),		0, true, IDC_DOCUMENTS);
 	AddButton(ResString(IDS_RECENT),		0, true, IDC_RECENT);
 	AddButton(ResString(IDS_FAVORITES),		0, true, IDC_FAVORITES);
@@ -735,6 +733,12 @@ int StartMenuRoot::Command(int id, int code)
 	  case IDC_PROGRAMS:
 		CreateSubmenu(id, CSIDL_COMMON_PROGRAMS, CSIDL_PROGRAMS);
 		break;
+
+	  case IDC_SEARCH_PROGRAM: {
+		HWND hwndDesktopBar = GetWindow(_hwnd, GW_OWNER);
+		CloseStartMenu(id);
+		Dialog::DoModal(IDD_SEARCH_PROGRAM, WINDOW_CREATOR(FindProgramTopicDlg), hwndDesktopBar);
+		break;}
 
 	  case IDC_EXPLORE:
 		explorer_show_frame(_hwnd, SW_SHOWNORMAL);
