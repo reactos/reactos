@@ -37,7 +37,6 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
 	  (PVOID)ExAllocatePoolWithTag(NonPagedPool,Length, TAG_SYS_BUF);
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
-	     IoFreeIrp(Irp);
 	     return(STATUS_NOT_IMPLEMENTED);
 	  }
 	/* FIXME: should copy buffer in on other ops */
@@ -121,13 +120,34 @@ IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
    StackPtr->FileObject = NULL;
    StackPtr->CompletionRoutine = NULL;
 
-   if (Buffer != NULL)
+   if (Length > 0)
      {
-	IoPrepareIrpBuffer(Irp,
-			   DeviceObject,
-			   Buffer,
-			   Length,
-			   MajorFunction);
+        NTSTATUS Status = STATUS_SUCCESS;
+
+        _SEH_FILTER(FreeAndGoOn) 
+	  {
+            IoFreeIrp(Irp);
+            return EXCEPTION_CONTINUE_SEARCH;
+          } 
+	_SEH_TRY_FILTER(FreeAndGoOn) 
+	  {
+	    Status = IoPrepareIrpBuffer(Irp,
+			                DeviceObject,
+			                Buffer,
+			                Length,
+			                MajorFunction);
+	  }
+        _SEH_HANDLE
+	  {
+	    KEBUGCHECK(0);
+	  }
+	_SEH_END;
+
+	if (!NT_SUCCESS(Status))
+	  {
+	    IoFreeIrp(Irp);
+	    return NULL;
+	  }
      }
 
    if (MajorFunction == IRP_MJ_READ)
@@ -296,7 +316,27 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 					     FALSE,
 					     FALSE,
 					    Irp);
-	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+	     if (Irp->MdlAddress == NULL)
+	       {
+	         IoFreeIrp(Irp);
+		 return NULL;
+	       }
+
+             _SEH_FILTER(FreeAndGoOn) 
+	       {
+                 IoFreeIrp(Irp);
+                 return EXCEPTION_CONTINUE_SEARCH;
+               } 
+	     _SEH_TRY_FILTER(FreeAndGoOn) 
+	       {
+	         MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+	       }
+             _SEH_HANDLE
+	       {
+	         KEBUGCHECK(0);
+	       }
+             _SEH_END;
+
 	  }
 	break;
 	
@@ -329,7 +369,26 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 					     FALSE,
 					     FALSE,
 					    Irp);
-	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	     if (Irp->MdlAddress == NULL)
+	       {
+	         IoFreeIrp(Irp);
+		 return NULL;
+	       }
+
+             _SEH_FILTER(FreeAndGoOn) 
+	       {
+                 IoFreeIrp(Irp);
+                 return EXCEPTION_CONTINUE_SEARCH;
+               } 
+	     _SEH_TRY_FILTER(FreeAndGoOn) 
+	       {
+	         MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	       }
+             _SEH_HANDLE
+	       {
+	         KEBUGCHECK(0);
+	       }
+	     _SEH_END;
 	  }
 	break;
 	
@@ -352,12 +411,12 @@ IoBuildDeviceIoControlRequest(ULONG IoControlCode,
  */
 PIRP STDCALL
 IoBuildSynchronousFsdRequest(ULONG MajorFunction,
-				  PDEVICE_OBJECT DeviceObject,
-				  PVOID Buffer,
-				  ULONG Length,
-				  PLARGE_INTEGER StartingOffset,
-				  PKEVENT Event,
-				  PIO_STATUS_BLOCK IoStatusBlock)
+			     PDEVICE_OBJECT DeviceObject,
+			     PVOID Buffer,
+			     ULONG Length,
+			     PLARGE_INTEGER StartingOffset,
+			     PKEVENT Event,
+			     PIO_STATUS_BLOCK IoStatusBlock)
 /*
  * FUNCTION: Allocates and builds an IRP to be sent synchronously to lower
  * level driver(s)
