@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -121,7 +121,10 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
              {
 	       for (i = 0; i < count; i++)
 	         {
-		   KeDisconnectInterrupt(&Interrupt[i]);
+		   if (ProcessorEnableMask & (1 << i))
+		     {
+		       KeDisconnectInterrupt(&Interrupt[i]);
+		     }
 		 }
 	       ExFreePool(Interrupt);
 	       return STATUS_INVALID_PARAMETER;
