@@ -1,5 +1,5 @@
 /*
- * $Id: dir.c,v 1.22 2002/02/02 14:04:55 hbirr Exp $
+ * $Id: dir.c,v 1.23 2002/02/05 21:31:03 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -234,8 +234,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   PVFATFCB pFcb;
   VFATFCB tmpFcb;
   PVFATCCB pCcb;
-  WCHAR pCharPattern[MAX_PATH];
-  unsigned long OldEntry, OldSector;
+  BOOLEAN First = FALSE;
 
   pCcb = (PVFATCCB) IrpContext->FileObject->FsContext2;
   pFcb = pCcb->pFcb;
@@ -251,103 +250,128 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   FileInformationClass =
     IrpContext->Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = IrpContext->Stack->Parameters.QueryDirectory.FileIndex;
-  if (IrpContext->Stack->Flags & SL_RESTART_SCAN)
-    {				//FIXME : what is really use of RestartScan ?
-      pCcb->StartEntry = pCcb->StartSector = 0;
+  if (pSearchPattern)
+  {
+    if (!pCcb->DirectorySearchPattern)
+    {
+      First = TRUE;
+      pCcb->DirectorySearchPattern = 
+        ExAllocatePool(NonPagedPool, pSearchPattern->Length + sizeof(WCHAR));
+      if (!pCcb->DirectorySearchPattern)
+      {
+        return STATUS_INSUFFICIENT_RESOURCES;
+      }
+      memcpy(pCcb->DirectorySearchPattern, pSearchPattern->Buffer,
+        pSearchPattern->Length);
+      pCcb->DirectorySearchPattern[pSearchPattern->Length / sizeof(WCHAR)] = 0;
     }
+  }
+  else if (!pCcb->DirectorySearchPattern)
+  {
+    First = TRUE;
+    pCcb->DirectorySearchPattern = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+    if (!pCcb->DirectorySearchPattern)
+    {
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    pCcb->DirectorySearchPattern[0] = L'*';
+    pCcb->DirectorySearchPattern[1] = 0;
+  }  
+     
+  if (IrpContext->Stack->Flags & SL_INDEX_SPECIFIED)
+  {
+    pCcb->Entry = pCcb->CurrentByteOffset.u.LowPart;
+  }
+  else if (First || (IrpContext->Stack->Flags & SL_RESTART_SCAN))
+  {
+    pCcb->Entry = 0;
+  }
   // determine Buffer for result :
   if (IrpContext->Irp->MdlAddress)
+  {
     Buffer = MmGetSystemAddressForMdl (IrpContext->Irp->MdlAddress);
+  }
   else
+  {
     Buffer = IrpContext->Irp->UserBuffer;
-  DPRINT ("Buffer=%x tofind=%S\n", Buffer, pSearchPattern->Buffer);
-  if (pSearchPattern == NULL)
-    {
-      pCharPattern[0] = L'*';
-      pCharPattern[1] = 0;
-    }
-  else
-    {
-      memcpy (pCharPattern, pSearchPattern->Buffer, pSearchPattern->Length);
-      pCharPattern[pSearchPattern->Length / sizeof(WCHAR)] = 0;
-    }
+  }
+  DPRINT ("Buffer=%x tofind=%S\n", Buffer, pCcb->DirectorySearchPattern);
+
   tmpFcb.ObjectName = tmpFcb.PathName;
   while (RC == STATUS_SUCCESS && BufferLength > 0)
+  {
+    RC = FindFile (IrpContext->DeviceExt, &tmpFcb, pFcb, 
+           pCcb->DirectorySearchPattern, &pCcb->Entry, NULL);
+    DPRINT ("Found %S, RC=%x, entry %x\n", tmpFcb.ObjectName, RC, pCcb->Entry);
+    if (NT_SUCCESS (RC))
     {
-      OldSector = pCcb->StartSector;
-      OldEntry = pCcb->StartEntry;
-      if (OldSector)
-	pCcb->StartEntry++;
-      RC =
-	FindFile (IrpContext->DeviceExt, &tmpFcb, pFcb, pCharPattern, &pCcb->StartEntry, NULL);
-    pCcb->StartSector = 1;
-      DPRINT ("Found %S,RC=%x, sector %x entry %x\n", tmpFcb.ObjectName, RC,
-	      pCcb->StartSector, pCcb->StartEntry);
-      if (NT_SUCCESS (RC))
-	{
-	  switch (FileInformationClass)
-	    {
-	    case FileNameInformation:
-	      RC =
-		VfatGetFileNameInformation (&tmpFcb,
-					   (PFILE_NAMES_INFORMATION) Buffer,
-					   BufferLength);
-	      break;
-	    case FileDirectoryInformation:
-	      RC =
-		VfatGetFileDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
-						(PFILE_DIRECTORY_INFORMATION)
-						Buffer, BufferLength);
-	      break;
-	    case FileFullDirectoryInformation:
-	      RC =
-		VfatGetFileFullDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
-						    (PFILE_FULL_DIRECTORY_INFORMATION)
-						    Buffer, BufferLength);
-	      break;
-	    case FileBothDirectoryInformation:
-	      RC =
-		VfatGetFileBothInformation (&tmpFcb, IrpContext->DeviceExt,
-					   (PFILE_BOTH_DIRECTORY_INFORMATION)
-					   Buffer, BufferLength);
-	      break;
-	    default:
-	      RC = STATUS_INVALID_INFO_CLASS;
-	    }
-	}
-      else
-	{
-	  if (Buffer0)
-	    Buffer0->NextEntryOffset = 0;
-          if (OldSector)
-            RC = STATUS_NO_MORE_FILES;
-          else
-            RC = STATUS_NO_SUCH_FILE;
-	  break;
-	}
+      switch (FileInformationClass)
+      {
+        case FileNameInformation:
+          RC = VfatGetFileNameInformation (&tmpFcb,
+            (PFILE_NAMES_INFORMATION) Buffer, BufferLength);
+          break;
+        case FileDirectoryInformation:
+          RC = VfatGetFileDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
+                 (PFILE_DIRECTORY_INFORMATION) Buffer, BufferLength);
+          break;
+        case FileFullDirectoryInformation:
+          RC = VfatGetFileFullDirectoryInformation (&tmpFcb, IrpContext->DeviceExt,
+                 (PFILE_FULL_DIRECTORY_INFORMATION) Buffer, BufferLength);
+          break;
+        case FileBothDirectoryInformation:
+          RC = VfatGetFileBothInformation (&tmpFcb, IrpContext->DeviceExt,
+                 (PFILE_BOTH_DIRECTORY_INFORMATION) Buffer, BufferLength);
+          break;
+        default:
+          RC = STATUS_INVALID_INFO_CLASS;
+      }
       if (RC == STATUS_BUFFER_OVERFLOW)
-	{
-	  if (Buffer0)
-	    Buffer0->NextEntryOffset = 0;
-	  pCcb->StartSector = OldSector;
-	  pCcb->StartEntry = OldEntry;
-	  break;
-	}
-      Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
-      Buffer0->FileIndex = FileIndex++;
-      if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
-	break;
-      BufferLength -= Buffer0->NextEntryOffset;
-      Buffer += Buffer0->NextEntryOffset;
+      {
+        if (Buffer0)
+        {
+          Buffer0->NextEntryOffset = 0;
+        }
+        break;
+      }
     }
+    else
+    {
+      if (Buffer0)
+      {
+        Buffer0->NextEntryOffset = 0;
+      }
+      if (First)
+      {
+        RC = STATUS_NO_SUCH_FILE;
+      }
+      else
+      {
+        RC = STATUS_NO_MORE_FILES;
+      }
+      break;
+    }
+    Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
+    Buffer0->FileIndex = FileIndex++;
+    pCcb->Entry++;
+    if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
+    {
+      break;
+    }
+    BufferLength -= Buffer0->NextEntryOffset;
+    Buffer += Buffer0->NextEntryOffset;
+  }
   if (Buffer0)
+  {
     Buffer0->NextEntryOffset = 0;
+  }
   if (FileIndex > 0)
+  {
     RC = STATUS_SUCCESS;
-
+  }
   if (IrpContext->Flags & IRPCONTEXT_CANWAIT)
   {
-     ExReleaseResourceLite(&pFcb->MainResource);
+    ExReleaseResourceLite(&pFcb->MainResource);
   }
 
   return RC;

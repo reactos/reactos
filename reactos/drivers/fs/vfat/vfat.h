@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.38 2002/01/08 00:49:01 dwelch Exp $ */
+/* $Id: vfat.h,v 1.39 2002/02/05 21:31:03 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -150,10 +150,9 @@ typedef struct _VFATCCB
   PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;
   /* for DirectoryControl */
-  ULONG StartSector;
+  ULONG Entry;
   /* for DirectoryControl */
-  ULONG StartEntry;
-  //    PSTRING DirectorySearchPattern;// for DirectoryControl ?
+  PWCHAR DirectorySearchPattern;
   ULONG LastCluster;
   ULONG LastOffset;
 
