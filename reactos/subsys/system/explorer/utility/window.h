@@ -65,6 +65,7 @@ protected:
 	HWND	_hwnd;
 
 
+	virtual LRESULT	Init(LPCREATESTRUCT pcs);
 	virtual LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	virtual int		Command(int id, int code);
 	virtual int		Notify(int id, NMHDR* pnmh);
@@ -167,4 +168,16 @@ protected:
 
 	int 	_split_pos;
 	int		_last_split;
+};
+
+
+struct Button
+{
+	Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+			UINT id, DWORD flags=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON, DWORD ex_flags=0);
+
+	operator HWND() const {return _hwnd;}
+
+protected:
+	HWND	_hwnd;
 };

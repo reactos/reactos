@@ -61,13 +61,13 @@ MainFrame::MainFrame(HWND hwnd)
 
 	TBBUTTON toolbarBtns[] = {
 		{0, 0, 0, TBSTYLE_SEP, {0, 0}, 0, 0},
-		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-		{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
+		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 /*TODO
-		{4, ID_... , TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-		{5, ID_... , TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
+		{4, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{5, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 */	};
 
 	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
@@ -88,7 +88,7 @@ MainFrame::MainFrame(HWND hwnd)
 
 	GetLogicalDriveStrings(BUFFER_LEN, _drives);
 
-	drivebarBtn.fsStyle = TBSTYLE_BUTTON;
+	drivebarBtn.fsStyle = BTNS_BUTTON;
 
 #ifdef _linux_
 	 // insert unix file system button

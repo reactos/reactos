@@ -62,7 +62,7 @@ ResString::ResString(UINT nid)
 }
 
 
-void explorer_show_frame(HWND hwndParent, int cmdshow)
+void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 {
 	if (g_Globals._hMainWnd)
 		return;
@@ -75,7 +75,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 	g_Globals._hMainWnd = Window::Create(WINDOW_CREATOR(MainFrame), 0,
 					(LPCTSTR)(int)g_Globals._hframeClass, ResString(IDS_TITLE), WS_OVERLAPPEDWINDOW,
 					CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-					hwndParent, hMenuFrame);
+					0/*hwndDesktop*/, hMenuFrame);
 
 	ShowWindow(g_Globals._hMainWnd, cmdshow);
 
@@ -133,7 +133,7 @@ static void InitInstance(HINSTANCE hinstance)
 }
 
 
-int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
+int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow)
 {
 	 // initialize COM and OLE
 	OleInit usingCOM;
@@ -146,7 +146,7 @@ int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 
 		InitInstance(hinstance);
 
-		if (hwndParent)
+		if (hwndDesktop)
 			g_Globals._desktop_mode = true;
 
 		if (cmdshow != SW_HIDE) {
@@ -156,7 +156,7 @@ int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow)
 				cmdshow = SW_MAXIMIZE;
 #endif
 
-			explorer_show_frame(hwndParent, cmdshow);
+			explorer_show_frame(hwndDesktop, cmdshow);
 		}
 
 		while(GetMessage(&msg, 0, 0, 0)) {
@@ -207,7 +207,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		HWND hwndExplorerBar = InitializeExplorerBar(hInstance);
 
 		 // Load plugins
-		LoadAvailablePlugIns(hwndExplorerBar);
+//		LoadAvailablePlugIns(hwndExplorerBar);
 
 #ifndef _DEBUG	//MF: disabled for debugging
 		{
@@ -219,7 +219,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	int ret = explorer_main(hInstance, hwndDesktop, nShowCmd);
 
-	ReleaseAvailablePlugIns();
+//	ReleaseAvailablePlugIns();
 
 	return ret;
 }

@@ -138,25 +138,34 @@ Window* Window::get_window(HWND hwnd)
 }
 
 
+LRESULT	Window::Init(LPCREATESTRUCT pcs)
+{
+	return 0;
+}
+
+
 LRESULT CALLBACK Window::WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	Window* pThis = get_window(hwnd);
 
 	if (pThis) {
 		switch(nmsg) {
+		  case WM_COMMAND:
+			return pThis->Command(LOWORD(wparam), HIWORD(wparam));
+
+		  case WM_NOTIFY:
+			return pThis->Notify(wparam, (NMHDR*)lparam);
+
+		  case WM_CREATE:
+			return pThis->Init((LPCREATESTRUCT)lparam);
+
 		  case WM_NCDESTROY:
 			delete pThis;
 			return 0;
 
-		  case WM_COMMAND:
-			pThis->Command(LOWORD(wparam), HIWORD(wparam));
-			return 0;
-
-		  case WM_NOTIFY:
-			return pThis->Notify(wparam, (NMHDR*)lparam);
+		  default:
+			return pThis->WndProc(nmsg, wparam, lparam);
 		}
-
-		return pThis->WndProc(nmsg, wparam, lparam);
 	}
 	else
 		return DefWindowProc(hwnd, nmsg, wparam, lparam);
@@ -342,4 +351,12 @@ void ChildWindow::resize_children(int cx, int cy)
 	DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 
 	EndDeferWindowPos(hdwp);
+}
+
+
+Button::Button(HWND parent, LPCTSTR text, int left, int top, int width, int height,
+				UINT id, DWORD flags, DWORD ex_flags)
+{
+	_hwnd = CreateWindowEx(ex_flags, TEXT("BUTTON"), text, flags, left, top, width, height,
+							parent, (HMENU)id, g_Globals._hInstance, 0);
 }

@@ -165,7 +165,7 @@ bool Pane::create_header(HWND hparent, int id)
 	if (!hwnd)
 		return false;
 
-	SendMessage(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), FALSE);
+	SetWindowFont(hwnd, GetStockFont(DEFAULT_GUI_FONT), FALSE);
 
 	HD_ITEM hdi;
 
@@ -188,7 +188,7 @@ void Pane::init()
 {
 	_himl = ImageList_LoadBitmap(g_Globals._hInstance, MAKEINTRESOURCE(IDB_IMAGES), 16, 0, RGB(0,255,0));
 
-	SendMessage(_hwnd, WM_SETFONT, (WPARAM)_out_wrkr._hfont, FALSE);
+	SetWindowFont(_hwnd, _out_wrkr._hfont, FALSE);
 
 	 // calculate column widths
 	_out_wrkr.init_output(_hwnd);

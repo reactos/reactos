@@ -117,8 +117,8 @@ HWND create_desktop_window(HINSTANCE hInstance)
 	wc.cbClsExtra   = 0;
 	wc.cbWndExtra   = 0;
 	wc.hInstance    = hInstance;
-	wc.hIcon        = LoadIcon(NULL, IDI_APPLICATION);
-	wc.hCursor      = LoadCursor(NULL, IDC_ARROW);
+	wc.hIcon        = LoadIcon(0, IDI_APPLICATION);
+	wc.hCursor      = LoadCursor(0, IDC_ARROW);
 	wc.hbrBackground= (HBRUSH) GetStockObject(BLACK_BRUSH);
 	wc.lpszMenuName = NULL;
 	wc.lpszClassName= DesktopClassName;

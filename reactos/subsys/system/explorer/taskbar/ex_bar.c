@@ -26,7 +26,7 @@ LRESULT WINAPI ExplorerBarProc(HWND, UINT, WPARAM, LPARAM);
 
 
 //#define TASKBAR_AT_TOP
-#define	TASKBAR_WIDTH	30
+#define	TASKBAR_HEIGHT	30
 
 
 // Loads a configuration style given by PInt
@@ -37,10 +37,10 @@ DWORD LoadProperty(int PInt)
  switch(PInt)
  {
   case 1:						// WS_EX_Style for creating the bar
-	return WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_PALETTEWINDOW;
+	return WS_EX_PALETTEWINDOW;
   break;
   case 2:						// WS_Style for creating the bar
-	return WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN | WS_VISIBLE ;
+	return WS_POPUP | WS_THICKFRAME | WS_CLIPCHILDREN | WS_VISIBLE;
   break;
   case 3:						// Start X for the panel
 	return -2;	// hide border
@@ -49,14 +49,14 @@ DWORD LoadProperty(int PInt)
 #ifdef TASKBAR_AT_TOP
 	return -2;
 #else
-	return GetSystemMetrics(SM_CYSCREEN)-TASKBAR_WIDTH;
+	return GetSystemMetrics(SM_CYSCREEN)-TASKBAR_HEIGHT;
 #endif
   break;
   case 5:
 	return GetSystemMetrics(SM_CXSCREEN)+4;	  // XLen for the panel
   break;
   case 6:
-	return TASKBAR_WIDTH+2;				// YLen for the panel
+	return TASKBAR_HEIGHT+2;				// YLen for the panel
   break;
  }
 

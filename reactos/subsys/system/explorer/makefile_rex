@@ -12,9 +12,9 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = explorer
 
-TARGET_CFLAGS = -fexceptions -Os -DNDEBUG -DWIN32 -D_ROS_ -W -D_WIN32_IE=0x0500
+TARGET_CFLAGS = -fexceptions -Os -DNDEBUG -DWIN32 -D_ROS_ -W -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501
 	
-TARGET_CPPFLAGS = -fexceptions -Os -DNDEBUG -DWIN32 -D_ROS_ -W -D_WIN32_IE=0x0500
+TARGET_CPPFLAGS = -fexceptions -Os -DNDEBUG -DWIN32 -D_ROS_ -W -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501
 
 TARGET_RCFLAGS = -DNDEBUG -DWIN32 -D_ROS_
 
@@ -50,10 +50,6 @@ TARGET_SDKLIBS = \
 
 TARGET_OBJECTS = \
 	startup.o \
-	ex_bar.o \
-	ex_menu.o \
-	ex_clock.o \
-	ex_shutdwn.o \
 	shellclasses.o \
 	utility.o \
 	window.o \
@@ -67,7 +63,8 @@ TARGET_OBJECTS = \
 	filechild.o \
 	pane.o \
 	shellbrowser.o \
-	desktop.o
+	desktop.o \
+	taskbar.o
 
 include $(PATH_TO_TOP)/rules.mak
 

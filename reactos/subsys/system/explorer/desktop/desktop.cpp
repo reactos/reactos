@@ -67,8 +67,9 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	// This next part could be improved by working out how much
 	// space the text actually needs...
 
+#define	TASKBAR_HEIGHT	30
 	rect.left = rect.right - 280;
-	rect.top = rect.bottom - 56 - 30;
+	rect.top = rect.bottom - 56 - TASKBAR_HEIGHT;
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
 
@@ -116,6 +117,82 @@ DesktopWindow::~DesktopWindow()
 }
 
 
+LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
+{
+	super::Init(pcs);
+
+	HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+/* also possible:
+	SFV_CREATE sfv_create;
+
+	sfv_create.cbSize = sizeof(SFV_CREATE);
+	sfv_create.pshf = Desktop();
+	sfv_create.psvOuter = NULL;
+	sfv_create.psfvcb = NULL;
+
+	HRESULT hr = SHCreateShellFolderView(&sfv_create, &_pShellView);
+*/
+	HWND hWndView = 0;
+
+	if (SUCCEEDED(hr)) {
+		FOLDERSETTINGS fs;
+
+		fs.ViewMode = FVM_ICON;
+		fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
+
+		RECT rect;
+		GetClientRect(_hwnd, &rect);
+
+		hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
+
+		//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
+
+		if (SUCCEEDED(hr)) {
+			_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
+
+		/*
+			IShellView2* pShellView2;
+
+			hr = _pShellView->QueryInterface(IID_IShellView2, (void**)&pShellView2);
+
+			SV2CVW2_PARAMS params;
+			params.cbSize = sizeof(SV2CVW2_PARAMS);
+			params.psvPrev = _pShellView;
+			params.pfs = &fs;
+			params.psbOwner = this;
+			params.prcView = &rect;
+			params.pvid = params.pvid;//@@
+
+			hr = pShellView2->CreateViewWindow2(&params);
+			params.pvid;
+		*/
+
+		/*
+			IFolderView* pFolderView;
+
+			hr = _pShellView->QueryInterface(IID_IFolderView, (void**)&pFolderView);
+
+			if (SUCCEEDED(hr)) {
+				hr = pFolderView->GetAutoArrange();
+				hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
+			}
+		*/
+
+			HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
+
+			new BackgroundWindow(hwndFolderView);
+		}
+	}
+
+	if (hWndView && SetShellWindowEx)
+		SetShellWindowEx(_hwnd, hWndView);
+	else if (SetShellWindow)
+		SetShellWindow(_hwnd);
+
+	return 0;
+}
+
+
 LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
@@ -133,76 +210,6 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_GETISHELLBROWSER:
 		return (LRESULT)static_cast<IShellBrowser*>(this);
-
-	  case WM_CREATE: {
-		HRESULT hr = Desktop()->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
-/* also possible:
-		SFV_CREATE sfv_create;
-
-		sfv_create.cbSize = sizeof(SFV_CREATE);
-		sfv_create.pshf = Desktop();
-		sfv_create.psvOuter = NULL;
-		sfv_create.psfvcb = NULL;
-
-		HRESULT hr = SHCreateShellFolderView(&sfv_create, &_pShellView);
-*/
-		HWND hWndView = 0;
-
-		if (SUCCEEDED(hr)) {
-			FOLDERSETTINGS fs;
-
-			fs.ViewMode = FVM_ICON;
-			fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
-
-			RECT rect;
-			GetClientRect(_hwnd, &rect);
-
-			hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
-
-			//TODO: use IShellBrowser::GetViewStateStream() to restore previous view state -> see SHOpenRegStream()
-
-			if (SUCCEEDED(hr)) {
-				_pShellView->UIActivate(SVUIA_ACTIVATE_FOCUS);
-
-			/*
-				IShellView2* pShellView2;
-
-				hr = _pShellView->QueryInterface(IID_IShellView2, (void**)&pShellView2);
-
-				SV2CVW2_PARAMS params;
-				params.cbSize = sizeof(SV2CVW2_PARAMS);
-				params.psvPrev = _pShellView;
-				params.pfs = &fs;
-				params.psbOwner = this;
-				params.prcView = &rect;
-				params.pvid = params.pvid;//@@
-
-				hr = pShellView2->CreateViewWindow2(&params);
-				params.pvid;
-			*/
-
-			/*
-				IFolderView* pFolderView;
-
-				hr = _pShellView->QueryInterface(IID_IFolderView, (void**)&pFolderView);
-
-				if (SUCCEEDED(hr)) {
-					hr = pFolderView->GetAutoArrange();
-					hr = pFolderView->SetCurrentViewMode(FVM_DETAILS);
-				}
-			*/
-
-				HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
-
-				new BackgroundWindow(hwndFolderView);
-			}
-		}
-
-		if (hWndView && SetShellWindowEx)
-			SetShellWindowEx(_hwnd, hWndView);
-		else if (SetShellWindow)
-			SetShellWindow(_hwnd);
-		break;}
 
 	  case WM_DESTROY:
 
@@ -225,12 +232,12 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HWND create_desktop_window(HINSTANCE hInstance)
 {
-	WindowClass wcDesktop(_T("Program Manager"));
+	WindowClass wcDesktop(_T("Progman"));
 
 	wcDesktop.style 		= CS_DBLCLKS;
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
-	wcDesktop.hIcon			= LoadIcon(NULL, IDI_APPLICATION);
-	wcDesktop.hCursor		= LoadCursor(NULL, IDC_ARROW);
+	wcDesktop.hIcon			= LoadIcon(0, IDI_APPLICATION);
+	wcDesktop.hCursor		= LoadCursor(0, IDC_ARROW);
 
 
 	ATOM desktopClass = wcDesktop.Register();
@@ -239,6 +246,6 @@ HWND create_desktop_window(HINSTANCE hInstance)
 	int height = GetSystemMetrics(SM_CYSCREEN);
 
 	return Window::Create(WINDOW_CREATOR(DesktopWindow),
-					0, (LPCTSTR)(int)desktopClass, _T("Progman"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
+					WS_EX_TOOLWINDOW, (LPCTSTR)(int)desktopClass, _T("Program Manager"), WS_POPUP|WS_VISIBLE|WS_CLIPCHILDREN,
 					0, 0, width, height, 0);
 }

@@ -35,10 +35,10 @@ extern "C" {
 extern int startup(int argc, char *argv[]);
 
  // explorer main routine
-extern int explorer_main(HINSTANCE hinstance, HWND hwndParent, int cmdshow);
+extern int explorer_main(HINSTANCE hinstance, HWND hwndDesktop, int cmdshow);
 
  // display explorer/file manager window
-extern void explorer_show_frame(HWND hWndParent, int cmdshow);
+extern void explorer_show_frame(HWND hwndDesktop, int cmdshow);
 
  // create desktop window
 extern HWND create_desktop_window(HINSTANCE hInstance);

@@ -45,6 +45,11 @@
 #include <time.h>
 
 
+#ifndef BTNS_BUTTON
+#define BTNS_BUTTON TBSTYLE_BUTTON //@@ -> wingw headers
+#endif
+
+
 #ifdef __cplusplus
 
  // STL headers for strings and streams
@@ -59,6 +64,9 @@ using namespace std;
 using namespace _com_util;
 
 #endif	// _MSC_VER
+
+
+#define	for if (0) {} else for
 
 
 struct CommonControlInit
@@ -131,6 +139,9 @@ extern "C" {
 #define	_stprintf sprintf
 #endif
 #endif
+
+
+#define	SetDlgCtrlID(hwnd, id) SetWindowLong(hwnd, GWL_ID, id)
 
 
  // display 

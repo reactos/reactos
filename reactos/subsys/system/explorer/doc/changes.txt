@@ -15,3 +15,4 @@
 11.08.2003	m. fuchs	class BackgroundWindow for painting of desktop background
 						open child folders by double click in ShellBrowserChild
 13.08.2003	m. fuchs	make explorer bar look more like windows taskbar bar
+16.08.2003	m. fuchs	first draft of working task bar

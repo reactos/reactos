@@ -1944,7 +1944,7 @@ static HWND create_header(HWND parent, Pane* pane, int id)
 	if (!hwnd)
 		return 0;
 
-	SendMessage(hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), FALSE);
+	SetWindowFont(hwnd, GetStockObject(DEFAULT_GUI_FONT), FALSE);
 
 	hdi.mask = HDI_TEXT|HDI_WIDTH|HDI_FORMAT;
 
@@ -2182,7 +2182,7 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header)
 	SetWindowLong(pane->hwnd, GWL_USERDATA, (LPARAM)pane);
 	g_orgTreeWndProc = SubclassWindow(pane->hwnd, TreeWndProc);
 
-	SendMessage(pane->hwnd, WM_SETFONT, (WPARAM)Globals.hfont, FALSE);
+	SetWindowFont(pane->hwnd, Globals.hfont, FALSE);
 
 	/* insert entries into listbox */
 	if (entry)
@@ -3549,7 +3549,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 		GetLogicalDriveStrings(BUFFER_LEN, Globals.drives);
 
-		drivebarBtn.fsStyle = TBSTYLE_BUTTON;
+		drivebarBtn.fsStyle = BTNS_BUTTON;
 
 #ifndef _NO_EXTENSIONS
 #ifdef __linux__
@@ -3600,13 +3600,13 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 	{
 		TBBUTTON toolbarBtns[] = {
 			{0, 0, 0, TBSTYLE_SEP, {0, 0}, 0, 0},
-			{0, ID_WINDOW_NEW, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-			{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-			{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-			{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
+			{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+			{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+			{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+			{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 /*TODO
-			{4, ID_... , TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
-			{5, ID_... , TBSTATE_ENABLED, TBSTYLE_BUTTON, {0, 0}, 0, 0},
+			{4, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+			{5, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 */		};
 
 		Globals.htoolbar = CreateToolbarEx(Globals.hMainWnd, WS_CHILD|WS_VISIBLE,

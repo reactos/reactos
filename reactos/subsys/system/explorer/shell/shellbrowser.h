@@ -116,7 +116,7 @@ protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int 	Notify(int id, NMHDR* pnmh);
 
-	void	OnCreate(LPCREATESTRUCT);
+	LRESULT	Init(LPCREATESTRUCT);
 	void	InitializeTree(/*const FileChildWndInfo& info*/);
 	void	InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();

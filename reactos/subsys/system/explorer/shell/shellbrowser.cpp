@@ -71,8 +71,10 @@ ShellBrowserChild::~ShellBrowserChild()
 }
 
 
-void ShellBrowserChild::OnCreate(LPCREATESTRUCT pcs)
+LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 {
+	super::Init(pcs);
+
 	_hWndFrame = GetParent(pcs->hwndParent);
 
 	RECT rect;
@@ -95,6 +97,8 @@ void ShellBrowserChild::OnCreate(LPCREATESTRUCT pcs)
 
 		InitDragDrop();
 	}
+
+	return 0;
 }
 
 
@@ -211,9 +215,8 @@ void ShellBrowserChild::Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPO
 
 			IContextMenu* pcm;
 
-			HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
-
-//			HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, 1, &pidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+			HRESULT hr = shell_folder->GetUIObjectOf(hwndParent, 1, &pidl, IID_IContextMenu, NULL, (LPVOID*)&pcm);
+//			HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm);
 
 			if (SUCCEEDED(hr)) {
 				HMENU hPopup = CreatePopupMenu();
@@ -405,11 +408,7 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
-	  case WM_CREATE:
-		OnCreate((LPCREATESTRUCT)lparam);
-		goto def;
-
-	  default: def:
+	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
 

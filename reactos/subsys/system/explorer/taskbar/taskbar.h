@@ -18,66 +18,76 @@
 
 
  //
- // Explorer clone
+ // Explorer and Desktop clone
  //
- // desktop.h
+ // taskbar.h
  //
- // Martin Fuchs, 09.08.2003
+ // Martin Fuchs, 16.08.2003
  //
 
 
-#include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../utility/shellbrowserimpl.h"
-#include "../utility/window.h"
-
-#include "../externals.h"
+#include <map>
+#include <set>
 
 
-struct BackgroundWindow : public SubclassedWindow
-{
-	typedef SubclassedWindow super;
-
-	BackgroundWindow(HWND hwnd) : super(hwnd) {}
-
-protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-};
+#define	TASKBAR_HEIGHT	30
+#define	TASKBAR_LEFT	60
+//#define TASKBAR_AT_TOP
 
 
-struct DesktopWindow : public Window, public IShellBrowserImpl
+struct DesktopBar : public Window
 {
 	typedef Window super;
 
-	DesktopWindow(HWND hwnd);
-	~DesktopWindow();
-
-	STDMETHOD(GetWindow)(HWND* lphwnd)
-	{
-		*lphwnd = _hwnd;
-		return S_OK;
-	}
-
-	STDMETHOD(QueryActiveShellView)(IShellView** ppshv)
-	{
-		_pShellView->AddRef();
-		*ppshv = _pShellView;
-		return S_OK;
-	}
-
-	STDMETHOD(GetControlWindow)(UINT id, HWND* lphwnd)
-	{
-		return E_NOTIMPL;
-	}
-
-	STDMETHOD(SendControlMsg)(UINT id, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT* pret)
-	{
-		return E_NOTIMPL;
-	}
+	DesktopBar(HWND hwnd);
+	~DesktopBar();
 
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
 
-	IShellView*	_pShellView;
+	HWND	_hwndTaskBar;
+};
+
+
+#define	IDW_TASKTOOLBAR	100
+
+struct TaskBarEntry
+{
+	int		_id;	// ID for WM_COMMAND
+	HBITMAP	_hbmp;
+	int		_bmp_idx;
+	int		_used;
+	int		_btn_idx;
+};
+
+struct TaskBarMap : public map<HWND, TaskBarEntry>
+{
+	~TaskBarMap();
+
+	iterator find_id(int id);
+};
+
+struct TaskBar : public Window
+{
+	typedef Window super;
+
+	TaskBar(HWND hwnd);
+
+	DesktopBar*	_desktop_bar;
+
+protected:
+	HWND	_htoolbar;
+	TaskBarMap _map;
+	int		_next_id;
+	HWND	_last_foreground_wnd;
+
+	LRESULT	Init(LPCREATESTRUCT pcs);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int		Command(int id, int code);
+
+	static BOOL CALLBACK EnumWndProc(HWND, LPARAM);
+
+	void	Refresh();
 };
