@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002 ReactOS Team
+ *  Copyright (C) 2002, 2003 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +16,14 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: volinfo.c,v 1.3 2002/05/07 22:42:46 hbirr Exp $
+/* $Id: volinfo.c,v 1.4 2003/11/12 21:02:42 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/volume.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
+ *                   Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -42,29 +43,28 @@ CdfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			   PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
 			   PULONG BufferLength)
 {
-  ULONG LabelLength;
-
   DPRINT("CdfsGetFsVolumeInformation() called\n");
   DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
   DPRINT("BufferLength %lu\n", *BufferLength);
 
   DPRINT("Vpb %p\n", DeviceObject->Vpb);
-  LabelLength = DeviceObject->Vpb->VolumeLabelLength;
 
-  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)));
-  DPRINT("LabelLength %lu\n", LabelLength);
-  DPRINT("Label %S\n", DeviceObject->Vpb->VolumeLabel);
+  DPRINT("Required length %lu\n", (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength));
+  DPRINT("LabelLength %hu\n", DeviceObject->Vpb->VolumeLabelLength);
+  DPRINT("Label %*.S\n", DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR), DeviceObject->Vpb->VolumeLabel);
 
   if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
 
-  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength*sizeof(WCHAR)))
+  if (*BufferLength < (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength))
     return STATUS_BUFFER_OVERFLOW;
 
   /* valid entries */
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
-  FsVolumeInfo->VolumeLabelLength = LabelLength * sizeof (WCHAR);
-  wcscpy(FsVolumeInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabel);
+  FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
+  memcpy(FsVolumeInfo->VolumeLabel,
+	 DeviceObject->Vpb->VolumeLabel,
+	 DeviceObject->Vpb->VolumeLabelLength);
 
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
@@ -72,7 +72,7 @@ CdfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("Finished FsdGetFsVolumeInformation()\n");
 
-  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + LabelLength * sizeof(WCHAR));
+  *BufferLength -= (sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
 
   DPRINT("BufferLength %lu\n", *BufferLength);
 
@@ -163,7 +163,6 @@ CdfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
 
   return(STATUS_SUCCESS);
 }
-
 
 
 NTSTATUS STDCALL
