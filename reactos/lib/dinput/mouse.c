@@ -880,6 +880,7 @@ int count_button;
 
 if (flags != DIGDD_PEEK) 
 {
+getmousesvalue(iface);
 b[0] = ((GetKeyState(VK_LBUTTON) & 0x80) ? 0xFF : 0x00);	
 b[1] = ((GetKeyState(VK_RBUTTON) & 0x80) ? 0xFF : 0x00);	
 b[2] = ((GetKeyState(VK_MBUTTON) & 0x80) ? 0xFF : 0x00);	
@@ -890,33 +891,50 @@ GetCursorPos( &point );
 
 #endif
 
+    
+  
+	
+	
+    
+
+  if (This->acquired == 0) {
+	WARN(" application tries to get data from an unacquired device !\n");
+	//return DIERR_NOTACQUIRED;
+
 	// windows does not get any data if 
 	// we do not call manual to mouse Acquire
 	// this is only need if some apps calling on getdevice data direcly
 	// in windows GetdeviceData does always update first the data
 	// then return it.
-	//SysMouseAImpl_Acquire(iface); < -- remove it geting UT2004 working
-    // less choopy but it need when user hook are implement in ros.
+	 SysMouseAImpl_Acquire(iface);
+	}
+	
     
-    if (This->acquired == 0) {
-	WARN(" application tries to get data from an unacquired device !\n");
-	return DIERR_NOTACQUIRED;
-    }
 
    
 
 #ifdef __REACTOS__	
-     
+
+  if (*entries == 0) return DIERR_INVALIDPARAM;
+
+  if (dodsize < sizeof(DIDEVICEOBJECTDATA_DX3)) {
+	    ERR("Wrong structure size !\n");	 
+	    return DIERR_INVALIDPARAM;
+	}
+	if (This->data_queue==NULL) {
+       WARN("No buffer have been set up !\n");	  
+       return DIERR_NOTINITIALIZED;
+	}   
 	    
   FIXME("This is broken in Tribes ??, need right implant of the buffer!!!!!!!!\n"); 
-
-  
+    
   if (GetTickCount()-time <50) {
+	  *entries=0;
 	  return DI_OK;
       }
 
   time = GetTickCount();
-  if (*entries == 0) return DIERR_INVALIDPARAM;
+  
   
 
 
@@ -924,11 +942,8 @@ GetCursorPos( &point );
 	  
 	 if (save_point.x != point.x) {
          dod[count_ent].dwOfs =   DIMOFS_X;         
-		 calc = point.x - save_point.x;	
-		 if (calc >2) dod[count_ent].dwData = 2;
-		 else if (calc < -2) dod[count_ent].dwData = -2;
-		 else dod[count_ent].dwData =  calc;	
-         		 
+
+		 dod[count_ent].dwData =  point.x - save_point.x;		         		 
          dod[count_ent].dwTimeStamp =  time +1; 
          dod[count_ent].dwSequence = last_event++;  
 		 count_ent++;
@@ -936,11 +951,8 @@ GetCursorPos( &point );
          }
 
      else if (save_point.y != point.y) {
-        dod[count_ent].dwOfs =   DIMOFS_Y;
-        calc =    point.y - save_point.y;
-		if (calc >2) dod[count_ent].dwData = 2;
-		 else if (calc < -2) dod[count_ent].dwData = -2;
-		 else dod[count_ent].dwData =  calc;	
+        dod[count_ent].dwOfs =   DIMOFS_Y;		
+		dod[count_ent].dwData =  point.y - save_point.y;	
 
         dod[count_ent].dwTimeStamp =  time +1;
         dod[count_ent].dwSequence = last_event++;
@@ -1102,6 +1114,7 @@ static HRESULT WINAPI SysMouseAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
 	    case (DWORD) DIPROP_AXISMODE: {
 		LPCDIPROPDWORD    pd = (LPCDIPROPDWORD)ph;
 		This->absolute = !(pd->dwData);
+        
 		TRACE("Using %s coordinates mode now\n", This->absolute ? "absolute" : "relative");
 		break;
 	    }
