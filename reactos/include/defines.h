@@ -848,6 +848,10 @@ extern "C" {
 #define DC_SMALLCAP	(2)
 
 /* DrawEdge */
+#define BDR_OUTER       (3)
+#define BDR_INNER       (12)
+#define BDR_RAISED      (5)
+#define BDR_SUNKEN      (10)
 #define BDR_RAISEDINNER	(4)
 #define BDR_SUNKENINNER	(8)
 #define BDR_RAISEDOUTER	(1)
