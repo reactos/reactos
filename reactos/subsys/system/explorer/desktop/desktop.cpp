@@ -331,7 +331,8 @@ DesktopWindow::~DesktopWindow()
 HWND DesktopWindow::Create()
 {
 	static IconWindowClass wcDesktop(TEXT("Progman"), IDI_REACTOS, CS_DBLCLKS);
-	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
+	/* (disabled because of small ugly temporary artefacts when hiding start menu)
+	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1); */
 
 	int width = GetSystemMetrics(SM_CXSCREEN);
 	int height = GetSystemMetrics(SM_CYSCREEN);

@@ -951,7 +951,7 @@ BEGIN
     IDS_SHUTDOWN            "Arrêter..."
     IDS_LAUNCH              "Exécuter..."
     IDS_START_HELP          "Aide"
-    IDS_SEARCH_FILES        "Rechercher Files..."
+    IDS_SEARCH_FILES        "Rechercher Fichiers..."
     IDS_DOCUMENTS           "Documents"
     IDS_FAVORITES           "Favoris"
     IDS_PROGRAMS            "Programmes"
@@ -978,8 +978,8 @@ BEGIN
     IDS_ABOUT_EXPLORER      "A propos de l'explorateur..."
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
-    IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
-    IDS_DESKTOP             "Desktop"
+    IDS_DESKTOPBAR_SETTINGS "Bureau"
+    IDS_DESKTOP             "Bureau"
     IDS_TASKBAR             "Taskbar"
 END
 
@@ -987,7 +987,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
-    IDS_DESKTOP_NUM         "Desktop %d"
+    IDS_DESKTOP_NUM         "Bureau %d"
 END
 
 #endif    // French (France) resources
