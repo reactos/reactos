@@ -29,7 +29,7 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
-    
+
 #include "taskmgr.h"
 #include "applpage.h"
 #include "procpage.h"
@@ -374,7 +374,7 @@ void AddOrUpdateHwnd(HWND hWnd, TCHAR *szTitle, HICON hIcon, BOOL bHung)
     else
     {
         //pAPLI = new APPLICATION_PAGE_LIST_ITEM;
-        pAPLI = malloc(sizeof(APPLICATION_PAGE_LIST_ITEM));
+        pAPLI = (LPAPPLICATION_PAGE_LIST_ITEM)malloc(sizeof(APPLICATION_PAGE_LIST_ITEM));
 
         pAPLI->hWnd = hWnd;
         pAPLI->hIcon = hIcon;
@@ -709,7 +709,7 @@ void ApplicationPage_OnWindowsTileHorizontally(void)
     HWND*                           hWndArray;
     int                             nWndCount;
 
-    hWndArray = malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -742,7 +742,7 @@ void ApplicationPage_OnWindowsTileVertically(void)
     int                             nWndCount;
 
     //hWndArray = new HWND[ListView_GetItemCount(hApplicationPageListCtrl)];
-    hWndArray = malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {
@@ -817,7 +817,7 @@ void ApplicationPage_OnWindowsCascade(void)
     int                             nWndCount;
 
     //hWndArray = new HWND[ListView_GetItemCount(hApplicationPageListCtrl)];
-    hWndArray = malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
+    hWndArray = (HWND*)malloc(sizeof(HWND) * ListView_GetItemCount(hApplicationPageListCtrl));
     nWndCount = 0;
 
     for (i=0; i<ListView_GetItemCount(hApplicationPageListCtrl); i++) {

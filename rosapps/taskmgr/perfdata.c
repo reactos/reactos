@@ -102,7 +102,7 @@ void PerfDataRefresh(void)
 	LPBYTE							SysHandleInfoData;
 	PSYSTEM_PROCESSORTIME_INFO		SysProcessorTimeInfo;
 	double							CurrentKernelTime;
-	
+
 
 	if (!NtQuerySystemInformation)
 		return;
@@ -121,14 +121,14 @@ void PerfDataRefresh(void)
 	status = NtQuerySystemInformation(SystemCacheInformation, &SysCacheInfo, sizeof(SysCacheInfo), NULL);
 	if (status != NO_ERROR)
 		return;
-	
+
 	// Get processor time information
 	//SysProcessorTimeInfo = new SYSTEM_PROCESSORTIME_INFO[SystemBasicInfo.bKeNumberProcessors];
-	SysProcessorTimeInfo = malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors);
+	SysProcessorTimeInfo = (PSYSTEM_PROCESSORTIME_INFO)malloc(sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors);
 	status = NtQuerySystemInformation(SystemProcessorTimeInformation, SysProcessorTimeInfo, sizeof(SYSTEM_PROCESSORTIME_INFO) * SystemBasicInfo.bKeNumberProcessors, &ulSize);
 	if (status != NO_ERROR)
 		return;
-	
+
 	// Get handle information
 	// We don't know how much data there is so just keep
 	// increasing the buffer size until the call succeeds
@@ -137,15 +137,15 @@ void PerfDataRefresh(void)
 	{
 		BufferSize += 0x10000;
 		//SysHandleInfoData = new BYTE[BufferSize];
-		SysHandleInfoData = malloc(BufferSize);
-		
+		SysHandleInfoData = (LPBYTE)malloc(BufferSize);
+
 		status = NtQuerySystemInformation(SystemHandleInformation, SysHandleInfoData, BufferSize, &ulSize);
-		
+
 		if (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/) {
 			//delete[] SysHandleInfoData;
 			free(SysHandleInfoData);
 		}
-		
+
 	} while (status == 0xC0000004 /*STATUS_INFO_LENGTH_MISMATCH*/);
 
 	// Get process information
@@ -156,7 +156,7 @@ void PerfDataRefresh(void)
 	{
 		BufferSize += 0x10000;
 		//pBuffer = new BYTE[BufferSize];
-		pBuffer = malloc(BufferSize);
+		pBuffer = (LPBYTE)malloc(BufferSize);
 
 		status = NtQuerySystemInformation(SystemProcessInformation, pBuffer, BufferSize, &ulSize);
 
@@ -242,7 +242,7 @@ void PerfDataRefresh(void)
 	}
 	pPerfDataOld = pPerfData;
 	//pPerfData = new PERFDATA[ProcessCount];
-	pPerfData = malloc(sizeof(PERFDATA) * ProcessCount);
+	pPerfData = (PPERFDATA)malloc(sizeof(PERFDATA) * ProcessCount);
 	pSPI = (PSYSTEM_PROCESS_INFORMATION)pBuffer;
 	for (Idx=0; Idx<ProcessCount; Idx++) {
 		// Get the old perf data for this process (if any)

@@ -228,7 +228,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	rcBarRight.right = rcBarLeft.right + 17;
 	rcBarLeft.top = rcBarRight.top = 5;
 	rcBarLeft.bottom = rcBarRight.bottom = 7;
-	
+
     if (nBarsUsed < 0)     nBarsUsed = 0;
     if (nBarsUsed > nBars) nBarsUsed = nBars;
 
@@ -429,7 +429,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
 	// Fill it with blackness
 	//
 	FillSolidRect(hDC, &rcClient, RGB(0, 0, 0));
-	
+
 	//
 	// Get the memory usage
 	//
@@ -444,7 +444,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
 	{
 		if ((i % 11) == 0)
 		{
-			FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);
+			// FillSolidRect2(hDC, 0, i, rcClient.right, 1, DARK_GREEN);
 		}
 	}
 	//
@@ -454,7 +454,7 @@ void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)
 	{
 		if ((i % 11) == 0)
 		{
-			FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);
+			// FillSolidRect2(hDC, i - offset, 0, 1, rcClient.bottom, DARK_GREEN);
 		}
 	}
 
