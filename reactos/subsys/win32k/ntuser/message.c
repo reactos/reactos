@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.28 2003/08/19 11:48:49 weiden Exp $
+/* $Id: message.c,v 1.29 2003/09/27 15:41:54 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -415,6 +415,7 @@ NtUserPostMessage(HWND hWnd,
   MSG Mesg;
   PUSER_MESSAGE Message;
   NTSTATUS Status;
+  LARGE_INTEGER LargeTickCount;
 
   if (WM_QUIT == Msg)
     {
@@ -433,6 +434,10 @@ NtUserPostMessage(HWND hWnd,
       Mesg.message = Msg;
       Mesg.wParam = wParam;
       Mesg.lParam = lParam;
+      Mesg.pt.x = PsGetWin32Process()->WindowStation->SystemCursor.x;
+      Mesg.pt.y = PsGetWin32Process()->WindowStation->SystemCursor.y;
+      KeQueryTickCount(&LargeTickCount);
+      Mesg.time = LargeTickCount.u.LowPart;
       Message = MsqCreateMessage(&Mesg);
       MsqPostMessage(Window->MessageQueue, Message);
       ObmDereferenceObject(Window);
