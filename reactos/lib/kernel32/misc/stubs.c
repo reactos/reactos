@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 1999/10/02 20:20:44 ariadne Exp $
+/* $Id: stubs.c,v 1.6 1999/10/03 23:19:15 ea Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -3032,32 +3032,6 @@ OpenConsoleW (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-
-HANDLE
-STDCALL
-OpenFileMappingA (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
-}
-
-
-HANDLE
-STDCALL
-OpenFileMappingW (
-	DWORD	dwDesiredAccess,
-	WINBOOL	bInheritHandle,
-	LPCWSTR	lpName
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return INVALID_HANDLE_VALUE;
 }
 
 

@@ -1,4 +1,5 @@
-/*
+/* $Id: section.c,v 1.4 1999/10/03 23:19:15 ea Exp $
+ *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/kernel32/mem/section.c
@@ -13,12 +14,16 @@
 
 /* FUNCTIONS *****************************************************************/
 
-HANDLE CreationFileMappingA(HANDLE hFile,
-			    LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
-			    DWORD flProtect,
-			    DWORD dwMaximumSizeHigh,
-			    DWORD dwMaximumSizeLow,
-			    LPCSTR lpName)
+HANDLE
+STDCALL
+CreateFileMappingA (
+	HANDLE			hFile,
+	LPSECURITY_ATTRIBUTES	lpFileMappingAttributes,
+	DWORD			flProtect,
+	DWORD			dwMaximumSizeHigh,
+	DWORD			dwMaximumSizeLow,
+	LPCSTR			lpName
+	)
 {
    NTSTATUS Status;
    HANDLE SectionHandle;
@@ -52,12 +57,17 @@ HANDLE CreationFileMappingA(HANDLE hFile,
 	return SectionHandle;
 }
 
-HANDLE CreationFileMappingW(HANDLE hFile,
-			    LPSECURITY_ATTRIBUTES lpFileMappingAttributes,
-			    DWORD flProtect,
-			    DWORD dwMaximumSizeHigh,
-			    DWORD dwMaximumSizeLow,
-			    LPCWSTR lpName)
+
+HANDLE
+STDCALL
+CreateFileMappingW (
+	HANDLE			hFile,
+	LPSECURITY_ATTRIBUTES	lpFileMappingAttributes,
+	DWORD			flProtect,
+	DWORD			dwMaximumSizeHigh,
+	DWORD			dwMaximumSizeLow,
+	LPCWSTR			lpName
+	)
 {
    NTSTATUS Status;
    HANDLE SectionHandle;
@@ -89,12 +99,17 @@ HANDLE CreationFileMappingW(HANDLE hFile,
 	return SectionHandle;
 }
 
-LPVOID MapViewOfFileEx(HANDLE hFileMappingObject,
-		       DWORD dwDesiredAccess,
-		       DWORD dwFileOffsetHigh,
-		       DWORD dwFileOffsetLow,
-		       DWORD dwNumberOfBytesToMap,
-		       LPVOID lpBaseAddress)
+
+LPVOID
+STDCALL
+MapViewOfFileEx (
+	HANDLE	hFileMappingObject,
+	DWORD	dwDesiredAccess,
+	DWORD	dwFileOffsetHigh,
+	DWORD	dwFileOffsetLow,
+	DWORD	dwNumberOfBytesToMap,
+	LPVOID	lpBaseAddress
+	)
 {
    NTSTATUS Status;
    
@@ -182,11 +197,14 @@ UnmapViewOfFile (
 	return TRUE;
 }
 
-HANDLE OpenFileMappingA(
-	DWORD  dwDesiredAccess,
-    	WINBOOL  bInheritHandle,	
-   	LPCSTR  lpName 	
-   )
+
+HANDLE
+STDCALL
+OpenFileMappingA (
+	DWORD	dwDesiredAccess,
+    	WINBOOL	bInheritHandle,	
+   	LPCSTR	lpName 	
+	)
 {
    NTSTATUS Status;
    HANDLE SectionHandle;
@@ -221,11 +239,14 @@ HANDLE OpenFileMappingA(
 	return SectionHandle;
 }
 
-HANDLE OpenFileMappingW(
-	DWORD  dwDesiredAccess,
-    	WINBOOL  bInheritHandle,	
-   	LPCWSTR  lpName 	
-   )
+
+HANDLE
+STDCALL
+OpenFileMappingW (
+	DWORD	dwDesiredAccess,
+    	WINBOOL	bInheritHandle,	
+   	LPCWSTR	lpName 	
+	)
 {
    NTSTATUS Status;
    HANDLE SectionHandle;
@@ -256,8 +277,4 @@ HANDLE OpenFileMappingW(
 }
 
 
-
-
-
-
-
+/* EOF */
