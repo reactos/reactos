@@ -57,7 +57,7 @@ __syserr35, __syserr36, __syserr37, __syserr38
 
 int __sys_nerr = sizeof(_sys_errlist) / sizeof(_sys_errlist[0]);
 
-int*	_sys_nerr_dll = &__sys_nerr;
+int* _sys_nerr = &__sys_nerr;
 
 char *strerror(int errnum)
 {

@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <msvcrt/stddef.h>
 
 int remove(const char *fn)
 {
@@ -6,4 +7,10 @@ int remove(const char *fn)
 		return -1;
 	return 0;
 }
- 
+
+int _wremove(const wchar_t *fn)
+{
+	if (!DeleteFileW(fn))
+		return -1;
+	return 0;
+}

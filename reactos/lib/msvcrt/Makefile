@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.7 2000/12/28 11:43:07 jean Exp $
+# $Id: Makefile,v 1.8 2001/01/06 15:49:25 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -7,7 +7,7 @@ PATH_TO_TOP = ../..
 TARGET_NAME=msvcrt
 TARGET_DLL=$(TARGET_NAME).dll
 
-BASE_CFLAGS = -I../../include
+CFLAGS = -I../../include -D__MSVCRT__
 
 all: $(TARGET_DLL)
 
@@ -42,7 +42,8 @@ OBJECTS_DIRECT = \
 	direct/rmdir.o
 
 OBJECTS_FLOAT = \
-	float/isnan.o \
+	float/fpreset.o \
+	float/isnan.o
 
 OBJECTS_IO = \
 	io/close.o \
@@ -52,6 +53,7 @@ OBJECTS_IO = \
 	io/open.o \
 	io/read.o \
 	io/setmode.o \
+	io/unlink.o \
 	io/write.o
 
 OBJECTS_MATH = \
@@ -59,11 +61,16 @@ OBJECTS_MATH = \
 	math/pow.o \
 
 OBJECTS_MISC = \
+	misc/amsg.o \
 	misc/dllmain.o \
+	misc/purecall.o \
 	misc/tls.o
 
 OBJECTS_PROCESS = \
-	process/thread.o
+	process/dll.o \
+	process/procid.o \
+	process/thread.o \
+	process/threadid.o
 	
 OBJECTS_SIGNAL = \
 	signal/signal.o \
@@ -118,6 +125,7 @@ OBJECTS_STDLIB = \
 	stdlib/ldiv.o \
 	stdlib/makepath.o \
 	stdlib/malloc.o \
+	stdlib/obsol.o \
 	stdlib/putenv.o \
 	stdlib/qsort.o \
 	stdlib/rand.o \
@@ -127,6 +135,7 @@ OBJECTS_STDLIB = \
 	stdlib/strtod.o \
 	stdlib/strtol.o \
 	stdlib/strtoul.o \
+	stdlib/swab.o \
 	stdlib/wcstod.o \
 	stdlib/wcstol.o \
 	stdlib/wcstoul.o \
@@ -259,12 +268,13 @@ $(TARGET_NAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGET_NAME).def
 		--def $(TARGET_NAME).def \
 		--output-lib $(TARGET_NAME).a
 	$(CC) \
-		-specs=misc/$(TARGET_NAME)_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
 		-Wl,--base-file,base.tmp \
+		-Wl,--entry=_DllMain@12 \
 		$(TARGET_NAME).o \
-		../kernel32/kernel32.a 
+		../kernel32/kernel32.a -lgcc
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET_NAME).dll \
@@ -273,15 +283,16 @@ $(TARGET_NAME).dll: $(DLLMAIN) $(OBJECTS) $(TARGET_NAME).def
 		--def $(TARGET_NAME).def
 	- $(RM) base.tmp
 	$(CC) \
-		-specs=misc/$(TARGET_NAME)_specs \
+		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGET_NAME).dll \
 		$(TARGET_NAME).o  \
-		../kernel32/kernel32.a \
+		../kernel32/kernel32.a -lgcc \
 		-Wl,--image-base,0x78000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
-		-Wl,temp.exp
+		-Wl,temp.exp \
+		-Wl,--entry=_DllMain@12
 	- $(RM) temp.exp
 	$(NM) --numeric-sort $(TARGET_NAME).dll > $(TARGET_NAME).sym
 

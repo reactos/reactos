@@ -2,6 +2,7 @@
 
 #include <windows.h>
 #include <msvcrt/internal/tls.h>
+#include <msvcrt/internal/rterror.h>
 
 
 static unsigned long TlsIndex = (unsigned long)-1;
@@ -85,7 +86,7 @@ PTHREADDATA GetThreadData(void)
 	  }
 	else
 	  {
-//	    _amsg_exit(_RT_THREAD); /* write message and die */
+	    _amsg_exit(_RT_THREAD); /* write message and die */
 	  }
      }
 
