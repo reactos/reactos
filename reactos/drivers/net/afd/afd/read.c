@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
+/* $Id: read.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/read.c
@@ -15,7 +15,7 @@
 #include "debug.h"
 
 NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
-					    PAFD_RECV_REQ RecvReq,
+					    PAFD_RECV_INFO RecvReq,
 					    PUINT TotalBytesCopied ) {
     UINT i, BytesToCopy = 0,
 	BytesAvailable = 
@@ -69,7 +69,7 @@ NTSTATUS DDKAPI ReceiveComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
-    PAFD_RECV_REQ RecvReq;
+    PAFD_RECV_INFO RecvReq;
     UINT TotalBytesCopied = 0;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
@@ -164,7 +164,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_RECV_REQ RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_RECV_INFO RecvReq = Irp->AssociatedIrp.SystemBuffer;
     UINT TotalBytesCopied = 0;
 
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
@@ -192,7 +192,7 @@ NTSTATUS STDCALL
 SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp, 
 			  PAFD_STORED_DATAGRAM DatagramRecv ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    PAFD_RECV_REQ RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_RECV_INFO RecvReq = Irp->AssociatedIrp.SystemBuffer;
     UINT CopyLen = 0;
 
     CopyLen = MIN(DatagramRecv->Len, RecvReq->BufferArray[0].len);
@@ -215,7 +215,7 @@ PacketSocketRecvComplete(
     PAFD_FCB FCB = Context;
     PIRP NextIrp;
     PLIST_ENTRY ListEntry;
-    PAFD_RECV_REQ RecvReq;
+    PAFD_RECV_INFO RecvReq;
     PAFD_STORED_DATAGRAM DatagramRecv;
     UINT DGSize = Irp->IoStatus.Information + sizeof( AFD_STORED_DATAGRAM );
 
@@ -291,7 +291,7 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_RECV_REQ RecvReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_RECV_INFO RecvReq = Irp->AssociatedIrp.SystemBuffer;
     PLIST_ENTRY ListEntry;
     PAFD_STORED_DATAGRAM DatagramRecv;
 

@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
+/* $Id: select.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -12,7 +12,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-VOID CopyBackStatus( PAFD_POLL_HANDLE HandleArray,
+VOID CopyBackStatus( PAFD_HANDLE HandleArray,
 		     UINT HandleCount ) {
     UINT i;
     
@@ -22,7 +22,7 @@ VOID CopyBackStatus( PAFD_POLL_HANDLE HandleArray,
     }
 }
 
-VOID ZeroEvents( PAFD_POLL_HANDLE HandleArray,
+VOID ZeroEvents( PAFD_HANDLE HandleArray,
 		 UINT HandleCount ) {
     UINT i;
     
@@ -33,7 +33,7 @@ VOID ZeroEvents( PAFD_POLL_HANDLE HandleArray,
 }
 
 NTSTATUS STDCALL
-ScanForImmediateTrigger( PAFD_POLL_HANDLE HandleArray,
+ScanForImmediateTrigger( PAFD_HANDLE HandleArray,
 			 UINT HandleCount,
 			 PUINT HandlesSet ) {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -46,7 +46,7 @@ ScanForImmediateTrigger( PAFD_POLL_HANDLE HandleArray,
         HandleArray[i].Status = 0;
 	Status = 
 	    ObReferenceObjectByHandle
-	    ( HandleArray[i].Handle,
+	    ( (PVOID)HandleArray[i].Handle,
 	      FILE_ALL_ACCESS,
 	      NULL,
 	      KernelMode,
@@ -62,7 +62,7 @@ ScanForImmediateTrigger( PAFD_POLL_HANDLE HandleArray,
 		HandleArray[i].Status = 
 		    FCB->PollState & HandleArray[i].Events;
 	    if( HandleArray[i].Status ) ShouldReturnNow = TRUE;
-	    ObDereferenceObject( HandleArray[i].Handle );
+	    ObDereferenceObject( (PVOID)HandleArray[i].Handle );
 	}
     }
 
@@ -75,7 +75,7 @@ VOID SelectTimeout( PKDPC Dpc,
 		    PVOID SystemArgument1,
 		    PVOID SystemArgument2 ) {
     PAFD_ACTIVE_POLL Poll = DeferredContext;
-    PAFD_POLL_REQ PollReq;
+    PAFD_POLL_INFO PollReq;
     PAFD_DEVICE_EXTENSION DeviceExt;
     PIRP Irp;
     KIRQL OldIrql;
@@ -103,12 +103,12 @@ NTSTATUS STDCALL
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	   PIO_STACK_LOCATION IrpSp ) {
     NTSTATUS Status = STATUS_NO_MEMORY;
-    PAFD_POLL_REQ PollReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_POLL_INFO PollReq = Irp->AssociatedIrp.SystemBuffer;
     PAFD_DEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
     PAFD_ACTIVE_POLL Poll = NULL;
     UINT CopySize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     UINT AllocSize = 
-	CopySize + sizeof(AFD_ACTIVE_POLL) - sizeof(AFD_POLL_REQ);
+	CopySize + sizeof(AFD_ACTIVE_POLL) - sizeof(AFD_POLL_INFO);
     KIRQL OldIrql;
     UINT HandlesSignalled; 
 
@@ -161,7 +161,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     return Status;
 }
 
-VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_REQ PollReq, UINT i ) {
+VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq, UINT i ) {
     /* One of the files was destroyed.  We return now with error. */
     Poll->Irp->IoStatus.Status = STATUS_SUCCESS; /* XXX REVISIT */
     Poll->Irp->IoStatus.Information = 1;
@@ -175,12 +175,12 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
     NTSTATUS Status;
     PFILE_OBJECT TargetFile;
     PAFD_FCB FCB;
-    PAFD_POLL_REQ PollReq = Poll->Irp->AssociatedIrp.SystemBuffer;
+    PAFD_POLL_INFO PollReq = Poll->Irp->AssociatedIrp.SystemBuffer;
 
     for( i = 0; i < PollReq->HandleCount; i++ ) {
 	Status = 
 	    ObReferenceObjectByHandle
-	    ( PollReq->Handles[i].Handle,
+	    ( (PVOID)PollReq->Handles[i].Handle,
 	      FILE_ALL_ACCESS,
 	      NULL,
 	      KernelMode,

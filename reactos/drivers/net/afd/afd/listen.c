@@ -1,4 +1,4 @@
-/* $Id: listen.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: listen.c,v 1.1.2.2 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/listen.c
@@ -28,7 +28,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_LISTEN_REQ ListenReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_LISTEN_DATA ListenReq = Irp->AssociatedIrp.SystemBuffer;
 
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -40,7 +40,7 @@ NTSTATUS AfdListenSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return UnlockAndMaybeComplete( FCB, Status, Irp, 0, NULL );
     }
     
-    FCB->DelayedAccept = ListenReq->DelayedAccept;
+    FCB->DelayedAccept = ListenReq->UseDelayedAcceptance;
 
     Status = WarmSocketForConnection( FCB );
 

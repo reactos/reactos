@@ -1,4 +1,4 @@
-/* $Id: write.c,v 1.1.2.4 2004/07/15 03:21:47 arty Exp $
+/* $Id: write.c,v 1.1.2.5 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/write.c
@@ -21,7 +21,7 @@ NTSTATUS DDKAPI SendComplete
     PAFD_FCB FCB = (PAFD_FCB)Context;
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp = NULL;
-    PAFD_SEND_REQ SendReq;
+    PAFD_SEND_INFO SendReq;
     PAFD_MAPBUF Map;
     UINT TotalBytesCopied = 0, SpaceAvail, i, CopySize = 0;
 
@@ -78,7 +78,8 @@ NTSTATUS DDKAPI SendComplete
 	    Map[i].BufferAddress = 
 		MmMapLockedPages( Map[i].Mdl, KernelMode );
 
-	    CopySize = MIN( SpaceAvail, SendReq->BufferArray[i].len );
+	    CopySize = MIN( SpaceAvail, 
+			    SendReq->BufferArray[i].len );
 
 	    RtlCopyMemory( FCB->Send.Window + FCB->Send.BytesUsed,
 			   Map[i].BufferAddress,
@@ -136,7 +137,7 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_SEND_REQ SendReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_SEND_INFO SendReq = Irp->AssociatedIrp.SystemBuffer;
     UINT TotalBytesCopied = 0, i, CopySize = 0, 
 	SpaceAvail = 0, TotalBytesEncountered = 0;
 
@@ -168,7 +169,8 @@ AfdConnectedSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	
 	for( i = 0; FCB->Send.BytesUsed < FCB->Send.Size && 
 		 i < SendReq->BufferCount; i++ ) {
-	    CopySize = MIN( SpaceAvail, SendReq->BufferArray[i].len );
+	    CopySize = MIN( SpaceAvail, 
+			    SendReq->BufferArray[i].len );
 
 	    TotalBytesEncountered += SendReq->BufferArray[i].len;
 
@@ -229,7 +231,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_SEND_REQ SendReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_SEND_INFO_UDP SendReq = Irp->AssociatedIrp.SystemBuffer;
    
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
@@ -242,7 +244,7 @@ AfdPacketSocketWriteData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	  FCB->AddressFile.Object,
 	  SendReq->BufferArray[0].buf,
 	  SendReq->BufferArray[0].len,
-	  &SendReq->Address,
+	  SendReq->RemoteAddress,
 	  &FCB->SendIrp.Iosb,
 	  NULL,
 	  NULL );

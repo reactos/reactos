@@ -1,4 +1,4 @@
-/* $Id: bind.c,v 1.1.2.2 2004/07/14 16:54:14 arty Exp $
+/* $Id: bind.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/bind.c
@@ -43,7 +43,7 @@ AfdBindSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_SUCCESS;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_BIND_REQ BindReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_BIND_DATA BindReq = Irp->AssociatedIrp.SystemBuffer;
     
     AFD_DbgPrint(MID_TRACE,("Called\n"));
     

@@ -1,4 +1,4 @@
-/* $Id: info.c,v 1.1.2.1 2004/07/09 04:41:18 arty Exp $
+/* $Id: info.c,v 1.1.2.2 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/info.c
@@ -20,11 +20,12 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
 
-    AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq, InfoReq ? InfoReq->InfoClass : 0));
+    AFD_DbgPrint(MID_TRACE,("Called %x %x\n", InfoReq, 
+			    InfoReq ? InfoReq->InformationClass : 0));
     
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
 
-    switch( InfoReq->InfoClass ) {
+    switch( InfoReq->InformationClass ) {
     case AFD_INFO_RECEIVE_WINDOW_SIZE:
 	InfoReq->Information.Ulong = FCB->Recv.Size;
 	break;
@@ -39,7 +40,8 @@ AfdGetInfo( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	break;
 
     default:
-	AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n", InfoReq->InfoClass));
+	AFD_DbgPrint(MID_TRACE,("Unknown info id %x\n", 
+				InfoReq->InformationClass));
 	Status = STATUS_INVALID_PARAMETER;
 	break;
     }

@@ -49,7 +49,7 @@ WSPRecv(
 	HANDLE						Event;
 
     /* Set up the Receive Structure */
-    RecvInfo.BufferArray = lpBuffers;
+    RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
 	RecvInfo.TdiFlags = 0;
 	RecvInfo.AfdFlags = 0;
@@ -183,7 +183,7 @@ WSPRecvFrom(
 	HANDLE						Event;
 
     /* Set up the Receive Structure */
-    RecvInfo.BufferArray = lpBuffers;
+    RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     RecvInfo.BufferCount = dwBufferCount;
 	RecvInfo.TdiFlags = 0;
 	RecvInfo.AfdFlags = 0;
@@ -318,7 +318,7 @@ WSPSend(
 	HANDLE						Event;
 
     /* Set up the Send Structure */
-    SendInfo.BufferArray = lpBuffers;
+    SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
     SendInfo.BufferCount = dwBufferCount;
 	SendInfo.TdiFlags = 0;
 	SendInfo.AfdFlags = 0;
@@ -446,7 +446,7 @@ WSPSendTo(
 	RtlCopyMemory(&RemoteAddress->Address[0].AddressType, SocketAddress, SocketAddressLength);
 
 	/* Set up Structure */
-	SendInfo.BufferArray = lpBuffers;
+	SendInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
 	SendInfo.AfdFlags = 0;
 	SendInfo.BufferCount = dwBufferCount;
 	SendInfo.RemoteAddress = RemoteAddress;

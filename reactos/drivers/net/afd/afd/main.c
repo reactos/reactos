@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.1.2.3 2004/07/15 03:21:47 arty Exp $
+/* $Id: main.c,v 1.1.2.4 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/main.c
@@ -46,7 +46,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject;
     PAFD_DEVICE_EXTENSION DeviceExt;
     PFILE_FULL_EA_INFORMATION EaInfo;
-    PAFD_SGID ConnectInfo;
+    PAFD_CREATE_PACKET ConnectInfo;
     ULONG EaLength;
     PWCHAR EaInfoValue;
     UINT Disposition, i;
@@ -61,8 +61,8 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     Irp->IoStatus.Information = 0;
     
     EaInfo = Irp->AssociatedIrp.SystemBuffer;
-    ConnectInfo = (PAFD_SGID)(EaInfo->EaName + EaInfo->EaNameLength + 1);
-    EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_SGID));
+    ConnectInfo = (PAFD_CREATE_PACKET)(EaInfo->EaName + EaInfo->EaNameLength + 1);
+    EaInfoValue = (PWCHAR)(((PCHAR)ConnectInfo) + sizeof(AFD_CREATE_PACKET));
 
     if(!EaInfo) {
 	AFD_DbgPrint(MIN_TRACE, ("No EA Info in IRP.\n"));
@@ -91,7 +91,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     RtlZeroMemory( FCB, sizeof( *FCB ) );
 
-    FCB->Flags = ConnectInfo->Flags;
+    FCB->Flags = ConnectInfo->EndpointFlags;
     FCB->State = SOCKET_STATE_CREATED;
     FCB->FileObject = FileObject;
     FCB->DeviceExt = DeviceExt;
@@ -108,7 +108,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 
     AFD_DbgPrint(MID_TRACE,("%x: Checking command channel\n", FCB));
 
-    FCB->TdiDeviceName.Length = ConnectInfo->TDNameLength;
+    FCB->TdiDeviceName.Length = ConnectInfo->SizeOfTransportName;
     FCB->TdiDeviceName.MaximumLength = FCB->TdiDeviceName.Length;
     FCB->TdiDeviceName.Buffer = 
       ExAllocatePool( NonPagedPool, FCB->TdiDeviceName.Length );
@@ -234,7 +234,7 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_CONNECT:
 	    return AfdStreamSocketConnect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_LISTEN:
+	case IOCTL_AFD_START_LISTEN:
 	    return AfdListenSocket( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_RECV:
@@ -244,14 +244,14 @@ AfdDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	case IOCTL_AFD_SELECT:
 	    return AfdSelect( DeviceObject, Irp, IrpSp );
 
-	case IOCTL_AFD_RECVFROM:
+	case IOCTL_AFD_RECV_DATAGRAM:
 	    return AfdPacketSocketReadData( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_SEND:
 	    return AfdConnectedSocketWriteData( DeviceObject, Irp, IrpSp, 
 						FALSE );
 
-	case IOCTL_AFD_SENDTO:
+	case IOCTL_AFD_SEND_DATAGRAM:
 	    return AfdPacketSocketWriteData( DeviceObject, Irp, IrpSp );
 
 	case IOCTL_AFD_GET_INFO:

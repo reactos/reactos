@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.1.2.2 2004/07/11 23:04:34 arty Exp $
+/* $Id: connect.c,v 1.1.2.3 2004/07/16 14:35:21 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/connect.c
@@ -126,7 +126,7 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     NTSTATUS Status = STATUS_INVALID_PARAMETER;
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
-    PAFD_CONNECT_REQ ConnectReq = Irp->AssociatedIrp.SystemBuffer;
+    PAFD_CONNECT_INFO ConnectReq = Irp->AssociatedIrp.SystemBuffer;
     AFD_DbgPrint(MID_TRACE,("Called on %x\n", FCB));
 
     if( !SocketAcquireStateLock( FCB ) ) return LostSocket( Irp );
@@ -145,18 +145,19 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	return LeaveIrpUntilLater( FCB, Irp, FUNCTION_CONNECT );
 
     case SOCKET_STATE_CREATED: {
-	FCB->LocalAddress = TaCopyTransportAddress( &ConnectReq->Address );
+	FCB->LocalAddress = 
+	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 
 	if( FCB->LocalAddress ) {
 	    RtlZeroMemory( FCB->LocalAddress, 
 			   TaLengthOfTransportAddress
-			   ( &ConnectReq->Address ) );
+			   ( &ConnectReq->RemoteAddress ) );
 	    
 	    FCB->LocalAddress->TAAddressCount = 1;
 	    FCB->LocalAddress->Address[0].AddressType = 
-		ConnectReq->Address.Address[0].AddressType;
+		ConnectReq->RemoteAddress.Address[0].AddressType;
 	    FCB->LocalAddress->Address[0].AddressLength = 
-		ConnectReq->Address.Address[0].AddressLength;
+		ConnectReq->RemoteAddress.Address[0].AddressLength;
 	    
 	    Status = WarmSocketForBind( FCB );
 	    
@@ -170,7 +171,8 @@ AfdStreamSocketConnect(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     } /* Drop through to SOCKET_STATE_BOUND */
 	
     case SOCKET_STATE_BOUND:
-	FCB->RemoteAddress = TaCopyTransportAddress( &ConnectReq->Address );
+	FCB->RemoteAddress = 
+	    TaCopyTransportAddress( &ConnectReq->RemoteAddress );
 	
 	Status = WarmSocketForConnection( FCB );
 
