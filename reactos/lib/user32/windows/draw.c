@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.22 2003/08/17 20:29:57 silverblade Exp $
+/* $Id: draw.c,v 1.23 2003/08/18 00:14:50 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1367,8 +1367,138 @@ BOOL WINAPI DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
 }
 
 
+WINBOOL
+STDCALL
+INTERNAL_GrayString(
+  HDC hDC,
+  HBRUSH hBrush,
+  GRAYSTRINGPROC lpOutputFunc,
+  LPARAM lpData,
+  int nCount,
+  int X,
+  int Y,
+  int nWidth,
+  int nHeight,
+  BOOL unicode)
+{
+    // AG: Mostly implemented, but probably won't work properly or return
+    // correct error codes. I doubt it grays strings either... Untested!
+
+    BOOL    success = FALSE;
+    HDC     MemDC = NULL;
+    HBITMAP MemBMP = NULL,
+            OldBMP = NULL;
+    HBRUSH  OldBrush = NULL;
+    HFONT   OldFont = NULL;
+    RECT    r;
+    COLORREF ForeColor, BackColor;
+
+    ForeColor = SetTextColor(hDC, RGB(0, 0, 0));
+    BackColor = SetBkColor(hDC, RGB(255, 255, 255));
+
+    
+    if (! hBrush)
+    {
+        // The documentation is a little vague on what exactly should happen
+        // here. Something about using the same brush for window text???
+        hBrush = (HBRUSH) GetCurrentObject(hDC, OBJ_BRUSH);
+    }
+    
+    if ((nCount == -1) && (! lpOutputFunc))
+        return FALSE;
+    
+    if (! nCount)
+    {
+        // TODO: calculate the length (easy enough)
+        
+        if (unicode)
+            nCount = lstrlenW((WCHAR*)lpData);
+        else
+            nCount = strlen((CHAR*)lpData);
+    }
+
+    if (! nWidth || ! nHeight)
+    {
+        SIZE s;
+        // TODO: calculate the rect
+        
+        if (unicode)
+            success = GetTextExtentPoint32W(hDC, (WCHAR*) lpData, nCount, &s);
+        else
+            success = GetTextExtentPoint32A(hDC, (CHAR*) lpData, nCount, &s);
+
+        if (! success) goto cleanup;
+        
+        if (! nWidth)   nWidth = s.cx;
+        if (! nHeight)  nHeight = s.cy;
+    }
+
+    SetRect(&r, X, Y, X + nWidth, Y + nHeight);    
+
+    MemDC = CreateCompatibleDC(hDC);
+    if (! MemDC) goto cleanup;
+    MemBMP = CreateBitmap(nWidth, nHeight, 1, 1, NULL);
+    if (! MemBMP) goto cleanup;
+    OldBMP = SelectObject(MemDC, MemBMP);
+    if (! OldBMP) goto cleanup;
+    OldFont = SelectObject(MemDC, GetCurrentObject(hDC, OBJ_FONT));
+    if (! OldFont) goto cleanup;
+    OldBrush = SelectObject(MemDC, hBrush);
+    if (! OldBrush) goto cleanup;
+
+    if (! BitBlt(MemDC, 0, 0, nWidth, nHeight, hDC, X, Y, SRCCOPY)) goto cleanup;
+
+    SetTextColor(MemDC, RGB(255, 255, 255));
+    SetBkColor(MemDC, RGB(0, 0, 0));
+    
+    if (lpOutputFunc)
+    {
+        success = lpOutputFunc(MemDC, lpData, nCount); // Set brush etc first?
+        
+        if ((nCount == -1) && (! success))
+        {
+            // Don't gray (documented behaviour)
+            success = (BOOL) BitBlt(hDC, X, Y, nWidth, nHeight, MemDC, 0, 0, SRCCOPY);
+            goto cleanup;
+        }
+    }
+    else
+    {
+        if (unicode)
+            success = TextOutW(MemDC, 0, 0, (WCHAR*) lpData, nCount);
+        else
+            success = TextOutA(MemDC, 0, 0, (CHAR*) lpData, nCount);
+            
+        if (! success) goto cleanup;
+
+        PatBlt(MemDC, 0, 0, nWidth, nHeight, PATCOPY);
+//      This is how WINE does it: (but we should have our own graying brush already)
+//        hbsave = (HBRUSH)SelectObject(memdc, CACHE_GetPattern55AABrush());
+//        PatBlt(memdc, 0, 0, cx, cy, 0x000A0329);
+//        SelectObject(memdc, hbsave);
+    }
+
+    if (! BitBlt(hDC, X, Y, nWidth, nHeight, MemDC, 0, 0, SRCCOPY)) goto cleanup;
+
+    cleanup :
+        SetTextColor(hDC, ForeColor);
+        SetBkColor(hDC, BackColor);
+
+        if (MemDC)
+        {
+            if (OldFont) SelectObject(MemDC, OldFont);
+            if (OldBrush) SelectObject(MemDC, OldBrush);
+            if (OldBMP) SelectObject(MemDC, OldBMP);
+            if (MemBMP) DeleteObject(MemBMP);
+            DeleteDC(MemDC);
+        }
+
+        return success;
+}
+
+
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1383,13 +1513,12 @@ GrayStringA(
   int nWidth,
   int nHeight)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return INTERNAL_GrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, FALSE);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL
 STDCALL
@@ -1404,8 +1533,7 @@ GrayStringW(
   int nWidth,
   int nHeight)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return INTERNAL_GrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, TRUE);
 }
 
 
