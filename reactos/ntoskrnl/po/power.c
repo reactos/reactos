@@ -196,11 +196,16 @@ INIT_FUNCTION
 PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock, 
        BOOLEAN ForceAcpiDisable)
 {
-    /* Set the ACPI State to False if it's been forced that way */
-    if (ForceAcpiDisable) PopAcpiPresent = FALSE;
-    
-    /* Otherwise check the LoaderBlock's Flag */
-    PopAcpiPresent = LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE;
+  if (ForceAcpiDisable)
+    {
+      /* Set the ACPI State to False if it's been forced that way */
+      PopAcpiPresent = FALSE;
+    }
+  else
+    {
+      /* Otherwise check the LoaderBlock's Flag */
+      PopAcpiPresent = (LoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
+    }
 }
 
 /*
