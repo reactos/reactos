@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.37 2003/12/24 21:23:03 navaraf Exp $
+/* $Id: reg.c,v 1.38 2003/12/24 21:51:38 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -2200,6 +2200,7 @@ RegQueryValueExA(
   ANSI_STRING AnsiString;
   LONG ErrorCode;
   DWORD Type;
+  DWORD Length;
 
   if ((lpData) && (!lpcbData))
     {
@@ -2227,14 +2228,17 @@ RegQueryValueExA(
 
   RtlCreateUnicodeStringFromAsciiz(&ValueName, (LPSTR)lpValueName);
 
+  /* Convert length from USHORT to DWORD */
+  Length = ValueData.Length;
   ErrorCode = RegQueryValueExW(
     hKey,
     ValueName.Buffer,
     lpReserved,
     &Type,
     (LPBYTE)ValueData.Buffer,
-    (LPDWORD)&ValueData.Length);
+    &Length);
   if (lpType) *lpType = Type;
+  ValueData.Length = Length;
 
   if ((ErrorCode == ERROR_SUCCESS) && (ValueData.Buffer != NULL))
     {
