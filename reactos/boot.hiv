@@ -1,0 +1,46 @@
+REGEDIT4
+
+[\Registry\Machine\HARDWARE]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0]
+"Component Information"=hex:00,00,00,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff
+"Identifier"="ISA"
+"Configuration Data"=hex(9):01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\KeyboardController]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\KeyboardController\0]
+"Component Information"=hex:28,00,00,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff
+"Configuration Data"=hex(9):01,00,00,00,00,00,00,00,00,00,00,00,03,00,00,00,01,\
+  01,01,00,60,00,00,00,00,00,00,00,01,00,00,00,01,01,01,00,64,00,00,00,00,00,\
+  00,00,01,00,00,00,02,00,01,00,01,00,00,00,01,00,00,00,ff,ff,ff,ff
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\KeyboardController\0\KeyboardPeripheral]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\KeyboardController\0\KeyboardPeripheral\0]
+"Component Information"=hex:28,00,00,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff
+"Identifier"="PCAT_ENHANCED"
+"Configuration Data"=hex(9):01,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,05,\
+  00,00,00,08,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,04,00,00,00
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\PointerController]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\PointerController\0]
+"Component Information"=hex:20,00,00,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff
+"Configuration Data"=hex(9):01,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,02,\
+  00,01,00,0c,00,00,00,0c,00,00,00,ff,ff,ff,ff
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\PointerController\0\PointerPeripheral]
+
+[\Registry\Machine\HARDWARE\DESCRIPTION\System\MultifunctionAdapter\0\PointerController\0\PointerPeripheral\0]
+"Component Information"=hex:20,00,00,00,00,00,00,00,00,00,00,00,ff,ff,ff,ff
+"Identifier"="MICROSOFT PS2 MOUSE"
+"Configuration Data"=hex(9):01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
+
+

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.62 2001/06/16 14:06:00 ekohl Exp $
+/* $Id: registry.c,v 1.63 2001/08/29 05:06:31 rex Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -11,23 +11,18 @@
  *                  Created 22/05/98
  */
 
+#include <ddk/ntddk.h>
+#include <internal/config.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 #include "cm.h"
-
-#define  REG_ROOT_KEY_NAME	L"\\Registry"
-#define  REG_MACHINE_KEY_NAME	L"\\Registry\\Machine"
-#define  REG_SYSTEM_KEY_NAME	L"\\Registry\\Machine\\System"
-#define  REG_SOFTWARE_KEY_NAME	L"\\Registry\\Machine\\Software"
-#define  REG_SAM_KEY_NAME	L"\\Registry\\Machine\\Sam"
-#define  REG_SEC_KEY_NAME	L"\\Registry\\Machine\\Security"
-#define  REG_USERS_KEY_NAME	L"\\Registry\\User"
-#define  REG_USER_KEY_NAME	L"\\Registry\\User\\CurrentUser"
-
-#define  SYSTEM_REG_FILE	L"\\SystemRoot\\System32\\Config\\SYSTEM"
-#define  SOFTWARE_REG_FILE	L"\\SystemRoot\\System32\\Config\\SOFTWARE"
-#define  USER_REG_FILE		L"\\SystemRoot\\System32\\Config\\DEFAULT"
-#define  SAM_REG_FILE		L"\\SystemRoot\\System32\\Config\\SAM"
-#define  SEC_REG_FILE		L"\\SystemRoot\\System32\\Config\\SECURITY"
-
 
 /*  -------------------------------------------------  File Statics  */
 
@@ -261,13 +256,6 @@ for(;;)
 __asm__ ("hlt\n\t");
 }
 */
-}
-
-VOID 
-CmImportHive(PCHAR  Chunk)
-{
-  /*  FIXME: implemement this  */
-  return; 
 }
 
 VOID

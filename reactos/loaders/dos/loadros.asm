@@ -233,20 +233,36 @@ entry:
 	push	di
 	mov	dx, di
 
-  ; Check if it is a symbol file
-  cmp byte [bx-5],'.'
-  jne .pe_copy
-  cmp byte [bx-4],'s'
-  jne .pe_copy
-  cmp byte [bx-3],'y'
-  jne .pe_copy
-  cmp byte [bx-2],'m'
-  jne .pe_copy
+	; Check if it is a symbol file
+	cmp	byte [bx-5],'.'
+	jne	.checkForHive
+	cmp	byte [bx-4],'s'
+	jne	.checkForHive
+	cmp	byte [bx-3],'y'
+	jne	.checkForHive
+	cmp	byte [bx-2],'m'
+	jne	.checkForHive
 
 	call	sym_load_module
-	jmp .after_copy
+	jmp	.after_copy
+
+.checkForHive:
+	; Check if it is a symbol file
+	cmp	byte [bx-5],'.'
+	jne	.pe_copy
+	cmp	byte [bx-4],'h'
+	jne	.pe_copy
+	cmp	byte [bx-3],'i'
+	jne	.pe_copy
+	cmp	byte [bx-2],'v'
+	jne	.pe_copy
+
+	call	sym_load_module
+	jmp	.after_copy
+
 .pe_copy:
-  call	pe_load_module
+	call	pe_load_module
+
 .after_copy:
 	pop	di
 	cmp	eax, 0
@@ -703,38 +719,40 @@ _current_file_size:
 	;;	DS:DX = Filename
 	;;
 sym_load_module:
-  call  load_module1
-  call  load_module2
-  mov edi, [next_load_base]
-  add edi, [_current_file_size]
+	call	load_module1
+	call	load_module2
+	mov	edi, [next_load_base]
+	add	edi, [_current_file_size]
 
-  mov eax, edi
+	mov	eax, edi
 	test	di, 0xfff
 	jz	.sym_no_round
 	and	di, 0xf000
 	add	edi, 0x1000
 
-  ;;
-  ;; Clear unused space in the last page
-  ;;
-  mov esi, edi
-	mov ecx, edi
-	sub ecx, eax
+	;;
+	;; Clear unused space in the last page
+	;;
+	mov	esi, edi
+	mov	ecx, edi
+	sub	ecx, eax
+
 .sym_clear:
-  mov byte [esi],0
-  inc esi
-	loop  .sym_clear
+	mov	byte [esi],0
+	inc	esi
+	loop	.sym_clear
+
 .sym_no_round:
 
-  call  load_module3
-  ret
+	call	load_module3
+	ret
 
 	;;
 	;; Load a PE file
 	;;	DS:DX = Filename
 	;;
 pe_load_module:
-  call load_module1
+	call	load_module1
 
 	;;
 	;; Read in the DOS EXE header

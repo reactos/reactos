@@ -2,16 +2,30 @@
 #ifndef __INCLUDE_CM_H
 #define __INCLUDE_CM_H
 
-#include <ddk/ntddk.h>
-#include <internal/config.h>
-#include <internal/ob.h>
-#include <limits.h>
-#include <string.h>
-#include <internal/pool.h>
-#include <internal/registry.h>
+#define  REG_ROOT_KEY_NAME	L"\\Registry"
+#define  REG_MACHINE_KEY_NAME	L"\\Registry\\Machine"
+#define  REG_CLASSES_KEY_NAME	L"\\Registry\\Machine\\Software\\Classes"
+#define  REG_SYSTEM_KEY_NAME	L"\\Registry\\Machine\\System"
+#define  REG_SOFTWARE_KEY_NAME	L"\\Registry\\Machine\\Software"
+#define  REG_SAM_KEY_NAME	L"\\Registry\\Machine\\Sam"
+#define  REG_SEC_KEY_NAME	L"\\Registry\\Machine\\Security"
+#define  REG_USERS_KEY_NAME	L"\\Registry\\User"
+#define  REG_USER_KEY_NAME	L"\\Registry\\User\\CurrentUser"
+#define  SYSTEM_REG_FILE	L"\\SystemRoot\\System32\\Config\\SYSTEM"
+#define  SOFTWARE_REG_FILE	L"\\SystemRoot\\System32\\Config\\SOFTWARE"
+#define  USER_REG_FILE		L"\\SystemRoot\\System32\\Config\\DEFAULT"
+#define  SAM_REG_FILE		L"\\SystemRoot\\System32\\Config\\SAM"
+#define  SEC_REG_FILE		L"\\SystemRoot\\System32\\Config\\SECURITY"
 
-#define NDEBUG
-#include <internal/debug.h>
+#define  REGISTRY_FILE_MAGIC    "REGEDIT4"
+
+#define  REG_MACHINE_STD_HANDLE_NAME  "HKEY_LOCAL_MACHINE"
+#define  REG_CLASSES_STD_HANDLE_NAME  "HKEY_CLASSES_ROOT"
+#define  REG_USERS_STD_HANDLE_NAME    "HKEY_USERS"
+#define  REG_USER_STD_HANDLE_NAME     "HKEY_CURRENT_USER"
+#define  REG_CONFIG_STD_HANDLE_NAME   "HKEY_CURRENT_CONFIG"
+#define  REG_DYN_STD_HANDLE_NAME      "HKEY_DYN_DATA"
+#define  MAX_REG_STD_HANDLE_NAME      19
 
 #define  KO_MARKED_FOR_DELETE  0x00000001
 

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.50 2001/08/21 20:13:08 chorns Exp $
+# $Id: Makefile,v 1.51 2001/08/29 05:06:31 rex Exp $
 #
 # ReactOS Operating System
 #
@@ -252,6 +252,7 @@ OBJECTS_SE = \
 
 # Configuration Manager (Registry)
 OBJECTS_CM = \
+	cm/import.o  \
 	cm/registry.o  \
 	cm/ntfunc.o \
 	cm/rtlfunc.o \

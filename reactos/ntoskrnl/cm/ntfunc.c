@@ -6,6 +6,17 @@
  * UPDATE HISTORY:
 */
 
+#include <ddk/ntddk.h>
+#include <internal/config.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 #include "cm.h"
 
 extern POBJECT_TYPE  CmiKeyType;
@@ -31,6 +42,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 //  DPRINT("NtCreateKey (Name %wZ),KeyHandle=%x,Root=%x\n",
 //         ObjectAttributes->ObjectName,KeyHandle
 //	,ObjectAttributes->RootDirectory);
+
+  /*FIXME: check for standard handle prefix and adjust objectAttributes accordingly */
+
   Status = ObFindObject(ObjectAttributes,&Object,&RemainingPath,CmiKeyType);
   if (!NT_SUCCESS(Status))
   {

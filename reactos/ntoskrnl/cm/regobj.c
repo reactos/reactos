@@ -6,6 +6,17 @@
  * UPDATE HISTORY:
 */
 
+#include <ddk/ntddk.h>
+#include <internal/config.h>
+#include <internal/ob.h>
+#include <limits.h>
+#include <string.h>
+#include <internal/pool.h>
+#include <internal/registry.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
 #include "cm.h"
 
 extern POBJECT_TYPE  CmiKeyType;
