@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.37 2003/12/24 01:26:10 weiden Exp $
+/* $Id: misc.c,v 1.38 2003/12/25 21:14:24 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,6 +24,7 @@
 #include <include/focus.h>
 #include <include/clipboard.h>
 #include <include/msgqueue.h>
+#include <include/desktop.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -506,7 +507,22 @@ NtUserSystemParametersInfo(
       }
     case SPI_GETGRADIENTCAPTIONS:
       {
-        Status = MmCopyToCaller(pvParam, &GradientCaptions, sizeof(BOOL));
+        HDC hDC;
+        PDC dc;
+        PSURFOBJ SurfObj;
+        BOOL Ret = GradientCaptions;
+        
+        hDC = IntGetScreenDC();
+        if(hDC)
+        {
+          dc = DC_LockDc(hDC);
+          SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+          if(SurfObj)
+            Ret = (SurfObj->iBitmapFormat > BMF_8BPP);
+          DC_UnlockDc(hDC);
+        }
+        
+        Status = MmCopyToCaller(pvParam, &Ret, sizeof(BOOL));
         if(!NT_SUCCESS(Status))
         {
           SetLastNtError(Status);
