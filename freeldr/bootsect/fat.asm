@@ -178,7 +178,7 @@ SearchRootDirSector:
 		add  di,BYTE +0x20						; Increment DI by the size of a directory entry
 		cmp  di,0200h							; Compare DI to 512 (DI has offset to next dir entry, make sure we haven't gone over one sector)
 		jc   SearchRootDirSector				; If DI is less than 512 loop again
-		jmp  LoadRootDirSector					; Didn't find FREELDR.SYS in this directory sector, try again
+		jmp short LoadRootDirSector				; Didn't find FREELDR.SYS in this directory sector, try again
 
 FoundFreeLoader:
 		; We found freeldr.sys on the disk
@@ -258,7 +258,7 @@ BadBoot:
         mov  si,msgAnyKey       ; Press any key message
         call PutChars           ; Display it
 
-		jmp  Reboot
+		jmp short Reboot
 
 ; Reads logical sectors into [ES:BX]
 ; DX:AX has logical sector number to read
