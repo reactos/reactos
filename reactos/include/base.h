@@ -117,6 +117,7 @@ typedef HANDLE HDROP;
 typedef HANDLE HDWP;
 typedef HANDLE HENHMETAFILE;
 typedef HANDLE HENV;
+typedef USHORT COLOR16;
 typedef int HFILE;
 typedef HANDLE HFONT;
 typedef HANDLE HGDIOBJ;
@@ -169,6 +170,15 @@ typedef const wchar_t *LPCWCH;
 typedef DWORD *LPDWORD;
 /* typedef LPFRHOOKPROC; */
 typedef HANDLE *LPHANDLE;
+typedef DWORD FULLSCREENCONTROL;
+typedef DWORD UNIVERSAL_FONT_ID;
+typedef UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
+typedef DWORD REALIZATION_INFO;
+typedef REALIZATION_INFO *PREALIZATION_INFO;
+typedef DWORD SHAREDHANDLETABLE;
+typedef SHAREDHANDLETABLE *PSHAREDHANDLETABLE;
+typedef DWORD CHWIDTHINFO;
+typedef CHWIDTHINFO *PCHWIDTHINFO;
 /* typedef LPHANDLER_FUNCTION; */
 typedef PINT LPINT;
 typedef PLONG LPLONG;
@@ -539,6 +549,8 @@ typedef WINBOOL CALLBACK (*PFNPROCESSPOLICIESW) (HWND, LPCWSTR, LPCWSTR, LPCWSTR
 #define SC_GROUP_IDENTIFIER            SC_GROUP_IDENTIFIERA
 #endif /* UNICODE */
 #endif /* _DISABLE_TIDENTS */
+
+#define MM_MAX_NUMAXES      16
 
 /* ---------------------------------- */
 /* From ddeml.h in old Cygnus headers */

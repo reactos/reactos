@@ -34,3 +34,17 @@ Rectangle(HDC  hDC,
    return NtGdiRectangle(hDC, LeftRect, TopRect, RightRect, BottomRect);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+PolyPolygon(
+	HDC		a0,
+	CONST POINT	*a1,
+	CONST INT	*a2,
+	int		a3
+	)
+{
+	return PolyPolygon(a0,(LPPOINT)a1,(LPINT)a2,a3);
+}

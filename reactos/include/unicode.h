@@ -36,6 +36,32 @@
 extern "C" {
 #endif /* __cplusplus */
 
+HFONT
+STDCALL
+CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd);
+
+DWORD 
+STDCALL
+GetGlyphIndicesW(
+	HDC hdc,
+	LPCWSTR lpstr,
+	int c,
+	LPWORD pgi,
+	DWORD fl
+);
+
+WINBOOL 
+STDCALL
+RemoveFontResourceExW(
+	LPCWSTR lpFileName,
+	DWORD fl,
+	PVOID pdv
+);
+
+UINT 
+STDCALL
+GetStringBitmapW(HDC hdc,LPWSTR pwsz,WINBOOL unknown,UINT cj,BYTE *lpSB);
+
 WINBOOL
 STDCALL
 GetAltTabInfoW(

@@ -1,4 +1,4 @@
-; $Id: win32k.edf,v 1.17 2003/08/19 11:48:50 weiden Exp $
+; $Id: win32k.edf,v 1.18 2003/08/26 12:28:53 weiden Exp $
 ;
 ; win32k.def
 ;
@@ -94,7 +94,7 @@ EngSort=EngSort@16
 EngStretchBlt=EngStretchBlt@44
 EngStrokeAndFillPath=EngStrokeAndFillPath@40
 EngStrokePath=EngStrokePath@32
-EngTextOut=EngTextOut@44
+EngTextOut=EngTextOut@40
 EngTransparentBlt=EngTransparentBlt@32
 EngUnicodeToMultiByteN=EngUnicodeToMultiByteN@20
 EngUnloadImage=EngUnloadImage@4

@@ -5,7 +5,7 @@ LIBRARY ws2help.dll
 EXPORTS
 WahCloseApcHelper@8
 WahCloseHandleHelper@8
-WahCloseNotificationHelper@8
+WahCloseNotificationHandleHelper@8
 WahCloseSocketHandle@8
 WahCloseThread@8
 WahCompleteRequest@8

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.21 2003/08/20 07:45:02 gvg Exp $ */
+/* $Id: line.c,v 1.22 2003/08/26 12:28:53 weiden Exp $ */
 
 // Some code from the WINE project source (www.winehq.com)
 
@@ -452,7 +452,28 @@ NtGdiPolyPolyline(HDC            hDC,
                  CONST LPDWORD  PolyPoints,
                  DWORD          Count)
 {
-   UNIMPLEMENTED;
+  DC    *dc = DC_LockDc(hDC);
+  int i;
+  LPPOINT pts;
+  LPDWORD pc;
+  BOOL   ret = FALSE; // default to failure
+  pts = pt;
+  pc = PolyPoints;
+  if ( dc )
+  {
+	for (i=0;i<Count;i++)
+	{
+		ret = IntPolyline ( dc, pts, *pc );
+		if (ret == FALSE)
+		{
+			return ret;
+		}
+		(DWORD)pts+=(DWORD)pc++;
+	}
+    DC_UnlockDc( hDC );
+  }
+
+  return ret;
 }
 
 int

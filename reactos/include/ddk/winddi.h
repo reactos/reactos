@@ -16,6 +16,7 @@
 #else
 #include <windows.h>
 #endif
+#include <ddk\ddrawi.h>
 
 #ifndef IN
 #define IN
@@ -27,25 +28,54 @@
 typedef DWORD PTRDIFF;
 #endif
 
+#define DDI_DRIVER_VERSION_NT4 0x20000
+#define DDI_DRIVER_VERSION_SP3 0x20003
+#define DDI_DRIVER_VERSION_NT5 0x30000
+#define DDI_DRIVER_VERSION_NT5_01 0x30100
+
 #define GDI_DRIVER_VERSION 0x4000   /* NT 4 compatibility */
 
-/* FIXME: find definitions for these structs  */
-typedef PVOID  PCOLORADJUSTMENT;
-typedef PVOID  PDD_CALLBACKS;
-typedef PVOID  PDD_HALINFO;
-typedef PVOID  PDD_PALETTECALLBACKS;
-typedef PVOID  PDD_SURFACECALLBACKS;
-typedef PVOID  PFONTINFO;
-typedef PVOID  PGAMMA_TABLES;
-typedef PVOID  PGLYPHDATA;
-typedef DWORD  MIX;
-typedef DWORD  ROP4;
-typedef PVOID  PTTPOLYGONHEADER;
-typedef PVOID  PVIDEOMEMORY;
+typedef DDHAL_DDCALLBACKS *PDD_CALLBACKS;
+typedef DDHALINFO *PDD_HALINFO;
+typedef DDHAL_DDPALETTECALLBACKS *PDD_PALETTECALLBACKS;
+typedef DDHAL_DDSURFACECALLBACKS *PDD_SURFACECALLBACKS;
+typedef struct _VIDEOMEMORY
+{
+    DWORD               dwFlags;
+    FLATPTR             fpStart;
+    union
+    {
+        FLATPTR         fpEnd;
+        DWORD           dwWidth;
+    };
+    DDSCAPS             ddsCaps;
+    DDSCAPS             ddsCapsAlt;
+    union
+    {
+        struct _VMEMHEAP *lpHeap;
+        DWORD           dwHeight;
+    };
+} VIDEOMEMORY, *PVIDEOMEMORY;
 
+typedef struct _FONTINFO
+{
+    ULONG   cjThis;
+    FLONG   flCaps;
+    ULONG   cGlyphsSupported;
+    ULONG   cjMaxGlyph1;
+    ULONG   cjMaxGlyph4;
+    ULONG   cjMaxGlyph8;
+    ULONG   cjMaxGlyph32;
+} FONTINFO, *PFONTINFO;
+
+typedef BYTE GAMMA_TABLES[2][256];
+typedef GAMMA_TABLES *PGAMMA_TABLES;
+typedef COLORADJUSTMENT *PCOLORADJUSTMENT;
+
+typedef ULONG  MIX;
+typedef ULONG  ROP4;
 #define  DDI_DRIVER_VERSION  0x00010000
 
-/* FIXME: how big should this constant be?  */
 #define  HS_DDI_MAX  6
 
 /* XLate types */
@@ -67,7 +97,9 @@ enum _BMF_TYPES
   BMF_24BPP,
   BMF_32BPP,
   BMF_4RLE,
-  BMF_8RLE
+  BMF_8RLE,
+  BMF_JPEG,
+  BMF_PNG
 };
 
 #define  BMF_TOPDOWN     0x00000001
@@ -75,6 +107,10 @@ enum _BMF_TYPES
 #define  BMF_DONTCACHE   0x00000004
 #define  BMF_USERMEM     0x00000008
 #define  BMF_KMSECTION   0x00000010
+#define  BMF_NOTSYSMEM  0x0020
+#define  BMF_WINDOW_BLT 0x0040
+#define  BMF_UMPDMEM    0x0080
+#define  BMF_RESERVED   0xFF00
 
 #define DC_TRIVIAL      0
 #define DC_RECT         1
@@ -188,6 +224,13 @@ enum _FP_MODES
   FP_WINDINGMODE
 };
 
+typedef struct _FD_GLYPHATTR {
+    ULONG    cjThis;
+    ULONG    cGlyphs;
+    ULONG    iMode;
+    BYTE     aGlyphAttr[1];
+} FD_GLYPHATTR, *PFD_GLYPHATTR;
+
 enum _GLYPH_MODE
 {
   FO_HGLYPHS,
@@ -290,6 +333,7 @@ enum _DRV_HOOK_FUNCS
   INDEX_DrvDisableSurface,
   INDEX_DrvAssertMode,
   INDEX_DrvResetPDEV = 7,
+  INDEX_DrvDisableDriver,
   INDEX_DrvCreateDeviceBitmap = 10,
   INDEX_DrvDeleteDeviceBitmap,
   INDEX_DrvRealizeBrush,
@@ -329,7 +373,8 @@ enum _DRV_HOOK_FUNCS
   INDEX_DrvQueryTrueTypeOutline,
   INDEX_DrvGetTrueTypeFile,
   INDEX_DrvQueryFontFile,
-  INDEX_DrvQueryAdvanceWidths = 53,
+  INDEX_DrvMovePanning,
+  INDEX_DrvQueryAdvanceWidths,
   INDEX_DrvSetPixelFormat,
   INDEX_DrvDescribePixelFormat,
   INDEX_DrvSwapBuffers,
@@ -339,7 +384,35 @@ enum _DRV_HOOK_FUNCS
   INDEX_DrvEnableDirectDraw,
   INDEX_DrvDisableDirectDraw,
   INDEX_DrvQuerySpoolType,
-  INDEX_DrvTransparentBlt = 74,
+  INDEX_DrvIcmCreateColorTransform,
+  INDEX_DrvIcmDeleteColorTransform,
+  INDEX_DrvIcmCheckBitmapBits,
+  INDEX_DrvIcmSetDeviceGammaRamp,
+  INDEX_DrvGradientFill,
+  INDEX_DrvStretchBltROP,
+  INDEX_DrvPlgBlt,
+  INDEX_DrvAlphaBlend,
+  INDEX_DrvSynthesizeFont,
+  INDEX_DrvGetSynthesizedFontFiles,
+  INDEX_DrvTransparentBlt,
+  INDEX_DrvQueryPerBandInfo,
+  INDEX_DrvQueryDeviceSupport,
+  INDEX_DrvReserved1,
+  INDEX_DrvReserved2,
+  INDEX_DrvReserved3,
+  INDEX_DrvReserved4,
+  INDEX_DrvReserved5,
+  INDEX_DrvReserved6,
+  INDEX_DrvReserved7,
+  INDEX_DrvReserved8,
+  INDEX_DrvQueryGlyphAttrs,
+  INDEX_DrvNotify,
+  INDEX_DrvSynchronizeSurface,
+  INDEX_DrvResetDevice,
+  INDEX_DrvReserved9,
+  INDEX_DrvReserved10,
+  INDEX_DrvReserved11,
+  INDEX_DrvDeriveSurface = 85,
   INDEX_LAST
 };
 
@@ -430,8 +503,7 @@ typedef struct _DRVENABLEDATA
   DRVFN  *pdrvfn;
 } DRVENABLEDATA, *PDRVENABLEDATA;
 
-/* FIXME: replace this with correct def for LDECI4  */
-typedef DWORD  LDECI4;
+typedef LONG  LDECI4;
 
 typedef struct _CIECHROMA
 {
@@ -516,7 +588,7 @@ typedef struct _BRUSHOBJ
 {
   ULONG  iSolidColor;
   PVOID  pvRbrush;
-
+  FLONG  flColorType;
   /*  remainder of fields are for GDI internal use  */
   LOGBRUSH  logbrush;
 } BRUSHOBJ, *PBRUSHOBJ;
@@ -536,6 +608,19 @@ typedef struct _ENUMRECTS
   ULONG  c;
   RECTL  arcl[1];
 } ENUMRECTS, *PENUMRECTS;
+
+typedef struct _BLENDOBJ
+{
+    BLENDFUNCTION BlendFunction;
+}BLENDOBJ,*PBLENDOBJ;
+
+typedef struct
+{
+   DWORD nSize;
+   HDC   hdc;
+   PBYTE pvEMF;
+   PBYTE pvCurrentRecord;
+} EMFINFO, *PEMFINFO;
 
 typedef struct _FONTOBJ
 {
@@ -628,6 +713,7 @@ typedef struct _XLATEOBJ
 
 typedef struct _PALOBJ
 {
+  ULONG   ulReserved;
   PXLATEOBJ logicalToSystem;
   int *mapping;
   PLOGPALETTE logpalette; /* _MUST_ be the last field */
@@ -667,7 +753,7 @@ typedef VOID (CALLBACK * WNDOBJCHANGEPROC)(PWNDOBJ WndObj, ULONG Flags);
 
 typedef struct _XFORMOBJ
 {
-  /* FIXME: what does this beast look like?  */
+    ULONG ulReserved;
 } XFORMOBJ, *PXFORMOBJ;
 
 typedef struct _GLYPHBITS
@@ -682,6 +768,24 @@ typedef union _GLYPHDEF
   GLYPHBITS  *pgb;
   PATHOBJ    *ppo;
 } GLYPHDEF;
+
+typedef struct _POINTQF
+{
+    LARGE_INTEGER x;
+    LARGE_INTEGER y;
+} POINTQF, *PPOINTQF;
+
+typedef struct _GLYPHDATA {
+        GLYPHDEF gdf;
+        HGLYPH   hg;
+        FIX      fxD;
+        FIX      fxA;
+        FIX      fxAB;
+        FIX      fxInkTop;
+        FIX      fxInkBottom;
+        RECTL    rclInk;
+        POINTQF  ptqD;
+} GLYPHDATA, *PGLYPHDATA;
 
 typedef struct _GLYPHPOS
 {
@@ -831,6 +935,7 @@ typedef struct _XFORML
 BOOL STDCALL
 DrvAssertMode(IN DHPDEV PDev,
 	      IN BOOL ShouldEnable);
+
 BOOL STDCALL
 DrvBitBlt(IN PSURFOBJ DestSurface,
 	  IN PSURFOBJ SrcSurface,
@@ -1159,8 +1264,8 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 PPATHOBJ STDCALL
 CLIPOBJ_ppoGetPath(PCLIPOBJ ClipObj);
 
-/* FIXME: find correct defines for following symbols  */
 #define  FL_ZERO_MEMORY  1
+#define  FL_NONPAGED_MEMORY 2
 
 PVOID STDCALL
 EngAllocMem(ULONG Flags,
@@ -1190,7 +1295,6 @@ EngBitBlt(SURFOBJ *Dest,
 	  ROP4 rop4);
 
 /*
-EngCheckAbort
 EngComputeGlyphSet
 */
 
@@ -1284,10 +1388,6 @@ EngDeleteEvent
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette);
 
-/*
-EngDeletePath
-*/
-
 BOOL STDCALL
 EngDeleteSurface(IN HSURF Surface);
 
@@ -1314,7 +1414,6 @@ EngEraseSurface(SURFOBJ *Surface,
 		ULONG iColor);
 
 /*
-EngFillPath
 EngFindImageProcAddress
 EngFindResource
 */
@@ -1334,14 +1433,12 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 		      OUT PUSHORT AnsiCodePage);
 
 /*
-EngGetDriverName
 EngGetFileChangeTime
 EngGetFilePath
 EngGetForm
 EngGetLastError
 EngGetPrinter
 EngGetPrinterData
-EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
 */
@@ -1361,7 +1458,6 @@ HANDLE STDCALL
 EngLoadImage(LPWSTR DriverName);
 
 /*
-EngLoadModule
 EngLoadModuleForWrite
 EngLockDriverObj
 */
@@ -1373,7 +1469,6 @@ EngLockSurface(IN HSURF Surface);
 EngMapEvent
 EngMapFontFile
 EngMapModule
-EngMarkBandingSurface
 EngMovePointer
 */
 
@@ -1388,10 +1483,6 @@ EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
 		       OUT PULONG BytesInUnicodeString,
 		       IN PCHAR MultiByteString,
 		       IN ULONG BytesInMultiByteString);
-
-/*
-EngMultiByteToWideChar
-*/
 
 BOOL STDCALL
 EngPaint(IN SURFOBJ *Surface,
@@ -1423,7 +1514,6 @@ void STDCALL
 EngSort(IN OUT PBYTE Buf, IN ULONG ElemSize, IN ULONG ElemCount, IN SORTCOMP CompFunc);
 
 /*
-EngStretchBlt
 EngStrokeAndFillPath
 EngStrokePath
 EngTextOut
@@ -1449,7 +1539,6 @@ EngUnicodeToMultiByteN(OUT PCHAR MultiByteString,
 /*
 EngUnloadImage
 EngUnlockDriverObj
-EngUnlockSurface
 EngUnmapEvent
 EngUnmapFontFile
 EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
@@ -1500,7 +1589,7 @@ FONTOBJ_cGetGlyphs(IN PFONTOBJ FontObj,
 
 PGAMMA_TABLES
 STDCALL
-FONTOBJ_pGetGammaTables(IN PFONTOBJ  FontObj);
+FONTOBJ_pGetGammaTables(IN PFONTOBJ FontObj);
 
 IFIMETRICS*
 STDCALL
@@ -1535,14 +1624,12 @@ PALOBJ_cGetColors(PALOBJ *PalObj,
 
 /*
 PATHOBJ_bCloseFigure
-PATHOBJ_bEnum
 PATHOBJ_bEnumClipLines
 PATHOBJ_bMoveTo
 PATHOBJ_bPolyBezierTo
 PATHOBJ_bPolyLineTo
 PATHOBJ_vEnumStart
 PATHOBJ_vEnumStartClipLines
-PATHOBJ_vGetBounds
 RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
 RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
 RtlRaiseException = NTOSKRNL.RtlRaiseException
@@ -1575,5 +1662,85 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 ULONG * STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj);
 
-#endif
+HANDLE STDCALL
+BRUSHOBJ_hGetColorTransform(BRUSHOBJ *pbo);
+ULONG STDCALL
+BRUSHOBJ_ulGetBrushColor(BRUSHOBJ *pbo);
+BOOL STDCALL 
+EngAlphaBlend(SURFOBJ *psoDest,SURFOBJ *psoSrc,CLIPOBJ *pco,XLATEOBJ *pxlo,RECTL *prclDest,RECTL *prclSrc,BLENDOBJ *pBlendObj);
+BOOL STDCALL
+EngCheckAbort(SURFOBJ *pso);
+FD_GLYPHSET* STDCALL
+EngComputeGlyphSet(INT nCodePage,INT nFirstChar,INT cChars);
+VOID STDCALL
+EngDeletePath(PATHOBJ *ppo);
+BOOL STDCALL
+EngFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,MIX mix,FLONG flOptions);
+PVOID STDCALL
+EngFindResource(HANDLE h,int iName,int iType,PULONG pulSize);
+VOID STDCALL 
+EngFreeModule(HANDLE h);
+LPWSTR STDCALL
+EngGetDriverName(HDEV hdev);
+LPWSTR STDCALL
+EngGetPrinterDataFileName(HDEV hdev);
+BOOL STDCALL 
+EngGradientFill(SURFOBJ *psoDest,CLIPOBJ *pco,XLATEOBJ *pxlo,TRIVERTEX *pVertex,ULONG nVertex,PVOID pMesh,ULONG nMesh,RECTL *prclExtents,POINTL *pptlDitherOrg,ULONG ulMode);
+HANDLE STDCALL 
+EngLoadModule(LPWSTR pwsz);
+BOOL STDCALL 
+EngMarkBandingSurface(HSURF hsurf);
+INT STDCALL 
+EngMultiByteToWideChar(UINT CodePage,LPWSTR WideCharString,INT BytesInWideCharString,LPSTR MultiByteString,INT BytesInMultiByteString);
+BOOL STDCALL 
+EngPlgBlt(SURFOBJ *psoTrg,SURFOBJ *psoSrc,SURFOBJ *psoMsk,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlBrushOrg,POINTFIX *pptfx,RECTL *prcl,POINTL *pptl,ULONG iMode);
+BOOL STDCALL
+EngQueryEMFInfo(HDEV hdev,EMFINFO *pEMFInfo);
+VOID STDCALL 
+EngQueryLocalTime(PENG_TIME_FIELDS etf);
+BOOL STDCALL 
+EngStretchBlt(SURFOBJ *psoDest,SURFOBJ *psoSrc,SURFOBJ *psoMask,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlHTOrg,RECTL *prclDest,RECTL *prclSrc,POINTL *pptlMask,ULONG iMode);
+BOOL STDCALL 
+EngStretchBltROP(SURFOBJ *psoDest,SURFOBJ *psoSrc,SURFOBJ *psoMask,CLIPOBJ *pco,XLATEOBJ *pxlo,COLORADJUSTMENT *pca,POINTL *pptlHTOrg,RECTL *prclDest,RECTL *prclSrc,POINTL *pptlMask,ULONG iMode,BRUSHOBJ *pbo,DWORD rop4);
+BOOL STDCALL 
+EngStrokeAndFillPath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,XFORMOBJ *pxo,BRUSHOBJ *pboStroke,LINEATTRS *plineattrs,BRUSHOBJ *pboFill,POINTL *pptlBrushOrg,MIX mixFill,FLONG flOptions);
+BOOL STDCALL
+EngStrokePath(SURFOBJ *pso,PATHOBJ *ppo,CLIPOBJ *pco,XFORMOBJ *pxo,BRUSHOBJ *pbo,POINTL *pptlBrushOrg,LINEATTRS *plineattrs,MIX mix);
+BOOL STDCALL 
+EngTextOut(SURFOBJ *pso,STROBJ *pstro,FONTOBJ *pfo,CLIPOBJ *pco,RECTL *prclExtra,RECTL *prclOpaque,BRUSHOBJ *pboFore,BRUSHOBJ *pboOpaque,POINTL *pptlOrg,MIX mix);
+VOID STDCALL 
+EngUnlockSurface(SURFOBJ *pso);
+INT STDCALL 
+EngWideCharToMultiByte(UINT CodePage,LPWSTR WideCharString,INT BytesInWideCharString,LPSTR MultiByteString,INT BytesInMultiByteString);
+PFD_GLYPHATTR STDCALL
+FONTOBJ_pQueryGlyphAttrs(FONTOBJ *pfo,ULONG iMode);
+VOID STDCALL
+PATHOBJ_vGetBounds(PATHOBJ *ppo,PRECTFX prectfx);
+FD_GLYPHSET *STDCALL
+FONTOBJ_pfdg(FONTOBJ *pfo);
+BOOL STDCALL
+PATHOBJ_bEnum(PATHOBJ *ppo,PATHDATA *ppd);
+BOOL STDCALL 
+PATHOBJ_bEnumClipLines(PATHOBJ *ppo,ULONG cb,CLIPLINE *pcl);
+VOID STDCALL 
+PATHOBJ_vEnumStart(PATHOBJ *ppo);
+VOID STDCALL
+PATHOBJ_vEnumStartClipLines(PATHOBJ *ppo,CLIPOBJ *pco,SURFOBJ *pso,LINEATTRS *pla);
+BOOL STDCALL
+STROBJ_bEnum(STROBJ *pstro,ULONG *pc,PGLYPHPOS *ppgpos);
+BOOL STDCALL
+STROBJ_bEnumPositionsOnly(STROBJ *pstro,ULONG *pc,PGLYPHPOS *ppgpos);
+BOOL STDCALL
+STROBJ_bGetAdvanceWidths(STROBJ *pso,ULONG iFirst,ULONG c,POINTQF *pptqD);
+DWORD STDCALL
+STROBJ_dwGetCodePage(STROBJ  *pstro);
+VOID STDCALL
+STROBJ_vEnumStart(STROBJ *pstro);
+ULONG STDCALL
+XFORMOBJ_iGetXform(XFORMOBJ *pxo,XFORML *pxform);
+BOOL STDCALL
+XFORMOBJ_bApplyXform(XFORMOBJ *pxo,ULONG iMode,ULONG cPoints,PVOID pvIn,PVOID pvOut);
+HANDLE STDCALL
+XLATEOBJ_hGetColorTransform(XLATEOBJ *pxlo);
 
+#endif

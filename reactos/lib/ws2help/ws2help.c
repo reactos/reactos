@@ -74,7 +74,7 @@ WahCloseHandleHelper(
 
 INT
 EXPORT
-WahCloseNotificationHelper(
+WahCloseNotificationHandleHelper(
     IN  PVOID HelperDllSocketContext,
     IN  SOCKET SocketHandle
     )

@@ -321,6 +321,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define GlobalFindAtom  GlobalFindAtomW
 #define GlobalGetAtomName  GlobalGetAtomNameW
 #define AddAtom  AddAtomW
+#define RemoveFontResourceEx RemoveFontResourceExW
 #define FindAtom  FindAtomW
 #define GetAtomName  GetAtomNameW
 #define GetProfileInt  GetProfileIntW
@@ -363,6 +364,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define MoveFile  MoveFileW
 #define MoveFileEx  MoveFileExW
 #define MoveFileWithProgress  MoveFileWithProgressW
+#define CreateFontIndirectEx CreateFontIndirectExW
 #define CreateNamedPipe  CreateNamedPipeW
 #define GetNamedPipeHandleState  GetNamedPipeHandleStateW
 #define CallNamedPipe  CallNamedPipeW
@@ -399,6 +401,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define VerFindFile  VerFindFileW
 #define VerInstallFile  VerInstallFileW
 #define GetFileVersionInfoSize  GetFileVersionInfoSizeW
+#define GetStringBitmap GetStringBitmapW
+#define GetGlyphIndices GetGlyphIndicesW
 #define GetFileVersionInfo  GetFileVersionInfoW
 #define VerLanguageName  VerLanguageNameW
 #define VerQueryValue  VerQueryValueW
@@ -599,6 +603,8 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define PageSetupDlg  PageSetupDlgA
 #define DefWindowProc  DefWindowProcA
 #define CallWindowProc  CallWindowProcA
+#define GetGlyphIndices GetGlyphIndicesA
+#define CreateFontIndirectEx CreateFontIndirectExA
 #define RegisterClass  RegisterClassA
 #define UnregisterClass  UnregisterClassA
 #define GetClassInfo  GetClassInfoA
@@ -698,6 +704,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define lstrcat  lstrcatA
 #define lstrlen  lstrlenA
 #define GetBinaryType  GetBinaryTypeA
+#define GetStringBitmap GetStringBitmapA
 #define GetShortPathName  GetShortPathNameA
 #define SetFileSecurity  SetFileSecurityA
 #define GetFileSecurity  GetFileSecurityA
@@ -714,6 +721,7 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #define ReportEvent  ReportEventA
 #define CreateProcess  CreateProcessA
 #define FatalAppExit  FatalAppExitA
+#define RemoveFontResourceEx RemoveFontResourceExA
 #define GetStartupInfo  GetStartupInfoA
 #define GetCommandLine  GetCommandLineA
 #define GetEnvironmentVariable  GetEnvironmentVariableA
@@ -890,8 +898,513 @@ typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
 #endif /* UNICODE and ASCII defines */
 #endif /* _DISABLE_TIDENTS */
 
+HANDLE 
+STDCALL 
+AddFontMemResourceEx(
+	PVOID pbFont,
+	DWORD cbFont,
+	PVOID pdv,
+	DWORD *pcFonts
+);
+
+int 
+STDCALL 
+AddFontResourceTracking(
+	LPCSTR lpString,
+	int unknown
+);
+
+WINBOOL 
+STDCALL 
+AnyLinkedFonts(VOID);
+
+HBITMAP 
+STDCALL
+ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags);
+
+HBRUSH 
+STDCALL
+ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags);
+
+WINBOOL 
+STDCALL
+ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEntries);
+
+WINBOOL 
+STDCALL
+EnableEUDC(WINBOOL enable);
+
+int
+STDCALL
+EndFormPage(HDC hdc);
+
+WINBOOL
+STDCALL
+EudcLoadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath,INT iPriority,INT iFontLinkType);
+
+WINBOOL 
+STDCALL
+EudcUnloadLinkW(LPCWSTR pBaseFaceName,LPCWSTR pEudcFontPath);
+
+WINBOOL 
+STDCALL
+FontIsLinked(HDC hdc);
+
+int 
+STDCALL
+GdiAddFontResourceW(LPCWSTR filename,FLONG f,DESIGNVECTOR *pdv);
+
+DWORD 
+STDCALL
+GdiAddGlsBounds(HDC hdc,LPRECT prc);
+
+WINBOOL 
+STDCALL
+GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LONG SrcX,LONG SrcY,LONG SrcCx,LONG SrcCy,BLENDFUNCTION BlendFunction);
+
+WINBOOL 
+STDCALL
+GdiArtificialDecrementDriver(LPWSTR pDriverName,WINBOOL unknown);
+
+WINBOOL
+STDCALL
+GdiCleanCacheDC(HDC hdc);
+
+WINBOOL 
+STDCALL
+GdiConsoleTextOut(HDC hdc, POLYTEXTW *lpto,UINT nStrings, RECTL *prclBounds);
+
+HDC
+STDCALL
+GdiConvertAndCheckDC(HDC hdc);
+
+HBITMAP 
+STDCALL
+GdiConvertBitmap(HBITMAP hbm);
+
+HBRUSH
+STDCALL
+GdiConvertBrush(HBRUSH hbr);
+
+HDC 
+STDCALL
+GdiConvertDC(HDC hdc);
+
+HFONT 
+STDCALL
+GdiConvertFont(HFONT hfont);
+
+HPALETTE 
+STDCALL
+GdiConvertPalette(HPALETTE hpal);
+
+HRGN
+STDCALL
+GdiConvertRegion(HRGN hregion);
+
+HENHMETAFILE 
+STDCALL
+GdiConvertEnhMetaFile(HENHMETAFILE hmf);
+
+WINBOOL
+STDCALL
+GdiDeleteLocalDC(HDC hdc);
+
+int 
+STDCALL
+GdiDescribePixelFormat(HDC hdc,int ipfd,UINT cjpfd,PPIXELFORMATDESCRIPTOR ppfd);
+
+WINBOOL
+STDCALL
+GdiDrawStream(HDC dc, ULONG l, VOID *v);
+
+HGDIOBJ
+STDCALL
+GdiFixUpHandle(HGDIOBJ hobj);
+
+NTSTATUS
+STDCALL
+GdiFullscreenControl(FULLSCREENCONTROL FullscreenCommand, PVOID FullscreenInput,
+					DWORD FullscreenInputLength, PVOID FullscreenOutput,
+					PULONG FullscreenOutputLength);
+
+DWORD 
+STDCALL
+GdiGetCodePage(HDC hdc);
+
+HBRUSH 
+STDCALL
+GdiGetLocalBrush(HBRUSH hbr);
+
+HDC 
+STDCALL
+GdiGetLocalDC(HDC hdc);
+
+HFONT 
+STDCALL
+GdiGetLocalFont(HFONT hfont);
+
+WINBOOL
+STDCALL
+GdiGradientFill(HDC hdc,PTRIVERTEX pVertex,ULONG uVertex,PVOID pMesh,ULONG uMesh,ULONG ulMode);
+
+WINBOOL
+STDCALL
+GdiIsMetaFileDC(HDC hdc);
+
+WINBOOL
+STDCALL
+GdiIsMetaPrintDC(HDC hdc);
+
+WINBOOL
+STDCALL
+GdiIsPlayMetafileDC(HDC hdc);
+
+INT 
+STDCALL
+GdiQueryFonts(PUNIVERSAL_FONT_ID pufiFontList,ULONG nBufferSize,PLARGE_INTEGER pTimeStamp );
+
+WINBOOL 
+STDCALL
+GdiRealizationInfo(HDC hdc, PREALIZATION_INFO pri);
+
+WINBOOL
+STDCALL
+GdiReleaseDC(HDC hdc);
+
+WINBOOL
+STDCALL
+GdiReleaseLocalDC(HDC hdc);
+
+WINBOOL
+STDCALL
+GdiSetAttrs(HDC hdc);
+
+VOID
+STDCALL
+GdiSetLastError(DWORD dwErrCode);
+
+WINBOOL
+STDCALL
+GdiSetPixelFormat(HDC hdc,int ipfd);
+
+WINBOOL
+STDCALL
+GdiTransparentBlt(HDC hdcDst, int xDst, int yDst, int cxDst, int cyDst,HDC hdcSrc, int xSrc, int ySrc, int cxSrc, int cySrc,COLORREF TransColor);
+
+WINBOOL
+STDCALL
+GdiValidateHandle(HGDIOBJ hobj);
+
+WINBOOL
+STDCALL
+GdiSwapBuffers(HDC hdc);
+
+VOID 
+STDCALL
+GdiSetServerAttr(HDC hdc,DWORD attr);
+
+DWORD 
+STDCALL
+GetBitmapAttributes(HBITMAP hbm);
+
+DWORD 
+STDCALL
+GetBrushAttributes(HBRUSH hbr);
+
+WINBOOL 
+STDCALL
+GetCharABCWidthsI(
+	HDC hdc,
+	UINT giFirst,
+	UINT cgi,
+	LPWORD pgi,
+	LPABC lpabc
+);
+
+WINBOOL 
+STDCALL
+GetCharWidthI(
+	HDC hdc,
+	UINT giFirst,
+	UINT cgi,
+	LPWORD pgi,
+	LPINT lpBuffer
+);
+
+WINBOOL 
+STDCALL
+GetCharWidthInfo(HDC hdc,PCHWIDTHINFO pChWidthInfo);
+
+COLORREF 
+STDCALL
+GetDCBrushColor(
+	HDC hdc
+);
+
+COLORREF 
+STDCALL
+GetDCPenColor(
+	HDC hdc
+);
+
+DWORD 
+STDCALL
+GetFontUnicodeRanges(
+	HDC hdc,
+	LPGLYPHSET lpgs
+);
+
+WINBOOL 
+STDCALL
+GetETM(HDC hdc,EXTTEXTMETRIC *petm);
+
+ULONG 
+STDCALL
+GetEUDCTimeStamp(VOID);
+
+DWORD 
+STDCALL
+GetEUDCTimeStampExW(LPCWSTR str);
+
+ULONG 
+STDCALL
+GetFontAssocStatus(HDC hdc);
+
+HFONT 
+STDCALL
+GetHFONT(HDC dc);
+
+DWORD 
+STDCALL
+GetLayout(
+	HDC hdc
+);
+
+WINBOOL
+STDCALL
+GetTextExtentExPointWPri(HDC hdc,LPWSTR lpwsz,ULONG cwc,ULONG dxMax,ULONG *pcCh,PULONG pdxOut,LPSIZE psize);
+
+WINBOOL 
+STDCALL
+GetTextExtentPointI(
+	HDC hdc,
+	LPWORD pgiIn,
+	int cgi,
+	LPSIZE lpSize
+);
+
+int 
+STDCALL
+GetTextFaceAliasW(HDC hdc,int cChar,LPWSTR pszOut);
+
+WINBOOL 
+STDCALL
+GetTransform(HDC hdc, DWORD iXform, LPXFORM pxf);
+
+LONG 
+STDCALL
+HT_Get8BPPFormatPalette(LPPALETTEENTRY pPaletteEntry, USHORT RedGamma,USHORT GreenGamma, USHORT BlueGamma);
+
+LONG 
+STDCALL
+HT_Get8BPPMaskPalette(LPPALETTEENTRY pPaletteEntry, WINBOOL Use8BPPMaskPal,BYTE CMYMask, USHORT RedGamma, USHORT GreenGamma, USHORT BlueGamma);
+
+WINBOOL 
+STDCALL
+MirrorRgn(HWND hwnd,HRGN hrgn);
+
+int 
+STDCALL
+NamedEscape(HDC hdc,PWCHAR pDriver,int nDriver,int iEsc,int cjIn,LPSTR pjIn,int cjOut,LPSTR pjOut);
+
+DWORD 
+STDCALL
+QueryFontAssocStatus(VOID);
+
+WINBOOL 
+STDCALL
+RemoveFontMemResourceEx(
+	HANDLE fh
+);
+
+int 
+STDCALL
+RemoveFontResourceTracking(LPCSTR lpString,int unknown);
+
+WINBOOL 
+STDCALL
+GetTextExtentExPointI(
+	HDC hdc,
+	LPWORD pgiIn,
+	int cgi,
+	int nMaxExtent,
+	LPINT lpnFit,
+	LPINT alpDx,
+	LPSIZE lpSize
+);
+
+HBITMAP 
+STDCALL
+SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags);
+
+HBRUSH 
+STDCALL
+SetBrushAttributes(HBRUSH hbm, DWORD dwFlags);
+
+COLORREF 
+STDCALL
+SetDCBrushColor(
+	HDC hdc,
+	COLORREF crColor
+);
+
+COLORREF 
+STDCALL
+SetDCPenColor(
+	HDC hdc,
+	COLORREF crColor
+);
+
+DWORD 
+STDCALL
+SetLayout(
+	HDC hdc,
+	DWORD dwLayout
+);
+
+DWORD 
+STDCALL
+SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout);
+
+WINBOOL 
+STDCALL
+SetMagicColors(HDC hdc,PALETTEENTRY peMagic,ULONG Index);
+
+WINBOOL
+STDCALL
+SetVirtualResolution(HDC hdc, int cxVirtualDevicePixel,int cyVirtualDevicePixel,int cxVirtualDeviceMm, int cyVirtualDeviceMm);
+
+int 
+STDCALL
+StartFormPage(HDC hdc);
+
+VOID 
+STDCALL
+UnloadNetworkFonts(DWORD unknown);
+
+WINBOOL 
+STDCALL
+bInitSystemAndFontsDirectoriesW(LPWSTR *SystemDir,LPWSTR *FontsDir);
+
+WINBOOL 
+STDCALL
+bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unknown);
+
+WINBOOL
+STDCALL
+GdiAddGlsRecord(HDC hdc,DWORD unknown1,LPCSTR unknown2,LPRECT unknown3);
+
+HANDLE
+STDCALL
+GdiConvertMetaFilePict(HGLOBAL hMem);
+
+DEVMODEW *
+STDCALL
+GdiConvertToDevmodeW(DEVMODEA *dm);
+
+HENHMETAFILE
+STDCALL
+GdiCreateLocalEnhMetaFile(HENHMETAFILE hmo);
+
+METAFILEPICT *
+STDCALL
+GdiCreateLocalMetaFilePict(HENHMETAFILE hmo);
+
 DWORD
-WINAPI
+STDCALL
+GdiGetCharDimensions(HDC hdc,LPTEXTMETRICW lptm,BOOL unk);
+
+PSHAREDHANDLETABLE
+STDCALL
+GdiQueryTable(VOID);
+
+HANDLE 
+STDCALL
+GdiGetSpoolFileHandle(
+	LPWSTR		pwszPrinterName,
+	LPDEVMODEW	pDevmode,
+	LPWSTR		pwszDocName);
+
+WINBOOL
+STDCALL
+GdiDeleteSpoolFileHandle(
+	HANDLE	SpoolFileHandle);
+
+DWORD 
+STDCALL
+GdiGetPageCount(
+	HANDLE	SpoolFileHandle);
+
+HDC
+STDCALL
+GdiGetDC(
+	HANDLE	SpoolFileHandle);
+
+HANDLE 
+STDCALL
+GdiGetPageHandle(
+	HANDLE	SpoolFileHandle,
+	DWORD	Page,
+	LPDWORD	pdwPageType);
+
+WINBOOL
+STDCALL
+GdiStartDocEMF(
+	HANDLE		SpoolFileHandle,
+	DOCINFOW	*pDocInfo);
+
+WINBOOL
+STDCALL
+GdiStartPageEMF(
+	HANDLE	SpoolFileHandle);
+
+WINBOOL
+STDCALL
+GdiPlayPageEMF(
+	HANDLE	SpoolFileHandle,
+	HANDLE	hemf,
+	RECT	*prectDocument,
+	RECT	*prectBorder,
+	RECT	*prectClip);
+
+WINBOOL
+STDCALL
+GdiEndPageEMF(
+	HANDLE	SpoolFileHandle,
+	DWORD	dwOptimization);
+
+WINBOOL
+STDCALL
+GdiEndDocEMF(
+	HANDLE	SpoolFileHandle);
+
+WINBOOL
+STDCALL
+GdiGetDevmodeForPage(
+	HANDLE		SpoolFileHandle,
+	DWORD		dwPageNumber,
+	PDEVMODEW	*pCurrDM,
+	PDEVMODEW	*pLastDM);
+
+WINBOOL
+STDCALL
+GdiResetDCEMF(
+	HANDLE		SpoolFileHandle,
+	PDEVMODEW	pCurrDM);
+
+DWORD
+STDCALL 
 SetSysColorsTemp(
 		 const COLORREF *pPens,
 		 const HBRUSH *pBrushes,
@@ -7903,7 +8416,7 @@ SHLoadInProc (REFCLSID);
 
 /* Win32 Fibers */
 
-typedef VOID (WINAPI * PFIBER_START_ROUTINE) (IN LPVOID lpFiberArgument);
+typedef VOID (WINAPI * PFIBER_START_ROUTINE) (LPVOID lpFiberArgument);
 typedef PFIBER_START_ROUTINE LPFIBER_START_ROUTINE;
 
 #define FIBER_FLAG_FLOAT_SWITCH (1)

@@ -77,16 +77,16 @@ EngUnmapFontFile ( ULONG_PTR iFile )
 BOOL
 STDCALL
 EngTextOut (
-	IN SURFOBJ  *pso,
-	IN STROBJ   *pstro,
-	IN FONTOBJ  *pfo,
-	IN CLIPOBJ  *pco,
-	IN RECTL    *prclExtra,
-	IN RECTL    *prclOpaque,
-	IN BRUSHOBJ *pboFore,
-	IN BRUSHOBJ *pboOpaque,
-	IN POINTL    pptlOrg,
-	IN MIX       mix
+	SURFOBJ  *pso,
+	STROBJ   *pstro,
+	FONTOBJ  *pfo,
+	CLIPOBJ  *pco,
+	RECTL    *prclExtra,
+	RECTL    *prclOpaque,
+	BRUSHOBJ *pboFore,
+	BRUSHOBJ *pboOpaque,
+	POINTL   *pptlOrg,
+	MIX       mix
 	)
 {
   // www.osr.com/ddk/graphics/gdifncs_4tgn.htm

@@ -485,6 +485,21 @@ typedef struct {
   FONTSIGNATURE fs;
 } CHARSETINFO, *LPCHARSETINFO;
 
+typedef struct tagWCRANGE
+{
+    WCHAR  wcLow;
+    USHORT cGlyphs;
+} WCRANGE, *PWCRANGE,FAR *LPWCRANGE;
+
+typedef struct tagGLYPHSET
+{
+    DWORD    cbThis;
+    DWORD    flAccel;
+    DWORD    cGlyphsSupported;
+    DWORD    cRanges;
+    WCRANGE  ranges[1];
+} GLYPHSET, *PGLYPHSET, FAR *LPGLYPHSET;
+
 typedef struct {
   DWORD        lStructSize;
   HWND         hwndOwner;
@@ -853,6 +868,16 @@ typedef struct _currencyfmtW {
 
 typedef_tident(CURRENCYFMT)
 
+typedef struct _TRIVERTEX
+{
+    LONG    x;
+    LONG    y;
+    COLOR16 Red;
+    COLOR16 Green;
+    COLOR16 Blue;
+    COLOR16 Alpha;
+}TRIVERTEX,*PTRIVERTEX,*LPTRIVERTEX;
+
 typedef struct tagCURSORSHAPE {
   int     xHotSpot;
   int     yHotSpot;
@@ -1183,6 +1208,36 @@ typedef struct {
 } DRAWTEXTPARAMS, *LPDRAWTEXTPARAMS;
 
 
+
+typedef struct _EXTTEXTMETRIC
+    {
+    short   emSize;
+    short   emPointSize;
+    short   emOrientation;
+    short   emMasterHeight;
+    short   emMinScale;
+    short   emMaxScale;
+    short   emMasterUnits;
+    short   emCapHeight;
+    short   emXHeight;
+    short   emLowerCaseAscent;
+    short   emLowerCaseDescent;
+    short   emSlant;
+    short   emSuperScript;
+    short   emSubScript;
+    short   emSuperScriptSize;
+    short   emSubScriptSize;
+    short   emUnderlineOffset;
+    short   emUnderlineWidth;
+    short   emDoubleUpperUnderlineOffset;
+    short   emDoubleLowerUnderlineOffset;
+    short   emDoubleUpperUnderlineWidth;
+    short   emDoubleLowerUnderlineWidth;
+    short   emStrikeOutOffset;
+    short   emStrikeOutWidth;
+    WORD    emKernPairs;
+    WORD    emKernTracks;
+} EXTTEXTMETRIC, *PEXTTEXTMETRIC;
 
 typedef struct _DRIVER_INFO_1A {
   LPSTR  pName;
@@ -2080,6 +2135,28 @@ typedef struct tagENUMLOGFONTEXW {
 
 typedef_tident(ENUMLOGFONTEX)
 typedef_tident(LPENUMLOGFONTEX)
+
+typedef struct tagDESIGNVECTOR
+{
+    DWORD  dvReserved;
+    DWORD  dvNumAxes;
+    LONG   dvValues[MM_MAX_NUMAXES];
+} DESIGNVECTOR, *PDESIGNVECTOR, FAR *LPDESIGNVECTOR;
+
+typedef struct tagENUMLOGFONTEXDVA
+{
+    ENUMLOGFONTEXA elfEnumLogfontEx;
+    DESIGNVECTOR   elfDesignVector;
+} ENUMLOGFONTEXDVA, *PENUMLOGFONTEXDVA, FAR *LPENUMLOGFONTEXDVA;
+typedef struct tagENUMLOGFONTEXDVW
+{
+    ENUMLOGFONTEXW elfEnumLogfontEx;
+    DESIGNVECTOR   elfDesignVector;
+} ENUMLOGFONTEXDVW, *PENUMLOGFONTEXDVW, FAR *LPENUMLOGFONTEXDVW;
+
+typedef_tident(ENUMLOGFONTEXDV)
+typedef_tident(PENUMLOGFONTEXDV)
+typedef_tident(LPENUMLOGFONTEXDV)
 
 typedef struct _EVENTLOGRECORD {
   DWORD  Length;
@@ -5184,7 +5261,7 @@ typedef struct _TTPOLYGONHEADER {
   DWORD   cb;
   DWORD   dwType;
   POINTFX pfxStart;
-} TTPOLYGONHEADER,  * LPTTPOLYGONHEADER;
+} TTPOLYGONHEADER, *PTTPOLYGONHEADER, *LPTTPOLYGONHEADER;
 
 typedef struct _TV_DISPINFOA {
   NMHDR    hdr;

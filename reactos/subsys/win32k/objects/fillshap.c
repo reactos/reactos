@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.28 2003/08/20 20:24:35 royce Exp $ */
+/* $Id: fillshap.c,v 1.29 2003/08/26 12:28:53 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -253,7 +253,32 @@ NtGdiPolyPolygon(HDC            hDC,
                 CONST LPINT    PolyCounts,
                 int            Count)
 {
-  UNIMPLEMENTED;
+  DC *dc;
+  int i;
+  LPPOINT pt;
+  LPINT pc;
+  BOOL ret = FALSE; // default to failure
+
+  dc = DC_LockDc ( hDC );
+  pt = Points;
+  pc = PolyCounts;
+  if ( !dc )
+    SetLastWin32Error(ERROR_INVALID_PARAMETER);
+  else
+  {
+	for (i=0;i<Count;i++)
+	{
+	    ret = IntPolygon ( dc, pt, *pc );
+		if (ret == FALSE)
+		{
+			return ret;
+		}
+		(DWORD)pt+=(DWORD)pc++;
+	}
+    DC_UnlockDc ( hDC );
+  }
+
+  return ret;
 }
 
 BOOL

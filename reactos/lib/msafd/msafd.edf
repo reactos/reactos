@@ -3,8 +3,6 @@
 LIBRARY msafd.dll
 
 EXPORTS
-WSPGetSockOpt=WSPGetSockOpt@24
-WSPSetSockOpt=WSPSetSockOpt@24
 WSPStartup=WSPStartup@76
 
 ; EOF

@@ -150,3 +150,18 @@ PolylineTo(
 {
 	return PolyBezierTo(a0,(CONST PPOINT)a1,a2);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+PolyPolyline(
+	HDC		hdc,
+	CONST POINT	*a1,
+	CONST DWORD	*a2,
+	DWORD		a3
+	)
+{
+	return NtGdiPolyPolyline(hdc,(LPPOINT)a1,(LPDWORD)a2,a3);
+}
