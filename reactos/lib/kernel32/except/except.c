@@ -1,4 +1,4 @@
-/* $Id: except.c,v 1.11 2003/07/10 18:50:51 chorns Exp $
+/* $Id: except.c,v 1.12 2003/08/24 14:49:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -54,7 +54,7 @@ SetUnhandledExceptionFilter(
 {
     LPTOP_LEVEL_EXCEPTION_FILTER OldTopLevelExceptionFilter =
 					 GlobalTopLevelExceptionFilter;
-    lpTopLevelExceptionFilter = GlobalTopLevelExceptionFilter;
+    GlobalTopLevelExceptionFilter = lpTopLevelExceptionFilter;
     return OldTopLevelExceptionFilter;
 }
 
