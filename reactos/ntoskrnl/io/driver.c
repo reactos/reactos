@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.1 2002/06/10 08:47:21 ekohl Exp $
+/* $Id: driver.c,v 1.2 2002/06/10 23:03:33 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -61,13 +61,13 @@ IopInitDriverImplementation(VOID)
 {
   /*  Register the process object type  */
   IoDriverObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'T');
+  IoDriverObjectType->Tag = TAG('D', 'R', 'V', 'R');
   IoDriverObjectType->TotalObjects = 0;
   IoDriverObjectType->TotalHandles = 0;
   IoDriverObjectType->MaxObjects = ULONG_MAX;
   IoDriverObjectType->MaxHandles = ULONG_MAX;
   IoDriverObjectType->PagedPoolCharge = 0;
-  IoDriverObjectType->NonpagedPoolCharge = sizeof(MODULE);
+  IoDriverObjectType->NonpagedPoolCharge = sizeof(DRIVER_OBJECT);
   IoDriverObjectType->Dump = NULL;
   IoDriverObjectType->Open = NULL;
   IoDriverObjectType->Close = NULL;

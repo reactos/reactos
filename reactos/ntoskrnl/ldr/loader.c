@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.106 2002/06/10 08:50:29 ekohl Exp $
+/* $Id: loader.c,v 1.107 2002/06/10 23:04:48 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -176,47 +176,17 @@ LdrInitModuleManagement(VOID)
 {
   PIMAGE_DOS_HEADER DosHeader;
   PMODULE_OBJECT ModuleObject;
-#if 0
-  HANDLE ModuleHandle;
-  NTSTATUS Status;
-  WCHAR NameBuffer[60];
-  UNICODE_STRING ModuleName;
-  OBJECT_ATTRIBUTES ObjectAttributes;
-#endif
 
   /* Initialize the module list and spinlock */
   InitializeListHead(&ModuleListHead);
   KeInitializeSpinLock(&ModuleListLock);
 
   /* Create module object for NTOSKRNL */
-#if 0
-  wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-  wcscat(NameBuffer, KERNEL_MODULE_NAME);
-  RtlInitUnicodeString (&ModuleName, NameBuffer);
-  DPRINT("Kernel's Module name is: %wZ\n", &ModuleName);
-
-  /*  Initialize ObjectAttributes for ModuleObject  */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &ModuleName,
-                             0,
-                             NULL,
-                             NULL);
-
-  /*  Create module object  */
-  ModuleHandle = 0;
-  Status = ObCreateObject(&ModuleHandle,
-                          STANDARD_RIGHTS_REQUIRED,
-                          &ObjectAttributes,
-                          IoDriverObjectType,
-                          (PVOID*)&ModuleObject);
-  assert(NT_SUCCESS(Status));
-#endif
-
   ModuleObject = ExAllocatePool(NonPagedPool, sizeof(MODULE_OBJECT));
   assert(ModuleObject != NULL);
   RtlZeroMemory(ModuleObject, sizeof(MODULE_OBJECT));
 
-  /*  Initialize ModuleObject data  */
+  /* Initialize ModuleObject data */
   ModuleObject->Base = (PVOID) KERNEL_BASE;
   ModuleObject->Flags = MODULE_FLAG_PE;
   RtlCreateUnicodeString(&ModuleObject->FullName,
@@ -242,34 +212,11 @@ LdrInitModuleManagement(VOID)
 		 &ModuleObject->ListEntry);
 
   /* Create module object for HAL */
-#if 0
-  wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-  wcscat(NameBuffer, HAL_MODULE_NAME);
-  RtlInitUnicodeString (&ModuleName, NameBuffer);
-  DPRINT("HAL's Module name is: %wZ\n", &ModuleName);
-
-  /*  Initialize ObjectAttributes for ModuleObject  */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &ModuleName,
-                             0,
-                             NULL,
-                             NULL);
-
-  /*  Create module object  */
-  ModuleHandle = 0;
-  Status = ObCreateObject(&ModuleHandle,
-                          STANDARD_RIGHTS_REQUIRED,
-                          &ObjectAttributes,
-                          IoDriverObjectType,
-                          (PVOID*)&ModuleObject);
-  assert(NT_SUCCESS(Status));
-#endif
-
   ModuleObject = ExAllocatePool(NonPagedPool, sizeof(MODULE_OBJECT));
   assert(ModuleObject != NULL);
   RtlZeroMemory(ModuleObject, sizeof(MODULE_OBJECT));
 
-  /*  Initialize ModuleObject data  */
+  /* Initialize ModuleObject data */
   ModuleObject->Base = (PVOID) LdrHalBase;
   ModuleObject->Flags = MODULE_FLAG_PE;
 
@@ -1044,7 +991,12 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
   PDEVICE_NODE DeviceNode;
   NTSTATUS Status;
 
-  CHAR Buffer [256];
+  WCHAR Buffer[MAX_PATH];
+  ULONG Length;
+  LPWSTR Start;
+  LPWSTR Ext;
+
+  CHAR TextBuffer [256];
   ULONG x, y, cx, cy;
 
 #ifdef KDBG
@@ -1056,14 +1008,14 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
 #endif
 
   HalQueryDisplayParameters(&x, &y, &cx, &cy);
-  RtlFillMemory(Buffer, x, ' ');
-  Buffer[x] = '\0';
+  RtlFillMemory(TextBuffer, x, ' ');
+  TextBuffer[x] = '\0';
   HalSetDisplayParameters(0, y-1);
-  HalDisplayString(Buffer);
+  HalDisplayString(TextBuffer);
 
-  sprintf(Buffer, "Initializing %s...\n", FileName);
+  sprintf(TextBuffer, "Initializing %s...\n", FileName);
   HalSetDisplayParameters(0, y-1);
-  HalDisplayString(Buffer);
+  HalDisplayString(TextBuffer);
   HalSetDisplayParameters(cx, cy);
 
 #ifdef KDBG
@@ -1135,6 +1087,24 @@ LdrInitializeBootStartDriver(PVOID ModuleLoadBase,
       CPRINT("Driver load failed, status (%x)\n", Status);
       return(STATUS_UNSUCCESSFUL);
     }
+
+
+  /* Get the service name from the module name */
+  Start = wcsrchr(ModuleObject->BaseName.Buffer, L'\\');
+  if (Start == NULL)
+    Start = ModuleObject->BaseName.Buffer;
+  else
+    Start++;
+
+  Ext = wcsrchr(ModuleObject->BaseName.Buffer, L'.');
+  if (Ext != NULL)
+    Length = Ext - Start;
+  else
+    Length = wcslen(Start);
+
+  wcsncpy(Buffer, Start, Length);
+  RtlInitUnicodeString(&DeviceNode->ServiceName, Buffer);
+
 
   Status = IopInitializeDriver(ModuleObject->EntryPoint, DeviceNode);
   if (!NT_SUCCESS(Status))
@@ -1392,14 +1362,12 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
   PRELOCATION_DIRECTORY RelocDir;
   PRELOCATION_ENTRY RelocEntry;
   PMODULE_OBJECT  LibraryModuleObject;
-  HANDLE  ModuleHandle;
   PMODULE_OBJECT CreatedModuleObject;
   PVOID *ImportAddressList;
   PULONG FunctionNameList;
   PCHAR pName;
   WORD Hint;
-  OBJECT_ATTRIBUTES  ObjectAttributes;
-  UNICODE_STRING  ModuleName;
+  UNICODE_STRING ModuleName;
   WCHAR  NameBuffer[60];
   MODULE_TEXT_SECTION* ModuleTextSection;
   NTSTATUS Status;
@@ -1654,37 +1622,14 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
         }
     }
 
-  /*  Create ModuleName string  */
-  wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-  if (wcsrchr(FileName->Buffer, '\\') != 0)
+  /* Create the module */
+  CreatedModuleObject = ExAllocatePool(NonPagedPool, sizeof(MODULE_OBJECT));
+  if (CreatedModuleObject == NULL)
     {
-      wcscat(NameBuffer, wcsrchr(FileName->Buffer, '\\') + 1);
+      return(STATUS_INSUFFICIENT_RESOURCES);
     }
-  else
-    {
-      wcscat(NameBuffer, FileName->Buffer);
-    }
-  RtlInitUnicodeString (&ModuleName, NameBuffer);
-  CPRINT("Module name is: %wZ\n", &ModuleName);
 
-  /*  Initialize ObjectAttributes for ModuleObject  */
-  InitializeObjectAttributes(&ObjectAttributes,
-                             &ModuleName,
-                             0,
-                             NULL,
-                             NULL);
-
-  /*  Create module object  */
-  ModuleHandle = 0;
-  Status = ObCreateObject(&ModuleHandle,
-                          STANDARD_RIGHTS_REQUIRED,
-                          &ObjectAttributes,
-                          IoDriverObjectType,
-                          (PVOID*)&CreatedModuleObject);
-   if (!NT_SUCCESS(Status))
-     {
-       return(Status);
-     }
+  RtlZeroMemory(CreatedModuleObject, sizeof(MODULE_OBJECT));
 
    /*  Initialize ModuleObject data  */
    CreatedModuleObject->Base = DriverBase;
@@ -1695,7 +1640,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
    LdrpBuildModuleBaseName(&CreatedModuleObject->BaseName,
 			   &CreatedModuleObject->FullName);
 
-  CreatedModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
+  CreatedModuleObject->EntryPoint = (PVOID)((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
   CreatedModuleObject->Length = DriverSize;
   DPRINT("EntryPoint at %x\n", CreatedModuleObject->EntryPoint);
@@ -1736,13 +1681,13 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 
   *ModuleObject = CreatedModuleObject;
 
-	  DPRINT("Loading Module %wZ...\n", FileName);
+  DPRINT("Loading Module %wZ...\n", FileName);
 
   if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_GDB))
-	  {
-			DbgPrint("Module %wZ loaded at 0x%.08x.\n",
-			  FileName, CreatedModuleObject->Base);
-	  }
+    {
+      DbgPrint("Module %wZ loaded at 0x%.08x.\n",
+	       FileName, CreatedModuleObject->Base);
+    }
 
   return STATUS_SUCCESS;
 }
@@ -2050,15 +1995,15 @@ LdrPEGetExportAddress(PMODULE_OBJECT ModuleObject,
         FunctionList[Hint - ExportDir->Base]);
     }
 
-   if (ExportAddress == 0)
-     {
-	CPRINT("Export not found for %d:%s\n",
-		 Hint,
-		 Name != NULL ? Name : "(Ordinal)");
-	KeBugCheck(0);
-     }
+  if (ExportAddress == 0)
+    {
+      CPRINT("Export not found for %d:%s\n",
+	     Hint,
+	     Name != NULL ? Name : "(Ordinal)");
+      KeBugCheck(0);
+    }
 
-   return ExportAddress;
+  return(ExportAddress);
 }
 
 
@@ -2114,10 +2059,10 @@ LdrSafePEGetExportAddress(PVOID ImportModuleBase,
 
   if (ExportAddress == 0)
     {
-	    ps("Export not found for %d:%s\n",
-		  Hint,
-		  Name != NULL ? Name : "(Ordinal)");
-		  for (;;);
+      ps("Export not found for %d:%s\n",
+	 Hint,
+	 Name != NULL ? Name : "(Ordinal)");
+      KeBugCheck(0);
     }
   return ExportAddress;
 }

@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.42 2002/06/10 08:47:20 ekohl Exp $
+/* $Id: device.c,v 1.43 2002/06/10 23:03:33 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -228,30 +228,67 @@ IopDefaultDispatchFunction(PDEVICE_OBJECT DeviceObject,
   return(STATUS_NOT_IMPLEMENTED);
 }
 
+
 NTSTATUS
-IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
+IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
+		      PUNICODE_STRING ServiceName,
+		      BOOLEAN FileSystem)
 {
   PDRIVER_OBJECT Object;
+  HANDLE DriverHandle = 0;
   ULONG i;
+  WCHAR NameBuffer[MAX_PATH];
+  UNICODE_STRING DriverName;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  NTSTATUS Status;
 
-  Object = ExAllocatePoolWithTag(NonPagedPool,
-       sizeof(DRIVER_OBJECT),
-       TAG_DRIVER);
-  if (Object == NULL)
+  DPRINT1("IopCreateDriverObject(%p '%wZ' %x)\n", DriverObject, ServiceName, FileSystem);
+
+  *DriverObject = NULL;
+
+  /*  Create ModuleName string  */
+  if (ServiceName != NULL)
     {
-	return STATUS_INSUFFICIENT_RESOURCES;
+      if (FileSystem)
+	wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
+      else
+	wcscpy(NameBuffer, DRIVER_ROOT_NAME);
+      wcscat(NameBuffer, ServiceName->Buffer);
+
+      RtlInitUnicodeString(&DriverName,
+			   NameBuffer);
+      DPRINT1("Driver name: '%wZ'\n", &DriverName);
     }
 
-  RtlZeroMemory(Object, sizeof(DRIVER_OBJECT));
+  /*  Initialize ObjectAttributes for ModuleObject  */
+  InitializeObjectAttributes(&ObjectAttributes,
+			     (ServiceName != NULL)? &DriverName : NULL,
+			     OBJ_PERMANENT,
+			     NULL,
+			     NULL);
 
+  /*  Create module object  */
+  Status = ObCreateObject(&DriverHandle,
+                          STANDARD_RIGHTS_REQUIRED,
+                          &ObjectAttributes,
+                          IoDriverObjectType,
+                          (PVOID*)&Object);
+  if (!NT_SUCCESS(Status))
+    {
+      return(Status);
+    }
+
+  NtClose(DriverHandle);
+
+  /* Create driver extension */
   Object->DriverExtension = (PDRIVER_EXTENSION)
     ExAllocatePoolWithTag(NonPagedPool,
        sizeof(DRIVER_EXTENSION),
        TAG_DRIVER_EXTENSION);
   if (Object->DriverExtension == NULL)
     {
-  ExFreePool(Object);
-	return STATUS_INSUFFICIENT_RESOURCES;
+      ExFreePool(Object);
+      return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
   RtlZeroMemory(Object->DriverExtension, sizeof(DRIVER_EXTENSION));
@@ -260,7 +297,7 @@ IopCreateDriverObject(PDRIVER_OBJECT *DriverObject)
 
   for (i=0; i<=IRP_MJ_MAXIMUM_FUNCTION; i++)
     {
-  Object->MajorFunction[i] = (PDRIVER_DISPATCH) IopDefaultDispatchFunction;
+       Object->MajorFunction[i] = (PDRIVER_DISPATCH) IopDefaultDispatchFunction;
     }
 
   *DriverObject = Object;
@@ -465,7 +502,7 @@ IopInitializeDriver(PDRIVER_INITIALIZE DriverEntry,
   DPRINT("IopInitializeDriver(DriverEntry %08lx, DeviceNode %08lx)\n",
     DriverEntry, DeviceNode);
 
-  Status = IopCreateDriverObject(&DriverObject);
+  Status = IopCreateDriverObject(&DriverObject, &DeviceNode->ServiceName, FALSE);
   if (!NT_SUCCESS(Status))
     {
       return(Status);

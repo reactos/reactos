@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.20 2002/06/10 08:46:06 ekohl Exp $
+/* $Id: io.h,v 1.21 2002/06/10 23:02:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -250,9 +250,10 @@ IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
                           BOOLEAN BootDriversOnly);
 VOID
 IopLoadBootStartDrivers(VOID);
-
 NTSTATUS
-IopCreateDriverObject(PDRIVER_OBJECT *DriverObject);
+IopCreateDriverObject(PDRIVER_OBJECT *DriverObject,
+		      PUNICODE_STRING ServiceName,
+		      BOOLEAN FileSystem);
 NTSTATUS
 IopInitializeDeviceNodeService(PDEVICE_NODE DeviceNode);
 NTSTATUS
