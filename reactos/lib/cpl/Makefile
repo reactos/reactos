@@ -6,7 +6,7 @@ PATH_TO_TOP = ../..
 
 include $(PATH_TO_TOP)/rules.mak
 
-CONTROL_PANELS = 
+CONTROL_PANELS = sysdm
 
 all: $(CONTROL_PANELS)
 
