@@ -509,6 +509,21 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 	ExceptionNr = 12;
      }
 
+   if (ExceptionNr == 15)
+     {
+       /* 
+        * FIXME:
+        *   This exception should never occur. The P6 has a bug, which does sometimes deliver 
+        *   the apic spurious interrupt as exception 15. On an athlon64, I get one exception
+        *   in the early boot phase in apic mode (using the smp build). I've looked to the linux
+        *   sources. Linux does ignore this exception.
+        *
+        *   Hartmut Birr
+        */
+       DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
+       return(0);
+     }
+
    /*
     * Maybe handle the page fault and return
     */
