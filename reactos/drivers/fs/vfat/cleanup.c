@@ -1,4 +1,4 @@
-/* $Id: cleanup.c,v 1.8 2002/12/15 17:01:51 chorns Exp $
+/* $Id: cleanup.c,v 1.9 2003/01/11 15:52:54 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -38,15 +38,6 @@ VfatCleanupFile(PDEVICE_EXTENSION DeviceExt,
       return  STATUS_SUCCESS;
     }
   pFcb = pCcb->pFcb;
-
-  if (FileObject->FileName.Buffer)
-    {
-      if (pFcb->Flags & FCB_UPDATE_DIRENTRY)
-	{
-	  VfatUpdateEntry (DeviceExt, FileObject);
-	  pFcb->Flags &= ~FCB_UPDATE_DIRENTRY;
-	}
-    }
 
   /* Uninitialize file cache if initialized for this file object. */
   if (pFcb->RFCB.Bcb != NULL)
