@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.19 2001/03/13 16:25:52 dwelch Exp $
+/* $Id: view.c,v 1.20 2001/03/13 17:47:47 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,6 +259,10 @@ CcInitializeFileCache(PFILE_OBJECT FileObject,
 	return(STATUS_UNSUCCESSFUL);
      }
    
+   ObReferenceObjectByPointer(FileObject,
+			      FILE_ALL_ACCESS,
+			      NULL,
+			      KernelMode);
    (*Bcb)->FileObject = FileObject;
    InitializeListHead(&(*Bcb)->CacheSegmentListHead);
    KeInitializeSpinLock(&(*Bcb)->BcbLock);

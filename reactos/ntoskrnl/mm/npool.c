@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.37 2001/03/09 14:40:28 dwelch Exp $
+/* $Id: npool.c,v 1.38 2001/03/13 17:47:47 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -744,7 +744,14 @@ VOID STDCALL ExFreePool (PVOID block)
    
    if (blk->magic != BLOCK_HDR_USED_MAGIC)
      {
-	DbgPrint("ExFreePool of non-allocated address %x\n",block);
+       if (blk->magic == BLOCK_HDR_FREE_MAGIC)
+	 {
+	   DbgPrint("ExFreePool of already freed address %x\n", block);
+	 }
+       else
+	 {
+	   DbgPrint("ExFreePool of non-allocated address %x\n", block);
+	 }
 	KeBugCheck(0);
 	return;
      }
