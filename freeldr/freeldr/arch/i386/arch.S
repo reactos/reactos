@@ -62,7 +62,8 @@ EXTERN(RealEntryPoint)
 	/* We should never get here */
 stop:
 	jmp		stop
-
+	nop
+	nop
 
 /*
  * Switches the processor to protected mode
