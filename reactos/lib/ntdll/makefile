@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.102 2004/05/31 19:33:12 gdalsnes Exp $
+# $Id: makefile,v 1.103 2004/06/20 23:22:06 gdalsnes Exp $
 
 PATH_TO_TOP = ../..
 
@@ -70,10 +70,8 @@ RTL_OBJECTS = \
 	rtl/callback.o \
 	rtl/crc32.o \
 	rtl/critical.o \
-	rtl/encode.o \
 	rtl/exception.o \
 	rtl/handle.o \
-	rtl/image.o \
 	rtl/intrlck.o \
 	rtl/math.o \
 	rtl/message.o \
@@ -85,7 +83,6 @@ RTL_OBJECTS = \
 	rtl/rangelist.o \
 	rtl/registry.o \
 	rtl/resource.o \
-	rtl/splaytree.o \
 	rtl/teb.o \
 	rtl/thread.o \
 	rtl/libsupp.o
