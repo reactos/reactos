@@ -9,6 +9,9 @@
 #ifndef TLS_MINIMUM_AVAILABLE
 #define TLS_MINIMUM_AVAILABLE 	(64)
 #endif
+#ifndef TLS_OUT_OF_INDEXES
+#define TLS_OUT_OF_INDEXES		0xFFFFFFFF
+#endif
 #ifndef MAX_PATH
 #define MAX_PATH 	(260)
 #endif

@@ -1,3 +1,7 @@
+2003-03-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* include/ddk/pstypes.h (TLS_OUT_OF_INDEXES): Define.
+
 2003-02-18  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* ntoskrnl/cc/view.c (CcRosFlushDirtyPages): Treat a write attempt with
