@@ -944,7 +944,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
 	if (Length < *ResultLength)
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
@@ -968,7 +968,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
 	if (Length < *ResultLength)
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
@@ -1005,7 +1005,7 @@ NtQueryKey(IN HANDLE KeyHandle,
 
 	if (Length < *ResultLength)
 	  {
-	    Status = STATUS_BUFFER_OVERFLOW;
+	    Status = STATUS_BUFFER_TOO_SMALL;
 	  }
 	else
 	  {
