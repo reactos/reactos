@@ -20,30 +20,43 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
+#ifdef _MSC_VER
 #include "stdafx.h"
-#include "TASKMGR.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+	
+#include "TaskMgr.h"
 #include "ProcessPage.h"
 #include "perfdata.h"
 #include "column.h"
 #include "proclist.h"
 #include <ctype.h>
 
-HWND		hProcessPage;						// Process List Property Page
+HWND hProcessPage;						// Process List Property Page
 
-HWND		hProcessPageListCtrl;				// Process ListCtrl Window
-HWND		hProcessPageHeaderCtrl;				// Process Header Control
-HWND		hProcessPageEndProcessButton;		// Process End Process button
-HWND		hProcessPageShowAllProcessesButton;	// Process Show All Processes checkbox
+HWND hProcessPageListCtrl;				// Process ListCtrl Window
+HWND hProcessPageHeaderCtrl;			// Process Header Control
+HWND hProcessPageEndProcessButton;		// Process End Process button
+HWND hProcessPageShowAllProcessesButton;// Process Show All Processes checkbox
 
 static int	nProcessPageWidth;
 static int	nProcessPageHeight;
 
 static HANDLE	hProcessPageEvent = NULL;	// When this event becomes signaled then we refresh the process list
 
-void				ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
-void				CommaSeparateNumberString(LPTSTR strNumber, int nMaxCount);
-void				ProcessPageShowContextMenu(DWORD dwProcessId);
-void				ProcessPageRefreshThread(void *lpParameter);
+void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam);
+void CommaSeparateNumberString(LPTSTR strNumber, int nMaxCount);
+void ProcessPageShowContextMenu(DWORD dwProcessId);
+void ProcessPageRefreshThread(void *lpParameter);
 
 LRESULT CALLBACK ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -197,11 +210,15 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
 			if (ColumnDataHints[ColumnIndex] == COLUMN_CPUTIME)
 			{
 				time = PerfDataGetCPUTime(Index);
-
-				DWORD	dwHours = (DWORD)(time.QuadPart / 36000000000LL);
-				DWORD	dwMinutes = (DWORD)((time.QuadPart % 36000000000LL) / 600000000LL);
-				DWORD	dwSeconds = (DWORD)(((time.QuadPart % 36000000000LL) % 600000000LL) / 10000000LL);
-
+#ifdef _MSC_VER
+				DWORD dwHours = (DWORD)(time.QuadPart / 36000000000L);
+				DWORD dwMinutes = (DWORD)((time.QuadPart % 36000000000L) / 600000000L);
+				DWORD dwSeconds = (DWORD)(((time.QuadPart % 36000000000L) % 600000000L) / 10000000L);
+#else
+				DWORD dwHours = (DWORD)(time.QuadPart / 36000000000LL);
+				DWORD dwMinutes = (DWORD)((time.QuadPart % 36000000000LL) / 600000000LL);
+				DWORD dwSeconds = (DWORD)(((time.QuadPart % 36000000000LL) % 600000000LL) / 10000000LL);
+#endif
 				wsprintf(pnmdi->item.pszText, _T("%d:%02d:%02d"), dwHours, dwMinutes, dwSeconds);
 			}
 			if (ColumnDataHints[ColumnIndex] == COLUMN_MEMORYUSAGE)

@@ -26,7 +26,20 @@
 // Menu item handlers for the options menu.
 //
 
+#ifdef _MSC_VER
 #include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+	
 #include "taskmgr.h"
 #include "optnmenu.h"
 #include "ProcessPage.h"

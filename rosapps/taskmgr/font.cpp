@@ -20,7 +20,20 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
+#ifdef _MSC_VER
 #include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+	
 #include "taskmgr.h"
 #include "font.h"
 
@@ -32,15 +45,11 @@ void Font_DrawText(HDC hDC, LPCTSTR lpszText, int x, int y)
 	int		i;
 	
 	hFontDC = CreateCompatibleDC(hDC);
-
 	hFontBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_FONT));
-	
 	hOldBitmap = (HBITMAP)SelectObject(hFontDC, hFontBitmap);
 	
-	for (i=0; i< (int) _tcslen(lpszText); i++)
-	{
-		if ((lpszText[i] >= '0') && (lpszText[i] <= '9'))
-		{
+	for (i = 0; i < (int)_tcslen(lpszText); i++) {
+		if ((lpszText[i] >= '0') && (lpszText[i] <= '9')) {
 			BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, (lpszText[i] - '0') * 8, 0, SRCCOPY);
 		}
 		else if (lpszText[i] == 'K')
@@ -52,7 +61,6 @@ void Font_DrawText(HDC hDC, LPCTSTR lpszText, int x, int y)
 			BitBlt(hDC, x + (i * 8), y, 8, 11, hFontDC, 88, 0, SRCCOPY);
 		}
 	}
-
 	SelectObject(hFontDC, hOldBitmap);
 	DeleteObject(hFontBitmap);
 	DeleteDC(hFontDC);

@@ -20,22 +20,46 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
+#ifdef _MSC_VER
 #include "stdafx.h"
-#include "TASKMGR.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+
+#include "TaskMgr.h"
 #include "PerformancePage.h"
 #include "perfdata.h"
+
 #include "graph.h"
+#include "GraphCtrl.h"
+
+TGraphCtrl PerformancePageCpuUsageHistoryGraph;
+TGraphCtrl PerformancePageMemUsageHistoryGraph;
 
 HWND		hPerformancePage;								// Performance Property Page
 
 HWND		hPerformancePageCpuUsageGraph;					// CPU Usage Graph
 HWND		hPerformancePageMemUsageGraph;					// MEM Usage Graph
+HWND		hPerformancePageCpuUsageHistoryGraph;			// CPU Usage History Graph
 HWND		hPerformancePageMemUsageHistoryGraph;			// Memory Usage History Graph
 
 HWND		hPerformancePageTotalsFrame;					// Totals Frame
 HWND		hPerformancePageCommitChargeFrame;				// Commit Charge Frame
 HWND		hPerformancePageKernelMemoryFrame;				// Kernel Memory Frame
 HWND		hPerformancePagePhysicalMemoryFrame;			// Physical Memory Frame
+
+HWND		hPerformancePageCpuUsageFrame;
+HWND		hPerformancePageMemUsageFrame;
+HWND		hPerformancePageCpuUsageHistoryFrame;
+HWND		hPerformancePageMemUsageHistoryFrame;
 
 HWND		hPerformancePageCommitChargeTotalEdit;			// Commit Charge Total Edit Control
 HWND		hPerformancePageCommitChargeLimitEdit;			// Commit Charge Limit Edit Control
@@ -52,6 +76,21 @@ HWND		hPerformancePagePhysicalMemorySystemCacheEdit;	// Physical Memory System C
 HWND		hPerformancePageTotalsHandleCountEdit;			// Total Handles Edit Control
 HWND		hPerformancePageTotalsProcessCountEdit;			// Total Processes Edit Control
 HWND		hPerformancePageTotalsThreadCountEdit;			// Total Threads Edit Control
+#if 0
+HWND		hPerformancePageCommitChargeTotalLabel;
+HWND		hPerformancePageCommitChargeLimitLabel;
+HWND		hPerformancePageCommitChargePeakLabel;
+HWND		hPerformancePageKernelMemoryTotalLabel;
+HWND		hPerformancePageKernelMemoryPagedLabel;
+HWND		hPerformancePageKernelMemoryNonPagedLabel;
+HWND		hPerformancePagePhysicalMemoryTotalLabel;
+HWND		hPerformancePagePhysicalMemoryAvailableLabel;
+HWND		hPerformancePagePhysicalMemorySystemCacheLabel;
+HWND		hPerformancePageTotalsHandleCountLabel;
+HWND		hPerformancePageTotalsProcessCountLabel;
+HWND		hPerformancePageTotalsThreadCountLabel;
+#endif
+
 
 static int	nPerformancePageWidth;
 static int	nPerformancePageHeight;
@@ -60,6 +99,54 @@ static HANDLE	hPerformancePageEvent = NULL;	// When this event becomes signaled 
 
 void		PerformancePageRefreshThread(void *lpParameter);
 
+void AdjustFramePostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+{
+	RECT	rc;
+	int		cx, cy;
+    GetClientRect(hCntrl, &rc);
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+    cx = rc.left + nXDifference;
+    cy = rc.top + nYDifference;
+    SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    InvalidateRect(hCntrl, NULL, TRUE);
+}
+		 
+void AdjustFrameSize(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+{
+	RECT	rc;
+	int		cx, cy, sx, sy;
+    GetClientRect(hCntrl, &rc);
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
+//    cx = rc.left + nXDifference;
+//    cy = rc.top + nYDifference;
+    cx = rc.left;
+    cy = rc.top;
+    sx = rc.right - rc.left + nXDifference;
+    sy = rc.bottom - rc.top + nYDifference;
+//    SetWindowPos(hCntrl, NULL, 0, 0, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+//    SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    SetWindowPos(hCntrl, NULL, cx, cy, sx, sy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOZORDER);
+    InvalidateRect(hCntrl, NULL, TRUE);
+}
+		 
+void AdjustControlPostion(HWND hCntrl, HWND hDlg, int nXDifference, int nYDifference)
+{
+	RECT	rc;
+	int		cx, cy;
+
+    GetClientRect(hCntrl, &rc);
+    MapWindowPoints(hCntrl, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)));
+    cx = rc.left + nXDifference;
+    cy = rc.top + nYDifference;
+    SetWindowPos(hCntrl, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+    InvalidateRect(hCntrl, NULL, TRUE);
+}
+		 
+void AdjustCntrlPos(int ctrl_id, HWND hDlg, int nXDifference, int nYDifference)
+{
+    AdjustControlPostion(GetDlgItem(hDlg, ctrl_id), hDlg, nXDifference, nYDifference);
+}
+		 
 LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	RECT	rc;
@@ -85,6 +172,12 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
 		hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);
 		hPerformancePagePhysicalMemoryFrame = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_FRAME);
+
+		hPerformancePageCpuUsageFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME);
+		hPerformancePageMemUsageFrame = GetDlgItem(hDlg, IDC_MEM_USAGE_FRAME);
+		hPerformancePageCpuUsageHistoryFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_FRAME);
+		hPerformancePageMemUsageHistoryFrame = GetDlgItem(hDlg, IDC_MEMORY_USAGE_HISTORY_FRAME);
+
 		hPerformancePageCommitChargeTotalEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_TOTAL);
 		hPerformancePageCommitChargeLimitEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_LIMIT);
 		hPerformancePageCommitChargePeakEdit = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_PEAK);
@@ -97,20 +190,63 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		hPerformancePageTotalsHandleCountEdit = GetDlgItem(hDlg, IDC_TOTALS_HANDLE_COUNT);
 		hPerformancePageTotalsProcessCountEdit = GetDlgItem(hDlg, IDC_TOTALS_PROCESS_COUNT);
 		hPerformancePageTotalsThreadCountEdit = GetDlgItem(hDlg, IDC_TOTALS_THREAD_COUNT);
+#if 0
+		hPerformancePageCommitChargeTotalLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_TOTAL);
+		hPerformancePageCommitChargeLimitLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_LIMIT);
+		hPerformancePageCommitChargePeakLabel = GetDlgItem(hDlg, IDS_COMMIT_CHARGE_PEAK);
+		hPerformancePageKernelMemoryTotalLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_TOTAL);
+		hPerformancePageKernelMemoryPagedLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_PAGED);
+		hPerformancePageKernelMemoryNonPagedLabel = GetDlgItem(hDlg, IDS_KERNEL_MEMORY_NONPAGED);
+		hPerformancePagePhysicalMemoryTotalLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_TOTAL);
+		hPerformancePagePhysicalMemoryAvailableLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_AVAILABLE);
+		hPerformancePagePhysicalMemorySystemCacheLabel = GetDlgItem(hDlg, IDS_PHYSICAL_MEMORY_SYSTEM_CACHE);
+		hPerformancePageTotalsHandleCountLabel = GetDlgItem(hDlg, IDS_TOTALS_HANDLE_COUNT);
+		hPerformancePageTotalsProcessCountLabel = GetDlgItem(hDlg, IDS_TOTALS_PROCESS_COUNT);
+		hPerformancePageTotalsThreadCountLabel = GetDlgItem(hDlg, IDS_TOTALS_THREAD_COUNT);
+#endif
 		hPerformancePageCpuUsageGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_GRAPH);
 		hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
 		hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
+        hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
 		
-		// Start our refresh thread
-		_beginthread(PerformancePageRefreshThread, 0, NULL);
+		GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
+        // create the control
+        //PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+        PerformancePageCpuUsageHistoryGraph.Create(hPerformancePageCpuUsageHistoryGraph, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
+        // customize the control
+        PerformancePageCpuUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
+//        PerformancePageCpuUsageHistoryGraph.SetYUnits("Current") ;
+//        PerformancePageCpuUsageHistoryGraph.SetXUnits("Samples (Windows Timer: 100 msec)") ;
+//        PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 64)) ;
+//        PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(192, 192, 255)) ;
+//        PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ;
+        PerformancePageCpuUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 0)) ;
+        PerformancePageCpuUsageHistoryGraph.SetGridColor(RGB(152, 205, 152)) ;
+        PerformancePageCpuUsageHistoryGraph.SetPlotColor(0, RGB(255, 0, 0)) ;
+        PerformancePageCpuUsageHistoryGraph.SetPlotColor(1, RGB(0, 255, 0)) ;
 
+		GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
+        PerformancePageMemUsageHistoryGraph.Create(hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
+        PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
+        PerformancePageMemUsageHistoryGraph.SetBackgroundColor(RGB(0, 0, 0)) ;
+        PerformancePageMemUsageHistoryGraph.SetGridColor(RGB(152, 215, 152)) ;
+        PerformancePageMemUsageHistoryGraph.SetPlotColor(0, RGB(255, 255, 0)) ;
+
+		// Start our refresh thread
+#ifdef RUN_PERF_PAGE
+		_beginthread(PerformancePageRefreshThread, 0, NULL);
+#endif
 		//
 		// Subclass graph buttons
 		//
-		OldGraphWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
-		SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
-		SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
+        OldGraphWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
+        SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
+//        SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)Graph_WndProc);
 		
+//		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageCpuUsageGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
+//		SetWindowLong(hPerformancePageMemUsageGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
+		OldGraphCtrlWndProc = SetWindowLong(hPerformancePageMemUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
+		SetWindowLong(hPerformancePageCpuUsageHistoryGraph, GWL_WNDPROC, (LONG)GraphCtrl_WndProc);
 		return TRUE;
 
 	case WM_COMMAND:
@@ -128,35 +264,63 @@ LRESULT CALLBACK PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, 
 		nYDifference = cy - nPerformancePageHeight;
 		nPerformancePageWidth = cx;
 		nPerformancePageHeight = cy;
+//		SetWindowPos(hPerformancePageMemUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
+//		SetWindowPos(hPerformancePageCpuUsageHistoryGraph, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
 
 		// Reposition the performance page's controls
-		/*GetWindowRect(hApplicationPageListCtrl, &rc);
-		cx = (rc.right - rc.left) + nXDifference;
-		cy = (rc.bottom - rc.top) + nYDifference;
-		SetWindowPos(hApplicationPageListCtrl, NULL, 0, 0, cx, cy, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOMOVE|SWP_NOZORDER);
-		InvalidateRect(hApplicationPageListCtrl, NULL, TRUE);
-		
-		GetClientRect(hApplicationPageEndTaskButton, &rc);
-		MapWindowPoints(hApplicationPageEndTaskButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
-   		cx = rc.left + nXDifference;
-		cy = rc.top + nYDifference;
-		SetWindowPos(hApplicationPageEndTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-		InvalidateRect(hApplicationPageEndTaskButton, NULL, TRUE);
-		
-		GetClientRect(hApplicationPageSwitchToButton, &rc);
-		MapWindowPoints(hApplicationPageSwitchToButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
-   		cx = rc.left + nXDifference;
-		cy = rc.top + nYDifference;
-		SetWindowPos(hApplicationPageSwitchToButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-		InvalidateRect(hApplicationPageSwitchToButton, NULL, TRUE);
-		
-		GetClientRect(hApplicationPageNewTaskButton, &rc);
-		MapWindowPoints(hApplicationPageNewTaskButton, hDlg, (LPPOINT)(&rc), (sizeof(RECT)/sizeof(POINT)) );
-   		cx = rc.left + nXDifference;
-		cy = rc.top + nYDifference;
-		SetWindowPos(hApplicationPageNewTaskButton, NULL, cx, cy, 0, 0, SWP_NOACTIVATE|SWP_NOOWNERZORDER|SWP_NOSIZE|SWP_NOZORDER);
-		InvalidateRect(hApplicationPageNewTaskButton, NULL, TRUE);*/
+        AdjustFramePostion(hPerformancePageTotalsFrame, hDlg, nXDifference, nYDifference);
+        AdjustFramePostion(hPerformancePageCommitChargeFrame, hDlg, nXDifference, nYDifference);
+        AdjustFramePostion(hPerformancePageKernelMemoryFrame, hDlg, nXDifference, nYDifference);
+        AdjustFramePostion(hPerformancePagePhysicalMemoryFrame, hDlg, nXDifference, nYDifference);
+        AdjustFrameSize(hPerformancePageCpuUsageFrame, hDlg, nXDifference, nYDifference);
+//        AdjustFrameSize(hPerformancePageMemUsageFrame, hDlg, nXDifference, nYDifference);
+//        AdjustFrameSize(hPerformancePageCpuUsageHistoryFrame, hDlg, nXDifference, nYDifference);
+//        AdjustFrameSize(hPerformancePageMemUsageHistoryFrame, hDlg, nXDifference, nYDifference);
+#if 0
+        AdjustControlPostion(hPerformancePageCommitChargeTotalLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeLimitLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargePeakLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryTotalLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryPagedLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsHandleCountLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsProcessCountLabel, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsThreadCountLabel, hDlg, nXDifference, nYDifference);
+#else
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_TOTAL, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_LIMIT, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_COMMIT_CHARGE_PEAK, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_TOTAL, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_PAGED, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_KERNEL_MEMORY_NONPAGED, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_TOTAL, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_AVAILABLE, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_PHYSICAL_MEMORY_SYSTEM_CACHE, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_HANDLE_COUNT, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_PROCESS_COUNT, hDlg, nXDifference, nYDifference);
+        AdjustCntrlPos(IDS_TOTALS_THREAD_COUNT, hDlg, nXDifference, nYDifference);
+#endif
 
+        AdjustControlPostion(hPerformancePageCommitChargeTotalEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargeLimitEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageCommitChargePeakEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryTotalEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryPagedEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageKernelMemoryNonPagedEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryTotalEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemoryAvailableEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePagePhysicalMemorySystemCacheEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsHandleCountEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsProcessCountEdit, hDlg, nXDifference, nYDifference);
+        AdjustControlPostion(hPerformancePageTotalsThreadCountEdit, hDlg, nXDifference, nYDifference);
+
+//        AdjustControlPostion(hPerformancePageCpuUsageGraph, hDlg, nXDifference, nYDifference);
+//        AdjustControlPostion(hPerformancePageMemUsageGraph, hDlg, nXDifference, nYDifference);
+//        AdjustControlPostion(hPerformancePageMemUsageHistoryGraph, hDlg, nXDifference, nYDifference);
+//        AdjustControlPostion(hPerformancePageCpuUsageHistoryGraph, hDlg, nXDifference, nYDifference);
 		break;
 	}
 
@@ -273,7 +437,45 @@ void PerformancePageRefreshThread(void *lpParameter)
 			//
 			InvalidateRect(hPerformancePageCpuUsageGraph, NULL, FALSE);
 			InvalidateRect(hPerformancePageMemUsageGraph, NULL, FALSE);
+
+            //
+
+        	ULONG	  CpuUsage;
+	        ULONG	  CpuKernelUsage;
+        	ULONGLONG CommitChargeTotal;
+	        ULONGLONG CommitChargeLimit;
+        	ULONG	  PhysicalMemoryTotal;
+        	ULONG	  PhysicalMemoryAvailable;
+            int nBarsUsed1;
+            int nBarsUsed2;
+
+        	//
+        	// Get the CPU usage
+        	//
+	        CpuUsage = PerfDataGetProcessorUsage();
+        	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
+        	if (CpuUsage < 0 )        CpuUsage = 0;
+        	if (CpuUsage > 100)       CpuUsage = 100;
+        	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
+        	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
+
+            //
+            // Get the memory usage
+            //
+            CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
+            CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
+            nBarsUsed1 = ((CommitChargeTotal * 100) / CommitChargeLimit);
+
+			PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
+			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
+            nBarsUsed2 = ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal);
+
+
+            PerformancePageCpuUsageHistoryGraph.AppendPoint(CpuUsage, CpuKernelUsage);
+            PerformancePageMemUsageHistoryGraph.AppendPoint(nBarsUsed1, nBarsUsed2);
+            //PerformancePageMemUsageHistoryGraph.SetRange(0.0, 100.0, 10) ;
 			InvalidateRect(hPerformancePageMemUsageHistoryGraph, NULL, FALSE);
+			InvalidateRect(hPerformancePageCpuUsageHistoryGraph, NULL, FALSE);
 		}
 	}
 }

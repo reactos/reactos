@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Developer Studio generated include file.
-// Used by TASKMGR.rc
+// Used by TaskMgr.rc
 //
 #define IDD_TASKMGR_DIALOG              102
 #define IDD_ABOUTBOX                    103
@@ -117,7 +117,23 @@
 #define IDC_MEM_USAGE_GRAPH             1048
 #define IDC_CPU30                       1049
 #define IDC_MEM_USAGE_HISTORY_GRAPH     1049
-#define IDC_CPU31                       1050
+#define IDC_CPU_USAGE_HISTORY_GRAPH     1050
+#define IDC_CPU31                       1051
+
+#define IDS_TOTALS_HANDLE_COUNT         1060
+#define IDS_TOTALS_THREAD_COUNT         1061
+#define IDS_TOTALS_PROCESS_COUNT        1062
+#define IDS_COMMIT_CHARGE_TOTAL         1063
+#define IDS_COMMIT_CHARGE_LIMIT         1064
+#define IDS_COMMIT_CHARGE_PEAK          1065
+#define IDS_PHYSICAL_MEMORY_TOTAL       1066
+#define IDS_PHYSICAL_MEMORY_AVAILABLE   1067
+#define IDS_PHYSICAL_MEMORY_SYSTEM_CACHE 1068
+#define IDS_KERNEL_MEMORY_TOTAL         1069
+#define IDS_KERNEL_MEMORY_PAGED         1070
+#define IDS_KERNEL_MEMORY_NONPAGED      1071
+
+
 #define ID_FILE_NEW                     32771
 #define ID_OPTIONS_ALWAYSONTOP          32773
 #define ID_OPTIONS_MINIMIZEONUSE        32774

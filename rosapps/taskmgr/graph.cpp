@@ -20,7 +20,20 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 	
+#ifdef _MSC_VER
 #include "stdafx.h"
+#else
+#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#include <windows.h>
+#include <commctrl.h>
+#include <stdlib.h>
+#include <malloc.h>
+#include <memory.h>
+#include <tchar.h>
+#include <process.h>
+#include <stdio.h>
+#endif
+	
 #include "taskmgr.h"
 #include "graph.h"
 #include "font.h"
@@ -160,7 +173,11 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	//
 	CpuUsage = PerfDataGetProcessorUsage();
 	CpuKernelUsage = PerfDataGetProcessorSystemUsage();
-	
+	if (CpuUsage < 0)         CpuUsage = 0;
+	if (CpuUsage > 100)       CpuUsage = 100;
+	if (CpuKernelUsage < 0)   CpuKernelUsage = 0;
+	if (CpuKernelUsage > 100) CpuKernelUsage = 100;
+
 	//
 	// Check and see how many digits it will take
 	// so we get the indentation right every time.
@@ -215,6 +232,15 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	rcBarLeft.top = rcBarRight.top = 5;
 	rcBarLeft.bottom = rcBarRight.bottom = 7;
 	
+    if (nBarsUsed < 0)     nBarsUsed = 0;
+    if (nBarsUsed > nBars) nBarsUsed = nBars;
+
+    if (nBarsFree < 0)     nBarsFree = 0;
+    if (nBarsFree > nBars) nBarsFree = nBars;
+
+    if (nBarsUsedKernel < 0)     nBarsUsedKernel = 0;
+    if (nBarsUsedKernel > nBars) nBarsUsedKernel = nBars;
+
 	//
 	// Draw the "free" bars
 	//
@@ -235,6 +261,8 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	//
 	for (i=0; i<nBarsUsed; i++)
 	{
+        if (nBarsUsed > 5000) nBarsUsed = 5000;
+
 		FillSolidRect(hDC, &rcBarLeft, BRIGHT_GREEN);
 		FillSolidRect(hDC, &rcBarRight, BRIGHT_GREEN);
 		
@@ -250,7 +278,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	//
 	rcBarLeft.bottom--;
 	rcBarRight.bottom--;
-	if (nBarsUsedKernel % 2)
+	if (nBarsUsedKernel && nBarsUsedKernel % 2)
 	{
 		rcBarLeft.top -= 2;
 		rcBarLeft.bottom -= 2;
@@ -271,6 +299,8 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	}
 	for (i=0; i<nBarsUsedKernel; i++)
 	{
+        if (nBarsUsedKernel > 5000) nBarsUsedKernel = 5000;
+
 		FillSolidRect(hDC, &rcBarLeft, RED);
 		FillSolidRect(hDC, &rcBarRight, RED);
 		
@@ -335,6 +365,12 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
 	nBars = ((rcClient.bottom - rcClient.top) - 25) / 3;
 	nBarsUsed = (nBars * (int)((CommitChargeTotal * 100) / CommitChargeLimit)) / 100;
 	nBarsFree = nBars - nBarsUsed;
+
+    if (nBarsUsed < 0)     nBarsUsed = 0;
+    if (nBarsUsed > nBars) nBarsUsed = nBars;
+
+    if (nBarsFree < 0)     nBarsFree = 0;
+    if (nBarsFree > nBars) nBarsFree = nBars;
 
 	//
 	// Now draw the bar graph
