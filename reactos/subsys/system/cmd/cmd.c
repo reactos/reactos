@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.4 2003/08/07 09:43:03 hbirr Exp $
+/* $Id: cmd.c,v 1.5 2003/08/08 15:52:32 weiden Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -302,7 +302,7 @@ Execute (LPTSTR first, LPTSTR rest)
 static VOID
 DoCommand (LPTSTR line)
 {
-	TCHAR com[MAX_PATH];  /* the first word in the command */
+	TCHAR com[CMDLINE_LENGTH];  /* the first word in the command */
 	LPTSTR cp = com;
 	LPTSTR cstart;
 	LPTSTR rest = line;   /* pointer to the rest of the command line */
@@ -340,6 +340,13 @@ DoCommand (LPTSTR line)
 
 		/* Terminate first word */
 		*cp = _T('\0');
+		
+		/* commands are limited to MAX_PATH */
+		if(_tcslen(com) > MAX_PATH)
+		{
+		  error_bad_command();
+		  return;
+		}
 
 		/* Skip over whitespace to rest of line */
 		while (_istspace (*rest))
