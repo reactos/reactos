@@ -288,7 +288,7 @@ NTSTATUS NTAPI HwTurnOffMotor(PCONTROLLER_INFO ControllerInfo)
  *     - Called at DISPATCH_LEVEL
  */
 {
-  KdPrint(("floppy: HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE));
+  KdPrint(("floppy: HwTurnOffMotor: writing byte 0x%x to offset 0x%x\n", DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE, DIGITAL_OUTPUT_REGISTER));
 
   WRITE_PORT_UCHAR(ControllerInfo->BaseAddress + DIGITAL_OUTPUT_REGISTER, DOR_FDC_ENABLE|DOR_DMA_IO_INTERFACE_ENABLE);
 
