@@ -44,12 +44,12 @@ NET_DRIVERS = ndis tcpip tditest
 # ne2000
 NET_DEVICE_DRIVERS = ne2000
 
-KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
 APPS = args hello shell test cat bench apc shm lpc thread event file gditest \
-       pteb consume dump_shared_data vmtest 
-#       wstest
+       pteb consume dump_shared_data vmtest regtest
 #       objdir
+
+KERNEL_SERVICES = $(DEVICE_DRIVERS) $(FS_DRIVERS) $(NET_DRIVERS) $(NET_DEVICE_DRIVERS)
 
 all: buildno $(COMPONENTS) $(DLLS) $(SUBSYS) $(LOADERS) $(KERNEL_SERVICES) $(APPS)
 
@@ -84,7 +84,7 @@ install: rcopy$(EXE_POSTFIX) rmkdir$(EXE_POSTFIX) make_install_dirs autoexec_ins
         $(KERNEL_SERVICES:%=%_install) $(SUBSYS:%=%_install) \
         $(APPS:%=%_install)
 
-dist: clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
+dist: rcopy$(EXE_POSTFIX) clean_dist_dir make_dist_dirs $(COMPONENTS:%=%_dist) $(DLLS:%=%_dist) \
       $(LOADERS:%=%_dist) $(KERNEL_SERVICES:%=%_dist) $(SUBSYS:%=%_dist) \
       $(APPS:%=%_dist)
 
