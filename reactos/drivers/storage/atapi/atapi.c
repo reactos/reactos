@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.19 2002/04/10 17:01:47 ekohl Exp $
+/* $Id: atapi.c,v 1.20 2002/05/14 23:17:12 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -672,7 +672,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
   DevExt = (PATAPI_MINIPORT_EXTENSION)DeviceExtension;
   if (DevExt->ExpectingInterrupt == FALSE)
     {
-      DPRINT1("AtapiInterrupt(): Unexpected interrupt\n");
+      DPRINT("AtapiInterrupt(): Unexpected interrupt\n");
       return(FALSE);
     }
 
