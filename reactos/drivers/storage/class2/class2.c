@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.36 2003/07/10 15:11:58 chorns Exp $
+/* $Id: class2.c,v 1.37 2003/07/11 14:07:13 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -54,10 +54,6 @@ ScsiClassCreateClose(IN PDEVICE_OBJECT DeviceObject,
 static NTSTATUS STDCALL
 ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
-
-static NTSTATUS STDCALL
-ScsiClassScsiDispatch(IN PDEVICE_OBJECT DeviceObject,
-		     IN PIRP Irp);
 
 static NTSTATUS STDCALL
 ScsiClassDeviceDispatch(IN PDEVICE_OBJECT DeviceObject,
@@ -139,8 +135,8 @@ ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
  * @implemented
  */
 VOID STDCALL
-ScsiClassBuildRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp)
+ScsiClassBuildRequest(IN PDEVICE_OBJECT DeviceObject,
+		      IN PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentIrpStack;
@@ -423,8 +419,8 @@ ScsiClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
  * @implemented
  */
 NTSTATUS STDCALL
-ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
-		       PIRP Irp)
+ScsiClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
+		       IN PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION NextStack;
@@ -569,10 +565,10 @@ ScsiClassDeviceControl(PDEVICE_OBJECT DeviceObject,
  * @unimplemented
  */
 PVOID STDCALL
-ScsiClassFindModePage(PCHAR ModeSenseBuffer,
-		      ULONG Length,
-		      UCHAR PageMode,
-		      BOOLEAN Use6Byte)
+ScsiClassFindModePage(IN PCHAR ModeSenseBuffer,
+		      IN ULONG Length,
+		      IN UCHAR PageMode,
+		      IN BOOLEAN Use6Byte)
 {
   UNIMPLEMENTED;
 }
@@ -582,8 +578,8 @@ ScsiClassFindModePage(PCHAR ModeSenseBuffer,
  * @implemented
  */
 ULONG STDCALL
-ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
-			      PSCSI_ADAPTER_BUS_INFO AdapterInformation)
+ScsiClassFindUnclaimedDevices(IN PCLASS_INIT_DATA InitializationData,
+			      IN PSCSI_ADAPTER_BUS_INFO AdapterInformation)
 {
   PSCSI_INQUIRY_DATA UnitInfo;
   PINQUIRYDATA InquiryData;
@@ -629,8 +625,8 @@ ScsiClassFindUnclaimedDevices(PCLASS_INIT_DATA InitializationData,
  * @implemented
  */
 NTSTATUS STDCALL
-ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
-			 PIO_SCSI_CAPABILITIES *PortCapabilities)
+ScsiClassGetCapabilities(IN PDEVICE_OBJECT PortDeviceObject,
+			 OUT PIO_SCSI_CAPABILITIES *PortCapabilities)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -677,8 +673,8 @@ ScsiClassGetCapabilities(PDEVICE_OBJECT PortDeviceObject,
  * @implemented
  */
 NTSTATUS STDCALL
-ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
-			PSCSI_ADAPTER_BUS_INFO *ConfigInfo)
+ScsiClassGetInquiryData(IN PDEVICE_OBJECT PortDeviceObject,
+			IN PSCSI_ADAPTER_BUS_INFO *ConfigInfo)
 {
   PSCSI_ADAPTER_BUS_INFO Buffer;
   IO_STATUS_BLOCK IoStatusBlock;
@@ -746,9 +742,9 @@ ScsiClassGetInquiryData(PDEVICE_OBJECT PortDeviceObject,
  * @implemented
  */
 ULONG STDCALL
-ScsiClassInitialize(PVOID Argument1,
-		    PVOID Argument2,
-		    PCLASS_INIT_DATA InitializationData)
+ScsiClassInitialize(IN PVOID Argument1,
+		    IN PVOID Argument2,
+		    IN PCLASS_INIT_DATA InitializationData)
 {
   PCONFIGURATION_INFORMATION ConfigInfo;
   PDRIVER_OBJECT DriverObject = Argument1;
@@ -766,7 +762,7 @@ ScsiClassInitialize(PVOID Argument1,
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = ScsiClassCreateClose;
   DriverObject->MajorFunction[IRP_MJ_READ] = ScsiClassReadWrite;
   DriverObject->MajorFunction[IRP_MJ_WRITE] = ScsiClassReadWrite;
-  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiClassScsiDispatch;
+  DriverObject->MajorFunction[IRP_MJ_SCSI] = ScsiClassInternalIoControl;
   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = ScsiClassDeviceDispatch;
   DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = ScsiClassShutdownFlush;
   DriverObject->MajorFunction[IRP_MJ_FLUSH_BUFFERS] = ScsiClassShutdownFlush;
@@ -842,8 +838,8 @@ ScsiClassInitialize(PVOID Argument1,
  * @implemented
  */
 VOID STDCALL
-ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
-				    ULONG NumberElements)
+ScsiClassInitializeSrbLookasideList(IN PDEVICE_EXTENSION DeviceExtension,
+				    IN ULONG NumberElements)
 {
   ExInitializeNPagedLookasideList(&DeviceExtension->SrbLookasideListHead,
 				  NULL,
@@ -859,29 +855,36 @@ ScsiClassInitializeSrbLookasideList(PDEVICE_EXTENSION DeviceExtension,
  * @unimplemented
  */
 NTSTATUS STDCALL
-ScsiClassInternalIoControl(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp)
+ScsiClassInternalIoControl(IN PDEVICE_OBJECT DeviceObject,
+			   IN PIRP Irp)
 {
-  UNIMPLEMENTED;
+  DPRINT1("ScsiClassInternalIoContol() called\n");
+
+  Irp->IoStatus.Status = STATUS_SUCCESS;
+  Irp->IoStatus.Information = 0;
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+  return(STATUS_SUCCESS);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN STDCALL
-ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
-			    PSCSI_REQUEST_BLOCK Srb,
-			    UCHAR MajorFunctionCode,
-			    ULONG IoDeviceCode,
-			    ULONG RetryCount,
-			    NTSTATUS *Status)
+ScsiClassInterpretSenseInfo(IN PDEVICE_OBJECT DeviceObject,
+			    IN PSCSI_REQUEST_BLOCK Srb,
+			    IN UCHAR MajorFunctionCode,
+			    IN ULONG IoDeviceCode,
+			    IN ULONG RetryCount,
+			    OUT NTSTATUS *Status)
 {
   PDEVICE_EXTENSION DeviceExtension;
 #if 0
   PIO_ERROR_LOG_PACKET LogPacket;
 #endif
   PSENSE_DATA SenseData;
+  NTSTATUS LogStatus;
   BOOLEAN LogError;
   BOOLEAN Retry;
 
@@ -914,9 +917,13 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
 	  /* FIXME: add more sense key codes */
 #if 0
 	  case SCSI_SENSE_NO_SENSE:
+#endif
 
 	  case SCSI_SENSE_RECOVERED_ERROR:
-#endif
+	    DPRINT("SCSI_SENSE_RECOVERED_ERROR\n");
+	    *Status = STATUS_SUCCESS;
+	    Retry = FALSE;
+	    break;
 
 	  case SCSI_SENSE_NOT_READY:
 	    DPRINT("SCSI_SENSE_NOT_READY\n");
@@ -1077,9 +1084,9 @@ ScsiClassInterpretSenseInfo(PDEVICE_OBJECT DeviceObject,
  * @implemented
  */
 NTSTATUS STDCALL
-ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
-		    PIRP Irp,
-		    PVOID Context)
+ScsiClassIoComplete(IN PDEVICE_OBJECT DeviceObject,
+		    IN PIRP Irp,
+		    IN PVOID Context)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
@@ -1164,9 +1171,9 @@ ScsiClassIoComplete(PDEVICE_OBJECT DeviceObject,
  * @implemented
  */
 NTSTATUS STDCALL
-ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
-			      PIRP Irp,
-			      PVOID Context)
+ScsiClassIoCompleteAssociated(IN PDEVICE_OBJECT DeviceObject,
+			      IN PIRP Irp,
+			      IN PVOID Context)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION IrpStack;
@@ -1265,15 +1272,62 @@ ScsiClassIoCompleteAssociated(PDEVICE_OBJECT DeviceObject,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 ULONG STDCALL
-ScsiClassModeSense(PDEVICE_OBJECT DeviceObject,
-		   CHAR ModeSenseBuffer,
-		   ULONG Length,
-		   UCHAR PageMode)
+ScsiClassModeSense(IN PDEVICE_OBJECT DeviceObject,
+		   IN PCHAR ModeSenseBuffer,
+		   IN ULONG Length,
+		   IN UCHAR PageMode)
 {
-  UNIMPLEMENTED;
+  PDEVICE_EXTENSION DeviceExtension;
+  SCSI_REQUEST_BLOCK Srb;
+  ULONG RetryCount;
+  PCDB Cdb;
+  NTSTATUS Status;
+
+  DPRINT("ScsiClassModeSense() called\n");
+
+  DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  RetryCount = 1;
+
+  /* Initialize the SRB */
+  RtlZeroMemory (&Srb,
+		 sizeof(SCSI_REQUEST_BLOCK));
+  Srb.CdbLength = 6;
+  Srb.TimeOutValue = DeviceExtension->TimeOutValue;
+
+  /* Initialize the CDB */
+  Cdb = (PCDB)&Srb.Cdb;
+  Cdb->MODE_SENSE.OperationCode = SCSIOP_MODE_SENSE;
+  Cdb->MODE_SENSE.PageCode = PageMode;
+  Cdb->MODE_SENSE.AllocationLength = (UCHAR)Length;
+
+TryAgain:
+  Status = ScsiClassSendSrbSynchronous (DeviceObject,
+					&Srb,
+					ModeSenseBuffer,
+					Length,
+					FALSE);
+  if (Status == STATUS_VERIFY_REQUIRED)
+    {
+      if (RetryCount != 0)
+	{
+	  RetryCount--;
+	  goto TryAgain;
+	}
+    }
+  else if (SRB_STATUS(Srb.SrbStatus) == SRB_STATUS_DATA_OVERRUN)
+    {
+      Status = STATUS_SUCCESS;
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      return 0;
+    }
+
+  return Srb.DataTransferLength;
 }
 
 
@@ -1690,9 +1744,9 @@ TryAgain:
  * @implemented
  */
 VOID STDCALL
-ScsiClassSplitRequest(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp,
-		      ULONG MaximumBytes)
+ScsiClassSplitRequest(IN PDEVICE_OBJECT DeviceObject,
+		      IN PIRP Irp,
+		      IN ULONG MaximumBytes)
 {
   PDEVICE_EXTENSION DeviceExtension;
   PIO_STACK_LOCATION CurrentStack;
@@ -1927,20 +1981,6 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
   /* Call the port driver */
   return(IoCallDriver(DeviceExtension->PortDeviceObject,
 		      Irp));
-}
-
-
-static NTSTATUS STDCALL
-ScsiClassScsiDispatch(IN PDEVICE_OBJECT DeviceObject,
-		      IN PIRP Irp)
-{
-  DPRINT1("ScsiClassScsiDispatch() called\n");
-
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-  return(STATUS_SUCCESS);
 }
 
 
