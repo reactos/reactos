@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -65,6 +65,7 @@ static const struct {
    { OFF, "GL_MESAX_texture_float",            F(ARB_texture_float) },
    { OFF, "GL_ARB_texture_mirrored_repeat",    F(ARB_texture_mirrored_repeat)},
    { OFF, "GL_ARB_texture_non_power_of_two",   F(ARB_texture_non_power_of_two)},
+   { OFF, "GL_ARB_texture_rectangle",          F(NV_texture_rectangle) },
    { ON,  "GL_ARB_transpose_matrix",           F(ARB_transpose_matrix) },
    { OFF, "GL_ARB_vertex_buffer_object",       F(ARB_vertex_buffer_object) },
    { OFF, "GL_ARB_vertex_program",             F(ARB_vertex_program) },
@@ -325,7 +326,6 @@ _mesa_enable_1_5_extensions(GLcontext *ctx)
 {
    ctx->Extensions.ARB_occlusion_query = GL_TRUE;
    ctx->Extensions.ARB_vertex_buffer_object = GL_TRUE;
-   ctx->Extensions.ARB_texture_non_power_of_two = GL_TRUE;
    ctx->Extensions.EXT_shadow_funcs = GL_TRUE;
 }
 

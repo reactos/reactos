@@ -25,8 +25,10 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -351,10 +353,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl_QueryInterface(
 ULONG WINAPI HGLOBALLockBytesImpl_AddRef(ILockBytes* iface)
 {
   HGLOBALLockBytesImpl* const This=(HGLOBALLockBytesImpl*)iface;
-
-  This->ref++;
-
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -364,22 +363,19 @@ ULONG WINAPI HGLOBALLockBytesImpl_AddRef(ILockBytes* iface)
 ULONG WINAPI HGLOBALLockBytesImpl_Release(ILockBytes* iface)
 {
   HGLOBALLockBytesImpl* const This=(HGLOBALLockBytesImpl*)iface;
+  ULONG ref;
 
-  ULONG newRef;
-
-  This->ref--;
-
-  newRef = This->ref;
+  ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (newRef==0)
+  if (ref==0)
   {
     HGLOBALLockBytesImpl_Destroy(This);
   }
 
-  return newRef;
+  return ref;
 }
 
 /******************************************************************************

@@ -1,8 +1,3 @@
-/* $Id: context.c,v 1.2.32.2 2004/10/25 02:25:01 ion Exp $
-*/
-/*
-*/
-
 #include <windows.h>
 #include <ndk/umtypes.h>
 #include <ndk/zwfuncs.h>

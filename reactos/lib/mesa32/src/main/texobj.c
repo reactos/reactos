@@ -5,7 +5,7 @@
 
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -72,7 +72,7 @@ _mesa_new_texture_object( GLcontext *ctx, GLuint name, GLenum target )
 
 
 /**
- * Initialize a texture object to default values.
+ * Initialize a new texture object to default values.
  * \param obj  the texture object
  * \param name  the texture name
  * \param target  the texture target
@@ -88,9 +88,9 @@ _mesa_initialize_texture_object( struct gl_texture_object *obj,
           target == GL_TEXTURE_CUBE_MAP_ARB ||
           target == GL_TEXTURE_RECTANGLE_NV);
 
+   _mesa_bzero(obj, sizeof(*obj));
    /* init the non-zero fields */
    _glthread_INIT_MUTEX(obj->Mutex);
-   _mesa_bzero(obj, sizeof(*obj));
    obj->RefCount = 1;
    obj->Name = name;
    obj->Target = target;
@@ -137,8 +137,6 @@ _mesa_delete_texture_object( GLcontext *ctx, struct gl_texture_object *texObj )
    GLuint i, face;
 
    (void) ctx;
-
-   assert(texObj);
 
    _mesa_free_colortable_data(&texObj->Palette);
 
@@ -703,12 +701,16 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
             }
             ctx->NewState |= _NEW_TEXTURE;
 
-            /* Decrement reference count and delete if zero */
-            delObj->RefCount--;
-            ASSERT(delObj->RefCount >= 0);
+            /* If user hasn't already tried to delete the texture... */
+            if (!delObj->DeletePending) {
+               delObj->DeletePending = GL_TRUE;
+               delObj->RefCount--;
+               ASSERT(delObj->RefCount >= 0);
+            }
 
+            /* See if we can really delete the texture now */
             if (delObj->RefCount == 0) {
-               ASSERT(delObj->Name != 0);
+               ASSERT(delObj->Name != 0); /* Never delete default tex objects */
                _mesa_remove_texture_object(ctx, delObj);
                ASSERT(ctx->Driver.DeleteTexture);
                (*ctx->Driver.DeleteTexture)(ctx, delObj);
@@ -717,6 +719,7 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
       }
    }
 }
+
 
 /**
  * Bind a named texture to a texturing target.
@@ -747,6 +750,9 @@ _mesa_BindTexture( GLenum target, GLuint texName )
       _mesa_debug(ctx, "glBindTexture %s %d\n",
                   _mesa_lookup_enum_by_nr(target), (GLint) texName);
 
+   /*
+    * Get pointer to currently bound texture object (oldTexObj)
+    */
    switch (target) {
       case GL_TEXTURE_1D:
          oldTexObj = texUnit->Current1D;
@@ -777,6 +783,10 @@ _mesa_BindTexture( GLenum target, GLuint texName )
    }
 
    if (oldTexObj->Name == texName)
+      /* XXX this might be wrong.  If the texobj is in use by another
+       * context and a texobj parameter was changed, this might be our
+       * only chance to update this context's hardware state.
+       */
       return;   /* rebinding the same texture- no change */
 
    /*
@@ -875,15 +885,20 @@ _mesa_BindTexture( GLenum target, GLuint texName )
    if (ctx->Driver.BindTexture)
       (*ctx->Driver.BindTexture)( ctx, target, newTexObj );
 
+   /* Decrement the reference count on the old texture and check if it's
+    * time to delete it.
+    */
    oldTexObj->RefCount--;
-   assert(oldTexObj->RefCount >= 0);
+   ASSERT(oldTexObj->RefCount >= 0);
    if (oldTexObj->RefCount == 0) {
-      assert(oldTexObj->Name != 0);
+      ASSERT(oldTexObj->Name != 0);
+      ASSERT(oldTexObj->DeletePending);
       _mesa_remove_texture_object(ctx, oldTexObj);
       ASSERT(ctx->Driver.DeleteTexture);
       (*ctx->Driver.DeleteTexture)( ctx, oldTexObj );
    }
 }
+
 
 /**
  * Set texture priorities.

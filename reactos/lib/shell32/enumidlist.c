@@ -21,6 +21,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define COBJMACROS
+
 #include "wine/debug.h"
 #include "windef.h"
 #include "winbase.h"

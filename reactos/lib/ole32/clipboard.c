@@ -62,8 +62,10 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -1162,9 +1164,8 @@ static ULONG WINAPI OLEClipbrd_IDataObject_AddRef(
 
   TRACE("(%p)->(count=%lu)\n",This, This->ref);
 
-  This->ref++;
+  return InterlockedIncrement(&This->ref);
 
-  return This->ref;
 }
 
 /************************************************************************
@@ -1179,23 +1180,24 @@ static ULONG WINAPI OLEClipbrd_IDataObject_Release(
    * Declare "This" pointer
    */
   OLEClipbrd *This = (OLEClipbrd *)iface;
+  ULONG ref;
 
   TRACE("(%p)->(count=%lu)\n",This, This->ref);
 
   /*
    * Decrease the reference count on this object.
    */
-  This->ref--;
+  ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (This->ref==0)
+  if (ref == 0)
   {
     OLEClipbrd_Destroy(This);
   }
 
-  return This->ref;
+  return ref;
 }
 
 
@@ -1651,7 +1653,7 @@ static ULONG WINAPI OLEClipbrd_IEnumFORMATETC_AddRef(LPENUMFORMATETC iface)
   if (This->pUnkDataObj)
     IUnknown_AddRef(This->pUnkDataObj);
 
-  return ++(This->ref);
+  return InterlockedIncrement(&This->ref);
 }
 
 /************************************************************************
@@ -1663,13 +1665,15 @@ static ULONG WINAPI OLEClipbrd_IEnumFORMATETC_Release(LPENUMFORMATETC iface)
 {
   IEnumFORMATETCImpl *This = (IEnumFORMATETCImpl *)iface;
   LPMALLOC pIMalloc;
+  ULONG ref;
 
   TRACE("(%p)->(count=%lu)\n",This, This->ref);
 
   if (This->pUnkDataObj)
     IUnknown_Release(This->pUnkDataObj);  /* Release parent data object */
 
-  if (!--(This->ref))
+  ref = InterlockedDecrement(&This->ref);
+  if (!ref)
   {
     TRACE("() - destroying IEnumFORMATETC(%p)\n",This);
     if (SUCCEEDED(CoGetMalloc(MEMCTX_TASK, &pIMalloc)))
@@ -1679,10 +1683,8 @@ static ULONG WINAPI OLEClipbrd_IEnumFORMATETC_Release(LPENUMFORMATETC iface)
     }
 
     HeapFree(GetProcessHeap(),0,This);
-    return 0;
   }
-
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************

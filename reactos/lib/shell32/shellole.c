@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "shellapi.h"
@@ -99,7 +101,7 @@ DWORD WINAPI __SHGUIDToStringW (REFGUID guid, LPWSTR str)
 
 /************************************************************************/
 
-LRESULT WINAPI SHCoCreateInstance(
+HRESULT WINAPI SHCoCreateInstance(
 	LPCWSTR aclsid,
 	const CLSID *clsid,
 	LPUNKNOWN pUnkOuter,

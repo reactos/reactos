@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: messagebox.c,v 1.27 2004/08/15 21:36:30 chorns Exp $
+/* $Id: messagebox.c,v 1.27.6.1 2004/10/25 14:48:54 ion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/messagebox.c
@@ -204,7 +204,7 @@ static INT_PTR CALLBACK MessageBoxProc( HWND hwnd, UINT message,
 #define SAFETY_MARGIN 32 /* Extra number of bytes to allocate in case we counted wrong */
 static int
 MessageBoxTimeoutIndirectW(
-  CONST MSGBOXPARAMS *lpMsgBoxParams, UINT Timeout)
+  CONST MSGBOXPARAMSW *lpMsgBoxParams, UINT Timeout)
 {
     DLGTEMPLATE *tpl;
     DLGITEMTEMPLATE *iico, *itxt;
@@ -213,7 +213,7 @@ MessageBoxTimeoutIndirectW(
     HMODULE hUser32;
     LPVOID buf;
     BYTE *dest;
-    LPWSTR caption, text;
+    LPCWSTR caption, text;
     HFONT hFont;
     HICON Icon;
     HDC hDC;
@@ -237,10 +237,10 @@ MessageBoxTimeoutIndirectW(
     else
       caption = (LPWSTR)lpMsgBoxParams->lpszCaption;
       
-    if(!lpMsgBoxParams->lpszText || !HIWORD((LPWSTR)lpMsgBoxParams->lpszText))
+    if(!lpMsgBoxParams->lpszText || !HIWORD(lpMsgBoxParams->lpszText))
       text = L"";
     else
-      text = (LPWSTR)lpMsgBoxParams->lpszText;
+      text = lpMsgBoxParams->lpszText;
     
     caplen = strlenW(caption);
     textlen = strlenW(text);
@@ -311,7 +311,7 @@ MessageBoxTimeoutIndirectW(
         MessageBeep(MB_ICONHAND);
         break;
       case MB_USERICON:
-        Icon = LoadIconW(lpMsgBoxParams->hInstance, (LPCWSTR)lpMsgBoxParams->lpszIcon);
+        Icon = LoadIconW(lpMsgBoxParams->hInstance, lpMsgBoxParams->lpszIcon);
         MessageBeep(MB_OK);
         break;
       default:

@@ -1,25 +1,160 @@
+Index: ordinal.c
+===================================================================
+RCS file: /home/wine/wine/dlls/shlwapi/ordinal.c,v
+retrieving revision 1.98
+diff -u -r1.98 ordinal.c
+--- ordinal.c	25 Sep 2004 00:29:30 -0000	1.98
++++ ordinal.c	20 Oct 2004 16:50:41 -0000
+@@ -1549,16 +1549,17 @@
+         LPVOID *p2)       /* [out]  ptr for call results */
+ {
+     DWORD ret, aa;
++    IUnknown *iobjectwithsite;
+ 
+     if (!p1) return E_FAIL;
+ 
+     /* see if SetSite interface exists for IObjectWithSite object */
+-    ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id1, (LPVOID *)&p1);
+-    TRACE("first IU_QI ret=%08lx, p1=%p\n", ret, p1);
++    ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id1, (LPVOID *)&iobjectwithsite);
++    TRACE("first IU_QI ret=%08lx, iobjectwithsite=%p\n", ret, iobjectwithsite);
+     if (ret) {
+ 
+ 	/* see if GetClassId interface exists for IPersistMoniker object */
+-	ret = IUnknown_QueryInterface((IUnknown *)p1, (REFIID)id2, (LPVOID *)&aa);
++	ret = IUnknown_QueryInterface(p1, (REFIID)id2, (LPVOID *)&aa);
+ 	TRACE("second IU_QI ret=%08lx, aa=%08lx\n", ret, aa);
+ 	if (ret) return ret;
+ 
+@@ -1570,10 +1571,10 @@
+     }
+     else {
+ 	/* fake a SetSite call */
+-	ret = IOleWindow_GetWindow((IOleWindow *)p1, (HWND*)p2);
++	ret = IOleWindow_GetWindow((IOleWindow *)iobjectwithsite, (HWND*)p2);
+ 	TRACE("first IU_QI doing 0x0c ret=%08lx, *p2=%08lx\n", ret,
+ 	      *(LPDWORD)p2);
+-	IUnknown_Release((IUnknown *)p1);
++	IUnknown_Release((IUnknown *)iobjectwithsite);
+     }
+     return ret;
+ }
 Index: path.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/path.c,v
-retrieving revision 1.42
-diff -u -r1.42 path.c
---- path.c	20 Apr 2004 00:34:52 -0000	1.42
-+++ path.c	20 Aug 2004 07:09:34 -0000
-@@ -32,6 +32,7 @@
- #include "wingdi.h"
- #include "winuser.h"
- #include "winreg.h"
-+#include "winnls.h"
- #define NO_SHLWAPI_STREAM
- #include "shlwapi.h"
- #include "wine/debug.h"
+retrieving revision 1.48
+diff -u -r1.48 path.c
+--- path.c	5 Oct 2004 18:07:14 -0000	1.48
++++ path.c	20 Oct 2004 16:50:42 -0000
+@@ -3989,3 +3989,101 @@
+     return S_OK;
+   return E_FAIL;
+ }
++
++#define PATH_CHAR_CLASS_LETTER      0x0001
++#define PATH_CHAR_CLASS_ASTERIX     0x0002
++#define PATH_CHAR_CLASS_DOT         0x0004
++#define PATH_CHAR_CLASS_BACKSLASH   0x0008
++#define PATH_CHAR_CLASS_COLON       0x0010
++#define PATH_CHAR_CLASS_SEMICOLON   0x0020
++#define PATH_CHAR_CLASS_COMMA       0x0040
++#define PATH_CHAR_CLASS_SPACE       0x0080
++#define PATH_CHAR_CLASS_OTHER_VALID 0x0100
++#define PATH_CHAR_CLASS_DOUBLEQUOTE 0x0200
++
++/*************************************************************************
++ * PathIsValidCharAW     [internal]
++ *
++ * Check if a char is of a certain class
++ */
++static BOOL WINAPI PathIsValidCharAW(unsigned Ch, DWORD Class)
++{
++  static struct
++  {
++    char Ch;
++    DWORD Class;
++  } CharClass[] =
++  {
++    { ' ', PATH_CHAR_CLASS_SPACE },
++    { '!', PATH_CHAR_CLASS_OTHER_VALID },
++    { '"', PATH_CHAR_CLASS_DOUBLEQUOTE },
++    { '#', PATH_CHAR_CLASS_OTHER_VALID },
++    { '$', PATH_CHAR_CLASS_OTHER_VALID },
++    { '%', PATH_CHAR_CLASS_OTHER_VALID },
++    { '&', PATH_CHAR_CLASS_OTHER_VALID },
++    { '\'', PATH_CHAR_CLASS_OTHER_VALID },
++    { '(', PATH_CHAR_CLASS_OTHER_VALID },
++    { ')', PATH_CHAR_CLASS_OTHER_VALID },
++    { '*', PATH_CHAR_CLASS_ASTERIX },
++    { '+', PATH_CHAR_CLASS_OTHER_VALID },
++    { ',', PATH_CHAR_CLASS_COMMA },
++    { '-', PATH_CHAR_CLASS_OTHER_VALID },
++    { '.', PATH_CHAR_CLASS_DOT },
++    { ':', PATH_CHAR_CLASS_COLON },
++    { ';', PATH_CHAR_CLASS_SEMICOLON },
++    { '=', PATH_CHAR_CLASS_OTHER_VALID },
++    { '?', PATH_CHAR_CLASS_LETTER },
++    { '@', PATH_CHAR_CLASS_OTHER_VALID },
++    { '[', PATH_CHAR_CLASS_OTHER_VALID },
++    { '\\', PATH_CHAR_CLASS_BACKSLASH },
++    { ']', PATH_CHAR_CLASS_OTHER_VALID },
++    { '^', PATH_CHAR_CLASS_OTHER_VALID },
++    { '_', PATH_CHAR_CLASS_OTHER_VALID },
++    { '`', PATH_CHAR_CLASS_OTHER_VALID },
++    { '{', PATH_CHAR_CLASS_OTHER_VALID },
++    { '}', PATH_CHAR_CLASS_OTHER_VALID },
++    { '~', PATH_CHAR_CLASS_OTHER_VALID },
++    { 0x7f, PATH_CHAR_CLASS_OTHER_VALID }
++  };
++  unsigned Index;
++
++  if (('A' <= Ch && Ch <= 'Z') || ('a' <= Ch && Ch <= 'z'))
++  {
++    return (Class & PATH_CHAR_CLASS_LETTER);
++  }
++
++  if (('0' <= Ch && Ch <= '9') || 0x80 <= Ch)
++  {
++    return (Class & PATH_CHAR_CLASS_OTHER_VALID);
++  }
++
++  for (Index = 0; Index < sizeof(CharClass) / sizeof(CharClass[0]); Index++)
++  {
++    if (Ch == CharClass[Index].Ch)
++    {
++      return (Class & CharClass[Index].Class);
++    }
++  }
++
++  return FALSE;
++}
++
++/*************************************************************************
++ * @     [SHLWAPI.455]
++ *
++ * Check if an Ascii char is of a certain class
++ */
++BOOL WINAPI PathIsValidCharA(char Ch, DWORD Class)
++{
++  return PathIsValidCharAW((unsigned) Ch, Class);
++}
++
++/*************************************************************************
++ * @     [SHLWAPI.456]
++ *
++ * Check if an Unicode char is of a certain class
++ */
++BOOL WINAPI PathIsValidCharW(WCHAR Ch, DWORD Class)
++{
++  return PathIsValidCharAW((unsigned) Ch, Class);
++}
 Index: shlwapi.spec
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/shlwapi.spec,v
-retrieving revision 1.93
-diff -u -r1.93 shlwapi.spec
---- shlwapi.spec	19 Jul 2004 19:32:51 -0000	1.93
-+++ shlwapi.spec	20 Aug 2004 07:09:34 -0000
+retrieving revision 1.96
+diff -u -r1.96 shlwapi.spec
+--- shlwapi.spec	25 Sep 2004 00:29:30 -0000	1.96
++++ shlwapi.spec	20 Oct 2004 16:50:42 -0000
 @@ -368,9 +368,9 @@
  368 stdcall @(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
  369 stdcall @(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
@@ -42,24 +177,30 @@ diff -u -r1.93 shlwapi.spec
  393 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamW
  394 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamA
  395 stub -noname MLWinHelpA
-@@ -456,8 +456,8 @@
- 456 stub -noname PathIsValidCharW
+@@ -452,12 +452,12 @@
+ 452 stub -noname CharUpperNoDBCSW
+ 453 stub -noname CharLowerNoDBCSA
+ 454 stub -noname CharLowerNoDBCSW
+-455 stub -noname PathIsValidCharA
+-456 stub -noname PathIsValidCharW
++455 stdcall -noname PathIsValidCharA(long long)
++456 stdcall -noname PathIsValidCharW(long long)
  457 stub -noname GetLongPathNameWrapW
  458 stub -noname GetLongPathNameWrapA
 -459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
 -460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 +459 stdcall SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
 +460 stdcall SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
- 461 stdcall -noname SHGetAppCompatFlags()
+ 461 stdcall -noname SHGetAppCompatFlags(long)
  462 stub -noname UrlFixupW
  463 stub -noname SHExpandEnvironmentStringsForUserA
 Index: string.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/string.c,v
-retrieving revision 1.47
-diff -u -r1.47 string.c
---- string.c	21 Jul 2004 03:12:16 -0000	1.47
-+++ string.c	20 Aug 2004 07:09:35 -0000
+retrieving revision 1.49
+diff -u -r1.49 string.c
+--- string.c	13 Sep 2004 18:11:56 -0000	1.49
++++ string.c	20 Oct 2004 16:50:43 -0000
 @@ -528,7 +528,7 @@
  {
    TRACE("(%s,%s)\n", debugstr_w(lpszStr), debugstr_w(lpszSearch));
@@ -81,11 +222,11 @@ diff -u -r1.47 string.c
 Index: url.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/shlwapi/url.c,v
-retrieving revision 1.35
-diff -u -r1.35 url.c
---- url.c	4 Jul 2004 00:06:29 -0000	1.35
-+++ url.c	20 Aug 2004 07:09:36 -0000
-@@ -1386,8 +1386,8 @@
+retrieving revision 1.43
+diff -u -r1.43 url.c
+--- url.c	5 Oct 2004 18:31:41 -0000	1.43
++++ url.c	20 Oct 2004 16:50:44 -0000
+@@ -1347,8 +1347,8 @@
   *  Success: TRUE. lpDest is filled with the computed hash value.
   *  Failure: FALSE, if any argument is invalid.
   */

@@ -403,6 +403,13 @@ struct swrast_device_driver {
     * depth[i] value if mask[i] is nonzero.
     */
 
+   void (*WriteMonoDepthSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
+                               const GLdepth depth, const GLubyte mask[] );
+   /* Write a horizontal run of depth values.
+    * If mask is NULL, draw all pixels.
+    * If mask is not null, only draw pixel [i] when mask [i] is true.
+    */
+
    void (*ReadDepthSpan)( GLcontext *ctx, GLuint n, GLint x, GLint y,
                           GLdepth depth[] );
    /* Read a horizontal span of values from the depth buffer.

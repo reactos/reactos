@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icon.c,v 1.22 2004/08/15 21:36:29 chorns Exp $
+/* $Id: icon.c,v 1.22.6.1 2004/10/25 14:48:54 ion Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/icon.c
@@ -569,7 +569,7 @@ LookupIconIdFromDirectoryEx(
    GRPCURSORICONDIR *dir = (GRPCURSORICONDIR*)presbits;
    UINT retVal = 0;
 
-   if (dir && !dir->idReserved && (dir->idType & 3))
+   if (dir && !dir->idReserved && (IMAGE_ICON == dir->idType || IMAGE_CURSOR == dir->idType))
    {
       GRPCURSORICONDIRENTRY *entry;
       HDC hdc;

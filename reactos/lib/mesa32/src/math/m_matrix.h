@@ -1,13 +1,8 @@
-/**
- * \file math/m_matrix.h
- * Defines basic structures for matrix-handling.
- */
-
 /*
  * Mesa 3-D graphics library
- * Version:  3.5
+ * Version:  6.2
  *
- * Copyright (C) 1999-2001  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -28,6 +23,11 @@
  */
 
 
+/**
+ * \file math/m_matrix.h
+ * Defines basic structures for matrix-handling.
+ */
+
 #ifndef _M_MATRIX_H
 #define _M_MATRIX_H
 
@@ -36,7 +36,7 @@
 /**
  * \name Symbolic names to some of the entries in the matrix
  *
- * To help out with the rework of the viewport_map as a matrix transform.
+ * These are handy for the viewport mapping, which is expressed as a matrix.
  */
 /*@{*/
 #define MAT_SX 0
@@ -47,29 +47,30 @@
 #define MAT_TZ 14
 /*@}*/
 
+
 /**
  * \defgroup MatFlags MAT_FLAG_XXX-flags
  *
- * Bitmasks to indicate different kinds of 4x4 matrices in
- * GLmatrix::flags
+ * Bitmasks to indicate different kinds of 4x4 matrices in GLmatrix::flags
+ * It would be nice to make all these flags private to m_matrix.c
  */
 /*@{*/
-
-#define MAT_FLAG_IDENTITY       0	/**< is an identity matrix flag.
-					 *   (Not actually used - the identity
-					 *   matrix is identified by the absense
-					 /   of all other flags.) */
-#define MAT_FLAG_GENERAL        0x1	/**< is a general matrix flag */
-#define MAT_FLAG_ROTATION       0x2	/**< is a rotation matrix flag */
-#define MAT_FLAG_TRANSLATION    0x4	/**< is a translation matrix flag */
-#define MAT_FLAG_UNIFORM_SCALE  0x8	/**< is an uniform scaling matrix flag */
-#define MAT_FLAG_GENERAL_SCALE  0x10	/**< is a general scaling matrix flag */
-#define MAT_FLAG_GENERAL_3D     0x20	/**< general 3D matrix flag */
-#define MAT_FLAG_PERSPECTIVE    0x40	/**< is a perspective projection matrix flag */
-#define MAT_FLAG_SINGULAR       0x80	/**< is a singular matrix flag */
-#define MAT_DIRTY_TYPE          0x100	/**< matrix type is dirty */
-#define MAT_DIRTY_FLAGS         0x200	/**< matrix flags are dirty */
-#define MAT_DIRTY_INVERSE       0x400	/**< matrix inverse is dirty */
+#define MAT_FLAG_IDENTITY       0     /**< is an identity matrix flag.
+                                       *   (Not actually used - the identity
+                                       *   matrix is identified by the absense
+                                       *   of all other flags.)
+                                       */
+#define MAT_FLAG_GENERAL        0x1   /**< is a general matrix flag */
+#define MAT_FLAG_ROTATION       0x2   /**< is a rotation matrix flag */
+#define MAT_FLAG_TRANSLATION    0x4   /**< is a translation matrix flag */
+#define MAT_FLAG_UNIFORM_SCALE  0x8   /**< is an uniform scaling matrix flag */
+#define MAT_FLAG_GENERAL_SCALE  0x10  /**< is a general scaling matrix flag */
+#define MAT_FLAG_GENERAL_3D     0x20  /**< general 3D matrix flag */
+#define MAT_FLAG_PERSPECTIVE    0x40  /**< is a perspective proj matrix flag */
+#define MAT_FLAG_SINGULAR       0x80  /**< is a singular matrix flag */
+#define MAT_DIRTY_TYPE          0x100  /**< matrix type is dirty */
+#define MAT_DIRTY_FLAGS         0x200  /**< matrix flags are dirty */
+#define MAT_DIRTY_INVERSE       0x400  /**< matrix inverse is dirty */
 
 /** angle preserving matrix flags mask */
 #define MAT_FLAGS_ANGLE_PRESERVING (MAT_FLAG_ROTATION | \
@@ -120,25 +121,27 @@
 
 /**
  * Different kinds of 4x4 transformation matrices.
+ * We use these to select specific optimized vertex transformation routines.
  */
 enum GLmatrixtype {
-	MATRIX_GENERAL,		/**< general 4x4 matrix */
-	MATRIX_IDENTITY,	/**< identity matrix */
-	MATRIX_3D_NO_ROT,	/**< orthogonal projection and others... */
-	MATRIX_PERSPECTIVE,	/**< perspective projection matrix */
-	MATRIX_2D,		/**< 2-D transformation */
-	MATRIX_2D_NO_ROT,	/**< 2-D scale & translate only */
-	MATRIX_3D		/**< 3-D transformation */
+   MATRIX_GENERAL,	/**< general 4x4 matrix */
+   MATRIX_IDENTITY,	/**< identity matrix */
+   MATRIX_3D_NO_ROT,	/**< orthogonal projection and others... */
+   MATRIX_PERSPECTIVE,	/**< perspective projection matrix */
+   MATRIX_2D,		/**< 2-D transformation */
+   MATRIX_2D_NO_ROT,	/**< 2-D scale & translate only */
+   MATRIX_3D		/**< 3-D transformation */
 } ;
 
 /**
- * Matrix.
+ * Matrix type to represent 4x4 transformation matrices.
  */
 typedef struct {
-   GLfloat *m;		/**< matrix, 16-byte aligned */
-   GLfloat *inv;	/**< optional inverse, 16-byte aligned */
+   GLfloat *m;		/**< 16 matrix elements (16-byte aligned) */
+   GLfloat *inv;	/**< optional 16-element inverse (16-byte aligned) */
    GLuint flags;        /**< possible values determined by (of \link
-			   MatFlags MAT_FLAG_* flags\endlink) */
+                         * MatFlags MAT_FLAG_* flags\endlink)
+                         */
    enum GLmatrixtype type;
 } GLmatrix;
 

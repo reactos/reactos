@@ -15,14 +15,14 @@ extern HINSTANCE hApplet;
 
 void ShowLastWin32Error(HWND hWndOwner);
 
-BOOL CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-BOOL CALLBACK UserProfilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ComputerPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK HardwarePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK UserProfilePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 /* environment.c */
-BOOL CALLBACK EnvironmentDlgProc (HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK EnvironmentDlgProc (HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 
 #endif /* __CPL_SYSDM_H */

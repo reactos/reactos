@@ -35,9 +35,7 @@ C_SRCS16 = \
 	ole2disp.c \
 	typelib16.c
 
-RC_SRCS = \
-	oleaut32.rc \
-	version.rc
+RC_SRCS = oleaut32.rc
 
 SUBDIRS = tests
 

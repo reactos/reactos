@@ -27,6 +27,9 @@
 #ifdef HAVE_UNISTD_H
 # include <unistd.h>
 #endif
+
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"

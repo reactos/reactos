@@ -131,6 +131,16 @@ static BOOL COMCTL32_ChrCmpW(WCHAR ch1, WCHAR ch2)
   return COMCTL32_ChrCmpHelperW(ch1, ch2, 0);
 }
 
+/*************************************************************************
+ * COMCTL32_ChrCmpIW
+ *
+ * Internal helper function.
+ */
+static BOOL COMCTL32_ChrCmpIW(WCHAR ch1, WCHAR ch2)
+{
+  return COMCTL32_ChrCmpHelperW(ch1, ch2, NORM_IGNORECASE);
+}
+
 /**************************************************************************
  * StrChrA [COMCTL32.350]
  *
@@ -627,7 +637,7 @@ LPWSTR WINAPI StrRStrIW(LPCWSTR lpszStr, LPCWSTR lpszEnd, LPCWSTR lpszSearch)
 
   while (lpszStr <= lpszEnd  && *lpszStr)
   {
-    if (!COMCTL32_ChrCmpIA(*lpszSearch, *lpszStr))
+    if (!COMCTL32_ChrCmpIW(*lpszSearch, *lpszStr))
     {
       if (!StrCmpNIW(lpszStr, lpszSearch, iLen))
         lpszRet = (LPWSTR)lpszStr;

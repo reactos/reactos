@@ -31,6 +31,8 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -145,7 +147,7 @@ ULONG   WINAPI RunningObjectTableImpl_AddRef(IRunningObjectTable* iface)
 
     TRACE("(%p)\n",This);
 
-    return ++(This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 /***********************************************************************
@@ -174,13 +176,14 @@ ULONG   WINAPI RunningObjectTableImpl_Release(IRunningObjectTable* iface)
 {
     DWORD i;
     RunningObjectTableImpl *This = (RunningObjectTableImpl *)iface;
+    ULONG ref;
 
     TRACE("(%p)\n",This);
 
-    This->ref--;
+    ref = InterlockedDecrement(&This->ref);
 
     /* unitialize ROT structure if there's no more reference to it*/
-    if (This->ref==0){
+    if (ref == 0) {
 
         /* release all registered objects */
         for(i=0;i<This->runObjTabLastIndx;i++)
@@ -197,11 +200,9 @@ ULONG   WINAPI RunningObjectTableImpl_Release(IRunningObjectTable* iface)
         /* there's no more elements in the table */
         This->runObjTabRegister=0;
         This->runObjTabLastIndx=0;
-
-        return 0;
     }
 
-    return This->ref;
+    return ref;
 }
 
 /***********************************************************************

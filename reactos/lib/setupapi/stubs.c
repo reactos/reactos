@@ -51,44 +51,6 @@ DWORD WINAPI suErrorToIds16( WORD w1, WORD w2 )
 }
 
 /***********************************************************************
- *		SetupDiOpenClassRegKeyExW  (SETUPAPI.@)
- *
- * WINAPI in description not given
- */
-HKEY WINAPI SetupDiOpenClassRegKeyExW(const GUID* class, REGSAM access, DWORD flags, PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return INVALID_HANDLE_VALUE;
-}
-
-/***********************************************************************
- *		SetupDiGetClassDescriptionExW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiGetClassDescriptionExW (const GUID* class, PWSTR desc, DWORD size, PDWORD required, PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
- *		SetupDiClassNameFromGuidExW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiClassNameFromGuidExW (const GUID* class, PWSTR desc, DWORD size, PDWORD required, PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
- *		SetupDiBuildClassInfoListExW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiBuildClassInfoListExW(DWORD flags, LPGUID list, DWORD size, PDWORD required,  LPCWSTR  machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
  *		SetupDiGetDeviceInfoListDetailA  (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInfoListDetailA(HDEVINFO devinfo, PSP_DEVINFO_LIST_DETAIL_DATA_A devinfo_data )
@@ -106,26 +68,9 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(HDEVINFO devinfo, PSP_DEVINFO_LIST_D
   return FALSE;
 }
 
-/***********************************************************************
- *		SetupDiCreateDeviceInfoListA (SETUPAPI.@)
- */
-HDEVINFO WINAPI SetupDiCreateDeviceInfoList(const GUID *class, HWND parend)
-{
-  FIXME("\n");
-  return FALSE;
-}
 
 /***********************************************************************
- *		SetupDiCreateDeviceInfoListExW  (SETUPAPI.@)
- */
-HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(const GUID *class, HWND parend , PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
- *		  (SETUPAPI.@)
+ *		SetupDiGetClassDevsExA  (SETUPAPI.@)
  *
  * NO WINAPI in description given
  */
@@ -136,20 +81,11 @@ HDEVINFO WINAPI SetupDiGetClassDevsExA(const GUID *class, PCSTR filter, HWND par
 }
 
 /***********************************************************************
- *		  (SETUPAPI.@)
+ *		SetupDiGetClassDevsExW  (SETUPAPI.@)
  *
  * NO WINAPI in description given
  */
 HDEVINFO WINAPI SetupDiGetClassDevsExW(const GUID *class, PCWSTR filter, HWND parent, DWORD flags, HDEVINFO deviceset, PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-/***********************************************************************
- *		SetupDiClassGuidsFromNameExW  (SETUPAPI.@)
- */
-BOOL WINAPI SetupDiClassGuidsFromNameExW(LPCWSTR class, LPGUID list, DWORD size, PDWORD required,  LPCWSTR  machine, PVOID reserved)
 {
   FIXME("\n");
   return FALSE;

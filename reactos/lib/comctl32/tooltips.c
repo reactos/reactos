@@ -192,7 +192,7 @@ TOOLTIPS_InitSystemSettings (TOOLTIPS_INFO *infoPtr)
 
     DeleteObject (infoPtr->hFont);
     nclm.cbSize = sizeof(nclm);
-    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
+    SystemParametersInfoW (SPI_GETNONCLIENTMETRICS, sizeof(nclm), &nclm, 0);
     infoPtr->hFont = CreateFontIndirectW (&nclm.lfStatusFont);
 
     DeleteObject (infoPtr->hTitleFont);
@@ -318,7 +318,7 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     ttnmdi.lParam = toolPtr->lParam;
 
     TRACE("hdr.idFrom = %x\n", ttnmdi.hdr.idFrom);
-    SendMessageA(toolPtr->hwnd, WM_NOTIFY,
+    SendMessageW(toolPtr->hwnd, WM_NOTIFY,
                  (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
 
     if (HIWORD((UINT)ttnmdi.lpszText) == 0) {
@@ -522,7 +522,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_SHOW;
-    SendMessageA (toolPtr->hwnd, WM_NOTIFY,
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
 		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
 
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
@@ -698,7 +698,7 @@ TOOLTIPS_Hide (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_POP;
-    SendMessageA (toolPtr->hwnd, WM_NOTIFY,
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
 		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
 
     infoPtr->nCurrentTool = -1;
@@ -736,7 +736,7 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_SHOW;
-    SendMessageA (toolPtr->hwnd, WM_NOTIFY,
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
 		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
 
     TRACE("%s\n", debugstr_w(infoPtr->szTipText));
@@ -822,7 +822,7 @@ TOOLTIPS_TrackHide (HWND hwnd, TOOLTIPS_INFO *infoPtr)
     hdr.hwndFrom = hwnd;
     hdr.idFrom = toolPtr->uId;
     hdr.code = TTN_POP;
-    SendMessageA (toolPtr->hwnd, WM_NOTIFY,
+    SendMessageW (toolPtr->hwnd, WM_NOTIFY,
 		    (WPARAM)toolPtr->uId, (LPARAM)&hdr);
 
     SetWindowPos (hwnd, HWND_TOP, 0, 0, 0, 0,
@@ -936,7 +936,7 @@ TOOLTIPS_CheckTool (HWND hwnd, BOOL bShowTest)
     INT nTool;
 
     GetCursorPos (&pt);
-    hwndTool = (HWND)SendMessageA (hwnd, TTM_WINDOWFROMPOINT, 0, (LPARAM)&pt);
+    hwndTool = (HWND)SendMessageW (hwnd, TTM_WINDOWFROMPOINT, 0, (LPARAM)&pt);
     if (hwndTool == 0)
 	return -1;
 
@@ -1048,7 +1048,7 @@ TOOLTIPS_AddToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TRACE("subclassing installed!\n");
     }
 
-    nResult = (INT) SendMessageA (toolPtr->hwnd, WM_NOTIFYFORMAT,
+    nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
 				  (WPARAM)hwnd, (LPARAM)NF_QUERY);
     if (nResult == NFR_ANSI) {
         toolPtr->bNotifyUnicode = FALSE;
@@ -1138,7 +1138,7 @@ TOOLTIPS_AddToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	TRACE("subclassing installed!\n");
     }
 
-    nResult = (INT) SendMessageA (toolPtr->hwnd, WM_NOTIFYFORMAT,
+    nResult = (INT) SendMessageW (toolPtr->hwnd, WM_NOTIFYFORMAT,
 				  (WPARAM)hwnd, (LPARAM)NF_QUERY);
     if (nResult == NFR_ANSI) {
         toolPtr->bNotifyUnicode = FALSE;
@@ -2415,7 +2415,7 @@ TOOLTIPS_NCHitTest (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	}
     }
 
-    return DefWindowProcA (hwnd, WM_NCHITTEST, wParam, lParam);
+    return DefWindowProcW (hwnd, WM_NCHITTEST, wParam, lParam);
 }
 
 
@@ -2464,8 +2464,9 @@ TOOLTIPS_SetFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     return 0;
 }
+
 /******************************************************************
- * TOOLTIPS_OnWMGetTextLength
+ * TOOLTIPS_GetTextLength
  *
  * This function is called when the tooltip receive a
  * WM_GETTEXTLENGTH message.
@@ -2473,12 +2474,12 @@ TOOLTIPS_SetFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
  * lParam : not used
  *
  * returns the length, in characters, of the tip text
- ******************************************************************/
+ */
 static LRESULT
-TOOLTIPS_OnWMGetTextLength(HWND hwnd, WPARAM wParam, LPARAM lParam)
+TOOLTIPS_GetTextLength(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
-    return lstrlenW(infoPtr->szTipText);
+    return strlenW(infoPtr->szTipText);
 }
 
 /******************************************************************
@@ -2491,17 +2492,21 @@ TOOLTIPS_OnWMGetTextLength(HWND hwnd, WPARAM wParam, LPARAM lParam)
  *          the tip text
  *
  * returns the number of characters copied
- ******************************************************************/
+ */
 static LRESULT
 TOOLTIPS_OnWMGetText (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TOOLTIPS_INFO *infoPtr = TOOLTIPS_GetInfoPtr (hwnd);
+    LRESULT res;
+    LPWSTR pszText = (LPWSTR)lParam;
 
-    if(!infoPtr || !(infoPtr->szTipText))
+    if(!infoPtr->szTipText || !wParam)
         return 0;
 
-    return WideCharToMultiByte(CP_ACP, 0, infoPtr->szTipText, -1,
-			       (LPSTR)lParam, wParam, NULL, NULL);
+    res = min(strlenW(infoPtr->szTipText)+1, wParam);
+    memcpy(pszText, infoPtr->szTipText, res*sizeof(WCHAR));
+    pszText[res-1] = '\0';
+    return res-1;
 }
 
 static LRESULT
@@ -2597,7 +2602,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     TRACE("hwnd=%p msg=%x wparam=%x lParam=%lx\n", hwnd, uMsg, wParam, lParam);
     if (!TOOLTIPS_GetInfoPtr(hwnd) && (uMsg != WM_CREATE) && (uMsg != WM_NCCREATE))
-        return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+        return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     switch (uMsg)
     {
 	case TTM_ACTIVATE:
@@ -2741,7 +2746,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return TOOLTIPS_OnWMGetText (hwnd, wParam, lParam);
 
 	case WM_GETTEXTLENGTH:
-	    return TOOLTIPS_OnWMGetTextLength (hwnd, wParam, lParam);
+	    return TOOLTIPS_GetTextLength (hwnd, wParam, lParam);
 
 	case WM_LBUTTONDOWN:
 	case WM_LBUTTONUP:
@@ -2777,7 +2782,7 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    if ((uMsg >= WM_USER) && (uMsg < WM_APP))
 		ERR("unknown msg %04x wp=%08x lp=%08lx\n",
 		     uMsg, wParam, lParam);
-	    return DefWindowProcA (hwnd, uMsg, wParam, lParam);
+	    return DefWindowProcW (hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }
@@ -2786,18 +2791,18 @@ TOOLTIPS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 VOID
 TOOLTIPS_Register (void)
 {
-    WNDCLASSA wndClass;
+    WNDCLASSW wndClass;
 
-    ZeroMemory (&wndClass, sizeof(WNDCLASSA));
+    ZeroMemory (&wndClass, sizeof(WNDCLASSW));
     wndClass.style         = CS_GLOBALCLASS | CS_DBLCLKS | CS_SAVEBITS;
-    wndClass.lpfnWndProc   = (WNDPROC)TOOLTIPS_WindowProc;
+    wndClass.lpfnWndProc   = TOOLTIPS_WindowProc;
     wndClass.cbClsExtra    = 0;
     wndClass.cbWndExtra    = sizeof(TOOLTIPS_INFO *);
-    wndClass.hCursor       = LoadCursorA (0, (LPSTR)IDC_ARROW);
+    wndClass.hCursor       = LoadCursorW (0, (LPWSTR)IDC_ARROW);
     wndClass.hbrBackground = 0;
-    wndClass.lpszClassName = TOOLTIPS_CLASSA;
+    wndClass.lpszClassName = TOOLTIPS_CLASSW;
 
-    RegisterClassA (&wndClass);
+    RegisterClassW (&wndClass);
 
     hTooltipIcons[TTI_NONE] = NULL;
     hTooltipIcons[TTI_INFO] = LoadImageW(COMCTL32_hModule,
@@ -2815,5 +2820,5 @@ TOOLTIPS_Unregister (void)
     int i;
     for (i = 0; i < TTI_ERROR+1; i++)
         DeleteObject(hTooltipIcons[i]);
-    UnregisterClassA (TOOLTIPS_CLASSA, NULL);
+    UnregisterClassW (TOOLTIPS_CLASSW, NULL);
 }

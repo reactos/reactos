@@ -31,8 +31,10 @@
 #include <string.h>
 #include <assert.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -513,8 +515,11 @@ void WINAPI CoUninitialize(void)
     RunningObjectTableImpl_UnInitialize();
 
     /* disconnect proxies to release the corresponding stubs.
-     * FIXME: native version might not do this and we might just be working
-     * around bugs elsewhere. */
+     * It is confirmed in "Essential COM" in the sub-chapter on
+     * "Lifecycle Management and Marshaling" that the native version also
+     * does some kind of proxy cleanup in this function.
+     * FIXME: does it just disconnect or completely destroy the proxies?
+     * FIXME: should this be in the apartment destructor? */
     MARSHAL_Disconnect_Proxies();
 
     /* Release the references to the registered class objects */
@@ -2196,4 +2201,13 @@ HRESULT WINAPI CoInitializeSecurity(PSECURITY_DESCRIPTOR pSecDesc, LONG cAuthSvc
         asAuthSvc, pReserved1, dwAuthnLevel, dwImpLevel, pReserved2,
         dwCapabilities, pReserved3);
   return S_OK;
+}
+
+/***********************************************************************
+ *           CoSuspendClassObjects [OLE32.@]
+ */
+HRESULT WINAPI CoSuspendClassObjects(void)
+{
+    FIXME("\n");
+    return S_OK;
 }

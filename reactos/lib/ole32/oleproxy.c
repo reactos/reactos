@@ -42,8 +42,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -104,20 +106,17 @@ CFStub_QueryInterface(LPRPCSTUBBUFFER iface, REFIID riid, LPVOID *ppv) {
 static ULONG WINAPI
 CFStub_AddRef(LPRPCSTUBBUFFER iface) {
     CFStub *This = (CFStub *)iface;
-
-    This->ref++;
-    return This->ref;
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI
 CFStub_Release(LPRPCSTUBBUFFER iface) {
     CFStub *This = (CFStub *)iface;
+    ULONG ref;
 
-    This->ref--;
-    if (This->ref)
-	return This->ref;
-    HeapFree(GetProcessHeap(),0,This);
-    return 0;
+    ref = InterlockedDecrement(&This->ref);
+    if (!ref) HeapFree(GetProcessHeap(),0,This);
+    return ref;
 }
 
 static HRESULT WINAPI
@@ -287,18 +286,18 @@ static HRESULT WINAPI IRpcProxyBufferImpl_QueryInterface(LPRPCPROXYBUFFER iface,
 
 static ULONG WINAPI IRpcProxyBufferImpl_AddRef(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(CFProxy,lpvtbl_proxy,iface);
-    return ++(This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG WINAPI IRpcProxyBufferImpl_Release(LPRPCPROXYBUFFER iface) {
     ICOM_THIS_MULTI(CFProxy,lpvtbl_proxy,iface);
+    ULONG ref = InterlockedDecrement(&This->ref);
 
-    if (!--(This->ref)) {
+    if (!ref) {
 	IRpcChannelBuffer_Release(This->chanbuf);This->chanbuf = NULL;
 	HeapFree(GetProcessHeap(),0,This);
-	return 0;
     }
-    return This->ref;
+    return ref;
 }
 
 static HRESULT WINAPI IRpcProxyBufferImpl_Connect(LPRPCPROXYBUFFER iface,IRpcChannelBuffer* pRpcChannelBuffer) {
@@ -332,17 +331,16 @@ CFProxy_QueryInterface(LPCLASSFACTORY iface,REFIID riid, LPVOID *ppv) {
 
 static ULONG   WINAPI CFProxy_AddRef(LPCLASSFACTORY iface) {
     ICOM_THIS_MULTI(CFProxy,lpvtbl_cf,iface);
-    This->ref++;
-    return This->ref;
+    return InterlockedIncrement(&This->ref);
 }
 
 static ULONG   WINAPI CFProxy_Release(LPCLASSFACTORY iface) {
+    ULONG ref;
     ICOM_THIS_MULTI(CFProxy,lpvtbl_cf,iface);
-    This->ref--;
-    if (This->ref)
-	return This->ref;
-    HeapFree(GetProcessHeap(),0,This);
-    return 0;
+    
+    ref = InterlockedDecrement(&This->ref);
+    if (!ref) HeapFree(GetProcessHeap(),0,This);
+    return ref;
 }
 
 static HRESULT WINAPI CFProxy_CreateInstance(

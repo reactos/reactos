@@ -1,4 +1,31 @@
-/* DO NOT EDIT - This file generated automatically with gltable.py script */
+/* DO NOT EDIT - This file generated automatically by a script */
+
+/*
+ * Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+ * (C) Copyright IBM Corporation 2004
+ * All Rights Reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sub license,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice (including the next
+ * paragraph) shall be included in all copies or substantial portions of the
+ * Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL, IBM,
+ * AND/OR THEIR SUPPLIERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF
+ * OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
 #ifndef _GLAPI_TABLE_H_
 #define _GLAPI_TABLE_H_
 
@@ -703,9 +730,9 @@ struct _glapi_table
    void (GLAPIENTRYP GenBuffersARB)(GLsizei n, GLuint * buffer); /* 692 */
    void (GLAPIENTRYP GetBufferParameterivARB)(GLenum target, GLenum pname, GLint * params); /* 693 */
    void (GLAPIENTRYP GetBufferPointervARB)(GLenum target, GLenum pname, GLvoid ** params); /* 694 */
-   void (GLAPIENTRYP GetBufferSubDataARB)(GLenum target, GLintptrARB offset, GLsizeiptrARB size, void * data); /* 695 */
+   void (GLAPIENTRYP GetBufferSubDataARB)(GLenum target, GLintptrARB offset, GLsizeiptrARB size, GLvoid * data); /* 695 */
    GLboolean (GLAPIENTRYP IsBufferARB)(GLuint buffer); /* 696 */
-   void * (GLAPIENTRYP MapBufferARB)(GLenum target, GLenum access); /* 697 */
+   GLvoid * (GLAPIENTRYP MapBufferARB)(GLenum target, GLenum access); /* 697 */
    GLboolean (GLAPIENTRYP UnmapBufferARB)(GLenum target); /* 698 */
    void (GLAPIENTRYP DepthBoundsEXT)(GLclampd zmin, GLclampd zmax); /* 699 */
    void (GLAPIENTRYP GenQueriesARB)(GLsizei n, GLuint * ids); /* 700 */

@@ -5,3 +5,4 @@ nul
 *.map
 *.sym
 doxy-doc
+freetype.coff

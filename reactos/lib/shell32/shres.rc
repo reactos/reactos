@@ -26,6 +26,8 @@
 #include "shlobj.h"
 #include "shresdef.h"
 
+#include "version.rc"
+
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 shv_accel ACCELERATORS

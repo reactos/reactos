@@ -29,8 +29,10 @@
 #include <stdio.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -378,10 +380,7 @@ ULONG WINAPI HGLOBALStreamImpl_AddRef(
 		IStream* iface)
 {
   HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
-
-  This->ref++;
-
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 /***
@@ -392,12 +391,9 @@ ULONG WINAPI HGLOBALStreamImpl_Release(
 		IStream* iface)
 {
   HGLOBALStreamImpl* const This=(HGLOBALStreamImpl*)iface;
-
   ULONG newRef;
 
-  This->ref--;
-
-  newRef = This->ref;
+  newRef = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.

@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.17 2004/10/03 10:05:56 weiden Exp $
+/* $Id: handle.c,v 1.17.4.1 2004/10/25 14:48:30 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -115,8 +115,8 @@ SetHandleInformation (HANDLE hObject,
 			  &BytesWritten);
   if (NT_SUCCESS(Status))
   {
-    HandleInfo.Inherit = ((dwFlags & HANDLE_FLAG_INHERIT) ? TRUE : FALSE);
-    HandleInfo.ProtectFromClose = ((dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) ? TRUE : FALSE);
+    HandleInfo.Inherit = (dwFlags & HANDLE_FLAG_INHERIT) != 0;
+    HandleInfo.ProtectFromClose = (dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE) != 0;
     Status = NtSetInformationObject (hObject,
 				     ObjectHandleInformation,
 				     &HandleInfo,
@@ -223,7 +223,7 @@ BOOL STDCALL DuplicateHandle(HANDLE hSourceProcessHandle,
       }
 
       *lpTargetHandle = DuplicateConsoleHandle(hSourceHandle, dwDesiredAccess, bInheritHandle, dwOptions);
-      return *lpTargetHandle != INVALID_HANDLE_VALUE ? TRUE : FALSE;
+      return *lpTargetHandle != INVALID_HANDLE_VALUE;
    }
       
    Status = NtDuplicateObject(hSourceProcessHandle,

@@ -29,6 +29,17 @@
  * \author Keith Whitwell <keith@tungstengraphics.com>
  */
 
+/**
+ * \mainpage swrast module
+ *
+ * This module, software rasterization, contains the software fallback
+ * routines for drawing points, lines, triangles, bitmaps and images.
+ * All rendering boils down to writing spans (arrays) of pixels with
+ * particular colors.  The span-writing routines must be implemented
+ * by the device driver.
+ */
+
+
 #ifndef S_CONTEXT_H
 #define S_CONTEXT_H
 

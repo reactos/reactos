@@ -345,7 +345,7 @@ BOOL16 WINAPI PrintDlg16(
 ) {
     BOOL      bRet = FALSE;
     LPVOID   ptr;
-    HINSTANCE16 hInst = GetWindowWord( HWND_32(lppd->hwndOwner), GWL_HINSTANCE );
+    HINSTANCE16 hInst = GetWindowLongPtrW( HWND_32(lppd->hwndOwner), GWLP_HINSTANCE );
 
     if(TRACE_ON(commdlg)) {
         char flagstr[1000] = "";

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/10/02 16:43:05 weiden Exp $
+# $Id: Makefile,v 1.1.4.1 2004/10/25 14:48:55 ion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = winfax
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = $(TARGET_BASE_LIB_ACLUI)
+TARGET_BASE = $(TARGET_BASE_LIB_WINFAX)
 
 TARGET_CFLAGS = \
  -D__USE_W32API \

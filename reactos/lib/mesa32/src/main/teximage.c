@@ -1979,6 +1979,9 @@ _mesa_GetTexImage( GLenum target, GLint level, GLenum format,
       return;
    }
 
+   /*
+    * XXX Move this code into a new driver fall-back function
+    */
    {
       const GLint width = texImage->Width;
       const GLint height = texImage->Height;
@@ -2396,7 +2399,7 @@ _mesa_TexSubImage1D( GLenum target, GLint level,
    texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
    assert(texImage);
 
-   if (width == 0 || !pixels)
+   if (width == 0)
       return;  /* no-op, not an error */
 
    /* If we have a border, xoffset=-1 is legal.  Bias by border width */
@@ -2443,7 +2446,7 @@ _mesa_TexSubImage2D( GLenum target, GLint level,
    texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
    assert(texImage);
 
-   if (width == 0 || height == 0 || !pixels)
+   if (width == 0 || height == 0)
       return;  /* no-op, not an error */
 
    /* If we have a border, xoffset=-1 is legal.  Bias by border width */
@@ -2485,7 +2488,7 @@ _mesa_TexSubImage3D( GLenum target, GLint level,
    texImage = _mesa_select_tex_image(ctx, texUnit, target, level);
    assert(texImage);
 
-   if (width == 0 || height == 0 || height == 0 || !pixels)
+   if (width == 0 || height == 0 || height == 0)
       return;  /* no-op, not an error */
 
    /* If we have a border, xoffset=-1 is legal.  Bias by border width */
@@ -3195,7 +3198,7 @@ _mesa_CompressedTexSubImage1DARB(GLenum target, GLint level, GLint xoffset,
       return;
    }
       
-   if (width == 0 || !data)
+   if (width == 0)
       return;  /* no-op, not an error */
 
    if (ctx->Driver.CompressedTexSubImage1D) {
@@ -3246,7 +3249,7 @@ _mesa_CompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset,
       return;
    }
       
-   if (width == 0 || height == 0 || !data)
+   if (width == 0 || height == 0)
       return;  /* no-op, not an error */
 
    if (ctx->Driver.CompressedTexSubImage2D) {
@@ -3297,7 +3300,7 @@ _mesa_CompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset,
       return;
    }
       
-   if (width == 0 || height == 0 || depth == 0 || !data)
+   if (width == 0 || height == 0 || depth == 0)
       return;  /* no-op, not an error */
 
    if (ctx->Driver.CompressedTexSubImage3D) {

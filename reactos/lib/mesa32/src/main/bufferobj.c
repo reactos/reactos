@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.1
+ * Version:  6.2
  *
  * Copyright (C) 1999-2004  Brian Paul   All Rights Reserved.
  *
@@ -383,7 +383,6 @@ _mesa_init_buffer_objects( GLcontext *ctx )
  * glGetTexImage, etc) we call this function to check that we're not
  * going to read out of bounds.
  *
- * \param ctx  the rendering context
  * \param width  width of image to read/write
  * \param height  height of image to read/write
  * \param depth  depth of image to read/write
@@ -511,7 +510,7 @@ _mesa_BindBufferARB(GLenum target, GLuint buffer)
  * Delete a set of buffer objects.
  * 
  * \param n      Number of buffer objects to delete.
- * \param buffer Array of \c n buffer object IDs.
+ * \param ids    Array of \c n buffer object IDs.
  */
 void GLAPIENTRY
 _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
@@ -540,41 +539,50 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
             if (ctx->Array.Vertex.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.Vertex.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.Normal.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.Normal.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.Color.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.Color.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.SecondaryColor.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.SecondaryColor.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.FogCoord.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.FogCoord.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.Index.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.Index.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             if (ctx->Array.EdgeFlag.BufferObj == bufObj) {
                bufObj->RefCount--;
                ctx->Array.EdgeFlag.BufferObj = ctx->Array.NullBufferObj;
+               ctx->Array.NullBufferObj->RefCount++;
             }
             for (j = 0; j < MAX_TEXTURE_UNITS; j++) {
                if (ctx->Array.TexCoord[j].BufferObj == bufObj) {
                   bufObj->RefCount--;
                   ctx->Array.TexCoord[j].BufferObj = ctx->Array.NullBufferObj;
+                  ctx->Array.NullBufferObj->RefCount++;
                }
             }
             for (j = 0; j < VERT_ATTRIB_MAX; j++) {
                if (ctx->Array.VertexAttrib[j].BufferObj == bufObj) {
                   bufObj->RefCount--;
                   ctx->Array.VertexAttrib[j].BufferObj = ctx->Array.NullBufferObj;
+                  ctx->Array.NullBufferObj->RefCount++;
                }
             }
 
@@ -593,8 +601,11 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
             }
 
             /* decrement refcount and delete if <= 0 */
-            bufObj->DeletePending = GL_TRUE;
-            bufObj->RefCount--;
+            if (!bufObj->DeletePending) {
+               bufObj->DeletePending = GL_TRUE;
+               bufObj->RefCount--;
+            }
+
             if (bufObj->RefCount <= 0) {
                /* buffer should not be bound anymore! */
                ASSERT(ctx->Array.ArrayBufferObj != bufObj);

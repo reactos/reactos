@@ -1,4 +1,4 @@
-/* $Id: wgl.c,v 1.2 2004/08/25 12:35:11 blight Exp $ */
+/* $Id: wgl.c,v 1.2.6.1 2004/10/25 14:48:33 ion Exp $ */
 
 /*
 * This library is free software; you can redistribute it and/or
@@ -587,7 +587,7 @@ WGLAPI int GLAPIENTRY wglDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nByte
 */
 WGLAPI PROC GLAPIENTRY wglGetProcAddress(LPCSTR lpszProc)
 {
-   PROC p = (PROC) (int) _glapi_get_proc_address((const char *) lpszProc);
+   PROC p = (PROC) _glapi_get_proc_address((const char *) lpszProc);
    if (p)
       return p;
 

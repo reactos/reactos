@@ -1,11 +1,11 @@
 Index: printdlg.c
 ===================================================================
 RCS file: /home/wine/wine/dlls/commdlg/printdlg.c,v
-retrieving revision 1.78
-diff -u -r1.78 printdlg.c
---- printdlg.c	19 Jul 2004 19:35:28 -0000	1.78
-+++ printdlg.c	14 Aug 2004 19:34:17 -0000
-@@ -341,7 +341,7 @@
+retrieving revision 1.81
+diff -u -r1.81 printdlg.c
+--- printdlg.c	22 Sep 2004 19:36:47 -0000	1.81
++++ printdlg.c	20 Oct 2004 08:58:30 -0000
+@@ -339,7 +339,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
  	    if (lpdm->dmFields & DM_COPIES)
@@ -14,7 +14,7 @@ diff -u -r1.78 printdlg.c
  	} else {
  	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
  	        lppd->Flags |= PD_COLLATE;
-@@ -416,7 +416,7 @@
+@@ -414,7 +414,7 @@
  	        lpdm->dmCollate =
  		  (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED);
  	    if (lpdm->dmFields & DM_COPIES)
@@ -23,7 +23,7 @@ diff -u -r1.78 printdlg.c
  	} else {
  	    if (IsDlgButtonChecked(hDlg, chx2) == BST_CHECKED)
  	        lppd->Flags |= PD_COLLATE;
-@@ -581,9 +581,9 @@
+@@ -579,9 +579,9 @@
                                        Sel, 0);
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -35,7 +35,7 @@ diff -u -r1.78 printdlg.c
          }
      }
      else {
-@@ -593,9 +593,9 @@
+@@ -591,9 +591,9 @@
           */
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -47,7 +47,7 @@ diff -u -r1.78 printdlg.c
          }
      }
  
-@@ -691,9 +691,9 @@
+@@ -689,9 +689,9 @@
                                        Sel, 0);
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -59,7 +59,7 @@ diff -u -r1.78 printdlg.c
          }
      }
      else {
-@@ -703,9 +703,9 @@
+@@ -701,9 +701,9 @@
           */
          if (dm) {
              if (nIDComboBox == cmb2)
@@ -71,7 +71,7 @@ diff -u -r1.78 printdlg.c
          }
      }
  
-@@ -968,7 +968,7 @@
+@@ -966,7 +966,7 @@
  	  if (lppd->hDevMode == 0)
  	      copies = lppd->nCopies;
  	  else
@@ -80,7 +80,7 @@ diff -u -r1.78 printdlg.c
  	  if(copies == 0) copies = 1;
  	  else if(copies < 0) copies = MAX_COPIES;
  	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
-@@ -990,7 +990,7 @@
+@@ -988,7 +988,7 @@
              ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
      } else { /* PD_PRINTSETUP */
@@ -89,7 +89,7 @@ diff -u -r1.78 printdlg.c
  
        PRINTDLG_SetUpPaperComboBoxA(hDlg, cmb2,
  				  PrintStructures->lpPrinterInfo->pPrinterName,
-@@ -1131,7 +1131,7 @@
+@@ -1128,7 +1128,7 @@
  	  if (lppd->hDevMode == 0)
  	      copies = lppd->nCopies;
  	  else
@@ -98,7 +98,7 @@ diff -u -r1.78 printdlg.c
  	  if(copies == 0) copies = 1;
  	  else if(copies < 0) copies = MAX_COPIES;
  	  SetDlgItemInt(hDlg, edt3, copies, FALSE);
-@@ -1153,7 +1153,7 @@
+@@ -1150,7 +1150,7 @@
              ShowWindow(GetDlgItem(hDlg, chx1), SW_HIDE);
  
      } else { /* PD_PRINTSETUP */
@@ -107,7 +107,7 @@ diff -u -r1.78 printdlg.c
  
        PRINTDLG_SetUpPaperComboBoxW(hDlg, cmb2,
  				  PrintStructures->lpPrinterInfo->pPrinterName,
-@@ -1498,7 +1498,7 @@
+@@ -1499,7 +1499,7 @@
      case rad1: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -116,7 +116,7 @@ diff -u -r1.78 printdlg.c
                SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hPortraitIcon));
          }
-@@ -1507,7 +1507,7 @@
+@@ -1508,7 +1508,7 @@
      case rad2: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
@@ -125,7 +125,7 @@ diff -u -r1.78 printdlg.c
                SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hLandscapeIcon));
          }
-@@ -1531,7 +1531,7 @@
+@@ -1532,7 +1532,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -134,7 +134,7 @@ diff -u -r1.78 printdlg.c
  							    CB_GETITEMDATA,
  							    Sel, 0);
        }
-@@ -1541,7 +1541,7 @@
+@@ -1542,7 +1542,7 @@
        {
  	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
@@ -143,7 +143,7 @@ diff -u -r1.78 printdlg.c
  							  CB_GETITEMDATA, Sel,
  							  0);
        }
-@@ -1552,8 +1552,8 @@
+@@ -1553,8 +1553,8 @@
  	case rad1:                         /* orientation */
  	case rad2:
  	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
@@ -154,7 +154,7 @@ diff -u -r1.78 printdlg.c
  		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hPortraitIcon);
-@@ -1562,8 +1562,8 @@
+@@ -1563,8 +1563,8 @@
  					(LPARAM)PrintStructures->hPortraitIcon);
  		}
  	    } else {
@@ -165,43 +165,43 @@ diff -u -r1.78 printdlg.c
  		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hLandscapeIcon);
-@@ -1662,7 +1662,7 @@
+@@ -1663,7 +1663,7 @@
      case rad1: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
 -              lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
 +              lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
-               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+               SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hPortraitIcon));
          }
-@@ -1671,7 +1671,7 @@
+@@ -1672,7 +1672,7 @@
      case rad2: /* Paperorientation */
          if (lppd->Flags & PD_PRINTSETUP)
          {
 -              lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
 +              lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
-               SendDlgItemMessageA(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
+               SendDlgItemMessageW(hDlg, ico1, STM_SETIMAGE, (WPARAM) IMAGE_ICON,
                            (LPARAM)(PrintStructures->hLandscapeIcon));
          }
-@@ -1695,7 +1695,7 @@
+@@ -1696,7 +1696,7 @@
        {
- 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb2, CB_GETCURSEL, 0, 0);
+ 	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb2, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
--	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
-+	      lpdm->u.s.dmPaperSize = SendDlgItemMessageA(hDlg, cmb2,
+-	      lpdm->u1.s1.dmPaperSize = SendDlgItemMessageW(hDlg, cmb2,
++	      lpdm->u.s.dmPaperSize = SendDlgItemMessageW(hDlg, cmb2,
  							    CB_GETITEMDATA,
  							    Sel, 0);
        }
-@@ -1705,7 +1705,7 @@
+@@ -1706,7 +1706,7 @@
        {
- 	  DWORD Sel = SendDlgItemMessageA(hDlg, cmb3, CB_GETCURSEL, 0, 0);
+ 	  DWORD Sel = SendDlgItemMessageW(hDlg, cmb3, CB_GETCURSEL, 0, 0);
  	  if(Sel != CB_ERR)
 -	      lpdm->dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
 +	      lpdm->u.s.dmDefaultSource = SendDlgItemMessageW(hDlg, cmb3,
  							  CB_GETITEMDATA, Sel,
  							  0);
        }
-@@ -1716,8 +1716,8 @@
+@@ -1717,8 +1717,8 @@
  	case rad1:                         /* orientation */
  	case rad2:
  	    if (IsDlgButtonChecked(hDlg, rad1) == BST_CHECKED) {
@@ -209,10 +209,10 @@ diff -u -r1.78 printdlg.c
 -		    lpdm->u1.s1.dmOrientation = DMORIENT_PORTRAIT;
 +	        if(lpdm->u.s.dmOrientation != DMORIENT_PORTRAIT) {
 +		    lpdm->u.s.dmOrientation = DMORIENT_PORTRAIT;
- 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hPortraitIcon);
-@@ -1726,8 +1726,8 @@
+@@ -1727,8 +1727,8 @@
  					(LPARAM)PrintStructures->hPortraitIcon);
  		}
  	    } else {
@@ -220,10 +220,10 @@ diff -u -r1.78 printdlg.c
 -	            lpdm->u1.s1.dmOrientation = DMORIENT_LANDSCAPE;
 +	        if(lpdm->u.s.dmOrientation != DMORIENT_LANDSCAPE) {
 +	            lpdm->u.s.dmOrientation = DMORIENT_LANDSCAPE;
- 		    SendDlgItemMessageA(hDlg, stc10, STM_SETIMAGE,
+ 		    SendDlgItemMessageW(hDlg, stc10, STM_SETIMAGE,
  					(WPARAM)IMAGE_ICON,
  					(LPARAM)PrintStructures->hLandscapeIcon);
-@@ -2919,7 +2919,7 @@
+@@ -2936,7 +2936,7 @@
  /***********************************************************************
   *	PrintDlgExA (COMDLG32.@)
   */
@@ -232,7 +232,7 @@ diff -u -r1.78 printdlg.c
  {
  	FIXME("stub\n");
  	return E_NOTIMPL;
-@@ -2927,7 +2927,7 @@
+@@ -2944,7 +2944,7 @@
  /***********************************************************************
   *	PrintDlgExW (COMDLG32.@)
   */

@@ -22,6 +22,9 @@
 
 #include <stdarg.h>
 #include <string.h>
+
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
@@ -189,17 +192,13 @@ static ULONG WINAPI OleAdviseHolderImpl_Release(
   LPOLEADVISEHOLDER iface)
 {
   OleAdviseHolderImpl *This = (OleAdviseHolderImpl *)iface;
+  ULONG ref;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
-  This->ref--;
+  ref = InterlockedDecrement(&This->ref);
 
-  if (This->ref == 0)
-  {
-    OleAdviseHolderImpl_Destructor(This);
+  if (ref == 0) OleAdviseHolderImpl_Destructor(This);
 
-    return 0;
-  }
-
-  return This->ref;
+  return ref;
 }
 
 /******************************************************************************
@@ -524,9 +523,7 @@ static ULONG WINAPI       DataAdviseHolder_AddRef(
 {
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
   TRACE("(%p) (ref=%ld)\n", This, This->ref);
-  This->ref++;
-
-  return This->ref;
+  return InterlockedIncrement(&This->ref);
 }
 
 /************************************************************************
@@ -538,24 +535,20 @@ static ULONG WINAPI DataAdviseHolder_Release(
   IDataAdviseHolder*      iface)
 {
   DataAdviseHolder *This = (DataAdviseHolder *)iface;
+  ULONG ref;
   TRACE("(%p) (ref=%ld)\n", This, This->ref);
 
   /*
    * Decrease the reference count on this object.
    */
-  This->ref--;
+  ref = InterlockedDecrement(&This->ref);
 
   /*
    * If the reference count goes down to 0, perform suicide.
    */
-  if (This->ref==0)
-  {
-    DataAdviseHolder_Destructor(This);
+  if (ref==0) DataAdviseHolder_Destructor(This);
 
-    return 0;
-  }
-
-  return This->ref;
+  return ref;
 }
 
 /************************************************************************

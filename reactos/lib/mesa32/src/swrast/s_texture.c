@@ -2155,56 +2155,47 @@ sample_linear_rect(GLcontext *ctx, GLuint texUnit,
 
       /* NOTE: we DO NOT use [0, 1] texture coordinates! */
       if (tObj->WrapS == GL_CLAMP) {
-         /* clamping to width-1 looks wrong, but it's really correct */
-         fcol = CLAMP(texcoords[i][0], 0.0F, width_minus_1);
+         /* Not exactly what the spec says, but it matches NVIDIA output */
+         fcol = CLAMP(texcoords[i][0] - 0.5F, 0.0, width_minus_1);
          i0 = IFLOOR(fcol);
          i1 = i0 + 1;
       }
       else if (tObj->WrapS == GL_CLAMP_TO_EDGE) {
          fcol = CLAMP(texcoords[i][0], 0.5F, width - 0.5F);
+         fcol -= 0.5F;
          i0 = IFLOOR(fcol);
          i1 = i0 + 1;
          if (i1 > width_minus_1)
             i1 = width_minus_1;
       }
-      else { /* GL_CLAMP_TO_BORDER */
-#if 0
-         /* literal reading of GL_NV_texture_rectangle spec */
+      else {
+         ASSERT(tObj->WrapS == GL_CLAMP_TO_BORDER);
          fcol = CLAMP(texcoords[i][0], -0.5F, width + 0.5F);
+         fcol -= 0.5F;
          i0 = IFLOOR(fcol);
          i1 = i0 + 1;
-#else
-         /* Note: this produces results that matches NVIDIA, but it's not
-          * exactly what the GL_NV_texture_rectangle specifies!
-          */
-         fcol = texcoords[i][0];
-         i0 = IFLOOR(fcol);
-         i1 = i0 + 1;
-#endif
-
       }
+
       if (tObj->WrapT == GL_CLAMP) {
-         frow = CLAMP(texcoords[i][1], 0.0F, height_minus_1);
+         /* Not exactly what the spec says, but it matches NVIDIA output */
+         frow = CLAMP(texcoords[i][1] - 0.5F, 0.0, width_minus_1);
          j0 = IFLOOR(frow);
          j1 = j0 + 1;
       }
       else if (tObj->WrapT == GL_CLAMP_TO_EDGE) {
          frow = CLAMP(texcoords[i][1], 0.5F, height - 0.5F);
+         frow -= 0.5F;
          j0 = IFLOOR(frow);
          j1 = j0 + 1;
          if (j1 > height_minus_1)
             j1 = height_minus_1;
       }
-      else { /* GL_CLAMP_TO_BORDER */
-#if 0
+      else {
+         ASSERT(tObj->WrapT == GL_CLAMP_TO_BORDER);
          frow = CLAMP(texcoords[i][1], -0.5F, height + 0.5F);
+         frow -= 0.5F;
          j0 = IFLOOR(frow);
          j1 = j0 + 1;
-#else
-         frow = texcoords[i][1];
-         j0 = IFLOOR(frow);
-         j1 = j0 + 1;
-#endif
       }
 
       /* compute integer rows/columns */

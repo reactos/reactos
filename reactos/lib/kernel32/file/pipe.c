@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.10 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: pipe.c,v 1.10.20.1 2004/10/25 14:48:30 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -37,35 +37,32 @@ BOOL STDCALL CreatePipe(PHANDLE hReadPipe,
    NTSTATUS Status;
    HANDLE ReadPipeHandle;
    HANDLE WritePipeHandle;
+   ULONG PipeId, Attributes;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 
    DefaultTimeout.QuadPart = 300000000; /* 30 seconds */
 
-   ProcessPipeId++;
+   PipeId = (ULONG)InterlockedIncrement((LONG*)&ProcessPipeId);
    swprintf(Buffer,
 	    L"\\Device\\NamedPipe\\Win32Pipes.%08x.%08x",
 	    NtCurrentTeb()->Cid.UniqueProcess,
-	    ProcessPipeId);
+	    PipeId);
    RtlInitUnicodeString (&PipeName,
 			 Buffer);
 
+   Attributes = OBJ_CASE_INSENSITIVE;
    if (lpPipeAttributes)
      {
 	SecurityDescriptor = lpPipeAttributes->lpSecurityDescriptor;
+	if(lpPipeAttributes->bInheritHandle)
+           Attributes |= OBJ_INHERIT;
      }
 
    InitializeObjectAttributes(&ObjectAttributes,
 			      &PipeName,
-			      OBJ_CASE_INSENSITIVE,
+			      Attributes,
 			      NULL,
 			      SecurityDescriptor);
-   if (lpPipeAttributes)
-   {
-      if(lpPipeAttributes->bInheritHandle)
-         ObjectAttributes.Attributes |= OBJ_INHERIT;
-      if (lpPipeAttributes->lpSecurityDescriptor)
-	 ObjectAttributes.SecurityDescriptor = lpPipeAttributes->lpSecurityDescriptor;
-   }
 
    Status = NtCreateNamedPipeFile(&ReadPipeHandle,
 				  FILE_GENERIC_READ,

@@ -1,4 +1,4 @@
-/* $Id: 3dnow.h,v 1.2 2004/08/25 12:35:19 blight Exp $ */
+/* $Id: 3dnow.h,v 1.2.6.1 2004/10/25 14:48:38 ion Exp $ */
 
 /*
  * Mesa 3-D graphics library

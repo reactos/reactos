@@ -28,8 +28,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"

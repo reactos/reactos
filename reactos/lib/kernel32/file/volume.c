@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.41 2004/08/24 17:15:42 navaraf Exp $
+/* $Id: volume.c,v 1.41.6.1 2004/10/25 14:48:30 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -451,6 +451,7 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 
         switch (FileFsDevice.DeviceType)
         {
+		case FILE_DEVICE_CD_ROM:
 		case FILE_DEVICE_CD_ROM_FILE_SYSTEM:
 			return DRIVE_CDROM;
 	        case FILE_DEVICE_VIRTUAL_DISK:
@@ -465,6 +466,8 @@ GetDriveTypeW(LPCWSTR lpRootPathName)
 				return DRIVE_REMOVABLE;
 			return DRIVE_FIXED;
         }
+
+        DPRINT1("Returning DRIVE_UNKNOWN for device type %d\n", FileFsDevice.DeviceType);
 
 	return DRIVE_UNKNOWN;
 }

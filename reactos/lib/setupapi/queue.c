@@ -978,8 +978,8 @@ BOOL static do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
         if ((GetFileAttributesW(target) != INVALID_FILE_ATTRIBUTES) &&
             (GetFileAttributesW(source) != INVALID_FILE_ATTRIBUTES))
         {
-            VersionSizeSource = GetFileVersionInfoSizeW(source,&zero);
-            VersionSizeTarget = GetFileVersionInfoSizeW(target,&zero);
+            VersionSizeSource = GetFileVersionInfoSizeW((LPWSTR)source,&zero);
+            VersionSizeTarget = GetFileVersionInfoSizeW((LPWSTR)target,&zero);
         }
 
         TRACE("SizeTarget %li ... SizeSource %li\n",VersionSizeTarget,
@@ -998,9 +998,9 @@ BOOL static do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style)
             VersionSource = HeapAlloc(GetProcessHeap(),0,VersionSizeSource);
             VersionTarget = HeapAlloc(GetProcessHeap(),0,VersionSizeTarget);
 
-            ret = GetFileVersionInfoW(source,0,VersionSizeSource,VersionSource);
+            ret = GetFileVersionInfoW((LPWSTR)source,0,VersionSizeSource,VersionSource);
             if (ret)
-              ret = GetFileVersionInfoW(target, 0, VersionSizeTarget,
+              ret = GetFileVersionInfoW((LPWSTR)target, 0, VersionSizeTarget,
                     VersionTarget);
 
             if (ret)

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/09/26 10:43:00 weiden Exp $
+# $Id: Makefile,v 1.2.4.1 2004/10/25 14:48:52 ion Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = slayer
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x5C7E0000
+TARGET_BASE = $(TARGET_BASE_LIB_EXT_SLAYER)
 
 TARGET_CFLAGS = \
  -DUNICODE \

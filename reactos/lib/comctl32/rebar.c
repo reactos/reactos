@@ -1,26 +1,5 @@
 /*
- * Testing: set to 1 to make background brush *always* green
- */
-#define GLATESTING 0
-
-/*
- *
- * 2.  At "FIXME:  problem # 2" WinRAR:
- *   if "#if 1" then last band draws in separate row
- *   if "#if 0" then last band draws in previous row *** just like native ***
- *
- */
-#define PROBLEM2 0
-
-/*
- * 3. REBAR_MoveChildWindows should have a loop because more than
- *    one pass is made (together with the RBN_CHILDSIZEs) is made on
- *    at least RB_INSERTBAND
- */
-
-
-/*
- * Rebar control    rev 8e
+ * Rebar control
  *
  * Copyright 1998, 1999 Eric Kohl
  *
@@ -38,105 +17,76 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * NOTES
- *   An author is needed! Any volunteers?
- *   I will only improve this control once in a while.
- *     Eric <ekohl@abo.rhein-zeitung.de>
  *
- * TODO:
- *   - vertical placement
- *   - ComboBox and ComboBoxEx placement
- *   - center image
- *   - Layout code.
- *   - Display code.
- *   - Some messages.
- *   - All notifications.
+ * This code was audited for completeness against the documented features
+ * of Comctl32.dll version 6.0 on Mar. 14, 2004, by Robert Shearman.
+ * 
+ * Unless otherwise noted, we believe this code to be complete, as per
+ * the specification mentioned above.
+ * If you discover missing features or bugs please note them below.
+ *
+ * TODO
+ *   Styles:
+ *   - RBS_DBLCLKTOGGLE
+ *   - RBS_FIXEDORDER
+ *   - RBS_REGISTERDROP
+ *   - RBS_TOOLTIPS
+ *   - CCS_NORESIZE
+ *   - CCS_NOMOVEX
+ *   - CCS_NOMOVEY
+ *   Messages:
+ *   - RB_BEGINDRAG
+ *   - RB_DRAGMOVE
+ *   - RB_ENDDRAG
+ *   - RB_GETBANDMARGINS
+ *   - RB_GETCOLORSCHEME
+ *   - RB_GETDROPTARGET
+ *   - RB_GETPALETTE
+ *   - RB_SETCOLORSCHEME
+ *   - RB_SETPALETTE
+ *   - RB_SETTOOLTIPS
+ *   - WM_CHARTOITEM
+ *   - WM_LBUTTONDBLCLK
+ *   - WM_MEASUREITEM
+ *   - WM_PALETTECHANGED
+ *   - WM_PRINTCLIENT
+ *   - WM_QUERYNEWPALETTE
+ *   - WM_RBUTTONDOWN
+ *   - WM_RBUTTONUP
+ *   - WM_SYSCOLORCHANGE
+ *   - WM_VKEYTOITEM
+ *   - WM_WININICHANGE
+ *   Notifications:
+ *   - NM_HCHITTEST
+ *   - NM_RELEASEDCAPTURE
+ *   - RBN_AUTOBREAK
+ *   - RBN_GETOBJECT
+ *   - RBN_MINMAX
+ *   Band styles:
+ *   - RBBS_FIXEDBMP
+ *   Native uses (on each draw!!) SM_CYBORDER (or SM_CXBORDER for CCS_VERT)
+ *   to set the size of the separator width (the value SEP_WIDTH_SIZE
+ *   in here). Should be fixed!!
+ */
 
- * Changes Guy Albertelli <galberte@neo.lrun.com>
- *  rev 2,3,4
- *   - Implement initial version of row grouping, row separators,
- *     text and background colors. Support additional messages.
- *     Support RBBS_BREAK. Implement ERASEBKGND and improve painting.
- *  rev 5
- *   - implement support for dragging Gripper left or right in a row. Supports
- *     WM_LBUTTONDOWN, WM_LBUTTONUP, and WM_MOUSEMOVE. Also support
- *     RBS_BANDBORDERS.
- *  rev 6
- *   - Fix or implement notifications for RBN_HEIGHTCHANGE, RBN_CHILDSIZE.
- *   - Correct styles RBBS_NOGRIPPER, RBBS_GRIPPERALWAYS, and RBBS_FIXEDSIZE.
- *   - Fix algorithm for Layout and AdjustBand.
+/*
+ * Testing: set to 1 to make background brush *always* green
+ */
+#define GLATESTING 0
+
+/*
  *
- * rev 7
- *   - Fix algorithm for _Layout and _AdjustBand.
- *   - Fix or implement RBN_ENDDRAG, RB_MOVEBAND, WM_SETREDRAW,
- *     WM_STYLECHANGED, RB_MINIMIZEBAND, RBBS_VARIABLEHEIGHT, RBS_VARHEIGHT,
- *     RBBS_HIDDEN, WM_NOTIFYFORMAT, NM_NCHITTEST, WM_SETREDRAW, RBS_AUTOSIZE,
- *     WM_SETFONT, RBS_BORDERS
- *   - Create structures in WM_NCCREATE
- *   - Additional performance enhancements.
+ * 2.  At "FIXME:  problem # 2" WinRAR:
+ *   if "#if 1" then last band draws in separate row
+ *   if "#if 0" then last band draws in previous row *** just like native ***
  *
- * rev 8
- *  1. Create array of start and end band indexes by row and use.
- *  2. Fix problem with REBAR_Layout Phase 2b to process only if only
- *     band in row.
- *  3. Set the Caption Font (Regular) as default font for text.
- *  4. Delete font handle on control distruction.
- *  5. Add UpdateWindow call in _MoveChildWindows to match repainting done
- *     by native control
- *  6. Improve some traces.
- *  7. Invalidate window rectangles after SetBandInfo, InsertBand, ShowBand
- *     so that repainting is correct.
- *  8. Implement RB_MAXIMIZEBAND for the "ideal=TRUE" case.
- *  9. Implement item custom draw notifications partially. Only done for
- *     ITEMPREPAINT and ITEMPOSTPAINT. (Used by IE4 for "Favorites" frame
- *     to draw the word "Favorites").
- * rev 8a
- * 10. Handle CCS_NODIVIDER and fix WS_BORDER code.
- * 11. Fix logic error in _AdjustBands where flag was set to valid band
- *     number (0) to indicate *no* band.
- * 12. Fix CCS_VERT errors in _ForceResize, _NCCalcSize, and _NCPaint.
- * 13. Support some special cases of CCS_TOP (and therefore CCS_LEFT),
- *     CCS_BOTTOM (and therefore CCS_RIGHT) and CCS_NOPARENTALIGN. Not
- *     at all sure whether this is all cases.
- * 14. Handle returned value for the RBN_CHILDSIZE notify.
- * 15. Implement RBBS_CHILDEDGE, and set each bands "offChild" at _Layout
- *     time.
- * 16. Fix REBARSPACE. It should depend on CCS_NODIVIDER.
- * rev 8b
- * 17. Fix determination of whether Gripper is needed in _ValidateBand.
- * 18. Fix _AdjustBand processing of RBBS_FIXEDSIZE.
- * rev 8c
- * 19. Fix problem in _Layout when all lengths are 0.
- * 20. If CLR_NONE specified, we will use default BtnFace color when drawing.
- * 21. Fix test in REBAR_Layout.
- * rev 8d
- * 22. Add support for WM_WINDOWPOSCHANGED to save new origin of window.
- * 23. Correct RBN_CHILDSIZE rect value for CCS_VERT rebar.
- * 24. Do UpdateWindow only if doing redraws.
- * rev 8e
- * 25. Adjust setting of offChild.cx based on RBBS_CHILDEDGE.
- *
- *
- *    Still to do:
- *  2. Following still not handled: RBBS_FIXEDBMP,
- *            CCS_NORESIZE,
- *            CCS_NOMOVEX, CCS_NOMOVEY
- *  3. Following are only partially handled:
- *            RBS_AUTOSIZE, RBBS_VARIABLEHEIGHT
- *  5. Native uses (on each draw!!) SM_CYBORDER (or SM_CXBORDER for CCS_VERT)
- *     to set the size of the separator width (the value SEP_WIDTH_SIZE
- *     in here). Should be fixed!!
- *  6. The following messages are not implemented:
- *        RB_BEGINDRAG, RB_DRAGMOVE, RB_ENDDRAG, RB_GETCOLORSCHEME,
- *        RB_GETDROPTARGET, RB_MAXIMIZEBAND,
- *        RB_SETCOLORSCHEME, RB_SETPALETTE, RB_SETTOOLTIPS
- *        WM_CHARTOITEM, WM_LBUTTONDBLCLK, WM_MEASUREITEM,
- *        WM_PALETTECHANGED, WM_PRINTCLIENT, WM_QUERYNEWPALETTE,
- *        WM_RBUTTONDOWN, WM_RBUTTONUP,
- *        WM_SYSCOLORCHANGE, WM_VKEYTOITEM, WM_WININICHANGE
- *  7. The following notifications are not implemented:
- *        NM_CUSTOMDRAW, NM_RELEASEDCAPTURE
- *        RBN_MINMAX
+ */
+#define PROBLEM2 0
+
+/*
+ * 3. REBAR_MoveChildWindows should have a loop because more than
+ *    one pass is made (together with the RBN_CHILDSIZEs) is made on
+ *    at least RB_INSERTBAND
  */
 
 #include <stdarg.h>
@@ -3131,9 +3081,9 @@ REBAR_InsertBandA (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	}
 
 	/* post copy */
-	if (uIndex < infoPtr->uNumBands - 1) {
+	if (uIndex < infoPtr->uNumBands) {
 	    memcpy (&infoPtr->bands[uIndex+1], &oldBands[uIndex],
-		    (infoPtr->uNumBands - uIndex - 1) * sizeof(REBAR_BAND));
+		    (infoPtr->uNumBands - uIndex) * sizeof(REBAR_BAND));
 	}
 
 	Free (oldBands);

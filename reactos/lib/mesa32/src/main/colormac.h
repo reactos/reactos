@@ -221,5 +221,7 @@ do {						\
 #define PACK_COLOR_233( B, G, R )					\
    (((B) & 0xc0) | (((G) & 0xe0) >> 2) | (((R) & 0xe0) >> 5))
 
+/*@}*/
+
 
 #endif /* COLORMAC_H */

@@ -162,7 +162,7 @@ typedef struct tagWINE_TIMERENTRY {
     DWORD			dwUser;
     UINT16			wFlags;
     UINT16			wTimerID;
-    UINT			uCurTime;
+    DWORD			dwTriggerTime;
     struct tagWINE_TIMERENTRY*	lpNext;
 } WINE_TIMERENTRY, *LPWINE_TIMERENTRY;
 
@@ -250,25 +250,25 @@ const char* 	MCI_MessageToString(UINT16 wMsg);
 UINT	WINAPI	MCI_DefYieldProc(MCIDEVICEID wDevID, DWORD data);
 LRESULT		MCI_CleanUp(LRESULT dwRet, UINT wMsg, DWORD dwParam2);
 DWORD		MCI_SendCommand(UINT wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2, BOOL bFrom32);
-DWORD		MCI_SendCommandFrom32(UINT wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2);
-DWORD		MCI_SendCommandFrom16(UINT wDevID, UINT16 wMsg, DWORD dwParam1, DWORD dwParam2);
+DWORD		MCI_SendCommandFrom32(UINT wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
+DWORD		MCI_SendCommandFrom16(UINT wDevID, UINT16 wMsg, DWORD_PTR dwParam1, DWORD_PTR dwParam2);
 UINT		MCI_SetCommandTable(void *table, UINT uDevType);
 
 BOOL            WINMM_CheckForMMSystem(void);
 const char*     WINMM_ErrorToString(MMRESULT error);
 
-UINT            MIXER_Open(LPHMIXER lphMix, UINT uDeviceID, DWORD dwCallback,
-                           DWORD dwInstance, DWORD fdwOpen, BOOL bFrom32);
-UINT            MIDI_OutOpen(HMIDIOUT* lphMidiOut, UINT uDeviceID, DWORD dwCallback,
-                             DWORD dwInstance, DWORD dwFlags, BOOL bFrom32);
-UINT            MIDI_InOpen(HMIDIIN* lphMidiIn, UINT uDeviceID, DWORD dwCallback,
-                            DWORD dwInstance, DWORD dwFlags, BOOL bFrom32);
+UINT            MIXER_Open(LPHMIXER lphMix, UINT uDeviceID, DWORD_PTR dwCallback,
+                           DWORD_PTR dwInstance, DWORD fdwOpen, BOOL bFrom32);
+UINT            MIDI_OutOpen(HMIDIOUT* lphMidiOut, UINT uDeviceID, DWORD_PTR dwCallback,
+                             DWORD_PTR dwInstance, DWORD dwFlags, BOOL bFrom32);
+UINT            MIDI_InOpen(HMIDIIN* lphMidiIn, UINT uDeviceID, DWORD_PTR dwCallback,
+                            DWORD_PTR dwInstance, DWORD dwFlags, BOOL bFrom32);
 MMRESULT        MIDI_StreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID,
-                                DWORD cMidi, DWORD dwCallback,
-                                DWORD dwInstance, DWORD fdwOpen, BOOL bFrom32);
+                                DWORD cMidi, DWORD_PTR dwCallback,
+                                DWORD_PTR dwInstance, DWORD fdwOpen, BOOL bFrom32);
 UINT            WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
-                          const LPWAVEFORMATEX lpFormat, DWORD dwCallback, 
-                          DWORD dwInstance, DWORD dwFlags, BOOL bFrom32);
+                          const LPWAVEFORMATEX lpFormat, DWORD_PTR dwCallback, 
+                          DWORD_PTR dwInstance, DWORD dwFlags, BOOL bFrom32);
 
 HMMIO           MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo,
                           DWORD dwOpenFlags, enum mmioProcType type);
@@ -285,7 +285,6 @@ void		TIME_MMTimeStop(void);
 
 /* Global variables */
 extern LPWINE_MM_IDATA  WINMM_IData;
-extern DWORD		WINMM_SysTimeMS;
 
 /* pointers to 16 bit functions (if sibling MMSYSTEM.DLL is loaded
  * NULL otherwise

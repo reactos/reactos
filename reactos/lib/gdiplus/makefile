@@ -2,8 +2,6 @@ PATH_TO_TOP = ../..
 
 TARGET_REGTESTS = yes
 
-TARGET_BUILDENV_TEST = yes
-
 TARGET_TYPE = dynlink
 
 TARGET_NAME = gdiplus

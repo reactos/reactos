@@ -39,7 +39,7 @@ typedef struct {
 } glprocs_table_t;
 
 #ifdef NEED_FUNCTION_POINTER
-#  define NAME_FUNC_OFFSET(n,f,o) { n , (void *) (int) f , o }
+#  define NAME_FUNC_OFFSET(n,f,o) { n , (void *) f , o }
 #else
 #  define NAME_FUNC_OFFSET(n,f,o) { n , o }
 #endif
@@ -1379,11 +1379,7 @@ static const glprocs_table_t static_functions[] = {
     NAME_FUNC_OFFSET(  5821, glMultTransposeMatrixfARB, _gloffset_MultTransposeMatrixfARB ),
     NAME_FUNC_OFFSET(  5847, glMultTransposeMatrixdARB, _gloffset_MultTransposeMatrixdARB ),
     NAME_FUNC_OFFSET(  5873, glSampleCoverageARB, _gloffset_SampleCoverageARB ),
-#ifdef USE_MGL_NAMESPACE
-    NAME_FUNC_OFFSET(  5893, mgl__unused413, _gloffset___unused413 ),
-#else
     NAME_FUNC_OFFSET(  5893, gl__unused413, _gloffset___unused413 ),
-#endif
     NAME_FUNC_OFFSET(  5907, glPolygonOffsetEXT, _gloffset_PolygonOffsetEXT ),
     NAME_FUNC_OFFSET(  5926, glGetTexFilterFuncSGIS, _gloffset_GetTexFilterFuncSGIS ),
     NAME_FUNC_OFFSET(  5949, glTexFilterFuncSGIS, _gloffset_TexFilterFuncSGIS ),

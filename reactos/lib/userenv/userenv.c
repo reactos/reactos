@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: userenv.c,v 1.4 2004/09/30 20:23:00 ekohl Exp $ 
+/* $Id: userenv.c,v 1.4.4.1 2004/10/25 14:48:55 ion Exp $ 
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,6 +27,7 @@
 
 #include "precomp.h"
 
+HINSTANCE hInstance = NULL;
 
 BOOL WINAPI
 DllMain (HINSTANCE hinstDLL,
@@ -35,6 +36,7 @@ DllMain (HINSTANCE hinstDLL,
 {
   if (fdwReason == DLL_PROCESS_ATTACH)
     {
+       hInstance = hinstDLL;
     }
   else if (fdwReason == DLL_PROCESS_DETACH)
     {

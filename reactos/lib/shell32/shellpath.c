@@ -775,14 +775,14 @@ static const WCHAR ProgramFilesDirW[] = {'P','r','o','g','r','a','m','F','i','l'
 static const WCHAR Program_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\0'};
 static const WCHAR Program_Files__Common_FilesW[] = {'P','r','o','g','r','a','m',' ','F','i','l','e','s','\\',
                                                      'C','o','m','m','o','n',' ','F','i','l','e','s','\0'};
-static const WCHAR ProgramsW[] = {'P','r','o','g','r','m','s','\0'};
+static const WCHAR ProgramsW[] = {'P','r','o','g','r','a','m','s','\0'};
 static const WCHAR RecentW[] = {'R','e','c','e','n','t','\0'};
 static const WCHAR ResourcesW[] = {'R','e','s','o','u','r','c','e','s','\0'};
 static const WCHAR SendToW[] = {'S','e','n','d','T','o','\0'};
 static const WCHAR ShellNewW[] = {'S','h','e','l','l','N','e','w','\0'};
 static const WCHAR Start_Menu__ProgramsW[] = {'S','t','a','r','t',' ','M','e','n','u','\\','P','r','o','g','r','a','m','s','\0'};
 static const WCHAR SysDirW[] = {'S','y','s','D','i','r','\0'};
-static const WCHAR SYSTEMW[] = {'S','Y','S','T','E','M','\0'};
+static const WCHAR SystemW[] = {'s','y','s','t','e','m','\0'};
 static const WCHAR StartUpW[] = {'S','t','a','r','t','U','p','\0'};
 static const WCHAR Start_MenuW[] = {'S','t','a','r','t',' ','M','e','n','u','\0'};
 static const WCHAR Start_Menu__Programs__Administrative_ToolsW[] = {
@@ -794,7 +794,7 @@ static const WCHAR Start_Menu__Programs__StartUpW[] = {'S','t','a','r','t',' ','
 static const WCHAR TemplatesW[] = {'T','e','m','p','l','a','t','e','s','\0'};
 static const WCHAR Temporary_Internet_FilesW[] = {'T','e','m','p','o','r','a','r','y',' ','I','n','t','e','r','n','e','t',' ','F','i','l','e','s','\0'};
 static const WCHAR WinDirW[] = {'W','i','n','D','i','r','\0'};
-static const WCHAR WindowsW[] = {'W','i','n','d','o','w','s','\0'};
+static const WCHAR WindowsW[] = {'w','i','n','d','o','w','s','\0'};
 
 
 
@@ -842,13 +842,13 @@ static const CSIDL_DATA CSIDL_Data[] =
 	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	SysDirW,
-	SYSTEMW
+	SystemW
     },
     { /* CSIDL_PRINTERS */
 	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	SysDirW,
-	SYSTEMW
+	SystemW
     },
     { /* CSIDL_PERSONAL */
 	CSIDL_MYFLAG_SHFOLDER,
@@ -1046,7 +1046,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
         HKLM,
 	SysDirW,
-	SYSTEMW
+	SystemW
     },
     { /* CSIDL_PROGRAM_FILES */
 	CSIDL_MYFLAG_CURRVER,
@@ -1070,7 +1070,7 @@ static const CSIDL_DATA CSIDL_Data[] =
 	CSIDL_MYFLAG_SETUP | CSIDL_MYFLAG_RELATIVE,
         HKLM,
  	SysDirW,
-	SYSTEMW
+	SystemW
     },
     { /* CSIDL_PROGRAM_FILESX86 */
 	CSIDL_MYFLAG_CURRVER,

@@ -38,6 +38,9 @@
 #ifdef HAVE_SYS_WAIT_H
 # include <sys/wait.h>
 #endif
+
+#define COBJMACROS
+
 #include "wine/debug.h"
 #include "winerror.h"
 #include "windef.h"
@@ -1323,7 +1326,7 @@ static HRESULT WINAPI IShellLinkA_fnResolve(IShellLinkA * iface, HWND hwnd, DWOR
 
 	    This->bDirty = TRUE;
 	} else
-	    hr = S_OK;    /* don't report any error occured while just caching information */
+	    hr = S_OK;    /* don't report an error occurred while just caching information */
     }
 
     if (!This->sIcoPath && This->sPath) {
@@ -1750,7 +1753,7 @@ static HRESULT WINAPI IShellLinkW_fnResolve(IShellLinkW * iface, HWND hwnd, DWOR
 
 	    This->bDirty = TRUE;
 	} else
-	    hr = S_OK;    /* don't report any error occured while just caching information */
+	    hr = S_OK;    /* don't report an error occurred while just caching information */
     }
 
     if (!This->sIcoPath && This->sPath) {

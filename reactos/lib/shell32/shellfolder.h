@@ -33,20 +33,24 @@
  * Predeclare the interfaces
  */
 DEFINE_GUID(IID_ISFHelper, 0x1fe68efbL, 0x1874, 0x9812, 0x56, 0xdc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
-typedef struct ISFHelper *LPISFHELPER;
 
 /*****************************************************************************
  * ISFHelper interface
  */
 
 #define INTERFACE ISFHelper
-#define ISFHelper_METHODS \
-	IUnknown_METHODS \
-	STDMETHOD(GetUniqueName)(THIS_ LPSTR  lpName, UINT  uLen) PURE; \
-	STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCSTR  lpName, LPITEMIDLIST * ppidlOut) PURE; \
-	STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE; \
-	STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl) PURE;
-DECLARE_INTERFACE_(ISFHelper, IUnknown) { ISFHelper_METHODS };
+DECLARE_INTERFACE_(ISFHelper,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** ISFHelper methods ***/
+    STDMETHOD(GetUniqueName)(THIS_ LPSTR  lpName, UINT  uLen) PURE;
+    STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCSTR  lpName, LPITEMIDLIST * ppidlOut) PURE;
+    STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE;
+    STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl) PURE;
+};
 #undef INTERFACE
 
 #ifdef COBJMACROS

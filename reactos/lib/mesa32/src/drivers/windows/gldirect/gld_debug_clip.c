@@ -1,4 +1,4 @@
-/* $Id: gld_debug_clip.c,v 1.1 2004/08/25 12:35:20 blight Exp $ */
+/* $Id: gld_debug_clip.c,v 1.1.6.1 2004/10/25 14:48:33 ion Exp $ */
 
 /*
  * Mesa 3-D graphics library

@@ -511,7 +511,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
             x  = budRect.right+DEFAULT_XSEP;
         }
 
-        /* first adjust the buddy to accomodate the up/down */
+        /* first adjust the buddy to accommodate the up/down */
         SetWindowPos(infoPtr->Buddy, 0, budRect.left, budRect.top,
                      budRect.right  - budRect.left, budRect.bottom - budRect.top,
                      SWP_NOACTIVATE|SWP_NOZORDER);
@@ -524,7 +524,7 @@ static HWND UPDOWN_SetBuddy (UPDOWN_INFO* infoPtr, HWND bud)
         /*
          * If the updown has a buddy border, it has to overlap with the buddy
          * to look as if it is integrated with the buddy control.
-         * We nudge the control or change it size to overlap.
+         * We nudge the control or change its size to overlap.
          */
         if (UPDOWN_HasBuddyBorder(infoPtr)) {
             if(dwStyle & UDS_ALIGNLEFT)

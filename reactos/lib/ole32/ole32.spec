@@ -66,7 +66,7 @@
 @ stub CoSetProxyBlanket          #@ stdcall (ptr long long wstr long long ptr long) return 0,ERR_NOTIMPLEMENTED
 @ stdcall CoSetState(ptr)
 @ stub CoSwitchCallContext
-@ stub CoSuspendClassObjects      #@ stdcall () return 0,ERR_NOTIMPLEMENTED
+@ stdcall CoSuspendClassObjects()
 @ stdcall CoTaskMemAlloc(long)
 @ stdcall CoTaskMemFree(ptr)
 @ stdcall CoTaskMemRealloc(ptr long)

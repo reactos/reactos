@@ -160,12 +160,12 @@ _mesa_RequestResidentProgramsNV(GLsizei n, const GLuint *ids)
       }
 
       prog = (struct program *) _mesa_HashLookup(ctx->Shared->Programs, ids[i]);
-
       if (!prog) {
          _mesa_error(ctx, GL_INVALID_VALUE, "glRequestResidentProgramsNV(id)");
          return;
       }
 
+      /* XXX this is really a hardware thing we should hook out */
       prog->Resident = GL_TRUE;
    }
 }
@@ -529,7 +529,7 @@ _mesa_LoadProgramNV(GLenum target, GLuint id, GLsizei len,
         target == GL_VERTEX_STATE_PROGRAM_NV)
        && ctx->Extensions.NV_vertex_program) {
       struct vertex_program *vprog = (struct vertex_program *) prog;
-      if (!vprog) {
+      if (!vprog || prog == &_mesa_DummyProgram) {
          vprog = (struct vertex_program *)
             ctx->Driver.NewProgram(ctx, target, id);
          if (!vprog) {
@@ -543,7 +543,7 @@ _mesa_LoadProgramNV(GLenum target, GLuint id, GLsizei len,
    else if (target == GL_FRAGMENT_PROGRAM_NV
             && ctx->Extensions.NV_fragment_program) {
       struct fragment_program *fprog = (struct fragment_program *) prog;
-      if (!fprog) {
+      if (!fprog || prog == &_mesa_DummyProgram) {
          fprog = (struct fragment_program *)
             ctx->Driver.NewProgram(ctx, target, id);
          if (!fprog) {
@@ -776,7 +776,7 @@ _mesa_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte *name,
    }
 
    if (len <= 0) {
-      _mesa_error(ctx, GL_INVALID_VALUE, "glProgramNamedParameterNV");
+      _mesa_error(ctx, GL_INVALID_VALUE, "glProgramNamedParameterNV(len)");
       return;
    }
 
@@ -790,7 +790,7 @@ _mesa_ProgramNamedParameter4fNV(GLuint id, GLsizei len, const GLubyte *name,
       return;
    }
 
-   _mesa_error(ctx, GL_INVALID_VALUE, "glProgramNamedParameterNV");
+   _mesa_error(ctx, GL_INVALID_VALUE, "glProgramNamedParameterNV(name)");
 }
 
 

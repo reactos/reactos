@@ -890,6 +890,7 @@ struct gl_point_attrib {
    GLboolean PointSprite;	/**< GL_NV_point_sprite / GL_NV_point_sprite */
    GLboolean CoordReplace[MAX_TEXTURE_UNITS]; /**< GL_NV_point_sprite / GL_NV_point_sprite */
    GLenum SpriteRMode;		/**< GL_NV_point_sprite (only!) */
+   GLenum SpriteOrigin;		/**< GL_ARB_point_sprite */
 };
 
 
@@ -1146,6 +1147,7 @@ struct gl_texture_image {
 struct gl_texture_object {
    _glthread_Mutex Mutex;	/**< for thread safety */
    GLint RefCount;		/**< reference count */
+   GLboolean DeletePending;	/**< Has glDeleteTexture been called? */
    GLuint Name;			/**< an unsigned integer */
    GLenum Target;               /**< GL_TEXTURE_1D, GL_TEXTURE_2D, etc. */
    GLfloat Priority;		/**< in [0,1] */
@@ -1572,10 +1574,11 @@ struct program_parameter_list;
 struct program
 {
    GLuint Id;
-   GLubyte *String;    /* Null-terminated program text */
-   GLenum Target;
-   GLenum Format;      /* String encoding format */
+   GLubyte *String;          /**< Null-terminated program text */
+   GLboolean DeletePending;  /**< User called glDeletePrograms? */
    GLint RefCount;
+   GLenum Target;
+   GLenum Format;            /**< String encoding format */
    GLboolean Resident;
    GLfloat LocalParams[MAX_PROGRAM_LOCAL_PARAMS][4];
    GLuint NumInstructions;  /* GL_ARB_vertex/fragment_program */

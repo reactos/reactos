@@ -22,8 +22,10 @@
 #include <stdarg.h>
 #include <string.h>
 
+#define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
+
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
@@ -194,7 +196,7 @@ ULONG WINAPI FileMonikerImpl_AddRef(IMoniker* iface)
 
     TRACE("(%p)\n",iface);
 
-    return ++(This->ref);
+    return InterlockedIncrement(&This->ref);
 }
 
 /******************************************************************************
@@ -203,19 +205,16 @@ ULONG WINAPI FileMonikerImpl_AddRef(IMoniker* iface)
 ULONG WINAPI FileMonikerImpl_Release(IMoniker* iface)
 {
     FileMonikerImpl *This = (FileMonikerImpl *)iface;
+    ULONG ref;
 
     TRACE("(%p)\n",iface);
 
-    This->ref--;
+    ref = InterlockedDecrement(&This->ref);
 
     /* destroy the object if there's no more reference on it */
-    if (This->ref==0){
+    if (ref == 0) FileMonikerImpl_Destroy(This);
 
-        FileMonikerImpl_Destroy(This);
-
-        return 0;
-    }
-    return This->ref;
+    return ref;
 }
 
 /******************************************************************************

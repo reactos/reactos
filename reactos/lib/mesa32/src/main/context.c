@@ -30,18 +30,23 @@
 
 
 /**
- * \mainpage Mesa Core Module
+ * \mainpage Mesa Main Module
  *
- * \section CoreIntroduction Introduction
+ * \section MainIntroduction Introduction
  *
- * The Mesa core module consists of all the top-level files in the src
- * directory.  The core module basically takes care of API dispatch,
- * and OpenGL state management.
+ * The Mesa Main module consists of all the files in the main/ directory.
+ * Among the features of this module are:
+ * <UL>
+ * <LI> Structures to represent most GL state </LI>
+ * <LI> State set/get functions </LI>
+ * <LI> Display lists </LI>
+ * <LI> Texture unit, object and image handling </LI>
+ * <LI> Matrix and attribute stacks </LI>
+ * </UL>
  *
- * For example, calls to glPolygonMode() are routed to _mesa_PolygonMode()
- * which updates the state related to polygonmode.  Furthermore, dirty
- * state flags related to polygon mode are set and if the device driver
- * implements a special routine for PolygonMode, it will be called.
+ * Other modules are responsible for API dispatch, vertex transformation,
+ * point/line/triangle setup, rasterization, vertex array caching,
+ * vertex/fragment programs/shaders, etc.
  *
  *
  * \section AboutDoxygen About Doxygen
@@ -1607,7 +1612,7 @@ _mesa_destroy_context( GLcontext *ctx )
  * \param mask bitwise OR of GL_*_BIT flags
  *
  * According to the bits specified in \p mask, copies the corresponding
- * attributes from \p src into \dst.  For many of the attributes a simple \c
+ * attributes from \p src into \p dst.  For many of the attributes a simple \c
  * memcpy is not enough due to the existence of internal pointers in their data
  * structures.
  */

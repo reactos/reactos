@@ -1,4 +1,4 @@
-/* $Id: sem.c,v 1.8 2004/01/23 21:16:04 ekohl Exp $
+/* $Id: sem.c,v 1.8.20.1 2004/10/25 14:48:32 ion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,18 +32,24 @@ CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
    ANSI_STRING Name;
    HANDLE Handle;
 
-   RtlInitAnsiString(&Name,
-		     (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&NameU,
-				&Name,
-				TRUE);
+   if (lpName != NULL)
+     {
+        RtlInitAnsiString(&Name,
+                          (LPSTR)lpName);
+        RtlAnsiStringToUnicodeString(&NameU,
+                                     &Name,
+                                     TRUE);
+     }
 
    Handle = CreateSemaphoreW(lpSemaphoreAttributes,
 			     lInitialCount,
 			     lMaximumCount,
-			     NameU.Buffer);
+			     (lpName ? NameU.Buffer : NULL));
 
-   RtlFreeUnicodeString (&NameU);
+   if (lpName != NULL)
+     {
+        RtlFreeUnicodeString (&NameU);
+     }
 
    return Handle;
 }
@@ -60,31 +66,24 @@ CreateSemaphoreW(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
 {
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-   UNICODE_STRING NameString;
+   UNICODE_STRING UnicodeName;
    HANDLE SemaphoreHandle;
 
-   if (lpName)
+   if (lpName != NULL)
      {
-	NameString.Length = lstrlenW(lpName)*sizeof(WCHAR);
-     }
-   else
-     {
-	NameString.Length = 0;
+       RtlInitUnicodeString(&UnicodeName, lpName);
      }
 
-   NameString.Buffer = (WCHAR *)lpName;
-   NameString.MaximumLength = NameString.Length;
+   InitializeObjectAttributes(&ObjectAttributes,
+			      (lpName ? &UnicodeName : NULL),
+			      0,
+			      hBaseDir,
+			      NULL);
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = hBaseDir;
-   ObjectAttributes.ObjectName = &NameString;
-   ObjectAttributes.Attributes = 0;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
    if (lpSemaphoreAttributes != NULL)
      {
 	ObjectAttributes.SecurityDescriptor = lpSemaphoreAttributes->lpSecurityDescriptor;
-	if (lpSemaphoreAttributes->bInheritHandle == TRUE)
+	if (lpSemaphoreAttributes->bInheritHandle)
 	  {
 	     ObjectAttributes.Attributes |= OBJ_INHERIT;
 	  }
@@ -130,16 +129,11 @@ OpenSemaphoreA(DWORD dwDesiredAccess,
 				&Name,
 				TRUE);
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = hBaseDir;
-   ObjectAttributes.ObjectName = &NameU;
-   ObjectAttributes.Attributes = 0;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   if (bInheritHandle == TRUE)
-     {
-	ObjectAttributes.Attributes |= OBJ_INHERIT;
-     }
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &NameU,
+			      (bInheritHandle ? OBJ_INHERIT : 0),
+			      hBaseDir,
+			      NULL);
 
    Status = NtOpenSemaphore(&Handle,
 			    (ACCESS_MASK)dwDesiredAccess,
@@ -179,16 +173,11 @@ OpenSemaphoreW(DWORD dwDesiredAccess,
    RtlInitUnicodeString(&Name,
 			(LPWSTR)lpName);
 
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = hBaseDir;
-   ObjectAttributes.ObjectName = &Name;
-   ObjectAttributes.Attributes = 0;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
-   if (bInheritHandle == TRUE)
-     {
-	ObjectAttributes.Attributes |= OBJ_INHERIT;
-     }
+   InitializeObjectAttributes(&ObjectAttributes,
+			      &Name,
+			      (bInheritHandle ? OBJ_INHERIT : 0),
+			      hBaseDir,
+			      NULL);
 
    Status = NtOpenSemaphore(&Handle,
 			    (ACCESS_MASK)dwDesiredAccess,

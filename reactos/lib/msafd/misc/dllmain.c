@@ -18,9 +18,6 @@
 DWORD DebugTraceLevel = DEBUG_ULTRA;
 #endif /* DBG */
 
-/* To make the linker happy */
-VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
-
 HANDLE							GlobalHeap;
 WSPUPCALLTABLE					Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST	lpWPUCompleteOverlappedRequest;
@@ -249,7 +246,9 @@ WSPSocket(
 error:
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
-	return 0;
+        *lpErrno = Status;
+
+	return INVALID_SOCKET;
 }
 
 

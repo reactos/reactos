@@ -1,12 +1,10 @@
-# $Id: Makefile,v 1.11 2004/08/20 15:19:38 navaraf Exp $
+# $Id: Makefile,v 1.11.6.1 2004/10/25 14:48:28 ion Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = kmdll
 
 TARGET_NAME = freetype
-
-TARGET_NORC = yes
 
 TARGET_DEFONLY = yes
 

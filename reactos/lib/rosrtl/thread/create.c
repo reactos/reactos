@@ -1,8 +1,3 @@
-/* $Id: create.c,v 1.6.18.2 2004/10/25 02:25:01 ion Exp $
-*/
-/*
-*/
-
 #include <stdarg.h>
 #include <windows.h>
 #include <ndk/umtypes.h>
@@ -27,7 +22,7 @@ RtlRosCreateUserThread
  IN ULONG_PTR * Parameters
 )
 {
- INITIAL_TEB usUserStack;
+ INITIAL_TEB usUserInitialTeb;
  CONTEXT ctxInitialContext;
  NTSTATUS nErrCode;
  HANDLE hThread;
@@ -40,7 +35,7 @@ RtlRosCreateUserThread
  nErrCode = RtlRosCreateStack
  (
   ProcessHandle,
-  &usUserStack,
+  &usUserInitialTeb,
   StackZeroBits,
   StackReserve,
   StackCommit
@@ -55,7 +50,7 @@ RtlRosCreateUserThread
   ProcessHandle,
   &ctxInitialContext,
   StartAddress,
-  &usUserStack,
+  &usUserInitialTeb,
   ParameterCount,
   Parameters
  );
@@ -72,7 +67,7 @@ RtlRosCreateUserThread
   ProcessHandle,
   ClientId,
   &ctxInitialContext,
-  &usUserStack,
+  &usUserInitialTeb,
   CreateSuspended
  );
 
@@ -87,7 +82,7 @@ l_Fail:
  ASSERT(!NT_SUCCESS(nErrCode));
 
  /* deallocate the stack */
- RtlRosDeleteStack(ProcessHandle, &usUserStack);
+ RtlRosDeleteStack(ProcessHandle, &usUserInitialTeb);
  
  return nErrCode;
 }

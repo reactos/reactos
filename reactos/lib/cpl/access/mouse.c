@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.1 2004/06/30 12:16:27 ekohl Exp $
+/* $Id: mouse.c,v 1.1.8.1 2004/10/25 14:48:24 ion Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/advanced.c
@@ -31,7 +31,7 @@
 #include "access.h"
 
 /* Property page dialog callback */
-BOOL CALLBACK
+INT_PTR CALLBACK
 MousePageProc(
   HWND hwndDlg,
   UINT uMsg,

@@ -113,6 +113,9 @@ typedef struct
 #define DEFAULT_TAB_WIDTH       96
 
 #define TAB_GetInfoPtr(hwnd) ((TAB_INFO *)GetWindowLongPtrW(hwnd,0))
+/* Since items are variable sized, cannot directly access them */
+#define TAB_GetItem(info,i) \
+  ((TAB_ITEM*)((LPBYTE)info->items + (i) * TAB_ITEM_SIZE(info)))
 
 /******************************************************************************
  * Hot-tracking timer constants
@@ -189,7 +192,7 @@ TAB_DumpItemInternal(TAB_INFO *infoPtr, UINT iItem)
     if (TRACE_ON(tab)) {
 	TAB_ITEM *ti;
 
-	ti = &infoPtr->items[iItem];
+	ti = TAB_GetItem(infoPtr, iItem);
 	TRACE("tab %d, mask=0x%08x, dwState=0x%08lx, pszText=%s, iImage=%d\n",
 	      iItem, ti->mask, ti->dwState, debugstr_w(ti->pszText),
 	      ti->iImage);
@@ -323,7 +326,7 @@ static BOOL TAB_InternalGetItemRect(
     itemRect = &tmpItemRect;
 
   /* Retrieve the unmodified item rect. */
-  *itemRect = infoPtr->items[itemIndex].rect;
+  *itemRect = TAB_GetItem(infoPtr,itemIndex)->rect;
 
   /* calculate the times bottom and top based on the row */
   GetClientRect(hwnd, &clientRect);
@@ -361,7 +364,7 @@ static BOOL TAB_InternalGetItemRect(
   {
     OffsetRect(itemRect,
 	     0,
-	     -infoPtr->items[infoPtr->leftmostVisible].rect.top);
+	     -TAB_GetItem(infoPtr, infoPtr->leftmostVisible)->rect.top);
 
     /*
      * Move the rectangle so the first item is slightly offset from
@@ -374,7 +377,7 @@ static BOOL TAB_InternalGetItemRect(
   } else
   {
     OffsetRect(itemRect,
-	     -infoPtr->items[infoPtr->leftmostVisible].rect.left,
+	     -TAB_GetItem(infoPtr, infoPtr->leftmostVisible)->rect.left,
 	     0);
 
     /*
@@ -1014,11 +1017,11 @@ static void TAB_SetupScrolling(
     {
        vsize = clientRect->right - (controlPos.right - controlPos.left + 1);
        maxRange = infoPtr->uNumItem;
-       tabwidth = infoPtr->items[maxRange - 1].rect.right;
+       tabwidth = TAB_GetItem(infoPtr, infoPtr->uNumItem - 1)->rect.right;
 
        for(; maxRange > 0; maxRange--)
        {
-          if(tabwidth - infoPtr->items[maxRange - 1].rect.left > vsize)
+          if(tabwidth - TAB_GetItem(infoPtr,maxRange - 1)->rect.left > vsize)
              break;
        }
 
@@ -1142,12 +1145,14 @@ static void TAB_SetItemBounds (HWND hwnd)
 
   for (curItem = 0; curItem < infoPtr->uNumItem; curItem++)
   {
+    TAB_ITEM *curr = TAB_GetItem(infoPtr, curItem);
+	
     /* Set the leftmost position of the tab. */
-    infoPtr->items[curItem].rect.left = curItemLeftPos;
+    curr->rect.left = curItemLeftPos;
 
-    if ((lStyle & TCS_FIXEDWIDTH) || !infoPtr->items[curItem].pszText)
+    if ((lStyle & TCS_FIXEDWIDTH) || !curr->pszText)
     {
-      infoPtr->items[curItem].rect.right = infoPtr->items[curItem].rect.left +
+      curr->rect.right = curr->rect.left +
         max(infoPtr->tabWidth, icon_width);
     }
     else
@@ -1155,17 +1160,13 @@ static void TAB_SetItemBounds (HWND hwnd)
       int num = 2;
 
       /* Calculate how wide the tab is depending on the text it contains */
-      GetTextExtentPoint32W(hdc, infoPtr->items[curItem].pszText,
-                            lstrlenW(infoPtr->items[curItem].pszText), &size);
+      GetTextExtentPoint32W(hdc, curr->pszText,
+                            lstrlenW(curr->pszText), &size);
 
-      infoPtr->items[curItem].rect.right = infoPtr->items[curItem].rect.left +
-                                           size.cx + icon_width +
-                                           num * infoPtr->uHItemPadding;
+      curr->rect.right = curr->rect.left + size.cx + icon_width +
+                         num * infoPtr->uHItemPadding;
       TRACE("for <%s>, l,r=%ld,%ld, num=%d\n",
-	  debugstr_w(infoPtr->items[curItem].pszText),
-	  infoPtr->items[curItem].rect.left,
-	  infoPtr->items[curItem].rect.right,
-	  num);
+	  debugstr_w(curr->pszText), curr->rect.left, curr->rect.right, num);
     }
 
     /*
@@ -1177,29 +1178,23 @@ static void TAB_SetItemBounds (HWND hwnd)
      */
 
     if (((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) &&
-        (infoPtr->items[curItem].rect.right > 
+        (curr->rect.right > 
 	(clientRect.right - CONTROL_BORDER_SIZEX - DISPLAY_AREA_PADDINGX)))
     {
-        infoPtr->items[curItem].rect.right -=
-                                      infoPtr->items[curItem].rect.left;
+        curr->rect.right -= curr->rect.left;
 
-	infoPtr->items[curItem].rect.left = 0;
+	curr->rect.left = 0;
         curItemRowCount++;
-	TRACE("wrapping <%s>, l,r=%ld,%ld\n",
-	    debugstr_w(infoPtr->items[curItem].pszText),
-	    infoPtr->items[curItem].rect.left,
-	    infoPtr->items[curItem].rect.right);
+	TRACE("wrapping <%s>, l,r=%ld,%ld\n", debugstr_w(curr->pszText),
+	    curr->rect.left, curr->rect.right);
     }
 
-    infoPtr->items[curItem].rect.bottom = 0;
-    infoPtr->items[curItem].rect.top = curItemRowCount - 1;
+    curr->rect.bottom = 0;
+    curr->rect.top = curItemRowCount - 1;
 
     TRACE("TextSize: %li\n", size.cx);
-    TRACE("Rect: T %li, L %li, B %li, R %li\n",
-	  infoPtr->items[curItem].rect.top,
-	  infoPtr->items[curItem].rect.left,
-	  infoPtr->items[curItem].rect.bottom,
-	  infoPtr->items[curItem].rect.right);
+    TRACE("Rect: T %li, L %li, B %li, R %li\n", curr->rect.top,
+	  curr->rect.left, curr->rect.bottom, curr->rect.right);
 
     /*
      * The leftmost position of the next item is the rightmost position
@@ -1207,12 +1202,12 @@ static void TAB_SetItemBounds (HWND hwnd)
      */
     if (lStyle & TCS_BUTTONS)
     {
-      curItemLeftPos = infoPtr->items[curItem].rect.right + BUTTON_SPACINGX;
+      curItemLeftPos = curr->rect.right + BUTTON_SPACINGX;
       if (lStyle & TCS_FLATBUTTONS)
         curItemLeftPos += FLAT_BTN_SPACINGX;
     }
     else
-      curItemLeftPos = infoPtr->items[curItem].rect.right;
+      curItemLeftPos = curr->rect.right;
   }
 
   if (!((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)))
@@ -1260,15 +1255,14 @@ static void TAB_SetItemBounds (HWND hwnd)
            iItm++,iCount++)
       {
           /* normalize the current rect */
-
+          TAB_ITEM *curr = TAB_GetItem(infoPtr, iItm);
+ 
           /* shift the item to the left side of the clientRect */
-          infoPtr->items[iItm].rect.right -=
-            infoPtr->items[iItm].rect.left;
-          infoPtr->items[iItm].rect.left = 0;
+          curr->rect.right -= curr->rect.left;
+          curr->rect.left = 0;
 
 	  TRACE("r=%ld, cl=%d, cl.r=%ld, iCount=%d, iRow=%d, uNumRows=%d, remTab=%d, tabPerRow=%d\n",
-	      infoPtr->items[iItm].rect.right,
-	      curItemLeftPos, clientRect.right,
+	      curr->rect.right, curItemLeftPos, clientRect.right,
 	      iCount, iRow, infoPtr->uNumRows, remTab, tabPerRow);
 
           /* if we have reached the maximum number of tabs on this row */
@@ -1292,23 +1286,21 @@ static void TAB_SetItemBounds (HWND hwnd)
 	  }
 
           /* shift the item to the right to place it as the next item in this row */
-          infoPtr->items[iItm].rect.left += curItemLeftPos;
-          infoPtr->items[iItm].rect.right += curItemLeftPos;
-          infoPtr->items[iItm].rect.top = iRow;
+          curr->rect.left += curItemLeftPos;
+          curr->rect.right += curItemLeftPos;
+          curr->rect.top = iRow;
           if (lStyle & TCS_BUTTONS)
 	  {
-            curItemLeftPos = infoPtr->items[iItm].rect.right + 1;
+            curItemLeftPos = curr->rect.right + 1;
             if (lStyle & TCS_FLATBUTTONS)
 	      curItemLeftPos += FLAT_BTN_SPACINGX;
 	  }
           else
-            curItemLeftPos = infoPtr->items[iItm].rect.right;
+            curItemLeftPos = curr->rect.right;
 
 	  TRACE("arranging <%s>, l,r=%ld,%ld, row=%ld\n",
-	      debugstr_w(infoPtr->items[iItm].pszText),
-	      infoPtr->items[iItm].rect.left,
-	      infoPtr->items[iItm].rect.right,
-	      infoPtr->items[iItm].rect.top);
+	      debugstr_w(curr->pszText), curr->rect.left,
+	      curr->rect.right, curr->rect.top);
       }
 
       /*
@@ -1321,14 +1313,16 @@ static void TAB_SetItemBounds (HWND hwnd)
 
         while(iIndexStart < infoPtr->uNumItem)
         {
+          TAB_ITEM *start = TAB_GetItem(infoPtr, iIndexStart);
+
           /*
-           * find the indexs of the row
+           * find the index of the row
            */
           /* find the first item on the next row */
           for (iIndexEnd=iIndexStart;
               (iIndexEnd < infoPtr->uNumItem) &&
- 	      (infoPtr->items[iIndexEnd].rect.top ==
-                infoPtr->items[iIndexStart].rect.top) ;
+ 	      (TAB_GetItem(infoPtr, iIndexEnd)->rect.top ==
+                start->rect.top) ;
               iIndexEnd++)
           /* intentionally blank */;
 
@@ -1339,7 +1333,7 @@ static void TAB_SetItemBounds (HWND hwnd)
            */
           /* find the amount of space remaining on this row */
           widthDiff = clientRect.right - (2 * SELECTED_TAB_OFFSET) -
-			infoPtr->items[iIndexEnd - 1].rect.right;
+			TAB_GetItem(infoPtr, iIndexEnd - 1)->rect.right;
 
 	  /* iCount is the number of tab items on this row */
 	  iCount = iIndexEnd - iIndexStart;
@@ -1351,26 +1345,26 @@ static void TAB_SetItemBounds (HWND hwnd)
 	    /* add widthDiff/iCount, or extra space/items on row, to each item on this row */
 	    for (iIndex=iIndexStart, iCount=0; iIndex < iIndexEnd; iIndex++, iCount++)
 	    {
-	      infoPtr->items[iIndex].rect.left += iCount * widthDiff;
-	      infoPtr->items[iIndex].rect.right += (iCount + 1) * widthDiff;
+              TAB_ITEM *item = TAB_GetItem(infoPtr, iIndex);
+
+	      item->rect.left += iCount * widthDiff;
+	      item->rect.right += (iCount + 1) * widthDiff;
 
 	      TRACE("adjusting 1 <%s>, l,r=%ld,%ld\n",
-		  debugstr_w(infoPtr->items[iIndex].pszText),
-		  infoPtr->items[iIndex].rect.left,
-		  infoPtr->items[iIndex].rect.right);
+		  debugstr_w(item->pszText),
+		  item->rect.left, item->rect.right);
 
 	    }
-	    infoPtr->items[iIndex - 1].rect.right += remainder;
+	    TAB_GetItem(infoPtr, iIndex - 1)->rect.right += remainder;
 	  }
 	  else /* we have only one item on this row, make it take up the entire row */
 	  {
-	    infoPtr->items[iIndexStart].rect.left = clientRect.left;
-	    infoPtr->items[iIndexStart].rect.right = clientRect.right - 4;
+	    start->rect.left = clientRect.left;
+	    start->rect.right = clientRect.right - 4;
 
 	    TRACE("adjusting 2 <%s>, l,r=%ld,%ld\n",
-		debugstr_w(infoPtr->items[iIndexStart].pszText),
-		infoPtr->items[iIndexStart].rect.left,
-		infoPtr->items[iIndexStart].rect.right);
+		debugstr_w(start->pszText),
+		start->rect.left, start->rect.right);
 
 	  }
 
@@ -1386,7 +1380,7 @@ static void TAB_SetItemBounds (HWND hwnd)
     RECT rcOriginal;
     for(iIndex = 0; iIndex < infoPtr->uNumItem; iIndex++)
     {
-      rcItem = &(infoPtr->items[iIndex].rect);
+      rcItem = &TAB_GetItem(infoPtr, iIndex)->rect;
 
       rcOriginal = *rcItem;
 
@@ -1584,7 +1578,7 @@ TAB_DrawItemInterior
 	}
 	else
 	{
-	  drawRect->bottom -= (infoPtr->items[iItem].rect.top != infoPtr->uNumRows-1)? 2:2;
+	  drawRect->bottom -= 2;
 	  InflateRect(drawRect, -2, 0);
 	}
       }
@@ -1626,7 +1620,7 @@ TAB_DrawItemInterior
   */
   oldBkMode = SetBkMode(hdc, TRANSPARENT);
   SetTextColor(hdc, (((iItem == infoPtr->iHotTracked) && !(lStyle & TCS_FLATBUTTONS)) |
-		     (infoPtr->items[iItem].dwState & TCIS_HIGHLIGHTED)) ?
+		     (TAB_GetItem(infoPtr, iItem)->dwState & TCIS_HIGHLIGHTED)) ?
                      comctl32_color.clrHighlight : comctl32_color.clrBtnText);
 
   /*
@@ -1666,7 +1660,7 @@ TAB_DrawItemInterior
     dis.hDC      = hdc;
     CopyRect(&dis.rcItem,drawRect);
     dis.itemData = 0;
-    memcpy( &dis.itemData, infoPtr->items[iItem].extra, min(sizeof(dis.itemData),infoPtr->cbInfo) );
+    memcpy( &dis.itemData, TAB_GetItem(infoPtr, iItem)->extra, min(sizeof(dis.itemData),infoPtr->cbInfo) );
 
     /*
      * send the draw message
@@ -1675,6 +1669,7 @@ TAB_DrawItemInterior
   }
   else
   {
+    TAB_ITEM *item = TAB_GetItem(infoPtr, iItem);
     RECT rcTemp;
     RECT rcImage;
 
@@ -1690,17 +1685,16 @@ TAB_DrawItemInterior
     rcText.left = rcText.top = rcText.right = rcText.bottom = 0;
 
     /* get the rectangle that the text fits in */
-    if (infoPtr->items[iItem].pszText)
+    if (item->pszText)
     {
-      DrawTextW(hdc, infoPtr->items[iItem].pszText, -1,
-                &rcText, DT_CALCRECT);
+      DrawTextW(hdc, item->pszText, -1, &rcText, DT_CALCRECT);
     }
     /*
      * If not owner draw, then do the drawing ourselves.
      *
      * Draw the icon.
      */
-    if (infoPtr->himl && (infoPtr->items[iItem].mask & TCIF_IMAGE))
+    if (infoPtr->himl && (item->mask & TCIF_IMAGE))
     {
       INT cx;
       INT cy;
@@ -1728,7 +1722,7 @@ TAB_DrawItemInterior
         center_offset_v = 0;
 	
       TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
-	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
+	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
 
@@ -1755,11 +1749,11 @@ TAB_DrawItemInterior
       }
 
       TRACE("drawing image=%d, left=%ld, top=%ld\n",
-	    infoPtr->items[iItem].iImage, rcImage.left, rcImage.top-1);
+	    item->iImage, rcImage.left, rcImage.top-1);
       ImageList_Draw
         (
         infoPtr->himl,
-        infoPtr->items[iItem].iImage,
+        item->iImage,
         hdc,
         rcImage.left,
         rcImage.top,
@@ -1835,15 +1829,15 @@ TAB_DrawItemInterior
       hFont = CreateFontIndirectA(&logfont);
       SelectObject(hdc, hFont);
 
-      if (infoPtr->items[iItem].pszText)
+      if (item->pszText)
       {
         ExtTextOutW(hdc,
         (lStyle & TCS_BOTTOM) ? drawRect->right : drawRect->left,
         (!(lStyle & TCS_BOTTOM)) ? drawRect->bottom : drawRect->top,
         ETO_CLIPPED,
         drawRect,
-        infoPtr->items[iItem].pszText,
-        lstrlenW(infoPtr->items[iItem].pszText),
+        item->pszText,
+        lstrlenW(item->pszText),
         0);
       }
 
@@ -1852,16 +1846,16 @@ TAB_DrawItemInterior
     else
     {
       TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%ld,%ld)-(%ld,%ld), textlen=%ld\n",
-	  debugstr_w(infoPtr->items[iItem].pszText), center_offset_h, center_offset_v,
+	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
 	  (rcText.right-rcText.left));
-      if (infoPtr->items[iItem].pszText)
+      if (item->pszText)
       {
         DrawTextW
         (
           hdc,
-          infoPtr->items[iItem].pszText,
-          lstrlenW(infoPtr->items[iItem].pszText),
+          item->pszText,
+          lstrlenW(item->pszText),
           drawRect,
           DT_LEFT | DT_SINGLELINE
         );
@@ -2086,7 +2080,7 @@ static void TAB_DrawItem(
         if (lStyle & TCS_BOTTOM)
         {
 	  /* Adjust both rectangles for topmost row */
-	  if (infoPtr->items[iItem].rect.top == infoPtr->uNumRows-1)
+	  if (TAB_GetItem(infoPtr, iItem)->rect.top == infoPtr->uNumRows-1)
 	  {
 	    fillRect.top -= 2;
 	    r.top -= 1;
@@ -2140,7 +2134,7 @@ static void TAB_DrawItem(
         else
         {
 	  /* Adjust both rectangles for bottommost row */
-	  if (infoPtr->items[iItem].rect.top == infoPtr->uNumRows-1)
+	  if (TAB_GetItem(infoPtr, iItem)->rect.top == infoPtr->uNumRows-1)
 	  {
 	    fillRect.bottom += 3;
 	    r.bottom += 2;
@@ -2304,13 +2298,14 @@ static void TAB_EnsureSelectionVisible(
    * style */
   if ((infoPtr->uNumRows > 1) && !(lStyle & TCS_BUTTONS))
   {
+      TAB_ITEM *selected = TAB_GetItem(infoPtr, iSelected);
       INT newselected;
       INT iTargetRow;
 
       if(lStyle & TCS_VERTICAL)
-        newselected = infoPtr->items[iSelected].rect.left;
+        newselected = selected->rect.left;
       else
-        newselected = infoPtr->items[iSelected].rect.top;
+        newselected = selected->rect.top;
 
       /* the target row is always (number of rows - 1)
          as row 0 is furthest from the clientRect */
@@ -2324,12 +2319,14 @@ static void TAB_EnsureSelectionVisible(
            for (i=0; i < infoPtr->uNumItem; i++)
            {
              /* move everything in the row of the selected item to the iTargetRow */
-             if (infoPtr->items[i].rect.left == newselected )
-                 infoPtr->items[i].rect.left = iTargetRow;
+             TAB_ITEM *item = TAB_GetItem(infoPtr, i);
+
+             if (item->rect.left == newselected )
+                 item->rect.left = iTargetRow;
              else
              {
-               if (infoPtr->items[i].rect.left > newselected)
-                 infoPtr->items[i].rect.left-=1;
+               if (item->rect.left > newselected)
+                 item->rect.left-=1;
              }
            }
          }
@@ -2337,12 +2334,14 @@ static void TAB_EnsureSelectionVisible(
          {
            for (i=0; i < infoPtr->uNumItem; i++)
            {
-             if (infoPtr->items[i].rect.top == newselected )
-                 infoPtr->items[i].rect.top = iTargetRow;
+             TAB_ITEM *item = TAB_GetItem(infoPtr, i);
+
+             if (item->rect.top == newselected )
+                 item->rect.top = iTargetRow;
              else
              {
-               if (infoPtr->items[i].rect.top > newselected)
-                 infoPtr->items[i].rect.top-=1;
+               if (item->rect.top > newselected)
+                 item->rect.top-=1;
              }
           }
         }
@@ -2363,6 +2362,7 @@ static void TAB_EnsureSelectionVisible(
   }
   else
   {
+     TAB_ITEM *selected = TAB_GetItem(infoPtr, iSelected);
      RECT r;
      INT width;
      UINT i;
@@ -2374,8 +2374,8 @@ static void TAB_EnsureSelectionVisible(
      GetClientRect(infoPtr->hwndUpDown, &r);
      width -= r.right;
 
-     if ((infoPtr->items[iSelected].rect.right -
-          infoPtr->items[iSelected].rect.left) >= width )
+     if ((selected->rect.right -
+          selected->rect.left) >= width )
      {
         /* Special case: width of selected item is greater than visible
          * part of control.
@@ -2386,8 +2386,7 @@ static void TAB_EnsureSelectionVisible(
      {
         for (i = infoPtr->leftmostVisible; i < infoPtr->uNumItem; i++)
         {
-           if ((infoPtr->items[iSelected].rect.right -
-                infoPtr->items[i].rect.left) < width)
+           if ((selected->rect.right - TAB_GetItem(infoPtr, i)->rect.left) < width)
               break;
         }
         infoPtr->leftmostVisible = i;
@@ -2493,9 +2492,10 @@ TAB_Paint (HWND hwnd, WPARAM wParam)
 }
 
 static LRESULT
-TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TAB_InsertItemAW (HWND hwnd, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 {
   TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
+  TAB_ITEM *item;
   TCITEMA *pti;
   INT iItem;
   RECT rect;
@@ -2511,7 +2511,10 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
   if (iItem > infoPtr->uNumItem)
     iItem = infoPtr->uNumItem;
 
-  TAB_DumpItemExternalA(pti, iItem);
+  if (bUnicode)
+    TAB_DumpItemExternalW((TCITEMW*)pti, iItem);
+  else
+    TAB_DumpItemExternalA(pti, iItem);
 
 
   if (infoPtr->uNumItem == 0) {
@@ -2520,20 +2523,21 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->iSelected = 0;
   }
   else {
-    TAB_ITEM *oldItems = infoPtr->items;
+    LPBYTE oldItems = (LPBYTE)infoPtr->items;
 
     infoPtr->uNumItem++;
     infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
     /* pre insert copy */
     if (iItem > 0) {
-      memcpy (&infoPtr->items[0], &oldItems[0],
+      memcpy (infoPtr->items, oldItems,
               iItem * TAB_ITEM_SIZE(infoPtr));
     }
 
     /* post insert copy */
     if (iItem < infoPtr->uNumItem - 1) {
-      memcpy (&infoPtr->items[iItem+1], &oldItems[iItem],
+      memcpy (TAB_GetItem(infoPtr, iItem + 1),
+              oldItems + iItem * TAB_ITEM_SIZE(infoPtr),
               (infoPtr->uNumItem - iItem - 1) * TAB_ITEM_SIZE(infoPtr));
 
     }
@@ -2544,17 +2548,28 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     Free (oldItems);
   }
 
-  infoPtr->items[iItem].mask = pti->mask;
+  item = TAB_GetItem(infoPtr, iItem);
+
+  item->mask = pti->mask;
+  item->pszText = NULL;
+
   if (pti->mask & TCIF_TEXT)
-    Str_SetPtrAtoW (&infoPtr->items[iItem].pszText, pti->pszText);
+  {
+    if (bUnicode)
+      Str_SetPtrW (&item->pszText, (WCHAR*)pti->pszText);
+    else
+      Str_SetPtrAtoW (&item->pszText, pti->pszText);
+  }
 
   if (pti->mask & TCIF_IMAGE)
-    infoPtr->items[iItem].iImage = pti->iImage;
+    item->iImage = pti->iImage;
+  else
+    item->iImage = -1;
 
   if (pti->mask & TCIF_PARAM)
-    memcpy(infoPtr->items[iItem].extra, &pti->lParam, infoPtr->cbInfo);
+    memcpy(item->extra, &pti->lParam, infoPtr->cbInfo);
   else
-    memset(infoPtr->items[iItem].extra, 0, infoPtr->cbInfo);
+    memset(item->extra, 0, infoPtr->cbInfo);
   
   TAB_SetItemBounds(hwnd);
   if (infoPtr->uNumItem > 1)
@@ -2563,87 +2578,10 @@ TAB_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     InvalidateRect(hwnd, NULL, TRUE);
 
   TRACE("[%p]: added item %d %s\n",
-        hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
+        hwnd, iItem, debugstr_w(item->pszText));
 
   return iItem;
 }
-
-
-static LRESULT
-TAB_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-  TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-  TCITEMW *pti;
-  INT iItem;
-  RECT rect;
-
-  GetClientRect (hwnd, &rect);
-  TRACE("Rect: %p T %li, L %li, B %li, R %li\n", hwnd,
-        rect.top, rect.left, rect.bottom, rect.right);
-
-  pti = (TCITEMW *)lParam;
-  iItem = (INT)wParam;
-
-  if (iItem < 0) return -1;
-  if (iItem > infoPtr->uNumItem)
-    iItem = infoPtr->uNumItem;
-
-  TAB_DumpItemExternalW(pti, iItem);
-
-  if (infoPtr->uNumItem == 0) {
-    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr));
-    infoPtr->uNumItem++;
-    infoPtr->iSelected = 0;
-  }
-  else {
-    TAB_ITEM *oldItems = infoPtr->items;
-
-    infoPtr->uNumItem++;
-    infoPtr->items = Alloc (TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
-
-    /* pre insert copy */
-    if (iItem > 0) {
-      memcpy (&infoPtr->items[0], &oldItems[0],
-              iItem * TAB_ITEM_SIZE(infoPtr));
-    }
-
-    /* post insert copy */
-    if (iItem < infoPtr->uNumItem - 1) {
-      memcpy (&infoPtr->items[iItem+1], &oldItems[iItem],
-              (infoPtr->uNumItem - iItem - 1) * TAB_ITEM_SIZE(infoPtr));
-
-  }
-
-    if (iItem <= infoPtr->iSelected)
-      infoPtr->iSelected++;
-
-    Free (oldItems);
-  }
-
-  infoPtr->items[iItem].mask = pti->mask;
-  if (pti->mask & TCIF_TEXT)
-    Str_SetPtrW (&infoPtr->items[iItem].pszText, pti->pszText);
-
-  if (pti->mask & TCIF_IMAGE)
-    infoPtr->items[iItem].iImage = pti->iImage;
-
-  if (pti->mask & TCIF_PARAM)
-    memcpy(infoPtr->items[iItem].extra, &pti->lParam, infoPtr->cbInfo);
-  else
-    memset(infoPtr->items[iItem].extra, 0, infoPtr->cbInfo);
-
-  TAB_SetItemBounds(hwnd);
-  if (infoPtr->uNumItem > 1)
-    TAB_InvalidateTabArea(hwnd, infoPtr);
-  else
-    InvalidateRect(hwnd, NULL, TRUE);
-
-  TRACE("[%p]: added item %d %s\n",
-        hwnd, iItem, debugstr_w(infoPtr->items[iItem].pszText));
-
-  return iItem;
-}
-
 
 static LRESULT
 TAB_SetItemSize (HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -2707,9 +2645,9 @@ TAB_HighlightItem (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   if ((infoPtr) && (iItem>=0) && (iItem<infoPtr->uNumItem)) {
     if (fHighlight)
-      infoPtr->items[iItem].dwState |= TCIS_HIGHLIGHTED;
+      TAB_GetItem(infoPtr, iItem)->dwState |= TCIS_HIGHLIGHTED;
     else
-      infoPtr->items[iItem].dwState &= ~TCIS_HIGHLIGHTED;
+      TAB_GetItem(infoPtr, iItem)->dwState &= ~TCIS_HIGHLIGHTED;
   } else
     return FALSE;
 
@@ -2717,7 +2655,7 @@ TAB_HighlightItem (HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 static LRESULT
-TAB_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TAB_SetItemAW (HWND hwnd, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 {
   TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
   TCITEMA *tabItem;
@@ -2730,9 +2668,12 @@ TAB_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
   TRACE("%d %p\n", iItem, tabItem);
   if ((iItem<0) || (iItem>=infoPtr->uNumItem)) return FALSE;
 
-  TAB_DumpItemExternalA(tabItem, iItem);
+  if (bUnicode)
+    TAB_DumpItemExternalW((TCITEMW *)tabItem, iItem);
+  else
+    TAB_DumpItemExternalA(tabItem, iItem);
 
-  wineItem = &infoPtr->items[iItem];
+  wineItem = TAB_GetItem(infoPtr, iItem);
 
   if (tabItem->mask & TCIF_IMAGE)
     wineItem->iImage = tabItem->iImage;
@@ -2747,48 +2688,17 @@ TAB_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     wineItem->dwState = tabItem->dwState;
 
   if (tabItem->mask & TCIF_TEXT)
-   Str_SetPtrAtoW(&wineItem->pszText, tabItem->pszText);
-
-  /* Update and repaint tabs */
-  TAB_SetItemBounds(hwnd);
-  TAB_InvalidateTabArea(hwnd,infoPtr);
-
-  return TRUE;
+  {
+    if (wineItem->pszText)
+    {
+      Free(wineItem->pszText);
+      wineItem->pszText = NULL;
+    }
+    if (bUnicode)
+      Str_SetPtrW(&wineItem->pszText, (WCHAR*)tabItem->pszText);
+    else
+      Str_SetPtrAtoW(&wineItem->pszText, tabItem->pszText);
   }
-
-
-static LRESULT
-TAB_SetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-  TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-  TCITEMW *tabItem;
-  TAB_ITEM *wineItem;
-  INT    iItem;
-
-  iItem = (INT)wParam;
-  tabItem = (LPTCITEMW)lParam;
-
-  TRACE("%d %p\n", iItem, tabItem);
-  if ((iItem<0) || (iItem>=infoPtr->uNumItem)) return FALSE;
-
-  TAB_DumpItemExternalW(tabItem, iItem);
-
-  wineItem = &infoPtr->items[iItem];
-
-  if (tabItem->mask & TCIF_IMAGE)
-    wineItem->iImage = tabItem->iImage;
-
-  if (tabItem->mask & TCIF_PARAM)
-    memcpy(wineItem->extra, &tabItem->lParam, infoPtr->cbInfo);
-
-  if (tabItem->mask & TCIF_RTLREADING)
-    FIXME("TCIF_RTLREADING\n");
-
-  if (tabItem->mask & TCIF_STATE)
-    wineItem->dwState = tabItem->dwState;
-
-  if (tabItem->mask & TCIF_TEXT)
-   Str_SetPtrW(&wineItem->pszText, tabItem->pszText);
 
   /* Update and repaint tabs */
   TAB_SetItemBounds(hwnd);
@@ -2796,7 +2706,6 @@ TAB_SetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   return TRUE;
 }
-
 
 static LRESULT
 TAB_GetItemCount (HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -2808,7 +2717,7 @@ TAB_GetItemCount (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
-TAB_GetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
+TAB_GetItemAW (HWND hwnd, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 {
    TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
    TCITEMA *tabItem;
@@ -2821,7 +2730,7 @@ TAB_GetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
   if ((iItem<0) || (iItem>=infoPtr->uNumItem))
     return FALSE;
 
-  wineItem = &infoPtr->items[iItem];
+  wineItem = TAB_GetItem(infoPtr, iItem);
 
   if (tabItem->mask & TCIF_IMAGE)
     tabItem->iImage = wineItem->iImage;
@@ -2836,46 +2745,17 @@ TAB_GetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     tabItem->dwState = wineItem->dwState;
 
   if (tabItem->mask & TCIF_TEXT)
-   Str_GetPtrWtoA (wineItem->pszText, tabItem->pszText, tabItem->cchTextMax);
+  {
+    if (bUnicode)
+      Str_GetPtrW (wineItem->pszText, (WCHAR*)tabItem->pszText, tabItem->cchTextMax);
+    else
+      Str_GetPtrWtoA (wineItem->pszText, tabItem->pszText, tabItem->cchTextMax);
+  }
 
-  TAB_DumpItemExternalA(tabItem, iItem);
-
-  return TRUE;
-}
-
-
-static LRESULT
-TAB_GetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
-{
-  TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-  TCITEMW *tabItem;
-  TAB_ITEM *wineItem;
-  INT    iItem;
-
-  iItem = (INT)wParam;
-  tabItem = (LPTCITEMW)lParam;
-  TRACE("\n");
-  if ((iItem<0) || (iItem>=infoPtr->uNumItem))
-    return FALSE;
-
-  wineItem=& infoPtr->items[iItem];
-
-  if (tabItem->mask & TCIF_IMAGE)
-    tabItem->iImage = wineItem->iImage;
-
-  if (tabItem->mask & TCIF_PARAM)
-    memcpy(&tabItem->lParam, wineItem->extra, infoPtr->cbInfo);
-
-  if (tabItem->mask & TCIF_RTLREADING)
-    FIXME("TCIF_RTLREADING\n");
-
-  if (tabItem->mask & TCIF_STATE)
-    tabItem->dwState = wineItem->dwState;
-
-  if (tabItem->mask & TCIF_TEXT)
-   Str_GetPtrW (wineItem->pszText, tabItem->pszText, tabItem->cchTextMax);
-
-  TAB_DumpItemExternalW(tabItem, iItem);
+  if (bUnicode)
+    TAB_DumpItemExternalW((TCITEMW*)tabItem, iItem);
+  else
+    TAB_DumpItemExternalA(tabItem, iItem);
 
   return TRUE;
 }
@@ -2890,20 +2770,43 @@ TAB_DeleteItem (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if ((iItem >= 0) && (iItem < infoPtr->uNumItem))
     {
-	TAB_ITEM *oldItems = infoPtr->items;
+        TAB_ITEM *item = TAB_GetItem(infoPtr, iItem);
+        LPBYTE oldItems = (LPBYTE)infoPtr->items;
 	
 	TAB_InvalidateTabArea(hwnd, infoPtr);
 
+	if ((item->mask & TCIF_TEXT) && item->pszText)
+            Free(item->pszText);
+
 	infoPtr->uNumItem--;
-	infoPtr->items = Alloc(TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
-	if (iItem > 0)
-	    memcpy(&infoPtr->items[0], &oldItems[0], iItem * TAB_ITEM_SIZE(infoPtr));
+	if (!infoPtr->uNumItem)
+        {
+            infoPtr->items = NULL;
+            if (infoPtr->iHotTracked >= 0)
+            {
+                KillTimer(hwnd, TAB_HOTTRACK_TIMER);
+                infoPtr->iHotTracked = -1;
+            }
+        }
+        else
+	{
+	    infoPtr->items = Alloc(TAB_ITEM_SIZE(infoPtr) * infoPtr->uNumItem);
 
-	if (iItem < infoPtr->uNumItem)
-	    memcpy(&infoPtr->items[iItem], &oldItems[iItem + 1],
-		   (infoPtr->uNumItem - iItem) * TAB_ITEM_SIZE(infoPtr));
+	    if (iItem > 0)
+	        memcpy(infoPtr->items, oldItems, iItem * TAB_ITEM_SIZE(infoPtr));
 
+	    if (iItem < infoPtr->uNumItem)
+	        memcpy(TAB_GetItem(infoPtr, iItem),
+                       oldItems + (iItem + 1) * TAB_ITEM_SIZE(infoPtr),
+		       (infoPtr->uNumItem - iItem) * TAB_ITEM_SIZE(infoPtr));
+
+            if (iItem <= infoPtr->iHotTracked)
+            {
+                /* When tabs move left/up, the hot track item may change */
+                FIXME("Recalc hot track");
+            }
+	}
 	Free(oldItems);
 
 	/* Readjust the selected index */
@@ -2929,17 +2832,9 @@ static LRESULT
 TAB_DeleteAllItems (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     TAB_INFO *infoPtr = TAB_GetInfoPtr(hwnd);
-   
-    TAB_InvalidateTabArea(hwnd,infoPtr);  
-
-    Free (infoPtr->items);
-    infoPtr->uNumItem = 0;
-    infoPtr->iSelected = -1;
-    if (infoPtr->iHotTracked >= 0)
-	KillTimer(hwnd, TAB_HOTTRACK_TIMER);
-    infoPtr->iHotTracked = -1;
-    
-    TAB_SetItemBounds(hwnd);
+ 
+    while (infoPtr->uNumItem)
+      TAB_DeleteItem (hwnd, 0, 0);
     return TRUE;
 }
 
@@ -3154,8 +3049,8 @@ TAB_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
   if (infoPtr->items) {
     for (iItem = 0; iItem < infoPtr->uNumItem; iItem++) {
-      if (infoPtr->items[iItem].pszText)
-	Free (infoPtr->items[iItem].pszText);
+      if (TAB_GetItem(infoPtr, iItem)->pszText)
+	Free (TAB_GetItem(infoPtr, iItem)->pszText);
     }
     Free (infoPtr->items);
   }
@@ -3214,16 +3109,12 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_GetItemCount (hwnd, wParam, lParam);
 
     case TCM_GETITEMA:
-      return TAB_GetItemA (hwnd, wParam, lParam);
-
     case TCM_GETITEMW:
-      return TAB_GetItemW (hwnd, wParam, lParam);
+      return TAB_GetItemAW (hwnd, wParam, lParam, uMsg == TCM_GETITEMW);
 
     case TCM_SETITEMA:
-      return TAB_SetItemA (hwnd, wParam, lParam);
-
     case TCM_SETITEMW:
-      return TAB_SetItemW (hwnd, wParam, lParam);
+      return TAB_SetItemAW (hwnd, wParam, lParam, uMsg == TCM_SETITEMW);
 
     case TCM_DELETEITEM:
       return TAB_DeleteItem (hwnd, wParam, lParam);
@@ -3244,10 +3135,8 @@ TAB_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       return TAB_SetCurSel (hwnd, wParam);
 
     case TCM_INSERTITEMA:
-      return TAB_InsertItemA (hwnd, wParam, lParam);
-
     case TCM_INSERTITEMW:
-      return TAB_InsertItemW (hwnd, wParam, lParam);
+      return TAB_InsertItemAW (hwnd, wParam, lParam, uMsg == TCM_INSERTITEMW);
 
     case TCM_SETITEMEXTRA:
       return TAB_SetItemExtra (hwnd, wParam, lParam);

@@ -39,6 +39,9 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+
+#define COBJMACROS
+
 #include "winerror.h"
 #include "windef.h"
 #include "winbase.h"
@@ -584,7 +587,7 @@ ImageList_Create (INT cx, INT cy, UINT flags,
             goto cleanup;
     }
 
-    /* Default to ILC_COLOR4 if non of the ILC_COLOR* flags are specified */
+    /* Default to ILC_COLOR4 if none of the ILC_COLOR* flags are specified */
     if (ilc == ILC_COLOR)
         ilc = ILC_COLOR4;
 
@@ -1716,8 +1719,7 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
 /*************************************************************************
  * ImageList_Merge [COMCTL32.@]
  *
- * Creates a new image list that contains a merged image from the specified
- * images of both source image lists.
+ * Create an image list containing a merged image from two image lists.
  *
  * PARAMS
  *     himl1 [I] handle to first image list
@@ -1728,10 +1730,16 @@ ImageList_LoadImageW (HINSTANCE hi, LPCWSTR lpbmp, INT cx, INT cGrow,
  *     dy    [I] Y offset of the second image relative to the first.
  *
  * RETURNS
- *     Success: handle of the merged image list.
- *     Failure: NULL
+ *     Success: The newly created image list. It contains a single image
+ *              consisting of the second image merged with the first.
+ *     Failure: NULL, if either himl1 or himl2 are invalid.
+ *
+ * NOTES
+ *   - The returned image list should be deleted by the caller using
+ *     ImageList_Destroy() when it is no longer required.
+ *   - If either i1 or i2 are not valid image indices they will be treated
+ *     as a blank image.
  */
-
 HIMAGELIST WINAPI
 ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
 		 INT dx, INT dy)
@@ -1746,17 +1754,6 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
 
     if (!is_valid(himl1) || !is_valid(himl2))
 	return NULL;
-
-    /* check indices */
-    if ((i1 < 0) || (i1 >= himl1->cCurImage)) {
-        ERR("Index 1 out of range! %d\n", i1);
-        return NULL;
-    }
-
-    if ((i2 < 0) || (i2 >= himl2->cCurImage)) {
-        ERR("Index 2 out of range! %d\n", i2);
-        return NULL;
-    }
 
     if (dx > 0) {
         cxDst = max (himl1->cx, dx + himl2->cx);
@@ -1791,23 +1788,28 @@ ImageList_Merge (HIMAGELIST himl1, INT i1, HIMAGELIST himl2, INT i2,
     }
 
     himlDst = ImageList_Create (cxDst, cyDst, ILC_MASK | ILC_COLOR, 1, 1);
-    if (!himlDst)
-        return NULL;
 
-    if (himlDst) {
+    if (himlDst)
+    {
         nX1 = i1 * himl1->cx;
         nX2 = i2 * himl2->cx;
 
         /* copy image */
-        BitBlt (himlDst->hdcImage,     0,     0,     cxDst,     cyDst, himl1->hdcImage,   0, 0, BLACKNESS);
-        BitBlt (himlDst->hdcImage, xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcImage, nX1, 0, SRCCOPY);
-        BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , nX2, 0, SRCAND);
-        BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, nX2, 0, SRCPAINT);
+        BitBlt (himlDst->hdcImage, 0, 0, cxDst, cyDst, himl1->hdcImage, 0, 0, BLACKNESS);
+        if (i1 >= 0 && i1 < himl1->cCurImage)
+            BitBlt (himlDst->hdcImage, xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcImage, nX1, 0, SRCCOPY);
+        if (i2 >= 0 && i2 < himl2->cCurImage)
+        {
+            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask , nX2, 0, SRCAND);
+            BitBlt (himlDst->hdcImage, xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcImage, nX2, 0, SRCPAINT);
+        }
 
         /* copy mask */
-        BitBlt (himlDst->hdcMask,      0,     0,     cxDst,     cyDst, himl1->hdcMask,    0, 0, WHITENESS);
-        BitBlt (himlDst->hdcMask,  xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcMask,  nX1, 0, SRCCOPY);
-        BitBlt (himlDst->hdcMask,  xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask,  nX2, 0, SRCAND);
+        BitBlt (himlDst->hdcMask, 0, 0, cxDst, cyDst, himl1->hdcMask, 0, 0, WHITENESS);
+        if (i1 >= 0 && i1 < himl1->cCurImage)
+            BitBlt (himlDst->hdcMask,  xOff1, yOff1, himl1->cx, himl1->cy, himl1->hdcMask,  nX1, 0, SRCCOPY);
+        if (i2 >= 0 && i2 < himl2->cCurImage)
+            BitBlt (himlDst->hdcMask,  xOff2, yOff2, himl2->cx, himl2->cy, himl2->hdcMask,  nX2, 0, SRCAND);
 
 	himlDst->cCurImage = 1;
     }
@@ -2052,7 +2054,7 @@ ImageList_Remove (HIMAGELIST himl, INT i)
     }
 
     if ((i < -1) || (i >= himl->cCurImage)) {
-        ERR("index out of range! %d\n", i);
+        TRACE("index out of range! %d\n", i);
         return FALSE;
     }
 
@@ -2247,7 +2249,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT i, HICON hIcon)
     ICONINFO  ii;
     BITMAP  bmp;
 
-    TRACE("(0x%lx 0x%x %p)\n", (DWORD)himl, i, hIcon);
+    TRACE("(%p %d %p)\n", himl, i, hIcon);
 
     if (!is_valid(himl))
 	return -1;
@@ -2305,6 +2307,7 @@ ImageList_ReplaceIcon (HIMAGELIST himl, INT i, HICON hIcon)
     if (ii.hbmMask)
 	DeleteObject (ii.hbmMask);
 
+    TRACE("Insert index = %d, himl->cCurImage = %d\n", nIndex, himl->cCurImage);
     return nIndex;
 }
 
@@ -2850,6 +2853,31 @@ static HBITMAP ImageList_CreateImage(HDC hdc, HIMAGELIST himl, UINT width, UINT 
 
         hbmNewBitmap = CreateBitmap (width, height, 1, himl->uBitsPixel, NULL);
     }
-
+    TRACE("returning %p\n", hbmNewBitmap);
     return hbmNewBitmap;
+}
+
+/*************************************************************************
+ * ImageList_SetColorTable [COMCTL32.@]
+ *
+ * Sets the color table of an image list.
+ *
+ * PARAMS
+ *     himl        [I] Handle to the image list.
+ *     uStartIndex [I] The first index to set.
+ *     cEntries    [I] Number of entries to set.
+ *     prgb        [I] New color information for color table for the image list.
+ *
+ * RETURNS
+ *     Success: Number of entries in the table that were set.
+ *     Failure: Zero.
+ *
+ * SEE
+ *     ImageList_Create(), SetDIBColorTable()
+ */
+
+UINT WINAPI
+ImageList_SetColorTable (HIMAGELIST himl, UINT uStartIndex, UINT cEntries, CONST RGBQUAD * prgb)
+{
+    return SetDIBColorTable(himl->hdcImage, uStartIndex, cEntries, prgb);
 }

@@ -22,6 +22,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#define COBJMACROS
+
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
