@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.58 2003/12/26 22:52:11 gvg Exp $
+/* $Id: msgqueue.c,v 1.59 2003/12/28 10:27:51 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -377,7 +377,16 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
   if ((*HitTest) != HTCLIENT)
   {
     Msg += WM_NCMOUSEMOVE - WM_MOUSEMOVE;
-    Message->Msg.wParam = *HitTest;
+    if((Msg == WM_NCRBUTTONUP) && 
+       (((*HitTest) == HTCAPTION) || ((*HitTest) == HTSYSMENU)))
+    {
+      Msg = WM_CONTEXTMENU;
+      Message->Msg.wParam = (WPARAM)Window->Self;
+    }
+    else
+    {
+      Message->Msg.wParam = *HitTest;
+    }
   }
   else
   {
