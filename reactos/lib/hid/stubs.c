@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.2 2004/07/12 16:04:37 weiden Exp $
+/* $Id: stubs.c,v 1.3 2004/08/09 16:02:43 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Hid User Library
@@ -22,60 +22,9 @@
  */
 HIDAPI
 BOOLEAN DDKAPI
-HidD_FlushQueue(IN HANDLE HidDeviceObject)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_FreePreparsedData(IN PHIDP_PREPARSED_DATA PreparsedData)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetAttributes(IN HANDLE HidDeviceObject,
-                   OUT PHIDD_ATTRIBUTES Attributes)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
 HidD_GetConfiguration(IN HANDLE HidDeviceObject,
                       OUT PHIDD_CONFIGURATION Configuration,
                       IN ULONG ConfigurationLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetFeature(IN HANDLE HidDeviceObject,
-                OUT PVOID ReportBuffer,
-                IN ULONG ReportBufferLength)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -102,34 +51,6 @@ HidD_GetIndexedString(IN HANDLE HidDeviceObject,
  */
 HIDAPI
 BOOLEAN DDKAPI
-HidD_GetInputReport(IN HANDLE HidDeviceObject,
-                    IN OUT PVOID ReportBuffer,
-                    IN ULONG ReportBufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetManufacturerString(IN HANDLE HidDeviceObject,
-                           OUT PVOID Buffer,
-                           IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
 HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
                           OUT PVOID Buffer,
                           IN ULONG BufferLength)
@@ -144,118 +65,9 @@ HidD_GetMsGenreDescriptor(IN HANDLE HidDeviceObject,
  */
 HIDAPI
 BOOLEAN DDKAPI
-HidD_GetNumInputBuffers(IN HANDLE HidDeviceObject,
-                        OUT PULONG NumberBuffers)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetPhysicalDescriptor(IN HANDLE HidDeviceObject,
-                           OUT PVOID Buffer,
-                           IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
-                      OUT PHIDP_PREPARSED_DATA *PreparsedData)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetProductString(IN HANDLE HidDeviceObject,
-                      OUT PVOID Buffer,
-                      IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_GetSerialNumberString(IN HANDLE HidDeviceObject,
-                           OUT PVOID Buffer,
-                           IN ULONG BufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
 HidD_SetConfiguration(IN HANDLE HidDeviceObject,
                       IN PHIDD_CONFIGURATION Configuration,
                       IN ULONG ConfigurationLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_SetFeature(IN HANDLE HidDeviceObject,
-                IN PVOID ReportBuffer,
-                IN ULONG ReportBufferLength)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_SetNumInputBuffers(IN HANDLE  HidDeviceObject,
-                        OUT ULONG  NumberBuffers)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HIDAPI
-BOOLEAN DDKAPI
-HidD_SetOutputReport(IN HANDLE HidDeviceObject,
-                     IN PVOID ReportBuffer,
-                     IN ULONG ReportBufferLength)
 {
   UNIMPLEMENTED;
   return FALSE;
