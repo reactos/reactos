@@ -1,2 +1,6 @@
+*.o
+*.d
+*.sys
 *.coff
+*.sym
 *.map

@@ -3,5 +3,6 @@
 *.exe
 *.coff
 *.sym
+*.sys
 *.map
 _regtests.c

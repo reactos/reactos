@@ -1,4 +1,6 @@
-*.coff
-*.exe
 *.o
+*.d
+*.exe
+*.coff
+*.sym
 *.map
