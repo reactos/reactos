@@ -6,10 +6,7 @@ VPATH     = @srcdir@
 MODULE    = shell32.dll
 IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32
 DELAYIMPORTS = ole32
-ALTNAMES  = shell.dll
-EXTRALIBS = $(LIBUUID) $(LIBUNICODE)
-
-SPEC_SRCS16 = $(ALTNAMES:.dll=.spec)
+EXTRALIBS = -luuid $(LIBUNICODE)
 
 C_SRCS = \
 	authors.c \
@@ -54,20 +51,21 @@ C_SRCS = \
 RC_SRCS = shres.rc
 RC_BINSRC = shres.rc
 RC_BINARIES = \
+	cdrom.ico \
 	desktop.ico \
 	document.ico \
 	drive.ico \
+	floppy.ico \
 	folder.ico \
 	folder_open.ico \
-	floppy.ico \
+	mycomputer.ico \
 	netdrive.ico \
 	netdrive2.ico \
-	cdrom.ico \
-	ramdisk.ico \
-	mycomputer.ico
+	ramdisk.ico
 
 C_SRCS16  = shell.c
 RC_SRCS16 = version16.rc
+SPEC_SRCS16 = shell.spec
 
 SUBDIRS = tests
 

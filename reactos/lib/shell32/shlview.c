@@ -2314,7 +2314,7 @@ static HRESULT WINAPI ISVViewObject_Draw(
 	LPCRECTL lprcBounds,
 	LPCRECTL lprcWBounds,
 	BOOL (CALLBACK *pfnContinue)(ULONG_PTR dwContinue),
-	DWORD dwContinue)
+	ULONG_PTR dwContinue)
 {
 
 	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
