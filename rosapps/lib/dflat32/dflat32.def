@@ -1,68 +1,115 @@
 ;
-; ReactOS dflat32 COnsole Windowing Library
+; ReactOS dflat32 Console Windowing Library
 ;
 LIBRARY DFLAT32.DLL
 
 EXPORTS
-AllocError			; dfalloc.c
-AltConvert			; console.c
-beep				; console.c
-cursor				; console.c
-curr_cursor			; console.c
-CopyTextToClipboard		; clipbord.c
-CopyToClipboard			; clipbord.c
-ClearClipboard			; clipbord.c
-DFcalloc			; dfalloc.c
-DFmalloc			; dfalloc.c
-DFrealloc			; dfalloc.c
-GetKey				; console.c
-getshift			; console.c
-hidecursor			; console.c
-normalcursor			; console.c
-PasteText			; clipbord.c
-restorecursor			; console.c
-savecursor			; console.c
-set_cursor_size			; console.c
-SetStandardColor		; config.c
-SetReverseColor			; config.c
-SwapCursorStack			; console.c
-unhidecursor			; console.c
-; Update this stuff below from message.c
-DfDispatchMessage		; message.c
-handshake			; message.c
-DfSendMessage			; message.c
-DfPostMessage			; message.c
-DfTerminate			; message.c
-DfInitialize			; message.c
-DfGetScreenWidth		; message.c
-DfGetScreenHeight		; message.c
-; Update this stuff below from Rect.c 
-subRectangle
-ClientRect
-RelativeWindowRect
-ClipRectangle
-; stuff from video.c
-GetVideo
-StoreVideo
-GetVideoChar
-PutVideoChar
+DfCreateWindow		
+DfInitialize                    ;message.c		
+DfPostMessage                   ;message.c
+DfSendMessage                   ;message.c
+DfDispatchMessage               ;message.c
+handshake                       ;message.c
+TestCriticalError		;stubs.c
+;DefaultWndProc         
+;BaseWndProc            
+;WindowHeight           
+;WindowWidth            
+;ClientWidth            
+;ClientHeight           
+;GetTop			
+;GetBottom		
+;GetLeft			
+;GetRight		
+;GetClientTop		
+;GetClientBottom		
+;GetClientLeft		
+;GetClientRight		
+;GetParent		
+;FirstWindow
+;LastWindow 
+;NextWindow
+;PrevWindow 
 CharInView
-wputch
-wputs
-scroll_window
-; stuff from window.c
-DfCreateWindow
+;TopBorderAdj
+;BorderAdj
+;GetTitle
 AddTitle
-InsertTitle
-writeline
-AdjustRectangle
-DisplayTitle
-PaintShadow
-RepaintBorder
-ClearWindow
-LineLength
-InitWindowColors
-PutWindowChar
+;GetClass
+;GetAttribute
+;AddAttribute
+;ClearAttribute
+;TestAttribute
+isVisible			;normal.o
+;GetText
+;GetTextLines
+;TextLine
+;SetProtected
+isActive
+GetCommandText
+ActivateCommand
+DeactivateCommand
+GetCommandToggle
+SetCommandToggle
+ClearCommandToggle
+InvertCommandToggle
+ItemSelected
+;DialogBox
+ControlWindow
+;MessageBox
+;CancelBox
+;ErrorMessage
+;TestErrorMessage
+;YesNoBox
+MomentaryMessage
+InputBox
+;SliderBox
+RadioButtonSetting
+;EnableButton
+;DisableButton
+;ButtonEnabled
+PutItemText
+;PutComboListText
+GetItemText
+;GetEditBoxText
+;GetComboBoxText
+;SetEditBoxText
+;SetComboBoxText
+;GetDlgText
+;SetDlgText
+;GetDlgTextBox
+;SetDlgTextBox
+;SetCheckBox
+;ClearCheckBox
+CheckBoxSetting
+;SetDlgTitle
+LoadHelpFile
+DisplayHelp				;helpbox.o
+;HelpComment
+UnLoadHelpFile				;helpbox.o
+;SearchText
+;ReplaceText
+;SearchNext
+WriteTextLine
 PutWindowLine
-; exports from the stubs
-classdefs
+PutWindowChar
+DrawVector
+DrawBox
+DrawBar
+;WindowClientColor
+;WindowReverseColor
+;WindowFrameColor
+;WindowHighlightColor
+MarkTextBlock
+;ClearTextBlock
+CopyToClipboard 			;clipbord.o
+CopyTextToClipboard			;clipbord.o
+PasteText                               ;clipbord.o
+ClearClipboard				;clipbord.o
+WatchIcon                               ;watch.o
+;
+;
+;
+; Everything below here is not part of the dflat32 api (documentation)
+DfTerminate
+LoadConfig

@@ -1,10 +1,10 @@
 /* ----------- console.c ---------- */
 
-//#define WIN32_LEAN_AND_MEAN
+// #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
 
 /* ----- table of alt keys for finding shortcut keys ----- */

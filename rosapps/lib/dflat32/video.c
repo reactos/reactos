@@ -1,6 +1,6 @@
 /* --------------------- video.c -------------------- */
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
 #define clr(fg,bg) ((fg)|((bg)<<4))
 

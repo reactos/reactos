@@ -1,15 +1,9 @@
-/* ---------- dfalloc.c ---------- 
- * This seems simple enough, if a AllocationError occors
- * then try to handle it in a somewhat clean fashion.
- *
- * Dont ask I didnt write it. - sedwards
- */
+/* ---------- dfalloc.c ---------- */
 
-/* #define WIN32_LEAN_AND_MEAN		Removed for ROS */	
-
+//#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
 static void AllocationError(void)
 {

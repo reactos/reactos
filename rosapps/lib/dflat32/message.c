@@ -1,13 +1,7 @@
-/* --------- message.c ---------- 
- * Message Que code for all events that dflat32
- * should know how to handle.
- *
- * You understand this? Good I'm glad one of us
- * does. - sedwards 3-24-02
- */
+/* --------- message.c ---------- */
 
-#include <dflat32/dflat.h>
-#include <dflat32/system.h>
+#include "dflat32/dflat.h"
+#include "dflat32/system.h"
 
 static int handshaking = 0;
 

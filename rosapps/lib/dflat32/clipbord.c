@@ -1,9 +1,5 @@
-/* ----------- clipbord.c ------------ 
- * Clipbord funcations. 
- *
- * sedwards
- */
-#include <dflat32\dflat.h>
+/* ----------- clipbord.c ------------ */
+#include "dflat32/dflat.h"
 
 char *Clipboard;
 unsigned ClipboardLength;

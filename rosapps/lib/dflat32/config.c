@@ -1,6 +1,6 @@
 /* ------------- config.c ------------- */
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
 /* ----- default colors for color video system ----- */
 unsigned char color[CLASSCOUNT] [4] [2] = {
@@ -440,7 +440,6 @@ CONFIG cfg = {
 	55				 /* Bottom printer margin		*/
 };
 
-char **Argv;
 void BuildFileName(char *path, char *ext)
 {
 	extern char **Argv;

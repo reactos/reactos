@@ -1,6 +1,6 @@
 /* ---------- window.c ------------- */
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
 DFWINDOW inFocus = NULL;
 

@@ -1,7 +1,7 @@
 /* 
- * 
  * ReactOS DFLAT32.DLL
  */
+
 #include <windows.h>
 BOOLEAN __stdcall DllMain(
 	PVOID	hinstDll,

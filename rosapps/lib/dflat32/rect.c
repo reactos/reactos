@@ -1,6 +1,6 @@
 /* ------------- rect.c --------------- */
 
-#include <dflat32/dflat.h>
+#include "dflat32/dflat.h"
 
  /* --- Produce the vector end points produced by the overlap
         of two other vectors --- */
