@@ -122,7 +122,7 @@ copy /Y subsys\system\autochk\autochk.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\gstart\gstart.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\lsass\lsass.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\services\services.exe %BOOTCD_DIR%\disk\install
-copy /Y subsys\system\shell\shell.exe %BOOTCD_DIR%\disk\install
+copy /Y subsys\system\cmd\cmd.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\winlogon\winlogon.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\win32k\win32k.sys %BOOTCD_DIR%\disk\install
 

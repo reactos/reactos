@@ -62,6 +62,6 @@ subsys\win32k\win32k.sys			system32
 
 ; Contents of disk 4
 ;.New Disk
-apps\system\shell\shell.exe			system32
+apps\system\cmd\cmd.exe 			system32
 
 ; EOF

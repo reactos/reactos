@@ -67,7 +67,7 @@ copy drivers\storage\disk\disk.sys %ROS_INSTALL%\system32\drivers
 copy drivers\storage\class2\class2.sys %ROS_INSTALL%\system32\drivers
 copy subsys\system\autochk\autochk.exe %ROS_INSTALL%\system32
 copy subsys\system\gstart\gstart.exe %ROS_INSTALL%\system32
-copy subsys\system\shell\shell.exe %ROS_INSTALL%\system32
+copy subsys\system\cmd\cmd.exe %ROS_INSTALL%\system32
 copy subsys\system\winlogon\winlogon.exe %ROS_INSTALL%\system32
 copy subsys\system\services\services.exe %ROS_INSTALL%\system32
 copy services\eventlog\eventlog.exe %ROS_INSTALL%\system32
