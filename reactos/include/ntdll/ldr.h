@@ -1,18 +1,26 @@
 typedef NTSTATUS (*PEPFUNC)(PPEB);
 
-typedef struct _DLL
+typedef struct _LDR_MODULE
 {
-   PIMAGE_NT_HEADERS Headers;
-   PVOID BaseAddress;
-   HANDLE SectionHandle;
-   struct _DLL* Prev;
-   struct _DLL* Next;
-   UINT ReferenceCount;
-} DLL, *PDLL;
+   LIST_ENTRY     InLoadOrderModuleList;
+   LIST_ENTRY     InMemoryOrderModuleList;		// not used
+   LIST_ENTRY     InInitializationOrderModuleList;	// not used
+   PVOID          BaseAddress;
+   ULONG          EntryPoint;
+   ULONG          SizeOfImage;
+   UNICODE_STRING FullDllName;
+   UNICODE_STRING BaseDllName;
+   ULONG          Flags;
+   SHORT          LoadCount;
+   SHORT          TlsIndex;
+   HANDLE         SectionHandle;
+   ULONG          CheckSum;
+   ULONG          TimeDateStamp;
+} LDR_MODULE, *PLDR_MODULE;
+
 
 #define RVA(m, b) ((ULONG)b + m)
 
-extern DLL LdrDllListHead;
 
 PEPFUNC LdrPEStartup(PVOID ImageBase, HANDLE SectionHandle);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
@@ -25,8 +33,7 @@ NTSTATUS LdrMapNTDllForProcess(HANDLE ProcessHandle,
 
 
 NTSTATUS STDCALL
-LdrDisableThreadCalloutsForDll (IN PVOID BaseAddress,
-                                IN BOOLEAN Disable);
+LdrDisableThreadCalloutsForDll (IN PVOID BaseAddress);
 
 NTSTATUS STDCALL
 LdrGetDllHandle (IN ULONG Unknown1,
@@ -51,6 +58,12 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
             IN ULONG LoadFlags,
             IN PUNICODE_STRING Name,
             OUT PVOID *BaseAddress OPTIONAL);
+
+NTSTATUS STDCALL
+LdrShutdownProcess (VOID);
+
+NTSTATUS STDCALL
+LdrShutdownThread (VOID);
 
 NTSTATUS STDCALL
 LdrUnloadDll (IN PVOID BaseAddress);

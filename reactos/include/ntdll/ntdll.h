@@ -3,6 +3,12 @@
 
 #define UNIMPLEMENTED DbgPrint("%s in %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
+#ifndef NASSERT
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); for(;;);}
+#else
+#define assert(x)
+#endif
+
 #ifdef NDEBUG
 #define DPRINT(args...)
 #define CHECKPOINT

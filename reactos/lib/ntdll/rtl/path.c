@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.5 2000/07/05 18:05:21 ekohl Exp $
+/* $Id: path.c,v 1.6 2000/09/01 17:05:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -811,6 +811,10 @@ RtlDoesFileExists_U (
 	CURDIR CurDir;
 	PWSTR Buffer;
 
+	/* only used by replacement code */
+	HANDLE FileHandle;
+	IO_STATUS_BLOCK StatusBlock;
+
 	if (!RtlDosPathNameToNtPathName_U (FileName,
 	                                   &NtFileName,
 	                                   NULL,
@@ -831,7 +835,19 @@ RtlDoesFileExists_U (
 	                            CurDir.Handle,
 	                            NULL);
 
-	Status = NtQueryAttributesFile (&Attr, NULL);
+	/* FIXME: not implemented yet */
+//	Status = NtQueryAttributesFile (&Attr, NULL);
+
+	/* REPLACEMENT start */
+	Status = NtOpenFile (&FileHandle,
+	                     0x10001,
+	                     &Attr,
+	                     &StatusBlock,
+	                     1,
+	                     FILE_SYNCHRONOUS_IO_NONALERT);
+	if (NT_SUCCESS(Status))
+		NtClose (FileHandle);
+	/* REPLACEMENT end */
 
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,

@@ -1,4 +1,4 @@
-/* $Id: ldr.c,v 1.8 2000/08/27 22:37:45 ekohl Exp $
+/* $Id: ldr.c,v 1.9 2000/09/01 17:09:19 ekohl Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -17,6 +17,24 @@
 
 
 /* FUNCTIONS ****************************************************************/
+
+WINBOOL
+STDCALL
+DisableThreadLibraryCalls (
+	HMODULE	hLibModule
+	)
+{
+	NTSTATUS Status;
+
+	Status = LdrDisableThreadCalloutsForDll ((PVOID)hLibModule);
+	if (!NT_SUCCESS (Status))
+	{
+		SetLastErrorByStatus (Status);
+		return FALSE;
+	}
+	return TRUE;
+}
+
 
 HINSTANCE
 STDCALL
@@ -38,7 +56,8 @@ LoadLibraryExA (
 {
 	UNICODE_STRING LibFileNameU;
 	ANSI_STRING LibFileName;
-	HINSTANCE hInstance;
+	HINSTANCE hInst;
+	NTSTATUS Status;
 
 	RtlInitAnsiString (&LibFileName,
 	                   (LPSTR)lpLibFileName);
@@ -53,13 +72,20 @@ LoadLibraryExA (
 		                             &LibFileName,
 		                             TRUE);
 
-	hInstance = LoadLibraryExW (LibFileNameU.Buffer,
-	                            hFile,
-	                            dwFlags);
+	Status = LdrLoadDll(NULL,
+			    dwFlags,
+			    &LibFileNameU,
+			    (PVOID*)&hInst);
 
 	RtlFreeUnicodeString (&LibFileNameU);
 
-	return hInstance;
+	if ( !NT_SUCCESS(Status))
+	{
+		SetLastErrorByStatus (Status);
+		return NULL;
+	}
+
+	return hInst;
 }
 
 
@@ -81,42 +107,15 @@ LoadLibraryExW (
 	DWORD	dwFlags
 	)
 {
-	HINSTANCE hInst;
-	int i;
-	LPWSTR lpDllName;
-	NTSTATUS Status;
 	UNICODE_STRING DllName;
+	HINSTANCE hInst;
+	NTSTATUS Status;
 
 	if ( lpLibFileName == NULL )
 		return NULL;
 
-	i = wcslen (lpLibFileName);
-// full path specified
-	if ( lpLibFileName[2] == L':' ) {
-		lpDllName = HeapAlloc(GetProcessHeap(),0,(i+3)*sizeof(WCHAR));
-		wcscpy (lpDllName,L"\\??\\");
-		wcscat (lpDllName,lpLibFileName);
-	}
-// point at the end means no extension 
-	else if ( lpLibFileName[i-1] == L'.' ) {
-		lpDllName = HeapAlloc(GetProcessHeap(),0,(i+1)*sizeof(WCHAR));
-		wcscpy (lpDllName,lpLibFileName);
-		lpDllName[i-1] = 0;
-	}
-// no extension
-	else if (i > 3 && lpLibFileName[i-3] != L'.' ) {
-		lpDllName = HeapAlloc(GetProcessHeap(),0,(i+4)*sizeof(WCHAR));
-		wcscpy (lpDllName,lpLibFileName);
-		wcscat (lpDllName,L".dll");
-	}
-	else {
-		lpDllName = HeapAlloc(GetProcessHeap(),0,(i+1)*sizeof(WCHAR));
-		wcscpy (lpDllName,lpLibFileName);
-	}
-
-	RtlInitUnicodeString (&DllName, lpDllName);
+	RtlInitUnicodeString (&DllName, (LPWSTR)lpLibFileName);
 	Status = LdrLoadDll(NULL, dwFlags, &DllName, (PVOID*)&hInst);
-	HeapFree(GetProcessHeap(), 0, lpDllName);
 	if ( !NT_SUCCESS(Status))
 	{
 		SetLastErrorByStatus (Status);
@@ -171,10 +170,127 @@ FreeLibraryAndExitThread (
 	DWORD	dwExitCode
 	)
 {
-
 	if ( FreeLibrary(hLibModule) )
 		ExitThread(dwExitCode);
 	return;
+}
+
+
+DWORD
+STDCALL
+GetModuleFileNameA (
+	HINSTANCE	hModule,
+	LPSTR		lpFilename,
+	DWORD		nSize
+	)
+{
+	ANSI_STRING FileName;
+	PLIST_ENTRY ModuleListHead;
+	PLIST_ENTRY Entry;
+	PLDR_MODULE Module;
+	PPEB Peb;
+	ULONG Length = 0;
+
+	Peb = NtCurrentPeb ();
+	RtlEnterCriticalSection (Peb->LoaderLock);
+
+	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
+	Entry = ModuleListHead->Flink;
+
+	while (Entry != ModuleListHead)
+	{
+		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+		if (Module->BaseAddress == (PVOID)hModule)
+		{
+			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
+			{
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			}
+			else
+			{
+				FileName.Length = 0;
+				FileName.MaximumLength = nSize * sizeof(WCHAR);
+				FileName.Buffer = lpFilename;
+
+				/* convert unicode string to ansi (or oem) */
+				if (bIsFileApiAnsi)
+					RtlUnicodeStringToAnsiString (&FileName,
+					                              &Module->FullDllName,
+					                              FALSE);
+				else
+					RtlUnicodeStringToOemString (&FileName,
+					                             &Module->FullDllName,
+					                             FALSE);
+				Length = Module->FullDllName.Length / sizeof(WCHAR);
+			}
+
+			RtlLeaveCriticalSection (Peb->LoaderLock);
+			return Length;
+		}
+
+		Entry = Entry->Flink;
+	}
+
+	SetLastErrorByStatus (STATUS_DLL_NOT_FOUND);
+	RtlLeaveCriticalSection (Peb->LoaderLock);
+
+
+	return 0;
+}
+
+
+DWORD
+STDCALL
+GetModuleFileNameW (
+	HINSTANCE	hModule,
+	LPWSTR		lpFilename,
+	DWORD		nSize
+	)
+{
+	UNICODE_STRING FileName;
+	PLIST_ENTRY ModuleListHead;
+	PLIST_ENTRY Entry;
+	PLDR_MODULE Module;
+	PPEB Peb;
+	ULONG Length = 0;
+
+	Peb = NtCurrentPeb ();
+	RtlEnterCriticalSection (Peb->LoaderLock);
+
+	ModuleListHead = &Peb->Ldr->InLoadOrderModuleList;
+	Entry = ModuleListHead->Flink;
+	while (Entry != ModuleListHead)
+	{
+		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+
+		if (Module->BaseAddress == (PVOID)hModule)
+		{
+			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
+			{
+				SetLastErrorByStatus (STATUS_BUFFER_TOO_SMALL);
+			}
+			else
+			{
+				FileName.Length = 0;
+				FileName.MaximumLength = nSize * sizeof(WCHAR);
+				FileName.Buffer = lpFilename;
+
+				RtlCopyUnicodeString (&FileName,
+				                      &Module->FullDllName);
+				Length = Module->FullDllName.Length / sizeof(WCHAR);
+			}
+
+			RtlLeaveCriticalSection (Peb->LoaderLock);
+			return Length;
+		}
+
+		Entry = Entry->Flink;
+	}
+
+	SetLastErrorByStatus (STATUS_DLL_NOT_FOUND);
+	RtlLeaveCriticalSection (Peb->LoaderLock);
+
+	return 0;
 }
 
 
@@ -182,19 +298,30 @@ HMODULE
 STDCALL
 GetModuleHandleA ( LPCSTR lpModuleName )
 {
-	UNICODE_STRING ModuleName;
+	UNICODE_STRING UnicodeName;
+	ANSI_STRING ModuleName;
 	PVOID BaseAddress;
 	NTSTATUS Status;
 
-	RtlCreateUnicodeStringFromAsciiz (&ModuleName,
-					  (LPSTR)lpModuleName);
+	RtlInitAnsiString (&ModuleName,
+	                   (LPSTR)lpModuleName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+		RtlAnsiStringToUnicodeString (&UnicodeName,
+					      &ModuleName,
+					      TRUE);
+	else
+		RtlOemStringToUnicodeString (&UnicodeName,
+					     &ModuleName,
+					     TRUE);
 
 	Status = LdrGetDllHandle (0,
 				  0,
-				  &ModuleName,
+				  &UnicodeName,
 				  &BaseAddress);
 
-	RtlFreeUnicodeString (&ModuleName);
+	RtlFreeUnicodeString (&UnicodeName);
 
 	if (!NT_SUCCESS(Status))
 	{

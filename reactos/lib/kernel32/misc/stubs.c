@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.20 2000/08/27 22:37:45 ekohl Exp $
+/* $Id: stubs.c,v 1.21 2000/09/01 17:09:19 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -1482,32 +1482,6 @@ GetMailslotInfo (
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-DWORD
-STDCALL
-GetModuleFileNameW (
-	HINSTANCE	hModule,
-	LPWSTR		lpFilename,
-	DWORD		nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-DWORD
-STDCALL
-GetModuleFileNameA (
-	HINSTANCE	hModule,
-	LPSTR		lpFilename,
-	DWORD		nSize
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
