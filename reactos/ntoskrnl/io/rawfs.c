@@ -1,4 +1,4 @@
-/* $Id: rawfs.c,v 1.10 2004/08/01 21:57:35 navaraf Exp $
+/* $Id: rawfs.c,v 1.11 2004/08/10 01:49:36 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -382,10 +382,11 @@ STDCALL RawFsDoRequest(PVOID IrpContext)
 {
   ULONG Count;
 
+  Count = InterlockedDecrement(&RawFsQueueCount);
+
   DPRINT("RawFsDoRequest(IrpContext %x), MajorFunction %x, %d\n",
     IrpContext, ((PRAWFS_IRP_CONTEXT) IrpContext)->MajorFunction, Count);
 
-  Count = InterlockedDecrement(&RawFsQueueCount);
   RawFsDispatchRequest((PRAWFS_IRP_CONTEXT) IrpContext);
 }
 
@@ -394,12 +395,12 @@ RawFsQueueRequest(PRAWFS_IRP_CONTEXT IrpContext)
 {
   ULONG Count;
 
-  DPRINT("RawFsQueueRequest (IrpContext %x), %d\n", IrpContext, Count);
-
   assert(IrpContext != NULL);
   assert(IrpContext->Irp != NULL);
 
   Count = InterlockedIncrement(&RawFsQueueCount);
+
+  DPRINT("RawFsQueueRequest (IrpContext %x), %d\n", IrpContext, Count);
 
   IrpContext->Flags |= IRPCONTEXT_CANWAIT;
   IoMarkIrpPending (IrpContext->Irp);

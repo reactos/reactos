@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.25 2004/08/01 21:57:34 navaraf Exp $
+/* $Id: kdb.c,v 1.26 2004/08/10 01:49:36 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -353,7 +353,7 @@ KdbDecodeAddress(PUCHAR Buffer, PULONG Address)
       PUCHAR AddressString = strpbrk(Buffer, ":");
       extern LIST_ENTRY ModuleTextListHead;
       PLIST_ENTRY current_entry;
-      MODULE_TEXT_SECTION* current;
+      MODULE_TEXT_SECTION* current = NULL;
       static WCHAR ModuleNameW[256];
       ULONG i;
 
@@ -572,7 +572,7 @@ DbgSetMemoryBreakPoint(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
   ULONG DebugRegNr;
   UCHAR BreakType;
   ULONG Length, Address;
-  ULONG Rw;
+  ULONG Rw = 0;
   ULONG i;
   if (Argc != 2 && Argc < 5)
     {
@@ -988,7 +988,7 @@ static int KjsGetNthModule( void *context,
   PKJS kjs = (PKJS)context_list[0];
   JSVirtualMachine *vm = kjs->vm;
   PLIST_ENTRY current_entry;
-  MODULE_TEXT_SECTION *current;
+  MODULE_TEXT_SECTION *current = NULL;
   extern LIST_ENTRY ModuleTextListHead;
   int n = 0;
   

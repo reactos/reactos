@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.74 2004/08/01 21:57:34 navaraf Exp $
+/* $Id: view.c,v 1.75 2004/08/10 01:49:36 navaraf Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -1152,12 +1152,12 @@ CcRosInitializeFileCache(PFILE_OBJECT FileObject,
  */
 {
    PBCB Bcb;
+
+   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    DPRINT("CcRosInitializeFileCache(FileObject %x, *Bcb %x, CacheSegmentSize %d)\n",
            FileObject, Bcb, CacheSegmentSize);
 
    ExAcquireFastMutex(&ViewLock);
-
-   Bcb = FileObject->SectionObjectPointer->SharedCacheMap;
    if (Bcb == NULL)
    {
       Bcb = ExAllocateFromNPagedLookasideList(&BcbLookasideList);	
