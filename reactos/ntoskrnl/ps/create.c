@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.41 2001/11/21 18:44:25 ekohl Exp $
+/* $Id: create.c,v 1.42 2002/01/03 17:59:09 ekohl Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -39,6 +39,12 @@ extern KSPIN_LOCK PiThreadListLock;
 extern ULONG PiNrThreads;
 
 extern LIST_ENTRY PiThreadListHead;
+
+#define MAX_THREAD_NOTIFY_ROUTINE_COUNT    8
+
+static ULONG PiThreadNotifyRoutineCount = 0;
+static PCREATE_THREAD_NOTIFY_ROUTINE
+PiThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
 /* FUNCTIONS ***************************************************************/
 
@@ -299,20 +305,32 @@ PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext)
 VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
 {
-   KIRQL oldIrql;
-   
-   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   DPRINT("Process %x(%d)\n", ((PETHREAD)ObjectBody)->ThreadsProcess,
-	   ObGetReferenceCount(((PETHREAD)ObjectBody)->ThreadsProcess));
-   ObDereferenceObject(((PETHREAD)ObjectBody)->ThreadsProcess);
-   ((PETHREAD)ObjectBody)->ThreadsProcess = NULL;
-   PiNrThreads--;
-   RemoveEntryList(&((PETHREAD)ObjectBody)->Tcb.ThreadListEntry);
-   HalReleaseTask((PETHREAD)ObjectBody);
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-   DPRINT("PiDeleteThread() finished\n");
+  KIRQL oldIrql;
+  PETHREAD Thread;
+  ULONG i;
+
+  DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+
+  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
+  Thread = (PETHREAD)ObjectBody;
+
+  for (i = 0; i < PiThreadNotifyRoutineCount; i++)
+    {
+      PiThreadNotifyRoutine[i](Thread->Cid.UniqueProcess,
+			       Thread->Cid.UniqueThread,
+			       FALSE);
+    }
+
+  DPRINT("Process %x(%d)\n",
+	 Thread->ThreadsProcess,
+	 ObGetReferenceCount(Thread->ThreadsProcess));
+  ObDereferenceObject(Thread->ThreadsProcess);
+  Thread->ThreadsProcess = NULL;
+  PiNrThreads--;
+  RemoveEntryList(&Thread->Tcb.ThreadListEntry);
+  HalReleaseTask(Thread);
+  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+  DPRINT("PiDeleteThread() finished\n");
 }
 
 VOID STDCALL
@@ -338,6 +356,7 @@ PsInitializeThread(HANDLE ProcessHandle,
    NTSTATUS Status;
    KIRQL oldIrql;
    PEPROCESS Process;
+   ULONG i;
    
    /*
     * Reference process
@@ -408,8 +427,15 @@ PsInitializeThread(HANDLE ProcessHandle,
 
    Thread->Tcb.BasePriority = Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
-   
-   return(STATUS_SUCCESS);
+
+  for (i = 0; i < PiThreadNotifyRoutineCount; i++)
+    {
+      PiThreadNotifyRoutine[i](Thread->Cid.UniqueProcess,
+			       Thread->Cid.UniqueThread,
+			       TRUE);
+    }
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -654,6 +680,19 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    PsUnblockThread(Thread, NULL);
    
    return(STATUS_SUCCESS);
+}
+
+
+NTSTATUS STDCALL
+PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
+{
+  if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
+    return(STATUS_INSUFFICIENT_RESOURCES);
+
+  PiThreadNotifyRoutine[PiThreadNotifyRoutineCount] = NotifyRoutine;
+  PiThreadNotifyRoutineCount++;
+
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.121 2002/01/03 14:02:04 ekohl Exp $
+; $Id: ntoskrnl.def,v 1.122 2002/01/03 18:02:34 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -609,8 +609,8 @@ PsReferenceImpersonationToken@16
 PsReferencePrimaryToken@4
 ;PsReturnPoolQuota@12
 PsRevertToSelf@0
-;PsSetCreateProcessNotifyRoutine@8
-;PsSetCreateThreadNotifyRoutine@4
+PsSetCreateProcessNotifyRoutine@8
+PsSetCreateThreadNotifyRoutine@4
 ;PsSetLegoNotifyRoutine@4
 ;PsSetProcessPriorityByClass@8
 PsTerminateSystemThread@4

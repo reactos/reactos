@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.74 2002/01/03 14:03:05 ekohl Exp $
+/* $Id: process.c,v 1.75 2002/01/03 17:59:09 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -45,6 +45,12 @@ static GENERIC_MAPPING PiProcessMapping = {PROCESS_READ,
 					   PROCESS_WRITE,
 					   PROCESS_EXECUTE,
 					   PROCESS_ALL_ACCESS};
+
+#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
+
+static ULONG PiProcessNotifyRoutineCount = 0;
+static PCREATE_PROCESS_NOTIFY_ROUTINE
+PiProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -300,20 +306,29 @@ PiFreeSymbols(PPEB Peb)
 VOID STDCALL
 PiDeleteProcess(PVOID ObjectBody)
 {
-   KIRQL oldIrql;
-   
-   DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
-   
-   KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
-   RemoveEntryList(&((PEPROCESS)ObjectBody)->ProcessListEntry);
+  KIRQL oldIrql;
+  PEPROCESS Process;
+  ULONG i;
+
+  DPRINT("PiDeleteProcess(ObjectBody %x)\n",ObjectBody);
+
+  Process = (PEPROCESS)Process;
+  KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  for (i = 0; i < PiProcessNotifyRoutineCount; i++)
+    {
+      PiProcessNotifyRoutine[i](Process->InheritedFromUniqueProcessId,
+			        (HANDLE)Process->UniqueProcessId,
+			        FALSE);
+    }
+   RemoveEntryList(&Process->ProcessListEntry);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
 #ifdef KDBG
-   PiFreeSymbols(((PEPROCESS)ObjectBody)->Peb);
+   PiFreeSymbols(Process->Peb);
 #endif /* KDBG */
 
-   (VOID)MmReleaseMmInfo((PEPROCESS)ObjectBody);
-   ObDeleteHandleTable((PEPROCESS)ObjectBody);
+   (VOID)MmReleaseMmInfo(Process);
+   ObDeleteHandleTable(Process);
 }
 
 
@@ -393,7 +408,7 @@ PsGetCurrentProcess(VOID)
 PEPROCESS STDCALL
 IoGetCurrentProcess(VOID)
 {
-   return(PsGetCurrentProcess());
+  return(PsGetCurrentProcess());
 }
 
 NTSTATUS STDCALL
@@ -454,6 +469,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    PEPORT ExceptionPort;
    PVOID BaseAddress;
    PMEMORY_AREA MemoryArea;
+   ULONG i;
    
    DPRINT("NtCreateProcess(ObjectAttributes %x)\n",ObjectAttributes);
 
@@ -500,6 +516,12 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    MmCopyMmInfo(ParentProcess, Process);
    
    KeAcquireSpinLock(&PsProcessListLock, &oldIrql);
+  for (i = 0; i < PiProcessNotifyRoutineCount; i++)
+    {
+      PiProcessNotifyRoutine[i](Process->InheritedFromUniqueProcessId,
+			        (HANDLE)Process->UniqueProcessId,
+			        TRUE);
+    }
    InsertHeadList(&PsProcessListHead, &Process->ProcessListEntry);
    InitializeListHead(&Process->ThreadListHead);
    KeReleaseSpinLock(&PsProcessListLock, oldIrql);
@@ -1181,6 +1203,20 @@ PsLookupProcessByProcessId(IN PVOID ProcessId,
   KeReleaseSpinLock(&PsProcessListLock, oldIrql);
 
   return(STATUS_INVALID_PARAMETER);
+}
+
+
+NTSTATUS STDCALL
+PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
+				IN BOOLEAN Remove)
+{
+  if (PiProcessNotifyRoutineCount >= MAX_PROCESS_NOTIFY_ROUTINE_COUNT)
+    return(STATUS_INSUFFICIENT_RESOURCES);
+
+  PiProcessNotifyRoutine[PiProcessNotifyRoutineCount] = NotifyRoutine;
+  PiProcessNotifyRoutineCount++;
+
+  return(STATUS_SUCCESS);
 }
 
 /* EOF */

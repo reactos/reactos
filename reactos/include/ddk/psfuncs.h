@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.17 2002/01/03 14:01:16 ekohl Exp $
+/* $Id: psfuncs.h,v 1.18 2002/01/03 17:58:44 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -86,6 +86,13 @@ NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
 NTSTATUS STDCALL PsLookupThreadByThreadId(IN PVOID ThreadId,
 					  OUT struct _ETHREAD **Thread);
 //					  OUT PETHREAD *Thread);
+
+NTSTATUS STDCALL
+PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,
+				IN BOOLEAN Remove);
+
+NTSTATUS STDCALL
+PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine);
 
 #endif
 

@@ -20,6 +20,14 @@ struct _KTHREAD;
 
 typedef NTSTATUS STDCALL (*PKSTART_ROUTINE)(PVOID StartContext);
 
+typedef VOID STDCALL (*PCREATE_PROCESS_NOTIFY_ROUTINE)(HANDLE ParentId,
+						       HANDLE ProcessId,
+						       BOOLEAN Create);
+
+typedef VOID STDCALL (*PCREATE_THREAD_NOTIFY_ROUTINE)(HANDLE ProcessId,
+						      HANDLE ThreadId,
+						      BOOLEAN Create);
+
 typedef struct _STACK_INFORMATION
 {
 	PVOID 	BaseAddress;
