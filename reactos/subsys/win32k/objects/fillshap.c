@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fillshap.c,v 1.33 2003/09/12 22:17:06 gvg Exp $ */
+/* $Id: fillshap.c,v 1.34 2003/09/23 21:48:18 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -86,6 +86,7 @@ NtGdiEllipse(HDC hDC,
   PSURFOBJ SurfObj;
   BRUSHOBJ PenBrushObj;
   PBRUSHOBJ FillBrushObj;
+  BOOL Even;
   BOOL ret = TRUE;
 
   if (Right <= Left || Bottom <= Top)
@@ -102,7 +103,7 @@ NtGdiEllipse(HDC hDC,
   dc = DC_LockDc ( hDC );
   if (NULL == dc)
     {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
 
@@ -114,10 +115,12 @@ NtGdiEllipse(HDC hDC,
       return FALSE;
     }
 
+  Even = (0 == (Right - Left) % 2);
+
   Left += dc->w.DCOrgX;
-  Right += dc->w.DCOrgX;
+  Right += dc->w.DCOrgX - 1;
   Top += dc->w.DCOrgY;
-  Bottom += dc->w.DCOrgY;
+  Bottom += dc->w.DCOrgY - 1;
 
   RectBounds.left = Left;
   RectBounds.right = Right;
@@ -126,29 +129,66 @@ NtGdiEllipse(HDC hDC,
 
   SurfObj = (PSURFOBJ) AccessUserObject((ULONG)dc->Surface);
   HPenToBrushObj(&PenBrushObj, dc->w.hPen);
+
+  if (Left == Right)
+    {
+      PUTPIXEL(Left, Top, &PenBrushObj);
+      BRUSHOBJ_UnlockBrush(dc->w.hBrush);
+      DC_UnlockDc(hDC);
+
+      return TRUE;
+    }
+
   Radius = (Right - Left) / 2;
-  X = 0;
-  Y = Radius;
-  X18 = Right;
-  X27 = (Left + Right) / 2;
-  X36 = (Left + Right) / 2;
-  X45 = Left;
-  Y14 = Top + Radius;
-  Y23 = Top;
-  Y58 = Top + Radius;
-  Y67 = Top + (Right - Left);
-  d = 1 - Radius;
-  PUTLINE(X45 + 1, Y14, X18, Y58, FillBrushObj);
-  PUTPIXEL(X27, Y23, &PenBrushObj);
-  PUTPIXEL(X45, Y14, &PenBrushObj);
-  PUTPIXEL(X18, Y58, &PenBrushObj);
-  PUTPIXEL(X27, Y67, &PenBrushObj);
+  if (Even)
+    {
+      X = 0;
+      Y = Radius;
+      d = 2 - Radius;
+      X18 = Right;
+      X27 = (Left + Right) / 2 + 1;
+      X36 = (Left + Right) / 2;
+      X45 = Left;
+      Y14 = Top + Radius;
+      Y23 = Top;
+      Y58 = Top + Radius + 1;
+      Y67 = Top + (Right - Left);
+      PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
+      PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
+      PUTPIXEL(X27, Y23, &PenBrushObj);
+      PUTPIXEL(X36, Y23, &PenBrushObj);
+      PUTPIXEL(X18, Y14, &PenBrushObj);
+      PUTPIXEL(X45, Y14, &PenBrushObj);
+      PUTPIXEL(X18, Y58, &PenBrushObj);
+      PUTPIXEL(X45, Y58, &PenBrushObj);
+      PUTPIXEL(X27, Y67, &PenBrushObj);
+      PUTPIXEL(X36, Y67, &PenBrushObj);
+    }
+  else
+    {
+      X = 0;
+      Y = Radius;
+      d = 1 - Radius;
+      X18 = Right;
+      X27 = (Left + Right) / 2;
+      X36 = (Left + Right) / 2;
+      X45 = Left;
+      Y14 = Top + Radius;
+      Y23 = Top;
+      Y58 = Top + Radius;
+      Y67 = Top + (Right - Left);
+      PUTLINE(X45 + 1, Y14, X18, Y58, FillBrushObj);
+      PUTPIXEL(X27, Y23, &PenBrushObj);
+      PUTPIXEL(X45, Y14, &PenBrushObj);
+      PUTPIXEL(X18, Y58, &PenBrushObj);
+      PUTPIXEL(X27, Y67, &PenBrushObj);
+    }
 
   while (X < Y)
     {
       if (d < 0)
 	{
-	  d += 2 * X + 3;
+	  d += 2 * X + (Even ? 4 : 3);
 
 	  X27++;
 	  X36--;
@@ -173,8 +213,11 @@ NtGdiEllipse(HDC hDC,
 	}
       X++;
 
-      PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
-      PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
+      if (Y23 < Y14)
+	{
+	  PUTLINE(X45 + 1, Y14, X18, Y14, FillBrushObj);
+	  PUTLINE(X45 + 1, Y58, X18, Y58, FillBrushObj);
+	}
       PUTPIXEL(X27, Y23, &PenBrushObj);
       PUTPIXEL(X36, Y23, &PenBrushObj);
       PUTPIXEL(X18, Y14, &PenBrushObj);
