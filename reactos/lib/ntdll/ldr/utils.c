@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.56 2002/09/08 10:23:04 chorns Exp $
+/* $Id: utils.c,v 1.57 2002/10/01 19:27:20 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -893,7 +893,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
 	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
 					  ImageBase + 
 					  RelocationDir->VirtualAddress,
-					  PAGESIZE,
+					  PAGE_SIZE,
 					  PAGE_READWRITE,
 					  &OldProtect);
 	  if (!NT_SUCCESS(Status))
@@ -945,7 +945,7 @@ static NTSTATUS LdrPerformRelocations (PIMAGE_NT_HEADERS	NTHeaders,
 	  Status = NtProtectVirtualMemory(NtCurrentProcess(),
 					  ImageBase + 
 					  RelocationDir->VirtualAddress,
-					  PAGESIZE,
+					  PAGE_SIZE,
 					  OldProtect,
 					  &OldProtect);
 	  if (!NT_SUCCESS(Status))

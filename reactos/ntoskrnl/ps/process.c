@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.92 2002/09/08 10:23:40 chorns Exp $
+/* $Id: process.c,v 1.93 2002/10/01 19:27:25 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -601,7 +601,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
 			       &Process->AddressSpace,
 			       MEMORY_AREA_SHARED_DATA,
 			       &BaseAddress,
-			       PAGESIZE,
+			       PAGE_SIZE,
 			       PAGE_READONLY,
 			       &MemoryArea,
 			       FALSE);

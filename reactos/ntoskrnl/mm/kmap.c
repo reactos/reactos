@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.20 2002/09/08 10:23:33 chorns Exp $
+/* $Id: kmap.c,v 1.21 2002/10/01 19:27:22 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -20,7 +20,7 @@
 
 /* GLOBALS *****************************************************************/
 
-#define ALLOC_MAP_SIZE (NONPAGED_POOL_SIZE / PAGESIZE)
+#define ALLOC_MAP_SIZE (NONPAGED_POOL_SIZE / PAGE_SIZE)
 
 /*
  * One bit for each page in the kmalloc region
@@ -38,7 +38,7 @@ VOID
 ExUnmapPage(PVOID Addr)
 {
    KIRQL oldIrql;
-   ULONG i = (Addr - NonPagedPoolBase) / PAGESIZE;
+   ULONG i = (Addr - NonPagedPoolBase) / PAGE_SIZE;
    
    DPRINT("ExUnmapPage(Addr %x)\n",Addr);
    DPRINT("i %x\n",i);
@@ -75,7 +75,7 @@ MiZeroPage(PHYSICAL_ADDRESS PhysPage)
     {
       return(STATUS_NO_MEMORY);
     }
-  memset(TempAddress, 0, PAGESIZE);
+  memset(TempAddress, 0, PAGE_SIZE);
   ExUnmapPage(TempAddress);
   return(STATUS_SUCCESS);
 }
@@ -90,7 +90,7 @@ MiCopyFromUserPage(PHYSICAL_ADDRESS DestPhysPage, PVOID SourceAddress)
     {
       return(STATUS_NO_MEMORY);
     }
-  memcpy(TempAddress, SourceAddress, PAGESIZE);
+  memcpy(TempAddress, SourceAddress, PAGE_SIZE);
   ExUnmapPage(TempAddress);
   return(STATUS_SUCCESS);
 }
@@ -111,7 +111,7 @@ ExAllocatePageWithPhysPage(PHYSICAL_ADDRESS PhysPage)
 	    DPRINT("i %x\n",i);
 	    AllocMap[i / 32] |= (1 << (i % 32));
 	    AllocMapHint = i + 1;
-	    addr = (ULONG)(NonPagedPoolBase + (i*PAGESIZE));
+	    addr = (ULONG)(NonPagedPoolBase + (i*PAGE_SIZE));
 	    Status = MmCreateVirtualMapping(NULL, 
 					    (PVOID)addr, 
 					    PAGE_READWRITE | PAGE_SYSTEM, 
@@ -141,7 +141,7 @@ VOID
 MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
 {
   ULONG i;
-  ULONG Base = (Addr - NonPagedPoolBase) / PAGESIZE;
+  ULONG Base = (Addr - NonPagedPoolBase) / PAGE_SIZE;
   ULONG Offset;
   KIRQL oldlvl;
   
@@ -152,7 +152,7 @@ MiFreeNonPagedPoolRegion(PVOID Addr, ULONG Count, BOOLEAN Free)
       Offset = Base + i;
       AllocMap[Offset / 32] &= (~(1 << (Offset % 32)));       
       MmDeleteVirtualMapping(NULL, 
-			     Addr + (i * PAGESIZE), 
+			     Addr + (i * PAGE_SIZE), 
 			     Free, 
 			     NULL, 
 			     NULL);
@@ -192,9 +192,9 @@ MiAllocNonPagedPoolRegion(ULONG nr_pages)
 		   {
 		     AllocMap[j / 32] |= (1 << (j % 32));
 		   }
-		 DPRINT("returning %x\n",((start*PAGESIZE)+NonPagedPoolBase));
+		 DPRINT("returning %x\n",((start*PAGE_SIZE)+NonPagedPoolBase));
 		 KeReleaseSpinLock(&AllocMapLock, oldlvl);
-		 return(((start*PAGESIZE)+NonPagedPoolBase));
+		 return(((start*PAGE_SIZE)+NonPagedPoolBase));
 	       }
 	  }
        else

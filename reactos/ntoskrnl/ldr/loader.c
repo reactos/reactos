@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.122 2002/09/08 10:23:31 chorns Exp $
+/* $Id: loader.c,v 1.123 2002/10/01 19:27:22 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1117,7 +1117,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase,
 	{
 	  for (i = 0; i < PAGE_ROUND_DOWN(Length); i++)
 	    {
-	      MmSetPageProtect(NULL, BaseAddress + (i * PAGESIZE), 
+	      MmSetPageProtect(NULL, BaseAddress + (i * PAGE_SIZE), 
 			       PAGE_READONLY);
 	    }
 	}

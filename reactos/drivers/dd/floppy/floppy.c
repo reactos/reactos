@@ -216,7 +216,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    CHECKPOINT;
    Status = IoAllocateAdapterChannel( ControllerExtension->AdapterObject,
 				      DeviceObject,
-				      0x3000/PAGESIZE,  // max track size is 12k
+				      0x3000/PAGE_SIZE,  // max track size is 12k
 				      FloppyAdapterControl,
 				      ControllerExtension );
    if( !NT_SUCCESS( Status ) )

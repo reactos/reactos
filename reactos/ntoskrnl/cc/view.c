@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.51 2002/09/30 20:55:33 chorns Exp $
+/* $Id: view.c,v 1.52 2002/10/01 19:27:20 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/cc/view.c
@@ -128,7 +128,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 	}
       current->ReferenceCount++;
       ExReleaseFastMutex(&ViewLock);
-      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       Status = CcRosFlushCacheSegment(current);      
       current->ReferenceCount--;
       ExReleaseFastMutex(&current->Lock);
@@ -189,7 +189,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
       ExReleaseFastMutex(&current->Lock);
       DPRINT("current->Bcb->CacheSegmentSize %d\n", 
 	     current->Bcb->CacheSegmentSize);
-      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGESIZE;
+      PagesPerSegment = current->Bcb->CacheSegmentSize / PAGE_SIZE;
       CcRosInternalFreeCacheSegment(current->Bcb, current);      
       DPRINT("CcRosTrimCache(): Freed %d\n", PagesPerSegment);
       PagesFreed = min(PagesPerSegment, Target);
@@ -383,7 +383,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
       ExAcquireFastMutex(&current->Lock);
     }
   ExReleaseFastMutex(&ViewLock);
-  for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
+  for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
     {
       PHYSICAL_ADDRESS Page;
       
@@ -394,7 +394,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 	}
       
       Status = MmCreateVirtualMapping(NULL,
-				      current->BaseAddress + (i * PAGESIZE),
+				      current->BaseAddress + (i * PAGE_SIZE),
 				      PAGE_READWRITE,
 				      Page,
 				      TRUE);

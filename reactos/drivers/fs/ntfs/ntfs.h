@@ -5,8 +5,8 @@
 
 
 #define CACHEPAGESIZE(pDeviceExt) \
-	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGESIZE ? \
-	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGESIZE)
+	((pDeviceExt)->NtfsInfo.BytesPerCluster > PAGE_SIZE ? \
+	 (pDeviceExt)->NtfsInfo.BytesPerCluster : PAGE_SIZE)
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 

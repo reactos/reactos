@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.53 2002/09/13 18:55:31 hbirr Exp $
+/* $Id: create.c,v 1.54 2002/10/01 19:27:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -209,12 +209,12 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   InitialTeb.StackReserve = (StackReserve < 0x100000) ? 0x100000 : StackReserve;
   /* FIXME: use correct commit size */
 #if 0
-  InitialTeb.StackCommit = (StackCommit < PAGESIZE) ? PAGESIZE : StackCommit;
+  InitialTeb.StackCommit = (StackCommit < PAGE_SIZE) ? PAGE_SIZE : StackCommit;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
   /* size of guard page */
-  InitialTeb.StackCommit += PAGESIZE;
+  InitialTeb.StackCommit += PAGE_SIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -266,7 +266,7 @@ KlCreateFirstThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGESIZE,
+				  PAGE_SIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: pagefile.c,v 1.26 2002/09/08 10:23:35 chorns Exp $
+/* $Id: pagefile.c,v 1.27 2002/10/01 19:27:23 chorns Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/pagefile.c
@@ -227,7 +227,7 @@ MmInitPagingFile(VOID)
    /*
     * Initialize the crash dump support.
     */
-   MmCoreDumpPageFrame = MmAllocateSection(PAGESIZE);
+   MmCoreDumpPageFrame = MmAllocateSection(PAGE_SIZE);
    if (MmCoreDumpType == MM_CORE_DUMP_TYPE_FULL)
      {
        MmCoreDumpSize = MmStats.NrTotalPages * 4096 + 1024 * 1024;
@@ -427,7 +427,7 @@ MmDumpToPagingFile(ULONG BugCode,
   Headers->FaultingStackBase = (PVOID)Thread->Tcb.StackLimit;
   Headers->FaultingStackSize = StackSize =
     (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);
-  Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGESIZE;
+  Headers->PhysicalMemorySize = MmStats.NrTotalPages * PAGE_SIZE;
 
   /* Initialize the dump device. */
   Context = MmCoreDumpDeviceFuncs.Context;
@@ -445,7 +445,7 @@ MmDumpToPagingFile(ULONG BugCode,
   Mdl->Process = NULL;
   Mdl->MappedSystemVa = MmCoreDumpPageFrame;
   Mdl->StartVa = NULL;
-  Mdl->ByteCount = PAGESIZE;
+  Mdl->ByteCount = PAGE_SIZE;
   Mdl->ByteOffset = 0;
   MdlMap = (PULONG)(Mdl + 1);
 
@@ -462,9 +462,9 @@ MmDumpToPagingFile(ULONG BugCode,
   DbgPrint(".");
 
   /* Write out the kernel mode stack of the faulting thread. */
-  for (i = 0; i < (StackSize / PAGESIZE); i++)
+  for (i = 0; i < (StackSize / PAGE_SIZE); i++)
     {
-      Mdl->MappedSystemVa = (PVOID)(Thread->Tcb.StackLimit + (i * PAGESIZE));
+      Mdl->MappedSystemVa = (PVOID)(Thread->Tcb.StackLimit + (i * PAGE_SIZE));
       MdlMap[0] = MmGetPhysicalAddress(Mdl->MappedSystemVa).u.LowPart;      
       Status = 
 	MmCoreDumpDeviceFuncs.DeviceWrite(Context, 
@@ -485,8 +485,8 @@ MmDumpToPagingFile(ULONG BugCode,
       for (i = 0; i < MmStats.NrTotalPages; i++)
 	{
 	  LARGE_INTEGER PhysicalAddress;
-	  PhysicalAddress.QuadPart = i * PAGESIZE;
-	  MdlMap[0] = i * PAGESIZE;
+	  PhysicalAddress.QuadPart = i * PAGE_SIZE;
+	  MdlMap[0] = i * PAGE_SIZE;
 	  MmCreateVirtualMappingForKernel(MmCoreDumpPageFrame,
 					  PAGE_READWRITE,
 					  PhysicalAddress);
@@ -591,7 +591,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    PagingFile->FileObject = FileObject;
    PagingFile->MaximumSize.QuadPart = MaximumSize->QuadPart;
    PagingFile->CurrentSize.QuadPart = InitialSize->QuadPart;
-   PagingFile->FreePages = InitialSize->QuadPart / PAGESIZE;
+   PagingFile->FreePages = InitialSize->QuadPart / PAGE_SIZE;
    PagingFile->UsedPages = 0;
    KeInitializeSpinLock(&PagingFile->AllocMapLock);
    
@@ -627,7 +627,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
      {
        MmCoreDumpBlockMap = 
 	 ExAllocatePool(NonPagedPool, 
-			(MmCoreDumpSize / PAGESIZE) * sizeof(ULONG));
+			(MmCoreDumpSize / PAGE_SIZE) * sizeof(ULONG));
        if (MmCoreDumpBlockMap == NULL)
 	 {
 	   DPRINT1("Failed to allocate block map.\n");
@@ -643,7 +643,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 				&MmCoreDumpSize,
 				sizeof(ULONG),
 				MmCoreDumpBlockMap,
-				(MmCoreDumpSize / PAGESIZE) * sizeof(ULONG));
+				(MmCoreDumpSize / PAGE_SIZE) * sizeof(ULONG));
        if (!NT_SUCCESS(Status))
 	 {
 	   DPRINT1("Failed to get dump block map (Status %X)\n", Status);

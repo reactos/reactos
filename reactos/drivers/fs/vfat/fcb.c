@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.20 2002/09/08 10:22:12 chorns Exp $
+/* $Id: fcb.c,v 1.21 2002/10/01 19:27:18 chorns Exp $
  *
  *
  * FILE:             fcb.c
@@ -187,8 +187,8 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
   fcb->pDevExt = vcb;
 
 
-  fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGESIZE) ?
-      vcb->FatInfo.BytesPerCluster : PAGESIZE;
+  fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGE_SIZE) ?
+      vcb->FatInfo.BytesPerCluster : PAGE_SIZE;
 
   status = CcRosInitializeFileCache (fileObject,
                                      &fcb->RFCB.Bcb,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: anonmem.c,v 1.6 2002/09/08 10:23:32 chorns Exp $
+/* $Id: anonmem.c,v 1.7 2002/10/01 19:27:22 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/anonmem.c
@@ -99,7 +99,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
   /*
    * Write the page to the pagefile
    */
-  Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+  Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
   MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
   Status = MmWriteToSwapPage(SwapEntry, Mdl);
   if (!NT_SUCCESS(Status))
@@ -199,7 +199,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    /*
     * Write the page to the pagefile
     */
-   Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+   Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
    MmBuildMdlFromPages(Mdl, (PULONG)&PhysicalAddress);
    Status = MmWriteToSwapPage(SwapEntry, Mdl);
    if (!NT_SUCCESS(Status))
@@ -365,7 +365,7 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
        PMDL Mdl;
 
        MmDeletePageFileMapping(NULL, Address, &SwapEntry);
-       Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
+       Mdl = MmCreateMdl(NULL, NULL, PAGE_SIZE);
        MmBuildMdlFromPages(Mdl, (PULONG)&Page);
        Status = MmReadFromSwapPage(SwapEntry, Mdl);
        if (!NT_SUCCESS(Status))
@@ -439,25 +439,25 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
       
-      for (i=0; i <= (RegionSize/PAGESIZE); i++)
+      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
 	{
 	  LARGE_INTEGER PhysicalAddr;
 
 	  if (MmIsPageSwapEntry(AddressSpace->Process,
-				BaseAddress + (i * PAGESIZE)))
+				BaseAddress + (i * PAGE_SIZE)))
 	    {
 	      SWAPENTRY SwapEntry;
 	      
 	      MmDeletePageFileMapping(AddressSpace->Process,
-				      BaseAddress + (i * PAGESIZE),
+				      BaseAddress + (i * PAGE_SIZE),
 				      &SwapEntry);
 	      MmFreeSwapPage(SwapEntry);
 	    }
 	  else
 	    {
-	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGESIZE));
+	      PhysicalAddr = MmGetPhysicalAddress(BaseAddress + (i*PAGE_SIZE));
 	      MmDeleteVirtualMapping(AddressSpace->Process,
-				     BaseAddress + (i*PAGESIZE),
+				     BaseAddress + (i*PAGE_SIZE),
 				     FALSE, NULL, NULL);
 	      if (PhysicalAddr.QuadPart != 0)
 		{
@@ -469,7 +469,7 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
 		      MmSetSavedSwapEntryPage(PhysicalAddr, 0);
 		    }
 		  MmDeleteRmap(PhysicalAddr, AddressSpace->Process,
-			       BaseAddress + (i * PAGESIZE));
+			       BaseAddress + (i * PAGE_SIZE));
 		  MmReleasePageMemoryConsumer(MC_USER, PhysicalAddr);
 		}
 	    }
@@ -485,13 +485,13 @@ MmModifyAttributes(PMADDRESS_SPACE AddressSpace,
     {
       ULONG i;
    
-      for (i=0; i <= (RegionSize/PAGESIZE); i++)
+      for (i=0; i <= (RegionSize/PAGE_SIZE); i++)
 	{
 	  if (MmIsPagePresent(AddressSpace->Process, 
-			      BaseAddress + (i*PAGESIZE)))
+			      BaseAddress + (i*PAGE_SIZE)))
 	    {
 	      MmSetPageProtect(AddressSpace->Process,
-			       BaseAddress + (i*PAGESIZE), 
+			       BaseAddress + (i*PAGE_SIZE), 
 			       NewProtect);
 	    }
 	}
@@ -690,7 +690,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
    */
   if (MemoryArea->PageOpCount > 0)
     {
-      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGESIZE); i++)
+      for (i = 0; i < (PAGE_ROUND_UP(MemoryArea->Length) / PAGE_SIZE); i++)
 	{
 	  PMM_PAGEOP PageOp;
 
@@ -700,7 +700,7 @@ MmFreeVirtualMemory(PEPROCESS Process,
 	    }
 	  
 	  PageOp = MmCheckForPageOp(MemoryArea, Process->UniqueProcessId,
-				    MemoryArea->BaseAddress + (i * PAGESIZE),
+				    MemoryArea->BaseAddress + (i * PAGE_SIZE),
 				    NULL, 0);
 	  if (PageOp != NULL)
 	    {

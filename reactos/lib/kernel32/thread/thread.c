@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.29 2002/09/08 10:22:46 chorns Exp $
+/* $Id: thread.c,v 1.30 2002/10/01 19:27:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -96,12 +96,12 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
   InitialTeb.StackReserve = 0x100000; /* 1MByte */
   /* FIXME: use correct commit size */
 #if 0
-  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGESIZE : dwStackSize;
+  InitialTeb.StackCommit = (dwStackSize == 0) ? PAGE_SIZE : dwStackSize;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
   /* size of guard page */
-  InitialTeb.StackCommit += PAGESIZE;
+  InitialTeb.StackCommit += PAGE_SIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -154,7 +154,7 @@ HANDLE STDCALL CreateRemoteThread(HANDLE hProcess,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(hProcess,
 				  InitialTeb.StackLimit,
-				  PAGESIZE,
+				  PAGE_SIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

@@ -3,5 +3,5 @@
  */
 
 #ifdef i386
-#define PAGESIZE (4096)
+#define PAGE_SIZE (4096)
 #endif

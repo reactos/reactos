@@ -1,5 +1,74 @@
 2002-10-01  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/dd/floppy/floppy.c: Changed PAGESIZE to PAGE_SIZE.
+	* drivers/fs/cdfs/fcb.c: Ditto.
+	* drivers/fs/cdfs/fsctl.c: Ditto.
+	* drivers/fs/cdfs/rw.c: Ditto.
+	* drivers/fs/ext2/dir.c: Ditto.
+	* drivers/fs/ext2/inode.c: Ditto.
+	* drivers/fs/ext2/rw.c: Ditto.
+	* drivers/fs/ext2/super.c: Ditto.
+	* drivers/fs/minix/blockdev.c: Ditto.
+	* drivers/fs/minix/cache.c: Ditto.
+	* drivers/fs/minix/inode.c: Ditto.
+	* drivers/fs/minix/rw.c: Ditto.
+	* drivers/fs/ntfs/fcb.c: Ditto.
+	* drivers/fs/ntfs/ntfs.h: Ditto.
+	* drivers/fs/vfat/create.c: Ditto.
+	* drivers/fs/vfat/direntry.c: Ditto.
+	* drivers/fs/vfat/dirwr.c: Ditto.
+	* drivers/fs/vfat/fat.c: Ditto.
+	* drivers/fs/vfat/fcb.c: Ditto.
+	* drivers/fs/vfat/fsctl.c: Ditto.
+	* drivers/fs/vfat/rw.c: Ditto.
+	* drivers/storage/class2/class2.c: Ditto.
+	* drivers/storage/scsiport/scsiport.c: Ditto.
+	* hal/halx86/adapter.c: Ditto.
+	* hal/halx86/mp.c: Ditto.
+	* include/ddk/mmfuncs.h: Ditto.
+	* include/ddk/mmtypes.h: Ditto.
+	* include/ddk/i386/pagesize.h: Ditto.
+	* include/ntdll/pagesize.h: Ditto.
+	* lib/kernel32/process/create.c: Ditto.
+	* lib/kernel32/thread/thread.c: Ditto.
+	* lib/ntdll/ldr/utils.c: Ditto.
+	* lib/ntdll/rtl/env.c: Ditto.
+	* lib/ntdll/rtl/heap.c: Ditto.
+	* lib/ntdll/rtl/ppb.c: Ditto.
+	* lib/ntdll/rtl/process.c: Ditto.
+	* lib/ntdll/rtl/thread.c: Ditto.
+	* ntoskrnl/cc/copy.c: Ditto.
+	* ntoskrnl/cc/view.c: Ditto.
+	* ntoskrnl/ex/sysinfo.c: Ditto.
+	* ntoskrnl/include/internal/i386/mm.h: Ditto.
+	* ntoskrnl/io/mdl.c: Ditto.
+	* ntoskrnl/ke/kthread.c: Ditto.
+	* ntoskrnl/ke/i386/kernel.c: Ditto.
+	* ntoskrnl/ldr/init.c: Ditto.
+	* ntoskrnl/ldr/loader.c: Ditto.
+	* ntoskrnl/mm/anonmem.c: Ditto.
+	* ntoskrnl/mm/cont.c: Ditto.
+	* ntoskrnl/mm/freelist.c: Ditto.
+	* ntoskrnl/mm/iospace.c: Ditto.
+	* ntoskrnl/mm/kmap.c: Ditto.
+	* ntoskrnl/mm/marea.c: Ditto.
+	* ntoskrnl/mm/mdl.c: Ditto.
+	* ntoskrnl/mm/mminit.c: Ditto.
+	* ntoskrnl/mm/ncache.c: Ditto.
+	* ntoskrnl/mm/npool.c: Ditto.
+	* ntoskrnl/mm/pagefile.c: Ditto.
+	* ntoskrnl/mm/pageop.c: Ditto.
+	* ntoskrnl/mm/section.c: Ditto.
+	* ntoskrnl/mm/slab.c: Ditto.
+	* ntoskrnl/mm/i386/page.c: Ditto.
+	* ntoskrnl/ob/handle.c: Ditto.
+	* ntoskrnl/ps/create.c: Ditto.
+	* ntoskrnl/ps/process.c: Ditto.
+	* ntoskrnl/ps/w32call.c: Ditto.
+	* subsys/win32k/include/object.h: Ditto.
+
+2002-10-01  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/ntdll/string/ctype.c: Undefine __MSVCRT__ to not have mingw
 	runtime import _pctype.
 

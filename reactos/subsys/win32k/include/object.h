@@ -25,7 +25,7 @@ typedef struct _USER_HANDLE
   PVOID ObjectBody;
 } USER_HANDLE, *PUSER_HANDLE;
 
-#define HANDLE_BLOCK_ENTRIES ((PAGESIZE-sizeof(LIST_ENTRY))/sizeof(USER_HANDLE))
+#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(USER_HANDLE))
 
 typedef struct _USER_HANDLE_BLOCK
 {

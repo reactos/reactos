@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.14 2002/09/08 10:23:06 chorns Exp $
+/* $Id: ppb.c,v 1.15 2002/10/01 19:27:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -140,7 +140,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
    Length += ALIGN(RuntimeInfo->MaximumLength, sizeof(ULONG));
 
    /* Calculate the required block size */
-   RegionSize = ROUNDUP(Length, PAGESIZE);
+   RegionSize = ROUNDUP(Length, PAGE_SIZE);
 
    Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 				    (PVOID*)&Param,

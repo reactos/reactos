@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.61 2002/09/08 10:23:35 chorns Exp $
+/* $Id: npool.c,v 1.62 2002/10/01 19:27:23 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -691,7 +691,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
  */
 {
    unsigned int total_size = size + sizeof(BLOCK_HDR);
-   unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGESIZE;
+   unsigned int nr_pages = PAGE_ROUND_UP(total_size) / PAGE_SIZE;
    unsigned int start;
    BLOCK_HDR* used_blk=NULL;
    BLOCK_HDR* free_blk=NULL;
@@ -715,7 +715,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	   return(NULL);
 	 }
        Status = MmCreateVirtualMapping(NULL,
-				       (PVOID)(start + (i*PAGESIZE)),
+				       (PVOID)(start + (i*PAGE_SIZE)),
 				       PAGE_READWRITE,
 				       Page,
 				       FALSE);
@@ -727,7 +727,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
      }
 
    KeAcquireSpinLock(&MmNpoolLock, &oldIrql);
-   if ((PAGESIZE-(total_size%PAGESIZE))>(2*sizeof(BLOCK_HDR)))
+   if ((PAGE_SIZE-(total_size%PAGE_SIZE))>(2*sizeof(BLOCK_HDR)))
      {
 	used_blk = (struct _BLOCK_HDR *)start;
 	DPRINT("Creating block at %x\n",start);
@@ -738,7 +738,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
 	free_blk = (BLOCK_HDR *)(start + sizeof(BLOCK_HDR) + size);
 	DPRINT("Creating block at %x\n",free_blk);
 	free_blk->Magic = BLOCK_HDR_FREE_MAGIC;
-	free_blk->Size = (nr_pages * PAGESIZE) -((sizeof(BLOCK_HDR)*2) + size);
+	free_blk->Size = (nr_pages * PAGE_SIZE) -((sizeof(BLOCK_HDR)*2) + size);
 	add_to_free_list(free_blk);
 	
 	EiFreeNonPagedPool = EiFreeNonPagedPool + free_blk->Size;
@@ -748,7 +748,7 @@ static BLOCK_HDR* grow_kernel_pool(unsigned int size, ULONG Tag, PVOID Caller)
      {
 	used_blk = (struct _BLOCK_HDR *)start;
 	used_blk->Magic = BLOCK_HDR_USED_MAGIC;
-	used_blk->Size = (nr_pages * PAGESIZE) - sizeof(BLOCK_HDR);
+	used_blk->Size = (nr_pages * PAGE_SIZE) - sizeof(BLOCK_HDR);
 	add_to_used_list(used_blk);
 	
 	EiUsedNonPagedPool = EiUsedNonPagedPool + used_blk->Size;
@@ -1013,7 +1013,7 @@ ExAllocateWholePageBlock(ULONG UserSize)
   ULONG NrPages;
 
   Size = sizeof(ULONG) + UserSize;
-  NrPages = ROUND_UP(Size, PAGESIZE) / PAGESIZE;
+  NrPages = ROUND_UP(Size, PAGE_SIZE) / PAGE_SIZE;
 
   Address = MiAllocNonPagedPoolRegion(NrPages + 1);
 
@@ -1025,14 +1025,14 @@ ExAllocateWholePageBlock(ULONG UserSize)
 	  KeBugCheck(0);
 	}
       MmCreateVirtualMapping(NULL, 
-			     Address + (i * PAGESIZE),
+			     Address + (i * PAGE_SIZE),
 			     PAGE_READWRITE | PAGE_SYSTEM,
 			     Page,
 			     TRUE);
     }
 
-  *((PULONG)((ULONG)Address + (NrPages * PAGESIZE) - Size)) = NrPages;
-  return((PVOID)((ULONG)Address + (NrPages * PAGESIZE) - UserSize));
+  *((PULONG)((ULONG)Address + (NrPages * PAGE_SIZE) - Size)) = NrPages;
+  return((PVOID)((ULONG)Address + (NrPages * PAGE_SIZE) - UserSize));
 }
 
 VOID STDCALL

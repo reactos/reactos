@@ -116,7 +116,7 @@ NTSTATUS MinixReadInode(PDEVICE_OBJECT DeviceObject,
    DPRINT("Reading block %x offset %x\n",block,block*BLOCKSIZE);
    DPRINT("Index %x\n",(ino-1)%MINIX_INODES_PER_BLOCK);
    
-   BaseAddress = ExAllocatePool(NonPagedPool, PAGESIZE);
+   BaseAddress = ExAllocatePool(NonPagedPool, PAGE_SIZE);
    
    MinixReadPage(DeviceObject,
 		 block,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.46 2002/09/08 10:22:12 chorns Exp $
+/* $Id: create.c,v 1.47 2002/10/01 19:27:17 chorns Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -38,7 +38,7 @@
 
 /* GLOBALS *******************************************************************/
 
-#define ENTRIES_PER_PAGE   (PAGESIZE / sizeof (FATDirEntry))
+#define ENTRIES_PER_PAGE   (PAGE_SIZE / sizeof (FATDirEntry))
 
 /* FUNCTIONS *****************************************************************/
 
@@ -175,7 +175,7 @@ GetEntryName(PVOID *pContext,
           Offset = 0;
           CcUnpinData(*pContext);
           FileOffset.QuadPart = *pIndex * sizeof(FATDirEntry);
-          if(!CcMapData(FileObject, &FileOffset, PAGESIZE, TRUE, pContext, Block))
+          if(!CcMapData(FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, Block))
           {
             *pContext = NULL;
             return STATUS_NO_MORE_ENTRIES;
@@ -204,7 +204,7 @@ GetEntryName(PVOID *pContext,
         Offset = 0;
         CcUnpinData(*pContext);
         FileOffset.QuadPart = *pIndex * sizeof(FATDirEntry);
-        if(!CcMapData(FileObject, &FileOffset, PAGESIZE, TRUE, pContext, Block))
+        if(!CcMapData(FileObject, &FileOffset, PAGE_SIZE, TRUE, pContext, Block))
          {
           *pContext = NULL;
           return STATUS_NO_MORE_ENTRIES;
@@ -263,7 +263,7 @@ ReadVolumeLabel (PDEVICE_EXTENSION DeviceExt, PVPB Vpb)
       }
       FileOffset.u.HighPart = 0;
       FileOffset.u.LowPart = (DirIndex - Offset) * sizeof(FATDirEntry);
-      if (!CcMapData(pFcb->FileObject, &FileOffset, PAGESIZE, TRUE, &Context, (PVOID*)&Entry))
+      if (!CcMapData(pFcb->FileObject, &FileOffset, PAGE_SIZE, TRUE, &Context, (PVOID*)&Entry))
       {
         Context = NULL;
         break;
@@ -400,7 +400,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
         CcUnpinData(Context);
       }
       FileOffset.QuadPart = (DirIndex - Offset) * sizeof(FATDirEntry);
-      if (!CcMapData(Parent->FileObject, &FileOffset, PAGESIZE, TRUE,
+      if (!CcMapData(Parent->FileObject, &FileOffset, PAGE_SIZE, TRUE,
              &Context, (PVOID*)&block))
       {
          Context = NULL;

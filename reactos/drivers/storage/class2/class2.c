@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class2.c,v 1.25 2002/09/19 16:18:00 ekohl Exp $
+/* $Id: class2.c,v 1.26 2002/10/01 19:27:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1534,11 +1534,11 @@ ScsiClassReadWrite(IN PDEVICE_OBJECT DeviceObject,
       /* Adjust the maximum transfer length */
       CurrentTransferPages = DeviceExtension->PortCapabilities->MaximumPhysicalPages;
 
-      if (MaximumTransferLength > CurrentTransferPages * PAGESIZE)
-	  MaximumTransferLength = CurrentTransferPages * PAGESIZE;
+      if (MaximumTransferLength > CurrentTransferPages * PAGE_SIZE)
+	  MaximumTransferLength = CurrentTransferPages * PAGE_SIZE;
 
       if (MaximumTransferLength == 0)
-	  MaximumTransferLength = PAGESIZE;
+	  MaximumTransferLength = PAGE_SIZE;
 
       IoMarkIrpPending(Irp);
 

@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.54 2002/09/30 20:56:17 hbirr Exp $
+/* $Id: create.c,v 1.55 2002/10/01 19:27:25 chorns Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -412,7 +412,7 @@ PsCreateTeb(HANDLE ProcessHandle,
    ULONG ResultLength;
 
    TebBase = (PVOID)0x7FFDE000;
-   TebSize = PAGESIZE;
+   TebSize = PAGE_SIZE;
 
    while (TRUE)
      {

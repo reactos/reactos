@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.11 2002/09/17 20:42:59 hbirr Exp $
+/* $Id: fsctl.c,v 1.12 2002/10/01 19:27:16 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -399,7 +399,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
 				    &Fcb->RFCB.Bcb,
-				    PAGESIZE);
+				    PAGE_SIZE);
   if (!NT_SUCCESS (Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");

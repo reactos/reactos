@@ -1,4 +1,4 @@
-/* $Id: pageop.c,v 1.13 2002/09/08 10:23:36 chorns Exp $
+/* $Id: pageop.c,v 1.14 2002/10/01 19:27:24 chorns Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -82,11 +82,11 @@ MmCheckForPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    */
   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
+      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
     }
   else
     {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
+      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
     }
   Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 
@@ -149,11 +149,11 @@ MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
    */
   if (MArea->Type == MEMORY_AREA_SECTION_VIEW)
     {
-      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGESIZE));
+      Hash = (((ULONG)Segment) | (((ULONG)Offset) / PAGE_SIZE));
     }
   else
     {
-      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGESIZE));
+      Hash = (((ULONG)Pid) | (((ULONG)Address) / PAGE_SIZE));
     }
   Hash = Hash % PAGEOP_HASH_TABLE_SIZE;
 

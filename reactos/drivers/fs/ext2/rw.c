@@ -73,9 +73,9 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
    Ext2ReleaseInode(DeviceExt,
 		    &Fcb->i);
    
-   if ((Offset % PAGESIZE) != 0)
+   if ((Offset % PAGE_SIZE) != 0)
      {
-	Delta = min(PAGESIZE - (Offset % PAGESIZE),Length);
+	Delta = min(PAGE_SIZE - (Offset % PAGE_SIZE),Length);
 	CcRequestCachePage(Fcb->Bcb,
 			   Offset,
 			   &BaseAddress,
@@ -88,7 +88,7 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 			  BaseAddress,
 			  Offset / BLOCKSIZE);
 	  }
-	memcpy(Buffer, BaseAddress + (Offset % PAGESIZE), Delta);
+	memcpy(Buffer, BaseAddress + (Offset % PAGE_SIZE), Delta);
 	CcReleaseCachePage(Fcb->Bcb,
 			   CacheSeg,
 			   TRUE);
@@ -97,7 +97,7 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 	Buffer = Buffer + Delta;
      }
    CHECKPOINT;
-   for (i=0; i<(Length/PAGESIZE); i++)
+   for (i=0; i<(Length/PAGE_SIZE); i++)
      {
 	CcRequestCachePage(Fcb->Bcb,
 			   Offset,
@@ -111,16 +111,16 @@ NTSTATUS Ext2ReadFile(PDEVICE_EXTENSION DeviceExt,
 			  BaseAddress,
 			  (Offset / BLOCKSIZE));
 	  }
-	memcpy(Buffer, BaseAddress, PAGESIZE);
+	memcpy(Buffer, BaseAddress, PAGE_SIZE);
 	CcReleaseCachePage(Fcb->Bcb,
 			   CacheSeg,
 			   TRUE);	
-	Length = Length - PAGESIZE;
-	Offset = Offset + PAGESIZE;
-	Buffer = Buffer + PAGESIZE;
+	Length = Length - PAGE_SIZE;
+	Offset = Offset + PAGE_SIZE;
+	Buffer = Buffer + PAGE_SIZE;
      }
    CHECKPOINT;
-   if ((Length % PAGESIZE) != 0)
+   if ((Length % PAGE_SIZE) != 0)
      {
 	CcRequestCachePage(Fcb->Bcb,
 			   Offset,

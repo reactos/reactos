@@ -1560,7 +1560,7 @@ RtlInitializeHeapManager(VOID)
    Peb = NtCurrentPeb();
    
    Peb->NumberOfHeaps = 0;
-   Peb->MaximumNumberOfHeaps = (PAGESIZE - sizeof(PEB)) / sizeof(HANDLE);
+   Peb->MaximumNumberOfHeaps = (PAGE_SIZE - sizeof(PEB)) / sizeof(HANDLE);
    Peb->ProcessHeaps = (PVOID)Peb + sizeof(PEB);
    
    RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);

@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.13 2002/09/08 10:47:44 chorns Exp $ */
+/* $Id: mmtypes.h,v 1.14 2002/10/01 19:27:19 chorns Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -7,7 +7,7 @@
 #include <ntos/mm.h>
 
 
-#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
+#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGE_SIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
 #define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
 
 

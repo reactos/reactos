@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.10 2002/09/09 17:26:24 hbirr Exp $
+/* $Id: fcb.c,v 1.11 2002/10/01 19:27:16 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -246,7 +246,7 @@ CdfsFCBInitializeCache(PVCB Vcb,
 
   Status = CcRosInitializeFileCache(FileObject,
 				    &Fcb->RFCB.Bcb,
-				    PAGESIZE);
+				    PAGE_SIZE);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcRosInitializeFileCache failed\n");
@@ -427,7 +427,7 @@ CdfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
     {
       Status = CcRosInitializeFileCache(FileObject,
 					&Fcb->RFCB.Bcb,
-					PAGESIZE);
+					PAGE_SIZE);
       if (!NT_SUCCESS(Status))
 	{
 	  DbgPrint("CcRosInitializeFileCache failed\n");

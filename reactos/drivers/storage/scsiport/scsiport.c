@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.22 2002/09/20 05:40:28 ei Exp $
+/* $Id: scsiport.c,v 1.23 2002/10/01 19:27:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1169,7 +1169,7 @@ ScsiPortCreatePortDevice(IN PDRIVER_OBJECT DriverObject,
   PortCapabilities->MaximumTransferLength =
     PortDeviceExtension->PortConfig.MaximumTransferLength;
   PortCapabilities->MaximumPhysicalPages =
-    PortCapabilities->MaximumTransferLength / PAGESIZE;
+    PortCapabilities->MaximumTransferLength / PAGE_SIZE;
   PortCapabilities->SupportedAsynchronousEvents = 0; /* FIXME */
   PortCapabilities->AlignmentMask =
     PortDeviceExtension->PortConfig.AlignmentMask;

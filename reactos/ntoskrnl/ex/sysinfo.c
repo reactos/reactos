@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.17 2002/09/08 10:23:19 chorns Exp $
+/* $Id: sysinfo.c,v 1.18 2002/10/01 19:27:21 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -292,7 +292,7 @@ QSI_DEF(SystemBasicInformation)
 
 	Sbi->Reserved = 0;
 	Sbi->TimerResolution = 0; /* FIXME */
-	Sbi->PageSize = PAGESIZE; /* FIXME: it should be PAGE_SIZE */
+	Sbi->PageSize = PAGE_SIZE; /* FIXME: it should be PAGE_SIZE */
 	Sbi->NumberOfPhysicalPages = 0; /* FIXME */
 	Sbi->LowestPhysicalPageNumber = 0; /* FIXME */
 	Sbi->HighestPhysicalPageNumber = 0; /* FIXME */

@@ -29,8 +29,8 @@ BOOLEAN MinixReadPage(PDEVICE_OBJECT DeviceObject,
    for (i=0; i<4; i++)
      {
 	Result = MinixReadSector(DeviceObject,
-				 (Offset + (i * PAGESIZE)) / BLOCKSIZE,
-				 (Buffer + (i * PAGESIZE)));
+				 (Offset + (i * PAGE_SIZE)) / BLOCKSIZE,
+				 (Buffer + (i * PAGE_SIZE)));
 	if (!Result)
 	  {
 	     return(Result);

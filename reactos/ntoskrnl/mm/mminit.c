@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.40 2002/09/08 10:23:35 chorns Exp $
+/* $Id: mminit.c,v 1.41 2002/10/01 19:27:22 chorns Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -86,7 +86,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
    LastKernelAddress = PAGE_ROUND_UP(LastKernelAddress);
    
    MmInitMemoryAreas();
-   ExInitNonPagedPool(LastKernelAddress + PAGESIZE);
+   ExInitNonPagedPool(LastKernelAddress + PAGE_SIZE);
 
    /*
     * Setup the system area descriptor list
@@ -140,7 +140,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      &kernel_param_desc,
 		      FALSE);
 
-   BaseAddress = (PVOID)(LastKernelAddress + PAGESIZE);
+   BaseAddress = (PVOID)(LastKernelAddress + PAGE_SIZE);
    Length = NONPAGED_POOL_SIZE;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
@@ -152,8 +152,8 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
 		      FALSE);
 
    MmPagedPoolSize = MM_PAGED_POOL_SIZE;
-   BaseAddress = (PVOID)(LastKernelAddress + PAGESIZE + NONPAGED_POOL_SIZE +
-			 PAGESIZE);
+   BaseAddress = (PVOID)(LastKernelAddress + PAGE_SIZE + NONPAGED_POOL_SIZE +
+			 PAGE_SIZE);
    MmPagedPoolBase = BaseAddress;
    Length = MM_PAGED_POOL_SIZE;
    MmCreateMemoryArea(NULL,
@@ -170,7 +170,7 @@ VOID MmInitVirtualMemory(ULONG LastKernelAddress,
     * Create the kernel mapping of the user/kernel shared memory.
     */
    BaseAddress = (PVOID)KI_USER_SHARED_DATA;
-   Length = PAGESIZE;
+   Length = PAGE_SIZE;
    MmCreateMemoryArea(NULL,
 		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_SYSTEM,
@@ -226,9 +226,9 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	for (i = 0; i < AddressRangeCount; i++)
 	  {
 	    if (BIOSMemoryMap[i].Type == 1
-	        && (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGESIZE -1) / PAGESIZE > last)
+	        && (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE > last)
 	      {
-		 last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGESIZE -1) / PAGESIZE;
+		 last = (BIOSMemoryMap[i].BaseAddrLow + BIOSMemoryMap[i].LengthLow + PAGE_SIZE -1) / PAGE_SIZE;
 	      }
 	  }
 	if ((last - 256) * 4 > KeLoaderBlock.MemHigher)
@@ -294,7 +294,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 #ifdef BIOS_MEM_FIX
   MmStats.NrTotalPages += 16;
 #endif
-   DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGESIZE) / 1024);
+   DbgPrint("Used memory %dKb\n", (MmStats.NrTotalPages * PAGE_SIZE) / 1024);
 
    LastKernelAddress = (ULONG)MmInitializePageList(
 					   (PVOID)FirstKrnlPhysAddr,
@@ -312,7 +312,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
    CHECKPOINT;
    DPRINT("_text_start__ %x _text_end__ %x\n",(int)&_text_start__,(int)&_text_end__);
    for (i=PAGE_ROUND_UP(((int)&_text_start__));
-	i<PAGE_ROUND_DOWN(((int)&_text_end__));i=i+PAGESIZE)
+	i<PAGE_ROUND_DOWN(((int)&_text_end__));i=i+PAGE_SIZE)
      {
 	MmSetPageProtect(NULL,
 			 (PVOID)i,
@@ -324,7 +324,7 @@ VOID MmInit1(ULONG FirstKrnlPhysAddr,
 	  KERNEL_BASE + 2 * PAGE_TABLE_SIZE);
    for (i=(LastKernelAddress); 
 	 i<(KERNEL_BASE + 2 * PAGE_TABLE_SIZE); 
-	 i=i+PAGESIZE)
+	 i=i+PAGE_SIZE)
      {
 	 MmDeleteVirtualMapping(NULL, (PVOID)(i), FALSE, NULL, NULL);
      }

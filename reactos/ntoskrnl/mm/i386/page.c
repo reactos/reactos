@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.44 2002/09/15 10:45:04 guido Exp $
+/* $Id: page.c,v 1.45 2002/10/01 19:27:25 chorns Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -150,7 +150,7 @@ NTSTATUS MmCopyMmInfo(PEPROCESS Src, PEPROCESS Dest)
    KProcess->DirectoryTableBase = PhysPageDirectory;   
    CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
    
-   memset(PageDirectory,0,PAGESIZE);
+   memset(PageDirectory,0,PAGE_SIZE);
    for (i=768; i<896; i++)
      {
 	PageDirectory[i] = CurrentPageDirectory[i];
@@ -258,7 +258,7 @@ NTSTATUS MmGetPageEntry2(PVOID PAddress, PULONG* Pte, BOOLEAN MayWait)
 	       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 
 		 *Pde;
 	     }
-	   memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+	   memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
 	   FLUSH_TLB;
 	 }
      }
@@ -661,7 +661,7 @@ NTSTATUS MmCreatePageTable(PVOID PAddress)
 	   return(Status);
 	 }
        (*page_dir) = npage.QuadPart | 0x7;
-       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
        FLUSH_TLB;
      }
    return(STATUS_SUCCESS);
@@ -696,7 +696,7 @@ PULONG MmGetPageEntry(PVOID PAddress)
 	   KeBugCheck(0);
 	 }
        (*page_dir) = npage.QuadPart | 0x7;
-       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGESIZE);
+       memset((PVOID)PAGE_ROUND_DOWN(ADDR_TO_PTE(Address)), 0, PAGE_SIZE);
        FLUSH_TLB;
      }
    page_tlb = ADDR_TO_PTE(Address);

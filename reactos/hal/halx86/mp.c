@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: mp.c,v 1.4 2002/10/01 19:27:19 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1561,7 +1561,7 @@ HaliInitBSP(
 	CommonBase = (PULONG)COMMON_AREA;
 
   /* Copy bootstrap code to common area */
-	memcpy((PVOID)((ULONG)CommonBase + PAGESIZE),
+	memcpy((PVOID)((ULONG)CommonBase + PAGE_SIZE),
 		    &APstart,
 		    (ULONG)&APend - (ULONG)&APstart + 1);
 
@@ -1570,10 +1570,10 @@ HaliInitBSP(
 
 	/* Set warm reset vector */
 	ps = (PUSHORT)((ULONG)BIOSBase + 0x467);
-	*ps = (COMMON_AREA + PAGESIZE) & 0xF;
+	*ps = (COMMON_AREA + PAGE_SIZE) & 0xF;
 
 	ps = (PUSHORT)((ULONG)BIOSBase + 0x469);
-	*ps = (COMMON_AREA + PAGESIZE) >> 4;
+	*ps = (COMMON_AREA + PAGE_SIZE) >> 4;
 
   /* Calibrate APIC timer */
 	APICCalibrateTimer(0);
@@ -1652,7 +1652,7 @@ HalInitializeProcessor (
 
          APICSendIPI(CPUMap[CPU].APICId,
             0,
-            APIC_DM_STARTUP | ((COMMON_AREA + PAGESIZE) >> 12),
+            APIC_DM_STARTUP | ((COMMON_AREA + PAGE_SIZE) >> 12),
             APIC_ICR0_LEVEL_DEASSERT);
 
          /* Wait up to 10ms for IPI to be delivered */

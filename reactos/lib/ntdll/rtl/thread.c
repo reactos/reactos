@@ -51,15 +51,15 @@ RtlCreateUserThread(HANDLE ProcessHandle,
 
   /* FIXME: use correct commit size */
 #if 0
-  if ((StackCommit != NULL) && (*StackCommit > PAGESIZE))
+  if ((StackCommit != NULL) && (*StackCommit > PAGE_SIZE))
     InitialTeb.StackCommit = *StackCommit;
   else
-    InitialTeb.StackCommit = PAGESIZE;
+    InitialTeb.StackCommit = PAGE_SIZE;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
   /* add size of guard page */
-  InitialTeb.StackCommit += PAGESIZE;
+  InitialTeb.StackCommit += PAGE_SIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -110,7 +110,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGESIZE,
+				  PAGE_SIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

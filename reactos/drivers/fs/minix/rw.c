@@ -94,9 +94,9 @@ MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	Length = FsContext->inode.i_size - Offset;
      }
    
-   if ((Offset%PAGESIZE)!=0)
+   if ((Offset%PAGE_SIZE)!=0)
      {
-	CurrentOffset = Offset - (Offset%PAGESIZE);
+	CurrentOffset = Offset - (Offset%PAGE_SIZE);
 	
 	MinixReadFilePage(DeviceObject,
 			  DeviceExt,
@@ -105,21 +105,21 @@ MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  &DiskBuffer);
 
 	memcpy(Buffer,
-	       DiskBuffer+(Offset%PAGESIZE),
-	       min(PAGESIZE - (Offset%PAGESIZE),Length));
+	       DiskBuffer+(Offset%PAGE_SIZE),
+	       min(PAGE_SIZE - (Offset%PAGE_SIZE),Length));
 	
 	ExFreePool(DiskBuffer);
 	
 	DPRINT("(BLOCKSIZE - (Offset%BLOCKSIZE)) %d\n",
 	       (BLOCKSIZE - (Offset%BLOCKSIZE)));
 	DPRINT("Length %d\n",Length);
-	CurrentOffset = CurrentOffset + PAGESIZE;
-	Buffer = Buffer + PAGESIZE - (Offset%PAGESIZE);
-	Length = Length - min(PAGESIZE - (Offset%PAGESIZE),Length);
+	CurrentOffset = CurrentOffset + PAGE_SIZE;
+	Buffer = Buffer + PAGE_SIZE - (Offset%PAGE_SIZE);
+	Length = Length - min(PAGE_SIZE - (Offset%PAGE_SIZE),Length);
 	DPRINT("CurrentOffset %d Buffer %x Length %d\n",CurrentOffset,Buffer,
 	       Length);
      }
-   for (i=0;i<(Length/PAGESIZE);i++)
+   for (i=0;i<(Length/PAGE_SIZE);i++)
      {
 	CHECKPOINT;
 	
@@ -130,18 +130,18 @@ MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  FsContext,
 			  CurrentOffset,
 			  &DiskBuffer);
-	memcpy(Buffer, DiskBuffer, PAGESIZE);
+	memcpy(Buffer, DiskBuffer, PAGE_SIZE);
 	
 	ExFreePool(DiskBuffer);
 	
-	CurrentOffset = CurrentOffset + PAGESIZE;
-	Buffer = Buffer + PAGESIZE;
+	CurrentOffset = CurrentOffset + PAGE_SIZE;
+	Buffer = Buffer + PAGE_SIZE;
      }
-   if ((Length%PAGESIZE) > 0)
+   if ((Length%PAGE_SIZE) > 0)
      {
 	CHECKPOINT;
 	
-	DPRINT("Length %x Buffer %x\n",(Length%PAGESIZE),Buffer);
+	DPRINT("Length %x Buffer %x\n",(Length%PAGE_SIZE),Buffer);
 	
 	MinixReadFilePage(DeviceObject,
 			  DeviceExt,
@@ -149,7 +149,7 @@ MinixRead(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 			  CurrentOffset,
 			  &DiskBuffer);
 
-	memcpy(Buffer, DiskBuffer, (Length%PAGESIZE));
+	memcpy(Buffer, DiskBuffer, (Length%PAGE_SIZE));
 
 	ExFreePool(DiskBuffer);
 

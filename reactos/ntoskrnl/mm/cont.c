@@ -1,4 +1,4 @@
-/* $Id: cont.c,v 1.23 2002/09/08 10:23:32 chorns Exp $
+/* $Id: cont.c,v 1.24 2002/10/01 19:27:22 chorns Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -113,7 +113,7 @@ MmAllocateContiguousMemory (IN ULONG NumberOfBytes,
 {
   return(MmAllocateContiguousAlignedMemory(NumberOfBytes,
 					   HighestAcceptableAddress,
-					   PAGESIZE));
+					   PAGE_SIZE));
 }
 
 

@@ -117,7 +117,7 @@ NTSTATUS Ext2Mount(PDEVICE_OBJECT DeviceToMount)
    DeviceExt->superblock = superblock;
    CcRosInitializeFileCache(DeviceExt->FileObject,
 			    &DeviceExt->Bcb,
-			    PAGESIZE * 3);
+			    PAGE_SIZE * 3);
    
    DPRINT("Ext2Mount() = STATUS_SUCCESS\n");
    

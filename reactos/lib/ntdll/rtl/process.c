@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.30 2002/09/08 10:23:06 chorns Exp $
+/* $Id: process.c,v 1.31 2002/10/01 19:27:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -52,15 +52,15 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
 
   /* FIXME */
 #if 0
-  if (StackCommit > PAGESIZE)
+  if (StackCommit > PAGE_SIZE)
     InitialTeb.StackCommit = StackCommit;
   else
-    InitialTeb.StackCommit = PAGESIZE;
+    InitialTeb.StackCommit = PAGE_SIZE;
 #endif
-  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGESIZE;
+  InitialTeb.StackCommit = InitialTeb.StackReserve - PAGE_SIZE;
 
   /* add guard page size */
-  InitialTeb.StackCommit += PAGESIZE;
+  InitialTeb.StackCommit += PAGE_SIZE;
 
   /* Reserve stack */
   InitialTeb.StackAllocate = NULL;
@@ -109,7 +109,7 @@ RtlpCreateFirstThread(HANDLE ProcessHandle,
   /* Protect guard page */
   Status = NtProtectVirtualMemory(ProcessHandle,
 				  InitialTeb.StackLimit,
-				  PAGESIZE,
+				  PAGE_SIZE,
 				  PAGE_GUARD | PAGE_READWRITE,
 				  &OldPageProtection);
   if (!NT_SUCCESS(Status))

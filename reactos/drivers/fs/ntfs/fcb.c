@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fcb.c,v 1.3 2002/09/08 10:22:11 chorns Exp $
+/* $Id: fcb.c,v 1.4 2002/10/01 19:27:17 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -273,9 +273,9 @@ NtfsMakeRootFCB(PDEVICE_EXTENSION Vcb)
 //  Fcb->Entry.FileFlags = 0x02; // FILE_ATTRIBUTE_DIRECTORY;
   Fcb->RefCount = 1;
   Fcb->DirIndex = 0;
-  Fcb->RFCB.FileSize.QuadPart = PAGESIZE;//Vcb->CdInfo.RootSize;
-  Fcb->RFCB.ValidDataLength.QuadPart = PAGESIZE;//Vcb->CdInfo.RootSize;
-  Fcb->RFCB.AllocationSize.QuadPart = PAGESIZE;//Vcb->CdInfo.RootSize;
+  Fcb->RFCB.FileSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
+  Fcb->RFCB.ValidDataLength.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
+  Fcb->RFCB.AllocationSize.QuadPart = PAGE_SIZE;//Vcb->CdInfo.RootSize;
 
   NtfsFCBInitializeCache(Vcb, Fcb);
   NtfsAddFCBToTable(Vcb, Fcb);

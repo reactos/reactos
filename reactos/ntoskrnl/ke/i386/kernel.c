@@ -61,11 +61,11 @@ KeApplicationProcessorInit(VOID)
    * Create a PCR for this processor
    */
   Offset = InterlockedIncrement(&PcrsAllocated) - 1;
-  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGESIZE));
+  KPCR = (PKPCR)(KPCR_BASE + (Offset * PAGE_SIZE));
   MmCreateVirtualMappingForKernel((PVOID)KPCR,
 				  PAGE_READWRITE,
 				  PcrPages[Offset]);
-  memset(KPCR, 0, PAGESIZE);
+  memset(KPCR, 0, PAGE_SIZE);
   KPCR->ProcessorNumber = Offset;
   KPCR->Self = KPCR;
   KPCR->Irql = HIGH_LEVEL;
@@ -116,7 +116,7 @@ KeInit1(VOID)
     * called, so we use a predefined page in low memory 
     */
    KPCR = (PKPCR)KPCR_BASE;
-   memset(KPCR, 0, PAGESIZE);
+   memset(KPCR, 0, PAGE_SIZE);
    KPCR->Self = (PKPCR)KPCR_BASE;
    KPCR->Irql = HIGH_LEVEL;
    KPCR->GDT = (PUSHORT)&KiBootGdt;

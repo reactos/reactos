@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.39 2002/09/08 10:22:12 chorns Exp $
+ * $Id: fat.c,v 1.40 2002/10/01 19:27:18 chorns Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -24,8 +24,8 @@
 
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
 
-#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGESIZE ? \
-		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGESIZE)
+#define  CACHEPAGESIZE(pDeviceExt) ((pDeviceExt)->FatInfo.BytesPerCluster > PAGE_SIZE ? \
+		   (pDeviceExt)->FatInfo.BytesPerCluster : PAGE_SIZE)
 
 /* FUNCTIONS ****************************************************************/
 

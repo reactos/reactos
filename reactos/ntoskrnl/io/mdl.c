@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.10 2002/09/08 10:23:25 chorns Exp $
+/* $Id: mdl.c,v 1.11 2002/10/01 19:27:21 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -65,9 +65,9 @@ IoBuildPartialMdl(PMDL SourceMdl,
    PULONG SourcePages = (PULONG)(SourceMdl + 1);
    ULONG Va;
    ULONG Delta = (PAGE_ROUND_DOWN(VirtualAddress) - (ULONG)SourceMdl->StartVa)/
-                 PAGESIZE;
+                 PAGE_SIZE;
 
-   for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGESIZE); Va++)
+   for (Va = 0; Va < (PAGE_ROUND_UP(Length)/PAGE_SIZE); Va++)
      {
 	TargetPages[Va] = SourcePages[Va+Delta];
      }

@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_MMFUNCS_H
 #define _INCLUDE_DDK_MMFUNCS_H
-/* $Id: mmfuncs.h,v 1.13 2002/09/08 10:47:44 chorns Exp $ */
+/* $Id: mmfuncs.h,v 1.14 2002/10/01 19:27:19 chorns Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 
@@ -35,12 +35,12 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
    
    HighestAddr = PAGE_ROUND_UP(Size + ((ULONG)Va));
    LowestAddr = PAGE_ROUND_DOWN((ULONG)Va);
-   return((HighestAddr - LowestAddr) / PAGESIZE);
+   return((HighestAddr - LowestAddr) / PAGE_SIZE);
 }
 #endif
 #define ADDRESS_AND_SIZE_TO_SPAN_PAGES(Va, Size) \
        (ULONG)((PAGE_ROUND_UP((Size) + ((ULONG)(Va))) - \
-                PAGE_ROUND_DOWN((ULONG)(Va))) / PAGESIZE)
+                PAGE_ROUND_DOWN((ULONG)(Va))) / PAGE_SIZE)
 
 /*
  * FUNCTION: Returns FALSE is the pointer is NULL, TRUE otherwise
@@ -50,7 +50,7 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
 /*
  * FUNCTION: Returns the byte offset of the address within its page
  */
-#define BYTE_OFFSET(va) (((ULONG)va)%PAGESIZE)
+#define BYTE_OFFSET(va) (((ULONG)va)%PAGE_SIZE)
 
 /*
  * FUNCTION: Takes a count in bytes and returns the number of pages

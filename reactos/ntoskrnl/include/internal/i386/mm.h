@@ -24,7 +24,7 @@ struct _EPROCESS;
 #define PA_SYSTEM          (0)
 #endif
 
-#define PAGESIZE (4096)
+#define PAGE_SIZE (4096)
 
 PULONG MmGetPageEntry(PVOID Address);
 

@@ -38,7 +38,7 @@ NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
 		      PAGE_ROUND_DOWN(FileOffset),
 		      BaseAddress);
      }		      
-   BaseAddress = BaseAddress + (FileOffset % PAGESIZE);
+   BaseAddress = BaseAddress + (FileOffset % PAGE_SIZE);
    
    return(STATUS_SUCCESS);
 }

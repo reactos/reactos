@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.3 2002/09/08 10:22:24 chorns Exp $
+/* $Id: adapter.c,v 1.4 2002/10/01 19:27:18 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@ HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
   LARGE_INTEGER MaxAddress;
 
   MaxAddress.QuadPart = 0x1000000;
-  Buffer = MmAllocateContiguousAlignedMemory( NumberOfMapRegisters * PAGESIZE,
+  Buffer = MmAllocateContiguousAlignedMemory( NumberOfMapRegisters * PAGE_SIZE,
 					      MaxAddress,
 					      0x10000 );
   if( !Buffer )

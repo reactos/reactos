@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: handle.c,v 1.40 2002/09/08 10:23:39 chorns Exp $
+/* $Id: handle.c,v 1.41 2002/10/01 19:27:25 chorns Exp $
  *
  * COPYRIGHT:          See COPYING in the top level directory
  * PROJECT:            ReactOS kernel
@@ -50,7 +50,7 @@ typedef struct
    BOOLEAN Inherit;
 } HANDLE_REP, *PHANDLE_REP;
 
-#define HANDLE_BLOCK_ENTRIES ((PAGESIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
+#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(HANDLE_REP))
 
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.12 2002/09/08 10:23:16 chorns Exp $
+/* $Id: copy.c,v 1.13 2002/10/01 19:27:20 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -116,11 +116,11 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 	  offset = 0;
 	  while (current2 != NULL && !current2->Valid)
 	    {
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE); i++)
 		{
 		  PVOID address;
 		  PHYSICAL_ADDRESS page;
-		  address = current2->BaseAddress + (i * PAGESIZE);
+		  address = current2->BaseAddress + (i * PAGE_SIZE);
 		  page = MmGetPhysicalAddressForProcess(NULL, address);
 		  ((PULONG)(Mdl + 1))[offset] = page.u.LowPart;
 		  offset++;
@@ -482,21 +482,21 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
       
       while (Length > 0)
 	{
-	  if (Length + WriteOffset.u.LowPart % PAGESIZE > 262144)
+	  if (Length + WriteOffset.u.LowPart % PAGE_SIZE > 262144)
 	    {
 	      Mdl = MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-				262144 - WriteOffset.u.LowPart % PAGESIZE);
+				262144 - WriteOffset.u.LowPart % PAGE_SIZE);
 	      WriteOffset.QuadPart += 
-		(262144 - WriteOffset.u.LowPart % PAGESIZE);
-	      Length -= (262144 - WriteOffset.u.LowPart % PAGESIZE);
+		(262144 - WriteOffset.u.LowPart % PAGE_SIZE);
+	      Length -= (262144 - WriteOffset.u.LowPart % PAGE_SIZE);
 	    }
 	  else
 	    {
 	      Mdl = 
 		MmCreateMdl(NULL, (PVOID)WriteOffset.u.LowPart, 
-			    Length - WriteOffset.u.LowPart % PAGESIZE);
+			    Length - WriteOffset.u.LowPart % PAGE_SIZE);
 	      WriteOffset.QuadPart += 
-		(Length - WriteOffset.u.LowPart % PAGESIZE);
+		(Length - WriteOffset.u.LowPart % PAGE_SIZE);
 	      Length = 0;
 	    }
 	  if (Mdl == NULL)
@@ -633,11 +633,11 @@ CcZeroData (IN PFILE_OBJECT     FileObject,
 	      Length -= TempLength;
 	      
 	      size = ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG));
-	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE) && 
+	      for (i = 0; i < (Bcb->CacheSegmentSize / PAGE_SIZE) && 
 		     count < size; i++)
 		{
 		  PVOID Address;
-		  Address = current->BaseAddress + (i * PAGESIZE);
+		  Address = current->BaseAddress + (i * PAGE_SIZE);
 		  page = 
 		    MmGetPhysicalAddressForProcess(NULL, Address);
 		  ((PULONG)(Mdl + 1))[count++] = page.u.LowPart;
