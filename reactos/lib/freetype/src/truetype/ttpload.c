@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType glyph data/program tables loader (body).                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,6 +23,10 @@
 #include FT_TRUETYPE_TAGS_H
 
 #include "ttpload.h"
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#include "ttgxvar.h"
+#endif
 
 #include "tterrors.h"
 
@@ -185,6 +189,11 @@
 
     FT_FRAME_EXIT();
     FT_TRACE2(( "loaded\n" ));
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    if ( face->doblend )
+      error = tt_face_vary_cvt( face, stream );
+#endif
 
   Exit:
     return error;

@@ -226,7 +226,7 @@ FT_BEGIN_HEADER
   typedef struct  PS_DesignMap_
   {
     FT_Byte    num_points;
-    FT_Fixed*  design_points;
+    FT_Long*   design_points;
     FT_Fixed*  blend_points;
 
   } PS_DesignMapRec, *PS_DesignMap;

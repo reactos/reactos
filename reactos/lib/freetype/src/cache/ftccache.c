@@ -304,6 +304,13 @@
   FT_EXPORT_DEF( FT_Error )
   FTC_Cache_Init( FTC_Cache  cache )
   {
+    return ftc_cache_init( cache );
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
+  ftc_cache_init( FTC_Cache  cache )
+  {
     FT_Memory  memory = cache->memory;
 
 
@@ -312,13 +319,6 @@
     cache->slack = FTC_HASH_INITIAL_SIZE * FTC_HASH_MAX_LOAD;
 
     return ( FT_MEM_NEW_ARRAY( cache->buckets, FTC_HASH_INITIAL_SIZE * 2 ) );
-  }
-
-
-  FT_LOCAL_DEF( FT_Error )
-  ftc_cache_init( FTC_Cache  cache )
-  {
-    return FTC_Cache_Init( cache );
   }
 
 
@@ -360,8 +360,8 @@
   }
 
 
-  FT_EXPORT_DEF( void )
-  FTC_Cache_Done( FTC_Cache  cache )
+  FT_LOCAL_DEF( void )
+  ftc_cache_done( FTC_Cache  cache )
   {
     if ( cache->memory )
     {
@@ -380,10 +380,10 @@
   }
 
 
-  FT_LOCAL_DEF( void )
-  ftc_cache_done( FTC_Cache  cache )
+  FT_EXPORT_DEF( void )
+  FTC_Cache_Done( FTC_Cache  cache )
   {
-    FTC_Cache_Done( cache );
+    ftc_cache_done( cache );
   }
 
 

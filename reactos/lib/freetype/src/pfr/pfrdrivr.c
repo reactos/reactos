@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,16 +27,17 @@
 #include "pfrerror.h"
 
 
-  static FT_Error
-  pfr_get_kerning( PFR_Face    face,
+  FT_CALLBACK_DEF( FT_Error )
+  pfr_get_kerning( FT_Face     pfrface,     /* PFR_Face */
                    FT_UInt     left,
                    FT_UInt     right,
                    FT_Vector  *avector )
   {
+    PFR_Face     face = (PFR_Face)pfrface;
     PFR_PhyFont  phys = &face->phy_font;
 
 
-    pfr_face_get_kerning( face, left, right, avector );
+    pfr_face_get_kerning( pfrface, left, right, avector );
 
     /* convert from metrics to outline units when necessary */
     if ( phys->outline_resolution != phys->metrics_resolution )
@@ -59,11 +60,12 @@
   *
   */
 
-  static FT_Error
-  pfr_get_advance( PFR_Face  face,
+  FT_CALLBACK_DEF( FT_Error )
+  pfr_get_advance( FT_Face   pfrface,       /* PFR_Face */
                    FT_UInt   gindex,
                    FT_Pos   *anadvance )
   {
+    PFR_Face  face  = (PFR_Face)pfrface;
     FT_Error  error = PFR_Err_Bad_Argument;
 
 
@@ -84,13 +86,14 @@
   }
 
 
-  static FT_Error
-  pfr_get_metrics( PFR_Face   face,
+  FT_CALLBACK_DEF( FT_Error )
+  pfr_get_metrics( FT_Face    pfrface,      /* PFR_Face */
                    FT_UInt   *anoutline_resolution,
                    FT_UInt   *ametrics_resolution,
                    FT_Fixed  *ametrics_x_scale,
                    FT_Fixed  *ametrics_y_scale )
   {
+    PFR_Face     face = (PFR_Face)pfrface;
     PFR_PhyFont  phys = &face->phy_font;
     FT_Fixed     x_scale, y_scale;
     FT_Size      size = face->root.size;
@@ -127,9 +130,9 @@
   FT_CALLBACK_TABLE_DEF
   const FT_Service_PfrMetricsRec  pfr_metrics_service_rec =
   {
-    (FT_PFR_GetMetricsFunc)pfr_get_metrics,
-    (FT_PFR_GetKerningFunc)pfr_face_get_kerning,
-    (FT_PFR_GetAdvanceFunc)pfr_get_advance
+    pfr_get_metrics,
+    pfr_face_get_kerning,
+    pfr_get_advance
   };
 
 
@@ -146,11 +149,11 @@
   };
 
 
-  static FT_Module_Interface
-  pfr_get_service( FT_Driver         driver,
+  FT_CALLBACK_DEF( FT_Module_Interface )
+  pfr_get_service( FT_Module         module,
                    const FT_String*  service_id )
   {
-    FT_UNUSED( driver );
+    FT_UNUSED( module );
 
     return ft_service_list_lookup( pfr_services, service_id );
   }
@@ -171,29 +174,29 @@
 
       NULL,
 
-      (FT_Module_Constructor)NULL,
-      (FT_Module_Destructor) NULL,
-      (FT_Module_Requester)  pfr_get_service
+      0,
+      0,
+      pfr_get_service
     },
 
     sizeof( PFR_FaceRec ),
     sizeof( PFR_SizeRec ),
     sizeof( PFR_SlotRec ),
 
-    (FT_Face_InitFunc)       pfr_face_init,
-    (FT_Face_DoneFunc)       pfr_face_done,
-    (FT_Size_InitFunc)       NULL,
-    (FT_Size_DoneFunc)       NULL,
-    (FT_Slot_InitFunc)       pfr_slot_init,
-    (FT_Slot_DoneFunc)       pfr_slot_done,
+    pfr_face_init,
+    pfr_face_done,
+    0,                  /* FT_Size_InitFunc */
+    0,                  /* FT_Size_DoneFunc */
+    pfr_slot_init,
+    pfr_slot_done,
 
-    (FT_Size_ResetPointsFunc)NULL,
-    (FT_Size_ResetPixelsFunc)NULL,
-    (FT_Slot_LoadFunc)       pfr_slot_load,
+    0,                  /* FT_Size_ResetPointsFunc */
+    0,                  /* FT_Size_ResetPixelsFunc */
+    pfr_slot_load,
 
-    (FT_Face_GetKerningFunc) pfr_get_kerning,
-    (FT_Face_AttachFunc)     0,
-    (FT_Face_GetAdvancesFunc)0
+    pfr_get_kerning,
+    0,                  /* FT_Face_AttachFunc      */
+    0                   /* FT_Face_GetAdvancesFunc */
   };
 
 

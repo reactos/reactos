@@ -2,7 +2,7 @@
 
     FreeType font driver for bdf fonts
 
-  Copyright (C) 2001, 2002, 2003 by
+  Copyright (C) 2001, 2002, 2003, 2004 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -58,6 +58,8 @@ FT_BEGIN_HEADER
 
     FT_CharMap        charmap_handle;
     FT_CharMapRec     charmap;  /* a single charmap per face */
+
+    FT_UInt           default_glyph;
 
   } BDF_FaceRec, *BDF_Face;
 

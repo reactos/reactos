@@ -51,9 +51,10 @@ FT_BEGIN_HEADER
 
   enum
   {
-    AF_LATIN_BLUE_ACTIVE = (1 << 0),
-    AF_LATIN_BLUE_TOP    = (1 << 1),
-
+    AF_LATIN_BLUE_ACTIVE     = (1 << 0),
+    AF_LATIN_BLUE_TOP        = (1 << 1),
+    AF_LATIN_BLUE_ADJUSTMENT = (1 << 2),  /* used for scale adjustment */
+                                          /* optimization              */
     AF_LATIN_BLUE_FLAG_MAX
   };
 

@@ -12,7 +12,7 @@
     NULL  /* do not remove */
   };
 
-#define AF_SCRIPT_LIST_DEFAULT   0    /* index of default script in 'af_script_classes' */
+#define AF_SCRIPT_LIST_DEFAULT   1    /* index of default script in 'af_script_classes' */
 #define AF_SCRIPT_LIST_NONE      255  /* indicates an uncovered glyph                      */
 
  /*

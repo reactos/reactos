@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (specification).                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -75,9 +75,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    no_recurse    :: Set but not used.                                 */
   /*                                                                       */
-  /*    error         :: An error code that is only used to report memory  */
-  /*                     allocation problems.                              */
-  /*                                                                       */
   /*    metrics_only  :: A boolean indicating that we only want to compute */
   /*                     the metrics of a given glyph, not load all of its */
   /*                     points.                                           */
@@ -111,7 +108,6 @@ FT_BEGIN_HEADER
     FT_Bool         load_points;
     FT_Bool         no_recurse;
 
-    FT_Error        error;         /* only used for memory errors */
     FT_Bool         metrics_only;
 
     void*           hints_funcs;    /* hinter-specific */

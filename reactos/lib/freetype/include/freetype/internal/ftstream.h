@@ -269,6 +269,25 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* Each GET_xxxx() macro uses an implicit `stream' variable.             */
   /*                                                                       */
+#if 0
+#define FT_GET_MACRO( type )    FT_NEXT_ ## type ( stream->cursor )
+
+#define FT_GET_CHAR()       FT_GET_MACRO( CHAR )
+#define FT_GET_BYTE()       FT_GET_MACRO( BYTE )
+#define FT_GET_SHORT()      FT_GET_MACRO( SHORT )
+#define FT_GET_USHORT()     FT_GET_MACRO( USHORT )
+#define FT_GET_OFF3()       FT_GET_MACRO( OFF3 )
+#define FT_GET_UOFF3()      FT_GET_MACRO( UOFF3 )
+#define FT_GET_LONG()       FT_GET_MACRO( LONG )
+#define FT_GET_ULONG()      FT_GET_MACRO( ULONG )
+#define FT_GET_TAG4()       FT_GET_MACRO( ULONG )
+
+#define FT_GET_SHORT_LE()   FT_GET_MACRO( SHORT_LE )
+#define FT_GET_USHORT_LE()  FT_GET_MACRO( USHORT_LE )
+#define FT_GET_LONG_LE()    FT_GET_MACRO( LONG_LE )
+#define FT_GET_ULONG_LE()   FT_GET_MACRO( ULONG_LE )
+
+#else
 #define FT_GET_MACRO( func, type )        ( (type)func( stream ) )
 
 #define FT_GET_CHAR()       FT_GET_MACRO( FT_Stream_GetChar, FT_Char )
@@ -285,6 +304,7 @@ FT_BEGIN_HEADER
 #define FT_GET_USHORT_LE()  FT_GET_MACRO( FT_Stream_GetShortLE, FT_UShort )
 #define FT_GET_LONG_LE()    FT_GET_MACRO( FT_Stream_GetLongLE, FT_Long )
 #define FT_GET_ULONG_LE()   FT_GET_MACRO( FT_Stream_GetLongLE, FT_ULong )
+#endif
 
 #define FT_READ_MACRO( func, type, var )        \
           ( var = (type)func( stream, &error ), \

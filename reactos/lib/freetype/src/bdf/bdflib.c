@@ -1404,7 +1404,7 @@
     /* present, and the SPACING property should override the default       */
     /* spacing.                                                            */
     if ( ft_memcmp( name, "DEFAULT_CHAR", 12 ) == 0 )
-      font->default_glyph = fp->value.int32;
+      font->default_char = fp->value.int32;
     else if ( ft_memcmp( name, "FONT_ASCENT", 11 ) == 0 )
       font->font_ascent = fp->value.int32;
     else if ( ft_memcmp( name, "FONT_DESCENT", 12 ) == 0 )
@@ -2048,8 +2048,8 @@
       error = hash_init( (hashtable *)p->font->internal,memory );
       if ( error )
         goto Exit;
-      p->font->spacing       = p->opts->font_spacing;
-      p->font->default_glyph = -1;
+      p->font->spacing      = p->opts->font_spacing;
+      p->font->default_char = -1;
 
       goto Exit;
     }

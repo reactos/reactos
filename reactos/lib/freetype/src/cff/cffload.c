@@ -1095,7 +1095,7 @@
 
     idx->stream = stream;
     if ( !FT_READ_USHORT( count ) &&
-         count > 0             )
+         count > 0                )
     {
       FT_Byte*   p;
       FT_Byte    offsize;

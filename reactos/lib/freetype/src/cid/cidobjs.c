@@ -47,20 +47,20 @@
   /*************************************************************************/
 
   FT_LOCAL_DEF( void )
-  cid_slot_done( CID_GlyphSlot  slot )
+  cid_slot_done( FT_GlyphSlot  slot )
   {
-    slot->root.internal->glyph_hints = 0;
+    slot->internal->glyph_hints = 0;
   }
 
 
   FT_LOCAL_DEF( FT_Error )
-  cid_slot_init( CID_GlyphSlot  slot )
+  cid_slot_init( FT_GlyphSlot  slot )
   {
     CID_Face          face;
     PSHinter_Service  pshinter;
 
 
-    face     = (CID_Face)slot->root.face;
+    face     = (CID_Face)slot->face;
     pshinter = (PSHinter_Service)face->pshinter;
 
     if ( pshinter )
@@ -68,7 +68,7 @@
       FT_Module  module;
 
 
-      module = FT_Get_Module( slot->root.face->driver->root.library,
+      module = FT_Get_Module( slot->face->driver->root.library,
                               "pshinter" );
       if ( module )
       {
@@ -76,7 +76,7 @@
 
 
         funcs = pshinter->get_t1_funcs( module );
-        slot->root.internal->glyph_hints = (void*)funcs;
+        slot->internal->glyph_hints = (void*)funcs;
       }
     }
 
@@ -108,25 +108,29 @@
 
 
   FT_LOCAL_DEF( void )
-  cid_size_done( CID_Size  size )
+  cid_size_done( FT_Size  cidsize )         /* CID_Size */
   {
-    if ( size->root.internal )
+    CID_Size  size = (CID_Size)cidsize;
+
+
+    if ( cidsize->internal )
     {
       PSH_Globals_Funcs  funcs;
 
 
       funcs = cid_size_get_globals_funcs( size );
       if ( funcs )
-        funcs->destroy( (PSH_Globals)size->root.internal );
+        funcs->destroy( (PSH_Globals)cidsize->internal );
 
-      size->root.internal = 0;
+      cidsize->internal = 0;
     }
   }
 
 
   FT_LOCAL_DEF( FT_Error )
-  cid_size_init( CID_Size  size )
+  cid_size_init( FT_Size  cidsize )     /* CID_Size */
   {
+    CID_Size           size  = (CID_Size)cidsize;
     FT_Error           error = 0;
     PSH_Globals_Funcs  funcs = cid_size_get_globals_funcs( size );
 
@@ -134,14 +138,14 @@
     if ( funcs )
     {
       PSH_Globals   globals;
-      CID_Face      face = (CID_Face)size->root.face;
+      CID_Face      face = (CID_Face)cidsize->face;
       CID_FaceDict  dict = face->cid.font_dicts + face->root.face_index;
       PS_Private    priv = &dict->private_dict;
 
 
-      error = funcs->create( size->root.face->memory, priv, &globals );
+      error = funcs->create( cidsize->face->memory, priv, &globals );
       if ( !error )
-        size->root.internal = (FT_Size_Internal)(void*)globals;
+        cidsize->internal = (FT_Size_Internal)(void*)globals;
     }
 
     return error;
@@ -149,18 +153,40 @@
 
 
   FT_LOCAL_DEF( FT_Error )
-  cid_size_reset( CID_Size  size )
+  cid_size_reset( FT_Size  cidsize,             /* CID_Size */
+                  FT_UInt  char_width,
+                  FT_UInt  char_height )
   {
+    CID_Size           size  = (CID_Size)cidsize;
     PSH_Globals_Funcs  funcs = cid_size_get_globals_funcs( size );
     FT_Error           error = 0;
 
+    FT_UNUSED( char_width );
+    FT_UNUSED( char_height );
+
 
     if ( funcs )
-      error = funcs->set_scale( (PSH_Globals)size->root.internal,
-                                 size->root.metrics.x_scale,
-                                 size->root.metrics.y_scale,
+      error = funcs->set_scale( (PSH_Globals)cidsize->internal,
+                                 cidsize->metrics.x_scale,
+                                 cidsize->metrics.y_scale,
                                  0, 0 );
     return error;
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
+  cid_point_size_reset( FT_Size     size,
+                        FT_F26Dot6  char_width,
+                        FT_F26Dot6  char_height,
+                        FT_UInt     horz_resolution,
+                        FT_UInt     vert_resolution )
+  {
+    FT_UNUSED( char_width );
+    FT_UNUSED( char_height );
+    FT_UNUSED( horz_resolution );
+    FT_UNUSED( vert_resolution );
+
+    return cid_size_reset( size, 0, 0 );
   }
 
 
@@ -182,8 +208,9 @@
   /*    face :: A pointer to the face object to destroy.                   */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  cid_face_done( CID_Face  face )
+  cid_face_done( FT_Face  cidface )         /* CID_Face */
   {
+    CID_Face   face = (CID_Face)cidface;
     FT_Memory  memory;
 
 
@@ -193,7 +220,7 @@
       PS_FontInfo   info = &cid->font_info;
 
 
-      memory = face->root.memory;
+      memory = cidface->memory;
 
       /* release subrs */
       if ( face->subrs )
@@ -232,8 +259,8 @@
       FT_FREE( cid->registry );
       FT_FREE( cid->ordering );
 
-      face->root.family_name = 0;
-      face->root.style_name  = 0;
+      cidface->family_name = 0;
+      cidface->style_name  = 0;
 
       FT_FREE( face->binary_data );
       FT_FREE( face->cid_stream );
@@ -266,11 +293,12 @@
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
   cid_face_init( FT_Stream      stream,
-                 CID_Face       face,
+                 FT_Face        cidface,        /* CID_Face */
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
+    CID_Face            face = (CID_Face)cidface;
     FT_Error            error;
     FT_Service_PsCMaps  psnames;
     PSAux_Service       psaux;
@@ -281,7 +309,7 @@
     FT_UNUSED( stream );
 
 
-    face->root.num_faces = 1;
+    cidface->num_faces = 1;
 
     FT_FACE_FIND_GLOBAL_SERVICE( face, psnames, POSTSCRIPT_CMAPS );
 
@@ -329,33 +357,32 @@
 
     /* set up root face fields */
     {
-      FT_Face       root = (FT_Face)&face->root;
       CID_FaceInfo  cid  = &face->cid;
       PS_FontInfo   info = &cid->font_info;
 
 
-      root->num_glyphs   = cid->cid_count;
-      root->num_charmaps = 0;
+      cidface->num_glyphs   = cid->cid_count;
+      cidface->num_charmaps = 0;
 
-      root->face_index = face_index;
-      root->face_flags = FT_FACE_FLAG_SCALABLE;
+      cidface->face_index = face_index;
+      cidface->face_flags = FT_FACE_FLAG_SCALABLE;
 
-      root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
+      cidface->face_flags |= FT_FACE_FLAG_HORIZONTAL;
 
       if ( info->is_fixed_pitch )
-        root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
+        cidface->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
       /* XXX: TODO: add kerning with .afm support */
 
       /* get style name -- be careful, some broken fonts only */
       /* have a /FontName dictionary entry!                   */
-      root->family_name = info->family_name;
+      cidface->family_name = info->family_name;
       /* assume "Regular" style if we don't know better */
-      root->style_name = (char *)"Regular";
-      if ( root->family_name )
+      cidface->style_name = (char *)"Regular";
+      if ( cidface->family_name )
       {
         char*  full   = info->full_name;
-        char*  family = root->family_name;
+        char*  family = cidface->family_name;
 
 
         if ( full )
@@ -376,7 +403,7 @@
               else
               {
                 if ( !*family )
-                  root->style_name = full;
+                  cidface->style_name = full;
                 break;
               }
             }
@@ -387,42 +414,42 @@
       {
         /* do we have a `/FontName'? */
         if ( cid->cid_font_name )
-          root->family_name = cid->cid_font_name;
+          cidface->family_name = cid->cid_font_name;
       }
 
       /* compute style flags */
-      root->style_flags = 0;
+      cidface->style_flags = 0;
       if ( info->italic_angle )
-        root->style_flags |= FT_STYLE_FLAG_ITALIC;
+        cidface->style_flags |= FT_STYLE_FLAG_ITALIC;
       if ( info->weight )
       {
         if ( !ft_strcmp( info->weight, "Bold"  ) ||
              !ft_strcmp( info->weight, "Black" ) )
-          root->style_flags |= FT_STYLE_FLAG_BOLD;
+          cidface->style_flags |= FT_STYLE_FLAG_BOLD;
       }
 
       /* no embedded bitmap support */
-      root->num_fixed_sizes = 0;
-      root->available_sizes = 0;
+      cidface->num_fixed_sizes = 0;
+      cidface->available_sizes = 0;
 
-      root->bbox.xMin =   cid->font_bbox.xMin             >> 16;
-      root->bbox.yMin =   cid->font_bbox.yMin             >> 16;
-      root->bbox.xMax = ( cid->font_bbox.xMax + 0xFFFFU ) >> 16;
-      root->bbox.yMax = ( cid->font_bbox.yMax + 0xFFFFU ) >> 16;
+      cidface->bbox.xMin =   cid->font_bbox.xMin             >> 16;
+      cidface->bbox.yMin =   cid->font_bbox.yMin             >> 16;
+      cidface->bbox.xMax = ( cid->font_bbox.xMax + 0xFFFFU ) >> 16;
+      cidface->bbox.yMax = ( cid->font_bbox.yMax + 0xFFFFU ) >> 16;
 
-      if ( !root->units_per_EM )
-        root->units_per_EM = 1000;
+      if ( !cidface->units_per_EM )
+        cidface->units_per_EM = 1000;
 
-      root->ascender  = (FT_Short)( root->bbox.yMax );
-      root->descender = (FT_Short)( root->bbox.yMin );
-      root->height    = (FT_Short)(
-        ( ( root->ascender - root->descender ) * 12 ) / 10 );
+      cidface->ascender  = (FT_Short)( cidface->bbox.yMax );
+      cidface->descender = (FT_Short)( cidface->bbox.yMin );
+      cidface->height    = (FT_Short)(
+        ( ( cidface->ascender - cidface->descender ) * 12 ) / 10 );
 
-      root->underline_position  = (FT_Short)info->underline_position;
-      root->underline_thickness = (FT_Short)info->underline_thickness;
+      cidface->underline_position  = (FT_Short)info->underline_position;
+      cidface->underline_thickness = (FT_Short)info->underline_thickness;
 
-      root->internal->max_points   = 0;
-      root->internal->max_contours = 0;
+      cidface->internal->max_points   = 0;
+      cidface->internal->max_contours = 0;
     }
 
   Exit:
@@ -445,7 +472,7 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  cid_driver_init( CID_Driver  driver )
+  cid_driver_init( FT_Module  driver )
   {
     FT_UNUSED( driver );
 
@@ -465,7 +492,7 @@
   /*    driver :: A handle to the target CID driver.                       */
   /*                                                                       */
   FT_LOCAL_DEF( void )
-  cid_driver_done( CID_Driver  driver )
+  cid_driver_done( FT_Module  driver )
   {
     FT_UNUSED( driver );
   }

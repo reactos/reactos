@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auto-hinting module implementation (declaration).                    */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003 Catharon Productions Inc.              */
+/*  Copyright 2000-2001, 2002, 2003, 2004 Catharon Productions Inc.        */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -39,24 +39,30 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  ft_autohinter_init( FT_AutoHinter  module )
+  ft_autohinter_init( FT_Module  module )       /* FT_AutoHinter */
   {
-    FT_Error  error;
+    FT_AutoHinter  autohinter = (FT_AutoHinter)module;
+    FT_Error       error;
 
 
-    error = ah_hinter_new( module->root.library, &module->hinter );
+    error = ah_hinter_new( module->library, &autohinter->hinter );
+
 #ifdef DEBUG_HINTER
     if ( !error )
-      ah_debug_hinter = module->hinter;
+      ah_debug_hinter = autohinter->hinter;
 #endif
+
     return error;
   }
 
 
   FT_CALLBACK_DEF( void )
-  ft_autohinter_done( FT_AutoHinter  module )
+  ft_autohinter_done( FT_Module  module )
   {
-    ah_hinter_done( module->hinter );
+    FT_AutoHinter  autohinter = (FT_AutoHinter)module;
+
+
+    ah_hinter_done( autohinter->hinter );
 
 #ifdef DEBUG_HINTER
     ah_debug_hinter = NULL;
@@ -128,9 +134,9 @@
 
     (const void*) &ft_autohinter_service,
 
-    (FT_Module_Constructor)ft_autohinter_init,
-    (FT_Module_Destructor) ft_autohinter_done,
-    (FT_Module_Requester)  0
+    ft_autohinter_init,
+    ft_autohinter_done,
+    0                       /* FT_Module_Requester */
   };
 
 

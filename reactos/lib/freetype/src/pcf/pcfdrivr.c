@@ -40,6 +40,7 @@ THE SOFTWARE.
 #include "pcfread.h"
 
 #include "pcferror.h"
+#include "pcfutil.h"
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pcfread
@@ -47,9 +48,20 @@ THE SOFTWARE.
 #include FT_SERVICE_BDF_H
 #include FT_SERVICE_XFREE86_NAME_H
 
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
+  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
+  /* messages during execution.                                            */
+  /*                                                                       */
+#undef  FT_COMPONENT
+#define FT_COMPONENT  trace_pcfdriver
+
+
   typedef struct  PCF_CMapRec_
   {
-    FT_CMapRec    cmap;
+    FT_CMapRec    root;
     FT_UInt       num_encodings;
     PCF_Encoding  encodings;
 
@@ -57,9 +69,13 @@ THE SOFTWARE.
 
 
   FT_CALLBACK_DEF( FT_Error )
-  pcf_cmap_init( PCF_CMap  cmap )
+  pcf_cmap_init( FT_CMap     pcfcmap,   /* PCF_CMap */
+                 FT_Pointer  init_data )
   {
-    PCF_Face  face = (PCF_Face)FT_CMAP_FACE( cmap );
+    PCF_CMap  cmap = (PCF_CMap)pcfcmap;
+    PCF_Face  face = (PCF_Face)FT_CMAP_FACE( pcfcmap );
+
+    FT_UNUSED( init_data );
 
 
     cmap->num_encodings = (FT_UInt)face->nencodings;
@@ -70,20 +86,24 @@ THE SOFTWARE.
 
 
   FT_CALLBACK_DEF( void )
-  pcf_cmap_done( PCF_CMap  cmap )
+  pcf_cmap_done( FT_CMap  pcfcmap )         /* PCF_CMap */
   {
+    PCF_CMap  cmap = (PCF_CMap)pcfcmap;
+
+
     cmap->encodings     = NULL;
     cmap->num_encodings = 0;
   }
 
 
   FT_CALLBACK_DEF( FT_UInt )
-  pcf_cmap_char_index( PCF_CMap   cmap,
+  pcf_cmap_char_index( FT_CMap    pcfcmap,  /* PCF_CMap */
                        FT_UInt32  charcode )
   {
+    PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
     FT_UInt       min, max, mid;
-    FT_UInt       result = 0;
+    FT_UInt       result    = 0;
 
 
     min = 0;
@@ -114,13 +134,14 @@ THE SOFTWARE.
 
 
   FT_CALLBACK_DEF( FT_UInt )
-  pcf_cmap_char_next( PCF_CMap    cmap,
+  pcf_cmap_char_next( FT_CMap    pcfcmap,   /* PCF_CMap */
                       FT_UInt32  *acharcode )
   {
+    PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
     FT_UInt       min, max, mid;
-    FT_UInt32     charcode = *acharcode + 1;
-    FT_UInt       result   = 0;
+    FT_UInt32     charcode  = *acharcode + 1;
+    FT_UInt       result    = 0;
 
 
     min = 0;
@@ -159,29 +180,21 @@ THE SOFTWARE.
   }
 
 
-  FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec  pcf_cmap_class =
+  FT_CALLBACK_TABLE_DEF
+  const FT_CMap_ClassRec  pcf_cmap_class =
   {
-    sizeof( PCF_CMapRec ),
-    (FT_CMap_InitFunc)     pcf_cmap_init,
-    (FT_CMap_DoneFunc)     pcf_cmap_done,
-    (FT_CMap_CharIndexFunc)pcf_cmap_char_index,
-    (FT_CMap_CharNextFunc) pcf_cmap_char_next
+    sizeof ( PCF_CMapRec ),
+    pcf_cmap_init,
+    pcf_cmap_done,
+    pcf_cmap_char_index,
+    pcf_cmap_char_next
   };
 
 
-  /*************************************************************************/
-  /*                                                                       */
-  /* The macro FT_COMPONENT is used in trace mode.  It is an implicit      */
-  /* parameter of the FT_TRACE() and FT_ERROR() macros, used to print/log  */
-  /* messages during execution.                                            */
-  /*                                                                       */
-#undef  FT_COMPONENT
-#define FT_COMPONENT  trace_pcfdriver
-
-
-  FT_CALLBACK_DEF( FT_Error )
-  PCF_Face_Done( PCF_Face  face )
+  FT_CALLBACK_DEF( void )
+  PCF_Face_Done( FT_Face  pcfface )         /* PCF_Face */
   {
+    PCF_Face   face   = (PCF_Face)pcfface;
     FT_Memory  memory = FT_FACE_MEMORY( face );
 
 
@@ -207,31 +220,30 @@ THE SOFTWARE.
     }
 
     FT_FREE( face->toc.tables );
-    FT_FREE( face->root.family_name );
-    FT_FREE( face->root.available_sizes );
+    FT_FREE( pcfface->family_name );
+    FT_FREE( pcfface->available_sizes );
     FT_FREE( face->charset_encoding );
     FT_FREE( face->charset_registry );
 
     FT_TRACE4(( "PCF_Face_Done: done face\n" ));
 
     /* close gzip/LZW stream if any */
-    if ( face->root.stream == &face->gzip_stream )
+    if ( pcfface->stream == &face->gzip_stream )
     {
       FT_Stream_Close( &face->gzip_stream );
-      face->root.stream = face->gzip_source;
+      pcfface->stream = face->gzip_source;
     }
-
-    return PCF_Err_Ok;
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
   PCF_Face_Init( FT_Stream      stream,
-                 PCF_Face       face,
+                 FT_Face        pcfface,        /* PCF_Face */
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
+    PCF_Face  face  = (PCF_Face)pcfface;
     FT_Error  error = PCF_Err_Ok;
 
     FT_UNUSED( num_params );
@@ -266,9 +278,9 @@ THE SOFTWARE.
           goto Fail;
 
         face->gzip_source = stream;
-        face->root.stream = &face->gzip_stream;
+        pcfface->stream   = &face->gzip_stream;
 
-        stream = face->root.stream;
+        stream = pcfface->stream;
 
         error = pcf_load_font( stream, face );
         if ( error )
@@ -277,9 +289,9 @@ THE SOFTWARE.
       else
       {
         face->gzip_source = stream;
-        face->root.stream = &face->gzip_stream;
+        pcfface->stream   = &face->gzip_stream;
 
-        stream = face->root.stream;
+        stream = pcfface->stream;
 
         error = pcf_load_font( stream, face );
         if ( error )
@@ -287,19 +299,16 @@ THE SOFTWARE.
       }
     }
 
-    /* set-up charmap */
+    /* set up charmap */
     {
-      FT_String  *charset_registry, *charset_encoding;
+      FT_String  *charset_registry = face->charset_registry;
+      FT_String  *charset_encoding = face->charset_encoding;
       FT_Bool     unicode_charmap  = 0;
 
 
-      charset_registry = face->charset_registry;
-      charset_encoding = face->charset_encoding;
-
-      if ( ( charset_registry != NULL ) &&
-           ( charset_encoding != NULL ) )
+      if ( charset_registry && charset_encoding )
       {
-        char*  s = face->charset_registry;
+        char*  s = charset_registry;
 
 
         /* Uh, oh, compare first letters manually to avoid dependency
@@ -336,8 +345,8 @@ THE SOFTWARE.
 
 #if 0
         /* Select default charmap */
-        if (face->root.num_charmaps)
-          face->root.charmap = face->root.charmaps[0];
+        if ( pcfface->num_charmaps )
+          pcfface->charmap = pcfface->charmaps[0];
 #endif
       }
     }
@@ -352,10 +361,15 @@ THE SOFTWARE.
   }
 
 
-  static FT_Error
-  PCF_Set_Pixel_Size( FT_Size  size )
+  FT_CALLBACK_DEF( FT_Error )
+  PCF_Set_Pixel_Size( FT_Size  size,
+                      FT_UInt  pixel_width,
+                      FT_UInt  pixel_height )
   {
-    PCF_Face face = (PCF_Face)FT_SIZE_FACE( size );
+    PCF_Face  face = (PCF_Face)FT_SIZE_FACE( size );
+
+    FT_UNUSED( pixel_width );
+    FT_UNUSED( pixel_height );
 
 
     FT_TRACE4(( "rec %d - pres %d\n", size->metrics.y_ppem,
@@ -383,7 +397,23 @@ THE SOFTWARE.
   }
 
 
-  static FT_Error
+  FT_CALLBACK_DEF( FT_Error )
+  PCF_Set_Point_Size( FT_Size     size,
+                      FT_F26Dot6  char_width,
+                      FT_F26Dot6  char_height,
+                      FT_UInt     horz_resolution,
+                      FT_UInt     vert_resolution )
+  {
+    FT_UNUSED( char_width );
+    FT_UNUSED( char_height );
+    FT_UNUSED( horz_resolution );
+    FT_UNUSED( vert_resolution );
+
+    return PCF_Set_Pixel_Size( size, 0, 0 );
+  }
+
+
+  FT_CALLBACK_DEF( FT_Error )
   PCF_Glyph_Load( FT_GlyphSlot  slot,
                   FT_Size       size,
                   FT_UInt       glyph_index,
@@ -567,7 +597,7 @@ THE SOFTWARE.
   };
 
 
-  static FT_Module_Interface
+  FT_CALLBACK_DEF( FT_Module_Interface )
   pcf_driver_requester( FT_Module    module,
                         const char*  name )
   {
@@ -591,30 +621,30 @@ THE SOFTWARE.
 
       0,
 
-      (FT_Module_Constructor)0,
-      (FT_Module_Destructor) 0,
-      (FT_Module_Requester)  pcf_driver_requester
+      0,
+      0,
+      pcf_driver_requester
     },
 
-    sizeof( PCF_FaceRec ),
-    sizeof( FT_SizeRec ),
-    sizeof( FT_GlyphSlotRec ),
+    sizeof ( PCF_FaceRec ),
+    sizeof ( FT_SizeRec ),
+    sizeof ( FT_GlyphSlotRec ),
 
-    (FT_Face_InitFunc)        PCF_Face_Init,
-    (FT_Face_DoneFunc)        PCF_Face_Done,
-    (FT_Size_InitFunc)        0,
-    (FT_Size_DoneFunc)        0,
-    (FT_Slot_InitFunc)        0,
-    (FT_Slot_DoneFunc)        0,
+    PCF_Face_Init,
+    PCF_Face_Done,
+    0,                      /* FT_Size_InitFunc */
+    0,                      /* FT_Size_DoneFunc */
+    0,                      /* FT_Slot_InitFunc */
+    0,                      /* FT_Slot_DoneFunc */
 
-    (FT_Size_ResetPointsFunc) PCF_Set_Pixel_Size,
-    (FT_Size_ResetPixelsFunc) PCF_Set_Pixel_Size,
+    PCF_Set_Point_Size,
+    PCF_Set_Pixel_Size,
 
-    (FT_Slot_LoadFunc)        PCF_Glyph_Load,
+    PCF_Glyph_Load,
 
-    (FT_Face_GetKerningFunc)  0,
-    (FT_Face_AttachFunc)      0,
-    (FT_Face_GetAdvancesFunc) 0
+    0,                      /* FT_Face_GetKerningFunc  */
+    0,                      /* FT_Face_AttachFunc      */
+    0                       /* FT_Face_GetAdvancesFunc */
   };
 
 

@@ -540,10 +540,15 @@
     FT_Long      line_no   = table->line_no;
 
 
+    /* the following is valid according to ANSI C */
+#if 0
     if ( block == NULL || cur_size == 0 )
       ft_mem_debug_panic( "trying to reallocate NULL in (%s:%ld)",
-                           file_name, line_no );
+                          file_name, line_no );
+#endif
 
+    /* while the following is allowed in ANSI C also, we abort since */
+    /* such code shouldn't be in FreeType...                         */
     if ( new_size <= 0 )
       ft_mem_debug_panic(
         "trying to reallocate %p to size 0 (current is %ld) in (%s:%ld)",
@@ -689,6 +694,46 @@
   }
 
 
+  FT_BASE_DEF( FT_Error )
+  FT_QAlloc_Debug( FT_Memory    memory,
+                   FT_Long      size,
+                   void*       *P,
+                   const char*  file_name,
+                   FT_Long      line_no )
+  {
+    FT_MemTable  table = (FT_MemTable)memory->user;
+
+
+    if ( table )
+    {
+      table->file_name = file_name;
+      table->line_no   = line_no;
+    }
+
+    return FT_QAlloc( memory, size, P );
+  }
+
+
+  FT_BASE_DEF( FT_Error )
+  FT_QRealloc_Debug( FT_Memory    memory,
+                     FT_Long      current,
+                     FT_Long      size,
+                     void*       *P,
+                     const char*  file_name,
+                     FT_Long      line_no )
+  {
+    FT_MemTable  table = (FT_MemTable)memory->user;
+
+
+    if ( table )
+    {
+      table->file_name = file_name;
+      table->line_no   = line_no;
+    }
+    return FT_QRealloc( memory, current, size, P );
+  }
+
+  
   FT_BASE_DEF( void )
   FT_Free_Debug( FT_Memory    memory,
                  FT_Pointer   block,

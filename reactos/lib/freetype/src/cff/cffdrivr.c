@@ -96,12 +96,13 @@
   /*                                                                       */
   /*    They can be implemented by format-specific interfaces.             */
   /*                                                                       */
-  static FT_Error
-  Get_Kerning( TT_Face     face,
+  FT_CALLBACK_DEF( FT_Error )
+  Get_Kerning( FT_Face     ttface,          /* TT_Face */
                FT_UInt     left_glyph,
                FT_UInt     right_glyph,
                FT_Vector*  kerning )
   {
+    TT_Face        face = (TT_Face)ttface;
     TT_Kern0_Pair  pair;
 
 
@@ -178,13 +179,15 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
-  static FT_Error
-  Load_Glyph( CFF_GlyphSlot  slot,
-              CFF_Size       size,
-              FT_UShort      glyph_index,
-              FT_Int32       load_flags )
+  FT_CALLBACK_DEF( FT_Error )
+  Load_Glyph( FT_GlyphSlot  cffslot,        /* CFF_GlyphSlot */
+              FT_Size       cffsize,        /* CFF_Size      */
+              FT_UInt       glyph_index,
+              FT_Int32      load_flags )
   {
     FT_Error  error;
+    CFF_GlyphSlot  slot = (CFF_GlyphSlot)cffslot;
+    CFF_Size       size = (CFF_Size)cffsize;
 
 
     if ( !slot )
@@ -200,8 +203,8 @@
     /* reset the size object if necessary */
     if ( size )
     {
-      /* these two object must have the same parent */
-      if ( size->root.face != slot->root.face )
+      /* these two objects must have the same parent */
+      if ( cffsize->face != cffslot->face )
         return CFF_Err_Invalid_Face_Handle;
     }
 
@@ -409,8 +412,8 @@
   };
 
 
-  static FT_Module_Interface
-  cff_get_interface( CFF_Driver   driver,
+  FT_CALLBACK_DEF( FT_Module_Interface )
+  cff_get_interface( FT_Module    driver,       /* CFF_Driver */
                      const char*  module_interface )
   {
     FT_Module            sfnt;
@@ -422,7 +425,7 @@
       return  result;
 
     /* we pass our request to the `sfnt' module */
-    sfnt = FT_Get_Module( driver->root.root.library, "sfnt" );
+    sfnt = FT_Get_Module( driver->library, "sfnt" );
 
     return sfnt ? sfnt->clazz->get_interface( sfnt, module_interface ) : 0;
   }
@@ -446,9 +449,9 @@
 
       0,   /* module-specific interface */
 
-      (FT_Module_Constructor)cff_driver_init,
-      (FT_Module_Destructor) cff_driver_done,
-      (FT_Module_Requester)  cff_get_interface,
+      cff_driver_init,
+      cff_driver_done,
+      cff_get_interface,
     },
 
     /* now the specific driver fields */
@@ -456,21 +459,21 @@
     sizeof( CFF_SizeRec ),
     sizeof( CFF_GlyphSlotRec ),
 
-    (FT_Face_InitFunc)       cff_face_init,
-    (FT_Face_DoneFunc)       cff_face_done,
-    (FT_Size_InitFunc)       cff_size_init,
-    (FT_Size_DoneFunc)       cff_size_done,
-    (FT_Slot_InitFunc)       cff_slot_init,
-    (FT_Slot_DoneFunc)       cff_slot_done,
+    cff_face_init,
+    cff_face_done,
+    cff_size_init,
+    cff_size_done,
+    cff_slot_init,
+    cff_slot_done,
 
-    (FT_Size_ResetPointsFunc)cff_size_reset,
-    (FT_Size_ResetPixelsFunc)cff_size_reset,
+    cff_point_size_reset,
+    cff_size_reset,
 
-    (FT_Slot_LoadFunc)       Load_Glyph,
+    Load_Glyph,
 
-    (FT_Face_GetKerningFunc) Get_Kerning,
-    (FT_Face_AttachFunc)     0,
-    (FT_Face_GetAdvancesFunc)0,
+    Get_Kerning,
+    0,                      /* FT_Face_AttachFunc      */
+    0                       /* FT_Face_GetAdvancesFunc */
   };
 
 

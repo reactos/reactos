@@ -86,7 +86,7 @@ FT_BEGIN_HEADER
   typedef struct FTC_MruListClassRec_ const *  FTC_MruListClass;
 
 
-  typedef FT_Int
+  typedef FT_Bool
   (*FTC_MruNode_CompareFunc)( FTC_MruNode  node,
                               FT_Pointer   key );
 
@@ -154,7 +154,7 @@ FT_BEGIN_HEADER
   FTC_MruList_Lookup( FTC_MruList   list,
                       FT_Pointer    key,
                       FTC_MruNode  *pnode );
-                      
+
 
   FT_EXPORT( void )
   FTC_MruList_Remove( FTC_MruList  list,
@@ -208,7 +208,7 @@ FT_BEGIN_HEADER
 #else  /* !FTC_INLINE */
 
 #define FTC_MRULIST_LOOKUP( list, key, node, error ) \
-  error = FTC_MruList_Lookup( (list), (key), (FTC_MruNode*)&(node) ) 
+  error = FTC_MruList_Lookup( (list), (key), (FTC_MruNode*)&(node) )
 
 #endif /* !FTC_INLINE */
 

@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  svmm.h                                                                 */
 /*                                                                         */
-/*    The FreeType Multiple Masters services (specification).              */
+/*    The FreeType Multiple Masters and GX var services (specification).   */
 /*                                                                         */
-/*  Copyright 2003 by                                                      */
+/*  Copyright 2003, 2004 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,9 +40,18 @@ FT_BEGIN_HEADER
                      FT_Multi_Master*  master );
 
   typedef FT_Error
+  (*FT_Get_MM_Var_Func)( FT_Face      face,
+                         FT_MM_Var*  *master );
+
+  typedef FT_Error
   (*FT_Set_MM_Design_Func)( FT_Face   face,
                             FT_UInt   num_coords,
                             FT_Long*  coords );
+
+  typedef FT_Error
+  (*FT_Set_Var_Design_Func)( FT_Face    face,
+                             FT_UInt    num_coords,
+                             FT_Fixed*  coords );
 
   typedef FT_Error
   (*FT_Set_MM_Blend_Func)( FT_Face   face,
@@ -52,9 +61,11 @@ FT_BEGIN_HEADER
 
   FT_DEFINE_SERVICE( MultiMasters )
   {
-    FT_Get_MM_Func         get_mm;
-    FT_Set_MM_Design_Func  set_mm_design;
-    FT_Set_MM_Blend_Func   set_mm_blend;
+    FT_Get_MM_Func          get_mm;
+    FT_Set_MM_Design_Func   set_mm_design;
+    FT_Set_MM_Blend_Func    set_mm_blend;
+    FT_Get_MM_Var_Func      get_mm_var;
+    FT_Set_Var_Design_Func  set_var_design;
   };
 
   /* */

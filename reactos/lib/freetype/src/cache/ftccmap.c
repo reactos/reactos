@@ -98,10 +98,11 @@
   /* no need for specific finalizer; we use `ftc_node_done' directly */
 
   FT_CALLBACK_DEF( void )
-  ftc_cmap_node_free( FTC_CMapNode  node,
-                      FTC_Cache     cache )
+  ftc_cmap_node_free( FTC_Node   ftcnode,
+                      FTC_Cache  cache )
   {
-    FT_Memory  memory = cache->memory;
+    FTC_CMapNode  node   = (FTC_CMapNode)ftcnode;
+    FT_Memory     memory = cache->memory;
 
 
     FT_FREE( node );
@@ -110,14 +111,16 @@
 
   /* initialize a new cmap node */
   FT_CALLBACK_DEF( FT_Error )
-  ftc_cmap_node_new( FTC_CMapNode  *anode,
-                     FTC_CMapQuery  query,
-                     FTC_Cache      cache )
+  ftc_cmap_node_new( FTC_Node   *ftcanode,
+                     FT_Pointer  ftcquery,
+                     FTC_Cache   cache )
   {
-    FT_Error      error;
-    FT_Memory     memory  = cache->memory;
-    FTC_CMapNode  node;
-    FT_UInt       nn;
+    FTC_CMapNode  *anode  = (FTC_CMapNode*)ftcanode;
+    FTC_CMapQuery  query  = (FTC_CMapQuery)ftcquery;
+    FT_Error       error;
+    FT_Memory      memory = cache->memory;
+    FTC_CMapNode   node;
+    FT_UInt        nn;
 
 
     if ( !FT_NEW( node ) )
@@ -138,9 +141,11 @@
 
   /* compute the weight of a given cmap node */
   FT_CALLBACK_DEF( FT_ULong )
-  ftc_cmap_node_weight( FTC_CMapNode  cnode )
+  ftc_cmap_node_weight( FTC_Node   cnode,
+                        FTC_Cache  cache )
   {
     FT_UNUSED( cnode );
+    FT_UNUSED( cache );
 
     return sizeof ( *cnode );
   }
@@ -148,9 +153,15 @@
 
   /* compare a cmap node to a given query */
   FT_CALLBACK_DEF( FT_Bool )
-  ftc_cmap_node_compare( FTC_CMapNode   node,
-                         FTC_CMapQuery  query )
+  ftc_cmap_node_compare( FTC_Node    ftcnode,
+                         FT_Pointer  ftcquery,
+                         FTC_Cache   cache )
   {
+    FTC_CMapNode   node  = (FTC_CMapNode)ftcnode;
+    FTC_CMapQuery  query = (FTC_CMapQuery)ftcquery;
+    FT_UNUSED( cache );
+
+
     if ( node->face_id    == query->face_id    &&
          node->cmap_index == query->cmap_index )
     {
@@ -165,9 +176,14 @@
 
 
   FT_CALLBACK_DEF( FT_Bool )
-  ftc_cmap_node_remove_faceid( FTC_CMapNode  node,
-                               FTC_FaceID    face_id )
+  ftc_cmap_node_remove_faceid( FTC_Node    ftcnode,
+                               FT_Pointer  ftcface_id,
+                               FTC_Cache   cache )
   {
+    FTC_CMapNode  node    = (FTC_CMapNode)ftcnode;
+    FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
+    FT_UNUSED( cache );
+
     return FT_BOOL( node->face_id == face_id );
   }
 
@@ -184,19 +200,19 @@
   FT_CALLBACK_TABLE_DEF
   const FTC_CacheClassRec  ftc_cmap_cache_class =
   {
-    (FTC_Node_NewFunc)    ftc_cmap_node_new,
-    (FTC_Node_WeightFunc) ftc_cmap_node_weight,
-    (FTC_Node_CompareFunc)ftc_cmap_node_compare,
-    (FTC_Node_CompareFunc)ftc_cmap_node_remove_faceid,
-    (FTC_Node_FreeFunc)   ftc_cmap_node_free,
+    ftc_cmap_node_new,
+    ftc_cmap_node_weight,
+    ftc_cmap_node_compare,
+    ftc_cmap_node_remove_faceid,
+    ftc_cmap_node_free,
 
     sizeof ( FTC_CacheRec ),
-    (FTC_Cache_InitFunc)  ftc_cache_init,
-    (FTC_Cache_DoneFunc)  ftc_cache_done,
+    ftc_cache_init,
+    ftc_cache_done,
   };
 
 
-  /* documentation is in ftccmap.h */
+  /* documentation is in ftcache.h */
 
   FT_EXPORT_DEF( FT_Error )
   FTC_CMapCache_New( FTC_Manager     manager,
@@ -208,7 +224,7 @@
   }
 
 
-  /* documentation is in ftccmap.h */
+  /* documentation is in ftcache.h */
 
   FT_EXPORT_DEF( FT_UInt )
   FTC_CMapCache_Lookup( FTC_CMapCache  cmap_cache,

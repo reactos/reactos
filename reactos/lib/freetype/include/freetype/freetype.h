@@ -44,7 +44,7 @@
   /*                                                                       */
 #define FREETYPE_MAJOR 2
 #define FREETYPE_MINOR 1
-#define FREETYPE_PATCH 8
+#define FREETYPE_PATCH 9
 
 
 #include <ft2build.h>
@@ -172,6 +172,7 @@ FT_BEGIN_HEADER
   /*    FT_CharMapRec                                                      */
   /*    FT_Select_Charmap                                                  */
   /*    FT_Set_Charmap                                                     */
+  /*    FT_Get_Charmap_Index                                               */
   /*                                                                       */
   /*************************************************************************/
 
@@ -188,34 +189,42 @@ FT_BEGIN_HEADER
   /*    instead.                                                           */
   /*                                                                       */
   /* <Fields>                                                              */
-  /*    width        :: The glyph's width.                                 */
+  /*    width ::                                                           */
+  /*      The glyph's width.                                               */
   /*                                                                       */
-  /*    height       :: The glyph's height.                                */
+  /*    height ::                                                          */
+  /*      The glyph's height.                                              */
   /*                                                                       */
-  /*    horiBearingX :: Horizontal left side bearing.                      */
+  /*    horiBearingX ::                                                    */
+  /*      Left side bearing for horizontal layout.                         */
   /*                                                                       */
-  /*    horiBearingY :: Horizontal top side bearing.                       */
+  /*    horiBearingY ::                                                    */
+  /*      Top side bearing for horizontal layout.                          */
   /*                                                                       */
-  /*    horiAdvance  :: Horizontal advance width.                          */
+  /*    horiAdvance ::                                                     */
+  /*      Advance width for horizontal layout.                             */
   /*                                                                       */
-  /*    vertBearingX :: Vertical left side bearing.                        */
+  /*    vertBearingX ::                                                    */
+  /*      Left side bearing for vertical layout.                           */
   /*                                                                       */
-  /*    vertBearingY :: Vertical top side bearing.                         */
+  /*    vertBearingY ::                                                    */
+  /*      Top side bearing for vertical layout.                            */
   /*                                                                       */
-  /*    vertAdvance  :: Vertical advance height.                           */
+  /*    vertAdvance ::                                                     */
+  /*      Advance height for vertical layout.                              */
   /*                                                                       */
   typedef struct  FT_Glyph_Metrics_
   {
-    FT_Pos  width;         /* glyph width  */
-    FT_Pos  height;        /* glyph height */
+    FT_Pos  width;
+    FT_Pos  height;
 
-    FT_Pos  horiBearingX;  /* left side bearing in horizontal layouts */
-    FT_Pos  horiBearingY;  /* top side bearing in horizontal layouts  */
-    FT_Pos  horiAdvance;   /* advance width for horizontal layout     */
+    FT_Pos  horiBearingX;
+    FT_Pos  horiBearingY;
+    FT_Pos  horiAdvance;
 
-    FT_Pos  vertBearingX;  /* left side bearing in vertical layouts */
-    FT_Pos  vertBearingY;  /* top side bearing in vertical layouts  */
-    FT_Pos  vertAdvance;   /* advance height for vertical layout    */
+    FT_Pos  vertBearingX;
+    FT_Pos  vertBearingY;
+    FT_Pos  vertAdvance;
 
   } FT_Glyph_Metrics;
 
@@ -249,6 +258,7 @@ FT_BEGIN_HEADER
   /*    x_ppem :: The horizontal ppem value (in 26.6 fractional format).   */
   /*                                                                       */
   /*    y_ppem :: The vertical ppem value (in 26.6 fractional format).     */
+  /*              Usually, this is the `nominal' pixel height of the font. */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The values in this structure are taken from the bitmap font.  If   */
@@ -262,10 +272,10 @@ FT_BEGIN_HEADER
   /*    where `size' is in points.                                         */
   /*                                                                       */
   /*    Windows FNT:                                                       */
-  /*      The `size', `x_ppem', and `y_ppem' parameters are not reliable:  */
-  /*      There exist fonts (e.g. app850.fon) which have a wrong size for  */
-  /*      some subfonts; since FNT files don't contain ppem but dpi values */
-  /*      the computed x_ppem and y_ppem numbers are thus wrong also.      */
+  /*      The `size' parameter is not reliable: There exist fonts (e.g.,   */
+  /*      app850.fon) which have a wrong size for some subfonts; x_ppem    */
+  /*      and y_ppem are thus set equal to pixel width and height given in */
+  /*      in the Windows FNT header.                                       */
   /*                                                                       */
   /*    TrueType embedded bitmaps:                                         */
   /*      `size', `width', and `height' values are not contained in the    */
@@ -1459,6 +1469,14 @@ FT_BEGIN_HEADER
   /*                         Note that the app will need to know about the */
   /*                         image format.                                 */
   /*                                                                       */
+  /*    lsb_delta         :: The difference between hinted and unhinted    */
+  /*                         left side bearing while autohinting is        */
+  /*                         active.  Zero otherwise.                      */
+  /*                                                                       */
+  /*    rsb_delta         :: The difference between hinted and unhinted    */
+  /*                         right side bearing while autohinting is       */
+  /*                         active.  Zero otherwise.                      */
+  /*                                                                       */
   /* <Note>                                                                */
   /*    If @FT_Load_Glyph is called with default flags (see                */
   /*    @FT_LOAD_DEFAULT) the glyph image is loaded in the glyph slot in   */
@@ -1477,6 +1495,34 @@ FT_BEGIN_HEADER
   /*    to specify the position of the bitmap relative to the current pen  */
   /*    position (e.g. coordinates [0,0] on the baseline).  Of course,     */
   /*    `slot->format' is also changed to `FT_GLYPH_FORMAT_BITMAP' .       */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    Here a small pseudo code fragment which shows how to use           */
+  /*    `lsb_delta' and `rsb_delta':                                       */
+  /*                                                                       */
+  /*    {                                                                  */
+  /*      FT_Pos  origin_x       = 0;                                      */
+  /*      FT_Pos  prev_rsb_delta = 0;                                      */
+  /*                                                                       */
+  /*                                                                       */
+  /*      for all glyphs do                                                */
+  /*        <compute kern between current and previous glyph and add it to */
+  /*         `origin_x'>                                                   */
+  /*                                                                       */
+  /*        <load glyph with `FT_Load_Glyph'>                              */
+  /*                                                                       */
+  /*        if ( prev_rsb_delta - face->glyph->lsb_delta >= 32 )           */
+  /*          origin_x -= 64;                                              */
+  /*        else if ( prev_rsb_delta - face->glyph->lsb_delta < -32 )      */
+  /*          origin_x += 64;                                              */
+  /*                                                                       */
+  /*        prev_rsb_delta = face->glyph->rsb_delta;                       */
+  /*                                                                       */
+  /*        <save glyph image, or render glyph, or ...>                    */
+  /*                                                                       */
+  /*        origin_x += face->glyph->advance.x;                            */
+  /*      endfor                                                           */
+  /*    }                                                                  */
   /*                                                                       */
   typedef struct  FT_GlyphSlotRec_
   {
@@ -1504,6 +1550,9 @@ FT_BEGIN_HEADER
 
     void*             control_data;
     long              control_len;
+
+    FT_Pos            lsb_delta;
+    FT_Pos            rsb_delta;
 
     void*             other;
 
@@ -2670,6 +2719,25 @@ FT_BEGIN_HEADER
   FT_EXPORT( FT_Error )
   FT_Set_Charmap( FT_Face     face,
                   FT_CharMap  charmap );
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* @function:                                                            */
+  /*    FT_Get_Charmap_Index                                               */
+  /*                                                                       */
+  /* @description:                                                         */
+  /*    Retrieve index of a given charmap.                                 */
+  /*                                                                       */
+  /* @input:                                                               */
+  /*    charmap :: A handle to a charmap.                                  */
+  /*                                                                       */
+  /* @return:                                                              */
+  /*    The index into the array of character maps within the face to      */
+  /*    which `charmap' belongs.                                           */
+  /*                                                                       */
+  FT_EXPORT( FT_Int )
+  FT_Get_Charmap_Index( FT_CharMap  charmap );
 
 
   /*************************************************************************/

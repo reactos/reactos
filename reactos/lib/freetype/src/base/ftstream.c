@@ -210,7 +210,7 @@
       FT_Memory  memory = stream->memory;
 
 
-      if ( FT_ALLOC( stream->base, count ) )
+      if ( FT_QALLOC( stream->base, count ) )
         goto Exit;
 
       /* read it */

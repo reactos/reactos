@@ -55,7 +55,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*   This section describes the FreeType 2 cache sub-system which is     */
-  /*   stile in beta.                                                      */
+  /*   still in beta.                                                      */
   /*                                                                       */
   /* <Order>                                                               */
   /*   FTC_Manager                                                         */
@@ -63,11 +63,13 @@ FT_BEGIN_HEADER
   /*   FTC_Face_Requester                                                  */
   /*                                                                       */
   /*   FTC_Manager_New                                                     */
+  /*   FTC_Manager_Reset                                                   */
+  /*   FTC_Manager_Done                                                    */
   /*   FTC_Manager_LookupFace                                              */
   /*   FTC_Manager_LookupSize                                              */
+  /*   FTC_Manager_RemoveFaceID                                            */
   /*                                                                       */
   /*   FTC_Node                                                            */
-  /*   FTC_Node_Ref                                                        */
   /*   FTC_Node_Unref                                                      */
   /*                                                                       */
   /*   FTC_Font                                                            */
@@ -79,6 +81,10 @@ FT_BEGIN_HEADER
   /*   FTC_SBitCache                                                       */
   /*   FTC_SBitCache_New                                                   */
   /*   FTC_SBitCache_Lookup                                                */
+  /*                                                                       */
+  /*   FTC_CMapCache                                                       */
+  /*   FTC_CMapCache_New                                                   */
+  /*   FTC_CMapCache_Lookup                                                */
   /*                                                                       */
   /*                                                                       */
   /*   FTC_Image_Desc                                                      */
@@ -502,11 +508,6 @@ FT_BEGIN_HEADER
                      FTC_CMapCache  *acache );
 
 
-  /* retrieve the index of a given charmap */
-  FT_EXPORT( FT_Int )
-  FT_Get_CharMap_Index( FT_CharMap  charmap );
-
-
   /*************************************************************************/
   /*                                                                       */
   /* @function:                                                            */
@@ -519,9 +520,9 @@ FT_BEGIN_HEADER
   /* @input:                                                               */
   /*    cache      :: A charmap cache handle.                              */
   /*                                                                       */
-  /*    face_id    :: source face id                                       */
+  /*    face_id    :: The source face ID.                                  */
   /*                                                                       */
-  /*    cmap_index :: index of charmap in source face                      */
+  /*    cmap_index :: The index of the charmap in the source face.         */
   /*                                                                       */
   /*    char_code  :: The character code (in the corresponding charmap).   */
   /*                                                                       */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 driver interface (body).                                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -129,9 +129,11 @@
 #ifndef T1_CONFIG_OPTION_NO_MM_SUPPORT
   static const FT_Service_MultiMastersRec  t1_service_multi_masters =
   {
-    (FT_Get_MM_Func)       T1_Get_Multi_Master,
-    (FT_Set_MM_Design_Func)T1_Set_MM_Design,
-    (FT_Set_MM_Blend_Func) T1_Set_MM_Blend
+    (FT_Get_MM_Func)        T1_Get_Multi_Master,
+    (FT_Set_MM_Design_Func) T1_Set_MM_Design,
+    (FT_Set_MM_Blend_Func)  T1_Set_MM_Blend,
+    (FT_Get_MM_Var_Func)    T1_Get_MM_Var,
+    (FT_Set_Var_Design_Func)T1_Set_Var_Design
   };
 #endif
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -39,30 +39,32 @@
   /*************************************************************************/
 
   FT_LOCAL_DEF( void )
-  pfr_face_done( PFR_Face  face )
+  pfr_face_done( FT_Face  pfrface )     /* PFR_Face */
   {
-    FT_Memory  memory = face->root.driver->root.memory;
+    PFR_Face   face   = (PFR_Face)pfrface;
+    FT_Memory  memory = pfrface->driver->root.memory;
 
 
     /* we don't want dangling pointers */
-    face->root.family_name = NULL;
-    face->root.style_name  = NULL;
+    pfrface->family_name = NULL;
+    pfrface->style_name  = NULL;
     
     /* finalize the physical font record */
     pfr_phy_font_done( &face->phy_font, FT_FACE_MEMORY( face ) );
 
     /* no need to finalize the logical font or the header */
-    FT_FREE( face->root.available_sizes );
+    FT_FREE( pfrface->available_sizes );
   }
 
 
   FT_LOCAL_DEF( FT_Error )
   pfr_face_init( FT_Stream      stream,
-                 PFR_Face       face,
+                 FT_Face        pfrface,
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
+    PFR_Face  face = (PFR_Face)pfrface;
     FT_Error  error;
 
     FT_UNUSED( num_params );
@@ -92,13 +94,13 @@
       if ( error )
         goto Exit;
 
-      face->root.num_faces = num_faces;
+      pfrface->num_faces = num_faces;
     }
 
     if ( face_index < 0 )
       goto Exit;
 
-    if ( face_index >= face->root.num_faces )
+    if ( face_index >= pfrface->num_faces )
     {
       FT_ERROR(( "pfr_face_init: invalid face index\n" ));
       error = PFR_Err_Invalid_Argument;
@@ -122,75 +124,74 @@
 
     /* now, set-up all root face fields */
     {
-      FT_Face      root     = FT_FACE( face );
       PFR_PhyFont  phy_font = &face->phy_font;
 
 
-      root->face_index = face_index;
-      root->num_glyphs = phy_font->num_chars;
-      root->face_flags = FT_FACE_FLAG_SCALABLE;
+      pfrface->face_index = face_index;
+      pfrface->num_glyphs = phy_font->num_chars;
+      pfrface->face_flags = FT_FACE_FLAG_SCALABLE;
 
       if ( (phy_font->flags & PFR_PHY_PROPORTIONAL) == 0 )
-        root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
+        pfrface->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
       if ( phy_font->flags & PFR_PHY_VERTICAL )
-        root->face_flags |= FT_FACE_FLAG_VERTICAL;
+        pfrface->face_flags |= FT_FACE_FLAG_VERTICAL;
       else
-        root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
+        pfrface->face_flags |= FT_FACE_FLAG_HORIZONTAL;
 
       if ( phy_font->num_strikes > 0 )
-        root->face_flags |= FT_FACE_FLAG_FIXED_SIZES;
+        pfrface->face_flags |= FT_FACE_FLAG_FIXED_SIZES;
 
       if ( phy_font->num_kern_pairs > 0 )
-        root->face_flags |= FT_FACE_FLAG_KERNING;
+        pfrface->face_flags |= FT_FACE_FLAG_KERNING;
 
       /* If no family name was found in the "undocumented" auxiliary
        * data, use the font ID instead.  This sucks but is better than
        * nothing.
        */
-      root->family_name = phy_font->family_name;
-      if ( root->family_name == NULL )
-        root->family_name = phy_font->font_id;
+      pfrface->family_name = phy_font->family_name;
+      if ( pfrface->family_name == NULL )
+        pfrface->family_name = phy_font->font_id;
 
       /* note that the style name can be NULL in certain PFR fonts,
        * probably meaning "Regular"
        */
-      root->style_name = phy_font->style_name;
+      pfrface->style_name = phy_font->style_name;
 
-      root->num_fixed_sizes = 0;
-      root->available_sizes = 0;
+      pfrface->num_fixed_sizes = 0;
+      pfrface->available_sizes = 0;
 
-      root->bbox         = phy_font->bbox;
-      root->units_per_EM = (FT_UShort)phy_font->outline_resolution;
-      root->ascender     = (FT_Short) phy_font->bbox.yMax;
-      root->descender    = (FT_Short) phy_font->bbox.yMin;
-      root->height       = (FT_Short)(
-        ( ( root->ascender - root->descender ) * 12 ) / 10 );
+      pfrface->bbox         = phy_font->bbox;
+      pfrface->units_per_EM = (FT_UShort)phy_font->outline_resolution;
+      pfrface->ascender     = (FT_Short) phy_font->bbox.yMax;
+      pfrface->descender    = (FT_Short) phy_font->bbox.yMin;
+      pfrface->height       = (FT_Short)(
+        ( ( pfrface->ascender - pfrface->descender ) * 12 ) / 10 );
 
       if ( phy_font->num_strikes > 0 )
       {
         FT_UInt          n, count = phy_font->num_strikes;
         FT_Bitmap_Size*  size;
         PFR_Strike       strike;
-        FT_Memory        memory = root->stream->memory;
+        FT_Memory        memory = pfrface->stream->memory;
          
          
-        if ( FT_NEW_ARRAY( root->available_sizes, count ) )
+        if ( FT_NEW_ARRAY( pfrface->available_sizes, count ) )
           goto Exit;
          
-        size   = root->available_sizes;
+        size   = pfrface->available_sizes;
         strike = phy_font->strikes;
         for ( n = 0; n < count; n++, size++, strike++ )
         {
           size->height = (FT_UShort)strike->y_ppm;
           size->width  = (FT_UShort)strike->x_ppm;
         }
-        root->num_fixed_sizes = count;
+        pfrface->num_fixed_sizes = count;
       }
 
       /* now compute maximum advance width */
       if ( ( phy_font->flags & PFR_PHY_PROPORTIONAL ) == 0 )
-        root->max_advance_width = (FT_Short)phy_font->standard_advance;
+        pfrface->max_advance_width = (FT_Short)phy_font->standard_advance;
       else
       {
         FT_Int    max = 0;
@@ -204,20 +205,20 @@
             max = gchar->advance;
         }
 
-        root->max_advance_width = (FT_Short)max;
+        pfrface->max_advance_width = (FT_Short)max;
       }
 
-      root->max_advance_height = root->height;
+      pfrface->max_advance_height = pfrface->height;
 
-      root->underline_position  = (FT_Short)( - root->units_per_EM / 10 );
-      root->underline_thickness = (FT_Short)(   root->units_per_EM / 30 );
+      pfrface->underline_position  = (FT_Short)( -pfrface->units_per_EM / 10 );
+      pfrface->underline_thickness = (FT_Short)(  pfrface->units_per_EM / 30 );
 
       /* create charmap */
       {
         FT_CharMapRec  charmap;
 
 
-        charmap.face        = root;
+        charmap.face        = pfrface;
         charmap.platform_id = 3;
         charmap.encoding_id = 1;
         charmap.encoding    = FT_ENCODING_UNICODE;
@@ -226,14 +227,14 @@
 
 #if 0
         /* Select default charmap */
-        if (root->num_charmaps)
-          root->charmap = root->charmaps[0];
+        if ( pfrface->num_charmaps )
+          pfrface->charmap = pfrface->charmaps[0];
 #endif
       }
 
       /* check whether we've loaded any kerning pairs */
       if ( phy_font->num_kern_pairs )
-        root->face_flags |= FT_FACE_FLAG_KERNING;
+        pfrface->face_flags |= FT_FACE_FLAG_KERNING;
     }
 
   Exit:
@@ -250,9 +251,11 @@
   /*************************************************************************/
 
   FT_LOCAL_DEF( FT_Error )
-  pfr_slot_init( PFR_Slot  slot )
+  pfr_slot_init( FT_GlyphSlot  pfrslot )        /* PFR_Slot */
   {
-    FT_GlyphLoader  loader = slot->root.internal->loader;
+    PFR_Slot        slot   = (PFR_Slot)pfrslot;
+    FT_GlyphLoader  loader = pfrslot->internal->loader;
+
 
     pfr_glyph_init( &slot->glyph, loader );
 
@@ -261,22 +264,27 @@
 
 
   FT_LOCAL_DEF( void )
-  pfr_slot_done( PFR_Slot  slot )
+  pfr_slot_done( FT_GlyphSlot  pfrslot )        /* PFR_Slot */
   {
+    PFR_Slot  slot = (PFR_Slot)pfrslot;
+
+
     pfr_glyph_done( &slot->glyph );
   }
 
 
   FT_LOCAL_DEF( FT_Error )
-  pfr_slot_load( PFR_Slot  slot,
-                 PFR_Size  size,
-                 FT_UInt   gindex,
-                 FT_Int32  load_flags )
+  pfr_slot_load( FT_GlyphSlot  pfrslot,         /* PFR_Slot */
+                 FT_Size       pfrsize,         /* PFR_Size */
+                 FT_UInt       gindex,
+                 FT_Int32      load_flags )
   {
+    PFR_Slot     slot    = (PFR_Slot)pfrslot;
+    PFR_Size     size    = (PFR_Size)pfrsize;
     FT_Error     error;
-    PFR_Face     face    = (PFR_Face)slot->root.face;
+    PFR_Face     face    = (PFR_Face)pfrslot->face;
     PFR_Char     gchar;
-    FT_Outline*  outline = &slot->root.outline;
+    FT_Outline*  outline = &pfrslot->outline;
     FT_ULong     gps_offset;
 
 
@@ -301,7 +309,7 @@
     }
 
     gchar               = face->phy_font.chars + gindex;
-    slot->root.format   = FT_GLYPH_FORMAT_OUTLINE;
+    pfrslot->format     = FT_GLYPH_FORMAT_OUTLINE;
     outline->n_points   = 0;
     outline->n_contours = 0;
     gps_offset          = face->header.gps_section_offset;
@@ -313,7 +321,7 @@
     if ( !error )
     {
       FT_BBox            cbox;
-      FT_Glyph_Metrics*  metrics = &slot->root.metrics;
+      FT_Glyph_Metrics*  metrics = &pfrslot->metrics;
       FT_Pos             advance;
       FT_Int             em_metrics, em_outline;
       FT_Bool            scaling;
@@ -327,7 +335,7 @@
       outline->flags &= ~FT_OUTLINE_OWNER;
       outline->flags |= FT_OUTLINE_REVERSE_FILL;
 
-      if ( size && size->root.metrics.y_ppem < 24 )
+      if ( size && pfrsize->metrics.y_ppem < 24 )
         outline->flags |= FT_OUTLINE_HIGH_PRECISION;
 
       /* compute the advance vector */
@@ -346,8 +354,8 @@
       else
         metrics->horiAdvance = advance;
 
-      slot->root.linearHoriAdvance = metrics->horiAdvance;
-      slot->root.linearVertAdvance = metrics->vertAdvance;
+      pfrslot->linearHoriAdvance = metrics->horiAdvance;
+      pfrslot->linearVertAdvance = metrics->vertAdvance;
 
       /* make-up vertical metrics(?) */
       metrics->vertBearingX = 0;
@@ -372,8 +380,8 @@
       if ( scaling )
       {
         FT_Int      n;
-        FT_Fixed    x_scale = size->root.metrics.x_scale;
-        FT_Fixed    y_scale = size->root.metrics.y_scale;
+        FT_Fixed    x_scale = pfrsize->metrics.x_scale;
+        FT_Fixed    y_scale = pfrsize->metrics.y_scale;
         FT_Vector*  vec     = outline->points;
 
 
@@ -411,19 +419,18 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  FT_LOCAL_DEF( void )
-  pfr_face_get_kerning( PFR_Face    face,
+  FT_LOCAL_DEF( FT_Error )
+  pfr_face_get_kerning( FT_Face     pfrface,        /* PFR_Face */
                         FT_UInt     glyph1,
                         FT_UInt     glyph2,
                         FT_Vector*  kerning )
   {
+    PFR_Face      face     = (PFR_Face)pfrface;
     FT_Error      error    = PFR_Err_Ok;
     PFR_PhyFont   phy_font = &face->phy_font;
     PFR_KernPair  pairs    = phy_font->kern_pairs;
     FT_UInt32     idx      = PFR_KERN_INDEX( glyph1, glyph2 );
     FT_UInt       min, max;
-
-    FT_UNUSED( error ); /* just needed as syntactical sugar */
 
 
     kerning->x = 0;
@@ -450,6 +457,8 @@
       else
         max = mid;
     }
+
+    return error;
   }
 
 

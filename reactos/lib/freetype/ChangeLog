@@ -1,14 +1,601 @@
-2004-04-21  David Turner    <david@freetype.org>
+2004-06-23  Werner Lemberg  <wl@gnu.org>
 
-        * src/cff/cffobjs.c (cff_face_init): fixed a small memory leak
+	* include/freetype/internal/ftmemory.h [FT_DEBUG_MEMORY]: Declare
+	FT_QAlloc_Debug and FT_QRealloc_Debug.
 
-        * src/autofit/afloader.c, src/autofit/afmodule.c, src/base/ftdebug.c:
-        removed compiler warnings
+	* src/base/ftutil.c (FT_QAlloc): Fix error and debug messages.
+	(FT_QRealloc): Call FT_QAlloc if original pointer is NULL.
+	Fix error message.
 
-        * src/autofit/aftypes.h, src/lzw/zopen.c, src/pcf/pcfdrivr.c,
-        src/pcf/pcfread.c, src/psaux/psobjs.c, src/type42/t42drivr.c:
-        changed data arrays to "const" to avoid populating the ".data"
-        segment
+2004-06-23  David Turner  <david@freetype.org>
+
+	* include/freetype/internal/ftmemory.h, src/base/ftutil.c
+	(FT_QAlloc, FT_QRealloc), src/base/ftdbgmem.c (FT_QAlloc_Debug,
+	FT_QRealloc_Debug): New functions that perform allocation without
+	zero-ing out the corresponding blocks.
+
+	* include/freetype/internal/ftmemory.h (FT_MEM_QALLOC,
+	FT_MEM_QREALLOC, FT_MEM_QNEW, FT_MEM_QNEW_ARRAY,
+	FT_MEM_QRENEW_ARRAY, FT_QALLOC, FT_QREALLOC, FT_QNEW, FT_QNEW_ARRAY,
+	FT_QRENEW_ARRAY): New macros.
+
+	* src/base/ftstream.c (FT_Stream_EnterFrame): Use FT_QALLOC.
+	* src/gzip/ftgzip.c (FT_Stream_OpenGzip):  Use FT_QNEW_ARRAY.
+	* src/sfnt/sfobjs.c (tt_face_get_name): Use FT_QNEW_ARRAY.
+
+	* src/sfnt/ttload.c (tt_face_load_directory, tt_face_load_metrics,
+	tt_face_load_gasp): Use FT_QNEW_ARRAY.
+	(tt_face_load_kern): Use FT_QNEW_ARRAY.
+	Small optimization in the kerning table verifier; this speeds up
+	TrueType face opening by about 7%.
+	(tt_face_load_hdmx): Use FT_QNEW_ARRAY and FT_QALLOC.
+
+	* include/freetype/config/ftmodule.h: Changed the order of modules,
+	putting TrueType and Type 1 first.  This dramatically improves the
+	performance of face open/close operations.  For example, putting the
+	TrueType driver first in the list results in a 5x speedup when
+	opening `Vera.ttf'.
+
+	The very problem is that both the PCF and BDF drivers do a lot more
+	than necessary to detect that they cannot handle a font file.
+
+2004-06-22  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfread.c (pcf_read_TOC, pcf_get_properties,
+	pcf_get_metrics, pcf_get_bitmaps, pcf_get_encodings): Improve
+	debugging messages.
+
+	* src/pcf/pcfdrivr.c (FT_COMPOMENT): Move up.
+	(PCF_Face_Init): Simplify code.
+
+	* src/bdf/bdfdrivr.h (BDF_FaceRec): New element `default_glyph'.
+
+	* src/bdf/bdflib.c (_bdf_add_property, _bdf_parse_start),
+	src/bdf/bdf.h (bdf_font_t): s/default_glyph/default_char/.
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Init): Fix number of glyphs.
+	Set `default_glyph'.
+	(BDF_Glyph_Load): Use `default_glyph' for undefined glyph.
+
+	* docs/CHANGES: Updated.
+
+2004-06-21  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2004-06-21  David Turner  <david@freetype.org>
+
+	* src/truetype/ttgload.c (TT_Process_Simple_Glyph,
+	load_truetype_glyph): Don't access (unrounded)
+	`TT_Size.root.metrics' but (rounded) `TT_Size.metrics'.  This fixes
+	a scaling bug that caused incorrect rendering when the bytecode
+	interpreter was enabled.
+
+2004-06-14  Huw D M Davies  <h.davies1@physics.ox.ac.uk>
+
+	* src/winfonts/winfnt.c (FNT_Face_Init): Set x_ppem and y_ppem
+	based on pixel_width and pixel_height.
+	(FNT_Size_Set_Pixels): Updated.
+
+2004-06-14  Werner Lemberg  <wl@gnu.org>
+
+	* src/lzw/zopen.c: Comment out inclusion of signal.h and unistd.h.
+	Reported by Hyvärinen Jyrki Juhani.
+
+2004-06-11  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2004-06-10  David Turner  <david@freetype.org>
+
+	* src/base/ftobject.c, src/base/fthash.c, src/base/ftexcept.c,
+	src/base/ftsysio.c, src/base/ftsysmem.c, src/base/ftlist.c: Removed.
+	Obsolete.
+
+	* src/raster/ftraster.c (Alignment, PAlignment): New union to fix
+	problems with 64bit systems.
+	(AlignProfileSize): Use it.
+
+2004-06-08  David Turner  <david@freetype.org>
+
+	* include/freetype/freetype.h (FT_GlyphMetrics): Move `lsb_delta'
+	and `rsb_delta' elements to...
+	(FT_GlyphSlotRec): Here to retain binary compatibility with older
+	FreeType versions.
+	Update all users.
+
+	* src/sfnt/sfobjs.c (tt_face_get_name): Remove compiler warning.
+
+	* src/winfonts/winfnt.c (FNT_Load_Glyph): Add missing initialization
+	of slot->metrics.width and slot->metrics.height when loading a
+	Windows FNT glyph.  Thanks to Huw Davies.
+
+	* include/freetype/cache/ftcmru.h (FTC_MruNode_CompareFunc): Change
+	return type to FT_Bool.
+
+	* src/cache/ftbasic.c (ftc_basic_family_compare): Change return
+	type to FT_Bool.
+
+	* src/cache/ftccache.c (FTC_Cache_Init, ftc_cache_init): Make
+	the former call the latter, not vice versa.
+	(FTC_Cache_Done, ftc_cache_done): Ditto.
+
+	* src/cache/ftcglyph.c (FTC_GNode_Compare, ftc_gnode_compare): Make
+	the former call the latter, not vice versa.
+	(FTC_GCache_Init, ftc_gcache_init): Ditto.
+	(FTC_GCache_Done, ftc_gcache_done): Ditto.
+
+	* src/cache/ftcimage.c (FTC_INode_Free, ftc_inode_free): Make the
+	former call the latter, not vice versa.
+	(FTC_INode_Weight, ftc_inode_weight): Ditto.
+
+	* src/cache/ftcmanag.c (ftc_size_node_compare,
+	ftc_size_node_compare_faceid, ftc_face_node_compare): Change return
+	type to FT_Bool.
+
+	* src/cache/ftcsbits.c (FTC_SNode_Free, ftc_snode_free): Make the
+	former call the latter, not vice versa.
+	(FTC_SNode_Weight, ftc_snode_weight): Ditto.
+	(FTC_SNode_Compare, ftc_snode_compare): Ditto.
+
+	* src/cache/ftcsbits.c: Fix some bugs and inefficiencies in the cache
+	sub-system.
+
+2004-06-05  Werner Lemberg  <wl@gnu.org>
+
+	* src/autofit/afloader.c (af_loader_load_g): Set `lsb_delta' and
+	`rsb_delta' in slot->metrics and tune side bearings slightly.
+
+2004-06-04  Werner Lemberg  <wl@gnu.org>
+
+	* docs/CHANGES: Updated.
+
+2004-06-04  David Chester  <davidchester@gmx.net>
+
+	Improve inter-letter spacing for autohinted glyphs.
+
+	* include/freetype/freetype.h (FT_Glyph_Metrics): Add elements
+	`lsb_delta' and `rsb_delta'.
+
+	* src/autohint/ahhint.c (ah_hinter_load): Set `lsb_delta' and
+	`rsb_delta' in slot->metrics and tune side bearings slightly.
+
+2004-06-04  David Turner  <david@freetype.org>
+
+	* src/autofit/*: Important fixes to the auto-fitter.  The output
+	now seems to be 100% equivalent to the auto-hinter, while being
+	about 2% faster (which proves that script-specific algorithm
+	selection isn't a performance problem).
+
+	To test it, change `autohint' to `autofit' in
+	<freetype/config/ftmodule.h> and recompile.
+
+	A few more testing is needed before making this the official
+	auto-hinting module.
+
+2004-06-02  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/ttgload.c (compute_glyph_metrics): Fix compiler
+	warnings.
+
+2004-06-01  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfobjs.c (tt_face_get_name): Make sure that an English
+	name record for the Apple platform is preferred to a non-English
+	entry for the Microsoft platform.  Problem reported by HANDA
+	Ken'ichi.
+
+2004-05-19  George Williams  <gww@silcom.com>
+
+	* src/type1/t1load.c (mm_axis_unmap, mm_weights_unmap): New
+	auxiliary functions.
+	(T1_Get_MM_Var): Provide axis tags.
+	Use mm_axis_unmap and mm_weights_unmap to provide default values
+	for design and normalized axis coordinates.
+
+	* include/freetype/t1tables.h (PS_DesignMapRec): Change type of
+	`design_points' to FT_Long.
+	Update all users.
+
+2004-05-17  Werner Lemberg  <wl@gnu.org>
+
+	* src/base/ftbbox.c (BBox_Conic_Check): Fix boundary cases.
+	Reported by Mikey Anbary <manbary@vizrt.com>.
+
+2004-05-15  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/sfobjs.c (sfnt_done_face): Free face->postscript_name.
+
+2004-05-15  George Williams  <gww@silcom.com>
+
+	* src/sfnt/ttload.c (tt_face_load_max_profile): Always set
+	face->root.num_glyphs.
+
+2004-05-14  Masatake YAMATO  <jet@gyve.org>
+	    George Williams  <gww@silcom.com>
+
+	* src/sfnt/ttload.c (sfnt_dir_check): Handle `bhed' properly.
+
+2004-05-14  Werner Lemberg  <wl@gnu.org>
+
+	* src/cache/ftcbasic.c (ftc_basic_family_compare,
+	ftc_basic_family_init, ftc_basic_family_get_count,
+	ftc_basic_family_load_bitmap, ftc_basic_family_load_glyph,
+	ftc_basic_gnode_compare_faceid): Adjust parameters and return types
+	to prototypes given in header files from include/freetype/cache.
+	Use casts to proper types locally.
+	(ftc_basic_image_family_class, ftc_basic_image_cache_class,
+	ftc_basic_sbit_family_class, ftc_basic_sbit_cache_class): Remove
+	casts.
+
+	* src/cache/ftccback.h: Adjust parameters and return types to
+	prototypes given in header files from include/freetype/cache.
+
+	* src/cache/ftcimage.c (ftc_inode_free, ftc_inode_new,
+	ftc_inode_weight): Adjust parameters and return types to prototypes
+	given in header files from include/freetype/cache.  Use casts to
+	proper types locally.
+
+	* src/cache/ftcsbits.c (ftc_snode_free, ftc_snode_new,
+	ftc_snode_weight, ftc_snode_compare): Adjust parameters and return
+	types to prototypes given in header files from
+	include/freetype/cache.  Use casts to proper types locally.
+
+	* src/cache/ftccmap.c (ftc_cmap_node_free, ftc_cmap_node_new,
+	ftc_cmap_node_weight, ftc_cmap_node_compare,
+	ftc_cmap_node_remove_faceid): Adjust parameters and return types to
+	prototypes given in header files from include/freetype/cache.  Use
+	casts to proper types locally.
+	(ftc_cmap_cache_class): Remove casts.
+
+	* src/cache/ftcglyph.c (ftc_gnode_compare, ftc_gcache_init,
+	ftc_gcache_done): Adjust parameters and return types to prototypes
+	given in header files from include/freetype/cache.  Use casts to
+	proper types locally.
+
+	* src/cache/ftcmanag.c (ftc_size_node_done, ftc_size_node_compare,
+	ftc_size_node_init, ftc_size_node_reset,
+	ftc_size_node_compare_faceid, ftc_face_node_init,
+	ftc_face_node_done, ftc_face_node_compare: Adjust parameters and
+	return types to prototypes given in header files from
+	include/freetype/cache.  Use casts to proper types locally.
+
+	(ftc_size_list_class, ftc_face_list_class): Remove casts.
+
+2004-05-13  Werner Lemberg  <wl@gnu.org>
+
+	* src/autohint/ahmodule.c (ft_autohinter_init, ft_autohinter_done):
+	Use FT_Module as parameter and do a cast to FT_AutoHinter locally.
+	(autohint_module_class): Remove casts.
+
+	* src/base/ftglyph.c (ft_bitmap_glyph_init, ft_bitmap_glyph_copy,
+	ft_bitmap_glyph_done, ft_bitmap_glyph_bbox, ft_outline_glyph_init,
+	ft_outline_glyph_done, ft_outline_glyph_copy,
+	ft_outline_glyph_transform, ft_outline_glyph_bbox,
+	ft_outline_glyph_prepare): Use FT_Glyph as parameter and do a cast
+	to FT_XXXGlyph locally.
+	Use FT_CALLBACK_DEF throughout.
+	(ft_bitmap_glyph_class, ft_outline_glyph_class): Remove casts.
+
+	* src/bdf/bdfdrivr.c (bdf_cmap_init, bdf_cmap_done,
+	bdf_cmap_char_index, bdf_cmap_char_next): Use FT_CMap as parameter
+	and do a cast to BDF_CMap locally.
+	(bdf_cmap_class): Remove casts.
+
+2004-05-12  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffgload.h (CFF_Builder): Remove `error'.
+	* src/cff/cffgload.c (cff_decoder_parse_charstrings): Replace
+	`Memory_Error' with `Fail' und update all users.
+
+2004-05-11  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/internal/psaux.h (T1_ParseState): New
+	enumeration.
+	(T1_BuilderRec): Replace `path_begun' with `parse_state'.
+	Remove `error'.
+	* src/psaux/t1decode.c (t1_decoder_parse_charstrings): Replace
+	`Memory_Error' with `Fail' and update all users.
+	Don't use `builder->error'.
+	Replace `path_begun' with `parse_state' and check parsing states.
+
+	* src/psaux/psobjs.c (t1_builder_init, t1_builder_start_point):
+	Replace `path_begun' with `parse_state' and check parsing states.
+
+2004-05-10  George Williams  <gww@silcom.com>
+
+	* src/truetype/ttxgvar.c (ft_var_load_avar): Do free arrays in case
+	of error -- `avar' is optional so we can't rely on tt_done_blend
+	being called automatically.
+
+2004-05-09  George Williams  <gww@silcom.com>
+
+	* src/truetype/ttxgvar.c (ft_var_load_avar, ft_var_load_gvar): Fix
+	error handling.
+
+2004-05-07  Werner Lemberg  <wl@gnu.org>
+
+	* src/pfr/pfrobjs.c, src/pfr/pfrobjs.h (pfr_face_init,
+	pfr_face_done, pfr_face_get_kerning, pfr_slot_init, pfr_slot_done,
+	pfr_slot_load): Don't use PFR_XXX but FT_XXX arguments which are
+	typecast to the proper PFR_XXX types within the function.
+	Update code accordingly.
+
+	* src/pfr/pfrdrivr.c (pfr_get_kerning, pfr_get_advance,
+	pfr_get_metrics, pfr_get_service): Don't use PFR_XXX but FT_XXX
+	arguments which are typecast to the proper PFR_XXX types within the
+	function.
+	Update code accordingly.
+	Use FT_CALLBACK_DEF throughout.
+	(pfr_metrics_service_rec, pfr_driver_class): Remove casts.
+
+2004-05-06  Masatake YAMATO  <jet@gyve.org>
+
+	* src/truetype/ttgxvar.c (ft_var_load_gvar): Use FT_FACE_STREAM.
+	(*): Rename local variable OffsetToData to offsetToData.
+
+2004-05-06  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffobjs.c (cff_size_done, cff_size_init, cff_size_reset,
+	cff_slot_done, cff_slot_init, cff_face_init, cff_face_done): Access
+	root fields directly.
+	* src/cff/cffdrivr.c (Load_Glyph): Access root fields directly.
+
+	* src/truetype/ttgload.c (TT_Process_Simple_Glyph): Save current
+	frame before calling TT_Vary_Get_Glyph_Deltas.
+
+	* src/pcf/pcfdrivr.c (PCF_CMapRec): Rename `cmap' to `root' for
+	consistency.
+	(pcf_cmap_init, pcf_cmap_done, pcf_cmap_char_index,
+	pcf_cmap_char_next): Don't use PCF_XXX but FT_XXX arguments which
+	are typecast to the proper PCF_XXX types within the function.
+	Update code accordingly.
+	(pcf_cmap_class): Remove casts.
+	(PCF_Face_Done, PCF_Face_Init, PCF_Set_Pixel_Size): Don't use
+	PCF_XXX but FT_XXX arguments which are typecast to the proper
+	PCF_XXX types within the function.
+	Update code accordingly.
+	Use FT_CALLBACK_DEF throughout.
+	(PCF_Set_Point_Size): New wrapper function.
+	(PCF_Glyph_Load, pcf_driver_requester): Use FT_CALLBACK_DEF.
+	(pcf_driver_class): Remove casts.
+
+2004-05-04  Steve Hartwell  <shspamsink@comcast.net>
+
+	* src/truetype/ttobjs.c (tt_driver_done): Fix typo.
+
+2004-05-04  Werner Lemberg  <wl@gnu.org>
+
+	* src/bdf/bdfdrivr.c (BDF_Face_Done, BDF_Face_Init,
+	BDF_Set_Pixel_Size): Don't use BDF_XXX but FT_XXX arguments which
+	are typecast to the proper BDF_XXX types within the function.
+	Update code accordingly.
+	Use FT_CALLBACK_DEF throughout.
+	(BDF_Set_Point_Size): New wrapper function.
+	(bdf_driver_class): Remove casts.
+
+	* src/cff/cffdrivr.c (Get_Kerning, Load_Glyph, cff_get_interface):
+	Don't use CFF_XXX but FT_XXX arguments which are typecast to the
+	proper CFF_XXX types within the function.
+	Update code accordingly.
+	Use FT_CALLBACK_DEF throughout.
+	(cff_driver_class): Remove casts.
+
+	* src/cff/cffobjs.h, src/cff/cffobjs.c (cff_size_done,
+	cff_size_init, cff_size_reset, cff_slot_done, cff_slot_init,
+	cff_face_init, cff_face_done, cff_driver_init, cff_driver_done):
+	Don't use CFF_XXX but FT_XXX arguments which are typecast to the
+	proper CFF_XXX types within the function.
+	Update code accordingly.
+	(cff_point_size_reset): New wrapper function.
+
+	* src/cid/cidobjs.h, src/cid/cidobjs.c (cid_slot_done,
+	cid_slot_init, cid_size_done, cid_size_init, cid_size_reset,
+	cid_face_done, cid_face_init, cid_driver_init, cid_driver_done):
+	Don't use CID_XXX but FT_XXX arguments which are typecast to the
+	proper CID_XXX types within the function.
+	Update code accordingly.
+	(cid_point_size_reset): New wrapper function.
+
+	* src/cid/cidgload.c, src/cid/cidgload.h (cid_slot_load_glyph):
+	Don't use CID_XXX but FT_XXX arguments which are typecast to the
+	proper CID_XXX types within the function.
+	Update code accordingly.
+
+	* src/cid/cidriver.c (cid_get_interface):
+	Don't use CID_XXX but FT_XXX arguments which are typecast to the
+	proper CID_XXX types within the function.
+	Update code accordingly.
+	Use FT_CALLBACK_DEF.
+	(t1cid_driver_class): Remove casts.
+
+	* src/truetype/ttdriver.c (tt_get_interface): Use FT_CALLBACK_DEF.
+	* src/truetype/ttgxvar.c (ft_var_load_avar): Don't free non-local
+	variables (this is done later).
+	(ft_var_load_avar): Fix call to FT_FRAME_ENTER.
+	(TT_Get_MM_Var): Fix size for `fvar_fields'.
+	(TT_Vary_Get_Glyph_Deltas): Handle deallocation of local variables
+	correctly.
+
+	* src/base/ftdbgmem.c (ft_mem_debug_realloc): Don't abort if
+	current size is zero.
+
+2004-05-03  Steve Hartwell  <shspamsink@comcast.net>
+
+	* src/truetype/ttobjs.h, src/truetype/ttobjs.c (tt_face_init,
+	tt_face_done, tt_size_init, tt_size_done, tt_driver_init,
+	tt_driver_done): Don't use TT_XXX but FT_XXX arguments which are
+	typecast to the proper TT_XXX types within the function.
+	Update code accordingly.
+
+	* src/truetype/ttdriver.c (Get_Kerning, Set_Char_Sizes,
+	Set_Pixel_Sizes, Load_Glyph, tt_get_interface): Don't use TT_XXX but
+	FT_XXX arguments which are typecast to the proper TT_XXX types
+	within the function.
+	Update code accordingly.
+	(tt_driver_class): Remove casts.
+
+2004-05-02  Werner Lemberg  <wl@gnu.org>
+
+	* src/sfnt/ttload.c (tt_face_free_names): Check that `table->names'
+	is not NULL.  Reported by Gordon Childs <gchilds@quickcut.com.au>.
+
+2004-04-29  Werner Lemberg  <wl@gnu.org>
+
+	* docs/formats.txt: Add more information on PFR format.
+
+2004-04-28  Werner Lemberg  <wl@gnu.org>
+
+	* docs/formats.txt: New file.
+	* docs/CHANGES: Updated.
+
+2004-04-28  Masatake YAMATO  <jet@gyve.org>
+
+	* include/freetype/internal/tttypes.h (GX_BlendRec_)
+	[TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Fix a typo.
+
+	* src/truetype/ttgxvar.h (GX_BlendRec_): Fix a typo.
+
+2004-04-27  Masatake YAMATO  <jet@gyve.org>
+
+	* src/truetype/ttgxvar.h: Use FT_LOCAL instead of FT_LOCAL_DEF
+	for function declarations.
+
+2004-04-25  George Williams  <gww@silcom.com>
+
+	* src/truetype/ttgxvar.c (ft_var_apply_tuple): Fix typo.
+
+2004-04-25  Werner Lemberg  <wl@gnu.org>
+
+	* src/truetype/Jamfile, docs/CHANGES: Updated.
+
+2004-04-24  Werner Lemberg  <wl@gnu.org>
+
+	* src/pcf/pcfdrivr.c: Revert change from 2004-04-17.
+	* src/pcf/pcfutil.c: Use FT_LOCAL_DEF.
+	* src/pcf/pcfutil.h: Include FT_CONFIG_CONFIG_H.
+	Use FT_BEGIN_HEADER and FT_END_HEADER.
+	Use FT_LOCAL.
+
+2004-04-24  George Williams  <gww@silcom.com>
+
+	Add support for Apple's distortable font technology (in GX fonts).
+
+	* devel/ftoption.h, include/freetype/config/ftoption.h
+	(TT_CONFIG_OPTION_GX_VAR_SUPPORT): New macro.
+
+	* include/freetype/ftmm.h (FT_Var_Axis, FT_Var_Named_Style,
+	FT_MM_Var): New structures.
+	(FT_Get_MM_Var, FT_Set_Var_Design_Coordinates,
+	FT_Set_Var_Blend_Coordinates): New function declarations.
+
+	* include/freetype/internal/services/svmm.h (FT_Get_MM_Var_Func,
+	FT_Set_Var_Design_Func): New typedefs.
+	Update MultiMasters service.
+
+	* include/freetype/internal/tttypes.h
+	[TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include FT_MULTIPLE_MASTERS_H.
+	(GX_Blend) [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: New typedef.
+	(TT_Face) [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: New members `doblend'
+	and `blend'.
+
+	* include/freetype/tttags.h (TTAG_avar, TTAG_cvar, TTAG_gvar): New
+	macros.
+
+	* include/freetype/internal/fttrace.h: Add `ttgxvar'.
+
+	* src/base/ftmm.c (FT_Get_MM_Var, FT_Set_Var_Design_Coordinates,
+	FT_Set_Var_Blend_Coordinates): New functions.
+
+	* src/sfnt/sfobjs.c (sfnt_load_face)
+	[TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Set FT_FACE_FLAG_MULTIPLE_MASTERS
+	flag for GX var fonts.
+
+	* src/truetype/ttgxvar.c, src/truetype/ttgxvar.h: New files.
+
+	* src/truetype/truetype.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
+	ttgxvar.c.
+
+	* src/truetype/ttdriver.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
+	FT_MULTIPLE_MASTERS_H, FT_SERVICE_MULTIPLE_MASTERS_H, and ttgxvar.h.
+	(tt_service_gx_multi_masters) [TT_CONFIG_OPTION_GX_VAR_SUPPORT]:
+	New service.
+	(tt_services) [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Updated.
+
+	* src/truetype/ttgload.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
+	ttgxvar.h.
+	(TT_Process_Simple_Glyph, load_truetype_glyph)
+	[TT_CONFIG_OPTION_GX_VAR_SUPPORT] :Support GX var fonts.
+
+	* src/truetype/ttobjs.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
+	ttgxvar.h.
+	(tt_done_face) [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Call
+	tt_done_blend.
+
+	* src/truetype/ttpload.c [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Include
+	ttgxvar.h.
+	(tt_face_load_cvt)  [TT_CONFIG_OPTION_GX_VAR_SUPPORT]: Call
+	tt_face_vary_cvt.
+
+	* src/truetype/rules.mk (TT_DRV_SRC): Add ttgxvar.c.
+
+	* src/type1/t1driver.c (t1_service_multi_masters): Add T1_Get_MM_Var
+	and T1_Set_Var_Design.
+
+	* src/type1/t1load.c (FT_INT_TO_FIXED, FT_FIXED_TO_INT): New macros.
+	(T1_Get_MM_Var, T1_Set_Var_Design): New functions.
+
+	* src/type1/t1load.h (T1_Get_MM_Var, T1_Set_Var_Design): New
+	function declarations.
+
+2004-04-23  Werner Lemberg  <wl@gnu.org>
+
+	* include/freetype/ftcache.h (FT_Get_CharMap_Index): Rename
+	declaration and move to...
+	* include/freetype/freetype.h (FT_Get_Charmap_Index): Here.
+	(FREETYPE_PATCH): Set to 9.
+
+	* src/base/ftobjs.c (FT_Get_Charmap_Index): New function.
+
+	* builds/unix/configure.ac (version_info): Set to 9:7:3.
+	* builds/unix/configure: Updated.
+
+	* builds/win32/visualc/index.html,
+	builds/win32/visualc/freetype.dsp,
+	builds/win32/visualc/freetype.vcproj: s/218/219/.
+
+	* builds/freetype.mk (refdoc), README, Jamfile (RefDoc):
+	s/2.1.8/2.1.9/.
+
+	* docs/CHANGES, docs/VERSION.DLL: Updated.
+
+2004-04-21  Werner Lemberg  <wl@gnu.org>
+
+	* src/cff/cffparse.c (cff_parser_run), src/psaux/psobjs.c
+	(ps_parser_load_field): Use FT_CHAR_BIT.
+
+2004-04-21  David Turner  <david@freetype.org>
+
+
+	* Version 2.1.8 released.
+	=========================
+
+
+	* src/cff/cffobjs.c (cff_face_init): Fix a small memory leak.
+
+	* src/autofit/afloader.c (af_loader_load_g), src/autofit/afmodule.c
+	(af_autofitter_load_glyph), src/base/ftdebug.c (FT_Trace_Get_Name):
+	Remove compiler warnings.
+
+	* src/autofit/aftypes.h: Undefine AF_DEBUG.
+
+	* src/lzw/zopen.c (rmask), src/pcf/pcfdrivr.c (pcf_service_bdf,
+	pcf_services), src/pcf/pcfread.c (tableNames), src/psaux/psobjs.c
+	(ft_char_table), src/type42/t42drivr.c (t42_service_glyph_dict,
+	t42_service_ps_font_name): Decorate data arrays with `const' to
+	avoid populating the `.data' segment.
+
+	* src/lzw/Jamfile: New file.
 
 2004-04-20  Werner Lemberg  <wl@gnu.org>
 
@@ -32,7 +619,7 @@
 	* src/bdf/bdfdrivr.c (BDF_Face_Init): Use `ft_strlen'.
 
 	* src/pcf/pcfutil.c, src/pcf/pcfutil.h: Decorate functions with
-	`static.'.
+	`static'.
 	Remove unused function `RepadBitmap'.
 	* src/pcf/pcfdrivr.c: Don't include pcfutil.h.
 
@@ -150,8 +737,8 @@
 	Handle broken FNT files which don't have a trailing NULL byte
 	in the face name string.
 
-	* src/winfnt/winfnt.h (FNT_FontRec): New member `family_name'.
-	* src/winfnt/winfnt.c (fnt_font_done): Free font->family_name.
+	* src/winfonts/winfnt.h (FNT_FontRec): New member `family_name'.
+	* src/winfonts/winfnt.c (fnt_font_done): Free font->family_name.
 	(FNT_Face_Init): Append a final zero byte to the font face name.
 
 2004-03-30  Werner Lemberg  <wl@gnu.org>
@@ -1237,7 +1824,7 @@
 	(FT_Load_Glyph): Update computation of linearHoriAdvance and
 	linearVertAdvance.
 
-	* src/true/type/ttinterp.c (Update_Max): Use FT_REALLOC.
+	* src/truetype/ttinterp.c (Update_Max): Use FT_REALLOC.
 
 2003-11-22  David Turner  <david@freetype.org>
 
@@ -6941,7 +7528,7 @@
 	(tt_driver_class): Add it.
 	* src/type1/t1driver.c (Get_Next_Char): New function.
 	(t1_driver_class): Add it.
-	* src/winfnt/winfnt.c (FNT_Get_Next_Char): New function.
+	* src/winfonts/winfnt.c (FNT_Get_Next_Char): New function.
 	(winfnt_driver_class): Add it.
 
 	* src/pcf/pcfread.c (pcf_load_font): For now, report Unicode for

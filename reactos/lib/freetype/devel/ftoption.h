@@ -484,6 +484,16 @@ FT_BEGIN_HEADER
 
 
   /*************************************************************************/
+  /*                                                                       */
+  /* Define TT_CONFIG_OPTION_GX_VAR_SUPPORT if you want to include         */
+  /* support for Apple's distortable font technology (fvar, gvar, cvar,    */
+  /* and avar tables).  This has many similarities to Type 1 Multiple      */
+  /* Masters support.                                                      */
+  /*                                                                       */
+#define TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+
+  /*************************************************************************/
   /*************************************************************************/
   /****                                                                 ****/
   /****      T Y P E 1   D R I V E R    C O N F I G U R A T I O N       ****/

@@ -10,11 +10,11 @@
 
     switch (dir)
     {
-     case AF_DIR_UP: result = "up"; break;
-     case AF_DIR_DOWN: result = "down"; break;
-     case AF_DIR_LEFT: result = "left"; break;
+     case AF_DIR_UP:    result = "up";    break;
+     case AF_DIR_DOWN:  result = "down";  break;
+     case AF_DIR_LEFT:  result = "left";  break;
      case AF_DIR_RIGHT: result = "right"; break;
-     default: result = "none";
+     default:           result = "none";
     }
     return result;
   }
@@ -111,7 +111,7 @@
 
       for ( edge = edges; edge < limit; edge++ )
       {
-        printf ( "  [ %5d | %4d | %5s | %4d | %5d |  %c  | %5.2f | %5.2f ]\n",
+        printf ( "  [ %5d | %4d | %5s | %4d | %5d |   %c  | %5.2f | %5.2f ]\n",
                  edge - edges,
                  (int)edge->fpos,
                  af_dir_str( edge->dir ),
@@ -314,26 +314,29 @@
 
 
 
+  FT_LOCAL_DEF( void )
+  af_glyph_hints_rescale( AF_GlyphHints     hints,
+                          AF_ScriptMetrics  metrics )
+  {
+    hints->metrics = metrics;
+  }
+
+
   FT_LOCAL_DEF( FT_Error )
-  af_glyph_hints_reset( AF_GlyphHints     hints,
-                        AF_Scaler         scaler,
-                        AF_ScriptMetrics  metrics,
-                        FT_Outline*       outline )
+  af_glyph_hints_reload( AF_GlyphHints     hints,
+                         FT_Outline*       outline )
   {
     FT_Error     error        = FT_Err_Ok;
     AF_Point     points;
     FT_UInt      old_max, new_max;
-    FT_Fixed     x_scale = scaler->x_scale;
-    FT_Fixed     y_scale = scaler->y_scale;
-    FT_Pos       x_delta = scaler->x_delta;
-    FT_Pos       y_delta = scaler->y_delta;
+    AF_Scaler    scaler  = &hints->metrics->scaler;
+    FT_Fixed     x_scale = hints->x_scale;
+    FT_Fixed     y_scale = hints->y_scale;
+    FT_Pos       x_delta = hints->x_delta;
+    FT_Pos       y_delta = hints->y_delta;
     FT_Memory    memory  = hints->memory;
 
-    hints->metrics = metrics;
-
-    hints->scaler_flags = scaler->flags;
-    hints->other_flags  = 0;
-
+    hints->scaler_flags  = scaler->flags;
     hints->num_points    = 0;
     hints->num_contours  = 0;
 

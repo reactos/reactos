@@ -1,4 +1,51 @@
 
+LATEST CHANGES BETWEEN 2.1.9 and 2.1.8
+
+  I. IMPORTANT BUG FIXES
+
+    - The function  `FT_Get_CharMap_Index' was only declared,  without
+      any  real  code.   For  consistency,  it  has  been  renamed  to
+      `FT_Get_Charmap_Index'.   (This function is needed  to implement
+      cmap caches.)
+
+    - `FT_Outline_Get_BBox'  sometimes returned  incorrect values  for
+      conic outlines (e.g., for TrueType fonts).
+
+    - Handling of `bhed' table has been fixed.
+
+    - The TrueType driver with enabled byte code interpreter sometimes
+      returned artifacts due to incorrect rounding.  This bug has been
+      introduced after version 2.1.4.
+
+    - The BDF driver dropped the last glyph in the font.
+
+    - The BDF driver now uses the DEFAULT_CHAR property (if available)
+      to select a glyph shape for the undefined glyph.
+
+
+  II. IMPORTANT CHANGES
+
+    - George  Williams   contributed  code  to   handle  Apple's  font
+      distortion technology found in GX fonts (`avar', `cvar', `fvar',
+      and `gvar' tables;  the Multiple Masters  API has been  slightly
+      extended to cope with the new functionality).
+
+    - The `FT_GlyphSlotRec' structure has been extended:  The elements
+      `lsb_delta' and  `rsb_delta' give the difference  between hinted
+      and  unhinted  left and right  side bearings  if autohinting  is
+      active.  Using those values can improve the inter-letter spacing
+      considerably.   See the documentation of  `FT_GlyphSlotRec'  and
+      the `ftstring' demo program how to use it.
+
+
+  III. MISCELLANEOUS
+
+    - A new  documentation file  `formats.txt' describes various  font
+      formats supported (and not supported) by FreeType.
+
+
+======================================================================
+
 LATEST CHANGES BETWEEN 2.1.8 and 2.1.7
 
   I. IMPORTANT BUG FIXES

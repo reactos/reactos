@@ -148,7 +148,7 @@ if $(DEBUG_HINTER)
 
 actions RefDoc
 {
-  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.8 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
+  python $(FT2_SRC)/tools/docmaker/docmaker.py --prefix=ft2 --title=FreeType-2.1.9 --output=$(DOC_DIR)  $(FT2_INCLUDE)/freetype/*.h  $(FT2_INCLUDE)/freetype/config/*.h  $(FT2_INCLUDE)/freetype/cache/*.h
 }
 
 RefDoc  refdoc ;

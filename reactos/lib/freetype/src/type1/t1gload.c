@@ -60,7 +60,7 @@
   {
     T1_Face   face  = (T1_Face)decoder->builder.face;
     T1_Font   type1 = &face->type1;
-    FT_Error  error = 0;
+    FT_Error  error = T1_Err_Ok;
 
 
     decoder->font_matrix = type1->font_matrix;

@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002, 2003 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2003, 2004 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -202,7 +202,7 @@ FT_BEGIN_HEADER
 
     unsigned short   monowidth;      /* Logical width for monowidth font.   */
 
-    long             default_glyph;  /* Encoding of the default glyph.      */
+    long             default_char;   /* Encoding of the default glyph.      */
 
     long             font_ascent;    /* Font ascent.                        */
     long             font_descent;   /* Font descent.                       */

@@ -113,19 +113,28 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  cff_size_init( CFF_Size  size );
+  cff_size_init( FT_Size  size );           /* CFF_Size */
 
   FT_LOCAL( void )
-  cff_size_done( CFF_Size  size );
+  cff_size_done( FT_Size  size );           /* CFF_Size */
 
   FT_LOCAL( FT_Error )
-  cff_size_reset( CFF_Size  size );
+  cff_size_reset( FT_Size  size,            /* CFF_Size */
+                  FT_UInt  char_width,
+                  FT_UInt  char_height );
+
+  FT_LOCAL( FT_Error )
+  cff_point_size_reset( FT_Size     cffsize,
+                        FT_F26Dot6  char_width,
+                        FT_F26Dot6  char_height,
+                        FT_UInt     horz_resolution,
+                        FT_UInt     vert_resolution );
 
   FT_LOCAL( void )
-  cff_slot_done( CFF_GlyphSlot  slot );
+  cff_slot_done( FT_GlyphSlot  slot );
 
   FT_LOCAL( FT_Error )
-  cff_slot_init( CFF_GlyphSlot   slot );
+  cff_slot_init( FT_GlyphSlot  slot );
 
 
   /*************************************************************************/
@@ -134,13 +143,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_LOCAL( FT_Error )
   cff_face_init( FT_Stream      stream,
-                 CFF_Face       face,
+                 FT_Face        face,           /* CFF_Face */
                  FT_Int         face_index,
                  FT_Int         num_params,
                  FT_Parameter*  params );
 
   FT_LOCAL( void )
-  cff_face_done( CFF_Face  face );
+  cff_face_done( FT_Face  face );               /* CFF_Face */
 
 
   /*************************************************************************/
@@ -148,10 +157,10 @@ FT_BEGIN_HEADER
   /* Driver functions                                                      */
   /*                                                                       */
   FT_LOCAL( FT_Error )
-  cff_driver_init( CFF_Driver  driver );
+  cff_driver_init( FT_Module  module );
 
   FT_LOCAL( void )
-  cff_driver_done( CFF_Driver  driver );
+  cff_driver_done( FT_Module  module );
 
 
 FT_END_HEADER

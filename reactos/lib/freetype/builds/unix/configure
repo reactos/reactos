@@ -1720,7 +1720,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='9:6:3'
+version_info='9:7:3'
 
 ft_version=`echo $version_info | tr : .`
 

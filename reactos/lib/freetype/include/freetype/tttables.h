@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -516,12 +516,11 @@ FT_BEGIN_HEADER
   /*    maxSizeOfInstructions :: The maximum number of TrueType opcodes    */
   /*                             used for glyph hinting.                   */
   /*                                                                       */
-  /*    maxComponentElements  :: An obscure value related to composite     */
-  /*                             glyphs definitions.                       */
+  /*    maxComponentElements  :: The maximum number of simple (i.e., non-  */
+  /*                             composite) glyphs in a composite glyph.   */
   /*                                                                       */
-  /*    maxComponentDepth     :: An obscure value related to composite     */
-  /*                             glyphs definitions.  Probably the maximum */
-  /*                             number of simple glyphs in a composite.   */
+  /*    maxComponentDepth     :: The maximum nesting depth of composite    */
+  /*                             glyphs.                                   */
   /*                                                                       */
   /* <Note>                                                                */
   /*    This structure is only used during font loading.                   */

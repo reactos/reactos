@@ -214,11 +214,13 @@ FT_BEGIN_HEADER
  /*  recomputes all AF_Point in a AF_GlyphHints from the definitions
   *  in a source outline
   */
+  FT_LOCAL( void )
+  af_glyph_hints_rescale( AF_GlyphHints     hints,
+                          AF_ScriptMetrics  metrics );
+
   FT_LOCAL( FT_Error )
-  af_glyph_hints_reset( AF_GlyphHints     hints,
-                        AF_Scaler         scaler,
-                        AF_ScriptMetrics  metrics,
-                        FT_Outline*       outline );
+  af_glyph_hints_reload( AF_GlyphHints     hints,
+                         FT_Outline*       outline );
 
   FT_LOCAL( void )
   af_glyph_hints_save( AF_GlyphHints   hints,

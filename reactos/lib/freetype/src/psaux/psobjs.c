@@ -285,7 +285,7 @@
 #if 'A' == 65
   /* ASCII */
 
-  static const char ft_char_table[128] =
+  static const char  ft_char_table[128] =
   {
     /* 0x00 */
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -306,7 +306,7 @@
 #if 'A' == 193
   /* EBCDIC */
 
-  static const char ft_char_table[128] =
+  static const char  ft_char_table[128] =
   {
     /* 0x80 */
     -1, 10, 11, 12, 13, 14, 15, 16, 17, 18, -1, -1, -1, -1, -1, -1,
@@ -1255,15 +1255,15 @@
       Store_Integer:
         switch ( field->size )
         {
-        case 1:
+        case (8 / FT_CHAR_BIT):
           *(FT_Byte*)q = (FT_Byte)val;
           break;
 
-        case 2:
+        case (16 / FT_CHAR_BIT):
           *(FT_UShort*)q = (FT_UShort)val;
           break;
 
-        case 4:
+        case (32 / FT_CHAR_BIT):
           *(FT_UInt32*)q = (FT_UInt32)val;
           break;
 
@@ -1543,7 +1543,7 @@
                    FT_GlyphSlot  glyph,
                    FT_Bool       hinting )
   {
-    builder->path_begun  = 0;
+    builder->parse_state = T1_Parse_Start;
     builder->load_points = 1;
 
     builder->face   = face;
@@ -1700,17 +1700,21 @@
                           FT_Pos      x,
                           FT_Pos      y )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PSaux_Err_Invalid_File_Format;
 
 
     /* test whether we are building a new contour */
-    if ( !builder->path_begun )
+
+    if ( builder->parse_state == T1_Parse_Have_Path )
+      error = PSaux_Err_Ok;
+    else if ( builder->parse_state == T1_Parse_Have_Moveto )
     {
-      builder->path_begun = 1;
+      builder->parse_state = T1_Parse_Have_Path;
       error = t1_builder_add_contour( builder );
       if ( !error )
         error = t1_builder_add_point1( builder, x, y );
     }
+
     return error;
   }
 

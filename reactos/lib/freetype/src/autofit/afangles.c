@@ -1,8 +1,57 @@
 #include "aftypes.h"
 
+/*
+ * a python script used to generate the following table
+ *
+
+import sys, math
+
+units  = 256
+scale  = units/math.pi
+comma  = ""
+
+print ""
+print "table of arctan( 1/2^n ) for PI = " + repr(units/65536.0) + " units"
+
+r = [-1] + range(32)
+
+for n in r:
+
+    if n >= 0:
+        x = 1.0/(2.0**n)    # tangent value
+    else:
+        x = 2.0**(-n)
+
+    angle  = math.atan(x)    # arctangent
+    angle2 = angle*scale     # arctangent in FT_Angle units
+
+    # determine which integer value for angle gives the best tangent
+    lo  = int(angle2)
+    hi  = lo + 1
+    tlo = math.tan(lo/scale)
+    thi = math.tan(hi/scale)
+
+    errlo = abs( tlo - x )
+    errhi = abs( thi - x )
+
+    angle2 = hi
+    if errlo < errhi:
+        angle2 = lo
+
+    if angle2 <= 0:
+        break
+
+    sys.stdout.write( comma + repr( int(angle2) ) )
+    comma = ", "
+
+*
+* end of python script
+*/
+
+
   /* this table was generated for AF_ANGLE_PI = 256 */
 #define AF_ANGLE_MAX_ITERS  8
-#define AF_TRIG_MAX_ITERS   9
+#define AF_TRIG_MAX_ITERS   8
 
   static const FT_Fixed
   af_angle_arctan_table[9] =
@@ -69,7 +118,7 @@
     {
       x = -x;
       y = -y;
-      theta = 2 * AF_ANGLE_PI2;
+      theta = AF_ANGLE_PI;
     }
 
     if ( y > 0 )
@@ -115,11 +164,13 @@
       }
     } while ( ++i < AF_TRIG_MAX_ITERS );
 
+#if 0
     /* round theta */
     if ( theta >= 0 )
-      theta = FT_PAD_ROUND( theta, 4 );
+      theta =   FT_PAD_ROUND( theta, 2 );
     else
-      theta = - FT_PAD_ROUND( theta, 4 );
+      theta = - FT_PAD_ROUND( -theta, 2 );
+#endif
 
     vec->x = x;
     vec->y = theta;
@@ -212,3 +263,40 @@
       }
     }
   }
+
+
+#ifdef TEST
+#include <stdio.h>
+#include <math.h>
+
+int main( void )
+{
+  int  angle;
+  int  dist;
+
+  for ( dist = 100; dist < 1000; dist++ )
+  {
+    for ( angle = AF_ANGLE_PI; angle < AF_ANGLE_2PI*4; angle++ )
+    {
+      double a = (angle*3.1415926535)/(1.0*AF_ANGLE_PI);
+      int    dx, dy, angle1, angle2, delta;
+
+      dx = dist * cos(a);
+      dy = dist * sin(a);
+
+      angle1  = ((atan2(dy,dx)*AF_ANGLE_PI)/3.1415926535);
+      angle2  = af_angle_atan( dx, dy );
+      delta   = (angle2 - angle1) % AF_ANGLE_2PI;
+      if ( delta < 0 )
+        delta = -delta;
+
+      if ( delta >= 2 )
+      {
+        printf( "dist:%4d angle:%4d => (%4d,%4d) angle1:%4d angle2:%4d\n",
+                dist, angle, dx, dy, angle1, angle2 );
+      }
+    }
+  }
+  return 0;
+}
+#endif

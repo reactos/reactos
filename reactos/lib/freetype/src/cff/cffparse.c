@@ -590,19 +590,19 @@
             Store_Number:
               switch ( field->size )
               {
-              case 1:
+              case (8 / FT_CHAR_BIT):
                 *(FT_Byte*)q = (FT_Byte)val;
                 break;
 
-              case 2:
+              case (16 / FT_CHAR_BIT):
                 *(FT_Short*)q = (FT_Short)val;
                 break;
 
-              case 4:
+              case (32 / FT_CHAR_BIT):
                 *(FT_Int32*)q = (FT_Int)val;
                 break;
 
-              default:  /* for 64-bit systems where long is 8 bytes */
+              default:  /* for 64-bit systems */
                 *(FT_Long*)q = val;
               }
               break;
@@ -627,15 +627,15 @@
                   val += cff_parse_num( data++ );
                   switch ( field->size )
                   {
-                  case 1:
+                  case (8 / FT_CHAR_BIT):
                     *(FT_Byte*)q = (FT_Byte)val;
                     break;
 
-                  case 2:
+                  case (16 / FT_CHAR_BIT):
                     *(FT_Short*)q = (FT_Short)val;
                     break;
 
-                  case 4:
+                  case (32 / FT_CHAR_BIT):
                     *(FT_Int32*)q = (FT_Int)val;
                     break;
 

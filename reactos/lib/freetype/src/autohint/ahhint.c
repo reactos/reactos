@@ -1542,7 +1542,7 @@
       /* width/positioning that occured during the hinting process  */
       if ( outline->num_vedges > 0 )
       {
-        FT_Pos   old_advance, old_rsb, old_lsb, new_lsb;
+        FT_Pos   old_advance, old_rsb, old_lsb, new_lsb, pp1x_uh, pp2x_uh;
         AH_Edge  edge1 = outline->vert_edges;     /* leftmost edge  */
         AH_Edge  edge2 = edge1 +
                          outline->num_vedges - 1; /* rightmost edge */
@@ -1553,8 +1553,24 @@
         old_lsb     = edge1->opos;
         new_lsb     = edge1->pos;
 
-        hinter->pp1.x = FT_PIX_ROUND( new_lsb    - old_lsb );
-        hinter->pp2.x = FT_PIX_ROUND( edge2->pos + old_rsb );
+        /* remember unhinted values to later account for rounding errors */
+
+        pp1x_uh = new_lsb    - old_lsb;
+        pp2x_uh = edge2->pos + old_rsb;
+
+        /* prefer too much space over too little space for very small sizes */
+
+        if ( old_lsb < 24 )
+          pp1x_uh -= 5;
+
+        if ( old_rsb < 24 )
+          pp2x_uh += 5;
+
+        hinter->pp1.x = FT_PIX_ROUND( pp1x_uh );
+        hinter->pp2.x = FT_PIX_ROUND( pp2x_uh );
+
+        slot->lsb_delta = hinter->pp1.x - pp1x_uh;
+        slot->rsb_delta = hinter->pp2.x - pp2x_uh;
 
 #if 0
         /* try to fix certain bad advance computations */

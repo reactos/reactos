@@ -254,7 +254,7 @@ library: $(PROJECT_LIBRARY)
 refdoc:
 	python $(SRC_DIR)/tools/docmaker/docmaker.py \
                --prefix=ft2                          \
-               --title=FreeType-2.1.8                \
+               --title=FreeType-2.1.9                \
                --output=$(DOC_DIR)                   \
                $(PUBLIC_DIR)/*.h                     \
                $(PUBLIC_DIR)/config/*.h              \

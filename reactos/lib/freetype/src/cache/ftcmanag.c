@@ -79,9 +79,12 @@
 
 
   FT_CALLBACK_DEF( void )
-  ftc_size_node_done( FTC_SizeNode  node )
+  ftc_size_node_done( FTC_MruNode  ftcnode,
+                      FT_Pointer   data )
   {
-    FT_Size  size = node->size;
+    FTC_SizeNode  node = (FTC_SizeNode)ftcnode;
+    FT_Size       size = node->size;
+    FT_UNUSED( data );
 
 
     if ( size )
@@ -90,10 +93,12 @@
 
 
   FT_CALLBACK_DEF( FT_Bool )
-  ftc_size_node_compare( FTC_SizeNode  node,
-                         FTC_Scaler    scaler )
+  ftc_size_node_compare( FTC_MruNode  ftcnode,
+                         FT_Pointer   ftcscaler )
   {
-    FTC_Scaler  scaler0 = &node->scaler;
+    FTC_SizeNode  node    = (FTC_SizeNode)ftcnode;
+    FTC_Scaler    scaler  = (FTC_Scaler)ftcscaler;
+    FTC_Scaler    scaler0 = &node->scaler;
 
 
     if ( FTC_SCALER_COMPARE( scaler0, scaler ) )
@@ -106,10 +111,15 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  ftc_size_node_init( FTC_SizeNode  node,
-                      FTC_Scaler    scaler,
-                      FTC_Manager   manager )
+  ftc_size_node_init( FTC_MruNode  ftcnode,
+                      FT_Pointer   ftcscaler,
+                      FT_Pointer   ftcmanager )
   {
+    FTC_SizeNode  node    = (FTC_SizeNode)ftcnode;
+    FTC_Scaler    scaler  = (FTC_Scaler)ftcscaler;
+    FTC_Manager   manager = (FTC_Manager)ftcmanager;
+
+
     node->scaler = scaler[0];
 
     return ftc_scaler_lookup_size( manager, scaler, &node->size );
@@ -117,10 +127,15 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  ftc_size_node_reset( FTC_SizeNode  node,
-                       FTC_Scaler    scaler,
-                       FTC_Manager   manager )
+  ftc_size_node_reset( FTC_MruNode  ftcnode,
+                       FT_Pointer   ftcscaler,
+                       FT_Pointer   ftcmanager )
   {
+    FTC_SizeNode  node    = (FTC_SizeNode)ftcnode;
+    FTC_Scaler    scaler  = (FTC_Scaler)ftcscaler;
+    FTC_Manager   manager = (FTC_Manager)ftcmanager;
+
+
     FT_Done_Size( node->size );
 
     node->scaler = scaler[0];
@@ -132,22 +147,28 @@
   FT_CALLBACK_TABLE_DEF
   const FTC_MruListClassRec  ftc_size_list_class =
   {
-    sizeof( FTC_SizeNodeRec ),
-    (FTC_MruNode_CompareFunc)ftc_size_node_compare,
-    (FTC_MruNode_InitFunc)   ftc_size_node_init,
-    (FTC_MruNode_ResetFunc)  ftc_size_node_reset,
-    (FTC_MruNode_DoneFunc)   ftc_size_node_done
+    sizeof ( FTC_SizeNodeRec ),
+    ftc_size_node_compare,
+    ftc_size_node_init,
+    ftc_size_node_reset,
+    ftc_size_node_done
   };
 
 
   /* helper function used by ftc_face_node_done */
   static FT_Bool
-  ftc_size_node_compare_faceid( FTC_SizeNode  node,
-                                FTC_FaceID    face_id )
+  ftc_size_node_compare_faceid( FTC_MruNode  ftcnode,
+                                FT_Pointer   ftcface_id )
   {
-    return FT_BOOL( node->scaler.face_id == face_id );
+    FTC_SizeNode  node    = (FTC_SizeNode)ftcnode;
+    FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
+
+
+    return node->scaler.face_id == face_id;
   }
 
+
+  /* documentation is in ftcache.h */
 
   FT_EXPORT_DEF( FT_Error )
   FTC_Manager_LookupSize( FTC_Manager  manager,
@@ -200,11 +221,14 @@
 
 
   FT_CALLBACK_DEF( FT_Error )
-  ftc_face_node_init( FTC_FaceNode  node,
-                      FTC_FaceID    face_id,
-                      FTC_Manager   manager )
+  ftc_face_node_init( FTC_MruNode  ftcnode,
+                      FT_Pointer   ftcface_id,
+                      FT_Pointer   ftcmanager )
   {
-    FT_Error  error;
+    FTC_FaceNode  node    = (FTC_FaceNode)ftcnode;
+    FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
+    FTC_Manager   manager = (FTC_Manager)ftcmanager;
+    FT_Error      error;
 
 
     node->face_id = face_id;
@@ -225,15 +249,18 @@
 
 
   FT_CALLBACK_DEF( void )
-  ftc_face_node_done( FTC_FaceNode  node,
-                      FTC_Manager   manager )
+  ftc_face_node_done( FTC_MruNode  ftcnode,
+                      FT_Pointer   ftcmanager )
   {
+    FTC_FaceNode  node    = (FTC_FaceNode)ftcnode;
+    FTC_Manager   manager = (FTC_Manager)ftcmanager;
+
+
     /* we must begin by removing all scalers for the target face */
     /* from the manager's list                                   */
-    FTC_MruList_RemoveSelection(
-      & manager->sizes,
-      (FTC_MruNode_CompareFunc)ftc_size_node_compare_faceid,
-      node->face_id );
+    FTC_MruList_RemoveSelection( &manager->sizes,
+                                 ftc_size_node_compare_faceid,
+                                 node->face_id );
 
     /* all right, we can discard the face now */
     FT_Done_Face( node->face );
@@ -243,9 +270,13 @@
 
 
   FT_CALLBACK_DEF( FT_Bool )
-  ftc_face_node_compare( FTC_FaceNode  node,
-                         FTC_FaceID    face_id )
+  ftc_face_node_compare( FTC_MruNode  ftcnode,
+                         FT_Pointer   ftcface_id )
   {
+    FTC_FaceNode  node    = (FTC_FaceNode)ftcnode;
+    FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
+
+
     return FT_BOOL( node->face_id == face_id );
   }
 
@@ -253,12 +284,12 @@
   FT_CALLBACK_TABLE_DEF
   const FTC_MruListClassRec  ftc_face_list_class =
   {
-    sizeof( FTC_FaceNodeRec),
+    sizeof ( FTC_FaceNodeRec),
 
-    (FTC_MruNode_CompareFunc)ftc_face_node_compare,
-    (FTC_MruNode_InitFunc)   ftc_face_node_init,
-    (FTC_MruNode_ResetFunc)  NULL,
-    (FTC_MruNode_DoneFunc)   ftc_face_node_done
+    ftc_face_node_compare,
+    ftc_face_node_init,
+    0,                          /* FTC_MruNode_ResetFunc */
+    ftc_face_node_done
   };
 
 
@@ -617,6 +648,8 @@
   }
 
 
+  /* documentation is in ftcache.h */
+
   FT_EXPORT_DEF( void )
   FTC_Manager_RemoveFaceID( FTC_Manager  manager,
                             FTC_FaceID   face_id )
@@ -633,7 +666,7 @@
   }
 
 
-  /* documentation is in ftcmanag.h */
+  /* documentation is in ftcache.h */
 
   FT_EXPORT_DEF( void )
   FTC_Node_Unref( FTC_Node     node,

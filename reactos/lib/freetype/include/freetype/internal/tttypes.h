@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType type definitions and interface (specification    */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2004 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -24,6 +24,10 @@
 #include <ft2build.h>
 #include FT_TRUETYPE_TABLES_H
 #include FT_INTERNAL_OBJECTS_H
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#include FT_MULTIPLE_MASTERS_H
+#endif
 
 
 FT_BEGIN_HEADER
@@ -823,6 +827,24 @@ FT_BEGIN_HEADER
   /*************************************************************************/
   /***                                                                   ***/
   /***                                                                   ***/
+  /***                    GX VARIATION TABLE SUPPORT                     ***/
+  /***                                                                   ***/
+  /***                                                                   ***/
+  /*************************************************************************/
+  /*************************************************************************/
+  /*************************************************************************/
+
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+  typedef struct GX_BlendRec_  *GX_Blend;
+#endif
+
+
+  /*************************************************************************/
+  /*************************************************************************/
+  /*************************************************************************/
+  /***                                                                   ***/
+  /***                                                                   ***/
   /***                  ORIGINAL TT_FACE CLASS DEFINITION                ***/
   /***                                                                   ***/
   /***                                                                   ***/
@@ -1152,7 +1174,17 @@ FT_BEGIN_HEADER
   /*    unpatented_hinting   :: If true, use only unpatented methods in    */
   /*                            the bytecode interpreter.                  */
   /*                                                                       */
+  /*    doblend              :: A boolean which is set if the font should  */
+  /*                            be blended (this is for GX var).           */
+  /*                                                                       */
+  /*    blend                :: Contains the data needed to control GX     */
+  /*                            variation tables (rather like Multiple     */
+  /*                            Master data).                              */
+  /*                                                                       */
   /*    extra                :: Reserved for third-party font drivers.     */
+  /*                                                                       */
+  /*    postscript_name      :: The PS name of the font.  Used by the      */
+  /*                            postscript name service.                   */
   /*                                                                       */
   typedef struct  TT_FaceRec_
   {
@@ -1261,6 +1293,11 @@ FT_BEGIN_HEADER
     FT_Bool               unpatented_hinting;
 #endif
 
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    FT_Bool               doblend;
+    GX_Blend              blend;
+#endif
+    
     /***********************************************************************/
     /*                                                                     */
     /* Other tables or fields. This is used by derivative formats like     */

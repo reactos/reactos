@@ -74,7 +74,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert bit order within each BYTE of an array.
    */
 
-  static void
+  FT_LOCAL_DEF( void )
   BitOrderInvert( unsigned char*  buf,
                   int             nbytes )
   {
@@ -90,7 +90,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert byte order within each 16-bits of an array.
    */
 
-  static void
+  FT_LOCAL_DEF( void )
   TwoByteSwap( unsigned char*  buf,
                int             nbytes )
   {
@@ -109,7 +109,7 @@ in this Software without prior written authorization from The Open Group.
    *  Invert byte order within each 32-bits of an array.
    */
 
-  static void
+  FT_LOCAL_DEF( void )
   FourByteSwap( unsigned char*  buf,
                 int             nbytes )
   {

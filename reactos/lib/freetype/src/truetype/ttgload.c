@@ -26,6 +26,10 @@
 
 #include "ttgload.h"
 
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+#include "ttgxvar.h"
+#endif
+
 #include "tterrors.h"
 
 
@@ -202,7 +206,7 @@
       *tsb = face->os2.sTypoAscender;
       *ah  = face->os2.sTypoAscender - face->os2.sTypoDescender;
     }
-    else 
+    else
     {
       *tsb = face->horizontal.Ascender;
       *ah  = face->horizontal.Ascender - face->horizontal.Descender;
@@ -352,7 +356,7 @@
     FT_Short        *cont, *cont_limit;
 
 
-    /* reading the contours endpoints & number of points */
+    /* reading the contours' endpoints & number of points */
     cont       = gloader->current.outline.contours;
     cont_limit = cont + n_contours;
 
@@ -724,10 +728,47 @@
       outline->tags[n_points + 3] = 0;
     }
 
-    /* Note that we return two more points that are not */
-    /* part of the glyph outline.                       */
+    /* Note that we return four more points that are not */
+    /* part of the glyph outline.                        */
 
     n_points += 4;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+    if ( ((TT_Face)load->face)->doblend )
+    {
+      /* Deltas apply to the unscaled data. */
+      FT_Vector*    deltas;
+      FT_Memory     memory       = load->face->memory;
+      FT_StreamRec  saved_stream = *(load->stream);
+      FT_UInt       i;
+
+
+      /* TT_Vary_Get_Glyph_Deltas uses a frame, thus we have to save */
+      /* (and restore) the current one                               */
+      load->stream->cursor = 0;
+      load->stream->limit  = 0;
+
+      error = TT_Vary_Get_Glyph_Deltas( (TT_Face)(load->face),
+                                        load->glyph_index,
+                                        &deltas,
+                                        n_points );
+
+      *(load->stream) = saved_stream;
+
+      if ( error )
+        goto Exit;
+
+      for ( i = 0; i < n_points; ++i )
+      {
+        outline->points[i].x += deltas[i].x;
+        outline->points[i].y += deltas[i].y;
+      }
+
+      FT_FREE( deltas );
+    }
+
+#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
 
     /* set up zone for hinting */
     tt_prepare_zone( zone, &gloader->current, 0, 0 );
@@ -737,9 +778,8 @@
     {
       FT_Vector*  vec     = zone->cur;
       FT_Vector*  limit   = vec + n_points;
-      FT_Fixed    x_scale = load->size->metrics.x_scale;
-      FT_Fixed    y_scale = load->size->metrics.y_scale;
-
+      FT_Fixed    x_scale = ((TT_Size)load->size)->metrics.x_scale;
+      FT_Fixed    y_scale = ((TT_Size)load->size)->metrics.y_scale;
 
       /* first scale the glyph points */
       for ( ; vec < limit; vec++ )
@@ -803,9 +843,11 @@
       load->pp4 = zone->cur[n_points - 1];
     }
 
-#ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#if defined( TT_CONFIG_OPTION_BYTECODE_INTERPRETER ) || \
+    defined( TT_CONFIG_OPTION_GX_VAR_SUPPORT )
   Exit:
 #endif
+
     return error;
   }
 
@@ -830,7 +872,7 @@
 #endif
 
     FT_Error        error;
-    TT_Face         face   = (TT_Face)loader->face;
+    TT_Face         face = (TT_Face)loader->face;
     FT_ULong        offset;
     FT_Int          contours_count;
     FT_UInt         num_points, count;
@@ -839,9 +881,13 @@
     FT_Bool         opened_frame = 0;
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
-    struct FT_StreamRec_  inc_stream;
-    FT_Data               glyph_data;
-    FT_Bool               glyph_data_loaded = 0;
+    FT_StreamRec    inc_stream;
+    FT_Data         glyph_data;
+    FT_Bool         glyph_data_loaded = 0;
+#endif
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+    FT_Vector      *deltas;
 #endif
 
 
@@ -865,8 +911,8 @@
     y_scale = 0x10000L;
     if ( ( loader->load_flags & FT_LOAD_NO_SCALE ) == 0 )
     {
-      x_scale = loader->size->metrics.x_scale;
-      y_scale = loader->size->metrics.y_scale;
+      x_scale = ((TT_Size)loader->size)->metrics.x_scale;
+      y_scale = ((TT_Size)loader->size)->metrics.y_scale;
     }
 
     /* get metrics, horizontal and vertical */
@@ -997,6 +1043,28 @@
       loader->pp3.y = 0;
       loader->pp4.y = loader->pp3.y-loader->vadvance;
 
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+      if ( ((TT_Face)(loader->face))->doblend )
+      {
+        /* this must be done before scaling */
+        FT_Memory  memory = loader->face->memory;
+
+
+        if ( (error = TT_Vary_Get_Glyph_Deltas( (TT_Face)(loader->face),
+                                                glyph_index,
+                                                &deltas,
+                                                4 ) ) )
+          goto Exit;
+
+        loader->pp1.x += deltas[0].x; loader->pp1.y += deltas[0].y;
+        loader->pp2.x += deltas[1].x; loader->pp2.y += deltas[1].y;
+        loader->pp3.x += deltas[2].x; loader->pp3.y += deltas[2].y;
+        loader->pp4.x += deltas[3].x; loader->pp4.y += deltas[3].y;
+
+        FT_FREE( deltas );
+      }
+#endif
+
       if ( ( loader->load_flags & FT_LOAD_NO_SCALE ) == 0 )
       {
         loader->pp2.x = FT_MulFix( loader->pp2.x, x_scale );
@@ -1043,14 +1111,6 @@
     loader->pp3.y = loader->top_bearing + loader->bbox.yMax;
     loader->pp4.x = 0;
     loader->pp4.y = loader->pp3.y - loader->vadvance;
-
-    if ( ( loader->load_flags & FT_LOAD_NO_SCALE ) == 0 )
-    {
-      loader->pp1.x = FT_MulFix( loader->pp1.x, x_scale );
-      loader->pp2.x = FT_MulFix( loader->pp2.x, x_scale );
-      loader->pp3.y = FT_MulFix( loader->pp3.y, y_scale );
-      loader->pp4.y = FT_MulFix( loader->pp4.y, y_scale );
-    }
 
     /***********************************************************************/
     /***********************************************************************/
@@ -1124,6 +1184,56 @@
 #endif
       face->forget_glyph_frame( loader );
       opened_frame = 0;
+
+#ifdef TT_CONFIG_OPTION_GX_VAR_SUPPORT
+
+      if ( face->doblend )
+      {
+        FT_Int       i, limit;
+        FT_SubGlyph  subglyph;
+        FT_Memory    memory = face->root.memory;
+
+
+        /* this provides additional offsets */
+        /* for each component's translation */
+
+        if ( (error = TT_Vary_Get_Glyph_Deltas(
+                        face,
+                        glyph_index,
+                        &deltas,
+                        gloader->current.num_subglyphs + 4 ) ) )
+          goto Exit;
+
+        /* Note: No subglyph reallocation here, our pointers are stable. */
+        subglyph = gloader->current.subglyphs + gloader->base.num_subglyphs;
+        limit    = gloader->current.num_subglyphs;
+
+        for ( i = 0; i < limit; ++i, ++subglyph )
+        {
+          if ( subglyph->flags & ARGS_ARE_XY_VALUES )
+          {
+            subglyph->arg1 += deltas[i].x;
+            subglyph->arg2 += deltas[i].y;
+          }
+        }
+
+        loader->pp1.x += deltas[i + 0].x; loader->pp1.y += deltas[i + 0].y;
+        loader->pp2.x += deltas[i + 1].x; loader->pp2.y += deltas[i + 1].y;
+        loader->pp3.x += deltas[i + 2].x; loader->pp3.y += deltas[i + 2].y;
+        loader->pp4.x += deltas[i + 3].x; loader->pp4.y += deltas[i + 3].y;
+
+        FT_FREE( deltas );
+      }
+
+#endif /* TT_CONFIG_OPTION_GX_VAR_SUPPORT */
+
+      if ( ( loader->load_flags & FT_LOAD_NO_SCALE ) == 0 )
+      {
+        loader->pp1.x = FT_MulFix( loader->pp1.x, x_scale );
+        loader->pp2.x = FT_MulFix( loader->pp2.x, x_scale );
+        loader->pp3.y = FT_MulFix( loader->pp3.y, y_scale );
+        loader->pp4.y = FT_MulFix( loader->pp4.y, y_scale );
+      }
 
       /* if the flag FT_LOAD_NO_RECURSE is set, we return the subglyph */
       /* `as is' in the glyph slot (the client application will be     */
@@ -1566,13 +1676,13 @@
       FT_Pos     top;      /* scaled vertical top side bearing  */
       FT_Pos     advance;  /* scaled vertical advance height    */
 
+
       /* Get the unscaled top bearing and advance height. */
       if ( face->vertical_info &&
            face->vertical.number_Of_VMetrics > 0 )
       {
-        advance_height = loader->pp4.y - loader->pp3.y;
-        top_bearing    = loader->pp3.y - bbox.yMax;
-
+        advance_height = (FT_UShort)( loader->pp4.y - loader->pp3.y );
+        top_bearing    = (FT_Short)( loader->pp3.y - bbox.yMax );
       }
       else
       {

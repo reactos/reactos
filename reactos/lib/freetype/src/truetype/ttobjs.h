@@ -380,19 +380,28 @@ FT_BEGIN_HEADER
   } TT_DriverRec;
 
 
+  /* Note: All of the functions below (except tt_size_reset()) are used    */
+  /* as function pointers in a FT_Driver_ClassRec.  Therefore their        */
+  /* parameters are of types FT_Face, FT_Size, etc., rather than TT_Face,  */
+  /* TT_Size, etc., so that the compiler can confirm that the types and    */
+  /* number of parameters are correct.  In all cases the FT_xxx types are  */
+  /* cast to their TT_xxx counterparts inside the functions since FreeType */
+  /* will always use the TT driver to create them.                         */
+
+
   /*************************************************************************/
   /*                                                                       */
   /* Face functions                                                        */
   /*                                                                       */
   FT_LOCAL( FT_Error )
   tt_face_init( FT_Stream      stream,
-                TT_Face        face,
+                FT_Face        ttface,      /* TT_Face */
                 FT_Int         face_index,
                 FT_Int         num_params,
                 FT_Parameter*  params );
 
   FT_LOCAL( void )
-  tt_face_done( TT_Face  face );
+  tt_face_done( FT_Face  ttface );          /* TT_Face */
 
 
   /*************************************************************************/
@@ -400,10 +409,10 @@ FT_BEGIN_HEADER
   /* Size functions                                                        */
   /*                                                                       */
   FT_LOCAL( FT_Error )
-  tt_size_init( TT_Size  size );
+  tt_size_init( FT_Size  ttsize );          /* TT_Size */
 
   FT_LOCAL( void )
-  tt_size_done( TT_Size  size );
+  tt_size_done( FT_Size  ttsize );          /* TT_Size */
 
   FT_LOCAL( FT_Error )
   tt_size_reset( TT_Size  size );
@@ -414,10 +423,10 @@ FT_BEGIN_HEADER
   /* Driver functions                                                      */
   /*                                                                       */
   FT_LOCAL( FT_Error )
-  tt_driver_init( TT_Driver  driver );
+  tt_driver_init( FT_Module  ttdriver );    /* TT_Driver */
 
   FT_LOCAL( void )
-  tt_driver_done( TT_Driver  driver );
+  tt_driver_done( FT_Module  ttdriver );    /* TT_Driver */
 
 
 FT_END_HEADER

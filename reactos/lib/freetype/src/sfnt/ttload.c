@@ -207,6 +207,10 @@
         FT_UInt32  magic;
 
 
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+      head_retry:
+#endif  /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */
+
         has_head = 1;
 
         /* The table length should be 0x36, but certain font tools
@@ -225,6 +229,10 @@
         if ( FT_STREAM_SEEK( offset + 28 + 16*nn ) )
           goto Bad_Format;
       }
+#ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
+      else if ( table.Tag == TTAG_bhed )
+        goto head_retry;
+#endif  /* TT_CONFIG_OPTION_EMBEDDED_BITMAPS */      
     }
 
     if ( has_head == 0 )
@@ -425,7 +433,7 @@
 
     face->num_tables = sfnt->num_tables;
 
-    if ( FT_NEW_ARRAY( face->dir_tables, face->num_tables ) )
+    if ( FT_QNEW_ARRAY( face->dir_tables, face->num_tables ) )
       goto Exit;
 
     if ( FT_STREAM_SEEK( sfnt->offset + 12 )      ||
@@ -715,6 +723,8 @@
     if ( FT_STREAM_READ_FIELDS( maxp_fields, maxProfile ) )
       goto Exit;
 
+    face->root.num_glyphs = maxProfile->numGlyphs;
+
     maxProfile->maxPoints             = 0;
     maxProfile->maxContours           = 0;
     maxProfile->maxCompositePoints    = 0;
@@ -742,8 +752,6 @@
 
       if ( maxProfile->maxFunctionDefs == 0 )
         maxProfile->maxFunctionDefs = 64;
-
-      face->root.num_glyphs = maxProfile->numGlyphs;
 
       face->root.internal->max_points =
         (FT_UShort)FT_MAX( maxProfile->maxCompositePoints,
@@ -880,8 +888,8 @@
       goto Exit;
     }
 
-    if ( FT_NEW_ARRAY( *longs,  num_longs  ) ||
-         FT_NEW_ARRAY( *shorts, num_shorts ) )
+    if ( FT_QNEW_ARRAY( *longs,  num_longs  ) ||
+         FT_QNEW_ARRAY( *shorts, num_shorts ) )
       goto Exit;
 
     if ( FT_FRAME_ENTER( table_len ) )
@@ -1198,14 +1206,17 @@
     FT_UInt       count  = table->numNameRecords;
 
 
-    for ( ; count > 0; count--, entry++ )
+    if ( table->names )
     {
-      FT_FREE( entry->string );
-      entry->stringLength = 0;
-    }
+      for ( ; count > 0; count--, entry++ )
+      {
+        FT_FREE( entry->string );
+        entry->stringLength = 0;
+      }
 
-    /* free strings table */
-    FT_FREE( table->names );
+      /* free strings table */
+      FT_FREE( table->names );
+    }
 
     table->numNameRecords = 0;
     table->format         = 0;
@@ -1575,7 +1586,7 @@
     num_ranges = face->gasp.numRanges;
     FT_TRACE3(( "number of ranges = %d\n", num_ranges ));
 
-    if ( FT_NEW_ARRAY( gaspranges, num_ranges ) ||
+    if ( FT_QNEW_ARRAY( gaspranges, num_ranges ) ||
          FT_FRAME_ENTER( num_ranges * 4L )      )
       goto Exit;
 
@@ -1624,6 +1635,11 @@
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
+  
+#undef  TT_KERN_INDEX
+#define TT_KERN_INDEX( g1, g2 )  ( ( (FT_ULong)g1 << 16 ) | g2 )
+
+
   FT_LOCAL_DEF( FT_Error )
   tt_face_load_kern( TT_Face    face,
                      FT_Stream  stream )
@@ -1680,8 +1696,8 @@
         FT_FRAME_EXIT();
 
         /* allocate array of kerning pairs */
-        if ( FT_NEW_ARRAY( face->kern_pairs, num_pairs ) ||
-             FT_FRAME_ENTER( 6L * num_pairs )            )
+        if ( FT_QNEW_ARRAY( face->kern_pairs, num_pairs ) ||
+             FT_FRAME_ENTER( 6L * num_pairs )             )
           goto Exit;
 
         pair  = face->kern_pairs;
@@ -1700,12 +1716,35 @@
 
         /* ensure that the kerning pair table is sorted (yes, some */
         /* fonts have unsorted tables!)                            */
+
+#if 1
+        if ( num_pairs > 0 )     
         {
+          TT_Kern0_Pair  pair0 = face->kern_pairs;
+          FT_ULong       prev  = TT_KERN_INDEX( pair0->left, pair0->right );
+          
+
+          for ( pair0++; pair0 < limit; pair0++ )
+          {
+            FT_ULong  next = TT_KERN_INDEX( pair0->left, pair0->right );
+            
+
+            if ( next < prev )
+              goto SortIt;
+              
+            prev = next;
+          }
+          goto Exit;
+          
+        SortIt:
+          ft_qsort( (void*)face->kern_pairs, (int)num_pairs,
+                    sizeof ( TT_Kern0_PairRec ), tt_kern_pair_compare );
+        }
+#else        
+        {
+          TT_Kern0_Pair  pair0    = face->kern_pairs;
           FT_UInt        i;
-          TT_Kern0_Pair  pair0;
-
-
-          pair0 = face->kern_pairs;
+          
 
           for ( i = 1; i < num_pairs; i++, pair0++ )
           {
@@ -1717,6 +1756,7 @@
             }
           }
         }
+#endif
 
         goto Exit;
       }
@@ -1733,10 +1773,6 @@
   Exit:
     return error;
   }
-
-
-#undef  TT_KERN_INDEX
-#define TT_KERN_INDEX( g1, g2 )  ( ( (FT_ULong)g1 << 16 ) | g2 )
 
 
   FT_CALLBACK_DEF( int )
@@ -1756,6 +1792,7 @@
 
 
 #undef TT_KERN_INDEX
+  
 
 
   /*************************************************************************/
@@ -1809,7 +1846,7 @@
     if ( hdmx->version != 0 )
       goto Exit;
 
-    if ( FT_NEW_ARRAY( hdmx->records, num_records ) )
+    if ( FT_QNEW_ARRAY( hdmx->records, num_records ) )
       goto Exit;
 
     hdmx->num_records = num_records;
@@ -1828,7 +1865,7 @@
              FT_READ_BYTE( cur->max_width ) )
           goto Exit;
 
-        if ( FT_ALLOC( cur->widths, num_glyphs )       ||
+        if ( FT_QALLOC( cur->widths, num_glyphs )       ||
              FT_STREAM_READ( cur->widths, num_glyphs ) )
           goto Exit;
 

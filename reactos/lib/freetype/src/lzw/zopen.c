@@ -66,10 +66,14 @@ static char rcsid[] = "$NetBSD: zopen.c,v 1.8 2003/08/07 11:13:29 agc Exp $";
  */
 
 #include <ctype.h>
+#if 0
 #include <signal.h>
+#endif
 #include <stdlib.h>
 #include <string.h>
+#if 0
 #include <unistd.h>
+#endif
 
 #if 0
 static char_type magic_header[] =

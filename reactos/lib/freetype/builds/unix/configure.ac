@@ -8,7 +8,7 @@ AC_CONFIG_SRCDIR([ftconfig.in])
 
 # Don't forget to update docs/VERSION.DLL!
 
-version_info='9:6:3'
+version_info='9:7:3'
 AC_SUBST([version_info])
 ft_version=`echo $version_info | tr : .`
 AC_SUBST([ft_version])

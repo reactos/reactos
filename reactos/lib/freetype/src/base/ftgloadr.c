@@ -182,14 +182,14 @@
   }
 
 
-  /* Ensure that we can add `n_points' and `n_contours' to our glyph. this */
-  /* function reallocates its outline tables if necessary.  Note that it   */
-  /* DOESN'T change the number of points within the loader!                */
+  /* Ensure that we can add `n_points' and `n_contours' to our glyph.      */
+  /* This function reallocates its outline tables if necessary.  Note that */
+  /* it DOESN'T change the number of points within the loader!             */
   /*                                                                       */
   FT_BASE_DEF( FT_Error )
   FT_GlyphLoader_CheckPoints( FT_GlyphLoader  loader,
-                               FT_UInt        n_points,
-                               FT_UInt        n_contours )
+                              FT_UInt         n_points,
+                              FT_UInt         n_contours )
   {
     FT_Memory    memory  = loader->memory;
     FT_Error     error   = FT_Err_Ok;

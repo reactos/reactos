@@ -105,16 +105,9 @@
         * is needed
         */
         if ( loader->transformed )
-        {
-          FT_Vector*  point = slot->outline.points;
-          FT_Vector*  limit = point + slot->outline.n_points;
-
-          for ( ; point < limit; point++ )
-          {
-            point->x += loader->trans_delta.x;
-            point->y += loader->trans_delta.y;
-          }
-        }
+          FT_Outline_Translate( &slot->outline,
+                                loader->trans_delta.x,
+                                loader->trans_delta.y );
 
         /* copy the outline points in the loader's current               */
         /* extra points which is used to keep original glyph coordinates */
@@ -157,38 +150,60 @@
 
         /* now load the slot image into the auto-outline and run the */
         /* automatic hinting process                                 */
-        error = metrics->clazz->script_hints_init( hints,
-                                                   &gloader->current.outline,
-                                                   metrics );
-        if ( error )
-          goto Exit;
-
-        /* apply the hints */
         metrics->clazz->script_hints_apply( hints,
                                             &gloader->current.outline,
                                             metrics );
+
         /* we now need to hint the metrics according to the change in */
         /* width/positioning that occured during the hinting process  */
         {
           FT_Pos        old_advance, old_rsb, old_lsb, new_lsb;
+          FT_Pos        pp1x_uh, pp2x_uh;
           AF_AxisHints  axis  = &hints->axis[ AF_DIMENSION_HORZ ];
-          AF_Edge       edge1 = axis->edges;    /* leftmost edge  */
-          AF_Edge       edge2 = edge1 + axis->num_edges - 1; /* rightmost edge */
+          AF_Edge       edge1 = axis->edges;         /* leftmost edge  */
+          AF_Edge       edge2 = edge1 +
+                                axis->num_edges - 1; /* rightmost edge */
 
 
-          old_advance = loader->pp2.x;
-          old_rsb     = old_advance - edge2->opos;
-          old_lsb     = edge1->opos;
-          new_lsb     = edge1->pos;
+          if ( edge2 > edge1 )
+          {
+            old_advance = loader->pp2.x;
+            old_rsb     = old_advance - edge2->opos;
+            old_lsb     = edge1->opos;
+            new_lsb     = edge1->pos;
 
-          loader->pp1.x = FT_PIX_ROUND( new_lsb    - old_lsb );
-          loader->pp2.x = FT_PIX_ROUND( edge2->pos + old_rsb );
+            /* remember unhinted values to later account */
+            /* for rounding errors                       */
+
+            pp1x_uh = new_lsb    - old_lsb;
+            pp2x_uh = edge2->pos + old_rsb;
+
+            /* prefer too much space over too little space */
+            /* for very small sizes                        */
+
+            if ( old_lsb < 24 )
+              pp1x_uh -= 5;
+
+            if ( old_rsb < 24 )
+              pp2x_uh += 5;
+
+            loader->pp1.x = FT_PIX_ROUND( pp1x_uh );
+            loader->pp2.x = FT_PIX_ROUND( pp2x_uh );
+
+            slot->lsb_delta = loader->pp1.x - pp1x_uh;
+            slot->rsb_delta = loader->pp2.x - pp2x_uh;
 
 #if 0
-          /* try to fix certain bad advance computations */
-          if ( loader->pp2.x + loader->pp1.x == edge2->pos && old_rsb > 4 )
-            loader->pp2.x += 64;
+            /* try to fix certain bad advance computations */
+            if ( loader->pp2.x + loader->pp1.x == edge2->pos && old_rsb > 4 )
+              loader->pp2.x += 64;
 #endif
+          }
+          else
+          {
+            loader->pp1.x = FT_PIX_ROUND( loader->pp1.x );
+            loader->pp2.x = FT_PIX_ROUND( loader->pp2.x );
+          }
         }
 
         /* good, we simply add the glyph to our loader's base */
@@ -366,7 +381,13 @@
         slot->metrics.horiAdvance = FT_MulFix( slot->metrics.horiAdvance,
                                                x_scale );
 #else
-      slot->metrics.horiAdvance = loader->pp2.x - loader->pp1.x;
+      /* for mono-width fonts (like Andale, Courier, etc.) we need */
+      /* to keep the original rounded advance width                */
+      if ( !FT_IS_FIXED_WIDTH( slot->face ) )
+        slot->metrics.horiAdvance = loader->pp2.x - loader->pp1.x;
+      else
+        slot->metrics.horiAdvance = FT_MulFix( slot->metrics.horiAdvance,
+                                               metrics->scaler.x_scale );
 #endif
 
       slot->metrics.horiAdvance = FT_PIX_ROUND( slot->metrics.horiAdvance );
@@ -434,8 +455,13 @@
         load_flags |=  FT_LOAD_NO_SCALE | FT_LOAD_IGNORE_TRANSFORM;
         load_flags &= ~FT_LOAD_RENDER;
 
+        error = metrics->clazz->script_hints_init( &loader->hints, metrics );
+        if ( error )
+          goto Exit;
+
         error = af_loader_load_g( loader, &scaler, gindex, load_flags, 0 );
       }
     }
+  Exit:
     return error;
   }
