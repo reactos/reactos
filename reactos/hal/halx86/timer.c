@@ -20,7 +20,7 @@
  * MA 02139, USA.  
  *
  */
-/* $Id: timer.c,v 1.6 2004/08/02 15:09:22 navaraf Exp $
+/* $Id: timer.c,v 1.7 2004/11/14 19:01:31 hbirr Exp $
  *
  * PROJECT:        ReactOS kernel
  * FILE:           ntoskrnl/hal/x86/udelay.c
@@ -32,7 +32,9 @@
 
 /* INCLUDES ***************************************************************/
 
+#include <roscfg.h>
 #include <ddk/ntddk.h>
+#include <internal/ps.h>
 #include <hal.h>
 
 #define NDEBUG
@@ -127,7 +129,23 @@ ROSL1:
 
 VOID STDCALL KeStallExecutionProcessor(ULONG Microseconds)
 {
-   __KeStallExecutionProcessor((delay_count*Microseconds)/1000);
+   PKPCR Pcr = KeGetCurrentKPCR();
+
+   if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+   {
+      LARGE_INTEGER EndCount, CurrentCount;
+      Ki386RdTSC(EndCount);
+      EndCount.QuadPart += Microseconds * (ULONGLONG)Pcr->PrcbData.MHz;
+      do
+      {
+         Ki386RdTSC(CurrentCount);
+      }
+      while (CurrentCount.QuadPart < EndCount.QuadPart);
+   }
+   else
+   {
+      __KeStallExecutionProcessor((Pcr->StallScaleFactor*Microseconds)/1000);
+   }
 }
 
 static ULONG Read8254Timer(VOID)
@@ -178,6 +196,8 @@ VOID HalpCalibrateStallExecution(VOID)
   ULONG i;
   ULONG calib_bit;
   ULONG CurCount;
+  PKPCR Pcr;
+  LARGE_INTEGER StartCount, EndCount;
 
   if (UdelayCalibrated)
     {
@@ -185,15 +205,31 @@ VOID HalpCalibrateStallExecution(VOID)
     }
 
   UdelayCalibrated = TRUE;
-
-  DbgPrint("Calibrating delay loop... [");
+  Pcr = KeGetCurrentKPCR();
 
   /* Initialise timer interrupt with MILLISEC ms interval        */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CTRL, TMR_SC0 | TMR_BOTH | TMR_MD2);  /* binary, mode 2, LSB/MSB, ch 0 */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH & 0xff); /* LSB */
   WRITE_PORT_UCHAR((PUCHAR) TMR_CNT0, LATCH >> 8); /* MSB */
 
-  /* Stage 1:  Coarse calibration                                   */
+  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+  {
+      
+     WaitFor8254Wraparound();
+     Ki386RdTSC(StartCount);
+
+     WaitFor8254Wraparound();
+     Ki386RdTSC(EndCount);
+
+     Pcr->PrcbData.MHz = (ULONG)(EndCount.QuadPart - StartCount.QuadPart) / 10000;
+     DPRINT("%dMHz\n", Pcr->PrcbData.MHz);
+     return;
+
+  }
+
+  DbgPrint("Calibrating delay loop... [");
+
+  /* Stage 1:  Coarse calibration					    */
 
   WaitFor8254Wraparound();
 
@@ -285,25 +321,37 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFreq)
  * RETURNS: The number of performance counter ticks since boot
  */
 {
-  LARGE_INTEGER TicksOld;
-  LARGE_INTEGER TicksNew;
+  PKPCR Pcr = KeGetCurrentKPCR();
   LARGE_INTEGER Value;
-  ULONG CountsLeft;
 
-  if (NULL != PerformanceFreq)
-    {
-      PerformanceFreq->QuadPart = CLOCK_TICK_RATE;
-    }
+  if (Pcr->PrcbData.FeatureBits & X86_FEATURE_TSC)
+  {
+     if (NULL != PerformanceFreq)
+     {
+        PerformanceFreq->QuadPart = Pcr->PrcbData.MHz * (ULONGLONG)1000000;   
+     }
+     Ki386RdTSC(Value);
+  }
+  else
+  {
+     LARGE_INTEGER TicksOld;
+     LARGE_INTEGER TicksNew;
+     ULONG CountsLeft;
 
-  do
-    {
-      KeQueryTickCount(&TicksOld);
-      CountsLeft = Read8254Timer();
-      Value.QuadPart = TicksOld.QuadPart * LATCH + (LATCH - CountsLeft);
-      KeQueryTickCount(&TicksNew);
-    }
-  while (TicksOld.QuadPart != TicksNew.QuadPart);
+     if (NULL != PerformanceFreq)
+     {
+        PerformanceFreq->QuadPart = CLOCK_TICK_RATE;
+     }
 
+     do
+     {
+        KeQueryTickCount(&TicksOld);
+        CountsLeft = Read8254Timer();
+        Value.QuadPart = TicksOld.QuadPart * LATCH + (LATCH - CountsLeft);
+        KeQueryTickCount(&TicksNew);
+     }
+     while (TicksOld.QuadPart != TicksNew.QuadPart);
+  }
   return Value;
 }
 

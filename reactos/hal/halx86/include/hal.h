@@ -5,6 +5,8 @@
 #ifndef __INTERNAL_HAL_HAL_H
 #define __INTERNAL_HAL_HAL_H
 
+#define HAL_APC_REQUEST	    0
+#define HAL_DPC_REQUEST	    1
 
 /* display.c */
 VOID FASTCALL HalInitializeDisplay (PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -86,6 +88,20 @@ HalQueryDisplayOwnership();
 #define Ki386DisableInterrupts()    __asm__ __volatile__("cli\n\t")
 #define Ki386EnableInterrupts()	    __asm__ __volatile__("sti\n\t")
 #define Ki386HaltProcessor()	    __asm__ __volatile__("hlt\n\t")
+#define Ki386RdTSC(x)		    __asm__ __volatile__("rdtsc\n\t" : "=A" (x.u.LowPart), "=d" (x.u.HighPart));
+
+static inline BYTE Ki386ReadFsByte(ULONG offset)
+{
+   BYTE b;
+   __asm__ __volatile__("movb %%fs:(%1),%0":"=g" (b):"0" (offset));
+   return b;
+}
+
+static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
+{
+    __asm__ __volatile__("movb %0,%%fs:(%1)"::"r" (value), "r" (offset));
+}
+
 #elif defined(_MSC_VER)
 #define Ki386SaveFlags(x)	    __asm pushfd  __asm pop x;
 #define Ki386RestoreFlags(x)	    __asm push x  __asm popfd;
