@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.7 2003/10/23 09:03:51 vizzini Exp $
+/* $Id: adapter.c,v 1.8 2003/10/31 01:08:00 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,10 +24,11 @@
 
 
 NTSTATUS STDCALL
-HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
-			  PWAIT_CONTEXT_BLOCK WaitContextBlock,
-			  ULONG NumberOfMapRegisters,
-			  PDRIVER_CONTROL ExecutionRoutine)
+HalAllocateAdapterChannel(
+  PADAPTER_OBJECT AdapterObject,
+  PWAIT_CONTEXT_BLOCK WaitContextBlock,
+  ULONG NumberOfMapRegisters,
+  PDRIVER_CONTROL ExecutionRoutine)
 /*
  * FUNCTION: Sets up an ADAPTER_OBJECT with map registers
  * ARGUMENTS:
@@ -50,6 +51,13 @@ HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
 {
   LARGE_INTEGER MaxAddress;
   IO_ALLOCATION_ACTION Retval;
+  
+  assert(KeGetCurrentIrql() == DISPATCH_LEVEL);
+  
+  /*
+  FIXME: return STATUS_INSUFFICIENT_RESOURCES if the NumberOfMapRegisters 
+  requested is larger than the value returned by IoGetDmaAdapter. 
+  */
 
   /* set up the wait context block in case we can't run right away */
   WaitContextBlock->DeviceRoutine = ExecutionRoutine;
@@ -112,12 +120,13 @@ HalAllocateAdapterChannel(PADAPTER_OBJECT AdapterObject,
 
 
 BOOLEAN STDCALL
-IoFlushAdapterBuffers (PADAPTER_OBJECT	AdapterObject,
-		       PMDL		Mdl,
-		       PVOID		MapRegisterBase,
-		       PVOID		CurrentVa,
-		       ULONG		Length,
-		       BOOLEAN		WriteToDevice)
+IoFlushAdapterBuffers (
+  PADAPTER_OBJECT	AdapterObject,
+  PMDL		Mdl,
+  PVOID		MapRegisterBase,
+  PVOID		CurrentVa,
+  ULONG		Length,
+  BOOLEAN		WriteToDevice)
 /*
  * FUNCTION: flush any data remaining in the dma controller's memory into the host memory
  * ARGUMENTS:
@@ -135,8 +144,7 @@ IoFlushAdapterBuffers (PADAPTER_OBJECT	AdapterObject,
  *     - This is only meaningful on a read operation.  Return immediately for a write.
  */
 {
-  /* FIXME we don't have ASSERT */
-  //ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
+  assert(KeGetCurrentIrql() <= DISPATCH_LEVEL);
   
   /* this can happen if the card supports scatter/gather */
   if(!MapRegisterBase)
@@ -144,10 +152,23 @@ IoFlushAdapterBuffers (PADAPTER_OBJECT	AdapterObject,
 
   if(WriteToDevice)
     return TRUE;
-
+    
   memcpy( 
         (PVOID)((DWORD)MmGetSystemAddressForMdl( Mdl ) + (DWORD)CurrentVa - (DWORD)MmGetMdlVirtualAddress( Mdl )), 
       MapRegisterBase, Length );
+
+  /*
+  FIXME: mask off (disable) channel if doing System DMA?
+  
+    From linux:
+    
+    if (dmanr<=3)
+      dma_outb(dmanr | 4,  DMA1_MASK_REG 0x0A) ;
+    else
+      dma_outb((dmanr & 3) | 4,  DMA2_MASK_REG 0x0A);
+
+  */
+  
 
   return TRUE;
 }
@@ -212,9 +233,10 @@ IoFreeAdapterChannel (PADAPTER_OBJECT	AdapterObject)
 
 
 VOID STDCALL
-IoFreeMapRegisters (PADAPTER_OBJECT	AdapterObject,
-		    PVOID		MapRegisterBase,
-		    ULONG		NumberOfMapRegisters)
+IoFreeMapRegisters (
+  IN PADAPTER_OBJECT	AdapterObject,
+  IN PVOID		MapRegisterBase,
+  IN ULONG		NumberOfMapRegisters)
 /*
  * FUNCTION: free map registers reserved by the system for a DMA
  * ARGUMENTS:
@@ -237,20 +259,22 @@ IoFreeMapRegisters (PADAPTER_OBJECT	AdapterObject,
 
 
 PHYSICAL_ADDRESS  STDCALL
-IoMapTransfer (PADAPTER_OBJECT	AdapterObject,
-	       PMDL		Mdl,
-	       PVOID		MapRegisterBase,
-	       PVOID		CurrentVa,
-	       PULONG		Length,
-	       BOOLEAN		WriteToDevice)
+IoMapTransfer (
+  IN PADAPTER_OBJECT	AdapterObject,
+  IN PMDL		Mdl,
+  IN PVOID		MapRegisterBase,
+  IN PVOID		CurrentVa,
+  IN OUT PULONG		Length,
+  IN BOOLEAN		WriteToDevice)
 /*
  * FUNCTION: map a dma for transfer and do the dma if it's a slave
  * ARGUMENTS:
- *     AdapterObject: adapter object to do the dma on
+ *     AdapterObject: adapter object to do the dma on. busmaster may pass NULL.
  *     Mdl: locked-down user buffer to DMA in to or out of
- *     MapRegisterBase: handle to map registers to use for this dma
+ *     MapRegisterBase: handle to map registers to use for this dma. allways NULL
+ *      when doing s/g.
  *     CurrentVa: index into Mdl to transfer into/out of
- *     Length: length of transfer in/out
+ *     Length: length of transfer in/out. Only modified on out when doing s/g.
  *     WriteToDevice: TRUE if it's an output dma, FALSE otherwise
  * RETURNS: 
  *     If a busmaster: A logical address that can be used to program a dma controller
@@ -263,30 +287,136 @@ IoMapTransfer (PADAPTER_OBJECT	AdapterObject,
  */
 {
   PHYSICAL_ADDRESS Address;
-  // program up the dma controller, and return
-  // if it is a write to the device, copy the caller buffer to the low buffer
-  if( WriteToDevice )
-    memcpy( MapRegisterBase,
-	    MmGetSystemAddressForMdl( Mdl ) + ( (DWORD)CurrentVa - (DWORD)MmGetMdlVirtualAddress( Mdl ) ),
-	    *Length );
-  Address = MmGetPhysicalAddress( MapRegisterBase );
-  // port 0xA is the dma mask register, or a 0x10 on to the channel number to mask it
-  WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel | 0x10 );
-  // write zero to the reset register
-  WRITE_PORT_UCHAR( (PVOID)0x0C, 0 );
-  // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for non auto initialize
-  WRITE_PORT_UCHAR( (PVOID)0x0B, AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 ) );
-  // set the 64k page register for the channel
-  WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)Address.QuadPart)>>16) );
-  // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
-  WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
-  WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
-  // count is 1 less than length, low then high
-  WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(*Length - 1) );
-  WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length - 1)>>8) );
-  // unmask the channel to let it rip
-  WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel );
-  Address.QuadPart = (DWORD)MapRegisterBase;
+  
+  
+  /* Isa System (slave) DMA? */
+  if (AdapterObject && AdapterObject->InterfaceType == Isa && !AdapterObject->Master)
+  {
+#if 0
+    /* channel 0 is reserved for DRAM refresh */
+    assert(AdapterObject->Channel != 0);
+    /* channel 4 is reserved for cascade */
+    assert(AdapterObject->Channel != 4);
+#endif
+
+    /*
+    FIXME: Handle case when doing common-buffer System DMA. In this case, the buffer described
+    by MDL is allready phys. contiguous and below 16 mega. Driver makes a one-shot call to 
+    IoMapTransfer during init. to program controller with the common-buffer.
+    */
+    
+    /* if it is a write to the device, copy the caller buffer to the low buffer */
+    if( WriteToDevice )
+    {
+      memcpy(MapRegisterBase,
+             MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
+	           *Length );
+    }
+             
+    // program up the dma controller, and return
+    Address = MmGetPhysicalAddress( MapRegisterBase );
+    // port 0xA is the dma mask register, or a 0x10 on to the channel number to mask it
+    WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel | 0x10 );
+    // write zero to the reset register
+    WRITE_PORT_UCHAR( (PVOID)0x0C, 0 );
+    // mode register, or channel with 0x4 for write memory, 0x8 for read memory, 0x10 for non auto initialize
+    WRITE_PORT_UCHAR( (PVOID)0x0B, AdapterObject->Channel | ( WriteToDevice ? 0x8 : 0x4 ) );
+    // set the 64k page register for the channel
+    WRITE_PORT_UCHAR( AdapterObject->PagePort, (UCHAR)(((ULONG)Address.QuadPart)>>16) );
+    // low, then high address byte, which is always 0 for us, because we have a 64k alligned address
+    WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
+    WRITE_PORT_UCHAR( AdapterObject->OffsetPort, 0 );
+    // count is 1 less than length, low then high
+    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)(*Length - 1) );
+    WRITE_PORT_UCHAR( AdapterObject->CountPort, (UCHAR)((*Length - 1)>>8) );
+    // unmask the channel to let it rip
+    WRITE_PORT_UCHAR( (PVOID)0x0A, AdapterObject->Channel );
+
+    /* 
+    NOTE: Return value should be ignored when doing System DMA.
+    Maybe return some more obvious invalid address here (thou returning 
+    MapRegisterBase is also wrong;-)to catch invalid use?
+    */
+    Address.QuadPart = (ULONG)MapRegisterBase;
+    return Address;
+  }
+  
+
+  /* 
+  Busmaster with s/g support?   
+  NOTE: old docs allowed busmasters to pass a NULL Adapter. In this case, MapRegisterBase 
+  being NULL is used to detect a s/g busmaster.
+  */
+  if ((!AdapterObject && !MapRegisterBase) ||
+      (AdapterObject && AdapterObject->Master && AdapterObject->ScatterGather))
+  {
+    /* 
+    Just return the passed VA's corresponding phys. address. 
+    Update length to the number of phys. contiguous bytes found.
+    */
+  
+    PULONG MdlPages;
+    ULONG MdlPageIndex, PhysContiguousLen;
+    ULONG PhysAddress;
+    
+    MdlPages = (PULONG)(Mdl + 1);
+    
+    /* Get VA's corresponding mdl phys. page index */
+    MdlPageIndex = ((ULONG)CurrentVa - (ULONG)Mdl->StartVa) / PAGE_SIZE;
+   
+    /* Get phys. page containing the VA */
+    PhysAddress = MdlPages[MdlPageIndex];
+    
+    PhysContiguousLen = PAGE_SIZE - BYTE_OFFSET(CurrentVa);
+    
+    /* VA to map may span several contiguous phys. pages (unlikely) */
+    while (PhysContiguousLen < *Length &&
+           MdlPages[MdlPageIndex++] + PAGE_SIZE == MdlPages[MdlPageIndex])
+    {
+      /* 
+      Note that allways adding PAGE_SIZE may make PhysContiguousLen greater
+      than Length if buffer doesn't end on page boundary. Take this
+      into consideration below. 
+      */
+      PhysContiguousLen += PAGE_SIZE; 
+    }
+    
+    if (PhysContiguousLen < *Length)
+    {
+      *Length = PhysContiguousLen;
+    }
+    
+    //add offset to phys. page address
+    Address.QuadPart = PhysAddress + BYTE_OFFSET(CurrentVa);
+    return Address;
+  }
+  
+  
+  /* 
+  Busmaster without s/g support? 
+  NOTE: old docs allowed busmasters to pass a NULL Adapter. In this case, MapRegisterBase 
+  not being NULL is used to detect a non s/g busmaster.
+  */
+  if ((!AdapterObject && MapRegisterBase) ||
+      (AdapterObject && AdapterObject->Master && !AdapterObject->ScatterGather))
+  {
+    /*
+    NOTE: Busmasters doing common-buffer DMA shouldn't call IoMapTransfer, but I don't
+    know if it's illegal... Maybe figure out what to do in this case...
+    */
+
+    if( WriteToDevice )
+    {
+      memcpy(MapRegisterBase,
+             MmGetSystemAddressForMdl(Mdl) + ((ULONG)CurrentVa - (ULONG)MmGetMdlVirtualAddress(Mdl)),
+             *Length );
+    }
+
+    return MmGetPhysicalAddress(MapRegisterBase);
+  }
+  
+  DPRINT1("IoMapTransfer: Unsupported operation\n");
+  KEBUGCHECK(0);
   return Address;
 }
 
