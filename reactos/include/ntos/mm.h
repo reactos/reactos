@@ -62,7 +62,7 @@
 
 #endif /* __USE_W32API */
 
-#define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGE_SIZE) ? ((((ULONG)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG)x) )
-#define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~(PAGE_SIZE-1)))
+#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#define PAGE_ROUND_DOWN(x) (((ULONG_PTR)x)&(~(PAGE_SIZE-1)))
 
 #endif /* __INCLUDE_MM_H */

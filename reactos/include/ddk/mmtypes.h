@@ -15,7 +15,7 @@
  * PURPOSE: Returns the byte offset of a field within a structure
  */
 #ifndef FIELD_OFFSET
-#define FIELD_OFFSET(Type,Field) ((LONG)(&(((Type *)(0))->Field)))
+#define FIELD_OFFSET(Type,Field) ((ULONG_PTR)(&(((Type *)(0))->Field)))
 #endif
 
 /*
@@ -27,9 +27,16 @@
  *          Field = Name of the field whose address is none
  */
 #ifndef CONTAINING_RECORD
-#define CONTAINING_RECORD(Address,Type,Field) ((Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field)))
+#define CONTAINING_RECORD(Address,Type,Field) ((Type *)(((ULONG_PTR)Address) - FIELD_OFFSET(Type,Field)))
 #endif
 
+#ifdef _M_IX86
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+#elif _M_IA64
+typedef ULONG64 PFN_NUMBER, *PPFN_NUMBER;
+#else
+#error Unknown architecture
+#endif
 
 #define   MDL_MAPPED_TO_SYSTEM_VA      (0x1)
 #define   MDL_PAGES_LOCKED             (0x2)

@@ -176,10 +176,10 @@ static __declspec(noreturn) __inline void __stdcall _SEHCompilerSpecificHandler
 
 #define _SEH_TRY_FILTER_FINALLY(FILTER_, FINALLY_) \
  {                                                                             \
-  _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_);                                    \
-                                                                               \
   _SEHFrame_t * _SEHFrame;                                                     \
   volatile _SEHPortableFrame_t * _SEHPortableFrame;                            \
+                                                                               \
+  _SEH_DECLARE_HANDLERS(FILTER_, FINALLY_);                                    \
                                                                                \
   _SEHFrame = _alloca(sizeof(_SEHFrame_t));                                    \
   _SEHFrame->SEH_Header.SPF_Handlers = &_SEHHandlers;                          \
