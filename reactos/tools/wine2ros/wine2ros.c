@@ -649,8 +649,6 @@ write_makefile(PMAKEFILE_INFO makefile_info)
     } while (1);
 
   close_file();
-
-  printf("ReactOS makefile successfully generated.\n");
 }
 
 static char HELP[] =

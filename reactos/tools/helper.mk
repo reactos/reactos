@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.69 2004/06/21 20:55:16 hyperion Exp $
+# $Id: helper.mk,v 1.70 2004/07/21 18:17:50 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -654,7 +654,7 @@ endif
 ifeq ($(TARGET_REGTESTS),yes)
   REGTEST_TARGETS := tests/_regtests.c tests/Makefile.tests tests/_rtstub.c 
 ifeq ($(MK_MODE),user)
-    MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
+  MK_LIBS := $(SDK_PATH_LIB)/rtshared.a $(MK_LIBS)
 endif
   MK_REGTESTS_CLEAN := clean_regtests
   MK_OBJECTS += tests/_rtstub.o tests/regtests.a
@@ -700,7 +700,10 @@ else
   MK_EXTRACMD2 :=
 endif
 
-$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_OBJECTS) $(MK_EXTRADEP) $(MK_LIBS)
+$(MK_BASENAME).a: $(MK_OBJECTS)
+	$(AR) -r $(MK_BASENAME).a $(MK_OBJECTS)
+
+$(MK_NOSTRIPNAME): $(MK_FULLRES) $(MK_BASENAME).a $(MK_EXTRADEP) $(MK_LIBS)
 ifeq ($(MK_EXETYPE),dll)
 	$(LD_CC) -Wl,--base-file,base.tmp \
 		-Wl,--entry,$(TARGET_ENTRY) \
@@ -778,6 +781,7 @@ ifneq ($(TARGET_CPPAPP),yes)
 else
 	- $(RM) temp.exp
 endif
+	@echo $(MK_FULLNAME) was successfully built.
 
 endif # KM_MODE
 
@@ -854,6 +858,7 @@ ifneq ($(TARGET_CPPAPP),yes)
 else
 	- $(RM) temp.exp
 endif
+	@echo $(MK_FULLNAME) was successfully built.
 
 endif # MK_MODE
 
@@ -862,6 +867,7 @@ ifeq ($(MK_MODE),static)
 
 $(MK_FULLNAME): $(TARGET_OBJECTS)
 	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
+	@echo $(MK_BASENAME)$(MK_EXT) was successfully built.
 
 # Static libraries dont have a nostrip version
 $(MK_NOSTRIPNAME):
@@ -936,6 +942,7 @@ ifeq ($(INSTALL_SYMBOLS),yes)
 install: $(SUBDIRS:%=%_install) $(MK_FULLNAME) $(MK_BASENAME).sym
 	-$(CP) $(MK_FULLNAME) $(INSTALL_DIR)/$(MK_INSTALLDIR)/$(MK_FULLNAME)
 	-$(CP) $(MK_BASENAME).sym $(INSTALL_DIR)/symbols/$(MK_BASENAME).sym
+	@echo $(MK_FULLNAME) was successfully installed.
 
 else # INSTALL_SYMBOLS
 
@@ -969,10 +976,10 @@ endif # MK_IMPLIBONLY
 
 ifeq ($(TARGET_TYPE),winedll)
 Makefile.ros: Makefile.in Makefile.ros-template
-	$(TOOLS_PATH)/wine2ros/wine2ros Makefile.in Makefile.ros-template Makefile.ros
+	$(WINE2ROS) Makefile.in Makefile.ros-template Makefile.ros
 
 $(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
-	$(TOOLS_PATH)/bin2res/bin2res -f -o $@ $(TARGET_RC_BINSRC)
+	$(BIN2RES) -f -o $@ $(TARGET_RC_BINSRC)
 
 $(MK_RESOURCE): $(MK_RC_BINARIES)
 endif
@@ -1074,5 +1081,3 @@ endif # ROS_USE_PCH
 # Compatibility
 CFLAGS := $(TARGET_CFLAGS)
 NFLAGS := $(TARGET_NFLAGS)
-
-# EOF

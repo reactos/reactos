@@ -3,6 +3,18 @@
 #
 .EXPORT_ALL_VARIABLES:
 
+# Default to verbose mode
+ifeq ($(VERBOSE),no)
+  Q = @
+else
+  Q =
+endif
+
+MAKE := @$(MAKE)
+
+# Do not print "Entering directory ..."
+MAKEFLAGS += --no-print-directory
+
 # Windows is default host environment
 ifeq ($(HOST),)
 HOST = mingw32-windows
@@ -44,12 +56,12 @@ NASM_FORMAT = win32
 PREFIX =
 EXE_PREFIX :=
 EXE_POSTFIX := .exe
-DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
+DLLTOOL = $(Q)$(PREFIX)dlltool --as=$(PREFIX)as
 #
 # Do not change NASM_CMD to NASM because older versions of 
 # nasm doesn't like an environment variable NASM
 #
-NASM_CMD = nasmw
+NASM_CMD = $(Q)nasmw
 DOSCLI = yes
 FLOPPY_DIR = A:
 SEP := \$(EMPTY_VAR)
@@ -80,38 +92,41 @@ endif
 endif
 
 
-CC = $(PREFIX)gcc
-CXX = $(PREFIX)g++
-HOST_CC = gcc
-HOST_CXX = g++
-HOST_AR = ar
-HOST_NM = nm
-LD = $(PREFIX)ld
-NM = $(PREFIX)nm
-OBJCOPY = $(PREFIX)objcopy
-STRIP = $(PREFIX)strip
-AS = $(PREFIX)gcc -c -x assembler-with-cpp
-CPP = $(PREFIX)cpp
-AR = $(PREFIX)ar
-RC = $(PREFIX)windres
-WRC = $(WINE_TOP)/tools/wrc/wrc
-OBJCOPY = $(PREFIX)objcopy
-OBJDUMP =$(PREFIX)objdump
+CC = $(Q)$(PREFIX)gcc
+CXX = $(Q)$(PREFIX)g++
+HOST_CC = $(Q)gcc
+HOST_CXX = $(Q)g++
+HOST_AR = $(Q)ar
+HOST_NM = $(Q)nm
+LD = $(Q)$(PREFIX)ld
+NM = $(Q)$(PREFIX)nm
+OBJCOPY = $(Q)$(PREFIX)objcopy
+STRIP = $(Q)$(PREFIX)strip
+AS = $(Q)$(PREFIX)gcc -c -x assembler-with-cpp
+CPP = $(Q)$(PREFIX)cpp
+AR = $(Q)$(PREFIX)ar
+RC = $(Q)$(PREFIX)windres
+WRC = $(Q)$(WINE_TOP)/tools/wrc/wrc
+OBJCOPY = $(Q)$(PREFIX)objcopy
+OBJDUMP =$(Q)$(PREFIX)objdump
 TOOLS_PATH = $(PATH_TO_TOP)/tools
 W32API_PATH = $(PATH_TO_TOP)/w32api
-CP = $(TOOLS_PATH)/rcopy
-RM = $(TOOLS_PATH)/rdel
-RLINE = $(TOOLS_PATH)/rline
-RMDIR = $(TOOLS_PATH)/rrmdir
-RMKDIR = $(TOOLS_PATH)/rmkdir
-RSYM = $(TOOLS_PATH)/rsym
-RTOUCH = $(TOOLS_PATH)/rtouch
-REGTESTS = $(TOOLS_PATH)/regtests
-MC = $(TOOLS_PATH)/wmc/wmc
-CABMAN = $(TOOLS_PATH)/cabman/cabman
-WINEBUILD = $(TOOLS_PATH)/winebuild/winebuild
-WINE2ROS = $(TOOLS_PATH)/wine2ros/wine2ros
-XSLTPROC = xsltproc
+CP = $(Q)$(TOOLS_PATH)/rcopy
+RM = $(Q)$(TOOLS_PATH)/rdel
+RLINE = $(Q)$(TOOLS_PATH)/rline
+RMDIR = $(Q)$(TOOLS_PATH)/rrmdir
+RMKDIR = $(Q)$(TOOLS_PATH)/rmkdir
+RSYM = $(Q)$(TOOLS_PATH)/rsym
+RTOUCH = $(Q)$(TOOLS_PATH)/rtouch
+REGTESTS = $(Q)$(TOOLS_PATH)/regtests
+MC = $(Q)$(TOOLS_PATH)/wmc/wmc
+CABMAN = $(Q)$(TOOLS_PATH)/cabman/cabman
+WINEBUILD = $(Q)$(TOOLS_PATH)/winebuild/winebuild
+WINE2ROS = $(Q)$(TOOLS_PATH)/wine2ros/wine2ros
+MKHIVE = $(Q)$(TOOLS_PATH)/mkhive/mkhive
+CDMAKE = $(Q)$(TOOLS_PATH)/cdmake/cdmake
+BIN2RES = $(Q)$(TOOLS_PATH)/bin2res/bin2res
+XSLTPROC = $(Q)xsltproc
 
 STD_CFLAGS = -I$(PATH_TO_TOP)/include -I$(W32API_PATH)/include -pipe -march=i386 -D_M_IX86
 STD_CPPFLAGS = $(STD_CFLAGS)

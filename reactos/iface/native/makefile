@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2003/11/14 17:13:30 weiden Exp $
+# $Id: makefile,v 1.14 2004/07/21 18:17:50 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -22,7 +22,7 @@ BASE_CFLAGS = -I../../include
 all: $(TARGET)$(EXE_POSTFIX) $(NAPI_FILES)
 
 $(NAPI_FILES): $(SYSTEM_CALLS_DB) $(TARGET)$(EXE_POSTFIX) 
-	./$(TARGET)$(EXE_POSTFIX) \
+	@./$(TARGET)$(EXE_POSTFIX) \
 		$(SYSTEM_CALLS_DB) \
 		$(NTDLL_STUBS) \
 		$(KERNEL_SERVICE_TABLE) \

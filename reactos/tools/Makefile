@@ -144,8 +144,8 @@ clean:
 	$(MAKE) -C wine2ros clean
 	$(MAKE) -C winebuild clean
 	$(MAKE) -C bin2res clean
-	rm mkconfig
-	rm $(TOOLS)
+	@rm mkconfig
+	@rm $(TOOLS)
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
@@ -158,7 +158,7 @@ clean:
 	$(MAKE) -C wine2ros clean
 	$(MAKE) -C winebuild clean
 	$(MAKE) -C bin2res clean
-	-del *$(EXE_POSTFIX)
+	-@del *$(EXE_POSTFIX)
 endif
 
 .PHONY: all clean

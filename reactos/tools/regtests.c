@@ -632,7 +632,5 @@ int main(int argc, char **argv)
         }
     }
 
-  printf("Successfully generated regression test registrations.\n");
-
   return 0;
 }

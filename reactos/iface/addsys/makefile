@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.13 2003/12/03 21:50:49 gvg Exp $
+# $Id: makefile,v 1.14 2004/07/21 18:17:50 chorns Exp $
 #
 # ReactOS Operating System
 #
@@ -36,7 +36,7 @@ $(TARGETNAME)$(EXE_POSTFIX): $(TARGETNAME).c
 		$(TARGETNAME).c
 
 $(SVC_FILES): $(SVC_DB) $(TARGETNAME)$(EXE_POSTFIX)
-	./$(TARGETNAME)$(EXE_POSTFIX) \
+	@./$(TARGETNAME)$(EXE_POSTFIX) \
 		$(SVC_DB) \
 		$(SVC_SERVICE_TABLE) \
 		$(SVC_GDI_STUBS) \
