@@ -266,49 +266,65 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   {
     for (i=x; i<x+len; i++)
       vgaPutPixel(i, y, c);
-  } else {
 
-    // Calculate the left mask pixels, middle bytes and right mask pixel
-    ileftpix = 8-mod(x, 8);
-    irightpix = mod(x+len-1, 8);
-    imidpix = (len-ileftpix-irightpix) / 8;
+   return TRUE;
+  }
 
-    pre1=xconv[x-(8-ileftpix)]+y80[y];
-    orgpre1=pre1;
+  // Calculate the left mask pixels, middle bytes and right mask pixel
+  ileftpix = 8-mod(x, 8);
+  irightpix = mod(x+len, 8);
+  imidpix = (len-ileftpix-irightpix) / 8;
 
-    // Left
-    if(ileftpix>0)
-    {
-      // Write left pixels
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
+  if(ileftpix == 8)
+  {
+    ileftpix = 0;
+    imidpix++;
+  }
 
-      a = READ_REGISTER_UCHAR(vidmem + pre1);
-      WRITE_REGISTER_UCHAR(vidmem + pre1, c);
+  pre1=xconv[x-(8-ileftpix)]+y80[y];
+  orgpre1=pre1;
 
-      // Prepare new x for the middle
-      x=orgx+8;
-    }
+  // Left
+  if(ileftpix>0)
+  {
+    // Write left pixels
+    WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask
+    WRITE_PORT_UCHAR((PUCHAR)0x3cf,startmasks[ileftpix]);
 
-    if(imidpix>0)
-    {
-      midpre1=xconv[x]+y80[y];
+    a = READ_REGISTER_UCHAR(vidmem + pre1);
+    WRITE_REGISTER_UCHAR(vidmem + pre1, c);
 
-      // Set mask to all pixels in byte
-      WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
-      WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
-      memset(vidmem+midpre1, c, imidpix); // write middle pixels, no need to read in latch because of the width
-    }
+    // Prepare new x for the middle
+    x=orgx+8;
+  }
 
+  if(imidpix>0)
+  {
+    midpre1=xconv[x]+y80[y];
+
+    // Set mask to all pixels in byte
+    WRITE_PORT_UCHAR((PUCHAR)0x3ce, 0x08);
+    WRITE_PORT_UCHAR((PUCHAR)0x3cf, 0xff);
+    memset(vidmem+midpre1, c, imidpix); // write middle pixels, no need to read in latch because of the width
+  }
+
+  if(irightpix>0)
+  {
     x=orgx+len-irightpix;
-    pre1=xconv[x]+y80[y];
+
+    for(i=x; i<x+irightpix; i++)
+    {
+      vgaPutPixel(i, y, c);
+    }
+
+/*  pre1=xconv[x]+y80[y];
 
     // Write right pixels
     WRITE_PORT_UCHAR((PUCHAR)0x3ce,0x08);     // set the mask bits
     WRITE_PORT_UCHAR((PUCHAR)0x3cf, endmasks[irightpix]);
 
     a = READ_REGISTER_UCHAR(vidmem + pre1);
-    WRITE_REGISTER_UCHAR(vidmem + pre1, c);
+    WRITE_REGISTER_UCHAR(vidmem + pre1, c); */
   }
 
   return TRUE;
