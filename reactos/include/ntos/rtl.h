@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.9 2003/05/16 17:33:51 ekohl Exp $
+/* $Id: rtl.h,v 1.10 2003/05/28 18:09:09 chorns Exp $
  * 
  */
 
@@ -1927,7 +1927,7 @@ NTSTATUS
 STDCALL
 RtlUpcaseUnicodeString (
 	IN OUT	PUNICODE_STRING	DestinationString,
-	IN	PUNICODE_STRING	SourceString,
+	IN	PCUNICODE_STRING	SourceString,
 	IN	BOOLEAN		AllocateDestinationString
 	);
 

@@ -153,9 +153,12 @@ typedef struct _MADDRESS_SPACE
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
 
 
+#ifndef __USE_W32API
 /* VARIABLES */
 
 extern PVOID MmSystemRangeStart;
+
+#endif /* __USE_W32API */
 
 
 /* FUNCTIONS */

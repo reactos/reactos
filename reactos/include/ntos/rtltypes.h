@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.7 2003/05/16 17:33:51 ekohl Exp $
+/* $Id: rtltypes.h,v 1.8 2003/05/28 18:09:09 chorns Exp $
  * 
  */
 
@@ -123,12 +123,6 @@ typedef struct _RTL_SPLAY_LINKS
   struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
-#else /* __USE_W32API */
-
-#include <ddk/ntifs.h>
-
-#endif /* __USE_W32API */
-
 typedef struct _USER_STACK
 {
  PVOID FixedStackBase;
@@ -137,6 +131,12 @@ typedef struct _USER_STACK
  PVOID ExpandableStackLimit;
  PVOID ExpandableStackBottom;
 } USER_STACK, *PUSER_STACK;
+
+#else /* __USE_W32API */
+
+#include <ddk/ntifs.h>
+
+#endif /* __USE_W32API */
 
 typedef struct _RTL_HEAP_DEFINITION
 {

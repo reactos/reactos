@@ -1,3 +1,44 @@
+2003-05-28  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+  Changes for compiling with w32api
+
+	* include/ddk/haltypes.h: Move ...
+	* include/ntos/haltypes.h: ... here.
+	* include/ddk/obtypes.h: Move ...
+	* include/ntos/obtypes.h: ... here.
+	* include/ddk/i386/tss.h: Move ...
+	* include/ntos/tss.h: ... here.
+	* include/errors.h, include/windows.h: #include_next <windows.h>.
+	* include/ntos.h: Include "ntos/haltypes.h", "ntos/obtypes.h", and
+	"ntos/tss.h".
+	* include/ddk/defines.h (EXPORTED, IMPORTED): Move to
+	include/ntos/types.h.
+	* include/ddk/exfuncs.h, include/ddk/mmtypes.h, include/ntos/except.h,
+	include/ntos/file.h, include/ole32/guiddef.h, include/win32k/color.h,
+	lib/msafd/include/debug.h, lib/user32/include/debug.h,
+	lib/ws2_32/include/debug.h, lib/ws2help/debug.h,
+	ntoskrnl/include/internal/debug.h, ntoskrnl/ke/i386/bthread.S,
+	ntoskrnl/rtl/error.c: Don't define macros if previously defined.
+	* include/ddk/halfuncs.h: Include <ntos/haltypes.h>.
+	* include/ddk/iotypes.h: Include <ntos/obtypes.h>.
+	* include/ddk/ketypes.h (MB_FLAGS_*, LOADER_MODULE, ADDRESS_RANGE,
+	LOADER_PARAMETER_BLOCK): Move to include/ntos/types.h.
+	* include/ddk/ntddk.h: #include_next <ddk/ntddk.h>.
+	* include/ddk/ntifs.h: #include_next <ddk/ntifs.h>.
+	* include/napi/shared_data.h (SharedUserData): Undefine before defining.
+	* include/ntos/rtl.h (RtlUpcaseUnicodeString): Correct prototype.
+	* include/ntos/zwtypes.h (THREAD_STATE): Add.
+	* lib/ntdll/rtl/unicode.c (RtlUpcaseUnicodeString): Match new prototype.
+	* ntoskrnl/rtl/unicode.c (RtlUpcaseUnicodeString): Ditto.
+	* lib/string/Makefile: Include Makefile.$(ARCH). Don't include
+	makefile.$(ARCH).
+	* ntoskrnl/ex/sysinfo.c, ntoskrnl/include/internal/ntoskrnl.h,
+	* ntoskrnl/include/internal/ob.h, ntoskrnl/ob/handle.c: Include <ntos.h>.
+	* ntoskrnl/ke/i386/syscall.S: Don't include <ddk/defines.h>.
+	(KernelMode, UserMode): Define.
+	* ntoskrnl/ke/i386/stkswitch.S, ntoskrnl/ke/i386/tskswitch.S,
+	ntoskrnl/ke/i386/v86m_sup.S: Include <ntos/tss.h>
+
 2003-05-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* Makefile: Fix typo.

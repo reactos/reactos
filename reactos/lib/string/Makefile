@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2003/05/27 18:56:15 hbirr Exp $
+# $Id: Makefile,v 1.2 2003/05/28 18:09:10 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -8,7 +8,7 @@ TARGET_NAME = string
 
 include $(PATH_TO_TOP)/config
 
-include makefile.$(ARCH)
+include Makefile.$(ARCH)
 
 TARGET_CFLAGS = -Wall -Werror
 

@@ -1,6 +1,8 @@
 #ifndef __INCLUDE_DDK_HALFUNCS_H
 #define __INCLUDE_DDK_HALFUNCS_H
-/* $Id: halfuncs.h,v 1.4 2003/02/26 14:11:41 ekohl Exp $ */
+/* $Id: halfuncs.h,v 1.5 2003/05/28 18:09:09 chorns Exp $ */
+
+#include <ntos/haltypes.h>
 
 VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);

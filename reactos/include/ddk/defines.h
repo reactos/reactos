@@ -5,13 +5,12 @@
 
 #ifndef __ASM__
 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0400
+#endif
 
 #include <ddk/kedef.h>
 #include <ddk/iodef.h>
-
-#define EXPORTED __declspec(dllexport)
-#define IMPORTED __declspec(dllimport)
 
 /*
  * PURPOSE: Number of a thread priority levels

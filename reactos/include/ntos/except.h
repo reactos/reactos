@@ -57,7 +57,9 @@ typedef struct _EXCEPTION_RECORD {
 /* ExceptionFlags */
 #ifndef _GNU_H_WINDOWS32_DEFINES
 #ifdef __NTOSKRNL__
+#ifndef EXCEPTION_NONCONTINUABLE
 #define	EXCEPTION_NONCONTINUABLE	0x01
+#endif
 #endif /* __NTOSKRNL__ */
 #endif /* _GNU_H_WINDOWS32_DEFINES */
 #define	EXCEPTION_UNWINDING       0x02

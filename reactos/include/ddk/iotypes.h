@@ -1,10 +1,11 @@
-/* $Id: iotypes.h,v 1.47 2003/04/27 18:08:56 ekohl Exp $
+/* $Id: iotypes.h,v 1.48 2003/05/28 18:09:09 chorns Exp $
  *
  */
 
 #ifndef __INCLUDE_DDK_IOTYPES_H
 #define __INCLUDE_DDK_IOTYPES_H
 
+#include <ntos/obtypes.h>
 #include <ntos/disk.h>
 #include <ntos/file.h>
 

@@ -32,6 +32,12 @@
 #ifndef _GNU_H_WINDOWS_H
 #define _GNU_H_WINDOWS_H
 
+#ifdef __USE_W32API
+
+#include_next <windows.h>
+
+#else /* __USE_W32API */
+
 #ifndef max
 #define max(a,b)   (((a) > (b)) ? (a) : (b))
 #endif
@@ -164,5 +170,7 @@
 #define STRICT 1
 #endif
 #endif
+
+#endif /* !__USE_W32API */
 
 #endif /* _GNU_H_WINDOWS_H */

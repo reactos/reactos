@@ -92,8 +92,6 @@
 #define FILE_FILE_COMPRESSION		(0x00000010)
 #define FILE_VOLUME_IS_COMPRESSED	(0x00008000)
 
-#endif /* !__USE_W32API */
-
 #define FILE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x1FF)
 
 #define FILE_GENERIC_READ         (STANDARD_RIGHTS_READ     |\
@@ -110,10 +108,11 @@
                                    FILE_APPEND_DATA         |\
                                    SYNCHRONIZE)
 
-
 #define FILE_GENERIC_EXECUTE      (STANDARD_RIGHTS_EXECUTE  |\
                                    FILE_READ_ATTRIBUTES     |\
                                    FILE_EXECUTE             |\
                                    SYNCHRONIZE)
+
+#endif /* !__USE_W32API */
 
 #endif /* __INCLUDE_FILE_H */

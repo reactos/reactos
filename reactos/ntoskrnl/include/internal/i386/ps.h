@@ -65,6 +65,8 @@ typedef struct _KPCR
   struct _KTHREAD* CurrentThread;    /* 124 */
 } __attribute__((packed)) KPCR, *PKPCR;
 
+#ifndef __USE_W32API
+
 static inline PKPCR KeGetCurrentKPCR(VOID)
 {
   ULONG value;
@@ -75,6 +77,8 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
     );
   return((PKPCR)value);
 }
+
+#endif /* __USE_W32API */
 
 VOID
 Ki386ContextSwitch(struct _KTHREAD* NewThread, 

@@ -68,19 +68,26 @@ Cambridge, MA 02139, USA.
 	#define DEFINE_GUID(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
 		const GUID name
 #endif
+
+#ifndef DEFINE_OLEGUID
 #define DEFINE_OLEGUID(name, l, w1, w2) DEFINE_GUID(name, l, w1, w2, 0xC0,0,0,0,0,0,0,0x46)
+#endif
 
 
 //	IID section
 typedef	GUID		IID;
 typedef	IID*		LPIID;
+#ifndef IsEqualIID
 #define IsEqualIID(riid1, riid2) IsEqualGUID(riid1, riid2)
+#endif
 
 
 //	CLSID section
 typedef GUID		CLSID;
 typedef CLSID*		LPCLSID;
+#ifndef IsEqualCLSID
 #define IsEqualCLSID(rclsid1, rclsid2) IsEqualGUID(rclsid1, rclsid2)
+#endif
 
 //	FMTID
 typedef	GUID		FMTID;
@@ -161,8 +168,12 @@ typedef	FMTID*		LPFMTID;
 
 
 //	compare functions for IID CLSID
+#ifndef IsEqualIID
 #define IsEqualIID(riid1, riid2) IsEqualGUID(riid1, riid2)
+#endif
+#ifndef IsEqualCLSID
 #define IsEqualCLSID(rclsid1, rclsid2) IsEqualGUID(rclsid1, rclsid2)
+#endif
 
 //	c++ helper functions
 #if !defined _SYS_GUID_OPERATOR_EQ_ && !defined _NO_SYS_GUID_OPERATOR_EQ_

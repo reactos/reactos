@@ -59,6 +59,9 @@ typedef struct _KUSER_SHARED_DATA
 
 #if defined(__NTOSKRNL__) || defined(__NTDRIVER__) || defined(__NTHAL__)
 #define KI_USER_SHARED_DATA	(0xFFDF0000)
+#ifdef SharedUserData
+#undef SharedUserData
+#endif
 #define SharedUserData		((KUSER_SHARED_DATA * const)KI_USER_SHARED_DATA)
 #else
 #ifndef __USE_W32API

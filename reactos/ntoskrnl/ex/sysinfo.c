@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.20 2003/03/29 12:55:48 chorns Exp $
+/* $Id: sysinfo.c,v 1.21 2003/05/28 18:09:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,10 +14,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/exfuncs.h>
-#include <ddk/halfuncs.h>
-#include <ddk/iofuncs.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 #include <internal/ex.h>
 #include <internal/ldr.h>
 #include <internal/safe.h>

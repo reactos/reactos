@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: syscall.S,v 1.9 2002/09/08 10:23:30 chorns Exp $
+/* $Id: syscall.S,v 1.10 2003/05/28 18:09:10 chorns Exp $
  *
  * FILE:            ntoskrnl/hal/x86/syscall.s
  * PURPOSE:         2E trap handler
@@ -28,7 +28,9 @@
 #include <ddk/status.h>
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
-#include <ddk/defines.h>
+
+#define KernelMode  (0)
+#define UserMode    (1)
 
 /*
  *

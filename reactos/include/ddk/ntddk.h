@@ -1,4 +1,4 @@
-/* $Id: ntddk.h,v 1.34 2003/02/15 18:43:20 ekohl Exp $
+/* $Id: ntddk.h,v 1.35 2003/05/28 18:09:09 chorns Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -8,6 +8,12 @@
  * UPDATE HISTORY:
  *                 15/05/98: Created
  */
+
+#ifdef __USE_W32API
+
+#include_next <ddk/ntddk.h>
+
+#else /* __USE_W32API */
 
 #ifndef __NTDDK_H
 #define __NTDDK_H
@@ -50,7 +56,6 @@ extern "C"
 #include <ddk/ketypes.h>
 #include <ntos/security.h>
 #include <ddk/setypes.h>
-#include <ddk/obtypes.h>
 #include <ddk/mmtypes.h>
 #include <ddk/potypes.h>
 #include <ddk/pnptypes.h>
@@ -61,7 +66,6 @@ extern "C"
 #include <ntos/zwtypes.h>
 #include <ddk/ioctrl.h>
 #include <ntos/rtltypes.h>
-#include <ddk/haltypes.h>
 #include <napi/shared_data.h>
 
 #include <ntos/zw.h>
@@ -88,3 +92,4 @@ extern "C"
 
 #endif /* __NTDDK_H */
 
+#endif /* __USE_W32API */

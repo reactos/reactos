@@ -3,7 +3,7 @@
 
 #include <ntos/ps.h>
 
-#include <ddk/i386/tss.h>
+#include <ntos/tss.h>
 #include <napi/teb.h>
 
 #ifndef TLS_MINIMUM_AVAILABLE

@@ -3,6 +3,17 @@
 
 #ifndef __USE_W32API
 
+typedef enum _THREAD_STATE {
+	StateInitialized,
+	StateReady,
+	StateRunning,
+	StateStandby,
+	StateTerminated,
+	StateWait,
+	StateTransition,
+	StateUnknown
+} THREAD_STATE;
+
 typedef enum _DEBUG_CONTROL_CODE
 {
   DebugGetTraceInformation = 1,
@@ -1225,20 +1236,23 @@ struct _SYSTEM_PATH_INFORMATION
 
 // SystemProcessInformation (5)
 
-typedef struct _SYSTEM_THREADS
-{
- TIME         KernelTime;
- TIME         UserTime;
- TIME         CreateTime;
- ULONG        WaitTime;
- PVOID        StartAddress;
- CLIENT_ID    ClientId;
- KPRIORITY    Priority;
- KPRIORITY    BasePriority;
- ULONG        ContextSwitchCount;
- ULONG State;
- KWAIT_REASON WaitReason;
+#ifndef __USE_W32API
+
+typedef struct _SYSTEM_THREADS {
+	LARGE_INTEGER  KernelTime;
+	LARGE_INTEGER  UserTime;
+	LARGE_INTEGER  CreateTime;
+	ULONG  WaitTime;
+	PVOID  StartAddress;
+	CLIENT_ID  ClientId;
+	KPRIORITY  Priority;
+	KPRIORITY  BasePriority;
+	ULONG  ContextSwitchCount;
+	THREAD_STATE  State;
+	KWAIT_REASON  WaitReason;
 } SYSTEM_THREADS, *PSYSTEM_THREADS;
+
+#endif /* __USE_W32API */
 
 typedef struct _SYSTEM_PROCESSES_NT4
 {
@@ -1277,8 +1291,12 @@ typedef struct _SYSTEM_PROCESSES_NT5
  SYSTEM_THREADS Threads[ANYSIZE_ARRAY];
 } SYSTEM_PROCESSES_NT5, *PSYSTEM_PROCESSES_NT5;
 
+#ifndef __USE_W32API
+
 /* Not sure. What version are we emulating? */
 typedef SYSTEM_PROCESSES_NT5 SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
+
+#endif /* __USE_W32API */
 
 // SystemCallCountInformation (6)
 typedef

@@ -2,4 +2,4 @@
 #include <reactos/resource.h>
 #include "resource.h"
 
-IDI_ICON                ICON    DISCARDABLE     "ICON.ICO"
+IDI_ICON                ICON    DISCARDABLE     "icon.ico"

@@ -17,11 +17,6 @@
 #define CONSOLE_INPUT_MODE_VALID  (0x0f)
 #define CONSOLE_OUTPUT_MODE_VALID (0x03)
 
-typedef struct _CONSOLE_FONT_INFO {
-  DWORD nFont;
-  COORD dwFontSize;
-} CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
-
 typedef struct _CONSOLE_SELECTION_INFO {
   DWORD dwFlags;
   COORD dwSelectionAnchor;
@@ -29,6 +24,11 @@ typedef struct _CONSOLE_SELECTION_INFO {
 } CONSOLE_SELECTION_INFO, *PCONSOLE_SELECTION_INFO;
 
 #ifndef __USE_W32API
+
+typedef struct _CONSOLE_FONT_INFO {
+  DWORD nFont;
+  COORD dwFontSize;
+} CONSOLE_FONT_INFO, *PCONSOLE_FONT_INFO;
 
 /* GetConsoleMode */
 #define ENABLE_LINE_INPUT			(0x02)

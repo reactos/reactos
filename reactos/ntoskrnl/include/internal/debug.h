@@ -29,6 +29,9 @@
 
 /* Assert only on "checked" version */
 #ifndef NASSERT
+#ifdef assert
+#undef assert
+#endif
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 
 #define assertmsg(_c_, _m_) \
@@ -40,6 +43,9 @@
 
 #else
 
+#ifdef assert
+#undef assert
+#endif
 #define assert(x)
 #define assertmsg(_c_, _m_)
 
@@ -51,6 +57,9 @@
 #else /* DBG */
 
 #define CPRINT(args...)
+#ifdef assert
+#undef assert
+#endif
 #define assert(x)
 #define assertmsg(_c_, _m_)
 

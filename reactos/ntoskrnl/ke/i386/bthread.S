@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bthread.S,v 1.7 2002/09/17 23:41:44 dwelch Exp $
+/* $Id: bthread.S,v 1.8 2003/05/28 18:09:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -34,12 +34,24 @@
 
 /* Values for contextflags */
 #define CONTEXT_i386    0x10000
+#ifndef CONTEXT_CONTROL
 #define CONTEXT_CONTROL         (CONTEXT_i386 | 1)	
+#endif
+#ifndef CONTEXT_INTEGER
 #define CONTEXT_INTEGER         (CONTEXT_i386 | 2)	
+#endif
+#ifndef CONTEXT_SEGMENTS
 #define CONTEXT_SEGMENTS        (CONTEXT_i386 | 4)	
+#endif
+#ifndef CONTEXT_FLOATING_POINT
 #define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 8)	
+#endif
+#ifndef CONTEXT_DEBUG_REGISTERS
 #define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x10)
+#endif
+#ifndef CONTEXT_FULL
 #define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS)
+#endif
 	
 /* FUNCTIONS *****************************************************************/
 

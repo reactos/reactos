@@ -7,7 +7,8 @@
 
 #ifndef __ASM__
 
-#include <ddk/ntddk.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 
 #include <stdarg.h>
 

@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.7 2002/12/08 16:23:32 robd Exp $
+/* $Id: error.c,v 1.8 2003/05/28 18:09:10 chorns Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -25,8 +25,12 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifndef HIWORD
 #define HIWORD(l) ((WORD)(((DWORD)(l) >> 16) & 0xFFFF))
+#endif
+#ifndef LOWORD
 #define LOWORD(l) ((WORD)(l))
+#endif
 
 /* TYPES *******************************************************************/
 

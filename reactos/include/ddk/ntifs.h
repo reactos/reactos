@@ -1,3 +1,9 @@
+#ifdef __USE_W32API
+
+#include_next <ddk/ntifs.h>
+
+#else /* __USE_W32API */
+
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
@@ -15,3 +21,5 @@ CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 #include <ddk/fsfuncs.h>
 
 #endif /* __INCLUDE_DDK_NTIFS_H */
+
+#endif /* __USE_W32API */

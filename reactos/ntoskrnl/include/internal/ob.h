@@ -9,7 +9,8 @@
 #ifndef __INCLUDE_INTERNAL_OBJMGR_H
 #define __INCLUDE_INTERNAL_OBJMGR_H
 
-#include <ddk/types.h>
+#define NTOS_MODE_KERNEL
+#include <ntos.h>
 
 struct _EPROCESS;
 

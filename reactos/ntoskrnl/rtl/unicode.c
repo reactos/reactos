@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.27 2003/05/20 14:38:05 ekohl Exp $
+/* $Id: unicode.c,v 1.28 2003/05/28 18:09:10 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1295,7 +1295,7 @@ RtlUnicodeStringToOemString(IN OUT POEM_STRING DestinationString,
 
 NTSTATUS STDCALL
 RtlUpcaseUnicodeString(IN OUT PUNICODE_STRING DestinationString,
-		       IN PUNICODE_STRING SourceString,
+		       IN PCUNICODE_STRING SourceString,
 		       IN BOOLEAN AllocateDestinationString)
 {
   ULONG i;
