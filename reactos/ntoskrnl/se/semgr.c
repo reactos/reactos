@@ -1,4 +1,4 @@
-/* $Id: semgr.c,v 1.36 2004/07/20 12:08:04 ekohl Exp $
+/* $Id: semgr.c,v 1.37 2004/07/21 23:38:15 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -287,59 +287,6 @@ SeDeassignSecurity(PSECURITY_DESCRIPTOR *SecurityDescriptor)
 }
 
 
-#if 0
-VOID
-SepGetDefaultsSubjectContext(PSECURITY_SUBJECT_CONTEXT SubjectContext,
-			     PSID* Owner,
-			     PSID* PrimaryGroup,
-			     PSID* ProcessOwner,
-			     PSID* ProcessPrimaryGroup,
-			     PACL* DefaultDacl)
-{
-  PACCESS_TOKEN Token;
-
-  if (SubjectContext->ClientToken != NULL)
-    {
-	Token = SubjectContext->ClientToken;
-    }
-  else
-    {
-	Token = SubjectContext->PrimaryToken;
-    }
-  *Owner = Token->UserAndGroups[Token->DefaultOwnerIndex].Sid;
-  *PrimaryGroup = Token->PrimaryGroup;
-  *DefaultDacl = Token->DefaultDacl;
-  *ProcessOwner = SubjectContext->PrimaryToken->
-    UserAndGroups[Token->DefaultOwnerIndex].Sid;
-  *ProcessPrimaryGroup = SubjectContext->PrimaryToken->PrimaryGroup;
-}
-
-
-NTSTATUS
-SepInheritAcl(PACL Acl,
-	      BOOLEAN IsDirectoryObject,
-	      PSID Owner,
-	      PSID PrimaryGroup,
-	      PACL DefaultAcl,
-	      PSID ProcessOwner,
-	      PSID ProcessGroup,
-	      PGENERIC_MAPPING GenericMapping)
-{
-  if (Acl == NULL)
-    {
-	return(STATUS_UNSUCCESSFUL);
-    }
-
-  if (Acl->AclRevision != 2 &&
-      Acl->AclRevision != 3 )
-    {
-	return(STATUS_UNSUCCESSFUL);
-    }
-
-}
-#endif
-
-
 /*
  * @unimplemented
  */
@@ -365,7 +312,6 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   PSID Group = NULL;
   PACL Dacl = NULL;
   PACL Sacl = NULL;
-//  NTSTATUS Status;
 
   /* FIXME: Lock subject context */
 
@@ -438,8 +384,9 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 
 
   /* Inherit the DACL */
-  /* FIXME */
-  if (ExplicitDescriptor != NULL && (ExplicitDescriptor->Control & SE_DACL_PRESENT))
+  if (ExplicitDescriptor != NULL &&
+      (ExplicitDescriptor->Control & SE_DACL_PRESENT) &&
+      !(ExplicitDescriptor->Control & SE_DACL_DEFAULTED))
     {
       DPRINT("Use explicit DACL!\n");
       Dacl = ExplicitDescriptor->Dacl;
@@ -449,13 +396,35 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
 	}
 
       Control |= SE_DACL_PRESENT;
-      DaclLength = Dacl->AclSize;
+    }
+  else if (ParentDescriptor != NULL &&
+	   (ParentDescriptor->Control & SE_DACL_PRESENT))
+    {
+      DPRINT("Use parent DACL!\n");
+      /* FIXME: Inherit */
+      Dacl = ParentDescriptor->Dacl;
+      if (Dacl != NULL && (ParentDescriptor->Control & SE_SELF_RELATIVE))
+	{
+	  Dacl = (PACL)(((ULONG_PTR)Dacl) + (ULONG_PTR)ParentDescriptor);
+	}
+      Control |= SE_DACL_PRESENT;
+    }
+  else if (Token != NULL && Token->DefaultDacl != NULL)
+    {
+      DPRINT("Use token default DACL!\n");
+      /* FIXME: Inherit */
+      Dacl = Token->DefaultDacl;
+      Control |= SE_DACL_PRESENT;
     }
   else
     {
-      DPRINT("No DACL!\n");
-      DaclLength = 0;
+      DPRINT("Use NULL DACL!\n");
+      Dacl = NULL;
+      Control |= SE_DACL_PRESENT;
     }
+
+  DaclLength = (Dacl != NULL) ? Dacl->AclSize : 0;
+
 
 
   /* Inherit the SACL */
@@ -490,7 +459,7 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
     {
       DPRINT1("ExAlloctePool() failed\n");
       /* FIXME: Unlock subject context */
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   RtlCreateSecurityDescriptor(Descriptor,
@@ -540,63 +509,6 @@ SeAssignSecurity(PSECURITY_DESCRIPTOR ParentDescriptor OPTIONAL,
   *NewDescriptor = Descriptor;
 
   return STATUS_SUCCESS;
-
-#if 0
-   PSID Owner;
-   PSID PrimaryGroup;
-   PACL DefaultDacl;
-   PSID ProcessOwner;
-   PSID ProcessPrimaryGroup;
-   PACL Sacl;
-
-   if (ExplicitDescriptor == NULL)
-     {
-	RtlCreateSecurityDescriptor(&Descriptor, 1);
-     }
-   else
-     {
-	Descriptor = ExplicitDescriptor;
-     }
-
-   SeLockSubjectContext(SubjectContext);
-
-   SepGetDefaultsSubjectContext(SubjectContext,
-				&Owner,
-				&PrimaryGroup,
-				&DefaultDacl,
-				&ProcessOwner,
-				&ProcessPrimaryGroup);
-
-   if (Descriptor->Control & SE_SACL_PRESENT ||
-       Descriptor->Control & SE_SACL_DEFAULTED)
-     {
-	if (ParentDescriptor == NULL)
-	  {
-	  }
-
-	if (Descriptor->Control & SE_SACL_PRESENT ||
-	    Descriptor->Sacl == NULL ||)
-	  {
-	     Sacl = NULL;
-	  }
-	else
-	  {
-	     Sacl = Descriptor->Sacl;
-	     if (Descriptor->Control & SE_SELF_RELATIVE)
-	       {
-		  Sacl = (PACL)(((ULONG_PTR)Sacl) + (ULONG_PTR)Descriptor);
-	       }
-	  }
-
-	SepInheritAcl(Sacl,
-		      IsDirectoryObject,
-		      Owner,
-		      PrimaryGroup,
-		      DefaultDacl,
-		      ProcessOwner,
-		      GenericMapping);
-     }
-#endif
 }
 
 
