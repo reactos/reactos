@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.59 2003/01/31 21:49:11 hbirr Exp $
+/* $Id: utils.c,v 1.60 2003/03/17 23:05:07 gdalsnes Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -659,9 +659,9 @@ LdrGetExportByOrdinal (
         DbgPrint(
                 "LdrGetExportByOrdinal(Ordinal %d) = %x\n",
                 Ordinal,
-                ExFunctions[ExOrdinals[Ordinal - ExportDir->Base]]
+                RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] )
                 );
-        return(ExFunctions[ExOrdinals[Ordinal - ExportDir->Base]]);
+        return(RVA(BaseAddress, ExFunctions[Ordinal - ExportDir->Base] ));
 }
 
 
@@ -678,6 +678,8 @@ LdrGetExportByOrdinal (
  * REVISIONS
  *
  * NOTE
+ *  AddressOfNames and AddressOfNameOrdinals are paralell tables, 
+ *  both with NumberOfNames entries.
  *
  */
 static PVOID
@@ -708,7 +710,15 @@ LdrGetExportByName(PVOID BaseAddress,
         DbgPrint("LdrGetExportByName(): no export directory!\n");
         return NULL;
      }
-   
+
+
+   //The symbol names may be missing entirely
+   if (ExportDir->AddressOfNames == 0)
+   {
+      DPRINT("LdrGetExportByName(): symbol names missing entirely\n");  
+      return NULL;
+   }
+
    /*
     * Get header pointers
     */
@@ -722,7 +732,7 @@ LdrGetExportByName(PVOID BaseAddress,
    /*
     * Check the hint first
     */
-   if (Hint < ExportDir->NumberOfFunctions)
+   if (Hint < ExportDir->NumberOfNames)
      {
         ExName = RVA(BaseAddress, ExNames[Hint]);
         if (strcmp(ExName, SymbolName) == 0)
@@ -744,7 +754,7 @@ LdrGetExportByName(PVOID BaseAddress,
     * Try a binary search first
     */
    minn = 0;
-   maxn = ExportDir->NumberOfFunctions;
+   maxn = ExportDir->NumberOfNames;
    while (minn <= maxn)
      {
         ULONG mid;
@@ -786,7 +796,7 @@ LdrGetExportByName(PVOID BaseAddress,
     * Fall back on a linear search
     */
    DPRINT("LdrGetExportByName(): Falling back on a linear search of export table\n");
-   for (i = 0; i < ExportDir->NumberOfFunctions; i++)
+   for (i = 0; i < ExportDir->NumberOfNames; i++)
      {
         ExName = RVA(BaseAddress, ExNames[i]);
         if (strcmp(ExName,SymbolName) == 0)
