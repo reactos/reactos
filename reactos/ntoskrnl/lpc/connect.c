@@ -1,4 +1,4 @@
-/* $Id: connect.c,v 1.25 2004/02/02 23:48:42 ea Exp $
+/* $Id: connect.c,v 1.26 2004/02/21 09:06:27 navaraf Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -432,20 +432,20 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     {
       if (UnsafeConnectDataLength != NULL)
 	{
-	  if (ExGetPreviousMode() != KernelMode)
-	    {
-	      Status = MmCopyToCaller(UnsafeConnectData,
-				      ConnectData,
-				      ConnectDataLength);
-	      ExFreePool(ConnectData);
-	      if (!NT_SUCCESS(Status))
-		{
-		  return(Status);
-		}
-	    }
 	  Status = MmCopyToCaller(UnsafeConnectDataLength,
 				  &ConnectDataLength,
 				  sizeof(ULONG));
+	  if (!NT_SUCCESS(Status))
+	    {
+	      return(Status);
+	    }
+	}
+      if (UnsafeConnectData != NULL && ConnectData != NULL)
+	{
+	  Status = MmCopyToCaller(UnsafeConnectData,
+				      ConnectData,
+				      ConnectDataLength);
+	  ExFreePool(ConnectData);
 	  if (!NT_SUCCESS(Status))
 	    {
 	      return(Status);
