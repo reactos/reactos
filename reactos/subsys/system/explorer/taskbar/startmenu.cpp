@@ -1869,6 +1869,6 @@ void RecentStartMenu::AddEntries()
 		}
 
 		dir.sort_directory(SORT_DATE);
-		AddShellEntries(dir, 16, smd._subfolders);	///@todo read max. count of entries from registry
+		AddShellEntries(dir, RECENT_DOCS_COUNT, smd._subfolders);
 	}
 }

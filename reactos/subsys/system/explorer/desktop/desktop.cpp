@@ -175,11 +175,9 @@ void Desktops::SwitchToDesktop(int idx)
 	if (_current_desktop == idx)
 		return;
 
-	Desktop& desktop = (*this)[idx];
-
-	 // save currently visible application windows
 	Desktop& old_desktop = (*this)[_current_desktop];
 	WindowSet& windows = old_desktop._windows;
+	Desktop& desktop = (*this)[idx];
 
 	windows.clear();
 
@@ -189,6 +187,7 @@ void Desktops::SwitchToDesktop(int idx)
 		for(WindowSet::const_iterator it2=it1->_windows.begin(); it2!=it1->_windows.end(); ++it2)
 			other_wnds.insert(*it2);
 
+	 // save currently visible application windows
 	EnumWindows(SwitchDesktopEnumFct, (LPARAM)&windows);
 
 	old_desktop._hwndForeground = (HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_LAST_ACTIVE, 0, 0);

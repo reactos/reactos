@@ -409,6 +409,8 @@ protected:
 };
 
 
+#define	RECENT_DOCS_COUNT	20	///@todo read max. count of entries from registry
+
  /// "Recent Files" sub-start menu
 struct RecentStartMenu : public StartMenu
 {
