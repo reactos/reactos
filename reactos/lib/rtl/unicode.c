@@ -2240,7 +2240,7 @@ BOOLEAN
 STDCALL
 RtlCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PWSTR  Source)
+   IN PCWSTR  Source)
 {
 
    DPRINT("RtlCreateUnicodeString\n");
@@ -2255,7 +2255,7 @@ BOOLEAN
 FASTCALL
 RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PWSTR  Source,
+   IN PCWSTR  Source,
    IN POOL_TYPE PoolType)
 {
    ULONG Length;
@@ -2392,7 +2392,7 @@ RtlpDowncaseUnicodeString(
  */
 NTSTATUS STDCALL
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
-                         IN PWSTR Source)
+                         IN PCWSTR Source)
 {
    ULONG slen;
 

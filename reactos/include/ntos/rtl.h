@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.41 2004/12/30 18:30:03 ion Exp $
+/* $Id$
  * 
  */
 #ifndef __DDK_RTL_H
@@ -381,7 +381,7 @@ NTSTATUS
 STDCALL
 RtlAppendUnicodeToString (
 	PUNICODE_STRING	Destination,
-	PWSTR		Source
+	PCWSTR		Source
 	);
 
 SIZE_T STDCALL
@@ -861,7 +861,7 @@ RtlCreateSystemVolumeInformationFolder(
 
 BOOLEAN STDCALL
 RtlCreateUnicodeString (OUT PUNICODE_STRING Destination,
-			IN PWSTR Source);
+			IN PCWSTR Source);
 
 BOOLEAN STDCALL
 RtlCreateUnicodeStringFromAsciiz (OUT PUNICODE_STRING Destination,
@@ -2791,7 +2791,7 @@ BOOLEAN
 FASTCALL
 RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PWSTR  Source,
+   IN PCWSTR  Source,
    IN POOL_TYPE PoolType);   
 
 NTSTATUS
