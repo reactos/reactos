@@ -1,10 +1,12 @@
-# $Id: makefile,v 1.12 2004/07/29 04:09:05 arty Exp $
+# $Id: makefile,v 1.13 2004/08/15 22:51:57 chorns Exp $
 
 PATH_TO_TOP = ../../..
 
 TARGET_TYPE = driver
 
 TARGET_NAME = afd
+
+TARGET_PCH = include/afd.h
 
 TARGET_DDKLIBS = \
 	$(PATH_TO_TOP)/dk/w32/lib/pseh.a

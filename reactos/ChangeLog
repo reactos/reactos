@@ -1,5 +1,12 @@
 2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* drivers/net/afd/include/.cvsignore: New file.
+	* drivers/net/afd/include/tdiconn.h: Don't include <afd.h>.
+	* drivers/net/afd/.cvsignore: Add *.d.
+	* drivers/net/afd/makefile (TARGET_PCH): Set to include/afd.h.
+
+2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* subsys/system/taskmgr/.cvsignore: Add *.gch.
 	* subsys/system/taskmgr/precomp.h: New file.
 	* subsys/system/taskmgr/makefile (TARGET_PCH): Set to precomp.h.

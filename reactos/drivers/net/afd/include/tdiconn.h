@@ -1,7 +1,6 @@
 #ifndef _TDICONN_H
 #define _TDICONN_H
 
-#include <afd.h>
 #ifdef _MSC_VER
 #include <ntddtdi.h>
 #endif
