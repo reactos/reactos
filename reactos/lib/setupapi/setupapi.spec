@@ -258,9 +258,10 @@
 @ stub SetupQueryFileLogW
 @ stub SetupQueryInfFileInformationA
 @ stub SetupQueryInfFileInformationW
+@ stub SetupQueryInfOriginalFileInformationA
+@ stub SetupQueryInfOriginalFileInformationW
 @ stub SetupQueryInfVersionInformationA
 @ stub SetupQueryInfVersionInformationW
-@ stub SetupQueryInfOriginalFileInformationW
 @ stub SetupQuerySourceListA
 @ stub SetupQuerySourceListW
 @ stdcall SetupQuerySpaceRequiredOnDriveA(long str ptr ptr long)
