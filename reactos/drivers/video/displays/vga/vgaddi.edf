@@ -1,0 +1,11 @@
+; $Id: vgaddi.edf,v 1.1 2004/01/10 14:39:20 navaraf Exp $
+;
+; vgaddi.def
+;
+; ReactOS Operating System
+;
+; From Anders Norlander's w32api-0.1.5 vgaddi.def.
+;
+LIBRARY vgaddi.dll
+EXPORTS
+DrvEnableDriver=DrvEnableDriver@12

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.200 2004/01/09 19:55:29 ekohl Exp $
+# $Id: Makefile,v 1.201 2004/01/10 14:39:20 navaraf Exp $
 #
 # Global makefile
 #
@@ -46,9 +46,6 @@ DLLS =	libwine advapi32 cards crtdll fmifs freetype gdi32 kernel32 packet lzexpa
 	syssetup twain unicode user32 userenv version winspool ws2help ws2_32 wsock32 \
 	wshirda iphlpapi msgina mswsock msimg32 d3d8thk winmm comctl32 $(DLLS_KBD)
 
-# Uncomment this after the update W32API headers will be released.
-# DLLS += ole32 shlwapi
-
 SUBSYS = smss win32k csrss ntvdm
 
 #
@@ -67,8 +64,8 @@ DRIVERS_LIB = bzip2
 
 # Kernel mode device drivers
 # Obsolete: ide
-# beep blue floppy null parallel ramdrv serenum serial vga videoprt
-DEVICE_DRIVERS = beep blue debugout floppy null serial vga videoprt bootvid
+# beep blue floppy null parallel ramdrv serenum serial videoprt
+DEVICE_DRIVERS = beep blue debugout floppy null serial videoprt bootvid
 
 # Kernel mode input drivers
 INPUT_DRIVERS = keyboard mouclass psaux sermouse
@@ -111,7 +108,7 @@ EXT_MODULES =
 endif
 
 KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS) \
-	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS)
+	$(NET_DRIVERS) $(NET_DEVICE_DRIVERS) $(STORAGE_DRIVERS) VIDEO_DRIVERS
 
 # Regression tests
 REGTESTS = regtests
@@ -258,8 +255,9 @@ $(SYS_SVC:%=%_install): %_install:
 $(APPS): %:
 	$(MAKE) -C apps/$*
 
-$(APPS:%=%_implib): %_implib:
-	$(MAKE) -C apps/$* implib
+# Not needed
+# $(APPS:%=%_implib): %_implib:
+#	$(MAKE) -C apps/$* implib
 
 $(APPS:%=%_clean): %_clean:
 	$(MAKE) -C apps/$* clean
@@ -445,6 +443,28 @@ $(DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 
 
 #
+# Video device driver rules
+#
+VIDEO_DRIVERS: 
+	$(MAKE) -C drivers/video
+
+VIDEO_DRIVERS_implib:
+	$(MAKE) -C drivers/video implib
+
+VIDEO_DRIVERS_clean:
+	$(MAKE) -C drivers/video clean
+
+VIDEO_DRIVERS_install:
+	$(MAKE) -C drivers/video install
+
+VIDEO_DRIVERS_bootcd:
+	$(MAKE) -C drivers/video bootcd
+
+.PHONY: VIDEO_DRIVERS VIDEO_DRIVERS_implib VIDEO_DRIVERS_clean \
+        VIDEO_DRIVERS_install VIDEO_DRIVERS_bootcd
+
+
+#
 # Input driver rules
 #
 $(INPUT_DRIVERS): %:
@@ -464,7 +484,6 @@ $(INPUT_DRIVERS:%=%_bootcd): %_bootcd:
 
 .PHONY: $(INPUT_DRIVERS) $(INPUT_DRIVERS:%=%_implib) $(INPUT_DRIVERS:%=%_clean)\
         $(INPUT_DRIVERS:%=%_install) $(INPUT_DRIVERS:%=%_bootcd)
-
 
 #
 # Filesystem driver rules
