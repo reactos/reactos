@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.86 2003/12/08 18:21:24 navaraf Exp $
+/* $Id: window.c,v 1.87 2003/12/10 03:59:18 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1328,28 +1328,18 @@ AnimateWindow(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 WINBOOL STDCALL
 OpenIcon(HWND hWnd)
 {
     if (! NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE)
     {
-        // Not minimized - error?
         return FALSE;
     }
-    
-    if (! SendMessageA(hWnd, WM_QUERYOPEN, 0, 0))
-    {
-        // Window doesn't want to be opened - error?
-        return FALSE;
-    }
-    
-    // Now we need to do the actual opening of the window, which is something
-    // I'll leave to someone more capable :)
 
-    UNIMPLEMENTED;
-    return FALSE;
+    ShowWindow(hWnd,SW_RESTORE);
+    return true;
 }
 
 
@@ -1758,3 +1748,4 @@ ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT *prcScroll,
 }
 
 /* EOF */
+	
