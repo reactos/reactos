@@ -21,8 +21,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * TODO:
- *  Image list support
  *  Unicode support (under construction)
+ *
+ *  Styles:
+ *   TCIF_RTLREADING
+ *
+ *  Messages:
+ *   TCM_SETITEMEXTRA
+ *   TCM_REMOVEIMAGE
+ *   TCM_DESELECTALL
+ *   TCM_GETEXTENDEDSTYLE
+ *   TCM_SETEXTENDEDSTYLE
  *
  * FIXME:
  *  UpDown control not displayed until after a tab is clicked on
@@ -652,9 +661,13 @@ TAB_DrawLoneItemInterior(HWND hwnd, TAB_INFO* infoPtr, int iItem)
   HDC hdc = GetDC(hwnd);
   RECT r, rC;
 
-  GetWindowRect(hwnd, &rC);
-  GetWindowRect(infoPtr->hwndUpDown, &r);
-  ExcludeClipRect(hdc, r.left - rC.left, r.top - rC.top, r.right - rC.left, r.bottom - rC.top);
+  /* Clip UpDown control to not draw over it */
+  if (infoPtr->needsScrolling)
+  {
+    GetWindowRect(hwnd, &rC);
+    GetWindowRect(infoPtr->hwndUpDown, &r);
+    ExcludeClipRect(hdc, r.left - rC.left, r.top - rC.top, r.right - rC.left, r.bottom - rC.top);
+  }
   TAB_DrawItemInterior(hwnd, hdc, iItem, NULL);
   ReleaseDC(hwnd, hdc);
 }
@@ -1188,8 +1201,7 @@ static void TAB_SetItemBounds (HWND hwnd)
      * Check if this is a multiline tab control and if so
      * check to see if we should wrap the tabs
      *
-     * Because we are going to arange all these tabs evenly
-     * really we are basically just counting rows at this point
+     * Wrap all these tabs. We will arange them evenly later.
      *
      */
 
@@ -1242,19 +1254,26 @@ static void TAB_SetItemBounds (HWND hwnd)
     /* Don't need scrolling, then update infoPtr->leftmostVisible */
     if(!infoPtr->needsScrolling)
       infoPtr->leftmostVisible = 0;
-
-    TAB_SetupScrolling(hwnd, infoPtr, &clientRect);
   }
+  else
+  {
+    /*
+     * No scrolling in Multiline or Vertical styles.
+     */
+    infoPtr->needsScrolling = FALSE;
+    infoPtr->leftmostVisible = 0;
+  }
+  TAB_SetupScrolling(hwnd, infoPtr, &clientRect);
 
   /* Set the number of rows */
   infoPtr->uNumRows = curItemRowCount;
 
-   if (((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) && (infoPtr->uNumItem > 0))
+  /* Arange all tabs evenly if style says so */
+   if (!(lStyle & TCS_RAGGEDRIGHT) &&  ((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) && (infoPtr->uNumItem > 0))
    {
-      INT widthDiff, remainder;
       INT tabPerRow,remTab;
       INT iRow,iItm;
-      INT iIndexStart=0,iIndexEnd=0, iCount=0;
+      INT iCount=0;
 
       /*
        * Ok windows tries to even out the rows. place the same
@@ -1335,66 +1354,68 @@ static void TAB_SetItemBounds (HWND hwnd)
        * Justify the rows
        */
       {
-         while(iIndexStart < infoPtr->uNumItem)
+	INT widthDiff, iIndexStart=0, iIndexEnd=0;
+	INT remainder;
+	INT iCount=0;
+
+        while(iIndexStart < infoPtr->uNumItem)
         {
-        /*
-         * find the indexs of the row
-         */
-        /* find the first item on the next row */
-        for (iIndexEnd=iIndexStart;
-             (iIndexEnd < infoPtr->uNumItem) &&
- 	       (infoPtr->items[iIndexEnd].rect.top ==
+          /*
+           * find the indexs of the row
+           */
+          /* find the first item on the next row */
+          for (iIndexEnd=iIndexStart;
+              (iIndexEnd < infoPtr->uNumItem) &&
+ 	      (infoPtr->items[iIndexEnd].rect.top ==
                 infoPtr->items[iIndexStart].rect.top) ;
-            iIndexEnd++)
-        /* intentionally blank */;
+              iIndexEnd++)
+          /* intentionally blank */;
 
-        /*
-         * we need to justify these tabs so they fill the whole given
-         * client area
-         *
-         */
-        /* find the amount of space remaining on this row */
-        widthDiff = clientRect.right - (2 * SELECTED_TAB_OFFSET) -
-                            infoPtr->items[iIndexEnd - 1].rect.right;
+          /*
+           * we need to justify these tabs so they fill the whole given
+           * client area
+           *
+           */
+          /* find the amount of space remaining on this row */
+          widthDiff = clientRect.right - (2 * SELECTED_TAB_OFFSET) -
+			infoPtr->items[iIndexEnd - 1].rect.right;
 
-        /* iCount is the number of tab items on this row */
-        iCount = iIndexEnd - iIndexStart;
+	  /* iCount is the number of tab items on this row */
+	  iCount = iIndexEnd - iIndexStart;
 
-
-        if (iCount > 1)
-        {
-           remainder = widthDiff % iCount;
-           widthDiff = widthDiff / iCount;
-           /* add widthDiff/iCount, or extra space/items on row, to each item on this row */
-           for (iIndex=iIndexStart,iCount=0; iIndex < iIndexEnd;
-                iIndex++,iCount++)
-           {
-              infoPtr->items[iIndex].rect.left += iCount * widthDiff;
-              infoPtr->items[iIndex].rect.right += (iCount + 1) * widthDiff;
+	  if (iCount > 1)
+	  {
+	    remainder = widthDiff % iCount;
+	    widthDiff = widthDiff / iCount;
+	    /* add widthDiff/iCount, or extra space/items on row, to each item on this row */
+	    for (iIndex=iIndexStart, iCount=0; iIndex < iIndexEnd; iIndex++, iCount++)
+	    {
+	      infoPtr->items[iIndex].rect.left += iCount * widthDiff;
+	      infoPtr->items[iIndex].rect.right += (iCount + 1) * widthDiff;
 
 	      TRACE("adjusting 1 <%s>, l,r=%ld,%ld\n",
 		  debugstr_w(infoPtr->items[iIndex].pszText),
 		  infoPtr->items[iIndex].rect.left,
 		  infoPtr->items[iIndex].rect.right);
 
-           }
-           infoPtr->items[iIndex - 1].rect.right += remainder;
-        }
-        else /* we have only one item on this row, make it take up the entire row */
-        {
-          infoPtr->items[iIndexStart].rect.left = clientRect.left;
-          infoPtr->items[iIndexStart].rect.right = clientRect.right - 4;
+	    }
+	    infoPtr->items[iIndex - 1].rect.right += remainder;
+	  }
+	  else /* we have only one item on this row, make it take up the entire row */
+	  {
+	    infoPtr->items[iIndexStart].rect.left = clientRect.left;
+	    infoPtr->items[iIndexStart].rect.right = clientRect.right - 4;
 
-	  TRACE("adjusting 2 <%s>, l,r=%ld,%ld\n",
-	      debugstr_w(infoPtr->items[iIndexStart].pszText),
-	      infoPtr->items[iIndexStart].rect.left,
-	      infoPtr->items[iIndexStart].rect.right);
+	    TRACE("adjusting 2 <%s>, l,r=%ld,%ld\n",
+		debugstr_w(infoPtr->items[iIndexStart].pszText),
+		infoPtr->items[iIndexStart].rect.left,
+		infoPtr->items[iIndexStart].rect.right);
 
-        }
+	  }
 
 
-        iIndexStart = iIndexEnd;
-        }
+	  iIndexStart = iIndexEnd;
+	}
       }
   }
 
@@ -1865,9 +1886,12 @@ static void TAB_DrawItem(
     RECT rUD, rC;
 
     /* Clip UpDown control to not draw over it */
-    GetWindowRect(hwnd, &rC);
-    GetWindowRect(infoPtr->hwndUpDown, &rUD);
-    ExcludeClipRect(hdc, rUD.left - rC.left, rUD.top - rC.top, rUD.right - rC.left, rUD.bottom - rC.top);
+    if (infoPtr->needsScrolling)
+    {
+      GetWindowRect(hwnd, &rC);
+      GetWindowRect(infoPtr->hwndUpDown, &rUD);
+      ExcludeClipRect(hdc, rUD.left - rC.left, rUD.top - rC.top, rUD.right - rC.left, rUD.bottom - rC.top);
+    }
 
     /* If you need to see what the control is doing,
      * then override these variables. They will change what
