@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.40 2003/11/17 02:12:50 hyperion Exp $
+/* $Id: find.c,v 1.41 2003/12/09 23:37:59 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -96,6 +96,7 @@ InternalFindFirstFile (
 	NTSTATUS Status;
 	PWSTR e1, e2;
 	WCHAR CurrentDir[256];
+	PWCHAR SlashlessFileName;
 	PWSTR SearchPath;
 	PWCHAR SearchPattern;
 	ULONG Length;
@@ -103,6 +104,26 @@ InternalFindFirstFile (
 
 	DPRINT("FindFirstFileW(lpFileName %S)\n",
 	       lpFileName);
+
+	Length = wcslen(lpFileName);
+	if (L'\\' == lpFileName[Length - 1])
+	{
+	    SlashlessFileName = RtlAllocateHeap(hProcessHeap,
+	                                        0,
+					        Length * sizeof(WCHAR));
+	    if (NULL == SlashlessFileName)
+	    {
+	        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+	        return NULL;
+	    }
+	    memcpy(SlashlessFileName, lpFileName, (Length - 1) * sizeof(WCHAR));
+	    SlashlessFileName[Length - 1] = L'\0';
+	    lpFileName = SlashlessFileName;
+	}
+	else
+	{
+	    SlashlessFileName = NULL;
+	}
 
 	e1 = wcsrchr(lpFileName, L'/');
 	e2 = wcsrchr(lpFileName, L'\\');
@@ -116,6 +137,12 @@ InternalFindFirstFile (
            Length = GetCurrentDirectoryW(sizeof(CurrentDir) / sizeof(WCHAR), SearchPath);
 	   if (0 == Length)
 	   {
+	      if (NULL != SlashlessFileName)
+	      {
+	         RtlFreeHeap(hProcessHeap,
+	                     0,
+	                     SlashlessFileName);
+	      }
 	      return NULL;
 	   }
 	   if (Length > sizeof(CurrentDir) / sizeof(WCHAR))
@@ -125,6 +152,12 @@ InternalFindFirstFile (
 					   Length * sizeof(WCHAR));
 	      if (NULL == SearchPath)
 	      {
+	         if (NULL != SlashlessFileName)
+	         {
+	            RtlFreeHeap(hProcessHeap,
+	                        0,
+	                        SlashlessFileName);
+	         }
 	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	         return NULL;
 	      }
@@ -143,6 +176,12 @@ InternalFindFirstFile (
 					   (Length + 1) * sizeof(WCHAR));
 	      if (NULL == SearchPath)
 	      {
+	         if (NULL != SlashlessFileName)
+	         {
+	            RtlFreeHeap(hProcessHeap,
+	                        0,
+	                        SlashlessFileName);
+	         }
 	         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	         return NULL;
 	      }
@@ -163,6 +202,12 @@ InternalFindFirstFile (
 	}
 	if (FALSE == bResult)
 	{
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
+	   }
 	   return NULL;
 	}
 
@@ -176,6 +221,12 @@ InternalFindFirstFile (
 	   RtlFreeHeap (hProcessHeap,
 	                0,
 	                NtPathU.Buffer);
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
+	   }
 	   SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 	   return NULL;
 	}
@@ -212,9 +263,15 @@ InternalFindFirstFile (
 
 	if (!NT_SUCCESS(Status))
 	{
-		RtlFreeHeap (hProcessHeap, 0, IData);
-		SetLastErrorByStatus (Status);
-		return(NULL);
+	   RtlFreeHeap (hProcessHeap, 0, IData);
+	   if (NULL != SlashlessFileName)
+	   {
+	      RtlFreeHeap(hProcessHeap,
+	                  0,
+	                  SlashlessFileName);
+	   }
+	   SetLastErrorByStatus (Status);
+	   return(NULL);
 	}
 	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
 	IData->pFileInfo->FileIndex = 0;
@@ -230,12 +287,18 @@ InternalFindFirstFile (
 	                               TRUE,
 	                               &PatternStr,
 	                               TRUE);
+	if (NULL != SlashlessFileName)
+	{
+	   RtlFreeHeap(hProcessHeap,
+	               0,
+	               SlashlessFileName);
+	}
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Status %lx\n", Status);
-		RtlFreeHeap (hProcessHeap, 0, IData);
-		SetLastErrorByStatus (Status);
-		return NULL;
+	   DPRINT("Status %lx\n", Status);
+	   RtlFreeHeap (hProcessHeap, 0, IData);
+	   SetLastErrorByStatus (Status);
+	   return NULL;
 	}
 	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 
