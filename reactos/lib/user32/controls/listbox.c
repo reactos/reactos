@@ -1,4 +1,4 @@
-/* $Id: listbox.c,v 1.11 2003/09/27 00:29:52 weiden Exp $
+/* $Id: listbox.c,v 1.12 2003/10/04 22:36:36 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -74,12 +74,6 @@ BOOL is_old_app(HWND hwnd)
 #define WM_LBTRACKPOINT     0x0131
 #define WS_EX_DRAGDETECT    0x00000002L
 #define WM_BEGINDRAG        0x022C
-//#define WM_MOUSEWHEEL       0x020A
-//#define WHEEL_DELTA			120
-
-#define WM_SYSTIMER     WM_TIMER
-#define SetSystemTimer  SetTimer
-#define KillSystemTimer  KillTimer
 
 /* End of hack section -------------------------------- */
 

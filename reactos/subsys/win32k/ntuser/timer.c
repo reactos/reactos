@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.10 2003/08/13 20:24:05 chorns Exp $
+/* $Id: timer.c,v 1.11 2003/10/04 22:36:37 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,6 +35,8 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ps.h>
 #include <include/msgqueue.h>
+#include <include/window.h>
+#include <include/error.h>
 #include <messages.h>
 #include <napi/win32.h>
 
@@ -48,6 +50,7 @@
 
 static FAST_MUTEX     Mutex;
 static LIST_ENTRY     TimerListHead;
+static LIST_ENTRY     SysTimerListHead;
 static KTIMER         Timer;
 static RTL_BITMAP     HandleLessTimersBitMap;
 static PVOID          HandleLessTimersBitMapBuffer;
@@ -72,32 +75,56 @@ typedef struct _MSG_TIMER_ENTRY{
 //must hold mutex while calling this
 BOOL
 FASTCALL
-InsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
+InsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer, BOOL SysTimer)
 {
    PLIST_ENTRY EnumEntry, InsertAfter;
    PMSG_TIMER_ENTRY MsgTimer;
 
    InsertAfter = NULL;
 
-   EnumEntry = TimerListHead.Flink;
-   while (EnumEntry != &TimerListHead)
+   if(!SysTimer)
    {
-      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      if (NewTimer->Timeout.QuadPart > MsgTimer->Timeout.QuadPart)
-      {
-         InsertAfter = EnumEntry;
-      }
-      EnumEntry = EnumEntry->Flink;
+     EnumEntry = TimerListHead.Flink;
+     while (EnumEntry != &TimerListHead)
+     {
+        MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+        if (NewTimer->Timeout.QuadPart > MsgTimer->Timeout.QuadPart)
+        {
+           InsertAfter = EnumEntry;
+        }
+        EnumEntry = EnumEntry->Flink;
+     }
+
+     if (InsertAfter)
+     {
+        InsertTailList(InsertAfter, &NewTimer->ListEntry);
+        return FALSE;
+     }
+     //insert as first entry
+     InsertHeadList(&TimerListHead, &NewTimer->ListEntry);
+   }
+   else
+   {
+     EnumEntry = SysTimerListHead.Flink;
+     while (EnumEntry != &SysTimerListHead)
+     {
+        MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+        if (NewTimer->Timeout.QuadPart > MsgTimer->Timeout.QuadPart)
+        {
+           InsertAfter = EnumEntry;
+        }
+        EnumEntry = EnumEntry->Flink;
+     }
+
+     if (InsertAfter)
+     {
+        InsertTailList(InsertAfter, &NewTimer->ListEntry);
+        return FALSE;
+     }
+     //insert as first entry
+     InsertHeadList(&SysTimerListHead, &NewTimer->ListEntry);
    }
 
-   if (InsertAfter)
-   {
-      InsertTailList(InsertAfter, &NewTimer->ListEntry);
-      return FALSE;
-   }
-
-   //insert as first entry
-   InsertHeadList(&TimerListHead, &NewTimer->ListEntry);
    return TRUE;
 
 }
@@ -105,25 +132,46 @@ InsertTimerAscendingOrder(PMSG_TIMER_ENTRY NewTimer)
 //must hold mutex while calling this
 PMSG_TIMER_ENTRY
 FASTCALL
-RemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID)
+RemoveTimer(HWND hWnd, UINT_PTR IDEvent, HANDLE ThreadID, BOOL SysTimer)
 {
    PMSG_TIMER_ENTRY MsgTimer;
    PLIST_ENTRY EnumEntry;
 
-   //remove timer if allready in the queue
-   EnumEntry = TimerListHead.Flink;
-   while (EnumEntry != &TimerListHead)
+   if(!SysTimer)
    {
-      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
-      EnumEntry = EnumEntry->Flink;
-
-      if (MsgTimer->Msg.hwnd == hWnd && 
-          MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
-          MsgTimer->ThreadID == ThreadID)
-      {
-         RemoveEntryList(&MsgTimer->ListEntry);
-         return MsgTimer;
-      }
+     //remove timer if allready in the queue
+     EnumEntry = TimerListHead.Flink;
+     while (EnumEntry != &TimerListHead)
+     {
+        MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+        EnumEntry = EnumEntry->Flink;
+    
+        if (MsgTimer->Msg.hwnd == hWnd && 
+            MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
+            MsgTimer->ThreadID == ThreadID)
+        {
+           RemoveEntryList(&MsgTimer->ListEntry);
+           return MsgTimer;
+        }
+     }
+   }
+   else
+   {
+     //remove timer if allready in the queue
+     EnumEntry = SysTimerListHead.Flink;
+     while (EnumEntry != &SysTimerListHead)
+     {
+        MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+        EnumEntry = EnumEntry->Flink;
+    
+        if (MsgTimer->Msg.hwnd == hWnd && 
+            MsgTimer->Msg.wParam == (WPARAM)IDEvent &&
+            MsgTimer->ThreadID == ThreadID)
+        {
+           RemoveEntryList(&MsgTimer->ListEntry);
+           return MsgTimer;
+        }
+     }
    }
 
    return NULL;
@@ -141,6 +189,19 @@ RemoveTimersThread(HANDLE ThreadID)
    PLIST_ENTRY EnumEntry;
 
    ExAcquireFastMutex(&Mutex);
+
+   EnumEntry = SysTimerListHead.Flink;
+   while (EnumEntry != &SysTimerListHead)
+   {
+      MsgTimer = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+      EnumEntry = EnumEntry->Flink;
+
+      if (MsgTimer->ThreadID == ThreadID)
+      {
+         RemoveEntryList(&MsgTimer->ListEntry);
+         ExFreePool(MsgTimer);
+      }
+   }
 
    EnumEntry = TimerListHead.Flink;
    while (EnumEntry != &TimerListHead)
@@ -177,18 +238,12 @@ NtUserSetTimer
 )
 {
  ULONG Index;
- PMSG_TIMER_ENTRY MsgTimer = NULL;
+ PMSG_TIMER_ENTRY MsgTimer2, MsgTimer = NULL;
  PMSG_TIMER_ENTRY NewTimer;
+ PLIST_ENTRY EnumEntry;
  LARGE_INTEGER CurrentTime;
+ PWINDOW_OBJECT WindowObject;
  HANDLE ThreadID;
-
- //FIXME: WINE: window must be owned by the calling thread
-#if 0
- if(hWnd && !(hWnd = WIN_IsCurrentThread(hWnd))
- {
-  return STATUS_UNSUCCESSFUL;
- }
-#endif
 
  ThreadID = PsGetCurrentThreadId();
  KeQuerySystemTime(&CurrentTime);
@@ -201,7 +256,6 @@ NtUserSetTimer
 
   if(Index == (ULONG) -1)
   {
-   /* FIXME: set the last error */
    ExReleaseFastMutex(&Mutex);
    return 0;
   }
@@ -213,9 +267,44 @@ NtUserSetTimer
  }
  else
  {
+  WindowObject = IntGetWindowObject(hWnd);
+  if(!WindowObject)
+  {
+   ExReleaseFastMutex(&Mutex);
+   SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+   return 0;
+  }
+  
+  if(WindowObject->OwnerThread != PsGetCurrentThread())
+  {
+   IntReleaseWindowObject(WindowObject);
+   ExReleaseFastMutex(&Mutex);
+   SetLastWin32Error(ERROR_ACCESS_DENIED);
+   return 0;
+  }
+  IntReleaseWindowObject(WindowObject);
+   
   /* remove timer if already in the queue */
-  MsgTimer = RemoveTimer(hWnd, nIDEvent, ThreadID); 
+  MsgTimer = RemoveTimer(hWnd, nIDEvent, ThreadID, FALSE); 
  }
+ 
+ #if 1
+ 
+ /* Win NT/2k/XP */
+ if(uElapse > 0x7fffffff)
+   uElapse = 1;
+ 
+ #else
+ 
+ /* Win Server 2003 */
+ if(uElapse > 0x7fffffff)
+   uElapse = 0x7fffffff;
+ 
+ #endif
+ 
+ /* Win 2k/XP */
+ if(uElapse < 10)
+   uElapse = 10;
 
  if(MsgTimer)
  {
@@ -230,6 +319,12 @@ NtUserSetTimer
  {
   /* FIXME: use lookaside? */
   NewTimer = ExAllocatePool(PagedPool, sizeof(MSG_TIMER_ENTRY));
+  if(!NewTimer)
+  {
+    ExReleaseFastMutex(&Mutex);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
 
   NewTimer->Msg.hwnd = hWnd;
   NewTimer->Msg.message = WM_TIMER;
@@ -240,10 +335,23 @@ NtUserSetTimer
   NewTimer->ThreadID = ThreadID;
  }
 
- if(InsertTimerAscendingOrder(NewTimer))
+ if(InsertTimerAscendingOrder(NewTimer, FALSE))
  {
-  /* new timer is first in queue and expires first */
-  KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+  EnumEntry = SysTimerListHead.Flink;
+  if(EnumEntry != &SysTimerListHead)
+  {
+    MsgTimer2 = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+    if (NewTimer->Timeout.QuadPart <= MsgTimer2->Timeout.QuadPart)
+    {
+      /* new timer is first in queue and expires first */
+      KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+    }
+  }
+  else
+  {  
+   /* new timer is first in queue and expires first */
+   KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+  }
  }
 
  ExReleaseFastMutex(&Mutex);
@@ -261,6 +369,7 @@ NtUserKillTimer
 )
 {
  PMSG_TIMER_ENTRY MsgTimer;
+ PWINDOW_OBJECT WindowObject;
  
  ExAcquireFastMutex(&Mutex);
 
@@ -277,8 +386,193 @@ NtUserKillTimer
 
   RtlClearBits(&HandleLessTimersBitMap, uIDEvent - 1, 1);
  }
+ else
+ {
+   WindowObject = IntGetWindowObject(hWnd);
+   if(!WindowObject)
+   {
+     ExReleaseFastMutex(&Mutex); 
+     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+     return FALSE;
+   }
+   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   {
+     IntReleaseWindowObject(WindowObject);
+     ExReleaseFastMutex(&Mutex); 
+     SetLastWin32Error(ERROR_ACCESS_DENIED);
+     return FALSE;
+   }
+   IntReleaseWindowObject(WindowObject);
+ }
 
- MsgTimer = RemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId());
+ MsgTimer = RemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), FALSE);
+
+ ExReleaseFastMutex(&Mutex);
+
+ if(MsgTimer == NULL)
+ {
+  /* didn't find timer */
+  /* FIXME: set the last error */
+  return FALSE;
+ }
+
+ /* FIXME: use lookaside? */
+ ExFreePool(MsgTimer);
+ 
+ return TRUE;
+}
+
+UINT_PTR
+STDCALL
+NtUserSetSystemTimer(
+ HWND hWnd,
+ UINT_PTR nIDEvent,
+ UINT uElapse,
+ TIMERPROC lpTimerFunc
+)
+{
+ /* As opposed to SetTimer() this one seems not to allow window-less timers! */
+ PMSG_TIMER_ENTRY MsgTimer2, MsgTimer = NULL;
+ PMSG_TIMER_ENTRY NewTimer;
+ PLIST_ENTRY EnumEntry;
+ LARGE_INTEGER CurrentTime;
+ PWINDOW_OBJECT WindowObject;
+ HANDLE ThreadID;
+
+ ThreadID = PsGetCurrentThreadId();
+ KeQuerySystemTime(&CurrentTime);
+ ExAcquireFastMutex(&Mutex);
+
+ if(hWnd == NULL)
+ {
+   ExReleaseFastMutex(&Mutex);
+   SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+   return 0;
+ }
+ else
+ {
+  WindowObject = IntGetWindowObject(hWnd);
+  if(!WindowObject)
+  {
+   ExReleaseFastMutex(&Mutex);
+   SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+   return 0;
+  }
+  
+  if(WindowObject->OwnerThread != PsGetCurrentThread())
+  {
+   IntReleaseWindowObject(WindowObject);
+   ExReleaseFastMutex(&Mutex);
+   SetLastWin32Error(ERROR_ACCESS_DENIED);
+   return 0;
+  }
+  IntReleaseWindowObject(WindowObject);
+   
+  /* remove timer if already in the queue */
+  MsgTimer = RemoveTimer(hWnd, nIDEvent, ThreadID, TRUE); 
+ }
+ 
+ #if 1
+ 
+ /* Win NT/2k/XP */
+ if(uElapse > 0x7fffffff)
+   uElapse = 1;
+ 
+ #else
+ 
+ /* Win Server 2003 */
+ if(uElapse > 0x7fffffff)
+   uElapse = 0x7fffffff;
+ 
+ #endif
+ 
+ /* Win 2k/XP */
+ if(uElapse < 10)
+   uElapse = 10;
+
+ if(MsgTimer)
+ {
+  /* modify existing (removed) timer */
+  NewTimer = MsgTimer;
+
+  NewTimer->Period = uElapse;
+  NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
+  NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
+ }
+ else
+ {
+  /* FIXME: use lookaside? */
+  NewTimer = ExAllocatePool(PagedPool, sizeof(MSG_TIMER_ENTRY));
+  if(!NewTimer)
+  {
+    ExReleaseFastMutex(&Mutex);
+    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+    return 0;
+  }
+
+  NewTimer->Msg.hwnd = hWnd;
+  NewTimer->Msg.message = WM_SYSTIMER;
+  NewTimer->Msg.wParam = (WPARAM)nIDEvent;
+  NewTimer->Msg.lParam = (LPARAM)lpTimerFunc;
+  NewTimer->Period = uElapse;
+  NewTimer->Timeout.QuadPart = CurrentTime.QuadPart + (uElapse * 10000);
+  NewTimer->ThreadID = ThreadID;
+ }
+
+ if(InsertTimerAscendingOrder(NewTimer, TRUE))
+ {
+  EnumEntry = TimerListHead.Flink;
+  if(EnumEntry != &TimerListHead)
+  {
+    MsgTimer2 = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+    if (NewTimer->Timeout.QuadPart <= MsgTimer2->Timeout.QuadPart)
+    {
+      /* new timer is first in queue and expires first */
+      KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+    }
+  }
+  else
+  {  
+   /* new timer is first in queue and expires first */
+   KeSetTimer(&Timer, NewTimer->Timeout, NULL);
+  }
+ }
+
+ ExReleaseFastMutex(&Mutex);
+
+ return 1;
+}
+
+BOOL
+STDCALL
+NtUserKillSystemTimer(
+ HWND hWnd,
+ UINT_PTR uIDEvent
+)
+{
+ /* As opposed to KillTimer() this one seems not to allow window-less timers! */
+ PMSG_TIMER_ENTRY MsgTimer;
+ PWINDOW_OBJECT WindowObject;
+ 
+ WindowObject = IntGetWindowObject(hWnd);
+
+ /* handle-less timer? Not allowed for SystemTimers! */
+ if(!WindowObject)
+ {
+   SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+   return FALSE;
+ }
+ if(WindowObject->OwnerThread != PsGetCurrentThread())
+ {
+   IntReleaseWindowObject(WindowObject);
+   SetLastWin32Error(ERROR_ACCESS_DENIED);
+   return FALSE;
+ }
+ IntReleaseWindowObject(WindowObject);
+ 
+ ExAcquireFastMutex(&Mutex);
+
+ MsgTimer = RemoveTimer(hWnd, uIDEvent, PsGetCurrentThreadId(), TRUE);
 
  ExReleaseFastMutex(&Mutex);
 
@@ -295,19 +589,6 @@ NtUserKillTimer
  return TRUE;
 }
 
-DWORD
-STDCALL
-NtUserSetSystemTimer(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
 
 static VOID STDCALL_FUNC
 TimerThreadMain(
@@ -317,7 +598,7 @@ TimerThreadMain(
    NTSTATUS Status;
    LARGE_INTEGER CurrentTime;
    PLIST_ENTRY EnumEntry;
-   PMSG_TIMER_ENTRY MsgTimer;
+   PMSG_TIMER_ENTRY MsgTimer, MsgTimer2;
    PETHREAD Thread;
 
    for (;;)
@@ -336,8 +617,43 @@ TimerThreadMain(
       }
 
       ExAcquireFastMutex(&Mutex);
-
+      
       KeQuerySystemTime(&CurrentTime);
+      
+      EnumEntry = SysTimerListHead.Flink;
+      while (EnumEntry != &SysTimerListHead)
+      {
+         MsgTimer2 = CONTAINING_RECORD(EnumEntry, MSG_TIMER_ENTRY, ListEntry);
+         EnumEntry = EnumEntry->Flink;
+
+         if (CurrentTime.QuadPart >= MsgTimer2->Timeout.QuadPart)
+         {
+            RemoveEntryList(&MsgTimer2->ListEntry);
+
+            /* 
+             * FIXME: 1) Find a faster way of getting the thread message queue? (lookup by id is slow)
+             */
+
+            if (!NT_SUCCESS(PsLookupThreadByThreadId(MsgTimer2->ThreadID, &Thread)))
+            {
+               ExFreePool(MsgTimer2);
+               continue;
+            }
+            
+            MsqPostMessage(((PW32THREAD)Thread->Win32Thread)->MessageQueue, MsqCreateMessage(&MsgTimer2->Msg));
+
+            ObDereferenceObject(Thread);
+
+            //set up next periodic timeout
+            MsgTimer2->Timeout.QuadPart += (MsgTimer2->Period * 10000); 
+            InsertTimerAscendingOrder(MsgTimer2, TRUE);
+
+         }                          
+         else                       
+         {
+            break;
+         }
+      }
 
       EnumEntry = TimerListHead.Flink;
       while (EnumEntry != &TimerListHead)
@@ -365,7 +681,7 @@ TimerThreadMain(
 
             //set up next periodic timeout
             MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000); 
-            InsertTimerAscendingOrder(MsgTimer);
+            InsertTimerAscendingOrder(MsgTimer, FALSE);
 
          }                          
          else                       
@@ -378,12 +694,31 @@ TimerThreadMain(
       if (!IsListEmpty(&TimerListHead))
       {
          MsgTimer = CONTAINING_RECORD( TimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
-         KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
+         if(!IsListEmpty(&SysTimerListHead))
+         {         
+           MsgTimer2 = CONTAINING_RECORD( SysTimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
+           if(MsgTimer->Timeout.QuadPart >= MsgTimer2->Timeout.QuadPart)
+             KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
+           else
+             KeSetTimer(&Timer, MsgTimer2->Timeout, NULL);
+         }
+         else
+         {
+           KeSetTimer(&Timer, MsgTimer->Timeout, NULL);
+         }
       }
       else
       {
-         /* Reinitialize the timer, this reset the state of the timer event on which we wait */
-         KeInitializeTimer(&Timer);
+         if(!IsListEmpty(&SysTimerListHead))
+         {
+           MsgTimer2 = CONTAINING_RECORD( SysTimerListHead.Flink, MSG_TIMER_ENTRY, ListEntry);
+           KeSetTimer(&Timer, MsgTimer2->Timeout, NULL);
+         }
+         else
+         {
+           /* Reinitialize the timer, this reset the state of the timer event on which we wait */
+           KeInitializeTimer(&Timer);
+         }
       }
 
       ExReleaseFastMutex(&Mutex);
@@ -403,6 +738,7 @@ InitTimerImpl(VOID)
    BitmapBytes = ROUND_UP(NUM_HANDLE_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
 
    InitializeListHead(&TimerListHead);
+   InitializeListHead(&SysTimerListHead);
    KeInitializeTimer(&Timer);
    ExInitializeFastMutex(&Mutex);
 

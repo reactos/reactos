@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.8 2003/07/10 21:04:31 chorns Exp $
+/* $Id: timer.c,v 1.9 2003/10/04 22:36:36 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/dde.c
@@ -35,6 +35,20 @@
 
 /* FUNCTIONS *****************************************************************/
 
+
+/*
+ * @implemented
+ */
+WINBOOL
+STDCALL
+KillSystemTimer(
+  HWND hWnd,
+  UINT_PTR IDEvent)
+{
+  return NtUserKillSystemTimer(hWnd, IDEvent); 
+}
+
+
 /*
  * @implemented
  */
@@ -44,7 +58,22 @@ KillTimer(
   HWND hWnd,
   UINT_PTR IDEvent)
 {
- return NtUserKillTimer(hWnd, IDEvent); 
+  return NtUserKillTimer(hWnd, IDEvent); 
+}
+
+
+/*
+ * @implemented
+ */
+UINT_PTR
+STDCALL
+SetSystemTimer(
+  HWND hWnd,
+  UINT_PTR IDEvent,
+  UINT Period,
+  TIMERPROC TimerFunc)
+{
+  return NtUserSetSystemTimer(hWnd, IDEvent, Period, TimerFunc);
 }
 
 
@@ -59,6 +88,6 @@ SetTimer(
   UINT Period,
   TIMERPROC TimerFunc)
 {
- return NtUserSetTimer(hWnd, IDEvent, Period, TimerFunc);
+  return NtUserSetTimer(hWnd, IDEvent, Period, TimerFunc);
 }
 

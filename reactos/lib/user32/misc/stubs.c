@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.43 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: stubs.c,v 1.44 2003/10/04 22:36:36 weiden Exp $
  *
  * COPYRIGHT:       See COPYING WINBOOLthe top level directory
  * PROJECT:         ReactOS user32.dll
@@ -872,22 +872,6 @@ SetWindowStationUser ( DWORD x1, DWORD x2 )
 /*
  * @unimplemented
  */
-UINT
-STDCALL
-SetSystemTimer(
-	       HWND      hwnd,
-	       UINT      id,
-	       UINT      timeout,
-	       TIMERPROC proc
-	       )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
 HRESULT
 STDCALL
 SetTaskmanWindow ( DWORD x )
@@ -973,17 +957,6 @@ RegisterSystemThread ( DWORD flags, DWORD reserved )
 DWORD
 STDCALL
 RegisterLogonProcess ( HANDLE hprocess, BOOL x )
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-KillSystemTimer ( HWND hwnd, UINT id )
 {
   UNIMPLEMENTED;
   return FALSE;

@@ -4713,11 +4713,11 @@ SetWindowStationUser(
 UINT
 STDCALL
 SetSystemTimer(
-	       HWND hwnd,
-	       UINT id,
-	       UINT timeout,
-	       TIMERPROC proc
-	       );
+	      HWND hWnd,
+	      UINT_PTR IDEvent,
+	      UINT Period,
+	      TIMERPROC TimerFunc
+	      );
 
 WINBOOL
 STDCALL
@@ -4777,9 +4777,9 @@ RegisterLogonProcess(
 WINBOOL
 STDCALL
 KillSystemTimer(
-		HWND hwnd,
-		UINT id
-		);
+		     HWND hWnd,
+		     UINT_PTR IDEvent
+		     );
 
 DWORD
 STDCALL

@@ -340,7 +340,7 @@ NtUserGetClipCursor(
   {
     DPRINT("Validation of window station handle (0x%X) failed\n",
       PROCESS_WINDOW_STATION());
-    SetLastWin32Error(Status);
+    SetLastNtError(Status);
     return FALSE;
   }
   

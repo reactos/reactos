@@ -961,6 +961,14 @@ NtUserIsClipboardFormatAvailable(
 
 BOOL
 STDCALL
+NtUserKillSystemTimer
+(
+ HWND hWnd,
+ UINT_PTR uIDEvent
+);
+
+BOOL
+STDCALL
 NtUserKillTimer
 (
  HWND hWnd,
@@ -1485,14 +1493,6 @@ NtUserSetSystemMenu(
   HWND hWnd,
   HMENU hMenu);
 
-DWORD
-STDCALL
-NtUserSetSystemTimer(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3);
-
 BOOL
 STDCALL
 NtUserSetThreadDesktop(
@@ -1503,6 +1503,16 @@ STDCALL
 NtUserSetThreadState(
   DWORD Unknown0,
   DWORD Unknown1);
+
+UINT_PTR
+STDCALL
+NtUserSetSystemTimer
+(
+ HWND hWnd,
+ UINT_PTR nIDEvent,
+ UINT uElapse,
+ TIMERPROC lpTimerFunc
+);
 
 UINT_PTR
 STDCALL
