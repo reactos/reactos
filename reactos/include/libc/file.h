@@ -37,6 +37,7 @@ void	_fwalk(void (*)(FILE *));
 char __is_text_file(FILE *p);
 
 int _doprnt(const char *fmt, va_list args, FILE *f);
+int _dowprnt(const char *fmt, va_list args, FILE *f);
 int _doscan(FILE *iop, const char *fmt, void **argp);
 
 void *filehnd(int fileno);
