@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.12 2001/04/18 03:31:19 dwelch Exp $
+/* $Id: mp.c,v 1.13 2001/04/20 12:42:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1236,8 +1236,8 @@ VOID APICCalibrateTimer(
 
 	/* Setup timer for normal operation */
   //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100); // 100ns
-  //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 10000); // 10ms
-  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
+  APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 15000); // 15ms
+  //APICSetupLVTT((CPUMap[CPU].BusSpeed / 1000000) * 100000); // 100ms
 
   DPRINT("CPU clock speed is %ld.%04ld MHz.\n",
 	  CPUMap[CPU].CoreSpeed/1000000,
@@ -1373,43 +1373,35 @@ static VOID SetInterruptGate(
 VOID MpsTimerHandler(
   VOID)
 {
+#if 0
   KIRQL OldIrql;
+#endif
 
-  /* FIXME: Pass EIP for profiling */
+  DPRINT("T1");
 
   /*
    * Acknowledge the interrupt
    */
   APICSendEOI();
-
+#if 0
   /*
    * Notify the rest of the kernel of the raised irq level
    */
   OldIrql = KeRaiseIrqlToSynchLevel();
-
-  /*
-   * Enable interrupts
-   */
+#endif
   __asm__("sti\n\t");
-
-  KiUpdateSystemTime(OldIrql, 0);
-
-  /*
-   * Disable interrupts
-   */
-   __asm__("cli\n\t");
-
-  /*
-   * Lower irq level
-   */
-  KeLowerIrql(OldIrql);
 
   /*
    * Call the dispatcher
    */
-
-  /* FIXME: Does not seem to work */
   PsDispatchThread(THREAD_STATE_RUNNABLE);
+
+#if 0
+  /*
+   * Lower irq level
+   */
+  KeLowerIrql(OldIrql);
+#endif
 }
 
 
@@ -1440,7 +1432,7 @@ VOID MpsErrorHandler(
 	   7: Illegal register address
 	*/
 	DPRINT1("APIC error on CPU(%d) ESR(%x)(%x)\n", ThisCPU(), tmp1, tmp2);
-  KeBugCheck(0);
+  for (;;);
 }
 
 
@@ -1453,9 +1445,8 @@ VOID MpsSpuriousHandler(
    * Acknowledge the interrupt
    */
   APICSendEOI();
-
   APICDump();
-  KeBugCheck(0);
+  for (;;);
 }
 
 
@@ -2322,7 +2313,7 @@ HalpInitMPS(
     DPRINT("CPU %d says it is now booted.\n", CPU);
 
     APICSetup();
-    //APICCalibrateTimer(CPU);
+    APICCalibrateTimer(CPU);
 
     /* This processor is now booted */
     CPUMap[CPU].Flags |= CPU_ENABLED;
@@ -2357,17 +2348,17 @@ HalpInitMPS(
   /* Setup IRQ to vector translation map */
   memset(&IRQVectorMap, sizeof(IRQVectorMap), 0);
 
+  /* Initialize the bootstrap processor */
+  HaliInitBSP();
+
   /* Setup I/O APIC */
   IOAPICSetup();
-
-  /* We can now enable interrupts */
-  __asm__ __volatile__ ("sti\n\t");
 
   /* Setup busy waiting */
   HalpCalibrateStallExecution();
 
-  /* Initialize the bootstrap processor */
-  HaliInitBSP();
+  /* We can now enable interrupts */
+  __asm__ __volatile__ ("sti\n\t");
 
   NextCPU = 0;
 }

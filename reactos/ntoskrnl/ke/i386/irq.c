@@ -1,4 +1,4 @@
-/* $Id: irq.c,v 1.11 2001/04/16 16:29:02 dwelch Exp $
+/* $Id: irq.c,v 1.12 2001/04/20 12:42:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -273,7 +273,15 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
     */
    __asm__("sti\n\t");
 
-
+   if (irq == 0)
+     {
+       if (KeGetCurrentProcessorNumber() == 0)
+         {
+       KiUpdateSystemTime(old_level, Trapframe->Eip);
+         }
+     }
+   else
+     {
       DPRINT("KiInterruptDispatch(Vector %d)\n", Vector);
       /*
        * Iterate the list until one of the isr tells us its device interrupted
@@ -288,7 +296,7 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 	   isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
 	   //DPRINT("current %x isr %x\n",current,isr);
 	}
-
+    }
    /*
     * Disable interrupts
     */
@@ -309,12 +317,11 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
   HalEndSystemInterrupt (DISPATCH_LEVEL, 0);
 	__asm__("sti\n\t");
 
-	if (KeGetCurrentThread() != NULL)
+ 	if (KeGetCurrentThread() != NULL)
 	  {
 	     KeGetCurrentThread()->LastEip = Trapframe->Eip;
 	  }
 	KiDispatchInterrupt();
-
 	if (KeGetCurrentThread() != NULL &&
 	    KeGetCurrentThread()->Alerted[1] != 0 &&
 	    Trapframe->Cs != KERNEL_CS)
@@ -322,8 +329,8 @@ KiInterruptDispatch (ULONG Vector, PKIRQ_TRAPFRAME Trapframe)
 	    HalEndSystemInterrupt (APC_LEVEL, 0);
 	    KiDeliverNormalApc();
 	  }
+    }
 
-  }
   HalEndSystemInterrupt (old_level, 0);
 }
 

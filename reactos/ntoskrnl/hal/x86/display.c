@@ -1,4 +1,4 @@
-/* $Id: display.c,v 1.14 2001/04/18 03:31:19 dwelch Exp $
+/* $Id: display.c,v 1.15 2001/04/20 12:42:23 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,7 +10,7 @@
  */
 
 #include <ddk/ntddk.h>
-
+#include <internal/hal/mps.h>
 
 #define SCREEN_SYNCHRONIZATION
 
@@ -195,9 +195,11 @@ HalDisplayString (IN	PCH	String)
   int offset;
 #endif
   static KSPIN_LOCK Lock;
+  ULONG Flags;
 
   pch = String;
 
+  pushfl(Flags);
   __asm__ ("cli\n\t");
   KeAcquireSpinLockAtDpcLevel(&Lock);
   
@@ -253,7 +255,7 @@ HalDisplayString (IN	PCH	String)
   WRITE_PORT_UCHAR((PUCHAR)CRTC_DATA, (offset >> 8) & 0xff);
 #endif
   KeReleaseSpinLockFromDpcLevel(&Lock);
-  __asm__ ("sti\n\t");
+  popfl(Flags);
 }
 
 

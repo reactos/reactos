@@ -28,12 +28,12 @@ static VOID KeSetCurrentIrql(KIRQL newlvl);
 
 /* FUNCTIONS ****************************************************************/
 
-#define IRQL2TPR(irql) (APIC_TPR_MIN + ((irql - DISPATCH_LEVEL - 1) << 4))
+#define IRQL2TPR(irql) (APIC_TPR_MIN + ((irql - DISPATCH_LEVEL - 1) * 8))
 
 static VOID HiSetCurrentPriority(
   ULONG Priority)
 {
-//  DPRINT(" P(0x%X) \n", Priority);
+  //DbgPrint(" P(0x%X)\n", Priority);
   APICWrite(APIC_TPR, Priority & APIC_TPR_PRI);
 }
 
@@ -47,25 +47,20 @@ static VOID HiSwitchIrql(KIRQL OldIrql, ULONG Flags)
    PKTHREAD CurrentThread;
    KIRQL CurrentIrql;
 
+   //DbgPrint("HiSwitchIrql(OldIrql %d)\n", OldIrql);
+
    CurrentIrql = KeGetCurrentKPCR()->Irql;
 
-   if (CurrentIrql == HIGH_LEVEL)
+   if (CurrentIrql >= IPI_LEVEL)
      {
   /* Block all interrupts */
   HiSetCurrentPriority(APIC_TPR_MAX);
 	return;
      }
 
-  if (CurrentIrql == IPI_LEVEL)
-     {
-	HiSetCurrentPriority(APIC_TPR_MAX - 16);
-	popfl(Flags);
-	return;
-     }
-
   if (CurrentIrql == CLOCK2_LEVEL)
      {
-	HiSetCurrentPriority(APIC_TPR_MAX - 32);
+	HiSetCurrentPriority(APIC_TPR_MAX - 16);
 	popfl(Flags);
 	return;
      }
@@ -167,9 +162,7 @@ KfLowerIrql (
   KIRQL OldIrql;
   ULONG Flags;
 
-  //DPRINT("KfLowerIrql(NewIrql %d)\n", NewIrql);
   //DbgPrint("KfLowerIrql(NewIrql %d)\n", NewIrql);
-  //KeBugCheck(0);
 
   pushfl(Flags);
   __asm__ ("\n\tcli\n\t");
@@ -243,9 +236,7 @@ KfRaiseIrql (
   KIRQL OldIrql;
   ULONG Flags;
 
-  //DPRINT("KfRaiseIrql(NewIrql %d)\n", NewIrql);
   //DbgPrint("KfRaiseIrql(NewIrql %d)\n", NewIrql);
-  //KeBugCheck(0);
 
   pushfl(Flags);
    __asm__ ("\n\tcli\n\t");
