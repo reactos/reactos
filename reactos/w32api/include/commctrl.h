@@ -757,6 +757,10 @@ extern "C" {
 #define TTN_NEEDTEXTW	TTN_GETDISPINFOW
 #define TTN_SHOW	(TTN_FIRST-1)
 #define TTN_POP	(TTN_FIRST-2)
+#define TTI_NONE	0
+#define TTI_INFO	1
+#define TTI_WARNING	2
+#define TTI_ERROR	3
 #define UD_MAXVAL	0x7fff
 #define UD_MINVAL	(-UD_MAXVAL)
 #define UDN_DELTAPOS (UDN_FIRST-1)
@@ -1471,6 +1475,9 @@ extern "C" {
 #define NM_SETCURSOR (NM_FIRST-17)
 #define NM_CHAR (NM_FIRST-18)
 #define NM_TOOLTIPSCREATED (NM_FIRST-19)
+#define NM_LDOWN (NM_FIRST-20)
+#define NM_RDOWN (NM_FIRST-21)
+#define NM_THEMECHANGED (NM_FIRST-22)
 #define SBARS_SIZEGRIP 256
 #define CCM_FIRST 0x2000
 #define CCM_LAST (CCM_FIRST+0x200)

@@ -11,7 +11,6 @@
 
 #include <stdlib.h>
 #pragma pack(push,8)
-#include <basetyps.h>
 
 #define WINOLEAPI STDAPI
 #define WINOLEAPI_(type) STDAPI_(type)
@@ -58,6 +57,7 @@ typedef enum tagREGCLS {
 #include <wtypes.h>
 #include <unknwn.h>
 #include <objidl.h>
+#include <propidl.h>
 
 #ifdef __cplusplus
 inline BOOL IsEqualGUID(REFGUID rguid1, REFGUID rguid2)
