@@ -954,7 +954,6 @@ exitdereferenceobjects:
    MmUnlockAddressSpace(&Process->AddressSpace);
    if (!NT_SUCCESS(Status))
      {
-        MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
         DPRINT1("Failed to create shared data page\n");
 	ObDereferenceObject(Process);
         goto exitdereferenceobjects;
@@ -972,7 +971,6 @@ exitdereferenceobjects:
 			    &hProcess);
    if (!NT_SUCCESS(Status))
      {
-        MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
         DPRINT1("Failed to create a handle for the process\n");
 	ObDereferenceObject(Process);
         goto exitdereferenceobjects;
@@ -987,7 +985,6 @@ exitdereferenceobjects:
    if (!NT_SUCCESS(Status))
      {
 	DbgPrint("LdrpMapSystemDll failed (Status %x)\n", Status);
-	MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
 	ObDereferenceObject(Process);
         goto exitdereferenceobjects;
      }
@@ -1009,11 +1006,10 @@ exitdereferenceobjects:
                                     0,
                                     MEM_COMMIT,
                                     PAGE_READWRITE);
-                                    
+        ObDereferenceObject(SectionObject);                            
 	if (!NT_SUCCESS(Status))
 	  {
 	     DbgPrint("Failed to map the process section (Status %x)\n", Status);
-	     MmUnlockAddressSpace(&Process->AddressSpace); /* FIXME ? */
 	     ObDereferenceObject(Process);
              goto exitdereferenceobjects;
 	  }
