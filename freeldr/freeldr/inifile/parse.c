@@ -41,6 +41,10 @@ BOOL IniParseFile(PUCHAR IniFileData, U32 IniFileSize)
 
 	DbgPrint((DPRINT_INIFILE, "IniParseFile() IniFileSize: %d\n", IniFileSize));
 
+	IniFileSectionListHead = NULL;
+	IniFileSectionCount = 0;
+	IniFileSettingCount = 0;
+
 	// Start with an 80-byte buffer
 	IniFileLineSize = 80;
 	IniFileLine = MmAllocateMemory(IniFileLineSize);
