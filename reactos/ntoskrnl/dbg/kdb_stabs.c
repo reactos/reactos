@@ -300,6 +300,9 @@ LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
   CurrentFileNameSymbol = NULL;
   CurrentFunctionSymbol = NULL;
   CurrentLineNumberSymbol = NULL;
+
+  DPRINT("Starting Parse: %08x to %08x\n", StabEntry, StabsEnd);
+
   while ((ULONG_PTR) StabEntry < (ULONG_PTR) StabsEnd)
     {
       Symbol = NULL;
@@ -322,8 +325,10 @@ LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
               String = (PCHAR)SymbolInfo->SymbolStringsBase + StabEntry->n_strx;
               RtlInitAnsiString(&Symbol->Name, String);
 
+#ifdef STABS_DEBUG
               DPRINT("FUN found. '%s' %d @ %x\n",
                 Symbol->Name.Buffer, FunLineNumber, FunRelativeAddress);
+#endif
             }
         }
       else if (StabEntry->n_type == N_SLINE)
@@ -335,8 +340,10 @@ LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
           Symbol->RelativeAddress = FunRelativeAddress + StabEntry->n_value;
           Symbol->LineNumber = StabEntry->n_desc;
 
+#ifdef STABS_DEBUG
           DPRINT("SLINE found. %d @ %x\n",
             Symbol->LineNumber, Symbol->RelativeAddress);
+#endif
         }
       else if (StabEntry->n_type == N_SO)
         {
@@ -349,8 +356,10 @@ LdrpParseImageSymbols(PIMAGE_SYMBOL_INFO SymbolInfo)
           String = (PCHAR)SymbolInfo->SymbolStringsBase + StabEntry->n_strx;
           RtlInitAnsiString(&Symbol->Name, String);
 
+#ifdef STABS_DEBUG
           DPRINT("SO found. '%s' @ %x\n",
             Symbol->Name.Buffer, Symbol->RelativeAddress);
+#endif
         }
 
       if (Symbol != NULL)
@@ -438,6 +447,7 @@ LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 {
   PSYMBOL NextSymbol;
   ULONG_PTR NextAddress;
+  ULONG_PTR AddrFound = 0;
   PSYMBOL Symbol;
 
   Symbol = SymbolInfo->FunctionSymbols.Symbols;
@@ -449,12 +459,15 @@ LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
       else
         NextAddress = SymbolInfo->ImageSize;
 
+#ifdef STABS_DEBUG
       DPRINT("FUN SEARCH: Type %d  RelativeAddress %x >= Symbol->RelativeAddress %x  < NextAddress %x\n",
         Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
+#endif
 
       if ((Symbol->SymbolType == ST_FUNCTION) &&
-        (RelativeAddress >= Symbol->RelativeAddress) &&
-        (RelativeAddress < NextAddress))
+	  (RelativeAddress >= Symbol->RelativeAddress) &&
+	  (RelativeAddress < NextAddress) &&
+	  Symbol->RelativeAddress > AddrFound)
         {
           PCHAR ExtraInfo;
           ULONG Length;
@@ -470,14 +483,15 @@ LdrpGetFunctionName(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 
           strncpy(FunctionName, Symbol->Name.Buffer, Length);
 	  FunctionName[Length]=0;
-          return STATUS_SUCCESS;
+	  AddrFound = Symbol->RelativeAddress;
+          /* return STATUS_SUCCESS; */
         }
       Symbol = NextSymbol;
     }
 
   DPRINT("FUN not found\n");
 
-  return STATUS_UNSUCCESSFUL;
+  return AddrFound ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
 }
 
 static NTSTATUS
@@ -498,8 +512,10 @@ LdrpGetLineNumber(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
       else
         NextAddress = SymbolInfo->ImageSize;
 
+#ifdef STABS_DEBUG
       DPRINT("LN SEARCH: Type %d  RelativeAddress %x >= Symbol->RelativeAddress %x  < NextAddress %x\n",
         Symbol->SymbolType, RelativeAddress, Symbol->RelativeAddress, NextAddress);
+#endif
 
       if ((Symbol->SymbolType == ST_LINENUMBER) &&
         (RelativeAddress >= Symbol->RelativeAddress) &&
@@ -530,12 +546,14 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
 
   DPRINT("RelativeAddress %p\n", RelativeAddress);
 
+#ifdef PEDANTIC_STABS
   if (RelativeAddress >= SymbolInfo->ImageSize)
     {
       DPRINT("Address is not within .text section. RelativeAddress %p  Length 0x%x\n",
         RelativeAddress, SymbolInfo->ImageSize);
       return STATUS_UNSUCCESSFUL;
     }
+#endif
 
   if (!AreSymbolsParsed(SymbolInfo))
     {
@@ -613,6 +631,8 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
                              NULL,
                              NULL);
 
+  DPRINT("Attempting to open symbols: %wZ\n", &SymFileName);
+
   Status = ZwOpenFile(&FileHandle,
                       FILE_ALL_ACCESS,
                       &ObjectAttributes,
@@ -625,7 +645,7 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
       return;
     }
 
-  CPRINT("Loading symbols from %wZ...\n", &SymFileName);
+  DPRINT("Loading symbols from %wZ...\n", &SymFileName);
 
   /*  Get the size of the file  */
   Status = ZwQueryInformationFile(FileHandle,
@@ -639,6 +659,8 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
       ZwClose(FileHandle);
       return;
     }
+
+  DPRINT("Symbol file is %08x bytes\n", FileStdInfo.EndOfFile.u.LowPart);
 
   /*  Allocate nonpageable memory for symbol file  */
   FileBuffer = ExAllocatePool(NonPagedPool,
@@ -668,12 +690,20 @@ LdrpLoadModuleSymbols(PUNICODE_STRING FileName,
 
   ZwClose(FileHandle);
 
+  DPRINT("Symbols loaded.\n");
+
   SymbolFileHeader = (PSYMBOLFILE_HEADER) FileBuffer;
   SymbolInfo->FileBuffer = FileBuffer;
   SymbolInfo->SymbolsBase = FileBuffer + SymbolFileHeader->StabsOffset;
   SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
   SymbolInfo->SymbolStringsBase = FileBuffer + SymbolFileHeader->StabstrOffset;
   SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+
+  DPRINT("Installed stabs: %wZ (%08x-%08x,%08x)\n",
+	   FileName,
+	   SymbolInfo->SymbolsBase, 
+	   SymbolInfo->SymbolsLength + SymbolInfo->SymbolsBase,
+	   SymbolInfo->SymbolStringsBase);
 }
 
 VOID
@@ -811,7 +841,10 @@ VOID
 KdbLoadDriver(PUNICODE_STRING Filename, PMODULE_OBJECT Module)
 {
   /* Load symbols for the image if available */
+  DPRINT1("Loading driver %wZ symbols (driver @ %08x)\n",
+	   Filename, Module->Base);
   LdrpLoadModuleSymbols(Filename, &Module->TextSection->SymbolInfo);
+  
 }
 
 VOID
@@ -866,6 +899,12 @@ KdbProcessSymbolFile(PVOID ModuleLoadBase, PCHAR FileName, ULONG Length)
       SymbolInfo->SymbolsLength = SymbolFileHeader->StabsLength;
       SymbolInfo->SymbolStringsBase = ModuleLoadBase + SymbolFileHeader->StabstrOffset;
       SymbolInfo->SymbolStringsLength = SymbolFileHeader->StabstrLength;
+      DPRINT("Installed stabs: %s@%08x-%08x (%08x-%08x,%08x)\n",
+	       FileName,
+	       ModuleObject->Base, ModuleObject->Length + ModuleObject->Base,
+	       SymbolInfo->SymbolsBase, 
+	       SymbolInfo->SymbolsLength + SymbolInfo->SymbolsBase,
+	       SymbolInfo->SymbolStringsBase);
     } 
 }
 

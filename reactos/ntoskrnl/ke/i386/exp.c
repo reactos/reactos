@@ -125,6 +125,14 @@ static NTSTATUS ExceptionToNtStatus[] =
 
 /* FUNCTIONS ****************************************************************/
 
+#ifdef KDBG
+STATIC BOOLEAN
+print_address(PVOID address)
+{
+  KdbPrintAddress(address);
+  return TRUE;
+}
+#else /* KDBG */
 STATIC BOOLEAN 
 print_address(PVOID address)
 {
@@ -152,6 +160,7 @@ print_address(PVOID address)
      }
    return(FALSE);
 }
+#endif /* KDBG */
 
 ULONG
 KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
@@ -598,7 +607,7 @@ KeDumpStackFrames(PULONG Frame)
       print_address((PVOID)Frame[1]);
       Frame = (PULONG)Frame[0];
       i++;
-      DbgPrint(" ");
+      DbgPrint("\n");
     }
 }
 

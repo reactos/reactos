@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.15 2004/01/10 21:06:38 arty Exp $
+/* $Id: kdb.c,v 1.16 2004/01/13 03:23:11 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -43,6 +43,9 @@
 /* TYPES *********************************************************************/
 
 /* GLOBALS *******************************************************************/
+
+#define BS 8
+#define DEL 127
 
 int isalpha( int );
 VOID
@@ -212,13 +215,13 @@ KdbGetCommand(PCH Buffer)
 	  *Buffer = 0;
 	  return;
 	}
-      else if (Key == '\x8')
+      else if (Key == BS || Key == DEL)
         {
           if (Buffer > Orig)
             {
               Buffer--;
               *Buffer = 0;
-              DbgPrint("%c %c", 8, 8);
+              DbgPrint("%c %c", BS, BS);
 	    }
         }
       else
@@ -305,6 +308,7 @@ DbgPrintBackTrace(PULONG Frame, ULONG StackBase, ULONG StackLimit)
 	 (ULONG)Frame < StackBase)
     {
       KdbPrintAddress((PVOID)Frame[1]);
+      DbgPrint("\n");
       Frame = (PULONG)Frame[0];
       i++;
     }

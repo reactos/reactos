@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.183 2004/01/09 17:16:26 sedwards Exp $
+/* $Id: main.c,v 1.184 2004/01/13 03:23:11 arty Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -629,7 +629,28 @@ ExpInitializeExecutive(VOID)
    * Enter the kernel debugger before starting up the boot drivers
    */
 #ifdef KDBG
-  KdbEnter();
+  {
+    /* Load the symbols */
+    UNICODE_STRING KWideModuleName;
+
+    for (i=0; i < KeLoaderBlock.ModsCount; i++)
+      {
+	RtlCreateUnicodeStringFromAsciiz(&KWideModuleName,
+					 (PCHAR)KeLoaderModules[i].String);
+	LdrInitDebug(&KeLoaderModules[i],KWideModuleName.Buffer);
+	if( strstr((PCHAR)KeLoaderModules[i].String,".sym") ||
+	    strstr((PCHAR)KeLoaderModules[i].String,".SYM") ) {
+	  KdbProcessSymbolFile((PVOID)KeLoaderModules[i].ModStart,
+			       (PCHAR)KeLoaderModules[i].String,
+			       KeLoaderModules[i].ModEnd - 
+			       KeLoaderModules[i].ModEnd);
+	}
+		   
+	RtlFreeUnicodeString(&KWideModuleName);
+      }
+
+    KdbEnter();
+  }
 #endif /* KDBG */
 
   IoCreateDriverList();

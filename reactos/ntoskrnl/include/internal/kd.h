@@ -1,4 +1,4 @@
-/* $Id: kd.h,v 1.20 2003/12/23 05:05:10 arty Exp $
+/* $Id: kd.h,v 1.21 2004/01/13 03:23:11 arty Exp $
  *
  * kernel debugger prototypes
  */
@@ -66,6 +66,9 @@ KdGdbDebugPrint (LPSTR Message);
 VOID
 KdDebugPrint (LPSTR Message);
 
+VOID
+KdbCreateThreadHook(PCONTEXT Context);
+
 KD_CONTINUE_TYPE
 KdEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 			 PCONTEXT Context,
@@ -79,6 +82,7 @@ VOID KdPrintMda(PCH pch);
 #define KDB_UNLOADDRIVER_HOOK(MODULE)
 #define KDB_LOADERINIT_HOOK(NTOS, HAL)
 #define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH)
+#define KDB_CREATE_THREAD_HOOK(CONTEXT)
 #else
 #define KDB_DELETEPROCESS_HOOK(PROCESS) KdbFreeSymbolsProcess(PROCESS)
 #define KDB_LOADDRIVER_HOOK(FILENAME, MODULE) KdbLoadDriver(FILENAME, MODULE)
@@ -86,6 +90,8 @@ VOID KdPrintMda(PCH pch);
 #define KDB_LOADERINIT_HOOK(NTOS, HAL) KdbLdrInit(NTOS, HAL)
 #define KDB_SYMBOLFILE_HOOK(LOADBASE, FILENAME, LENGTH) \
         KdbProcessSymbolFile(LOADBASE, FILENAME, LENGTH)
+#define KDB_CREATE_THREAD_HOOK(CONTEXT) \
+	KdbCreateThreadHook(CONTEXT)
 #endif /* KDBG */
 
 VOID
