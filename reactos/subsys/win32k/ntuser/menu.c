@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.32 2003/11/23 11:39:48 navaraf Exp $
+/* $Id: menu.c,v 1.33 2003/11/23 12:31:53 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -418,6 +418,22 @@ IntGetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
   }
   return FALSE;
 }
+
+
+BOOL FASTCALL
+IntIsMenu(HMENU hMenu)
+{
+
+   PMENU_OBJECT Menu;
+
+   if (!(Menu = IntGetMenuObject(hMenu)))
+      return FALSE;
+   else
+      IntReleaseMenuObject(Menu);
+
+   return TRUE;
+}
+
 
 BOOL FASTCALL
 IntSetMenuInfo(PMENU_OBJECT MenuObject, LPMENUINFO lpmi)
