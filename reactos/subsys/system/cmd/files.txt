@@ -39,7 +39,7 @@ free.c          Implements free command
 goto.c          Implements goto command
 history.c       Command-line history handling
 if.c            Implements if command
-internal.c      Internal commands (DIR, RD, etc)
+internal.c      Internal commands (DIR, RD, CD, etc)
 label.c         Implements label command
 locale.c        Locale handling code
 memory.c        Implements memory command

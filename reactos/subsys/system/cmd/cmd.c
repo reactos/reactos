@@ -1,4 +1,4 @@
-/* $Id: cmd.c,v 1.10 2004/01/28 20:52:57 gvg Exp $
+/* $Id: cmd.c,v 1.11 2004/04/26 20:26:15 gdalsnes Exp $
  *
  *  CMD.C - command-line interface.
  *
@@ -163,6 +163,58 @@ static BOOL NtDllChecked = FALSE;
 WORD wColor;              /* current color */
 WORD wDefColor;           /* default color */
 #endif
+
+
+
+/***********************************************************************
+ *           MakeSureDirectoryPathExistsEx
+ *
+ * If a dir is at the end and the path ends with a backslash, FileAtEnd
+ * is ignored. If the path doesn't end with a backslash, FileAtEnd is
+ * used to determine if the last part of the path is a file name or a
+ * directory.
+ *
+ * Path may be absolute or relative to current dir.
+ *
+ * FIXME: maybe put this in a header/library where everyone can use it?????
+ */
+BOOL WINAPI MakeSureDirectoryPathExistsEx(LPCSTR DirPath, BOOL FileAtEnd)
+{
+   char Path[MAX_PATH];
+   char *SlashPos = Path;
+   char Slash;
+   BOOL bRes;
+   
+   strcpy(Path, DirPath);
+        
+   while((SlashPos=strpbrk(SlashPos+1,"\\/")))
+   {
+      Slash = *SlashPos;
+      *SlashPos = 0;
+      
+      bRes = CreateDirectoryA(Path, NULL);
+      if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         return FALSE;
+      }
+      
+      *SlashPos = Slash;
+      
+      if (*(SlashPos+1) == 0) return TRUE;
+   }
+
+   if (!FileAtEnd)
+   {
+      bRes = CreateDirectoryA(Path, NULL);
+      if (bRes == FALSE && GetLastError() != ERROR_ALREADY_EXISTS)
+      {
+         return FALSE;
+      }
+   }
+
+   return TRUE;
+}
+
 
 
 /*
@@ -512,6 +564,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 #ifdef FEATURE_REDIRECTION
 	/* find the temp path to store temporary files */
 	GetTempPath (MAX_PATH, szTempPath);
+   MakeSureDirectoryPathExistsEx(szTempPath, FALSE);
 	if (szTempPath[_tcslen (szTempPath) - 1] != _T('\\'))
 		_tcscat (szTempPath, _T("\\"));
 
@@ -571,10 +624,16 @@ VOID ParseCommandLine (LPTSTR cmd)
 
 		/* Create unique temporary file name */
 		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
-
+      
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
+                   
+      if (hFile[1] == INVALID_HANDLE_VALUE){
+         ConErrPrintf (_T("Error creating temporary file for pipe data\n"));
+         return;
+      }
+                   
 		SetStdHandle (STD_OUTPUT_HANDLE, hFile[1]);
 
 		DoCommand (s);
