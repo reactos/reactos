@@ -12,20 +12,20 @@
 static int in8;
 static int ct8 = 8;
 static FILE *fi;
-static BYTECOUNTER bytectr;
+static DF_BYTECOUNTER bytectr;
 static int LoadingASCII;
-struct htr *HelpTree;
+struct DfHTr *DfHelpTree;
 static int root;
 
 /* ------- open the help database file -------- */
-FILE *OpenHelpFile(void)
+FILE *DfOpenHelpFile(void)
 {
     char *cp;
     int treect, i;
     char helpname[65];
 
     /* -------- get the name of the help file ---------- */
-    BuildFileName(helpname, ".hlp");
+    DfBuildFileName(helpname, ".hlp");
     LoadingASCII = FALSE;
     if ((fi = fopen(helpname, "rb")) == NULL)    {
         /* ---- no .hlp file, look for .txt file ---- */
@@ -38,25 +38,25 @@ FILE *OpenHelpFile(void)
         LoadingASCII = TRUE;
     }
 
-    if (!LoadingASCII && HelpTree == NULL)    {
+    if (!LoadingASCII && DfHelpTree == NULL)    {
            /* ----- read the byte count ------ */
            fread(&bytectr, sizeof bytectr, 1, fi);
            /* ----- read the frequency count ------ */
            fread(&treect, sizeof treect, 1, fi);
            /* ----- read the root offset ------ */
            fread(&root, sizeof root, 1, fi);
-        HelpTree = DFcalloc(treect-256, sizeof(struct htr));
+        DfHelpTree = DfCalloc(treect-256, sizeof(struct DfHTr));
         /* ---- read in the tree --- */
         for (i = 0; i < treect-256; i++)    {
-               fread(&HelpTree[i].left,  sizeof(int), 1, fi);
-            fread(&HelpTree[i].right, sizeof(int), 1, fi);
+               fread(&DfHelpTree[i].left,  sizeof(int), 1, fi);
+            fread(&DfHelpTree[i].right, sizeof(int), 1, fi);
         }
     }
     return fi;
 }
 
 /* ----- read a line of text from the help database ----- */
-void *GetHelpLine(char *line)
+void *DfGetHelpLine(char *line)
 {
     int h;
     if (LoadingASCII)	{
@@ -83,9 +83,9 @@ void *GetHelpLine(char *line)
             }
             /* -- point to left or right node based on msb -- */
             if (in8 & 0x80)
-                h = HelpTree[h-256].left;
+                h = DfHelpTree[h-256].left;
             else
-                h = HelpTree[h-256].right;
+                h = DfHelpTree[h-256].right;
             /* --- shift the next bit in --- */
             in8 <<= 1;
             ct8++;
@@ -104,7 +104,7 @@ void *GetHelpLine(char *line)
 }
 
 /* --- compute the database file byte and bit position --- */
-void HelpFilePosition(long *offset, int *bit)
+void DfHelpFilePosition(long *offset, int *bit)
 {
     *offset = ftell(fi);
     if (LoadingASCII)
@@ -117,7 +117,7 @@ void HelpFilePosition(long *offset, int *bit)
 }
 
 /* -- position the database to the specified byte and bit -- */
-void SeekHelpLine(long offset, int bit)
+void DfSeekHelpLine(long offset, int bit)
 {
     int i;
     fseek(fi, offset, 0);

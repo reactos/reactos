@@ -1,49 +1,49 @@
 /* ----------- clipbord.c ------------ */
 #include "dflat.h"
 
-char *Clipboard;
-unsigned ClipboardLength;
+char *DfClipboard;
+unsigned DfClipboardLength;
 
-void CopyTextToClipboard(char *text)
+void DfCopyTextToClipboard(char *text)
 {
-    ClipboardLength = strlen(text);
-    Clipboard = DFrealloc(Clipboard, ClipboardLength);
-    memmove(Clipboard, text, ClipboardLength);
+    DfClipboardLength = strlen(text);
+    DfClipboard = DfRealloc(DfClipboard, DfClipboardLength);
+    memmove(DfClipboard, text, DfClipboardLength);
 }
 
-void CopyToClipboard(DFWINDOW wnd)
+void DfCopyToClipboard(DFWINDOW wnd)
 {
-    if (TextBlockMarked(wnd))    {
-        char *bbl=TextLine(wnd,wnd->BlkBegLine)+wnd->BlkBegCol;
-        char *bel=TextLine(wnd,wnd->BlkEndLine)+wnd->BlkEndCol;
-        ClipboardLength = (int) (bel - bbl);
-        Clipboard = DFrealloc(Clipboard, ClipboardLength);
-        memmove(Clipboard, bbl, ClipboardLength);
+    if (DfTextBlockMarked(wnd))    {
+        char *bbl=DfTextLine(wnd,wnd->BlkBegLine)+wnd->BlkBegCol;
+        char *bel=DfTextLine(wnd,wnd->BlkEndLine)+wnd->BlkEndCol;
+        DfClipboardLength = (int) (bel - bbl);
+        DfClipboard = DfRealloc(DfClipboard, DfClipboardLength);
+        memmove(DfClipboard, bbl, DfClipboardLength);
     }
 }
 
-void ClearClipboard(void)
+void DfClearClipboard(void)
 {
-    if (Clipboard != NULL)  {
-        free(Clipboard);
-        Clipboard = NULL;
+    if (DfClipboard != NULL)  {
+        free(DfClipboard);
+        DfClipboard = NULL;
     }
 }
 
 
-BOOL PasteText(DFWINDOW wnd, char *SaveTo, unsigned len)
+BOOL DfPasteText(DFWINDOW wnd, char *SaveTo, unsigned len)
 {
     if (SaveTo != NULL && len > 0)    {
         unsigned plen = strlen(wnd->text) + len;
 
 		if (plen <= wnd->MaxTextLength)	{
         	if (plen+1 > wnd->textlen)    {
-            	wnd->text = DFrealloc(wnd->text, plen+3);
+            	wnd->text = DfRealloc(wnd->text, plen+3);
             	wnd->textlen = plen+1;
         	}
-          	memmove(CurrChar+len, CurrChar, strlen(CurrChar)+1);
-           	memmove(CurrChar, SaveTo, len);
-           	BuildTextPointers(wnd);
+          	memmove(DfCurrChar+len, DfCurrChar, strlen(DfCurrChar)+1);
+           	memmove(DfCurrChar, SaveTo, len);
+           	DfBuildTextPointers(wnd);
            	wnd->TextChanged = TRUE;
 			return TRUE;
 		}

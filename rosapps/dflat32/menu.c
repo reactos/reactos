@@ -2,11 +2,11 @@
 
 #include "dflat.h"
 
-static struct PopDown *FindCmd(MBAR *mn, int cmd)
+static struct DfPopDown *FindCmd(DF_MBAR *mn, int cmd)
 {
-    MENU *mnu = mn->PullDown;
+    DF_MENU *mnu = mn->PullDown;
     while (mnu->Title != (void *)-1)    {
-        struct PopDown *pd = mnu->Selections;
+        struct DfPopDown *pd = mnu->Selections;
         while (pd->SelectionTitle != NULL)    {
             if (pd->ActionId == cmd)
                 return pd;
@@ -17,69 +17,69 @@ static struct PopDown *FindCmd(MBAR *mn, int cmd)
     return NULL;
 }
 
-char *GetCommandText(MBAR *mn, int cmd)
+char *DfGetCommandText(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
         return pd->SelectionTitle;
     return NULL;
 }
 
-BOOL isCascadedCommand(MBAR *mn, int cmd)
+BOOL DfIsCascadedCommand(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        return pd->Attrib & CASCADED;
+        return pd->Attrib & DF_CASCADED;
     return FALSE;
 }
 
-void ActivateCommand(MBAR *mn, int cmd)
+void DfActivateCommand(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        pd->Attrib &= ~INACTIVE;
+        pd->Attrib &= ~DF_INACTIVE;
 }
 
-void DeactivateCommand(MBAR *mn, int cmd)
+void DfDeactivateCommand(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        pd->Attrib |= INACTIVE;
+        pd->Attrib |= DF_INACTIVE;
 }
 
-BOOL isActive(MBAR *mn, int cmd)
+BOOL isActive(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        return !(pd->Attrib & INACTIVE);
+        return !(pd->Attrib & DF_INACTIVE);
     return FALSE;
 }
 
-BOOL GetCommandToggle(MBAR *mn, int cmd)
+BOOL DfGetCommandToggle(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        return (pd->Attrib & CHECKED) != 0;
+        return (pd->Attrib & DF_CHECKED) != 0;
     return FALSE;
 }
 
-void SetCommandToggle(MBAR *mn, int cmd)
+void DfSetCommandToggle(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        pd->Attrib |= CHECKED;
+        pd->Attrib |= DF_CHECKED;
 }
 
-void ClearCommandToggle(MBAR *mn, int cmd)
+void DfClearCommandToggle(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        pd->Attrib &= ~CHECKED;
+        pd->Attrib &= ~DF_CHECKED;
 }
 
-void InvertCommandToggle(MBAR *mn, int cmd)
+void DfInvertCommandToggle(DF_MBAR *mn, int cmd)
 {
-    struct PopDown *pd = FindCmd(mn, cmd);
+    struct DfPopDown *pd = FindCmd(mn, cmd);
     if (pd != NULL)
-        pd->Attrib ^= CHECKED;
+        pd->Attrib ^= DF_CHECKED;
 }

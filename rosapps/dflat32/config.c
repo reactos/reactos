@@ -2,425 +2,425 @@
 
 #include "dflat.h"
 
-/* ----- default colors for color video system ----- */
-unsigned char color[CLASSCOUNT] [4] [2] = {
-    /* ------------ NORMAL ------------ */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},/* HILITE_COLOR */
+/* ----- default colors for DfColor video system ----- */
+unsigned char DfColor[DF_CLASSCOUNT] [4] [2] = {
+    /* ------------ DF_NORMAL ------------ */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},/* DF_HILITE_COLOR */
 
-    /* ---------- APPLICATION --------- */
-   {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {LIGHTGRAY, BLUE},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
+    /* ---------- DF_APPLICATION --------- */
+   {{LIGHTGRAY, BLUE},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLUE},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLUE}}, /* DF_HILITE_COLOR */
 
-    /* ------------ TEXTBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_TEXTBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------ LISTBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_LISTBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- EDITBOX ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLUE},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_EDITBOX ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLUE},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- MENUBAR ------------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, CYAN},      /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {DARKGRAY, RED}},   /* HILITE_COLOR
-                          Inactive, Shortcut (both FG) */
+    /* ---------- DF_MENUBAR ------------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, CYAN},      /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, RED}},   /* DF_HILITE_COLOR
+                          Inactive, Shortcut (both DF_FG) */
 
-    /* ---------- POPDOWNMENU --------- */
-   {{BLACK, CYAN},      /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, CYAN},      /* FRAME_COLOR  */
-    {DARKGRAY, RED}},   /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
+    /* ---------- DF_POPDOWNMENU --------- */
+   {{BLACK, CYAN},      /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, CYAN},      /* DF_FRAME_COLOR  */
+    {DARKGRAY, RED}},   /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
 
 #ifdef INCLUDE_PICTUREBOX
-    /* ------------ PICTUREBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_PICTUREBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 #endif
 
-    /* ------------- DIALOG ----------- */
-   {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
+    /* ------------- DF_DIALOG ----------- */
+   {{LIGHTGRAY, BLUE},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLUE}}, /* DF_HILITE_COLOR */
 
-	/* ------------ BOX --------------- */
-   {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {LIGHTGRAY, BLUE},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
+	/* ------------ DF_BOX --------------- */
+   {{LIGHTGRAY, BLUE},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLUE},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLUE}}, /* DF_HILITE_COLOR */
 
-    /* ------------ BUTTON ------------ */
-   {{BLACK, CYAN},      /* STD_COLOR    */
-    {WHITE, CYAN},      /* SELECT_COLOR */
-    {BLACK, CYAN},      /* FRAME_COLOR  */
-    {DARKGRAY, RED}},   /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
-    /* ------------ COMBOBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_BUTTON ------------ */
+   {{BLACK, CYAN},      /* DF_STD_COLOR    */
+    {WHITE, CYAN},      /* DF_SELECT_COLOR */
+    {BLACK, CYAN},      /* DF_FRAME_COLOR  */
+    {DARKGRAY, RED}},   /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
+    /* ------------ DF_COMBOBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------- TEXT ----------- */
-   {{0xff, 0xff},  /* STD_COLOR    */
-    {0xff, 0xff},  /* SELECT_COLOR */
-    {0xff, 0xff},  /* FRAME_COLOR  */
-    {0xff, 0xff}}, /* HILITE_COLOR */
+    /* ------------- DF_TEXT ----------- */
+   {{0xff, 0xff},  /* DF_STD_COLOR    */
+    {0xff, 0xff},  /* DF_SELECT_COLOR */
+    {0xff, 0xff},  /* DF_FRAME_COLOR  */
+    {0xff, 0xff}}, /* DF_HILITE_COLOR */
 
-    /* ------------- RADIOBUTTON ----------- */
-   {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
+    /* ------------- DF_RADIOBUTTON ----------- */
+   {{LIGHTGRAY, BLUE},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLUE}}, /* DF_HILITE_COLOR */
 
-    /* ------------- CHECKBOX ----------- */
-   {{LIGHTGRAY, BLUE},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLUE},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLUE}}, /* HILITE_COLOR */
+    /* ------------- DF_CHECKBOX ----------- */
+   {{LIGHTGRAY, BLUE},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLUE},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLUE}}, /* DF_HILITE_COLOR */
 
-    /* ------------ SPINBUTTON ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_SPINBUTTON ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- ERRORBOX ----------- */
-   {{YELLOW, RED},      /* STD_COLOR    */
-    {YELLOW, RED},      /* SELECT_COLOR */
-    {YELLOW, RED},      /* FRAME_COLOR  */
-    {YELLOW, RED}},     /* HILITE_COLOR */
+    /* ----------- DF_ERRORBOX ----------- */
+   {{YELLOW, RED},      /* DF_STD_COLOR    */
+    {YELLOW, RED},      /* DF_SELECT_COLOR */
+    {YELLOW, RED},      /* DF_FRAME_COLOR  */
+    {YELLOW, RED}},     /* DF_HILITE_COLOR */
 
-    /* ----------- MESSAGEBOX --------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_MESSAGEBOX --------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- HELPBOX ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLUE},  /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {WHITE, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_HELPBOX ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLUE},  /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {WHITE, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- STATUSBAR ------------- */
-   {{BLACK, CYAN},      /* STD_COLOR    */
-    {BLACK, CYAN},      /* SELECT_COLOR */
-    {BLACK, CYAN},      /* FRAME_COLOR  */
-    {BLACK, CYAN}},     /* HILITE_COLOR */
+    /* ---------- DF_STATUSBAR ------------- */
+   {{BLACK, CYAN},      /* DF_STD_COLOR    */
+    {BLACK, CYAN},      /* DF_SELECT_COLOR */
+    {BLACK, CYAN},      /* DF_FRAME_COLOR  */
+    {BLACK, CYAN}},     /* DF_HILITE_COLOR */
 
-    /* ---------- TITLEBAR ------------ */
-   {{BLACK, CYAN},      /* STD_COLOR    */
-    {BLACK, CYAN},      /* SELECT_COLOR */
-    {BLACK, CYAN},      /* FRAME_COLOR  */
-    {WHITE, CYAN}},     /* HILITE_COLOR */
+    /* ---------- DF_TITLEBAR ------------ */
+   {{BLACK, CYAN},      /* DF_STD_COLOR    */
+    {BLACK, CYAN},      /* DF_SELECT_COLOR */
+    {BLACK, CYAN},      /* DF_FRAME_COLOR  */
+    {WHITE, CYAN}},     /* DF_HILITE_COLOR */
 
-    /* ------------ DUMMY ------------- */
-   {{GREEN, LIGHTGRAY}, /* STD_COLOR    */
-    {GREEN, LIGHTGRAY}, /* SELECT_COLOR */
-    {GREEN, LIGHTGRAY}, /* FRAME_COLOR  */
-    {GREEN, LIGHTGRAY}} /* HILITE_COLOR */
+    /* ------------ DF_DUMMY ------------- */
+   {{GREEN, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {GREEN, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {GREEN, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {GREEN, LIGHTGRAY}} /* DF_HILITE_COLOR */
 };
 
 /* ----- default colors for mono video system ----- */
-unsigned char bw[CLASSCOUNT] [4] [2] = {
-    /* ------------ NORMAL ------------ */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},/* HILITE_COLOR */
+unsigned char DfBW[DF_CLASSCOUNT] [4] [2] = {
+    /* ------------ DF_NORMAL ------------ */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},/* DF_HILITE_COLOR */
 
-    /* ---------- APPLICATION --------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},/* HILITE_COLOR */
+    /* ---------- DF_APPLICATION --------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},/* DF_HILITE_COLOR */
 
-    /* ------------ TEXTBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_TEXTBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------ LISTBOX ----------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_LISTBOX ----------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- EDITBOX ------------ */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_EDITBOX ------------ */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- MENUBAR ------------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive, Shortcut (both FG) */
+    /* ---------- DF_MENUBAR ------------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive, Shortcut (both DF_FG) */
 
-    /* ---------- POPDOWNMENU --------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
+    /* ---------- DF_POPDOWNMENU --------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
 
 #ifdef INCLUDE_PICTUREBOX
-    /* ------------ PICTUREBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_PICTUREBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 #endif
 
-    /* ------------- DIALOG ----------- */
-   {{LIGHTGRAY, BLACK},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}}, /* HILITE_COLOR */
+    /* ------------- DF_DIALOG ----------- */
+   {{LIGHTGRAY, BLACK},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}}, /* DF_HILITE_COLOR */
 
-	/* ------------ BOX --------------- */
-   {{LIGHTGRAY, BLACK},  /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}}, /* HILITE_COLOR */
+	/* ------------ DF_BOX --------------- */
+   {{LIGHTGRAY, BLACK},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}}, /* DF_HILITE_COLOR */
 
-    /* ------------ BUTTON ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {WHITE, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
-    /* ------------ COMBOBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_BUTTON ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {WHITE, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
+    /* ------------ DF_COMBOBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------- TEXT ----------- */
-   {{0xff, 0xff},  /* STD_COLOR    */
-    {0xff, 0xff},  /* SELECT_COLOR */
-    {0xff, 0xff},  /* FRAME_COLOR  */
-    {0xff, 0xff}}, /* HILITE_COLOR */
+    /* ------------- DF_TEXT ----------- */
+   {{0xff, 0xff},  /* DF_STD_COLOR    */
+    {0xff, 0xff},  /* DF_SELECT_COLOR */
+    {0xff, 0xff},  /* DF_FRAME_COLOR  */
+    {0xff, 0xff}}, /* DF_HILITE_COLOR */
 
-    /* ------------- RADIOBUTTON ----------- */
-   {{LIGHTGRAY, BLACK},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}}, /* HILITE_COLOR */
+    /* ------------- DF_RADIOBUTTON ----------- */
+   {{LIGHTGRAY, BLACK},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}}, /* DF_HILITE_COLOR */
 
-    /* ------------- CHECKBOX ----------- */
-   {{LIGHTGRAY, BLACK},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY},  /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},  /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}}, /* HILITE_COLOR */
+    /* ------------- DF_CHECKBOX ----------- */
+   {{LIGHTGRAY, BLACK},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY},  /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},  /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}}, /* DF_HILITE_COLOR */
 
-    /* ------------ SPINBUTTON ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_SPINBUTTON ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- ERRORBOX ----------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},/* HILITE_COLOR */
+    /* ----------- DF_ERRORBOX ----------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},/* DF_HILITE_COLOR */
 
-    /* ----------- MESSAGEBOX --------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},/* HILITE_COLOR */
+    /* ----------- DF_MESSAGEBOX --------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},/* DF_HILITE_COLOR */
 
-    /* ----------- HELPBOX ------------ */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {WHITE, BLACK},     /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {WHITE, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_HELPBOX ------------ */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {WHITE, BLACK},     /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {WHITE, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- STATUSBAR ------------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ---------- DF_STATUSBAR ------------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- TITLEBAR ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ---------- DF_TITLEBAR ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------ DUMMY ------------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}} /* HILITE_COLOR */
+    /* ------------ DF_DUMMY ------------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}} /* DF_HILITE_COLOR */
 };
-/* ----- default colors for reverse mono video ----- */
-unsigned char reverse[CLASSCOUNT] [4] [2] = {
-    /* ------------ NORMAL ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+/* ----- default colors for DfReverse mono video ----- */
+unsigned char DfReverse[DF_CLASSCOUNT] [4] [2] = {
+    /* ------------ DF_NORMAL ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- APPLICATION --------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ---------- DF_APPLICATION --------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------ TEXTBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_TEXTBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------ LISTBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_LISTBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- EDITBOX ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_EDITBOX ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- MENUBAR ------------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive, Shortcut (both FG) */
+    /* ---------- DF_MENUBAR ------------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive, Shortcut (both DF_FG) */
 
-    /* ---------- POPDOWNMENU --------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
+    /* ---------- DF_POPDOWNMENU --------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
 
 #ifdef INCLUDE_PICTUREBOX
-    /* ------------ PICTUREBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_PICTUREBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 #endif
 
-    /* ------------- DIALOG ----------- */
-   {{BLACK, LIGHTGRAY},  /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},  /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}}, /* HILITE_COLOR */
+    /* ------------- DF_DIALOG ----------- */
+   {{BLACK, LIGHTGRAY},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},  /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}}, /* DF_HILITE_COLOR */
 
-	/* ------------ BOX --------------- */
-   {{BLACK, LIGHTGRAY},  /* STD_COLOR    */
-    {BLACK, LIGHTGRAY},  /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}}, /* HILITE_COLOR */
+	/* ------------ DF_BOX --------------- */
+   {{BLACK, LIGHTGRAY},  /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY},  /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}}, /* DF_HILITE_COLOR */
 
-    /* ------------ BUTTON ------------ */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {WHITE, BLACK},     /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {DARKGRAY, WHITE}}, /* HILITE_COLOR
-                           Inactive ,Shortcut (both FG) */
-    /* ------------ COMBOBOX ----------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_BUTTON ------------ */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {WHITE, BLACK},     /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {DARKGRAY, WHITE}}, /* DF_HILITE_COLOR
+                           Inactive ,Shortcut (both DF_FG) */
+    /* ------------ DF_COMBOBOX ----------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ------------- TEXT ----------- */
-   {{0xff, 0xff},  /* STD_COLOR    */
-    {0xff, 0xff},  /* SELECT_COLOR */
-    {0xff, 0xff},  /* FRAME_COLOR  */
-    {0xff, 0xff}}, /* HILITE_COLOR */
+    /* ------------- DF_TEXT ----------- */
+   {{0xff, 0xff},  /* DF_STD_COLOR    */
+    {0xff, 0xff},  /* DF_SELECT_COLOR */
+    {0xff, 0xff},  /* DF_FRAME_COLOR  */
+    {0xff, 0xff}}, /* DF_HILITE_COLOR */
 
-    /* ------------- RADIOBUTTON ----------- */
-   {{BLACK, LIGHTGRAY},  /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},  /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}}, /* HILITE_COLOR */
+    /* ------------- DF_RADIOBUTTON ----------- */
+   {{BLACK, LIGHTGRAY},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},  /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}}, /* DF_HILITE_COLOR */
 
-    /* ------------- CHECKBOX ----------- */
-   {{BLACK, LIGHTGRAY},  /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},  /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY},  /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}}, /* HILITE_COLOR */
+    /* ------------- DF_CHECKBOX ----------- */
+   {{BLACK, LIGHTGRAY},  /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},  /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY},  /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}}, /* DF_HILITE_COLOR */
 
-    /* ------------ SPINBUTTON ----------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ------------ DF_SPINBUTTON ----------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- ERRORBOX ----------- */
-   {{BLACK, LIGHTGRAY},      /* STD_COLOR    */
-    {BLACK, LIGHTGRAY},      /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY},      /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},     /* HILITE_COLOR */
+    /* ----------- DF_ERRORBOX ----------- */
+   {{BLACK, LIGHTGRAY},      /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY},      /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY},      /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},     /* DF_HILITE_COLOR */
 
-    /* ----------- MESSAGEBOX --------- */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {BLACK, LIGHTGRAY}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {BLACK, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_MESSAGEBOX --------- */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {BLACK, LIGHTGRAY}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {BLACK, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ----------- HELPBOX ------------ */
-   {{BLACK, LIGHTGRAY}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {BLACK, LIGHTGRAY}, /* FRAME_COLOR  */
-    {WHITE, LIGHTGRAY}},/* HILITE_COLOR */
+    /* ----------- DF_HELPBOX ------------ */
+   {{BLACK, LIGHTGRAY}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {BLACK, LIGHTGRAY}, /* DF_FRAME_COLOR  */
+    {WHITE, LIGHTGRAY}},/* DF_HILITE_COLOR */
 
-    /* ---------- STATUSBAR ------------- */
-   {{LIGHTGRAY, BLACK},      /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},      /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},      /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},     /* HILITE_COLOR */
+    /* ---------- DF_STATUSBAR ------------- */
+   {{LIGHTGRAY, BLACK},      /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},      /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},      /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},     /* DF_HILITE_COLOR */
 
-    /* ---------- TITLEBAR ------------ */
-   {{LIGHTGRAY, BLACK},      /* STD_COLOR    */
-    {LIGHTGRAY, BLACK},      /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK},      /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}},     /* HILITE_COLOR */
+    /* ---------- DF_TITLEBAR ------------ */
+   {{LIGHTGRAY, BLACK},      /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK},      /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK},      /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}},     /* DF_HILITE_COLOR */
 
-    /* ------------ DUMMY ------------- */
-   {{LIGHTGRAY, BLACK}, /* STD_COLOR    */
-    {LIGHTGRAY, BLACK}, /* SELECT_COLOR */
-    {LIGHTGRAY, BLACK}, /* FRAME_COLOR  */
-    {LIGHTGRAY, BLACK}} /* HILITE_COLOR */
+    /* ------------ DF_DUMMY ------------- */
+   {{LIGHTGRAY, BLACK}, /* DF_STD_COLOR    */
+    {LIGHTGRAY, BLACK}, /* DF_SELECT_COLOR */
+    {LIGHTGRAY, BLACK}, /* DF_FRAME_COLOR  */
+    {LIGHTGRAY, BLACK}} /* DF_HILITE_COLOR */
 };
 
 /* ------ default configuration values ------- */
-CONFIG cfg = {
-    VERSION,
+DFCONFIG DfCfg = {
+    DF_VERSION,
     TRUE,            /* Editor Insert Mode          */
     4,               /* Editor tab stops            */
     TRUE,            /* Editor word wrap            */
@@ -440,7 +440,7 @@ CONFIG cfg = {
 	55				 /* Bottom printer margin		*/
 };
 
-void BuildFileName(char *path, char *ext)
+void DfBuildFileName(char *path, char *ext)
 {
 	extern char **Argv;
     char *cp;
@@ -455,32 +455,32 @@ void BuildFileName(char *path, char *ext)
 	strcat(cp, ext);
 }
 
-FILE *OpenConfig(char *mode)
+FILE *DfOpenConfig(char *mode)
 {
 	char path[64];
-	BuildFileName(path, ".cfg");
+	DfBuildFileName(path, ".DfCfg");
 	return fopen(path, mode);
 }
 
 /* ------ load a configuration file from disk ------- */
-BOOL LoadConfig(void)
+BOOL DfLoadConfig(void)
 {
 	static BOOL ConfigLoaded = FALSE;
 	if (ConfigLoaded == FALSE)	{
-	    FILE *fp = OpenConfig("rb");
+	    FILE *fp = DfOpenConfig("rb");
     	if (fp != NULL)    {
-        	fread(cfg.version, sizeof cfg.version+1, 1, fp);
-        	if (strcmp(cfg.version, VERSION) == 0)    {
+        	fread(DfCfg.version, sizeof DfCfg.version+1, 1, fp);
+        	if (strcmp(DfCfg.version, DF_VERSION) == 0)    {
             	fseek(fp, 0L, SEEK_SET);
-            	fread(&cfg, sizeof(CONFIG), 1, fp);
+            	fread(&DfCfg, sizeof(DFCONFIG), 1, fp);
  		       	fclose(fp);
         	}
         	else	{
 				char path[64];
-				BuildFileName(path, ".cfg");
+				DfBuildFileName(path, ".DfCfg");
 	        	fclose(fp);
 				unlink(path);
-            	strcpy(cfg.version, VERSION);
+            	strcpy(DfCfg.version, DF_VERSION);
 			}
 			ConfigLoaded = TRUE;
     	}
@@ -489,26 +489,26 @@ BOOL LoadConfig(void)
 }
 
 /* ------ save a configuration file to disk ------- */
-void SaveConfig(void)
+void DfSaveConfig(void)
 {
-    FILE *fp = OpenConfig("wb");
+    FILE *fp = DfOpenConfig("wb");
     if (fp != NULL)    {
-        fwrite(&cfg, sizeof(CONFIG), 1, fp);
+        fwrite(&DfCfg, sizeof(DFCONFIG), 1, fp);
         fclose(fp);
     }
 }
 
 /* --------- set window colors --------- */
-void SetStandardColor(DFWINDOW wnd)
+void DfSetStandardColor(DFWINDOW wnd)
 {
-    foreground = WndForeground(wnd);
-    background = WndBackground(wnd);
+    DfForeground = DfWndForeground(wnd);
+    DfBackground = DfWndBackground(wnd);
 }
 
-void SetReverseColor(DFWINDOW wnd)
+void DfSetReverseColor(DFWINDOW wnd)
 {
-    foreground = SelectForeground(wnd);
-    background = SelectBackground(wnd);
+    DfForeground = DfSelectForeground(wnd);
+    DfBackground = DfSelectBackground(wnd);
 }
 
 /* EOF */

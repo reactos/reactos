@@ -10,20 +10,20 @@
 /* ----- table of alt keys for finding shortcut keys ----- */
 #if 0
 static int altconvert[] = {
-    ALT_A,ALT_B,ALT_C,ALT_D,ALT_E,ALT_F,ALT_G,ALT_H,
-    ALT_I,ALT_J,ALT_K,ALT_L,ALT_M,ALT_N,ALT_O,ALT_P,
-    ALT_Q,ALT_R,ALT_S,ALT_T,ALT_U,ALT_V,ALT_W,ALT_X,
-    ALT_Y,ALT_Z,ALT_0,ALT_1,ALT_2,ALT_3,ALT_4,ALT_5,
-    ALT_6,ALT_7,ALT_8,ALT_9
+    DF_ALT_A,DF_ALT_B,DF_ALT_C,DF_ALT_D,DF_ALT_E,DF_ALT_F,DF_ALT_G,DF_ALT_H,
+    DF_ALT_I,DF_ALT_J,DF_ALT_K,DF_ALT_L,DF_ALT_M,DF_ALT_N,DF_ALT_O,DF_ALT_P,
+    DF_ALT_Q,DF_ALT_R,DF_ALT_S,DF_ALT_T,DF_ALT_U,DF_ALT_V,DF_ALT_W,DF_ALT_X,
+    DF_ALT_Y,DF_ALT_Z,DF_ALT_0,DF_ALT_1,DF_ALT_2,DF_ALT_3,DF_ALT_4,DF_ALT_5,
+    DF_ALT_6,DF_ALT_7,DF_ALT_8,DF_ALT_9
 };
 #endif
 
-static COORD cursorpos[MAXSAVES];
-static CONSOLE_CURSOR_INFO cursorinfo[MAXSAVES];
+static COORD cursorpos[DF_MAXSAVES];
+static CONSOLE_CURSOR_INFO cursorinfo[DF_MAXSAVES];
 static int cs = 0;
 
 
-void SwapCursorStack(void)
+void DfSwapCursorStack(void)
 {
 	if (cs > 1)
 	{
@@ -48,17 +48,17 @@ void SwapCursorStack(void)
 
 
 /* ---- Read a keystroke ---- */
-void GetKey (PINPUT_RECORD lpBuffer)
+void DfGetKey (PINPUT_RECORD lpBuffer)
 {
-	HANDLE hInput;
+	HANDLE DfInput;
 	DWORD dwRead;
 
-	hInput = GetStdHandle (STD_INPUT_HANDLE);
+	DfInput = GetStdHandle (STD_INPUT_HANDLE);
 
 	do
 	{
-//		WaitForSingleObject (hInput, INFINITE);
-		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
+//		WaitForSingleObject (DfInput, INFINITE);
+		ReadConsoleInput (DfInput, lpBuffer, 1, &dwRead);
 		if ((lpBuffer->EventType == KEY_EVENT) &&
 			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
 			break;
@@ -69,7 +69,7 @@ void GetKey (PINPUT_RECORD lpBuffer)
 
 /* ---------- read the keyboard shift status --------- */
 
-int getshift(void)
+int DfGetShift(void)
 {
 //    regs.h.ah = 2;
 //    int86(KEYBRD, &regs, &regs);
@@ -81,15 +81,15 @@ int getshift(void)
 
 
 /* -------- sound a buzz tone ---------- */
-void beep(void)
+void DfBeep(void)
 {
 	Beep(440, 50);
 //	MessageBeep (-1);
 }
 
 
-/* ------ position the cursor ------ */
-void cursor(int x, int y)
+/* ------ position the DfCursor ------ */
+void DfCursor(int x, int y)
 {
 	COORD coPos;
 
@@ -99,8 +99,8 @@ void cursor(int x, int y)
 }
 
 
-/* ------- get the current cursor position ------- */
-void curr_cursor(int *x, int *y)
+/* ------- get the current DfCursor position ------- */
+void DfCurrCursor(int *x, int *y)
 //VOID GetCursorXY (PSHORT x, PSHORT y)
 {
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -112,10 +112,10 @@ void curr_cursor(int *x, int *y)
 }
 
 
-/* ------ save the current cursor configuration ------ */
-void savecursor(void)
+/* ------ save the current DfCursor configuration ------ */
+void DfSaveCursor(void)
 {
-	if (cs < MAXSAVES)
+	if (cs < DF_MAXSAVES)
 	{
 		CONSOLE_SCREEN_BUFFER_INFO csbi;
 
@@ -130,8 +130,8 @@ void savecursor(void)
 	}
 }
 
-/* ---- restore the saved cursor configuration ---- */
-void restorecursor(void)
+/* ---- restore the saved DfCursor configuration ---- */
+void DfRestoreCursor(void)
 {
 	if (cs)
 	{
@@ -143,8 +143,8 @@ void restorecursor(void)
 	}
 }
 
-/* ------ make a normal cursor ------ */
-void normalcursor(void)
+/* ------ make a normal DfCursor ------ */
+void DfNormalCursor(void)
 {
 	CONSOLE_CURSOR_INFO csi;
 
@@ -154,8 +154,8 @@ void normalcursor(void)
 	                      &csi);
 }
 
-/* ------ hide the cursor ------ */
-void hidecursor(void)
+/* ------ hide the DfCursor ------ */
+void DfHideCursor(void)
 {
 	CONSOLE_CURSOR_INFO csi;
 
@@ -166,8 +166,8 @@ void hidecursor(void)
 	                      &csi);
 }
 
-/* ------ unhide the cursor ------ */
-void unhidecursor(void)
+/* ------ unhide the DfCursor ------ */
+void DfUnhideCursor(void)
 {
 	CONSOLE_CURSOR_INFO csi;
 
@@ -178,8 +178,8 @@ void unhidecursor(void)
 	                      &csi);
 }
 
-/* set the cursor size (in percent) */
-void set_cursor_size (unsigned t)
+/* set the DfCursor size (in percent) */
+void DfSetCursorSize (unsigned t)
 {
 	CONSOLE_CURSOR_INFO csi;
 
@@ -198,7 +198,7 @@ void set_cursor_size (unsigned t)
 
 
 /* ------ convert an Alt+ key to its letter equivalent ----- */
-int AltConvert(int c)
+int DfAltConvert(int c)
 {
 	return c;
 #if 0

@@ -24,24 +24,24 @@ static void AllocationError(void)
 	{
 		OnceIn = TRUE;
 		/* ------ close all windows ------ */
-		DfSendMessage(ApplicationWindow, CLOSE_WINDOW, 0, 0);
-		GetVideo(rc, savbuf);
+		DfSendMessage(DfApplicationWindow, DFM_CLOSE_WINDOW, 0, 0);
+		DfGetVideo(rc, savbuf);
 		for (x = 0; x < 18; x++)
 		{
 			for (y = 0; y < 3; y++)
 			{
 				int c = (255 & (*(*(ErrMsg+y)+x))) | 0x7000;
-				PutVideoChar(x+rc.lf, y+rc.tp, c);
+				DfPutVideoChar(x+rc.lf, y+rc.tp, c);
 			}
 		}
-		GetKey(&ir);
-		StoreVideo(rc, savbuf);
+		DfGetKey(&ir);
+		DfStoreVideo(rc, savbuf);
 		if (AllocTesting)
 			longjmp(AllocError, 1);
 	}
 }
 
-void *DFcalloc(size_t nitems, size_t size)
+void *DfCalloc(size_t nitems, size_t size)
 {
 	void *rtn = calloc(nitems, size);
 	if (size && rtn == NULL)
@@ -49,7 +49,7 @@ void *DFcalloc(size_t nitems, size_t size)
 	return rtn;
 }
 
-void *DFmalloc(size_t size)
+void *DfMalloc(size_t size)
 {
 	void *rtn = malloc(size);
 	if (size && rtn == NULL)
@@ -57,7 +57,7 @@ void *DFmalloc(size_t size)
 	return rtn;
 }
 
-void *DFrealloc(void *block, size_t size)
+void *DfRealloc(void *block, size_t size)
 {
 	void *rtn;
 

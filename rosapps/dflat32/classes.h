@@ -4,53 +4,53 @@
  *         Make class changes to this source file
  *         Other source files will adapt
  *
- *         You must add entries to the color tables in
- *         CONFIG.C for new classes.
+ *         You must add entries to the DfColor tables in
+ *         DFCONFIG.C for new classes.
  *
  *        Class Name  Base Class   Processor       Attribute    
  *       ------------  --------- ---------------  -----------
  */
-ClassDef(  NORMAL,      -1,      NormalProc,      0 )
-ClassDef(  APPLICATION, NORMAL,  ApplicationProc, VISIBLE   |
-                                                  SAVESELF  |
-                                                  CONTROLBOX )
-ClassDef(  TEXTBOX,     NORMAL,  TextBoxProc,     0          )
-ClassDef(  LISTBOX,     TEXTBOX, ListBoxProc,     0          )
-ClassDef(  EDITBOX,     TEXTBOX, EditBoxProc,     0          )
-ClassDef(  MENUBAR,     NORMAL,  MenuBarProc,     NOCLIP     )
-ClassDef(  POPDOWNMENU, LISTBOX, PopDownProc,     SAVESELF  |
-                                                  NOCLIP    |
-                                                  HASBORDER  )
+DfClassDef(  DF_NORMAL,      -1,      DfNormalProc,      0 )
+DfClassDef(  DF_APPLICATION, DF_NORMAL,  DfApplicationProc, DF_VISIBLE   |
+                                                  DF_SAVESELF  |
+                                                  DF_CONTROLBOX )
+DfClassDef(  DF_TEXTBOX,     DF_NORMAL,  DfTextBoxProc,     0          )
+DfClassDef(  DF_LISTBOX,     DF_TEXTBOX, DfListBoxProc,     0          )
+DfClassDef(  DF_EDITBOX,     DF_TEXTBOX, DfEditBoxProc,     0          )
+DfClassDef(  DF_MENUBAR,     DF_NORMAL,  DfMenuBarProc,     DF_NOCLIP     )
+DfClassDef(  DF_POPDOWNMENU, DF_LISTBOX, DfPopDownProc,     DF_SAVESELF  |
+                                                  DF_NOCLIP    |
+                                                  DF_HASBORDER  )
 #ifdef INCLUDE_PICTUREBOX
-ClassDef(  PICTUREBOX,  TEXTBOX, PictureProc,     0          )
+DfClassDef(  DF_PICTUREBOX,  DF_TEXTBOX, DfPictureProc,     0          )
 #endif
-ClassDef(  DIALOG,      NORMAL,  DialogProc,      SHADOW    |
-                                                  MOVEABLE  |
-                                                  CONTROLBOX|
-                                                  HASBORDER |
-                                                  NOCLIP     )
-ClassDef(  BOX,         NORMAL,  BoxProc,         HASBORDER  )
-ClassDef(  BUTTON,      TEXTBOX, ButtonProc,      SHADOW     )
-ClassDef(  COMBOBOX,    EDITBOX, ComboProc,       0          )
-ClassDef(  TEXT,        TEXTBOX, TextProc,        0          )
-ClassDef(  RADIOBUTTON, TEXTBOX, RadioButtonProc, 0          )
-ClassDef(  CHECKBOX,    TEXTBOX, CheckBoxProc,    0          )
-ClassDef(  SPINBUTTON,  LISTBOX, SpinButtonProc,  0          )
-ClassDef(  ERRORBOX,    DIALOG,  NULL,            SHADOW    |
-                                                  HASBORDER  )
-ClassDef(  MESSAGEBOX,  DIALOG,  NULL,            SHADOW    |
-                                                  HASBORDER  )
-ClassDef(  HELPBOX,     DIALOG,  HelpBoxProc,     MOVEABLE  |
-                                                  SAVESELF  |
-                                                  HASBORDER |
-                                                  NOCLIP    |
-                                                  CONTROLBOX )
-ClassDef(  STATUSBAR,   TEXTBOX, StatusBarProc,   NOCLIP     )
+DfClassDef(  DF_DIALOG,      DF_NORMAL,  DfDialogProc,      DF_SHADOW    |
+                                                  DF_MOVEABLE  |
+                                                  DF_CONTROLBOX|
+                                                  DF_HASBORDER |
+                                                  DF_NOCLIP     )
+DfClassDef(  DF_BOX,         DF_NORMAL,  DfBoxProc,         DF_HASBORDER  )
+DfClassDef(  DF_BUTTON,      DF_TEXTBOX, DfButtonProc,      DF_SHADOW     )
+DfClassDef(  DF_COMBOBOX,    DF_EDITBOX, DfComboProc,       0          )
+DfClassDef(  DF_TEXT,        DF_TEXTBOX, DfTextProc,        0          )
+DfClassDef(  DF_RADIOBUTTON, DF_TEXTBOX, DfRadioButtonProc, 0          )
+DfClassDef(  DF_CHECKBOX,    DF_TEXTBOX, DfCheckBoxProc,    0          )
+DfClassDef(  DF_SPINBUTTON,  DF_LISTBOX, DfSpinButtonProc,  0          )
+DfClassDef(  DF_ERRORBOX,    DF_DIALOG,  NULL,            DF_SHADOW    |
+                                                  DF_HASBORDER  )
+DfClassDef(  DF_MESSAGEBOX,  DF_DIALOG,  NULL,            DF_SHADOW    |
+                                                  DF_HASBORDER  )
+DfClassDef(  DF_HELPBOX,     DF_DIALOG,  DfHelpBoxProc,     DF_MOVEABLE  |
+                                                  DF_SAVESELF  |
+                                                  DF_HASBORDER |
+                                                  DF_NOCLIP    |
+                                                  DF_CONTROLBOX )
+DfClassDef(  DF_STATUSBAR,   DF_TEXTBOX, DfStatusBarProc,   DF_NOCLIP     )
 
 /*
  *  ========> Add new classes here <========
  */
 
 /* ---------- pseudo classes to create enums, etc. ---------- */
-ClassDef(  TITLEBAR,    -1,      NULL,            0          )
-ClassDef(  DUMMY,       -1,      NULL,            HASBORDER  )
+DfClassDef(  DF_TITLEBAR,    -1,      NULL,            0          )
+DfClassDef(  DF_DUMMY,       -1,      NULL,            DF_HASBORDER  )

@@ -3,7 +3,7 @@
 #include "dflat.h"
 #include "htree.h"
 
-extern struct htree *ht;
+extern struct DfHTree *ht;
 extern int root;
 extern int treect;
 static int lastchar = '\n';
@@ -29,7 +29,7 @@ void main(int argc, char *argv[])
 {
     FILE *fi, *fo;
     int c;
-    BYTECOUNTER bytectr = 0;
+    DF_BYTECOUNTER bytectr = 0;
 
     if (argc < 3)   {
         printf("\nusage: huffc infile outfile");
@@ -46,7 +46,7 @@ void main(int argc, char *argv[])
         exit(1);
     }
 
-    ht = calloc(256, sizeof(struct htree));
+    ht = calloc(256, sizeof(struct DfHTree));
 
     /* - read the input file and count character frequency - */
     while ((c = fgetcx(fi)) != EOF)   {
@@ -56,7 +56,7 @@ void main(int argc, char *argv[])
     }
 
     /* ---- build the huffman tree ---- */
-    buildtree();
+    DfBuildTree();
 
     /* --- write the byte count to the output file --- */
     fwrite(&bytectr, sizeof bytectr, 1, fo);

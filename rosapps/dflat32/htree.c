@@ -3,12 +3,12 @@
 #include "dflat.h"
 #include "htree.h"
 
-struct htree *ht;
+struct DfHTree *ht;
 int root;
 int treect;
 
 /* ------ build a Huffman tree from a frequency array ------ */
-void buildtree(void)
+void DfBuildTree(void)
 {
     int i;
 
@@ -25,7 +25,7 @@ void buildtree(void)
         /* ---- find the two lowest frequencies ---- */
         for (i = 0; i < treect; i++)   {
             if (i != h1) {
-                struct htree *htt = ht+i;
+                struct DfHTree *htt = ht+i;
                 /* --- find a node without a parent --- */
                 if (htt->cnt > 0 && htt->parent == -1)   {
                     /* ---- h1 & h2 -> lowest nodes ---- */
@@ -47,7 +47,7 @@ void buildtree(void)
         /* --- combine two nodes and add one --- */
         ht[h1].parent = treect;
         ht[h2].parent = treect;
-        ht = realloc(ht, (treect+1) * sizeof(struct htree));
+        ht = realloc(ht, (treect+1) * sizeof(struct DfHTree));
         if (ht == NULL)
             break;
         /* --- the new node's frequency is the sum of the two

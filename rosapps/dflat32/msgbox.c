@@ -2,123 +2,123 @@
 
 #include "dflat.h"
 
-extern DBOX MsgBox;
-extern DBOX InputBoxDB;
+extern DF_DBOX MsgBox;
+extern DF_DBOX InputBoxDB;
 DFWINDOW CancelWnd;
 
 static int ReturnValue;
 
-int MessageBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfMessageBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     switch (msg)    {
-        case CREATE_WINDOW:
-            GetClass(wnd) = MESSAGEBOX;
-			InitWindowColors(wnd);
-            ClearAttribute(wnd, CONTROLBOX);
+        case DFM_CREATE_WINDOW:
+            DfGetClass(wnd) = DF_MESSAGEBOX;
+			DfInitWindowColors(wnd);
+            DfClearAttribute(wnd, DF_CONTROLBOX);
             break;
-        case KEYBOARD:
-            if (p1 == '\r' || p1 == ESC)
+        case DFM_KEYBOARD:
+            if (p1 == '\r' || p1 == DF_ESC)
                 ReturnValue = (int)p1;
             break;
         default:
             break;
     }
-    return BaseWndProc(MESSAGEBOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_MESSAGEBOX, wnd, msg, p1, p2);
 }
 
-int YesNoBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfYesNoBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     switch (msg)    {
-        case CREATE_WINDOW:
-            GetClass(wnd) = MESSAGEBOX;
-			InitWindowColors(wnd);
-            ClearAttribute(wnd, CONTROLBOX);
+        case DFM_CREATE_WINDOW:
+            DfGetClass(wnd) = DF_MESSAGEBOX;
+			DfInitWindowColors(wnd);
+            DfClearAttribute(wnd, DF_CONTROLBOX);
             break;
-        case KEYBOARD:    {
+        case DFM_KEYBOARD:    {
             int c = tolower((int)p1);
             if (c == 'y')
-                DfSendMessage(wnd, DFM_COMMAND, ID_OK, 0);
+                DfSendMessage(wnd, DFM_COMMAND, DF_ID_OK, 0);
             else if (c == 'n')
-                DfSendMessage(wnd, DFM_COMMAND, ID_CANCEL, 0);
+                DfSendMessage(wnd, DFM_COMMAND, DF_ID_CANCEL, 0);
             break;
         }
         default:
             break;
     }
-    return BaseWndProc(MESSAGEBOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_MESSAGEBOX, wnd, msg, p1, p2);
 }
 
-int ErrorBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfErrorBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     switch (msg)    {
-        case CREATE_WINDOW:
-            GetClass(wnd) = ERRORBOX;
-			InitWindowColors(wnd);
+        case DFM_CREATE_WINDOW:
+            DfGetClass(wnd) = DF_ERRORBOX;
+			DfInitWindowColors(wnd);
             break;
-        case KEYBOARD:
-            if (p1 == '\r' || p1 == ESC)
+        case DFM_KEYBOARD:
+            if (p1 == '\r' || p1 == DF_ESC)
                 ReturnValue = (int)p1;
             break;
         default:
             break;
     }
-    return BaseWndProc(ERRORBOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_ERRORBOX, wnd, msg, p1, p2);
 }
 
-int CancelBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfCancelBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     switch (msg)    {
-        case CREATE_WINDOW:
+        case DFM_CREATE_WINDOW:
             CancelWnd = wnd;
-            DfSendMessage(wnd, CAPTURE_MOUSE, 0, 0);
-            DfSendMessage(wnd, CAPTURE_KEYBOARD, 0, 0);
+            DfSendMessage(wnd, DFM_CAPTURE_MOUSE, 0, 0);
+            DfSendMessage(wnd, DFM_CAPTURE_KEYBOARD, 0, 0);
             break;
         case DFM_COMMAND:
-            if ((int) p1 == ID_CANCEL && (int) p2 == 0)
-                DfSendMessage(GetParent(wnd), msg, p1, p2);
+            if ((int) p1 == DF_ID_CANCEL && (int) p2 == 0)
+                DfSendMessage(DfGetParent(wnd), msg, p1, p2);
             return TRUE;
-        case CLOSE_WINDOW:
+        case DFM_CLOSE_WINDOW:
             CancelWnd = NULL;
-            DfSendMessage(wnd, RELEASE_MOUSE, 0, 0);
-            DfSendMessage(wnd, RELEASE_KEYBOARD, 0, 0);
+            DfSendMessage(wnd, DFM_RELEASE_MOUSE, 0, 0);
+            DfSendMessage(wnd, DFM_RELEASE_KEYBOARD, 0, 0);
             p1 = TRUE;
             break;
         default:
             break;
     }
-    return BaseWndProc(MESSAGEBOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_MESSAGEBOX, wnd, msg, p1, p2);
 }
 
-void CloseCancelBox(void)
+void DfCloseCancelBox(void)
 {
     if (CancelWnd != NULL)
-        DfSendMessage(CancelWnd, CLOSE_WINDOW, 0, 0);
+        DfSendMessage(CancelWnd, DFM_CLOSE_WINDOW, 0, 0);
 }
 
 static char *InputText;
 static int TextLength;
 
-int InputBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int InputBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     int rtn;
     switch (msg)    {
-        case CREATE_WINDOW:
-            rtn = DefaultWndProc(wnd, msg, p1, p2);
-            DfSendMessage(ControlWindow(&InputBoxDB,ID_INPUTTEXT),
-                        SETTEXTLENGTH, TextLength, 0);
+        case DFM_CREATE_WINDOW:
+            rtn = DfDefaultWndProc(wnd, msg, p1, p2);
+            DfSendMessage(DfControlWindow(&InputBoxDB,DF_ID_INPUTTEXT),
+                        DFM_SETTEXTLENGTH, TextLength, 0);
             return rtn;
         case DFM_COMMAND:
-            if ((int) p1 == ID_OK && (int) p2 == 0)
-                GetItemText(wnd, ID_INPUTTEXT,
+            if ((int) p1 == DF_ID_OK && (int) p2 == 0)
+                DfGetItemText(wnd, DF_ID_INPUTTEXT,
                             InputText, TextLength);
             break;
         default:
             break;
     }
-    return DefaultWndProc(wnd, msg, p1, p2);
+    return DfDefaultWndProc(wnd, msg, p1, p2);
 }
 
-BOOL InputBox(DFWINDOW wnd,char *ttl,char *msg,char *text,int len)
+BOOL DfInputBox(DFWINDOW wnd,char *ttl,char *msg,char *text,int len)
 {
     InputText = text;
     TextLength = len;
@@ -131,23 +131,23 @@ BOOL InputBox(DFWINDOW wnd,char *ttl,char *msg,char *text,int len)
     InputBoxDB.ctl[1].dwnd.w = len;
     InputBoxDB.ctl[2].dwnd.x = (InputBoxDB.dwnd.w - 20) / 2;
     InputBoxDB.ctl[3].dwnd.x = InputBoxDB.ctl[2].dwnd.x + 10;
-    InputBoxDB.ctl[2].isetting = ON;
-    InputBoxDB.ctl[3].isetting = ON;
+    InputBoxDB.ctl[2].isetting = DF_ON;
+    InputBoxDB.ctl[3].isetting = DF_ON;
     return DfDialogBox(wnd, &InputBoxDB, TRUE, InputBoxProc);
 }
 
-BOOL GenericMessage(DFWINDOW wnd,char *ttl,char *msg,int buttonct,
-      int (*wndproc)(struct window *,enum messages,PARAM,PARAM),
+BOOL DfGenericMessage(DFWINDOW wnd,char *ttl,char *msg,int buttonct,
+      int (*wndproc)(struct DfWindow *,enum DfMessages,DF_PARAM,DF_PARAM),
       char *b1, char *b2, int c1, int c2, int isModal)
 {
     BOOL rtn;
     MsgBox.dwnd.title = ttl;
-    MsgBox.ctl[0].dwnd.h = MsgHeight(msg);
+    MsgBox.ctl[0].dwnd.h = DfMsgHeight(msg);
 	if (ttl)
-		MsgBox.ctl[0].dwnd.w = max(max(MsgWidth(msg),
+		MsgBox.ctl[0].dwnd.w = max(max(DfMsgWidth(msg),
 			   (int)(buttonct*8 + buttonct + 2)), (int)strlen(ttl)+2);
 	else
-		MsgBox.ctl[0].dwnd.w = max(MsgWidth(msg), (int)(buttonct*8 + buttonct + 2));
+		MsgBox.ctl[0].dwnd.w = max(DfMsgWidth(msg), (int)(buttonct*8 + buttonct + 2));
     MsgBox.dwnd.h = MsgBox.ctl[0].dwnd.h+6;
     MsgBox.dwnd.w = MsgBox.ctl[0].dwnd.w+4;
     if (buttonct == 1)
@@ -155,7 +155,7 @@ BOOL GenericMessage(DFWINDOW wnd,char *ttl,char *msg,int buttonct,
     else    {
         MsgBox.ctl[1].dwnd.x = (MsgBox.dwnd.w - 20) / 2;
         MsgBox.ctl[2].dwnd.x = MsgBox.ctl[1].dwnd.x + 10;
-        MsgBox.ctl[2].class = BUTTON;
+        MsgBox.ctl[2].class = DF_BUTTON;
     }
     MsgBox.ctl[1].dwnd.y = MsgBox.dwnd.h - 4;
     MsgBox.ctl[2].dwnd.y = MsgBox.dwnd.h - 4;
@@ -164,29 +164,29 @@ BOOL GenericMessage(DFWINDOW wnd,char *ttl,char *msg,int buttonct,
     MsgBox.ctl[2].itext = b2;
     MsgBox.ctl[1].command = c1;
     MsgBox.ctl[2].command = c2;
-    MsgBox.ctl[1].isetting = ON;
-    MsgBox.ctl[2].isetting = ON;
+    MsgBox.ctl[1].isetting = DF_ON;
+    MsgBox.ctl[2].isetting = DF_ON;
     rtn = DfDialogBox(wnd, &MsgBox, isModal, wndproc);
     MsgBox.ctl[2].class = 0;
     return rtn;
 }
 
-DFWINDOW MomentaryMessage(char *msg)
+DFWINDOW DfMomentaryMessage(char *msg)
 {
-    DFWINDOW wnd = DfCreateWindow(
-                    TEXTBOX,
+    DFWINDOW wnd = DfDfCreateWindow(
+                    DF_TEXTBOX,
                     NULL,
-                    -1,-1,MsgHeight(msg)+2,MsgWidth(msg)+2,
+                    -1,-1,DfMsgHeight(msg)+2,DfMsgWidth(msg)+2,
                     NULL,NULL,NULL,
-                    HASBORDER | SHADOW | SAVESELF);
-    DfSendMessage(wnd, SETTEXT, (PARAM) msg, 0);
-    WindowClientColor(wnd, WHITE, GREEN);
-    WindowFrameColor(wnd, WHITE, GREEN);
-    DfSendMessage (wnd, SHOW_WINDOW, 0, 0);
+                    DF_HASBORDER | DF_SHADOW | DF_SAVESELF);
+    DfSendMessage(wnd, DFM_SETTEXT, (DF_PARAM) msg, 0);
+    DfWindowClientColor(wnd, WHITE, GREEN);
+    DfWindowFrameColor(wnd, WHITE, GREEN);
+    DfSendMessage (wnd, DFM_SHOW_WINDOW, 0, 0);
     return wnd;
 }
 
-int MsgHeight(char *msg)
+int DfMsgHeight(char *msg)
 {
 	int h = 1;
 
@@ -199,7 +199,7 @@ int MsgHeight(char *msg)
 	return min(h, DfGetScreenHeight ()-10);
 }
 
-int MsgWidth(char *msg)
+int DfMsgWidth(char *msg)
 {
 	int w = 0;
 	char *cp = msg;

@@ -2,43 +2,43 @@
 
 #include "dflat.h"
 
-int BoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
 	int rtn;
 	DFWINDOW oldFocus;
-	CTLWINDOW *ct = GetControl(wnd);
+	DF_CTLWINDOW *ct = DfGetControl(wnd);
 	static BOOL SettingFocus = FALSE;
 	if (ct != NULL)
 	{
 		switch (msg)
 		{
-			case SETFOCUS:
-				SettingFocus = isVisible(wnd);
-				rtn = BaseWndProc(BOX, wnd, msg, p1, p2);
+			case DFM_SETFOCUS:
+				SettingFocus = DfIsVisible(wnd);
+				rtn = DfBaseWndProc(DF_BOX, wnd, msg, p1, p2);
 				SettingFocus = FALSE;
 				return rtn;
 
-            case PAINT:
+            case DFM_PAINT:
                 return FALSE;
-            case LEFT_BUTTON:
+            case DFM_LEFT_BUTTON:
             case DFM_BUTTON_RELEASED:
-                return DfSendMessage(GetParent(wnd), msg, p1, p2);
-            case BORDER:
+                return DfSendMessage(DfGetParent(wnd), msg, p1, p2);
+            case DFM_BORDER:
 				if (SettingFocus)
 					return TRUE;
-				oldFocus = inFocus;
-				inFocus = NULL;
-				rtn = BaseWndProc(BOX, wnd, msg, p1, p2);
-				inFocus = oldFocus;
+				oldFocus = DfInFocus;
+				DfInFocus = NULL;
+				rtn = DfBaseWndProc(DF_BOX, wnd, msg, p1, p2);
+				DfInFocus = oldFocus;
                 if (ct != NULL)
                     if (ct->itext != NULL)
-                        writeline(wnd, ct->itext, 1, 0, FALSE);
+                        DfWriteLine(wnd, ct->itext, 1, 0, FALSE);
 				return rtn;
             default:
                 break;
         }
     }
-    return BaseWndProc(BOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_BOX, wnd, msg, p1, p2);
 }
 
 /* EOF */

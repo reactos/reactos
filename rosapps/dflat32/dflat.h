@@ -28,24 +28,24 @@
 #include <time.h>
 #include <setjmp.h>
 
-#ifndef VERSION
-#define VERSION "Beta Version 0.3"
+#ifndef DF_VERSION
+#define DF_VERSION "Beta Version 0.3"
 #endif
 
-void *DFcalloc(size_t, size_t);
-void *DFmalloc(size_t);
-void *DFrealloc(void *, size_t);
+void *DfCalloc(size_t, size_t);
+void *DfMalloc(size_t);
+void *DfRealloc(void *, size_t);
 
 
-#define MAXMESSAGES 50
-#define DELAYTICKS 1
-#define FIRSTDELAY 7
-#define DOUBLETICKS 5
+#define DF_MAXMESSAGES 50
+#define DF_DELAYTICKS 1
+#define DF_FIRSTDELAY 7
+#define DF_DOUBLETICKS 5
 
-#define MAXTEXTLEN 65000U /* maximum text buffer            */
-#define EDITLEN     1024  /* starting length for multiliner */
-#define ENTRYLEN     256  /* starting length for one-liner  */
-#define GROWLENGTH    64  /* buffers grow by this much      */
+#define DF_MAXTEXTLEN 65000U /* maximum text buffer            */
+#define DF_EDITLEN     1024  /* starting length for multiliner */
+#define DF_ENTRYLEN     256  /* starting length for one-liner  */
+#define DF_GROWLENGTH    64  /* buffers grow by this much      */
 
 #include "system.h"
 #include "config.h"
@@ -56,18 +56,18 @@ void *DFrealloc(void *, size_t);
 #include "dialbox.h"
 
 /* ------ integer type for message parameters ----- */
-typedef long PARAM;
+typedef long DF_PARAM;
 
-enum Condition
+enum DfCondition
 {
-    ISRESTORED, ISMINIMIZED, ISMAXIMIZED, ISCLOSING
+    DF_SRESTORED, DF_ISMINIMIZED, DF_ISMAXIMIZED, DF_ISCLOSING
 };
 
-typedef struct window
+typedef struct DfWindow
 {
 	DFCLASS class;		/* window class                  */
 	char *title;		/* window title                  */
-	int (*wndproc)(struct window *, enum messages, PARAM, PARAM);
+	int (*wndproc)(struct DfWindow *, enum DfMessages, DF_PARAM, DF_PARAM);
 
 	/* ----------------- window colors -------------------- */
 	char WindowColors[4][2];
@@ -78,24 +78,24 @@ typedef struct window
 	DFRECT RestoredRC;	/* restored condition rect       */
 
 	/* -------------- linked list pointers ---------------- */
-	struct window *parent;      /* parent window            */
-	struct window *firstchild;  /* first child this parent  */
-	struct window *lastchild;   /* last child this parent   */
-	struct window *nextsibling; /* next sibling             */
-	struct window *prevsibling; /* previous sibling         */
-	struct window *childfocus;	/* child that ha(s/d) focus */
+	struct DfWindow *parent;      /* parent window            */
+	struct DfWindow *firstchild;  /* first child this parent  */
+	struct DfWindow *lastchild;   /* last child this parent   */
+	struct DfWindow *nextsibling; /* next sibling             */
+	struct DfWindow *prevsibling; /* previous sibling         */
+	struct DfWindow *childfocus;	/* child that ha(s/d) focus */
 
 	int attrib;                 /* Window attributes        */
 	PCHAR_INFO videosave;       /* video save buffer        */
-	enum Condition condition;   /* Restored, Maximized,
+	enum DfCondition condition;   /* Restored, Maximized,
 	                               Minimized, Closing       */
-	enum Condition oldcondition;/* previous condition       */
+	enum DfCondition oldcondition;/* previous condition       */
 	int restored_attrib;        /* attributes when restored */
 	void *extension;      /* menus, dialogs, documents, etc */
-	struct window *PrevMouse;
-	struct window *PrevKeyboard;
-	struct window *MenuBarWnd;/* menu bar                   */
-	struct window *StatusBar; /* status bar                 */
+	struct DfWindow *PrevMouse;
+	struct DfWindow *PrevKeyboard;
+	struct DfWindow *MenuBarWnd;/* menu bar                   */
+	struct DfWindow *StatusBar; /* status bar                 */
 	int isHelping;		/* > 0 when help is being displayed */
 
 	/* ----------------- text box fields ------------------ */
@@ -133,12 +133,12 @@ typedef struct window
 	/* ---------------- dialog box fields ----------------- */
 	int ReturnCode;		/* return code from a dialog box */
 	BOOL Modal;		/* True if a modeless dialog box */
-	CTLWINDOW *ct;		/* control structure             */
-	struct window *dfocus;	/* control window that has focus */
+	DF_CTLWINDOW *ct;		/* control structure             */
+	struct DfWindow *dfocus;	/* control window that has focus */
 	/* -------------- popdownmenu fields ------------------ */
-	MENU *mnu;		/* points to menu structure             */
-	MBAR *holdmenu;		/* previous active menu                 */
-	struct window *oldFocus;
+	DF_MENU *mnu;		/* points to menu structure             */
+	DF_MBAR *holdmenu;		/* previous active menu                 */
+	struct DfWindow *oldFocus;
 
 	/* --------------- help box fields -------------------- */
 	void *firstword; /* -> first in list of key words       */
@@ -156,332 +156,332 @@ typedef struct window
 #include "classdef.h"
 #include "video.h"
 
-void LogMessages (DFWINDOW, DFMESSAGE, PARAM, PARAM);
-void MessageLog(DFWINDOW);
+void DfLogMessages (DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+void DfMessageLog(DFWINDOW);
 /* ------- window methods ----------- */
-#define ICONHEIGHT 3
-#define ICONWIDTH  10
-#define WindowHeight(w)      ((w)->ht)
-#define WindowWidth(w)       ((w)->wd)
-#define BorderAdj(w)         (TestAttribute(w,HASBORDER)?1:0)
-#define BottomBorderAdj(w)   (TestAttribute(w,HASSTATUSBAR)?1:BorderAdj(w))
-#define TopBorderAdj(w)      ((TestAttribute(w,HASTITLEBAR) &&   \
-                              TestAttribute(w,HASMENUBAR)) ?  \
-                              2 : (TestAttribute(w,HASTITLEBAR | \
-                              HASMENUBAR | HASBORDER) ? 1 : 0))
-#define ClientWidth(w)       (WindowWidth(w)-BorderAdj(w)*2)
-#define ClientHeight(w)      (WindowHeight(w)-TopBorderAdj(w)-\
-                              BottomBorderAdj(w))
-#define WindowRect(w)        ((w)->rc)
-#define GetTop(w)            (RectTop(WindowRect(w)))
-#define GetBottom(w)         (RectBottom(WindowRect(w)))
-#define GetLeft(w)           (RectLeft(WindowRect(w)))
-#define GetRight(w)          (RectRight(WindowRect(w)))
-#define GetClientTop(w)      (GetTop(w)+TopBorderAdj(w))
-#define GetClientBottom(w)   (GetBottom(w)-BottomBorderAdj(w))
-#define GetClientLeft(w)     (GetLeft(w)+BorderAdj(w))
-#define GetClientRight(w)    (GetRight(w)-BorderAdj(w))
-#define GetTitle(w)          ((w)->title)
-#define GetParent(w)         ((w)->parent)
-#define FirstWindow(w)       ((w)->firstchild)
-#define LastWindow(w)        ((w)->lastchild)
-#define NextWindow(w)        ((w)->nextsibling)
-#define PrevWindow(w)        ((w)->prevsibling)
-#define GetClass(w)          ((w)->class)
-#define GetAttribute(w)      ((w)->attrib)
-#define AddAttribute(w,a)    (GetAttribute(w) |= a)
-#define ClearAttribute(w,a)  (GetAttribute(w) &= ~(a))
-#define TestAttribute(w,a)   (GetAttribute(w) & (a))
-#define isHidden(w)          (!(GetAttribute(w) & VISIBLE))
-#define SetVisible(w)        (GetAttribute(w) |= VISIBLE)
-#define ClearVisible(w)      (GetAttribute(w) &= ~VISIBLE)
-#define gotoxy(w,x,y) cursor(w->rc.lf+(x)+1,w->rc.tp+(y)+1)
-BOOL isVisible(DFWINDOW);
-DFWINDOW DfCreateWindow(DFCLASS,char *,int,int,int,int,void*,DFWINDOW,
-       int (*)(struct window *,enum messages,PARAM,PARAM),int);
-void AddTitle(DFWINDOW, char *);
-void InsertTitle(DFWINDOW, char *);
-void DisplayTitle(DFWINDOW, DFRECT *);
-void RepaintBorder(DFWINDOW, DFRECT *);
-void PaintShadow(DFWINDOW);
-void ClearWindow(DFWINDOW, DFRECT *, int);
-void writeline(DFWINDOW, char *, int, int, BOOL);
-void InitWindowColors(DFWINDOW);
+#define DF_ICONHEIGHT 3
+#define DF_ICONWIDTH  10
+#define DfWindowHeight(w)      ((w)->ht)
+#define DfWindowWidth(w)       ((w)->wd)
+#define DfBorderAdj(w)         (DfTestAttribute(w,DF_HASBORDER)?1:0)
+#define DfBottomBorderAdj(w)   (DfTestAttribute(w,DF_HASSTATUSBAR)?1:DfBorderAdj(w))
+#define DfTopBorderAdj(w)      ((DfTestAttribute(w,DF_HASTITLEBAR) &&   \
+                              DfTestAttribute(w,DF_HASMENUBAR)) ?  \
+                              2 : (DfTestAttribute(w,DF_HASTITLEBAR | \
+                              DF_HASMENUBAR | DF_HASBORDER) ? 1 : 0))
+#define DfClientWidth(w)       (DfWindowWidth(w)-DfBorderAdj(w)*2)
+#define DfClientHeight(w)      (DfWindowHeight(w)-DfTopBorderAdj(w)-\
+                              DfBottomBorderAdj(w))
+#define DfWindowRect(w)        ((w)->rc)
+#define DfGetTop(w)            (DfRectTop(DfWindowRect(w)))
+#define DfGetBottom(w)         (DfRectBottom(DfWindowRect(w)))
+#define DfGetLeft(w)           (DfRectLeft(DfWindowRect(w)))
+#define DfGetRight(w)          (DfRectRight(DfWindowRect(w)))
+#define DfGetClientTop(w)      (DfGetTop(w)+DfTopBorderAdj(w))
+#define DfGetClientBottom(w)   (DfGetBottom(w)-DfBottomBorderAdj(w))
+#define DfGetClientLeft(w)     (DfGetLeft(w)+DfBorderAdj(w))
+#define DfGetClientRight(w)    (DfGetRight(w)-DfBorderAdj(w))
+#define DfGetTitle(w)          ((w)->title)
+#define DfGetParent(w)         ((w)->parent)
+#define DfFirstWindow(w)       ((w)->firstchild)
+#define DfLastWindow(w)        ((w)->lastchild)
+#define DfNextWindow(w)        ((w)->nextsibling)
+#define DfPrevWindow(w)        ((w)->prevsibling)
+#define DfGetClass(w)          ((w)->class)
+#define DfGetAttribute(w)      ((w)->attrib)
+#define DfAddAttribute(w,a)    (DfGetAttribute(w) |= a)
+#define DfClearAttribute(w,a)  (DfGetAttribute(w) &= ~(a))
+#define DfTestAttribute(w,a)   (DfGetAttribute(w) & (a))
+#define isHidden(w)          (!(DfGetAttribute(w) & DF_VISIBLE))
+#define DfSetVisible(w)        (DfGetAttribute(w) |= DF_VISIBLE)
+#define DfClearVisible(w)      (DfGetAttribute(w) &= ~DF_VISIBLE)
+#define DfGotoXY(w,x,y) DfCursor(w->rc.lf+(x)+1,w->rc.tp+(y)+1)
+BOOL DfIsVisible(DFWINDOW);
+DFWINDOW DfDfCreateWindow(DFCLASS,char *,int,int,int,int,void*,DFWINDOW,
+       int (*)(struct DfWindow *,enum DfMessages,DF_PARAM,DF_PARAM),int);
+void DfAddTitle(DFWINDOW, char *);
+void DfInsertTitle(DFWINDOW, char *);
+void DfDisplayTitle(DFWINDOW, DFRECT *);
+void DfRepaintBorder(DFWINDOW, DFRECT *);
+void DfPaintShadow(DFWINDOW);
+void DfClearWindow(DFWINDOW, DFRECT *, int);
+void DfWriteLine(DFWINDOW, char *, int, int, BOOL);
+void DfInitWindowColors(DFWINDOW);
 
-void SetNextFocus(void);
-void SetPrevFocus(void);
-void RemoveWindow(DFWINDOW);
-void AppendWindow(DFWINDOW);
-void ReFocus(DFWINDOW);
-void SkipApplicationControls(void);
+void DfSetNextFocus(void);
+void DfSetPrevFocus(void);
+void DfRemoveWindow(DFWINDOW);
+void DfAppendWindow(DFWINDOW);
+void DfReFocus(DFWINDOW);
+void DfSkipApplicationControls(void);
 
-BOOL CharInView(DFWINDOW, int, int);
-void CreatePath(char *, char *, int, int);
-#define SwapVideoBuffer(wnd, ish, fh) swapvideo(wnd, wnd->videosave, ish, fh)
-int LineLength(char *);
-DFRECT AdjustRectangle(DFWINDOW, DFRECT);
-BOOL isDerivedFrom(DFWINDOW, DFCLASS);
-DFWINDOW GetAncestor(DFWINDOW);
-void PutWindowChar(DFWINDOW,char,int,int);
-void PutWindowLine(DFWINDOW, void *,int,int);
-#define BaseWndProc(class,wnd,msg,p1,p2)    \
-    (*classdefs[(classdefs[class].base)].wndproc)(wnd,msg,p1,p2)
-#define DefaultWndProc(wnd,msg,p1,p2)         \
-	(classdefs[wnd->class].wndproc == NULL) ? \
-	BaseWndProc(wnd->class,wnd,msg,p1,p2) :	  \
-    (*classdefs[wnd->class].wndproc)(wnd,msg,p1,p2)
-struct LinkedList    {
-    DFWINDOW FirstWindow;
-    DFWINDOW LastWindow;
+BOOL DfCharInView(DFWINDOW, int, int);
+void DfCreatePath(char *, char *, int, int);
+#define DfSwapVideoBuffer(wnd, ish, fh) swapvideo(wnd, wnd->videosave, ish, fh)
+int DfLineLength(char *);
+DFRECT DfAdjustRectangle(DFWINDOW, DFRECT);
+BOOL DfIsDerivedFrom(DFWINDOW, DFCLASS);
+DFWINDOW DfGetAncestor(DFWINDOW);
+void DfPutWindowChar(DFWINDOW,char,int,int);
+void DfPutWindowLine(DFWINDOW, void *,int,int);
+#define DfBaseWndProc(class,wnd,msg,p1,p2)    \
+    (*DfClassDefs[(DfClassDefs[class].base)].wndproc)(wnd,msg,p1,p2)
+#define DfDefaultWndProc(wnd,msg,p1,p2)         \
+	(DfClassDefs[wnd->class].wndproc == NULL) ? \
+	DfBaseWndProc(wnd->class,wnd,msg,p1,p2) :	  \
+    (*DfClassDefs[wnd->class].wndproc)(wnd,msg,p1,p2)
+struct DfLinkedList    {
+    DFWINDOW DfFirstWindow;
+    DFWINDOW DfLastWindow;
 };
-extern DFWINDOW ApplicationWindow;
-extern DFWINDOW inFocus;
-extern DFWINDOW CaptureMouse;
-extern DFWINDOW CaptureKeyboard;
-extern int foreground, background;
-extern BOOL WindowMoving;
-extern BOOL WindowSizing;
-extern BOOL VSliding;
-extern BOOL HSliding;
+extern DFWINDOW DfApplicationWindow;
+extern DFWINDOW DfInFocus;
+extern DFWINDOW DfCaptureMouse;
+extern DFWINDOW DfCaptureKeyboard;
+extern int DfForeground, DfBackground;
+extern BOOL DfWindowMoving;
+extern BOOL DfWindowSizing;
+extern BOOL DfVSliding;
+extern BOOL DfHSliding;
 extern char DFlatApplication[];
-extern char *Clipboard;
-extern unsigned ClipboardLength;
-extern BOOL ClipString;
+extern char *DfClipboard;
+extern unsigned DfClipboardLength;
+extern BOOL DfClipString;
 /* --------- space between menubar labels --------- */
-#define MSPACE 2
+#define DF_MSPACE 2
 /* --------------- border characters ------------- */
-#define FOCUS_NW      (unsigned char) '\xc9'
-#define FOCUS_NE      (unsigned char) '\xbb'
-#define FOCUS_SE      (unsigned char) '\xbc'
-#define FOCUS_SW      (unsigned char) '\xc8'
-#define FOCUS_SIDE    (unsigned char) '\xba'
-#define FOCUS_LINE    (unsigned char) '\xcd'
-#define NW            (unsigned char) '\xda'
-#define NE            (unsigned char) '\xbf'
-#define SE            (unsigned char) '\xd9'
-#define SW            (unsigned char) '\xc0'
-#define SIDE          (unsigned char) '\xb3'
-#define LINE          (unsigned char) '\xc4'
-#define LEDGE         (unsigned char) '\xc3'
-#define REDGE         (unsigned char) '\xb4'
+#define DF_FOCUS_NW      (unsigned char) '\xc9'
+#define DF_FOCUS_NE      (unsigned char) '\xbb'
+#define DF_FOCUS_SE      (unsigned char) '\xbc'
+#define DF_FOCUS_SW      (unsigned char) '\xc8'
+#define DF_FOCUS_SIDE    (unsigned char) '\xba'
+#define DF_FOCUS_LINE    (unsigned char) '\xcd'
+#define DF_NW            (unsigned char) '\xda'
+#define DF_NE            (unsigned char) '\xbf'
+#define DF_SE            (unsigned char) '\xd9'
+#define DF_SW            (unsigned char) '\xc0'
+#define DF_SIDE          (unsigned char) '\xb3'
+#define DF_LINE          (unsigned char) '\xc4'
+#define DF_LEDGE         (unsigned char) '\xc3'
+#define DF_REDGE         (unsigned char) '\xb4'
 /* ------------- scroll bar characters ------------ */
-#define UPSCROLLBOX    (unsigned char) '\x1e'
-#define DOWNSCROLLBOX  (unsigned char) '\x1f'
-#define LEFTSCROLLBOX  (unsigned char) '\x11'
-#define RIGHTSCROLLBOX (unsigned char) '\x10'
-#define SCROLLBARCHAR  (unsigned char) 176
-#define SCROLLBOXCHAR  (unsigned char) 178
+#define DF_UPSCROLLBOX    (unsigned char) '\x1e'
+#define DF_DOWNSCROLLBOX  (unsigned char) '\x1f'
+#define DF_LEFTSCROLLBOX  (unsigned char) '\x11'
+#define DF_RIGHTSCROLLBOX (unsigned char) '\x10'
+#define DF_SCROLLBARCHAR  (unsigned char) 176
+#define DF_SCROLLBOXCHAR  (unsigned char) 178
 /* ------------------ menu characters --------------------- */
-#define CHECKMARK      (unsigned char) '\x04' //(SCREENHEIGHT==25?251:4)
-#define CASCADEPOINTER (unsigned char) '\x10'
+#define DF_CHECKMARK      (unsigned char) '\x04' //(DF_SCREENHEIGHT==25?251:4)
+#define DF_CASCADEPOINTER (unsigned char) '\x10'
 /* ----------------- title bar characters ----------------- */
-#define CONTROLBOXCHAR (unsigned char) '\xf0'
-#define MAXPOINTER     24      /* maximize token            */
-#define MINPOINTER     25      /* minimize token            */
-#define RESTOREPOINTER 18      /* restore token             */
+#define DF_CONTROLBOXCHAR (unsigned char) '\xf0'
+#define DF_MAXPOINTER     24      /* maximize token            */
+#define DF_MINPOINTER     25      /* minimize token            */
+#define DF_RESTOREPOINTER 18      /* restore token             */
 /* --------------- text control characters ---------------- */
-#define APPLCHAR     (unsigned char) 176 /* fills application window */
-#define SHORTCUTCHAR '~'    /* prefix: shortcut key display */
-#define CHANGECOLOR  (unsigned char) 174 /* prefix to change colors  */
-#define RESETCOLOR   (unsigned char) 175 /* reset colors to default  */
-#define LISTSELECTOR   4    /* selected list box entry      */
+#define DF_APPLCHAR     (unsigned char) 176 /* fills application window */
+#define DF_SHORTCUTCHAR '~'    /* prefix: shortcut key display */
+#define DF_CHANGECOLOR  (unsigned char) 174 /* prefix to change colors  */
+#define DF_RESETCOLOR   (unsigned char) 175 /* reset colors to default  */
+#define DF_LISTSELECTOR   4    /* selected list box entry      */
 
 /* --------- message prototypes ----------- */
 BOOL DfInitialize (void);
 void DfTerminate (void);
-void DfPostMessage (DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int DfSendMessage (DFWINDOW, DFMESSAGE, PARAM, PARAM);
+void DfPostMessage (DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfSendMessage (DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
 BOOL DfDispatchMessage (void);
-void handshake(void);
+void DfHandshake(void);
 SHORT DfGetScreenHeight (void);
 SHORT DfGetScreenWidth (void);
 
 /* ---- standard window message processing prototypes ----- */
-int ApplicationProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int NormalProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int TextBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int ListBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int EditBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int PictureProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int MenuBarProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int PopDownProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int ButtonProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int ComboProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int TextProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int RadioButtonProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int CheckBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int SpinButtonProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int BoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int DialogProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int SystemMenuProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int HelpBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int MessageBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int CancelBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int ErrorBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int YesNoBoxProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int StatusBarProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
-int WatchIconProc(DFWINDOW, DFMESSAGE, PARAM, PARAM);
+int DfApplicationProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfNormalProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfTextBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfListBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfEditBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfPictureProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfMenuBarProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfPopDownProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfButtonProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfComboProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfTextProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfRadioButtonProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfCheckBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfSpinButtonProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfDialogProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfSystemMenuProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfHelpBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfMessageBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfCancelBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfErrorBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfYesNoBoxProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfStatusBarProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
+int DfWatchIconProc(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
 
 /* ------------- normal box prototypes ------------- */
-void SetStandardColor(DFWINDOW);
-void SetReverseColor(DFWINDOW);
-BOOL isAncestor(DFWINDOW, DFWINDOW);
-#define HitControlBox(wnd, p1, p2)     \
-     (TestAttribute(wnd, CONTROLBOX) && \
+void DfSetStandardColor(DFWINDOW);
+void DfSetReverseColor(DFWINDOW);
+BOOL DfIsAncestor(DFWINDOW, DFWINDOW);
+#define DfHitControlBox(wnd, p1, p2)     \
+     (DfTestAttribute(wnd, DF_CONTROLBOX) && \
      p1 == 2 && p2 == 0)
-#define WndForeground(wnd) 		\
-	(wnd->WindowColors [STD_COLOR] [FG])
-#define WndBackground(wnd) 		\
-	(wnd->WindowColors [STD_COLOR] [BG])
-#define FrameForeground(wnd) 	\
-	(wnd->WindowColors [FRAME_COLOR] [FG])
-#define FrameBackground(wnd) 	\
-	(wnd->WindowColors [FRAME_COLOR] [BG])
-#define SelectForeground(wnd) 	\
-	(wnd->WindowColors [SELECT_COLOR] [FG])
-#define SelectBackground(wnd) 	\
-	(wnd->WindowColors [SELECT_COLOR] [BG])
-#define HighlightForeground(wnd) 	\
-	(wnd->WindowColors [HILITE_COLOR] [FG])
-#define HighlightBackground(wnd) 	\
-	(wnd->WindowColors [HILITE_COLOR] [BG])
-#define WindowClientColor(wnd, fg, bg) 	\
-		WndForeground(wnd) = fg, WndBackground(wnd) = bg
-#define WindowReverseColor(wnd, fg, bg) \
-		SelectForeground(wnd) = fg, SelectBackground(wnd) = bg
-#define WindowFrameColor(wnd, fg, bg) \
-		FrameForeground(wnd) = fg, FrameBackground(wnd) = bg
-#define WindowHighlightColor(wnd, fg, bg) \
-		HighlightForeground(wnd) = fg, HighlightBackground(wnd) = bg
+#define DfWndForeground(wnd) 		\
+	(wnd->WindowColors [DF_STD_COLOR] [DF_FG])
+#define DfWndBackground(wnd) 		\
+	(wnd->WindowColors [DF_STD_COLOR] [DF_BG])
+#define DfFrameForeground(wnd) 	\
+	(wnd->WindowColors [DF_FRAME_COLOR] [DF_FG])
+#define DfFrameBackground(wnd) 	\
+	(wnd->WindowColors [DF_FRAME_COLOR] [DF_BG])
+#define DfSelectForeground(wnd) 	\
+	(wnd->WindowColors [DF_SELECT_COLOR] [DF_FG])
+#define DfSelectBackground(wnd) 	\
+	(wnd->WindowColors [DF_SELECT_COLOR] [DF_BG])
+#define DfHighlightForeground(wnd) 	\
+	(wnd->WindowColors [DF_HILITE_COLOR] [DF_FG])
+#define DfHighlightBackground(wnd) 	\
+	(wnd->WindowColors [DF_HILITE_COLOR] [DF_BG])
+#define DfWindowClientColor(wnd, fg, bg) 	\
+		DfWndForeground(wnd) = fg, DfWndBackground(wnd) = bg
+#define DfWindowReverseColor(wnd, fg, bg) \
+		DfSelectForeground(wnd) = fg, DfSelectBackground(wnd) = bg
+#define DfWindowFrameColor(wnd, fg, bg) \
+		DfFrameForeground(wnd) = fg, DfFrameBackground(wnd) = bg
+#define DfWindowHighlightColor(wnd, fg, bg) \
+		DfHighlightForeground(wnd) = fg, DfHighlightBackground(wnd) = bg
 /* -------- text box prototypes ---------- */
-#define TextLine(wnd, sel) \
+#define DfTextLine(wnd, sel) \
       (wnd->text + *((wnd->TextPointers) + sel))
-void WriteTextLine(DFWINDOW, DFRECT *, int, BOOL);
-#define TextBlockMarked(wnd) (  wnd->BlkBegLine ||    \
+void DfWriteTextLine(DFWINDOW, DFRECT *, int, BOOL);
+#define DfTextBlockMarked(wnd) (  wnd->BlkBegLine ||    \
                                 wnd->BlkEndLine ||    \
                                 wnd->BlkBegCol  ||    \
                                 wnd->BlkEndCol)
-void MarkTextBlock(DFWINDOW, int, int, int, int);
-#define ClearTextBlock(wnd) wnd->BlkBegLine = wnd->BlkEndLine =  \
+void DfMarkTextBlock(DFWINDOW, int, int, int, int);
+#define DfClearTextBlock(wnd) wnd->BlkBegLine = wnd->BlkEndLine =  \
                         wnd->BlkBegCol  = wnd->BlkEndCol = 0;
-#define GetText(w)        ((w)->text)
-#define GetTextLines(w)   ((w)->wlines)
-void ClearTextPointers(DFWINDOW);
-void BuildTextPointers(DFWINDOW);
-int TextLineNumber(DFWINDOW, char *);
-/* ------------ Clipboard prototypes ------------- */
-void CopyTextToClipboard(char *);
-void CopyToClipboard(DFWINDOW);
-#define PasteFromClipboard(wnd) PasteText(wnd,Clipboard,ClipboardLength)
-BOOL PasteText(DFWINDOW, char *, unsigned);
-void ClearClipboard(void);
+#define DfGetText(w)        ((w)->text)
+#define DfGetTextLines(w)   ((w)->wlines)
+void DfClearTextPointers(DFWINDOW);
+void DfBuildTextPointers(DFWINDOW);
+int DfTextLineNumber(DFWINDOW, char *);
+/* ------------ DfClipboard prototypes ------------- */
+void DfCopyTextToClipboard(char *);
+void DfCopyToClipboard(DFWINDOW);
+#define DfPasteFromClipboard(wnd) DfPasteText(wnd,DfClipboard,DfClipboardLength)
+BOOL DfPasteText(DFWINDOW, char *, unsigned);
+void DfClearClipboard(void);
 /* --------- menu prototypes ---------- */
-int CopyCommand(unsigned char *, unsigned char *, int, int);
-void PrepFileMenu(void *, struct Menu *);
-void PrepEditMenu(void *, struct Menu *);
-void PrepSearchMenu(void *, struct Menu *);
-void PrepWindowMenu(void *, struct Menu *);
-void BuildSystemMenu(DFWINDOW);
-BOOL isActive(MBAR *, int);
-char *GetCommandText(MBAR *, int);
-BOOL isCascadedCommand(MBAR *,int);
-void ActivateCommand(MBAR *,int);
-void DeactivateCommand(MBAR *,int);
-BOOL GetCommandToggle(MBAR *,int);
-void SetCommandToggle(MBAR *,int);
-void ClearCommandToggle(MBAR *,int);
-void InvertCommandToggle(MBAR *,int);
-int BarSelection(int);
+int DfCopyCommand(unsigned char *, unsigned char *, int, int);
+void DfPrepFileMenu(void *, struct DfMenu *);
+void DfPrepEditMenu(void *, struct DfMenu *);
+void DfPrepSearchMenu(void *, struct DfMenu *);
+void DfPrepWindowMenu(void *, struct DfMenu *);
+void DfBuildSystemMenu(DFWINDOW);
+BOOL isActive(DF_MBAR *, int);
+char *DfGetCommandText(DF_MBAR *, int);
+BOOL DfIsCascadedCommand(DF_MBAR *,int);
+void DfActivateCommand(DF_MBAR *,int);
+void DfDeactivateCommand(DF_MBAR *,int);
+BOOL DfGetCommandToggle(DF_MBAR *,int);
+void DfSetCommandToggle(DF_MBAR *,int);
+void DfClearCommandToggle(DF_MBAR *,int);
+void DfInvertCommandToggle(DF_MBAR *,int);
+int DfBarSelection(int);
 /* ------------- list box prototypes -------------- */
-BOOL ItemSelected(DFWINDOW, int);
+BOOL DfItemSelected(DFWINDOW, int);
 /* ------------- edit box prototypes ----------- */
-#define CurrChar (TextLine(wnd, wnd->CurrLine)+wnd->CurrCol)
-#define WndCol   (wnd->CurrCol-wnd->wleft)
-#define isMultiLine(wnd) TestAttribute(wnd, MULTILINE)
+#define DfCurrChar (DfTextLine(wnd, wnd->CurrLine)+wnd->CurrCol)
+#define DfWndCol   (wnd->CurrCol-wnd->wleft)
+#define DfIsMultiLine(wnd) DfTestAttribute(wnd, DF_MULTILINE)
 void DfSearchText(DFWINDOW);
 void DfReplaceText(DFWINDOW);
 void DfSearchNext(DFWINDOW);
 /* --------- message box prototypes -------- */
-DFWINDOW SliderBox(int, char *, char *);
-BOOL InputBox(DFWINDOW, char *, char *, char *, int);
-BOOL GenericMessage(DFWINDOW, char *, char *, int,
-	int (*)(struct window *, enum messages, PARAM, PARAM),
+DFWINDOW DfSliderBox(int, char *, char *);
+BOOL DfInputBox(DFWINDOW, char *, char *, char *, int);
+BOOL DfGenericMessage(DFWINDOW, char *, char *, int,
+	int (*)(struct DfWindow *, enum DfMessages, DF_PARAM, DF_PARAM),
 	char *, char *, int, int, int);
 #define DfTestErrorMessage(msg)	\
-	GenericMessage(NULL, "Error", msg, 2, ErrorBoxProc,	  \
-		Ok, Cancel, ID_OK, ID_CANCEL, TRUE)
+	DfGenericMessage(NULL, "Error", msg, 2, DfErrorBoxProc,	  \
+		Ok, Cancel, DF_ID_OK, DF_ID_CANCEL, TRUE)
 #define DfErrorMessage(msg) \
-	GenericMessage(NULL, "Error", msg, 1, ErrorBoxProc,   \
-		Ok, NULL, ID_OK, 0, TRUE)
+	DfGenericMessage(NULL, "Error", msg, 1, DfErrorBoxProc,   \
+		Ok, NULL, DF_ID_OK, 0, TRUE)
 #define DfMessageBox(ttl, msg) \
-	GenericMessage(NULL, ttl, msg, 1, MessageBoxProc, \
-		Ok, NULL, ID_OK, 0, TRUE)
+	DfGenericMessage(NULL, ttl, msg, 1, DfMessageBoxProc, \
+		Ok, NULL, DF_ID_OK, 0, TRUE)
 #define DfYesNoBox(msg)	\
-	GenericMessage(NULL, NULL, msg, 2, YesNoBoxProc,   \
-		Yes, No, ID_OK, ID_CANCEL, TRUE)
+	DfGenericMessage(NULL, NULL, msg, 2, DfYesNoBoxProc,   \
+		Yes, No, DF_ID_OK, DF_ID_CANCEL, TRUE)
 #define DfCancelBox(wnd, msg) \
-	GenericMessage(wnd, "Wait...", msg, 1, CancelBoxProc, \
-		Cancel, NULL, ID_CANCEL, 0, FALSE)
-void CloseCancelBox(void);
-DFWINDOW MomentaryMessage(char *);
-int MsgHeight(char *);
-int MsgWidth(char *);
+	DfGenericMessage(wnd, "Wait...", msg, 1, DfCancelBoxProc, \
+		Cancel, NULL, DF_ID_CANCEL, 0, FALSE)
+void DfCloseCancelBox(void);
+DFWINDOW DfMomentaryMessage(char *);
+int DfMsgHeight(char *);
+int DfMsgWidth(char *);
 
 /* ------------- dialog box prototypes -------------- */
-BOOL DfDialogBox(DFWINDOW, DBOX *, BOOL,
-       int (*)(struct window *, enum messages, PARAM, PARAM));
-void ClearDialogBoxes(void);
-BOOL OpenFileDialogBox(char *, char *);
-BOOL SaveAsDialogBox(char *);
-void GetDlgListText(DFWINDOW, char *, enum commands);
-BOOL DfDlgDirList(DFWINDOW, char *, enum commands,
-                            enum commands, unsigned);
-BOOL RadioButtonSetting(DBOX *, enum commands);
-void PushRadioButton(DBOX *, enum commands);
-void PutItemText(DFWINDOW, enum commands, char *);
-void PutComboListText(DFWINDOW, enum commands, char *);
-void GetItemText(DFWINDOW, enum commands, char *, int);
-char *GetDlgTextString(DBOX *, enum commands, DFCLASS);
-void SetDlgTextString(DBOX *, enum commands, char *, DFCLASS);
-BOOL CheckBoxSetting(DBOX *, enum commands);
-CTLWINDOW *FindCommand(DBOX *, enum commands, int);
-DFWINDOW ControlWindow(DBOX *, enum commands);
-void SetScrollBars(DFWINDOW);
-void SetRadioButton(DBOX *, CTLWINDOW *);
-void ControlSetting(DBOX *, enum commands, int, int);
-void SetFocusCursor(DFWINDOW);
+BOOL DfDialogBox(DFWINDOW, DF_DBOX *, BOOL,
+       int (*)(struct DfWindow *, enum DfMessages, DF_PARAM, DF_PARAM));
+void DfClearDialogBoxes(void);
+BOOL DfOpenFileDialogBox(char *, char *);
+BOOL DfSaveAsDialogBox(char *);
+void DfGetDlgListText(DFWINDOW, char *, enum DfCommands);
+BOOL DfDlgDirList(DFWINDOW, char *, enum DfCommands,
+                            enum DfCommands, unsigned);
+BOOL DfRadioButtonSetting(DF_DBOX *, enum DfCommands);
+void DfPushRadioButton(DF_DBOX *, enum DfCommands);
+void DfPutItemText(DFWINDOW, enum DfCommands, char *);
+void DfPutComboListText(DFWINDOW, enum DfCommands, char *);
+void DfGetItemText(DFWINDOW, enum DfCommands, char *, int);
+char *DfGetDlgTextString(DF_DBOX *, enum DfCommands, DFCLASS);
+void DfSetDlgTextString(DF_DBOX *, enum DfCommands, char *, DFCLASS);
+BOOL DfCheckBoxSetting(DF_DBOX *, enum DfCommands);
+DF_CTLWINDOW *DfFindCommand(DF_DBOX *, enum DfCommands, int);
+DFWINDOW DfControlWindow(DF_DBOX *, enum DfCommands);
+void DfSetScrollBars(DFWINDOW);
+void DfSetRadioButton(DF_DBOX *, DF_CTLWINDOW *);
+void DfControlSetting(DF_DBOX *, enum DfCommands, int, int);
+void DfSetFocusCursor(DFWINDOW);
 
-#define GetControl(wnd)             (wnd->ct)
-#define GetDlgText(db, cmd)         GetDlgTextString(db, cmd, TEXT)
-#define GetDlgTextBox(db, cmd)      GetDlgTextString(db, cmd, TEXTBOX)
-#define GetEditBoxText(db, cmd)     GetDlgTextString(db, cmd, EDITBOX)
-#define GetComboBoxText(db, cmd)    GetDlgTextString(db, cmd, COMBOBOX)
-#define SetDlgText(db, cmd, s)      SetDlgTextString(db, cmd, s, TEXT)
-#define SetDlgTextBox(db, cmd, s)   SetDlgTextString(db, cmd, s, TEXTBOX)
-#define SetEditBoxText(db, cmd, s)  SetDlgTextString(db, cmd, s, EDITBOX)
-#define SetComboBoxText(db, cmd, s) SetDlgTextString(db, cmd, s, COMBOBOX)
-#define SetDlgTitle(db, ttl)        ((db)->dwnd.title = ttl)
-#define SetCheckBox(db, cmd)        ControlSetting(db, cmd, CHECKBOX, ON)
-#define ClearCheckBox(db, cmd)      ControlSetting(db, cmd, CHECKBOX, OFF)
-#define EnableButton(db, cmd)       ControlSetting(db, cmd, BUTTON, ON)
-#define DisableButton(db, cmd)      ControlSetting(db, cmd, BUTTON, OFF)
+#define DfGetControl(wnd)             (wnd->ct)
+#define DfGetDlgText(db, cmd)         DfGetDlgTextString(db, cmd, DF_TEXT)
+#define DfGetDlgTextBox(db, cmd)      DfGetDlgTextString(db, cmd, DF_TEXTBOX)
+#define DfGetEditBoxText(db, cmd)     DfGetDlgTextString(db, cmd, DF_EDITBOX)
+#define DfGetComboBoxText(db, cmd)    DfGetDlgTextString(db, cmd, DF_COMBOBOX)
+#define DfSetDlgText(db, cmd, s)      DfSetDlgTextString(db, cmd, s, DF_TEXT)
+#define DfSetDlgTextBox(db, cmd, s)   DfSetDlgTextString(db, cmd, s, DF_TEXTBOX)
+#define DfSetEditBoxText(db, cmd, s)  DfSetDlgTextString(db, cmd, s, DF_EDITBOX)
+#define DfSetComboBoxText(db, cmd, s) DfSetDlgTextString(db, cmd, s, DF_COMBOBOX)
+#define DfSetDlgTitle(db, ttl)        ((db)->dwnd.title = ttl)
+#define DfSetCheckBox(db, cmd)        DfControlSetting(db, cmd, DF_CHECKBOX, DF_ON)
+#define DfClearCheckBox(db, cmd)      DfControlSetting(db, cmd, DF_CHECKBOX, DF_OFF)
+#define DfEnableButton(db, cmd)       DfControlSetting(db, cmd, DF_BUTTON, DF_ON)
+#define DfDisableButton(db, cmd)      DfControlSetting(db, cmd, DF_BUTTON, DF_OFF)
 
 /* ---- types of vectors that can be in a picture box ------- */
-enum VectTypes {VECTOR, SOLIDBAR, HEAVYBAR, CROSSBAR, LIGHTBAR};
+enum DfVectTypes {DF_VECTOR, DF_SOLIDBAR, DF_HEAVYBAR, DF_CROSSBAR, DF_LIGHTBAR};
 
 /* ------------- picture box prototypes ------------- */
-void DrawVector(DFWINDOW, int, int, int, int);
-void DrawBox(DFWINDOW, int, int, int, int);
-void DrawBar(DFWINDOW, enum VectTypes, int, int, int, int);
-DFWINDOW WatchIcon(void);
+void DfDrawVector(DFWINDOW, int, int, int, int);
+void DfDrawBox(DFWINDOW, int, int, int, int);
+void DfDrawBar(DFWINDOW, enum DfVectTypes, int, int, int, int);
+DFWINDOW DfWatchIcon(void);
 
 /* ------------- help box prototypes ------------- */
-void LoadHelpFile(void);
-void UnLoadHelpFile(void);
-BOOL DisplayHelp(DFWINDOW, char *);
+void DfLoadHelpFile(void);
+void DfUnLoadHelpFile(void);
+BOOL DfDisplayHelp(DFWINDOW, char *);
 
-extern char *ClassNames[];
+extern char *DfClassNames[];
 
-void BuildFileName(char *, char *);
+void DfBuildFileName(char *, char *);
 
 #endif

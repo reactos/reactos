@@ -4,25 +4,25 @@
 
 #define clr(fg,bg) ((fg)|((bg)<<4))
 
-BOOL ClipString;
+BOOL DfClipString;
 
 /* -- read a rectangle of video memory into a save buffer -- */
-void GetVideo(DFRECT rc, PCHAR_INFO bf)
+void DfGetVideo(DFRECT rc, PCHAR_INFO bf)
 {
 	COORD Size;
 	COORD Pos;
 	SMALL_RECT Rect;
 
-	Size.X = RectRight(rc) - RectLeft(rc) + 1;
-	Size.Y = RectBottom(rc) - RectTop(rc) + 1;
+	Size.X = DfRectRight(rc) - DfRectLeft(rc) + 1;
+	Size.Y = DfRectBottom(rc) - DfRectTop(rc) + 1;
 
 	Pos.X = 0;
 	Pos.Y = 0;
 
-	Rect.Left   = RectLeft(rc);
-	Rect.Top    = RectTop(rc);
-	Rect.Right  = RectRight(rc);
-	Rect.Bottom = RectBottom(rc);
+	Rect.Left   = DfRectLeft(rc);
+	Rect.Top    = DfRectTop(rc);
+	Rect.Right  = DfRectRight(rc);
+	Rect.Bottom = DfRectBottom(rc);
 
 	ReadConsoleOutput (GetStdHandle (STD_OUTPUT_HANDLE),
 	                   bf,
@@ -32,22 +32,22 @@ void GetVideo(DFRECT rc, PCHAR_INFO bf)
 }
 
 /* -- write a rectangle of video memory from a save buffer -- */
-void StoreVideo(DFRECT rc, PCHAR_INFO bf)
+void DfStoreVideo(DFRECT rc, PCHAR_INFO bf)
 {
 	COORD Size;
 	COORD Pos;
 	SMALL_RECT Rect;
 
-	Size.X = RectRight(rc) - RectLeft(rc) + 1;
-	Size.Y = RectBottom(rc) - RectTop(rc) + 1;
+	Size.X = DfRectRight(rc) - DfRectLeft(rc) + 1;
+	Size.Y = DfRectBottom(rc) - DfRectTop(rc) + 1;
 
 	Pos.X = 0;
 	Pos.Y = 0;
 
-	Rect.Left   = RectLeft(rc);
-	Rect.Top    = RectTop(rc);
-	Rect.Right  = RectRight(rc);
-	Rect.Bottom = RectBottom(rc);
+	Rect.Left   = DfRectLeft(rc);
+	Rect.Top    = DfRectTop(rc);
+	Rect.Right  = DfRectRight(rc);
+	Rect.Bottom = DfRectBottom(rc);
 
 	WriteConsoleOutput (GetStdHandle (STD_OUTPUT_HANDLE),
 	                    bf,
@@ -57,7 +57,7 @@ void StoreVideo(DFRECT rc, PCHAR_INFO bf)
 }
 
 /* -------- read a character of video memory ------- */
-char GetVideoChar(int x, int y)
+char DfGetVideoChar(int x, int y)
 {
 	COORD pos;
 	DWORD dwRead;
@@ -76,12 +76,12 @@ char GetVideoChar(int x, int y)
 }
 
 /* -------- write a character of video memory ------- */
-void PutVideoChar(int x, int y, int ch)
+void DfPutVideoChar(int x, int y, int ch)
 {
 	COORD pos;
 	DWORD dwWritten;
 
-	if (x < sScreenWidth && y < sScreenHeight)
+	if (x < DfScreenWidth && y < DfScreenHeight)
 	{
 		pos.X = x;
 		pos.Y = y;
@@ -94,69 +94,69 @@ void PutVideoChar(int x, int y, int ch)
 	}
 }
 
-BOOL CharInView(DFWINDOW wnd, int x, int y)
+BOOL DfCharInView(DFWINDOW wnd, int x, int y)
 {
-	DFWINDOW nwnd = NextWindow(wnd);
+	DFWINDOW nwnd = DfNextWindow(wnd);
 	DFWINDOW pwnd;
 	DFRECT rc;
-	int x1 = GetLeft(wnd)+x;
-	int y1 = GetTop(wnd)+y;
+	int x1 = DfGetLeft(wnd)+x;
+	int y1 = DfGetTop(wnd)+y;
 
-	if (!TestAttribute(wnd, VISIBLE))
+	if (!DfTestAttribute(wnd, DF_VISIBLE))
 		return FALSE;
-	if (!TestAttribute(wnd, NOCLIP))
+	if (!DfTestAttribute(wnd, DF_NOCLIP))
 	{
-		DFWINDOW wnd1 = GetParent(wnd);
+		DFWINDOW wnd1 = DfGetParent(wnd);
 		while (wnd1 != NULL)
 		{
 			/* clip character to parent's borders */
-			if (!TestAttribute(wnd1, VISIBLE))
+			if (!DfTestAttribute(wnd1, DF_VISIBLE))
 				return FALSE;
-			if (!InsideRect(x1, y1, ClientRect(wnd1)))
+			if (!DfInsideRect(x1, y1, DfClientRect(wnd1)))
 				return FALSE;
-			wnd1 = GetParent(wnd1);
+			wnd1 = DfGetParent(wnd1);
 		}
 	}
 	while (nwnd != NULL)
 	{
-		if (!isHidden(nwnd) && !isAncestor(wnd, nwnd))
+		if (!isHidden(nwnd) && !DfIsAncestor(wnd, nwnd))
 		{
-			rc = WindowRect(nwnd);
-			if (TestAttribute(nwnd, SHADOW))
+			rc = DfWindowRect(nwnd);
+			if (DfTestAttribute(nwnd, DF_SHADOW))
 			{
-				RectBottom(rc)++;
-				RectRight(rc)++;
+				DfRectBottom(rc)++;
+				DfRectRight(rc)++;
 			}
-			if (!TestAttribute(nwnd, NOCLIP))
+			if (!DfTestAttribute(nwnd, DF_NOCLIP))
 			{
 				pwnd = nwnd;
-				while (GetParent(pwnd))
+				while (DfGetParent(pwnd))
 				{
-					pwnd = GetParent(pwnd);
-					rc = subRectangle(rc, ClientRect(pwnd));
+					pwnd = DfGetParent(pwnd);
+					rc = DfSubRectangle(rc, DfClientRect(pwnd));
 				}
 			}
-			if (InsideRect(x1,y1,rc))
+			if (DfInsideRect(x1,y1,rc))
 				return FALSE;
 		}
-		nwnd = NextWindow(nwnd);
+		nwnd = DfNextWindow(nwnd);
 	}
-	return (x1 < sScreenWidth && y1 < sScreenHeight);
+	return (x1 < DfScreenWidth && y1 < DfScreenHeight);
 }
 
 /* -------- write a character to a window ------- */
-void wputch(DFWINDOW wnd, int c, int x, int y)
+void DfWPutch(DFWINDOW wnd, int c, int x, int y)
 {
-	if (CharInView(wnd, x, y))
+	if (DfCharInView(wnd, x, y))
 	{
 		DWORD dwWritten;
 		COORD pos;
 		WORD Attr;
 
-		pos.X = GetLeft(wnd)+x;
-		pos.Y = GetTop(wnd)+y;
+		pos.X = DfGetLeft(wnd)+x;
+		pos.Y = DfGetTop(wnd)+y;
 
-		Attr = clr(foreground, background);
+		Attr = clr(DfForeground, DfBackground);
 
 		WriteConsoleOutputAttribute (GetStdHandle(STD_OUTPUT_HANDLE),
 		                             &Attr,
@@ -173,46 +173,46 @@ void wputch(DFWINDOW wnd, int c, int x, int y)
 }
 
 /* ------- write a string to a window ---------- */
-void wputs(DFWINDOW wnd, void *s, int x, int y)
+void DfWPuts(DFWINDOW wnd, void *s, int x, int y)
 {
 
-	int x1 = GetLeft(wnd)+x;
+	int x1 = DfGetLeft(wnd)+x;
 	int x2 = x1;
-	int y1 = GetTop(wnd)+y;
+	int y1 = DfGetTop(wnd)+y;
 
-	if (x1 < sScreenWidth && y1 < sScreenHeight && isVisible(wnd))
+	if (x1 < DfScreenWidth && y1 < DfScreenHeight && DfIsVisible(wnd))
 	{
 		char ln[200];
 		WORD attr[200];
 		char *cp = ln;
 		WORD *ap = attr;
 		unsigned char *str = s;
-		int fg = foreground;
-		int bg = background;
+		int fg = DfForeground;
+		int bg = DfBackground;
 		int len;
 		int off = 0;
 		while (*str)
 		{
-			if (*str == CHANGECOLOR)
+			if (*str == DF_CHANGECOLOR)
 			{
 				str++;
-				foreground = (*str++) & 0x7f;
-				background = (*str++) & 0x7f;
+				DfForeground = (*str++) & 0x7f;
+				DfBackground = (*str++) & 0x7f;
 				continue;
 			}
 
-			if (*str == RESETCOLOR)
+			if (*str == DF_RESETCOLOR)
 			{
-				foreground = fg & 0x7f;
-				background = bg & 0x7f;
+				DfForeground = fg & 0x7f;
+				DfBackground = bg & 0x7f;
 				str++;
 				continue;
 			}
 			*cp = (*str & 255);
-			*ap = (WORD)clr(foreground, background);
-//			*cp1 = (*str & 255) | (clr(foreground, background) << 8);
-//			if (ClipString)
-//				if (!CharInView(wnd, x, y))
+			*ap = (WORD)clr(DfForeground, DfBackground);
+//			*cp1 = (*str & 255) | (clr(DfForeground, DfBackground) << 8);
+//			if (DfClipString)
+//				if (!DfCharInView(wnd, x, y))
 //					*cp1 = peek(video_address, vad(x2,y1));
 			cp++;
 			ap++;
@@ -220,28 +220,28 @@ void wputs(DFWINDOW wnd, void *s, int x, int y)
 			x++;
 			x2++;
 		}
-		foreground = fg;
-		background = bg;
+		DfForeground = fg;
+		DfBackground = bg;
 		len = (int)(cp-ln);
-		if (x1+len > sScreenWidth)
-			len = sScreenWidth-x1;
+		if (x1+len > DfScreenWidth)
+			len = DfScreenWidth-x1;
 
-		if (!ClipString && !TestAttribute(wnd, NOCLIP))
+		if (!DfClipString && !DfTestAttribute(wnd, DF_NOCLIP))
 		{
-			/* -- clip the line to within ancestor windows -- */
-			DFRECT rc = WindowRect(wnd);
-			DFWINDOW nwnd = GetParent(wnd);
+			/* -- clip the line to DfWithin ancestor windows -- */
+			DFRECT rc = DfWindowRect(wnd);
+			DFWINDOW nwnd = DfGetParent(wnd);
 			while (len > 0 && nwnd != NULL)
 			{
-				if (!isVisible(nwnd))
+				if (!DfIsVisible(nwnd))
 				{
 					len = 0;
 					break;
 				}
-				rc = subRectangle(rc, ClientRect(nwnd));
-				nwnd = GetParent(nwnd);
+				rc = DfSubRectangle(rc, DfClientRect(nwnd));
+				nwnd = DfGetParent(nwnd);
 			}
-			while (len > 0 && !InsideRect(x1+off,y1,rc))
+			while (len > 0 && !DfInsideRect(x1+off,y1,rc))
 			{
 				off++;
 				--len;
@@ -249,7 +249,7 @@ void wputs(DFWINDOW wnd, void *s, int x, int y)
 			if (len > 0)
 			{
 				x2 = x1+len-1;
-				while (len && !InsideRect(x2,y1,rc))
+				while (len && !DfInsideRect(x2,y1,rc))
 				{
 					--x2;
 					--len;
@@ -280,36 +280,36 @@ void wputs(DFWINDOW wnd, void *s, int x, int y)
 }
 
 /* --------- scroll the window. d: 1 = up, 0 = dn ---------- */
-void scroll_window(DFWINDOW wnd, DFRECT rc, int d)
+void DfScrollWindow(DFWINDOW wnd, DFRECT rc, int d)
 {
-	if (RectTop(rc) != RectBottom(rc))
+	if (DfRectTop(rc) != DfRectBottom(rc))
 	{
 		CHAR_INFO ciFill;
 		SMALL_RECT rcScroll;
 		SMALL_RECT rcClip;
 		COORD pos;
 
-		ciFill.Attributes = clr(WndForeground(wnd),WndBackground(wnd));
+		ciFill.Attributes = clr(DfWndForeground(wnd),DfWndBackground(wnd));
 		ciFill.Char.AsciiChar = ' ';
 
-		rcScroll.Left = RectLeft(rc);
-		rcScroll.Right = RectRight(rc);
-		rcScroll.Top = RectTop(rc);
-		rcScroll.Bottom = RectBottom(rc);
+		rcScroll.Left = DfRectLeft(rc);
+		rcScroll.Right = DfRectRight(rc);
+		rcScroll.Top = DfRectTop(rc);
+		rcScroll.Bottom = DfRectBottom(rc);
 
 		rcClip = rcScroll;
 
-		pos.X = RectLeft(rc);
+		pos.X = DfRectLeft(rc);
 
 		if (d == 0)
 		{
 			/* scroll 1 line down */
-			pos.Y = RectTop(rc)+1;
+			pos.Y = DfRectTop(rc)+1;
 		}
 		else
 		{
 			/* scroll 1 line up */
-			pos.Y = RectTop(rc)-1;
+			pos.Y = DfRectTop(rc)-1;
 		}
 
 		ScrollConsoleScreenBuffer (GetStdHandle(STD_OUTPUT_HANDLE),

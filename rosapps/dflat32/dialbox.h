@@ -5,47 +5,47 @@
 
 #include <stdio.h>
 
-#define MAXCONTROLS 30
-#define MAXRADIOS 20
+#define DF_MAXCONTROLS 30
+#define DF_MAXRADIOS 20
 
-#define OFF FALSE
-#define ON  TRUE
+#define DF_OFF FALSE
+#define DF_ON  TRUE
 
 /* -------- dialog box and control window structure ------- */
 typedef struct  {
     char *title;    /* window title         */
     int x, y;       /* relative coordinates */
     int h, w;       /* size                 */
-} DIALOGWINDOW;
+} DF_DIALOGWINDOW;
 
 /* ------ one of these for each control window ------- */
 typedef struct {
-    DIALOGWINDOW dwnd;
-    DFCLASS class;    /* LISTBOX, BUTTON, etc */
+    DF_DIALOGWINDOW dwnd;
+    DFCLASS class;    /* DF_LISTBOX, DF_BUTTON, etc */
     char *itext;    /* initialized text     */
     int command;    /* command code         */
     char *help;     /* help mnemonic        */
-    BOOL isetting;  /* initially ON or OFF  */
-    BOOL setting;   /* ON or OFF            */
+    BOOL isetting;  /* initially DF_ON or DF_OFF  */
+    BOOL setting;   /* DF_ON or DF_OFF            */
     void *wnd;      /* window handle        */
-} CTLWINDOW;
+} DF_CTLWINDOW;
 
 /* --------- one of these for each dialog box ------- */
 typedef struct {
     char *HelpName;
-    DIALOGWINDOW dwnd;
-    CTLWINDOW ctl[MAXCONTROLS+1];
-} DBOX;
+    DF_DIALOGWINDOW dwnd;
+    DF_CTLWINDOW ctl[DF_MAXCONTROLS+1];
+} DF_DBOX;
 
 /* -------- macros for dialog box resource compile -------- */
-#define DIALOGBOX(db) DBOX db={ #db,
-#define DB_TITLE(ttl,x,y,h,w) {ttl,x,y,h,w},{
-#define CONTROL(ty,tx,x,y,h,w,c) 						\
+#define DF_DIALOGBOX(db) DF_DBOX db={ #db,
+#define DF_DB_TITLE(ttl,x,y,h,w) {ttl,x,y,h,w},{
+#define DF_CONTROL(ty,tx,x,y,h,w,c) 						\
 				{{NULL,x,y,h,w},ty,						\
-				(ty==EDITBOX||ty==COMBOBOX?NULL:tx),	\
-				c,#c,(ty==BUTTON?ON:OFF),OFF,NULL},
+				(ty==DF_EDITBOX||ty==DF_COMBOBOX?NULL:tx),	\
+				c,#c,(ty==DF_BUTTON?DF_ON:DF_OFF),DF_OFF,NULL},
 
-#define ENDDB {{NULL}} }};
+#define DF_ENDDB {{NULL}} }};
 
 #define Cancel  " Cancel "
 #define Ok      "   OK   "

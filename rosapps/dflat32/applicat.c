@@ -3,13 +3,13 @@
 #include "dflat.h"
 
 static BOOL DisplayModified = FALSE;
-DFWINDOW ApplicationWindow;
+DFWINDOW DfApplicationWindow;
 
-extern DBOX Display;
-extern DBOX Windows;
+extern DF_DBOX Display;
+extern DF_DBOX Windows;
 
 #ifdef INCLUDE_LOGGING
-extern DBOX Log;
+extern DF_DBOX Log;
 #endif
 
 #ifdef INCLUDE_SHELLDOS
@@ -46,21 +46,21 @@ static char Menus[9][26] =
 };
 #endif
 
-/* --------------- CREATE_WINDOW Message -------------- */
+/* --------------- DFM_CREATE_WINDOW Message -------------- */
 static int CreateWindowMsg(DFWINDOW wnd)
 {
 	int rtn;
 
-	ApplicationWindow = wnd;
+	DfApplicationWindow = wnd;
 #ifdef INCLUDE_WINDOWOPTIONS
-    if (cfg.Border)
-        SetCheckBox(&Display, ID_BORDER);
-    if (cfg.Title)
-        SetCheckBox(&Display, ID_TITLE);
-    if (cfg.StatusBar)
-        SetCheckBox(&Display, ID_STATUSBAR);
-    if (cfg.Texture)
-        SetCheckBox(&Display, ID_TEXTURE);
+    if (DfCfg.Border)
+        DfSetCheckBox(&Display, DF_ID_BORDER);
+    if (DfCfg.Title)
+        DfSetCheckBox(&Display, DF_ID_TITLE);
+    if (DfCfg.StatusBar)
+        DfSetCheckBox(&Display, DF_ID_STATUSBAR);
+    if (DfCfg.Texture)
+        DfSetCheckBox(&Display, DF_ID_TEXTURE);
 #endif
     SelectColors(wnd);
 #ifdef INCLUDE_WINDOWOPTIONS
@@ -68,135 +68,135 @@ static int CreateWindowMsg(DFWINDOW wnd)
     SelectTitle(wnd);
     SelectStatusBar(wnd);
 #endif
-    rtn = BaseWndProc(APPLICATION, wnd, CREATE_WINDOW, 0, 0);
+    rtn = DfBaseWndProc(DF_APPLICATION, wnd, DFM_CREATE_WINDOW, 0, 0);
     if (wnd->extension != NULL)
         DfCreateMenu(wnd);
     CreateStatusBar(wnd);
     return rtn;
 }
 
-/* --------- ADDSTATUS Message ---------- */
-static void AddStatusMsg(DFWINDOW wnd, PARAM p1)
+/* --------- DFM_ADDSTATUS Message ---------- */
+static void AddStatusMsg(DFWINDOW wnd, DF_PARAM p1)
 {
     if (wnd->StatusBar != NULL)    {
         if (p1 && *(char *)p1)
-            DfSendMessage(wnd->StatusBar, SETTEXT, p1, 0);
+            DfSendMessage(wnd->StatusBar, DFM_SETTEXT, p1, 0);
         else 
-            DfSendMessage(wnd->StatusBar, CLEARTEXT, 0, 0);
-        DfSendMessage(wnd->StatusBar, PAINT, 0, 0);
+            DfSendMessage(wnd->StatusBar, DFM_CLEARTEXT, 0, 0);
+        DfSendMessage(wnd->StatusBar, DFM_PAINT, 0, 0);
     }
 }
 
-/* -------- SETFOCUS Message -------- */
+/* -------- DFM_SETFOCUS Message -------- */
 static void SetFocusMsg(DFWINDOW wnd, BOOL p1)
 {
     if (p1)
-        DfSendMessage(inFocus, SETFOCUS, FALSE, 0);
-    inFocus = p1 ? wnd : NULL;
-	if (isVisible(wnd))
-	    DfSendMessage(wnd, BORDER, 0, 0);
+        DfSendMessage(DfInFocus, DFM_SETFOCUS, FALSE, 0);
+    DfInFocus = p1 ? wnd : NULL;
+	if (DfIsVisible(wnd))
+	    DfSendMessage(wnd, DFM_BORDER, 0, 0);
 	else 
-	    DfSendMessage(wnd, SHOW_WINDOW, 0, 0);
+	    DfSendMessage(wnd, DFM_SHOW_WINDOW, 0, 0);
 }
 
 /* ------- SIZE Message -------- */
-static void SizeMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
+static void SizeMsg(DFWINDOW wnd, DF_PARAM p1, DF_PARAM p2)
 {
     BOOL WasVisible;
-    WasVisible = isVisible(wnd);
+    WasVisible = DfIsVisible(wnd);
     if (WasVisible)
         DfSendMessage(wnd, DFM_HIDE_WINDOW, 0, 0);
-    if (p1-GetLeft(wnd) < 30)
-        p1 = GetLeft(wnd) + 30;
-    BaseWndProc(APPLICATION, wnd, DFM_SIZE, p1, p2);
+    if (p1-DfGetLeft(wnd) < 30)
+        p1 = DfGetLeft(wnd) + 30;
+    DfBaseWndProc(DF_APPLICATION, wnd, DFM_DFM_SIZE, p1, p2);
     DfCreateMenu(wnd);
     CreateStatusBar(wnd);
     if (WasVisible)
-        DfSendMessage(wnd, SHOW_WINDOW, 0, 0);
+        DfSendMessage(wnd, DFM_SHOW_WINDOW, 0, 0);
 }
 
-/* ----------- KEYBOARD Message ------------ */
-static int KeyboardMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
+/* ----------- DFM_KEYBOARD Message ------------ */
+static int KeyboardMsg(DFWINDOW wnd, DF_PARAM p1, DF_PARAM p2)
 {
-    if (WindowMoving || WindowSizing || (int) p1 == F1)
-        return BaseWndProc(APPLICATION, wnd, KEYBOARD, p1, p2);
+    if (DfWindowMoving || DfWindowSizing || (int) p1 == DF_F1)
+        return DfBaseWndProc(DF_APPLICATION, wnd, DFM_KEYBOARD, p1, p2);
     switch ((int) p1)    {
-        case ALT_F4:
-            DfPostMessage(wnd, CLOSE_WINDOW, 0, 0);
+        case DF_ALT_F4:
+            DfPostMessage(wnd, DFM_CLOSE_WINDOW, 0, 0);
             return TRUE;
 #ifdef INCLUDE_MULTI_WINDOWS
-        case ALT_F6:
-            SetNextFocus();
+        case DF_ALT_F6:
+            DfSetNextFocus();
             return TRUE;
 #endif
-        case ALT_HYPHEN:
-            BuildSystemMenu(wnd);
+        case DF_ALT_HYPHEN:
+            DfBuildSystemMenu(wnd);
             return TRUE;
         default:
             break;
     }
-    DfPostMessage(wnd->MenuBarWnd, KEYBOARD, p1, p2);
+    DfPostMessage(wnd->MenuBarWnd, DFM_KEYBOARD, p1, p2);
     return TRUE;
 }
 
-/* --------- SHIFT_CHANGED Message -------- */
-static void ShiftChangedMsg(DFWINDOW wnd, PARAM p1)
+/* --------- DFM_SHIFT_CHANGED Message -------- */
+static void ShiftChangedMsg(DFWINDOW wnd, DF_PARAM p1)
 {
 	extern BOOL AltDown;
-    if ((int)p1 & ALTKEY)
+    if ((int)p1 & DF_ALTKEY)
         AltDown = TRUE;
     else if (AltDown)    {
         AltDown = FALSE;
-        if (wnd->MenuBarWnd != inFocus)
-            DfSendMessage(NULL, HIDE_CURSOR, 0, 0);
-        DfSendMessage(wnd->MenuBarWnd, KEYBOARD, F10, 0);
+        if (wnd->MenuBarWnd != DfInFocus)
+            DfSendMessage(NULL, DFM_HIDE_CURSOR, 0, 0);
+        DfSendMessage(wnd->MenuBarWnd, DFM_KEYBOARD, DF_F10, 0);
     }
 }
 
 /* -------- COMMAND Message ------- */
-static void CommandMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
+static void CommandMsg(DFWINDOW wnd, DF_PARAM p1, DF_PARAM p2)
 {
     switch ((int)p1)    {
-        case ID_HELP:
-            DisplayHelp(wnd, DFlatApplication);
+        case DF_ID_HELP:
+            DfDisplayHelp(wnd, DFlatApplication);
             break;
-        case ID_HELPHELP:
-            DisplayHelp(wnd, "HelpHelp");
+        case DF_ID_HELPHELP:
+            DfDisplayHelp(wnd, "HelpHelp");
             break;
-        case ID_EXTHELP:
-            DisplayHelp(wnd, "ExtHelp");
+        case DF_ID_EXTHELP:
+            DfDisplayHelp(wnd, "ExtHelp");
             break;
-        case ID_KEYSHELP:
-            DisplayHelp(wnd, "KeysHelp");
+        case DF_ID_KEYSHELP:
+            DfDisplayHelp(wnd, "KeysHelp");
             break;
-        case ID_HELPINDEX:
-            DisplayHelp(wnd, "HelpIndex");
+        case DF_ID_HELPINDEX:
+            DfDisplayHelp(wnd, "HelpIndex");
             break;
 #ifdef TESTING_DFLAT
-        case ID_LOADHELP:
-            LoadHelpFile();
+        case DF_ID_LOADHELP:
+            DfLoadHelpFile();
             break;
 #endif
 #ifdef INCLUDE_LOGGING
-        case ID_LOG:
-            MessageLog(wnd);
+        case DF_ID_LOG:
+            DfMessageLog(wnd);
             break;
 #endif
 #ifdef INCLUDE_SHELLDOS
-        case ID_DOS:
+        case DF_ID_DOS:
             ShellDOS(wnd);
             break;
 #endif
-        case ID_EXIT:
-        case ID_SYSCLOSE:
-            DfPostMessage(wnd, CLOSE_WINDOW, 0, 0);
+        case DF_ID_EXIT:
+        case DF_ID_SYSCLOSE:
+            DfPostMessage(wnd, DFM_CLOSE_WINDOW, 0, 0);
             break;
-        case ID_DISPLAY:
+        case DF_ID_DISPLAY:
             if (DfDialogBox(wnd, &Display, TRUE, NULL))    {
-				if (inFocus == wnd->MenuBarWnd || inFocus == wnd->StatusBar)
-					oldFocus = ApplicationWindow;
+				if (DfInFocus == wnd->MenuBarWnd || DfInFocus == wnd->StatusBar)
+					oldFocus = DfApplicationWindow;
 				else 
-					oldFocus = inFocus;
+					oldFocus = DfInFocus;
                 DfSendMessage(wnd, DFM_HIDE_WINDOW, 0, 0);
                 SelectColors(wnd);
 #ifdef INCLUDE_WINDOWOPTIONS
@@ -207,45 +207,45 @@ static void CommandMsg(DFWINDOW wnd, PARAM p1, PARAM p2)
 #endif
                 DfCreateMenu(wnd);
                 CreateStatusBar(wnd);
-                DfSendMessage(wnd, SHOW_WINDOW, 0, 0);
-			    DfSendMessage(oldFocus, SETFOCUS, TRUE, 0);
+                DfSendMessage(wnd, DFM_SHOW_WINDOW, 0, 0);
+			    DfSendMessage(oldFocus, DFM_SETFOCUS, TRUE, 0);
             }
             break;
-        case ID_SAVEOPTIONS:
-            SaveConfig();
+        case DF_ID_SAVEOPTIONS:
+            DfSaveConfig();
             break;
 #ifdef INCLUDE_MULTI_WINDOWS
-        case ID_WINDOW:
+        case DF_ID_WINDOW:
             ChooseWindow(wnd, (int)p2-2);
             break;
-        case ID_CLOSEALL:
+        case DF_ID_CLOSEALL:
             CloseAll(wnd, FALSE);
             break;
-        case ID_MOREWINDOWS:
+        case DF_ID_MOREWINDOWS:
             MoreWindows(wnd);
             break;
 #endif
 #ifdef INCLUDE_RESTORE
-        case ID_SYSRESTORE:
+        case DF_ID_SYSRESTORE:
 #endif
-        case ID_SYSMOVE:
-        case ID_SYSSIZE:
+        case DF_ID_SYSMOVE:
+        case DF_ID_SYSSIZE:
 #ifdef INCLUDE_MINIMIZE
-        case ID_SYSMINIMIZE:
+        case DF_ID_SYSMINIMIZE:
 #endif
 #ifdef INCLUDE_MAXIMIZE
-        case ID_SYSMAXIMIZE:
+        case DF_ID_SYSMAXIMIZE:
 #endif
-            BaseWndProc(APPLICATION, wnd, DFM_COMMAND, p1, p2);
+            DfBaseWndProc(DF_APPLICATION, wnd, DFM_COMMAND, p1, p2);
             break;
         default:
-            if (inFocus != wnd->MenuBarWnd && inFocus != wnd)
-                DfPostMessage(inFocus, DFM_COMMAND, p1, p2);
+            if (DfInFocus != wnd->MenuBarWnd && DfInFocus != wnd)
+                DfPostMessage(DfInFocus, DFM_COMMAND, p1, p2);
             break;
     }
 }
 
-/* --------- CLOSE_WINDOW Message -------- */
+/* --------- DFM_CLOSE_WINDOW Message -------- */
 static int CloseWindowMsg(DFWINDOW wnd)
 {
     int rtn;
@@ -254,78 +254,78 @@ static int CloseWindowMsg(DFWINDOW wnd)
 	WindowSel = 0;
 #endif
     DfPostMessage(NULL, DFM_STOP, 0, 0);
-    rtn = BaseWndProc(APPLICATION, wnd, CLOSE_WINDOW, 0, 0);
-    UnLoadHelpFile();
+    rtn = DfBaseWndProc(DF_APPLICATION, wnd, DFM_CLOSE_WINDOW, 0, 0);
+    DfUnLoadHelpFile();
 	DisplayModified = FALSE;
-	ApplicationWindow = NULL;
+	DfApplicationWindow = NULL;
     return rtn;
 }
 
-/* --- APPLICATION Window Class window processing module --- */
-int ApplicationProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+/* --- DF_APPLICATION Window Class window processing module --- */
+int DfApplicationProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     switch (msg)
     {
-        case CREATE_WINDOW:
+        case DFM_CREATE_WINDOW:
             return CreateWindowMsg(wnd);
         case DFM_HIDE_WINDOW:
-            if (wnd == inFocus)
-                inFocus = NULL;
+            if (wnd == DfInFocus)
+                DfInFocus = NULL;
             break;
-        case ADDSTATUS:
+        case DFM_ADDSTATUS:
             AddStatusMsg(wnd, p1);
             return TRUE;
-        case SETFOCUS:
-            if ((int)p1 == (inFocus != wnd))    {
+        case DFM_SETFOCUS:
+            if ((int)p1 == (DfInFocus != wnd))    {
                 SetFocusMsg(wnd, (BOOL) p1);
                 return TRUE;
             }
             break;
-        case DFM_SIZE:
+        case DFM_DFM_SIZE:
             SizeMsg(wnd, p1, p2);
             return TRUE;
 #ifdef INCLUDE_MINIMIZE
-        case MINIMIZE:
+        case DFM_MINIMIZE:
             return TRUE;
 #endif
-        case KEYBOARD:
+        case DFM_KEYBOARD:
             return KeyboardMsg(wnd, p1, p2);
-        case SHIFT_CHANGED:
+        case DFM_SHIFT_CHANGED:
             ShiftChangedMsg(wnd, p1);
             return TRUE;
-        case PAINT:
-            if (isVisible(wnd))    {
+        case DFM_PAINT:
+            if (DfIsVisible(wnd))    {
 #ifdef INCLUDE_WINDOWOPTIONS
-                int cl = cfg.Texture ? APPLCHAR : ' ';
+                int cl = DfCfg.Texture ? DF_APPLCHAR : ' ';
 #else
-                int cl = APPLCHAR;
+                int cl = DF_APPLCHAR;
 #endif
-                ClearWindow(wnd, (DFRECT *)p1, cl);
+                DfClearWindow(wnd, (DFRECT *)p1, cl);
             }
             return TRUE;
         case DFM_COMMAND:
             CommandMsg(wnd, p1, p2);
             return TRUE;
-        case CLOSE_WINDOW:
+        case DFM_CLOSE_WINDOW:
             return CloseWindowMsg(wnd);
         default:
             break;
     }
-    return BaseWndProc(APPLICATION, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_APPLICATION, wnd, msg, p1, p2);
 }
 
 #ifdef INCLUDE_SHELLDOS
 static void SwitchCursor(void)
 {
-    DfSendMessage(NULL, SAVE_CURSOR, 0, 0);
-    SwapCursorStack();
-    DfSendMessage(NULL, RESTORE_CURSOR, 0, 0);
+    DfSendMessage(NULL, DFM_SAVE_CURSOR, 0, 0);
+    DfSwapCursorStack();
+    DfSendMessage(NULL, DFM_RESTORE_CURSOR, 0, 0);
 }
 
 /* ------- Shell out to DOS ---------- */
 static void ShellDOS(DFWINDOW wnd)
 {
-	oldFocus = inFocus;
+	oldFocus = DfInFocus;
     DfSendMessage(wnd, DFM_HIDE_WINDOW, 0, 0);
     SwitchCursor();
     printf("To return to %s, execute the DOS exit command.",
@@ -333,51 +333,51 @@ static void ShellDOS(DFWINDOW wnd)
     fflush(stdout);
     _spawnl(P_WAIT, getenv("COMSPEC"), " ", NULL);
     SwitchCursor();
-	DfSendMessage(wnd, SHOW_WINDOW, 0, 0);
-    DfSendMessage(oldFocus, SETFOCUS, TRUE, 0);
+	DfSendMessage(wnd, DFM_SHOW_WINDOW, 0, 0);
+    DfSendMessage(oldFocus, DFM_SETFOCUS, TRUE, 0);
 }
 #endif
 
 /* -------- Create the menu bar -------- */
 static void DfCreateMenu(DFWINDOW wnd)
 {
-    AddAttribute(wnd, HASMENUBAR);
+    DfAddAttribute(wnd, DF_HASMENUBAR);
     if (wnd->MenuBarWnd != NULL)
-        DfSendMessage(wnd->MenuBarWnd, CLOSE_WINDOW, 0, 0);
-    wnd->MenuBarWnd = DfCreateWindow(MENUBAR,
+        DfSendMessage(wnd->MenuBarWnd, DFM_CLOSE_WINDOW, 0, 0);
+    wnd->MenuBarWnd = DfDfCreateWindow(DF_MENUBAR,
                         NULL,
-                        GetClientLeft(wnd),
-                        GetClientTop(wnd)-1,
+                        DfGetClientLeft(wnd),
+                        DfGetClientTop(wnd)-1,
                         1,
-                        ClientWidth(wnd),
+                        DfClientWidth(wnd),
                         NULL,
                         wnd,
                         NULL,
                         0);
-    DfSendMessage(wnd->MenuBarWnd,BUILDMENU,
-        (PARAM)wnd->extension,0);
-    AddAttribute(wnd->MenuBarWnd, VISIBLE);
+    DfSendMessage(wnd->MenuBarWnd,DFM_BUILDMENU,
+        (DF_PARAM)wnd->extension,0);
+    DfAddAttribute(wnd->MenuBarWnd, DF_VISIBLE);
 }
 
 /* ----------- Create the status bar ------------- */
 static void CreateStatusBar(DFWINDOW wnd)
 {
     if (wnd->StatusBar != NULL)    {
-        DfSendMessage(wnd->StatusBar, CLOSE_WINDOW, 0, 0);
+        DfSendMessage(wnd->StatusBar, DFM_CLOSE_WINDOW, 0, 0);
         wnd->StatusBar = NULL;
     }
-    if (TestAttribute(wnd, HASSTATUSBAR))    {
-        wnd->StatusBar = DfCreateWindow(STATUSBAR,
+    if (DfTestAttribute(wnd, DF_HASSTATUSBAR))    {
+        wnd->StatusBar = DfDfCreateWindow(DF_STATUSBAR,
                             NULL,
-                            GetClientLeft(wnd),
-                            GetBottom(wnd),
+                            DfGetClientLeft(wnd),
+                            DfGetBottom(wnd),
                             1,
-                            ClientWidth(wnd),
+                            DfClientWidth(wnd),
                             NULL,
                             wnd,
                             NULL,
                             0);
-        AddAttribute(wnd->StatusBar, VISIBLE);
+        DfAddAttribute(wnd->StatusBar, DF_VISIBLE);
     }
 }
 
@@ -385,44 +385,44 @@ static void CreateStatusBar(DFWINDOW wnd)
 /* -------- return the name of a document window ------- */
 static char *WindowName(DFWINDOW wnd)
 {
-    if (GetTitle(wnd) == NULL)
+    if (DfGetTitle(wnd) == NULL)
     {
-        if (GetClass(wnd) == DIALOG)
-            return ((DBOX *)(wnd->extension))->HelpName;
+        if (DfGetClass(wnd) == DF_DIALOG)
+            return ((DF_DBOX *)(wnd->extension))->HelpName;
         else 
             return "Untitled";
     }
     else
-        return GetTitle(wnd);
+        return DfGetTitle(wnd);
 }
 
 /* ----------- Prepare the Window menu ------------ */
-void PrepWindowMenu(void *w, struct Menu *mnu)
+void DfPrepWindowMenu(void *w, struct DfMenu *mnu)
 {
     DFWINDOW wnd = w;
-    struct PopDown *p0 = mnu->Selections;
-    struct PopDown *pd = mnu->Selections + 2;
-    struct PopDown *ca = mnu->Selections + 13;
+    struct DfPopDown *p0 = mnu->Selections;
+    struct DfPopDown *pd = mnu->Selections + 2;
+    struct DfPopDown *ca = mnu->Selections + 13;
     int MenuNo = 0;
     DFWINDOW cwnd;
 
 	mnu->Selection = 0;
 	oldFocus = NULL;
 
-	if (GetClass(wnd) != APPLICATION)
+	if (DfGetClass(wnd) != DF_APPLICATION)
 	{
 		oldFocus = wnd;
 
-		/* point to the APPLICATION window */
-		if (ApplicationWindow == NULL)
+		/* point to the DF_APPLICATION window */
+		if (DfApplicationWindow == NULL)
 			return;
 
-		cwnd = FirstWindow(ApplicationWindow);
+		cwnd = DfFirstWindow(DfApplicationWindow);
 		/* get the first 9 document windows */
 		while (cwnd != NULL && MenuNo < 9)
 		{
-			if (GetClass(cwnd) != MENUBAR &&
-			    GetClass(cwnd) != STATUSBAR)
+			if (DfGetClass(cwnd) != DF_MENUBAR &&
+			    DfGetClass(cwnd) != DF_STATUSBAR)
 			{
 				/* add the document window to the menu */
 				strncpy (Menus[MenuNo]+4, WindowName(cwnd), 20);
@@ -430,15 +430,15 @@ void PrepWindowMenu(void *w, struct Menu *mnu)
 				if (cwnd == oldFocus)
 				{
 					/* mark the current document */
-					pd->Attrib |= CHECKED;
+					pd->Attrib |= DF_CHECKED;
 					mnu->Selection = MenuNo+2;
 				}
 				else
-					pd->Attrib &= ~CHECKED;
+					pd->Attrib &= ~DF_CHECKED;
 				pd++;
 				MenuNo++;
 			}
-			cwnd = NextWindow(cwnd);
+			cwnd = DfNextWindow(cwnd);
 		}
 	}
 
@@ -457,44 +457,44 @@ void PrepWindowMenu(void *w, struct Menu *mnu)
 }
 
 /* window processing module for the More Windows dialog box */
-static int WindowPrep(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
+static int WindowPrep(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
 {
     switch (msg)    {
-        case INITIATE_DIALOG:    {
+        case DFM_INITIATE_DIALOG:    {
             DFWINDOW wnd1;
-            DFWINDOW cwnd = ControlWindow(&Windows,ID_WINDOWLIST);
+            DFWINDOW cwnd = DfControlWindow(&Windows,DF_ID_WINDOWLIST);
             int sel = 0;
             if (cwnd == NULL)
                 return FALSE;
-			wnd1 = FirstWindow(ApplicationWindow);
+			wnd1 = DfFirstWindow(DfApplicationWindow);
 			while (wnd1 != NULL)	{
-                if (wnd1 != wnd && GetClass(wnd1) != MENUBAR &&
-                        GetClass(wnd1) != STATUSBAR)    {
+                if (wnd1 != wnd && DfGetClass(wnd1) != DF_MENUBAR &&
+                        DfGetClass(wnd1) != DF_STATUSBAR)    {
                     if (wnd1 == oldFocus)
                         WindowSel = sel;
-                    DfSendMessage(cwnd, ADDTEXT,
-                        (PARAM) WindowName(wnd1), 0);
+                    DfSendMessage(cwnd, DFM_ADDTEXT,
+                        (DF_PARAM) WindowName(wnd1), 0);
                     sel++;
                 }
-				wnd1 = NextWindow(wnd1);
+				wnd1 = DfNextWindow(wnd1);
             }
-            DfSendMessage(cwnd, LB_SETSELECTION, WindowSel, 0);
-            AddAttribute(cwnd, VSCROLLBAR);
-            DfPostMessage(cwnd, SHOW_WINDOW, 0, 0);
+            DfSendMessage(cwnd, DFM_LB_SETSELECTION, WindowSel, 0);
+            DfAddAttribute(cwnd, DF_VSCROLLBAR);
+            DfPostMessage(cwnd, DFM_SHOW_WINDOW, 0, 0);
             break;
         }
         case DFM_COMMAND:
             switch ((int) p1)    {
-                case ID_OK:
+                case DF_ID_OK:
                     if ((int)p2 == 0)
                         WindowSel = DfSendMessage(
-                                    ControlWindow(&Windows,
-                                    ID_WINDOWLIST),
-                                    LB_CURRENTSELECTION, 0, 0);
+                                    DfControlWindow(&Windows,
+                                    DF_ID_WINDOWLIST),
+                                    DFM_LB_CURRENTSELECTION, 0, 0);
                     break;
-                case ID_WINDOWLIST:
-                    if ((int) p2 == LB_CHOOSE)
-                        DfSendMessage(wnd, DFM_COMMAND, ID_OK, 0);
+                case DF_ID_WINDOWLIST:
+                    if ((int) p2 == DFM_LB_CHOOSE)
+                        DfSendMessage(wnd, DFM_COMMAND, DF_ID_OK, 0);
                     break;
                 default:
                     break;
@@ -503,7 +503,7 @@ static int WindowPrep(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
         default:
             break;
     }
-    return DefaultWndProc(wnd, msg, p1, p2);
+    return DfDefaultWndProc(wnd, msg, p1, p2);
 }
 
 /* ---- the More Windows command on the Window menu ---- */
@@ -517,19 +517,19 @@ static void MoreWindows(DFWINDOW wnd)
         or the More Window dialog box ----- */
 static void ChooseWindow(DFWINDOW wnd, int WindowNo)
 {
-    DFWINDOW cwnd = FirstWindow(wnd);
+    DFWINDOW cwnd = DfFirstWindow(wnd);
 	while (cwnd != NULL)
 	{
-        if (GetClass(cwnd) != MENUBAR &&
-                GetClass(cwnd) != STATUSBAR)
+        if (DfGetClass(cwnd) != DF_MENUBAR &&
+                DfGetClass(cwnd) != DF_STATUSBAR)
             if (WindowNo-- == 0)
                 break;
-		cwnd = NextWindow(cwnd);
+		cwnd = DfNextWindow(cwnd);
     }
     if (cwnd != NULL)    {
-        DfSendMessage(cwnd, SETFOCUS, TRUE, 0);
-        if (cwnd->condition == ISMINIMIZED)
-            DfSendMessage(cwnd, RESTORE, 0, 0);
+        DfSendMessage(cwnd, DFM_SETFOCUS, TRUE, 0);
+        if (cwnd->condition == DF_ISMINIMIZED)
+            DfSendMessage(cwnd, DFM_RESTORE, 0, 0);
     }
 }
 
@@ -538,20 +538,20 @@ static void CloseAll(DFWINDOW wnd, int closing)
 {
 	DFWINDOW wnd1, wnd2;
 
-	DfSendMessage(wnd, SETFOCUS, TRUE, 0);
-	wnd1 = LastWindow(wnd);
+	DfSendMessage(wnd, DFM_SETFOCUS, TRUE, 0);
+	wnd1 = DfLastWindow(wnd);
 	while (wnd1 != NULL)
 	{
-		wnd2 = PrevWindow(wnd1);
-		if (GetClass(wnd1) != MENUBAR && GetClass(wnd1) != STATUSBAR)
+		wnd2 = DfPrevWindow(wnd1);
+		if (DfGetClass(wnd1) != DF_MENUBAR && DfGetClass(wnd1) != DF_STATUSBAR)
 		{
-			ClearVisible(wnd1);
-			DfSendMessage(wnd1, CLOSE_WINDOW, 0, 0);
+			DfClearVisible(wnd1);
+			DfSendMessage(wnd1, DFM_CLOSE_WINDOW, 0, 0);
 		}
 		wnd1 = wnd2;
 	}
 	if (!closing)
-		DfSendMessage(wnd, PAINT, 0, 0);
+		DfSendMessage(wnd, DFM_PAINT, 0, 0);
 }
 
 #endif    /* #ifdef INCLUDE_MULTI_WINDOWS */
@@ -560,21 +560,21 @@ static void DoWindowColors(DFWINDOW wnd)
 {
 	DFWINDOW cwnd;
 
-	InitWindowColors(wnd);
-	cwnd = FirstWindow(wnd);
+	DfInitWindowColors(wnd);
+	cwnd = DfFirstWindow(wnd);
 	while (cwnd != NULL)
 	{
 		DoWindowColors(cwnd);
-		if (GetClass(cwnd) == TEXT && GetText(cwnd) != NULL)
-			DfSendMessage(cwnd, CLEARTEXT, 0, 0);
-		cwnd = NextWindow(cwnd);
+		if (DfGetClass(cwnd) == DF_TEXT && DfGetText(cwnd) != NULL)
+			DfSendMessage(cwnd, DFM_CLEARTEXT, 0, 0);
+		cwnd = DfNextWindow(cwnd);
 	}
 }
 
 /* set up colors for the application window */
 static void SelectColors(DFWINDOW wnd)
 {
-	memcpy(cfg.clr, color, sizeof color);
+	memcpy(DfCfg.clr, DfColor, sizeof DfColor);
 	DoWindowColors(wnd);
 }
 
@@ -584,37 +584,37 @@ static void SelectColors(DFWINDOW wnd)
 /* ----- select the screen texture ----- */
 static void SelectTexture(void)
 {
-    cfg.Texture = CheckBoxSetting(&Display, ID_TEXTURE);
+    DfCfg.Texture = DfCheckBoxSetting(&Display, DF_ID_TEXTURE);
 }
 
 /* -- select whether the application screen has a border -- */
 static void SelectBorder(DFWINDOW wnd)
 {
-    cfg.Border = CheckBoxSetting(&Display, ID_BORDER);
-    if (cfg.Border)
-        AddAttribute(wnd, HASBORDER);
+    DfCfg.Border = DfCheckBoxSetting(&Display, DF_ID_BORDER);
+    if (DfCfg.Border)
+        DfAddAttribute(wnd, DF_HASBORDER);
     else
-        ClearAttribute(wnd, HASBORDER);
+        DfClearAttribute(wnd, DF_HASBORDER);
 }
 
 /* select whether the application screen has a status bar */
 static void SelectStatusBar(DFWINDOW wnd)
 {
-    cfg.StatusBar = CheckBoxSetting(&Display, ID_STATUSBAR);
-    if (cfg.StatusBar)
-        AddAttribute(wnd, HASSTATUSBAR);
+    DfCfg.StatusBar = DfCheckBoxSetting(&Display, DF_ID_STATUSBAR);
+    if (DfCfg.StatusBar)
+        DfAddAttribute(wnd, DF_HASSTATUSBAR);
     else
-        ClearAttribute(wnd, HASSTATUSBAR);
+        DfClearAttribute(wnd, DF_HASSTATUSBAR);
 }
 
 /* select whether the application screen has a title bar */
 static void SelectTitle(DFWINDOW wnd)
 {
-    cfg.Title = CheckBoxSetting(&Display, ID_TITLE);
-    if (cfg.Title)
-        AddAttribute(wnd, HASTITLEBAR);
+    DfCfg.Title = DfCheckBoxSetting(&Display, DF_ID_TITLE);
+    if (DfCfg.Title)
+        DfAddAttribute(wnd, DF_HASTITLEBAR);
     else
-        ClearAttribute(wnd, HASTITLEBAR);
+        DfClearAttribute(wnd, DF_HASTITLEBAR);
 }
 
 #endif

@@ -1,8 +1,8 @@
 /* ---------------- search.c ------------- */
 #include "dflat.h"
 
-extern DBOX SearchTextDB;
-extern DBOX ReplaceTextDB;
+extern DF_DBOX SearchTextDB;
+extern DF_DBOX ReplaceTextDB;
 static int CheckCase = TRUE;
 static int Replacing = FALSE;
 
@@ -17,10 +17,10 @@ static BOOL SearchCmp(int a, int b)
 }
 
 /* ----- replace a matching block of text ----- */
-static void replacetext(DFWINDOW wnd, char *cp1, DBOX *db)
+static void replacetext(DFWINDOW wnd, char *cp1, DF_DBOX *db)
 {
-    char *cr = GetEditBoxText(db, ID_REPLACEWITH);
-    char *cp = GetEditBoxText(db, ID_SEARCHFOR);
+    char *cr = DfGetEditBoxText(db, DF_ID_REPLACEWITH);
+    char *cp = DfGetEditBoxText(db, DF_ID_SEARCHFOR);
     int oldlen = strlen(cp); /* length of text being replaced */
     int newlen = strlen(cr); /* length of replacing text      */
     int dif;
@@ -31,7 +31,7 @@ static void replacetext(DFWINDOW wnd, char *cp1, DBOX *db)
             /* ---- need to reallocate the text buffer ---- */
             int offset = (int)((int)cp1-(int)wnd->text);
             wnd->textlen += dif;
-            wnd->text = DFrealloc(wnd->text, wnd->textlen+2);
+            wnd->text = DfRealloc(wnd->text, wnd->textlen+2);
             cp1 = wnd->text + offset;
         }
         memmove(cp1+dif, cp1, strlen(cp1)+1);
@@ -48,20 +48,20 @@ static void replacetext(DFWINDOW wnd, char *cp1, DBOX *db)
 static void SearchTextBox(DFWINDOW wnd, int incr)
 {
     char *s1 = NULL, *s2, *cp1;
-    DBOX *db = Replacing ? &ReplaceTextDB : &SearchTextDB;
-    char *cp = GetEditBoxText(db, ID_SEARCHFOR);
+    DF_DBOX *db = Replacing ? &ReplaceTextDB : &SearchTextDB;
+    char *cp = DfGetEditBoxText(db, DF_ID_SEARCHFOR);
     BOOL rpl = TRUE, FoundOne = FALSE;
 
     while (rpl == TRUE && cp != NULL && *cp)    {
         rpl = Replacing ?
-                CheckBoxSetting(&ReplaceTextDB, ID_REPLACEALL) :
+                DfCheckBoxSetting(&ReplaceTextDB, DF_ID_REPLACEALL) :
                 FALSE;
-        if (TextBlockMarked(wnd))    {
-            ClearTextBlock(wnd);
-            DfSendMessage(wnd, PAINT, 0, 0);
+        if (DfTextBlockMarked(wnd))    {
+            DfClearTextBlock(wnd);
+            DfSendMessage(wnd, DFM_PAINT, 0, 0);
         }
-        /* search for a match starting at cursor position */
-        cp1 = CurrChar;
+        /* search for a match starting at DfCursor position */
+        cp1 = DfCurrChar;
         if (incr)
             cp1++;    /* start past the last hit */
         /* --- compare at each character position --- */
@@ -82,44 +82,44 @@ static void SearchTextBox(DFWINDOW wnd, int incr)
             FoundOne = TRUE;
 
             /* mark a block at beginning of matching text */
-            wnd->BlkEndLine = TextLineNumber(wnd, s2);
-            wnd->BlkBegLine = TextLineNumber(wnd, cp1);
+            wnd->BlkEndLine = DfTextLineNumber(wnd, s2);
+            wnd->BlkBegLine = DfTextLineNumber(wnd, cp1);
             if (wnd->BlkEndLine < wnd->BlkBegLine)
                 wnd->BlkEndLine = wnd->BlkBegLine;
             wnd->BlkEndCol =
-                (int)((int)s2 - (int)TextLine(wnd, wnd->BlkEndLine));
+                (int)((int)s2 - (int)DfTextLine(wnd, wnd->BlkEndLine));
             wnd->BlkBegCol =
-                (int)((int)cp1 - (int)TextLine(wnd, wnd->BlkBegLine));
+                (int)((int)cp1 - (int)DfTextLine(wnd, wnd->BlkBegLine));
 
-            /* position the cursor at the matching text */
+            /* position the DfCursor at the matching text */
             wnd->CurrCol = wnd->BlkBegCol;
             wnd->CurrLine = wnd->BlkBegLine;
             wnd->WndRow = wnd->CurrLine - wnd->wtop;
 
             /* align the window scroll to matching text */
-            if (WndCol > ClientWidth(wnd)-1)
+            if (DfWndCol > DfClientWidth(wnd)-1)
                 wnd->wleft = wnd->CurrCol;
-            if (wnd->WndRow > ClientHeight(wnd)-1)    {
+            if (wnd->WndRow > DfClientHeight(wnd)-1)    {
                 wnd->wtop = wnd->CurrLine;
                 wnd->WndRow = 0;
             }
 
-            DfSendMessage(wnd, PAINT, 0, 0);
-            DfSendMessage(wnd, KEYBOARD_CURSOR,
-                WndCol, wnd->WndRow);
+            DfSendMessage(wnd, DFM_PAINT, 0, 0);
+            DfSendMessage(wnd, DFM_KEYBOARD_CURSOR,
+                DfWndCol, wnd->WndRow);
 
             if (Replacing)    {
                 if (rpl || DfYesNoBox("Replace the text?"))  {
                     replacetext(wnd, cp1, db);
                     wnd->TextChanged = TRUE;
-                    BuildTextPointers(wnd);
+                    DfBuildTextPointers(wnd);
                 }
                 if (rpl)    {
                     incr = TRUE;
                     continue;
                 }
-                ClearTextBlock(wnd);
-                DfSendMessage(wnd, PAINT, 0, 0);
+                DfClearTextBlock(wnd);
+                DfSendMessage(wnd, DFM_PAINT, 0, 0);
             }
             return;
         }
@@ -135,9 +135,9 @@ void DfReplaceText(DFWINDOW wnd)
 {
 	Replacing = TRUE;
     if (CheckCase)
-        SetCheckBox(&ReplaceTextDB, ID_MATCHCASE);
+        DfSetCheckBox(&ReplaceTextDB, DF_ID_MATCHCASE);
     if (DfDialogBox(NULL, &ReplaceTextDB, TRUE, NULL))    {
-        CheckCase=CheckBoxSetting(&ReplaceTextDB,ID_MATCHCASE);
+        CheckCase=DfCheckBoxSetting(&ReplaceTextDB,DF_ID_MATCHCASE);
         SearchTextBox(wnd, FALSE);
     }
 }
@@ -147,9 +147,9 @@ void DfSearchText(DFWINDOW wnd)
 {
 	Replacing = FALSE;
     if (CheckCase)
-        SetCheckBox(&SearchTextDB, ID_MATCHCASE);
+        DfSetCheckBox(&SearchTextDB, DF_ID_MATCHCASE);
     if (DfDialogBox(NULL, &SearchTextDB, TRUE, NULL))    {
-        CheckCase=CheckBoxSetting(&SearchTextDB,ID_MATCHCASE);
+        CheckCase=DfCheckBoxSetting(&SearchTextDB,DF_ID_MATCHCASE);
         SearchTextBox(wnd, FALSE);
     }
 }

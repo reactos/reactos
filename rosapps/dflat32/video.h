@@ -5,14 +5,14 @@
 
 #include "rect.h"
 
-void GetVideo(DFRECT, PCHAR_INFO);
-void StoreVideo(DFRECT, PCHAR_INFO);
-void wputch(DFWINDOW, int, int, int);
-char GetVideoChar(int, int);
-void PutVideoChar(int, int, int);
-void wputs(DFWINDOW, void *, int, int);
-void scroll_window(DFWINDOW, DFRECT, int);
+void DfGetVideo(DFRECT, PCHAR_INFO);
+void DfStoreVideo(DFRECT, PCHAR_INFO);
+void DfWPutch(DFWINDOW, int, int, int);
+char DfGetVideoChar(int, int);
+void DfPutVideoChar(int, int, int);
+void DfWPuts(DFWINDOW, void *, int, int);
+void DfScrollWindow(DFWINDOW, DFRECT, int);
 
-#define videochar(x,y) (GetVideoChar(x,y) & 0xFF)
+#define DfVideoChar(x,y) (DfGetVideoChar(x,y) & 0xFF)
 
 #endif

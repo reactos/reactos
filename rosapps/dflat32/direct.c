@@ -19,7 +19,7 @@ static char ext[_MAX_EXT];
 /* ----- Create unambiguous path from file spec, filling in the
      drive and directory if incomplete. Optionally change to
      the new drive and subdirectory ------ */
-void CreatePath(char *path,char *fspec,int InclName,int Change)
+void DfCreatePath(char *path,char *fspec,int InclName,int Change)
 {
     int cm = 0;
     char currdir[MAX_PATH];
@@ -83,20 +83,20 @@ static int dircmp(const void *c1, const void *c2)
 
 
 BOOL DfDlgDirList(DFWINDOW wnd, char *fspec,
-                enum commands nameid, enum commands pathid,
+                enum DfCommands nameid, enum DfCommands pathid,
                 unsigned attrib)
 {
     int ax, i = 0;
     struct _finddata_t ff;
-    CTLWINDOW *ct = FindCommand(wnd->extension,nameid,LISTBOX);
+    DF_CTLWINDOW *ct = DfFindCommand(wnd->extension,nameid,DF_LISTBOX);
     DFWINDOW lwnd;
     char **dirlist = NULL;
 
-	CreatePath(path, fspec, TRUE, TRUE);
+	DfCreatePath(path, fspec, TRUE, TRUE);
 	if (ct != NULL)
 	{
 		lwnd = ct->wnd;
-		DfSendMessage(ct->wnd, CLEARTEXT, 0, 0);
+		DfSendMessage(ct->wnd, DFM_CLEARTEXT, 0, 0);
 
 		if (attrib & 0x8000)
 		{
@@ -122,10 +122,10 @@ BOOL DfDlgDirList(DFWINDOW wnd, char *fspec,
                             strcat(drname, " (RAMdisk)");
                     }
 #endif
-					DfSendMessage(lwnd,ADDTEXT,(PARAM)drname,0);
+					DfSendMessage(lwnd,DFM_ADDTEXT,(DF_PARAM)drname,0);
 				}
 			}
-			DfSendMessage(lwnd, PAINT, 0, 0);
+			DfSendMessage(lwnd, DFM_PAINT, 0, 0);
 		}
 		ax = _findfirst(path, &ff);
 		if (ax == -1)
@@ -139,9 +139,9 @@ BOOL DfDlgDirList(DFWINDOW wnd, char *fspec,
                 char fname[MAX_PATH+2];
                 sprintf(fname, (ff.attrib & FILE_ATTRIBUTE_DIRECTORY) ?
                                 "[%s]" : "%s" , ff.name);
-                dirlist = DFrealloc(dirlist,
+                dirlist = DfRealloc(dirlist,
                                     sizeof(char *)*(i+1));
-                dirlist[i] = DFmalloc(strlen(fname)+1);
+                dirlist[i] = DfMalloc(strlen(fname)+1);
                 if (dirlist[i] != NULL)
                     strcpy(dirlist[i], fname);
                 i++;
@@ -157,17 +157,17 @@ BOOL DfDlgDirList(DFWINDOW wnd, char *fspec,
 
             /* ---- send sorted list to list box ---- */
             for (j = 0; j < i; j++)    {
-                DfSendMessage(lwnd,ADDTEXT,(PARAM)dirlist[j],0);
+                DfSendMessage(lwnd,DFM_ADDTEXT,(DF_PARAM)dirlist[j],0);
                 free(dirlist[j]);
             }
             free(dirlist);
         }
-        DfSendMessage(lwnd, SHOW_WINDOW, 0, 0);
+        DfSendMessage(lwnd, DFM_SHOW_WINDOW, 0, 0);
     }
     if (pathid)
 	{
         _makepath(path, drive, dir, NULL, NULL);
-        PutItemText(wnd, pathid, path);
+        DfPutItemText(wnd, pathid, path);
     }
     return TRUE;
 }

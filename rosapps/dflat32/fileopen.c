@@ -2,8 +2,8 @@
 
 #include "dflat.h"
 
-static BOOL DlgFileOpen(char *, char *, DBOX *);
-static int DlgFnOpen(DFWINDOW, DFMESSAGE, PARAM, PARAM);
+static BOOL DlgFileOpen(char *, char *, DF_DBOX *);
+static int DlgFnOpen(DFWINDOW, DFMESSAGE, DF_PARAM, DF_PARAM);
 static void InitDlgBox(DFWINDOW);
 static void StripPath(char *);
 static BOOL IncompleteFilename(char *);
@@ -14,13 +14,13 @@ static char *FileName;
 static char *NewFileName;
 
 static BOOL Saving;
-extern DBOX FileOpen;
-extern DBOX SaveAs;
+extern DF_DBOX FileOpen;
+extern DF_DBOX SaveAs;
 
 /*
  * Dialog Box to select a file to open
  */
-BOOL OpenFileDialogBox(char *Fpath, char *Fname)
+BOOL DfOpenFileDialogBox(char *Fpath, char *Fname)
 {
     return DlgFileOpen(Fpath, Fname, &FileOpen);
 }
@@ -28,13 +28,13 @@ BOOL OpenFileDialogBox(char *Fpath, char *Fname)
 /*
  * Dialog Box to select a file to save as
  */
-BOOL SaveAsDialogBox(char *Fname)
+BOOL DfSaveAsDialogBox(char *Fname)
 {
     return DlgFileOpen(NULL, Fname, &SaveAs);
 }
 
 /* --------- generic file open ---------- */
-static BOOL DlgFileOpen(char *Fpath, char *Fname, DBOX *db)
+static BOOL DlgFileOpen(char *Fpath, char *Fname, DF_DBOX *db)
 {
     BOOL rtn;
     char savedir[MAX_PATH];
@@ -74,48 +74,48 @@ static BOOL DlgFileOpen(char *Fpath, char *Fname, DBOX *db)
 /*
  *  Process dialog box messages
  */
-static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
+static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,DF_PARAM p1,DF_PARAM p2)
 {
 	int rtn;
-	DBOX *db;
+	DF_DBOX *db;
 	DFWINDOW cwnd;
 
     switch (msg)
     {
-        case CREATE_WINDOW:
-            rtn = DefaultWndProc(wnd, msg, p1, p2);
+        case DFM_CREATE_WINDOW:
+            rtn = DfDefaultWndProc(wnd, msg, p1, p2);
             db = wnd->extension;
-            cwnd = ControlWindow(db, ID_FILENAME);
-            DfSendMessage(cwnd, SETTEXTLENGTH, 64, 0);
+            cwnd = DfControlWindow(db, DF_ID_FILENAME);
+            DfSendMessage(cwnd, DFM_SETTEXTLENGTH, 64, 0);
             return rtn;
 
-        case INITIATE_DIALOG:
+        case DFM_INITIATE_DIALOG:
             InitDlgBox(wnd);
             break;
 
         case DFM_COMMAND:
             switch ((int) p1)
 			{
-                case ID_FILENAME:
-                    if (p2 != ENTERFOCUS)
+                case DF_ID_FILENAME:
+                    if (p2 != DFM_ENTERFOCUS)
 					{
                         /* allow user to modify the file spec */
-                        GetItemText(wnd, ID_FILENAME,
+                        DfGetItemText(wnd, DF_ID_FILENAME,
                                 FileName, 65);
                         if (IncompleteFilename(FileName) || Saving)
 						{
                             strcpy(OrigSpec, FileName);
                             StripPath(OrigSpec);
                         }
-                        if (p2 != LEAVEFOCUS)
-                            DfSendMessage(wnd, DFM_COMMAND, ID_OK, 0);
+                        if (p2 != DFM_LEAVEFOCUS)
+                            DfSendMessage(wnd, DFM_COMMAND, DF_ID_OK, 0);
                     }
                     return TRUE;
 
-                case ID_OK:
+                case DF_ID_OK:
                     if (p2 != 0)
                         break;
-                    GetItemText(wnd, ID_FILENAME,
+                    DfGetItemText(wnd, DF_ID_FILENAME,
                             FileName, 65);
                     strcpy(FileSpec, FileName);
                     if (IncompleteFilename(FileName))
@@ -126,50 +126,50 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
                         return TRUE;
                     }
                     else    {
-                        GetItemText(wnd, ID_PATH, FileName, 65);
+                        DfGetItemText(wnd, DF_ID_PATH, FileName, 65);
                         strcat(FileName, FileSpec);
                         strcpy(NewFileName, FileName);
                     }
                     break;
 
-                case ID_FILES:
+                case DF_ID_FILES:
                     switch ((int) p2)
 					{
-                        case ENTERFOCUS:
-                        case LB_SELECTION:
+                        case DFM_ENTERFOCUS:
+                        case DFM_LB_SELECTION:
                             /* selected a different filename */
-                            GetDlgListText(wnd, FileName,
-                                        ID_FILES);
-                            PutItemText(wnd, ID_FILENAME,
+                            DfGetDlgListText(wnd, FileName,
+                                        DF_ID_FILES);
+                            DfPutItemText(wnd, DF_ID_FILENAME,
                                             FileName);
                             break;
-                        case LB_CHOOSE:
+                        case DFM_LB_CHOOSE:
                             /* chose a file name */
-                            GetDlgListText(wnd, FileName,
-                                    ID_FILES);
-                            DfSendMessage(wnd, DFM_COMMAND, ID_OK, 0);
+                            DfGetDlgListText(wnd, FileName,
+                                    DF_ID_FILES);
+                            DfSendMessage(wnd, DFM_COMMAND, DF_ID_OK, 0);
                             break;
                         default:
                             break;
                     }
                     return TRUE;
 
-                case ID_DRIVE:
+                case DF_ID_DRIVE:
                     switch ((int) p2)    {
-                        case ENTERFOCUS:
+                        case DFM_ENTERFOCUS:
                             if (Saving)
                                 *FileSpec = '\0';
                             break;
-                        case LEAVEFOCUS:
+                        case DFM_LEAVEFOCUS:
                             if (Saving)
                                 strcpy(FileSpec, FileName);
                             break;
 
-						case LB_SELECTION:
+						case DFM_LB_SELECTION:
 							{
 								char dd[25];
 								/* selected different drive/dir */
-								GetDlgListText(wnd, dd, ID_DRIVE);
+								DfGetDlgListText(wnd, dd, DF_ID_DRIVE);
 								if (*(dd+2) == ':')
 									*(dd+3) = '\0';
 								else
@@ -180,7 +180,7 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
 								strcat(FileName, OrigSpec);
 								if (*(FileName+1) != ':' && *FileName != '.')
 								{
-									GetItemText(wnd, ID_PATH, FileSpec, 65);
+									DfGetItemText(wnd, DF_ID_PATH, FileSpec, 65);
 									strcat(FileSpec, FileName);
 								}
 								else 
@@ -188,16 +188,16 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
 							}
 							break;
 
-                        case LB_CHOOSE:
+                        case DFM_LB_CHOOSE:
                             /* chose drive/dir */
                             if (Saving)
-                                PutItemText(wnd, ID_FILENAME, "");
+                                DfPutItemText(wnd, DF_ID_FILENAME, "");
                             InitDlgBox(wnd);
                             return TRUE;
                         default:
                             break;
                     }
-                    PutItemText(wnd, ID_FILENAME, FileSpec);
+                    DfPutItemText(wnd, DF_ID_FILENAME, FileSpec);
                     return TRUE;
 
 
@@ -207,7 +207,7 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
         default:
             break;
     }
-    return DefaultWndProc(wnd, msg, p1, p2);
+    return DfDefaultWndProc(wnd, msg, p1, p2);
 }
 
 /*
@@ -216,11 +216,11 @@ static int DlgFnOpen(DFWINDOW wnd,DFMESSAGE msg,PARAM p1,PARAM p2)
 static void InitDlgBox(DFWINDOW wnd)
 {
     if (*FileSpec && !Saving)
-        PutItemText(wnd, ID_FILENAME, FileSpec);
-    if (DfDlgDirList(wnd, FileSpec, ID_FILES, ID_PATH, 0))
+        DfPutItemText(wnd, DF_ID_FILENAME, FileSpec);
+    if (DfDlgDirList(wnd, FileSpec, DF_ID_FILES, DF_ID_PATH, 0))
     {
         StripPath(FileSpec);
-        DfDlgDirList(wnd, "*.*", ID_DRIVE, 0, 0xc010);
+        DfDlgDirList(wnd, "*.*", DF_ID_DRIVE, 0, 0xc010);
     }
 }
 

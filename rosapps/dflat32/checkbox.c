@@ -2,47 +2,47 @@
 
 #include "dflat.h"
 
-int CheckBoxProc(DFWINDOW wnd, DFMESSAGE msg, PARAM p1, PARAM p2)
+int DfCheckBoxProc(DFWINDOW wnd, DFMESSAGE msg, DF_PARAM p1, DF_PARAM p2)
 {
     int rtn;
-    CTLWINDOW *ct = GetControl(wnd);
+    DF_CTLWINDOW *ct = DfGetControl(wnd);
     if (ct != NULL)    {
         switch (msg)    {
-            case SETFOCUS:
+            case DFM_SETFOCUS:
                 if (!(int)p1)
-                    DfSendMessage(NULL, HIDE_CURSOR, 0, 0);
-            case MOVE:
-                rtn = BaseWndProc(CHECKBOX, wnd, msg, p1, p2);
-                SetFocusCursor(wnd);
+                    DfSendMessage(NULL, DFM_HIDE_CURSOR, 0, 0);
+            case DFM_MOVE:
+                rtn = DfBaseWndProc(DF_CHECKBOX, wnd, msg, p1, p2);
+                DfSetFocusCursor(wnd);
                 return rtn;
-            case PAINT:    {
+            case DFM_PAINT:    {
                 char cb[] = "[ ]";
                 if (ct->setting)
                     cb[1] = 'X';
-                DfSendMessage(wnd, CLEARTEXT, 0, 0);
-                DfSendMessage(wnd, ADDTEXT, (PARAM) cb, 0);
-                SetFocusCursor(wnd);
+                DfSendMessage(wnd, DFM_CLEARTEXT, 0, 0);
+                DfSendMessage(wnd, DFM_ADDTEXT, (DF_PARAM) cb, 0);
+                DfSetFocusCursor(wnd);
                 break;
             }
-            case KEYBOARD:
+            case DFM_KEYBOARD:
                 if ((int)p1 != ' ')
                     break;
-            case LEFT_BUTTON:
-                ct->setting ^= ON;
-                DfSendMessage(wnd, PAINT, 0, 0);
+            case DFM_LEFT_BUTTON:
+                ct->setting ^= DF_ON;
+                DfSendMessage(wnd, DFM_PAINT, 0, 0);
                 return TRUE;
             default:
                 break;
         }
     }
-    return BaseWndProc(CHECKBOX, wnd, msg, p1, p2);
+    return DfBaseWndProc(DF_CHECKBOX, wnd, msg, p1, p2);
 }
 
-BOOL CheckBoxSetting(DBOX *db, enum commands cmd)
+BOOL DfCheckBoxSetting(DF_DBOX *db, enum DfCommands cmd)
 {
-    CTLWINDOW *ct = FindCommand(db, cmd, CHECKBOX);
+    DF_CTLWINDOW *ct = DfFindCommand(db, cmd, DF_CHECKBOX);
     if (ct != NULL)
-        return (ct->isetting == ON);
+        return (ct->isetting == DF_ON);
     return FALSE;
 }
 
