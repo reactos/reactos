@@ -1189,13 +1189,6 @@ extern ULONG NtBuildNumber;
 #define ThreadHideFromDebugger			17
 #define MaxThreadInfoClass			17
 
-// object handle information
-
-#define ObjectBasicInformation			0
-#define ObjectNameInformation			1
-#define ObjectTypeInformation			2
-#define ObjectAllInformation			3
-#define ObjectDataInformation			4
 
 typedef struct _ATOM_TABLE_INFORMATION
 {
@@ -1561,7 +1554,7 @@ struct _SYSTEM_QUOTA_INFORMATION
 #define THREAD_WAIT_OBJECTS			3
 //#define MAXIMUM_WAIT_OBJECTS			64
 
-// object type  access rights
+// object type access rights
 
 #define OBJECT_TYPE_CREATE		0x0001
 #define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
@@ -1581,20 +1574,16 @@ struct _SYSTEM_QUOTA_INFORMATION
 #define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
 
-typedef struct _OBJECT_DATA_INFORMATION
-{
-	BOOLEAN bInheritHandle;
-	BOOLEAN bProtectFromClose;
-} OBJECT_DATA_INFORMATION, *POBJECT_DATA_INFORMATION;
+/* object information class */
 
-
-typedef struct _OBJECT_TYPE_INFORMATION
+typedef enum _OBJECT_INFORMATION_CLASS
 {
-	UNICODE_STRING	Name;
-	UNICODE_STRING Type;
-	ULONG TotalHandles;
-	ULONG ReferenceCount;
-} OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
+  ObjectBasicInformation,
+  ObjectNameInformation,
+  ObjectTypeInformation,
+  ObjectAllTypesInformation,
+  ObjectHandleInformation
+} OBJECT_INFORMATION_CLASS;
 
 
 // directory information

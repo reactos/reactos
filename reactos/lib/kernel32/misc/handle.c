@@ -1,4 +1,4 @@
-/* $Id: handle.c,v 1.13 2003/08/28 19:37:00 gvg Exp $
+/* $Id: handle.c,v 1.14 2003/10/04 17:12:31 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,71 +32,79 @@ DuplicateConsoleHandle (HANDLE	hConsole,
 /*
  * @implemented
  */
-WINBOOL WINAPI GetHandleInformation(HANDLE hObject, LPDWORD lpdwFlags)
+WINBOOL WINAPI
+GetHandleInformation (HANDLE hObject,
+		      LPDWORD lpdwFlags)
 {
-   OBJECT_DATA_INFORMATION HandleInfo;
-   ULONG BytesWritten;
-   NTSTATUS errCode;
-   
-   errCode = NtQueryObject(hObject,
-			   ObjectDataInformation, 
-			   &HandleInfo, 
-			   sizeof(OBJECT_DATA_INFORMATION),
-			   &BytesWritten);
-   if (!NT_SUCCESS(errCode)) 
-     {
-	SetLastErrorByStatus (errCode);
+  OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+  ULONG BytesWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryObject (hObject,
+			  ObjectHandleInformation,
+			  &HandleInfo,
+			  sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+			  &BytesWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
 	return FALSE;
-     }
-   if ( HandleInfo.bInheritHandle )
-     *lpdwFlags &= HANDLE_FLAG_INHERIT;
-   if ( HandleInfo.bProtectFromClose )
-     *lpdwFlags &= HANDLE_FLAG_PROTECT_FROM_CLOSE;
-   return TRUE;
+    }
+
+  if (HandleInfo.Inherit)
+    *lpdwFlags &= HANDLE_FLAG_INHERIT;
+
+  if (HandleInfo.ProtectFromClose)
+    *lpdwFlags &= HANDLE_FLAG_PROTECT_FROM_CLOSE;
+
+  return TRUE;
 }
 
 
 /*
  * @implemented
  */
-WINBOOL STDCALL SetHandleInformation(HANDLE hObject,
-				     DWORD dwMask,
-				     DWORD dwFlags)
+WINBOOL STDCALL
+SetHandleInformation (HANDLE hObject,
+		      DWORD dwMask,
+		      DWORD dwFlags)
 {
-   OBJECT_DATA_INFORMATION HandleInfo;
-   NTSTATUS errCode;
-   ULONG BytesWritten;
+  OBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo;
+  ULONG BytesWritten;
+  NTSTATUS Status;
 
-   errCode = NtQueryObject(hObject,
-			   ObjectDataInformation,
-			   &HandleInfo,
-			   sizeof(OBJECT_DATA_INFORMATION),
-			   &BytesWritten);
-   if (!NT_SUCCESS(errCode)) 
-     {
-	SetLastErrorByStatus (errCode);
-	return FALSE;
-     }
-   if (dwMask & HANDLE_FLAG_INHERIT)
-     {
-	HandleInfo.bInheritHandle = dwFlags & HANDLE_FLAG_INHERIT;
-     }	
-   if (dwMask & HANDLE_FLAG_PROTECT_FROM_CLOSE) 
-     {
-	HandleInfo.bProtectFromClose = dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE;
-     }
-   
-   errCode = NtSetInformationObject(hObject,
-				    ObjectDataInformation,
-				    &HandleInfo,
-				    sizeof(OBJECT_DATA_INFORMATION));
-   if (!NT_SUCCESS(errCode)) 
-     {
-	SetLastErrorByStatus (errCode);
-	return FALSE;
-     }
-   
-   return TRUE;
+  Status = NtQueryObject (hObject,
+			  ObjectHandleInformation,
+			  &HandleInfo,
+			  sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION),
+			  &BytesWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
+
+  if (dwMask & HANDLE_FLAG_INHERIT)
+    {
+      HandleInfo.Inherit = dwFlags & HANDLE_FLAG_INHERIT;
+    }
+
+  if (dwMask & HANDLE_FLAG_PROTECT_FROM_CLOSE)
+    {
+      HandleInfo.ProtectFromClose = dwFlags & HANDLE_FLAG_PROTECT_FROM_CLOSE;
+    }
+
+  Status = NtSetInformationObject (hObject,
+				   ObjectHandleInformation,
+				   &HandleInfo,
+				   sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return FALSE;
+    }
+
+  return TRUE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.14 2003/07/10 21:34:29 royce Exp $
+/* $Id: ntobj.c,v 1.15 2003/10/04 17:11:58 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -35,10 +35,41 @@
  */
 NTSTATUS STDCALL
 NtSetInformationObject (IN HANDLE ObjectHandle,
-			IN CINT ObjectInformationClass,
+			IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 			IN PVOID ObjectInformation,
 			IN ULONG Length)
 {
+#if 0
+  POBJECT_HEADER ObjectHeader;
+  PVOID Object;
+  NTSTATUS Status;
+
+  if (ObjectInformationClass != ObjectHandleInformation)
+    return STATUS_INVALID_INFO_CLASS;
+
+  if (Length != sizeof(OBJECT_HANDLE_ATTRIBUTE_INFORMATION))
+    return STATUS_INFO_LENGTH_MISMATCH;
+
+  Status = ObReferenceObjectByHandle (ObjectHandle,
+				      0,
+				      NULL,
+				      KeGetPreviousMode(),
+				      &Object,
+				      NULL);
+  if (!NT_SUCCESS (Status))
+    {
+      return Status;
+    }
+
+  ObjectHeader = BODY_TO_HEADER(Object);
+
+  /* FIXME: Change handle attributes here... */
+
+  ObDereferenceObject(Object);
+
+  return Status;
+#endif
+
   UNIMPLEMENTED;
 }
 
@@ -67,10 +98,10 @@ NtSetInformationObject (IN HANDLE ObjectHandle,
  */
 NTSTATUS STDCALL
 NtQueryObject (IN HANDLE ObjectHandle,
-	       IN CINT ObjectInformationClass,
+	       IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	       OUT PVOID ObjectInformation,
 	       IN ULONG Length,
-	       OUT PULONG ReturnLength)
+	       OUT PULONG ReturnLength OPTIONAL)
 {
   POBJECT_TYPE_INFORMATION typeinfo;
   POBJECT_HEADER ObjectHeader;
@@ -92,6 +123,10 @@ NtQueryObject (IN HANDLE ObjectHandle,
 
   switch (ObjectInformationClass)
     {
+      case ObjectBasicInformation:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
       case ObjectNameInformation:
 	Status = ObQueryNameString (Object,
 				    (POBJECT_NAME_INFORMATION)ObjectInformation,
@@ -119,8 +154,16 @@ NtQueryObject (IN HANDLE ObjectHandle,
 	typeinfo->ReferenceCount = ObjectHeader -> RefCount;
 	break;
 
-      default:
+      case ObjectAllTypesInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      case ObjectHandleInformation:
+	Status = STATUS_NOT_IMPLEMENTED;
+	break;
+
+      default:
+	Status = STATUS_INVALID_INFO_CLASS;
 	break;
     }
 
@@ -177,7 +220,7 @@ NtMakeTemporaryObject (IN HANDLE Handle)
   Status = ObReferenceObjectByHandle(Handle,
 				     0,
 				     NULL,
-				     KernelMode,
+				     KeGetPreviousMode(),
 				     & Object,
 				     NULL);
   if (Status != STATUS_SUCCESS)

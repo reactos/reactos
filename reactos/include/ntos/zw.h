@@ -1,5 +1,5 @@
 
-/* $Id: zw.h,v 1.17 2003/09/10 06:12:21 vizzini Exp $
+/* $Id: zw.h,v 1.18 2003/10/04 17:10:55 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -4748,12 +4748,7 @@ NtSetInformationKey(
  *      ObjectHandle = 
  *	ObjectInformationClass = Index to the set of parameters to change. 
 
-			
-	ObjectBasicInformation  	
-	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
-	ObjectAllInformation		
-	ObjectDataInformation		OBJECT_DATA_INFORMATION
-	ObjectNameInformation		OBJECT_NAME_INFORMATION	
+	ObjectHandleInformation		OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 
 
  *      ObjectInformation = Caller supplies storage for parameters to set.
@@ -4764,7 +4759,7 @@ NTSTATUS
 STDCALL
 NtSetInformationObject(
 	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
+	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	IN PVOID ObjectInformation,
 	IN ULONG Length 
 	);
@@ -5349,17 +5344,18 @@ ZwQueryIntervalProfile(
 
 /*
  * FUNCTION: Queries the information of a  object.
- * ARGUMENTS: 
+ * ARGUMENTS:
 	ObjectHandle = Handle to a object
 	ObjectInformationClass = Index to a certain information structure
 
-	ObjectBasicInformation  	
-	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectBasicInformation		OBJECT_BASIC_INFORMATION
 	ObjectNameInformation		OBJECT_NAME_INFORMATION
-	ObjectDataInformation		OBJECT_DATA_INFORMATION
+	ObjectTypeInformation		OBJECT_TYPE_INFORMATION
+	ObjectAllTypesInformation	OBJECT_ALL_TYPES_INFORMATION
+	ObjectHandleInformation		OBJECT_HANDLE_ATTRIBUTES_INFORMATION
 
 	ObjectInformation = Caller supplies storage for resulting information
-	Length = Size of the supplied storage 
+	Length = Size of the supplied storage
  	ResultLength = Bytes written
  */
 
@@ -5367,10 +5363,10 @@ NTSTATUS
 STDCALL
 ZwQueryObject(
 	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
+	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	OUT PVOID ObjectInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength
+	OUT PULONG ResultLength OPTIONAL
 	);
 
 NTSTATUS
@@ -5472,12 +5468,7 @@ ZwSetInformationKey(
  *      ObjectHandle = 
  *	ObjectInformationClass = Index to the set of parameters to change. 
 
-			
-	ObjectBasicInformation  	
-	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
-	ObjectAllInformation		
-	ObjectDataInformation		OBJECT_DATA_INFORMATION
-	ObjectNameInformation		OBJECT_NAME_INFORMATION	
+	ObjectHandleInformation		OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 
 
  *      ObjectInformation = Caller supplies storage for parameters to set.
@@ -5488,9 +5479,9 @@ NTSTATUS
 STDCALL
 ZwSetInformationObject(
 	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
+	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	IN PVOID ObjectInformation,
-	IN ULONG Length 
+	IN ULONG Length
 	);
 
 /*
@@ -5758,10 +5749,11 @@ NtQuerySystemTime (
 	ObjectHandle = Handle to a object
 	ObjectInformationClass = Index to a certain information structure
 
-	ObjectBasicInformation  	
-	ObjectTypeInformation 		OBJECT_TYPE_INFORMATION 
+	ObjectBasicInformation		OBJECT_BASIC_INFORMATION
 	ObjectNameInformation		OBJECT_NAME_INFORMATION
-	ObjectDataInformation		OBJECT_DATA_INFORMATION
+	ObjectTypeInformation		OBJECT_TYPE_INFORMATION
+	ObjectAllTypesInformation	OBJECT_ALL_TYPES_INFORMATION
+	ObjectHandleInformation		OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 
 	ObjectInformation = Caller supplies storage for resulting information
 	Length = Size of the supplied storage 
@@ -5772,10 +5764,10 @@ NTSTATUS
 STDCALL
 NtQueryObject(
 	IN HANDLE ObjectHandle,
-	IN CINT ObjectInformationClass,
+	IN OBJECT_INFORMATION_CLASS ObjectInformationClass,
 	OUT PVOID ObjectInformation,
 	IN ULONG Length,
-	OUT PULONG ResultLength
+	OUT PULONG ResultLength OPTIONAL
 	);
 
 /* BEGIN REACTOS ONLY */
