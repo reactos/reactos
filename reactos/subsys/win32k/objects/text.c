@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.103 2004/07/09 20:28:20 navaraf Exp $ */
+/* $Id: text.c,v 1.104 2004/07/11 02:10:48 navaraf Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -2016,9 +2016,16 @@ NtGdiGetCharWidth32(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   TextObj = TEXTOBJ_LockText(hFont);
    hFont = dc->w.hFont;
+   TextObj = TEXTOBJ_LockText(hFont);
    DC_UnlockDc(hDC);
+
+   if (TextObj == NULL)
+   {
+      ExFreePool(SafeBuffer);
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+   }
 
    if (!NT_SUCCESS(GetFontObjectsFromTextObj(TextObj, NULL, NULL, &FontGDI)))
    {
