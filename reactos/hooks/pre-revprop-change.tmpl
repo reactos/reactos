@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# PRE-REVPROP-CHANGE HOOK
+#
+# The pre-revprop-change hook is invoked before a revision property
+# is modified.  Subversion runs this hook by invoking a program
+# (script, executable, binary, etc.) named 'pre-revprop-change' (for which
+# this file is a template), with the following ordered arguments:
+#
+#   [1] REPOS-PATH   (the path to this repository)
+#   [2] REVISION     (the revision being tweaked)
+#   [3] USER         (the username of the person tweaking the property)
+#   [4] PROPNAME     (the property being set on the revision)
+#
+#   [STDIN] PROPVAL  ** the property value is passed via STDIN.
+#
+# If the hook program exits with success, the propchange happens; but
+# if it exits with failure (non-zero), the propchange doesn't happen.
+# The hook program can use the 'svnlook' utility to examine the 
+# existing value of the revision property.
+#
+# WARNING: unlike other hooks, this hook MUST exist for revision
+# properties to be changed.  If the hook does not exist, Subversion 
+# will behave as if the hook were present, but failed.  The reason
+# for this is that revision properties are UNVERSIONED, meaning that
+# a successful propchange is destructive;  the old value is gone
+# forever.  We recommend the hook back up the old value somewhere.
+#
+# On a Unix system, the normal procedure is to have 'pre-revprop-change'
+# invoke other programs to do the real work, though it may do the
+# work itself too.
+#
+# Note that 'pre-revprop-change' must be executable by the user(s) who will
+# invoke it (typically the user httpd runs as), and that user must
+# have filesystem-level permission to access the repository.
+#
+# On a Windows system, you should name the hook program
+# 'pre-revprop-change.bat' or 'pre-revprop-change.exe',
+# but the basic idea is the same.
+#
+# Here is an example hook script, for a Unix /bin/sh interpreter:
+
+REPOS="$1"
+REV="$2"
+USER="$3"
+PROPNAME="$4"
+
+if [ "$PROPNAME" = "svn:log" ]; then exit 0; fi
+exit 1

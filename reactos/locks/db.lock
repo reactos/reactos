@@ -1,0 +1,10 @@
+DB lock file, representing locks on the versioned filesystem.
+
+All accessors -- both readers and writers -- of the repository's
+Berkeley DB environment take out shared locks on this file, and
+each accessor removes its lock when done.  If and when the DB
+recovery procedure is run, the recovery code takes out an
+exclusive lock on this file, so we can be sure no one else is
+using the DB during the recovery.
+
+You should never have to edit or remove this file.
