@@ -305,27 +305,33 @@ STDCALL
 RtlLeaveCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
 {   
+#ifndef NDEBUG
     HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
     
+    /* In win this case isn't checked. However it's a valid check so it should only
+       be performed in debug builds! */
     if (Thread != CriticalSection->OwningThread)
     {
        DPRINT1("Releasing critical section not owned!\n");
-       /* FIXME: raise exception */
        return STATUS_INVALID_PARAMETER;
     }
+#endif
    
-    /* Decrease the Recursion Count */    
+    /* Decrease the Recursion Count. No need to do this atomically because only
+       the thread who holds the lock can call this function (unless the program
+       is totally screwed... */
     if (--CriticalSection->RecursionCount) {
     
-        /* Someone still owns us, but we are free */
+        /* Someone still owns us, but we are free. This needs to be done atomically. */
         InterlockedDecrement(&CriticalSection->LockCount);
         
     } else {
         
-         /* Nobody owns us anymore */
+         /* Nobody owns us anymore. No need to do this atomically. See comment
+            above. */
         CriticalSection->OwningThread = 0;
         
-        /* Was someone wanting us? */
+        /* Was someone wanting us? This needs to be done atomically. */
         if (InterlockedDecrement(&CriticalSection->LockCount) >= 0) {
         
             /* Let him have us */
@@ -360,19 +366,19 @@ RtlTryEnterCriticalSection(
     PRTL_CRITICAL_SECTION CriticalSection)
 {   
     /* Try to take control */
-    if (InterlockedCompareExchange(&CriticalSection->LockCount,
-                                   0,
-                                   -1) == -1) {
+    if (InterlockedCompareExchange(&CriticalSection->LockCount, 0, -1) == -1) {
 
-        /* It's ours */                                
+        /* It's ours. Changing this information does not have to be serialized
+           because we just obtained the lock. */
         CriticalSection->OwningThread =  NtCurrentTeb()->Cid.UniqueThread;
         CriticalSection->RecursionCount = 1;
         return TRUE;
    
    } else if (CriticalSection->OwningThread == NtCurrentTeb()->Cid.UniqueThread) {
        
-        /* It's already ours */
-        InterlockedIncrement(&CriticalSection->LockCount);
+        /* It's already ours, just increment the recursion counter. This doesn't
+           have to be serialized because only the thread who already holds the
+           lock can do this. */
         CriticalSection->RecursionCount++;
         return TRUE;
     }
