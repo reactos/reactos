@@ -244,6 +244,7 @@ int lstat(const char *file_name, struct stat *buf);
 void *memmove(void *dest, const void *src, size_t len);
 #endif /* !defined(HAVE_MEMMOVE) */
 
+#ifndef __REACTOS__
 #ifndef HAVE_PREAD
 ssize_t pread( int fd, void *buf, size_t count, off_t offset );
 #endif /* HAVE_PREAD */
@@ -251,6 +252,7 @@ ssize_t pread( int fd, void *buf, size_t count, off_t offset );
 #ifndef HAVE_PWRITE
 ssize_t pwrite( int fd, const void *buf, size_t count, off_t offset );
 #endif /* HAVE_PWRITE */
+#endif /* __REACTOS__ */
 
 #ifndef HAVE_SIGSETJMP
 # include <setjmp.h>
