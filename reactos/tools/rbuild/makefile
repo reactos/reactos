@@ -34,14 +34,16 @@ HOST_LFLAGS = -g
 rbuild$(EXE_POSTFIX): $(OBJECTS)
 	$(HOST_CXX) $(OBJECTS) $(HOST_LFLAGS) -o rbuild$(EXE_POSTFIX)
 
+ifeq ($(HOST),"")
+echo Please set HOST variable to mingw32-windows or mingw32-linux
+endif
 ifeq ($(HOST),mingw32-linux)
 clean:
 	-rm -f *.o
 	-rm -f rbuild$(EXE_POSTFIX)
 	-rm -f tests/*.o
 	-rm -f rbuild_tests$(EXE_POSTFIX)
-endif
-ifeq ($(HOST),mingw32-windows)
+else
 clean:
 	-del *.o
 	-del rbuild$(EXE_POSTFIX)
