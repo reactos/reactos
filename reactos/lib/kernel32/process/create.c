@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.91 2004/12/18 13:26:57 weiden Exp $
+/* $Id: create.c,v 1.92 2004/12/30 08:05:11 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -12,6 +12,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <k32.h>
+#include <pseh/framebased.h>
 
 #define NDEBUG
 #include "../include/debug.h"
@@ -1385,11 +1386,11 @@ CreateProcessW
     * Create the thread for the kernel
     */
    DPRINT("Creating thread for process (EntryPoint = 0x%.08x)\n",
-    ImageBaseAddress + (ULONG)Sii.EntryPoint);
+    (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint));
    hThread =  KlCreateFirstThread(hProcess,
 				  lpThreadAttributes,
           &Sii,
-          ImageBaseAddress + (ULONG)Sii.EntryPoint,
+          (PVOID)((ULONG_PTR)ImageBaseAddress + Sii.EntryPoint),
 				  dwCreationFlags,
 				  &lpProcessInformation->dwThreadId);
    if (hThread == INVALID_HANDLE_VALUE)

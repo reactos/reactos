@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.79 2004/12/24 17:07:00 navaraf Exp $
+/* $Id: page.c,v 1.80 2004/12/30 08:05:11 hyperion Exp $
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -146,11 +146,11 @@ ProtectToPTE(ULONG flProtect)
    {
       Attributes = 0;
    }
-   else if (flProtect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE))
+   else if (flProtect & PAGE_IS_WRITABLE)
    {
       Attributes = PA_PRESENT | PA_READWRITE;
    }
-   else if (flProtect & (PAGE_READONLY|PAGE_EXECUTE|PAGE_EXECUTE_READ))
+   else if (flProtect & (PAGE_IS_READABLE | PAGE_IS_EXECUTABLE))
    {
       Attributes = PA_PRESENT;
    }
@@ -160,7 +160,7 @@ ProtectToPTE(ULONG flProtect)
       KEBUGCHECK(0);
    }
    if (Ke386NoExecute && 
-       !(flProtect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE)))
+       !(flProtect & PAGE_IS_EXECUTABLE))
    {
       Attributes = Attributes | 0x80000000;
    }

@@ -144,6 +144,8 @@ OBJECTS_MM = \
 	mm/balance.o \
 	mm/cont.o \
 	mm/drvlck.o \
+	mm/elf32.o \
+	mm/elf64.o \
 	mm/freelist.o \
 	mm/iospace.o \
 	mm/kmap.o \
@@ -159,6 +161,7 @@ OBJECTS_MM = \
 	mm/pageop.o \
 	mm/pager.o \
 	mm/paging.o \
+	mm/pe.o \
 	mm/pool.o \
 	mm/ppool.o \
 	mm/physical.o \

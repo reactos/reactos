@@ -1486,19 +1486,19 @@ typedef struct _SECTION_BASIC_INFORMATION {
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
 typedef struct _SECTION_IMAGE_INFORMATION {
-    PVOID   EntryPoint;
-    ULONG   Unknown1;
-    ULONG   StackReserve;
-    ULONG   StackCommit;
-    ULONG   Subsystem;
-    USHORT  MinorSubsystemVersion;
-    USHORT  MajorSubsystemVersion;
-    ULONG   Unknown2;
-    ULONG   Characteristics;
-    USHORT  ImageNumber;
-    BOOLEAN Executable;
-    UCHAR   Unknown3;
-    ULONG   Unknown4[3];
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #if (VER_PRODUCTBUILD >= 2600)

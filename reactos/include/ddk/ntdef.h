@@ -17,4 +17,14 @@ struct _EPROCESS;
 #define NTAPI STDCALL
 #endif
 
+#define MINCHAR   (0x80)
+#define MAXCHAR   (0x7F)
+#define MINSHORT  (0x8000)
+#define MAXSHORT  (0x7FFF)
+#define MINLONG   (0x80000000)
+#define MAXLONG   (0x7FFFFFFF)
+#define MAXUCHAR  (0xFF)
+#define MAXUSHORT (0xFFFF)
+#define MAXULONG  (0xFFFFFFFF)
+
 #endif

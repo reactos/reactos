@@ -71,6 +71,26 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 						 PAGE_NOACCESS | \
 						 PAGE_NOCACHE)
 
+#define PAGE_IS_READABLE (PAGE_READONLY | \
+                          PAGE_READWRITE | \
+                          PAGE_WRITECOPY | \
+                          PAGE_EXECUTE_READ | \
+                          PAGE_EXECUTE_READWRITE | \
+                          PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_WRITABLE (PAGE_READWRITE | \
+                          PAGE_WRITECOPY | \
+                          PAGE_EXECUTE_READWRITE | \
+                          PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_EXECUTABLE (PAGE_EXECUTE | \
+                            PAGE_EXECUTE_READ | \
+                            PAGE_EXECUTE_READWRITE | \
+                            PAGE_EXECUTE_WRITECOPY)
+
+#define PAGE_IS_WRITECOPY (PAGE_WRITECOPY | \
+                           PAGE_EXECUTE_WRITECOPY)
+
 typedef struct
 {
   ULONG Entry[NR_SECTION_PAGE_ENTRIES];
@@ -86,38 +106,35 @@ typedef struct
 #define MM_PAGEFILE_SEGMENT    (0x1)
 #define MM_DATAFILE_SEGMENT    (0x2)
 
-#define MM_SECTION_SEGMENT_BSS (0x1)
-
 typedef struct _MM_SECTION_SEGMENT
 {
-  ULONG FileOffset;
-  ULONG Protection;
-  ULONG Attributes;
-  ULONG Length;
+  LONGLONG FileOffset;
+  ULONG_PTR VirtualAddress;
   ULONG RawLength;
+  ULONG Length;
+  ULONG Protection;
   FAST_MUTEX Lock;
   ULONG ReferenceCount;
   SECTION_PAGE_DIRECTORY PageDirectory;
   ULONG Flags;
-  PVOID VirtualAddress;
   ULONG Characteristics;
   BOOLEAN WriteCopy;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
-  PVOID ImageBase;
-  PVOID EntryPoint;
-  ULONG StackReserve;
-  ULONG StackCommit;
+  ULONG_PTR ImageBase;
+  ULONG_PTR StackReserve;
+  ULONG_PTR StackCommit;
+  ULONG EntryPoint;
   ULONG Subsystem;
-  ULONG MinorSubsystemVersion;
-  ULONG MajorSubsystemVersion;
   ULONG ImageCharacteristics;
+  USHORT MinorSubsystemVersion;
+  USHORT MajorSubsystemVersion;
   USHORT Machine;
   BOOLEAN Executable;
   ULONG NrSegments;
-  MM_SECTION_SEGMENT Segments[0];
+  PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
 typedef struct _SECTION_OBJECT

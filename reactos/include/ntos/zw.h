@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.39 2004/12/23 20:12:51 ekohl Exp $
+/* $Id: zw.h,v 1.40 2004/12/30 08:05:10 hyperion Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -6479,7 +6479,7 @@ ZwQuerySection(
 
 typedef struct _SECTION_IMAGE_INFORMATION
 {
-  PVOID EntryPoint;
+  ULONG EntryPoint;
   ULONG Unknown1;
   ULONG StackReserve;
   ULONG StackCommit;
