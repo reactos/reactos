@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: control.c,v 1.4 2004/06/30 12:10:12 ekohl Exp $
+/* $Id: control.c,v 1.5 2004/09/15 16:03:09 fireball Exp $
  *
  * PROJECT:         ReactOS System Control Panel
  * FILE:            lib/cpl/system/control.c
@@ -45,7 +45,6 @@
 #define CTL_DEBUG(x)
 #endif
 
-
 #define MYWNDCLASS _T("CTLPANELCLASS")
 
 typedef LONG (CALLBACK *CPLAPPLETFUNC)(HWND hwndCPL, UINT uMsg, LPARAM lParam1, LPARAM lParam2);
@@ -63,6 +62,7 @@ typedef struct CPLLISTENTRY
 HWND hListView;
 HINSTANCE hInst;
 HWND hMainWnd;
+DEVMODE pDevMode;
 
 void dbgprint(TCHAR *format,...)
 {
@@ -81,11 +81,31 @@ void PopulateCPLList(HWND hLisCtrl)
 	TCHAR pszSearchPath[MAX_PATH];
 	HIMAGELIST hImgListSmall;
 	HIMAGELIST hImgListLarge;
+	int C_Depth;
+	
 	GetSystemDirectory(pszSearchPath,MAX_PATH);
 	_tcscat(pszSearchPath,_T("\\*.cpl"));
 	hFind = FindFirstFile(pszSearchPath,&fd);
-	hImgListSmall = ImageList_Create(16,16,ILC_COLOR | ILC_MASK,256,1000);
-	hImgListLarge = ImageList_Create(32,32,ILC_COLOR | ILC_MASK,256,1000);
+
+/* Icon drawing mode */
+	pDevMode.dmSize = sizeof(DEVMODE);
+	pDevMode.dmDriverExtra = 0;
+	
+	EnumDisplaySettings(NULL,ENUM_CURRENT_SETTINGS,&pDevMode);
+	switch(pDevMode.dmBitsPerPel)
+	{
+		case 32: C_Depth = ILC_COLOR32; break;
+		case 24: C_Depth = ILC_COLOR24; break;
+		case 16: C_Depth = ILC_COLOR16; break;
+		case  8: C_Depth = ILC_COLOR8;  break;
+		case  4: C_Depth = ILC_COLOR4;  break;
+		default: C_Depth = ILC_COLOR;  break;
+	}
+	
+	hImgListSmall = ImageList_Create(16,16,C_Depth | ILC_MASK,256,1000);
+	hImgListLarge = ImageList_Create(32,32,C_Depth | ILC_MASK,256,1000);
+	
+	
 	while(hFind != INVALID_HANDLE_VALUE)
 	{
 		CPLLISTENTRY *pEntry;
