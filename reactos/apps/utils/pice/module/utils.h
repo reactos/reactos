@@ -33,6 +33,30 @@ Copyright notice:
 #define __STR(x) #x
 #define STR(x) __STR(x)
 
+typedef enum {
+  kbDE,
+  kbUS,
+  kbDK,
+  kbMaximum
+} KeyboardLayout;
+
+// scancode to ASCII conversion
+typedef struct tagSCANTOASCII
+{
+	UCHAR s;  // 0 terminates the table
+	UCHAR a;
+}SCANTOASCII, *PSCANTOASCII;
+
+typedef struct tagKEYBOARD_LAYOUT
+{
+  LPSTR name;
+  PSCANTOASCII normal;
+  PSCANTOASCII shifted;
+  PSCANTOASCII alted;
+} KEYBOARD_LAYOUT, *PKEYBOARD_LAYOUT;
+
+extern PKEYBOARD_LAYOUT CurrentKeyboard;
+ 
 typedef struct _FRAME
 {
     ULONG error_code;
@@ -168,7 +192,8 @@ typedef struct tagDESCRIPTOR
 	USHORT Val	:13;	// index into table
 }DESCRIPTOR,*PDESCRIPTOR;
 
-
+PKEYBOARD_LAYOUT GetKeyboardLayout();
+PKEYBOARD_LAYOUT SetKeyboardLayoutByName(LPSTR Name);
 void PICE_memset(void* p,unsigned char c,int sz);
 void PICE_memcpy(void* t,void* s,int sz);
 char *PICE_strrev(char *);

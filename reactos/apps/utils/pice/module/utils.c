@@ -46,16 +46,10 @@ char tempFlowChanges[256];
 
 ULONG TwoPagesForPhysMem[2*_PAGE_SIZE];
 
-// scancode to ASCII conversion
-typedef struct tagSCANTOASCII
-{
-	UCHAR s,a;
-}SCANTOASCII;
-
 // scancode to ASCII table
-SCANTOASCII ucScanToAscii_GER[]=
+SCANTOASCII ucScanToAscii_DE[]=
 {
-// german keyboard
+// German keyboard
 	{16,'q'},{17,'w'},{18,'e'},{19,'r'},{20,'t'},
 	{21,'z'},{22,'u'},{23,'i'},{24,'o'},{25,'p'},
 	{30,'a'},{31,'s'},{32,'d'},{33,'f'},{34,'g'},
@@ -65,7 +59,26 @@ SCANTOASCII ucScanToAscii_GER[]=
 	{2,'1'},{3,'2'},{4,'3'},{ 5,'4'},{ 6,'5'},
 	{7,'6'},{8,'7'},{9,'8'},{10,'9'},{11,'0'},
 	{12,'ß'}, // 239 = &szlig;
-	{0x39,' '},{0x35,'-'},{0x34,'.'},{0x1b,'+'}
+	{0x39,' '},{0x35,'-'},{0x34,'.'},{0x1b,'+'},
+  {0,0}
+};
+
+SCANTOASCII ucShiftScanToAscii_DE[]=
+{
+// German keyboard SHIFTED
+	{16,'Q'},{17,'W'},{18,'E'},{19,'R'},{20,'T'},
+	{21,'Z'},{22,'U'},{23,'I'},{24,'O'},{25,'P'},
+	{30,'A'},{31,'S'},{32,'D'},{33,'F'},{34,'G'},
+	{35,'H'},{36,'J'},{37,'K'},{38,'L'},
+	{44,'Y'},{45,'X'},{46,'C'},{47,'V'},{48,'B'},
+	{49,'N'},{50,'M'},
+	{2,'!'},{3,'\"'}, // " // (fixes mc syntax highlighting)
+	                {4,'@'}, // is pragraph sign on keyboard
+					        { 5,'$'},{ 6,'%'},
+	{7,'&'},{8,'/'},{9,'('},{10,')'},{11,'='},
+	{12,'?'},
+	{0x39,' '},{0x35,'_'},{0x34,':'},{0x1b,'*'},
+  {0,0}
 };
 
 SCANTOASCII ucScanToAscii_US[]=
@@ -82,24 +95,8 @@ SCANTOASCII ucScanToAscii_US[]=
     {8,'7'},{9,'8'},{10,'9'},{11,'0'},{12,'-'},
     {0x39,' '},{0x35,'/'},{0x34,'.'},{0x1b,']'},
     {0x1a,'['},{0x33,','},{0x27,';'},{0x0d,'='},
-    {0x2b,'\\'},{0x28,'\''},{0x29,'`'}
-};
-
-SCANTOASCII ucShiftScanToAscii_GER[]=
-{
-// german keyboard SHIFTED
-	{16,'Q'},{17,'W'},{18,'E'},{19,'R'},{20,'T'},
-	{21,'Z'},{22,'U'},{23,'I'},{24,'O'},{25,'P'},
-	{30,'A'},{31,'S'},{32,'D'},{33,'F'},{34,'G'},
-	{35,'H'},{36,'J'},{37,'K'},{38,'L'},
-	{44,'Y'},{45,'X'},{46,'C'},{47,'V'},{48,'B'},
-	{49,'N'},{50,'M'},
-	{2,'!'},{3,'\"'}, // " // (fixes mc syntax highlighting)
-	                {4,'@'}, // is pragraph sign on keyboard
-					        { 5,'$'},{ 6,'%'},
-	{7,'&'},{8,'/'},{9,'('},{10,')'},{11,'='},
-	{12,'?'},
-	{0x39,' '},{0x35,'_'},{0x34,':'},{0x1b,'*'}
+    {0x2b,'\\'},{0x28,'\''},{0x29,'`'},
+    {0,0}
 };
 
 SCANTOASCII ucShiftScanToAscii_US[]=
@@ -116,12 +113,112 @@ SCANTOASCII ucShiftScanToAscii_US[]=
 	{8,'&'},{9,'*'},{10,'('},{11,')'},{12,'_'},
 	{0x39,' '},{0x35,'?'},{0x34,'>'},{0x1b,'}'},
 	{0x1a,'{'},{0x33,'<'},{0x27,':'},{0x0d,'+'},
-	{0x2b,'|'},{0x28,'\"'},{0x29,'~'}
+	{0x2b,'|'},{0x28,'\"'},{0x29,'~'},
+  {0,0}
 };
+
+SCANTOASCII ucScanToAscii_DK[]=
+{
+// Danish keyboard
+    {16,'q'},{17,'w'},{18,'e'},{19,'r'},
+    {20,'t'},{21,'y'},{22,'u'},{23,'i'},
+    {24,'o'},{25,'p'},{30,'a'},{31,'s'},
+    {32,'d'},{33,'f'},{34,'g'},{35,'h'},
+    {36,'j'},{37,'k'},{38,'l'},{44,'z'},
+    {45,'x'},{46,'c'},{47,'v'},{48,'b'},
+    {49,'n'},{50,'m'},{2,'1'},{3,'2'},
+    {4,'3'},{5,'4'},{6,'5'},{7,'6'},
+    {8,'7'},{9,'8'},{10,'9'},{11,'0'},{12,'+'},
+    {0x39,' '},{0x35,'_'},{0x34,'.'},{0x1b,'¨'},
+    {0x1a,'å'},{0x33,','},{0x27,'æ'},{0x0d,'´'},
+    {0x2b,'\''},{0x28,'ø'},{0x29,' '},
+    {0,0}
+};
+
+SCANTOASCII ucShiftScanToAscii_DK[]=
+{
+// Danish keyboard SHIFTED
+	{16,'Q'},{17,'W'},{18,'E'},{19,'R'},
+	{20,'T'},{21,'Y'},{22,'U'},{23,'I'},
+	{24,'O'},{25,'P'},{30,'A'},{31,'S'},
+	{32,'D'},{33,'F'},{34,'G'},{35,'H'},
+	{36,'J'},{37,'K'},{38,'L'},{44,'Z'},
+	{45,'X'},{46,'C'},{47,'V'},{48,'B'},
+	{49,'N'},{50,'M'},{2,'!'},{3,'"'},
+	{4,'#'},{5,'¤'},{6,'%'},{7,'&'},
+	{8,'/'},{9,'('},{10,')'},{11,'='},{12,'?'},
+	{0x39,' '},{0x35,'_'},{0x34,':'},{0x1b,'^'},
+	{0x1a,'Å'},{0x33,';'},{0x27,'Æ'},{0x0d,'`'},
+	{0x2b,'*'},{0x28,'Ø'},{0x29,'§'},
+  {0,0}
+};
+
+SCANTOASCII ucAltScanToAscii_DK[]=
+{
+// Danish keyboard ALTED
+	{16,' '},{17,' '},{18,' '},{19,' '},
+	{20,' '},{21,' '},{22,' '},{23,' '},
+	{24,' '},{25,' '},{30,' '},{31,' '},
+	{32,' '},{33,' '},{34,' '},{35,' '},
+	{36,' '},{37,' '},{38,' '},{44,' '},
+	{45,' '},{46,' '},{47,' '},{48,' '},
+	{49,' '},{50,' '},{2,' '},{3,'@'},
+	{4,'£'},{5,'$'},{6,'€'},{7,' '},
+	{8,'{'},{9,'['},{10,']'},{11,'}'},{12,' '},
+	{0x39,' '},{0x35,' '},{0x34,' '},{0x1b,'~'},
+	{0x1a,' '},{0x33,' '},{0x27,' '},{0x0d,'|'},
+	{0x2b,' '},{0x28,' '},{0x29,' '},
+  {0,0}
+};
+
+KEYBOARD_LAYOUT ucKeyboard[]=
+{
+  {"de", ucScanToAscii_DE, ucShiftScanToAscii_DE, NULL},
+  {"us", ucScanToAscii_US, ucShiftScanToAscii_US, NULL},
+  {"dk", ucScanToAscii_DK, ucShiftScanToAscii_DK, ucAltScanToAscii_DK},
+  {NULL, NULL, NULL, NULL}
+};
+
+PKEYBOARD_LAYOUT CurrentKeyboard = NULL;
+
 
 ////////////////////////////////////////////////////
 // FUNCTIONS
 ////
+
+//*************************************************************************
+// GetKeyboardLayout()
+//
+//*************************************************************************
+PKEYBOARD_LAYOUT GetKeyboardLayout()
+{
+  if (CurrentKeyboard == NULL)
+    {
+      CurrentKeyboard = &ucKeyboard[kbUS];
+    }
+
+  return CurrentKeyboard;
+}
+
+//*************************************************************************
+// SetKeyboardLayoutByName()
+//
+//*************************************************************************
+PKEYBOARD_LAYOUT SetKeyboardLayoutByName(LPSTR Name)
+{
+  CHAR tempCmd[256];
+  ULONG i;
+
+	for(i=0;ucKeyboard[i].name != NULL;i++)
+	  {
+	    if(PICE_strcmpi(ucKeyboard[i].name, Name) == 0)
+	      {
+      CurrentKeyboard = &ucKeyboard[i];
+		  return CurrentKeyboard;
+	      }
+	  }
+  return GetKeyboardLayout();
+}
 
 //*************************************************************************
 // PICE_memset()
@@ -1982,60 +2079,37 @@ int PICE_sprintf(char * buf, const char *fmt, ...)
 //*************************************************************************
 UCHAR AsciiFromScan(UCHAR s)
 {
+  PSCANTOASCII table;
   ULONG i;
 
   ENTER_FUNC();
 
-  if(!bShift)
+  if (bShift)
     {
-      if(ucKeyboardLayout == GERMANY)
-        {
-	  for(i=0;i<DIM(ucScanToAscii_GER);i++)
-	    {
-	      if(ucScanToAscii_GER[i].s==s)
-                {
-		  LEAVE_FUNC();
-		  return ucScanToAscii_GER[i].a;
-                }
-	    }
-        }
-      else
-        {
-	  for(i=0;i<DIM(ucScanToAscii_US);i++)
-	    {
-	      if(ucScanToAscii_US[i].s==s)
-                {
-		  LEAVE_FUNC();
-		  return ucScanToAscii_US[i].a;
-                }
-	    }
-        }
+      table = GetKeyboardLayout()->shifted;
+    }
+  else if(bAlt)
+    {
+      table = GetKeyboardLayout()->alted;
     }
   else
     {
-      if(ucKeyboardLayout == GERMANY)
-        {
-	  for(i=0;i<DIM(ucShiftScanToAscii_GER);i++)
-	    {
-	      if(ucShiftScanToAscii_GER[i].s==s)
-                {
-		  LEAVE_FUNC();
-		  return ucShiftScanToAscii_GER[i].a;
-                }
-	    }
-        }
-      else
-        {
-	  for(i=0;i<DIM(ucShiftScanToAscii_US);i++)
-	    {
-	      if(ucShiftScanToAscii_US[i].s==s)
-                {
-		  LEAVE_FUNC();
-		  return ucShiftScanToAscii_US[i].a;
-                }
-	    }
-        }
+      table = GetKeyboardLayout()->normal;
     }
+
+
+  if (table)
+    {
+	  for(i=0;table[i].s != 0;i++)
+	    {
+	      if(table[i].s==s)
+	        {
+			  LEAVE_FUNC();
+			  return table[i].a;
+	        }
+	    }
+    }
+
   DPRINT((0,"AsciiFromScan(): no translation for key\n"));
   LEAVE_FUNC();
   return 0;
@@ -2049,35 +2123,38 @@ UCHAR AsciiFromScan(UCHAR s)
 //*************************************************************************
 UCHAR AsciiToScan(UCHAR s)
 {
-    ULONG i;
+  PSCANTOASCII table;
+  ULONG i;
 
-    ENTER_FUNC();
+  ENTER_FUNC();
 
-    if(ucKeyboardLayout == GERMANY)
+  if (bShift)
     {
-		for(i=0;i<DIM(ucShiftScanToAscii_GER);i++)
-		{
-			if(ucShiftScanToAscii_GER[i].a==s)
-            {
-                LEAVE_FUNC();
-				return ucShiftScanToAscii_GER[i].s;
-            }
-		}
+      table = GetKeyboardLayout()->shifted;
     }
-    else
+  else if(bAlt)
     {
-		for(i=0;i<DIM(ucShiftScanToAscii_US);i++)
-		{
-			if(ucShiftScanToAscii_GER[i].a==s)
-            {
-                LEAVE_FUNC();
-				return ucShiftScanToAscii_GER[i].s;
-            }
-		}
+      table = GetKeyboardLayout()->alted;
+    }
+  else
+    {
+      table = GetKeyboardLayout()->normal;
     }
 
-    DPRINT((0,"AsciiToScan(): no translation for ASCII code\n"));
-    LEAVE_FUNC();
+  if (table)
+    {
+		  for(i=0;table[i].s != 0;i++)
+		    {
+		      if(table[i].a==s)
+		        {
+				  LEAVE_FUNC();
+				  return table[i].s;
+		        }
+		    }
+    }
+
+  DPRINT((0,"AsciiToScan(): no translation for ASCII code\n"));
+  LEAVE_FUNC();
 	return 0;
 }
 

@@ -88,8 +88,4 @@ extern volatile BOOLEAN bEnterNow;
 
 void ShowStatusLine(void);
 
-#define USA     (0)
-#define GERMANY (1)
-extern UCHAR ucKeyboardLayout;
-
 #define KEYBOARD_IRQ       1

@@ -214,7 +214,7 @@ CMDTABLE CmdTable[]={
 	{"pci",ShowPCI,"show PCI devices"   					        ,COMMAND_HAS_PARAMS|COMMAND_HAS_SWITCHES,{PARAM_CAN_BE_DECIMAL,PARAM_CAN_BE_DECIMAL,0,0,0},"a",COMMAND_GROUP_INFO},
 	{"next",NextInstr,"advance EIP to next instruction"				,0,{0,0,0,0,0},""},
 	{"i3here",I3here,"catch INT 3s"									,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_ONOFF,0,0,0,0},"",COMMAND_GROUP_FLOW},
-	{"layout",SetKeyboardLayout,"sets keyboard layout"  			,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_DECIMAL,0,0,0,0},"",COMMAND_GROUP_FLOW},
+	{"layout",SetKeyboardLayout,"sets keyboard layout"  			,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_ANY_STRING,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"syscall",ShowSysCallTable,"displays syscall (table)" 			,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_DECIMAL,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"altkey",SetAltKey,"set alternate break key"        			,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_LETTER,0,0,0,0},"",COMMAND_GROUP_FLOW},
 	{"addr",ShowContext,"show/set address contexts"            		,COMMAND_HAS_PARAMS,{PARAM_CAN_BE_PRNAME,0,0,0,0},"",COMMAND_GROUP_FLOW},
@@ -3124,26 +3124,22 @@ CommonShowPCIExit:
 //*************************************************************************
 COMMAND_PROTOTYPE(SetKeyboardLayout)
 {
+    PKEYBOARD_LAYOUT layout;
+
     ENTER_FUNC();
+
+    layout = GetKeyboardLayout();
 
     switch(pArgs->Count)
     {
         case 0:
-            PICE_sprintf(tempCmd,"current layout = %s\n",(ucKeyboardLayout == GERMANY)?"german":"american");
+            PICE_sprintf(tempCmd,"current layout = %s\n", layout->name);
             Print(OUTPUT_WINDOW,tempCmd);
             break;
         case 1:
-            if(pArgs->Value[0] < 2)
-            {
-                ucKeyboardLayout = pArgs->Value[0];
-                PICE_sprintf(tempCmd,"current layout = %s\n",(ucKeyboardLayout == GERMANY)?"german":"american");
-                Print(OUTPUT_WINDOW,tempCmd);
-            }
-            else
-            {
-                PICE_sprintf(tempCmd,"current layout = %s\n",(ucKeyboardLayout == GERMANY)?"german":"american");
-                Print(OUTPUT_WINDOW,tempCmd);
-            }
+            layout = SetKeyboardLayoutByName((LPSTR)pArgs->Value[0]);
+            PICE_sprintf(tempCmd,"current layout = %s\n", layout->name);
+            Print(OUTPUT_WINDOW,tempCmd);
             break;
     }
 

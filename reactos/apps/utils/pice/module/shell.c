@@ -66,8 +66,6 @@ BOOLEAN bStepInto = FALSE;
 
 // key handling
 UCHAR ucConverted; // key converted from scancode to ANSI
-// keyboard layout
-UCHAR ucKeyboardLayout = USA;
 
 volatile BOOLEAN bControl=FALSE; // TRUE when CTRL key was pressed
 volatile BOOLEAN bShift=FALSE; // TRUE when SHIFT key was pressed
