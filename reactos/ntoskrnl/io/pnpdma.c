@@ -1,4 +1,4 @@
-/* $Id: pnpdma.c,v 1.4 2003/10/20 06:03:29 vizzini Exp $
+/* $Id: pnpdma.c,v 1.5 2003/12/20 21:43:21 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -43,6 +43,7 @@ VOID
 IopPutDmaAdapter(
   PDMA_ADAPTER DmaAdapter)
 {
+  DPRINT("IopPutDmaAdapter\n");
   ExFreePool(DmaAdapter);
 }
 
@@ -54,6 +55,7 @@ IopAllocateCommonBuffer(
   OUT PPHYSICAL_ADDRESS LogicalAddress,
   IN BOOLEAN CacheEnabled)
 {
+  DPRINT("IopAllocateCommonBuffer\n");
   return HalAllocateCommonBuffer(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     Length, LogicalAddress, CacheEnabled);
@@ -68,6 +70,7 @@ IopFreeCommonBuffer(
   IN PVOID VirtualAddress,
   IN BOOLEAN CacheEnabled)
 {
+  DPRINT("IopFreeCommonBuffer\n");
   HalFreeCommonBuffer(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     Length, LogicalAddress, VirtualAddress, CacheEnabled);
@@ -82,6 +85,7 @@ IopAllocateAdapterChannel(
   IN PDRIVER_CONTROL ExecutionRoutine,
   IN PVOID Context)
 {
+  DPRINT("IopAllocateAdapterChannel\n");
   return IoAllocateAdapterChannel(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     DeviceObject, NumberOfMapRegisters, ExecutionRoutine, Context);
@@ -97,6 +101,7 @@ IopFlushAdapterBuffers(
   IN ULONG Length,
   IN BOOLEAN WriteToDevice)
 {
+  DPRINT("IopFlushAdapterBuffers\n");
   return IoFlushAdapterBuffers(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     Mdl, MapRegisterBase, CurrentVa, Length, WriteToDevice);
@@ -107,6 +112,7 @@ VOID
 IopFreeAdapterChannel(
   IN PDMA_ADAPTER DmaAdapter)
 {
+  DPRINT("IopFreeAdapterChannel\n");
   IoFreeAdapterChannel(((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter);
 }
 
@@ -117,6 +123,7 @@ IopFreeMapRegisters(
   PVOID MapRegisterBase,
   ULONG NumberOfMapRegisters)
 {
+  DPRINT("IopFreeMapRegisters\n");
   IoFreeMapRegisters(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     MapRegisterBase, NumberOfMapRegisters);
@@ -132,6 +139,7 @@ IopMapTransfer(
   IN OUT PULONG Length,
   IN BOOLEAN WriteToDevice)
 {
+  DPRINT("IopMapTransfer\n");
   return IoMapTransfer(
     ((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter,
     Mdl, MapRegisterBase, CurrentVa, Length, WriteToDevice);
@@ -142,6 +150,7 @@ ULONG
 IopGetDmaAlignment(
   IN PDMA_ADAPTER DmaAdapter)
 {
+  DPRINT("IopGetDmaAlignment\n");
   /* FIXME: This is actually true only on i386 and Amd64 */
   return 1L;
 }
@@ -151,6 +160,7 @@ ULONG
 IopReadDmaCounter(
   IN PDMA_ADAPTER DmaAdapter)
 {
+  DPRINT("IopReadDmaCounter\n");
   return HalReadDmaCounter(((PDMA_ADAPTER_INTERNAL)DmaAdapter)->HalAdapter);
 }
 
@@ -166,6 +176,7 @@ IopGetScatterGatherList(
   IN PVOID Context,
   IN BOOLEAN WriteToDevice)
 {
+  DPRINT("IopGetScatterGatherList\n");
   /* FIXME */
   return STATUS_UNSUCCESSFUL;
 }
