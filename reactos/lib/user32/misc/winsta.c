@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.9 2003/08/07 04:03:24 royce Exp $
+/* $Id: winsta.c,v 1.10 2003/08/21 16:04:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -67,13 +67,29 @@ CreateWindowStationW(LPWSTR lpwinsta,
 		     ACCESS_MASK dwDesiredAccess,
 		     LPSECURITY_ATTRIBUTES lpsa)
 {
+  HWINSTA res;
   UNICODE_STRING WindowStationName;
+  HMENU SysMenuTemplate;
+  HMODULE hUser32;
   
   RtlInitUnicodeString(&WindowStationName, lpwinsta);
   
-  return NtUserCreateWindowStation(&WindowStationName,
+  res = NtUserCreateWindowStation(&WindowStationName,
 				   dwDesiredAccess,
 				   lpsa, 0, 0, 0);
+				   
+  hUser32 = GetModuleHandleW(L"user32.dll");
+  SysMenuTemplate = LoadMenuW(hUser32, L"SYSMENU");
+				   
+  if(SysMenuTemplate)
+  {
+    NtUserCallTwoParam((DWORD)res, (DWORD)SysMenuTemplate, 
+                       TWOPARAM_ROUTINE_SETWINSTASYSMENU);
+    /* we don't need the menu anymore, it's been cloned */
+    DestroyMenu(SysMenuTemplate);
+  }
+    
+  return res;
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.98 2003/08/21 15:26:19 weiden Exp $
+/* $Id: window.c,v 1.99 2003/08/21 16:04:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -304,7 +304,7 @@ IntReleaseWindowObject(PWINDOW_OBJECT Window)
 HMENU FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
 {
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT MenuObject, NewMenuObject;
   PW32PROCESS W32Process;
 
   if(bRevert)
@@ -325,18 +325,15 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert)
       if(!MenuObject)
         return (HMENU)0;
 
-      MenuObject = IntCloneMenu(MenuObject);
-      if(MenuObject)
+      NewMenuObject = IntCloneMenu(MenuObject);
+      if(NewMenuObject)
       {
-        WindowObject->SystemMenu = MenuObject->Self;
-        MenuObject->IsSystemMenu = TRUE;
+        WindowObject->SystemMenu = NewMenuObject->Self;
+        NewMenuObject->IsSystemMenu = TRUE;
+        IntReleaseMenuObject(NewMenuObject);
       }
+      IntReleaseMenuObject(MenuObject);
     }
-    /* FIXME Load system menu here? 
-    else
-    {
-    
-    }*/
     return (HMENU)0;
   }
   else

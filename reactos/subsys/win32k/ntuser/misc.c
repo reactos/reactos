@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.7 2003/08/19 11:48:49 weiden Exp $
+/* $Id: misc.c,v 1.8 2003/08/21 16:04:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -130,13 +130,19 @@ NtUserCallTwoParam(
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return FALSE;
+        return (DWORD)FALSE;
       }
       
       WindowObject->ContextHelpId = Param2;
       
       IntReleaseWindowObject(WindowObject);
-      return TRUE;
+      return (DWORD)TRUE;
+      
+    case TWOPARAM_ROUTINE_SETWINSTASYSMENU:
+      if(!Param1 || !Param2)
+        return (DWORD)FALSE;
+      /* FIXME clone menu and assign it to the window station */
+      return (DWORD)TRUE;
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam()\n Param1=0x%x Parm2=0x%x\n",
