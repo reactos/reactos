@@ -232,8 +232,6 @@ VOID WINAPI SHGetSetSettings(LPSHELLSTATE lpss, DWORD dwMask, BOOL bSet)
  *  the registry path are for win98 (tested)
  *  and possibly are the same in nt40
  *
- * FIXME: implement new flags such as SSF_WIN95CLASSIC and SSF_STARTPANELON
- *
  */
 VOID WINAPI SHGetSettings(LPSHELLFLAGSTATE lpsfs, DWORD dwMask)
 {
@@ -627,7 +625,6 @@ static INT SHADD_create_add_mru_data(HANDLE mruhandle, LPSTR doc_name, LPSTR new
  *
  * NOTES
  *     exported by name
- *
  */
 void WINAPI SHAddToRecentDocs (UINT uFlags,LPCVOID pv)
 {
@@ -966,7 +963,7 @@ HRESULT WINAPI SHCreateShellFolderViewEx(
 	HRESULT hRes;
 
 	TRACE("sf=%p pidl=%p cb=%p mode=0x%08x parm=%p\n",
-	  psvcbi->pshf, psvcbi->pidlFolder, psvcbi->pfnCallback,
+	  psvcbi->pshf, psvcbi->pidl, psvcbi->pfnCallback,
 	  psvcbi->fvm, psvcbi->psvOuter);
 
 	psf = IShellView_Constructor(psvcbi->pshf);
@@ -1494,7 +1491,7 @@ HRESULT WINAPI SHCreateStdEnumFmtEtc(
 
 
 /*************************************************************************
- *                              SHELL32_256
+ *		SHELL32_256 (SHELL32.256)
  */
 HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
 {
@@ -1517,6 +1514,15 @@ HRESULT WINAPI SHELL32_256(LPDWORD lpdw0, LPDWORD lpdw1)
     }
 
     return ret;
+}
+
+/*************************************************************************
+ *		SHFindFiles (SHELL32.90)
+ */
+BOOL WINAPI SHFindFiles( LPCITEMIDLIST pidlFolder, LPCITEMIDLIST pidlSaveFile )
+{
+    FIXME("%p %p\n", pidlFolder, pidlSaveFile );
+    return FALSE;
 }
 
 /*************************************************************************
