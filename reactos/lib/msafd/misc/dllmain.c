@@ -9,7 +9,6 @@
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
  */
-#include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
 #include <helpers.h>
@@ -25,7 +24,6 @@ VOID STDCALL KeBugCheck (ULONG	BugCheckCode) {}
 HANDLE							GlobalHeap;
 WSPUPCALLTABLE					Upcalls;
 LPWPUCOMPLETEOVERLAPPEDREQUEST	lpWPUCompleteOverlappedRequest;
-HANDLE							SockEvent;
 ULONG							SocketCount;
 PSOCKET_INFORMATION 			*Sockets = NULL;
 LIST_ENTRY						SockHelpersListHead = {NULL};
@@ -297,6 +295,12 @@ WSPBind(
 	NTSTATUS					Status;
 	UCHAR						BindBuffer[0x1A];
 	SOCKADDR_INFO				SocketInfo;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -345,6 +349,8 @@ WSPBind(
 	Socket->SharedData.State = SocketBound;
 	Socket->TdiAddressHandle = (HANDLE)IOSB.Information;
 
+	NtClose( SockEvent );
+
 	return 0;
 }
 
@@ -358,7 +364,13 @@ WSPListen(
 	IO_STATUS_BLOCK				IOSB;
 	AFD_LISTEN_DATA				ListenData;
 	PSOCKET_INFORMATION			Socket = NULL;
+	HANDLE                                  SockEvent;
 	NTSTATUS				Status;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -383,6 +395,8 @@ WSPListen(
 	/* Set to Listening */
 	Socket->SharedData.Listening = TRUE;
 
+	NtClose( SockEvent );
+
 	return 0;
 }
 
@@ -405,6 +419,12 @@ WSPSelect(
 	LARGE_INTEGER			uSec;
 	PVOID					PollBuffer;
 	ULONG					i, j = 0;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Find out how many sockets we have, and how large the buffer needs to be */
 	HandleCount = ( readfds ? readfds->fd_count : 0 ) + 
@@ -495,6 +515,8 @@ WSPSelect(
 		}
 	}
 
+	NtClose( SockEvent );
+
 	return 0;
 }
 
@@ -527,6 +549,12 @@ WSPAccept(
 	WSAPROTOCOL_INFOW			ProtocolInfo;
 	SOCKET						AcceptSocket;
 	UCHAR						ReceiveBuffer[0x1A];
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Dynamic Structure...ugh */
 	ListenReceiveData = (PAFD_RECEIVED_ACCEPT_DATA)ReceiveBuffer;
@@ -680,6 +708,8 @@ WSPAccept(
 							NULL,
 							0);
 
+			NtClose( SockEvent );
+
 			if (CallBack == CF_REJECT ) {
 				return WSAECONNREFUSED;
 			} else {
@@ -721,6 +751,8 @@ WSPAccept(
 					&ListenReceiveData->Address.Address[0].AddressType, 
 					sizeof(RemoteAddress));
 
+	NtClose( SockEvent );
+
 	/* Return Socket */
 	return AcceptSocket;
 }
@@ -746,6 +778,12 @@ WSPConnect(
 	ULONG						InConnectDataLength;
 	UINT						BindAddressLength;
 	PSOCKADDR					BindAddress;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -839,7 +877,9 @@ WSPConnect(
 
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
 
-	return STATUS_SUCCESS;
+	NtClose( SockEvent );
+
+	return Status;
 }
 int
 WSPAPI 
@@ -853,6 +893,12 @@ WSPShutdown(
 	AFD_DISCONNECT_INFO			DisconnectInfo;
 	PSOCKET_INFORMATION			Socket = NULL;
 	NTSTATUS					Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -899,6 +945,8 @@ WSPShutdown(
 	}
 
 	AFD_DbgPrint(MID_TRACE,("Ending\n"));
+
+	NtClose( SockEvent );
 
 	return 0;
 }
@@ -1032,6 +1080,12 @@ GetSocketInformation(
 	IO_STATUS_BLOCK				IOSB;
 	AFD_INFO					InfoData;
 	NTSTATUS					Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Set Info Class */
 	InfoData.InformationClass = AfdInformationClass;
@@ -1059,6 +1113,8 @@ GetSocketInformation(
 		*LargeInteger = InfoData.Information.LargeInteger;
 	}
 
+	NtClose( SockEvent );
+
 	return 0;
 
 }
@@ -1074,6 +1130,12 @@ SetSocketInformation(
 	IO_STATUS_BLOCK				IOSB;
 	AFD_INFO					InfoData;
 	NTSTATUS					Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Set Info Class */
 	InfoData.InformationClass = AfdInformationClass;
@@ -1101,6 +1163,8 @@ SetSocketInformation(
 		WaitForSingleObject(SockEvent, 0);
 	}
 
+	NtClose( SockEvent );
+
 	return 0;
 
 }
@@ -1124,6 +1188,12 @@ int CreateContext(PSOCKET_INFORMATION Socket)
 	IO_STATUS_BLOCK				IOSB;
 	SOCKET_CONTEXT				ContextData;
 	NTSTATUS				Status;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Create Context */
 	ContextData.SharedData = Socket->SharedData;
@@ -1146,6 +1216,13 @@ int CreateContext(PSOCKET_INFORMATION Socket)
 					sizeof(ContextData),
 					NULL,
 					0);
+
+	/* Wait for Completition */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, 0);
+	}
+	
+	NtClose( SockEvent );
 
 	return 0;
 }

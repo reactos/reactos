@@ -47,6 +47,12 @@ WSPRecv(
 	PVOID						APCContext;
 	PVOID						APCFunction;
 	HANDLE						Event;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
     /* Set up the Receive Structure */
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
@@ -126,6 +132,8 @@ WSPRecv(
 		Status = IOSB->Status;
 	}
 
+    NtClose( SockEvent );
+
 	/* Return the Flags */
     	*ReceiveFlags = 0;
     switch (Status) {
@@ -181,6 +189,12 @@ WSPRecvFrom(
 	PVOID						APCContext;
 	PVOID						APCFunction;
 	HANDLE						Event;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
     /* Set up the Receive Structure */
     RecvInfo.BufferArray = (PAFD_WSABUF)lpBuffers;
@@ -262,6 +276,8 @@ WSPRecvFrom(
 		Status = IOSB->Status;
 	}
 
+    NtClose( SockEvent );
+
 	/* Return the Flags */
     	*ReceiveFlags = 0;
     switch (Status) {
@@ -316,6 +332,12 @@ WSPSend(
 	PVOID						APCContext;
 	PVOID						APCFunction;
 	HANDLE						Event;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	AFD_DbgPrint(MID_TRACE,("Called\n"));
 
@@ -385,6 +407,8 @@ WSPSend(
 		Status = IOSB->Status;
 	}
 
+	NtClose( SockEvent );
+
 	if (Status == STATUS_PENDING) {
 	    AFD_DbgPrint(MID_TRACE,("Leaving (Pending)\n"));
 	    return WSA_IO_PENDING;
@@ -426,6 +450,12 @@ WSPSendTo(
 	UCHAR						TdiBuffer[0x16];
 	PSOCKADDR					BindAddress;
 	INT							BindAddressLength;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -504,6 +534,8 @@ WSPSendTo(
 		WaitForSingleObject(SockEvent, 0); // BUGBUG, shouldn wait infintely for send...
 		Status = IOSB->Status;
 	}
+
+	NtClose( SockEvent );
 
 	if (Status == STATUS_PENDING) {
         return WSA_IO_PENDING;

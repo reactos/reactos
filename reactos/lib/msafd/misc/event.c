@@ -25,6 +25,12 @@ WSPEventSelect(
 	PSOCKET_INFORMATION			Socket = NULL;
 	NTSTATUS					Status;
 	ULONG						BlockMode;
+	HANDLE                                  SockEvent;
+
+	Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
+				NULL, 1, FALSE );
+
+	if( !NT_SUCCESS(Status) ) return -1;
 
 	/* Get the Socket Structure associate to this Socket*/
 	Socket = GetSocketStructure(Handle);
@@ -92,6 +98,8 @@ WSPEventSelect(
 	if (Status == STATUS_PENDING) {
 		WaitForSingleObject(SockEvent, 0);
 	}
+
+	NtClose( SockEvent );
 
 	/* Set Socket Data*/
 	Socket->EventObject = hEventObject;
