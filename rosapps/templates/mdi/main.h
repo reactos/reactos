@@ -19,9 +19,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/*
- * Based on Winefile, Copyright 2000 martin Fuchs <martin-fuchs@gmx.net>
- */
 
 #ifndef __MAIN_H__
 #define __MAIN_H__

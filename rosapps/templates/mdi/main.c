@@ -58,21 +58,9 @@ TCHAR szChildClass[MAX_LOADSTRING];
 
 
 ////////////////////////////////////////////////////////////////////////////////
-//
-//
-//   FUNCTION: InitInstance(HANDLE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
+
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-//    ChildWnd* pChildWnd;
-
     WNDCLASSEX wcFrame = {
         sizeof(WNDCLASSEX),
         CS_HREDRAW | CS_VREDRAW/*style*/,
@@ -190,6 +178,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 void UpdateStatusBar(void)
 {
     TCHAR text[260];
@@ -219,6 +209,7 @@ static BOOL CALLBACK EnumWndProc(HWND hWnd, LPARAM lParam)
     return TRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
 void ExitInstance(void)
 {
@@ -232,7 +223,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 {
     MSG msg;
-    HACCEL hAccel;
+//    HACCEL hAccel;
     HWND hMDIClient;
 
     // Initialize global strings
@@ -252,13 +243,13 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
-    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_MDI_APP);
+//    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_MDI_APP);
     hMDIClient = GetWindow(hFrameWnd, GW_CHILD);
 
     // Main message loop:
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) { 
         if (!TranslateMDISysAccel(hMDIClient, &msg) && 
-            !TranslateAccelerator(hFrameWnd/*hwndFrame*/, hAccel, &msg)) { 
+            !TranslateAccelerator(hFrameWnd, hAccel, &msg)) { 
             TranslateMessage(&msg); 
             DispatchMessage(&msg); 
         } 
