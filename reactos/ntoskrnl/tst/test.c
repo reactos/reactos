@@ -431,7 +431,7 @@ static  char SectorBuffer[512 * 10];
                 }
               DbgPrint("\n");
             }
-for(;;);
+//for(;;);
           Status = ZwWriteFile(FileHandle,
                                NULL,
                                NULL,
