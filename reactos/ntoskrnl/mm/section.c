@@ -143,7 +143,7 @@ NTSTATUS STDCALL ZwCreateSection(OUT PHANDLE SectionHandle,
    PSECTION_OBJECT Section;
    NTSTATUS Status;
    
-   DbgPrint("ZwCreateSection()\n");
+   DPRINT("ZwCreateSection()\n");
 
    Section = ObCreateObject(SectionHandle,
 			    DesiredAccess,
