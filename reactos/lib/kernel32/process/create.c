@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.76 2003/12/27 23:55:02 navaraf Exp $
+/* $Id: create.c,v 1.77 2004/01/04 11:40:56 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -1114,17 +1114,6 @@ CreateProcessW
 			 DUPLICATE_SAME_ACCESS);
    }
 
-   if (Ppb->hConsole)
-   {
-      Status = NtDuplicateObject (NtCurrentProcess(), 
-	                 Ppb->hConsole,
-			 hProcess,
-			 &Ppb->hConsole,
-			 0,
-			 TRUE,
-			 DUPLICATE_SAME_ACCESS);
-   }
-
    /*
     * Get some information about the executable
     */
@@ -1179,10 +1168,8 @@ CreateProcessW
      {
 	DbgPrint("Failed to tell csrss about new process. Expect trouble.\n");
      }
-   else if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_CUI)
-     {
-       Ppb->hConsole = CsrReply.Data.CreateProcessReply.Console;
-     }
+
+   Ppb->hConsole = CsrReply.Data.CreateProcessReply.Console;
 
    InputSet = FALSE;
    OutputSet = FALSE;
