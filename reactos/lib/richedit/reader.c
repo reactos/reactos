@@ -124,7 +124,7 @@ int _RTFGetChar(RTF_Info *info)
 
     if(CHARLIST_GetNbItems(&info->inputCharList) == 0)
     {
-        char buff[10];
+        char buff[4096];
         long pcb;
         info->editstream.pfnCallback(info->editstream.dwCookie, buff, sizeof(buff), &pcb);
         if(pcb == 0)
