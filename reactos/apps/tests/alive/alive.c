@@ -1,11 +1,11 @@
-/* $Id: alive.c,v 1.1 2001/03/18 20:20:13 ea Exp $
+/* $Id: alive.c,v 1.2 2001/03/26 21:30:20 ea Exp $
  *
  */
 #include <windows.h>
 #include <stdlib.h>
 
 HANDLE	StandardOutput = INVALID_HANDLE_VALUE;
-WCHAR	Message [80];
+CHAR	Message [80];
 DWORD	CharactersToWrite = 0;
 DWORD	WrittenCharacters = 0;
 INT	d = 0, h = 0, m = 0, s = 0;
@@ -22,12 +22,12 @@ main (int argc, char * argv [])
 	{
 		/* Prepare the message and update it */
 		CharactersToWrite =
-			wsprintfW (
+			wsprintf (
 				Message,
-				L"Alive for %dd %dh %d' %d\"   \r",
+				"Alive for %dd %dh %d' %d\"   \r",
 				d, h, m, s
 				);
-		WriteConsoleW (
+		WriteConsole (
 			StandardOutput,
 			Message,
 			CharactersToWrite,
