@@ -1,4 +1,4 @@
-/* $Id: npool.c,v 1.65 2003/01/11 15:48:33 hbirr Exp $
+/* $Id: npool.c,v 1.66 2003/06/27 21:35:05 hbirr Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -28,7 +28,7 @@
 //#define ENABLE_VALIDATE_POOL
 
 /* Enable tracking of statistics about the tagged blocks in the pool */
-#define TAG_STATISTICS_TRACKING
+//#define TAG_STATISTICS_TRACKING
 
 /* 
  * Put each block in its own range of pages and position the block at the
@@ -227,7 +227,9 @@ ExInitNonPagedPool(ULONG BaseAddress)
    kernel_pool_base = BaseAddress;
    KeInitializeSpinLock(&MmNpoolLock);
    MmInitKernelMap((PVOID)BaseAddress);
+#ifdef TAG_STATISTICS_TRACKING
    memset(tag_hash_table, 0, sizeof(tag_hash_table));
+#endif
    InitializeListHead(&FreeBlockListHead);
    InitializeListHead(&UsedBlockListHead);
 }
