@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.52 2002/12/09 20:09:24 hbirr Exp $
+# $Id: makefile,v 1.53 2003/04/06 13:10:21 gvg Exp $
 
 PATH_TO_TOP = ../..
 
@@ -285,7 +285,7 @@ SEARCH_OBJECTS = \
 	$(PATH_TO_MSVCRT)/search/lsearch.o
 
 SETJMP_OBJECTS = \
-	$(PATH_TO_MSVCRT)/setjmp/setjmp.o
+	$(PATH_TO_MSVCRT)/setjmp/i386/setjmp.o
 
 SIGNAL_OBJECTS = \
 	signal/xcptfil.o \
