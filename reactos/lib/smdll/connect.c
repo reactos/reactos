@@ -61,9 +61,12 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
     }
     RtlZeroMemory (& ConnectData, sizeof ConnectData);
     ConnectData.Subsystem = dwSubsystem;
-    RtlCopyMemory (& ConnectData.SbName,
-		   pSbApiPortName->Buffer,
-		   pSbApiPortName->Length);
+    if (pSbApiPortName->Length > 0)
+    {
+      RtlCopyMemory (& ConnectData.SbName,
+		     pSbApiPortName->Buffer,
+		     pSbApiPortName->Length);
+    }
   }
   ConnectDataLength = sizeof ConnectData;
 
@@ -73,7 +76,7 @@ SmConnectApiPort (IN      PUNICODE_STRING  pSbApiPortName  OPTIONAL,
   SecurityQos.EffectiveOnly       = TRUE;
 
   RtlInitUnicodeString (& SmApiPortName, SM_API_PORT_NAME);
-DbgPrint("SMDLL: calling NtConnectPort\n");
+
   Status = NtConnectPort (
              phSmApiPort,
              & SmApiPortName,
