@@ -185,7 +185,7 @@ const FileTypeInfo& FileTypeManager::operator[](String ext)
 	ftype._neverShowExt = false;
 
 	HKEY hkey;
-	TCHAR value[MAX_PATH], display_name[MAX_PATH];;
+	TCHAR value[MAX_PATH], display_name[MAX_PATH];
 	LONG valuelen = sizeof(value);
 
 	if (!RegQueryValue(HKEY_CLASSES_ROOT, ext, value, &valuelen)) {
@@ -287,17 +287,39 @@ HBITMAP	Icon::create_bitmap(COLORREF bk_color, HBRUSH hbrBkgnd, HDC hdc_wnd) con
 		return create_bitmap_from_icon(_hicon, hbrBkgnd, hdc_wnd);
 }
 
+HICON Icon::create_icon(COLORREF bk_color, HDC hdc_wnd) const
+{
+	if (_itype == IT_SYSCACHE) {
+		return 0;	/*@@todo
+		HIMAGELIST himl = g_Globals._icon_cache.get_sys_imagelist();
+
+		int cx, cy;
+		ImageList_GetIconSize(himl, &cx, &cy);
+
+		HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, cx, cy);
+		HDC hdc = CreateCompatibleDC(hdc_wnd);
+		HBITMAP hbmp_old = SelectBitmap(hdc, hbmp);
+		ImageList_DrawEx(himl, _sys_idx, hdc, 0, 0, cx, cy, bk_color, CLR_DEFAULT, ILD_NORMAL);
+		SelectBitmap(hdc, hbmp_old);
+		DeleteDC(hdc);
+		return hbmp;
+*/	} else
+		return (HICON) CopyImage(_hicon, IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), 0);
+}
+
 HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
 {
-	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
+	int cx = GetSystemMetrics(SM_CXSMICON);
+	int cy = GetSystemMetrics(SM_CYSMICON);
+	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, cx, cy);
 
 	MemCanvas canvas;
 	BitmapSelection sel(canvas, hbmp);
 
-	RECT rect = {0, 0, 16, 16};
+	RECT rect = {0, 0, cx, cy};
 	FillRect(canvas, &rect, hbrush_bkgnd);
 
-	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
+	DrawIconEx(canvas, 0, 0, hIcon, cx, cy, 0, hbrush_bkgnd, DI_NORMAL);
 
 	return hbmp;
 }
@@ -313,6 +335,17 @@ int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HD
 	return ret;
 }
 
+int ImageList_AddAlphaIcon(HIMAGELIST himl, const Icon& icon, HDC hdc_wnd)
+{
+	HICON hicon = icon.create_icon(ImageList_GetBkColor(himl), hdc_wnd);
+
+	int ret = ImageList_AddIcon(himl, hicon);
+
+	DeleteObject(hicon);
+
+	return ret;
+}
+
 
 int IconCache::s_next_id = ICID_DYNAMIC;
 
@@ -322,7 +355,7 @@ void IconCache::init()
 	_icons[ICID_NONE]		= Icon(IT_STATIC, ICID_NONE, (HICON)0);
 
 	_icons[ICID_FOLDER]		= Icon(ICID_FOLDER,		IDI_FOLDER);
-	//_icons[ICID_DOCUMENT] = Icon(ICID_DOCUMENT,	IDI_DOCUMENT);
+	//_icons[ICID_DOCUMENT]	= Icon(ICID_DOCUMENT,	IDI_DOCUMENT);
 	_icons[ICID_EXPLORER]	= Icon(ICID_EXPLORER,	IDI_EXPLORER);
 	_icons[ICID_APP]		= Icon(ICID_APP,		IDI_APPICON);
 

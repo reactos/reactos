@@ -94,6 +94,7 @@ struct Icon {
 
 	void	draw(HDC hdc, int x, int y, int cx, int cy, COLORREF bk_color, HBRUSH bk_brush) const;
 	HBITMAP	create_bitmap(COLORREF bk_color, HBRUSH hbrBkgnd, HDC hdc_wnd) const;
+	HICON	create_icon(COLORREF bk_color, HDC hdc_wnd) const;
 
 	int		get_sysiml_idx() const {return _itype==IT_SYSCACHE? _sys_idx: -1;}
 
@@ -150,6 +151,9 @@ extern HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc
 
  /// add icon with alpha channel to imagelist using the specified background color
 extern int ImageList_AddAlphaIcon(HIMAGELIST himl, HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd);
+
+ /// add Icon object to image list
+extern int ImageList_AddAlphaIcon(HIMAGELIST himl, const Icon& icon, HDC hdc_wnd);
 
  /// retrieve icon from window
 extern HICON get_window_icon_small(HWND hwnd);

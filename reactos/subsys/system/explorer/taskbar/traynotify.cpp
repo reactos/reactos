@@ -756,7 +756,7 @@ String string_from_mode(NOTIFYICONMODE mode)
 TrayNotifyDlg::TrayNotifyDlg(HWND hwnd)
  :	super(hwnd),
 	_tree_ctrl(GetDlgItem(hwnd, IDC_NOTIFY_ICONS)),
-	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR24, 2, 0)),
+	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_COLOR24, 3, 0)),
 	_pNotifyArea(static_cast<NotifyArea*>(Window::get_window((HWND)SendMessage(g_Globals._hwndDesktopBar, PM_GET_NOTIFYAREA, 0, 0))))
 {
 	_selectedItem = 0;

@@ -273,8 +273,8 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist,
 			const BookmarkFolder& folder = *node._pfolder;
 
 			tv.pszText = (LPTSTR)folder._name.c_str();
-			tv.iImage = 3;
-			tv.iSelectedImage = 4;
+			tv.iImage = 3;			// folder
+			tv.iSelectedImage = 4;	// open folder
 			HTREEITEM hitem = TreeView_InsertItem(hwnd, &tvi);
 
 			folder._bookmarks.fill_tree(hwnd, hitem, himagelist, hdc_wnd);
@@ -282,15 +282,15 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist,
 			const Bookmark& bookmark = *node._pbookmark;
 
 			tv.pszText = (LPTSTR)bookmark._name.c_str();
-			tv.iImage = 0;
-			tv.iSelectedImage = 1;
+			tv.iImage = 1;			// bookmark
+			tv.iSelectedImage = 2;	// selected bookmark
 
 			if (!bookmark._icon_path.empty()) {
 				///@todo retreive "http://.../favicon.ico" icons
 				const Icon& icon = g_Globals._icon_cache.extract(bookmark._icon_path, bookmark._icon_idx);
 
 				if ((ICON_ID)icon != ICID_NONE)
-					tv.iImage = tv.iSelectedImage = ImageList_Add(himagelist, icon.create_bitmap(RGB(255,255,255), GetStockBrush(WHITE_BRUSH), hdc_wnd), 0);
+					tv.iImage = tv.iSelectedImage = ImageList_AddAlphaIcon(himagelist, icon, hdc_wnd);
 			}
 
 			TreeView_InsertItem(hwnd, &tvi);

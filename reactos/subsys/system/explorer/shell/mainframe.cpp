@@ -41,7 +41,8 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 
 
 MainFrame::MainFrame(HWND hwnd)
- :	super(hwnd)
+ :	super(hwnd),
+	_himl(ImageList_Create(GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), ILC_MASK|ILC_COLOR24, 2, 0))
 {
 	_hMenuFrame = GetMenu(hwnd);
 	_hMenuWindow = GetSubMenu(_hMenuFrame, GetMenuItemCount(_hMenuFrame)-2);
@@ -277,10 +278,9 @@ MainFrame::MainFrame(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
 
 	_hsidebar = CreateWindowEx(WS_EX_STATICEDGE, WC_TREEVIEW, TEXT("Sidebar"),
-					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
+					WS_CHILD|WS_TABSTOP|WS_BORDER|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
 
-	_himl = ImageList_LoadBitmap(g_Globals._hInstance, MAKEINTRESOURCE(IDB_IMAGES), 16, 0, RGB(0,255,0));
 	TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_CHECKED);
@@ -769,24 +769,27 @@ int MainFrame::Notify(int id, NMHDR* pnmh)
 
 	  case TVN_GETINFOTIP: {
 		NMTVGETINFOTIP* pnmgit = (NMTVGETINFOTIP*)pnmh;
-		const BookmarkNode& node = *(BookmarkNode*)pnmgit->lParam;
 
-		if (node._type == BookmarkNode::BMNT_FOLDER) {
-			 // display tooltips for bookmark folders
-			if (!node._pfolder->_description.empty())
-				lstrcpyn(pnmgit->pszText, node._pfolder->_description.c_str(), pnmgit->cchTextMax);
-		} else {	// BookmarkNode::BMNT_BOOKMARK
-			 // display tooltips for bookmark folders
-			String txt = node._pbookmark->_description;
+		if (pnmgit->lParam) {
+			const BookmarkNode& node = *(BookmarkNode*)pnmgit->lParam;
 
-			if (!node._pbookmark->_url.empty()) {
-				if (!txt.empty())
-					txt += TEXT("  -  ");
+			if (node._type == BookmarkNode::BMNT_FOLDER) {
+				 // display tooltips for bookmark folders
+				if (!node._pfolder->_description.empty())
+					lstrcpyn(pnmgit->pszText, node._pfolder->_description.c_str(), pnmgit->cchTextMax);
+			} else {	// BookmarkNode::BMNT_BOOKMARK
+				 // display tooltips for bookmark folders
+				String txt = node._pbookmark->_description;
 
-				txt += node._pbookmark->_url;
+				if (!node._pbookmark->_url.empty()) {
+					if (!txt.empty())
+						txt += TEXT("  -  ");
+
+					txt += node._pbookmark->_url;
+				}
+
+				lstrcpyn(pnmgit->pszText, txt.c_str(), pnmgit->cchTextMax);
 			}
-
-			lstrcpyn(pnmgit->pszText, txt.c_str(), pnmgit->cchTextMax);
 		}
 		break;}
 	}
@@ -1043,11 +1046,37 @@ bool MainFrame::activate_child_window(LPCTSTR filesys)
 void MainFrame::FillBookmarks()
 {
 	HiddenWindow hide(_hsidebar);
+	WindowCanvas canvas(_hwnd);
 
 	TreeView_DeleteAllItems(_hsidebar);
 
-	WindowCanvas canvas(_hwnd);
-	g_Globals._favorites.fill_tree(_hsidebar, TVI_ROOT, _himl, canvas);
+	HBRUSH hbr_bkgnd = GetStockBrush(WHITE_BRUSH);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FAVORITES), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_TRANS), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FOLDER), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_FOLDER), hbr_bkgnd, canvas);
+/*@@ This does not produce the expected result because CopyImage() seems not to duplicate 32 BIT alpha blended images:
+	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FAVORITES), canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT_TRANS), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, SmallIcon(IDI_DOT), hbr_bkgnd, canvas);
+	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FOLDER), canvas);
+	ImageList_AddAlphaIcon(_himl, g_Globals._icon_cache.get_icon(ICID_FOLDER), canvas);
+*/
+	TV_INSERTSTRUCT tvi;
+
+	tvi.hParent = TVI_ROOT;
+	tvi.hInsertAfter = TVI_LAST;
+	tvi.item.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
+	ResString sFavorites(IDS_FAVORITES);
+	tvi.item.pszText = (LPTSTR)sFavorites.c_str();
+	tvi.item.iSelectedImage = tvi.item.iImage = 0;
+
+	HTREEITEM hitem_bookmarks = TreeView_InsertItem(_hsidebar, &tvi);
+
+	g_Globals._favorites.fill_tree(_hsidebar, hitem_bookmarks, _himl, canvas);
+
+	TreeView_Expand(_hsidebar, hitem_bookmarks, TVE_EXPAND);
 }
 
 #endif
