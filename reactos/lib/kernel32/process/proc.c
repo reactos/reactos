@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.50 2003/01/15 21:24:35 chorns Exp $
+/* $Id: proc.c,v 1.51 2003/01/22 02:24:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -25,13 +25,13 @@ WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 LPSTARTUPINFO lpLocalStartupInfo = NULL;
 
 VOID STDCALL
-RegisterWaitForInputIdle (WaitForInputIdleType	lpfnRegisterWaitForInputIdle);
+RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);
+
+WINBOOL STDCALL
+GetProcessId (HANDLE hProcess, LPDWORD lpProcessId);
 
 
 /* FUNCTIONS ****************************************************************/
-
-WINBOOL STDCALL
-GetProcessId (HANDLE	hProcess, LPDWORD	lpProcessId);
 
 WINBOOL STDCALL
 GetProcessAffinityMask(HANDLE hProcess,
@@ -51,6 +51,14 @@ GetProcessAffinityMask(HANDLE hProcess,
   *lpSystemAffinityMask  = 0x00000001;
 
   return(TRUE);
+}
+
+
+BOOL STDCALL
+SetProcessAffinityMask(HANDLE hProcess,
+		       DWORD dwProcessAffinityMask)
+{
+  return(FALSE);
 }
 
 
@@ -111,8 +119,24 @@ GetProcessWorkingSetSize(HANDLE hProcess,
 			 LPDWORD lpMinimumWorkingSetSize,
 			 LPDWORD lpMaximumWorkingSetSize)
 {
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return(FALSE);
+  QUOTA_LIMITS QuotaLimits;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessQuotaLimits,
+				     &QuotaLimits,
+				     sizeof(QUOTA_LIMITS),
+				     NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  *lpMinimumWorkingSetSize = (DWORD)QuotaLimits.MinimumWorkingSetSize;
+  *lpMaximumWorkingSetSize = (DWORD)QuotaLimits.MaximumWorkingSetSize;
+
+  return(TRUE);
 }
 
 
@@ -147,7 +171,7 @@ GetProcessTimes(HANDLE hProcess,
       return(FALSE);
     }
 
-  lpCreationTime->dwLowDateTime	= Kut.CreateTime.u.LowPart;
+  lpCreationTime->dwLowDateTime = Kut.CreateTime.u.LowPart;
   lpCreationTime->dwHighDateTime = Kut.CreateTime.u.HighPart;
 
   lpExitTime->dwLowDateTime = Kut.ExitTime.u.LowPart;
@@ -213,22 +237,24 @@ WINBOOL STDCALL
 GetProcessId(HANDLE hProcess,
 	     LPDWORD lpProcessId)
 {
-   NTSTATUS errCode;
-   PROCESS_BASIC_INFORMATION ProcessBasic;
-   ULONG BytesWritten;
+  PROCESS_BASIC_INFORMATION ProcessBasic;
+  ULONG BytesWritten;
+  NTSTATUS Status;
 
-   errCode = NtQueryInformationProcess(hProcess,
-				       ProcessBasicInformation,
-				       &ProcessBasic,
-				       sizeof(PROCESS_BASIC_INFORMATION),
-				       &BytesWritten);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus (errCode);
-	return FALSE;
-     }
-   memcpy( lpProcessId ,&ProcessBasic.UniqueProcessId,sizeof(DWORD));
-   return TRUE;
+  Status = NtQueryInformationProcess(hProcess,
+				     ProcessBasicInformation,
+				     &ProcessBasic,
+				     sizeof(PROCESS_BASIC_INFORMATION),
+				     &BytesWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  memcpy(lpProcessId, &ProcessBasic.UniqueProcessId, sizeof(DWORD));
+
+  return(TRUE);
 }
 
 
@@ -689,13 +715,5 @@ GetProcessVersion (DWORD	ProcessId)
     }
   return (Version);
 }
-
-
-BOOL STDCALL
-SetProcessAffinityMask(HANDLE hProcess, DWORD dwProcessAffinityMask)
-{
-    return FALSE;
-}
-
 
 /* EOF */

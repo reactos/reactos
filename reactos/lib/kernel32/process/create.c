@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.60 2003/01/19 01:13:04 gvg Exp $
+/* $Id: create.c,v 1.61 2003/01/22 02:24:10 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -823,13 +823,13 @@ CreateProcessW(LPCWSTR lpApplicationName,
 
         DPRINT("Launching VDM...\n");
         return CreateProcessW(L"ntvdm.exe",
-	         lpApplicationName,
+	         (LPWSTR)lpApplicationName,
 	         lpProcessAttributes,
 	         lpThreadAttributes,
 	         bInheritHandles,
-  	         dwCreationFlags,
-  	         lpEnvironment,
- 	         lpCurrentDirectory,
+	         dwCreationFlags,
+	         lpEnvironment,
+	         lpCurrentDirectory,
 	         lpStartupInfo,
 	         lpProcessInformation);
    }
@@ -865,7 +865,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
 	 RuntimeInfo_U.Buffer = RtlAllocateHeap(GetProcessHeap(), 0, RuntimeInfo_U.Length);
 	 memcpy(RuntimeInfo_U.Buffer, lpStartupInfo->lpReserved2, lpStartupInfo->cbReserved2);
       }
-   } 
+   }
 
    /*
     * Create the PPB
@@ -883,14 +883,14 @@ CreateProcessW(LPCWSTR lpApplicationName,
 
    if (lpStartupInfo && lpStartupInfo->lpReserved2)
 	RtlFreeHeap(GetProcessHeap(), 0, RuntimeInfo_U.Buffer);
-  
+
 
    /*
     * Translate some handles for the new process
     */
    if (Ppb->CurrentDirectoryHandle)
    {
-      Status = NtDuplicateObject (NtCurrentProcess(), 
+      Status = NtDuplicateObject (NtCurrentProcess(),
 	                 Ppb->CurrentDirectoryHandle,
 			 hProcess,
 			 &Ppb->CurrentDirectoryHandle,

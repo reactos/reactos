@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.33 2003/01/15 21:24:36 chorns Exp $
+/* $Id: thread.c,v 1.34 2003/01/22 02:24:36 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,7 +18,7 @@
 #include <kernel32/kernel32.h>
 
 
-static VOID ThreadAttachDlls (VOID);
+//static VOID ThreadAttachDlls (VOID);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -62,13 +62,13 @@ CreateThread(LPSECURITY_ATTRIBUTES lpThreadAttributes,
 	     DWORD dwCreationFlags,
 	     LPDWORD lpThreadId)
 {
-   return(CreateRemoteThread(NtCurrentProcess(),
-			     lpThreadAttributes,
-			     dwStackSize,
-			     lpStartAddress,
-			     lpParameter,
-			     dwCreationFlags,
-			     lpThreadId));
+  return(CreateRemoteThread(NtCurrentProcess(),
+			    lpThreadAttributes,
+			    dwStackSize,
+			    lpStartAddress,
+			    lpParameter,
+			    dwCreationFlags,
+			    lpThreadId));
 }
 
 
@@ -258,34 +258,33 @@ GetCurrentThreadId(VOID)
 VOID STDCALL
 ExitThread(DWORD uExitCode)
 {
-   NTSTATUS errCode;
-   BOOLEAN LastThread;
-   NTSTATUS Status;
+  BOOLEAN LastThread;
+  NTSTATUS Status;
 
-   /*
-    * Terminate process if this is the last thread
-    * of the current process
-    */
-   Status = NtQueryInformationThread(NtCurrentThread(),
-				     ThreadAmILastThread,
-				     &LastThread,
-				     sizeof(BOOLEAN),
-				     NULL);
-   if (NT_SUCCESS(Status) && LastThread == TRUE)
-     {
-	ExitProcess (uExitCode);
-     }
+  /*
+   * Terminate process if this is the last thread
+   * of the current process
+   */
+  Status = NtQueryInformationThread(NtCurrentThread(),
+				    ThreadAmILastThread,
+				    &LastThread,
+				    sizeof(BOOLEAN),
+				    NULL);
+  if (NT_SUCCESS(Status) && LastThread == TRUE)
+    {
+      ExitProcess(uExitCode);
+    }
 
-   /* FIXME: notify csrss of thread termination */
+  /* FIXME: notify csrss of thread termination */
 
-   LdrShutdownThread();
+  LdrShutdownThread();
 
-   errCode = NtTerminateThread(NtCurrentThread(),
-			       uExitCode);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-     }
+  Status = NtTerminateThread(NtCurrentThread(),
+			     uExitCode);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+    }
 }
 
 
@@ -296,25 +295,27 @@ GetThreadTimes(HANDLE hThread,
 	       LPFILETIME lpKernelTime,
 	       LPFILETIME lpUserTime)
 {
-   NTSTATUS errCode;
-   KERNEL_USER_TIMES KernelUserTimes;
-   ULONG ReturnLength;
-   
-   errCode = NtQueryInformationThread(hThread,
-				      ThreadTimes,
-				      &KernelUserTimes,
-				      sizeof(KERNEL_USER_TIMES),
-				      &ReturnLength);
-   if (!NT_SUCCESS(errCode))
-     {
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-   memcpy(lpCreationTime, &KernelUserTimes.CreateTime, sizeof(FILETIME));
-   memcpy(lpExitTime, &KernelUserTimes.ExitTime, sizeof(FILETIME));
-   memcpy(lpKernelTime, &KernelUserTimes.KernelTime, sizeof(FILETIME));
-   memcpy(lpUserTime, &KernelUserTimes.UserTime, sizeof(FILETIME));
-   return TRUE;
+  KERNEL_USER_TIMES KernelUserTimes;
+  ULONG ReturnLength;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(hThread,
+				    ThreadTimes,
+				    &KernelUserTimes,
+				    sizeof(KERNEL_USER_TIMES),
+				    &ReturnLength);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  memcpy(lpCreationTime, &KernelUserTimes.CreateTime, sizeof(FILETIME));
+  memcpy(lpExitTime, &KernelUserTimes.ExitTime, sizeof(FILETIME));
+  memcpy(lpKernelTime, &KernelUserTimes.KernelTime, sizeof(FILETIME));
+  memcpy(lpUserTime, &KernelUserTimes.UserTime, sizeof(FILETIME));
+
+  return(TRUE);
 }
 
 
@@ -526,6 +527,64 @@ GetThreadPriority(HANDLE hThread)
     }
 
   return(ThreadBasic.BasePriority);
+}
+
+
+WINBOOL STDCALL
+GetThreadPriorityBoost(IN HANDLE hThread,
+		       OUT PBOOL pDisablePriorityBoost)
+{
+  ULONG PriorityBoost;
+  ULONG DataWritten;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationThread(hThread,
+				    ThreadPriorityBoost,
+				    &PriorityBoost,
+				    sizeof(ULONG),
+				    &DataWritten);
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  *pDisablePriorityBoost = !((WINBOOL)PriorityBoost);
+
+  return(TRUE);
+}
+
+
+WINBOOL STDCALL
+SetThreadPriorityBoost(IN HANDLE hThread,
+		       IN WINBOOL bDisablePriorityBoost)
+{
+  ULONG PriorityBoost;
+  NTSTATUS Status;
+
+  PriorityBoost = (ULONG)!bDisablePriorityBoost;
+
+  Status = NtSetInformationThread(hThread,
+				  ThreadPriorityBoost,
+				  &PriorityBoost,
+				  sizeof(ULONG));
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus(Status);
+      return(FALSE);
+    }
+
+  return(TRUE);
+}
+
+
+WINBOOL STDCALL
+GetThreadSelectorEntry(IN HANDLE hThread,
+		       IN DWORD dwSelector,
+		       OUT LPLDT_ENTRY lpSelectorEntry)
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return(FALSE);
 }
 
 /* EOF */

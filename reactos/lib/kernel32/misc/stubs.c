@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.43 2003/01/21 20:50:51 robd Exp $
+/* $Id: stubs.c,v 1.44 2003/01/22 02:23:48 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -19,6 +19,14 @@ IsProcessorFeaturePresent( DWORD ProcessorFeature )
 BOOL
 STDCALL
 BaseAttachCompleteThunk (VOID)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+BOOL STDCALL
+CancelIo(HANDLE hFile)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
@@ -593,32 +601,6 @@ GetThreadLocale (VOID)
 
 #endif
 
-WINBOOL
-STDCALL
-GetThreadPriorityBoost (
-    HANDLE      hThread,
-    DWORD       dwSelector,
-    LPLDT_ENTRY lpSelectorEntry
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-GetThreadSelectorEntry (
-    HANDLE      hThread,
-    DWORD       dwSelector,
-    LPLDT_ENTRY lpSelectorEntry
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
 int
 STDCALL
 GetTimeFormatW (
@@ -870,6 +852,47 @@ SetComputerNameW (
 }
 
 
+#ifndef _OLE2NLS_IN_BUILD_
+
+WINBOOL
+STDCALL
+SetLocaleInfoA (
+    LCID    Locale,
+    LCTYPE  LCType,
+    LPCSTR  lpLCData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetLocaleInfoW (
+    LCID    Locale,
+    LCTYPE  LCType,
+    LPCWSTR lpLCData
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+SetThreadLocale (
+    LCID    Locale
+    )
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+#endif
+
+
 WINBOOL
 STDCALL
 SetSystemPowerState (
@@ -884,16 +907,8 @@ SetSystemPowerState (
 
 WINBOOL
 STDCALL
-SetThreadIdealProcessor(VOID)
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-WINBOOL
-STDCALL
-SetThreadPriorityBoost(VOID)
+SetThreadIdealProcessor(HANDLE hThread,
+			DWORD dwIdealProcessor)
 {
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
@@ -945,44 +960,8 @@ VDMOperationStarted (
     return 0;
 }
 
+
 #ifndef _OLE2NLS_IN_BUILD_
-
-WINBOOL
-STDCALL
-SetLocaleInfoA (
-    LCID    Locale,
-    LCTYPE  LCType,
-    LPCSTR  lpLCData
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetLocaleInfoW (
-    LCID    Locale,
-    LCTYPE  LCType,
-    LPCWSTR lpLCData
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
-
-WINBOOL
-STDCALL
-SetThreadLocale (
-    LCID    Locale
-    )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
 
 DWORD
 STDCALL
@@ -1023,6 +1002,7 @@ VirtualBufferExceptionHandler (
     return 0;
 }
 
+
 BOOL
 STDCALL
 GetFileAttributesExA(
@@ -1035,6 +1015,7 @@ GetFileAttributesExA(
     return 0;
 }
 
+
 BOOL
 STDCALL
 GetFileAttributesExW(
@@ -1046,6 +1027,5 @@ GetFileAttributesExW(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
-
 
 /* EOF */
