@@ -20,7 +20,7 @@
 #include "freeldr.h"
 #include "stdlib.h"
 #include "fs.h"
-#include "reactos.h"
+#include "reactos/reactos.h"
 #include "tui.h"
 #include "asmcode.h"
 #include "menu.h"

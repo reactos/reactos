@@ -145,9 +145,13 @@ void	boot_reactos(void);
 #include "fs.h"		// Included FILE structure definition
 
 BOOL	MultiBootLoadKernel(FILE *KernelImage);
-BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
-int		GetBootPartition(char *OperatingSystemName);
+//BOOL	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName);
+PVOID	MultiBootLoadModule(FILE *ModuleImage, char *ModuleName, PULONG ModuleSize);
 
+int	GetBootPartition(char *OperatingSystemName);
+
+PVOID MultiBootCreateModule(char *ModuleName);
+BOOL MultiBootCloseModule(PVOID ModuleBase, DWORD dwModuleSize);
 
 #endif /* ! ASM */
 

@@ -41,3 +41,4 @@ install:
 
 clean:
 	$(RM) *.bin
+	$(MAKE) -C freeldr clean

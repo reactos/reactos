@@ -30,6 +30,7 @@
 #include "../parseini.h"
 
 #include "registry.h"
+#include "hwdetect.h"
 
 
 #define NDEBUG
@@ -485,7 +486,7 @@ void LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	/*
 	 * retrieve hardware information and create the hardware hive
 	 */
-//	DetectHardware();
+	DetectHardware();
 //	Base = MultiBootCreateModule(HARDWARE.HIV);
 //	RegExportHardwareHive(Base, &Size);
 //	MultiBootCloseModule(Base, Size);

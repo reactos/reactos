@@ -292,6 +292,21 @@ char *strchr(const char *s, int c)
 	return 0;
 }
 
+char *strrchr(const char *s, int c)
+{
+	char cc = c;
+	const char *sp=(char *)0;
+	while (*s)
+	{
+		if (*s == cc)
+			sp = s;
+		s++;
+	}
+	if (cc == 0)
+		sp = s;
+	return (char *)sp;
+}
+
 int strcmp(const char *string1, const char *string2)
 {
 	while(*string1 == *string2)
@@ -328,6 +343,21 @@ int _strnicmp(const char *string1, const char *string2, size_t length)
 	{
 		if (toupper(*string1) != toupper(*string2++))
 			return toupper(*(unsigned const char *)string1) - toupper(*(unsigned const char *)--string2);
+		if (*string1++ == 0)
+			break;
+	}
+	while (--length != 0);
+	return 0;
+}
+
+int strncmp(const char *string1, const char *string2, size_t length)
+{
+	if (length == 0)
+		return 0;
+	do
+	{
+		if (*string1 != *string2++)
+			return *(unsigned const char *)string1 - *(unsigned const char *)--string2;
 		if (*string1++ == 0)
 			break;
 	}
@@ -388,4 +418,19 @@ int atoi(char *string)
 	}
 
 	return result;
+}
+
+int isspace(int c)
+{
+  return(c == ' ' || (c >= 0x09 && c <= 0x0D));
+}
+
+int isdigit(int c)
+{
+  return(c >= '0' && c <= '9');
+}
+
+int isxdigit(int c)
+{
+  return((c >= '0' && c <= '9')||(c >= 'a' && c <= 'f')||(c >= 'A' && c <= 'F'));
 }

@@ -507,4 +507,65 @@ RegImportHive(PCHAR ChunkBase,
   return;
 }
 
+
+
+
+static PCHAR
+bprintf(char *buffer, char *format, ... )
+{
+  int *dataptr = (int *) &format;
+  char c, *ptr, str[16];
+  char *p = buffer;
+
+  dataptr++;
+
+  while ((c = *(format++)))
+    {
+      if (c != '%')
+      {
+	*p = c;
+	p++;
+      }
+      else
+	switch (c = *(format++))
+	  {
+	  case 'd': case 'u': case 'x':
+	    *convert_to_ascii(str, c, *((unsigned long *) dataptr++)) = 0;
+
+	    ptr = str;
+
+	    while (*ptr)
+	    {
+	      *p = *(ptr++);
+	      p++;
+	    }
+	    break;
+
+	  case 'c':
+	    *p = (*(dataptr++))&0xff;
+	    p++;
+	    break;
+
+	  case 's':
+	    ptr = (char *)(*(dataptr++));
+
+	    while ((c = *(ptr++)))
+	    {
+	      *p = c;
+	      p++;
+	    }
+	    break;
+	  }
+    }
+  return(p);
+}
+
+
+BOOL
+RegExportHive(PCHAR ChunkBase, PULONG ChunkSize)
+{
+
+  return(TRUE);
+}
+
 /* EOF */

@@ -43,8 +43,10 @@ char	*strcpy(char *dest, char *src);
 char	*strncpy(char *dest, char *src, size_t count);
 char	*strcat(char *dest, char *src);
 char	*strchr(const char *s, int c);
+char	*strrchr(const char *s, int c);
 int	strcmp(const char *string1, const char *string2);
 int	stricmp(const char *string1, const char *string2);
+int	strncmp(const char *string1, const char *string2, size_t length);
 int	_strnicmp(const char *string1, const char *string2, size_t length);
 char	*itoa(int value, char *string, int radix);
 int	toupper(int c);
@@ -56,6 +58,10 @@ char	*fgets(char *string, int n, PFILE stream);
 int	atoi(char *string);
 
 #define ZeroMemory(Destination, Length) memset(Destination, 0, Length)
+
+int	isspace(int c);
+int	isdigit(int c);
+int	isxdigit(int c);
 
 
 void	print(char *str);
@@ -74,6 +80,14 @@ void	stop_floppy(void);		// Implemented in asmcode.S
 int	get_heads(int drive);		// Implemented in asmcode.S
 int	get_cylinders(int drive);	// Implemented in asmcode.S
 int	get_sectors(int drive);		// Implemented in asmcode.S
+
+#ifndef max
+#define max(a, b)  (((a) > (b)) ? (a) : (b))
+#endif
+
+#ifndef min
+#define min(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
 
 
 #endif  // defined __STDLIB_H

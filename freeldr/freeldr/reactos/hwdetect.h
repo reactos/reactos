@@ -1,5 +1,6 @@
 /*
  *  FreeLoader
+ *
  *  Copyright (C) 1999, 2000  Brian Palmer  <brianp@sginet.com>
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -17,11 +18,9 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifndef __ROSBOOT_H
-#define __ROSBOOT_H
+#ifndef __HWDETECT_H
+#define __HWDETECT_H
 
+VOID DetectHardware(VOID);
 
-void	LoadAndBootReactOS(PUCHAR OperatingSystemName);
-
-
-#endif // defined __ROSBOOT_H
+#endif /* __HWDETECT_H */

@@ -19,9 +19,21 @@
  */
 
 #include "../freeldr.h"
+#include "../stdlib.h"
 
+//#define NDEBUG
 
 VOID
 DetectHardware(VOID)
 {
+
+#ifndef NDEBUG
+  printf("DetectHardware() called\n");
+#endif
+
+
+#ifndef NDEBUG
+  printf("DetectHardware() done\n");
+#endif
+//for(;;);
 }
