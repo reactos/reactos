@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.71.4.7 2004/09/23 19:42:30 weiden Exp $
+/* $Id: message.c,v 1.71.4.8 2004/09/29 10:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -835,7 +835,7 @@ IntSendMessageTimeout(PWINDOW_OBJECT Window,
   ASSERT(Window);
   
   if(!IntIsWindow(Window) ||
-     Window->MessageQueue->Thread->Win32Thread->IsExiting)
+     Window->MessageQueue->Thread->Tcb.Win32Thread->IsExiting)
   {
     /* Never send messages to exiting threads */
     return FALSE;
@@ -1016,18 +1016,18 @@ IntPostMessage(PWINDOW_OBJECT Window,
 BOOL INTERNAL_CALL
 IntInitMessagePumpHook()
 {
-	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue++;
+	PsGetWin32Thread()->MessagePumpHookValue++;
 	return TRUE;
 }
 
 BOOL INTERNAL_CALL
 IntUninitMessagePumpHook()
 {
-	if (PsGetCurrentThread()->Win32Thread->MessagePumpHookValue <= 0)
+	if (PsGetWin32Thread()->MessagePumpHookValue <= 0)
 	{
 		return FALSE;
 	}
-	PsGetCurrentThread()->Win32Thread->MessagePumpHookValue--;
+	PsGetWin32Thread()->MessagePumpHookValue--;
 	return TRUE;
 }
 

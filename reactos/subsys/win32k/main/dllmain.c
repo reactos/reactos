@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.76.12.4 2004/09/14 01:00:43 weiden Exp $
+/* $Id: dllmain.c,v 1.76.12.5 2004/09/29 10:27:03 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -120,7 +120,7 @@ Win32kThreadCallback (struct _ETHREAD *Thread,
   DPRINT("Win32kThreadCallback() called\n");
 
   Process = Thread->ThreadsProcess;
-  Win32Thread = Thread->Win32Thread;
+  Win32Thread = Thread->Tcb.Win32Thread;
   if (Create)
     {
       DPRINT("W32k: Create thread\n");
@@ -302,7 +302,7 @@ IntConvertThreadToGUIThread(PETHREAD Thread)
   
   /* FIXME - do this atomic!!! */
   
-  if(Thread->Win32Thread != NULL)
+  if(Thread->Tcb.Win32Thread != NULL)
   {
     return STATUS_SUCCESS;
   }

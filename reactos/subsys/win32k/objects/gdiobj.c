@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.71.4.4 2004/09/26 22:52:43 weiden Exp $
+ * $Id: gdiobj.c,v 1.71.4.5 2004/09/29 10:27:04 weiden Exp $
  */
 #include <w32k.h>
 
@@ -125,7 +125,7 @@ GDIOBJ_iAllocHandleTable(ULONG Entries)
   UINT ObjType;
   ULONG MemSize = sizeof(GDI_HANDLE_TABLE) + (sizeof(GDI_TABLE_ENTRY) * (Entries - 1));
 
-  handleTable = ExAllocatePoolWithTag(PagedPool, MemSize, TAG_GDIHNDTBLE);
+  handleTable = ExAllocatePoolWithTag(NonPagedPool, MemSize, TAG_GDIHNDTBLE);
   ASSERT( handleTable );
   RtlZeroMemory(handleTable, MemSize);
 
@@ -134,7 +134,7 @@ GDIOBJ_iAllocHandleTable(ULONG Entries)
 
   handleTable->EntriesEnd = &handleTable->Entries[Entries];
 
-  handleTable->LookasideLists = ExAllocatePoolWithTag(PagedPool,
+  handleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
                                                       OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
   if(handleTable->LookasideLists == NULL)
@@ -149,7 +149,7 @@ GDIOBJ_iAllocHandleTable(ULONG Entries)
                                    ObjInfo[ObjType].Size + sizeof(GDIOBJHDR), TAG_GDIOBJ, 0);
   }
 
-  ShortDelay.QuadPart = -100;
+  ShortDelay.QuadPart = -100LL;
 
   return handleTable;
 }

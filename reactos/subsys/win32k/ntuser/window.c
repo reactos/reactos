@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.244.2.13 2004/09/27 12:53:18 weiden Exp $
+/* $Id: window.c,v 1.244.2.14 2004/09/29 10:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -344,7 +344,7 @@ DestroyThreadWindows(struct _ETHREAD *Thread)
 
   ASSERT(Thread);
 
-  Win32Thread = Thread->Win32Thread;
+  Win32Thread = Thread->Tcb.Win32Thread;
   Win32Process = Thread->ThreadsProcess->Win32Process;
   
   /* FIXME - acquire lock */
@@ -972,7 +972,7 @@ IntCreateWindow(DWORD dwExStyle,
     PRTL_USER_PROCESS_PARAMETERS ProcessParams;
     BOOL CalculatedDefPosSize = FALSE;
     
-    IntGetDesktopWorkArea(WindowObject->MessageQueue->Thread->Win32Thread->Desktop, &WorkArea);
+    IntGetDesktopWorkArea(WindowObject->MessageQueue->Thread->Tcb.Win32Thread->Desktop, &WorkArea);
     
     rc = WorkArea;
     ProcessParams = PsGetCurrentProcess()->Peb->ProcessParameters;

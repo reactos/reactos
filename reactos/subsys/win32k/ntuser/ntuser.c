@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntuser.c,v 1.1.4.16 2004/09/27 12:48:48 weiden Exp $
+/* $Id: ntuser.c,v 1.1.4.17 2004/09/29 10:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -392,7 +392,7 @@ NtUserCallTwoParam(DWORD Param1,
       
       ENTER_CRITICAL();
       VALIDATE_USER_OBJECT(WINDOW, (HWND)Param2, Window);
-      MsgQueue = PsGetCurrentThread()->Win32Thread->MessageQueue;
+      MsgQueue = PsGetCurrentThread()->Tcb.Win32Thread->MessageQueue;
       if(Window->MessageQueue != MsgQueue)
       {
         NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
@@ -747,15 +747,15 @@ NtUserDestroyWindow(HWND hWnd)
   VALIDATE_USER_OBJECT(WINDOW, hWnd, Window);
   
   /* Check for owner thread and desktop window */
-  if(!IntWndBelongsToThread(Window, Thread->Win32Thread) || IntIsDesktopWindow(Window))
+  if(!IntWndBelongsToThread(Window, Thread->Tcb.Win32Thread) || IntIsDesktopWindow(Window))
   {
     LEAVE_CRITICAL();
     NTUSER_FAIL_ERROR(ERROR_ACCESS_DENIED);
   }
   ASSERT(W32Process);
-  ASSERT(Thread->Win32Thread);
+  ASSERT(Thread->Tcb.Win32Thread);
   /* FIXME - send messages if the thread is already terminating? */
-  Result = IntDestroyWindow(Window, W32Process, Thread->Win32Thread, TRUE);
+  Result = IntDestroyWindow(Window, W32Process, Thread->Tcb.Win32Thread, TRUE);
   
   LEAVE_CRITICAL();
   
@@ -1742,7 +1742,7 @@ NtUserPostThreadMessage(DWORD idThread,
     NTUSER_FAIL_NTERROR(Status);
   }
   
-  if(peThread->Win32Thread == NULL)
+  if(peThread->Tcb.Win32Thread == NULL)
   {
     /* we try to send a message to a non-win32 thread... */
     ObDereferenceObject(peThread);
@@ -1755,7 +1755,7 @@ NtUserPostThreadMessage(DWORD idThread,
              calling process. set the last error code to ERROR_INVALID_THREAD_ID */
   
   ENTER_CRITICAL_SHARED();
-  Result = IntPostThreadMessage(peThread->Win32Thread,
+  Result = IntPostThreadMessage(peThread->Tcb.Win32Thread,
                                 Msg,
                                 wParam,
                                 lParam);

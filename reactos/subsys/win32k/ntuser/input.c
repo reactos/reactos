@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.36.4.7 2004/09/14 01:00:44 weiden Exp $
+/* $Id: input.c,v 1.36.4.8 2004/09/29 10:27:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -379,11 +379,11 @@ KeyboardThreadMain(PVOID StartContext)
 
 	  FocusThread = FocusQueue->Thread;
 
-	  if (FocusThread && FocusThread->Win32Thread &&
-	      FocusThread->Win32Thread->KeyboardLayout)
+	  if (FocusThread && FocusThread->Tcb.Win32Thread &&
+	      FocusThread->Tcb.Win32Thread->KeyboardLayout)
 	    {
 	      W32kKeyProcessMessage(&msg,
-				    FocusThread->Win32Thread->KeyboardLayout);
+				    FocusThread->Tcb.Win32Thread->KeyboardLayout);
 	    }
 	  else
 	    continue;

@@ -798,7 +798,7 @@ VOID INTERNAL_CALL VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN Uncovered
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
 
 #define IntWndBelongsToThread(WndObj, W32Thread) \
-  ((WndObj)->MessageQueue->Thread->Win32Thread == W32Thread)
+  ((WndObj)->MessageQueue->Thread->Tcb.Win32Thread == W32Thread)
 
 #define IntGetWndThreadId(WndObj) \
   ((WndObj)->MessageQueue->Thread->Cid.UniqueThread)
