@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.13 2000/04/25 23:22:53 ea Exp $
+/* $Id: error.c,v 1.14 2000/08/15 12:39:18 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/error.c
  *
@@ -18,7 +18,7 @@ SetLastErrorByStatus (
 	NTSTATUS	Status
 	)
 {
-	DWORD	Error =	RtlNtStatusToDosError (Status);
+	DWORD Error = RtlNtStatusToDosError (Status);
 	SetLastError (Error);
 	return (Error);
 }
@@ -38,20 +38,6 @@ STDCALL
 GetLastError (VOID)
 {
 	return (DWORD) (NtCurrentTeb ()->LastErrorValue);
-}
-
-
-BOOL
-__ErrorReturnFalse (ULONG ErrorCode)
-{
-   return(FALSE);
-}
-
-
-PVOID
-__ErrorReturnNull (ULONG ErrorCode)
-{
-   return(NULL);
 }
 
 

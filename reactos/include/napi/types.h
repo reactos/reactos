@@ -39,6 +39,12 @@ typedef enum _SECTION_INHERIT {
     ViewUnmap = 2
 } SECTION_INHERIT;
 
+typedef enum _NT_PRODUCT_TYPE
+{
+   NtProductWinNt = 1,
+   NtProductLanManNt,
+   NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 
 /*  File information for IRP_MJ_QUERY_INFORMATION (and SET)  */
 typedef enum _FILE_INFORMATION_CLASS

@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.60 2000/08/11 17:30:20 ea Exp $
+; $Id: ntdll.def,v 1.61 2000/08/15 12:40:19 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -266,6 +266,8 @@ NtYieldExecution@0
 ;PfxInitialize
 ;PfxInsertPrefix
 ;PfxRemovePrefix
+;PropertyLengthAsVariant
+;RestoreEm87Context
 ;RtlAbortRXact
 RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock@0
@@ -602,6 +604,7 @@ RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize@4
+;SaveEm87Context
 ZwAcceptConnectPort@24
 ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm@44

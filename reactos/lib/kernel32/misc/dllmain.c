@@ -1,4 +1,4 @@
-/* $Id: dllmain.c,v 1.12 2000/07/06 14:34:48 dwelch Exp $
+/* $Id: dllmain.c,v 1.13 2000/08/15 12:39:18 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,22 +11,28 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
+#include <napi/shared_data.h>
 #include <windows.h>
 #include <wchar.h>
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+
+extern UNICODE_STRING SystemDirectory;
+extern UNICODE_STRING WindowsDirectory;
+
+
 WINBOOL STDCALL DllMain (HANDLE hInst,
 			 ULONG ul_reason_for_call,
 			 LPVOID lpReserved);
-
 
 
 BOOL WINAPI DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 {
    return(DllMain(hDll,dwReason,lpReserved));
 }
+
 
 WINBOOL STDCALL DllMain(HANDLE hInst,
 			ULONG ul_reason_for_call,
@@ -40,7 +46,9 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
       case DLL_PROCESS_ATTACH:
 	  {
 	     NTSTATUS Status;
-	     
+	     PKUSER_SHARED_DATA SharedUserData = 
+		(PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE;
+
 	     DPRINT("DLL_PROCESS_ATTACH\n");
 	     /*
 	      * Connect to the csrss server
@@ -51,6 +59,22 @@ WINBOOL STDCALL DllMain(HANDLE hInst,
 		  DbgPrint("Failed to connect to csrss.exe: expect trouble\n");
 		  //	ZwTerminateProcess(NtCurrentProcess(), Status);
 	       }
+
+	     /*
+	      * Initialize WindowsDirectory and SystemDirectory
+	      */
+	     DPRINT("NtSystemRoot: %S\n",
+		    SharedUserData->NtSystemRoot);
+	     RtlCreateUnicodeString (&WindowsDirectory,
+				     SharedUserData->NtSystemRoot);
+	     SystemDirectory.MaximumLength = WindowsDirectory.MaximumLength + 18;
+	     SystemDirectory.Length = WindowsDirectory.Length + 18;
+	     SystemDirectory.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+						       0,
+						       SystemDirectory.MaximumLength);
+	     wcscpy (SystemDirectory.Buffer, WindowsDirectory.Buffer);
+	     wcscat (SystemDirectory.Buffer, L"\\System32");
+
 	     break;
 	  }
       case DLL_PROCESS_DETACH:

@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.49 2000/08/11 17:30:20 ea Exp $
+; $Id: ntdll.edf,v 1.50 2000/08/15 12:40:19 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -48,6 +48,7 @@ LdrLoadDll
 ;LdrShutdownProcess
 ;LdrShutdownThread
 LdrUnloadDll
+;LdrVerifyImageMatchesChecksum
 NlsAnsiCodePage DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
@@ -265,6 +266,8 @@ NtYieldExecution=NtYieldExecution@0
 ;PfxInitialize
 ;PfxInsertPrefix
 ;PfxRemovePrefix
+;PropertyLengthAsVariant
+;RestoreEm87Context
 ;RtlAbortRXact
 RtlAbsoluteToSelfRelativeSD=RtlAbsoluteToSelfRelativeSD@12
 RtlAcquirePebLock=RtlAcquirePebLock@0
@@ -600,6 +603,7 @@ RtlxAnsiStringToUnicodeSize=RtlxAnsiStringToUnicodeSize@4
 RtlxOemStringToUnicodeSize=RtlxOemStringToUnicodeSize@4
 RtlxUnicodeStringToAnsiSize=RtlxUnicodeStringToAnsiSize@4
 RtlxUnicodeStringToOemSize=RtlxUnicodeStringToOemSize@4
+;SaveEm87Context
 ZwAcceptConnectPort=ZwAcceptConnectPort@24
 ZwAccessCheck=ZwAccessCheck@32
 ZwAccessCheckAndAuditAlarm=ZwAccessCheckAndAuditAlarm@44

@@ -1,4 +1,4 @@
-/* $Id: misc.c,v 1.1 2000/08/11 12:35:47 ekohl Exp $
+/* $Id: misc.c,v 1.2 2000/08/15 12:41:13 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -13,11 +13,11 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/rtl.h>
+#include <napi/shared_data.h>
 
 /* GLOBALS ******************************************************************/
 
 extern ULONG NtGlobalFlag;
-static ULONG NtProductType = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -69,19 +69,9 @@ RtlGetNtGlobalFlags(VOID)
  */
 
 BOOLEAN STDCALL
-RtlGetNtProductType(PULONG ProductType)
+RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 {
-   if (NtProductType != 0)
-     {
-	*ProductType = NtProductType;
-	return TRUE;
-     }
-
-   /* FIXME: read product type from registry */
-   NtProductType = 1; /* Workstation */
-
-   *ProductType = NtProductType;
-
+   *ProductType = ((PKUSER_SHARED_DATA)USER_SHARED_DATA_BASE)->NtProductType;
    return TRUE;
 }
 

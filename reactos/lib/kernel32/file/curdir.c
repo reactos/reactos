@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.25 2000/06/03 14:47:31 ea Exp $
+/* $Id: curdir.c,v 1.26 2000/08/15 12:38:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,6 @@
 
 /* GLOBAL VARIABLES **********************************************************/
 
-/* FIXME initialize them on startup !! */
 UNICODE_STRING SystemDirectory;
 UNICODE_STRING WindowsDirectory;
 

@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.56 2000/07/30 18:22:34 dwelch Exp $
+/* $Id: main.c,v 1.57 2000/08/15 12:44:47 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,7 @@
 
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
+#include <napi/shared_data.h>
 
 //#define NDEBUG
 #include <internal/debug.h>
@@ -185,6 +186,13 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
                          NULL,
                          NULL,
                          NULL);
+
+   /* set system root in shared user page */
+   wcscpy (((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->NtSystemRoot,
+	   L"C:\\reactos");
+
+   ((PKUSER_SHARED_DATA)KERNEL_SHARED_DATA_BASE)->NtProductType = NtProductWinNt;
+
 
   /*
    *  Launch initial process

@@ -255,4 +255,11 @@ typedef struct _KINTERRUPT
    KIRQL SynchLevel;
 } KINTERRUPT, *PKINTERRUPT;
 
+typedef struct _KSYSTEM_TIME
+{
+   ULONG LowPart;
+   LONG High1Part;
+   LONG High2Part;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
 #endif /* __INCLUDE_DDK_KETYPES_H */
