@@ -1217,7 +1217,7 @@ DrawCaption(HWND hWnd, HDC hDC, LPCRECT lprc, UINT uFlags)
 
     r.bottom = r.top + Height;
 
-  if ((uFlags & DC_TEXT) && (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
+  if ((uFlags & DC_TEXT) && (NtUserInternalGetWindowText( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) )))
   {
     if(!(uFlags & DC_GRADIENT))
     {
