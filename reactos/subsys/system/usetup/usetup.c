@@ -407,39 +407,39 @@ StartPage(PINPUT_RECORD Ir)
 			&FileName,
 			TRUE);
   if (!NT_SUCCESS(Status))
-  {
-    PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
   /* Open 'Version' section */
   Section = IniCacheGetSection(IniCache,
 			       L"Version");
   if (Section == NULL)
-  {
-    PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
 
   /* Get pointer 'Signature' key */
@@ -447,37 +447,37 @@ StartPage(PINPUT_RECORD Ir)
 			  L"Signature",
 			  &Value);
   if (!NT_SUCCESS(Status))
-  {
-    PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
+    {
+      PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
       while(TRUE)
-      {
-	ConInKey(Ir);
-
-	if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	{
-	  return(QUIT_PAGE);
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
 	}
-      }
-  }
+    }
 
   /* Check 'Signature' string */
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
-  {
-    PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
-	       "ENTER = Reboot computer");
-
-    while(TRUE)
     {
-      ConInKey(Ir);
+      PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
 
-      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
-      {
-	return(QUIT_PAGE);
-      }
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
     }
-  }
 
   return(INTRO_PAGE);
 }
@@ -492,9 +492,9 @@ RepairIntroPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 12, "The repair functions are not implemented yet.");
 
-  SetTextXY(8, 15, "\xf9  Press ESC to return to the main page.");
+  SetTextXY(8, 15, "\xfa  Press ESC to return to the main page.");
 
-  SetTextXY(8, 17, "\xf9  Press ENTER to reboot your computer.");
+  SetTextXY(8, 17, "\xfa  Press ENTER to reboot your computer.");
 
   SetStatusText("   ESC = Main page  ENTER = Reboot");
 
@@ -531,13 +531,13 @@ IntroPage(PINPUT_RECORD Ir)
   SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
   SetTextXY(6, 12, "computer and prepares the second part of the setup.");
 
-  SetTextXY(8, 15, "\xf9  Press ENTER to install ReactOS.");
+  SetTextXY(8, 15, "\xfa  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 17, "\xf9  Press E to start the emergency repair console.");
+  SetTextXY(8, 17, "\xfa  Press E to start the emergency repair console.");
 
-  SetTextXY(8, 19, "\xf9  Press R to repair ReactOS.");
+  SetTextXY(8, 19, "\xfa  Press R to repair ReactOS.");
 
-  SetTextXY(8, 21, "\xf9  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 21, "\xfa  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -587,9 +587,9 @@ InstallIntroPage(PINPUT_RECORD Ir)
 
 
 
-  SetTextXY(8, 21, "\xf9  Press ENTER to install ReactOS.");
+  SetTextXY(8, 21, "\xfa  Press ENTER to install ReactOS.");
 
-  SetTextXY(8, 23, "\xf9  Press F3 to quit without installing ReactOS.");
+  SetTextXY(8, 23, "\xfa  Press F3 to quit without installing ReactOS.");
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
@@ -626,10 +626,10 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
   SetTextXY(6, 9, "space for new partitions.");
 
-  SetTextXY(8, 11, "\xf9  Press UP or DOWN to select a list entry.");
-  SetTextXY(8, 13, "\xf9  Press ENTER to install ReactOS onto the selected partition.");
-  SetTextXY(8, 15, "\xf9  Press C to create a new partition.");
-  SetTextXY(8, 17, "\xf9  Press D to delete an existing partition.");
+  SetTextXY(8, 11, "\xfa  Press UP or DOWN to select a list entry.");
+  SetTextXY(8, 13, "\xfa  Press ENTER to install ReactOS onto the selected partition.");
+  SetTextXY(8, 15, "\xfa  Press C to create a new partition.");
+  SetTextXY(8, 17, "\xfa  Press D to delete an existing partition.");
 
   SetStatusText("   Please wait...");
 
@@ -789,9 +789,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
   SetTextXY(6, 17, "Select a file system for the partition from the list below.");
 
-  SetTextXY(8, 19, "\xf9  Press UP or DOWN to select a file system.");
-  SetTextXY(8, 21, "\xf9  Press ENTER to format the partition.");
-  SetTextXY(8, 23, "\xf9  Press ESC to select another partition.");
+  SetTextXY(8, 19, "\xfa  Press UP or DOWN to select a file system.");
+  SetTextXY(8, 21, "\xfa  Press ENTER to format the partition.");
+  SetTextXY(8, 23, "\xfa  Press ESC to select another partition.");
 
   /* FIXME: use a real list later */
   SetInvertedTextXY(6, 26, " Keep current file system (no changes) ");
@@ -861,22 +861,55 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 static ULONG
 InstallDirectoryPage(PINPUT_RECORD Ir)
 {
+  PINICACHESECTION Section;
   WCHAR PathBuffer[MAX_PATH];
   WCHAR InstallDir[51];
+  PWCHAR DefaultPath;
   ULONG Length;
+  NTSTATUS Status;
+
+  /* Open 'SetupData' section */
+  Section = IniCacheGetSection(IniCache,
+			       L"SetupData");
+  if (Section == NULL)
+    {
+      PopupError("Setup failed to find the 'SetupData' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer");
+
+      while(TRUE)
+	{
+	  ConInKey(Ir);
+
+	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+	    {
+	      return(QUIT_PAGE);
+	    }
+	}
+    }
+
+  /* Read the 'DefaultPath' key */
+  Status = IniCacheGetKey(Section,
+			  L"DefaultPath",
+			  &DefaultPath);
+  if (!NT_SUCCESS(Status))
+    {
+      wcscpy(InstallDir, L"\\reactos");
+    }
+  else
+    {
+      wcscpy(InstallDir, DefaultPath);
+    }
+  Length = wcslen(InstallDir);
 
   SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
   SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
-
-  wcscpy(InstallDir, L"\\reactos");
-  Length = wcslen(InstallDir);
 
   SetInputTextXY(8, 11, 51, InstallDir);
 
   SetTextXY(6, 14, "To change the suggested directory, press BACKSPACE to delete");
   SetTextXY(6, 15, "characters and then type the directory where you want ReactOS to");
   SetTextXY(6, 16, "be installed.");
-
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
 
@@ -893,7 +926,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  /* Create 'DestinationPath' string */
+	  /* Create 'InstallPath' string */
 	  RtlFreeUnicodeString(&InstallPath);
 	  RtlCreateUnicodeString(&InstallPath,
 				 InstallDir);

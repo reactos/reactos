@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: filesup.c,v 1.4 2003/01/17 13:18:15 ekohl Exp $
+/* $Id: filesup.c,v 1.5 2003/02/08 00:19:32 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/filesup.c
@@ -47,15 +47,6 @@ CreateDirectory(PWCHAR DirectoryName)
 
   RtlCreateUnicodeString(&PathName,
 			 DirectoryName);
-
-#if 0
-  ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-  ObjectAttributes.RootDirectory = NULL;
-  ObjectAttributes.ObjectName = &PathName;
-  ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
-  ObjectAttributes.SecurityDescriptor = NULL;
-  ObjectAttributes.SecurityQualityOfService = NULL;
-#endif
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &PathName,
@@ -119,10 +110,10 @@ SetupCopyFile(PWCHAR SourceFileName,
 		      FILE_SHARE_READ,
 		      FILE_SYNCHRONOUS_IO_ALERT | FILE_SEQUENTIAL_ONLY);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    return(Status);
-  }
+      return(Status);
+    }
 
   Status = NtQueryInformationFile(FileHandleSource,
 				  &IoStatusBlock,
@@ -130,22 +121,22 @@ CHECKPOINT1;
 				  sizeof(FILE_STANDARD_INFORMATION),
 				  FileStandardInformation);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    return(Status);
-  }
+     NtClose(FileHandleSource);
+     return(Status);
+    }
 
   Status = NtQueryInformationFile(FileHandleSource,
 				  &IoStatusBlock,&FileBasic,
 				  sizeof(FILE_BASIC_INFORMATION),
 				  FileBasicInformation);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    return(Status);
-  }
+      NtClose(FileHandleSource);
+      return(Status);
+    }
 
   RtlInitUnicodeString(&FileName,
 		       DestinationFileName);
@@ -168,11 +159,11 @@ CHECKPOINT1;
 			NULL,
 			0);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    return(Status);
-  }
+      NtClose(FileHandleSource);
+      return(Status);
+    }
 
   FilePosition.CurrentByteOffset.QuadPart = 0;
 
@@ -182,12 +173,12 @@ CHECKPOINT1;
 				sizeof(FILE_POSITION_INFORMATION),
 				FilePositionInformation);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    NtClose(FileHandleDest);
-    return(Status);
-  }
+      NtClose(FileHandleSource);
+      NtClose(FileHandleDest);
+      return(Status);
+    }
 
   Status = NtSetInformationFile(FileHandleDest,
 				&IoStatusBlock,
@@ -195,18 +186,18 @@ CHECKPOINT1;
 				sizeof(FILE_POSITION_INFORMATION),
 				FilePositionInformation);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    NtClose(FileHandleDest);
-    return(Status);
-  }
+      NtClose(FileHandleSource);
+      NtClose(FileHandleDest);
+      return(Status);
+    }
 
   RegionSize = PAGE_ROUND_UP(FileStandard.EndOfFile.u.LowPart);
   if (RegionSize > 0x100000)
-  {
-     RegionSize = 0x100000;
-  }
+    {
+      RegionSize = 0x100000;
+    }
   Status = NtAllocateVirtualMemory(NtCurrentProcess(),
 				   (PVOID *)&Buffer,
 				   2,
@@ -214,66 +205,81 @@ CHECKPOINT1;
 				   MEM_RESERVE | MEM_COMMIT,
 				   PAGE_READWRITE);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    NtClose(FileHandleSource);
-    NtClose(FileHandleDest);
-    return(Status);
-  }
+      NtClose(FileHandleSource);
+      NtClose(FileHandleDest);
+      return(Status);
+    }
 
   while (TRUE)
-  {
-    Status = NtReadFile(FileHandleSource,
-			NULL,
-			NULL,
-			NULL,
-			&IoStatusBlock,
-			Buffer,
-			RegionSize,
-			NULL,
-			NULL);
-    if (!NT_SUCCESS(Status))
     {
-      NtFreeVirtualMemory(NtCurrentProcess(),
-			  (PVOID *)&Buffer,
-			  &RegionSize,
-			  MEM_RELEASE);
-      NtClose(FileHandleSource);
-      NtClose(FileHandleDest);
-      if (Status == STATUS_END_OF_FILE)
-      {
-	DPRINT("STATUS_END_OF_FILE\n");
-	break;
-      }
+      Status = NtReadFile(FileHandleSource,
+			  NULL,
+			  NULL,
+			  NULL,
+			  &IoStatusBlock,
+			  Buffer,
+			  RegionSize,
+			  NULL,
+			  NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  NtFreeVirtualMemory(NtCurrentProcess(),
+			      (PVOID *)&Buffer,
+			      &RegionSize,
+			      MEM_RELEASE);
+	  if (Status == STATUS_END_OF_FILE)
+	    {
+	      DPRINT("STATUS_END_OF_FILE\n");
+	      break;
+	    }
 CHECKPOINT1;
-      return(Status);
+	  NtClose(FileHandleSource);
+	  NtClose(FileHandleDest);
+	  return(Status);
+	}
+
+      DPRINT("Bytes read %lu\n", IoStatusBlock.Information);
+
+      Status = NtWriteFile(FileHandleDest,
+			   NULL,
+			   NULL,
+			   NULL,
+			   &IoStatusBlock,
+			   Buffer,
+			   IoStatusBlock.Information,
+			   NULL,
+			   NULL);
+      if (!NT_SUCCESS(Status))
+	{
+CHECKPOINT1;
+	  NtFreeVirtualMemory(NtCurrentProcess(),
+			      (PVOID *)&Buffer,
+			      &RegionSize,
+			      MEM_RELEASE);
+	  NtClose(FileHandleSource);
+	  NtClose(FileHandleDest);
+	  return(Status);
+	}
     }
 
-DPRINT("Bytes read %lu\n", IoStatusBlock.Information);
 
-    Status = NtWriteFile(FileHandleDest,
-			 NULL,
-			 NULL,
-			 NULL,
-			 &IoStatusBlock,
-			 Buffer,
-			 IoStatusBlock.Information,
-			 NULL,
-			 NULL);
-    if (!NT_SUCCESS(Status))
+  /* Copy file date/time from source file */
+  Status = NtSetInformationFile(FileHandleDest,
+				&IoStatusBlock,
+				&FileBasic,
+				sizeof(FILE_BASIC_INFORMATION),
+				FileBasicInformation);
+  if (!NT_SUCCESS(Status))
     {
-CHECKPOINT1;
-      NtFreeVirtualMemory(NtCurrentProcess(),
-			  (PVOID *)&Buffer,
-			  &RegionSize,
-			  MEM_RELEASE);
-      NtClose(FileHandleSource);
-      NtClose(FileHandleDest);
-      return(Status);
+      DPRINT("NtSetInformationFile() failed (Status %lx)\n", Status);
     }
-  }
 
-  return(STATUS_SUCCESS);
+  NtClose(FileHandleSource);
+  NtClose(FileHandleDest);
+
+  return(Status);
 }
 
 
@@ -312,10 +318,10 @@ DoesFileExist(PWSTR PathName,
 		      0,
 		      FILE_SYNCHRONOUS_IO_ALERT);
   if (!NT_SUCCESS(Status))
-  {
+    {
 CHECKPOINT1;
-    return(FALSE);
-  }
+      return(FALSE);
+    }
 
   NtClose(FileHandle);
 
