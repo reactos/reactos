@@ -164,6 +164,9 @@
 <directory name="olepro32">
 	<xi:include href="olepro32/olepro32.xml" />
 </directory>
+<directory name="opengl32">
+	<xi:include href="opengl32/opengl32.xml" />
+</directory>
 <directory name="psapi">
 	<xi:include href="psapi/psapi.xml" />
 </directory>
@@ -191,6 +194,9 @@
 <directory name="setupapi">
 	<xi:include href="setupapi/setupapi.xml" />
 </directory>
+<directory name="shdocvw">
+	<xi:include href="shdocvw/shdocvw.xml" />
+</directory>
 <directory name="shell32">
 	<xi:include href="shell32/shell32.xml" />
 </directory>
@@ -203,17 +209,32 @@
 <directory name="strmiids">
 	<xi:include href="strmiids/strmiids.xml" />
 </directory>
+<directory name="syssetup">
+	<xi:include href="syssetup/syssetup.xml" />
+</directory>
+<directory name="twain">
+	<xi:include href="twain/twain_32.xml" />
+</directory>
 <directory name="unicode">
 	<xi:include href="unicode/unicode.xml" />
 </directory>
+<directory name="urlmon">
+	<xi:include href="urlmon/urlmon.xml" />
+</directory>
 <directory name="user32">
 	<xi:include href="user32/user32.xml" />
+</directory>
+<directory name="userenv">
+	<xi:include href="userenv/userenv.xml" />
 </directory>
 <directory name="uuid">
 	<xi:include href="uuid/uuid.xml" />
 </directory>
 <directory name="version">
 	<xi:include href="version/version.xml" />
+</directory>
+<directory name="wininet">
+	<xi:include href="wininet/wininet.xml" />
 </directory>
 <directory name="winmm">
 	<xi:include href="winmm/winmm.xml" />
@@ -223,6 +244,15 @@
 </directory>
 <directory name="ws2_32">
 	<xi:include href="ws2_32/ws2_32.xml" />
+</directory>
+<directory name="ws2help">
+	<xi:include href="ws2help/ws2help.xml" />
+</directory>
+<directory name="wshirda">
+	<xi:include href="wshirda/wshirda.xml" />
+</directory>
+<directory name="wsock32">
+	<xi:include href="wsock32/wsock32.xml" />
 </directory>
 <directory name="zlib">
 	<xi:include href="zlib/zlib.xml" />
