@@ -10,6 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
+//#define NDEBUG
 #include <ntoskrnl.h>
 #include <internal/debug.h>
 
@@ -30,8 +31,25 @@ IoReportDetectedDevice(
   IN BOOLEAN ResourceAssigned,
   IN OUT PDEVICE_OBJECT *DeviceObject)
 {
-  DPRINT("IoReportDetectedDevice called (UNIMPLEMENTED)\n");
-  return STATUS_NOT_IMPLEMENTED;
+  PDEVICE_NODE DeviceNode;
+  NTSTATUS Status;
+  
+  DPRINT("IoReportDetectedDevice called (partly implemented)\n");
+  /* Use IopRootDeviceNode for now */
+  Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &DeviceNode);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("IopCreateDeviceNode() failed (Status 0x%08x)\n", Status);
+    return Status;
+  }
+  
+  Status = IopInitializePnpServices(DeviceNode, FALSE);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("IopInitializePnpServices() failed (Status 0x%08x)\n", Status);
+    return Status;
+  }
+  return IopInitializeDevice(DeviceNode, DriverObject);
 }
 
 /*
@@ -48,8 +66,9 @@ IoReportResourceForDetection(
   IN ULONG DeviceListSize   OPTIONAL,
   OUT PBOOLEAN ConflictDetected)
 {
-  DPRINT("IoReportResourceForDetection called (UNIMPLEMENTED)\n");
-  return STATUS_NOT_IMPLEMENTED;
+  DPRINT("IoReportResourceForDetection UNIMPLEMENTED but returns success.\n");
+  *ConflictDetected = FALSE;
+  return STATUS_SUCCESS;
 }
 
 /*
@@ -61,7 +80,7 @@ IoReportTargetDeviceChange(
   IN PDEVICE_OBJECT PhysicalDeviceObject,
   IN PVOID NotificationStructure)
 {
-  DPRINT("IoReportTargetDeviceChange called (UNIMPLEMENTED)\n");
+  DPRINT1("IoReportTargetDeviceChange called (UNIMPLEMENTED)\n");
   return STATUS_NOT_IMPLEMENTED;
 }
 
@@ -76,7 +95,7 @@ IoReportTargetDeviceChangeAsynchronous(
   IN PDEVICE_CHANGE_COMPLETE_CALLBACK Callback  OPTIONAL,
   IN PVOID Context  OPTIONAL)
 {
-  DPRINT("IoReportTargetDeviceChangeAsynchronous called (UNIMPLEMENTED)\n");
+  DPRINT1("IoReportTargetDeviceChangeAsynchronous called (UNIMPLEMENTED)\n");
   return STATUS_NOT_IMPLEMENTED;
 }
 
