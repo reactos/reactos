@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.9 2000/11/23 15:53:37 jean Exp $
+/* $Id: rw.c,v 1.10 2000/12/01 12:41:08 jean Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -255,6 +255,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	       TempLength);
 	
 	/* Write the cluster back */
+	Length2 -= TempLength;
 	if (FirstCluster==1)
 	  {
 	     VFATWriteSectors(DeviceExt->StorageDevice,
@@ -266,9 +267,9 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	else
 	  {
 	     VFATWriteCluster(DeviceExt,Temp,CurrentCluster);
-	     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
+	     if (Length2 >0)
+	       CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
 	  }
-	Length2 -= TempLength;
 	Buffer = Buffer + TempLength;
      }
    CHECKPOINT;
@@ -283,6 +284,7 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	     ExFreePool(Temp);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
+	Length2 -= DeviceExt->BytesPerCluster;
 	if (FirstCluster==1)
 	  {
 	     VFATWriteSectors(DeviceExt->StorageDevice,
@@ -294,10 +296,10 @@ NTSTATUS FsdWriteFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	else
 	  {
 	     VFATWriteCluster(DeviceExt,Buffer,CurrentCluster);
-	     CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
+	     if (Length2 >0)
+	       CurrentCluster = GetNextWriteCluster(DeviceExt, CurrentCluster);
 	  }
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
-	Length2 -= DeviceExt->BytesPerCluster;
      }
    CHECKPOINT;
    
