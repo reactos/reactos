@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.31 2003/08/19 00:36:40 weiden Exp $
+/* $Id: class.c,v 1.32 2003/08/19 00:49:42 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -31,6 +31,13 @@ GetClassInfoExA(
   WNDCLASSEXW w;
   BOOL retval;
   NTSTATUS Status;
+  
+  if(!lpszClass || !lpwcx)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
   if(IS_ATOM(lpszClass))
     str = (LPWSTR)lpszClass;
   else
@@ -38,7 +45,7 @@ GetClassInfoExA(
   if ( !NT_SUCCESS (Status) )
   {
     SetLastError (RtlNtStatusToDosError(Status));
-    return 0;
+    return FALSE;
   }
   
   str2.Length = 0;
@@ -48,7 +55,7 @@ GetClassInfoExA(
   if(!str2.Buffer)
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-    return 0;
+    return FALSE;
   }
 
   w.lpszMenuName = (LPCWSTR)&str2;  
@@ -57,7 +64,7 @@ GetClassInfoExA(
     HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
-  if (!IS_INTRESOURCE(w.lpszMenuName))
+  if (!IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName)
   {
     lpwcx->lpszMenuName = heap_string_poolA (str2.Buffer, str2.Length);
   }
@@ -80,6 +87,13 @@ GetClassInfoExW(
   UNICODE_STRING str2;
   WNDCLASSEXW w;
   WINBOOL retval;
+  
+  if(!lpszClass || !lpwcx)
+  {
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+  
   if(IS_ATOM(lpszClass))
     str = (LPWSTR)lpszClass;
   else
@@ -92,7 +106,7 @@ GetClassInfoExW(
   if(!str2.Buffer)
   {
     SetLastError (RtlNtStatusToDosError(STATUS_NO_MEMORY));
-    return 0;
+    return FALSE;
   }
 
   w.lpszMenuName = (LPCWSTR)&str2;  
@@ -101,7 +115,7 @@ GetClassInfoExW(
     HEAP_free(str);
   RtlCopyMemory ( lpwcx, &w, sizeof(WNDCLASSEXW) );
 
-  if (!IS_INTRESOURCE(w.lpszMenuName) )
+  if (!IS_INTRESOURCE(w.lpszMenuName) && w.lpszMenuName)
   {
     lpwcx->lpszMenuName = heap_string_poolW (str2.Buffer, str2.Length);
   }
