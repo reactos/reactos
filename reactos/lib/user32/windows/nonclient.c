@@ -1321,3 +1321,85 @@ DrawCaptionTempA(
   UNIMPLEMENTED;
   return FALSE;
 }
+
+/***********************************************************************
+ *           NcGetInsideRect
+ *
+ * Get the 'inside' rectangle of a window, i.e. the whole window rectangle
+ * but without the borders (if any).
+ * The rectangle is in window coordinates (for drawing with GetWindowDC()).
+ */
+static void FASTCALL
+NcGetInsideRect(HWND Wnd, RECT *Rect)
+{
+  DWORD Style;
+  DWORD ExStyle;
+
+  GetWindowRect(Wnd, Rect);
+  Rect->right = Rect->right - Rect->left;
+  Rect->left = 0;
+  Rect->bottom = Rect->bottom - Rect->top;
+  Rect->top = 0;
+
+  Style = GetWindowLongW(Wnd, GWL_STYLE);
+  if (0 != (Style & WS_ICONIC))
+    {
+      return;
+    }
+
+  /* Remove frame from rectangle */
+  ExStyle = GetWindowLongW(Wnd, GWL_EXSTYLE);
+  if (HAS_THICKFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXFRAME), - GetSystemMetrics(SM_CYFRAME));
+    }
+  else if (HAS_DLGFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXDLGFRAME), - GetSystemMetrics(SM_CYDLGFRAME));
+    }
+  else if (HAS_THINFRAME(Style, ExStyle))
+    {
+      InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
+    }
+
+  /* We have additional border information if the window
+   * is a child (but not an MDI child) */
+  if (0 != (Style & WS_CHILD)
+      && 0 == (ExStyle & WS_EX_MDICHILD))
+    {
+      if (0 != (ExStyle & WS_EX_CLIENTEDGE))
+        {
+          InflateRect(Rect, - GetSystemMetrics(SM_CXEDGE), - GetSystemMetrics(SM_CYEDGE));
+        }
+      if (0 != (ExStyle & WS_EX_STATICEDGE))
+        {
+          InflateRect(Rect, - GetSystemMetrics(SM_CXBORDER), - GetSystemMetrics(SM_CYBORDER));
+        }
+    }
+}
+
+/***********************************************************************
+ *           NcGetSysPopupPos
+ */
+void FASTCALL
+NcGetSysPopupPos(HWND Wnd, RECT *Rect)
+{
+  RECT WindowRect;
+
+  if (IsIconic(Wnd))
+    {
+      GetWindowRect(Wnd, Rect);
+    }
+  else
+    {
+      NcGetInsideRect(Wnd, Rect);
+      GetWindowRect(Wnd, &WindowRect);
+      OffsetRect(Rect, WindowRect.left, WindowRect.top);
+      if (0 != (GetWindowLongW(Wnd, GWL_STYLE) & WS_CHILD))
+        {
+          ClientToScreen(GetParent(Wnd), (POINT *) Rect);
+        }
+      Rect->right = Rect->left + GetSystemMetrics(SM_CYCAPTION) - 1;
+      Rect->bottom = Rect->top + GetSystemMetrics(SM_CYCAPTION) - 1;
+    }
+}

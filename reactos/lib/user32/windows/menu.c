@@ -21,7 +21,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.49 2004/02/22 18:04:52 gvg Exp $
+/* $Id: menu.c,v 1.50 2004/02/22 23:40:58 gvg Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -1929,6 +1929,35 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
 }
 
 /***********************************************************************
+ *           MenuInitSysMenuPopup
+ *
+ * Grey the appropriate items in System menu.
+ */
+static void FASTCALL
+MenuInitSysMenuPopup(HMENU Menu, DWORD Style, DWORD ClsStyle )
+{
+  BOOL Gray;
+
+  Gray = 0 == (Style & WS_THICKFRAME) || 0 != (Style & (WS_MAXIMIZE | WS_MINIMIZE));
+  EnableMenuItem(Menu, SC_SIZE, (Gray ? MF_GRAYED : MF_ENABLED));
+  Gray = 0 != (Style & WS_MAXIMIZE);
+  EnableMenuItem(Menu, SC_MOVE, (Gray ? MF_GRAYED : MF_ENABLED));
+  Gray = 0 == (Style & WS_MINIMIZEBOX) || 0 != (Style & WS_MINIMIZE);
+  EnableMenuItem(Menu, SC_MINIMIZE, (Gray ? MF_GRAYED : MF_ENABLED));
+  Gray = 0 == (Style & WS_MAXIMIZEBOX) || 0 != (Style & WS_MAXIMIZE);
+  EnableMenuItem(Menu, SC_MAXIMIZE, (Gray ? MF_GRAYED : MF_ENABLED));
+  Gray = 0 == (Style & (WS_MAXIMIZE | WS_MINIMIZE));
+  EnableMenuItem(Menu, SC_RESTORE, (Gray ? MF_GRAYED : MF_ENABLED));
+  Gray = 0 != (ClsStyle & CS_NOCLOSE);
+
+  /* The menu item must keep its state if it's disabled */
+  if (Gray)
+    {
+      EnableMenuItem(Menu, SC_CLOSE, MF_GRAYED);
+    }
+}
+
+/***********************************************************************
  *           MenuShowSubPopup
  *
  * Display the sub-menu of the selected item of this menu.
@@ -1937,6 +1966,7 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
 static HMENU FASTCALL
 MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Flags)
 {
+  extern void FASTCALL NcGetSysPopupPos(HWND Wnd, RECT *Rect);
   RECT Rect;
   ROSMENUITEMINFO ItemInfo;
   ROSMENUINFO SubMenuInfo;
@@ -2012,16 +2042,14 @@ MenuShowSubPopup(HWND WndOwner, PROSMENUINFO MenuInfo, BOOL SelectFirst, UINT Fl
 
   if (IS_SYSTEM_MENU(MenuInfo))
     {
-#if 0 /* FIXME */
-      MENU_InitSysMenuPopup(item->hSubMenu,
-                              GetWindowLongW( menu->hWnd, GWL_STYLE ),
-                              GetClassLongW( menu->hWnd, GCL_STYLE));
+      MenuInitSysMenuPopup(ItemInfo.hSubMenu,
+                           GetWindowLongW(MenuInfo->Wnd, GWL_STYLE ),
+                           GetClassLongW(MenuInfo->Wnd, GCL_STYLE));
 
-	NC_GetSysPopupPos( menu->hWnd, &rect );
-	rect.top = rect.bottom;
-	rect.right = GetSystemMetrics(SM_CXSIZE);
-        rect.bottom = GetSystemMetrics(SM_CYSIZE);
-#endif
+      NcGetSysPopupPos(MenuInfo->Wnd, &Rect);
+      Rect.top = Rect.bottom;
+      Rect.right = GetSystemMetrics(SM_CXSIZE);
+      Rect.bottom = GetSystemMetrics(SM_CYSIZE);
     }
   else
     {
@@ -2345,11 +2373,7 @@ MenuPtMenu(HMENU Menu, POINT Pt)
     }
   else if (HTSYSMENU == Ht)
     {
-#if 0 /* FIXME */
-      Ret = get_win_sys_menu( menu->hWnd );
-#else
-      Ret = NULL;
-#endif
+      Ret = NtUserGetSystemMenu(MenuInfo.Wnd, FALSE);
     }
   else if (HTMENU == Ht)
     {
@@ -2529,7 +2553,6 @@ MenuGetSubPopup(HMENU Menu)
 static LRESULT FASTCALL
 MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
 {
-#if 0 /* FIXME */
   ROSMENUINFO TopMenuInfo;
   ROSMENUINFO MenuInfo;
 
@@ -2579,10 +2602,8 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
             }
           else if (0 != (Style & WS_SYSMENU))
             {
-#if 0 /* FIXME */
               /* switch to the system menu */
-              NewMenu = get_win_sys_menu(NewWnd);
-#endif
+              NewMenu = NtUserGetSystemMenu(NewWnd, FALSE);
             }
           else
             {
@@ -2598,17 +2619,13 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
             {
               DWORD Style = GetWindowLongW(NewWnd, GWL_STYLE);
 
-#if 0 /* FIXME */
               if (0 != (Style & WS_SYSMENU)
-                  && GetSubMenu(get_win_sys_menu(NewWnd), 0) == NewMenu)
+                  && GetSystemMenu(NewWnd, FALSE) == NewMenu)
                 {
                   /* get the real system menu */
-                  NewMenu =  get_win_sys_menu(NewWnd);
+                  NewMenu = NtUserGetSystemMenu(NewWnd, FALSE);
                 }
               else if (0 != (Style & WS_CHILD) || GetMenu(NewWnd) != NewMenu)
-#else
-              if (0 != (Style & WS_CHILD) || GetMenu(NewWnd) != NewMenu)
-#endif
                 {
                   /* FIXME: Not sure what to do here;
                    * perhaps try to track NewMenu as a popup? */
@@ -2647,7 +2664,6 @@ MenuDoNextMenu(MTRACKER* Mt, UINT Vk)
 
       return TRUE;
     }
-#endif
 
   return FALSE;
 }
@@ -2894,15 +2910,24 @@ static UINT FASTCALL
 MenuFindItemByKey(HWND WndOwner, PROSMENUINFO MenuInfo,
                   WCHAR Key, BOOL ForceMenuChar)
 {
+  ROSMENUINFO SysMenuInfo;
   PROSMENUITEMINFO Items, ItemInfo;
   LRESULT MenuChar;
   UINT i;
 
   DPRINT("\tlooking for '%c' (0x%02x) in [%p]\n", (char) Key, Key, MenuInfo);
 
-#if 0 /* FIXME */
-  if (! IsMenu( hmenu )) hmenu = GetSubMenu( get_win_sys_menu(hwndOwner), 0);
-#endif
+  if (NULL == MenuInfo || ! IsMenu(MenuInfo->Self))
+    {
+      if (MenuGetRosMenuInfo(&SysMenuInfo, GetSystemMenu(WndOwner, FALSE)))
+        {
+          MenuInfo = &SysMenuInfo;
+        }
+      else
+        {
+          MenuInfo = NULL;
+        }
+    }
 
   if (NULL != MenuInfo)
     {
@@ -3328,19 +3353,8 @@ MenuExitTracking(HWND Wnd)
 VOID
 MenuTrackMouseMenuBar(HWND Wnd, ULONG Ht, POINT Pt)
 {
-#if 0 /* FIXME */
-  HMENU Menu = (ht == HTSYSMENU) ? get_win_sys_menu( Wnd ) : GetMenu( Wnd );
+  HMENU Menu = (HTSYSMENU == Ht) ? NtUserGetSystemMenu(Wnd, FALSE) : GetMenu(Wnd);
   UINT Flags = TPM_ENTERIDLEEX | TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
-#else
-  HMENU Menu;
-  UINT Flags = TPM_ENTERIDLEEX | TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
-
-  if (HTSYSMENU == Ht)
-    {
-      return;
-    }
-  Menu = GetMenu(Wnd);
-#endif
 
   DPRINT("wnd=%p ht=0x%04x (%ld,%ld)\n", Wnd, Ht, pt.x, pt.y);
 
@@ -3760,10 +3774,26 @@ GetSubMenu(
 
   if (NtUserMenuItemInfo(hMenu, (UINT)nPos, MF_BYPOSITION, &mi, FALSE))
     {
-      return mi.hSubMenu;
+      return IsMenu(mi.hSubMenu) ? mi.hSubMenu : NULL;
     }
 
-  return (HMENU)0;
+  return NULL;
+}
+
+/*
+ * @implemented
+ */
+HMENU
+STDCALL
+GetSystemMenu(
+  HWND hWnd,
+  BOOL bRevert)
+{
+  HMENU TopMenu;
+
+  TopMenu = NtUserGetSystemMenu(hWnd, bRevert);
+
+  return NULL == TopMenu ? NULL : GetSubMenu(TopMenu, 0);
 }
 
 
@@ -4257,6 +4287,28 @@ SetMenuItemInfoW(
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetSystemMenu (
+  HWND hwnd, 
+  HMENU hMenu)
+{
+  if(!hwnd)
+  {
+    SetLastError(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  if(!hMenu)
+  {
+    SetLastError(ERROR_INVALID_MENU_HANDLE);
+    return FALSE;
+  }
+  return NtUserSetSystemMenu(hwnd, hMenu);
 }
 
 

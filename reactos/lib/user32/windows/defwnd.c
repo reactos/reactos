@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.123 2004/01/26 08:44:51 weiden Exp $
+/* $Id: defwnd.c,v 1.124 2004/02/22 23:40:58 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -817,7 +817,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
         SendMessageA(hWnd, WM_CLOSE, 0, 0);
         break;
       case SC_MOUSEMENU:
-        MenuTrackMouseMenuBar(hWnd, wParam, Pt);
+        MenuTrackMouseMenuBar(hWnd, wParam & 0x000f, Pt);
 	break;
       case SC_KEYMENU:
         MenuTrackKbdMenuBar(hWnd, wParam, Pt.x);

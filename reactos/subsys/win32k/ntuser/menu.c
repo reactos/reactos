@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.47 2004/02/22 18:04:52 gvg Exp $
+/* $Id: menu.c,v 1.48 2004/02/22 23:40:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -763,8 +763,8 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
     }
     else
     {
-      FreeMenuText(MenuItem);
-      MenuItem->fType = MF_SEPARATOR;
+      MenuItem->fType |= MF_SEPARATOR;
+      RtlInitUnicodeString(&MenuItem->Text, NULL);
     }
   }
   else
@@ -781,7 +781,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
   return TRUE;
 }
 
-static BOOL FASTCALL
+BOOL FASTCALL
 IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
                   PROSMENUITEMINFO ItemInfo)
 {

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.98 2004/02/02 11:46:41 ea Exp $
+/* $Id: window.c,v 1.99 2004/02/22 23:40:58 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1460,45 +1460,6 @@ STDCALL
 SetLastErrorEx(DWORD dwErrCode, DWORD dwType)
 {
   SetLastError(dwErrCode);
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-SetSystemMenu (
-  HWND hwnd, 
-  HMENU hMenu)
-{
-  if(!hwnd)
-  {
-    SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
-  }
-  if(!hMenu)
-  {
-    SetLastError(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
-  }
-  return NtUserSetSystemMenu(hwnd, hMenu);
-}
-
-/*
- * @implemented
- */
-HMENU
-STDCALL
-GetSystemMenu(
-  HWND hWnd,
-  BOOL bRevert)
-{
-  if(!hWnd)
-  {
-    SetLastError(ERROR_INVALID_WINDOW_HANDLE);
-    return (HMENU)0;
-  }
-  return NtUserGetSystemMenu(hWnd, bRevert);
 }
 
 /*

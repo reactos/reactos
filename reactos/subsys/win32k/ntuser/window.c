@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.189 2004/02/22 15:14:27 navaraf Exp $
+/* $Id: window.c,v 1.190 2004/02/22 23:40:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -589,9 +589,10 @@ IntGetParent(PWINDOW_OBJECT Wnd)
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
 {
-  PMENU_OBJECT MenuObject, NewMenuObject, ret = NULL;
+  PMENU_OBJECT MenuObject, NewMenuObject, SysMenuObject, ret = NULL;
   PW32PROCESS W32Process;
-  HMENU NewMenu;
+  HMENU NewMenu, SysMenu;
+  ROSMENUITEMINFO ItemInfo;
 
   if(bRevert)
   {
@@ -623,6 +624,7 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
       {
         WindowObject->SystemMenu = NewMenuObject->MenuInfo.Self;
         NewMenuObject->MenuInfo.Flags |= MF_SYSMENU;
+        NewMenuObject->MenuInfo.Wnd = WindowObject->Self;
         ret = NewMenuObject;
         //IntReleaseMenuObject(NewMenuObject);
       }
@@ -630,20 +632,53 @@ IntGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu)
     }
     else
     {
+      SysMenu = NtUserCreateMenu(FALSE);
+      if (NULL == SysMenu)
+      {
+        return NULL;
+      }
+      SysMenuObject = IntGetMenuObject(SysMenu);
+      if (NULL == SysMenuObject)
+      {
+        NtUserDestroyMenu(SysMenu);
+        return NULL;
+      }
+      SysMenuObject->MenuInfo.Flags |= MF_SYSMENU;
+      SysMenuObject->MenuInfo.Wnd = WindowObject->Self;
       NewMenu = IntLoadSysMenuTemplate();
       if(!NewMenu)
+      {
+        IntReleaseMenuObject(SysMenuObject);
+        NtUserDestroyMenu(SysMenu);
         return NULL;
+      }
       MenuObject = IntGetMenuObject(NewMenu);
       if(!MenuObject)
+      {
+        IntReleaseMenuObject(SysMenuObject);
+        NtUserDestroyMenu(SysMenu);
         return NULL;
+      }
       
       NewMenuObject = IntCloneMenu(MenuObject);
       if(NewMenuObject)
       {
-        WindowObject->SystemMenu = NewMenuObject->MenuInfo.Self;
-        NewMenuObject->MenuInfo.Flags |= MF_SYSMENU;
-        ret = NewMenuObject;
-        //IntReleaseMenuObject(NewMenuObject);
+        NewMenuObject->MenuInfo.Flags |= MF_SYSMENU | MF_POPUP;
+        IntReleaseMenuObject(NewMenuObject);
+	NtUserSetMenuDefaultItem(NewMenuObject->MenuInfo.Self, SC_CLOSE, FALSE);
+
+        ItemInfo.cbSize = sizeof(MENUITEMINFOW);
+        ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
+        ItemInfo.fType = MF_POPUP;
+        ItemInfo.fState = MFS_ENABLED;
+        ItemInfo.dwTypeData = NULL;
+        ItemInfo.cch = 0;
+        ItemInfo.hSubMenu = NewMenuObject->MenuInfo.Self;
+        IntInsertMenuItem(SysMenuObject, (UINT) -1, TRUE, &ItemInfo);
+
+        WindowObject->SystemMenu = SysMenuObject->MenuInfo.Self;
+
+        ret = SysMenuObject;
       }
       IntDestroyMenuObject(MenuObject, FALSE, TRUE);
       IntReleaseMenuObject(MenuObject);
@@ -2317,17 +2352,7 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    MenuObject = IntGetSystemMenu(WindowObject, bRevert, FALSE);
    if (MenuObject)
    {
-      /*
-       * Return the handle of the first submenu.
-       */
-      ExAcquireFastMutexUnsafe(&MenuObject->MenuItemsLock);
-      if (MenuObject->MenuItemList)
-      {
-         Result = MenuObject->MenuItemList->hSubMenu;
-         if (!IntIsMenu(Result))
-            Result = 0;
-      }    
-      ExReleaseFastMutexUnsafe(&MenuObject->MenuItemsLock);
+      Result = MenuObject->MenuInfo.Self;
       IntReleaseMenuObject(MenuObject);
    }
   
