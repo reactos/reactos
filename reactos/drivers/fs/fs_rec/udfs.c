@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: udfs.c,v 1.4 2003/11/17 02:12:49 hyperion Exp $
+/* $Id: udfs.c,v 1.5 2004/01/05 13:50:23 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -41,6 +41,8 @@
 
 /* TYPES ********************************************************************/
 
+#include <pshpack1.h>
+
 typedef struct _TAG
 {
   USHORT Identifier;
@@ -51,20 +53,23 @@ typedef struct _TAG
   USHORT Crc;
   USHORT CrcLength;
   ULONG  Location;
-} PACKED TAG, *PTAG;
+} TAG, *PTAG;
 
 typedef struct _EXTENT
 {
   ULONG Length;
   ULONG Location;
-} PACKED EXTENT, *PEXTENT;
+} EXTENT, *PEXTENT;
 
 typedef struct _AVDP
 {
   TAG    DescriptorTag;
   EXTENT MainVolumeDescriptorExtent;
   EXTENT ReserveVolumeDescriptorExtent;
-} PACKED AVDP, *PAVDP;
+} AVDP, *PAVDP;
+
+#include <poppack.h>
+
 
 /* FUNCTIONS ****************************************************************/
 
