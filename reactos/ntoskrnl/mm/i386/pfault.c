@@ -68,7 +68,11 @@ NTSTATUS MmPageFault(ULONG Cs,
       KeGetCurrentThread()->Alerted[UserMode] != 0 &&
       Cs != KERNEL_CS)
    {
+      KIRQL oldIrql;
+      
+      KeRaiseIrql(APC_LEVEL, &oldIrql);
       KiDeliverApc(KernelMode, NULL, NULL);
+      KeLowerIrql(oldIrql);
    }
    if (!NT_SUCCESS(Status) && (Mode == KernelMode) &&
          ((*Eip) >= (ULONG)MmSafeCopyFromUserUnsafeStart) &&
