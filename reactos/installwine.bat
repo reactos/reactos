@@ -7,6 +7,7 @@ set WINE_INSTALL=%1
 goto Install
 :NoParameter
 set WINE_INSTALL=c:\reactos\system32
+set ROS_INSTALL=c:\reactos
 :Install
 echo Installing dlls to %WINE_INSTALL%
 @echo off
@@ -31,19 +32,18 @@ copy ..\wine\dlls\shell32\shell32.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shfolder\shfolder.dll	%WINE_INSTALL%
 copy ..\wine\dlls\shlwapi\shlwapi.dll	%WINE_INSTALL%
 REM
-echo Installing winelib programs to C:\bin
+echo Installing winelib programs to %ROS_INSTALL%\bin
 REM
-mkdir C:\bin
-copy ..\wine\programs\clock\winclock.exe		C:\bin
-copy ..\wine\programs\cmdlgtst\cmdlgtst.exe		C:\bin
-copy ..\wine\programs\control\control.exe		C:\bin
-copy ..\wine\programs\notepad\notepad.exe		C:\bin
-copy ..\wine\programs\progman\progman.exe		C:\bin
-copy ..\wine\programs\uninstaller\uninstaller.exe	C:\bin
-copy ..\wine\programs\view\view.exe			C:\bin
-copy ..\wine\programs\wcmd\wcmd.exe			C:\bin
-copy ..\wine\programs\winemine\winmine.exe		C:\bin
-copy ..\wine\programs\winver\winver.exe			C:\bin
+copy ..\wine\programs\clock\winclock.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\cmdlgtst\cmdlgtst.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\control\control.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\notepad\notepad.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\progman\progman.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\uninstaller\uninstaller.exe	%ROS_INSTALL%\bin
+copy ..\wine\programs\view\view.exe			%ROS_INSTALL%\bin
+copy ..\wine\programs\wcmd\wcmd.exe			%ROS_INSTALL%\bin
+copy ..\wine\programs\winemine\winmine.exe		%ROS_INSTALL%\bin
+copy ..\wine\programs\winver\winver.exe			%ROS_INSTALL%\bin
 
 
 
