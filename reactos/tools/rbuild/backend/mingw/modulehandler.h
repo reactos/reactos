@@ -144,7 +144,8 @@ private:
 	                                 const std::string& filename ) const;
 	void GetDefaultDependencies ( string_list& dependencies ) const;
 	void GetInvocationDependencies ( const Module& module, string_list& dependencies );
-
+	bool IsWineModule () const;
+	std::string GetDefinitionFilename () const;
 public:
 	const Module& module;
 	string_list clean_files;

@@ -30,7 +30,7 @@ WINEBUILD_SOURCES = $(addprefix $(WINEBUILD_BASE_), \
 	)
 
 WINEBUILD_OBJECTS = \
-  $(addprefix $(INTERMEDIATE), $(WINEBUILD_SOURCES:.c=.o))
+  $(addprefix $(INTERMEDIATE_), $(WINEBUILD_SOURCES:.c=.o))
 
 WINEBUILD_HOST_CFLAGS = -D__USE_W32API -Iinclude/wine
 

@@ -848,7 +848,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          def_file.c_str () );
 
 	fprintf ( fMakefile,
-	          "%s: %s\n",
+	          "%s: %s $(WINEBUILD_TARGET)\n",
 	          stub_file.c_str (),
 	          sourceFilename.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_WINEBLD)\n" );
@@ -946,7 +946,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		CLEAN_FILE ( junk_tmp );
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
-		string def_file = module.GetBasePath () + SSEP + module.importLibrary->definition;
+		string def_file = GetDefinitionFilename ();
 
 		fprintf ( fMakefile,
 		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
@@ -1420,6 +1420,26 @@ MingwModuleHandler::GeneratePreconditionDependencies ()
 	fprintf ( fMakefile, "\n" );
 }
 
+bool
+MingwModuleHandler::IsWineModule () const
+{
+	if ( module.importLibrary == NULL)
+		return false;
+
+	size_t index = module.importLibrary->definition.rfind ( ".spec.def" );
+	return ( index != string::npos );
+}
+
+string
+MingwModuleHandler::GetDefinitionFilename () const
+{
+	string defFilename = module.GetBasePath () + SSEP + module.importLibrary->definition;
+	if ( IsWineModule () )
+		return PassThruCacheDirectory ( defFilename, false );
+	else
+		return defFilename;
+}
+
 void
 MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 {
@@ -1442,7 +1462,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 			          deps[i].c_str () );
 
 		fprintf ( fMakefile, " %s\n",
-		          GetDirectory(GetTargetFilename(module,NULL)).c_str () );
+		          GetDirectory ( GetTargetFilename ( module, NULL ) ).c_str () );
 
 		fprintf ( fMakefile, "\t$(ECHO_DLLTOOL)\n" );
 
@@ -1450,7 +1470,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-lib %s %s\n\n",
 		          module.GetTargetName ().c_str (),
-		          ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          GetDefinitionFilename ().c_str (),
 		          library_target.c_str (),
 		          killAt.c_str () );
 	}
@@ -1462,8 +1482,10 @@ MingwModuleHandler::GetSpecObjectDependencies (
 	const string& filename ) const
 {
 	string basename = GetBasename ( filename );
-	dependencies.push_back ( basename + ".spec.def" );
-	dependencies.push_back ( basename + ".stubs.c" );
+	string defDependency = PassThruCacheDirectory ( FixupTargetFilename ( basename + ".spec.def" ), false );
+	dependencies.push_back ( defDependency );
+	string stubsDependency = PassThruCacheDirectory ( FixupTargetFilename ( basename + ".stubs.c" ), false );
+	dependencies.push_back ( stubsDependency );
 }
 
 void
