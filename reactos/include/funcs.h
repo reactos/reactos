@@ -6474,7 +6474,7 @@ ColorMatchToTarget(HDC,HDC,DWORD);
 
 HPROPSHEETPAGE
 STDCALL
-CreatePropertySheetPageA(LPCPROPSHEETPAGE lppsp);
+CreatePropertySheetPageA(LPCPROPSHEETPAGEA lppsp);
 
 WINBOOL
 STDCALL
@@ -7547,7 +7547,10 @@ void WINAPI
 SHChangeNotify (LONG, UINT, LPCVOID, LPCVOID);
 
 int WINAPI
-SHFileOperation (LPSHFILEOPSTRUCT);
+SHFileOperationA (LPSHFILEOPSTRUCTA);
+
+int WINAPI
+SHFileOperationW (LPSHFILEOPSTRUCTW);
 
 void WINAPI
 SHFreeNameMappings (HANDLE);

@@ -360,7 +360,7 @@ NtUserGetCapture			0
 NtUserGetCaretBlinkTime                 0
 NtUserGetCaretPos                       1
 NtUserGetClassInfo                      5
-NtUserGetClassLong			2
+NtUserGetClassLong			3
 NtUserGetClassName                      3
 NtUserGetClientOrigin			2
 NtUserGetClientRect			2
@@ -412,7 +412,7 @@ NtUserGetUpdateRect                     3
 NtUserGetUpdateRgn                      3
 NtUserGetWindowDC                       1
 NtUserGetWindowPlacement                2
-NtUserGetWindowLong			2
+NtUserGetWindowLong                     3
 NtUserGetWindowRect			2
 NtUserGetWOWClass                       2
 NtUserHideCaret                         1

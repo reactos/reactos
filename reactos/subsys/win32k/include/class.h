@@ -10,7 +10,8 @@
 
 typedef struct _WNDCLASS_OBJECT
 {
-  WNDCLASSEX Class;
+  WNDCLASSEXA ClassA;
+  WNDCLASSEXW ClassW;
   BOOL Unicode;
   LIST_ENTRY ListEntry;
 } WNDCLASS_OBJECT, *PWNDCLASS_OBJECT;
@@ -33,12 +34,13 @@ NTSTATUS FASTCALL
 ClassReferenceClassByNameOrAtom(PWNDCLASS_OBJECT *Class,
 				LPWSTR ClassNameOrAtom);
 PWNDCLASS_OBJECT FASTCALL
-W32kCreateClass(LPWNDCLASSEXW lpwcx,
+W32kCreateClass(CONST WNDCLASSEXW *lpwcxw,
+		CONST WNDCLASSEXA *lpwcxa,
 		BOOL bUnicodeClass,
-		RTL_ATOM ClassName);
+		RTL_ATOM Atom);
 struct _WINDOW_OBJECT;
 ULONG FASTCALL
-W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset);
+W32kGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi);
 
 #endif /* __WIN32K_CLASS_H */
 

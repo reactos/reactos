@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.26 2003/08/02 16:53:08 gdalsnes Exp $
+/* $Id: message.c,v 1.27 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -106,11 +106,22 @@ NtUserDispatchMessage(CONST MSG* UnsafeMsg)
   /* FIXME: Call hook procedures. */
 
   /* Call the window procedure. */
-  Result = W32kCallWindowProc(WindowObject->WndProc,
-			      Msg.hwnd,
-			      Msg.message,
-			      Msg.wParam,
-			      Msg.lParam);
+  if (WindowObject->Unicode == TRUE)
+  {
+	Result = W32kCallWindowProc(WindowObject->WndProcW,
+					Msg.hwnd,
+					Msg.message,
+					Msg.wParam,
+					Msg.lParam);
+  }
+  else
+  {
+	Result = W32kCallWindowProc(WindowObject->WndProcA,
+					Msg.hwnd,
+					Msg.message,
+					Msg.wParam,
+					Msg.lParam);
+  }
 
   return Result;
 }
@@ -211,7 +222,7 @@ W32kPeekMessage(LPMSG Msg,
       if (WindowObject != NULL)
 	{
 	  if (WindowObject->Style & WS_MINIMIZE &&
-	      (HICON)NtUserGetClassLong(Msg->hwnd, GCL_HICON) != NULL)
+	      (HICON)NtUserGetClassLong(Msg->hwnd, GCL_HICON, FALSE) != NULL)
 	    {
 	      Msg->message = WM_PAINTICON;
 	      Msg->wParam = 1;
@@ -512,7 +523,14 @@ W32kSendMessage(HWND hWnd,
 	}
       else
 	{
-	  Result = W32kCallWindowProc(Window->WndProc, hWnd, Msg, wParam, lParam);
+	if (Window->Unicode == TRUE)
+	{
+	  Result = W32kCallWindowProc(Window->WndProcW, hWnd, Msg, wParam, lParam);
+	}
+	else
+	{
+	  Result = W32kCallWindowProc(Window->WndProcA, hWnd, Msg, wParam, lParam);
+	}
 	  return Result;
 	}
     }

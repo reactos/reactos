@@ -56,14 +56,14 @@ int
 STDCALL
 W32kEnumFontFamilies(HDC  hDC,
                           LPCWSTR  Family,
-                          FONTENUMPROC  EnumFontFamProc,
+                          FONTENUMPROCW EnumFontFamProc,
                           LPARAM  lParam);
 
 int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONTW  Logfont,
-                            FONTENUMEXPROC  EnumFontFamExProc,
+                            FONTENUMEXPROCW  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags);
 
@@ -71,7 +71,7 @@ int
 STDCALL
 W32kEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
-                   FONTENUMPROC  FontFunc,
+                   FONTENUMPROCW  FontFunc,
                    LPARAM  lParam);
 
 BOOL
@@ -110,7 +110,7 @@ W32kGetCharacterPlacement(HDC  hDC,
                                  LPCWSTR  String,
                                  int  Count,
                                  int  MaxExtent,
-                                 LPGCP_RESULTS  Results,
+                                 LPGCP_RESULTSW Results,
                                  DWORD  Flags);
 
 BOOL
@@ -213,7 +213,7 @@ W32kGetTextMetrics(HDC  hDC,
 BOOL
 STDCALL
 W32kPolyTextOut(HDC  hDC,
-                      CONST LPPOLYTEXT  txt,
+                      CONST LPPOLYTEXTW txt,
                       int  Count);
 
 BOOL

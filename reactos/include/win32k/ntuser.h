@@ -3,20 +3,28 @@
 
 ULONG STDCALL
 NtUserGetSystemMetrics(ULONG Index);
+
 DWORD STDCALL
-NtUserGetClassLong(HWND hWnd, DWORD Offset);
+NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi);
+
 LONG STDCALL
-NtUserGetWindowLong(HWND hWnd, DWORD Index);
+NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
+
 INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
+
 BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
+
 BOOL STDCALL
 NtUserGetClientRect(HWND hWnd, LPRECT Rect);
+
 HANDLE STDCALL
 NtUserGetProp(HWND hWnd, ATOM Atom);
+
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point);
+
 HWND STDCALL
 NtUserGetDesktopWindow();
 
@@ -80,7 +88,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFO* lpmiil,
+ LPCMENUITEMINFOW* lpmiil,
  ULONG nBufSize,
  DWORD Reserved);
 
@@ -448,7 +456,8 @@ NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFOW lpmii);
+  LPCMENUITEMINFOW lpmii);
+
 
 DWORD
 STDCALL
@@ -571,10 +580,9 @@ NtUserGetClassInfo(IN LPWSTR ClassName,
 
 DWORD
 STDCALL
-NtUserGetClassName(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+NtUserGetClassName(HWND hWnd,
+		   LPWSTR lpClassName,
+		   int nMaxCount);
 
 DWORD
 STDCALL
@@ -1148,13 +1156,12 @@ NtUserRedrawWindow
 
 RTL_ATOM
 STDCALL
-NtUserRegisterClassExWOW(
-  LPWNDCLASSEXW lpwcx,
-  BOOL bUnicodeClass,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5);
+NtUserRegisterClassExWOW(CONST WNDCLASSEXW* lpwcxw,
+			 CONST WNDCLASSEXA* lpwcxa,
+			 BOOL bUnicodeClass,
+			 DWORD Unknown3,
+			 DWORD Unknown4,
+			 DWORD Unknown5);
 
 DWORD
 STDCALL
@@ -1259,9 +1266,13 @@ NtUserSetCapture(HWND Wnd);
 HWND STDCALL
 NtUserGetCapture(VOID);
 
-DWORD
-STDCALL
-NtUserSetClassLong(HWND hWnd, int Index, LONG NewValue, DWORD unk);
+DWORD STDCALL
+NtUserSetClassLong(
+  HWND  hWnd,
+  DWORD Offset,
+  LONG  dwNewLong,
+  BOOL  Ansi );
+
 
 DWORD
 STDCALL

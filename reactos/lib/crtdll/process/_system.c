@@ -1,4 +1,4 @@
-/* $Id: _system.c,v 1.7 2003/07/11 17:25:16 royce Exp $
+/* $Id: _system.c,v 1.8 2003/08/05 15:41:02 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -23,7 +23,7 @@ int system(const char *command)
 	
 
 	PROCESS_INFORMATION ProcessInformation;
-	STARTUPINFO StartupInfo;
+	STARTUPINFOA StartupInfo;
 
 	int nStatus;
 
@@ -57,7 +57,7 @@ int system(const char *command)
 //command file has invalid format ENOEXEC
 
 
-	StartupInfo.cb = sizeof(STARTUPINFO);
+	StartupInfo.cb = sizeof(StartupInfo);
 	StartupInfo.lpReserved= NULL;
 	StartupInfo.dwFlags = 0;
 	StartupInfo.wShowWindow = SW_SHOWDEFAULT; 

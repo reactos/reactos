@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.17 2003/07/24 22:17:15 royce Exp $
+/* $Id: stubsw.c,v 1.18 2003/08/05 15:41:02 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -129,51 +129,66 @@ DeviceCapabilitiesExW(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
 EnumFontFamiliesExW(
 	HDC		hdc,
 	LPLOGFONTW	lpLogFont,
-	FONTENUMEXPROC	lpEnumFontFamProc,
+	FONTENUMEXPROCW	lpEnumFontFamProc,
 	LPARAM		lParam,
 	DWORD		dwFlags
 	)
 {
+#if 0
   return W32kEnumFontFamiliesEx ( hdc, lpLogFont, lpEnumFontFamProc, lParam, dwFlags );
+#else
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
 EnumFontFamiliesW(
 	HDC		hdc,
 	LPCWSTR		lpszFamily,
-	FONTENUMPROC	lpEnumFontFamProc,
+	FONTENUMPROCW	lpEnumFontFamProc,
 	LPARAM		lParam
 	)
 {
+#if 0
   return W32kEnumFontFamilies ( hdc, lpszFamily, lpEnumFontFamProc, lParam );
+#else
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
 EnumFontsW(
 	HDC  hDC,
 	LPCWSTR lpFaceName,
-	FONTENUMPROC  FontFunc,
+	FONTENUMPROCW  FontFunc,
 	LPARAM  lParam
 	)
 {
+#if 0
   return W32kEnumFonts ( hDC, lpFaceName, FontFunc, lParam );
+#else
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#endif
 }
 
 
@@ -335,7 +350,7 @@ GetCharacterPlacementW(
 	LPCWSTR		a1,
 	int		a2,
 	int		a3,
-	LPGCP_RESULTS	a4,
+	LPGCP_RESULTSW	a4,
 	DWORD		a5
 	)
 {
@@ -435,11 +450,11 @@ GetEnhMetaFileDescriptionW(
 int 
 STDCALL 
 StartDocW(
-	HDC		hdc, 
-	CONST DOCINFO	*a1
+	HDC		hdc,
+	CONST DOCINFOW	*a1
 	)
 {
-	return W32kStartDoc ( hdc, (CONST PDOCINFO)a1 );
+	return W32kStartDoc ( hdc, (CONST PDOCINFOW)a1 );
 }
 
 
@@ -465,7 +480,7 @@ BOOL
 STDCALL
 PolyTextOutW(
 	HDC			hdc,
-	CONST POLYTEXT		*a1,
+	CONST POLYTEXTW		*a1,
 	int			a2
 	)
 {
@@ -513,7 +528,7 @@ BOOL
 STDCALL
 GetLogColorSpaceW(
 	HCOLORSPACE		a0,
-	LPLOGCOLORSPACE	a1,
+	LPLOGCOLORSPACEW	a1,
 	DWORD			a2
 	)
 {
@@ -527,7 +542,7 @@ GetLogColorSpaceW(
 HCOLORSPACE
 STDCALL
 CreateColorSpaceW(
-	LPLOGCOLORSPACE	a0
+	LPLOGCOLORSPACEW	a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.13 2003/08/02 16:53:08 gdalsnes Exp $
+/* $Id: msgqueue.c,v 1.14 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -195,7 +195,7 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     }
   if (Click)
     {
-      if (W32kGetClassLong(Window, GCL_STYLE) & CS_DBLCLKS ||
+      if (W32kGetClassLong(Window, GCL_STYLE, FALSE) & CS_DBLCLKS ||
 	  (*HitTest) != HTCLIENT)
 	{
 	  if (Msg == ClkMessage &&

@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.50 2003/08/04 16:56:40 gdalsnes Exp $
+/* $Id: window.c,v 1.51 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -45,6 +45,7 @@ User32SendNCCALCSIZEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -80,6 +81,7 @@ User32SendGETMINMAXINFOMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -105,6 +107,7 @@ User32SendCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -129,6 +132,7 @@ User32SendNCCREATEMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -153,6 +157,7 @@ User32SendWINDOWPOSCHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLengt
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -177,6 +182,7 @@ User32SendWINDOWPOSCHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -201,6 +207,7 @@ User32SendSTYLECHANGINGMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -225,6 +232,7 @@ User32SendSTYLECHANGEDMessageForKernel(PVOID Arguments, ULONG ArgumentLength)
       DPRINT("Wrong length.\n");
       return(STATUS_INFO_LENGTH_MISMATCH);
     }
+  /* FIXME: handle ANSI windows vs Unicode windows */
   Proc = (WNDPROC)GetWindowLongW(CallbackArgs->Wnd, GWL_WNDPROC);
   DPRINT("Proc %X\n", Proc);
   /* Call the window procedure; notice kernel messages are always unicode. */
@@ -265,6 +273,7 @@ User32CallWindowProcFromKernel(PVOID Arguments, ULONG ArgumentLength)
     }
   if (CallbackArgs->Proc == NULL)
     {
+      /* FIXME: handle ANSI windows vs Unicode windows */
       CallbackArgs->Proc = (WNDPROC)GetWindowLong(CallbackArgs->Wnd, 
 						  GWL_WNDPROC);
     }
@@ -1257,7 +1266,7 @@ IsChild(HWND hWndParent,
 WINBOOL STDCALL
 IsIconic(HWND hWnd)
 {
-  return (NtUserGetWindowLong( hWnd, GWL_STYLE ) & WS_MINIMIZE) != 0;  
+  return (NtUserGetWindowLong( hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0;  
 }
 
 
@@ -1267,8 +1276,7 @@ IsIconic(HWND hWnd)
 WINBOOL STDCALL
 IsWindow(HWND hWnd)
 {
-  DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC);
-
+  DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
   return (0 != WndProc || ERROR_INVALID_HANDLE != GetLastError());
 }
 

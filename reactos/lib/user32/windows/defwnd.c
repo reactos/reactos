@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.58 2003/08/03 01:48:53 rcampbell Exp $
+/* $Id: defwnd.c,v 1.59 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -393,7 +393,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
 			    DWORD style, BOOL active )
 {
     RECT r = *rect;
-    char buffer[256];
+    WCHAR buffer[256];
     /* FIXME:  Implement and Use DrawCaption() */
     SelectObject( hDC, GetSysColorBrush(active ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION) );
     
@@ -410,12 +410,12 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
         UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMIN);
         UserDrawCaptionButton( hWnd, hDC, FALSE, DFCS_CAPTIONMAX);
     }
-    if (GetWindowTextA( hWnd, buffer, sizeof(buffer) ))
+    if (GetWindowTextW( hWnd, buffer, sizeof(buffer)/sizeof(buffer[0]) ))
     {
-        NONCLIENTMETRICS nclm;
+        NONCLIENTMETRICSW nclm;
         HFONT hFont, hOldFont;
 
-        nclm.cbSize = sizeof(NONCLIENTMETRICS);
+        nclm.cbSize = sizeof(nclm);
         SystemParametersInfoW(SPI_GETNONCLIENTMETRICS, 0, &nclm, 0);
         SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
         SetBkMode( hDC, TRANSPARENT );
@@ -424,7 +424,7 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
         else
             hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
         hOldFont = SelectObject(hDC, hFont);
-        TextOutA(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), rect->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, strlen(buffer));
+        TextOutW(hDC, r.left + (GetSystemMetrics(SM_CXDLGFRAME) * 2), rect->top + (nclm.lfCaptionFont.lfHeight / 2), buffer, wcslen(buffer));
         DeleteObject (SelectObject (hDC, hOldFont));
     }
 }

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.7 2003/08/04 23:52:25 weiden Exp $
+/* $Id: menu.c,v 1.8 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -621,7 +621,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFO* lpmiil,
+ LPCMENUITEMINFOW* lpmiil,
  ULONG nBufSize,
  DWORD Reserved)
 {
@@ -773,7 +773,7 @@ NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFOW lpmii)
+  LPCMENUITEMINFOW lpmii)
 {
   DWORD res = 0;
   PMENU_OBJECT MenuObject;

@@ -39,7 +39,7 @@ W32kSetAbortProc(HDC  hDC,
 INT
 STDCALL
 W32kStartDoc(HDC  hDC,
-                  CONST PDOCINFO  di);
+                  CONST PDOCINFOW  di);
 
 INT
 STDCALL

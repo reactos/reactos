@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.54 2003/07/10 18:50:51 chorns Exp $
+/* $Id: proc.c,v 1.55 2003/08/05 15:41:02 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,7 +22,7 @@
 
 WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
-LPSTARTUPINFO lpLocalStartupInfo = NULL;
+LPSTARTUPINFOA lpLocalStartupInfo = NULL;
 
 VOID STDCALL
 RegisterWaitForInputIdle(WaitForInputIdleType lpfnRegisterWaitForInputIdle);

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.21 2003/07/27 21:35:50 dwelch Exp $
+/* $Id: class.c,v 1.22 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -10,8 +10,9 @@
  */
 #include <windows.h>
 #include <user32.h>
+#include <string.h>
+#include <stdlib.h>
 #include <debug.h>
-
 
 /*
  * @unimplemented
@@ -79,19 +80,8 @@ GetClassInfoW(
 DWORD STDCALL
 GetClassLongA(HWND hWnd, int nIndex)
 {
-  switch (nIndex)
-    {
-    case GCL_WNDPROC:
-      UNIMPLEMENTED;
-      return(0);
-    case GCL_MENUNAME:
-      UNIMPLEMENTED;
-      return(0);
-    default:
-      return(GetClassLongW(hWnd, nIndex));
-    }
+  return(NtUserGetClassLong(hWnd, nIndex, TRUE));
 }
-
 
 /*
  * @implemented
@@ -99,12 +89,12 @@ GetClassLongA(HWND hWnd, int nIndex)
 DWORD STDCALL
 GetClassLongW(HWND hWnd, int nIndex)
 {
-  return(NtUserGetClassLong(hWnd, nIndex));
+  return(NtUserGetClassLong(hWnd, nIndex, FALSE));
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -113,13 +103,27 @@ GetClassNameA(
   LPSTR lpClassName,
   int nMaxCount)
 {
-  UNIMPLEMENTED;
-  return 0;
+	int result;
+	LPWSTR ClassName;
+	NTSTATUS Status;
+	ClassName = RtlAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,nMaxCount);
+    result = NtUserGetClassName(hWnd, ClassName, nMaxCount);
+    Status = RtlUnicodeToMultiByteN (lpClassName,
+				   result,
+				   NULL,
+				   ClassName,
+				   result);
+    if (!NT_SUCCESS(Status))
+	{
+		return 0;
+	}
+	RtlFreeHeap(RtlGetProcessHeap(),0,ClassName);
+	return result;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -128,8 +132,13 @@ GetClassNameW(
   LPWSTR lpClassName,
   int nMaxCount)
 {
-  UNIMPLEMENTED;
-  return 0;
+	int result;
+	LPWSTR ClassName;
+	ClassName = RtlAllocateHeap(RtlGetProcessHeap(),HEAP_ZERO_MEMORY,nMaxCount);
+    result = NtUserGetClassName(hWnd, ClassName, nMaxCount);
+	RtlCopyMemory(ClassName,lpClassName,result);
+	RtlFreeHeap(RtlGetProcessHeap(),0,ClassName);
+	return result;
 }
 
 
@@ -156,7 +165,7 @@ GetClassWord(
 LONG STDCALL
 GetWindowLongA(HWND hWnd, int nIndex)
 {
-  return NtUserGetWindowLong(hWnd, nIndex);
+  return NtUserGetWindowLong(hWnd, nIndex, TRUE);
 }
 
 
@@ -166,7 +175,7 @@ GetWindowLongA(HWND hWnd, int nIndex)
 LONG STDCALL
 GetWindowLongW(HWND hWnd, int nIndex)
 {
-  return NtUserGetWindowLong(hWnd, nIndex);
+  return NtUserGetWindowLong(hWnd, nIndex, FALSE);
 }
 
 
@@ -223,7 +232,7 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
 {
   WNDCLASSEXA Class;
 
-  RtlMoveMemory(&Class.style, lpWndClass, sizeof(WNDCLASS));
+  RtlMoveMemory ( &Class.style, lpWndClass, sizeof(WNDCLASSA));
   Class.cbSize = sizeof(WNDCLASSEXA);
   Class.hIconSm = INVALID_HANDLE_VALUE;
   return RegisterClassExA(&Class);
@@ -236,48 +245,13 @@ RegisterClassA(CONST WNDCLASSA *lpWndClass)
 ATOM STDCALL
 RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
 {
-  UNICODE_STRING MenuName;
-  UNICODE_STRING ClassName;
-  WNDCLASSEXW Class;
   RTL_ATOM Atom;
 
-  RtlMoveMemory(&Class, lpwcx, sizeof(WNDCLASSEXA));  
-  if (HIWORD((ULONG)lpwcx->lpszMenuName) != 0)
-    {
-      if (!RtlCreateUnicodeStringFromAsciiz(&MenuName, (PCSZ)lpwcx->lpszMenuName))
-	{
-	  RtlFreeUnicodeString(&MenuName);
-	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	  return (ATOM)0;
-	}
-      Class.lpszMenuName = MenuName.Buffer;
-    }
-  if (HIWORD((ULONG)lpwcx->lpszClassName) != 0)
-    {
-      if (!RtlCreateUnicodeStringFromAsciiz(&ClassName, (PCSZ)lpwcx->lpszClassName))
-	{
-	  RtlFreeUnicodeString(&ClassName);
-	  SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	  return (ATOM)0;
-	}  
-      Class.lpszClassName = ClassName.Buffer;
-    }
-
-  Atom = NtUserRegisterClassExWOW(&Class,
+  Atom = NtUserRegisterClassExWOW(0,(WNDCLASSEXA*)lpwcx,
 				  FALSE,
 				  0,
 				  0,
-				  0,
 				  0);
-
-  if (HIWORD((ULONG)lpwcx->lpszMenuName) != 0)
-    {
-      RtlFreeUnicodeString(&ClassName);
-    }
-  if (HIWORD((ULONG)lpwcx->lpszClassName )!= 0)
-    {
-      RtlFreeUnicodeString(&MenuName);
-    }
 
   return (ATOM)Atom;
 }
@@ -292,8 +266,8 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
   RTL_ATOM Atom;
 
   Atom = NtUserRegisterClassExWOW((WNDCLASSEXW*)lpwcx,
-				  TRUE,
 				  0,
+				  TRUE,
 				  0,
 				  0,
 				  0);
@@ -318,7 +292,7 @@ RegisterClassW(CONST WNDCLASSW *lpWndClass)
 
 
 /*
- * @unimplemented
+ * @mplemented
  */
 DWORD
 STDCALL
@@ -327,13 +301,12 @@ SetClassLongA(
   int nIndex,
   LONG dwNewLong)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return(NtUserSetClassLong(hWnd, nIndex, dwNewLong, TRUE));
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -342,8 +315,7 @@ SetClassLongW(
   int nIndex,
   LONG dwNewLong)
 {
-  UNIMPLEMENTED;
-  return 0;
+  return(NtUserSetClassLong(hWnd, nIndex, dwNewLong, FALSE));
 }
 
 

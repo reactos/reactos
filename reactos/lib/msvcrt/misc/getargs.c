@@ -48,7 +48,7 @@ int add(char* name)
 int expand(char* name, int flag)
 {
     char* s;
-    WIN32_FIND_DATA fd;
+    WIN32_FIND_DATAA fd;
     HANDLE hFile;
     BOOLEAN first = TRUE;
     char buffer[256];

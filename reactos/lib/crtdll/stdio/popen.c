@@ -15,7 +15,7 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 {
   FILE *pf;
   HANDLE hReadPipe, hWritePipe;
-  STARTUPINFO StartupInfo;
+  STARTUPINFOA StartupInfo;
   PROCESS_INFORMATION ProcessInformation;
 
   // fixme CreatePipe
@@ -23,7 +23,7 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 //  if ( !CreatePipe(&hReadPipe,&hWritePipe,NULL,1024))
 //		return NULL;	
 
-  StartupInfo.cb = sizeof(STARTUPINFO);
+  StartupInfo.cb = sizeof(StartupInfo);
   if ( md == "r" ) {
 	StartupInfo.hStdOutput = hWritePipe;
   }

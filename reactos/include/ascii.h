@@ -1525,7 +1525,7 @@ InsertMenuItemA(
     HMENU,
     UINT,
     WINBOOL,
-    LPCMENUITEMINFO
+    LPCMENUITEMINFOA
     );
  
 WINBOOL
@@ -1534,7 +1534,7 @@ GetMenuItemInfoA(
     HMENU,
     UINT,
     WINBOOL,
-    LPMENUITEMINFO
+    LPMENUITEMINFOA
     );
  
 WINBOOL
@@ -1543,7 +1543,7 @@ SetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFO lpmii);
+  LPMENUITEMINFOA lpmii);
  
 int
 STDCALL
@@ -1886,15 +1886,15 @@ DeviceCapabilitiesA(LPCSTR, LPCSTR, WORD,
 
 int
 STDCALL
-EnumFontFamiliesExA(HDC, LPLOGFONTA, FONTENUMEXPROC, LPARAM,DWORD);
+EnumFontFamiliesExA(HDC, LPLOGFONTA, FONTENUMEXPROCA, LPARAM,DWORD);
 
 int
 STDCALL
-EnumFontFamiliesA(HDC, LPCSTR, FONTENUMPROC, LPARAM);
+EnumFontFamiliesA(HDC, LPCSTR, FONTENUMPROCA, LPARAM);
 
 int
 STDCALL
-EnumFontsA(HDC, LPCSTR,  FONTENUMPROC, LPARAM);
+EnumFontsA(HDC, LPCSTR,  FONTENUMPROCA, LPARAM);
 
 WINBOOL
 STDCALL
@@ -1959,7 +1959,7 @@ GetTextExtentExPointA(
 
 DWORD
 STDCALL
-GetCharacterPlacementA(HDC, LPCSTR, int, int, LPGCP_RESULTS, DWORD);
+GetCharacterPlacementA(HDC, LPCSTR, int, int, LPGCP_RESULTSA, DWORD);
 
 HDC
 STDCALL
@@ -1991,7 +1991,7 @@ GetTextMetricsA(HDC, LPTEXTMETRICA);
 
 int
 STDCALL
-StartDocA(HDC, CONST DOCINFO *);
+StartDocA(HDC, CONST DOCINFOA *);
 
 int
 STDCALL
@@ -2007,7 +2007,7 @@ ExtTextOutA(HDC, int, int, UINT, CONST RECT *,LPCSTR, UINT, CONST INT *);
 
 WINBOOL
 STDCALL
-PolyTextOutA(HDC, CONST POLYTEXT *, int); 
+PolyTextOutA(HDC, CONST POLYTEXTA *, int); 
 
 int
 STDCALL
@@ -2019,11 +2019,11 @@ GetKerningPairsA(HDC, DWORD, LPKERNINGPAIR);
 
 HCOLORSPACE
 STDCALL
-CreateColorSpaceA(LPLOGCOLORSPACE);
+CreateColorSpaceA(LPLOGCOLORSPACEA);
 
 WINBOOL
 STDCALL
-GetLogColorSpaceA(HCOLORSPACE,LPLOGCOLORSPACE,DWORD);
+GetLogColorSpaceA(HCOLORSPACE,LPLOGCOLORSPACEA,DWORD);
 
 WINBOOL
 STDCALL
@@ -2043,7 +2043,7 @@ EnumICMProfilesA(HDC,ICMENUMPROC,LPARAM);
 
 int
 STDCALL
-PropertySheetA(LPCPROPSHEETHEADER lppsph);
+PropertySheetA(LPCPROPSHEETHEADERA lppsph);
 
 HIMAGELIST
 STDCALL
@@ -2059,11 +2059,11 @@ DrawStatusTextA(HDC hDC, LPRECT lprc, LPCSTR pszText, UINT uFlags);
 
 WINBOOL
 STDCALL
-GetOpenFileNameA(LPOPENFILENAME);
+GetOpenFileNameA(LPOPENFILENAMEA);
 
 WINBOOL
 STDCALL
-GetSaveFileNameA(LPOPENFILENAME);
+GetSaveFileNameA(LPOPENFILENAMEA);
 
 short
 STDCALL
@@ -2071,27 +2071,27 @@ GetFileTitleA(LPCSTR, LPSTR, WORD);
 
 WINBOOL
 STDCALL
-ChooseColorA(LPCHOOSECOLOR);
+ChooseColorA(LPCHOOSECOLORA);
 
 HWND
 STDCALL
-FindTextA(LPFINDREPLACE);
+FindTextA(LPFINDREPLACEA);
 
 HWND
 STDCALL
-ReplaceTextA(LPFINDREPLACE);
+ReplaceTextA(LPFINDREPLACEA);
 
 WINBOOL
 STDCALL
-ChooseFontA(LPCHOOSEFONT);
+ChooseFontA(LPCHOOSEFONTA);
 
 WINBOOL
 STDCALL
-PrintDlgA(LPPRINTDLG);
+PrintDlgA(LPPRINTDLGA);
 
 WINBOOL
 STDCALL
-PageSetupDlgA( LPPAGESETUPDLG );
+PageSetupDlgA( LPPAGESETUPDLGA );
 
 WINBOOL
 STDCALL
@@ -2130,14 +2130,14 @@ HANDLE
 STDCALL
 FindFirstFileA(
     LPCSTR lpFileName,
-    LPWIN32_FIND_DATA lpFindFileData
+    LPWIN32_FIND_DATAA lpFindFileData
     );
 
 WINBOOL
 STDCALL
 FindNextFileA(
     HANDLE hFindFile,
-    LPWIN32_FIND_DATA lpFindFileData
+    LPWIN32_FIND_DATAA lpFindFileData
     );
 
 WINBOOL
@@ -2361,7 +2361,7 @@ LONG
 STDCALL
 RegQueryMultipleValuesA (
     HKEY hKey,
-    PVALENT val_list,
+    PVALENTA val_list,
     DWORD num_vals,
     LPSTR lpValueBuf,
     LPDWORD ldwTotsize
@@ -2508,7 +2508,7 @@ GetNumberFormatA(
     LCID     Locale,
     DWORD    dwFlags,
     LPCSTR lpValue,
-    CONST NUMBERFMT *lpFormat,
+    CONST NUMBERFMTA *lpFormat,
     LPSTR  lpNumberStr,
     int      cchNumber);
 
@@ -2518,7 +2518,7 @@ GetCurrencyFormatA(
     LCID     Locale,
     DWORD    dwFlags,
     LPCSTR lpValue,
-    CONST CURRENCYFMT *lpFormat,
+    CONST CURRENCYFMTA *lpFormat,
     LPSTR  lpCurrencyStr,
     int      cchCurrency);
 
@@ -2713,7 +2713,7 @@ WNetAddConnectionA(
 
 DWORD STDCALL
 WNetAddConnection2A(
-     LPNETRESOURCE lpNetResource,
+     LPNETRESOURCEA lpNetResource,
      LPCSTR       lpPassword,
      LPCSTR       lpUserName,
      DWORD          dwFlags
@@ -2722,7 +2722,7 @@ WNetAddConnection2A(
 DWORD STDCALL
 WNetAddConnection3A(
      HWND           hwndOwner,
-     LPNETRESOURCE lpNetResource,
+     LPNETRESOURCEA lpNetResource,
      LPCSTR       lpPassword,
      LPCSTR       lpUserName,
      DWORD          dwFlags
@@ -2751,7 +2751,7 @@ WNetGetConnectionA(
 DWORD STDCALL
 WNetUseConnectionA(
     HWND            hwndOwner,
-    LPNETRESOURCE  lpNetResource,
+    LPNETRESOURCEA  lpNetResource,
     LPCSTR        lpUserID,
     LPCSTR        lpPassword,
     DWORD           dwFlags,
@@ -2769,12 +2769,12 @@ WNetSetConnectionA(
 
 DWORD STDCALL
 WNetConnectionDialog1A(
-    LPCONNECTDLGSTRUCT lpConnDlgStruct
+    LPCONNECTDLGSTRUCTA lpConnDlgStruct
     );
 
 DWORD STDCALL
 WNetDisconnectDialog1A(
-    LPDISCDLGSTRUCT lpConnDlgStruct
+    LPDISCDLGSTRUCTA lpConnDlgStruct
     );
 
 DWORD STDCALL
@@ -2782,7 +2782,7 @@ WNetOpenEnumA(
      DWORD          dwScope,
      DWORD          dwType,
      DWORD          dwUsage,
-     LPNETRESOURCE lpNetResource,
+     LPNETRESOURCEA lpNetResource,
      LPHANDLE       lphEnum
     );
 
@@ -2833,7 +2833,7 @@ WNetGetLastErrorA(
 
 DWORD STDCALL
 MultinetGetConnectionPerformanceA(
-        LPNETRESOURCE lpNetResource,
+        LPNETRESOURCEA lpNetResource,
         LPNETCONNECTINFOSTRUCT lpNetConnectInfoStruct
         );
 

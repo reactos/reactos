@@ -36,9 +36,9 @@ direct_exec_tail(const char* program, const char* args,
                  char* const envp[],
                  PROCESS_INFORMATION* ProcessInformation)
 {
-    static STARTUPINFO StartupInfo;
+    static STARTUPINFOA StartupInfo;
 
-    StartupInfo.cb = sizeof(STARTUPINFO);
+    StartupInfo.cb = sizeof(StartupInfo);
     StartupInfo.lpReserved= NULL;
     StartupInfo.dwFlags = 0;
     StartupInfo.wShowWindow = SW_SHOWDEFAULT; 

@@ -624,3 +624,266 @@ GetDeviceCaps(
 {
 	return W32kGetDeviceCaps(DC, Index);
 }
+
+/*
+ * @implemented
+ */
+HPALETTE
+STDCALL
+CreatePalette(
+	CONST LOGPALETTE	*a0
+	)
+{
+	return W32kCreatePalette((CONST PLOGPALETTE)a0);
+}
+
+/*
+ * @implemented
+ */
+COLORREF
+STDCALL
+GetNearestColor(
+	HDC		a0,
+	COLORREF	a1
+	)
+{
+	return W32kGetNearestColor(a0,a1);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetNearestPaletteIndex(
+	HPALETTE	a0,
+	COLORREF	a1
+	)
+{
+	return W32kGetNearestPaletteIndex(a0,a1);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetPaletteEntries(
+	HPALETTE	a0,
+	UINT		a1,
+	UINT		a2,
+	LPPALETTEENTRY	a3
+	)
+{
+	return W32kGetPaletteEntries(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+GetSystemPaletteEntries(
+	HDC		a0,
+	UINT		a1,
+	UINT		a2,
+	LPPALETTEENTRY	a3
+	)
+{
+	return W32kGetSystemPaletteEntries(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RestoreDC(
+	HDC	a0,
+	int	a1
+	)
+{
+	return W32kRestoreDC(a0,a1);
+}
+
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SaveDC(
+	HDC	a0
+	)
+{
+	return W32kSaveDC(a0);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+SetPaletteEntries(
+	HPALETTE		a0,
+	UINT			a1,
+	UINT			a2,
+	CONST PALETTEENTRY	*a3
+	)
+{
+	return W32kSetPaletteEntries(a0,a1,a2,(CONST PPALETTEENTRY)a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetWorldTransform(
+	HDC		hdc,
+	LPXFORM		a1
+	)
+{
+	return W32kGetWorldTransform(hdc,a1);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetWorldTransform(
+	HDC		a0,
+	CONST XFORM	*a1
+	)
+{
+	return W32kSetWorldTransform(a0,(CONST PXFORM)a1);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+ModifyWorldTransform(
+	HDC		a0,
+	CONST XFORM	*a1,
+	DWORD		a2
+	)
+{
+	return W32kModifyWorldTransform(a0,(CONST PXFORM)a1,a2);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CombineTransform(
+	LPXFORM		a0,
+	CONST XFORM	*a1,
+	CONST XFORM	*a2
+	)
+{
+	return W32kCombineTransform(a0,(CONST PXFORM)a1,(CONST PXFORM)a2);
+}
+
+/*
+ * @implemented
+ */
+UINT
+STDCALL
+SetDIBColorTable(
+	HDC		hdc,
+	UINT		a1,
+	UINT		a2,
+	CONST RGBQUAD	*a3
+	)
+{
+	return W32kSetDIBColorTable(hdc,a1,a2,(CONST PRGBQUAD)a3);
+}
+
+/*
+ * @implemented
+ */
+HPALETTE
+STDCALL
+CreateHalftonePalette(
+	HDC	hdc
+	)
+{
+	return W32kCreateHalftonePalette(hdc);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetViewportExtEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	LPSIZE	a3
+	)
+{
+	return W32kSetViewportExtEx(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetWindowExtEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	LPSIZE	a3
+	)
+{
+	return W32kSetWindowExtEx(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+OffsetWindowOrgEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	LPPOINT	a3
+	)
+{
+	return W32kOffsetWindowOrgEx(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetBitmapDimensionEx(
+	HBITMAP	a0,
+	int	a1,
+	int	a2,
+	LPSIZE	a3
+	)
+{
+	return W32kSetBitmapDimensionEx(a0,a1,a2,a3);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetDCOrgEx(
+	HDC	a0,
+	LPPOINT	a1
+	)
+{
+	return W32kGetDCOrgEx(a0,a1);
+}

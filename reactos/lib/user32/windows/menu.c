@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.15 2003/08/04 23:52:25 weiden Exp $
+/* $Id: menu.c,v 1.16 2003/08/05 15:41:03 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/menu.c
@@ -171,53 +171,59 @@ STATIC HEAP_strdupA2W ( HANDLE hHeap, LPWSTR* ppszW, LPCSTR lpszA, UINT* NewLen 
  *
  * Parse an extended menu resource and add items to the menu.
  * Return a pointer to the end of the resource.
+ *
+ * FIXME - should we be passing an LPCSTR to a predominantly UNICODE function?
  */
 static LPCSTR MENUEX_ParseResource( LPCSTR res, HMENU hMenu)
 {
-    WORD resinfo;
-    
-    do {
-	MENUITEMINFO mii;
+  WORD resinfo;
+  
+  do
+    {
+      MENUITEMINFOW mii;
 
-	mii.cbSize = sizeof(mii);
-	mii.fMask = MIIM_STATE | MIIM_ID | MIIM_TYPE;
-	mii.fType = GET_DWORD(res);
-        res += sizeof(DWORD);
-	mii.fState = GET_DWORD(res);
-        res += sizeof(DWORD);
-	mii.wID = GET_DWORD(res);
-        res += sizeof(DWORD);
-	resinfo = GET_WORD(res);
-        res += sizeof(WORD);
-	/* Align the text on a word boundary.  */
-	res += (~((int)res - 1)) & 1;
-	mii.dwTypeData = (LPWSTR) res;
-	res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
-	/* Align the following fields on a dword boundary.  */
-	res += (~((int)res - 1)) & 3;
+      mii.cbSize = sizeof(mii);
+      mii.fMask = MIIM_STATE | MIIM_ID | MIIM_TYPE;
+      mii.fType = GET_DWORD(res);
+      res += sizeof(DWORD);
+      mii.fState = GET_DWORD(res);
+      res += sizeof(DWORD);
+      mii.wID = GET_DWORD(res);
+      res += sizeof(DWORD);
+      resinfo = GET_WORD(res);
+      res += sizeof(WORD);
+      /* Align the text on a word boundary.  */
+      res += (~((int)res - 1)) & 1;
+      mii.dwTypeData = (LPWSTR) res;
+      res += (1 + strlenW(mii.dwTypeData)) * sizeof(WCHAR);
+      /* Align the following fields on a dword boundary.  */
+      res += (~((int)res - 1)) & 3;
 
-	if (resinfo & 1) {	/* Pop-up? */
-	    /* DWORD helpid = GET_DWORD(res); FIXME: use this.  */
-	    res += sizeof(DWORD);
-	    mii.hSubMenu = CreatePopupMenu();
-	    if (!mii.hSubMenu)
-		return NULL;
-	    if (!(res = MENUEX_ParseResource(res, mii.hSubMenu))) {
-		DestroyMenu(mii.hSubMenu);
-                return NULL;
-	    }
-	    mii.fMask |= MIIM_SUBMENU;
-	    mii.fType |= MF_POPUP;
-        }
-	else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
+      if (resinfo & 1) /* Pop-up? */
 	{
-	    DbgPrint("WARN: Converting NULL menu item %04x, type %04x to SEPARATOR\n",
-		mii.wID, mii.fType);
-	    mii.fType |= MF_SEPARATOR;
+	  /* DWORD helpid = GET_DWORD(res); FIXME: use this.  */
+	  res += sizeof(DWORD);
+	  mii.hSubMenu = CreatePopupMenu();
+	  if (!mii.hSubMenu)
+	      return NULL;
+	  if (!(res = MENUEX_ParseResource(res, mii.hSubMenu)))
+	  {
+	      DestroyMenu(mii.hSubMenu);
+	      return NULL;
+	  }
+	  mii.fMask |= MIIM_SUBMENU;
+	  mii.fType |= MF_POPUP;
 	}
-	InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
-    } while (!(resinfo & MF_END));
-    return res;
+      else if(!*mii.dwTypeData && !(mii.fType & MF_SEPARATOR))
+	{
+	  DbgPrint("WARN: Converting NULL menu item %04x, type %04x to SEPARATOR\n",
+	      mii.wID, mii.fType);
+	  mii.fType |= MF_SEPARATOR;
+	}
+      InsertMenuItemW(hMenu, -1, MF_BYPOSITION, &mii);
+    }
+  while (!(resinfo & MF_END));
+  return res;
 }
 
 /**********************************************************************
@@ -751,7 +757,7 @@ GetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFO lpmii)
+  LPMENUITEMINFOA lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -767,7 +773,7 @@ GetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFO lpmii)
+  LPMENUITEMINFOW lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -892,7 +898,7 @@ InsertMenuItemA(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii)
+  LPCMENUITEMINFOA lpmii)
 {
   MENUITEMINFOW mi;
   WINBOOL res = FALSE;
@@ -935,7 +941,7 @@ InsertMenuItemW(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPCMENUITEMINFO lpmii)
+  LPCMENUITEMINFOW lpmii)
 {
   MENUITEMINFOW mi;
   WINBOOL res = FALSE;
@@ -1250,7 +1256,7 @@ SetMenuItemInfoA(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFO lpmii)
+  LPMENUITEMINFOA lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;
@@ -1266,7 +1272,7 @@ SetMenuItemInfoW(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFO lpmii)
+  LPMENUITEMINFOW lpmii)
 {
   UNIMPLEMENTED;
   return FALSE;

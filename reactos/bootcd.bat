@@ -1,4 +1,3 @@
-@echo off
 set BOOTCD_DIR=..\bootcd
 set FREELDR_DIR=..\freeldr
 set ROSAPPS_DIR=..\rosapps

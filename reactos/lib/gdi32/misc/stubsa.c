@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.21 2003/08/04 00:28:44 royce Exp $
+/* $Id: stubsa.c,v 1.22 2003/08/05 15:41:02 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -227,39 +227,46 @@ DeviceCapabilitiesExA(
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
-EnumFontFamiliesExA(
+EnumFontFamiliesExA (
 	HDC		hdc,
 	LPLOGFONTA	lpLogFont,
-	FONTENUMEXPROC	lpEnumFontFamProc,
+	FONTENUMEXPROCA	lpEnumFontFamProc,
 	LPARAM		lParam,
 	DWORD		dwFlags
 	)
 {
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#if 0
   LOGFONTW LogFontW;
 
   RosRtlLogFontA2W ( &LogFontW, lpLogFont );
 
   /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
   return W32kEnumFontFamiliesEx ( hdc, &LogFontW, lpEnumFontFamProc, lParam, dwFlags );
+#endif
 }
 
 
 /*
- * @implemented
+ * @unimplemented
  */
 int
 STDCALL
 EnumFontFamiliesA(
 	HDC		hdc,
 	LPCSTR		lpszFamily,
-	FONTENUMPROC	lpEnumFontFamProc,
+	FONTENUMPROCA	lpEnumFontFamProc,
 	LPARAM		lParam
 	)
 {
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#if 0
   NTSTATUS Status;
   LPWSTR lpszFamilyW;
   int rc = 0;
@@ -275,6 +282,7 @@ EnumFontFamiliesA(
     }
 
   return rc;
+#endif
 }
 
 
@@ -286,10 +294,13 @@ STDCALL
 EnumFontsA (
 	HDC  hDC,
 	LPCSTR lpFaceName,
-	FONTENUMPROC  FontFunc,
+	FONTENUMPROCA  FontFunc,
 	LPARAM  lParam
 	)
 {
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return 0;
+#if 0
   NTSTATUS Status;
   LPWSTR lpFaceNameW;
   int rc = 0;
@@ -304,6 +315,7 @@ EnumFontsA (
       HEAP_free ( lpFaceNameW );
     }
   return rc;
+#endif
 }
 
 
@@ -498,7 +510,7 @@ GetCharacterPlacementA(
 	LPCSTR		a1,
 	int		a2,
 	int		a3,
-	LPGCP_RESULTS	a4,
+	LPGCP_RESULTSA	a4,
 	DWORD		a5
 	)
 {
@@ -699,7 +711,7 @@ int
 STDCALL
 StartDocA(
 	HDC		hdc,
-	CONST DOCINFO	*a1
+	CONST DOCINFOA	*a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -729,7 +741,7 @@ BOOL
 STDCALL 
 PolyTextOutA(
 	HDC			hdc, 
-	CONST POLYTEXT		*a1, 
+	CONST POLYTEXTA		*a1, 
 	int			a2
 	)
 {
@@ -777,7 +789,7 @@ BOOL
 STDCALL
 GetLogColorSpaceA(
 	HCOLORSPACE		a0,
-	LPLOGCOLORSPACE	a1,
+	LPLOGCOLORSPACEA	a1,
 	DWORD			a2
 	)
 {
@@ -792,7 +804,7 @@ GetLogColorSpaceA(
 HCOLORSPACE
 STDCALL
 CreateColorSpaceA(
-	LPLOGCOLORSPACE	a0
+	LPLOGCOLORSPACEA	a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

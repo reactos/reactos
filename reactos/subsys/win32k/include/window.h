@@ -91,7 +91,9 @@ typedef struct _WINDOW_OBJECT
   PSCROLLBARINFO pVScroll;
   PSCROLLBARINFO wExtra;
   LONG UserData;
-  WNDPROC WndProc;
+  BOOL Unicode;
+  WNDPROC WndProcA;
+  WNDPROC WndProcW;
   PETHREAD OwnerThread;
   HWND hWndOwner; /* handle to the owner window (why not use pointer to window? wine doesn't...)*/
   HWND hWndLastPopup; /* handle to last active popup window (why not use pointer to window? wine doesn't...)*/

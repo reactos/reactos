@@ -240,3 +240,30 @@ FillRgn(
 {
 	return W32kFillRgn(a0, a1, a2);
 }
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+PtInRegion(
+	HRGN	a0,
+	int	a1,
+	int	a2
+	)
+{
+	return W32kPtInRegion(a0,a1,a2);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+RectInRegion(
+	HRGN		a0,
+	CONST RECT	*a1
+	)
+{
+	return W32kRectInRegion(a0,(CONST PRECT)a1);
+}

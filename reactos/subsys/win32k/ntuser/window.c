@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.76 2003/08/04 21:21:13 royce Exp $
+/* $Id: window.c,v 1.77 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,6 +63,9 @@ static LIST_ENTRY RegisteredMessageListHead;
 
 #define REGISTERED_MESSAGE_MIN 0xc000
 #define REGISTERED_MESSAGE_MAX 0xffff
+
+PWINDOW_OBJECT FASTCALL
+W32kGetParent(PWINDOW_OBJECT Wnd);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -119,7 +122,7 @@ W32kGetParent(PWINDOW_OBJECT Wnd)
 {
   if (Wnd->Style & WS_POPUP)
   {
-    return W32kGetWindowObject(Wnd->hWndOwner); /* wine use HWND for owner window (unknown reason) */
+    return W32kGetWindowObject(Wnd->ParentHandle); /* wine use HWND for owner window (unknown reason) */
   }
   else if (Wnd->Style & WS_CHILD) 
   {
@@ -488,7 +491,9 @@ W32kCreateDesktopWindow(PWINSTATION_OBJECT WindowStation,
   WindowObject->WindowRect.bottom = Height;
   WindowObject->ClientRect = WindowObject->WindowRect;
   WindowObject->UserData = 0;
-  WindowObject->WndProc = DesktopClass->Class.lpfnWndProc;
+  /*FIXME: figure out what the correct strange value is and what to do with it (and how to set the wndproc values correctly) */
+  WindowObject->WndProcA = DesktopClass->ClassA.lpfnWndProc;
+  WindowObject->WndProcW = DesktopClass->ClassW.lpfnWndProc;
   WindowObject->OwnerThread = PsGetCurrentThread();
 
   InitializeListHead(&WindowObject->ChildrenListHead);
@@ -599,7 +604,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)
     ObmCreateObject(PsGetWin32Process()->WindowStation->HandleTable, &Handle,
-        otWindow, sizeof(WINDOW_OBJECT) + ClassObject->Class.cbWndExtra
+        otWindow, sizeof(WINDOW_OBJECT) + ClassObject->ClassW.cbWndExtra
         );
 
   DPRINT("Created object with handle %X\n", Handle);
@@ -632,14 +637,16 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
   WindowObject->Parent = ParentWindow;
   WindowObject->UserData = 0;
-  WindowObject->WndProc = ClassObject->Class.lpfnWndProc;
+  WindowObject->Unicode = ClassObject->Unicode;
+  WindowObject->WndProcA = ClassObject->ClassA.lpfnWndProc;
+  WindowObject->WndProcW = ClassObject->ClassW.lpfnWndProc;
   WindowObject->OwnerThread = PsGetCurrentThread();
 
   /* extra window data */
-  if (ClassObject->Class.cbWndExtra != 0)
+  if (ClassObject->ClassW.cbWndExtra != 0)
     {
       WindowObject->ExtraData = (PULONG)(WindowObject + 1);
-      WindowObject->ExtraDataSize = ClassObject->Class.cbWndExtra;
+      WindowObject->ExtraDataSize = ClassObject->ClassW.cbWndExtra;
       RtlZeroMemory(WindowObject->ExtraData, WindowObject->ExtraDataSize);
     }
   else
@@ -1684,7 +1691,7 @@ NtUserSetWindowFNID(DWORD Unknown0,
 }
 
 LONG STDCALL
-NtUserGetWindowLong(HWND hWnd, DWORD Index)
+NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 {
   PWINDOW_OBJECT WindowObject;
   NTSTATUS Status;
@@ -1722,9 +1729,17 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index)
 	case GWL_STYLE:
 	  Result = WindowObject->Style;
 	  break;
-
+    /* FIXME: need to return the "invalid" value if the caller asks for it
+	   (but we cant do that because that breaks stuff in user32 which wont be fixable until we have an implementation of IsWindowUnicode available */
 	case GWL_WNDPROC:
-	  Result = (LONG) WindowObject->WndProc;	
+	  if (WindowObject->Unicode)
+	  {
+		Result = (LONG) WindowObject->WndProcW;
+	  }
+	  else
+	  {
+		Result = (LONG) WindowObject->WndProcA;
+	  }
 	  break;
 
 	case GWL_HINSTANCE:
@@ -1810,8 +1825,9 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
 	case GWL_WNDPROC:
 	  /* FIXME: should check if window belongs to current process */
-	  OldValue = (LONG) WindowObject->WndProc;
-	  WindowObject->WndProc = (WNDPROC) NewValue;
+	  /*OldValue = (LONG) WindowObject->WndProc;
+	  WindowObject->WndProc = (WNDPROC) NewValue;*/
+	  OldValue = 0;
 	  break;
 
 	case GWL_HINSTANCE:

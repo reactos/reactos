@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.37 2003/07/24 21:23:37 gvg Exp $ */
+/* $Id: text.c,v 1.38 2003/08/05 15:41:03 weiden Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -364,7 +364,7 @@ int
 STDCALL
 W32kEnumFontFamiliesEx(HDC  hDC,
                             LPLOGFONTW  Logfont,
-                            FONTENUMEXPROC  EnumFontFamExProc,
+                            FONTENUMEXPROCW  EnumFontFamExProc,
                             LPARAM  lParam,
                             DWORD  Flags)
 {
@@ -429,7 +429,7 @@ W32kGetCharacterPlacement(HDC  hDC,
                                  LPCWSTR  String,
                                  int  Count,
                                  int  MaxExtent,
-                                 LPGCP_RESULTS  Results,
+                                 LPGCP_RESULTSW  Results,
                                  DWORD  Flags)
 {
   UNIMPLEMENTED;
@@ -914,7 +914,7 @@ W32kGetTextMetrics(HDC hDC,
 BOOL
 STDCALL
 W32kPolyTextOut(HDC  hDC,
-                      CONST LPPOLYTEXT  txt,
+                      CONST LPPOLYTEXTW  txt,
                       int  Count)
 {
   UNIMPLEMENTED;

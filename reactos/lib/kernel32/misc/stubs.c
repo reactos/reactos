@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.52 2003/07/10 18:50:51 chorns Exp $
+/* $Id: stubs.c,v 1.53 2003/08/05 15:41:02 weiden Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -425,7 +425,7 @@ GetCurrencyFormatW (
     LCID            Locale,
     DWORD           dwFlags,
     LPCWSTR         lpValue,
-    CONST CURRENCYFMT   * lpFormat,
+    CONST CURRENCYFMTW   * lpFormat,
     LPWSTR          lpCurrencyStr,
     int         cchCurrency
     )
@@ -444,7 +444,7 @@ GetCurrencyFormatA (
     LCID            Locale,
     DWORD           dwFlags,
     LPCSTR          lpValue,
-    CONST CURRENCYFMT   * lpFormat,
+    CONST CURRENCYFMTA   * lpFormat,
     LPSTR           lpCurrencyStr,
     int         cchCurrency
     )
@@ -550,7 +550,7 @@ GetNumberFormatW (
     LCID        Locale,
     DWORD       dwFlags,
     LPCWSTR     lpValue,
-    CONST NUMBERFMT * lpFormat,
+    CONST NUMBERFMTW * lpFormat,
     LPWSTR      lpNumberStr,
     int     cchNumber
     )
@@ -569,7 +569,7 @@ GetNumberFormatA (
     LCID        Locale,
     DWORD       dwFlags,
     LPCSTR      lpValue,
-    CONST NUMBERFMT * lpFormat,
+    CONST NUMBERFMTA * lpFormat,
     LPSTR       lpNumberStr,
     int     cchNumber
     )

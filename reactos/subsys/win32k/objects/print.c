@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: print.c,v 1.9 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: print.c,v 1.10 2003/08/05 15:41:03 weiden Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -80,7 +80,7 @@ W32kSetAbortProc(HDC  hDC,
 INT
 STDCALL
 W32kStartDoc(HDC  hDC,
-                  CONST PDOCINFO  di)
+                  CONST PDOCINFOW  di)
 {
   UNIMPLEMENTED;
 }

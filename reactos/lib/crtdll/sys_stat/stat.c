@@ -12,7 +12,7 @@
 int _stat(const char* path, struct stat* buffer)
 {
     HANDLE fh;
-    WIN32_FIND_DATA wfd;
+    WIN32_FIND_DATAA wfd;
 
     fh = FindFirstFile(path, &wfd);
     if (fh == INVALID_HANDLE_VALUE) {

@@ -48,7 +48,7 @@ DWORD
 STDCALL
 NtUserBuildMenuItemList(
  HMENU hMenu,
- LPCMENUITEMINFO* lpmiil,
+ LPCMENUITEMINFOW* lpmiil,
  ULONG nBufSize,
  DWORD Reserved);
 
@@ -97,7 +97,8 @@ NtUserInsertMenuItem(
   HMENU hMenu,
   UINT uItem,
   WINBOOL fByPosition,
-  LPMENUITEMINFOW lpmii);
+  LPCMENUITEMINFOW lpmii);
+
   
 BOOL
 STDCALL

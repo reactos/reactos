@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.22 2003/08/04 16:54:54 gdalsnes Exp $
+/* $Id: painting.c,v 1.23 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -63,7 +63,7 @@ PaintDoPaint(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags, ULONG ExFlags)
   HDC hDC;
   HWND hWnd = Window->Self;
   BOOL bIcon = (0 != (Window->Style & WS_MINIMIZE)) &&
-               (0 != W32kGetClassLong(Window, GCL_HICON));
+               (0 != W32kGetClassLong(Window, GCL_HICON, FALSE));
 
   if (0 != (ExFlags & RDW_EX_DELAY_NCPAINT) ||
       PaintHaveToDelayNCPaint(Window, 0))
@@ -902,14 +902,14 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs)
 
   /* FIXME: Hide caret. */
 
-  IsIcon = (Window->Style & WS_MINIMIZE) && W32kGetClassLong(Window, GCL_HICON);
+  IsIcon = (Window->Style & WS_MINIMIZE) && W32kGetClassLong(Window, GCL_HICON, FALSE);
 
   DcxFlags = DCX_INTERSECTRGN | DCX_WINDOWPAINT | DCX_USESTYLE;
   if (IsIcon)
     {
     DcxFlags |= DCX_WINDOW;
     }
-  if (W32kGetClassLong(Window, GCL_STYLE) & CS_PARENTDC)
+  if (W32kGetClassLong(Window, GCL_STYLE, FALSE) & CS_PARENTDC)
     {
       /* Don't clip the output to the update region for CS_PARENTDC window */
       if ((HRGN) 1 < UpdateRegion)

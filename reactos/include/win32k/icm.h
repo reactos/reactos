@@ -17,7 +17,7 @@ W32kColorMatchToTarget(HDC  hDC,
 
 HCOLORSPACE
 STDCALL
-W32kCreateColorSpace(LPLOGCOLORSPACE  LogColorSpace);
+W32kCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace);
 
 BOOL
 STDCALL
@@ -25,7 +25,7 @@ W32kDeleteColorSpace(HCOLORSPACE  hColorSpace);
 
 INT
 STDCALL
-W32kEnumICMProfiles(HDC  hDC,  
+W32kEnumICMProfiles(HDC  hDC,
                          ICMENUMPROC  EnumICMProfilesFunc,
                          LPARAM lParam);
 
@@ -35,19 +35,19 @@ W32kGetColorSpace(HDC  hDC);
 
 BOOL
 STDCALL
-W32kGetDeviceGammaRamp(HDC  hDC,  
+W32kGetDeviceGammaRamp(HDC  hDC,
                              LPVOID  Ramp);
 
 BOOL
 STDCALL
 W32kGetICMProfile(HDC  hDC,  
-                        LPDWORD  NameSize,  
+                        LPDWORD  NameSize,
                         LPWSTR  Filename);
 
 BOOL
 STDCALL
 W32kGetLogColorSpace(HCOLORSPACE  hColorSpace,
-                           LPLOGCOLORSPACE  Buffer,  
+                           LPLOGCOLORSPACEW  Buffer,
                            DWORD  Size);
 
 HCOLORSPACE

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.29 2003/07/21 04:04:20 jimtabor Exp $
+/* $Id: stubs.c,v 1.30 2003/08/05 15:41:02 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -30,27 +30,6 @@ AnimatePalette(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-Arc(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6,
-	int	a7,
-	int	a8
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
 
 
 /*
@@ -117,21 +96,6 @@ CloseMetaFile(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-HBRUSH
-STDCALL
-CreateBrushIndirect(
-	CONST LOGBRUSH	*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -139,21 +103,6 @@ HBRUSH
 STDCALL
 CreateDIBPatternBrush(
 	HGLOBAL			a0,
-	UINT			a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HBRUSH
-STDCALL
-CreateDIBPatternBrushPt(
-	CONST VOID		*a0,
 	UINT			a1
 	)
 {
@@ -186,35 +135,6 @@ HRGN
 STDCALL
 CreateEllipticRgnIndirect(
 	CONST RECT		*a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HBRUSH
-STDCALL
-CreateHatchBrush(
-	int		a0,
-	COLORREF	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-HPALETTE
-STDCALL
-CreatePalette(
-	CONST LOGPALETTE	*a0
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -525,54 +445,6 @@ GetMetaFileBitsEx(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-COLORREF
-STDCALL
-GetNearestColor(
-	HDC		a0,
-	COLORREF	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetNearestPaletteIndex(
-	HPALETTE	a0,
-	COLORREF	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetPaletteEntries(
-	HPALETTE	a0,
-	UINT		a1,
-	UINT		a2,
-	LPPALETTEENTRY	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */
@@ -616,25 +488,6 @@ GetRasterizerCaps(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetSystemPaletteEntries(
-	HDC		a0,
-	UINT		a1,
-	UINT		a2,
-	LPPALETTEENTRY	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @unimplemented
@@ -829,23 +682,6 @@ PolyPolygon(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-PtInRegion(
-	HRGN	a0,
-	int	a1,
-	int	a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 /*
  * @unimplemented
  */
@@ -867,39 +703,9 @@ PtVisible(
  */
 BOOL
 STDCALL
-RectInRegion(
-	HRGN		a0,
-	CONST RECT	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 RectVisible(
 	HDC		a0,
 	CONST RECT	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-RestoreDC(
-	HDC	a0,
-	int	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -940,21 +746,6 @@ ResizePalette(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
 }
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SaveDC(
-	HDC	a0
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @unimplemented
@@ -1025,23 +816,6 @@ STDCALL
 SetMetaFileBitsEx(
 	UINT		a0,
 	CONST BYTE	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-SetPaletteEntries(
-	HPALETTE		a0,
-	UINT			a1,
-	UINT			a2,
-	CONST PALETTEENTRY	*a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1425,68 +1199,6 @@ PolyPolyline(
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-GetWorldTransform(
-	HDC		hdc,
-	LPXFORM		a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetWorldTransform(
-	HDC		a0,
-	CONST XFORM	*a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ModifyWorldTransform(
-	HDC		a0,
-	CONST XFORM	*a1,
-	DWORD		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-CombineTransform(
-	LPXFORM		a0,
-	CONST XFORM	*a1,
-	CONST XFORM	*a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
 UINT
 STDCALL
 GetDIBColorTable(
@@ -1500,26 +1212,8 @@ GetDIBColorTable(
 	return 0;
 }
 
-
 /*
- * @unimplemented
- */
-UINT
-STDCALL
-SetDIBColorTable(
-	HDC		hdc,
-	UINT		a1,
-	UINT		a2,
-	CONST RGBQUAD	*a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
-/*
- * @unimplemented
+ * @unimplemented 
  */
 BOOL
 STDCALL
@@ -1545,20 +1239,6 @@ GetColorAdjustment(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-HPALETTE
-STDCALL
-CreateHalftonePalette(
-	HDC	hdc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 
@@ -1640,28 +1320,6 @@ BOOL
 STDCALL
 AbortPath(
 	HDC	hdc
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ArcTo(
-	HDC	hdc,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	int	a5,
-	int	a6,
-	int	a7,
-	int	a8
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -1908,106 +1566,6 @@ CreatePolygonRgn(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-PolyBezier(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-PolyBezierTo(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-PolylineTo(
-	HDC		a0,
-	CONST POINT	*a1,
-	DWORD		a2
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetViewportExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetWindowExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-OffsetWindowOrgEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	LPPOINT	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 /*
  * @unimplemented
  */
@@ -2051,43 +1609,11 @@ ScaleWindowExtEx(
  */
 BOOL
 STDCALL
-SetBitmapDimensionEx(
-	HBITMAP	a0,
-	int	a1,
-	int	a2,
-	LPSIZE	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 SetBrushOrgEx(
 	HDC	a0,
 	int	a1,
 	int	a2,
 	LPPOINT	a3
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetDCOrgEx(
-	HDC	a0,
-	LPPOINT	a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

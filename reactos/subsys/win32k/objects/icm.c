@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: icm.c,v 1.6 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: icm.c,v 1.7 2003/08/05 15:41:03 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -47,7 +47,7 @@ W32kColorMatchToTarget(HDC  hDC,
 
 HCOLORSPACE
 STDCALL
-W32kCreateColorSpace(LPLOGCOLORSPACE  LogColorSpace)
+W32kCreateColorSpace(LPLOGCOLORSPACEW  LogColorSpace)
 {
   UNIMPLEMENTED;
 }
@@ -86,8 +86,8 @@ W32kGetDeviceGammaRamp(HDC  hDC,
 
 BOOL
 STDCALL
-W32kGetICMProfile(HDC  hDC,  
-                        LPDWORD  NameSize,  
+W32kGetICMProfile(HDC  hDC,
+                        LPDWORD  NameSize,
                         LPWSTR  Filename)
 {
   UNIMPLEMENTED;
@@ -96,7 +96,7 @@ W32kGetICMProfile(HDC  hDC,
 BOOL
 STDCALL
 W32kGetLogColorSpace(HCOLORSPACE  hColorSpace,
-                           LPLOGCOLORSPACE  Buffer,  
+                           LPLOGCOLORSPACEW  Buffer,
                            DWORD  Size)
 {
   UNIMPLEMENTED;

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.6 2003/07/16 02:45:24 royce Exp $ */
+/* $Id: process.c,v 1.7 2003/08/05 15:41:03 weiden Exp $ */
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
@@ -163,7 +163,7 @@ valisttos(const char* arg0, va_list alist, char delim)
 static int
 do_spawn(int mode, const char* cmdname, const char* args, const char* envp)
 {
-    STARTUPINFO StartupInfo;
+    STARTUPINFOA StartupInfo;
     PROCESS_INFORMATION ProcessInformation;
     char* fmode;
     HANDLE* hFile;
@@ -191,8 +191,8 @@ do_spawn(int mode, const char* cmdname, const char* args, const char* envp)
 	return -1;
     }
 
-    memset (&StartupInfo, 0, sizeof(STARTUPINFO));
-    StartupInfo.cb = sizeof(STARTUPINFO);
+    memset (&StartupInfo, 0, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
 
     for (last = i = 0; i < maxfno; i++)
     {

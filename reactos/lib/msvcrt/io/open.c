@@ -1,4 +1,4 @@
-/* $Id: open.c,v 1.15 2003/07/11 21:57:54 royce Exp $
+/* $Id: open.c,v 1.16 2003/08/05 15:41:03 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -358,7 +358,7 @@ BOOL __fileno_init(void)
    ULONG count = 0, i;
    HANDLE* pFile;
    char* pmode;
-   STARTUPINFO StInfo;
+   STARTUPINFOA StInfo;
 
    GetStartupInfoA(&StInfo);
    if (StInfo.lpReserved2 && StInfo.cbReserved2 >= sizeof(ULONG)) {
