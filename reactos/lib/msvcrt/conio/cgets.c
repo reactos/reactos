@@ -1,6 +1,13 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             msvcrt/conio/cgets.c
+ * PURPOSE:          C Runtime
+ * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
+ */
+
 #include <msvcrt/conio.h>
 #include <msvcrt/stdlib.h>
-
 
 /*
  * @implemented

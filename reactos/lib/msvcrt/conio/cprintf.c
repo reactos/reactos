@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             msvcrt/conio/cprintf.c
+ * PURPOSE:          C Runtime
+ * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
+ */
+
 #include <msvcrt/stdio.h>
 #include <msvcrt/conio.h>
 

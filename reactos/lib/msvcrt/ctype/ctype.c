@@ -1,4 +1,11 @@
-/* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             msvcrt/ctype/ctype.c
+ * PURPOSE:          C Runtime
+ * PROGRAMMER:       Copyright (C) 1995 DJ Delorie
+ */
+
 #include <msvcrt/ctype.h>
 
 unsigned short _ctype[] = {

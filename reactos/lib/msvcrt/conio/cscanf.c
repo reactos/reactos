@@ -1,3 +1,11 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             msvcrt/conio/cscanf.c
+ * PURPOSE:          C Runtime
+ * PROGRAMMER:       Eric Kohl (Imported from DJGPP)
+ */
+
 #include <msvcrt/conio.h>
 #include <msvcrt/stdarg.h>
 #include <msvcrt/stdio.h>
