@@ -12,8 +12,6 @@ TARGET_NAME = ps
 
 TARGET_SDKLIBS = kernel32.a
 
-TARGET_GCCLIBS = th32 stdc++
-
 TARGET_OBJECTS = $(TARGET_NAME).o
 
 include $(PATH_TO_TOP)/rules.mak
