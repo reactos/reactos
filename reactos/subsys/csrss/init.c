@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.18 2002/10/31 01:49:39 ekohl Exp $
+/* $Id: init.c,v 1.19 2003/06/17 13:55:16 gvg Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -84,6 +84,8 @@ CsrInitVideo(VOID)
   IO_STATUS_BLOCK Iosb;
   HANDLE VideoHandle;
   NTSTATUS Status;
+
+  InitializeVideoAddressSpace();
 
   RtlInitUnicodeStringFromLiteral(&DeviceName, L"\\??\\DISPLAY1");
   InitializeObjectAttributes(&ObjectAttributes,
@@ -201,8 +203,6 @@ CsrServerInitialization (
        PrintString( "CSR: Unable to create console thread\n" );
        return FALSE;
      }
-
-   InitializeVideoAddressSpace();
 
    W32kInitialize();
 
