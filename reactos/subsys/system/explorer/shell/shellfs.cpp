@@ -175,7 +175,7 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 	if (SUCCEEDED(folder->GetUIObjectOf(0, 1, (LPCITEMIDLIST*)&pidl, IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
 		TCHAR path[_MAX_PATH];
 		unsigned flags;
-		HICON hicon;
+		HICON hIcon;
 		int idx;
 
 		if (SUCCEEDED(pExtract->GetIconLocation(GIL_FORSHELL, path, _MAX_PATH, &idx, &flags))) {
@@ -183,18 +183,18 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 				if (idx == -1)
 					idx = 0;	// special case for some control panel applications
 
-				if ((int)ExtractIconEx(path, idx, 0, &hicon, 1) > 0)
+				if ((int)ExtractIconEx(path, idx, 0, &hIcon, 1) > 0)
 					flags &= ~GIL_DONTCACHE;
 			} else {
 				HICON hIconLarge = 0;
 
-				HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hicon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
+				HRESULT hr = pExtract->Extract(path, idx, &hIconLarge, &hIcon, MAKELONG(0/*GetSystemMetrics(SM_CXICON)*/,GetSystemMetrics(SM_CXSMICON)));
 
 				if (SUCCEEDED(hr))
 					DestroyIcon(hIconLarge);
 			}
 
-			return hicon;
+			return hIcon;
 		}
 	}
 
@@ -275,10 +275,10 @@ void ShellDirectory::read_directory()
 			 // get display icons for files and virtual objects
 			if (!(entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ||
 				!(attribs & SFGAO_FILESYSTEM)) {
-				entry->_hicon = extract_icon(_folder, pidls[n]);
+				entry->_hIcon = extract_icon(_folder, pidls[n]);
 
-				if (!entry->_hicon)
-					entry->_hicon = (HICON)-1;	// don't try again later
+				if (!entry->_hIcon)
+					entry->_hIcon = (HICON)-1;	// don't try again later
 			}
 
 			entry->_down = NULL;

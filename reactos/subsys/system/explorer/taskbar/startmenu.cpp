@@ -84,10 +84,19 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 	if (super::Init(pcs))
 		return 1;
 
-	for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
-		const StartMenuEntry& sme = it->second;
+	 // create buttons for registered entries in _entries
+	if (_entries.empty()) {
+		AddButton(ResString(IDS_EMPTY), 0, false, (UINT)-1, WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW|WS_DISABLED);
+	} else {
+		for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+			const StartMenuEntry& sme = it->second;
+			bool showArrow = false;
 
-		AddButton(sme._title, sme._hIcon, it->first);
+			if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+				showArrow = true;
+
+			AddButton(sme._title, sme._hIcon, showArrow, it->first);
+		}
 	}
 
 	return 0;
@@ -194,7 +203,7 @@ StartMenuEntry& StartMenu::AddEntry(LPCTSTR title, HICON hIcon, UINT id)
 
 StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* entry)
 {
-	HICON hIcon = entry->_hicon;
+	HICON hIcon = entry->_hIcon;
 
 	if (entry->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 		hIcon = SmallIcon(IDI_EXPLORER);
@@ -209,7 +218,7 @@ StartMenuEntry& StartMenu::AddEntry(const ShellFolder folder, const ShellEntry* 
 }
 
 
-void StartMenu::AddButton(LPCTSTR title, HICON hIcon, UINT id)
+void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool showArrow, UINT id, DWORD style)
 {
 	WindowRect rect(_hwnd);
 
@@ -222,7 +231,7 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, UINT id)
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, title, id, hIcon);
+	StartMenuButton(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-4, title, id, hIcon, showArrow, style);
 }
 
 void StartMenu::AddSeparator()
@@ -250,13 +259,13 @@ void StartMenu::CreateSubmenu(int id, const StartMenuFolders& new_folders, CREAT
 	if (btn) {
 		WindowRect pos(btn);
 
-		x = pos.right;
-		y = pos.top+STARTMENU_HEIGHT-4;
+		x = pos.right-8;	// Submenus should overlap their parent a bit.
+		y = pos.top;
 	} else {
 		WindowRect pos(_hwnd);
 
-		x = pos.right;
-		y = pos.top+STARTMENU_HEIGHT-4;
+		x = pos.right-8;
+		y = pos.top;
 	}
 
 	StartMenu::Create(x, y, new_folders, _hwnd, creator);
@@ -283,12 +292,10 @@ void StartMenu::CreateSubmenu(int id, int folder_id1, int folder_id2, CREATORFUN
 	if (folder1)
 		new_folders.push_back(folder1);
 
-	if (folder_id2 != -1) {
-		SpecialFolder folder2(folder_id2, _hwnd);
+	SpecialFolder folder2(folder_id2, _hwnd);
 
-		if (folder2)
-			new_folders.push_back(folder2);
-	}
+	if (folder2)
+		new_folders.push_back(folder2);
 
 	CreateSubmenu(id, new_folders, creator);
 }
@@ -335,21 +342,21 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 	AddSeparator();
 
 	 // insert hard coded start entries
-	AddButton(ResString(IDS_PROGRAMS),	0, IDC_PROGRAMS);
-	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), IDC_EXPLORE);
-	AddButton(ResString(IDS_FAVORITES),	0, IDC_FAVORITES);
-	AddButton(ResString(IDS_DOCUMENTS),	0, IDC_DOCUMENTS);
-	AddButton(ResString(IDS_RECENT),	0, IDC_RECENT);
-	AddButton(ResString(IDS_SETTINGS),	0, IDC_SETTINGS);
-	AddButton(ResString(IDS_ADMIN),		0, IDC_ADMIN);
-	AddButton(ResString(IDS_SEARCH),	0, IDC_SEARCH);
-	AddButton(ResString(IDS_START_HELP),0, IDC_START_HELP);
-	AddButton(ResString(IDS_LAUNCH),	0, IDC_LAUNCH);
+	AddButton(ResString(IDS_PROGRAMS),	0, true, IDC_PROGRAMS);
+	AddButton(ResString(IDS_EXPLORE),	SmallIcon(IDI_EXPLORER), false, IDC_EXPLORE);
+	AddButton(ResString(IDS_FAVORITES),	0, true, IDC_FAVORITES);
+	AddButton(ResString(IDS_DOCUMENTS),	0, true, IDC_DOCUMENTS);
+	AddButton(ResString(IDS_RECENT),	0, true, IDC_RECENT);
+	AddButton(ResString(IDS_SETTINGS),	0, true, IDC_SETTINGS);
+	AddButton(ResString(IDS_ADMIN),		0, true, IDC_ADMIN);
+	AddButton(ResString(IDS_SEARCH),	0, false, IDC_SEARCH);
+	AddButton(ResString(IDS_START_HELP),0, false, IDC_START_HELP);
+	AddButton(ResString(IDS_LAUNCH),	0, false, IDC_LAUNCH);
 
 	AddSeparator();
 
-	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), IDC_SHUTDOWN);
-	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), IDC_LOGOFF);
+	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
+	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
 
 	return 0;
 }

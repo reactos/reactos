@@ -63,7 +63,7 @@ public:
 	SFGAOF		_shell_attribs;
 
 	ENTRY_TYPE	_etype;
-	HICON		_hicon;
+	HICON		_hIcon;
 
 	BY_HANDLE_FILE_INFORMATION _bhfi;
 	bool		_bhfi_valid;

@@ -48,18 +48,18 @@ struct ResIcon
 {
 	ResIcon(UINT nid);
 
-	operator HICON() const {return _hicon;}
+	operator HICON() const {return _hIcon;}
 
 protected:
-	HICON	_hicon;
+	HICON	_hIcon;
 };
 
 struct SmallIcon
 {
 	SmallIcon(UINT nid);
 
-	operator HICON() const {return _hicon;}
+	operator HICON() const {return _hIcon;}
 
 protected:
-	HICON	_hicon;
+	HICON	_hIcon;
 };

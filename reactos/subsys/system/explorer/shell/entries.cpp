@@ -44,7 +44,7 @@ Entry::Entry(ENTRY_TYPE etype)
 	_scanned = false;
 	_bhfi_valid = false;
 	_level = 0;
-	_hicon = 0;
+	_hIcon = 0;
 }
 
 Entry::Entry(Entry* parent)
@@ -57,14 +57,14 @@ Entry::Entry(Entry* parent)
 	_scanned = false;
 	_bhfi_valid = false;
 	_level = 0;
-	_hicon = 0;
+	_hIcon = 0;
 }
 
  // free a directory entry
 Entry::~Entry()
 {
-	if (_hicon && _hicon!=(HICON)-1)
-		DestroyIcon(_hicon);
+	if (_hIcon && _hIcon!=(HICON)-1)
+		DestroyIcon(_hIcon);
 }
 
 

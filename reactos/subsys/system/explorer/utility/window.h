@@ -434,13 +434,13 @@ struct PictureButton : public OwnerdrawnButton
 {
 	typedef OwnerdrawnButton super;
 
-	PictureButton(HWND hwnd, HICON hicon, bool flat=false)
-	 :	super(hwnd), _hicon(hicon), _flat(flat) {}
+	PictureButton(HWND hwnd, HICON hIcon, bool flat=false)
+	 :	super(hwnd), _hIcon(hIcon), _flat(flat) {}
 
 protected:
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
-	HICON	_hicon;
+	HICON	_hIcon;
 	bool	_flat;
 };
 
@@ -452,11 +452,12 @@ struct StartmenuEntry : public OwnerdrawnButton
 {
 	typedef OwnerdrawnButton super;
 
-	StartmenuEntry(HWND hwnd, HICON hicon)
-	 :	super(hwnd), _hicon(hicon) {}
+	StartmenuEntry(HWND hwnd, HICON hIcon, bool showArrow)
+	 :	super(hwnd), _hIcon(hIcon), _showArrow(showArrow) {}
 
 protected:
 	virtual void DrawItem(LPDRAWITEMSTRUCT dis);
 
-	HICON	_hicon;
+	HICON	_hIcon;
+	bool	_showArrow;
 };

@@ -63,12 +63,12 @@ ResString::ResString(UINT nid)
 
 ResIcon::ResIcon(UINT nid)
 {
-	_hicon = LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(nid));
+	_hIcon = LoadIcon(g_Globals._hInstance, MAKEINTRESOURCE(nid));
 }
 
 SmallIcon::SmallIcon(UINT nid)
 {
-	_hicon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
+	_hIcon = (HICON)LoadImage(g_Globals._hInstance, MAKEINTRESOURCE(nid), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 }
 
 

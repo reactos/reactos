@@ -33,14 +33,19 @@
 #define	TITLE_STARTMENU			_T("Start Menu")
 
 
+#define	STARTMENU_WIDTH			150
+#define	STARTMENU_LINE_HEIGHT	22
+#define	STARTMENU_SEP_HEIGHT	(STARTMENU_LINE_HEIGHT/2)
+
+
  // Startmenu button
 struct StartMenuButton : public Button
 {
 	StartMenuButton(HWND parent, int y, LPCTSTR title,
-					UINT id, HICON hIcon=0, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW, DWORD exStyle=0)
-	 :	Button(parent, title, 2, y, STARTMENU_WIDTH-4, STARTMENU_LINE_HEIGHT, id, style, exStyle)
+					UINT id, HICON hIcon=0, bool showArrow=false, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW, DWORD exStyle=0)
+	 :	Button(parent, title, 0, y, ClientRect(parent).right, STARTMENU_LINE_HEIGHT, id, style, exStyle)
 	{
-		*new StartmenuEntry(_hwnd, hIcon);
+		*new StartmenuEntry(_hwnd, hIcon, showArrow);
 
 		SetWindowFont(_hwnd, GetStockFont(DEFAULT_GUI_FONT), FALSE);
 	}
@@ -50,7 +55,7 @@ struct StartMenuButton : public Button
 struct StartMenuSeparator : public Static
 {
 	StartMenuSeparator(HWND parent, int y, DWORD style=WS_VISIBLE|WS_CHILD|SS_ETCHEDHORZ, DWORD exStyle=0)
-	 :	Static(parent, NULL, 2, y+STARTMENU_SEP_HEIGHT/2-1, STARTMENU_WIDTH-4, 2, -1, style, exStyle)
+	 :	Static(parent, NULL, 0, y+STARTMENU_SEP_HEIGHT/2-1, ClientRect(parent).right, 2, -1, style, exStyle)
 	{
 	}
 };
@@ -114,7 +119,7 @@ protected:
 
 	void	AddShellEntries(const ShellDirectory& dir, int max=-1, bool subfolders=true);
 
-	void	AddButton(LPCTSTR title, HICON hIcon=0, UINT id=(UINT)-1);
+	void	AddButton(LPCTSTR title, HICON hIcon=0, bool showArrow=false, UINT id=(UINT)-1, DWORD style=WS_VISIBLE|WS_CHILD|BS_PUSHBUTTON|BS_OWNERDRAW);
 	void	AddSeparator();
 
 	void	CreateSubmenu(int id, const StartMenuFolders& new_folders, CREATORFUNC creator=s_def_creator);

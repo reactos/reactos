@@ -509,6 +509,10 @@ SOURCE=.\shell\winfs.h
 # End Group
 # Begin Source File
 
+SOURCE=.\res\arrow.ico
+# End Source File
+# Begin Source File
+
 SOURCE=.\explorer.cpp
 # End Source File
 # Begin Source File

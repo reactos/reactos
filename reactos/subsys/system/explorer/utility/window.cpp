@@ -31,6 +31,7 @@
 #include "window.h"
 
 #include "../globals.h"
+#include "../explorer_intres.h"
 
 
 WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
@@ -593,7 +594,7 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	} else
 		DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, style);
 
-	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
+	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, GetSysColorBrush(COLOR_BTNFACE), DI_NORMAL);
 
 	TCHAR text[BUFFER_LEN];
 	GetWindowText(_hwnd, text, BUFFER_LEN);
@@ -648,13 +649,19 @@ void StartmenuEntry::DrawItem(LPDRAWITEMSTRUCT dis)
 	HBRUSH bk_brush = GetSysColorBrush(bk_color);
 
 	FillRect(dis->hDC, &dis->rcItem, bk_brush);
-	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hicon, 16, 16, 0, bk_brush, DI_NORMAL);
+	DrawIconEx(dis->hDC, iconPos.x, iconPos.y, _hIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+
+	 // draw submenu arrow at the right
+	if (_showArrow) {
+		SmallIcon arrowIcon(IDI_FOLDERARROW);
+		DrawIconEx(dis->hDC, dis->rcItem.right-16, iconPos.y, arrowIcon, 16, 16, 0, bk_brush, DI_NORMAL);
+	}
 
 	TCHAR text[BUFFER_LEN];
 	GetWindowText(_hwnd, text, BUFFER_LEN);
 
 	if (dis->itemState & (ODS_DISABLED|ODS_GRAYED))
-		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER|DT_CENTER);
+		DrawGrayText(dis, &textRect, text, DT_SINGLELINE|DT_VCENTER);
 	else {
 		BkMode mode(dis->hDC, TRANSPARENT);
 		TextColor lcColor(dis->hDC, GetSysColor(text_color));

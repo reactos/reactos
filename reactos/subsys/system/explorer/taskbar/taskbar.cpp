@@ -164,32 +164,32 @@ int DesktopBar::Command(int id, int code)
 
 static HICON get_window_icon(HWND hwnd)
 {
-	HICON hicon = 0;
+	HICON hIcon = 0;
 
-	SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hicon);
+	SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL2, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
 
-	if (!hicon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hicon);
+	if (!hIcon)
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_SMALL, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
 
-	if (!hicon)
-		SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hicon);
+	if (!hIcon)
+		SendMessageTimeout(hwnd, WM_GETICON, ICON_BIG, 0, SMTO_ABORTIFHUNG, 1000, (LPDWORD)&hIcon);
 
-	if (!hicon)
-		hicon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
+	if (!hIcon)
+		hIcon = (HICON)GetClassLong(hwnd, GCL_HICONSM);
 
-	if (!hicon)
-		hicon = (HICON)GetClassLong(hwnd, GCL_HICON);
+	if (!hIcon)
+		hIcon = (HICON)GetClassLong(hwnd, GCL_HICON);
 
-	if (!hicon)
-		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hicon);
+	if (!hIcon)
+		SendMessageTimeout(hwnd, WM_QUERYDRAGICON, 0, 0, 0, 1000, (LPDWORD)&hIcon);
 
-	if (!hicon)
-		hicon = LoadIcon(0, IDI_APPLICATION);
+	if (!hIcon)
+		hIcon = LoadIcon(0, IDI_APPLICATION);
 
-	return hicon;
+	return hIcon;
 }
 
-static HBITMAP create_bitmap_from_icon(HICON hicon, HWND hwnd, HBRUSH hbrush_bkgnd)
+static HBITMAP create_bitmap_from_icon(HICON hIcon, HWND hwnd, HBRUSH hbrush_bkgnd)
 {
 	HDC hdc_wnd = GetDC(hwnd);
 	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
@@ -197,7 +197,7 @@ static HBITMAP create_bitmap_from_icon(HICON hicon, HWND hwnd, HBRUSH hbrush_bkg
 
 	HDC hdc = CreateCompatibleDC(0);
 	HBITMAP hbmp_org = SelectBitmap(hdc, hbmp);
-	DrawIconEx(hdc, 0, 0, hicon, 16, 16, 0, hbrush_bkgnd, DI_IMAGE);
+	DrawIconEx(hdc, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_IMAGE);
 	SelectBitmap(hdc, hbmp_org);
 	DeleteDC(hdc);
 
@@ -352,8 +352,8 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			if (!last_id)
 				found->second._id = pThis->_next_id++;
 		} else {
-			HICON hicon = get_window_icon(hwnd);
-			HBITMAP hbmp = create_bitmap_from_icon(hicon, pThis->_htoolbar, GetSysColorBrush(COLOR_BTNFACE));
+			HICON hIcon = get_window_icon(hwnd);
+			HBITMAP hbmp = create_bitmap_from_icon(hIcon, pThis->_htoolbar, GetSysColorBrush(COLOR_BTNFACE));
 
 			TBADDBITMAP ab = {0, (UINT_PTR)hbmp};
 			int bmp_idx = SendMessage(pThis->_htoolbar, TB_ADDBITMAP, 1, (LPARAM)&ab);

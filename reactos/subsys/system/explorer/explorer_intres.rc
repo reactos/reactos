@@ -94,6 +94,7 @@ IDI_REACTOS             ICON    DISCARDABLE     "res/reactos.ico"
 IDI_EXPLORER            ICON    DISCARDABLE     "res/explorer.ico"
 IDI_STARTMENU           ICON    DISCARDABLE     "res/startmenu.ico"
 IDI_LOGOFF              ICON    DISCARDABLE     "res/logoff.ico"
+IDI_FOLDERARROW         ICON    DISCARDABLE     "res/arrow.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //
