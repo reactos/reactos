@@ -77,7 +77,7 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
 WINE_DLLS = rpcrt4 mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
             shell32 shlwapi comctl32 shfolder shdocvw commdlg \
             ddraw dinput dplay dplayx \
-            psapi richedit serialui urlmon winspool
+            psapi richedit serialui tapi32 urlmon winspool wintrust
 
 WINE_PROGS = clock cmdlgtst control notepad osversioncheck \
              progman uninstaller view wcmd winefile winemine \
