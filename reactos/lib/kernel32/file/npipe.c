@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.7 2001/10/20 15:28:03 ekohl Exp $
+/* $Id: npipe.c,v 1.8 2001/10/21 19:06:42 chorns Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -345,25 +345,29 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
    NPFS_SET_STATE SetState;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
-   
-#if 0
+
    Status = NtFsControlFile(hNamedPipe,
 			    NULL,
 			    NULL,
 			    NULL,
 			    &Iosb,
-			    FSCTL_GET_STATE,
+			    FSCTL_PIPE_GET_STATE,
 			    NULL,
 			    0,
 			    &GetState,
-			    sizeof(GetState));
-   if (!NT_SUCCESS(Status))
+			    sizeof(NPFS_GET_STATE));
+   if (Status == STATUS_PENDING)
      {
-	SetLastErrorByStatus (Status);
-	return(FALSE);
+	Status = NtWaitForSingleObject(hNamedPipe,
+				       FALSE,
+				       NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     SetLastErrorByStatus(Status);
+	     return(FALSE);
+	  }
      }
-#endif
-   
+
    if (lpMode != NULL)
      {
 	if ((*lpMode) & PIPE_READMODE_MESSAGE)
@@ -410,25 +414,30 @@ SetNamedPipeHandleState(HANDLE hNamedPipe,
      {
 	SetState.Timeout = GetState.Timeout;
      }
-   
-#if 0
+
    Status = NtFsControlFile(hNamedPipe,
 			    NULL,
 			    NULL,
 			    NULL,
 			    &Iosb,
-			    FSCTL_SET_STATE,
+			    FSCTL_PIPE_SET_STATE,
 			    &SetState,
-			    sizeof(SetState),
+			    sizeof(NPFS_SET_STATE),
 			    NULL,
 			    0);
-   if (!NT_SUCCESS(Status))
+   if (Status == STATUS_PENDING)
      {
-	SetLastErrorByStatus (Status);
-	return(FALSE);
+	Status = NtWaitForSingleObject(hNamedPipe,
+				       FALSE,
+				       NULL);
+	if (!NT_SUCCESS(Status))
+	  {
+	     SetLastErrorByStatus(Status);
+	     return(FALSE);
+	  }
      }
-#endif
-   return(TRUE);
+
+  return(TRUE);
 }
 
 

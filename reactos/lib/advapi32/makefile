@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.19 2001/08/21 20:13:05 chorns Exp $
+# $Id: makefile,v 1.20 2001/10/21 19:06:42 chorns Exp $
 
 PATH_TO_TOP = ../..
 
@@ -7,6 +7,8 @@ TARGET_TYPE = dynlink
 TARGET_NAME = advapi32
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
+
+# TARGET_CFLAGS = -DUNICODE
 
 TARGET_BASE = 0x77dc0000
 
