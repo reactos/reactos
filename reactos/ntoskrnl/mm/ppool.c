@@ -1,4 +1,4 @@
-/* $Id: ppool.c,v 1.37 2004/12/17 13:20:05 royce Exp $
+/* $Id: ppool.c,v 1.38 2004/12/18 21:27:27 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,7 +28,7 @@
 #define R_MUTEX FAST_MUTEX
 #define R_ACQUIRE_MUTEX(pool) /*DPRINT1("Acquiring PPool Mutex\n");*/ ExAcquireFastMutex(&pool->Mutex)
 #define R_RELEASE_MUTEX(pool) /*DPRINT1("Releasing PPool Mutex\n");*/ ExReleaseFastMutex(&pool->Mutex)
-#define R_PRINT_ADDRESS(addr) 0
+#define R_PRINT_ADDRESS(addr) KeRosPrintAddress(addr)
 #define R_PANIC() KeBugCheck(0)
 #define R_DEBUG DbgPrint
 #define R_EXTRA_STACK_UP 2
