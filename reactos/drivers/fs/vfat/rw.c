@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.12 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: rw.c,v 1.13 2001/01/01 04:42:12 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,11 +19,42 @@
 
 #include "vfat.h"
 
-/* FUNCTIONS ****************************************************************/
+/* GLOBALS *******************************************************************/
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+
+/* FUNCTIONS *****************************************************************/
+
+ULONG
+OffsetToCluster(PDEVICE_EXTENSION DeviceExt, 
+		ULONG FirstCluster, 
+		ULONG FileOffset)
+{
+  ULONG CurrentCluster;
+  ULONG i;
+
+  CurrentCluster = FirstCluster;
+  if (FirstCluster == 1)
+    {				
+      /* root of FAT16 or FAT12 */
+      CurrentCluster = DeviceExt->rootStart + FileOffset
+	/ (DeviceExt->BytesPerCluster) * DeviceExt->Boot->SectorsPerCluster;
+    }
+  else
+    {
+      for (i = 0; i < FileOffset / DeviceExt->BytesPerCluster; i++)
+	{
+	  CurrentCluster = GetNextCluster (DeviceExt, CurrentCluster);
+	}
+    }
+  return(CurrentCluster);
+}
 
 NTSTATUS
-VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
-	      PVOID Buffer, ULONG Length, ULONG ReadOffset, PULONG LengthRead)
+VfatReadFileNoCache (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+		     PVOID Buffer, ULONG Length, ULONG ReadOffset, 
+		     PULONG LengthRead)
 /*
  * FUNCTION: Reads data from a file
  */
@@ -45,15 +76,21 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  "Length %d, ReadOffset %d)\n", DeviceExt, FileObject, Buffer,
 	  Length, ReadOffset);
 
-  Fcb = ((PVFATCCB) (FileObject->FsContext2))->pFcb;
+  Fcb = ((PVFATCCB)FileObject->FsContext2)->pFcb;
+
+  /*
+   * Find the first cluster
+   */
   if (DeviceExt->FatType == FAT32)
-    CurrentCluster = Fcb->entry.FirstCluster
+    CurrentCluster = Fcb->entry.FirstCluster 
       + Fcb->entry.FirstClusterHigh * 65536;
   else
     CurrentCluster = Fcb->entry.FirstCluster;
   FirstCluster = CurrentCluster;
-  DPRINT ("DeviceExt->BytesPerCluster %x\n", DeviceExt->BytesPerCluster);
-
+  
+  /*
+   * Truncate the read if necessary
+   */
   if (!(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
     {
       if (ReadOffset >= Fcb->entry.FileSize)
@@ -65,14 +102,25 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  Length = Fcb->entry.FileSize - ReadOffset;
 	}
     }
-  CHECKPOINT;
+
+
   *LengthRead = 0;
-  /* FIXME: optimize by remembering the last cluster read and using if possible */
+  
+  /*
+   * Allocate a buffer to hold partial clusters
+   */
   Temp = ExAllocatePool (NonPagedPool, DeviceExt->BytesPerCluster);
   if (!Temp)
     return STATUS_UNSUCCESSFUL;
+
+  /*
+   * Find the cluster to start the read from
+   * FIXME: Optimize by remembering the last cluster read and using if 
+   * possible.
+   */
   if (FirstCluster == 1)
-    {				//root of FAT16 or FAT12
+    {				
+      /* root of FAT16 or FAT12 */
       CurrentCluster = DeviceExt->rootStart + ReadOffset
 	/ (DeviceExt->BytesPerCluster) * DeviceExt->Boot->SectorsPerCluster;
     }
@@ -82,7 +130,11 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       {
 	CurrentCluster = GetNextCluster (DeviceExt, CurrentCluster);
       }
-  CHECKPOINT;
+  
+  /*
+   * If the read doesn't begin on a cluster boundary then read a full
+   * cluster and copy it.
+   */
   if ((ReadOffset % DeviceExt->BytesPerCluster) != 0)
     {
       if (FirstCluster == 1)
@@ -154,6 +206,270 @@ VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   return (STATUS_SUCCESS);
 }
 
+NTSTATUS
+VfatRawReadCluster (PDEVICE_EXTENSION DeviceExt, 
+		    ULONG FirstCluster,
+		    PULONG CurrentCluster,
+		    PVOID Destination)
+{
+  if (FirstCluster == 1)
+    {
+      VFATReadSectors (DeviceExt->StorageDevice,
+		       (*CurrentCluster),
+		       DeviceExt->Boot->SectorsPerCluster, 
+		       Destination);
+      (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
+    }
+  else
+    {
+      VFATLoadCluster (DeviceExt, Destination, (*CurrentCluster));
+      (*CurrentCluster) = GetNextCluster (DeviceExt, (*CurrentCluster));
+    }
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+VfatReadCluster(PDEVICE_EXTENSION DeviceExt,
+		PVFATFCB Fcb,
+		ULONG StartOffset,
+		ULONG FirstCluster,
+		PULONG CurrentCluster,
+		PVOID Destination,
+		ULONG Cached)
+{
+  ULONG BytesPerCluster;
+  BOOLEAN Valid;
+  PVOID BaseAddress;
+  PCACHE_SEGMENT CacheSeg;
+  NTSTATUS Status;
+
+  BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
+
+  if (BytesPerCluster >= PAGESIZE)
+    {
+      /*
+       * In this case the size of a cache segment is the same as a cluster
+       */
+      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb,
+				     StartOffset,
+				     &BaseAddress,
+				     &Valid,
+				     &CacheSeg);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      if (!Valid)
+	{
+	  /*
+	   * If necessary read the cluster from the disk
+	   */
+	  Status = VfatRawReadCluster(DeviceExt, FirstCluster, CurrentCluster,
+				      BaseAddress);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+	      return(Status);
+	    }
+	}
+      else
+	{
+	  /*
+	   * Otherwise go on to the next cluster
+	   */
+	  if (FirstCluster == 1)
+	    {
+	      (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
+	    }
+	  else
+	    {
+	      (*CurrentCluster) = GetNextCluster(DeviceExt, (*CurrentCluster));
+	    }
+	}
+      /*
+       * Copy the data from the cache to the caller
+       */
+      memcpy(Destination, BaseAddress, BytesPerCluster);
+      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+    }
+  else
+    {
+      ULONG i;
+      ULONG ReadOffset;
+      ULONG InternalOffset;
+
+      ReadOffset = ROUND_DOWN(StartOffset, PAGESIZE);
+      InternalOffset = StartOffset % PAGESIZE;
+      Status = CcRequestCacheSegment(Fcb->RFCB.Bcb, 
+				     ReadOffset,
+				     &BaseAddress,
+				     &Valid,
+				     &CacheSeg);
+      if (!NT_SUCCESS(Status))
+	{
+	  return(Status);
+	}
+      
+      /*
+       * If necessary read all the data for the page
+       */
+      if (!Valid)
+	{
+	  ULONG StartCluster;
+
+	  StartCluster = OffsetToCluster(DeviceExt, FirstCluster, ReadOffset);
+
+	  for (i = 0; i < (PAGESIZE / BytesPerCluster); i++)
+	    {	  
+	      Status = VfatRawReadCluster(DeviceExt, 
+					  FirstCluster,
+					  &StartCluster,
+					  BaseAddress + (i * BytesPerCluster));
+	      if (!NT_SUCCESS(Status))
+		{
+		  CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, FALSE);
+		  return(Status);
+		}
+	    }
+	}
+      /*
+       * Go on to the next cluster
+       */
+      if (FirstCluster == 1)
+	{
+	  (*CurrentCluster) += DeviceExt->Boot->SectorsPerCluster;
+	}
+      else
+	{
+	  (*CurrentCluster) = GetNextCluster(DeviceExt, (*CurrentCluster));
+	}
+      /*
+       * Copy the data from the cache to the caller
+       */
+      memcpy(Destination, BaseAddress + InternalOffset, BytesPerCluster);
+      CcReleaseCacheSegment(Fcb->RFCB.Bcb, CacheSeg, TRUE);
+    }
+  return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+VfatReadFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
+	      PVOID Buffer, ULONG Length, ULONG ReadOffset, 
+	      PULONG LengthRead)
+/*
+ * FUNCTION: Reads data from a file
+ */
+{
+  ULONG CurrentCluster;
+  ULONG FileOffset;
+  ULONG FirstCluster;
+  PVFATFCB Fcb;
+  PVOID Temp;
+  ULONG TempLength;
+
+  /* PRECONDITION */
+  assert (DeviceExt != NULL);
+  assert (DeviceExt->BytesPerCluster != 0);
+  assert (FileObject != NULL);
+  assert (FileObject->FsContext != NULL);
+
+  DPRINT ("FsdReadFile(DeviceExt %x, FileObject %x, Buffer %x, "
+	  "Length %d, ReadOffset %d)\n", DeviceExt, FileObject, Buffer,
+	  Length, ReadOffset);
+
+  Fcb = ((PVFATCCB)FileObject->FsContext2)->pFcb;
+
+  /*
+   * Find the first cluster
+   */
+  if (DeviceExt->FatType == FAT32)
+    CurrentCluster = Fcb->entry.FirstCluster 
+      + Fcb->entry.FirstClusterHigh * 65536;
+  else
+    CurrentCluster = Fcb->entry.FirstCluster;
+  FirstCluster = CurrentCluster;
+  
+  /*
+   * Truncate the read if necessary
+   */
+  if (!(Fcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
+    {
+      if (ReadOffset >= Fcb->entry.FileSize)
+	{
+	  return (STATUS_END_OF_FILE);
+	}
+      if ((ReadOffset + Length) > Fcb->entry.FileSize)
+	{
+	  Length = Fcb->entry.FileSize - ReadOffset;
+	}
+    }
+
+
+  *LengthRead = 0;
+  
+  /*
+   * Allocate a buffer to hold partial clusters
+   */
+  Temp = ExAllocatePool (NonPagedPool, DeviceExt->BytesPerCluster);
+  if (!Temp)
+    return STATUS_UNSUCCESSFUL;
+
+  /*
+   * Find the cluster to start the read from
+   * FIXME: Optimize by remembering the last cluster read and using if 
+   * possible.
+   */
+  CurrentCluster = OffsetToCluster(DeviceExt, FirstCluster, ReadOffset);
+  
+  /*
+   * If the read doesn't begin on a cluster boundary then read a full
+   * cluster and copy it.
+   */
+  if ((ReadOffset % DeviceExt->BytesPerCluster) != 0)
+    {
+      VfatReadCluster(DeviceExt, Fcb, 
+		      ROUND_DOWN(ReadOffset, DeviceExt->BytesPerCluster),
+		      FirstCluster, &CurrentCluster, Temp, 1);
+      TempLength = min (Length, DeviceExt->BytesPerCluster -
+			(ReadOffset % DeviceExt->BytesPerCluster));
+
+      memcpy (Buffer, Temp + ReadOffset % DeviceExt->BytesPerCluster,
+	      TempLength);
+
+      (*LengthRead) = (*LengthRead) + TempLength;
+      Length = Length - TempLength;
+      Buffer = Buffer + TempLength;
+      ReadOffset = ReadOffset + TempLength;
+    }
+
+  while (Length >= DeviceExt->BytesPerCluster)
+    {
+      VfatReadCluster(DeviceExt, Fcb, ReadOffset,
+		      FirstCluster, &CurrentCluster, Buffer,  1);
+      if (CurrentCluster == 0xffffffff)
+	{
+	  ExFreePool (Temp);
+	  return (STATUS_SUCCESS);
+	}
+
+      (*LengthRead) = (*LengthRead) + DeviceExt->BytesPerCluster;
+      Buffer = Buffer + DeviceExt->BytesPerCluster;
+      Length = Length - DeviceExt->BytesPerCluster;
+      ReadOffset = ReadOffset + DeviceExt->BytesPerCluster;
+    }
+
+  if (Length > 0)
+    {
+      VfatReadCluster(DeviceExt, Fcb, ReadOffset,
+		      FirstCluster, &CurrentCluster, Temp, 1);
+      (*LengthRead) = (*LengthRead) + Length;
+      memcpy (Buffer, Temp, Length);
+    }
+  ExFreePool (Temp);
+  return (STATUS_SUCCESS);
+}
+
+#if 0
 NTSTATUS
 VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	       PVOID Buffer, ULONG Length, ULONG WriteOffset)
@@ -361,6 +677,7 @@ VfatWriteFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   ExFreePool (Temp);
   return (STATUS_SUCCESS);
 }
+#endif
 
 NTSTATUS STDCALL
 VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -382,7 +699,8 @@ VfatWrite (PDEVICE_OBJECT DeviceObject, PIRP Irp)
   Buffer = MmGetSystemAddressForMdl (Irp->MdlAddress);
   Offset = Stack->Parameters.Write.ByteOffset.u.LowPart;
 
-  Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset);
+/*  Status = VfatWriteFile (DeviceExt, FileObject, Buffer, Length, Offset); */
+  Status = STATUS_MEDIA_WRITE_PROTECTED;
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Length;

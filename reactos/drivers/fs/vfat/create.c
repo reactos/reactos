@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.10 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: create.c,v 1.11 2001/01/01 04:42:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -392,6 +392,7 @@ FsdOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   short i, j;
   PLIST_ENTRY current_entry;
   KIRQL oldIrql;
+  ULONG BytesPerCluster;
 
   DPRINT ("FsdOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
 
@@ -579,7 +580,17 @@ FsdOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   vfat_wcsncpy (ParentFcb->PathName, FileName, MAX_PATH);
   ParentFcb->ObjectName = ParentFcb->PathName + (current - FileName);
   ParentFcb->pDevExt = DeviceExt;
-  Status = CcInitializeFileCache(FileObject, &ParentFcb->RFCB.Bcb);
+  BytesPerCluster = DeviceExt->Boot->SectorsPerCluster * BLOCKSIZE;
+  if (BytesPerCluster >= PAGESIZE)
+    {
+      Status = CcInitializeFileCache(FileObject, &ParentFcb->RFCB.Bcb,
+				     BytesPerCluster);
+    }
+  else
+    {
+      Status = CcInitializeFileCache(FileObject, &ParentFcb->RFCB.Bcb, 
+				     PAGESIZE);
+    }
   if (!NT_SUCCESS(Status))
     {
       DbgPrint("CcInitializeFileCache failed\n");
@@ -642,10 +653,14 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  || RequestedDisposition == FILE_SUPERSEDE)
 	{
 	  CHECKPOINT;
+#if 0
 	  Status =
 	    addEntry (DeviceExt, FileObject, RequestedOptions,
 		      (Stack->Parameters.
 		       Create.FileAttributes & FILE_ATTRIBUTE_VALID_FLAGS));
+#else
+	  Status = STATUS_UNSUCCESSFUL;
+#endif
 	  if (NT_SUCCESS (Status))
 	    Irp->IoStatus.Information = FILE_CREATED;
 	  /* FIXME set size if AllocationSize requested */
@@ -677,7 +692,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	    Cluster = pFcb->entry.FirstCluster;
 	  pFcb->entry.FirstCluster = 0;
 	  pFcb->entry.FirstClusterHigh = 0;
-	  updEntry (DeviceExt, FileObject);
+	  //	  updEntry (DeviceExt, FileObject);
 	  while (Cluster != 0xffffffff && Cluster > 1)
 	    {
 	      NextCluster = GetNextCluster (DeviceExt, Cluster);

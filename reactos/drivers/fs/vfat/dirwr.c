@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.14 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: dirwr.c,v 1.15 2001/01/01 04:42:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,7 +19,7 @@
 
 #include "vfat.h"
 
-
+#if 0
 /*
  * Copies a file name into a directory slot (long file name entry)
  * and fills trailing slot space with 0xFFFF. This keeps scandisk
@@ -458,5 +458,6 @@ addEntry (PDEVICE_EXTENSION DeviceExt,
   DPRINT ("addentry ok\n");
   return STATUS_SUCCESS;
 }
+#endif
 
 /* EOF */

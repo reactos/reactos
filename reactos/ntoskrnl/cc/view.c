@@ -1,3 +1,4 @@
+
 /*
  *  ReactOS kernel
  *  Copyright (C) 2000, 1999, 1998 David Welch <welch@cwcom.net>
@@ -16,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.12 2000/12/23 02:37:38 dwelch Exp $
+/* $Id: view.c,v 1.13 2001/01/01 04:42:11 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,10 +60,15 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* GLOBALS *******************************************************************/
+
+#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#define ROUND_DOWN(N, S) (ROUND_UP(N, S) - S)
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS STDCALL 
-CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
+CcFlushCacheSegment(PCACHE_SEGMENT CacheSeg)
 /*
  * FUNCTION: Asks the FSD to flush the contents of the page back to disk
  */
@@ -78,9 +84,9 @@ CcFlushCachePage(PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS STDCALL 
-CcReleaseCachePage(PBCB Bcb,
-		   PCACHE_SEGMENT CacheSeg,
-		   BOOLEAN Valid)
+CcReleaseCacheSegment(PBCB Bcb,
+		      PCACHE_SEGMENT CacheSeg,
+		      BOOLEAN Valid)
 {
    DPRINT("CcReleaseCachePage(Bcb %x, CacheSeg %x, Valid %d)\n",
 	  Bcb, CacheSeg, Valid);
@@ -95,11 +101,11 @@ CcReleaseCachePage(PBCB Bcb,
 }
 
 NTSTATUS STDCALL 
-CcRequestCachePage(PBCB Bcb,
-		   ULONG FileOffset,
-		   PVOID* BaseAddress,
-		   PBOOLEAN UptoDate,
-		   PCACHE_SEGMENT* CacheSeg)
+CcRequestCacheSegment(PBCB Bcb,
+		      ULONG FileOffset,
+		      PVOID* BaseAddress,
+		      PBOOLEAN UptoDate,
+		      PCACHE_SEGMENT* CacheSeg)
 /*
  * FUNCTION: Request a page mapping for a BCB
  */
@@ -107,7 +113,13 @@ CcRequestCachePage(PBCB Bcb,
    KIRQL oldirql;
    PLIST_ENTRY current_entry;
    PCACHE_SEGMENT current;
+   ULONG i;
    
+   if ((FileOffset % Bcb->CacheSegmentSize) != 0)
+     {
+       KeBugCheck(0);
+     }
+
    DPRINT("CcRequestCachePage(Bcb %x, FileOffset %x, BaseAddress %x, "
 	  "UptoDate %x, CacheSeg %x)\n", Bcb, FileOffset, BaseAddress,
 	  UptoDate, CacheSeg);
@@ -118,7 +130,7 @@ CcRequestCachePage(PBCB Bcb,
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
 	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
-	if (current->FileOffset == PAGE_ROUND_DOWN(FileOffset))
+	if (current->FileOffset == FileOffset)
 	  {
 	     DPRINT("Found existing segment at %x\n", current);
 	     current->ReferenceCount++;
@@ -145,14 +157,14 @@ CcRequestCachePage(PBCB Bcb,
    current = ExAllocatePool(NonPagedPool, sizeof(CACHE_SEGMENT));
    current->BaseAddress = NULL;
    MmCreateMemoryArea(KernelMode,
-		      NULL,
+		      MmGetKernelAddressSpace(),
 		      MEMORY_AREA_CACHE_SEGMENT,
 		      &current->BaseAddress,
-		      CACHE_SEGMENT_SIZE,
+		      Bcb->CacheSegmentSize,
 		      PAGE_READWRITE,
 		      (PMEMORY_AREA*)&current->MemoryArea);
    current->Valid = FALSE;
-   current->FileOffset = PAGE_ROUND_DOWN(FileOffset);
+   current->FileOffset = FileOffset;
    current->Bcb = Bcb;
    KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
    current->ReferenceCount = 1;
@@ -160,10 +172,13 @@ CcRequestCachePage(PBCB Bcb,
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
    *CacheSeg = current;
-   MmCreateVirtualMapping(NULL,
-			  current->BaseAddress,
-			  PAGE_READWRITE,
-			  (ULONG)MmAllocPage(0));
+   for (i = 0; i < (Bcb->CacheSegmentSize / PAGESIZE); i++)
+     {
+       MmCreateVirtualMapping(NULL,
+			      current->BaseAddress + (i * PAGESIZE),
+			      PAGE_READWRITE,
+			      (ULONG)MmAllocPage(0));
+     }
    
    
    DPRINT("Returning %x (BaseAddress %x)\n", current, *BaseAddress);
@@ -180,7 +195,7 @@ CcFreeCacheSegment(PBCB Bcb,
 {
    MmFreeMemoryArea(NULL,
 		    CacheSeg->BaseAddress,
-		    CACHE_SEGMENT_SIZE,
+		    Bcb->CacheSegmentSize,
 		    TRUE);
    ExFreePool(CacheSeg);
    return(STATUS_SUCCESS);
@@ -217,7 +232,8 @@ CcReleaseFileCache(PFILE_OBJECT FileObject,
 
 NTSTATUS STDCALL 
 CcInitializeFileCache(PFILE_OBJECT FileObject,
-		      PBCB* Bcb)
+		      PBCB* Bcb,
+		      ULONG CacheSegmentSize)
 /*
  * FUNCTION: Initializes a BCB for a file object
  */
@@ -233,7 +249,8 @@ CcInitializeFileCache(PFILE_OBJECT FileObject,
    (*Bcb)->FileObject = FileObject;
    InitializeListHead(&(*Bcb)->CacheSegmentListHead);
    KeInitializeSpinLock(&(*Bcb)->BcbLock);
-   
+   (*Bcb)->CacheSegmentSize = CacheSegmentSize;
+
    DPRINT("Finished CcInitializeFileCache() = %x\n", *Bcb);
    
    return(STATUS_SUCCESS);
@@ -260,7 +277,7 @@ VOID STDCALL
 CcMdlReadCompleteDev (IN	PMDL		MdlChain,
 		      IN	PDEVICE_OBJECT	DeviceObject)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 

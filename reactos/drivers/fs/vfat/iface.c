@@ -1,4 +1,4 @@
-/* $Id: iface.c,v 1.45 2000/12/29 23:17:12 dwelch Exp $
+/* $Id: iface.c,v 1.46 2001/01/01 04:42:11 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -91,10 +91,23 @@ VfatMountDevice (PDEVICE_EXTENSION DeviceExt, PDEVICE_OBJECT DeviceToMount)
   DeviceExt->FATEntriesPerSector = DeviceExt->Boot->BytesPerSector / 32;
   DeviceExt->BytesPerCluster = DeviceExt->Boot->SectorsPerCluster *
     DeviceExt->Boot->BytesPerSector;
+  
+  if (DeviceExt->BytesPerCluster >= PAGESIZE && 
+      (DeviceExt->BytesPerCluster % PAGESIZE) != 0)
+    {
+      DbgPrint("Invalid cluster size\n");
+      KeBugCheck(0);
+    }
+  else if (DeviceExt->BytesPerCluster < PAGESIZE &&
+	   (PAGESIZE % DeviceExt->BytesPerCluster) != 0)
+    {
+      DbgPrint("Invalid cluster size2\n");
+      KeBugCheck(0);
+    }
 
   if (strncmp (DeviceExt->Boot->SysType, "FAT12", 5) == 0)
     {
-      DeviceExt->FatType = FAT12;
+      DeviceExt->FatType = FAT12; 
     }
   else
     if (strncmp

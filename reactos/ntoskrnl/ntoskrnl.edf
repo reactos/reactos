@@ -1,14 +1,14 @@
-; $Id: ntoskrnl.edf,v 1.78 2000/12/30 01:41:52 ekohl Exp $
+; $Id: ntoskrnl.edf,v 1.79 2001/01/01 04:42:11 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
 ; ReactOS Operating System
 ;
 EXPORTS
-CcInitializeFileCache=CcInitializeFileCache@8
+CcInitializeFileCache=CcInitializeFileCache@12
 CcMdlReadComplete=CcMdlReadComplete@8
-CcRequestCachePage=CcRequestCachePage@20
-CcReleaseCachePage=CcReleaseCachePage@12
+CcRequestCacheSegment=CcRequestCacheSegment@20
+CcReleaseCacheSegment=CcReleaseCacheSegment@12
 CcReleaseFileCache=CcReleaseFileCache@8
 DbgBreakPoint=DbgBreakPoint@0
 DbgBreakPointWithStatus=DbgBreakPointWithStatus@4

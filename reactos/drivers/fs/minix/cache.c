@@ -27,7 +27,7 @@ NTSTATUS MinixRequestCacheBlock(PDEVICE_OBJECT DeviceObject,
 {
    BOOLEAN UptoDate;
    
-   CcRequestCachePage(Bcb,
+   CcRequestCacheSegment(Bcb,
 		      FileOffset,
 		      BaseAddress,
 		      &UptoDate,
