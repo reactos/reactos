@@ -102,7 +102,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 		}
 		while(FindNextFile(hFind,&FindData));
 
-		FindClose(hFile);
+		FindClose(hFind);
 	}	
 	
 /*
