@@ -1,6 +1,8 @@
-# $Id: makefile,v 1.7 2001/08/21 20:13:03 chorns Exp $
+# $Id: makefile,v 1.8 2001/12/30 04:06:25 sedwards Exp $
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP=../../../reactos
+
+ROS_DIR=../../../reactos
 
 TARGET_TYPE = program
 

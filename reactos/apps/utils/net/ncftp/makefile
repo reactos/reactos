@@ -2,7 +2,9 @@
 # ncftp 3.0.3 for reactos ported from MS-Vc++
 # sedwards 12-20-01
 
-PATH_TO_TOP = ../../..
+PATH_TO_TOP=../../../reactos
+
+ROS_DIR=../../../reactos
 
 TARGET_TYPE = program
 
