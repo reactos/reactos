@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.97 2004/02/22 14:26:35 navaraf Exp $
+/* $Id: winpos.c,v 1.98 2004/02/24 01:30:58 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -122,34 +122,53 @@ NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-  PWINDOW_OBJECT Child;
-  PWINDOW_OBJECT TabooWindow = Window;
+  PWINDOW_OBJECT Child, Wnd = Window;
+  HWND *List, *phWnd;
 
-  for (;;)
+  if (!Window || IntIsDesktopWindow(Window))
+  {
+    IntSetFocusMessageQueue(NULL);
+    return;
+  }
+
+  for(;;)
+  {
+    Wnd = IntGetParentObject(Wnd);
+    if(!Wnd)
     {
-      if (NULL == Window || IntIsDesktopWindow(Window))
-        {
-          IntSetFocusMessageQueue(NULL);
-          return;
-        }
-      Window = Window->Parent;
-      ExAcquireFastMutex(&(Window->ChildrenListLock));
-      Child = Window->FirstChild;
-      while (NULL != Child)
-        {
-          if (Child != TabooWindow)
-            {
-              ExReleaseFastMutex(&(Window->ChildrenListLock));
-              if (IntSetForegroundWindow(Child))
-                {
-                  return;
-                }
-              ExAcquireFastMutex(&(Window->ChildrenListLock));
-            }
-          Child = Child->NextSibling;
-        }
-      ExReleaseFastMutex(&(Window->ChildrenListLock));
+      IntSetFocusMessageQueue(NULL);
+      return;
     }
+    if(IntIsDesktopWindow(Wnd))
+    {
+      IntReleaseWindowObject(Wnd);
+      IntSetFocusMessageQueue(NULL);
+      return;
+    }
+    if((List = IntWinListChildren(Window)))
+    {
+      for(phWnd = List; *phWnd; ++phWnd)
+      {
+        if(*phWnd == Window->Self)
+        {
+          continue;
+        }
+        
+        Child = IntGetWindowObject(*phWnd);
+        if(Child)
+        {
+          if(IntSetForegroundWindow(Child))
+          {
+            IntReleaseWindowObject(Child);
+            ExFreePool(List);
+            return;
+          }
+          IntReleaseWindowObject(Child);
+        }
+      }
+      ExFreePool(List);
+    }
+  }
 }
 
 VOID STATIC FASTCALL
@@ -161,6 +180,7 @@ WinPosFindIconPos(HWND hWnd, POINT *Pos)
 PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
+  PWINDOW_OBJECT Parent;
   INT XInc, YInc;
   
   if (WindowObject->InternalPos == NULL)
@@ -168,10 +188,17 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
       RECT WorkArea;
       PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
       
-      if(IntIsDesktopWindow(WindowObject->Parent))
-        WorkArea = *IntGetDesktopWorkArea(Desktop);
+      Parent = IntGetParentObject(WindowObject);
+      if(Parent)
+      {
+        if(IntIsDesktopWindow(Parent))
+          WorkArea = *IntGetDesktopWorkArea(Desktop);
+        else
+          WorkArea = Parent->ClientRect;
+        IntReleaseWindowObject(Parent);
+      }
       else
-        WorkArea = WindowObject->Parent->ClientRect;
+        WorkArea = *IntGetDesktopWorkArea(Desktop);
       
       WindowObject->InternalPos = ExAllocatePoolWithTag(NonPagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
@@ -402,6 +429,7 @@ LONG STATIC FASTCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
 {
+  PWINDOW_OBJECT Parent;
   UINT wvrFlags = 0;
 
   /* Send WM_NCCALCSIZE message to get new client area */
@@ -413,14 +441,15 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.rgrc[0] = *WindowRect;
       params.rgrc[1] = Window->WindowRect;
       params.rgrc[2] = Window->ClientRect;
-      if (0 != (Window->Style & WS_CHILD))
+      Parent = IntGetParentObject(Window);
+      if (0 != (Window->Style & WS_CHILD) && Parent)
 	{
-	  NtGdiOffsetRect(&(params.rgrc[0]), - Window->Parent->ClientRect.left,
-	                      - Window->Parent->ClientRect.top);
-	  NtGdiOffsetRect(&(params.rgrc[1]), - Window->Parent->ClientRect.left,
-	                      - Window->Parent->ClientRect.top);
-	  NtGdiOffsetRect(&(params.rgrc[2]), - Window->Parent->ClientRect.left,
-	                      - Window->Parent->ClientRect.top);
+	  NtGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
+	                      - Parent->ClientRect.top);
+	  NtGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
+	                      - Parent->ClientRect.top);
+	  NtGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
+	                      - Parent->ClientRect.top);
 	}
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
@@ -432,10 +461,10 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
           params.rgrc[0].top <= params.rgrc[0].bottom)
 	{
           *ClientRect = params.rgrc[0];
-	  if (Window->Style & WS_CHILD)
+	  if ((Window->Style & WS_CHILD) && Parent)
 	    {
-	      NtGdiOffsetRect(ClientRect, Window->Parent->ClientRect.left,
-	                      Window->Parent->ClientRect.top);
+	      NtGdiOffsetRect(ClientRect, Parent->ClientRect.left,
+	                      Parent->ClientRect.top);
 	    }
 	}
 
@@ -454,6 +483,8 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 	{
           WinPos->flags &= ~SWP_NOCLIENTSIZE;
 	}
+	  if(Parent)
+	    IntReleaseWindowObject(Parent);
     }
   else
     {
@@ -492,13 +523,17 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 
   if (!(WinPos->flags & SWP_NOMOVE))
     {
+      PWINDOW_OBJECT Parent;
       X = WinPos->x;
       Y = WinPos->y;
-      if (0 != (WindowObject->Style & WS_CHILD))
+      Parent = IntGetParentObject(WindowObject);
+      if ((0 != (WindowObject->Style & WS_CHILD)) && Parent)
 	{
-	  X += WindowObject->Parent->ClientRect.left;
-	  Y += WindowObject->Parent->ClientRect.top;
+	  X += Parent->ClientRect.left;
+	  Y += Parent->ClientRect.top;
 	}
+	  if(Parent)
+	    IntReleaseWindowObject(Parent);
       WindowRect->left = X;
       WindowRect->top = Y;
       WindowRect->right += X - WindowObject->WindowRect.left;
@@ -588,8 +623,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 VOID STATIC FASTCALL
 WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
-   HWND *Children;
-   UINT Count;
+   PWINDOW_OBJECT Child;
 
    Window->WindowRect.left += MoveX;
    Window->WindowRect.right += MoveX;
@@ -600,18 +634,13 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
    Window->ClientRect.right += MoveX;
    Window->ClientRect.top += MoveY;
    Window->ClientRect.bottom += MoveY;
-
-   Children = IntWinListChildren(Window);
-   if (Children)
+   
+   IntLockRelatives(Window);
+   for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
-      for (Count = 0; Children[Count] != NULL; Count++)
-      {
-         Window = IntGetWindowObject(Children[Count]);
-         WinPosInternalMoveWindow(Window, MoveX, MoveY);
-         IntReleaseWindowObject(Window);
-      }
-      ExFreePool(Children);
+     WinPosInternalMoveWindow(Child, MoveX, MoveY);
    }
+   IntUnLockRelatives(Window);
 }
 
 /*
@@ -691,13 +720,18 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
       if ((WinPos->hwndInsertAfter != HWND_TOP) &&
           (WinPos->hwndInsertAfter != HWND_BOTTOM))
       {
+         PWINDOW_OBJECT Parent = IntGetParentObject(Window);
          if (NtUserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
-             Window->Parent->Self)
+             (Parent ? Parent->Self : NULL))
          {
+            if(Parent)
+              IntReleaseWindowObject(Parent);
             return FALSE;
          }
          else
          {
+            if(Parent)
+              IntReleaseWindowObject(Parent);
             /*
              * We don't need to change the Z order of hwnd if it's already
              * inserted after hwndInsertAfter or when inserting hwnd after
@@ -812,26 +846,35 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT InsertAfterWindow;
 
-      ParentWindow = Window->Parent;
-      if (ParentWindow)
+      if ((ParentWindow = IntGetParentObject(Window)))
       {
          if (WinPos.hwndInsertAfter == HWND_TOP)
             InsertAfterWindow = NULL;
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
-            InsertAfterWindow = IntGetWindowObject(ParentWindow->LastChild->Self);
+         {
+            IntLockRelatives(ParentWindow);
+            if(ParentWindow->LastChild)
+            {
+               IntReferenceWindowObject(ParentWindow->LastChild);
+               InsertAfterWindow = ParentWindow->LastChild;
+            }
+            else
+              InsertAfterWindow = NULL;
+            IntUnLockRelatives(ParentWindow);
+         }
          else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
          /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
             the last window */
          if (InsertAfterWindow != Window)
          {
-             ExAcquireFastMutexUnsafe(&ParentWindow->ChildrenListLock);
              IntUnlinkWindow(Window);
              IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
-             ExReleaseFastMutexUnsafe(&ParentWindow->ChildrenListLock);
          }
          if (InsertAfterWindow != NULL)
             IntReleaseWindowObject(InsertAfterWindow);
+         
+         IntReleaseWindowObject(ParentWindow);
       }
    }
 
@@ -1191,7 +1234,7 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
       if (Wnd == IntGetThreadFocusWindow() ||
           IntIsChildWindow(Wnd, IntGetThreadFocusWindow()))
         {
-          NtUserSetFocus(Window->Parent->Self);
+          NtUserSetFocus(Window->Parent);
         }
     }
 
@@ -1238,71 +1281,78 @@ WinPosSearchChildren(PWINDOW_OBJECT ScopeWin, POINT *Point,
 		     PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
   PWINDOW_OBJECT Current;
+  HWND *List, *phWnd;
 
-  ExAcquireFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-  Current = ScopeWin->FirstChild;
-  while (Current)
+  if((List = IntWinListChildren(ScopeWin)))
+  {
+    for(phWnd = List; *phWnd; ++phWnd)
     {
+      if(!(Current = IntGetWindowObject(*phWnd)))
+      {
+        continue;
+      }
+      
       if (Current->Style & WS_VISIBLE &&
-	  ((!(Current->Style & WS_DISABLED)) ||
-	   (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
-	  (Point->x >= Current->WindowRect.left &&
+	      ((!(Current->Style & WS_DISABLED)) ||
+	       (Current->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD) &&
+	      (Point->x >= Current->WindowRect.left &&
            Point->x < Current->WindowRect.right &&
            Point->y >= Current->WindowRect.top &&
            Point->y < Current->WindowRect.bottom))
            /* FIXME - check if Point is in window region */
-	{
-	  if(*Window)
 	  {
-	    ObmDereferenceObject(*Window);
-	  }
-	  ObmReferenceObjectByPointer(Current, otWindow);
-	  *Window = Current;
-	  
-	  if (Current->Style & WS_DISABLED)
+	    if(*Window)
 	    {
-	      ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	      *HitTest = HTERROR;
-	      return TRUE;
+	      IntReleaseWindowObject(*Window);
 	    }
-	  if(Current->MessageQueue == PsGetWin32Thread()->MessageQueue)
-	  {
-	    *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
-				      MAKELONG(Point->x, Point->y));
-	    if((*HitTest) == (USHORT)HTTRANSPARENT)
-	    {
-	      Current = Current->NextSibling;
-	      continue;
-	    }
-	  }
-	  else
-	  {
-	    *HitTest = HTCLIENT;
-	  }
-	  
-	  if (Point->x >= Current->ClientRect.left &&
-	      Point->x < Current->ClientRect.right &&
-	      Point->y >= Current->ClientRect.top &&
-	      Point->y < Current->ClientRect.bottom)
-	    {
-	      USHORT ChildHitTest;
-	      if(WinPosSearchChildren(Current, Point, Window, &ChildHitTest))
-	      {
-                ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	        *HitTest = ChildHitTest;
-	        return TRUE;
-	      }
-	    }
-
-	  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-	  return TRUE;
-	}
-      Current = Current->NextSibling;
+	    *Window = Current;
+	    
+        if(Current->Style & WS_DISABLED)
+        {
+          *HitTest = HTERROR;
+	      ExFreePool(List);
+          return TRUE;
+        }
+        
+        if(Current->MessageQueue == PsGetWin32Thread()->MessageQueue)
+        {
+          *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
+                                    MAKELONG(Point->x, Point->y));
+          if((*HitTest) == (USHORT)HTTRANSPARENT)
+          {
+            continue;
+          }
+        }
+        else
+        {
+          *HitTest = HTCLIENT;
+        }
+        
+        if(Point->x >= Current->ClientRect.left &&
+           Point->x < Current->ClientRect.right &&
+           Point->y >= Current->ClientRect.top &&
+           Point->y < Current->ClientRect.bottom)
+        {
+          USHORT ChildHitTest;
+          if(WinPosSearchChildren(Current, Point, Window, &ChildHitTest))
+          {
+            *HitTest = ChildHitTest;
+            ExFreePool(List);
+            return TRUE;
+          }
+        }
+        
+        ExFreePool(List);
+        return TRUE;
+      }
+      IntReleaseWindowObject(Current);
     }
-		  
-  ExReleaseFastMutexUnsafe(&ScopeWin->ChildrenListLock);
-  if(*Window == NULL)
-    *HitTest = HTNOWHERE;
+    ExFreePool(List);
+  }
+  
+  if((*Window) == NULL)
+    HitTest = HTNOWHERE;
+  
   return FALSE;
 }
 
@@ -1330,15 +1380,18 @@ WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, POINT WinPoint,
 
   /* Translate the point to the space of the scope window. */
   DesktopWindowHandle = IntGetDesktopWindow();
-  DesktopWindow = IntGetWindowObject(DesktopWindowHandle);
-  Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
-  Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
-  IntReleaseWindowObject(DesktopWindow);
-
+  if((DesktopWindow = IntGetWindowObject(DesktopWindowHandle)))
+  {
+    Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
+    Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
+    IntReleaseWindowObject(DesktopWindow);
+  }
+  
   if(WinPosSearchChildren(ScopeWin, &Point, Window, &HitTest))
   {
     return HitTest;
   }
+
   return HTNOWHERE;
 }
 

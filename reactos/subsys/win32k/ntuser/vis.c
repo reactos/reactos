@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: vis.c,v 1.19 2004/02/22 16:56:14 navaraf Exp $
+ * $Id: vis.c,v 1.20 2004/02/24 01:30:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,7 +70,7 @@ VIS_ComputeVisibleRegion(
     */
 
    PreviousWindow = Window;
-   CurrentWindow = Window->Parent;
+   CurrentWindow = IntGetParentObject(Window);
    while (CurrentWindow)
    {
       if (!(CurrentWindow->Style & WS_VISIBLE))
@@ -85,7 +85,7 @@ VIS_ComputeVisibleRegion(
       if ((CurrentWindow->Style & WS_CLIPSIBLINGS) ||
           (PreviousWindow == Window && ClipSiblings))
       {
-         ExAcquireFastMutexUnsafe(&CurrentWindow->ChildrenListLock);
+         IntLockRelatives(CurrentWindow);
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != PreviousWindow)
          {
@@ -97,16 +97,17 @@ VIS_ComputeVisibleRegion(
             }
             CurrentSibling = CurrentSibling->NextSibling;
          }
-         ExReleaseFastMutexUnsafe(&CurrentWindow->ChildrenListLock);
+         IntUnLockRelatives(CurrentWindow);
       }
 
       PreviousWindow = CurrentWindow;
-      CurrentWindow = CurrentWindow->Parent;
+      CurrentWindow = IntGetParentObject(CurrentWindow);
+      IntReleaseWindowObject(PreviousWindow);
    }
 
    if (ClipChildren)
    {
-      ExAcquireFastMutexUnsafe(&Window->ChildrenListLock);
+      IntLockRelatives(Window);
       CurrentWindow = Window->FirstChild;
       while (CurrentWindow)
       {
@@ -118,7 +119,7 @@ VIS_ComputeVisibleRegion(
          }
          CurrentWindow = CurrentWindow->NextSibling;
       }
-      ExReleaseFastMutexUnsafe(&Window->ChildrenListLock);
+      IntUnLockRelatives(Window);
    }
 
    NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
@@ -132,18 +133,23 @@ VIS_WindowLayoutChanged(
    HRGN NewlyExposed)
 {
    HRGN Temp;
+   PWINDOW_OBJECT Parent;
    
    Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
-   if (Window->Parent != NULL)
+   
+   Parent = IntGetParentObject(Window);
+   if(Parent)
    {
       NtGdiOffsetRgn(Temp,
-                     Window->WindowRect.left - Window->Parent->ClientRect.left,
-                     Window->WindowRect.top - Window->Parent->ClientRect.top);
+                     Window->WindowRect.left - Parent->ClientRect.left,
+                     Window->WindowRect.top - Parent->ClientRect.top);
    }
-   IntRedrawWindow(Window->Parent, NULL, Temp,
+   IntRedrawWindow(Parent, NULL, Temp,
                    RDW_FRAME | RDW_ERASE | RDW_INVALIDATE | 
                    RDW_ALLCHILDREN);
+   if(Parent)
+     IntReleaseWindowObject(Parent);
    NtGdiDeleteObject(Temp);
 }
 

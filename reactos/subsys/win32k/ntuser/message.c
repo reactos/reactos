@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: message.c,v 1.50 2004/02/19 21:12:09 weiden Exp $
+/* $Id: message.c,v 1.51 2004/02/24 01:30:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -776,13 +776,11 @@ IntSendMessage(HWND hWnd,
       IntReleaseWindowObject(Window);
       return Result;
     }
-  else
-    {
-      Result = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam);
+  
+  Result = MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam);
 
-      IntReleaseWindowObject(Window);
-      return Result;
-    }
+  IntReleaseWindowObject(Window);
+  return Result;
 }
 
 static NTSTATUS FASTCALL

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: msgqueue.c,v 1.69 2004/02/23 20:08:35 gvg Exp $
+/* $Id: msgqueue.c,v 1.70 2004/02/24 01:30:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -258,11 +258,13 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
     /*
     **Make sure that we have a window that is not already in focus
     */
-    if (0 != Window && Window->Self != IntGetFocusWindow())
+    if (Window)
     {
+      if(Window->Self != IntGetFocusWindow())
+      {
         SpareLParam = MAKELONG(Hit, Msg);
         
-        if(Window && (Hit != (USHORT)HTTRANSPARENT))
+        if(Hit != (USHORT)HTTRANSPARENT)
         {
           Result = IntSendMessage(Window->Self, WM_MOUSEACTIVATE, (WPARAM)NtUserGetParent(Window->Self), (LPARAM)SpareLParam);
           
@@ -285,16 +287,16 @@ MsqTranslateMouseMessage(HWND hWnd, UINT FilterLow, UINT FilterHigh,
                   IntMouseActivateWindow(Window);
                   break;
           }
-          IntReleaseWindowObject(Window);
         }
         else
         {
-          if(Window)
-            IntReleaseWindowObject(Window);
+          IntReleaseWindowObject(Window);
           ExFreePool(Message);
           *Freed = TRUE;
           return(FALSE);
         }
+      }
+      IntReleaseWindowObject(Window);
     }
 
   }
@@ -577,6 +579,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	    }
 	}
     }
+  IntReleaseWindowObject(DesktopWindow);
   /* Check if the system message queue is now empty. */
   KeAcquireSpinLock(&SystemMessageQueueLock, &OldIrql);
   if (SystemMessageQueueCount == 0 && IsListEmpty(&HardwareMessageQueueHead))

@@ -7,6 +7,7 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <include/object.h>
 #include <include/class.h>
 #include <include/msgqueue.h>
 #include <include/winsta.h>
@@ -63,18 +64,18 @@ typedef struct _WINDOW_OBJECT
   FAST_MUTEX UpdateLock;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
+  /* Lock for the list of child windows. */
+  FAST_MUTEX RelativesLock;
   struct _WINDOW_OBJECT* FirstChild;
   struct _WINDOW_OBJECT* LastChild;
-  /* Lock for the list of child windows. */
-  FAST_MUTEX ChildrenListLock;
   struct _WINDOW_OBJECT* NextSibling;
   struct _WINDOW_OBJECT* PrevSibling;
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
   /* Pointer to the parent window. */
-  struct _WINDOW_OBJECT* Parent;
+  HANDLE Parent;
   /* Pointer to the owner window. */
-  struct _WINDOW_OBJECT* Owner;
+  HANDLE Owner;
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Property list head.*/
@@ -101,18 +102,46 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_NEED_INTERNALPAINT   (0x00000008)
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
-inline BOOL IntIsDesktopWindow(PWINDOW_OBJECT WindowObject);
+#define IntIsDesktopWindow(WndObj) \
+  (WndObj->Parent == NULL)
 
-inline BOOL IntIsBroadcastHwnd(HWND hwnd);
+#define IntIsBroadcastHwnd(hWnd) \
+  (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
+
+#define IntGetWindowObject(hWnd) \
+  IntGetProcessWindowObject(PsGetWin32Process(), hWnd)
+
+#define IntReferenceWindowObject(WndObj) \
+  ObmReferenceObjectByPointer(WndObj, otWindow)
+
+#define IntReleaseWindowObject(WndObj) \
+  ObmDereferenceObject(WndObj)
+
+#define IntWndBelongsToThread(WndObj, W32Thread) \
+  (((WndObj->OwnerThread && WndObj->OwnerThread->Win32Thread)) && \
+   (WndObj->OwnerThread->Win32Thread == W32Thread))
+
+#define IntGetWndThreadId(WndObj) \
+  WndObj->OwnerThread->Cid.UniqueThread
+
+#define IntGetWndProcessId(WndObj) \
+  WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
+
+#define IntLockRelatives(WndObj) \
+  ExAcquireFastMutexUnsafe(&WndObj->RelativesLock)
+
+#define IntUnLockRelatives(WndObj) \
+  ExReleaseFastMutexUnsafe(&WndObj->RelativesLock)
+
+
+PWINDOW_OBJECT FASTCALL
+IntGetProcessWindowObject(PW32PROCESS ProcessData, HWND hWnd);
 
 BOOL FASTCALL
 IntIsWindow(HWND hWnd);
 
 HWND* FASTCALL
 IntWinListChildren(PWINDOW_OBJECT Window);
-
-BOOLEAN FASTCALL
-IntWndBelongsToThread(PWINDOW_OBJECT Window, PW32THREAD ThreadData);
 
 NTSTATUS FASTCALL
 InitWindowImpl (VOID);
@@ -123,17 +152,11 @@ CleanupWindowImpl (VOID);
 VOID FASTCALL
 IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
 
-PWINDOW_OBJECT FASTCALL
-IntGetWindowObject (HWND hWnd);
-
-VOID FASTCALL
-IntReleaseWindowObject (PWINDOW_OBJECT Window);
-
 HWND FASTCALL
 IntGetActiveWindow (VOID);
 
 BOOL FASTCALL
-IntIsWindowVisible (HWND Wnd);
+IntIsWindowVisible (HWND hWnd);
 
 BOOL FASTCALL
 IntIsChildWindow (HWND Parent, HWND Child);
@@ -143,9 +166,6 @@ IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data);
 
 PPROPERTY FASTCALL
 IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
-
-DWORD FASTCALL
-IntGetWindowThreadProcessId(PWINDOW_OBJECT Wnd, PDWORD pid);
 
 VOID FASTCALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd);
@@ -159,24 +179,9 @@ IntGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 PWINDOW_OBJECT FASTCALL
 IntGetParent(PWINDOW_OBJECT Wnd);
 
-typedef enum _WINLOCK_TYPE
-{
-  None,
-  Any,
-  Shared,
-  Exclusive
-} WINLOCK_TYPE; 
+PWINDOW_OBJECT FASTCALL
+IntGetParentObject(PWINDOW_OBJECT Wnd);
 
-#define ASSERT_WINLOCK(a) assert(IntVerifyWinLock(a))
-
-inline VOID IntAcquireWinLockShared();
-inline VOID IntAcquireWinLockExclusive();
-inline VOID IntReleaseWinLock();
-BOOL FASTCALL IntVerifyWinLock(WINLOCK_TYPE Type);
-WINLOCK_TYPE FASTCALL IntSuspendWinLock();
-VOID FASTCALL IntRestoreWinLock(WINLOCK_TYPE Type);
-inline BOOL IntInitializeWinLock();
-inline VOID IntDeleteWinLock();
 DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);

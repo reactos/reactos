@@ -16,10 +16,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: focus.c,v 1.17 2004/02/23 12:39:37 gvg Exp $
+ * $Id: focus.c,v 1.18 2004/02/24 01:30:57 weiden Exp $
  */
 
 #include <win32k/win32k.h>
+#include <include/object.h>
 #include <include/window.h>
 #include <include/desktop.h>
 #include <include/focus.h>
@@ -112,20 +113,28 @@ HWND FASTCALL
 IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 {
   HWND Ret;
-  PWINDOW_OBJECT Child;
-  ExAcquireFastMutexUnsafe(&Root->ChildrenListLock);
+  PWINDOW_OBJECT Child, OwnerWnd;
+  IntLockRelatives(Root);
   
   for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
   {
-    if(Child->Owner == Owner)
+    IntLockRelatives(Child);
+    OwnerWnd = IntGetWindowObject(Child->Owner);
+    IntUnLockRelatives(Child);
+    if(!OwnerWnd)
+      continue;
+    
+    if(OwnerWnd == Owner)
     {
+      IntUnLockRelatives(Root);
       Ret = Child->Self;
-      ExReleaseFastMutexUnsafe(&Root->ChildrenListLock);
+      IntReleaseWindowObject(OwnerWnd);
       return Ret;
     }
+    IntReleaseWindowObject(OwnerWnd);
   }
   
-  ExReleaseFastMutexUnsafe(&Root->ChildrenListLock);
+  IntUnLockRelatives(Root);
   return NULL;
 }
 
@@ -186,7 +195,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    }
    IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
    IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
-
+   
    return TRUE;
 }
 
@@ -210,8 +219,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
     if(DesktopWindow)
     {
       Top = IntFindChildWindowToOwner(DesktopWindow, Window);
-      TopWnd = IntGetWindowObject(Top);
-      if(TopWnd)
+      if((TopWnd = IntGetWindowObject(Top)))
       {
         Ret = IntMouseActivateWindow(TopWnd);
         IntReleaseWindowObject(TopWnd);
@@ -283,9 +291,8 @@ IntSetActiveWindow(PWINDOW_OBJECT Window)
 }
 
 HWND FASTCALL
-IntSetFocusWindow(PWINDOW_OBJECT Window)
+IntSetFocusWindow(HWND hWnd)
 {
-   HWND hWnd = Window != 0 ? Window->Self : 0;
    HWND hWndPrev = 0;
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
@@ -453,14 +460,14 @@ NtUserSetFocus(HWND hWnd)
          NtUserSetActiveWindow(hWndTop);
       }
 
-      hWndPrev = IntSetFocusWindow(Window);
+      hWndPrev = IntSetFocusWindow(hWnd);
       IntReleaseWindowObject(Window);
 
       return hWndPrev;
    }
    else
    {
-      return IntSetFocusWindow(0);
+      return IntSetFocusWindow(NULL);
    }
 }
 

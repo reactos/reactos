@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.72 2004/02/22 16:56:14 navaraf Exp $
+ *  $Id: painting.c,v 1.73 2004/02/24 01:30:57 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -59,14 +59,11 @@
 VOID FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 {
-   HWND Parent;
-   PWINDOW_OBJECT ParentWindow;
+   PWINDOW_OBJECT ParentWindow = IntGetParentObject(Child), OldWindow;
 
-   Parent = NtUserGetAncestor(Child->Self, GA_PARENT);
-   while (Parent)
+   while (ParentWindow)
    {
-      ParentWindow = IntGetWindowObject(Parent);
-      if (ParentWindow && !(ParentWindow->Style & WS_CLIPCHILDREN))
+      if (!(ParentWindow->Style & WS_CLIPCHILDREN))
       {
          ExAcquireFastMutex(&ParentWindow->UpdateLock);
          if (ParentWindow->UpdateRegion != 0)
@@ -87,15 +84,9 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
          }
          ExReleaseFastMutex(&ParentWindow->UpdateLock);
       }
-      if (ParentWindow)
-      {
-         IntReleaseWindowObject(ParentWindow);
-         Parent = NtUserGetAncestor(Parent, GA_PARENT);
-      }
-      else
-      {
-         return;
-      }
+      OldWindow = ParentWindow;
+      ParentWindow = IntGetParentObject(ParentWindow);
+      IntReleaseWindowObject(OldWindow);
    }
 }
 
@@ -422,14 +413,21 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 BOOL FASTCALL
 IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
-   PWINDOW_OBJECT Wnd = Window;
+   PWINDOW_OBJECT Old, Wnd = Window;
    
-   for (; Wnd; Wnd = Wnd->Parent)
+   IntReferenceWindowObject(Wnd);
+   do
    {
       if (!(Wnd->Style & WS_VISIBLE) ||
           ((Wnd->Style & WS_MINIMIZE) && (Wnd != Window)))
+      {
+         IntReleaseWindowObject(Wnd);
          return FALSE;
-   }
+      }
+      Old = Wnd;
+      Wnd = IntGetParentObject(Wnd);
+      IntReleaseWindowObject(Old);
+   } while(Wnd);
 
    return TRUE;
 }
@@ -559,7 +557,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
       return hWnd;
    }
 
-   ExAcquireFastMutex(&Window->ChildrenListLock);
+   IntLockRelatives(Window);
    for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
       if (IntIsWindowDirty(Child) &&
@@ -569,7 +567,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
          break;
       }
    }
-   ExReleaseFastMutex(&Window->ChildrenListLock);
+   IntUnLockRelatives(Window);
 
    if (hFoundWnd == NULL)
    {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: windc.c,v 1.58 2004/02/22 12:25:35 navaraf Exp $
+/* $Id: windc.c,v 1.59 2004/02/24 01:30:57 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -238,7 +238,13 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    {
       PWINDOW_OBJECT Parent;
 
-      Parent = Window->Parent;
+      Parent = IntGetParentObject(Window);
+      if(!Parent)
+      {
+        hRgnVisible = NULL;
+        goto noparent;
+      }
+      
       if (Parent->Style & WS_CLIPSIBLINGS)
       {
          DcxFlags = DCX_CLIPSIBLINGS | 
@@ -289,6 +295,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
       hRgnVisible = DceGetVisRgn(Window->Self, Flags, 0, 0);
    }
 
+noparent:
    if (Flags & DCX_INTERSECTRGN)
    {
       NtGdiCombineRgn(hRgnVisible, hRgnVisible, Dce->hClipRgn, RGN_AND);
@@ -311,7 +318,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
 HDC STDCALL
 NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 {
-  PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT Window, Parent;
   ULONG DcxFlags;
   DCE* Dce;
   BOOL UpdateVisRgn = TRUE;
@@ -372,7 +379,9 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       Flags = (Flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
     }
 
-  if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Window->Parent)
+  Parent = (Window ? IntGetParentObject(Window) : NULL);
+  
+  if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Parent)
     {
       Flags &= ~DCX_PARENTCLIP;
     }
@@ -380,16 +389,19 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
     {
       Flags |= DCX_CACHE;
       if ((Window->Style & WS_VISIBLE) &&
-          (Window->Parent->Style & WS_VISIBLE))
+          (Parent->Style & WS_VISIBLE))
         {
           Flags &= ~DCX_CLIPCHILDREN;
-          if (Window->Parent->Style & WS_CLIPSIBLINGS)
+          if (Parent->Style & WS_CLIPSIBLINGS)
             {
               Flags |= DCX_CLIPSIBLINGS;
             }
         }
     }
 
+  if(Parent)
+    IntReleaseWindowObject(Parent);
+  
   DcxFlags = Flags & DCX_CACHECOMPAREMASK;
 
   if (Flags & DCX_CACHE)

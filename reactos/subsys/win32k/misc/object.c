@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.8 2003/12/17 19:56:13 weiden Exp $
+/* $Id: object.c,v 1.9 2004/02/24 01:30:57 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -31,6 +31,7 @@
 
 #include <ddk/ntddk.h>
 #include <include/object.h>
+#include <include/window.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -113,7 +114,7 @@ ObmpGetObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
       Current = Current->Flink;
       if (Current == &(HandleTable->ListHead))
 	{
-          DPRINT1("Invalid handle 0x%x\n", Handle);
+      DPRINT1("Invalid handle 0x%x\n", Handle);
 	  return NULL;
 	}
     }
@@ -275,6 +276,7 @@ ObmReferenceObject(PVOID ObjectBody)
   
   if (!ObjectBody)
     {
+      DPRINT1("Cannot Reference NULL!\n");
       return;
     }
   
@@ -298,13 +300,17 @@ ObmDereferenceObject(PVOID ObjectBody)
   
   if (!ObjectBody)
     {
+      DPRINT1("Cannot Dereference NULL!\n");
       return;
     }
   
   ObjectHeader = BODY_TO_HEADER(ObjectBody);
   
   ObjectHeader->RefCount--;
-
+  #if 0
+  if(ObjectHeader->Type == otWindow)
+    DbgPrint("Dereference 0x%x: %d\n", ((PWINDOW_OBJECT)ObjectBody)->Self, ObjectHeader->RefCount);
+  #endif
   ObmpPerformRetentionChecks(ObjectHeader);
 }
 
@@ -327,7 +333,10 @@ ObmReferenceObjectByPointer(PVOID ObjectBody,
     {
       return STATUS_INVALID_PARAMETER;
     }
-  
+  #if 0
+  if(ObjectType == otWindow)
+    DbgPrint("Reference 0x%x: %d\n", ((PWINDOW_OBJECT)ObjectBody)->Self, ObjectHeader->RefCount);
+  #endif
   ObjectHeader->RefCount++;
   
   return STATUS_SUCCESS;
