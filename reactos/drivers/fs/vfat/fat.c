@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.22 2001/04/26 01:28:15 phreak Exp $
+ * $Id: fat.c,v 1.23 2001/04/26 04:01:54 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -15,7 +15,7 @@
 #include <wchar.h>
 #include <ntos/minmax.h>
 
-#define NDEBUG
+#define NDEBUGN
 #include <debug.h>
 
 #include "vfat.h"
@@ -133,10 +133,9 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
  PVOID BaseAddress;
 
  *NextCluster = 0;
- FATOffset = (CurrentCluster * 12) / 8; /* first byte containing value */
 
  Status = CcRequestCacheSegment(DeviceExt->Fat12StorageBcb,
-				PAGE_ROUND_DOWN(FATOffset),
+				0,
 				&BaseAddress,
 				&Valid,
 				&CacheSeg);
@@ -148,7 +147,7 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
     {
       Status = VfatReadSectors(DeviceExt->StorageDevice,
 			       DeviceExt->FATStart,
-			       PAGESIZE / BLOCKSIZE,
+			       DeviceExt->Boot->FATSectors,
 			       BaseAddress);
       if (!NT_SUCCESS(Status))
 	{
@@ -158,12 +157,11 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
     }
   CBlock = (PUCHAR)BaseAddress;
   
+  FATOffset = (CurrentCluster * 12) / 8; /* first byte containing value */
   if ((CurrentCluster % 2) == 0)
     {
       Entry = CBlock[FATOffset];
-      DPRINT( "Entry = %x, FATOffset = %x\n", Entry, FATOffset );
       Entry |= ((CBlock[FATOffset+1] & 0xf)<<8);
-      DPRINT( "Entry = %x\n", Entry );
     }
   else
     {
@@ -175,7 +173,6 @@ Fat12GetNextCluster (PDEVICE_EXTENSION DeviceExt,
     Entry = 0xffffffff;
 //  DPRINT("Returning %x\n",Entry);
   *NextCluster = Entry;
-  DPRINT( "NextCluster = %x, CurrentCluster = %x\n", *NextCluster, CurrentCluster );
   CcReleaseCacheSegment(DeviceExt->Fat12StorageBcb, CacheSeg, TRUE);
   return Entry == 0xffffffff ? STATUS_END_OF_FILE : STATUS_SUCCESS;
 }
