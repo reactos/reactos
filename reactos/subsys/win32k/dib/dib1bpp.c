@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dib1bpp.c,v 1.21 2004/04/07 15:37:50 weiden Exp $ */
+/* $Id: dib1bpp.c,v 1.22 2004/04/07 16:38:27 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -478,10 +478,10 @@ DIB_1BPP_BitBlt(
             Pattern = 0;
             for (k = 0; k < 8; k++)
             {
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, Y % PatternHeight) << (7 - k));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, Y % PatternHeight) << (8 + (7 - k)));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, Y % PatternHeight) << (16 + (7 - k)));
-               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, Y % PatternHeight) << (24 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k) % PatternWidth, PatternY) << (7 - k));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 8) % PatternWidth, PatternY) << (8 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 16) % PatternWidth, PatternY) << (16 + (7 - k)));
+               Pattern |= (DIB_1BPP_GetPixel(PatternObj, (X + k + 24) % PatternWidth, PatternY) << (24 + (7 - k)));
             }
          }
 
@@ -503,7 +503,7 @@ DIB_1BPP_BitBlt(
 
             if (UsesPattern)
             {
-               Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, Y % PatternHeight);
+               Pattern = DIB_1BPP_GetPixel(PatternObj, X % PatternWidth, PatternY);
             }
 
             DIB_1BPP_PutPixel(DestSurf, X, Y, DIB_DoRop(Rop4, Dest, Source, Pattern) & 0xF);

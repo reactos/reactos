@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.45 2004/04/06 21:53:48 weiden Exp $
+/* $Id: bitblt.c,v 1.46 2004/04/07 16:38:27 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -114,7 +114,7 @@ BltMask(SURFOBJ* Dest,
    PGDIBRUSHOBJ GdiBrush;
    HBITMAP PatternSurface = NULL;
    PSURFOBJ PatternObj;
-   ULONG PatternWidth, PatternHeight;
+   ULONG PatternWidth, PatternHeight, PatternY;
   
    if (Mask == NULL)
    {
@@ -147,6 +147,10 @@ BltMask(SURFOBJ* Dest,
    {
       lMask = tMask;
       c8 = SourcePoint->x & 0x07;
+      
+      if(PatternSurface)
+         PatternY = (DestRect->top + j) % PatternHeight;
+      
       for (i = 0; i < dx; i++)
       {
          if (0 != (*lMask & maskbit[c8]))
@@ -158,7 +162,7 @@ BltMask(SURFOBJ* Dest,
             else
             {
                DestGDI->DIB_PutPixel(Dest, DestRect->left + i, DestRect->top + j,
-                  DIB_1BPP_GetPixel(PatternObj, (DestRect->left + i) % PatternWidth, (DestRect->top + j) % PatternHeight) ? GdiBrush->crFore : GdiBrush->crBack);
+                  DIB_1BPP_GetPixel(PatternObj, (DestRect->left + i) % PatternWidth, PatternY) ? GdiBrush->crFore : GdiBrush->crBack);
             }
          }
          c8++;
