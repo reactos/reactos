@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.24 2004/06/27 05:38:54 ion Exp $ */
+/* $Id: fsfuncs.h,v 1.25 2004/06/27 11:23:57 navaraf Exp $ */
 #define FlagOn(x,f) ((x) & (f))
 
 #include <ntos/fstypes.h>
@@ -698,8 +698,8 @@ FsRtlProcessFileLock (
 STDCALL
 NTSTATUS
 FsRtlRegisterFileSystemFilterCallbacks (
-    IN PVOID		Unknown,
-    IN PVOID		Unknown
+    IN PVOID		Unknown1,
+    IN PVOID		Unknown2
     );
 
 NTSTATUS STDCALL
