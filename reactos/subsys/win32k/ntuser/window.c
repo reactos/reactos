@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.71 2003/07/28 02:05:46 jimtabor Exp $
+/* $Id: window.c,v 1.72 2003/08/01 11:56:43 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2170,6 +2170,22 @@ NtUserBuildHwndList(
     }
 
   return dwCount;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL
+NtUserDrawMenuBarTemp(
+  HWND hWnd,
+  HDC hDC,
+  PRECT hRect,
+  HMENU hMenu,
+  DWORD Unknown4)
+{
+  UNIMPLEMENTED
+
+  return 0;
 }
 
 
