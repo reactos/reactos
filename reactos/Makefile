@@ -13,6 +13,14 @@
 #        Examples of output files include *.exe, *.dll, and *.sys. N.B. Don't
 #        put a path separator at the end. The variable defaults to .\output-i386.
 #
+#    ROS_TEMPORARY
+#        This variable controls where to put temporary files. Temporary files
+#        are (usually small) generated files that are needed to generate the
+#        intermediate or final output files. Examples of temporary files include
+#        *.rci (preprocessed .rc files for wrc), *.tmp, and *.exp. N.B. Don't put
+#        a path separator at the end. The variable defaults to the current
+#        directory.
+#
 
 .PHONY: all
 .PHONY: clean
