@@ -1220,7 +1220,7 @@ ULONG MPChecksum(PUCHAR Base,
 PCHAR HaliMPFamily(ULONG Family,
 		   ULONG Model)
 {
-   static CHAR str[32];
+   static CHAR str[64];
    static PCHAR CPUs[] =
    {
       "80486DX", "80486DX",
