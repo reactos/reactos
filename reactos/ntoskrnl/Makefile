@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.79 2002/08/10 16:41:17 dwelch Exp $
+# $Id: Makefile,v 1.80 2002/08/28 07:03:09 hbirr Exp $
 #
 # ReactOS Operating System
 #
@@ -110,6 +110,9 @@ OBJECTS_RTL = \
 	rtl/wstring.o \
 	rtl/memcmp.o \
 	rtl/capture.o
+
+OBJECTS_RTL := $(filter-out $(RTL_EXCLUDE_FILTER), $(OBJECTS_RTL))
+
 
 # Kernel (Ke)
 OBJECTS_KE = \
