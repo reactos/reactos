@@ -74,6 +74,12 @@ SmallIcon::SmallIcon(UINT nid)
 }
 
 
+ResBitmap::ResBitmap(UINT nid)
+{
+	_hBmp = LoadBitmap(g_Globals._hInstance, MAKEINTRESOURCE(nid));
+}
+
+
 void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 {
 	if (g_Globals._hMainWnd)

@@ -44,7 +44,7 @@ static BOOL (WINAPI*SetShellWindowEx)(HWND, HWND);
 
 BOOL IsAnyDesktopRunning()
 {
-	HINSTANCE shell32 = GetModuleHandle(TEXT("user32"));
+	HINSTANCE shell32 = GetModuleHandle(_T("user32"));
 
 	SetShellWindow = (BOOL(WINAPI*)(HWND)) GetProcAddress(shell32, "SetShellWindow");
 	SetShellWindowEx = (BOOL(WINAPI*)(HWND,HWND)) GetProcAddress(shell32, "SetShellWindowEx");
@@ -55,13 +55,6 @@ BOOL IsAnyDesktopRunning()
 
 static void draw_desktop_background(HWND hwnd, HDC hdc)
 {
-	// We'd want to draw the desktop wallpaper here. Need to
-	// maintain a copy of the wallpaper in an off-screen DC and then
-	// bitblt (or stretchblt?) it to the screen appropriately. For
-	// now, though, we'll just draw some text.
-
-	static const TCHAR BkgndText[] = TEXT("ReactOS 0.1.2 Desktop Example\nby Silver Blade, Martin Fuchs");
-
 	ClientRect rect(hwnd);
 
 	PaintDesktop(hdc);
@@ -70,13 +63,13 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 	FillRect(hdc, &rect, bkgndBrush);
 	DeleteBrush(bkgndBrush);
 */
-	// This next part could be improved by working out how much
-	// space the text actually needs...
 
 	rect.left = rect.right - 280;
 	rect.top = rect.bottom - 56 - DESKTOPBARBAR_HEIGHT;
 	rect.right = rect.left + 250;
 	rect.bottom = rect.top + 40;
+
+	static const LPCTSTR BkgndText = _T("ReactOS 0.1.2 Explorer\nby Martin Fuchs");
 
 	BkMode bkMode(hdc, TRANSPARENT);
 
@@ -94,7 +87,7 @@ LRESULT	BackgroundWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_ERASEBKGND:
-		draw_desktop_background(_hwnd, (HDC)wparam);
+		PaintDesktop((HDC)wparam);
 		return TRUE;
 
 	  case WM_MBUTTONDBLCLK:
@@ -218,10 +211,9 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case WM_PAINT: {
-		PaintCanvas canvas(_hwnd);
-		draw_desktop_background(_hwnd, canvas);
-		break;}
+	  case WM_PAINT:
+		draw_desktop_background(_hwnd, PaintCanvas(_hwnd));
+		break;
 
 	  case WM_LBUTTONDBLCLK:
 	  case WM_RBUTTONDBLCLK:

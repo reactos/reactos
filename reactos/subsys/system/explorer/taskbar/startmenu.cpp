@@ -46,6 +46,7 @@ StartMenu::StartMenu(HWND hwnd)
 {
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
+	_border_left = 0;
 }
 
 StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
@@ -57,6 +58,7 @@ StartMenu::StartMenu(HWND hwnd, const StartMenuFolders& info)
 
 	_next_id = IDC_FIRST_MENU;
 	_submenu_id = 0;
+	_border_left = 0;
 }
 
 StartMenu::~StartMenu()
@@ -153,7 +155,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
 	  case WM_SIZE:
-		ResizeButtons(LOWORD(lparam));
+		ResizeButtons(LOWORD(lparam)-_border_left);
 		break;
 
 	  case WM_NCHITTEST: {
@@ -306,15 +308,17 @@ void StartMenu::AddButton(LPCTSTR title, HICON hIcon, bool hasSubmenu, UINT id, 
 	}
 
 	 // widen window, if it is too small
-	int width = StartMenuButton::GetTextWidth(title,_hwnd) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
+	int text_width = StartMenuButton::GetTextWidth(title,_hwnd) + 16/*icon*/ + 10/*placeholder*/ + 16/*arrow*/;
 
 	ClientRect clnt(_hwnd);
-	if (width > clnt.right)
-		rect.right += width-clnt.right;
+	int cx = clnt.right - _border_left;
+	if (text_width > cx)
+		rect.right += text_width-cx;
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuCtrl(_hwnd, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-6, title, id, hIcon, hasSubmenu, style);
+	StartMenuCtrl(_hwnd, _border_left, rect.bottom-rect.top-STARTMENU_LINE_HEIGHT-6, rect.right-rect.left-_border_left,
+					title, id, hIcon, hasSubmenu, style);
 }
 
 void StartMenu::AddSeparator()
@@ -330,7 +334,7 @@ void StartMenu::AddSeparator()
 
 	MoveWindow(_hwnd, rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, TRUE);
 
-	StartMenuSeparator(_hwnd, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-6);
+	StartMenuSeparator(_hwnd, _border_left, rect.bottom-rect.top-STARTMENU_SEP_HEIGHT-6, rect.right-rect.left-_border_left);
 }
 
 
@@ -538,6 +542,14 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 	 // insert directory "<user name>\Start Menu"
 	ShellDirectory usr_startmenu(Desktop(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
 	_dirs.push_back(StartMenuDirectory(usr_startmenu, false));	// don't add subfolders
+
+	 // read size of logo bitmap
+	BITMAP bmp_hdr;
+	GetObject(ResBitmap(IDB_LOGOV), sizeof(BITMAP), &bmp_hdr);
+	_logo_size.cx = bmp_hdr.bmWidth;
+	_logo_size.cy = bmp_hdr.bmHeight;
+
+	_border_left = _logo_size.cx;
 }
 
 
@@ -578,6 +590,35 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 
 	AddButton(ResString(IDS_SHUTDOWN),	SmallIcon(IDI_LOGOFF), false, IDC_SHUTDOWN);
 	AddButton(ResString(IDS_LOGOFF),	SmallIcon(IDI_LOGOFF), false, IDC_LOGOFF);
+
+	return 0;
+}
+
+
+LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		MemCanvas mem_dc;
+		ResBitmap bmp(IDB_LOGOV);
+		BitmapSelection sel(mem_dc, bmp);
+
+		ClientRect clnt(_hwnd);
+		int h = min(_logo_size.cy, clnt.bottom);
+
+		RECT rect = {0, 0, _logo_size.cx-1, clnt.bottom-h};
+		HBRUSH hbr = CreateSolidBrush(RGB(166,202,240));	// same color as the background color in the logo bitmap
+		FillRect(canvas, &rect, hbr);
+		PatBlt(canvas, _logo_size.cx-1, 0, 1, clnt.bottom-h, WHITENESS);
+		DeleteObject(hbr);
+
+		BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
+		break;}
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
 
 	return 0;
 }

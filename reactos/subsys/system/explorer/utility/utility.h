@@ -322,6 +322,18 @@ protected:
 	HFONT	_old_hFont;
 };
 
+struct BitmapSelection
+{
+	BitmapSelection(HDC hdc, HBITMAP hBmp)
+	 : _hdc(hdc), _old_hBmp(SelectBitmap(hdc, hBmp)) {}
+
+	~BitmapSelection() {SelectBitmap(_hdc, _old_hBmp);}
+
+protected:
+	HDC		_hdc;
+	HBITMAP	_old_hBmp;
+};
+
 
 struct String
 #ifdef UNICODE

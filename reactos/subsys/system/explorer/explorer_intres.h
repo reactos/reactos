@@ -19,7 +19,7 @@
 #define IDS_ADMIN                       15
 #define IDS_NETWORK                     16
 #define IDS_CONNECTIONS                 17
-#define IDS_DRIVES                     18
+#define IDS_DRIVES                      18
 #define IDI_REACTOS                     100
 #define IDI_EXPLORER                    101
 #define IDI_STARTMENU                   102
@@ -37,6 +37,7 @@
 #define IDI_FOLDERARROW                 125
 #define IDI_ARROW                       125
 #define IDI_ARROW_SELECTED              126
+#define IDB_LOGOV                       129
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -68,7 +69,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        129
+#define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1000
 #define _APS_NEXT_SYMED_VALUE           101

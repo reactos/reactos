@@ -246,16 +246,13 @@ HBITMAP create_bitmap_from_icon(HICON hIcon, HBRUSH hbrush_bkgnd, HDC hdc_wnd)
 {
 	HBITMAP hbmp = CreateCompatibleBitmap(hdc_wnd, 16, 16);
 
-	HDC hdc = CreateCompatibleDC(0);
-	HBITMAP hbmp_org = SelectBitmap(hdc, hbmp);
+	MemCanvas canvas;
+	BitmapSelection sel(canvas, hbmp);
 
 	RECT rect = {0, 0, 16, 16};
-	FillRect(hdc, &rect, hbrush_bkgnd);
+	FillRect(canvas, &rect, hbrush_bkgnd);
 
-	DrawIconEx(hdc, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
-
-	SelectBitmap(hdc, hbmp_org);
-	DeleteDC(hdc);
+	DrawIconEx(canvas, 0, 0, hIcon, 16, 16, 0, hbrush_bkgnd, DI_NORMAL);
 
 	return hbmp;
 }

@@ -95,9 +95,9 @@ protected:
  */
 struct StartMenuCtrl : public Button
 {
-	StartMenuCtrl(HWND parent, int y, LPCTSTR title,
+	StartMenuCtrl(HWND parent, int x, int y, int w, LPCTSTR title,
 					UINT id, HICON hIcon=0, bool hasSubmenu=false, DWORD style=WS_VISIBLE|WS_CHILD|BS_OWNERDRAW, DWORD exStyle=0)
-	 :	Button(parent, title, 0, y, ClientRect(parent).right, STARTMENU_LINE_HEIGHT, id, style, exStyle)
+	 :	Button(parent, title, x, y, w, STARTMENU_LINE_HEIGHT, id, style, exStyle)
 	{
 		*new StartMenuButton(_hwnd, hIcon, hasSubmenu);
 
@@ -108,8 +108,8 @@ struct StartMenuCtrl : public Button
 
 struct StartMenuSeparator : public Static
 {
-	StartMenuSeparator(HWND parent, int y, DWORD style=WS_VISIBLE|WS_CHILD|WS_DISABLED|SS_ETCHEDHORZ, DWORD exStyle=0)
-	 :	Static(parent, NULL, 0, y+STARTMENU_SEP_HEIGHT/2-1, ClientRect(parent).right, 2, -1, style, exStyle)
+	StartMenuSeparator(HWND parent, int x, int y, int w, DWORD style=WS_VISIBLE|WS_CHILD|WS_DISABLED|SS_ETCHEDHORZ, DWORD exStyle=0)
+	 :	Static(parent, NULL, x, y+STARTMENU_SEP_HEIGHT/2-1, w, 2, -1, style, exStyle)
 	{
 	}
 };
@@ -152,6 +152,8 @@ protected:
 
 	UINT	_submenu_id;
 	WindowHandle _submenu;
+
+	int		_border_left;	// left border in pixels
 
 	 // member functions
 	void	ResizeButtons(int cx);
@@ -200,9 +202,12 @@ struct StartMenuRoot : public StartMenu
 
 protected:
 	LRESULT	Init(LPCREATESTRUCT pcs);
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int		Command(int id, int code);
 
 	void	ShowLaunchDialog(HWND hwndDesktopBar);
+
+	SIZE	_logo_size;
 };
 
 

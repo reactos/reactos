@@ -324,7 +324,6 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 	int visible_cols = _visible_cols;
 	COLORREF bkcolor, textcolor;
 	RECT focusRect = dis->rcItem;
-	HBRUSH hbrush;
 	enum IMAGE img;
 	int img_pos, cx;
 	int col = 0;
@@ -459,7 +458,7 @@ void Pane::draw_item(LPDRAWITEMSTRUCT dis, Entry* entry, int calcWidthCol)
 			bkcolor = RGB(255,255,255);
 		}
 
-		hbrush = CreateSolidBrush(bkcolor);
+		HBRUSH hbrush = CreateSolidBrush(bkcolor);
 		FillRect(dis->hDC, &focusRect, hbrush);
 		DeleteObject(hbrush);
 

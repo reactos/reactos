@@ -63,3 +63,14 @@ struct SmallIcon
 protected:
 	HICON	_hIcon;
 };
+
+struct ResBitmap
+{
+	ResBitmap(UINT nid);
+	~ResBitmap() {DeleteObject(_hBmp);}
+
+	operator HBITMAP() const {return _hBmp;}
+
+protected:
+	HBITMAP	_hBmp;
+};
