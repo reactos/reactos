@@ -494,6 +494,11 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	DbgPrint((DPRINT_REACTOS, "high_mem = %d\n", mb_info.mem_upper));
 
 	/*
+	 * Initialize the registry
+	 */
+	RegInitializeRegistry();
+
+	/*
 	 * Make sure the system path is set in the .ini file
 	 */
 	if (!IniReadSettingByName(SectionId, "SystemPath", value, 1024))
@@ -561,7 +566,16 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 
 	DbgPrint((DPRINT_REACTOS,"SystemRoot: '%s'\n", szBootPath));
 
+
 	UiDrawBackdrop();
+	UiDrawStatusText("Detecting Hardware...");
+
+	/*
+	 * Detect hardware
+	 */
+	DetectHardware();
+
+
 	UiDrawStatusText("Loading...");
 	UiDrawProgressBarCenter(0, 100, "Loading ReactOS...");
 
@@ -655,7 +669,7 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		FilePointer = FsOpenFile(szFileName);
 		if (FilePointer == NULL)
 		{
-			UiMessageBox("Could not find the system hive!");
+			UiMessageBox("Could not find the System hive!");
 			return;
 		}
 		else
@@ -674,11 +688,19 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	UiDrawStatusText(name);
 
 	/*
-	 * Load the system hive
+	 * Load the System hive
 	 */
 	Base = MultiBootLoadModule(FilePointer, szFileName, &Size);
-	RegInitializeRegistry();
+	if (Base == NULL || Size == 0)
+	{
+		UiMessageBox("Could not load the System hive!\n");
+		return;
+	}
+	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
 
+	/*
+	 * Import the loaded system hive
+	 */
 	if (TextHive)
 	{
 		RegImportTextHive(Base, Size);
@@ -688,13 +710,12 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 		RegImportBinaryHive(Base, Size);
 	}
 
-	UiDrawProgressBarCenter(15, 100, "Loading ReactOS...");
-	DbgPrint((DPRINT_REACTOS, "SystemHive loaded at 0x%x size %u", (unsigned)Base, (unsigned)Size));
-
 	/*
-	 * Detect hardware
+	 * Initialize the 'CurrentControlSet' link
 	 */
-	DetectHardware();
+	RegInitCurrentControlSet(FALSE);
+
+	UiDrawProgressBarCenter(15, 100, "Loading ReactOS...");
 
 	/*
 	 * Export the hardware hive
@@ -706,17 +727,12 @@ LoadAndBootReactOS(PUCHAR OperatingSystemName)
 	UiDrawProgressBarCenter(20, 100, "Loading ReactOS...");
 
 	/*
-	 * Initialize the 'currentControlSet' link
-	 */
-	RegInitCurrentControlSet(FALSE);
-
-	/*
 	 * Load NLS files
 	 */
 #if 0
 	if (!LoadNlsFiles(szBootPath))
 	{
-		MessageBox("Failed to load NLS files\n");
+		UiMessageBox("Failed to load NLS files\n");
 		return;
 	}
 #endif
