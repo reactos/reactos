@@ -1,4 +1,4 @@
-%include 'internal/hal/segment.inc'
+%include 'internal/i386/segment.inc'
 
 BITS 32
 segment .text
