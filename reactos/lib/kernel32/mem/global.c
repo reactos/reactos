@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.14 2003/10/13 04:45:30 mtempel Exp $
+/* $Id: global.c,v 1.15 2003/10/14 01:44:39 mtempel Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -516,7 +516,7 @@ GlobalReAlloc(HGLOBAL hMem,
 DWORD STDCALL
 GlobalSize(HGLOBAL hMem)
 {
-    DWORD          retval  = 0;
+    SIZE_T         retval  = 0;
     PGLOBAL_HANDLE phandle = 0;
     
     DbgPrint("GlobalSize( 0x%lX )\n", (ULONG)hMem);
@@ -535,7 +535,22 @@ GlobalSize(HGLOBAL hMem)
         {
             if (0 != phandle->Pointer)/*NOT DISCARDED*/
             {
-                retval = RtlSizeHeap(GetProcessHeap(), 0, phandle->Pointer) - HANDLE_SIZE;
+                retval = RtlSizeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
+                
+                if (retval == (SIZE_T)-1) /*RtlSizeHeap failed*/
+                {
+                    /*
+                    **TODO: RtlSizeHeap does not set last error.
+                    **      We should choose an error value to set as
+                    **      the last error. Which One?
+                    */
+                    DbgPrint("GlobalSize:  RtlSizeHeap failed.\n");
+                    retval = 0;
+                }
+                else /*Everything is ok*/
+                {
+                    retval = retval - HANDLE_SIZE;
+                }
             }
         }
         else
