@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.21 2000/05/13 13:50:59 dwelch Exp $
+/* $Id: buildirp.c,v 1.22 2000/07/07 00:40:49 phreak Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -515,7 +515,8 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
    Irp->UserIosb = IoStatusBlock;
    DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
+   Irp->Flags = IRP_PAGING_IO;
+   
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->MajorFunction = MajorFunction;
    StackPtr->MinorFunction = 0;
