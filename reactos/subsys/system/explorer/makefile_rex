@@ -42,7 +42,7 @@ all: buildno.h explorer.exe
 	@strip explorer.exe
 
 buildno.h: ../../../include/reactos/buildno.h
-	./updatebuildno
+	updatebuildno
 
 TARGET_SDKLIBS = \
 	kernel32.a \
