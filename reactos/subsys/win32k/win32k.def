@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.22 2003/08/26 12:28:53 weiden Exp $
+; $Id: win32k.def,v 1.23 2004/02/08 21:37:52 weiden Exp $
 ;
 ; win32k.def
 ;
@@ -60,6 +60,7 @@ EngGetPrinterData@24
 EngGetPrinterDataFileName@4
 EngGetProcessHandle@0
 EngGetType1FontList@24
+EngGradientFill@40
 EngLineTo@36
 EngLoadImage@4
 EngLoadModule@4

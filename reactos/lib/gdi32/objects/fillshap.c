@@ -128,3 +128,19 @@ FloodFill(
 	return NtGdiFloodFill(hdc,nXStart, nYStart, crFill );
 }
 
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GdiGradientFill(
+  HDC hdc,
+  PTRIVERTEX pVertex,
+  ULONG uVertex,
+  PVOID pMesh,
+  ULONG uMesh,
+  ULONG ulMode
+)
+{
+	return NtGdiGradientFill(hdc, pVertex, uVertex, pMesh, uMesh, ulMode);
+}
+

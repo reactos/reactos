@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objects.h,v 1.27 2004/02/06 22:18:56 rcampbell Exp $
+/* $Id: objects.h,v 1.28 2004/02/08 21:37:52 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -145,6 +145,8 @@ typedef HBITMAP STDCALL (*PFN_CreateDeviceBitmap)(DHPDEV, SIZEL, ULONG);
 
 typedef BOOL STDCALL (*PFN_SetPalette)(DHPDEV, PALOBJ*, ULONG, ULONG, ULONG);
 
+typedef BOOL STDCALL (*PFN_GradientFill)(SURFOBJ*, CLIPOBJ*, XLATEOBJ*, TRIVERTEX*, ULONG, PVOID, ULONG, RECTL*, POINTL*, ULONG);
+
 /* Forward declare (circular reference) */
 typedef struct _SURFGDI *PSURFGDI;
 
@@ -186,6 +188,7 @@ typedef struct _SURFGDI {
   PFN_SetPalette SetPalette;
   PFN_MovePointer MovePointer;
   PFN_SetPointerShape SetPointerShape;
+  PFN_GradientFill GradientFill;
 
   /* DIB functions */
   PFN_DIB_PutPixel   DIB_PutPixel;

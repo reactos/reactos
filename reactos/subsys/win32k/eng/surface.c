@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.30 2004/01/16 19:32:00 gvg Exp $
+/* $Id: surface.c,v 1.31 2004/02/08 21:37:52 weiden Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -458,6 +458,7 @@ EngAssociateSurface(IN HSURF Surface,
   if(Hooks & HOOK_COPYBITS)          SurfGDI->CopyBits          = Device->DriverFunctions.CopyBits;
   if(Hooks & HOOK_SYNCHRONIZE)       SurfGDI->Synchronize       = Device->DriverFunctions.Synchronize;
   if(Hooks & HOOK_SYNCHRONIZEACCESS) SurfGDI->SynchronizeAccess = TRUE;
+  if(Hooks & HOOK_GRADIENTFILL)      SurfGDI->GradientFill      = Device->DriverFunctions.GradientFill;
 
   SurfGDI->CreateDeviceBitmap = Device->DriverFunctions.CreateDeviceBitmap;
   SurfGDI->SetPalette = Device->DriverFunctions.SetPalette;

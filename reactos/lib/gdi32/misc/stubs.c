@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.47 2004/02/08 16:16:24 navaraf Exp $
+/* $Id: stubs.c,v 1.48 2004/02/08 21:37:52 weiden Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -2255,17 +2255,6 @@ GdiGetLocalDC(HDC hdc)
 HFONT 
 STDCALL
 GdiGetLocalFont(HFONT hfont)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-GdiGradientFill(HDC hdc,PTRIVERTEX pVertex,ULONG uVertex,PVOID pMesh,ULONG uMesh,ULONG ulMode)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;

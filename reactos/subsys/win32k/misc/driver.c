@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: driver.c,v 1.34 2003/12/12 12:54:30 gvg Exp $
+/* $Id: driver.c,v 1.35 2004/02/08 21:37:53 weiden Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -229,6 +229,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     if(DED->pdrvfn[i].iFunc == INDEX_DrvEnableDirectDraw)  DF->EnableDirectDraw = (PGD_ENABLEDIRECTDRAW)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvDisableDirectDraw) DF->DisableDirectDraw = (PGD_DISABLEDIRECTDRAW)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvQuerySpoolType)  DF->QuerySpoolType = (PGD_QUERYSPOOLTYPE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvGradientFill) DF->GradientFill = (PGD_GRADIENTFILL)DED->pdrvfn[i].pfn;
   }
 
   return TRUE;

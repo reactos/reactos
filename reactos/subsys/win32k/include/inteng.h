@@ -36,6 +36,19 @@ IntEngStretchBlt(SURFOBJ *DestObj,
                  POINTL *BrushOrigin,
                  ULONG Mode);
 
+BOOL STDCALL
+IntEngGradientFill(
+    SURFOBJ  *psoDest,
+    CLIPOBJ  *pco,
+    XLATEOBJ  *pxlo,
+    TRIVERTEX  *pVertex,
+    ULONG  nVertex,
+    PVOID  pMesh,
+    ULONG  nMesh,
+    RECTL  *prclExtents,
+    POINTL  *pptlDitherOrg,
+    ULONG  ulMode);
+
 XLATEOBJ * STDCALL IntEngCreateXlate(USHORT DestPalType,
                             USHORT SourcePalType,
                             HPALETTE PaletteDest,

@@ -1962,6 +1962,11 @@ extern "C" {
 #define GMEM_LOCKCOUNT  (255)
 #define GlobalDiscard(h) GlobalReAlloc(h, 0, GMEM_MOVEABLE)
 
+/* GradientFill */
+#define GRADIENT_FILL_RECT_H	(0)
+#define GRADIENT_FILL_RECT_V	(1)
+#define GRADIENT_FILL_TRIANGLE	(2)
+
 /* ImageList_Create */
 #define ILC_COLOR	(0)
 #define ILC_COLOR4	(4)

@@ -166,6 +166,16 @@ NtGdiGetPixel (
 	);
 BOOL
 STDCALL
+NtGdiGradientFill (
+	HDC hdc,
+	PTRIVERTEX pVertex,
+	ULONG uVertex,
+	PVOID pMesh,
+	ULONG uMesh,
+	ULONG ulMode
+	);
+BOOL
+STDCALL
 NtGdiMaskBlt (
 	HDC	hDCDest,
 	INT	XDest,

@@ -6293,6 +6293,17 @@ typedef struct _WIN32_FILE_ATTRIBUTES_DATA {
     DWORD    nFileSizeLow;
 } WIN32_FILE_ATTRIBUTE_DATA, *LPWIN32_FILE_ATTRIBUTE_DATA;
 
+typedef struct _GRADIENT_TRIANGLE {
+  ULONG Vertex1;
+  ULONG Vertex2;
+  ULONG Vertex3;
+} GRADIENT_TRIANGLE, *PGRADIENT_TRIANGLE, *LPGRADIENT_TRIANGLE;
+
+typedef struct _GRADIENT_RECT {
+  ULONG UpperLeft;
+  ULONG LowerRight;
+} GRADIENT_RECT, *PGRADIENT_RECT, *LPGRADIENT_RECT;
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
