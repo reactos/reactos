@@ -1,4 +1,4 @@
-/* $Id: usercall.c,v 1.7 2000/02/22 07:27:30 rex Exp $
+/* $Id: usercall.c,v 1.8 2000/02/22 20:50:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -25,13 +25,6 @@
 
 extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTable[];
 extern KE_SERVICE_DESCRIPTOR_TABLE_ENTRY KeServiceDescriptorTableShadow[];
-
-/*
- * These become obsolete when the interrupt handler uses
- * the service descriptor tables.
- */
-extern SSDT MainSSDT[];
-extern SSPT MainSSPT[];
 
 
 #define _STR(x) #x
@@ -182,8 +175,8 @@ void interrupt_handler2e(void);
            "cmpl  $0x0fff, %eax\n\t"
            "ja    useShadowTable\n\t"
 
-           /*  Check to see if SS is valid/inrange  */
-           "cmpl  _KeServiceDescriptorTable + 8, %eax\n\t"
+           /*  Check to see if EAX is valid/inrange  */
+           "cmpl  %es:_KeServiceDescriptorTable + 8, %eax\n\t"
            "jbe   serviceInRange\n\t"
            "movl  $"STR(STATUS_INVALID_SYSTEM_SERVICE)", %eax\n\t"
            "jmp   done\n\t"
@@ -230,8 +223,8 @@ void interrupt_handler2e(void);
 
            "subl  $0x1000, %eax\n\t"
 
-           /*  Check to see if SS is valid/inrange  */
-           "cmpl  _KeServiceDescriptorTableShadow + 8, %eax\n\t"
+           /*  Check to see if EAX is valid/inrange  */
+           "cmpl  %es:_KeServiceDescriptorTableShadow + 24, %eax\n\t"
            "jbe   shadowServiceInRange\n\t"
            "movl  $"STR(STATUS_INVALID_SYSTEM_SERVICE)", %eax\n\t"
            "jmp   done\n\t"
@@ -239,7 +232,7 @@ void interrupt_handler2e(void);
            "shadowServiceInRange:\n\t"
 
            /*  Allocate room for argument list from kernel stack  */
-           "movl  %es:_KeServiceDescriptorTableShadow + 12, %ecx\n\t"
+           "movl  %es:_KeServiceDescriptorTableShadow + 28, %ecx\n\t"
            "movl  %es:(%ecx, %eax, 4), %ecx\n\t"
            "subl  %ecx, %esp\n\t"
 
@@ -256,7 +249,7 @@ void interrupt_handler2e(void);
 	   "popl %eax\n\t"
 
            /*  Make the system service call  */
-           "movl  %es:_KeServiceDescriptorTableShadow, %ecx\n\t"
+           "movl  %es:_KeServiceDescriptorTableShadow + 16, %ecx\n\t"
            "movl  %es:(%ecx, %eax, 4), %eax\n\t"
            "call  *%eax\n\t"
 
@@ -293,4 +286,3 @@ void interrupt_handler2e(void);
 	   "popl %ebp\n\t"       /* Ebp */
 
            "iret\n\t");
-
