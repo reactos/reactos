@@ -1,4 +1,4 @@
-/* $Id: sctrl.c,v 1.4 2002/07/20 13:31:34 ekohl Exp $
+/* $Id: sctrl.c,v 1.5 2002/08/27 06:41:58 hbirr Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -46,7 +46,7 @@ ScLookupServiceByServiceName(LPWSTR lpServiceName)
 
   for (i = 0; i < ActiveServiceCount; i++)
     {
-      if (wcsicmp(ActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
+      if (_wcsicmp(ActiveServices[i].ServiceName.Buffer, lpServiceName) == 0)
 	{
 	  return(&ActiveServices[i]);
 	}
