@@ -1,4 +1,4 @@
-/* $Id: sem.c,v 1.9 2004/10/24 12:16:54 weiden Exp $
+/* $Id: sem.c,v 1.10 2004/10/24 12:26:27 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -32,18 +32,24 @@ CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
    ANSI_STRING Name;
    HANDLE Handle;
 
-   RtlInitAnsiString(&Name,
-		     (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&NameU,
-				&Name,
-				TRUE);
+   if (lpName != NULL)
+     {
+        RtlInitAnsiString(&Name,
+                          (LPSTR)lpName);
+        RtlAnsiStringToUnicodeString(&NameU,
+                                     &Name,
+                                     TRUE);
+     }
 
    Handle = CreateSemaphoreW(lpSemaphoreAttributes,
 			     lInitialCount,
 			     lMaximumCount,
-			     NameU.Buffer);
+			     (lpName ? NameU.Buffer : NULL));
 
-   RtlFreeUnicodeString (&NameU);
+   if (lpName != NULL)
+     {
+        RtlFreeUnicodeString (&NameU);
+     }
 
    return Handle;
 }

@@ -1,4 +1,4 @@
-/* $Id: mutex.c,v 1.9 2004/10/24 12:16:54 weiden Exp $
+/* $Id: mutex.c,v 1.10 2004/10/24 12:26:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,17 +31,24 @@ CreateMutexA(LPSECURITY_ATTRIBUTES lpMutexAttributes,
    ANSI_STRING Name;
    HANDLE Handle;
 
-   RtlInitAnsiString(&Name,
-		     (LPSTR)lpName);
-   RtlAnsiStringToUnicodeString(&NameU,
-				&Name,
-				TRUE);
+   if (lpName != NULL)
+     {
+        RtlInitAnsiString(&Name,
+                          (LPSTR)lpName);
+
+        RtlAnsiStringToUnicodeString(&NameU,
+                                     &Name,
+                                     TRUE);
+     }
 
    Handle = CreateMutexW(lpMutexAttributes,
 			 bInitialOwner,
-			 NameU.Buffer);
+			 (lpName ? NameU.Buffer : NULL));
 
-   RtlFreeUnicodeString(&NameU);
+   if (lpName != NULL)
+     {
+        RtlFreeUnicodeString(&NameU);
+     }
 
    return Handle;
 }
