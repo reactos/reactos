@@ -162,6 +162,7 @@ IntInitScreenInfo(
          {
             continue;
          }
+
          if (pDevMode->dmPelsWidth == ModeInfoPtr->VisScreenWidth &&
              pDevMode->dmPelsHeight == ModeInfoPtr->VisScreenHeight &&
              pDevMode->dmBitsPerPel == (ModeInfoPtr->BitsPerPlane *
@@ -171,6 +172,8 @@ IntInitScreenInfo(
             SelectedMode = ModeInfoPtr;
             break;
          }
+
+         ModeInfoPtr++;
       }
    }
 
