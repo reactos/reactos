@@ -2103,6 +2103,18 @@ GetStartupInfoW(
     LPSTARTUPINFOW lpStartupInfo
     );
 
+WINBASEAPI
+HANDLE
+WINAPI
+FindFirstFileExW (
+	LPCWSTR			lpFileName,
+	FINDEX_INFO_LEVELS	fInfoLevelId,
+	LPVOID			lpFindFileData,
+	FINDEX_SEARCH_OPS	fSearchOp,
+	LPVOID			lpSearchFilter,
+	DWORD			dwAdditionalFlags
+	);
+
 HANDLE
 STDCALL
 FindFirstFileW(

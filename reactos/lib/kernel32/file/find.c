@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.26 2000/06/03 14:47:32 ea Exp $
+/* $Id: find.c,v 1.26.2.1 2000/07/24 21:20:38 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -445,5 +445,38 @@ FindNextFileW (
 
 	return TRUE;
 }
+
+
+HANDLE
+STDCALL
+FindFirstFileExW (
+	LPCWSTR			lpFileName,
+	FINDEX_INFO_LEVELS	fInfoLevelId,
+	LPVOID			lpFindFileData,
+	FINDEX_SEARCH_OPS	fSearchOp,
+	LPVOID			lpSearchFilter,
+	DWORD			dwAdditionalFlags
+	)
+{
+	/* FIXME */
+	return (HANDLE) 0;
+}
+ 
+
+HANDLE
+STDCALL
+FindFirstFileExA (
+	LPCSTR			lpFileName,
+	FINDEX_INFO_LEVELS	fInfoLevelId,
+	LPVOID			lpFindFileData,
+	FINDEX_SEARCH_OPS	fSearchOp,
+	LPVOID			lpSearchFilter,
+	DWORD			dwAdditionalFlags
+	)
+{
+	/* FIXME */
+	return (HANDLE) 0;
+}
+
 
 /* EOF */
