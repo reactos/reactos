@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.55 2004/05/28 13:17:32 weiden Exp $
+/* $Id: file.c,v 1.56 2004/07/24 01:27:54 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -82,6 +82,28 @@ OpenFile(LPCSTR lpFileName,
 		return FALSE;
 	}
 
+	if ((uStyle & OF_CREATE) == OF_CREATE)
+	{
+		DWORD Sharing;
+		switch (uStyle & 0x70)
+		{
+			case OF_SHARE_EXCLUSIVE: Sharing = 0; break;
+			case OF_SHARE_DENY_WRITE: Sharing = FILE_SHARE_READ; break;
+			case OF_SHARE_DENY_READ: Sharing = FILE_SHARE_WRITE; break;
+			case OF_SHARE_DENY_NONE:
+			case OF_SHARE_COMPAT:
+			default:
+				Sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		}
+		return (HFILE) CreateFileA (lpFileName,
+		                            GENERIC_READ | GENERIC_WRITE,
+		                            Sharing,
+		                            NULL,
+		                            CREATE_ALWAYS,
+		                            FILE_ATTRIBUTE_NORMAL,
+		                            0);
+	}
+
 	RtlInitAnsiString (&FileName, (LPSTR)lpFileName);
 
 	/* convert ansi (or oem) string to unicode */
@@ -90,21 +112,18 @@ OpenFile(LPCSTR lpFileName,
 	else
 		RtlOemStringToUnicodeString (&FileNameU, &FileName, TRUE);
 		        
-	if ((uStyle & OF_CREATE) == 0)
+	Len = SearchPathW (NULL,
+	                   FileNameU.Buffer,
+        	           NULL,
+	                   OFS_MAXPATHNAME,
+	                   PathNameW,
+        	           &FilePart);
+
+	RtlFreeUnicodeString(&FileNameU);
+
+	if (Len == 0 || Len > OFS_MAXPATHNAME)
 	{
-		Len = SearchPathW (NULL,
-		                   FileNameU.Buffer,
-	        	           NULL,
-		                   OFS_MAXPATHNAME,
-		                   PathNameW,
-	        	           &FilePart);
-
-		RtlFreeUnicodeString(&FileNameU);
-
-		if (Len == 0 || Len > OFS_MAXPATHNAME)
-		{
-			return (HFILE)INVALID_HANDLE_VALUE;
-		}
+		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
 	FileName.Buffer = lpReOpenBuff->szPathName;
@@ -134,28 +153,6 @@ OpenFile(LPCSTR lpFileName,
 	{
 		RtlFreeUnicodeString(&FileNameString);
 		return (HFILE)NULL;
-	}
-
-	if ((uStyle & OF_CREATE) == OF_CREATE)
-	{
-		DWORD Sharing;
-		switch (uStyle & 0x70)
-		{
-			case OF_SHARE_EXCLUSIVE: Sharing = 0; break;
-			case OF_SHARE_DENY_WRITE: Sharing = FILE_SHARE_READ; break;
-			case OF_SHARE_DENY_READ: Sharing = FILE_SHARE_WRITE; break;
-			case OF_SHARE_DENY_NONE:
-			case OF_SHARE_COMPAT:
-			default:
-				Sharing = FILE_SHARE_READ | FILE_SHARE_WRITE;
-		}
-		return (HFILE) CreateFileA (lpFileName,
-		                            GENERIC_READ | GENERIC_WRITE,
-		                            Sharing,
-		                            NULL,
-		                            CREATE_ALWAYS,
-		                            FILE_ATTRIBUTE_NORMAL,
-		                            0);
 	}
 
 	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
