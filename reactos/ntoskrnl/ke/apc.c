@@ -287,7 +287,7 @@ KiDeliverApc(ULONG Unknown1,
    KeReleaseSpinLock(&PiApcLock, oldlvl);
 }
 
-VOID STDCALL
+BOOLEAN STDCALL
 KeInsertQueueApc (PKAPC	Apc,
 		  PVOID	SystemArgument1,
 		  PVOID	SystemArgument2,
@@ -300,6 +300,7 @@ KeInsertQueueApc (PKAPC	Apc,
  *         Mode = TBD
  */
 {
+   //FIXME: return FALSE if APC can't be queued to target thread (thread has ended)
    KIRQL oldlvl;
    PKTHREAD TargetThread;
    
@@ -343,7 +344,7 @@ KeInsertQueueApc (PKAPC	Apc,
        Apc->NormalRoutine == NULL)
      {
        KeReleaseSpinLock(&PiApcLock, oldlvl);
-       return;
+       return TRUE;
      }
 
    /*
@@ -397,6 +398,7 @@ KeInsertQueueApc (PKAPC	Apc,
 			       STATUS_USER_APC);
      }
    KeReleaseSpinLock(&PiApcLock, oldlvl);
+   return TRUE;
 }
 
 BOOLEAN STDCALL

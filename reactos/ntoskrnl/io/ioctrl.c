@@ -1,4 +1,4 @@
-/* $Id: ioctrl.c,v 1.16 2002/09/08 10:23:25 chorns Exp $
+/* $Id: ioctrl.c,v 1.17 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -91,6 +91,9 @@ NTSTATUS STDCALL NtDeviceIoControlFile (IN HANDLE DeviceHandle,
 				       FALSE,
 				       ptrEvent,
 				       Event ? IoStatusBlock : &IoSB);
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = UserApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = UserApcContext;

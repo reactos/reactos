@@ -169,7 +169,7 @@ LONG STDCALL
 KeInsertQueue(IN PKQUEUE Queue,
 	      IN PLIST_ENTRY Entry);
 
-VOID STDCALL KeInsertQueueApc (PKAPC	Apc,
+BOOLEAN STDCALL KeInsertQueueApc (PKAPC	Apc,
 			       PVOID	SystemArgument1,
 			       PVOID	SystemArgument2,
 			       UCHAR	Mode);

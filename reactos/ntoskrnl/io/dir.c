@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.15 2002/09/08 10:23:24 chorns Exp $
+/* $Id: dir.c,v 1.16 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -111,6 +111,8 @@ NtQueryDirectoryFile(
 	return STATUS_UNSUCCESSFUL;
      }
    
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
    
    Irp->UserIosb = &IoSB;
    Irp->UserEvent = &FileObject->Event;

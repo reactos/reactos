@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.32 2003/05/13 21:28:26 chorns Exp $
+/* $Id: iomgr.c,v 1.33 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -58,11 +58,15 @@ IopCloseFile(PVOID ObjectBody,
      {
 	return;
      }
-   
+
+#if 0
+//NOTE: Allmost certain that the latest changes to I/O Mgr makes this redundant (OriginalFileObject case)
    ObReferenceObjectByPointer(FileObject,
 			      STANDARD_RIGHTS_REQUIRED,
 			      IoFileObjectType,
 			      UserMode);
+#endif
+
    KeResetEvent( &FileObject->Event );
   
    Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
@@ -94,11 +98,14 @@ IopDeleteFile(PVOID ObjectBody)
 
    if (FileObject->DeviceObject)
    {
+#if 0
+//NOTE: Allmost certain that the latest changes to I/O Mgr makes this redundant (OriginalFileObject case)
+     
      ObReferenceObjectByPointer(ObjectBody,
 			        STANDARD_RIGHTS_REQUIRED,
 			        IoFileObjectType,
 			        UserMode);
-   
+#endif   
      KeResetEvent( &FileObject->Event );
      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
 				        FileObject->DeviceObject,

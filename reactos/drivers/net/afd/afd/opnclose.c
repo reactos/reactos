@@ -242,13 +242,16 @@ AfdClose(
     case IRP_MJ_CLEANUP:
         FCB->OpenHandleCount--;
         Status = STATUS_SUCCESS;
+
+        ExFreePool(CCB);
+
         break;
 
 	default:
         Status = STATUS_INVALID_DEVICE_REQUEST;
     }
 
-    ExFreePool(CCB);
+//    ExFreePool(CCB);
 
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information = 0;

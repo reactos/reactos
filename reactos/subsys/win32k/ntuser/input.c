@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.6 2003/05/18 17:16:17 ea Exp $
+/* $Id: input.c,v 1.7 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -226,6 +226,10 @@ InitInputImpl(VOID)
 				       TRUE,
 				       &FileObject->Event,
 				       &Iosb);
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
    StackPtr->DeviceObject = FileObject->DeviceObject;

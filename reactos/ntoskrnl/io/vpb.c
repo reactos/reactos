@@ -1,4 +1,4 @@
-/* $Id: vpb.c,v 1.19 2002/09/08 10:23:26 chorns Exp $
+/* $Id: vpb.c,v 1.20 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -139,6 +139,9 @@ NtQueryVolumeInformationFile(IN HANDLE FileHandle,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    KeResetEvent( &FileObject->Event );
    Irp->UserEvent = &FileObject->Event;
@@ -221,6 +224,9 @@ IoQueryVolumeInformation(IN PFILE_OBJECT FileObject,
 	ObDereferenceObject(FileObject);
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
    
    Irp->AssociatedIrp.SystemBuffer = FsInformation;
    KeResetEvent( &FileObject->Event );
@@ -310,6 +316,9 @@ NtSetVolumeInformationFile(IN HANDLE FileHandle,
 		      FsInformation,
 		      Length);
    
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    KeResetEvent( &FileObject->Event );
    Irp->UserEvent = &FileObject->Event;

@@ -1,4 +1,4 @@
-/* $Id: fs.c,v 1.32 2003/05/13 21:28:26 chorns Exp $
+/* $Id: fs.c,v 1.33 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -128,6 +128,9 @@ NtFsControlFile (
 				       FALSE,
 				       ptrEvent,
 				       &IoSB);
+   
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
    
    Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
    Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;

@@ -114,6 +114,9 @@ NtLockFile (
 	else
 		IoStatusBlock = UserIoStatusBlock;
 
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
 	Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
 	Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
@@ -249,6 +252,9 @@ NtUnlockFile (
 		Status = STATUS_INSUFFICIENT_RESOURCES;
 		goto fail;
 	}
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
 	Irp->UserIosb = &LocalIoStatusBlock;
 	Irp->Tail.Overlay.Thread = PsGetCurrentThread();

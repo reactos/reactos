@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.49 2003/05/17 00:25:39 chorns Exp $
+/* $Id: irp.c,v 1.50 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -191,25 +191,9 @@ IoAllocateIrp(CCHAR StackSize,
 }
 
 
-VOID STDCALL
-IopCompleteRequest(struct _KAPC* Apc,
-		   PKNORMAL_ROUTINE* NormalRoutine,
-		   PVOID* NormalContext,
-		   PVOID* SystemArgument1,
-		   PVOID* SystemArgument2)
-{
-  DPRINT("IopCompleteRequest(Apc %x, SystemArgument1 %x, (*SystemArgument1) %x\n",
-	 Apc,
-	 SystemArgument1,
-	 *SystemArgument1);
-  IoSecondStageCompletion((PIRP)(*SystemArgument1),
-			  (KPRIORITY)(*SystemArgument2));
-}
-
-
 VOID FASTCALL
 IofCompleteRequest(PIRP Irp,
-		   CCHAR PriorityBoost)
+         CCHAR PriorityBoost)
 /*
  * FUNCTION: Indicates the caller has finished all processing for a given
  * I/O request and is returning the given IRP to the I/O manager
@@ -222,6 +206,7 @@ IofCompleteRequest(PIRP Irp,
    ULONG             i;
    NTSTATUS          Status;
    PDEVICE_OBJECT    DeviceObject;
+   PFILE_OBJECT      OriginalFileObject;
 
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
       Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
@@ -275,30 +260,42 @@ IofCompleteRequest(PIRP Irp,
       }
    }
 
+   //Windows NT File System Internals, page 154
+   OriginalFileObject = Irp->Tail.Overlay.OriginalFileObject;
+
    if (Irp->PendingReturned)
-     {
-	DPRINT("Dispatching APC\n");
-	KeInitializeApc(&Irp->Tail.Apc,
-			&Irp->Tail.Overlay.Thread->Tcb,
-			0,
-			IopCompleteRequest,
-			NULL,
-			(PKNORMAL_ROUTINE)
-			NULL,
-			KernelMode,
-			NULL);
-	KeInsertQueueApc(&Irp->Tail.Apc,
-			 (PVOID)Irp,
-			 (PVOID)(ULONG)PriorityBoost,
-			 KernelMode);
-	DPRINT("Finished dispatching APC\n");
-     }
+   {
+      BOOLEAN bStatus;
+
+      DPRINT("Dispatching APC\n");
+      KeInitializeApc(  &Irp->Tail.Apc,
+                        &Irp->Tail.Overlay.Thread->Tcb,
+                        0,
+                        IoSecondStageCompletion,
+                        NULL,
+                        (PKNORMAL_ROUTINE) NULL,
+                        KernelMode,
+                        OriginalFileObject);
+      
+      bStatus = KeInsertQueueApc(&Irp->Tail.Apc,
+                                 (PVOID)Irp,
+                                 (PVOID)(ULONG)PriorityBoost,
+                                 KernelMode);
+
+      if (bStatus == FALSE)
+      {
+         DPRINT1("Error queueing APC for thread. Thread has probably exited.\n");
+      }
+
+      DPRINT("Finished dispatching APC\n");
+   }
    else
-     {
-	DPRINT("Calling completion routine directly\n");
-	IoSecondStageCompletion(Irp,PriorityBoost);
-	DPRINT("Finished completition routine\n");
-     }
+   {
+      DPRINT("Calling IoSecondStageCompletion routine directly\n");
+      IoSecondStageCompletion(NULL,NULL,(PVOID)&OriginalFileObject,(PVOID) &Irp,(PVOID) &PriorityBoost);
+      DPRINT("Finished completition routine\n");
+   }
+
 }
 
 
@@ -328,31 +325,28 @@ IoCompleteRequest(PIRP Irp,
 BOOLEAN STDCALL
 IoIsOperationSynchronous(IN PIRP Irp)
 {
-  PFILE_OBJECT FileObject = NULL;
-  ULONG Flags = 0;
+   PFILE_OBJECT FileObject = NULL;
 
-  /* Check the FILE_OBJECT's flags first. */
-  FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
-  if (!(FO_SYNCHRONOUS_IO & FileObject->Flags))
-    {
-      /* Check IRP's flags. */
-      Flags = Irp->Flags;
-      if (!((IRP_SYNCHRONOUS_API | IRP_SYNCHRONOUS_PAGING_IO) & Flags))
-	{
-	  return(FALSE);
-	}
-    }
+   FileObject = IoGetCurrentIrpStackLocation(Irp)->FileObject;
+  
+   if (Irp->Flags & IRP_SYNCHRONOUS_PAGING_IO)
+   {
+      return TRUE;
+   }
 
-  /* Check more IRP's flags. */
-  Flags = Irp->Flags;
-  if (!(IRP_PAGING_IO & Flags)
-      || (IRP_SYNCHRONOUS_PAGING_IO & Flags))
-    {
-      return(TRUE);
-    }
+   if (Irp->Flags & IRP_PAGING_IO)
+   {
+      return FALSE;
+   }
 
-  /* Otherwise, it is an asynchronous operation. */
-  return(FALSE);
+   //NOTE: Windows 2000 crash if IoStack->FileObject == NULL, so I guess we should too;-)
+   if (Irp->Flags & IRP_SYNCHRONOUS_API || FileObject->Flags & FO_SYNCHRONOUS_IO)
+   {
+      return TRUE;
+   }
+
+   /* Otherwise, it is an asynchronous operation. */
+   return FALSE;
 }
 
 

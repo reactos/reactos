@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.30 2003/05/13 21:28:26 chorns Exp $
+/* $Id: io.h,v 1.31 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -271,7 +271,13 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 POBJECT IoOpenSymlink(POBJECT SymbolicLink);
 POBJECT IoOpenFileOnDevice(POBJECT SymbolicLink, PWCHAR Name);
 
-VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
+VOID STDCALL
+IoSecondStageCompletion(
+   PKAPC Apc,
+   PKNORMAL_ROUTINE* NormalRoutine,
+   PVOID* NormalContext,
+   PVOID* SystemArgument1,
+   PVOID* SystemArgument2);
 
 NTSTATUS STDCALL
 IopCreateFile(PVOID ObjectBody,

@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.23 2003/03/23 14:46:09 ekohl Exp $
+/* $Id: file.c,v 1.24 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -80,6 +80,9 @@ NtQueryInformationFile(HANDLE FileHandle,
 	return(STATUS_INSUFFICIENT_RESOURCES);
      }
    
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = &IoSB;
    Irp->UserEvent = &FileObject->Event;
@@ -161,6 +164,9 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
 	ObDereferenceObject(FileObject);
 	return STATUS_INSUFFICIENT_RESOURCES;
      }
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
    
    Irp->AssociatedIrp.SystemBuffer = FileInformation;
    Irp->UserIosb = &IoStatusBlock;
@@ -293,6 +299,9 @@ NtSetInformationFile(HANDLE FileHandle,
 		      FileInformation,
 		      Length);
    
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    Irp->AssociatedIrp.SystemBuffer = SystemBuffer;
    Irp->UserIosb = &IoSB;
    Irp->UserEvent = &FileObject->Event;

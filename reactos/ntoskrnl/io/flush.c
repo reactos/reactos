@@ -69,6 +69,9 @@ NtFlushBuffersFile (
 				      &FileObject->Event,
 				      &IoSB);
 
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
 

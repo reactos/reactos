@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.63 2003/05/12 10:00:46 ekohl Exp $
+/* $Id: create.c,v 1.64 2003/05/22 00:47:04 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -378,7 +378,7 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
    SecurityContext.DesiredAccess = DesiredAccess;
    SecurityContext.FullCreateOptions = 0; /* ?? */
    
-   KeInitializeEvent(&FileObject->Lock, NotificationEvent, TRUE);
+   KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
    
    DPRINT("FileObject %x\n", FileObject);
@@ -394,6 +394,9 @@ IoCreateFile(OUT	PHANDLE			FileHandle,
 	ZwClose(*FileHandle);
 	return (STATUS_UNSUCCESSFUL);
      }
+
+   //trigger FileObject/Event dereferencing
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
      
    Irp->UserIosb = &IoSB;   //return iostatus
    Irp->AssociatedIrp.SystemBuffer = EaBuffer;

@@ -20,52 +20,6 @@
 #include <internal/debug.h>
 
 /* FUNCTIONS ***************************************************************/
-
-VOID STDCALL
-IopCompleteRequest1(struct _KAPC* Apc,
-		    PKNORMAL_ROUTINE* NormalRoutine,
-		    PVOID* NormalContext,
-		    PVOID* SystemArgument1,
-		    PVOID* SystemArgument2)
-{
-   PIRP Irp;
-   CCHAR PriorityBoost;
-   PIO_STACK_LOCATION IoStack;
-   PFILE_OBJECT FileObject;
-   
-   DPRINT("IopCompleteRequest1()\n");
-   
-   Irp = (PIRP)(*SystemArgument1);
-   PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
-   
-   IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
-   FileObject = IoStack->FileObject;
-   
-   (*SystemArgument1) = (PVOID)Irp->UserIosb;
-   (*SystemArgument2) = (PVOID)Irp->IoStatus.Information;
-   
-   if (Irp->UserIosb!=NULL)
-     {
-	*Irp->UserIosb=Irp->IoStatus;
-     }
-
-   if (Irp->UserEvent)
-   {
-      KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
-   }
-
-   if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
-   {
-      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
-      {
-	 ObDereferenceObject(FileObject);
-      }
-   }
-   
-   IoFreeIrp(Irp);
-
-}
-
 VOID IoDeviceControlCompletion(PDEVICE_OBJECT DeviceObject,
 			       PIRP Irp,
 			       PIO_STACK_LOCATION IoStack)
@@ -171,99 +125,155 @@ VOID IoVolumeInformationCompletion(PDEVICE_OBJECT DeviceObject,
 {
 }
 
-VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost)
+
+VOID STDCALL
+IoSecondStageCompletion_KernelApcRoutine(
+    IN PKAPC Apc,
+    IN OUT PKNORMAL_ROUTINE *NormalRoutine,
+    IN OUT PVOID *NormalContext,
+    IN OUT PVOID *SystemArgument1,
+    IN OUT PVOID *SystemArgument2
+    )
+{
+   IoFreeIrp((PIRP)(*SystemArgument1));
+}
+
+
+VOID STDCALL
+IoSecondStageCompletion_RundownApcRoutine(
+   IN PKAPC Apc
+   )
+{
+   PIRP Irp;
+
+   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+   IoFreeIrp(Irp);
+}
+
+
 /*
  * FUNCTION: Performs the second stage of irp completion for read/write irps
- * ARGUMENTS:
- *          Irp = Irp to completion
- *          FromDevice = True if the operation transfered data from the device
+ * 
+ * Called as a special kernel APC or directly from IofCompleteRequest()
  */
+VOID STDCALL
+IoSecondStageCompletion(
+   PKAPC Apc,
+   PKNORMAL_ROUTINE* NormalRoutine,
+   PVOID* NormalContext,
+   PVOID* SystemArgument1,
+   PVOID* SystemArgument2)
+
 {
-   PIO_STACK_LOCATION IoStack;
-   PDEVICE_OBJECT DeviceObject;
-   PFILE_OBJECT FileObject;
-   
-   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n",
-	  Irp, PriorityBoost);
+   PIO_STACK_LOCATION   IoStack;
+   PDEVICE_OBJECT       DeviceObject;
+   PFILE_OBJECT         OriginalFileObject;
+   PIRP                 Irp;
+   CCHAR                PriorityBoost;
+
+   OriginalFileObject = (PFILE_OBJECT)(*NormalContext);
+   Irp = (PIRP)(*SystemArgument1);
+   PriorityBoost = (CCHAR)(LONG)(*SystemArgument2);
    
    IoStack = &Irp->Stack[(ULONG)Irp->CurrentLocation];
-   FileObject = IoStack->FileObject;
-   
    DeviceObject = IoStack->DeviceObject;
-   
+
+   DPRINT("IoSecondStageCompletion(Irp %x, PriorityBoost %d)\n", Irp, PriorityBoost);
+
    switch (IoStack->MajorFunction)
      {
       case IRP_MJ_CREATE:
       case IRP_MJ_FLUSH_BUFFERS:
-	  /* NOP */
-	break;
-	
+     /* NOP */
+   break;
+   
       case IRP_MJ_READ:
       case IRP_MJ_WRITE:
-	IoReadWriteCompletion(DeviceObject,Irp,IoStack);
-	break;
-	
+   IoReadWriteCompletion(DeviceObject,Irp,IoStack);
+   break;
+   
       case IRP_MJ_DEVICE_CONTROL:
       case IRP_MJ_INTERNAL_DEVICE_CONTROL:
-	IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
-	break;
-	
+   IoDeviceControlCompletion(DeviceObject, Irp, IoStack);
+   break;
+   
       case IRP_MJ_QUERY_VOLUME_INFORMATION:
       case IRP_MJ_SET_VOLUME_INFORMATION:
-	IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
-	break;
-	
+   IoVolumeInformationCompletion(DeviceObject, Irp, IoStack);
+   break;
+   
       default:
-	break;
+   break;
      }
    
-   if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
-     {
-	PKTHREAD Thread;
-	PKNORMAL_ROUTINE UserApcRoutine;
-	PVOID UserApcContext;
-	
-   	DPRINT("Dispatching APC\n");
-	Thread = &Irp->Tail.Overlay.Thread->Tcb;
-	UserApcRoutine = (PKNORMAL_ROUTINE)
-	  Irp->Overlay.AsynchronousParameters.UserApcRoutine;
-	UserApcContext = (PVOID)
-	  Irp->Overlay.AsynchronousParameters.UserApcContext;
-	KeInitializeApc(&Irp->Tail.Apc,
-			Thread,
-			0,
-			IopCompleteRequest1,
-			NULL,
-			UserApcRoutine,
-			UserMode,
-			UserApcContext);
-	KeInsertQueueApc(&Irp->Tail.Apc,
-			 Irp,
-			 (PVOID)(LONG)PriorityBoost,
-			 KernelMode);
-	return;
-     }
-   
-   DPRINT("Irp->UserIosb %x &Irp->UserIosb %x\n", 
-	   Irp->UserIosb,
-	   &Irp->UserIosb);
    if (Irp->UserIosb!=NULL)
-     {
-	*Irp->UserIosb=Irp->IoStatus;
-     }
+   {
+      *Irp->UserIosb=Irp->IoStatus;
+   }
 
    if (Irp->UserEvent)
    {
       KeSetEvent(Irp->UserEvent,PriorityBoost,FALSE);
    }
 
-   if (!(Irp->Flags & IRP_PAGING_IO) && FileObject)
+   //Windows NT File System Internals, page 169
+   if (OriginalFileObject)
    {
-      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+      if (Irp->UserEvent == NULL)
       {
-	 ObDereferenceObject(FileObject);
+         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);         
+      }
+      else if (OriginalFileObject->Flags & FO_SYNCHRONOUS_IO && Irp->UserEvent != &OriginalFileObject->Event)
+      {
+         KeSetEvent(&OriginalFileObject->Event,PriorityBoost,FALSE);         
       }
    }
 
+   //Windows NT File System Internals, page 154
+   if (!(Irp->Flags & IRP_PAGING_IO) && OriginalFileObject)
+   {
+      // if the event is not the one in the file object, it needs dereferenced   
+      if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)   
+      {
+         ObDereferenceObject(Irp->UserEvent);
+      }
+  
+      if (IoStack->MajorFunction != IRP_MJ_CLOSE)
+      {
+         ObDereferenceObject(OriginalFileObject);
+      }
+   }
+
+   if (Irp->Overlay.AsynchronousParameters.UserApcRoutine != NULL)
+   {
+      PKNORMAL_ROUTINE UserApcRoutine;
+      PVOID UserApcContext;
+   
+      DPRINT("Dispatching user APC\n");
+
+      UserApcRoutine = (PKNORMAL_ROUTINE)Irp->Overlay.AsynchronousParameters.UserApcRoutine;
+      UserApcContext = (PVOID)Irp->Overlay.AsynchronousParameters.UserApcContext;
+
+      KeInitializeApc(  &Irp->Tail.Apc,
+                        KeGetCurrentThread(),
+                        0,
+                        IoSecondStageCompletion_KernelApcRoutine,
+                        IoSecondStageCompletion_RundownApcRoutine,
+                        UserApcRoutine,
+                        UserMode,
+                        UserApcContext);
+
+      KeInsertQueueApc( &Irp->Tail.Apc,
+                        Irp,
+                        NULL,
+                        KernelMode);
+
+      //NOTE: kernel (or rundown) routine frees the IRP
+
+      return;
+
+   }
+
    IoFreeIrp(Irp);
+   
 }
