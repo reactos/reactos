@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.33 2004/03/19 22:58:09 gvg Exp $
+; $Id: msvcrt.def,v 1.34 2004/04/08 17:53:30 gvg Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -561,7 +561,7 @@ _waccess
 _wasctime
 _wchdir
 _wchmod
-;_wcmdln
+_wcmdln=MSVCRT__wcmdln
 _wcreat
 _wcsdup
 ;_wcserror
