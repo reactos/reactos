@@ -1,4 +1,4 @@
-/* $Id: version.h,v 1.4 2000/08/05 18:01:48 dwelch Exp $
+/* $Id: version.h,v 1.5 2001/02/11 15:02:48 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS kernel
@@ -14,13 +14,13 @@
 #ifndef __VERSION_H
 #define __VERSION_H
 
-#define KERNEL_VERSION_MAJOR    	0
-#define KERNEL_VERSION_MINOR    	0
-#define KERNEL_VERSION_PATCH_LEVEL      16
+#define KERNEL_VERSION_MAJOR		0
+#define KERNEL_VERSION_MINOR		0
+#define KERNEL_VERSION_PATCH_LEVEL	17
 /* Edit each time a new release is out: format is YYYYMMDD (UTC) */
-#define KERNEL_RELEASE_DATE		20000805L
+#define KERNEL_RELEASE_DATE		20010209L
 
-#define KERNEL_VERSION                  "0.0.16"
+#define KERNEL_VERSION			"0.0.17"
 
 #endif
 
