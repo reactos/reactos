@@ -164,7 +164,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		FOLDERSETTINGS fs;
 
 		fs.ViewMode = FVM_ICON;
-		fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
+		fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;	//|FWF_AUTOARRANGE;
 
 		ClientRect rect(_hwnd);
 
@@ -207,6 +207,8 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		*/
 
 			HWND hwndFolderView = ::GetNextWindow(hWndView, GW_CHILD);
+
+			SetWindowStyle(hwndFolderView, (GetWindowStyle(hwndFolderView)&~LVS_ALIGNLEFT)|LVS_ALIGNTOP|LVS_AUTOARRANGE);
 
 			 // work around for Windows NT, Win 98, ...
 			 // Without this the desktop has mysteriously only a size of 800x600 pixels.
