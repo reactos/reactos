@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.9 2000/03/09 21:04:10 jfilby Exp $
+/* $Id: driver.c,v 1.10 2000/03/10 12:39:53 jfilby Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -95,6 +95,8 @@ BOOL  DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     if(DED->pdrvfn[i].iFunc == INDEX_DrvEnablePDEV)      DF->EnablePDev = (PGD_ENABLEPDEV)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvCompletePDEV)    DF->CompletePDev = (PGD_COMPLETEPDEV)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvDisablePDEV)     DF->DisablePDev = (PGD_DISABLEPDEV)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvEnableSurface)   DF->EnableSurface = (PGD_ENABLESURFACE)DED->pdrvfn[i].pfn;
+    if(DED->pdrvfn[i].iFunc == INDEX_DrvDisableSurface)  DF->DisableSurface = (PGD_DISABLESURFACE)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvAssertMode)      DF->AssertMode = (PGD_ASSERTMODE)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvResetPDEV)       DF->ResetPDev = (PGD_RESETPDEV)DED->pdrvfn[i].pfn;
     if(DED->pdrvfn[i].iFunc == INDEX_DrvCreateDeviceBitmap)
