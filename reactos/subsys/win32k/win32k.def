@@ -1,0 +1,177 @@
+; $Id: win32k.def,v 1.1 1999/05/20 17:26:02 ea Exp $
+;
+; win32k.def
+;
+; ReactOS win32k.sys
+;
+LIBRARY win32k
+EXPORTS
+BRUSHOBJ_pvAllocRbrush
+BRUSHOBJ_pvGetRbrush
+BRUSHOBJ_ulGetBrushColor
+CLIPOBJ_bEnum
+CLIPOBJ_cEnumStart
+CLIPOBJ_ppoGetPath
+EngAcquireSemaphore
+EngAllocMem
+EngAllocUserMem
+EngAssociateSurface
+EngBitBlt
+EngCheckAbort
+EngComputeGlyphSet
+EngCopyBits
+EngCreateBitmap
+EngCreateClip
+EngCreateDeviceBitmap
+EngCreateDeviceSurface
+EngCreateDriverObj
+EngCreateEvent
+EngCreatePalette
+EngCreatePath
+EngCreateSemaphore
+EngCreateWnd
+EngDebugBreak = NTOSKRNL.DbgBreakPoint
+EngDebugPrint
+EngDeleteClip
+EngDeleteDriverObj
+EngDeleteEvent
+EngDeletePalette
+EngDeletePath
+EngDeleteSemaphore
+EngDeleteSurface
+EngDeleteWnd
+EngDeviceIoControl
+EngEnumForms
+EngEraseSurface
+EngFillPath
+EngFindImageProcAddress
+EngFindResource
+EngFreeMem
+EngFreeModule
+EngFreeUserMem
+EngGetCurrentCodePage
+EngGetDriverName
+EngGetFileChangeTime
+EngGetFilePath
+EngGetForm
+EngGetLastError
+EngGetPrinter
+EngGetPrinterData
+EngGetPrinterDataFileName
+EngGetProcessHandle
+EngGetType1FontList
+EngLineTo
+EngLoadImage
+EngLoadModule
+EngLoadModuleForWrite
+EngLockDriverObj
+EngLockSurface
+EngMapEvent
+EngMapFontFile
+EngMapModule
+EngMarkBandingSurface
+EngMovePointer
+EngMulDiv
+EngMultiByteToUnicodeN
+EngMultiByteToWideChar
+EngPaint
+EngProbeForRead
+EngProbeForReadAndWrite = NTOSKRNL.ProbeForWrite
+EngQueryLocalTime
+EngQueryPalette
+EngQueryPerformanceCounter
+EngQueryPerformanceFrequency
+EngReleaseSemaphore
+EngRestoreFloatingPointState
+EngSaveFloatingPointState
+EngSecureMem
+EngSetEvent
+EngSetLastError
+EngSetPointerShape
+EngSetPointerTag
+EngSetPrinterData
+EngSort
+EngStretchBlt
+EngStrokeAndFillPath
+EngStrokePath
+EngTextOut
+EngUnicodeToMultiByteN
+EngUnloadImage
+EngUnlockDriverObj
+EngUnlockSurface
+EngUnmapEvent
+EngUnmapFontFile
+EngUnsecureMem = NTOSKRNL.MmUnsecureVirtualMemory
+EngWaitForSingleObject
+EngWideCharToMultiByte
+EngWritePrinter
+FLOATOBJ_Add
+FLOATOBJ_AddFloat
+FLOATOBJ_AddFloatObj
+FLOATOBJ_AddLong
+FLOATOBJ_Div
+FLOATOBJ_DivFloat
+FLOATOBJ_DivFloatObj
+FLOATOBJ_DivLong
+FLOATOBJ_Equal
+FLOATOBJ_EqualLong
+FLOATOBJ_GetFloat
+FLOATOBJ_GetLong
+FLOATOBJ_GreaterThan
+FLOATOBJ_GreaterThanLong
+FLOATOBJ_LessThan
+FLOATOBJ_LessThanLong
+FLOATOBJ_Mul
+FLOATOBJ_MulFloat
+FLOATOBJ_MulFloatObj
+FLOATOBJ_MulLong
+FLOATOBJ_Neg
+FLOATOBJ_SetFloat
+FLOATOBJ_SetLong
+FLOATOBJ_Sub
+FLOATOBJ_SubFloat
+FLOATOBJ_SubFloatObj
+FLOATOBJ_SubLong
+FONTOBJ_cGetAllGlyphHandles
+FONTOBJ_cGetGlyphs
+FONTOBJ_pifi
+FONTOBJ_pvTrueTypeFontFile
+FONTOBJ_pxoGetXform
+FONTOBJ_vGetInfo
+HT_ComputeRGBGammaTable
+HT_Get8BPPFormatPalette
+PALOBJ_cGetColors
+PATHOBJ_bCloseFigure
+PATHOBJ_bEnum
+PATHOBJ_bEnumClipLines
+PATHOBJ_bMoveTo
+PATHOBJ_bPolyBezierTo
+PATHOBJ_bPolyLineTo
+PATHOBJ_vEnumStart
+PATHOBJ_vEnumStartClipLines
+PATHOBJ_vGetBounds
+RtlAnsiCharToUnicodeChar = NTOSKRNL.RtlAnsiCharToUnicodeChar
+RtlMultiByteToUnicodeN = NTOSKRNL.RtlMultiByteToUnicodeN
+RtlRaiseException = NTOSKRNL.RtlRaiseException
+RtlUnicodeToMultiByteN = NTOSKRNL.RtlUnicodeToMultiByteN
+RtlUnicodeToMultiByteSize = NTOSKRNL.RtlUnicodeToMultiByteSize
+RtlUnwind = NTOSKRNL.RtlUnwind
+RtlUpcaseUnicodeChar = NTOSKRNL.RtlUpcaseUnicodeChar
+RtlUpcaseUnicodeToMultiByteN = NTOSKRNL.RtlUpcaseUnicodeToMultiByteN
+STROBJ_bEnum
+STROBJ_dwGetCodePage
+STROBJ_vEnumStart
+WNDOBJ_bEnum
+WNDOBJ_cEnumStart
+WNDOBJ_vSetConsumer
+XFORMOBJ_bApplyXform
+XFORMOBJ_iGetFloatObjXform
+XFORMOBJ_iGetXform
+XLATEOBJ_cGetPalette
+XLATEOBJ_iXlate
+XLATEOBJ_piVector
+_abnormal_termination = NTOSKRNL._abnormal_termination
+_except_handler2 = NTOSKRNL._except_handler2
+_global_unwind2 = NTOSKRNL._global_unwind2
+_local_unwind2 = NTOSKRNL._local_unwind2
+
