@@ -65,6 +65,9 @@ DllMain(HANDLE hInstDll,
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PULONG NTEInstance)
@@ -74,6 +77,9 @@ AddIPAddress(IPAddr Address, IPMask IpMask, DWORD IfIndex, PULONG NTEContext, PU
 }
 
 
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 SetIpNetEntry(PMIB_IPNETROW pArpEntry)
@@ -82,6 +88,10 @@ SetIpNetEntry(PMIB_IPNETROW pArpEntry)
     return 0L;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
@@ -90,6 +100,10 @@ CreateIpForwardEntry(PMIB_IPFORWARDROW pRoute)
     return 0L;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
@@ -97,6 +111,10 @@ GetAdapterIndex(LPWSTR AdapterName, PULONG IfIndex)
     return 0;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD WINAPI MyGetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 {
 	LONG lErr;
@@ -232,6 +250,9 @@ DWORD WINAPI MyGetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/*
+ * @implemented
+ */
 DWORD
 WINAPI
 GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
@@ -267,6 +288,9 @@ GetNumberOfInterfaces(OUT PDWORD pdwNumIf)
 }
 
 
+/*
+ * @implemented
+ */
 DWORD
 WINAPI
 GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
@@ -317,6 +341,10 @@ GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG pOutBufLen)
     return result;
 }
 
+
+/*
+ * @implemented
+ */
 DWORD
 WINAPI
 GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
@@ -377,6 +405,10 @@ GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     return result;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 GetTcpStatistics(PMIB_TCPSTATS pStats)
@@ -388,6 +420,10 @@ GetTcpStatistics(PMIB_TCPSTATS pStats)
     return result;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
@@ -399,6 +435,10 @@ GetTcpTable(PMIB_TCPTABLE pTcpTable, PDWORD pdwSize, BOOL bOrder)
     return result;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 GetUdpStatistics(PMIB_UDPSTATS pStats)
@@ -410,6 +450,10 @@ GetUdpStatistics(PMIB_UDPSTATS pStats)
     return result;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
@@ -421,6 +465,10 @@ GetUdpTable(PMIB_UDPTABLE pUdpTable, PDWORD pdwSize, BOOL bOrder)
     return result;
 }
 
+
+/*
+ * @unimplemented
+ */
 DWORD
 WINAPI
 FlushIpNetTable(DWORD dwIfIndex)
@@ -431,4 +479,3 @@ FlushIpNetTable(DWORD dwIfIndex)
 }
 
 /* EOF */
-
