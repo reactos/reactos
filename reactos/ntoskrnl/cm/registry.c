@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.105 2003/06/16 13:56:30 ekohl Exp $
+/* $Id: registry.c,v 1.106 2003/06/16 14:00:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -541,8 +541,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
       return STATUS_OBJECT_NAME_NOT_FOUND;
     }
 
-  DPRINT("RemainingPath %S  ParentObject %x\n",
-	 RemainingPath.Buffer, Object);
+  DPRINT("RemainingPath %wZ  ParentKey %p\n",
+	 &RemainingPath, ParentKey);
 
   Status = ObRosCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
