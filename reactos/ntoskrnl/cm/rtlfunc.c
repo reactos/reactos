@@ -8,9 +8,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
 #include <ddk/ntddk.h>
 #include <roscfg.h>
 #include <internal/ob.h>
@@ -23,7 +20,6 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#endif
 
 
 /* FUNCTIONS ****************************************************************/
@@ -166,10 +162,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   PWSTR StringPtr;
 
   DPRINT("RtlQueryRegistryValues() called\n");
-#ifdef WIN32_REGDBG
-  BaseKeyHandle = NULL;
-  CurrentKeyHandle = NULL;
-#endif
 
   Status = RtlpGetRegistryHandle(RelativeTo,
 				 (PWSTR) Path,
@@ -186,48 +178,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   while ((QueryEntry->QueryRoutine != NULL) ||
 	 (QueryEntry->Name != NULL))
     {
-/* TODO: (from RobD)
-
-  packet.sys has this code which calls this (and fails here) with:
-
-    RtlZeroMemory(ParamTable, sizeof(ParamTable));
-    //
-    //  change to the linkage key
-    //
-    ParamTable[0].QueryRoutine = NULL;                 // NOTE: QueryRoutine is set to NULL
-    ParamTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
-    ParamTable[0].Name = L"Linkage";
-    //
-    //  Get the name of the mac driver we should bind to
-    //
-    ParamTable[1].QueryRoutine = PacketQueryRegistryRoutine;
-    ParamTable[1].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_NOEXPAND;
-    ParamTable[1].Name = L"Bind";
-    ParamTable[1].EntryContext = (PVOID)MacDriverName;
-    ParamTable[1].DefaultType = REG_MULTI_SZ;
-
-    Status = RtlQueryRegistryValues(
-               IN ULONG RelativeTo = RTL_REGISTRY_ABSOLUTE,
-               IN PWSTR Path = Path,
-               IN PRTL_QUERY_REGISTRY_TABLE QueryTable = ParamTable,
-               IN PVOID Context = NULL,
-               IN PVOID Environment = NULL);
-
- */
-      //CSH: Was:
-      //if ((QueryEntry->QueryRoutine == NULL) &&
-      //  ((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_DIRECT)) != 0))
-      // Which is more correct?
-      if ((QueryEntry->QueryRoutine == NULL) &&
-	  ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
-	{
-	  DPRINT("Bad parameters\n");
-	  Status = STATUS_INVALID_PARAMETER;
-	  break;
-	}
-
-      DPRINT("Name: %S\n", QueryEntry->Name);
-
       if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
 	  (BaseKeyHandle != CurrentKeyHandle))
 	{
@@ -266,9 +216,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 	      Status = STATUS_NO_MEMORY;
 	      break;
 	    }
-#ifdef WIN32_REGDBG
-      memset(ValueInfo, 0, BufferSize);
-#endif
+
 	  Status = ZwQueryValueKey(CurrentKeyHandle,
 				   &KeyName,
 				   KeyValuePartialInformation,
@@ -335,7 +283,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      RtlInitUnicodeString(ValueString,
 					   NULL);
-		      ValueString->MaximumLength = ValueInfo->DataLength + sizeof(WCHAR); //256 * sizeof(WCHAR);
+		      ValueString->MaximumLength = ValueInfo->DataLength;
 		      ValueString->Buffer = ExAllocatePool(PagedPool,
 							   ValueString->MaximumLength);
 		      if (!ValueString->Buffer)
@@ -343,7 +291,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      ValueString->Buffer[0] = 0;
 		    }
 		  ValueString->Length = RtlMin(ValueInfo->DataLength,
-					       ValueString->MaximumLength - sizeof(WCHAR));
+					       ValueString->MaximumLength) - sizeof(WCHAR);
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,
 			 ValueString->Length);
@@ -493,11 +441,8 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
 		    {
 		      DPRINT("Expand REG_MULTI_SZ type\n");
-#ifdef WIN32_REGDBG
-		      StringPtr = (PWSTR)(FullValueInfo + FullValueInfo->DataOffset);
-#else
+
 		      StringPtr = (PWSTR)((PVOID)FullValueInfo + FullValueInfo->DataOffset);
-#endif
 		      while (*StringPtr != 0)
 			{
 			  StringLen = (wcslen(StringPtr) + 1) * sizeof(WCHAR);
@@ -516,11 +461,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		    {
 		      Status = QueryEntry->QueryRoutine(FullValueInfo->Name,
 							FullValueInfo->Type,
-#ifdef WIN32_REGDBG
-							FullValueInfo + FullValueInfo->DataOffset,
-#else
 							(PVOID)FullValueInfo + FullValueInfo->DataOffset,
-#endif
 							FullValueInfo->DataLength,
 							Context,
 							QueryEntry->EntryContext);
@@ -551,7 +492,7 @@ ByeBye:
 
   NtClose(BaseKeyHandle);
 
-  return(Status);
+  return Status;
 }
 
 
@@ -727,60 +668,60 @@ RtlpCreateRegistryKeyPath(PWSTR Path)
 
   if (_wcsnicmp(Path, L"\\Registry\\", 10) != 0)
     {
-      return(STATUS_INVALID_PARAMETER);
+      return STATUS_INVALID_PARAMETER;
     }
 
-  wcsncpy(KeyBuffer, Path, MAX_PATH-1);
-  RtlInitUnicodeString(&KeyName, KeyBuffer);
+  wcsncpy (KeyBuffer, Path, MAX_PATH-1);
+  RtlInitUnicodeString (&KeyName, KeyBuffer);
 
   /* Skip \\Registry\\ */
   Current = KeyName.Buffer;
-  Current = wcschr(Current, '\\') + 1;
-  Current = wcschr(Current, '\\') + 1;
+  Current = wcschr (Current, '\\') + 1;
+  Current = wcschr (Current, '\\') + 1;
 
-  do {
-    Next = wcschr(Current, '\\');
-    if (Next == NULL)
-      {
-    /* The end */
-      }
-    else
-      {
-    *Next = 0;
-      }
+  do
+   {
+      Next = wcschr (Current, '\\');
+      if (Next == NULL)
+	{
+	  /* The end */
+	}
+      else
+	{
+	  *Next = 0;
+	}
 
-    InitializeObjectAttributes(
-      &ObjectAttributes,
-	    &KeyName,
-	    OBJ_CASE_INSENSITIVE,
-	    NULL,
-	    NULL);
+      InitializeObjectAttributes (&ObjectAttributes,
+				  &KeyName,
+				  OBJ_CASE_INSENSITIVE,
+				  NULL,
+				  NULL);
 
-    DPRINT("Create '%S'\n", KeyName.Buffer);
+      DPRINT("Create '%S'\n", KeyName.Buffer);
 
-    Status = NtCreateKey(
-      &KeyHandle,
-      KEY_ALL_ACCESS,
-	    &ObjectAttributes,
-	    0,
-	    NULL,
-	    0,
-	    NULL);
-    if (!NT_SUCCESS(Status))
-      {
-        DPRINT("NtCreateKey() failed with status %x\n", Status);
-        return Status;
-      }
+      Status = NtCreateKey (&KeyHandle,
+			    KEY_ALL_ACCESS,
+			    &ObjectAttributes,
+			    0,
+			    NULL,
+			    0,
+			    NULL);
+      if (!NT_SUCCESS (Status))
+	{
+	  DPRINT ("NtCreateKey() failed with status %x\n", Status);
+	  return Status;
+	}
 
-    NtClose(KeyHandle);
+      NtClose (KeyHandle);
 
-    if (Next != NULL)
-      {
-    *Next = L'\\';
-      }
+      if (Next != NULL)
+	{
+	  *Next = L'\\';
+	}
 
-    Current = Next + 1;
-  } while (Next != NULL);
+      Current = Next + 1;
+    }
+   while (Next != NULL);
 
   return STATUS_SUCCESS;
 }

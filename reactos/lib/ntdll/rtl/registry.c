@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.22 2003/07/11 23:58:45 ekohl Exp $
+/* $Id: registry.c,v 1.23 2003/08/14 14:52:13 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -206,15 +206,6 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
   while ((QueryEntry->QueryRoutine != NULL) ||
 	 (QueryEntry->Name != NULL))
     {
-      if ((QueryEntry->QueryRoutine == NULL) &&
-	  ((QueryEntry->Flags & RTL_QUERY_REGISTRY_SUBKEY) != 0))
-	{
-	  Status = STATUS_INVALID_PARAMETER;
-	  break;
-	}
-
-      DPRINT("Name: %S\n", QueryEntry->Name);
-
       if (((QueryEntry->Flags & (RTL_QUERY_REGISTRY_SUBKEY | RTL_QUERY_REGISTRY_TOPKEY)) != 0) &&
 	  (BaseKeyHandle != CurrentKeyHandle))
 	{
@@ -278,7 +269,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 
 		  SourceString = (PUNICODE_STRING)QueryEntry->DefaultData;
 		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
-		  if (ValueString->Buffer == 0)
+		  if (ValueString->Buffer == NULL)
 		    {
 		      ValueString->Length = SourceString->Length;
 		      ValueString->MaximumLength = SourceString->MaximumLength;
@@ -321,7 +312,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		  ValueString = (PUNICODE_STRING)QueryEntry->EntryContext;
 		  if (ValueString->Buffer == NULL)
 		    {
-		      ValueString->MaximumLength = ValueInfo->DataLength + sizeof(WCHAR);
+		      ValueString->MaximumLength = ValueInfo->DataLength;
 		      ValueString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
 							    0,
 							    ValueString->MaximumLength);
@@ -333,7 +324,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 		      ValueString->Buffer[0] = 0;
 		     }
 		  ValueString->Length = min(ValueInfo->DataLength,
-					    ValueString->MaximumLength - sizeof(WCHAR));
+					    ValueString->MaximumLength) - sizeof(WCHAR);
 		  memcpy(ValueString->Buffer,
 			 ValueInfo->Data,
 			 ValueString->Length);
