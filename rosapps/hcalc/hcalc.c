@@ -130,10 +130,10 @@ do_exit(int ec)
 LRESULT CALLBACK
 WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-  int i;
-  int lw = LOWORD(wParam);
-  int hw = HIWORD(wParam);
-  HWND w = (HWND)lParam;
+//  int i;
+//  int lw = LOWORD(wParam);
+//  int hw = HIWORD(wParam);
+//  HWND w = (HWND)lParam;
 
   window = hWnd;
 

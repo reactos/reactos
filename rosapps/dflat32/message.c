@@ -40,13 +40,13 @@ DFWINDOW CaptureKeyboard;
 static BOOL NoChildCaptureMouse;
 static BOOL NoChildCaptureKeyboard;
 
-static int doubletimer = -1;
-static int delaytimer  = -1;
+//static int doubletimer = -1;
+//static int delaytimer  = -1;
 static int clocktimer  = -1;
 
 static DFWINDOW Cwnd;
 
-static char ermsg[] = "Error accessing drive x";
+//static char ermsg[] = "Error accessing drive x";
 
 
 static void StopMsg(void)

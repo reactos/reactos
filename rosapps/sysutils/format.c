@@ -1,6 +1,6 @@
 //======================================================================
 //
-// $Id: format.c,v 1.2 2000/02/29 23:57:46 ea Exp $
+// $Id: format.c,v 1.3 2003/01/14 18:51:12 guido Exp $
 //
 // Formatx
 //
@@ -270,6 +270,8 @@ FormatExCallback(
 			wprintf(L"FormatEx was unable to complete successfully.\n\n");
 			Error = TRUE;
 		}
+		break;
+	default:
 		break;
 	}
 	return TRUE;
