@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.6 2003/01/15 21:24:35 chorns Exp $
+/* $Id: sysinfo.c,v 1.7 2003/02/12 03:44:20 ekohl Exp $
  *
  * reactos/lib/kernel32/misc/sysinfo.c
  *
@@ -119,5 +119,13 @@ GetSystemInfo (
 	}
 }
 
+BOOL STDCALL
+IsProcessorFeaturePresent(DWORD ProcessorFeature)
+{
+  if (ProcessorFeature >= PROCESSOR_FEATURES_MAX)
+    return(FALSE);
+
+  return((BOOL)SharedUserData->ProcessorFeatures[ProcessorFeature]);
+}
 
 /* EOF */

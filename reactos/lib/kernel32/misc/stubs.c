@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.46 2003/02/03 14:20:03 ekohl Exp $
+/* $Id: stubs.c,v 1.47 2003/02/12 03:44:20 ekohl Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
@@ -6,15 +6,6 @@
 #include <k32.h>
 
 //#define _OLE2NLS_IN_BUILD_
-
-BOOL
-STDCALL
-IsProcessorFeaturePresent( DWORD ProcessorFeature )
-{
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
-}
-
 
 BOOL
 STDCALL
