@@ -765,7 +765,7 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 		if (!pidl->mkid.cb)
 			break;
 
-		 // copy first element of item idlist
+		 // copy first element of item idlist	-> could be replaced by SHBindToParent()
 		next_pidl = (*Globals.iMalloc->lpVtbl->Alloc)(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
 		memcpy(next_pidl, pidl, pidl->mkid.cb);
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
@@ -1807,7 +1807,7 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 				/*TODO: There are even more menu items! */
 
 #ifndef _NO_EXTENSIONS
-#ifdef _WINE_
+#ifdef __WINE__
 				case ID_LICENSE:
 					WineLicense(Globals.hMainWnd);
 					break;
@@ -3628,7 +3628,7 @@ void explorer_show_frame(HWND hwndParent, int cmdshow)
 
 	ShowWindow(Globals.hMainWnd, cmdshow);
 
-#if defined(_SHELL_FOLDERS) && !defined(_WINE_)
+#if defined(_SHELL_FOLDERS) && !defined(__WINE__)
 	 // Shell Namespace as default:
 	child = alloc_child_window(path, get_path_pidl(path,Globals.hMainWnd), Globals.hMainWnd);
 #else
