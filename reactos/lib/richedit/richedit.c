@@ -576,8 +576,9 @@ static LRESULT WINAPI RICHED32_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam,
             TRACE_EDIT_MSG32("case EM_SCROLL Passed to edit control");
             return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
      case EM_SCROLLCARET:
+     case WM_USER+49:  /* EM_SCROLLCARET too */
             TRACE_EDIT_MSG32("EM_SCROLLCARET Passed to edit control");
-            return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProcA(lpfnEditWndProc, hwnd, EM_SCROLLCARET, wParam, lParam);
      case EM_SETHANDLE:
             TRACE_EDIT_MSG32("EM_SETHANDLE Passed to edit control");
             return CallWindowProcA(lpfnEditWndProc, hwnd, uMsg, wParam, lParam);

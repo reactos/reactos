@@ -36,7 +36,6 @@ typedef struct _tagCHARLIST
 
 
 void CHARLIST_Enqueue( CHARLIST* pCharList, char myChar);
-void CHARLIST_Push( CHARLIST* pCharList, char myChar);
 char CHARLIST_Dequeue(CHARLIST* pCharList);
 int CHARLIST_GetNbItems(CHARLIST* pCharList);
 void CHARLIST_FreeList(CHARLIST* pCharList);

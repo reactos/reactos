@@ -56,29 +56,6 @@ void CHARLIST_Enqueue( CHARLIST* pCharList, char myChar )
     pCharList->nCount++;
 }
 
-void CHARLIST_Push( CHARLIST* pCharList, char myChar)
-{
-    CHARLISTENTRY* pNewEntry = malloc(sizeof(CHARLISTENTRY));
-
-    TRACE("\n");
-
-    pNewEntry->myChar = myChar;
-
-    if(pCharList->pHead == NULL)
-    {
-         pCharList->pHead = pCharList->pTail = pNewEntry;
-         pNewEntry->pNext = NULL;
-
-    }
-    else
-    {
-         pNewEntry->pNext = pCharList->pHead;
-         pCharList->pHead = pNewEntry;
-    }
-
-    pCharList->nCount++;
-}
-
 char CHARLIST_Dequeue(CHARLIST* pCharList)
 {
     CHARLISTENTRY* pCurrent;
@@ -151,4 +128,3 @@ int CHARLIST_toBuffer(CHARLIST* pCharList, char* pBuffer, int nBufferSize)
 
    return 0;
 }
-
