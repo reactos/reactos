@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.h,v 1.7 2001/04/24 22:53:00 narnaoud Exp $ */
+/* $Id: RegistryExplorer.h,v 1.8 2003/02/09 02:15:23 narnaoud Exp $ */
 
 #ifndef _REGISTRY_EXPLORER_H__INCLUDED
 #define _REGISTRY_EXPLORER_H__INCLUDED
@@ -28,9 +28,7 @@
 #define CREDITS_MSG			_T("Registry Explorer is written by Nedko Arnaoudov\n")\
 							_T("Special thanks to Emanuele Aliberti\n")
 
-#define BUGS_MSG			_T("Please report bugs to ") EMAIL _T("\n")\
-							_T("Updates are available at http://www.geocities.com/registryexplorer/\n")\
-							_T("and as part of ReactOS http://www.reactos.com\n")
+#define BUGS_MSG			_T("Please report bugs to ") EMAIL _T("\n")
 
 #define VER_MSG				COPYRIGHT_MSG\
 							_T("\n")\
