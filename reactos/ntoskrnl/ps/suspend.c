@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: suspend.c,v 1.11 2003/06/05 23:36:35 gdalsnes Exp $
+/* $Id: suspend.c,v 1.12 2003/07/21 21:36:01 dwelch Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/suspend.c
@@ -110,10 +110,15 @@ PsSuspendThread(PETHREAD Thread, PULONG PreviousSuspendCount)
   Thread->Tcb.SuspendCount++;
   if (!Thread->Tcb.SuspendApc.Inserted)
     {
-      KeInsertQueueApc(&Thread->Tcb.SuspendApc,
-		       NULL,
-		       NULL,
-		       IO_NO_INCREMENT);
+      if (!KeInsertQueueApc(&Thread->Tcb.SuspendApc,
+			    NULL,
+			    NULL,
+			    IO_NO_INCREMENT))
+	{
+	  Thread->Tcb.SuspendCount--;
+	  ExReleaseFastMutex(&SuspendMutex);
+	  return(STATUS_THREAD_IS_TERMINATING);
+	}
     }
   ExReleaseFastMutex(&SuspendMutex);
   if (PreviousSuspendCount != NULL)

@@ -17,7 +17,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.10 2003/06/16 19:19:30 hbirr Exp $
+/* $Id: debug.c,v 1.11 2003/07/21 21:36:01 dwelch Exp $
  *
  * PROJECT:                ReactOS kernel
  * FILE:                   ntoskrnl/ps/debug.c
@@ -245,21 +245,26 @@ NtGetContextThread(IN HANDLE ThreadHandle,
                       NULL,
                       KernelMode,
                       (PVOID)&Context);
-      KeInsertQueueApc(&Apc,
-                       (PVOID)&Event,
-                       (PVOID)&AStatus,
-                       IO_NO_INCREMENT);
-      Status = KeWaitForSingleObject(&Event,
-                                     0,
-                                     UserMode,
-                                     FALSE,
-                                     NULL);
-      if (NT_SUCCESS(Status) && ! NT_SUCCESS(AStatus))
+      if (!KeInsertQueueApc(&Apc,
+			    (PVOID)&Event,
+			    (PVOID)&AStatus,
+			    IO_NO_INCREMENT))
 	{
-	  Status = AStatus;
+	  Status = STATUS_THREAD_IS_TERMINATING;
+	}
+      else
+	{
+	  Status = KeWaitForSingleObject(&Event,
+					 0,
+					 UserMode,
+					 FALSE,
+					 NULL);
+	  if (NT_SUCCESS(Status) && !NT_SUCCESS(AStatus))
+	    {
+	      Status = AStatus;
+	    }
 	}
     }
-
   if (NT_SUCCESS(Status))
     {
       Status = MmCopyToCaller(UnsafeContext, &Context, sizeof(Context));
@@ -346,18 +351,24 @@ NtSetContextThread(IN HANDLE ThreadHandle,
                       NULL,
                       KernelMode,
                       (PVOID)&Context);
-      KeInsertQueueApc(&Apc,
-                       (PVOID)&Event,
-                       (PVOID)&AStatus,
-                       IO_NO_INCREMENT);
-      Status = KeWaitForSingleObject(&Event,
-                                     0,
-                                     UserMode,
-                                     FALSE,
-                                     NULL);
-      if (NT_SUCCESS(Status) && ! NT_SUCCESS(AStatus))
+      if (!KeInsertQueueApc(&Apc,
+			    (PVOID)&Event,
+			    (PVOID)&AStatus,
+			    IO_NO_INCREMENT))
 	{
-	  Status = AStatus;
+	  Status = STATUS_THREAD_IS_TERMINATING;
+	}
+      else
+	{
+	  Status = KeWaitForSingleObject(&Event,
+					 0,
+					 UserMode,
+					 FALSE,
+                                     NULL);
+	  if (NT_SUCCESS(Status) && !NT_SUCCESS(AStatus))
+	    {
+	      Status = AStatus;
+	    }
 	}
     }
 

@@ -326,6 +326,14 @@ KeInsertQueueApc (PKAPC	Apc,
      }
    
    TargetThread = Apc->Thread;
+
+   if (TargetThread->State == THREAD_STATE_TERMINATED_1 ||
+       TargetThread->State == THREAD_STATE_TERMINATED_2)
+     {
+       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       return(FALSE);
+     }
+
    if (Apc->ApcMode == KernelMode)
      {
 	InsertTailList(&TargetThread->ApcState.ApcListHead[0], 
