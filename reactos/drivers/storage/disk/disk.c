@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.15 2002/06/06 23:19:53 ekohl Exp $
+/* $Id: disk.c,v 1.16 2002/07/18 18:09:29 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,6 +43,7 @@ typedef struct _DISK_DATA
 {
   ULONG HiddenSectors;
   ULONG PartitionNumber;
+  ULONG PartitionOrdinal;
   UCHAR PartitionType;
   BOOLEAN BootIndicator;
   BOOLEAN DriveNotReady;
@@ -352,29 +353,31 @@ DiskClassCheckReadWrite(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-//    DiskClassCreateDeviceObject
-//
-//  DESCRIPTION:
-//    Create the raw device and any partition devices on this drive
-//
-//  RUN LEVEL:
-//    PASSIVE_LEVEL
-//
-//  ARGUMENTS:
-//    IN  PDRIVER_OBJECT  DriverObject  The system created driver object
-//    IN  PCONTROLLER_OBJECT         ControllerObject
-//    IN  PIDE_CONTROLLER_EXTENSION  ControllerExtension
-//                                      The IDE controller extension for
-//                                      this device
-//    IN  int             DriveIdx      The index of the drive on this
-//                                      controller
-//    IN  int             HarddiskIdx   The NT device number for this
-//                                      drive
-//
-//  RETURNS:
-//    TRUE   Drive exists and devices were created
-//    FALSE  no devices were created for this device
-//
+/**********************************************************************
+ * NAME							EXPORTED
+ *	DiskClassCreateDeviceObject
+ *
+ * DESCRIPTION
+ *	Create the raw device and any partition devices on this drive
+ *
+ * RUN LEVEL
+ *	PASSIVE_LEVEL
+ *
+ * ARGUMENTS
+ *	DriverObject
+ *		The system created driver object
+ *	RegistryPath
+ *	PortDeviceObject
+ *	PortNumber
+ *	DiskNumber
+ *	Capabilities
+ *	InquiryData
+ *	InitialzationData
+ *
+ * RETURN VALUE
+ *	STATUS_SUCCESS: Device objects for disk and partitions were created.
+ *	Others: Failure.
+ */
 
 static NTSTATUS
 DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
@@ -643,6 +646,7 @@ DiskClassCreateDeviceObject(IN PDRIVER_OBJECT DriverObject,
 	      DiskData = (PDISK_DATA)(PartitionDeviceExtension + 1);
 	      DiskData->PartitionType = PartitionEntry->PartitionType;
 	      DiskData->PartitionNumber = PartitionNumber + 1;
+	      DiskData->PartitionOrdinal = PartitionNumber + 1;
 	      DiskData->HiddenSectors = PartitionEntry->HiddenSectors;
 	      DiskData->BootIndicator = PartitionEntry->BootIndicator;
 	      DiskData->DriveNotReady = FALSE;
@@ -770,9 +774,30 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	break;
 
       case IOCTL_DISK_SET_PARTITION_INFO:
-	DPRINT1("Unhandled IOCTL_DISK_SET_PARTITION_INFO\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	Information = 0;
+	if (IrpStack->Parameters.DeviceIoControl.InputBufferLength <
+	    sizeof(SET_PARTITION_INFORMATION))
+	  {
+	    Status = STATUS_INFO_LENGTH_MISMATCH;
+	  }
+	else if (DiskData->PartitionNumber == 0)
+	  {
+	    Status = STATUS_INVALID_DEVICE_REQUEST;
+	  }
+	else
+	  {
+	    PSET_PARTITION_INFORMATION PartitionInfo;
+
+	    PartitionInfo = (PSET_PARTITION_INFORMATION)Irp->AssociatedIrp.SystemBuffer;
+
+	    Status = IoSetPartitionInformation(DeviceExtension->PhysicalDevice,
+					       DeviceExtension->DiskGeometry->BytesPerSector,
+					       DiskData->PartitionOrdinal,
+					       PartitionInfo->PartitionType);
+	    if (NT_SUCCESS(Status))
+	      {
+		DiskData->PartitionType = PartitionInfo->PartitionType;
+	      }
+	  }
 	break;
 
       case IOCTL_DISK_GET_DRIVE_LAYOUT:
@@ -837,6 +862,12 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	return(ScsiClassDeviceControl(DeviceObject, Irp));
     }
 
+  /* Verify the device if the user caused the error */
+  if (!NT_SUCCESS(Status) && IoIsErrorUserInduced(Status))
+    {
+      IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+    }
+
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Information;
   IoCompleteRequest(Irp,
@@ -871,14 +902,72 @@ NTSTATUS STDCALL
 DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp)
 {
+  PDEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+
   DPRINT("DiskClassShutdownFlush() called!\n");
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
-  Irp->IoStatus.Information = 0;
-  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+  DeviceExtension = DeviceObject->DeviceExtension;
 
-  return(STATUS_SUCCESS);
+  /* Allocate SRB */
+  Srb = ExAllocatePool(NonPagedPool,
+		       sizeof(SCSI_REQUEST_BLOCK));
+  if (Srb == NULL)
+    {
+      Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+
+  /* Initialize SRB */
+  RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+  Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+
+  /* Set device IDs */
+  Srb->PathId = DeviceExtension->PathId;
+  Srb->TargetId = DeviceExtension->TargetId;
+  Srb->Lun = DeviceExtension->Lun;
+
+
+  /* FIXME: Flush write cache */
+
+
+  /* Get current stack location */
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+
+
+  /* FIXME: Unlock removable media upon shutdown */
+
+
+  /* No retry */
+  IrpStack->Parameters.Others.Argument4 = (PVOID)0;
+
+  /* Send shutdown or flush request to the port driver */
+  Srb->CdbLength = 0;
+  if (IrpStack->MajorFunction == IRP_MJ_SHUTDOWN)
+    Srb->Function = SRB_FUNCTION_SHUTDOWN;
+  else
+    Srb->Function = SRB_FUNCTION_FLUSH;
+
+  /* Init completion routine */
+  IoSetCompletionRoutine(Irp,
+			 ScsiClassIoComplete,
+			 Srb,
+			 TRUE,
+			 TRUE,
+			 TRUE);
+
+  /* Prepare next stack location for a call to the port driver */
+  IrpStack = IoGetNextIrpStackLocation(Irp);
+  IrpStack->MajorFunction = IRP_MJ_SCSI;
+  IrpStack->Parameters.Scsi.Srb = Srb;
+  Srb->OriginalRequest = Irp;
+
+  /* Call port driver */
+  return(IoCallDriver(DeviceExtension->PortDeviceObject, Irp));
 }
-
 
 /* EOF */

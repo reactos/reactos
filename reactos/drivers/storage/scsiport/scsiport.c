@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.17 2002/07/15 18:25:17 hbirr Exp $
+/* $Id: scsiport.c,v 1.18 2002/07/18 18:09:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -706,41 +706,16 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   NTSTATUS Status = STATUS_SUCCESS;
   ULONG DataSize = 0;
 
-
   DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n",
 	 DeviceObject, Irp);
 
   DeviceExtension = DeviceObject->DeviceExtension;
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
-
-  switch(Stack->Parameters.DeviceIoControl.IoControlCode)
-    {
-      case IOCTL_SCSI_EXECUTE_IN:
-	{
-	  DPRINT("  IOCTL_SCSI_EXECUTE_IN\n");
-	}
-	break;
-
-      case IOCTL_SCSI_EXECUTE_OUT:
-	{
-	  DPRINT("  IOCTL_SCSI_EXECUTE_OUT\n");
-	}
-	break;
-
-      case IOCTL_SCSI_EXECUTE_NONE:
-	{
-	  DPRINT("  IOCTL_SCSI_EXECUTE_NONE\n");
-	}
-	break;
-    }
-
   Srb = Stack->Parameters.Scsi.Srb;
   if (Srb == NULL)
     {
-
       Status = STATUS_UNSUCCESSFUL;
-
 
       Irp->IoStatus.Status = Status;
       Irp->IoStatus.Information = 0;
@@ -757,10 +732,17 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
   switch (Srb->Function)
     {
       case SRB_FUNCTION_EXECUTE_SCSI:
-	DPRINT("  SRB_FUNCTION_EXECUTE_SCSI\n");
 	IoStartPacket(DeviceObject, Irp, NULL, NULL);
-	DPRINT("Returning STATUS_PENDING\n");
 	return(STATUS_PENDING);
+
+      case SRB_FUNCTION_SHUTDOWN:
+      case SRB_FUNCTION_FLUSH:
+	if (DeviceExtension->PortConfig.CachesData == TRUE)
+	  {
+	    IoStartPacket(DeviceObject, Irp, NULL, NULL);
+	    return(STATUS_PENDING);
+	  }
+	break;
 
       case SRB_FUNCTION_CLAIM_DEVICE:
 	{
@@ -848,6 +830,11 @@ ScsiPortDispatchScsi(IN PDEVICE_OBJECT DeviceObject,
 		}
 	    }
 	}
+	break;
+
+      default:
+	DPRINT1("SRB function not implemented (Function %lu)\n", Srb->Function);
+	Status = STATUS_NOT_IMPLEMENTED;
 	break;
     }
 

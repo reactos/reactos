@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.11 2002/06/06 23:19:19 ekohl Exp $
+/* $Id: cdrom.c,v 1.12 2002/07/18 18:08:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -592,6 +592,11 @@ CdromClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	return(ScsiClassDeviceControl(DeviceObject, Irp));
     }
 
+  /* Verify the device if the user caused the error */
+  if (!NT_SUCCESS(Status) && IoIsErrorUserInduced(Status))
+    {
+      IoSetHardErrorOrVerifyDevice(Irp, DeviceObject);
+    }
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = Information;

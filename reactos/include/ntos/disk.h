@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.8 2002/05/29 21:39:06 ekohl Exp $
+/* $Id: disk.h,v 1.9 2002/07/18 18:08:27 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -105,7 +105,8 @@
      (P) == PARTITION_XINT13_EXTENDED)
 
 
-typedef enum _MEDIA_TYPE {
+typedef enum _MEDIA_TYPE
+{
   Unknown,
   F5_1Pt2_512,
   F3_1Pt44_512,
@@ -123,30 +124,35 @@ typedef enum _MEDIA_TYPE {
 
 typedef struct _PARTITION_INFORMATION
 {
-   LARGE_INTEGER StartingOffset;
-   LARGE_INTEGER PartitionLength;
-   DWORD HiddenSectors;
-   DWORD PartitionNumber;
-   BYTE PartitionType;
-   BOOLEAN BootIndicator;
-   BOOLEAN RecognizedPartition;
-   BOOLEAN RewritePartition;
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER PartitionLength;
+  DWORD HiddenSectors;
+  DWORD PartitionNumber;
+  BYTE PartitionType;
+  BOOLEAN BootIndicator;
+  BOOLEAN RecognizedPartition;
+  BOOLEAN RewritePartition;
 } PARTITION_INFORMATION, *PPARTITION_INFORMATION;
 
 typedef struct _DRIVE_LAYOUT_INFORMATION
 {
-   DWORD PartitionCount;
-   DWORD Signature;
-   PARTITION_INFORMATION PartitionEntry[1];
+  DWORD PartitionCount;
+  DWORD Signature;
+  PARTITION_INFORMATION PartitionEntry[1];
 } DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
+
+typedef struct _SET_PARTITION_INFORMATION
+{
+  ULONG PartitionType;
+} SET_PARTITION_INFORMATION, *PSET_PARTITION_INFORMATION;
 
 typedef struct _DISK_GEOMETRY
 {
-   LARGE_INTEGER Cylinders;
-   MEDIA_TYPE MediaType;
-   DWORD TracksPerCylinder;
-   DWORD SectorsPerTrack;
-   DWORD BytesPerSector;
+  LARGE_INTEGER Cylinders;
+  MEDIA_TYPE MediaType;
+  DWORD TracksPerCylinder;
+  DWORD SectorsPerTrack;
+  DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
 #endif /* __INCLUDE_DISK_H */
