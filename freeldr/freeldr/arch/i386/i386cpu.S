@@ -122,6 +122,8 @@ EXTERN(_GetCpuid)
  *
  * RETURNS:
  */
+
+	.code16
 _mps_supported:
 	.long	0
 _mps_fp_table_offset:
@@ -190,6 +192,7 @@ mps_not_found:
  *
  * RETURNS:
  */
+	.code16
 _mps_default_configuration:
 	.long	0
 
@@ -239,6 +242,7 @@ EXTERN(_MpsGetDefaultConfiguration)
  *
  * RETURNS:
  */
+	.code16
 _mps_buffer_segment:
 	.word	0
 _mps_buffer_offset:
@@ -311,7 +315,9 @@ EXTERN(_MpsGetConfigurationTable)
 	movw	_mps_config_offset,%si
 
 	/* init DS */
+.code32
 	movw	_mps_config_segment,%ax
+.code16
 	pushw	%ds
 	pushw	%ax
 	popw	%ds

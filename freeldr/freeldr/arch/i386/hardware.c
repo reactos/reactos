@@ -27,6 +27,7 @@
 #include <portio.h>
 
 #include "../../reactos/registry.h"
+#include "hardware.h"
 
 
 #define MILLISEC     (10)
@@ -37,29 +38,6 @@
 #define LATCH (CLOCK_TICK_RATE / HZ)
 
 
-typedef enum
-{
-  InterfaceTypeUndefined = -1,
-  Internal,
-  Isa,
-  Eisa,
-  MicroChannel,
-  TurboChannel,
-  PCIBus,
-  VMEBus,
-  NuBus,
-  PCMCIABus,
-  CBus,
-  MPIBus,
-  MPSABus,
-  ProcessorInternal,
-  InternalPowerBus,
-  PNPISABus,
-  MaximumInterfaceType
-} INTERFACE_TYPE, *PINTERFACE_TYPE;
-
-
-typedef U64 PHYSICAL_ADDRESS;
 
 
 typedef struct _CM_INT13_DRIVE_PARAMETER
@@ -81,70 +59,35 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 } CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
 
 
-typedef struct
-{
-  U8 Type;
-  U8 ShareDisposition;
-  U16 Flags;
-  union
-    {
-      struct
-	{
-	  PHYSICAL_ADDRESS Start;
-	  U32 Length;
-	} __attribute__((packed)) Port;
-      struct
-	{
-	  U32 Level;
-	  U32 Vector;
-	  U32 Affinity;
-	} __attribute__((packed)) Interrupt;
-      struct
-	{
-	  PHYSICAL_ADDRESS Start;
-	  U32 Length;
-	} __attribute__((packed)) Memory;
-      struct
-	{
-	  U32 Channel;
-	  U32 Port;
-	  U32 Reserved1;
-	} __attribute__((packed)) Dma;
-      struct
-	{
-	  U32 DataSize;
-	  U32 Reserved1;
-	  U32 Reserved2;
-	} __attribute__((packed)) DeviceSpecificData;
-    } __attribute__((packed)) u;
-} __attribute__((packed)) CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
 
 
-typedef struct
-{
-  U16 Version;
-  U16 Revision;
-  U32 Count;
-  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
-} __attribute__((packed))CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
-
-
-typedef struct
-{
-  INTERFACE_TYPE InterfaceType;
-  U32 BusNumber;
-  CM_PARTIAL_RESOURCE_LIST PartialResourceList;
-} __attribute__((packed)) CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
-
-
-typedef struct _DEVICE_NODE
+typedef struct _CM_PNP_BIOS_DEVICE_NODE
 {
   U16 Size;
   U8  Node;
-  U8  ProductId[4];
+  U32 ProductId;
   U8  DeviceType[3];
   U16 DeviceAttributes;
-} PACKED DEVICE_NODE, *PDEVICE_NODE;
+} __attribute__((packed)) CM_PNP_BIOS_DEVICE_NODE, *PCM_PNP_BIOS_DEVICE_NODE;
+
+
+typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
+{
+  U8  Signature[4];
+  U8  Revision;
+  U8  Length;
+  U16 ControlField;
+  U8  Checksum;
+  U32 EventFlagAddress;
+  U16 RealModeEntryOffset;
+  U16 RealModeEntrySegment;
+  U16 ProtectedModeEntryOffset;
+  U32 ProtectedModeCodeBaseAddress;
+  U32 OemDeviceId;
+  U16 RealModeDataBaseAddress;
+  U32 ProtectedModeDataBaseAddress;
+} __attribute__((packed)) CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
 
 typedef struct _MPS_CONFIG_TABLE_HEADER
 {
@@ -163,6 +106,7 @@ typedef struct _MPS_CONFIG_TABLE_HEADER
   U8    Reserved;
 } PACKED MPS_CONFIG_TABLE_HEADER, *PMPS_CONFIG_TABLE_HEADER;
 
+
 typedef struct _MPS_PROCESSOR_ENTRY
 {
   U8  EntryType;
@@ -175,19 +119,9 @@ typedef struct _MPS_PROCESSOR_ENTRY
   U32 Reserved2;
 } PACKED MPS_PROCESSOR_ENTRY, *PMPS_PROCESSOR_ENTRY;
 
+
 static char Hex[] = "0123456789ABCDEF";
 static unsigned int delay_count = 1;
-
-/* PROTOTYPES ***************************************************************/
-
-/* i386cpu.S */
-
-U32 CpuidSupported(VOID);
-VOID GetCpuid(U32 Level, U32 *eax, U32 *ebx, U32 *ecx, U32 *edx);
-
-U32 MpsSupported(VOID);
-U32 MpsGetDefaultConfiguration(VOID);
-U32 MpsGetConfigurationTable(PVOID ConfigTable);
 
 
 /* FUNCTIONS ****************************************************************/
@@ -299,6 +233,184 @@ HalpCalibrateStallExecution(VOID)
 }
 
 
+VOID
+SetComponentInformation(HKEY ComponentKey,
+			U32 Flags,
+			U32 Key,
+			U32 Affinity)
+{
+  CM_COMPONENT_INFORMATION CompInfo;
+  S32 Error;
+
+  CompInfo.Flags = Flags;
+  CompInfo.Version = 0;
+  CompInfo.Key = Key;
+  CompInfo.Affinity = Affinity;
+
+  /* Set 'Component Information' value */
+  Error = RegSetValue(ComponentKey,
+		      "Component Information",
+		      REG_BINARY,
+		      (PU8)&CompInfo,
+		      sizeof(CM_COMPONENT_INFORMATION));
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+    }
+}
+
+
+static VOID
+DetectPnpBios(HKEY SystemKey, U32 *BusNumber)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_PNP_BIOS_DEVICE_NODE DeviceNode;
+  char Buffer[80];
+  HKEY BusKey;
+  U32 x;
+  U32 NodeSize = 0;
+  U32 NodeCount = 0;
+  U8 NodeNumber;
+  U32 FoundNodeCount;
+  int i;
+  U32 PnpBufferSize;
+  U32 Size;
+  char *Ptr;
+  S32 Error;
+
+  x = PnpBiosSupported((PVOID)DISKREADBUFFER);
+  if (!x)
+    {
+      printf("  PnP-BIOS not supported\n");
+      return;
+    }
+
+  x = PnpBiosGetDeviceNodeCount(&NodeSize, &NodeCount);
+  if (x != 0 || NodeSize == 0 || NodeCount == 0)
+    {
+      DbgPrint((DPRINT_HWDETECT, "PnP-BIOS failed to enumerate device nodes\n");
+      return;
+    }
+  DbgPrint((DPRINT_HWDETECT,
+	    "PnP-BIOS supported: found %u device nodes\n",
+	    (unsigned int)NodeCount));
+
+  FoundNodeCount = 0;
+
+  PnpBufferSize = 0;
+  for (i = 0; i < 0x255; i++)
+    {
+      NodeNumber = (U8)i;
+
+      x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
+      if (x == 0)
+	{
+	  DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
+	  PnpBufferSize += DeviceNode->Size;
+
+	  FoundNodeCount++;
+	  if (FoundNodeCount >= NodeCount)
+	    break;
+	}
+    }
+  PnpBufferSize += sizeof(CM_PNP_BIOS_INSTALLATION_CHECK);
+  DbgPrint((DPRINT_HWDETECT, "PnpBufferSize: %u\n", PnpBufferSize));
+
+  /* Create new bus key */
+  sprintf(Buffer,
+	  "MultifunctionAdapter\\%u", *BusNumber);
+  Error = RegCreateKey(SystemKey,
+		       Buffer,
+		       &BusKey);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Increment bus number */
+  (*BusNumber)++;
+
+  /* Set 'Identifier' value */
+  Error = RegSetValue(BusKey,
+		      "Identifier",
+		      REG_SZ,
+		      (PU8)"PNP BIOS",
+		      9);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
+      return;
+    }
+
+  /* Set 'Configuration Data' value */
+  Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + PnpBufferSize;
+  FullResourceDescriptor = MmAllocateMemory(Size);
+  if (FullResourceDescriptor == NULL)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"Failed to allocate resource descriptor\n"));
+      return;
+    }
+
+  /* Initialize resource descriptor */
+  memset(FullResourceDescriptor, 0, Size);
+  FullResourceDescriptor->InterfaceType = Internal;
+  FullResourceDescriptor->BusNumber = 0;
+  FullResourceDescriptor->PartialResourceList.Count = 1;
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type =
+    CmResourceTypeDeviceSpecific;
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].ShareDisposition =
+    CmResourceShareUndetermined;
+//  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Flags =
+  FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize =
+    PnpBufferSize;
+
+  Ptr = (char *)((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
+
+  /* Set instalation check data */
+  PnpBiosSupported((PVOID)DISKREADBUFFER);
+  memcpy (Ptr, (PVOID)DISKREADBUFFER, sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
+
+  Ptr = (char *)((PVOID)Ptr + sizeof(CM_PNP_BIOS_INSTALLATION_CHECK));
+
+  /* Copy device nodes */
+  for (i = 0; i < 0x255; i++)
+    {
+      NodeNumber = (U8)i;
+
+      x = PnpBiosGetDeviceNode(&NodeNumber, (PVOID)DISKREADBUFFER);
+      if (x == 0)
+	{
+	  DeviceNode = (PCM_PNP_BIOS_DEVICE_NODE)DISKREADBUFFER;
+
+	  memcpy (Ptr,
+		  DeviceNode,
+		  DeviceNode->Size);
+	  Ptr = (char *)((U32)Ptr + DeviceNode->Size);
+
+	  FoundNodeCount++;
+	  if (FoundNodeCount >= NodeCount)
+	    break;
+	}
+    }
+
+  /* Set 'Configuration Data' value */
+  Error = RegSetValue(BusKey,
+		      "Configuration Data",
+		      REG_FULL_RESOURCE_DESCRIPTOR,
+		      (PU8) FullResourceDescriptor,
+		      Size);
+  MmFreeMemory(FullResourceDescriptor);
+  if (Error != ERROR_SUCCESS)
+    {
+      DbgPrint((DPRINT_HWDETECT,
+		"RegSetValue(Configuration Data) failed (Error %u)\n",
+		(int)Error));
+    }
+}
+
+
 static VOID
 DetectCPU(HKEY CpuKey,
 	  HKEY FpuKey)
@@ -372,7 +484,9 @@ DetectCPU(HKEY CpuKey,
       FeatureSet = 0;
     }
 
-  /* FIXME: Set 'Configuration Data' value (CPU and FPU) */
+  /* Set 'Conmponent Information' value (CPU and FPU) */
+  SetComponentInformation(CpuInstKey, 0, 0, 1);
+  SetComponentInformation(FpuInstKey, 0, 0, 1);
 
   /* Set 'FeatureSet' value (CPU only) */
   DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
@@ -492,7 +606,16 @@ SetMpsProcessor(HKEY CpuKey,
   /* Get FeatureSet */
   FeatureSet = CpuEntry->FeatureFlags;
 
-  /* FIXME: Set 'Configuration Data' value (CPU and FPU) */
+  /* Set 'Configuration Data' value (CPU and FPU) */
+  SetComponentInformation(CpuInstKey,
+			  0,
+			  CpuEntry->LocalApicId,
+			  1 << CpuEntry->LocalApicId);
+
+  SetComponentInformation(FpuInstKey,
+			  0,
+			  CpuEntry->LocalApicId,
+			  1 << CpuEntry->LocalApicId);
 
   /* Set 'FeatureSet' value (CPU only) */
   DbgPrint((DPRINT_HWDETECT, "FeatureSet: %x\n", FeatureSet));
@@ -660,7 +783,7 @@ DetectCPUs(HKEY SystemKey)
       return;
     }
 
-  /* Create the 'CentralProcessor' key */
+  /* Create the 'FloatingPointProcessor' key */
   Error = RegCreateKey(SystemKey,
 		       "FloatingPointProcessor",
 		       &FpuKey);
@@ -1044,14 +1167,14 @@ DetectHardware(VOID)
       return;
     }
 
-//  DetectBiosData ();
+//  DetectSystemData ();
   DetectCPUs (SystemKey);
 
   /* Detect buses */
 
 //  DetectPciBios (&BusNumber);
 //  DetectApmBios (&BusNumber);
-//  DetectPnpBios (&BusNumber);
+  DetectPnpBios (SystemKey, &BusNumber);
   DetectIsaBios (SystemKey, &BusNumber);
 //  DetectAcpiBios (&BusNumber);
 

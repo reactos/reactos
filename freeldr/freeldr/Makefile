@@ -196,6 +196,8 @@ ARCH_OBJS	=	fathelp.o	\
 				arch.o		\
 				i386idt.o	\
 				i386trap.o	\
+				i386cpu.o	\
+				i386pnp.o	\
 				boot.o		\
 				linux.o		\
 				mb.o		\
@@ -207,7 +209,6 @@ ARCH_OBJS	=	fathelp.o	\
 				i386disk.o	\
 				portio.o	\
 				hardware.o	\
-				i386cpu.o	\
 				_alloca.o		# For Mingw32 builds
 
 RTL_OBJS	=	print.o		\
