@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.47 2004/08/27 03:08:23 navaraf Exp $
+# $Id: Makefile,v 1.48 2004/10/03 14:24:43 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,6 +11,9 @@ TARGET_NAME = msvcrt
 TARGET_PCH = precomp.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_MSVCRT)
+
+# don't remove @nn from exported symbols - needed so dlltool doesn't mess up mangled c++ exports
+RM_AT_FROM_SYMBOLS = no
 
 TARGET_LFLAGS = -nostartfiles --enable-stdcall-fixup
 

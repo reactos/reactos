@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.82 2004/10/02 14:03:51 chorns Exp $
+# $Id: helper.mk,v 1.83 2004/10/03 14:24:43 weiden Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -357,6 +357,11 @@ endif
 # can be overidden with $(CXX) for linkage of c++ executables
 LD_CC = $(CC)
 
+ifeq ($(RM_AT_FROM_SYMBOLS),no)
+  MK_KILLAT :=
+else
+  MK_KILLAT := --kill-at
+endif
 
 ifeq ($(TARGET_TYPE),program)
   ifeq ($(TARGET_APPTYPE),windows)
@@ -671,7 +676,7 @@ $(MK_IMPLIBPATH)/$(MK_IMPLIB_FULLNAME): $(MK_OBJECTS) $(MK_DEFNAME)
 		--dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
 		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
-		--kill-at
+		$(MK_KILLAT)
 
 else # MK_IMPLIBONLY
 
@@ -720,7 +725,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp --kill-at $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -762,7 +767,7 @@ ifeq ($(MK_EXETYPE),dll)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp --kill-at $(MK_EXTRACMD)
+		--output-exp temp.exp $(MK_KILLAT) $(MK_EXTRACMD)
 	- $(RM) base.tmp
 endif
 	$(LD_CC) $(TARGET_LFLAGS) \
@@ -798,7 +803,7 @@ $(MK_NOSTRIPNAME): $(MK_EXTRADEP) $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD) --kill-at
+		--output-exp temp.exp $(MK_EXTRACMD) $(MK_KILLAT)
 	- $(RM) base.tmp
 	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
@@ -830,7 +835,7 @@ endif
 	- $(RM) junk.tmp
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--base-file base.tmp \
-		--output-exp temp.exp $(MK_EXTRACMD) --kill-at
+		--output-exp temp.exp $(MK_EXTRACMD) $(MK_KILLAT)
 	- $(RM) base.tmp
 	$(LD_CC) $(TARGET_LFLAGS) \
 		-Wl,--subsystem,native \
@@ -881,7 +886,7 @@ $(MK_IMPLIBPATH)/$(MK_BASENAME).a: $(MK_DEFNAME)
 	$(DLLTOOL) --dllname $(MK_FULLNAME) \
 		--def $(MK_DEFNAME) \
 		--output-lib $(MK_IMPLIBPATH)/$(MK_BASENAME).a \
-		--kill-at
+		$(MK_KILLAT)
 
 implib: $(MK_IMPLIBPATH)/$(MK_BASENAME).a
 else

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.67 2004/09/16 10:25:12 gvg Exp $
+# $Id: makefile,v 1.68 2004/10/03 14:24:42 weiden Exp $
 
 PATH_TO_TOP = ../..
 
@@ -11,6 +11,9 @@ TARGET_NAME = crtdll
 TARGET_PCH = precomp.h
 
 TARGET_BASE = $(TARGET_BASE_LIB_CRTDLL)
+
+# don't remove @nn from exported symbols - needed so dlltool doesn't mess up mangled c++ exports
+RM_AT_FROM_SYMBOLS = no
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
