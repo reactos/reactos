@@ -1,7 +1,7 @@
 #include <windows.h>
 INT
 STDCALL
-LibMain(
+DllMain (
 	PVOID	hinstDll,
 	ULONG	dwReason,
 	PVOID	reserved
