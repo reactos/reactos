@@ -185,7 +185,7 @@ static BOOL argifyA(char* out, int len, const char* fmt, const char* lpFile, LPI
 /*************************************************************************
  *	SHELL_ResolveShortCutW [Internal]
  */
-static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR args, LPWSTR wdir, HWND hwnd, LPCWSTR lpVerb, int* pshowcmd, LPITEMIDLIST* ppidl)
+static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR wargs, LPWSTR wdir, HWND hwnd, LPCWSTR lpVerb, int* pshowcmd, LPITEMIDLIST* ppidl)
 {
     IShellFolder* psf;
 
@@ -224,20 +224,16 @@ static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR args, LPWSTR wdir, HWN
 				if (wcmd[0]==':' && wcmd[1]==':') {
 				    /* open shell folder for the specified class GUID */
 				    strcpyW(wcmd, L"explorer.exe");
-				} else if (HCR_GetExecuteCommandW(L"Folder", lpVerb?lpVerb:L"open", args, MAX_PATH/*sizeof(szParameters)*/)) {
-				    //FIXME@@ argifyW(wcmd, MAX_PATH/*sizeof(szApplicationName)*/, args, NULL, *ppidl, NULL);
+				} else if (HCR_GetExecuteCommandW(L"Folder", lpVerb?lpVerb:L"open", wargs, MAX_PATH/*sizeof(szParameters)*/)) {
+				    //FIXME@@ argifyW(wcmd, MAX_PATH/*sizeof(szApplicationName)*/, wargs, NULL, *ppidl, NULL);
 				}
 			    }
 			}
 
 			if (SUCCEEDED(hr)) {
 			    /* get command line arguments, working directory and display mode if available */
-			    if (SUCCEEDED(IShellLinkW_GetWorkingDirectory(psl, wdir, MAX_PATH)))
-				;
-
-			    if (SUCCEEDED(IShellLinkW_GetArguments(psl, args, MAX_PATH)))
-				;
-
+			    IShellLinkW_GetWorkingDirectory(psl, wdir, MAX_PATH);
+			    IShellLinkW_GetArguments(psl, wargs, MAX_PATH);
 			    IShellLinkW_GetShowCmd(psl, pshowcmd);
 			}
 		    }
@@ -974,6 +970,16 @@ BOOL WINAPI ShellExecuteExA32 (LPSHELLEXECUTEINFOA psei)
 
     if (ext && !strcasecmp(ext, ".lnk"))	/* or check for: shell_attribs & SFGAO_LINK */
 	SHELL_ResolveShortCutA(&sei_tmp);
+
+    /* expand environment strings */
+    if (ExpandEnvironmentStringsA(sei_tmp.lpFile, cmd, MAX_PATH))
+	lstrcpyA(szApplicationName/*sei_tmp.lpFile*/, cmd);
+
+    if (ExpandEnvironmentStringsA(sei_tmp.lpParameters, cmd, MAX_PATH))
+	lstrcpyA(szParameters/*sei_tmp.lpParameters*/, cmd);
+
+    if (ExpandEnvironmentStringsA(sei_tmp.lpDirectory, cmd, MAX_PATH))
+	lstrcpyA(szDir/*sei_tmp.lpDirectory*/, cmd);
 
     /* separate out command line arguments from executable file name */
     if (!*szParameters) {
