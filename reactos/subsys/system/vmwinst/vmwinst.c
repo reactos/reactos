@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: vmwinst.c,v 1.7 2004/08/10 15:08:05 weiden Exp $
+/* $Id: vmwinst.c,v 1.8 2004/08/10 15:21:27 weiden Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VMware(r) driver installation utility
@@ -979,7 +979,7 @@ CreateWizard(VOID)
   psh.hIcon = 0;
   psh.pszCaption = Caption;
   psh.nPages = 7;
-  psh.nStartPage = (StartVMwConfigWizard ? 4 : 0);
+  psh.nStartPage = (StartVMwConfigWizard ? 5 : 0);
   psh.ppsp = psp;
   
   InitPropSheetPage(&psp[0], IDD_WELCOMEPAGE, PageWelcomeProc);
