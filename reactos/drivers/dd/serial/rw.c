@@ -16,12 +16,8 @@ static PVOID
 SerialGetUserBuffer(IN PIRP Irp)
 {
    ASSERT(Irp);
-
-   if (Irp->MdlAddress)
-      return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
-   else
-   	/* FIXME: try buffer */
-      return Irp->UserBuffer;
+   
+   return Irp->AssociatedIrp.SystemBuffer;
 }
 
 NTSTATUS STDCALL
@@ -36,6 +32,7 @@ SerialRead(
 	PUCHAR Buffer;
 	PUCHAR ComPortBase;
 	UCHAR ReceivedByte;
+	KIRQL Irql;
 	NTSTATUS Status = STATUS_SUCCESS;
 	
 	DPRINT("Serial: IRP_MJ_READ\n");
@@ -64,8 +61,8 @@ SerialRead(
 	if (!NT_SUCCESS(Status))
 		goto ByeBye;
 	
-	/* FIXME: lock InputBuffer */
-	while (Length-- > 0 && !IsCircularBufferEmpty(&DeviceExtension->InputBuffer))
+	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
+	while (Length-- > 0)
 	{
 		Status = PopCircularBufferEntry(&DeviceExtension->InputBuffer, &ReceivedByte);
 		if (!NT_SUCCESS(Status))
@@ -73,54 +70,117 @@ SerialRead(
 		DPRINT("Serial: read from buffer 0x%x (%c)\n", ReceivedByte, ReceivedByte);
 		Buffer[Information++] = ReceivedByte;
 	}
+	KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
 	if (Length > 0 &&
 		!(DeviceExtension->SerialTimeOuts.ReadIntervalTimeout == INFINITE &&
 		  DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant == 0 &&
 		  DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier == 0))
 	{
-		if (DeviceExtension->SerialTimeOuts.ReadIntervalTimeout == 0
-			|| DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier == 0)
+		ULONG IntervalTimeout;
+		ULONG TotalTimeout;
+		BOOLEAN UseIntervalTimeout = FALSE;
+		BOOLEAN UseTotalTimeout = FALSE;
+		ULONG ThisByteTimeout;
+		BOOLEAN IsByteReceived;
+		ULONG i;
+		/* Extract timeouts informations */
+		if (DeviceExtension->SerialTimeOuts.ReadIntervalTimeout == INFINITE &&
+			DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier == INFINITE &&
+			DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant > 0 &&
+			DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant < INFINITE)
 		{
-			DPRINT("Serial: we must wait for %lu characters!\n", Length);
-#if 1
-			/* Disable interrupts */
-			WRITE_PORT_UCHAR(SER_IER((PUCHAR)DeviceExtension->BaseAddress), DeviceExtension->IER & ~1);
-			
-			/* Polling code */
-			while (Length > 0)
+			if (Information > 0)
 			{
-				while ((READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR) == 0)
-					;
-				ReceivedByte = READ_PORT_UCHAR(SER_RBR(ComPortBase));
-				Buffer[Information++] = ReceivedByte;
-				Length--;
+				/* don't read mode bytes */
+				Length = 0;
 			}
-			/* Enable interrupts */
-			WRITE_PORT_UCHAR(SER_IER((PUCHAR)DeviceExtension->BaseAddress), DeviceExtension->IER);
-#else
-			while (Length > 0)
+			else
 			{
-				if (!IsCircularBufferEmpty(&DeviceExtension->InputBuffer))
-				{
-					Status = PopCircularBufferEntry(&DeviceExtension->InputBuffer, &ReceivedByte);
-					if (!NT_SUCCESS(Status))
-						break;
-					DPRINT1("Serial: read from buffer 0x%x (%c)\n", ReceivedByte, ReceivedByte);
-					Buffer[Information++] = ReceivedByte;
-					Length--;
-				}
+				/* read only one byte */
+				UseTotalTimeout = TRUE;
+				TotalTimeout = DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant;
+				Length = 1;
 			}
-#endif
 		}
 		else
 		{
-			/* FIXME: use ReadTotalTimeoutMultiplier and ReadTotalTimeoutConstant */
-			DPRINT1("Serial: we must wait for %lu characters at maximum within %lu milliseconds! UNIMPLEMENTED\n",
-				Length,
-				Stack->Parameters.Read.Length * DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier + DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant);
+			if (DeviceExtension->SerialTimeOuts.ReadIntervalTimeout != 0)
+			{
+				UseIntervalTimeout = TRUE;
+				IntervalTimeout = DeviceExtension->SerialTimeOuts.ReadIntervalTimeout;
+			}
+			if (DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant != 0 ||
+				DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier != 0)
+			{
+				UseTotalTimeout = TRUE;
+				TotalTimeout = DeviceExtension->SerialTimeOuts.ReadTotalTimeoutConstant +
+					DeviceExtension->SerialTimeOuts.ReadTotalTimeoutMultiplier * Length;
+			}
 		}
+		DPRINT("Serial: UseIntervalTimeout = %ws, IntervalTimeout = %lu\n",
+			UseIntervalTimeout ? L"YES" : L"NO",
+			UseIntervalTimeout ? IntervalTimeout : 0);
+		DPRINT("Serial: UseTotalTimeout = %ws, TotalTimeout = %lu\n",
+			UseTotalTimeout ? L"YES" : L"NO",
+			UseTotalTimeout ? TotalTimeout : 0);
+		
+		/* FIXME: it should be better to use input buffer instead of
+		 * disabling interrupts, and try to directly read for port! */
+		
+		/* FIXME: NtQueryPerformanceCounter gives a more accurate
+		 * timer, but it is not available on all computers. First try
+		 * NtQueryPerformanceCounter, and current method if it is not
+		 * implemented. */
+		
+		/* FIXME: remove disabling interrupts */
+		WRITE_PORT_UCHAR(SER_IER(ComPortBase), DeviceExtension->IER & ~1);
+		while (Length > 0)
+		{
+			ThisByteTimeout = IntervalTimeout;
+			IsByteReceived = FALSE;
+			while (TRUE)
+			{
+				for (i = 0; i < 1000; i++)
+				{
+#if 1
+					if ((READ_PORT_UCHAR(SER_LSR(ComPortBase)) & SR_LSR_DR) != 0)
+					{
+						ReceivedByte = READ_PORT_UCHAR(ComPortBase);
+						DPRINT("Serial: received byte 0x%02x (%c)\n", ReceivedByte, ReceivedByte);
+						IsByteReceived = TRUE;
+						break;
+					}
+#else
+					KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
+					if (!IsCircularBufferEmpty(&DeviceExtension->InputBuffer))
+					{
+						PopCircularBufferEntry(&DeviceExtension->InputBuffer, &ReceivedByte);
+						KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
+						DPRINT("Serial: reading byte from buffer 0x%02x (%c)\n", ReceivedByte, ReceivedByte);
+						IsByteReceived = TRUE;
+						break;
+					}
+					KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
+#endif
+					KeStallExecutionProcessor(1);
+				}
+				if (IsByteReceived) break;
+				if (UseIntervalTimeout)
+				{
+					if (ThisByteTimeout == 0) break; else ThisByteTimeout--;
+				}
+				if (UseTotalTimeout)
+				{
+					if (TotalTimeout == 0) break; else TotalTimeout--;
+				}
+			}
+			if (!IsByteReceived) break;
+			Buffer[Information++] = ReceivedByte;
+			Length--;
+		}
+		/* FIXME: remove enabling interrupts */
+		WRITE_PORT_UCHAR(SER_IER(ComPortBase), DeviceExtension->IER);
 	}
-	/* FIXME: unlock InputBuffer */
 	Status = STATUS_SUCCESS;
 	
 	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
@@ -143,6 +203,7 @@ SerialWrite(
 	ULONG Information = 0;
 	PUCHAR Buffer;
 	PUCHAR ComPortBase;
+	KIRQL Irql;
 	NTSTATUS Status = STATUS_SUCCESS;
 	
 	DPRINT("Serial: IRP_MJ_WRITE\n");
@@ -166,7 +227,7 @@ SerialWrite(
 	if (!NT_SUCCESS(Status))
 		goto ByeBye;
 	
-	/* FIXME: lock OutputBuffer */
+	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	if (IsCircularBufferEmpty(&DeviceExtension->OutputBuffer))
 	{
 		/* Put the maximum amount of data in UART output buffer */
@@ -197,7 +258,7 @@ SerialWrite(
 		DPRINT1("Serial: write to buffer 0x%02x\n", Buffer[Information]);
 		Information++;
 	}
-	/* FIXME: unlock OutputBuffer */
+	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 	IoReleaseRemoveLock(&DeviceExtension->RemoveLock, (PVOID)DeviceExtension->ComPort);
 
 ByeBye:

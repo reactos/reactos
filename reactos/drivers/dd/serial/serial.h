@@ -81,6 +81,8 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	ULONG BaudRate;
 	ULONG BaseAddress;
 	PKINTERRUPT Interrupt;
+	KDPC ReceivedByteDpc;
+	KDPC SendByteDpc;
 	
 	SERIAL_LINE_CONTROL SerialLineControl;
 	UART_TYPE UartType;
@@ -90,7 +92,9 @@ typedef struct _SERIAL_DEVICE_EXTENSION
 	SERIAL_TIMEOUTS SerialTimeOuts;
 	BOOLEAN IsOpened;	
 	CIRCULAR_BUFFER InputBuffer;
+	KSPIN_LOCK InputBufferLock;
 	CIRCULAR_BUFFER OutputBuffer;
+	KSPIN_LOCK OutputBufferLock;
 	
 	/* Current values */
 	UCHAR IER; /* Base+1, Interrupt Enable Register */
@@ -249,6 +253,20 @@ NTSTATUS STDCALL
 ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+VOID STDCALL
+SerialReceiveByte(
+	IN PKDPC Dpc,
+	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
+	IN PVOID pByte,            // real type UCHAR
+	IN PVOID Unused);
+
+VOID STDCALL
+SerialSendByte(
+	IN PKDPC Dpc,
+	IN PVOID pDeviceExtension, // real type PSERIAL_DEVICE_EXTENSION
+	IN PVOID Unused1,
+	IN PVOID Unused2);
 
 BOOLEAN STDCALL
 SerialInterruptService(

@@ -76,6 +76,10 @@ SerialAddDeviceInternal(
 	Status = InitializeCircularBuffer(&DeviceExtension->OutputBuffer, 16);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 	IoInitializeRemoveLock(&DeviceExtension->RemoveLock, SERIAL_TAG, 0, 0);
+	KeInitializeSpinLock(&DeviceExtension->InputBufferLock);
+	KeInitializeSpinLock(&DeviceExtension->OutputBufferLock);
+	KeInitializeDpc(&DeviceExtension->ReceivedByteDpc, SerialReceiveByte, DeviceExtension);
+	KeInitializeDpc(&DeviceExtension->SendByteDpc, SerialSendByte, DeviceExtension);
 	//Fdo->Flags |= DO_POWER_PAGEABLE (or DO_POWER_INRUSH?)
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
@@ -152,13 +156,7 @@ SerialPnpStartDevice(
 	
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
-	/* FIXME: actually, IRP_MN_START_DEVICE is sent twice to each serial device:
-	 * - one when loading serial.sys
-	 * - one when loading attached upper filter serenum.sys
-	 * This behaviour MUST NOT exist.
-	 * As PnP handling isn't right anyway, I didn't search how to correct this.
-	 */
-	if (DeviceExtension->PnpState == dsStarted) return STATUS_SUCCESS;
+	ASSERT(DeviceExtension->PnpState == dsStopped);
 	
 	DeviceExtension->ComPort = DeviceExtension->SerialPortNumber + 1;
 	DeviceExtension->BaudRate = 19200 | SERIAL_BAUD_USER;

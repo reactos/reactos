@@ -215,14 +215,23 @@ SerialGetCommStatus(
 	OUT PSERIAL_STATUS pSerialStatus,
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
 {
+	KIRQL Irql;
+	
 	RtlZeroMemory(pSerialStatus, sizeof(SERIAL_STATUS));
 	
 	pSerialStatus->Errors = 0; /* FIXME */
 	pSerialStatus->HoldReasons = 0; /* FIXME */
+	
+	KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
 	pSerialStatus->AmountInInQueue = (DeviceExtension->InputBuffer.WritePosition + DeviceExtension->InputBuffer.Length
 		- DeviceExtension->InputBuffer.ReadPosition) % DeviceExtension->InputBuffer.Length;
+	KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
+	
+	KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 	pSerialStatus->AmountInOutQueue = (DeviceExtension->OutputBuffer.WritePosition + DeviceExtension->OutputBuffer.Length
 		- DeviceExtension->OutputBuffer.ReadPosition) % DeviceExtension->OutputBuffer.Length;
+	KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
+	
 	pSerialStatus->EofReceived = FALSE; /* FIXME */
 	pSerialStatus->WaitForImmediate = FALSE; /* FIXME */
 	
@@ -497,8 +506,10 @@ SerialDeviceControl(
 		}
 		case IOCTL_SERIAL_PURGE:
 		{
+			KIRQL Irql1, Irql2;
 			DPRINT("Serial: IOCTL_SERIAL_PURGE\n");
-			/* FIXME: lock input and output queues */
+			KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql1);
+			KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql2);
 			DeviceExtension->InputBuffer.ReadPosition = DeviceExtension->InputBuffer.WritePosition = 0;
 			DeviceExtension->OutputBuffer.ReadPosition = DeviceExtension->OutputBuffer.WritePosition = 0;
 			/* Clear receive/transmit buffers */
@@ -507,7 +518,8 @@ SerialDeviceControl(
 				WRITE_PORT_UCHAR(SER_FCR(ComPortBase),
 					SR_FCR_CLEAR_RCVR | SR_FCR_CLEAR_XMIT);
 			}
-			/* FIXME: unlock input and output queues */
+			KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql2);
+			KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql1);
 			Status = STATUS_SUCCESS;
 			break;
 		}
@@ -618,18 +630,19 @@ SerialDeviceControl(
 				return STATUS_INVALID_PARAMETER;
 			else
 			{
+				KIRQL Irql;
 				Status = STATUS_SUCCESS;
 				if (((PSERIAL_QUEUE_SIZE)Buffer)->InSize > DeviceExtension->InputBuffer.Length)
 				{
-					/* FIXME: lock input queue */
+					KeAcquireSpinLock(&DeviceExtension->InputBufferLock, &Irql);
 					Status = IncreaseCircularBufferSize(&DeviceExtension->InputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->InSize);
-					/* FIXME: unlock input queue */
+					KeReleaseSpinLock(&DeviceExtension->InputBufferLock, Irql);
 				}
 				if (NT_SUCCESS(Status) && ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize > DeviceExtension->OutputBuffer.Length)
 				{
-					/* FIXME: lock output queue */
+					KeAcquireSpinLock(&DeviceExtension->OutputBufferLock, &Irql);
 					Status = IncreaseCircularBufferSize(&DeviceExtension->OutputBuffer, ((PSERIAL_QUEUE_SIZE)Buffer)->OutSize);
-					/* FIXME: unlock output queue */
+					KeReleaseSpinLock(&DeviceExtension->OutputBufferLock, Irql);
 				}
 			}
 			break;
