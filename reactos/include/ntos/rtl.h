@@ -878,6 +878,12 @@ RtlCustomCPToUnicodeN (
 	ULONG		CustomSize
 	);
 
+BOOLEAN STDCALL
+RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
+                           OUT PLARGE_INTEGER SystemTime,
+                           IN PLARGE_INTEGER CurrentTime,
+                           IN ULONG Unknown);
+
 NTSTATUS STDCALL
 RtlDecompressBuffer(IN USHORT CompressionFormat,
 		    OUT PUCHAR UncompressedBuffer,

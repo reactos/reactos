@@ -1,4 +1,4 @@
-/* $Id: time.c,v 1.2 2004/12/16 23:46:41 ekohl Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -48,9 +48,7 @@ static const int YearLengths[2] =
    };
 static const int MonthLengths[2][MONSPERYEAR] =
    {
-      {
-         31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-      },
+      { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 },
       { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
    };
 
@@ -72,11 +70,94 @@ static __inline void NormalizeTimeFields(CSHORT *FieldToNormalize,
 /*
  * @implemented
  */
+BOOLEAN STDCALL
+RtlCutoverTimeToSystemTime(IN PTIME_FIELDS CutoverTimeFields,
+                           OUT PLARGE_INTEGER SystemTime,
+                           IN PLARGE_INTEGER CurrentTime,
+                           IN ULONG Unknown)
+{
+  TIME_FIELDS AdjustedTimeFields;
+  TIME_FIELDS CurrentTimeFields;
+  TIME_FIELDS CutoverSystemTimeFields;
+  LARGE_INTEGER CutoverSystemTime;
+  CSHORT MonthLength;
+  CSHORT Days;
+
+  /* Check fixed cutover time */
+  if (CutoverTimeFields->Year != 0)
+  {
+    if (!RtlTimeFieldsToTime(CutoverTimeFields, SystemTime))
+      return FALSE;
+
+    if (SystemTime->QuadPart < CurrentTime->QuadPart)
+      return FALSE;
+
+    return TRUE;
+  }
+
+  /*
+   * Compute recurring cutover time
+   */
+
+  /* Day must be between 1(first) and 5(last) */
+  if (CutoverTimeFields->Day == 0 || CutoverTimeFields->Day > 5)
+    return FALSE;
+
+  RtlTimeToTimeFields(CurrentTime, &CurrentTimeFields);
+
+  /* Compute the cutover time of the first day of the current month */
+  AdjustedTimeFields.Year = CurrentTimeFields.Year;
+  AdjustedTimeFields.Month = CutoverTimeFields->Month;
+  AdjustedTimeFields.Day = 1;
+  AdjustedTimeFields.Hour = CutoverTimeFields->Hour;
+  AdjustedTimeFields.Minute = CutoverTimeFields->Minute;
+  AdjustedTimeFields.Second = CutoverTimeFields->Second;
+  AdjustedTimeFields.Milliseconds = CutoverTimeFields->Milliseconds;
+
+  if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
+    return FALSE;
+
+  RtlTimeToTimeFields(&CutoverSystemTime, &CutoverSystemTimeFields);
+
+  /* Adjust day to first matching weekday */
+  if (CutoverSystemTimeFields.Weekday != CutoverTimeFields->Weekday)
+  {
+    if (CutoverSystemTimeFields.Weekday < CutoverTimeFields->Weekday)
+      Days = CutoverTimeFields->Weekday - CutoverSystemTimeFields.Weekday;
+    else
+      Days = DAYSPERWEEK - (CutoverSystemTimeFields.Weekday - CutoverTimeFields->Weekday);
+
+    AdjustedTimeFields.Day += Days;
+  }
+
+  /* Adjust the number of weeks */
+  if (CutoverTimeFields->Day > 1)
+  {
+    Days = DAYSPERWEEK * (CutoverTimeFields->Day - 1);
+    MonthLength = MonthLengths[IsLeapYear(AdjustedTimeFields.Year)][AdjustedTimeFields.Month - 1];
+    if ((AdjustedTimeFields.Day + Days) > MonthLength)
+      Days -= DAYSPERWEEK;
+
+    AdjustedTimeFields.Day += Days;
+  }
+
+  if (!RtlTimeFieldsToTime(&AdjustedTimeFields, &CutoverSystemTime))
+    return FALSE;
+
+  SystemTime->QuadPart = CutoverSystemTime.QuadPart;
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 BOOLEAN
 STDCALL
 RtlTimeFieldsToTime(
-   PTIME_FIELDS TimeFields,
-   PLARGE_INTEGER Time)
+   IN PTIME_FIELDS TimeFields,
+   OUT PLARGE_INTEGER Time)
 {
    int CurYear;
    int CurMonth;
@@ -179,13 +260,13 @@ RtlTimeToElapsedTimeFields(IN PLARGE_INTEGER Time,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 STDCALL
 RtlTimeToTimeFields(
-   PLARGE_INTEGER Time,
-   PTIME_FIELDS TimeFields)
+   IN PLARGE_INTEGER Time,
+   OUT PTIME_FIELDS TimeFields)
 {
    const int *Months;
    int SecondsInDay, CurYear;
@@ -230,7 +311,6 @@ RtlTimeToTimeFields(
    Days += CurYear - CurYear / 4 + CurYear / 100 - CurYear / 400;
    CurYear++;
    Days -= EPOCHYEAR - 1 - (EPOCHYEAR -1) / 4 + (EPOCHYEAR -1) / 100 - (EPOCHYEAR - 1) / 400;
-   /* FIXME: handle calendar modifications */
    while (1)
    {
       LeapYear = IsLeapYear(CurYear);
@@ -259,8 +339,8 @@ RtlTimeToTimeFields(
 BOOLEAN
 STDCALL
 RtlTimeToSecondsSince1970(
-   PLARGE_INTEGER Time,
-   PULONG SecondsSince1970)
+   IN PLARGE_INTEGER Time,
+   OUT PULONG SecondsSince1970)
 {
    LARGE_INTEGER IntTime;
 
@@ -282,8 +362,8 @@ RtlTimeToSecondsSince1970(
 BOOLEAN
 STDCALL
 RtlTimeToSecondsSince1980(
-   PLARGE_INTEGER Time,
-   PULONG SecondsSince1980)
+   IN PLARGE_INTEGER Time,
+   OUT PULONG SecondsSince1980)
 {
    LARGE_INTEGER IntTime;
 
@@ -304,8 +384,8 @@ RtlTimeToSecondsSince1980(
  */
 NTSTATUS
 STDCALL
-RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
-                         PLARGE_INTEGER SystemTime)
+RtlLocalTimeToSystemTime(IN PLARGE_INTEGER LocalTime,
+                         OUT PLARGE_INTEGER SystemTime)
 {
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
@@ -315,12 +395,12 @@ RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                      NULL);
    if (!NT_SUCCESS(Status))
-      return(Status);
+      return Status;
 
    SystemTime->QuadPart = LocalTime->QuadPart +
                           TimeInformation.TimeZoneBias.QuadPart;
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 
@@ -329,8 +409,8 @@ RtlLocalTimeToSystemTime(PLARGE_INTEGER LocalTime,
  */
 NTSTATUS
 STDCALL
-RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
-                         PLARGE_INTEGER LocalTime)
+RtlSystemTimeToLocalTime(IN PLARGE_INTEGER SystemTime,
+                         OUT PLARGE_INTEGER LocalTime)
 {
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
@@ -340,36 +420,34 @@ RtlSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                      NULL);
    if (!NT_SUCCESS(Status))
-      return(Status);
+      return Status;
 
    LocalTime->QuadPart = SystemTime->QuadPart -
                          TimeInformation.TimeZoneBias.QuadPart;
 
-   return(STATUS_SUCCESS);
+   return STATUS_SUCCESS;
 }
 
 
 /*
  * @implemented
  */
-VOID
-STDCALL
+VOID STDCALL
 RtlSecondsSince1970ToTime(
-   ULONG SecondsSince1970,
-   PLARGE_INTEGER Time)
+   IN ULONG SecondsSince1970,
+   OUT PLARGE_INTEGER Time)
 {
-   Time->QuadPart = ((LONGLONG)SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
+  Time->QuadPart = ((LONGLONG)SecondsSince1970 * TICKSPERSEC) + TICKSTO1970;
 }
 
 
 /*
  * @implemented
  */
-VOID
-STDCALL
+VOID STDCALL
 RtlSecondsSince1980ToTime(
-   ULONG SecondsSince1980,
-   PLARGE_INTEGER Time)
+   IN ULONG SecondsSince1980,
+   OUT PLARGE_INTEGER Time)
 {
    Time->QuadPart = ((LONGLONG)SecondsSince1980 * TICKSPERSEC) + TICKSTO1980;
 }

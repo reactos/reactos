@@ -1,4 +1,4 @@
-; $Id: ntdll.def,v 1.135 2004/12/05 21:16:01 navaraf Exp $
+; $Id$
 ;
 ; ReactOS Operating System
 ;
@@ -370,7 +370,7 @@ RtlCreateUserProcess@40
 ;RtlCreateUserSecurityObject
 RtlCreateUserThread@40
 RtlCustomCPToUnicodeN@24
-;RtlCutoverTimeToSystemTime
+RtlCutoverTimeToSystemTime@16
 RtlDeNormalizeProcessParams@4
 RtlDecompressBuffer@24
 RtlDecompressFragment@32
