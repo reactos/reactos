@@ -15,7 +15,9 @@ typedef struct _CC_FILE_SIZES
 } CC_FILE_SIZES, *PCC_FILE_SIZES;
 
 
-typedef VOID (*PCC_POST_DEFERRED_WRITE)(IN PVOID Context1, IN PVOID Context2);
+typedef VOID STDCALL
+(*PCC_POST_DEFERRED_WRITE)(IN PVOID Context1,
+			   IN PVOID Context2);
 
 typedef struct _PUBLIC_BCB
 {
@@ -35,23 +37,19 @@ typedef VOID (*PDIRTY_PAGE_ROUTINE) (
     IN PVOID            Context2
 );
 
-typedef BOOLEAN (*PACQUIRE_FOR_LAZY_WRITE) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
+typedef BOOLEAN STDCALL
+(*PACQUIRE_FOR_LAZY_WRITE)(IN PVOID Context,
+			   IN BOOLEAN Wait);
 
-typedef VOID (*PRELEASE_FROM_LAZY_WRITE) (
-    IN PVOID Context
-);
+typedef VOID STDCALL
+(*PRELEASE_FROM_LAZY_WRITE)(IN PVOID Context);
 
-typedef BOOLEAN (*PACQUIRE_FOR_READ_AHEAD) (
-    IN PVOID    Context,
-    IN BOOLEAN  Wait
-);
+typedef BOOLEAN STDCALL
+(*PACQUIRE_FOR_READ_AHEAD)(IN PVOID Context,
+			   IN BOOLEAN Wait);
 
-typedef VOID (*PRELEASE_FROM_READ_AHEAD) (
-    IN PVOID Context
-);
+typedef VOID STDCALL
+(*PRELEASE_FROM_READ_AHEAD)(IN PVOID Context);
 
 typedef struct _CACHE_MANAGER_CALLBACKS
 {
@@ -71,7 +69,9 @@ typedef struct _SECTION_OBJECT_POINTERS
 } SECTION_OBJECT_POINTERS, *PSECTION_OBJECT_POINTERS;
 */
 
-typedef VOID (*PFLUSH_TO_LSN)(IN PVOID LogHandle, IN LARGE_INTEGER Lsn);
+typedef VOID STDCALL
+(*PFLUSH_TO_LSN)(IN PVOID LogHandle,
+		 IN LARGE_INTEGER Lsn);
 
 typedef struct _REACTOS_COMMON_FCB_HEADER
 {

@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.3 2001/07/04 20:40:20 chorns Exp $
+/* $Id: lookas.c,v 1.4 2001/08/30 23:51:08 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -59,10 +59,10 @@ VOID ExpDefaultMinMax(
 }
 
 
-PVOID ExpDefaultAllocate(
-  POOL_TYPE PoolType,
-  ULONG NumberOfBytes,
-  ULONG Tag)
+PVOID STDCALL
+ExpDefaultAllocate(POOL_TYPE PoolType,
+		   ULONG NumberOfBytes,
+		   ULONG Tag)
 /*
  * FUNCTION: Default allocate function for lookaside lists
  * ARGUMENTS:
@@ -77,8 +77,8 @@ PVOID ExpDefaultAllocate(
 }
 
 
-VOID ExpDefaultFree(
-  PVOID Buffer)
+VOID STDCALL
+ExpDefaultFree(PVOID Buffer)
 /*
  * FUNCTION: Default free function for lookaside lists
  * ARGUMENTS:
