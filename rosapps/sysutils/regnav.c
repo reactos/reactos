@@ -1,8 +1,8 @@
-/* $Id: regnav.c,v 1.3 2000/05/28 17:44:53 ea Exp $
+/* $Id: regnav.c,v 1.4 2000/09/11 20:17:02 ea Exp $
  * 
  * regnav.c
  * 
- * Copyright (c) 1998, 1999 Emanuele Aliberti
+ * Copyright (c) 1998-2000 Emanuele Aliberti
  * 
  * --------------------------------------------------------------------
  *
@@ -46,7 +46,7 @@ LPCTSTR STR_HKEY_PERFORMANCE_DATA	= _TEXT("HKEY_PERFORMANCE_DATA");
 
 
 LPTSTR	app_name = _TEXT("regnav");
-LPCTSTR	app_ver = _TEXT("1.0.4");
+LPCTSTR	app_ver = _TEXT("1.0.5");
 HANDLE	CurrentWorkingKey = INVALID_HANDLE_VALUE;	/* \ */
 TCHAR	CurrentPath [CURRENT_PATH_SIZE] = _TEXT("\\");
 BOOL	Done = FALSE;
@@ -510,7 +510,7 @@ CMDPROTO(cmd_ver)
 		_TEXT("\
 %s version %s (compiled on %s, at %s)\n\
 ReactOS Console Registry Navigator\n\
-Copyright (c) 1998, 1999 Emanuele Aliberti\n\n"),
+Copyright (c) 1998-2000 Emanuele Aliberti\n\n"),
 		app_name,
 		app_ver,
 		_TEXT(__DATE__),

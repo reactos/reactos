@@ -1,4 +1,4 @@
-/* $Id: ldd.c,v 1.1 2000/08/04 21:49:31 ea Exp $
+/* $Id: ldd.c,v 1.2 2000/09/11 20:17:02 ea Exp $
  *
  * FILE  : ldd.c
  * AUTHOR: Emanuele ALIBERTI
@@ -9,6 +9,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+#include <reactos/buildno.h>
 
 #include "win32err.h"
 
@@ -51,8 +53,9 @@ int
 main (int argc, char * argv [] )
 {
 	printf (
-		"ReactOS W32 - List DOS Devices\n"
+		"ReactOS %s - List DOS Devices Utility\n"
 		"Written by E.Aliberti (%s)\n\n",
+		KERNEL_RELEASE_STR,
 		__DATE__
 		);
 

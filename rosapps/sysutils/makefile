@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2000/05/28 17:44:51 ea Exp $
+# $Id: makefile,v 1.6 2000/09/11 20:17:02 ea Exp $
 #
 # ReactOS System Utilities
 #
@@ -18,6 +18,9 @@
 # 2000-04-23 (ea)
 #	Added pedump.c
 #
+# 2000-08-4 (ea)
+#	Added ldd.c; removed login.c
+#
 BASE_CFLAGS = -I../../reactos/include
 
 
@@ -32,94 +35,114 @@ IMPORT_USER32=$(ROS_LIB)/user32/user32.a
 IMPORT_CRTDLL=$(ROS_LIB)/crtdll/crtdll.a
 
 TARGET=\
-	regnav.exe \
-	chklib.exe \
-	qsi.exe
-#	pedump.exe \
-#	shutdown.exe \
-#	chkdsk.exe \
-#	format.exe \
+	regnav.exe	\
+	chklib.exe	\
+	qsi.exe		\
+	ldd.exe		\
+	pedump.exe	\
+	shutdown.exe	\
+	chkdsk.exe	\
+	format.exe
 
 all: $(TARGET)
 
 # By Mark Russinovich
 
-chkdsk.exe: chkdsk.o win32err.o wmain.o
+chkdsk.exe: chkdsk.o win32err.o wmain.o chkdsk.coff
 	$(CC) \
-		chkdsk.o \
-		win32err.o \
-		wmain.o \
-		$(IMPORT_FMIFS) \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_CRTDLL) \
+		chkdsk.o	\
+		win32err.o		\
+		wmain.o			\
+		chkdsk.coff		\
+		$(IMPORT_FMIFS)		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
 		-o chkdsk.exe 
 	$(NM) --numeric-sort chkdsk.exe > chkdsk.sym
 
-format.exe: format.o win32err.o wmain.o
+format.exe: format.o win32err.o wmain.o format.coff
 	$(CC) \
-		format.o \
-		win32err.o \
-		wmain.o \
-		$(IMPORT_FMIFS) \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_CRTDLL) \
+		format.o		\
+		win32err.o		\
+		wmain.o			\
+		format.coff		\
+		$(IMPORT_FMIFS)		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
 		-o format.exe
 	$(NM) --numeric-sort format.exe > format.sym
 
 #---
 
-chklib.exe: chklib.o win32err.o
+chklib.exe: chklib.o win32err.o chklib.coff
 	$(CC) \
-		chklib.o \
-		win32err.o \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_CRTDLL) \
+		chklib.o		\
+		win32err.o		\
+		chklib.coff		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
 		-o chklib.exe
 	$(NM) --numeric-sort chklib.exe > chklib.sym
 
 
-regnav.exe: regnav.o win32err.o
+regnav.exe: regnav.o win32err.o regnav.coff
 	$(CC) \
-		regnav.o \
-		win32err.o \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_ADVAPI32) \
-		$(IMPORT_CRTDLL) \
+		regnav.o		\
+		win32err.o		\
+		regnav.coff 		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_ADVAPI32)	\
+		$(IMPORT_CRTDLL)	\
 		-o regnav.exe
 	$(NM) --numeric-sort regnav.exe > regnav.sym
 	
 
-shutdown.exe: shutdown.o win32err.o
+shutdown.exe: shutdown.o win32err.o shutdown.coff
 	$(CC) \
-		shutdown.o \
-		win32err.o \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_USER32) \
-		$(IMPORT_CRTDLL) \
+		shutdown.o		\
+		win32err.o		\
+		shutdown.coff		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_USER32)	\
+		$(IMPORT_CRTDLL)	\
 		-o shutdown.exe
 	$(NM) --numeric-sort shutdown.exe > shutdown.sym
 
-qsi.exe: qsi.o
+qsi.exe: qsi.o qsi.coff
 	$(CC) \
-		qsi.o \
-		$(IMPORT_NTDLL) \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_CRTDLL) \
+		qsi.o			\
+		qsi.coff		\
+		$(IMPORT_NTDLL)		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
 		-o qsi.exe
 	$(NM) --numeric-sort qsi.exe > qsi.sym
 
 qsi.o: qsi.c $(ROS_INC)/ddk/zwtypes.h
 
-pedump.exe: pedump.o
+pedump.exe: pedump.o pedump.coff
 	$(CC) \
-		pedump.o \
-		$(IMPORT_NTDLL) \
-		$(IMPORT_KERNEL32) \
-		$(IMPORT_CRTDLL) \
+		pedump.o		\
+		pedump.coff		\
+		$(IMPORT_NTDLL)		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
 		-o pedump.exe
 	$(NM) --numeric-sort pedump.exe > pedump.sym
 
 pedump.o: pedump.c
+
+ldd.exe: ldd.o win32err.o ldd.coff
+	$(CC) \
+		ldd.o			\
+		win32err.o		\
+		ldd.coff		\
+		$(IMPORT_KERNEL32)	\
+		$(IMPORT_CRTDLL)	\
+		-o ldd.exe
+	$(NM) --numeric-sort ldd.exe > ldd.sym
+
+ldd.o: ldd.c
 
 #---
 
