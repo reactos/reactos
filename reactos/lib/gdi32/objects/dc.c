@@ -226,3 +226,13 @@ SetPolyFillMode(
 	return W32kSetPolyFillMode(a0, a1);
 }
 
+
+int
+STDCALL
+GetDeviceCaps(
+	HDC	DC,
+	int	Index
+	)
+{
+	return W32kGetDeviceCaps(DC, Index);
+}

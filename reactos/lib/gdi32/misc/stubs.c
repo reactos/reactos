@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.16 2003/03/27 03:24:03 rcampbell Exp $
+/* $Id: stubs.c,v 1.17 2003/05/03 13:39:06 gvg Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -514,19 +514,6 @@ GetCurrentPositionEx(
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return FALSE;
-}
-
-
-
-int
-STDCALL
-GetDeviceCaps(
-	HDC	a0,
-	int	a1
-	)
-{
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 

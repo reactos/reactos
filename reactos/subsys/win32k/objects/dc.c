@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.57 2003/03/28 16:20:51 gvg Exp $
+/* $Id: dc.c,v 1.58 2003/05/03 13:39:06 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -223,6 +223,43 @@ static BOOL STDCALL FindDriverFileNames(PUNICODE_STRING DriverFileNames)
   return TRUE;
 }
 
+#ifdef TODO
+static void
+SetupDevCaps(GDIDEVICE *GDIDev)
+{
+  RtlZeroMemory(&(GDIDev->DevCaps), sizeof(DEVICECAPS));
+  GDIDev->DevCaps.version = GDIDev->GDIInfo.ulVersion;
+  GDIDev->DevCaps.technology = GDIDev->GDIInfo.ulTechnology;
+  GDIDev->DevCaps.horzSize = GDIDev->GDIInfo.ulHorzSize;
+  GDIDev->DevCaps.vertSize = GDIDev->GDIInfo.ulVertSize;
+  GDIDev->DevCaps.horzRes = GDIDev->GDIInfo.ulHorzRes;
+  GDIDev->DevCaps.vertRes = GDIDev->GDIInfo.ulVertRes;
+  GDIDev->DevCaps.bitsPixel = GDIDev->GDIInfo.cBitsPixel;
+  GDIDev->DevCaps.planes = GDIDev->GDIInfo.cPlanes;
+  GDIDev->DevCaps.numBrushes = 0; /* FIXME */
+  GDIDev->DevCaps.numPens = 0; /* FIXME */
+  GDIDev->DevCaps.numMarkers = 0; /* FIXME */
+  GDIDev->DevCaps.numFonts = 0; /* FIXME */
+  GDIDev->DevCaps.numColors = GDIDev->GDIInfo.ulNumColors;
+  GDIDev->DevCaps.pdeviceSize = 0; /* FIXME */
+  GDIDev->DevCaps.curveCaps = 0; /* FIXME */
+  GDIDev->DevCaps.lineCaps = 0; /* FIXME */
+  GDIDev->DevCaps.polygonalCaps = 0; /* FIXME */
+  GDIDev->DevCaps.textCaps = GDIDev->GDIInfo.flTextCaps;
+  GDIDev->DevCaps.clipCaps = 0; /* FIXME */
+  GDIDev->DevCaps.rasterCaps = 0; /* FIXME */
+  GDIDev->DevCaps.aspectX = GDIDev->GDIInfo.ulAspectX;
+  GDIDev->DevCaps.aspectY = GDIDev->GDIInfo.ulAspectY;
+  GDIDev->DevCaps.aspectXY = GDIDev->GDIInfo.ulAspectXY;
+  GDIDev->DevCaps.logPixelsX = GDIDev->GDIInfo.ulLogPixelsX;
+  GDIDev->DevCaps.logPixelsY = GDIDev->GDIInfo.ulLogPixelsY;
+  GDIDev->DevCaps.sizePalette = GDIDev->GDIInfo.ulNumPalReg; /* FIXME not sure */
+  GDIDev->DevCaps.numReserved = 0; /* FIXME */
+  GDIDev->DevCaps.colorRes = 0; /* FIXME */
+}
+#endif
+
+
 BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
 {
@@ -396,8 +433,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
     }
   PrimarySurfaceCreated = TRUE;
   NewDC->DMW = PrimarySurface.DMW;
-  NewDC->DevInfo = PrimarySurface.DevInfo;
-  NewDC->GDIInfo = PrimarySurface.GDIInfo;
+  NewDC->DevInfo = &PrimarySurface.DevInfo;
+  NewDC->GDIInfo = &PrimarySurface.GDIInfo;
   memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
 	 sizeof(NewDC->FillPatternSurfaces));
   NewDC->PDev = PrimarySurface.PDev;
@@ -419,7 +456,7 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   NewDC->w.bitsPerPixel = SurfGDI->BitsPerPixel; // FIXME: set this here??
 
-  NewDC->w.hPalette = NewDC->DevInfo.hpalDefault;
+  NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
@@ -595,9 +632,6 @@ HDC STDCALL W32kGetDCState16(HDC  hDC)
   ASSERT( newdc );
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
-#if 0
-  newdc->w.devCaps          = dc->w.devCaps;
-#endif
   newdc->w.hPen             = dc->w.hPen;
   newdc->w.hBrush           = dc->w.hBrush;
   newdc->w.hFont            = dc->w.hFont;
@@ -687,60 +721,193 @@ INT STDCALL W32kGetDeviceCaps(HDC  hDC,
     return 0;
   }
 
-  /* Device capabilities for the printer */
+  /* Retrieve capability */
   switch (Index)
   {
+    case DRIVERVERSION:
+      ret = dc->GDIInfo->ulVersion;
+      break;
+
+    case TECHNOLOGY:
+      ret = dc->GDIInfo->ulTechnology;
+      break;
+
+    case HORZSIZE:
+      ret = dc->GDIInfo->ulHorzSize;
+      break;
+
+    case VERTSIZE:
+      ret = dc->GDIInfo->ulVertSize;
+      break;
+
+    case HORZRES:
+      ret = dc->GDIInfo->ulHorzRes;
+      break;
+
+    case VERTRES:
+      ret = dc->GDIInfo->ulVertRes;
+      break;
+
+    case LOGPIXELSX:
+      ret = dc->GDIInfo->ulLogPixelsX;
+      break;
+
+    case LOGPIXELSY:
+      ret = dc->GDIInfo->ulLogPixelsY;
+      break;
+
+    case BITSPIXEL:
+      ret = dc->GDIInfo->cBitsPixel;
+      break;
+
+    case PLANES:
+      ret = dc->GDIInfo->cPlanes;
+      break;
+
+    case NUMBRUSHES:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case NUMPENS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case NUMFONTS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case NUMCOLORS:
+      ret = dc->GDIInfo->ulNumColors;
+      break;
+
+    case ASPECTX:
+      ret = dc->GDIInfo->ulAspectX;
+      break;
+
+    case ASPECTY:
+      ret = dc->GDIInfo->ulAspectY;
+      break;
+
+    case ASPECTXY:
+      ret = dc->GDIInfo->ulAspectXY;
+      break;
+
+    case PDEVICESIZE:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case CLIPCAPS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case SIZEPALETTE:
+      ret = dc->GDIInfo->ulNumPalReg; /* FIXME not sure */
+      break;
+
+    case NUMRESERVED:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case COLORRES:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
     case PHYSICALWIDTH:
       if(W32kEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.x;
+        ret = pt.x;
+      }
+      else
+      {
+	ret = 0;
       }
       break;
 
     case PHYSICALHEIGHT:
       if(W32kEscape(hDC, GETPHYSPAGESIZE, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.y;
+        ret = pt.y;
+      }
+      else
+      {
+	ret = 0;
       }
       break;
 
     case PHYSICALOFFSETX:
       if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.x;
+        ret = pt.x;
+      }
+      else
+      {
+	ret = 0;
       }
       break;
 
     case PHYSICALOFFSETY:
       if(W32kEscape(hDC, GETPRINTINGOFFSET, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.y;
+        ret = pt.y;
       }
+      else
+      {
+	ret = 0;
+      }
+      break;
+
+    case VREFRESH:
+      UNIMPLEMENTED; /* FIXME */
       break;
 
     case SCALINGFACTORX:
       if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.x;
+        ret = pt.x;
+      }
+      else
+      {
+	ret = 0;
       }
       break;
 
     case SCALINGFACTORY:
       if(W32kEscape(hDC, GETSCALINGFACTOR, 0, NULL, (LPVOID)&pt) > 0)
       {
-        return pt.y;
+        ret = pt.y;
       }
+      else
+      {
+	ret = 0;
+      }
+      break;
+
+    case RASTERCAPS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case CURVECAPS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case LINECAPS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case POLYGONALCAPS:
+      UNIMPLEMENTED; /* FIXME */
+      break;
+
+    case TEXTCAPS:
+      ret = dc->GDIInfo->flTextCaps;
+      break;
+
+    default:
+      ret = 0;
       break;
   }
 
-  if ((Index < 0) || (Index > sizeof(DEVICECAPS) - sizeof(WORD)))
-  {
-    return 0;
-  }
-
-  DPRINT("(%04x,%d): returning %d\n",
-         hDC, Index, *(WORD *)(((char *)dc->w.devCaps) + Index));
-  ret = *(WORD *)(((char *)dc->w.devCaps) + Index);
+  DPRINT("(%04x,%d): returning %d\n", hDC, Index, ret);
 
   DC_ReleasePtr( hDC );
   return ret;
@@ -1182,10 +1349,6 @@ static void  W32kSetDCState16(HDC  hDC, HDC  hDCSave)
   }
 
   dc->w.flags            = dcs->w.flags & ~DC_SAVED;
-
-#if 0
-  dc->w.devCaps          = dcs->w.devCaps;
-#endif
 
   dc->w.hFirstBitmap     = dcs->w.hFirstBitmap;
 

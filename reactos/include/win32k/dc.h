@@ -7,56 +7,9 @@
 #include <win32k/gdiobj.h>
 #include <win32k/path.h>
 
-typedef struct
-{
-  HANDLE Handle;
-  DHPDEV PDev;
-  DEVMODEW DMW;
-  HSURF FillPatterns[HS_DDI_MAX];
-  GDIINFO GDIInfo;
-  DEVINFO DevInfo;
-  DRIVER_FUNCTIONS DriverFunctions;
-} GDIDEVICE;
-
-/*  (RJJ) Taken from WINE  */
-typedef struct _DEVICECAPS
-{
-  WORD   version;       /*   0: driver version */
-  WORD   technology;    /*   2: device technology */
-  WORD   horzSize;      /*   4: width of display in mm */
-  WORD   vertSize;      /*   6: height of display in mm */
-  WORD   horzRes;       /*   8: width of display in pixels */
-  WORD   vertRes;       /*  10: width of display in pixels */
-  WORD   bitsPixel;     /*  12: bits per pixel */
-  WORD   planes;        /*  14: color planes */
-  WORD   numBrushes;    /*  16: device-specific brushes */
-  WORD   numPens;       /*  18: device-specific pens */
-  WORD   numMarkers;    /*  20: device-specific markers */
-  WORD   numFonts;      /*  22: device-specific fonts */
-  WORD   numColors;     /*  24: size of color table */
-  WORD   pdeviceSize;   /*  26: size of PDEVICE structure */
-  WORD   curveCaps;     /*  28: curve capabilities */
-  WORD   lineCaps;      /*  30: line capabilities */
-  WORD   polygonalCaps; /*  32: polygon capabilities */
-  WORD   textCaps;      /*  34: text capabilities */
-  WORD   clipCaps;      /*  36: clipping capabilities */
-  WORD   rasterCaps;    /*  38: raster capabilities */
-  WORD   aspectX;       /*  40: relative width of device pixel */
-  WORD   aspectY;       /*  42: relative height of device pixel */
-  WORD   aspectXY;      /*  44: relative diagonal width of device pixel */
-  WORD   pad1[21];      /*  46-86: reserved */
-  WORD   logPixelsX;    /*  88: pixels / logical X inch */
-  WORD   logPixelsY;    /*  90: pixels / logical Y inch */
-  WORD   pad2[6];       /*  92-102: reserved */
-  WORD   sizePalette;   /* 104: entries in system palette */
-  WORD   numReserved;   /* 106: reserved entries */
-  WORD   colorRes;      /* 108: color resolution */
-} DEVICECAPS, *PDEVICECAPS;
-
 typedef struct _WIN_DC_INFO
 {
   int  flags;
-  const PDEVICECAPS  devCaps;
   HRGN  hClipRgn;     /* Clip region (may be 0) */
   HRGN  hVisRgn;      /* Visible region (must never be 0) */
   HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
@@ -128,8 +81,8 @@ typedef struct _DC
   DHPDEV  PDev;
   DEVMODEW  DMW;
   HSURF  FillPatternSurfaces[HS_DDI_MAX];
-  GDIINFO  GDIInfo;
-  DEVINFO  DevInfo;
+  PGDIINFO  GDIInfo;
+  PDEVINFO  DevInfo;
   HSURF  Surface;
 
   DRIVER_FUNCTIONS  DriverFunctions;
@@ -149,6 +102,17 @@ typedef struct _DC
 
   WIN_DC_INFO  w;
 } DC, *PDC;
+
+typedef struct
+{
+  HANDLE Handle;
+  DHPDEV PDev;
+  DEVMODEW DMW;
+  HSURF FillPatterns[HS_DDI_MAX];
+  GDIINFO GDIInfo;
+  DEVINFO DevInfo;
+  DRIVER_FUNCTIONS DriverFunctions;
+} GDIDEVICE;
 
 /*  Internal functions  */
 

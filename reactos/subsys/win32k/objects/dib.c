@@ -22,7 +22,7 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
 
   if (!(dc = (PDC)AccessUserObject(hDC))) return 0;
 
-  if (!(palette = (PPALOBJ)AccessUserObject(dc->DevInfo.hpalDefault)))
+  if (!(palette = (PPALOBJ)AccessUserObject(dc->DevInfo->hpalDefault)))
   {
 //    GDI_ReleaseObj( hdc );
     return 0;
@@ -48,7 +48,7 @@ UINT STDCALL W32kSetDIBColorTable(HDC  hDC,
     Entries = 0;
   }
 
-//  GDI_ReleaseObj(dc->DevInfo.hpalDefault);
+//  GDI_ReleaseObj(dc->DevInfo->hpalDefault);
 //  GDI_ReleaseObj(hdc);
 
   return Entries;
@@ -125,9 +125,9 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   SourceSurf = (PSURFOBJ)AccessUserObject(SourceBitmap);
 
   // Destination palette obtained from the hDC
-  hDCPalette = (PPALGDI)AccessInternalObject(dc->DevInfo.hpalDefault);
+  hDCPalette = (PPALGDI)AccessInternalObject(dc->DevInfo->hpalDefault);
   DDB_Palette_Type = hDCPalette->Mode;
-  DDB_Palette = dc->DevInfo.hpalDefault;
+  DDB_Palette = dc->DevInfo->hpalDefault;
 
   // Source palette obtained from the BITMAPINFO
   DIB_Palette = BuildDIBPalette(bmi, &DIB_Palette_Type);
@@ -695,7 +695,7 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
   DWORD *lpIndex;
   PPALOBJ palObj;
 
-  palObj = AccessUserObject(dc->DevInfo.hpalDefault);
+  palObj = AccessUserObject(dc->DevInfo->hpalDefault);
 
   if (palObj == NULL) {
 //      RELEASEDCINFO(hDC);

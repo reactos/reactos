@@ -251,17 +251,17 @@ UINT STDCALL W32kGetSystemPaletteEntries(HDC  hDC,
 
   if (!pe)
   {
-    Entries = dc->devCaps->sizePalette;
+    Entries = dc->GDIInfo->ulNumPalReg;
     goto done;
   }
 
-  if (StartIndex >= dc->devCaps->sizePalette)
+  if (StartIndex >= dc->GDIInfo->ulNumPalReg)
   {
     Entries = 0;
     goto done;
   }
 
-  if (StartIndex + Entries >= dc->devCaps->sizePalette) Entries = dc->devCaps->sizePalette - StartIndex;
+  if (StartIndex + Entries >= dc->GDIInfo->ulNumPalReg) Entries = dc->GDIInfo->ulNumPalReg - StartIndex;
 
   for (i = 0; i < Entries; i++)
   {
@@ -469,7 +469,7 @@ BOOL STDCALL W32kUpdateColors(HDC  hDC)
   int size;
 /*
   if (!(dc = AccessUserObject(hDC))) return 0;
-  size = dc->devCaps->sizePalette;
+  size = dc->GDIInfo->ulNumPalReg;
 //  GDI_ReleaseObj( hDC );
 
   if (Callout.WindowFromDC)
