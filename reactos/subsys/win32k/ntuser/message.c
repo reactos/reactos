@@ -1123,7 +1123,6 @@ NtUserPostMessage(HWND Wnd,
     }
   else
     {
-      PSYSTEM_CURSORINFO CurInfo;
       Window = IntGetWindowObject(Wnd);
       if (NULL == Window)
         {
@@ -1149,9 +1148,8 @@ NtUserPostMessage(HWND Wnd,
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
           return FALSE;
         }
-      CurInfo = IntGetSysCursorInfo(PsGetWin32Thread()->Desktop->WindowStation);
-      KernelModeMsg.pt.x = CurInfo->x;
-      KernelModeMsg.pt.y = CurInfo->y;
+      IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
+                           &KernelModeMsg.pt);
       KeQueryTickCount(&LargeTickCount);
       KernelModeMsg.time = LargeTickCount.u.LowPart;
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,

@@ -37,7 +37,6 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL Enabled;
   BOOL SwapButtons;
   UINT ButtonsDown;
-  LONG x, y;
   FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
@@ -56,6 +55,8 @@ BOOL FASTCALL IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
 PCURICON_OBJECT FASTCALL IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle);
 PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
 VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
+
+BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
 
 #define IntGetSysCursorInfo(WinStaObj) \
   (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)

@@ -263,7 +263,6 @@ NtUserCallOneParam(
     
     case ONEPARAM_ROUTINE_GETCURSORPOSITION:
     {
-      PSYSTEM_CURSORINFO CurInfo;
       PWINSTATION_OBJECT WinStaObject;
       NTSTATUS Status;
       POINT Pos;
@@ -277,10 +276,8 @@ NtUserCallOneParam(
       if (!NT_SUCCESS(Status))
         return (DWORD)FALSE;
       
-      CurInfo = IntGetSysCursorInfo(WinStaObject);
       /* FIXME - check if process has WINSTA_READATTRIBUTES */
-      Pos.x = CurInfo->x;
-      Pos.y = CurInfo->y;
+      IntGetCursorLocation(WinStaObject, &Pos);
       
       Status = MmCopyToCaller((PPOINT)Param, &Pos, sizeof(POINT));
       if(!NT_SUCCESS(Status))

@@ -68,9 +68,9 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       tmp = HazardY2; HazardY2 = HazardY1; HazardY1 = tmp;
     }
 
-  pgp->SafetyRemoveCount++;
+  ppdev->SafetyRemoveCount++;
 
-  if (pgp->SafetyRemoveLevel)
+  if (ppdev->SafetyRemoveLevel)
     {
       /* already hidden */
       return FALSE;
@@ -81,7 +81,7 @@ MouseSafetyOnDrawStart(SURFOBJ *SurfObj, LONG HazardX1,
       && pgp->Exclude.bottom >= HazardY1
       && pgp->Exclude.top <= HazardY2)
     {
-      pgp->SafetyRemoveLevel = pgp->SafetyRemoveCount;
+      ppdev->SafetyRemoveLevel = ppdev->SafetyRemoveCount;
       if (pgp->MovePointer)
         pgp->MovePointer(SurfObj, -1, -1, NULL);
       else
@@ -100,6 +100,8 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
   GDIDEVICE *ppdev;
   GDIPOINTER *pgp;
 
+  ASSERT(WinSta);
+
   ASSERT(SurfObj != NULL);
 
   ppdev = GDIDEV(SurfObj);
@@ -117,22 +119,16 @@ MouseSafetyOnDrawEnd(SURFOBJ *SurfObj)
     return FALSE;
   }
 
-  if (--pgp->SafetyRemoveCount >= pgp->SafetyRemoveLevel)
+  if (--ppdev->SafetyRemoveCount >= ppdev->SafetyRemoveLevel)
    {
       return FALSE;
    }
-   /* FIXME - this is wrong!!!!!! we must NOT access pgp->Pos from here, it's
-	      a private field for ENG/driver. This will paint the cursor to the
-	      wrong screen coordinates when a driver overrides DrvMovePointer()!
-	      We should store the coordinates before calling Drv/EngMovePointer()
-	      and Drv/EngSetPointerShape() separately in the GDIDEVICE structure
-	      or somewhere where ntuser can access it! */
   if (pgp->MovePointer)
     pgp->MovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
   else
     EngMovePointer(SurfObj, pgp->Pos.x, pgp->Pos.y, &pgp->Exclude);
 
-  pgp->SafetyRemoveLevel = 0;
+  ppdev->SafetyRemoveLevel = 0;
 
   return(TRUE);
 }
@@ -368,6 +364,8 @@ EngSetPointerShape(
    pgp->HotSpot.x = xHot;
    pgp->HotSpot.y = yHot;
 
+   /* Actually this should be set by 'the other side', but it would be
+    * done right after this. It helps IntShowMousePointer. */
    if (x != -1)
    {
      pgp->Pos.x = x;
@@ -472,14 +470,13 @@ EngSetPointerShape(
      
      if (prcl != NULL)
      {
-       prcl->left = pgp->Pos.x - pgp->HotSpot.x;
-       prcl->top = pgp->Pos.y - pgp->HotSpot.x;
+       prcl->left = x - pgp->HotSpot.x;
+       prcl->top = y - pgp->HotSpot.x;
        prcl->right = prcl->left + pgp->Size.cx;
        prcl->bottom = prcl->top + pgp->Size.cy;
      }
-   }
-   
-   /* FIXME - touch prcl when x == -1? */
+   } else if (prcl != NULL)
+     prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
 
    return SPS_ACCEPT_EXCLUDE;
 }
@@ -509,19 +506,21 @@ EngMovePointer(
    IntHideMousePointer(ppdev, pso);
    if (x != -1)
    {
+     /* Actually this should be set by 'the other side', but it would be
+      * done right after this. It helps IntShowMousePointer. */
      pgp->Pos.x = x;
      pgp->Pos.y = y;
      IntShowMousePointer(ppdev, pso);
      if (prcl != NULL)
      {
-       prcl->left = pgp->Pos.x - pgp->HotSpot.x;
-       prcl->top = pgp->Pos.y - pgp->HotSpot.x;
+       prcl->left = x - pgp->HotSpot.x;
+       prcl->top = y - pgp->HotSpot.x;
        prcl->right = prcl->left + pgp->Size.cx;
        prcl->bottom = prcl->top + pgp->Size.cy;
      }
-   }
+   } else if (prcl != NULL)
+     prcl->left = prcl->top = prcl->right = prcl->bottom = -1;
    
-   /* FIXME - touch prcl when x == -1? */
 }
 
 /* EOF */

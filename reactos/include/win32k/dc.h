@@ -124,9 +124,6 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
   PGD_MOVEPOINTER MovePointer;
   ULONG Status;
-  UINT SafetyRemoveLevel; /* at what level was the cursor removed?
-			     0 for not removed */
-  UINT SafetyRemoveCount;
 } GDIPOINTER, *PGDIPOINTER;
 
 typedef struct
@@ -141,6 +138,11 @@ typedef struct
   PFILE_OBJECT VideoFileObject;
 
   GDIPOINTER Pointer;
+
+  /* Stuff to keep track of software cursors; win32k gdi part */
+  UINT SafetyRemoveLevel; /* at what level was the cursor removed?
+			     0 for not removed */
+  UINT SafetyRemoveCount;
 } GDIDEVICE;
 
 /*  Internal functions  */

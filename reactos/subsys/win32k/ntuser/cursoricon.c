@@ -42,6 +42,40 @@ static PAGED_LOOKASIDE_LIST ProcessLookasideList;
 static LIST_ENTRY CurIconList;
 static FAST_MUTEX CurIconListLock;
 
+/* Look up the location of the cursor in the GDIDEVICE structure
+ * when all we know is the window station object
+ * Actually doesn't use the window station, but should... */
+BOOL FASTCALL
+IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc)
+{
+  HDC hDC;
+  PDC dc;
+  HBITMAP hBitmap;
+  BITMAPOBJ *BitmapObj;
+  SURFOBJ *SurfObj;
+
+#if 1
+  /* FIXME - get the screen dc from the window station or desktop */
+  if (!(hDC = IntGetScreenDC())) 
+    return FALSE;
+#endif
+
+  if (!(dc = DC_LockDc(hDC)))
+    return FALSE;
+    
+  hBitmap = dc->w.hBitmap;
+  DC_UnlockDc(hDC);                                                                                 
+  if (!(BitmapObj = BITMAPOBJ_LockBitmap(hBitmap)))
+    return FALSE;
+
+  SurfObj = &BitmapObj->SurfObj;
+  loc->x = GDIDEV(SurfObj)->Pointer.Pos.x;
+  loc->y = GDIDEV(SurfObj)->Pointer.Pos.y;
+
+  BITMAPOBJ_UnlockBitmap(hBitmap);
+  return TRUE;
+}
+
 PCURICON_OBJECT FASTCALL
 IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
 {
@@ -116,10 +150,9 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       {
          /* Remove the cursor if it was displayed */
          if (GDIDEV(SurfObj)->Pointer.MovePointer)
-           GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, -1, -1, NULL);
+           GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
          else
-           EngMovePointer(SurfObj, -1, -1, NULL);
-         GDIDEV(SurfObj)->Pointer.Exclude.right = -1;
+           EngMovePointer(SurfObj, -1, -1, &GDIDEV(SurfObj)->Pointer.Exclude);
       }
 
       GDIDEV(SurfObj)->Pointer.Status = SPS_ACCEPT_NOEXCLUDE;
@@ -218,8 +251,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                                                         SurfObj, soMask, soColor, XlateObj,
                                                         NewCursor->IconInfo.xHotspot,
                                                         NewCursor->IconInfo.yHotspot,
-                                                        CurInfo->x, 
-                                                        CurInfo->y, 
+                                                        GDIDEV(SurfObj)->Pointer.Pos.x,
+                                                        GDIDEV(SurfObj)->Pointer.Pos.y,
                                                         &(GDIDEV(SurfObj)->Pointer.Exclude),
                                                         SPS_CHANGE);
       DPRINT("SetCursor: DrvSetPointerShape() returned %x\n",
@@ -236,8 +269,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
                          SurfObj, soMask, soColor, XlateObj,
                          NewCursor->IconInfo.xHotspot,
                          NewCursor->IconInfo.yHotspot,
-                         CurInfo->x, 
-                         CurInfo->y, 
+                         GDIDEV(SurfObj)->Pointer.Pos.x, 
+                         GDIDEV(SurfObj)->Pointer.Pos.y, 
                          &(GDIDEV(SurfObj)->Pointer.Exclude),
                          SPS_CHANGE);
       GDIDEV(SurfObj)->Pointer.MovePointer = EngMovePointer;
@@ -760,6 +793,16 @@ NtUserGetCursorInfo(
   PWINSTATION_OBJECT WinStaObject;
   NTSTATUS Status;
   PCURICON_OBJECT CursorObject;
+
+#if 1
+  HDC hDC;
+
+  /* FIXME - get the screen dc from the window station or desktop */
+  if (!(hDC = IntGetScreenDC()))
+  {
+    return FALSE;
+  }
+#endif
   
   Status = MmCopyFromCaller(&SafeCi.cbSize, pci, sizeof(DWORD));
   if(!NT_SUCCESS(Status))
@@ -785,9 +828,9 @@ NtUserGetCursorInfo(
   
   SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
   SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Self : (HCURSOR)0);
-  SafeCi.ptScreenPos.x = CurInfo->x;
-  SafeCi.ptScreenPos.y = CurInfo->y;
-  
+
+  IntGetCursorLocation(WinStaObject, &SafeCi.ptScreenPos);
+
   Status = MmCopyToCaller(pci, &SafeCi, sizeof(CURSORINFO));
   if(!NT_SUCCESS(Status))
   {
@@ -815,6 +858,7 @@ NtUserClipCursor(
   PSYSTEM_CURSORINFO CurInfo;
   RECT Rect;
   PWINDOW_OBJECT DesktopWindow = NULL;
+  POINT MousePos;
 
   WinStaObject = IntGetWinStaObj();
   if (WinStaObject == NULL)
@@ -830,6 +874,8 @@ NtUserClipCursor(
   }
   
   CurInfo = IntGetSysCursorInfo(WinStaObject);
+  IntGetCursorLocation(WinStaObject, &MousePos);
+
   if(WinStaObject->ActiveDesktop)
     DesktopWindow = IntGetWindowObject(WinStaObject->ActiveDesktop->DesktopWindow);
   
@@ -845,8 +891,8 @@ NtUserClipCursor(
     CurInfo->CursorClipInfo.Bottom = min(Rect.bottom - 1, DesktopWindow->WindowRect.bottom - 1);
     IntReleaseWindowObject(DesktopWindow);
     
-    mi.dx = CurInfo->x;
-    mi.dy = CurInfo->y;
+    mi.dx = MousePos.x;
+    mi.dy = MousePos.y;
     mi.mouseData = 0;
     mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
     mi.time = 0;

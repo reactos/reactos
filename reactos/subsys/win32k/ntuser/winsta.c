@@ -389,8 +389,6 @@ NtUserCreateWindowStation(
    ExInitializeFastMutex(&CurInfo->CursorMutex);
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;
-   CurInfo->x = (LONG)0;
-   CurInfo->y = (LONG)0;
    CurInfo->CursorClipInfo.IsClipped = FALSE;
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
