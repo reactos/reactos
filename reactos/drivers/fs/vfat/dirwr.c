@@ -45,7 +45,7 @@ VfatUpdateEntry (PVFATFCB pFcb)
       return STATUS_SUCCESS;
     }
 
-  ASSERT (pFcb->parrentFcb);
+  ASSERT (pFcb->parentFcb);
   
   Offset.u.HighPart = 0;
   Offset.u.LowPart = dirIndex * SizeDirEntry;

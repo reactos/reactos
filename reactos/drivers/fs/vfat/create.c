@@ -186,7 +186,7 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
  */
 {
   PWCHAR PathNameBuffer;
-  ULONG PathNameBufferLength;
+  USHORT PathNameBufferLength;
   NTSTATUS Status;
   PVOID Context = NULL;
   PVOID Page;

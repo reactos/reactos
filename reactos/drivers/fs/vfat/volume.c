@@ -204,7 +204,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   LabelLen = FsLabelInfo->VolumeLabelLength / sizeof(WCHAR);
   RtlZeroMemory(&VolumeLabelDirEntry, SizeDirEntry);
   StringW.Buffer = FsLabelInfo->VolumeLabel;
-  StringW.Length = StringW.MaximumLength = FsLabelInfo->VolumeLabelLength;
+  StringW.Length = StringW.MaximumLength = (USHORT)FsLabelInfo->VolumeLabelLength;
   StringO.Buffer = cString;
   StringO.Length = 0;
   StringO.MaximumLength = 42;
@@ -288,7 +288,7 @@ FsdSetFsLabelInformation(PDEVICE_OBJECT DeviceObject,
   }
   
   /* Update volume label in memory */
-  DeviceObject->Vpb->VolumeLabelLength = FsLabelInfo->VolumeLabelLength;
+  DeviceObject->Vpb->VolumeLabelLength = (USHORT)FsLabelInfo->VolumeLabelLength;
   RtlCopyMemory(DeviceObject->Vpb->VolumeLabel, FsLabelInfo->VolumeLabel, DeviceObject->Vpb->VolumeLabelLength);
   
   return Status;
