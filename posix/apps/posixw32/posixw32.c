@@ -1,4 +1,4 @@
-/* $Id: posixw32.c,v 1.4 2003/08/28 20:01:23 ea Exp $
+/* $Id$
  *
  * PROJECT    : ReactOS Operating System / POSIX+ Environment Subsystem
  * DESCRIPTION: POSIXW32 - A DEC VT-100 terminal emulator for the PSX subsystem
@@ -39,6 +39,7 @@
 
 #define NTOS_MODE_USER
 #include <ntos.h>
+#include <sm/helper.h>
 #include <psx/lpcproto.h>
 
 #include "vt100.h"
@@ -53,7 +54,8 @@
 #ifdef NDEBUG
 #define TRACE
 #else
-#define TRACE OutputDebugString(__FUNCTION__)
+//#define TRACE OutputDebugString(__FUNCTION__)
+#define TRACE vtprintf("%s\n",__FUNCTION__)
 #endif
 
 /*** GLOBALS *********************************************************/
@@ -347,7 +349,31 @@ TRACE;
     }
     return Status;
 }
+/**********************************************************************
+ * 	RunPsxSs/0
+ *
+ * DESCRIPTION
+ * 	This function is called only when initializing the session
+ * 	with PSXSS fails. We assume that it failed because the
+ * 	subsystem, being optional, is not running, therefore we
+ * 	ask the SM to start it up.
+ */
+PRIVATE NTSTATUS RunPsxSs(VOID)
+{
+	NTSTATUS Status;
+	HANDLE   SmApiPort;
+	UNICODE_STRING Program;
 
+	RtlInitUnicodeString (& Program, L"POSIX");
+	Status = SmConnectApiPort (NULL, 0, 0, & SmApiPort);
+	if(!NT_SUCCESS(Status))
+	{
+		return Status;
+	}
+	Status = SmExecuteProgram (SmApiPort, & Program);
+	NtClose (SmApiPort);
+	return Status;
+}
 /**********************************************************************
  *	CreateTerminalToPsxChannel/0				PRIVATE
  *
@@ -360,6 +386,7 @@ PRIVATE NTSTATUS STDCALL CreateTerminalToPsxChannel (VOID)
     ULONG                        ConnectDataLength = sizeof ConnectData;
     SECURITY_QUALITY_OF_SERVICE  Sqos;
     NTSTATUS                     Status;
+    LONG			 Count = 2;
 
 TRACE;
 
@@ -374,22 +401,32 @@ TRACE;
      * Try connecting to \POSIX+\SessionPort.
      */
     RtlInitUnicodeString (& Session.ServerPort.Name, Session.ServerPort.NameBuffer);
-    OutputDebugStringW(Session.ServerPort.Name.Buffer);
-    Status = NtConnectPort (
-                & Session.ServerPort.Handle,
-                & Session.ServerPort.Name,
-                & Sqos,
-                NULL,
-                NULL,
-                0,
-                & ConnectData,
-                & ConnectDataLength
-                );
-    if (STATUS_SUCCESS != Status)
+    while (Count--)
     {
-        vtprintf ("%s: %s: NtConnectPort failed with %08x\n",
-            MyName, __FUNCTION__, Status);
-        return Status;
+	    OutputDebugStringW(Session.ServerPort.Name.Buffer);
+	    Status = NtConnectPort (
+        	        & Session.ServerPort.Handle,
+                	& Session.ServerPort.Name,
+	                & Sqos,
+        	        NULL,
+                	NULL,
+	                0,
+        	        & ConnectData,
+                	& ConnectDataLength
+	                );
+	    if (STATUS_SUCCESS != Status)
+	    {
+	        if(Count)
+		{
+		    vtprintf("%s: %s: asking SM to start PSXSS...\n",MyName,__FUNCTION__);
+		    RunPsxSs();
+		    continue;
+		}
+        	vtprintf ("%s: %s: NtConnectPort failed with %08x\n",
+	            MyName, __FUNCTION__, Status);
+        	return Status;
+	    }
+	    break;
     }
     Session.Identifier = ConnectData.PortIdentifier;
     return STATUS_SUCCESS;
@@ -399,9 +436,9 @@ TRACE;
  *	InitializeSsIoChannel					PRIVATE
  *
  * DESCRIPTION
- *	Create our objects in the system name space
- *	(CreateSessionObjects) and then connect to the session port
- *	(CreateControChannel).
+ *	Connect to the session port (CreateControChannel) of the PSX
+ *	subsystem. If that succeeds, create our objects in the system
+ *	name space (CreateSessionObjects).
  */
 PRIVATE NTSTATUS STDCALL InitializeSsIoChannel (VOID)
 {
@@ -411,18 +448,18 @@ PRIVATE NTSTATUS STDCALL InitializeSsIoChannel (VOID)
 TRACE;
 
 
-	Status = CreateSessionObjects (Pid);
-	if (STATUS_SUCCESS != Status)
-	{
-		vtprintf ("%s: %s: CreateSessionObjects failed with %08x\n",
-                    MyName, __FUNCTION__, Status);
-		return Status;
-	}
 	Status = CreateTerminalToPsxChannel ();
 	if (STATUS_SUCCESS != Status)
 	{
 		vtprintf ("%s: %s: CreateTerminalToPsxChannel failed with %08x\n",
 		    MyName, __FUNCTION__, Status);
+		return Status;
+	}
+	Status = CreateSessionObjects (Pid);
+	if (STATUS_SUCCESS != Status)
+	{
+		vtprintf ("%s: %s: CreateSessionObjects failed with %08x\n",
+                    MyName, __FUNCTION__, Status);
 		return Status;
 	}
 	return STATUS_SUCCESS;

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2003/01/05 18:27:19 robd Exp $
+# $Id$
 #
 # Win32 Terminal Emulator for the POSIX+ subsystem.
 #
@@ -15,7 +15,7 @@ TARGET_APPTYPE = console
 
 TARGET_CFLAGS = -I$(PATH_TO_TOP_PSX)/include
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = ntdll.a smdll.a kernel32.a
 
 TARGET_OBJECTS = \
 	$(TARGET_NAME).o \
