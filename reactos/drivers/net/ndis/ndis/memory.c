@@ -11,7 +11,7 @@
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NDIS_STATUS
 EXPORT
