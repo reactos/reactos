@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.13 2001/08/07 14:10:41 ekohl Exp $
+/* $Id: env.c,v 1.14 2002/07/05 17:23:05 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -26,81 +26,83 @@ NTSTATUS STDCALL
 RtlCreateEnvironment(BOOLEAN Inherit,
 		     PWSTR *Environment)
 {
-	MEMORY_BASIC_INFORMATION MemInfo;
-	PVOID EnvPtr = NULL;
-	NTSTATUS Status = STATUS_SUCCESS;
-	ULONG RegionSize = PAGESIZE;
+  MEMORY_BASIC_INFORMATION MemInfo;
+  PVOID EnvPtr = NULL;
+  NTSTATUS Status = STATUS_SUCCESS;
+  ULONG RegionSize = PAGESIZE;
 
-	if (Inherit == TRUE)
-	{
-		RtlAcquirePebLock ();
+  if (Inherit == TRUE)
+    {
+      RtlAcquirePebLock();
 #if 0
-		if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
-		{
-			Status = NtQueryVirtualMemory (NtCurrentProcess (),
-			                               NtCurrentPeb ()->ProcessParameters->Environment,
-			                               MemoryBasicInformation,
-			                               &MemInfo,
-			                               sizeof(MEMORY_BASIC_INFORMATION),
-			                               NULL);
-			if (!NT_SUCCESS(Status))
-			{
-				RtlReleasePebLock ();
-				*Environment = NULL;
-				return Status;
-			}
-
-			RegionSize = MemInfo.RegionSize;
-			Status = NtAllocateVirtualMemory (NtCurrentProcess (),
-			                                  &EnvPtr,
-			                                  0,
-			                                  &RegionSize,
-			                                  MEM_RESERVE | MEM_COMMIT,
-			                                  PAGE_READWRITE);
-			if (!NT_SUCCESS(Status))
-			{
-				RtlReleasePebLock ();
-				*Environment = NULL;
-				return Status;
-			}
-
-			memmove (EnvPtr,
-			         NtCurrentPeb ()->ProcessParameters->Environment,
-			         MemInfo.RegionSize);
-
-			*Environment = EnvPtr;
-		}
-#endif
-		RtlReleasePebLock ();
-	}
-	else
+      if (NtCurrentPeb()->ProcessParameters->Environment != NULL)
 	{
-		Status = NtAllocateVirtualMemory (NtCurrentProcess (),
-		                                  &EnvPtr,
-		                                  0,
-		                                  &RegionSize,
-		                                  MEM_RESERVE | MEM_COMMIT,
-		                                  PAGE_READWRITE);
-		if (NT_SUCCESS(Status))
-		{
-			memset (EnvPtr, 0, RegionSize);
-			*Environment = EnvPtr;
-		}
-	}
+	  Status = NtQueryVirtualMemory(NtCurrentProcess(),
+					NtCurrentPeb()->ProcessParameters->Environment,
+					MemoryBasicInformation,
+					&MemInfo,
+					sizeof(MEMORY_BASIC_INFORMATION),
+					NULL);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      RtlReleasePebLock();
+	      *Environment = NULL;
+	      return(Status);
+	    }
 
-	return Status;
+	  RegionSize = MemInfo.RegionSize;
+	  Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+					   &EnvPtr,
+					   0,
+					   &RegionSize,
+					   MEM_RESERVE | MEM_COMMIT,
+					   PAGE_READWRITE);
+	  if (!NT_SUCCESS(Status))
+	    {
+	      RtlReleasePebLock();
+	      *Environment = NULL;
+	      return(Status);
+	    }
+
+	  memmove(EnvPtr,
+		  NtCurrentPeb ()->ProcessParameters->Environment,
+		  MemInfo.RegionSize);
+
+	  *Environment = EnvPtr;
+	}
+#endif
+      RtlReleasePebLock ();
+    }
+  else
+    {
+      Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+				       &EnvPtr,
+				       0,
+				       &RegionSize,
+				       MEM_RESERVE | MEM_COMMIT,
+				       PAGE_READWRITE);
+      if (NT_SUCCESS(Status))
+	{
+	  memset(EnvPtr,
+		 0,
+		 RegionSize);
+	  *Environment = EnvPtr;
+	}
+    }
+
+  return(Status);
 }
 
 
 VOID STDCALL
 RtlDestroyEnvironment(PWSTR Environment)
 {
-   ULONG Size = 0;
+  ULONG Size = 0;
 
-   NtFreeVirtualMemory(NtCurrentProcess(),
-		       (PVOID*)&Environment,
-		       &Size,
-		       MEM_RELEASE);
+  NtFreeVirtualMemory(NtCurrentProcess(),
+		      (PVOID*)&Environment,
+		      &Size,
+		      MEM_RELEASE);
 }
 
 
@@ -193,20 +195,20 @@ VOID STDCALL
 RtlSetCurrentEnvironment(PWSTR NewEnvironment,
 			 PWSTR *OldEnvironment)
 {
-   PVOID EnvPtr;
+  PVOID EnvPtr;
 
-   DPRINT ("NewEnvironment %x OldEnvironment %x\n",
-	   NewEnvironment, OldEnvironment);
+  DPRINT("NewEnvironment %x OldEnvironment %x\n",
+	 NewEnvironment, OldEnvironment);
 
-   RtlAcquirePebLock();
+  RtlAcquirePebLock();
 
-   EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
-   NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
+  EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
+  NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
 
-   if (OldEnvironment != NULL)
-     *OldEnvironment = EnvPtr;
+  if (OldEnvironment != NULL)
+    *OldEnvironment = EnvPtr;
 
-   RtlReleasePebLock();
+  RtlReleasePebLock();
 }
 
 
@@ -215,191 +217,246 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
 			  PUNICODE_STRING Name,
 			  PUNICODE_STRING Value)
 {
-	MEMORY_BASIC_INFORMATION mbi;
-	UNICODE_STRING var;
-	int     hole_len, new_len, env_len = 0;
-	WCHAR   *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
-	PWSTR head = NULL;
-	ULONG size = 0, new_size;
-	LONG f = 1;
-	NTSTATUS Status = STATUS_SUCCESS;
+  MEMORY_BASIC_INFORMATION mbi;
+  UNICODE_STRING var, ExpandedValue;
+  int hole_len, new_len, env_len = 0;
+  WCHAR *new_env = 0, *env_end = 0, *wcs, *env, *val = 0, *tail = 0, *hole = 0;
+  PWSTR head = NULL;
+  ULONG size = 0, new_size;
+  LONG f = 1;
+  NTSTATUS Status = STATUS_SUCCESS;
 
-	DPRINT ("RtlSetEnvironmentVariable Environment %p Name %wZ Value %wZ\n",
-	        Environment, Name, Value);
+  DPRINT("RtlSetEnvironmentVariable(Environment %p Name %wZ Value %wZ)\n",
+	 Environment, Name, Value);
 
-	if (Environment)
+  if (Environment)
+    {
+      env = *Environment;
+    }
+  else
+    {
+      RtlAcquirePebLock();
+      env = NtCurrentPeb()->ProcessParameters->Environment;
+    }
+
+  if (env)
+    {
+      /* get environment length */
+      wcs = env_end = env;
+      while (*env_end)
+	while (*env_end++)
+	  ;
+      env_end++;
+      env_len = env_end - env;
+      DPRINT("environment length %ld characters\n", env_len);
+
+      /* find where to insert */
+      while (*wcs)
 	{
-		env = *Environment;
-	}
-	else
-	{
-		RtlAcquirePebLock();
-		env = NtCurrentPeb()->ProcessParameters->Environment;
-	}
-
-	if (env)
-	{
-		/* get environment length */
-		wcs = env_end = env;
-		while (*env_end)
-			while (*env_end++)
-				;
-		env_end++;
-		env_len = env_end - env;
-		DPRINT ("environment length %ld characters\n", env_len);
-
-		/* find where to insert */
-		while (*wcs)
+	  for (var.Buffer = wcs++; *wcs && *wcs != L'='; wcs++)
+	    ;
+	  if (*wcs)
+	    {
+	      var.Length = (wcs - var.Buffer) * sizeof(WCHAR);
+	      var.MaximumLength = var.Length;
+	      for ( val = ++wcs; *wcs; wcs++)
+		;
+	      f = RtlCompareUnicodeString(&var, Name, TRUE);
+	      if (f >= 0)
 		{
-			for (var.Buffer = wcs++; *wcs && *wcs != L'='; wcs++);
-			if (*wcs)
-			{
-				var.Length        = (wcs - var.Buffer) * sizeof(WCHAR);
-				var.MaximumLength = var.Length;
-				for ( val = ++wcs; *wcs; wcs++);
-				f = RtlCompareUnicodeString (&var, Name, TRUE);
-				if (f >= 0)
-				{
-					if (f) /* Insert before found */
-					{
-						hole = tail = var.Buffer;
-					}
-					else /* Exact match */
-					{
-						head = var.Buffer;
-						tail = ++wcs;
-						hole = val;
-					}
-					goto found;
-				}
-			}
-			wcs++;
+		  if (f) /* Insert before found */
+		    {
+		      hole = tail = var.Buffer;
+		    }
+		  else /* Exact match */
+		    {
+		      head = var.Buffer;
+		      tail = ++wcs;
+		      hole = val;
+		    }
+		  goto found;
 		}
-		hole = tail = wcs; /* Append to environment */
+	    }
+	  wcs++;
 	}
+      hole = tail = wcs; /* Append to environment */
+    }
 
 found:
-	if (Value->Length > 0)
+  /* Perform inline replacement if Value references existing vars */
+  /* ex: SET PATH=C:\MinGW\Bin;%PATH% */
+
+  ExpandedValue.MaximumLength = (env_len + Value->Length) * 2 * sizeof(WCHAR);
+  ExpandedValue.Buffer = RtlAllocateHeap(RtlGetProcessHeap(),
+					 0,
+					 ExpandedValue.MaximumLength + 1);
+  if (ExpandedValue.Buffer == NULL)
+    {
+      if (Environment == NULL)
 	{
-		hole_len = tail - hole;
-		/* calculate new environment size */
-		new_size = Value->Length + sizeof(WCHAR);
-		/* adding new variable */
-		if (f)
-			new_size += Name->Length + sizeof(WCHAR);
-		new_len = new_size / sizeof(WCHAR);
-		if (hole_len < new_len)
-		{
-			/* we must enlarge environment size */
-			/* let's check the size of available memory */
-			new_size += (env_len - hole_len) * sizeof(WCHAR);
-			new_size = ROUNDUP(new_size, PAGESIZE);
-			mbi.RegionSize = 0;
-			DPRINT("new_size %lu\n", new_size);
-
-			if (env)
-			{
-				Status = NtQueryVirtualMemory (NtCurrentProcess (),
-				                               env,
-				                               0,
-				                               &mbi,
-				                               sizeof(mbi),
-				                               NULL);
-				if (!NT_SUCCESS(Status))
-				{
-				   if (Environment == NULL)
-				     {
-					RtlReleasePebLock ();
-				     }
-				   return Status;
-				}
-			}
-
-			if (new_size > mbi.RegionSize)
-			{
-				/* reallocate memory area */
-				Status = NtAllocateVirtualMemory (NtCurrentProcess (),
-				                                  (VOID**)&new_env,
-				                                  0,
-				                                  &new_size,
-				                                  MEM_RESERVE | MEM_COMMIT,
-				                                  PAGE_READWRITE);
-				if (!NT_SUCCESS(Status))
-				{
-				   if (Environment == NULL)
-				     {
-					RtlReleasePebLock ();
-				     }
-				   return Status;
-				}
-
-				if (env)
-				{
-					memmove (new_env,
-					         env,
-					         (hole - env) * sizeof(WCHAR));
-					hole = new_env + (hole - env);
-				}
-				else
-				{
-					/* absolutely new environment */
-					tail = hole = new_env;
-					*hole = 0;
-					env_end = hole + 1;
-				}
-			}
-		}
-
-		/* move tail */
-		memmove (hole + new_len, tail, (env_end - tail) * sizeof(WCHAR));
-
-		if (new_env)
-		{
-			/* we reallocated environment, let's free the old one */
-			if (Environment)
-				*Environment = new_env;
-			else
-				NtCurrentPeb()->ProcessParameters->Environment = new_env;
-
-			if (env)
-			{
-				size = 0;
-				NtFreeVirtualMemory (NtCurrentProcess (),
-				                     (PVOID*)&env,
-				                     &size,
-				                     MEM_RELEASE);
-			}
-		}
-
-		/* and now copy given stuff */
-		if (f)
-		{
-			/* copy variable name and '=' character */
-			memmove (hole, Name->Buffer, Name->Length);
-			hole += Name->Length / sizeof(WCHAR);
-			*hole++ = L'=';
-		}
-
-		/* copy value */
-		memmove (hole, Value->Buffer, Value->Length);
-		hole += Value->Length / sizeof(WCHAR);
-		*hole = 0;
+	  RtlReleasePebLock();
 	}
-	else
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
+  ExpandedValue.Length = 0;
+  ExpandedValue.Buffer[0] = (WCHAR)'\0';
+
+  Status = RtlExpandEnvironmentStrings_U(env,
+					 Value,
+					 &ExpandedValue,
+					 NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeHeap(RtlGetProcessHeap(),
+		  0,
+		  ExpandedValue.Buffer);
+      if (Environment == NULL)
 	{
-		/* remove the environment variable */
-		if (f == 0)
-			memmove (head,
-			         tail,
-			         (env_end - tail) * sizeof(WCHAR));
-		else
-			Status = STATUS_VARIABLE_NOT_FOUND;
+	  RtlReleasePebLock();
 	}
-   if (Environment == NULL)
-     {
-	RtlReleasePebLock();
-     }
-   return Status;
+      return(Status);
+    }
+
+  if (ExpandedValue.Length > 0)
+    {
+      hole_len = tail - hole;
+      /* calculate new environment size */
+      new_size = ExpandedValue.Length + sizeof(WCHAR);
+      /* adding new variable */
+      if (f)
+	new_size += Name->Length + sizeof(WCHAR);
+      new_len = new_size / sizeof(WCHAR);
+      if (hole_len < new_len)
+	{
+	  /* enlarge environment size */
+	  /* check the size of available memory */
+	  new_size += (env_len - hole_len) * sizeof(WCHAR);
+	  new_size = ROUNDUP(new_size, PAGESIZE);
+	  mbi.RegionSize = 0;
+	  DPRINT("new_size %lu\n", new_size);
+
+	  if (env)
+	    {
+	      Status = NtQueryVirtualMemory(NtCurrentProcess(),
+					    env,
+					    0,
+					    &mbi,
+					    sizeof(mbi),
+					    NULL);
+	      if (!NT_SUCCESS(Status))
+		{
+		  RtlFreeHeap(RtlGetProcessHeap(),
+			      0,
+			      ExpandedValue.Buffer);
+		  if (Environment == NULL)
+		    {
+		      RtlReleasePebLock();
+		    }
+		  return(Status);
+		}
+	    }
+
+	  if (new_size > mbi.RegionSize)
+	    {
+	      /* reallocate memory area */
+	      Status = NtAllocateVirtualMemory(NtCurrentProcess(),
+					       (VOID**)&new_env,
+					       0,
+					       &new_size,
+					       MEM_RESERVE | MEM_COMMIT,
+					       PAGE_READWRITE);
+	      if (!NT_SUCCESS(Status))
+		{
+		  RtlFreeHeap(RtlGetProcessHeap(),
+			      0,
+			      ExpandedValue.Buffer);
+		  if (Environment == NULL)
+		    {
+		      RtlReleasePebLock();
+		    }
+		  return(Status);
+		}
+
+	      if (env)
+		{
+		  memmove(new_env,
+			  env,
+			  (hole - env) * sizeof(WCHAR));
+		  hole = new_env + (hole - env);
+		}
+	      else
+		{
+		  /* absolutely new environment */
+		  tail = hole = new_env;
+		  *hole = 0;
+		  env_end = hole + 1;
+		}
+	    }
+	}
+
+      /* move tail */
+      memmove (hole + new_len, tail, (env_end - tail) * sizeof(WCHAR));
+
+      if (new_env)
+	{
+	  /* we reallocated environment, let's free the old one */
+	  if (Environment)
+	    *Environment = new_env;
+	  else
+	    NtCurrentPeb()->ProcessParameters->Environment = new_env;
+
+	  if (env)
+	    {
+	      size = 0;
+	      NtFreeVirtualMemory(NtCurrentProcess(),
+				  (PVOID*)&env,
+				  &size,
+				  MEM_RELEASE);
+	    }
+	}
+
+      /* and now copy given stuff */
+      if (f)
+	{
+	  /* copy variable name and '=' character */
+	  memmove(hole,
+		  Name->Buffer,
+		  Name->Length);
+	  hole += Name->Length / sizeof(WCHAR);
+	  *hole++ = L'=';
+	}
+
+      /* copy value */
+      memmove(hole,
+	      ExpandedValue.Buffer,
+	      ExpandedValue.Length);
+      hole += ExpandedValue.Length / sizeof(WCHAR);
+      *hole = 0;
+    }
+  else
+    {
+      /* remove the environment variable */
+      if (f == 0)
+	{
+	  memmove(head,
+		  tail,
+		  (env_end - tail) * sizeof(WCHAR));
+	}
+      else
+	{
+	  Status = STATUS_VARIABLE_NOT_FOUND;
+	}
+    }
+
+  RtlFreeHeap(RtlGetProcessHeap(),
+	      0,
+	      ExpandedValue.Buffer);
+  if (Environment == NULL)
+    {
+      RtlReleasePebLock();
+    }
+
+  return(Status);
 }
 
 
