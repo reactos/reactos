@@ -19,6 +19,8 @@ HidD_GetSerialNumberString@12
 HidD_Hello@8
 HidD_SetConfiguration@12
 HidD_SetFeature@12
+HidD_SetNumInputBuffers@8
+HidD_SetOutputReport@12
 HidP_GetButtonCaps@16
 HidP_GetCaps@8
 HidP_GetData@24
