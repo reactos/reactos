@@ -1,9 +1,10 @@
-/* $Id: mcb.c,v 1.1 1999/08/20 16:29:22 ea Exp $
+/* $Id: mcb.c,v 1.2 2002/08/09 22:57:48 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/mcb.c
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 
 #include <internal/debug.h>
 
@@ -18,19 +19,14 @@
  *
  * NOTES
  */
-VOID
-STDCALL
-FsRtlAddLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
-	)
+BOOLEAN STDCALL
+FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
+		      IN LONGLONG Vbn,
+		      IN LONGLONG Lbn,
+		      IN LONGLONG SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -47,17 +43,15 @@ FsRtlAddMcbEntry (
 }
 
 
-VOID
-STDCALL
-FsRtlGetNextLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOLEAN STDCALL
+FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
+			  IN ULONG RunIndex,
+			  OUT PLONGLONG Vbn,
+			  OUT PLONGLONG Lbn,
+			  OUT PLONGLONG SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -75,14 +69,11 @@ FsRtlGetNextMcbEntry (
 }
 
 
-VOID
-STDCALL
-FsRtlInitializeLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	)
+VOID STDCALL
+FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
+			IN POOL_TYPE PoolType)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 
@@ -97,32 +88,27 @@ FsRtlInitializeMcb (
 }
 
 
-VOID
-STDCALL
-FsRtlLookupLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	)
+BOOLEAN STDCALL
+FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
+			 IN LONGLONG Vbn,
+			 OUT PLONGLONG Lbn OPTIONAL,
+			 OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+			 OUT PLONGLONG StartingLbn OPTIONAL,
+			 OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+			 OUT PULONG Index OPTIONAL)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
-VOID
-STDCALL
-FsRtlLookupLastLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+BOOLEAN STDCALL
+FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
+			     OUT PLONGLONG Vbn,
+			     OUT PLONGLONG Lbn)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
@@ -152,13 +138,11 @@ FsRtlLookupMcbEntry (
 }
 
 
-VOID
-STDCALL
-FsRtlNumberOfRunsInLargeMcb (
-	DWORD	Unknown0
-	)
+ULONG STDCALL
+FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(0);
 }
 
 
@@ -172,17 +156,12 @@ FsRtlNumberOfRunsInMcb (
 }
 
 
-VOID
-STDCALL
-FsRtlRemoveLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+VOID STDCALL
+FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
+			 IN LONGLONG Vbn,
+			 IN LONGLONG SectorCount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 
@@ -198,29 +177,21 @@ FsRtlRemoveMcbEntry (
 }
 
 
-VOID
-STDCALL
-FsRtlSplitLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+BOOLEAN STDCALL
+FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
+		   IN LONGLONG Vbn,
+		   IN LONGLONG Amount)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
+  return(FALSE);
 }
 
 
-VOID
-STDCALL
-FsRtlTruncateLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+VOID STDCALL
+FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
+		      IN LONGLONG Vbn)
 {
-	UNIMPLEMENTED
+  UNIMPLEMENTED
 }
 
 
@@ -235,13 +206,10 @@ FsRtlTruncateMcb (
 }
 
 
-VOID
-STDCALL
-FsRtlUninitializeLargeMcb (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 

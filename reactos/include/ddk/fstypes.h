@@ -1,6 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.4 2002/01/13 22:02:30 ea Exp $ */
+/* $Id: fstypes.h,v 1.5 2002/08/09 22:57:27 ekohl Exp $ */
 
 #define FSRTL_TAG 	TAG('F','S','r','t')
 
@@ -49,12 +49,6 @@ typedef struct _FILE_LOCK {
     PVOID                       LastReturnedLock;
 } FILE_LOCK, *PFILE_LOCK;
 
-typedef struct _RTL_SPLAY_LINKS {
-    struct _RTL_SPLAY_LINKS *Parent;
-    struct _RTL_SPLAY_LINKS *LeftChild;
-    struct _RTL_SPLAY_LINKS *RightChild;
-} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
-
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
     PRTL_SPLAY_LINKS    Cache;
@@ -78,5 +72,25 @@ typedef struct _NOTIFY_SYNC
 	
 } NOTIFY_SYNC, * PNOTIFY_SYNC;
 
+
+typedef struct _LARGE_MCB
+{
+  PFAST_MUTEX FastMutex;
+  ULONG MaximumPairCount;
+  ULONG PairCount;
+  POOL_TYPE PoolType;
+  PVOID Mapping;
+} LARGE_MCB, *PLARGE_MCB;
+
+
+typedef VOID
+(*POPLOCK_WAIT_COMPLETE_ROUTINE)(PVOID Context,
+				 PIRP Irp);
+
+typedef VOID
+(*POPLOCK_FS_PREPOST_IRP)(PVOID Context,
+			  PIRP Irp);
+
+typedef PVOID OPLOCK, *POPLOCK;
 
 #endif /* __INCLUDE_DDK_FSFUNCS_H */

@@ -1,4 +1,4 @@
-/* $Id: rtltypes.h,v 1.3 2002/07/25 13:15:08 ekohl Exp $
+/* $Id: rtltypes.h,v 1.4 2002/08/09 22:57:27 ekohl Exp $
  * 
  */
 
@@ -122,6 +122,14 @@ typedef struct _RTL_NLS_TABLE
   PWCHAR UpcaseTable;
   PWCHAR DowncaseTable;
 } RTL_NLS_TABLE, *PRTL_NLS_TABLE;
+
+
+typedef struct _RTL_SPLAY_LINKS
+{
+  struct _RTL_SPLAY_LINKS *Parent;
+  struct _RTL_SPLAY_LINKS *LeftChild;
+  struct _RTL_SPLAY_LINKS *RightChild;
+} RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
 
 typedef struct _RTL_GENERIC_TABLE

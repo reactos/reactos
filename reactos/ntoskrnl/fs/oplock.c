@@ -1,9 +1,9 @@
-/* $Id: oplock.c,v 1.2 2000/03/11 00:51:36 ea Exp $
+/* $Id: oplock.c,v 1.3 2002/08/09 22:57:48 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/oplock.c
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 
 
@@ -18,17 +18,14 @@
  * RETURN VALUE
  *
  */
-DWORD
-STDCALL
-FsRtlCheckOplock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	)
+NTSTATUS STDCALL
+FsRtlCheckOplock(IN POPLOCK Oplock,
+		 IN PIRP Irp,
+		 IN PVOID Context,
+		 IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+		 IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL)
 {
-	return 0;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -43,13 +40,10 @@ FsRtlCheckOplock (
  * RETURN VALUE
  *
  */
-BOOLEAN
-STDCALL
-FsRtlCurrentBatchOplock (
-	DWORD	Unknown0
-	)
+BOOLEAN STDCALL
+FsRtlCurrentBatchOplock(IN POPLOCK Oplock)
 {
-	return FALSE;
+  return(FALSE);
 }
 
 
@@ -66,11 +60,8 @@ FsRtlCurrentBatchOplock (
  * NOTE
  *	Obsolete function.
  */
-VOID
-STDCALL
-FsRtlInitializeOplock (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+FsRtlInitializeOplock(IN OUT POPLOCK Oplock)
 {
 }
 
@@ -86,15 +77,12 @@ FsRtlInitializeOplock (
  * RETURN VALUE
  *
  */
-NTSTATUS
-STDCALL
-FsRtlOplockFsctrl (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+NTSTATUS STDCALL
+FsRtlOplockFsctrl(IN POPLOCK Oplock,
+		  IN PIRP Irp,
+		  IN ULONG OpenCount)
 {
-	return 0;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
@@ -109,13 +97,10 @@ FsRtlOplockFsctrl (
  * RETURN VALUE
  *
  */
-BOOLEAN
-STDCALL
-FsRtlOplockIsFastIoPossible (
-	DWORD	Unknown0
-	)
+BOOLEAN STDCALL
+FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock)
 {
-	return FALSE;
+  return(FALSE);
 }
 
 
@@ -130,14 +115,9 @@ FsRtlOplockIsFastIoPossible (
  * RETURN VALUE
  *
  */
-DWORD
-STDCALL
-FsRtlUninitializeOplock (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+FsRtlUninitializeOplock(IN POPLOCK Oplock)
 {
-	return 0;
 }
-
 
 /* EOF */

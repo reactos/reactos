@@ -1,9 +1,9 @@
-/* $Id: util.c,v 1.9 2002/01/17 23:17:39 ea Exp $
+/* $Id: util.c,v 1.10 2002/08/09 22:57:48 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/util.c
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 
 

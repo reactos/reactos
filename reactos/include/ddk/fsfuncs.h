@@ -1,28 +1,23 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.13 2002/03/13 20:41:11 ekohl Exp $ */
+/* $Id: fsfuncs.h,v 1.14 2002/08/09 22:57:26 ekohl Exp $ */
 #define FlagOn(x,f) ((x) & (f))
-VOID
-STDCALL
-FsRtlAddLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6
-	);
-VOID
-STDCALL
-FsRtlAddMcbEntry (
+
+BOOLEAN STDCALL
+FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
+		      IN LONGLONG Vbn,
+		      IN LONGLONG Lbn,
+		      IN LONGLONG SectorCount);
+
+VOID STDCALL
+FsRtlAddMcbEntry(
 	DWORD	Unknown0,
 	DWORD	Unknown1,
 	DWORD	Unknown2,
 	DWORD	Unknown3
 	);
-VOID
-STDCALL
+
+VOID STDCALL
 FsRtlAddToTunnelCache (
     IN PTUNNEL          Cache,
     IN ULONGLONG        DirectoryKey,
@@ -32,20 +27,20 @@ FsRtlAddToTunnelCache (
     IN ULONG            DataLength,
     IN PVOID            Data
     );
-PVOID
-STDCALL
+
+PVOID STDCALL
 FsRtlAllocatePool (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes
 	);
-PVOID
-STDCALL
+
+PVOID STDCALL
 FsRtlAllocatePoolWithQuota (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes
 	);
-PVOID
-STDCALL
+
+PVOID STDCALL
 FsRtlAllocatePoolWithQuotaTag (
 	IN	POOL_TYPE	PoolType,
 	IN	ULONG		NumberOfBytes,
@@ -88,15 +83,14 @@ FsRtlCheckLockForWriteAccess (
 	IN PFILE_LOCK   FileLock,
 	IN PIRP         Irp
 	);
-DWORD
-STDCALL
-FsRtlCheckOplock (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+NTSTATUS STDCALL
+FsRtlCheckOplock(IN POPLOCK Oplock,
+		 IN PIRP Irp,
+		 IN PVOID Context,
+		 IN POPLOCK_WAIT_COMPLETE_ROUTINE CompletionRoutine OPTIONAL,
+		 IN POPLOCK_FS_PREPOST_IRP PostIrpRoutine OPTIONAL);
+
 BOOLEAN
 STDCALL
 FsRtlCopyRead (
@@ -121,27 +115,20 @@ FsRtlCopyWrite (
 	OUT	PIO_STATUS_BLOCK	IoStatus,
 	IN	PDEVICE_OBJECT		DeviceObject
 	);
-BOOLEAN
-STDCALL
-FsRtlCurrentBatchOplock (
-	DWORD	Unknown0
-	);
-VOID
-STDCALL
-FsRtlDeleteKeyFromTunnelCache (
-    IN PTUNNEL      Cache,
-    IN ULONGLONG    DirectoryKey
-    );
-VOID
-STDCALL
-FsRtlDeleteTunnelCache (
-    IN PTUNNEL Cache
-    );
-VOID
-STDCALL
-FsRtlDeregisterUncProvider (
-	DWORD	Unknown0
-	);
+
+BOOLEAN STDCALL
+FsRtlCurrentBatchOplock(IN POPLOCK Oplock);
+
+VOID STDCALL
+FsRtlDeleteKeyFromTunnelCache(IN PTUNNEL Cache,
+			      IN ULONGLONG DirectoryKey);
+
+VOID STDCALL
+FsRtlDeleteTunnelCache(IN PTUNNEL Cache);
+
+VOID STDCALL
+FsRtlDeregisterUncProvider(IN HANDLE Handle);
+
 VOID
 STDCALL
 FsRtlDissectDbcs (
@@ -240,15 +227,14 @@ FsRtlGetNextFileLock (
 	IN	PFILE_LOCK	FileLock,
 	IN	BOOLEAN		Restart
 	);
-VOID
-STDCALL
-FsRtlGetNextLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+BOOLEAN STDCALL
+FsRtlGetNextLargeMcbEntry(IN PLARGE_MCB Mcb,
+			  IN ULONG RunIndex,
+			  OUT PLONGLONG Vbn,
+			  OUT PLONGLONG Lbn,
+			  OUT PLONGLONG SectorCount);
+
 VOID
 STDCALL
 FsRtlGetNextMcbEntry (
@@ -267,23 +253,21 @@ FsRtlInitializeFileLock (
 	IN PCOMPLETE_LOCK_IRP_ROUTINE   CompleteLockIrpRoutine OPTIONAL,
 	IN PUNLOCK_ROUTINE              UnlockRoutine OPTIONAL
 	);
-VOID
-STDCALL
-FsRtlInitializeLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
+
+VOID STDCALL
+FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
+			IN POOL_TYPE PoolType);
+
 VOID
 STDCALL
 FsRtlInitializeMcb (
 	DWORD	Unknown0,
 	DWORD	Unknown1
 	);
-VOID
-STDCALL
-FsRtlInitializeOplock (
-	DWORD	Unknown0
-	);
+
+VOID STDCALL
+FsRtlInitializeOplock(IN OUT POPLOCK Oplock);
+
 VOID
 STDCALL
 FsRtlInitializeTunnelCache (
@@ -321,40 +305,33 @@ FsRtlIsNameInExpression (
 	IN	BOOLEAN		IgnoreCase,
 	IN	PWCHAR		UpcaseTable	OPTIONAL
 	);
-BOOLEAN
-STDCALL
-FsRtlIsNtstatusExpected (
-	IN NTSTATUS	NtStatus
-	);
-BOOLEAN
-STDCALL
-FsRtlIsTotalDeviceFailure (
-	NTSTATUS	NtStatus
-	);
+
+BOOLEAN STDCALL
+FsRtlIsNtstatusExpected(IN NTSTATUS NtStatus);
+
+BOOLEAN STDCALL
+FsRtlIsTotalDeviceFailure(IN NTSTATUS NtStatus);
+
 #define FsRtlIsUnicodeCharacterWild(C) ( \
     (((C) >= 0x40) ? \
     FALSE : \
     FlagOn((*FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER )) \
     )
-VOID
-STDCALL
-FsRtlLookupLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4,
-	DWORD	Unknown5,
-	DWORD	Unknown6,
-	DWORD	Unknown7
-	);
-VOID
-STDCALL
-FsRtlLookupLastLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
+
+BOOLEAN STDCALL
+FsRtlLookupLargeMcbEntry(IN PLARGE_MCB Mcb,
+			 IN LONGLONG Vbn,
+			 OUT PLONGLONG Lbn OPTIONAL,
+			 OUT PLONGLONG SectorCountFromLbn OPTIONAL,
+			 OUT PLONGLONG StartingLbn OPTIONAL,
+			 OUT PLONGLONG SectorCountFromStartingLbn OPTIONAL,
+			 OUT PULONG Index OPTIONAL);
+
+BOOLEAN STDCALL
+FsRtlLookupLastLargeMcbEntry(IN PLARGE_MCB Mcb,
+			     OUT PLONGLONG Vbn,
+			     OUT PLONGLONG Lbn);
+
 VOID
 STDCALL
 FsRtlLookupLastMcbEntry (
@@ -485,29 +462,22 @@ FsRtlNotifyReportChange (
 	IN	PUSHORT		FileNamePartLength,
 	IN	ULONG		FilterMatch
 	);
-VOID
-STDCALL
-FsRtlNotifyInitializeSync (
-	IN OUT	PNOTIFY_SYNC	* NotifySync
-	);
-NTSTATUS
-STDCALL
-FsRtlNotifyVolumeEvent (
-	IN	PFILE_OBJECT	FileObject,
-	IN	ULONG	EventCode
-	);
-NTSTATUS
-STDCALL
-FsRtlOplockFsctrl (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
-BOOLEAN
-STDCALL
-FsRtlOplockIsFastIoPossible (
-	DWORD	Unknown0
-	);
+
+VOID STDCALL
+FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC *NotifySync);
+
+NTSTATUS STDCALL
+FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,
+		       IN ULONG EventCode);
+
+NTSTATUS STDCALL
+FsRtlOplockFsctrl(IN POPLOCK Oplock,
+		  IN PIRP Irp,
+		  IN ULONG OpenCount);
+
+BOOLEAN STDCALL
+FsRtlOplockIsFastIoPossible(IN POPLOCK Oplock);
+
 BOOLEAN
 STDCALL
 FsRtlPrepareMdlWrite (
@@ -529,17 +499,14 @@ FsRtlPrepareMdlWriteDev (
 	OUT	PIO_STATUS_BLOCK	IoStatus,
 	IN	PDEVICE_OBJECT		DeviceObject
 	);
-NTSTATUS
-STDCALL
-FsRtlNormalizeNtstatus (
-	IN	NTSTATUS	NtStatusToNormalize,
-	IN	NTSTATUS	NormalizedNtStatus
-	);
-VOID
-STDCALL
-FsRtlNumberOfRunsInLargeMcb (
-	DWORD	Unknown0
-	);
+
+NTSTATUS STDCALL
+FsRtlNormalizeNtstatus(IN NTSTATUS NtStatusToNormalize,
+		       IN NTSTATUS NormalizedNtStatus);
+
+ULONG STDCALL
+FsRtlNumberOfRunsInLargeMcb(IN PLARGE_MCB Mcb);
+
 VOID
 STDCALL
 FsRtlNumberOfRunsInMcb (
@@ -582,22 +549,17 @@ FsRtlProcessFileLock (
     IN PIRP         Irp,
     IN PVOID        Context OPTIONAL
     );
-DWORD
-STDCALL
-FsRtlRegisterUncProvider (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
-VOID
-STDCALL
-FsRtlRemoveLargeMcbEntry (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+NTSTATUS STDCALL
+FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
+			 IN PUNICODE_STRING RedirectorDeviceName,
+			 IN BOOLEAN MailslotsSupported);
+
+VOID STDCALL
+FsRtlRemoveLargeMcbEntry(IN PLARGE_MCB Mcb,
+			 IN LONGLONG Vbn,
+			 IN LONGLONG SectorCount);
+
 VOID
 STDCALL
 FsRtlRemoveMcbEntry (
@@ -605,15 +567,12 @@ FsRtlRemoveMcbEntry (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
-VOID
-STDCALL
-FsRtlSplitLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+
+BOOLEAN STDCALL
+FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
+		   IN LONGLONG Vbn,
+		   IN LONGLONG Amount);
+
 NTSTATUS
 STDCALL
 FsRtlSyncVolumes (
@@ -621,13 +580,11 @@ FsRtlSyncVolumes (
 	DWORD	Unknown1,
 	DWORD	Unknown2
 	);
-VOID
-STDCALL
-FsRtlTruncateLargeMcb (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	);
+
+VOID STDCALL
+FsRtlTruncateLargeMcb(IN PLARGE_MCB Mcb,
+		      IN LONGLONG Vbn);
+
 VOID
 STDCALL
 FsRtlTruncateMcb (
@@ -639,20 +596,17 @@ STDCALL
 FsRtlUninitializeFileLock (
     IN PFILE_LOCK FileLock
     );
-VOID
-STDCALL
-FsRtlUninitializeLargeMcb (
-	DWORD	Unknown0
-	);
+
+VOID STDCALL
+FsRtlUninitializeLargeMcb(IN PLARGE_MCB Mcb);
+
 VOID
 STDCALL
 FsRtlUninitializeMcb (
 	DWORD	Unknown0
 	);
-DWORD
-STDCALL
-FsRtlUninitializeOplock (
-	DWORD	Unknown0
-	);
+
+VOID STDCALL
+FsRtlUninitializeOplock(IN POPLOCK Oplock);
 
 #endif /* __INCLUDE_DDK_FSFUNCS_H */

@@ -1,9 +1,10 @@
-/* $Id: unc.c,v 1.1 2000/01/20 22:14:07 ea Exp $
+/* $Id: unc.c,v 1.2 2002/08/09 22:57:48 ekohl Exp $
  *
  * reactos/ntoskrnl/fs/unc.c
  *
  */
-#include <ntos.h>
+#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 
 
 /**********************************************************************
@@ -17,11 +18,8 @@
  * RETURN VALUE
  *
  */
-VOID
-STDCALL
-FsRtlDeregisterUncProvider (
-	DWORD	Unknown0
-	)
+VOID STDCALL
+FsRtlDeregisterUncProvider(IN HANDLE Handle)
 {
 }
 
@@ -37,15 +35,12 @@ FsRtlDeregisterUncProvider (
  * RETURN VALUE
  *
  */
-DWORD
-STDCALL
-FsRtlRegisterUncProvider (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
-	)
+NTSTATUS STDCALL
+FsRtlRegisterUncProvider(IN OUT PHANDLE Handle,
+			 IN PUNICODE_STRING RedirectorDeviceName,
+			 IN BOOLEAN MailslotsSupported)
 {
-	return 0;
+  return(STATUS_NOT_IMPLEMENTED);
 }
 
 
