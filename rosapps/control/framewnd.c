@@ -207,9 +207,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         DestroyWindow(hWnd);
         break;
     case ID_VIEW_REFRESH:
-        // TODO:
+        RefreshListView(hListWnd, NULL);
         break;
-
     case ID_VIEW_LARGE_ICONS:
     case ID_VIEW_SMALL_ICONS:
     case ID_VIEW_LIST:
@@ -257,7 +256,6 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
         if (dwListStyle == 0) dwListStyle |= LVS_REPORT;
         hListWnd = CreateListView(hWnd, LIST_WINDOW, dwListStyle/*, pChildWnd->szPath*/);
-        RefreshListView(hListWnd, 0, NULL);
         break;
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam)) {

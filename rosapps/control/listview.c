@@ -53,12 +53,12 @@ static int column_alignment[MAX_LIST_COLUMNS] = { LVCFMT_LEFT, LVCFMT_LEFT, LVCF
 // Local module support methods
 //
 
-static void AddEntryToList(HWND hwndLV, LPTSTR Name, HMODULE hModule, LPTSTR pszComment, DWORD dwCount)
+static void AddEntryToList(HWND hwndLV, LPTSTR Name, HMODULE hModule, LPTSTR pszComment, int nImage)
 { 
     LVITEM item;
     int index;
 
-    item.mask = LVIF_TEXT | LVIF_PARAM; 
+    item.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM; 
     item.iItem = 0;//idx; 
     item.iSubItem = 0; 
     item.state = 0; 
@@ -67,7 +67,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, HMODULE hModule, LPTSTR psz
     item.cchTextMax = _tcslen(item.pszText); 
     if (item.cchTextMax == 0)
         item.pszText = LPSTR_TEXTCALLBACK; 
-    item.iImage = 0; 
+    item.iImage = nImage; 
     item.lParam = (LPARAM)hModule;
 #if (_WIN32_IE >= 0x0300)
     item.iIndent = 0;
@@ -79,7 +79,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, HMODULE hModule, LPTSTR psz
     }
 }
 
-static void CreateListColumns(HWND hWndListView)
+static void CreateListColumns(HWND hwndLV)
 {
     TCHAR szText[50];
     int index;
@@ -95,11 +95,165 @@ static void CreateListColumns(HWND hWndListView)
         lvC.cx = default_column_widths[index];
         lvC.fmt = column_alignment[index];
         LoadString(hInst, IDS_LIST_COLUMN_FIRST + index, szText, 50);
-        if (ListView_InsertColumn(hWndListView, index, &lvC) == -1) {
+        if (ListView_InsertColumn(hwndLV, index, &lvC) == -1) {
             // TODO: handle failure condition...
             break;
         }
     }
+}
+
+// InitListViewImageLists - creates image lists for a list view control.
+// This function only creates image lists. It does not insert the
+// items into the control, which is necessary for the control to be 
+// visible.   
+// Returns TRUE if successful, or FALSE otherwise. 
+// hwndLV - handle to the list view control. 
+BOOL InitListViewImageLists(HWND hwndLV) 
+{ 
+    HICON hiconItem;     // icon for list view items 
+    HIMAGELIST hLarge;   // image list for icon view 
+    HIMAGELIST hSmall;   // image list for other views 
+ 
+    // Create the full-sized icon image lists. 
+    hLarge = ImageList_Create(GetSystemMetrics(SM_CXICON), 
+        GetSystemMetrics(SM_CYICON), ILC_MASK, 1, 1); 
+    hSmall = ImageList_Create(GetSystemMetrics(SM_CXSMICON), 
+        GetSystemMetrics(SM_CYSMICON), ILC_MASK, 1, 1); 
+ 
+    // Add an icon to each image list.  
+//    hiconItem = LoadIcon(hInst, MAKEINTRESOURCE(IDI_ITEM)); 
+    hiconItem = LoadIcon(hInst, MAKEINTRESOURCE(IDI_CONTROL)); 
+    ImageList_AddIcon(hLarge, hiconItem); 
+    ImageList_AddIcon(hSmall, hiconItem); 
+    DestroyIcon(hiconItem); 
+	
+    /*********************************************************
+    Usually you have multiple icons; therefore, the previous
+    four lines of code can be inside a loop. The following code 
+    shows such a loop. The icons are defined in the application's
+    header file as resources, which are numbered consecutively
+    starting with IDS_FIRSTICON. The number of icons is
+    defined in the header file as C_ICONS.
+	
+    for(index = 0; index < C_ICONS; index++) {
+        hIconItem = LoadIcon (hInst, MAKEINTRESOURCE (IDS_FIRSTICON + index));
+        ImageList_AddIcon(hSmall, hIconItem);
+        ImageList_AddIcon(hLarge, hIconItem);
+        Destroy(hIconItem);
+    }
+    *********************************************************/
+ 
+    // Assign the image lists to the list view control. 
+    ListView_SetImageList(hwndLV, hLarge, LVSIL_NORMAL); 
+    ListView_SetImageList(hwndLV, hSmall, LVSIL_SMALL); 
+    return TRUE; 
+} 
+
+typedef LONG (WINAPI *CPlApplet_Ptr)(HWND, UINT, LONG, LONG);
+/*
+LONG CPlApplet(
+    HWND hwndCPl,
+    UINT uMsg,
+    LONG lParam1,
+    LONG lParam2
+);
+ */
+
+static BOOL InitCPlApplet(HWND hwndLV, HMODULE hCpl)
+{
+    if (hwndLV && hCpl) {
+        CPlApplet_Ptr pCPlApplet;
+        pCPlApplet = (CPlApplet_Ptr)(FARPROC)GetProcAddress(hCpl, "CPlApplet");
+        if (pCPlApplet)	{
+            if (pCPlApplet(hwndLV, CPL_INIT, 0, 0)) {
+                int nSubProgs = pCPlApplet(hwndLV, CPL_GETCOUNT, 0, 0);
+                while (nSubProgs && nSubProgs--) {
+                    CPLINFO cplInfo;
+                    memset(&cplInfo, 0, sizeof(CPLINFO));
+                    pCPlApplet(hwndLV, CPL_INQUIRE, nSubProgs, (LPARAM)&cplInfo);
+                    if (cplInfo.idName == CPL_DYNAMIC_RES) {
+#if UNICODE
+                        NEWCPLINFO cplNewInfo;
+                        memset(&cplNewInfo, 0, sizeof(NEWCPLINFO));
+                        cplNewInfo.dwSize = sizeof(NEWCPLINFO);
+                        pCPlApplet(hwndLV, CPL_NEWINQUIRE, nSubProgs, (LPARAM)&cplNewInfo);
+                        AddEntryToList(hwndLV, cplNewInfo.szName, hCpl, cplNewInfo.szInfo, 0);
+#endif
+                    } else {
+                        TCHAR NameBuf[MAX_PATH];
+                        TCHAR InfoBuf[MAX_PATH];
+                        HANDLE hIcon;
+                        int index;
+                        memset(NameBuf, _T('\0'), sizeof(NameBuf));
+                        memset(InfoBuf, _T('\0'), sizeof(InfoBuf));
+                        if (LoadString(hCpl, cplInfo.idName, NameBuf, MAX_PATH)) {
+                        }
+                        if (LoadString(hCpl, cplInfo.idInfo, InfoBuf, MAX_PATH)) {
+                        }
+                        hIcon = LoadImage(hCpl, (LPCTSTR)cplInfo.idIcon, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
+                        if (hIcon) {
+                            // add the icon to an image list, pass index to AddEntryToList(...)
+                            HIMAGELIST hImageList;
+                            hImageList = ListView_GetImageList(hwndLV, LVSIL_NORMAL);
+                            index = ImageList_AddIcon(hImageList, hIcon); 
+                            hImageList = ListView_GetImageList(hwndLV, LVSIL_SMALL);
+                            ImageList_AddIcon(hImageList, hIcon);
+                            DestroyIcon(hIcon); 
+                        }
+                        AddEntryToList(hwndLV, NameBuf, hCpl, InfoBuf, index);
+                    }
+                 }
+                 return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
+static BOOL InitListViewItems(HWND hwndLV, LPTSTR szPath)
+{
+	WIN32_FIND_DATA	data;
+//	BY_HANDLE_FILE_INFORMATION bhfi;
+//	BOOL bhfi_valid;
+	HANDLE hFind;
+	HANDLE hFile;
+	TCHAR buffer[MAX_PATH+10], *p;
+    UINT length;
+
+    length = GetSystemDirectory(buffer, sizeof(buffer)/sizeof(TCHAR));
+    p = &buffer[length];
+
+//  path = buffer;
+//	for (p=buffer; *path; ) *p++ = *path++;
+	lstrcpy(p, _T("\\*.cpl"));
+
+    memset(&data, 0, sizeof(WIN32_FIND_DATA));
+	hFind = FindFirstFile(buffer, &data);
+
+	if (hFind != INVALID_HANDLE_VALUE) {
+		do {
+			if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+				continue;
+			}
+			lstrcpy(p+1, data.cFileName);
+			hFile = CreateFile(buffer, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
+								0, OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, 0);
+			if (hFile != INVALID_HANDLE_VALUE) {
+                HMODULE	hCpl;
+//				if (GetFileInformationByHandle(hFile, &bhfi)) bhfi_valid = TRUE;
+				CloseHandle(hFile);
+                hCpl = LoadLibrary(data.cFileName);
+                if (hCpl) {
+                    if (InitCPlApplet(hwndLV, hCpl)) {
+                    } else {
+                    }
+                    FreeLibrary(hCpl);
+                }
+			}
+		} while (FindNextFile(hFind, &data));
+		FindClose(hFind);
+    }
+    return TRUE;
 }
 
 // OnGetDispInfo - processes the LVN_GETDISPINFO notification message. 
@@ -247,89 +401,21 @@ static LRESULT CALLBACK ListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPAR
 	return 0;
 }
 
-
-HWND CreateListView(HWND hwndParent, int id, DWORD style)
+#if 1
+BOOL RefreshListView(HWND hwndLV, LPTSTR szPath)
 { 
-    RECT rcClient;
-    HWND hwndLV;
- 
-    // Get the dimensions of the parent window's client area, and create the list view control. 
-    GetClientRect(hwndParent, &rcClient); 
-    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"), 
-        WS_VISIBLE | WS_CHILD | style, 
-        0, 0, rcClient.right, rcClient.bottom, 
-        hwndParent, (HMENU)id, hInst, NULL); 
-    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
- 
-    // Initialize the image list, and add items to the control. 
-/*
-    if (!InitListViewImageLists(hwndLV) || 
-            !InitListViewItems(hwndLV, szName)) { 
-        DestroyWindow(hwndLV); 
-        return FALSE; 
-    } 
- */
-    CreateListColumns(hwndLV);
-	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
-    return hwndLV;
-} 
+//    TCHAR buffer[MAX_PATH+10], *p;
+//    UINT length;
+//    length = GetSystemDirectory(buffer, sizeof(buffer)/sizeof(TCHAR));
 
-typedef LONG (WINAPI *CPlApplet_Ptr)(HWND, UINT, LONG, LONG);
-/*
-LONG CPlApplet(
-    HWND hwndCPl,
-    UINT uMsg,
-    LONG lParam1,
-    LONG lParam2
-);
- */
-
-static BOOL InitCPlApplet(HWND hwndLV, HMODULE hCpl)
-{
-    if (hwndLV && hCpl) {
-        CPlApplet_Ptr pCPlApplet;
-        pCPlApplet = (CPlApplet_Ptr)(FARPROC)GetProcAddress(hCpl, "CPlApplet");
-        if (pCPlApplet)	{
-            if (pCPlApplet(hwndLV, CPL_INIT, 0, 0)) {
-                int nSubProgs = pCPlApplet(hwndLV, CPL_GETCOUNT, 0, 0);
-                while (nSubProgs && nSubProgs--) {
-                    CPLINFO cplInfo;
-                    memset(&cplInfo, 0, sizeof(CPLINFO));
-                    pCPlApplet(hwndLV, CPL_INQUIRE, nSubProgs, (LPARAM)&cplInfo);
-                    if (cplInfo.idName == CPL_DYNAMIC_RES) {
-                        NEWCPLINFO cplNewInfo;
-                        memset(&cplNewInfo, 0, sizeof(NEWCPLINFO));
-                        cplNewInfo.dwSize = sizeof(NEWCPLINFO);
-                        pCPlApplet(hwndLV, CPL_NEWINQUIRE, nSubProgs, (LPARAM)&cplNewInfo);
-                        AddEntryToList(hwndLV, cplNewInfo.szName, hCpl, cplNewInfo.szInfo, 0);
-                    } else {
-                        TCHAR NameBuf[MAX_PATH];
-                        TCHAR InfoBuf[MAX_PATH];
-                        HANDLE hIcon;
-                        memset(NameBuf, _T('\0'), sizeof(NameBuf));
-                        memset(InfoBuf, _T('\0'), sizeof(InfoBuf));
-                        if (LoadString(hCpl, cplInfo.idName, NameBuf, MAX_PATH)) {
-                        }
-                        if (LoadString(hCpl, cplInfo.idInfo, InfoBuf, MAX_PATH)) {
-                        }
-                        hIcon = LoadImage(hCpl, (LPCTSTR)cplInfo.idIcon, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE);
-                        if (hIcon) {
-                            // add the icon to an image list, pass index to AddEntryToList(...)
-                        }
-                        AddEntryToList(hwndLV, NameBuf, hCpl, InfoBuf, 0);
-                    }
-                 }
-                 return TRUE;
-            }
-        }
+    if (hwndLV != NULL) {
+        ListView_DeleteAllItems(hwndLV);
     }
-    return FALSE;
+    return InitListViewItems(hwndLV, szPath);
 }
-
-
-BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR path)
+#else
+BOOL RefreshListView(HWND hwndLV, LPTSTR path)
 { 
-
 	WIN32_FIND_DATA	data;
 //	BY_HANDLE_FILE_INFORMATION bhfi;
 //	BOOL bhfi_valid;
@@ -377,4 +463,32 @@ BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPTSTR path)
     }
     return TRUE;
 } 
+#endif
+
+HWND CreateListView(HWND hwndParent, int id, DWORD style)
+{ 
+    RECT rcClient;
+    HWND hwndLV;
+ 
+    // Get the dimensions of the parent window's client area, and create the list view control. 
+    GetClientRect(hwndParent, &rcClient); 
+    hwndLV = CreateWindowEx(WS_EX_CLIENTEDGE, WC_LISTVIEW, _T("List View"), 
+        WS_VISIBLE | WS_CHILD | style, 
+        0, 0, rcClient.right, rcClient.bottom, 
+        hwndParent, (HMENU)id, hInst, NULL); 
+    ListView_SetExtendedListViewStyle(hwndLV,  LVS_EX_FULLROWSELECT);
+ 
+    CreateListColumns(hwndLV);
+
+    // Initialize the image list, and add items to the control. 
+#if 1
+    if (!InitListViewImageLists(hwndLV) || !InitListViewItems(hwndLV, NULL/*szPath*/)) { 
+        DestroyWindow(hwndLV); 
+        return FALSE; 
+    } 
+#endif
+	g_orgListWndProc = SubclassWindow(hwndLV, ListWndProc);
+    return hwndLV;
+} 
+
 

@@ -33,7 +33,7 @@ extern "C" {
 
 
 HWND CreateListView(HWND hwndParent, int id, DWORD style);
-BOOL RefreshListView(HWND hwndTV, HKEY hKey, LPTSTR keyPath);
+BOOL RefreshListView(HWND hwndTV, LPTSTR szPath);
 
 
 #ifdef __cplusplus
