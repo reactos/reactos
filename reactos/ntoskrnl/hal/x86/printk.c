@@ -13,7 +13,7 @@
 
 #include <internal/ntoskrnl.h>
 #include <internal/string.h>
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
 #include <internal/hal/io.h>
 
 #include <internal/debug.h>
@@ -66,6 +66,7 @@ static unsigned char mode03[] = {0x67,0x00,0x03,0x00,0x03,0x00,0x02,
 
 /* FUNCTIONS ***************************************************************/
 
+
 void HalSwitchToBlueScreen(void)
 /*
  * FUNCTION: Switches the monitor to text mode and writes a blue background
@@ -92,6 +93,14 @@ void HalSwitchToBlueScreen(void)
     * Jeff Morgan (kinfira@hotmail.com)
     */
    
+}
+
+
+NTSTATUS STDCALL NtDisplayString(IN PUNICODE_STRING DisplayString)
+{
+//   DbgPrint("DisplayString %x\n",DisplayString);
+   DbgPrint("%s",DisplayString);
+   return(STATUS_SUCCESS);
 }
 
 void HalDisplayString(char* string)

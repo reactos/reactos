@@ -155,4 +155,88 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
  */
 VOID KeBugCheck(ULONG BugCheckCode);
 
+// kmutant definition slightly modified from nt5 ddk
+
+typedef struct _KMUTANT 
+{
+	DISPATCHER_HEADER Header;
+	LIST_ENTRY MutantListEntry;
+	struct _KTHREAD* OwnerThread;
+	BOOLEAN Abandoned;
+	UCHAR ApcDisable;
+} KMUTANT, *PKMUTANT;
+
+// io permission map has a 8k size
+// Each bit in the IOPM corresponds to an io port byte address. The bitmap
+// is initialized to allow IO at any port. [ all bits set ]. 
+
+typedef struct _IOPM 
+{
+	UCHAR Bitmap[8192];
+} IOPM, *PIOPM;
+
+/*
+ * FUNCTION: Provides the kernel with a new access map for a driver
+ * ARGUMENTS:
+ * 	NewMap: =  If FALSE the kernel's map is set to all disabled. If TRUE
+ *			the kernel disables access to a particular port.
+ *	IoPortMap = Caller supplies storage for the io permission map.
+ * REMARKS
+ *	Each bit in the IOPM corresponds to an io port byte address. The bitmap
+ *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
+ *	the minium privilege level required to perform IO prior to checking the permission map.
+ */
+void Ke386SetIoAccessMap(int NewMap, PIOPM *IoPermissionMap);
+
+/*
+ * FUNCTION: Queries the io permission  map.
+ * ARGUMENTS:
+ * 	NewMap: =  If FALSE the kernel's map is set to all disabled. If TRUE
+ *			the kernel disables access to a particular port.
+ *	IoPortMap = Caller supplies storage for the io permission map.
+ * REMARKS
+ *	Each bit in the IOPM corresponds to an io port byte address. The bitmap
+ *	is initialized to allow IO at any port. [ all bits set ]. The IOPL determines
+ *	the minium privilege level required to perform IO prior to checking the permission map.
+ */
+void Ke386QueryIoAccessMap(BOOLEAN NewMap, PIOPM *IoPermissionMap);
+
+/*
+ * FUNCTION: Set the process IOPL
+ * ARGUMENTS:
+ *	Eprocess = Pointer to a executive process object
+ *	EnableIo = Specify TRUE to enable IO and FALSE to disable 
+ */
+NTSTATUS Ke386IoSetAccessProcess(PEPROCESS Eprocess, BOOLEAN EnableIo);
+
+/*
+ * FUNCTION: Releases a set of Global Descriptor Table Selectors
+ * ARGUMENTS:
+ *	SelArray = 
+ *	NumOfSelectors = 
+ */
+NTSTATUS KeI386ReleaseGdtSelectors(
+	OUT PULONG SelArray,
+	IN ULONG NumOfSelectors
+	);
+
+/*
+ * FUNCTION: Allocates a set of Global Descriptor Table Selectors
+ * ARGUMENTS:
+ *	SelArray = 
+ *	NumOfSelectors = 
+ */
+NTSTATUS KeI386AllocateGdtSelectors(
+	OUT PULONG SelArray,
+	IN ULONG NumOfSelectors
+	);
+
+/*
+ * FUNCTION: Raises a user mode exception
+ * ARGUMENTS:
+ *	ExceptionCode = Status code of the exception 
+ */
+void KeRaiseUserException(NTSTATUS ExceptionCode);
+
+
 #endif /* __INCLUDE_DDK_KEFUNCS_H */

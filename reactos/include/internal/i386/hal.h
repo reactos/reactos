@@ -51,6 +51,7 @@ typedef struct
    unsigned char io_bitmap[1];
 } hal_thread_state;
 
+
 /*
  * FUNCTION: Probes for a PCI bus
  * RETURNS: True if found

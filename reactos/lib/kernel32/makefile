@@ -1,9 +1,30 @@
-all: dummy
+all: kernel32.a
 
-OBJECTS = file/file.o file/lfile.o mem/virtual.o mem/local.o mem/global.o
+SYNCH_OBJECTS = synch/critical.o
 
-kernel32_lib: $(OBJECTS)
-	$(LD) --oformat=coff-go32 -Ttext b0000000 $(LDFLAGS) $(OBJECTS) -o kernel32.dll
+#MISC_OBJECTS = misc/atom.o
+MISC_OBJECTS = misc/error.o
+
+#FILE_OBJECTS = file/file.o file/lfile.o
+FILE_OBJECTS = file/file.o file/curdir.o
+
+MEM_OBJECTS = mem/virtual.o mem/heap.o mem/utils.o
+
+#THREAD_OBJECTS = thread/thread.o
+
+PROCESS_OBJECTS = process/proc.o
+
+STRING_OBJECTS = string/lstring.o
+
+INTERNAL_OBJECTS = internal/dprintf.o internal/vsprintf.o
+
+OBJECTS = $(MISC_OBJECTS) $(FILE_OBJECTS) $(THREAD_OBJECTS) \
+          $(PROCESS_OBJECTS) $(STRING_OBJECTS) $(MEM_OBJECTS) \
+	  $(INTERNAL_OBJECTS) $(SYNCH_OBJECTS)
+  
+
+kernel32.a: $(OBJECTS)
+	$(AR) vrcs kernel32.a $(OBJECTS) 
 
 dummy:
 

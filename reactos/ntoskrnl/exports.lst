@@ -377,3 +377,10 @@ ZwUnmapViewOfSection
 ZwWriteFile
 sprintf
 wcschr
+wcsncat
+wcsncpy
+wtolower
+wtoupper
+CbInitDccb
+CbAcquireForRead
+CbReleaseFromRead

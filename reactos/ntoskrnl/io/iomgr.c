@@ -13,45 +13,15 @@
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-OBJECT_TYPE DeviceObjectType = {{0,0,NULL},
-                                0,
-                                0,
-                                ULONG_MAX,
-                                ULONG_MAX,
-                                sizeof(DEVICE_OBJECT),
-                                0,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               };
-
-OBJECT_TYPE FileObjectType = {{0,0,NULL},
-                                0,
-                                0,
-                                ULONG_MAX,
-                                ULONG_MAX,
-                                sizeof(FILE_OBJECT),
-                                0,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               NULL,
-                               };
+POBJECT_TYPE IoDeviceType = NULL;
+POBJECT_TYPE IoFileType = NULL;
                            
 
 /* FUNCTIONS ****************************************************************/
@@ -60,31 +30,63 @@ VOID IoInit(VOID)
 {
    OBJECT_ATTRIBUTES attr;
    HANDLE handle;
-   UNICODE_STRING string;
-   ANSI_STRING astring;
+   UNICODE_STRING UnicodeString;
+   ANSI_STRING AnsiString;
    
    /*
     * Register iomgr types
     */
-   RtlInitAnsiString(&astring,"Device");
-   RtlAnsiStringToUnicodeString(&DeviceObjectType.TypeName,&astring,TRUE);
-   ObRegisterType(OBJTYP_DEVICE,&DeviceObjectType);
-
-   RtlInitAnsiString(&astring,"File");
-   RtlAnsiStringToUnicodeString(&FileObjectType.TypeName,&astring,TRUE);   
-   ObRegisterType(OBJTYP_FILE,&FileObjectType);
+   IoDeviceType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
+   IoDeviceType->TotalObjects = 0;
+   IoDeviceType->TotalHandles = 0;
+   IoDeviceType->MaxObjects = ULONG_MAX;
+   IoDeviceType->MaxHandles = ULONG_MAX;
+   IoDeviceType->PagedPoolCharge = 0;
+   IoDeviceType->NonpagedPoolCharge = sizeof(DEVICE_OBJECT);
+   IoDeviceType->Dump = NULL;
+   IoDeviceType->Open = NULL;
+   IoDeviceType->Close = NULL;
+   IoDeviceType->Delete = NULL;
+   IoDeviceType->Parse = NULL;
+   IoDeviceType->Security = NULL;
+   IoDeviceType->QueryName = NULL;
+   IoDeviceType->OkayToClose = NULL;
+   
+   RtlInitAnsiString(&AnsiString,"Device");
+   RtlAnsiStringToUnicodeString(&IoDeviceType->TypeName,&AnsiString,TRUE);
+   
+   IoFileType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   
+   IoFileType->TotalObjects = 0;
+   IoFileType->TotalHandles = 0;
+   IoFileType->MaxObjects = ULONG_MAX;
+   IoFileType->MaxHandles = ULONG_MAX;
+   IoFileType->PagedPoolCharge = 0;
+   IoFileType->NonpagedPoolCharge = sizeof(FILE_OBJECT);
+   IoFileType->Dump = NULL;
+   IoFileType->Open = NULL;
+   IoFileType->Close = NULL;
+   IoFileType->Delete = NULL;
+   IoFileType->Parse = NULL;
+   IoFileType->Security = NULL;
+   IoFileType->QueryName = NULL;
+   IoFileType->OkayToClose = NULL;
+   
+   RtlInitAnsiString(&AnsiString,"File");
+   RtlAnsiStringToUnicodeString(&IoFileType->TypeName,&AnsiString,TRUE);
+
    /*
     * Create the device directory
     */
-   RtlInitAnsiString(&astring,"\\Device");
-   RtlAnsiStringToUnicodeString(&string,&astring,TRUE);
-   InitializeObjectAttributes(&attr,&string,0,NULL,NULL);
+   RtlInitAnsiString(&AnsiString,"\\Device");
+   RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+   InitializeObjectAttributes(&attr,&UnicodeString,0,NULL,NULL);
    ZwCreateDirectoryObject(&handle,0,&attr);
    
-   RtlInitAnsiString(&astring,"\\??");
-   RtlAnsiStringToUnicodeString(&string,&astring,TRUE);
-   InitializeObjectAttributes(&attr,&string,0,NULL,NULL);
+   RtlInitAnsiString(&AnsiString,"\\??");
+   RtlAnsiStringToUnicodeString(&UnicodeString,&AnsiString,TRUE);
+   InitializeObjectAttributes(&attr,&UnicodeString,0,NULL,NULL);
    ZwCreateDirectoryObject(&handle,0,&attr);
 
    IoInitCancelHandling();

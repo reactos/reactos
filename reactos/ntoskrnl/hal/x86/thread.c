@@ -16,8 +16,8 @@
 #include <internal/ps.h>
 #include <internal/string.h>
 #include <internal/hal.h>
-#include <internal/hal/segment.h>
-#include <internal/hal/page.h>
+#include <internal/i386/segment.h>
+#include <internal/mmhal.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -29,7 +29,7 @@
 
 static char null_ldt[8]={0,};
 static unsigned int null_ldt_sel=0;
-static PKTHREAD FirstThread=NULL;
+static PETHREAD FirstThread=NULL;
 
 /* FUNCTIONS **************************************************************/
 
@@ -42,6 +42,7 @@ void HalTaskSwitch(PKTHREAD thread)
  * again
  */
 {
+   DPRINT("Scheduling thread %x\n",thread);
    DPRINT("Scheduling thread %x\n",thread->Context.nr);
    DPRINT("previous task %x reserved1 %x esp0 %x ss0 %x\n",
           thread->Context.previous_task,thread->Context.reserved1,
@@ -75,7 +76,6 @@ void HalTaskSwitch(PKTHREAD thread)
 	   : /* No outputs */
 	   : "m" (*(((unsigned char *)(&(thread->Context.nr)))-4) )
 	   : "ax","dx");
-//   set_breakpoint(0,&(FirstThread->Context.gs),HBP_READWRITE,HBP_DWORD);
 }
 
 static unsigned int allocate_tss_descriptor(void)
@@ -114,8 +114,129 @@ static void begin_thread(PKSTART_ROUTINE fn, PVOID start_context)
    for(;;);
 }
 
-BOOLEAN HalInitTask(PKTHREAD thread, PKSTART_ROUTINE fn, 
-		    PVOID StartContext)
+#define FLAG_NT (1<<14)
+#define FLAG_VM (1<<17)
+#define FLAG_IF (1<<9)
+#define FLAG_IOPL ((1<<12)+(1<<13))
+
+NTSTATUS KeValidateUserContext(PCONTEXT Context)
+/*
+ * FUNCTION: Validates a processor context
+ * ARGUMENTS:
+ *        Context = Context to validate
+ * RETURNS: Status
+ * NOTE: This only validates the context as not violating system security, it
+ * doesn't guararantee the thread won't crash at some point
+ * NOTE2: This relies on there only being two selectors which can access 
+ * system space
+ */
+{
+   if (Context->Eip >= KERNEL_BASE)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Context->SegCs == KERNEL_CS)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Context->SegDs == KERNEL_DS)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Context->SegEs == KERNEL_DS)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Context->SegFs == KERNEL_DS)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if (Context->SegGs == KERNEL_DS)
+     {
+	return(STATUS_UNSUCCESSFUL);
+     }
+   if ((Context->EFlags & FLAG_IOPL) != 0 ||
+       (Context->EFlags & FLAG_NT) ||
+       (Context->EFlags & FLAG_VM) ||
+       (!(Context->EFlags & FLAG_IF)))
+     {
+	return(STATUS_SUCCESS);
+     }
+   return(STATUS_SUCCESS);
+}
+
+NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
+/*
+ * FUNCTION: Initialize a task with a user mode context
+ * ARGUMENTS:
+ *        Thread = Thread to initialize
+ *        Context = Processor context to initialize it with
+ * RETURNS: Status
+ */
+{
+   unsigned int desc;
+   unsigned int length;
+   unsigned int base;
+   unsigned int* kernel_stack;
+   NTSTATUS Status;
+   
+   DPRINT("HalInitTaskWithContext(Thread %x, Context %x)\n",
+          Thread,Context);
+
+   assert(sizeof(hal_thread_state)>=0x68);
+   
+   if ((Status=KeValidateUserContext(Context))!=STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+   
+   desc = allocate_tss_descriptor();
+   length = sizeof(hal_thread_state) - 1;
+   base = (unsigned int)(&(Thread->Tcb.Context));
+   kernel_stack = ExAllocatePool(NonPagedPool,PAGESIZE);
+   
+   /*
+    * Setup a TSS descriptor
+    */
+   gdt[desc].a = (length & 0xffff) | ((base & 0xffff) << 16);
+   gdt[desc].b = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
+                 | (base & 0xff000000);
+   
+   /*
+    * Initialize the thread context
+    */
+   memset(&Thread->Tcb.Context,0,sizeof(hal_thread_state));
+   Thread->Tcb.Context.ldt = null_ldt_sel;
+   Thread->Tcb.Context.eflags = Context->EFlags;
+   Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
+   Thread->Tcb.Context.esp0 = (ULONG)&kernel_stack[1021];
+   Thread->Tcb.Context.ss0 = KERNEL_DS;
+   Thread->Tcb.Context.esp = Context->Esp;
+   Thread->Tcb.Context.ss = Context->SegSs;
+   Thread->Tcb.Context.cs = Context->SegCs;
+   Thread->Tcb.Context.eip = Context->Eip;
+   Thread->Tcb.Context.io_bitmap[0] = 0xff;
+   Thread->Tcb.Context.cr3 = 
+          linear_to_physical(Thread->ThreadsProcess->Pcb.PageTableDirectory);
+   Thread->Tcb.Context.ds = Context->SegDs;
+   Thread->Tcb.Context.es = Context->SegEs;
+   Thread->Tcb.Context.fs = Context->SegFs;
+   Thread->Tcb.Context.gs = Context->SegGs;
+   Thread->Tcb.Context.eax = Context->Eax;
+   Thread->Tcb.Context.ebx = Context->Ebx;
+   Thread->Tcb.Context.ecx = Context->Ecx;
+   Thread->Tcb.Context.edx = Context->Edx;
+   Thread->Tcb.Context.edi = Context->Edi;
+   Thread->Tcb.Context.esi = Context->Esi;
+   Thread->Tcb.Context.ebp = Context->Ebp;
+
+   Thread->Tcb.Context.nr = desc * 8;
+   DPRINT("Allocated %x\n",desc*8);
+   
+   return(STATUS_SUCCESS);
+}
+
+BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
 /*
  * FUNCTION: Initializes the HAL portion of a thread object
  * ARGUMENTS:
@@ -127,12 +248,13 @@ BOOLEAN HalInitTask(PKTHREAD thread, PKSTART_ROUTINE fn,
 {
    unsigned int desc = allocate_tss_descriptor();
    unsigned int length = sizeof(hal_thread_state) - 1;
-   unsigned int base = (unsigned int)(&(thread->Context));
+   unsigned int base = (unsigned int)(&(thread->Tcb.Context));
    unsigned int* kernel_stack = ExAllocatePool(NonPagedPool,4096);
    
    DPRINT("HalInitTask(Thread %x, fn %x, StartContext %x)\n",
           thread,fn,StartContext);
-
+   DPRINT("thread->ThreadsProcess %x\n",thread->ThreadsProcess);
+   
    /*
     * Make sure
     */
@@ -156,30 +278,31 @@ BOOLEAN HalInitTask(PKTHREAD thread, PKSTART_ROUTINE fn,
    /*
     * Initialize the thread context
     */
-   memset(&thread->Context,0,sizeof(hal_thread_state));
-   thread->Context.ldt = null_ldt_sel;
-   thread->Context.eflags = (1<<1)+(1<<9);
-   thread->Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   thread->Context.esp0 = &kernel_stack[1021];
-   thread->Context.ss0 = KERNEL_DS;
-   thread->Context.esp = &kernel_stack[1021];
-   thread->Context.ss = KERNEL_DS;
-   thread->Context.cs = KERNEL_CS;
-   thread->Context.eip = (unsigned long)begin_thread;
-   thread->Context.io_bitmap[0] = 0xff;
-   thread->Context.cr3 = ((unsigned int)get_page_directory()) - IDMAP_BASE;
-   thread->Context.ds = KERNEL_DS;
-   thread->Context.es = KERNEL_DS;
-   thread->Context.fs = KERNEL_DS;
-   thread->Context.gs = KERNEL_DS;
-   thread->Context.nr = desc * 8;
+   memset(&thread->Tcb.Context,0,sizeof(hal_thread_state));
+   thread->Tcb.Context.ldt = null_ldt_sel;
+   thread->Tcb.Context.eflags = (1<<1)+(1<<9);
+   thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
+   thread->Tcb.Context.esp0 = &kernel_stack[1021];
+   thread->Tcb.Context.ss0 = KERNEL_DS;
+   thread->Tcb.Context.esp = &kernel_stack[1021];
+   thread->Tcb.Context.ss = KERNEL_DS;
+   thread->Tcb.Context.cs = KERNEL_CS;
+   thread->Tcb.Context.eip = (unsigned long)begin_thread;
+   thread->Tcb.Context.io_bitmap[0] = 0xff;
+   thread->Tcb.Context.cr3 = 
+          linear_to_physical(thread->ThreadsProcess->Pcb.PageTableDirectory);
+   thread->Tcb.Context.ds = KERNEL_DS;
+   thread->Tcb.Context.es = KERNEL_DS;
+   thread->Tcb.Context.fs = KERNEL_DS;
+   thread->Tcb.Context.gs = KERNEL_DS;
+   thread->Tcb.Context.nr = desc * 8;
    DPRINT("Allocated %x\n",desc*8);
    
 
    return(TRUE);
 }
 
-void HalInitFirstTask(PKTHREAD thread)
+void HalInitFirstTask(PETHREAD thread)
 /*
  * FUNCTION: Called to setup the HAL portion of a thread object for the 
  * initial thread
@@ -208,6 +331,6 @@ void HalInitFirstTask(PKTHREAD thread)
     */
    __asm__("ltr %%ax" 
 	   : /* no output */
-           : "a" (thread->Context.nr));
+           : "a" (thread->Tcb.Context.nr));
    FirstThread = thread;
 }

@@ -16,6 +16,28 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS STDCALL NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
+				 IN PLARGE_INTEGER NewSystemTime OPTIONAL)
+{
+   return(ZwSetSystemTime(SystemTime,NewSystemTime));
+}
+
+NTSTATUS STDCALL ZwSetSystemTime(IN PLARGE_INTEGER SystemTime,
+				 IN PLARGE_INTEGER NewSystemTime OPTIONAL)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtQuerySystemTime (OUT TIME *CurrentTime)
+{
+   return(ZwQuerySystemTime(CurrentTime));
+}
+
+NTSTATUS STDCALL ZwQuerySystemTime (OUT TIME *CurrentTime)
+{
+   UNIMPLEMENTED;
+}
+
 VOID ExLocalTimeToSystemTime(PLARGE_INTEGER LocalTime, 
 			     PLARGE_INTEGER SystemTime)
 {

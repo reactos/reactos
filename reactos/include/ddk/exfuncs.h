@@ -94,3 +94,59 @@ PLIST_ENTRY ExInterlockedInsertHeadList(PLIST_ENTRY ListHead,
 
 VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
 		     WORK_QUEUE_TYPE QueueType);
+VOID ExRaiseStatus(NTSTATUS Status);
+VOID ExReinitializeResourceLite(PERESOURCE Resource);
+VOID ExReleaseFastMutex(PFAST_MUTEX Mutex);
+VOID ExReleaseFastMutexUnsafe(PFAST_MUTEX Mutex);
+VOID ExReleaseResource(PERESOURCE Resource);
+VOID ExReleaseResourceForThread(PERESOURCE Resource, 
+				ERESOURCE_THREAD ResourceThreadId);
+VOID ExReleaseResourceForThreadLite(PERESOURCE Resource,
+				    ERESOURCE_THREAD ResourceThreadId);
+VOID ExSystemTimeToLocalTime(PLARGE_INTEGER SystemTime,
+			     PLARGE_INTEGER LocalTime);
+BOOLEAN ExTryToAcquireFastMutex(PFAST_MUTEX FastMutex);
+BOOLEAN ExTryToAcquireResourceExclusiveLite(PERESOURCE Resource);
+PVOID InterlockedCompareExchange(PVOID* Destination,
+				 PVOID Exchange,
+				 PVOID Comperand);
+LONG InterlockedDecrement(PLONG Addend);
+LONG InterlockedExchange(PLONG Target, LONG Value);
+LONG InterlockedExchangeAdd(PLONG Addend, LONG Value);
+LONG InterlockedIncrement(PLONG Addend);
+
+PVOID ExInterlockedAllocateFromZone(PZONE_HEADER Zone, PKSPIN_LOCK Lock);
+PVOID ExInterlockedFreeToZone(PZONE_HEADER Zone, PVOID Block,
+			      PKSPIN_LOCK Lock);
+NTSTATUS ExInterlockedExtendZone(PZONE_HEADER Zone, PVOID Segment,
+				 ULONG SegmentSize, PKSPIN_LOCK Lock);
+PSINGLE_LIST_ENTRY ExInterlockedPopEntryList(PSINGLE_LIST_ENTRY ListHead,
+					     PKSPIN_LOCK Lock);
+PSINGLE_LIST_ENTRY ExInterlockedPushEntryList(PSINGLE_LIST_ENTRY ListHead,
+					      PSINGLE_LIST_ENTRY ListEntry,
+					      PKSPIN_LOCK Lock);
+PSINGLE_LIST_ENTRY ExInterlockedPushEntrySList(PSLIST_HEADER ListHead,
+					       PSINGLE_LIST_ENTRY ListEntry,
+					       PKSPIN_LOCK Lock);
+PSINGLE_LIST_ENTRY ExInterlockedPopEntrySList(PSLIST_HEADER ListHead,
+					      PKSPIN_LOCK Lock);
+BOOLEAN ExIsFullZone(PZONE_HEADER Zone);
+BOOLEAN ExIsObjectInFirstZoneSegment(PZONE_HEADER Zone, PVOID Object);
+VOID ExLocalTimeToSystemTime(PLARGE_INTEGER LocalTime, 
+			     PLARGE_INTEGER SystemTime);
+
+typedef unsigned int (exception_hook)(CONTEXT* c, unsigned int exp);
+unsigned int ExHookException(exception_hook fn, unsigned int exp);
+
+INTERLOCKED_RESULT ExInterlockedDecrementLong(PLONG Addend,
+					      PKSPIN_LOCK Lock);
+ULONG ExInterlockedExchangeUlong(PULONG Target,
+				 ULONG Value,
+				 PKSPIN_LOCK Lock);
+INTERLOCKED_RESULT ExInterlockedIncrementLong(PLONG Addend,
+					      PKSPIN_LOCK Lock);
+BOOLEAN ExIsResourceAcquiredExclusiveLite(PERESOURCE Resource);
+BOOLEAN ExIsResourceAcquiredSharedLite(PERESOURCE Resource);
+USHORT ExQueryDepthSListHead(PSLIST_HEADER SListHead);
+
+

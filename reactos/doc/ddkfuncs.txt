@@ -20,8 +20,5 @@ IoInitializeDpc
 IoInitializeTimer
 IoStartTimer
 IoStopTimer
-
-Partially implemented
-
 IoCreateDevice
 IoCallDriver

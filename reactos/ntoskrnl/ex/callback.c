@@ -23,9 +23,12 @@ VOID ExCallUserCallBack(PVOID fn)
 {
 }
 
-VOID NtReturnFromCallBack(VOID)
-/*
- * FUNCTION: Returns from a user callback
- */
+NTSTATUS STDCALL NtCallbackReturn(VOID)
 {
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtW32Call(VOID)
+{
+   UNIMPLEMENTED;
 }

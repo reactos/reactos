@@ -142,7 +142,7 @@ VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
    ASSERT_IRQL(DISPATCH_LEVEL);
    
    /*
-    * Insert the item in the appropiate queue and wake on any thread
+    * Insert the item in the appropiate queue and wake up any thread
     * waiting for something to do
     */
    switch(QueueType)
@@ -152,5 +152,5 @@ VOID ExQueueWorkItem(PWORK_QUEUE_ITEM WorkItem,
 				    &normal_work_queue.Lock);
 	KeSetEvent(&normal_work_queue.Busy,IO_NO_INCREMENT,FALSE);
 	break;
-     };
+     }
 }

@@ -3,12 +3,16 @@
 
 #include <internal/hal.h>
 
-extern EPROCESS SystemProcess;
+extern PEPROCESS SystemProcess;
 extern HANDLE SystemProcessHandle;
+
+extern POBJECT_TYPE PsThreadType;
+extern POBJECT_TYPE PsProcessType;
 
 void PsInitThreadManagment(void);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
+VOID PsDispatchThread(VOID);
 
 /*
  * PURPOSE: Thread states
@@ -45,9 +49,9 @@ enum
  * Functions the HAL must provide
  */
 
-void HalInitFirstTask(PKTHREAD thread);
-BOOLEAN HalInitTask(PKTHREAD thread, PKSTART_ROUTINE fn, 
-		 PVOID StartContext);
+void HalInitFirstTask(PETHREAD thread);
+BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext);
 void HalTaskSwitch(PKTHREAD thread);
+NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context);
 
 #endif

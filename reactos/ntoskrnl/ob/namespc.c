@@ -22,23 +22,7 @@
 
 /* GLOBALS ****************************************************************/
 
-OBJECT_TYPE DirectoryObjectType = {{0,0,NULL},
-                                   0,
-                                   0,
-                                   ULONG_MAX,
-                                   ULONG_MAX,
-                                   sizeof(DIRECTORY_OBJECT),
-                                   0,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   NULL,
-                                   };
-
+POBJECT_TYPE ObDirectoryType = NULL;
 
 static struct
 {
@@ -49,6 +33,15 @@ static struct
 } namespc_root = {{0,},};
 
 /* FUNCTIONS **************************************************************/
+
+NTSTATUS NtOpenDirectoryObject(PHANDLE DirectoryHandle,
+			       ACCESS_MASK DesiredAccess,
+			       POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return(ZwOpenDirectoryObject(DirectoryHandle,
+				DesiredAccess,
+				ObjectAttributes));
+}
 
 NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
 			       ACCESS_MASK DesiredAccess,
@@ -80,9 +73,27 @@ NTSTATUS ZwOpenDirectoryObject(PHANDLE DirectoryHandle,
 	return(STATUS_UNSUCCESSFUL);
      }
    
-   *DirectoryHandle = ObAddHandle(Object);
+   *DirectoryHandle = ObInsertHandle(KeGetCurrentProcess(),Object,
+				     DesiredAccess,FALSE);
    CHECKPOINT;
    return(STATUS_SUCCESS);
+}
+
+NTSTATUS NtQueryDirectoryObject(IN HANDLE DirObjHandle,
+				OUT POBJDIR_INFORMATION DirObjInformation, 
+				IN ULONG                BufferLength, 
+				IN BOOLEAN              GetNextIndex, 
+				IN BOOLEAN              IgnoreInputIndex, 
+				IN OUT PULONG           ObjectIndex,
+				OUT PULONG              DataWritten OPTIONAL)
+{
+   return(ZwQueryDirectoryObject(DirObjHandle,
+				 DirObjInformation,
+				 BufferLength,
+				 GetNextIndex,
+				 IgnoreInputIndex,
+				 ObjectIndex,
+				 DataWritten));
 }
 
 NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
@@ -111,19 +122,30 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
  * RETURNS: Status
  */
 {
-   COMMON_BODY_HEADER* hdr = ObGetObjectByHandle(DirObjHandle);
-   PDIRECTORY_OBJECT dir = (PDIRECTORY_OBJECT)hdr;
+   PDIRECTORY_OBJECT dir = NULL;
    ULONG EntriesToRead;
    PLIST_ENTRY current_entry;
    POBJECT_HEADER current;
    ULONG i=0;
    ULONG EntriesToSkip;
+   NTSTATUS Status;
    
    DPRINT("ZwQueryDirectoryObject(DirObjHandle %x)\n",DirObjHandle);
    DPRINT("dir %x namespc_root %x\n",dir,HEADER_TO_BODY(&(namespc_root.hdr)));
    
-   assert_irql(PASSIVE_LEVEL);
-
+//   assert_irql(PASSIVE_LEVEL);
+   
+   Status = ObReferenceObjectByHandle(DirObjHandle,
+				      DIRECTORY_QUERY,
+				      ObDirectoryType,
+				      UserMode,
+				      (PVOID*)&dir,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+   
    EntriesToRead = BufferLength / sizeof(OBJDIR_INFORMATION);
    *DataWritten = 0;
    
@@ -152,16 +174,16 @@ NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
     */
    while ( i<EntriesToRead && current_entry!=(&(dir->head)))
      {
-	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,entry);
-	DPRINT("Scanning %w\n",current->name.Buffer);
+	current = CONTAINING_RECORD(current_entry,OBJECT_HEADER,Entry);
+	DPRINT("Scanning %w\n",current->Name.Buffer);
 	DirObjInformation[i].ObjectName.Buffer = 
-	               ExAllocatePool(NonPagedPool,current->name.Length);
-	DirObjInformation[i].ObjectName.Length = current->name.Length;
-	DirObjInformation[i].ObjectName.MaximumLength = current->name.Length;
+	               ExAllocatePool(NonPagedPool,(current->Name.Length+1)*2);
+	DirObjInformation[i].ObjectName.Length = current->Name.Length;
+	DirObjInformation[i].ObjectName.MaximumLength = current->Name.Length;
 	DPRINT("DirObjInformation[i].ObjectName.Buffer %x\n",
 	       DirObjInformation[i].ObjectName.Buffer);
 	RtlCopyUnicodeString(&DirObjInformation[i].ObjectName,
-			     &(current->name));
+			     &(current->Name));
 	i++;
 	current_entry = current_entry->Flink;
 	(*DataWritten) = (*DataWritten) + sizeof(OBJDIR_INFORMATION);
@@ -194,7 +216,7 @@ NTSTATUS ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 				 PACCESS_STATE PassedAccessState,
 				 ACCESS_MASK DesiredAccess,
 				 POBJECT_TYPE ObjectType,
-				 KPROCESSOR_MODE Accessmode,
+				 KPROCESSOR_MODE AccessMode,
 				 PVOID ParseContext,
 				 PVOID* ObjectPtr)
 {
@@ -210,6 +232,8 @@ NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 	  ObjectAttributes,Object);
    DPRINT("ObjectAttributes = {ObjectName %x ObjectName->Buffer %w}\n",
 	  ObjectAttributes->ObjectName,ObjectAttributes->ObjectName->Buffer);
+   DPRINT("ObjectAttributes->ObjectName->Length %d\n",
+	  ObjectAttributes->ObjectName->Length);
    
    *Object = NULL;
    Status = ObLookupObject(ObjectAttributes->RootDirectory, 
@@ -217,6 +241,8 @@ NTSTATUS ObOpenObjectByName(POBJECT_ATTRIBUTES ObjectAttributes,
 			   Object,
 			   UnparsedSection);
    DPRINT("*Object %x\n",*Object);
+   DPRINT("ObjectAttributes->ObjectName->Length %d\n",
+	  ObjectAttributes->ObjectName->Length);
    return(Status);
 }
 
@@ -225,15 +251,40 @@ void ObInit(void)
  * FUNCTION: Initialize the object manager namespace
  */
 {
-   ANSI_STRING ansi_str;
+   ANSI_STRING AnsiString;
    
-   ObInitializeObjectHeader(OBJTYP_DIRECTORY,NULL,&namespc_root.hdr);
+   ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   
+   ObDirectoryType->TotalObjects = 0;
+   ObDirectoryType->TotalHandles = 0;
+   ObDirectoryType->MaxObjects = ULONG_MAX;
+   ObDirectoryType->MaxHandles = ULONG_MAX;
+   ObDirectoryType->PagedPoolCharge = 0;
+   ObDirectoryType->NonpagedPoolCharge = sizeof(DIRECTORY_OBJECT);
+   ObDirectoryType->Dump = NULL;
+   ObDirectoryType->Open = NULL;
+   ObDirectoryType->Close = NULL;
+   ObDirectoryType->Delete = NULL;
+   ObDirectoryType->Parse = NULL;
+   ObDirectoryType->Security = NULL;
+   ObDirectoryType->QueryName = NULL;
+   ObDirectoryType->OkayToClose = NULL;
+   
+   RtlInitAnsiString(&AnsiString,"Directory");
+   RtlAnsiStringToUnicodeString(&ObDirectoryType->TypeName,
+				&AnsiString,TRUE);
+   
+   ObInitializeObjectHeader(ObDirectoryType,NULL,&namespc_root.hdr);
    InitializeListHead(&namespc_root.head);
-   
-   RtlInitAnsiString(&ansi_str,"Directory");
-   RtlAnsiStringToUnicodeString(&DirectoryObjectType.TypeName,&ansi_str,
-				TRUE);
-   ObRegisterType(OBJTYP_DIRECTORY,&DirectoryObjectType);
+}
+
+NTSTATUS NtCreateDirectoryObject(PHANDLE DirectoryHandle,
+				 ACCESS_MASK DesiredAccess,
+				 POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return(ZwCreateDirectoryObject(DirectoryHandle,
+				  DesiredAccess,
+				  ObjectAttributes));
 }
 
 NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
@@ -254,7 +305,7 @@ NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
    PDIRECTORY_OBJECT dir;
    
    dir = ObGenericCreateObject(DirectoryHandle,DesiredAccess,ObjectAttributes,
-			       OBJTYP_DIRECTORY);
+			       ObDirectoryType);
    
    /*
     * Initialize the object body
@@ -326,9 +377,9 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
      }
    while (current!=(&(dir->head)))
      {
-	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,entry);
-	DPRINT("Scanning %w\n",current_obj->name.Buffer);
-	if ( wcscmp(current_obj->name.Buffer, name)==0)
+	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
+	DPRINT("Scanning %w\n",current_obj->Name.Buffer);
+	if ( wcscmp(current_obj->Name.Buffer, name)==0)
 	  {
 	     return(HEADER_TO_BODY(current_obj));
 	  }
@@ -338,6 +389,16 @@ static PVOID ObDirLookup(PDIRECTORY_OBJECT dir, PWSTR name)
    return(NULL);
 }
 
+VOID ObRemoveEntry(POBJECT_HEADER Header)
+{
+   KIRQL oldlvl;
+   
+   DPRINT("ObRemoveEntry(Header %x)\n",Header);
+   
+   KeAcquireSpinLock(&(Header->Parent->Lock),&oldlvl);
+   RemoveEntryList(&(Header->Entry));
+   KeReleaseSpinLock(&(Header->Parent->Lock),oldlvl);
+}
 
 VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
 /*
@@ -348,14 +409,13 @@ VOID ObCreateEntry(PDIRECTORY_OBJECT parent,POBJECT_HEADER Object)
  *         Object = Header of the object to add the entry for
  */
 {
-   DPRINT("ObjCreateEntry(%x,%x,%x,%w)\n",parent,Object,Object->name.Buffer,
-	  Object->name.Buffer);
-   assert(parent->Type == OBJTYP_DIRECTORY);
+   DPRINT("ObjCreateEntry(%x,%x,%x,%w)\n",parent,Object,Object->Name.Buffer,
+	  Object->Name.Buffer);
    
    /*
     * Insert ourselves in our parents list
     */
-   InsertTailList(&parent->head,&Object->entry);
+   InsertTailList(&parent->head,&Object->Entry);
 }
 
 NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
@@ -411,7 +471,8 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
    next = &string[0];
    current = next+1;
    
-   while (next!=NULL && current_dir->Type==OBJTYP_DIRECTORY)
+   while (next!=NULL && 
+	  BODY_TO_HEADER(current_dir)->ObjectType==ObDirectoryType)
      {		
 	*next = '\\';
 	current = next+1;
@@ -433,15 +494,10 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 	  {
              DbgPrint("(%s:%d) Path component not found\n",__FILE__,
                     __LINE__);
-	     ExFreePool(string);
 	     return(STATUS_UNSUCCESSFUL);	   	     
 	  }
 	
-	DPRINT("current_dir %x\n",current_dir);
-	DPRINT("current_dir->Type %d OBJTYP_SYMLNK %d OBJTYP_DIRECTORY %d\n",
-	       current_dir->Type,OBJTYP_SYMLNK,OBJTYP_DIRECTORY);
-	DPRINT("&(current_dir->Type) %x\n",&(current_dir->Type));
-	if (current_dir->Type==OBJTYP_SYMLNK)
+	if (BODY_TO_HEADER(current_dir)->ObjectType==IoSymbolicLinkType)
 	  {
 	     current_dir = IoOpenSymlink(current_dir);	   
 	  }
@@ -465,18 +521,14 @@ NTSTATUS ObLookupObject(HANDLE rootdir, PWSTR string, PVOID* Object,
 	CHECKPOINT;
 	*next = '\\';
 	*UnparsedSection = next;
-	switch(current_dir->Type)
+	if (BODY_TO_HEADER(current_dir)->ObjectType == IoDeviceType)
 	  {
-	   case OBJTYP_DEVICE:
-	     CHECKPOINT;
 	     Status = STATUS_FS_QUERY_REQUIRED;
-	     break;
-	     
-	   default:
-	     current_dir = NULL;
-	     Status = STATUS_UNSUCCESSFUL;
-	     break;
 	  }
+	else
+	  {
+	     Status = STATUS_UNSUCCESSFUL;
+	  }     
      }
    CHECKPOINT;
    *Object = current_dir;

@@ -16,6 +16,11 @@
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS STDCALL NtSystemDebugControl(VOID)
+{
+   UNIMPLEMENTED;
+}
+
 VOID DbgBreakPoint(VOID)
 {
    __asm__("int $3\n\t");

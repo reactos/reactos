@@ -15,6 +15,10 @@
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
+VOID KeAcquireDispatcherDatabaseLock(BOOLEAN Wait);
+VOID KeReleaseDispatcherDatabaseLock(BOOLEAN Wait);
+VOID KeDispatcherObjectWake(DISPATCHER_HEADER* hdr);
+
 VOID KiInterruptDispatch(ULONG irq);
 VOID KiDispatchInterrupt(ULONG irq);
 VOID KiTimerInterrupt(VOID);

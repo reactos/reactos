@@ -21,6 +21,27 @@
 
 /* FUNCTIONS ***************************************************************/
 
+
+NTSTATUS 
+STDCALL
+NtUnloadDriver(
+	IN PUNICODE_STRING DriverServiceName
+	)
+{
+}
+
+NTSTATUS 
+STDCALL
+ZwUnloadDriver(
+	IN PUNICODE_STRING DriverServiceName
+	)
+{
+}
+
+NTSTATUS NtLoadDriver(PUNICODE_STRING DriverServiceName)
+{
+}
+
 NTSTATUS ZwLoadDriver(PUNICODE_STRING DriverServiceName)
 /*
  * FUNCTION: Loads a driver
@@ -187,11 +208,11 @@ NTSTATUS IoCreateDevice(PDRIVER_OBJECT DriverObject,
    if (DeviceName!=NULL)
      {
 	InitializeObjectAttributes(&dev_attr,DeviceName,0,NULL,NULL);
-	dev = ObGenericCreateObject(&devh,0,&dev_attr,OBJTYP_DEVICE);
+	dev = ObGenericCreateObject(&devh,0,&dev_attr,IoDeviceType);
      }
    else
      {
-	dev = ObGenericCreateObject(&devh,0,NULL,OBJTYP_DEVICE);
+	dev = ObGenericCreateObject(&devh,0,NULL,IoDeviceType);
      }
 					      
    *DeviceObject=NULL;

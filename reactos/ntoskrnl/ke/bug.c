@@ -32,6 +32,7 @@ VOID KeInitializeBugCheck(VOID)
 
 VOID KeInitializeCallbackRecord(PKBUGCHECK_CALLBACK_RECORD CallbackRecord)
 {
+   UNIMPLEMENTED;
 }
 
 BOOLEAN KeRegisterBugCheckCallback(PKBUGCHECK_CALLBACK_RECORD CallbackRecord,
@@ -64,6 +65,7 @@ VOID KeBugCheckEx(ULONG BugCheckCode,
    DbgPrint("Bug detected (code %x param %x %x %x %x)\n",BugCheckCode,
 	  BugCheckParameter1,BugCheckParameter2,BugCheckParameter3,
 	  BugCheckParameter4);
+   *((unsigned int *)0)=0;
    for(;;);
 }
 

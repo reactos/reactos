@@ -18,3 +18,24 @@ VOID ExRaiseStatus(NTSTATUS Status)
    DbgPrint("ExRaiseStatus(%d)\n",Status);
    for(;;);
 }
+
+
+NTSTATUS
+STDCALL
+NtRaiseException(
+	IN PEXCEPTION_RECORD ExceptionRecord,
+	IN PCONTEXT Context,
+	IN BOOL IsDebugger OPTIONAL
+	)
+{
+}
+
+NTSTATUS
+STDCALL
+ZwRaiseException(
+	IN PEXCEPTION_RECORD ExceptionRecord,
+	IN PCONTEXT Context,
+	IN BOOL IsDebugger OPTIONAL
+	)
+{
+}

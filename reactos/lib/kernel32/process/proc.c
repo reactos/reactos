@@ -1,3 +1,4 @@
+#include <windows.h>
 #include <process.h>
 /*
  * Win32 Process Api functions
@@ -14,13 +15,17 @@
 #define NT_CURRENT_THREAD	0xFFFFFFFE
 
 
-WINBASEAPI
-HANDLE
-WINAPI
-GetCurrentProcess()
+HANDLE STDCALL GetCurrentProcess(VOID)
 {
 	return NT_CURRENT_PROCESS;
 }
+
+HANDLE STDCALL GetCurrentThread()
+{
+	return NT_CURRENT_PROCESS;
+}
+
+#if 0
 
 WINBASEAPI
 DWORD
@@ -30,14 +35,6 @@ GetCurrentProcessId()
 	return GetTeb()->dwProcessId; 
 }
 
-
-WINBASEAPI
-HANDLE
-WINAPI
-GetCurrentThread()
-{
-	return NT_CURRENT_PROCESS;
-}
 
 WINBASEAPI
 DWORD
@@ -135,3 +132,5 @@ BOOL FlushInstructionCache(
 		return FALSE;
 	}
 }
+
+#endif

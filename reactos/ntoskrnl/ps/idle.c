@@ -22,16 +22,28 @@ HANDLE IdleThreadHandle = NULL;
 
 static VOID PsIdleThreadMain(PVOID Context)
 {
-   for(;;);
+   for(;;)
+     {
+//        DbgPrint("Idling.... ");
+	ZwYieldExecution();
+     }
 }
 
 VOID PsInitIdleThread(VOID)
 {
+   KPRIORITY Priority;
+   
    PsCreateSystemThread(&IdleThreadHandle,
-			0,
+			THREAD_ALL_ACCESS,
 			NULL,
 			NULL,
 			NULL,
 			PsIdleThreadMain,
 			NULL);
+   
+   Priority = THREAD_PRIORITY_IDLE;
+   ZwSetInformationThread(IdleThreadHandle,
+			  ThreadPriority,
+			  &Priority,
+			  sizeof(Priority));
 }

@@ -38,6 +38,11 @@ extern char _ctmp;
 
 #define upalpha ('A' - 'a')
 
+extern inline int isspace(char c)
+{
+   return(c==' '||c=='\t');
+}
+
 extern inline char toupper(char c)
 {
    if ((c>='a') && (c<='z')) return (c+upalpha);

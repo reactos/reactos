@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID KeInit()
+VOID KeInit(VOID)
 {
    KeInitDpc();
    KeInitializeBugCheck();

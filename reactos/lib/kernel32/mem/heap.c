@@ -26,7 +26,9 @@
  * Put the type definitions of the heap in a seperate header. Boudewijn Dekker
  */
 
+#include <kernel32/kernel32.h>
 #include <kernel32/heap.h>
+#include <internal/string.h>
 
 static HEAP_BUCKET __HeapDefaultBuckets[]=
 {
@@ -40,13 +42,14 @@ static HEAP_BUCKET __HeapDefaultBuckets[]=
   { NULL, 256, 15, 4088 },
 };
 
+PHEAP	__ProcessHeap;
 
 static BOOL   __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end);
 static BOOL   __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end);
 static LPVOID __HeapAlloc(PHEAP pheap, ULONG flags, ULONG size, ULONG tag);
 static VOID   __HeapFreeRest(PHEAP pheap, PHEAP_BLOCK pfree, ULONG allocsize,
                              ULONG newsize);
-static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, ULONG size);
+static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size);
 static BOOL   __HeapFree(PHEAP pheap, ULONG flags, LPVOID pmem);
 static PHEAP_SUBALLOC __HeapAllocSub(PHEAP pheap, PHEAP_BUCKET pbucket);
 static LPVOID __HeapAllocFragment(PHEAP pheap, ULONG flags, ULONG size);
@@ -67,12 +70,14 @@ static BOOL __HeapCommit(PHEAP pheap, LPVOID start, LPVOID end)
 {
    dprintf("__HeapCommit( 0x%lX, 0x%lX, 0x%lX)\n",
            (ULONG) pheap, (ULONG) start, (ULONG) end);
-#ifdef NOT
-   __VirtualDump();
-#endif
+
    if(end >= pheap->LastBlock)
       pheap->LastBlock=end;
-   return __VirtualCommit(start, end-start, PAGE_READWRITE);
+   if (VirtualAlloc(start,end-start,MEM_COMMIT,PAGE_READWRITE)!=start)
+     {
+	return(FALSE);
+     }
+   return(TRUE);
 }
 
 /*********************************************************************
@@ -89,7 +94,8 @@ static BOOL __HeapDecommit(PHEAP pheap, LPVOID start, LPVOID end)
 #endif
    if((end >= pheap->LastBlock)&&(start<= pheap->LastBlock))
       pheap->LastBlock=start;
-   return __VirtualDecommit(start, end-start );
+   
+   return(VirtualFree(start,end-start,MEM_RESERVE));
 }
 
 /*********************************************************************
@@ -106,7 +112,10 @@ static LPVOID __HeapAlloc(PHEAP pheap, ULONG flags, ULONG size, ULONG tag)
    LPVOID	commitend;
    ULONG	freesize;
    ULONG	allocsize;
-
+   
+   dprintf("__HeapAlloc(pheap %x, flags %x, size %d, tag %x)\n",
+	   pheap,flags,size,tag);
+   
    pfree=&(pheap->Start);
    allocsize=SIZE_ROUND(size);
    freesize=HEAP_SIZE(pfree);
@@ -154,7 +163,7 @@ static LPVOID __HeapAlloc(PHEAP pheap, ULONG flags, ULONG size, ULONG tag)
    /* update our administration */
    palloc->Size= size | tag;
    if((flags | pheap->Flags)& HEAP_ZERO_MEMORY)
-      memset((LPVOID)palloc+HEAP_ADMIN_SIZE, 0, allocsize);
+      FillMemory((LPVOID)palloc+HEAP_ADMIN_SIZE, allocsize, 0);
    return (LPVOID)palloc+HEAP_ADMIN_SIZE;
 }
 
@@ -236,7 +245,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
       /* alloc a new fragment */
       pmem=__HeapAllocFragment(pheap, flags, size);
       if(pmem)
-         memcpy(pmem, pold, size);
+	 CopyMemory(pmem, pold, size);
       return pmem;
    }
 #endif
@@ -300,7 +309,7 @@ static LPVOID __HeapReAlloc(PHEAP pheap, ULONG flags, LPVOID pold, DWORD size)
             oldsize=HEAP_SIZE(prealloc);
             pmem=__HeapAlloc(pheap, flags, size, HEAP_NORMAL_TAG);
             if(pmem)
-               memcpy(pmem, pold, oldsize);
+	       CopyMemory(pmem, pold, oldsize);
             if((flags|pheap->Flags)&HEAP_ZERO_MEMORY)
                memset(pmem + oldsize, 0, size-oldsize);
             __HeapFree(pheap, flags, pold);
@@ -502,7 +511,7 @@ static LPVOID __HeapReAllocFragment(PHEAP pheap, ULONG flags,
             pmem=__HeapAllocFragment(pheap, flags, size);
 
          if(pmem)
-            memcpy(pmem, pold, size);
+	    CopyMemory(pmem, pold, size);
          if((flags|pheap->Flags)&HEAP_ZERO_MEMORY)
             memset(pmem+pfrag->Size, 0, size-pfrag->Size);
 
@@ -580,12 +589,15 @@ static BOOL __HeapFreeFragment(PHEAP pheap, ULONG flags, LPVOID pfree )
 PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 {
    PHEAP pheap=(PHEAP) base;
-
+   
+   dprintf("__HeapPrepare(base %x, minsize %d, maxsize %d, flags %x)\n",
+	   base,minsize,maxsize,flags);
+   
    pheap->Magic=MAGIC_HEAP;
    pheap->End= ((LPVOID)pheap)+minsize;
    pheap->Flags=flags;
    pheap->LastBlock=(LPVOID)pheap + PAGESIZE;
-   memcpy(pheap->Bucket,__HeapDefaultBuckets,sizeof(__HeapDefaultBuckets));
+   CopyMemory(pheap->Bucket,__HeapDefaultBuckets,sizeof(__HeapDefaultBuckets));
    if(__ProcessHeap)
    {
       pheap->NextHeap=__ProcessHeap->NextHeap;
@@ -611,8 +623,8 @@ PHEAP __HeapPrepare(LPVOID base, ULONG minsize, ULONG maxsize,  ULONG flags)
 
 VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize)
 {
-   mmap(base, PAGESIZE, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE,
-        __DevZero, 0);
+   VirtualAlloc(base,maxsize,MEM_RESERVE,PAGE_READWRITE);
+   VirtualAlloc(base,PAGESIZE,MEM_COMMIT,PAGE_READWRITE);
    
    __HeapPrepare(base, minsize, maxsize, 0);
 }
@@ -621,16 +633,14 @@ VOID WINAPI __HeapInit(LPVOID base, ULONG minsize, ULONG maxsize)
 /*********************************************************************
 *                     HeapCreate -- KERNEL32                         *
 *********************************************************************/
-
-HANDLE WINAPI HeapCreate(ULONG flags, ULONG minsize, ULONG maxsize)
+HANDLE STDCALL HeapCreate(DWORD flags, DWORD minsize, DWORD maxsize)
 {
    PHEAP pheap;
 
    aprintf("HeapCreate( 0x%lX, 0x%lX, 0x%lX )\n", flags, minsize, maxsize);
 
-   pheap = __VirtualReserve(NULL, minsize, PAGE_READWRITE | MEM_TOP_DOWN);
-   __VirtualCommit(pheap, PAGESIZE, PAGE_READWRITE);
-   __VirtualDump();
+   pheap = VirtualAlloc(NULL, minsize, MEM_TOP_DOWN, PAGE_READWRITE);
+   VirtualAlloc(pheap, PAGESIZE, MEM_COMMIT, PAGE_READWRITE);
    return (HANDLE) __HeapPrepare(pheap, minsize, maxsize, flags);
 }
 
@@ -647,15 +657,15 @@ BOOL WINAPI HeapDestroy(HANDLE hheap)
       return __ErrorReturnFalse(ERROR_INVALID_PARAMETER);
 
    DeleteCriticalSection(&(pheap->Synchronize));
-   __VirtualRelease(pheap);
-
+   VirtualFree(pheap,0,MEM_RELEASE);
+   
    return TRUE;
 }
 
 /*********************************************************************
 *                     HeapAlloc -- KERNEL32                          *
 *********************************************************************/
-LPVOID WINAPI HeapAlloc(HANDLE hheap, ULONG flags, ULONG size)
+LPVOID STDCALL HeapAlloc(HANDLE hheap, DWORD flags, DWORD size)
 {
    PHEAP    pheap=hheap;
    LPVOID   retval;
@@ -684,7 +694,7 @@ LPVOID WINAPI HeapAlloc(HANDLE hheap, ULONG flags, ULONG size)
 /*********************************************************************
 *                     HeapReAlloc -- KERNEL32                        *
 *********************************************************************/
-LPVOID WINAPI HeapReAlloc(HANDLE hheap, ULONG flags, LPVOID ptr, ULONG size)
+LPVOID STDCALL HeapReAlloc(HANDLE hheap, DWORD flags, LPVOID ptr, DWORD size)
 {
    PHEAP            pheap=hheap;
    PHEAP_BLOCK      pfree=((PHEAP_BLOCK)ptr-1);
@@ -714,7 +724,7 @@ LPVOID WINAPI HeapReAlloc(HANDLE hheap, ULONG flags, LPVOID ptr, ULONG size)
 /*********************************************************************
 *                     HeapFree -- KERNEL32                           *
 *********************************************************************/
-BOOL WINAPI HeapFree(HANDLE hheap, ULONG flags, LPVOID ptr)
+WINBOOL STDCALL HeapFree(HANDLE hheap, DWORD flags, LPVOID ptr)
 {
    PHEAP            pheap=hheap;
    PHEAP_BLOCK      pfree=(PHEAP_BLOCK)((LPVOID)ptr-HEAP_ADMIN_SIZE);

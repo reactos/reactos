@@ -37,5 +37,6 @@ LONG KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 			LONG Adjustment,
 			BOOLEAN Wait)
 {
+   UNIMPLEMENTED;
 }
 

@@ -14,6 +14,10 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 
+extern POBJECT_TYPE IoDeviceType;
+extern POBJECT_TYPE IoFileType;
+extern POBJECT_TYPE IoSymbolicLinkType;
+
 /*
  * FUNCTION: Called to initalize a loaded driver
  * ARGUMENTS: 
@@ -36,5 +40,9 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
 				     PKEVENT UserEvent,
 				     PIO_STATUS_BLOCK IoStatusBlock,
 				     PDEVICE_OBJECT DeviceToMount);
-
+NTSTATUS IoPageRead(PFILE_OBJECT FileObject,
+		    PVOID Address,
+		     PLARGE_INTEGER Offset,
+		     PIO_STATUS_BLOCK StatusBlock);
+VOID IoSecondStageCompletion(PIRP Irp, CCHAR PriorityBoost);
 #endif

@@ -22,13 +22,6 @@ extern "C"
 
 #define QUAD_PART(LI)  (*(LONGLONG *)(&LI))
 
-
-#define  IO_DISK_INCREMENT  4
-
-#define  FILE_WORD_ALIGNMENT  0x0001
-
-#define  FILE_OPENED          0x0001
-
 #include <ddk/status.h>
 #include <ddk/ntdef.h>
 #include <ddk/defines.h>
@@ -41,6 +34,7 @@ extern "C"
 #include <ddk/iotypes.h>
 #include <ddk/extypes.h>
 #include <ddk/pstypes.h>
+#include <ddk/zwtypes.h>
 #include <ddk/ioctrl.h>   
 #include <internal/hal/ddk.h>
    
@@ -53,7 +47,8 @@ extern "C"
 #include <ddk/psfuncs.h>
 #include <ddk/obfuncs.h>
 #include <ddk/dbgfuncs.h>
-      
+#include <ddk/sefuncs.h>      
+   
 #ifdef __cplusplus
 };
 #endif

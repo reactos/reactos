@@ -80,7 +80,7 @@ VOID KeDispatcherObjectWakeAll(DISPATCHER_HEADER* hdr)
 	current = CONTAINING_RECORD(current_entry,KWAIT_BLOCK,
 					    WaitListEntry);
 	DPRINT("Waking %x\n",current->Thread);
-	PsWakeThread((PETHREAD)current->Thread);
+	PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
      };
 }
 
@@ -101,7 +101,7 @@ BOOLEAN KeDispatcherObjectWakeOne(DISPATCHER_HEADER* hdr)
 			       WaitListEntry);
    DPRINT("current_entry %x current %x\n",current_entry,current);
    DPRINT("Waking %x\n",current->Thread);
-   PsWakeThread((PETHREAD)current->Thread);
+   PsResumeThread(CONTAINING_RECORD(current->Thread,ETHREAD,Tcb));
    return(TRUE);
 }
 
@@ -146,7 +146,6 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 {
    DISPATCHER_HEADER* hdr = (DISPATCHER_HEADER *)Object;
    KWAIT_BLOCK blk;
-   KIRQL oldlvl;
    
    DPRINT("Entering KeWaitForSingleObject(Object %x)\n",Object);
 
@@ -154,9 +153,12 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 
    if (hdr->SignalState)
    {
-        hdr->SignalState=FALSE;
-        KeReleaseDispatcherDatabaseLock(FALSE);
-        return(STATUS_SUCCESS);
+      if (hdr->Type == SynchronizationEvent)
+	{
+	   hdr->SignalState=FALSE;
+	}
+      KeReleaseDispatcherDatabaseLock(FALSE);
+      return(STATUS_SUCCESS);
    }
 
    if (Timeout!=NULL)
@@ -173,7 +175,7 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 //   DPRINT("hdr->WaitListHead.Flink %x hdr->WaitListHead.Blink %x\n",
 //          hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
    KeReleaseDispatcherDatabaseLock(FALSE);
-   PsSuspendThread();
+   PsSuspendThread(PsGetCurrentThread());
    return(STATUS_SUCCESS);
 }
 
@@ -192,4 +194,64 @@ NTSTATUS KeWaitForMultipleObjects(ULONG Count,
 VOID KeInitializeDispatcher(VOID)
 {
    KeInitializeSpinLock(&DispatcherDatabaseLock);
+}
+
+NTSTATUS STDCALL NtWaitForMultipleObjects (IN ULONG Count,
+					   IN PHANDLE Object[],
+					   IN CINT WaitType,
+					   IN BOOLEAN Alertable,
+					   IN PLARGE_INTEGER Time)
+{
+   return(ZwWaitForMultipleObjects(Count,
+				   Object,
+				   WaitType,
+				   Alertable,
+				   Time));
+}
+
+NTSTATUS STDCALL ZwWaitForMultipleObjects (IN ULONG Count,
+					   IN PHANDLE Object[],
+					   IN CINT WaitType,
+					   IN BOOLEAN Alertable,
+					   IN PLARGE_INTEGER Time)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtWaitForSingleObject (IN PHANDLE Object,
+					IN BOOLEAN Alertable,
+					IN PLARGE_INTEGER Time)
+{
+   return(ZwWaitForSingleObject(Object,
+				Alertable,
+				Time));
+}
+
+NTSTATUS STDCALL ZwWaitForSingleObject (IN PHANDLE Object,
+					IN BOOLEAN Alertable,
+					IN PLARGE_INTEGER Time)
+{
+   UNIMPLEMENTED;
+}
+
+
+NTSTATUS STDCALL NtSignalAndWaitForSingleObject(
+				 IN HANDLE EventHandle,
+	                         IN BOOLEAN Alertable,
+	                         IN PLARGE_INTEGER Time,
+	                         PULONG NumberOfWaitingThreads OPTIONAL)
+{
+   return(ZwSignalAndWaitForSingleObject(EventHandle,
+					 Alertable,
+					 Time,
+					 NumberOfWaitingThreads));
+}
+
+NTSTATUS STDCALL ZwSignalAndWaitForSingleObject(
+				 IN HANDLE EventHandle,
+				 IN BOOLEAN Alertable,
+				 IN PLARGE_INTEGER Time,
+				 PULONG NumberOfWaitingThreads OPTIONAL)
+{
+   UNIMPLEMENTED;
 }

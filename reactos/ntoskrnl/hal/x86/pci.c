@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            mkernel/hal/eisa.c
+ * FILE:            ntoskrnl/hal/x86/pci.c
  * PURPOSE:         Interfaces to the PCI bus
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

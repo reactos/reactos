@@ -26,7 +26,7 @@
 #include <internal/linkage.h>
 #include <internal/string.h>
 
-#include <internal/hal/segment.h>
+#include <internal/i386/segment.h>
 #include <internal/hal/io.h>
 
 #define NDEBUG
@@ -35,7 +35,7 @@
 /* GLOBALS *****************************************************************/
 
 #define NR_IRQS         (16)
-#define IRQ_BASE        (0x20)
+#define IRQ_BASE        (0x40)
 
 asmlinkage void irq_handler_0(void);
 asmlinkage void irq_handler_1(void);

@@ -1,5 +1,10 @@
 /* IO MANAGER ***************************************************************/
 
+BOOLEAN IoRaiseInformationalHardError(NTSTATUS ErrorStatus,
+				      PUNICODE_STRING String,
+				      PKTHREAD Thread);
+
+
 /*
  * FUNCTION: Registers the driver with WMI
  * ARGUMENTS:
@@ -503,7 +508,6 @@ NTSTATUS IoWritePartitionTable(PDEVICE_OBJECT DeviceObject,
 			       ULONG NumberOfHeads,
 			       struct _DRIVE_LAYOUT_INFORMATION* PBuffer);
 
-typedef ULONG FS_INFORMATION_CLASS;
 
 // Preliminary guess
 NTKERNELAPI NTSTATUS IoQueryFileVolumeInformation(IN PFILE_OBJECT FileObject, 

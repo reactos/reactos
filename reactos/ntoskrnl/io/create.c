@@ -22,6 +22,41 @@
 
 /* FUNCTIONS *************************************************************/
 
+NTSTATUS STDCALL NtDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return(ZwDeleteFile(ObjectAttributes));
+}
+
+NTSTATUS STDCALL ZwDeleteFile(IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS NtCreateFile(PHANDLE FileHandle,
+		      ACCESS_MASK DesiredAccess,
+		      POBJECT_ATTRIBUTES ObjectAttributes,
+		      PIO_STATUS_BLOCK IoStatusBlock,
+		      PLARGE_INTEGER AllocateSize,
+		      ULONG FileAttributes,
+		      ULONG ShareAccess,
+		      ULONG CreateDisposition,
+		      ULONG CreateOptions,
+		      PVOID EaBuffer,
+		      ULONG EaLength)
+{
+   return(ZwCreateFile(FileHandle,
+		       DesiredAccess,
+		       ObjectAttributes,
+		       IoStatusBlock,
+		       AllocateSize,
+		       FileAttributes,
+		       ShareAccess,
+		       CreateDisposition,
+		       CreateOptions,
+		       EaBuffer,
+		       EaLength));
+}
+
 NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 		      ACCESS_MASK DesiredAccess,
 		      POBJECT_ATTRIBUTES ObjectAttributes,
@@ -56,7 +91,144 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
  * RETURNS: Status
  */
 {
-   UNIMPLEMENTED;
+   PVOID Object;
+   NTSTATUS Status;
+   PIRP Irp;
+   KEVENT Event;
+   PDEVICE_OBJECT DeviceObject;
+   PFILE_OBJECT FileObject;   
+   PIO_STACK_LOCATION StackLoc;
+   PWSTR Remainder;
+   
+   DPRINT("ZwCreateFile(FileHandle %x, DesiredAccess %x, "
+	  "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %w)\n",
+	  FileHandle,DesiredAccess,ObjectAttributes,
+	  ObjectAttributes->ObjectName->Buffer);   
+   
+   assert_irql(PASSIVE_LEVEL);
+   
+   *FileHandle=0;
+
+   FileObject = ObGenericCreateObject(FileHandle,DesiredAccess,NULL,IoFileType);
+   memset(FileObject,0,sizeof(FILE_OBJECT));
+
+   Status =  ObOpenObjectByName(ObjectAttributes,&Object,&Remainder);
+
+   if (Status != STATUS_SUCCESS && Status != STATUS_FS_QUERY_REQUIRED)
+     {
+	DPRINT("%s() = Failed to find object\n",__FUNCTION__);
+	ZwClose(*FileHandle);
+	*FileHandle=0;
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   
+   DeviceObject = (PDEVICE_OBJECT)Object;
+   DeviceObject = IoGetAttachedDevice(DeviceObject);
+   DPRINT("DeviceObject %x\n",DeviceObject);
+   
+   if (Status == STATUS_SUCCESS)
+     {
+	CHECKPOINT;
+	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
+	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
+					ObjectAttributes->ObjectName->Length);
+	FileObject->FileName.Length = ObjectAttributes->Length;
+	RtlCopyUnicodeString(&(FileObject->FileName),
+			     ObjectAttributes->ObjectName);
+     }
+   else
+     {
+	CHECKPOINT;
+	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
+	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
+	  {
+	     ZwClose(*FileHandle);
+	     *FileHandle=0;
+	     return(STATUS_UNSUCCESSFUL);
+	  }
+	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
+	  {
+	     Status = IoTryToMountStorageDevice(DeviceObject);
+	     if (Status!=STATUS_SUCCESS)
+	       {
+		  ZwClose(*FileHandle);
+		  *FileHandle=0;
+		  return(Status);
+	       }
+	     DeviceObject = IoGetAttachedDevice(DeviceObject);
+	  }
+	DPRINT("Remainder %w\n",Remainder);
+	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
+						     wstrlen(Remainder));
+	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
+	DPRINT("FileObject->FileName.Buffer %x %w\n",
+	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
+     }
+   CHECKPOINT;
+   
+   if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
+     {
+	FileObject->Flags = FileObject->Flags | FO_ALERTABLE_IO;
+	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
+     }
+   if (CreateOptions & FILE_SYNCHRONOUS_IO_NONALERT)
+     {
+	FileObject->Flags = FileObject->Flags | FO_SYNCHRONOUS_IO;
+     }
+   
+   FileObject->DeviceObject=DeviceObject;
+   FileObject->Vpb=DeviceObject->Vpb;
+   
+   KeInitializeEvent(&Event,NotificationEvent,FALSE);
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+   if (Irp==NULL)
+     {
+	ZwClose(*FileHandle);
+	*FileHandle=0;
+	return(STATUS_UNSUCCESSFUL);
+     }
+   
+   StackLoc = IoGetNextIrpStackLocation(Irp);
+   StackLoc->MajorFunction = IRP_MJ_CREATE;
+   StackLoc->MinorFunction = 0;
+   StackLoc->Flags = 0;
+   StackLoc->Control = 0;
+   StackLoc->DeviceObject = DeviceObject;
+   StackLoc->FileObject=FileObject;
+   Status = IoCallDriver(DeviceObject,Irp);
+   if (Status==STATUS_PENDING)
+     {
+	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
+	Status = IoStatusBlock->Status;
+     }
+   
+   if (Status!=STATUS_SUCCESS)
+     {
+	ZwClose(*FileHandle);
+	*FileHandle=0;
+     }
+   
+   DPRINT("*FileHandle %x\n",*FileHandle);
+   
+   return(Status);
+
+}
+
+NTSTATUS NtOpenFile(PHANDLE FileHandle,
+		    ACCESS_MASK DesiredAccess,
+		    POBJECT_ATTRIBUTES ObjectAttributes,
+		    PIO_STATUS_BLOCK IoStatusBlock,
+		    ULONG ShareAccess,
+		    ULONG OpenOptions)
+{
+   return(ZwOpenFile(FileHandle,
+		     DesiredAccess,
+		     ObjectAttributes,
+		     IoStatusBlock,
+		     ShareAccess,
+		     OpenOptions));
 }
 
 NTSTATUS ZwOpenFile(PHANDLE FileHandle,
@@ -79,119 +251,17 @@ NTSTATUS ZwOpenFile(PHANDLE FileHandle,
  * NOTE: Undocumented
  */
 {
-   PVOID Object;
-   NTSTATUS Status;
-   PIRP Irp;
-   KEVENT Event;
-   PDEVICE_OBJECT DeviceObject;
-   PFILE_OBJECT FileObject;   
-   PIO_STACK_LOCATION StackLoc;
-   PWSTR Remainder;
-   
-   DPRINT("ZwOpenFile(FileHandle %x, ObjectAttributes %x, "
-	  "ObjectAttributes->ObjectName->Buffer %w)\n",FileHandle,
-	  ObjectAttributes,ObjectAttributes->ObjectName->Buffer);
-   
-   assert_irql(PASSIVE_LEVEL);
-   
-   *FileHandle=0;
-
-   FileObject = ObGenericCreateObject(FileHandle,0,NULL,OBJTYP_FILE);
-   memset(FileObject,0,sizeof(FILE_OBJECT));
-   
-   Status =  ObOpenObjectByName(ObjectAttributes,&Object,&Remainder);
-   
-   if (Status != STATUS_SUCCESS && Status != STATUS_FS_QUERY_REQUIRED)
-     {
-	DPRINT("%s() = Failed to find object\n",__FUNCTION__);
-	ObDeleteHandle(*FileHandle);
-	*FileHandle=0;
-	ExFreePool(FileObject);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   
-   DeviceObject = (PDEVICE_OBJECT)Object;
-   DeviceObject = IoGetAttachedDevice(DeviceObject);
-   DPRINT("DeviceObject %x\n",DeviceObject);
-   
-   if (Status == STATUS_SUCCESS)
-     {
-	CHECKPOINT;
-	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
-	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-						     ObjectAttributes->Length);
-	RtlCopyUnicodeString(&(FileObject->FileName),
-			     ObjectAttributes->ObjectName);
-     }
-   else
-     {
-	CHECKPOINT;
-	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
-	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
-	  {
-	     ObDeleteHandle(*FileHandle);
-	     *FileHandle=0;
-	     ExFreePool(FileObject);
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	if (!(DeviceObject->Vpb->Flags & VPB_MOUNTED))
-	  {
-	     Status = IoTryToMountStorageDevice(DeviceObject);
-	     if (Status!=STATUS_SUCCESS)
-	       {
-		  ObDeleteHandle(*FileHandle);
-		  *FileHandle=0;
-		  ExFreePool(FileObject);
-		  return(Status);
-	       }
-	     DeviceObject = IoGetAttachedDevice(DeviceObject);
-	  }
-	DPRINT("Remainder %w\n",Remainder);
-	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-						     wstrlen(Remainder));
-	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
-	DPRINT("FileObject->FileName.Buffer %x %w\n",
-	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
-     }
-   CHECKPOINT;
-   
-   FileObject->DeviceObject=DeviceObject;
-   FileObject->Vpb=DeviceObject->Vpb;
-   
-   KeInitializeEvent(&Event,NotificationEvent,FALSE);
-   
-   Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
-   if (Irp==NULL)
-     {
-	ObDeleteHandle(*FileHandle);
-	*FileHandle=0;
-	ExFreePool(FileObject);
-	return(STATUS_UNSUCCESSFUL);
-     }
-   
-   StackLoc = IoGetNextIrpStackLocation(Irp);
-   StackLoc->MajorFunction = IRP_MJ_CREATE;
-   StackLoc->MinorFunction = 0;
-   StackLoc->Flags = 0;
-   StackLoc->Control = 0;
-   StackLoc->DeviceObject = DeviceObject;
-   StackLoc->FileObject=FileObject;
-   Status = IoCallDriver(DeviceObject,Irp);
-   if (Status==STATUS_PENDING)
-     {
-	KeWaitForSingleObject(&Event,Executive,KernelMode,FALSE,NULL);
-	Status = IoStatusBlock->Status;
-     }
-   
-   if (Status!=STATUS_SUCCESS)
-     {
-	ObDeleteHandle(*FileHandle);
-	*FileHandle=0;
-	ExFreePool(FileObject);
-     }
-   
-   return(Status);
+   return(ZwCreateFile(FileHandle,
+		       DesiredAccess,
+		       ObjectAttributes,
+		       IoStatusBlock,
+		       NULL,
+		       0,
+		       ShareAccess,
+		       FILE_OPEN,
+		       OpenOptions,
+		       NULL,
+		       0));
 }
 
 

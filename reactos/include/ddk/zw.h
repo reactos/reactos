@@ -9,6 +9,7 @@
  *              13/07/98: Reorganised things a bit (David Welch)
  *              04/08/98: Added some documentation (Boudewijn Dekker)
  *		14/08/98: Added type TIME and change variable type from [1] to [0]
+ *              14/09/98: Added for each Nt call a corresponding Zw Call
  */
 
 #ifndef __DDK_ZW_H
@@ -16,1050 +17,35 @@
 
 #include <windows.h>
 
-typedef struct _OBJDIR_INFORMATION {
-	UNICODE_STRING ObjectName;
-	UNICODE_STRING ObjectTypeName; // Directory, Device ...
-	UCHAR          Data[0];        
-} OBJDIR_INFORMATION, *POBJDIR_INFORMATION;
-
-
-/*
- * FUNCTION: Closes an object handle
- * ARGUMENTS:
- *         Handle = Handle to the object
- * RETURNS: Status
- */
-NTSTATUS ZwClose(HANDLE Handle);
-
-/*
- * FUNCTION: Creates or opens a directory object, which is a container for
- * other objects
- * ARGUMENTS:
- *        DirectoryHandle (OUT) = Points to a variable which stores the
- *                                handle for the directory on success
- *        DesiredAccess = Type of access the caller requires to the directory
- *        ObjectAttributes = Structures specifing the object attributes,
- *                           initialized with InitializeObjectAttributes
- * RETURNS: Status 
- */
-NTSTATUS ZwCreateDirectoryObject(PHANDLE DirectoryHandle,
-				 ACCESS_MASK DesiredAccess,
-				 POBJECT_ATTRIBUTES ObjectAttributes);
-
-/*
- * FUNCTION: Creates or opens a registry key
- * ARGUMENTS:
- *        KeyHandle (OUT) = Points to a variable which stores the handle
- *                          for the key on success
- *        DesiredAccess = Access desired by the caller to the key 
- *        ObjectAttributes = Initialized object attributes for the key
- *        TitleIndex = Who knows?
- *        Class = Object class of the key?
- *        CreateOptions = Options for the key creation
- *        Disposition (OUT) = Points to a variable which a status value
- *                            indicating whether a new key was created
- * RETURNS: Status
- */
-NTSTATUS ZwCreateKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes,
-		     ULONG TitleIndex, PUNICODE_STRING Class,
-		     ULONG CreateOptions, PULONG Disposition);
-
-/*
- * FUNCTION: Deletes a registry key
- * ARGUMENTS:
- *         KeyHandle = Handle of the key
- * RETURNS: Status
- */
-NTSTATUS ZwDeleteKey(HANDLE KeyHandle);
-
-/*
- * FUNCTION: Returns information about the subkeys of an open key
- * ARGUMENTS:
- *         KeyHandle = Handle of the key whose subkeys are to enumerated
- *         Index = zero based index of the subkey for which information is
- *                 request
- *         KeyInformationClass = Type of information returned
- *         KeyInformation (OUT) = Caller allocated buffer for the information
- *                                about the key
- *         Length = Length in bytes of the KeyInformation buffer
- *         ResultLength (OUT) = Caller allocated storage which holds
- *                              the number of bytes of information retrieved
- *                              on return
- * RETURNS: Status
- */
-NTSTATUS ZwEnumerateKey(HANDLE KeyHandle, ULONG Index, 
-			KEY_INFORMATION_CLASS KeyInformationClass,
-			PVOID KeyInformation, ULONG Length, 
-			PULONG ResultLength);
-
-/*
- * FUNCTION: Returns information about the value entries of an open key
- * ARGUMENTS:
- *         KeyHandle = Handle of the key whose value entries are to enumerated
- *         Index = zero based index of the subkey for which information is
- *                 request
- *         KeyInformationClass = Type of information returned
- *         KeyInformation (OUT) = Caller allocated buffer for the information
- *                                about the key
- *         Length = Length in bytes of the KeyInformation buffer
- *         ResultLength (OUT) = Caller allocated storage which holds
- *                              the number of bytes of information retrieved
- *                              on return
- * RETURNS: Status
- */
-NTSTATUS ZwEnumerateValueKey(HANDLE KeyHandle, ULONG Index, 
-			KEY_VALUE_INFORMATION_CLASS KeyInformationClass,
-			PVOID KeyInformation, ULONG Length, 
-			PULONG ResultLength);
-
-
-/*
- * FUNCTION: Forces a registry key to be committed to disk
- * ARGUMENTS:
- *        KeyHandle = Handle of the key to be written to disk
- * RETURNS: Status
- */
-NTSTATUS ZwFlushKey(HANDLE KeyHandle);
-
-/*
- * FUNCTION: Changes the attributes of an object to temporary
- * ARGUMENTS:
- *        Handle = Handle for the object
- * RETURNS: Status
- */
-NTSTATUS ZwMakeTemporaryObject(HANDLE Handle);
-
-/*
- * FUNCTION: Maps a view of a section into the virtual address space of a 
- *           process
- * ARGUMENTS:
- *        SectionHandle = Handle of the section
- *        ProcessHandle = Handle of the process
- *        BaseAddress = Desired base address (or NULL) on entry
- *                      Actual base address of the view on exit
- *        ZeroBits = Number of high order address bits that must be zero
- *        CommitSize = Size in bytes of the initially committed section of 
- *                     the view 
- *        SectionOffset = Offset in bytes from the beginning of the section
- *                        to the beginning of the view
- *        ViewSize = Desired length of map (or zero to map all) on entry
- *                   Actual length mapped on exit
- *        InheritDisposition = Specified how the view is to be shared with
- *                            child processes
- *        AllocateType = Type of allocation for the pages
- *        Protect = Protection for the committed region of the view
- * RETURNS: Status
- */
-NTSTATUS ZwMapViewOfSection(HANDLE SectionHandle,
-			    HANDLE ProcessHandle,
-			    PVOID* BaseAddress,
-			    ULONG ZeroBits,
-			    ULONG CommitSize,
-			    PLARGE_INTEGER SectionOffset,
-			    PULONG ViewSize,
-			    SECTION_INHERIT InheritDisposition,
-			    ULONG AllocationType,
-			    ULONG Protect);
-
-/*
- * FUNCTION: Opens an existing key in the registry
- * ARGUMENTS:
- *        KeyHandle (OUT) = Caller supplied storage for the resulting handle
- *        DesiredAccess = Requested access to the key
- *        ObjectAttribute = Initialized attributes for the object
- * RETURNS: Status
- */
-NTSTATUS ZwOpenKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
-		   POBJECT_ATTRIBUTES ObjectAttributes);
-
-/*
- * FUNCTION: Opens an existing section object
- * ARGUMENTS:
- *        KeyHandle (OUT) = Caller supplied storage for the resulting handle
- *        DesiredAccess = Requested access to the key
- *        ObjectAttribute = Initialized attributes for the object
- * RETURNS: Status
- */
-NTSTATUS ZwOpenSection(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
-		       POBJECT_ATTRIBUTES ObjectAttributes);
-
-NTSTATUS ZwQueryDirectoryObject(IN HANDLE DirObjHandle,
-				OUT POBJDIR_INFORMATION DirObjInformation, 
-				IN ULONG                BufferLength, 
-				IN BOOLEAN              GetNextIndex, 
-				IN BOOLEAN              IgnoreInputIndex, 
-				IN OUT PULONG           ObjectIndex,
-				OUT PULONG              DataWritten OPTIONAL);
-
-/*
- * FUNCTION: Returns information about an open file
- * ARGUMENTS:
- *        FileHandle = Handle of the file to be queried
- *        IoStatusBlock (OUT) = Caller supplied storage for the result
- *        FileInformation (OUT) = Caller supplied storage for the file
- *                                information
- *        Length = Length in bytes of the buffer for file information
- *        FileInformationClass = Type of information to be returned
- * RETURNS: Status
- */
-NTSTATUS ZwQueryInformationFile(HANDLE FileHandle,
-				PIO_STATUS_BLOCK IoStatusBlock,
-				PVOID FileInformation,
-				ULONG Length,
-				FILE_INFORMATION_CLASS FileInformationClass);
-
-
-
-NTSTATUS ZwReadFile(HANDLE FileHandle,
-                    HANDLE EventHandle,
-		    PIO_APC_ROUTINE ApcRoutine,
-		    PVOID ApcContext,
-		    PIO_STATUS_BLOCK IoStatusBlock,
-		    PVOID Buffer,
-		    ULONG Length,
-		    PLARGE_INTEGER ByteOffset,
-		    PULONG Key);
-
-
-   
-
-
-#define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
-#define NtCurrentThread() ( (HANDLE) 0xFFFFFFFE )
-
-
-
-// event access mask
-
-#define EVENT_READ_ACCESS			1
-#define EVENT_WRITE_ACCESS			2
-
-
-// file creation flags 
-
-#define FILE_DIRECTORY_FILE                     0x00000001
-#define FILE_WRITE_THROUGH                      0x00000002
-#define FILE_SEQUENTIAL_ONLY                    0x00000004
-#define FILE_NO_INTERMEDIATE_BUFFERING          0x00000008
-
-#define FILE_SYNCHRONOUS_IO_ALERT               0x00000010
-#define FILE_SYNCHRONOUS_IO_NONALERT            0x00000020
-#define FILE_NON_DIRECTORY_FILE                 0x00000040
-#define FILE_CREATE_TREE_CONNECTION             0x00000080
-
-#define FILE_COMPLETE_IF_OPLOCKED               0x00000100
-#define FILE_NO_EA_KNOWLEDGE                    0x00000200
-
-#define FILE_RANDOM_ACCESS                      0x00000800
-
-#define FILE_DELETE_ON_CLOSE                    0x00001000
-#define FILE_OPEN_BY_FILE_ID                    0x00002000
-#define FILE_OPEN_FOR_BACKUP_INTENT             0x00004000
-#define FILE_NO_COMPRESSION                     0x00008000
-
-#define FILE_RESERVE_OPFILTER                   0x00100000
-#define FILE_TRANSACTED_MODE                    0x00200000
-#define FILE_OPEN_OFFLINE_FILE                  0x00400000
-
-#define FILE_VALID_OPTION_FLAGS                 0x007fffff
-#define FILE_VALID_PIPE_OPTION_FLAGS            0x00000032
-#define FILE_VALID_MAILSLOT_OPTION_FLAGS        0x00000032
-#define FILE_VALID_SET_FLAGS                    0x00001036
-
-
-// file disposition values
-
-
-#define FILE_SUPERSEDE                  0x0000
-#define FILE_OPEN                       0x0001
-#define FILE_CREATE                     0x0002
-#define FILE_OPEN_IF                    0x0003
-#define FILE_OVERWRITE                  0x0004
-#define FILE_OVERWRITE_IF               0x0005
-#define FILE_MAXIMUM_DISPOSITION        0x0005
-
-
-
-
-//process query / set information class
-
-#define	ProcessBasicInformation 		0
-#define	ProcessQuotaLimits			1
-#define	ProcessIoCounters			2
-#define ProcessVmCounters			3
-#define ProcessTimes				4
-#define ProcessBasePriority			5
-#define ProcessRaisePriority			6
-#define ProcessDebugPort			7
-#define ProcessExceptionPort			8
-#define ProcessAccessToken			9
-#define ProcessLdtInformation			10
-#define ProcessLdtSize				11
-#define ProcessDefaultHardErrorMode		12
-#define ProcessIoPortHandlers			13
-#define ProcessPooledUsageAndLimits		14
-#define ProcessWorkingSetWatch			15
-#define ProcessUserModeIOPL			16
-#define ProcessEnableAlignmentFaultFixup	17
-#define ProcessPriorityClass			18
-#define ProcessWx86Information			19
-#define ProcessHandleCount			20
-#define ProcessAffinityMask			21
-#define MaxProcessInfoClass			22
-
-// thread query / set information class
-#define ThreadBasicInformation			0
-#define ThreadTimes				1
-#define ThreadPriority				2
-#define ThreadBasePriority			3
-#define ThreadAffinityMask			4
-#define ThreadImpersonationToken		5
-#define ThreadDescriptorTableEntry		6
-#define ThreadEnableAlignmentFaultFixup		7
-#define ThreadEventPair				8
-#define ThreadQuerySetWin32StartAddress		9
-#define ThreadZeroTlsCell			10
-#define ThreadPerformanceCount			11
-#define ThreadAmILastThread			12
-#define ThreadIdealProcessor			13
-#define ThreadPriorityBoost			14
-#define MaxThreadInfoClass			15
-
-
-
-// key query information class
-
-#define KeyBasicInformation			0
-#define KeyNodeInformation			1
-#define KeyFullInformation			2
-
-
-// key set information class
-
-#define KeyWriteTimeInformation			0
-
-// key value information class
-
-#define KeyValueBasicInformation		0
-#define	KeyValueFullInformation			1
-#define	KeyValuePartialInformation		2
-
-// object handle information
-
-#define ObjectBasicInformation			0
-#define ObjectNameInformation			1
-#define ObjectTypeInformation			2
-#define ObjectAllInformation			3
-#define	ObjectDataInformation			4
-
-// semaphore information
-
-#define SemaphoreBasicInformation		0
-
-// event information
-
-#define EventBasicInformation			0
-
-
-// system information
-
-#define SystemPerformanceInformation		 5
-#define SystemCacheInformation			21
-#define SystemTimeAdjustmentInformation		28
-
-
-// file information
-
-
-#define FileDirectoryInformation 		1
-#define FileFullDirectoryInformation		2
-#define FileBothDirectoryInformation		3
-#define FileBasicInformation			4
-#define FileStandardInformation			5
-#define FileInternalInformation			6
-#define FileEaInformation			7
-#define FileAccessInformation			8
-#define FileNameInformation			9
-#define FileRenameInformation			10
-#define FileLinkInformation			11
-#define FileNamesInformation			12
-#define FileDispositionInformation		13
-#define FilePositionInformation			14
-#define FileFullEaInformation			15
-#define FileModeInformation			16
-#define FileAlignmentInformation		17
-#define FileAllInformation			18
-#define FileAllocationInformation		19
-#define FileEndOfFileInformation		20
-#define FileAlternateNameInformation		21
-#define FileStreamInformation			22
-#define FilePipeInformation			23
-#define FilePipeLocalInformation		24
-#define FilePipeRemoteInformation		25
-#define FileMailslotQueryInformation		26
-#define FileMailslotSetInformation		27
-#define FileCompressionInformation		28
-#define FileCopyOnWriteInformation		29
-#define FileCompletionInformation		30
-#define FileMoveClusterInformation		31
-#define FileOleClassIdInformation		32
-#define FileOleStateBitsInformation		33
-#define FileNetworkOpenInformation		34
-#define FileObjectIdInformation			35
-#define FileOleAllInformation			36
-#define FileOleDirectoryInformation		37
-#define FileContentIndexInformation		38
-#define FileInheritContentIndexInformation	39
-#define FileOleInformation			40
-#define FileMaximumInformation			41
-
-
-
-//file system information class values
-
-
-
-#define FileFsVolumeInformation 		1
-#define FileFsLabelInformation			2
-#define FileFsSizeInformation			3
-#define FileFsDeviceInformation			4
-#define FileFsAttributeInformation		5
-#define FileFsControlInformation		6
-#define FileFsQuotaQueryInformation		7
-#define FileFsQuotaSetInformation		8
-#define FileFsMaximumInformation		9
-
-
-// shutdown action
-
-typedef enum SHUTDOWN_ACTION_TAG {
-	ShutdownNoReboot,
-	ShutdownReboot,
-	ShutdownPowerOff
-} SHUTDOWN_ACTION;
-
-
-
-// wait type
-
-#define WaitAll					0
-#define WaitAny					1
- 
- 
-// key restore flags
-
-#define REG_WHOLE_HIVE_VOLATILE     		1   
-#define REG_REFRESH_HIVE            		2   
-
-
-// object type  access rights
-
-#define OBJECT_TYPE_CREATE		0x0001 
-#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-
-
-// directory access rights
-
-#define DIRECTORY_QUERY				0x0001
-#define DIRECTORY_TRAVERSE			0x0002
-#define DIRECTORY_CREATE_OBJECT			0x0004
-#define DIRECTORY_CREATE_SUBDIRECTORY		0x0008
-
-#define DIRECTORY_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0xF)
-
-// symbolic link access rights
-
-#define SYMBOLIC_LINK_QUERY 			0x0001
-#define SYMBOLIC_LINK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
-   
-typedef struct _PROCESS_WS_WATCH_INFORMATION
-{
-	PVOID FaultingPc;
-	PVOID FaultingVa;
-} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
-
-typedef struct _PROCESS_BASIC_INFORMATION
-{
-	NTSTATUS ExitStatus;
-	PNT_PEB PebBaseAddress;
-	KAFFINITY AffinityMask;
-	KPRIORITY BasePriority;
-	ULONG UniqueProcessId;
-	ULONG InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
-
-typedef struct _QUOTA_LIMITS 
-{
-	ULONG PagedPoolLimit;
-	ULONG NonPagedPoolLimit;
-	ULONG MinimumWorkingSetSize;
-	ULONG MaximumWorkingSetSize;
-	ULONG PagefileLimit;
-	TIME TimeLimit;
-} QUOTA_LIMITS, *PQUOTA_LIMITS;
-
-typedef struct _IO_COUNTERS
-{
-	ULONG ReadOperationCount;
-	ULONG WriteOperationCount;
-	ULONG OtherOperationCount;
-	LARGE_INTEGER ReadTransferCount;
-	LARGE_INTEGER WriteTransferCount;
-	LARGE_INTEGER OtherTransferCount;
-} IO_COUNTERS, *PIO_COUNTERS;
-
-
-typedef struct _VM_COUNTERS_ 
-{
-	ULONG PeakVirtualSize;
-	ULONG VirtualSize;
-	ULONG PageFaultCount;
-	ULONG PeakWorkingSetSize;
-	ULONG WorkingSetSize;
-	ULONG QuotaPeakPagedPoolUsage;
-	ULONG QuotaPagedPoolUsage;
-	ULONG QuotaPeakNonPagedPoolUsage;
-	ULONG QuotaNonPagedPoolUsage;
-	ULONG PagefileUsage;
-	ULONG PeakPagefileUsage;
-} VM_COUNTERS, *PVM_COUNTERS;
-
-
-typedef struct _POOLED_USAGE_AND_LIMITS_ 
-{
-	ULONG PeakPagedPoolUsage;
-	ULONG PagedPoolUsage;
-	ULONG PagedPoolLimit;
-	ULONG PeakNonPagedPoolUsage;
-	ULONG NonPagedPoolUsage;
-	ULONG NonPagedPoolLimit;
-	ULONG PeakPagefileUsage;
-	ULONG PagefileUsage;
-	ULONG PagefileLimit;
-} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
-
-
-typedef struct _PROCESS_ACCESS_TOKEN 
-{
-	HANDLE Token;
-	HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
-
-typedef struct _KERNEL_USER_TIMES 
-{
-	TIME CreateTime;
-	TIME ExitTime;
-	TIME KernelTime;
-	TIME UserTime;
-} KERNEL_USER_TIMES;
-typedef KERNEL_USER_TIMES *PKERNEL_USER_TIMES;
-
-// thread information
-
-// incompatible with MS NT
-
-typedef struct _THREAD_BASIC_INFORMATION
-{
-	NTSTATUS ExitStatus;
-	PVOID TebBaseAddress;
-	KAFFINITY AffinityMask;
-	KPRIORITY BasePriority;
-	ULONG UniqueThreadId;
-} THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
-
-// object information
-   
-typedef struct _OBJECT_NAME_INFORMATION 
-{               
-    UNICODE_STRING Name;                                
-} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;   
-
-
-
-typedef struct _OBJECT_DATA_INFORMATION 
-{
-	BOOL bInheritHanlde;
-	BOOL bProtectFromClose;
-} OBJECT_DATA_INFORMATION,  *POBJECT_DATA_INFORMATION;
-
-
-typedef struct _OBJECT_TYPE_INFORMATION 
-{
-	UNICODE_STRING	Name;
-	UNICODE_STRING Type;
-	ULONG TotalHandles;
-	ULONG ReferenceCount;
-} OBJECT_TYPE_INFORMATION, *POBJECT_TYPE_INFORMATION;
-
-// system information
-
-typedef struct _SYSTEM_TIME_ADJUSTMENT
-{
-	ULONG TimeAdjustment;	
-	BOOL  TimeAdjustmentDisabled;
-} SYSTEM_TIME_ADJUSTMENT, *PSYSTEM_TIME_ADJUSTMENT;
-	
-typedef struct _SYSTEM_CONFIGURATION_INFO { 
-    	union { 
-		ULONG  	OemId; 
-		struct { 
-			WORD ProcessorArchitecture; 
-			WORD Reserved; 
-		} tag1; 
-	} tag2; 
-	ULONG  PageSize; 
-	PVOID  MinimumApplicationAddress; 
-	PVOID  MaximumApplicationAddress; 
-	ULONG  ActiveProcessorMask; 
-	ULONG  NumberOfProcessors; 
-	ULONG  ProcessorType; 
-	ULONG  AllocationGranularity; 
-	WORD   ProcessorLevel; 
-	WORD   ProcessorRevision; 
-} SYSTEM_CONFIGURATION_INFO, *PSYSTEM_CONFIGURATION_INFO; 
-
-
-typedef struct _SYSTEM_CACHE_INFORMATION {
-	ULONG    	CurrentSize;
-	ULONG    	PeakSize;
-	ULONG    	PageFaultCount;
-	ULONG    	MinimumWorkingSet;
-	ULONG    	MaximumWorkingSet;
-	ULONG    	Unused[4];
-} SYSTEM_CACHE_INFORMATION;
-
-
-
-// file information
-
-typedef struct _FILE_BASIC_INFORMATION 
-{                    
-	TIME CreationTime;                             
-	TIME LastAccessTime;                           
-	TIME LastWriteTime;                            
-	TIME ChangeTime;                               
-	ULONG FileAttributes;                                   
-} FILE_BASIC_INFORMATION, *PFILE_BASIC_INFORMATION;         
-                                                            
-typedef struct _FILE_STANDARD_INFORMATION 
-{                 
-	LARGE_INTEGER AllocationSize;                           
-	LARGE_INTEGER EndOfFile;                                
-	ULONG NumberOfLinks;                                    
-	BOOLEAN DeletePending;                                  
-	BOOLEAN Directory;                                      
-} FILE_STANDARD_INFORMATION, *PFILE_STANDARD_INFORMATION;   
-                                                            
-typedef struct _FILE_POSITION_INFORMATION 
-{                 
-	LARGE_INTEGER CurrentByteOffset;                        
-} FILE_POSITION_INFORMATION, *PFILE_POSITION_INFORMATION;   
-                                                            
-typedef struct _FILE_ALIGNMENT_INFORMATION 
-{                
-	ULONG AlignmentRequirement;                             
-} FILE_ALIGNMENT_INFORMATION, *PFILE_ALIGNMENT_INFORMATION; 
-                                                            
-typedef struct _FILE_DISPOSITION_INFORMATION
-{                  
-	BOOLEAN DeleteFile;                                         
-} FILE_DISPOSITION_INFORMATION, *PFILE_DISPOSITION_INFORMATION; 
-                                                                
-typedef struct _FILE_END_OF_FILE_INFORMATION
-{                  
-	LARGE_INTEGER EndOfFile;                                    
-} FILE_END_OF_FILE_INFORMATION, *PFILE_END_OF_FILE_INFORMATION; 
-                                                                
-typedef struct _FILE_NETWORK_OPEN_INFORMATION {
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
-	LARGE_INTEGER AllocationSize;
-	LARGE_INTEGER EndOfFile;
-	ULONG FileAttributes;
-} FILE_NETWORK_OPEN_INFORMATION, *PFILE_NETWORK_OPEN_INFORMATION;
-
-typedef struct _FILE_FULL_EA_INFORMATION
-{
-	ULONG NextEntryOffset;
-	UCHAR Flags;
-	UCHAR EaNameLength;
-	USHORT EaValueLength;
-	CHAR *EaName;
-} FILE_FULL_EA_INFORMATION, *PFILE_FULL_EA_INFORMATION;
-
-
-typedef struct _FILE_EA_INFORMATION {
-	ULONG EaSize;
-} FILE_EA_INFORMATION, *PFILE_EA_INFORMATION;
-
-
-typedef struct _FILE_GET_EA_INFORMATION {
-	ULONG NextEntryOffset;
-	UCHAR EaNameLength;
-	CHAR EaName[0];
-} FILE_GET_EA_INFORMATION, *PFILE_GET_EA_INFORMATION;
-
-typedef struct _FILE_STREAM_INFORMATION {
-        ULONG NextEntryOffset;
-        ULONG StreamNameLength;
-        LARGE_INTEGER StreamSize;
-        LARGE_INTEGER StreamAllocationSize;
-        WCHAR StreamName[0];
-} FILE_STREAM_INFORMATION, *PFILE_STREAM_INFORMATION;
-
-typedef struct _FILE_ALLOCATION_INFORMATION {
-	LARGE_INTEGER AllocationSize;
-} FILE_ALLOCATION_INFORMATION, *PFILE_ALLOCATION_INFORMATION;
-
-typedef struct _FILE_NAME_INFORMATION {
-	ULONG FileNameLength;
-	WCHAR FileName[0];
-} FILE_NAME_INFORMATION, *PFILE_NAME_INFORMATION;
-
-typedef struct _FILE_NAMES_INFORMATION {
-	ULONG NextEntryOffset;
-	ULONG FileIndex;
-	ULONG FileNameLength;
-	WCHAR FileName[0];
-} FILE_NAMES_INFORMATION, *PFILE_NAMES_INFORMATION;
-
-
-typedef struct _FILE_RENAME_INFORMATION {
-	BOOLEAN Replace;
-	HANDLE RootDir;
-        ULONG FileNameLength;
-	WCHAR FileName[0];
-} FILE_RENAME_INFORMATION, *PFILE_RENAME_INFORMATION;
-
-
-typedef struct _FILE_INTERNAL_INFORMATION {
-	LARGE_INTEGER IndexNumber;
-} FILE_INTERNAL_INFORMATION, *PFILE_INTERNAL_INFORMATION;
-
-typedef struct _FILE_ACCESS_INFORMATION {
-	ACCESS_MASK AccessFlags;
-} FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
-
-
-typedef struct _FILE_MODE_INFORMATION {
-	ULONG Mode;
-} FILE_MODE_INFORMATION, *PFILE_MODE_INFORMATION;
-
-typedef struct _FILE_COMPRESSION_INFORMATION {
-	LARGE_INTEGER CompressedFileSize;
-	USHORT CompressionFormat;
-	UCHAR CompressionUnitShift;
-	UCHAR ChunkShift;
-	UCHAR ClusterShift;
-	UCHAR Reserved[3];
-} FILE_COMPRESSION_INFORMATION, *PFILE_COMPRESSION_INFORMATION;
-
-typedef struct _FILE_ALL_INFORMATION {
-	FILE_BASIC_INFORMATION BasicInformation;
-	FILE_STANDARD_INFORMATION StandardInformation;
-	FILE_INTERNAL_INFORMATION InternalInformation;
-	FILE_EA_INFORMATION EaInformation;
-	FILE_ACCESS_INFORMATION AccessInformation;
-	FILE_POSITION_INFORMATION PositionInformation;
-	FILE_MODE_INFORMATION ModeInformation;
-	FILE_ALIGNMENT_INFORMATION AlignmentInformation;
-	FILE_NAME_INFORMATION NameInformation;
-} FILE_ALL_INFORMATION, *PFILE_ALL_INFORMATION;
-
-// file system information structures
-
-typedef struct _FILE_FS_DEVICE_INFORMATION {                    
-	DEVICE_TYPE DeviceType;                                     
-	ULONG Characteristics;                                      
-} FILE_FS_DEVICE_INFORMATION,  *PFILE_FS_DEVICE_INFORMATION;
-
-
-/* 	device type can be one of the following values:
-
-	FILE_DEVICE_BEEP	        0x00000001
-	FILE_DEVICE_CD_ROM           	0x00000002
-	FILE_DEVICE_CD_ROM_FILE_SYSTEM 	0x00000003
-	FILE_DEVICE_CONTROLLER       	0x00000004
-	FILE_DEVICE_DATALINK         	0x00000005
-	FILE_DEVICE_DFS              	0x00000006
-	FILE_DEVICE_DISK             	0x00000007
-	FILE_DEVICE_DISK_FILE_SYSTEM 	0x00000008
-	FILE_DEVICE_FILE_SYSTEM      	0x00000009
-	FILE_DEVICE_INPORT_PORT      	0x0000000a
-	FILE_DEVICE_KEYBOARD         	0x0000000b
-	FILE_DEVICE_MAILSLOT         	0x0000000c
-	FILE_DEVICE_MIDI_IN          	0x0000000d
-	FILE_DEVICE_MIDI_OUT         	0x0000000e
-	FILE_DEVICE_MOUSE            	0x0000000f
-	FILE_DEVICE_MULTI_UNC_PROVIDER 	0x00000010
-	FILE_DEVICE_NAMED_PIPE       	0x00000011
-	FILE_DEVICE_NETWORK          	0x00000012
-	FILE_DEVICE_NETWORK_BROWSER  	0x00000013
-	FILE_DEVICE_NETWORK_FILE_SYSTEM 0x00000014
-	FILE_DEVICE_NULL             	0x00000015
-	FILE_DEVICE_PARALLEL_PORT    	0x00000016
-	FILE_DEVICE_PHYSICAL_NETCARD 	0x00000017
-	FILE_DEVICE_PRINTER          	0x00000018
-	FILE_DEVICE_SCANNER          	0x00000019
-	FILE_DEVICE_SERIAL_MOUSE_PORT 	0x0000001a
-	FILE_DEVICE_SERIAL_PORT      	0x0000001b
-	FILE_DEVICE_SCREEN           	0x0000001c
-	FILE_DEVICE_SOUND            	0x0000001d
-	FILE_DEVICE_STREAMS          	0x0000001e
-	FILE_DEVICE_TAPE             	0x0000001f
-	FILE_DEVICE_TAPE_FILE_SYSTEM 	0x00000020
-	FILE_DEVICE_TRANSPORT        	0x00000021
-	FILE_DEVICE_UNKNOWN          	0x00000022
-	FILE_DEVICE_VIDEO            	0x00000023
-	FILE_DEVICE_VIRTUAL_DISK     	0x00000024
-	FILE_DEVICE_WAVE_IN          	0x00000025
-	FILE_DEVICE_WAVE_OUT         	0x00000026
-	FILE_DEVICE_8042_PORT        	0x00000027
-	FILE_DEVICE_NETWORK_REDIRECTOR	0x00000028
-	FILE_DEVICE_BATTERY          	0x00000029
-	FILE_DEVICE_BUS_EXTENDER     	0x0000002a
-	FILE_DEVICE_MODEM            	0x0000002b
-	FILE_DEVICE_VDM              	0x0000002c
- */
-
-/* 
-	characteristics  is one of the following values:
-
-	FILE_REMOVABLE_MEDIA            0x00000001
-        FILE_READ_ONLY_DEVICE           0x00000002
-        FILE_FLOPPY_DISKETTE            0x00000004
-        FILE_WRITE_ONCE_MEDIA           0x00000008
-        FILE_REMOTE_DEVICE              0x00000010
-        FILE_DEVICE_IS_MOUNTED          0x00000020
-        FILE_VIRTUAL_VOLUME             0x00000040
-*/  
-
-typedef struct _FILE_FS_VOLUME_INFORMATION {
-	TIME VolumeCreationTime;
-	ULONG VolumeSerialNumber;
-	ULONG VolumeLabelLength;
-	BOOLEAN SupportsObjects;
-	WCHAR VolumeLabel[0];
-} FILE_FS_VOLUME_INFORMATION;
-
-typedef struct _FILE_FS_SIZE_INFORMATION {
-	LARGE_INTEGER TotalAllocationUnits;
-	LARGE_INTEGER AvailableAllocationUnits;
-	ULONG SectorsPerAllocationUnit;
-	ULONG BytesPerSector;
-} FILE_FS_SIZE_INFORMATION, *PFILE_FS_SIZE_INFORMATION;
-
-typedef struct _FILE_FS_ATTRIBUTE_INFORMATION {
-	ULONG FileSystemAttributes;
-	LONG MaximumComponentNameLength;
-	ULONG FileSystemNameLength;
-	WCHAR FileSystemName[0]; 
-} FILE_FS_ATTRIBUTE_INFORMATION;
-
-/*
-	FileSystemAttributes is one of the following values:
-
-   	FILE_CASE_SENSITIVE_SEARCH      0x00000001
-        FILE_CASE_PRESERVED_NAMES       0x00000002
-        FILE_UNICODE_ON_DISK            0x00000004
-        FILE_PERSISTENT_ACLS            0x00000008
-        FILE_FILE_COMPRESSION           0x00000010
-        FILE_VOLUME_QUOTAS              0x00000020
-        FILE_VOLUME_IS_COMPRESSED       0x00008000
-*/
-typedef struct _FILE_FS_LABEL_INFORMATION {
-	ULONG VolumeLabelLength;
-	WCHAR VolumeLabel[0];
-} FILE_FS_LABEL_INFORMATION, *PFILE_FS_LABEL_INFORMATION;
-
-// read file scatter / write file scatter
-//FIXME I am a win32 struct aswell
-
-typedef union _FILE_SEGMENT_ELEMENT {     
-	PVOID Buffer; 
-	ULONG Alignment; 
-}FILE_SEGMENT_ELEMENT, *PFILE_SEGMENT_ELEMENT; 
-
-// directory information
-
-
-typedef struct _FILE_DIRECTORY_INFORMATION {
-	ULONG	NextEntryOffset;
-	ULONG	FileIndex;
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
-	LARGE_INTEGER EndOfFile;
-	LARGE_INTEGER AllocationSize;
-	ULONG FileAttributes;
-	ULONG FileNameLength;
-	WCHAR FileName[0];
-} FILE_DIRECTORY_INFORMATION, *PFILE_DIRECTORY_INFORMATION;
-
-typedef struct _FILE_FULL_DIRECTORY_INFORMATION {
-	ULONG	NextEntryOffset;
-	ULONG	FileIndex;
-	TIME CreationTime;
-	TIME LastAccessTime;
-	TIME LastWriteTime;
-	TIME ChangeTime;
-	LARGE_INTEGER EndOfFile;
-	LARGE_INTEGER AllocationSize;
-	ULONG FileAttributes;
-	ULONG FileNameLength;
-	ULONG EaSize;
-	WCHAR FileName[0];
-} FILE_FULL_DIRECTORY_INFORMATION, *PFILE_FULL_DIRECTORY_INFORMATION;
-
-
-typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
-	ULONG		NextEntryOffset;
-	ULONG		FileIndex;
-	TIME 		CreationTime;
-	TIME 		LastAccessTime;
-	TIME 		LastWriteTime;
-	TIME 		ChangeTime;
-	LARGE_INTEGER 	EndOfFile;
-	LARGE_INTEGER 	AllocationSize;
-	ULONG 		FileAttributes;
-	ULONG 		FileNameLength;
-	ULONG 		EaSize;
-	CHAR 		ShortNameLength;
-	WCHAR 		ShortName[12]; // 8.3 name
-	WCHAR 		FileName[0];
-} FILE_BOTH_DIRECTORY_INFORMATION, *PFILE_BOTH_DIRECTORY_INFORMATION;
-
-
-/*
-	NotifyFilter / CompletionFilter:
-
-	FILE_NOTIFY_CHANGE_FILE_NAME        0x00000001
-	FILE_NOTIFY_CHANGE_DIR_NAME         0x00000002
-	FILE_NOTIFY_CHANGE_NAME             0x00000003
-	FILE_NOTIFY_CHANGE_ATTRIBUTES       0x00000004
-	FILE_NOTIFY_CHANGE_SIZE             0x00000008
-	FILE_NOTIFY_CHANGE_LAST_WRITE       0x00000010
-	FILE_NOTIFY_CHANGE_LAST_ACCESS      0x00000020
-	FILE_NOTIFY_CHANGE_CREATION         0x00000040
-	FILE_NOTIFY_CHANGE_EA               0x00000080
-	FILE_NOTIFY_CHANGE_SECURITY         0x00000100
-	FILE_NOTIFY_CHANGE_STREAM_NAME      0x00000200
-	FILE_NOTIFY_CHANGE_STREAM_SIZE      0x00000400
-	FILE_NOTIFY_CHANGE_STREAM_WRITE     0x00000800
-*/
-
-typedef struct _FILE_NOTIFY_INFORMATION {
-	ULONG NextEntryOffset;
-	ULONG Action;
-	ULONG FileNameLength;
-	WCHAR FileName[0]; 
-} FILE_NOTIFY_INFORMATION;
-
-
-/*
-	 Action is one of the following values:
-
-	FILE_ACTION_ADDED      	    	0x00000001
-	FILE_ACTION_REMOVED     	0x00000002
-	FILE_ACTION_MODIFIED       	0x00000003
-	FILE_ACTION_RENAMED_OLD_NAME	0x00000004
-	FILE_ACTION_RENAMED_NEW_NAME 	0x00000005
-	FILE_ACTION_ADDED_STREAM   	0x00000006
-	FILE_ACTION_REMOVED_STREAM  	0x00000007
-	FILE_ACTION_MODIFIED_STREAM  	0x00000008
-
-*/
-
-
-//FIXME: I am a win32 object 
-typedef 
-VOID 
-(*PTIMERAPCROUTINE)( 
-	LPVOID lpArgToCompletionRoutine, 
-	DWORD dwTimerLowValue, 
-	DWORD dwTimerHighValue 
-	); 
-
-// NtProcessStartup parameters
-
-typedef struct _ENVIRONMENT_INFORMATION {
-       ULONG            Unknown[21];     
-       UNICODE_STRING   CommandLine;
-       UNICODE_STRING   ImageFile;
-} ENVIRONMENT_INFORMATION, *PENVIRONMENT_INFORMATION;
-
-
-typedef struct _STARTUP_ARGUMENT {
-       ULONG                     Unknown[3];
-       PENVIRONMENT_INFORMATION  Environment;
-} STARTUP_ARGUMENT, *PSTARTUP_ARGUMENT;
-
-
-// File System Control commands ( related to defragging )
-
-#define	FSCTL_READ_MFT_RECORD			0x90068 // NTFS only
-#define FSCTL_GET_VOLUME_BITMAP			0x9006F
-#define FSCTL_GET_RETRIEVAL_POINTERS		0x90073
-#define FSCTL_MOVE_FILE				0x90074
-
-typedef struct _MAPPING_PAIR 
-{
-	ULONGLONG	Vcn;
-	ULONGLONG	Lcn;
-} MAPPING_PAIR, *PMAPPING_PAIR;
-
-typedef struct _GET_RETRIEVAL_DESCRIPTOR
-{
-	ULONG		NumberOfPairs;
-	ULONGLONG	StartVcn;
-	MAPPING_PAIR	Pair[0];
-} GET_RETRIEVAL_DESCRIPTOR, *PGET_RETRIEVAL_DESCRIPTOR;
-
-typedef struct _BITMAP_DESCRIPTOR
-{
-	ULONGLONG	StartLcn;
-	ULONGLONG	ClustersToEndOfVol;
-	BYTE		Map[0];
-} BITMAP_DESCRIPTOR, *PBITMAP_DESCRIPTOR; 
-
-typedef struct _MOVEFILE_DESCRIPTOR
-{
-	HANDLE            FileHandle; 
-	ULONG             Reserved;   
-	LARGE_INTEGER     StartVcn; 
-	LARGE_INTEGER     TargetLcn;
-	ULONG             NumVcns; 
-	ULONG             Reserved1;	
-} MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
-
-
-// semaphore information
-
-typedef struct _SEMAPHORE_BASIC_INFORMATION
-{
-	ULONG CurrentCount;
-	ULONG MaximumCount;
-} SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
-
-// event information
-
-typedef struct _EVENT_BASIC_INFORMATION 
-{
-	BOOL AutomaticReset;
-	BOOL Signaled;
-} EVENT_BASIC_INFORMATION, *PEVENT_INFORMATION;
-
-
-
+NTSTATUS
+STDCALL
+NtAccessCheck(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAcces,
+	IN PGENERIC_MAPPING GenericMapping,
+	OUT PRIVILEGE_SET PrivilegeSet,
+	OUT PULONG ReturnLength,
+	OUT PULONG GrantedAccess,
+	OUT PULONG AccessStatus
+	);
+NTSTATUS
+STDCALL
+ZwAccessCheck(
+	IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+	IN HANDLE ClientToken,
+	IN ULONG DesiredAcces,
+	IN PGENERIC_MAPPING GenericMapping,
+	OUT PRIVILEGE_SET PrivilegeSet,
+	OUT PULONG ReturnLength,
+	OUT PULONG GrantedAccess,
+	OUT PULONG AccessStatus
+	);
 
 /*
  * FUNCTION: Adds an atom to the global atom table
  * ARGUMENTS: 
-	  Atom (OUT) = Caller supplies storage for the resulting atom.
+ *	  Atom (OUT) = Caller supplies storage for the resulting atom.
  *        AtomString = The string to add to the atom table.
  * REMARKS: The arguments map to the win32 add GlobalAddAtom. 
  * RETURNS: Status
@@ -1067,6 +53,14 @@ typedef struct _EVENT_BASIC_INFORMATION
 NTSTATUS
 STDCALL
 NtAddAtom(
+	OUT ATOM *Atom,
+	IN PUNICODE_STRING AtomString
+	);
+
+
+NTSTATUS
+STDCALL
+ZwAddAtom(
 	OUT ATOM *Atom,
 	IN PUNICODE_STRING AtomString
 	);
@@ -1087,6 +81,13 @@ NtAlertResumeThread(
 	OUT PULONG SuspendCount
 	);
 
+NTSTATUS
+STDCALL
+ZwAlertResumeThread(
+	IN HANDLE ThreadHandle,
+	OUT PULONG SuspendCount
+	);
+
 /*
  * FUNCTION: Puts the thread in a alerted state
  * ARGUMENTS: 
@@ -1099,6 +100,13 @@ NtAlertThread(
 	IN HANDLE ThreadHandle
 	);
 
+NTSTATUS
+STDCALL
+ZwAlertThread(
+	IN HANDLE ThreadHandle
+	);
+
+
 /*
  * FUNCTION: Allocates a locally unique id
  * ARGUMENTS: 
@@ -1110,6 +118,13 @@ STDCALL
 NtAllocateLocallyUniqueId(
 	OUT PVOID LocallyUniqueId
 	);
+
+NTSTATUS
+STDCALL
+ZwAllocateLocallyUniqueId(
+	OUT PVOID LocallyUniqueId
+	);
+
 
 /*
  * FUNCTION: Allocates a block of virtual memory in the process address space
@@ -1144,6 +159,34 @@ NtAllocateVirtualMemory(
 	IN ULONG  Protect
 	);
 
+NTSTATUS
+STDCALL
+ZwAllocateVirtualMemory( 
+	IN HANDLE ProcessHandle,
+	OUT PVOID *BaseAddress,
+	IN ULONG  ZeroBits,
+	IN ULONG  RegionSize,
+	IN ULONG  AllocationType, 
+	IN ULONG  Protect
+	);
+/*
+ * FUNCTION: Returns from a callback into user mode
+ * ARGUMENTS:
+ * RETURN Status
+ */
+//FIXME: this function might need 3 parameters
+NTSTATUS
+STDCALL
+NtCallbackReturn(
+		VOID
+	);
+
+NTSTATUS
+STDCALL
+ZwCallbackReturn(
+		VOID
+	);
+
 /*
  * FUNCTION: Cancels a IO request
  * ARGUMENTS: 
@@ -1160,18 +203,32 @@ NtCancelIoFile(
 	IN HANDLE FileHandle,
 	OUT PIO_STATUS_BLOCK IoStatusBlock   
 	);
+
+NTSTATUS
+STDCALL
+ZwCancelIoFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock   
+	);
 /*
  * FUNCTION: Cancels a timer
  * ARGUMENTS: 
  *        TimerHandle = Handle to the timer
-          ElapsedTime = Specifies the elapsed time the timer has run so far.
+ *        CurrentState = Specifies the state of the timer when cancelled.
  * REMARKS:
-          The arguments to this function map to the function CancelWaitableTimer. 
+ *        The arguments to this function map to the function CancelWaitableTimer. 
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtCancelTimer(
+	IN HANDLE TimerHandle,
+	OUT PBOOLEAN CurrentState OPTIONAL
+	);
+
+NTSTATUS
+STDCALL
+ZwCancelTimer(
 	IN HANDLE TimerHandle,
 	OUT ULONG ElapsedTime
 	);
@@ -1190,6 +247,12 @@ NtClearEvent(
 	IN HANDLE  EventHandle 
 	);
 
+NTSTATUS
+STDCALL
+ZwClearEvent( 
+	IN HANDLE  EventHandle 
+	);
+
 /*
  * FUNCTION: Closes an object handle
  * ARGUMENTS:
@@ -1205,21 +268,39 @@ NtClose(
     	IN HANDLE Handle
     	);
 
+NTSTATUS
+STDCALL
+ZwClose(
+    	IN HANDLE Handle
+    	);
+
 
 /*
  * FUNCTION: Continues a thread with the specified context
  * ARGUMENTS: 
  *        Context = Specifies the processor context
+ *	  IrqLevel = Specifies the Interupt Request Level to continue with. Can
+ *			be PASSIVE_LEVEL or APC_LEVEL
  * REMARKS
- *        NtContinue can be used to continue after a exception.
+ *        NtContinue can be used to continue after an exception or apc.
  * RETURNS: Status
  */
 //FIXME This function might need another parameter
+
 NTSTATUS
 STDCALL
 NtContinue(
-	IN PCONTEXT Context
+	IN PCONTEXT Context,
+	IN CINT IrqLevel
 	);
+
+NTSTATUS
+STDCALL
+ZwContinue(
+	IN PCONTEXT Context,
+	IN CINT IrqLevel
+	);
+
 
 /*
  * FUNCTION: Creates a directory object
@@ -1231,6 +312,7 @@ NtContinue(
  *          handle, a access mask and a OBJECT_ATTRIBUTES structure to map the path name and the SECURITY_ATTRIBUTES.
  * RETURNS: Status
  */
+
 NTSTATUS
 STDCALL
 NtCreateDirectoryObject(
@@ -1238,6 +320,15 @@ NtCreateDirectoryObject(
     	IN ACCESS_MASK DesiredAccess,
     	IN POBJECT_ATTRIBUTES ObjectAttributes
     	);
+
+NTSTATUS
+STDCALL
+ZwCreateDirectoryObject(
+    	OUT PHANDLE DirectoryHandle,
+    	IN ACCESS_MASK DesiredAccess,
+    	IN POBJECT_ATTRIBUTES ObjectAttributes
+    	);
+
 /*
  * FUNCTION: Creates an event object
  * ARGUMENTS:
@@ -1245,22 +336,33 @@ NtCreateDirectoryObject(
  *        DesiredAccess = Specifies access to the event
  *        ObjectAttribute = Initialized attributes for the object
  *        ManualReset = manual-reset or auto-reset if true you have to reset the state of the event manually
-                        using NtResetEvent/NtClearEvent. if false the system will reset the event to a non-signalled state
-                        automatically after the system has rescheduled a thread waiting on the event.
+ *                       using NtResetEvent/NtClearEvent. if false the system will reset the event to a non-signalled state
+ *                       automatically after the system has rescheduled a thread waiting on the event.
  *        InitialState = specifies the initial state of the event to be signaled ( TRUE ) or non-signalled (FALSE).
  * REMARKS: This function maps to the win32 CreateEvent. Demanding a out variable  of type HANDLE,
  *          a access mask and a OBJECT_ATTRIBUTES structure mapping to the SECURITY_ATTRIBUTES. ManualReset and InitialState are
  *          both parameters aswell ( possibly the order is reversed ).
  * RETURNS: Status
  */
+
 NTSTATUS
 STDCALL
 NtCreateEvent(
 	OUT PHANDLE FileHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
-	IN BOOL ManualReset,
-	IN BOOL InitialState
+	IN BOOLEAN ManualReset,
+	IN BOOLEAN InitialState
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateEvent(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN BOOLEAN ManualReset,
+	IN BOOLEAN InitialState
 	);
 
 /*
@@ -1274,6 +376,14 @@ NtCreateEvent(
 NTSTATUS
 STDCALL
 NtCreateEventPair(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateEventPair(
 	OUT PHANDLE FileHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -1297,7 +407,8 @@ NtCreateEventPair(
  *        EaLength = Extended Attributes buffer size,  applies only to files and directories.
  * REMARKS: This function maps to the win32 CreateFile. 
  * RETURNS: Status
- */                                        
+ */
+                                        
 NTSTATUS                                        
 STDCALL                                           
 NtCreateFile(                                   
@@ -1313,6 +424,23 @@ NtCreateFile(
 	IN PVOID EaBuffer OPTIONAL,                 
 	IN ULONG EaLength                           
     	);                                          
+
+NTSTATUS                                        
+STDCALL                                           
+ZwCreateFile(                                   
+	OUT PHANDLE FileHandle,                     
+	IN ACCESS_MASK DesiredAccess,               
+	IN POBJECT_ATTRIBUTES ObjectAttributes,     
+	OUT PIO_STATUS_BLOCK IoStatusBlock,         
+	IN PLARGE_INTEGER AllocationSize OPTIONAL,  
+	IN ULONG FileAttributes,                    
+	IN ULONG ShareAccess,                       
+	IN ULONG CreateDisposition,                 
+	IN ULONG CreateOptions,                     
+	IN PVOID EaBuffer OPTIONAL,                 
+	IN ULONG EaLength                           
+    	);          
+
 /*
  * FUNCTION: Creates or opens a file, directory or device object.
  * ARGUMENTS:
@@ -1324,6 +452,7 @@ NtCreateFile(
  * RETURNS:
  *	Status
  */
+
 NTSTATUS
 STDCALL
 NtCreateIoCompletion(
@@ -1332,6 +461,16 @@ NtCreateIoCompletion(
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN ULONG NumberOfConcurrentThreads 
 	);
+
+NTSTATUS
+STDCALL
+ZwCreateIoCompletion(
+	OUT PHANDLE CompletionPort,
+	IN ACCESS_MASK DesiredAccess,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG NumberOfConcurrentThreads 
+	);
+
 /*
  * FUNCTION: Creates a registry key
  * ARGUMENTS:
@@ -1347,9 +486,9 @@ NtCreateIoCompletion(
  *			KEY_NOTIFY	
  *			KEY_CREATE_LINK	A symbolic link to the key can be created. 
  *        ObjectAttributes = The name of the key may be specified directly in the name field 
- *				of object attributes or relative
- *				to a key in rootdirectory.
- *	  Class = Specifies the kind of data.
+ *				of object attributes or relative to a key in rootdirectory.
+ *        TitleIndex = Might specify the position in the sequential order of subkeys. 
+ *	  Class = Specifies the kind of data, for example REG_SZ for string data. [ ??? ]
  *        CreateOptions = Specifies additional options with which the key is created
  *			REG_OPTION_VOLATILE		The key is not preserved across boots.
  *			REG_OPTION_NON_VOLATILE		The key is preserved accross boots.
@@ -1360,9 +499,22 @@ NtCreateIoCompletion(
  * RETURNS:
  *	Status
  */
+
 NTSTATUS
 STDCALL
 NtCreateKey(
+	OUT PHANDLE KeyHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN ULONG TitleIndex,
+	IN PUNICODE_STRING Class OPTIONAL,
+	IN ULONG CreateOptions,
+	IN PULONG Disposition OPTIONAL
+    	);
+
+NTSTATUS
+STDCALL
+ZwCreateKey(
 	OUT PHANDLE KeyHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -1393,7 +545,16 @@ NtCreateMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN OBJECT_ATTRIBUTES ObjectAttributes,
-	IN BOOL InitialOwner
+	IN BOOLEAN InitialOwner
+	);
+
+NTSTATUS
+STDCALL
+ZwCreateMutant(
+	OUT PHANDLE MutantHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN OBJECT_ATTRIBUTES ObjectAttributes,
+	IN BOOLEAN InitialOwner
 	);
 
 //NtCreateNamedPipeFile
@@ -1404,9 +565,10 @@ NtCreateMutant(
  *        PageFileName  = Name of the pagefile
  *        MinimumSize = Specifies the minimum size
  *        MaximumSize = Specifies the maximum size
- *        ActualSize  = Specifies the actual size 
+ *        ActualSize(OUT)  = Specifies the actual size 
  * RETURNS: Status
-*/
+ */
+
 NTSTATUS 
 STDCALL 
 NtCreatePagingFile(
@@ -1415,6 +577,16 @@ NtCreatePagingFile(
 	IN ULONG MaxiumSize,
 	OUT PULONG ActualSize 
 	);
+
+NTSTATUS 
+STDCALL 
+ZwCreatePagingFile(
+	IN PUNICODE_STRING PageFileName,
+	IN ULONG MiniumSize,
+	IN ULONG MaxiumSize,
+	OUT PULONG ActualSize 
+	);
+
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -1443,6 +615,20 @@ NtCreateProcess(
         IN HANDLE DebugPort OPTIONAL,
         IN HANDLE ExceptionPort OPTIONAL
 	);
+
+NTSTATUS 
+STDCALL 
+ZwCreateProcess(
+	OUT PHANDLE ProcessHandle,
+        IN ACCESS_MASK DesiredAccess,
+        IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+        IN HANDLE ParentProcess,
+        IN BOOLEAN InheritObjectTable,
+        IN HANDLE SectionHandle OPTIONAL,
+        IN HANDLE DebugPort OPTIONAL,
+        IN HANDLE ExceptionPort OPTIONAL
+	);
+
 /*
  * FUNCTION: Creates a section object.
  * ARGUMENTS:
@@ -1457,6 +643,7 @@ NtCreateProcess(
  *        FileHanlde = Handle to a file to create a section mapped to a file instead of a memory backed section.
  * RETURNS: Status
  */
+
 NTSTATUS
 STDCALL
 NtCreateSection( 
@@ -1468,6 +655,19 @@ NtCreateSection(
 	IN ULONG AllocationAttributes,
 	IN HANDLE FileHandle OPTIONAL
 	);
+
+NTSTATUS
+STDCALL
+ZwCreateSection( 
+	OUT PHANDLE SectionHandle, 
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,  
+	IN PLARGE_INTEGER MaximumSize OPTIONAL,  
+	IN ULONG SectionPageProtection OPTIONAL,
+	IN ULONG AllocationAttributes,
+	IN HANDLE FileHandle OPTIONAL
+	);
+
 /*
  * FUNCTION: Creates a semaphore object for interprocess synchronization.
  * ARGUMENTS:
@@ -1491,15 +691,24 @@ NtCreateSemaphore(
 	IN ULONG InitialCount,
 	IN ULONG MaximumCount
 	);
+
+NTSTATUS
+STDCALL
+ZwCreateSemaphore(
+	OUT PHANDLE SemaphoreHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN ULONG InitialCount,
+	IN ULONG MaximumCount
+	);
+
 /*
  * FUNCTION: Creates a symbolic link object
  * ARGUMENTS:
  *        SymbolicLinkHandle (OUT) = Caller supplied storage for the resulting handle
  *        DesiredAccess = Specifies the allowed or desired access to the thread. 
  *        ObjectAttributes = Initialized attributes for the object.
- *        Name = 
- * REMARKS:
- *        This function map to the win32 function CreateThread. 
+ *        Name = Target name of the symbolic link  
  * RETURNS: Status
  */
 NTSTATUS
@@ -1510,6 +719,16 @@ NtCreateSymbolicLinkObject(
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PUNICODE_STRING Name
 	);
+
+NTSTATUS
+STDCALL
+ZwCreateSymbolicLinkObject(
+	OUT PHANDLE SymbolicLinkHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PUNICODE_STRING Name
+	);
+
 /*
  * FUNCTION: Creates a user mode thread
  * ARGUMENTS:
@@ -1519,15 +738,28 @@ NtCreateSymbolicLinkObject(
  *        ProcessHandle = Handle to the threads parent process.
  *        ClientId (OUT) = Caller supplies storage for returned process id and thread id.
  *        ThreadContext = Initial processor context for the thread.
- *        InitialTeb = Initial Thread Environment Block for the Thread.
+ *        InitialTeb = Initial user mode stack context for the thread.
  *        CreateSuspended = Specifies if the thread is ready for scheduling
  * REMARKS:
- *        This function maps to the win32 function CreateThread.  The exact arguments are from the usenet. [<6f7cqj$tq9$1@nnrp1.dejanews.com>] 
+ *        This function maps to the win32 function CreateThread.  
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL 
 NtCreateThread(
+	OUT PHANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN HANDLE ProcessHandle,
+	OUT PCLIENT_ID ClientId,
+	IN PCONTEXT ThreadContext,
+	IN PINITIAL_TEB InitialTeb,
+	IN BOOLEAN CreateSuspended
+	);
+
+NTSTATUS
+STDCALL 
+ZwCreateThread(
 	OUT PHANDLE ThreadHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
@@ -1543,7 +775,7 @@ NtCreateThread(
  *        TimerHandle (OUT) = Caller supplied storage for the resulting handle
  *        DesiredAccess = Specifies the allowed or desired access to the timer. 
  *        ObjectAttributes = Initialized attributes for the object.
- *        ManualReset = Specifies if the timer should be reset manually.
+ *        TimerType = Specifies if the timer should be reset manually.
  * REMARKS:
  *       This function maps to the win32  CreateWaitableTimer. lpTimerAttributes and lpTimerName map to
  *       corresponding fields in OBJECT_ATTRIBUTES structure. 
@@ -1556,18 +788,26 @@ NtCreateTimer(
 	OUT PHANDLE TimerHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-	IN BOOL ManualReset 
+	IN CINT TimerType
 	);
-/*
- * FUNCTION: Returns the callers thread TEB.
- * ARGUMENTS:
- *        Teb (OUT) = Caller supplied storage for the resulting TEB.
- * RETURNS: Status
- */
+
 NTSTATUS
 STDCALL 
-NtCurrentTeb(
-	NT_TEB *CurrentTeb
+ZwCreateTimer(
+	OUT PHANDLE TimerHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+	IN CINT TimerType
+	);
+
+
+/*
+ * FUNCTION: Returns the callers thread TEB.
+ * RETURNS: The resulting teb.
+ */
+NT_TEB *
+STDCALL 
+NtCurrentTeb(VOID
 	);
 
 /*
@@ -1580,16 +820,24 @@ NtCurrentTeb(
 NTSTATUS
 STDCALL
 NtDelayExecution(
-	IN BOOL Alertable,
-	IN PLARGE_INTEGER Interval
+	IN BOOLEAN Alertable,
+	IN TIME *Interval
 	);
+
+NTSTATUS
+STDCALL
+ZwDelayExecution(
+	IN BOOLEAN Alertable,
+	IN TIME *Interval
+	);
+
 
 /*
  * FUNCTION: Deletes an atom from the global atom table
  * ARGUMENTS:
- *        Atom = Atom to delete
+ *        Atom = Identifies the atom to delete
  * REMARKS:
-	 The function maps to the win32 GlobalDeleteAtom
+ *	 The function maps to the win32 GlobalDeleteAtom
  * RETURNS: Status
  */
 NTSTATUS
@@ -1598,19 +846,31 @@ NtDeleteAtom(
 	IN ATOM Atom
 	);
 
+NTSTATUS
+STDCALL
+ZwDeleteAtom(
+	IN ATOM Atom
+	);
+
 /*
  * FUNCTION: Deletes a file
  * ARGUMENTS:
- *        ObjectAttributes = Handle to the file which should be deleted
+ *        ObjectAttributes = Name of the file which should be deleted
  * REMARKS:
-	 This system call is functionally equivalent to NtSetInformationFile
-	 setting the disposition information.
+ *	 This system call is functionally equivalent to NtSetInformationFile
+ *	 setting the disposition information.
  *	 The function maps to the win32 DeleteFile. 
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtDeleteFile(
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwDeleteFile(
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
 
@@ -1625,6 +885,12 @@ STDCALL
 NtDeleteKey(
 	IN HANDLE KeyHandle
 	);
+NTSTATUS
+STDCALL
+ZwDeleteKey(
+	IN HANDLE KeyHandle
+	);
+
 /*
  * FUNCTION: Deletes a value from a registry key
  * ARGUMENTS:
@@ -1639,14 +905,21 @@ NtDeleteValueKey(
 	IN HANDLE KeyHandle,
 	IN PUNICODE_STRING ValueName
 	);
+
+NTSTATUS
+STDCALL
+ZwDeleteValueKey(
+	IN HANDLE KeyHandle,
+	IN PUNICODE_STRING ValueName
+	);
 /*
  * FUNCTION: Sends IOCTL to the io sub system
  * ARGUMENTS:
  *        DeviceHandle = Points to the handle that is created by NtCreateFile
  *        Event = Event to synchronize on STATUS_PENDING
- *        ApcRoutine = 
- *	  ApcContext =
- *	  IoStatusBlock = Caller should supply storage for 
+ *        ApcRoutine = Asynchroneous procedure callback
+ *	  ApcContext = Callback context.
+ *	  IoStatusBlock = Caller should supply storage for extra information.. 
  *        IoControlCode = Contains the IO Control command. This is an 
  *			index to the structures in InputBuffer and OutputBuffer.
  *	  InputBuffer = Caller should supply storage for input buffer if IOTL expects one.
@@ -1670,6 +943,21 @@ NtDeviceIoControlFile(
 	OUT PVOID OutputBuffer,
 	IN ULONG OutputBufferSize
 	);
+
+NTSTATUS
+STDCALL
+ZwDeviceIoControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+	IN PVOID UserApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	);
 /*
  * FUNCTION: Displays a string on the blue screen
  * ARGUMENTS:
@@ -1682,16 +970,31 @@ STDCALL
 NtDisplayString(
 	IN PUNICODE_STRING DisplayString
 	);
+
+NTSTATUS
+STDCALL
+ZwDisplayString(
+	IN PUNICODE_STRING DisplayString
+	);
+
 /*
- * FUNCTION: Displays a string on the blue screen
+ * FUNCTION: Copies a handle from one process space to another
  * ARGUMENTS:
- *         SourceProcessHandle = The string to display
-	   SourceHandle =
-	   TargetProcessHandle =
-	   TargetHandle = 
-	   DesiredAccess = 
-	   InheritHandle = 
+ *         SourceProcessHandle = The source process owning the handle. The source process should have opened
+ *			the SourceHandle with PROCESS_DUP_HANDLE access.
+ *	   SourceHandle = The handle to the object.
+ *	   TargetProcessHandle = The destination process owning the handle 
+ *	   TargetHandle (OUT) = Caller should supply storage for the duplicated handle. 
+ *	   DesiredAccess = The desired access to the handle.
+ *	   InheritHandle = Indicates wheter the new handle will be inheritable or not.
+ *	   Options = Specifies special actions upon duplicating the handle. Can be
+ *			one of the values DUPLICATE_CLOSE_SOURCE | DUPLICATE_SAME_ACCESS.
+ *			DUPLICATE_CLOSE_SOURCE specifies that the source handle should be
+ *			closed after duplicating. DUPLICATE_SAME_ACCESS specifies to ignore
+ *			the DesiredAccess paramter and just grant the same access to the new
+ *			handle.
  * RETURNS: Status
+ * REMARKS: This function maps to the win32 DuplicateHandle.
  */
 
 NTSTATUS
@@ -1701,8 +1004,21 @@ NtDuplicateObject(
 	IN PHANDLE SourceHandle,
 	IN HANDLE TargetProcessHandle,
 	OUT PHANDLE TargetHandle,
-	IN ULONG DesiredAccess,
-	IN BOOL InheritHandle
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN InheritHandle,
+	ULONG Options
+	);
+
+NTSTATUS
+STDCALL
+ZwDuplicateObject(
+	IN HANDLE SourceProcessHandle,
+	IN PHANDLE SourceHandle,
+	IN HANDLE TargetProcessHandle,
+	OUT PHANDLE TargetHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN BOOLEAN InheritHandle,
+	ULONG Options
 	);
 /*
  * FUNCTION: Returns information about the subkeys of an open key
@@ -1724,7 +1040,18 @@ STDCALL
 NtEnumerateKey(
 	IN HANDLE KeyHandle,
 	IN ULONG Index,
-	IN CINT KeyInformationClass,
+	IN KEY_INFORMATION_CLASS KeyInformationClass,
+	OUT PVOID KeyInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
+NTSTATUS
+STDCALL
+ZwEnumerateKey(
+	IN HANDLE KeyHandle,
+	IN ULONG Index,
+	IN KEY_INFORMATION_CLASS KeyInformationClass,
 	OUT PVOID KeyInformation,
 	IN ULONG Length,
 	OUT PULONG ResultLength
@@ -1749,7 +1076,18 @@ STDCALL
 NtEnumerateValueKey(
 	IN HANDLE KeyHandle,
 	IN ULONG Index,
-	IN CINT KeyValueInformationClass,
+	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+	OUT PVOID KeyValueInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
+NTSTATUS
+STDCALL
+ZwEnumerateValueKey(
+	IN HANDLE KeyHandle,
+	IN ULONG Index,
+	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
 	OUT PVOID KeyValueInformation,
 	IN ULONG Length,
 	OUT PULONG ResultLength
@@ -1767,6 +1105,13 @@ NtExtendSection(
 	IN HANDLE SectionHandle,
 	IN ULONG NewMaximumSize
 	);
+NTSTATUS
+STDCALL
+ZwExtendSection(
+	IN HANDLE SectionHandle,
+	IN ULONG NewMaximumSize
+	);
+
 /*
  * FUNCTION: Finds a atom
  * ARGUMENTS:
@@ -1774,7 +1119,7 @@ NtExtendSection(
  *	 AtomString = String to search for.
  * RETURNS: Status 
  * REMARKS:
-	This funciton maps to the win32 GlobalFindAtom
+ *	This funciton maps to the win32 GlobalFindAtom
  */
 NTSTATUS
 STDCALL
@@ -1782,16 +1127,23 @@ NtFindAtom(
 	OUT ATOM *Atom,
 	IN PUNICODE_STRING AtomString
 	);
+
+NTSTATUS
+STDCALL
+ZwFindAtom(
+	OUT ATOM *Atom,
+	IN PUNICODE_STRING AtomString
+	);
 /*
  * FUNCTION: Flushes chached file data to disk
  * ARGUMENTS:
  *       FileHandle = Points to the file
-	 IoStatusBlock = Caller must supply storage to receive the result of the flush
-		buffers operation. The information field is set to number of bytes
-		flushed to disk.
+ *	 IoStatusBlock = Caller must supply storage to receive the result of the flush
+ *		buffers operation. The information field is set to number of bytes
+ *		flushed to disk.
  * RETURNS: Status 
  * REMARKS:
-	This funciton maps to the win32 FlushFileBuffers
+ *	This funciton maps to the win32 FlushFileBuffers
  */
 NTSTATUS
 STDCALL
@@ -1799,19 +1151,33 @@ NtFlushBuffersFile(
 	IN HANDLE FileHandle,
 	OUT PIO_STATUS_BLOCK IoStatusBlock
 	);
+
+NTSTATUS
+STDCALL
+ZwFlushBuffersFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock
+	);
 /*
  * FUNCTION: Flushes a the processors instruction cache
  * ARGUMENTS:
  *       ProcessHandle = Points to the process owning the cache
-	 BaseAddress = // might this be a image address ????
-	 NumberOfBytesToFlush = 
+ *	 BaseAddress = // might this be a image address ????
+ *	 NumberOfBytesToFlush = 
  * RETURNS: Status 
  * REMARKS:
-	This funciton is used by debuggers
+ *	This funciton is used by debuggers
  */
 NTSTATUS
 STDCALL
 NtFlushInstructionCache(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN UINT NumberOfBytesToFlush
+	);
+NTSTATUS
+STDCALL
+ZwFlushInstructionCache(
 	IN HANDLE ProcessHandle,
 	IN PVOID BaseAddress,
 	IN UINT NumberOfBytesToFlush
@@ -1822,11 +1188,17 @@ NtFlushInstructionCache(
  *       KeyHandle = Points to the registry key handle
  * RETURNS: Status 
  * REMARKS:
-	This funciton maps to the win32 RegFlushKey.
+ *	This funciton maps to the win32 RegFlushKey.
  */
 NTSTATUS
 STDCALL
 NtFlushKey(
+	IN HANDLE KeyHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwFlushKey(
 	IN HANDLE KeyHandle
 	);
 
@@ -1839,7 +1211,7 @@ NtFlushKey(
  *        NumberOfBytesFlushed = Actual number of bytes flushed
  * RETURNS: Status 
  * REMARKS:
-	  Check return status on STATUS_NOT_MAPPED_DATA 
+ *	  Check return status on STATUS_NOT_MAPPED_DATA 
  */
 NTSTATUS
 STDCALL
@@ -1849,22 +1221,28 @@ NtFlushVirtualMemory(
 	IN ULONG NumberOfBytesToFlush,
 	OUT PULONG NumberOfBytesFlushed OPTIONAL
 	);
+NTSTATUS
+STDCALL
+ZwFlushVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytesToFlush,
+	OUT PULONG NumberOfBytesFlushed OPTIONAL
+	);
 /*
- * FUNCTION: Flushes virtual memory to file
- * ARGUMENTS:
- *        ProcessHandle = Points to the process that allocated the virtual memory
- *        BaseAddress = Points to the memory address
- *        NumberOfBytesToFlush = Limits the range to flush,
- *        NumberOfBytesFlushed = Actual number of bytes flushed
+ * FUNCTION: Flushes the dirty pages to file
  * RETURNS: Status 
- * REMARKS:
-	  Check return status on STATUS_NOT_MAPPED_DATA 
  */
-VOID
+NTSTATUS
 STDCALL                                            
 NtFlushWriteBuffer (                            
 	VOID                                        
-	);              
+	);
+NTSTATUS
+STDCALL                                            
+ZwFlushWriteBuffer (                            
+	VOID                                        
+	);                      
 /*
  * FUNCTION: Frees a range of virtual memory
  * ARGUMENTS:
@@ -1878,11 +1256,20 @@ NtFlushWriteBuffer (
 NTSTATUS
 STDCALL
 NtFreeVirtualMemory(
-	IN PHANDLE ProcessHandle,
+	IN HANDLE ProcessHandle,
 	IN PVOID  *BaseAddress,	
 	IN ULONG  RegionSize,	
 	IN ULONG  FreeType
-	); 
+	);
+
+NTSTATUS
+STDCALL
+ZwFreeVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID  *BaseAddress,	
+	IN ULONG  RegionSize,	
+	IN ULONG  FreeType
+	);  
 
 /*
  * FUNCTION: Sends FSCTL to the filesystem
@@ -1893,21 +1280,37 @@ NtFreeVirtualMemory(
  *	  ApcContext =
  *	  IoStatusBlock = Caller should supply storage for 
  *        IoControlCode = Contains the File System Control command. This is an 
-			index to the structures in InputBuffer and OutputBuffer.
-		FSCTL_GET_RETRIEVAL_POINTERS  	MAPPING_PAIR
-		FSCTL_GET_RETRIEVAL_POINTERS  	GET_RETRIEVAL_DESCRIPTOR
-		FSCTL_GET_VOLUME_BITMAP  	BITMAP_DESCRIPTOR
-		FSCTL_MOVE_FILE  		MOVEFILE_DESCRIPTOR
-
+ *			index to the structures in InputBuffer and OutputBuffer.
+ *		FSCTL_GET_RETRIEVAL_POINTERS  	MAPPING_PAIR
+ *		FSCTL_GET_RETRIEVAL_POINTERS  	GET_RETRIEVAL_DESCRIPTOR
+ *		FSCTL_GET_VOLUME_BITMAP  	BITMAP_DESCRIPTOR
+ *		FSCTL_MOVE_FILE  		MOVEFILE_DESCRIPTOR
+ *
  *	  InputBuffer = Caller should supply storage for input buffer if FCTL expects one.
  * 	  InputBufferSize = Size of the input bufffer
  *        OutputBuffer = Caller should supply storage for output buffer if FCTL expects one.
  *        OutputBufferSize  = Size of the input bufffer
- * RETURNS: Status 
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
+ *		STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST ]
  */
 NTSTATUS
 STDCALL
 NtFsControlFile(
+	IN HANDLE DeviceHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock, 
+	IN ULONG IoControlCode,
+	IN PVOID InputBuffer, 
+	IN ULONG InputBufferSize,
+	OUT PVOID OutputBuffer,
+	IN ULONG OutputBufferSize
+	);
+
+NTSTATUS
+STDCALL
+ZwFsControlFile(
 	IN HANDLE DeviceHandle,
 	IN HANDLE Event OPTIONAL, 
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
@@ -1934,6 +1337,13 @@ NtGetContextThread(
 	IN HANDLE ThreadHandle, 
 	OUT PCONTEXT Context
 	);
+
+NTSTATUS
+STDCALL 
+ZwGetContextThread(
+	IN HANDLE ThreadHandle, 
+	OUT PCONTEXT Context
+	);
 /*
  * FUNCTION: Retrieves the uptime of the system
  * ARGUMENTS:
@@ -1943,6 +1353,12 @@ NtGetContextThread(
 NTSTATUS
 STDCALL 
 NtGetTickCount(
+	PULONG UpTime
+	);
+
+NTSTATUS
+STDCALL 
+ZwGetTickCount(
 	PULONG UpTime
 	);
 
@@ -1957,8 +1373,14 @@ NtGetTickCount(
 NTSTATUS
 STDCALL 
 NtInitializeRegistry(
-	BOOL SetUpBoot
+	BOOLEAN SetUpBoot
 	);
+NTSTATUS
+STDCALL 
+ZwInitializeRegistry(
+	BOOLEAN SetUpBoot
+	);
+
 /*
  * FUNCTION: Loads a driver. 
  * ARGUMENTS: 
@@ -1968,6 +1390,12 @@ NtInitializeRegistry(
 NTSTATUS
 STDCALL 
 NtLoadDriver(
+	IN PUNICODE_STRING DriverServiceName
+	);
+
+NTSTATUS
+STDCALL 
+ZwLoadDriver(
 	IN PUNICODE_STRING DriverServiceName
 	);
 
@@ -1987,6 +1415,12 @@ NtLoadKey(
 	PHANDLE KeyHandle,
 	OBJECT_ATTRIBUTES ObjectAttributes
 	);
+NTSTATUS
+STDCALL 
+ZwLoadKey(
+	PHANDLE KeyHandle,
+	OBJECT_ATTRIBUTES ObjectAttributes
+	);
 /*
  * FUNCTION: Locks a range of bytes in a file. 
  * ARGUMENTS: 
@@ -1998,27 +1432,46 @@ NtLoadKey(
  *			 the completion status and information about the requested lock operation.
  *       ByteOffset = Offset 
  *       Length = Number of bytes to lock.
- *       Key  = 
- *       FailImmediatedly =
- *       ExclusiveLock =
+ *       Key  = Special value to give other threads the possibility to unlock the file
+		by supplying the key in a call to NtUnlockFile.
+ *       FailImmediatedly = If false the request will block untill the lock is obtained. 
+ *       ExclusiveLock = Specifies whether a exclusive or a shared lock is obtained.
  * REMARK:
-	This procedure maps to the win32 procedure LockFileEx 
- * RETURNS: Status
+	This procedure maps to the win32 procedure LockFileEx. STATUS_PENDING is returned if the lock could
+	not be obtained immediately, the device queue is busy and the IRP is queued.
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
+		STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_LOCK_NOT_GRANTED ]
+
  */	
 NTSTATUS 
 STDCALL
 NtLockFile(
-  IN  HANDLE FileHandle,
-  IN  HANDLE Event OPTIONAL,
-  IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-  IN  PVOID ApcContext OPTIONAL,
-  OUT PIO_STATUS_BLOCK IoStatusBlock,
-  IN  PLARGE_INTEGER ByteOffset,
-  IN  PLARGE_INTEGER Length,
-  IN  ULONG Key,
-  IN  BOOLEAN FailImmediatedly,
-  IN  BOOLEAN ExclusiveLock
-  );
+	IN  HANDLE FileHandle,
+	IN  HANDLE Event OPTIONAL,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN  PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN  PLARGE_INTEGER ByteOffset,
+	IN  PLARGE_INTEGER Length,
+	IN  PULONG Key,
+	IN  BOOLEAN FailImmediatedly,
+	IN  BOOLEAN ExclusiveLock
+	);
+
+NTSTATUS 
+STDCALL
+ZwLockFile(
+	IN  HANDLE FileHandle,
+	IN  HANDLE Event OPTIONAL,
+	IN  PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN  PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN  PLARGE_INTEGER ByteOffset,
+	IN  PLARGE_INTEGER Length,
+	IN  PULONG Key,
+	IN  BOOLEAN FailImmediatedly,
+	IN  BOOLEAN ExclusiveLock
+	);
 /*
  * FUNCTION: Locks a range of virtual memory. 
  * ARGUMENTS: 
@@ -2028,11 +1481,19 @@ NtLockFile(
  *       NumberOfBytesLocked (OUT) = Number of bytes actually locked.
  * REMARK:
 	This procedure maps to the win32 procedure VirtualLock 
- * RETURNS: Status
+ * RETURNS: Status [STATUS_SUCCESS | STATUS_WAS_LOCKED ]
  */	
 NTSTATUS
 STDCALL 
 NtLockVirtualMemory(
+	HANDLE ProcessHandle,
+	PVOID BaseAddress,
+	ULONG NumberOfBytesToLock,
+	PULONG NumberOfBytesLocked
+	);
+NTSTATUS
+STDCALL 
+ZwLockVirtualMemory(
 	HANDLE ProcessHandle,
 	PVOID BaseAddress,
 	ULONG NumberOfBytesToLock,
@@ -2048,6 +1509,12 @@ NtLockVirtualMemory(
 NTSTATUS
 STDCALL
 NtMakeTemporaryObject(
+	IN HANDLE Handle 
+	);
+
+NTSTATUS
+STDCALL
+ZwMakeTemporaryObject(
 	IN HANDLE Handle 
 	);
 /*
@@ -2071,18 +1538,34 @@ NtMakeTemporaryObject(
  *        Protect = Protection for the committed region of the view
  * RETURNS: Status
  */
-NTSTATUS STDCALL
+NTSTATUS 
+STDCALL
 NtMapViewOfSection(
-     IN HANDLE SectionHandle,
-     IN HANDLE ProcessHandle,
-     IN OUT PVOID *BaseAddress,
-     IN ULONG ZeroBits,
-     IN ULONG CommitSize,
-     IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
-     IN OUT PULONG ViewSize,
-     IN SECTION_INHERIT InheritDisposition,
-     IN ULONG AllocationType,
-     IN ULONG AccessProtection
+	IN HANDLE SectionHandle,
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID *BaseAddress,
+	IN ULONG ZeroBits,
+	IN ULONG CommitSize,
+	IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+	IN OUT PULONG ViewSize,
+	IN SECTION_INHERIT InheritDisposition,
+	IN ULONG AllocationType,
+	IN ULONG AccessProtection
+    );
+
+NTSTATUS 
+STDCALL
+ZwMapViewOfSection(
+	IN HANDLE SectionHandle,
+	IN HANDLE ProcessHandle,
+	IN OUT PVOID *BaseAddress,
+ 	IN ULONG ZeroBits,
+	IN ULONG CommitSize,
+	IN OUT PLARGE_INTEGER SectionOffset OPTIONAL,
+	IN OUT PULONG ViewSize,
+	IN SECTION_INHERIT InheritDisposition,
+	IN ULONG AllocationType,
+	IN ULONG AccessProtection
     );
 
 /*
@@ -2127,11 +1610,68 @@ NtNotifyChangeDirectoryFile(
 	OUT PVOID Buffer,
 	IN ULONG BufferSize,
 	IN ULONG CompletionFilter,
-	IN BOOL WatchTree
+	IN BOOLEAN WatchTree
 	);
+
+NTSTATUS
+STDCALL
+ZwNotifyChangeDirectoryFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID Buffer,
+	IN ULONG BufferSize,
+	IN ULONG CompletionFilter,
+	IN BOOLEAN WatchTree
+	);
+
+/*
+ * FUNCTION: Installs a notfication callback on registry changes
+ * ARGUMENTS:
+	KeyHandle = Handle to the registry key
+	Event = Event that should be signalled on modification of the key
+	ApcRoutine = Routine that should be called on modification of the key
+	ApcContext = Argument to the ApcRoutine
+	IoStatusBlock = ???
+	CompletionFilter = Specifies the kind of notification the caller likes to receive.
+			Can be a combination of the following values:
+
+			REG_NOTIFY_CHANGE_NAME
+			REG_NOTIFY_CHANGE_ATTRIBUTES
+			REG_NOTIFY_CHANGE_LAST_SET
+			REG_NOTIFY_CHANGE_SECURITY
+				
+				
+	Asynchroneous = If TRUE the changes are reported by signalling an event if false
+			the function will not return before a change occurs.
+	ChangeBuffer =  Will return the old value
+	Length = Size of the change buffer
+	WatchSubtree =  Indicates if the caller likes to receive a notification of changes in
+			sub keys or not.
+ * REMARKS: If the key is closed the event is signalled aswell.
+ * RETURNS: Status
+ */
+
 NTSTATUS
 STDCALL
 NtNotifyChangeKey(
+	IN HANDLE KeyHandle,
+	IN HANDLE Event,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG CompletionFilter,
+	IN BOOLEAN Asynchroneous, 
+	OUT PVOID ChangeBuffer,
+	IN ULONG Length,
+	IN BOOLEAN WatchSubtree
+	);
+
+NTSTATUS
+STDCALL
+ZwNotifyChangeKey(
 	IN HANDLE KeyHandle,
 	IN HANDLE Event,
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
@@ -2160,6 +1700,14 @@ NtOpenDirectoryObject(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
+NTSTATUS
+STDCALL
+ZwOpenDirectoryObject(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
 /*
  * FUNCTION: Opens an existing event
  * ARGUMENTS:
@@ -2171,6 +1719,14 @@ NtOpenDirectoryObject(
 NTSTATUS
 STDCALL
 NtOpenEvent(	
+	OUT PHANDLE EventHandle,
+        IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenEvent(	
 	OUT PHANDLE EventHandle,
         IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -2197,6 +1753,17 @@ NtOpenFile(
    	IN ULONG OpenOptions                                                                    
 	);
 
+NTSTATUS
+STDCALL
+ZwOpenFile(
+	OUT PHANDLE FileHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,   
+	IN ULONG ShareAccess,         
+   	IN ULONG OpenOptions                                                                    
+	);
+
 /*
  * FUNCTION: Opens an existing io completion object
  * ARGUMENTS:
@@ -2209,6 +1776,14 @@ NtOpenFile(
 NTSTATUS
 STDCALL
 NtOpenIoCompletion(
+	OUT PHANDLE CompetionPort,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+
+NTSTATUS
+STDCALL
+ZwOpenIoCompletion(
 	OUT PHANDLE CompetionPort,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -2229,6 +1804,14 @@ NtOpenKey(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
+
+NTSTATUS
+STDCALL
+ZwOpenKey(
+	OUT PHANDLE KeyHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
 /*
  * FUNCTION: Opens an existing key in the registry
  * ARGUMENTS:
@@ -2240,6 +1823,13 @@ NtOpenKey(
 NTSTATUS
 STDCALL
 NtOpenMutant(
+	OUT PHANDLE MutantHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+NTSTATUS
+STDCALL
+ZwOpenMutant(
 	OUT PHANDLE MutantHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -2262,6 +1852,14 @@ NtOpenProcess (
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PCLIENT_ID ClientId
 	); 
+NTSTATUS 
+STDCALL
+ZwOpenProcess (
+	OUT PHANDLE ProcessHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PCLIENT_ID ClientId
+	); 
 /*
  * FUNCTION: Opens an existing section object
  * ARGUMENTS:
@@ -2273,6 +1871,13 @@ NtOpenProcess (
 NTSTATUS
 STDCALL
 NtOpenSection(
+	OUT PHANDLE SectionHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+NTSTATUS
+STDCALL
+ZwOpenSection(
 	OUT PHANDLE SectionHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -2292,6 +1897,13 @@ NtOpenSemaphore(
 	IN ACCESS_MASK DesiredAcces,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
 	);
+NTSTATUS
+STDCALL
+ZwOpenSemaphore(
+	IN HANDLE SemaphoreHandle,
+	IN ACCESS_MASK DesiredAcces,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
 /*
  * FUNCTION: Opens an existing symbolic link
  * ARGUMENTS:
@@ -2303,6 +1915,13 @@ NtOpenSemaphore(
 NTSTATUS
 STDCALL
 NtOpenSymbolicLinkObject(
+	OUT PHANDLE SymbolicLinkHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+	);
+NTSTATUS
+STDCALL
+ZwOpenSymbolicLinkObject(
 	OUT PHANDLE SymbolicLinkHandle,
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
@@ -2324,6 +1943,14 @@ NtOpenThread(
 	IN POBJECT_ATTRIBUTES ObjectAttributes,
 	IN PCLIENT_ID ClientId
 	);
+NTSTATUS
+STDCALL
+ZwOpenThread(
+	OUT PHANDLE ThreadHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes,
+	IN PCLIENT_ID ClientId
+	);
 /*
  * FUNCTION: Opens an existing timer
  * ARGUMENTS:
@@ -2339,12 +1966,19 @@ NtOpenTimer(
 	IN ACCESS_MASK DesiredAccess,
 	IN POBJECT_ATTRIBUTES ObjectAttributes
     	);
+NTSTATUS
+STDCALL
+ZwOpenTimer(
+	OUT PHANDLE TimerHandle,
+	IN ACCESS_MASK DesiredAccess,
+	IN POBJECT_ATTRIBUTES ObjectAttributes
+    	);
 /*
  * FUNCTION: Entry point for native applications
  * ARGUMENTS:
  *	Argument = Arguments passed to the application by the system [ at boot time ]
  * REMARKS:
- *	 Native applications should use this function instead of a main.
+ *	 Native applications should use this function instead of a main. Calling proces should terminate itself.
  * RETURNS: Status
  */ 	
 void NtProcessStartup( 
@@ -2375,12 +2009,22 @@ NtProtectVirtualMemory(
 	IN ULONG NewAccessProtection,
 	OUT PULONG OldAccessProtection 
 	);
+NTSTATUS
+STDCALL
+ZwProtectVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	IN ULONG NumberOfBytesToProtect,
+	IN ULONG NewAccessProtection,
+	OUT PULONG OldAccessProtection 
+	);
+
 
 /*
  * FUNCTION: Signals an event and resets it afterwards.
  * ARGUMENTS:
  *        EventHandle  = Handle to the event
- *        PulseCount = Number of times the action should be repeated
+ *        PulseCount = Number of times the action is repeated
  * RETURNS: Status
  */
 NTSTATUS 
@@ -2390,13 +2034,80 @@ NtPulseEvent(
 	IN PULONG PulseCount OPTIONAL
 	);
 
-//-- NtQueryAttributesFile
+NTSTATUS 
+STDCALL 
+ZwPulseEvent(
+	IN HANDLE EventHandle,
+	IN PULONG PulseCount OPTIONAL
+	);
 
-// FileNameInformation - FILE_NAMES_INFORMATION
+/*
+ * FUNCTION: Queries the attributes of a file
+ * ARGUMENTS:
+ *        FileHandle  = Handle to the file
+ *        Buffer = Caller supplies storage for the attributes
+ * RETURNS: Status
+ */
+
+NTSTATUS 
+STDCALL 
+NtQueryAttributesFile(
+	IN HANDLE FileHandle,
+	IN PVOID Buffer
+	);
+
+NTSTATUS 
+STDCALL 
+ZwQueryAttributesFile(
+	IN HANDLE FileHandle,
+	IN PVOID Buffer
+	);
+
+
+/*
+ * FUNCTION: Queries a directory file.
+ * ARGUMENTS:
+ *	  FileHandle = Handle to a directory file
+ *        EventHandle  = Handle to the event signaled on completion
+ *	  ApcRoutine = Asynchroneous procedure callback, called on completion
+ *	  ApcContext = Argument to the apc.
+ *	  IoStatusBlock = Caller supplies storage for extended status information.
+ *	  FileInformation = Caller supplies storage for the resulting information.
+ *
+ *		FileNameInformation  		FILE_NAMES_INFORMATION
+ *		FileDirectoryInformation  	FILE_DIRECTORY_INFORMATION
+ *		FileFullDirectoryInformation 	FILE_FULL_DIRECTORY_INFORMATION
+ *		FileBothDirectoryInformation	FILE_BOTH_DIR_INFORMATION
+ *
+ *	  Length = Size of the storage supplied
+ *	  FileInformationClass = Indicates the type of information requested.  
+ *	  ReturnSingleEntry = Specify true if caller only requests the first directory found.
+ *	  FileName = Initial directory name to query, that may contain wild cards.
+ *        RestartScan = Number of times the action should be repeated
+ * RETURNS: Status [ STATUS_SUCCESS, STATUS_ACCESS_DENIED, STATUS_INSUFFICIENT_RESOURCES,
+ *		     STATUS_INVALID_PARAMETER, STATUS_INVALID_DEVICE_REQUEST, STATUS_BUFFER_OVERFLOW,
+ *		     STATUS_INVALID_INFO_CLASS, STATUS_NO_SUCH_FILE, STATUS_NO_MORE_FILES ]
+ */
 
 NTSTATUS 
 STDCALL 
 NtQueryDirectoryFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID FileInformation,
+	IN ULONG Length,
+	IN FILE_INFORMATION_CLASS FileInformationClass,
+	IN BOOLEAN ReturnSingleEntry,
+	IN PUNICODE_STRING FileName OPTIONAL,
+	IN BOOLEAN RestartScan
+	);
+
+NTSTATUS 
+STDCALL 
+ZwQueryDirectoryFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL,
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
@@ -2434,9 +2145,50 @@ NtQueryDirectoryObject(
 	OUT PULONG              DataWritten OPTIONAL
 	); 
 
+NTSTATUS 
+STDCALL 
+ZwQueryDirectoryObject(
+	IN HANDLE DirObjHandle,
+	OUT POBJDIR_INFORMATION DirObjInformation, 
+	IN ULONG                BufferLength, 
+	IN BOOLEAN              GetNextIndex, 
+	IN BOOLEAN              IgnoreInputIndex, 
+	IN OUT PULONG           ObjectIndex,
+	OUT PULONG              DataWritten OPTIONAL
+	); 
+
+/*
+ * FUNCTION: Queries the extended attributes of a file
+ * ARGUMENTS:
+ *        FileHandle  = Handle to the event
+ *        IoStatusBlock = Number of times the action is repeated
+ *        Buffer
+ *        Length
+ *        ReturnSingleEntry
+ *        EaList
+ *        EaListLength
+ *        EaIndex
+ *        RestartScan
+ * RETURNS: Status
+ */
+
 NTSTATUS
 STDCALL
 NtQueryEaFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID Buffer,
+	IN ULONG Length,
+	IN BOOLEAN ReturnSingleEntry,
+	IN PVOID EaList OPTIONAL,
+	IN ULONG EaListLength,
+	IN PULONG EaIndex OPTIONAL,
+	IN BOOLEAN RestartScan
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryEaFile(
 	IN HANDLE FileHandle,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID Buffer,
@@ -2471,8 +2223,47 @@ NtQueryEvent(
 	IN ULONG EventInformationLength,
 	OUT PULONG ReturnLength
 	); 
-//-- NtQueryFullAttributesFile
-//-- NtQueryInformationAtom
+
+NTSTATUS
+STDCALL
+ZwQueryEvent(
+	IN HANDLE EventHandle,
+	IN CINT EventInformationClass,
+	OUT PVOID EventInformation,
+	IN ULONG EventInformationLength,
+	OUT PULONG ReturnLength
+	);
+NTSTATUS
+STDCALL 
+NtQueryFullAttributesFile(
+	IN HANDLE FileHandle,
+	IN PVOID Attributes
+	);
+NTSTATUS
+STDCALL 
+ZwQueryFullAttributesFile(
+	IN HANDLE FileHandle,
+	IN PVOID Attributes
+	);
+
+NTSTATUS
+STDCALL
+NtQueryInformationAtom(
+	IN HANDLE AtomHandle,
+	IN CINT AtomInformationClass,
+	OUT PVOID AtomInformation,
+	IN ULONG AtomInformationLength,
+	OUT PULONG ReturnLength
+	); 
+NTSTATUS
+STDCALL
+NtQueryInformationAtom(
+	IN HANDLE AtomHandle,
+	IN CINT AtomInformationClass,
+	OUT PVOID AtomInformation,
+	IN ULONG AtomInformationLength,
+	OUT PULONG ReturnLength
+	); 
 
 
 
@@ -2540,9 +2331,15 @@ NtQueryInformationFile(
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	OUT PVOID FileInformation,
 	IN ULONG Length,
-	IN CINT FileInformationClass
+	IN FILE_INFORMATION_CLASS FileInformationClass
     );
 
+NTSTATUS ZwQueryInformationFile(HANDLE FileHandle,
+				PIO_STATUS_BLOCK IoStatusBlock,
+				PVOID FileInformation,
+				ULONG Length,
+				FILE_INFORMATION_CLASS FileInformationClass);
+  
 /*
  * FUNCTION: Queries the information of a process object.
  * ARGUMENTS: 
@@ -2560,7 +2357,7 @@ NtQueryInformationFile(
 		ProcessExceptionPort		 HANDLE	
 		ProcessAccessToken		 PROCESS_ACCESS_TOKEN
 		ProcessLdtInformation		 LDT_ENTRY ??
-		ProcessLdtSize			 ??
+		ProcessLdtSize			 ULONG
 		ProcessDefaultHardErrorMode	 ULONG
 		ProcessIoPortHandlers		 // kernel mode only
 		ProcessPooledUsageAndLimits 	 POOLED_USAGE_AND_LIMITS
@@ -2572,7 +2369,7 @@ NtQueryInformationFile(
 		ProcessHandleCount		 ULONG
 		ProcessAffinityMask		 ULONG	
 		ProcessPooledQuotaLimits 	 QUOTA_LIMITS
-		MaxProcessInfoClass		 ??
+		MaxProcessInfoClass		 
 
  *        ProcessInformation = Caller supplies storage for the process information structure
  *	  ProcessInformationLength = Size of the process information structure
@@ -2598,6 +2395,16 @@ NtQueryInformationProcess(
 	OUT PULONG ReturnLength 
 	);
 
+NTSTATUS
+STDCALL
+ZwQueryInformationProcess(
+	IN HANDLE ProcessHandle,
+	IN CINT ProcessInformationClass,
+	OUT PVOID ProcessInformation,
+	IN ULONG ProcessInformationLength,
+	OUT PULONG ReturnLength 
+	);
+
 
 
 /*
@@ -2606,11 +2413,11 @@ NtQueryInformationProcess(
  *        ThreadHandle = Handle to the thread object
  *        ThreadInformationClass = Index to a certain information structure
 
-		ThreadBasicInformation		THREAD_BASIC_INFORMATION	
-		ThreadTimes 			KERNEL_USER_TIMES
-		ThreadPriority			KPRIORITY	
-		ThreadBasePriority		KPRIORITY	
-		ThreadAffinityMask		KAFFINITY	
+		ThreadBasicInformation			THREAD_BASIC_INFORMATION	
+		ThreadTimes 				KERNEL_USER_TIMES
+		ThreadPriority				KPRIORITY	
+		ThreadBasePriority			KPRIORITY	
+		ThreadAffinityMask			KAFFINITY	
 		ThreadImpersonationToken		
 		ThreadDescriptorTableEntry		
 		ThreadEnableAlignmentFaultFixup		
@@ -2639,7 +2446,7 @@ NTSTATUS
 STDCALL
 NtQueryInformationThread(
 	IN HANDLE ThreadHandle,
-	IN CINT ThreadInformationClass,
+	IN THREADINFOCLASS ThreadInformationClass,
 	OUT PVOID ThreadInformation,
 	IN ULONG ThreadInformationLength,
 	OUT PULONG ReturnLength 
@@ -2647,7 +2454,7 @@ NtQueryInformationThread(
 
 NTSTATUS
 STDCALL
-NtQueryIoCompletion(
+ZwQueryIoCompletion(
 	IN HANDLE CompletionPort,
 	IN CINT CompletionInformationClass,
 	OUT PVOID CompletionInformation,
@@ -2669,19 +2476,39 @@ NTSTATUS
 STDCALL
 NtQueryKey(
 	IN HANDLE KeyHandle,
-	IN CINT KeyInformationClass,
+	IN KEY_INFORMATION_CLASS KeyInformationClass,
+	OUT PVOID KeyInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength 
+	);
+
+NTSTATUS
+STDCALL
+ZwQueryKey(
+	IN HANDLE KeyHandle,
+	IN KEY_INFORMATION_CLASS KeyInformationClass,
 	OUT PVOID KeyInformation,
 	IN ULONG Length,
 	OUT PULONG ResultLength 
 	);
 
 
-
-// preliminary guess
+// draft
 
 NTSTATUS
 STDCALL
 NtQueryMultipleValueKey(
+   HANDLE KeyHandle,	
+   PVALENT ListOfValuesToQuery,	
+   ULONG NumberOfItems,	
+   PVOID MultipleValueInformation,		
+   ULONG Length,
+   PULONG  ReturnLength
+);	
+
+NTSTATUS
+STDCALL
+ZwQueryMultipleValueKey(
    HANDLE KeyHandle,	
    PVALENT ListOfValuesToQuery,	
    ULONG NumberOfItems,	
@@ -2708,7 +2535,16 @@ NtQueryMutant(
 	IN ULONG Length,
 	OUT PULONG ResultLength 
 	);
-	
+
+NTSTATUS
+STDCALL
+ZwQueryMutant(
+	IN HANDLE MutantHandle,
+	IN CINT MutantInformationClass,
+	OUT PVOID MutantInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength 
+	);
 /*
  * FUNCTION: Queries the information of a  object.
  * ARGUMENTS: 
@@ -2734,6 +2570,15 @@ NtQueryObject(
 	IN ULONG Length,
 	OUT PULONG ResultLength
 	);
+NTSTATUS
+STDCALL
+ZwQueryObject(
+	IN HANDLE ObjectHandle,
+	IN CINT ObjectInformationClass,
+	OUT PVOID ObjectInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
 
 /*
  * FUNCTION: Queries the system ( high-resolution ) performance counter.
@@ -2752,6 +2597,13 @@ NtQueryPerformanceCounter(
 	IN PLARGE_INTEGER Counter,
 	IN PLARGE_INTEGER Frequency
 	);
+
+NTSTATUS
+STDCALL
+ZwQueryPerformanceCounter(
+	IN PLARGE_INTEGER Counter,
+	IN PLARGE_INTEGER Frequency
+	);
 /*
  * FUNCTION: Queries the information of a section object.
  * ARGUMENTS: 
@@ -2766,6 +2618,15 @@ NtQueryPerformanceCounter(
 NTSTATUS
 STDCALL
 NtQuerySection(
+	IN HANDLE SectionHandle,
+	IN CINT SectionInformationClass,
+	OUT PVOID SectionInformation,
+	IN ULONG Length, 
+	OUT PULONG ResultLength 
+	);
+NTSTATUS
+STDCALL
+ZwQuerySection(
 	IN HANDLE SectionHandle,
 	IN CINT SectionInformationClass,
 	OUT PVOID SectionInformation,
@@ -2795,12 +2656,21 @@ NtQuerySemaphore(
 	ULONG Length,
 	PULONG ReturnLength
 	);
+NTSTATUS
+STDCALL
+ZwQuerySemaphore(
+	HANDLE SemaphoreHandle,
+	CINT SemaphoreInformationClass,
+	OUT PVOID SemaphoreInformation,
+	ULONG Length,
+	PULONG ReturnLength
+	);
 
 /*
  * FUNCTION: Queries the information of a symbolic link object.
  * ARGUMENTS: 
  *        SymbolicLinkHandle = Handle to the symbolic link object
- *	  LinkName = resolved name of link
+ *	  LinkTarget = resolved name of link
  *        DataWritten = size of the LinkName.
  * RETURNS: Status
  *
@@ -2809,10 +2679,45 @@ NTSTATUS
 STDCALL 
 NtQuerySymbolicLinkObject(
 	IN HANDLE               SymLinkObjHandle,
+	OUT PUNICODE_STRING     LinkTarget,    
+	OUT PULONG              DataWritten OPTIONAL
+	); 
+
+NTSTATUS
+STDCALL 
+ZwQuerySymbolicLinkObject(
+	IN HANDLE               SymLinkObjHandle,
 	OUT PUNICODE_STRING     LinkName,    
 	OUT PULONG              DataWritten OPTIONAL
 	); 
-//-- NtQuerySystemEnvironmentValue
+
+
+/*
+ * FUNCTION: Queries a system environment variable.
+ * ARGUMENTS: 
+ *        Name = Name of the variable
+ *	  Value (OUT) = value of the variable
+ *        Length = size of the buffer
+ *        ReturnLength = data written
+ * RETURNS: Status
+ *
+*/      
+NTSTATUS
+STDCALL 
+NtQuerySystemEnvironmentValue(
+	IN PUNICODE_STRING Name,
+	OUT PVOID Value,
+	ULONG Length,
+	PULONG ReturnLength
+	);
+NTSTATUS
+STDCALL 
+ZwQuerySystemEnvironmentValue(
+	IN PUNICODE_STRING Name,
+	OUT PVOID Value,
+	ULONG Length,
+	PULONG ReturnLength
+	);
 
 
 /*
@@ -2822,6 +2727,7 @@ NtQuerySymbolicLinkObject(
 
 	  SystemTimeAdjustmentInformation 	SYSTEM_TIME_ADJUSTMENT
 	  SystemCacheInformation 		SYSTEM_CACHE_INFORMATION
+	  SystemConfigurationInformation	CONFIGURATION_INFORMATION
 
  *	  SystemInformation = caller supplies storage for the information structure
  *        Length = size of the structure
@@ -2832,6 +2738,14 @@ NtQuerySymbolicLinkObject(
 NTSTATUS
 STDCALL
 NtQuerySystemInformation(
+	IN CINT SystemInformationClass,
+	OUT PVOID SystemInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+NTSTATUS
+STDCALL
+ZwQuerySystemInformation(
 	IN CINT SystemInformationClass,
 	OUT PVOID SystemInformation,
 	IN ULONG Length,
@@ -2849,9 +2763,44 @@ NtQuerySystemInformation(
 NTSTATUS
 STDCALL
 NtQuerySystemTime (
-	OUT PLARGE_INTEGER CurrentTime
+	OUT TIME *CurrentTime
 	);
-//-- NtQueryTimer
+
+NTSTATUS
+STDCALL
+ZwQuerySystemTime (
+	OUT TIME *CurrentTime
+	);
+
+/*
+ * FUNCTION: Queries information about a timer
+ * ARGUMENTS: 
+ *        TimerHandle  = Handle to the timer
+	  TimerValueInformationClass = Index to a certain information structure
+	  TimerValueInformation = Caller supplies storage for the information structure
+	  Length = Size of the information structure
+	  ResultLength = Data written
+ * RETURNS: Status
+ *
+*/       
+NTSTATUS
+STDCALL
+NtQueryTimer(
+	IN HANDLE TimerHandle,
+	IN CINT TimerInformationClass,
+	OUT PVOID TimerInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+NTSTATUS
+STDCALL
+ZwQueryTimer(
+	IN HANDLE TimerHandle,
+	IN CINT TimerInformationClass,
+	OUT PVOID TimerInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
 
 /*
  * FUNCTION: Queries the timer resolution
@@ -2864,8 +2813,17 @@ NtQuerySystemTime (
 */        
 
 
-NTSTATUS 
+NTSTATUS
+STDCALL 
 NtQueryTimerResolution ( 
+	OUT PULONG MinimumResolution,
+	OUT PULONG MaximumResolution, 
+	OUT PULONG ActualResolution 
+	); 
+
+NTSTATUS
+STDCALL 
+ZwQueryTimerResolution ( 
 	OUT PULONG MinimumResolution,
 	OUT PULONG MaximumResolution, 
 	OUT PULONG ActualResolution 
@@ -2893,11 +2851,23 @@ STDCALL
 NtQueryValueKey(
     	IN HANDLE KeyHandle,
     	IN PUNICODE_STRING ValueName,
-    	IN CINT KeyValueInformationClass,
+    	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
     	OUT PVOID KeyValueInformation,
     	IN ULONG Length,
 	OUT PULONG ResultLength
     	);
+
+NTSTATUS
+STDCALL
+ZwQueryValueKey(
+    	IN HANDLE KeyHandle,
+    	IN PUNICODE_STRING ValueName,
+    	IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    	OUT PVOID KeyValueInformation,
+    	IN ULONG Length,
+	OUT PULONG ResultLength
+    	);
+
 
 
 
@@ -2927,10 +2897,21 @@ NtQueryVirtualMemory(
 	IN ULONG Length,
 	OUT PULONG ResultLength
 	);
+NTSTATUS
+STDCALL
+ZwQueryVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID Address,
+	IN IN CINT VirtualMemoryInformationClass,
+	OUT PVOID VirtualMemoryInformation,
+	IN ULONG Length,
+	OUT PULONG ResultLength
+	);
+
 /*
  * FUNCTION: Queries the volume information
  * ARGUMENTS: 
- *        FileHandle  = 
+ *        FileHandle  = Handle to a file object on the target volume
 	  ReturnLength = DataWritten
 	  FSInformation = Caller should supply storage for the information structure.
 	  Length = Size of the information structure
@@ -2946,7 +2927,8 @@ NtQueryVirtualMemory(
 		FileFsQuotaSetInformation	--
 		FileFsMaximumInformation	
 
- * RETURNS: Status
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_INSUFFICIENT_RESOURCES | STATUS_INVALID_PARAMETER |
+		 STATUS_INVALID_DEVICE_REQUEST | STATUS_BUFFER_OVERFLOW ]
  *
 */     
 NTSTATUS
@@ -2958,7 +2940,48 @@ NtQueryVolumeInformationFile(
 	IN ULONG Length,
 	IN CINT FSInformationClass 
     );
-// NtQueueApcThread
+
+NTSTATUS
+STDCALL
+ZwQueryVolumeInformationFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID FSInformation,
+	IN ULONG Length,
+	IN CINT FSInformationClass 
+    );
+// draft
+// FIXME: Should I specify if the apc is user or kernel mode somewhere ??
+/*
+ * FUNCTION: Queues a (user) apc to a thread.
+ * ARGUMENTS: 
+	  ThreadHandle = Thread to which the apc is queued.
+	  ApcRoutine = Points to the apc routine
+	  NormalContext = Argument to Apc Routine
+ *        SystemArgument1 = Argument of the Apc Routine
+	  SystemArgument2 = Argument of the Apc Routine
+ * REMARK: If the apc is queued against a thread of a different process than the calling thread
+		the apc routine should be specified in the address space of the queued thread's process.
+ * RETURNS: Status
+*/
+
+NTSTATUS
+STDCALL
+NtQueueApcThread(
+	HANDLE ThreadHandle,
+	PKNORMAL_ROUTINE ApcRoutine,
+	PVOID NormalContext,
+	PVOID SystemArgument1,
+	PVOID SystemArgument2);
+
+NTSTATUS
+STDCALL
+ZwQueueApcThread(
+	HANDLE ThreadHandle,
+	PKNORMAL_ROUTINE ApcRoutine,
+	PVOID NormalContext,
+	PVOID SystemArgument1,
+	PVOID SystemArgument2);
 /*
  * FUNCTION: Raises an exception
  * ARGUMENTS: 
@@ -2978,6 +3001,14 @@ NtRaiseException(
 	IN BOOL IsDebugger OPTIONAL
 	);
 
+NTSTATUS
+STDCALL
+ZwRaiseException(
+	IN PEXCEPTION_RECORD ExceptionRecord,
+	IN PCONTEXT Context,
+	IN BOOL IsDebugger OPTIONAL
+	);
+
 //NtRaiseHardError
 /*
  * FUNCTION: Read a file
@@ -2990,7 +3021,7 @@ NtRaiseException(
 	  Buffer = Caller should supply storage to receive the information
 	  BufferLength = Size of the buffer
 	  ByteOffset = Offset to start reading the file
-	  Key =  unused
+	  Key = If a range is lock a matching key will allow the read to continue.
  * RETURNS: Status
  *
 */       
@@ -2999,6 +3030,20 @@ NtRaiseException(
 NTSTATUS
 STDCALL
 NtReadFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
+	IN PVOID UserApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PVOID Buffer,
+	IN ULONG BufferLength,
+	IN PLARGE_INTEGER ByteOffset OPTIONAL,
+	IN PULONG Key OPTIONAL	
+	);
+
+NTSTATUS
+STDCALL
+ZwReadFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL,
 	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL,
@@ -3020,13 +3065,27 @@ NtReadFile(
 	  BufferDescription = Caller should supply storage to receive the information
 	  BufferLength = Size of the buffer
 	  ByteOffset = Offset to start reading the file
-	  Key =  unused
+	  Key =  Key = If a range is lock a matching key will allow the read to continue.
  * RETURNS: Status
  *
 */       
 NTSTATUS
 STDCALL
 NtReadFileScatter( 
+	IN HANDLE FileHandle, 
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
+	IN  PVOID UserApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK UserIoStatusBlock, 
+	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
+	IN ULONG BufferLength, 
+	IN PLARGE_INTEGER ByteOffset, 
+	IN PULONG Key OPTIONAL	
+	); 
+
+NTSTATUS
+STDCALL
+ZwReadFileScatter( 
 	IN HANDLE FileHandle, 
 	IN HANDLE Event OPTIONAL, 
 	IN PIO_APC_ROUTINE UserApcRoutine OPTIONAL, 
@@ -3056,24 +3115,39 @@ NtReadVirtualMemory(
 	OUT PVOID Buffer,
 	IN ULONG  NumberOfBytesToRead,
 	OUT PULONG NumberOfBytesRead
+	); 
+NTSTATUS
+STDCALL
+ZwReadVirtualMemory( 
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress,
+	OUT PVOID Buffer,
+	IN ULONG  NumberOfBytesToRead,
+	OUT PULONG NumberOfBytesRead
 	); 	
-//FIXME: Is the parameters correctly named ? ThreadHandle might be a TerminationPort
+	
+
 /*
  * FUNCTION: Debugger can register for thread termination
  * ARGUMENTS: 
- *       ThreadHandle = 
+ *       TerminationPort = Port on which the debugger likes to be notified.
  * RETURNS: Status
  */
 
 NTSTATUS
 STDCALL	
 NtRegisterThreadTerminatePort(
-	HANDLE ThreadHandle
+	HANDLE TerminationPort
+	);
+NTSTATUS
+STDCALL	
+ZwRegisterThreadTerminatePort(
+	HANDLE TerminationPort
 	);
 /*
  * FUNCTION: Releases a mutant
  * ARGUMENTS: 
- *       MutantHandle = 
+ *       MutantHandle = Handle to the mutant
  *       ReleaseCount = 
  * RETURNS: Status
  */
@@ -3083,12 +3157,19 @@ NtReleaseMutant(
 	IN HANDLE MutantHandle,
 	IN PULONG ReleaseCount OPTIONAL 
 	);
+
+NTSTATUS
+STDCALL	
+ZwReleaseMutant(
+	IN HANDLE MutantHandle,
+	IN PULONG ReleaseCount OPTIONAL 
+	);
 /*
  * FUNCTION: Releases a semaphore 
  * ARGUMENTS: 
  *       SemaphoreHandle = Handle to the semaphore object
- *       ReleaseCount =
- *       PreviousCount =  
+ *       ReleaseCount = Number to decrease the semaphore count
+ *       PreviousCount = Previous semaphore count
  * RETURNS: Status
  */
 NTSTATUS
@@ -3098,20 +3179,37 @@ NtReleaseSemaphore(
 	IN ULONG ReleaseCount,
 	IN PULONG PreviousCount
 	);
+
+NTSTATUS
+STDCALL
+ZwReleaseSemaphore( 
+	IN HANDLE SemaphoreHandle,
+	IN ULONG ReleaseCount,
+	IN PULONG PreviousCount
+	);
 /*
  * FUNCTION: Removes an io completion
  * ARGUMENTS:
  *        CompletionPort (OUT) = Caller supplied storage for the resulting handle
  *        CompletionKey = Requested access to the key
- *        IoStatusBlock =
- *        ObjectAttribute = Initialized attributes for the object
- *        CompletionStatus =
- *        WaitTime =
+ *        IoStatusBlock = Caller provides storage for extended status information
+ *        CompletionStatus = Current status of the io operation.
+ *        WaitTime = Time to wait if ..
  * RETURNS: Status
  */
 NTSTATUS
 STDCALL
 NtRemoveIoCompletion(
+	IN HANDLE CompletionPort,
+	OUT PULONG CompletionKey,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	OUT PULONG CompletionStatus,
+	ULONG WaitTime 
+	);
+
+NTSTATUS
+STDCALL
+ZwRemoveIoCompletion(
 	IN HANDLE CompletionPort,
 	OUT PULONG CompletionKey,
 	OUT PIO_STATUS_BLOCK IoStatusBlock,
@@ -3133,6 +3231,14 @@ NtReplaceKey(
 	IN HANDLE Key,
 	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
 	);
+NTSTATUS
+STDCALL
+ZwReplaceKey(
+	IN POBJECT_ATTRIBUTES ObjectAttributes, 
+	IN HANDLE Key,
+	IN POBJECT_ATTRIBUTES ReplacedObjectAttributes 
+	);
+
 /*
  * FUNCTION: Resets a event to a non signaled state 
  * ARGUMENTS: 
@@ -3146,10 +3252,24 @@ NtResetEvent(
 	HANDLE EventHandle,
 	PULONG NumberOfWaitingThreads OPTIONAL
 	);
-//Preliminary guess
+NTSTATUS
+STDCALL
+ZwResetEvent(
+	HANDLE EventHandle,
+	PULONG NumberOfWaitingThreads OPTIONAL
+	);
+//draft
 NTSTATUS
 STDCALL
 NtRestoreKey(
+	HANDLE KeyHandle,
+	HANDLE FileHandle,
+	ULONG RestoreFlags
+	);
+
+NTSTATUS
+STDCALL
+ZwRestoreKey(
 	HANDLE KeyHandle,
 	HANDLE FileHandle,
 	ULONG RestoreFlags
@@ -3170,6 +3290,12 @@ NtResumeThread(
 	IN HANDLE ThreadHandle,
 	IN PULONG SuspendCount
 	);
+NTSTATUS
+STDCALL
+ZwResumeThread(
+	IN HANDLE ThreadHandle,
+	IN PULONG SuspendCount
+	);
 /*
  * FUNCTION: Writes the content of a registry key to ascii file
  * ARGUMENTS: 
@@ -3186,6 +3312,12 @@ NtSaveKey(
 	IN HANDLE KeyHandle,
 	IN HANDLE FileHandle
 	);
+NTSTATUS
+STDCALL
+ZwSaveKey(
+	IN HANDLE KeyHandle,
+	IN HANDLE FileHandle
+	);
 /*
  * FUNCTION: Sets the context of a specified thread.
  * ARGUMENTS: 
@@ -3197,6 +3329,12 @@ NtSaveKey(
 NTSTATUS
 STDCALL
 NtSetContextThread(
+	IN HANDLE ThreadHandle,
+	IN PCONTEXT Context
+	);
+NTSTATUS
+STDCALL
+ZwSetContextThread(
 	IN HANDLE ThreadHandle,
 	IN PCONTEXT Context
 	);
@@ -3218,14 +3356,22 @@ NtSetEaFile(
 	PVOID EaBuffer, 
 	ULONG EaBufferSize
 	);
+NTSTATUS
+STDCALL
+ZwSetEaFile(
+	IN HANDLE FileHandle,
+	IN PIO_STATUS_BLOCK IoStatusBlock,	
+	PVOID EaBuffer, 
+	ULONG EaBufferSize
+	);
 
-//FIXME Shoud I have input EVENT_BASIC_INFORMATION ??
+//FIXME: should I return the event state ?
 
 /*
- * FUNCTION: Sets the attributes of an event.
+ * FUNCTION: Sets the  event to a signalled state.
  * ARGUMENTS: 
  *        EventHandle = Handle to the event
- *        Count =  The resulting count.
+ *        NumberOfThreadsReleased =  The number of threads released
  * REMARK:
  *	  This procedure maps to the win32 SetEvent function. 
  * RETURNS: Status
@@ -3235,7 +3381,14 @@ NTSTATUS
 STDCALL
 NtSetEvent(
 	IN HANDLE EventHandle,
-	PULONG Count
+	PULONG NumberOfThreadsReleased
+	);
+
+NTSTATUS
+STDCALL
+ZwSetEvent(
+	IN HANDLE EventHandle,
+	PULONG NumberOfThreadsReleased
 	);
 
 /*
@@ -3251,6 +3404,11 @@ NtSetHighEventPair(
 	IN HANDLE EventPair
 	);
 
+NTSTATUS
+STDCALL
+ZwSetHighEventPair(
+	IN HANDLE EventPair
+	);
 /*
  * FUNCTION: Sets the high part of an event pair and wait for the low part
  * ARGUMENTS: 
@@ -3260,6 +3418,11 @@ NtSetHighEventPair(
 NTSTATUS
 STDCALL
 NtSetHighWaitLowEventPair(
+	IN HANDLE EventPair
+	);
+NTSTATUS
+STDCALL
+ZwSetHighWaitLowEventPair(
 	IN HANDLE EventPair
 	);
 
@@ -3292,8 +3455,18 @@ NtSetInformationFile(
     	IN PIO_STATUS_BLOCK IoStatusBlock,
     	IN PVOID FileInformation,
    	IN ULONG Length,
-    	IN CINT FileInformationClass
+    	IN FILE_INFORMATION_CLASS FileInformationClass
     	);
+NTSTATUS
+STDCALL
+ZwSetInformationFile(
+    	IN HANDLE FileHandle,
+    	IN PIO_STATUS_BLOCK IoStatusBlock,
+    	IN PVOID FileInformation,
+   	IN ULONG Length,
+    	IN FILE_INFORMATION_CLASS FileInformationClass
+    	);
+
 
 
 /*
@@ -3313,6 +3486,15 @@ NtSetInformationFile(
 NTSTATUS
 STDCALL
 NtSetInformationKey(
+	IN HANDLE KeyHandle,
+	IN CINT KeyInformationClass,
+	IN PVOID KeyInformation,
+	IN ULONG KeyInformationLength
+	);
+
+NTSTATUS
+STDCALL
+ZwSetInformationKey(
 	IN HANDLE KeyHandle,
 	IN CINT KeyInformationClass,
 	IN PVOID KeyInformation,
@@ -3339,6 +3521,15 @@ NtSetInformationKey(
 NTSTATUS
 STDCALL
 NtSetInformationObject(
+	IN HANDLE ObjectHandle,
+	IN CINT ObjectInformationClass,
+	IN PVOID ObjectInformation,
+	IN ULONG Length 
+	);
+
+NTSTATUS
+STDCALL
+ZwSetInformationObject(
 	IN HANDLE ObjectHandle,
 	IN CINT ObjectInformationClass,
 	IN PVOID ObjectInformation,
@@ -3374,6 +3565,14 @@ NtSetInformationProcess(
 	IN PVOID ProcessInformation,
 	IN ULONG ProcessInformationLength
 	);
+NTSTATUS
+STDCALL
+ZwSetInformationProcess(
+	IN HANDLE ProcessHandle,
+	IN CINT ProcessInformationClass,
+	IN PVOID ProcessInformation,
+	IN ULONG ProcessInformationLength
+	);
 /*
  * FUNCTION: Changes a set of thread specific parameters
  * ARGUMENTS: 
@@ -3397,11 +3596,20 @@ NTSTATUS
 STDCALL
 NtSetInformationThread(
 	IN HANDLE ThreadHandle,
-	IN CINT ThreadInformationClass,
+	IN THREADINFOCLASS ThreadInformationClass,
 	IN PVOID ThreadInformation,
 	IN ULONG ThreadInformationLength
 	);
-//FIXME: Are the arguments correct
+NTSTATUS
+STDCALL
+ZwSetInformationThread(
+	IN HANDLE ThreadHandle,
+	IN THREADINFOCLASS ThreadInformationClass,
+	IN PVOID ThreadInformation,
+	IN ULONG ThreadInformationLength
+	);
+
+ //FIXME: Are the arguments correct
 // Might be a ordinary set function
 /*
  * FUNCTION: Sets an io completion
@@ -3422,6 +3630,15 @@ NtSetIoCompletion(
 	IN ULONG NumberOfBytesToTransfer, 
 	OUT PULONG NumberOfBytesTransferred
 	);
+NTSTATUS
+STDCALL
+ZwSetIoCompletion(
+	IN HANDLE CompletionPort,
+	IN ULONG CompletionKey,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN ULONG NumberOfBytesToTransfer, 
+	OUT PULONG NumberOfBytesTransferred
+	);
 //FIXME: Should I have more parameters ?
 /*
  * FUNCTION: Initializes the Local Descriptor Table
@@ -3430,12 +3647,12 @@ NtSetIoCompletion(
 	LdtEntry =
  * RETURNS: Status
 */
-NTSTATUS
-STDCALL
-NtSetLdtEntries(
-	HANDLE ProcessHandle,
-	PVOID LdtEntry // LDT_ENTR
-	);
+//NTSTATUS
+//STDCALL
+//NtSetLdtEntries(
+//	HANDLE ProcessHandle,
+//	PVOID LdtEntry // LDT_ENTR
+//	);
 
 /*
  * FUNCTION: Sets the low part of an event pair
@@ -3449,7 +3666,11 @@ STDCALL
 NtSetLowEventPair(
 	HANDLE EventPair
 	);
-
+NTSTATUS
+STDCALL
+ZwSetLowEventPair(
+	HANDLE EventPair
+	);
 /*
  * FUNCTION: Sets the low part of an event pair and wait for the high part
  * ARGUMENTS: 
@@ -3459,6 +3680,11 @@ NtSetLowEventPair(
 NTSTATUS
 STDCALL
 NtSetLowWaitHighEventPair(
+	HANDLE EventPair
+	);
+NTSTATUS
+STDCALL
+ZwSetLowWaitHighEventPair(
 	HANDLE EventPair
 	);
 
@@ -3473,10 +3699,15 @@ NtSetLowWaitHighEventPair(
 NTSTATUS
 STDCALL
 NtSetSystemEnvironmentValue(
-	IN PUNICODE_STRING ValueName,
-	IN PVOID Value
+	IN PUNICODE_STRING VariableName,
+	IN PUNICODE_STRING Value
 	);
-
+NTSTATUS
+STDCALL
+ZwSetSystemEnvironmentValue(
+	IN PUNICODE_STRING VariableName,
+	IN PUNICODE_STRING Value
+	);
 /*
  * FUNCTION: Sets system parameters
  * ARGUMENTS: 
@@ -3497,6 +3728,14 @@ NtSetSystemInformation(
 	IN ULONG SystemInformationLength
 	);
 
+NTSTATUS
+STDCALL
+ZwSetSystemInformation(
+	IN CINT SystemInformationClass,
+	IN PVOID SystemInformation,
+	IN ULONG SystemInformationLength
+	);
+
 /*
  * FUNCTION: Sets the system time
  * ARGUMENTS: 
@@ -3510,15 +3749,22 @@ NtSetSystemTime(
 	IN PLARGE_INTEGER SystemTime,
 	IN PLARGE_INTEGER NewSystemTime OPTIONAL
 	);
+NTSTATUS
+STDCALL
+ZwSetSystemTime(
+	IN PLARGE_INTEGER SystemTime,
+	IN PLARGE_INTEGER NewSystemTime OPTIONAL
+	);
 /*
  * FUNCTION: Sets the characteristics of a timer
  * ARGUMENTS: 
- *      TimerHandle = 
- *	DueTime = 
- *      CompletionRoutine = 
- *      ArgToCompletionRoutine =
- *      Resume = 
- *      Period = 
+ *      TimerHandle = Handle to the timer
+ *	DueTime = Time before the timer becomes signalled for the first time.
+ *      TimerApcRoutine = Completion routine can be called on time completion
+ *      TimerContext = Argument to the completion routine
+ *      Resume = Specifies if the timer should repeated after completing one cycle
+ *      Period = Cycle of the timer
+ * REMARKS: This routine maps to the win32 SetWaitableTimer.
  * RETURNS: Status
 */
 NTSTATUS
@@ -3526,10 +3772,22 @@ STDCALL
 NtSetTimer(
 	IN HANDLE TimerHandle,
 	IN PLARGE_INTEGER DueTime,
-	IN PTIMERAPCROUTINE CompletionRoutine,
-	IN PVOID ArgToCompletionRoutine,
-	IN BOOL Resume,
-	IN ULONG Period
+	IN PTIMERAPCROUTINE TimerApcRoutine,
+	IN PVOID TimerContext,
+	IN BOOL WakeTimer,
+	IN ULONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
+	);
+NTSTATUS
+STDCALL
+ZwSetTimer(
+	IN HANDLE TimerHandle,
+	IN PLARGE_INTEGER DueTime,
+	IN PTIMERAPCROUTINE TimerApcRoutine,
+	IN PVOID TimerContext,
+	IN BOOL WakeTimer,
+	IN ULONG Period OPTIONAL,
+	OUT PBOOLEAN PreviousState OPTIONAL
 	);
 /*
  * FUNCTION: Sets the frequency of the system timer
@@ -3546,6 +3804,13 @@ NtSetTimerResolution(
 	IN BOOL SetOrUnset,
 	OUT PULONG ActualResolution
 	);
+NTSTATUS
+STDCALL
+ZwSetTimerResolution(
+	IN ULONG RequestedResolution,
+	IN BOOL SetOrUnset,
+	OUT PULONG ActualResolution
+	);
 /*
  * FUNCTION: Sets the value of a registry key
  * ARGUMENTS: 
@@ -3553,7 +3818,7 @@ NtSetTimerResolution(
  *	ValueName = Name of the value entry to change
  *	TitleIndex = pointer to a structure containing the new volume information
  *      Type = Type of the registry key. Can be one of the values:
- *		REG_BINARY		
+ *		REG_BINARY			Unspecified binary data
  *		REG_DWORD			A 32 bit value
  *		REG_DWORD_LITTLE_ENDIAN		Same as REG_DWORD
  *		REG_DWORD_BIG_ENDIAN		A 32 bit value whose least significant byte is at the highest address
@@ -3579,6 +3844,16 @@ NtSetValueKey(
 	IN PVOID Data,
 	IN ULONG DataSize
 	);
+NTSTATUS
+STDCALL
+ZwSetValueKey(
+	IN HANDLE KeyHandle,
+	IN PUNICODE_STRING ValueName,
+	IN ULONG TitleIndex OPTIONAL,
+	IN ULONG Type,
+	IN PVOID Data,
+	IN ULONG DataSize
+	);
 /*
  * FUNCTION: Sets the volume information of a file. 
  * ARGUMENTS: 
@@ -3596,15 +3871,31 @@ NtSetVolumeInformationFile(
 	PVOID VolumeInformation,
 	ULONG Length
 	);
+
+NTSTATUS
+STDCALL
+ZwSetVolumeInformationFile(
+	IN HANDLE FileHandle,
+	IN CINT VolumeInformationClass,
+	PVOID VolumeInformation,
+	ULONG Length
+	);
 /*
  * FUNCTION: Shuts the system down
  * ARGUMENTS: 
- *        Action: 
+ *        Action: Specifies the type of shutdown, it can be one of the following values:
+			ShutdownNoReboot, ShutdownReboot, ShutdownPowerOff
  * RETURNS: Status
  */ 
 NTSTATUS 
 STDCALL 
 NtShutdownSystem(
+	IN SHUTDOWN_ACTION Action
+	);
+
+NTSTATUS 
+STDCALL 
+ZwShutdownSystem(
 	IN SHUTDOWN_ACTION Action
 	);
 /*
@@ -3620,6 +3911,15 @@ NtShutdownSystem(
 NTSTATUS 
 STDCALL 
 NtSignalAndWaitForSingleObject(
+        IN HANDLE EventHandle,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time,
+	PULONG NumberOfWaitingThreads OPTIONAL 
+	);
+
+NTSTATUS 
+STDCALL 
+ZwSignalAndWaitForSingleObject(
         IN HANDLE EventHandle,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Time,
@@ -3642,6 +3942,12 @@ NtSuspendThread(
 	IN HANDLE ThreadHandle,
 	IN PULONG PreviousSuspendCount 
 	);
+NTSTATUS 
+STDCALL 
+ZwSuspendThread(
+	IN HANDLE ThreadHandle,
+	IN PULONG PreviousSuspendCount 
+	);
 
 //--NtSystemDebugControl
 /*
@@ -3659,6 +3965,12 @@ NtTerminateProcess(
 	IN HANDLE ProcessHandle ,
 	IN NTSTATUS ExitStatus
 	);
+NTSTATUS 
+STDCALL 
+ZwTerminateProcess(
+	IN HANDLE ProcessHandle ,
+	IN NTSTATUS ExitStatus
+	);
 /*
  * FUNCTION: Terminates the execution of a thread. 
  * ARGUMENTS: 
@@ -3672,13 +3984,24 @@ NtTerminateThread(
 	IN HANDLE ThreadHandle ,
 	IN NTSTATUS ExitStatus
 	);
+NTSTATUS 
+STDCALL 
+ZwTerminateThread(
+	IN HANDLE ThreadHandle ,
+	IN NTSTATUS ExitStatus
+	);
 /*
- * FUNCTION: Test to see if there are any pending alerts for the calling thread 
+ * FUNCTION: Tests to see if there are any pending alerts for the calling thread 
  * RETURNS: Status
  */	
 NTSTATUS 
 STDCALL 
 NtTestAlert(
+	VOID 
+	);
+NTSTATUS 
+STDCALL 
+ZwTestAlert(
 	VOID 
 	);
 /*
@@ -3692,10 +4015,15 @@ STDCALL
 NtUnloadDriver(
 	IN PUNICODE_STRING DriverServiceName
 	);
+NTSTATUS 
+STDCALL
+ZwUnloadDriver(
+	IN PUNICODE_STRING DriverServiceName
+	);
 
 //FIXME: NtUnloadKey needs more arguments
 /*
- * FUNCTION: Unload a registry key. 
+ * FUNCTION: Unloads a registry key. 
  * ARGUMENTS: 
  *       KeyHandle = Handle to the registry key
  * REMARK:
@@ -3705,6 +4033,11 @@ NtUnloadDriver(
 NTSTATUS 
 STDCALL
 NtUnloadKey(
+	HANDLE KeyHandle
+	);
+NTSTATUS 
+STDCALL
+ZwUnloadKey(
 	HANDLE KeyHandle
 	);
 
@@ -3717,16 +4050,29 @@ NtUnloadKey(
 			The information field is set to the number of bytes unlocked.
  *       ByteOffset = Offset to start the range of bytes to unlock 
  *       Length = Number of bytes to unlock.
- *       Key = 
+ *       Key = Special value to enable other threads to unlock a file than the
+		thread that locked the file. The key supplied must match with the one obtained
+		in a previous call to NtLockFile.
  * REMARK:
-	This procedure maps to the win32 procedure UnlockFileEx 
- * RETURNS: Status
+	This procedure maps to the win32 procedure UnlockFileEx. STATUS_PENDING is returned if the lock could
+	not be obtained immediately, the device queue is busy and the IRP is queued.
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES |
+	STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_RANGE_NOT_LOCKED ]
  */	
 NTSTATUS 
 STDCALL
 NtUnlockFile(
 	IN HANDLE FileHandle,
-	OUT IO_STATUS_BLOCK IoStatusBlock,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN LARGE_INTEGER ByteOffset,
+	IN LARGE_INTEGER Lenght,
+	OUT PULONG Key OPTIONAL
+	);
+NTSTATUS 
+STDCALL
+ZwUnlockFile(
+	IN HANDLE FileHandle,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
 	IN LARGE_INTEGER ByteOffset,
 	IN LARGE_INTEGER Lenght,
 	OUT PULONG Key OPTIONAL
@@ -3741,11 +4087,20 @@ NtUnlockFile(
  *       NumberOfBytesUnlocked (OUT) = Number of bytes actually unlocked.
  * REMARK:
 	This procedure maps to the win32 procedure VirtualUnlock 
- * RETURNS: Status
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PAGE_WAS_ULOCKED ]
  */	
 NTSTATUS 
 STDCALL
 NtUnlockVirtualMemory(
+	HANDLE ProcessHandle,
+	PVOID BaseAddress,
+	ULONG  NumberOfBytesToUnlock,
+	PULONG NumberOfBytesUnlocked OPTIONAL
+	);
+
+NTSTATUS 
+STDCALL
+ZwUnlockVirtualMemory(
 	HANDLE ProcessHandle,
 	PVOID BaseAddress,
 	ULONG  NumberOfBytesToUnlock,
@@ -3766,12 +4121,18 @@ NtUnmapViewOfSection(
 	IN HANDLE ProcessHandle,
 	IN PVOID BaseAddress
 	);
+NTSTATUS
+STDCALL
+ZwUnmapViewOfSection(
+	IN HANDLE ProcessHandle,
+	IN PVOID BaseAddress
+	);
 /*
  * FUNCTION: Waits for multiple objects to become signalled. 
  * ARGUMENTS: 
  *       Count = The number of objects
  *       Object = The array of object handles
- *       WaitType = 
+ *       WaitType = Can be one of the values UserMode or KernelMode
  *       Alertable = If true the wait is alertable.
  *       Time = The maximum wait time. 
  * REMARKS:
@@ -3782,7 +4143,17 @@ NTSTATUS
 STDCALL
 NtWaitForMultipleObjects (
 	IN ULONG Count,
-	IN PHANDLE Object[0],
+	IN PHANDLE Object[],
+	IN CINT WaitType,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time 
+	);
+
+NTSTATUS
+STDCALL
+ZwWaitForMultipleObjects (
+	IN ULONG Count,
+	IN PHANDLE Object[],
 	IN CINT WaitType,
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Time 
@@ -3804,11 +4175,31 @@ NtWaitForSingleObject (
 	IN BOOLEAN Alertable,
 	IN PLARGE_INTEGER Time 
 	);
+
+NTSTATUS
+STDCALL
+ZwWaitForSingleObject (
+	IN PHANDLE Object,
+	IN BOOLEAN Alertable,
+	IN PLARGE_INTEGER Time 
+	);
+
+NTSTATUS
+STDCALL
+NtWaitLowEventPair(
+	IN HANDLE EventHandle
+	);
+
+NTSTATUS
+STDCALL
+ZwWaitLowEventPair(
+	IN HANDLE EventHandle
+	);
 /*
  * FUNCTION: Writes data to a file
  * ARGUMENTS: 
  *       FileHandle = The handle a file ( from NtCreateFile )
- *       Event  = 
+ *       Event  = Specifies a event that will become signalled when the write operation completes.
  *       ApcRoutine = Asynchroneous Procedure Callback [ Should not be used by device drivers ]
  *       ApcContext = Argument to the Apc Routine 
  *       IoStatusBlock = Caller should supply storage for a structure containing the completion status and information about the requested write operation.
@@ -3822,11 +4213,26 @@ NtWaitForSingleObject (
  * REMARKS:
  *	 This function maps to the win32 WriteFile. 
  *	 Callers to NtWriteFile should run at IRQL PASSIVE_LEVEL.
- * RETURNS: Status
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES
+	STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_FILE_LOCK_CONFLICT ]
  */
 NTSTATUS
 STDCALL
 NtWriteFile(
+	IN HANDLE FileHandle,
+	IN HANDLE Event OPTIONAL,
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+	IN PVOID ApcContext OPTIONAL,
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN PVOID Buffer,
+	IN ULONG Length,
+	IN PLARGE_INTEGER ByteOffset,
+	IN PULONG Key OPTIONAL
+    );
+
+NTSTATUS
+STDCALL
+ZwWriteFile(
 	IN HANDLE FileHandle,
 	IN HANDLE Event OPTIONAL,
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
@@ -3851,16 +4257,18 @@ NtWriteFile(
  *       ByteOffset = Points to a file offset. If a combination of Length and BytesOfSet is past the end-of-file mark the file will be enlarged.
  *		      BytesOffset is ignored if the file is created with FILE_APPEND_DATA in the DesiredAccess. BytesOffset is also ignored if
  *                    the file is created with CreateOptions flags FILE_SYNCHRONOUS_IO_ALERT or FILE_SYNCHRONOUS_IO_NONALERT set, in that case a offset
- *                    should be created by specifying FILE_USE_FILE_POINTER_POSITION.
- *       Key =  Unused
+ *                    should be created by specifying FILE_USE_FILE_POINTER_POSITION. Use FILE_WRITE_TO_END_OF_FILE to write to the EOF.
+ *       Key = If a matching key [ a key provided at NtLockFile ] is provided the write operation will continue even if a byte range is locked.
  * REMARKS:
  *	 This function maps to the win32 WriteFile. 
  *	 Callers to NtWriteFile should run at IRQL PASSIVE_LEVEL.
- * RETURNS: Status
+ * RETURNS: Status [ STATUS_SUCCESS | STATUS_PENDING | STATUS_ACCESS_DENIED | STATUS_INSUFFICIENT_RESOURCES
+		STATUS_INVALID_PARAMETER | STATUS_INVALID_DEVICE_REQUEST | STATUS_FILE_LOCK_CONFLICT ]
  */
 
 NTSTATUS
-STDCALL NtWriteFileScatter( 
+STDCALL 
+NtWriteFileGather( 
 	IN HANDLE FileHandle, 
 	IN HANDLE Event OPTIONAL, 
 	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
@@ -3871,6 +4279,21 @@ STDCALL NtWriteFileScatter(
 	IN PLARGE_INTEGER ByteOffset, 
 	IN PULONG Key OPTIONAL
 	); 
+
+NTSTATUS
+STDCALL 
+ZwWriteFileGather( 
+	IN HANDLE FileHandle, 
+	IN HANDLE Event OPTIONAL, 
+	IN PIO_APC_ROUTINE ApcRoutine OPTIONAL, 
+	IN PVOID ApcContext OPTIONAL, 
+	OUT PIO_STATUS_BLOCK IoStatusBlock,
+	IN FILE_SEGMENT_ELEMENT BufferDescription[], 
+	IN ULONG BufferLength, 
+	IN PLARGE_INTEGER ByteOffset, 
+	IN PULONG Key OPTIONAL
+	); 
+
 
 /*
  * FUNCTION: Writes a range of virtual memory
@@ -3893,6 +4316,16 @@ NtWriteVirtualMemory(
 	IN ULONG NumberOfBytesToWrite,
 	OUT PULONG NumberOfBytesWritten
 	);
+
+NTSTATUS
+STDCALL 
+ZwWriteVirtualMemory(
+	IN HANDLE ProcessHandle,
+	IN PVOID  BaseAddress,
+	IN PVOID Buffer,
+	IN ULONG NumberOfBytesToWrite,
+	OUT PULONG NumberOfBytesWritten
+	);
 /*
  * FUNCTION: Yields the callers thread.
  * RETURNS: Status
@@ -3903,6 +4336,77 @@ NtYieldExecution(
 	VOID
 	);
 
+NTSTATUS
+STDCALL 
+ZwYieldExecution(
+	VOID
+	);
 
 
+/*
+ * These prototypes are unknown as yet
+ */
+NTSTATUS STDCALL NtAcceptConnectPort(VOID);
+NTSTATUS STDCALL NtAccessCheckAndAuditAlarm(VOID);
+NTSTATUS STDCALL NtAdjustGroupsToken(VOID);
+NTSTATUS STDCALL NtAdjustPrivilegesToken(VOID);
+NTSTATUS STDCALL NtAllocateUuids(VOID);
+NTSTATUS STDCALL NtCloseObjectAuditAlarm(VOID);
+NTSTATUS STDCALL NtCompleteConnectPort(VOID);
+NTSTATUS STDCALL NtConnectPort(VOID);
+NTSTATUS STDCALL NtCreateMailslotFile(VOID);
+NTSTATUS STDCALL NtCreateNamedPipeFile(VOID);
+NTSTATUS STDCALL NtCreatePort(VOID);
+NTSTATUS STDCALL NtCreateProfile(VOID);
+NTSTATUS STDCALL NtCreateToken(VOID);
+NTSTATUS STDCALL NtDeleteObjectAuditAlarm(VOID);
+NTSTATUS STDCALL NtDuplicateToken(VOID);
+NTSTATUS STDCALL NtGetPlugPlayEvent(VOID);
+NTSTATUS STDCALL NtImpersonateClientOfPort(VOID);
+NTSTATUS STDCALL NtImpersonateThread(VOID);
+NTSTATUS STDCALL NtListenPort(VOID);
+NTSTATUS STDCALL NtLoadKey2(VOID);
+NTSTATUS STDCALL NtOpenEventPair(VOID);
+NTSTATUS STDCALL NtOpenObjectAuditAlarm(VOID);
+NTSTATUS STDCALL NtOpenProcessToken(VOID);
+NTSTATUS STDCALL NtOpenThreadToken(VOID);
+NTSTATUS STDCALL NtPlugPlayControl(VOID);
+NTSTATUS STDCALL NtPrivilegeCheck(VOID);
+NTSTATUS STDCALL NtPrivilegedServiceAuditAlarm(VOID);
+NTSTATUS STDCALL NtPrivilegeObjectAuditAlarm(VOID);
+NTSTATUS STDCALL NtQueryDefaultLocale(VOID);
+NTSTATUS STDCALL NtQueryIoCompletion(VOID);
+NTSTATUS STDCALL NtQueryInformationPort(VOID);
+NTSTATUS STDCALL NtQueryInformationToken(VOID);
+NTSTATUS STDCALL NtQueryIntervalProfile(VOID);
+NTSTATUS STDCALL NtQueryOleDirectoryFile(VOID);
+NTSTATUS STDCALL NtQuerySecurityObject(VOID);
+NTSTATUS STDCALL NtRaiseHardError(VOID);
+NTSTATUS STDCALL NtReadRequestData(VOID);
+NTSTATUS STDCALL NtReplyPort(VOID);
+NTSTATUS STDCALL NtReplyWaitReceivePort(VOID);
+NTSTATUS STDCALL NtReplyWaitReplyPort(VOID);
+NTSTATUS STDCALL NtRequestPort(VOID);
+NTSTATUS STDCALL NtSetDefaultHardErrorPort(VOID);
+NTSTATUS STDCALL NtSetDefaultLocale(VOID);
+NTSTATUS STDCALL NtSetInformationToken(VOID);
+NTSTATUS STDCALL NtSetIntervalProfile(VOID);
+NTSTATUS STDCALL NtSetLdtEntries(VOID);
+NTSTATUS STDCALL NtSetSecurityObject(VOID);
+NTSTATUS STDCALL NtSetSystemPowerState(VOID);
+NTSTATUS STDCALL NtStartProfile(VOID);
+NTSTATUS STDCALL NtStopProfile(VOID);
+NTSTATUS STDCALL NtSystemDebugControl(VOID);
+NTSTATUS STDCALL NtVdmControl(VOID);
+NTSTATUS STDCALL NtWaitHighEventPair(VOID);
+NTSTATUS STDCALL NtWriteRequestData(VOID);
+NTSTATUS STDCALL NtW32Call(VOID);
+NTSTATUS STDCALL NtCreateChannel(VOID);
+NTSTATUS STDCALL NtListenChannel(VOID);
+NTSTATUS STDCALL NtOpenChannel(VOID);
+NTSTATUS STDCALL NtReplyWaitSendChannel(VOID);
+NTSTATUS STDCALL NtSendWaitReplyChannel(VOID);
+NTSTATUS STDCALL NtSetContextChannel(VOID);
+NTSTATUS STDCALL NtRequestWaitReplyPort(VOID); 
+ 
 #endif /* __DDK_ZW_H */

@@ -41,7 +41,7 @@
 #include <base.h>
 
 /* WIN32 messages */
-#ifndef _WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #include <messages.h>
 #endif
 
@@ -54,20 +54,22 @@
 #include <structs.h>
 
 /* WIN32 functions */
-#ifndef _WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #include <funcs.h>
 #endif
 
 #endif /* ! defined (RC_INVOKED) */
 
 /* WIN32 error codes */
+#ifndef WIN32_LEAN_AND_MEAN
 #include <errors.h>
+#endif
 
 #ifndef RC_INVOKED
 
 /* Windows sockets specification version 1.1 */
 #ifdef Win32_Winsock
-#ifndef _WIN32_LEAN_AND_MEAN
+#ifndef WIN32_LEAN_AND_MEAN
 #include <sockets.h>
 #endif
 #endif

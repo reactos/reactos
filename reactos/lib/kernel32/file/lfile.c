@@ -5,10 +5,11 @@
 * todo:		check the _lopen for correctness
 */
 
+#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <string.h>
 #include <wstring.h>
-
+#include <fcntl.h>
 
 
 
@@ -26,8 +27,7 @@ long _hread(
 
 }
 
-long 
-_lread(HFILE fd,LPVOID buffer,long count)
+UINT STDCALL _lread(HFILE fd,LPVOID buffer,UINT count)
 {
     return _hread(fd,buffer, count);
 }
@@ -54,14 +54,15 @@ long _hwrite(
 
 }
 
-
-long _lwrite(
-    HFILE  hFile,	
-    LPCSTR  lpBuffer,	
-    long  lBytes 	
-   )
+UINT
+STDCALL
+_lwrite(
+	HFILE hFile,
+	LPCSTR lpBuffer,
+	UINT uBytes
+	)
 {
-	return _hwrite(hFile,lpBuffer,lBytes);
+	return _hwrite(hFile,lpBuffer,uBytes);
 }
 
 #define OF_OPENMASK	(OF_READ|OF_READWRITE|OF_WRITE|OF_CREATE)
@@ -123,7 +124,7 @@ int _lclose(
 	if ( CloseHandle((HANDLE)hFile) )
 		return 0;
 	else
-		rerturn -1; 
+		return -1; 
 }
 
 LONG _llseek(

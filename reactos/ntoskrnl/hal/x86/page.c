@@ -10,7 +10,7 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
 #include <internal/mm.h>
 #include <internal/string.h>
 #include <internal/bitops.h>
@@ -28,6 +28,81 @@
 #define PA_PRESENT (1<<PA_BIT_PRESENT)
 
 /* FUNCTIONS ***************************************************************/
+
+static ULONG ProtectToPTE(ULONG flProtect)
+{
+   ULONG Attributes = 0;
+   
+   if (flProtect & PAGE_NOACCESS || flProtect & PAGE_GUARD)
+     {
+	Attributes = 0;
+     }
+   if (flProtect & PAGE_READWRITE || flProtect & PAGE_EXECUTE_READWRITE)
+     {
+	Attributes = PA_WRITE;
+     }
+   if (flProtect & PAGE_READONLY || flProtect & PAGE_EXECUTE ||
+       flProtect & PAGE_EXECUTE_READ)
+     {
+	Attributes = PA_READ;
+     }
+   return(Attributes);
+}
+
+PULONG MmGetPageEntry(PEPROCESS Process, ULONG Address)
+{
+   unsigned int page_table;
+   unsigned int* page_tlb;
+   unsigned int* page_dir = linear_to_physical(
+					     Process->Pcb.PageTableDirectory);
+
+   DPRINT("vaddr %x ",vaddr);
+   page_tlb = (unsigned int *)physical_to_linear(
+			     PAGE_MASK(page_dir[VADDR_TO_PD_OFFSET(Address)]));
+   DPRINT("page_tlb %x\n",page_tlb);
+
+   if (PAGE_MASK(page_dir[VADDR_TO_PD_OFFSET(Address)])==0)
+     {
+	DPRINT("Creating new page directory\n",0);
+	page_table = get_free_page();  // Returns a physical address
+	page_tlb=(unsigned int *)physical_to_linear(page_table);
+	memset(page_tlb,0,PAGESIZE);
+	page_dir[VADDR_TO_PD_OFFSET(Address)]=page_table+0x7;
+	
+     }
+   return(&page_tlb[VADDR_TO_PT_OFFSET(Address)/4]);
+}
+
+BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
+{
+   return((*MmGetPageEntry(Process, Address)) & PA_PRESENT);
+}
+
+VOID MmSetPage(PEPROCESS Process,
+	       PVOID Address, 
+	       ULONG flProtect,
+	       ULONG PhysicalAddress)
+{
+   
+   ULONG Attributes = 0;
+   
+   Attributes = ProtectToPTE(flProtect);
+   
+   (*MmGetPageEntry(Process, Address)) = PhysicalAddress | Attributes;
+}
+
+VOID MmSetPageProtect(PEPROCESS Process,
+		      PVOID Address,
+		      ULONG flProtect)
+{
+   ULONG Attributes = 0;
+   PULONG PageEntry;
+   
+   Attributes = ProtectToPTE(flProtect);
+   
+   PageEntry = MmGetPageEntry(Process,Address);
+   (*PageEntry) = PAGE_MASK(*PageEntry) | Attributes;
+}
 
 /*
  * The mark_page_xxxx manipulate the attributes of a page. Use the

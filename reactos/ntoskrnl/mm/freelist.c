@@ -20,7 +20,7 @@
 /* INCLUDES ****************************************************************/
 
 #include <internal/stddef.h>
-#include <internal/hal/page.h>
+#include <internal/mmhal.h>
 #include <internal/mm.h>
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
@@ -166,7 +166,7 @@ unsigned int get_free_page(void)
    unsigned int eflags;
    __asm__("pushf\n\tpop %0\n\tcli\n\t"
 	   : "=d" (eflags));
-   CHECKPOINT;
+
    /*
     * If we are totally out of memory then panic
     */
@@ -175,9 +175,9 @@ unsigned int get_free_page(void)
 	printk("CRITICAL: Unable to allocate page\n");
 	KeBugCheck(KBUG_OUT_OF_MEMORY);
      }
-   CHECKPOINT;
+
    addr = 0;
-   CHECKPOINT;
+
    if (free_page_list_head->nr_pages>1)
      {
 	free_page_list_head->nr_pages--;
@@ -189,14 +189,14 @@ unsigned int get_free_page(void)
 	addr = (unsigned int)free_page_list_head;
 	free_page_list_head = free_page_list_head -> next;
      }
-   CHECKPOINT;
+
    __asm__("push %0\n\tpopf\n\t"
 	   :
 	   : "d" (eflags));
    
    addr = addr - (IDMAP_BASE);
    DPRINT("allocated %x\n",addr);
-   CHECKPOINT;
+
    return(addr);
 }
 

@@ -18,8 +18,8 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/string.h>
-#include <internal/hal/page.h>
-#include <internal/hal/segment.h>
+#include <internal/mmhal.h>
+#include <internal/i386/segment.h>
 
 /* TYPES ******************************************************************/
 

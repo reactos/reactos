@@ -43,7 +43,13 @@ int main(int argc, char* argv[])
         fprintf(stdout,"*/\n");
 
         fprintf(stdout,"#include <internal/symbol.h>\n");        
-
+        fprintf(stdout,"#include <ddk/ntddk.h>\n");
+        fprintf(stdout,"#include <ddk/ntifs.h>\n");
+        fprintf(stdout,"#include <internal/ke.h>\n");
+        fprintf(stdout,"#include <internal/ntoskrnl.h>\n");
+        fprintf(stdout,"#include <internal/mm.h>\n");
+        fprintf(stdout,"#include <wstring.h>\n");
+   
         while (!feof(stdin))
         {
                 read_line(buffer);
@@ -60,7 +66,7 @@ int main(int argc, char* argv[])
         fprintf(stdout,"#endif\n");
         for (j=0;j<i;j++)
         {
-                fprintf(stdout,"void %s(void);\n",sym[j]);
+//                fprintf(stdout,"void %s(void);\n",sym[j]);
         }
         fprintf(stdout,"#ifdef __cplusplus\n");
         fprintf(stdout,"}\n");

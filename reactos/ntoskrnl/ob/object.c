@@ -17,35 +17,93 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-/* GLOBALS ****************************************************************/
-
-/*
- * List of pointers to object types
- */
-static POBJECT_TYPE ObjectTypes[OBJTYP_MAX]={NULL,};
-
 /* FUNCTIONS ************************************************************/
+
+NTSTATUS STDCALL NtSetInformationObject(IN HANDLE ObjectHandle,
+					IN CINT ObjectInformationClass,
+					IN PVOID ObjectInformation,
+					IN ULONG Length)
+{
+   return(ZwSetInformationObject(ObjectHandle,
+				 ObjectInformationClass,
+				 ObjectInformation,
+				 Length));
+}
+
+NTSTATUS STDCALL ZwSetInformationObject(IN HANDLE ObjectHandle,
+					IN CINT ObjectInformationClass,
+					IN PVOID ObjectInformation,
+					IN ULONG Length)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS STDCALL NtQueryObject(IN HANDLE ObjectHandle,
+			       IN CINT ObjectInformationClass,
+			       OUT PVOID ObjectInformation,
+			       IN ULONG Length,
+			       OUT PULONG ResultLength)
+{
+   return(ZwQueryObject(ObjectHandle,
+			ObjectInformationClass,
+			ObjectInformation,
+			Length,
+			ResultLength));
+}
+
+NTSTATUS STDCALL ZwQueryObject(IN HANDLE ObjectHandle,
+			       IN CINT ObjectInformationClass,
+			       OUT PVOID ObjectInformation,
+			       IN ULONG Length,
+			       OUT PULONG ResultLength)
+{
+   UNIMPLEMENTED
+}
+
+NTSTATUS NtMakeTemporaryObject(HANDLE Handle)
+{
+   return(ZwMakeTemporaryObject(Handle));
+}
 
 NTSTATUS ZwMakeTemporaryObject(HANDLE Handle)
 {
-   UNIMPLEMENTED;
+   PVOID Object;
+   NTSTATUS Status;  
+   POBJECT_HEADER ObjectHeader;
+   
+   Status = ObReferenceObjectByHandle(Handle,
+				      0,
+				      NULL,
+				      KernelMode,
+				      &Object,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+     {
+	return(Status);
+     }
+
+   ObjectHeader = BODY_TO_HEADER(Object);
+   ObjectHeader->Permanent = FALSE;
+   
+   ObDereferenceObject(Object);
+   
+   return(STATUS_SUCCESS);
 }
 
 PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,
-			    CSHORT Type)
+			    POBJECT_TYPE Type)
 {
    POBJECT_HEADER hdr = NULL;
    UNICODE_STRING ObjectName;
    PWSTR path;
    PWSTR name;
-   PDIRECTORY_OBJECT parent;
    PWSTR Ignored;
    
    DPRINT("ObGenericCreateObject(Handle %x, DesiredAccess %x,"
-	  "ObjectAttributes %x, Type %d)\n",Handle,DesiredAccess,ObjectAttributes,
-	  Type);
+	  "ObjectAttributes %x, Type %x)\n",Handle,DesiredAccess,
+	  ObjectAttributes,Type);
    
    /*
     * Allocate the object body and header
@@ -62,7 +120,13 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
    if (ObjectAttributes==NULL)
      {
 	ObInitializeObjectHeader(Type,NULL,hdr);
-	*Handle = ObAddHandle(HEADER_TO_BODY(hdr));
+	if (Handle != NULL)
+	  {
+	     *Handle = ObInsertHandle(KeGetCurrentProcess(),
+				      HEADER_TO_BODY(hdr),
+				      DesiredAccess,
+				      FALSE);
+	  }
 	return(HEADER_TO_BODY(hdr));
      }
    
@@ -107,31 +171,19 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
    ObCreateEntry(hdr->Parent,hdr);
       
    DPRINT("Handle %x\n",Handle);
-   *Handle = ObAddHandle(HEADER_TO_BODY(hdr));
+   if (Handle != NULL)
+     {
+	*Handle = ObInsertHandle(KeGetCurrentProcess(),
+				 HEADER_TO_BODY(hdr),
+				 DesiredAccess,
+				 FALSE);
+     }
    
    return(HEADER_TO_BODY(hdr));
 }
 
-ULONG ObSizeOf(CSHORT Type)
-{
-   DPRINT("ObSizeOf(Type %d)\n",Type);
-   DPRINT("ObSizeOf() Returning %d\n",ObjectTypes[Type]->PagedPoolCharge);
-   return(ObjectTypes[Type]->PagedPoolCharge);
-}
-
-VOID ObRegisterType(CSHORT id, POBJECT_TYPE type)
-/*
- * FUNCTION: Registers a new type of object
- * ARGUMENTS:
- *         typ = Pointer to the type definition to register
- */
-{
-   DPRINT("ObRegisterType(id %d, type %x)\n",id,type);
-   ObjectTypes[id]=type;
-}
-
-VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
-			      POBJECT_HEADER obj)
+VOID ObInitializeObjectHeader(POBJECT_TYPE Type, PWSTR name,
+			      POBJECT_HEADER ObjectHeader)
 /*
  * FUNCTION: Creates a new object
  * ARGUMENT:
@@ -141,38 +193,25 @@ VOID ObInitializeObjectHeader(CSHORT id, PWSTR name,
 {
    PWSTR temp_name;
    
-   if (name!=NULL)
-     {
-	DPRINT("ObInitializeObjectHeader(id %d name %w obj %x)\n",id,
-	       name,obj);
-     }
-   else
-     {
-   	DPRINT("ObInitializeObjectHeader(id %d name %x obj %x)\n",id,
-	       name,obj);
-     }
+   DPRINT("ObInitializeObjectHeader(id %x name %w obj %x)\n",Type,
+	  name,ObjectHeader);
    
-   obj->HandleCount = 0;
-   obj->RefCount = 0;
-   obj->Type = id;
+   ObjectHeader->HandleCount = 0;
+   ObjectHeader->RefCount = 0;
+   ObjectHeader->ObjectType = Type;
+   ObjectHeader->Permanent = FALSE;
    if (name==NULL)
      {
-	obj->name.Length=0;
-	obj->name.Buffer=NULL;
+	ObjectHeader->Name.Length=0;
+	ObjectHeader->Name.Buffer=NULL;
      }
    else
      {
-	DPRINT("name %w\n",name);
-	obj->name.MaximumLength = wstrlen(name);
-	obj->name.Buffer = ExAllocatePool(NonPagedPool,
-					  (obj->name.MaximumLength+1)*2);
-	DPRINT("name %w\n",name);
-	RtlInitUnicodeString(&obj->name,name);
-	DPRINT("name %w\n",obj->name.Buffer);
+	ObjectHeader->Name.MaximumLength = wstrlen(name);
+	ObjectHeader->Name.Buffer = ExAllocatePool(NonPagedPool,
+				   (ObjectHeader->Name.MaximumLength+1)*2);
+	RtlInitUnicodeString(&ObjectHeader->Name,name);
      }
-   DPRINT("obj->Type %d\n",obj->Type);
-   DPRINT("obj %x\n",obj);
-   DPRINT("&(obj->Type) %x\n",&(obj->Type));
 }
 
 
@@ -199,6 +238,17 @@ NTSTATUS ObReferenceObjectByPointer(PVOID ObjectBody,
    return(STATUS_SUCCESS);
 }
 
+NTSTATUS ObPerformRetentionChecks(POBJECT_HEADER Header)
+{
+   if (Header->RefCount == 0 && Header->HandleCount == 0 &&
+       !Header->Permanent)
+     {
+	ObRemoveEntry(Header);
+	ExFreePool(Header);
+     }
+   return(STATUS_SUCCESS);
+}
+
 VOID ObDereferenceObject(PVOID ObjectBody)
 /*
  * FUNCTION: Decrements a given object's reference count and performs
@@ -207,8 +257,15 @@ VOID ObDereferenceObject(PVOID ObjectBody)
  *        ObjectBody = Body of the object
  */
 {
-   POBJECT_HEADER Object = BODY_TO_HEADER(ObjectBody);
-   Object->RefCount--;
+   POBJECT_HEADER Header = BODY_TO_HEADER(ObjectBody);
+   Header->RefCount--;
+   ObPerformRetentionChecks(Header);
+}
+
+
+NTSTATUS NtClose(HANDLE Handle)
+{
+   return(ZwClose(Handle));
 }
 
 NTSTATUS ZwClose(HANDLE Handle)
@@ -220,15 +277,25 @@ NTSTATUS ZwClose(HANDLE Handle)
  */
 {
    PVOID ObjectBody;
+   POBJECT_HEADER Header;
+   PHANDLE_REP HandleRep;
    
    assert_irql(PASSIVE_LEVEL);
    
-   ObjectBody = ObGetObjectByHandle(Handle);   
-   if (ObjectBody == NULL)
+   HandleRep = ObTranslateHandle(KeGetCurrentProcess(),Handle);
+   if (HandleRep == NULL)
      {
 	return(STATUS_INVALID_HANDLE);
-     }
-   ObDereferenceObject(ObjectBody);
+     }   
+   ObjectBody = HandleRep->ObjectBody;
+   
+   HandleRep->ObjectBody = NULL;
+   
+   Header = BODY_TO_HEADER(ObjectBody);
+   
+   Header->HandleCount--;
+   ObPerformRetentionChecks(Header);
+   
    return(STATUS_SUCCESS);
 }
 
@@ -254,18 +321,47 @@ NTSTATUS ObReferenceObjectByHandle(HANDLE Handle,
  * RETURNS: Status
  */
 {
-   PVOID ObjectBody;
+   PHANDLE_REP HandleRep;
+   POBJECT_HEADER ObjectHeader;
    
    ASSERT_IRQL(PASSIVE_LEVEL);
-   assert(HandleInformationPtr==NULL);
-   assert(Object!=NULL);
-   assert(Handle!=NULL);
-
-   ObjectBody = ObGetObjectByHandle(Handle);   
-   if (ObjectBody == NULL)
+   
+   DPRINT("ObReferenceObjectByHandle(Handle %x, DesiredAccess %x, "
+	  "ObjectType %x, AccessMode %d, Object %x)\n",Handle,DesiredAccess,
+	  ObjectType,AccessMode,Object);
+   
+   if (Handle == NtCurrentProcess())
+     {
+	*Object = PsGetCurrentProcess();
+	return(STATUS_SUCCESS);
+     }
+   if (Handle == NtCurrentThread())
+     {
+	*Object = PsGetCurrentThread();
+	return(STATUS_SUCCESS);
+     }
+   
+   HandleRep = ObTranslateHandle(KeGetCurrentProcess(),Handle);
+   if (HandleRep == NULL || HandleRep->ObjectBody == NULL)
      {
 	return(STATUS_INVALID_HANDLE);
+     }
+   
+   ObjectHeader = BODY_TO_HEADER(HandleRep->ObjectBody);
+   
+   if (ObjectType != NULL && ObjectType != ObjectHeader->ObjectType)
+     {
+	return(STATUS_UNSUCCESSFUL);
      }   
-   return(ObReferenceObjectByPointer(ObjectBody,DesiredAccess,
-				     ObjectType,AccessMode));
+   
+   if (!(HandleRep->GrantedAccess & DesiredAccess))
+     {
+	return(STATUS_ACCESS_DENIED);
+     }
+   
+   ObjectHeader->RefCount++;
+   
+   *Object = HandleRep->ObjectBody;
+   
+   return(STATUS_SUCCESS);
 }

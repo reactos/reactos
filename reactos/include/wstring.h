@@ -36,6 +36,11 @@ extern size_t wcsnlen(const wchar_t * s, size_t count);
 extern int wcsicmp(const wchar_t* cs,const wchar_t * ct);
 extern int wcsnicmp(const wchar_t* cs,const wchar_t * ct, size_t count);
 
+WCHAR wtoupper(WCHAR c);
+WCHAR wtolower(WCHAR c);
+
+   
+   
 #ifdef __cplusplus
 }
 #endif
