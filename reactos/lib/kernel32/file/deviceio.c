@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.12 2003/07/10 18:50:51 chorns Exp $
+/* $Id: deviceio.c,v 1.13 2003/11/27 00:57:57 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -139,54 +139,46 @@ DeviceIoControl(
 WINBOOL
 STDCALL
 GetOverlappedResult (
-	HANDLE		hFile,
-	LPOVERLAPPED	lpOverlapped,
-	LPDWORD		lpNumberOfBytesTransferred,
-	WINBOOL		bWait
+  IN HANDLE   hFile,
+	IN LPOVERLAPPED	lpOverlapped,
+	OUT LPDWORD		lpNumberOfBytesTransferred,
+	IN WINBOOL		bWait
 	)
 {
 	DWORD WaitStatus;
+  HANDLE hObject;
 
-	if (lpOverlapped == NULL)
-	{
-		SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
-		return FALSE;
-	}
+  if (lpOverlapped->Internal == STATUS_PENDING)
+  {
+    if (!bWait)
+    {
+      /* can't use SetLastErrorByStatus(STATUS_PENDING) here, 
+      since STATUS_PENDING translates to ERROR_IO_PENDING */
+      SetLastError(ERROR_IO_INCOMPLETE);
+      return FALSE;
+    }
+    
+    hObject = lpOverlapped->hEvent ? lpOverlapped->hEvent : hFile;
 
-	if (lpOverlapped ->Internal == STATUS_PENDING)
-	{
-		if (lpNumberOfBytesTransferred == 0)
-		{
-			SetLastErrorByStatus (STATUS_PENDING);
-			return FALSE;
-		}
-		else if (bWait == TRUE)
-		{
-			if (lpOverlapped->hEvent != NULL)
-			{
-				WaitStatus = WaitForSingleObject (lpOverlapped->hEvent,
-				                                  -1);
-				if (WaitStatus ==  STATUS_TIMEOUT)
-				{
-					SetLastError (ERROR_IO_INCOMPLETE);
-					return FALSE;
-				}
-				else
-					return GetOverlappedResult (hFile,
-					                            lpOverlapped,
-					                            lpNumberOfBytesTransferred,
-					                            FALSE);
-			}
-		}
-	}
+    /* Wine delivers pending APC's while waiting, but Windows does
+    not, nor do we... */
+    WaitStatus = WaitForSingleObject(hObject, INFINITE);
+    
+    if (WaitStatus == WAIT_FAILED)
+    {
+      DPRINT("Wait failed!\n");
+      /* WaitForSingleObjectEx sets the last error */
+      return FALSE;
+    }
+  }
 
-	*lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
-
-	if (lpOverlapped->Internal < 0)
-	{
-		SetLastErrorByStatus (lpOverlapped->Internal);
-		return FALSE;
-	}
+  *lpNumberOfBytesTransferred = lpOverlapped->InternalHigh;
+  
+  if (!NT_SUCCESS(lpOverlapped->Internal))
+  {
+    SetLastErrorByStatus(lpOverlapped->Internal);
+    return FALSE;
+  }
 
 	return TRUE;
 }
