@@ -87,13 +87,25 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
+	File f ( "input.lst", "r" );
+	if ( !f.isopened() )
+	{
+		printf ( "Couldn't open \"input.lst\" for input\nPress any key to exit\n" );
+		(void)getch();
+		return;
+	}
+	string filename;
+	while ( f.next_line ( filename, true ) )
+		import_file ( filename.c_str() );
 	//printf ( "press any key to start\n" );
 	//getch();
-#if 1
+/*#if 1
 	import_file ( "../test.h" );
 #else
 	EnumFilesInDirectory ( "c:/cvs/reactos/apps/utils/sdkparse/include", "*.h", FileEnumProc, 0, TRUE, FALSE );
-#endif
+#endif*/
+	printf ( "Done!\nPress any key to exit!\n" );
+	(void)getch();
 }
 
 bool import_file ( const char* filename )
