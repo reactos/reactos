@@ -126,8 +126,9 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
         /* Insert the Timer into the Timer Lists and enable it */
         if (!KiInsertTimer(ThreadTimer, *Interval)) {    
 
-            /* FIXME: Unhandled case...what should we do? */
-            DPRINT1("Could not create timer for KeDelayExecutionThread\n");
+            /* FIXME: The timer already expired, we should find a new ready thread */
+            Status = STATUS_SUCCESS;
+            break;
         }    
         
         /* Handle Kernel Queues */
