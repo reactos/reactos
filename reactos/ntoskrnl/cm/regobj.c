@@ -267,7 +267,7 @@ CmiObjectDelete(PVOID DeletedObject)
 {
   PKEY_OBJECT KeyObject;
 
-  DPRINT("Delete object key\n");
+  DPRINT("Delete key object (%p)\n", DeletedObject);
 
   KeyObject = (PKEY_OBJECT) DeletedObject;
 
@@ -286,7 +286,7 @@ CmiObjectDelete(PVOID DeletedObject)
 		      KeyObject->ParentKey,
 		      KeyObject);
 
-      if (!IsVolatileHive(KeyObject->RegistryHive))
+      if (!IsNoFileHive(KeyObject->RegistryHive))
 	{
 	  CmiSyncHives();
 	}

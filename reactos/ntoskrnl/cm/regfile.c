@@ -1073,7 +1073,7 @@ CmiInitVolatileRegistryHive(PREGISTRY_HIVE RegistryHive)
 {
   PKEY_CELL RootKeyCell;
 
-  RegistryHive->Flags |= (HIVE_VOLATILE | HIVE_POINTER);
+  RegistryHive->Flags |= (HIVE_NO_FILE | HIVE_POINTER);
 
   CmiCreateDefaultHiveHeader(RegistryHive->HiveHeader);
 
@@ -1157,6 +1157,75 @@ CmiCreateRegistryHive(PWSTR Filename,
 
 
 NTSTATUS
+CmiLoadHive(IN PUNICODE_STRING KeyName,
+	    IN PUNICODE_STRING FileName,
+	    IN ULONG Flags)
+{
+  PREGISTRY_HIVE Hive;
+  NTSTATUS Status;
+
+  DPRINT ("CmiLoadHive(Filename %wZ)\n", FileName);
+
+  Hive = ExAllocatePool (NonPagedPool,
+			 sizeof(REGISTRY_HIVE));
+  if (Hive == NULL)
+    {
+      DPRINT1 ("Failed to allocate hive header.\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+  RtlZeroMemory (Hive,
+		 sizeof(REGISTRY_HIVE));
+
+  DPRINT ("Hive %x\n", Hive);
+
+  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool(NonPagedPool,
+						  sizeof(HIVE_HEADER));
+  if (Hive->HiveHeader == NULL)
+    {
+      DPRINT1 ("Failed to allocate hive header.\n");
+      ExFreePool (Hive);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  Status = CmiInitNonVolatileRegistryHive (Hive,
+					   FileName->Buffer,
+					   TRUE);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1 ("CmiInitNonVolatileRegistryHive() failed (Status %lx)\n", Status);
+      ExFreePool (Hive->HiveHeader);
+      ExFreePool (Hive);
+      return Status;
+    }
+
+  ExInitializeResourceLite (&Hive->HiveResource);
+
+  /* Add the new hive to the hive list */
+  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
+				  TRUE);
+  InsertTailList (&CmiHiveListHead,
+		  &Hive->HiveList);
+  ExReleaseResourceLite (&CmiHiveListLock);
+
+
+  VERIFY_REGISTRY_HIVE(Hive);
+
+
+  Status = CmiConnectHive (KeyName,
+			   Hive);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
+//      CmiRemoveRegistryHive (Hive);
+    }
+
+  DPRINT ("CmiLoadHive() done\n");
+
+  return Status;
+}
+
+
+NTSTATUS
 CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
 {
   /* Acquire hive list lock exclusively */
@@ -1170,6 +1239,7 @@ CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive)
 
 
   /* FIXME: Remove attached keys and values */
+
 
 
   /* Release hive header */
@@ -2885,7 +2955,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 	}
 
       /* Update time of heap */
-      if (!IsVolatileHive(RegistryHive))
+      if (!IsNoFileHive(RegistryHive))
 	NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
 
@@ -2893,7 +2963,7 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
   Status = CmiDestroyBlock(RegistryHive, ValueCell, VBOffset);
 
   /* Update time of heap */
-  if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
       NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
@@ -2951,7 +3021,7 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
   tmpBlock->CellSize = (REG_BLOCK_SIZE - REG_HBIN_DATA_OFFSET);
 
   /* Grow bitmap if necessary */
-  if (IsVolatileHive(RegistryHive) &&
+  if (IsNoFileHive(RegistryHive) &&
       (RegistryHive->BlockListSize % (sizeof(ULONG) * 8) == 0))
     {
       PULONG BitmapBuffer;
@@ -3132,7 +3202,7 @@ CmiDestroyBlock(PREGISTRY_HIVE RegistryHive,
       CmiAddFree(RegistryHive, Block, Offset, TRUE);
 
       /* Update time of heap */
-      if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
+      if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, Offset,&pBin))
 	NtQuerySystemTime((PTIME) &pBin->DateModified);
 
       CmiMarkBlockDirty(RegistryHive, Offset);
@@ -3391,7 +3461,7 @@ CmiMarkBlockDirty(PREGISTRY_HIVE RegistryHive,
   ULONG BlockNumber;
   ULONG BlockCount;
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsNoFileHive(RegistryHive))
     return;
 
   DPRINT("CmiMarkBlockDirty(Offset 0x%lx)\n", (ULONG)BlockOffset);
@@ -3429,7 +3499,7 @@ CmiMarkBinDirty(PREGISTRY_HIVE RegistryHive,
   ULONG BlockCount;
   PHBIN Bin;
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsNoFileHive(RegistryHive))
     return;
 
   DPRINT("CmiMarkBinDirty(Offset 0x%lx)\n", (ULONG)BinOffset);

@@ -748,7 +748,7 @@ NtFlushKey(IN HANDLE KeyHandle)
   ExAcquireResourceExclusiveLite(&RegistryHive->HiveResource,
 				 TRUE);
 
-  if (IsVolatileHive(RegistryHive))
+  if (IsNoFileHive(RegistryHive))
     {
       Status = STATUS_SUCCESS;
     }
@@ -1300,7 +1300,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
       ValueCell->DataType = Type;
 
       /* Update time of heap */
-      if (!IsVolatileHive(RegistryHive))
+      if (!IsNoFileHive(RegistryHive))
 	{
 	  NtQuerySystemTime((PTIME) &pBin->DateModified);
 	}
@@ -1355,7 +1355,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     }
 
   /* Update time of heap */
-  if (!IsVolatileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
+  if (!IsNoFileHive(RegistryHive) && CmiGetBlock(RegistryHive, VBOffset, &pBin))
     {
       NtQuerySystemTime((PTIME) &pBin->DateModified);
     }
@@ -1420,7 +1420,9 @@ NTSTATUS STDCALL
 NtLoadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	   IN POBJECT_ATTRIBUTES FileObjectAttributes)
 {
-  return NtLoadKey2 (KeyObjectAttributes, FileObjectAttributes, 0);
+  return NtLoadKey2 (KeyObjectAttributes,
+		     FileObjectAttributes,
+		     0);
 }
 
 
@@ -1428,14 +1430,31 @@ NtLoadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
  * NOTE:
  * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
  * KeyObjectAttributes->Name specifies the name of the key to load.
+ * Flags can be 0 or REG_NO_LAZY_FLUSH.
  */
 NTSTATUS STDCALL
 NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    IN POBJECT_ATTRIBUTES FileObjectAttributes,
 	    IN ULONG Flags)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  NTSTATUS Status;
+
+  DPRINT ("NtLoadKey2() called\n");
+
+  if (Flags & ~REG_NO_LAZY_FLUSH)
+    return STATUS_INVALID_PARAMETER;
+
+  /* FIXME: Get the absolute file name */
+
+  Status = CmiLoadHive (KeyObjectAttributes->ObjectName,
+			FileObjectAttributes->ObjectName,
+			Flags);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
+    }
+
+  return Status;
 }
 
 
@@ -1567,15 +1586,14 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
 
   DPRINT("Return Status 0x%X\n", Status);
 
-  return(Status);
+  return Status;
 }
 
 
 NTSTATUS STDCALL
 NtReplaceKey (IN POBJECT_ATTRIBUTES ObjectAttributes,
 	      IN HANDLE Key,
-	      IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
-	)
+	      IN POBJECT_ATTRIBUTES ReplacedObjectAttributes)
 {
 	UNIMPLEMENTED;
 }
@@ -1616,25 +1634,82 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 NTSTATUS STDCALL
 NtUnloadKey (IN POBJECT_ATTRIBUTES KeyObjectAttributes)
 {
-  UNIMPLEMENTED;
+  PREGISTRY_HIVE RegistryHive;
+  NTSTATUS Status;
+
+  DPRINT ("NtUnloadKey() called\n");
+
+  Status = CmiDisconnectHive (KeyObjectAttributes->ObjectName,
+			      &RegistryHive);
+  if (!NT_SUCCESS (Status))
+    {
+      DPRINT1 ("CmiDisconnectHive() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  DPRINT ("RegistryHive %p\n", RegistryHive);
+
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite (&CmiHiveListLock,
+				  TRUE);
+
+#if 0
+  /* Flush hive */
+  if (!IsNoFileHive (RegistryHive))
+    CmiFlushRegistryHive (RegistryHive);
+#endif
+
+  /* Remove hive from hive list */
+  RemoveEntryList (&RegistryHive->HiveList);
+
+  /* Release hive list lock */
+  ExReleaseResourceLite (&CmiHiveListLock);
+
+  /* Release file names */
+  RtlFreeUnicodeString (&RegistryHive->HiveFileName);
+  RtlFreeUnicodeString (&RegistryHive->LogFileName);
+
+  /* Release hive bitmap */
+  ExFreePool (RegistryHive->BitmapBuffer);
+
+  /* Release free cell list */
+  ExFreePool (RegistryHive->FreeList);
+  ExFreePool (RegistryHive->FreeListOffset);
+
+  /* Release hive resource */
+  ExDeleteResource (&RegistryHive->HiveResource);
+
+  /* Release bins and bin list */
+  CmiFreeHiveBins (RegistryHive);
+  ExFreePool (RegistryHive->BlockList);
+
+  /* Release hive header */
+  ExFreePool (RegistryHive->HiveHeader);
+
+  /* Release hive */
+  ExFreePool (RegistryHive);
+
+  DPRINT ("NtUnloadKey() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 
 NTSTATUS STDCALL
 NtInitializeRegistry (IN BOOLEAN SetUpBoot)
 {
-  NTSTATUS Status = STATUS_ACCESS_DENIED;
+  NTSTATUS Status;
 
-  if (CmiRegistryInitialized == FALSE)
-    {
-      /* FIXME: save boot log file */
+  if (CmiRegistryInitialized == TRUE)
+    return STATUS_ACCESS_DENIED;
 
-      Status = CmiInitHives(SetUpBoot);
+  /* FIXME: save boot log file */
 
-      CmiRegistryInitialized = TRUE;
-    }
+  Status = CmiInitHives (SetUpBoot);
 
-  return(Status);
+  CmiRegistryInitialized = TRUE;
+
+  return Status;
 }
 
 /* EOF */

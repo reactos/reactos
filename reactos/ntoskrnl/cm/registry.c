@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.98 2003/05/29 14:09:41 ekohl Exp $
+/* $Id: registry.c,v 1.99 2003/05/30 22:28:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,7 @@
 #include <roscfg.h>
 #include <limits.h>
 #include <string.h>
-#include <internal/pool.h>
+#include <internal/ob.h>
 #include <internal/registry.h>
 #include <reactos/bugcodes.h>
 
@@ -498,14 +498,13 @@ CmiCreateCurrentControlSetLink(VOID)
 
 
 NTSTATUS
-CmiConnectHive(PREGISTRY_HIVE RegistryHive,
-	       PUNICODE_STRING KeyName)
+CmiConnectHive(IN PUNICODE_STRING KeyName,
+	       IN PREGISTRY_HIVE RegistryHive)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING ParentKeyName;
   PKEY_OBJECT ParentKey;
   PKEY_OBJECT NewKey;
-  HANDLE KeyHandle;
   NTSTATUS Status;
   PWSTR SubName;
 
@@ -549,7 +548,7 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
 			     NULL,
 			     NULL);
 
-  Status = ObCreateObject(&KeyHandle,
+  Status = ObCreateObject(NULL,
 			  STANDARD_RIGHTS_REQUIRED,
 			  &ObjectAttributes,
 			  CmiKeyType,
@@ -572,7 +571,7 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
   if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
     {
       DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
-      NtClose(NewKey);
+      ObDereferenceObject (NewKey);
       ObDereferenceObject (ParentKey);
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
@@ -583,8 +582,10 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
     {
       DPRINT1("RtlCreateUnicodeString() failed (Status %lx)\n", Status);
       if (NewKey->SubKeys != NULL)
-	ExFreePool(NewKey->SubKeys);
-      NtClose(KeyHandle);
+	{
+	  ExFreePool (NewKey->SubKeys);
+	}
+      ObDereferenceObject (NewKey);
       ObDereferenceObject (ParentKey);
       return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -594,7 +595,65 @@ CmiConnectHive(PREGISTRY_HIVE RegistryHive,
 
   VERIFY_KEY_OBJECT(NewKey);
 
-  return(STATUS_SUCCESS);
+  /* Note: Do not dereference NewKey here! */
+
+  return STATUS_SUCCESS;
+}
+
+
+NTSTATUS
+CmiDisconnectHive (IN PUNICODE_STRING KeyName,
+		   OUT PREGISTRY_HIVE *RegistryHive)
+{
+  PKEY_OBJECT KeyObject;
+  PREGISTRY_HIVE Hive;
+  NTSTATUS Status;
+
+  DPRINT("CmiDisconnectHive() called\n");
+
+  *RegistryHive = NULL;
+
+  Status = ObReferenceObjectByName (KeyName,
+				    OBJ_CASE_INSENSITIVE,
+				    NULL,
+				    STANDARD_RIGHTS_REQUIRED,
+				    CmiKeyType,
+				    KernelMode,
+				    NULL,
+				    (PVOID*)&KeyObject);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1 ("ObReferenceObjectByName() failed (Status %lx)\n", Status);
+      return Status;
+    }
+  DPRINT("KeyObject %p  Hive %p\n", KeyObject, KeyObject->RegistryHive);
+
+  if (!(KeyObject->KeyCell->Flags & REG_KEY_ROOT_CELL))
+    {
+      DPRINT1("Key is not the Hive-Root-Key\n");
+      ObDereferenceObject(KeyObject);
+      return STATUS_INVALID_PARAMETER;
+    }
+
+  if (ObGetObjectHandleCount(KeyObject) != 0 ||
+      ObGetObjectPointerCount(KeyObject) != 2)
+    {
+      DPRINT1("Hive is still in use\n");
+      ObDereferenceObject(KeyObject);
+      return STATUS_UNSUCCESSFUL;
+    }
+
+  Hive = KeyObject->RegistryHive;
+
+  /* Dereference KeyObject twice to delete it */
+  ObDereferenceObject(KeyObject);
+  ObDereferenceObject(KeyObject);
+
+  *RegistryHive = Hive;
+
+  DPRINT("CmiDisconnectHive() done\n");
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -619,8 +678,8 @@ CmiInitializeSystemHive (PWSTR FileName,
       return Status;
     }
 
-  Status = CmiConnectHive (RegistryHive,
-			   KeyName);
+  Status = CmiConnectHive (KeyName,
+			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
@@ -713,8 +772,8 @@ CmiInitializeHive(PWSTR FileName,
     }
 
   /* Connect the hive */
-  Status = CmiConnectHive(RegistryHive,
-			  KeyName);
+  Status = CmiConnectHive(KeyName,
+			  RegistryHive);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("CmiConnectHive() failed (Status %lx)\n", Status);
@@ -922,7 +981,7 @@ CmShutdownRegistry(VOID)
     {
       Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
 
-      if (!IsVolatileHive(Hive))
+      if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
 	{
 	  /* Acquire hive resource exclusively */
 	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,
@@ -963,7 +1022,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
     {
       Hive = CONTAINING_RECORD(Entry, REGISTRY_HIVE, HiveList);
 
-      if (!IsVolatileHive(Hive))
+      if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
 	{
 	  /* Acquire hive resource exclusively */
 	  ExAcquireResourceExclusiveLite(&Hive->HiveResource,

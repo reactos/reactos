@@ -262,16 +262,20 @@ typedef struct _REGISTRY_HIVE
 } REGISTRY_HIVE, *PREGISTRY_HIVE;
 
 /* REGISTRY_HIVE.Flags constants */
-/* When set, the hive is volatile. It will not be sync'ed to disk. */
-#define HIVE_VOLATILE   0x00000001
 /* When set, the hive uses pointers instead of offsets. */
-#define HIVE_POINTER    0x00000002
-/* When set, the hive is temporary. It will not be sync'ed to disk. */
-#define HIVE_TEMPORARY  0x00000004
+#define HIVE_POINTER    0x00000001
 
-#define IsVolatileHive(Hive)(Hive->Flags & HIVE_VOLATILE)
-#define IsPointerHive(Hive)(Hive->Flags & HIVE_POINTER)
-#define IsTemporaryHive(Hive)(Hive->Flags & HIVE_TEMPORARY)
+/* When set, the hive is not backed by a file.
+   Therefore, it can not be flushed to disk. */
+#define HIVE_NO_FILE    0x00000002
+
+/* When set, a modified (dirty) hive is not synchronized automatically.
+   Explicit synchronization (save/flush) works. */
+#define HIVE_NO_SYNCH   0x00000004
+
+#define IsPointerHive(Hive)  ((Hive)->Flags & HIVE_POINTER)
+#define IsNoFileHive(Hive)  ((Hive)->Flags & HIVE_NO_FILE)
+#define IsNoSynchHive(Hive)  ((Hive)->Flags & HIVE_NO_SYNCH)
 
 
 #define IsFreeCell(Cell)(Cell->CellSize >= 0)
@@ -424,6 +428,11 @@ CmiCreateRegistryHive(PWSTR Filename,
   BOOLEAN CreateNew);
 
 NTSTATUS
+CmiLoadHive(PUNICODE_STRING KeyName,
+	    PUNICODE_STRING FileName,
+	    ULONG Flags);
+
+NTSTATUS
 CmiRemoveRegistryHive(PREGISTRY_HIVE RegistryHive);
 
 NTSTATUS
@@ -558,8 +567,12 @@ CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 	   BOOLEAN MergeFreeBlocks);
 
 NTSTATUS
-CmiConnectHive(PREGISTRY_HIVE RegistryHive,
-	       PUNICODE_STRING KeyName);
+CmiConnectHive(PUNICODE_STRING KeyName,
+	       PREGISTRY_HIVE RegistryHive);
+
+NTSTATUS
+CmiDisconnectHive (PUNICODE_STRING KeyName,
+		   PREGISTRY_HIVE *RegistryHive);
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);

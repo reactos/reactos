@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.19 2003/05/24 13:18:32 ekohl Exp $
+/* $Id: import.c,v 1.20 2003/05/30 22:28:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -127,7 +127,7 @@ CmImportBinaryHive (PCHAR ChunkBase,
       return Status;
     }
 
-  if (!(Hive->Flags & HIVE_VOLATILE))
+  if (!(Hive->Flags & HIVE_NO_FILE))
     {
       /* Create the block bitmap */
       Status = CmiCreateHiveBitmap (Hive);
@@ -190,8 +190,8 @@ CmImportSystemHive(PCHAR ChunkBase,
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
 			L"\\Registry\\Machine\\System");
-  Status = CmiConnectHive (RegistryHive,
-			   &KeyName);
+  Status = CmiConnectHive (&KeyName,
+			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
@@ -328,7 +328,7 @@ CmImportHardwareHive(PCHAR ChunkBase,
   DPRINT ("ChunkBase %lx  ChunkSize %lu\n", ChunkBase, ChunkSize);
 
   /* Import the binary system hive (volatile, offset-based, permanent) */
-  if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_VOLATILE, &RegistryHive))
+  if (!CmImportBinaryHive (ChunkBase, ChunkSize, HIVE_NO_FILE, &RegistryHive))
     {
       DPRINT1 ("CmiImportBinaryHive() failed\n", Status);
       return FALSE;
@@ -337,8 +337,8 @@ CmImportHardwareHive(PCHAR ChunkBase,
   /* Attach it to the machine key */
   RtlInitUnicodeString (&KeyName,
 			L"\\Registry\\Machine\\HARDWARE");
-  Status = CmiConnectHive (RegistryHive,
-			   &KeyName);
+  Status = CmiConnectHive (&KeyName,
+			   RegistryHive);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1 ("CmiConnectHive() failed (Status %lx)\n", Status);
