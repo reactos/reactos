@@ -32,6 +32,7 @@
 #define	_UNICODE
 #include <wchar.h>
 #endif
+#include <tchar.h>
 
 #include <windows.h>
 #include <windowsx.h>
@@ -39,7 +40,6 @@
 #include <commdlg.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <tchar.h>
 #include <ctype.h>
 
 #ifdef _MSC_VER
@@ -139,3 +139,11 @@ typedef struct
   UINT			cfStrFName;
 #endif
 } WINEFILE_GLOBALS;
+
+#ifdef __WINE__
+#ifdef UNICODE
+extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
+#else
+extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
+#endif
+#endif
