@@ -1,4 +1,4 @@
-/* $Id: res.c,v 1.1 2002/12/08 15:57:40 robd Exp $
+/* $Id: res.c,v 1.2 2003/01/07 17:35:55 robd Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -24,8 +24,7 @@
 #include <ntdll/ldr.h>
 #include <ntos/minmax.h>
 
-//#define NDEBUG
-#define DBG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* PROTOTYPES ****************************************************************/

@@ -19,7 +19,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: stubs.c,v 1.3 2002/09/24 15:06:10 robd Exp $
+/* $Id: stubs.c,v 1.4 2003/01/07 17:35:56 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -44,6 +44,8 @@
 
 #ifdef __GNUC__
 void* _alloca(size_t);
+#else
+#define __FUNCTION__ "unknown"
 #endif
 
 #define NO_SHLWAPI_STREAM
@@ -99,6 +101,7 @@ typedef struct _browseinfo {
 } BROWSEINFO, *PBROWSEINFO, *LPBROWSEINFO; 
 
 
+#define DbgPrint(a,b,c,d)
 
 #undef DragQueryFile
 #undef ShellExecute
