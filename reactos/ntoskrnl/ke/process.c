@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: process.c,v 1.11 2002/09/08 10:23:29 chorns Exp $
+/* $Id: process.c,v 1.12 2003/05/07 21:41:03 gvg Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/process.c
@@ -44,6 +44,7 @@ KeAttachProcess (PEPROCESS Process)
 {
    KIRQL oldlvl;
    PETHREAD CurrentThread;
+   PULONG AttachedProcessPageDir;
    ULONG PageDir;
    
    DPRINT("KeAttachProcess(Process %x)\n",Process);
@@ -57,10 +58,23 @@ KeAttachProcess (PEPROCESS Process)
      }
    
    KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
-   
+
+   /* The stack of the current process may be located in a page which is
+      not present in the page directory of the process we're attaching to.
+      That would lead to a page fault when this function returns. However,
+      since the processor can't call the page fault handler 'cause it can't
+      push EIP on the stack, this will show up as a stack fault which will
+      crash the entire system.
+      To prevent this, make sure the page directory of the process we're
+      attaching to is up-to-date. */
+
+   AttachedProcessPageDir = ExAllocatePageWithPhysPage(Process->Pcb.DirectoryTableBase);
+   MmUpdatePageDir(AttachedProcessPageDir);
+   ExUnmapPage(AttachedProcessPageDir);
+
    CurrentThread->OldProcess = PsGetCurrentProcess();
    CurrentThread->ThreadsProcess = Process;
-   PageDir = CurrentThread->ThreadsProcess->Pcb.DirectoryTableBase.u.LowPart;
+   PageDir = Process->Pcb.DirectoryTableBase.u.LowPart;
    DPRINT("Switching process context to %x\n",PageDir)
    __asm__("movl %0,%%cr3\n\t"
 	   : /* no inputs */
