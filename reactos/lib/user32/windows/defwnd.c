@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.129 2004/04/05 21:26:24 navaraf Exp $
+/* $Id: defwnd.c,v 1.130 2004/04/05 22:12:53 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -432,17 +432,28 @@ DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
 
 VOID STATIC 
 UserDrawWindowFrame(HDC hdc, const RECT *rect,
-		    ULONG width, ULONG height, DWORD rop )
+		    ULONG width, ULONG height)
 {
-  HBRUSH hbrush = SelectObject( hdc, GetStockObject( GRAY_BRUSH ) );
+  static HBRUSH hDraggingRectBrush = NULL;
+  
+  if(!hDraggingRectBrush)
+  {
+    static HBITMAP hDraggingPattern = NULL;
+    const DWORD Pattern[4] = {0x5555AAAA, 0x5555AAAA, 0x5555AAAA, 0x5555AAAA};
+    
+    hDraggingPattern = CreateBitmap(8, 8, 1, 1, Pattern);
+    hDraggingRectBrush = CreatePatternBrush(hDraggingPattern);
+  }
+  
+  HBRUSH hbrush = SelectObject( hdc, hDraggingRectBrush );
   PatBlt( hdc, rect->left, rect->top,
-	  rect->right - rect->left - width, height, rop );
+	  rect->right - rect->left - width, height, PATINVERT );
   PatBlt( hdc, rect->left, rect->top + height, width,
-	  rect->bottom - rect->top - height, rop );
+	  rect->bottom - rect->top - height, PATINVERT );
   PatBlt( hdc, rect->left + width, rect->bottom - 1,
-	  rect->right - rect->left - width, -height, rop );
+	  rect->right - rect->left - width, -height, PATINVERT );
   PatBlt( hdc, rect->right - 1, rect->top, -width,
-	  rect->bottom - rect->top - height, rop );
+	  rect->bottom - rect->top - height, PATINVERT );
   SelectObject( hdc, hbrush );
 }
 
@@ -452,7 +463,7 @@ UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe)
   if (thickframe)
     {
       UserDrawWindowFrame(hdc, rect, GetSystemMetrics(SM_CXFRAME),
-			  GetSystemMetrics(SM_CYFRAME), DSTINVERT);
+			  GetSystemMetrics(SM_CYFRAME));
     }
   else DrawFocusRect( hdc, rect );
 }
