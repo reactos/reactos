@@ -6,14 +6,14 @@
  * Utility to copy and enable thread privileges
  *
  * OUT HANDLE *hPreviousToken -> Pointer to a variable that receives the previous token handle
- * IN  DWORD *Privileges      -> Points to an array of privileges to be enabled
+ * IN  LUID *Privileges       -> Points to an array of privileges to be enabled
  * IN  DWORD PrivilegeCount   -> Number of the privileges in the array
  *
  * Returns TRUE on success and copies the thread token (if any) handle that was active before impersonation.
  */
 BOOL
 RosEnableThreadPrivileges(HANDLE *hPreviousToken,
-                          DWORD *Privileges,
+                          LUID *Privileges,
                           DWORD PrivilegeCount)
 {
   HANDLE hToken;
@@ -55,8 +55,7 @@ RosEnableThreadPrivileges(HANDLE *hPreviousToken,
     privs->PrivilegeCount = PrivilegeCount;
     for(la = privs->Privileges; PrivilegeCount-- > 0; la++)
     {
-      la->Luid.LowPart = *(Privileges++);
-      la->Luid.HighPart = 0;
+      la->Luid = *(Privileges++);
       la->Attributes = SE_PRIVILEGE_ENABLED;
     }
     

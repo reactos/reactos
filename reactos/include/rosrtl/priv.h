@@ -1,4 +1,4 @@
-/* $Id: priv.h,v 1.1 2004/08/11 08:28:13 weiden Exp $
+/* $Id: priv.h,v 1.2 2004/08/11 08:48:20 weiden Exp $
  */
 
 #ifndef ROSRTL_SEC_H__
@@ -10,7 +10,7 @@ extern "C"
 #endif
 
 BOOL
-RosEnableThreadPrivileges(HANDLE *hToken, DWORD *Privileges, DWORD PrivilegeCount);
+RosEnableThreadPrivileges(HANDLE *hToken, LUID *Privileges, DWORD PrivilegeCount);
 BOOL
 RosResetThreadPrivileges(HANDLE hToken);
 
