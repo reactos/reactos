@@ -227,12 +227,17 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
     } else {
 	/* it's a filesystem path on the desktop. Let a FSFolder parse it */
 
-	/* build a complete path to create a simple pidl */
-	lstrcpyA(szPath, This->sPathTarget);
-	PathAddBackslashA(szPath);
-	len = lstrlenA(szPath);
-	WideCharToMultiByte(CP_ACP, 0, lpszDisplayName, -1, szPath + len, MAX_PATH - len, NULL, NULL);
-	pidlTemp = _ILCreateFromPathA(szPath);
+	if (*lpszDisplayName) {
+	    /* build a complete path to create a simple pidl */
+	    lstrcpyA(szPath, This->sPathTarget);
+	    PathAddBackslashA(szPath);
+	    len = lstrlenA(szPath);
+	    WideCharToMultiByte(CP_ACP, 0, lpszDisplayName, -1, szPath + len, MAX_PATH - len, NULL, NULL);
+	    pidlTemp = _ILCreateFromPathA(szPath);
+	} else {
+	    pidlTemp = _ILCreateMyComputer();
+	}
+
 	szNext = NULL;
     }
 
