@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.18 2002/10/01 19:27:20 chorns Exp $
+/* $Id: env.c,v 1.19 2003/07/09 20:25:00 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -244,9 +244,11 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
     {
       /* get environment length */
       wcs = env_end = env;
-      while (*env_end)
-	while (*env_end++)
-	  ;
+      do
+      {
+	 env_end += wcslen(env_end) + 1;
+      }
+      while (*env_end);
       env_end++;
       env_len = env_end - env;
       DPRINT("environment length %ld characters\n", env_len);
@@ -254,14 +256,18 @@ RtlSetEnvironmentVariable(PWSTR *Environment,
       /* find where to insert */
       while (*wcs)
 	{
-	  for (var.Buffer = wcs++; *wcs && *wcs != L'='; wcs++)
-	    ;
+          var.Buffer = wcs++;
+	  wcs = wcschr(wcs, L'=');
+	  if (wcs == NULL)
+	  {
+	     wcs = var.Buffer + wcslen(var.Buffer);
+	  }
 	  if (*wcs)
 	    {
 	      var.Length = (wcs - var.Buffer) * sizeof(WCHAR);
 	      var.MaximumLength = var.Length;
-	      for ( val = ++wcs; *wcs; wcs++)
-		;
+	      val = ++wcs;
+	      wcs += wcslen(wcs); 
 	      f = RtlCompareUnicodeString(&var, Name, TRUE);
 	      if (f >= 0)
 		{
@@ -425,9 +431,8 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
 {
   NTSTATUS Status;
   PWSTR wcs;
-  PWSTR var;
+  UNICODE_STRING var;
   PWSTR val;
-  int varlen;
   int len;
   BOOLEAN SysEnvUsed = FALSE;
 
@@ -451,22 +456,24 @@ RtlQueryEnvironmentVariable_U(PWSTR Environment,
   len = Name->Length / sizeof(WCHAR);
   while (*wcs)
     {
-      for (var = wcs++; *wcs && *wcs != L'='; wcs++)
-	;
-
+      var.Buffer = wcs++;
+      wcs = wcschr(wcs, L'=');
+      if (wcs == NULL)
+      {
+         wcs = var.Buffer + wcslen(var.Buffer);
+      }
       if (*wcs)
 	{
-	  varlen = wcs - var;
-	  for (val = ++wcs; *wcs; wcs++)
-	     ;
+	  var.Length = var.MaximumLength = (wcs - var.Buffer) * sizeof(WCHAR);
+	  val = ++wcs;
+	  wcs += wcslen(wcs);
 
-	  if (varlen == len &&
-	      !_wcsnicmp(var, Name->Buffer, len))
+	  if (RtlEqualUnicodeString(&var, Name, TRUE))
 	    {
 	      Value->Length = (wcs - val) * sizeof(WCHAR);
 	      if (Value->Length < Value->MaximumLength)
 		{
-		  wcscpy(Value->Buffer, val);
+		  memcpy(Value->Buffer, val, Value->Length + sizeof(WCHAR));
 		  DPRINT("Value %S\n", val);
 		  DPRINT("Return STATUS_SUCCESS\n");
 		  Status = STATUS_SUCCESS;
