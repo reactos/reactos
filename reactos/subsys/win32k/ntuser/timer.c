@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.19 2003/12/23 21:34:52 navaraf Exp $
+/* $Id: timer.c,v 1.20 2003/12/26 10:47:20 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -383,6 +383,7 @@ IntKillTimer(HWND hWnd, UINT_PTR uIDEvent, BOOL SystemTimer)
   return TRUE;
 }
 
+extern VOID STDCALL ValidateNonPagedPool(VOID);
 static VOID STDCALL_FUNC
 TimerThreadMain(PVOID StartContext)
 {
@@ -445,6 +446,8 @@ TimerThreadMain(PVOID StartContext)
       
       if (CurrentTime.QuadPart >= MsgTimer->Timeout.QuadPart)
       {
+        EnumEntry = EnumEntry->Flink;
+
         RemoveEntryList(&MsgTimer->ListEntry);
         
         /* 
@@ -463,7 +466,11 @@ TimerThreadMain(PVOID StartContext)
         ++ThreadsToDereferencePos;
         
         //set up next periodic timeout
-        MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000); 
+        do
+          {
+            MsgTimer->Timeout.QuadPart += (MsgTimer->Period * 10000);
+          }
+        while (MsgTimer->Timeout.QuadPart <= CurrentTime.QuadPart);
         IntInsertTimerAscendingOrder(MsgTimer, FALSE);
       }
       else
@@ -471,7 +478,6 @@ TimerThreadMain(PVOID StartContext)
         break;
       }
 
-      EnumEntry = EnumEntry->Flink;
     }
     
     EnumEntry = SysTimerListHead.Flink;
@@ -481,6 +487,8 @@ TimerThreadMain(PVOID StartContext)
       
       if (CurrentTime.QuadPart >= MsgTimer2->Timeout.QuadPart)
       {
+        EnumEntry = EnumEntry->Flink;
+
         RemoveEntryList(&MsgTimer2->ListEntry);
         
         /* 
@@ -499,15 +507,17 @@ TimerThreadMain(PVOID StartContext)
         ++ThreadsToDereferencePos;
         
         //set up next periodic timeout
-        MsgTimer2->Timeout.QuadPart += (MsgTimer2->Period * 10000); 
+        do
+          {
+            MsgTimer2->Timeout.QuadPart += (MsgTimer2->Period * 10000);
+          }
+        while (MsgTimer2->Timeout.QuadPart <= CurrentTime.QuadPart);
         IntInsertTimerAscendingOrder(MsgTimer2, TRUE);
       }
       else
       {
         break;
       }
-
-      EnumEntry = EnumEntry->Flink;
     }
     
     //set up next timeout from first entry (if any)
