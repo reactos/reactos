@@ -41,6 +41,8 @@ copy drivers\input\keyboard\keyboard.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\mouclass\mouclass.sys %ROS_INSTALL%\system32\drivers
 copy drivers\input\psaux\psaux.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\blue\blue.sys %ROS_INSTALL%\system32\drivers
+copy drivers\dd\beep\beep.sys %ROS_INSTALL%\system32\drivers
+copy drivers\dd\null\null.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vga\miniport\vgamp.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vga\display\vgaddi.dll %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vidport\vidport.sys %ROS_INSTALL%\system32\drivers
