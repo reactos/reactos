@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.5 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: paint.c,v 1.6 2002/08/27 20:32:03 jfilby Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -40,7 +40,7 @@ BeginPaint(
   HWND hwnd,
   LPPAINTSTRUCT lpPaint)
 {
-  return (HDC)0;
+  return NtUserBeginPaint(hwnd, lpPaint);
 }
 WINBOOL
 STDCALL
@@ -48,7 +48,7 @@ EndPaint(
   HWND hWnd,
   CONST PAINTSTRUCT *lpPaint)
 {
-  return FALSE;
+  return NtUserEndPaint(hWnd, lpPaint);
 }
 int
 STDCALL
