@@ -1,4 +1,4 @@
-/* $Id: processor_mp.c,v 1.2 2004/12/25 11:21:48 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -186,10 +186,15 @@ VOID IOAPICMaskIrq(ULONG Irq)
   IOAPIC_ROUTE_ENTRY Entry;
   ULONG Apic = IrqApicMap[Irq];
 
-
-  *((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
-  Entry.mask = 1;
-  IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *((PULONG)&Entry));
+  *(((PULONG)&Entry)+0) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
+  *(((PULONG)&Entry)+1) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq+1);
+  Entry.dest.logical.logical_dest &= ~(1 << KeGetCurrentProcessorNumber());
+  if (Entry.dest.logical.logical_dest == 0)
+  {
+     Entry.mask = 1;
+  }
+  IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq+1, *(((PULONG)&Entry)+1));
+  IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *(((PULONG)&Entry)+0));
 }
 
 
@@ -199,9 +204,12 @@ VOID IOAPICUnmaskIrq(ULONG Irq)
   IOAPIC_ROUTE_ENTRY Entry;
   ULONG Apic = IrqApicMap[Irq];
 
-  *((PULONG)&Entry) = IOAPICRead(Apic, IOAPIC_REDTBL+2*IrqPinMap[Irq]);
+  *(((PULONG)&Entry)+0) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq);
+  *(((PULONG)&Entry)+1) = IOAPICRead(Apic, IOAPIC_REDTBL+2*Irq+1);
+  Entry.dest.logical.logical_dest |= 1 << KeGetCurrentProcessorNumber();
   Entry.mask = 0;
-  IOAPICWrite(Apic, IOAPIC_REDTBL+2*IrqPinMap[Irq], *((PULONG)&Entry));
+  IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq+1, *(((PULONG)&Entry)+1));
+  IOAPICWrite(Apic, IOAPIC_REDTBL+2*Irq, *(((PULONG)&Entry)+0));
 }
 
 static VOID 
@@ -619,15 +627,8 @@ VOID IOAPICSetupIrqs(VOID)
 	 entry.delivery_mode = (APIC_DM_LOWEST >> 8);
 	 entry.dest_mode = 1;  /* logical delivery */
 	 entry.mask = 1;       /* disable IRQ */
-#if 0
-	 /*
-	  * FIXME:
-	  *   Some drivers are not able to deal with more than one cpu.
-	  */
-	 entry.dest.logical.logical_dest = OnlineCPUs;
-#else
-	 entry.dest.logical.logical_dest = 1 << 0;
-#endif
+         entry.dest.logical.logical_dest = 0;
+
 	 idx = IOAPICGetIrqEntry(apic,pin,INT_VECTORED);
 	 if (idx == -1) 
 	 {
@@ -650,11 +651,7 @@ VOID IOAPICSetupIrqs(VOID)
 	 {
 	    entry.trigger = 1;
 	    entry.mask = 1; // disable
-#if 0
-	    entry.dest.logical.logical_dest = OnlineCPUs;
-#else
-	    entry.dest.logical.logical_dest = 1 << 0;
-#endif
+	    entry.dest.logical.logical_dest = 0;
 	 }
 
 	 irq = Pin2Irq(idx, apic, pin);
