@@ -1,4 +1,4 @@
-/* $Id: xhaldrv.c,v 1.32 2003/05/11 18:31:09 chorns Exp $
+/* $Id: xhaldrv.c,v 1.33 2003/06/27 00:16:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -314,7 +314,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 			   (PVOID *)&Sector);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("xHalpReadSector() failed (Status %lx)\n", Status);
+      DPRINT("xHalpReadSector() failed (Status %lx)\n", Status);
       return;
     }
 
