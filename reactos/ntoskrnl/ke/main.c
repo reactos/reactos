@@ -705,7 +705,7 @@ ExpInitializeExecutive(VOID)
 
   /* On the assumption that we can now access disks start up the debug
    * logger thread */
-  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_BOOTLOG))
+  if ((KdDebuggerEnabled == TRUE) && (KdDebugState & KD_DEBUG_FILELOG))
     {
       DebugLogInit2();
     }

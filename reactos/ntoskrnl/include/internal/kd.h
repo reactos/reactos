@@ -16,7 +16,7 @@
 #define KD_DEBUG_SCREEN		0x04
 #define KD_DEBUG_SERIAL		0x08
 #define KD_DEBUG_BOCHS		0x10
-#define KD_DEBUG_BOOTLOG	0x20
+#define KD_DEBUG_FILELOG	0x20
 #define KD_DEBUG_MDA            0x40
 #define KD_DEBUG_KDB            0x80
 #define KD_DEBUG_KDSERIAL       0x100

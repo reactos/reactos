@@ -1,4 +1,4 @@
-/* $Id:$
+/* $Id$
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -151,15 +151,15 @@ KdInitSystem(ULONG BootPhase,
 		  if (Value > 0 && Value < 5)
 		    {
 		      KdDebuggerEnabled = TRUE;
-			  KdDebugState |= KD_DEBUG_SERIAL;
+		      KdDebugState |= KD_DEBUG_SERIAL;
 		      LogPortInfo.ComPort = Value;
 		    }
 		}
-	      else if (!_strnicmp(p2, "BOOTLOG", 4) && BootPhase > 0)
+	      else if (!_strnicmp(p2, "FILE", 4) && BootPhase > 0)
 		{
 		  p2 += 4;
 		  KdDebuggerEnabled = TRUE;
-		  KdDebugState |= KD_DEBUG_BOOTLOG;
+		  KdDebugState |= KD_DEBUG_FILELOG;
 		}
 	      else if (!_strnicmp(p2, "MDA", 3) && BootPhase > 0)
 		{
@@ -261,7 +261,7 @@ KdInitSystem(ULONG BootPhase,
       if (KdDebugState & KD_DEBUG_SERIAL  && BootPhase == 0)
 	    KdPortInitializeEx(&LogPortInfo, 0, 0);
 
-      if (KdDebugState & KD_DEBUG_BOOTLOG && BootPhase > 0)
+      if (KdDebugState & KD_DEBUG_FILELOG && BootPhase > 0)
 	    DebugLogInit();
 
       if (KdDebugState & KD_DEBUG_MDA && BootPhase > 0)
@@ -317,7 +317,7 @@ KdInit3(VOID)
 	    PrintString("\n   Serial debugging enabled. COM%ld %ld Baud\n\n",
 			LogPortInfo.ComPort, LogPortInfo.BaudRate);
 
-      if (KdDebugState & KD_DEBUG_BOOTLOG)
+      if (KdDebugState & KD_DEBUG_FILELOG)
 	    PrintString("\n   File log debugging enabled\n\n");
       if (KdDebugState & KD_DEBUG_MDA)
 	    PrintString("\n   MDA debugging enabled\n\n");
@@ -374,7 +374,7 @@ KdpPrintString(PANSI_STRING String)
 	if (KdDebugState & KD_DEBUG_BOCHS)
 		KdBochsDebugPrint(pch);
 
-	if (KdDebugState & KD_DEBUG_BOOTLOG)
+	if (KdDebugState & KD_DEBUG_FILELOG)
 		DebugLogWrite(pch);
 
 	if (KdDebugState & KD_DEBUG_MDA)
