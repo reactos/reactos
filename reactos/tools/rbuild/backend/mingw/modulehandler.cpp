@@ -100,7 +100,7 @@ MingwModuleHandler::GetImportLibraryDependencies ( const Module& module ) const
 			dependencies += " ";
 		const Module* importedModule = module.project.LocateModule ( module.libraries[i]->name );
 		assert ( importedModule != NULL );
-		dependencies += FixupTargetFilename ( importedModule->GetPath () ).c_str ();
+		dependencies += FixupTargetFilename ( importedModule->GetDependencyPath () ).c_str ();
 	}
 	return dependencies;
 }
@@ -261,8 +261,14 @@ string
 MingwModuleHandler::GenerateGccParameters ( const Module& module ) const
 {
 	string parameters = GenerateGccDefineParameters ( module );
-	parameters += ssprintf(" $(%s_INCLUDES)",module.name.c_str());
+	parameters += ssprintf(" $(%s_INCLUDES)", module.name.c_str());
 	return parameters;
+}
+
+string
+MingwModuleHandler::GenerateNasmParameters ( const Module& module ) const
+{
+	return "";
 }
 
 string
@@ -292,6 +298,18 @@ MingwModuleHandler::GenerateGccAssemblerCommand ( const Module& module,
 }
 
 string
+MingwModuleHandler::GenerateNasmCommand ( const Module& module,
+	                                      const string& sourceFilename ) const
+{
+	string objectFilename = GetObjectFilename ( sourceFilename );
+	return ssprintf ( "%s -f win32 %s -o %s %s\n",
+		              "nasm",
+		              sourceFilename.c_str (),
+		              objectFilename.c_str (),
+		              GenerateNasmParameters ( module ).c_str () );
+}
+
+string
 MingwModuleHandler::GenerateCommand ( const Module& module,
 	                                  const string& sourceFilename,
 	                                  const string& cc ) const
@@ -305,6 +323,9 @@ MingwModuleHandler::GenerateCommand ( const Module& module,
 		return GenerateGccAssemblerCommand ( module,
 		                                     sourceFilename,
 		                                     cc );
+	else if ( extension == ".asm" || extension == ".ASM" )
+		return GenerateNasmCommand ( module,
+		                             sourceFilename );
 
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__,
@@ -506,6 +527,7 @@ MingwModuleHandler::GeneratePreconditionDependencies ( const Module& module ) co
 	          preconditionDependenciesName.c_str () );
 }
 
+
 static MingwBuildToolModuleHandler buildtool_handler;
 
 MingwBuildToolModuleHandler::MingwBuildToolModuleHandler()
@@ -540,7 +562,7 @@ MingwBuildToolModuleHandler::GenerateBuildToolModuleTarget ( const Module& modul
 static MingwKernelModuleHandler kernelmodule_handler;
 
 MingwKernelModuleHandler::MingwKernelModuleHandler ()
-	: MingwModuleHandler ( KernelModeDLL )
+	: MingwModuleHandler ( Kernel )
 {
 }
 
@@ -564,13 +586,15 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	string base_tmp = ros_junk + module.name + ".base.tmp";
 	string junk_tmp = ros_junk + module.name + ".junk.tmp";
 	string temp_exp = ros_junk + module.name + ".temp.exp";
+	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,_NtProcessStartup -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+	                              module.GetBasePath ().c_str () );
 	fprintf ( fMakefile, "%s: %s %s\n",
 	          target.c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${gcc} -Wl,--entry,_NtProcessStartup -Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -Wl,--base-file,%s -nostartfiles -o %s %s %s\n",
-	          module.GetBasePath ().c_str (),
+	          "\t${gcc} %s -Wl,--base-file,%s -o %s %s %s\n",
+	          gccOptions.c_str (),
 	          base_tmp.c_str (),
 	          junk_tmp.c_str (),
 	          archiveFilename.c_str (),
@@ -587,7 +611,8 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	          "\t${rm} %s\n",
 	          base_tmp.c_str () );
 	fprintf ( fMakefile,
-	          "\t${ld} -Wl,%s -o %s %s %s\n",
+	          "\t${gcc} %s -Wl,%s -o %s %s %s\n",
+	          gccOptions.c_str (),
 	          temp_exp.c_str (),
 	          target.c_str (),
 	          archiveFilename.c_str (),
@@ -599,6 +624,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	GenerateArchiveTargetTarget ( module );
 	GenerateObjectFileTargetsTarget ( module );
 }
+
 
 static MingwStaticLibraryModuleHandler staticlibrary_handler;
 
@@ -620,4 +646,66 @@ MingwStaticLibraryModuleHandler::GenerateStaticLibraryModuleTarget ( const Modul
 {
 	GenerateArchiveTargetTarget ( module );
 	GenerateObjectFileTargetsTarget ( module );
+}
+
+
+static MingwKernelModeDLLModuleHandler kernelmodedll_handler;
+
+MingwKernelModeDLLModuleHandler::MingwKernelModeDLLModuleHandler ()
+	: MingwModuleHandler ( KernelModeDLL )
+{
+}
+
+void
+MingwKernelModeDLLModuleHandler::Process ( const Module& module )
+{
+	GeneratePreconditionDependencies ( module );
+	GenerateKernelModeDLLModuleTarget ( module );
+	GenerateInvocations ( module );
+}
+
+void
+MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Module& module )
+{
+	static string ros_junk ( "$(ROS_TEMPORARY)" );
+	string target ( FixupTargetFilename ( module.GetPath () ) );
+	string workingDirectory = GetWorkingDirectory ( );
+	string archiveFilename = GetModuleArchiveFilename ( module );
+	string importLibraryDependencies = GetImportLibraryDependencies ( module );
+
+	if (module.importLibrary != NULL)
+	{
+		fprintf ( fMakefile, "%s:\n",
+		          module.GetDependencyPath ().c_str () );
+
+		fprintf ( fMakefile,
+		          "\t${dlltool} --dllname %s --def %s --output-lib %s --kill-at\n\n",
+		          module.GetTargetName ().c_str (),
+		          FixupTargetFilename ( module.GetBasePath () + SSEP + module.importLibrary->definition ).c_str (),
+		          FixupTargetFilename ( module.GetDependencyPath () ).c_str () );
+	}
+
+	if (module.files.size () > 0)
+	{
+		fprintf ( fMakefile, "%s: %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+	
+		fprintf ( fMakefile,
+		          "\t${gcc} -Wl,--subsystem,native -Wl,--entry,_DriverEntry@8 -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll -o %s %s %s\n",
+		          target.c_str (),
+		          archiveFilename.c_str (),
+		          importLibraryDependencies.c_str () );
+		
+		GenerateArchiveTargetTarget ( module );
+		GenerateObjectFileTargetsTarget ( module );
+	}
+	else
+	{
+		fprintf ( fMakefile, "%s:\n\n",
+		          target.c_str ());
+		fprintf ( fMakefile, ".PHONY: %s\n\n",
+		          target.c_str ());
+	}
 }

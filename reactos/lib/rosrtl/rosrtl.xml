@@ -1,0 +1,33 @@
+<module name="rosrtl" type="staticlibrary">
+	<define name="__USE_W32API" />
+	<directory name="file">
+		<file>sparse.c</file>
+	</directory>
+	<directory name="misc">
+		<file>devmode.c</file>
+		<file>intrlck.c</file>
+		<file>logfont.c</file>
+		<file>qsort.c</file>
+ 	</directory>
+	<directory name="recmutex">
+		<file>recmutex.c</file>
+	</directory>
+	<directory name="registry">
+		<file>registry.c</file>
+ 	</directory>
+	<directory name="string">
+		<file>append.c</file>
+		<file>resstr.c</file>
+	</directory>
+	<directory name="thread">
+		<directory name="i386">
+			<file>context.c</file>
+			<file>stackexit.S</file>
+		</directory>
+		<file>create.c</file>
+		<file>exit.c</file>
+		<file>linearstack.c</file>
+		<file>priv.c</file>
+		<file>stack.c</file>
+	</directory>
+</module>

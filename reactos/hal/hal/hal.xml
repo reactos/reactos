@@ -1,0 +1,3 @@
+<module name="hal" type="kernelmodedll">
+	<importlibrary basename="hal" definition="hal.def" />
+</module>

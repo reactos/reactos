@@ -1,0 +1,30 @@
+<module name="string" type="staticlibrary">
+	<file>memccpy.c</file>
+	<file>memchr.c</file>
+	<file>memcmp.c</file>
+	<file>memcpy.c</file>
+	<file>memmove.c</file>
+	<file>memset.c</file>
+	<file>strcat.c</file>
+	<file>strchr.c</file>
+	<file>strcmp.c</file>
+	<file>strcpy.c</file>
+	<file>strcspn.c</file>
+	<file>strlen.c</file>
+	<file>strncat.c</file>
+	<file>strncmp.c</file>
+	<file>strncpy.c</file>
+	<file>strnlen.c</file>
+	<file>strrchr.c</file>
+	<file>strspn.c</file>
+	<file>wcscat.c</file>
+	<file>wcschr.c</file>
+	<file>wcscmp.c</file>
+	<file>wcscpy.c</file>
+	<file>wcslen.c</file>
+	<file>wcsncat.c</file>
+	<file>wcsncmp.c</file>
+	<file>wcsncpy.c</file>
+	<file>wcsnlen.c</file>
+	<file>wcsrchr.c</file>
+</module>

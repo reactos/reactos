@@ -12,6 +12,9 @@
 	<directory name="tools">
 		<xi:include href="tools/tools.xml" />
 	</directory>
+	<directory name="hal">
+		<xi:include href="hal/directory.xml" />
+	</directory>
 	<directory name="iface">
 		<directory name="native">
 			<xi:include href="iface/native/module.xml" />

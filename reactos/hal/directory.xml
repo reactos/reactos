@@ -1,0 +1,3 @@
+<directory name="hal">
+	<xi:include href="hal/hal.xml" />
+</directory>

@@ -48,12 +48,15 @@ private:
 	void GenerateGccModuleIncludeVariable ( const Module& module ) const;
 	std::string GenerateGccIncludeParameters ( const Module& module ) const;
 	std::string GenerateGccParameters ( const Module& module ) const;
+	std::string GenerateNasmParameters ( const Module& module ) const;
 	std::string GenerateGccCommand ( const Module& module,
 	                                 const std::string& sourceFilename,
 	                                 const std::string& cc ) const;
 	std::string GenerateGccAssemblerCommand ( const Module& module,
 	                                          const std::string& sourceFilename,
 	                                          const std::string& cc ) const;
+	std::string GenerateNasmCommand ( const Module& module,
+	                                  const std::string& sourceFilename ) const;
 	std::string GenerateCommand ( const Module& module,
 	                              const std::string& sourceFilename,
 	                              const std::string& cc ) const;
@@ -92,6 +95,16 @@ public:
 	virtual void Process ( const Module& module );
 private:
 	void GenerateStaticLibraryModuleTarget ( const Module& module );
+};
+
+
+class MingwKernelModeDLLModuleHandler : public MingwModuleHandler
+{
+public:
+	MingwKernelModeDLLModuleHandler ();
+	virtual void Process ( const Module& module );
+private:
+	void GenerateKernelModeDLLModuleTarget ( const Module& module );
 };
 
 #endif /* MINGW_MODULEHANDLER_H */

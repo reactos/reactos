@@ -65,7 +65,7 @@ MingwBackend::GenerateGlobalVariables ()
 	fprintf ( fMakefile, "host_gcc = gcc\n" );
 	fprintf ( fMakefile, "host_ar = ar\n" );
 	fprintf ( fMakefile, "host_ld = ld\n" );
-	fprintf ( fMakefile, "rm = del /y\n" );
+	fprintf ( fMakefile, "rm = del /f /q\n" );
 	fprintf ( fMakefile, "gcc = gcc\n" );
 	fprintf ( fMakefile, "ld = ld\n" );
 	fprintf ( fMakefile, "ar = ar\n" );
@@ -82,7 +82,7 @@ MingwBackend::GenerateAllTarget ()
 		Module& module = *ProjectNode.modules[i];
 		fprintf ( fMakefile,
 		          " %s",
-		          FixupTargetFilename(module.GetPath ()).c_str () );
+		          FixupTargetFilename( module.GetPath () ).c_str () );
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
 }

@@ -24,8 +24,9 @@ FixSeparator ( const string& s )
 Module::Module ( const Project& project,
                  const XMLElement& moduleNode,
                  const string& modulePath )
-	: project(project),
-	  node(moduleNode)
+	: project (project),
+	  node (moduleNode),
+	  importLibrary (NULL)
 {
 	if ( node.name != "module" )
 		throw Exception ( "internal tool error: Module created with non-<module> node" );
@@ -126,6 +127,11 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		dependencies.push_back ( new Dependency ( e, *this ) );
 		subs_invalid = true;
 	}
+	else if ( e.name == "importlibrary" )
+	{
+		importLibrary = new ImportLibrary ( e, *this );
+		subs_invalid = true;
+	}
 	if ( subs_invalid && e.subElements.size() > 0 )
 		throw InvalidBuildFileException (
 			e.location,
@@ -142,6 +148,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return BuildTool;
 	if ( attribute.value == "staticlibrary" )
 		return StaticLibrary;
+	if ( attribute.value == "kernel" )
+		return Kernel;
 	if ( attribute.value == "kernelmodedll" )
 		return KernelModeDLL;
 	throw InvalidAttributeValueException ( location,
@@ -158,6 +166,8 @@ Module::GetDefaultModuleExtension () const
 			return EXEPOSTFIX;
 		case StaticLibrary:
 			return ".a";
+		case Kernel:
+			return ".exe";
 		case KernelModeDLL:
 			return ".dll";
 	}
@@ -166,7 +176,26 @@ Module::GetDefaultModuleExtension () const
 }
 
 string
-Module::GetBasePath() const
+Module::GetTargetName () const
+{
+	return name + extension;
+}
+
+string
+Module::GetDependencyPath () const
+{
+	if ( type == KernelModeDLL )
+		return ssprintf ( "dk%snkm%slib%slib%s.a",
+		                  SSEP,
+		                  SSEP,
+		                  SSEP,
+		                  name.c_str () );
+	else
+		return GetPath ();
+}
+
+string
+Module::GetBasePath () const
 {
 	return path;
 }
@@ -174,7 +203,13 @@ Module::GetBasePath() const
 string
 Module::GetPath () const
 {
-	return path + CSEP + name + extension;
+	return path + CSEP + GetTargetName ();
+}
+
+string
+Module::GetPathWithPrefix ( const string& prefix ) const
+{
+	return path + CSEP + prefix + GetTargetName ();
 }
 
 string
@@ -370,4 +405,21 @@ Dependency::ProcessXML()
 		                                  "module '%s' depend on non-existant module '%s'",
 		                                  module.name.c_str(),
 		                                  node.value.c_str() );
+}
+
+
+ImportLibrary::ImportLibrary ( const XMLElement& _node,
+                               const Module& _module )
+	: node (_node),
+	  module (_module)
+{
+	const XMLAttribute* att = _node.GetAttribute ( "basename", false );
+	if (att != NULL)
+		basename = att->value;
+	else
+		basename = module.name;
+
+	att = _node.GetAttribute ( "definition", true );
+	assert (att);
+	definition = att->value;
 }

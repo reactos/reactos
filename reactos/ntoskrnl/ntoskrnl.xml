@@ -1,4 +1,4 @@
-<module name="ntoskrnl" type="kernelmodedll" extension=".exe">
+<module name="ntoskrnl" type="kernel">
 	<dependency>buildno</dependency>
 	<dependency>genntdll</dependency>
 	<dependency>wmc</dependency>
@@ -9,7 +9,12 @@
 	<define name="__ELF_WORD_SIZE">32</define>
 	<include base="kjs">include</include>
 	<include base="ntoskrnl">include</include>
+	<library>hal</library>
 	<library>kjs</library>
+	<library>pseh</library>
+	<library>rosrtl</library>
+	<library>rtl</library>
+	<library>string</library>
 	<invoke module="wmc">
 		<input>
 			<inputfile>ntoskrnl.mc</inputfile>
@@ -83,13 +88,11 @@
 		<file>user.c</file>
 	</directory>
 	<directory name="ex">
-		<!--
 		<if property="arch" value="i386">
 			<directory name="i386">
 				<file>interlck.c</file>
 			</directory>
 		</if>
-		-->
 		<file>btree.c</file>
 		<file>callback.c</file>
 		<file>fmutex.c</file>
@@ -315,6 +318,7 @@
 		<file>plugplay.c</file>
 		<file>profile.c</file>
 		<file>vdm.c</file>
+		<file>zw.c</file>
 	</directory>
 	<directory name="ob">
 		<file>dirobj.c</file>

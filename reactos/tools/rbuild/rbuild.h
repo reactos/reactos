@@ -30,6 +30,7 @@ class Library;
 class Invoke;
 class InvokeFile;
 class Dependency;
+class ImportLibrary;
 
 class Project
 {
@@ -63,6 +64,7 @@ enum ModuleType
 {
 	BuildTool,
 	StaticLibrary,
+	Kernel,
 	KernelModeDLL
 };
 
@@ -76,6 +78,7 @@ public:
 	std::string extension;
 	std::string path;
 	ModuleType type;
+	ImportLibrary* importLibrary;
 	std::vector<File*> files;
 	std::vector<Library*> libraries;
 	std::vector<Include*> includes;
@@ -89,8 +92,11 @@ public:
 	~Module ();
 	ModuleType GetModuleType ( const std::string& location,
 	                           const XMLAttribute& attribute );
+	std::string GetTargetName () const;
+	std::string GetDependencyPath () const;
 	std::string GetBasePath() const;
 	std::string GetPath () const;
+	std::string GetPathWithPrefix ( const std::string& prefix ) const;
 	std::string GetTargets () const;
 	std::string GetInvocationTarget ( const int index ) const;
 	void ProcessXML();
@@ -215,6 +221,21 @@ public:
 	             const Module& _module );
 
 	void ProcessXML();
+};
+
+
+class ImportLibrary
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::string basename;
+	std::string definition;
+
+	ImportLibrary ( const XMLElement& _node,
+	                const Module& module );
+
+	void ProcessXML ();
 };
 
 extern std::string

@@ -1,3 +1,15 @@
 <directory name="kjs">
-	<xi:include href="kjs/module.xml" />
+	<xi:include href="kjs/kjs.xml" />
+</directory>
+<directory name="pseh">
+	<xi:include href="pseh/pseh.xml" />
+</directory>
+<directory name="rosrtl">
+	<xi:include href="rosrtl/rosrtl.xml" />
+</directory>
+<directory name="rtl">
+	<xi:include href="rtl/rtl.xml" />
+</directory>
+<directory name="string">
+	<xi:include href="string/string.xml" />
 </directory>
