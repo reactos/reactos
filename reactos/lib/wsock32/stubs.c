@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.5 2003/09/12 17:51:48 vizzini Exp $
+/* $Id: stubs.c,v 1.6 2003/11/19 13:16:22 navaraf Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock DLL
@@ -9,8 +9,8 @@
  */
 
 #include <windows.h>
-#include <stdlib.h>
 #include <winsock2.h>
+//#include <stdlib.h>
 
 /*
  * @unimplemented
@@ -24,6 +24,22 @@ getsockopt(SOCKET Sock,
            int *OptLen)
 {
   OutputDebugStringW(L"w32sock getsockopt stub called\n");
+
+  return SOCKET_ERROR;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+setsockopt(SOCKET Sock,
+           int Level,
+           int OptName,
+           const char *OptVal,
+           int OptLen)
+{
+  OutputDebugStringW(L"w32sock setsockopt stub called\n");
 
   return SOCKET_ERROR;
 }
@@ -60,24 +76,6 @@ recvfrom(SOCKET Sock,
 
   return SOCKET_ERROR;
 }
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-setsockopt(SOCKET Sock,
-           int Level,
-           int OptName,
-           const char *OptVal,
-           int OptLen)
-{
-  OutputDebugStringW(L"w32sock setsockopt stub called\n");
-
-  return SOCKET_ERROR;
-}
-
 
 /*
  * @unimplemented
