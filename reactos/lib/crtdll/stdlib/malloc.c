@@ -38,12 +38,12 @@ void *alloca(size_t s)
 	
 	__asm__ __volatile__(
 	"mov %0, %%edx  	\n"
-	"popl %%ebp		\n"
+//	"popl %%ebp		\n"
 	"leave			\n"
 	"popl  %%ecx		\n"
         "subl  %%edx, %%esp	\n"
         "movl  %%esp, %%eax	\n"
-        "addl  $4, %%eax        \n"
+        "addl  $20, %%eax        \n"//4 bytes + 16 bytes = arguments
         "push  %%ecx		\n"
         "ret			\n"
         :
@@ -70,12 +70,12 @@ void *_alloca(size_t s)
 	
 	__asm__ __volatile__(
 	"mov %0, %%edx  	\n"
-	"popl %%ebp		\n"
+//	"popl %%ebp		\n"
 	"leave			\n"
 	"popl  %%ecx		\n"
         "subl  %%edx, %%esp	\n"
         "movl  %%esp, %%eax	\n"
-        "addl  $4, %%eax        \n"
+        "addl  $20, %%eax        \n"//4 bytes + 16 bytes = arguments
         "push  %%ecx		\n"
         "ret			\n"
         :
