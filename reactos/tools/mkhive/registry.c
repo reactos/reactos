@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: registry.c,v 1.5 2003/07/27 22:27:36 ekohl Exp $
+/* $Id: registry.c,v 1.6 2003/10/18 20:41:14 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
  * FILE:            tools/mkhive/registry.c
@@ -172,7 +172,7 @@ RegCreateKey(HKEY ParentKey,
 					KeyList);
 	  DPRINT ("SearchKey 0x%x\n", SearchKey);
 	  DPRINT ("Searching '%s'\n", SearchKey->Name);
-	  if (strncmp (SearchKey->Name, name, subkeyLength) == 0)
+	  if (strncasecmp (SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -352,7 +352,7 @@ RegOpenKey(HKEY ParentKey,
 	  DPRINT ("SearchKey 0x%x\n", SearchKey);
 	  DPRINT ("Searching '%s'\n", SearchKey->Name);
 
-	  if (strncmp(SearchKey->Name, name, subkeyLength) == 0)
+	  if (strncasecmp(SearchKey->Name, name, subkeyLength) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
@@ -594,7 +594,7 @@ RegDeleteValue(HKEY Key,
 	  Value = CONTAINING_RECORD(Ptr,
 				    VALUE,
 				    ValueList);
-	  if (strcmp(Value->Name, ValueName) == 0)
+	  if (strcasecmp(Value->Name, ValueName) == 0)
 	    break;
 
 	  Ptr = Ptr->Flink;
