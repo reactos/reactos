@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.48 2004/08/18 02:13:27 navaraf Exp $
+/* $Id: dir.c,v 1.49 2004/10/07 20:39:04 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -336,70 +336,71 @@ GetFullPathNameA (
         LPSTR   *lpFilePart
         )
 {
-        UNICODE_STRING nameW;
-        WCHAR bufferW[MAX_PATH];
-        DWORD ret, retW;
-        LPWSTR FilePart = NULL;
+    UNICODE_STRING nameW;
+    WCHAR bufferW[MAX_PATH];
+    DWORD ret;
+    LPWSTR FilePart = NULL;
 
-        DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
-               "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+if (0 == nBufferLength) __asm__("int $3\n");
+    DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
+           "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-        if (!lpFileName)
+    if (!lpFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    if (!RtlCreateUnicodeStringFromAsciiz(&nameW, (LPSTR)lpFileName))
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return 0;
+    }
+
+    if (lpFilePart)
+    {
+            *lpFilePart = NULL;
+    }
+
+    ret = GetFullPathNameW(nameW.Buffer, MAX_PATH, bufferW, &FilePart);
+
+    if (MAX_PATH < ret)
+    {
+        SetLastError(ERROR_FILENAME_EXCED_RANGE);
+        ret = 0;
+    }
+    else if (0 < ret)
+    {
+        if (ret < nBufferLength)
         {
-                SetLastError(ERROR_INVALID_PARAMETER);
-                return 0;
-        }
+            ANSI_STRING AnsiBuffer;
+            UNICODE_STRING UnicodeBuffer;
 
-        if (!RtlCreateUnicodeStringFromAsciiz(&nameW, (LPSTR)lpFileName))
-        {
-                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                return 0;
-        }
+            UnicodeBuffer.Length = wcslen(bufferW) * sizeof(WCHAR);
+            UnicodeBuffer.MaximumLength = MAX_PATH * sizeof(WCHAR);
+            UnicodeBuffer.Buffer = bufferW;
+            AnsiBuffer.MaximumLength = nBufferLength;
+            AnsiBuffer.Length = 0;
+            AnsiBuffer.Buffer = lpBuffer;
+            RtlUnicodeStringToAnsiString(&AnsiBuffer, &UnicodeBuffer, FALSE);
 
-        if (lpFilePart)
-        {
-                *lpFilePart = NULL;
-        }
-
-        retW = GetFullPathNameW(nameW.Buffer, MAX_PATH, bufferW, &FilePart);
-
-        if (!retW)
-        {
-                ret = 0;
-        }
-        else if (retW > MAX_PATH)
-        {
-                SetLastError(ERROR_FILENAME_EXCED_RANGE);
-                ret = 0;
+            if (lpFilePart && FilePart != NULL)
+            {
+                *lpFilePart = (FilePart - bufferW) + lpBuffer;
+            }
         }
         else
         {
-                ANSI_STRING AnsiBuffer;
-                UNICODE_STRING UnicodeBuffer;
-
-                UnicodeBuffer.Length = wcslen(bufferW) * sizeof(WCHAR);
-                ret = nameW.Length;
-                if (nameW.Length <= nBufferLength)
-                {
-                        UnicodeBuffer.Buffer = bufferW;
-                        AnsiBuffer.MaximumLength = nBufferLength;
-                        AnsiBuffer.Length = 0;
-                        AnsiBuffer.Buffer = lpBuffer;
-                        RtlUnicodeStringToAnsiString(&AnsiBuffer, &UnicodeBuffer, FALSE);
-
-                        if (lpFilePart && FilePart != NULL)
-                        {
-                                *lpFilePart = (FilePart - bufferW) + lpBuffer;
-                        }
-                }
+            ret++;
         }
+    }
 
-        RtlFreeUnicodeString(&nameW);
+    RtlFreeUnicodeString(&nameW);
 
-        DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
-               lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart, nameW.Length);
+    DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
+           lpBuffer, (lpFilePart == NULL) ? "NULL" : *lpFilePart, nameW.Length);
 
-        return ret;
+    return ret;
 }
 
 
@@ -415,20 +416,27 @@ GetFullPathNameW (
         LPWSTR  *lpFilePart
         )
 {
-        ULONG Length;
+    ULONG Length;
 
-        DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
-               "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
+    DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
+           "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-        Length = RtlGetFullPathName_U ((LPWSTR)lpFileName,
-                                       nBufferLength * sizeof(WCHAR),
-                                       lpBuffer,
-                                       lpFilePart);
+    Length = RtlGetFullPathName_U ((LPWSTR)lpFileName,
+                                   nBufferLength * sizeof(WCHAR),
+                                   lpBuffer,
+                                   lpFilePart);
 
-        DPRINT("lpBuffer %S lpFilePart %S Length %ld\n",
-               lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
+    DPRINT("lpBuffer %S lpFilePart %S Length %ld\n",
+           lpBuffer, (lpFilePart == NULL) ? L"NULL" : *lpFilePart, Length / sizeof(WCHAR));
 
-        return (Length / sizeof(WCHAR));
+    Length = Length / sizeof(WCHAR);
+    if (nBufferLength < Length + 1)
+    {
+        DPRINT("Adjusting Length for terminator\n");
+        Length++;
+    }
+
+    return Length;
 }
 
 
