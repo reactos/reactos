@@ -1,4 +1,4 @@
-/* $Id: console.c,v 1.2 2003/06/01 17:06:22 hbirr Exp $
+/* $Id: console.c,v 1.3 2003/08/07 09:38:54 hbirr Exp $
  *
  *  CONSOLE.C - console input/output functions.
  *
@@ -21,29 +21,6 @@
 
 
 #define OUTPUT_BUFFER_SIZE  4096
-
-
-#ifdef _DEBUG
-VOID DebugPrintf (LPTSTR szFormat, ...)
-{
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	va_list arg_ptr;
-	DWORD dwWritten;
-
-	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
-	va_end (arg_ptr);
-
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
-	           szOut,
-	           _tcslen(szOut) * sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
-#if 0
-	OutputDebugString (szOut);
-#endif
-}
-#endif /* _DEBUG */
 
 
 VOID ConInDisable (VOID)
@@ -76,10 +53,14 @@ VOID ConInDummy (VOID)
 
 #ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
-		DebugPrintf ("Invalid input handle!!!\n");
+		DebugPrintf (_T("Invalid input handle!!!\n"));
 #endif /* _DEBUG */
-
+#ifdef __REACTOSS__
+	/* ReadConsoleInputW isn't implwmented within ROS. */
+	ReadConsoleInputA (hInput, &dummy, 1, &dwRead);
+#else
 	ReadConsoleInput (hInput, &dummy, 1, &dwRead);
+#endif
 }
 
 VOID ConInFlush (VOID)
@@ -95,12 +76,17 @@ VOID ConInKey (PINPUT_RECORD lpBuffer)
 
 #ifdef _DEBUG
 	if (hInput == INVALID_HANDLE_VALUE)
-		DebugPrintf ("Invalid input handle!!!\n");
+		DebugPrintf (_T("Invalid input handle!!!\n"));
 #endif /* _DEBUG */
 
 	do
 	{
+#ifdef __REACTOS__
+		/* ReadConsoleInputW isn't implwmented within ROS. */
+		ReadConsoleInputA (hInput, lpBuffer, 1, &dwRead);
+#else
 		ReadConsoleInput (hInput, lpBuffer, 1, &dwRead);
+#endif
 		if ((lpBuffer->EventType == KEY_EVENT) &&
 			(lpBuffer->Event.KeyEvent.bKeyDown == TRUE))
 			break;
@@ -118,15 +104,24 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 
 	LPTSTR p;
 	DWORD  i;
+	PCHAR pBuf;
 
+#ifdef UNICODE
+	pBuf = (PCHAR)alloca(dwLength);
+#else
+	pBuf = lpInput;
+#endif
 	ZeroMemory (lpInput, dwLength * sizeof(TCHAR));
 	hFile = GetStdHandle (STD_INPUT_HANDLE);
 	GetConsoleMode (hFile, &dwOldMode);
 
 	SetConsoleMode (hFile, ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT);
 
-	ReadFile (hFile, lpInput, dwLength, &dwRead, NULL);
+	ReadFile (hFile, (PVOID)pBuf, dwLength, &dwRead, NULL);
 
+#ifdef _UNICODE
+	MultiByteToWideChar(CP_ACP, 0, pBuf, dwLength + 1, lpInput, dwLength + 1);
+#endif
 	p = lpInput;
 	for (i = 0; i < dwRead; i++, p++)
 	{
@@ -140,31 +135,80 @@ VOID ConInString (LPTSTR lpInput, DWORD dwLength)
 	SetConsoleMode (hFile, dwOldMode);
 }
 
-
-VOID ConOutChar (TCHAR c)
+static VOID ConChar(TCHAR c, DWORD nStdHandle)
 {
 	DWORD dwWritten;
-
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
-	           &c,
-	           sizeof(TCHAR),
+	CHAR cc;
+#ifdef _UNICODE
+	CHAR as[2];
+	WCHAR ws[2];
+	ws[0] = c;
+	ws[1] = 0;
+	WideCharToMultiByte(CP_ACP, 0, ws, 2, as, 2, NULL, NULL);
+	cc = as[0];
+#else
+	cc = c;
+#endif
+	WriteFile (GetStdHandle (nStdHandle),
+	           &cc,
+	           1,
 	           &dwWritten,
 	           NULL);
 }
 
+VOID ConOutChar (TCHAR c)
+{
+	ConChar(c, STD_OUTPUT_HANDLE);
+}
+
+VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
+{
+	DWORD dwWritten;
+	PCHAR pBuf;
+	INT len;
+
+	len = _tcslen(szText);
+#ifdef _UNICODE
+	pBuf = alloca(len + 1);
+	len = WideCharToMultiByte(CP_ACP, 0, szText, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
+	pBuf = szText;
+#endif
+	WriteFile (GetStdHandle (nStdHandle),
+	           pBuf,
+	           len,
+	           &dwWritten,
+	           NULL);
+	WriteFile (GetStdHandle (nStdHandle),
+	           "\n",
+	           1,
+	           &dwWritten,
+	           NULL);
+}
 
 VOID ConOutPuts (LPTSTR szText)
 {
+	ConPuts(szText, STD_OUTPUT_HANDLE);
+}
+
+
+VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
+{
+	INT len;
+	PCHAR pBuf;
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
 	DWORD dwWritten;
 
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
-	           szText,
-	           _tcslen(szText) * sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
-	           _T("\n"),
-	           sizeof(TCHAR),
+	len = _vstprintf (szOut, szFormat, arg_ptr);
+#ifdef _UNICODE
+	pBuf = alloca(len + 1);
+	len = WideCharToMultiByte(CP_ACP, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
+	pBuf = szOut;
+#endif
+	WriteFile (GetStdHandle (nStdHandle),
+	           pBuf,
+	           len,
 	           &dwWritten,
 	           NULL);
 }
@@ -172,68 +216,51 @@ VOID ConOutPuts (LPTSTR szText)
 
 VOID ConOutPrintf (LPTSTR szFormat, ...)
 {
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	DWORD dwWritten;
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
+	ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
 	va_end (arg_ptr);
-
-	WriteFile (GetStdHandle (STD_OUTPUT_HANDLE),
-	           szOut,
-	           _tcslen(szOut) * sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
 }
-
 
 VOID ConErrChar (TCHAR c)
 {
-	DWORD dwWritten;
-
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
-	           &c,
-	           sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
+	ConChar(c, STD_ERROR_HANDLE);
 }
 
 
 VOID ConErrPuts (LPTSTR szText)
 {
-	DWORD dwWritten;
-
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
-	           szText,
-	           _tcslen(szText) * sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
-	           _T ("\n"),
-	           sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
+	ConPuts(szText, STD_ERROR_HANDLE);
 }
 
 
 VOID ConErrPrintf (LPTSTR szFormat, ...)
 {
-	TCHAR szOut[OUTPUT_BUFFER_SIZE];
-	DWORD dwWritten;
 	va_list arg_ptr;
 
 	va_start (arg_ptr, szFormat);
-	_vstprintf (szOut, szFormat, arg_ptr);
+	ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
 	va_end (arg_ptr);
-
-	WriteFile (GetStdHandle (STD_ERROR_HANDLE),
-	           szOut,
-	           _tcslen(szOut) * sizeof(TCHAR),
-	           &dwWritten,
-	           NULL);
 }
 
+#ifdef _DEBUG
+VOID DebugPrintf (LPTSTR szFormat, ...)
+{
+	va_list arg_ptr;
+
+	va_start (arg_ptr, szFormat);
+	ConPrintf(szFormat, arg_ptr, STD_ERROR_HANDLE);
+	va_end (arg_ptr);
+#if 0
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
+	va_start (arg_ptr, szFormat);
+	_vstprintf (szOut, szFormat, arg_ptr);
+	OutputDebugString (szOut);
+	va_end (arg_ptr);
+#endif
+}
+#endif /* _DEBUG */
 
 VOID SetCursorXY (SHORT x, SHORT y)
 {
