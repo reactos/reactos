@@ -1,11 +1,11 @@
-/* $Id: stubs.c,v 1.42 2003/01/15 21:24:35 chorns Exp $
+/* $Id: stubs.c,v 1.43 2003/01/21 20:50:51 robd Exp $
  *
  * KERNEL32.DLL stubs (unimplemented functions)
  * Remove from this file, if you implement them.
  */
 #include <k32.h>
 
-#define _OLE2NLS_IN_BUILD_
+//#define _OLE2NLS_IN_BUILD_
 
 BOOL
 STDCALL
