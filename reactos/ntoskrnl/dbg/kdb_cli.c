@@ -873,7 +873,8 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
    PEPROCESS Process = NULL;
    PULONG Esp;
    PULONG Ebp;
-   ULONG Eip, ul;
+   ULONG Eip;
+   ULONG ul = 0;
    PCHAR State, pend, str1, str2;
    STATIC CONST PCHAR ThreadStateToString[THREAD_STATE_MAX] =
                                           { "Initialized", "Ready", "Running",
@@ -1224,14 +1225,15 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
       }
       KdbpPrint("IDT Base: 0x%08x  Limit: 0x%04x\n", Reg.Base, Reg.Limit);
       KdbpPrint("  Idx  Type        Seg. Sel.  Offset      DPL\n");
-      for ( ; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
+      for (i = 0; (i + sizeof(SegDesc) - 1) <= Reg.Limit; i += 8)
       {
          if (!NT_SUCCESS(KdbpSafeReadMemory(SegDesc, (PVOID)(Reg.Base + i), sizeof(SegDesc))))
          {
             KdbpPrint("Couldn't access memory at 0x%08x!\n", Reg.Base + i);
             return TRUE;
          }
-         
+
+         Dpl = ((SegDesc[1] >> 13) & 3);
          if ((SegDesc[1] & 0x1f00) == 0x0500)        /* Task gate */
             SegType = "TASKGATE";
          else if ((SegDesc[1] & 0x1fe0) == 0x0e00)   /* 32 bit Interrupt gate */
@@ -1242,6 +1244,8 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
             SegType = "TRAPGATE32";
          else if ((SegDesc[1] & 0x1fe0) == 0x0700)   /* 16 bit Trap gate */
             SegType = "TRAPGATE16";
+         else
+            SegType = "UNKNOWN";
 
          if ((SegDesc[1] & (1 << 15)) == 0) /* not present */
          {
@@ -1673,7 +1677,7 @@ KdbpPrint(
    STATIC CHAR Buffer[4096];
    STATIC BOOLEAN TerminalInitialized = FALSE;
    STATIC BOOLEAN TerminalReportsSize = TRUE;
-   CHAR c;
+   CHAR c = '\0';
    PCHAR p;
    INT Length;
    INT i;
