@@ -81,7 +81,7 @@ BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABL
 	MASTER_BOOT_RECORD		MasterBootRecord;
 	PARTITION_TABLE_ENTRY	ExtendedPartitionTableEntry;
 	U32						ExtendedPartitionNumber;
-	U32						ExtendedPartitionRelativeOffset;
+	U32						ExtendedPartitionOffset;
 	U32						Index;
 
 	// Read master boot record
@@ -113,7 +113,7 @@ BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABL
 		// Set the initial relative starting sector to 0
 		// This is because extended partition starting
 		// sectors a numbered relative to their parent
-		ExtendedPartitionRelativeOffset = 0;
+		ExtendedPartitionOffset = 0;
 
 		for (Index=0; Index<=ExtendedPartitionNumber; Index++)
 		{
@@ -124,10 +124,14 @@ BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABL
 			}
 
 			// Adjust the relative starting sector of the partition
-			ExtendedPartitionRelativeOffset += ExtendedPartitionTableEntry.SectorCountBeforePartition;
-
+			ExtendedPartitionTableEntry.SectorCountBeforePartition += ExtendedPartitionOffset;
+			if (ExtendedPartitionOffset == 0)
+			{
+				// Set the start of the parrent extended partition
+				ExtendedPartitionOffset = ExtendedPartitionTableEntry.SectorCountBeforePartition;
+			}
 			// Read the partition boot record
-			if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionRelativeOffset, &MasterBootRecord))
+    			if (!DiskReadBootRecord(DriveNumber, ExtendedPartitionTableEntry.SectorCountBeforePartition, &MasterBootRecord))
 			{
 				return FALSE;
 			}
@@ -139,7 +143,7 @@ BOOL DiskGetPartitionEntry(U32 DriveNumber, U32 PartitionNumber, PPARTITION_TABL
 			}
 
 			// Now correct the start sector of the partition
-			PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionRelativeOffset;
+			PartitionTableEntry->SectorCountBeforePartition += ExtendedPartitionTableEntry.SectorCountBeforePartition;
 		}
 
 		// When we get here we should have the correct entry
