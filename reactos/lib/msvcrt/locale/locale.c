@@ -10,14 +10,16 @@ const char *_current_locale;
 int parse_locale(char *locale, char *lang, char *country, char *code_page);
 
 /*
- * @implemented
+ * @unimplemented
  */
 char *setlocale(int category, const char *locale)
 {
 	char lang[100];
 	char country[100];
 	char code_page[100];
-	parse_locale((char *)locale,lang,country,code_page);	
+	if (NULL != locale) {
+		parse_locale((char *)locale,lang,country,code_page);
+	}
 
 	//printf("%s %s %s %s\n",locale,lang,country,code_page);
 
