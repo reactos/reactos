@@ -276,7 +276,7 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
 {
    MEMORY_AREA* MemoryArea;
    ULONG i;
-   ULONG PhysicalAddr;
+   LARGE_INTEGER PhysicalAddr;
    
    DPRINT("MmFreeMemoryArea(AddressSpace %x, BaseAddress %x, Length %x,"
 	   "FreePages %d)\n",AddressSpace,BaseAddress,Length,FreePages);
@@ -292,12 +292,11 @@ NTSTATUS MmFreeMemoryArea(PMADDRESS_SPACE AddressSpace,
      {
 	for (i=0;i<=(MemoryArea->Length/PAGESIZE);i++)
 	  {
-	     PhysicalAddr = MmGetPhysicalAddressForProcess(AddressSpace->Process,
-							   MemoryArea->BaseAddress + 
-							   (i*PAGESIZE));
-	     if (PhysicalAddr != 0)
+	     PhysicalAddr = MmGetPhysicalAddress(MemoryArea->BaseAddress + 
+						 (i*PAGESIZE));
+	     if (PhysicalAddr.u.LowPart != 0)
 	       {
-		  MmDereferencePage((PVOID)PhysicalAddr);
+		  MmDereferencePage((PVOID)(ULONG)(PhysicalAddr.u.LowPart));
 	       }
 	  }
      }
