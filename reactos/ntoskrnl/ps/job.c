@@ -90,6 +90,15 @@ PspAssignProcessToJob(PEPROCESS Process,
   return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS
+PspTerminateJobObject(PEJOB Job,
+                      KPROCESSOR_MODE AccessMode,
+                      NTSTATUS ExitStatus)
+{
+  DPRINT("PspTerminateJobObject() is unimplemented!\n");
+  return STATUS_NOT_IMPLEMENTED;
+}
+
 
 /*
  * @unimplemented
@@ -434,8 +443,27 @@ STDCALL
 NtTerminateJobObject(HANDLE JobHandle,
                      NTSTATUS ExitStatus)
 {
-  UNIMPLEMENTED;
-  return STATUS_NOT_IMPLEMENTED;
+  KPROCESSOR_MODE PreviousMode;
+  PEJOB Job;
+  NTSTATUS Status;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  Status = ObReferenceObjectByHandle(JobHandle,
+                                     JOB_OBJECT_TERMINATE,
+                                     PsJobType,
+                                     PreviousMode,
+                                     (PVOID*)&Job,
+                                     NULL);
+  if(NT_SUCCESS(Status))
+  {
+    Status = PspTerminateJobObject(Job,
+                                   PreviousMode,
+                                   ExitStatus);
+    ObDereferenceObject(Job);
+  }
+  
+  return Status;
 }
 
 
