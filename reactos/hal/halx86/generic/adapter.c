@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.1 2004/12/03 20:10:43 gvg Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -203,7 +203,7 @@ HalpAllocateAdapterEx(
 	/* Check if this is the Master Adapter, in which case we need to allocate the bitmap */
 	if (IsMaster) {
 		/* Size due to the Bitmap + Bytes in the Bitmap Buffer (8 bytes, 64 bits)*/
-		BitmapSize = sizeof(RTL_BITMAP) + AllowedMapRegisters / 8;
+		BitmapSize = sizeof(RTL_BITMAP) + (AllowedMapRegisters + 7) / 8;
 		
 		/* We will put the Bitmap Buffer after the Adapter Object for simplicity */
 		ObjectSize = sizeof(ADAPTER_OBJECT) + BitmapSize;
