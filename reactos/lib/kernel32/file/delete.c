@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.9 2001/08/14 20:50:47 hbirr Exp $
+/* $Id: delete.c,v 1.10 2002/04/27 19:13:41 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -93,9 +93,11 @@ DeleteFileW (
 	                       FILE_ATTRIBUTE_NORMAL,
 	                       0,
 	                       FILE_OPEN,
-                           FILE_NON_DIRECTORY_FILE,
+                               FILE_NON_DIRECTORY_FILE,
 	                       NULL,
 	                       0);
+
+	RtlFreeUnicodeString(&NtPathU);
 
 	if (!NT_SUCCESS(Status))
 	{
