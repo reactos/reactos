@@ -180,7 +180,7 @@ void create_root_entry(root_entry_t *root, char *fname,
   root->time = (((localt->tm_hour & 0x001f) << 11) |
                 ((localt->tm_min & 0x003f) << 5) |
                 ((localt->tm_sec / 2) & 0x001f));
-  root->date = ((((localt->tm_year - 1980) & 0x007f) << 9) |
+  root->date = ((((localt->tm_year - 80) & 0x007f) << 9) |
                 (((localt->tm_mon + 1) & 0x000f) << 5) |
                  (localt->tm_mday & 0x001f));
   root->cluster = cluster;
