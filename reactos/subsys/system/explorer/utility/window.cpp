@@ -492,10 +492,10 @@ int Window::MessageLoop()
 			try {
 				DispatchMessage(&msg);
 			} catch(COMException& e) {
-				HandleException(e, g_Globals._hMainWnd);
+				HandleException(e, 0);
 			}
 		} catch(COMException& e) {
-			HandleException(e, g_Globals._hMainWnd);
+			HandleException(e, 0);
 		}
 	}
 

@@ -64,7 +64,12 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 
 void HandleException(COMException& e, HWND hwnd)
 {
+	SetLastError(0);
+
 	MessageBox(hwnd, e.ErrorMessage(), TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
+
+	if (GetLastError() == ERROR_INVALID_WINDOW_HANDLE)
+		MessageBox(0, e.ErrorMessage(), TEXT("ShellClasses COM Exception"), MB_ICONHAND|MB_OK);
 }
 
 

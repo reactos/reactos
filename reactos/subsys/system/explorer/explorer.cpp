@@ -132,7 +132,7 @@ int explorer_main(HINSTANCE hInstance, HWND hwndDesktop, int cmdshow)
 	try {
 		InitInstance(hInstance);
 	} catch(COMException& e) {
-		HandleException(e, g_Globals._hMainWnd);
+		HandleException(e, hwndDesktop);
 		return -1;
 	}
 

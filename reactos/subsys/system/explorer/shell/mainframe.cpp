@@ -432,6 +432,10 @@ int MainFrame::Command(int id, int code)
 		ShellAbout(_hwnd, ResString(IDS_TITLE), NULL, 0);
 		break;
 
+	  case ID_EXPLORER_FAQ:
+		launch_file(_hwnd, TEXT("http://www.sky.franken.de/explorer/"), SW_SHOWNORMAL);
+		break;
+
 	  default:
 		/*TODO: if (wParam >= PM_FIRST_LANGUAGE && wParam <= PM_LAST_LANGUAGE)
 			STRING_SelectLanguageByNumber(wParam - PM_FIRST_LANGUAGE);

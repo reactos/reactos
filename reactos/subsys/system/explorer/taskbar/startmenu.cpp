@@ -96,24 +96,28 @@ LRESULT	StartMenu::Init(LPCREATESTRUCT pcs)
 {
 	WaitCursor wait;
 
-	AddEntries();
+	try {
+		AddEntries();
 
-	if (super::Init(pcs))
-		return 1;
+		if (super::Init(pcs))
+			return 1;
 
-	 // create buttons for registered entries in _entries
-	if (_entries.empty()) {
-		AddButton(ResString(IDS_EMPTY), 0, false, (UINT)-1, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW|WS_DISABLED);
-	} else {
-		for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
-			const StartMenuEntry& sme = it->second;
-			bool hasSubmenu = false;
+		 // create buttons for registered entries in _entries
+		if (_entries.empty()) {
+			AddButton(ResString(IDS_EMPTY), 0, false, (UINT)-1, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW|WS_DISABLED);
+		} else {
+			for(ShellEntryMap::const_iterator it=_entries.begin(); it!=_entries.end(); ++it) {
+				const StartMenuEntry& sme = it->second;
+				bool hasSubmenu = false;
 
-			if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
-				hasSubmenu = true;
+				if (sme._entry && (sme._entry->_data.dwFileAttributes&FILE_ATTRIBUTE_DIRECTORY))
+					hasSubmenu = true;
 
-			AddButton(sme._title, sme._hIcon, hasSubmenu, it->first);
+				AddButton(sme._title, sme._hIcon, hasSubmenu, it->first);
+			}
 		}
+	} catch(COMException& e) {
+		HandleException(e, pcs->hwndParent);	// destroys the start menu window while switching focus
 	}
 
 	return 0;
@@ -125,11 +129,7 @@ void StartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		try {
-			dir.smart_scan();
-		} catch(COMException& e) {
-			HandleException(e, g_Globals._hMainWnd);
-		}
+		dir.smart_scan();
 
 		AddShellEntries(dir, -1, smd._subfolders);
 	}
@@ -626,10 +626,10 @@ void StartMenuRoot::TrackStartmenu()
 			try {
 				DispatchMessage(&msg);
 			} catch(COMException& e) {
-				HandleException(e, g_Globals._hMainWnd);
+				HandleException(e, _hwnd);
 			}
 		} catch(COMException& e) {
-			HandleException(e, g_Globals._hMainWnd);
+			HandleException(e, _hwnd);
 		}
 	}
 }
@@ -858,11 +858,7 @@ void RecentStartMenu::AddEntries()
 		StartMenuDirectory& smd = *it;
 		ShellDirectory& dir = smd._dir;
 
-		try {
-			dir.smart_scan();
-		} catch(COMException& e) {
-			HandleException(e, g_Globals._hMainWnd);
-		}
+		dir.smart_scan();
 
 		dir.sort_directory(SORT_DATE);
 		AddShellEntries(dir, 16, smd._subfolders);	//TODO: read max. count of entries from registry
