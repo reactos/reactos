@@ -474,7 +474,7 @@ ifeq ($(TARGET_TYPE),winedll)
   MK_SDKLIBS :=
   MK_CFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D_STDDEF_H -I$(PATH_TO_TOP)/include/wine
   MK_CPPFLAGS := -D__USE_W32API -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x501 -DWINVER=0x501 -D__need_offsetof -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/include/wine
-  MK_RCFLAGS := --define __USE_W32API --include-dir $(PATH_TO_TOP)/include/wine
+  MK_PREPROC_FOR_RC_FLAGS := -xc -E -DRC_INVOKED -D__USE_W32API -I$(PATH_TO_TOP)/include/wine -I$(PATH_TO_TOP)/include -I$(PATH_TO_TOP)/w32api/include
   MK_IMPLIB := yes
   MK_IMPLIBONLY := no
   MK_IMPLIBDEFPATH := $(SDK_PATH_LIB)
@@ -931,7 +931,7 @@ clean: $(MK_REGTESTS_CLEAN) $(SUBDIRS:%=%_clean)
 	- $(RM) *.o $(MK_PCHCLEAN) $(MK_BASENAME).a $(MK_RESOURCE) \
 	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) $(MK_BASENAME).map \
 	  junk.tmp base.tmp temp.exp $(MK_RC_BINARIES) $(MK_SPECDEF) $(MK_STUBS_SRC) \
-	  $(MK_GENERATED_MAKEFILE) $(TARGET_CLEAN)
+	  $(MK_RES_TEMPS) $(MK_GENERATED_MAKEFILE) $(TARGET_CLEAN)
 
 ifneq ($(TARGET_HEADERS),)
 $(TARGET_OBJECTS): $(TARGET_HEADERS)
@@ -1007,6 +1007,8 @@ $(MK_RC_BINARIES): $(TARGET_RC_BINSRC)
 	$(BIN2RES) -f -o $@ $(TARGET_RC_BINSRC)
 
 $(MK_RESOURCE): $(MK_RC_BINARIES)
+
+MK_RES_TEMPS = $(MK_RESOURCE:.coff=.rci) $(MK_RESOURCE:.coff=.res)
 endif
 
 REGTEST_TESTS = $(wildcard tests/tests/*.c)
@@ -1091,9 +1093,19 @@ endif
 %.o: %.asm
 	$(HALFVERBOSEECHO) [NASM]    $<
 	$(NASM_CMD) $(TARGET_NFLAGS) $< -o $@
+ifeq ($(TARGET_TYPE),winedll)
+%.coff: %.rc
+	$(HALFVERBOSEECHO) [RC]      $<
+	$(CC) $(MK_PREPROC_FOR_RC_FLAGS) $< > $(<:.rc=.rci)
+	$(WRC) $(<:.rc=.rci) $(<:.rc=.res)
+	$(RM) $(<:.rc=.rci)
+	$(RC) $(<:.rc=.res) -o $@
+	$(RM) $(<:.rc=.res)
+else
 %.coff: %.rc
 	$(HALFVERBOSEECHO) [RC]      $<
 	$(RC) $(TARGET_RCFLAGS) $< -o $@
+endif
 %.spec.def: %.spec
 	$(HALFVERBOSEECHO) [DEF]     $<
 	$(WINEBUILD) $(DEFS) -o $@ --def $<

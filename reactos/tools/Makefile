@@ -20,7 +20,7 @@ TOOLS = \
 CLEAN_FILES = $(TOOLS)
 
 all: $(TOOLS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
-	wine2ros_target pipetools_target winebuild_target bin2res_target
+	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target
 
 buildno$(EXE_POSTFIX): buildno.c ../include/reactos/version.h
 	@$(HOST_CC) $(CFLAGS) -o buildno$(EXE_POSTFIX) buildno.c
@@ -130,11 +130,15 @@ winebuild_target:
 bin2res_target:
 	$(MAKE) --silent -C bin2res bin2res$(EXE_POSTFIX)
 
-.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target
+wrc_target:
+	$(MAKE) --silent -C wrc wrc$(EXE_POSTFIX)
+
+.PHONY: wmc_target cdmake_target mkhive_target rgenstat_target pipetools_target wrc_target
 
 
 ifeq ($(HOST),mingw32-linux)
 clean:
+	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
 	$(MAKE) --silent -C mkhive clean
@@ -150,6 +154,7 @@ clean:
 endif
 ifeq ($(HOST),mingw32-windows)
 clean:
+	$(MAKE) --silent -C wrc clean
 	$(MAKE) --silent -C cabman clean
 	$(MAKE) --silent -C cdmake clean
 	$(MAKE) --silent -C mkhive clean
