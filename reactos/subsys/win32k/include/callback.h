@@ -47,6 +47,6 @@ HMENU STDCALL
 IntLoadSysMenuTemplate();
 
 BOOL STDCALL
-IntLoadDefaultCursors();
+IntLoadDefaultCursors(BOOL SetDefault);
 
 #endif /* _WIN32K_CALLBACK_H */

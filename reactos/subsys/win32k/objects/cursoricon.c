@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.21 2003/11/20 21:21:29 navaraf Exp $ */
+/* $Id: cursoricon.c,v 1.22 2003/11/21 16:36:26 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -25,7 +25,6 @@
 #include <win32k/win32k.h>
 #include <windows.h>
 #include <stdlib.h>
-#include <win32k/cursoricon.h>
 #include <win32k/bitmaps.h>
 #include <win32k/dc.h>
 #include <include/winsta.h>
@@ -37,7 +36,7 @@
 #include <include/surface.h>
 #include <include/palette.h>
 #include <include/eng.h>
-#include <include/inteng.h>
+#include <include/callback.h>
 #include "include/object.h"
 #include <internal/safe.h>
 
@@ -62,6 +61,20 @@ IntCopyBitmap(HBITMAP bmp)
   }
   
   return ret;
+}
+
+LPARAM FASTCALL
+IntSendSetCursorMessage(PWINDOW_OBJECT Window, USHORT Msg, USHORT HitTest)
+{
+  /* FIXME - high-order word of lParam is 0 if we're in menu mode */
+  if(Window)
+    return IntSendMessage(Window->Self, WM_SETCURSOR, (WPARAM)Window->Self, MAKELPARAM(HitTest, Msg), FALSE);
+  else
+  {
+    /* set default cursor */
+    IntLoadDefaultCursors(TRUE);
+    return 1;
+  }
 }
 
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursor.c,v 1.15 2003/11/18 19:59:51 weiden Exp $
+/* $Id: cursor.c,v 1.16 2003/11/21 16:36:26 weiden Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/cursor.c
@@ -42,10 +42,20 @@ CopyBitmap(HBITMAP bmp);
 NTSTATUS STDCALL
 User32SetupDefaultCursors(PVOID Arguments, ULONG ArgumentLength)
 {
+  BOOL *DefaultCursor = (BOOL*)Arguments;
   LRESULT Result = TRUE;
-  /* FIXME load system cursor scheme */
-  SetCursor(0);
-  SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+  
+  if(*DefaultCursor)
+  {
+    /* set default cursor */
+    SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+  }
+  else
+  {
+    /* FIXME load system cursor scheme */
+    SetCursor(0);
+    SetCursor(LoadCursorW(0, (LPCWSTR)IDC_ARROW));
+  }
   
   return(ZwCallbackReturn(&Result, sizeof(LRESULT), STATUS_SUCCESS));
 }

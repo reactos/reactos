@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.43 2003/11/17 02:12:52 hyperion Exp $
+/* $Id: winsta.c,v 1.44 2003/11/21 16:36:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1027,7 +1027,7 @@ IntInitializeDesktopGraphics(VOID)
   GDIOBJ_MarkObjectGlobal(ScreenDeviceContext);
   EnableMouse(ScreenDeviceContext);
   /* not the best place to load the cursors but it's good for now */
-  IntLoadDefaultCursors();
+  IntLoadDefaultCursors(FALSE);
   NtUserAcquireOrReleaseInputOwnership(FALSE);
 }
 

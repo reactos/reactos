@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.45 2003/11/16 12:36:24 gvg Exp $
+/* $Id: mouse.c,v 1.46 2003/11/21 16:36:26 weiden Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -36,6 +36,7 @@
 #include "include/msgqueue.h"
 #include "include/object.h"
 #include "include/winsta.h"
+#include "include/window.h"
 #include "include/cursoricon.h"
 #include "include/callback.h"
 #include <include/mouse.h>
