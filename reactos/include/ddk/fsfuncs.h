@@ -368,30 +368,22 @@ FsRtlInsertPerStreamContext (
     IN PFSRTL_PER_STREAM_CONTEXT Ptr
     );
 
-BOOLEAN
-STDCALL
-FsRtlIsDbcsInExpression (
-	DWORD	Unknown0,
-	DWORD	Unknown1
-	);
-BOOLEAN
-STDCALL
-FsRtlIsFatDbcsLegal (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
-BOOLEAN
-STDCALL
-FsRtlIsHpfsDbcsLegal (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2,
-	DWORD	Unknown3,
-	DWORD	Unknown4
-	);
+BOOLEAN STDCALL
+FsRtlIsDbcsInExpression(IN PANSI_STRING Expression,
+			IN PANSI_STRING Name);
+
+BOOLEAN STDCALL
+FsRtlIsFatDbcsLegal(IN ANSI_STRING Name,
+		    IN BOOLEAN Unknown2,
+		    IN BOOLEAN Unknown3,
+		    IN BOOLEAN Unknown4);
+
+BOOLEAN STDCALL
+FsRtlIsHpfsDbcsLegal(IN ANSI_STRING Name,
+		     IN BOOLEAN Unknown2,
+		     IN BOOLEAN Unknown3,
+		     IN BOOLEAN Unknown4);
+
 BOOLEAN
 STDCALL
 FsRtlIsNameInExpression (
@@ -710,17 +702,17 @@ FsRtlNumberOfRunsInMcb (IN PMCB Mcb);
 VOID
 STDCALL
 FsRtlPostPagingFileStackOverflow (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	);
 
 VOID
 STDCALL
 FsRtlPostStackOverflow (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	);
 
 BOOLEAN
@@ -807,9 +799,9 @@ FsRtlSplitLargeMcb(IN PLARGE_MCB Mcb,
 NTSTATUS
 STDCALL
 FsRtlSyncVolumes (
-	DWORD	Unknown0,
-	DWORD	Unknown1,
-	DWORD	Unknown2
+	ULONG	Unknown0,
+	ULONG	Unknown1,
+	ULONG	Unknown2
 	);
 
 VOID
