@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.51 2003/05/12 19:47:53 ekohl Exp $
+/* $Id: startup.c,v 1.52 2003/05/21 16:10:12 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -55,6 +55,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    PPEB Peb;
    PLDR_MODULE NtModule;  // ntdll
    PLDR_MODULE ExeModule; // executable
+   NLSTABLEINFO NlsTable;
    WCHAR FullNtDllPath[MAX_PATH];
 
    DPRINT("LdrInitializeThunk()\n");
@@ -94,11 +95,6 @@ __true_LdrInitializeThunk (ULONG Unknown1,
         ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
      }
 
-   Peb->OSMajorVersion = 4;
-   Peb->OSMinorVersion = 0;
-   Peb->OSBuildNumber = 0;
-   Peb->OSPlatformId = VER_PLATFORM_WIN32_NT;
-
    NtGlobalFlag = Peb->NtGlobalFlag;
 
    /*  If MZ header exists  */
@@ -115,14 +111,12 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    /* normalize process parameters */
    RtlNormalizeProcessParams (Peb->ProcessParameters);
 
-#if 0
-   /* initialize NLS data */
+   /* Initialize NLS data */
    RtlInitNlsTables (Peb->AnsiCodePageData,
                      Peb->OemCodePageData,
                      Peb->UnicodeCaseTableData,
-                     &TranslationTable);
-   RtlResetRtlTranslations (&TranslationTable);
-#endif
+                     &NlsTable);
+   RtlResetRtlTranslations (&NlsTable);
 
    NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
 

@@ -1,4 +1,4 @@
-/* $Id: unicode.c,v 1.26 2003/03/26 15:16:50 ekohl Exp $
+/* $Id: unicode.c,v 1.27 2003/05/21 16:11:02 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,43 +17,45 @@
 #define NDEBUG
 #include <ntdll/ntdll.h>
 
+
+extern PUSHORT NlsUnicodeUpcaseTable;
+extern PUSHORT NlsUnicodeLowercaseTable;
+
+WCHAR RtlDowncaseUnicodeChar(IN WCHAR Source);
+
 /* FUNCTIONS *****************************************************************/
 
-WCHAR
-STDCALL
-RtlAnsiCharToUnicodeChar(
-	IN	CHAR	AnsiChar)
+WCHAR STDCALL
+RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar)
 {
-	ULONG Size;
-	WCHAR UnicodeChar;
+  ULONG Size;
+  WCHAR UnicodeChar;
 
-	Size = 1;
+  Size = 1;
 #if 0
-	Size = (NlsLeadByteInfo[AnsiChar] == 0) ? 1 : 2;
+  Size = (NlsLeadByteInfo[AnsiChar] == 0) ? 1 : 2;
 #endif
 
-	RtlMultiByteToUnicodeN (&UnicodeChar,
-	                        sizeof(WCHAR),
-	                        NULL,
-	                        &AnsiChar,
-	                        Size);
+  RtlMultiByteToUnicodeN (&UnicodeChar,
+			  sizeof(WCHAR),
+			  NULL,
+			  &AnsiChar,
+			  Size);
 
-	return UnicodeChar;
+  return UnicodeChar;
 }
 
 
-ULONG
-STDCALL
-RtlAnsiStringToUnicodeSize(
-	IN	PANSI_STRING	AnsiString)
+ULONG STDCALL
+RtlAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 {
-	ULONG Size;
+  ULONG Size;
 
-	RtlMultiByteToUnicodeSize (&Size,
-	                           AnsiString->Buffer,
-	                           AnsiString->Length);
+  RtlMultiByteToUnicodeSize (&Size,
+			     AnsiString->Buffer,
+			     AnsiString->Length);
 
-	return Size;
+  return Size;
 }
 
 
@@ -520,8 +522,7 @@ RtlDowncaseUnicodeString(
 		}
 		else
 		{
-			/* FIXME: characters above 'Z' */
-			*Dest = *Src;
+			*Dest = RtlDowncaseUnicodeChar(*Src);
 		}
 
 		Dest++;
@@ -1446,22 +1447,6 @@ RtlUnicodeStringToOemString(
 }
 
 
-WCHAR
-STDCALL
-RtlUpcaseUnicodeChar(IN	WCHAR	Source)
-{
-	if (Source < L'a')
-		return Source;
-
-	if (Source <= L'z')
-		return (Source - (L'a' - L'A'));
-
-	/* FIXME: characters above 'z' */
-
-	return Source;
-}
-
-
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeString(
@@ -1701,49 +1686,9 @@ RtlUpcaseUnicodeStringToOemString (
 }
 
 
-CHAR
-STDCALL
-RtlUpperChar (
-	IN	CHAR	Source
-	)
-{
-	WCHAR	Unicode;
-	CHAR	Destination;
-
-	if (NlsMbCodePageTag == FALSE)
-	{
-		/* single-byte code page */
-		/* ansi->unicode */
-		Unicode = (WCHAR)Source;
-#if 0
-		Unicode = NlsAnsiToUnicodeData[Source];
-#endif
-
-		/* upcase conversion */
-		Unicode = RtlUpcaseUnicodeChar (Unicode);
-
-		/* unicode -> ansi */
-		Destination = (CHAR)Unicode;
-#if 0
-		Destination = NlsUnicodeToAnsiData[Unicode];
-#endif
-	}
-	else
-	{
-		/* single-byte code page */
-		/* FIXME: implement the multi-byte stuff!! */
-		Destination = Source;
-	}
-
-	return Destination;
-}
-
-
-VOID
-STDCALL
-RtlUpperString(
-	IN OUT	PSTRING	DestinationString,
-	IN	PSTRING	SourceString)
+VOID STDCALL
+RtlUpperString (IN OUT PSTRING DestinationString,
+		IN PSTRING SourceString)
 {
 	ULONG Length;
 	ULONG i;
@@ -1766,35 +1711,31 @@ RtlUpperString(
 }
 
 
-ULONG
-STDCALL
-RtlxAnsiStringToUnicodeSize(IN	PANSI_STRING	AnsiString)
+ULONG STDCALL
+RtlxAnsiStringToUnicodeSize (IN PANSI_STRING AnsiString)
 {
-	return RtlAnsiStringToUnicodeSize(AnsiString);
+  return RtlAnsiStringToUnicodeSize (AnsiString);
 }
 
 
-ULONG
-STDCALL
-RtlxOemStringToUnicodeSize(IN	POEM_STRING	OemString)
+ULONG STDCALL
+RtlxOemStringToUnicodeSize (IN POEM_STRING OemString)
 {
-	return RtlAnsiStringToUnicodeSize((PANSI_STRING)OemString);
+  return RtlAnsiStringToUnicodeSize ((PANSI_STRING)OemString);
 }
 
 
-ULONG
-STDCALL
-RtlxUnicodeStringToAnsiSize(IN	PUNICODE_STRING	UnicodeString)
+ULONG STDCALL
+RtlxUnicodeStringToAnsiSize (IN PUNICODE_STRING UnicodeString)
 {
-	return RtlUnicodeStringToAnsiSize(UnicodeString);
+  return RtlUnicodeStringToAnsiSize (UnicodeString);
 }
 
 
-ULONG
-STDCALL
-RtlxUnicodeStringToOemSize(IN	PUNICODE_STRING	UnicodeString)
+ULONG STDCALL
+RtlxUnicodeStringToOemSize (IN PUNICODE_STRING UnicodeString)
 {
-	return RtlUnicodeStringToAnsiSize(UnicodeString);
+  return RtlUnicodeStringToAnsiSize (UnicodeString);
 }
 
 /* EOF */
