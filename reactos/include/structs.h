@@ -482,7 +482,7 @@ typedef struct _RECTL {
   LONG top;      
   LONG right;    
   LONG bottom;   
-} RECTL; 
+} RECTL, *PRECTL; 
  
 typedef struct _AppBarData {
   DWORD  cbSize;           
@@ -661,7 +661,7 @@ typedef struct tagPOINTFX {
 typedef struct _POINTL { 
   LONG x; 
   LONG y; 
-} POINTL; 
+} POINTL, *PPOINTL; 
  
 typedef struct tagPOINTS { 
   SHORT x;    
