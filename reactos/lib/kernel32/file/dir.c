@@ -50,11 +50,12 @@ CreateDirectoryExA (
         LPCSTR                  lpNewDirectory,
         LPSECURITY_ATTRIBUTES   lpSecurityAttributes)
 {
-   PWCHAR TemplateDirectoryW;
-   PWCHAR NewDirectoryW;   
+   PWCHAR TemplateDirectoryW = NULL;
+   PWCHAR NewDirectoryW = NULL;
    BOOL ret;
 
-   if (!(TemplateDirectoryW = FilenameA2W(lpTemplateDirectory, FALSE)))
+   if (TemplateDirectoryW != NULL &&
+       !(TemplateDirectoryW = FilenameA2W(lpTemplateDirectory, FALSE)))
       return FALSE;
       
    if (!(NewDirectoryW = FilenameA2W(lpNewDirectory, TRUE)))
