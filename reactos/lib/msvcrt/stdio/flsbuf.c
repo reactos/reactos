@@ -93,6 +93,7 @@ int _flsbuf(int c, FILE* f)
     if ((f->_flag & (_IO_LBF|_IONBF)) == 0) {
         f->_cnt--;
         *f->_ptr++ = c;
+        f->_flag |= _IODIRTY;
     }
     return c;
 }
