@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.27 1999/11/24 11:51:46 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.28 1999/11/25 23:35:24 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -247,6 +247,10 @@ RtlUpcaseUnicodeToOemN@20
 RtlUpperChar@4
 RtlUpperString@8
 RtlZeroMemory@8
+RtlxAnsiStringToUnicodeSize@4
+RtlxOemStringToUnicodeSize@4
+RtlxUnicodeStringToAnsiSize@4
+RtlxUnicodeStringToOemSize@4
 ZwAccessCheckAndAuditAlarm@44
 ZwAlertThread@4
 ZwAllocateVirtualMemory@24
@@ -336,7 +340,7 @@ ZwYieldExecution@0
 ;_aullshr
 ;_except_handler2
 ;_global_unwind2
-;_itoa
+_itoa
 ;_local_unwind2
 ;_purecall
 ;_snprintf

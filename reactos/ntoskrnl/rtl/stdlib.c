@@ -22,37 +22,38 @@ static unsigned long long next = 0;
 #if 0
 int atoi(const char *str)
 {
-	return (int)strtol(str, 0, 10);
+	return (int)atol (str);
 }
 
 long atol(const char *str)
 {
 	return strtol(str, 0, 10);
 }
+#endif
 
-char *_itoa(int value, char *string, int radix)
+
+/*
+ * NOTE: no radix range check (valid range: 2 - 36)
+ */
+
+char *_itoa (int value, char *string, int radix)
 {
   char tmp[33];
   char *tp = tmp;
   int i;
   unsigned v;
   int sign;
-  char *sp;
+  char *sp = NULL;
 
-  if (string == 0)
+  if (string == NULL)
     return NULL;
-
-  if (radix > 36 || radix <= 1)
-  {
-    __set_errno(EDOM);
-    return 0;
-  }
 
   sign = (radix == 10 && value < 0);
   if (sign)
     v = -value;
   else
     v = (unsigned)value;
+
   while (v || tp == tmp)
   {
     i = v % radix;
@@ -65,12 +66,13 @@ char *_itoa(int value, char *string, int radix)
 
   if (sign)
     *sp++ = '-';
+
   while (tp > tmp)
     *sp++ = *--tp;
   *sp = 0;
+
   return string;
 }
-#endif
 
 
 int rand(void)
