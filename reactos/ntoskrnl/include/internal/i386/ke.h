@@ -136,9 +136,9 @@ VOID
 NtEarlyInitVdm(VOID);
 
 
-#define X86_EFLAGS_ID       (1 << 21)
+#define X86_EFLAGS_ID		(1 << 21)
 
-#define X86_CR4_PGE			(1 << 8)
+#define X86_CR4_PGE		(1 << 7)
 #define X86_FEATURE_PGE		(1 << 13)
 
 #if defined(__GNUC__)
