@@ -8,9 +8,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <ddk/ntddk.h>
+
 //#define DUMP_DATA
 #define DUMP_SIZE_INFO
-
+#define UNICODE
 
 #ifdef DUMP_DATA
 void HexDump(char *buffer, ULONG size)

@@ -27,8 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
 #include <stdio.h>
+#include <stdarg.h>
+
+#include <windef.h>
+#include <winbase.h>
 
 #include "debug.h"
 

@@ -10,7 +10,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = partinfo
 
-TARGET_CFLAGS = -Wall -Werror -Wno-format
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror -Wno-format
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 

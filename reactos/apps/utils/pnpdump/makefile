@@ -10,7 +10,7 @@ TARGET_APPTYPE = console
 
 TARGET_NAME = pnpdump
 
-TARGET_CFLAGS = -Wall -Werror
+TARGET_CFLAGS = -D__USE_W32API -Wall -Werror
 
 TARGET_SDKLIBS = ntdll.a kernel32.a
 
