@@ -1,5 +1,5 @@
 /*
- Copyright (c) 2004 KJK::Hyperion
+ Copyright (c) 2004/2005 KJK::Hyperion
  
  Permission is hereby granted, free of charge, to any person obtaining a copy of
  this software and associated documentation files (the "Software"), to deal in
@@ -33,7 +33,10 @@
 
 /*
  Fall back to non-optimal, non-native NLG implementation for environments
- without their own (e.g., currently, kernel-mode ReactOS/Windows)
+ without their own (e.g., currently, kernel-mode ReactOS/Windows). THIS IS NOT
+ RECOMMENDED AND IT WILL BE DROPPED IN A FUTURE VERSION BECAUSE IT MAY CAUSE
+ SEVERE STACK CORRUPTION. REIMPLEMENT OR PORT YOUR COMPILER'S NATIVE NLG
+ IMPLEMENTATION INSTEAD.
 */
 #ifdef _SEH_NO_NATIVE_NLG
 # include <pseh/setjmp.h>
