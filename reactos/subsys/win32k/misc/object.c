@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: object.c,v 1.12.8.1 2004/07/15 20:07:17 weiden Exp $
+/* $Id: object.c,v 1.12.8.2 2004/07/22 13:07:08 weiden Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -94,8 +94,8 @@ ObmEnumHandles(PUSER_HANDLE_TABLE HandleTable,
   ASSERT(EnumProc);
   
   /* enumerate all handles */
-  Slot = HandleTable->Handles;
-  for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)
+  LastSlot = HandleTable->Handles + N_USER_HANDLES;
+  for(Slot = HandleTable->Handles; Slot < LastSlot; Slot++)
   {
     if((ObjectHeader = *Slot) && (ObjectType == ObjectHeader->Type || ObjectType == otUNKNOWN))
     {
@@ -144,8 +144,8 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
   RtlZeroMemory(ObjectBody, ObjectSize);
   
   /* search for a free handle slot */
-  Slot = HandleTable->Handles;
-  for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)
+  LastSlot = HandleTable->Handles + N_USER_HANDLES;
+  for(Slot = HandleTable->Handles; Slot < LastSlot; Slot++)
   {
     if(InterlockedCompareExchange((LONG*)Slot, (LONG)ObjectHeader, 0) == 0)
     {
@@ -153,7 +153,8 @@ ObmCreateObject(PUSER_HANDLE_TABLE HandleTable,
       InterlockedIncrement((LONG*)&HandleTable->HandleCount);
       
       ObjectHeader->Slot = Slot; 
-      *Handle = (HANDLE)(((Slot - HandleTable->Handles) >> 2) + 1);
+      *Handle = (HANDLE)((((ULONG)Slot - (ULONG)HandleTable->Handles) / sizeof(HANDLE)) + 1);
+
       return ObjectBody;
     }
   }
@@ -201,7 +202,7 @@ ObmDeleteObject(PUSER_HANDLE_TABLE HandleTable,
     DPRINT1("Object 0x%x has been deleted already!\n");
     return FALSE;
   }
-  
+
   /* remove the object from the handle table */
   InterlockedCompareExchange((LONG*)ObjectHeader->Slot, 0, (LONG)ObjectHeader);
   InterlockedDecrement((LONG*)&HandleTable->HandleCount);
@@ -240,8 +241,8 @@ ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
   
   HandleTable->HandleCount = 0;
   /* Clear the handle table */
-  Slot = HandleTable->Handles;
-  for(LastSlot = HandleTable->Handles + N_USER_HANDLES; Slot < LastSlot; Slot++)
+  LastSlot = HandleTable->Handles + N_USER_HANDLES;
+  for(Slot = HandleTable->Handles; Slot < LastSlot; Slot++)
   {
     *Slot = NULL;
   }
