@@ -1,18 +1,16 @@
 /*
-
- ** Mouse driver 0.0.4
+ ** Mouse driver 0.0.5
  ** Written by Jason Filby (jasonfilby@yahoo.com)
- ** For ReactOS (www.sid-dis.com/reactos)
+ ** For ReactOS (www.reactos.com)
 
  ** Note: The serial.o driver must be loaded before loading this driver
 
  ** Known Limitations:
  ** Only supports mice on COM port 1
-
 */
 
 #include <ddk/ntddk.h>
-#include "../include/mouse.h"
+#include <ddk/ntddmou.h>
 #include "sermouse.h"
 #include "mouse.h"
 
@@ -34,18 +32,40 @@ static signed int       mouse_x=40, mouse_y=12;
 static unsigned char    mouse_button1, mouse_button2;
 static signed int       horiz_sensitivity, vert_sensitivity;
 
+// Previous button state
+static ULONG PreviousButtons = 0;
+
 BOOLEAN microsoft_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
+  PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
+  PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
+  PMOUSE_INPUT_DATA Input;
+  ULONG Queue, ButtonsDiff;
   unsigned int mbyte=READ_PORT_UCHAR((PUCHAR)MOUSE_COM);
 
   // Synchronize
-  if((mbyte&64)==64) { bytepos=0; }
+  if((mbyte&64)==64)
+    bytepos=0;
 
   mpacket[bytepos]=mbyte;
   bytepos++;
 
   // Process packet
   if(bytepos==3) {
+    // Set local variables for DeviceObject and DeviceExtension
+    DeviceObject = (PDEVICE_OBJECT)ServiceContext;
+    DeviceExtension = (PDEVICE_EXTENSION)DeviceObject->DeviceExtension;
+    Queue = DeviceExtension->ActiveQueue % 2;
+
+    // Prevent buffer overflow
+    if (DeviceExtension->InputDataCount[Queue] == MOUSE_BUFFER_SIZE)
+    {
+      return TRUE;
+    }
+
+    Input = &DeviceExtension->MouseInputData[Queue]
+            [DeviceExtension->InputDataCount[Queue]];
+
     // Retrieve change in x and y from packet
     int change_x=((mpacket[0] & 3) << 6) + mpacket[1];
     int change_y=((mpacket[0] & 12) << 4) + mpacket[2];
@@ -70,11 +90,50 @@ BOOLEAN microsoft_mouse_handler(PKINTERRUPT Interrupt, PVOID ServiceContext)
     if(mouse_y<0) { mouse_y=0; }
     if(mouse_y>max_screen_y) { mouse_y=max_screen_y; }
 
+    Input->LastX = mouse_x;
+    Input->LastY = mouse_y;
+
     // Retrieve mouse button status from packet
     mouse_button1=mpacket[0] & 32;
     mouse_button2=mpacket[0] & 16;
+    
+    // Determine the current state of the buttons
+    Input->RawButtons = mouse_button1 + mouse_button2;
+    
+    /* Determine ButtonFlags */
+    Input->ButtonFlags = 0;
+    ButtonsDiff = PreviousButtons ^ Input->RawButtons;
+
+    if (ButtonsDiff & 32)
+    {
+      if (Input->RawButtons & 32)
+      {
+        Input->ButtonFlags |= MOUSE_BUTTON_1_DOWN;
+      } else {
+        Input->ButtonFlags |= MOUSE_BUTTON_1_UP;
+      }
+    }
+
+    if (ButtonsDiff & 16)
+    {
+      if (Input->RawButtons & 16)
+      {
+        Input->ButtonFlags |= MOUSE_BUTTON_2_DOWN;
+      } else {
+        Input->ButtonFlags |= MOUSE_BUTTON_2_UP;
+      }
+    }
 
     bytepos=0;
+    
+    /* Send the Input data to the Mouse Class driver */
+    DeviceExtension->InputDataCount[Queue]++;
+    KeInsertQueueDpc(&DeviceExtension->IsrDpc, DeviceObject->CurrentIrp, NULL);
+
+    /* Copy RawButtons to Previous Buttons for Input */
+    PreviousButtons = Input->RawButtons;
+
+    return TRUE;
   }
 
 }
@@ -89,7 +148,7 @@ void InitializeMouseHardware(unsigned int mtype)
   WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+3, mtype); // 2=MS Mouse; 3=Mouse systems mouse
   WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+1, 0); // set comm and DLAB to 0
   WRITE_PORT_UCHAR((PUCHAR)MOUSE_COM+4, 1); // DR int enable
- 
+
   clear_error_bits=READ_PORT_UCHAR((PUCHAR)MOUSE_COM+5); // clear error bits
 }
 
@@ -186,26 +245,18 @@ BOOLEAN InitializeMouse(PDEVICE_OBJECT DeviceObject)
 
   if(gotmouse==0) return FALSE;
 
-  DeviceExtension->InputDataCount = 0;
-  DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE);
+  DeviceExtension->ActiveQueue    = 0;
+  MappedIrq = HalGetInterruptVector(Internal, 0, 0, MOUSE_IRQ, &Dirql, &Affinity);
 
-  MappedIrq = HalGetInterruptVector(Internal, 0, 0, MOUSE_IRQ,
-            &Dirql, &Affinity);
-
-  IoConnectInterrupt(&DeviceExtension->MouseInterrupt, microsoft_mouse_handler, NULL,
-         NULL, MappedIrq, Dirql, Dirql, 0, FALSE,
-         Affinity, FALSE);
+  IoConnectInterrupt(&DeviceExtension->MouseInterrupt, microsoft_mouse_handler,
+                     DeviceObject, NULL, MappedIrq, Dirql, Dirql, 0, FALSE,
+                     Affinity, FALSE);
 
   return TRUE;
 }
 
 VOID SerialMouseInitializeDataQueue(PVOID Context)
 {
-  ;
-/*   PDEVICE_EXTENSION DeviceExtension = (PDEVICE_EXTENSION)DeviceExtension;
-
-   DeviceExtension->InputDataCount = 0;
-   DeviceExtension->MouseInputData = ExAllocatePool(NonPagedPool, sizeof(MOUSE_INPUT_DATA) * MOUSE_BUFFER_SIZE); */
 }
 
 BOOLEAN MouseSynchronizeRoutine(PVOID Context)
@@ -329,7 +380,7 @@ VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID C
 			NULL,
 			&DeviceExtension->InputDataCount);
 
-   DeviceExtension->InputDataCount = 0;
+   DeviceExtension->ActiveQueue = 0;
 }
 
 NTSTATUS STDCALL
@@ -340,10 +391,13 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
   UNICODE_STRING SymlinkName;
   PDEVICE_EXTENSION DeviceExtension;
 
-  DbgPrint("Serial Mouse Driver 0.0.4\n");
-
-  if(InitializeMouse(DeviceObject) == FALSE)
+  if(InitializeMouse(DeviceObject) == TRUE)
+  {
+    DbgPrint("Serial Mouse Driver 0.0.5\n");
+  } else {
+    DbgPrint("Serial mouse not found.\n");
     return STATUS_UNSUCCESSFUL;
+  }
 
   DriverObject->MajorFunction[IRP_MJ_CREATE] = SerialMouseDispatch;
   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = SerialMouseDispatch;
@@ -367,7 +421,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 
   DeviceExtension = DeviceObject->DeviceExtension;
   KeInitializeDpc(&DeviceExtension->IsrDpc, (PKDEFERRED_ROUTINE)SerialMouseIsrDpc, DeviceObject);
-  KeInitializeDpc(&DeviceExtension->IsrDpcRetry, (PKDEFERRED_ROUTINE)SerialMouseIsrDpc, DeviceObject);
 
   return(STATUS_SUCCESS);
 }
+
