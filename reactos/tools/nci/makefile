@@ -19,8 +19,10 @@ $(NCI_TARGET): $(NCI_OBJECTS)
 $(NCI_OBJECTS): %.o : %.c
 	${host_gcc} $(NCI_HOST_CFLAGS) -c $< -o $@
 
-clean::
+.PHONY: nci_clean
+nci_clean:
 	-@$(rm) $(NCI_TARGET) $(NCI_OBJECTS) 2>$(NUL)
+clean: nci_clean
 
 # WIN32K.SYS
 WIN32K_SVC_DB = $(NCI_BASE)$(SEP)w32ksvc.db
@@ -53,5 +55,7 @@ $(NCI_SERVICE_FILES): $(NCI_TARGET)
 		$(WIN32K_GDI_STUBS) \
 		$(WIN32K_USER_STUBS)
 
-clean::
+.PHONY: nci_service_files_clean
+nci_service_files_clean:
 	-@$(rm) $(NCI_SERVICE_FILES) 2>$(NUL)
+clean: nci_service_files_clean

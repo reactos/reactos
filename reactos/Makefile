@@ -71,5 +71,7 @@ include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) nt
 include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_TARGET) lib$(SEP)kernel32$(SEP)kernel32.mc
 	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
 
-clean::
+.PHONY: makefile_auto_clean
+makefile_auto_clean:
 	-@$(rm) Makefile.auto $(PREAUTO) 2>$(NUL)
+clean: makefile_auto_clean

@@ -189,9 +189,9 @@ void CCABManager::Usage()
  */
 {
     printf("ReactOS Cabinet Manager - Version %s\n\n", CM_VERSION);
-    printf("CABMAN [/D | /E] [/A] [/L dir] cabinet [filename ...]\n");
-    printf("CABMAN /C dirfile [/I] [/RC file]\n");
-    printf("CABMAN /S cabinet filename\n");
+    printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
+    printf("CABMAN -C dirfile [-I] [-RC file]\n");
+    printf("CABMAN -S cabinet filename\n");
     printf("  cabinet   Cabinet file.\n");
     printf("  filename  Name of the file to extract from the cabinet.\n");
     printf("            Wild cards and multiple filenames\n");
@@ -199,18 +199,18 @@ void CCABManager::Usage()
 
     printf("  dirfile   Name of the directive file to use.\n");
 
-    printf("  /A        Process ALL cabinets. Follows cabinet chain\n");
+    printf("  -A        Process ALL cabinets. Follows cabinet chain\n");
     printf("            starting in first cabinet mentioned.\n");
-    printf("  /C        Create cabinet.\n");
-    printf("  /D        Display cabinet directory.\n");
-    printf("  /E        Extract files from cabinet.\n");
-    printf("  /I        Don't create the cabinet, only the .inf file.\n");
-    printf("  /L dir    Location to place extracted or generated files\n");
+    printf("  -C        Create cabinet.\n");
+    printf("  -D        Display cabinet directory.\n");
+    printf("  -E        Extract files from cabinet.\n");
+    printf("  -I        Don't create the cabinet, only the .inf file.\n");
+    printf("  -L dir    Location to place extracted or generated files\n");
     printf("            (default is current directory).\n");
-    printf("  /N        Don't create the .inf file, only the cabinet.\n");
-    printf("  /RC       Specify file to put in cabinet reserved area\n");
+    printf("  -N        Don't create the .inf file, only the cabinet.\n");
+    printf("  -RC       Specify file to put in cabinet reserved area\n");
     printf("            (size must be less than 64KB).\n");
-    printf("  /S        Create simple cabinet.\n");
+    printf("  -S        Create simple cabinet.\n");
 }
 
 bool CCABManager::ParseCmdline(int argc, char* argv[])
@@ -230,7 +230,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
     ShowUsage = (argc < 2);
 
     for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '/') {
+        if (argv[i][0] == '-') {
           switch (argv[i][1]) {
           case 'a':
           case 'A': ProcessAll = true; break;
@@ -404,7 +404,7 @@ bool CCABManager::DisplayCabinet()
         }
         return true;
     } else
-        printf("Cannot not open file: %s\n", GetCabinetName());
+        printf("Cannot open file: %s\n", GetCabinetName());
 
     return false;
 }
@@ -443,7 +443,7 @@ bool CCABManager::ExtractFromCabinet()
         }
         return true;
     } else
-        printf("Cannot not open file: %s.\n", GetCabinetName());
+        printf("Cannot open file: %s.\n", GetCabinetName());
 
     return false;
 }

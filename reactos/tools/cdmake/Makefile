@@ -20,5 +20,7 @@ $(CDMAKE_TARGET): $(CDMAKE_OBJECTS)
 $(CDMAKE_OBJECTS): %.o : %.c
 	${host_gcc} $(CDMAKE_CFLAGS) -c $< -o $@
 
-clean::
+.PHONY: cdmake_clean
+cdmake_clean:
 	-@$(rm) $(CDMAKE_TARGET) $(CDMAKE_OBJECTS) 2>$(NUL)
+clean: cdmake_clean

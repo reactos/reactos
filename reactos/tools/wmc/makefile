@@ -26,5 +26,7 @@ $(WMC_TARGET): $(WMC_OBJECTS)
 $(WMC_OBJECTS): %.o : %.c
 	${host_gcc} $(WMC_HOST_CXXFLAGS) -c $< -o $@
 
-clean::
+.PHONY: wmc_clean
+wmc_clean:
 	-@$(rm) $(WMC_TARGET) $(WMC_OBJECTS) 2>$(NUL)
+clean: wmc_clean

@@ -19,9 +19,10 @@ $(RMKDIR_TARGET): $(RMKDIR_OBJECTS)
 $(RMKDIR_OBJECTS): %.o : %.c
 	${host_gcc} $(RMKDIR_HOST_CFLAGS) -c $< -o $@
 
-clean::
+.PHONY: rmkdir_clean
+rmkdir_clean:
 	-@$(rm) $(RMKDIR_TARGET) $(RMKDIR_OBJECTS) 2>$(NUL)
-
+clean: rmkdir_clean
 
 
 BUILDNO_BASE = tools
@@ -45,8 +46,10 @@ $(BUILDNO_TARGET): $(BUILDNO_OBJECTS)
 $(BUILDNO_OBJECTS): %.o : %.c
 	${host_gcc} $(BUILDNO_HOST_CFLAGS) -c $< -o $@
 
-clean::
+.PHONY: buildno_clean
+buildno_clean:
 	-@$(rm) $(BUILDNO_TARGET) $(BUILDNO_OBJECTS) 2>$(NUL)
+clean: buildno_clean
 
 include$(SEP)reactos$(SEP)buildno.h: $(BUILDNO_TARGET)
 	$(EXEPREFIX)$(BUILDNO_TARGET) include$(SEP)reactos$(SEP)buildno.h

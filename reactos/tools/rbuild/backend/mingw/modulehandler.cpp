@@ -1029,14 +1029,16 @@ MingwModuleHandler::GenerateMacrosAndTargets (
 	clean_files.push_back ( ar_target );
 	GetCleanTargets ( clean_files, module.files, module.ifs );
 
-	fprintf ( fMakefile, "clean::\n\t-@$(rm)" );
+	fprintf ( fMakefile, ".PHONY: %s_clean\n", module.name.c_str() );
+	fprintf ( fMakefile, "%s_clean:\n\t-@$(rm)", module.name.c_str() );
 	for ( size_t i = 0; i < clean_files.size(); i++ )
 	{
 		if ( 9==(i%10) )
 			fprintf ( fMakefile, " 2>$(NUL)\n\t-@$(rm)" );
 		fprintf ( fMakefile, " %s", clean_files[i].c_str() );
 	}
-	fprintf ( fMakefile, " 2>$(NUL)\n\n" );
+	fprintf ( fMakefile, " 2>$(NUL)\n" );
+	fprintf ( fMakefile, "clean: %s_clean\n\n", module.name.c_str() );
 }
 
 void
@@ -2100,11 +2102,11 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ( const Module& module )
 	          cdDirectories.c_str (),
 	          cdFiles.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cabman} /C %s /L %s /I\n",
+	          "\t${cabman} -C %s -L %s -I\n",
 	          reactosDff.c_str (),
 	          bootcdReactos.c_str () );
 	fprintf ( fMakefile,
-	          "\t${cabman} /C %s /RC %s /L %s /N\n",
+	          "\t${cabman} -C %s -RC %s -L %s -N\n",
 	          reactosDff.c_str (),
 	          reactosInf.c_str (),
 	          bootcdReactos.c_str () );

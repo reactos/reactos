@@ -104,5 +104,7 @@ $(RBUILD_TEST_SPECIAL_OBJECTS): %.o: %.cpp
 rbuild_test: $(RBUILD_TEST_TARGET)
 	$(RBUILD_TEST_TARGET)
 
-clean::
+.PHONY: rbuild_clean
+rbuild_clean:
 	-@$(rm) $(RBUILD_TARGET) $(RBUILD_OBJECTS) $(RBUILD_TEST_TARGET) $(RBUILD_TEST_OBJECTS) 2>$(NUL)
+clean: rbuild_clean
