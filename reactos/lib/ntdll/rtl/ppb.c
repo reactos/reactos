@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.10 2001/08/07 14:10:41 ekohl Exp $
+/* $Id: ppb.c,v 1.11 2002/03/14 16:32:49 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,7 +56,7 @@ RtlpCopyParameterString(PWCHAR *Ptr,
    if (Source->Length)
      memmove (Destination->Buffer, Source->Buffer, Source->Length);
    Destination->Buffer[Destination->Length / sizeof(WCHAR)] = 0;
-   *Ptr += Destination->MaximumLength;
+   *Ptr += Destination->MaximumLength/sizeof(WCHAR);
 }
 
 
