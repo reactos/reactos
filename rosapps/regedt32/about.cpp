@@ -39,14 +39,14 @@
 
 
 extern HINSTANCE hInst;
-extern HWND hMainWnd;
+//extern HWND hMainWnd;
 
 LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 
-void OnAbout(void)
+void ShowAboutBox(HWND hWnd)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, (DLGPROC)AboutDialogWndProc);
+    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, (DLGPROC)AboutDialogWndProc);
 }
 
 LRESULT CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

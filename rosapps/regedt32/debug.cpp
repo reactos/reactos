@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-	
+    
 #include "regedt32.h"
 #include "debug.h"
 

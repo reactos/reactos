@@ -2,8 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by regedt32.rc
 //
-#define IDC_MYICON                      2
-#define IDD_REGED_DIALOG                102
 #define IDD_ABOUTBOX                    103
 #define IDS_APP_TITLE                   103
 #define IDM_ABOUT                       104
@@ -13,10 +11,8 @@
 #define IDI_SMALL                       108
 #define IDC_REGEDT32                    109
 #define IDC_REGEDT32_FRAME              110
-#define IDR_MAINFRAME                   128
-#define IDR_REGEDIT_MENU                129
-#define IDR_REGEDT32_MENU               130
-#define IDD_DIALOG1                     131
+#define IDR_REGEDT32_MENU               129
+#define IDR_REGEDT_MENU                 130
 #define ID_HELP_HELPTOPICS              32771
 #define ID_FAVORITES_ADDTOFAVOURITES    32772
 #define ID_FAVORITES_REMOVEFAVOURITE    32773

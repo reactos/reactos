@@ -23,7 +23,7 @@
 #ifdef _MSC_VER
 #include "stdafx.h"
 #else
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 #include <commctrl.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@
 #include <process.h>
 #include <stdio.h>
 #endif
-	
+    
 #include "resource.h"
 #include <shellapi.h>
 //#include <winspool.h>
@@ -66,7 +66,7 @@ ATOM                MyRegisterClass2(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 LRESULT CALLBACK    FrameWndProc(HWND, UINT, WPARAM, LPARAM);
-LRESULT CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
 
 int APIENTRY WinMain(HINSTANCE hInstance,
                      HINSTANCE hPrevInstance,
@@ -128,8 +128,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, (LPCTSTR)IDI_REGEDT32);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)SS_BLACKRECT/*(COLOR_WINDOW+1)*/;
-//  wcex.lpszMenuName   = (LPCSTR)IDC_REGEDT32;
-//  wcex.lpszMenuName   = (LPCSTR)IDR_REGEDIT_MENU;
+//    wcex.lpszMenuName   = (LPCSTR)IDC_REGEDT32;
     wcex.lpszMenuName   = (LPCSTR)IDR_REGEDT32_MENU;
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon((HINSTANCE)wcex.hInstance, (LPCTSTR)IDI_SMALL);
@@ -149,8 +148,7 @@ ATOM MyRegisterClass2(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, (LPCTSTR)IDI_REGEDT32);
     wcex.hCursor        = LoadCursor(NULL, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = (LPCSTR)IDR_REGEDIT_MENU;
-//  wcex.lpszMenuName   = (LPCSTR)IDR_REGEDT32_MENU;
+    wcex.lpszMenuName   = (LPCSTR)IDR_REGEDT32_MENU;
     wcex.lpszClassName  = szFrameClass;
     wcex.hIconSm        = LoadIcon((HINSTANCE)wcex.hInstance, (LPCTSTR)IDI_SMALL);
     return RegisterClassEx(&wcex);
@@ -188,7 +186,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     // Create the status bar
     hStatusWnd = CreateStatusWindow(WS_VISIBLE|WS_CHILD|WS_CLIPSIBLINGS|SBT_NOBORDERS, 
-		                            "", hMainWnd, STATUS_WINDOW);
+                                    "", hMainWnd, STATUS_WINDOW);
     if (!hStatusWnd)
         return FALSE;
 
@@ -249,7 +247,7 @@ void OnExitMenuLoop(HWND hWnd)
 {
     RECT  rc;
     int   nParts[3];
-    TCHAR text[260];
+//    TCHAR text[260];
 
     bInMenuLoop = FALSE;
     // Update the status bar pane sizes
@@ -297,8 +295,8 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         // Parse the menu selections:
         switch (wmId) {
             case IDM_ABOUT:
-//            DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
-				{
+//                ShowAboutBox(hWnd);
+                {
                 HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
                 ShellAbout(hWnd, szTitle, "FrameWndProc", hIcon);
                 //if (hIcon) DestroyIcon(hIcon); // NOT REQUIRED
@@ -360,20 +358,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             //PageSetupDlg(&psd);
             break;
         case ID_REGISTRY_OPENLOCAL:
-			{
+            {
             HWND hChildWnd;
 //            hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
 //                                   CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, hWnd, NULL, hInst, NULL);
             hChildWnd = CreateWindow(szFrameClass, szTitle, WS_OVERLAPPEDWINDOW | WS_CHILD,
                                      0, 0, 150, 170, hWnd, NULL, hInst, NULL);
-			if (hChildWnd) {
-				ShowWindow(hChildWnd, 1);
-				UpdateWindow(hChildWnd);
-			}
+            if (hChildWnd) {
+                ShowWindow(hChildWnd, 1);
+                UpdateWindow(hChildWnd);
+            }
             }
             break;
         case IDM_ABOUT:
-//            DialogBox(hInst, (LPCTSTR)IDD_ABOUTBOX, hWnd, (DLGPROC)About);
+//            ShowAboutBox(hWnd);
             {
             HICON hIcon = LoadIcon(hInst, (LPCTSTR)IDI_REGEDT32);
             ShellAbout(hWnd, szTitle, "", hIcon);
@@ -418,20 +416,4 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         return DefWindowProc(hWnd, message, wParam, lParam);
    }
    return 0;
-}
-
-// Mesage handler for about box.
-LRESULT CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    switch (message) {
-    case WM_INITDIALOG:
-        return TRUE;
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL) {
-            EndDialog(hDlg, LOWORD(wParam));
-            return TRUE;
-        }
-        break;
-    }
-    return FALSE;
 }
