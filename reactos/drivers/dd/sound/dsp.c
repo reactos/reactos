@@ -1,3 +1,19 @@
+/*
+ * COPYRIGHT:        See COPYING in the top level directory
+ * PROJECT:          ReactOS kernel
+ * FILE:             drivers/dd/sound/dsp.c
+ * PURPOSE:          Digital Signal Processing ?
+ * PROGRAMMER:       Snatched from ?
+ * 
+ * UPDATE HISTORY: 
+ *              ??/??/??: Created
+ * 		10/23/02: Steven Edwards (Steven_Ed4153@yahoo.com)
+ *			  Minor build fix            
+ */
+
+#include "dsp.h"
+#include "sb16.h"
+
 /************************************
  * unsigned char read_dsp(void)
  *

@@ -13,5 +13,5 @@ unsigned short base;
 unsigned char irq,dma8,dma16;
 unsigned char read_dsp(unsigned short base);
 void write_dsp(unsigned short base,unsigned char data);
-sb_status detect_dsp(SB16* sb16);
+//sb_status detect_dsp(SB16* sb16);
 sb_status reset_dsp(unsigned short base_address);
