@@ -301,8 +301,17 @@ static UINT SHELL_ExecuteW(const WCHAR *lpCmd, void *env, BOOL shWait,
     STARTUPINFOW  startup;
     PROCESS_INFORMATION info;
     UINT retval = 31;
+    UINT gcdret = 0;
+    WCHAR curdir[MAX_PATH];
 
     TRACE("Execute %s from directory %s\n", debugstr_w(lpCmd), debugstr_w(psei->lpDirectory));
+
+    /* ShellExecute specifies the command from psei->lpDirectory
+     * if present. Not from the current dir as CreateProcess does */
+    if( psei->lpDirectory && psei->lpDirectory[0] )
+        if( ( gcdret = GetCurrentDirectoryW( MAX_PATH, curdir)))
+            if( !SetCurrentDirectoryW( psei->lpDirectory))
+                ERR("cannot set directory %s\n", debugstr_w(psei->lpDirectory));
 
     ZeroMemory(&startup, sizeof(startup));
     startup.cb = sizeof(STARTUPINFOW);
@@ -335,6 +344,11 @@ static UINT SHELL_ExecuteW(const WCHAR *lpCmd, void *env, BOOL shWait,
     TRACE("returning %u\n", retval);
 
     psei_out->hInstApp = (HINSTANCE)retval;
+
+    if( gcdret ) 
+        if( !SetCurrentDirectoryW( curdir))
+            ERR("cannot return to directory %s\n", debugstr_w(curdir));
+
     return retval;
 }
 
@@ -800,7 +814,7 @@ static unsigned dde_connect(WCHAR * key, WCHAR* start, WCHAR* ddeexec,
         }
     }
 
-    SHELL_ArgifyW(res, sizeof(res), exec, lpFile, pidl, szCommandline);
+    SHELL_ArgifyW(res, sizeof(res)/sizeof(WCHAR), exec, lpFile, pidl, szCommandline);
     TRACE("%s %s => %s\n", debugstr_w(exec), debugstr_w(lpFile), debugstr_w(res));
 
     ret = (DdeClientTransaction((LPBYTE)res, (strlenW(res) + 1) * sizeof(WCHAR), hConv, 0L, 0,
@@ -1039,7 +1053,17 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 
     if (ext && !strcmpiW(ext, wExtLnk))	/* or check for: shell_attribs & SFGAO_LINK */
     {
-	HRESULT hr = SHELL_ResolveShortCutW((LPWSTR)sei_tmp.lpFile, (LPWSTR)sei_tmp.lpParameters, (LPWSTR)sei_tmp.lpDirectory,
+	HRESULT hr;
+
+	/* expand paths before reading shell link */
+	if (ExpandEnvironmentStringsW(sei_tmp.lpFile, buffer, MAX_PATH))
+	    lstrcpyW(wszApplicationName/*sei_tmp.lpFile*/, buffer);
+
+	if (*sei_tmp.lpParameters)
+	    if (ExpandEnvironmentStringsW(sei_tmp.lpParameters, buffer, MAX_PATH))
+		lstrcpyW(wszParameters/*sei_tmp.lpParameters*/, buffer);
+
+	hr = SHELL_ResolveShortCutW((LPWSTR)sei_tmp.lpFile, (LPWSTR)sei_tmp.lpParameters, (LPWSTR)sei_tmp.lpDirectory,
 					    sei_tmp.hwnd, sei_tmp.lpVerb?sei_tmp.lpVerb:wszEmpty, &sei_tmp.nShow, (LPITEMIDLIST*)&sei_tmp.lpIDList);
 
 	if (psei->lpIDList)
@@ -1184,7 +1208,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW psei, SHELL_ExecuteW32 execfu
 	if (sei_tmp.lpIDList!=psei->lpIDList && sei_tmp.lpIDList)
 	    SHFree(sei_tmp.lpIDList);
 
-        TRACE("execfunc: retval=%d sei_tmp.hInstApp=%p\n", retval, sei_tmp.hInstApp);
+        TRACE("execfunc: retval=%d psei->hInstApp=%p\n", retval, psei->hInstApp);
         return TRUE;
     }
 
