@@ -1397,6 +1397,7 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
   PUCHAR Buffer;
   PUCHAR Ptr;
   ULONG BlockIndex;
+  ULONG LastIndex;
   PVOID BlockPtr;
   NTSTATUS Status;
 
@@ -1486,13 +1487,13 @@ CmiStartLogUpdate(PREGISTRY_HIVE RegistryHive)
   /* Write dirty blocks */
   FileOffset.QuadPart = (ULONGLONG)BufferSize;
   BlockIndex = 0;
-  while (TRUE)
+  while (BlockIndex < RegistryHive->BlockListSize)
     {
+      LastIndex = BlockIndex;
       BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitMap,
 				  1,
 				  BlockIndex);
-      if ((BlockIndex == (ULONG)-1) ||
-	  (BlockIndex >= RegistryHive->BlockListSize))
+      if (BlockIndex == (ULONG)-1 || BlockIndex < LastIndex)
 	{
 	  DPRINT("No more set bits\n");
 	  Status = STATUS_SUCCESS;
@@ -1771,6 +1772,7 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
   HANDLE FileHandle;
   LARGE_INTEGER FileOffset;
   ULONG BlockIndex;
+  ULONG LastIndex;
   PVOID BlockPtr;
   NTSTATUS Status;
 
@@ -1823,13 +1825,13 @@ CmiStartHiveUpdate(PREGISTRY_HIVE RegistryHive)
     }
 
   BlockIndex = 0;
-  while (TRUE)
+  while (BlockIndex < RegistryHive->BlockListSize)
     {
+      LastIndex = BlockIndex;
       BlockIndex = RtlFindSetBits(&RegistryHive->DirtyBitMap,
 				  1,
 				  BlockIndex);
-      if ((BlockIndex == (ULONG)-1) ||
-	  (BlockIndex >= RegistryHive->BlockListSize))
+      if (BlockIndex == (ULONG)-1 || BlockIndex < LastIndex)
 	{
 	  DPRINT("No more set bits\n");
 	  Status = STATUS_SUCCESS;
