@@ -42,7 +42,7 @@ VOID IopCloseFile(PVOID ObjectBody, ULONG HandleCount)
 			      IoFileType,
 			      UserMode);
    
-   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLEANUP,
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_CLOSE,
 				      FileObject->DeviceObject,
 				      NULL,
 				      0,
