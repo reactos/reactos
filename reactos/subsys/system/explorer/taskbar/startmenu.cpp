@@ -660,7 +660,7 @@ int StartMenuRoot::Command(int id, int code)
 		CloseStartMenu(id);
 		HWND hwndFrame = MainFrame::Create();
 		ShowWindow(hwndFrame, SW_SHOW);
-		SendMessage(hwndFrame, PM_OPEN_WINDOW, 0, (LPARAM)_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
+		SendMessage(hwndFrame, PM_OPEN_WINDOW, FALSE/*mode_explore*/, (LPARAM)_T("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}"));
 		break;}
 
 	  case IDC_FAVORITES:

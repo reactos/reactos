@@ -374,9 +374,14 @@ void ChildWindow::resize_children(int cx, int cy)
 	rt.right  = cx;
 	rt.bottom = cy;
 
-	cx = _split_pos + SPLIT_WIDTH/2;
+	if (_left_hwnd) {
+		cx = _split_pos + SPLIT_WIDTH/2;
 
-	hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+		hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rt.left, rt.top, _split_pos-SPLIT_WIDTH/2-rt.left, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	} else {
+		_split_pos = 0;
+		cx = 0;
+	}
 
 	hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rt.left+cx+1, rt.top, rt.right-cx, rt.bottom-rt.top, SWP_NOZORDER|SWP_NOACTIVATE);
 

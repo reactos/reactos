@@ -96,7 +96,7 @@ void explorer_show_frame(HWND hwndDesktop, int cmdshow)
 	UpdateWindow(hwndFrame);
 
 	 // Open the first child window after initializing the whole application
-	PostMessage(hwndFrame, PM_OPEN_WINDOW, 0, 0);
+	PostMessage(hwndFrame, PM_OPEN_WINDOW, TRUE/*mode_explore*/, 0);
 }
 
 
