@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cdrom.c,v 1.5 2002/03/22 20:32:36 ekohl Exp $
+/* $Id: cdrom.c,v 1.6 2002/03/22 23:05:44 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,7 +33,7 @@
 #include "../include/class2.h"
 #include "../include/ntddscsi.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define VERSION "0.0.1"
