@@ -1,5 +1,5 @@
 /*
- * $Id: fat.c,v 1.26 2001/06/14 10:02:59 ekohl Exp $
+ * $Id: fat.c,v 1.27 2001/06/15 11:14:53 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -690,7 +690,7 @@ FAT32WriteCluster(PDEVICE_EXTENSION DeviceExt,
     }
   ExFreePool (Block);
 #endif
-  KeBugCheck(0);
+//  KeBugCheck(0);
   return(STATUS_SUCCESS);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.9 2000/07/07 10:30:54 dwelch Exp $ */
+/* $Id: mmtypes.h,v 1.10 2001/06/15 11:13:08 ekohl Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -6,11 +6,11 @@
 #include <ntos/mm.h>
 
 #ifdef __NTOSKRNL__
-PVOID EXPORTED MmUserProbeAddress;
-PVOID EXPORTED MmHighestUserAddress;
+extern PVOID EXPORTED MmUserProbeAddress;
+extern PVOID EXPORTED MmHighestUserAddress;
 #else
-PVOID IMPORTED MmUserProbeAddress;
-PVOID IMPORTED MmHighestUserAddress;
+extern PVOID IMPORTED MmUserProbeAddress;
+extern PVOID IMPORTED MmHighestUserAddress;
 #endif
 
 #ifdef __NTOSKRNL__

@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.19 2001/06/11 19:54:05 ekohl Exp $
+/* $Id: volume.c,v 1.20 2001/06/15 11:14:06 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -635,7 +635,7 @@ SetVolumeLabelW(LPCWSTR lpRootPathName,
 			       sizeof(FILE_FS_LABEL_INFORMATION) +
 			       LabelLength);
    LabelInfo->VolumeLabelLength = LabelLength;
-   wcscpy(&LabelInfo->VolumeLabel,
+   wcscpy(LabelInfo->VolumeLabel,
 	  lpVolumeName);
    
    hFile = CreateFileW(lpRootPathName,

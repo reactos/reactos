@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.29 2001/05/02 03:18:03 rex Exp $
+# $Id: makefile,v 1.30 2001/06/15 11:15:32 ekohl Exp $
 #
 #
 PATH_TO_TOP = ../../..
@@ -7,11 +7,12 @@ TARGET=vfatfs
 
 OBJECTS = blockdev.o close.o create.o dir.o dirwr.o iface.o string.o fat.o \
           rw.o finfo.o volume.o shutdown.o cleanup.o fcb.o $(TARGET).coff
-LIBS = ../../../ntoskrnl/ntoskrnl.a
+
+LIBS = $(PATH_TO_TOP)/ntoskrnl/ntoskrnl.a
 
 CFLAGS = -g -Wall -Werror
 
-all: $(TARGET).nostrip.sys $(TARGET).sys
+all: $(TARGET).sys.unstripped $(TARGET).sys
 
 .phony: all
 
@@ -22,9 +23,11 @@ ifeq ($(DOSCLI),yes)
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
+	- $(RM) $(TARGET).sym
 	- $(RM) $(TARGET).sys
+	- $(RM) $(TARGET).sys.unstripped
 else
-	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).nostrip.sys
+	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys $(TARGET).sys.unstripped
 endif
 
 .phony: clean
@@ -39,7 +42,8 @@ dist: ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 ../../../$(DIST_DIR)/drivers/$(TARGET).sys: $(TARGET).sys
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 
-$(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
+
+$(TARGET).sys.unstripped: $(OBJECTS) $(LIBS)
 	$(LD) -r -o vfat.o $(OBJECTS)
 	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext -Wl,--base-file,base.tmp -Wl,"-h vfatfs.sys" vfat.o $(LIBS)
 	- $(RM) junk.tmp
@@ -49,8 +53,9 @@ $(TARGET).nostrip.sys: $(OBJECTS) $(LIBS)
 		--output-exp temp.exp \
 		--def vfatfs.def
 	- $(RM) base.tmp
-	$(CC) -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).nostrip.sys vfat.o $(LIBS)
+	$(CC) -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 -Wl,temp.exp -Wl,"-h vfatfs.sys" -specs=../../svc_specs -mdll -o $(TARGET).sys.unstripped vfat.o $(LIBS)
 	- $(RM) temp.exp
+	$(NM) --numeric-sort $(TARGET).sys.unstripped >$(TARGET).sym
 
 
 $(TARGET).sys: $(OBJECTS) $(LIBS)
