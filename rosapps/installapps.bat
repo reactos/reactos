@@ -14,6 +14,8 @@ copy mc\release\mc.exe		%ROS_INSTALL%\bin
 copy net\ncftp\ncftp.exe 	%ROS_INSTALL%\bin
 copy net\ping\ping.exe		%ROS_INSTALL%\bin
 copy net\telnet\telnet.exe 	%ROS_INSTALL%\bin
+copy net\telnet\keys.cfg 	%ROS_INSTALL%\bin
+copy net\telnet\telnet.ini 	%ROS_INSTALL%\bin
 copy notevil\notevil.exe	%ROS_INSTALL%\bin
 copy sysutils\chkdsk.exe	%ROS_INSTALL%\bin
 copy sysutils\chklib.exe	%ROS_INSTALL%\bin
