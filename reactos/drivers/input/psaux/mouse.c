@@ -194,7 +194,7 @@ BOOLEAN detect_ps2_port(void)
 
   Millisecond_Timeout.QuadPart = 1;
 
-  return TRUE; // The rest of this code fails under BOCHs
+  //return TRUE; // The rest of this code fails under BOCHs
 
   /* Put the value 0x5A in the output buffer using the "WriteAuxiliary Device Output Buffer" command (0xD3).
      Poll the Status Register for a while to see if the value really turns up in the Data Register. If the
