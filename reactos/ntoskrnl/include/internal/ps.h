@@ -428,7 +428,6 @@ struct _EPROCESS
    */
   MADDRESS_SPACE        AddressSpace;
   LIST_ENTRY            ProcessListEntry;
-  FAST_MUTEX            TebLock;
   PVOID                 TebBlock;
   PVOID                 TebLastAllocated;
 };

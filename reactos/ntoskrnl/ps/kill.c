@@ -101,9 +101,9 @@ PspTerminateProcessThreads(PEPROCESS Process,
         
             /* Make sure it didn't already terminate */
             if (!Thread->HasTerminated) {
-        
-                Thread->HasTerminated = TRUE;
 
+                Thread->HasTerminated = TRUE;
+                
                 /* Terminate it by APC */
                 PspTerminateThreadByPointer(Thread, ExitStatus);
             }
@@ -143,7 +143,7 @@ PspDeleteThread(PVOID ObjectBody)
     PETHREAD Thread = (PETHREAD)ObjectBody;
     PEPROCESS Process = Thread->ThreadsProcess;
 
-    DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
+    DPRINT("PiDeleteThread(ObjectBody 0x%x, process 0x%x)\n",ObjectBody, Thread->ThreadsProcess);
 
     /* Deassociate the Process */
     Thread->ThreadsProcess = NULL;
@@ -179,12 +179,15 @@ PspExitThread(NTSTATUS ExitStatus)
     PVOID TebBlock;
     PTERMINATION_PORT TerminationPort;
 
-    DPRINT("PsTerminateCurrentThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
+    DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
     /* Get the Current Thread and Process */
     CurrentThread = PsGetCurrentThread();
-    CurrentThread->HasTerminated = TRUE;
     CurrentProcess = CurrentThread->ThreadsProcess;
+    
+    /* Set the Exit Status and Exit Time */
+    CurrentThread->ExitStatus = ExitStatus;
+    KeQuerySystemTime(&CurrentThread->ExitTime);
 
     /* Can't terminate a thread if it attached another process */
     if (KeIsAttachedProcess()) {
@@ -198,15 +201,14 @@ PspExitThread(NTSTATUS ExitStatus)
     /* Lower to Passive Level */
     KeLowerIrql(PASSIVE_LEVEL);
 
-    /* Run Thread Notify Routines before we desintegrate the thread */
-    PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
-    
-    /* Set the Exit Status and Exit Time */
-    CurrentThread->ExitStatus = ExitStatus;
-    KeQuerySystemTime(&CurrentThread->ExitTime);
-
     /* Lock the Process before we modify its thread entries */
     PsLockProcess(CurrentProcess, FALSE);
+    
+    /* wake up the thread so we don't deadlock on PsLockProcess */
+    KeForceResumeThread(&CurrentThread->Tcb);
+    
+    /* Run Thread Notify Routines before we desintegrate the thread */
+    PspRunCreateThreadNotifyRoutines(CurrentThread, FALSE);
 
     /* Remove the thread from the thread list of its process */
     RemoveEntryList(&CurrentThread->ThreadListEntry);
@@ -250,36 +252,31 @@ PspExitThread(NTSTATUS ExitStatus)
     PsTerminateWin32Thread(CurrentThread);
     if (Last) PsTerminateWin32Process(CurrentProcess);
    
-    /* Cancel I/O for the thread. */
-    IoCancelThreadIo(CurrentThread);
-   
     /* Rundown Registry Notifications. TODO (refers to NtChangeNotify, not Cm callbacks) */
     //CmNotifyRunDown(CurrentThread);
-     
+    
     /* Free the TEB */
     if(CurrentThread->Tcb.Teb) {
-        
+
         DPRINT("Decommit teb at %p\n", CurrentThread->Tcb.Teb);
-        ExAcquireFastMutex(&CurrentProcess->TebLock);
         TebBlock = MM_ROUND_DOWN(CurrentThread->Tcb.Teb, MM_VIRTMEM_GRANULARITY);
-     
+
         ZwFreeVirtualMemory(NtCurrentProcess(),
                            (PVOID *)&CurrentThread->Tcb.Teb,
                            &Length,
                            MEM_DECOMMIT);
-        
+
         DPRINT("teb %p, TebBlock %p\n", CurrentThread->Tcb.Teb, TebBlock);
-     
+
         if (TebBlock != CurrentProcess->TebBlock ||
             CurrentProcess->TebBlock == CurrentProcess->TebLastAllocated) {
-            
+
             MmLockAddressSpace(&CurrentProcess->AddressSpace);
             MmReleaseMemoryAreaIfDecommitted(CurrentProcess, &CurrentProcess->AddressSpace, TebBlock);
             MmUnlockAddressSpace(&CurrentProcess->AddressSpace);
         }
-    
+
         CurrentThread->Tcb.Teb = NULL;
-        ExReleaseFastMutex(&CurrentProcess->TebLock);
     }
    
     /* The last Thread shuts down the Process */
@@ -287,6 +284,9 @@ PspExitThread(NTSTATUS ExitStatus)
     
     /* Unlock the Process */
     PsUnlockProcess(CurrentProcess);
+    
+    /* Cancel I/O for the thread. */
+    IoCancelThreadIo(CurrentThread);
     
     /* Rundown Timers */
     ExTimerRundown();
@@ -318,7 +318,7 @@ PsExitSpecialApc(PKAPC Apc,
 {
     NTSTATUS ExitStatus = (NTSTATUS)Apc->NormalContext;
     
-    DPRINT("PsExitSpecialApc called: 0x%x\n", PsGetCurrentThread());
+    DPRINT("PsExitSpecialApc called: 0x%x (proc: 0x%x)\n", PsGetCurrentThread(), PsGetCurrentProcess());
     
     /* Free the APC */
     ExFreePool(Apc);
@@ -396,7 +396,7 @@ NTSTATUS
 STDCALL
 PspExitProcess(PEPROCESS Process)
 {
-    DPRINT("PspExitProcess\n");
+    DPRINT("PspExitProcess 0x%x\n", Process);
            
     PspRunCreateProcessNotifyRoutines(Process, FALSE);
            
@@ -421,24 +421,30 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
 {
     NTSTATUS Status;
     PEPROCESS Process;
+    PETHREAD CurrentThread;
+    BOOLEAN KillByHandle;
    
     PAGED_CODE();
    
     DPRINT("NtTerminateProcess(ProcessHandle %x, ExitStatus %x)\n",
             ProcessHandle, ExitStatus);
     
+    KillByHandle = (ProcessHandle != NULL);
+
     /* Get the Process Object */
-    Status = ObReferenceObjectByHandle(ProcessHandle,
+    Status = ObReferenceObjectByHandle((KillByHandle ? ProcessHandle : NtCurrentProcess()),
                                        PROCESS_TERMINATE,
                                        PsProcessType,
                                        KeGetPreviousMode(),
                                        (PVOID*)&Process,
                                        NULL);
     if (!NT_SUCCESS(Status)) {
-    
+
         DPRINT1("Invalid handle to Process\n");
         return(Status);
     }
+    
+    CurrentThread = PsGetCurrentThread();
     
     PsLockProcess(Process, FALSE);
     
@@ -450,36 +456,43 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
     
     /* Terminate all the Process's Threads */
     PspTerminateProcessThreads(Process, ExitStatus);
-            
-    /* Only master thread remains... kill it off */
-    if (PsGetCurrentThread()->ThreadsProcess == Process) {
-        
+    
+    /* only kill the calling thread if it either passed a process handle or
+       NtCurrentProcess() */
+    if (KillByHandle) {
+
         /* set the exit time as we're about to release the process lock before
            we kill ourselves to prevent threads outside of our process trying
            to kill us */
         KeQuerySystemTime(&Process->ExitTime);
-        
-        PsUnlockProcess(Process);
-        
-        /* we can safely dereference the process because the current thread
-           holds a reference to it until it gets reaped */
-        ObDereferenceObject(Process);
-        
-        /* now the other threads get a chance to terminate, we don't wait but
-           just kill ourselves right now. The process will be run down when the
-           last thread terminates */
 
-        PspExitThread(ExitStatus);
-        
-        /* we should never reach this point! */
-        KEBUGCHECK(0);
+        /* Only master thread remains... kill it off */
+        if (CurrentThread->ThreadsProcess == Process) {
+
+            /* mark our thread as terminating so attempts to terminate it, when
+               unlocking the process, fail */
+            CurrentThread->HasTerminated = TRUE;
+
+            PsUnlockProcess(Process);
+
+            /* we can safely dereference the process because the current thread
+               holds a reference to it until it gets reaped */
+            ObDereferenceObject(Process);
+
+            /* now the other threads get a chance to terminate, we don't wait but
+               just kill ourselves right now. The process will be run down when the
+               last thread terminates */
+
+            PspExitThread(ExitStatus);
+
+            /* we should never reach this point! */
+            KEBUGCHECK(0);
+        }
     }
-    else
-    {
-        /* unlock and dereference the process so the threads can kill themselves */
-        PsUnlockProcess(Process);
-        ObDereferenceObject(Process);
-    }
+
+    /* unlock and dereference the process so the threads can kill themselves */
+    PsUnlockProcess(Process);
+    ObDereferenceObject(Process);
     
     return(STATUS_SUCCESS);
 }
@@ -501,7 +514,7 @@ NtTerminateThread(IN HANDLE ThreadHandle,
                                        KeGetPreviousMode(),
                                        (PVOID*)&Thread,
                                        NULL);
-    if (Status != STATUS_SUCCESS) {
+    if (!NT_SUCCESS(Status)) {
         
         DPRINT1("Could not reference thread object\n");
         return(Status);
@@ -518,15 +531,27 @@ NtTerminateThread(IN HANDLE ThreadHandle,
     /* Check to see if we're running in the same thread */
     if (Thread != PsGetCurrentThread())  {
                  
-         /* This isn't our thread, check if it's terminated already */
+        /* we need to lock the process to make sure it's not already terminating */
+        PsLockProcess(Thread->ThreadsProcess, FALSE);
+        
+        /* This isn't our thread, terminate it if not already done */
         if (!Thread->HasTerminated) {
          
+             Thread->HasTerminated = TRUE;
+             
              /* Terminate it */
              PspTerminateThreadByPointer(Thread, ExitStatus);
-         }
+        }
+        
+        PsUnlockProcess(Thread->ThreadsProcess);
+        
+        /* Dereference the Thread and return */
+        ObDereferenceObject(Thread);
         
     } else {
 
+        Thread->HasTerminated = TRUE;
+        
         /* it's safe to dereference thread, there's at least the keep-alive
            reference which will be removed by the thread reaper causing the
            thread to be finally destroyed */
@@ -539,8 +564,6 @@ NtTerminateThread(IN HANDLE ThreadHandle,
         KEBUGCHECK(0);
     }
     
-    /* Dereference the Thread and return */
-    ObDereferenceObject(Thread);
     return(STATUS_SUCCESS);
 }
 

@@ -166,7 +166,7 @@ PsCreateTeb(HANDLE ProcessHandle,
    else
      {
        Process = Thread->ThreadsProcess;
-       ExAcquireFastMutex(&Process->TebLock);
+       PsLockProcess(Process, FALSE);
        if (NULL == Process->TebBlock ||
            Process->TebBlock == Process->TebLastAllocated)
          {
@@ -180,7 +180,7 @@ PsCreateTeb(HANDLE ProcessHandle,
                                             PAGE_READWRITE);
            if (! NT_SUCCESS(Status))
              {
-               ExReleaseFastMutex(&Process->TebLock);
+               PsUnlockProcess(Process);
                DPRINT1("Failed to reserve virtual memory for TEB\n");
                return Status;
              }
@@ -199,7 +199,7 @@ PsCreateTeb(HANDLE ProcessHandle,
            return Status;
          }
        Process->TebLastAllocated = TebBase;
-       ExReleaseFastMutex(&Process->TebLock);
+       PsUnlockProcess(Process);
      }
 
    DPRINT ("TebBase %p TebSize %lu\n", TebBase, TebSize);
