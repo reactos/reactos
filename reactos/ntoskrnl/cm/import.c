@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.11 2003/03/22 18:26:53 ekohl Exp $
+/* $Id: import.c,v 1.12 2003/03/24 19:09:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -613,29 +613,202 @@ CmImportTextHive(PCHAR  ChunkBase,
 }
 
 
-VOID
+BOOLEAN
 CmImportSystemHive(PCHAR ChunkBase,
 		   ULONG ChunkSize)
 {
+  PREGISTRY_HIVE Hive;
+  PCELL_HEADER FreeBlock;
+  BLOCK_OFFSET BlockOffset;
+  PHBIN Bin;
+  ULONG i, j;
+  ULONG FreeOffset;
+  NTSTATUS Status;
+  ULONG BitmapSize;
+
+
+//  CmImportTextHive (ChunkBase, ChunkSize);
+
   if (strncmp (ChunkBase, "REGEDIT4", 8) == 0)
     {
-      DPRINT("Found 'REGEDIT4' magic\n");
+      DPRINT1("Found 'REGEDIT4' magic\n");
       CmImportTextHive (ChunkBase, ChunkSize);
+      return TRUE;
     }
-  else
+  else if (strncpy (ChunkBase, "regf", 4) != 0)
     {
-      DPRINT1("Found '%*s' magic\n", 4, ChunkBase);
-      KeBugCheck(0);
+      DPRINT1("Found invalid '%*s' magic\n", 4, ChunkBase);
+      return FALSE;
     }
+
+  /* Create a new hive */
+  Hive = ExAllocatePool (NonPagedPool,
+			 sizeof(REGISTRY_HIVE));
+  if (Hive == NULL)
+    {
+      return FALSE;
+    }
+  RtlZeroMemory (Hive,
+		 sizeof(REGISTRY_HIVE));
+
+  Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
+						   sizeof(HIVE_HEADER));
+  if (Hive->HiveHeader == NULL)
+    {
+      DPRINT1 ("Allocating hive header failed\n");
+      ExFreePool (Hive);
+      return FALSE;
+    }
+
+  /* Import the hive header */
+  RtlCopyMemory (Hive->HiveHeader,
+		 ChunkBase,
+		 sizeof(HIVE_HEADER));
+
+  /* Read update counter */
+  Hive->UpdateCounter = Hive->HiveHeader->UpdateCounter1;
+
+  /* Set the hive's size */
+  Hive->FileSize = ChunkSize;
+
+  /* Set the size of the block list */
+  Hive->BlockListSize = (Hive->FileSize / 4096) - 1;
+
+  /* Allocate block list */
+  DPRINT1("Space needed for block list describing hive: 0x%x\n",
+	 sizeof(PHBIN *) * Hive->BlockListSize);
+  Hive->BlockList = ExAllocatePool(NonPagedPool,
+				   sizeof(PHBIN *) * Hive->BlockListSize);
+  if (Hive->BlockList == NULL)
+    {
+      DPRINT1 ("Allocating block list failed\n");
+      ExFreePool (Hive->HiveHeader);
+      ExFreePool (Hive);
+      return FALSE;
+    }
+
+  /* Allocate the first hive block */
+  Hive->BlockList[0] = ExAllocatePool(PagedPool,
+				      Hive->FileSize - 4096);
+  if (Hive->BlockList[0] == NULL)
+    {
+      DPRINT1 ("Allocating the first hive block failed\n");
+      ExFreePool (Hive->BlockList);
+      ExFreePool (Hive->HiveHeader);
+      ExFreePool (Hive);
+      return FALSE;
+    }
+
+  /* Import the hive block */
+  RtlCopyMemory (Hive->BlockList[0],
+		 ChunkBase + 4096,
+		 Hive->FileSize - 4096);
+
+  /* Initialize the free block list */
+  Hive->FreeListSize = 0;
+  Hive->FreeListMax = 0;
+  Hive->FreeList = NULL;
+
+  BlockOffset = 0;
+  for (i = 0; i < Hive->BlockListSize; i++)
+    {
+      Hive->BlockList[i] = (PHBIN) (((ULONG_PTR)Hive->BlockList[0]) + BlockOffset);
+      Bin = (PHBIN) (((ULONG_PTR)Hive->BlockList[i]));
+      if (Bin->BlockId != REG_BIN_ID)
+	{
+	  DPRINT1("Bad BlockId %x, offset %x\n", Bin->BlockId, BlockOffset);
+	  /* FIXME: */
+	  assert(FALSE);
+//	  return STATUS_INSUFFICIENT_RESOURCES;
+	}
+
+      assertmsg((Bin->BlockSize % 4096) == 0, ("BlockSize (0x%.08x) must be multiplum of 4K\n", Bin->BlockSize));
+
+      if (Bin->BlockSize > 4096)
+	{
+	  for (j = 1; j < Bin->BlockSize / 4096; j++)
+	    {
+	      Hive->BlockList[i + j] = Hive->BlockList[i];
+	    }
+	  i = i + j - 1;
+	}
+
+      /* Search free blocks and add to list */
+      FreeOffset = REG_HBIN_DATA_OFFSET;
+      while (FreeOffset < Bin->BlockSize)
+	{
+	  FreeBlock = (PCELL_HEADER) ((ULONG_PTR)Hive->BlockList[i] + FreeOffset);
+	  if (FreeBlock->CellSize > 0)
+	    {
+	      Status = CmiAddFree(Hive,
+				  FreeBlock,
+				  Hive->BlockList[i]->BlockOffset + FreeOffset,
+				  FALSE);
+	      if (!NT_SUCCESS(Status))
+		{
+		  /* FIXME: */
+		  assert(FALSE);
+		}
+
+	      FreeOffset += FreeBlock->CellSize;
+	    }
+	  else
+	    {
+	      FreeOffset -= FreeBlock->CellSize;
+	    }
+	}
+      BlockOffset += Bin->BlockSize;
+    }
+
+  /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
+  BitmapSize = ROUND_UP(Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
+  DPRINT("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
+  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+
+  /* Allocate bitmap */
+  Hive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
+					      BitmapSize);
+  if (Hive->BitmapBuffer == NULL)
+    {
+      DPRINT1 ("Allocating the hive bitmap failed\n");
+      ExFreePool (Hive->BlockList[0]);
+      ExFreePool (Hive->BlockList);
+      ExFreePool (Hive->HiveHeader);
+      ExFreePool (Hive);
+      return FALSE;
+    }
+
+  /* Initialize bitmap */
+  RtlInitializeBitMap(&Hive->DirtyBitMap,
+		      Hive->BitmapBuffer,
+		      BitmapSize * 8);
+  RtlClearAllBits(&Hive->DirtyBitMap);
+  Hive->HiveDirty = FALSE;
+
+
+  /* Initialize the hive's executive resource */
+  ExInitializeResourceLite(&Hive->HiveResource);
+
+  /* Acquire hive list lock exclusively */
+  ExAcquireResourceExclusiveLite(&CmiHiveListLock, TRUE);
+
+  /* Add the new hive to the hive list */
+  InsertTailList(&CmiHiveListHead, &Hive->HiveList);
+
+  /* Release hive list lock */
+  ExReleaseResourceLite(&CmiHiveListLock);
+
+  return TRUE;
 }
 
 
-VOID
+BOOLEAN
 CmImportHardwareHive(PCHAR ChunkBase,
 		     ULONG ChunkSize)
 {
   DPRINT1("CmImportHardwareHive() called\n");
 
+  return TRUE;
 }
 
 /* EOF */

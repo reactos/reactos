@@ -256,6 +256,7 @@ typedef struct _REGISTRY_HIVE
   BLOCK_OFFSET *FreeListOffset;
   ERESOURCE  HiveResource;
 
+  PULONG BitmapBuffer;
   RTL_BITMAP  DirtyBitMap;
   BOOLEAN  HiveDirty;
 } REGISTRY_HIVE, *PREGISTRY_HIVE;

@@ -6,9 +6,6 @@
  * UPDATE HISTORY:
 */
 
-#ifdef WIN32_REGDBG
-#include "cm_win32.h"
-#else
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <roscfg.h>
@@ -23,7 +20,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#endif
+
 
 /* uncomment to enable hive checks (incomplete and probably buggy) */
 // #define HIVE_CHECK
@@ -81,11 +78,7 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
 {
   assert(RootKeyCell);
   RtlZeroMemory(RootKeyCell, sizeof(KEY_CELL));
-#ifdef WIN32_REGDBG
-  RootKeyCell->CellSize = -(LONG)sizeof(KEY_CELL);
-#else
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
-#endif
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
   NtQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
@@ -766,9 +759,9 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   PHBIN tmpBin;
   ULONG i, j;
   ULONG BitmapSize;
-  PULONG BitmapBuffer;
 
-  DPRINT1("CmiInitNonVolatileRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
+  DPRINT("CmiInitNonVolatileRegistryHive(%p, %S, %d) called\n",
+	 RegistryHive, Filename, CreateNew);
 
   /* Duplicate Filename */
   Status = RtlCreateUnicodeString(&RegistryHive->HiveFileName,
@@ -896,7 +889,7 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 				  sizeof(fsi),
 				  FileStandardInformation);
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status) || fsi.EndOfFile.u.LowPart == 0)
     {
       DPRINT("NtQueryInformationFile() failed (Status %lx)\n", Status);
       NtClose(FileHandle);
@@ -906,17 +899,6 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
     }
 
   RegistryHive->FileSize = fsi.EndOfFile.u.LowPart;
-#ifdef WIN32_REGDBG
-//  assert(RegistryHive->FileSize);
-  if (RegistryHive->FileSize == 0)
-    {
-      DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
-      NtClose(FileHandle);
-      RtlFreeUnicodeString(&RegistryHive->HiveFileName);
-      RtlFreeUnicodeString(&RegistryHive->LogFileName);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-#endif
   RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
 
   DPRINT("Space needed for block list describing hive: 0x%x\n",
@@ -937,10 +919,6 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
 
   RegistryHive->BlockList[0] = ExAllocatePool(PagedPool,
 	  RegistryHive->FileSize - 4096);
-#ifdef WIN32_REGDBG
-  RtlZeroMemory(RegistryHive->BlockList[0], RegistryHive->FileSize - 4096);
-#endif
-
   if (RegistryHive->BlockList[0] == NULL)
     {
       ExFreePool(RegistryHive->BlockList);
@@ -1034,10 +1012,10 @@ CmiInitNonVolatileRegistryHive(PREGISTRY_HIVE RegistryHive,
   DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
 
   /* Allocate bitmap */
-  BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
-					BitmapSize);
+  RegistryHive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
+						      BitmapSize);
   RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
-		      BitmapBuffer,
+		      RegistryHive->BitmapBuffer,
 		      BitmapSize * 8);
 
   /* Initialize bitmap */
@@ -1822,7 +1800,7 @@ CmiFlushRegistryHive(PREGISTRY_HIVE RegistryHive)
 
 ULONG
 CmiGetMaxNameLength(PREGISTRY_HIVE  RegistryHive,
-  PKEY_CELL  KeyCell)
+		    PKEY_CELL  KeyCell)
 {
   PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
@@ -1841,27 +1819,27 @@ CmiGetMaxNameLength(PREGISTRY_HIVE  RegistryHive,
   for (i = 0; i < HashBlock->HashTableSize; i++)
     {
       if (HashBlock->Table[i].KeyOffset != 0)
-        {
-          CurSubKeyCell = CmiGetBlock(RegistryHive,
-            HashBlock->Table[i].KeyOffset,
-            NULL);
-          if (MaxName < CurSubKeyCell->NameSize)
-            {
-              MaxName = CurSubKeyCell->NameSize;
-            }
-          CmiReleaseBlock(RegistryHive, CurSubKeyCell);
-        }
+	{
+	  CurSubKeyCell = CmiGetBlock(RegistryHive,
+				      HashBlock->Table[i].KeyOffset,
+				      NULL);
+	  if (MaxName < CurSubKeyCell->NameSize)
+	    {
+	      MaxName = CurSubKeyCell->NameSize;
+	    }
+	  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
+	}
     }
 
   CmiReleaseBlock(RegistryHive, HashBlock);
-  
+
   return MaxName;
 }
 
 
 ULONG
 CmiGetMaxClassLength(PREGISTRY_HIVE  RegistryHive,
-  PKEY_CELL  KeyCell)
+		     PKEY_CELL  KeyCell)
 {
   PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
@@ -1880,16 +1858,16 @@ CmiGetMaxClassLength(PREGISTRY_HIVE  RegistryHive,
   for (i = 0; i < HashBlock->HashTableSize; i++)
     {
       if (HashBlock->Table[i].KeyOffset != 0)
-        {
-          CurSubKeyCell = CmiGetBlock(RegistryHive,
-            HashBlock->Table[i].KeyOffset,
-            NULL);
-          if (MaxClass < CurSubKeyCell->ClassSize)
-            {
-              MaxClass = CurSubKeyCell->ClassSize;
-            }
-          CmiReleaseBlock(RegistryHive, CurSubKeyCell);
-        }
+	{
+	  CurSubKeyCell = CmiGetBlock(RegistryHive,
+				      HashBlock->Table[i].KeyOffset,
+				      NULL);
+	  if (MaxClass < CurSubKeyCell->ClassSize)
+	    {
+	      MaxClass = CurSubKeyCell->ClassSize;
+	    }
+	  CmiReleaseBlock(RegistryHive, CurSubKeyCell);
+	}
     }
 
   CmiReleaseBlock(RegistryHive, HashBlock);
@@ -1898,9 +1876,9 @@ CmiGetMaxClassLength(PREGISTRY_HIVE  RegistryHive,
 }
 
 
-ULONG  
+ULONG
 CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
-  PKEY_CELL KeyCell)
+			 PKEY_CELL KeyCell)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -1909,7 +1887,9 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
 
   VERIFY_KEY_CELL(KeyCell);
 
-  ValueListCell = CmiGetBlock(RegistryHive, KeyCell->ValuesOffset, NULL);
+  ValueListCell = CmiGetBlock(RegistryHive,
+			      KeyCell->ValuesOffset,
+			      NULL);
   MaxValueName = 0;
   if (ValueListCell == NULL)
     {
@@ -1930,7 +1910,7 @@ CmiGetMaxValueNameLength(PREGISTRY_HIVE RegistryHive,
     }
 
   CmiReleaseBlock(RegistryHive, ValueListCell);
-  
+
   return MaxValueName;
 }
 
@@ -1973,12 +1953,12 @@ CmiGetMaxValueDataLength(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
-	IN PKEY_CELL KeyCell,
-	OUT PKEY_CELL *SubKeyCell,
-	OUT BLOCK_OFFSET *BlockOffset,
-	IN PCHAR KeyName,
-	IN ACCESS_MASK DesiredAccess,
-	IN ULONG Attributes)
+		 IN PKEY_CELL KeyCell,
+		 OUT PKEY_CELL *SubKeyCell,
+		 OUT BLOCK_OFFSET *BlockOffset,
+		 IN PCHAR KeyName,
+		 IN ACCESS_MASK DesiredAccess,
+		 IN ULONG Attributes)
 {
   PHASH_TABLE_CELL HashBlock;
   PKEY_CELL CurSubKeyCell;
@@ -2336,10 +2316,10 @@ CmiRemoveSubKey(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
-	IN PKEY_CELL KeyCell,
-	IN PUNICODE_STRING ValueName,
-	OUT PVALUE_CELL *ValueCell,
-	OUT BLOCK_OFFSET *VBOffset)
+		   IN PKEY_CELL KeyCell,
+		   IN PUNICODE_STRING ValueName,
+		   OUT PVALUE_CELL *ValueCell,
+		   OUT BLOCK_OFFSET *VBOffset)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -2386,9 +2366,9 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiGetValueFromKeyByIndex(IN PREGISTRY_HIVE RegistryHive,
-	IN PKEY_CELL KeyCell,
-	IN ULONG Index,
-	OUT PVALUE_CELL *ValueCell)
+			  IN PKEY_CELL KeyCell,
+			  IN ULONG Index,
+			  OUT PVALUE_CELL *ValueCell)
 {
   PVALUE_LIST_CELL ValueListCell;
   PVALUE_CELL CurValueCell;
@@ -2775,8 +2755,8 @@ CmiDestroyValueCell(PREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 CmiAddBin(PREGISTRY_HIVE RegistryHive,
-  PVOID *NewBlock,
-  BLOCK_OFFSET *NewBlockOffset)
+	  PVOID *NewBlock,
+	  BLOCK_OFFSET *NewBlockOffset)
 {
   PCELL_HEADER tmpBlock;
   PHBIN * tmpBlockList;
@@ -2839,9 +2819,10 @@ CmiAddBin(PREGISTRY_HIVE RegistryHive,
       RtlCopyMemory(BitmapBuffer,
 		    RegistryHive->DirtyBitMap.Buffer,
 		    RegistryHive->DirtyBitMap.SizeOfBitMap);
-      ExFreePool(RegistryHive->DirtyBitMap.Buffer);
+      ExFreePool(RegistryHive->BitmapBuffer);
+      RegistryHive->BitmapBuffer = BitmapBuffer;
       RtlInitializeBitMap(&RegistryHive->DirtyBitMap,
-			  BitmapBuffer,
+			  RegistryHive->BitmapBuffer,
 			  BitmapSize * 8);
     }
 
