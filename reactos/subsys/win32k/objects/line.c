@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: line.c,v 1.35 2004/07/03 17:40:27 navaraf Exp $ */
+/* $Id: line.c,v 1.36 2004/07/03 22:36:01 navaraf Exp $ */
 #include <w32k.h>
 
 // Some code from the WINE project source (www.winehq.com)
@@ -188,56 +188,53 @@ IntGdiPolyline(DC      *dc,
                LPPOINT pt,
                int     Count)
 {
-  BITMAPOBJ    *BitmapObj;
-  BOOL         ret = FALSE; // default to failure
-  LONG         i;
-  PGDIBRUSHOBJ PenBrushObj;
-  POINT       *pts;
+   BITMAPOBJ *BitmapObj;
+   GDIBRUSHOBJ *PenBrushObj;
+   LPPOINT Points;
+   BOOL Ret = TRUE;
+   LONG i;
 
-  if ( PATH_IsPathOpen ( dc->w.path ) )
-    return PATH_Polyline ( dc, pt, Count );
+   if (PATH_IsPathOpen(dc->w.path))
+      return PATH_Polyline(dc, pt, Count);
 
-  BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
-  ASSERT(BitmapObj);
+   /* Get BRUSHOBJ from current pen. */
+   PenBrushObj = PENOBJ_LockPen(dc->w.hPen);
+   ASSERT(PenBrushObj);
 
-  //Allocate "Count" bytes of memory to hold a safe copy of pt
-  pts = (POINT*)ExAllocatePoolWithTag ( PagedPool, sizeof(POINT)*Count, TAG_SHAPE );
-  if ( pts )
-  {
-    // safely copy pt to local version
-    if ( STATUS_SUCCESS == MmCopyFromCaller(pts, pt, sizeof(POINT)*Count) )
-    {
-      //offset the array of point by the dc->w.DCOrg
-      for ( i = 0; i < Count; i++ )
+   if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+   {
+      Points = EngAllocMem(0, Count * sizeof(POINT), TAG_COORD);
+      if (Points != NULL)
       {
-	pts[i].x += dc->w.DCOrgX;
-	pts[i].y += dc->w.DCOrgY;
+         BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
+         ASSERT(BitmapObj);
+
+         RtlCopyMemory(Points, pt, Count * sizeof(POINT));
+         IntLPtoDP(dc, Points, Count);
+
+         /* Offset the array of point by the dc->w.DCOrg */
+         for (i = 0; i < Count; i++)
+         {
+            Points[i].x += dc->w.DCOrgX;
+            Points[i].y += dc->w.DCOrgY;
+         }
+
+         Ret = IntEngPolyline(BitmapObj, dc->CombinedClip,
+     			   &PenBrushObj->BrushObject, Points, Count,
+     			   dc->w.ROPmode);
+
+         BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+         EngFreeMem(Points);
       }
-
-      /* get BRUSHOBJ from current pen. */
-      PenBrushObj = PENOBJ_LockPen( dc->w.hPen );
-      ASSERT(PenBrushObj);
-
-      if (!(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
+      else
       {
-        //get IntEngPolyline to do the drawing.
-        ret = IntEngPolyline(BitmapObj,
-  			   dc->CombinedClip,
-  			   &PenBrushObj->BrushObject,
-  			   pts,
-  			   Count,
-  			   dc->w.ROPmode);
+         Ret = FALSE;
       }
+   }
 
-      PENOBJ_UnlockPen( dc->w.hPen );
-    }
+   PENOBJ_UnlockPen(dc->w.hPen);
 
-    ExFreePool ( pts );
-  }
-
-  BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
-
-  return ret;
+   return Ret;
 }
 
 BOOL FASTCALL
