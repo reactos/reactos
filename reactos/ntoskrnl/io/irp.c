@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.46 2002/11/10 18:17:41 chorns Exp $
+/* $Id: irp.c,v 1.47 2003/01/25 16:16:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -73,6 +73,7 @@ IoMakeAssociatedIrp(PIRP Irp,
   
   AssocIrp = IoAllocateIrp(StackSize,FALSE);
   UNIMPLEMENTED;
+  return NULL;
 }
 
 
@@ -105,7 +106,6 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
   * FUNCTION: Sends an IRP to the next lower driver
  */
 {
-  NTSTATUS Status;
   PDRIVER_OBJECT DriverObject;
   PIO_STACK_LOCATION Param;
   
@@ -118,20 +118,18 @@ IofCallDriver(PDEVICE_OBJECT DeviceObject,
 
   assert(DriverObject);
 
-  Param = IoGetNextIrpStackLocation(Irp);
+  IoSetNextIrpStackLocation(Irp);
+  Param = IoGetCurrentIrpStackLocation(Irp);
 
   DPRINT("IrpSp 0x%X\n", Param);
   
-  Irp->Tail.Overlay.CurrentStackLocation--;
-  Irp->CurrentLocation--;
-  
+  Param->DeviceObject = DeviceObject;
+
   DPRINT("MajorFunction %d\n", Param->MajorFunction);
   DPRINT("DriverObject->MajorFunction[Param->MajorFunction] %x\n",
-	 DriverObject->MajorFunction[Param->MajorFunction]);
-  Status = DriverObject->MajorFunction[Param->MajorFunction](DeviceObject,
-							     Irp);
-
-  return(Status);
+    DriverObject->MajorFunction[Param->MajorFunction]);
+  
+  return DriverObject->MajorFunction[Param->MajorFunction](DeviceObject, Irp);
 }
 
 
@@ -221,34 +219,62 @@ IofCompleteRequest(PIRP Irp,
  *                         thread making the request
  */
 {
-   ULONG i;
-   NTSTATUS Status;
-   
+   ULONG             i;
+   NTSTATUS          Status;
+   PDEVICE_OBJECT    DeviceObject;
+
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
-	   Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
+      Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
+
+   assert(Irp->CancelRoutine == NULL);
+   assert(Irp->IoStatus.Status != STATUS_PENDING);
+
+   if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
+   {
+      Irp->PendingReturned = TRUE;
+   }
 
    for (i=Irp->CurrentLocation;i<(ULONG)Irp->StackCount;i++)
    {
-      if (Irp->Stack[i].CompletionRoutine != NULL)
-      {
-	 Status = Irp->Stack[i].CompletionRoutine(
-					     Irp->Stack[i].DeviceObject,
-					     Irp,
-					     Irp->Stack[i].CompletionContext);
-	 if (Status == STATUS_MORE_PROCESSING_REQUIRED)
-	 {
-	    return;
-	 }
-      }
-      if (Irp->Stack[i].Control & SL_PENDING_RETURNED)
-      {
-	 Irp->PendingReturned = TRUE;
-      }
+      /*
+      Completion routines expect the current irp stack location to be the same as when
+      IoSetCompletionRoutine was called to set them. A side effect is that completion
+      routines set by highest level drivers without their own stack location will receive
+      an invalid current stack location (at least it should be considered as invalid).
+      Since the DeviceObject argument passed is taken from the current stack, this value
+      is also invalid (NULL).
+      */
       if (Irp->CurrentLocation < Irp->StackCount - 1)
       {
-	 IoSkipCurrentIrpStackLocation(Irp);
+         IoSetPreviousIrpStackLocation(Irp);
+         DeviceObject = IoGetCurrentIrpStackLocation(Irp)->DeviceObject;
+      }
+      else
+      {
+         DeviceObject = NULL;
+      }
+
+      if (Irp->Stack[i].CompletionRoutine != NULL &&
+         ((NT_SUCCESS(Irp->IoStatus.Status) && (Irp->Stack[i].Control & SL_INVOKE_ON_SUCCESS)) ||
+         (!NT_SUCCESS(Irp->IoStatus.Status) && (Irp->Stack[i].Control & SL_INVOKE_ON_ERROR)) ||
+         (Irp->Cancel && (Irp->Stack[i].Control & SL_INVOKE_ON_CANCEL))))
+      {
+         Status = Irp->Stack[i].CompletionRoutine(DeviceObject,
+                                                  Irp,
+                                                  Irp->Stack[i].CompletionContext);
+
+         if (Status == STATUS_MORE_PROCESSING_REQUIRED)
+         {
+            return;
+         }
+      }
+   
+      if (IoGetCurrentIrpStackLocation(Irp)->Control & SL_PENDING_RETURNED)
+      {
+         Irp->PendingReturned = TRUE;
       }
    }
+
    if (Irp->PendingReturned)
      {
 	DPRINT("Dispatching APC\n");
