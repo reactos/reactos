@@ -67,11 +67,10 @@ VOID
 MiniDisplayPacket(
     PNDIS_PACKET Packet)
 {
-//#ifdef DBG
-#if 0
+#ifdef DBG
     ULONG i, Length;
     UCHAR Buffer[64];
-    if ((DebugTraceLevel | DEBUG_PACKET) > 0) {
+    if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
         Length = CopyPacketToBuffer(
             (PUCHAR)&Buffer,
             Packet,
@@ -99,7 +98,7 @@ MiniDisplayPacket2(
     UINT   LookaheadBufferSize)
 {
 #ifdef DBG
-    if ((DebugTraceLevel | DEBUG_PACKET) > 0) {
+    if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
         ULONG i, Length;
         PUCHAR p;
 
@@ -1544,7 +1543,7 @@ NdisIDispatchPnp(
         Status = NdisIForwardIrpAndWait(Adapter, Irp);
         if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
           {
-            Status = NdisIPnPStartDevice(DeviceObject, Irp);
+	      Status = NdisIPnPStartDevice(DeviceObject, Irp);
           }
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
