@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.37 2003/10/28 12:21:36 navaraf Exp $
+/* $Id: winpos.c,v 1.38 2003/10/28 13:43:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -757,7 +757,7 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    * FIXME: Relink windows. (also take into account shell window in hwndShellWindow)
    */
   if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwndInsertAfter != WinPos.hwnd &&
-      Window->Self != NtUserGetShellWindow())
+      WinPos.hwnd != NtUserGetShellWindow())
     {
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT InsertAfterWindow;

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.120 2003/10/28 12:21:36 navaraf Exp $
+/* $Id: window.c,v 1.121 2003/10/28 13:43:56 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2242,14 +2242,12 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
   if (0 <= (int) Index)
     {
-      DbgPrint("GetWindowLong(%x, %d)\n", hWnd, Index);
       if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return 0;
 	}
       Result = *((LONG *)(WindowObject->ExtraData + Index));
-      DbgPrint("Result: %x\n", Result);
     }
   else
     {
@@ -2847,7 +2845,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
     /* move shell window into background */
     if (hwndListView && hwndListView!=hwndShell)
     {
-        WinPosSetWindowPos(hwndListView, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
+        WinPosSetWindowPos(hwndListView, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
 	if (NtUserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
 	    return FALSE;
@@ -2941,7 +2939,6 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
   if (0 <= (int) Index)
     {
-      DbgPrint("SetWindowLong(%x, %d, %x)\n", hWnd, Index, NewValue);
       if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2949,7 +2946,6 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 	}
       OldValue = *((LONG *)(WindowObject->ExtraData + Index));
       *((LONG *)(WindowObject->ExtraData + Index)) = NewValue;
-      DbgPrint("OldValue: %x\n", OldValue);
     }
   else
     {
