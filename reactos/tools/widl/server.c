@@ -677,8 +677,12 @@ static void write_serverinterfacedecl(type_t *iface)
     print_server("0,\n");
     indent--;
     print_server("};\n");
-    print_server("RPC_IF_HANDLE %s_v%d_%d_s_ifspec = (RPC_IF_HANDLE)& %s___RpcServerInterface;\n",
-                 iface->name, LOWORD(ver), HIWORD(ver), iface->name);
+    if (old_names)
+        print_server("RPC_IF_HANDLE %s_ServerIfHandle = (RPC_IF_HANDLE)& %s___RpcServerInterface;\n",
+                     iface->name, iface->name);
+    else
+        print_server("RPC_IF_HANDLE %s_v%d_%d_s_ifspec = (RPC_IF_HANDLE)& %s___RpcServerInterface;\n",
+                     iface->name, LOWORD(ver), HIWORD(ver), iface->name);
     fprintf(server, "\n");
 }
 

@@ -14,7 +14,9 @@ LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 #define REACTOS_STR_ORIGINAL_FILENAME	"sysdm.cpl\0"
 #include <reactos/version.rc>
 
+IDI_CPLSYSTEM ICON "resources/applet.ico"
+IDI_DEVMGR ICON "resources/devmgr.ico"
 
 #include "en.rc"
 #include "de.rc"
-
+#include "dk.rc"

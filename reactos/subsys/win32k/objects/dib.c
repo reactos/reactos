@@ -883,8 +883,15 @@ DIB_CreateDIBSection(
     if(bi->biBitCount == 4) { Entries = 16; } else
     if(bi->biBitCount == 8) { Entries = 256; }
 
-    bmp->ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
-    RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
+    if (Entries)
+    {
+      bmp->ColorMap = ExAllocatePoolWithTag(PagedPool, sizeof(RGBQUAD)*Entries, TAG_COLORMAP);
+      RtlCopyMemory(bmp->ColorMap, bmi->bmiColors, sizeof(RGBQUAD)*Entries);
+    }
+    else
+    {
+      bmp->ColorMap = NULL;
+    }
   }
 
   // Clean up in case of errors

@@ -18,11 +18,14 @@ TOOLS = \
 
 LIBS = lib_unicode lib_wpp
 
-CLEAN_FILES = $(TOOLS)
+CLEAN_FILES = $(TOOLS) tools-check.tmp tools-check.h
 
-all: $(TOOLS) $(LIBS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
+all: $(TOOLS) tools_check $(LIBS) zlib_target wmc_target cabman_target cdmake_target mkhive_target rgenstat_target \
 	wine2ros_target pipetools_target winebuild_target bin2res_target wrc_target widl_target \
 	buildno_target
+
+tools_check:
+	$(MAKE) -f tools-check.mak
 
 regtests$(EXE_POSTFIX): regtests.c
 	@$(HOST_CC) $(CFLAGS) -o regtests$(EXE_POSTFIX) regtests.c

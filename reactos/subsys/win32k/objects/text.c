@@ -2971,6 +2971,12 @@ TextIntRealizeFont(HFONT FontHandle)
       return STATUS_INVALID_HANDLE;
     }
 
+  if (TextObj->Initialized)
+    {
+      TEXTOBJ_UnlockText(FontHandle);
+      return STATUS_SUCCESS;
+    }
+
   if (! RtlCreateUnicodeString(&FaceName, TextObj->logfont.lfFaceName))
     {
       TEXTOBJ_UnlockText(FontHandle);
@@ -3003,6 +3009,7 @@ TextIntRealizeFont(HFONT FontHandle)
     }
   else
     {
+      TextObj->Initialized = TRUE;
       Status = STATUS_SUCCESS;
     }
 

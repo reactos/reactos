@@ -20,6 +20,7 @@
 
 #include <limits.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include "wine/unicode.h"
 

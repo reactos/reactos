@@ -672,8 +672,12 @@ static void write_clientinterfacedecl(type_t *iface)
     print_client("0,\n");
     indent--;
     print_client("};\n");
-    print_client("RPC_IF_HANDLE %s_v%d_%d_c_ifspec = (RPC_IF_HANDLE)& %s___RpcClientInterface;\n",
-                 iface->name, LOWORD(ver), HIWORD(ver), iface->name);
+    if (old_names)
+       print_client("RPC_IF_HANDLE %s_ClientIfHandle = (RPC_IF_HANDLE)& %s___RpcClientInterface;\n",
+                    iface->name, iface->name);
+    else
+       print_client("RPC_IF_HANDLE %s_v%d_%d_c_ifspec = (RPC_IF_HANDLE)& %s___RpcClientInterface;\n",
+                    iface->name, LOWORD(ver), HIWORD(ver), iface->name);
     fprintf(client, "\n");
 }
 

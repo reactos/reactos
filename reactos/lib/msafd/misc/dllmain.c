@@ -1285,6 +1285,7 @@ WSPGetSockName(
 			RtlCopyMemory (Name->sa_data,
 			               SocketAddress->Address[0].Address, 
 			               SocketAddress->Address[0].AddressLength);
+			*NameLength = 2 + SocketAddress->Address[0].AddressLength;
 			HeapFree(GlobalHeap, 0, TdiAddress);
 			return 0;
 		} else {

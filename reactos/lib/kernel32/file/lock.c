@@ -39,6 +39,7 @@ LockFile(
    
 	Overlapped.Offset = dwFileOffsetLow;
 	Overlapped.OffsetHigh = dwFileOffsetHigh;
+   Overlapped.hEvent = NULL;
 	dwReserved = 0;
 
   	return LockFileEx(hFile, LOCKFILE_FAIL_IMMEDIATELY|LOCKFILE_EXCLUSIVE_LOCK,dwReserved,nNumberOfBytesToLockLow, nNumberOfBytesToLockHigh, &Overlapped ) ;
@@ -57,7 +58,7 @@ LockFileEx(
 	   DWORD dwReserved,
 	   DWORD nNumberOfBytesToLockLow,
 	   DWORD nNumberOfBytesToLockHigh,
-	   LPOVERLAPPED lpOverlapped
+	   LPOVERLAPPED lpOverlapped /* required! */
 	   )
 {
    LARGE_INTEGER BytesToLock;	
@@ -66,7 +67,7 @@ LockFileEx(
    NTSTATUS errCode;
    LARGE_INTEGER Offset;
    
-   if(dwReserved != 0) 
+   if(dwReserved != 0 || lpOverlapped==NULL) 
      {      
 	SetLastError(ERROR_INVALID_PARAMETER);
 	return FALSE;
@@ -91,7 +92,7 @@ LockFileEx(
    BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
    
    errCode = NtLockFile(hFile,
-			NULL,
+         lpOverlapped->hEvent,
 			NULL,
 			NULL,
 			(PIO_STATUS_BLOCK)lpOverlapped,
@@ -124,13 +125,13 @@ UnlockFile(
 	   DWORD nNumberOfBytesToUnlockHigh
 	   )
 {
-	DWORD dwReserved;
 	OVERLAPPED Overlapped;
+   DWORD dwReserved;
 	Overlapped.Offset = dwFileOffsetLow;
 	Overlapped.OffsetHigh = dwFileOffsetHigh;
-	dwReserved = 0;
-	return UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow, nNumberOfBytesToUnlockHigh, &Overlapped);
-
+   dwReserved = 0;
+   
+   return UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow, nNumberOfBytesToUnlockHigh, &Overlapped);
 }
 
 
@@ -144,19 +145,14 @@ UnlockFileEx(
 	DWORD dwReserved,
 	DWORD nNumberOfBytesToUnLockLow,
 	DWORD nNumberOfBytesToUnLockHigh,
-	LPOVERLAPPED lpOverlapped
+	LPOVERLAPPED lpOverlapped /* required! */
 	)
 {
    LARGE_INTEGER BytesToUnLock;
    LARGE_INTEGER StartAddress;
    NTSTATUS errCode;
    
-   if(dwReserved != 0) 
-     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-     }
-   if ( lpOverlapped == NULL ) 
+   if(dwReserved != 0 || lpOverlapped == NULL) 
      {
 	SetLastError(ERROR_INVALID_PARAMETER);
 	return FALSE;

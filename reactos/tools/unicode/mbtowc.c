@@ -22,6 +22,8 @@
 
 #include "wine/unicode.h"
 
+typedef unsigned char uchar;
+
 /* get the decomposition of a Unicode char */
 int get_decomposition( WCHAR src, WCHAR *dst, unsigned int dstlen )
 {
@@ -256,25 +258,25 @@ int wine_cp_mbstowcs( const union cptable *table, int flags,
     {
         if (flags & MB_ERR_INVALID_CHARS)
         {
-            if (check_invalid_chars_sbcs( &table->sbcs, src, srclen )) return -2;
+            if (check_invalid_chars_sbcs( &table->sbcs, (const uchar*)src, srclen )) return -2;
         }
         if (!(flags & MB_COMPOSITE))
         {
             if (!dstlen) return srclen;
-            return mbstowcs_sbcs( &table->sbcs, src, srclen, dst, dstlen );
+            return mbstowcs_sbcs( &table->sbcs, (const uchar*)src, srclen, dst, dstlen );
         }
-        return mbstowcs_sbcs_decompose( &table->sbcs, src, srclen, dst, dstlen );
+        return mbstowcs_sbcs_decompose( &table->sbcs, (const uchar*)src, srclen, dst, dstlen );
     }
     else /* mbcs */
     {
         if (flags & MB_ERR_INVALID_CHARS)
         {
-            if (check_invalid_chars_dbcs( &table->dbcs, src, srclen )) return -2;
+            if (check_invalid_chars_dbcs( &table->dbcs, (const uchar*)src, srclen )) return -2;
         }
         if (!(flags & MB_COMPOSITE))
-            return mbstowcs_dbcs( &table->dbcs, src, srclen, dst, dstlen );
+            return mbstowcs_dbcs( &table->dbcs, (const uchar*)src, srclen, dst, dstlen );
         else
-            return mbstowcs_dbcs_decompose( &table->dbcs, src, srclen, dst, dstlen );
+            return mbstowcs_dbcs_decompose( &table->dbcs, (const uchar*)src, srclen, dst, dstlen );
     }
 }
 
