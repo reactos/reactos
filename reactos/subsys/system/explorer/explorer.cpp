@@ -601,6 +601,19 @@ int main(int argc, char* argv[])
 #endif	// __MINGW && UNICODE
 
 
+static bool SetShellReadyEvent(LPCTSTR evtName)
+{
+	HANDLE hEvent = OpenEvent(EVENT_MODIFY_STATE, FALSE, evtName);
+	if (!hEvent)
+		return false;
+
+	SetEvent(hEvent);
+	CloseHandle(hEvent);
+
+	return true;
+}
+
+
 int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nShowCmd)
 {
 	CONTEXT("WinMain()");
@@ -646,10 +659,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		}
 
 		startup_desktop = TRUE;
-	} else
+	} else {
 		 // create desktop window and task bar only, if there is no other shell and we are
 		 // the first explorer instance
+		 // MS Explorer looks additionally into the registry entry HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon\shell,
+		 // to decide wether it is currently configured as shell application.
 		startup_desktop = !any_desktop_running;
+	}
+
 
 	bool autostart = !any_desktop_running;
 
@@ -674,6 +691,14 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
 		autostart = false;
 
+	if (startup_desktop) {
+		 // hide the XP login screen (Credit to Nicolas Escuder)
+		 // another undocumented event: "Global\\msgina: ReturnToWelcome"
+		if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
+			SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+	}
+
+
 	g_Globals.init(hInstance);
 
 	 // initialize COM and OLE before creating the desktop window
@@ -684,6 +709,7 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 		g_Globals._hwndDesktop = DesktopWindow::Create();
 
+		/**TODO launching autostart programs can be moved into a background thread. */
 		if (autostart) {
 			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
 			startup(2, argv);
