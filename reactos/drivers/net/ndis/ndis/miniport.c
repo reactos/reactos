@@ -1946,7 +1946,7 @@ NdisMSleep(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 EXPORT
@@ -1955,9 +1955,9 @@ NdisMSynchronizeWithInterrupt(
     IN  PVOID                       SynchronizeFunction,
     IN  PVOID                       SynchronizeContext)
 {
-    UNIMPLEMENTED
-
-  return FALSE;
+  return(KeSynchronizeExecution((PKINTERRUPT)Interrupt,
+				(PKSYNCHRONIZE_ROUTINE)SynchronizeFunction,
+				SynchronizeContext));
 }
 
 
