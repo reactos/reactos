@@ -1,0 +1,11 @@
+<module name="sound" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>dsp.c</file>
+	<file>mixer.c</file>
+	<file>sb16.c</file>
+	<file>sb_waveout.c</file>
+	<file>sound.c</file>
+	<file>wave.c</file>
+	<file>sb16.rc</file>
+</module>

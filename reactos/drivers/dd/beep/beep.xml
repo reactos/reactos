@@ -1,0 +1,6 @@
+<module name="beep" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>beep.c</file>
+	<file>beep.rc</file>
+</module>

@@ -1,0 +1,6 @@
+<module name="serial" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>serial.c</file>
+	<file>serial.rc</file>
+</module>

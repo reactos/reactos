@@ -1,0 +1,6 @@
+<module name="blue" type="kernelmodedriver">
+	<library>ntoskrnl</library>
+	<library>hal</library>
+	<file>blue.c</file>
+	<file>blue.rc</file>
+</module>
