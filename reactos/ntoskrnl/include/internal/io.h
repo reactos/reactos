@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.43 2004/05/02 19:33:29 ekohl Exp $
+/* $Id: io.h,v 1.44 2004/09/23 11:26:09 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -352,11 +352,27 @@ IoCreateDriverList(VOID);
 NTSTATUS
 IoDestroyDriverList(VOID);
 
+/* bootlog.c */
+
+VOID
+IopInitBootLog(VOID);
+
+VOID
+IopStartBootLog(VOID);
+
+VOID
+IopStopBootLog(VOID);
+
+VOID
+IopBootLog(PUNICODE_STRING DriverName, BOOLEAN Success);
+
+VOID
+IopSaveBootLogToFile(VOID);
 
 /* errlog.c */
 
 NTSTATUS
-IopInitErrorLog (VOID);
+IopInitErrorLog(VOID);
 
 
 /* rawfs.c */

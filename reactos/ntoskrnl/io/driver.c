@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.52 2004/09/20 19:47:25 hbirr Exp $
+/* $Id: driver.c,v 1.53 2004/09/23 11:26:41 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -1183,6 +1183,8 @@ IopInitializeBootDrivers(VOID)
    PCHAR Extension;
    PLOADER_MODULE KeLoaderModules = (PLOADER_MODULE)KeLoaderBlock.ModsAddr;
    ULONG i;
+   UNICODE_STRING DriverName;
+   NTSTATUS Status;
 
    DPRINT("IopInitializeBootDrivers()\n");
 
@@ -1209,15 +1211,25 @@ IopInitializeBootDrivers(VOID)
       /*
        * Load builtin driver
        */
-
-      if (!_stricmp(Extension, ".sys"))
+      if (!_stricmp(Extension, ".exe") || !_stricmp(Extension, ".dll"))
+      {
+        RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
+        IopBootLog(&DriverName, TRUE);
+        RtlFreeUnicodeString(&DriverName);
+      }
+      else if (!_stricmp(Extension, ".sys"))
       {
          if (!ModuleLoaded)
          {
-            IopInitializeBuiltinDriver(NULL, (PVOID)ModuleStart, ModuleName,
-               ModuleSize);
+            Status = IopInitializeBuiltinDriver(NULL,
+                                                (PVOID)ModuleStart,
+                                                ModuleName,
+                                                ModuleSize);
+            RtlCreateUnicodeStringFromAsciiz(&DriverName, ModuleName);
+            IopBootLog(&DriverName, NT_SUCCESS(Status) ? TRUE : FALSE);
+            RtlFreeUnicodeString(&DriverName);
          }
-         ++BootDriverCount;
+         BootDriverCount++;
       }
 
       /*
@@ -1251,6 +1263,7 @@ IopLoadDriver(PSERVICE Service)
 
    IopDisplayLoadingMessage(Service->ServiceName.Buffer);
    Status = NtLoadDriver(&Service->RegistryPath);
+   IopBootLog(&Service->ImagePath, NT_SUCCESS(Status) ? TRUE : FALSE);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("NtLoadDriver() failed (Status %lx)\n", Status);

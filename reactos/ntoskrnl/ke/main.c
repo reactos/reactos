@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.194 2004/09/09 20:42:33 hbirr Exp $
+/* $Id: main.c,v 1.195 2004/09/23 11:27:08 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -356,7 +356,7 @@ ExpInitializeExecutive(VOID)
 	    else
 	      {
 		MmCoreDumpType = MM_CORE_DUMP_TYPE_NONE;
-	      }	    
+	      }
 	  }
       }
      p1 = p2;
@@ -649,6 +649,21 @@ ExpInitializeExecutive(VOID)
   /* Initialize Callbacks before drivers */
   ExpInitializeCallbacks();
 
+  /* Start boot logging */
+  IopInitBootLog();
+  p1 = (PCHAR)KeLoaderBlock.CommandLine;
+  while (*p1 && (p2 = strchr(p1, '/')))
+  {
+    p2++;
+    if (!_strnicmp(p2, "BOOTLOG", 7))
+    {
+      p2 += 7;
+      IopStartBootLog();
+    }
+
+    p1 = p2;
+  }
+
   /*
    * Load boot start drivers
    */
@@ -693,6 +708,9 @@ ExpInitializeExecutive(VOID)
   IopInitializeSystemDrivers();
 
   IoDestroyDriverList();
+
+  /* Stop boot logging */
+  IopStopBootLog();
 
   /*
    * Assign drive letters
@@ -744,11 +762,7 @@ ExpInitializeExecutive(VOID)
       Handles[1] = ProcessHandle;
 
       /* Wait for the system to be initialized */
-#ifdef __GNUC__
-      Timeout.QuadPart = -1200000000LL;  /* 120 second timeout */
-#else
-      Timeout.QuadPart = -1200000000;  /* 120 second timeout */
-#endif
+      Timeout.QuadPart = (LONGLONG)-1200000000;  /* 120 second timeout */
       Status = NtWaitForMultipleObjects(((LONG) sizeof(Handles) / sizeof(HANDLE)),
         Handles,
         WaitAny,
@@ -790,11 +804,7 @@ ExpInitializeExecutive(VOID)
       /*
        * Crash the system if the initial process terminates within 5 seconds.
        */
-#ifdef __GNUC__
-      Timeout.QuadPart = -50000000LL;
-#else
-      Timeout.QuadPart = -50000000;
-#endif
+      Timeout.QuadPart = (LONGLONG)-50000000;  /* 5 second timeout */
       Status = NtWaitForSingleObject(ProcessHandle,
     				 FALSE,
     				 &Timeout);

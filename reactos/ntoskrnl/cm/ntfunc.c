@@ -1993,7 +1993,8 @@ NtInitializeRegistry (IN BOOLEAN SetUpBoot)
   if (CmiRegistryInitialized == TRUE)
     return STATUS_ACCESS_DENIED;
 
-  /* FIXME: save boot log file */
+  /* Save boot log file */
+  IopSaveBootLogToFile();
 
   Status = CmiInitHives (SetUpBoot);
 
