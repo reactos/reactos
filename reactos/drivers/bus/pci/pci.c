@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.2 2002/05/05 14:57:45 chorns Exp $
+/* $Id: pci.c,v 1.3 2003/04/26 07:06:55 hbirr Exp $
  *
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
@@ -68,7 +68,7 @@ PciReadConfigUshort(UCHAR Bus,
      {
      case pbtType1:
 	WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(Bus, Slot, Offset));
-	*Value = READ_PORT_USHORT((PUSHORT)0xCFC + (Offset & 1));
+	*Value = READ_PORT_USHORT((PUSHORT)0xCFC + (Offset & 2));
 	return STATUS_SUCCESS;
 
      case pbtType2:
@@ -150,7 +150,7 @@ PciWriteConfigUshort(UCHAR Bus,
      {
      case pbtType1:
 	WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(Bus, Slot, Offset));
-	WRITE_PORT_USHORT((PUSHORT)0xCFC + (Offset & 1), Value);
+	WRITE_PORT_USHORT((PUSHORT)0xCFC + (Offset & 2), Value);
 	return STATUS_SUCCESS;
 
      case pbtType2:

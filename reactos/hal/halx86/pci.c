@@ -1,4 +1,4 @@
-/* $Id: pci.c,v 1.8 2003/04/06 10:45:15 chorns Exp $
+/* $Id: pci.c,v 1.9 2003/04/26 07:06:54 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -115,7 +115,7 @@ ReadPciConfigUshort(UCHAR Bus,
      case 1:
         KeAcquireSpinLock(&PciLock, &oldIrql);
 	WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(Bus, Slot, Offset));
-	*Value = READ_PORT_USHORT((PUSHORT)0xCFC + (Offset & 1));
+	*Value = READ_PORT_USHORT((PUSHORT)0xCFC + (Offset & 2));
 	KeReleaseSpinLock(&PciLock, oldIrql);
 	return STATUS_SUCCESS;
 
@@ -215,7 +215,7 @@ WritePciConfigUshort(UCHAR Bus,
      case 1:
         KeAcquireSpinLock(&PciLock, &oldIrql);
 	WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(Bus, Slot, Offset));
-	WRITE_PORT_USHORT((PUSHORT)0xCFC + (Offset & 1), Value);
+	WRITE_PORT_USHORT((PUSHORT)0xCFC + (Offset & 2), Value);
 	KeReleaseSpinLock(&PciLock, oldIrql);
 	return STATUS_SUCCESS;
 
