@@ -51,7 +51,8 @@ LIST_ENTRY MiniportListHead;
 KSPIN_LOCK MiniportListLock;
 LIST_ENTRY AdapterListHead;
 KSPIN_LOCK AdapterListLock;
-
+LIST_ENTRY OrphanAdapterListHead;
+KSPIN_LOCK OrphanAdapterListLock;
 
 #ifdef DBG
 VOID
