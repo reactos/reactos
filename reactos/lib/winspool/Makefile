@@ -1,4 +1,6 @@
-# $Id: Makefile,v 1.2 2003/08/07 04:03:24 royce Exp $
+#
+# Fix this
+#
 
 PATH_TO_TOP = ../..
 
@@ -15,6 +17,8 @@ TARGET_CFLAGS = \
  -Wall \
  -Werror \
  -fno-builtin \
+ -D__REACTOS__ \
+ -D__USE_W32API \
  -DUNICODE \
  -DLE \
  -DDBG
@@ -24,9 +28,9 @@ TARGET_CFLAGS += -D_DISABLE_TIDENTS
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_SDKLIBS = libwine.a libwine_unicode.a ntdll.a kernel32.a
 
-TARGET_OBJECTS = stubs.o
+TARGET_OBJECTS = info.o stubs.o
 
 TARGET_CLEAN = $(DEP_FILES)
 

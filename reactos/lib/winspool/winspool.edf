@@ -1,4 +1,4 @@
-; $Id: winspool.edf,v 1.1 2003/04/30 20:44:06 gvg Exp $
+; $Id: winspool.edf,v 1.2 2004/01/12 23:42:23 sedwards Exp $
 ;
 ; winspool.drv - Printer spooler
 
@@ -76,6 +76,8 @@ FindClosePrinterChangeNotification=FindClosePrinterChangeNotification@4
 FindFirstPrinterChangeNotification=FindFirstPrinterChangeNotification@16
 FindNextPrinterChangeNotification=FindNextPrinterChangeNotification@16
 FreePrinterNotifyInfo=FreePrinterNotifyInfo@4
+GetDefaultPrinterA=GetDefaultPrinterA@8
+GetDefaultPrinterW=GetDefaultPrinterW@8
 GetFormA=GetFormA@24
 GetFormW=GetFormW@24
 GetJobA=GetJobA@24
