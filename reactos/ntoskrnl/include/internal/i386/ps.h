@@ -41,7 +41,7 @@
 #define KPCR_BASE                 0xFF000000
 
 #define KPCR_EXCEPTION_LIST       0x0
-#define KPCR_SELF                 0x18
+#define KPCR_SELF                 0x1C
 #define KPCR_TSS                  0x40
 #define KPCR_CURRENT_THREAD       0x124	
 
@@ -213,30 +213,30 @@ typedef struct _KPCR_TIB {
  */
 typedef struct _KPCR {
   KPCR_TIB  Tib;                /* 00 */
-  struct _KPCR  *Self;          /* 18 */
-  struct _KPRCB  *PCRCB;        /* 1C */
-  KIRQL  Irql;                  /* 20 */
-  ULONG  IRR;                   /* 24 */
-  ULONG  IrrActive;             /* 28 */
-  ULONG  IDR;                   /* 2C */
-  PVOID  KdVersionBlock;        /* 30 */
-  PUSHORT  IDT;                 /* 34 */
-  PUSHORT  GDT;                 /* 38 */
-  struct _KTSS  *TSS;           /* 3C */
-  USHORT  MajorVersion;         /* 40 */
-  USHORT  MinorVersion;         /* 42 */
-  KAFFINITY  SetMember;         /* 44 */
-  ULONG  StallScaleFactor;      /* 48 */
-  UCHAR  DebugActive;           /* 4C */
-  UCHAR  ProcessorNumber;       /* 4D */
-  UCHAR  Reserved;              /* 4E */
-  UCHAR  L2CacheAssociativity;  /* 4F */
-  ULONG  VdmAlert;              /* 50 */
-  ULONG  KernelReserved[14];    /* 54 */
-  ULONG  L2CacheSize;           /* 8C */
-  ULONG  HalReserved[16];       /* 90 */
-  ULONG  InterruptMode;         /* D0 */
-  UCHAR  KernelReserved2[0x48]; /* D4 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *PCRCB;        /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  DebugActive;           /* 50 */
+  UCHAR  ProcessorNumber;       /* 51 */
+  UCHAR  Reserved;              /* 52 */
+  UCHAR  L2CacheAssociativity;  /* 53 */
+  ULONG  VdmAlert;              /* 54 */
+  ULONG  KernelReserved[14];    /* 58 */
+  ULONG  L2CacheSize;           /* 90 */
+  ULONG  HalReserved[16];       /* 94 */
+  ULONG  InterruptMode;         /* D4 */
+  UCHAR  KernelReserved2[0x48]; /* D8 */
   KPRCB  PrcbData;              /* 120 */
 } KPCR, *PKPCR;
 
@@ -251,12 +251,12 @@ static inline PKPCR KeGetCurrentKPCR(VOID)
   ULONG value;
 
 #if defined(__GNUC__)
-  __asm__ __volatile__ ("movl %%fs:0x18, %0\n\t"
+  __asm__ __volatile__ ("movl %%fs:0x1C, %0\n\t"
 	  : "=r" (value)
     : /* no inputs */
     );
 #elif defined(_MSC_VER)
-  __asm mov eax, fs:0x18;
+  __asm mov eax, fs:0x1C;
   __asm mov value, eax;
 #else
 #error Unknown compiler for inline assembler
