@@ -21,7 +21,6 @@
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-
 #include "wine/debug.h"
 #include "windef.h"
 #include "winbase.h"
