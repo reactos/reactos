@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.30 2004/05/02 20:16:45 hbirr Exp $
+/* $Id: fsctl.c,v 1.31 2004/06/20 09:52:58 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -31,7 +31,7 @@
 #include <rosrtl/string.h>
 #include <wchar.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "vfat.h"
@@ -122,6 +122,16 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
          /* This is possible a removable media formated as super floppy */
          *RecognizedFS = TRUE;
       }
+   }
+   /*
+    * Floppy disk driver can return Unknown as media type if it
+    * doesn't know yet what floppy in the drive really is. This is
+    * perfectly correct to do under Windows.
+    */
+   if (DiskGeometry.MediaType == Unknown)
+   {
+      *RecognizedFS = TRUE;
+      DiskGeometry.BytesPerSector = 512;
    }
    if (DiskGeometry.MediaType > Unknown && DiskGeometry.MediaType < RemovableMedia )
    {
