@@ -50,8 +50,8 @@ DRIVERS_LIB = bzip2 zlib
 
 # Kernel mode device drivers
 # Obsolete: ide
-# beep blue floppy null parallel ramdrv serenum serial vga vidport
-DEVICE_DRIVERS = beep blue floppy null serial vga vidport
+# beep blue floppy null parallel ramdrv serenum serial vga videoprt
+DEVICE_DRIVERS = beep blue floppy null serial vga videoprt
 
 # Kernel mode input drivers
 # keyboard mouclass psaux sermouse
