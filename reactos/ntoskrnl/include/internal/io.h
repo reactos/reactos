@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.44 2004/09/23 11:26:09 ekohl Exp $
+/* $Id: io.h,v 1.45 2004/10/22 10:55:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -79,15 +79,9 @@ typedef struct _DEVICE_NODE
   ULONG DisableableDepends;
   ULONG Problem;
   PCM_RESOURCE_LIST CmResourceList;
-  PCM_RESOURCE_LIST BootResourcesList;
+  PCM_RESOURCE_LIST BootResourceList;
   PIO_RESOURCE_REQUIREMENTS_LIST ResourceRequirementsList;
   /* Not NT's */
-  UNICODE_STRING DeviceID;
-  UNICODE_STRING InstanceID;
-  UNICODE_STRING HardwareIDs;
-  UNICODE_STRING CompatibleIDs;
-  UNICODE_STRING DeviceText;
-  UNICODE_STRING DeviceTextLocation;
   PPNP_BUS_INFORMATION BusInformation;
 } DEVICE_NODE, *PDEVICE_NODE;
 
