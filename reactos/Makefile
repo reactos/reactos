@@ -72,9 +72,9 @@ APPS = args hello test cat bench apc shm lpc thread event file gditest \
        objdir atomtest winhello partinfo mutex stats pice
 
   
-#lzexpand mapi32 (missing imports)
+#lzexpand (missing imports)
 #dsound (missing winmm.dll)
-WINE_DLLS = rpcrt4 ole32 oleaut32 oledlg olepro32 olecli olesvr \
+WINE_DLLS = rpcrt4 mapi32 ole32 oleaut32 oledlg olepro32 olecli olesvr \
             shell32 shlwapi comctl32 shfolder shdocvw commdlg \
             ddraw dinput dplay dplayx \
             psapi richedit serialui winspool

@@ -17,6 +17,7 @@ copy ..\wine\dlls\ddraw\ddraw.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\dinput\dinput.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\dplay\dplay.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\dplayx\dplayx.dll 	%WINE_INSTALL%
+copy ..\wine\dlls\mapi32\mapi32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\ole32\ole32.dll 	%WINE_INSTALL%
 copy ..\wine\dlls\oleaut32\oleaut32.dll %WINE_INSTALL%
 copy ..\wine\dlls\olecli\olecli32.dll   %WINE_INSTALL%
