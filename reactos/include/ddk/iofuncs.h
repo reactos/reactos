@@ -1,6 +1,6 @@
 #ifndef _INCLUDE_DDK_IOFUNCS_H
 #define _INCLUDE_DDK_IOFUNCS_H
-/* $Id: iofuncs.h,v 1.34 2002/10/03 19:26:46 robd Exp $ */
+/* $Id: iofuncs.h,v 1.35 2002/10/05 10:53:36 dwelch Exp $ */
 
 /* --- EXPORTED BY NTOSKRNL --- */
 
@@ -824,9 +824,6 @@ STDCALL
 IoQueueThreadIrp (
 	IN	PIRP	Irp
 	);
-
-typedef struct _IO_WORKITEM *PIO_WORKITEM;
-typedef VOID (*PIO_WORKITEM_ROUTINE)(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
 
 VOID
 STDCALL

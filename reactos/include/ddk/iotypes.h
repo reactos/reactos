@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.42 2002/10/03 19:26:47 robd Exp $
+/* $Id: iotypes.h,v 1.43 2002/10/05 10:53:36 dwelch Exp $
  *
  */
 
@@ -814,6 +814,9 @@ typedef VOID STDCALL
 typedef VOID STDCALL
 (*PIO_TIMER_ROUTINE)(PDEVICE_OBJECT DeviceObject,
 		     PVOID Context);
+
+typedef struct _IO_WORKITEM *PIO_WORKITEM;
+typedef VOID (*PIO_WORKITEM_ROUTINE)(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
 
 #if WINDOWS_STRUCTS_DOESNT_ALREADY_DEFINE_THIS
 typedef struct _PARTITION_INFORMATION

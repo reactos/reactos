@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.26 2002/10/03 19:24:24 robd Exp $
+/* $Id: io.h,v 1.27 2002/10/05 10:53:37 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -268,8 +268,6 @@ VOID
 IoInitFileSystemImplementation(VOID);
 VOID
 IoInitVpbImplementation(VOID);
-VOID
-IoInitializeWorkerThreads(VOID);
 
 NTSTATUS
 IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
