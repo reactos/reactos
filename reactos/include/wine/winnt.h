@@ -31,6 +31,20 @@
 #define LANG_WELSH                       0x92
 #define LANG_BRETON                      0x93
 
+/* FIXME: these are not in the Windows header */
+#define LANG_GAELIC         0x3c
+#define LANG_MALTESE        0x3a
+#define LANG_MAORI          0x28
+#define LANG_RHAETO_ROMANCE 0x17
+#define LANG_SAAMI          0x3b
+#define LANG_SORBIAN        0x2e
+#define LANG_SUTU           0x30
+#define LANG_TSONGA         0x31
+#define LANG_TSWANA         0x32
+#define LANG_VENDA          0x33
+#define LANG_XHOSA          0x34
+#define LANG_ZULU           0x35
+
 #define WINE_UNUSED   __attribute__((unused))
 
 #endif  /* __WINE_WINNT_H */
