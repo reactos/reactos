@@ -189,7 +189,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    return ioStatus.Status;
 }
 
-NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+NTSTATUS STDCALL_FUNC MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;
@@ -270,7 +270,7 @@ VOID MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    }
 }
 
-NTSTATUS STDCALL MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
+NTSTATUS STDCALL_FUNC MouseClassInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    // Retrieve GDI's callback
 
@@ -318,7 +318,8 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 {
    PDEVICE_OBJECT DeviceObject;
    UNICODE_STRING DeviceName = UNICODE_STRING_INITIALIZER(L"\\Device\\MouseClass");
-   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");
+   UNICODE_STRING SymlinkName = UNICODE_STRING_INITIALIZER(L"\\??\\MouseClass");   NTSTATUS Status;
+
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = MouseClassDispatch;
 //   DriverObject->MajorFunction[IRP_MJ_CLOSE]  = MouseClassDispatch;
@@ -326,16 +327,32 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
    DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = MouseClassInternalDeviceControl; // to get GDI callback
 //   DriverObject->DriverStartIo                = MouseClassStartIo;
 
-   IoCreateDevice(DriverObject,
-		  sizeof(DEVICE_EXTENSION),
-		  &DeviceName,
-		  FILE_DEVICE_MOUSE,
-		  0,
-		  TRUE,
-		  &DeviceObject);
+   Status = IoCreateDevice(DriverObject,
+			   sizeof(DEVICE_EXTENSION),
+			   &DeviceName,
+			   FILE_DEVICE_MOUSE,
+			   0,
+			   TRUE,
+			   &DeviceObject);
+   if (!NT_SUCCESS(Status))
+     {
+       return(Status);
+     }
    DeviceObject->Flags = DeviceObject->Flags | DO_BUFFERED_IO;
 
-   IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+   Status = IoCreateSymbolicLink(&SymlinkName, &DeviceName);
+   if (!NT_SUCCESS(Status))
+     {
+       IoDeleteDevice(DeviceObject);
+       return(Status);
+     }
 
-   return ConnectMousePortDriver(DeviceObject);
+   Status = ConnectMousePortDriver(DeviceObject);
+   if (!NT_SUCCESS(Status))
+     {
+       IoDeleteSymbolicLink(&SymlinkName);
+       IoDeleteDevice(DeviceObject);
+       return(Status);
+     }
+   return(STATUS_SUCCESS);
 }
