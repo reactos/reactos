@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.36 2003/12/13 13:45:17 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.37 2003/12/13 19:53:17 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -91,7 +91,6 @@ IntCopyBitmap(HBITMAP bmp)
 HCURSOR FASTCALL
 IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange)
 {
-  PDC dc;
   PSURFOBJ SurfObj;
   PSURFGDI SurfGDI;
   SIZEL MouseSize;
@@ -108,20 +107,27 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   CurInfo = &WinStaObject->SystemCursor;
   OldCursor = CurInfo->CurrentCursorObject;
   if(OldCursor)
+  {
     Ret = (HCURSOR)OldCursor->Handle;
+  }
   
   if(!ForceChange && (OldCursor == NewCursor))
-    goto done;
+  {
+    return Ret;
+  }
   
+  {
   /* FIXME use the desktop's HDC instead of using ScreenDeviceContext */
-  dc = DC_LockDc(IntGetScreenDC());
+    PDC dc = DC_LockDc(IntGetScreenDC());
   if(!dc)
-    goto done;
-  
+    {
+      return Ret;
+    }
   SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
   SurfGDI = (PSURFGDI)AccessInternalObject((ULONG) dc->Surface);
   DevInfo = dc->DevInfo;
   DC_UnlockDc(IntGetScreenDC());
+  }
   
   if(!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
   {
@@ -133,24 +139,29 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       &MouseRect,
                                                       SPS_CHANGE);
     
-    CurInfo->CurrentCursorObject = NewCursor;
+    CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
     CurInfo->ShowingCursor = 0;
-    goto done;
+    return Ret;
   }
   
-  if(NewCursor || ForceChange)
+  if (!NewCursor)
   {
+    return Ret;
+  }
+
+  /* TODO: Fixme. Logic is screwed above */
+
+  ASSERT(NewCursor);
     MaskBmpObj = BITMAPOBJ_LockBitmap(NewCursor->IconInfo.hbmMask);
     if(MaskBmpObj)
     {
-      if(MaskBmpObj->bitmap.bmBitsPixel != 1)
+    const int maskBpp = MaskBmpObj->bitmap.bmBitsPixel;
+    BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
+    if(maskBpp != 1)
       {
         DbgPrint("SetCursor: The Mask bitmap must have 1BPP!\n");
-        BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
-        goto done;
+      return Ret;
       }
-      
-      BITMAPOBJ_UnlockBitmap(NewCursor->IconInfo.hbmMask);
       
       if((DevInfo->flGraphicsCaps2 & GCAPS2_ALPHACURSOR) && 
          (SurfGDI->BitsPerPixel >= 16) && NewCursor->Shadow
@@ -203,19 +214,23 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       SPS_CHANGE);
     
     if(hMask)
+  {
       EngDeleteSurface(hMask);
+  }
     if(hColor)
+  {
       EngDeleteSurface(hColor);
+  }
     if(XlateObj)
+  {
       EngDeleteXlate(XlateObj);
+  }
     
     if(SurfGDI->PointerStatus == SPS_DECLINE)
       DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_DECLINE\n");
     else if(SurfGDI->PointerStatus == SPS_ERROR)
       DbgPrint("SetCursor: DrvSetPointerShape() returned SPS_ERROR\n");
-  }
   
-  done:
   return Ret;
 }
 
