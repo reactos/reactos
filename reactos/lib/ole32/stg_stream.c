@@ -443,7 +443,12 @@ HRESULT WINAPI StgStreamImpl_Write(
   /*
    * Do we have permission to write to this stream?
    */
-  if (!(This->grfMode & (STGM_WRITE | STGM_READWRITE))) {
+  switch(STGM_ACCESS_MODE(This->grfMode))
+  {
+  case STGM_WRITE:
+  case STGM_READWRITE:
+      break;
+  default:
       return STG_E_ACCESSDENIED;
   }
 

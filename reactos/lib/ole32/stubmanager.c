@@ -29,6 +29,7 @@
 
 #include <assert.h>
 #include <stdarg.h>
+#include <limits.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -48,7 +49,7 @@ static struct ifstub *stub_manager_ipid_to_ifstub(struct stub_manager *m, const 
 /* creates a new stub manager and adds it into the apartment. caller must
  * release stub manager when it is no longer required. the apartment and
  * external refs together take one implicit ref */
-struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
+struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object, MSHLFLAGS mshlflags)
 {
     struct stub_manager *sm;
 
@@ -74,6 +75,13 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
      * the marshalled ifptr.
      */
     sm->extrefs = 0;
+
+    if (mshlflags & MSHLFLAGS_TABLESTRONG)
+        sm->state = STUBSTATE_TABLE_STRONG;
+    else if (mshlflags & MSHLFLAGS_TABLEWEAK)
+        sm->state = STUBSTATE_TABLE_WEAK_UNMARSHALED;
+    else
+        sm->state = STUBSTATE_NORMAL_MARSHALED;
     
     EnterCriticalSection(&apt->cs);
     sm->oid    = apt->oidc++;
@@ -228,8 +236,16 @@ ULONG stub_manager_int_release(struct stub_manager *This)
 /* add some external references (ie from a client that unmarshaled an ifptr) */
 ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs)
 {
-    ULONG rc = InterlockedExchangeAdd(&m->extrefs, refs) + refs;
+    ULONG rc;
 
+    EnterCriticalSection(&m->lock);
+    
+    /* make sure we don't overflow extrefs */
+    refs = min(refs, (ULONG_MAX-1 - m->extrefs));
+    rc = (m->extrefs += refs);
+
+    LeaveCriticalSection(&m->lock);
+    
     TRACE("added %lu refs to %p (oid %s), rc is now %lu\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
     return rc;
@@ -238,7 +254,15 @@ ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs)
 /* remove some external references */
 ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs)
 {
-    ULONG rc = InterlockedExchangeAdd(&m->extrefs, -refs) - refs;
+    ULONG rc;
+
+    EnterCriticalSection(&m->lock);
+
+    /* make sure we don't underflow extrefs */
+    refs = min(refs, m->extrefs);
+    rc = (m->extrefs -= refs);
+
+    LeaveCriticalSection(&m->lock);
     
     TRACE("removed %lu refs from %p (oid %s), rc is now %lu\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
@@ -321,24 +345,27 @@ HRESULT ipid_to_stub_manager(const IPID *ipid, APARTMENT **stub_apt, struct stub
     return S_OK;
 }
 
-IRpcStubBuffer *ipid_to_stubbuffer(const IPID *ipid)
+/* gets the apartment and IRpcStubBuffer from an object. the caller must
+ * release the references to both objects */
+IRpcStubBuffer *ipid_to_apt_and_stubbuffer(const IPID *ipid, APARTMENT **stub_apt)
 {
     IRpcStubBuffer *ret = NULL;
-    APARTMENT *apt;
     struct stub_manager *stubmgr;
     struct ifstub *ifstub;
     HRESULT hr;
 
-    hr = ipid_to_stub_manager(ipid, &apt, &stubmgr);
+    *stub_apt = NULL;
+
+    hr = ipid_to_stub_manager(ipid, stub_apt, &stubmgr);
     if (hr != S_OK) return NULL;
 
     ifstub = stub_manager_ipid_to_ifstub(stubmgr, ipid);
     if (ifstub)
         ret = ifstub->stubbuffer;
 
-    stub_manager_int_release(stubmgr);
+    if (ret) IRpcStubBuffer_AddRef(ret);
 
-    COM_ApartmentRelease(apt);
+    stub_manager_int_release(stubmgr);
 
     return ret;
 }
@@ -367,12 +394,12 @@ static inline HRESULT generate_ipid(struct stub_manager *m, IPID *ipid)
 }
 
 /* registers a new interface stub COM object with the stub manager and returns registration record */
-struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid, BOOL tablemarshal)
+struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *sb, IUnknown *iptr, REFIID iid)
 {
     struct ifstub *stub;
 
-    TRACE("oid=%s, stubbuffer=%p, iptr=%p, iid=%s, tablemarshal=%s\n",
-          wine_dbgstr_longlong(m->oid), sb, iptr, debugstr_guid(iid), tablemarshal ? "TRUE" : "FALSE");
+    TRACE("oid=%s, stubbuffer=%p, iptr=%p, iid=%s\n",
+          wine_dbgstr_longlong(m->oid), sb, iptr, debugstr_guid(iid));
 
     stub = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct ifstub));
     if (!stub) return NULL;
@@ -382,11 +409,6 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
 
     /* no need to ref this, same object as sb */
     stub->iface = iptr;
-
-    if (tablemarshal)
-        stub->state = IFSTUB_STATE_TABLE_MARSHALED;
-    else
-        stub->state = IFSTUB_STATE_NORMAL_MARSHALED;
 
     stub->iid = *iid;
 
@@ -415,8 +437,10 @@ struct ifstub *stub_manager_new_ifstub(struct stub_manager *m, IRpcStubBuffer *s
 static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *ifstub)
 {
     TRACE("m=%p, m->oid=%s, ipid=%s\n", m, wine_dbgstr_longlong(m->oid), debugstr_guid(&ifstub->ipid));
-    
+
     list_remove(&ifstub->entry);
+
+    RPC_UnregisterInterface(&ifstub->iid);
         
     IUnknown_Release(ifstub->stubbuffer);
     IUnknown_Release(ifstub->iface);
@@ -425,33 +449,30 @@ static void stub_manager_delete_ifstub(struct stub_manager *m, struct ifstub *if
 }
 
 /* returns TRUE if it is possible to unmarshal, FALSE otherwise. */
-BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid)
+BOOL stub_manager_notify_unmarshal(struct stub_manager *m)
 {
-    struct ifstub *ifstub;
     BOOL ret;
-
-    ifstub = stub_manager_ipid_to_ifstub(m, ipid);
-    if (!ifstub)
-    {
-        WARN("Can't find ifstub for OID %s, IPID %s\n",
-            wine_dbgstr_longlong(m->oid), wine_dbgstr_guid(ipid));
-        return FALSE;
-    }
 
     EnterCriticalSection(&m->lock);
 
-    switch (ifstub->state)
+    switch (m->state)
     {
-    case IFSTUB_STATE_TABLE_MARSHALED:
+    case STUBSTATE_TABLE_STRONG:
+    case STUBSTATE_TABLE_WEAK_MARSHALED:
+        /* no transition */
         ret = TRUE;
         break;
-    case IFSTUB_STATE_NORMAL_MARSHALED:
-        ifstub->state = IFSTUB_STATE_NORMAL_UNMARSHALED;
+    case STUBSTATE_TABLE_WEAK_UNMARSHALED:
+        m->state = STUBSTATE_TABLE_WEAK_MARSHALED;
+        ret = TRUE;
+        break;
+    case STUBSTATE_NORMAL_MARSHALED:
+        m->state = STUBSTATE_NORMAL_UNMARSHALED;
         ret = TRUE;
         break;
     default:
-        WARN("object OID %s, IPID %s already unmarshaled\n",
-            wine_dbgstr_longlong(m->oid), wine_dbgstr_guid(ipid));
+        WARN("object OID %s already unmarshaled\n",
+            wine_dbgstr_longlong(m->oid));
         ret = FALSE;
         break;
     }
@@ -461,22 +482,39 @@ BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid)
     return ret;
 }
 
-/* is an ifstub table marshaled? */
-BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid)
+void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs)
 {
-    struct ifstub *ifstub;
-    BOOL ret;
+    EnterCriticalSection(&m->lock);
 
-    ifstub = stub_manager_ipid_to_ifstub(m, ipid);
-    if (!ifstub)
+    switch (m->state)
     {
-        WARN("Can't find ifstub for OID %s, IPID %s\n",
-            wine_dbgstr_longlong(m->oid), wine_dbgstr_guid(ipid));
-        return FALSE;
+    case STUBSTATE_NORMAL_MARSHALED:
+    case STUBSTATE_NORMAL_UNMARSHALED: /* FIXME: check this */
+        /* nothing to change */
+        break;
+    case STUBSTATE_TABLE_WEAK_UNMARSHALED:
+    case STUBSTATE_TABLE_STRONG:
+        refs = 1;
+        break;
+    case STUBSTATE_TABLE_WEAK_MARSHALED:
+        refs = 0; /* like native */
+        break;
     }
 
+    stub_manager_ext_release(m, refs);
+
+    LeaveCriticalSection(&m->lock);
+}
+
+/* is an ifstub table marshaled? */
+BOOL stub_manager_is_table_marshaled(struct stub_manager *m)
+{
+    BOOL ret;
+
     EnterCriticalSection(&m->lock);
-    ret = (ifstub->state == IFSTUB_STATE_TABLE_MARSHALED);
+    ret = ((m->state == STUBSTATE_TABLE_STRONG) ||
+           (m->state == STUBSTATE_TABLE_WEAK_MARSHALED) ||
+           (m->state == STUBSTATE_TABLE_WEAK_UNMARSHALED));
     LeaveCriticalSection(&m->lock);
 
     return ret;
@@ -688,7 +726,7 @@ HRESULT start_apartment_remote_unknown()
         {
             STDOBJREF stdobjref; /* dummy - not used */
             /* register it with the stub manager */
-            hr = register_ifstub(COM_CurrentApt(), &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHLFLAGS_NORMAL);
+            hr = register_ifstub(apt, &stdobjref, &IID_IRemUnknown, (IUnknown *)pRemUnknown, MSHLFLAGS_NORMAL);
             /* release our reference to the object as the stub manager will manage the life cycle for us */
             IRemUnknown_Release(pRemUnknown);
             if (hr == S_OK)
