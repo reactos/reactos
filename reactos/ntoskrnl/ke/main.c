@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.155 2003/05/16 17:35:12 ekohl Exp $
+/* $Id: main.c,v 1.156 2003/05/17 13:40:03 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -285,6 +285,19 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
      }
 }
 
+VOID STATIC
+MiFreeBootDriverMemory(PVOID StartAddress, ULONG Length)
+{
+  PHYSICAL_ADDRESS Page;
+  ULONG i;
+
+  for (i = 0; i < PAGE_ROUND_UP(Length)/PAGE_SIZE; i++)
+  {
+     Page = MmGetPhysicalAddressForProcess(NULL, StartAddress + i * PAGE_SIZE);
+     MmDeleteVirtualMapping(NULL, StartAddress + i * PAGE_SIZE, FALSE, NULL, NULL);
+     MmDereferencePage(Page);
+  }
+}
 
 VOID
 ExpInitializeExecutive(VOID)
@@ -525,6 +538,12 @@ ExpInitializeExecutive(VOID)
       if (RtlpCheckFileNameExtension(name, ".sys"))
 	BootDriverCount++;
     }
+  /*  Pass 5: free memory for all boot files, except ntoskrnl.exe and hal.dll  */
+  for (i = 2; i < KeLoaderBlock.ModsCount; i++)
+  {
+     MiFreeBootDriverMemory((PVOID)KeLoaderModules[i].ModStart, 
+	                    KeLoaderModules[i].ModEnd - KeLoaderModules[i].ModStart);
+  }
 
   if (BootDriverCount == 0)
     {
