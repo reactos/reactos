@@ -72,7 +72,7 @@
 /* Stereo and parallel not tested for Mesa 4.0. */
 #define NO_STEREO
 #if !defined(NO_STEREO)
-#include "gl\glu.h"
+#include "GL/glu.h"
 #include "stereo.h"
 #endif
 
