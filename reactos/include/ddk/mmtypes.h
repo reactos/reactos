@@ -1,4 +1,4 @@
-/* $Id: mmtypes.h,v 1.16 2003/06/07 10:14:39 chorns Exp $ */
+/* $Id: mmtypes.h,v 1.17 2003/11/03 20:27:51 gdalsnes Exp $ */
 
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
@@ -16,7 +16,7 @@
  * PURPOSE: Returns the byte offset of a field within a structure
  */
 #ifndef FIELD_OFFSET
-#define FIELD_OFFSET(Type,Field) (LONG)(&(((Type *)(0))->Field))
+#define FIELD_OFFSET(Type,Field) ((LONG)(&(((Type *)(0))->Field)))
 #endif
 
 /*
@@ -28,7 +28,7 @@
  *          Field = Name of the field whose address is none
  */
 #ifndef CONTAINING_RECORD
-#define CONTAINING_RECORD(Address,Type,Field) (Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field))
+#define CONTAINING_RECORD(Address,Type,Field) ((Type *)(((LONG)Address) - FIELD_OFFSET(Type,Field)))
 #endif
 
 
