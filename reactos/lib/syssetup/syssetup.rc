@@ -43,5 +43,6 @@ END
  * a neutral version. This is to get localized bitmaps for example.
  */
 
+#include "syssetup_De.rc"
 #include "syssetup_En.rc"
 #include "syssetup_Cz.rc"

@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "Registry &exportieren...",    ID_REGISTRY_EXPORTREGISTRYFILE
 
         MENUITEM SEPARATOR
-        MENUITEM "&Mit Neztwerkregistry verbinden...",
+        MENUITEM "&Mit Netzwerkregistry verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
         , GRAYED
         MENUITEM "&Von Netzwerkregistry trennen...",
@@ -68,6 +68,8 @@ BEGIN
             MENUITEM "&Binärwert",               ID_EDIT_NEW_BINARYVALUE
             MENUITEM "&DWORD Wert",                ID_EDIT_NEW_DWORDVALUE
         END
+        MENUITEM SEPARATOR
+        MENUITEM "&Berechtigungen...",		ID_EDIT_PERMISSIONS
         MENUITEM SEPARATOR
         MENUITEM "&Löschen\tEntf",                ID_EDIT_DELETE
         MENUITEM "&Unbenennen",                     ID_EDIT_RENAME
@@ -269,7 +271,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_BINARY_EMPTY	    "(lerrer Binärwert)"
+    IDS_BINARY_EMPTY	    "(leerer Binärwert)"
     IDS_DEFAULT_VALUE_NAME  "(Standard)"
     IDS_VALUE_NOT_SET       "(Wert nicht gesetzt)"
     IDS_UNKNOWN_TYPE        "Unbekannter Typ: (0x%lx)"
@@ -287,6 +289,29 @@ BEGIN
     IDS_FLT_REGEDIT4_FLT    "*.reg"
     IDS_FLT_ALLFILES        "Alle Dateien (*.*)"
     IDS_FLT_ALLFILES_FLT    "*.*"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_ACCESS_FULLCONTROL        "Vollzugriff"
+  IDS_ACCESS_READ               "Lesen"
+  IDS_ACCESS_QUERYVALUE         "Wert auslesen"
+  IDS_ACCESS_SETVALUE           "Wert setzen"
+  IDS_ACCESS_CREATESUBKEY       "Unterschlüssel anlegen"
+  IDS_ACCESS_ENUMERATESUBKEYS   "Unterschlüssel lesen"
+  IDS_ACCESS_NOTIFY             "Benachrichtigen"
+  IDS_ACCESS_CREATELINK         "Verknüpfung erstellen"
+  IDS_ACCESS_DELETE             "Löschen"
+  IDS_ACCESS_WRITEDAC           "DAC schreiben"
+  IDS_ACCESS_WRITEOWNER         "Besitzer festlegen"
+  IDS_ACCESS_READCONTROL        "Berechtigungen lesen"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_INHERIT_THISKEYONLY        "Nur diesen Schlüssel"
+  IDS_INHERIT_THISKEYANDSUBKEYS  "Dieser Schlüssel und dessen Unterschlüssel"
+  IDS_INHERIT_SUBKEYSONLY        "Nur Unterschlüssel"
 END
 
 /*****************************************************************/

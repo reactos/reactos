@@ -3,6 +3,7 @@
 #include "vmwinst.h"
 
 #include "Es.rc"
+#include "De.rc"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
