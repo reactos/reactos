@@ -1,4 +1,4 @@
-/* $Id: import.c,v 1.12 2003/03/24 19:09:04 ekohl Exp $
+/* $Id: import.c,v 1.13 2003/04/01 16:37:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -26,6 +26,9 @@
 
 #include "cm.h"
 #endif
+
+extern PKEY_OBJECT  CmiMachineKey;
+
 
 static PCHAR 
 checkAndSkipMagic (PCHAR  regChunk)
@@ -613,9 +616,10 @@ CmImportTextHive(PCHAR  ChunkBase,
 }
 
 
-BOOLEAN
-CmImportSystemHive(PCHAR ChunkBase,
-		   ULONG ChunkSize)
+static BOOLEAN
+CmImportBinarySystemHive(PCHAR ChunkBase,
+			 ULONG ChunkSize,
+			 PREGISTRY_HIVE *RegistryHive)
 {
   PREGISTRY_HIVE Hive;
   PCELL_HEADER FreeBlock;
@@ -626,16 +630,9 @@ CmImportSystemHive(PCHAR ChunkBase,
   NTSTATUS Status;
   ULONG BitmapSize;
 
+  *RegistryHive = NULL;
 
-//  CmImportTextHive (ChunkBase, ChunkSize);
-
-  if (strncmp (ChunkBase, "REGEDIT4", 8) == 0)
-    {
-      DPRINT1("Found 'REGEDIT4' magic\n");
-      CmImportTextHive (ChunkBase, ChunkSize);
-      return TRUE;
-    }
-  else if (strncpy (ChunkBase, "regf", 4) != 0)
+  if (strncmp (ChunkBase, "regf", 4) != 0)
     {
       DPRINT1("Found invalid '%*s' magic\n", 4, ChunkBase);
       return FALSE;
@@ -686,8 +683,9 @@ CmImportSystemHive(PCHAR ChunkBase,
       ExFreePool (Hive);
       return FALSE;
     }
+CHECKPOINT1;
 
-  /* Allocate the first hive block */
+  /* Allocate the hive block */
   Hive->BlockList[0] = ExAllocatePool(PagedPool,
 				      Hive->FileSize - 4096);
   if (Hive->BlockList[0] == NULL)
@@ -699,6 +697,7 @@ CmImportSystemHive(PCHAR ChunkBase,
       return FALSE;
     }
 
+CHECKPOINT1;
   /* Import the hive block */
   RtlCopyMemory (Hive->BlockList[0],
 		 ChunkBase + 4096,
@@ -709,6 +708,7 @@ CmImportSystemHive(PCHAR ChunkBase,
   Hive->FreeListMax = 0;
   Hive->FreeList = NULL;
 
+CHECKPOINT1;
   BlockOffset = 0;
   for (i = 0; i < Hive->BlockListSize; i++)
     {
@@ -759,11 +759,12 @@ CmImportSystemHive(PCHAR ChunkBase,
 	}
       BlockOffset += Bin->BlockSize;
     }
+CHECKPOINT1;
 
   /* Calculate bitmap size in bytes (always a multiple of 32 bits) */
   BitmapSize = ROUND_UP(Hive->BlockListSize, sizeof(ULONG) * 8) / 8;
-  DPRINT("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
-  DPRINT("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
+  DPRINT1("Hive->BlockListSize: %lu\n", Hive->BlockListSize);
+  DPRINT1("BitmapSize:  %lu Bytes  %lu Bits\n", BitmapSize, BitmapSize * 8);
 
   /* Allocate bitmap */
   Hive->BitmapBuffer = (PULONG)ExAllocatePool(PagedPool,
@@ -777,6 +778,7 @@ CmImportSystemHive(PCHAR ChunkBase,
       ExFreePool (Hive);
       return FALSE;
     }
+CHECKPOINT1;
 
   /* Initialize bitmap */
   RtlInitializeBitMap(&Hive->DirtyBitMap,
@@ -797,8 +799,120 @@ CmImportSystemHive(PCHAR ChunkBase,
 
   /* Release hive list lock */
   ExReleaseResourceLite(&CmiHiveListLock);
+CHECKPOINT1;
+
+  *RegistryHive = Hive;
 
   return TRUE;
+}
+
+
+BOOLEAN
+CmImportSystemHive(PCHAR ChunkBase,
+		   ULONG ChunkSize)
+{
+  PREGISTRY_HIVE RegistryHive;
+//  UNICODE_STRING ParentKeyName;
+//  UNICODE_STRING SubKeyName;
+//  NTSTATUS Status;
+
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  PKEY_OBJECT NewKey;
+  HANDLE KeyHandle;
+  UNICODE_STRING KeyName;
+  NTSTATUS Status;
+
+  if (strncmp (ChunkBase, "REGEDIT4", 8) == 0)
+    {
+      DPRINT1("Found 'REGEDIT4' magic\n");
+      CmImportTextHive (ChunkBase, ChunkSize);
+      return TRUE;
+    }
+  else if (strncmp (ChunkBase, "regf", 4) == 0)
+    {
+      DPRINT1("Found '%*s' magic\n", 4, ChunkBase);
+      if (!CmImportBinarySystemHive (ChunkBase, ChunkSize, &RegistryHive))
+	{
+	  return FALSE;
+	}
+
+
+
+      RtlInitUnicodeString(&KeyName,
+			   L"\\Registry\\Machine\\System");
+      InitializeObjectAttributes(&ObjectAttributes,
+				 &KeyName,
+				 0,
+				 NULL,
+				 NULL);
+
+      Status = ObCreateObject(&KeyHandle,
+			      STANDARD_RIGHTS_REQUIRED,
+			      &ObjectAttributes,
+			      CmiKeyType,
+			      (PVOID*)&NewKey);
+      if (!NT_SUCCESS(Status))
+	{
+	  DPRINT1("ObCreateObject() failed (Status %lx)\n", Status);
+	  KeBugCheck(0);
+//	  CmiRemoveRegistryHive(RegistryHive);
+//	  return(Status);
+	}
+
+      NewKey->RegistryHive = RegistryHive;
+      NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
+      NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
+      NewKey->Flags = 0;
+      NewKey->NumberOfSubKeys = 0;
+      NewKey->SubKeys = ExAllocatePool(PagedPool,
+      NewKey->KeyCell->NumberOfSubKeys * sizeof(DWORD));
+
+      if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
+	{
+	  DPRINT1("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
+	  KeBugCheck(0);
+//	  ZwClose(NewKey);
+//	  CmiRemoveRegistryHive(RegistryHive);
+//	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+      NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
+      NewKey->NameSize = strlen("System");
+      NewKey->Name = ExAllocatePool(PagedPool, NewKey->NameSize);
+
+      if ((NewKey->Name == NULL) && (NewKey->NameSize != 0))
+	{
+	  DPRINT1("NewKey->NameSize %d\n", NewKey->NameSize);
+	  if (NewKey->SubKeys != NULL)
+	    ExFreePool(NewKey->SubKeys);
+	  KeBugCheck(0);
+//	  ZwClose(NewKey);
+//	  CmiRemoveRegistryHive(RegistryHive);
+//	  return(STATUS_INSUFFICIENT_RESOURCES);
+	}
+
+      memcpy(NewKey->Name, "System", NewKey->NameSize);
+      CmiAddKeyToList(CmiMachineKey, NewKey);
+
+
+#if 0
+      RtlInitUnicodeString (&ParentKeyName,
+			    REG_MACHINE_KEY_NAME);
+      RtlInitUnicodeString (&SubKeyName,
+			    L"System");
+
+      Status = CmiLinkHive (&ParentKeyName,
+			    &SubKeyName,
+			    Hive);
+      if (!NT_SUCCESS(Status))
+	{
+	  return FALSE;
+	}
+#endif
+      return TRUE;
+    }
+
+  return FALSE;
 }
 
 

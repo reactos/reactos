@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.87 2003/03/18 20:36:17 ekohl Exp $
+/* $Id: registry.c,v 1.88 2003/04/01 16:37:14 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -43,7 +43,7 @@ KDPC CmiHiveSyncDpc;
 KTIMER CmiHiveSyncTimer;
 
 static PKEY_OBJECT  CmiRootKey = NULL;
-static PKEY_OBJECT  CmiMachineKey = NULL;
+PKEY_OBJECT  CmiMachineKey = NULL;
 static PKEY_OBJECT  CmiUserKey = NULL;
 static PKEY_OBJECT  CmiHardwareKey = NULL;
 
