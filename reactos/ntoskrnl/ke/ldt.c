@@ -16,11 +16,13 @@
 
 /* FUNCTIONS *****************************************************************/
 
-
-
-NTSTATUS STDCALL NtSetLdtEntries(HANDLE Thread,
-				 ULONG FirstEntry,
-				 PULONG Entries)
+NTSTATUS STDCALL 
+NtSetLdtEntries(HANDLE Thread, ULONG FirstEntry, PULONG Entries)
 {
    UNIMPLEMENTED;
 }
+
+
+
+
+

@@ -34,12 +34,6 @@ typedef ULONG SWAPENTRY;
 #define NR_SECTION_PAGE_TABLES           (1024)
 #define NR_SECTION_PAGE_ENTRIES          (1024)
 
-#define SPE_PAGEIN_PENDING                      (0x1)
-#define SPE_MPW_PENDING                         (0x2)
-#define SPE_PAGEOUT_PENDING                     (0x4)
-#define SPE_DIRTY                               (0x8)
-#define SPE_IN_PAGEFILE                         (0x10)
-
 /*
  * Flags for section objects
  */
@@ -398,7 +392,9 @@ typedef struct _MM_PAGEOP
   BOOLEAN Abandoned;
   /* The memory area to be affected by the operation. */
   PMEMORY_AREA MArea;
+  ULONG Hash;
   struct _MM_PAGEOP* Next;
+  struct _ETHREAD* Thread;
   /* 
    * These fields are used to identify the operation if it is against a
    * virtual memory area.
@@ -412,6 +408,13 @@ typedef struct _MM_PAGEOP
   PMM_SECTION_SEGMENT Segment;
   ULONG Offset;
 } MM_PAGEOP, *PMM_PAGEOP;
+
+VOID
+MmReleasePageOp(PMM_PAGEOP PageOp);
+
+PMM_PAGEOP
+MmGetPageOp(PMEMORY_AREA MArea, ULONG Pid, PVOID Address,
+	    PMM_SECTION_SEGMENT Segment, ULONG Offset);
 
 VOID
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly);
@@ -429,5 +432,8 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
   ULONG NrSegments;
   MM_SECTION_SEGMENT Segments[0];
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
+
+VOID 
+MmFreeVirtualMemory(struct _EPROCESS* Process, PMEMORY_AREA MemoryArea);
 
 #endif

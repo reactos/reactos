@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.29 2001/02/14 02:53:53 dwelch Exp $
+/* $Id: mdl.c,v 1.30 2001/03/13 16:25:54 dwelch Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -15,13 +15,19 @@
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <internal/ps.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
 
-/* FUNCTIONS ***************************************************************/
+/* GLOBALS *******************************************************************/
 
-PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
+#define TAG_MDL    TAG('M', 'M', 'D', 'L')
+
+/* FUNCTIONS *****************************************************************/
+
+PVOID 
+MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
 {
    PULONG MdlPages;
    
@@ -318,7 +324,8 @@ PMDL STDCALL MmCreateMdl (PMDL	MemoryDescriptorList,
 	ULONG Size;
 	
 	Size = MmSizeOfMdl(Base,Length);
-	MemoryDescriptorList = (PMDL)ExAllocatePool(NonPagedPool,Size);
+	MemoryDescriptorList = 
+	  (PMDL)ExAllocatePoolWithTag(NonPagedPool, Size, TAG_MDL);
 	if (MemoryDescriptorList == NULL)
 	  {
 	     return(NULL);

@@ -1,4 +1,4 @@
-/* $Id: close.c,v 1.3 2000/12/10 23:42:00 dwelch Exp $
+/* $Id: close.c,v 1.4 2001/03/13 16:25:54 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -33,42 +33,41 @@
  *
  */
 VOID
-NiClosePort (PVOID	ObjectBody,
-	     ULONG	HandleCount)
+NiClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 {
-   PEPORT		Port = (PEPORT) ObjectBody;
-   LPC_MESSAGE	Message;
-   
-   //	DPRINT1("NiClosePort(ObjectBody %x, HandleCount %d) RefCount %d\n",
-   //		ObjectBody, HandleCount, ObGetReferenceCount(Port));
-   
-   if ((HandleCount == 0) && 
-       (Port->State == EPORT_CONNECTED_CLIENT) && 
-       (ObGetReferenceCount(Port) == 2))
-     {
-	//		DPRINT1("All handles closed to client port\n");
-	
-	Message.MessageSize = sizeof(LPC_MESSAGE);
-	Message.DataSize = 0;
-	
-	EiReplyOrRequestPort (Port->OtherPort,
-			      &Message,
-			      LPC_PORT_CLOSED,
-			      Port);
-	KeSetEvent (&Port->OtherPort->Event,
-		    IO_NO_INCREMENT,
-		    FALSE);
+  PEPORT Port = (PEPORT)ObjectBody;
+  LPC_MESSAGE Message;
+  
+  /*
+   * If the client has just closed its handle then tell the server what
+   * happened and disconnect this port.
+   */
+  if (HandleCount == 0 && Port->State == EPORT_CONNECTED_CLIENT && 
+      ObGetReferenceCount(Port) == 2)
+    {
+      Message.MessageSize = sizeof(LPC_MESSAGE);
+      Message.DataSize = 0;
+      
+      EiReplyOrRequestPort (Port->OtherPort,
+			    &Message,
+			    LPC_PORT_CLOSED,
+			    Port);
+      KeSetEvent (&Port->OtherPort->Event,
+		  IO_NO_INCREMENT,
+		  FALSE);
+      
+      Port->OtherPort->OtherPort = NULL;
+      Port->OtherPort->State = EPORT_DISCONNECTED;
+      ObDereferenceObject (Port);
+    }
 
-	Port->OtherPort->OtherPort = NULL;
-	Port->OtherPort->State = EPORT_DISCONNECTED;
-	ObDereferenceObject (Port);
-     }
-   if ((HandleCount == 0) && 
-       (Port->State == EPORT_CONNECTED_SERVER) && 
-       (ObGetReferenceCount(Port) == 2))
-     {
-	//		DPRINT("All handles closed to server\n");
-	
+  /*
+   * If the server has closed all of its handles then disconnect the port,
+   * don't actually notify the client until it attempts an operation.
+   */
+  if (HandleCount == 0 && Port->State == EPORT_CONNECTED_SERVER && 
+      ObGetReferenceCount(Port) == 2)
+    {
 	Port->OtherPort->OtherPort = NULL;
 	Port->OtherPort->State = EPORT_DISCONNECTED;
 	ObDereferenceObject(Port->OtherPort);

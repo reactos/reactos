@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.54 2001/02/10 22:51:08 dwelch Exp $
+/* $Id: registry.c,v 1.55 2001/03/13 16:25:53 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,6 +15,7 @@
 #include <internal/ob.h>
 #include <limits.h>
 #include <string.h>
+#include <internal/pool.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -300,7 +301,6 @@ static VOID  CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
 static NTSTATUS
 CmiAddFree(PREGISTRY_FILE  RegistryFile,
 		PFREE_SUB_BLOCK FreeBlock,BLOCK_OFFSET FreeOffset);
-
 
 /*  ---------------------------------------------  Public Interface  */
 

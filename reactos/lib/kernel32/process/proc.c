@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.38 2001/02/10 22:01:50 ea Exp $
+/* $Id: proc.c,v 1.39 2001/03/13 16:25:51 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -35,65 +35,50 @@ WaitForInputIdleType  lpfnGlobalRegisterWaitForInputIdle;
 
 LPSTARTUPINFO lpLocalStartupInfo = NULL;
 
-VOID
-STDCALL
-RegisterWaitForInputIdle (
-	WaitForInputIdleType	lpfnRegisterWaitForInputIdle
-	);
+VOID STDCALL
+RegisterWaitForInputIdle (WaitForInputIdleType	lpfnRegisterWaitForInputIdle);
 
 
 /* FUNCTIONS ****************************************************************/
 
-WINBOOL
-STDCALL
-GetProcessId (
-	HANDLE	hProcess,
-	LPDWORD	lpProcessId
-	);
+WINBOOL STDCALL
+GetProcessId (HANDLE	hProcess, LPDWORD	lpProcessId);
 
-
-
-
-
-WINBOOL
-STDCALL
-GetProcessTimes (
-	HANDLE		hProcess,
-	LPFILETIME	lpCreationTime,
-	LPFILETIME	lpExitTime,
-	LPFILETIME	lpKernelTime,
-	LPFILETIME	lpUserTime
-	)
+WINBOOL STDCALL
+GetProcessTimes (HANDLE		hProcess,
+		 LPFILETIME	lpCreationTime,
+		 LPFILETIME	lpExitTime,
+		 LPFILETIME	lpKernelTime,
+		 LPFILETIME	lpUserTime)
 {
-	NTSTATUS		Status;
-	KERNEL_USER_TIMES	Kut;
-
-	Status = NtQueryInformationProcess (
-			hProcess,
-			ProcessTimes,
-			& Kut,
-			sizeof Kut,
-			NULL
-			);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return (FALSE);
-	}
-
-	lpCreationTime->dwLowDateTime	= Kut.CreateTime.u.LowPart;
-	lpCreationTime->dwHighDateTime	= Kut.CreateTime.u.HighPart;
+  NTSTATUS		Status;
+  KERNEL_USER_TIMES	Kut;
+  
+  Status = NtQueryInformationProcess (hProcess,
+				      ProcessTimes,
+				      &Kut,
+				      sizeof(Kut),
+				      NULL
+				      );
+  if (!NT_SUCCESS(Status))
+    {
+      SetLastErrorByStatus (Status);
+      return (FALSE);
+    }
+  
+  lpCreationTime->dwLowDateTime	= Kut.CreateTime.u.LowPart;
+  lpCreationTime->dwHighDateTime = Kut.CreateTime.u.HighPart;
+  
+  lpExitTime->dwLowDateTime = Kut.ExitTime.u.LowPart;
+  lpExitTime->dwHighDateTime = Kut.ExitTime.u.HighPart;
 	
-	lpExitTime->dwLowDateTime	= Kut.ExitTime.u.LowPart;
-	lpExitTime->dwHighDateTime	= Kut.ExitTime.u.HighPart;
-	
-	lpKernelTime->dwLowDateTime	= Kut.KernelTime.u.LowPart;
-	lpKernelTime->dwHighDateTime	= Kut.KernelTime.u.HighPart;
-
-	lpUserTime->dwLowDateTime	= Kut.UserTime.u.LowPart;
-	lpUserTime->dwHighDateTime	= Kut.UserTime.u.HighPart;
-
-	return (TRUE);
+  lpKernelTime->dwLowDateTime = Kut.KernelTime.u.LowPart;
+  lpKernelTime->dwHighDateTime = Kut.KernelTime.u.HighPart;
+  
+  lpUserTime->dwLowDateTime = Kut.UserTime.u.LowPart;
+  lpUserTime->dwHighDateTime = Kut.UserTime.u.HighPart;
+  
+  return (TRUE);
 }
 
 

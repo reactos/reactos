@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.21 2001/03/07 08:57:09 dwelch Exp $
+/* $Id: create.c,v 1.22 2001/03/13 16:25:55 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,7 +19,14 @@
 
 #include "vfat.h"
 
-/* FUNCTIONS ****************************************************************/
+/* GLOBALS *******************************************************************/
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
+#define TAG_FCB TAG('V', 'F', 'C', 'B')
+#define TAG_CCB TAG('V', 'C', 'C', 'B')
+
+/* FUNCTIONS *****************************************************************/
 
 BOOLEAN
 IsLastEntry (PVOID Block, ULONG Offset)
@@ -448,7 +455,8 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  Fcb->RefCount++;
 	  KeReleaseSpinLock (&DeviceExt->FcbListLock, oldIrql);
 	  FileObject->FsContext = (PVOID)&Fcb->RFCB;
-	  newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
+	  newCCB = 
+	    ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
 	  memset (newCCB, 0, sizeof (VFATCCB));
 	  FileObject->Flags = FileObject->Flags | 
 	    FO_FCB_IS_VALID | FO_DIRECT_CACHE_PAGING_READ;
@@ -471,7 +479,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 
   string = FileName;
   ParentFcb = NULL;
-  Fcb = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
+  Fcb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATFCB), TAG_FCB);
   memset (Fcb, 0, sizeof (VFATFCB));
   Fcb->ObjectName = &Fcb->PathName[1];
   Fcb->PathName[0]='\\';
@@ -532,7 +540,8 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  if (ParentFcb == NULL)
 	    {
 	      CHECKPOINT;
-	      Fcb = ExAllocatePool (NonPagedPool, sizeof (VFATFCB));
+	      Fcb = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATFCB), 
+					   TAG_FCB);
 	      memset (Fcb, 0, sizeof (VFATFCB));
               Fcb->ObjectName = &Fcb->PathName[1];
 	      Fcb->PathName[0] = '\\';
@@ -594,7 +603,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
   memset(FileObject->SectionObjectPointers, 0, 
 	 sizeof(SECTION_OBJECT_POINTERS));
   FileObject->FsContext = (PVOID)&ParentFcb->RFCB;
-  newCCB = ExAllocatePool (NonPagedPool, sizeof (VFATCCB));
+  newCCB = ExAllocatePoolWithTag (NonPagedPool, sizeof (VFATCCB), TAG_CCB);
   memset (newCCB, 0, sizeof (VFATCCB));
   FileObject->FsContext2 = newCCB;
   newCCB->pFcb = ParentFcb;

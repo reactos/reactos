@@ -1,4 +1,22 @@
-/* $Id: mm.c,v 1.44 2001/03/08 22:06:01 dwelch Exp $
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/* $Id: mm.c,v 1.45 2001/03/13 16:25:54 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -32,20 +50,6 @@ extern PVOID MmSharedDataPagePhysicalAddress;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID STATIC
-MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
-{
-  PEPROCESS Process = (PEPROCESS)Context;
-    
-  if (PhysicalAddr != 0)
-    {
-      DPRINT("Freeing page at 0x%x (pa 0x%x)\n",
-	     Address, PhysicalAddr);
-      MmRemovePageFromWorkingSet(Process, Address);
-      MmDereferencePage((PVOID)PhysicalAddr);
-    }
-}
-
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
    NTSTATUS Status;
@@ -64,13 +68,8 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 	assert(Status == STATUS_SUCCESS);
 	return(STATUS_SUCCESS);
 
-      case MEMORY_AREA_VIRTUAL_MEMORY:
-       Status = MmFreeMemoryArea(&Process->AddressSpace,
-				 Marea->BaseAddress,
-				 0,
-				 MmFreeVirtualMemoryPage,
-				 (PVOID)Process);
-       assert(Status == STATUS_SUCCESS);
+     case MEMORY_AREA_VIRTUAL_MEMORY:
+       MmFreeVirtualMemory(Process, Marea);
        break;	
 
      case MEMORY_AREA_SHARED_DATA:

@@ -1,4 +1,4 @@
-/* $Id: tls.c,v 1.6 2000/11/19 16:01:29 ekohl Exp $
+/* $Id: tls.c,v 1.7 2001/03/13 16:25:52 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -24,28 +24,28 @@
 
 /* FUNCTIONS *****************************************************************/
 
-DWORD STDCALL TlsAlloc(VOID)
+DWORD STDCALL 
+TlsAlloc(VOID)
 {
    ULONG Index;
 
    RtlAcquirePebLock();
-   Index = RtlFindClearBitsAndSet (NtCurrentPeb()->TlsBitmap,
-				   1,
-				   0);
+   Index = RtlFindClearBitsAndSet (NtCurrentPeb()->TlsBitmap, 1, 0);
    if (Index == (ULONG)-1)
      {
-	SetLastErrorByStatus(STATUS_NO_MEMORY);
+       SetLastErrorByStatus(STATUS_NO_MEMORY);
      }
    else
      {
-	NtCurrentTeb()->TlsSlots[Index] = 0;
+       NtCurrentTeb()->TlsSlots[Index] = 0;
      }
    RtlReleasePebLock();
-
-   return Index;
+   
+   return(Index);
 }
 
-WINBOOL STDCALL TlsFree(DWORD dwTlsIndex)
+WINBOOL STDCALL 
+TlsFree(DWORD dwTlsIndex)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
      {
@@ -73,7 +73,8 @@ WINBOOL STDCALL TlsFree(DWORD dwTlsIndex)
    return(TRUE);
 }
 
-LPVOID STDCALL TlsGetValue(DWORD dwTlsIndex)
+LPVOID STDCALL 
+TlsGetValue(DWORD dwTlsIndex)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
      {
@@ -83,7 +84,8 @@ LPVOID STDCALL TlsGetValue(DWORD dwTlsIndex)
    return(NtCurrentTeb()->TlsSlots[dwTlsIndex]);
 }
 
-WINBOOL STDCALL TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
+WINBOOL STDCALL 
+TlsSetValue(DWORD dwTlsIndex, LPVOID lpTlsValue)
 {
    if (dwTlsIndex >= TLS_MINIMUM_AVAILABLE)
      {

@@ -32,7 +32,6 @@ typedef struct _PHYSICAL_PAGE
   ULONG Flags;
   LIST_ENTRY ListEntry;
   ULONG ReferenceCount;
-  KEVENT Event;
   SWAPENTRY SavedSwapEntry;
   ULONG LockCount;
   ULONG MapCount;
@@ -187,9 +186,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -199,9 +195,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&UsedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -210,9 +203,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -221,9 +211,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -235,9 +222,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -246,9 +230,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_BIOS;
 	     MmPageArray[i].ReferenceCount = 1;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&BiosPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -257,9 +238,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	     MmPageArray[i].ReferenceCount = 0;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&FreePageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -269,9 +247,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
 	  {
 	     MmPageArray[i].Flags = MM_PHYSICAL_PAGE_USED;
 	     MmPageArray[i].ReferenceCount = 1;
-	     KeInitializeEvent(&MmPageArray[i].Event,
-			       NotificationEvent,
-			       FALSE);
 	     InsertTailList(&UsedPageListHead,
 			    &MmPageArray[i].ListEntry);
 	  }
@@ -282,9 +257,6 @@ PVOID MmInitializePageList(PVOID FirstPhysKernelAddress,
      {
 	MmPageArray[i].Flags = MM_PHYSICAL_PAGE_FREE;
 	MmPageArray[i].ReferenceCount = 0;
-	KeInitializeEvent(&MmPageArray[i].Event,
-			  NotificationEvent,
-			  FALSE);
 	InsertTailList(&FreePageListHead,
 		       &MmPageArray[i].ListEntry);
      }  
@@ -638,39 +610,3 @@ MmAllocPageMaybeSwap(SWAPENTRY SavedSwapEntry)
    return(Page);
 }
 
-NTSTATUS 
-MmWaitForPage(PVOID PhysicalAddress)
-{
-   NTSTATUS Status;
-   ULONG Start;
-   
-   Start = (ULONG)PhysicalAddress / PAGESIZE;
-   Status = KeWaitForSingleObject(&MmPageArray[Start].Event,
-				  UserRequest,
-				  KernelMode,
-				  FALSE,
-				  NULL);
-   return(Status);
-}
-
-VOID 
-MmClearWaitPage(PVOID PhysicalAddress)
-{
-   ULONG Start;
-   
-   Start = (ULONG)PhysicalAddress / PAGESIZE;
-   
-   KeClearEvent(&MmPageArray[Start].Event);
-}
-
-VOID 
-MmSetWaitPage(PVOID PhysicalAddress)
-{
-   ULONG Start;
-   
-   Start = (ULONG)PhysicalAddress / PAGESIZE;
-   
-   KeSetEvent(&MmPageArray[Start].Event,
-	      IO_DISK_INCREMENT,
-	      FALSE);
-}

@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.41 2001/03/08 22:06:02 dwelch Exp $
+/* $Id: virtual.c,v 1.42 2001/03/13 16:25:54 dwelch Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -222,7 +222,22 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
    NTSTATUS Status;
    PMM_SEGMENT Segment;
    PVOID CurrentAddress;
+   PMM_PAGEOP PageOp;
    
+   /*
+    * There is a window between taking the page fault and locking the
+    * address space when another thread could load the page so we check
+    * that.
+    */
+   if (MmIsPagePresent(NULL, Address))
+     {
+	if (Locked)
+	  {
+	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	  }  
+	return(STATUS_SUCCESS);
+     }
+
    /*
     * Get the segment corresponding to the virtual address
     */
@@ -235,13 +250,56 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
      {
 	return(STATUS_UNSUCCESSFUL);
      }
-   
-   if (MmIsPagePresent(NULL, Address))
-     {	
+
+   /*
+    * Get or create a page operation
+    */
+   PageOp = MmGetPageOp(MemoryArea, (ULONG)PsGetCurrentProcessId(), 
+			(PVOID)PAGE_ROUND_DOWN(Address), NULL, 0);
+   if (PageOp == NULL)
+     {
+       DPRINT1("MmGetPageOp failed");
+       KeBugCheck(0);
+     }
+
+   /*
+    * Check if someone else is already handling this fault, if so wait
+    * for them
+    */
+   if (PageOp->Thread != PsGetCurrentThread())
+     {
+       MmUnlockAddressSpace(AddressSpace);
+       Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+				      0,
+				      KernelMode,
+				      FALSE,
+				      NULL);
+       /*
+	* Check for various strange conditions
+	*/
+       if (Status != STATUS_SUCCESS)
+	 {
+	   DPRINT1("Failed to wait for page op\n");
+	   KeBugCheck(0);
+	 }
+       if (PageOp->Status == STATUS_PENDING)
+	 {
+	   DPRINT1("Woke for page op before completion\n");
+	   KeBugCheck(0);
+	 }
+       /*
+	* If the thread handling this fault has failed then we don't retry
+	*/
+       if (!NT_SUCCESS(PageOp->Status))
+	 {
+	   return(Status);
+	 }
+       MmLockAddressSpace(AddressSpace);
        if (Locked)
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }
+       MmReleasePageOp(PageOp);
        return(STATUS_SUCCESS);
      }
    
@@ -254,18 +312,9 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	MmUnlockAddressSpace(AddressSpace);
 	MmWaitForFreePages();
 	MmLockAddressSpace(AddressSpace);
-	if (MmIsPagePresent(NULL, Address))
-	  {
-	    if (Locked)
-	      {
-		MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
-								 Address));
-	      }
-	    return(STATUS_SUCCESS);
-	  }
 	Page = MmAllocPage(0);
      }
-   
+
    /*
     * Add the page to the process's working set
     */
@@ -285,16 +334,6 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
 	MmUnlockAddressSpace(AddressSpace);
 	MmWaitForFreePages();
 	MmLockAddressSpace(AddressSpace);
-	if (MmIsPagePresent(NULL, Address))
-	  {
-	    if (Locked)
-	      {
-		MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
-								 Address));
-	      }
-	    MmDereferencePage(Page);
-	    return(STATUS_SUCCESS);
-	  }
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
 					MemoryArea->Attributes,
@@ -302,16 +341,22 @@ MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
      }  
    if (!NT_SUCCESS(Status))
      {
-	return(Status);
+       DPRINT1("MmCreateVirtualMapping failed, not out of memory\n");
+       KeBugCheck(0);
+       return(Status);
      }
-   else
+
+   /*
+    * Finish the operation
+    */
+   if (Locked)
      {
-       if (Locked)
-	 {
-	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
-	 }  
-       return(STATUS_SUCCESS);
-     }
+       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+     }  
+   PageOp->Status = STATUS_SUCCESS;
+   KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+   MmReleasePageOp(PageOp);
+   return(STATUS_SUCCESS);
 }
 
 VOID STATIC
@@ -960,6 +1005,27 @@ MmFreeVirtualMemoryPage(PVOID Context, PVOID Address, ULONG PhysicalAddr)
     }
 }
 
+VOID 
+MmFreeVirtualMemory(PEPROCESS Process, PMEMORY_AREA MemoryArea)
+{
+  PLIST_ENTRY current_entry;
+  PMM_SEGMENT current;
+  
+  current_entry = MemoryArea->Data.VirtualMemoryData.SegmentListHead.Flink;
+  while (current_entry != &MemoryArea->Data.VirtualMemoryData.SegmentListHead)
+    {
+      current = CONTAINING_RECORD(current_entry, MM_SEGMENT, SegmentListEntry);
+      current_entry = current_entry->Flink;
+      ExFreePool(current);
+    }
+
+  MmFreeMemoryArea(&Process->AddressSpace,
+		   MemoryArea->BaseAddress,
+		   0,
+		   MmFreeVirtualMemoryPage,
+		   (PVOID)Process);
+}
+
 NTSTATUS STDCALL 
 NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 		    IN	PVOID*  PBaseAddress,	
@@ -1033,12 +1099,8 @@ NtFreeVirtualMemory(IN	HANDLE	ProcessHandle,
 	     MmDereserveSwapPages(PAGE_ROUND_UP(MemoryArea->Length));
 	  }
 #endif
-	
-	MmFreeMemoryArea(&Process->AddressSpace,
-			 BaseAddress,
-			 0,
-			 MmFreeVirtualMemoryPage,
-			 (PVOID)Process);
+
+	MmFreeVirtualMemory(Process, MemoryArea);
 	MmUnlockAddressSpace(AddressSpace);
 	ObDereferenceObject(Process);
 	return(STATUS_SUCCESS);

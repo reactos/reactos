@@ -1,4 +1,4 @@
-/* $Id: ntsem.c,v 1.10 2001/03/07 16:48:44 dwelch Exp $
+/* $Id: ntsem.c,v 1.11 2001/03/13 16:25:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -16,6 +16,7 @@
 #include <internal/ob.h>
 #include <ntos/synch.h>
 #include <internal/pool.h>
+#include <internal/ps.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -87,7 +88,6 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
 {
    PKSEMAPHORE Semaphore;
    
-   DPRINT("NtCreateSemaphore()\n");
    Semaphore = ObCreateObject(SemaphoreHandle,
 			      DesiredAccess,
 			      ObjectAttributes,

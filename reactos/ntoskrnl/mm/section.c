@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.50 2001/03/09 14:40:28 dwelch Exp $
+/* $Id: section.c,v 1.51 2001/03/13 16:25:54 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -185,123 +185,6 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 }
 
 NTSTATUS 
-MmWaitForPendingOperationSection(PMADDRESS_SPACE AddressSpace,
-				 PMEMORY_AREA MemoryArea,
-				 PVOID Address,
-				 PSECTION_OBJECT Section,
-				 PMM_SECTION_SEGMENT Segment,
-				 LARGE_INTEGER Offset,
-				 ULONG Entry,
-				 ULONG Attributes,
-				 BOOLEAN Locked)
-{
-   PVOID Page;
-   NTSTATUS Status;
-   
-   /*
-    * If a page-in on that section offset is pending that wait for
-    * it to finish.
-    */
-   
-   do
-     {
-	/*
-	 * Release all our locks and wait for the pending operation
-	 * to complete
-	 */
-       MmUnlockSectionSegment(Segment);
-       MmUnlockSection(Section);
-       MmUnlockAddressSpace(AddressSpace);
-	/*
-	 * FIXME: What if the event is set and cleared after we
-	 * unlock the section but before we wait. 
-	 */
-	Status = MmWaitForPage((PVOID)(Entry & (~SPE_PAGEIN_PENDING)));
-	if (!NT_SUCCESS(Status))
-	  {
-	     /*
-	      * FIXME: What do we do in this case? Maybe the thread 
-	      * has terminated.
-	      */
-	     
-	     DbgPrint("Failed to wait for page\n");
-	     KeBugCheck(0);
-	     return(STATUS_UNSUCCESSFUL);
-	  }
-	
-	/*
-	 * Relock the address space, section and segment
-	 */
-	MmLockAddressSpace(AddressSpace);
-	MmLockSection(Section);
-	MmLockSectionSegment(Segment);
-	
-	/*
-	 * Get the entry for the section offset. If the entry is still
-	 * pending that means another thread is already trying the
-	 * page-in again so we have to wait again.
-	 */
-	Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
-     } while (Entry & SPE_PAGEIN_PENDING);
-   
-   /*
-    * Setting the entry to null means the read failing. 
-    * FIXME: We should retry it (unless that filesystem has gone
-    * entirely e.g. the network died).
-    */
-   if (Entry == 0)
-     {
-	DbgPrint("Entry set to null while we slept\n");
-	KeBugCheck(0);
-     }
-   
-   /*
-    * Maybe the thread did the page-in took the fault on the
-    * same address-space/address as we did. If so we can just
-    * return success.
-    */
-   if (MmIsPagePresent(NULL, Address))
-     {
-       if (Locked)
-	 {
-	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
-	 }  
-       MmUnlockSectionSegment(Segment);
-       MmUnlockSection(Section);
-       return(STATUS_SUCCESS);
-     }
-   
-   /*
-    * Get a reference to the page containing the data for the page.
-    */
-   Page = (PVOID)Entry;
-   MmReferencePage(Page);   
-   
-   /*
-    * When we reach here, we have the address space, section and segment locked
-    * and have a reference to a page containing valid data for the
-    * section offset. Set the page and return success.
-    */
-   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
-				   Address,
-				   Attributes,
-				   (ULONG)Page);
-   if (!NT_SUCCESS(Status))
-     {
-	DbgPrint("Unable to create virtual mapping\n");
-	KeBugCheck(0);
-     }
-   if (Locked)
-     {
-       MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
-     }  
-   MmUnlockSectionSegment(Segment);
-   MmUnlockSection(Section);
-   
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS 
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			     MEMORY_AREA* MemoryArea, 
 			     PVOID Address,
@@ -318,10 +201,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    ULONG Entry;
    ULONG Entry1;
    ULONG Attributes;
-   
-   DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
-	   MemoryArea,Address);
-   
+   PMM_PAGEOP PageOp;
    
    /*
     * There is a window between taking the page fault and locking the
@@ -330,7 +210,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
     */
    if (MmIsPagePresent(NULL, Address))
      {
-	DbgPrint("Page is already present\n");
 	if (Locked)
 	  {
 	    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
@@ -351,6 +230,84 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    MmLockSectionSegment(Segment);
    
    /*
+    * Get or create a page operation descriptor
+    */
+   PageOp = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset.u.LowPart);
+   if (PageOp == NULL)
+     {
+       DPRINT1("MmGetPageOp failed\n");
+       KeBugCheck(0);
+     }
+
+   /*
+    * Check if someone else is already handling this fault, if so wait
+    * for them
+    */
+   if (PageOp->Thread != PsGetCurrentThread())
+     {
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       MmUnlockAddressSpace(AddressSpace);
+       Status = KeWaitForSingleObject(&PageOp->CompletionEvent,
+				      0,
+				      KernelMode,
+				      FALSE,
+				      NULL);
+       /*
+	* Check for various strange conditions
+	*/
+       if (Status != STATUS_SUCCESS)
+	 {
+	   DPRINT1("Failed to wait for page op\n");
+	   KeBugCheck(0);
+	 }
+       if (PageOp->Status == STATUS_PENDING)
+	 {
+	   DPRINT1("Woke for page op before completion\n");
+	   KeBugCheck(0);
+	 }
+       /*
+	* If the thread handling this fault has failed then we don't retry
+	*/
+       if (!NT_SUCCESS(PageOp->Status))
+	 {
+	   return(Status);
+	 }
+       MmLockAddressSpace(AddressSpace);
+       MmLockSection(Section);
+       MmLockSectionSegment(Segment);
+       /*
+	* If the completed fault was for another address space then set the 
+	* page in this one.
+	*/
+       if (!MmIsPagePresent(NULL, Address))
+	 {
+	   Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
+
+	   Page = (PVOID)(Entry & 0xFFFFF000);
+	   MmReferencePage(Page);	
+
+	   Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
+					   Address,
+					   Attributes,
+					   (ULONG)Page);
+	   if (!NT_SUCCESS(Status))
+	     {
+	       DbgPrint("Unable to create virtual mapping\n");
+	       KeBugCheck(0);
+	     }
+	 }
+       if (Locked)
+	 {
+	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
+	 }
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       MmReleasePageOp(PageOp);
+       return(STATUS_SUCCESS);
+     }
+
+   /*
     * Satisfying a page fault on a map of /Device/PhysicalMemory is easy
     */
    if (Section->Flags & SO_PHYSICAL_MEMORY)
@@ -366,6 +323,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }  
+
+       /*
+	* Cleanup and release locks
+	*/
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        return(STATUS_SUCCESS);
@@ -384,11 +348,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmUnlockAddressSpace(AddressSpace);	   
 	    MmWaitForFreePages();
 	    MmLockAddressSpace(AddressSpace);
-	    if (MmIsPagePresent(NULL, Address))
-	      {
-		MmUnlockAddressSpace(AddressSpace);
-		return(STATUS_SUCCESS);
-	      }
 	    MmLockSection(Section);
 	    MmLockSectionSegment(Segment);
 	    Page = MmAllocPage(0);
@@ -401,10 +360,21 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }  
+
+       /*
+	* Cleanup and release locks
+	*/
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
        MmUnlockSectionSegment(Segment);
        MmUnlockSection(Section);
        return(STATUS_SUCCESS);
      }
+
+   /*
+    * Check if this page needs to be mapped COW
+    */
    if (Segment->Characteristics & IMAGE_SECTION_CHAR_DATA)
      {
        Attributes = PAGE_READONLY;
@@ -418,8 +388,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Get the entry corresponding to the offset within the section
     */
    Entry = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
-   
-   DPRINT("Entry %x\n", Entry);
    
    if (Entry == 0)
      {   
@@ -440,55 +408,8 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	    MmUnlockAddressSpace(AddressSpace);
 	    MmWaitForFreePages();
 	    MmLockAddressSpace(AddressSpace);
-	    if (MmIsPagePresent(NULL, Address))
-	      {
-		MmUnlockAddressSpace(AddressSpace);
-		return(STATUS_SUCCESS);
-	      }
 	    MmLockSection(Section);
 	    MmLockSectionSegment(Segment);
-
-	    /*
-	     * Check if page fault handling has already been started on
-	     * this offset by another thread
-	     */
-	    Entry1 = MmGetPageEntrySectionSegment(Segment, Offset.u.LowPart);
-	    if (Entry1 & SPE_PAGEIN_PENDING)
-	      {
-		return(MmWaitForPendingOperationSection(AddressSpace,
-							MemoryArea,
-							Address,
-							Section,
-							Segment,
-							Offset,
-							Entry1,
-							Attributes,
-							Locked));
-	      }
-	    else if (Entry1 != 0)
-	      {
-		Page = (PVOID)Entry;
-		MmReferencePage(Page);	
-		
-		Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
-						Address,
-						Attributes,
-						(ULONG)Page);
-		if (!NT_SUCCESS(Status))
-		  {
-		    DbgPrint("Unable to create virtual mapping\n");
-		    KeBugCheck(0);
-		  }
-		if (Locked)
-		  {
-		    MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, 
-								     Address));
-		  }  
-		MmUnlockSectionSegment(Segment);
-		MmUnlockSection(Section);
-		
-		return(STATUS_SUCCESS);
-	      }
 	    Page = MmAllocPage(0);
 	  }
 	
@@ -499,25 +420,11 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	MmBuildMdlFromPages(Mdl, (PULONG)&Page);
 	
 	/*
-	 * Clear the wait state (Since we are holding the only reference to
-	 * page this is safe)
-	 */
-	MmClearWaitPage(Page);
-	
-	/*
-	 * Notify any other threads that fault on the same section offset
-	 * that a page-in is pending.
-	 */
-	Entry = ((ULONG)Page) | SPE_PAGEIN_PENDING;
-	MmSetPageEntrySectionSegment(Segment, Offset.u.LowPart, Entry);
-	
-	/*
 	 * Release all our locks and read in the page from disk
 	 */
 	MmUnlockSectionSegment(Segment);
 	MmUnlockSection(Section);
 	MmUnlockAddressSpace(AddressSpace);
-	DPRINT("Reading file offset %x\n", Offset.QuadPart);
 	Status = IoPageRead(MemoryArea->Data.SectionData.Section->FileObject,
 			    Mdl,
 			    &Offset,
@@ -529,6 +436,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	      * FIXME: What do we know in this case?
 	      */
 	    DPRINT("IoPageRead failed (Status %x)\n", Status);
+	    
+	    /*
+	     * Cleanup and release locks
+	     */
+	    PageOp->Status = Status;
+	    KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+	    MmReleasePageOp(PageOp);
 	    MmLockAddressSpace(AddressSpace);
 	    return(Status);
 	  }
@@ -558,12 +472,6 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	Entry = (ULONG)Page;
 	MmSetPageEntrySectionSegment(Segment, Offset.QuadPart, Entry);
 	
-        /*
-	 * Set the event associated with the page so other threads that
-	 * may be waiting know that valid data is now in-memory.
-	 */
-	MmSetWaitPage(Page);
-	
 	Status = MmCreateVirtualMapping(PsGetCurrentProcess(),
 					Address,
 					Attributes,
@@ -577,23 +485,13 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }  
-	MmUnlockSectionSegment(Segment);
-	MmUnlockSection(Section);
-	DPRINT("MmNotPresentFaultSectionView succeeded\n");
-	return(STATUS_SUCCESS);
-
-     }
-   else if (Entry & SPE_PAGEIN_PENDING)
-     {
-	return(MmWaitForPendingOperationSection(AddressSpace,
-						MemoryArea,
-						Address,
-						Section,
-						Segment,
-						Offset,
-						Entry,
-						Attributes,
-						Locked));
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);
+       DPRINT("MmNotPresentFaultSectionView succeeded\n");
+       return(STATUS_SUCCESS);
      }
    else
      {
@@ -618,10 +516,12 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	 {
 	   MmLockPage((PVOID)MmGetPhysicalAddressForProcess(NULL, Address));
 	 }  
-	MmUnlockSectionSegment(Segment);
-	MmUnlockSection(Section);
-	
-	return(STATUS_SUCCESS);
+       PageOp->Status = STATUS_SUCCESS;
+       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
+       MmReleasePageOp(PageOp);
+       MmUnlockSectionSegment(Segment);
+       MmUnlockSection(Section);	
+       return(STATUS_SUCCESS);
      }
 }
 

@@ -239,12 +239,8 @@ RtlInitializeContext(HANDLE ProcessHandle,
 }
 
 
-NTSTATUS
-STDCALL
-RtlFreeUserThreadStack (
-	HANDLE	ProcessHandle,
-	HANDLE	ThreadHandle
-	)
+NTSTATUS STDCALL
+RtlFreeUserThreadStack (HANDLE	ProcessHandle, HANDLE	ThreadHandle)
 {
 	THREAD_BASIC_INFORMATION ThreadInfo;
 	NTSTATUS Status;
