@@ -45,12 +45,14 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
        "Your knees start shakin' and your fingers pop\n"
        "Like a pinch on the neck from Mr. Spock!\n",
        "It's worse than that ... He's dead, Jim\n",
-	   "Don't Panic!\n",
-	   "Et tu... Brute?\n",
-	   "Dog of a Saxon! Take thy lance, and prepare for the death thou hast drawn upon thee!\n",
-	   "My Precious!  O my Precious!\n",
-   	   "Sir, If you'll not be needing me for a while I'll turn down.\n",
-	   "What are you doing, Dave...?\n",
+       "Don't Panic!\n",
+       "Et tu... Brute?\n",
+       "Dog of a Saxon! Take thy lance, and prepare for the death thou hast drawn upon thee!\n",
+       "My Precious!  O my Precious!\n",
+       "Sir, If you'll not be needing me for a while I'll turn down.\n",
+       "What are you doing, Dave...?\n",
+       "I feel a great disturbance in the Force\n",
+       "Gone fishing\n",
      };
    LARGE_INTEGER Now;
 
@@ -70,6 +72,7 @@ NtShutdownSystem(IN SHUTDOWN_ACTION Action)
    if (Action == ShutdownNoReboot)
      {
         HalReleaseDisplayOwnership();
+        HalDisplayString("\nYou can switch off your computer now\n\n");
         HalDisplayString(FamousLastWords[Now.u.LowPart % (sizeof(FamousLastWords) / sizeof(PCH))]);
 #if 0
         /* Switch off */
