@@ -147,14 +147,14 @@ static void print_address(PVOID address)
 	if (address >= current->Base &&
 	    address < (current->Base + current->Length))
 	  {
-	     DbgPrint("<%w: %x>\n", current->Name, 
+	     DbgPrint("<%w: %x>", current->Name, 
 		      address - current->Base);
 	     return;
 	  }
 
 	current_entry = current_entry->Flink;
      }
-   DbgPrint("<%x>\n", address);
+   DbgPrint("<%x>", address);
 }
 
 asmlinkage void exception_handler(unsigned int edi,
@@ -240,8 +240,9 @@ asmlinkage void exception_handler(unsigned int edi,
 	DbgPrint("Exception: %d(%x)\n",type,error_code&0xffff);
      }
    DbgPrint("CS:EIP %x:%x\n",cs&0xffff,eip);
-   DbgPrint("CS:EIP %x");
+   DbgPrint("CS:EIP %x:", cs&0xffff);
    print_address(eip);
+   DbgPrint("\n");
    __asm__("movl %%cr2,%0\n\t"
 	   : "=d" (cr2));
    __asm__("movl %%cr3,%0\n\t"
@@ -301,6 +302,7 @@ asmlinkage void exception_handler(unsigned int edi,
             {
 //              DbgPrint("  %.8x", stack[i]);
 	       print_address(stack[i]);
+	       DbgPrint(" ");
             }
         }
      }
@@ -323,8 +325,8 @@ asmlinkage void exception_handler(unsigned int edi,
         }
      }
    
-   DPRINT1("Killing current task\n");
-   for(;;);
+   DbgPrint("\n");
+   DbgPrint("Killing current task\n");
    KeLowerIrql(PASSIVE_LEVEL);
    if ((cs&0xffff) == USER_CS)
      {

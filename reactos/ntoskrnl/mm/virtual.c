@@ -568,14 +568,21 @@ NTSTATUS STDCALL NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    
    KeAttachProcess(Process);
    
+   DPRINT("Attached to process copying memory\n");
+   
    SystemAddress = MmGetSystemAddressForMdl(Mdl);
    memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+   
+   DPRINT("Done copy\n");
    
    KeDetachProcess();
    
    ObDereferenceObject(Process);
    
    *NumberOfBytesWritten = NumberOfBytesToWrite;
+   
+   DPRINT("Finished NtWriteVirtualMemory()\n");
+   
    return(STATUS_SUCCESS);
 }
 

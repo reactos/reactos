@@ -22,3 +22,5 @@ cp subsys/win32k/win32k.sys $1/reactos/system32/drivers
 cp apps/apc/apc.exe $1/reactos/bin
 cp apps/shm/shmsrv.exe $1/reactos/bin
 cp apps/shm/shmclt.exe $1/reactos/bin
+cp apps/lpc/lpcsrv.exe $1/reactos/bin
+cp apps/lpc/lpcclt.exe $1/reactos/bin

@@ -11,21 +11,12 @@ enum {
 
 } LPC_MESSAGE_TYPE;
 
-typedef
-struct _LPC_REPLY
+typedef struct _LPC_MESSAGE
 {
-	DWORD	ReplyValue;
-
-} LPC_REPLY, * PLPC_REPLY;
-
-typedef
-struct _LPC_MESSAGE
-{
-	LPC_MESSAGE_TYPE	Type;
-	ULONG			Length;
-	PVOID			Buffer; /* Page aligned! */
-	DWORD			Flags; /* To be defined */
-		
+   LPC_MESSAGE_TYPE	Type;
+   ULONG			Length;
+   PVOID			Buffer; /* Page aligned! */
+   DWORD			Flags; /* To be defined */
 } LPC_MESSAGE, * PLPC_MESSAGE;
 
 

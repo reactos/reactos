@@ -113,4 +113,7 @@ NTSTATUS MmUnmapViewOfSection(PEPROCESS Process,
 			      PMEMORY_AREA MemoryArea);
 PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section, ULONG Offset);
 
+NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
+NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
+
 #endif

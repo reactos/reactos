@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.12 1999/11/20 21:46:16 ekohl Exp $
+; $Id: ntdll.edf,v 1.13 1999/11/25 10:47:55 dwelch Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -572,4 +572,5 @@ LdrGetExportByOrdinal
 LdrLoadDll
 LdrMapNTDllForProcess
 LdrUnloadDll
-
+LdrAccessResource
+LdrFindResource_U

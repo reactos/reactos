@@ -19,8 +19,8 @@
 
 /* GLOBALS *******************************************************************/
 
-static LIST_ENTRY SystemAreaList = {NULL,NULL};
-static KSPIN_LOCK SystemAreaListLock = {0,};
+static LIST_ENTRY SystemAreaList;
+static KSPIN_LOCK SystemAreaListLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -573,6 +573,7 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
 					    +(PAGESIZE*2));
 	if ((*BaseAddress)==0)
 	  {
+	     DPRINT("No suitable gap\n");
 	     MmUnlockMemoryAreaListByMode(Mode,&oldlvl);
 	     return(STATUS_UNSUCCESSFUL);
 	  }
@@ -585,6 +586,7 @@ NTSTATUS MmCreateMemoryArea(KPROCESSOR_MODE Mode,
 						*BaseAddress,
 						Length)!=NULL)
 	  {
+	     DPRINT("Memory area already occupied\n");
 	     MmUnlockMemoryAreaList(*BaseAddress,&oldlvl);
 	     return(STATUS_UNSUCCESSFUL);
 	  }

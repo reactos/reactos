@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.16 1999/11/24 11:51:52 dwelch Exp $
+/* $Id: section.c,v 1.17 1999/11/25 10:47:57 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -366,6 +366,8 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
 				      NULL);
    if (!NT_SUCCESS(Status))
      {
+	DPRINT("ObReferenceObjectByHandle(ProcessHandle, ...) failed (%x)\n",
+	       Status);
 	ObDereferenceObject(Section);		
 	return Status;
      }

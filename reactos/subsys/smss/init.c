@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.2 1999/10/24 17:07:57 rex Exp $
+/* $Id: init.c,v 1.3 1999/11/25 10:47:58 dwelch Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -63,6 +63,7 @@ InitSessionManager(
 #endif
 
         /* Start the simple shell (shell.exe) */
+   DisplayString(L"Executing shell\n");
         RtlInitUnicodeString(&CmdLineW,
                              L"\\??\\C:\\reactos\\system32\\shell.exe");
         Status = RtlCreateUserProcess(&CmdLineW,

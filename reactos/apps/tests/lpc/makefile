@@ -1,24 +1,51 @@
-# $Id: makefile,v 1.3 1999/07/17 23:10:12 ea Exp $
-# ReactOS Operating System
-# LPC test
-CC=gcc
-LD=ld
-CFLAGS=-I../../include
+#
+#
+#
+SRV_OBJECTS= ../common/crt0.o lpcsrv.o
+CLT_OBJECTS= ../common/crt0.o lpcclt.o
+
+PROGS= lpcsrv.exe lpcclt.exe
+
+BASE_CFLAGS = -I../../include
+LIBS = ../../lib/crtdll/crtdll.a ../../lib/kernel32/kernel32.a \
+       ../../lib/ntdll/ntdll.a
+
+all: $(PROGS)
+
+.phony: all
+
+clean:
+	- $(RM) lpcsrv.o
+	- $(RM) lpcsrv.exe
+	- $(RM) lpcsrv.sym
+
+.phony: clean
+
+floppy: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+
+$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* $(FLOPPY_DIR)\apps\$*
+else
+	$(CP) $* $(FLOPPY_DIR)/apps/$*
+endif
+
+dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+
+$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
+ifeq ($(DOSCLI),yes)
+	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
+else
+	$(CP) $* ../../$(DIST_DIR)/apps/$*
+endif
+
+lpcsrv.exe: $(SRV_OBJECTS) $(LIBS)
+	$(LD) $(SRV_OBJECTS) $(LIBS) -o lpcsrv.exe
+	$(NM) --numeric-sort lpcsrv.exe > lpcsrv.sym
+
+lpcclt.exe: $(CLT_OBJECTS) $(LIBS)
+	$(LD) $(CLT_OBJECTS) $(LIBS) -o lpcclt.exe
+	$(NM) --numeric-sort lpcclt.exe > lpcclt.sym
 
 
-all: conport.exe creport.exe simpless.exe
-
-conport.exe: conport.o dumpinfo.o
-	$(CC) -o conport conport.o dumpinfo.o
-
-creport.exe: creport.o dumpinfo.o.
-	$(CC) -o creport creport.o dumpinfo.o 
-
-simpless.exe: simpless.o dumpinfo.o.
-	$(CC) -o simpless simpless.o dumpinfo.o 
-
-%.o: %.c
-	$(CC) $(CFLAGS) -c $< -o $@
-
-
-#EOF
+include ../../rules.mak

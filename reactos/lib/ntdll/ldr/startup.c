@@ -1,4 +1,4 @@
-/* $Id: startup.c,v 1.11 1999/11/24 11:51:45 dwelch Exp $
+/* $Id: startup.c,v 1.12 1999/11/25 10:47:55 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -36,11 +36,8 @@ extern HANDLE __ProcessHeap;
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-LdrMapNTDllForProcess (
-	HANDLE	ProcessHandle,
-	PHANDLE	PtrNTDllSectionHandle
-	)
+NTSTATUS LdrMapNTDllForProcess (HANDLE	ProcessHandle,
+				PHANDLE	PtrNTDllSectionHandle)
 {
    ULONG InitialViewSize;
    NTSTATUS Status;

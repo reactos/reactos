@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.20 1999/11/24 11:51:42 dwelch Exp $
+/* $Id: zw.h,v 1.21 1999/11/25 10:47:53 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -5177,15 +5177,6 @@ NtConnectPort (
 	IN	DWORD		Unknown6,
 	IN	ULONG		Flags	
 	);
-/*NTSTATUS
-STDCALL
-NtCreatePort ( 
-	IN	POBJECT_ATTRIBUTES	PortAttributes	OPTIONAL,  
-	OUT	PHANDLE			PortHandle,
-	IN	ACCESS_MASK		GrantedAccess,
-	IN	DWORD			Unknown3,
-	IN	ULONG			Flags
-	);*/
 NTSTATUS STDCALL NtCreatePort(PHANDLE PortHandle,
 			      ACCESS_MASK DesiredAccess,
 			      POBJECT_ATTRIBUTES ObjectAttributes,
@@ -5216,13 +5207,13 @@ NTSTATUS
 STDCALL
 NtReplyPort ( /* @8 */
 	IN	HANDLE		PortHandle,
-	IN	PLPC_REPLY	LpcReply	/* guess */
+	IN	PLPC_MESSAGE	LpcReply	/* guess */
 	);
 NTSTATUS
 STDCALL
 NtReplyWaitReceivePort ( /* @16 */
 	IN	HANDLE		PortHandle,
-	IN	PLPC_REPLY	LpcReply,	/* guess */
+	IN	PLPC_MESSAGE	LpcReply,	/* guess */
 	OUT	PLPC_MESSAGE	LpcMessage,	/* guess */
 	OUT	PULONG		MessageLength	/* guess */
 	);
@@ -5230,7 +5221,7 @@ NTSTATUS
 STDCALL
 NtReplyWaitReplyPort ( /* @8 */
 	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_REPLY	LpcReply	/* guess */
+	IN OUT	PLPC_MESSAGE	LpcReply	/* guess */
 	);
 NTSTATUS
 STDCALL
@@ -5242,8 +5233,8 @@ NTSTATUS
 STDCALL
 NtRequestWaitReplyPort ( /* @12 */
 	IN	HANDLE		PortHandle,
-	IN OUT	PLPC_REPLY	LpcReply,	/* guess */
-	IN	TIME		* TimeToWait 	/* guess */
+	IN OUT	PLPC_MESSAGE	LpcReply,	/* guess */
+	OUT     PLPC_MESSAGE    LpcRequest 	/* guess */
 	); 
 NTSTATUS
 STDCALL
