@@ -1,3 +1,4 @@
+Makefile.ros
 *.coff
 *.dll
 *.o
