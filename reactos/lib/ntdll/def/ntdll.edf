@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.62 2001/05/30 20:01:58 ekohl Exp $
+; $Id: ntdll.edf,v 1.63 2001/06/17 09:25:03 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -14,10 +14,10 @@ EXPORTS
 CsrClientCallServer=CsrClientCallServer@16
 CsrClientConnectToServer=CsrClientConnectToServer@0
 ;CsrFreeCaptureBuffer
-;CsrIdentifyAlertableThread
+CsrIdentifyAlertableThread=CsrIdentifyAlertableThread@0
 CsrNewThread=CsrNewThread@0
-;CsrProbeForRead
-;CsrProbeForWrite
+CsrProbeForRead=CsrProbeForRead@12
+CsrProbeForWrite=CsrProbeForWrite@12
 CsrSetPriorityClass=CsrSetPriorityClass@8
 DbgBreakPoint=DbgBreakPoint@0
 DbgPrint

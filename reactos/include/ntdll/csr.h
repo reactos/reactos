@@ -1,4 +1,4 @@
-/* $Id: csr.h,v 1.4 2001/05/02 22:22:23 ekohl Exp $
+/* $Id: csr.h,v 1.5 2001/06/17 09:23:46 ekohl Exp $
  *
  */
 
@@ -12,9 +12,16 @@ NTSTATUS STDCALL CsrClientCallServer(PCSRSS_API_REQUEST Request,
 				     PCSRSS_API_REPLY Reply,
 				     ULONG Length,
 				     ULONG ReplyLength);
+VOID STDCALL CsrIdentifyAlertableThread(VOID);
 NTSTATUS STDCALL CsrNewThread(VOID);
 NTSTATUS STDCALL CsrSetPriorityClass(HANDLE Process,
 				     PULONG PriorityClass);
+VOID STDCALL CsrProbeForRead(IN CONST PVOID Address,
+			     IN ULONG Length,
+			     IN ULONG Alignment);
+VOID STDCALL CsrProbeForWrite(IN CONST PVOID Address,
+			      IN ULONG Length,
+			      IN ULONG Alignment);
 
 #endif /* __INCLUDE_NTDLL_CSR_H */
 

@@ -1,4 +1,4 @@
-/* $Id: api.c,v 1.9 2001/05/02 22:23:00 ekohl Exp $
+/* $Id: api.c,v 1.10 2001/06/17 09:24:04 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -10,6 +10,7 @@
 
 #include <ddk/ntddk.h>
 #include <ntdll/csr.h>
+#include <ntdll/rtl.h>
 #include <string.h>
 
 #include <csrss/csrss.h>
@@ -86,6 +87,12 @@ CsrClientConnectToServer(VOID)
    return(STATUS_SUCCESS);
 }
 
+VOID STDCALL
+CsrIdentifyAlertableThread(VOID)
+{
+   /* FIXME: notify csrss that current thread is alertable */
+}
+
 NTSTATUS STDCALL
 CsrNewThread(VOID)
 {
@@ -100,6 +107,51 @@ CsrSetPriorityClass(HANDLE Process,
    *PriorityClass = CSR_PRIORITY_CLASS_NORMAL;
 
    return (STATUS_NOT_IMPLEMENTED);
+}
+
+VOID STDCALL
+CsrProbeForRead(IN CONST PVOID Address,
+		IN ULONG Length,
+		IN ULONG Alignment)
+{
+   PUCHAR Pointer;
+   UCHAR Data;
+
+   if (Length == 0)
+     return;
+
+   if ((ULONG)Address & (Alignment - 1))
+     RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
+
+   Pointer = (PUCHAR)Address;
+   Data = *Pointer;
+   Pointer = (PUCHAR)((ULONG)Address + Length -1);
+   Data = *Pointer;
+}
+
+VOID STDCALL
+CsrProbeForWrite(IN CONST PVOID Address,
+		 IN ULONG Length,
+		 IN ULONG Alignment)
+{
+   PUCHAR Pointer;
+   UCHAR Data;
+
+   if (Length == 0)
+     return;
+
+   if ((ULONG)Address & (Alignment - 1))
+     RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
+
+//   if (Address >= MmUserProbeAddress)
+//     RtlRaiseStatus(STATUS_ACCESS_VIOLATION);
+
+   Pointer = (PUCHAR)Address;
+   Data = *Pointer;
+   *Pointer = Data;
+   Pointer = (PUCHAR)((ULONG)Address + Length -1);
+   Data = *Pointer;
+   *Pointer = Data;
 }
 
 /* EOF */
