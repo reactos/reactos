@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.119 2003/12/28 00:41:31 weiden Exp $
+/* $Id: defwnd.c,v 1.120 2003/12/28 16:31:44 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -451,7 +451,7 @@ UserDrawMovingFrame(HDC hdc, RECT *rect, BOOL thickframe)
   if (thickframe)
     {
       UserDrawWindowFrame(hdc, rect, GetSystemMetrics(SM_CXFRAME),
-			  GetSystemMetrics(SM_CYFRAME), PATINVERT );
+			  GetSystemMetrics(SM_CYFRAME), DSTINVERT);
     }
   else DrawFocusRect( hdc, rect );
 }

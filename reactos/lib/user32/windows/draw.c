@@ -1864,16 +1864,14 @@ DrawFocusRect(HDC hdc, CONST RECT *rect)
 
    return TRUE;
 #else
-   HBRUSH hbrush = SelectObject(hdc, GetStockObject(GRAY_BRUSH));
    PatBlt(hdc, rect->left, rect->top,
-      rect->right - rect->left - 1, 1, PATINVERT);
+      rect->right - rect->left - 1, 1, DSTINVERT);
    PatBlt(hdc, rect->left, rect->top + 1, 1,
-      rect->bottom - rect->top - 1, PATINVERT);
+      rect->bottom - rect->top - 1, DSTINVERT);
    PatBlt(hdc, rect->left + 1, rect->bottom - 1,
-      rect->right - rect->left - 1, -1, PATINVERT);
+      rect->right - rect->left - 1, -1, DSTINVERT);
    PatBlt(hdc, rect->right - 1, rect->top, -1,
-      rect->bottom - rect->top - 1, PATINVERT);
-   SelectObject(hdc, hbrush);
+      rect->bottom - rect->top - 1, DSTINVERT);
 
    return TRUE;
 #endif
