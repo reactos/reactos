@@ -1,4 +1,4 @@
-/* $Id: conio.c,v 1.46 2003/03/21 21:09:41 hbirr Exp $
+/* $Id: conio.c,v 1.47 2003/03/26 22:10:43 hbirr Exp $
  *
  * reactos/subsys/csrss/api/conio.c
  *
@@ -817,16 +817,20 @@ VOID STDCALL CsrDeleteConsole( PCSRSS_CONSOLE Console )
 	 if( Console->Next != Console )
 	    {
 	       ActiveConsole = Console->Next;
-	       Console->Prev->Next = Console->Next;
-	       Console->Next->Prev = Console->Prev;
 	    }
 	 else ActiveConsole = 0;
       }
+   if (Console->Next != Console)
+   {
+      Console->Prev->Next = Console->Next;
+      Console->Next->Prev = Console->Prev;
+   }
+   
    if( ActiveConsole )
      CsrDrawConsole( ActiveConsole->ActiveBuffer );
-   UNLOCK;
    if( !--Console->ActiveBuffer->Header.ReferenceCount )
      CsrDeleteScreenBuffer( Console->ActiveBuffer );
+   UNLOCK;
    NtClose( Console->ActiveEvent );
    RtlFreeUnicodeString( &Console->Title );
    RtlFreeHeap( CsrssApiHeap, 0, Console );
