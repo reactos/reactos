@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.40 2004/05/14 22:20:46 navaraf Exp $ */
+/* $Id: color.c,v 1.41 2004/05/16 19:42:32 navaraf Exp $ */
 #include <w32k.h>
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
@@ -364,7 +364,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   if(dc->w.flags != DC_MEMORY)
   {
     // Device managed DC
-    palGDI->logicalToSystem = IntEngCreateXlate(sysGDI->Mode, palGDI->Mode, systemPalette, dc->w.hPalette);
+    palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->w.hPalette);
   }
 
   DC_UnlockDc(hDC);
