@@ -78,7 +78,7 @@ NET_DEVICE_DRIVERS = ne2000
 
 # Kernel mode storage drivers
 # atapi cdrom class2 disk scsiport
-STORAGE_DRIVERS = atapi cdrom class2 disk scsiport
+STORAGE_DRIVERS = atapi cdrom class2 disk scsiport diskdump
 
 # System applications
 # autochk cmd format gstart services setup usetup welcome winlogon

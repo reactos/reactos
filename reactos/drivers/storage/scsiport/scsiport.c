@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.30 2003/07/10 19:41:20 chorns Exp $
+/* $Id: scsiport.c,v 1.31 2003/08/27 21:30:37 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -38,81 +38,9 @@
 
 #define VERSION "0.0.1"
 
+#include "scsiport_int.h"
 
 /* TYPES *********************************************************************/
-
-/*
- * SCSI_PORT_TIMER_STATES
- *
- * DESCRIPTION
- *	An enumeration containing the states in the timer DFA
- */
-typedef enum _SCSI_PORT_TIMER_STATES
-{
-  IDETimerIdle,
-  IDETimerCmdWait,
-  IDETimerResetWaitForBusyNegate,
-  IDETimerResetWaitForDrdyAssert
-} SCSI_PORT_TIMER_STATES;
-
-
-typedef struct _SCSI_PORT_DEVICE_BASE
-{
-  LIST_ENTRY List;
-
-  PVOID MappedAddress;
-  ULONG NumberOfBytes;
-  SCSI_PHYSICAL_ADDRESS IoAddress;
-  ULONG SystemIoBusNumber;
-} SCSI_PORT_DEVICE_BASE, *PSCSI_PORT_DEVICE_BASE;
-
-
-/*
- * SCSI_PORT_DEVICE_EXTENSION
- *
- * DESCRIPTION
- *	First part of the port objects device extension. The second
- *	part is the miniport-specific device extension.
- */
-
-typedef struct _SCSI_PORT_DEVICE_EXTENSION
-{
-  ULONG Length;
-  ULONG MiniPortExtensionSize;
-  PORT_CONFIGURATION_INFORMATION PortConfig;
-  ULONG PortNumber;
-
-  KSPIN_LOCK IrpLock;
-  KSPIN_LOCK SpinLock;
-  PKINTERRUPT Interrupt;
-  PIRP                   CurrentIrp;
-  ULONG IrpFlags;
-
-  SCSI_PORT_TIMER_STATES TimerState;
-  LONG                   TimerCount;
-
-  BOOLEAN Initializing;
-
-  LIST_ENTRY DeviceBaseListHead;
-
-  ULONG PortBusInfoSize;
-  PSCSI_ADAPTER_BUS_INFO PortBusInfo;
-
-  PIO_SCSI_CAPABILITIES PortCapabilities;
-
-  PDEVICE_OBJECT DeviceObject;
-  PCONTROLLER_OBJECT ControllerObject;
-
-  PHW_STARTIO HwStartIo;
-  PHW_INTERRUPT HwInterrupt;
-
-  PSCSI_REQUEST_BLOCK OriginalSrb;
-  SCSI_REQUEST_BLOCK InternalSrb;
-  SENSE_DATA InternalSenseData;
-
-  UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
-} SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
-
 
 #define IRP_FLAG_COMPLETE	0x00000001
 #define IRP_FLAG_NEXT		0x00000002
@@ -1027,7 +955,16 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 
   switch (Stack->Parameters.DeviceIoControl.IoControlCode)
     {
-
+      case IOCTL_SCSI_GET_DUMP_POINTERS:
+	{
+	  PDUMP_POINTERS DumpPointers;
+	  DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
+	  DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
+	  DumpPointers->DeviceObject = DeviceObject;
+	  
+	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
+	}
+      break;
       case IOCTL_SCSI_GET_CAPABILITIES:
 	{
 	  DPRINT("  IOCTL_SCSI_GET_CAPABILITIES\n");
