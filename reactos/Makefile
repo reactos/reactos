@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.243 2004/08/16 22:31:04 chorns Exp $
+# $Id: Makefile,v 1.244 2004/08/19 00:39:59 chorns Exp $
 #
 # Global makefile
 #
@@ -713,7 +713,7 @@ ntoskrnl_bootcd:
 #
 # Hardware Abstraction Layer import library
 #
-hallib: ntoskrnl_implib
+hallib: $(PATH_TO_TOP)/include/roscfg.h ntoskrnl_implib
 	$(MAKE) --silent -C hal/hal
 
 hallib_implib: dk ntoskrnl_implib
