@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.36 2003/05/05 19:59:21 chorns Exp $
+# $Id: helper.mk,v 1.37 2003/05/29 08:50:23 ekohl Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -686,10 +686,12 @@ endif
 
 # Be carefull not to clean non-object files
 MK_CLEANFILES := $(filter %.o,$(MK_OBJECTS))
+MK_CLEANFILTERED := $(MK_OBJECTS:.o=.d)
+MK_CLEANDEPS := $(join $(dir $(MK_CLEANFILTERED)), $(addprefix ., $(notdir $(MK_CLEANFILTERED))))
 
 clean:
 	- $(RM) *.o depend.d *.pch $(MK_BASENAME).sym $(MK_BASENAME).a $(TARGET_PATH)/$(MK_RES_BASE).coff \
-	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) \
+	  $(MK_FULLNAME) $(MK_NOSTRIPNAME) $(MK_CLEANFILES) $(MK_CLEANDEPS) \
 	  junk.tmp base.tmp temp.exp \
 	  $(TARGET_CLEAN)
 
