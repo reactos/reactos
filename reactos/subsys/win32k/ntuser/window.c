@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.133 2003/11/11 21:04:55 navaraf Exp $
+/* $Id: window.c,v 1.134 2003/11/11 22:17:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -372,7 +372,7 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     hwndShellListView = 0;
 
   /* Unregister hot keys */
-  UnregisterWindowHotKeys (Window->Self);
+  UnregisterWindowHotKeys (Window);
 
   /* FIXME: do we need to fake QS_MOUSEMOVE wakebit? */
 

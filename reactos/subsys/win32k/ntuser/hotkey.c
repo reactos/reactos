@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: hotkey.c,v 1.2 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: hotkey.c,v 1.3 2003/11/11 22:17:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -32,7 +32,11 @@
 #include <ddk/ntddk.h>
 #include <win32k/win32k.h>
 #include <win32k/userobj.h>
+#include <internal/ex.h>
+#include <internal/ps.h>
+#include <include/error.h>
 #include <include/msgqueue.h>
+#include <include/hotkey.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -40,35 +44,20 @@
 
 /* GLOBALS *******************************************************************/
 
-typedef struct _HOT_KEY_ITEM
-{
-  LIST_ENTRY ListEntry;
-  struct _ETHREAD *Thread;
-  HWND hWnd;
-  int id;
-  UINT fsModifiers;
-  UINT vk;
-} HOT_KEY_ITEM, *PHOT_KEY_ITEM;
-
-
-static LIST_ENTRY HotKeyListHead;
-static FAST_MUTEX HotKeyListLock;
-
-
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS FASTCALL
-InitHotKeyImpl(VOID)
+InitHotKeys(PWINSTATION_OBJECT WinStaObject)
 {
-  InitializeListHead(&HotKeyListHead);
-  ExInitializeFastMutex(&HotKeyListLock);
+  InitializeListHead(&WinStaObject->HotKeyListHead);
+  ExInitializeFastMutex(&WinStaObject->HotKeyListLock);
 
   return STATUS_SUCCESS;
 }
 
 
 NTSTATUS FASTCALL
-CleanupHotKeyImpl(VOID)
+CleanupHotKeys(PWINSTATION_OBJECT WinStaObject)
 {
 
   return STATUS_SUCCESS;
@@ -76,7 +65,8 @@ CleanupHotKeyImpl(VOID)
 
 
 BOOL
-GetHotKey (UINT fsModifiers,
+GetHotKey (PWINSTATION_OBJECT WinStaObject,
+       UINT fsModifiers,
 	   UINT vk,
 	   struct _ETHREAD **Thread,
 	   HWND *hWnd,
@@ -85,10 +75,10 @@ GetHotKey (UINT fsModifiers,
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
 
-  ExAcquireFastMutex (&HotKeyListLock);
+  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
 
-  Entry = HotKeyListHead.Flink;
-  while (Entry != &HotKeyListHead)
+  Entry = WinStaObject->HotKeyListHead.Flink;
+  while (Entry != &WinStaObject->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD(Entry,
 						     HOT_KEY_ITEM,
@@ -105,7 +95,7 @@ GetHotKey (UINT fsModifiers,
 	  if (id != NULL)
 	    *id = HotKeyItem->id;
 
-	  ExReleaseFastMutex (&HotKeyListLock);
+	  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
 
 	  return TRUE;
 	}
@@ -113,35 +103,43 @@ GetHotKey (UINT fsModifiers,
       Entry = Entry->Flink;
     }
 
-  ExReleaseFastMutex (&HotKeyListLock);
+  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
 
   return FALSE;
 }
 
 
 VOID
-UnregisterWindowHotKeys(HWND hWnd)
+UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
+  PWINSTATION_OBJECT WinStaObject = NULL;
+  
+  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess &&
+     Window->OwnerThread->ThreadsProcess->Win32Process)
+    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
 
-  ExAcquireFastMutex (&HotKeyListLock);
+  if(!WinStaObject)
+    return;
 
-  Entry = HotKeyListHead.Flink;
-  while (Entry != &HotKeyListHead)
+  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
+
+  Entry = WinStaObject->HotKeyListHead.Flink;
+  while (Entry != &WinStaObject->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD (Entry,
 						      HOT_KEY_ITEM,
 						      ListEntry);
       Entry = Entry->Flink;
-      if (HotKeyItem->hWnd == hWnd)
+      if (HotKeyItem->hWnd == Window->Self)
 	{
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);
 	}
     }
 
-  ExReleaseFastMutex (&HotKeyListLock);
+  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
 }
 
 
@@ -150,11 +148,18 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
+  PWINSTATION_OBJECT WinStaObject = NULL;
+  
+  if(Thread->ThreadsProcess && Thread->ThreadsProcess->Win32Process)
+    WinStaObject = Thread->ThreadsProcess->Win32Process->WindowStation;
+  
+  if(!WinStaObject)
+    return;
+  
+  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
 
-  ExAcquireFastMutex (&HotKeyListLock);
-
-  Entry = HotKeyListHead.Flink;
-  while (Entry != &HotKeyListHead)
+  Entry = WinStaObject->HotKeyListHead.Flink;
+  while (Entry != &WinStaObject->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD (Entry,
 						      HOT_KEY_ITEM,
@@ -167,19 +172,20 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 	}
     }
 
-  ExReleaseFastMutex (&HotKeyListLock);
+  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
 }
 
 
 static BOOL
-IsHotKey (UINT fsModifiers,
+IsHotKey (PWINSTATION_OBJECT WinStaObject,
+      UINT fsModifiers,
 	  UINT vk)
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
 
-  Entry = HotKeyListHead.Flink;
-  while (Entry != &HotKeyListHead)
+  Entry = WinStaObject->HotKeyListHead.Flink;
+  while (Entry != &WinStaObject->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD (Entry,
 						      HOT_KEY_ITEM,
@@ -204,18 +210,40 @@ NtUserRegisterHotKey(HWND hWnd,
 		     UINT vk)
 {
   PHOT_KEY_ITEM HotKeyItem;
+  PWINDOW_OBJECT Window;
+  PWINSTATION_OBJECT WinStaObject = NULL;
+  
+  Window = IntGetWindowObject(hWnd);
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
+    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
+  
+  if(!WinStaObject)
+  {
+    IntReleaseWindowObject(Window);
+    return FALSE;
+  }
 
-  ExAcquireFastMutex (&HotKeyListLock);
+  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
 
   /* Check for existing hotkey */
-  if (IsHotKey (fsModifiers, vk))
+  if (IsHotKey (WinStaObject, fsModifiers, vk))
+  {
+    IntReleaseWindowObject(Window);
     return FALSE;
+  }
 
   HotKeyItem = ExAllocatePool (PagedPool,
 			       sizeof(HOT_KEY_ITEM));
   if (HotKeyItem == NULL)
     {
-      ExReleaseFastMutex (&HotKeyListLock);
+      ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+      IntReleaseWindowObject(Window);
       return FALSE;
     }
 
@@ -225,11 +253,12 @@ NtUserRegisterHotKey(HWND hWnd,
   HotKeyItem->fsModifiers = fsModifiers;
   HotKeyItem->vk = vk;
 
-  InsertHeadList (&HotKeyListHead,
+  InsertHeadList (&WinStaObject->HotKeyListHead,
 		  &HotKeyItem->ListEntry);
 
-  ExReleaseFastMutex (&HotKeyListLock);
-
+  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  
+  IntReleaseWindowObject(Window);
   return TRUE;
 }
 
@@ -240,11 +269,29 @@ NtUserUnregisterHotKey(HWND hWnd,
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
+  PWINDOW_OBJECT Window;
+  PWINSTATION_OBJECT WinStaObject = NULL;
+  
+  Window = IntGetWindowObject(hWnd);
+  if(!Window)
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+  
+  if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
+    WinStaObject = Window->OwnerThread->ThreadsProcess->Win32Process->WindowStation;
+  
+  if(!WinStaObject)
+  {
+    IntReleaseWindowObject(Window);
+    return FALSE;
+  }
 
-  ExAcquireFastMutex (&HotKeyListLock);
+  ExAcquireFastMutex (&WinStaObject->HotKeyListLock);
 
-  Entry = HotKeyListHead.Flink;
-  while (Entry != &HotKeyListHead)
+  Entry = WinStaObject->HotKeyListHead.Flink;
+  while (Entry != &WinStaObject->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD (Entry,
 						      HOT_KEY_ITEM,
@@ -254,15 +301,18 @@ NtUserUnregisterHotKey(HWND hWnd,
 	{
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);
-	  ExReleaseFastMutex (&HotKeyListLock);
+	  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+	  
+	  IntReleaseWindowObject(Window);
 	  return TRUE;
 	}
 
       Entry = Entry->Flink;
     }
 
-  ExReleaseFastMutex (&HotKeyListLock);
-
+  ExReleaseFastMutex (&WinStaObject->HotKeyListLock);
+  
+  IntReleaseWindowObject(Window);
   return FALSE;
 }
 

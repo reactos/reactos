@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.41 2003/11/11 20:28:21 gvg Exp $
+/* $Id: winsta.c,v 1.42 2003/11/11 22:17:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -49,6 +49,7 @@
 #include <include/callback.h>
 #include <include/color.h>
 #include <include/cursoricon.h>
+#include <include/hotkey.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -372,7 +373,9 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return((HWINSTA)0);
     }
-    
+  
+  InitHotKeys(WinStaObject);
+  
   ExInitializeFastMutex(&WinStaObject->SystemCursor.CursorMutex);
   WinStaObject->SystemCursor.Enabled = FALSE;
   WinStaObject->SystemCursor.ButtonsDown = 0;

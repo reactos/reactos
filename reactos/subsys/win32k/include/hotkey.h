@@ -3,22 +3,35 @@
 
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <include/winsta.h>
+#include <include/window.h>
+
+typedef struct _HOT_KEY_ITEM
+{
+  LIST_ENTRY ListEntry;
+  struct _ETHREAD *Thread;
+  HWND hWnd;
+  int id;
+  UINT fsModifiers;
+  UINT vk;
+} HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
 NTSTATUS FASTCALL
-InitHotKeyImpl (VOID);
+InitHotKeys(PWINSTATION_OBJECT WinStaObject);
 
 NTSTATUS FASTCALL
-CleanupHotKeyImpl (VOID);
+CleanupHotKeys(PWINSTATION_OBJECT WinStaObject);
 
 BOOL
-GetHotKey (UINT fsModifiers,
+GetHotKey (PWINSTATION_OBJECT WinStaObject,
+       UINT fsModifiers,
 	   UINT vk,
 	   struct _ETHREAD **Thread,
 	   HWND *hWnd,
 	   int *id);
 
 VOID
-UnregisterWindowHotKeys(HWND hWnd);
+UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
 
 VOID
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);

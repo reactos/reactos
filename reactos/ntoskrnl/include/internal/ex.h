@@ -60,6 +60,8 @@ typedef struct _WINSTATION_OBJECT
   SYSTEM_CURSORINFO SystemCursor;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
+  LIST_ENTRY HotKeyListHead;
+  FAST_MUTEX HotKeyListLock;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 typedef struct _DESKTOP_OBJECT

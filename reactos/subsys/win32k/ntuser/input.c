@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.17 2003/11/03 18:52:21 ekohl Exp $
+/* $Id: input.c,v 1.18 2003/11/11 22:17:18 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -144,7 +144,8 @@ KeyboardThreadMain(PVOID StartContext)
 
 	  /* FIXME: Support MOD_WIN */
 
-	  if (GetHotKey(fsModifiers,
+	  if (GetHotKey(InputWindowStation,
+		    fsModifiers,
 			KeyEvent.wVirtualKeyCode,
 			&Thread,
 			&hWnd,

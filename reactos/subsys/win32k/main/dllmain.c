@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.49 2003/11/11 20:28:21 gvg Exp $
+/* $Id: dllmain.c,v 1.50 2003/11/11 22:17:18 weiden Exp $
  *
  *  Entry Point for win32k.sys
  */
@@ -227,13 +227,6 @@ DllMain (
   if (!NT_SUCCESS(Status))
   {
     DbgPrint("Failed to initialize menu implementation!\n");
-    return STATUS_UNSUCCESSFUL;
-  }
-
-  Status = InitHotKeyImpl();
-  if (!NT_SUCCESS(Status))
-  {
-    DbgPrint("Failed to initialize hot key implementation!\n");
     return STATUS_UNSUCCESSFUL;
   }
 
