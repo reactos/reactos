@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.12 2003/05/18 17:16:17 ea Exp $
+/* $Id: clip.c,v 1.13 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -92,18 +92,27 @@ CLIPOBJ STDCALL * IntEngCreateClipRegion( ULONG count, PRECTL pRect, RECTL rcBou
 	return NULL;
 }
 
+/*
+ * @implemented
+ */
 CLIPOBJ * STDCALL
 EngCreateClip(VOID)
 {
   return EngAllocMem(FL_ZERO_MEMORY, sizeof(CLIPOBJ), 0);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngDeleteClip(CLIPOBJ *ClipRegion)
 {
   EngFreeMem(ClipRegion);
 }
 
+/*
+ * @unimplemented
+ */
 ULONG STDCALL
 CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
 		   IN BOOL ShouldDoAll,
@@ -130,6 +139,9 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
   return ClipGDI->EnumRects.c;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
 	      IN ULONG ObjSize,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: lineto.c,v 1.18 2003/05/18 17:16:17 ea Exp $ */
+/* $Id: lineto.c,v 1.19 2003/07/11 15:59:37 royce Exp $ */
 #include <ddk/winddi.h>
 #include <ddk/ntddmou.h>
 #include <include/inteng.h>
@@ -29,6 +29,9 @@
 #include <include/object.h>
 #include <include/surface.h>
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 EngLineTo(SURFOBJ *DestObj,
 	  CLIPOBJ *Clip,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: nls.c,v 1.1 2003/06/21 18:04:49 ekohl Exp $
+/* $Id: nls.c,v 1.2 2003/07/11 15:59:37 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -35,6 +35,9 @@
 
 /* FUNCTIONS ****************************************************************/
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 		      OUT PUSHORT AnsiCodePage)
@@ -43,6 +46,9 @@ EngGetCurrentCodePage(OUT PUSHORT OemCodePage,
 			 AnsiCodePage);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
 		       IN ULONG MaxBytesInUnicodeString,
@@ -57,6 +63,9 @@ EngMultiByteToUnicodeN(OUT LPWSTR UnicodeString,
 			 BytesInMultiByteString);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngUnicodeToMultiByteN(OUT PCHAR MultiByteString,
 		       IN ULONG MaxBytesInMultiByteString,

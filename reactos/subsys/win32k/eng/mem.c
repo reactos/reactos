@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mem.c,v 1.10 2003/06/19 17:13:28 gvg Exp $
+/* $Id: mem.c,v 1.11 2003/07/11 15:59:37 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -41,6 +41,9 @@ typedef struct _USERMEMHEADER
   }
 USERMEMHEADER, *PUSERMEMHEADER;
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 EngAllocMem(ULONG Flags,
 	    ULONG MemSize,
@@ -58,12 +61,18 @@ EngAllocMem(ULONG Flags,
   return newMem;
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngFreeMem(PVOID Mem)
 {
   ExFreePool(Mem);
 }
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 EngAllocUserMem(ULONG cj, ULONG Tag)
 {
@@ -86,6 +95,9 @@ EngAllocUserMem(ULONG cj, ULONG Tag)
   return (PVOID)(Header + 1);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngFreeUserMem(PVOID pv)
 {
@@ -95,12 +107,18 @@ EngFreeUserMem(PVOID pv)
   ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_DECOMMIT);
 }
 
+/*
+ * @implemented
+ */
 HANDLE STDCALL
 EngSecureMem(PVOID Address, ULONG Length)
 {
   return MmSecureVirtualMemory(Address, Length, PAGE_READWRITE);
 }
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngUnsecureMem(HANDLE Mem)
 {

@@ -16,13 +16,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: loader.c,v 1.10 2003/05/18 17:16:17 ea Exp $
+/* $Id: loader.c,v 1.11 2003/07/11 15:59:37 royce Exp $
  *
  */
 
 #include <ddk/ntddk.h>
 #include <ddk/winddi.h>
 
+/*
+ * @implemented
+ */
 HANDLE
 STDCALL
 EngLoadImage (LPWSTR DriverName)
@@ -38,6 +41,9 @@ EngLoadImage (LPWSTR DriverName)
 }
 
 
+/*
+ * @unimplemented
+ */
 HANDLE
 STDCALL
 EngLoadModule(LPWSTR ModuleName)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.22 2003/07/09 07:00:00 gvg Exp $
+/* $Id: bitblt.c,v 1.23 2003/07/11 15:59:37 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -180,6 +180,9 @@ CallDibBitBlt(PSURFOBJ OutputObj,
 
 INT abs(INT nm);
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 EngBitBlt(SURFOBJ *DestObj,
 	  SURFOBJ *SourceObj,
@@ -298,7 +301,7 @@ EngBitBlt(SURFOBJ *DestObj,
     OutputGDI = (PSURFGDI)AccessInternalObjectFromUserObject(OutputObj);
     }
 
-  /* The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
+  /* FIXME The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
    * paint a brush pattern on the destination. */
   if (NULL == InputObj && 0xaacc != Rop4 && PATCOPY != Rop4)
   {

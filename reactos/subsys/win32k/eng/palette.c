@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: palette.c,v 1.15 2003/05/18 17:16:17 ea Exp $
+/* $Id: palette.c,v 1.16 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -34,6 +34,9 @@
 #define NDEBUG
 #include <win32k/debug1.h>
 
+/*
+ * @implemented
+ */
 HPALETTE STDCALL
 EngCreatePalette(ULONG Mode,
 		 ULONG NumColors,
@@ -74,6 +77,9 @@ EngCreatePalette(ULONG Mode,
   return NewPalette;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 EngDeletePalette(IN HPALETTE Palette)
 {
@@ -81,6 +87,9 @@ EngDeletePalette(IN HPALETTE Palette)
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 PALOBJ_cGetColors(PALOBJ *PalObj,
 		  ULONG Start,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: copybits.c,v 1.14 2003/05/18 17:16:17 ea Exp $
+/* $Id: copybits.c,v 1.15 2003/07/11 15:59:37 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -36,6 +36,9 @@
 #include <include/object.h>
 #include <include/eng.h>
 
+/*
+ * @unimplemented
+ */
 BOOL STDCALL
 EngCopyBits(SURFOBJ *Dest,
 	    SURFOBJ *Source,
@@ -176,6 +179,7 @@ EngCopyBits(SURFOBJ *Dest,
           } while(EnumMore);
 
           MouseSafetyOnDrawEnd(Source, SourceGDI);
+
           MouseSafetyOnDrawEnd(Dest, DestGDI);
 
           return(TRUE);

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: brush.c,v 1.7 2003/05/18 17:16:17 ea Exp $
+/* $Id: brush.c,v 1.8 2003/07/11 15:59:37 royce Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,9 @@
 
 #include <ddk/winddi.h>
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
 		       IN ULONG  ObjSize)
@@ -37,6 +40,9 @@ BRUSHOBJ_pvAllocRbrush(IN PBRUSHOBJ  BrushObj,
   return(BrushObj->pvRbrush);
 }
 
+/*
+ * @implemented
+ */
 PVOID STDCALL
 BRUSHOBJ_pvGetRbrush(IN PBRUSHOBJ  BrushObj)
 {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: device.c,v 1.8 2003/06/21 14:25:30 gvg Exp $
+/* $Id: device.c,v 1.9 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -33,6 +33,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/*
+ * @implemented
+ */
 DWORD STDCALL
 EngDeviceIoControl(HANDLE  hDevice,
 		   DWORD   dwIoControlCode,

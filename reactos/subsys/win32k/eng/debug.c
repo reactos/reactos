@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: debug.c,v 1.4 2003/05/18 17:16:17 ea Exp $
+/* $Id: debug.c,v 1.5 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -29,6 +29,9 @@
 
 #include <ddk/ntddk.h>
 
+/*
+ * @implemented
+ */
 VOID STDCALL
 EngDebugPrint(PCHAR StandardPrefix,
 	      PCHAR DebugMessage,

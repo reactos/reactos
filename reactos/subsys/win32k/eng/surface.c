@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.19 2003/05/18 17:16:17 ea Exp $
+/* $Id: surface.c,v 1.20 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -141,6 +141,9 @@ VOID FASTCALL InitializeFuncs(SURFGDI *SurfGDI, ULONG BitmapFormat)
     }
 }
 
+/*
+ * @implemented
+ */
 HBITMAP STDCALL
 EngCreateDeviceBitmap(IN DHSURF dhsurf,
 		      IN SIZEL Size,
@@ -156,6 +159,9 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   return NewBitmap;
 }
 
+/*
+ * @implemented
+ */
 HBITMAP STDCALL
 EngCreateBitmap(IN SIZEL Size,
 		IN LONG Width,
@@ -214,6 +220,9 @@ EngCreateBitmap(IN SIZEL Size,
   return NewBitmap;
 }
 
+/*
+ * @unimplemented
+ */
 HSURF STDCALL
 EngCreateDeviceSurface(IN DHSURF dhsurf,
 		       IN SIZEL Size,
@@ -257,6 +266,9 @@ PFN FASTCALL DriverFunction(DRVENABLEDATA *DED, ULONG DriverFunc)
   return NULL;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 EngAssociateSurface(IN HSURF Surface,
 		    IN HDEV Dev,
@@ -296,6 +308,9 @@ EngAssociateSurface(IN HSURF Surface,
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 EngDeleteSurface(IN HSURF Surface)
 {
@@ -303,6 +318,9 @@ EngDeleteSurface(IN HSURF Surface)
   return TRUE;
 }
 
+/*
+ * @implemented
+ */
 BOOL STDCALL
 EngEraseSurface(SURFOBJ *Surface,
 		RECTL *Rect,
@@ -311,6 +329,9 @@ EngEraseSurface(SURFOBJ *Surface,
   return FillSolid(Surface, Rect, iColor);
 }
 
+/*
+ * @unimplemented
+ */
 SURFOBJ * STDCALL
 EngLockSurface(IN HSURF Surface)
 {
@@ -318,6 +339,9 @@ EngLockSurface(IN HSURF Surface)
   return (SURFOBJ*)AccessUserObject((ULONG)Surface);
 }
 
+/*
+ * @unimplemented
+ */
 VOID STDCALL
 EngUnlockSurface(IN SURFOBJ *Surface)
 {

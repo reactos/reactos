@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: xlate.c,v 1.19 2003/05/18 17:16:17 ea Exp $
+/* $Id: xlate.c,v 1.20 2003/07/11 15:59:37 royce Exp $
  * 
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -356,6 +356,9 @@ VOID FASTCALL EngDeleteXlate(XLATEOBJ *XlateObj)
   FreeGDIHandle((ULONG)HXlate);
 }
 
+/*
+ * @implemented
+ */
 ULONG * STDCALL
 XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 {
@@ -369,6 +372,9 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
   return NULL;
 }
 
+/*
+ * @unimplemented
+ */
 ULONG STDCALL
 XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
 		ULONG Color)
@@ -406,6 +412,9 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj,
   return 0;
 }
 
+/*
+ * @implemented
+ */
 ULONG STDCALL
 XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj,
 		     ULONG PalOutType,
