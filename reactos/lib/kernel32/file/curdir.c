@@ -94,12 +94,7 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
    return(TRUE);
 }
 
-DWORD
-STDCALL
-GetTempPathA(
-    DWORD nBufferLength,
-    LPSTR lpBuffer
-    )
+DWORD STDCALL GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer)
 {
 	WCHAR BufferW[MAX_PATH];
 	DWORD retCode;
@@ -116,14 +111,8 @@ GetTempPathA(
 	
 }
 
-DWORD
-STDCALL
-GetTempPathW(
-    DWORD nBufferLength,
-    LPWSTR lpBuffer
-    )
+DWORD STDCALL GetTempPathW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
-
 	WCHAR EnvironmentBufferW[MAX_PATH];
 	UINT i;
 
@@ -137,12 +126,7 @@ GetTempPathW(
 	return i;
 }
 
-UINT
-STDCALL
-GetSystemDirectoryA(
-    LPSTR lpBuffer,
-    UINT uSize
-    )
+UINT STDCALL GetSystemDirectoryA(LPSTR lpBuffer, UINT uSize)
 {
    UINT uPathSize,i;
    if ( lpBuffer == NULL ) 
@@ -161,12 +145,7 @@ GetSystemDirectoryA(
    return uPathSize;
 }
 
-UINT
-STDCALL
-GetWindowsDirectoryA(
-    LPSTR lpBuffer,
-    UINT uSize
-    )
+UINT STDCALL GetWindowsDirectoryA(LPSTR lpBuffer, UINT uSize)
 {
    UINT uPathSize,i;
    if ( lpBuffer == NULL ) 
@@ -184,8 +163,7 @@ GetWindowsDirectoryA(
    return uPathSize;
 }
 
-UINT STDCALL GetSystemDirectoryW(LPWSTR lpBuffer,
-				 UINT uSize)
+UINT STDCALL GetSystemDirectoryW(LPWSTR lpBuffer, UINT uSize)
 {
    UINT uPathSize;
    if ( lpBuffer == NULL ) 
@@ -198,8 +176,7 @@ UINT STDCALL GetSystemDirectoryW(LPWSTR lpBuffer,
    return uPathSize;
 }
 
-UINT STDCALL GetWindowsDirectoryW(LPWSTR lpBuffer,
-				  UINT uSize)
+UINT STDCALL GetWindowsDirectoryW(LPWSTR lpBuffer, UINT uSize)
 {
    UINT uPathSize;
    if ( lpBuffer == NULL ) 

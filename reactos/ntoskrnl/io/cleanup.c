@@ -31,12 +31,14 @@ VOID IoReadWriteCompletion(PDEVICE_OBJECT DeviceObject,
    
    DPRINT("FileObject %x\n",FileObject);
    
-   if (DeviceObject->Flags & DO_BUFFERED_IO && 
-       IoStack->MajorFunction == IRP_MJ_READ)
+   if (DeviceObject->Flags & DO_BUFFERED_IO)     
      {
-        DPRINT("Copying buffered io back to user\n");
-	memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
-	       IoStack->Parameters.Read.Length);
+	if (IoStack->MajorFunction == IRP_MJ_READ)
+	  {
+	     DPRINT("Copying buffered io back to user\n");
+	     memcpy(Irp->UserBuffer,Irp->AssociatedIrp.SystemBuffer,
+		    IoStack->Parameters.Read.Length);
+	  }
 	ExFreePool(Irp->AssociatedIrp.SystemBuffer);
      }
    if (DeviceObject->Flags & DO_DIRECT_IO)

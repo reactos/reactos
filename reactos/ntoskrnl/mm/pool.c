@@ -45,43 +45,46 @@ PVOID ExAllocatePool(POOL_TYPE PoolType, ULONG NumberOfBytes)
  */
 {
    PVOID Block;
-//   DbgPrint("ExAllocatePool(NumberOfBytes %d) caller %x\n",
-//            NumberOfBytes,((PULONG)&PoolType)[-1]);
-   Block = ExAllocatePoolWithTag(PoolType,NumberOfBytes,TAG_NONE);
-//   DbgPrint("ExAllocatePool() = %x\n",Block);
+   Block = ExAllocateNonPagedPoolWithTag(PoolType,
+					 NumberOfBytes,
+					 TAG_NONE,
+					 (&PoolType)[-1]);
    return(Block);
 }
 
-PVOID ExAllocatePoolWithTag(ULONG type, ULONG size, ULONG Tag)
+PVOID ExAllocatePoolWithTag(ULONG PoolType, ULONG NumberOfBytes, ULONG Tag)
 {
    PVOID Block;
    
-   if (type == NonPagedPoolCacheAligned || 
-       type == NonPagedPoolCacheAlignedMustS)
+   if (PoolType == NonPagedPoolCacheAligned || 
+       PoolType == NonPagedPoolCacheAlignedMustS)
      {
 	UNIMPLEMENTED;
      }
    
-   switch(type)
+   switch(PoolType)
      {
       case NonPagedPool:
       case NonPagedPoolMustSucceed:
       case NonPagedPoolCacheAligned:
       case NonPagedPoolCacheAlignedMustS:
-	Block = ExAllocateNonPagedPoolWithTag(type,size,Tag);
+	Block = ExAllocateNonPagedPoolWithTag(PoolType,
+					      NumberOfBytes,
+					      Tag,
+					      (&PoolType)[-1]);
 	break;
 	
       case PagedPool:
       case PagedPoolCacheAligned:
-	Block = ExAllocatePagedPoolWithTag(type,size,Tag);
+	Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
 	break;
 	
       default:
 	return(NULL);
      };
    
-   if ((type==NonPagedPoolMustSucceed || type==NonPagedPoolCacheAlignedMustS)
-       && Block==NULL)     
+   if ((PoolType==NonPagedPoolMustSucceed || 
+	PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)     
      {
 	KeBugCheck(MUST_SUCCEED_POOL_EMPTY);
      }

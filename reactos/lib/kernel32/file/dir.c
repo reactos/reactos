@@ -8,13 +8,19 @@
  *                  Created 01/11/98
  */
 
+/*
+ * NOTES: Changed to using ZwCreateFile
+ */
+
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <string.h>
 #include <wstring.h>
-#include <ddk/rtl.h>
+
+#define NDEBUG
+#include <kernel32/kernel32.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -48,70 +54,73 @@ WINBOOL STDCALL CreateDirectoryExA(LPCSTR lpTemplateDirectory,
 		i++;
      	}
    	NewDirectoryW[i] = 0;
-	return CreateDirectoryExW(TemplateDirectoryW,NewDirectoryW,lpSecurityAttributes);
+	return CreateDirectoryExW(TemplateDirectoryW,
+				  NewDirectoryW,
+				  lpSecurityAttributes);
 }
 
 
-WINBOOL
-STDCALL
-CreateDirectoryW(
-    LPCWSTR lpPathName,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
-    )
+WINBOOL STDCALL CreateDirectoryW(LPCWSTR lpPathName, 
+				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
 	
-	return CreateDirectoryExW(NULL,lpPathName,lpSecurityAttributes);	
+	return CreateDirectoryExW(NULL,lpPathName,lpSecurityAttributes);
 }
 
-WINBOOL
-STDCALL
-CreateDirectoryExW(
-    LPCWSTR lpTemplateDirectory,
-    LPCWSTR lpNewDirectory,
-    LPSECURITY_ATTRIBUTES lpSecurityAttributes
-    )
+WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
+				   LPCWSTR lpNewDirectory,
+				   LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-	NTSTATUS errCode;
-	HANDLE DirectoryHandle;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING DirectoryNameString;
+   NTSTATUS errCode;
+   HANDLE DirectoryHandle;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING DirectoryNameString;
+   IO_STATUS_BLOCK IoStatusBlock;
+   
+   if ( lpTemplateDirectory != NULL ) 
+     {
+	// get object attributes from template directory
+	DPRINT("KERNEL32:FIXME:%s:%d\n",__FILE__,__LINE__);
+	return(FALSE);
+     }
 
-	if ( lpTemplateDirectory != NULL ) {
-		// get object attributes from template directory
-	}
-
-
-	DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
-	DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
-	DirectoryNameString.MaximumLength = DirectoryNameString.Length+sizeof(WCHAR);
+   DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
+   DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
+   DirectoryNameString.MaximumLength = DirectoryNameString.Length+sizeof(WCHAR);
 	
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-   	ObjectAttributes.ObjectName = &DirectoryNameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.ObjectName = &DirectoryNameString;
+   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+   ObjectAttributes.SecurityDescriptor = NULL;
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   errCode = ZwCreateFile(&DirectoryHandle,
+			  DIRECTORY_ALL_ACCESS,
+			  &ObjectAttributes,
+			  &IoStatusBlock,
+			  NULL,
+			  FILE_ATTRIBUTE_DIRECTORY,
+			  0,
+			  FILE_CREATE,
+			  0,
+			  NULL,
+			  0);
 
-
-	errCode = NtCreateDirectoryObject(
-    		&DirectoryHandle,
-    		GENERIC_ALL,
-    		&ObjectAttributes
-    	);
-	if (!NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   
+   NtClose(DirectoryHandle);
+   
+   return TRUE;
 }
 
 
 
-WINBOOL
-STDCALL
-RemoveDirectoryA(
-    LPCSTR lpPathName
-    )
+WINBOOL STDCALL RemoveDirectoryA(LPCSTR lpPathName)
 {
 	WCHAR PathNameW[MAX_PATH];
 	ULONG i;
@@ -127,45 +136,37 @@ RemoveDirectoryA(
 }
 
 
-WINBOOL
-STDCALL
-RemoveDirectoryW(
-    LPCWSTR lpPathName
-    )
+WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
 {
-	NTSTATUS errCode;
-	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING PathNameString;
+   NTSTATUS errCode;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   UNICODE_STRING PathNameString;
+   
+   PathNameString.Length = lstrlenW(lpPathName)*sizeof(WCHAR);
+   PathNameString.Buffer = (WCHAR *)lpPathName;
+   PathNameString.MaximumLength = PathNameString.Length+sizeof(WCHAR);
+   
+   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
+   ObjectAttributes.RootDirectory = NULL;
+   ObjectAttributes.ObjectName = &PathNameString;
+   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+   ObjectAttributes.SecurityDescriptor = NULL;
+   ObjectAttributes.SecurityQualityOfService = NULL;
+   
+   errCode = NtDeleteFile(&ObjectAttributes);
 
-	PathNameString.Length = lstrlenW(lpPathName)*sizeof(WCHAR);
-	PathNameString.Buffer = (WCHAR *)lpPathName;
-	PathNameString.MaximumLength = PathNameString.Length+sizeof(WCHAR);
-	
-	ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-	ObjectAttributes.RootDirectory = NULL;
-   	ObjectAttributes.ObjectName = &PathNameString;
-	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
-	ObjectAttributes.SecurityDescriptor = NULL;
-	ObjectAttributes.SecurityQualityOfService = NULL;
-
-	errCode = NtDeleteFile(
-		&ObjectAttributes
-	);
-	if (!NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
-		return FALSE;
-	}
-	return TRUE;
+   if (!NT_SUCCESS(errCode))
+     {
+	SetLastError(RtlNtStatusToDosError(errCode));
+	return FALSE;
+     }
+   return TRUE;
 }
 
-DWORD
-STDCALL
-GetFullPathNameA(
-    LPCSTR lpFileName,
-    DWORD nBufferLength,
-    LPSTR lpBuffer,
-    LPSTR *lpFilePart
-    )
+DWORD STDCALL GetFullPathNameA(LPCSTR lpFileName,
+			       DWORD nBufferLength,
+			       LPSTR lpBuffer,
+			       LPSTR *lpFilePart)
 {
 	
 }

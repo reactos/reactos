@@ -95,16 +95,6 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 
    StackPtr = IoGetNextIrpStackLocation(Irp);
    StackPtr->FileObject = FileObject;
-   StackPtr->Parameters.Read.Length = Length;
-   if (ByteOffset!=NULL)
-   {
-        StackPtr->Parameters.Read.ByteOffset = *ByteOffset;
-   }
-   else
-   {
-        SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 0);
-        SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 0);
-   }
    if (Key!=NULL)
    {
          StackPtr->Parameters.Read.Key = *Key;
@@ -114,7 +104,6 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
         StackPtr->Parameters.Read.Key = 0;
    }
    
-   DPRINT("FileObject->DeviceObject %x\n",FileObject->DeviceObject);
    Status = IoCallDriver(FileObject->DeviceObject,Irp);
    if (Status == STATUS_PENDING  && (FileObject->Flags & FO_SYNCHRONOUS_IO))
      {

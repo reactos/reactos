@@ -553,7 +553,6 @@ typedef struct _FILE_BOTH_DIRECTORY_INFORMATION {
 */
 
 typedef struct _FILE_NOTIFY_INFORMATION {
-	ULONG NextEntryOffset;
 	ULONG Action;
 	ULONG FileNameLength;
 	WCHAR FileName[0]; 

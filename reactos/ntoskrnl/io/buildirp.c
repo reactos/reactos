@@ -285,15 +285,17 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
      {
        if (StartingOffset != NULL)
          {
-DPRINT("StartingOffset:%ld:%ld\n", 
-       GET_LARGE_INTEGER_HIGH_PART(*StartingOffset),
-       GET_LARGE_INTEGER_LOW_PART(*StartingOffset));
+	    DPRINT("StartingOffset:%ld:%ld\n", 
+		   GET_LARGE_INTEGER_HIGH_PART(*StartingOffset),
+		   GET_LARGE_INTEGER_LOW_PART(*StartingOffset));
             StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
          }
        else
          {
-            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 0);
-            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 0);
+            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 
+				       0);
+            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 
+					0);
          }
      }
    else
@@ -304,8 +306,10 @@ DPRINT("StartingOffset:%ld:%ld\n",
          }
        else
          {
-            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
-            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
+            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 
+				       0);
+            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset,
+					0);
          }
      }
 

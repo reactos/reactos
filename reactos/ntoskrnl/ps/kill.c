@@ -120,6 +120,12 @@ NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle,
 }
 
 VOID PsReleaseThread(PETHREAD Thread)
+/*
+ * FUNCTION: Called internally to release a thread's resources from another
+ * thread's context
+ * ARGUMENTS:
+ *        Thread = Thread to release
+ */
 {
    DPRINT("PsReleaseThread(Thread %x)\n",Thread);
    

@@ -24,7 +24,7 @@
 #include <ddk/li.h>
 #include <ddk/rtl.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <kernel32/kernel32.h>
 
 /* FUNCTIONS ****************************************************************/

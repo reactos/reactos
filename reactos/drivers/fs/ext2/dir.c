@@ -1,9 +1,9 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ext2/super.c
+ * FILE:             services/fs/ext2/dir.c
  * PURPOSE:          ext2 filesystem
- * PROGRAMMER:       David Welch (welch@mcmail.com)
+ * PROGRAMMER:       David Welch (welch@cwcom.net)
  * UPDATE HISTORY: 
  */
 
@@ -44,6 +44,9 @@ PVOID Ext2ProcessDirEntry(PDEVICE_EXTENSION DeviceExt,
    ULONG i;
    PWSTR FileName;
    struct ext2_inode inode;
+   
+   DPRINT("FileIndex %d\n",FileIndex);
+   DPRINT("Buffer %x\n",Buffer);
    
    Ext2ReadInode(DeviceExt,
 		 dir_entry->inode,
@@ -95,7 +98,10 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
    struct ext2_dir_entry dir_entry;
    ULONG CurrentIndex;
    
+   DPRINT("Buffer %x\n",Buffer);
+   
    Buffer = Irp->UserBuffer;
+   DPRINT("IoStack->Flags %x\n",IoStack->Flags);
    
    if (IoStack->Flags & SL_RETURN_SINGLE_ENTRY)
      {
@@ -106,6 +112,8 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
 	UNIMPLEMENTED;
      }
    
+   DPRINT("Buffer->FileIndex %d\n",
+	  ((PFILE_DIRECTORY_INFORMATION)Buffer)->FileIndex);
    if (IoStack->Flags & SL_INDEX_SPECIFIED)
      {
 	StartIndex = ((PFILE_DIRECTORY_INFORMATION)Buffer)->FileIndex;
@@ -120,9 +128,11 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
 	StartIndex = 0;
      }
    
+   DPRINT("StartIndex %d\n",StartIndex);
+   
    for (i=0; i<Max ;i++)
      {
-	if (!Ext2ScanDir(DeviceExt,&Fcb->inode,"*",&dir_entry,&StartIndex))	  
+	if (!Ext2ScanDir(DeviceExt,&Fcb->inode,"*",&dir_entry,&StartIndex))
 	  {
 	     ((PFILE_DIRECTORY_INFORMATION)Buffer)->NextEntryOffset = 0;
 	     return(STATUS_NO_MORE_FILES);
@@ -133,6 +143,7 @@ NTSTATUS Ext2QueryDirectory(PDEVICE_EXTENSION DeviceExt,
 				     Buffer, 
 				     StartIndex);
      }
+   return(STATUS_SUCCESS);
 }
 
 NTSTATUS Ext2DirectoryControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
@@ -253,10 +264,10 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    Fcb = ExAllocatePool(NonPagedPool, sizeof(EXT2_FCB));
    
    unicode_to_ansi(name,FileName);
-   DbgPrint("name %s\n",name);
+   DPRINT("name %s\n",name);
    
    current_segment = strtok(name,"\\");
-   do
+   while (current_segment!=NULL)
      {
 	Ext2ReadInode(DeviceExt,
 		      current_inode,
@@ -269,7 +280,7 @@ NTSTATUS Ext2OpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
 	  }
 	current_inode = entry.inode;
 	current_segment = strtok(NULL,"\\");
-     } while(current_segment!=NULL);
+     };
    DPRINT("Found file\n");
    
    Ext2ReadInode(DeviceExt,

@@ -86,9 +86,22 @@ enum
    SL_ALLOW_RAW_MOUNT = 0x4000,     
 };
 
+#define SL_FORCE_ACCESS_CHECK      (0x1)
+#define SL_OPEN_PAGING_FILE        (0x2)
+#define SL_OPEN_TARGET_DIRECTORY   (0x4)
+#define SL_CASE_SENSITIVE          (0x8)
+#define SL_KEY_SPECIFIED           (0x10)
+#define SL_OVERRIDE_VERIFY_VOLUME  (0x20)
+#define SL_WRITE_THROUGHT          (0x40)
+#define SL_FT_SEQUENTIAL_WRITE     (0x80)
+#define SL_FAIL_IMMEDIATELY        (0x100)
+#define SL_EXCLUSIVE_LOCK          (0x200)
+#define SL_WATCH_TREE              (0x2000)
+
+
 #define SL_RESTART_SCAN        (0x1)
 #define SL_RETURN_SINGLE_ENTRY (0x2)
-#define SL_INDEX_SPECIFIED     (0x3)
+#define SL_INDEX_SPECIFIED     (0x4)
 
 #define SL_PENDING_RETURNED             0x01
 #define SL_INVOKE_ON_CANCEL             0x20
@@ -98,11 +111,8 @@ enum
 /*
  * Possible flags for the device object flags
  */
-enum
-{
-   DO_BUFFERED_IO = 0x1,
-   DO_DIRECT_IO   = 0x2,
-};
+#define DO_BUFFERED_IO   (0x1)
+#define DO_DIRECT_IO     (0x2)
 
 /*
  * Possible device types

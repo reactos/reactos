@@ -48,9 +48,10 @@ ULONG Fat32GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  *           disk read
  */
 {
- ULONG FATsector;
- ULONG FATeis;
- PULONG Block;
+   ULONG FATsector;
+   ULONG FATeis;
+   PULONG Block;
+   
    Block = ExAllocatePool(NonPagedPool,1024);
    FATsector=CurrentCluster/(512/sizeof(ULONG));
    FATeis=CurrentCluster-(FATsector*(512/sizeof(ULONG)));
@@ -69,11 +70,11 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
  *           in-memory FAT
  */
 {
- PUSHORT Block;
+   PUSHORT Block;
    Block=(PUSHORT)DeviceExt->FAT;
    CurrentCluster = Block[CurrentCluster];
    if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
-    CurrentCluster = 0xffffffff;
+     CurrentCluster = 0xffffffff;
    DPRINT("Returning %x\n",CurrentCluster);
    return(CurrentCluster);
 }
@@ -1096,11 +1097,11 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       VFATLoadCluster(DeviceExt,Buffer,CurrentCluster);
       CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
     }
-    if (CurrentCluster == 0xffffffff)
-	  {
-             ExFreePool(Temp);
-	     return(STATUS_SUCCESS);
-	  }
+      if (CurrentCluster == 0xffffffff)
+	{
+	   ExFreePool(Temp);
+	   return(STATUS_SUCCESS);
+	}
 	
 	(*LengthRead) = (*LengthRead) + DeviceExt->BytesPerCluster;
 	Buffer = Buffer + DeviceExt->BytesPerCluster;
@@ -1110,17 +1111,17 @@ NTSTATUS FsdReadFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
    if (Length > 0)
      {
 	(*LengthRead) = (*LengthRead) + Length;
-    if (FirstCluster==1)
-    {
-      VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
-           ,DeviceExt->Boot->SectorsPerCluster,Temp);
-      CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
-    }
-    else
-    {
-      VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
-      CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
-    }
+	if (FirstCluster==1)
+	  {
+	     VFATReadSectors(DeviceExt->StorageDevice,CurrentCluster
+			     ,DeviceExt->Boot->SectorsPerCluster,Temp);
+	     CurrentCluster += DeviceExt->Boot->SectorsPerCluster;
+	  }
+	else
+	  {
+	     VFATLoadCluster(DeviceExt,Temp,CurrentCluster);
+	     CurrentCluster = GetNextCluster(DeviceExt, CurrentCluster);
+	  }
 	memcpy(Buffer, Temp, Length);
      }
    ExFreePool(Temp);

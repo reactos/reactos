@@ -11,8 +11,10 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <internal/debug.h>
 #include <string.h>
+
+#define NDEBUG
+#include <internal/debug.h>
 
 #include "ext2fs.h"
 

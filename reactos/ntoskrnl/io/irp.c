@@ -197,7 +197,8 @@ PIRP IoAllocateIrp(CCHAR StackSize, BOOLEAN ChargeQuota)
    DPRINT("IoAllocateIrp(StackSize %d ChargeQuota %d)\n",
           StackSize,
 	  ChargeQuota);
-   if (ChargeQuota)
+//   if (ChargeQuota)
+   if (0)
      {
 	Irp = ExAllocatePoolWithQuota(NonPagedPool,IoSizeOfIrp(StackSize));
      }

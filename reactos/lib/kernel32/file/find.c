@@ -78,16 +78,17 @@ WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
                                  &(IData->PatternStr),
                                  FALSE);
    DPRINT("Found %w\n",IData->FileInfo.FileName);
-   lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
    if (Status != STATUS_SUCCESS)
    {
         return(FALSE);
    }
+
+   FileDataToWin32Data(lpFindFileData, IData);
+
    return(TRUE);
 }
 
-static FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData
-                            ,PKERNEL32_FIND_FILE_DATA IData)
+static FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData, PKERNEL32_FIND_FILE_DATA IData)
 {
  int i;
    lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
@@ -96,16 +97,7 @@ static FileDataToWin32Data(LPWIN32_FIND_DATA lpFindFileData
 //   memcpy(&lpFindFileData->ftLastWriteTime,&IData->FileInfo.LastWriteTime,sizeof(FILETIME));
    lpFindFileData->nFileSizeHigh = IData->FileInfo.EndOfFile>>32;
    lpFindFileData->nFileSizeLow = IData->FileInfo.EndOfFile;
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        lpFindFileData->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   lpFindFileData->cFileName[i] = 0;
-   for(i=0;i<IData->FileInfo.ShortNameLength;i++)
-   {
-      lpFindFileData->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
-   }
-   lpFindFileData->cAlternateFileName[i] = 0;
+
 }
 
 HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName, 
@@ -180,6 +172,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
 			FALSE);
    DPRINT("Found %w\n",IData->FileInfo.FileName);
    
+   FileDataToWin32Data(lpFindFileData, IData);
 
    return(IData);
 }
@@ -203,9 +196,31 @@ HANDLE FindFirstFileA(LPCTSTR lpFileName, LPWIN32_FIND_DATA lpFindFileData)
    if (IData == NULL)
      {
 	DPRINT("Failing request\n");
-	return(NULL);
+	return(INVALID_HANDLE_VALUE);
      }
-   FileDataToWin32Data(lpFindFileData,IData);
+
+   
+   Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
+   
+   DPRINT("IData->FileInfo.FileNameLength %d\n",
+	  IData->FileInfo.FileNameLength);
+   for (i=0; i<IData->FileInfo.FileNameLength; i++)
+   {
+        Ret->cFileName[i] = IData->FileInfo.FileName[i];
+   }
+   Ret->cFileName[i] = 0;
+
+   DPRINT("IData->FileInfo.ShortNameLength %d\n",
+	  IData->FileInfo.ShortNameLength);
+   if (IData->FileInfo.ShortNameLength > 13)
+     {
+	IData->FileInfo.ShortNameLength = 13;
+     }
+   for (i=0; i<IData->FileInfo.ShortNameLength; i++)
+     {
+	Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
+     }
+   Ret->cAlternateFileName[i] = 0;
 
    
    return(IData);
@@ -224,11 +239,28 @@ WINBOOL FindNextFileA(HANDLE hFindFile, LPWIN32_FIND_DATA lpFindFileData)
      }
    if (!InternalFindNextFile(hFindFile, lpFindFileData))
    {
-        return(FALSE);
+      DPRINT("InternalFindNextFile() failed\n");
+      return(FALSE);
    }
 
    Ret = (PWIN32_FIND_DATA_ASCII)lpFindFileData;
-   FileDataToWin32Data(lpFindFileData,IData);
+
+   DPRINT("IData->FileInfo.FileNameLength %d\n",
+	  IData->FileInfo.FileNameLength);
+   for (i=0; i<IData->FileInfo.FileNameLength; i++)
+   {
+        Ret->cFileName[i] = IData->FileInfo.FileName[i];
+   }
+   Ret->cFileName[i] = 0;
+   
+   DPRINT("IData->FileInfo.ShortNameLength %d\n",
+	  IData->FileInfo.ShortNameLength);
+   for (i=0; i<IData->FileInfo.ShortNameLength; i++)
+     {
+	Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
+     }
+   Ret->cAlternateFileName[i] = 0;
+
    return(TRUE);
 }
 
@@ -236,7 +268,7 @@ BOOL FindClose(HANDLE hFindFile)
 {
    PKERNEL32_FIND_FILE_DATA IData;
    
-   dprintf("FindClose(hFindFile %x)\n",hFindFile);
+   DPRINT("FindClose(hFindFile %x)\n",hFindFile);
    
    IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
    NtClose(IData->DirectoryHandle);
@@ -253,17 +285,12 @@ HANDLE STDCALL FindFirstFileW(LPCWSTR lpFileName,
 
    IData = InternalFindFirstFile(lpFileName,lpFindFileData);
    Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
-   FileDataToWin32Data(lpFindFileData,IData);
 
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
-   for(i=0;i<IData->FileInfo.ShortNameLength;i++)
-   {
-      Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
-   }
+   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
+	  IData->FileInfo.FileNameLength);
+   memset(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
+	  IData->FileInfo.ShortNameLength);
+
 
    return(IData);
 }
@@ -282,17 +309,11 @@ WINBOOL STDCALL FindNextFileW(HANDLE hFindFile,
    }
 
    Ret = (PWIN32_FIND_DATA_UNICODE)lpFindFileData;
-   FileDataToWin32Data(lpFindFileData,IData);
 
-   for (i=0; i<IData->FileInfo.FileNameLength; i++)
-   {
-        Ret->cFileName[i] = IData->FileInfo.FileName[i];
-   }
-   Ret->cFileName[i] = 0;
-   for(i=0;i<IData->FileInfo.ShortNameLength;i++)
-   {
-      Ret->cAlternateFileName[i] = IData->FileInfo.ShortName[i];
-   }
+   memcpy(Ret->cFileName, IData->FileInfo.FileName, 
+	  IData->FileInfo.FileNameLength);
+   memcpy(Ret->cAlternateFileName, IData->FileInfo.ShortName, 
+	  IData->FileInfo.ShortNameLength);
 
    return(TRUE);
 }

@@ -3,7 +3,7 @@
  * PROJECT:      ReactOS kernel
  * FILE:         ntoskrnl/mm/pool.c
  * PURPOSE:      Implements the kernel memory pool
- * PROGRAMMER:   David Welch (welch@mcmail.com)
+ * PROGRAMMER:   David Welch (welch@cwcom.net)
  * UPDATE HISTORY:
  *               27/05/98: Created
  *               10/06/98: Bug fixes by Iwan Fatahi (i_fatahi@hotmail.com)
@@ -32,6 +32,12 @@
 #define VALIDATE_POOL validate_kernel_pool()
 #else
 #define VALIDATE_POOL
+#endif
+
+#if 0
+#define POOL_TRACE(args...) do { DbgPrint(args); } while(0);
+#else
+#define POOL_TRACE(args...)
 #endif
 
 /* TYPES *******************************************************************/
@@ -534,8 +540,8 @@ asmlinkage VOID ExFreePool(PVOID block)
    block_hdr* blk=address_to_block(block);
    OLD_DPRINT("(%s:%d) freeing block %x\n",__FILE__,__LINE__,blk);
    
-//   DbgPrint("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
-//            ((PULONG)&block)[-1]);
+   POOL_TRACE("ExFreePool(block %x), size %d, caller %x\n",block,blk->size,
+            ((PULONG)&block)[-1]);
    
    VALIDATE_POOL;
    
@@ -596,10 +602,16 @@ static void defrag_free_list(void)
    DPRINT("Finish To defrag free blocks,max=%d\n",max);
 }
 
-PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
+PVOID ExAllocateNonPagedPoolWithTag(ULONG type, 
+				    ULONG size, 
+				    ULONG Tag,
+				    PVOID Caller)
 {
    block_hdr* current=NULL;
-   void* block;
+   PVOID block;
+   
+   POOL_TRACE("ExAllocatePool(NumberOfBytes %d) caller %x ",
+	      size,Caller);
    
 //   DbgPrint("Blocks on free list %d\n",nr_free_blocks);
 //   DbgPrint("Blocks on used list %d\n",eiNrUsedblocks);
@@ -611,6 +623,7 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
     */
    if (size==0)
      {
+	POOL_TRACE("= NULL\n");
 	return(NULL);
      }
    
@@ -635,43 +648,48 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
 	     block=take_block(current,size);
 	     VALIDATE_POOL;
 	     memset(block,0,size);
+	     POOL_TRACE("= %x\n",block);
 	     return(block);
 	  }
 	current=current->next;
      }
-   if(EiFreeNonPagedPool>size+32*PAGESIZE)
-   {//try defrag free list before growing kernel pool
-      defrag_free_list();
-      /*
-       * reLook after defrag
-       */
-      current=free_list_head;
 
-      while (current!=NULL)
+   if(EiFreeNonPagedPool>size+32*PAGESIZE)
+     {//try defrag free list before growing kernel pool
+	defrag_free_list();
+	/*
+	 * reLook after defrag
+	 */
+	current=free_list_head;
+	
+	while (current!=NULL)
         {
-       OLD_DPRINT("current %x size %x next %x\n",current,current->size,
-              current->next);
-       if (current->magic != BLOCK_HDR_MAGIC)
-         {
-            DbgPrint("Bad block magic (probable pool corruption)\n");
-            KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
-         }
-       if (current->size>=size)
-         {
-            OLD_DPRINT("found block %x of size %d\n",current,size);
-            block=take_block(current,size);
-            memset(block,0,size);
-            return(block);
-         }
-       current=current->next;
+	   OLD_DPRINT("current %x size %x next %x\n",current,current->size,
+		      current->next);
+	   if (current->magic != BLOCK_HDR_MAGIC)
+	     {
+		DbgPrint("Bad block magic (probable pool corruption)\n");
+		KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
+	     }
+	   if (current->size>=size)
+	     {
+		OLD_DPRINT("found block %x of size %d\n",current,size);
+		block=take_block(current,size);
+		memset(block,0,size);
+		POOL_TRACE("= %x\n",block);
+		return(block);
+	     }
+	   current=current->next;
         }
-   }
+     }
+   
    /*
     * Otherwise create a new block
     */
    block=block_to_address(grow_kernel_pool(size));
    VALIDATE_POOL;
    memset(block,0,size);
+   POOL_TRACE("= %x\n",block);
    return(block);
 }
 
