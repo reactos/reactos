@@ -1742,7 +1742,7 @@ typedef enum
     LPC_DEBUG_EVENT        = 0x8,
     LPC_ERROR_EVENT        = 0x9,
     LPC_CONNECTION_REQUEST = 0xa,
-    LPC_CONNECTION_REFUSED = 0xb
+    LPC_CONNECTION_REFUSED = 0xb /* ReactOS only */
 
 } LPC_TYPE, *PLPC_TYPE;
 
