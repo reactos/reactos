@@ -156,14 +156,17 @@ typedef struct _RECT {
   LONG top;
   LONG right;
   LONG bottom;
-} RECT, *LPRECT, *LPCRECT, *PRECT;
+} RECT, *LPRECT, *LPCRECT, *PRECT,
+RECTL, *LPRECTL, *LPCRECTL, *PRECTL;
 
+#if 0
 typedef struct _RECTL {
   LONG left;
   LONG top;
   LONG right;
   LONG bottom;
 } RECTL, *LPRECTL, *LPCRECTL, *PRECTL;
+#endif
 
 typedef struct _AppBarData {
   DWORD  cbSize;
