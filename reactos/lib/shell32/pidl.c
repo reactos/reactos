@@ -687,6 +687,7 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 	/*  TRACE(pidl,"--new pidl=%p\n",pidlNew);*/
 	return pidlNew;
 }
+
 /*************************************************************************
  *  SHGetRealIDL [SHELL32.98]
  *
@@ -694,10 +695,21 @@ LPITEMIDLIST WINAPI ILCombine(LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
  */
 HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEMIDLIST *pidlReal)
 {
-	FIXME("sf=%p pidlSimple=%p pidlReal=%p\n", lpsf, pidlSimple, pidlReal);
+	LPITEMIDLIST parentpidl;
+	HRESULT hr;
 
-	pdump (pidlSimple);
-	return 0;
+	TRACE("sf=%p pidlSimple=%p pidlReal=%p\n", lpsf, pidlSimple, pidlReal);
+
+	hr = IShellFolder_ParseDisplayName(lpsf, 0, NULL, NULL, NULL, &parentpidl, NULL);
+
+	if (SUCCEEDED(hr)) {
+	    *pidlReal = ILCombine(parentpidl, pidlSimple);
+
+	    if (!*pidlReal)
+		hr = E_OUTOFMEMORY;
+	}
+
+	return S_OK;
 }
 
 /*************************************************************************
