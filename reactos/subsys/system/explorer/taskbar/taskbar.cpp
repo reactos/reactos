@@ -55,12 +55,25 @@ TaskBarMap::~TaskBarMap()
 TaskBar::TaskBar(HWND hwnd)
  :	super(hwnd)
 {
+	HMODULE Module;
 	_last_btn_width = 0;
+
+	Module = LoadLibraryA("User32.dll");
+	if (Module && GetProcAddress(Module, "RegisterShellHookWindow")) {
+		_HasShellHook = TRUE;
+	} else {
+		_HasShellHook = FALSE;
+		if (Module)
+			FreeLibrary(Module);
+	}
+	LOG (_HasShellHook ? L"Has shell hooks.\n" : L"Does not have shell hooks.\n");
+
 }
 
 TaskBar::~TaskBar()
 {
-	KillTimer(_hwnd, 0);
+	if (!_HasShellHook)
+		KillTimer(_hwnd, 0);
 
 	//DeinstallShellHook();
 }
@@ -99,13 +112,22 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 
 	Refresh();
 
-	SetTimer(_hwnd, 0, 200, NULL);
+	if (_HasShellHook)
+		RegisterShellHookWindow(_hwnd);
+	else
+		SetTimer(_hwnd, 0, 200, NULL);
 
 	return 0;
 }
 
 LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
+	static UINT ShellHookNmsg = 0;
+
+	if (!ShellHookNmsg) {
+		ShellHookNmsg = RegisterWindowMessage(TEXT("SHELLHOOK"));
+		LOG (FmtString(TEXT("Nmsg == %#x"), ShellHookNmsg));
+	}
 	switch(nmsg) {
 	  case WM_SIZE:
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
@@ -145,7 +167,19 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		return (LRESULT)(HWND)_last_foreground_wnd;
 
 	  default: def:
-		return super::WndProc(nmsg, wparam, lparam);
+		if (nmsg == RegisterWindowMessage(TEXT("SHELLHOOK"))) {
+			LOG(FmtString(TEXT("SHELLHOOK %x"), wparam));
+			switch (wparam) {
+			  case HSHELL_WINDOWCREATED:
+			  case HSHELL_WINDOWDESTROYED:
+			  case HSHELL_WINDOWACTIVATED:
+			  case HSHELL_REDRAW:
+				Refresh();
+				break;
+			}
+		} else {
+			return super::WndProc(nmsg, wparam, lparam);
+		}
 	}
 
 	return 0;

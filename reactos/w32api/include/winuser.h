@@ -3708,6 +3708,7 @@ BOOL WINAPI RegisterLogonProcess(DWORD,BOOL);
 #if (_WIN32_WINNT >= 0x0501)
 BOOL WINAPI RegisterRawInputDevices(PCRAWINPUTDEVICE,UINT,UINT);
 #endif
+BOOL WINAPI RegisterShellHookWindow(HWND);
 UINT WINAPI RegisterWindowMessageA(LPCSTR);
 UINT WINAPI RegisterWindowMessageW(LPCWSTR);
 BOOL WINAPI ReleaseCapture(void);
