@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.13 $
- * $Author: jfilby $
- * $Date: 2001/05/26 08:21:02 $
+ * $Revision: 1.14 $
+ * $Author: ekohl $
+ * $Date: 2001/06/29 19:32:50 $
  *
  */
 
@@ -13,7 +13,7 @@
 
 #define  DBG_PREFIX  "VGADDI: "
 
-VOID VGADDIAssertMode(IN DHPDEV  DPev, 
+BOOL VGADDIAssertMode(IN DHPDEV  DPev, 
                       IN BOOL  Enable); 
 VOID VGADDICompletePDEV(IN DHPDEV  PDev,
                         IN HDEV  Dev);
@@ -184,7 +184,7 @@ DHPDEV VGADDIEnablePDEV(IN DEVMODEW  *DM,
   // FIXME: fill out DevCaps
   // FIXME: full out DevInfo
 
-  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG)(VGApalette.PaletteEntry), 0, 0, 0);
+  devinfoVGA.hpalDefault = EngCreatePalette(PAL_INDEXED, 16, (PULONG*)(VGApalette.PaletteEntry), 0, 0, 0);
 
   *DI = devinfoVGA;
 
@@ -203,7 +203,7 @@ VOID VGADDICompletePDEV(IN DHPDEV  PDev,
 }
 
 
-VOID VGADDIAssertMode(IN DHPDEV  DPev, 
+BOOL VGADDIAssertMode(IN DHPDEV  DPev,
                       IN BOOL  Enable)
 {
   PPDEV ppdev = (PPDEV)DPev;
@@ -235,6 +235,7 @@ VOID VGADDIAssertMode(IN DHPDEV  DPev,
     }
 
   }
+  return TRUE;
 }
 
 VOID VGADDIDisablePDEV(IN DHPDEV PDev)

@@ -13,12 +13,13 @@ CreateDCA (
 	LPCSTR		lpszDriver,
 	LPCSTR		lpszDevice,
 	LPCSTR		lpszOutput,
-	CONST DEVMODE	* lpInitData
+	CONST DEVMODEA	* lpInitData
 	)
 {
         ANSI_STRING DriverA, DeviceA, OutputA;
         UNICODE_STRING DriverU, DeviceU, OutputU;
 	HDC	hDC;
+	DEVMODEW *lpInitDataW;
 
 	/*
 	 * If needed, convert to Unicode
@@ -44,6 +45,12 @@ CreateDCA (
 	} else
 		OutputU.Buffer = NULL;
 
+	if (NULL != lpInitData)
+	{
+//		lpInitDataW = HeapAllocMem(
+	} else
+		lpInitDataW = NULL;
+
 	/*
 	 * Call the Unicode version
 	 * of CreateDC.
@@ -53,8 +60,8 @@ CreateDCA (
 		DriverU.Buffer,
 		DeviceU.Buffer,
 		OutputU.Buffer,
-		lpInitData
-		);
+		NULL);
+//		lpInitDataW);
 	/*
 	 * Free Unicode parameters.
 	 */
@@ -75,14 +82,14 @@ CreateDCW (
 	LPCWSTR		lpwszDriver,
 	LPCWSTR		lpwszDevice,
 	LPCWSTR		lpwszOutput,
-	CONST DEVMODE	* lpInitData
+	CONST DEVMODEW	* lpInitData
 	)
 {
 	return W32kCreateDC (
 			lpwszDriver,
 			lpwszDevice,
 			lpwszOutput,
-			lpInitData
+			(PDEVMODEW)lpInitData
 			);
 }
 

@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.1 2001/06/12 17:50:27 chorns Exp $
+/* $Id: desktop.c,v 1.2 2001/06/29 19:31:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -26,7 +26,7 @@ STDCALL
 CreateDesktopA(
   LPCSTR lpszDesktop,
   LPCSTR lpszDevice,
-  LPDEVMODE pDevmode,
+  LPDEVMODEA pDevmode,
   DWORD dwFlags,
   ACCESS_MASK dwDesiredAccess,
   LPSECURITY_ATTRIBUTES lpsa)
@@ -60,7 +60,7 @@ STDCALL
 CreateDesktopW(
   LPCWSTR lpszDesktop,
   LPCWSTR lpszDevice,
-  LPDEVMODE pDevmode,
+  LPDEVMODEW pDevmode,
   DWORD dwFlags,
   ACCESS_MASK dwDesiredAccess,
   LPSECURITY_ATTRIBUTES lpsa)

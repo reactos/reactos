@@ -43,6 +43,7 @@
 #include <ntos/file.h>
 #include <ntos/ps.h>
 #include <ntos/disk.h>
+#include <ntos/gditypes.h>
 
 typedef struct _VALENT
 {
@@ -903,42 +904,7 @@ typedef struct _DEV_BROADCAST_VOLUME {
   USHORT dbcv_flags; 
 } DEV_BROADCAST_VOLUME;
 typedef DEV_BROADCAST_VOLUME *PDEV_BROADCAST_VOLUME;
- 
-typedef struct _devicemode {  
-  BCHAR  dmDeviceName[CCHDEVICENAME]; 
-  WORD   dmSpecVersion; 
-  WORD   dmDriverVersion; 
-  WORD   dmSize; 
-  WORD   dmDriverExtra; 
-  DWORD  dmFields; 
-  short  dmOrientation; 
-  short  dmPaperSize; 
-  short  dmPaperLength; 
-  short  dmPaperWidth; 
-  short  dmScale; 
-  short  dmCopies; 
-  short  dmDefaultSource; 
-  short  dmPrintQuality; 
-  short  dmColor; 
-  short  dmDuplex; 
-  short  dmYResolution; 
-  short  dmTTOption; 
-  short  dmCollate; 
-  BCHAR  dmFormName[CCHFORMNAME]; 
-  WORD  dmLogPixels; 
-  DWORD  dmBitsPerPel; 
-  DWORD  dmPelsWidth; 
-  DWORD  dmPelsHeight; 
-  DWORD  dmDisplayFlags; 
-  DWORD  dmDisplayFrequency; 
-  DWORD  dmICMMethod;         
-  DWORD  dmICMIntent;         
-  DWORD  dmMediaType;         
-  DWORD  dmDitherType;        
-  DWORD  dmICCManufacturer;   
-  DWORD  dmICCModel;          
-} DEVMODE, *LPDEVMODE; 
- 
+
 typedef struct tagDEVNAMES { 
   WORD wDriverOffset; 
   WORD wDeviceOffset; 
@@ -3061,13 +3027,21 @@ typedef struct tagPD {
   HANDLE    hPrintTemplate; 
   HANDLE    hSetupTemplate; 
 } PRINTDLG PACKED, *LPPRINTDLG PACKED;
- 
-typedef struct _PRINTER_DEFAULTS {  
-  LPTSTR      pDatatype; 
-  LPDEVMODE   pDevMode; 
-  ACCESS_MASK DesiredAccess; 
-} PRINTER_DEFAULTS; 
- 
+
+typedef struct _PRINTER_DEFAULTSA
+{
+  LPTSTR      pDatatype;
+  LPDEVMODEA   pDevMode;
+  ACCESS_MASK DesiredAccess;
+} PRINTER_DEFAULTSA, *PPRINTER_DEFAULTSA, *LPPRINTER_DEFAULTSA;
+
+typedef struct _PRINTER_DEFAULTSW
+{
+  LPTSTR      pDatatype;
+  LPDEVMODEA   pDevMode;
+  ACCESS_MASK DesiredAccess;
+} PRINTER_DEFAULTSW, *PPRINTER_DEFAULTSW, *LPPRINTER_DEFAULTSW;
+
 typedef struct _PRINTER_INFO_1 { 
   DWORD  Flags; 
   LPTSTR pDescription; 

@@ -999,22 +999,22 @@ STDCALL
 LoadKeyboardLayoutA(
     LPCSTR pwszKLID,
     UINT Flags);
- 
+
 WINBOOL
 STDCALL
 GetKeyboardLayoutNameA(
     LPSTR pwszKLID);
- 
+
 HDESK
 STDCALL
 CreateDesktopA(
     LPCSTR lpszDesktop,
     LPCSTR lpszDevice,
-    LPDEVMODE pDevmode,
+    LPDEVMODEA pDevmode,
     DWORD dwFlags,
     ACCESS_MASK dwDesiredAccess,
     LPSECURITY_ATTRIBUTES lpsa);
- 
+
 HDESK
 STDCALL
 OpenDesktopA(
@@ -1022,14 +1022,14 @@ OpenDesktopA(
     DWORD dwFlags,
     WINBOOL fInherit,
     DWORD dwDesiredAccess);
- 
+
 WINBOOL
 STDCALL
 EnumDesktopsA(
     HWINSTA hwinsta,
     DESKTOPENUMPROC lpEnumFunc,
     LPARAM lParam);
- 
+
 HWINSTA
 STDCALL
 CreateWindowStationA(
@@ -1808,7 +1808,7 @@ WinHelpA(
 LONG
 STDCALL
 ChangeDisplaySettingsA(
-    LPDEVMODE lpDevMode,
+    LPDEVMODEA lpDevMode,
     DWORD dwFlags);
  
 WINBOOL
@@ -1816,8 +1816,8 @@ STDCALL
 EnumDisplaySettingsA(
     LPCSTR lpszDeviceName,
     DWORD iModeNum,
-    LPDEVMODE lpDevMode);
- 
+    LPDEVMODEA lpDevMode);
+
 WINBOOL
 STDCALL
 SystemParametersInfoA(
@@ -1825,7 +1825,7 @@ SystemParametersInfoA(
     UINT uiParam,
     PVOID pvParam,
     UINT fWinIni);
- 
+
 int
 STDCALL
 AddFontResourceA(LPCSTR);
@@ -1840,7 +1840,7 @@ CreateFontIndirectA(CONST LOGFONT *);
 
 HDC
 STDCALL
-CreateICA(LPCSTR, LPCSTR , LPCSTR , CONST DEVMODE *);
+CreateICA(LPCSTR, LPCSTR , LPCSTR , CONST DEVMODEA *);
 
 HDC
 STDCALL
@@ -1853,7 +1853,7 @@ CreateScalableFontResourceA(DWORD, LPCSTR, LPCSTR, LPCSTR);
 int
 STDCALL
 DeviceCapabilitiesA(LPCSTR, LPCSTR, WORD,
-                                LPSTR, CONST DEVMODE *);
+                                LPSTR, CONST DEVMODEA *);
 
 int
 STDCALL
@@ -1934,7 +1934,7 @@ GetCharacterPlacementA(HDC, LPCSTR, int, int, LPGCP_RESULTS, DWORD);
 
 HDC
 STDCALL
-ResetDCA(HDC, CONST DEVMODE *);
+ResetDCA(HDC, CONST DEVMODEA *);
 
 WINBOOL
 STDCALL
@@ -2136,7 +2136,7 @@ DialogBoxIndirectParamA(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
 
 HDC
 STDCALL
-CreateDCA(LPCSTR, LPCSTR , LPCSTR , CONST DEVMODE *);
+CreateDCA(LPCSTR, LPCSTR , LPCSTR , CONST DEVMODEA *);
 
 DWORD
 STDCALL

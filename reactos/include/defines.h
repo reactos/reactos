@@ -75,8 +75,6 @@ extern "C" {
 #define ELF_VENDOR_SIZE	(4)
 #define MAX_DEFAULTCHAR	(2)
 #define MAX_LEADBYTES	(12)
-#define CCHDEVICENAME	(32)
-#define CCHFORMNAME	(32)
 #define MENU_TEXT_LEN	(40)
 #define MAX_LANA	(254)
 #define NCBNAMSZ	(16)

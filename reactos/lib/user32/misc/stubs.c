@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.4 2001/06/18 03:05:54 phreak Exp $
+/* $Id: stubs.c,v 1.5 2001/06/29 19:31:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -188,7 +188,7 @@ ChangeClipboardChain(
 LONG
 STDCALL
 ChangeDisplaySettingsA(
-  LPDEVMODE lpDevMode,
+  LPDEVMODEA lpDevMode,
   DWORD dwflags)
 {
   return 0;
@@ -198,7 +198,7 @@ LONG
 STDCALL
 ChangeDisplaySettingsExA(
   LPCSTR lpszDeviceName,
-  LPDEVMODE lpDevMode,
+  LPDEVMODEA lpDevMode,
   HWND hwnd,
   DWORD dwflags,
   LPVOID lParam)
@@ -210,7 +210,7 @@ LONG
 STDCALL
 ChangeDisplaySettingsExW(
   LPCWSTR lpszDeviceName,
-  LPDEVMODE lpDevMode,
+  LPDEVMODEW lpDevMode,
   HWND hwnd,
   DWORD dwflags,
   LPVOID lParam)
@@ -221,7 +221,7 @@ ChangeDisplaySettingsExW(
 LONG
 STDCALL
 ChangeDisplaySettingsW(
-  LPDEVMODE lpDevMode,
+  LPDEVMODEW lpDevMode,
   DWORD dwflags)
 {
   return 0;
@@ -1573,7 +1573,7 @@ STDCALL
 EnumDisplaySettingsA(
   LPCSTR lpszDeviceName,
   DWORD iModeNum,
-  LPDEVMODE lpDevMode)
+  LPDEVMODEA lpDevMode)
 {
   return FALSE;
 }
@@ -1583,7 +1583,7 @@ STDCALL
 EnumDisplaySettingsExA(
   LPCSTR lpszDeviceName,
   DWORD iModeNum,
-  LPDEVMODE lpDevMode,
+  LPDEVMODEW lpDevMode,
   DWORD dwFlags)
 {
   return FALSE;
@@ -1594,7 +1594,7 @@ STDCALL
 EnumDisplaySettingsExW(
   LPCWSTR lpszDeviceName,
   DWORD iModeNum,
-  LPDEVMODE lpDevMode,
+  LPDEVMODEA lpDevMode,
   DWORD dwFlags)
 {
   return FALSE;
@@ -1605,7 +1605,7 @@ STDCALL
 EnumDisplaySettingsW(
   LPCWSTR lpszDeviceName,
   DWORD iModeNum,
-  LPDEVMODE lpDevMode)
+  LPDEVMODEW lpDevMode)
 {
   return FALSE;
 }

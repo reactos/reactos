@@ -1011,7 +1011,7 @@ STDCALL
 CreateDesktopW(
     LPCWSTR lpszDesktop,
     LPCWSTR lpszDevice,
-    LPDEVMODE pDevmode,
+    LPDEVMODEW pDevmode,
     DWORD dwFlags,
     ACCESS_MASK dwDesiredAccess,
     LPSECURITY_ATTRIBUTES lpsa);
@@ -1809,7 +1809,7 @@ WinHelpW(
 LONG
 STDCALL
 ChangeDisplaySettingsW(
-    LPDEVMODE lpDevMode,
+    LPDEVMODEW lpDevMode,
     DWORD dwFlags);
 
 WINBOOL
@@ -1817,7 +1817,7 @@ STDCALL
 EnumDisplaySettingsW(
     LPCWSTR lpszDeviceName,
     DWORD iModeNum,
-    LPDEVMODE lpDevMode);
+    LPDEVMODEW lpDevMode);
 
 WINBOOL
 STDCALL
@@ -1847,7 +1847,7 @@ CreateFontW(int, int, int, int, int, DWORD,
 
 HDC
 STDCALL
-CreateICW(LPCWSTR, LPCWSTR , LPCWSTR , CONST DEVMODE *);
+CreateICW(LPCWSTR, LPCWSTR , LPCWSTR , CONST DEVMODEW *);
 
 HDC
 STDCALL
@@ -1860,7 +1860,7 @@ CreateScalableFontResourceW(DWORD, LPCWSTR, LPCWSTR, LPCWSTR);
 int
 STDCALL
 DeviceCapabilitiesW(LPCWSTR, LPCWSTR, WORD,
-                                LPWSTR, CONST DEVMODE *);
+                                LPWSTR, CONST DEVMODEW *);
 
 int
 STDCALL
@@ -1941,7 +1941,7 @@ GetCharacterPlacementW(HDC, LPCWSTR, int, int, LPGCP_RESULTS, DWORD);
 
 HDC
 STDCALL
-ResetDCW(HDC, CONST DEVMODE *);
+ResetDCW(HDC, CONST DEVMODEW *);
 
 WINBOOL
 STDCALL
@@ -2153,7 +2153,7 @@ DialogBoxIndirectParamW(hInstance, lpTemplate, hWndParent, lpDialogFunc, 0L)
 
 HDC
 STDCALL
-CreateDCW(LPCWSTR, LPCWSTR , LPCWSTR , CONST DEVMODE *);
+CreateDCW(LPCWSTR, LPCWSTR , LPCWSTR , CONST DEVMODEW *);
 
 HFONT
 STDCALL

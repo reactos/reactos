@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.4 2001/05/02 12:35:06 jfilby Exp $
+/* $Id: stubsw.c,v 1.5 2001/06/29 19:29:48 ekohl Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -42,7 +42,7 @@ CreateICW(
 	LPCWSTR			a0,
 	LPCWSTR			a1,
 	LPCWSTR			a2,
-	CONST DEVMODE *	a3
+	CONST DEVMODEW *	a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -82,7 +82,7 @@ DeviceCapabilitiesExW(
 	LPCWSTR		a1,
 	WORD		a2,
 	LPWSTR		a3,
-	CONST DEVMODE	*a4
+	CONST DEVMODEW	*a4
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -295,7 +295,7 @@ HDC
 STDCALL
 ResetDCW(
 	HDC		a0,
-	CONST DEVMODE	*a1
+	CONST DEVMODEW	*a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

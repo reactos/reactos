@@ -160,7 +160,7 @@ CreateFontIndirectA(
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
-	BOOL ret;
+	HFONT ret;
         LOGFONT tlf;
 
 	RtlInitAnsiString(&StringA, (LPSTR)lf->lfFaceName);
@@ -168,7 +168,7 @@ CreateFontIndirectA(
         memcpy(&tlf, lf, sizeof(LOGFONT));
         memcpy(&tlf.lfFaceName, &StringU.Buffer, StringU.Length);
 
-        ret = CreateFontIndirectW(&lf);
+        ret = CreateFontIndirectW((CONST LOGFONT *)&lf);
 
 	RtlFreeUnicodeString(&StringU);
 
@@ -181,7 +181,7 @@ CreateFontIndirectW(
 	CONST LOGFONT		*lf
 	)
 {
-	return W32kCreateFontIndirect(lf);
+	return W32kCreateFontIndirect((CONST LPLOGFONT)lf);
 }
 
 HFONT
@@ -205,7 +205,7 @@ CreateFontA(
 {
         ANSI_STRING StringA;
         UNICODE_STRING StringU;
-	BOOL ret;
+	HFONT ret;
         LOGFONT tlf;
 
 	RtlInitAnsiString(&StringA, (LPSTR)Face);
@@ -217,9 +217,6 @@ CreateFontA(
 	RtlFreeUnicodeString(&StringU);
 
 	return ret;
-
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
 }
 
 HFONT

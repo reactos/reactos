@@ -1,4 +1,4 @@
-/* $Id: stubsa.c,v 1.5 2001/05/02 12:35:06 jfilby Exp $
+/* $Id: stubsa.c,v 1.6 2001/06/29 19:29:48 ekohl Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -44,7 +44,7 @@ CreateICA(
 	LPCSTR			a0,
 	LPCSTR			a1,
 	LPCSTR			a2,
-	CONST DEVMODE *	a3
+	CONST DEVMODEA *	a3
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -84,7 +84,7 @@ DeviceCapabilitiesExA(
 	LPCSTR		a1,
 	WORD		a2,
 	LPSTR		a3,
-	CONST DEVMODE	*a4
+	CONST DEVMODEA	*a4
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -297,7 +297,7 @@ HDC
 STDCALL
 ResetDCA(
 	HDC		a0,
-	CONST DEVMODE	*a1
+	CONST DEVMODEA	*a1
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

@@ -18,5 +18,5 @@ HPEN
 STDCALL
 CreatePenIndirect(CONST LOGPEN *lgpn)
 {
-   return W32kCreatePenIndirect(lgpn);
+   return W32kCreatePenIndirect((CONST PLOGPEN)lgpn);
 }

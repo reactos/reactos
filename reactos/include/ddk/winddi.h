@@ -514,36 +514,6 @@ typedef struct _GDIINFO
   ULONG  ulPanningVertRes;
 } GDIINFO, *PGDIINFO;
 
-typedef struct _DEVMODEW 
-{
-  WCHAR  dmDeviceName[DMMAXDEVICENAME];
-  WORD  dmSpecVersion;
-  WORD  dmDriverVersion;
-  WORD  dmSize;
-  WORD  dmDriverExtra;
-  DWORD  dmFields;
-  short  dmOrientation;
-  short  dmPaperSize;
-  short  dmPaperLength;
-  short  dmPaperWidth;
-  short  dmScale;
-  short  dmCopies;
-  short  dmDefaultSource;
-  short  dmPrintQuality;
-  short  dmColor;
-  short  dmDuplex;
-  short  dmYResolution;
-  short  dmTTOption;
-  short  dmCollate;
-  WCHAR  dmFormName[DMMAXFORMNAME];
-  WORD  dmLogPixels;
-  DWORD  dmBitsPerPel;
-  DWORD  dmPelsWidth;
-  DWORD  dmPelsHeight;
-  DWORD  dmDisplayFlags;
-  DWORD  dmDisplayFrequency;
-} DEVMODEW, *PDEVMODEW;
-
 typedef struct _BRUSHOBJ 
 {
   ULONG  iSolidColor;
@@ -709,7 +679,7 @@ typedef struct _XFORMOBJ
  */
 
 /*  GDI --> DDI calls  */
-VOID DrvAssertMode(IN DHPDEV  PDev, 
+BOOL DrvAssertMode(IN DHPDEV  PDev, 
                    IN BOOL  ShouldEnable);
 BOOL DrvBitBlt(IN PSURFOBJ  DestSurface, 
                IN PSURFOBJ  SrcSurface, 

@@ -1,4 +1,4 @@
-/* $Id: wapi.c,v 1.12 2001/06/23 19:20:01 phreak Exp $
+/* $Id: wapi.c,v 1.13 2001/06/29 19:33:39 ekohl Exp $
  * 
  * reactos/subsys/csrss/api/wapi.c
  *
@@ -75,7 +75,7 @@ static void Thread_Api2(HANDLE ServerPort)
 	if ( LpcRequest.Header.MessageType == LPC_PORT_CLOSED )
 
 	  {
-	     CsrFreeProcessData( LpcRequest.Header.Cid.UniqueProcess );
+	     CsrFreeProcessData( (ULONG)LpcRequest.Header.Cid.UniqueProcess );
 	     NtClose(ServerPort);
 	     NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
 	     continue;

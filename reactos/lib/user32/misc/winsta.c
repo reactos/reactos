@@ -1,4 +1,4 @@
-/* $Id: winsta.c,v 1.1 2001/06/12 17:50:27 chorns Exp $
+/* $Id: winsta.c,v 1.2 2001/06/29 19:31:59 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -61,7 +61,7 @@ CreateWindowStationW(
 {
   UNICODE_STRING WindowStationName;
 
-  RtlInitAnsiString(&WindowStationName, lpwinsta);
+  RtlInitUnicodeString(&WindowStationName, lpwinsta);
 
   return NtUserCreateWindowStation(
     &WindowStationName,
@@ -131,7 +131,7 @@ OpenWindowStationW(
 {
   UNICODE_STRING WindowStationName;
 
-  RtlInitAnsiString(&WindowStationName, lpszWinSta);
+  RtlInitUnicodeString(&WindowStationName, lpszWinSta);
 
   return NtUserOpenWindowStation(&WindowStationName, dwDesiredAccess);
 }

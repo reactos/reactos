@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.23 2001/06/25 09:30:06 ekohl Exp $
+/* $Id: dc.c,v 1.24 2001/06/29 19:34:35 ekohl Exp $
  *
  * DC.C - Device context functions
  * 
@@ -812,7 +812,7 @@ DC_GET_VAL_EX( W32kGetViewportOrgEx, vportOrgX, vportOrgY, POINT )
 DC_GET_VAL_EX( W32kGetWindowExtEx, wndExtX, wndExtY, SIZE )
 DC_GET_VAL_EX( W32kGetWindowOrgEx, wndOrgX, wndOrgY, POINT )
 
-HDC STDCALL W32kResetDC(HDC  hDC, CONST DEVMODE  *InitData)
+HDC STDCALL W32kResetDC(HDC  hDC, CONST DEVMODEW *InitData)
 {
   UNIMPLEMENTED;
 }
