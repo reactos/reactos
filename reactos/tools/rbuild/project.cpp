@@ -30,15 +30,12 @@ Project::ReadXml ()
 {
 	Path path;
 
-	head = XMLParse ( xmlfile, path );
-	if ( !head )
-		throw InvalidBuildFileException ( "Document contains no 'project' tag." );
-
-	if ( head->name != "project" )
+	do
 	{
-		throw InvalidBuildFileException ( "Expected 'project', got '%s'.",
-			                              head->name.c_str());
-	}
+		head = XMLParse ( xmlfile, path );
+		if ( !head )
+			throw InvalidBuildFileException ( "Document contains no 'project' tag." );
+	} while ( head->name != "project" );
 
 	this->ProcessXML ( *head, "." );
 }
@@ -73,7 +70,7 @@ Project::ProcessXML ( const XMLElement& e, const string& path )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		assert(att);
-		subpath = path + "/" + att->value;
+		subpath = path + CSEP + att->value;
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );

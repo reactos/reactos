@@ -251,6 +251,14 @@ XMLFile::get_token(string& token)
 		else
 			tokend += 3;
 	}
+	else if ( !strncmp ( _p, "<?", 2 ) )
+	{
+		tokend = strstr ( _p, "?>" );
+		if ( !tokend )
+			tokend = _end;
+		else
+			tokend += 2;
+	}
 	else if ( *_p == '<' )
 	{
 		tokend = strchr ( _p, '>' );
@@ -456,7 +464,9 @@ XMLParse(XMLFile& f,
 		return NULL;
 	bool end_tag;
 
-	while ( token[0] != '<' || !strncmp ( token.c_str(), "<!--", 4 ) )
+	while ( token[0] != '<'
+	        || !strncmp ( token.c_str(), "<!--", 4 )
+	        || !strncmp ( token.c_str(), "<?", 2 ) )
 	{
 		if ( token[0] != '<' )
 			throw XMLSyntaxErrorException ( f.Location(),

@@ -8,37 +8,18 @@
 using std::string;
 using std::vector;
 
-#ifdef WIN32
-#define EXEPOSTFIX ".exe"
-#define SEP "\\"
 string
 FixSeparator ( const string& s )
 {
 	string s2(s);
-	char* p = strchr ( &s2[0], '/' );
+	char* p = strchr ( &s2[0], CBAD_SEP );
 	while ( p )
 	{
-		*p++ = '\\';
-		p = strchr ( p, '/' );
+		*p++ = CSEP;
+		p = strchr ( p, CBAD_SEP );
 	}
 	return s2;
 }
-#else
-#define EXEPOSTFIX
-#define SEP "/"
-string
-FixSeparator ( const string& s )
-{
-	string s2(s);
-	char* p = strchr ( &s2[0], '\\' );
-	while ( p )
-	{
-		*p++ = '/';
-		p = strchr ( p, '\\' );
-	}
-	return s2;
-}
-#endif
 
 Module::Module ( Project* project,
                  const XMLElement& moduleNode,
@@ -68,7 +49,7 @@ Module::ProcessXML ( const XMLElement& e,
 	string subpath ( path );
 	if ( e.name == "file" && e.value.size () )
 	{
-		files.push_back ( new File ( path + "/" + e.value ) );
+		files.push_back ( new File ( path + CSEP + e.value ) );
 	}
 	else if ( e.name == "library" && e.value.size () )
 	{
@@ -78,7 +59,7 @@ Module::ProcessXML ( const XMLElement& e,
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );
 		assert(att);
-		subpath = path + "/" + att->value;
+		subpath = path + CSEP + att->value;
 	}
 	for ( size_t i = 0; i < e.subElements.size (); i++ )
 		ProcessXML ( *e.subElements[i], subpath );
@@ -100,7 +81,7 @@ Module::GetModuleType ( const XMLAttribute& attribute )
 string
 Module::GetPath ()
 {
-	return FixSeparator (path) + SEP + name + EXEPOSTFIX;
+	return FixSeparator (path) + CSEP + name + EXEPOSTFIX;
 }
 
 

@@ -7,6 +7,20 @@
 #include "exception.h"
 #include "XML.h"
 
+#ifdef WIN32
+#define EXEPOSTFIX ".exe"
+#define CSEP '\\'
+#define CBAD_SEP '/'
+#define SSEP "\\"
+#define SBAD_SEP "/"
+#else
+#define EXEPOSTFIX
+#define CSEP '/'
+#define CBAD_SEP '\\'
+#define SSEP "/"
+#define SBAD_SEP "\\"
+#endif
+
 class Project;
 class Module;
 class File;
@@ -77,5 +91,8 @@ public:
 
 	Library ( const std::string& _name );
 };
+
+extern std::string
+FixSeparator ( const std::string& s );
 
 #endif /* __RBUILD_H */

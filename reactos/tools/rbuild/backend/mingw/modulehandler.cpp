@@ -1,5 +1,6 @@
 
 #include "../../pch.h"
+#include <assert.h>
 
 #include "../../rbuild.h"
 #include "mingw.h"
@@ -162,30 +163,30 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( Module& module )
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${gcc} -Wl,--base-file,%s/base.tmp -o %s/junk.tmp %s %s\n",
+	          "\t${gcc} -Wl,--base-file,%s" SSEP "base.tmp -o %s" SSEP "junk.tmp %s %s\n",
 	          workingDirectory.c_str (),
 	          workingDirectory.c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${rm} %s/junk.tmp\n",
+	          "\t${rm} %s" SSEP "junk.tmp\n",
 	          workingDirectory.c_str () );
 	fprintf ( fMakefile,
-	          "\t${dlltool} --dllname %s --base-file %s/base.tmp --output-exp %s/temp.exp --kill-at\n",
+	          "\t${dlltool} --dllname %s --base-file %s" SSEP "base.tmp --output-exp %s" SSEP "temp.exp --kill-at\n",
 	          module.GetPath ().c_str (),
 	          workingDirectory.c_str (),
 	          workingDirectory.c_str ());
 	fprintf ( fMakefile,
-	          "\t${rm} %s/base.tmp\n",
+	          "\t${rm} %s" SSEP "base.tmp\n",
 	          workingDirectory.c_str () );
 	fprintf ( fMakefile,
-	          "\t${ld} -Wl,%s/temp.exp -o %s %s %s\n",
+	          "\t${ld} -Wl,%s" SSEP "temp.exp -o %s %s %s\n",
 	          workingDirectory.c_str (),
 	          module.GetPath ().c_str (),
 	          archiveFilename.c_str (),
 	          importLibraryDependencies.c_str () );
 	fprintf ( fMakefile,
-	          "\t${rm} %s/temp.exp\n",
+	          "\t${rm} %s" SSEP "temp.exp\n",
 	          workingDirectory.c_str () );
 	
 	GenerateArchiveTarget ( module );
