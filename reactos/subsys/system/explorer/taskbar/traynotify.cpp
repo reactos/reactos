@@ -262,7 +262,8 @@ void NotifyArea::write_config()
 	XMLPos pos = g_Globals.get_cfg();
 
 	pos.smart_create("desktopbar");
-	XMLBoolRef(XMLPos(pos,"options"), "show-clock") = _hwndClock!=0;
+	XMLBoolRef boolRef(XMLPos(pos,"options"), "show-clock");
+    boolRef = _hwndClock!=0;
 	pos.back();
 
 	pos.smart_create("notify-icons");

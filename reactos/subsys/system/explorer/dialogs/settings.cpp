@@ -192,16 +192,24 @@ int	TaskbarSettingsDlg::Command(int id, int code)
 		break;
 
 	  case ID_SHOW_CLOCK:
-		XMLBoolRef(XMLPos(g_Globals.get_cfg("desktopbar"),"options"), "show-clock", true).toggle();
+	    {
+		XMLBoolRef boolRef1(XMLPos(g_Globals.get_cfg("desktopbar"),"options"), "show-clock", true);
+		boolRef1.toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
 		break;
+		}
+		
 
 	  case ID_HIDE_INACTIVE_ICONS:
-		XMLBoolRef(XMLPos(g_Globals.get_cfg("notify-icons"),"options"), "hide-inactive", true).toggle();
+		{
+		XMLBoolRef boolRef2(XMLPos(g_Globals.get_cfg("notify-icons"),"options"), "hide-inactive", true);
+        boolRef2.toggle();
 		SendMessage(g_Globals._hwndDesktopBar, PM_REFRESH_CONFIG, 0, 0);
 		PropSheet_Changed(GetParent(_hwnd), _hwnd);
 		break;
+		}
+		
 
 	  default:
 		return 1;
