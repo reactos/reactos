@@ -1,13 +1,17 @@
 #
 #
 #
-OBJECTS= objdir.o
+OBJECTS= ../common/crt0.o objdir.o
 
 
 PROGS= objdir.exe 
 
 BASE_CFLAGS = -I../../include
-LIBS = ../../lib/ntdll/ntdll.a
+LIB_BASE=../../lib
+LIBS = \
+	$(LIB_BASE)/ntdll/ntdll.a \
+	$(LIB_BASE)/kernel32/kernel32.a \
+	$(LIB_BASE)/crtdll/crtdll.a
 
 all: $(PROGS)
 
