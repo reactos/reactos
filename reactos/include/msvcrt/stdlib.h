@@ -18,9 +18,9 @@
  *  DISCLAIMED. This includes but is not limited to warranties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.6 $
+ * $Revision: 1.7 $
  * $Author: royce $
- * $Date: 2003/08/10 23:55:18 $
+ * $Date: 2003/08/11 02:59:57 $
  *
  */
 /* Appropriated for Reactos Crtdll by Ariadne */
@@ -238,7 +238,7 @@ unsigned long _lrotr(unsigned long value, int shift);
 #define _tsplitpath _splitpath
 #define _tmakepath _makepath
 #endif
-#endif _DISABLE_TIDENTS
+#endif /* _DISABLE_TIDENTS */
 
 #ifdef __cplusplus
 }
