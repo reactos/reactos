@@ -1,4 +1,4 @@
-/* $Id: regcontrol.h,v 1.1 2003/06/16 13:46:26 gvg Exp $
+/* $Id: regcontrol.h,v 1.2 2003/06/22 19:18:17 sedwards Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -8,6 +8,16 @@
  * REVISION HISTORY: 2003/06/16 GvG Created
  * NOTES:
  */
+#ifndef ROS_REGCONTROL_H
+#define ROS_REGCONTROL_H
+
+/* Missing from Winuser.h */
+#ifndef MAKEINTATOMA
+#define MAKEINTATOMA(atom)  ((LPCSTR)((ULONG_PTR)((WORD)(atom))))
+#endif
+
+/* Built-in class names (see _Undocumented_Windows_ p.418) */
+#define ICONTITLE_CLASS_ATOM MAKEINTATOMA(32772)  /* IconTitle */
 
 /* Built-in class descriptor */
 struct builtin_class_descr
@@ -35,3 +45,5 @@ extern const struct builtin_class_descr MDICLIENT_builtin_class;
 extern const struct builtin_class_descr MENU_builtin_class;
 extern const struct builtin_class_descr SCROLL_builtin_class;
 extern const struct builtin_class_descr STATIC_builtin_class;
+
+#endif /* ROS_REGCONTROL_H */
