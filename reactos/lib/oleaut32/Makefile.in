@@ -17,8 +17,8 @@ C_SRCS = \
 	hash.c \
 	oleaut.c \
 	olepicture.c \
-	stubs.c \
 	safearray.c \
+	stubs.c \
 	varformat.c \
 	variant.c \
 	vartype.c

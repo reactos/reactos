@@ -22,7 +22,7 @@
 #define VAR_FORMAT_NOSUBSTITUTE 0x0020
 #define VAR_FOURDIGITYEARS 0x0040
 #define VAR_CALENDAR_THAI 0x0080
-#define	VAR_CALENDAR_GREGORIAN 0x0100
+#define VAR_CALENDAR_GREGORIAN 0x0100
 #define MEMBERID_NIL DISPID_UNKNOWN
 #define ID_DEFAULTINST (-2)
 #define DISPATCH_METHOD 1
@@ -34,9 +34,9 @@
 #define IsHashValCompatible(h1,h2) ((BOOL)((0x00ff0000&(h1))==(0x00ff0000&(h2))))
 #define ACTIVEOBJECT_STRONG 0
 #define ACTIVEOBJECT_WEAK 1
-#ifdef NONAMELESSUNION
-#define V_UNION(X,Y) ((X)->n1.n2.n3.Y)
-#define V_VT(X) ((X)->n1.n2.vt)
+#if __STDC__ || defined(NONAMELESSUNION)
+#define V_UNION(X,Y) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.__VARIANT_NAME_3.Y)
+#define V_VT(X) ((X)->__VARIANT_NAME_1.__VARIANT_NAME_2.vt)
 #else
 #define V_UNION(X,Y) ((X)->Y)
 #define V_VT(X) ((X)->vt)
@@ -90,7 +90,7 @@
 #define V_ARRAYREF(X) V_UNION(X,pparray)
 #define V_BYREF(X) V_UNION(X,byref)
 #if (__STDC__ && !defined(_FORCENAMELESSUNION)) || defined(NONAMELESSUNION)
-#define V_DECIMAL(X) ((X)->n1.decVal)
+#define V_DECIMAL(X) ((X)->__VARIANT_NAME_1.decVal)
 #else
 #define V_DECIMAL(X) ((X)->decVal)
 #endif

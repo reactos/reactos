@@ -2204,7 +2204,7 @@ HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
     ULONG64 tmp;
     DECIMAL* pDec = &V_DECIMAL(pVarDst);
 
-    DECIMAL_SETZERO(pDec);
+    DECIMAL_SETZERO(*pDec);
     DEC_LO32(pDec) = 0;
 
     if (pNumprs->dwOutFlags & NUMPRS_NEG)

@@ -7,7 +7,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#ifdef NONAMELESSUNION
+#if (__STDC__ && !defined(_FORCENAMELESSUNION)) || defined(NONAMELESSUNION)
 #define __VARIANT_NAME_1 n1
 #define __VARIANT_NAME_2 n2
 #define __VARIANT_NAME_3 n3
