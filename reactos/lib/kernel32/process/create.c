@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.63 2003/03/16 14:16:54 chorns Exp $
+/* $Id: create.c,v 1.64 2003/03/26 22:11:27 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -904,7 +904,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       Status = NtDuplicateObject (NtCurrentProcess(),
 	                 Ppb->CurrentDirectoryHandle,
 			 hProcess,
-		 &Ppb->CurrentDirectoryHandle,
+			 &Ppb->CurrentDirectoryHandle,
 			 0,
 			 TRUE,
 			 DUPLICATE_SAME_ACCESS);
@@ -952,6 +952,12 @@ CreateProcessW(LPCWSTR lpApplicationName,
    CsrRequest.Type = CSRSS_CREATE_PROCESS;
    CsrRequest.Data.CreateProcessRequest.NewProcessId = 
      ProcessBasicInfo.UniqueProcessId;
+   if (Sii.Subsystem == IMAGE_SUBSYSTEM_WINDOWS_GUI)
+   {
+      /* Do not create a console for GUI applications */
+      dwCreationFlags &= ~CREATE_NEW_CONSOLE;
+      dwCreationFlags |= DETACHED_PROCESS;
+   }
    CsrRequest.Data.CreateProcessRequest.Flags = dwCreationFlags;
    Status = CsrClientCallServer(&CsrRequest, 
 				&CsrReply,
