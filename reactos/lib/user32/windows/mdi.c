@@ -1332,7 +1332,11 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 {
     MDICLIENTINFO *ci;
 
-    if (!(ci = get_client_info( hwnd ))) return 0;
+    if (WM_NCCREATE != message && WM_CREATE != message
+        && NULL == (ci = get_client_info(hwnd)))
+    {
+        return 0;
+    }
 
     switch (message)
     {
@@ -1345,6 +1349,12 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
 #ifndef __REACTOS__
           WND *wndPtr = WIN_GetPtr( hwnd );
 #endif
+	ci = HeapAlloc(GetProcessHeap(), 0, sizeof(MDICLIENTINFO));
+	if (NULL == ci)
+	{
+	    return -1;
+	}
+	SetWindowLongPtr(hwnd, 0, (LONG_PTR) ci);
 
 	/* Translation layer doesn't know what's in the cs->lpCreateParams
 	 * so we have to keep track of what environment we're in. */
