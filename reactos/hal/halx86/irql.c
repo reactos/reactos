@@ -26,6 +26,17 @@
  */
 static KIRQL CurrentIrql = HIGH_LEVEL;
 
+/* 
+ * PURPOSE: - Mask for HalEnableSystemInterrupt and HalDisableSystemInterrupt
+ *          - At startup enable timer and cascade 
+ */
+static USHORT pic_mask = 0xFFFA;
+
+/*
+ * PURPOSE: Mask for disabling of acknowledged interrupts 
+ */
+static USHORT pic_mask_intr = 0x0000;
+
 extern IMPORTED ULONG DpcQueueSize;
 
 static ULONG HalpPendingInterruptCount[NR_IRQS];
@@ -64,9 +75,9 @@ VOID HalpInitPICs(VOID)
   /* 8086 mode */
   WRITE_PORT_UCHAR((PUCHAR)0x21, 0x1);
   WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x1);   
-  /* Enable all interrupts from PICs */
-  WRITE_PORT_UCHAR((PUCHAR)0x21, 0x0);
-  WRITE_PORT_UCHAR((PUCHAR)0xa1, 0x0);
+  /* Enable interrupts */
+  WRITE_PORT_UCHAR((PUCHAR)0x21, pic_mask & 0xFF);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, (pic_mask >> 8) & 0xFF);
   
   /* We can now enable interrupts */
   __asm__ __volatile__ ("sti\n\t");
@@ -93,6 +104,10 @@ HalpExecuteIrqs(KIRQL NewIrql)
 	  CurrentIrql = IRQ_TO_DIRQL(i);
 	  KiInterruptDispatch2(i, NewIrql);
 	  HalpPendingInterruptCount[i]--;
+	  if (HalpPendingInterruptCount[i] == 0)
+	  {
+	     HalEndSystemInterrupt(CurrentIrql, 0);
+	  }
 	}
     }
 }
@@ -304,21 +319,30 @@ HalBeginSystemInterrupt (ULONG Vector,
 			 KIRQL Irql,
 			 PKIRQL OldIrql)
 {
-  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+  ULONG irq;
+  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
     {
       return(FALSE);
     }
-  
-  /* Send EOI to the PICs */
-  WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
-  if ((Vector-IRQ_BASE)>=8)
-    {
-      WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
-    }
+  irq = Vector - IRQ_BASE;
+  pic_mask_intr |= (1 << irq);
+
+  if (irq < 8)
+  {
+     WRITE_PORT_UCHAR((PUCHAR)0x21, (pic_mask|pic_mask_intr) & 0xff);
+     WRITE_PORT_UCHAR((PUCHAR)0x20, 0x20);
+  }
+  else
+  {
+     WRITE_PORT_UCHAR((PUCHAR)0xa1, ((pic_mask|pic_mask_intr) >> 8) & 0xff);
+     /* Send EOI to the PICs */
+     WRITE_PORT_UCHAR((PUCHAR)0x20,0x20);
+     WRITE_PORT_UCHAR((PUCHAR)0xa0,0x20);
+  }
   
   if (CurrentIrql >= Irql)
     {
-      HalpPendingInterruptCount[Vector - IRQ_BASE]++;
+      HalpPendingInterruptCount[irq]++;
       return(FALSE);
     }
   *OldIrql = CurrentIrql;
@@ -333,27 +357,48 @@ VOID STDCALL HalEndSystemInterrupt (KIRQL Irql, ULONG Unknown2)
  * FUNCTION: Finish a system interrupt and restore the specified irq level.
  */
 {
-  HalpLowerIrql(Irql);
-}
+  ULONG mask;
 
+  HalpLowerIrql(Irql);
+
+  if (Irql > PROFILE_LEVEL)
+  {
+     mask = 0xffff;
+  }
+  else if (Irql > PROFILE_LEVEL - NR_IRQS)
+  {
+     mask = ~((1 << (PROFILE_LEVEL - Irql + 1)) - 1);
+  }
+  else 
+  {
+     mask = 0;
+  }
+  /* Interrupts should be disable while enabling irqs of both pics */
+  __asm__("pushf\n\t");
+  __asm__("cli\n\t");
+  pic_mask_intr &= mask;
+  WRITE_PORT_UCHAR((PUCHAR)0x21, (pic_mask|pic_mask_intr) & 0xff);
+  WRITE_PORT_UCHAR((PUCHAR)0xa1, ((pic_mask|pic_mask_intr) >> 8) & 0xff);
+  __asm__("popf\n\t");
+}
+  
 BOOLEAN STDCALL HalDisableSystemInterrupt (ULONG Vector,
 					   ULONG Unknown2)
 {
   ULONG irq;
   
-  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
     return FALSE;
 
   irq = Vector - IRQ_BASE;
+  pic_mask |= (1 << irq);
   if (irq < 8)
      {
-       WRITE_PORT_UCHAR((PUCHAR)0x21, 
-			READ_PORT_UCHAR((PUCHAR)0x21)|(1<<irq));
+      WRITE_PORT_UCHAR((PUCHAR)0x21, (pic_mask|pic_mask_intr) & 0xff);
      }
   else
     {
-      WRITE_PORT_UCHAR((PUCHAR)0xa1, 
-		       READ_PORT_UCHAR((PUCHAR)0xa1)|(1<<(irq-8)));
+      WRITE_PORT_UCHAR((PUCHAR)0xa1, ((pic_mask|pic_mask_intr) >> 8) & 0xff);
     }
   
   return TRUE;
@@ -366,19 +411,18 @@ BOOLEAN STDCALL HalEnableSystemInterrupt (ULONG Vector,
 {
   ULONG irq;
 
-  if (Vector < IRQ_BASE || Vector > IRQ_BASE + NR_IRQS)
+  if (Vector < IRQ_BASE || Vector >= IRQ_BASE + NR_IRQS)
     return FALSE;
 
   irq = Vector - IRQ_BASE;
+  pic_mask &= ~(1 << irq);
   if (irq < 8)
     {
-      WRITE_PORT_UCHAR((PUCHAR)0x21, 
-		       READ_PORT_UCHAR((PUCHAR)0x21)&(~(1<<irq)));
+      WRITE_PORT_UCHAR((PUCHAR)0x21, (pic_mask|pic_mask_intr) & 0xff);
     }
   else
      {
-       WRITE_PORT_UCHAR((PUCHAR)0xa1, 
-			READ_PORT_UCHAR((PUCHAR)0xa1)&(~(1<<(irq-8))));
+       WRITE_PORT_UCHAR((PUCHAR)0xa1, ((pic_mask|pic_mask_intr) >> 8) & 0xff);
      }
 
   return TRUE;
