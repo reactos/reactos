@@ -709,7 +709,7 @@ HRESULT WINAPI SHGetRealIDL(LPSHELLFOLDER lpsf, LPCITEMIDLIST pidlSimple, LPITEM
 	    IDataObject_Release(pDataObj);
 
 	    if (SUCCEEDED(hr)) {
-		//assert(pida->cidl==1);
+		/*assert(pida->cidl==1);*/
 		LPIDA pida = (LPIDA)GlobalLock(medium.hGlobal);
 
 		LPCITEMIDLIST pidl_folder = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);

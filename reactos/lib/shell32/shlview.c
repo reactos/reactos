@@ -315,7 +315,7 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
         This->ListViewSortInfo.nLastHeaderID = -1;
 
 	if (This->FolderSettings.fFlags & FWF_DESKTOP) {
-	  if (0)  //FIXME: look into registry vale HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow and activate drop shadows
+	  if (0)  /* FIXME: look into registry vale HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced\ListviewShadow and activate drop shadows */
 	    ListView_SetTextBkColor(This->hWndList, CLR_NONE);
 	  else
 	    ListView_SetTextBkColor(This->hWndList, GetSysColor(COLOR_DESKTOP));
@@ -874,7 +874,7 @@ static HRESULT ShellView_OpenSelectedItems(IShellViewImpl * This)
 	    SHELLEXECUTEINFOA shexinfo;
 
 	    shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
-	    shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	// SEE_MASK_IDLIST is also possible.
+	    shexinfo.fMask = SEE_MASK_INVOKEIDLIST;	/* SEE_MASK_IDLIST is also possible. */
 	    shexinfo.hwnd = NULL;
 	    shexinfo.lpVerb = NULL;
 	    shexinfo.lpFile = NULL;

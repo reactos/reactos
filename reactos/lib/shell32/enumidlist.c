@@ -377,6 +377,10 @@ static BOOL CreateDesktopEnumList(
 
 	/*enumerate the elements in %windir%\desktop */
 	SHGetSpecialFolderPathA(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
+
+    /*FIXME: hide icons for classes in SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\explorer\\HideDesktopIcons\\ClassicStartMenu
+	-> alter attributes in IDLDATA.folder.uFileAttribs ?
+    */
 	CreateFolderEnumList( (IEnumIDList*)This, szPath, dwFlags);
 
 	return TRUE;
