@@ -842,15 +842,6 @@ void DrawGrayText(HDC hdc, LPRECT pRect, LPCTSTR title, int dt_flags)
 }
 
 
-static BOOL DrawButton(HDC hdc, LPRECT prect, UINT state, HBRUSH hbrush)
-{
-	FillRect(hdc, prect, hbrush);
-	DrawEdge(hdc, prect, EDGE_RAISED, BF_RECT|BF_SOFT);
-
-	return TRUE;
-}
-
-
 /* not yet used
 void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 {
@@ -868,7 +859,6 @@ void ColorButton::DrawItem(LPDRAWITEMSTRUCT dis)
 	}
 
 	DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
-	//DrawButton(dis->hDC, &dis->rcItem, state, GetSysColorBrush(COLOR_BTNFACE));
 
 	TCHAR title[BUFFER_LEN];
 	GetWindowText(_hwnd, title, BUFFER_LEN);
@@ -946,8 +936,7 @@ void PictureButton::DrawItem(LPDRAWITEMSTRUCT dis)
 		if (style & BS_FLAT)	// Only with BS_FLAT set, there will be drawn a frame without highlight.
 			DrawEdge(dis->hDC, &dis->rcItem, EDGE_RAISED, BF_RECT|BF_FLAT);
 	} else
-		//DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
-		DrawButton(dis->hDC, &dis->rcItem, state, _hBrush);
+		DrawFrameControl(dis->hDC, &dis->rcItem, DFC_BUTTON, state);
 
 	if (_hIcon)
 		DrawIconEx(dis->hDC, imagePos.x, imagePos.y, _hIcon, _cx, _cy, 0, _hBrush, DI_NORMAL);

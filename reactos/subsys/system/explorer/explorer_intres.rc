@@ -119,6 +119,13 @@ BEGIN
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
 END
 
 #endif    // Romanian resources
@@ -483,6 +490,13 @@ BEGIN
     IDS_LAUNCH_MANY_PROGRAMS 
                             "Sie haben mehrere Programme ausgew‰hlt.\nSind Sie sicher, daﬂ sie diese alle starten wollen?"
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
 END
 
 #endif    // German (Germany) resources
@@ -699,7 +713,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,56,25,44,41
     CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,111,25,44,41
-    CONTROL         "right/top up",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,25,44,41
     CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,76,44,41
@@ -707,7 +721,7 @@ BEGIN
                     BS_BOTTOM | WS_TABSTOP,56,76,44,41
     CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,111,76,44,41
-    CONTROL         "right/bot. up",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,76,44,41
 END
 
@@ -810,6 +824,13 @@ BEGIN
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
 END
 
 #endif    // English (U.S.) resources
@@ -923,6 +944,13 @@ BEGIN
     IDS_LAUNCH_MANY_PROGRAMS 
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
+    IDS_DESKTOP             "Desktop"
+    IDS_TASKBAR             "Taskbar"
+END
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_STARTMENU           "Startmenu"
 END
 
 #endif    // French (France) resources
