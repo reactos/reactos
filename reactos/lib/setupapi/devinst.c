@@ -18,6 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+ 
 #include <stdarg.h>
 
 #include "windef.h"
@@ -29,6 +32,7 @@
 #include "winnls.h"
 #include "setupapi.h"
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 #include "rpc.h"
 #include "rpcdce.h"
@@ -1132,4 +1136,58 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceA(
     FIXME("%p %s %08lx %p\n", DeviceInfoSet,
         debugstr_a(DevicePath), OpenFlags, DeviceInterfaceData);
     return FALSE;
+}
+
+/***********************************************************************
+ *             SetupDiSetClassInstallParamsA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiSetClassInstallParamsA(
+       HDEVINFO  DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       PSP_CLASSINSTALL_HEADER ClassInstallParams,
+       DWORD ClassInstallParamsSize)
+{
+    FIXME("%p %p %x %lu\n",DeviceInfoSet, DeviceInfoData,
+          ClassInstallParams->InstallFunction, ClassInstallParamsSize);
+    return FALSE;
+}
+
+/***********************************************************************
+ *             SetupDiCallClassInstaller (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiCallClassInstaller(
+       DWORD InstallFunction,
+       HDEVINFO DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME("%ld %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+    return FALSE;
+}
+
+/***********************************************************************
+ *             SetupDiGetDeviceInstallParamsA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInstallParamsA(
+       HDEVINFO DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+{
+    FIXME("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstallParams);
+    return FALSE;
+}
+
+/***********************************************************************
+ *             SetupDiOpenDevRegKey (SETUPAPI.@)
+ */
+HKEY WINAPI SetupDiOpenDevRegKey(
+       HDEVINFO DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       DWORD Scope,
+       DWORD HwProfile,
+       DWORD KeyType,
+       REGSAM samDesired)
+{
+    FIXME("%p %p %ld %ld %ld %lx\n", DeviceInfoSet, DeviceInfoData,
+          Scope, HwProfile, KeyType, samDesired);
+    return INVALID_HANDLE_VALUE;
 }
