@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.32 2000/06/25 03:59:15 dwelch Exp $
+/* $Id: section.c,v 1.33 2000/06/26 19:41:43 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -264,16 +264,26 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    DPRINT("MmSectionHandleFault(MemoryArea %x, Address %x)\n",
 	   MemoryArea,Address);
    
+   
+   /*
+    * There is a window between taking the page fault and locking the
+    * address space when another thread could load the page so we check
+    * that.
+    */
    if (MmIsPagePresent(NULL, Address))
      {
 	DbgPrint("Page is already present\n");
-	KeBugCheck(0);
+	return(STATUS_SUCCESS);
      }
    
    PAddress = (ULONG)PAGE_ROUND_DOWN(((ULONG)Address));
    Offset.QuadPart = (PAddress - (ULONG)MemoryArea->BaseAddress) +
      MemoryArea->Data.SectionData.ViewOffset;
    
+   /*
+    * This is a temporary hack because we need to map PE sections
+    * to within a finer granularity than data file section.
+    */
    if ((MemoryArea->Data.SectionData.ViewOffset % PAGESIZE) != 0)
      {
 	return(MmUnalignedLoadPageForSection(AddressSpace, 
@@ -286,29 +296,51 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	   MemoryArea->Data.SectionData.ViewOffset);
    DPRINT("Got offset %x\n", Offset.QuadPart);
    
+   /*
+    * Lock the section
+    */
    Section = MemoryArea->Data.SectionData.Section;
-   
-   DPRINT("Section %x\n", Section);
-   
    MmLockSection(Section);
    
+   /*
+    * Get the entry corresponding to the offset within the section
+    */
    Entry = MmGetPageEntrySection(Section, Offset.u.LowPart);
    
    DPRINT("Entry %x\n", Entry);
    
    if (Entry == 0)
      {   
+	/*
+	 * If the entry is zero (and it can't change because we have
+	 * locked the section) then we need to load the page.
+	 */
+	
+	/*
+	 * Create an mdl to hold the page we are going to read data into.
+	 */
 	Mdl = MmCreateMdl(NULL, NULL, PAGESIZE);
 	MmBuildMdlFromPages(Mdl);
 	Page = MmGetMdlPageAddress(Mdl, 0);
 	
+	/*
+	 * Clear the wait state (Since we are holding the only reference to
+	 * page this is safe)
+	 */
 	MmClearWaitPage(Page);	
 	
+	/*
+	 * Notify any other threads that fault on the same section offset
+	 * that a page-in is pending.
+	 */
 	Entry = ((ULONG)Page) | SPE_PENDING;
 	MmSetPageEntrySection(Section, 
 			      Offset.u.LowPart,
 			      Entry);
 	
+	/*
+	 * Release all our locks and read in the page from disk
+	 */
 	MmUnlockSection(Section);
 	MmUnlockAddressSpace(AddressSpace);
 	DPRINT("Reading file offset %x\n", Offset.QuadPart);
@@ -318,12 +350,24 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 			    &IoStatus);
 	if (!NT_SUCCESS(Status))
 	  {
+	     /*
+	      * FIXME: What do we know in this case?
+	      */
+	     
+	     MmLockAddressSpace(AddressSpace);
 	     return(Status);
 	  }
      
+	/*
+	 * Relock the address space and section
+	 */
 	MmLockAddressSpace(AddressSpace);
 	MmLockSection(Section);
 	
+	/*
+	 * Check the entry. No one should change the status of a page
+	 * that has a pending page-in.
+	 */
 	Entry1 = MmGetPageEntrySection(Section, Offset.QuadPart);
 	if (Entry != Entry1)
 	  {
@@ -331,50 +375,111 @@ NTSTATUS MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 	     KeBugCheck(0);
 	  }
 	
+	/*
+	 * Mark the offset within the section as having valid, in-memory
+	 * data
+	 */
 	Entry = (ULONG)Page;
 	MmSetPageEntrySection(Section,
 			      Offset.QuadPart,
 			      Entry);
+	
+        /*
+	 * Set the event associated with the page so other threads that
+	 * may be waiting know that valid data is now in-memory.
+	 */
 	MmSetWaitPage(Page);
      }
    else if (Entry & SPE_PENDING)
      {
+	/*
+	 * If a page-in on that section offset is pending that wait for
+	 * it to finish.
+	 */
+	
 	do
 	  {
+	     /*
+	      * Release all our locks and wait for the pending operation
+	      * to complete
+	      */
 	     MmUnlockSection(Section);
 	     MmUnlockAddressSpace(AddressSpace);
+	     /*
+	      * FIXME: What if the event is set and cleared after we
+	      * unlock the section but before we wait. 
+	      */
 	     Status = MmWaitForPage((PVOID)(Entry & (~SPE_PENDING)));
 	     if (!NT_SUCCESS(Status))
 	       {
+		  /*
+		   * FIXME: What do we do in this case? Maybe the thread 
+		   * has terminated.
+		   */
+		  
 		  DbgPrint("Failed to wait for page\n");
 		  KeBugCheck(0);
 	       }
+	     
+	     /*
+	      * Relock the address space and section
+	      */
 	     MmLockAddressSpace(AddressSpace);
 	     MmLockSection(Section);
+	     
+	     /*
+	      * Get the entry for the section offset. If the entry is still
+	      * pending that means another thread is already trying the
+	      * page-in again so we have to wait again.
+	      */
 	     Entry = MmGetPageEntrySection(Section,
 					   Offset.u.LowPart);					   
 	  } while (Entry & SPE_PENDING);
 	
+	/*
+	 * Setting the entry to null means the read failing. 
+	 * FIXME: We should retry it (unless that filesystem has gone
+	 * entirely e.g. the network died).
+	 */
 	if (Entry == 0)
 	  {
 	     DbgPrint("Entry set to null while we slept\n");
 	     KeBugCheck(0);
 	  }
 	
+	/*
+	 * Maybe the thread did the page-in took the fault on the
+	 * same address-space/address as we did. If so we can just
+	 * return success.
+	 */
 	if (MmIsPagePresent(NULL, Address))
 	  {
 	     MmUnlockSection(Section);
 	     return(STATUS_SUCCESS);
 	  }
 	
+	/*
+	 * Get a reference to the page containing the data for the page.
+	 */
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);
      }
    else
      {
+	/*
+	 * If the section offset is already in-memory and valid then just
+	 * take another reference to the page 
+	 */
+	
 	Page = (PVOID)Entry;
 	MmReferencePage(Page);	
      }
+   
+   /*
+    * When we reach here, we have the address space and section locked
+    * and have a reference to a page containing valid data for the
+    * section offset. Set the page and return success.
+    */
    
    MmSetPage(NULL,
 	     Address,

@@ -288,15 +288,36 @@ PVOID MmAllocPage(VOID)
    return((PVOID)offset);
 }
 
-NTSTATUS MmWaitForPage(PVOID Page)
+NTSTATUS MmWaitForPage(PVOID PhysicalAddress)
 {
-   return(STATUS_SUCCESS);
+   NTSTATUS Status;
+   ULONG Start;
+   
+   Start = (ULONG)PhysicalAddress / PAGESIZE;
+   Status = KeWaitForSingleObject(&MmPageArray[Start].Event,
+				  UserRequest,
+				  KernelMode,
+				  FALSE,
+				  NULL);
+   return(Status);
 }
 
-VOID MmClearWaitPage(PVOID Page)
+VOID MmClearWaitPage(PVOID PhysicalAddress)
 {
+   ULONG Start;
+   
+   Start = (ULONG)PhysicalAddress / PAGESIZE;
+   
+   KeClearEvent(&MmPageArray[Start].Event);
 }
 
-VOID MmSetWaitPage(PVOID Page)
+VOID MmSetWaitPage(PVOID PhysicalAddress)
 {
+   ULONG Start;
+   
+   Start = (ULONG)PhysicalAddress / PAGESIZE;
+   
+   KeSetEvent(&MmPageArray[Start].Event,
+	      IO_DISK_INCREMENT,
+	      FALSE);
 }
