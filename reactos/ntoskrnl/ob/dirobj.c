@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.26 2004/09/05 22:26:17 hbirr Exp $
+/* $Id$
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -179,8 +179,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     NTSTATUS            Status = STATUS_SUCCESS;
     ULONG               DirectoryCount = 0;
     ULONG               DirectoryIndex = 0;
-    PDIRECTORY_BASIC_INFORMATION current_odi = (PDIRECTORY_BASIC_INFORMATION) Buffer;
-    DIRECTORY_BASIC_INFORMATION ZeroOdi;
+    POBJECT_DIRECTORY_INFORMATION current_odi = (POBJECT_DIRECTORY_INFORMATION) Buffer;
+    OBJECT_DIRECTORY_INFORMATION ZeroOdi;
     PUCHAR              FirstFree = (PUCHAR) Buffer;
     ULONG               Context;
     ULONG               RequiredSize;
@@ -248,14 +248,14 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
      */
     DirectoryCount = 0;
     /* For the end sentenil */
-    RequiredSize = sizeof(DIRECTORY_BASIC_INFORMATION);
+    RequiredSize = sizeof(OBJECT_DIRECTORY_INFORMATION);
     for (current_entry = start_entry;
          current_entry != &dir->head;
          current_entry = current_entry->Flink)
       {
 	current = CONTAINING_RECORD(current_entry, OBJECT_HEADER, Entry);
 
-	RequiredSize += sizeof(DIRECTORY_BASIC_INFORMATION) +
+	RequiredSize += sizeof(OBJECT_DIRECTORY_INFORMATION) +
 	                current->Name.Length + sizeof(WCHAR) +
 	                current->ObjectType->TypeName.Length + sizeof(WCHAR);
 	if (RequiredSize <= BufferLength &&
@@ -284,7 +284,7 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     /*
      * Move FirstFree to point to the Unicode strings area
      */
-    FirstFree += (DirectoryCount + 1) * sizeof(DIRECTORY_BASIC_INFORMATION);
+    FirstFree += (DirectoryCount + 1) * sizeof(OBJECT_DIRECTORY_INFORMATION);
 
     /* Scan the directory */
     current_entry = start_entry;
@@ -326,8 +326,8 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
     ObDereferenceObject(dir);
 
     /* Terminate with all zero entry */
-    memset(&ZeroOdi, '\0', sizeof(DIRECTORY_BASIC_INFORMATION));
-    Status = MmCopyToCaller(current_odi, &ZeroOdi, sizeof(DIRECTORY_BASIC_INFORMATION));
+    memset(&ZeroOdi, '\0', sizeof(OBJECT_DIRECTORY_INFORMATION));
+    Status = MmCopyToCaller(current_odi, &ZeroOdi, sizeof(OBJECT_DIRECTORY_INFORMATION));
     if (! NT_SUCCESS(Status))
       {
         return Status;

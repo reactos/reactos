@@ -857,18 +857,20 @@ KeInitExceptions(VOID)
 /*
  * @implemented
  */
-
 NTSTATUS STDCALL
 KeRaiseUserException(IN NTSTATUS ExceptionCode)
 {
-   /* FIXME: This needs SEH */
    ULONG OldEip;
    PKTHREAD Thread = KeGetCurrentThread();
 
-   ProbeForWrite(&Thread->Teb->ExceptionCode, sizeof(NTSTATUS), sizeof(NTSTATUS)); /* NT doesn't check this -- bad? */
+    _SEH_TRY {
+        Thread->Teb->ExceptionCode = ExceptionCode;
+    } _SEH_HANDLE {
+        return(ExceptionCode);
+    } _SEH_END;
+            
    OldEip = Thread->TrapFrame->Eip;
    Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
-   Thread->Teb->ExceptionCode = ExceptionCode;
    return((NTSTATUS)OldEip);
 }
 
