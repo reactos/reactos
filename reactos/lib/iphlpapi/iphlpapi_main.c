@@ -639,11 +639,13 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
             for (ndx = 0; ndx < table->numIndexes; ndx++) {
               PIP_ADAPTER_INFO ptr = &pAdapterInfo[ndx];
               DWORD addrLen = sizeof(ptr->Address), type;
+	      const char *ifname = 
+		  getInterfaceNameByIndex(table->indexes[ndx]);
 
               /* on Win98 this is left empty, but whatever */
-              strncpy(ptr->AdapterName,
-               getInterfaceNameByIndex(table->indexes[ndx]),
-               sizeof(ptr->AdapterName));
+	      
+              strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
+	      consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
               getInterfacePhysicalByIndex(table->indexes[ndx], &addrLen,
                ptr->Address, &type);
@@ -845,7 +847,8 @@ DWORD WINAPI GetIfEntry(PMIB_IFROW pIfRow)
   if (name) {
     ret = getInterfaceEntryByIndex(pIfRow->dwIndex, pIfRow);
     if (ret == NO_ERROR)
-      ret = getInterfaceStatsByName(pIfRow->dwIndex, pIfRow);
+      ret = getInterfaceStatsByIndex(pIfRow->dwIndex, pIfRow);
+    consumeInterfaceName(name);
   }
   else
     ret = ERROR_INVALID_DATA;
@@ -989,6 +992,7 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
              walker++, assigner++)
               *assigner = *walker;
             *assigner = 0;
+	    consumeInterfaceName(name);
             pIfTable->NumAdapters++;
           }
           ret = NO_ERROR;
@@ -1351,6 +1355,8 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   if (!resInfo) 
     return ERROR_OUTOFMEMORY;
 
+  TRACE("resInfo->riCount = %d\n", resInfo->riCount);
+
   size = sizeof(FIXED_INFO) + (resInfo->riCount > 0 ? (resInfo->riCount  - 1) *
    sizeof(IP_ADDR_STRING) : 0);
   if (!pFixedInfo || *pOutBufLen < size) {
@@ -1364,6 +1370,9 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   GetComputerNameExA(ComputerNameDnsHostname, pFixedInfo->HostName, &size);
   size = sizeof(pFixedInfo->DomainName);
   GetComputerNameExA(ComputerNameDnsDomain, pFixedInfo->DomainName, &size);
+
+  TRACE("GetComputerNameExA: %s\n", pFixedInfo->DomainName);
+
   if (resInfo->riCount > 0) {
     PIP_ADDR_STRING ptr;
     int i;

@@ -55,7 +55,7 @@ void interfaceMapFree(void)
     /* Ditto. */
 }
 
-BOOL openTcpFile(PHANDLE tcpFile) {
+NTSTATUS openTcpFile(PHANDLE tcpFile) {
     UNICODE_STRING fileName;
     OBJECT_ATTRIBUTES objectAttributes;
     IO_STATUS_BLOCK ioStatusBlock;
@@ -413,7 +413,7 @@ DWORD getNthInterfaceEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent ) {
 	return STATUS_UNSUCCESSFUL;
     }
 }
-
+    
 /* Note that the result of this operation must be freed later */
 
 const char *getInterfaceNameByIndex(DWORD index)
@@ -458,11 +458,15 @@ const char *getInterfaceNameByIndex(DWORD index)
     return interfaceName;
 }
 
+void consumeInterfaceName(const char *name) {
+    HeapFree( GetProcessHeap(), 0, (char *)name );
+}
+
 DWORD getInterfaceIndexByName(const char *name, PDWORD index)
 {
     DWORD ret = STATUS_SUCCESS;
     int numInterfaces = getNumInterfaces();
-    char *iname = 0;
+    const char *iname = 0;
     int i;
     HANDLE tcpFile;
 
@@ -478,7 +482,7 @@ DWORD getInterfaceIndexByName(const char *name, PDWORD index)
 	if( !strcmp(iname, name) ) {
 	    *index = i;
 	}
-	HeapFree( GetProcessHeap(), 0, iname );
+	HeapFree( GetProcessHeap(), 0, (char *)iname );
     }
 
     closeTcpFile( tcpFile );
@@ -513,6 +517,7 @@ InterfaceIndexTable *getInterfaceIndexTableInt( BOOL nonLoopbackOnly ) {
       }
   }
   
+  tdiFreeThingSet( entitySet );
   closeTcpFile( tcpFile );
   ret->numIndexes = curInterface;
   
@@ -697,6 +702,7 @@ DWORD getInterfaceEntryByIndex(DWORD index, PMIB_IFROW entry)
 
     status = tdiGetMibForIfEntity( tcpFile, 
 				   entity.tei_instance,
+				   (IFEntrySafelySized *)
 				   &entry->wszName[MAX_INTERFACE_NAME_LEN] );
     
     closeTcpFile( tcpFile );

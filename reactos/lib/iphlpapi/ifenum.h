@@ -75,10 +75,14 @@ InterfaceIndexTable *getNonLoopbackInterfaceIndexTable(void);
 /* ByName/ByIndex versions of various getter functions. */
 
 /* can be used as quick check to see if you've got a valid index, returns NULL
- * if not.  The buffer's only valid till the next call, so copy it right away
- * if you care.
+ * if not.  The buffer returned may have been allocated.  It should be returned
+ * by calling consumeInterfaceNmae.
  */
 const char *getInterfaceNameByIndex(DWORD index);
+
+/* consume the interface name provided by getInterfaceName. */
+
+void consumeInterfaceName( const char *ifname );
 
 /* Fills index with the index of name, if found.  Returns
  * ERROR_INVALID_PARAMETER if name or index is NULL, ERROR_INVALID_DATA if name

@@ -82,4 +82,11 @@ typedef union _IFEntrySafelySized {
     } offset;
 } IFEntrySafelySized;
 
+/** Prototypes **/
+NTSTATUS openTcpFile(PHANDLE tcpFile);
+VOID closeTcpFile(HANDLE tcpFile);
+NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
+			    PDWORD numEntities );
+VOID tdiFreeThingSet( PVOID things );
+
 #endif/*IPPRIVATE_H*/

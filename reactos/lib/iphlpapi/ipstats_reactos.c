@@ -204,6 +204,11 @@ DWORD getInterfaceStatsByName(const char *name, PMIB_IFROW entry)
   return NO_ERROR;
 }
 
+DWORD getInterfaceStatsByIndex(DWORD index, PMIB_IFROW entry)
+{
+    return ERROR_INVALID_PARAMETER;
+}
+
 DWORD getICMPStats(MIB_ICMP *stats)
 {
   FILE *fp;
@@ -386,7 +391,10 @@ DWORD getNumRoutes(void)
 	    IPSNMPInfo isnmp;
 	    memset( &isnmp, 0, sizeof( isnmp ) );
 	    status = tdiGetMibForIpEntity( tcpFile, &entitySet[i], &isnmp );
-	    if( !NT_SUCCESS(status) ) return status;
+	    if( !NT_SUCCESS(status) ) {
+		tdiFreeThingSet( entitySet );
+		return status;
+	    }
 	    numRoutes += isnmp.ipsi_numroutes;
 	}
     }
