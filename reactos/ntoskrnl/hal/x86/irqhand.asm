@@ -2,7 +2,7 @@
 ; This module has code to handle IRQs 
 ;
 
-%include "internal/hal/segment.inc"
+%include "internal/i386/segment.inc"
 
 bits 32
 section .text
