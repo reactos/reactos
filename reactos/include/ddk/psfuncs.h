@@ -1,4 +1,4 @@
-/* $Id: psfuncs.h,v 1.12 2000/12/22 13:29:48 ekohl Exp $
+/* $Id: psfuncs.h,v 1.13 2001/04/21 12:38:28 ekohl Exp $
  */
 #ifndef _INCLUDE_DDK_PSFUNCS_H
 #define _INCLUDE_DDK_PSFUNCS_H
@@ -33,6 +33,10 @@ NTSTATUS STDCALL PsCreateSystemThread(PHANDLE ThreadHandle,
 				      PKSTART_ROUTINE StartRoutine,
 				      PVOID StartContext);
 NTSTATUS STDCALL PsTerminateSystemThread(NTSTATUS ExitStatus);
+
+NTSTATUS STDCALL PsCreateSystemProcess(PHANDLE ProcessHandle,
+				       ACCESS_MASK DesiredAccess,
+				       POBJECT_ATTRIBUTES ObjectAttributes);
 
 struct _ETHREAD* STDCALL PsGetCurrentThread(VOID);
 struct _EPROCESS* STDCALL PsGetCurrentProcess(VOID);

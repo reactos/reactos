@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.62 2001/04/16 16:29:03 dwelch Exp $
+/* $Id: process.c,v 1.63 2001/04/21 12:39:05 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -90,7 +90,7 @@ PsGetNextProcess(PEPROCESS OldProcess)
 
 NTSTATUS STDCALL 
 NtOpenProcessToken(IN	HANDLE		ProcessHandle,
-		   IN	ACCESS_MASK	DesiredAccess,  
+		   IN	ACCESS_MASK	DesiredAccess,
 		   OUT	PHANDLE		TokenHandle)
 {
    PACCESS_TOKEN Token;
@@ -111,7 +111,7 @@ NtOpenProcessToken(IN	HANDLE		ProcessHandle,
    return(Status);
 }
 
-PACCESS_TOKEN STDCALL 
+PACCESS_TOKEN STDCALL
 PsReferencePrimaryToken(PEPROCESS Process)
 {
    ObReferenceObjectByPointer(Process->Token,
@@ -121,7 +121,7 @@ PsReferencePrimaryToken(PEPROCESS Process)
    return(Process->Token);
 }
 
-NTSTATUS 
+NTSTATUS
 PsOpenTokenOfProcess(HANDLE ProcessHandle,
 		     PACCESS_TOKEN* Token)
 {
@@ -296,7 +296,8 @@ static NTSTATUS PsCreatePeb(HANDLE ProcessHandle,
 }
 
 
-PKPROCESS KeGetCurrentProcess(VOID)
+PKPROCESS
+KeGetCurrentProcess(VOID)
 /*
  * FUNCTION: Returns a pointer to the current process
  */
@@ -304,7 +305,8 @@ PKPROCESS KeGetCurrentProcess(VOID)
    return(&(PsGetCurrentProcess()->Pcb));
 }
 
-HANDLE STDCALL PsGetCurrentProcessId(VOID)
+HANDLE STDCALL
+PsGetCurrentProcessId(VOID)
 {
    return((HANDLE)PsGetCurrentProcess()->UniqueProcessId);
 }
@@ -312,7 +314,8 @@ HANDLE STDCALL PsGetCurrentProcessId(VOID)
 /*
  * FUNCTION: Returns a pointer to the current process
  */
-PEPROCESS STDCALL PsGetCurrentProcess(VOID)
+PEPROCESS STDCALL
+PsGetCurrentProcess(VOID)
 {
    if (PsGetCurrentThread() == NULL || 
        PsGetCurrentThread()->ThreadsProcess == NULL)
@@ -325,20 +328,36 @@ PEPROCESS STDCALL PsGetCurrentProcess(VOID)
      }
 }
 
-PEPROCESS STDCALL IoGetCurrentProcess(VOID)
+PEPROCESS STDCALL
+IoGetCurrentProcess(VOID)
 {
    return(PsGetCurrentProcess());
 }
 
-NTSTATUS STDCALL 
-NtCreateProcess (OUT PHANDLE ProcessHandle,
-		 IN ACCESS_MASK DesiredAccess,
-		 IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
-		 IN HANDLE ParentProcessHandle,
-		 IN BOOLEAN InheritObjectTable,
-		 IN HANDLE SectionHandle OPTIONAL,
-		 IN HANDLE DebugPortHandle OPTIONAL,
-		 IN HANDLE ExceptionPortHandle OPTIONAL)
+NTSTATUS STDCALL
+PsCreateSystemProcess(PHANDLE ProcessHandle,
+		      ACCESS_MASK DesiredAccess,
+		      POBJECT_ATTRIBUTES ObjectAttributes)
+{
+   return NtCreateProcess(ProcessHandle,
+			  DesiredAccess,
+			  ObjectAttributes,
+			  SystemProcessHandle,
+			  FALSE,
+			  NULL,
+			  NULL,
+			  NULL);
+}
+
+NTSTATUS STDCALL
+NtCreateProcess(OUT PHANDLE ProcessHandle,
+		IN ACCESS_MASK DesiredAccess,
+		IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+		IN HANDLE ParentProcessHandle,
+		IN BOOLEAN InheritObjectTable,
+		IN HANDLE SectionHandle OPTIONAL,
+		IN HANDLE DebugPortHandle OPTIONAL,
+		IN HANDLE ExceptionPortHandle OPTIONAL)
 /*
  * FUNCTION: Creates a process.
  * ARGUMENTS:
@@ -534,7 +553,7 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
 	ObDereferenceObject(Process);
 	ObDereferenceObject(ParentProcess);
 	ZwClose(*ProcessHandle);
-	*ProcessHandle = NULL;       
+	*ProcessHandle = NULL;
 	return(Status);
      }
    Process->Peb = Peb;
@@ -573,10 +592,11 @@ NtCreateProcess (OUT PHANDLE ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtOpenProcess (OUT	PHANDLE		    ProcessHandle,
-				IN	ACCESS_MASK	    DesiredAccess,
-				IN	POBJECT_ATTRIBUTES  ObjectAttributes,
-				IN	PCLIENT_ID	    ClientId)
+NTSTATUS STDCALL
+NtOpenProcess(OUT PHANDLE	    ProcessHandle,
+	      IN  ACCESS_MASK	    DesiredAccess,
+	      IN  POBJECT_ATTRIBUTES  ObjectAttributes,
+	      IN  PCLIENT_ID	    ClientId)
 {
    DPRINT("NtOpenProcess(ProcessHandle %x, DesiredAccess %x, "
 	  "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
@@ -643,7 +663,7 @@ NTSTATUS STDCALL NtOpenProcess (OUT	PHANDLE		    ProcessHandle,
 		  ObDereferenceObject(current);
 		  DPRINT("*ProcessHandle %x\n", ProcessHandle);
 		  DPRINT("NtOpenProcess() = %x\n", Status);
-		  return(Status);			  
+		  return(Status);
 	       }
 	     current_entry = current_entry->Flink;
 	  }
@@ -655,11 +675,12 @@ NTSTATUS STDCALL NtOpenProcess (OUT	PHANDLE		    ProcessHandle,
 }
 
 
-NTSTATUS STDCALL NtQueryInformationProcess (IN	HANDLE ProcessHandle,
-					    IN	CINT ProcessInformationClass,
-					    OUT	PVOID ProcessInformation,
-					    IN	ULONG ProcessInformationLength,
-					    OUT	PULONG ReturnLength)
+NTSTATUS STDCALL
+NtQueryInformationProcess(IN  HANDLE ProcessHandle,
+			  IN  CINT ProcessInformationClass,
+			  OUT PVOID ProcessInformation,
+			  IN  ULONG ProcessInformationLength,
+			  OUT PULONG ReturnLength)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -684,10 +705,10 @@ NTSTATUS STDCALL NtQueryInformationProcess (IN	HANDLE ProcessHandle,
 	ProcessBasicInformationP->ExitStatus = Process->ExitStatus;
 	ProcessBasicInformationP->PebBaseAddress = Process->Peb;
 	ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
-        ProcessBasicInformationP->UniqueProcessId =
-          Process->UniqueProcessId;
-        ProcessBasicInformationP->InheritedFromUniqueProcessId =
-          (ULONG)Process->InheritedFromUniqueProcessId;
+	ProcessBasicInformationP->UniqueProcessId =
+	  Process->UniqueProcessId;
+	ProcessBasicInformationP->InheritedFromUniqueProcessId =
+	  (ULONG)Process->InheritedFromUniqueProcessId;
 	Status = STATUS_SUCCESS;
 	break;
 	
@@ -724,8 +745,9 @@ NTSTATUS STDCALL NtQueryInformationProcess (IN	HANDLE ProcessHandle,
    return(Status);
 }
 
-NTSTATUS PspAssignPrimaryToken(PEPROCESS Process,
-			       HANDLE TokenHandle)
+NTSTATUS
+PspAssignPrimaryToken(PEPROCESS Process,
+		      HANDLE TokenHandle)
 {
    PACCESS_TOKEN Token;
    PACCESS_TOKEN OldToken;
@@ -750,10 +772,11 @@ NTSTATUS PspAssignPrimaryToken(PEPROCESS Process,
    return(Status);
 }
 
-NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
-					 IN CINT ProcessInformationClass,
-					 IN PVOID ProcessInformation,
-					 IN ULONG ProcessInformationLength)
+NTSTATUS STDCALL
+NtSetInformationProcess(IN HANDLE ProcessHandle,
+			IN CINT ProcessInformationClass,
+			IN PVOID ProcessInformation,
+			IN ULONG ProcessInformationLength)
 {
    PEPROCESS Process;
    NTSTATUS Status;
@@ -799,7 +822,7 @@ NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
 //	DPRINT1("Process->ImageFileName %.8s\n", Process->ImageFileName);
 	Status = STATUS_SUCCESS;
 	break;
-	  
+	
       case ProcessLdtInformation:
       case ProcessLdtSize:
       case ProcessDefaultHardErrorMode:
