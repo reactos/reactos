@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: arcname.c,v 1.3 2002/05/05 14:57:43 chorns Exp $
+/* $Id: arcname.c,v 1.4 2002/06/20 21:30:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -232,7 +232,7 @@ IoCreateSystemRootLink(PCHAR ParameterLine)
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ArcName,
-			     0,
+			     OBJ_OPENLINK,
 			     NULL,
 			     NULL);
 

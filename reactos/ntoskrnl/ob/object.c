@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.50 2002/06/05 19:37:12 hbirr Exp $
+/* $Id: object.c,v 1.51 2002/06/20 21:31:39 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -185,7 +185,6 @@ NTSTATUS ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 						  &NextObject,
 						  &PathString,
 						  &current,
-						  ObjectType,
 						  ObjectAttributes->Attributes);
 	if (Status == STATUS_REPARSE)
 	  {

@@ -33,7 +33,6 @@ CmiObjectParse(PVOID ParsedObject,
 	       PVOID *NextObject,
 	       PUNICODE_STRING FullPath,
 	       PWSTR *Path,
-	       POBJECT_TYPE ObjectType,
 	       ULONG Attributes)
 {
   BLOCK_OFFSET BlockOffset;

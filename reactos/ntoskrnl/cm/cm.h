@@ -349,7 +349,6 @@ CmiObjectParse(IN PVOID  ParsedObject,
 	       OUT PVOID  *NextObject,
 	       IN PUNICODE_STRING  FullPath,
 	       IN OUT PWSTR  *Path,
-	       IN POBJECT_TYPE  ObjectType,
 	       IN ULONG  Attribute);
 
 NTSTATUS STDCALL

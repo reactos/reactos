@@ -1,4 +1,4 @@
-/* $Id: symlink.c,v 1.26 2002/04/15 12:38:01 ekohl Exp $
+/* $Id: symlink.c,v 1.27 2002/06/20 21:30:33 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -82,7 +82,6 @@ IopParseSymbolicLink(PVOID Object,
 		     PVOID * NextObject,
 		     PUNICODE_STRING FullPath,
 		     PWSTR * RemainingPath,
-		     POBJECT_TYPE ObjectType,
 		     ULONG Attributes)
 {
    PSYMLNK_OBJECT SymlinkObject = (PSYMLNK_OBJECT) Object;
@@ -94,7 +93,7 @@ IopParseSymbolicLink(PVOID Object,
     * the desired object is a symbolic link object.
     */
    if (((*RemainingPath == NULL) || (**RemainingPath == 0)) &&
-       (ObjectType == IoSymbolicLinkType))
+       (Attributes & OBJ_OPENLINK))
      {
 	DPRINT("Parsing stopped!\n");
 	*NextObject = NULL;

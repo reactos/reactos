@@ -163,7 +163,6 @@ ExpWinStaObjectParse(PVOID Object,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
 		     PWSTR *Path,
-		     POBJECT_TYPE ObjectType,
 		     ULONG Attributes)
 {
   PVOID FoundObject;

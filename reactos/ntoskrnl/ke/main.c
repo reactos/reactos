@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.126 2002/06/17 22:16:33 joeg Exp $
+/* $Id: main.c,v 1.127 2002/06/20 21:31:01 ekohl Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -182,7 +182,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
    InitializeObjectAttributes (&ObjectAttributes,
 			       &ArcName,
-			       0,
+			       OBJ_OPENLINK,
 			       NULL,
 			       NULL);
 
@@ -229,7 +229,7 @@ InitSystemSharedUserPage (PCSZ ParameterLine)
 
 	InitializeObjectAttributes (&ObjectAttributes,
 				    &DriveName,
-				    0,
+				    OBJ_OPENLINK,
 				    NULL,
 				    NULL);
 

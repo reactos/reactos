@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.30 2002/03/06 12:40:47 ekohl Exp $
+/* $Id: namespc.c,v 1.31 2002/06/20 21:31:39 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -248,7 +248,6 @@ ObpParseDirectory(PVOID Object,
 		  PVOID * NextObject,
 		  PUNICODE_STRING FullPath,
 		  PWSTR * Path,
-		  POBJECT_TYPE ObjectType,
 		  ULONG Attributes)
 {
    PWSTR end;
