@@ -697,5 +697,7 @@ wsprintfA
 wsprintfW
 wvsprintfA@12
 wvsprintfW@12
+wvsnprintfA@16
+wvsnprintfW@16
 
 ; EOF

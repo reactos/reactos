@@ -1,4 +1,4 @@
-/* $Id: sprintf.c,v 1.4 2001/02/19 15:04:51 dwelch Exp $
+/* $Id: sprintf.c,v 1.5 2001/11/05 20:59:57 jimtabor Exp $
  *
  * user32.dll
  *
@@ -339,7 +339,6 @@ WPRINTF_ParseFormatA(
  * NAME								PRIVATE
  *	wvsnprintfA   (Not a Windows API)
  */
-static
 INT
 STDCALL
 wvsnprintfA(
@@ -711,7 +710,6 @@ WPRINTF_ParseFormatW(
  * NAME								PRIVATE
  *           wvsnprintfW   (Not a Windows API)
  */
-static
 INT
 wvsnprintfW(
 	LPWSTR	buffer,
