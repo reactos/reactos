@@ -1541,7 +1541,7 @@ DWORD WINAPI WNetGetConnectionA( LPCSTR lpLocalName,
 
         if (len)
         {
-            PWSTR wideLocalName = (PWSTR)HeapAlloc(GetProcessHeap(), 0, len);
+            PWSTR wideLocalName = (PWSTR)HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
 
             if (wideLocalName)
             {
