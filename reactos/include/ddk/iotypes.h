@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.67 2004/10/31 22:21:41 ion Exp $
+/* $Id: iotypes.h,v 1.68 2004/10/31 23:40:10 ion Exp $
  *
  */
 
@@ -1242,23 +1242,23 @@ typedef VOID STDCALL_FUNC
 #endif // (_WIN32_WINNT >= 0x0400)
 
 
-typedef struct _IO_PIPE_CREATE_BUFFER
-{
-   BOOLEAN WriteModeMessage;
-   BOOLEAN ReadModeMessage;
-   BOOLEAN NonBlocking;
-   ULONG MaxInstances;
-   ULONG InBufferSize;
-   ULONG OutBufferSize;
-   LARGE_INTEGER TimeOut;
-} IO_PIPE_CREATE_BUFFER, *PIO_PIPE_CREATE_BUFFER;
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS {
+    ULONG           NamedPipeType;
+    ULONG           ReadMode;
+    ULONG           CompletionMode;
+    ULONG           MaximumInstances;
+    ULONG           InboundQuota;
+    ULONG           OutboundQuota;
+    LARGE_INTEGER   DefaultTimeout;
+    BOOLEAN         TimeoutSpecified;
+} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
-typedef struct _IO_MAILSLOT_CREATE_BUFFER
-{
-   ULONG Param; /* ?? */
-   ULONG MaxMessageSize;
-   LARGE_INTEGER TimeOut;
-} IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
+typedef struct _MAILSLOT_CREATE_PARAMETERS {
+    ULONG           MailslotQuota;
+    ULONG           MaximumMessageSize;
+    LARGE_INTEGER   ReadTimeout;
+    BOOLEAN         TimeoutSpecified;
+} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
 /* error logging */
 
