@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: page.c,v 1.80 2004/12/30 08:05:11 hyperion Exp $
+/* $Id$
  *
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -106,7 +106,7 @@ MiFlushTlbIpiRoutine(PVOID Address)
 VOID
 MiFlushTlb(PULONG Pt, PVOID Address)
 {
-#ifdef MP
+#ifdef CONFIG_SMP
    if (Pt)
    {
       MmUnmapPageTable(Pt);
@@ -635,7 +635,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       {
          KEBUGCHECK(0);
       }
-      if (PageDir[PdeOffset] == 0)
+      if (0 == InterlockedCompareExchangeUL(&PageDir[PdeOffset], 0, 0))
       {
          if (Create == FALSE)
 	 {
@@ -667,11 +667,11 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
       return Pt + ADDR_TO_PTE_OFFSET(Address);
    }
    PageDir = ADDR_TO_PDE(Address);
-   if (*PageDir == 0)
+   if (0 == InterlockedCompareExchangeUL(PageDir, 0, 0))
    {
       if (Address >= (PVOID)KERNEL_BASE)
       {
-         if (MmGlobalKernelPageDirectory[PdeOffset] == 0)
+         if (0 == InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
 	 {
 	    if (Create == FALSE)
 	    {
@@ -692,7 +692,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 	       MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn);
 	    }
 	 }
-         *PageDir =MmGlobalKernelPageDirectory[PdeOffset];
+         InterlockedExchangeUL(PageDir, MmGlobalKernelPageDirectory[PdeOffset]);
       }
       else
       {
@@ -907,7 +907,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
          /*
           * Set the entry to zero
           */
-         *Pt = 0;
+         InterlockedExchangeUL(Pt, 0);
          MiFlushTlb(Pt, Address);
       }
    }
@@ -1596,7 +1596,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
          {
             KEBUGCHECK(0);
          }
-         *Pt = PFN_TO_PTE(Pages[i]) | Attributes;
+         InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
       }
    }
 
@@ -1665,7 +1665,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
       {
          MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
       }
-      *Pt = SwapEntry << 1;
+      InterlockedExchangeUL(Pt, SwapEntry << 1);
       if (Pte != 0) 
       {
          MiFlushTlb(Pt, Address);
@@ -1866,7 +1866,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
          {
             MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
          }
-         *Pt = PFN_TO_PTE(Pages[i]) | Attributes;
+	 InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
          if (Address < (PVOID)KERNEL_BASE &&
 	     Process->AddressSpace.PageTableRefCountTable != NULL &&
              Attributes & PA_PRESENT)
@@ -2027,7 +2027,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
       {
          KEBUGCHECK(0);
       }
-      *Pt = PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY));
+      InterlockedExchange(Pt, PAGE_MASK(*Pt) | Attributes | (*Pt & (PA_ACCESSED|PA_DIRTY)));
       MiFlushTlb(Pt, Address);
    }
 }
@@ -2174,6 +2174,7 @@ MmInitGlobalKernelPageDirectory(VOID)
 	    if (Ke386GlobalPagesEnabled)
 	    {
                MmGlobalKernelPageDirectoryForPAE[i] |= PA_GLOBAL;
+               CurrentPageDirectory[i] |= PA_GLOBAL;
 	    }
 	 }
       }
@@ -2190,6 +2191,7 @@ MmInitGlobalKernelPageDirectory(VOID)
 	    if (Ke386GlobalPagesEnabled)
 	    {
                MmGlobalKernelPageDirectory[i] |= PA_GLOBAL;
+               CurrentPageDirectory[i] |= PA_GLOBAL;
 	    }
          }
       }
