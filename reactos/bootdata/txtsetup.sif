@@ -96,3 +96,11 @@ system.hiv   = 4
 
 [SetupData]
 DefaultPath = \ReactOS
+
+[HiveInfs.Install]
+AddReg=hivecls.inf,AddReg
+AddReg=hivedef.inf,AddReg
+AddReg=hivesft.inf,AddReg
+AddReg=hivesys.inf,AddReg
+
+; EOF

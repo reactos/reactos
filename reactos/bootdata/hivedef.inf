@@ -1,0 +1,12 @@
+[Version]
+Signature="$ReactOS$
+
+[AddReg]
+
+HKCU,"Control Panel",,0x00000012
+
+HKCU,"Control Panel\Appearance",,0x00000012
+
+HKCU,"Environment",,0x00000012
+
+; EOF

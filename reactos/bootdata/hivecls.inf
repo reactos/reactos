@@ -1,0 +1,15 @@
+[Version]
+Signature="$ReactOS$
+
+[AddReg]
+HKLM,"SOFTWARE\Classes",,0x00000010
+
+HKCR,"CLSID",,0x00000012
+
+HKCR,"Interface",,0x00000012
+
+HKCR,"NDS\Clsid","",0x00000002,"{323991f0-7bad-11cf-b03d-00aa006e0975}"
+
+HKCR,"WinNT\Clsid","",0x00000002,"{8b20cd60-0f29-11cf-abc4-02608c9e7553}"
+
+; EOF

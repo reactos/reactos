@@ -1,0 +1,10 @@
+[Version]
+Signature="$ReactOS$
+
+[AddReg]
+
+
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","Shell",0x00020000,"%SystemRoot%\System32\cmd.exe"
+HKLM,"SOFTWARE\ReactOS\Windows NT\CurrentVersion\WinLogon","StartServices",0x00010001,0x00000001
+
+; EOF

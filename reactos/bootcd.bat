@@ -41,6 +41,8 @@ rem copy data files
 copy /Y bootdata\autorun.inf %BOOTCD_DIR%\disk
 copy /Y bootdata\readme.txt %BOOTCD_DIR%\disk
 
+copy /Y bootdata\hivecls.inf %BOOTCD_DIR%\disk\install
+copy /Y bootdata\hivedef.inf %BOOTCD_DIR%\disk\install
 copy /Y bootdata\hivesft.inf %BOOTCD_DIR%\disk\install
 copy /Y bootdata\hivesys.inf %BOOTCD_DIR%\disk\install
 
