@@ -1,4 +1,4 @@
-/* $Id: pool.c,v 1.21 2003/07/31 11:16:10 dwelch Exp $
+/* $Id: pool.c,v 1.22 2003/09/14 09:15:04 hbirr Exp $
  * 
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -30,12 +30,7 @@ EiAllocatePool(POOL_TYPE PoolType,
 	       PVOID Caller)
 {
    PVOID Block;
-   
-   if (PoolType == NonPagedPoolCacheAligned || 
-       PoolType == NonPagedPoolCacheAlignedMustS)
-     {
-	UNIMPLEMENTED;
-     }
+  
    
    switch(PoolType)
      {
