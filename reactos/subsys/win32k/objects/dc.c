@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.29 2001/11/19 12:06:23 jfilby Exp $
+/* $Id: dc.c,v 1.30 2002/02/15 20:14:43 hbirr Exp $
  *
  * DC.C - Device context functions
  * 
@@ -320,15 +320,17 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
       return  FALSE;
     }
   DPRINT( "Deleting DC\n" );
-  if ((!DRIVER_UnreferenceDriver (DCToDelete->DriverName)) &&
-      (!(DCToDelete->w.flags & DC_MEMORY))) // Don't reset the display if its a memory DC
+  if ((!(DCToDelete->w.flags & DC_MEMORY))) // Don't reset the display if its a memory DC
   {
-    DPRINT( "No more references to driver, reseting display\n" );
-    DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
-    CHECKPOINT;
-    DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
-    CHECKPOINT;
-    DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+    if (!DRIVER_UnreferenceDriver (DCToDelete->DriverName))
+    {
+      DPRINT( "No more references to driver, reseting display\n" );
+      DCToDelete->DriverFunctions.DisableSurface(DCToDelete->PDev);
+      CHECKPOINT;
+      DCToDelete->DriverFunctions.AssertMode( DCToDelete->PDev, FALSE );
+      CHECKPOINT;
+      DCToDelete->DriverFunctions.DisablePDev(DCToDelete->PDev);
+    }
   }
   CHECKPOINT;
   /*  First delete all saved DCs  */
@@ -376,7 +378,7 @@ BOOL STDCALL W32kDeleteDC(HDC  DCHandle)
 #if 0 /* FIXME */
   PATH_DestroyGdiPath (&DCToDelete->w.path);
 #endif
-  
+      
   DC_FreeDC (DCToDelete);
   
   return TRUE;
