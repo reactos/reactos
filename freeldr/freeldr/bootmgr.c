@@ -37,7 +37,6 @@
 #include <cmdline.h>
 #include <machine.h>
 
-
 VOID RunLoader(VOID)
 {
 	UCHAR	SettingName[80];
@@ -63,13 +62,15 @@ VOID RunLoader(VOID)
 		MachConsGetCh();
 		return;
 	}
+	TimeOut = GetTimeOut();
 
-	if (!UiInitialize())
+	if (!UiInitialize(TimeOut))
 	{
 		printf("Press any key to reboot.\n");
 		MachConsGetCh();
 		return;
 	}
+	
 
 	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
 	{
@@ -84,7 +85,6 @@ VOID RunLoader(VOID)
 	}
 
 	DefaultOperatingSystem = GetDefaultOperatingSystem(OperatingSystemSectionNames, OperatingSystemCount);
-	TimeOut = GetTimeOut();
 	
 	//
 	// Find all the message box settings and run them
@@ -93,6 +93,12 @@ VOID RunLoader(VOID)
 
 	for (;;)
 	{
+	
+		/* If Timeout is 0, don't even bother loading any gui */
+		if (!UserInterfaceUp) {
+			goto NoGui;
+		}
+		
 		// Redraw the backdrop
 		UiDrawBackdrop();
 
@@ -102,6 +108,8 @@ VOID RunLoader(VOID)
 			UiMessageBox("Press ENTER to reboot.\n");
 			goto reboot;
 		}
+		
+NoGui:
 		TimeOut = -1;
 		DefaultOperatingSystem = SelectedOperatingSystem;
 
@@ -123,7 +131,6 @@ VOID RunLoader(VOID)
 
 		// Install the drive mapper according to this sections drive mappings
 		DriveMapMapDrivesInSection(OperatingSystemSectionNames[SelectedOperatingSystem]);
-
 		if (stricmp(SettingValue, "ReactOS") == 0)
 		{
 			LoadAndBootReactOS(OperatingSystemSectionNames[SelectedOperatingSystem]);

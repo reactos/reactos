@@ -59,13 +59,23 @@ BOOL	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
 UCHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
 
-BOOL UiInitialize(VOID)
+BOOL UiInitialize(BOOLEAN ShowGui)
 {
 	U32	SectionId;
 	UCHAR	DisplayModeText[260];
 	UCHAR	SettingText[260];
 	U32	Depth;
 
+	if (!ShowGui) {
+		if (!TuiInitialize())
+		{
+			MachVideoSetDisplayMode(NULL, FALSE);
+			return FALSE;
+		}
+		UserInterfaceUp = FALSE;
+		return TRUE;
+	}
+	
 	DbgPrint((DPRINT_UI, "Initializing User Interface.\n"));
 
 	DbgPrint((DPRINT_UI, "Reading in UI settings from [Display] section.\n"));
@@ -210,6 +220,8 @@ VOID UiUnInitialize(PUCHAR BootText)
 
 VOID UiDrawBackdrop(VOID)
 {
+	if (!UserInterfaceUp) return;
+	
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawBackdrop();
@@ -288,6 +300,8 @@ VOID UiDrawCenteredText(U32 Left, U32 Top, U32 Right, U32 Bottom, PUCHAR TextStr
 
 VOID UiDrawStatusText(PUCHAR StatusText)
 {
+	if (!UserInterfaceUp) return;
+	
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawStatusText(StatusText);
@@ -453,6 +467,8 @@ UCHAR UiTextToFillStyle(PUCHAR FillStyleText)
 
 VOID UiDrawProgressBarCenter(U32 Position, U32 Range, PUCHAR ProgressText)
 {
+	if (!UserInterfaceUp) return;
+	
 	if (VideoTextMode == UiDisplayMode)
 	{
 		TuiDrawProgressBarCenter(Position, Range, ProgressText);

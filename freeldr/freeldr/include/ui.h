@@ -54,7 +54,7 @@ extern	UCHAR	UiMonthNames[12][15];
 // User Interface Functions
 //
 ///////////////////////////////////////////////////////////////////////////////////////
-BOOL	UiInitialize(VOID);										// Initialize User-Interface
+BOOL	UiInitialize(BOOLEAN ShowGui);								// Initialize User-Interface
 VOID	UiUnInitialize(PUCHAR BootText);						// Un-initialize User-Interface
 VOID	UiDrawBackdrop(VOID);									// Fills the entire screen with a backdrop
 VOID	UiFillArea(U32 Left, U32 Top, U32 Right, U32 Bottom, UCHAR FillChar, UCHAR Attr /* Color Attributes */);	// Fills the area specified with FillChar and Attr
