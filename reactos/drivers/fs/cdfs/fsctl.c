@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fsctl.c,v 1.9 2002/09/08 10:22:09 chorns Exp $
+/* $Id: fsctl.c,v 1.10 2002/09/15 22:25:05 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos/minmax.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -37,10 +38,15 @@
 
 /* FUNCTIONS ****************************************************************/
 
+static inline
+int msf_to_lba (BYTE m, BYTE s, BYTE f)
+{
+   return (((m * 60) + s) * 75 + f) - 150;
+}
+
 static VOID
-CdfsGetPVDData(PUCHAR Buffer,
-	       PDEVICE_EXTENSION Vcb,
-	       PVPB Vpb)
+CdfsGetPVDData(PUCHAR Buffer, 
+	       PCDINFO CdInfo)
 {
   PPVD Pvd;
   ULONG i;
@@ -65,34 +71,75 @@ CdfsGetPVDData(PUCHAR Buffer,
       Serial.Part[2] += Buffer[i+1];
       Serial.Part[3] += Buffer[i+0];
     }
-  Vpb->SerialNumber = Serial.Value;
+  CdInfo->SerialNumber = Serial.Value;
 
   /* Extract the volume label */
   pc = Pvd->VolumeId;
-  pw = Vpb->VolumeLabel;
+  pw = CdInfo->VolumeLabel;
   for (i = 0; i < MAXIMUM_VOLUME_LABEL_LENGTH && *pc != ' '; i++)
     {
       *pw++ = (WCHAR)*pc++;
     }
   *pw = 0;
-  Vpb->VolumeLabelLength = i;
+  CdInfo->VolumeLabelLength = i;
 
-  Vcb->CdInfo.VolumeSpaceSize = Pvd->VolumeSpaceSizeL;
-  Vcb->CdInfo.RootStart = Pvd->RootDirRecord.ExtentLocationL;
-  Vcb->CdInfo.RootSize = Pvd->RootDirRecord.DataLengthL;
+  CdInfo->VolumeSpaceSize = Pvd->VolumeSpaceSizeL;
+  CdInfo->RootStart = Pvd->RootDirRecord.ExtentLocationL;
+  CdInfo->RootSize = Pvd->RootDirRecord.DataLengthL;
 
-  DPRINT("VolumeSerial: %08lx\n", Vpb->SerialNumber);
-  DPRINT("VolumeLabel: '%S'\n", Vpb->VolumeLabel);
-  DPRINT("VolumeLabelLength: %lu\n", Vpb->VolumeLabelLength);
+  DPRINT("VolumeSerial: %08lx\n", CdInfo->SerialNumber);
+  DPRINT("VolumeLabel: '%S'\n", CdInfo->VolumeLabel);
+  DPRINT("VolumeLabelLength: %lu\n", CdInfo->VolumeLabelLength);
   DPRINT("VolumeSize: %lu\n", Pvd->VolumeSpaceSizeL);
   DPRINT("RootStart: %lu\n", Pvd->RootDirRecord.ExtentLocationL);
   DPRINT("RootSize: %lu\n", Pvd->RootDirRecord.DataLengthL);
+
+#if 0
+  DbgPrint("******** PVD **********\n");
+  DbgPrint("VdType:               %d\n", Pvd->VdType);
+  DbgPrint("StandardId:           '%.*s'\n", 5, Pvd->StandardId);
+  DbgPrint("VdVersion:            %d\n", Pvd->VdVersion);
+  DbgPrint("SystemId:             '%.*s'\n", 32, Pvd->SystemId);
+  DbgPrint("VolumeId:             '%.*s'\n", 32, Pvd->VolumeId);
+  DbgPrint("VolumeSpaceSizeL:     %d (%x)\n", Pvd->VolumeSpaceSizeL, Pvd->VolumeSpaceSizeL);
+  DbgPrint("VolumeSpaceSizeM:     %d (%x)\n", Pvd->VolumeSpaceSizeM, Pvd->VolumeSpaceSizeM);
+  DbgPrint("VolumeSetSize:        %d (%x)\n", Pvd->VolumeSequenceNumber, Pvd->VolumeSequenceNumber);
+  DbgPrint("VolumeSequenceNumber: %d (%x)\n", Pvd->VolumeSequenceNumber, Pvd->VolumeSequenceNumber);
+  DbgPrint("LogicalBlockSize:     %d (%x)\n", Pvd->LogicalBlockSize, Pvd->LogicalBlockSize);
+  DbgPrint("PathTableSizeL:       %d (%x)\n", Pvd->PathTableSizeL, Pvd->PathTableSizeL);
+  DbgPrint("PathTableSizeM:       %d (%x)\n", Pvd->PathTableSizeM, Pvd->PathTableSizeM);
+  DbgPrint("LPathTablePos:        %d (%x)\n", Pvd->LPathTablePos, Pvd->LPathTablePos);
+  DbgPrint("LOptPathTablePos:     %d (%x)\n", Pvd->LOptPathTablePos, Pvd->LOptPathTablePos);
+  DbgPrint("MPathTablePos:        %d (%x)\n", Pvd->MPathTablePos, Pvd->MPathTablePos);
+  DbgPrint("MOptPathTablePos:     %d (%x)\n", Pvd->MOptPathTablePos, Pvd->MOptPathTablePos);
+  DbgPrint("VolumeSetIdentifier:  '%.*s'\n", 128, Pvd->VolumeSetIdentifier);
+  DbgPrint("PublisherIdentifier:  '%.*s'\n", 128, Pvd->PublisherIdentifier);
+  DbgPrint("******** Root *********\n");
+  DbgPrint("RecordLength:         %d\n", Pvd->RootDirRecord.RecordLength);
+  DbgPrint("ExtAttrRecordLength:  %d\n", Pvd->RootDirRecord.ExtAttrRecordLength);
+  DbgPrint("ExtentLocationL:      %d\n", Pvd->RootDirRecord.ExtentLocationL);
+  DbgPrint("DataLengthL:          %d\n", Pvd->RootDirRecord.DataLengthL);
+  DbgPrint("Year:                 %d\n", Pvd->RootDirRecord.Year);
+  DbgPrint("Month:                %d\n", Pvd->RootDirRecord.Month);
+  DbgPrint("Day:                  %d\n", Pvd->RootDirRecord.Day);
+  DbgPrint("Hour:                 %d\n", Pvd->RootDirRecord.Hour);
+  DbgPrint("Minute:               %d\n", Pvd->RootDirRecord.Minute);
+  DbgPrint("Second:               %d\n", Pvd->RootDirRecord.Second);
+  DbgPrint("TimeZone:             %d\n", Pvd->RootDirRecord.TimeZone);
+  DbgPrint("FileFlags:            %d\n", Pvd->RootDirRecord.FileFlags);
+  DbgPrint("FileUnitSize:         %d\n", Pvd->RootDirRecord.FileUnitSize);
+  DbgPrint("InterleaveGapSize:    %d\n", Pvd->RootDirRecord.InterleaveGapSize);
+  DbgPrint("VolumeSequenceNumber: %d\n", Pvd->RootDirRecord.VolumeSequenceNumber);
+  DbgPrint("FileIdLength:         %d\n", Pvd->RootDirRecord.FileIdLength);
+  DbgPrint("FileId:               '%.*s'\n", Pvd->RootDirRecord.FileId);
+  DbgPrint("***********************\n");
+#endif
 }
 
 
 static VOID
 CdfsGetSVDData(PUCHAR Buffer,
-	       PDEVICE_EXTENSION Vcb)
+	       PCDINFO CdInfo)
 {
   PSVD Svd;
   ULONG JolietLevel = 0;
@@ -117,12 +164,12 @@ CdfsGetSVDData(PUCHAR Buffer,
       JolietLevel = 3;
     }
 
-  Vcb->CdInfo.JolietLevel = JolietLevel;
+  CdInfo->JolietLevel = JolietLevel;
 
   if (JolietLevel != 0)
     {
-      Vcb->CdInfo.RootStart = Svd->RootDirRecord.ExtentLocationL;
-      Vcb->CdInfo.RootSize = Svd->RootDirRecord.DataLengthL;
+      CdInfo->RootStart = Svd->RootDirRecord.ExtentLocationL;
+      CdInfo->RootSize = Svd->RootDirRecord.DataLengthL;
 
       DPRINT("RootStart: %lu\n", Svd->RootDirRecord.ExtentLocationL);
       DPRINT("RootSize: %lu\n", Svd->RootDirRecord.DataLengthL);
@@ -132,115 +179,133 @@ CdfsGetSVDData(PUCHAR Buffer,
 
 static NTSTATUS
 CdfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
-		  PDEVICE_EXTENSION Vcb)
+		  PCDINFO CdInfo)
 {
   PUCHAR Buffer;
   NTSTATUS Status;
   ULONG Sector;
   PVD_HEADER VdHeader;
+  PCDROM_TOC Toc;
+  ULONG Size;
+  ULONG Offset;
+  ULONG i;
+  PTRACK_DATA TrackData;
 
-  Vcb->CdInfo.JolietLevel = 0;
-  Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION;
-
+  DPRINT("CdfsGetVolumeData\n");
+  
   Buffer = ExAllocatePool(NonPagedPool,
-			  CDFS_BASIC_SECTOR);
+			  max (CDFS_BASIC_SECTOR, CDROM_TOC_SIZE));
+
   if (Buffer == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
+  
+  Toc = (PCDROM_TOC)Buffer;
+  Size = sizeof(CDROM_TOC);
+  Status = CdfsDeviceIoControl(DeviceObject,
+			       IOCTL_CDROM_READ_TOC,
+			       NULL,
+			       0,
+			       Toc,
+			       &Size);
+  if (!NT_SUCCESS(Status))
+  {
+     ExFreePool(Buffer);
+     return Status;
+  }
 
+  CHECKPOINT;
+  if (Toc->FirstTrack == 0xaa)
+  {
+     ExFreePool(Buffer);
+     return STATUS_UNSUCCESSFUL;
+  }
+
+  for (i = Toc->LastTrack; i >= Toc->FirstTrack; i--)
+  {
+     TrackData = &Toc->TrackData[i - 1];
+     if (TrackData->Control & 0x4)
+     {
+	 /* we have found the last data session */
+         CHECKPOINT;
+	 break;
+     }
+  }
+
+  if (i < Toc->FirstTrack)
+  {
+     /* there is no data session on the cd */
+     CHECKPOINT;
+     ExFreePool(Buffer);
+     return STATUS_UNSUCCESSFUL;
+  }
+
+  Offset = msf_to_lba(TrackData->Address[1], TrackData->Address[2], TrackData->Address[3]);
+  CdInfo->VolumeOffset = Offset * BLOCKSIZE;
+  
+  CdInfo->JolietLevel = 0;
   VdHeader = (PVD_HEADER)Buffer;
+  Buffer[0] = 0;
 
-  do
-    {
-      /* Read the Primary Volume Descriptor (PVD) */
-      Status = CdfsReadRawSectors(DeviceObject,
-				  Sector,
-				  1,
-				  Buffer);
-      if (!NT_SUCCESS(Status))
-	return(Status);
-
-      switch (VdHeader->VdType)
+  for (Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION; Sector < 100 && Buffer[0] != 255; Sector++)
+     {
+        /* Read the Primary Volume Descriptor (PVD) */
+        Status = CdfsReadRawSectors(DeviceObject,
+				    Sector + Offset,
+				    1,
+				    Buffer);
+        if (!NT_SUCCESS(Status))
 	{
-	  case 0:
-	    DPRINT("BootVolumeDescriptor found!\n");
-	    break;
-
-	  case 1:
-	    DPRINT("PrimaryVolumeDescriptor found!\n");
-	    CdfsGetPVDData(Buffer, Vcb, DeviceObject->Vpb);
-	    break;
-
-	  case 2:
-	    DPRINT("SupplementaryVolumeDescriptor found!\n");
-	    CdfsGetSVDData(Buffer, Vcb);
-	    break;
-
-	  case 3:
-	    DPRINT("VolumePartitionDescriptor found!\n");
-	    break;
-
-	  case 255:
-	    DPRINT("VolumeDescriptorSetTerminator found!\n");
-	    break;
-
-	  default:
-	    DPRINT1("Unknown volume descriptor type %u found!\n", VdHeader->VdType);
-	    break;
+	    ExFreePool(Buffer);
+	    return(Status);
 	}
 
-      Sector++;
-    }
-  while (VdHeader->VdType != 255);
+	if (Sector == CDFS_PRIMARY_DESCRIPTOR_LOCATION)
+	{  
+            DPRINT("CD-identifier: [%.5s]\n", Buffer + 1);
+
+            if (Buffer[0] != 1 || Buffer[1] != 'C' || Buffer[2] != 'D' ||
+	        Buffer[3] != '0' || Buffer[4] != '0' || Buffer[5] != '1')
+	    {
+		ExFreePool(Buffer);
+		return STATUS_UNRECOGNIZED_VOLUME;
+	    }
+	}
+
+        switch (VdHeader->VdType)
+	{
+	   case 0:
+	      DPRINT("BootVolumeDescriptor found!\n");
+	      break;
+
+	   case 1:
+	      DPRINT("PrimaryVolumeDescriptor found!\n");
+	      CdfsGetPVDData(Buffer, CdInfo);
+	      break;
+
+	   case 2:
+	      DPRINT("SupplementaryVolumeDescriptor found!\n");
+	      CdfsGetSVDData(Buffer, CdInfo);
+	      break;
+
+	   case 3:
+	      DPRINT("VolumePartitionDescriptor found!\n");
+	      break;
+
+	   case 255:
+	      DPRINT("VolumeDescriptorSetTerminator found!\n");
+	      break;
+
+	   default:
+	      DPRINT1("Unknown volume descriptor type %u found!\n", VdHeader->VdType);
+	      break;
+	}
+
+     }
 
   ExFreePool(Buffer);
 
   return(STATUS_SUCCESS);
 }
-
-
-static NTSTATUS
-CdfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
-/*
- * FUNCTION: Tests if the device contains a filesystem that can be mounted 
- * by this fsd
- */
-{
-  PUCHAR Buffer;
-  NTSTATUS Status;
-
-  Buffer = ExAllocatePool(NonPagedPool,
-			  CDFS_BASIC_SECTOR);
-  if (Buffer == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
-
-  DPRINT("CDFS: Checking on mount of device %08x\n", DeviceToMount);
-
-  Status = CdfsReadRawSectors(DeviceToMount,
-			      CDFS_PRIMARY_DESCRIPTOR_LOCATION,
-			      1,
-			      Buffer);
-  if (!NT_SUCCESS(Status))
-    {
-      return(Status);
-    }
-
-  Buffer[6] = 0;
-  DPRINT("CD-identifier: [%.5s]\n", Buffer + 1);
-
-  Status = (Buffer[0] == 1 &&
-	    Buffer[1] == 'C' &&
-	    Buffer[2] == 'D' &&
-	    Buffer[3] == '0' &&
-	    Buffer[4] == '0' &&
-	    Buffer[5] == '1') ? STATUS_SUCCESS : STATUS_UNRECOGNIZED_VOLUME;
-
-  ExFreePool(Buffer);
-
-  return(Status);
-}
-
 
 static NTSTATUS
 CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
@@ -254,6 +319,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   PCCB Ccb = NULL;
   PVPB Vpb;
   NTSTATUS Status;
+  CDINFO CdInfo;
 
   DPRINT("CdfsMountVolume() called\n");
 
@@ -267,7 +333,7 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   DeviceToMount = Stack->Parameters.MountVolume.DeviceObject;
   Vpb = Stack->Parameters.MountVolume.Vpb;
 
-  Status = CdfsHasFileSystem(DeviceToMount);
+  Status = CdfsGetVolumeData(DeviceToMount, &CdInfo);
   if (!NT_SUCCESS(Status))
     {
       goto ByeBye;
@@ -289,11 +355,11 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
   RtlZeroMemory(DeviceExt,
 		sizeof(DEVICE_EXTENSION));
 
-  Status = CdfsGetVolumeData(DeviceToMount,
-			     DeviceExt);
-  if (!NT_SUCCESS(Status))
-    goto ByeBye;
-
+  Vpb->SerialNumber = CdInfo.SerialNumber;
+  Vpb->VolumeLabelLength = CdInfo.VolumeLabelLength;
+  RtlCopyMemory(Vpb->VolumeLabel, CdInfo.VolumeLabel, CdInfo.VolumeLabelLength * sizeof(WCHAR));
+  RtlCopyMemory(&DeviceExt->CdInfo, &CdInfo, sizeof(CDINFO));
+  
   NewDeviceObject->Vpb = DeviceToMount->Vpb;
 
   DeviceExt->StorageDevice = DeviceToMount;
@@ -337,12 +403,11 @@ CdfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Fcb->Flags = FCB_IS_VOLUME_STREAM;
 
-  Fcb->RFCB.FileSize.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
-  Fcb->RFCB.ValidDataLength.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
-  Fcb->RFCB.AllocationSize.QuadPart = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
+  Fcb->RFCB.FileSize.QuadPart = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
+  Fcb->RFCB.ValidDataLength = Fcb->RFCB.AllocationSize = Fcb->RFCB.FileSize;
 
   Fcb->Entry.ExtentLocationL = 0;
-  Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
+  Fcb->Entry.DataLengthL = (DeviceExt->CdInfo.VolumeSpaceSize + DeviceExt->CdInfo.VolumeOffset) * BLOCKSIZE;
 
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
 				    &Fcb->RFCB.Bcb,
@@ -387,16 +452,8 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 {
   PDEVICE_OBJECT DeviceToVerify;
   PIO_STACK_LOCATION Stack;
-  PUCHAR Buffer;
-  ULONG Sector;
-  ULONG i;
   NTSTATUS Status;
-
-  union
-    {
-      ULONG Value;
-      UCHAR Part[4];
-    } Serial;
+  CDINFO CdInfo;
 
   DPRINT1("CdfsVerifyVolume() called\n");
 
@@ -413,68 +470,18 @@ CdfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 
   DPRINT("Device object %p  Device to verify %p\n", DeviceObject, DeviceToVerify);
 
-  Sector = CDFS_PRIMARY_DESCRIPTOR_LOCATION;
+  CdInfo.SerialNumber = ~DeviceToVerify->Vpb->SerialNumber;
 
-  Buffer = ExAllocatePool(NonPagedPool,
-			  CDFS_BASIC_SECTOR);
-  if (Buffer == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
+  Status = CdfsGetVolumeData(DeviceToVerify, &CdInfo);
 
-  do
-    {
-      /* Read the Primary Volume Descriptor (PVD) */
-      Status = CdfsReadRawSectors(DeviceToVerify,
-				  Sector,
-				  1,
-				  Buffer);
-      DPRINT("CdfsReadRawSectors() status %lx\n", Status);
-      if (!NT_SUCCESS(Status))
-	{
-	  goto ByeBye;
-	}
+  if (NT_SUCCESS(Status))
+  {
+     DPRINT("Current serial number %08lx  Vpb serial number %08lx\n",
+	    CdInfo.SerialNumber, DeviceToVerify->Vpb->SerialNumber);
 
-      if (Buffer[0] == 1 &&
-	  Buffer[1] == 'C' &&
-	  Buffer[2] == 'D' &&
-	  Buffer[3] == '0' &&
-	  Buffer[4] == '0' &&
-	  Buffer[5] == '1')
-	{
-	  break;
-	}
-
-      Sector++;
-    }
-  while (Buffer[0] != 255);
-
-  if (Buffer[0] == 255)
-    goto ByeBye;
-
-  Status = STATUS_WRONG_VOLUME;
-
-  /* Calculate the volume serial number */
-  Serial.Value = 0;
-  for (i = 0; i < 2048; i += 4)
-    {
-      /* DON'T optimize this to ULONG!!! (breaks overflow) */
-      Serial.Part[0] += Buffer[i+3];
-      Serial.Part[1] += Buffer[i+2];
-      Serial.Part[2] += Buffer[i+1];
-      Serial.Part[3] += Buffer[i+0];
-    }
-
-  DPRINT("Current serial number %08lx  Vpb serial number %08lx\n",
-	  Serial.Value, DeviceToVerify->Vpb->SerialNumber);
-
-  if (Serial.Value == DeviceToVerify->Vpb->SerialNumber)
-    Status = STATUS_SUCCESS;
-
-ByeBye:
-  ExFreePool(Buffer);
-
-  DPRINT("CdfsVerifyVolume() done (Status: %lx)\n", Status);
+     if (CdInfo.SerialNumber != DeviceToVerify->Vpb->SerialNumber)
+	 Status = STATUS_WRONG_VOLUME;
+  }
 
   return(Status);
 }

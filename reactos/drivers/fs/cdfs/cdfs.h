@@ -128,11 +128,14 @@ typedef struct _SVD SVD, *PSVD;
 
 typedef struct _CDINFO
 {
+  ULONG VolumeOffset;
   ULONG VolumeSpaceSize;
   ULONG JolietLevel;
   ULONG RootStart;
   ULONG RootSize;
-
+  WCHAR VolumeLabel[MAXIMUM_VOLUME_LABEL_LENGTH];
+  ULONG VolumeLabelLength;
+  ULONG SerialNumber;
 } CDINFO, *PCDINFO;
 
 
@@ -240,6 +243,10 @@ NTSTATUS STDCALL
 CdfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
+NTSTATUS
+CdfsCloseFile(PDEVICE_EXTENSION DeviceExt,
+	      PFILE_OBJECT FileObject);
+
 /* common.c */
 
 NTSTATUS
@@ -253,6 +260,14 @@ CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
 		   IN ULONG DiskSector,
 		   IN ULONG SectorCount,
 		   IN OUT PUCHAR Buffer);
+
+NTSTATUS
+CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
+		     IN ULONG CtlCode,
+		     IN PVOID InputBuffer,
+		     IN ULONG InputBufferSize,
+		     IN OUT PVOID OutputBuffer, 
+		     IN OUT PULONG pOutputBufferSize);
 
 /* create.c */
 
@@ -330,6 +345,10 @@ CdfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 NTSTATUS STDCALL
 CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp);
+
+NTSTATUS STDCALL
+CdfsSetInformation(PDEVICE_OBJECT DeviceObject,
+		   PIRP Irp);
 
 /* fsctl.c */
 

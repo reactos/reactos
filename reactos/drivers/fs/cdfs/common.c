@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: common.c,v 1.4 2002/05/09 15:53:02 ekohl Exp $
+/* $Id: common.c,v 1.5 2002/09/15 22:25:05 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -189,6 +189,69 @@ CdfsReadRawSectors(IN PDEVICE_OBJECT DeviceObject,
   DPRINT("Block request succeeded for %x\n", Irp);
 
   return(STATUS_SUCCESS);
+}
+
+NTSTATUS
+CdfsDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
+		     IN ULONG CtlCode,
+		     IN PVOID InputBuffer,
+		     IN ULONG InputBufferSize,
+		     IN OUT PVOID OutputBuffer, 
+		     IN OUT PULONG pOutputBufferSize)
+{
+  ULONG OutputBufferSize = 0;
+  KEVENT Event;
+  PIRP Irp;
+  IO_STATUS_BLOCK IoStatus;
+  NTSTATUS Status;
+
+  DPRINT("CdfsDeviceIoControl(DeviceObject %x, CtlCode %x, "
+	 "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, " 
+	 "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode, 
+	 InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize, 
+	 pOutputBufferSize ? *pOutputBufferSize : 0);
+
+  if (pOutputBufferSize)
+  {
+     OutputBufferSize = *pOutputBufferSize;
+  }
+
+  KeInitializeEvent (&Event, NotificationEvent, FALSE);
+
+  DPRINT("Building device I/O control request ...\n");
+  Irp = IoBuildDeviceIoControlRequest(CtlCode, 
+				      DeviceObject, 
+				      InputBuffer, 
+				      InputBufferSize, 
+				      OutputBuffer,
+				      OutputBufferSize, 
+				      FALSE, 
+				      &Event, 
+				      &IoStatus);
+  if (Irp == NULL)
+  {
+     DPRINT("IoBuildDeviceIoControlRequest failed\n");
+     return STATUS_INSUFFICIENT_RESOURCES;
+  }
+
+  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  Status = IoCallDriver(DeviceObject, Irp);
+
+  DPRINT ("Waiting for IO Operation for %x\n", Irp);
+  if (Status == STATUS_PENDING)
+  {
+     DPRINT ("Operation pending\n");
+     KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
+     DPRINT ("Getting IO Status... for %x\n", Irp);
+
+     Status = IoStatus.Status;
+  }
+  if (OutputBufferSize)
+  {
+     *pOutputBufferSize = OutputBufferSize;
+  }
+  DPRINT("Returning Status %x\n", Status);
+  return Status;
 }
 
 /* EOF */
