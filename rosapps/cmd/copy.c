@@ -1,4 +1,5 @@
-/*
+/* $Id: copy.c,v 1.6 1999/12/24 17:20:54 ekohl Exp $
+ *
  *  COPY.C -- copy internal command.
  *
  *
@@ -18,7 +19,7 @@
  *        Replaced CRT io functions by Win32 io functions.
  *
  *    27-Oct-1998 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
- *        Disabled prompting then used in batch mode.
+ *        Disabled prompting when used in batch mode.
  */
 
 #include "config.h"
@@ -283,7 +284,8 @@ ParseCommand (LPFILES f, int argc, char **arg, LPDWORD lpdwFlags)
 }
 
 
-static VOID DeleteFileList (LPFILES f)
+static VOID
+DeleteFileList (LPFILES f)
 {
 	LPFILES temp;
 
@@ -738,11 +740,12 @@ INT cmd_copy (LPTSTR first, LPTSTR rest)
 		copied = setup_copy (sources->next, p, bMultiple, drive_d, dir_d, file_d, ext_d, &append, &dwFlags) + 1;
 	}
 
-//        DeleteFileList (start);
-        DeleteFileList (sources);
+	DeleteFileList (sources);
 	freep (p);
 	ConOutPrintf (_T("        %d file(s) copied\n"), copied);
 
 	return 1;
 }
 #endif /* INCLUDE_CMD_COPY */
+
+/* EOF */

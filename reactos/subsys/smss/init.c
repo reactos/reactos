@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.6 1999/12/06 00:25:14 ekohl Exp $
+/* $Id: init.c,v 1.7 1999/12/24 17:17:51 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -87,8 +87,8 @@ InitSessionManager (
 	                            NULL);
 
 	Status = NtCreatePort (&SmApiPort,
-	                       0,
 	                       &ObjectAttributes,
+	                       0,
 	                       0,
 	                       0);
 
@@ -243,8 +243,8 @@ InitSessionManager (
 	                            NULL);
 
 	Status = NtCreatePort (&DbgSsApiPort,
-	                       0,
 	                       &ObjectAttributes,
+	                       0,
 	                       0,
 	                       0);
 
@@ -266,8 +266,8 @@ InitSessionManager (
 	                            NULL);
 
 	Status = NtCreatePort (&DbgUiApiPort,
-	                       0,
 	                       &ObjectAttributes,
+	                       0,
 	                       0,
 	                       0);
 

@@ -27,7 +27,7 @@ double exp (double __x)
   __asm __volatile__
     ("fldl2e                    # e^x = 2^(x * log2(e))\n\t"
      "fmul      %%st(1)         # x * log2(e)\n\t"
-     "fstl      %%st(1)\n\t"
+     "fst       %%st(1)\n\t"
      "frndint                   # int(x * log2(e))\n\t"
      "fxch\n\t"
      "fsub      %%st(1)         # fract(x * log2(e))\n\t"

@@ -42,7 +42,6 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 	TCHAR directory[MAX_PATH];
 	LPCOMMAND cmds_ptr;
 
-
 	/* expand current file name */
 	count = charcount - 1;
 	if (count < 0)
@@ -95,7 +94,7 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 		do
 		{
 			/* ignore "." and ".." */
-			if (!_tcscmp (file.cFileName, _T(".")) || 
+			if (!_tcscmp (file.cFileName, _T(".")) ||
 				!_tcscmp (file.cFileName, _T("..")))
 				continue;
 
@@ -139,23 +138,18 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 	}
 	else
 	{
-		/* no match found */
-
-		/*interanl commands serch*/
-
-		for(cmds_ptr=cmds;cmds_ptr->name;cmds_ptr++)
+		/* no match found - search for internal command */
+		for (cmds_ptr = cmds; cmds_ptr->name; cmds_ptr++)
 		{
-			if(!_tcsnicmp(&str[start],cmds_ptr->name,
-				_tcslen(&str[start])))
+			if (!_tcsnicmp (&str[start], cmds_ptr->name,
+				_tcslen (&str[start])))
 			{
-				/*return the mach only if it is uniq*/
-				if(_tcsnicmp(&str[start],(cmds_ptr+1)->name,_tcslen(&str[start])))				
-					_tcscpy(&str[start],cmds_ptr->name);
-
+				/* return the mach only if it is unique */
+				if (_tcsnicmp (&str[start], (cmds_ptr+1)->name, _tcslen (&str[start])))
+					_tcscpy (&str[start], cmds_ptr->name);
 				break;
 			}
 		}
-
 
 #ifdef __REACTOS__
 		Beep (440, 50);
@@ -181,8 +175,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	TCHAR path[MAX_PATH];
 	TCHAR fname[MAX_PATH];
 	TCHAR directory[MAX_PATH];
-	LPCOMMAND cmds_ptr;
-
 
 	/* expand current file name */
 	count = charcount - 1;
@@ -265,8 +257,6 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	else
 	{
 		/* no match found */
-
-
 #ifdef __REACTOS__
 		Beep (440, 50);
 #else

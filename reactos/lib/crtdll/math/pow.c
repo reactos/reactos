@@ -64,7 +64,7 @@ double pow (double __x, double __y)
     }
   __asm __volatile__
     ("fmul      %%st(1)         # y * log2(x)\n\t"
-     "fstl      %%st(1)\n\t"
+     "fst       %%st(1)\n\t"
      "frndint                   # int(y * log2(x))\n\t"
      "fxch\n\t"
      "fsub      %%st(1)         # fract(y * log2(x))\n\t"
