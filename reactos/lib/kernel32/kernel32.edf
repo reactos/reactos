@@ -1,4 +1,4 @@
-; $Id: kernel32.edf,v 1.16 2002/11/12 00:46:02 mdill Exp $
+; $Id: kernel32.edf,v 1.17 2002/12/27 23:50:20 gvg Exp $
 ;
 ; kernel32.edf
 ;
@@ -453,8 +453,10 @@ MapViewOfFile=MapViewOfFile@20
 MapViewOfFileEx=MapViewOfFileEx@24
 MoveFileA=MoveFileA@8
 MoveFileExA=MoveFileExA@12
+MoveFileWithProgressA=MoveFileWithProgressA@20
 MoveFileExW=MoveFileExW@12
 MoveFileW=MoveFileW@8
+MoveFileWithProgressW=MoveFileWithProgressW@20
 MulDiv=MulDiv@12
 MultiByteToWideChar=MultiByteToWideChar@24
 OpenConsoleW=OpenConsoleW@16

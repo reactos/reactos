@@ -640,6 +640,17 @@ CopyFileA(
 
 WINBOOL
 STDCALL
+CopyFileExA(
+    LPCSTR lpExistingFileName,
+    LPCSTR lpNewFileName,
+    LPPROGRESS_ROUTINE lpProgressRoutine,
+    LPVOID lpData,
+    LPBOOL pbCancel,
+    DWORD dwCopyFlags
+    );
+
+WINBOOL
+STDCALL
 MoveFileA(
     LPCSTR lpExistingFileName,
     LPCSTR lpNewFileName
@@ -650,6 +661,16 @@ STDCALL
 MoveFileExA(
     LPCSTR lpExistingFileName,
     LPCSTR lpNewFileName,
+    DWORD dwFlags
+    );
+
+WINBOOL
+STDCALL
+MoveFileWithProgressA(
+    LPCSTR lpExistingFileName,
+    LPCSTR lpNewFileName,
+    LPPROGRESS_ROUTINE lpProgressRoutine,
+    LPVOID lpData,
     DWORD dwFlags
     );
 

@@ -4483,6 +4483,21 @@ extern "C" {
 #define TMPF_TRUETYPE		(0x4)
 #define TMPF_DEVICE		(0x8)
 
+/* CopyFileEx options */
+#define COPY_FILE_FAIL_IF_EXISTS	(1)
+
+/* CopyProgressRoutine callback */
+#define CALLBACK_CHUNK_FINISHED (0)
+#define CALLBACK_STREAM_SWITCH	(1)
+
+#define PROGRESS_CONTINUE	(0)
+#define PROGRESS_CANCEL		(1)
+#define PROGRESS_STOP		(2)
+#define PROGRESS_QUIET		(3)
+
+/* GetFileAttributes */
+#define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
+
 /* --------------------- old stuff, need to organize! --------------- */
 
 /* BEGINNING of windowsx.h stuff from old headers: */

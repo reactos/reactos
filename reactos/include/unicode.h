@@ -641,6 +641,17 @@ CopyFileW(
 
 WINBOOL
 STDCALL
+CopyFileExW(
+    LPCWSTR lpExistingFileName,
+    LPCWSTR lpNewFileName,
+    LPPROGRESS_ROUTINE lpProgressRoutine,
+    LPVOID lpData,
+    LPBOOL pbCancel,
+    DWORD dwCopyFlags
+    );
+
+WINBOOL
+STDCALL
 MoveFileW(
     LPCWSTR lpExistingFileName,
     LPCWSTR lpNewFileName
@@ -651,6 +662,16 @@ STDCALL
 MoveFileExW(
     LPCWSTR lpExistingFileName,
     LPCWSTR lpNewFileName,
+    DWORD dwFlags
+    );
+
+WINBOOL
+STDCALL
+MoveFileWithProgressW(
+    LPCWSTR lpExistingFileName,
+    LPCWSTR lpNewFileName,
+    LPPROGRESS_ROUTINE lpProgressRoutine,
+    LPVOID lpData,
     DWORD dwFlags
     );
 

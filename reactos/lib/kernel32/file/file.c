@@ -1,4 +1,4 @@
-/* $Id: file.c,v 1.38 2002/11/07 02:52:37 robd Exp $
+/* $Id: file.c,v 1.39 2002/12/27 23:50:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,8 +20,6 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <kernel32/error.h>
-
-#define LPPROGRESS_ROUTINE void*
 
 
 /* GLOBALS ******************************************************************/
@@ -607,6 +605,11 @@ SetFileAttributesW(LPCWSTR lpFileName,
 		       OPEN_EXISTING,
 		       FILE_ATTRIBUTE_NORMAL,
 		       NULL);
+   if (INVALID_HANDLE_VALUE == hFile)
+     {
+	DPRINT("SetFileAttributes CreateFileW failed with code %d\n", GetLastError());
+	return FALSE;
+     }
 
    errCode = NtQueryInformationFile(hFile,
 				    &IoStatusBlock,
@@ -616,6 +619,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
+	DPRINT("SetFileAttributes NtQueryInformationFile failed with status 0x%08x\n", errCode);
 	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
@@ -628,6 +632,7 @@ SetFileAttributesW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
+	DPRINT("SetFileAttributes NtSetInformationFile failed with status 0x%08x\n", errCode);
 	SetLastErrorByStatus(errCode);
 	return FALSE;
      }

@@ -37,6 +37,19 @@
 extern "C" {
 #endif /* __cplusplus */
 
+typedef
+DWORD (CALLBACK *PPROGRESS_ROUTINE)(
+	LARGE_INTEGER TotalFileSize,
+	LARGE_INTEGER TotalBytesTransferred,
+	LARGE_INTEGER StreamSize,
+	LARGE_INTEGER StreamBytesTransferred,
+	DWORD StreamNumber,
+	DWORD CallbackReason,
+	HANDLE SourceFile,
+	HANDLE DestinationFile,
+	LPVOID UserData);
+typedef PPROGRESS_ROUTINE LPPROGRESS_ROUTINE;
+
 /* These functions were a real pain, having to figure out which
    had Unicode/Ascii versions and which did not */
 
@@ -341,8 +354,10 @@ extern "C" {
 #define FindNextFile  FindNextFileW
 #define SearchPath  SearchPathW
 #define CopyFile  CopyFileW
+#define CopyFileEx  CopyFileExW
 #define MoveFile  MoveFileW
 #define MoveFileEx  MoveFileExW
+#define MoveFileWithProgress  MoveFileWithProgressW
 #define CreateNamedPipe  CreateNamedPipeW
 #define GetNamedPipeHandleState  GetNamedPipeHandleStateW
 #define CallNamedPipe  CallNamedPipeW
@@ -745,8 +760,10 @@ extern "C" {
 #define FindNextFile  FindNextFileA
 #define SearchPath  SearchPathA
 #define CopyFile  CopyFileA
+#define CopyFileEx  CopyFileExA
 #define MoveFile  MoveFileA
 #define MoveFileEx  MoveFileExA
+#define MoveFileWithProgress  MoveFileWithProgressA
 #define CreateNamedPipe  CreateNamedPipeA
 #define GetNamedPipeHandleState  GetNamedPipeHandleStateA
 #define CallNamedPipe  CallNamedPipeA

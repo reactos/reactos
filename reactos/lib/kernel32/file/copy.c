@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.11 2002/09/08 10:22:41 chorns Exp $
+/* $Id: copy.c,v 1.12 2002/12/27 23:50:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -20,10 +20,177 @@
 #include <kernel32/error.h>
 
 
-#define LPPROGRESS_ROUTINE void*
-
-
 /* FUNCTIONS ****************************************************************/
+
+
+static NTSTATUS
+CopyLoop (
+	HANDLE			FileHandleSource,
+	HANDLE			FileHandleDest,
+	LARGE_INTEGER		SourceFileSize,
+	LPPROGRESS_ROUTINE	lpProgressRoutine,
+	LPVOID			lpData,
+	WINBOOL			*pbCancel,
+	WINBOOL                 *KeepDest
+	)
+{
+   NTSTATUS errCode;
+   IO_STATUS_BLOCK IoStatusBlock;
+   UCHAR *lpBuffer = NULL;
+   ULONG RegionSize = 0x10000;
+   LARGE_INTEGER BytesCopied;
+   DWORD CallbackReason;
+   DWORD ProgressResult;
+   WINBOOL EndOfFileFound;
+
+   *KeepDest = FALSE;
+   errCode = NtAllocateVirtualMemory(NtCurrentProcess(),
+				     (PVOID *)&lpBuffer,
+				     2,
+				     &RegionSize,
+				     MEM_RESERVE | MEM_COMMIT,
+				     PAGE_READWRITE);
+
+   if (NT_SUCCESS(errCode))
+     {
+	BytesCopied.QuadPart = 0;
+	EndOfFileFound = FALSE;
+	CallbackReason = CALLBACK_STREAM_SWITCH; 
+	while (! EndOfFileFound &&
+	       NT_SUCCESS(errCode) &&
+	       (NULL == pbCancel || ! *pbCancel))
+	  {
+	     if (NULL != lpProgressRoutine)
+	       {
+		   ProgressResult = (*lpProgressRoutine)(SourceFileSize,
+							 BytesCopied,
+							 SourceFileSize,
+							 BytesCopied,
+							 0,
+							 CallbackReason,
+							 FileHandleSource,
+							 FileHandleDest,
+							 lpData);
+		   switch (ProgressResult)
+		     {
+		     case PROGRESS_CANCEL:
+			DPRINT("Progress callback requested cancel\n");
+			errCode = STATUS_REQUEST_ABORTED;
+			break;
+		     case PROGRESS_STOP:
+			DPRINT("Progress callback requested stop\n");
+			errCode = STATUS_REQUEST_ABORTED;
+			*KeepDest = TRUE;
+			break;
+		     case PROGRESS_QUIET:
+			lpProgressRoutine = NULL;
+			break;
+		     case PROGRESS_CONTINUE:
+		     default:
+			break;
+		     }
+		   CallbackReason = CALLBACK_CHUNK_FINISHED;
+	       }
+	     if (NT_SUCCESS(errCode))
+	       {
+		  errCode = NtReadFile(FileHandleSource,
+				       NULL,
+				       NULL,
+				       NULL,
+				       (PIO_STATUS_BLOCK)&IoStatusBlock,
+				       lpBuffer,
+				       RegionSize,
+				       NULL,
+				       NULL);
+		  if (NT_SUCCESS(errCode) && (NULL == pbCancel || ! *pbCancel))
+		    {
+		       errCode = NtWriteFile(FileHandleDest,
+					     NULL,
+					     NULL,
+					     NULL,
+					     (PIO_STATUS_BLOCK)&IoStatusBlock,
+					     lpBuffer,
+					     IoStatusBlock.Information,
+					     NULL,
+					     NULL);
+		       if (NT_SUCCESS(errCode))
+			 {
+			    BytesCopied.QuadPart += IoStatusBlock.Information;
+			 }
+		       else
+			 {
+			    DPRINT("Error 0x%08x reading writing to dest\n", errCode);
+			 }
+		    }
+		  else if (!NT_SUCCESS(errCode))
+		    {
+		       if (STATUS_END_OF_FILE == errCode)
+			 {
+			    EndOfFileFound = TRUE;
+			    errCode = STATUS_SUCCESS;
+			 }
+		       else
+			 {
+			    DPRINT("Error 0x%08x reading from source\n", errCode);
+			 }
+		    }
+	       }
+	  }
+
+	if (! EndOfFileFound && (NULL != pbCancel && *pbCancel))
+	  {
+	  DPRINT("User requested cancel\n");
+	  errCode = STATUS_REQUEST_ABORTED;
+	  }
+
+	NtFreeVirtualMemory(NtCurrentProcess(),
+			    (PVOID *)&lpBuffer,
+			    &RegionSize,
+			    MEM_RELEASE);
+     }
+   else
+     {
+	DPRINT("Error 0x%08x allocating buffer of %d bytes\n", errCode, RegionSize);
+     }
+
+   return errCode;
+}
+
+static NTSTATUS
+SetLastWriteTime(
+	HANDLE FileHandle,
+	TIME LastWriteTime
+	)
+{
+   NTSTATUS errCode = STATUS_SUCCESS;
+   IO_STATUS_BLOCK IoStatusBlock;
+   FILE_BASIC_INFORMATION FileBasic;
+
+   errCode = NtQueryInformationFile (FileHandle,
+				     &IoStatusBlock,
+				     &FileBasic,
+				     sizeof(FILE_BASIC_INFORMATION),
+				     FileBasicInformation);
+   if (!NT_SUCCESS(errCode))
+     {
+	DPRINT("Error 0x%08x obtaining FileBasicInformation\n", errCode);
+     }
+   else
+     {
+	FileBasic.LastWriteTime = LastWriteTime;
+	errCode = NtSetInformationFile (FileHandle,
+					&IoStatusBlock,
+					&FileBasic,
+					sizeof(FILE_BASIC_INFORMATION),
+					FileBasicInformation);
+	if (!NT_SUCCESS(errCode))
+	  {
+	     DPRINT("Error 0x%0x setting LastWriteTime\n", errCode);
+	  }
+     }
+
+   return errCode;
+}
 
 WINBOOL
 STDCALL
@@ -36,15 +203,15 @@ CopyFileExW (
 	DWORD			dwCopyFlags
 	)
 {
-   NTSTATUS errCode = 0;
+   NTSTATUS errCode;
    HANDLE FileHandleSource, FileHandleDest;
    IO_STATUS_BLOCK IoStatusBlock;
    FILE_STANDARD_INFORMATION FileStandard;
    FILE_BASIC_INFORMATION FileBasic;
-   FILE_POSITION_INFORMATION FilePosition;
-   UCHAR *lpBuffer = NULL;
-   ULONG RegionSize = 0x1000000;
-   BOOL bCancel = FALSE;
+   FILE_DISPOSITION_INFORMATION FileDispInfo;
+   WINBOOL RC = FALSE;
+   WINBOOL KeepDestOnError = FALSE;
+   DWORD SystemError;
 
    FileHandleSource = CreateFileW(lpExistingFileName,
 				  GENERIC_READ,
@@ -53,137 +220,87 @@ CopyFileExW (
 				  OPEN_EXISTING,
 				  FILE_ATTRIBUTE_NORMAL|FILE_FLAG_NO_BUFFERING,
 				  NULL);
-   if (FileHandleSource == NULL)
+   if (INVALID_HANDLE_VALUE != FileHandleSource)
      {
-	return(FALSE);
-     }
-
-   errCode = NtQueryInformationFile(FileHandleSource,
-				    &IoStatusBlock,
-				    &FileStandard,
-				    sizeof(FILE_STANDARD_INFORMATION),
-				    FileStandardInformation);
-   if (!NT_SUCCESS(errCode))
-     {
+	errCode = NtQueryInformationFile(FileHandleSource,
+					 &IoStatusBlock,
+					 &FileStandard,
+					 sizeof(FILE_STANDARD_INFORMATION),
+					 FileStandardInformation);
+	if (!NT_SUCCESS(errCode))
+	  {
+	     DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+	     SetLastErrorByStatus(errCode);
+	  }
+	else
+	  {
+	     errCode = NtQueryInformationFile(FileHandleSource,
+	  				      &IoStatusBlock,&FileBasic,
+					      sizeof(FILE_BASIC_INFORMATION),
+					      FileBasicInformation);
+	     if (!NT_SUCCESS(errCode))
+	       {
+		  DPRINT("Status 0x%08x obtaining FileBasicInformation for source\n", errCode);
+		  SetLastErrorByStatus(errCode);
+	       }
+	     else
+	       {
+		  FileHandleDest = CreateFileW(lpNewFileName,
+					       GENERIC_WRITE,
+					       FILE_SHARE_WRITE,
+					       NULL,
+					       dwCopyFlags ? CREATE_NEW : CREATE_ALWAYS,
+                                               FileBasic.FileAttributes,
+					       NULL);
+		  if (INVALID_HANDLE_VALUE != FileHandleDest)
+		    {
+		       errCode = CopyLoop(FileHandleSource,
+					  FileHandleDest,
+					  FileStandard.EndOfFile,
+					  lpProgressRoutine,
+					  lpData,
+					  pbCancel,
+					  &KeepDestOnError);
+		       if (!NT_SUCCESS(errCode))
+			 {
+			    SetLastErrorByStatus(errCode);
+			 }
+		       else
+			 {
+			    errCode = SetLastWriteTime(FileHandleDest,
+						       FileBasic.LastWriteTime);
+			    if (!NT_SUCCESS(errCode))
+			      {
+				 SetLastErrorByStatus(errCode);
+			      }
+			    else
+			      {
+				 RC = TRUE;
+			      }
+			 }
+		       NtClose(FileHandleDest);
+		       if (! RC && ! KeepDestOnError)
+			 {
+			    SystemError = GetLastError();
+			    SetFileAttributesW(lpNewFileName, FILE_ATTRIBUTE_NORMAL);
+			    DeleteFileW(lpNewFileName);
+			    SetLastError(SystemError);
+			 }
+		    }
+		  else
+		    {
+		    DPRINT("Error %d during opening of dest file\n", GetLastError());
+		    }
+	       }
+	  }
 	NtClose(FileHandleSource);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
      }
-
-   errCode = NtQueryInformationFile(FileHandleSource,
-				    &IoStatusBlock,&FileBasic,
-				    sizeof(FILE_BASIC_INFORMATION),
-				    FileBasicInformation);
-   if (!NT_SUCCESS(errCode))
+   else
      {
-	NtClose(FileHandleSource);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
+     DPRINT("Error %d during opening of source file\n", GetLastError());
      }
 
-   FileHandleDest = CreateFileW(lpNewFileName,
-				GENERIC_WRITE,
-				FILE_SHARE_WRITE,
-				NULL,
-				dwCopyFlags  ?  CREATE_NEW : CREATE_ALWAYS,
-				FileBasic.FileAttributes|FILE_FLAG_NO_BUFFERING,
-				NULL);
-   if (FileHandleDest == NULL)
-     {
-	return(FALSE);
-     }
-
-   FilePosition.CurrentByteOffset.QuadPart = 0;
-
-   errCode = NtSetInformationFile(FileHandleSource,
-				  &IoStatusBlock,
-				  &FilePosition,
-				  sizeof(FILE_POSITION_INFORMATION),
-				  FilePositionInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	NtClose(FileHandleSource);
-	NtClose(FileHandleDest);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-
-   errCode = NtSetInformationFile(FileHandleDest,
-				  &IoStatusBlock,
-				  &FilePosition,
-				  sizeof(FILE_POSITION_INFORMATION),
-				  FilePositionInformation);
-   if (!NT_SUCCESS(errCode))
-     {
-	NtClose(FileHandleSource);
-	NtClose(FileHandleDest);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-
-   errCode = NtAllocateVirtualMemory(NtCurrentProcess(),
-				     (PVOID *)&lpBuffer,
-				     2,
-				     &RegionSize,
-				     MEM_RESERVE | MEM_COMMIT,
-				     PAGE_READWRITE);
-
-   if (!NT_SUCCESS(errCode))
-     {
-	NtClose(FileHandleSource);
-	NtClose(FileHandleDest);
-	SetLastErrorByStatus(errCode);
-	return FALSE;
-     }
-
-   do {
-      errCode = NtReadFile(FileHandleSource,
-			   NULL,
-			   NULL,
-			   NULL,
-			   (PIO_STATUS_BLOCK)&IoStatusBlock,
-			   lpBuffer,
-			   RegionSize,
-			   NULL,
-			   NULL);
-      if (pbCancel != NULL)
-	bCancel = *pbCancel;
-
-      if (!NT_SUCCESS(errCode) || bCancel)
-	{
-	   NtFreeVirtualMemory(NtCurrentProcess(),
-			       (PVOID *)&lpBuffer, &RegionSize,MEM_RELEASE);
-	   NtClose(FileHandleSource);
-	   NtClose(FileHandleDest);
-	   if ( errCode == STATUS_END_OF_FILE )
-	     break;
-	   else
-	     return FALSE;
-	}
-
-      errCode = NtWriteFile(FileHandleDest,
-			    NULL,
-			    lpProgressRoutine,
-			    lpData,
-			    (PIO_STATUS_BLOCK)&IoStatusBlock,
-			    lpBuffer,
-			    IoStatusBlock.Information,
-			    NULL,
-			    NULL);
-
-      if (!NT_SUCCESS(errCode))
-	{
-	   NtFreeVirtualMemory(NtCurrentProcess(),
-			       (PVOID *)&lpBuffer,
-			       &RegionSize,
-			       MEM_RELEASE);
-	   NtClose(FileHandleSource);
-	   NtClose(FileHandleDest);
-	   return FALSE;
-	}
-      
-   } while ( TRUE );
-   return TRUE;
+   return RC;
 }
 
 

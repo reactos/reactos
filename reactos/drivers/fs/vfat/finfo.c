@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.22 2002/11/11 21:49:18 hbirr Exp $
+/* $Id: finfo.c,v 1.23 2002/12/27 23:50:20 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -86,6 +86,45 @@ VfatGetPositionInformation(PFILE_OBJECT FileObject,
 }
 
 static NTSTATUS
+VfatSetBasicInformation(PFILE_OBJECT FileObject,
+			PVFATFCB FCB,
+			PDEVICE_EXTENSION DeviceExt,
+			PFILE_BASIC_INFORMATION BasicInfo)
+{
+  DPRINT("VfatSetBasicInformation()\n");
+
+  assert (NULL != FileObject);
+  assert (NULL != FCB);
+  assert (NULL != DeviceExt);
+  assert (NULL != BasicInfo);
+  /* Check volume label bit */
+  assert(0 == (FCB->entry.Attrib & 0x08));
+
+  FsdFileTimeToDosDateTime(&(BasicInfo->CreationTime),
+                           &(FCB->entry.CreationDate),  
+                           &(FCB->entry.CreationTime));
+  FsdFileTimeToDosDateTime(&(BasicInfo->LastAccessTime),
+                           &(FCB->entry.AccessDate),  
+                           NULL);
+  FsdFileTimeToDosDateTime(&(BasicInfo->LastWriteTime),
+                           &(FCB->entry.UpdateDate),
+                           &(FCB->entry.UpdateTime));
+
+  FCB->entry.Attrib = (FCB->entry.Attrib &
+                       (FILE_ATTRIBUTE_DIRECTORY | 0x48)) |
+                      (BasicInfo->FileAttributes &
+                       (FILE_ATTRIBUTE_ARCHIVE |
+                        FILE_ATTRIBUTE_SYSTEM |
+                        FILE_ATTRIBUTE_HIDDEN |
+                        FILE_ATTRIBUTE_READONLY));
+  DPRINT("Setting attributes 0x%02x\n", FCB->entry.Attrib);
+
+  VfatUpdateEntry(DeviceExt, FileObject);
+
+  return(STATUS_SUCCESS);
+}
+
+static NTSTATUS
 VfatGetBasicInformation(PFILE_OBJECT FileObject,
 			PVFATFCB FCB,
 			PDEVICE_OBJECT DeviceObject,
@@ -109,7 +148,16 @@ VfatGetBasicInformation(PFILE_OBJECT FileObject,
   BasicInfo->ChangeTime = BasicInfo->LastWriteTime;
 
   BasicInfo->FileAttributes = FCB->entry.Attrib;
-  DPRINT("Getting attributes %x\n", BasicInfo->FileAttributes);
+  /* Synthesize FILE_ATTRIBUTE_NORMAL */
+  if (0 == (BasicInfo->FileAttributes & (FILE_ATTRIBUTE_DIRECTORY |
+                                         FILE_ATTRIBUTE_ARCHIVE |
+                                         FILE_ATTRIBUTE_SYSTEM |
+                                         FILE_ATTRIBUTE_HIDDEN |
+                                         FILE_ATTRIBUTE_READONLY)))
+  {
+    BasicInfo->FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+  }
+  DPRINT("Getting attributes 0x%02x\n", BasicInfo->FileAttributes);
 
   *BufferLength -= sizeof(FILE_BASIC_INFORMATION);
   return(STATUS_SUCCESS);
@@ -618,6 +666,11 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
 					    (PLARGE_INTEGER)SystemBuffer);
       break;    
     case FileBasicInformation:
+      RC = VfatSetBasicInformation(IrpContext->FileObject,
+				   FCB,
+				   IrpContext->DeviceExt,
+				   SystemBuffer);
+      break;
     case FileRenameInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;

@@ -1,4 +1,4 @@
-/* $Id: move.c,v 1.7 2002/09/08 10:22:42 chorns Exp $
+/* $Id: move.c,v 1.8 2002/12/27 23:50:21 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 #define FILE_RENAME_SIZE  MAX_PATH +sizeof(FILE_RENAME_INFORMATION)
@@ -43,6 +44,24 @@ MoveFileExA (
 	LPCSTR	lpExistingFileName,
 	LPCSTR	lpNewFileName,
 	DWORD	dwFlags
+	)
+{
+	return MoveFileWithProgressA (lpExistingFileName,
+	                              lpNewFileName,
+	                              NULL,
+	                              NULL,
+	                              dwFlags);
+}
+
+
+WINBOOL
+STDCALL
+MoveFileWithProgressA (
+	LPCSTR			lpExistingFileName,
+	LPCSTR			lpNewFileName,
+	LPPROGRESS_ROUTINE	lpProgressRoutine,
+	LPVOID			lpData,
+	DWORD			dwFlags
 	)
 {
 	UNICODE_STRING ExistingFileNameU;
@@ -77,9 +96,11 @@ MoveFileExA (
 		                             TRUE);
 	}
 
-	Result = MoveFileExW (ExistingFileNameU.Buffer,
-	                      NewFileNameU.Buffer,
-	                      dwFlags);
+	Result = MoveFileWithProgressW (ExistingFileNameU.Buffer,
+	                                NewFileNameU.Buffer,
+	                                lpProgressRoutine,
+	                                lpData,
+	                                dwFlags);
 
 	RtlFreeHeap (RtlGetProcessHeap (),
 	             0,
@@ -113,11 +134,158 @@ MoveFileExW (
 	DWORD	dwFlags
 	)
 {
+	return MoveFileWithProgressW (lpExistingFileName,
+	                              lpNewFileName,
+	                              NULL,
+	                              NULL,
+	                              dwFlags);
+}
+
+
+static WINBOOL
+AdjustFileAttributes (
+	LPCWSTR ExistingFileName,
+	LPCWSTR NewFileName
+	)
+{
+	IO_STATUS_BLOCK IoStatusBlock;
+	FILE_BASIC_INFORMATION ExistingInfo,
+		NewInfo;
+	HANDLE hFile;
+	DWORD Attributes;
+	NTSTATUS errCode;
+	WINBOOL Result = FALSE;
+
+	hFile = CreateFileW (ExistingFileName,
+	                     FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+	                     FILE_SHARE_READ,
+	                     NULL,
+	                     OPEN_EXISTING,
+	                     FILE_ATTRIBUTE_NORMAL,
+	                     NULL);
+	if (INVALID_HANDLE_VALUE != hFile)
+	{
+		errCode = NtQueryInformationFile (hFile,
+		                                  &IoStatusBlock,
+		                                  &ExistingInfo,
+		                                  sizeof(FILE_BASIC_INFORMATION),
+		                                  FileBasicInformation);
+		if (NT_SUCCESS (errCode))
+		{
+			if (0 != (ExistingInfo.FileAttributes & FILE_ATTRIBUTE_READONLY))
+			{
+				Attributes = ExistingInfo.FileAttributes;
+				ExistingInfo.FileAttributes &= ~ FILE_ATTRIBUTE_READONLY;
+				if (0 == (ExistingInfo.FileAttributes &
+				          (FILE_ATTRIBUTE_HIDDEN |
+				           FILE_ATTRIBUTE_SYSTEM |
+				           FILE_ATTRIBUTE_ARCHIVE)))
+				{
+					ExistingInfo.FileAttributes |= FILE_ATTRIBUTE_NORMAL;
+				}
+				errCode = NtSetInformationFile (hFile,
+				                                &IoStatusBlock,
+				                                &ExistingInfo,
+				                                sizeof(FILE_BASIC_INFORMATION),
+				                                FileBasicInformation);
+				if (!NT_SUCCESS(errCode))
+				{
+					DPRINT("Removing READONLY attribute from source failed with status 0x%08x\n", errCode);
+				}
+				ExistingInfo.FileAttributes = Attributes;
+			}
+			CloseHandle(hFile);
+
+			if (NT_SUCCESS(errCode))
+			{
+				hFile = CreateFileW (NewFileName,
+				                     FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
+				                     FILE_SHARE_READ,
+				                     NULL,
+				                     OPEN_EXISTING,
+			        	             FILE_ATTRIBUTE_NORMAL,
+				                     NULL);
+				if (INVALID_HANDLE_VALUE != hFile)
+				{
+					errCode = NtQueryInformationFile(hFile,
+					                                 &IoStatusBlock,
+					                                 &NewInfo,
+					                                 sizeof(FILE_BASIC_INFORMATION),
+					                                 FileBasicInformation);
+					if (NT_SUCCESS(errCode))
+					{
+						NewInfo.FileAttributes = (NewInfo.FileAttributes &
+						                          ~ (FILE_ATTRIBUTE_HIDDEN |
+						                             FILE_ATTRIBUTE_SYSTEM |
+						                             FILE_ATTRIBUTE_READONLY |
+						                             FILE_ATTRIBUTE_NORMAL)) |
+					                                 (ExistingInfo.FileAttributes &
+					                                  (FILE_ATTRIBUTE_HIDDEN |
+						                           FILE_ATTRIBUTE_SYSTEM |
+						                           FILE_ATTRIBUTE_READONLY |
+						                           FILE_ATTRIBUTE_NORMAL)) |
+						                         FILE_ATTRIBUTE_ARCHIVE;
+						NewInfo.CreationTime = ExistingInfo.CreationTime;
+						NewInfo.LastAccessTime = ExistingInfo.LastAccessTime;
+						NewInfo.LastWriteTime = ExistingInfo.LastWriteTime;
+						errCode = NtSetInformationFile (hFile,
+						                                &IoStatusBlock,
+						                                &NewInfo,
+						                                sizeof(FILE_BASIC_INFORMATION),
+						                                FileBasicInformation);
+						if (NT_SUCCESS(errCode))
+						{
+							Result = TRUE;
+						}
+						else
+						{
+							DPRINT("Setting attributes on dest file failed with status 0x%08x\n", errCode);
+						}
+					}
+					else
+					{
+						DPRINT("Obtaining attributes from dest file failed with status 0x%08x\n", errCode);
+					}
+					CloseHandle(hFile);
+				}
+				else
+				{
+					DPRINT("Opening dest file to set attributes failed with code %d\n", GetLastError());
+				}
+			}
+		}
+		else
+		{
+			DPRINT("Obtaining attributes from source file failed with status 0x%08x\n", errCode);
+			CloseHandle(hFile);
+		}
+	}
+	else
+	{
+		DPRINT("Opening source file to obtain attributes failed with code %d\n", GetLastError());
+	}
+
+	return Result;
+}
+
+
+WINBOOL
+STDCALL
+MoveFileWithProgressW (
+	LPCWSTR			lpExistingFileName,
+	LPCWSTR			lpNewFileName,
+	LPPROGRESS_ROUTINE	lpProgressRoutine,
+	LPVOID			lpData,
+	DWORD			dwFlags
+	)
+{
 	HANDLE hFile = NULL;
 	IO_STATUS_BLOCK IoStatusBlock;
 	FILE_RENAME_INFORMATION *FileRename;
 	USHORT Buffer[FILE_RENAME_SIZE];
-	NTSTATUS errCode;	
+	NTSTATUS errCode;
+	DWORD err;
+	WINBOOL Result;
 
 	hFile = CreateFileW (lpExistingFileName,
 	                     GENERIC_ALL,
@@ -137,21 +305,63 @@ MoveFileExW (
 	memcpy (FileRename->FileName,
 	        lpNewFileName,
 	        min(FileRename->FileNameLength, MAX_PATH));
-	
+
 	errCode = NtSetInformationFile (hFile,
 	                                &IoStatusBlock,
 	                                FileRename,
 	                                FILE_RENAME_SIZE,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
-	if (!NT_SUCCESS(errCode))
+	if (NT_SUCCESS(errCode))
 	{
-		if (CopyFileW (lpExistingFileName,
-		               lpNewFileName,
-		               FileRename->Replace))
-			DeleteFileW (lpExistingFileName);
+		Result = TRUE;
 	}
-	return TRUE;
+	/* FIXME file rename not yet implemented in all FSDs so it will always
+	 * fail, even when the move is to the same device
+	 */
+#if 0
+	else if (STATUS_NOT_SAME_DEVICE == errCode &&
+		 MOVEFILE_COPY_ALLOWED == (dwFlags & MOVEFILE_COPY_ALLOWED))
+#else
+	else
+#endif
+	{
+		Result = CopyFileExW (lpExistingFileName,
+		                      lpNewFileName,
+		                      lpProgressRoutine,
+		                      lpData,
+		                      NULL,
+		                      FileRename->Replace ? 0 : COPY_FILE_FAIL_IF_EXISTS) &&
+		         AdjustFileAttributes(lpExistingFileName, lpNewFileName) &&
+		         DeleteFileW (lpExistingFileName);
+		if (! Result)
+		{
+			/* Delete of the existing file failed so the
+			 * existing file is still there. Clean up the
+			 * new file (if possible)
+			 */
+			err = GetLastError();
+			if (! SetFileAttributesW (lpNewFileName, FILE_ATTRIBUTE_NORMAL))
+			{
+				DPRINT("Removing possible READONLY attrib from new file failed with code %d\n", GetLastError());
+			}
+			if (! DeleteFileW (lpNewFileName))
+			{
+				DPRINT("Deleting new file during cleanup failed with code %d\n", GetLastError());
+			}
+			SetLastError (err);
+		}
+	}
+	/* See FIXME above */
+#if 0
+	else
+	{
+		SetLastErrorByStatus (errCode);
+		Result = FALSE;
+	}
+#endif
+
+	return Result;
 }
 
 /* EOF */
