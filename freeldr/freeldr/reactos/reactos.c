@@ -240,6 +240,7 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
   U32 DriverGroupSize;
 
   UCHAR ImagePath[256];
+  UCHAR TempImagePath[256];
 
   /* get 'service group order' key */
   rc = RegOpenKey(NULL,
@@ -304,9 +305,9 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 	    {
 	      ValueSize = 256;
 	      rc = RegQueryValue(hDriverKey,
-				 "ImagePathName",
+				 "ImagePath",
 				 NULL,
-				 (PUCHAR)ImagePath,
+				 (PUCHAR)TempImagePath,
 				 &ValueSize);
 	      if (rc != ERROR_SUCCESS)
 		{
@@ -316,8 +317,14 @@ LoadBootDrivers(PCHAR szSystemRoot, int nPos)
 		  strcat(ImagePath, ServiceName);
 		  strcat(ImagePath, ".sys");
 		}
+	      else if (TempImagePath[0] != '\\')
+		{
+		  strcpy(ImagePath, szSystemRoot);
+		  strcat(ImagePath, TempImagePath);
+		}
 	      else
 		{
+		  strcpy(ImagePath, TempImagePath);
 		  DbgPrint((DPRINT_REACTOS, "  ImagePath: '%s'\n", ImagePath));
 		}
 	      DbgPrint((DPRINT_REACTOS, "  Loading driver: '%s'\n", ImagePath));
