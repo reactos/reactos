@@ -24,6 +24,10 @@ extern "C" {
 #define  IDE_MAX_WRITE_RETRIES     1000
 #define  IDE_MAX_BUSY_RETRIES      100
 #define  IDE_MAX_DRQ_RETRIES       1000
+#define  IDE_MAX_CMD_RETRIES       1
+#define  IDE_CMD_TIMEOUT           5
+#define  IDE_RESET_BUSY_TIMEOUT    31
+#define  IDE_RESET_DRDY_TIMEOUT    120
 
 #define  IDE_REG_ALT_STATUS     0x0006
 #define  IDE_REG_DEV_CNTRL      0x0006  /* device control register */
@@ -80,8 +84,14 @@ extern "C" {
 #define IDEWriteDriveHead(Address, Data)     (outb_p((Address) + IDE_REG_DRV_HEAD, (Data)))
 #define IDEReadStatus(Address)               (inb_p((Address) + IDE_REG_STATUS))
 #define IDEWriteCommand(Address, Data)       (outb_p((Address) + IDE_REG_COMMAND, (Data)))
-#define IDEReadBlock(Address, Buffer)        (insw((Address) + IDE_REG_DATA_PORT, (Buffer), IDE_SECTOR_BUF_SZ / 2))
-#define IDEWriteBlock(Address, Buffer)        (outsw((Address) + IDE_REG_DATA_PORT, (Buffer), IDE_SECTOR_BUF_SZ / 2))
+
+//
+//  Data block read and write commands
+//
+#define IDEReadBlock(Address, Buffer, Count) \
+  (insw((Address) + IDE_REG_DATA_PORT, (Buffer), (Count) / 2))
+#define IDEWriteBlock(Address, Buffer, Count) \
+  (outsw((Address) + IDE_REG_DATA_PORT, (Buffer), (Count) / 2))
 
 //
 //  Access macros for control registers
@@ -130,7 +140,10 @@ typedef struct _IDE_DEVICE_EXTENSION {
 //
 
 typedef enum _IDE_TIMER_STATES {
-  IDETimerIdle
+  IDETimerIdle,
+  IDETimerCmdWait,
+  IDETimerResetWaitForBusyNegate,
+  IDETimerResetWaitForDrdyAssert
 } IDE_TIMER_STATES;
 
 //    IDE_CONTROLLER_EXTENSION
@@ -157,6 +170,7 @@ typedef struct _IDE_CONTROLLER_EXTENSION {
   BYTE                   DeviceStatus;
   PIDE_DEVICE_EXTENSION  DeviceForOperation;
   PIRP                   CurrentIrp;
+  int                    Retries;
 
   IDE_TIMER_STATES       TimerState;
   LONG                   TimerCount;
@@ -186,8 +200,13 @@ typedef struct _IDE_DRIVE_IDENTIFY {
   char   FirmwareRev[8];      /*23*/
   char   ModelNumber[40];     /*27*/
   WORD  RWMultImplemented;   /*47*/
-  WORD  DWordIOSupported;    /*48*/
-  WORD  LBADMASupported;     /*49*/
+  WORD  Reserved48;          /*48*/
+  WORD  Capabilities;        /*49*/
+#define IDE_DRID_STBY_SUPPORTED   0x2000
+#define IDE_DRID_IORDY_SUPPORTED  0x0800
+#define IDE_DRID_IORDY_DISABLE    0x0400
+#define IDE_DRID_LBA_SUPPORTED    0x0200
+#define IDE_DRID_DMA_SUPPORTED    0x0100
   WORD  Reserved50;          /*50*/
   WORD  MinPIOTransTime;     /*51*/
   WORD  MinDMATransTime;     /*52*/

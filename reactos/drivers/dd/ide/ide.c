@@ -44,7 +44,6 @@
 //     
 //
 //   To Do:
-// FIXME: reads/writes that cause multiple calls to setup to device should be tested.
 // FIXME: a timer should be used to watch for device timeouts and errors
 // FIXME: errors should be retried
 // FIXME: a drive reset/recalibrate should be attempted if errors occur
@@ -140,32 +139,32 @@ static int TotalPartitions = 0;
 
 //  ---------------------------------------------------- Forward Declarations
 
-static BOOLEAN  IDECreateController(IN PDRIVER_OBJECT DriverObject, 
-                                    IN PIDE_CONTROLLER_PARAMETERS ControllerParams, 
-                                    IN int ControllerIdx);
-static BOOLEAN  IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
-static BOOLEAN  IDECreateDevices(IN PDRIVER_OBJECT DriverObject, 
-                                 IN PCONTROLLER_OBJECT ControllerObject, 
-                                 IN PIDE_CONTROLLER_EXTENSION ControllerExtension, 
-                                 IN int DriveIdx,
-                                 IN int HarddiskIdx);
-static BOOLEAN  IDEGetDriveIdentification(IN int CommandPort, 
-                                          IN int DriveNum, 
-                                          OUT PIDE_DRIVE_IDENTIFY DrvParms);
-static BOOLEAN  IDEGetPartitionTable(IN int CommandPort, 
-                                     IN int DriveNum, 
-                                     IN int Offset, 
-                                     IN PIDE_DRIVE_IDENTIFY DrvParms,
-                                     PARTITION *PartitionTable);
-static NTSTATUS  IDECreateDevice(IN PDRIVER_OBJECT DriverObject, 
-                                 IN PCHAR DeviceName, 
-                                 OUT PDEVICE_OBJECT *DeviceObject, 
-                                 IN PCONTROLLER_OBJECT ControllerObject, 
-                                 IN int UnitNumber,
-                                 IN char *Win32Alias,
-                                 IN PIDE_DRIVE_IDENTIFY DrvParms, 
-                                 IN DWORD Offset, 
-                                 IN DWORD Size);
+static BOOLEAN IDECreateController(IN PDRIVER_OBJECT DriverObject, 
+                                   IN PIDE_CONTROLLER_PARAMETERS ControllerParams, 
+                                   IN int ControllerIdx);
+static BOOLEAN IDEResetController(IN WORD CommandPort, IN WORD ControlPort);
+static BOOLEAN IDECreateDevices(IN PDRIVER_OBJECT DriverObject, 
+                                IN PCONTROLLER_OBJECT ControllerObject, 
+                                IN PIDE_CONTROLLER_EXTENSION ControllerExtension, 
+                                IN int DriveIdx,
+                                IN int HarddiskIdx);
+static BOOLEAN IDEGetDriveIdentification(IN int CommandPort, 
+                                         IN int DriveNum, 
+                                         OUT PIDE_DRIVE_IDENTIFY DrvParms);
+static BOOLEAN IDEGetPartitionTable(IN int CommandPort, 
+                                    IN int DriveNum, 
+                                    IN int Offset, 
+                                    IN PIDE_DRIVE_IDENTIFY DrvParms,
+                                    PARTITION *PartitionTable);
+static NTSTATUS IDECreateDevice(IN PDRIVER_OBJECT DriverObject, 
+                                IN PCHAR DeviceName, 
+                                OUT PDEVICE_OBJECT *DeviceObject, 
+                                IN PCONTROLLER_OBJECT ControllerObject, 
+                                IN int UnitNumber,
+                                IN char *Win32Alias,
+                                IN PIDE_DRIVE_IDENTIFY DrvParms, 
+                                IN DWORD Offset, 
+                                IN DWORD Size);
 static int IDEPolledRead(IN WORD Address, 
                          IN BYTE PreComp, 
                          IN BYTE SectorCnt, 
@@ -175,22 +174,23 @@ static int IDEPolledRead(IN WORD Address,
                          IN BYTE DrvHead, 
                          IN BYTE Command, 
                          OUT BYTE *Buffer);
-
-static  NTSTATUS  IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static  NTSTATUS  IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static  NTSTATUS  IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
-static  VOID  IDEStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
-static  IO_ALLOCATION_ACTION IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
-                                                   IN PIRP Irp, 
-                                                   IN PVOID MapRegisterBase, 
-                                                   IN PVOID Ccontext);
-static  BOOLEAN  IDEStartController(IN OUT PVOID Context);
-static  BOOLEAN  IDEIsr(IN PKINTERRUPT Interrupt, IN PVOID ServiceContext);
-static  VOID  IDEDpcForIsr(IN PKDPC Dpc, 
-                           IN PDEVICE_OBJECT DpcDeviceObject,
-                           IN PIRP DpcIrp, 
-                           IN PVOID DpcContext);
-static  VOID  IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
+static NTSTATUS IDEDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS IDEDispatchReadWrite(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static NTSTATUS IDEDispatchDeviceControl(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
+static VOID IDEStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static IO_ALLOCATION_ACTION IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
+                                                  IN PIRP Irp, 
+                                                  IN PVOID MapRegisterBase, 
+                                                  IN PVOID Ccontext);
+static BOOLEAN IDEStartController(IN OUT PVOID Context);
+VOID IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+static BOOLEAN IDEIsr(IN PKINTERRUPT Interrupt, IN PVOID ServiceContext);
+static VOID IDEDpcForIsr(IN PKDPC Dpc, 
+                         IN PDEVICE_OBJECT DpcDeviceObject,
+                         IN PIRP DpcIrp, 
+                         IN PVOID DpcContext);
+static VOID IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension);
+static VOID IDEIoTimer(PDEVICE_OBJECT DeviceObject, PVOID Context);
  
 //  ----------------------------------------------------------------  Inlines
 
@@ -393,23 +393,43 @@ IDEResetController(IN WORD CommandPort,
 {
   int  Retries;
 
-    //  Send the controller reset command
+    //  Assert drive reset line
   IDEWriteDriveControl(ControlPort, IDE_DC_SRST);
-  KeStallExecutionProcessor(50);
+
+    //  Wait for BUSY assertion
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++) 
+    {
+      if (IDEReadStatus(CommandPort) & IDE_SR_BUSY)
+        {
+          break;
+        }
+      KeStallExecutionProcessor(10);
+    }
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      return FALSE;
+    }
+
+    //  Negate drive reset line
   IDEWriteDriveControl(ControlPort, 0);
 
-    //  Loop on status register waiting for controller ready
-  for (Retries = 0; Retries < IDE_MAX_RESET_RETRIES; Retries++) 
+    //  Wait for BUSY negation
+  for (Retries = 0; Retries < IDE_RESET_BUSY_TIMEOUT * 1000; Retries++) 
     {
       if (!(IDEReadStatus(CommandPort) & IDE_SR_BUSY))
-        break;
+        {
+          break;
+        }
       KeStallExecutionProcessor(10);
+    }
+  if (Retries >= IDE_RESET_BUSY_TIMEOUT * 1000)
+    {
+      return FALSE;
     }
 
     //  return TRUE if controller came back to life. and
     //  the registers are initialized correctly
-  return  Retries < IDE_MAX_RESET_RETRIES &&
-          IDEReadError(CommandPort) == 1 &&
+  return  IDEReadError(CommandPort) == 1 &&
           IDEReadSectorCount(CommandPort) == 1 &&
           IDEReadSectorNum(CommandPort) == 1 &&
           IDEReadCylinderLow(CommandPort) == 0 &&
@@ -723,11 +743,10 @@ IDEGetDriveIdentification(IN int CommandPort,
          DrvParms->ECCByteCnt, 
          DrvParms->FirmwareRev);
   DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
-  DPRINT("RWMult?:%02x  DWrdIO?:%d  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
+  DPRINT("RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n", 
          (DrvParms->RWMultImplemented) & 0xff, 
-         DrvParms->DWordIOSupported, 
-         (DrvParms->LBADMASupported & 0x0200) ? 1 : 0,
-         (DrvParms->LBADMASupported & 0x0100) ? 1 : 0, 
+         (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0,
+         (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0, 
          DrvParms->MinPIOTransTime,
          DrvParms->MinDMATransTime);
   DPRINT("TM:Cyls:%d  Heads:%d  Sectors/Trk:%d Capacity:%d\n",
@@ -773,7 +792,7 @@ IDEGetPartitionTable(IN int CommandPort,
 
     //  Get sector at offset
   SaveOffset = Offset;
-  if (DrvParms->LBADMASupported & 0x0200) 
+  if (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) 
     {
       SectorNum = Offset & 0xff;
       CylinderLow = (Offset >> 8) & 0xff;
@@ -913,8 +932,10 @@ IDECreateDevice(IN PDRIVER_OBJECT DriverObject,
   DeviceExtension->DeviceObject = (*DeviceObject);
   DeviceExtension->ControllerObject = ControllerObject;
   DeviceExtension->UnitNumber = UnitNumber;
-  DeviceExtension->LBASupported = (DrvParms->LBADMASupported & 0x0200) ? 1 : 0;
-  DeviceExtension->DMASupported = (DrvParms->LBADMASupported & 0x0100) ? 1 : 0;
+  DeviceExtension->LBASupported = 
+    (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED) ? 1 : 0;
+  DeviceExtension->DMASupported = 
+    (DrvParms->Capabilities & IDE_DRID_DMA_SUPPORTED) ? 1 : 0;
     // FIXME: deal with bizarre sector sizes
   DeviceExtension->BytesPerSector = 512 /* DrvParms->BytesPerSector */;
   DeviceExtension->SectorsPerLogCyl = DrvParms->LogicalHeads * 
@@ -1076,7 +1097,7 @@ IDEPolledRead(IN WORD Address,
         }
 
         //  Read data into buffer
-      IDEReadBlock(Address, Buffer);
+      IDEReadBlock(Address, Buffer, IDE_SECTOR_BUF_SZ);
       Buffer += IDE_SECTOR_BUF_SZ;
 
         //  Check for more sectors to read
@@ -1318,7 +1339,9 @@ IDEStartIo(IN PDEVICE_OBJECT DeviceObject,
       DeviceExtension->TargetAddress = (BYTE *)MmGetSystemAddressForMdl(Irp->MdlAddress);
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
       IoAllocateController(DeviceExtension->ControllerObject,
-          DeviceObject, IDEAllocateController, NULL);
+                           DeviceObject, 
+                           IDEAllocateController, 
+                           NULL);
       KeLowerIrql(OldIrql);
       break;
 
@@ -1346,6 +1369,7 @@ IDEAllocateController(IN PDEVICE_OBJECT DeviceObject,
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) 
       DeviceExtension->ControllerObject->ControllerExtension;
   ControllerExtension->CurrentIrp = Irp;
+  ControllerExtension->Retries = 0;
   return KeSynchronizeExecution(ControllerExtension->Interrupt, 
                                 IDEStartController,
                                 DeviceExtension) ? KeepObject : 
@@ -1429,14 +1453,23 @@ IDEStartController(IN OUT PVOID Context)
         }
       KeStallExecutionProcessor(10);
     }
-  /* FIXME: should reset controller and try again  */
+Retries = IDE_MAX_BUSY_RETRIES;
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
-      Irp = ControllerExtension->CurrentIrp;
-      Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-      Irp->IoStatus.Information = 0;
+      if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
+        {
+          Irp = ControllerExtension->CurrentIrp;
+          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
+          Irp->IoStatus.Information = 0;
 
-      return DeallocateObject;
+          return FALSE;
+        }
+      else
+        {
+          IDEBeginControllerReset(ControllerExtension);
+
+          return TRUE;
+        }
     }
 
   /*  Select the desired drive  */
@@ -1452,14 +1485,22 @@ IDEStartController(IN OUT PVOID Context)
         }
       KeStallExecutionProcessor(10);
     }
-  /* FIXME: should reset controller and try again  */
   if (Retries >= IDE_MAX_BUSY_RETRIES)
     {
-      Irp = ControllerExtension->CurrentIrp;
-      Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-      Irp->IoStatus.Information = 0;
+      if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
+        {
+          Irp = ControllerExtension->CurrentIrp;
+          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
+          Irp->IoStatus.Information = 0;
 
-      return DeallocateObject;
+          return FALSE;
+        }
+      else
+        {
+          IDEBeginControllerReset(ControllerExtension);
+
+          return TRUE;
+        }
     }
 
   /*  Setup command parameters  */
@@ -1472,7 +1513,10 @@ IDEStartController(IN OUT PVOID Context)
 
   /*  Issue command to drive  */
   IDEWriteCommand(ControllerExtension->CommandPortBase, Command);
-
+  ControllerExtension->TimerState = IDETimerCmdWait;
+  ControllerExtension->TimerCount = IDE_CMD_TIMEOUT;
+  IoStartTimer(ControllerExtension->TimerDevice);
+  
   if (DeviceExtension->Operation == IRP_MJ_WRITE) 
     {
 
@@ -1484,23 +1528,69 @@ IDEStartController(IN OUT PVOID Context)
             {
               break;
             }
+          KeStallExecutionProcessor(10);
         }
       if (Retries >= IDE_MAX_BUSY_RETRIES)
         {
-          Irp = ControllerExtension->CurrentIrp;
-          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-          Irp->IoStatus.Information = 0;
+          if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
+            {
+              Irp = ControllerExtension->CurrentIrp;
+              Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
+              Irp->IoStatus.Information = 0;
 
-          return DeallocateObject;
+              return FALSE;
+            }
+          else
+            {
+              IDEBeginControllerReset(ControllerExtension);
+
+              return TRUE;
+            }
         }
 
         //  Load the first sector of data into the controller
-      IDEWriteBlock(ControllerExtension->CommandPortBase, DeviceExtension->TargetAddress);
+      IDEWriteBlock(ControllerExtension->CommandPortBase, 
+                    DeviceExtension->TargetAddress,
+                    IDE_SECTOR_BUF_SZ);
       DeviceExtension->TargetAddress += IDE_SECTOR_BUF_SZ;
       DeviceExtension->BytesToTransfer -= DeviceExtension->BytesPerSector;
+      DeviceExtension->SectorsTransferred++;
     }
 
   return  TRUE;
+}
+
+//    IDEBeginControllerReset
+
+VOID 
+IDEBeginControllerReset(PIDE_CONTROLLER_EXTENSION ControllerExtension)
+{
+  int Retries;
+
+    // Assert drive reset line
+  IDEWriteDriveControl(ControllerExtension->ControlPortBase, IDE_DC_SRST);
+
+    // FIXME: wait for BSY assertion
+  for (Retries = 0; Retries < IDE_MAX_RESET_RETRIES; Retries++) 
+    {
+      BYTE Status = IDEReadStatus(ControllerExtension->CommandPortBase);
+      if ((Status & IDE_SR_BUSY)) 
+        {
+          break;
+        }
+      KeStallExecutionProcessor(10);
+    }
+
+    // Negate drive reset line
+  IDEWriteDriveControl(ControllerExtension->ControlPortBase, 0);
+
+  // FIXME: handle case of no device 0
+
+    // FIXME: set timer to check for end of reset
+  ControllerExtension->TimerState = IDETimerResetWaitForBusyNegate;
+  ControllerExtension->TimerCount = IDE_RESET_BUSY_TIMEOUT;
+  IoStartTimer(ControllerExtension->TimerDevice);
+
 }
 
 //    IDEIsr
@@ -1616,7 +1706,9 @@ IDEIsr(IN PKINTERRUPT Interrupt,
             }
 
             //  Copy the block of data
-          IDEReadBlock(ControllerExtension->CommandPortBase, TargetAddress);
+          IDEReadBlock(ControllerExtension->CommandPortBase, 
+                       TargetAddress,
+                       IDE_SECTOR_BUF_SZ);
 
             //  check DRQ
           if (IsLastBlock) 
@@ -1716,9 +1808,12 @@ IDEIsr(IN PKINTERRUPT Interrupt,
               TargetAddress = DeviceExtension->TargetAddress;
               DeviceExtension->TargetAddress += DeviceExtension->BytesPerSector;
               DeviceExtension->BytesToTransfer -= DeviceExtension->BytesPerSector;
+              DeviceExtension->SectorsTransferred++;
 
                 //  Write block to controller
-              IDEWriteBlock(ControllerExtension->CommandPortBase, TargetAddress);
+              IDEWriteBlock(ControllerExtension->CommandPortBase, 
+                            TargetAddress,
+                            IDE_SECTOR_BUF_SZ);
             }
           break;
         }
@@ -1727,7 +1822,6 @@ IDEIsr(IN PKINTERRUPT Interrupt,
   //  If there was an error or the request is done, complete the packet
   if (AnErrorOccured || RequestIsComplete) 
     {
-
       //  Set the return status and info values
       Irp = ControllerExtension->CurrentIrp;
       Irp->IoStatus.Status = ErrorStatus;
@@ -1768,15 +1862,22 @@ IDEDpcForIsr(IN PKDPC Dpc,
              IN PIRP DpcIrp, 
              IN PVOID DpcContext)
 {
-  PIDE_CONTROLLER_EXTENSION ControllerExtension;
+  IDEFinishOperation((PIDE_CONTROLLER_EXTENSION) DpcContext);
+}
+
+//    IDEFinishOperation
+
+static VOID 
+IDEFinishOperation(PIDE_CONTROLLER_EXTENSION ControllerExtension)
+{
   PIDE_DEVICE_EXTENSION DeviceExtension;
   PIRP Irp;
   ULONG Operation;
 
-  ControllerExtension = (PIDE_CONTROLLER_EXTENSION) DpcContext;
   DeviceExtension = ControllerExtension->DeviceForOperation;
   Irp = ControllerExtension->CurrentIrp;
   Operation = DeviceExtension->Operation;
+  ControllerExtension->OperationInProgress = FALSE;
   ControllerExtension->DeviceForOperation = 0;
   ControllerExtension->CurrentIrp = 0;
 
@@ -1815,8 +1916,48 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
 {
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
 
+DPRINT("entered timer\n");
+
     //  Setup Extension pointer
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION) Context;
+
+    //  Handle state change if necessary
+  switch (ControllerExtension->TimerState) 
+    {
+      case IDETimerResetWaitForBusyNegate:
+        if (!(IDEReadStatus(ControllerExtension->CommandPortBase) & 
+            IDE_SR_BUSY))
+          {
+            ControllerExtension->TimerState = IDETimerResetWaitForDrdyAssert;
+            ControllerExtension->TimerCount = IDE_RESET_DRDY_TIMEOUT;
+            return;
+          }
+        break;
+        
+      case IDETimerResetWaitForDrdyAssert:
+        if (IDEReadStatus(ControllerExtension->CommandPortBase) & 
+            IDE_SR_DRQ)
+          {
+            ControllerExtension->TimerState = IDETimerIdle;
+            ControllerExtension->TimerCount = 0;
+            IoStopTimer(ControllerExtension->TimerDevice);
+
+              // FIXME: get diagnostic code from drive 0
+
+              //  Start current packet command again
+            if (!KeSynchronizeExecution(ControllerExtension->Interrupt, 
+                                        IDEStartController,
+                                        ControllerExtension->DeviceForOperation))
+              {
+                IDEFinishOperation(ControllerExtension);
+              }
+            return;
+          }
+        break;
+
+      default:
+        break;
+    }
 
     //  If we're counting down, then count.
   if (ControllerExtension->TimerCount > 0) 
@@ -1830,6 +1971,29 @@ IDEIoTimer(PDEVICE_OBJECT DeviceObject,
       switch (ControllerExtension->TimerState) 
         {
           case IDETimerIdle:
+            break;
+
+          case IDETimerCmdWait:
+              //  Command timed out, reset drive and try again or fail
+            if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
+              {
+                ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
+                ControllerExtension->CurrentIrp->IoStatus.Information = 0;
+                IoStopTimer(ControllerExtension->TimerDevice);
+                IDEFinishOperation(ControllerExtension);
+              }
+            else
+              {
+                IDEBeginControllerReset(ControllerExtension);
+              }
+            break;
+
+          case IDETimerResetWaitForBusyNegate:
+          case IDETimerResetWaitForDrdyAssert:
+            ControllerExtension->CurrentIrp->IoStatus.Status = STATUS_IO_TIMEOUT;
+            ControllerExtension->CurrentIrp->IoStatus.Information = 0;
+            IoStopTimer(ControllerExtension->TimerDevice);
+            IDEFinishOperation(ControllerExtension);
             break;
         }
     }
