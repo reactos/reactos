@@ -1,4 +1,4 @@
-/* $Id: winlogon.c,v 1.6 2001/06/12 17:50:26 chorns Exp $
+/* $Id: winlogon.c,v 1.7 2001/06/22 02:10:11 phreak Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -289,7 +289,7 @@ WinMain(HINSTANCE hInstance,
 
 
    AllocConsole();
-   
+   SetConsoleTitle( "Winlogon" );
    /* start system processes (services.exe & lsass.exe) */
    StartServices();
 #if 0
