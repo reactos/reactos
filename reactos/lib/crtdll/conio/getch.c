@@ -23,7 +23,7 @@ int
 _getch(void)
 {
   
-  DWORD  NumberOfCharsRead;
+  DWORD  NumberOfCharsRead = 0;
   char c;
   if (char_avail)
   {
@@ -31,12 +31,12 @@ _getch(void)
     char_avail = 0;
   }
   else
-  {
+  {	
+	ReadConsoleA(filehnd(stdin->_file), &c,1,&NumberOfCharsRead ,NULL);
 	
-  	if( !ReadFile(filehnd(stdin->_file), &c,1,&NumberOfCharsRead ,NULL))
-		return -1;
-
   }
-  printk("%c",c);
+  if ( c == 10 )
+	c = 13;
+  putchar(c);
   return c;
 }
