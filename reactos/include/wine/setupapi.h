@@ -9,7 +9,11 @@
 #ifndef __WINE_SETUPAPI_H
 #define __WINE_SETUPAPI_H
 
+#undef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT
 #include_next <setupapi.h>
+#undef DECLSPEC_IMPORT
+#define DECLSPEC_IMPORT __declspec(dllimport)
 
 #define FLG_ADDREG_DELREG_BIT             0x00008000
 #define FLG_DELREG_KEYONLY_COMMON        FLG_ADDREG_KEYONLY_COMMON
