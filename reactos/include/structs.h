@@ -2172,13 +2172,27 @@ typedef struct _SERVICE_STATUS {
   DWORD dwCheckPoint; 
   DWORD dwWaitHint; 
 } SERVICE_STATUS, *LPSERVICE_STATUS; 
- 
-typedef struct _ENUM_SERVICE_STATUS { 
-  LPTSTR lpServiceName; 
-  LPTSTR lpDisplayName; 
-  SERVICE_STATUS ServiceStatus; 
-} ENUM_SERVICE_STATUS, *LPENUM_SERVICE_STATUS; 
- 
+
+typedef struct _ENUM_SERVICE_STATUSA {
+  LPSTR lpServiceName;
+  LPSTR lpDisplayName;
+  SERVICE_STATUS ServiceStatus;
+} ENUM_SERVICE_STATUSA, *LPENUM_SERVICE_STATUSA;
+
+typedef struct _ENUM_SERVICE_STATUSW {
+  LPWSTR lpServiceName;
+  LPWSTR lpDisplayName;
+  SERVICE_STATUS ServiceStatus;
+} ENUM_SERVICE_STATUSW, *LPENUM_SERVICE_STATUSW;
+
+#ifdef UNICODE
+#define ENUM_SERVICE_STATUS ENUM_SERVICE_STATUSW
+#define LPENUM_SERVICE_STATUS LPENUM_SERVICE_STATUSW
+#else
+#define ENUM_SERVICE_STATUS ENUM_SERVICE_STATUSA
+#define LPENUM_SERVICE_STATUS LPENUM_SERVICE_STATUSA
+#endif
+
 typedef struct tagENUMLOGFONT { 
   LOGFONT elfLogFont; 
   BCHAR    elfFullName[LF_FULLFACESIZE]; 
@@ -3611,35 +3625,69 @@ typedef struct _PROVIDOR_INFO_1 {
   LPTSTR pDLLName ; 
 } PROVIDOR_INFO_1; 
  
-typedef struct _PSHNOTIFY { 
-  NMHDR hdr; 
-  LPARAM lParam; 
-} PSHNOTIFY,   *LPPSHNOTIFY; 
- 
+typedef struct _PSHNOTIFY {
+  NMHDR hdr;
+  LPARAM lParam;
+} PSHNOTIFY,   *LPPSHNOTIFY;
+
 typedef struct _punctuation {
-  UINT   iSize;          
-  LPSTR  szPunctuation;  
+  UINT   iSize;
+  LPSTR  szPunctuation;
 } PUNCTUATION; 
- 
-typedef struct _QUERY_SERVICE_CONFIG { 
-  DWORD dwServiceType; 
-  DWORD dwStartType; 
-  DWORD dwErrorControl; 
-  LPTSTR lpBinaryPathName; 
-  LPTSTR lpLoadOrderGroup; 
-  DWORD dwTagId; 
-  LPTSTR lpDependencies; 
-  LPTSTR lpServiceStartName; 
-  LPTSTR lpDisplayName; 
-} QUERY_SERVICE_CONFIG, *LPQUERY_SERVICE_CONFIG; 
- 
-typedef struct _QUERY_SERVICE_LOCK_STATUS { 
-  DWORD fIsLocked; 
-  LPTSTR lpLockOwner; 
-  DWORD dwLockDuration; 
-} QUERY_SERVICE_LOCK_STATUS, *LPQUERY_SERVICE_LOCK_STATUS ; 
- 
-typedef  struct  _RASAMB {  
+
+typedef struct _QUERY_SERVICE_CONFIGA {
+  DWORD dwServiceType;
+  DWORD dwStartType;
+  DWORD dwErrorControl;
+  LPSTR lpBinaryPathName;
+  LPSTR lpLoadOrderGroup;
+  DWORD dwTagId;
+  LPSTR lpDependencies;
+  LPSTR lpServiceStartName;
+  LPSTR lpDisplayName;
+} QUERY_SERVICE_CONFIGA, *LPQUERY_SERVICE_CONFIGA;
+
+typedef struct _QUERY_SERVICE_CONFIGW {
+  DWORD dwServiceType;
+  DWORD dwStartType;
+  DWORD dwErrorControl;
+  LPWSTR lpBinaryPathName;
+  LPWSTR lpLoadOrderGroup;
+  DWORD dwTagId;
+  LPWSTR lpDependencies;
+  LPWSTR lpServiceStartName;
+  LPWSTR lpDisplayName;
+} QUERY_SERVICE_CONFIGW, *LPQUERY_SERVICE_CONFIGW;
+
+#ifdef UNICODE
+#define QUERY_SERVICE_CONFIG QUERY_SERVICE_CONFIGW
+#define LPQUERY_SERVICE_CONFIG LPQUERY_SERVICE_CONFIGW
+#else
+#define QUERY_SERVICE_CONFIG QUERY_SERVICE_CONFIGA
+#define LPQUERY_SERVICE_CONFIG LPQUERY_SERVICE_CONFIGA
+#endif
+
+typedef struct _QUERY_SERVICE_LOCK_STATUSA {
+  DWORD fIsLocked;
+  LPSTR lpLockOwner;
+  DWORD dwLockDuration;
+} QUERY_SERVICE_LOCK_STATUSA, *LPQUERY_SERVICE_LOCK_STATUSA;
+
+typedef struct _QUERY_SERVICE_LOCK_STATUSW {
+  DWORD fIsLocked;
+  LPWSTR lpLockOwner;
+  DWORD dwLockDuration;
+} QUERY_SERVICE_LOCK_STATUSW, *LPQUERY_SERVICE_LOCK_STATUSW;
+
+#ifdef UNICODE
+#define QUERY_SERVICE_LOCK_STATUS QUERY_SERVICE_LOCK_STATUSW
+#define LPQUERY_SERVICE_LOCK_STATUS LPQUERY_SERVICE_LOCK_STATUSW
+#else
+#define QUERY_SERVICE_LOCK_STATUS QUERY_SERVICE_LOCK_STATUSA
+#define LPQUERY_SERVICE_LOCK_STATUS LPQUERY_SERVICE_LOCK_STATUSA
+#endif
+
+typedef  struct  _RASAMB {
   DWORD    dwSize; 
   DWORD    dwError; 
   TCHAR    szNetBiosError[ NETBIOS_NAME_LEN + 1 ]; 
@@ -3797,11 +3845,25 @@ typedef struct tagSERIALKEYS {
   DWORD iPortState; 
 } SERIALKEYS,  * LPSERIALKEYS; 
  
-typedef struct _SERVICE_TABLE_ENTRY { 
-  LPTSTR lpServiceName; 
+typedef struct _SERVICE_TABLE_ENTRYA { 
+  LPSTR lpServiceName; 
   LPSERVICE_MAIN_FUNCTION lpServiceProc; 
-} SERVICE_TABLE_ENTRY, *LPSERVICE_TABLE_ENTRY; 
- 
+} SERVICE_TABLE_ENTRYA, *LPSERVICE_TABLE_ENTRYA; 
+
+typedef struct _SERVICE_TABLE_ENTRYW { 
+  LPWSTR lpServiceName; 
+  LPSERVICE_MAIN_FUNCTION lpServiceProc; 
+} SERVICE_TABLE_ENTRYW, *LPSERVICE_TABLE_ENTRYW; 
+
+#ifdef UNICODE
+#define SERVICE_TABLE_ENTRY SERVICE_TABLE_ENTRYW
+#define LPSERVICE_TABLE_ENTRY LPSERVICE_TABLE_ENTRYW
+#else
+#define SERVICE_TABLE_ENTRY SERVICE_TABLE_ENTRYA
+#define LPSERVICE_TABLE_ENTRY LPSERVICE_TABLE_ENTRYA
+#endif
+
+
 typedef struct _SERVICE_TYPE_VALUE_ABS { 
   DWORD   dwNameSpace; 
   DWORD   dwValueType; 

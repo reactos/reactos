@@ -10,6 +10,7 @@
  */
 #include <windows.h>
 #include <ddk/ntddk.h>
+#include <wchar.h>
 
 /************************************************************************
  *	RegCloseKey
@@ -20,6 +21,9 @@ RegCloseKey(
 	HKEY	hKey
 	)
 {
+	if (!hKey)
+		return ERROR_INVALID_HANDLE;
+
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
@@ -52,8 +56,38 @@ RegCreateKeyA(
 	PHKEY	phkResult
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+	return RegCreateKeyExA(hKey,
+		lpSubKey,
+		0,
+		NULL,
+		0,
+		MAXIMUM_ALLOWED,
+		NULL,
+		phkResult,
+		NULL);
+}
+
+
+/************************************************************************
+ *	RegCreateKeyW
+ */
+LONG
+STDCALL
+RegCreateKeyW(
+	HKEY	hKey,
+	LPCWSTR lpSubKey,
+	PHKEY	phkResult
+	)
+{
+	return RegCreateKeyExW(hKey,
+		lpSubKey,
+		0,
+		NULL,
+		0,
+		MAXIMUM_ALLOWED,
+		NULL,
+		phkResult,
+		NULL);
 }
 
 
@@ -80,6 +114,28 @@ RegCreateKeyExA(
 
 
 /************************************************************************
+ *	RegCreateKeyExW
+ */
+LONG
+STDCALL
+RegCreateKeyExW(
+	HKEY			hKey,
+	LPCWSTR			lpSubKey,
+	DWORD			Reserved,
+	LPWSTR			lpClass,
+	DWORD			dwOptions,
+	REGSAM			samDesired,
+	LPSECURITY_ATTRIBUTES	lpSecurityAttributes,
+	PHKEY			phkResult,
+	LPDWORD			lpdwDisposition
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
  *	RegDeleteKeyA
  */
 LONG
@@ -87,6 +143,21 @@ STDCALL
 RegDeleteKeyA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegDeleteKeyW
+ */
+LONG
+STDCALL
+RegDeleteKeyW(
+	HKEY	hKey,
+	LPCWSTR	lpSubKey
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -185,6 +256,7 @@ RegFlushKey(
 /************************************************************************
  *	RegGetKeySecurity
  */
+#if 0
 LONG
 STDCALL
 RegGetKeySecurity (
@@ -197,6 +269,7 @@ RegGetKeySecurity (
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
+#endif
 
 
 /************************************************************************
@@ -208,6 +281,22 @@ RegLoadKey(
 	HKEY	hKey,
 	LPCSTR	lpSubKey,
 	LPCSTR	lpFile
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegLoadKeyW
+ */
+LONG
+STDCALL
+RegLoadKeyW(
+	HKEY	hKey,
+	LPCWSTR	lpSubKey,
+	LPCWSTR	lpFile
 	)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
@@ -251,6 +340,47 @@ RegOpenKeyA(
 
 
 /************************************************************************
+ *	RegOpenKeyW
+ *
+ *	19981101 Ariadne
+ *	19990525 EA
+ */
+LONG
+STDCALL
+RegOpenKeyW (
+	HKEY	hKey,
+	LPCWSTR	lpSubKey,
+	PHKEY	phkResult
+	)
+{
+	NTSTATUS		errCode;
+	UNICODE_STRING		SubKeyString;
+	OBJECT_ATTRIBUTES	ObjectAttributes;
+
+	SubKeyString.Buffer = (LPWSTR)lpSubKey;
+	SubKeyString.Length = wcslen(lpSubKey);
+	SubKeyString.MaximumLength = SubKeyString.Length;
+
+	ObjectAttributes.RootDirectory =  hKey;
+	ObjectAttributes.ObjectName = & SubKeyString;
+	ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE; 
+	errCode = NtOpenKey(
+			phkResult,
+			GENERIC_ALL,
+			& ObjectAttributes
+			);
+	if ( !NT_SUCCESS(errCode) )
+	{
+		LONG LastError = RtlNtStatusToDosError(errCode);
+		
+		SetLastError(LastError);
+		return LastError;
+	}
+	return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
  *	RegOpenKeyExA
  */
 LONG
@@ -258,6 +388,24 @@ STDCALL
 RegOpenKeyExA(
 	HKEY	hKey,
 	LPCSTR	lpSubKey,
+	DWORD	ulOptions,
+	REGSAM	samDesired,
+	PHKEY	phkResult
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegOpenKeyExW
+ */
+LONG
+STDCALL
+RegOpenKeyExW(
+	HKEY	hKey,
+	LPCWSTR	lpSubKey,
 	DWORD	ulOptions,
 	REGSAM	samDesired,
 	PHKEY	phkResult
@@ -279,11 +427,36 @@ RegQueryInfoKeyA(
 	LPDWORD		lpcbClass,
 	LPDWORD		lpReserved,
 	LPDWORD		lpcSubKeys,
-	LPDWORD 	lpcbMaxSubKeyLen,
-	LPDWORD 	lpcbMaxClassLen,
-	LPDWORD 	lpcValues,
-	LPDWORD 	lpcbMaxValueNameLen,
-	LPDWORD 	lpcbMaxValueLen,
+	LPDWORD		lpcbMaxSubKeyLen,
+	LPDWORD		lpcbMaxClassLen,
+	LPDWORD		lpcValues,
+	LPDWORD		lpcbMaxValueNameLen,
+	LPDWORD		lpcbMaxValueLen,
+	LPDWORD		lpcbSecurityDescriptor,
+	PFILETIME	lpftLastWriteTime
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegQueryInfoKeyW
+ */
+LONG
+STDCALL
+RegQueryInfoKeyW(
+	HKEY		hKey,
+	LPWSTR		lpClass,
+	LPDWORD		lpcbClass,
+	LPDWORD		lpReserved,
+	LPDWORD		lpcSubKeys,
+	LPDWORD		lpcbMaxSubKeyLen,
+	LPDWORD		lpcbMaxClassLen,
+	LPDWORD		lpcValues,
+	LPDWORD		lpcbMaxValueNameLen,
+	LPDWORD		lpcbMaxValueLen,
 	LPDWORD		lpcbSecurityDescriptor,
 	PFILETIME	lpftLastWriteTime
 	)
@@ -335,7 +508,26 @@ LONG
 STDCALL
 RegQueryValueExA(
 	HKEY	hKey,
-	LPCSTR	lpValueName,
+	LPSTR	lpValueName,
+	LPDWORD	lpReserved,
+	LPDWORD	lpType,
+	LPBYTE	lpData,
+	LPDWORD	lpcbData
+	)
+{
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *	RegQueryValueExW
+ */
+LONG
+STDCALL
+RegQueryValueExW(
+	HKEY	hKey,
+	LPWSTR	lpValueName,
 	LPDWORD	lpReserved,
 	LPDWORD	lpType,
 	LPBYTE	lpData,
@@ -399,6 +591,7 @@ RegSaveKeyA(
 /************************************************************************
  *	RegSetKeySecurity
  */
+#if 0
 LONG
 STDCALL
 RegSetKeySecurity(
@@ -410,7 +603,7 @@ RegSetKeySecurity(
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
-
+#endif
 
 /************************************************************************
  *	RegSetValueA
@@ -465,4 +658,3 @@ RegUnLoadKeyA(
 
 
 /* EOF */
-

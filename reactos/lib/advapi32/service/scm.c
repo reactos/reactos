@@ -1,4 +1,4 @@
-/* $Id: scm.c,v 1.1 1999/05/19 16:43:30 ea Exp $
+/* $Id: scm.c,v 1.2 1999/07/22 21:36:14 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -191,7 +191,10 @@ EnumDependentServicesW(
 
 /**********************************************************************
  *	EnumServiceGroupW
+ *
+ * Return value unknown.
  */
+DWORD
 STDCALL
 EnumServiceGroupW(VOID)
 {
@@ -236,6 +239,7 @@ EnumServicesStatusExA(VOID)
 /**********************************************************************
  *	EnumServicesStatusExW
  */
+BOOL
 STDCALL
 EnumServicesStatusExW(VOID)
 {
@@ -337,7 +341,10 @@ GetServiceKeyNameW(
  *	I_ScSetServiceBitsA
  *
  * Undocumented
+ *
+ * Return value unknown.
  */
+DWORD
 STDCALL
 I_ScSetServiceBitsA(VOID)
 {
@@ -350,7 +357,10 @@ I_ScSetServiceBitsA(VOID)
  *	I_ScSetServiceBitsW
  *
  * Undocumented
+ *
+ * Return value unknown.
  */
+DWORD
 STDCALL
 I_ScSetServiceBitsW(VOID)
 {
@@ -587,6 +597,7 @@ RegisterServiceCtrlHandlerW(
 /**********************************************************************
  *	SetServiceBits
  */
+BOOL
 STDCALL
 SetServiceBits(VOID)
 {

@@ -7,6 +7,10 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+
+#include <windows.h>
+#include <ddk/ntddk.h>
+
 WINBOOL
 STDCALL
 AdjustTokenGroups (
@@ -20,7 +24,7 @@ AdjustTokenGroups (
 {
 	NTSTATUS errCode;
 	errCode = NtAdjustGroupsToken(TokenHandle,ResetToDefault,NewState,
-			BufferLength, PreviousState, ReturnLength );
+			BufferLength, PreviousState, (PULONG)ReturnLength );
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
@@ -39,8 +43,8 @@ AdjustTokenPrivileges (
 		       PDWORD ReturnLength
 			)
 {	NTSTATUS errCode;
-	errCode = NtAdjustPrivilegesToken(TokenHandle,ResetToDefault,NewState,
-			BufferLength, PreviousState, ReturnLength );
+	errCode = NtAdjustPrivilegesToken(TokenHandle,DisableAllPrivileges,NewState,
+			BufferLength, PreviousState, (PULONG)ReturnLength );
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
@@ -61,7 +65,7 @@ GetTokenInformation (
 {
 	NTSTATUS errCode;
 	errCode = NtQueryInformationToken(TokenHandle,TokenInformationClass,TokenInformation,
-			TokenInformationLength, ReturnLength);
+			TokenInformationLength, (PULONG)ReturnLength);
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
@@ -79,7 +83,7 @@ SetTokenInformation (
 		      )
 {
 	NTSTATUS errCode;
-	errCode = NtSetnformationToken(TokenHandle,TokenInformationClass,TokenInformation,
+	errCode = NtSetInformationToken(TokenHandle,TokenInformationClass,TokenInformation,
 			TokenInformationLength);
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
@@ -106,10 +110,10 @@ AccessCheck (
 	     ClientToken,
 	     DesiredAccess,
 	     GenericMapping,
-	     PrivilegeSet,
-	     PrivilegeSetLength,
-	     GrantedAccess,
-	     AccessStatus);
+             PrivilegeSet,
+	     (PULONG)PrivilegeSetLength,
+	     (PULONG)GrantedAccess,
+	     (PBOOLEAN)AccessStatus);
 	if ( !NT_SUCCESS(errCode) ) {
 		SetLastError(RtlNtStatusToDosError(errCode));
 		return FALSE;
@@ -157,3 +161,46 @@ OpenThreadToken (
 }
 
 
+WINBOOL
+STDCALL
+SetThreadToken (
+                PHANDLE ThreadHandle,
+                HANDLE TokenHandle
+                 )
+{
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+}
+
+
+WINBOOL
+STDCALL
+DuplicateToken (
+                HANDLE ExistingTokenHandle,
+                SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                PHANDLE DuplicateTokenHandle
+                 )
+{
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+}
+
+
+
+WINBOOL
+STDCALL
+DuplicateTokenEx (
+                  HANDLE ExistingTokenHandle,
+                  DWORD  dwDesiredAccess,
+                  LPSECURITY_ATTRIBUTES lpTokenAttributes,
+                  SECURITY_IMPERSONATION_LEVEL ImpersonationLevel,
+                  TOKEN_TYPE TokenType,
+                  PHANDLE DuplicateTokenHandle
+                   )
+{
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+}
+
+
+/* EOF */

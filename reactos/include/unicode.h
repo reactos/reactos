@@ -2292,7 +2292,7 @@ LONG
 STDCALL
 RegQueryValueExW (
     HKEY hKey,
-    LPCWSTR lpValueName,
+    LPWSTR lpValueName,
     LPDWORD lpReserved,
     LPDWORD lpType,
     LPBYTE lpData,
@@ -2858,7 +2858,7 @@ STDCALL
 EnumDependentServicesW(
     SC_HANDLE               hService,
     DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUS  lpServices,
+    LPENUM_SERVICE_STATUSW  lpServices,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded,
     LPDWORD                 lpServicesReturned
@@ -2870,7 +2870,7 @@ EnumServicesStatusW(
     SC_HANDLE               hSCManager,
     DWORD                   dwServiceType,
     DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUS  lpServices,
+    LPENUM_SERVICE_STATUSW  lpServices,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded,
     LPDWORD                 lpServicesReturned,
@@ -2881,8 +2881,8 @@ WINBOOL
 STDCALL
 GetServiceKeyNameW(
     SC_HANDLE               hSCManager,
-    LPCWSTR                lpDisplayName,
-    LPWSTR                 lpServiceName,
+    LPCWSTR                 lpDisplayName,
+    LPWSTR                  lpServiceName,
     LPDWORD                 lpcchBuffer
     );
 
@@ -2890,8 +2890,8 @@ WINBOOL
 STDCALL
 GetServiceDisplayNameW(
     SC_HANDLE               hSCManager,
-    LPCWSTR                lpServiceName,
-    LPWSTR                 lpDisplayName,
+    LPCWSTR                 lpServiceName,
+    LPWSTR                  lpDisplayName,
     LPDWORD                 lpcchBuffer
     );
 
@@ -2907,7 +2907,7 @@ SC_HANDLE
 STDCALL
 OpenServiceW(
     SC_HANDLE   hSCManager,
-    LPCWSTR    lpServiceName,
+    LPCWSTR     lpServiceName,
     DWORD       dwDesiredAccess
     );
 
@@ -2915,7 +2915,7 @@ WINBOOL
 STDCALL
 QueryServiceConfigW(
     SC_HANDLE               hService,
-    LPQUERY_SERVICE_CONFIG lpServiceConfig,
+    LPQUERY_SERVICE_CONFIGW lpServiceConfig,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded
     );
@@ -2924,7 +2924,7 @@ WINBOOL
 STDCALL
 QueryServiceLockStatusW(
     SC_HANDLE                       hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUS    lpLockStatus,
+    LPQUERY_SERVICE_LOCK_STATUSW    lpLockStatus,
     DWORD                           cbBufSize,
     LPDWORD                         pcbBytesNeeded
     );
@@ -2932,14 +2932,14 @@ QueryServiceLockStatusW(
 SERVICE_STATUS_HANDLE
 STDCALL
 RegisterServiceCtrlHandlerW(
-    LPCWSTR             lpServiceName,
+    LPCWSTR              lpServiceName,
     LPHANDLER_FUNCTION   lpHandlerProc
     );
 
 WINBOOL
 STDCALL
 StartServiceCtrlDispatcherW(
-    LPSERVICE_TABLE_ENTRY    lpServiceStartTable
+    LPSERVICE_TABLE_ENTRYW   lpServiceStartTable
     );
 
 WINBOOL

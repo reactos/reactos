@@ -7,11 +7,14 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
+
+#include <windows.h>
+
 DWORD
 STDCALL
 GetSecurityDescriptorLength (
 			     PSECURITY_DESCRIPTOR pSecurityDescriptor
 			      )
 {
-	return RtlSetSecurityDescriptorLength(pSecurityDescriptor);
+        return RtlLengthSecurityDescriptor(pSecurityDescriptor);
 }

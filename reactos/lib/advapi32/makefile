@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.4 1999/07/17 23:10:18 ea Exp $
+# $Id: makefile,v 1.5 1999/07/22 21:33:48 ekohl Exp $
 #
 # Makefile for ReactOS advapi32.dll
 #
@@ -17,7 +17,7 @@ endif
 MISC_OBJECTS = misc/dllmain.o misc/shutdown.o \
 		misc/sysfunc.o
 
-REGISTRY_OBJECTS = reg/reg.o reg/regw.o
+REGISTRY_OBJECTS = reg/reg.o
 
 SECURITY_OBJECTS = sec/lsa.o sec/sec.o
 #SECURITY_OBJECTS = sec/lsa.o sec/rtlsec.o sec/sec.o
@@ -46,8 +46,8 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--output-lib $(TARGET).a
 	$(CC) \
 		$(TARGET).o \
-		../kernel32/kernel32.a \
 		../ntdll/ntdll.a \
+		../kernel32/kernel32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
 		-o junk.tmp \
@@ -60,12 +60,12 @@ $(TARGET).dll: $(DLLMAIN) $(OBJECTS) $(TARGET).def
 		--def $(TARGET).edf
 	- $(RM) base.tmp
 	$(CC) \
-		$(TARGET).o
-		../kernel32/kernel32.a
+		$(TARGET).o \
 		../ntdll/ntdll.a \
+		../kernel32/kernel32.a \
 		-specs=$(TARGET)_specs \
 		-mdll \
-		-o $(TARGET).dll   \
+		-o $(TARGET).dll \
 		-Wl,--image-base,0x20000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

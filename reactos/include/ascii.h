@@ -2333,7 +2333,7 @@ LONG
 STDCALL
 RegQueryValueExA (
     HKEY hKey,
-    LPCSTR lpValueName,
+    LPSTR lpValueName,
     LPDWORD lpReserved,
     LPDWORD lpType,
     LPBYTE lpData,
@@ -2838,7 +2838,7 @@ STDCALL
 EnumDependentServicesA(
     SC_HANDLE               hService,
     DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUS  lpServices,
+    LPENUM_SERVICE_STATUSA  lpServices,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded,
     LPDWORD                 lpServicesReturned
@@ -2850,7 +2850,7 @@ EnumServicesStatusA(
     SC_HANDLE               hSCManager,
     DWORD                   dwServiceType,
     DWORD                   dwServiceState,
-    LPENUM_SERVICE_STATUS  lpServices,
+    LPENUM_SERVICE_STATUSA  lpServices,
     DWORD                   cbBufSize,
     LPDWORD                 pcbBytesNeeded,
     LPDWORD                 lpServicesReturned,
@@ -2904,7 +2904,7 @@ WINBOOL
 STDCALL
 QueryServiceLockStatusA(
     SC_HANDLE                       hSCManager,
-    LPQUERY_SERVICE_LOCK_STATUS    lpLockStatus,
+    LPQUERY_SERVICE_LOCK_STATUSA    lpLockStatus,
     DWORD                           cbBufSize,
     LPDWORD                         pcbBytesNeeded
     );
@@ -2919,7 +2919,7 @@ RegisterServiceCtrlHandlerA(
 WINBOOL
 STDCALL
 StartServiceCtrlDispatcherA(
-			    LPSERVICE_TABLE_ENTRY    lpServiceStartTable
+                            LPSERVICE_TABLE_ENTRYA   lpServiceStartTable
 			    );
 
 WINBOOL

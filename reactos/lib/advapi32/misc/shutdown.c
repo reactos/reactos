@@ -1,4 +1,4 @@
-/* $Id: shutdown.c,v 1.2 1999/07/17 23:10:18 ea Exp $
+/* $Id: shutdown.c,v 1.3 1999/07/22 21:34:01 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -40,13 +40,18 @@ AbortSystemShutdownA(
 	LPSTR	lpMachineName
 	)
 {
-	UNICODE_STRING	MachineNameW = USZ;
+        ANSI_STRING     MachineNameA;
+        UNICODE_STRING  MachineNameW;
 	NTSTATUS	Status;
 	BOOL		rv;
 
+        RtlInitAnsiString(
+                        & MachineNameA,
+                        lpMachineName
+                        );
 	Status = RtlAnsiStringToUnicodeString(
-			& MachineNameW,
-			lpMachineName,
+                        & MachineNameW,
+                        & MachineNameA,
 			TRUE
 			);
 	if (STATUS_SUCCESS != Status) 
@@ -56,6 +61,9 @@ AbortSystemShutdownA(
 	}
 	rv = AbortSystemShutdownW(
 			MachineNameW.Buffer
+			);
+        RtlFreeAnsiString(
+                        & MachineNameA
 			);
 	RtlFreeUnicodeString(
 			& MachineNameW
@@ -109,38 +117,51 @@ InitiateSystemShutdownA(
 	BOOL	bRebootAfterShutdown
 	)
 {
-	UNICODE_STRING	MachineNameW = USZ;
-	UNICODE_STRING	MessageW = USZ;
+        ANSI_STRING     MachineNameA;
+        ANSI_STRING     MessageA;
+        UNICODE_STRING  MachineNameW;
+        UNICODE_STRING  MessageW;
 	NTSTATUS	Status;
 	INT		LastError;
 	BOOL		rv;
 
 	if (lpMachineName)
 	{
+                RtlInitAnsiString(
+                                & MachineNameA,
+                                lpMachineName
+                                );
 		Status = RtlAnsiStringToUnicodeString(
 				& MachineNameW,
-				lpMachineName,
+                                & MachineNameA,
 				TRUE
 				);
 		if (STATUS_SUCCESS != Status)
 		{
+                        RtlFreeAnsiString(&MachineNameA);
 			SetLastError(RtlNtStatusToDosError(Status));
 			return FALSE;
 		}
 	}
 	if (lpMessage)
 	{
+                RtlInitAnsiString(
+                                & MessageA,
+                                lpMessage
+                                );
 		Status = RtlAnsiStringToUnicodeString(
 				& MessageW,
-				lpMessage,
+                                & MessageA,
 				TRUE
 				);
 		if (STATUS_SUCCESS != Status)
 		{
 			if (MachineNameW.Length)
 			{
+                                RtlFreeAnsiString(&MachineNameA);
 				RtlFreeUnicodeString(&MachineNameW);
 			}
+                        RtlFreeAnsiString(&MessageA);
 			SetLastError(RtlNtStatusToDosError(Status));
 			return FALSE;
 		}
@@ -153,8 +174,16 @@ InitiateSystemShutdownA(
 			bRebootAfterShutdown
 			);
 	LastError = GetLastError();
-	if (MachineNameW.Length) RtlFreeUnicodeString(&MachineNameW);
-	if (MessageW.Length) RtlFreeUnicodeString(&MessageW);
+        if (lpMachineName)
+        {
+                RtlFreeAnsiString(&MachineNameA);
+                RtlFreeUnicodeString(&MachineNameW);
+        }
+        if (lpMessage)
+        {
+                RtlFreeAnsiString(&MessageA);
+                RtlFreeUnicodeString(&MessageW);
+        }
 	SetLastError(LastError);
 	return rv;
 }

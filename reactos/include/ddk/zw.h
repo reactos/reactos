@@ -1,4 +1,4 @@
-/* $Id: zw.h,v 1.16 1999/07/17 23:10:15 ea Exp $
+/* $Id: zw.h,v 1.17 1999/07/22 21:29:46 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -93,7 +93,7 @@ NtAccessCheck(
 	IN HANDLE ClientToken,
 	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
-	OUT PRIVILEGE_SET PrivilegeSet,
+        OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
 	OUT PBOOLEAN AccessStatus
@@ -105,7 +105,7 @@ ZwAccessCheck(
 	IN HANDLE ClientToken,
 	IN ACCESS_MASK DesiredAcces,
 	IN PGENERIC_MAPPING GenericMapping,
-	OUT PRIVILEGE_SET PrivilegeSet,
+        OUT PPRIVILEGE_SET PrivilegeSet,
 	OUT PULONG ReturnLength,
 	OUT PULONG GrantedAccess,
 	OUT PBOOLEAN AccessStatus

@@ -15,7 +15,7 @@
  */
 INT
 STDCALL
-SystemFunction001(VOID)
+SystemFunction001(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 1;
@@ -27,7 +27,7 @@ SystemFunction001(VOID)
  */
 INT
 STDCALL
-SystemFunction002(VOID)
+SystemFunction002(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 2;
@@ -39,7 +39,7 @@ SystemFunction002(VOID)
  */
 INT
 STDCALL
-SystemFunction003(VOID)
+SystemFunction003(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 3;
@@ -51,7 +51,7 @@ SystemFunction003(VOID)
  */
 INT
 STDCALL
-SystemFunction004(VOID)
+SystemFunction004(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 4;
@@ -63,7 +63,7 @@ SystemFunction004(VOID)
  */
 INT
 STDCALL
-SystemFunction005(VOID)
+SystemFunction005(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 5;
@@ -75,7 +75,7 @@ SystemFunction005(VOID)
  */
 INT
 STDCALL
-SystemFunction006(VOID)
+SystemFunction006(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 6;
@@ -87,7 +87,7 @@ SystemFunction006(VOID)
  */
 INT
 STDCALL
-SystemFunction007(VOID)
+SystemFunction007(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 7;
@@ -99,7 +99,7 @@ SystemFunction007(VOID)
  */
 INT
 STDCALL
-SystemFunction008(VOID)
+SystemFunction008(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 8;
@@ -111,7 +111,7 @@ SystemFunction008(VOID)
  */
 INT
 STDCALL
-SystemFunction009(VOID)
+SystemFunction009(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 9;
@@ -123,7 +123,7 @@ SystemFunction009(VOID)
  */
 INT
 STDCALL
-SystemFunction010(VOID)
+SystemFunction010(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 10;
@@ -135,7 +135,7 @@ SystemFunction010(VOID)
  */
 INT
 STDCALL
-SystemFunction011(VOID)
+SystemFunction011(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 11;
@@ -147,7 +147,7 @@ SystemFunction011(VOID)
  */
 INT
 STDCALL
-SystemFunction012(VOID)
+SystemFunction012(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 12;
@@ -159,7 +159,7 @@ SystemFunction012(VOID)
  */
 INT
 STDCALL
-SystemFunction013(VOID)
+SystemFunction013(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 13;
@@ -171,7 +171,7 @@ SystemFunction013(VOID)
  */
 INT
 STDCALL
-SystemFunction014(VOID)
+SystemFunction014(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 14;
@@ -183,7 +183,7 @@ SystemFunction014(VOID)
  */
 INT
 STDCALL
-SystemFunction015(VOID)
+SystemFunction015(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 15;
@@ -195,7 +195,7 @@ SystemFunction015(VOID)
  */
 INT
 STDCALL
-SystemFunction016(VOID)
+SystemFunction016(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 16;
@@ -207,7 +207,7 @@ SystemFunction016(VOID)
  */
 INT
 STDCALL
-SystemFunction017(VOID)
+SystemFunction017(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 17;
@@ -219,7 +219,7 @@ SystemFunction017(VOID)
  */
 INT
 STDCALL
-SystemFunction018(VOID)
+SystemFunction018(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 18;
@@ -231,7 +231,7 @@ SystemFunction018(VOID)
  */
 INT
 STDCALL
-SystemFunction019(VOID)
+SystemFunction019(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 19;
@@ -243,7 +243,7 @@ SystemFunction019(VOID)
  */
 INT
 STDCALL
-SystemFunction020(VOID)
+SystemFunction020(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 20;
@@ -255,7 +255,7 @@ SystemFunction020(VOID)
  */
 INT
 STDCALL
-SystemFunction021(VOID)
+SystemFunction021(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 21;
@@ -267,7 +267,7 @@ SystemFunction021(VOID)
  */
 INT
 STDCALL
-SystemFunction022(VOID)
+SystemFunction022(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 22;
@@ -279,7 +279,7 @@ SystemFunction022(VOID)
  */
 INT
 STDCALL
-SystemFunction023(VOID)
+SystemFunction023(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 23;
@@ -291,7 +291,7 @@ SystemFunction023(VOID)
  */
 INT
 STDCALL
-SystemFunction024(VOID)
+SystemFunction024(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 24;
@@ -303,7 +303,7 @@ SystemFunction024(VOID)
  */
 INT
 STDCALL
-SystemFunction025(VOID)
+SystemFunction025(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 25;
@@ -315,7 +315,7 @@ SystemFunction025(VOID)
  */
 INT
 STDCALL
-SystemFunction026(VOID)
+SystemFunction026(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 26;
@@ -327,7 +327,7 @@ SystemFunction026(VOID)
  */
 INT
 STDCALL
-SystemFunction027(VOID)
+SystemFunction027(INT a, INT b, INT c)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 27;
@@ -339,7 +339,7 @@ SystemFunction027(VOID)
  */
 INT
 STDCALL
-SystemFunction028(VOID)
+SystemFunction028(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 28;
@@ -351,7 +351,7 @@ SystemFunction028(VOID)
  */
 INT
 STDCALL
-SystemFunction029(VOID)
+SystemFunction029(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 29;
@@ -363,7 +363,7 @@ SystemFunction029(VOID)
  */
 INT
 STDCALL
-SystemFunction030(VOID)
+SystemFunction030(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 30;
@@ -375,7 +375,7 @@ SystemFunction030(VOID)
  */
 INT
 STDCALL
-SystemFunction031(VOID)
+SystemFunction031(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 31;
@@ -387,7 +387,7 @@ SystemFunction031(VOID)
  */
 INT
 STDCALL
-SystemFunction032(VOID)
+SystemFunction032(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 32;
@@ -399,7 +399,7 @@ SystemFunction032(VOID)
  */
 INT
 STDCALL
-SystemFunction033(VOID)
+SystemFunction033(INT a, INT b)
 {
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 33;
