@@ -88,7 +88,7 @@ Usage()
 int
 AnalyzeArgv(char *argument)
 {
-    char element=0;
+    int element=0;
     char HelpFlag=0;
     char *keys[]={"--help","/h","/?","-h"};
     char *sections[]={".1",".2",".3",".4",".5",".6",".7",".8",".9"};
@@ -123,7 +123,7 @@ int
 AnalyzeFile()
 {
     char *cur_string=(char*)malloc(sizeof(char)*MAXLINE);
-    char symbol=0;
+    int symbol=0;
     char *THtag=(char*)malloc(sizeof(char)*MAXLINE);
     
    
@@ -157,7 +157,7 @@ AnalyzeFile()
         
      if(symbol) TagFlag=1;
           
-     for(symbol;cur_string[symbol]!='\n'; symbol++)
+     for(;cur_string[symbol]!='\n'; symbol++)
         putchar(cur_string[symbol]);
         putchar(' ');
      }
@@ -209,6 +209,7 @@ AnalyzeFile()
      else text_outp(); // print plane text
      th_outp();
 /* END of TAGs processing */
+     return 0;
 }
  
     
@@ -225,5 +226,6 @@ main(int argc, char *argv[])
     
    if(OpenFlag)CloseF();
    SetCl(NORMAL);
+   return 0;
 }
 
