@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: input.c,v 1.9 2003/07/20 05:32:19 jimtabor Exp $
+/* $Id: input.c,v 1.10 2003/08/02 16:55:59 gdalsnes Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -88,16 +88,6 @@ GetKeyboardLayout(DWORD idThread)
 {
   UNIMPLEMENTED;
   return (HKL)0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL STDCALL GetInputState(VOID)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 

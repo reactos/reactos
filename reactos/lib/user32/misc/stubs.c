@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.27 2003/07/27 11:54:42 dwelch Exp $
+/* $Id: stubs.c,v 1.28 2003/08/02 16:56:13 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -212,19 +212,6 @@ GetMouseMovePointsEx(
   LPMOUSEMOVEPOINT lpptBuf,
   int nBufPoints,
   DWORD resolution)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetQueueStatus(
-  UINT flags)
 {
   UNIMPLEMENTED;
   return 0;

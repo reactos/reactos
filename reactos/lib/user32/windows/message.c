@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.21 2003/08/01 18:45:35 dwelch Exp $
+/* $Id: message.c,v 1.22 2003/08/02 16:55:59 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -745,6 +745,54 @@ ReleaseCapture(VOID)
   return(TRUE);
 }
 
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetQueueStatus(UINT flags)
+{
+   DWORD ret;
+   WORD changed_bits, wake_bits; 
+
+#if 0 /* wine stuff. don't know what it does... */
+
+   /* check for pending X events */
+   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
+      USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
+#endif
+
+   ret = NtUserGetQueueStatus(TRUE /*ClearChanges*/);
+
+   changed_bits = LOWORD(ret);
+   wake_bits = HIWORD(ret);
+
+   return MAKELONG(changed_bits & flags, wake_bits & flags);
+}
+
+
+/*
+ * @unimplemented
+ */
+WINBOOL STDCALL GetInputState(VOID)
+{
+   DWORD ret;
+   WORD  wake_bits;
+
+#if 0 /* wine stuff. don't know what it does... */ 
+
+   /* check for pending X events */
+   if (USER_Driver.pMsgWaitForMultipleObjectsEx)
+     USER_Driver.pMsgWaitForMultipleObjectsEx( 0, NULL, 0, 0, 0 );
+#endif
+
+   ret = NtUserGetQueueStatus(FALSE /*ClearChanges*/);
+   
+   wake_bits = HIWORD(ret);
+
+   return wake_bits & (QS_KEY | QS_MOUSEBUTTON);
+}
 
 
 
