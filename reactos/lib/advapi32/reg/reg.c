@@ -1,4 +1,4 @@
-/* $Id: reg.c,v 1.47 2004/06/17 09:07:12 ekohl Exp $
+/* $Id: reg.c,v 1.48 2004/07/02 21:20:51 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -314,6 +314,115 @@ RegConnectRegistryW (LPCWSTR lpMachineName,
 
 
 /************************************************************************
+ *  CreateNestedKey
+ *
+ *  Create key and all necessary intermediate keys
+ */
+static NTSTATUS
+CreateNestedKey(PHKEY KeyHandle,
+		POBJECT_ATTRIBUTES ObjectAttributes,
+                PUNICODE_STRING ClassString,
+                DWORD dwOptions,
+                REGSAM samDesired,
+                DWORD *lpdwDisposition)
+{
+  OBJECT_ATTRIBUTES LocalObjectAttributes;
+  UNICODE_STRING LocalKeyName;
+  ULONG Disposition;
+  NTSTATUS Status;
+  ULONG FullNameLength;
+  ULONG Length;
+  PWCHAR Ptr;
+  HANDLE LocalKeyHandle;
+
+  Status = NtCreateKey((PHANDLE) KeyHandle,
+                       samDesired,
+                       ObjectAttributes,
+                       0,
+                       ClassString,
+                       dwOptions,
+                       (PULONG)lpdwDisposition);
+  DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
+  if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+    return Status;
+
+  /* Copy object attributes */
+  RtlCopyMemory (&LocalObjectAttributes,
+		 ObjectAttributes,
+		 sizeof(OBJECT_ATTRIBUTES));
+  RtlCreateUnicodeString (&LocalKeyName,
+			  ObjectAttributes->ObjectName->Buffer);
+  LocalObjectAttributes.ObjectName = &LocalKeyName;
+  FullNameLength = LocalKeyName.Length / sizeof(WCHAR);
+
+  /* Remove the last part of the key name and try to create the key again. */
+  while (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+      Ptr = wcsrchr (LocalKeyName.Buffer, '\\');
+      if (Ptr == NULL || Ptr == LocalKeyName.Buffer)
+	{
+	  Status = STATUS_UNSUCCESSFUL;
+	  break;
+	}
+      *Ptr = (WCHAR)0;
+      LocalKeyName.Length = wcslen (LocalKeyName.Buffer) * sizeof(WCHAR);
+
+      Status = NtCreateKey (&LocalKeyHandle,
+			    KEY_ALL_ACCESS,
+			    &LocalObjectAttributes,
+			    0,
+			    NULL,
+			    0,
+			    &Disposition);
+      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeUnicodeString (&LocalKeyName);
+      return Status;
+    }
+
+  /* Add removed parts of the key name and create them too. */
+  Length = wcslen (LocalKeyName.Buffer);
+  while (TRUE)
+    {
+      NtClose (LocalKeyHandle);
+
+      LocalKeyName.Buffer[Length] = L'\\';
+      Length = wcslen (LocalKeyName.Buffer);
+      LocalKeyName.Length = Length * sizeof(WCHAR);
+
+      if (Length == FullNameLength)
+        {
+          Status = NtCreateKey((PHANDLE) KeyHandle,
+                               samDesired,
+                               ObjectAttributes,
+                               0,
+                               ClassString,
+                               dwOptions,
+                               (PULONG)lpdwDisposition);
+          break;
+        }
+      Status = NtCreateKey (&LocalKeyHandle,
+			    KEY_ALL_ACCESS,
+			    &LocalObjectAttributes,
+			    0,
+			    NULL,
+			    0,
+			    &Disposition);
+      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+      if (!NT_SUCCESS(Status))
+	break;
+    }
+
+  RtlFreeUnicodeString (&LocalKeyName);
+
+  return Status;
+}
+
+
+/************************************************************************
  *  RegCreateKeyExA
  *
  * @implemented
@@ -361,13 +470,12 @@ RegCreateKeyExA (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
 			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
-  Status = NtCreateKey ((PHANDLE)phkResult,
-			samDesired,
-			&Attributes,
-			0,
-			(lpClass == NULL)? NULL : &ClassString,
-			dwOptions,
-			(PULONG)lpdwDisposition);
+  Status = CreateNestedKey(phkResult,
+		           &Attributes,
+                           (lpClass == NULL)? NULL : &ClassString,
+                           dwOptions,
+                           samDesired,
+                           lpdwDisposition);
   RtlFreeUnicodeString (&SubKeyString);
   if (lpClass != NULL)
     {
@@ -430,13 +538,12 @@ RegCreateKeyExW (HKEY hKey,
 			      OBJ_CASE_INSENSITIVE,
 			      (HANDLE)ParentKey,
 			      (PSECURITY_DESCRIPTOR)lpSecurityAttributes);
-  Status = NtCreateKey ((PHANDLE)phkResult,
-			samDesired,
-			&Attributes,
-			0,
-			(lpClass == NULL)? NULL : &ClassString,
-			dwOptions,
-			(PULONG)lpdwDisposition);
+  Status = CreateNestedKey(phkResult,
+		           &Attributes,
+                           (lpClass == NULL)? NULL : &ClassString,
+                           dwOptions,
+                           samDesired,
+                           lpdwDisposition);
   DPRINT("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
     {
@@ -1622,6 +1729,7 @@ RegOpenKeyA (HKEY hKey,
   LONG ErrorCode;
   NTSTATUS Status;
 
+DPRINT1("RegOpenKeyA hKey 0x%x subkey %s\n", hKey, lpSubKey);
   Status = MapDefaultKey (&KeyHandle,
 			  hKey);
   if (!NT_SUCCESS(Status))
