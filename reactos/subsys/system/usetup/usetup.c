@@ -46,6 +46,7 @@
 #include "filesup.h"
 #include "drivesup.h"
 #include "genlist.h"
+#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -866,41 +867,63 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
   /* Initialize the computer settings list */
   if (ComputerList == NULL)
     {
-      ComputerList = CreateGenericList();
-      AppendGenericListEntry(ComputerList, "Standard-PC", NULL, TRUE);
+      ComputerList = CreateComputerTypeList(SetupInf);
+      if (ComputerList == NULL)
+	{
+	  /* FIXME: report error */
+	}
     }
 
   /* Initialize the display settings list */
   if (DisplayList == NULL)
     {
-      DisplayList = CreateGenericList();
-      AppendGenericListEntry(DisplayList, "VGA display", NULL, FALSE);
-      AppendGenericListEntry(DisplayList, "VESA display", NULL, FALSE);
-      AppendGenericListEntry(DisplayList, "Automatic detection", NULL, TRUE);
+      DisplayList = CreateDisplayDriverList(SetupInf);
+      if (DisplayList == NULL)
+	{
+	  /* FIXME: report error */
+	}
     }
 
   /* Initialize the keyboard settings list */
   if (KeyboardList == NULL)
     {
-      KeyboardList = CreateGenericList();
-      AppendGenericListEntry(KeyboardList, "XT-, AT- or extended keyboard (83-105 keys)", NULL, TRUE);
+      KeyboardList = CreateKeyboardDriverList(SetupInf);
+      if (KeyboardList == NULL)
+	{
+	  /* FIXME: report error */
+	}
     }
 
-  /* Initialize the keyboard settings list */
+  /* Initialize the keyboard layout list */
   if (LayoutList == NULL)
     {
-      LayoutList = CreateGenericList();
-      AppendGenericListEntry(LayoutList, "English (USA)", NULL, TRUE);
-      AppendGenericListEntry(LayoutList, "French (France)", NULL, FALSE);
-      AppendGenericListEntry(LayoutList, "German (Germany)", NULL, FALSE);
+      LayoutList = CreateKeyboardLayoutList(SetupInf);
+      if (LayoutList == NULL)
+	{
+	  /* FIXME: report error */
+	  PopupError("Setup failed to load the keyboard layout list.\n",
+		     "ENTER = Reboot computer");
+
+	  while (TRUE)
+	    {
+	      ConInKey(Ir);
+
+	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
+		{
+		  return QUIT_PAGE;
+		}
+	    }
+	}
     }
 
-  /* Initialize the keyboard settings list */
+  /* Initialize the pointer settings list */
   if (PointerList == NULL)
     {
-      PointerList = CreateGenericList();
-      AppendGenericListEntry(PointerList, "PS/2 (Mouse port) mouse", NULL, TRUE);
-      AppendGenericListEntry(PointerList, "Serial mouse", NULL, FALSE);
+      PointerList = CreateMouseDriverList(SetupInf);
+      if (PointerList == NULL)
+	{
+	  /* FIXME: report error */
+	}
     }
 
   SetTextXY(6, 8, "The list below shows the current device settings.");
@@ -2614,7 +2637,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-          return (InstallDirectoryPage1 (InstallDir, DiskEntry, PartEntry));
+	  return (InstallDirectoryPage1 (InstallDir, DiskEntry, PartEntry));
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x08) /* BACKSPACE */
 	{
