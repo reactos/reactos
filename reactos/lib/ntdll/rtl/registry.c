@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.25 2003/10/15 21:14:01 ekohl Exp $
+/* $Id: registry.c,v 1.26 2003/10/26 12:47:12 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -546,12 +546,15 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 				       &ResultSize);
 	      if (!NT_SUCCESS(Status))
 		{
-		  Status = QueryEntry->QueryRoutine(QueryEntry->Name,
-						    QueryEntry->DefaultType,
-						    QueryEntry->DefaultData,
-						    QueryEntry->DefaultLength,
-						    Context,
-						    QueryEntry->EntryContext);
+		  if (!(QueryEntry->Flags & RTL_QUERY_REGISTRY_REQUIRED))
+		    {
+		      Status = QueryEntry->QueryRoutine(QueryEntry->Name,
+							QueryEntry->DefaultType,
+							QueryEntry->DefaultData,
+							QueryEntry->DefaultLength,
+							Context,
+							QueryEntry->EntryContext);
+		    }
 		}
 	      else if ((ValueInfo->Type == REG_MULTI_SZ) &&
 		       !(QueryEntry->Flags & RTL_QUERY_REGISTRY_NOEXPAND))
