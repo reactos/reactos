@@ -23,8 +23,8 @@
 
 FLOPPY_CONTROLLER_PARAMETERS ControllerParameters[FLOPPY_MAX_CONTROLLERS] = 
 {
-  {0x03f0, 6, 6, 2, 6, LevelSensitive, 0xffff}
-  //  {0x0370, 6, 6, 6, LevelSensitive, 0xffff},
+  {0x03f0, 6, 2, Latched}
+  //  {0x0370, 6, 6, Latched}
 };
 
 const FLOPPY_MEDIA_TYPE MediaTypes[] = {
@@ -50,8 +50,17 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
    PCONFIGURATION_INFORMATION Config;
    DEVICE_DESCRIPTION DeviceDescription;
    ULONG MaxMapRegs;
+   ULONG MappedIrq;
+   KIRQL Dirql;
+   KAFFINITY Affinity;
    
-   /* FIXME: Register port ranges and interrupts with HAL */
+   /* FIXME: Register port ranges with HAL */
+   MappedIrq = HalGetInterruptVector(Isa,
+				     0,
+				     ControllerParameters->Vector,
+				     ControllerParameters->Vector,
+				     &Dirql,
+				     &Affinity);
 
    /*  Create controller object for FDC  */
    ControllerObject = IoCreateController(sizeof(FLOPPY_CONTROLLER_EXTENSION));
@@ -67,7 +76,7 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
      ControllerObject->ControllerExtension;
    ControllerExtension->Number = Index;
    ControllerExtension->PortBase = ControllerParameters->PortBase;
-   ControllerExtension->Vector = ControllerParameters->Vector;
+   ControllerExtension->Vector = MappedIrq;
    KeInitializeEvent( &ControllerExtension->Event, SynchronizationEvent, FALSE );
    ControllerExtension->Device = 0;  // no active device
    ControllerExtension->Irp = 0;     // no active IRP
@@ -81,12 +90,12 @@ FloppyCreateController(PDRIVER_OBJECT DriverObject,
 			       FloppyIsr, 
 			       ControllerObject, 
 			       &ControllerExtension->SpinLock, 
-			       ControllerExtension->Vector, 
-			       ControllerParameters->IrqL, 
-			       ControllerParameters->SynchronizeIrqL, 
+			       MappedIrq, 
+			       Dirql, 
+			       Dirql, 
 			       ControllerParameters->InterruptMode, 
 			       FALSE, 
-			       ControllerParameters->Affinity, 
+			       Affinity, 
 			       FALSE);
    if (!NT_SUCCESS(Status)) 
      {

@@ -171,11 +171,8 @@ typedef struct _FLOPPY_CONTROLLER_PARAMETERS
 {
    ULONG            PortBase;
    ULONG            Vector;
-   ULONG            IrqL;
    ULONG            DmaChannel;
-   ULONG            SynchronizeIrqL;
    KINTERRUPT_MODE  InterruptMode;
-   KAFFINITY        Affinity;
 } FLOPPY_CONTROLLER_PARAMETERS, *PFLOPPY_CONTROLLER_PARAMETERS;
 
 #define  FLOPPY_MAX_CONTROLLERS  1

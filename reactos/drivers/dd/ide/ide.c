@@ -1,4 +1,4 @@
-/* $Id: ide.c,v 1.56 2002/09/08 10:22:04 chorns Exp $
+/* $Id: ide.c,v 1.57 2002/12/09 19:57:56 hbirr Exp $
  *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
@@ -90,10 +90,7 @@ typedef struct _IDE_CONTROLLER_PARAMETERS
   int              ControlPortBase;
   int              ControlPortSpan;
   int              Vector;
-  int              IrqL;
-  int              SynchronizeIrqL;
   KINTERRUPT_MODE  InterruptMode;
-  KAFFINITY        Affinity;
 } IDE_CONTROLLER_PARAMETERS, *PIDE_CONTROLLER_PARAMETERS;
 
 //  NOTE: Do not increase max drives above 2
@@ -103,10 +100,10 @@ typedef struct _IDE_CONTROLLER_PARAMETERS
 #define  IDE_MAX_CONTROLLERS  2
 IDE_CONTROLLER_PARAMETERS Controllers[IDE_MAX_CONTROLLERS] = 
 {
-  {0x01f0, 8, 0x03f6, 1, 14, 14, 15, LevelSensitive, 0xffff},
-  {0x0170, 8, 0x0376, 1, 15, 15, 15, LevelSensitive, 0xffff}
-/*  {0x01E8, 8, 0x03ee, 1, 11, 11, 15, LevelSensitive, 0xffff},
-  {0x0168, 8, 0x036e, 1, 10, 10, 15, LevelSensitive, 0xffff}*/
+  {0x01f0, 8, 0x03f6, 1, 14, Latched},
+  {0x0170, 8, 0x0376, 1, 15, Latched}
+/*  {0x01E8, 8, 0x03ee, 1, 11, LevelSensitive},
+  {0x0168, 8, 0x036e, 1, 10, LevelSensitive}*/
 };
 
 static BOOLEAN IDEInitialized = FALSE;
@@ -487,6 +484,9 @@ IdeCreateController(IN PDRIVER_OBJECT DriverObject,
   NTSTATUS                   RC;
   PCONTROLLER_OBJECT         ControllerObject;
   PIDE_CONTROLLER_EXTENSION  ControllerExtension;
+  ULONG MappedIrq;
+  KIRQL Dirql;
+  KAFFINITY Affinity;
 
   ControllerObject = IoCreateController(sizeof(IDE_CONTROLLER_EXTENSION));
   if (ControllerObject == NULL)
@@ -496,13 +496,20 @@ IdeCreateController(IN PDRIVER_OBJECT DriverObject,
       return STATUS_NO_SUCH_DEVICE;
     }
 
+  MappedIrq = HalGetInterruptVector(Isa,
+				    0,
+				    ControllerParams->Vector,
+				    ControllerParams->Vector,
+				    &Dirql,
+				    &Affinity);
+
     //  Fill out Controller extension data
   ControllerExtension = (PIDE_CONTROLLER_EXTENSION)
       ControllerObject->ControllerExtension;
   ControllerExtension->Number = ControllerIdx;
   ControllerExtension->CommandPortBase = ControllerParams->CommandPortBase;
   ControllerExtension->ControlPortBase = ControllerParams->ControlPortBase;
-  ControllerExtension->Vector = ControllerParams->Vector;
+  ControllerExtension->Vector = MappedIrq;
   ControllerExtension->DMASupported = FALSE;
   ControllerExtension->ControllerInterruptBug = FALSE;
   ControllerExtension->OperationInProgress = FALSE;
@@ -516,11 +523,11 @@ IdeCreateController(IN PDRIVER_OBJECT DriverObject,
                           ControllerExtension,
                           &ControllerExtension->SpinLock,
                           ControllerExtension->Vector,
-                          ControllerParams->IrqL,
-                          ControllerParams->SynchronizeIrqL,
+                          Dirql,
+                          Dirql,
                           ControllerParams->InterruptMode,
                           FALSE,
-                          ControllerParams->Affinity,
+                          Affinity,
                           FALSE);
   if (!NT_SUCCESS(RC))
     {
