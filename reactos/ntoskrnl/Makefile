@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.20 2001/03/15 18:37:29 dwelch Exp $
+# $Id: Makefile,v 1.21 2001/03/15 18:49:17 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -579,7 +579,7 @@ include $(D1_FILES)
 	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@ 
 
 .%.d: %.S
-	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) 
+	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) > $@
 
 include $(PATH_TO_TOP)/rules.mak
 

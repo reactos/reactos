@@ -20,13 +20,18 @@ int main(int argc, char* argv[])
     }
 
   i = 0;
-  while ((ch = fgetc(stdin)) != ':')
+  while ((ch = fgetc(stdin)) != ':' && ch != EOF)
     {
       buf[i] = ch;
       i++;
     }
   buf[i] = 0;
   
+  if (i == 0)
+    {
+      return(0);
+    }
+
   dot = strrchr(buf, '.');
   if (dot != NULL)
     {
