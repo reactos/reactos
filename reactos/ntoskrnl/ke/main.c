@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.74 2001/01/17 15:38:02 dwelch Exp $
+/* $Id: main.c,v 1.75 2001/01/17 19:07:13 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,7 +13,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ntoskrnl.h>
-#include <reactos/buildno.h>
+#include <reactos/resource.h>
 #include <internal/mm.h>
 #include <internal/module.h>
 #include <internal/ldr.h>
@@ -489,13 +489,12 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
     */
    HalDisplayString("Starting ReactOS "KERNEL_VERSION_STR" (Build "
 		    KERNEL_VERSION_BUILD_STR")\n");
-   HalDisplayString("Copyright 2000 (So who owns the copyright?).\n");
-   HalDisplayString("ReactOS is free software, covered by the GNU General "
+   HalDisplayString(RES_STR_LEGAL_COPYRIGHT);
+   HalDisplayString("\n\nReactOS is free software, covered by the GNU General "
 		    "Public License, and you\n");
    HalDisplayString("are welcome to change it and/or distribute copies of it "
 		    "under certain\n"); 
-   HalDisplayString("conditions.\n");
-   HalDisplayString("There is absolutely no warranty for ReactOS.\n");
+   HalDisplayString("conditions. There is absolutely no warranty for ReactOS.\n");
    
    last_kernel_address = KeLoaderModules[KeLoaderBlock.ModsCount - 1].ModEnd;
    
