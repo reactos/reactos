@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.37 2003/07/10 18:50:51 chorns Exp $
+/* $Id: dir.c,v 1.38 2003/10/19 16:17:50 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -336,67 +336,67 @@ GetFullPathNameA (
 	LPSTR	*lpFilePart
 	)
 {
-	UNICODE_STRING FileNameU;
-	UNICODE_STRING FullNameU;
-	ANSI_STRING FileName;
-	ANSI_STRING FullName;
-	PWSTR FilePartU;
-	ULONG BufferLength;
-	ULONG Offset;
-	DWORD FullNameLen;
+	UNICODE_STRING nameW;
+	WCHAR bufferW[MAX_PATH];
+	DWORD ret, retW;
 
 	DPRINT("GetFullPathNameA(lpFileName %s, nBufferLength %d, lpBuffer %p, "
 	       "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
-	RtlInitAnsiString (&FileName,
-	                   (LPSTR)lpFileName);
-
-	RtlAnsiStringToUnicodeString (&FileNameU,
-	                              &FileName,
-	                              TRUE);
-
-	BufferLength = nBufferLength * sizeof(WCHAR);
-
-	FullNameU.MaximumLength = BufferLength;
-	FullNameU.Length = 0;
-	FullNameU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-	                                    0,
-	                                    BufferLength);
-
-	FullNameU.Length = RtlGetFullPathName_U (FileNameU.Buffer,
-	                                         BufferLength,
-	                                         FullNameU.Buffer,
-	                                         &FilePartU);
-
-	RtlFreeUnicodeString (&FileNameU);
-
-	FullName.MaximumLength = nBufferLength;
-	FullName.Length = 0;
-	FullName.Buffer = lpBuffer;
-
-        if (lpBuffer != NULL )
+	if (!lpFileName)
 	{
-		RtlUnicodeStringToAnsiString (&FullName,
-					&FullNameU,
-					FALSE);
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return 0;
+	}
 
-		if (lpFilePart != NULL)
+	if (!RtlCreateUnicodeStringFromAsciiz(&nameW, (LPSTR)lpFileName))
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return 0;
+	}
+
+	retW = GetFullPathNameW(nameW.Buffer, MAX_PATH, bufferW, NULL);
+
+	if (!retW)
+	{
+		ret = 0;
+	}
+	else if (retW > MAX_PATH)
+	{
+		SetLastError(ERROR_FILENAME_EXCED_RANGE);
+		ret = 0;
+	}
+	else
+	{
+		ret = WideCharToMultiByte(CP_ACP, 0, bufferW, -1, NULL, 0, NULL, NULL);
+		if (ret <= nBufferLength)
 		{
-			Offset = (ULONG)(FilePartU - FullNameU.Buffer);
-			*lpFilePart = FullName.Buffer + Offset;
+			WideCharToMultiByte(CP_ACP, 0, bufferW, -1, lpBuffer, nBufferLength, NULL, NULL);
+			ret--; /* length without 0 */
+
+			if (lpFilePart)
+			{
+				LPSTR p = lpBuffer + strlen(lpBuffer);
+
+				if (*p != '\\')
+				{
+					while ((p > lpBuffer + 2) && (*p != '\\')) p--;
+					*lpFilePart = p + 1;
+				}
+				else
+				{
+					*lpFilePart = NULL;
+				}
+			}
 		}
 	}
 
-	FullNameLen = FullNameU.Length / sizeof(WCHAR);
-	
-	RtlFreeHeap (RtlGetProcessHeap (),
-	             0,
-	             FullNameU.Buffer);
+	RtlFreeUnicodeString(&nameW);
 
 	DPRINT("lpBuffer %s lpFilePart %s Length %ld\n",
-	       lpBuffer, lpFilePart, FullName.Length);
+	       lpBuffer, lpFilePart, nameW.Length);
 
-	return FullNameLen;
+	return ret;
 }
 
 
