@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.57 2003/12/19 23:20:06 weiden Exp $
+/* $Id: winpos.c,v 1.58 2003/12/21 10:19:40 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -62,8 +62,6 @@
 #define  SWP_AGG_STATUSFLAGS \
     (SWP_AGG_NOPOSCHANGE | SWP_FRAMECHANGED | SWP_HIDEWINDOW | SWP_SHOWWINDOW)
 
-ATOM AtomInternalPos = (ATOM) NULL;
-
 /* FUNCTIONS *****************************************************************/
 
 #define HAS_DLGFRAME(Style, ExStyle) \
@@ -73,12 +71,6 @@ ATOM AtomInternalPos = (ATOM) NULL;
 #define HAS_THICKFRAME(Style, ExStyle) \
        (((Style) & WS_THICKFRAME) && \
         !((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)
-
-VOID FASTCALL
-WinPosSetupInternalPos(VOID)
-{
-  AtomInternalPos = NtAddAtom(L"SysIP", (ATOM*)(PULONG)&AtomInternalPos);
-}
 
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
@@ -136,13 +128,12 @@ WinPosNtGdiIconTitle(PWINDOW_OBJECT WindowObject)
 BOOL STATIC FASTCALL
 WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 {
-  PINTERNALPOS InternalPos = (PINTERNALPOS)IntGetProp(WindowObject, AtomInternalPos);
   PWINDOW_OBJECT IconWindow;
   NTSTATUS Status;
 
-  if (InternalPos)
+  if (WindowObject->InternalPos)
     {
-      HWND hWnd = InternalPos->IconTitle;
+      HWND hWnd = WindowObject->InternalPos->IconTitle;
 
       if (hWnd == NULL)
 	{
@@ -179,35 +170,32 @@ WinPosShowIconTitle(PWINDOW_OBJECT WindowObject, BOOL Show)
 PINTERNALPOS STATIC STDCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT pt, PRECT RestoreRect)
 {
-  PINTERNALPOS InternalPos = (PINTERNALPOS)IntGetProp(WindowObject, AtomInternalPos);
-  if (InternalPos == NULL)
+  if (WindowObject->InternalPos == NULL)
     {
-      InternalPos = 
-	ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
-      if(!InternalPos)
+      WindowObject->InternalPos = ExAllocatePool(NonPagedPool, sizeof(INTERNALPOS));
+      if(!WindowObject->InternalPos)
       {
         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
         return NULL;
       }
-      IntSetProp(WindowObject, AtomInternalPos, InternalPos);
-      InternalPos->IconTitle = 0;
-      InternalPos->NormalRect = WindowObject->WindowRect;
-      InternalPos->IconPos.x = InternalPos->MaxPos.x = 0xFFFFFFFF;
-      InternalPos->IconPos.y = InternalPos->MaxPos.y = 0xFFFFFFFF;
+      WindowObject->InternalPos->IconTitle = 0;
+      WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
+      WindowObject->InternalPos->IconPos.x = WindowObject->InternalPos->MaxPos.x = 0xFFFFFFFF;
+      WindowObject->InternalPos->IconPos.y = WindowObject->InternalPos->MaxPos.y = 0xFFFFFFFF;
     }
   if (WindowObject->Style & WS_MINIMIZE)
     {
-      InternalPos->IconPos = pt;
+      WindowObject->InternalPos->IconPos = pt;
     }
   else if (WindowObject->Style & WS_MAXIMIZE)
     {
-      InternalPos->MaxPos = pt;
+      WindowObject->InternalPos->MaxPos = pt;
     }
   else if (RestoreRect != NULL)
     {
-      InternalPos->NormalRect = *RestoreRect;
+      WindowObject->InternalPos->NormalRect = *RestoreRect;
     }
-  return(InternalPos);
+  return(WindowObject->InternalPos);
 }
 
 UINT STDCALL
@@ -315,7 +303,6 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 {
   MINMAXINFO MinMax;
   INT XInc, YInc;
-  INTERNALPOS* Pos;
 
   /* Get default values. */
   MinMax.ptMaxSize.x = NtUserGetSystemMetrics(SM_CXSCREEN);
@@ -347,10 +334,9 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
   MinMax.ptMaxSize.x += 2 * XInc;
   MinMax.ptMaxSize.y += 2 * YInc;
 
-  Pos = (PINTERNALPOS)IntGetProp(Window, AtomInternalPos);
-  if (Pos != NULL)
+  if (Window->InternalPos != NULL)
     {
-      MinMax.ptMaxPosition = Pos->MaxPos;
+      MinMax.ptMaxPosition = Window->InternalPos->MaxPos;
     }
   else
     {

@@ -81,6 +81,7 @@ typedef struct _WINDOW_OBJECT
   WNDPROC WndProcW;
   PETHREAD OwnerThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
+  PINTERNALPOS InternalPos;
 } WINDOW_OBJECT; /* PWINDOW_OBJECT already declared at top of file */
 
 /* Window flags. */
