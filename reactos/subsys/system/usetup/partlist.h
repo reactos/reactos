@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.h,v 1.17 2003/08/12 15:56:21 ekohl Exp $
+/* $Id: partlist.h,v 1.18 2003/08/18 17:39:26 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.h
@@ -103,11 +103,8 @@ typedef struct _PARTLIST
   PDISKENTRY CurrentDisk;
   PPARTENTRY CurrentPartition;
 
-#if 0
-  /* Not used yet! */
   PDISKENTRY ActiveBootDisk;
   PPARTENTRY ActiveBootPartition;
-#endif
 
   LIST_ENTRY DiskListHead;
 
@@ -134,9 +131,7 @@ VOID
 ScrollUpPartitionList (PPARTLIST List);
 
 VOID
-GetActiveBootPartition(PPARTLIST List,
-		       PDISKENTRY *DiskEntry,
-		       PPARTENTRY *PartEntry);
+SetActiveBootPartition (PPARTLIST List);
 
 VOID
 CreateNewPartition (PPARTLIST List,

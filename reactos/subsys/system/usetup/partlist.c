@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.17 2003/08/12 15:56:21 ekohl Exp $
+/* $Id: partlist.c,v 1.18 2003/08/18 17:39:26 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -47,33 +47,28 @@ GetDriverName (PDISKENTRY DiskEntry)
   WCHAR KeyName[32];
   NTSTATUS Status;
 
-#if 0
-  RtlCreateUnicodeString (&DiskEntry->DriverName,
-			  L"atapi");
-#endif
+  RtlInitUnicodeString (&DiskEntry->DriverName,
+			NULL);
 
-  RtlInitUnicodeString(&DiskEntry->DriverName,
-		       NULL);
+  swprintf (KeyName,
+	    L"\\Scsi\\Scsi Port %lu",
+	    DiskEntry->Port);
 
-  swprintf(KeyName,
-	   L"\\Scsi\\Scsi Port %lu",
-	   DiskEntry->Port);
-
-  RtlZeroMemory(&QueryTable,
-		sizeof(QueryTable));
+  RtlZeroMemory (&QueryTable,
+		 sizeof(QueryTable));
 
   QueryTable[0].Name = L"Driver";
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
   QueryTable[0].EntryContext = &DiskEntry->DriverName;
 
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
-				  KeyName,
-				  QueryTable,
-				  NULL,
-				  NULL);
-  if (!NT_SUCCESS(Status))
+  Status = RtlQueryRegistryValues (RTL_REGISTRY_DEVICEMAP,
+				   KeyName,
+				   QueryTable,
+				   NULL,
+				   NULL);
+  if (!NT_SUCCESS (Status))
     {
-      DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+      DPRINT1 ("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
     }
 }
 
@@ -104,9 +99,9 @@ AssignDriverLetters (PPARTLIST List)
 	  PartEntry->DriveLetter = 0;
 
 	  if (PartEntry->Unpartitioned == FALSE &&
-	      !IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+	      !IsContainerPartition (PartEntry->PartInfo[0].PartitionType))
 	    {
-	      if (IsRecognizedPartition(PartEntry->PartInfo[0].PartitionType) ||
+	      if (IsRecognizedPartition (PartEntry->PartInfo[0].PartitionType) ||
 		  (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
 		   PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
 		{
@@ -142,9 +137,9 @@ AssignDriverLetters (PPARTLIST List)
 	      PartEntry->DriveLetter = 0;
 
 	      if (PartEntry->Unpartitioned == FALSE &&
-		  !IsContainerPartition(PartEntry->PartInfo[0].PartitionType))
+		  !IsContainerPartition (PartEntry->PartInfo[0].PartitionType))
 		{
-		  if (IsRecognizedPartition(PartEntry->PartInfo[0].PartitionType) ||
+		  if (IsRecognizedPartition (PartEntry->PartInfo[0].PartitionType) ||
 		      (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED &&
 		       PartEntry->PartInfo[0].PartitionLength.QuadPart != 0LL))
 		    {
@@ -192,7 +187,7 @@ UpdatePartitionNumbers (PDISKENTRY DiskEntry)
 	{
 	  for (i = 0; i < 4; i++)
 	    {
-	      if (IsContainerPartition(PartEntry->PartInfo[i].PartitionType))
+	      if (IsContainerPartition (PartEntry->PartInfo[i].PartitionType))
 		{
 		  PartEntry->PartInfo[i].PartitionNumber = 0;
 		}
@@ -297,7 +292,7 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
 
 	  for (j = 0; j < 4; j++)
 	    {
-	      if ((!IsContainerPartition(PartEntry->PartInfo[j].PartitionType)) &&
+	      if ((!IsContainerPartition (PartEntry->PartInfo[j].PartitionType)) &&
 		  (PartEntry->PartInfo[j].PartitionType != PARTITION_ENTRY_UNUSED ||
 		   PartEntry->PartInfo[j].PartitionLength.QuadPart != 0LL))
 		{
@@ -394,7 +389,7 @@ AddDiskToList (HANDLE FileHandle,
 				  0,
 				  &DiskGeometry,
 				  sizeof(DISK_GEOMETRY));
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS (Status))
     {
       return;
     }
@@ -434,10 +429,10 @@ AddDiskToList (HANDLE FileHandle,
   DiskEntry->SectorsPerTrack = DiskGeometry.SectorsPerTrack;
   DiskEntry->BytesPerSector = DiskGeometry.BytesPerSector;
 
-  DPRINT("Cylinders %d\n", DiskEntry->Cylinders);
-  DPRINT("TracksPerCylinder %d\n", DiskEntry->TracksPerCylinder);
-  DPRINT("SectorsPerTrack %d\n", DiskEntry->SectorsPerTrack);
-  DPRINT("BytesPerSector %d\n", DiskEntry->BytesPerSector);
+  DPRINT ("Cylinders %d\n", DiskEntry->Cylinders);
+  DPRINT ("TracksPerCylinder %d\n", DiskEntry->TracksPerCylinder);
+  DPRINT ("SectorsPerTrack %d\n", DiskEntry->SectorsPerTrack);
+  DPRINT ("BytesPerSector %d\n", DiskEntry->BytesPerSector);
 
   DiskEntry->DiskSize =
     DiskGeometry.Cylinders.QuadPart *
@@ -521,10 +516,6 @@ CreatePartitionList (SHORT Left,
   if (List == NULL)
     return NULL;
 
-//  List->Left = 0;
-//  List->Top = 0;
-//  List->Right = 0;
-//  List->Bottom = 0;
   List->Left = Left;
   List->Top = Top;
   List->Right = Right;
@@ -621,26 +612,6 @@ DestroyPartitionList (PPARTLIST List)
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry;
-#if 0
-  COORD coPos;
-  USHORT Width;
-
-  /* clear occupied screen area */
-  coPos.X = List->Left;
-  Width = List->Right - List->Left + 1;
-  for (coPos.Y = List->Top; coPos.Y <= List->Bottom; coPos.Y++)
-    {
-      FillConsoleOutputAttribute(0x17,
-				 Width,
-				 coPos,
-				 &i);
-
-      FillConsoleOutputCharacter(' ',
-				 Width,
-				 coPos,
-				 &i);
-    }
-#endif
 
   /* Release disk and partition info */
   while (!IsListEmpty (&List->DiskListHead))
@@ -748,14 +719,13 @@ PrintPartitionData (PPARTLIST List,
 	  Unit = "KB";
 	}
 
-      sprintf(LineBuffer,
-	      "    Unpartitioned space              %6I64u %s",
-	      PartSize,
-	      Unit);
+      sprintf (LineBuffer,
+	       "    Unpartitioned space              %6I64u %s",
+	       PartSize,
+	       Unit);
     }
   else
     {
-
       /* Determine partition type */
       PartType = NULL;
       if (PartEntry->New == TRUE)
@@ -826,23 +796,23 @@ PrintPartitionData (PPARTLIST List,
   Attribute = (List->CurrentDisk == DiskEntry &&
 	       List->CurrentPartition == PartEntry) ? 0x71 : 0x17;
 
-  FillConsoleOutputCharacter(' ',
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (' ',
+			      Width,
+			      coPos,
+			      &Written);
 
   coPos.X += 4;
   Width -= 8;
-  FillConsoleOutputAttribute(Attribute,
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputAttribute (Attribute,
+			      Width,
+			      coPos,
+			      &Written);
 
   coPos.X++;
   Width -= 2;
-  WriteConsoleOutputCharacters(LineBuffer,
-			       min(strlen(LineBuffer), Width),
-			       coPos);
+  WriteConsoleOutputCharacters (LineBuffer,
+				min (strlen (LineBuffer), Width),
+				coPos);
 
   List->Line++;
 }
@@ -889,47 +859,47 @@ PrintDiskData (PPARTLIST List,
 
   if (DiskEntry->DriverName.Length > 0)
     {
-      sprintf(LineBuffer,
-	      "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
-	      DiskSize,
-	      Unit,
-	      DiskEntry->DiskNumber,
-	      DiskEntry->Port,
-	      DiskEntry->Bus,
-	      DiskEntry->Id,
-	      &DiskEntry->DriverName);
+      sprintf (LineBuffer,
+	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
+	       DiskSize,
+	       Unit,
+	       DiskEntry->DiskNumber,
+	       DiskEntry->Port,
+	       DiskEntry->Bus,
+	       DiskEntry->Id,
+	       &DiskEntry->DriverName);
     }
   else
     {
-      sprintf(LineBuffer,
-	      "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
-	      DiskSize,
-	      Unit,
-	      DiskEntry->DiskNumber,
-	      DiskEntry->Port,
-	      DiskEntry->Bus,
-	      DiskEntry->Id);
+      sprintf (LineBuffer,
+	       "%6I64u %s  Harddisk %lu  (Port=%hu, Bus=%hu, Id=%hu)",
+	       DiskSize,
+	       Unit,
+	       DiskEntry->DiskNumber,
+	       DiskEntry->Port,
+	       DiskEntry->Bus,
+	       DiskEntry->Id);
     }
 
-  FillConsoleOutputAttribute(0x17,
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputAttribute (0x17,
+			      Width,
+			      coPos,
+			      &Written);
 
-  FillConsoleOutputCharacter(' ',
-			     Width,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (' ',
+			      Width,
+			      coPos,
+			      &Written);
 
   coPos.X++;
-  WriteConsoleOutputCharacters(LineBuffer,
-			       min(strlen(LineBuffer), Width - 2),
-			       coPos);
+  WriteConsoleOutputCharacters (LineBuffer,
+				min (strlen (LineBuffer), Width - 2),
+				coPos);
 
   List->Line++;
 
   /* Print separator line */
-  PrintEmptyLine(List);
+  PrintEmptyLine (List);
 
   /* Print partition lines*/
   Entry = DiskEntry->PartListHead.Flink;
@@ -946,7 +916,7 @@ PrintDiskData (PPARTLIST List,
     }
 
   /* Print separator line */
-  PrintEmptyLine(List);
+  PrintEmptyLine (List);
 }
 
 
@@ -964,67 +934,67 @@ DrawPartitionList (PPARTLIST List)
   /* draw upper left corner */
   coPos.X = List->Left;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter(0xDA, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xDA, // '+',
+			      1,
+			      coPos,
+			      &Written);
 
   /* draw upper edge */
   coPos.X = List->Left + 1;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter(0xC4, // '-',
-			     List->Right - List->Left - 1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xC4, // '-',
+			      List->Right - List->Left - 1,
+			      coPos,
+			      &Written);
 
   /* draw upper right corner */
   coPos.X = List->Right;
   coPos.Y = List->Top;
-  FillConsoleOutputCharacter(0xBF, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xBF, // '+',
+			      1,
+			      coPos,
+			      &Written);
 
   /* draw left and right edge */
   for (i = List->Top + 1; i < List->Bottom; i++)
     {
       coPos.X = List->Left;
       coPos.Y = i;
-      FillConsoleOutputCharacter(0xB3, // '|',
-				 1,
-				 coPos,
-				 &Written);
+      FillConsoleOutputCharacter (0xB3, // '|',
+				  1,
+				  coPos,
+				  &Written);
 
       coPos.X = List->Right;
-      FillConsoleOutputCharacter(0xB3, //'|',
-				 1,
-				 coPos,
-				 &Written);
+      FillConsoleOutputCharacter (0xB3, //'|',
+				  1,
+				  coPos,
+				  &Written);
     }
 
   /* draw lower left corner */
   coPos.X = List->Left;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter(0xC0, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xC0, // '+',
+			      1,
+			      coPos,
+			      &Written);
 
   /* draw lower edge */
   coPos.X = List->Left + 1;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter(0xC4, // '-',
-			     List->Right - List->Left - 1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xC4, // '-',
+			      List->Right - List->Left - 1,
+			      coPos,
+			      &Written);
 
   /* draw lower right corner */
   coPos.X = List->Right;
   coPos.Y = List->Bottom;
-  FillConsoleOutputCharacter(0xD9, // '+',
-			     1,
-			     coPos,
-			     &Written);
+  FillConsoleOutputCharacter (0xD9, // '+',
+			      1,
+			      coPos,
+			      &Written);
 
   /* print list entries */
   List->Line = 0;
@@ -1166,45 +1136,49 @@ ScrollUpPartitionList (PPARTLIST List)
 
 
 VOID
-GetActiveBootPartition (PPARTLIST List,
-			PDISKENTRY *DiskEntry,
-			PPARTENTRY *PartEntry)
+SetActiveBootPartition (PPARTLIST List)
 {
-  PDISKENTRY LocalDiskEntry;
-  PPARTENTRY LocalPartEntry;
-  PLIST_ENTRY Entry;
-  ULONG i;
-
-  *DiskEntry = NULL;
-  *PartEntry = NULL;
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
 
   /* Check for empty disk list */
   if (IsListEmpty (&List->DiskListHead))
-    return;
+    {
+      List->ActiveBootDisk = NULL;
+      List->ActiveBootPartition = NULL;
+      return;
+    }
 
-  /* Get first disk entry from the disk list */
-  Entry = List->DiskListHead.Flink;
-  LocalDiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
+  DiskEntry = CONTAINING_RECORD (List->DiskListHead.Flink,
+				 DISKENTRY,
+				 ListEntry);
 
   /* Check for empty partition list */
-  if (IsListEmpty (&LocalDiskEntry->PartListHead))
-    return;
-
-  /* Search for active partition */
-  Entry = LocalDiskEntry->PartListHead.Flink;
-  while (Entry != &LocalDiskEntry->PartListHead)
+  if (IsListEmpty (&DiskEntry->PartListHead))
     {
-      LocalPartEntry = CONTAINING_RECORD (Entry, PARTENTRY, ListEntry);
-
-      if (LocalPartEntry->PartInfo[0].BootIndicator)
-	{
-	  *DiskEntry = LocalDiskEntry;
-	  *PartEntry = LocalPartEntry;
-	  return;
-	}
-
-      Entry = Entry->Flink;
+      List->ActiveBootDisk = NULL;
+      List->ActiveBootPartition = NULL;
+      return;
     }
+
+  PartEntry = CONTAINING_RECORD (DiskEntry->PartListHead.Flink,
+				 PARTENTRY,
+				 ListEntry);
+
+  /* Set active boot partition 1 */
+  if (PartEntry->PartInfo[0].BootIndicator == FALSE &&
+      PartEntry->PartInfo[1].BootIndicator == FALSE &&
+      PartEntry->PartInfo[2].BootIndicator == FALSE &&
+      PartEntry->PartInfo[3].BootIndicator == FALSE)
+    {
+      PartEntry->PartInfo[0].BootIndicator == TRUE;
+      PartEntry->PartInfo[0].RewritePartition == TRUE;
+      DiskEntry->Modified = TRUE;
+    }
+
+  /* FIXME: Might be incorrect if partitions were created by Linux FDISK */
+  List->ActiveBootDisk = DiskEntry;
+  List->ActiveBootPartition = PartEntry;
 }
 
 
@@ -1661,7 +1635,6 @@ DeleteCurrentPartition (PPARTLIST List)
 BOOLEAN
 WritePartitionsToDisk (PPARTLIST List)
 {
-#if 0
   PDRIVE_LAYOUT_INFORMATION DriveLayout;
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK Iosb;
@@ -1776,22 +1749,25 @@ WritePartitionsToDisk (PPARTLIST List)
 					      DriveLayoutSize,
 					      NULL,
 					      0);
-	      NtClose (FileHandle);
 	      if (!NT_SUCCESS (Status))
 		{
 		  DPRINT1 ("NtDeviceIoControlFile() failed (Status %lx)\n", Status);
+		  NtClose (FileHandle);
 		  return FALSE;
 		}
 
 	      RtlFreeHeap (ProcessHeap,
 			   0,
 			   DriveLayout);
+
+	      /* FIXME: Install MBR code */
+
+	      NtClose (FileHandle);
 	    }
 	}
 
       Entry1 = Entry1->Flink;
     }
-#endif
 
   return TRUE;
 }

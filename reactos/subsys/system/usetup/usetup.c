@@ -94,9 +94,6 @@ UNICODE_STRING SourceRootPath;
 
 static PPARTLIST PartitionList = NULL;
 
-static PDISKENTRY ActiveBootDisk = NULL;
-static PPARTENTRY ActiveBootPartition = NULL;
-
 static PFILE_SYSTEM_LIST FileSystemList = NULL;
 
 
@@ -677,7 +674,6 @@ InstallIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
-  WCHAR PathBuffer[MAX_PATH];
   SHORT xScreen;
   SHORT yScreen;
 
@@ -690,9 +686,6 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
 
   SetStatusText("   Please wait...");
-
-  RtlFreeUnicodeString(&DestinationPath);
-  RtlFreeUnicodeString(&DestinationRootPath);
 
   GetScreenSize(&xScreen, &yScreen);
 
@@ -755,54 +748,9 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	      CreateNewPartition (PartitionList,
 				  0ULL,
 				  TRUE);
-
-	      /* FIXME: Update drive letters and partition numbers */
-
-	      return SELECT_FILE_SYSTEM_PAGE;
 	    }
-	  else
-	    {
-	      RtlFreeUnicodeString (&DestinationRootPath);
-	      swprintf (PathBuffer,
-			L"\\Device\\Harddisk%lu\\Partition%lu",
-			PartitionList->CurrentDisk->DiskNumber,
-			PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
-	      RtlCreateUnicodeString (&DestinationRootPath,
-				      PathBuffer);
 
-	      GetActiveBootPartition (PartitionList,
-				      &ActiveBootDisk,
-				      &ActiveBootPartition);
-
-	      RtlFreeUnicodeString (&SystemRootPath);
-	      if (ActiveBootDisk != NULL && ActiveBootPartition != NULL)
-		{
-		  swprintf (PathBuffer,
-			    L"\\Device\\Harddisk%lu\\Partition%lu",
-			    ActiveBootDisk->DiskNumber,
-			    ActiveBootPartition->PartInfo[0].PartitionNumber);
-		}
-	      else
-		{
-		  /*
-		   * FIXME:
-		   *   Check whether partition can be activated.
-		   *   We may have to force Disk0\Partition1.
-		   *   Mark partition active.
-		   */
-		  swprintf (PathBuffer,
-			    L"\\Device\\Harddisk%lu\\Partition%lu",
-			    PartitionList->CurrentDisk->DiskNumber,
-			    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
-		}
-	      RtlCreateUnicodeString (&SystemRootPath,
-				      PathBuffer);
-
-	      DPRINT ("DestinationRootPath: %wZ\n", &DestinationRootPath);
-	      DPRINT ("SystemRootPath: %wZ\n", &SystemRootPath);
-
-	      return SELECT_FILE_SYSTEM_PAGE;
-	    }
+	  return SELECT_FILE_SYSTEM_PAGE;
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
 	{
@@ -1347,7 +1295,6 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 {
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
-//  BOOLEAN ForceFormat;
   ULONGLONG DiskSize;
   ULONGLONG PartSize;
   PCHAR DiskUnit;
@@ -1488,11 +1435,8 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
   SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
   SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
 
-//  ForceFormat = (PartEntry->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED);
-
   if (FileSystemList == NULL)
     {
-//      FileSystemList = CreateFileSystemList (6, 26, ForceFormat, FsFat);
       FileSystemList = CreateFileSystemList (6, 26, PartEntry->New, FsFat);
       if (FileSystemList == NULL)
 	{
@@ -1536,7 +1480,6 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_RETURN) /* ENTER */
 	{
-#if 0
 	  if (FileSystemList->CurrentFileSystem == FsKeep)
 	    {
 	      return CHECK_FILE_SYSTEM_PAGE;
@@ -1545,8 +1488,6 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 	    {
 	      return FORMAT_PARTITION_PAGE;
 	    }
-#endif
-	  return FORMAT_PARTITION_PAGE;
 	}
     }
 
@@ -1557,14 +1498,16 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 static ULONG
 FormatPartitionPage (PINPUT_RECORD Ir)
 {
+  WCHAR PathBuffer[MAX_PATH];
   PDISKENTRY DiskEntry;
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry;
-//  NTSTATUS Status;
+  NTSTATUS Status;
 
-
+//#ifndef NDEBUG
   ULONG Line;
   ULONG i;
+//#endif
 
 
   SetTextXY(6, 8, "Format partition");
@@ -1637,7 +1580,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		return QUIT_PAGE;
 	    }
 
-//#if 0
+//#ifndef NDEBUG
 	  PrintTextXY (6, 12,
 		       "Disk: %I64u  Cylinder: %I64u  Track: %I64u",
 		       DiskEntry->DiskSize,
@@ -1675,6 +1618,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	    }
 //#endif
 
+	  SetActiveBootPartition (PartitionList);
+
 	  if (WritePartitionsToDisk (PartitionList) == FALSE)
 	    {
 	      DPRINT ("WritePartitionsToDisk() failed\n");
@@ -1693,17 +1638,36 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		}
 	    }
 
-	  SetStatusText ("   Press any key ...");
-	  ConInKey(Ir);
 
-#if 0
+	  /* Set DestinationRootPath */
+	  RtlFreeUnicodeString (&DestinationRootPath);
+	  swprintf (PathBuffer,
+		    L"\\Device\\Harddisk%lu\\Partition%lu",
+		    PartitionList->CurrentDisk->DiskNumber,
+		    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
+	  RtlCreateUnicodeString (&DestinationRootPath,
+				  PathBuffer);
+	  DPRINT1 ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+
+
+	  /* Set SystemRootPath */
+	  RtlFreeUnicodeString (&SystemRootPath);
+	  swprintf (PathBuffer,
+		    L"\\Device\\Harddisk%lu\\Partition%lu",
+		    PartitionList->ActiveBootDisk->DiskNumber,
+		    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
+	  RtlCreateUnicodeString (&SystemRootPath,
+				  PathBuffer);
+	  DPRINT1 ("SystemRootPath: %wZ\n", &SystemRootPath);
+
+
 	  switch (FileSystemList->CurrentFileSystem)
 	    {
 	      case FsFat:
 		Status = FormatPartition (&DestinationRootPath);
 		if (!NT_SUCCESS (Status))
 		  {
-		    DPRINT1("FormatPartition() failed with status 0x%.08x\n", Status);
+		    DPRINT1 ("FormatPartition() failed with status 0x%.08x\n", Status);
 		    /* FIXME: show an error dialog */
 		    return QUIT_PAGE;
 		  }
@@ -1716,6 +1680,10 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 		return QUIT_PAGE;
 	    }
 
+	  SetStatusText ("   Done.  Press any key ...");
+	  ConInKey(Ir);
+
+#if 0
 	  return INSTALL_DIRECTORY_PAGE;
 #endif
 
@@ -1730,6 +1698,8 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 static ULONG
 CheckFileSystemPage(PINPUT_RECORD Ir)
 {
+  WCHAR PathBuffer[MAX_PATH];
+
   SetTextXY(6, 8, "Check file system");
 
   SetTextXY(6, 10, "At present, ReactOS can not check file systems.");
@@ -1738,6 +1708,28 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
 
 
   SetStatusText("   ENTER = Continue   F3 = Quit");
+
+
+  /* Set DestinationRootPath */
+  RtlFreeUnicodeString (&DestinationRootPath);
+  swprintf (PathBuffer,
+	    L"\\Device\\Harddisk%lu\\Partition%lu",
+	    PartitionList->CurrentDisk->DiskNumber,
+	    PartitionList->CurrentPartition->PartInfo[0].PartitionNumber);
+  RtlCreateUnicodeString (&DestinationRootPath,
+			  PathBuffer);
+  DPRINT1 ("DestinationRootPath: %wZ\n", &DestinationRootPath);
+
+  /* Set SystemRootPath */
+  RtlFreeUnicodeString (&SystemRootPath);
+  swprintf (PathBuffer,
+	    L"\\Device\\Harddisk%lu\\Partition%lu",
+	    PartitionList->ActiveBootDisk->DiskNumber,
+	    PartitionList->ActiveBootPartition->PartInfo[0].PartitionNumber);
+  RtlCreateUnicodeString (&SystemRootPath,
+			  PathBuffer);
+  DPRINT1 ("SystemRootPath: %wZ\n", &SystemRootPath);
+
 
   while(TRUE)
     {
@@ -2367,7 +2359,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
     }
 #endif
 
-  if (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
+  if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_ENTRY_UNUSED)
     {
       DPRINT1("Error: active partition invalid (unused)\n");
       PopupError("The active partition is unused (invalid).\n",
@@ -2384,7 +2376,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
     }
 
-  if (ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
+  if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x0A)
     {
       /* OS/2 boot manager partition */
       DPRINT1("Found OS/2 boot manager partition\n");
@@ -2402,7 +2394,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if (ActiveBootPartition->PartInfo[0].PartitionType == 0x83)
+  else if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == 0x83)
     {
       /* Linux ext2 partition */
       DPRINT1("Found Linux ext2 partition\n");
@@ -2420,7 +2412,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_IFS)
+  else if (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_IFS)
     {
       /* NTFS partition */
       DPRINT1("Found NTFS partition\n");
@@ -2438,12 +2430,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
-  else if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
-	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
-	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_HUGE) ||
-	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_XINT13) ||
-	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	   (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+  else if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_12) ||
+	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT_16) ||
+	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_HUGE) ||
+	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_XINT13) ||
+	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	   (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
   {
     /* FAT or FAT32 partition */
     DPRINT1("System path: '%wZ'\n", &SystemRootPath);
@@ -2507,8 +2499,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootcode */
-	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  /* Install FAT32 bootcode */
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
@@ -2703,8 +2695,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootsector */
-	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
 	  wcscat(SrcPath, L"\\loader\\fat32.bin");
@@ -2864,8 +2856,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
 	}
 
 	/* Install new bootsector */
-	if ((ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
-	    (ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
+	if ((PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32) ||
+	    (PartitionList->ActiveBootPartition->PartInfo[0].PartitionType == PARTITION_FAT32_XINT13))
 	{
 	  wcscpy(SrcPath, SourceRootPath.Buffer);
 	  wcscat(SrcPath, L"\\loader\\fat32.bin");

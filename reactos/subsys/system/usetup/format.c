@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: format.c,v 1.1 2003/04/28 19:44:13 chorns Exp $
+/* $Id: format.c,v 1.2 2003/08/18 17:39:26 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/format.c
@@ -41,13 +41,13 @@ FormatPartition(PUNICODE_STRING DriveRoot)
 
   VfatInitialize();
 
-  Status = VfatFormat(DriveRoot,
-  	0,    // MediaFlag
-  	NULL, // Label
-  	TRUE, // QuickFormat
-  	0,    // ClusterSize
-  	NULL); // Callback
-  DPRINT("VfatFormat() status 0x%.08x\n", Status);
+  Status = VfatFormat (DriveRoot,
+		       0,    // MediaFlag
+		       NULL, // Label
+		       TRUE, // QuickFormat
+		       0,    // ClusterSize
+		       NULL); // Callback
+  DPRINT1("VfatFormat() status 0x%.08x\n", Status);
 
   VfatCleanup();
 
