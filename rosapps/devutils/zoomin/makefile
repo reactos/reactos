@@ -1,3 +1,4 @@
+# $Id: makefile,v 1.2 2004/06/02 02:27:04 royce Exp $
 #
 #  ReactOS zoomin
 #
@@ -19,35 +20,23 @@
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #
-	
-PATH_TO_TOP = ../..
 
-TARGET = zoomin
+PATH_TO_TOP = ../../../reactos
 
-OBJS =	framewnd.o \
-        main.o
+TARGET_TYPE = program
 
-LIBS = -lkernel32 -lgdi32 -luser32
+TARGET_APPTYPE = windows
 
-all:	$(TARGET).exe
+TARGET_NAME = zoomin
 
-$(TARGET).res:	$(TARGET).rc
+TARGET_CFLAGS = -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -D__USE_W32API 
 
-$(TARGET).exe:	$(OBJS) $(TARGET).coff
-	$(CC) -Wl,--subsystem,windows -o $(TARGET).exe $(OBJS) $(TARGET).coff $(LIBS)
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
+TARGET_SDKLIBS = kernel32.a gdi32.a user32.a
 
-
-main.h:		resource.h
-
-main.o:		main.c main.h framewnd.h 
-
-framewnd.o:	framewnd.c framewnd.h main.h
-
-clean:
-	- $(RM) $(OBJS)
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
+TARGET_OBJECTS = framewnd.o main.o
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+# EOF

@@ -11,14 +11,21 @@ include rules.mak
 APPS = 	calc \
 	cmdutils \
 	cmdutils$(SEP)mode \
+    cmdutils$(SEP)touch \
+	demos$(SEP)maze \
+    devutils$(SEP)genguid \
+    devutils$(SEP)zoomin \
 	dflat32 \
+    games$(SEP)winemine \
 	hcalc \
 	mc \
 	notepad \
 	notevil \
 	sysutils \
-	demos$(SEP)maze\
 	sysutils$(SEP)ctm \
+    sysutils$(SEP)kill \
+    sysutils$(SEP)tcat \
+	sysutils$(SEP)tlist \
 	net$(SEP)ping \
 	net$(SEP)finger \
 	net$(SEP)telnet \
@@ -40,7 +47,6 @@ APPS = 	calc \
 #
 # Removed because it doesn't build correctly
 #
-#	sysutils$(SEP)tlist \
 #
 
 all: $(APPS)
