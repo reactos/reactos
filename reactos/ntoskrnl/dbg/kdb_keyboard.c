@@ -81,7 +81,7 @@ VOID KbdDisableMouse()
 }
 
 CHAR
-KdbTryGetCharKeyboard()
+KdbTryGetCharKeyboard(PULONG ScanCode)
 {
     static byte_t last_key = 0;
     static byte_t shift = 0;
@@ -105,6 +105,7 @@ KdbTryGetCharKeyboard()
 		//printf("kbd: %d, %d, %c\n", scancode, last_key, keyb_layout[shift][scancode]);
 		last_key = scancode;
 		c = keyb_layout[shift][scancode];
+		*ScanCode = scancode;
 		if (c > 0) return c;
 	    }
 	}

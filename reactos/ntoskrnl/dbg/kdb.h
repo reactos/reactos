@@ -8,8 +8,8 @@ LdrGetAddressInformation(IN PIMAGE_SYMBOL_INFO  SymbolInfo,
   OUT PCH FileName  OPTIONAL,
   OUT PCH FunctionName  OPTIONAL);
 
-ULONG
-KdbTryGetCharKeyboard(VOID);
+CHAR
+KdbTryGetCharKeyboard(PULONG ScanCode);
 ULONG
 KdbTryGetCharSerial(VOID);
 VOID

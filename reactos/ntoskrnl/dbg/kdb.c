@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: kdb.c,v 1.19 2004/03/13 18:21:56 dwelch Exp $
+/* $Id: kdb.c,v 1.20 2004/03/14 18:28:58 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/dbg/kdb.c
@@ -48,7 +48,6 @@
 
 #define BS 8
 #define DEL 127
-#define UPARROW 56
 
 BOOL KbdEchoOn = TRUE;
 
@@ -262,6 +261,7 @@ KdbGetCommand(PCH Buffer)
   CHAR Key;
   PCH Orig = Buffer;
   static UCHAR LastCommand[256] = "";
+  ULONG ScanCode = 0;
   
   KbdEchoOn = !((KdDebugState & KD_DEBUG_KDNOECHO) != 0);
   
@@ -270,7 +270,7 @@ KdbGetCommand(PCH Buffer)
       if (KdDebugState & KD_DEBUG_KDSERIAL)
 	while ((Key = KdbTryGetCharSerial()) == -1);
       else
-	while ((Key = KdbTryGetCharKeyboard()) == -1);
+	while ((Key = KdbTryGetCharKeyboard(&ScanCode)) == -1);
 
       if (Key == '\r' || Key == '\n')
 	{
@@ -302,7 +302,7 @@ KdbGetCommand(PCH Buffer)
 		DbgPrint(" %c", BS);
 	    }
         }
-      else if (Key == UPARROW)
+      else if (ScanCode == 72)
 	{
 	  ULONG i;
 	  while (Buffer > Orig)
@@ -673,8 +673,8 @@ DbgStepOver(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
     {
       Eip++;
     }
-  if (Eip[0] == 0xE8 || Eip[0] == 0x9A ||
-      (Eip[0] == 0xFF && (Eip[0] & 0x3C) == 0x10))
+  if (Eip[0] == 0xE8 || Eip[0] == 0x9A || Eip[0] == 0xF2 || Eip[0] == 0xF3 ||
+      (Eip[0] == 0xFF && (Eip[1] & 0x3C) == 0x10))
     {
       ULONG NextInst = Tf->Eip + KdbGetInstLength(Tf->Eip);
       KdbLastSingleStepFrom = Tf->Eip;
@@ -1124,7 +1124,7 @@ DbgBackTraceCommand(ULONG Argc, PCH Argv[], PKTRAP_FRAME Tf)
 	  StackBase = (ULONG)&init_stack_top;
 	  StackLimit = (ULONG)&init_stack;
 	}
-      DbgPrintBackTrace((PULONG)Tf->Ebp, StackBase, StackLimit);
+      DbgPrintBackTrace((PULONG)&Tf->DebugEbp, StackBase, StackLimit);
     }
   /* 
    * If there are two arguments and the second begins with a asterik treat it
@@ -1535,9 +1535,10 @@ KdbMainLoop(PKTRAP_FRAME Tf)
 
 VOID
 KdbInternalEnter(PKTRAP_FRAME Tf)
-{
+{  
   __asm__ __volatile__ ("cli\n\t");
   KbdDisableMouse();
+  HalReleaseDisplayOwnership();
   (VOID)KdbMainLoop(Tf);
   KbdEnableMouse();
   __asm__ __volatile__("sti\n\t");

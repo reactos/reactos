@@ -57,8 +57,8 @@ _KdbEnter:
 	pushl	$0		/* TempCs */
 	pushl	$0		/* DebugPointer */
 	pushl	$0		/* DebugArgMark */
-	pushl	$0		/* DebugEip */
-	pushl	$0		/* DebugEbp */
+	pushl	_KdbEipTemp	/* DebugEip */
+	pushl	%ebp		/* DebugEbp */
 
 	/*
 	 * Push a pointer to the trap frame
