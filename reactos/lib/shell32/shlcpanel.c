@@ -754,7 +754,7 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
     BOOL ret;
     int l;
 
-    TRACE("(%p)->execute(%x)\n", This, psei);
+    TRACE("(%p)->execute(%p)\n", This, psei);
 
     if (!psei)
 	return E_INVALIDARG;
@@ -768,8 +768,8 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
     l = 1 + MultiByteToWideChar(CP_ACP, 0, pcpanel->szName, -1, path+1, MAX_PATH);
 
     /* pass applet name to Control_RunDLL to distinguish between applets in one .cpl file */
-    lstrcpyW(path+1, L"\" ");
-    l += 2;
+    path[++l] = '"';
+    path[++l] = ' ';
 
     MultiByteToWideChar(CP_ACP, 0, pcpanel->szName+pcpanel->offsDispName, -1, path+l, MAX_PATH);
 
@@ -836,7 +836,7 @@ static HRESULT WINAPI IShellExecuteHookA_fnExecute(IShellExecuteHookA* iface, LP
     char path[MAX_PATH];
     BOOL ret;
 
-    TRACE("(%p)->execute(%x)\n", This, psei);
+    TRACE("(%p)->execute(%p)\n", This, psei);
 
     if (!psei)
 	return E_INVALIDARG;

@@ -397,7 +397,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	if (SFGAO_LINK & *pdwAttributes) {
 	    char ext[MAX_PATH];
 
-	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || stricmp(ext, "lnk"))
+	    if (!_ILGetExtension(pidl, ext, MAX_PATH) || strcasecmp(ext, "lnk"))
 		*pdwAttributes &= ~SFGAO_READONLY;
 	}
     } else {
