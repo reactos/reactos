@@ -73,7 +73,15 @@ MainFrame::MainFrame(HWND hwnd)
 /*TODO
 		{4, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{5, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-*/	};
+*/
+		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
+		{7, ID_BROWSE_BACK, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{8, ID_BROWSE_FORWARD, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{9, ID_BROWSE_HOME, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{10, ID_BROWSE_SEARCH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{11, ID_REFRESH, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+		{12, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
+	};
 
 	_htoolbar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE,
 		IDW_TOOLBAR, 2, g_Globals._hInstance, IDB_TOOLBAR, toolbarBtns,
@@ -130,7 +138,7 @@ MainFrame::MainFrame(HWND hwnd)
 	}
 
 	 // insert Registry button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Registry\0"));
+	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
 
 	drivebarBtn.idCommand = ID_DRIVE_REGISTRY;
 	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
@@ -634,12 +642,6 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  default:
-		/*@todo if (wParam >= PM_FIRST_LANGUAGE && wParam <= PM_LAST_LANGUAGE)
-			STRING_SelectLanguageByNumber(wParam - PM_FIRST_LANGUAGE);
-		else */if ((id<IDW_FIRST_CHILD || id>=IDW_FIRST_CHILD+0x100) &&
-			(id<SC_SIZE || id>SC_RESTORE))
-			MessageBox(_hwnd, TEXT("Not yet implemented"), ResString(IDS_TITLE), MB_OK);
-
 #ifndef _NO_MDI
 		return DefFrameProc(_hwnd, _hmdiclient, WM_COMMAND, MAKELONG(id,code), 0);
 #else

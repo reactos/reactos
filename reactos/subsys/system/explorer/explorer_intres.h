@@ -114,7 +114,7 @@
 #define ID_ABOUT_WINEFILE               1705
 #define IDC_FILETREE                    10001
 #define ID_EXPLORER_FAQ                 10002
-#define ID_WEB_WINDOW                 10003
+#define ID_WEB_WINDOW                   10003
 #define ID_WINDOW_AUTOSORT              0x8003
 #define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERED_SIZES               0x8005
@@ -127,7 +127,12 @@
 #define ID_DRIVE_FIRST                  0x9006
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
-#define ID_DESKTOPBAR_SETTINGS          40005
+#define ID_DESKTOPBAR_SETTINGS          40004
+#define ID_BROWSE_BACK                  40005
+#define ID_BROWSE_FORWARD               40006
+#define ID_BROWSE_HOME                  40007
+#define ID_BROWSE_SEARCH                40008
+#define ID_STOP                         40009
 #define ID_WINDOW_NEW                   0xE130
 #define ID_WINDOW_ARRANGE               0xE131
 #define ID_WINDOW_CASCADE               0xE132

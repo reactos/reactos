@@ -29,6 +29,8 @@
 #include "../utility/utility.h"
 #include "../explorer.h"
 
+#include "../explorer_intres.h"
+
 #include "webchild.h"
 
 //#include <mshtml.h>
@@ -184,7 +186,7 @@ HWND create_webchildwindow(HWND hmdiclient, const WebChildWndInfo& info)
 static const CLSID CLSID_MozillaBrowser =
 	{0x1339B54C, 0x3453, 0x11D2, {0x93, 0xB9, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}};
 
-  
+
 WebChildWindow::WebChildWindow(HWND hwnd, const WebChildWndInfo& info)
  :	super(hwnd),
 	_evt_handler1(NULL),
@@ -223,20 +225,68 @@ WebChildWindow::~WebChildWindow()
 
 LRESULT WebChildWindow::WndProc(UINT message, WPARAM wparam, LPARAM lparam)
 {
-	if (message == WM_ERASEBKGND) {
-		if (!_control) {
-			HDC hdc = (HDC)wparam;
-			ClientRect rect(_hwnd);
+	try {
+		switch(message) {
+		  case WM_ERASEBKGND:
+			if (!_control) {
+				HDC hdc = (HDC)wparam;
+				ClientRect rect(_hwnd);
 
-			HBRUSH hbrush = CreateSolidBrush(RGB(200,200,235));
-			BkMode mode(hdc, TRANSPARENT);
-			TextColor color(hdc, RGB(200,40,40));
-			FillRect(hdc, &rect, hbrush);
-			DrawText(hdc, TEXT("Sorry - no web browser control could be loaded."), -1, &rect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
-			DeleteObject(hbrush);
+				HBRUSH hbrush = CreateSolidBrush(RGB(200,200,235));
+				BkMode mode(hdc, TRANSPARENT);
+				TextColor color(hdc, RGB(200,40,40));
+				FillRect(hdc, &rect, hbrush);
+				DrawText(hdc, TEXT("Sorry - no web browser control could be loaded."), -1, &rect, DT_CENTER|DT_VCENTER|DT_SINGLELINE);
+				DeleteObject(hbrush);
+			}
+
+			return TRUE;
+
+ 		  case PM_DISPATCH_COMMAND: {
+			if (_control) {
+				HRESULT hr = E_FAIL;
+
+				switch(LOWORD(wparam)) {
+				  case ID_BROWSE_BACK:
+					hr = _control->GoBack();
+					break;
+
+				  case ID_BROWSE_FORWARD:
+					hr = _control->GoForward();
+					break;
+
+				  case ID_BROWSE_HOME:
+					hr = _control->GoHome();
+					break;
+
+				  case ID_BROWSE_SEARCH:
+					hr = _control->GoSearch();
+					break;
+
+				  case ID_REFRESH:
+					hr = _control->Refresh();
+					break;
+
+				  case ID_STOP:
+					hr = _control->Stop();
+					break;
+
+				  default:
+					return FALSE;
+				}
+
+				if (FAILED(hr) && hr!=E_FAIL)
+					THROW_EXCEPTION(hr);
+			}
+
+			return TRUE;}
+
+		  default:
+			return super::WndProc(message, wparam, lparam);
 		}
+	} catch(COMException& e) {
+		HandleException(e, _hwnd);
+	}
 
-		return TRUE;
-	} else
-		return super::WndProc(message, wparam, lparam);
+	return 0;
 }
