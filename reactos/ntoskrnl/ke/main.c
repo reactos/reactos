@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.69 2000/12/26 05:32:44 dwelch Exp $
+/* $Id: main.c,v 1.70 2000/12/26 05:34:27 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -585,11 +585,7 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
    /*
     *  Launch initial process
     */
-#if 0
    LdrLoadInitialProcess();
-#endif
-
-   TestV86Mode();
 
    DbgPrint("Finished main()\n");
    PsTerminateSystemThread(STATUS_SUCCESS);
