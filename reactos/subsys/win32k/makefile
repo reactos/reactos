@@ -1,8 +1,8 @@
-# $Id: makefile,v 1.55 2003/02/15 19:16:33 gvg Exp $
+# $Id: makefile,v 1.56 2003/02/25 23:08:52 gvg Exp $
 
 PATH_TO_TOP = ../..
 
-TARGET_TYPE = export_driver
+TARGET_TYPE = subsystem
 
 TARGET_NAME = win32k
 
@@ -22,7 +22,8 @@ TARGET_CFLAGS = $(CFLAGS_DBG) -I$(PATH_TO_TOP)/ntoskrnl/include -DUNICODE -Wall
 
 ENG_OBJECTS= eng/debug.o eng/mem.o eng/brush.o eng/bitblt.o eng/clip.o \
     eng/copybits.o eng/device.o eng/handle.o eng/lineto.o eng/paint.o \
-    eng/palette.o eng/surface.o eng/xlate.o eng/transblt.o eng/mouse.o
+    eng/palette.o eng/surface.o eng/xlate.o eng/transblt.o eng/mouse.o \
+    eng/misc.o
 MAIN_OBJECTS = main/dllmain.o main/svctabm.o
 MISC_OBJECTS = misc/driver.o misc/error.o misc/math.o misc/object.o
 LDR_OBJECTS = ldr/loader.o

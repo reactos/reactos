@@ -1,4 +1,4 @@
-/* $Id: dc.c,v 1.46 2003/02/15 19:16:34 gvg Exp $
+/* $Id: dc.c,v 1.47 2003/02/25 23:08:54 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -184,13 +184,61 @@ HDC STDCALL  W32kCreateCompatableDC(HDC  hDC)
   return  hNewDC;
 }
 
+static BOOL STDCALL FindDriverFileNames(PUNICODE_STRING DriverFileNames)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  UNICODE_STRING RegistryPath;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&RegistryPath, NULL);
+  RtlZeroMemory(QueryTable, sizeof(QueryTable));
+  QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
+  QueryTable[0].Name = L"\\Device\\Video0";
+  QueryTable[0].EntryContext = &RegistryPath;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_DEVICEMAP,
+                                  L"VIDEO",
+                                  QueryTable,
+                                  NULL,
+                                  NULL);
+  if (! NT_SUCCESS(Status))
+  {
+    DPRINT1("No \\Device\\Video0 value in DEVICEMAP\\VIDEO found\n");
+    return FALSE;
+  }
+
+  DPRINT("RegistryPath %S\n", RegistryPath.Buffer);
+
+  QueryTable[0].Name = L"InstalledDisplayDrivers";
+  QueryTable[0].EntryContext = DriverFileNames;
+
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                  RegistryPath.Buffer,
+                                  QueryTable,
+                                  NULL,
+                                  NULL);
+  RtlFreeUnicodeString(&RegistryPath);
+  if (! NT_SUCCESS(Status))
+  {
+    DPRINT1("No InstalledDisplayDrivers value in service entry found\n");
+    return FALSE;
+  }
+
+  DPRINT("DriverFileNames %S\n", DriverFileNames->Buffer);
+
+  return TRUE;
+}
+
 BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
 				      LPCWSTR Device)
 {
-  PGD_ENABLEDRIVER  GDEnableDriver;
+  PGD_ENABLEDRIVER GDEnableDriver;
   HANDLE DeviceDriver;
-  DRVENABLEDATA  DED;
+  DRVENABLEDATA DED;
   PSURFOBJ SurfObj;
+  UNICODE_STRING DriverFileNames;
+  PWSTR CurrentName;
+  BOOL GotDriver;
 
   /*  Open the miniport driver  */
   if ((DeviceDriver = DRIVER_FindMPDriver(Driver)) == NULL)
@@ -199,22 +247,64 @@ BOOL STDCALL W32kCreatePrimarySurface(LPCWSTR Driver,
     return(FALSE);
   }
 
-  /*  Get the DDI driver's entry point  */
-  /*  FIXME: Retrieve DDI driver name from registry */
-  if ((GDEnableDriver = DRIVER_FindDDIDriver(L"\\SystemRoot\\system32\\drivers\\vgaddi.dll")) == NULL)
+  /*  Retrieve DDI driver names from registry */
+  RtlInitUnicodeString(&DriverFileNames, NULL);
+  if (! FindDriverFileNames(&DriverFileNames))
   {
-    DPRINT("FindDDIDriver failed\n");
+    DPRINT("FindDriverFileNames failed\n");
     return(FALSE);
   }
 
-  /*  Call DDI driver's EnableDriver function  */
-  RtlZeroMemory(&DED, sizeof(DED));
-
-  if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+  /* DriverFileNames may be a list of drivers in REG_SZ_MULTI format, scan all of
+     them until a good one found */
+  CurrentName = DriverFileNames.Buffer;
+  GotDriver = FALSE;
+  while (! GotDriver && CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
   {
-    DPRINT("DrvEnableDriver failed\n");
-    return(FALSE);
+    /*  Get the DDI driver's entry point  */
+    GDEnableDriver = DRIVER_FindDDIDriver(CurrentName);
+    if (NULL == GDEnableDriver)
+    {
+      DPRINT("FindDDIDriver failed for %S\n", CurrentName);
+    }
+    else
+    {
+      /*  Call DDI driver's EnableDriver function  */
+      RtlZeroMemory(&DED, sizeof(DED));
+
+      if (!GDEnableDriver(DDI_DRIVER_VERSION, sizeof(DED), &DED))
+      {
+        DPRINT("DrvEnableDriver failed for %S\n", CurrentName);
+      }
+      else
+      {
+        GotDriver = TRUE;
+      }
+    }
+
+    if (! GotDriver)
+    {
+      /* Skip to the next name but never get past the Unicode string */
+      while (L'\0' != *CurrentName &&
+             CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+      {
+	CurrentName++;
+      }
+      if (CurrentName < DriverFileNames.Buffer + DriverFileNames.Length)
+      {
+        CurrentName++;
+      }
+    }
   }
+  RtlFreeUnicodeString(&DriverFileNames);
+  if (! GotDriver)
+  {
+    DPRINT("No suitable driver found\n");
+    return FALSE;
+  }
+
+  DPRINT("Display driver %S loaded\n", DriverName);
+
   DPRINT("Building DDI Functions\n");
 
   /*  Construct DDI driver function dispatch table  */
@@ -338,7 +428,8 @@ HDC STDCALL  W32kCreateDC(LPCWSTR  Driver,
 
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
-  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, 640, 480);
+  NewDC->w.hVisRgn = W32kCreateRectRgn(0, 0, SurfGDI->SurfObj.sizlBitmap.cx,
+                                       SurfGDI->SurfObj.sizlBitmap.cy);
   DC_ReleasePtr( hNewDC );
 
   /*  Initialize the DC state  */

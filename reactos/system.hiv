@@ -290,6 +290,18 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Vga\Device0]
+"InstalledDisplayDrivers"=multi:"vgaddi"
+[\Registry\Machine\SYSTEM\ControlSet001\Services\vmx_svga]
+"ErrorControl"=dword:00000000
+"Group"="Video"
+"ImagePath"=expand:"system32\drivers\vmx_svga.sys"
+"Start"=dword:00000004
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\vmx_svga\Device0]
+"InstalledDisplayDrivers"=multi:"vmx_fb"
+
 [\Registry\Machine\SYSTEM\ControlSet002]
 
 [\Registry\Machine\SYSTEM\Select]

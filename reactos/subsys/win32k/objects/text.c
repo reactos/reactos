@@ -10,6 +10,8 @@
 
 #include "../eng/handle.h"
 
+#include <include/inteng.h>
+
 // #define NDEBUG
 #include <win32k/debug1.h>
 
@@ -713,8 +715,8 @@ W32kTextOut(HDC  hDC,
     DestRect.top = TextTop + yoff - glyph->bitmap_top;
     DestRect.right = TextLeft + glyph->bitmap.width;
     DestRect.bottom = DestRect.top + glyph->bitmap.rows;
-    bitSize.cx = pitch-1;
-    bitSize.cy = glyph->bitmap.rows-1;
+    bitSize.cx = pitch;
+    bitSize.cy = glyph->bitmap.rows;
     MaskRect.right = glyph->bitmap.width;
     MaskRect.bottom = glyph->bitmap.rows;
 
@@ -725,7 +727,7 @@ W32kTextOut(HDC  hDC,
     SourceGlyphSurf = (PSURFOBJ)AccessUserObject(HSourceGlyph);
 
     // Use the font data as a mask to paint onto the DCs surface using a brush
-    EngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
+    IntEngBitBlt(SurfObj, NULL, SourceGlyphSurf, NULL, NULL, &DestRect, &SourcePoint, &MaskRect, Brush, &BrushOrigin, 0xAACC);
 
     EngDeleteSurface(HSourceGlyph);
 

@@ -15,11 +15,13 @@
 #include "clip.h"
 #include "objects.h"
 #include "../dib/dib.h"
+#include "misc.h"
 #include <include/mouse.h>
 #include <include/object.h>
 #include <include/dib.h>
 #include <include/surface.h>
 #include <include/copybits.h>
+#include <include/inteng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -123,7 +125,6 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
   LONG y;
   ULONG LineWidth;
 
-  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
   // Assign DIB functions according to bytes per pixel
   DPRINT("BPF: %d\n", BitsPerFormat(Dest->iBitmapFormat));
   switch(BitsPerFormat(Dest->iBitmapFormat))
@@ -144,7 +145,6 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
       DbgPrint("BltPatCopy: unsupported DIB format %u (bitsPerPixel:%u)\n", Dest->iBitmapFormat,
                BitsPerFormat(Dest->iBitmapFormat));
 
-      MouseSafetyOnDrawEnd(Dest, DestGDI);
       return FALSE;
   }
 
@@ -153,7 +153,6 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
   {
     DIB_HLine(Dest, DestRect->left, DestRect->right, y,  Brush->iSolidColor);
   }
-  MouseSafetyOnDrawEnd(Dest, DestGDI);
 
   return TRUE;
 }
@@ -161,8 +160,8 @@ BltPatCopy(SURFOBJ *Dest, PSURFGDI DestGDI, SURFOBJ *Mask,
 INT abs(INT nm);
 
 BOOL STDCALL
-EngBitBlt(SURFOBJ *Dest,
-	  SURFOBJ *Source,
+EngBitBlt(SURFOBJ *DestObj,
+	  SURFOBJ *SourceObj,
 	  SURFOBJ *Mask,
 	  CLIPOBJ *ClipRegion,
 	  XLATEOBJ *ColorTranslation,
@@ -173,104 +172,90 @@ EngBitBlt(SURFOBJ *Dest,
 	  POINTL *BrushOrigin,
 	  ROP4 rop4)
 {
-  BOOLEAN   ret;
-  BYTE      clippingType;
-  RECTL     rclTmp;
-  POINTL    ptlTmp;
-  RECT_ENUM RectEnum;
-  BOOL      EnumMore;
-  PSURFGDI  DestGDI, SourceGDI;
-  HSURF     hTemp;
-  PSURFOBJ  TempSurf = NULL;
-  BOOLEAN   canCopyBits;
-  POINTL    TempPoint;
-  RECTL     TempRect;
-  SIZEL     TempSize;
+  BOOLEAN            ret;
+  BYTE               clippingType;
+  RECTL              rclTmp;
+  POINTL             ptlTmp;
+  RECT_ENUM          RectEnum;
+  BOOL               EnumMore;
+  PSURFGDI           OutputGDI, InputGDI;
+  POINTL             InputPoint;
+  RECTL              InputRect;
+  RECTL              OutputRect;
+  POINTL             Translate;
+  INTENG_ENTER_LEAVE EnterLeaveSource;
+  INTENG_ENTER_LEAVE EnterLeaveDest;
+  PSURFOBJ           InputObj;
+  PSURFOBJ           OutputObj;
 
-  if(Source != NULL) SourceGDI = (PSURFGDI)AccessInternalObjectFromUserObject(Source);
-  if(Dest   != NULL) DestGDI   = (PSURFGDI)AccessInternalObjectFromUserObject(Dest);
-
-  if (Source != NULL)
+  /* Check for degenerate case: if height or width of DestRect is 0 pixels there's
+     nothing to do */
+  if (DestRect->right == DestRect->left || DestRect->bottom == DestRect->top)
     {
-      MouseSafetyOnDrawStart(Source, SourceGDI, SourcePoint->x, SourcePoint->y,
-			     (SourcePoint->x + abs(DestRect->right - DestRect->left)),
-			     (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+    return TRUE;
     }
-  MouseSafetyOnDrawStart(Dest, DestGDI, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
-  // If we don't have to do anything special, we can punt to DrvCopyBits
-  // if it exists
-  if( (Mask == NULL)        && (MaskOrigin == NULL) && (Brush == NULL) &&
-      (BrushOrigin == NULL) && (rop4 == 0) )
-  {
-    canCopyBits = TRUE;
-  } else
-    canCopyBits = FALSE;
-
-  // Check for CopyBits or BitBlt hooks if one is not a GDI managed bitmap, IF:
-  // * The destination bitmap is not managed by the GDI OR
-  if(Dest->iType != STYPE_BITMAP)
-  {
-    // Destination surface is device managed
-    if (DestGDI->BitBlt!=NULL)
+  if (NULL != SourcePoint)
     {
-      if (Source!=NULL)
-      {
-        // Get the source into a format compatible surface
-        TempPoint.x = 0;
-        TempPoint.y = 0;
-        TempRect.top    = 0;
-        TempRect.left   = 0;
-        TempRect.bottom = DestRect->bottom - DestRect->top;
-        TempRect.right  = DestRect->right - DestRect->left;
-        TempSize.cx = TempRect.right;
-        TempSize.cy = TempRect.bottom;
-
-        hTemp = EngCreateBitmap(TempSize,
-                     DIB_GetDIBWidthBytes(DestRect->right - DestRect->left, BitsPerFormat(Dest->iBitmapFormat)),
-                     Dest->iBitmapFormat, 0, NULL);
-        TempSurf = (PSURFOBJ)AccessUserObject((ULONG)hTemp);
-
-        // FIXME: Skip creating a TempSurf if we have the same BPP and palette
-        EngBitBlt(TempSurf, Source, NULL, NULL, ColorTranslation, &TempRect, SourcePoint, NULL, NULL, NULL, 0);
-      }
-
-      ret = DestGDI->BitBlt(Dest, TempSurf, Mask, ClipRegion,
-                            NULL, DestRect, &TempPoint,
-                            MaskOrigin, Brush, BrushOrigin, rop4);
-
-      MouseSafetyOnDrawEnd(Source, SourceGDI);
-      MouseSafetyOnDrawEnd(Dest, DestGDI);
-
-      return ret;
+    InputRect.left = SourcePoint->x;
+    InputRect.right = SourcePoint->x + (DestRect->right - DestRect->left);
+    InputRect.top = SourcePoint->y;
+    InputRect.bottom = SourcePoint->y + (DestRect->bottom - DestRect->top);
     }
-  }
+  else
+    {
+    InputRect.left = 0;
+    InputRect.right = DestRect->right - DestRect->left;
+    InputRect.top = 0;
+    InputRect.bottom = DestRect->bottom - DestRect->top;
+    }
+
+  if (! IntEngEnter(&EnterLeaveSource, SourceObj, &InputRect, TRUE, &Translate, &InputObj))
+    {
+    return FALSE;
+    }
+
+  if (NULL != SourcePoint)
+    {
+    InputPoint.x = SourcePoint->x + Translate.x;
+    InputPoint.y = SourcePoint->y + Translate.y;
+    }
+  else
+    {
+    InputPoint.x = 0;
+    InputPoint.y = 0;
+    }
+
+  if (NULL != InputObj)
+    {
+    InputGDI = (PSURFGDI) AccessInternalObjectFromUserObject(InputObj);
+    }
+
+  OutputRect = *DestRect;
+
+  if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
+    {
+    IntEngLeave(&EnterLeaveSource);
+    return FALSE;
+    }
+
+  OutputRect.left = DestRect->left + Translate.x;
+  OutputRect.right = DestRect->right + Translate.x;
+  OutputRect.top = DestRect->top + Translate.y;
+  OutputRect.bottom = DestRect->bottom + Translate.y;
+
+
+  if (NULL != OutputObj)
+    {
+    OutputGDI = (PSURFGDI)AccessInternalObjectFromUserObject(OutputObj);
+    }
 
   /* The code currently assumes there will be a source bitmap. This is not true when, for example, using this function to
    * paint a brush pattern on the destination. */
-  if(!Source && 0xaacc != rop4 && PATCOPY != rop4)
+  if (NULL == InputObj && 0xaacc != rop4 && PATCOPY != rop4)
   {
     DbgPrint("EngBitBlt: A source is currently required, even though not all operations require one (FIXME)\n");
     return FALSE;
-  }
-
-  // * The source bitmap is not managed by the GDI and we didn't already obtain it using EngCopyBits from the device
-  if(NULL != Source && STYPE_BITMAP != Source->iType && NULL == SourceGDI->CopyBits)
-  {
-    if (SourceGDI->BitBlt!=NULL)
-    {
-      // Request the device driver to return the bitmap in a format compatible with the device
-      ret = SourceGDI->BitBlt(Dest, Source, Mask, ClipRegion,
-                              NULL, DestRect, SourcePoint,
-                              MaskOrigin, Brush, BrushOrigin, rop4);
-
-      MouseSafetyOnDrawEnd(Source, SourceGDI);
-      MouseSafetyOnDrawEnd(Dest, DestGDI);
-
-      return ret;
-
-      // Convert the surface from the driver into the required destination surface
-    }
   }
 
   // Determine clipping type
@@ -283,9 +268,15 @@ EngBitBlt(SURFOBJ *Dest,
 
   if (0xaacc == rop4)
   {
-    return BltMask(Dest, DestGDI, Mask, DestRect, MaskOrigin, Brush, BrushOrigin);
+    ret = BltMask(OutputObj, OutputGDI, Mask, &OutputRect, MaskOrigin, Brush, BrushOrigin);
+    IntEngLeave(&EnterLeaveDest);
+    IntEngLeave(&EnterLeaveSource);
+    return ret;
   } else if (PATCOPY == rop4) {
-    return BltPatCopy(Dest, DestGDI, Mask, DestRect, MaskOrigin, Brush, BrushOrigin);
+    ret = BltPatCopy(OutputObj, OutputGDI, Mask, &OutputRect, MaskOrigin, Brush, BrushOrigin);
+    IntEngLeave(&EnterLeaveDest);
+    IntEngLeave(&EnterLeaveSource);
+    return ret;
   }
 
 
@@ -293,23 +284,23 @@ EngBitBlt(SURFOBJ *Dest,
   switch(clippingType)
   {
     case DC_TRIVIAL:
-      CopyBitsCopy(Dest, Source, DestGDI, SourceGDI, DestRect, SourcePoint, Source->lDelta, ColorTranslation);
+      CopyBitsCopy(OutputObj, InputObj, OutputGDI, InputGDI, &OutputRect, &InputPoint, InputObj->lDelta, ColorTranslation);
 
-      MouseSafetyOnDrawEnd(Source, SourceGDI);
-      MouseSafetyOnDrawEnd(Dest, DestGDI);
+      IntEngLeave(&EnterLeaveDest);
+      IntEngLeave(&EnterLeaveSource);
 
       return(TRUE);
 
     case DC_RECT:
 
       // Clip the blt to the clip rectangle
-      EngIntersectRect(&rclTmp, DestRect, &ClipRegion->rclBounds);
+      EngIntersectRect(&rclTmp, &OutputRect, &ClipRegion->rclBounds);
 
-      ptlTmp.x = SourcePoint->x + rclTmp.left - DestRect->left;
-      ptlTmp.y = SourcePoint->y + rclTmp.top  - DestRect->top;
+      ptlTmp.x = InputPoint.x + rclTmp.left - OutputRect.left;
+      ptlTmp.y = InputPoint.y + rclTmp.top  - OutputRect.top;
 
-      MouseSafetyOnDrawEnd(Source, SourceGDI);
-      MouseSafetyOnDrawEnd(Dest, DestGDI);
+      IntEngLeave(&EnterLeaveDest);
+      IntEngLeave(&EnterLeaveSource);
 
       return(TRUE);
 
@@ -326,10 +317,10 @@ EngBitBlt(SURFOBJ *Dest,
           RECTL* prcl    = &RectEnum.arcl[0];
 
           do {
-            EngIntersectRect(prcl, prcl, DestRect);
+            EngIntersectRect(prcl, prcl, &OutputRect);
 
-            ptlTmp.x = SourcePoint->x + prcl->left - DestRect->left;
-            ptlTmp.y = SourcePoint->y + prcl->top - DestRect->top;
+            ptlTmp.x = InputPoint.x + prcl->left - OutputRect.left;
+            ptlTmp.y = InputPoint.y + prcl->top - OutputRect.top;
 
             prcl++;
 
@@ -338,14 +329,65 @@ EngBitBlt(SURFOBJ *Dest,
 
       } while(EnumMore);
 
-    MouseSafetyOnDrawEnd(Source, SourceGDI);
-    MouseSafetyOnDrawEnd(Dest, DestGDI);
+    IntEngLeave(&EnterLeaveDest);
+    IntEngLeave(&EnterLeaveSource);
 
     return(TRUE);
   }
 
-  MouseSafetyOnDrawEnd(Source, SourceGDI);
-  MouseSafetyOnDrawEnd(Dest, DestGDI);
+  IntEngLeave(&EnterLeaveDest);
+  IntEngLeave(&EnterLeaveSource);
 
   return(FALSE);
+}
+
+BOOL STDCALL
+IntEngBitBlt(SURFOBJ *DestObj,
+             SURFOBJ *SourceObj,
+             SURFOBJ *Mask,
+             CLIPOBJ *ClipRegion,
+             XLATEOBJ *ColorTranslation,
+             RECTL *DestRect,
+             POINTL *SourcePoint,
+             POINTL *MaskOrigin,
+             BRUSHOBJ *Brush,
+             POINTL *BrushOrigin,
+             ROP4 rop4)
+{
+  BOOLEAN ret;
+  SURFGDI *DestGDI;
+  SURFGDI *SourceGDI;
+
+  if (NULL != SourceObj)
+    {
+    SourceGDI = (PSURFGDI) AccessInternalObjectFromUserObject(SourceObj);
+    MouseSafetyOnDrawStart(SourceObj, SourceGDI, SourcePoint->x, SourcePoint->y,
+                           (SourcePoint->x + abs(DestRect->right - DestRect->left)),
+			   (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+    }
+
+  /* No success yet */
+  ret = FALSE;
+  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
+  MouseSafetyOnDrawStart(DestObj, DestGDI, DestRect->left, DestRect->top,
+                         DestRect->right, DestRect->bottom);
+
+  /* Call the driver's DrvBitBlt if available */
+  if (NULL != DestGDI->BitBlt) {
+    ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                          DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, rop4);
+  }
+
+  if (! ret) {
+    ret = EngBitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
+                    DestRect, SourcePoint, MaskOrigin, Brush, BrushOrigin, rop4);
+  }
+
+  MouseSafetyOnDrawEnd(DestObj, DestGDI);
+  if (NULL != SourceObj)
+    {
+    MouseSafetyOnDrawEnd(SourceObj, SourceGDI);
+    }
+
+  return ret;
 }

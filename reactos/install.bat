@@ -50,7 +50,7 @@ copy drivers\dd\null\null.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\serial\serial.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\serenum\serenum.sys %ROS_INSTALL%\system32\drivers
 copy drivers\dd\vga\miniport\vgamp.sys %ROS_INSTALL%\system32\drivers
-copy drivers\dd\vga\display\vgaddi.dll %ROS_INSTALL%\system32\drivers
+copy drivers\dd\vga\display\vgaddi.dll %ROS_INSTALL%\system32
 copy drivers\dd\videoprt\videoprt.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\afd\afd.sys %ROS_INSTALL%\system32\drivers
 copy drivers\net\dd\ne2000\ne2000.sys %ROS_INSTALL%\system32\drivers
@@ -97,7 +97,7 @@ copy lib\wsock32\wsock32.dll %ROS_INSTALL%\system32
 copy subsys\smss\smss.exe %ROS_INSTALL%\system32
 copy subsys\csrss\csrss.exe %ROS_INSTALL%\system32
 copy subsys\ntvdm\ntvdm.exe %ROS_INSTALL%\system32
-copy subsys\win32k\win32k.sys %ROS_INSTALL%\system32\drivers
+copy subsys\win32k\win32k.sys %ROS_INSTALL%\system32
 copy subsys\system\usetup\usetup.exe %ROS_INSTALL%\system32
 copy apps\utils\cat\cat.exe %ROS_INSTALL%\bin
 copy apps\utils\partinfo\partinfo.exe %ROS_INSTALL%\bin

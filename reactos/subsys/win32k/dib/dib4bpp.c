@@ -30,7 +30,7 @@ PFN_DIB_HLine DIB_4BPP_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c
   PBYTE  addr = SurfObj->pvBits + (x1>>1) + y * SurfObj->lDelta;
   LONG  cx = x1;
 
-  while(cx <= x2) {
+  while(cx < x2) {
     *addr = (*addr & notmask[x1&1]) | (c << ((1-(x1&1))<<2));
     if((++x1 & 1) == 0)
       ++addr;
@@ -44,7 +44,7 @@ PFN_DIB_VLine DIB_4BPP_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c
   int  lDelta = SurfObj->lDelta;
 
   addr += (x>>1) + y1 * lDelta;
-  while(y1++ <= y2) {
+  while(y1++ < y2) {
     *addr = (*addr & notmask[x&1]) | (c << ((1-(x&1))<<2));
     addr += lDelta;
   }

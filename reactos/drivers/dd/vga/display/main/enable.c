@@ -1,9 +1,9 @@
 /*
  * entry.c
  *
- * $Revision: 1.23 $
- * $Author: dwelch $
- * $Date: 2002/09/25 21:21:35 $
+ * $Revision: 1.24 $
+ * $Author: gvg $
+ * $Date: 2003/02/25 23:08:52 $
  *
  */
 
@@ -20,6 +20,7 @@ DRVFN FuncList[] =
   /*  Required Display driver fuctions  */
   {INDEX_DrvAssertMode, (PFN) DrvAssertMode},
   {INDEX_DrvCompletePDEV, (PFN) DrvCompletePDEV},
+  {INDEX_DrvCopyBits, (PFN) DrvCopyBits},
   {INDEX_DrvDisablePDEV, (PFN) DrvDisablePDEV},
   {INDEX_DrvDisableSurface, (PFN) DrvDisableSurface},
   {INDEX_DrvEnablePDEV, (PFN) DrvEnablePDEV},

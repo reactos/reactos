@@ -369,8 +369,15 @@ DrvBitBlt(SURFOBJ *Dest,
 			     BrushPoint, rop4));
 
     case SRCCOPY:
-      return(VGADDI_BltSrc(Dest, Source, ColorTranslation, DestRect,
-			   SourcePoint));
+      if (BMF_4BPP == Source->iBitmapFormat && BMF_4BPP == Dest->iBitmapFormat)
+        {
+	return(VGADDI_BltSrc(Dest, Source, ColorTranslation, DestRect,
+	                     SourcePoint));
+	}
+      else
+	{
+	return FALSE;
+	}
 
     case 0xAACC:
       return(VGADDI_BltMask(Dest, Mask, ColorTranslation, DestRect,

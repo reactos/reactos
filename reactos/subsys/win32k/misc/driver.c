@@ -1,4 +1,4 @@
-/* $Id: driver.c,v 1.22 2002/09/08 10:23:51 chorns Exp $
+/* $Id: driver.c,v 1.23 2003/02/25 23:08:53 gvg Exp $
  * 
  * GDI Driver support routines
  * (mostly swiped from Wine)
@@ -12,12 +12,13 @@
 #include <windows.h>
 #include <win32k/driver.h>
 #include <wchar.h>
-//#include "../../ntoskrnl/include/internal/module.h"
 #include <ddk/winddi.h>
 #include <ddk/ntddvid.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#define DRIVER_TAG TAG('G', 'D', 'R', 'V')
 
 typedef struct _GRAPHICS_DRIVER
 {
@@ -32,14 +33,16 @@ static PGRAPHICS_DRIVER  GenericDriver = 0;
 
 BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
 {
-  PGRAPHICS_DRIVER  Driver = ExAllocatePool(NonPagedPool, sizeof(*Driver));
+  PGRAPHICS_DRIVER  Driver = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Driver), DRIVER_TAG);
   DPRINT( "DRIVER_RegisterDriver( Name: %S )\n", Name );
   if (!Driver)  return  FALSE;
   Driver->ReferenceCount = 0;
   Driver->EnableDriver = EnableDriver;
   if (Name)
   {
-    Driver->Name = ExAllocatePool(PagedPool, (wcslen(Name) + 1) * sizeof(WCHAR));
+    Driver->Name = ExAllocatePoolWithTag(PagedPool,
+                                         (wcslen(Name) + 1) * sizeof(WCHAR),
+                                         DRIVER_TAG);
     wcscpy(Driver->Name, Name);
     Driver->Next  = DriverList;
     DriverList = Driver;
@@ -56,16 +59,69 @@ BOOL  DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
   return  TRUE;
 }
 
-PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
+PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 {
+  static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
+  static WCHAR DefaultExtension[] = L".DLL";
   SYSTEM_LOAD_IMAGE GdiDriverInfo;
   GRAPHICS_DRIVER *Driver = DriverList;
   NTSTATUS Status;
+  WCHAR *FullName;
+  WCHAR *p;
+  BOOL PathSeparatorFound;
+  BOOL DotFound;
+  UINT Size;
+
+  DotFound = FALSE;  
+  PathSeparatorFound = FALSE;
+  p = Name;
+  while (L'\0' != *p)
+  {
+    if (L'\\' == *p || L'/' == *p)
+    {
+      PathSeparatorFound = TRUE;
+      DotFound = FALSE;
+    }
+    else if (L'.' == *p)
+    {
+      DotFound = TRUE;
+    }
+    p++;
+  }
+
+  Size = (wcslen(Name) + 1) * sizeof(WCHAR);
+  if (! PathSeparatorFound)
+  {
+    Size += sizeof(DefaultPath) - sizeof(WCHAR);
+  }
+  if (! DotFound)
+  {
+    Size += sizeof(DefaultExtension) - sizeof(WCHAR);
+  }
+  FullName = ExAllocatePoolWithTag(PagedPool, Size, DRIVER_TAG);
+  if (NULL == FullName)
+  {
+    DPRINT1("Out of memory\n");
+    return NULL;
+  }
+  if (PathSeparatorFound)
+  {
+    FullName[0] = L'\0';
+  }
+  else
+  {
+    wcscpy(FullName, DefaultPath);
+  }
+  wcscat(FullName, Name);
+  if (! DotFound)
+  {
+    wcscat(FullName, DefaultExtension);
+  }
 
   /* First see if the driver hasn't already been loaded */
-  while (Driver && Name)
+  while (Driver && FullName)
   {
-    if (!_wcsicmp( Driver->Name, Name)) 
+    if (!_wcsicmp( Driver->Name, FullName)) 
     {
       return Driver->EnableDriver;
     }
@@ -73,8 +129,9 @@ PGD_ENABLEDRIVER  DRIVER_FindDDIDriver(LPCWSTR  Name)
   }
 
   /* If not, then load it */
-  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, (LPWSTR)Name);
+  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, (LPWSTR)FullName);
   Status = ZwSetSystemInformation (SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
+  ExFreePool(FullName);
   if (!NT_SUCCESS(Status)) return NULL;
 
   DRIVER_RegisterDriver( L"DISPLAY", GdiDriverInfo.EntryPoint);

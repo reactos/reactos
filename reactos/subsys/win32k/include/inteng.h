@@ -12,5 +12,16 @@ extern BOOL STDCALL IntEngLineTo(SURFOBJ *Surface,
                                  LONG y2,
                                  RECTL *RectBounds,
                                  MIX mix);
+BOOL STDCALL IntEngBitBlt(SURFOBJ *DestObj,
+	                  SURFOBJ *SourceObj,
+	                  SURFOBJ *Mask,
+	                  CLIPOBJ *ClipRegion,
+	                  XLATEOBJ *ColorTranslation,
+	                  RECTL *DestRect,
+	                  POINTL *SourcePoint,
+	                  POINTL *MaskOrigin,
+	                  BRUSHOBJ *Brush,
+	                  POINTL *BrushOrigin,
+	                  ROP4 rop4);
 
 #endif

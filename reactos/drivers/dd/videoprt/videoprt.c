@@ -1,31 +1,8 @@
-/* $Id: videoprt.c,v 1.2 2003/02/17 21:24:42 gvg Exp $
+/* $Id: videoprt.c,v 1.3 2003/02/25 23:08:52 gvg Exp $
  *
  * VideoPort driver
  *   Written by Rex Jolliff
  *
- * FIXME:
- * There are two ugly and temporary hacks in this file, to get the VMware driver to
- * work.
- * First, the miniport driver is allowed to call VideoPortInitialize() multiple times.
- * VideoPortInitialize() will create a device and then call the miniport's 
- * HwFindAdapter(). If that call returns with an error code, the device will be
- * deleted. The next time VideoPortInitialize() is called, it will be create a
- * new device with the same name as the first time. The first device was deleted so
- * this shouldn't be a problem, the device is created successfully. Initialization
- * then continues.
- * The problems start when it's time to start the device. When the driver is opened,
- * the caller will receive a pointer to the FIRST device, the one which was later
- * deleted. This is propably due to a problem in the Io subsystem which needs to
- * be investigated. To get around this, a pointer is kept to the last successfully
- * opened device (pdoLastOpened) and this device is used instead of the pointer
- * passed in.
- * The second problem has to do with resources. The miniport driver will call
- * VideoPortGetDeviceBase() to map a physical address to a virtual address. Later,
- * it will call VideoPortMapMemory() with the same physical address. It should
- * map to the same virtual address, but I couldn't get this to work at the moment.
- * So, as a workaround, a maximum of 2 physical addresses with their corresponding
- * virtual addresses saved. They are filled by VideoPortGetDeviceBase() and
- * looked-up by VideoPortMapMemory().
  */
 
 #include <errors.h>
@@ -34,25 +11,55 @@
 
 #include "../../../ntoskrnl/include/internal/v86m.h"
 
-#include "videoprt.h"
-
 #define NDEBUG
 #include <debug.h>
 
 #define VERSION "0.0.0"
 
+#define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
+
+typedef struct _VIDEO_PORT_ADDRESS_MAPPING
+{
+  LIST_ENTRY List;
+
+  PVOID MappedAddress;
+  ULONG NumberOfUchars;
+  PHYSICAL_ADDRESS IoAddress;
+  ULONG SystemIoBusNumber;
+  UINT MappingCount;
+} VIDEO_PORT_ADDRESS_MAPPING, *PVIDEO_PORT_ADDRESS_MAPPING;
+
+typedef struct _VIDEO_PORT_DEVICE_EXTENSTION
+{
+  PDEVICE_OBJECT  DeviceObject;
+  PKINTERRUPT  InterruptObject;
+  KSPIN_LOCK  InterruptSpinLock;
+  ULONG  InterruptLevel;
+  KIRQL  IRQL;
+  KAFFINITY  Affinity;
+  PVIDEO_HW_INITIALIZE HwInitialize;
+  LIST_ENTRY AddressMappingListHead;
+  INTERFACE_TYPE AdapterInterfaceType;
+  ULONG SystemIoBusNumber;
+  UNICODE_STRING RegistryPath;
+
+  UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
+} VIDEO_PORT_DEVICE_EXTENSION, *PVIDEO_PORT_DEVICE_EXTENSION;
+
+
 static VOID STDCALL VidStartIo(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchOpenClose(IN PDEVICE_OBJECT pDO, IN PIRP Irp);
 static NTSTATUS STDCALL VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
+static PVOID STDCALL InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
+                                       IN PHYSICAL_ADDRESS  IoAddress,
+                                       IN ULONG NumberOfUchars,
+                                       IN UCHAR InIoSpace);
+static VOID STDCALL InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
+                                        IN PVOID MappedAddress);
 
 static BOOLEAN CsrssInitialized = FALSE;
 static HANDLE CsrssHandle = 0;
 static struct _EPROCESS* Csrss = NULL;
-
-/* FIXME: see file header */
-static PDEVICE_OBJECT pdoLastOpened;
-static PHYSICAL_ADDRESS Phys1, Phys2;
-static PVOID Virt1, Virt2;
 
 PBYTE ReturnCsrssAddress(void)
 {
@@ -126,7 +133,15 @@ STDCALL
 VideoPortFreeDeviceBase(IN PVOID  HwDeviceExtension, 
                         IN PVOID  MappedAddress)
 {
-  DPRINT1("VideoPortFreeDeviceBase not implemented\n");
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VideoPortFreeDeviceBase\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  InternalUnmapMemory(DeviceExtension, MappedAddress);
 }
 
 ULONG 
@@ -138,11 +153,16 @@ VideoPortGetBusData(IN PVOID  HwDeviceExtension,
                     IN ULONG  Offset,
                     IN ULONG  Length)
 {
-  ULONG BusNumber = 0;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VideoPortGetBusData\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
   return HalGetBusDataByOffset(BusDataType, 
-                               BusNumber, 
+                               DeviceExtension->SystemIoBusNumber, 
                                SlotNumber, 
                                Buffer, 
                                Offset, 
@@ -164,40 +184,15 @@ VideoPortGetDeviceBase(IN PVOID  HwDeviceExtension,
                        IN ULONG  NumberOfUchars,
                        IN UCHAR  InIoSpace)
 {
-  PHYSICAL_ADDRESS TranslatedAddress;
-  PVOID Virtual;
-  ULONG AddressSpace;
-  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
-    MPExtensionToVPExtension(HwDeviceExtension);
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VideoPortGetDeviceBase\n");
-  AddressSpace = (InIoSpace ? 1 : 0);
 
-  if (HalTranslateBusAddress(PCIBus, 0, IoAddress, &AddressSpace, &TranslatedAddress))
-    {
-      if (AddressSpace)
-	{
-	return (PVOID)(DWORD)(TranslatedAddress.QuadPart);
-	}
-      else
-	{
-          Virtual = MmMapIoSpace(TranslatedAddress, NumberOfUchars, MmNonCached);
-	  /* FIXME: see file header */
-	  DPRINT("Mapped 0x%08x to 0x%08x\n", IoAddress.u.LowPart, Virtual);
-	  if (0 == Phys1.QuadPart)
-	    {
-	      Virt1 = Virtual;
-	    }
-	  if (0 == Phys2.QuadPart)
-	    {
-	      Virt2 = Virtual;
-	    }
-	}
-    }
-  else
-    {
-    return NULL;
-    }
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  return InternalMapMemory(DeviceExtension, IoAddress, NumberOfUchars, InIoSpace);
 }
 
 VP_STATUS 
@@ -226,15 +221,20 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
   BOOLEAN FoundDevice;
   ULONG FunctionNumber;
   PCI_COMMON_CONFIG Config;
-  UINT BusNumber = 0;
   PCM_RESOURCE_LIST AllocatedResources;
   NTSTATUS Status;
   UINT AssignedCount;
   CM_FULL_RESOURCE_DESCRIPTOR *FullList;
   CM_PARTIAL_RESOURCE_DESCRIPTOR *Descriptor;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VideoPortGetAccessRanges\n");
-  if (0 == NumRequestedResources)
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  if (0 == NumRequestedResources && PCIBus == DeviceExtension->AdapterInterfaceType)
     {
       DPRINT("Looking for VendorId 0x%04x DeviceId 0x%04x\n", (int)*((USHORT *) VendorId),
              (int)*((USHORT *) DeviceId));
@@ -244,8 +244,9 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 	{
 	  PciSlotNumber.u.bits.FunctionNumber = FunctionNumber;
 	  if (sizeof(PCI_COMMON_CONFIG) ==
-	      HalGetBusDataByOffset(PCIConfiguration, BusNumber, PciSlotNumber.u.AsULONG,
-	                            &Config, 0, sizeof(PCI_COMMON_CONFIG)))
+	      HalGetBusDataByOffset(PCIConfiguration, DeviceExtension->SystemIoBusNumber,
+	                            PciSlotNumber.u.AsULONG,&Config, 0,
+	                            sizeof(PCI_COMMON_CONFIG)))
 	    {
 	      DPRINT("Slot 0x%02x (Device %d Function %d) VendorId 0x%04x DeviceId 0x%04x\n",
 	             PciSlotNumber.u.AsULONG, PciSlotNumber.u.bits.DeviceNumber,
@@ -258,7 +259,9 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 	{
 	  return STATUS_UNSUCCESSFUL;
 	}
-      Status = HalAssignSlotResources(NULL, NULL, NULL, NULL, PCIBus, BusNumber,
+      Status = HalAssignSlotResources(NULL, NULL, NULL, NULL,
+                                      DeviceExtension->AdapterInterfaceType,
+                                      DeviceExtension->SystemIoBusNumber,
                                       PciSlotNumber.u.AsULONG, &AllocatedResources);
       if (! NT_SUCCESS(Status))
 	{
@@ -271,7 +274,7 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
            FullList++)
 	{
 	  assert(FullList->InterfaceType == PCIBus &&
-	         FullList->BusNumber == BusNumber &&
+	         FullList->BusNumber == DeviceExtension->SystemIoBusNumber &&
 	         1 == FullList->PartialResourceList.Version &&
 	         1 == FullList->PartialResourceList.Revision);
 	  for (Descriptor = FullList->PartialResourceList.PartialDescriptors;
@@ -310,6 +313,10 @@ VideoPortGetAccessRanges(IN PVOID  HwDeviceExtension,
 	}
       ExFreePool(AllocatedResources);
     }
+  else
+    {
+    UNIMPLEMENTED
+    }
 
   return STATUS_SUCCESS;
 }
@@ -324,8 +331,40 @@ VideoPortGetRegistryParameters(IN PVOID  HwDeviceExtension,
 {
   DPRINT("VideoPortGetRegistryParameters\n");
   DPRINT("ParameterName %S\n", ParameterName);
-  UNIMPLEMENTED;
+  return STATUS_OBJECT_NAME_NOT_FOUND;
+/*
+  return NO_ERROR;
+*/
 }
+
+typedef struct _VIDEO_PORT_CONFIG_INFO_TODO {
+  ULONG  Length;
+  ULONG  SystemIoBusNumber;
+  INTERFACE_TYPE  AdapterInterfaceType;
+  ULONG  BusInterruptLevel;
+  ULONG  BusInterruptVector;
+  KINTERRUPT_MODE  InterruptMode;
+  ULONG  NumEmulatorAccessEntries;
+  PEMULATOR_ACCESS_ENTRY  EmulatorAccessEntries;
+  ULONG_PTR  EmulatorAccessEntriesContext;
+  PHYSICAL_ADDRESS  VdmPhysicalVideoMemoryAddress;
+  ULONG  VdmPhysicalVideoMemoryLength;
+  ULONG  HardwareStateSize;
+  ULONG  DmaChannel;
+  ULONG  DmaPort;
+  UCHAR  DmaShareable;
+  UCHAR  InterruptShareable;
+  BOOLEAN  Master;
+  DMA_WIDTH  DmaWidth;
+  DMA_SPEED  DmaSpeed;
+  BOOLEAN  bMapBuffers;
+  BOOLEAN  NeedPhysicalAddresses;
+  BOOLEAN  DemandMode;
+  ULONG  MaximumTransferLength;
+  ULONG  NumberOfPhysicalBreaks;
+  BOOLEAN  ScatterGather;
+  ULONG  MaximumScatterGatherChunkSize;
+} VIDEO_PORT_CONFIG_INFO_TODO, *PVIDEO_PORT_CONFIG_INFO_TODO;
 
 ULONG STDCALL
 VideoPortInitialize(IN PVOID  Context1,
@@ -333,20 +372,25 @@ VideoPortInitialize(IN PVOID  Context1,
                     IN PVIDEO_HW_INITIALIZATION_DATA  HwInitializationData,
                     IN PVOID  HwContext)
 {
+  PUNICODE_STRING RegistryPath;
   UCHAR  Again;
   WCHAR  DeviceBuffer[20];
   WCHAR  SymlinkBuffer[20];
+  WCHAR  DeviceVideoBuffer[20];
   NTSTATUS  Status;
   PDRIVER_OBJECT  MPDriverObject = (PDRIVER_OBJECT) Context1;
   PDEVICE_OBJECT  MPDeviceObject;
-  VIDEO_PORT_CONFIG_INFO  ConfigInfo;
-  PVIDEOPORT_EXTENSION_DATA  ExtensionData;
+  VIDEO_PORT_CONFIG_INFO_TODO  ConfigInfo;
+  PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
   ULONG DeviceNumber = 0;
   UNICODE_STRING DeviceName;
   UNICODE_STRING SymlinkName;
-  CLIENT_ID Cid;
+  ULONG MaxBus;
+  ULONG MaxLen;
 
   DPRINT("VideoPortInitialize\n");
+
+  RegistryPath = (PUNICODE_STRING) Context2;
 
   /*  Build Dispatch table from passed data  */
   MPDriverObject->DriverStartIo = (PDRIVER_STARTIO) HwInitializationData->HwStartIO;
@@ -361,7 +405,7 @@ VideoPortInitialize(IN PVOID  Context1,
       /*  Create the device  */
       Status = IoCreateDevice(MPDriverObject,
                               HwInitializationData->HwDeviceExtensionSize +
-                                sizeof(VIDEOPORT_EXTENSION_DATA),
+                                sizeof(VIDEO_PORT_DEVICE_EXTENSION),
                               &DeviceName,
                               FILE_DEVICE_VIDEO,
                               0,
@@ -375,10 +419,72 @@ VideoPortInitialize(IN PVOID  Context1,
 
       MPDriverObject->DeviceObject = MPDeviceObject;
 
-      /* initialize the miniport drivers dispatch table */
+      /* Initialize the miniport drivers dispatch table */
       MPDriverObject->MajorFunction[IRP_MJ_CREATE] = VidDispatchOpenClose;
       MPDriverObject->MajorFunction[IRP_MJ_CLOSE] = VidDispatchOpenClose;
       MPDriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = VidDispatchDeviceControl;
+
+      /* Initialize our device extension */
+      DeviceExtension = 
+        (PVIDEO_PORT_DEVICE_EXTENSION) MPDeviceObject->DeviceExtension;
+      DeviceExtension->DeviceObject = MPDeviceObject;
+      DeviceExtension->HwInitialize = HwInitializationData->HwInitialize;
+      DeviceExtension->AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
+      DeviceExtension->SystemIoBusNumber = 0;
+      MaxLen = (wcslen(RegistryPath->Buffer) + 10) * sizeof(WCHAR);
+      DeviceExtension->RegistryPath.MaximumLength = MaxLen;
+      DeviceExtension->RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                                   MaxLen,
+                                                                   TAG_VIDEO_PORT);
+      swprintf(DeviceExtension->RegistryPath.Buffer, L"%s\\Device%d",
+               RegistryPath->Buffer, DeviceNumber);
+      DeviceExtension->RegistryPath.Length = wcslen(DeviceExtension->RegistryPath.Buffer) *
+                                             sizeof(WCHAR);
+
+      MaxBus = (DeviceExtension->AdapterInterfaceType == PCIBus) ? 8 : 1;
+      DPRINT("MaxBus: %lu\n", MaxBus);
+      InitializeListHead(&DeviceExtension->AddressMappingListHead);
+      
+      /*  Set the buffering strategy here...  */
+      /*  If you change this, remember to change VidDispatchDeviceControl too */
+      MPDeviceObject->Flags |= DO_BUFFERED_IO;
+
+      do
+	{
+	  RtlZeroMemory(&DeviceExtension->MiniPortDeviceExtension, 
+	                HwInitializationData->HwDeviceExtensionSize);
+	  DPRINT("Searching on bus %d\n", DeviceExtension->SystemIoBusNumber);
+	  /* Setup configuration info */
+	  RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO_TODO));
+	  ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO_TODO);
+	  ConfigInfo.AdapterInterfaceType = DeviceExtension->AdapterInterfaceType;
+	  ConfigInfo.SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
+	  ConfigInfo.InterruptMode = (PCIBus == DeviceExtension->AdapterInterfaceType) ?
+	                              LevelSensitive : Latched;
+
+	  /*  Call HwFindAdapter entry point  */
+	  /* FIXME: Need to figure out what string to pass as param 3  */
+	  Status = HwInitializationData->HwFindAdapter(&DeviceExtension->MiniPortDeviceExtension,
+	                                               Context2,
+	                                               NULL,
+	                                               &ConfigInfo,
+	                                               &Again);
+	  if (NO_ERROR != Status)
+	    {
+	      DPRINT("HwFindAdapter call failed with error %d\n", Status);
+	      DeviceExtension->SystemIoBusNumber++;
+	    }
+	}
+      while (NO_ERROR != Status && DeviceExtension->SystemIoBusNumber < MaxBus);
+
+      if (NO_ERROR != Status)
+        {
+	  RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
+          IoDeleteDevice(MPDeviceObject);
+
+          return  Status;
+        }
+      DPRINT("Found adapter\n");
 
       /* create symbolic link "\??\DISPLAYx" */
       swprintf(SymlinkBuffer, L"\\??\\DISPLAY%lu", DeviceNumber+1);
@@ -387,36 +493,14 @@ VideoPortInitialize(IN PVOID  Context1,
       IoCreateSymbolicLink (&SymlinkName,
                             &DeviceName);
 
-      ExtensionData = 
-        (PVIDEOPORT_EXTENSION_DATA) MPDeviceObject->DeviceExtension;
-      ExtensionData->DeviceObject = MPDeviceObject;
-      ExtensionData->HwInitialize = HwInitializationData->HwInitialize;
-      
-      /*  Set the buffering strategy here...  */
-      /*  If you change this, remember to change VidDispatchDeviceControl too */
-      MPDeviceObject->Flags |= DO_BUFFERED_IO;
-
-      RtlZeroMemory(&ConfigInfo, sizeof(VIDEO_PORT_CONFIG_INFO));
-      ConfigInfo.Length = sizeof(VIDEO_PORT_CONFIG_INFO);
-      ConfigInfo.AdapterInterfaceType = HwInitializationData->AdapterInterfaceType;
-      /*  Call HwFindAdapter entry point  */
-      /* FIXME: Need to figure out what string to pass as param 3  */
-      Status = HwInitializationData->HwFindAdapter(VPExtensionToMPExtension(ExtensionData),
-                                                   Context2,
-                                                   NULL,
-                                                   &ConfigInfo,
-                                                   &Again);
-      if (NO_ERROR != Status)
-        {
-          DPRINT("HwFindAdapter call failed with error %d\n", Status);
-          IoDeleteDevice(MPDeviceObject);
-	  IoDeleteSymbolicLink(&SymlinkName);
-
-          return  Status;
-        }
-      /* FIXME: see file header */
-      pdoLastOpened = MPDeviceObject;
-      DPRINT("Setting last opened device to 0x%08x\n", pdoLastOpened);
+      /* Add entry to DEVICEMAP\VIDEO key in registry */
+      swprintf(DeviceVideoBuffer, L"\\Device\\Video%d", DeviceNumber);
+      RtlWriteRegistryValue(RTL_REGISTRY_DEVICEMAP,
+                            L"VIDEO",
+                            DeviceVideoBuffer,
+                            REG_SZ,
+                            DeviceExtension->RegistryPath.Buffer,
+                            DeviceExtension->RegistryPath.Length + sizeof(WCHAR));
 
       /* FIXME: Allocate hardware resources for device  */
 
@@ -426,26 +510,26 @@ VideoPortInitialize(IN PVOID  Context1,
             ConfigInfo.BusInterruptVector == 0))
         {
 #if 0
-          ExtensionData->IRQL = ConfigInfo.BusInterruptLevel;
-          ExtensionData->InterruptLevel = 
+          DeviceExtension->IRQL = ConfigInfo.BusInterruptLevel;
+          DeviceExtension->InterruptLevel = 
             HalGetInterruptVector(ConfigInfo.AdapterInterfaceType,
                                   ConfigInfo.SystemIoBusNumber,
                                   ConfigInfo.BusInterruptLevel,
                                   ConfigInfo.BusInterruptVector,
-                                  &ExtensionData->IRQL,
-                                  &ExtensionData->Affinity);
-          KeInitializeSpinLock(&ExtensionData->InterruptSpinLock);
-          Status = IoConnectInterrupt(&ExtensionData->InterruptObject,
+                                  &DeviceExtension->IRQL,
+                                  &DeviceExtension->Affinity);
+          KeInitializeSpinLock(&DeviceExtension->InterruptSpinLock);
+          Status = IoConnectInterrupt(&DeviceExtension->InterruptObject,
                                       (PKSERVICE_ROUTINE)
                                         HwInitializationData->HwInterrupt,
-                                      VPExtensionToMPExtension(ExtensionData),
-                                      &ExtensionData->InterruptSpinLock,
-                                      ExtensionData->InterruptLevel,
-                                      ExtensionData->IRQL,
-                                      ExtensionData->IRQL,
+                                      &DeviceExtension->MiniPortDeviceExtension,
+                                      &DeviceExtension->InterruptSpinLock,
+                                      DeviceExtension->InterruptLevel,
+                                      DeviceExtension->IRQL,
+                                      DeviceExtension->IRQL,
                                       ConfigInfo.InterruptMode,
                                       FALSE,
-                                      ExtensionData->Affinity,
+                                      DeviceExtension->Affinity,
                                       FALSE);
           if (!NT_SUCCESS(Status))
             {
@@ -466,14 +550,14 @@ VideoPortInitialize(IN PVOID  Context1,
       Status = IoInitializeTimer(MPDeviceObject,
                                  (PIO_TIMER_ROUTINE)
                                    HwInitializationData->HwTimer,
-                                 VPExtensionToMPExtension(ExtensionData));
+                                 &DeviceExtension->MiniPortDeviceExtension);
       if (!NT_SUCCESS(Status))
         {
           DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);
           
           if (HwInitializationData->HwInterrupt != NULL)
             {
-              IoDisconnectInterrupt(ExtensionData->InterruptObject);
+              IoDisconnectInterrupt(DeviceExtension->InterruptObject);
             }
           IoDeleteDevice(MPDeviceObject);
           
@@ -544,46 +628,19 @@ VideoPortMapMemory(IN PVOID  HwDeviceExtension,
                    IN PULONG  InIoSpace,
                    OUT PVOID  *VirtualAddress)
 {
-  PHYSICAL_ADDRESS TranslatedAddress;
-  ULONG AddressSpace;
-  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
-    MPExtensionToVPExtension(HwDeviceExtension);
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+  PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
+  PLIST_ENTRY Entry;
 
   DPRINT("VideoPortMapMemory\n");
 
-  /* FIXME: see file header */
-  if (Phys1.QuadPart == PhysicalAddress.QuadPart)
-    {
-      DPRINT("Using saved mapping #1\n");
-      *VirtualAddress = Virt1;
-      return STATUS_SUCCESS;
-    }
-  if (Phys2.QuadPart == PhysicalAddress.QuadPart)
-    {
-      DPRINT("Using saved mapping #2\n");
-      *VirtualAddress = Virt2;
-      return STATUS_SUCCESS;
-    }
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  *VirtualAddress = InternalMapMemory(DeviceExtension, PhysicalAddress,
+                                      *Length, *InIoSpace);
 
-  AddressSpace = (*InIoSpace ? 1 : 0);
-
-  if (HalTranslateBusAddress(PCIBus, 0, PhysicalAddress, &AddressSpace, &TranslatedAddress))
-    {
-      if (AddressSpace)
-	{
-	*VirtualAddress = (PVOID)(DWORD)(TranslatedAddress.QuadPart);
-	return STATUS_SUCCESS;
-	}
-      else
-	{
-	*VirtualAddress = MmMapIoSpace(TranslatedAddress, *Length, MmNonCached);
-	return NULL != *VirtualAddress ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
-	}
-    }
-  else
-    {
-    return STATUS_UNSUCCESSFUL;
-    }
+  return NULL == *VirtualAddress ? STATUS_NO_MEMORY : STATUS_SUCCESS;
 }
 
 UCHAR 
@@ -730,8 +787,21 @@ VideoPortSetRegistryParameters(IN PVOID  HwDeviceExtension,
                                IN PVOID  ValueData,
                                IN ULONG  ValueLength)
 {
-  DPRINT1("VideoPortSetRegistryParameters not implemented\n");
-  return NO_ERROR;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VideoSetRegistryParameters\n");
+
+  assert_irql(PASSIVE_LEVEL);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  return RtlWriteRegistryValue(RTL_REGISTRY_ABSOLUTE,
+                               DeviceExtension->RegistryPath.Buffer,
+                               ValueName,
+                               REG_BINARY,
+                               ValueData,
+                               ValueLength);
 }
 
 VP_STATUS 
@@ -748,22 +818,28 @@ VOID
 STDCALL
 VideoPortStartTimer(IN PVOID  HwDeviceExtension)
 {
-  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
-    MPExtensionToVPExtension(HwDeviceExtension);
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VideoPortStartTimer\n");
-  IoStartTimer(ExtensionData->DeviceObject);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  IoStartTimer(DeviceExtension->DeviceObject);
 }
 
 VOID 
 STDCALL
 VideoPortStopTimer(IN PVOID  HwDeviceExtension)
 {
-  PVIDEOPORT_EXTENSION_DATA ExtensionData = 
-    MPExtensionToVPExtension(HwDeviceExtension);
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
   DPRINT("VideoPortStopTimer\n");
-  IoStopTimer(ExtensionData->DeviceObject);
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+  IoStopTimer(DeviceExtension->DeviceObject);
 }
 
 BOOLEAN 
@@ -783,8 +859,17 @@ VideoPortUnmapMemory(IN PVOID  HwDeviceExtension,
                      IN PVOID  VirtualAddress,
                      IN HANDLE  ProcessHandle)
 {
-  DPRINT1("VideoPortUnmapMemory not implemented\n");
-  return NO_ERROR;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("VideoPortFreeDeviceBase\n");
+
+  DeviceExtension = CONTAINING_RECORD(HwDeviceExtension,
+				      VIDEO_PORT_DEVICE_EXTENSION,
+				      MiniPortDeviceExtension);
+
+  InternalUnmapMemory(DeviceExtension, VirtualAddress);
+
+  return STATUS_SUCCESS;
 }
 
 VP_STATUS 
@@ -820,7 +905,9 @@ STDCALL
 VideoPortWritePortUlong(IN PULONG Port, 
                         IN ULONG Value)
 {
+#ifdef TODO
   DPRINT("VideoPortWritePortUlong\n");
+#endif
   WRITE_PORT_ULONG(Port, Value);
 }
 
@@ -914,7 +1001,7 @@ VideoPortZeroDeviceMemory(OUT PVOID  Destination,
 			  IN ULONG  Length)
 {
   DPRINT("VideoPortZeroDeviceMemory\n");
-  UNIMPLEMENTED;
+  RtlZeroMemory(Destination, Length);
 }
 
 
@@ -940,13 +1027,10 @@ VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
                      IN PIRP Irp)
 {
   PIO_STACK_LOCATION IrpStack;
-  PVIDEOPORT_EXTENSION_DATA  ExtensionData;
+  PVIDEO_PORT_DEVICE_EXTENSION  DeviceExtension;
 
   DPRINT("VidDispatchOpenClose() called\n");
 
-  /* FIXME: see file header */
-  DPRINT("Using device 0x%08x instead of 0x%08x\n", pdoLastOpened, pDO);
-  pDO = pdoLastOpened;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
 
   if (IrpStack->MajorFunction == IRP_MJ_CREATE &&
@@ -956,8 +1040,8 @@ VidDispatchOpenClose(IN PDEVICE_OBJECT pDO,
       Csrss = PsGetCurrentProcess();
       CsrssInitialized = TRUE;
       DPRINT("Csrss %p\n", Csrss);
-      ExtensionData = (PVIDEOPORT_EXTENSION_DATA) pDO->DeviceExtension;
-      if (ExtensionData->HwInitialize(VPExtensionToMPExtension(ExtensionData)))
+      DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION) pDO->DeviceExtension;
+      if (DeviceExtension->HwInitialize(&DeviceExtension->MiniPortDeviceExtension))
 	{
 	  Irp->IoStatus.Status = STATUS_SUCCESS;
 	}
@@ -1020,37 +1104,144 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                          IN PIRP Irp)
 {
   PIO_STACK_LOCATION IrpStack;
+  PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
   PVIDEO_REQUEST_PACKET vrp;
 
   DPRINT("VidDispatchDeviceControl\n");
-  /* FIXME: See file header */
-  DPRINT("Using device 0x%08x instead of 0x%08x\n", pdoLastOpened, DeviceObject);
-  DeviceObject = pdoLastOpened;
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  DeviceExtension = DeviceObject->DeviceExtension;
 
-  // Translate the IRP to a VRP
+  /* Translate the IRP to a VRP */
   vrp = ExAllocatePool(PagedPool, sizeof(VIDEO_REQUEST_PACKET));
-  vrp->StatusBlock = ExAllocatePool(PagedPool, sizeof(STATUS_BLOCK));
+  if (NULL == vrp)
+    {
+    return STATUS_NO_MEMORY;
+    }
+  vrp->StatusBlock        = (PSTATUS_BLOCK) &(Irp->IoStatus);
   vrp->IoControlCode      = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
-  // We're assuming METHOD_BUFFERED
+  /* We're assuming METHOD_BUFFERED */
   vrp->InputBuffer        = Irp->AssociatedIrp.SystemBuffer;
   vrp->InputBufferLength  = IrpStack->Parameters.DeviceIoControl.InputBufferLength;
-  vrp->OutputBuffer       = Irp->UserBuffer;
+  vrp->OutputBuffer       = Irp->AssociatedIrp.SystemBuffer;
   vrp->OutputBufferLength = IrpStack->Parameters.DeviceIoControl.OutputBufferLength;
 
-  // Call the Miniport Driver with the VRP
-  DeviceObject->DriverObject->DriverStartIo(VPExtensionToMPExtension(DeviceObject->DeviceExtension), (PIRP)vrp);
+  /* Call the Miniport Driver with the VRP */
+  DeviceObject->DriverObject->DriverStartIo((PVOID) &DeviceExtension->MiniPortDeviceExtension, (PIRP)vrp);
 
-  // Translate the VRP back into the IRP for OutputBuffer
-  Irp->UserBuffer                                             = vrp->OutputBuffer;
-  IrpStack->Parameters.DeviceIoControl.OutputBufferLength = vrp->OutputBufferLength;
-  Irp->IoStatus.Status = vrp->StatusBlock->Status;
-  Irp->IoStatus.Information = vrp->StatusBlock->Information;
-
-  // Free the VRP
-  ExFreePool(vrp->StatusBlock);
+  /* Free the VRP */
   ExFreePool(vrp);
 
+  IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
   return STATUS_SUCCESS;
+}
+
+static PVOID STDCALL
+InternalMapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
+                  IN PHYSICAL_ADDRESS IoAddress,
+                  IN ULONG NumberOfUchars,
+                  IN UCHAR InIoSpace)
+{
+  PHYSICAL_ADDRESS TranslatedAddress;
+  PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
+  ULONG AddressSpace;
+  PVOID MappedAddress;
+  PLIST_ENTRY Entry;
+  INTERFACE_TYPE BusType = PCIBus;
+
+  if (0 != (InIoSpace & VIDEO_MEMORY_SPACE_P6CACHE))
+    {
+      DPRINT("VIDEO_MEMORY_SPACE_P6CACHE not supported, turning off\n");
+      InIoSpace &= ~VIDEO_MEMORY_SPACE_P6CACHE;
+    }
+  if (! IsListEmpty(&DeviceExtension->AddressMappingListHead))
+    {
+      Entry = DeviceExtension->AddressMappingListHead.Flink;
+      while (Entry != &DeviceExtension->AddressMappingListHead)
+	{
+	  AddressMapping = CONTAINING_RECORD(Entry,
+	                                     VIDEO_PORT_ADDRESS_MAPPING,
+	                                     List);
+	  if (IoAddress.QuadPart == AddressMapping->IoAddress.QuadPart &&
+	      NumberOfUchars <= AddressMapping->NumberOfUchars)
+	    {
+	      AddressMapping->MappingCount++;
+	      return AddressMapping->MappedAddress;
+	    }
+	  Entry = Entry->Flink;
+	}
+    }
+
+  AddressSpace = (ULONG)InIoSpace;
+  if (HalTranslateBusAddress(BusType,
+			     DeviceExtension->SystemIoBusNumber,
+			     IoAddress,
+			     &AddressSpace,
+			     &TranslatedAddress) == FALSE)
+    return NULL;
+
+  /* i/o space */
+  if (AddressSpace != 0)
+    {
+    assert(0 == TranslatedAddress.u.HighPart);
+    return (PVOID) TranslatedAddress.u.LowPart;
+    }
+
+  MappedAddress = MmMapIoSpace(TranslatedAddress,
+			       NumberOfUchars,
+			       FALSE);
+
+  AddressMapping = ExAllocatePoolWithTag(PagedPool,
+			                 sizeof(VIDEO_PORT_ADDRESS_MAPPING),
+                                         TAG_VIDEO_PORT);
+  if (AddressMapping == NULL)
+    return MappedAddress;
+
+  AddressMapping->MappedAddress = MappedAddress;
+  AddressMapping->NumberOfUchars = NumberOfUchars;
+  AddressMapping->IoAddress = IoAddress;
+  AddressMapping->SystemIoBusNumber = DeviceExtension->SystemIoBusNumber;
+  AddressMapping->MappingCount = 1;
+
+  InsertHeadList(&DeviceExtension->AddressMappingListHead,
+		 &AddressMapping->List);
+
+  return MappedAddress;
+}
+
+static VOID STDCALL
+InternalUnmapMemory(IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
+                    IN PVOID MappedAddress)
+{
+  PVIDEO_PORT_ADDRESS_MAPPING AddressMapping;
+  PLIST_ENTRY Entry;
+
+  Entry = DeviceExtension->AddressMappingListHead.Flink;
+  while (Entry != &DeviceExtension->AddressMappingListHead)
+    {
+      AddressMapping = CONTAINING_RECORD(Entry,
+				         VIDEO_PORT_ADDRESS_MAPPING,
+				         List);
+      if (AddressMapping->MappedAddress == MappedAddress)
+	{
+	  assert(0 <= AddressMapping->MappingCount);
+	  AddressMapping->MappingCount--;
+	  if (0 == AddressMapping->MappingCount)
+	    {
+#ifdef TODO
+	      MmUnmapIoSpace(AddressMapping->MappedAddress,
+	                     AddressMapping->NumberOfUchars);
+#else
+DPRINT1("MmUnmapIoSpace(0x%08x, 0x%08x)\n", AddressMapping->MappedAddress, AddressMapping->NumberOfUchars);
+#endif
+	      RemoveEntryList(Entry);
+	      ExFreePool(AddressMapping);
+
+	      return;
+	    }
+	}
+
+      Entry = Entry->Flink;
+    }
 }

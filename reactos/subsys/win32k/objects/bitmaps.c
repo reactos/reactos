@@ -4,6 +4,7 @@
 #include <win32k/bitmaps.h>
 //#include <win32k/debug.h>
 #include "../eng/handle.h"
+#include <include/inteng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -86,7 +87,7 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
 
   // Perform the bitblt operation
 
-  Status = EngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
+  Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, NULL, XlateObj, &DestRect, &SourcePoint, NULL, NULL, NULL, ROP);
 
   if(SurfDestAlloc == TRUE) ExFreePool(SurfDest);
   if(SurfSrcAlloc  == TRUE) ExFreePool(SurfSrc);

@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.44 2002/09/08 10:23:46 chorns Exp $
+/* $Id: init.c,v 1.45 2003/02/25 23:08:52 gvg Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -561,7 +561,7 @@ SmLoadSubsystems(VOID)
 
   /* Load kernel mode subsystem (aka win32k.sys) */
   RtlInitUnicodeStringFromLiteral(&ImageInfo.ModuleName,
-		       L"\\SystemRoot\\system32\\drivers\\win32k.sys");
+		       L"\\SystemRoot\\system32\\win32k.sys");
 
   Status = NtSetSystemInformation(SystemLoadAndCallImage,
 				  &ImageInfo,

@@ -22,7 +22,7 @@ blue.sys     = 3
 floppy.sys   = 3
 null.sys     = 3
 serial.sys   = 3
-vgaddi.dll   = 3
+vgaddi.dll   = 2
 vgamp.sys    = 3
 videoprt.sys = 3
 
@@ -87,7 +87,7 @@ services.exe = 2
 shell.exe    = 2
 winlogon.exe = 2
 
-win32k.sys   = 3
+win32k.sys   = 2
 
 helb____.ttf = 6
 timr____.ttf = 6

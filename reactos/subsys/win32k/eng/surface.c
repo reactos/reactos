@@ -134,6 +134,7 @@ EngCreateBitmap(IN SIZEL Size,
   SurfObj->sizlBitmap = Size;
   SurfObj->iBitmapFormat = Format;
   SurfObj->iType = STYPE_BITMAP;
+  SurfObj->pvScan0 = SurfObj->pvBits;
 
   // Use flags to determine bitmap type -- TOP_DOWN or whatever
 

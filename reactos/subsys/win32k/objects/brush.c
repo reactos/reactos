@@ -1,4 +1,4 @@
-/* $Id: brush.c,v 1.18 2003/01/18 20:46:31 ei Exp $
+/* $Id: brush.c,v 1.19 2003/02/25 23:08:54 gvg Exp $
  */
 
 
@@ -9,6 +9,7 @@
 #include <win32k/brush.h>
 //#include <win32k/debug.h>
 #include <include/object.h>
+#include <include/inteng.h>
 
 #define NDEBUG
 #include <win32k/debug1.h>
@@ -221,17 +222,17 @@ BOOL STDCALL W32kPatBlt(HDC  hDC,
 	  DestRect.top = YLeft + Height + dc->w.DCOrgY;
 	  DestRect.bottom = YLeft + dc->w.DCOrgY;
 	}
-      ret = EngBitBlt(SurfObj,
-		      NULL,
-		      NULL,
-		      NULL,
-		      NULL,
-		      &DestRect,
-		      NULL,
-		      NULL,
-		      BrushObj,
-		      NULL,
-		      PATCOPY);
+      ret = IntEngBitBlt(SurfObj,
+		         NULL,
+		         NULL,
+		         NULL,
+		         NULL,
+		         &DestRect,
+		         NULL,
+		         NULL,
+		         BrushObj,
+		         NULL,
+		         PATCOPY);
     }
   GDIOBJ_UnlockObj( dc->w.hBrush, GO_BRUSH_MAGIC );
   DC_ReleasePtr( hDC );
