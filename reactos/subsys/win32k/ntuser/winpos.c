@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winpos.c,v 1.14 2003/07/27 11:54:42 dwelch Exp $
+/* $Id: winpos.c,v 1.15 2003/07/29 02:14:46 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -371,7 +371,7 @@ LONG STATIC STDCALL
 WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 		   RECT* WindowRect, RECT* ClientRect)
 {
-  return 0; //FIXME
+  return 0; /* FIXME:  Calculate non client size */
 }
 
 BOOL STDCALL
@@ -389,6 +389,12 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
   *ClientRect = 
     (WindowObject->Style & WS_MINIMIZE) ? WindowObject->WindowRect :
     WindowObject->ClientRect;
+
+	/* Temp fix for WineMine */
+	ClientRect->left++;
+	ClientRect->top++;
+	ClientRect->right--;
+	ClientRect->bottom--;
 
   if (!(WinPos->flags & SWP_NOSIZE))
     {
