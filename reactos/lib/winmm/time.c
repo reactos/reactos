@@ -2,13 +2,14 @@
            However, this should work fine for our needs */
 
 #include <windows.h>
-#include <MMSystem.h>
+typedef UINT *LPUINT;
+#include <mmsystem.h>
 
 /* This is what it seems to be on my machine.  (WinXP) */
 #define MMSYSTIME_MININTERVAL 1
 #define MMSYSTIME_MAXINTERVAL 1000000
 
-MMRESULT timeGetDevCaps(
+MMRESULT WINAPI timeGetDevCaps(
   LPTIMECAPS ptc,  
   UINT cbtc        
 )
@@ -19,7 +20,7 @@ MMRESULT timeGetDevCaps(
 	return TIMERR_NOERROR;
 }
 
-MMRESULT timeBeginPeriod(
+MMRESULT WINAPI timeBeginPeriod(
   UINT uPeriod  
 )
 {
@@ -29,7 +30,7 @@ MMRESULT timeBeginPeriod(
 		return TIMERR_NOERROR;
 }
 
-MMRESULT timeEndPeriod(
+MMRESULT WINAPI timeEndPeriod(
   UINT uPeriod  
 )
 {

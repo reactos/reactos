@@ -5,220 +5,200 @@
  * Added more stubs for bochs 1.3 once again still mostly wrong
  * but bochs gets further now. 12-14-02
  *
+ * [8-18-03] AG: I've added PlaySound/A/W and implemented sndPlaySoundA/W to
+ * call these. I've also tried to match the parameter names and types with the
+ * correct ones.
+ *
  */
 
 #include <windows.h>
-
-DECLARE_HANDLE(HWAVEOUT); // mmsystem.h
+typedef UINT *LPUINT;
+#include <mmsystem.h>
+#define NDEBUG
+#include <debug.h>
 
 #define NEAR
 #define FAR
-
-typedef UINT 	MMRESULT; // error returncode, 0 means no error
-typedef UINT    MCIDEVICEID;    /* MCI device ID type */
-typedef DWORD	MCIERROR;
 
 /* general constants */
 #define MAXPNAMELEN      32     /* max product name length (including NULL) */
 #define MAXERRORLENGTH   256    /* max error text length (including NULL) */
 #define MAX_JOYSTICKOEMVXDNAME 260 /* max oem vxd name length (including NULL) */
 
-#define MMSYSERR_BASE	0
-
-#define MMSYSERR_NOERROR	0
-#define MMSYSERR_ERROR	(MMSYSERR_BASE + 1)
-
-/* joystick device capabilities data structure */
-typedef struct tagJOYCAPSA {
-    WORD    wMid;                /* manufacturer ID */
-    WORD    wPid;                /* product ID */
-    CHAR    szPname[MAXPNAMELEN];/* product name (NULL terminated string) */
-    UINT    wXmin;               /* minimum x position value */
-    UINT    wXmax;               /* maximum x position value */
-    UINT    wYmin;               /* minimum y position value */
-    UINT    wYmax;               /* maximum y position value */
-    UINT    wZmin;               /* minimum z position value */
-    UINT    wZmax;               /* maximum z position value */
-    UINT    wNumButtons;         /* number of buttons */
-    UINT    wPeriodMin;          /* minimum message period when captured */
-    UINT    wPeriodMax;          /* maximum message period when captured */
-    UINT    wRmin;               /* minimum r position value */
-    UINT    wRmax;               /* maximum r position value */
-    UINT    wUmin;               /* minimum u (5th axis) position value */
-    UINT    wUmax;               /* maximum u (5th axis) position value */
-    UINT    wVmin;               /* minimum v (6th axis) position value */
-    UINT    wVmax;               /* maximum v (6th axis) position value */
-    UINT    wCaps;	 	 /* joystick capabilites */
-    UINT    wMaxAxes;	 	 /* maximum number of axes supported */
-    UINT    wNumAxes;	 	 /* number of axes in use */
-    UINT    wMaxButtons;	 /* maximum number of buttons supported */
-    CHAR    szRegKey[MAXPNAMELEN];/* registry key */
-    CHAR    szOEMVxD[MAX_JOYSTICKOEMVXDNAME]; /* OEM VxD in use */
-} JOYCAPSA, *PJOYCAPSA, *NPJOYCAPSA, *LPJOYCAPSA;
-
-typedef struct joyinfoex_tag {
-    DWORD dwSize;		 /* size of structure */
-    DWORD dwFlags;		 /* flags to indicate what to return */
-    DWORD dwXpos;                /* x position */
-    DWORD dwYpos;                /* y position */
-    DWORD dwZpos;                /* z position */
-    DWORD dwRpos;		 /* rudder/4th axis position */
-    DWORD dwUpos;		 /* 5th axis position */
-    DWORD dwVpos;		 /* 6th axis position */
-    DWORD dwButtons;             /* button states */
-    DWORD dwButtonNumber;        /* current button number pressed */
-    DWORD dwPOV;                 /* point of view state */
-    DWORD dwReserved1;		 /* reserved for communication between winmm & driver */
-    DWORD dwReserved2;		 /* reserved for future expansion */
-} JOYINFOEX, *PJOYINFOEX, NEAR *NPJOYINFOEX, FAR *LPJOYINFOEX;
-
 
 // mmsystem.h ends here
 
-UINT 
+MMRESULT
 WINAPI 
-waveOutReset(HWAVEOUT hWaveOut)
+waveOutReset(HWAVEOUT hwo)
 {
+    // Possible return values:
+    // MMSYSERR_INVALHANDLE, MMSYSERR_NODRIVER, MMSYSERR_NOMEM, MMSYSERR_NOTSUPPORTED
+
 	DbgPrint("waveOutReset stub\n");
+    UNIMPLEMENTED;
 	return 1;
 }
 
 
-UINT WINAPI waveOutWrite(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT WINAPI waveOutWrite(HWAVEOUT hwo, LPWAVEHDR pwh,
+			 UINT cbwh)
 {
+    // Posible return values:
+    // MMSYSERR_INVALHANDLE, MMSYSERR_NODRIVER, MMSYSERR_NOMEM, WAVERR_UNPREPARED
+
 	DbgPrint("waveOutWrite stub\n");
+    UNIMPLEMENTED;
 	return 1;
 }
 
+// PlaySound() needs exporting
+#undef PlaySound
 
-WINBOOL 
-STDCALL
-sndPlaySoundA(LPCSTR pszSoundA, UINT uFlags)
+
+BOOL WINAPI
+PlaySoundA(LPCSTR pszSound, HMODULE hmod, DWORD fdwSound)
 {
-	DbgPrint("sndPlaySoundA stub\n");
-	return 1;
+    DbgPrint("PlaySoundA stub\n");
+    UNIMPLEMENTED;
+    return TRUE;
 }
 
-WINBOOL 
-STDCALL
-sndPlaySoundW(LPCSTR pszSoundA, UINT uFlags)
+
+BOOL WINAPI
+PlaySoundW(LPCWSTR pszSound, HMODULE hmod, DWORD fdwSound)
 {
-	DbgPrint("sndPlaySoundW stub\n");
-	return 1;
+    DbgPrint("PlaySoundW stub\n");
+    UNIMPLEMENTED;
+    return TRUE;
 }
 
-WINBOOL 
-STDCALL
-midiOutReset(HWAVEOUT hWaveOut)
+
+BOOL WINAPI
+PlaySound(LPCSTR pszSound, HMODULE hmod, DWORD fdwSound)
+{
+    // ANSI?
+    return PlaySoundA(pszSound, hmod, fdwSound);
+}
+
+
+BOOL
+WINAPI
+sndPlaySoundA(LPCSTR lpszSound, UINT fuSound)
+{
+    fuSound &= SND_ASYNC | SND_LOOP | SND_MEMORY | SND_NODEFAULT | SND_NOSTOP | SND_SYNC;
+    return PlaySoundA(lpszSound, NULL, fuSound);
+}
+
+BOOL
+WINAPI
+sndPlaySoundW(LPCWSTR lpszSound, UINT fuSound)
+{
+    fuSound &= SND_ASYNC | SND_LOOP | SND_MEMORY | SND_NODEFAULT | SND_NOSTOP | SND_SYNC;
+    return PlaySoundW(lpszSound, NULL, fuSound);
+}
+
+MMRESULT 
+WINAPI
+midiOutReset(HMIDIOUT hmo)
 {
 	DbgPrint("midiOutReset stub\n");
+    UNIMPLEMENTED;
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-waveOutPrepareHeader(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT 
+WINAPI
+waveOutPrepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh,
+			 UINT cbwh)
 {
 	DbgPrint("waveOutPrepareHeader stub\n");
+    UNIMPLEMENTED;
+    pwh->dwFlags |= WHDR_PREPARED;
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-waveOutGetErrorTextA(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT
+WINAPI
+waveOutGetErrorTextA(MMRESULT mmrError, LPSTR pszText,
+			 UINT cchText)
 {
 	DbgPrint("waveOutGetErrorTextA stub\n");
+    UNIMPLEMENTED;
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-waveOutOpen(HWAVEOUT* lphWaveOut, UINT uDeviceID,
-			const lpFormat, DWORD dwCallback,
-			DWORD dwInstance, DWORD dwFlags)
+MMRESULT
+WINAPI
+waveOutOpen(LPHWAVEOUT pwho, UINT uDeviceID,
+			LPCWAVEFORMATEX pwfx, DWORD dwCallback,
+			DWORD dwCallbackInstance, DWORD fdwOpen)
 {
 	DbgPrint("waveOutOpen stub\n");
+    UNIMPLEMENTED;
 	return 1;
 }
 
-UINT 
+MMRESULT
 WINAPI 
-waveOutClose(HWAVEOUT hWaveOut)
+waveOutClose(HWAVEOUT hwo)
 {
 	DbgPrint("waveOutClose stub\n");
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-midiOutClose(HWAVEOUT hWaveOut)
+MMRESULT
+WINAPI
+midiOutClose(HMIDIOUT hmo)
 {
 	DbgPrint("midiOutClose stub\n");
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-midiOutUnprepareHeader(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT
+WINAPI
+midiOutUnprepareHeader(HWAVEOUT hwo, LPMIDIHDR pwh,
+			 UINT cbwh)
 {
 	DbgPrint("midiOutUnprepareHeader stub\n");
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-waveOutUnprepareHeader(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT 
+WINAPI
+waveOutUnprepareHeader(HWAVEOUT hwo, LPWAVEHDR pwh,
+			 UINT cbwh)
 {
 	DbgPrint("waveOutUnprepareHeader stub\n");
+    pwh->dwFlags &= ! WHDR_PREPARED;
 	return 1;
 }
 
 
-WINBOOL 
-STDCALL
-midiOutPrepareHeader(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT
+WINAPI
+midiOutPrepareHeader(HMIDIOUT hmo, LPMIDIHDR lpMidiOutHdr,
+			 UINT cbMidiOutHdr)
 {
 	DbgPrint("midiOutPrepareHeader stub\n");
 	return 1;
 }
 
-WINBOOL 
-STDCALL
-midiOutLongMsg(HWAVEOUT hWaveOut, LPCSTR pszSoundA,
-			 UINT uSize)
+MMRESULT 
+WINAPI
+midiOutLongMsg(HMIDIOUT hmo, LPMIDIHDR lpMidiOutHdr,
+			 UINT cbMidiOutHdr)
 {
 	DbgPrint("midiOutLongMsg stub\n");
 	return 1;
 }
 
-UINT/*MMRESULT*/
-STDCALL
-timeBeginPeriod(UINT uPeriod)
-{
-	DbgPrint("timeBeginPeriod stub\n");
-	return 97/*TIMERR_NOCANDO*/;
-}
-
 DWORD
-STDCALL
+WINAPI
 timeGetTime(VOID)
 {
 	DbgPrint("timeGetTime stub\n");
 	return 0;
-}
-
-UINT/*MMRESULT*/
-STDCALL
-timeEndPeriod(UINT uPeriod)
-{
-	DbgPrint("timeEndPeriod stub\n");
-	return 97/*TIMERR_NOCANDO*/;
 }
 
 MMRESULT WINAPI joyGetDevCapsA(UINT uJoyID, LPJOYCAPSA pjc, UINT cbjc)

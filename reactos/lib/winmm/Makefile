@@ -17,8 +17,10 @@ TARGET_SDKLIBS = ntdll.a kernel32.a
 
 TARGET_OBJECTS = \
 	dllmain.o \
+	midiin.o \
+	midiout.o \
 	time.o \
-	misc/stubs.o
+#	misc/stubs.o
 
 include $(PATH_TO_TOP)/rules.mak
 
