@@ -137,7 +137,7 @@ static void ccf_search(adns_state ads, const char *fn, int lno, const char *buf)
   pp= newptrs;
   while (nextword(&bufp,&word,&l)) {
     *pp++= newchars;
-    memcpy(newchars,word,l);
+    memcpy(newchars,word,(size_t) l);
     newchars += l;
     *newchars++ = 0;
   }
@@ -168,7 +168,7 @@ static void ccf_sortlist(adns_state ads, const char *fn, int lno, const char *bu
       continue;
     }
     
-    memcpy(tbuf,word,l); tbuf[l]= 0;
+    memcpy(tbuf,word, (size_t) l); tbuf[l]= 0;
     slash= strchr(tbuf,'/');
     if (slash) *slash++= 0;
     
@@ -351,7 +351,7 @@ static int gl_text(adns_state ads, getline_ctx *src_io, const char *filename,
     return -2;
   }
     
-  memcpy(buf,cp,l);
+  memcpy(buf,cp, (size_t) l);
   buf[l]= 0;
   return l;
 }
@@ -382,7 +382,7 @@ static void readconfiggeneric(adns_state ads, const char *filename,
     while (*q && !ctype_whitespace(*q)) q++;
     dirl= q-p;
     for (ccip=configcommandinfos;
-	 ccip->name && !((int)strlen(ccip->name)==dirl && !memcmp(ccip->name,p,q-p));
+	 ccip->name && !((int)strlen(ccip->name)==dirl && !memcmp(ccip->name,p,(size_t) (q-p)));
 	 ccip++);
     if (!ccip->name) {
       adns__diag(ads,-1,0,"%s:%d: unknown configuration directive `%.*s'",

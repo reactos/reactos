@@ -123,7 +123,7 @@ adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
     nbytes+= ll+1;
     if (nbytes >= DNS_MAXDOMAIN) return adns_s_querydomaintoolong;
     MKQUERY_ADDB(ll);
-    memcpy(rqp,label,ll); rqp+= ll;
+    memcpy(rqp,label,(size_t) ll); rqp+= ll;
   }
   MKQUERY_ADDB(0);
 
@@ -152,7 +152,7 @@ adns_status adns__mkquery_frdgram(adns_state ads, vbuf *vb, int *id_r,
     if (!lablen) break;
     assert(lablen<255);
     MKQUERY_ADDB(lablen);
-    memcpy(rqp,qd_dgram+labstart,lablen);
+    memcpy(rqp,qd_dgram+labstart, (size_t) lablen);
     rqp+= lablen;
   }
   MKQUERY_ADDB(0);
