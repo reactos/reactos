@@ -1,4 +1,4 @@
-/* $Id: volume.c,v 1.34 2003/10/28 17:43:42 navaraf Exp $
+/* $Id: volume.c,v 1.35 2004/01/12 20:02:42 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -239,7 +239,7 @@ GetDiskFreeSpaceW(
         RootPathName[3] = 0;
     }
 
-  hFile = InternalOpenDirW(lpRootPathName, FALSE);
+  hFile = InternalOpenDirW(RootPathName, FALSE);
   if (INVALID_HANDLE_VALUE == hFile)
     {
       SetLastError(ERROR_PATH_NOT_FOUND);
@@ -345,7 +345,7 @@ GetDiskFreeSpaceExW(
         RootPathName[3] = 0;
     }
 
-    hFile = InternalOpenDirW(lpDirectoryName, FALSE);
+    hFile = InternalOpenDirW(RootPathName, FALSE);
     if (INVALID_HANDLE_VALUE == hFile)
     {
         return FALSE;
@@ -605,6 +605,7 @@ GetVolumeInformationW(
   PFILE_FS_VOLUME_INFORMATION FileFsVolume;
   PFILE_FS_ATTRIBUTE_INFORMATION FileFsAttribute;
   IO_STATUS_BLOCK IoStatusBlock;
+  WCHAR RootPathName[MAX_PATH];
   UCHAR Buffer[max(FS_VOLUME_BUFFER_SIZE, FS_ATTRIBUTE_BUFFER_SIZE)];
 
   HANDLE hFile;
@@ -616,7 +617,17 @@ GetVolumeInformationW(
   DPRINT("FileFsVolume %p\n", FileFsVolume);
   DPRINT("FileFsAttribute %p\n", FileFsAttribute);
 
-  hFile = InternalOpenDirW(lpRootPathName, FALSE);
+  if (!lpRootPathName || !wcscmp(lpRootPathName, L""))
+  {
+      GetCurrentDirectoryW (MAX_PATH, RootPathName);
+      RootPathName[3] = 0;
+  }
+  else
+  {
+      wcsncpy (RootPathName, lpRootPathName, min(MAX_PATH, wcslen(lpRootPathName)));
+  }
+
+  hFile = InternalOpenDirW(RootPathName, FALSE);
   if (hFile == INVALID_HANDLE_VALUE)
     {
       return FALSE;
