@@ -512,10 +512,10 @@ TARGET_OBJECTS = $(EXTRA_OBJECTS) $(OBJECTS)
 TARGET_LIBS = \
 	$(DDK_PATH_LIB)/libhal.a \
 	$(SDK_PATH_LIB)/librtl.a \
+	$(SDK_PATH_LIB)/librossym.a \
 	$(SDK_PATH_LIB)/libstring.a \
 	$(SDK_PATH_LIB)/librosrtl.a \
 	$(SDK_PATH_LIB)/libpseh.a \
-	$(SDK_PATH_LIB)/librossym.a \
 	$(PATH_TO_TOP)/drivers/lib/csq/csq.o
 
 TARGET_LFLAGS = \
