@@ -1,4 +1,4 @@
-/* $Id: services.c,v 1.10 2002/12/27 13:54:28 robd Exp $
+/* $Id: services.c,v 1.11 2003/01/05 19:18:44 robd Exp $
  *
  * service control manager
  * 
@@ -210,7 +210,7 @@ ScmNamedPipeListenerThread(LPVOID Context)
 
 //    hPipe = (HANDLE)Context;
     for (;;) {
-        PrintString("SCM: Waiting for connection on named pipe...\n");
+        PrintString("SCM: Waiting for new connection on named pipe...\n");
         /* Create named pipe */
         if (!ScmCreateNamedPipe()) {
             PrintString("\nSCM: Failed to create named pipe\n");
