@@ -65,6 +65,8 @@ extern VOID KiTrapUnknown(VOID);
 extern ULONG init_stack;
 extern ULONG init_stack_top;
 
+extern BOOLEAN Ke386NoExecute;
+
 static char *ExceptionTypeStrings[] =
   {
     "Divide Error",
@@ -572,6 +574,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if (ExceptionNr == 14)
      {
+        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2_ >= KERNEL_BASE)
+	{
+           KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
+	}
         if (Tf->Eflags & FLAG_IF)
 	{
 	  Ke386EnableInterrupts();

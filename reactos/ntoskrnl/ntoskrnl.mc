@@ -1029,4 +1029,12 @@ Language=English
  certain\n conditions. There is absolutely no warranty for ReactOS.\n
 .
 
+MessageId=0xFC
+Severity=Success
+Facility=System
+SymbolicName=ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
+Language=English
+ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY
+.
+
 ; EOF
