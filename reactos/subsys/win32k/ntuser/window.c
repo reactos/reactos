@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.154 2003/12/07 23:02:57 gvg Exp $
+/* $Id: window.c,v 1.155 2003/12/08 18:21:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2808,25 +2808,6 @@ NtUserRegisterWindowMessage(PUNICODE_STRING MessageNameUnsafe)
   InsertTailList(&RegisteredMessageListHead, &(NewMsg->ListEntry));
 
   return Msg;
-}
-
-
-/*
- * @unimplemented
- */
-DWORD STDCALL
-NtUserScrollWindowEx(DWORD Unknown0,
-		     DWORD Unknown1,
-		     DWORD Unknown2,
-		     DWORD Unknown3,
-		     DWORD Unknown4,
-		     DWORD Unknown5,
-		     DWORD Unknown6,
-		     DWORD Unknown7)
-{
-  UNIMPLEMENTED
-
-  return 0;
 }
 
 

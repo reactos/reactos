@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.43 2003/12/07 23:02:57 gvg Exp $
+ *  $Id: painting.c,v 1.44 2003/12/08 18:21:25 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -36,7 +36,9 @@
 #include <include/object.h>
 #include <include/guicheck.h>
 #include <include/window.h>
+#include <include/winpos.h>
 #include <include/class.h>
+#include <include/caret.h>
 #include <include/error.h>
 #include <include/winsta.h>
 #include <windows.h>
@@ -675,6 +677,43 @@ IntGetPaintMessage(HWND hWnd, PW32THREAD Thread, MSG *Message,
    return FALSE;
 }
 
+HWND FASTCALL
+IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
+{
+   GUITHREADINFO info;
+
+   if (!NtUserGetGUIThreadInfo(0, &info))
+      return 0;
+   if (!info.hwndCaret)
+      return 0;
+   if (info.hwndCaret == hWnd ||
+       ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(hWnd, info.hwndCaret)))
+   {
+      POINT pt, FromOffset, ToOffset, Offset;
+      
+      pt.x = info.rcCaret.left;
+      pt.y = info.rcCaret.top;
+
+      NtUserGetClientOrigin(info.hwndCaret, &FromOffset);
+      NtUserGetClientOrigin(hWnd, &ToOffset);
+      Offset.x = FromOffset.x - ToOffset.x;
+      Offset.y = FromOffset.y - ToOffset.y;
+      info.rcCaret.left += Offset.x;
+      info.rcCaret.top += Offset.y;
+      info.rcCaret.right += Offset.x;
+      info.rcCaret.bottom += Offset.y;
+      if (NtGdiIntersectRect(lprc, lprc, &info.rcCaret))
+      {
+         NtUserHideCaret(0);
+         lprc->left = pt.x;
+         lprc->top = pt.y;
+         return info.hwndCaret;
+      }
+   }
+
+   return 0;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*
@@ -924,6 +963,226 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    }
  
    return TRUE;
+}
+
+/*
+ * NtUserScrollDC
+ *
+ * Status
+ *    @implemented
+ */
+
+DWORD STDCALL
+NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
+   const RECT *lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate)
+{
+   RECT rSrc, rClipped_src, rClip, rDst, offset;
+
+   /*
+    * Compute device clipping region (in device coordinates).
+    */
+
+   if (lprcScroll)
+      rSrc = *lprcScroll;
+   else
+      NtGdiGetClipBox(hDC, &rSrc);
+   NtGdiLPtoDP(hDC, (LPPOINT)&rSrc, 2);
+
+   if (lprcClip)
+      rClip = *lprcClip;
+   else
+      NtGdiGetClipBox(hDC, &rClip);
+   NtGdiLPtoDP(hDC, (LPPOINT)&rClip, 2);
+
+   NtGdiIntersectRect(&rClipped_src, &rSrc, &rClip);
+
+   rDst = rClipped_src;
+   NtGdiSetRect(&offset, 0, 0, dx, dy);
+   NtGdiLPtoDP(hDC, (LPPOINT)&offset, 2);
+   NtGdiOffsetRect(&rDst, offset.right - offset.left,  offset.bottom - offset.top);
+   NtGdiIntersectRect(&rDst, &rDst, &rClip);
+
+   /*
+    * Copy bits, if possible.
+    */
+
+   if (rDst.bottom > rDst.top && rDst.right > rDst.left)
+   {
+      RECT rDst_lp = rDst, rSrc_lp = rDst;
+
+      NtGdiOffsetRect(&rSrc_lp, offset.left - offset.right, offset.top - offset.bottom);
+      NtGdiDPtoLP(hDC, (LPPOINT)&rDst_lp, 2);
+      NtGdiDPtoLP(hDC, (LPPOINT)&rSrc_lp, 2);
+
+      if (!NtGdiBitBlt(hDC, rDst_lp.left, rDst_lp.top, rDst_lp.right - rDst_lp.left,
+                       rDst_lp.bottom - rDst_lp.top, hDC, rSrc_lp.left, rSrc_lp.top,
+                       SRCCOPY))
+         return FALSE;
+   }
+
+   /*
+    * Compute update areas.  This is the clipped source or'ed with the
+    * unclipped source translated minus the clipped src translated (rDst)
+    * all clipped to rClip.
+    */
+
+   if (hrgnUpdate || lprcUpdate)
+   {
+      HRGN hRgn = hrgnUpdate, hRgn2;
+
+      if (hRgn)
+         NtGdiSetRectRgn(hRgn, rClipped_src.left, rClipped_src.top, rClipped_src.right, rClipped_src.bottom);
+      else
+         hRgn = NtGdiCreateRectRgn(rClipped_src.left, rClipped_src.top, rClipped_src.right, rClipped_src.bottom);
+
+      hRgn2 = NtGdiCreateRectRgnIndirect(&rSrc);
+      NtGdiOffsetRgn(hRgn2, offset.right - offset.left,  offset.bottom - offset.top);
+      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_OR);
+
+      NtGdiSetRectRgn(hRgn2, rDst.left, rDst.top, rDst.right, rDst.bottom);
+      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_DIFF);
+        
+      NtGdiSetRectRgn(hRgn2, rClip.left, rClip.top, rClip.right, rClip.bottom);
+      NtGdiCombineRgn(hRgn, hRgn, hRgn2, RGN_AND);
+
+      if (lprcUpdate)
+      {
+         NtGdiGetRgnBox(hRgn, lprcUpdate);
+
+         /* Put the lprcUpdate in logical coordinate */
+         NtGdiDPtoLP(hDC, (LPPOINT)lprcUpdate, 2);
+      }
+      if (!hrgnUpdate)
+         NtGdiDeleteObject(hRgn);
+      NtGdiDeleteObject(hRgn2);
+   }
+   return TRUE;
+}
+
+/*
+ * NtUserScrollWindowEx
+ *
+ * Status
+ *    @unimplemented
+ */
+
+DWORD STDCALL
+NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
+   const RECT *clipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags)
+{
+   RECT rc, cliprc, caretrc;
+   INT Result;
+   PWINDOW_OBJECT Window;
+   HDC hDC;
+   HRGN hrgnTemp;
+   HWND hwndCaret;
+   BOOL bUpdate = (rcUpdate || hrgnUpdate || flags & (SW_INVALIDATE | SW_ERASE));
+   BOOL bOwnRgn = TRUE;
+
+   Window = IntGetWindowObject(hWnd);
+   if (!Window || !IntIsWindowDrawable(Window))
+   {
+      IntReleaseWindowObject(Window);
+      return ERROR;
+   }
+
+   IntGetClientRect(Window, &rc);
+   if (rect)
+      NtGdiIntersectRect(&rc, &rc, rect);
+
+   if (clipRect)
+      NtGdiIntersectRect(&cliprc, &rc, clipRect);
+   else
+      cliprc = rc;
+
+   if (cliprc.right <= cliprc.left || cliprc.bottom <= cliprc.top ||
+       (dx == 0 && dy == 0))
+   { 
+      return NULLREGION;
+   }
+
+   caretrc = rc;
+   hwndCaret = IntFixCaret(hWnd, &caretrc, flags);
+
+   if (hrgnUpdate)
+      bOwnRgn = FALSE;
+   else if (bUpdate)
+      hrgnUpdate = NtGdiCreateRectRgn(0, 0, 0, 0);
+
+   hDC = NtUserGetDCEx( hWnd, 0, DCX_CACHE | DCX_USESTYLE );
+   if (hDC)
+   {
+      HRGN hRgn = NtGdiCreateRectRgn( 0, 0, 0, 0 );
+
+      NtUserScrollDC(hDC, dx, dy, &rc, &cliprc, hrgnUpdate, rcUpdate);
+      NtUserReleaseDC(hWnd, hDC);
+      if (bUpdate)
+         NtGdiCombineRgn(hrgnUpdate, hrgnUpdate, hRgn, RGN_OR);
+      else
+         NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | RDW_ERASE);
+      NtGdiDeleteObject(hRgn);
+   }
+
+   /* 
+    * Take into account the fact that some damage may have occurred during
+    * the scroll.
+    */
+
+   hrgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+   Result = NtUserGetUpdateRgn(hWnd, hrgnTemp, FALSE);
+   if (Result != NULLREGION)
+   {
+      HRGN hrgnClip = NtGdiCreateRectRgnIndirect(&cliprc);
+      NtGdiOffsetRgn(hrgnTemp, dx, dy);
+      NtGdiCombineRgn(hrgnTemp, hrgnTemp, hrgnClip, RGN_AND);
+      NtUserRedrawWindow(hWnd, NULL, hrgnTemp, RDW_INVALIDATE | RDW_ERASE);
+      NtGdiDeleteObject(hrgnClip);
+   }
+   NtGdiDeleteObject(hrgnTemp);
+
+   if (flags & SW_SCROLLCHILDREN)
+   {
+      HWND *List = IntWinListChildren(Window);
+      if (List)
+      {
+         int i;
+         RECT r, dummy;
+         POINT ClientOrigin;
+
+         for (i = 0; List[i]; i++)
+         {
+            NtUserGetWindowRect(List[i], &r);
+            NtUserGetClientOrigin(hWnd, &ClientOrigin);
+            r.left -= ClientOrigin.x;
+            r.top -= ClientOrigin.y;
+            r.right -= ClientOrigin.x;
+            r.bottom -= ClientOrigin.y;
+            if (!rect || NtGdiIntersectRect(&dummy, &r, &rc))
+               WinPosSetWindowPos(List[i], 0, r.left + dx, r.top + dy, 0, 0,
+                                  SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
+                                  SWP_NOREDRAW);
+         }
+         ExFreePool(List);
+      }
+   }
+
+   if (flags & (SW_INVALIDATE | SW_ERASE))
+      NtUserRedrawWindow(hWnd, NULL, hrgnUpdate, RDW_INVALIDATE | RDW_ERASE |
+                         ((flags & SW_ERASE) ? RDW_ERASENOW : 0) |
+                         ((flags & SW_SCROLLCHILDREN) ? RDW_ALLCHILDREN : 0));
+
+   if (bOwnRgn && hrgnUpdate)
+      NtGdiDeleteObject(hrgnUpdate);
+   
+   if (hwndCaret)
+   {
+      IntSetCaretPos(caretrc.left + dx, caretrc.top + dy);
+      NtUserShowCaret(hwndCaret);
+   }
+
+   IntReleaseWindowObject(Window);
+    
+   return Result;
 }
 
 /* EOF */

@@ -1246,17 +1246,9 @@ NtUserScrollDC(
   HRGN hrgnUpdate,
   LPRECT lprcUpdate);
 
-DWORD
-STDCALL
-NtUserScrollWindowEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3,
-  DWORD Unknown4,
-  DWORD Unknown5,
-  DWORD Unknown6,
-  DWORD Unknown7);
+DWORD STDCALL
+NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *rect,
+   const RECT *clipRect, HRGN hrgnUpdate, LPRECT rcUpdate, UINT flags);
 
 DWORD
 STDCALL

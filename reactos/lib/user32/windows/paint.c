@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: paint.c,v 1.18 2003/08/22 07:51:32 gvg Exp $
+/* $Id: paint.c,v 1.19 2003/12/08 18:21:24 navaraf Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -193,19 +193,12 @@ RedrawWindow(
 /*
  * @unimplemented
  */
-WINBOOL
-STDCALL
-ScrollDC(
-  HDC hDC,
-  int dx,
-  int dy,
-  CONST RECT *lprcScroll,
-  CONST RECT *lprcClip,
-  HRGN hrgnUpdate,
-  LPRECT lprcUpdate)
+WINBOOL STDCALL
+ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
+   HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+   return NtUserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate,
+      lprcUpdate);
 }
 
 

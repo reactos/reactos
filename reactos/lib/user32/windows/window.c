@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.85 2003/12/07 23:02:57 gvg Exp $
+/* $Id: window.c,v 1.86 2003/12/08 18:21:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1732,6 +1732,29 @@ GetTaskmanWindow(VOID)
 {
   UNIMPLEMENTED;
   return FALSE;
+}
+
+/*
+ * @implemented
+ */
+WINBOOL STDCALL
+ScrollWindow(HWND hWnd, int dx, int dy, CONST RECT *lpRect,
+   CONST RECT *prcClip)
+{
+   return NtUserScrollWindowEx(hWnd, dx, dy, lpRect, prcClip, 0, NULL, 
+      (lpRect ? 0 : SW_SCROLLCHILDREN) | SW_INVALIDATE) != ERROR;
+}
+
+
+/*
+ * @implemented
+ */
+INT STDCALL
+ScrollWindowEx(HWND hWnd, int dx, int dy, CONST RECT *prcScroll,
+   CONST RECT *prcClip, HRGN hrgnUpdate, LPRECT prcUpdate, UINT flags)
+{
+   return NtUserScrollWindowEx(hWnd, dx, dy, prcScroll, prcClip, hrgnUpdate,
+      prcUpdate, flags);
 }
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.54 2003/12/07 18:54:15 navaraf Exp $
+/* $Id: stubs.c,v 1.55 2003/12/08 18:21:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -206,43 +206,6 @@ RealMsgWaitForMultipleObjectsEx(
   DWORD dwMilliseconds,
   DWORD dwWakeMask,
   DWORD dwFlags)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-ScrollWindow(
-  HWND hWnd,
-  int XAmount,
-  int YAmount,
-  CONST RECT *lpRect,
-  CONST RECT *lpClipRect)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-ScrollWindowEx(
-  HWND hWnd,
-  int dx,
-  int dy,
-  CONST RECT *prcScroll,
-  CONST RECT *prcClip,
-  HRGN hrgnUpdate,
-  LPRECT prcUpdate,
-  UINT flags)
 {
   UNIMPLEMENTED;
   return 0;

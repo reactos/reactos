@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.18 2003/10/25 22:57:34 navaraf Exp $
+/* $Id: scrollbar.c,v 1.19 2003/12/08 18:21:25 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -743,23 +743,6 @@ NtUserEnableScrollBar(
 
   IntReleaseWindowObject(Window);
   return TRUE;
-}
-
-DWORD
-STDCALL
-NtUserScrollDC(
-  HDC hDC,
-  int dx,
-  int dy,
-  CONST RECT *lprcScroll,
-  CONST RECT *lprcClip ,
-  HRGN hrgnUpdate,
-  LPRECT lprcUpdate)
-
-{
-  UNIMPLEMENTED
-
-  return 0;
 }
 
 DWORD

@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.106 2003/11/09 11:42:08 navaraf Exp $
+/* $Id: defwnd.c,v 1.107 2003/12/08 18:21:24 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -879,6 +879,11 @@ DefWndControlColor(HDC hDC, UINT ctlType)
   return GetSysColorBrush(COLOR_WINDOW);
 }
 
+VOID FASTCALL
+DefWndScreenshot(HWND hWnd)
+{
+   
+}
 
 LRESULT STDCALL
 User32DefWindowProc(HWND hWnd,
@@ -1200,7 +1205,11 @@ User32DefWindowProc(HWND hWnd,
                         else
                             PostMessageA(top, WM_SYSCOMMAND, SC_CLOSE, 0);
                     }
-	            }
+                }
+                else if (wParam == VK_SNAPSHOT)
+                {
+                    DefWndScreenshot(hWnd);
+                }
             }
             break;
         }
