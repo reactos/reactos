@@ -1616,7 +1616,7 @@ WDML_SERVER*	WDML_AddServer(WDML_INSTANCE* pInstance, HSZ hszService, HSZ hszTop
     WDML_IncHSZ(pInstance, pServer->hszService = hszService);
 
     DdeQueryStringA(pInstance->instanceID, hszService, buf1, sizeof(buf1), CP_WINANSI);
-    snprintf(buf2, sizeof(buf2), "%s(0x%08lx)", buf1, GetCurrentProcessId());
+    _snprintf(buf2, sizeof(buf2), "%s(0x%08lx)", buf1, GetCurrentProcessId());
     pServer->hszServiceSpec = DdeCreateStringHandleA(pInstance->instanceID, buf2, CP_WINANSI);
 
     pServer->atomService = WDML_MakeAtomFromHsz(pServer->hszService);
