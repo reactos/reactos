@@ -44,6 +44,8 @@
 
 #include "wine/debug.h"
 
+OSVERSIONINFOW OsVersionInfo;
+
 static HINSTANCE CABINET_hInstance = 0;
 
 static HFDI (__cdecl *sc_FDICreate)(PFNALLOC, PFNFREE, PFNOPEN,
@@ -674,6 +676,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
         DisableThreadLibraryCalls(hinstDLL);
+        OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
+        if (!GetVersionExW(&OsVersionInfo))
+            return FALSE;
         break;
     case DLL_PROCESS_DETACH:
         UnloadCABINETDll();

@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include "wine/port.h"
- 
+
 #include <stdarg.h>
 
 #include "windef.h"
@@ -37,6 +37,8 @@
 
 #include "rpc.h"
 #include "rpcdce.h"
+
+#include "setupapi_private.h"
 
 
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
@@ -90,8 +92,26 @@ BOOL WINAPI SetupDiBuildClassInfoListExA(
         LPCSTR MachineName,
         PVOID Reserved)
 {
-    FIXME("\n");
-    return FALSE;
+    LPWSTR MachineNameW = NULL;
+    BOOL bResult;
+
+    TRACE("\n");
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (MachineNameW == NULL)
+            return FALSE;
+    }
+
+    bResult = SetupDiBuildClassInfoListExW(Flags, ClassGuidList,
+                                           ClassGuidListSize, RequiredSize,
+                                           MachineNameW, Reserved);
+
+    if (MachineNameW)
+        MyFree(MachineNameW);
+
+    return bResult;
 }
 
 /***********************************************************************
@@ -237,9 +257,9 @@ BOOL WINAPI SetupDiClassGuidsFromNameA(
         DWORD ClassGuidListSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassGuidsFromNameExA(ClassName, ClassGuidList,
-                                      ClassGuidListSize, RequiredSize,
-                                      NULL, NULL);
+    return SetupDiClassGuidsFromNameExA(ClassName, ClassGuidList,
+                                        ClassGuidListSize, RequiredSize,
+                                        NULL, NULL);
 }
 
 /***********************************************************************
@@ -251,9 +271,9 @@ BOOL WINAPI SetupDiClassGuidsFromNameW(
         DWORD ClassGuidListSize,
         PDWORD RequiredSize)
 {
-  return SetupDiClassGuidsFromNameExW(ClassName, ClassGuidList,
-                                      ClassGuidListSize, RequiredSize,
-                                      NULL, NULL);
+    return SetupDiClassGuidsFromNameExW(ClassName, ClassGuidList,
+                                        ClassGuidListSize, RequiredSize,
+                                        NULL, NULL);
 }
 
 /***********************************************************************
@@ -267,8 +287,36 @@ BOOL WINAPI SetupDiClassGuidsFromNameExA(
         LPCSTR MachineName,
         PVOID Reserved)
 {
-  FIXME("\n");
-  return FALSE;
+    LPWSTR ClassNameW = NULL;
+    LPWSTR MachineNameW = NULL;
+    BOOL bResult;
+
+    FIXME("\n");
+
+    ClassNameW = MultiByteToUnicode(ClassName, CP_ACP);
+    if (ClassNameW == NULL)
+        return FALSE;
+
+    if (MachineNameW)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (MachineNameW == NULL)
+        {
+            MyFree(ClassNameW);
+            return FALSE;
+        }
+    }
+
+    bResult = SetupDiClassGuidsFromNameExW(ClassNameW, ClassGuidList,
+                                           ClassGuidListSize, RequiredSize,
+                                           MachineNameW, Reserved);
+
+    if (MachineNameW)
+        MyFree(MachineNameW);
+
+    MyFree(ClassNameW);
+
+    return bResult;
 }
 
 /***********************************************************************
@@ -502,8 +550,25 @@ SetupDiCreateDeviceInfoListExA(const GUID *ClassGuid,
 			       PCSTR MachineName,
 			       PVOID Reserved)
 {
-  FIXME("\n");
-  return (HDEVINFO)INVALID_HANDLE_VALUE;
+    LPWSTR MachineNameW = NULL;
+    HDEVINFO hDevInfo;
+
+    TRACE("\n");
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (MachineNameW == NULL)
+              return (HDEVINFO)INVALID_HANDLE_VALUE;
+    }
+
+    hDevInfo = SetupDiCreateDeviceInfoListExW(ClassGuid, hwndParent,
+                                              MachineNameW, Reserved);
+
+    if (MachineNameW)
+        MyFree(MachineNameW);
+
+    return hDevInfo;
 }
 
 /***********************************************************************
@@ -587,16 +652,9 @@ BOOL WINAPI SetupDiGetActualSectionToInstallW(
         PWSTR *Extension)
 {
     WCHAR szBuffer[MAX_PATH];
-    OSVERSIONINFOW OsVersionInfo;
     DWORD dwLength;
     DWORD dwFullLength;
     LONG lLineCount = -1;
-
-    OsVersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOW);
-    if (!GetVersionExW(&OsVersionInfo))
-    {
-	return FALSE;
-    }
 
     lstrcpyW(szBuffer, InfSectionName);
     dwLength = lstrlenW(szBuffer);
@@ -1048,8 +1106,25 @@ HKEY WINAPI SetupDiOpenClassRegKeyExA(
         PCSTR MachineName,
         PVOID Reserved)
 {
-    FIXME("\n");
-    return INVALID_HANDLE_VALUE;
+    PWSTR MachineNameW = NULL;
+    HKEY hKey;
+
+    TRACE("\n");
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (MachineNameW == NULL)
+            return INVALID_HANDLE_VALUE;
+    }
+
+    hKey = SetupDiOpenClassRegKeyExW(ClassGuid, samDesired,
+                                     Flags, MachineNameW, Reserved);
+
+    if (MachineNameW)
+        MyFree(MachineNameW);
+
+    return hKey;
 }
 
 
@@ -1125,7 +1200,7 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 }
 
 /***********************************************************************
- *		SetupDiOpenDeviceInterfaceA (SETUPAPI.@)
+ *		SetupDiOpenDeviceInterfaceW (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiOpenDeviceInterfaceW(
        HDEVINFO DeviceInfoSet,
