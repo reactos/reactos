@@ -332,23 +332,35 @@ NtReleaseMutant(IN HANDLE MutantHandle,
         
         LONG Prev;
         
-        /* Save the Old State */
-        DPRINT("Releasing Mutant\n");
-        Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
+        /* release the mutant. doing so might raise an exception which we're
+           required to catch! */
+        _SEH_TRY {
+
+            Prev = KeReleaseMutant(Mutant, MUTANT_INCREMENT, FALSE, FALSE);
+
+        } _SEH_HANDLE {
+
+            Status = _SEH_GetExceptionCode();
+
+        } _SEH_END;
+        
         ObDereferenceObject(Mutant);
 
-        /* Return it */        
-        if(PreviousCount) {
-            
-            _SEH_TRY {
+        if(NT_SUCCESS(Status)) {
+
+            /* Return it */
+            if(PreviousCount) {
+
+                _SEH_TRY {
+
+                    *PreviousCount = Prev;
+
+                } _SEH_HANDLE {
                 
-                *PreviousCount = Prev;
-            
-            } _SEH_HANDLE {
-                
-                Status = _SEH_GetExceptionCode();
-            
-            } _SEH_END;
+                    Status = _SEH_GetExceptionCode();
+
+                } _SEH_END;
+            }
         }
     }
 
