@@ -15,7 +15,7 @@ Installation isn't yet automated, sorry. The system can only be installed on
 the first partition which must be formatted for DOS. Set up a directory
 structure like the following
 
-make directories C:\reactos,C:\reactos\system,C:\reactos\system\drivers
+make directories C:\reactos,C:\reactos\system32,C:\reactos\system32\drivers
 
 Copy apps/shell/shell.exe to C:\reactos\system32
 Copy subsys/smss/smss.exe to C:\reactos\system32
