@@ -18,6 +18,8 @@
 #include <internal/i386/segment.h>
 #include <internal/ps.h>
 
+#include <ddk/ntddbeep.h>
+
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -393,8 +395,75 @@ void TstIDERead(void)
     }
 }
 
-void TstBegin()
+
+NTSTATUS TstBeepDriver(DWORD dwFreq, DWORD dwDuration)
 {
+    NTSTATUS Status;
+    HANDLE hBeep;
+    ANSI_STRING AnsiDeviceName;
+    UNICODE_STRING UnicodeDeviceName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK   IoStatusBlock;
+    BEEP_SET_PARAMETERS BeepSetParameters;
+
+    RtlInitAnsiString(&AnsiDeviceName, "\\Device\\Beep");
+    RtlAnsiStringToUnicodeString(&UnicodeDeviceName,
+                                 &AnsiDeviceName, TRUE);
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &UnicodeDeviceName,
+                               0,
+                               NULL,
+                               NULL);
+
+    Status = ZwCreateFile(&hBeep,
+                          FILE_GENERIC_WRITE,
+                          &ObjectAttributes,
+                          &IoStatusBlock,
+                          0,
+                          FILE_ATTRIBUTE_NORMAL,
+                          0,
+                          FILE_OPEN,
+                          0,
+                          NULL,
+                          0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        return Status;
+    }
+
+    /* Set beep data */
+    BeepSetParameters.Frequency = dwFreq;
+    BeepSetParameters.Duration  = dwDuration;
+
+    Status = ZwDeviceIoControlFile(hBeep,
+                                   NULL,
+                                   NULL,
+                                   NULL,
+                                   &IoStatusBlock,
+                                   IOCTL_BEEP_SET,
+                                   &BeepSetParameters,
+                                   sizeof(BEEP_SET_PARAMETERS),
+                                   NULL,
+                                   0);
+
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose (hBeep);
+        return Status;
+    }
+
+    ZwClose(hBeep);
+    return STATUS_SUCCESS;
+}
+
+
+void TstBegin(void)
+{
+//   TstBeepDriver(440, 100);
+//   TstBeepDriver(880, 200);
+//   TstBeepDriver(440, 100);
    ExExecuteShell();
 }
 

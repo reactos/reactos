@@ -6,6 +6,7 @@
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
  *                  Created 22/05/98
+ *                  Fixed IO method handling 04/03/99
  */
 
 /* INCLUDES *****************************************************************/
@@ -31,31 +32,31 @@ NTSTATUS IoPrepareIrpBuffer(PIRP Irp,
      {
 	DPRINT("Doing buffer i/o\n");
 	Irp->AssociatedIrp.SystemBuffer = (PVOID)
-	                   ExAllocatePool(NonPagedPool,Length);
+			   ExAllocatePool(NonPagedPool,Length);
 	if (Irp->AssociatedIrp.SystemBuffer==NULL)
 	  {
 	     IoFreeIrp(Irp);
 	     return(STATUS_NOT_IMPLEMENTED);
 	  }
-        /* FIXME: should copy buffer in on other ops */
-        if (MajorFunction == IRP_MJ_WRITE)
-          {
-             RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
-          }
+	/* FIXME: should copy buffer in on other ops */
+	if (MajorFunction == IRP_MJ_WRITE)
+	  {
+	     RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer, Buffer, Length);
+	  }
      }
    if (DeviceObject->Flags & DO_DIRECT_IO)
      {
 	DPRINT("Doing direct i/o\n");
 	
 	Irp->MdlAddress = MmCreateMdl(NULL,Buffer,Length);
-        if (MajorFunction == IRP_MJ_READ)
-          {
-             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
-          }
-        else
-          {
-             MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
-          }
+	if (MajorFunction == IRP_MJ_READ)
+	  {
+	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoWriteAccess);
+	  }
+	else
+	  {
+	     MmProbeAndLockPages(Irp->MdlAddress,UserMode,IoReadAccess);
+	  }
 	Irp->UserBuffer = NULL;
 	Irp->AssociatedIrp.SystemBuffer = NULL;
      }
@@ -75,7 +76,7 @@ PIRP IoBuildFilesystemControlRequest(ULONG MinorFunction,
  *         UserEvent = Event used to notify the caller of completion
  *         IoStatusBlock (OUT) = Used to return the status of the operation
  *         DeviceToMount = Device to mount (for the IRP_MN_MOUNT_DEVICE 
- *					    request)
+ *                                          request)
  */
 {
    PIRP Irp;
@@ -192,7 +193,7 @@ PIRP IoBuildAsynchronousFsdRequest(ULONG MajorFunction,
 	  {
 	     SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 0);
 	     SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset, 0);
-	  }	
+	  }     
      }
 	
    Irp->UserIosb = IoStatusBlock;
@@ -209,8 +210,145 @@ PIRP IoBuildDeviceIoControlRequest(ULONG IoControlCode,
 				   BOOLEAN InternalDeviceIoControl,
 				   PKEVENT Event,
 				   PIO_STATUS_BLOCK IoStatusBlock)
+/*
+ * FUNCTION: Allocates and sets up an IRP to be sent to drivers
+ * ARGUMENTS:
+ *         IoControlCode = Device io control code
+ *         DeviceObject = Device object to send the irp to
+ *         InputBuffer = Buffer from which data will be read by the driver
+ *         InputBufferLength = Length in bytes of the input buffer
+ *         OutputBuffer = Buffer into which data will be written by the driver
+ *         OutputBufferLength = Length in bytes of the output buffer
+ *         InternalDeviceIoControl = Determines weather
+ *                                   IRP_MJ_INTERNAL_DEVICE_CONTROL or
+ *                                   IRP_MJ_DEVICE_CONTROL will be used
+ *         Event = Event used to notify the caller of completion
+ *         IoStatusBlock (OUT) = Storage for the result of the operation
+ * RETURNS: The IRP allocated on success, or
+ *          NULL on failure
+ */
 {
-   UNIMPLEMENTED;
+   PIRP Irp;
+   PIO_STACK_LOCATION StackPtr;
+
+   DPRINT("IoBuildDeviceIoRequest(IoControlCode %x, DeviceObject %x, "
+      "InputBuffer %x, InputBufferLength %x, OutputBuffer %x, "
+      "OutputBufferLength %x, InternalDeviceIoControl %x "
+      "Event %x, IoStatusBlock %x\n",IoControlCode,DeviceObject,
+      InputBuffer,InputBufferLength,OutputBuffer,OutputBufferLength,
+      InternalDeviceIoControl,Event,IoStatusBlock);
+   
+   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   if (Irp==NULL)
+   {
+      return(NULL);
+   }
+   
+   Irp->UserEvent = Event;
+   Irp->UserIosb = IoStatusBlock;
+
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->MajorFunction = InternalDeviceIoControl ? IRP_MJ_INTERNAL_DEVICE_CONTROL : IRP_MJ_DEVICE_CONTROL;
+   StackPtr->MinorFunction = 0;
+   StackPtr->Flags = 0;
+   StackPtr->Control = 0;
+   StackPtr->DeviceObject = DeviceObject;
+   StackPtr->FileObject = NULL;
+   StackPtr->CompletionRoutine = NULL;
+   StackPtr->Parameters.DeviceIoControl.IoControlCode = IoControlCode;
+   StackPtr->Parameters.DeviceIoControl.InputBufferLength = InputBufferLength;
+   StackPtr->Parameters.DeviceIoControl.OutputBufferLength = OutputBufferLength;
+
+   if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_BUFFERED)
+   {
+      ULONG BufferLength;
+      DPRINT("Using METHOD_BUFFERED!\n");
+
+      BufferLength = (InputBufferLength>OutputBufferLength)?InputBufferLength:OutputBufferLength;
+      if (BufferLength)
+      {
+         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+               ExAllocatePool(NonPagedPool,BufferLength);
+
+         if (Irp->AssociatedIrp.SystemBuffer==NULL)
+         {
+            IoFreeIrp(Irp);
+            return(NULL);
+         }
+      }
+
+      if (InputBuffer && InputBufferLength)
+      {
+         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+               InputBuffer,
+               InputBufferLength);
+      }
+   }
+   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_IN_DIRECT)
+   {
+      DPRINT("Using METHOD_IN_DIRECT!\n");
+
+      /* build input buffer (control buffer) */
+      if (InputBuffer && InputBufferLength)
+      {
+         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+               ExAllocatePool(NonPagedPool,InputBufferLength);
+
+         if (Irp->AssociatedIrp.SystemBuffer==NULL)
+         {
+            IoFreeIrp(Irp);
+            return(NULL);
+         }
+
+         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+               InputBuffer,
+               InputBufferLength);
+      }
+
+      /* build output buffer (data transfer buffer) */
+      if (OutputBuffer && OutputBufferLength)
+      {
+         PMDL Mdl = IoAllocateMdl (OutputBuffer,OutputBufferLength, FALSE, FALSE, Irp);
+         MmProbeAndLockPages (Mdl, UserMode,IoReadAccess);
+      }
+   }
+   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_OUT_DIRECT)
+   {
+      DPRINT("Using METHOD_OUT_DIRECT!\n");
+
+      /* build input buffer (control buffer) */
+      if (InputBuffer && InputBufferLength)
+      {
+         Irp->AssociatedIrp.SystemBuffer = (PVOID)
+               ExAllocatePool(NonPagedPool,InputBufferLength);
+
+         if (Irp->AssociatedIrp.SystemBuffer==NULL)
+         {
+            IoFreeIrp(Irp);
+            return(NULL);
+         }
+
+         RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+               InputBuffer,
+               InputBufferLength);
+      }
+
+      /* build output buffer (data transfer buffer) */
+      if (OutputBuffer && OutputBufferLength)
+      {
+         PMDL Mdl = IoAllocateMdl (OutputBuffer,OutputBufferLength, FALSE, FALSE, Irp);
+         MmProbeAndLockPages (Mdl, UserMode,IoWriteAccess);
+      }
+   }
+   else if (IO_METHOD_FROM_CTL_CODE(IoControlCode) == METHOD_NEITHER)
+   {
+      DPRINT("Using METHOD_NEITHER!\n");
+
+      Irp->UserBuffer = OutputBuffer;
+      StackPtr->Parameters.DeviceIoControl.Type3InputBuffer = InputBuffer;
+   }
+
+   return(Irp);
 }
 
 PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
@@ -274,31 +412,31 @@ PIRP IoBuildSynchronousFsdRequest(ULONG MajorFunction,
    if (MajorFunction == IRP_MJ_READ)
      {
        if (StartingOffset != NULL)
-         {
-            StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
-         }
+	 {
+	    StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
+	 }
        else
-         {
-            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 
+	 {
+	    SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Read.ByteOffset, 
 				       0);
-            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 
+	    SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Read.ByteOffset, 
 					0);
-         }
+	 }
 	StackPtr->Parameters.Read.Length = Length;
      }
    else
      {
        if (StartingOffset!=NULL)
-         {
-            StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
-         }
+	 {
+	    StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
+	 }
        else
-         {
-            SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 
+	 {
+	    SET_LARGE_INTEGER_LOW_PART(StackPtr->Parameters.Write.ByteOffset, 
 				       0);
-            SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset,
+	    SET_LARGE_INTEGER_HIGH_PART(StackPtr->Parameters.Write.ByteOffset,
 					0);
-         }
+	 }
 	StackPtr->Parameters.Write.Length = Length;
      }
 

@@ -17,6 +17,13 @@ char toupper(char c)
    return(c);
 }
 
+char tolower(char c)
+{
+   if (c>='A' && c <= 'Z')
+       return (c - upalpha);
+   return(c);
+}
+
 int islower(char c)
 {
    if ((c>='a') && (c<='z')) return 1;
@@ -38,5 +45,11 @@ int isxdigit(char c)
    return 0;
 }
 
+int iscntrl(char c)
+{
+   if ((c >=0x00 && c <= 0x1f) || c == 0x7f);
+    return 1;
+   return 0;
+}
 
 

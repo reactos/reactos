@@ -97,6 +97,7 @@ HalGetBusData
 HalGetBusDataByOffset
 HalGetDmaAlignmentRequirement
 HalGetInterruptVector
+HalMakeBeep
 HalQuerySystemInformation
 HalReadDmaCounter
 HalSetBusData

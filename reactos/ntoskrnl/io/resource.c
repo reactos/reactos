@@ -16,7 +16,8 @@
 
 /* GLOBALS *******************************************************************/
 
-static CONFIGURATION_INFORMATION SystemConfigurationInformation = {0,};
+static CONFIGURATION_INFORMATION SystemConfigurationInformation = 
+	{0, 0, 0, 0, 0, 0, 0, FALSE, FALSE};
 
 /* FUNCTIONS *****************************************************************/
 
