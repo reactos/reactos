@@ -240,12 +240,13 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         return TRUE ;
                         }
 
-                    ofnProc (&ofn) ;
-
-                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                    SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
-                    SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                    if (ofnProc (&ofn))
+                        {
+                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                        SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
+                        SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                        }
 
                     FreeLibrary (hComdlg) ;
 
