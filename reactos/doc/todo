@@ -1,0 +1,31 @@
+* Kernel things implemented [exceptions in brackets]
+
+Spinlocks [Uniprocessor only]
+IRQ levels [Not APC_LEVEL or WAKE_LEVEL, uniprocessor only]
+ISRs [Partial, uniprocessor only]
+Timers [Untested]
+DPCs [Untested]
+Objects [Partial]
+Namespace [Partial]
+Handle tables [One process only]
+Threads [Some initial work]
+RTL list functions [All except sequenced lists]
+Zones [Untested]
+Memory pool [Working but semantics partially incompatiable]
+Device objects [Some but no support for layering]
+IRP [Partial]
+Memory sections [Partial, no file mappings]
+PCI interface [Probes but no support]
+CreateFile API [Device only]
+ReadFile/WriteFile API [Device only]
+MDL functions [Untested]
+
+* Kernel things unimplemented (partial)
+
+Add support for source level debugging to Bochs
+Support for remote debugging
+Process managment
+Dispatcher objects (Mutex, Semaphore etc)
+Investigate user and kernel mode APCs
+Asynchronous I/O
+Optimization

@@ -1,0 +1,16 @@
+subject wstring.zip
+author Boudewijn Dekker
+date 06-06-98
+
+
+I wrote some inline wide character string functions. It are modified version
+of the ones in string.h. I added four more function nl stricmp, strnicmp,
+wcsicmp, and wcsnicmp. These are the case insensitive variants of
+strcmp, strncmp and wcscmp, wcsncmp. I tested all the functions but I
+would urge anyone to tested again. I removed an extern specifier
+__wcstok and strtok cause I it caused an compilation error when
+using strtok or wcstok. Please could someone see if this correct.
+I also used these string functions in lstring api functions.
+
+
+Boudewijn Dekker  

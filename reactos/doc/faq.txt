@@ -1,0 +1,114 @@
+Kernel Development FAQ (for v0.0.7)
+
+This attempts to answer some of the common questions people developing for
+the kernel might want to ask (or at least what I think they should ask).
+Obviously I can only detail those parts which I have written so other
+developers please fill in the gaps.
+
+Q: What is this, what are you people, what's going on
+A: This is the ReactOS, an operating system intended as a clone of windows
+NT. See the project website (http://www.sid-dis.com/reactos/) for more details.
+
+Q: Why ReactOS
+A: To condemn Bill Gates to penury.
+
+Q: What do I need to compile the kernel
+A: DJGPP, get it from http://www.delorie.com/djgpp
+
+Q: How do I compile the kernel
+A: Unpack the zip. It is important not to install the kernel in the same
+directory as a previous version, this has caused a bit of confusion in the 
+past. Edit the makefile in the top level directory, in particular select the
+correct host to build from. Then run make in the top directory
+
+Q: What files are created when I make the kernel
+A: The following files are created in the kernel directory
+        kimage = the kernel as a coff executable
+        kimage.bin = the kernel as a raw binary image
+        kernel.sym = a list of the kernel symbols
+
+Q: How do I load the kernel
+A: Run the boot.bat batch file.
+
+Q: Does it boot from disk
+A: Not at the moment.
+
+Q: When I run the kernel it crashes
+A: The kernel (at the moment) can only be loaded from a clean system. That
+is one without EMM386 or any version of windows loaded. A quick way to
+ensure this (if you have windows 95) is to set the program to run in msdos
+mode and specify an empty config.sys and autoexec.bat. See the windows help
+for more information.
+
+If you do that and the problem persists then contact the kernel team
+(ros-kernel@sid-dis.com) as it is probably a bug in the kernel 
+
+Q6: How do I load a module with the kernel
+A: Add the names of any modules to be loaded to the command line of boot.bat.
+
+Q7: I want to add code to the kernel, how do I get it to be compiled
+A: You will need to edit the Makefile in kernel directory. There should be
+a statement like this 
+
+    OBJECTS = hal/head.o hal/exp.o kernel/vsprintf.o \
+              ....
+	      kernel/irqhand.o hal/page.o mm/virtual.o kernel/error.o \
+	      kernel/exports.o kernel/module.o
+
+Add the name of the object file (the file produced when your code is
+compiled) to the end of the statement (in this case after kernel/module.o).
+If you need to go onto a new line then add a slash to the end of the
+previous line. It is also very important to use an editor which preserves
+tabs.
+
+Q8: I want to add code to the kernel, how do I make it official
+A: Contact the kernel mailing list ros-kernel@sid-dis.com or our coordinator
+dwinkley@whitworth.edu. If it is for a specific section then the kernel
+website (http://www.geocities.com/SiliconValley/Peaks/1957) has a list of
+those working on individual areas, you might what to contact one of them
+instead.
+
+Q9: What header files should I use
+A: Don't include the usual DJGPP headers like stdio.h unless you are using
+something compiler based like stdargs.h. To use the DJGPP headers requires
+linking with libc which is useless in kernel mode.
+
+All the header files are in the top-level include directory which is laid
+out like this
+         include  = general win32 api declarations
+	 include/internal = private kernel headers
+	 include/internal/hal = HAL headers
+	 include/ddk = header files with declarations for modules
+
+There should be a file called api.txt which documents all of the functions
+(and which header files they need).
+
+Q11: I want to export my function for modules to use, how do I do that
+A: Add the function to the list in kernel/exports.lst, then remake the
+kernel. Note the function must be declared as extern "C".
+
+Q12: I want to make my functions part of the kernel interface to user mode,
+A: That section isn't finished yet, though it will probably mean adding a
+pointer to the function and the size of its parameters to a internal table
+somewhere.
+
+Q14: I want to write a module, what are the guidelines
+A: See modules.txt in this directory
+
+Q15: I want to write an ISR (interrupt service routine)
+A: See irq.txt in this directory
+
+Q16: I want to use DMA
+A: Firstly this answer covers only DMA via the dma chips *not*
+busmaster DMA.
+
+To program the dma chip use the functions in internal/dma.h (look in api.txt
+for details). PC DMA can only go to memory with a physical address below
+1mb (or 16mb on some systems), use the get_dma_page to allocate this kind
+of memory.
+
+Q17: You haven't answered my question
+A: Send your questions to ros-kernel@sid-dis.com
+
+
+- David Welch (welch@mcmail.com)
