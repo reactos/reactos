@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: blockdev.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
+/* $Id: blockdev.c,v 1.3 2003/11/10 17:09:29 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -153,9 +153,9 @@ FsRecDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
       Status = IoStatus.Status;
     }
 
-  if (OutputBufferSize)
+  if (OutputBufferSize != NULL)
     {
-      *OutputBufferSize = BufferSize;
+      *OutputBufferSize = IoStatus.Information;
     }
 
   ExFreePool(Event);

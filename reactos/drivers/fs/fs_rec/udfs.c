@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: udfs.c,v 1.1 2003/01/16 11:58:15 ekohl Exp $
+/* $Id: udfs.c,v 1.2 2003/11/10 17:09:29 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -94,7 +94,7 @@ FsRecCheckVolumeRecognitionSequence(IN PDEVICE_OBJECT DeviceObject,
 				Buffer);
       if (!NT_SUCCESS(Status))
 	{
-	  DPRINT1("FsRecReadSectors() failed (Status %lx)\n", Status);
+	  DPRINT ("FsRecReadSectors() failed (Status %lx)\n", Status);
 	  break;
 	}
 
@@ -114,7 +114,7 @@ FsRecCheckVolumeRecognitionSequence(IN PDEVICE_OBJECT DeviceObject,
 	      }
 	    else
 	      {
-		DPRINT1("VRS start sector is not 'BEA01'\n");
+		DPRINT ("VRS start sector is not 'BEA01'\n");
 		ExFreePool(Buffer);
 		return(STATUS_UNRECOGNIZED_VOLUME);
 	      }
@@ -138,7 +138,7 @@ FsRecCheckVolumeRecognitionSequence(IN PDEVICE_OBJECT DeviceObject,
 		(Buffer[4] == '0') &&
 		(Buffer[5] == '1'))
 	      {
-		DPRINT1("Found 'TEA01'\n");
+		DPRINT ("Found 'TEA01'\n");
 		ExFreePool(Buffer);
 		return(STATUS_SUCCESS);
 	      }
@@ -148,7 +148,7 @@ FsRecCheckVolumeRecognitionSequence(IN PDEVICE_OBJECT DeviceObject,
       Sector++;
       if (Sector == UDFS_AVDP_SECTOR)
 	{
-	  DPRINT1("No 'TEA01' found\n");
+	  DPRINT ("No 'TEA01' found\n");
 	  ExFreePool(Buffer);
 	  return(STATUS_UNRECOGNIZED_VOLUME);
 	}
@@ -184,24 +184,24 @@ FsRecCheckAnchorVolumeDescriptorPointer(IN PDEVICE_OBJECT DeviceObject,
 			    Buffer);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("FsRecReadSectors() failed (Status %lx)\n", Status);
+      DPRINT ("FsRecReadSectors() failed (Status %lx)\n", Status);
       ExFreePool(Buffer);
       return(Status);
     }
 
   Avdp = (PAVDP)Buffer;
-  DPRINT1("Descriptor identifier: %hu\n", Avdp->DescriptorTag.Identifier);
+  DPRINT ("Descriptor identifier: %hu\n", Avdp->DescriptorTag.Identifier);
 
-  DPRINT1("Main volume descriptor sequence location: %lu\n",
+  DPRINT ("Main volume descriptor sequence location: %lu\n",
 	  Avdp->MainVolumeDescriptorExtent.Location);
 
-  DPRINT1("Main volume descriptor sequence length: %lu\n",
+  DPRINT ("Main volume descriptor sequence length: %lu\n",
 	  Avdp->MainVolumeDescriptorExtent.Length);
 
-  DPRINT1("Reserve volume descriptor sequence location: %lu\n",
+  DPRINT ("Reserve volume descriptor sequence location: %lu\n",
 	  Avdp->ReserveVolumeDescriptorExtent.Location);
 
-  DPRINT1("Reserve volume descriptor sequence length: %lu\n",
+  DPRINT ("Reserve volume descriptor sequence length: %lu\n",
 	  Avdp->ReserveVolumeDescriptorExtent.Length);
 
   ExFreePool(Buffer);
@@ -227,10 +227,10 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject)
 				&Size);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
+      DPRINT ("FsRecDeviceIoControl() failed (Status %lx)\n", Status);
       return(Status);
     }
-  DPRINT1("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
+  DPRINT ("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
 
   /* Check the volume recognition sequence */
   Status = FsRecCheckVolumeRecognitionSequence(DeviceObject,
@@ -242,7 +242,6 @@ FsRecIsUdfsVolume(IN PDEVICE_OBJECT DeviceObject)
 						   DiskGeometry.BytesPerSector);
   if (!NT_SUCCESS(Status))
     return(Status);
-
 
   return(STATUS_SUCCESS);
 }
