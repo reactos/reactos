@@ -28,14 +28,17 @@
 #endif
 #define UNIMPLEMENTED do {DbgPrint("%s at %s:%d is unimplemented, have a nice day\n",__FUNCTION__,__FILE__,__LINE__); for(;;);  } while(0)
 
+
+#ifdef assert
+#undef assert
+#endif
+
 #ifdef DBG
 
 /* Assert only on "checked" version */
 #ifndef NASSERT
-#ifdef assert
-#undef assert
-#endif
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); KeBugCheck(0); }
 
 #define assertmsg(_c_, _m_) \
   if (!(_c_)) { \
@@ -44,13 +47,19 @@
       KeBugCheck(0); \
   }
 
+#define ASSERTMSG(_c_, _m_) \
+  if (!(_c_)) { \
+      DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
+      DbgPrint _m_ ; \
+      KeBugCheck(0); \
+  }
+
 #else
 
-#ifdef assert
-#undef assert
-#endif
 #define assert(x)
+#define ASSERT(x)
 #define assertmsg(_c_, _m_)
+#define ASSERTMSG(_c_, _m_)
 
 #endif
 
@@ -64,11 +73,10 @@
 #else /* DBG */
 
 #define CPRINT(args...)
-#ifdef assert
-#undef assert
-#endif
 #define assert(x)
+#define ASSERT(x)
 #define assertmsg(_c_, _m_)
+#define ASSERTMSG(_c_, _m_)
 
 #endif /* DBG */
 
@@ -116,7 +124,7 @@
  * ARGUMENTS:
  *        x = Maximum irql
  */
-#define ASSERT_IRQL(x) assert(KeGetCurrentIrql()<=(x))
+#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql()<=(x))
 #define assert_irql(x) assert(KeGetCurrentIrql()<=(x))
 
 #endif /* __INTERNAL_DEBUG */

@@ -32,6 +32,23 @@
 #endif
 #endif
 
+#ifndef ASSERT
+#ifndef NASSERT
+#define ASSERT(x) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, ""); }
+#else
+#define ASSERT(x)
+#endif
+#endif
+
+#ifndef ASSERTMSG
+#ifndef NASSERT
+#define ASSERTMSG(x,m) if (!(x)) {RtlAssert("#x",__FILE__,__LINE__, m); }
+#else
+#define ASSERTMSG(x)
+#endif
+#endif
+
+
 /* TODO: Make the output of file/line and the debug message atomic */
 #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
 #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
