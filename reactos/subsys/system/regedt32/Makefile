@@ -6,6 +6,8 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = regedt32
 
+TARGET_INSTALLDIR = system32
+
 TARGET_CFLAGS = -DGCC \
   -D__USE_W32API \
   -D__REACTOS__ \

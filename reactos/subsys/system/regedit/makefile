@@ -12,6 +12,8 @@ TARGET_APPTYPE = windows
 
 TARGET_NAME = regedit
 
+TARGET_INSTALLDIR = system32
+
 TARGET_CFLAGS = -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 -D__USE_W32API
 	
 TARGET_SDKLIBS = kernel32.a advapi32.a user32.a gdi32.a wine_uuid.a ole32.a \

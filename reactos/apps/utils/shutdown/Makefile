@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/09/16 12:46:43 gvg Exp $
+# $Id: Makefile,v 1.3 2004/12/13 18:06:38 weiden Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -7,6 +7,8 @@ TARGET_NORC = yes
 TARGET_TYPE = program
 
 TARGET_APPTYPE = console
+
+TARGET_INSTALLDIR = system32
 
 TARGET_NAME = shutdown
 
