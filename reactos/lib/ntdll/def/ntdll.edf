@@ -1,4 +1,4 @@
-; $Id: ntdll.edf,v 1.7 1999/10/12 21:17:04 ea Exp $
+; $Id: ntdll.edf,v 1.8 1999/10/21 16:13:39 ekohl Exp $
 ;
 ; ReactOS Operating System
 ;
@@ -545,4 +545,8 @@ wcspbrk
 wcsrchr
 wcsspn
 wcsstr
+LdrGetExportByName
+LdrGetExportByOrdinal
+LdrLoadDll
 LdrMapNTDllForProcess
+LdrUnloadDll
