@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.26 2003/09/12 17:51:46 vizzini Exp $
+; $Id: advapi32.edf,v 1.27 2003/10/12 09:39:44 hbirr Exp $
 ;
 ; advapi32.edf
 ;
@@ -597,7 +597,7 @@ StartServiceW=StartServiceW@12
 ;StartTraceW
 ;StopTraceA
 ;StopTraceW
-ynchronizeWindows31FilesAndWindowsNTRegistry=SynchronizeWindows31FilesAndWindowsNTRegistry@16
+SynchronizeWindows31FilesAndWindowsNTRegistry=SynchronizeWindows31FilesAndWindowsNTRegistry@16
 SystemFunction001=SystemFunction001@12
 SystemFunction002=SystemFunction002@12
 SystemFunction003=SystemFunction003@8
