@@ -343,7 +343,7 @@ l_ReadHeaderFromFile:
  }
  else
  {
-  ULONG32 cbOptHeaderOffsetSize;
+  ULONG cbOptHeaderOffsetSize;
 
   nStatus = STATUS_INVALID_IMAGE_FORMAT;
 

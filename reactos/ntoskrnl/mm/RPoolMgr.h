@@ -12,17 +12,18 @@
 #define RPOOLMGR_H
 
 typedef unsigned long rulong;
+typedef ULONG_PTR rulong_ptr;
 
-#define R_IS_POOL_PTR(pool,ptr) (void*)(ptr) >= pool->UserBase && (ULONG_PTR)(ptr) < ((ULONG_PTR)pool->UserBase + pool->UserSize)
+#define R_IS_POOL_PTR(pool,ptr) (void*)(ptr) >= pool->UserBase && (rulong_ptr)(ptr) < ((rulong_ptr)pool->UserBase + pool->UserSize)
 #define R_ASSERT_PTR(pool,ptr) ASSERT( R_IS_POOL_PTR(pool,ptr) )
 #define R_ASSERT_SIZE(pool,sz) ASSERT( sz > (sizeof(R_USED)+2*R_RZ) && sz >= sizeof(R_FREE) && sz < pool->UserSize )
 
 #ifndef R_ROUND_UP
-#define R_ROUND_UP(x,s)    ((PVOID)(((ULONG_PTR)(x)+(s)-1) & ~((ULONG_PTR)(s)-1)))
+#define R_ROUND_UP(x,s)    ((PVOID)(((rulong_ptr)(x)+(s)-1) & ~((rulong_ptr)(s)-1)))
 #endif//R_ROUND_UP
 
 #ifndef R_ROUND_DOWN
-#define R_ROUND_DOWN(x,s)  ((PVOID)(((ULONG_PTR)(x)) & ~((ULONG_PTR)(s)-1)))
+#define R_ROUND_DOWN(x,s)  ((PVOID)(((rulong_ptr)(x)) & ~((rulong_ptr)(s)-1)))
 #endif//R_ROUND_DOWN
 
 #ifndef R_QUEMIN
@@ -77,9 +78,9 @@ typedef struct _R_FREE
 #endif//R_MAGIC
 	rulong PrevSize : 30;
 	rulong Status : 2;
-	rulong Size;
+	rulong_ptr Size;
 #if R_STACK
-	ULONG_PTR LastOwnerStack[R_STACK];
+	rulong_ptr LastOwnerStack[R_STACK];
 #endif//R_STACK
 	struct _R_FREE* NextFree;
 	struct _R_FREE* PrevFree;
@@ -93,9 +94,9 @@ typedef struct _R_USED
 #endif//R_MAGIC
 	rulong PrevSize : 30;
 	rulong Status : 2;
-	rulong Size;
+	rulong_ptr Size;
 #if R_STACK
-	ULONG_PTR LastOwnerStack[R_STACK];
+	rulong_ptr LastOwnerStack[R_STACK];
 #endif//R_STACK
 	struct _R_USED* NextUsed;
 #if R_RZ
@@ -115,9 +116,9 @@ R_QUE, *PR_QUE;
 typedef struct _R_POOL
 {
 	void* PoolBase;
-	rulong PoolSize;
+	rulong_ptr PoolSize;
 	void* UserBase;
-	rulong UserSize;
+	rulong_ptr UserSize;
 	rulong Alignments[3];
 	PR_FREE FirstFree, LastFree;
 	R_QUE Que[R_QUECOUNT][3];
@@ -147,7 +148,7 @@ RiPrintLastOwner ( PR_USED Block )
 #endif//R_STACK
 
 static int
-RQueWhich ( rulong size )
+RQueWhich ( rulong_ptr size )
 {
 	rulong que, quesize;
 	for ( que=0, quesize=16; que < R_QUECOUNT; que++, quesize<<=1 )
@@ -287,7 +288,7 @@ RFreeInit ( void* memory )
 }
 
 PR_POOL
-RPoolInit ( void* PoolBase, rulong PoolSize, int align1, int align2, int align3 )
+RPoolInit ( void* PoolBase, rulong_ptr PoolSize, int align1, int align2, int align3 )
 {
 	int align, que;
 	PR_POOL pool = (PR_POOL)PoolBase;
@@ -567,7 +568,7 @@ RPoolRedZoneCheck ( PR_POOL pool, const char* file, int line )
 }
 
 static void
-RSetSize ( PR_POOL pool, PR_FREE Block, rulong NewSize, PR_FREE NextBlock )
+RSetSize ( PR_POOL pool, PR_FREE Block, rulong_ptr NewSize, PR_FREE NextBlock )
 {
 	R_ASSERT_PTR(pool,Block);
 	ASSERT ( NewSize < pool->UserSize );
@@ -580,7 +581,7 @@ RSetSize ( PR_POOL pool, PR_FREE Block, rulong NewSize, PR_FREE NextBlock )
 }
 
 static PR_FREE
-RFreeSplit ( PR_POOL pool, PR_FREE Block, rulong NewSize )
+RFreeSplit ( PR_POOL pool, PR_FREE Block, rulong_ptr NewSize )
 {
 	PR_FREE NewBlock = (PR_FREE)((char*)Block + NewSize);
 	RSetSize ( pool, NewBlock, Block->Size - NewSize, NULL );
@@ -654,7 +655,7 @@ RiUsedInit ( PR_USED Block, rulong Tag )
 #define RiUsedInitRedZone(Block,UserSize)
 #else//R_RZ
 static void
-RiUsedInitRedZone ( PR_USED Block, rulong UserSize )
+RiUsedInitRedZone ( PR_USED Block, rulong_ptr UserSize )
 {
 	// write out buffer-overrun detection bytes
 	char* Addr = (char*)RHdrToBody(Block);
@@ -668,7 +669,7 @@ RiUsedInitRedZone ( PR_USED Block, rulong UserSize )
 #endif//R_RZ
 
 static void*
-RPoolAlloc ( PR_POOL pool, rulong NumberOfBytes, rulong Tag, rulong align )
+RPoolAlloc ( PR_POOL pool, rulong_ptr NumberOfBytes, rulong Tag, rulong align )
 {
 	PR_USED NewBlock;
 	PR_FREE BestBlock,
@@ -677,10 +678,8 @@ RPoolAlloc ( PR_POOL pool, rulong NumberOfBytes, rulong Tag, rulong align )
 		BestPreviousBlock,
 		CurrentBlock;
 	void* BestAlignedAddr;
-	int que,
-		queBytes = NumberOfBytes;
-	rulong BlockSize,
-		Alignment;
+	rulong_ptr que, queBytes = NumberOfBytes;
+	rulong BlockSize, Alignment;
 	int que_reclaimed = 0;
 
 	ASSERT ( pool );
