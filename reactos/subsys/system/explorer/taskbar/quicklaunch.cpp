@@ -101,6 +101,7 @@ void QuickLaunchBar::AddShortcuts()
 
 		_stprintf(path, TEXT("%s\\")QUICKLAUNCH_FOLDER, (LPCTSTR)app_data);
 
+		CreateDirectory(path, NULL);
 		_dir = new ShellDirectory(Desktop(), path, _hwnd);
 
 		_dir->smart_scan(SCAN_EXTRACT_ICONS|SCAN_FILESYSTEM);

@@ -112,7 +112,7 @@ void ShellBrowserChild::InitializeTree()
 	TreeView_SetImageList(_left_hwnd, _himlSmall, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
-	const String& root_name = Desktop().get_name(_create_info._root_shell_path);
+	const String& root_name = Desktop().get_name(_create_info._root_shell_path, SHGDN_FORPARSING);
 
 	_root._drive_type = DRIVE_UNKNOWN;
 	lstrcpy(_root._volname, root_name);	// most of the time "Desktop"
