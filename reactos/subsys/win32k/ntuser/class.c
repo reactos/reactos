@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.54 2004/05/16 19:31:09 navaraf Exp $
+/* $Id: class.c,v 1.55 2004/05/17 16:38:58 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -183,15 +183,10 @@ NtUserGetClassInfo(
    lpWndClassEx->hIcon = Class->hIcon;
    lpWndClassEx->hCursor = Class->hCursor;
    lpWndClassEx->hbrBackground = Class->hbrBackground;
-   if (Class->lpszMenuName)
-   {
-      if (!IS_INTRESOURCE((LPCWSTR)Class->lpszMenuName))
-         RtlCopyUnicodeString((PUNICODE_STRING)lpWndClassEx->lpszMenuName, Class->lpszMenuName);
-      else
-         lpWndClassEx->lpszMenuName = (LPCWSTR)Class->lpszMenuName;
-   }
+   if (Class->lpszMenuName.MaximumLength)
+      RtlCopyUnicodeString((PUNICODE_STRING)lpWndClassEx->lpszMenuName, &Class->lpszMenuName);
    else
-      lpWndClassEx->lpszMenuName = (LPCWSTR)NULL;
+      lpWndClassEx->lpszMenuName = Class->lpszMenuName.Buffer;
    lpWndClassEx->lpszClassName = lpClassName;
    lpWndClassEx->hIconSm = Class->hIconSm;
    Atom = Class->Atom;
@@ -349,12 +344,16 @@ IntCreateClass(
 	}
 	if (MenuName->Length == 0)
 	{
-		ClassObject->lpszMenuName = (PUNICODE_STRING)MenuName->Buffer;
+		ClassObject->lpszMenuName.Length =
+		ClassObject->lpszMenuName.MaximumLength = 0;
+		ClassObject->lpszMenuName.Buffer = MenuName->Buffer;
 	}
 	else
 	{		
-		ClassObject->lpszMenuName = ExAllocatePoolWithTag(NonPagedPool, sizeof(UNICODE_STRING), TAG_STRING);
-		RtlCreateUnicodeString(ClassObject->lpszMenuName, MenuName->Buffer);
+		ClassObject->lpszMenuName.Length =
+		ClassObject->lpszMenuName.MaximumLength = MenuName->MaximumLength;
+		ClassObject->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, ClassObject->lpszMenuName.MaximumLength, TAG_STRING);
+		RtlCopyUnicodeString(&ClassObject->lpszMenuName, MenuName);
 	}
 	/* Extra class data */
 	if (ClassObject->cbClsExtra != 0)
@@ -516,7 +515,7 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
       Ret = (ULONG)WindowObject->Class->hInstance;
       break;
     case GCL_MENUNAME:
-      Ret = (ULONG)WindowObject->Class->lpszMenuName;
+      Ret = (ULONG)WindowObject->Class->lpszMenuName.Buffer;
       break;
     case GCL_STYLE:
       Ret = WindowObject->Class->style;
@@ -558,8 +557,6 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 void FASTCALL
 IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
-  PUNICODE_STRING str;
-
   if ((int)Offset >= 0)
     {
       DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
@@ -596,16 +593,21 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
       WindowObject->Class->hInstance = (HINSTANCE)dwNewLong;
       break;
     case GCL_MENUNAME:
-	  if (!IS_INTRESOURCE(dwNewLong))
-	  {
-	    str = ExAllocatePoolWithTag(PagedPool,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length, TAG_STRING);
-	    memcpy(str,(PUNICODE_STRING)dwNewLong,sizeof(UNICODE_STRING)+((PUNICODE_STRING)dwNewLong)->Length);
-        WindowObject->Class->lpszMenuName = str;
-	  }
-	  else
-	  {
-		WindowObject->Class->lpszMenuName = (PUNICODE_STRING)dwNewLong;
-	  }
+      if (WindowObject->Class->lpszMenuName.MaximumLength)
+        RtlFreeUnicodeString(&WindowObject->Class->lpszMenuName);
+      if (!IS_INTRESOURCE(dwNewLong))
+      {
+        WindowObject->Class->lpszMenuName.Length =
+        WindowObject->Class->lpszMenuName.MaximumLength = ((PUNICODE_STRING)dwNewLong)->MaximumLength;
+        WindowObject->Class->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowObject->Class->lpszMenuName.MaximumLength, TAG_STRING);
+        RtlCopyUnicodeString(&WindowObject->Class->lpszMenuName, (PUNICODE_STRING)dwNewLong);
+      }
+      else
+      {
+        WindowObject->Class->lpszMenuName.Length =
+        WindowObject->Class->lpszMenuName.MaximumLength = 0;
+        WindowObject->Class->lpszMenuName.Buffer = (LPWSTR)dwNewLong;
+      }
       break;
     case GCL_STYLE:
       WindowObject->Class->style = dwNewLong;

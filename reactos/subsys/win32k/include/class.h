@@ -21,7 +21,7 @@ typedef struct _WNDCLASS_OBJECT
   HICON   hIcon;
   HCURSOR hCursor;
   HBRUSH  hbrBackground;
-  PUNICODE_STRING lpszMenuName;
+  UNICODE_STRING lpszMenuName;
   RTL_ATOM Atom;
   HICON   hIconSm;
   BOOL Unicode;

@@ -1,4 +1,4 @@
-/* $Id: class.c,v 1.48 2004/05/16 19:31:07 navaraf Exp $
+/* $Id: class.c,v 1.49 2004/05/17 16:38:57 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -442,7 +442,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
    {
       MenuName.Length =
       MenuName.MaximumLength = 0;
-      MenuName.Buffer = (LPWSTR)lpwcx->lpszClassName;
+      MenuName.Buffer = (LPWSTR)lpwcx->lpszMenuName;
    } else
    {
       RtlCreateUnicodeStringFromAsciiz(&MenuName, lpwcx->lpszMenuName);
@@ -515,7 +515,7 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
    {
       MenuName.Length =
       MenuName.MaximumLength = 0;
-      MenuName.Buffer = (LPWSTR)lpwcx->lpszClassName;
+      MenuName.Buffer = (LPWSTR)lpwcx->lpszMenuName;
    } else
    {
       RtlInitUnicodeString(&MenuName, lpwcx->lpszMenuName);
