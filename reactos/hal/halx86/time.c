@@ -32,6 +32,9 @@
 
 #define RTC_REGISTER_CENTURY   0x32
 
+/* GLOBALS ******************************************************************/
+
+static KSPIN_LOCK CmosLock = {0};
 
 /* FUNCTIONS *****************************************************************/
 
@@ -105,9 +108,12 @@ HalpSetECMOS(USHORT Reg,
 VOID STDCALL
 HalQueryRealTimeClock(PTIME_FIELDS Time)
 {
+    KIRQL oldIrql;
+
+    KeAcquireSpinLock(&CmosLock, &oldIrql);
+
     /* check 'Update In Progress' bit */
-    while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
-        ;
+    while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP);
 
     Time->Second = BCD_INT(HalpQueryCMOS (0));
     Time->Minute = BCD_INT(HalpQueryCMOS (2));
@@ -127,6 +133,8 @@ HalQueryRealTimeClock(PTIME_FIELDS Time)
     Time->Year += BCD_INT(HalpQueryCMOS (RTC_REGISTER_CENTURY)) * 100;
 #endif
 
+    KeReleaseSpinLock(&CmosLock, oldIrql);
+
 #ifndef NDEBUG
     DbgPrint ("HalQueryRealTimeClock() %d:%d:%d %d/%d/%d\n",
               Time->Hour,
@@ -145,9 +153,12 @@ HalQueryRealTimeClock(PTIME_FIELDS Time)
 VOID STDCALL
 HalSetRealTimeClock(PTIME_FIELDS Time)
 {
+    KIRQL oldIrql;
+
+    KeAcquireSpinLock(&CmosLock, &oldIrql);
+
     /* check 'Update In Progress' bit */
-    while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP)
-        ;
+    while (HalpQueryCMOS (RTC_REGISTER_A) & RTC_REG_A_UIP);
 
     HalpSetCMOS (0, INT_BCD(Time->Second));
     HalpSetCMOS (2, INT_BCD(Time->Minute));
@@ -161,6 +172,8 @@ HalSetRealTimeClock(PTIME_FIELDS Time)
     /* Century */
     HalpSetCMOS (RTC_REGISTER_CENTURY, INT_BCD(Time->Year / 100));
 #endif
+    KeReleaseSpinLock(&CmosLock, oldIrql);
+
 }
 
 
@@ -169,11 +182,15 @@ HalGetEnvironmentVariable(PCH Name,
 			  PCH Value,
 			  USHORT ValueLength)
 {
+   KIRQL oldIrql;
+
+
    if (_stricmp(Name, "LastKnownGood") != 0)
      {
 	return FALSE;
      }
 
+   KeAcquireSpinLock(&CmosLock, &oldIrql);
    if (HalpQueryCMOS(RTC_REGISTER_B) & 0x01)
      {
 	strncpy(Value, "FALSE", ValueLength);
@@ -182,6 +199,7 @@ HalGetEnvironmentVariable(PCH Name,
      {
 	strncpy(Value, "TRUE", ValueLength);
      }
+   KeReleaseSpinLock(&CmosLock, oldIrql);
 
    return TRUE;
 }
@@ -192,9 +210,13 @@ HalSetEnvironmentVariable(PCH Name,
 			  PCH Value)
 {
   UCHAR Val;
+  KIRQL oldIrql;
+  BOOLEAN result = TRUE;
 
   if (_stricmp(Name, "LastKnownGood") != 0)
     return FALSE;
+
+  KeAcquireSpinLock(&CmosLock, &oldIrql);
 
   Val = HalpQueryCMOS(RTC_REGISTER_B);
 
@@ -203,9 +225,11 @@ HalSetEnvironmentVariable(PCH Name,
   else if (_stricmp(Value, "FALSE") == 0)
     HalpSetCMOS(RTC_REGISTER_B, Val & ~0x01);
   else
-    return FALSE;
+    result = FALSE;
 
-   return TRUE;
+  KeReleaseSpinLock(&CmosLock, oldIrql);
+
+  return result;
 }
 
 
@@ -220,6 +244,7 @@ HalpGetCmosData(PBUS_HANDLER BusHandler,
   PUCHAR Ptr = Buffer;
   ULONG Address = SlotNumber;
   ULONG Len = Length;
+  KIRQL oldIrql;
 
   DPRINT("HalpGetCmosData() called.\n");
   DPRINT("  BusNumber %lu\n", BusNumber);
@@ -233,6 +258,7 @@ HalpGetCmosData(PBUS_HANDLER BusHandler,
   if (BusNumber == 0)
     {
       /* CMOS */
+      KeAcquireSpinLock(&CmosLock, &oldIrql);
       while ((Len > 0) && (Address < 0x100))
 	{
 	  *Ptr = HalpQueryCMOS((UCHAR)Address);
@@ -240,10 +266,12 @@ HalpGetCmosData(PBUS_HANDLER BusHandler,
 	  Address++;
 	  Len--;
 	}
+      KeReleaseSpinLock(&CmosLock, oldIrql);
     }
   else if (BusNumber == 1)
     {
       /* Extended CMOS */
+      KeAcquireSpinLock(&CmosLock, &oldIrql);
       while ((Len > 0) && (Address < 0x1000))
 	{
 	  *Ptr = HalpQueryECMOS((USHORT)Address);
@@ -251,6 +279,7 @@ HalpGetCmosData(PBUS_HANDLER BusHandler,
 	  Address++;
 	  Len--;
 	}
+      KeReleaseSpinLock(&CmosLock, oldIrql);
     }
 
   return(Length - Len);
@@ -268,6 +297,7 @@ HalpSetCmosData(PBUS_HANDLER BusHandler,
   PUCHAR Ptr = (PUCHAR)Buffer;
   ULONG Address = SlotNumber;
   ULONG Len = Length;
+  KIRQL oldIrql;
 
   DPRINT("HalpSetCmosData() called.\n");
   DPRINT("  BusNumber %lu\n", BusNumber);
@@ -281,6 +311,7 @@ HalpSetCmosData(PBUS_HANDLER BusHandler,
   if (BusNumber == 0)
     {
       /* CMOS */
+      KeAcquireSpinLock(&CmosLock, &oldIrql);
       while ((Len > 0) && (Address < 0x100))
 	{
 	  HalpSetCMOS((UCHAR)Address, *Ptr);
@@ -288,10 +319,12 @@ HalpSetCmosData(PBUS_HANDLER BusHandler,
 	  Address++;
 	  Len--;
 	}
+      KeReleaseSpinLock(&CmosLock, oldIrql);
     }
   else if (BusNumber == 1)
     {
       /* Extended CMOS */
+      KeAcquireSpinLock(&CmosLock, &oldIrql);
       while ((Len > 0) && (Address < 0x1000))
 	{
 	  HalpSetECMOS((USHORT)Address, *Ptr);
@@ -299,6 +332,7 @@ HalpSetCmosData(PBUS_HANDLER BusHandler,
 	  Address++;
 	  Len--;
 	}
+      KeReleaseSpinLock(&CmosLock, oldIrql);
     }
 
   return(Length - Len);
