@@ -250,12 +250,14 @@ ssize_t pwrite( int fd, const void *buf, size_t count, off_t offset );
 #endif /* HAVE_PWRITE */
 #endif /* __REACTOS__ */
 
+#ifdef WIN32
 #ifndef HAVE_SIGSETJMP
 # include <setjmp.h>
 typedef jmp_buf sigjmp_buf;
 int sigsetjmp( sigjmp_buf buf, int savesigs );
 void siglongjmp( sigjmp_buf buf, int val );
 #endif /* HAVE_SIGSETJMP */
+#endif
 
 #ifndef HAVE_STATFS
 int statfs(const char *name, struct statfs *info);

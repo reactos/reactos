@@ -64,7 +64,7 @@
 /* #undef HAVE_CURSES_H */
 
 /* Define to 1 if you have the <direct.h> header file. */
-#define HAVE_DIRECT_H 1
+/* #undef HAVE_DIRECT_H */
 
 /* Define to 1 if you have the <dlfcn.h> header file. */
 /* #undef HAVE_DLFCN_H */
@@ -202,7 +202,7 @@
 #define HAVE_INTTYPES_H 1
 
 /* Define to 1 if you have the <io.h> header file. */
-#define HAVE_IO_H 1
+/*#define HAVE_IO_H 1*/
 
 /* Define if IPX should use netipx/ipx.h from libc */
 /* #undef HAVE_IPX_GNU */
@@ -421,7 +421,7 @@
 /* #undef HAVE_PREAD */
 
 /* Define to 1 if you have the <process.h> header file. */
-#define HAVE_PROCESS_H 1
+/*#define HAVE_PROCESS_H 1*/
 
 /* Define to 1 if you have the `pthread_getattr_np' function. */
 /* #undef HAVE_PTHREAD_GETATTR_NP */
