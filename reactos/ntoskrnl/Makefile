@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.51 2001/08/29 05:06:31 rex Exp $
+# $Id: Makefile,v 1.52 2001/09/02 17:31:00 dwelch Exp $
 #
 # ReactOS Operating System
 #
@@ -99,7 +99,8 @@ OBJECTS_RTL = \
 	rtl/unicode.o \
 	rtl/wstring.o \
 	rtl/bitops.o \
-	rtl/memcmp.o
+	rtl/memcmp.o \
+	rtl/capture.o
 
 # Kernel (Ke)
 OBJECTS_KE = \
