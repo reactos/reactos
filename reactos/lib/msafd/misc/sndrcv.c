@@ -9,6 +9,8 @@
  *   CSH 01/09-2000 Created
  *	 Alex 16/07/2004 - Complete Rewrite
  */
+
+#include <roscfg.h>
 #include <string.h>
 #include <msafd.h>
 
