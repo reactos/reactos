@@ -19,7 +19,7 @@
 /*
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/rundown.c
- * PURPOSE:         Rundown Functions
+ * PURPOSE:         Rundown Protection Functions
  * PORTABILITY:     Checked
  */
 
@@ -36,107 +36,157 @@
 /* FUNCTIONS *****************************************************************/
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtection (
-	PVOID		ProcessRundownProtect
-	)
+    IN PEX_RUNDOWN_REF RunRef
+    )
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    /* Call the general function with only one Reference add */
+    return ExAcquireRundownProtectionEx(RunRef, 1);
 }
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtectionEx (
-	IN PVOID	ProcessRundownProtect,
-	IN PVOID	Unknown
-	)
+    IN PEX_RUNDOWN_REF RunRef,
+    IN ULONG Count
+    )
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    /* Make sure a Rundown is not in progress */
+    if (RunRef->Count & EX_RUNDOWN_ACTIVE) return FALSE;
+
+    /* Increment Reference Count */
+    RunRef->Count += Count * 2;
+
+    /* Return Success */
+    return TRUE;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 FASTCALL
 ExInitializeRundownProtection (
-	IN PVOID	ProcessRundownProtect
-	)
+    IN PEX_RUNDOWN_REF RunRef
+    )
 {
-	UNIMPLEMENTED;
+    /* Set the count to zero */
+    RunRef->Count = 0;
 }
 
-
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 FASTCALL
 ExReInitializeRundownProtection (
-	IN PVOID	ProcessRundownProtect
-	)
+    IN PEX_RUNDOWN_REF RunRef
+    )
 {
-	UNIMPLEMENTED;
+    /* Reset the count */
+    RunRef->Count = 0;
 }
 
-/*
- * @unimplemented
- */
-BOOLEAN
-FASTCALL
-ExReleaseRundownProtection (
-	IN PVOID	ProcessRundownProtect
-	)
-{
-	UNIMPLEMENTED;
-	return FALSE;
-}
 
 /*
- * @unimplemented
+ * @implemented
  */
-BOOLEAN
+VOID
 FASTCALL
 ExReleaseRundownProtectionEx (
-	IN PVOID	ProcessRundownProtect,
-	IN PVOID	Unknown
-	)
+    IN PEX_RUNDOWN_REF RunRef,
+    IN ULONG Count
+    )
 {
-	UNIMPLEMENTED;
-	return FALSE;
+    PRUNDOWN_DESCRIPTOR RundownDescriptor;
+
+    /* Check if Rundown is in progress */
+    if (RunRef->Count & EX_RUNDOWN_ACTIVE) {
+
+        /* Get Pointer */
+        RundownDescriptor = RunRef->Pointer;
+
+        /* Decrease Reference Count */
+        RundownDescriptor->References -= Count;
+
+        /* If anyone else is still referencing, don't signal the event */
+        if (RundownDescriptor->References) return;
+
+        /* Signal the event so anyone waiting on it can now kill it */
+        KeSetEvent(RundownDescriptor->RundownEvent, 0, FALSE);
+
+    } else {
+        /* Decrease Count */
+        RunRef->Count -= Count * 2;
+    }
 }
 
+/*
+* @implemented
+*/
+VOID
+FASTCALL
+ExReleaseRundownProtection (
+    IN PEX_RUNDOWN_REF RunRef
+    )
+{
+    /* Call the general function with only 1 reference removal */
+     ExReleaseRundownProtectionEx(RunRef, 1);
+}
 
 /*
- * @unimplemented
+ * @implemented
  */
 VOID
 FASTCALL
 ExRundownCompleted (
-	IN PVOID	ProcessRundownProtect
-	)
+    IN PEX_RUNDOWN_REF RunRef
+    )
 {
-	UNIMPLEMENTED;
+    /* Remove pending rundown */
+    RunRef->Count++;
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
-PVOID
+VOID
 FASTCALL
 ExWaitForRundownProtectionRelease (
-	PVOID		ProcessRundownProtect
-	)
+    IN PEX_RUNDOWN_REF RunRef
+    )
 {
-	UNIMPLEMENTED;
-	return FALSE;
-}
+    RUNDOWN_DESCRIPTOR RundownDescriptor;
 
+    /* Check if anyone is referencing the structure */
+    if (!RunRef->Count) {
+        /* It's free, set it to Rundown Mode */
+        RunRef->Count = EX_RUNDOWN_ACTIVE;
+    } else {
+        /* Check if it's already in rundown */
+        if (RunRef->Count == EX_RUNDOWN_ACTIVE) return;
+    }
+
+    /* Save number of references */
+    RundownDescriptor.References = RunRef->Count / 2;
+
+    /* Pending references... wait on them to be closed with an event */
+    KeInitializeEvent(RundownDescriptor.RundownEvent, NotificationEvent, FALSE);
+
+    /* Save Rundown Descriptor. This is safe because this stack won't be modified */
+    RunRef->Pointer = &RundownDescriptor;
+
+    /* Set the Count to 1 so nobody else acquires and so release notifies us */
+    RunRef->Count++;
+
+    /* Wait for whoever needs to release to notify us */
+    KeWaitForSingleObject(RundownDescriptor.RundownEvent, Executive, KernelMode, FALSE, NULL);
+}
 /* EOF */

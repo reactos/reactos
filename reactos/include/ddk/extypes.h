@@ -1,4 +1,4 @@
-/* $Id: extypes.h,v 1.22 2004/06/23 21:02:35 ion Exp $ */
+/* $Id: extypes.h,v 1.23 2004/08/09 01:26:10 ion Exp $ */
 
 #ifndef __INCLUDE_DDK_EXTYPES_H
 #define __INCLUDE_DDK_EXTYPES_H
@@ -38,6 +38,19 @@ typedef struct _ERESOURCE
    KSPIN_LOCK SpinLock;
 } ERESOURCE, *PERESOURCE;
 
+#define EX_RUNDOWN_ACTIVE       0x1
+
+typedef struct _RUNDOWN_DESCRIPTOR {
+    ULONG References;
+    PKEVENT RundownEvent;
+} RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
+
+typedef struct _EX_RUNDOWN_REF {
+    union {
+        ULONG_PTR Count;
+        PRUNDOWN_DESCRIPTOR Pointer;
+    };
+} EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
 typedef struct 
 {

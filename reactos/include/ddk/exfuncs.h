@@ -48,14 +48,14 @@ ExAcquireResourceSharedLite (
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtection (
-	PVOID		ProcessRundownProtect
-	);
+    IN PEX_RUNDOWN_REF RunRef
+    );
 BOOLEAN
 FASTCALL
 ExAcquireRundownProtectionEx (
-	IN PVOID	ProcessRundownProtect,
-	IN PVOID	Unknown
-	);
+    IN PEX_RUNDOWN_REF RunRef,
+    IN ULONG Count
+    );
 PVOID
 FASTCALL
 ExfAcquirePushLockExclusive (
@@ -311,8 +311,8 @@ ExInitializeResourceLite (
 VOID
 FASTCALL
 ExInitializeRundownProtection (
-	PVOID	ProcessRundown
-	);
+    IN PEX_RUNDOWN_REF RunRef
+    );
 
 /*
  * VOID
@@ -633,8 +633,8 @@ ExReinitializeResourceLite (
 VOID
 FASTCALL
 ExReInitializeRundownProtection (
-	PVOID	ProcessRundown
-	);
+    IN PEX_RUNDOWN_REF RunRef
+    );
 
 /* ReactOS Specific: begin */
 VOID
@@ -675,22 +675,22 @@ ExReleaseResourceForThreadLite (
 	PERESOURCE		Resource,
 	ERESOURCE_THREAD	ResourceThreadId
 	);
-BOOLEAN
+VOID
 FASTCALL
 ExReleaseRundownProtection (
-	IN PVOID	ProcessRundownProtect
-	);
-BOOLEAN
+    IN PEX_RUNDOWN_REF RunRef
+    );
+VOID
 FASTCALL
 ExReleaseRundownProtectionEx (
-	IN PVOID	ProcessRundownProtect,
-	IN PVOID	Unknown
-	);
+    IN PEX_RUNDOWN_REF RunRef,
+    IN ULONG Count
+    );
 VOID
 FASTCALL
 ExRundownCompleted (
-	PVOID	ProcessRundown
-	);
+    IN PEX_RUNDOWN_REF RunRef
+    );
 VOID
 STDCALL
 ExSetResourceOwnerPointer (
@@ -748,11 +748,11 @@ ExUuidCreate(
     OUT UUID *Uuid
     );
 
-PVOID
+VOID
 FASTCALL
 ExWaitForRundownProtectionRelease (
-	PVOID		ProcessRundownProtect
-	);
+    IN PEX_RUNDOWN_REF RunRef
+    );
 
 PSLIST_ENTRY
 FASTCALL
