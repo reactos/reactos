@@ -382,27 +382,11 @@ SOURCE=.\shell\entries.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\shell\filechild.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\filechild.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\shell\mainframe.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\shell\mainframe.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\pane.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\shell\pane.h
 # End Source File
 # Begin Source File
 

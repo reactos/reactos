@@ -46,25 +46,14 @@ MainFrame::MainFrame(HWND hwnd)
 
 	_hAccel = LoadAccelerators(g_Globals._hInstance, MAKEINTRESOURCE(IDA_EXPLORER));
 
-
 	CLIENTCREATESTRUCT ccs;
 
 	ccs.hWindowMenu = _hMenuWindow;
 	ccs.idFirstChild = IDW_FIRST_CHILD;
 
-#ifndef _NO_MDI
-	_hmdiclient = CreateWindowEx(0, TEXT("MDICLIENT"), NULL,
-					WS_CHILD|WS_CLIPCHILDREN|WS_VSCROLL|WS_HSCROLL|WS_VISIBLE|WS_BORDER,
-					0, 0, 0, 0,
-					hwnd, 0, g_Globals._hInstance, &ccs);
-#endif
-
 	TBBUTTON toolbarBtns[] = {
 		{0, 0, 0, BTNS_SEP, {0, 0}, 0, 0},
 		{0, ID_WINDOW_NEW, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{1, ID_WINDOW_CASCADE, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{2, ID_WINDOW_TILE_HORZ, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
-		{3, ID_WINDOW_TILE_VERT, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 /*TODO
 		{4, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
 		{5, ID_... , TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0},
@@ -81,65 +70,45 @@ MainFrame::MainFrame(HWND hwnd)
 	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_TOOL_BAR, MF_BYCOMMAND|MF_CHECKED);
 
 
-	TBBUTTON drivebarBtn = {0, 0, TBSTATE_ENABLED, BTNS_SEP, {0, 0}, 0, 0};
-	int btn = 1;
-	PTSTR p;
-
-	_hdrivebar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE|CCS_NOMOVEY|TBSTYLE_LIST,
-				IDW_DRIVEBAR, 2, g_Globals._hInstance, IDB_DRIVEBAR, &drivebarBtn,
-				1, 16, 13, 16, 13, sizeof(TBBUTTON));
-	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_DRIVE_BAR, MF_BYCOMMAND|MF_CHECKED);
-
-
-	GetLogicalDriveStrings(BUFFER_LEN, _drives);
-
-	drivebarBtn.fsStyle = BTNS_BUTTON;
-
-	 // insert explorer window button
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)TEXT("Explore\0"));
-
-	drivebarBtn.idCommand = ID_DRIVE_DESKTOP;
-	SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-	++drivebarBtn.iString;
-
-	 // register windows drive root strings
-	SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)_drives);
-
-	drivebarBtn.idCommand = ID_DRIVE_FIRST;
-
-	for(p=_drives; *p; ) {
-		 // insert drive letter
-		TCHAR b[3] = {tolower(*p)};
-		SendMessage(_hdrivebar, TB_ADDSTRING, 0, (LPARAM)b);
-
-		switch(GetDriveType(p)) {
-			case DRIVE_REMOVABLE:	drivebarBtn.iBitmap = 1;	break;
-			case DRIVE_CDROM:		drivebarBtn.iBitmap = 3;	break;
-			case DRIVE_REMOTE:		drivebarBtn.iBitmap = 4;	break;
-			case DRIVE_RAMDISK: 	drivebarBtn.iBitmap = 5;	break;
-			default:/*DRIVE_FIXED*/ drivebarBtn.iBitmap = 2;
-		}
-
-		SendMessage(_hdrivebar, TB_INSERTBUTTON, btn++, (LPARAM)&drivebarBtn);
-		++drivebarBtn.idCommand;
-		++drivebarBtn.iString;
-
-		while(*p++);
-	}
-
-
-	 // address & command bar
-	WindowCanvas canvas(hwnd);
-	RECT rect = {0, 0, 0, 0};
-	DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-
-	/* CreateStatusWindow does not accept WS_BORDER
-		_hstatusbar = CreateWindowEx(WS_EX_NOPARENTNOTIFY, STATUSCLASSNAME, 0,
-						WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_BORDER|CCS_NODIVIDER, 0,0,0,0,
-						hwnd, (HMENU)IDW_STATUSBAR, g_Globals._hInstance, 0);*/
-
 	_hstatusbar = CreateStatusWindow(WS_CHILD|WS_VISIBLE, 0, hwnd, IDW_STATUSBAR);
 	CheckMenuItem(_menu_info._hMenuOptions, ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
+
+	update_explorer_view();
+}
+
+void MainFrame::update_explorer_view()
+{
+	int split_pos = DEFAULT_SPLIT_POS;	//@@
+
+	if (_shellBrowser.get()) {
+		split_pos = _shellBrowser->_split_pos;
+		delete _shellBrowser.release();
+	}
+
+	 // create explorer treeview
+	if (_create_info._open_mode & OWM_EXPLORE) {
+		if (!_left_hwnd) {
+			WindowCanvas canvas(_hwnd);
+			RECT rect = {0, 0, 0, 0};
+			DrawText(canvas, TEXT("My"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+
+			_left_hwnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_TREEVIEW, NULL,
+						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
+						0, rect.top, split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
+						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
+		}
+	} else {
+		if (_left_hwnd) {
+			DestroyWindow(_left_hwnd);
+			_left_hwnd = 0;
+		}
+	}
+
+	_shellBrowser = auto_ptr<ShellBrowserChild>(new ShellBrowserChild(_hwnd, _left_hwnd, _right_hwnd, _create_info));
+
+	 // update _shellBrowser->_clnt_rect
+	ClientRect rect(_hwnd);
+	resize_frame(rect.right, rect.bottom);
 }
 
 
@@ -172,7 +141,7 @@ HWND MainFrame::Create(LPCTSTR path, int mode)
 	MainFrame* pMainFrame = GET_WINDOW(MainFrame, hMainFrame);
 
 	if (pMainFrame)
-		pMainFrame->CreateChild(path, mode);
+		pMainFrame->jump_to(path, mode);
 
 	return hMainFrame;
 }
@@ -188,20 +157,28 @@ HWND MainFrame::Create(LPCITEMIDLIST pidl, int mode)
 	MainFrame* pMainFrame = GET_WINDOW(MainFrame, hMainFrame);
 
 	if (pMainFrame)
-		pMainFrame->CreateChild(pidl, mode);
+		pMainFrame->jump_to(pidl, mode);
 
 	return hMainFrame;
 }
 
 
-ChildWindow* MainFrame::CreateChild(LPCTSTR path, int mode)
+void MainFrame::jump_to(LPCTSTR path, int mode)
 {
-	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode, (LPARAM)path));
+	_create_info._open_mode = mode;
+	_create_info._shell_path = path;
+	_create_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+
+	update_explorer_view();
 }
 
-ChildWindow* MainFrame::CreateChild(LPCITEMIDLIST pidl, int mode)
+void MainFrame::jump_to(LPCITEMIDLIST path, int mode)
 {
-	return reinterpret_cast<ChildWindow*>(SendMessage(_hwnd, PM_OPEN_WINDOW, mode|OWM_PIDL, (LPARAM)pidl));
+	_create_info._open_mode = mode;
+	_create_info._shell_path = path;
+	_create_info._root_shell_path = DesktopFolderPath();	//@@
+
+	update_explorer_view();
 }
 
 
@@ -233,25 +210,7 @@ int MainFrame::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 				} catch(COMException& e) {
 					HandleException(e, g_Globals._hMainWnd);
 				}
-			}/*TEST
-			else { // !(attribs & SFGAO_FOLDER))
-				SHELLEXECUTEINFOA shexinfo;
-
-				shexinfo.cbSize = sizeof(SHELLEXECUTEINFOA);
-				shexinfo.fMask = SEE_MASK_INVOKEIDLIST;
-				shexinfo.hwnd = NULL;
-				shexinfo.lpVerb = NULL;
-				shexinfo.lpFile = NULL;
-				shexinfo.lpParameters = NULL;
-				shexinfo.lpDirectory = NULL;
-				shexinfo.nShow = SW_NORMAL;
-				shexinfo.lpIDList = ILCombine(parent_pidl, pidl);
-
-				if (ShellExecuteExA(&shexinfo))
-					++cnt;
-
-				ILFree((LPITEMIDLIST)shexinfo.lpIDList);
-			}*/
+			}
 	}
 
 	return cnt;
@@ -263,11 +222,6 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	switch(nmsg) {
 	  case PM_TRANSLATE_MSG: {
 		MSG* pmsg = (MSG*) lparam;
-
-#ifndef _NO_MDI
-		if (_hmdiclient && TranslateMDISysAccel(_hmdiclient, pmsg))
-			return TRUE;
-#endif
 
 		if (TranslateAccelerator(_hwnd, _hAccel, pmsg))
 			return TRUE;
@@ -284,7 +238,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_SIZE:
 		resize_frame(LOWORD(lparam), HIWORD(lparam));
-		break;	// do not pass message to DefFrameProc
+		break;
 
 	  case WM_GETMINMAXINFO: {
 		LPMINMAXINFO lpmmi = (LPMINMAXINFO)lparam;
@@ -330,23 +284,7 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			path = buffer;
 		}
 
-		{
-			OBJ_CONTEXT("create ShellChildWndInfo", path);
-
-			 // Shell Namespace as default view
-			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
-
-			create_info._pos.showCmd = SW_SHOWMAXIMIZED;
-			create_info._pos.rcNormalPosition.left = 0;
-			create_info._pos.rcNormalPosition.top = 0;
-			create_info._pos.rcNormalPosition.right = 600;
-			create_info._pos.rcNormalPosition.bottom = 280;
-
-			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
-
-		//	FileChildWindow::create(_hmdiclient, create_info);
-			return (LRESULT)ShellBrowserChild::create(create_info);
-		}
+		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
 		break;}
 
 	  case PM_GET_CONTROLWINDOW:
@@ -354,60 +292,30 @@ LRESULT MainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return (LRESULT)(HWND)_hstatusbar;
 		break;
 
-	  case PM_SETSTATUSTEXT:
-		SendMessage(_hstatusbar, SB_SETTEXT, 0, lparam);
-		break;
 
 	  default:
-#ifndef _NO_MDI
-		return DefFrameProc(_hwnd, _hmdiclient, nmsg, wparam, lparam);
-#else
-		return super::WNdProc(nmsg, wparam, lparam);
-#endif
+		if (_shellBrowser.get())
+			return _shellBrowser->WndProc(nmsg, wparam, lparam);
+		else
+			return super::WndProc(nmsg, wparam, lparam);
 	}
 
 	return 0;
 }
 
 
+int MainFrame::Notify(int id, NMHDR* pnmh)
+{
+	if (_shellBrowser.get())
+		return _shellBrowser->Notify(id, pnmh);
+
+	return super::Notify(id, pnmh);
+}
+
+
 int MainFrame::Command(int id, int code)
 {
 	CONTEXT("MainFrame::Command()");
-
-#ifndef _NO_MDI
-	HWND hwndClient = (HWND) SendMessage(_hmdiclient, WM_MDIGETACTIVE, 0, 0);
-
-	if (SendMessage(hwndClient, PM_DISPATCH_COMMAND, MAKELONG(id,code), 0))
-		return 0;
-#endif
-
-	if (id>=ID_DRIVE_FIRST && id<=ID_DRIVE_FIRST+0xFF) {
-		TCHAR drv[_MAX_DRIVE], path[MAX_PATH];
-		LPCTSTR root = _drives;
-
-		for(int i=id-ID_DRIVE_FIRST; i--; root++)
-			while(*root)
-				++root;
-
-		if (activate_drive_window(root))
-			return 0;
-
-		_tsplitpath(root, drv, 0, 0, 0);
-
-		if (!SetCurrentDirectory(drv)) {
-			display_error(_hwnd, GetLastError());
-			return 0;
-		}
-
-		GetCurrentDirectory(MAX_PATH, path); ///@todo store last directory per drive
-
-#ifndef _NO_MDI
-		FileChildWindow::create(FileChildWndInfo(_hmdiclient, path));
-#else
-		///@todo SDI implementation
-#endif
-		return 1;
-	}
 
 	switch(id) {
 	  case ID_FILE_EXIT:
@@ -419,37 +327,11 @@ int MainFrame::Command(int id, int code)
 
 		GetCurrentDirectory(MAX_PATH, path);
 
-#ifndef _NO_MDI
-		FileChildWindow::create(FileChildWndInfo(_hmdiclient, path));
-#else
-		///@todo SDI implementation
-#endif
+		MainFrame::Create(path);
 		break;}
-
-#ifndef _NO_MDI
-	  case ID_WINDOW_CASCADE:
-		SendMessage(_hmdiclient, WM_MDICASCADE, 0, 0);
-		break;
-
-	  case ID_WINDOW_TILE_HORZ:
-		SendMessage(_hmdiclient, WM_MDITILE, MDITILE_HORIZONTAL, 0);
-		break;
-
-	  case ID_WINDOW_TILE_VERT:
-		SendMessage(_hmdiclient, WM_MDITILE, MDITILE_VERTICAL, 0);
-		break;
-
-	  case ID_WINDOW_ARRANGE:
-		SendMessage(_hmdiclient, WM_MDIICONARRANGE, 0, 0);
-		break;
-#endif
 
 	  case ID_VIEW_TOOL_BAR:
 		toggle_child(_hwnd, id, _htoolbar);
-		break;
-
-	  case ID_VIEW_DRIVE_BAR:
-		toggle_child(_hwnd, id, _hdrivebar);
 		break;
 
 	  case ID_VIEW_STATUSBAR:
@@ -473,21 +355,6 @@ int MainFrame::Command(int id, int code)
 		WinHelp(_hwnd, TEXT("explorer")/*file explorer.hlp*/, HELP_INDEX, 0);
 		break;
 
-	  case ID_VIEW_FULLSCREEN:
-		CheckMenuItem(_menu_info._hMenuOptions, id, toggle_fullscreen()?MF_CHECKED:0);
-		break;
-
-	  case ID_DRIVE_DESKTOP: {
-		TCHAR path[MAX_PATH];
-
-		if (activate_child_window(TEXT("Desktop")))
-			break;
-
-		GetCurrentDirectory(MAX_PATH, path);
-
-		ShellBrowserChild::create(ShellChildWndInfo(_hmdiclient, path, DesktopFolderPath()));
-		break;}
-
 	///@todo There are even more menu items!
 
 	  case ID_ABOUT_WINDOWS:
@@ -503,11 +370,7 @@ int MainFrame::Command(int id, int code)
 		break;
 
 	  default:
-#ifndef _NO_MDI
-		return DefFrameProc(_hwnd, _hmdiclient, WM_COMMAND, MAKELONG(id,code), 0);
-#else
 		return 1;
-#endif
 	}
 
 	return 0;
@@ -516,21 +379,10 @@ int MainFrame::Command(int id, int code)
 
 void MainFrame::resize_frame_rect(PRECT prect)
 {
-	int new_top;
-
 	if (IsWindowVisible(_htoolbar)) {
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
 		ClientRect rt(_htoolbar);
-		prect->top = rt.bottom+3;
-//		prect->bottom -= rt.bottom+3;
-	}
-
-	if (IsWindowVisible(_hdrivebar)) {
-		SendMessage(_hdrivebar, WM_SIZE, 0, 0);
-		ClientRect rt(_hdrivebar);
-		new_top = --prect->top + rt.bottom+3;
-		MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
-		prect->top = new_top;
+		prect->top = rt.bottom+2;
 //		prect->bottom -= rt.bottom+2;
 	}
 
@@ -542,19 +394,6 @@ void MainFrame::resize_frame_rect(PRECT prect)
 		ClientRect rt(_hstatusbar);
 		prect->bottom -= rt.bottom;
 	}
-
-	if (IsWindowVisible(_haddressedit) || IsWindowVisible(_hcommandedit)) {
-		ClientRect rt(_haddressedit);
-		prect->bottom -= rt.bottom;
-
-		int mid = (prect->right-prect->left) / 2;	///@todo use split bar
-		SetWindowPos(_haddressedit, 0, 0, prect->bottom, mid, rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
-		SetWindowPos(_hcommandedit, 0, mid+1, prect->bottom, prect->right-(mid+1), rt.bottom, SWP_NOACTIVATE|SWP_NOZORDER);
-	}
-
-#ifndef _NO_MDI
-	MoveWindow(_hmdiclient, prect->left-1,prect->top-1,prect->right-prect->left+2,prect->bottom-prect->top+1, TRUE);
-#endif
 }
 
 void MainFrame::resize_frame(int cx, int cy)
@@ -567,6 +406,11 @@ void MainFrame::resize_frame(int cx, int cy)
 	rect.bottom = cy;
 
 	resize_frame_rect(&rect);
+
+	if (_shellBrowser.get()) {
+		_shellBrowser->_clnt_rect = rect;
+		_shellBrowser->resize_children();
+	}
 }
 
 void MainFrame::resize_frame_client()
@@ -598,64 +442,11 @@ void MainFrame::frame_get_clientspace(PRECT prect)
 		prect->top += rt.bottom+2;
 	}
 
-	if (IsWindowVisible(_hdrivebar)) {
-		ClientRect rt(_hdrivebar);
-		prect->top += rt.bottom+2;
-	}
-
 	if (IsWindowVisible(_hstatusbar)) {
 		ClientRect rt(_hstatusbar);
 		prect->bottom -= rt.bottom;
 	}
 }
-
-BOOL MainFrame::toggle_fullscreen()
-{
-	RECT rt;
-
-	if ((_fullscreen._mode=!_fullscreen._mode)) {
-		GetWindowRect(_hwnd, &_fullscreen._orgPos);
-		_fullscreen._wasZoomed = IsZoomed(_hwnd);
-
-		Frame_CalcFrameClient(_hwnd, &rt);
-		ClientToScreen(_hwnd, (LPPOINT)&rt.left);
-		ClientToScreen(_hwnd, (LPPOINT)&rt.right);
-
-		rt.left = _fullscreen._orgPos.left-rt.left;
-		rt.top = _fullscreen._orgPos.top-rt.top;
-		rt.right = GetSystemMetrics(SM_CXSCREEN)+_fullscreen._orgPos.right-rt.right;
-		rt.bottom = GetSystemMetrics(SM_CYSCREEN)+_fullscreen._orgPos.bottom-rt.bottom;
-
-		MoveWindow(_hwnd, rt.left, rt.top, rt.right-rt.left, rt.bottom-rt.top, TRUE);
-	} else {
-		MoveWindow(_hwnd, _fullscreen._orgPos.left, _fullscreen._orgPos.top,
-							_fullscreen._orgPos.right-_fullscreen._orgPos.left,
-							_fullscreen._orgPos.bottom-_fullscreen._orgPos.top, TRUE);
-
-		if (_fullscreen._wasZoomed)
-			ShowWindow(_hwnd, WS_MAXIMIZE);
-	}
-
-	return _fullscreen._mode;
-}
-
-void MainFrame::fullscreen_move()
-{
-	RECT rt, pos;
-	GetWindowRect(_hwnd, &pos);
-
-	Frame_CalcFrameClient(_hwnd, &rt);
-	ClientToScreen(_hwnd, (LPPOINT)&rt.left);
-	ClientToScreen(_hwnd, (LPPOINT)&rt.right);
-
-	rt.left = pos.left-rt.left;
-	rt.top = pos.top-rt.top;
-	rt.right = GetSystemMetrics(SM_CXSCREEN)+pos.right-rt.right;
-	rt.bottom = GetSystemMetrics(SM_CYSCREEN)+pos.bottom-rt.bottom;
-
-	MoveWindow(_hwnd, rt.left, rt.top, rt.right-rt.left, rt.bottom-rt.top, TRUE);
-}
-
 
 void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild)
 {
@@ -665,74 +456,32 @@ void MainFrame::toggle_child(HWND hwnd, UINT cmd, HWND hchild)
 
 	ShowWindow(hchild, vis?SW_HIDE:SW_SHOW);
 
-	if (_fullscreen._mode)
-		fullscreen_move();
-
 	resize_frame_client();
 }
 
-#ifndef _NO_MDI
-bool MainFrame::activate_drive_window(LPCTSTR path)
+
+BOOL CALLBACK ExecuteDialog::WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	TCHAR drv1[_MAX_DRIVE], drv2[_MAX_DRIVE];
-	HWND child_wnd;
+	static struct ExecuteDialog* dlg;
 
-	_tsplitpath(path, drv1, 0, 0, 0);
+	switch(nmsg) {
+	  case WM_INITDIALOG:
+		dlg = (struct ExecuteDialog*) lparam;
+		return 1;
 
-	 // search for a already open window for the same drive
-	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
+	  case WM_COMMAND: {
+		int id = (int)wparam;
 
-		if (child) {
-			_tsplitpath(child->get_root()._path, drv2, 0, 0, 0);
+		if (id == IDOK) {
+			GetWindowText(GetDlgItem(hwnd, 201), dlg->cmd, MAX_PATH);
+			dlg->cmdshow = Button_GetState(GetDlgItem(hwnd,214))&BST_CHECKED?
+											SW_SHOWMINIMIZED: SW_SHOWNORMAL;
+			EndDialog(hwnd, id);
+		} else if (id == IDCANCEL)
+			EndDialog(hwnd, id);
 
-			if (!lstrcmpi(drv2, drv1)) {
-				SendMessage(_hmdiclient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);
-
-				if (IsMinimized(child_wnd))
-					ShowWindow(child_wnd, SW_SHOWNORMAL);
-
-				return true;
-			}
-		}
+		return 1;}
 	}
 
-	return false;
+	return 0;
 }
-
-bool MainFrame::activate_child_window(LPCTSTR filesys)
-{
-	HWND child_wnd;
-
-	 // search for a already open window of the given file system name
-	for(child_wnd=::GetNextWindow(_hmdiclient,GW_CHILD); child_wnd; child_wnd=::GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		FileChildWindow* child = (FileChildWindow*) SendMessage(child_wnd, PM_GET_FILEWND_PTR, 0, 0);
-
-		if (child) {
-			if (!lstrcmpi(child->get_root()._fs, filesys)) {
-				SendMessage(_hmdiclient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);
-
-				if (IsMinimized(child_wnd))
-					ShowWindow(child_wnd, SW_SHOWNORMAL);
-
-				return true;
-			}
-		} else {
-			ShellBrowserChild* shell_child = (ShellBrowserChild*) SendMessage(child_wnd, PM_GET_SHELLBROWSER_PTR, 0, 0);
-
-			if (shell_child) {
-				if (!lstrcmpi(shell_child->get_root()._fs, filesys)) {
-					SendMessage(_hmdiclient, WM_MDIACTIVATE, (WPARAM)child_wnd, 0);
-
-					if (IsMinimized(child_wnd))
-						ShowWindow(child_wnd, SW_SHOWNORMAL);
-
-					return true;
-				}
-			}
-		}
-	}
-
-	return false;
-}
-#endif

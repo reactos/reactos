@@ -40,11 +40,6 @@ BEGIN
     POPUP "&Fereastrã"
     BEGIN
         MENUITEM "&Fereastrã Nouã",             ID_WINDOW_NEW
-        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Aliniazã &Orizontal",         ID_WINDOW_TILE_HORZ
-        MENUITEM "Aliniazã &Vertical\tShift+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "Aranjeazã automat",           ID_WINDOW_AUTOSORT
-        MENUITEM "Aranjeazã &Simbolurile",      ID_WINDOW_ARRANGE
         MENUITEM "&Resetare\tF5",               ID_REFRESH
     END
     POPUP "&Ajutor"
@@ -160,8 +155,6 @@ IDB_LOGOV16             BITMAP  DISCARDABLE     "res/logov16.bmp"
 IDA_EXPLORER ACCELERATORS DISCARDABLE 
 BEGIN
     "X",            ID_FILE_EXIT,           VIRTKEY, ALT, NOINVERT
-    "S",            ID_VIEW_FULLSCREEN,     VIRTKEY, SHIFT, CONTROL, 
-                                                    NOINVERT
 END
 
 IDA_SEARCH_PROGRAM ACCELERATORS DISCARDABLE 
@@ -201,11 +194,6 @@ BEGIN
     POPUP "&Fenster"
     BEGIN
         MENUITEM "Neues &Fenster",              ID_WINDOW_NEW
-        MENUITEM "Über&lappend\tUmschalt+F5",   ID_WINDOW_CASCADE
-        MENUITEM "&Untereinander",              ID_WINDOW_TILE_HORZ
-        MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "au&tomatisch anordnen",       ID_WINDOW_AUTOSORT
-        MENUITEM "&Symbole anordnen",           ID_WINDOW_ARRANGE
         MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
     END
     POPUP "&Help"
@@ -407,11 +395,6 @@ BEGIN
     POPUP "&Window"
     BEGIN
         MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
         MENUITEM "&Refresh\tF5",                ID_REFRESH
     END
     POPUP "&Help"
@@ -591,11 +574,6 @@ BEGIN
     POPUP "&Window"
     BEGIN
         MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
         MENUITEM "&Refresh\tF5",                ID_REFRESH
     END
     POPUP "A&ide"

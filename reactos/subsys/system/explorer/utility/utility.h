@@ -392,20 +392,6 @@ inline void ScreenToClient(HWND hwnd, RECT* prect)
  {::ScreenToClient(hwnd,(LPPOINT)&prect->left); ::ScreenToClient(hwnd,(LPPOINT)&prect->right);}
 
 
- /// structure containing information about full screen display of the frame window
-struct FullScreenParameters
-{
-	FullScreenParameters()
-	 :	_mode(FALSE)
-	{
-	}
-
-	BOOL	_mode;
-	RECT	_orgPos;
-	BOOL	_wasZoomed;
-};
-
-
  // drawing utilities
 
  /// PaintCanvas is a encapsulation of device contexts managed by BeginPaint()/EndPaint().

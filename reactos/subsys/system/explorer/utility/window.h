@@ -40,16 +40,6 @@ typedef set<HWND> WindowSet;
  */
 
 
- /// information structure for creation of a MDI child window
-struct ChildWndInfo
-{
-	ChildWndInfo(HWND hmdiclient)
-	 :	_hmdiclient(hmdiclient) {}
-
-	HWND	_hmdiclient;
-};
-
-
  /**
 	Class Window is the base class for several C++ window wrapper classes.
 	Window objects are allocated from the heap. They are automatically freed
@@ -75,9 +65,6 @@ struct Window : public WindowHandle
 				DWORD dwExStyle, LPCTSTR lpClassName, LPCTSTR lpWindowName,
 				DWORD dwStyle, int x, int y, int w, int h,
 				HWND hwndParent=0, HMENU hMenu=0/*, LPVOID lpParam=0*/);
-
-	static Window* create_mdi_child(const ChildWndInfo& info, const MDICREATESTRUCT& mcs, CREATORFUNC_INFO creator);
-//	static Window* create_property_sheet(struct PropertySheetDialog* ppsd, CREATORFUNC creator, const void* info);
 
 	static LRESULT CALLBACK WindowWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 	static INT_PTR CALLBACK DialogProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
@@ -129,9 +116,7 @@ protected:
 	static StaticWindowData& GetStaticWindowData();
 
 
-	 // MDI child creation
 	static HHOOK s_hcbtHook;
-	static LRESULT CALLBACK MDICBTHookProc(int code, WPARAM wparam, LPARAM lparam);
 	static LRESULT CALLBACK PropSheetCBTHookProc(int code, WPARAM wparam, LPARAM lparam);
 
 	static WindowSet s_pretranslate_windows;
@@ -256,7 +241,6 @@ struct IconWindowClass : public WindowClass
 
 
  // private message constants
-#define	PM_DISPATCH_COMMAND		(WM_APP+0x00)
 #define	PM_TRANSLATE_MSG		(WM_APP+0x01)
 
 
@@ -265,7 +249,7 @@ struct IconWindowClass : public WindowClass
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 
 
- /// menu info structure for MDI child windows
+ /// menu info structure
 struct MenuInfo
 {
 	HMENU	_hMenuView;
@@ -275,41 +259,6 @@ struct MenuInfo
 #define	PM_FRM_GET_MENUINFO		(WM_APP+0x02)
 
 #define	Frame_GetMenuInfo(hwnd) ((MenuInfo*)SNDMSG(hwnd, PM_FRM_GET_MENUINFO, 0, 0))
-
-
- /**
-	Class ChildWindow represents MDI child windows.
-	It is used with class MainFrame.
- */
-struct ChildWindow : public Window
-{
-	typedef Window super;
-
-	ChildWindow(HWND hwnd, const ChildWndInfo& info);
-
-	static ChildWindow* create(const ChildWndInfo& info, const RECT& rect, CREATORFUNC_INFO creator,
-								LPCTSTR classname, LPCTSTR title=NULL);
-
-protected:
-	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
-
-	virtual void resize_children(int cx, int cy);
-
-protected:
-	MenuInfo*_menu_info;
-
-	WindowHandle _left_hwnd;
-	WindowHandle _right_hwnd;
-	int 	_focus_pane;		// 0: left	1: right
-
-	int 	_split_pos;
-	int		_last_split;
-
-	HWND	_hwndFrame;
-	String	_statusText;
-};
-
-#define	PM_SETSTATUSTEXT		(WM_APP+0x1D)
 
 
  /**

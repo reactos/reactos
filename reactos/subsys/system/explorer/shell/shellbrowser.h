@@ -29,27 +29,23 @@
 #include "../utility/shellbrowserimpl.h"
 
 
- /// Implementation of IShellBrowserImpl interface in explorer child windows
-struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
+ /// information structure to hold current shell folder information
+struct ShellPathInfo
 {
-	typedef ChildWindow super;
+	ShellPathInfo(int mode=0) : _open_mode(mode) {}
 
-	ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info);
+	ShellPath	_shell_path;
+	ShellPath	_root_shell_path;
+
+	int			_open_mode;	//OPEN_WINDOW_MODE
+};
+
+
+ /// Implementation of IShellBrowserImpl interface in explorer child windows
+struct ShellBrowserChild : public IShellBrowserImpl
+{
+	ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info);
 	~ShellBrowserChild();
-
-	static ShellBrowserChild* create(const FileChildWndInfo& info)
-	{
-#ifndef _NO_MDI
-		ChildWindow* child = ChildWindow::create(info, info._pos.rcNormalPosition,
-			WINDOW_CREATOR_INFO(ShellBrowserChild,ShellChildWndInfo), CLASSNAME_CHILDWND, NULL);
-#else
-		///@todo SDI implementation
-#endif
-
-		ShowWindow(*child, info._pos.showCmd);
-
-		return static_cast<ShellBrowserChild*>(child);
-	}
 
 	//IOleWindow
 	virtual HRESULT STDMETHODCALLTYPE GetWindow(HWND* lphwnd)
@@ -104,10 +100,14 @@ struct ShellBrowserChild : public ChildWindow, public IShellBrowserImpl
 	const Root& get_root() const {return _root;}
 
 protected:
-	Root _root;
+	HWND	_hwnd;
+	HWND	_left_hwnd;
+	WindowHandle& _right_hwnd;
+	ShellPathInfo& _create_info;
+
+	Root	_root;
 
 	WindowHandle _hWndFrame;
-	ShellChildWndInfo _create_info;
 	ShellFolder	_folder;
 
 	IShellView*	_pShellView;	// current hosted shellview
@@ -117,11 +117,12 @@ protected:
 
 	HTREEITEM _last_sel;
 
+public:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	int 	Notify(int id, NMHDR* pnmh);
 
-	LRESULT	Init(LPCREATESTRUCT);
-	void	InitializeTree(/*const FileChildWndInfo& info*/);
+	LRESULT	Init(HWND hWndFrame);
+	void	InitializeTree();
 	int		InsertSubitems(HTREEITEM hParentItem, Entry* entry, IShellFolder* pParentFolder);
 	bool	InitDragDrop();
 
@@ -135,4 +136,12 @@ protected:
 	void	UpdateFolderView(IShellFolder* folder);
 	void	Tree_DoItemMenu(HWND hwndTreeView, HTREEITEM hItem, LPPOINT pptScreen);
 	bool	expand_folder(ShellDirectory* entry);
+
+	// SDI integration
+public:
+	int 	_split_pos;
+	int		_last_split;
+	RECT	_clnt_rect;
+
+	void	resize_children();
 };

@@ -80,8 +80,6 @@ OBJECTS = \
 	winfs.o \
 	shellfs.o \
 	mainframe.o \
-	filechild.o \
-	pane.o \
 	shellbrowser.o \
 	desktop.o \
 	desktopbar.o \

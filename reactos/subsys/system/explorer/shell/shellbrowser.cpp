@@ -48,14 +48,22 @@ static LPARAM TreeView_GetItemData(HWND hwndTreeView, HTREEITEM hItem)
 }
 
 
-ShellBrowserChild::ShellBrowserChild(HWND hwnd, const ShellChildWndInfo& info)
- :	super(hwnd, info),
-	_create_info(info)
+ShellBrowserChild::ShellBrowserChild(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info)
+ :	_hwnd(hwnd),
+	_left_hwnd(left_hwnd),
+	_right_hwnd(right_hwnd),
+	_create_info(create_info)
 {
 	_pShellView = NULL;
 	_pDropTarget = NULL;
 	_himlSmall = 0;
 	_last_sel = 0;
+
+	 // SDI integration
+	_split_pos = DEFAULT_SPLIT_POS;
+	_last_split = DEFAULT_SPLIT_POS;
+
+	Init(hwnd);
 }
 
 ShellBrowserChild::~ShellBrowserChild()
@@ -67,17 +75,19 @@ ShellBrowserChild::~ShellBrowserChild()
 		_pDropTarget->Release();
 		_pDropTarget = NULL;
 	}
+
+	if (_right_hwnd) {
+		DestroyWindow(_right_hwnd);
+		_right_hwnd = 0;
+	}
 }
 
 
-LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
+LRESULT ShellBrowserChild::Init(HWND hWndFrame)
 {
 	CONTEXT("ShellBrowserChild::Init()");
 
-	if (super::Init(pcs))
-		return 1;
-
-	_hWndFrame = GetParent(pcs->hwndParent);
+	_hWndFrame = hWndFrame;
 
 	ClientRect rect(_hwnd);
 
@@ -87,19 +97,13 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 //	_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
 
 
-	 // create explorer treeview
-	if (_create_info._open_mode & OWM_EXPLORE)
-		_left_hwnd = CreateWindowEx(0, WC_TREEVIEW, NULL,
-						WS_CHILD|WS_TABSTOP|WS_VISIBLE|WS_CHILD|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_NOTOOLTIPS|TVS_SHOWSELALWAYS,
-						0, rect.top, _split_pos-SPLIT_WIDTH/2, rect.bottom-rect.top,
-						_hwnd, (HMENU)IDC_FILETREE, g_Globals._hInstance, 0);
-
 	if (_left_hwnd) {
 		InitializeTree();
 
 		InitDragDrop();
-	} else
-		UpdateFolderView(_create_info._shell_path.get_folder());
+	}
+
+	UpdateFolderView(_create_info._shell_path.get_folder());
 
 	return 0;
 }
@@ -379,7 +383,7 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 		pLastShellView->GetCurrentInfo(&fs);
 	else {
 		fs.ViewMode = _create_info._open_mode&OWM_DETAILS? FVM_DETAILS: FVM_ICON;
-		fs.fFlags = FWF_NOCLIENTEDGE|FWF_BESTFITWINDOW;
+		fs.fFlags = FWF_BESTFITWINDOW;
 	}
 
 	HRESULT hr = folder->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
@@ -398,11 +402,34 @@ void ShellBrowserChild::UpdateFolderView(IShellFolder* folder)
 		pLastShellView->DestroyViewWindow();
 		pLastShellView->Release();
 
-		ClientRect clnt(_hwnd);
-		resize_children(clnt.right, clnt.bottom);
+		resize_children();
 	}
 
 	_pShellView->UIActivate(SVUIA_ACTIVATE_NOFOCUS);
+}
+
+
+void ShellBrowserChild::resize_children()
+{
+	RECT rect = _clnt_rect;
+
+	HDWP hdwp = BeginDeferWindowPos(2);
+
+	int cx = rect.left;
+
+	if (_left_hwnd) {
+		cx = _split_pos + SPLIT_WIDTH/2;
+
+		hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, rect.left, rect.top, _split_pos-SPLIT_WIDTH/2-rect.left, rect.bottom-rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
+	} else {
+		_split_pos = 0;
+		cx = 0;
+	}
+
+	if (_right_hwnd)
+		hdwp = DeferWindowPos(hdwp, _right_hwnd, 0, rect.left+cx+1, rect.top, rect.right-cx, rect.bottom-rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
+
+	EndDeferWindowPos(hdwp);
 }
 
 
@@ -412,22 +439,90 @@ LRESULT ShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_GETISHELLBROWSER:	// for Registry Explorer Plugin
 		return (LRESULT)static_cast<IShellBrowser*>(this);
 
-	  case PM_GET_SHELLBROWSER_PTR:
-		return (LRESULT)this;
 
-	  case PM_DISPATCH_COMMAND: {
-		switch(LOWORD(wparam)) {
-		  case ID_WINDOW_NEW: {CONTEXT("ShellBrowserChild PM_DISPATCH_COMMAND ID_WINDOW_NEW");
-			ShellBrowserChild::create(_create_info);
-			break;}
+		// SDI integration:
 
-		  default:
-			return FALSE;
+	  case WM_PAINT: {
+		PaintCanvas canvas(_hwnd);
+		ClientRect rt(_hwnd);
+		rt.left = _split_pos-SPLIT_WIDTH/2;
+		rt.right = _split_pos+SPLIT_WIDTH/2+1;
+
+		if (_right_hwnd) {
+			WindowRect right_rect(_right_hwnd);
+			ScreenToClient(_hwnd, &right_rect);
+			rt.top = right_rect.top;
+			rt.bottom = right_rect.bottom;
 		}
-		return TRUE;}
-	
-	  default:
-		return super::WndProc(nmsg, wparam, lparam);
+
+		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
+		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
+		SelectObject(canvas, lastBrush);
+		break;}
+
+	  case WM_SETCURSOR:
+		if (LOWORD(lparam) == HTCLIENT) {
+			POINT pt;
+			GetCursorPos(&pt);
+			ScreenToClient(_hwnd, &pt);
+
+			if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
+				SetCursor(LoadCursor(0, IDC_SIZEWE));
+				return TRUE;
+			}
+		}
+		goto def;
+
+	  case WM_LBUTTONDOWN: {
+		int x = GET_X_LPARAM(lparam);
+
+		ClientRect rt(_hwnd);
+
+		if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
+			_last_split = _split_pos;
+			SetCapture(_hwnd);
+		}
+
+		break;}
+
+	  case WM_LBUTTONUP:
+		if (GetCapture() == _hwnd)
+			ReleaseCapture();
+		break;
+
+	  case WM_KEYDOWN:
+		if (wparam == VK_ESCAPE)
+			if (GetCapture() == _hwnd) {
+				_split_pos = _last_split;
+				resize_children();
+				_last_split = -1;
+				ReleaseCapture();
+				SetCursor(LoadCursor(0, IDC_ARROW));
+			}
+		break;
+
+	  case WM_MOUSEMOVE:
+		if (GetCapture() == _hwnd) {
+			int x = LOWORD(lparam);
+
+			ClientRect rt(_hwnd);
+
+			if (x>=0 && x<rt.right) {
+				_split_pos = x;
+				resize_children();
+				rt.left = x-SPLIT_WIDTH/2;
+				rt.right = x+SPLIT_WIDTH/2+1;
+				InvalidateRect(_hwnd, &rt, FALSE);
+				UpdateWindow(_left_hwnd);
+				UpdateWindow(_hwnd);
+				UpdateWindow(_right_hwnd);
+			}
+		}
+		break;
+
+
+	  default: def:
+		return DefWindowProc(_hwnd, nmsg, wparam, lparam);
 	}
 
 	return 0;
@@ -440,7 +535,6 @@ int ShellBrowserChild::Notify(int id, NMHDR* pnmh)
 	  case TVN_ITEMEXPANDING:	OnTreeItemExpanding(id, (LPNMTREEVIEW)pnmh);	break;
 	  case TVN_SELCHANGED:		OnTreeItemSelected(id, (LPNMTREEVIEW)pnmh);		break;
 	  case NM_RCLICK:			OnTreeItemRClick(id, pnmh);						break;
-	  default:					return super::Notify(id, pnmh);
 	}
 
 	return 0;

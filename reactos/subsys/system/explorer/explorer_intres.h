@@ -90,7 +90,6 @@
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
 #define ID_VIEW_STATUSBAR               503
-#define ID_VIEW_DRIVE_BAR               507
 #define ID_VIEW_TOOL_BAR                508
 #define IDC_ROS_EXPLORER                1000
 #define IDC_WWW                         1012
@@ -101,10 +100,7 @@
 #define IDC_FILETREE                    10001
 #define ID_EXPLORER_FAQ                 10002
 #define ID_WINDOW_AUTOSORT              0x8003
-#define ID_VIEW_FULLSCREEN              0x8004
 #define ID_PREFERED_SIZES               0x8005
-#define ID_DRIVE_DESKTOP                0x9000
-#define ID_DRIVE_FIRST                  0x9006
 #define ID_ABOUT_WINDOWS                40002
 #define ID_ABOUT_EXPLORER               40003
 #define ID_DESKTOPBAR_SETTINGS          40004
@@ -115,11 +111,6 @@
 #define ID_EXPLORE                      40011
 #define ID_SWITCH_DESKTOP_1             40012
 #define ID_WINDOW_NEW                   0xE130
-#define ID_WINDOW_ARRANGE               0xE131
-#define ID_WINDOW_CASCADE               0xE132
-#define ID_WINDOW_TILE_HORZ             0xE133
-#define ID_WINDOW_TILE_VERT             0xE134
-#define ID_WINDOW_SPLIT                 0xE135
 #define ID_EDIT_PROPERTIES              57656
 #define ID_FILE_EXIT                    0xE141
 #define ID_HELP_USING                   0xE144
@@ -130,7 +121,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        162
+#define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         40015
 #define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101

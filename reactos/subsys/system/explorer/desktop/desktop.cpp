@@ -27,18 +27,16 @@
 
 
 #include "../utility/utility.h"
-#include "../utility/shellclasses.h"
-#include "../utility/shellbrowserimpl.h"
-#include "../utility/dragdropimpl.h"
-#include "../utility/window.h"
+
+#include "../explorer.h"	// for MainFrame::OpenShellFolders()
+#include "desktop.h"
 
 #include "../globals.h"
 #include "../externals.h"
-#include "../explorer_intres.h"
 
-#include "desktop.h"
 #include "../taskbar/desktopbar.h"
-#include "../shell/mainframe.h"	// for MainFrame::Create()
+
+#include "../explorer_intres.h"
 
 
 static BOOL (WINAPI*SetShellWindow)(HWND);

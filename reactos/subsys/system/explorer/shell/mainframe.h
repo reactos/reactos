@@ -43,42 +43,50 @@ struct MainFrame : public PreTranslateWindow
 	static HWND Create(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
 	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd);
 
-	ChildWindow* CreateChild(LPCTSTR path=NULL, int mode=OWM_EXPLORE|OWM_DETAILS);
-	ChildWindow* CreateChild(LPCITEMIDLIST pidl, int mode=OWM_EXPLORE|OWM_DETAILS|OWM_PIDL);
-
 protected:
-	FullScreenParameters _fullscreen;
-
-#ifndef _NO_MDI
-	HWND	_hmdiclient;
-#endif
-
 	WindowHandle _hstatusbar;
 	WindowHandle _htoolbar;
-	WindowHandle _hdrivebar;
-	WindowHandle _haddressedit;
-	WindowHandle _hcommandedit;
 
 	HMENU	_hMenuFrame;
 	HMENU	_hMenuWindow;
 
 	MenuInfo _menu_info;
 
+	auto_ptr<ShellBrowserChild> _shellBrowser;
+
 protected:
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+	int 	Notify(int id, NMHDR* pnmh);
 	int		Command(int id, int code);
 
 	void	toggle_child(HWND hwnd, UINT cmd, HWND hchild);
-	bool	activate_drive_window(LPCTSTR path);
-	bool	activate_child_window(LPCTSTR filesys);
 
 	void	resize_frame_rect(PRECT prect);
 	void	resize_frame(int cx, int cy);
 	void	resize_frame_client();
 	void	frame_get_clientspace(PRECT prect);
-	BOOL	toggle_fullscreen();
-	void	fullscreen_move();
 
 	HACCEL	_hAccel;
-	TCHAR	_drives[BUFFER_LEN];
+
+
+	 // SDI integration
+
+	ShellPathInfo _create_info;
+
+	WindowHandle _left_hwnd;
+	WindowHandle _right_hwnd;
+	//@@int 	_focus_pane;		// 0: left	1: right
+
+	void	update_explorer_view();
+	void	jump_to(LPCTSTR path, int mode);
+	void	jump_to(LPCITEMIDLIST path, int mode);
+};
+
+
+ /// The "Execute..."-dialog lets the user enter a command line to launch.
+struct ExecuteDialog {	///@todo use class Dialog
+	TCHAR	cmd[MAX_PATH];
+	int		cmdshow;
+
+	static BOOL CALLBACK WndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 };

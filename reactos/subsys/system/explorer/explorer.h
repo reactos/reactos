@@ -42,9 +42,6 @@
 #define	IDW_FIRST_CHILD			0xC000	/*0x200*/
 
 
-#define	PM_GET_FILEWND_PTR		(WM_APP+0x05)
-#define	PM_GET_SHELLBROWSER_PTR	(WM_APP+0x06)
-
 #define	PM_GET_CONTROLWINDOW	(WM_APP+0x16)
 
 #define	PM_RESIZE_CHILDREN		(WM_APP+0x17)
@@ -57,7 +54,5 @@
 #define	CLASSNAME_WINEFILETREE	TEXT("WFS_Tree")
 
 
-#include "shell/mainframe.h"
-#include "shell/pane.h"
-#include "shell/filechild.h"
 #include "shell/shellbrowser.h"
+#include "shell/mainframe.h"
