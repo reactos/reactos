@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.28 2000/03/26 19:38:26 ea Exp $
+/* $Id: rw.c,v 1.29 2000/05/09 16:13:49 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -86,7 +86,7 @@ NTSTATUS STDCALL NtReadFile(HANDLE			FileHandle,
      {
 	Status = ObReferenceObjectByHandle(EventHandle,
 					   SYNCHRONIZE,
-					   ExEventType,
+					   ExEventObjectType,
 					   UserMode,
 					   (PVOID *) ptrEvent,
 					   NULL);

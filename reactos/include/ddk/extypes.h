@@ -1,5 +1,17 @@
+/* $Id: extypes.h,v 1.3 2000/05/09 16:12:47 ekohl Exp $ */
 
-extern POBJECT_TYPE ExEventType;
+#ifndef __INCLUDE_DDK_EXTYPES_H
+#define __INCLUDE_DDK_EXTYPES_H
+
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED ExDesktopObjectType;
+extern POBJECT_TYPE EXPORTED ExEventObjectType;
+extern POBJECT_TYPE EXPORTED ExWindowStationObjectType;
+#else
+extern POBJECT_TYPE IMPORTED ExDesktopObjectType;
+extern POBJECT_TYPE IMPORTED ExEventObjectType;
+extern POBJECT_TYPE IMPORTED ExWindowStationObjectType;
+#endif
 
 typedef ULONG INTERLOCKED_RESULT;
 typedef ULONG WORK_QUEUE_TYPE;
@@ -126,3 +138,7 @@ typedef struct
    LIST_ENTRY ListEntry;
    FAST_MUTEX Lock;
 } PAGED_LOOKASIDE_LIST, *PPAGED_LOOKASIDE_LIST;
+
+#endif /* __INCLUDE_DDK_EXTYPES_H */
+
+/* EOF */

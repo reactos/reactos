@@ -1,4 +1,4 @@
-/* $Id: io.h,v 1.10 2000/03/29 13:11:51 dwelch Exp $
+/* $Id: io.h,v 1.11 2000/05/09 16:13:07 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,8 +15,6 @@
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 
-extern POBJECT_TYPE EXPORTED	IoDeviceObjectType;
-extern POBJECT_TYPE EXPORTED	IoFileObjectType;
 extern POBJECT_TYPE		IoSymbolicLinkObjectType;
 
 /*

@@ -1,4 +1,4 @@
-/* $Id: iomgr.c,v 1.9 2000/03/26 19:38:25 ea Exp $
+/* $Id: iomgr.c,v 1.10 2000/05/09 16:13:49 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -25,6 +25,9 @@
 
 POBJECT_TYPE EXPORTED IoDeviceObjectType = NULL;
 POBJECT_TYPE EXPORTED IoFileObjectType = NULL;
+ULONG        EXPORTED IoReadOperationCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoReadTransferCount = 0;	/* FIXME: unknown type */
+ULONG        EXPORTED IoWriteOperationCount = 0; /* FIXME: unknown type */
 ULONG        EXPORTED IoWriteTransferCount = 0;	/* FIXME: unknown type */
 ULONG        EXPORTED IoStatisticsLock = 0;	/* FIXME: unknown type */
 

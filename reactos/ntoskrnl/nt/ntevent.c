@@ -18,7 +18,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE ExEventType = NULL;
+POBJECT_TYPE EXPORTED ExEventObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -47,26 +47,26 @@ VOID NtInitializeEventImplementation(VOID)
 {
    ANSI_STRING AnsiName;
    
-   ExEventType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   ExEventObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
    RtlInitAnsiString(&AnsiName,"Event");
-   RtlAnsiStringToUnicodeString(&ExEventType->TypeName,&AnsiName,TRUE);
+   RtlAnsiStringToUnicodeString(&ExEventObjectType->TypeName,&AnsiName,TRUE);
    
-   ExEventType->MaxObjects = ULONG_MAX;
-   ExEventType->MaxHandles = ULONG_MAX;
-   ExEventType->TotalObjects = 0;
-   ExEventType->TotalHandles = 0;
-   ExEventType->PagedPoolCharge = 0;
-   ExEventType->NonpagedPoolCharge = sizeof(KEVENT);
-   ExEventType->Dump = NULL;
-   ExEventType->Open = NULL;
-   ExEventType->Close = NULL;
-   ExEventType->Delete = NULL;
-   ExEventType->Parse = NULL;
-   ExEventType->Security = NULL;
-   ExEventType->QueryName = NULL;
-   ExEventType->OkayToClose = NULL;
-   ExEventType->Create = NtpCreateEvent;
+   ExEventObjectType->MaxObjects = ULONG_MAX;
+   ExEventObjectType->MaxHandles = ULONG_MAX;
+   ExEventObjectType->TotalObjects = 0;
+   ExEventObjectType->TotalHandles = 0;
+   ExEventObjectType->PagedPoolCharge = 0;
+   ExEventObjectType->NonpagedPoolCharge = sizeof(KEVENT);
+   ExEventObjectType->Dump = NULL;
+   ExEventObjectType->Open = NULL;
+   ExEventObjectType->Close = NULL;
+   ExEventObjectType->Delete = NULL;
+   ExEventObjectType->Parse = NULL;
+   ExEventObjectType->Security = NULL;
+   ExEventObjectType->QueryName = NULL;
+   ExEventObjectType->OkayToClose = NULL;
+   ExEventObjectType->Create = NtpCreateEvent;
 }
 
 NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
@@ -76,7 +76,7 @@ NTSTATUS STDCALL NtClearEvent (IN HANDLE EventHandle)
    
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
-				      ExEventType,
+				      ExEventObjectType,
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);
@@ -97,12 +97,12 @@ NTSTATUS STDCALL NtCreateEvent (OUT PHANDLE			EventHandle,
 				IN BOOLEAN	InitialState)
 {
    PKEVENT Event;
-   
+
    DPRINT("NtCreateEvent()\n");
    Event = ObCreateObject(EventHandle,
 			  DesiredAccess,
 			  ObjectAttributes,
-			  ExEventType);
+			  ExEventObjectType);
    KeInitializeEvent(Event, 
 		     ManualReset ? NotificationEvent : SynchronizationEvent, 
 		     InitialState );
@@ -116,14 +116,13 @@ NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE			EventHandle,
 			      IN POBJECT_ATTRIBUTES	ObjectAttributes)
 {
    NTSTATUS Status;
-   PKEVENT Event;   
+   PKEVENT Event;
 
-   
    Status = ObReferenceObjectByName(ObjectAttributes->ObjectName,
 				    ObjectAttributes->Attributes,
 				    NULL,
 				    DesiredAccess,
-				    ExEventType,
+				    ExEventObjectType,
 				    UserMode,
 				    NULL,
 				    (PVOID*)&Event);
@@ -131,7 +130,7 @@ NTSTATUS STDCALL NtOpenEvent (OUT PHANDLE			EventHandle,
      {
 	return(Status);
      }
-   
+
    Status = ObCreateHandle(PsGetCurrentProcess(),
 			   Event,
 			   DesiredAccess,
@@ -170,7 +169,7 @@ NTSTATUS STDCALL NtResetEvent(HANDLE	EventHandle,
    
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
-				      ExEventType,
+				      ExEventObjectType,
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);
@@ -194,7 +193,7 @@ NTSTATUS STDCALL NtSetEvent(IN	HANDLE	EventHandle,
    
    Status = ObReferenceObjectByHandle(EventHandle,
 				      EVENT_MODIFY_STATE,
-				      ExEventType,
+				      ExEventObjectType,
 				      UserMode,
 				      (PVOID*)&Event,
 				      NULL);

@@ -1,6 +1,14 @@
+/* $Id: mmtypes.h,v 1.6 2000/05/09 16:12:47 ekohl Exp $ */
+
 #ifndef _INCLUDE_DDK_MMTYPES_H
 #define _INCLUDE_DDK_MMTYPES_H
-/* $Id: mmtypes.h,v 1.5 2000/04/07 02:23:57 dwelch Exp $ */
+
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED MmSectionObjectType;
+#else
+extern POBJECT_TYPE IMPORTED MmSectionObjectType;
+#endif
+
 
 struct _EPROCESS;
 

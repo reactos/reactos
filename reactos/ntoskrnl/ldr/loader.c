@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.53 2000/04/05 15:51:11 ekohl Exp $
+/* $Id: loader.c,v 1.54 2000/05/09 16:14:07 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -47,7 +47,7 @@ NTSTATUS IoInitializeDriver(PDRIVER_INITIALIZE DriverEntry);
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY ModuleListHead;
-POBJECT_TYPE ObModuleType = NULL;
+POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
 /* FORWARD DECLARATIONS ******************************************************/
 
@@ -88,24 +88,24 @@ VOID LdrInitModuleManagement(VOID)
   PMODULE_OBJECT ModuleObject;
 
   /*  Register the process object type  */
-  ObModuleType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
-  ObModuleType->TotalObjects = 0;
-  ObModuleType->TotalHandles = 0;
-  ObModuleType->MaxObjects = ULONG_MAX;
-  ObModuleType->MaxHandles = ULONG_MAX;
-  ObModuleType->PagedPoolCharge = 0;
-  ObModuleType->NonpagedPoolCharge = sizeof(MODULE);
-  ObModuleType->Dump = NULL;
-  ObModuleType->Open = NULL;
-  ObModuleType->Close = NULL;
-  ObModuleType->Delete = NULL;
-  ObModuleType->Parse = NULL;
-  ObModuleType->Security = NULL;
-  ObModuleType->QueryName = NULL;
-  ObModuleType->OkayToClose = NULL;
-  ObModuleType->Create = LdrCreateModule;
+  IoDriverObjectType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+  IoDriverObjectType->TotalObjects = 0;
+  IoDriverObjectType->TotalHandles = 0;
+  IoDriverObjectType->MaxObjects = ULONG_MAX;
+  IoDriverObjectType->MaxHandles = ULONG_MAX;
+  IoDriverObjectType->PagedPoolCharge = 0;
+  IoDriverObjectType->NonpagedPoolCharge = sizeof(MODULE);
+  IoDriverObjectType->Dump = NULL;
+  IoDriverObjectType->Open = NULL;
+  IoDriverObjectType->Close = NULL;
+  IoDriverObjectType->Delete = NULL;
+  IoDriverObjectType->Parse = NULL;
+  IoDriverObjectType->Security = NULL;
+  IoDriverObjectType->QueryName = NULL;
+  IoDriverObjectType->OkayToClose = NULL;
+  IoDriverObjectType->Create = LdrCreateModule;
   RtlInitAnsiString(&AnsiString, "Module");
-  RtlAnsiStringToUnicodeString(&ObModuleType->TypeName, &AnsiString, TRUE);
+  RtlAnsiStringToUnicodeString(&IoDriverObjectType->TypeName, &AnsiString, TRUE);
 
   /*  Create Modules object directory  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
@@ -138,7 +138,7 @@ VOID LdrInitModuleManagement(VOID)
   ModuleObject = ObCreateObject(&ModuleHandle,
                                 STANDARD_RIGHTS_REQUIRED,
                                 &ObjectAttributes,
-                                ObModuleType);
+                                IoDriverObjectType);
   assert(ModuleObject != NULL);
 
   InitializeListHead(&ModuleListHead);
@@ -766,7 +766,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   ModuleObject = ObCreateObject(&ModuleHandle,
                                 STANDARD_RIGHTS_REQUIRED,
                                 &ObjectAttributes,
-                                ObModuleType);
+                                IoDriverObjectType);
 
   /*  Initialize ModuleObject data  */
   ModuleObject->Base = DriverBase;

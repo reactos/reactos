@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.56 2000/05/01 14:15:02 ea Exp $
+; $Id: ntoskrnl.edf,v 1.57 2000/05/09 16:16:07 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -31,6 +31,8 @@ ExDeleteNPagedLookasideList
 ExDeletePagedLookasideList
 ExDeleteResource
 ExDeleteResourceLite
+ExDesktopObjectType DATA
+ExEventObjectType DATA
 ExExtendZone
 ExFreePool
 ExFreeToNPagedLookasideList
@@ -81,6 +83,7 @@ ExReleaseResourceForThread
 ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
+ExWindowStationObjectType DATA
 FsRtlAddLargeMcbEntry=FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry=FsRtlAddMcbEntry@16
 FsRtlAddToTunnelCache=FsRtlAddToTunnelCache@32
@@ -167,6 +170,7 @@ FsRtlUninitializeMcb=FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock=FsRtlUninitializeOplock@4
 IoAcquireCancelSpinLock=IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock=IoAcquireVpbSpinLock@4
+IoAdapterObjectType DATA
 IoAllocateAdapterChannel=IoAllocateAdapterChannel@20
 IoAllocateIrp=IoAllocateIrp@8
 IoAllocateMdl=IoAllocateMdl@20
@@ -204,7 +208,7 @@ IoDeviceHandlerObjectSize DATA
 IoDeviceHandlerObjectType DATA
 IoDeviceObjectType DATA
 IoDisconnectInterrupt=IoDisconnectInterrupt@4
-IoDriverObjectType=IoFileObjectType DATA
+IoDriverObjectType DATA
 IoEnqueueIrp=IoEnqueueIrp@4
 IoFastQueryNetworkAttributes=IoFastQueryNetworkAttributes@20
 IoFileObjectType DATA
@@ -237,7 +241,7 @@ IoQueueThreadIrp=IoQueueThreadIrp@4
 IoRaiseHardError=IoRaiseHardError@12
 IoRaiseInformationalHardError=IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
-IoReadTransferCount=IoAdapterObjectType DATA
+IoReadTransferCount DATA
 IoRegisterDriverReinitialization=IoRegisterDriverReinitialization@12
 IoRegisterFileSystem=IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange=IoRegisterFsRegistrationChange@8
@@ -267,14 +271,14 @@ IoUnregisterShutdownNotification=IoUnregisterShutdownNotification@4
 IoUpdateShareAccess=IoUpdateShareAccess@8
 IoVerifyVolume=IoVerifyVolume@8
 IoWriteErrorLogEntry=IoWriteErrorLogEntry@4
-IoWriteOperationCount=IoDeviceObjectType DATA
+IoWriteOperationCount DATA
 IoWriteTransferCount DATA
 ;IofCallDriver=@IofCallDriver@0
 IofCallDriver=IofCallDriver@8
 ;IofCompleteRequest=@IofCompleteRequest@0
 IofCompleteRequest=IofCompleteRequest@8
-KdDebuggerEnabled		DATA
-KdDebuggerNotPresent	DATA
+KdDebuggerEnabled DATA
+KdDebuggerNotPresent DATA
 KdPollBreakIn=KdPollBreakIn@0
 KeAddSystemServiceTable=KeAddSystemServiceTable@20
 KeBugCheck
@@ -345,11 +349,11 @@ MmUnmapViewInSystemSpace=MmUnmapViewInSystemSpace@4
 MmUnmapViewOfSection=MmUnmapViewOfSection@8
 MmUnsecureVirtualMemory=MmUnsecureVirtualMemory@4
 MmUserProbeAddress DATA
-NlsAnsiCodePage	DATA
-NlsLeadByteInfo	DATA
-NlsMbCodePageTag	DATA
-NlsMbOemCodePageTag	DATA
-NlsOemLeadByteInfo	DATA
+NlsAnsiCodePage DATA
+NlsLeadByteInfo DATA
+NlsMbCodePageTag DATA
+NlsMbOemCodePageTag DATA
+NlsOemLeadByteInfo DATA
 NtAddAtom=NtAddAtom@8
 NtAdjustPrivilegesToken=NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId=NtAllocateLocallyUniqueId@4

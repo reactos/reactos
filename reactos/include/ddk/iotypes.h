@@ -1,9 +1,23 @@
-/* $Id: iotypes.h,v 1.15 2000/03/26 22:00:06 dwelch Exp $
+/* $Id: iotypes.h,v 1.16 2000/05/09 16:12:47 ekohl Exp $
  * 
  */
 
 #ifndef __INCLUDE_DDK_IOTYPES_H
 #define __INCLUDE_DDK_IOTYPES_H
+
+#ifdef __NTOSKRNL__
+extern POBJECT_TYPE EXPORTED IoAdapterObjectType;
+extern POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType;
+extern POBJECT_TYPE EXPORTED IoDeviceObjectType;
+extern POBJECT_TYPE EXPORTED IoDriverObjectType;
+extern POBJECT_TYPE EXPORTED IoFileObjectType;
+#else
+extern POBJECT_TYPE IMPORTED IoAdapterObjectType;
+extern POBJECT_TYPE IMPORTED IoDeviceHandlerObjectType;
+extern POBJECT_TYPE IMPORTED IoDeviceObjectType;
+extern POBJECT_TYPE IMPORTED IoDriverObjectType;
+extern POBJECT_TYPE IMPORTED IoFileObjectType;
+#endif
 
 /*
  * These are referenced before they can be fully defined

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.69 2000/05/01 14:15:02 ea Exp $
+; $Id: ntoskrnl.def,v 1.70 2000/05/09 16:16:07 ekohl Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -31,6 +31,8 @@ ExDeleteNPagedLookasideList
 ExDeletePagedLookasideList
 ExDeleteResource
 ExDeleteResourceLite
+ExDesktopObjectType DATA
+ExEventObjectType DATA
 ExExtendZone
 ExFreePool
 ExFreeToNPagedLookasideList
@@ -81,6 +83,7 @@ ExReleaseResourceForThread
 ExReleaseResourceForThreadLite
 ExSystemTimeToLocalTime
 ExTryToAcquireResourceExclusiveLite
+ExWindowStationObjectType DATA
 FsRtlAddLargeMcbEntry@28
 FsRtlAddMcbEntry@16
 FsRtlAddToTunnelCache@32
@@ -167,6 +170,7 @@ FsRtlUninitializeMcb@4
 FsRtlUninitializeOplock@4
 IoAcquireCancelSpinLock@4
 IoAcquireVpbSpinLock@4
+IoAdapterObjectType DATA
 IoAllocateAdapterChannel@20
 IoAllocateController@16
 IoAllocateErrorLogEntry@8
@@ -202,10 +206,9 @@ IoDeleteSymbolicLink@4
 IoDetachDevice@4
 IoDeviceHandlerObjectSize DATA
 IoDeviceHandlerObjectType DATA
-IoDeviceObjectType DATA
 IoDisconnectInterrupt@4
 IoDeviceObjectType DATA
-IoDriverObjectType=IoFileObjectType DATA
+IoDriverObjectType DATA
 IoEnqueueIrp@4
 IoFastQueryNetworkAttributes@20
 IoFileObjectType DATA
@@ -238,7 +241,7 @@ IoQueueThreadIrp@4
 IoRaiseHardError@12
 IoRaiseInformationalHardError@12
 IoReadOperationCount DATA
-IoReadTransferCount=IoAdapterObjectType DATA
+IoReadTransferCount DATA
 IoRegisterDriverReinitialization@12
 IoRegisterFileSystem@4
 IoRegisterFsRegistrationChange@8
@@ -268,14 +271,14 @@ IoUnregisterShutdownNotification@4
 IoUpdateShareAccess@8
 IoVerifyVolume@8
 IoWriteErrorLogEntry@4
-IoWriteOperationCount=IoDeviceObjectType DATA
+IoWriteOperationCount DATA
 IoWriteTransferCount DATA
 ;@IofCallDriver@8
 IofCallDriver@8
 ;@IofCompleteRequest@8
 IofCompleteRequest@8
-KdDebuggerEnabled		DATA
-KdDebuggerNotPresent	DATA
+KdDebuggerEnabled DATA
+KdDebuggerNotPresent DATA
 KdPollBreakIn@0
 KeAddSystemServiceTable@20
 KeBugCheck
@@ -293,7 +296,7 @@ KeInsertQueueDpc
 KeQuerySystemTime
 KeReadStateEvent
 KeResetEvent
-KeServiceDescriptorTable	DATA
+KeServiceDescriptorTable DATA
 KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
@@ -346,11 +349,11 @@ MmUnmapViewInSystemSpace@4
 MmUnmapViewOfSection@8
 MmUnsecureVirtualMemory@4
 MmUserProbeAddress DATA
-NlsAnsiCodePage	DATA
-NlsLeadByteInfo	DATA
-NlsMbCodePageTag	DATA
-NlsMbOemCodePageTag	DATA
-NlsOemLeadByteInfo	DATA
+NlsAnsiCodePage DATA
+NlsLeadByteInfo DATA
+NlsMbCodePageTag DATA
+NlsMbOemCodePageTag DATA
+NlsOemLeadByteInfo DATA
 NtAddAtom@8
 NtAdjustPrivilegesToken@24
 NtAllocateLocallyUniqueId@4

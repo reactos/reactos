@@ -11,6 +11,12 @@
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 
+/* DATA **********************************************************************/
+
+POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
+POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
+
+
 /* FUNCTIONS ****************************************************************/
 
 VOID ExInit (VOID)
