@@ -1,4 +1,4 @@
-/* $Id: global.c,v 1.15 2003/10/14 01:44:39 mtempel Exp $
+/* $Id: global.c,v 1.16 2003/10/21 01:35:05 mtempel Exp $
  *
  * Win32 Global/Local heap functions (GlobalXXX, LocalXXX).
  * These functions included in Win32 for compatibility with 16 bit Windows
@@ -584,23 +584,31 @@ GlobalUnlock(HGLOBAL hMem)
    PGLOBAL_HANDLE	phandle;
    BOOL			    locked;
 
-   DPRINT("GlobalUnlock( 0x%lX )\n", (ULONG)hMem);
+   DbgPrint("GlobalUnlock( 0x%lX )\n", (ULONG)hMem);
 
 
    if(ISPOINTER(hMem))
-      return TRUE;
+   {
+       SetLastError(ERROR_NOT_LOCKED);
+      return FALSE;
+   }
 
    HeapLock(GetProcessHeap());
 
    phandle = HANDLE_TO_INTERN(hMem);
    if(MAGIC_GLOBAL_USED == phandle->Magic)
    {
-      if((GLOBAL_LOCK_MAX > phandle->LockCount) &&
-         (0 < phandle->LockCount)             )
-
+      if (0 >= phandle->LockCount)
+      {
+          locked = FALSE;
+          SetLastError(ERROR_NOT_LOCKED);
+      }
+      else if (GLOBAL_LOCK_MAX > phandle->LockCount)
+      {
          phandle->LockCount--;
-
-      locked = (0 == phandle->LockCount) ? TRUE : FALSE;
+         locked = (0 == phandle->LockCount) ? TRUE : FALSE;
+         SetLastError(NO_ERROR);
+      }
    }
    else
    {

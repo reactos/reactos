@@ -298,7 +298,9 @@ LRESULT CALLBACK EditWndProcW(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 const struct builtin_class_descr EDIT_builtin_class =
 {
     L"Edit",               			/* name */
-    CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC,  /* style */
+    CS_GLOBALCLASS | CS_DBLCLKS,  /* style */
+    /*TODO: Fix ExtTextOut so that we can have the CS_PARENTDC style*/
+    /*CS_GLOBALCLASS | CS_DBLCLKS | CS_PARENTDC,*/  /* style */
     (WNDPROC) EditWndProcW,         		/* procW */
     sizeof(EDITSTATE *),  			/* extra */
     (LPCWSTR) IDC_ARROW,                        	/* cursor */ /* FIXME Wine uses IDC_ARROWA */
@@ -3492,25 +3494,32 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
 static LRESULT EDIT_WM_Destroy(EDITSTATE *es)
 {
 	LINEDEF *pc, *pp;
-
+    DbgPrint("[edit] In EDIT_WM_Destroy\n");
 	if (es->hloc32W) {
-		while (LocalUnlock(es->hloc32W)) ;
+		while (LocalUnlock(es->hloc32W))
+        {
+             DbgPrint("[edit] spinning on LocalUnlock(es->hloc32W)\n");
+        }
 		LocalFree(es->hloc32W);
 	}
 	if (es->hloc32A) {
-		while (LocalUnlock(es->hloc32A)) ;
-		LocalFree(es->hloc32A);
+		while (LocalUnlock(es->hloc32A)) 
+        {
+             DbgPrint("[edit] spinning on LocalUnlock(es->hloc32A)\n");
+        }		
+        LocalFree(es->hloc32A);
 	}
 
 	pc = es->first_line_def;
 	while (pc)
 	{
+        DbgPrint("[edit] freeing line structures.\n");
 		pp = pc->next;
 		HeapFree(GetProcessHeap(), 0, pc);
 		pc = pp;
 	}
 
-        SetWindowLongW( es->hwndSelf, 0, 0 );
+    SetWindowLongW( es->hwndSelf, 0, 0 );
 	HeapFree(GetProcessHeap(), 0, es);
 
 	return 0;
@@ -4209,6 +4218,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, WPARAM wParam)
 	if (!es->bEnableState)
 		SetTextColor(dc, GetSysColor(COLOR_GRAYTEXT));
 	GetClipBox(dc, &rcRgn);
+    DbgPrint("[edit...WM_Paint] GetClipBox returns: Top: %d Left: %d Bottom: %d Right: %d\n", rcRgn.top, rcRgn.left, rcRgn.bottom, rcRgn.right);
 	if (es->style & ES_MULTILINE) {
 		INT vlc = (es->format_rect.bottom - es->format_rect.top) / es->line_height;
 		for (i = es->y_offset ; i <= min(es->y_offset + vlc, es->y_offset + es->line_count - 1) ; i++) {
