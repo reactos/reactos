@@ -255,7 +255,7 @@ LsaQueryInformationPolicy@12
 ;LsaQueryTrustedDomainInfo@16
 ;LsaRemoveAccountRights@20
 ;LsaRemovePrivilegesFromAccount@12
-;LsaRetrievePrivateData@12
+LsaRetrievePrivateData@12
 ;LsaSetInformationPolicy@12
 ;LsaSetInformationTrustedDomain@12
 ;LsaSetQuotasForAccount@8
@@ -263,7 +263,7 @@ LsaQueryInformationPolicy@12
 ;LsaSetSecurityObject@12
 ;LsaSetSystemAccessAccount@8
 ;LsaSetTrustedDomainInformation@16
-;LsaStorePrivateData@12
+LsaStorePrivateData@12
 MakeAbsoluteSD@44
 MakeSelfRelativeSD@12
 MapGenericMask@8
