@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.34 2002/09/08 10:23:39 chorns Exp $
+/* $Id: namespc.c,v 1.35 2002/11/10 13:36:15 robd Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,6 +11,10 @@
 
 /* INCLUDES ***************************************************************/
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
+
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
@@ -19,6 +23,8 @@
 
 #define NDEBUG
 #include <internal/debug.h>
+
+#endif
 
 /* GLOBALS ****************************************************************/
 
@@ -40,7 +46,7 @@ static GENERIC_MAPPING ObpTypeMapping = {
 	0x000F0001};
 
 /* FUNCTIONS **************************************************************/
-
+#ifndef WIN32_REGDBG
 NTSTATUS STDCALL
 ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
 			ULONG Attributes,
@@ -84,7 +90,7 @@ DPRINT("Object %p\n", Object);
    RtlFreeUnicodeString (&RemainingPath);
    return(STATUS_SUCCESS);
 }
-
+#endif // WIN32_REGDBG
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -125,7 +131,7 @@ ObOpenObjectByName(IN POBJECT_ATTRIBUTES ObjectAttributes,
    PVOID Object = NULL;
    NTSTATUS Status;
 
-   DPRINT("ObOpenObjectByName()\n");
+   DPRINT("ObOpenObjectByName(...)\n");
 
    Status = ObFindObject(ObjectAttributes,
 			 &Object,
@@ -220,7 +226,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
    while (current!=(&(DirectoryObject->head)))
      {
 	current_obj = CONTAINING_RECORD(current,OBJECT_HEADER,Entry);
-	DPRINT("Scanning %S %S\n",current_obj->Name.Buffer, Name);
+	DPRINT("  Scanning: %S for: %S\n",current_obj->Name.Buffer, Name);
 	if (Attributes & OBJ_CASE_INSENSITIVE)
 	  {
 	     if (_wcsicmp(current_obj->Name.Buffer, Name)==0)
@@ -239,7 +245,7 @@ ObpFindEntryDirectory(PDIRECTORY_OBJECT DirectoryObject,
 	  }
 	current = current->Flink;
      }
-   DPRINT("%s() = NULL\n",__FUNCTION__);
+   DPRINT("    Not Found: %s() = NULL\n",__FUNCTION__);
    return(NULL);
 }
 
@@ -417,7 +423,7 @@ ObpCreateTypeObject(POBJECT_TYPE ObjectType)
   UNICODE_STRING Name;
   NTSTATUS Status;
 
-  DPRINT("ObjectType: %wZ\n", &ObjectType->TypeName);
+  DPRINT("ObpCreateTypeObject(ObjectType: %wZ)\n", &ObjectType->TypeName);
   wcscpy(NameString, L"\\ObjectTypes\\");
   wcscat(NameString, ObjectType->TypeName.Buffer);
   RtlInitUnicodeString(&Name,
