@@ -71,4 +71,6 @@ void add_token(tok_e type, const WCHAR *name, int tok, int cp, const WCHAR *alia
 token_t *lookup_token(const WCHAR *s);
 void get_tokentable(token_t **tab, int *len);
 
+#define _alloca alloca
+
 #endif
