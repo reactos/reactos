@@ -64,6 +64,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Debug", \
  "Video Init", \
  "Video", \
+ "Video Save", \
  "File System", \
  "Event log", \
  "NDIS", \
@@ -102,7 +103,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 ; Pagefile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
-
 
 ; 3Com 3c905 Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
@@ -253,14 +253,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Keyboard","Type",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0\Devices","SBWaveIn0",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd\Parameters\Device0\Devices","SBWaveOut0",0x00010001,0x00000002
 
-
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ServiceType",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sb16snd","ImagePath",0x00020000,"system32\drivers\sndblst.sys"
-
 
 HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Group",0x00000000,"Base"
 HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ServiceType",0x00010001,0x00000001
@@ -281,7 +279,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EA
 HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiOut1",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMixer0",0x00010001,0x00000006
 HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPAux0",0x00010001,0x00000005
-
 
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
@@ -360,12 +357,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
-;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
 
 ; AMD PCNet NIC driver
 HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
@@ -552,7 +549,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vfatfs","Type",0x00010001,0x00000002
 
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
