@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: section.c,v 1.142 2004/01/27 20:13:08 hbirr Exp $
+/* $Id: section.c,v 1.143 2004/01/30 23:57:58 hbirr Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
@@ -1218,6 +1218,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
   ULONG Offset;
   PMM_PAGEOP PageOp;
   PMM_REGION Region;
+  ULONG Entry;
 
   /*
    * Check if the page has been paged out or has already been set readwrite
@@ -1253,15 +1254,11 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     */
    MmLockSectionSegment(Segment);
 
-   /*
-    * Sanity check.
-    */
-   if (MmGetPageEntrySectionSegment(Segment, Offset) == 0)
-     {
-       DPRINT1("COW fault for page with PESS 0. Address was 0x%.8X\n",
-	       Address);
-     }
+   OldPage = MmGetPhysicalAddressForProcess(NULL, Address);
+   Entry = MmGetPageEntrySectionSegment(Segment, Offset);
+
    MmUnlockSectionSegment(Segment);
+
    /*
     * Check if we are doing COW
     */
@@ -1271,6 +1268,18 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
      {
        DPRINT("Address 0x%.8X\n", Address);
        return(STATUS_UNSUCCESSFUL);
+     }
+
+   if (IS_SWAP_FROM_SSE(Entry) ||
+       PAGE_FROM_SSE(Entry) != OldPage.u.LowPart)
+     {
+       /* This is a private page. We must only change the page protection. */
+       MmSetPageProtect(AddressSpace->Process, (PVOID)PAddress, Region->Protect);
+       if (Locked)
+         {
+	   MmLockPage(OldPage);
+	 }
+       return(STATUS_SUCCESS);
      }
 
    /*
@@ -1330,7 +1339,6 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
    /*
     * Copy the old page
     */
-   OldPage = MmGetPhysicalAddressForProcess(NULL, Address);
 
    NewAddress = ExAllocatePageWithPhysPage(NewPage);
    memcpy(NewAddress, (PVOID)PAddress, PAGE_SIZE);
