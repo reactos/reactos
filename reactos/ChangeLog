@@ -1,5 +1,14 @@
 2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* Makefile: Correct dependencies.
+	* tools/Makefile: Silence some annoying messages.
+	* tools/config.mk: Ditto.
+	* rules.mak (MINIMALDEPENDENCIES): New option; minimal dependencies
+	(yes/no). If yes, then components do not depend on all import libraries.
+	If no, then they do. Defaults to yes.
+
+2004-08-16  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* lib/user32/include/debug.h (ASSERT): Don't call KeBugCheck.
 	* lib/user32/misc/dllmain.c (KeBugCheck): Remove declaration.
 

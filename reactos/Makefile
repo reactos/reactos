@@ -1,9 +1,11 @@
-# $Id: Makefile,v 1.242 2004/08/10 15:49:55 weiden Exp $
+# $Id: Makefile,v 1.243 2004/08/16 22:31:04 chorns Exp $
 #
 # Global makefile
 #
 
 PATH_TO_TOP = .
+
+include $(PATH_TO_TOP)/rules.mak
 
 #
 # Define to build ReactOS external targets
@@ -14,10 +16,14 @@ else
 ROS_BUILD_EXT = yes
 endif
 
-include $(PATH_TO_TOP)/rules.mak
+ifneq ($(MINIMALDEPENDENCIES),no)
+IMPLIB =
+else
+IMPLIB = implib
+endif
 
 # Required to run the system
-COMPONENTS = iface_native iface_additional hallib ntoskrnl
+COMPONENTS = ntoskrnl
 
 # Hardware Abstraction Layers
 # halx86
@@ -43,7 +49,7 @@ DLLS_CPL = cpl
 # User mode libraries
 # libpcap packet epsapi
 DLLS = acledit aclui advapi32 cabinet cards comctl32 crtdll comdlg32 d3d8thk expat fmifs freetype \
-	gdi32 gdiplus imagehlp imm32 iphlpapi kernel32 lzexpand mpr msacm msafd msgina msimg32 msvcrt \
+	gdi32 gdiplus imagehlp imm32 iphlpapi kernel32 lzexpand mpr msacm msafd msgina msimg32 \
 	msvcrt20 msvideo mswsock netapi32 ntdll ole32 oleaut32 oledlg packet psapi richedit \
 	rpcrt4 samlib secur32 setupapi shell32 shlwapi snmpapi syssetup twain unicode user32 \
 	userenv version wininet winmm winspool ws2help ws2_32 wsock32 wshirda \
@@ -116,30 +122,32 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 # Regression tests
 REGTESTS = regtests
 
-all: tools dk implib $(LIB_STATIC) $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
+all: bootstrap $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
      $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
      $(APPS) $(EXT_MODULES)
 
+bootstrap: dk implib iface_native iface_additional
+
 #config: $(TOOLS:%=%_config)
 
-depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) $(DLLS:%=%_depends) $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
+depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLLS:%=%_depends) \
+         $(SUBSYS:%=%_depends) $(SYS_SVC:%=%_depends) \
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
-implib: $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
+	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) msvcrt_implib $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
 	      $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
 	      $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
-	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) $(DLLS:%=%_test) $(LOADERS:%=%_test) \
+	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) msvcrt_test $(DLLS:%=%_test) $(LOADERS:%=%_test) \
 	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
 	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
 clean: tools dk_clean $(HALS:%=%_clean) \
-       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) $(DLLS:%=%_clean) \
-       $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
-       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
-       $(NET_APPS:%=%_clean) \
+       $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) \
+       msvcrt_clean $(DLLS:%=%_clean) $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) $(SUBSYS:%=%_clean) \
+       $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) $(NET_APPS:%=%_clean) \
        $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) $(REGTESTS:%=%_clean) \
        clean_after tools_clean
 
@@ -148,8 +156,8 @@ clean_after:
 
 fastinstall: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
-         $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) $(DLLS:%=%_install) $(LOADERS:%=%_install) \
-         $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
+         $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) msvcrt_install $(DLLS:%=%_install) \
+         $(LOADERS:%=%_install) $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
          $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
 install: fastinstall registry
@@ -175,8 +183,8 @@ bootcd_directory_layout:
 	$(CP) ${FREELDR_DIR}/freeldr/obj/i386/setupldr.sys ${BOOTCD_DIR}/loader/setupldr.sys
 
 bootcd_bootstrap_files: $(COMPONENTS:%=%_bootcd) $(HALS:%=%_bootcd) $(BUS:%=%_bootcd) \
-	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) $(DLLS:%=%_bootcd) $(KERNEL_DRIVERS:%=%_bootcd) \
-	$(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
+	$(LIB_STATIC:%=%_bootcd) $(LIB_FSLIB:%=%_bootcd) msvcrt_bootcd $(DLLS:%=%_bootcd) \
+  $(KERNEL_DRIVERS:%=%_bootcd) $(SUBSYS:%=%_bootcd) $(SYS_APPS:%=%_bootcd)
 
 bootcd_install_before:
 	$(RLINE) bootdata/autorun.inf $(BOOTCD_DIR)/autorun.inf
@@ -235,18 +243,20 @@ livecd: livecd_basic livecd_makecd
 registry: tools
 	$(MKHIVE) bootdata $(INSTALL_DIR)/system32/config bootdata/hiveinst.inf
 
-.PHONY: all depends implib test clean clean_before install freeldr bootcd_directory_layout \
+.PHONY: all bootstrap depends implib test clean clean_before install freeldr bootcd_directory_layout \
 bootcd_bootstrap_files bootcd_install_before bootcd_basic bootcd_makecd ubootcd_unattend bootcd
 
+
+$(COMPONENTS): dk
 
 #
 # System Applications
 #
-$(SYS_APPS): %:
+$(SYS_APPS): %: $(IMPLIB)
 	$(MAKE) -C subsys/system/$*
 
-$(SYS_APPS:%=%_implib): %_implib:
-	$(MAKE) -C subsys/system/$* implib
+$(SYS_APPS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C subsys/system/$* implib
 
 $(SYS_APPS:%=%_test): %_test:
 	$(MAKE) -C subsys/system/$* test
@@ -266,14 +276,14 @@ $(SYS_APPS:%=%_bootcd): %_bootcd:
 #
 # System Services
 #
-$(SYS_SVC): %:
+$(SYS_SVC): %: $(IMPLIB)
 	$(MAKE) -C services/$*
 
 $(SYS_SVC:%=%_depends): %_depends:
 	$(MAKE) -C services/$* depends
 
-$(SYS_SVC:%=%_implib): %_implib:
-	$(MAKE) -C services/$* implib
+$(SYS_SVC:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C services/$* implib
 
 $(SYS_SVC:%=%_test): %_test:
 	$(MAKE) -C services/$* test
@@ -294,12 +304,12 @@ $(SYS_SVC:%=%_install): %_install:
 #
 # Extra (optional system) Applications
 #
-$(APPS): %:
+$(APPS): %: $(IMPLIB)
 	$(MAKE) -C apps/$*
 
 # Not needed
-# $(APPS:%=%_implib): %_implib:
-#	$(MAKE) -C apps/$* implib
+# $(APPS:%=%_implib): %_implib: dk
+#	$(MAKE) --silent -C apps/$* implib
 
 $(APPS:%=%_test): %_test:
 	$(MAKE) -C apps/$* test
@@ -322,8 +332,8 @@ $(EXTERNALS): %:
 $(EXTERNALS:%=%_depends): %_depends:
 	$(MAKE) -C $(ROOT_PATH)/$* depends
 
-$(EXTERNALS:%=%_implib): %_implib:
-	$(MAKE) -C $(ROOT_PATH)/$* implib
+$(EXTERNALS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C $(ROOT_PATH)/$* implib
 
 $(EXTERNALS:%=%_clean): %_clean:
 	$(MAKE) -C $(ROOT_PATH)/$* clean
@@ -338,7 +348,7 @@ $(EXTERNALS:%=%_install): %_install:
 # Tools
 #
 tools:
-	$(MAKE) -C tools
+	$(MAKE) --silent -C tools
 
 tools_implib:
 	
@@ -357,17 +367,17 @@ tools_install:
 #
 # Developer Kits
 #
-dk:
-	$(RMKDIR) $(DK_PATH)
-	$(RMKDIR) $(DDK_PATH)
-	$(RMKDIR) $(DDK_PATH_LIB)
-	$(RMKDIR) $(DDK_PATH_INC)
-	$(RMKDIR) $(SDK_PATH)
-	$(RMKDIR) $(SDK_PATH_LIB)
-	$(RMKDIR) $(SDK_PATH_INC)
-	$(RMKDIR) $(XDK_PATH)
-	$(RMKDIR) $(XDK_PATH_LIB)
-#	$(RMKDIR) $(XDK_PATH_INC)
+dk: tools
+	@$(RMKDIR) $(DK_PATH)
+	@$(RMKDIR) $(DDK_PATH)
+	@$(RMKDIR) $(DDK_PATH_LIB)
+	@$(RMKDIR) $(DDK_PATH_INC)
+	@$(RMKDIR) $(SDK_PATH)
+	@$(RMKDIR) $(SDK_PATH_LIB)
+	@$(RMKDIR) $(SDK_PATH_INC)
+	@$(RMKDIR) $(XDK_PATH)
+	@$(RMKDIR) $(XDK_PATH_LIB)
+#	@$(RMKDIR) $(XDK_PATH_INC)
 
 dk_implib:
 
@@ -396,28 +406,28 @@ dk_install:
 # Interfaces
 #
 iface_native:
-	$(MAKE) -C iface/native
+	$(MAKE) --silent -C iface/native
 
 iface_native_implib:
 	
 iface_native_test:
 	
 iface_native_clean:
-	$(MAKE) -C iface/native clean
+	$(MAKE) --silent -C iface/native clean
 
 iface_native_install:
 
 iface_native_bootcd:
 
 iface_additional:
-	$(MAKE) -C iface/addsys
+	$(MAKE) --silent -C iface/addsys
 
 iface_additional_implib:
 	
 iface_additional_test:
 	
 iface_additional_clean:
-	$(MAKE) -C iface/addsys clean
+	$(MAKE) --silent -C iface/addsys clean
 
 iface_additional_install:
 
@@ -432,11 +442,11 @@ iface_additional_bootcd:
 #
 # Bus driver rules
 #
-$(BUS): %:
+$(BUS): %: $(IMPLIB)
 	$(MAKE) -C drivers/bus/$*
 
-$(BUS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/bus/$* implib
+$(BUS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/bus/$* implib
 
 $(BUS:%=%_test): %_test:
 	$(MAKE) -C drivers/bus/$* test
@@ -457,11 +467,11 @@ $(BUS:%=%_bootcd): %_bootcd:
 #
 # Driver support libraries rules
 #
-$(DRIVERS_LIB): %:
+$(DRIVERS_LIB): %: $(IMPLIB)
 	$(MAKE) -C drivers/lib/$*
 
-$(DRIVERS_LIB:%=%_implib): %_implib:
-	$(MAKE) -C drivers/lib/$* implib
+$(DRIVERS_LIB:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/lib/$* implib
 
 $(DRIVERS_LIB:%=%_test): %_test:
 	$(MAKE) -C drivers/lib/$* test
@@ -482,11 +492,11 @@ $(DRIVERS_LIB:%=%_bootcd): %_bootcd:
 #
 # Device driver rules
 #
-$(DEVICE_DRIVERS): %:
+$(DEVICE_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/dd/$*
 
-$(DEVICE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/dd/$* implib
+$(DEVICE_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/dd/$* implib
 
 $(DEVICE_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/dd/$* test
@@ -507,11 +517,11 @@ $(DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 #
 # Video device driver rules
 #
-VIDEO_DRIVERS: 
+VIDEO_DRIVERS: $(IMPLIB)
 	$(MAKE) -C drivers/video
 
-VIDEO_DRIVERS_implib:
-	$(MAKE) -C drivers/video implib
+VIDEO_DRIVERS_implib: dk
+	$(MAKE) --silent -C drivers/video implib
 
 VIDEO_DRIVERS_test:
 	$(MAKE) -C drivers/video test
@@ -532,11 +542,11 @@ VIDEO_DRIVERS_bootcd:
 #
 # Input driver rules
 #
-$(INPUT_DRIVERS): %:
+$(INPUT_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/input/$*
 
-$(INPUT_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/input/$* implib
+$(INPUT_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/input/$* implib
 
 $(INPUT_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/input/$* test
@@ -556,11 +566,11 @@ $(INPUT_DRIVERS:%=%_bootcd): %_bootcd:
 #
 # Filesystem driver rules
 #
-$(FS_DRIVERS): %:
+$(FS_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/fs/$*
 
-$(FS_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/fs/$* implib
+$(FS_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/fs/$* implib
 
 $(FS_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/fs/$* test
@@ -581,11 +591,11 @@ $(FS_DRIVERS:%=%_bootcd): %_bootcd:
 #
 # Network driver rules
 #
-$(NET_DRIVERS): %:
+$(NET_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/net/$*
 
-$(NET_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/net/$* implib
+$(NET_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/net/$* implib
 
 $(NET_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/net/$* test
@@ -606,11 +616,11 @@ $(NET_DRIVERS:%=%_bootcd): %_bootcd:
 #
 # Network device driver rules
 #
-$(NET_DEVICE_DRIVERS): %:
+$(NET_DEVICE_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/net/dd/$*
 
-$(NET_DEVICE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/net/dd/$* implib
+$(NET_DEVICE_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/net/dd/$* implib
 
 $(NET_DEVICE_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/net/dd/$* test
@@ -632,11 +642,11 @@ $(NET_DEVICE_DRIVERS:%=%_bootcd): %_bootcd:
 #
 # storage driver rules
 #
-$(STORAGE_DRIVERS): %:
+$(STORAGE_DRIVERS): %: $(IMPLIB)
 	$(MAKE) -C drivers/storage/$*
 
-$(STORAGE_DRIVERS:%=%_implib): %_implib:
-	$(MAKE) -C drivers/storage/$* implib
+$(STORAGE_DRIVERS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C drivers/storage/$* implib
 
 $(STORAGE_DRIVERS:%=%_test): %_test:
 	$(MAKE) -C drivers/storage/$* test
@@ -661,7 +671,7 @@ $(STORAGE_DRIVERS:%=%_bootcd): %_bootcd:
 $(LOADERS): %:
 	$(MAKE) -C loaders/$*
 
-$(LOADERS:%=%_implib): %_implib:
+$(LOADERS:%=%_implib): %_implib: dk
 
 $(LOADERS:%=%_test): %_test:
 
@@ -678,11 +688,11 @@ $(LOADERS:%=%_install): %_install:
 #
 # Required system components
 #
-ntoskrnl:
+ntoskrnl: bootstrap
 	$(MAKE) -C ntoskrnl
 
-ntoskrnl_implib:
-	$(MAKE) -C ntoskrnl implib
+ntoskrnl_implib: dk
+	$(MAKE) --silent -C ntoskrnl implib
 
 ntoskrnl_test:
 	$(MAKE) -C ntoskrnl test
@@ -703,11 +713,11 @@ ntoskrnl_bootcd:
 #
 # Hardware Abstraction Layer import library
 #
-hallib:
-	$(MAKE) -C hal/hal
+hallib: ntoskrnl_implib
+	$(MAKE) --silent -C hal/hal
 
-hallib_implib:
-	$(MAKE) -C hal/hal implib
+hallib_implib: dk ntoskrnl_implib
+	$(MAKE) --silent -C hal/hal implib
 
 hallib_test:
 	$(MAKE) -C hal/hal test
@@ -728,11 +738,11 @@ hallib_bootcd:
 #
 # Hardware Abstraction Layers
 #
-$(HALS): %:
+$(HALS): %: $(IMPLIB)
 	$(MAKE) -C hal/$*
 
-$(HALS:%=%_implib): %_implib:
-	$(MAKE) -C hal/$* implib
+$(HALS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C hal/$* implib
 
 $(HALS:%=%_test): %_test:
 	$(MAKE) -C hal/$* test
@@ -753,14 +763,14 @@ $(HALS:%=%_bootcd): %_bootcd:
 #
 # File system libraries
 #
-$(LIB_FSLIB): %:
+$(LIB_FSLIB): %: dk
 	$(MAKE) -C lib/fslib/$*
 
 $(LIB_FSLIB:%=%_depends): %_depends:
 	$(MAKE) -C lib/fslib/$* depends
 
-$(LIB_FSLIB:%=%_implib): %_implib:
-	$(MAKE) -C lib/fslib/$* implib
+$(LIB_FSLIB:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C lib/fslib/$* implib
 
 $(LIB_FSLIB:%=%_test): %_test:
 	$(MAKE) -C lib/fslib/$* test
@@ -782,14 +792,14 @@ $(LIB_FSLIB:%=%_bootcd): %_bootcd:
 #
 # Static libraries
 #
-$(LIB_STATIC): %:
-	$(MAKE) -C lib/$*
+$(LIB_STATIC): %: dk
+	$(MAKE) --silent -C lib/$*
 
 $(LIB_STATIC:%=%_depends): %_depends:
 	$(MAKE) -C lib/string depends
 
-$(LIB_STATIC:%=%_implib): %_implib:
-	$(MAKE) -C lib/$* implib
+$(LIB_STATIC:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C lib/$* implib
 
 $(LIB_STATIC:%=%_test): %_test:
 	$(MAKE) -C lib/$* test
@@ -809,16 +819,44 @@ $(LIB_STATIC:%=%_bootcd): %_bootcd:
 
 
 #
+# MSVCRT is seperate since CRTDLL depend on this
+#
+msvcrt: $(IMPLIB)
+	$(MAKE) -C lib/msvcrt
+
+msvcrt_depends:
+	$(MAKE) -C lib/msvcrt depends
+
+msvcrt_implib: dk
+	$(MAKE) --silent -C lib/msvcrt implib
+
+msvcrt_test:
+	$(MAKE) -C lib/msvcrt test
+
+msvcrt_clean:
+	$(MAKE) -C lib/msvcrt clean
+
+msvcrt_install:
+	$(MAKE) -C lib/msvcrt install
+
+msvcrt_bootcd:
+	$(MAKE) -C lib/msvcrt bootcd
+
+.PHONY: msvcrt msvcrt_depends msvcrt_implib msvcrt_test \
+        msvcrt_clean msvcrt_install msvcrt_bootcd
+
+
+#
 # DLLs
 #
-$(DLLS): %:
+$(DLLS): %: $(IMPLIB) msvcrt
 	$(MAKE) -C lib/$*
 
 $(DLLS:%=%_depends): %_depends:
 	$(MAKE) -C lib/$* depends
 
-$(DLLS:%=%_implib): %_implib:
-	$(MAKE) -C lib/$* implib
+$(DLLS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C lib/$* implib
 
 $(DLLS:%=%_test): %_test:
 	$(MAKE) -C lib/$* test
@@ -839,14 +877,14 @@ $(DLLS:%=%_bootcd): %_bootcd:
 #
 # Subsystem support modules
 #
-$(SUBSYS): %:
+$(SUBSYS): %: $(IMPLIB)
 	$(MAKE) -C subsys/$*
 
 $(SUBSYS:%=%_depends): %_depends:
 	$(MAKE) -C subsys/$* depends
 
-$(SUBSYS:%=%_implib): %_implib:
-	$(MAKE) -C subsys/$* implib
+$(SUBSYS:%=%_implib): %_implib: dk
+	$(MAKE) --silent -C subsys/$* implib
 
 $(SUBSYS:%=%_test): %_test:
 	$(MAKE) -C subsys/$* test
@@ -867,8 +905,8 @@ $(SUBSYS:%=%_bootcd): %_bootcd:
 # Regression testsuite
 #
 
-$(REGTESTS): %:
-	$(MAKE) -C regtests
+$(REGTESTS): %: $(IMPLIB)
+	$(MAKE) --silent -C regtests
 
 $(REGTESTS:%=%_clean): %_clean:
 	$(MAKE) -C regtests clean
@@ -965,3 +1003,5 @@ docu:
 	doxygen Doxyfile
 
 .PHONY: docu
+
+include $(TOOLS_PATH)/config.mk

@@ -24,8 +24,16 @@ ifeq ($(HOST),)
 HOST = mingw32-windows
 endif
 
-# Build map files which includes source and asm code
+# Default to building map files which includes source and asm code
+ifeq ($(FULL_MAP),)
 FULL_MAP = yes
+endif
+
+# Default to minimal dependencies, making components not
+# depend on all import libraries
+ifeq ($(MINIMALDEPENDENCIES),)
+MINIMALDEPENDENCIES = yes
+endif
 
 # Default to no PCH support
 ifeq ($(ROS_USE_PCH),)
