@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.50 2003/12/22 11:37:32 navaraf Exp $
+ *  $Id: painting.c,v 1.51 2003/12/23 18:19:07 navaraf Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -1064,7 +1064,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
  * NtUserScrollWindowEx
  *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 DWORD STDCALL

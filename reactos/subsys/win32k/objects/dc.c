@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.113 2003/12/13 23:26:04 gvg Exp $
+/* $Id: dc.c,v 1.114 2003/12/23 18:19:07 navaraf Exp $
  *
  * DC.C - Device context functions
  *
@@ -1932,6 +1932,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.xformWorld2Vport = NewDC->w.xformWorld2Wnd;
   NewDC->w.xformVport2World = NewDC->w.xformWorld2Wnd;
   NewDC->w.vport2WorldValid = TRUE;
+  NewDC->w.MapMode = MM_TEXT;
 
   NewDC->w.hFont = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->w.hFont);

@@ -241,54 +241,6 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
 }
 
-/*
- * FIXME:
- * - Move to controls/scroll.c ?
- * - Handle drawing of reversed size grip
- */
-VOID
-SCROLL_DrawSizeGrip(HDC hDC, LPRECT lpRect)
-{
-   HPEN hPenFace, hPenShadow, hPenHighlight, hOldPen;
-   POINT pt;
-   INT i;
-
-   pt.x = lpRect->right - 1;
-   pt.y = lpRect->bottom - 1;
-
-   hPenFace = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DFACE));
-   hOldPen = SelectObject(hDC, hPenFace);
-   MoveToEx(hDC, pt.x - 12, pt.y, NULL);
-   LineTo(hDC, pt.x, pt.y);
-   LineTo(hDC, pt.x, pt.y - 13);
-
-   pt.x--;
-   pt.y--;
-
-   hPenShadow = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW));
-   SelectObject(hDC, hPenShadow);
-   for (i = 1; i < 11; i += 4)
-   {
-      MoveToEx(hDC, pt.x - i, pt.y, NULL);
-      LineTo(hDC, pt.x + 1, pt.y - i - 1);
-      MoveToEx(hDC, pt.x - i - 1, pt.y, NULL);
-      LineTo(hDC, pt.x + 1, pt.y - i - 2);
-   }
-
-   hPenHighlight = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DHIGHLIGHT));
-   SelectObject(hDC, hPenHighlight );
-   for (i = 3; i < 13; i += 4)
-   {
-      MoveToEx(hDC, pt.x - i, pt.y, NULL);
-      LineTo(hDC, pt.x + 1, pt.y - i - 1);
-   }
-
-   SelectObject(hDC, hOldPen);
-   DeleteObject(hPenFace);
-   DeleteObject(hPenShadow);
-   DeleteObject(hPenHighlight);
-}
-
 /* FIXME: Verify implementation. */
 BOOL
 DefWndRedrawIconTitle(HWND hWnd)
@@ -475,14 +427,21 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
        (CurrentRect.bottom - CurrentRect.top) > GetSystemMetrics(SM_CYHSCROLL))
    {
       TempRect = CurrentRect;
-      if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
+      if (ExStyle & WS_EX_LEFTSCROLLBAR)
          TempRect.right = TempRect.left + GetSystemMetrics(SM_CXVSCROLL);
       else
          TempRect.left = TempRect.right - GetSystemMetrics(SM_CXVSCROLL);
       TempRect.top = TempRect.bottom - GetSystemMetrics(SM_CYHSCROLL);
       FillRect(hDC, &TempRect, GetSysColorBrush(COLOR_SCROLLBAR));
       /* FIXME: Correct drawing of size-box with WS_EX_LEFTSCROLLBAR */
-      SCROLL_DrawSizeGrip(hDC, &TempRect);
+      if (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD))
+      {
+         TempRect.top--;
+         TempRect.bottom++;
+         TempRect.left--;
+         TempRect.right++;
+         DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+      }
       IntDrawScrollBar(hWnd, hDC, SB_VERT);
       IntDrawScrollBar(hWnd, hDC, SB_HORZ);
    }
@@ -749,7 +708,8 @@ DefWndNCHitTest(HWND hWnd, POINT Point)
 
       TempRect.top = TempRect2.top;
       TempRect.bottom = TempRect2.bottom;
-      if (PtInRect(&TempRect, Point))
+      if (PtInRect(&TempRect, Point) && 
+          (!(Style & WS_CHILD) || (ExStyle & WS_EX_MDICHILD)))
       {
          if ((ExStyle & WS_EX_LEFTSCROLLBAR) != 0)
             return HTBOTTOMLEFT;

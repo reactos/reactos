@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.63 2003/12/21 20:37:42 navaraf Exp $ */
+/* $Id: text.c,v 1.64 2003/12/23 18:19:07 navaraf Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -890,7 +890,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
   FT_Face face;
   FT_GlyphSlot glyph;
   INT error, n, glyph_index, i, previous;
-  LONG TotalWidth = 0, MaxHeight = 0;
+  LONG TotalWidth = 0;
   FT_CharMap charmap, found = NULL;
   BOOL use_kerning;
 
@@ -969,11 +969,6 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
 	    {
 	      DPRINT1("WARNING: Failed to render glyph!\n");
 	    }
-
-	  if (0 != glyph->bitmap.rows && MaxHeight < (glyph->bitmap.rows - 1))
-	    {
-	      MaxHeight = glyph->bitmap.rows - 1;
-	    }
     	}
 
       if (TotalWidth <= MaxExtent && NULL != Fit)
@@ -990,7 +985,7 @@ TextIntGetTextExtentPoint(PTEXTOBJ TextObj,
     }
 
   Size->cx = TotalWidth;
-  Size->cy = MaxHeight;
+  Size->cy = (TextObj->logfont.lfHeight < 0 ? - TextObj->logfont.lfHeight : TextObj->logfont.lfHeight);
 
   return TRUE;
 }

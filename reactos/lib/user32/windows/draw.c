@@ -1,51 +1,32 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 1998, 1999, 2000, 2001 ReactOS Team
+ * ReactOS User32 Library
+ * - Various drawing functions
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * Copyright 2001 Casper S. Hournstroup
+ * Copyright 2003 Andrew Greenwood
+ * Copyright 2003 Filip Navara
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * Based on Wine code.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id: draw.c,v 1.34 2003/12/22 19:40:29 navaraf Exp $
- *
- * PROJECT:         ReactOS user32.dll
- * FILE:            lib/user32/windows/input.c
- * PURPOSE:         Input
- * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
- * UPDATE HISTORY:
- *      09-05-2001  CSH  Created
- */
-
-/*
  * Copyright 1993, 1994 Alexandre Julliard
  * Copyright 2002 Bill Medland
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *******************************************************************/
 
 #ifndef __USE_W32API
 #define __USE_W32API
@@ -53,25 +34,13 @@
 #endif
 
 #include <windows.h>
-#ifndef __USE_W32API
-#include <user32.h>
-#endif
-
-// Needed for DrawState
 #include <string.h>
-#ifndef __USE_W32API
-#include <unicode.h>
-#include <draw.h>
-#endif
-
-#define NDEBUG
-#include <debug.h>
+#include <wine/unicode.h>
+#include <wine/debug.h>
 
 /* GLOBALS *******************************************************************/
 
-#define COLOR_MAX (28)
-
-/* HPEN STDCALL W32kGetSysColorPen(int nIndex); */
+#define	DSS_DEFAULT	0x0040  /* Make it bold */
 
 static const WORD wPattern_AA55[8] = { 0xaaaa, 0x5555, 0xaaaa, 0x5555,
                                        0xaaaa, 0x5555, 0xaaaa, 0x5555 };
@@ -160,8 +129,7 @@ HBRUSH STDCALL GetSysColorBrush(int nIndex);
 
 /* Ported from WINE20020904 */
 /* Same as DrawEdge invoked with BF_DIAGONAL */
-static BOOL UITOOLS95_DrawDiagEdge(HDC hdc, LPRECT rc,
-				     UINT uType, UINT uFlags)
+static BOOL IntDrawDiagEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
 {
     POINT Points[4];
     signed char InnerI, OuterI;
@@ -467,8 +435,7 @@ static BOOL UITOOLS95_DrawDiagEdge(HDC hdc, LPRECT rc,
  * 21 = COLOR_3DDKSHADOW
  * 22 = COLOR_3DLIGHT
  */
-static BOOL UITOOLS95_DrawRectEdge(HDC hdc, LPRECT rc,
-				     UINT uType, UINT uFlags)
+static BOOL IntDrawRectEdge(HDC hdc, LPRECT rc, UINT uType, UINT uFlags)
 {
     signed char LTInnerI, LTOuterI;
     signed char RBInnerI, RBOuterI;
@@ -678,9 +645,9 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
     if(uFlags & DFCS_CHECKED)
     {
         if(uFlags & DFCS_MONO)
-            UITOOLS95_DrawRectEdge(dc, &myr, edge, BF_MONO|BF_RECT|BF_ADJUST);
+            IntDrawRectEdge(dc, &myr, edge, BF_MONO|BF_RECT|BF_ADJUST);
         else
-            UITOOLS95_DrawRectEdge(dc, &myr, edge, (uFlags&DFCS_FLAT)|BF_RECT|BF_SOFT|BF_ADJUST);
+            IntDrawRectEdge(dc, &myr, edge, (uFlags&DFCS_FLAT)|BF_RECT|BF_SOFT|BF_ADJUST);
 
 	UITOOLS_DrawCheckedRect( dc, &myr );
         }
@@ -688,12 +655,12 @@ static BOOL UITOOLS95_DFC_ButtonPush(HDC dc, LPRECT r, UINT uFlags)
         {
         if(uFlags & DFCS_MONO)
         {
-            UITOOLS95_DrawRectEdge(dc, &myr, edge, BF_MONO|BF_RECT|BF_ADJUST);
+            IntDrawRectEdge(dc, &myr, edge, BF_MONO|BF_RECT|BF_ADJUST);
             FillRect(dc, &myr, GetSysColorBrush(COLOR_BTNFACE));
         }
         else
         {
-            UITOOLS95_DrawRectEdge(dc, r, edge, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT);
+            IntDrawRectEdge(dc, r, edge, (uFlags&DFCS_FLAT) | BF_MIDDLE | BF_RECT);
         }
     }
 
@@ -725,7 +692,7 @@ static BOOL UITOOLS95_DFC_ButtonCheck(HDC dc, LPRECT r, UINT uFlags)
     if(uFlags & DFCS_FLAT) flags |= BF_FLAT;
     else if(uFlags & DFCS_MONO) flags |= BF_MONO;
 
-    UITOOLS95_DrawRectEdge( dc, &myr, EDGE_SUNKEN, flags );
+    IntDrawRectEdge( dc, &myr, EDGE_SUNKEN, flags );
 
     if(uFlags & (DFCS_INACTIVE|DFCS_PUSHED))
         FillRect(dc, &myr, GetSysColorBrush(COLOR_BTNFACE));
@@ -928,9 +895,9 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     SIZE size;
 
   if(uFlags & DFCS_PUSHED)
-      UITOOLS95_DrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
+      IntDrawRectEdge(dc,r,EDGE_SUNKEN, BF_RECT | BF_MIDDLE | BF_SOFT);
     else
-      UITOOLS95_DrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
+      IntDrawRectEdge(dc,r,BDR_RAISEDINNER | BDR_RAISEDOUTER, BF_RECT |
                                BF_SOFT | BF_MIDDLE);
 
     switch(uFlags & 0xff)
@@ -1182,7 +1149,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
 
     case DFCS_SCROLLSIZEGRIP:
         /* This one breaks the flow... */
-        UITOOLS95_DrawRectEdge(dc, r, EDGE_BUMP, BF_MIDDLE | ((uFlags&(DFCS_MONO|DFCS_FLAT)) ? BF_MONO : 0));
+        IntDrawRectEdge(dc, r, EDGE_BUMP, BF_MIDDLE | ((uFlags&(DFCS_MONO|DFCS_FLAT)) ? BF_MONO : 0));
         hpsave = (HPEN)SelectObject(dc, GetStockObject(NULL_PEN));
         hbsave = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
         if(uFlags & (DFCS_MONO|DFCS_FLAT))
@@ -1262,7 +1229,7 @@ static BOOL UITOOLS95_DrawFrameScroll(HDC dc, LPRECT r, UINT uFlags)
     if( ! (uFlags & (0xff00 & ~DFCS_ADJUSTRECT)) )
       /* UITOOLS95_DFC_ButtonPush always uses BF_SOFT which we don't */
       /* want for the normal scroll-arrow button. */
-      UITOOLS95_DrawRectEdge( dc, r, EDGE_RAISED, (uFlags&DFCS_ADJUSTRECT) | BF_MIDDLE | BF_RECT);
+      IntDrawRectEdge( dc, r, EDGE_RAISED, (uFlags&DFCS_ADJUSTRECT) | BF_MIDDLE | BF_RECT);
     else
       UITOOLS95_DFC_ButtonPush(dc, r, (uFlags & 0xff00) );
 
@@ -1371,48 +1338,10 @@ static BOOL UITOOLS95_DrawFrameMenu(HDC dc, LPRECT r, UINT uFlags)
     return retval;
 }
 
-/* Ported from WINE20020904 */
-BOOL WINAPI DrawFrameControl( HDC hdc, LPRECT rc, UINT uType,
-                                  UINT uState )
-{
-   /* Win95 doesn't support drawing in other mapping modes
-    if(GetMapMode(hdc) != MM_TEXT)
-        return FALSE;
-    */
-    switch(uType)
-    {
-    case DFC_BUTTON:
-      return UITOOLS95_DrawFrameButton(hdc, rc, uState);
-    case DFC_CAPTION:
-      return UITOOLS95_DrawFrameCaption(hdc, rc, uState);
-    case DFC_MENU:
-      return UITOOLS95_DrawFrameMenu(hdc, rc, uState);
-    /*
-    case DFC_POPUPMENU:
-      break;
-    */
-    case DFC_SCROLL:
-      return UITOOLS95_DrawFrameScroll(hdc, rc, uState);
-/*
-    default:
-      DbgPrint("(%p,%p,%d,%x), bad type!\n", hdc,rc,uType,uState );
-*/
-    }
-    return FALSE;
-}
-/* Ported from WINE20020904 */
-BOOL WINAPI DrawEdge( HDC hdc, LPRECT rc, UINT edge, UINT flags )
-{
-    if(flags & BF_DIAGONAL)
-      return UITOOLS95_DrawDiagEdge(hdc, rc, edge, flags);
-    else
-      return UITOOLS95_DrawRectEdge(hdc, rc, edge, flags);
-}
-
 
 WINBOOL
 STDCALL
-INTERNAL_GrayString(
+IntGrayString(
   HDC hDC,
   HBRUSH hBrush,
   GRAYSTRINGPROC lpOutputFunc,
@@ -1539,569 +1468,433 @@ INTERNAL_GrayString(
         return success;
 }
 
-
-/*
- * @implemented
+/**********************************************************************
+ *          PAINTING_DrawStateJam
+ *
+ * Jams in the requested type in the dc
  */
-WINBOOL
-STDCALL
-GrayStringA(
-  HDC hDC,
-  HBRUSH hBrush,
-  GRAYSTRINGPROC lpOutputFunc,
-  LPARAM lpData,
-  int nCount,
-  int X,
-  int Y,
-  int nWidth,
-  int nHeight)
+static BOOL PAINTING_DrawStateJam(HDC hdc, UINT opcode,
+                                  DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
+                                  LPRECT rc, UINT dtflags, BOOL unicode )
 {
-  return INTERNAL_GrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, FALSE);
-}
-
-
-/*
- * @implemented
- */
-WINBOOL
-STDCALL
-GrayStringW(
-  HDC hDC,
-  HBRUSH hBrush,
-  GRAYSTRINGPROC lpOutputFunc,
-  LPARAM lpData,
-  int nCount,
-  int X,
-  int Y,
-  int nWidth,
-  int nHeight)
-{
-  return INTERNAL_GrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, TRUE);
-}
-
-
-/*
- * @implemented
- */
-WINBOOL
-STDCALL
-InvertRect(
-  HDC hDC,
-  CONST RECT *lprc)
-{
-  
-  return PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
-  			lprc->bottom - lprc->top, DSTINVERT);
-}
-
-
-/*
- * @implemented
- */
-int
-STDCALL
-FrameRect(
-  HDC hDC,
-  CONST RECT *lprc,
-  HBRUSH hbr)
-{
-HBRUSH oldbrush;
-RECT r = *lprc;
-
-	if ( (r.right <= r.left) || (r.bottom <= r.top) ) return 0;
-	if (!(oldbrush = SelectObject( hDC, hbr ))) return 0;
-        
-	PatBlt( hDC, r.left, r.top, 1, r.bottom - r.top, PATCOPY );
-	PatBlt( hDC, r.right - 1, r.top, 1, r.bottom - r.top, PATCOPY );
-	PatBlt( hDC, r.left, r.top, r.right - r.left, 1, PATCOPY );
-	PatBlt( hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY );
-                                                                            
-	SelectObject( hDC, oldbrush );
-	return TRUE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-FlashWindow(
-  HWND hWnd,
-  WINBOOL bInvert)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-FlashWindowEx(
-  PFLASHWINFO pfwi)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-int STDCALL
-FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
-{
-  HBRUSH prevhbr;
-  if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
-    {
-      return(FALSE);
-    }
-  PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
-	 lprc->bottom - lprc->top, PATCOPY);
-  SelectObject(hDC, prevhbr);
-  return(TRUE);
-}
-
-
-/*
- * @unimplemented
- */
-WINBOOL
-STDCALL
-DrawAnimatedRects(
-  HWND hwnd,
-  int idAni,
-  CONST RECT *lprcFrom,
-  CONST RECT *lprcTo)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @implemented
- */
-WINBOOL
-STDCALL
-DrawFocusRect(
-  HDC hdc,
-  CONST RECT *rect)
-{
-#if 0 /* FIXME PS_ALTERNATE and R2_XORPEN not yet implemented */
-  HBRUSH hOldBrush;
-  HPEN hOldPen, hNewPen;
-  INT oldDrawMode, oldBkMode;
-
-  hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
-  hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
-  hOldPen = SelectObject(hdc, hNewPen);
-  oldDrawMode = SetROP2(hdc, R2_XORPEN);
-  oldBkMode = SetBkMode(hdc, TRANSPARENT);
-
-  Rectangle(hdc, rect->left, rect->top, rect->right, rect->bottom);
-
-  SetBkMode(hdc, oldBkMode);
-  SetROP2(hdc, oldDrawMode);
-  SelectObject(hdc, hOldPen);
-  DeleteObject(hNewPen);
-  SelectObject(hdc, hOldBrush);
-
-  return TRUE;
-#else
-  HBRUSH hbrush = SelectObject(hdc, GetStockObject(GRAY_BRUSH));
-  PatBlt(hdc, rect->left, rect->top,
-	 rect->right - rect->left - 1, 1, PATINVERT);
-  PatBlt(hdc, rect->left, rect->top + 1, 1,
-	 rect->bottom - rect->top - 1, PATINVERT);
-  PatBlt(hdc, rect->left + 1, rect->bottom - 1,
-	 rect->right - rect->left - 1, -1, PATINVERT);
-  PatBlt(hdc, rect->right - 1, rect->top, -1,
-	 rect->bottom - rect->top - 1, PATINVERT);
-  SelectObject(hdc, hbrush);
-
-  return TRUE;
-#endif
-}
-
-
-// These are internal functions, based on the WINE sources. Currently they
-// are only implemented for DSS_NORMAL and DST_TEXT, although some handling
-// for DST_BITMAP has been included.
-
-WINBOOL INTERNAL_DrawStateDraw(HDC hdc, UINT type, DRAWSTATEPROC lpOutputFunc,
-                        LPARAM lData, WPARAM wData, LPRECT rc, UINT dtflags,
-                        BOOL unicode)
-{
-//    HDC MemDC;
-//    HBITMAP MemBMP;
-    BOOL retval = FALSE;
+    HDC memdc;
+    HBITMAP hbmsave;
+    BOOL retval;
     INT cx = rc->right - rc->left;
     INT cy = rc->bottom - rc->top;
 
-//  Is this supposed to happen?
-//    if (((type == DST_TEXT) || (type == DST_PREFIXTEXT)) && (lpOutputFunc))
-//        type = DST_COMPLEX;
-
-    switch(type)
+    switch(opcode)
     {
-        case DST_TEXT :
-        case DST_PREFIXTEXT :
+    case DST_TEXT:
+    case DST_PREFIXTEXT:
+        if(unicode)
+            return DrawTextW(hdc, (LPWSTR)lp, (INT)wp, rc, dtflags);
+        else
+            return DrawTextA(hdc, (LPSTR)lp, (INT)wp, rc, dtflags);
+
+    case DST_ICON:
+        return DrawIcon(hdc, rc->left, rc->top, (HICON)lp);
+
+    case DST_BITMAP:
+        memdc = CreateCompatibleDC(hdc);
+        if(!memdc) return FALSE;
+        hbmsave = (HBITMAP)SelectObject(memdc, (HBITMAP)lp);
+        if(!hbmsave)
         {
-/*
-            DbgPrint("Drawing DST_TEXT\n");
-*/
-            if (unicode)
-                return DrawTextW(hdc, (LPWSTR)lData, (INT)wData, rc, dtflags);
-            else
-                return DrawTextA(hdc, (LPSTR)lData, (INT)wData, rc, dtflags);
+            DeleteDC(memdc);
+            return FALSE;
         }
-        
-        case DST_ICON :
-        {
-            // TODO
-/*
-            DbgPrint("Drawing DST_ICON\n");
-*/
-            return retval;
-        }
-        
-        case DST_BITMAP :
-        {
-            // TODO
-/*
-            DbgPrint("Drawing DST_BITMAP\n");
-*/
-            return retval;
-        }
-        
-        case DST_COMPLEX :
-        {
-/*            
-            DbgPrint("Drawing DST_COMPLEX\n");
-*/
-            // Call lpOutputFunc, if necessary
-            if (lpOutputFunc)
-            {
-                // Something seems to be wrong with OffsetViewportOrgEx:
-                OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
-/*                
-                DbgPrint("Calling lpOutputFunc(0x%x, 0x%x, 0x%x, %d, %d)\n", hdc, lData, wData, cx, cy);
-*/
-                retval = lpOutputFunc(hdc, lData, wData, cx, cy);
-                OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
-                return retval;
-            }
-            else
-                return FALSE;
-        }
+        retval = BitBlt(hdc, rc->left, rc->top, cx, cy, memdc, 0, 0, SRCCOPY);
+        SelectObject(memdc, hbmsave);
+        DeleteDC(memdc);
+        return retval;
+
+    case DST_COMPLEX:
+        if(func) {
+	    BOOL bRet;
+	    /* DRAWSTATEPROC assumes that it draws at the center of coordinates  */
+
+	    OffsetViewportOrgEx(hdc, rc->left, rc->top, NULL);
+            bRet = func(hdc, lp, wp, cx, cy);
+	    /* Restore origin */
+	    OffsetViewportOrgEx(hdc, -rc->left, -rc->top, NULL);
+	    return bRet;
+	} else
+            return FALSE;
     }
-    
     return FALSE;
 }
 
-
-WINBOOL INTERNAL_DrawState(
-  HDC hdc,
-  HBRUSH hbr,
-  DRAWSTATEPROC lpOutputFunc,
-  LPARAM lData,
-  WPARAM wData,
-  int x,
-  int y,
-  int cx,
-  int cy,
-  UINT fuFlags,
-  BOOL unicode)
+static BOOL
+IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
+   INT x, INT y, INT cx, INT cy, UINT flags, BOOL unicode)
 {
-    UINT type;
-    UINT state;
-    INT len;
-    RECT rect;
-    UINT dtflags = DT_NOCLIP;           // Flags for DrawText
-    BOOL retval = FALSE;                // Return value
+    HBITMAP hbm, hbmsave;
+    HFONT hfsave;
+    HBRUSH hbsave, hbrtmp = 0;
+    HDC memdc;
+    RECT rc;
+    UINT dtflags = DT_NOCLIP;
+    COLORREF fg, bg;
+    UINT opcode = flags & 0xf;
+    INT len = wp;
+    BOOL retval, tmp;
 
-    COLORREF ForeColor,                 // Foreground color
-             BackColor;                 // Background color
-
-    HDC MemDC = NULL;                   // Memory DC
-    HBITMAP MemBMP = NULL,              // Memory bitmap (for MemDC)
-            OldBMP = NULL;              // Old memory bitmap (for MemDC)
-    HFONT   Font = NULL;                // Old font (for MemDC)
-    HBRUSH  OldBrush = NULL,            // Old brush (for MemDC)
-            TempBrush = NULL;           // Temporary brush (for MemDC)
-
-    // AG: Experimental, unfinished, and most likely buggy! I haven't been
-    // able to test this - my intention was to implement some things needed
-    // by the button control.
-
-    if ((! lpOutputFunc) && (fuFlags & DST_COMPLEX))
-        return FALSE;
-
-    type = fuFlags & 0xf;          // DST_xxx
-    state = fuFlags & 0x7ff0;      // DSS_xxx
-    len = wData;                    // Data length
-
-/*
-    DbgPrint("Entered DrawState, fuFlags %d, type %d, state %d\n", fuFlags, type, state);
-*/
-
-    if ((type == DST_TEXT || type == DST_PREFIXTEXT) && ! len)
+    if((opcode == DST_TEXT || opcode == DST_PREFIXTEXT) && !len)    /* The string is '\0' terminated */
     {
-        // The string is NULL-terminated
-        if (unicode)
-            len = lstrlenW((LPWSTR) lData);
+        if(unicode)
+            len = strlenW((LPWSTR)lp);
         else
-            len = strlen((LPSTR) lData);
+            len = strlen((LPSTR)lp);
     }
-    
-    // Identify the image size if not specified
-    if (!cx || !cy)
+
+    /* Find out what size the image has if not given by caller */
+    if(!cx || !cy)
     {
         SIZE s;
-//        CURSORICONINFO *ici;
-        BITMAP bm;
-        
-        switch(type)  // TODO
+        ICONINFO ici;
+	BITMAP bm;
+
+        switch(opcode)
         {
-            case DST_TEXT :
-            case DST_PREFIXTEXT :
-            {
-                BOOL success;
+        case DST_TEXT:
+        case DST_PREFIXTEXT:
+            if(unicode)
+                retval = GetTextExtentPoint32W(hdc, (LPWSTR)lp, len, &s);
+            else
+                retval = GetTextExtentPoint32A(hdc, (LPSTR)lp, len, &s);
+            if(!retval) return FALSE;
+            break;
 
-/*
-                DbgPrint("Calculating rect of DST_TEXT / DST_PREFIXTEXT\n");
-*/
-            
-                if (unicode)
-                    success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
-                else
-                    success = GetTextExtentPoint32A(hdc, (LPSTR) lData, len, &s);
-
-                if (!success) return FALSE;
-                break;
-            }
-
-            case DST_ICON :
-            {
-/*
-                DbgPrint("Calculating rect of DST_ICON\n");
-*/
-                // TODO
-                break;
-            }
-
-            case DST_BITMAP :
-            {
-/*
-                DbgPrint("Calculating rect of DST_BITMAP\n");
-*/
-
-                if (!GetObjectA((HBITMAP) lData, sizeof(bm), &bm))
-                    return FALSE;
-                
-                s.cx = bm.bmWidth;
-                s.cy = bm.bmHeight;
-                break;
-            }
-
-            case DST_COMPLEX :  // cx and cy must be set in this mode
-/*
-                DbgPrint("Calculating rect of DST_COMPLEX - Not allowed!\n");
-*/
+        case DST_ICON:
+            if(!GetIconInfo((HICON)lp, &ici))
                 return FALSE;
-        }
-        
-        if (! cx) cx = s.cx;
-        if (! cy) cy = s.cy;
+	    if(!GetObjectW(ici.hbmColor, sizeof(bm), &bm))
+	        return FALSE;
+            s.cx = bm.bmWidth;
+            s.cy = bm.bmHeight;
+            break;
+
+        case DST_BITMAP:
+	    if(!GetObjectW((HBITMAP)lp, sizeof(bm), &bm))
+	        return FALSE;
+            s.cx = bm.bmWidth;
+            s.cy = bm.bmHeight;
+            break;
+
+        case DST_COMPLEX: /* cx and cy must be set in this mode */
+            return FALSE;
+	}
+
+        if(!cx) cx = s.cx;
+        if(!cy) cy = s.cy;
     }
 
-    // Flags for DrawText
-    if (fuFlags & DSS_RIGHT)  // Undocumented
+    rc.left   = x;
+    rc.top    = y;
+    rc.right  = x + cx;
+    rc.bottom = y + cy;
+
+    if(flags & DSS_RIGHT)    /* This one is not documented in the win32.hlp file */
         dtflags |= DT_RIGHT;
-    if (type == DST_TEXT)
+    if(opcode == DST_TEXT)
         dtflags |= DT_NOPREFIX;
-        
-    // No additional processing needed for DSS_NORMAL
-    if (state == DSS_NORMAL)
+
+    /* For DSS_NORMAL we just jam in the image and return */
+    if((flags & 0x7ff0) == DSS_NORMAL)
     {
-/*
-        DbgPrint("DSS_NORMAL (no additional processing necessary)\n");
-*/
-        SetRect(&rect, x, y, x + cx, y + cy);
-        return INTERNAL_DrawStateDraw(hdc, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
-    }
-    
-    // WARNING: FROM THIS POINT ON THE CODE IS VERY BUGGY
-
-    // Set the rectangle to that of the memory DC
-    SetRect(&rect, 0, 0, cx, cy);
-
-    // Set colors
-    ForeColor = SetTextColor(hdc, RGB(0, 0, 0));
-    BackColor = SetBkColor(hdc, RGB(255, 255, 255));
-
-    // Create and initialize the memory DC
-    MemDC = CreateCompatibleDC(hdc);
-    if (! MemDC) goto cleanup;
-    MemBMP = CreateBitmap(cx, cy, 1, 1, NULL);
-    if (! MemBMP) goto cleanup;
-    OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
-    if (! OldBMP) goto cleanup;
-
-/*
-    DbgPrint("Created and inited MemDC\n");
-*/
-
-    // Set up the default colors and font
-    if (! FillRect(MemDC, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH))) goto cleanup;
-    SetBkColor(MemDC, RGB(255, 255, 255));
-    SetTextColor(MemDC, RGB(0, 0, 0));
-    Font = (HFONT)SelectObject(MemDC, GetCurrentObject(hdc, OBJ_FONT));
-
-/*
-    DbgPrint("Selected font and set colors\n");
-*/
-
-    // Enable this line to use the current DC image to begin with (wrong?)
-//    if (! BitBlt(MemDC, 0, 0, cx, cy, hdc, x, y, SRCCOPY)) goto cleanup;
-
-    // DST_COMPLEX may draw text as well, so make sure font is selected
-    if (! Font && (type <= DST_PREFIXTEXT)) // THIS FAILS
-      goto cleanup;
-
-    {
-      BOOL TempResult = INTERNAL_DrawStateDraw(MemDC, type, lpOutputFunc, lData, wData, &rect, dtflags, unicode);
-      if (Font) SelectObject(MemDC, Font);
-      if (! TempResult) goto cleanup;
+        return PAINTING_DrawStateJam(hdc, opcode, func, lp, len, &rc, dtflags, unicode);
     }
 
-/*
-    DbgPrint("Done drawing\n");
-*/
+    /* For all other states we need to convert the image to B/W in a local bitmap */
+    /* before it is displayed */
+    fg = SetTextColor(hdc, RGB(0, 0, 0));
+    bg = SetBkColor(hdc, RGB(255, 255, 255));
+    hbm = NULL; hbmsave = NULL;
+    memdc = NULL; hbsave = NULL;
+    retval = FALSE; /* assume failure */
 
-    // Apply state(s?)
-    if (state & DSS_UNION)
+    /* From here on we must use "goto cleanup" when something goes wrong */
+    hbm     = CreateBitmap(cx, cy, 1, 1, NULL);
+    if(!hbm) goto cleanup;
+    memdc   = CreateCompatibleDC(hdc);
+    if(!memdc) goto cleanup;
+    hbmsave = (HBITMAP)SelectObject(memdc, hbm);
+    if(!hbmsave) goto cleanup;
+    rc.left = rc.top = 0;
+    rc.right = cx;
+    rc.bottom = cy;
+    if(!FillRect(memdc, &rc, (HBRUSH)GetStockObject(WHITE_BRUSH))) goto cleanup;
+    SetBkColor(memdc, RGB(255, 255, 255));
+    SetTextColor(memdc, RGB(0, 0, 0));
+    hfsave  = (HFONT)SelectObject(memdc, GetCurrentObject(hdc, OBJ_FONT));
+
+    /* DST_COMPLEX may draw text as well,
+     * so we must be sure that correct font is selected
+     */
+    if(!hfsave && (opcode <= DST_PREFIXTEXT)) goto cleanup;
+    tmp = PAINTING_DrawStateJam(memdc, opcode, func, lp, len, &rc, dtflags, unicode);
+    if(hfsave) SelectObject(memdc, hfsave);
+    if(!tmp) goto cleanup;
+
+    /* This state cause the image to be dithered */
+    if(flags & DSS_UNION)
     {
-/*
-        DbgPrint("DSS_UNION\n");
-*/
-        // Dither the image (not implemented in ReactOS yet?)
-        // TODO
+#if 0
+        hbsave = (HBRUSH)SelectObject(memdc, CACHE_GetPattern55AABrush());
+        if(!hbsave) goto cleanup;
+        tmp = PatBlt(memdc, 0, 0, cx, cy, 0x00FA0089);
+        SelectObject(memdc, hbsave);
+        if(!tmp) goto cleanup;
+#else
+        UNIMPLEMENTED;
+#endif
     }
 
-    // Prepare shadow brush
-    if (state & DSS_DISABLED)
-        TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
-    // else if (state & DSS_DEFAULT)
-    // TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+    if (flags & DSS_DISABLED)
+       hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DHILIGHT));
+    else if (flags & DSS_DEFAULT)
+       hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
 
-    // Draw shadow
-    if (state & (DSS_DISABLED /*|DSS_DEFAULT*/))
+    /* Draw light or dark shadow */
+    if (flags & (DSS_DISABLED|DSS_DEFAULT))
     {
-/*
-        DbgPrint("DSS_DISABLED - Drawing shadow\n");
-*/
-        if (! TempBrush) goto cleanup;
-        OldBrush = (HBRUSH)SelectObject(hdc, TempBrush);
-        if (! OldBrush) goto cleanup;
-        if (! BitBlt(hdc, x + 1, y + 1, cx, cy, MemDC, 0, 0, 0x00B8074A)) goto cleanup;
-        SelectObject(hdc, OldBrush);
-        DeleteObject(TempBrush);
-        TempBrush = NULL;
+       if(!hbrtmp) goto cleanup;
+       hbsave = (HBRUSH)SelectObject(hdc, hbrtmp);
+       if(!hbsave) goto cleanup;
+       if(!BitBlt(hdc, x+1, y+1, cx, cy, memdc, 0, 0, 0x00B8074A)) goto cleanup;
+       SelectObject(hdc, hbsave);
+       DeleteObject(hbrtmp);
+       hbrtmp = 0;
     }
 
-    if (state & DSS_DISABLED)
+    if (flags & DSS_DISABLED)
     {
-/*
-        DbgPrint("DSS_DISABLED - Creating shadow brush 2\n");
-*/
-        hbr = TempBrush = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
-        if (! TempBrush) goto cleanup;
+       hbr = hbrtmp = CreateSolidBrush(GetSysColor(COLOR_3DSHADOW));
+       if(!hbrtmp) goto cleanup;
     }
-    else if (! hbr)
+    else if (!hbr)
     {
-/*
-        DbgPrint("Creating a brush\n");
-*/
-        hbr = (HBRUSH) GetStockObject(BLACK_BRUSH);
+       hbr = (HBRUSH)GetStockObject(BLACK_BRUSH);
     }
-    
-/*
-    DbgPrint("Selecting new brush\n");
-*/
-    OldBrush = (HBRUSH) SelectObject(hdc, hbr);
 
-    // Copy to hdc from MemDC    
-/*
-    DbgPrint("Blitting\n");
-*/
-    if (! BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, 0x00B8074A)) goto cleanup;
-    
-    retval = TRUE;
+    hbsave = (HBRUSH)SelectObject(hdc, hbr);
 
-    
-    cleanup :
-/*
-        DbgPrint("In cleanup : Font %x  OldBrush %x  OldBMP %x  Tempbrush %x  MemBMP %x  MemDC %x\n",
-                  Font, OldBrush, OldBMP, TempBrush, MemBMP, MemDC);
-*/
-        SetTextColor(hdc, ForeColor);
-        SetBkColor(hdc, BackColor);
-        if (OldBrush)   SelectObject(MemDC, OldBrush);
-        if (OldBMP)     SelectObject(MemDC, OldBMP);
-        if (TempBrush)  DeleteObject(TempBrush);
-        if (MemBMP)     DeleteObject(MemBMP);
-        if (MemDC)      DeleteDC(MemDC);
-        
-/*
-        DbgPrint("Leaving DrawState() with retval %d\n", retval);
-*/
-        
-        return retval;
+    if(!BitBlt(hdc, x, y, cx, cy, memdc, 0, 0, 0x00B8074A)) goto cleanup;
+
+    retval = TRUE; /* We succeeded */
+
+cleanup:
+    SetTextColor(hdc, fg);
+    SetBkColor(hdc, bg);
+
+    if(hbsave)  SelectObject(hdc, hbsave);
+    if(hbmsave) SelectObject(memdc, hbmsave);
+    if(hbrtmp)  DeleteObject(hbrtmp);
+    if(hbm)     DeleteObject(hbm);
+    if(memdc)   DeleteDC(memdc);
+
+    return retval;
 }
-
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-DrawStateA(
-  HDC hdc,
-  HBRUSH hbr,
-  DRAWSTATEPROC lpOutputFunc,
-  LPARAM lData,
-  WPARAM wData,
-  int x,
-  int y,
-  int cx,
-  int cy,
-  UINT fuFlags)
+BOOL STDCALL
+DrawFrameControl(HDC hDC, LPRECT rc, UINT uType, UINT uState)
 {
-    return INTERNAL_DrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, FALSE);
-}
+   if (GetMapMode(hDC) != MM_TEXT)
+      return FALSE;
 
+   switch(uType)
+   {
+      case DFC_BUTTON:
+         return UITOOLS95_DrawFrameButton(hDC, rc, uState);
+      case DFC_CAPTION:
+         return UITOOLS95_DrawFrameCaption(hDC, rc, uState);
+      case DFC_MENU:
+         return UITOOLS95_DrawFrameMenu(hDC, rc, uState);
+#if 0
+      case DFC_POPUPMENU:
+         UNIMPLEMENTED;
+         break;
+#endif
+      case DFC_SCROLL:
+         return UITOOLS95_DrawFrameScroll(hDC, rc, uState);
+   }
+   return FALSE;
+}
 
 /*
  * @implemented
  */
-WINBOOL
-STDCALL
-DrawStateW(
-  HDC hdc,
-  HBRUSH hbr,
-  DRAWSTATEPROC lpOutputFunc,
-  LPARAM lData,
-  WPARAM wData,
-  int x,
-  int y,
-  int cx,
-  int cy,
-  UINT fuFlags)
+BOOL STDCALL
+DrawEdge(HDC hDC, LPRECT rc, UINT edge, UINT flags)
 {
-    return INTERNAL_DrawState(hdc, hbr, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, TRUE);
+   if (flags & BF_DIAGONAL)
+      return IntDrawDiagEdge(hDC, rc, edge, flags);
+   else
+      return IntDrawRectEdge(hDC, rc, edge, flags);
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GrayStringA(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
+   int nCount, int X, int Y, int nWidth, int nHeight)
+{
+  return IntGrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, FALSE);
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GrayStringW(HDC hDC, HBRUSH hBrush, GRAYSTRINGPROC lpOutputFunc, LPARAM lpData,
+   int nCount, int X, int Y, int nWidth, int nHeight)
+{
+  return IntGrayString(hDC, hBrush, lpOutputFunc, lpData, nCount, X, Y, nWidth, nHeight, TRUE);
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+InvertRect(HDC hDC, CONST RECT *lprc)
+{
+   return PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+      lprc->bottom - lprc->top, DSTINVERT);
+}
+
+/*
+ * @implemented
+ */
+INT STDCALL
+FrameRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
+{
+   HBRUSH oldbrush;
+   RECT r = *lprc;
+
+   if ((r.right <= r.left) || (r.bottom <= r.top)) return 0;
+   if (!(oldbrush = SelectObject(hDC, hbr))) return 0;
+        
+   PatBlt(hDC, r.left, r.top, 1, r.bottom - r.top, PATCOPY);
+   PatBlt(hDC, r.right - 1, r.top, 1, r.bottom - r.top, PATCOPY);
+   PatBlt(hDC, r.left, r.top, r.right - r.left, 1, PATCOPY);
+   PatBlt(hDC, r.left, r.bottom - 1, r.right - r.left, 1, PATCOPY);
+                                                                            
+   SelectObject(hDC, oldbrush);
+   return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+FlashWindow(HWND hWnd, BOOL bInvert)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+FlashWindowEx(PFLASHWINFO pfwi)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @implemented
+ */
+INT STDCALL
+FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
+{
+   HBRUSH prevhbr;
+   if ((DWORD)hbr < 0x4000)
+      hbr = GetSysColorBrush((DWORD)hbr);
+   if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
+      return FALSE;
+   PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+      lprc->bottom - lprc->top, PATCOPY);
+   SelectObject(hDC, prevhbr);
+   return TRUE;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+DrawAnimatedRects(HWND hWnd, int idAni, CONST RECT *lprcFrom,
+   CONST RECT *lprcTo)
+{
+   UNIMPLEMENTED;
+   return FALSE;
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+DrawFocusRect(HDC hdc, CONST RECT *rect)
+{
+/* FIXME PS_ALTERNATE and R2_XORPEN not yet implemented */
+#if 0 
+   HBRUSH hOldBrush;
+   HPEN hOldPen, hNewPen;
+   INT oldDrawMode, oldBkMode;
+
+   hOldBrush = SelectObject(hdc, GetStockObject(NULL_BRUSH));
+   hNewPen = CreatePen(PS_ALTERNATE, 1, GetSysColor(COLOR_WINDOWTEXT));
+   hOldPen = SelectObject(hdc, hNewPen);
+   oldDrawMode = SetROP2(hdc, R2_XORPEN);
+   oldBkMode = SetBkMode(hdc, TRANSPARENT);
+
+   Rectangle(hdc, rect->left, rect->top, rect->right, rect->bottom);
+
+   SetBkMode(hdc, oldBkMode);
+   SetROP2(hdc, oldDrawMode);
+   SelectObject(hdc, hOldPen);
+   DeleteObject(hNewPen);
+   SelectObject(hdc, hOldBrush);
+
+   return TRUE;
+#else
+   HBRUSH hbrush = SelectObject(hdc, GetStockObject(GRAY_BRUSH));
+   PatBlt(hdc, rect->left, rect->top,
+      rect->right - rect->left - 1, 1, PATINVERT);
+   PatBlt(hdc, rect->left, rect->top + 1, 1,
+      rect->bottom - rect->top - 1, PATINVERT);
+   PatBlt(hdc, rect->left + 1, rect->bottom - 1,
+      rect->right - rect->left - 1, -1, PATINVERT);
+   PatBlt(hdc, rect->right - 1, rect->top, -1,
+      rect->bottom - rect->top - 1, PATINVERT);
+   SelectObject(hdc, hbrush);
+
+   return TRUE;
+#endif
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+DrawStateA(HDC hDC, HBRUSH hBrush, DRAWSTATEPROC lpOutputFunc, LPARAM lData,
+   WPARAM wData, int x, int y, int cx, int cy, UINT fuFlags)
+{
+   return IntDrawState(hDC, hBrush, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, FALSE);
+}
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+DrawStateW(HDC hDC, HBRUSH hBrush, DRAWSTATEPROC lpOutputFunc, LPARAM lData,
+   WPARAM wData, int x, int y, int cx, int cy, UINT fuFlags)
+{
+   return IntDrawState(hDC, hBrush, lpOutputFunc, lData, wData, x, y, cx, cy, fuFlags, TRUE);
 }

@@ -19,12 +19,23 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __USE_W32API
+#define __USE_W32API
+#endif
+
+#include <stdarg.h>
+#include <string.h>
+#include <stdlib.h>
+
 #include "windows.h"
+#include "controls.h"
 #include "user32/regcontrol.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
-HPEN STDCALL GetSysColorPen (int nIndex); // ReactOS Hack. Go Away
+#ifdef __REACTOS__
+HPEN STDCALL GetSysColorPen(int nIndex);
+#endif
 
 /* GetWindowLong offsets for window extra information */
 #define STATE_GWL_OFFSET  0
@@ -99,13 +110,23 @@ static WORD checkBoxWidth = 0, checkBoxHeight = 0;
  */
 const struct builtin_class_descr BUTTON_builtin_class =
 {
-    L"Button",            /* name */
+#ifdef __REACTOS__
+    L"Button",           /* name */
     CS_GLOBALCLASS | CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
-    (WNDPROC) ButtonWndProcW,      /* procW */
-    (WNDPROC) ButtonWndProcA,      /* procA */
+    ButtonWndProcW,      /* procW */
+    ButtonWndProcA,      /* procA */
     NB_EXTRA_BYTES,      /* extra */
-    (LPCWSTR) IDC_ARROW,           /* cursor */
+    (LPWSTR)IDC_ARROW,   /* cursor */
     0                    /* brush */
+#else
+    "Button",            /* name */
+    CS_DBLCLKS | CS_VREDRAW | CS_HREDRAW | CS_PARENTDC, /* style  */
+    ButtonWndProcA,      /* procA */
+    ButtonWndProcW,      /* procW */
+    NB_EXTRA_BYTES,      /* extra */
+    IDC_ARROW,           /* cursor */
+    0                    /* brush */
+#endif
 };
 
 
@@ -372,9 +393,10 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     case WM_SYSCOLORCHANGE:
         InvalidateRect( hWnd, NULL, FALSE );
         break;
+
 #ifndef __REACTOS__
     case BM_SETSTYLE16:
-#endif /* __REACTOS__ */
+#endif
     case BM_SETSTYLE:
         if ((wParam & 0x0f) >= MAX_BTN_TYPE) break;
         btn_type = wParam & 0x0f;
@@ -411,14 +433,16 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
 
     case BM_GETIMAGE:
         return GetWindowLongA( hWnd, HIMAGE_GWL_OFFSET );
+
 #ifndef __REACTOS__
     case BM_GETCHECK16:
-#endif /* __REACTOS__ */
+#endif
     case BM_GETCHECK:
         return get_button_state( hWnd ) & 3;
+
 #ifndef __REACTOS__
     case BM_SETCHECK16:
-#endif /* __REACTOS__ */
+#endif
     case BM_SETCHECK:
         if (wParam > maxCheckState[btn_type]) wParam = maxCheckState[btn_type];
         state = get_button_state( hWnd );
@@ -436,11 +460,13 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if ((btn_type == BS_AUTORADIOBUTTON) && (wParam == BUTTON_CHECKED) && (style & WS_CHILD))
             BUTTON_CheckAutoRadioButton( hWnd );
         break;
+
 #ifndef __REACTOS__
     case BM_GETSTATE16:
 #endif
     case BM_GETSTATE:
         return get_button_state( hWnd );
+
 #ifndef __REACTOS__
     case BM_SETSTATE16:
 #endif
@@ -729,13 +755,18 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     GetClientRect( hwnd, &rc );
 
-	 /* Send WM_CTLCOLOR to allow changing the font (the colors are fixed) */
+    /* Send WM_CTLCOLOR to allow changing the font (the colors are fixed) */
     if ((hFont = get_button_font( hwnd ))) SelectObject( hDC, hFont );
     SendMessageW( GetParent(hwnd), WM_CTLCOLORBTN, (WPARAM)hDC, (LPARAM)hwnd );
+#ifndef __REACTOS__
+    hOldPen = (HPEN)SelectObject(hDC, SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
+#else
     hOldPen = (HPEN)SelectObject(hDC, GetSysColorPen(COLOR_WINDOWFRAME));
+#endif
     hOldBrush =(HBRUSH)SelectObject(hDC,GetSysColorBrush(COLOR_BTNFACE));
     oldBkMode = SetBkMode(hDC, TRANSPARENT);
-    #ifndef __REACTOS__
+
+#ifndef __REACTOS__
     if ( TWEAK_WineLook == WIN31_LOOK)
     {
         COLORREF clr_wnd = GetSysColor(COLOR_WINDOW);
@@ -747,12 +778,14 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
         SetPixel( hDC, rc.right-1, rc.bottom-1, clr_wnd);
 	InflateRect( &rc, -1, -1 );
     }
-	#endif /* __REACTOS__ */
+#endif
+
     if (get_button_type(style) == BS_DEFPUSHBUTTON)
     {
         Rectangle(hDC, rc.left, rc.top, rc.right, rc.bottom);
 	InflateRect( &rc, -1, -1 );
     }
+
 #ifndef __REACTOS__
     if (TWEAK_WineLook == WIN31_LOOK)
     {
@@ -769,7 +802,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 	}
     }
     else
-			#endif /* __REACTOS__ */
+#endif
     {
         UINT uState = DFCS_BUTTONPUSH | DFCS_ADJUSTRECT;
 
@@ -800,6 +833,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     if (pushedState)
        OffsetRect(&r, 1, 1);
+
 #ifndef __REACTOS__
     if(TWEAK_WineLook == WIN31_LOOK)
     {
@@ -807,6 +841,7 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
        InflateRect(&focus_rect, 2, 0);
     }
 #endif
+
     hRgn = CreateRectRgn(rc.left, rc.top, rc.right, rc.bottom);
     SelectClipRgn(hDC, hRgn);
 
@@ -889,7 +924,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     /* Draw the check-box bitmap */
     if (action == ODA_DRAWENTIRE || action == ODA_SELECT)
     {
-		#ifndef __REACTOS__
+#ifndef __REACTOS__
         if( TWEAK_WineLook == WIN31_LOOK )
         {
 	    HDC hMemDC = CreateCompatibleDC( hDC );
@@ -917,7 +952,7 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
 	    DeleteDC( hMemDC );
         }
         else
-				#endif /* __REACTOS__ */
+#endif
         {
             UINT flags;
 
@@ -1034,7 +1069,7 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
 				     (WPARAM)hDC, (LPARAM)hwnd);
 
     GetClientRect( hwnd, &rc);
-	#ifndef __REACTOS__
+#ifndef __REACTOS__
     if (TWEAK_WineLook == WIN31_LOOK) {
         HPEN hPrevPen = SelectObject( hDC,
 					  SYSCOLOR_GetPen(COLOR_WINDOWFRAME));
@@ -1044,10 +1079,9 @@ static void GB_Paint( HWND hwnd, HDC hDC, UINT action )
 	Rectangle( hDC, rc.left, rc.top + 2, rc.right - 1, rc.bottom - 1 );
 	SelectObject( hDC, hPrevBrush );
 	SelectObject( hDC, hPrevPen );
-    } 
-	else
-	#endif /* __REACTOS__ */
-	{
+    } else
+#endif
+    {
 	TEXTMETRICW tm;
 	rcFrame = rc;
 
