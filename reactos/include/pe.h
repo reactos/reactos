@@ -235,20 +235,6 @@ typedef struct _IMAGE_IMPORT_BY_NAME {
 
 #define    RT_NEWRESOURCE   0x2000
 #define    RT_ERROR         0x7fff
-#define    RT_CURSOR        1
-#define    RT_BITMAP        2
-#define    RT_ICON          3
-#define    RT_MENU          4
-#define    RT_DIALOG        5
-#define    RT_STRING        6
-#define    RT_FONTDIR       7
-#define    RT_FONT          8
-#define    RT_ACCELERATORS  9
-#define    RT_RCDATA        10
-#define    RT_MESSAGETABLE  11
-#define    RT_GROUP_CURSOR  12
-#define    RT_GROUP_ICON    14
-#define    RT_VERSION       16
 #define    NEWBITMAP        (RT_BITMAP|RT_NEWRESOURCE)
 #define    NEWMENU          (RT_MENU|RT_NEWRESOURCE)
 #define    NEWDIALOG        (RT_DIALOG|RT_NEWRESOURCE)
@@ -358,7 +344,6 @@ typedef struct _IMAGE_NORMAL_MENU_ITEM{
 #define MI_MENUBREAK    0x0040 // MENUBREAK keyword
 #define MI_ENDMENU      0x0080 // used internally
 
-
 // Dialog Box Resources	.................. added by sang cho.
 
 // A dialog box is contained in a single resource and has a header and 
@@ -450,97 +435,6 @@ typedef struct _IMAGE_CONTROL_DATA{
 // ICON                STATIC                SS_ICON
 // SCROLLBAR           SCROLLBAR             None
 ///
-
-#define WS_OVERLAPPED   0x00000000L
-#define WS_POPUP        0x80000000L
-#define WS_CHILD        0x40000000L
-#define WS_CLIPSIBLINGS 0x04000000L
-#define WS_CLIPCHILDREN 0x02000000L
-#define WS_VISIBLE      0x10000000L
-#define WS_DISABLED     0x08000000L
-#define WS_MINIMIZE     0x20000000L
-#define WS_MAXIMIZE     0x01000000L
-#define WS_CAPTION      0x00C00000L
-#define WS_BORDER       0x00800000L
-#define WS_DLGFRAME     0x00400000L
-#define WS_VSCROLL      0x00200000L
-#define WS_HSCROLL      0x00100000L
-#define WS_SYSMENU      0x00080000L
-#define WS_THICKFRAME   0x00040000L
-#define WS_MINIMIZEBOX  0x00020000L
-#define WS_MAXIMIZEBOX  0x00010000L
-#define WS_GROUP        0x00020000L
-#define WS_TABSTOP      0x00010000L
-
-// other aliases
-#define WS_OVERLAPPEDWINDOW (WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX)
-#define WS_POPUPWINDOW  (WS_POPUP | WS_BORDER | WS_SYSMENU)
-#define WS_CHILDWINDOW  (WS_CHILD)
-#define WS_TILED        WS_OVERLAPPED
-#define WS_ICONIC       WS_MINIMIZE
-#define WS_SIZEBOX      WS_THICKFRAME
-#define WS_TILEDWINDOW  WS_OVERLAPPEDWINDOW
-
-#define WS_EX_DLGMODALFRAME     0x00000001L
-#define WS_EX_NOPARENTNOTIFY    0x00000004L
-#define WS_EX_TOPMOST           0x00000008L
-#define WS_EX_ACCEPTFILES       0x00000010L
-#define WS_EX_TRANSPARENT       0x00000020L
-
-#define BS_PUSHBUTTON           0x00000000L
-#define BS_DEFPUSHBUTTON        0x00000001L
-#define BS_CHECKBOX             0x00000002L
-#define BS_AUTOCHECKBOX         0x00000003L
-#define BS_RADIOBUTTON          0x00000004L
-#define BS_3STATE               0x00000005L
-#define BS_AUTO3STATE           0x00000006L
-#define BS_GROUPBOX             0x00000007L
-#define BS_USERBUTTON           0x00000008L
-#define BS_AUTORADIOBUTTON      0x00000009L
-#define BS_OWNERDRAW            0x0000000BL
-#define BS_LEFTTEXT             0x00000020L
-
-#define ES_LEFT         0x00000000L
-#define ES_CENTER       0x00000001L
-#define ES_RIGHT        0x00000002L
-#define ES_MULTILINE    0x00000004L
-#define ES_UPPERCASE    0x00000008L
-#define ES_LOWERCASE    0x00000010L
-#define ES_PASSWORD     0x00000020L
-#define ES_AUTOVSCROLL  0x00000040L
-#define ES_AUTOHSCROLL  0x00000080L
-#define ES_NOHIDESEL    0x00000100L
-#define ES_OEMCONVERT   0x00000400L
-#define ES_READONLY     0x00000800L
-#define ES_WANTRETURN   0x00001000L
-
-#define LBS_NOTIFY            0x0001L
-#define LBS_SORT              0x0002L
-#define LBS_NOREDRAW          0x0004L
-#define LBS_MULTIPLESEL       0x0008L
-#define LBS_OWNERDRAWFIXED    0x0010L
-#define LBS_OWNERDRAWVARIABLE 0x0020L
-#define LBS_HASSTRINGS        0x0040L
-#define LBS_USETABSTOPS       0x0080L
-#define LBS_NOINTEGRALHEIGHT  0x0100L
-#define LBS_MULTICOLUMN       0x0200L
-#define LBS_WANTKEYBOARDINPUT 0x0400L
-#define LBS_EXTENDEDSEL       0x0800L
-#define LBS_DISABLENOSCROLL   0x1000L
-
-#define SS_LEFT             0x00000000L
-#define SS_CENTER           0x00000001L
-#define SS_RIGHT            0x00000002L
-#define SS_ICON             0x00000003L
-#define SS_BLACKRECT        0x00000004L
-#define SS_GRAYRECT         0x00000005L
-#define SS_WHITERECT        0x00000006L
-#define SS_BLACKFRAME       0x00000007L
-#define SS_GRAYFRAME        0x00000008L
-#define SS_WHITEFRAME       0x00000009L
-#define SS_SIMPLE           0x0000000BL
-#define SS_LEFTNOWORDWRAP   0x0000000CL
-#define SS_BITMAP           0x0000000EL
 
 //
 // Debug Format

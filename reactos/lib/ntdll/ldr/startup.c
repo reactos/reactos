@@ -9,31 +9,44 @@
 
 /* INCLUDES *****************************************************************/
 
+#define WIN32_NO_PEHDR
 #include <windows.h>
+#include <ddk/ntddk.h>
+#include <pe.h>
+#include <string.h>
+#include <wstring.h>
 
 /* MACROS ********************************************************************/
 
+/* TYPEDEFS ******************************************************************/
+
+typedef int (*PEPFUNC)();
+ 
 /* GLOBALS *******************************************************************/
 
 /* FORWARD DECLARATIONS ******************************************************/
 
 VOID LdrStartup(DWORD ImageBase);
-static VOID LdrPEStartup(DWORD ImageBase);
-static VOID LdrMZStartup(DWORD ImageBase);
-static VOID LdrBinStartup(DWORD ImageBase);
+static PEPFUNC LdrPEStartup(DWORD ImageBase);
+static PEPFUNC LdrMZStartup(DWORD ImageBase);
+static PEPFUNC LdrBinStartup(DWORD ImageBase);
 
 /* FUNCTIONS *****************************************************************/
 
 static VOID
-LdrPrintMsg(const char *s)
+LdrPrintMsg(char *s)
 {
-  ANSI_STRING AnsiString;
+  int i;
+  wchar_t USBuf[512];
   UNICODE_STRING UnicodeString;
 
-  RtlInitAnsiString(&AnsiString, s);
-  RtlAnsiToUnicodeString(&AnsiString, &UnicodeString, TRUE);
+  for (i = 0; s[i] != '\0'; i++)
+    {
+      USBuf[i] = s[i];
+    }
+  USBuf[i] = 0;
+  RtlInitUnicodeString(&UnicodeString, USBuf);
   NtDisplayString(&UnicodeString);
-  RtlFreeUnicodeString(&UnicodeString);
 }
 
 /*   LdrStartup
@@ -46,7 +59,7 @@ LdrPrintMsg(const char *s)
 VOID
 LdrStartup(DWORD ImageBase)
 {
-  int (*EntryPoint)(...);
+  PEPFUNC EntryPoint;
   PIMAGE_DOS_HEADER PEDosHeader;
 
   /*  If MZ header exists  */
@@ -68,46 +81,54 @@ LdrStartup(DWORD ImageBase)
   /* FIXME: {else} could check for a.out, ELF, COFF, etc. images here... */
 
   /* FIXME: where does the return status go? */
-  EntryPoint();
+  if (EntryPoint != 0)
+    EntryPoint();
   /* FIXME: terminate the process */
 }
 
-static VOID
+static PEPFUNC
 LdrMZStartup(DWORD ImageBase)
 {
+  int *foo = 0;
 
   /* FIXME: map VDM into low memory  */
   /* FIXME: Build/Load image sections  */
    
-  (*0) = 5;
+  *foo = 5;
+
+  return 0;
 }
 
-static VOID
+static PEPFUNC
 LdrPEStartup(DWORD ImageBase)
 {
   int i;
   PVOID SectionBase;
   NTSTATUS Status;
+  PEPFUNC EntryPoint;
   PIMAGE_DOS_HEADER DosHeader;
   PIMAGE_NT_HEADERS NTHeaders;
+  PIMAGE_SECTION_HEADER SectionList;
    
   DosHeader = (PIMAGE_DOS_HEADER) ImageBase;
-  NTHeaders = (PIMAGE_NT_HEADERS)((PUCHAR) ImageBase + DosHeader->e_lfanew);
+  NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + DosHeader->e_lfanew);
+  SectionList = (PIMAGE_SECTION_HEADER) (ImageBase + DosHeader->e_lfanew + 
+    sizeof(ULONG) + sizeof(IMAGE_FILE_HEADER) + sizeof(IMAGE_OPTIONAL_HEADER));
       
   /*  Initialize Image sections  */
-  for (i = 0; i < NTHeaders->FileHeader->NumberOfSections; i++)
+  for (i = 0; i < NTHeaders->FileHeader.NumberOfSections; i++)
     {
-      SectionBase = (PVOID)(ImageBase + SectionList[i].s_vaddr);
+      SectionBase = (PVOID)(ImageBase + SectionList[i].VirtualAddress);
 
       /* Initialize appropriate sections to zero  */
-      if (SectionList[i].s_flags & STYP_BSS)
+      if (SectionList[i].Characteristics & IMAGE_SECTION_INITIALIZED_DATA)
         {
-          memset(SectionBase, 0, SectionList[i].s_size);
+          memset(SectionBase, 0, SectionList[i].SizeOfRawData);
         }
     }
 
   /* FIXME: if actual load address is different from ImageBase, then reloc  */
-  if (ImageBase != (DWORD) NTHeaders->OptionalHeader->ImageBase)
+  if (ImageBase != (DWORD) NTHeaders->OptionalHeader.ImageBase)
     {
       USHORT NumberOfEntries;
       PUSHORT pValue16;
@@ -176,14 +197,14 @@ LdrPEStartup(DWORD ImageBase)
 
   /* FIXME: do import fixups/load required libraries  */
   /*  Resolve Import Library references  */
-  if (NTHeaders->OptionalHeader->DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].
+  if (NTHeaders->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].
       VirtualAddress != 0)
     {
       PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
 
       /*  Process each import module  */
       ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)
-        (ImageBase + NTHeaders->OptionalHeader->
+        (ImageBase + NTHeaders->OptionalHeader.
          DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
       while (ImportModuleDirectory->dwRVAModuleName)
         {
@@ -198,10 +219,9 @@ LdrPEStartup(DWORD ImageBase)
 
           /*  Load the library module into the process  */
           /* FIXME: this should take a UNICODE string  */
-          Status = LdrLoadLibrary(ProcessHandle,
-                                  &LibraryBase,
-                                  (PCHAR)(ImageBase +
-                                          ImportModuleDirectory->dwRVAModuleName));
+          Status = LdrLoadDll(&LibraryBase,
+                              (PCHAR)(ImageBase +
+                                      ImportModuleDirectory->dwRVAModuleName));
           if (!NT_SUCCESS(Status))
             {
               return 0;
@@ -212,14 +232,14 @@ LdrPEStartup(DWORD ImageBase)
           LibNTHeaders = (PIMAGE_NT_HEADERS)(LibraryBase + 
                                              LibDosHeader->e_lfanew);
           LibraryExports = (PVOID *)(LibraryBase + 
-            (LibNTHeaders->OptionalHeader->
+            (LibNTHeaders->OptionalHeader.
              DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress +
-             sizeof(IMAGE_EXPORT_DIRECTORY));
+             sizeof(IMAGE_EXPORT_DIRECTORY)));
 
           /*  Get the import address list  */
           ImportAddressList = (PVOID *)
-            ((PCHAR)NTHeaders->OptionalHeader->ImageBase + 
-            ImportModuleDirectory->dwRVAFunctionAddressList);
+            (NTHeaders->OptionalHeader.ImageBase + 
+             ImportModuleDirectory->dwRVAFunctionAddressList);
 
           /*  Get the list of functions to import  */
           if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
@@ -260,14 +280,15 @@ LdrPEStartup(DWORD ImageBase)
     }
       
   /* FIXME: locate the entry point for the image  */
+  EntryPoint = 0;
   
-  return EntryPoint;  
+  return EntryPoint;
 }
 
-static VOID
+static PEPFUNC
 LdrBinStartup(DWORD ImageBase)
 {
-  return ImageBase;
+  return (PEPFUNC) ImageBase;
 }
 
 

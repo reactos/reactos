@@ -1,14 +1,47 @@
-all: ntdll.a
 
-OBJECTS = napi.o stubs/stubs.o string/wstring.o stdio/vsprintf.o \
-          rtl/unicode.o rtl/namespc.o string/ctype.o string/strlen.o \
-	  string/strncmp.o string/strcpy.o string/strncpy.o string/strcmp.o \
-	  string/memcpy.o string/memset.o string/strcat.o string/stricmp.o \
-	  string/strnlen.o string/strrchr.o rtl/largeint.o
+ifneq ($(HOST),mingw32-windows)
+  ifneq ($(HOST),mingw32-linux)
+    DLLTARGET=ntdll.a
+    DLLMAIN=
+  else
+    DLLTARGET=ntdll.dll
+    DLLMAIN=main/dllmain.c
+  endif
+else
+  DLLTARGET=ntdll.dll
+  DLLMAIN=main/dllmain.o
+endif
+
+all: $(DLLTARGET)
+
+OBJECTS = napi.o ldr/startup.o rtl/largeint.o rtl/namespc.o rtl/unicode.o \
+          stdio/vsprintf.o string/ctype.o string/memcpy.o string/memset.o \
+          string/strcat.o string/strcmp.o string/strcpy.o string/stricmp.o \
+          string/strlen.o string/strncmp.o string/strncpy.o string/strnlen.o \
+          string/strrchr.o string/wstring.o stubs/stubs.o
 
 ntdll.a: $(OBJECTS)
 	$(AR) csr ntdll.a $(OBJECTS)
-	
-dummy:
+
+ntdll.dll: $(DLLMAIN) $(OBJECTS) 
+	$(LD) -r $(DLLMAIN) $(OBJECTS) -o ntdll.o
+	$(DLLTOOL) --dllname ntdll.dll --def def/ntdll.def \
+	           --output-lib ntdll.lib
+	$(CC) -specs=../../specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
+	      -Wl,--base-file,base.tmp ntdll.o
+	- $(RM) junk.tmp
+	$(DLLTOOL) --dllname ntdll.dll --base-file base.tmp \
+	           --output-exp temp.exp --def def/ntdll.def
+	- $(RM) base.tmp
+	$(CC) -specs=../../specs -mdll -o ntdll.dll ntdll.o \
+	      -Wl,--image-base,0x80000000 \
+	      -Wl,--file-alignment,0x1000 \
+	      -Wl,--section-alignment,0x1000 \
+	      -Wl,--defsym,_end=end \
+	      -Wl,--defsym,_edata=__data_end__ \
+	      -Wl,--defsym,_etext=etext -Wl,temp.exp
+	- $(RM) temp.exp
+	$(NM) --numeric-sort ntdll.dll > ntdll.sym
 
 include ../../rules.mak

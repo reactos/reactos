@@ -4551,6 +4551,8 @@ typedef struct
 
 /* PE executable header.  */
 
+#ifndef WIN32_NO_PEHDR
+
 typedef struct
 {
   WORD e_magic;		/* Magic number, 0x5a4d */
@@ -4577,6 +4579,8 @@ typedef struct
   /* DWORD dos_message[16]; * text which always follows dos header */
   /* DWORD nt_signature;    * required NT signature, 0x4550 */ 
 } IMAGE_DOS_HEADER, *PIMAGE_DOS_HEADER;
+
+#endif /* WIN32_NO_PEHDR */
 
 #ifdef __cplusplus
 }
