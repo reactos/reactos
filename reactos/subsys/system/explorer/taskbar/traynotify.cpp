@@ -328,8 +328,13 @@ HWND ClockWindow::Create(HWND hwndParent)
 	FontSelection font(canvas, GetStockFont(DEFAULT_GUI_FONT));
 
 	RECT rect = {0, 0, 0, 0};
-	DrawText(canvas, TEXT("00:00"), -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
-	int clockwindowWidth = rect.right-rect.left + 32;
+	TCHAR buffer[16];
+
+	if (!GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
+		_tcscpy(buffer, TEXT("00:00"));
+
+	DrawText(canvas, buffer, -1, &rect, DT_SINGLELINE|DT_NOPREFIX|DT_CALCRECT);
+	int clockwindowWidth = rect.right-rect.left + 4;
 
 	return Window::Create(WINDOW_CREATOR(ClockWindow), 0,
 							BtnWindowClass(CLASSNAME_CLOCKWINDOW,CS_DBLCLKS), NULL, WS_CHILD|WS_VISIBLE,
@@ -382,14 +387,12 @@ void ClockWindow::TimerTick()
 bool ClockWindow::FormatTime()
 {
 	TCHAR buffer[16];
-	TCHAR TimeFormat[] = TEXT("hh':'mm tt");
 
-	GetTimeFormatW(LOCALE_USER_DEFAULT,0,NULL,TimeFormat,buffer,sizeof(buffer));
-
-	if (_tcscmp(buffer, _time)) {
-		_tcscpy(_time, buffer);
-		return true;	// The text to display has changed.
-	}
+	if (GetTimeFormat(LOCALE_USER_DEFAULT, TIME_NOSECONDS, NULL, NULL, buffer, sizeof(buffer)/sizeof(TCHAR)))
+		if (_tcscmp(buffer, _time)) {
+			_tcscpy(_time, buffer);
+			return true;	// The text to display has changed.
+		}
 
 	return false;	// no change
 }
