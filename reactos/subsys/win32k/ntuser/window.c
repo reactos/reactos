@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.195 2004/02/27 00:11:58 weiden Exp $
+/* $Id: window.c,v 1.196 2004/02/27 01:05:45 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -281,9 +281,9 @@ static void IntSendDestroyMsg(HWND Wnd)
  * Destroy storage associated to a window. "Internals" p.358
  */
 static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
-                                 PW32PROCESS ProcessData,
-                                 PW32THREAD ThreadData,
-                                 BOOLEAN SendMessages)
+                                PW32PROCESS ProcessData,
+                                PW32THREAD ThreadData,
+                                BOOLEAN SendMessages)
 {
   HWND *Children;
   HWND *ChildHandle;
@@ -1851,6 +1851,7 @@ NtUserDestroyWindow(HWND Wnd)
   
   if (!IntIsWindow(Wnd))
     {
+      IntReleaseWindowObject(Window);
       return TRUE;
     }
 
