@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.56 2002/10/25 22:59:55 chorns Exp $
+/* $Id: create.c,v 1.57 2002/11/05 20:54:10 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -167,6 +167,8 @@ CreateProcessA (LPCSTR			lpApplicationName,
 	return Result;
 }
 
+struct _CONTEXT;
+struct __EXCEPTION_RECORD;
 
 static
 EXCEPTION_DISPOSITION
@@ -194,13 +196,13 @@ _except_handler(
 
 VOID STDCALL
 BaseProcessStart(LPTHREAD_START_ROUTINE lpStartAddress,
-				 DWORD lpParameter)
+		 DWORD lpParameter)
 {
 	UINT uExitCode = 0;
 
 	__try1(_except_handler)
 	{
-		uExitCode = (lpStartAddress)(lpParameter);
+		uExitCode = (lpStartAddress)((PVOID)lpParameter);
 	} __except1
 	{
 	}
@@ -658,7 +660,7 @@ CreateProcessW(LPCWSTR lpApplicationName,
       {
          s = TempApplicationNameW;
       }
-      s = wcsrchr(TempApplicationNameW, L'.');
+      s = wcsrchr(s, L'.');
       if (s == NULL)
 	 wcscat(TempApplicationNameW, L".exe");
    }
