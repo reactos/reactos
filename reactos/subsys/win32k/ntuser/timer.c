@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: timer.c,v 1.6 2003/07/21 21:53:53 royce Exp $
+/* $Id: timer.c,v 1.7 2003/07/23 17:04:24 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -208,6 +208,7 @@ NtUserSetTimer
 
   ++ Index;
   HintIndex = Index;
+  ExReleaseFastMutex(&Mutex);
   return Index;
  }
  else
