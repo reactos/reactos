@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.86 2004/03/28 22:39:59 gvg Exp $ */
+/* $Id: text.c,v 1.87 2004/04/04 15:28:43 gvg Exp $ */
 
 
 #undef WIN32_LEAN_AND_MEAN
@@ -1475,7 +1475,7 @@ NtGdiExtTextOut(
    CONST RECT *lprc,
    LPCWSTR String,
    UINT Count,
-   CONST INT *lpDx)
+   CONST INT *UnsafeDx)
 {
    /*
     * FIXME:
@@ -1508,11 +1508,27 @@ NtGdiExtTextOut(
    PXLATEOBJ XlateObj, XlateObj2;
    ULONG Mode;
    FT_Render_Mode RenderMode;
-   BOOL Render;
+   BOOLEAN Render;
+   NTSTATUS Status;
+   INT *Dx = NULL;;
 
    dc = DC_LockDc(hDC);
    if (!dc)
       return FALSE;
+
+   if (NULL != UnsafeDx)
+   {
+      Dx = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_GDITEXT);
+      if (NULL == Dx)
+      {
+         goto fail;
+      }
+      Status = MmCopyFromCaller(Dx, UnsafeDx, Count * sizeof(INT));
+      if (! NT_SUCCESS(Status))
+      {
+         goto fail;
+      }
+   }
  
    SurfObj = (SURFOBJ*)AccessUserObject((ULONG) dc->Surface);
 
@@ -1655,14 +1671,26 @@ NtGdiExtTextOut(
 
    if (dc->w.textAlign & (TA_RIGHT | TA_CENTER))
    {
-      UINT TextWidth;
+      UINT TextWidth = 0;
       LPCWSTR TempText = String;
+      int Start;
 
       /*
        * Calculate width of the text.
        */
 
-      for (i = 0; i < Count; i++)
+      if (NULL != Dx)
+      {
+         Start = Count < 2 ? 0 : Count - 2;
+         TextWidth = Count < 2 ? 0 : Dx[Count - 2];
+      }
+      else
+      {
+         Start = 0;
+      }
+      TempText = String + Start;
+
+      for (i = Start; i < Count; i++)
       {
          IntLockFreeType;
          glyph_index = FT_Get_Char_Index(face, *TempText);
@@ -1700,7 +1728,7 @@ NtGdiExtTextOut(
       }
       else
       {
-         XStart -= TextWidth >> 1;
+         XStart -= TextWidth / 2;
       }
    }
 
@@ -1730,7 +1758,7 @@ NtGdiExtTextOut(
       glyph = face->glyph;
 
       /* retrieve kerning distance and move pen position */
-      if (use_kerning && previous && glyph_index)
+      if (use_kerning && previous && glyph_index && NULL == Dx)
       {
          FT_Vector delta;
          IntLockFreeType;
@@ -1815,7 +1843,14 @@ NtGdiExtTextOut(
 
       EngDeleteSurface(HSourceGlyph);
 
-      TextLeft += (glyph->advance.x + 32) >> 6;
+      if (NULL == Dx)
+      {
+        TextLeft += (glyph->advance.x + 32) >> 6;
+      }
+      else
+      {
+        TextLeft += Dx[i];
+      }
       previous = glyph_index;
 
       String++;
@@ -1831,6 +1866,10 @@ NtGdiExtTextOut(
    }
    BRUSHOBJ_UnlockBrush(hBrushFg);
    NtGdiDeleteObject(hBrushFg);
+   if (NULL != Dx)
+   {
+      ExFreePool(Dx);
+   }
    DC_UnlockDc(hDC);
  
    return TRUE;
@@ -1846,6 +1885,10 @@ fail:
    {
       BRUSHOBJ_UnlockBrush(hBrushFg);
       NtGdiDeleteObject(hBrushFg);
+   }
+   if (NULL != Dx)
+   {
+      ExFreePool(Dx);
    }
    DC_UnlockDc(hDC);
 
