@@ -4,6 +4,9 @@
 #include <msvcrt/stdlib.h>
 #include <stdarg.h>
 
+/*
+ * @implemented
+ */
 int _execl(const char* szPath, const char* szArgv0, ...)
 {
   char *szArg[100];

@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 int
 _stricmp(const char *s1, const char *s2)
 {
@@ -15,6 +18,9 @@ _stricmp(const char *s1, const char *s2)
   return toupper(*(unsigned const char *)s1) - toupper(*(unsigned const char *)(s2));
 }
 
+/*
+ * @implemented
+ */
 int
 _strcmpi(const char *s1, const char *s2)
 {

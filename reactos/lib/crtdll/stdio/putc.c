@@ -9,6 +9,9 @@
 #undef putc
 #undef putwc
 
+/*
+ * @implemented
+ */
 int putc(int c, FILE* fp)
 {
 // valid stream macro should check that fp is dword aligned

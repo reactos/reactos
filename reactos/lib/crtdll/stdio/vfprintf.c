@@ -14,6 +14,9 @@ int _isinf(double x);
 int
 __vfprintf (FILE *fp, const char *fmt0, va_list argp);
 
+/*
+ * @implemented
+ */
 int
 vfprintf(FILE *f, const char *fmt, va_list ap)
 {

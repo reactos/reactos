@@ -2,6 +2,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/string.h>
 
+/*
+ * @implemented
+ */
 char *
 strrchr(const char *s, int c)
 {

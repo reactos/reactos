@@ -1,6 +1,9 @@
 #include <windows.h>
 
 
+/*
+ * @implemented
+ */
 int remove(const char *fn)
 {
 	if (!DeleteFileA(fn))

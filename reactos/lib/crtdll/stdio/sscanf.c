@@ -25,6 +25,9 @@
 
 /* Read formatted input from S, according to the format string FORMAT.  */
 /* VARARGS2 */
+/*
+ * @implemented
+ */
 int sscanf (const char *s,const char *format, ...)
 {
   va_list arg;
@@ -37,6 +40,9 @@ int sscanf (const char *s,const char *format, ...)
   return done;
 }
 
+/*
+ * @implemented
+ */
 int swscanf(const wchar_t *str, const wchar_t *fmt, ...)
 {
   va_list arg;

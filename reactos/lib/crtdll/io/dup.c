@@ -1,4 +1,4 @@
-/* $Id: dup.c,v 1.7 2002/11/24 18:42:13 robd Exp $ */
+/* $Id: dup.c,v 1.8 2003/07/11 17:25:16 royce Exp $ */
 #include <windows.h>
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
@@ -8,6 +8,9 @@
 int __fileno_alloc(HANDLE hFile, int mode);
 int __fileno_getmode(int _fd);
 
+/*
+ * @implemented
+ */
 int _dup(int handle)
 {
     HANDLE hFile;

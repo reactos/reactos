@@ -40,6 +40,9 @@ double __log2 (double __x)
   return __value;
 }
 
+/*
+ * @implemented
+ */
 double pow (double __x, double __y)
 {
   register double __value;

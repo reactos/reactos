@@ -4,6 +4,9 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+/*
+ * @implemented
+ */
 int _isatty( int fd )
 {
   struct stat buf;

@@ -8,6 +8,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @unimplemented
+ */
 FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 {
   FILE *pf;
@@ -50,6 +53,9 @@ FILE *_popen (const char *cm, const char *md) /* program name, pipe mode */
 }
 
 
+/*
+ * @unimplemented
+ */
 int
 _pclose (FILE *pp)
 {

@@ -15,6 +15,9 @@ size_t _mbclen2(const unsigned int s);
 
 //  iskanji2()   : (0x40 <= c <= 0x7E 0x80  <=  c <= 0xFC) 
 
+/*
+ * @implemented
+ */
 int _ismbbtrail(unsigned int c)
 {
 	return ((_jctype+1)[(unsigned char)(c)] & _KNJ_2);
@@ -26,6 +29,9 @@ int _ismbbtrail(unsigned int c)
 //}
 
 
+/*
+ * @implemented
+ */
 int _ismbstrail( const unsigned char *str, const unsigned char *t)
 {
 	unsigned char *s = (unsigned char *)str;

@@ -13,6 +13,9 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 
+/*
+ * @implemented
+ */
 int _cputs(const char *_str)
 {
   int len = strlen(_str);

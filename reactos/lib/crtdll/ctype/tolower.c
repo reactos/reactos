@@ -2,6 +2,9 @@
 #include <msvcrt/ctype.h>
 
 #undef tolower
+/*
+ * @implemented
+ */
 int tolower(int c)
 {
    if (_isctype (c, _UPPER))
@@ -10,6 +13,9 @@ int tolower(int c)
 }
 
 #undef towlower
+/*
+ * @implemented
+ */
 wchar_t towlower(wchar_t c)
 {
    if (iswctype (c, _UPPER))
@@ -17,6 +23,9 @@ wchar_t towlower(wchar_t c)
    return(c);
 }
 
+/*
+ * @implemented
+ */
 int _tolower(int c)
 {
    if (_isctype (c, _UPPER))

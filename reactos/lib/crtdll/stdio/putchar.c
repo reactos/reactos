@@ -13,6 +13,9 @@
 #undef putc
 #undef putchar
 
+/*
+ * @implemented
+ */
 int putchar(int c)
 {
   int r = putc(c, stdout);

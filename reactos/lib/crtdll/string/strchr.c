@@ -3,6 +3,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 char *strchr(const char *s, int c)
 {
   char cc = c;

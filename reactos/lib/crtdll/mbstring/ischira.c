@@ -12,21 +12,33 @@
 #include <msvcrt/mbctype.h>
 
 
+/*
+ * @implemented
+ */
 int _ismbchira(unsigned int c)
 {
 	return ((c>=0x829F) && (c<=0x82F1));
 }
 
+/*
+ * @implemented
+ */
 int _ismbckata(unsigned int c)
 {
 	return ((c>=0x8340) && (c<=0x8396));
 }
 
+/*
+ * @implemented
+ */
 unsigned int _mbctohira(unsigned int c)
 {
 	return c;
 }
 
+/*
+ * @implemented
+ */
 unsigned int _mbctokata(unsigned int c)
 {
 	return c;

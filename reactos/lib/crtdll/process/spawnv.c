@@ -3,6 +3,9 @@
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 int _spawnv(int nMode, const char* szPath, char* const* szaArgv)
 {
   return _spawnve(nMode, szPath, (char * const *)szaArgv, _environ);

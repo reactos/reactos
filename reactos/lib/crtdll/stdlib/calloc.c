@@ -2,6 +2,9 @@
 #include <msvcrt/stdlib.h>
 #include <msvcrt/string.h>
 
+/*
+ * @implemented
+ */
 void *
 calloc(size_t size, size_t nelem)
 {

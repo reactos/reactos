@@ -208,6 +208,9 @@ static size_t _fmt(const char* format, const struct tm* t)
   return gsize;
 }
 
+/*
+ * @implemented
+ */
 size_t
 strftime(char *s, size_t maxsize, const char *format, const struct tm *t)
 {
@@ -222,6 +225,9 @@ strftime(char *s, size_t maxsize, const char *format, const struct tm *t)
   return 0;
 }
 
+/*
+ * @implemented
+ */
 size_t wcsftime(wchar_t* s, size_t maxsize, const wchar_t* format, const struct tm* t)
 {
   char* x;

@@ -22,6 +22,9 @@
 
 VOID STDCALL GetSystemTimeAsFileTime(LPFILETIME  lpSystemTimeAsFileTime );
 
+/*
+ * @implemented
+ */
 time_t time(time_t* t)
 {
 	FILETIME  SystemTime;

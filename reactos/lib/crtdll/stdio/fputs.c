@@ -4,6 +4,9 @@
 #include <msvcrt/string.h>
 #include <windows.h>
 
+/*
+ * @implemented
+ */
 int
 fputs(const char *s, FILE *f)
 {

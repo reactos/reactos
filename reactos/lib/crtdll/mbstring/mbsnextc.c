@@ -1,5 +1,8 @@
 #include <msvcrt/mbstring.h>
 
+/*
+ * @implemented
+ */
 unsigned int _mbsnextc (const unsigned char *src)
 {
 	unsigned char *char_src = (unsigned char *)src;

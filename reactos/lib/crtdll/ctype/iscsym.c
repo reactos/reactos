@@ -10,11 +10,17 @@
 #include <msvcrt/ctype.h>
 
 
+/*
+ * @implemented
+ */
 int __iscsymf(int c)
 {
 	return (isalpha(c) || ( c == '_' )) ;
 }
 
+/*
+ * @implemented
+ */
 int __iscsym(int c)
 {
 	return (isalnum(c) || ( c == '_' )) ;

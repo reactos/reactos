@@ -12,11 +12,17 @@
 #include <msvcrt/stdio.h>
 #include <msvcrt/internal/file.h>
 
+/*
+ * @implemented
+ */
 int fgetc(FILE *f)
 {
   return getc(f);
 }
 
+/*
+ * @implemented
+ */
 wint_t fgetwc(FILE *f)
 {
   return getwc(f);

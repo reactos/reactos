@@ -18,6 +18,9 @@ MsvcrtDebug(ULONG Value)
 }
 
 
+/*
+ * @unimplemented
+ */
 EXCEPTION_DISPOSITION
 _except_handler2(
     struct _EXCEPTION_RECORD* ExceptionRecord, void* Frame,

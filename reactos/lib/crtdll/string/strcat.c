@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 char* strcat(char* s, const char* append)
 {
     char* save = s;

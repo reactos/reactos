@@ -3,6 +3,9 @@
 #include <msvcrt/malloc.h>
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 void* _expand(void* pold, size_t size)
 {
    PHEAP_BUCKET	pbucket;
@@ -25,6 +28,9 @@ void* _expand(void* pold, size_t size)
    return NULL;
 }
 
+/*
+ * @implemented
+ */
 size_t _msize(void* pBlock)
 {
    PHEAP_BUCKET	pbucket;

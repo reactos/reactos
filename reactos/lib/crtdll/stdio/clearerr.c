@@ -8,6 +8,9 @@
 void clearerr(FILE *stream);
 #endif
 
+/*
+ * @implemented
+ */
 void
 clearerr(FILE *f)
 {

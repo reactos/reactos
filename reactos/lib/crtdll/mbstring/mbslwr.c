@@ -11,6 +11,9 @@ unsigned int _mbbtolower(unsigned int c)
 // code page 952
 #define CASE_DIFF (0x8281 - 0x8260)
 
+/*
+ * @implemented
+ */
 unsigned int _mbctolower(unsigned int c)
 {
     if ((c & 0xFF00) != 0) {
@@ -23,6 +26,9 @@ unsigned int _mbctolower(unsigned int c)
     return 0;
 }
 
+/*
+ * @implemented
+ */
 unsigned char * _mbslwr(unsigned char *x)
 {
     unsigned char  *y=x;

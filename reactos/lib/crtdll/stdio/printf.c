@@ -22,6 +22,9 @@
 
 /* Write formatted output to stdout from the format string FORMAT.  */
 /* VARARGS1 */
+/*
+ * @implemented
+ */
 int
 printf (const char *format, ...)
 {
@@ -34,6 +37,9 @@ printf (const char *format, ...)
   return done;
 }
 
+/*
+ * @implemented
+ */
 int
 wprintf (const wchar_t *format, ...)
 {

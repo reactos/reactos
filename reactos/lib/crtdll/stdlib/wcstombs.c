@@ -50,13 +50,16 @@ size_t
 __wcsrtombs (char *dst, const wchar_t **src, size_t len, mbstate_t *ps);
 
 /* Convert the `wchar_t' string in PWCS to a multibyte character string
-   in S, writing no more than N characters.  Return the number of bytes
-   written, or (size_t) -1 if an invalid `wchar_t' was found.
-
-   Attention: this function should NEVER be intentionally used.
-   The interface is completely stupid.  The state is shared between
-   all conversion functions.  You should use instead the restartable
-   version `wcsrtombs'.  */
+ * in S, writing no more than N characters.  Return the number of bytes
+ * written, or (size_t) -1 if an invalid `wchar_t' was found.
+ *
+ * Attention: this function should NEVER be intentionally used.
+ * The interface is completely stupid.  The state is shared between
+ * all conversion functions.  You should use instead the restartable
+ * version `wcsrtombs'.
+ *
+ * @implemented
+ */
 size_t
 wcstombs (char *s, const wchar_t *pwcs, size_t n)
 {

@@ -1,4 +1,4 @@
-/* $Id: itow.c,v 1.3 2002/11/29 15:59:01 robd Exp $
+/* $Id: itow.c,v 1.4 2003/07/11 17:25:32 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -17,6 +17,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 wchar_t* _itow(int value, wchar_t* string, int radix)
 {
     wchar_t     tmp [33];
@@ -63,6 +66,9 @@ wchar_t* _itow(int value, wchar_t* string, int radix)
     return string;
 }
 
+/*
+ * @implemented
+ */
 wchar_t* _ltow(long value, wchar_t* string, int radix)
 {
     wchar_t         tmp [33];
@@ -108,6 +114,9 @@ wchar_t* _ltow(long value, wchar_t* string, int radix)
     return string;
 }
 
+/*
+ * @implemented
+ */
 wchar_t* _ultow(unsigned long value, wchar_t* string, int radix)
 {
     wchar_t         tmp [33];

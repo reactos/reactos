@@ -3,8 +3,11 @@
 #include <msvcrt/stdarg.h>
 
 
-// fixme rewrite to pass the array variants to va_list variant
-
+/*
+ * FIXME rewrite to pass the array variants to va_list variant
+ *
+ * @unimplemented
+ */
 int _execle(const char *path, const char *szArgv0, ... /*, const char **envp */)
 {
   char *szArg[100];

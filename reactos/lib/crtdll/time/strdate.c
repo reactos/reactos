@@ -13,6 +13,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 char *_strdate( const char *datestr )
 {
 	time_t t;

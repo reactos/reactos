@@ -21,6 +21,9 @@ Cambridge, MA 02139, USA.  */
 #include <msvcrt/internal/ieee.h>
 
 
+/*
+ * @implemented
+ */
 int _isnan(double __x)
 {
 	double_t* x = (double_t*)&__x;
@@ -49,6 +52,9 @@ int _isinf(double __x)
 	return (x->exponent == 0x7ff  && (x->mantissah == 0 && x->mantissal == 0));	
 }
 
+/*
+ * @implemented
+ */
 int _finite(double x)
 {
 	return !_isinf(x);

@@ -4,6 +4,9 @@
 
 char *fcvtbuf (double, int, int *, int *, char *);
 
+/*
+ * @implemented
+ */
 char *
 _fcvt (double value, int ndigits, int *decpt, int *sign)
 {

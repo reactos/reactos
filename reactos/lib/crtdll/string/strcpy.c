@@ -3,6 +3,9 @@
 
 #pragma function(strcpy)
 
+/*
+ * @implemented
+ */
 char* strcpy(char *to, const char *from)
 {
   char *save = to;

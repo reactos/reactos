@@ -7,6 +7,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _futime(int nHandle, struct _utimbuf* pTimes)
 {
     FILETIME LastAccessTime;

@@ -4,6 +4,9 @@
 #include <limits.h>
 #include <msvcrt/internal/file.h>
 
+/*
+ * @implemented
+ */
 int
 vsprintf(char *str, const char *fmt, va_list ap)
 {
@@ -19,6 +22,9 @@ vsprintf(char *str, const char *fmt, va_list ap)
   return len;
 }
 
+/*
+ * @implemented
+ */
 int
 vswprintf(wchar_t *str, const wchar_t *fmt, va_list ap)
 {
@@ -35,6 +41,9 @@ vswprintf(wchar_t *str, const wchar_t *fmt, va_list ap)
 }
 
 
+/*
+ * @implemented
+ */
 int
 _vsnprintf(char *str, size_t maxlen, const char *fmt, va_list ap)
 {
@@ -50,6 +59,9 @@ _vsnprintf(char *str, size_t maxlen, const char *fmt, va_list ap)
   return len;
 }
 
+/*
+ * @implemented
+ */
 int
 _vsnwprintf(wchar_t *str, size_t maxlen, const wchar_t *fmt, va_list ap)
 {

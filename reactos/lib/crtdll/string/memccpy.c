@@ -1,6 +1,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void *
 _memccpy (void *to, const void *from,int c,size_t count)
 {

@@ -1,5 +1,8 @@
 #include <msvcrt/string.h>
 
+/*
+ * @implemented
+ */
 wchar_t *wcstok(wchar_t *s, const wchar_t *ct)
 {
 	const wchar_t *spanp;

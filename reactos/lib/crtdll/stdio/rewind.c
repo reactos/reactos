@@ -5,6 +5,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 void rewind(FILE *f)
 {
   fflush(f);

@@ -12,6 +12,9 @@
 
 size_t _mbclen2(const unsigned int s);
 
+/*
+ * @implemented
+ */
 unsigned char * _mbsrchr(const unsigned char *src, unsigned int val)
 {
 	char  *s = (char *)src;

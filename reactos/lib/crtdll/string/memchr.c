@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void *
 memchr(const void *s, int c, size_t n)
 {

@@ -20,6 +20,9 @@
 #include <msvcrt/io.h>
 
 
+/*
+ * @implemented
+ */
 int fflush(FILE *f)
 {
   char *base;
@@ -105,6 +108,9 @@ int fflush(FILE *f)
   return 0;
 }
 
+/*
+ * @implemented
+ */
 int _flushall( void )
 {
 	return fflush(NULL);

@@ -1,6 +1,9 @@
 #include <msvcrt/wchar.h>
 
 
+/*
+ * @implemented
+ */
 long wcstol(const wchar_t* cp, wchar_t** endp, int base)
 {
 	long result = 0, value;
@@ -32,6 +35,9 @@ long wcstol(const wchar_t* cp, wchar_t** endp, int base)
 	return result * sign;
 }
 
+/*
+ * @implemented
+ */
 unsigned long wcstoul(const wchar_t* cp, wchar_t** endp, int base)
 {
 	unsigned long result = 0, value;

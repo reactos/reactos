@@ -46,13 +46,17 @@ static const unsigned char encoding_byte[] =
 size_t
 __wcrtomb (char *s, wchar_t wc);
 
-/* Convert WCHAR into its multibyte character representation,
-   putting this in S and returning its length.
-
-   Attention: this function should NEVER be intentionally used.
-   The interface is completely stupid.  The state is shared between
-   all conversion functions.  You should use instead the restartable
-   version `wcrtomb'.  */
+/*
+ * Convert WCHAR into its multibyte character representation,
+ * putting this in S and returning its length.
+ *
+ * Attention: this function should NEVER be intentionally used.
+ * The interface is completely stupid.  The state is shared between
+ * all conversion functions.  You should use instead the restartable
+ * version `wcrtomb'.
+ *
+ * @implemented
+ */
 int
 wctomb (char *s, wchar_t wchar)
 {

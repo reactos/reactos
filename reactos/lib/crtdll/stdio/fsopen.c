@@ -20,6 +20,9 @@
 FILE* __alloc_file(void);
 
 
+/*
+ * @implemented
+ */
 FILE* _fsopen(const char* file, const char* mode, int shflag)
 {
   FILE* f;

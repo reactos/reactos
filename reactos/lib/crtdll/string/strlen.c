@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 size_t strlen(const char* str)
 {
   const char* s;

@@ -145,6 +145,9 @@ static struct {
 
 /*-------------------------------------------------*/
 
+/*
+ * @implemented
+ */
 int _spawnve(int mode, const char* path, char* const argv[], char* const envp[])
 {
     /* This is the one that does the work! */
@@ -279,6 +282,9 @@ const char* find_exec(char* path, char* rpath)
     return rpath;
 }
 
+/*
+ * @implemented
+ */
 int _spawnvpe(int nMode, const char* szPath, char* const* szaArgv, char* const* szaEnv)
 {
     char rpath[FILENAME_MAX];

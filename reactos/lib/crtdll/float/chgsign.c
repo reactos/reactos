@@ -2,6 +2,9 @@
 #include <msvcrt/internal/ieee.h>
 
 
+/*
+ * @implemented
+ */
 double _chgsign(double __x)
 {
 	double_t* x = (double_t*)&x;

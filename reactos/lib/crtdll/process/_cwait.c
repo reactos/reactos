@@ -13,6 +13,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _cwait(int* pnStatus, int hProc, int nAction)
 {
     DWORD ExitCode;

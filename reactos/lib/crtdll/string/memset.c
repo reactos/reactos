@@ -1,6 +1,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void* memset(void* src, int val, size_t count)
 {
 	char* char_src = (char*)src;

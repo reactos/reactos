@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.6 2002/11/29 15:59:01 robd Exp $
+/* $Id: thread.c,v 1.7 2003/07/11 17:25:32 royce Exp $
  *
  */
 #include <windows.h>
@@ -7,6 +7,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 unsigned long _beginthread(
     void (*pfuncStart)(void*),
 	unsigned unStackSize,
@@ -25,6 +28,9 @@ unsigned long _beginthread(
 	return (unsigned long)hThread;
 }
 
+/*
+ * @unimplemented
+ */
 void	_endthread(void)
 {
 	//fixme ExitThread

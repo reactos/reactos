@@ -4,6 +4,9 @@
 #include <msvcrt/stdlib.h>
 
 
+/*
+ * @implemented
+ */
 double
 strtod(const char *s, char **sret)
 {

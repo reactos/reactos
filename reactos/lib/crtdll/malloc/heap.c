@@ -2,6 +2,9 @@
 #include <windows.h>
 #include <msvcrt/malloc.h>
 
+/*
+ * @implemented
+ */
 int	_heapchk(void)
 {
 	if (!HeapValidate(GetProcessHeap(), 0, NULL))
@@ -9,6 +12,9 @@ int	_heapchk(void)
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 int	_heapmin(void)
 {
 	if (!HeapCompact(GetProcessHeap(), 0)) 
@@ -16,6 +22,9 @@ int	_heapmin(void)
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 int	_heapset(unsigned int unFill)
 {
 	if (_heapchk() == -1)
@@ -24,6 +33,9 @@ int	_heapset(unsigned int unFill)
 		
 }
 
+/*
+ * @implemented
+ */
 int _heapwalk(struct _heapinfo* entry)
 {
 	return 0;

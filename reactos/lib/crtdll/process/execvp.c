@@ -3,6 +3,9 @@
 #include <msvcrt/process.h>
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 int _execvp(const char* szPath, char* const* szaArgv)
 {
   return _spawnvpe(P_OVERLAY, szPath, szaArgv, _environ);

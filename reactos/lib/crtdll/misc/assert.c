@@ -5,6 +5,9 @@
 #include <msvcrt/signal.h>
 
 
+/*
+ * @implemented
+ */
 void _assert(const char* msg, const char* file, int line)
 {
     /* Assertion failed at foo.c line 45: x<y */

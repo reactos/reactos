@@ -1,4 +1,4 @@
-/* $Id: read.c,v 1.9 2002/11/24 18:42:13 robd Exp $
+/* $Id: read.c,v 1.10 2003/07/11 17:25:16 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -15,6 +15,9 @@
 #define NDEBUG
 #include <msvcrt/msvcrtdbg.h>
 
+/*
+ * @implemented
+ */
 size_t	_read(int _fd, void *_buf, size_t _nbyte)
 {
    DWORD _rbyte;

@@ -16,6 +16,9 @@ char *fullpath(char *absPath, const char *relPath, size_t maxLength)
 	return _fullpath(absPath,relPath,maxLength );
 }
 
+/*
+ * @implemented
+ */
 char* _fullpath(char* absPath, const char* relPath, size_t maxLength)
 {
     char* lpFilePart;

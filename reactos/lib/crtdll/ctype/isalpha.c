@@ -13,12 +13,18 @@
 
 #undef isalpha
 
+/*
+ * @implemented
+ */
 int isalpha(int c)
 {
     return _isctype(c, _ALPHA);
 }
 
 #undef iswalpha
+/*
+ * @implemented
+ */
 int iswalpha(wint_t c)
 {
     return iswctype(c, _ALPHA);

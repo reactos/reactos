@@ -1,6 +1,9 @@
 #include <msvcrt/string.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 unsigned long strtoul(const char *cp,char **endp,unsigned int base)
 {
 	unsigned long result = 0,value;

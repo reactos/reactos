@@ -6,6 +6,9 @@
 #include <msvcrt/errno.h>
 
 
+/*
+ * @implemented
+ */
 int _stat(const char* path, struct stat* buffer)
 {
     HANDLE fh;

@@ -11,6 +11,9 @@
 #include <msvcrt/mbstring.h>
 #include <msvcrt/mbctype.h>
 
+/*
+ * @implemented
+ */
 int _ismbbkana(unsigned char c)      
 {
 	return ((_jctype+1)[(unsigned char)(c)] & (_KNJ_M|_KNJ_P));

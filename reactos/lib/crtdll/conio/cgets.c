@@ -2,7 +2,10 @@
 #include <msvcrt/stdlib.h>
 
 
-char *_cgets(char *string)
+/*
+ * @implemented
+ */
+char* _cgets(char *string)
 {
   unsigned len = 0;
   unsigned int maxlen_wanted;

@@ -4,6 +4,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _findclose(int handle)
 {
     // check no wildcards or invalid handle
@@ -12,6 +15,9 @@ int _findclose(int handle)
     return FindClose((void*)handle);
 }
 
+/*
+ * @implemented
+ */
 int _findfirst(const char* _name, struct _finddata_t* result)
 {
     WIN32_FIND_DATAA FindFileData;
@@ -54,6 +60,9 @@ int _findfirst(const char* _name, struct _finddata_t* result)
     return hFindFile;
 }
 
+/*
+ * @implemented
+ */
 int _findnext(int handle, struct _finddata_t* result)
 {
     WIN32_FIND_DATAA FindFileData;

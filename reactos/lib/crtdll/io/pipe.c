@@ -1,4 +1,4 @@
-/* $Id: pipe.c,v 1.4 2002/11/24 18:42:13 robd Exp $
+/* $Id: pipe.c,v 1.5 2003/07/11 17:25:16 royce Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
@@ -13,6 +13,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 int _pipe(int _fildes[2], unsigned int size, int mode )
 {	
 	HANDLE hReadPipe, hWritePipe;

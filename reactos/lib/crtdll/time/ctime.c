@@ -904,6 +904,9 @@ gmtload(struct state * CPP_CONST sp)
     (void) tzparse(GMT, sp, TRUE);
 }
 
+/*
+ * @implemented
+ */
 void
 _tzset(void)
 {
@@ -1022,6 +1025,9 @@ localsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONS
   tmp->tm_zone = (char *)&sp->chars[ttisp->tt_abbrind];
 }
 
+/*
+ * @implemented
+ */
 struct tm *
 localtime(const time_t * CPP_CONST timep)
 {
@@ -1069,6 +1075,9 @@ gmtsub(const time_t * CPP_CONST timep, const long offset, struct tm * CPP_CONST 
   }
 }
 
+/*
+ * @implemented
+ */
 struct tm *
 gmtime(const time_t * CPP_CONST timep)
 {
@@ -1177,6 +1186,9 @@ timesub(const time_t * CPP_CONST timep, const long offset, const struct state * 
 ** A la X3J11
 */
 
+/*
+ * @implemented
+ */
 char *
 asctime(const struct tm *timeptr)
 {
@@ -1198,6 +1210,9 @@ asctime(const struct tm *timeptr)
   return result;
 }
 
+/*
+ * @implemented
+ */
 char *
 ctime(const time_t * CPP_CONST timep)
 {
@@ -1414,6 +1429,9 @@ time1(struct tm * CPP_CONST tmp, void (*const funcp)(const time_t * CPP_CONST, c
   return WRONG;
 }
 
+/*
+ * @implemented
+ */
 time_t
 mktime(struct tm * tmp)
 {

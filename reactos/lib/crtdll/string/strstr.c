@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 char *strstr(const char *s, const char *find)
 {
   char c, sc;

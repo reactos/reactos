@@ -3,6 +3,9 @@
 
 double atan2 (double __y, double __x);
 
+/*
+ * @implemented
+ */
 double atan2 (double __y, double __x)
 {
   register double __value;

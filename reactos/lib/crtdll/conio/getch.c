@@ -14,6 +14,9 @@
 #include <msvcrt/internal/console.h>
 
 
+/*
+ * @implemented
+ */
 int _getch(void)
 {
     DWORD  NumberOfCharsRead = 0;
@@ -35,6 +38,9 @@ int _getch(void)
 }
 
 #if 0
+/*
+ * @unimplemented
+ */
 int _getche(void)
 {
     int c;

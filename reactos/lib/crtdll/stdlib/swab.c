@@ -1,6 +1,9 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 void	_swab (const char* caFrom, char* caTo, size_t sizeToCopy)
 {
   unsigned long temp;

@@ -38,6 +38,9 @@ static sig_element signal_list[SIGMAX] =
 
 int nsignal = 21;
 
+/*
+ * @implemented
+ */
 _p_sig_fn_t	signal(int sig, _p_sig_fn_t func)
 {
   _p_sig_fn_t temp;
@@ -72,6 +75,9 @@ _p_sig_fn_t	signal(int sig, _p_sig_fn_t func)
 }
 
 
+/*
+ * @implemented
+ */
 int
 raise(int sig)
 {

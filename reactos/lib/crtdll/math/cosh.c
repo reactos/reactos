@@ -2,6 +2,9 @@
 #include <msvcrt/math.h>
 
 
+/*
+ * @implemented
+ */
 double cosh(double x)
 {
     const double ebig = exp(fabs(x));

@@ -1,8 +1,12 @@
 #include <msvcrt/string.h>
 
 
-/* This is the most reliable way to avoid incompatibilities
-   in available built-in functions on various systems.  */
+/*
+ * This is the most reliable way to avoid incompatibilities
+ * in available built-in functions on various systems.
+ *
+ * @implemented
+ */
 void* memcpy(void* to, const void* from, size_t count)
 {
   register char* f = (char*)from;

@@ -1,6 +1,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 void * memmove(void *dest,const void *src,size_t count)
 {
     char *char_dest = (char *)dest;

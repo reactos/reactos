@@ -9,6 +9,9 @@
  */
 #include <msvcrt/mbctype.h>
 
+/*
+ * @implemented
+ */
 int _ismbbkpunct( unsigned int c )
 {
 	return  ((_jctype+1)[(unsigned char)(c)] & (_KNJ_P));

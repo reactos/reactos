@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 int memcmp(const void *s1, const void *s2, size_t n)
 {
     if (n != 0) {

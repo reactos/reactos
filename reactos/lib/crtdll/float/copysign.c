@@ -1,6 +1,9 @@
 #include <msvcrt/float.h>
 #include <msvcrt/internal/ieee.h>
 
+/*
+ * @implemented
+ */
 double _copysign (double __d, double __s)
 {
 	double_t *d = (double_t *)&__d;

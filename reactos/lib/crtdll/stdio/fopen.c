@@ -11,6 +11,9 @@
 FILE *	__alloc_file(void);
 
 
+/*
+ * @implemented
+ */
 FILE* fopen(const char *file, const char *mode)
 {
   FILE *f;

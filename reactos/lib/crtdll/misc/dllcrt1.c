@@ -20,9 +20,9 @@
  *  DISCLAMED. This includes but is not limited to warrenties of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
- * $Revision: 1.3 $
- * $Author: robd $
- * $Date: 2002/11/29 12:27:48 $
+ * $Revision: 1.4 $
+ * $Author: royce $
+ * $Date: 2003/07/11 17:25:16 $
  * 
  */
 
@@ -84,6 +84,8 @@ DllMainCRTStartup(HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
  *       the global constructor function __do_global_ctors called from __main
  *       will attempt to register __do_global_dtors using atexit.
  *       Thanks to Andrey A. Smirnov for pointing this one out.
+ *
+ * @unimplemented
  */
 int
 atexit(void (*pfn)())

@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <msvcrt/io.h>
 
+/*
+ * @implemented
+ */
 int _eof( int _fd )
 {
 	int cur_pos = _lseek(_fd, 0, SEEK_CUR);

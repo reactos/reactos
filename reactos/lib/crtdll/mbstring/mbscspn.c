@@ -1,6 +1,10 @@
 #include <msvcrt/mbstring.h>
 
-// not correct
+/*
+ * FIXME not correct
+ *
+ * @unimplemented
+ */
 size_t _mbscspn(const unsigned char *s1, const unsigned char *s2)
 {
   const char *p, *spanp;

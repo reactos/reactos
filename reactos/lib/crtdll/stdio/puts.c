@@ -7,6 +7,9 @@
 #undef putchar
 
 
+/*
+ * @implemented
+ */
 int puts(const char *s)
 {
     int c;

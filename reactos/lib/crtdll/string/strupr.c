@@ -12,6 +12,9 @@
 #include <msvcrt/string.h>
 #include <msvcrt/ctype.h>
 
+/*
+ * @implemented
+ */
 char *_strupr(char *x)
 {
 	char  *y=x;

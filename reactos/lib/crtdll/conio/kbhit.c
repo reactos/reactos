@@ -15,6 +15,9 @@
 
 // FIXME PeekCosoleInput returns more than keyboard hits
 
+/*
+ * @unimplemented
+ */
 int _kbhit(void)
 {
   //INPUT_RECORD InputRecord;

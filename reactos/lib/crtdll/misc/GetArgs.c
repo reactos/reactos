@@ -67,6 +67,9 @@ int i;
   return 0;
 }
 
+/*
+ * @implemented
+ */
 int __GetMainArgs(int *argc,char ***argv,char ***env,int flag)
 {
    int i,afterlastspace;

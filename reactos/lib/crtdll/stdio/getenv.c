@@ -5,6 +5,9 @@ void *malloc(size_t size);
 
 
 
+/*
+ * @implemented
+ */
 char *getenv(const char *name) 
 {
 	char *buffer;

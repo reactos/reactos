@@ -7,6 +7,9 @@
 //getc can be a macro
 #undef getc
 
+/*
+ * @implemented
+ */
 int getc(FILE *fp)
 {
         int c = -1;

@@ -21,6 +21,9 @@ unsigned int _mbbtoupper(unsigned int c)
 // codepage 952
 #define CASE_DIFF (0x8281 - 0x8260)
 
+/*
+ * @implemented
+ */
 unsigned int _mbctoupper(unsigned int c)
 {
 
@@ -35,6 +38,9 @@ unsigned int _mbctoupper(unsigned int c)
 	return 0;
 }
 
+/*
+ * @implemented
+ */
 unsigned char * _mbsupr(unsigned char *x)
 {
 	unsigned char  *y=x;

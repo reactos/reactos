@@ -1,6 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <msvcrt/stdlib.h>
 
+/*
+ * @implemented
+ */
 void *
 bsearch(const void *key, const void *base0, size_t nelem,
 	size_t size, int (*cmp)(const void *ck, const void *ce))

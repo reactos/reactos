@@ -15,6 +15,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 char* _itoa(int value, char* string, int radix)
 {
   char tmp[33];
@@ -57,6 +60,9 @@ char* _itoa(int value, char* string, int radix)
   return string;
 }
 
+/*
+ * @implemented
+ */
 char* _ltoa(long value, char* string, int radix)
 {
   char tmp[33];
@@ -99,6 +105,9 @@ char* _ltoa(long value, char* string, int radix)
   return string;
 }
 
+/*
+ * @implemented
+ */
 char* _ultoa(unsigned long value, char* string, int radix)
 {
   char tmp[33];

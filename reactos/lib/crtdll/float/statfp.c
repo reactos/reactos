@@ -1,5 +1,8 @@
 #include <msvcrt/float.h>
 
+/*
+ * @implemented
+ */
 unsigned int	_statusfp (void)
 {	
 

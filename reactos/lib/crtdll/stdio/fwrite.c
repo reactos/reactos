@@ -4,6 +4,9 @@
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>
 
+/*
+ * @implemented
+ */
 #if 0
 size_t
 fwrite(const void *p, size_t size, size_t count, FILE *iop)

@@ -2,6 +2,9 @@
 #include <msvcrt/string.h>
 
 
+/*
+ * @implemented
+ */
 char *
 strpbrk(const char *s1, const char *s2)
 {

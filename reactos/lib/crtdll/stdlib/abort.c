@@ -5,6 +5,9 @@
 
 char *msg ="Abort\n\r";
 
+/*
+ * @implemented
+ */
 void abort()
 {
 	fflush(NULL);

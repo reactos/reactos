@@ -7,6 +7,9 @@
 #include <msvcrt/internal/file.h>
 
 
+/*
+ * @implemented
+ */
 FILE *freopen(const char *file, const char *mode, FILE *f)
 {
   int fd, rw, oflags=0;

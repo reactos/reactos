@@ -3,6 +3,9 @@
 #include <msvcrt/direct.h>
 
 
+/*
+ * @implemented
+ */
 int _chdir(const char* _path)
 {
     if (_path[1] == ':')

@@ -3,6 +3,9 @@
 
 static unsigned long long next = 0;
 
+/*
+ * @implemented
+ */
 int
 rand(void)
 {
@@ -10,6 +13,9 @@ rand(void)
   return (int)((next >> 16) & RAND_MAX);
 }
 
+/*
+ * @implemented
+ */
 void
 srand(unsigned seed)
 {
