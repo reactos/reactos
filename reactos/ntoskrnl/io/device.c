@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.61 2003/09/29 20:43:06 navaraf Exp $
+/* $Id: device.c,v 1.62 2003/09/30 15:46:59 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -433,8 +433,9 @@ IopInitializeDevice(PDEVICE_NODE DeviceNode,
            */
           if (!BootDriver)
             {
-              Status = IopInterrogateBusExtender(
-                DeviceNode, Fdo);
+              Status = IopInvalidateDeviceRelations(
+                DeviceNode, BusRelations);
+/*              IopInterrogateBusExtender(DeviceNode, Fdo); */
               if (!NT_SUCCESS(Status))
                 {
                   ObDereferenceObject(Fdo);

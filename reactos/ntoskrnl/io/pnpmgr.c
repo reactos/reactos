@@ -1,4 +1,4 @@
-/* $Id: pnpmgr.c,v 1.17 2003/09/29 20:43:07 navaraf Exp $
+/* $Id: pnpmgr.c,v 1.18 2003/09/30 15:46:59 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -49,6 +49,17 @@ STDCALL
 IoAdjustPagingPathCount(
   IN PLONG Count,
   IN BOOLEAN Increment)
+{
+}
+
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+IoInvalidateDeviceRelations(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN DEVICE_RELATION_TYPE Type)
 {
 }
 
@@ -154,17 +165,6 @@ IoGetDeviceProperty(
   }
 
   return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-IoInvalidateDeviceRelations(
-  IN PDEVICE_OBJECT DeviceObject,
-  IN DEVICE_RELATION_TYPE Type)
-{
 }
 
 /*
@@ -1062,9 +1062,9 @@ IopActionInitChildServices(
 
 
 NTSTATUS
-IopInterrogateBusExtender(
-  PDEVICE_NODE DeviceNode,
-  PDEVICE_OBJECT Pdo)
+IopInvalidateDeviceRelations(
+  IN PDEVICE_NODE DeviceNode,
+  IN DEVICE_RELATION_TYPE Type)
 {
   DEVICETREE_TRAVERSE_CONTEXT Context;
   PDEVICE_RELATIONS DeviceRelations;
@@ -1078,10 +1078,10 @@ IopInterrogateBusExtender(
 
   DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
 
-  Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
+  Stack.Parameters.QueryDeviceRelations.Type = Type/*BusRelations*/;
 
   Status = IopInitiatePnpIrp(
-    Pdo,
+    DeviceNode->Pdo,
     &IoStatusBlock,
     IRP_MN_QUERY_DEVICE_RELATIONS,
     &Stack);
@@ -1178,7 +1178,7 @@ IopInterrogateBusExtender(
 
 VOID IopLoadBootStartDrivers(VOID)
 {
-  IopInterrogateBusExtender(IopRootDeviceNode, IopRootDeviceNode->Pdo);
+  IopInvalidateDeviceRelations(IopRootDeviceNode, BusRelations);
 }
 
 VOID PnpInit(VOID)

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.35 2003/09/29 20:43:06 navaraf Exp $
+/* $Id: io.h,v 1.36 2003/09/30 15:46:59 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -259,8 +259,8 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 NTSTATUS
 IopFreeDeviceNode(PDEVICE_NODE DeviceNode);
 NTSTATUS
-IopInterrogateBusExtender(PDEVICE_NODE DeviceNode,
-                          PDEVICE_OBJECT Pdo);
+IopInvalidateDeviceRelations(PDEVICE_NODE DeviceNode,
+                             DEVICE_RELATION_TYPE Type);
 VOID
 IopLoadBootStartDrivers(VOID);
 NTSTATUS

@@ -38,6 +38,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x0000000
 
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
+ "Boot Bus Extender", \
  "SCSI Port", \
  "SCSI Miniport", \
  "Primary Disk", \
@@ -88,6 +89,21 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\KnownDlls","kernel32",0x0
 ; Pagefile settings
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","PagingFiles",0x00010000, \
  "C:\reactos\pagefile.sys"
+
+; --------------------------- BUS drivers ---------------------------
+
+; PCI driver
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000003
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
+;HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
+
+; ----------------------- End of BUS drivers ------------------------
 
 ; Afd driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
@@ -205,7 +221,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Msfs","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Group",0x00000000,"NDIS"
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\drivers\ndis.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
 ; NIC drivers are like any other drivers - but no card-specific info here.  bind/route/export
@@ -229,9 +245,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000\Enum","NextInstance",0x00010001,0
 ; one day this will happen automatically; until then we need this since ndis5 drivers
 ; rely on the fact that their resources are handed to them by ndis, so we have to find
 ; the driver that goes with the detected cards.  this is how.
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
 
 ; Each adapter in the system gets its own SCM entry where its parameters and protocol info are stored.
 ; NOTE - service type is 0x4 (SERVICE_ADAPTER) and start is 0x3 (manual start).  These drivers are named
@@ -380,6 +396,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Group",0x00000000,"Pointer Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ImagePath",0x00020000,"system32\drivers\psaux.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Psaux\Parameters","DisableExtensionDetection",0x00010001,0x00000000
 
 ; Serial mouse driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ErrorControl",0x00010001,0x00000000
@@ -445,7 +462,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\BootVideo","Type",0x00010001,0x00000002
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\drivers\vgamp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
 
@@ -453,9 +470,17 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Group",0x00000000,"Video"
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
+
+; nVidia SVGA driver
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia","Group",0x00000000,"Video"
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia","ImagePath",0x00020000,"system32\drivers\nv4_mini.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\nVidia\Device0","InstalledDisplayDrivers",0x00010000,"nv4_disp"
 
 ; Kernel-mode regression test driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kmregtests","ErrorControl",0x00010001,0x00000000
