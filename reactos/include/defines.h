@@ -1274,6 +1274,10 @@ extern "C" {
 #define CP_ACP	(0)
 #define CP_MACCP	(2)
 #define CP_OEMCP	(1)
+#define CP_THREAD_ACP			3			//ACP Current thread's ANSI code page 
+#define CP_SYMBOL				42			//Symbol code page (42) 
+#define CP_UTF7					65000		//Translate using UTF-7 
+#define CP_UTF8					65001		//Translate using UTF-8 
 
 /* GetDateFormat */
 #define DATE_SHORTDATE	(1)
