@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/06/30 12:11:11 ekohl Exp $
+# $Id: Makefile,v 1.3 2004/10/31 11:51:30 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = appwiz
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = $(TARGET_BASE_LIB_CPL_SYSDM)
+TARGET_BASE = $(TARGET_BASE_LIB_CPL_APPWIZ)
 
 TARGET_CFLAGS = \
  -D_WIN32_IE=0x0600 \

@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.1 2004/10/30 19:15:31 ekohl Exp $
+# $Id: makefile,v 1.2 2004/10/31 11:54:22 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = timedate
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x75970000
+TARGET_BASE = $(TARGET_BASE_LIB_CPL_TIMEDATE)
 
 TARGET_CFLAGS = \
  -D_WIN32_IE=0x0600 \

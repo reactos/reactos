@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 2004/06/30 12:16:27 ekohl Exp $
+# $Id: Makefile,v 1.2 2004/10/31 11:51:13 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,7 +10,7 @@ TARGET_NAME = access
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = 0x58760000
+TARGET_BASE = $(TARGET_BASE_LIB_CPL_ACCESS)
 
 TARGET_CFLAGS = \
  -D_WIN32_IE=0x0600 \
