@@ -95,6 +95,7 @@ RMKDIR = $(TOOLS_PATH)/rmkdir
 RSYM = $(TOOLS_PATH)/rsym
 RTOUCH = $(TOOLS_PATH)/rtouch
 MC = $(TOOLS_PATH)/wmc/wmc
+XSLTPROC = xsltproc
 
 
 # Maybe we can delete these soon

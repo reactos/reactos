@@ -1,5 +1,22 @@
 2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
+	* rules.mak (XSLTPROC): Add.
+	* tools/Makefile: Add rgenstat.
+	* apistatus.lst: New file.
+	* tools/rgenstat: New directory.
+	* tools/rgenstat/.cvsignore: New file.
+	* tools/rgenstat/llmosrt.c: Ditto.
+	* tools/rgenstat/Makefile: Ditto.
+	* tools/rgenstat/rgenstat.c: Ditto.
+	* tools/rgenstat/web: New directory.
+	* tools/rgenstat/web/*.gif: New files.
+	* tools/rgenstat/web/.cvsignore: New file.
+	* tools/rgenstat/web/rapistatus.css: Ditto.
+	* tools/rgenstat/web/rapistatus.js: Ditto.
+	* tools/rgenstat/web/rapistatus.xsl: Ditto.
+
+2003-07-10  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
 	* drivers/fs/vfat/misc.c (VfatLockControl): Move it so it is placed
 	before it is referenced.
 	* include/win32k/ntuser.h (NtUserQueryWindow): Correct prototype.

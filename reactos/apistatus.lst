@@ -1,0 +1,30 @@
+; Format:
+;   COMPONENT_NAME PATH_TO_COMPONENT_SOURCES
+; COMPONENT_NAME            - Name of the component. Eg. kernel32.dll.
+; PATH_TO_COMPONENT_SOURCES - Relative path to sources (relative to
+;                             where rgenstat is run from).
+advapi32.dll reactos/lib/advapi32
+crtdll.dll reactos/lib/crtdll
+gdi32.dll reactos/lib/gdi32
+iphlpapi.dll reactos/lib/iphlpapi
+kernel32.dll reactos/lib/kernel32
+msvcrt.dll reactos/lib/msvcrt
+ole32.dll reactos/lib/ole32
+oleaut32.dll reactos/lib/oleaut32
+rpcrt4.dll reactos/lib/rpcrt4
+secur32.dll reactos/lib/secur32
+shell32.dll reactos/lib/shell32
+snmpapi.dll reactos/lib/snmpapi
+user32.dll reactos/lib/user32
+version.dll reactos/lib/version
+winmm.dll reactos/lib/winmm
+winspool.dll reactos/lib/winspool
+ws2_32.dll reactos/lib/ws2_32
+wsock32.dll reactos/lib/wsock32
+videoprt.dll reactos/drivers/dd/videoprt
+ndis.dll reactos/drivers/net/ndis
+tdi.dll reactos/drivers/net/tdi
+class2.sys reactos/drivers/storage/class2
+scsiport.sys reactos/drivers/storage/scsiport
+ntoskrnl.exe reactos/ntoskrnl
+win32k.sys reactos/subsys/win32k

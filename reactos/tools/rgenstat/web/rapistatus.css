@@ -1,0 +1,52 @@
+.c IMG
+{
+	border: 0px;
+}
+
+.c, .c_,
+.f, .f_,
+.i, .i_,
+.u, .u_
+{
+	FONT: 10px 'Verdana';
+	margin-left: 20px;
+}
+
+.c_ .f,
+.c_ .f_
+{
+	display: none;
+}
+
+.t
+{
+	cursor: pointer;
+	margin-right: 8px;
+}
+
+.filter
+{
+	cursor: pointer;
+	vertical-align: middle;
+}
+
+
+.st
+{
+	margin-left: 20px;
+}
+
+.i
+{
+	margin-left: 20px;
+}
+
+.u
+{
+	margin-left: 20px;
+}
+
+.l
+{
+	cursor: pointer;
+}
