@@ -29,10 +29,6 @@
 #define RMODE_DS	0x20	/* RMode data selector, base 0 limit 64k */
 
 #define	KERNEL_BASE	0xC0000000
-//#define	USER_CS		0x08
-//#define	USER_DS		0x10
-//#define	KERNEL_CS	0x20
-//#define	KERNEL_DS	0x28
 #define	KERNEL_CS	0x08
 #define	KERNEL_DS	0x10
 

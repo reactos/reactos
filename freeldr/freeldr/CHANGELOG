@@ -1,3 +1,8 @@
+Changes in v1.8.26 (10/30/2004) (chorns)
+
+- Print stack frames on crashes.
+- Users should report errors to ros-dev@reactos.com.
+
 Changes in v1.8.25 (10/30/2004) (chorns)
 
 - Support FULL_MAP command line option.

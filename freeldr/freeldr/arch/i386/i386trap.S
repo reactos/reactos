@@ -80,11 +80,10 @@
 
 
 i386ExceptionHandlerText:
-	.ascii "FreeLoader i386 Exception Handler\n"
+	.ascii "An error occured in FreeLoader\n"
 	.ascii VERSION
 	.ascii "\n"
-//	.asciz "Report bugs to Brian Palmer <brianp@reactos.org>\n\n"
-	.asciz "Report bugs to ReactOS Kernel mailing list <ros-kernel@reactos.com>\n\n"
+	.asciz "Report this error to the ReactOS Development mailing list <ros-dev@reactos.com>\n\n"
 
 i386DivideByZeroText:
 	.asciz "Exception 00: DIVIDE BY ZERO\n\n"
@@ -187,6 +186,9 @@ i386_LDTR_Text:
 	.asciz "        LDTR: "
 i386_TR_Text:
 	.asciz " TR: "
+
+i386FramesText:
+	.asciz "Frames:\n"
 
 /* Set by each exception handler to the address of the description text */
 i386ExceptionDescriptionText:
@@ -436,11 +438,37 @@ i386CommonExceptionHandler:
 	movl	$0,i386_ScreenPosX
 	incl	i386_ScreenPosY
 	incl	i386_ScreenPosY
+  call  i386PrintFrames           // Display frames
+	incl	i386_ScreenPosY
+	incl	i386_ScreenPosY
 
 i386ExceptionHandlerHang:
 	jmp		i386ExceptionHandlerHang
 
 	iret
+
+i386PrintFrames:
+	movl	$0,i386_ScreenPosX
+	movl	$i386FramesText,%esi
+	call	i386PrintText
+
+	movl	i386_EBP,%edi
+printnextframe:
+  test  %edi,%edi
+  je    nomoreframes
+  movl  $STACK32ADDR,%eax
+  cmpl  %edi,%eax
+  jbe   nomoreframes
+  movl	4(%edi),%eax
+  pushl %edi
+	call	i386PrintHexDword					// Display frame
+  popl  %edi
+	incl	i386_ScreenPosX
+	incl	i386_ScreenPosX
+  movl	0(%edi),%edi
+  jmp printnextframe
+nomoreframes:
+  ret
 
 /************************************************************************/
 i386ClearScreenToBlue:
