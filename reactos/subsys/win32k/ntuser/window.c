@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.174 2003/12/26 22:52:11 gvg Exp $
+/* $Id: window.c,v 1.175 2004/01/15 21:02:09 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1451,10 +1451,6 @@ NtUserCreateWindowEx(DWORD dwExStyle,
     {
       DPRINT("NtUserCreateWindow(): About to show window\n");
       WinPosShowWindow(WindowObject->Self, dwShowMode);
-    }
-  else if (NtUserGetActiveWindow() == NULL)
-    {
-      NtUserSetActiveWindow(WindowObject->Self);
     }
 
   DPRINT("NtUserCreateWindow(): = %X\n", Handle);
