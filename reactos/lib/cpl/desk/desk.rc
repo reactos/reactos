@@ -53,6 +53,6 @@ END
 
 STRINGTABLE 
 BEGIN
-  IDS_CPLSYSTEMNAME "Display Properties"
+  IDS_CPLSYSTEMNAME "Display"
   IDS_CPLSYSTEMDESCRIPTION "Customizes your desktop display and screen saver."
 END
