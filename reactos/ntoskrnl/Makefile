@@ -1,26 +1,49 @@
-# $Id: Makefile,v 1.29 2001/03/31 17:02:17 dwelch Exp $
+# $Id: Makefile,v 1.30 2001/04/09 02:45:03 dwelch Exp $
 #
 # ReactOS Operating System
 #
-PATH_TO_TOP = ..
 
-
+#
+# Path to the directory containing the root makefile
+#
+PATH_TO_TOP := ..
 
 #
 # Architecture to build for
 #
 ARCH := i386
 
-TARGETNAME = ntoskrnl
+#
+# Whether to compile in the kernel debugger
+#
+KDBG := 0
+
+#
+# Whether to compile for debugging
+#
+DBG := 1
+
+#
+#
+#
+ifeq ($(DBG), 1)
+CFLAGS_DBG := -g -DDBG
+else
+CFLAGS_DBG :=
+endif
+
+ifeq ($(KDBG), 1)
+CFLAGS_KDBG := -DKDBG
+else
+CFLAGS_KDBG :=
+endif
+
+TARGETNAME := ntoskrnl
 
 OBJECTS_PATH = objects
 
 ASFLAGS = -Iinclude
-CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror 
-# -DDBGPRINT_FILE_LOG
-#         -W -Wpointer-arith -Wconversion -Wstrict-prototypes -Wundef \
-#	 -Wmissing-prototypes -Wshadow\
-#CFLAGS = -DDBGPRINT_FILE_LOG
+CFLAGS = -Iinclude -D__NTOSKRNL__ $(CFLAGS_DBG) $(CFLAGS_KDBG) -Wall -Werror 
 
 include $(PATH_TO_TOP)/rules.mak
 

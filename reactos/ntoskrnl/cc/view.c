@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: view.c,v 1.23 2001/04/03 17:25:48 dwelch Exp $
+/* $Id: view.c,v 1.24 2001/04/09 02:45:03 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -68,6 +68,9 @@
 
 #define TAG_CSEG  TAG('C', 'S', 'E', 'G')
 #define TAG_BCB   TAG('B', 'C', 'B', ' ')
+
+static LIST_ENTRY BcbListHead;
+static KSPIN_LOCK BcbListLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -122,7 +125,7 @@ CcGetCacheSegment(PBCB Bcb,
    current_entry = Bcb->CacheSegmentListHead.Flink;
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
-	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
+	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
 	if (current->FileOffset <= FileOffset &&
 	    (current->FileOffset + Bcb->CacheSegmentSize) > FileOffset)
 	  {
@@ -162,7 +165,7 @@ CcGetCacheSegment(PBCB Bcb,
    current->Bcb = Bcb;
    KeInitializeEvent(&current->Lock, SynchronizationEvent, FALSE);
    current->ReferenceCount = 1;
-   InsertTailList(&Bcb->CacheSegmentListHead, &current->ListEntry);
+   InsertTailList(&Bcb->CacheSegmentListHead, &current->BcbListEntry);
    *UptoDate = current->Valid;
    *BaseAddress = current->BaseAddress;
    *CacheSeg = current;
@@ -246,7 +249,8 @@ CcReleaseFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    current_entry = Bcb->CacheSegmentListHead.Flink;
    while (current_entry != &Bcb->CacheSegmentListHead)
      {
-	current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT, ListEntry);
+	current = 
+	  CONTAINING_RECORD(current_entry, CACHE_SEGMENT, BcbListEntry);
 	current_entry = current_entry->Flink;
 	CcFreeCacheSegment(Bcb, current);
      }
@@ -339,5 +343,11 @@ CcMdlReadComplete (IN	PFILE_OBJECT	FileObject,
 			 DeviceObject);
 }
 
+VOID
+CcInitView(VOID)
+{
+  InitializeListHead(&BcbListHead);
+  KeInitializeSpinLock(&BcbListLock);
+}
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: kdebug.c,v 1.21 2001/03/07 16:48:42 dwelch Exp $
+/* $Id: kdebug.c,v 1.22 2001/04/09 02:45:04 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -340,25 +340,63 @@ KeEnterKernelDebugger (VOID)
 VOID STDCALL
 KdSystemDebugControl(ULONG Code)
 {
+  /* A - Dump the entire contents of the non-paged pool. */
   if (Code == 0)
     {
       MiDebugDumpNonPagedPool(FALSE);
     }
+  /* B - Bug check the system. */
   else if (Code == 1)
     {
       KeBugCheck(0);
     }
+  /* 
+   * C -  Dump statistics about the distribution of tagged blocks in 
+   *      the non-paged pool.
+   */
   else if (Code == 2)
     {
       MiDebugDumpNonPagedPoolStats(FALSE);
     }
+  /* 
+   * D - Dump the blocks created in the non-paged pool since the last
+   * SysRq + D and SysRq + E command.
+   */
   else if (Code == 3)
     {
       MiDebugDumpNonPagedPool(TRUE);
     }
+  /* E - Dump statistics about the tags of newly created blocks. */
   else if (Code == 4)
     {
       MiDebugDumpNonPagedPoolStats(TRUE);
+    }
+  /* F */
+  else if (Code == 5)
+    {
+    }
+  /* G */
+  else if (Code == 6)
+    {
+    }
+  /* H */
+  else if (Code == 7)
+    {
+    }
+  /* I */
+  else if (Code == 8)
+    {
+    }
+  /* J */
+  else if (Code == 9)
+    {
+    }
+  /* K - Enter the system debugger. */
+  else if (Code == 10)
+    {
+#if KDBG
+#else /* KDBG */
+#endif /* not KDBG */
     }
 }
 

@@ -77,7 +77,7 @@ typedef struct _REACTOS_COMMON_FCB_HEADER
 {
   CSHORT NodeTypeCode;
   CSHORT NodeByteSize;
-  PBCB Bcb;
+  struct _BCB* Bcb;
   LARGE_INTEGER AllocationSize;
   LARGE_INTEGER FileSize;
   LARGE_INTEGER ValidDataLength;

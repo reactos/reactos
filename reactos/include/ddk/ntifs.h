@@ -1,47 +1,35 @@
 #ifndef __INCLUDE_DDK_NTIFS_H
 #define __INCLUDE_DDK_NTIFS_H
 
-typedef struct _BCB
-{
-  LIST_ENTRY CacheSegmentListHead;
-  PFILE_OBJECT FileObject;
-  KSPIN_LOCK BcbLock;
-  ULONG CacheSegmentSize;
-} BCB, *PBCB;
+struct _BCB;
+
+typedef struct _BCB* PBCB;
 
 struct _MEMORY_AREA;
 
-typedef struct _CACHE_SEGMENT
-{
-  PVOID BaseAddress;
-  struct _MEMORY_AREA* MemoryArea;
-  BOOLEAN Valid;
-  LIST_ENTRY ListEntry;
-  ULONG FileOffset;
-  KEVENT Lock;
-  ULONG ReferenceCount;
-  PBCB Bcb;
-} CACHE_SEGMENT, *PCACHE_SEGMENT;
+struct _CACHE_SEGMENT;
+
+typedef struct _CACHE_SEGMENT* PCACHE_SEGMENT;
 
 NTSTATUS STDCALL
-CcFlushCacheSegment (PCACHE_SEGMENT	CacheSeg);
+CcFlushCacheSegment (struct _CACHE_SEGMENT*	CacheSeg);
 NTSTATUS STDCALL
-CcReleaseCacheSegment (PBCB		Bcb,
-		    PCACHE_SEGMENT	CacheSeg,
+CcReleaseCacheSegment (struct _BCB*		Bcb,
+		    struct _CACHE_SEGMENT*	CacheSeg,
 		    BOOLEAN		Valid);
 NTSTATUS STDCALL
-CcRequestCacheSegment (PBCB		Bcb,
+CcRequestCacheSegment (struct _BCB*		Bcb,
 		       ULONG		FileOffset,
 		       PVOID* BaseAddress,
 		       PBOOLEAN	UptoDate,
-		       PCACHE_SEGMENT* CacheSeg);
+		       struct _CACHE_SEGMENT** CacheSeg);
 NTSTATUS STDCALL
 CcInitializeFileCache (PFILE_OBJECT	FileObject,
-		       PBCB* Bcb,
+		       struct _BCB** Bcb,
 		       ULONG CacheSegmentSize);
 NTSTATUS STDCALL
 CcReleaseFileCache (PFILE_OBJECT	FileObject,
-		    PBCB		Bcb);
+		    struct _BCB*		Bcb);
 
 #include <ddk/cctypes.h>
 

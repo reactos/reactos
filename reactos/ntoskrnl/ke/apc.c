@@ -230,9 +230,10 @@ KiDeliverUserApc(PKTRAP_FRAME TrapFrame)
    return(TRUE);
 }
 
-VOID STDCALL KiDeliverApc(ULONG Unknown1,
-			  ULONG Unknown2,
-			  ULONG Unknown3)
+VOID STDCALL 
+KiDeliverApc(ULONG Unknown1,
+	     ULONG Unknown2,
+	     ULONG Unknown3)
 /*
  * FUNCTION: Deliver an APC to the current thread.
  * NOTES: This is called from the IRQL switching code if the current thread
@@ -326,10 +327,22 @@ KeInsertQueueApc (PKAPC	Apc,
    Apc->Inserted = TRUE;
 
    /*
+    * If this is a kernel-mode APC for the current thread and we are not
+    * inside a critical section or at APC level then call it, in fact we
+    * rely on the side effects of dropping the IRQL level when we release
+    * the spinlock
+    */
+   if (Apc->ApcMode == KernelMode && TargetThread == KeGetCurrentThread() && 
+       Apc->NormalRoutine == NULL)
+     {
+       KeReleaseSpinLock(&PiApcLock, oldlvl);
+       return;
+     }
+
+   /*
     * If this is a kernel-mode APC and it is waiting at PASSIVE_LEVEL and
     * not inside a critical section then wake it up. Otherwise it will
     * execute the APC as soon as it returns to PASSIVE_LEVEL.
-    * FIXME: Check for sending an APC to the current thread.
     * FIXME: If the thread is running on another processor then send an
     * IPI.
     * FIXME: Check if the thread is terminating.

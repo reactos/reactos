@@ -427,10 +427,10 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    unsigned int cr2, cr3;
    unsigned int i;
 //   unsigned int j, sym;
-   PULONG stack;
    NTSTATUS Status;
    ULONG Esp0;
    ULONG StackLimit;
+   PULONG Frame;
 
    /* Use the address of the trap frame as approximation to the ring0 esp */
    Esp0 = (ULONG)&Tf->Eip;
@@ -529,10 +529,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
      }
 
    DbgPrint("ESP %x\n", Esp0);
-   stack = (PULONG) (Esp0 + 24);
-   stack = (PULONG)(((ULONG)stack) & (~0x3));
-   
-   DbgPrint("stack<%p>: ", stack);
 
    if (PsGetCurrentThread() != NULL)
      {
@@ -543,24 +539,23 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
        StackLimit = (ULONG)&init_stack_top;
      }
    
-   for (i = 0; i < 18; i = i + 6)
+   /*
+    * Dump the stack frames
+    */
+   DbgPrint("Frames: ");
+   i = 1;
+   Frame = (PULONG)Tf->Ebp;
+   while (Frame != NULL)
      {
-       DbgPrint("%.8x %.8x %.8x %.8x\n", 
-		stack[i], stack[i+1], 
-		stack[i+2], stack[i+3], 
-		stack[i+4], stack[i+5]);
+       print_address((PVOID)Frame[1]);
+       Frame = (PULONG)Frame[0];
+       i++;
      }
-   DbgPrint("Frames:\n");
-   for (i = 0; i < 32 && ((ULONG)&stack[i] < StackLimit); i++)
+   if ((i % 8) != 0)
      {
-       if (stack[i] > ((unsigned int) &_text_start__) &&
-	   !(stack[i] >= ((ULONG)&init_stack) &&
-	     stack[i] <= ((ULONG)&init_stack_top)))
-	 {
-	   print_address((PVOID)stack[i]);
-	   DbgPrint(" ");
-	 }
-    }
+       DbgPrint("\n");
+     }
+
    for(;;);
 }
 

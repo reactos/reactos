@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <internal/cc.h>
 
 #include <internal/debug.h>
 
@@ -37,7 +38,7 @@
 NTSTATUS 
 CcInit(VOID)
 {
-   /* Nothing in here at the moment */
+  CcInitView();
    
-   return(STATUS_SUCCESS);
+  return(STATUS_SUCCESS);
 }

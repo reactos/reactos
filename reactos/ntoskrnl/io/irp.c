@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.35 2001/04/06 04:29:16 phreak Exp $
+/* $Id: irp.c,v 1.36 2001/04/09 02:45:04 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -205,7 +205,6 @@ IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
 {
    unsigned int i;
    NTSTATUS Status;
-   PKTHREAD Thread;
    
    DPRINT("IoCompleteRequest(Irp %x, PriorityBoost %d) Event %x THread %x\n",
 	   Irp,PriorityBoost, Irp->UserEvent, PsGetCurrentThread());
@@ -228,12 +227,11 @@ IofCompleteRequest (PIRP Irp, CCHAR PriorityBoost)
 	     Irp->PendingReturned = TRUE;
 	  }
      }
-   Thread = &Irp->Tail.Overlay.Thread->Tcb;
-   if ( Irp->PendingReturned && Thread != KeGetCurrentThread() )
+   if (Irp->PendingReturned)
      {
 	DPRINT("Dispatching APC\n");
 	KeInitializeApc(&Irp->Tail.Apc,
-			Thread,
+			&Irp->Tail.Overlay.Thread->Tcb,
 			0,
 			IopCompleteRequest,
 			NULL,
