@@ -61,23 +61,15 @@ WARN_LOGFILE           =
 #---------------------------------------------------------------------------
 # configuration options related to the input files
 #---------------------------------------------------------------------------
-INPUT                  = drivers \
-                         apps \
-                         hal \
-                         lib \
-                         services \
+INPUT                  = hal \
                          subsys \
-                         tools \
-                         regtests
+                         services \
+                         regtests \
+						 iface
 FILE_PATTERNS          = *.c \
                          *.h
 RECURSIVE              = YES
-EXCLUDE                = ntoskrnl \
-                         lib \
-                         drivers \
-                         tools \
-                         apps \
-                         subsys/win32k \
+EXCLUDE                = subsys/win32k \
                          subsys/system/explorer
 EXCLUDE_SYMLINKS       = NO
 EXCLUDE_PATTERNS       = 
