@@ -19,8 +19,6 @@ DllMain(PVOID hinstDll,
 	ULONG dwReason,
 	PVOID reserved)
 {
-  DbgPrint("WINMM: DllMain() called\n");
-
   switch (dwReason)
   {
   case DLL_PROCESS_ATTACH:
@@ -29,8 +27,6 @@ DllMain(PVOID hinstDll,
   case DLL_PROCESS_DETACH:
     break;
   }
-
-  DbgPrint("WINMM: DllMain() done\n");
 
   return TRUE;
 }
