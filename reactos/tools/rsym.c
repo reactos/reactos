@@ -278,15 +278,23 @@ int main(int argc, char* argv[])
 
   for (i = 0; i < SymbolsCount; i++)
     {
-      if (StabEntry[i].n_type == N_FUN ||
-	  StabEntry[i].n_type == N_SLINE ||
-	  StabEntry[i].n_type == N_SO)
-        {
-	  memmove(&StabEntry[Count], &StabEntry[i], sizeof(STAB_ENTRY));
-	  if ( StabEntry[Count].n_value >= ImageBase )
-		StabEntry[Count].n_value -= ImageBase;
-	  Count++;
-	}
+      switch ( StabEntry[i].n_type )
+      {
+      case N_FUN:
+	if ( StabEntry[i].n_desc == 0 ) // line # 0 isn't valid
+	  continue;
+	break;
+      case N_SLINE:
+	break;
+      case N_SO:
+	break;
+      default:
+	continue;
+      }
+      memmove(&StabEntry[Count], &StabEntry[i], sizeof(STAB_ENTRY));
+      if ( StabEntry[Count].n_value >= ImageBase )
+	    StabEntry[Count].n_value -= ImageBase;
+      Count++;
     }
 
   StrEntry = malloc(sizeof(STR_ENTRY) * Count);
