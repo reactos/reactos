@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.13 2004/11/05 23:53:06 weiden Exp $
+/* $Id: win32.c,v 1.14 2004/11/06 01:42:04 weiden Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -935,15 +935,15 @@ GetProcessImageFileNameW(HANDLE hProcess,
                          DWORD nSize)
 {
   PUNICODE_STRING ImageFileName;
-  ULONG BufferSize;
+  SIZE_T BufferSize;
   NTSTATUS Status;
+  DWORD Ret = 0;
 
   BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
 
   ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
   if(ImageFileName != NULL)
   {
-    DWORD Ret;
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
                                        ImageFileName,
@@ -957,22 +957,17 @@ GetProcessImageFileNameW(HANDLE hProcess,
       lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = L'\0';
       Ret = ImageFileName->Length / sizeof(WCHAR);
     }
+    else if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+      /* XP sets this error code for some reason if the buffer is too small */
+      SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
     else
     {
-      if(Status == STATUS_INFO_LENGTH_MISMATCH)
-      {
-        /* XP sets this error code for some reason if the buffer is too small */
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      }
-      else
-      {
-        SetLastErrorByStatus(Status);
-      }
-      Ret = 0;
+      SetLastErrorByStatus(Status);
     }
 
     LocalFree((HLOCAL)ImageFileName);
-    return Ret;
   }
 
   return 0;
@@ -989,15 +984,15 @@ GetProcessImageFileNameA(HANDLE hProcess,
                          DWORD nSize)
 {
   PUNICODE_STRING ImageFileName;
-  ULONG BufferSize;
+  SIZE_T BufferSize;
   NTSTATUS Status;
+  DWORD Ret = 0;
 
   BufferSize = sizeof(UNICODE_STRING) + (nSize * sizeof(WCHAR));
 
   ImageFileName = (PUNICODE_STRING)LocalAlloc(LMEM_FIXED, BufferSize);
   if(ImageFileName != NULL)
   {
-    DWORD Ret;
     Status = NtQueryInformationProcess(hProcess,
                                        ProcessImageFileName,
                                        ImageFileName,
@@ -1018,26 +1013,168 @@ GetProcessImageFileNameA(HANDLE hProcess,
       lpImageFileName[ImageFileName->Length / sizeof(WCHAR)] = '\0';
       Ret = ImageFileName->Length / sizeof(WCHAR);
     }
+    else if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+      /* XP sets this error code for some reason if the buffer is too small */
+      SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    }
     else
     {
-      if(Status == STATUS_INFO_LENGTH_MISMATCH)
-      {
-        /* XP sets this error code for some reason if the buffer is too small */
-        SetLastError(ERROR_INSUFFICIENT_BUFFER);
-      }
-      else
-      {
-        SetLastErrorByStatus(Status);
-      }
-      Ret = 0;
+      SetLastErrorByStatus(Status);
     }
 
     LocalFree((HLOCAL)ImageFileName);
-    return Ret;
   }
 
   return 0;
 }
 
-/* EOF */
 
+typedef struct _INTERNAL_ENUM_PAGE_FILES_CONTEXT
+{
+  PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine;
+  LPVOID lpContext;
+} INTERNAL_ENUM_PAGE_FILES_CONTEXT, *PINTERNAL_ENUM_PAGE_FILES_CONTEXT;
+
+
+static BOOL
+InternalAnsiPageFileCallback(LPVOID pContext,
+                             PENUM_PAGE_FILE_INFORMATION pPageFileInfo,
+                             LPCWSTR lpFilename)
+{
+  size_t slen;
+  LPSTR AnsiFileName;
+  PINTERNAL_ENUM_PAGE_FILES_CONTEXT Context = (PINTERNAL_ENUM_PAGE_FILES_CONTEXT)pContext;
+  
+  slen = wcslen(lpFilename);
+  
+  AnsiFileName = (LPSTR)LocalAlloc(LMEM_FIXED, (slen + 1) * sizeof(CHAR));
+  if(AnsiFileName != NULL)
+  {
+    BOOL Ret;
+    
+    WideCharToMultiByte(CP_ACP,
+                        0,
+                        lpFilename,
+                        -1, /* only works if the string is NULL-terminated!!! */
+                        AnsiFileName,
+                        (slen + 1) * sizeof(CHAR),
+                        NULL,
+                        NULL);
+    
+    Ret = Context->pCallbackRoutine(Context->lpContext, pPageFileInfo, AnsiFileName);
+    
+    LocalFree((HLOCAL)AnsiFileName);
+    
+    return Ret;
+  }
+
+  return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
+               LPVOID lpContext)
+{
+  INTERNAL_ENUM_PAGE_FILES_CONTEXT Context;
+  
+  Context.pCallbackRoutine = pCallbackRoutine;
+  Context.lpContext = lpContext;
+  
+  return EnumPageFilesW(InternalAnsiPageFileCallback, &Context);
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
+               LPVOID lpContext)
+{
+  NTSTATUS Status;
+  PVOID Buffer;
+  ULONG BufferSize = 0;
+  BOOL Ret = FALSE;
+
+  for(;;)
+  {
+    BufferSize += 0x1000;
+    Buffer = LocalAlloc(LMEM_FIXED, BufferSize);
+    if(Buffer == NULL)
+    {
+      return FALSE;
+    }
+
+    Status = NtQuerySystemInformation(SystemPagefileInformation,
+                                      Buffer,
+                                      BufferSize,
+                                      NULL);
+    if(Status == STATUS_INFO_LENGTH_MISMATCH)
+    {
+      LocalFree((HLOCAL)Buffer);
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  if(NT_SUCCESS(Status))
+  {
+    ENUM_PAGE_FILE_INFORMATION Information;
+    PSYSTEM_PAGEFILE_INFORMATION pfi = (PSYSTEM_PAGEFILE_INFORMATION)Buffer;
+    ULONG Offset = 0;
+
+    do
+    {
+      PWCHAR Colon;
+
+      pfi = (PSYSTEM_PAGEFILE_INFORMATION)((ULONG_PTR)pfi + Offset);
+
+      Information.cb = sizeof(Information);
+      Information.Reserved = 0;
+      Information.TotalSize = pfi->TotalSize;
+      Information.TotalInUse = pfi->TotalInUse;
+      Information.PeakUsage = pfi->PeakUsage;
+
+      /* strip the \??\ prefix from the file name. We do this by searching for the first
+         : character and then just change Buffer to point to the previous character. */
+
+      Colon = wcschr(pfi->PageFileName.Buffer, L':');
+      if(Colon != NULL)
+      {
+        pfi->PageFileName.Buffer = --Colon;
+      }
+
+      /* FIXME - looks like the PageFileName string is always NULL-terminated on win.
+                 At least I haven't encountered a different case so far, we should
+                 propably manually NULL-terminate the string here... */
+
+      if(!pCallbackRoutine(lpContext, &Information, pfi->PageFileName.Buffer))
+      {
+        break;
+      }
+
+      Offset = pfi->NextEntryOffset;
+    } while(Offset != 0);
+
+    Ret = TRUE;
+  }
+  else
+  {
+    SetLastErrorByStatus(Status);
+  }
+
+  LocalFree((HLOCAL)Buffer);
+
+  return Ret;
+}
+
+/* EOF */

@@ -474,12 +474,12 @@ struct _SYSTEM_OBJECT_INFORMATION
 typedef
 struct _SYSTEM_PAGEFILE_INFORMATION
 {
-	ULONG		RelativeOffset;
-	ULONG		CurrentSizePages;
-	ULONG		TotalUsedPages;
-	ULONG		PeakUsedPages;
-	UNICODE_STRING	PagefileFileName;
-	
+	ULONG	NextEntryOffset;
+	ULONG	TotalSize;
+	ULONG	TotalInUse;
+	ULONG	PeakUsage;
+	UNICODE_STRING	PageFileName;
+
 } SYSTEM_PAGEFILE_INFORMATION, *PSYSTEM_PAGEFILE_INFORMATION;
 
 // SystemCacheInformation (21)

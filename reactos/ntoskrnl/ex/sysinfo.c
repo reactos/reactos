@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.56 2004/11/05 17:42:20 ekohl Exp $
+/* $Id: sysinfo.c,v 1.57 2004/11/06 01:42:04 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -856,12 +856,12 @@ QSI_DEF(SystemPageFileInformation)
 	UNICODE_STRING FileName; /* FIXME */
 
 	/* FIXME */
-	Spfi->RelativeOffset = 0;
+	Spfi->NextEntryOffset = 0;
 
-	Spfi->CurrentSizePages = MiFreeSwapPages + MiUsedSwapPages;
-	Spfi->TotalUsedPages = MiUsedSwapPages;
-	Spfi->PeakUsedPages = MiUsedSwapPages; /* FIXME */
-	Spfi->PagefileFileName = FileName;
+	Spfi->TotalSize = MiFreeSwapPages + MiUsedSwapPages;
+	Spfi->TotalInUse = MiUsedSwapPages;
+	Spfi->PeakUsage = MiUsedSwapPages; /* FIXME */
+	Spfi->PageFileName = FileName;
 	return (STATUS_SUCCESS);
 }
 

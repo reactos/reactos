@@ -1,35 +1,8 @@
-/* $Id: stubs.c,v 1.9 2004/11/05 23:53:06 weiden Exp $ */
+/* $Id: stubs.c,v 1.10 2004/11/06 01:42:04 weiden Exp $ */
 #include "precomp.h"
 
 #define NDEBUG
 #include <debug.h>
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
-               LPVOID lpContext)
-{
-  DPRINT1("PSAPI: EnumPageFilesA is UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
-               LPVOID lpContext)
-{
-  DPRINT1("PSAPI: EnumPageFilesW is UNIMPLEMENTED!\n");
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return FALSE;
-}
 
 
 /*
