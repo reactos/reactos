@@ -113,6 +113,25 @@ typedef struct _SYMBOLFILE_HEADER {
   unsigned long StabstrLength;
 } SYMBOLFILE_HEADER, *PSYMBOLFILE_HEADER;
 
+typedef struct _STAB_ENTRY {
+  unsigned long n_strx;         /* index into string table of name */
+  unsigned char n_type;         /* type of symbol */
+  unsigned char n_other;        /* misc info (usually empty) */
+  unsigned short n_desc;        /* description field */
+  unsigned long n_value;        /* value of symbol */
+} STAB_ENTRY, *PSTAB_ENTRY;
+
+#define N_FUN 0x24
+#define N_SLINE 0x44
+#define N_SO 0x64
+
+typedef struct 
+{
+   unsigned long OldOffset;
+   unsigned long NewOffset;
+   char* Name;
+   unsigned long Length;
+} STR_ENTRY, *PSTR_ENTRY;
 
 char* convert_path(char* origpath)
 {
@@ -161,6 +180,13 @@ int main(int argc, char* argv[])
   FILE* out;
   int n_in;
   int n_out;
+  PSTAB_ENTRY StabEntry;
+  ULONG Count;
+  ULONG i;
+  ULONG SymbolsCount;
+  PSTR_ENTRY StrEntry;
+  ULONG StrCount;
+  ULONG j;
    
    if (argc != 3)
      {
@@ -239,14 +265,64 @@ int main(int argc, char* argv[])
         }
     }
 
+  StabEntry = SymbolsBase;
+  SymbolsCount = SymbolsLength / sizeof(STAB_ENTRY);
+  Count = 0;
+
+  for (i = 0; i < SymbolsCount; i++)
+    {
+      if (StabEntry[i].n_type == N_FUN ||
+	  StabEntry[i].n_type == N_SLINE ||
+	  StabEntry[i].n_type == N_SO)
+        {
+	  memmove(&StabEntry[Count], &StabEntry[i], sizeof(STAB_ENTRY));
+	  Count++;
+	}
+    }
+
+  StrEntry = malloc(sizeof(STR_ENTRY) * Count);
+  StrCount = 0;
+
+  for (i = 0; i < Count; i++)
+    {
+      for (j = 0; j < StrCount; j++)
+        {
+	  if (StabEntry[i].n_strx == StrEntry[j].OldOffset)
+	    {
+	      StabEntry[i].n_strx = StrEntry[j].NewOffset;
+	      break;
+	    }
+	}
+      if (j >= StrCount)
+        {
+	  StrEntry[StrCount].OldOffset = StabEntry[i].n_strx;
+	  StrEntry[StrCount].Name = (char*)SymbolStringsBase + StrEntry[StrCount].OldOffset;
+	  StrEntry[StrCount].Length = strlen(StrEntry[StrCount].Name) + 1;
+	  if (StrCount == 0)
+	    {
+	      StrEntry[StrCount].NewOffset = 0;
+	    }
+	  else
+	    {
+	      StrEntry[StrCount].NewOffset = StrEntry[StrCount-1].NewOffset + StrEntry[StrCount-1].Length;
+	    }
+	  StabEntry[i].n_strx = StrEntry[StrCount].NewOffset;
+	  StrCount++;
+	}
+    }
+
   SymbolFileHeader.StabsOffset = sizeof(SYMBOLFILE_HEADER);
-  SymbolFileHeader.StabsLength = SymbolsLength;
-  SymbolFileHeader.StabstrOffset = SymbolFileHeader.StabsOffset + SymbolsLength;
-  SymbolFileHeader.StabstrLength = SymbolStringsLength;
+  SymbolFileHeader.StabsLength = Count * sizeof(STAB_ENTRY);
+  SymbolFileHeader.StabstrOffset = SymbolFileHeader.StabsOffset + SymbolFileHeader.StabsLength;
+  SymbolFileHeader.StabstrLength = StrEntry[StrCount-1].NewOffset + StrEntry[StrCount-1].Length;
 
   n_out = fwrite(&SymbolFileHeader, 1, sizeof(SYMBOLFILE_HEADER), out);
-  n_out = fwrite(SymbolsBase, 1, SymbolsLength, out);
-  n_out = fwrite(SymbolStringsBase, 1, SymbolStringsLength, out);
+  n_out = fwrite(SymbolsBase, 1, SymbolFileHeader.StabsLength, out);
+  for (i = 0; i < StrCount; i++)
+    {
+      fwrite(StrEntry[i].Name, 1, StrEntry[i].Length, out);
+    }
 
+  fclose(out);
   exit(0);
 }
