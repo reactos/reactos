@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.42 2004/01/01 17:08:38 sedwards Exp $
+# $Id: Makefile,v 1.43 2004/05/15 12:55:47 jfilby Exp $
 
 PATH_TO_TOP = ../..
 
@@ -152,6 +152,7 @@ IO_OBJECTS = \
 	io/read.o \
 	io/setmode.o \
 	io/sopen.o \
+    io/stubs.o \
 	io/tell.o \
 	io/telli64.o \
 	io/umask.o \

@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.34 2004/04/08 17:53:30 gvg Exp $
+; $Id: msvcrt.def,v 1.35 2004/05/15 12:55:47 jfilby Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -107,7 +107,7 @@ __RTtypeid=MSVCRT___RTtypeid
 ;__STRINGTOLD
 __argc DATA
 __argv DATA
-;__badioinfo
+__badioinfo DATA
 __crtCompareStringA ;=NTDLL.RtlCompareString
 ;__crtGetLocaleInfoW
 __crtLCMapStringA
