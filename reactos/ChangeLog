@@ -1,3 +1,9 @@
+2003-04-04  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* lib/freetype/builds/compiler/gcc.mk (CC): Comment out; use CC from
+	rules.mak instead.
+	* lib/freetype/README.ROS: Note this in porting guide.
+
 2003-03-29  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* ntoskrnl/ex/sysinfo.c (SystemProcessInformation): Fix warning.
