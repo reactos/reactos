@@ -1,0 +1,31 @@
+# $Id: Makefile.i386,v 1.1 2003/05/27 18:56:15 hbirr Exp $
+
+
+EXCLUDE_FILTER = \
+	memchr.o \
+	memcpy.o \
+	memset.o \
+	strcat.o \
+	strchr.o \
+	strcmp.o \
+	strcpy.o \
+	strlen.o \
+	strncat.o \
+	strncmp.o \
+	strncpy.o \
+	strrchr.o \
+	wcscat.o \
+	wcschr.o \
+	wcscmp.o \
+	wcscpy.o \
+	wcslen.o \
+	wcsncat.o \
+	wcsncmp.o \
+	wcsncpy.o \
+	wcsrchr.o
+	
+
+OBJECTS_ARCH = $(addprefix i386/, $(EXCLUDE_FILTER))
+
+
+# EOF
