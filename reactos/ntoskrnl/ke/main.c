@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: main.c,v 1.138 2002/09/15 10:45:02 guido Exp $
+/* $Id: main.c,v 1.139 2002/09/17 23:48:14 dwelch Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/main.c
@@ -694,8 +694,16 @@ _main (ULONG MultiBootMagic, PLOADER_PARAMETER_BLOCK _LoaderBlock)
   KeLoaderModules[0].ModStart = 0xC0000000;
   KeLoaderModules[0].ModEnd = PAGE_ROUND_UP((ULONG)&_bss_end__);
   for (i = 1; i < KeLoaderBlock.ModsCount; i++)
-    {
-      strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
+    {      
+      CHAR* s;
+      if ((s = strrchr((PUCHAR)KeLoaderModules[i].String, '/')) != 0)
+	{
+	  strcpy(KeLoaderModuleStrings[i], s + 1);
+	}
+      else
+	{
+	  strcpy(KeLoaderModuleStrings[i], (PUCHAR)KeLoaderModules[i].String);
+	}
       KeLoaderModules[i].ModStart -= 0x200000;
       KeLoaderModules[i].ModStart += 0xc0000000;
       KeLoaderModules[i].ModEnd -= 0x200000;
