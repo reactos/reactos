@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.65 2004/12/18 17:36:13 royce Exp $
+/* $Id: bitblt.c,v 1.66 2004/12/18 17:52:30 royce Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -901,8 +901,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   ULONG              Direction;
   POINTL             AdjustedBrushOrigin;
 
-  if ( NULL == Mask )
-    return FALSE;
+  ASSERT ( Mask );
 
   if (NULL != SourcePoint)
     {
@@ -1094,6 +1093,8 @@ IntEngMaskBlt(SURFOBJ *DestObj,
   BOOLEAN ret;
   RECTL OutputRect;
   POINTL InputPoint;
+
+  ASSERT(Mask);
 
   if (NULL != SourcePoint)
     {
