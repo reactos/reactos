@@ -406,8 +406,9 @@ AutomaticDependency::CheckAutomaticDependencies ()
 				assert ( sourceFile->youngestLastWriteTime != 0 );
 				if ( sourceFile->youngestLastWriteTime > sourceFile->lastWriteTime )
 				{
-					printf ( "Marking %s for rebuild\n",
-					         sourceFile->filename.c_str () );
+					printf ( "Marking %s for rebuild due to younger file %s\n",
+					         sourceFile->filename.c_str (),
+					         sourceFile->youngestFile->filename.c_str () );
 					timebuf.actime = sourceFile->youngestLastWriteTime;
 					timebuf.modtime = sourceFile->youngestLastWriteTime;
 					utime ( sourceFile->filename.c_str (),
