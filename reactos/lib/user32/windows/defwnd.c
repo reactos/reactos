@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.30 2003/03/11 00:18:54 rcampbell Exp $
+/* $Id: defwnd.c,v 1.31 2003/03/12 06:02:59 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -346,11 +346,11 @@ static void UserDrawCaptionNC( HDC hDC, RECT *rect, HWND hWnd,
         hFont = CreateFontIndirectW(&nclm.lfCaptionFont);
       hOldFont = SelectObject(hDC, hFont);
 
-      SetTextColor(hDC, GetSysColor( (active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT ) ) );
+      SetTextColor(hDC, SysColours[ active ? COLOR_CAPTIONTEXT : COLOR_INACTIVECAPTIONTEXT]);
       SetBkMode( hDC, TRANSPARENT );
       
       /*FIXME:  Need verticle centering code and other fixups */
-      TextOutA(hDC, r.left+5, r.top+5, buffer, strlen(buffer));
+      TextOutA(hDC, r.left, r.top+5, buffer, strlen(buffer));
       DeleteObject (SelectObject (hDC, hOldFont));
     }
 }
