@@ -314,7 +314,19 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn)
    } else
    if (ExStyle & WS_EX_STATICEDGE)
    {
+#if 0
       DrawEdge(hDC, &CurrentRect, BDR_SUNKENINNER, BF_RECT | BF_ADJUST | BF_FLAT);
+#else
+      SelectObject(hDC, GetSysColorBrush(COLOR_BTNSHADOW));
+      PatBlt(hDC, CurrentRect.left, CurrentRect.top, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      PatBlt(hDC, CurrentRect.left, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+      
+      SelectObject(hDC, GetSysColorBrush(COLOR_BTNHIGHLIGHT));
+      PatBlt(hDC, CurrentRect.left, CurrentRect.bottom - 1, CurrentRect.right - CurrentRect.left, 1, PATCOPY);
+      PatBlt(hDC, CurrentRect.right - 1, CurrentRect.top, 1, CurrentRect.bottom - CurrentRect.top, PATCOPY);
+
+      InflateRect(&CurrentRect, -1, -1);
+#endif
    }
     
    /* Firstly the "thick" frame */
@@ -508,8 +520,16 @@ DefWndNCCalcSize(HWND hWnd, BOOL CalcSizeStruct, RECT *Rect)
    {
       HMENU menu = GetMenu(hWnd);
       
-      UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
-      InflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
+      if (UserHasWindowEdge(Style, ExStyle))
+      {
+         UserGetWindowBorders(Style, ExStyle, &WindowBorders, FALSE);
+         InflateRect(Rect, -WindowBorders.cx, -WindowBorders.cy);
+      } else
+      if (ExStyle & WS_EX_STATICEDGE)
+      {
+         InflateRect(Rect, -1, -1);
+      }
+
       if ((Style & WS_CAPTION) == WS_CAPTION)
       {
          if (ExStyle & WS_EX_TOOLWINDOW)

@@ -328,15 +328,9 @@ HWND NotifyArea::Create(HWND hwndParent)
 
 	ClientRect clnt(hwndParent);
 
-#ifndef _ROS_
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
 							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
-#else
-	return Window::Create(WINDOW_CREATOR(NotifyArea), 0,
-							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
-							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
-#endif
 }
 
 LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
@@ -603,10 +597,6 @@ void NotifyArea::Paint()
 
 	 // first fill with the background color
 	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
-
-#ifdef _ROS_
-	DrawEdge(canvas, ClientRect(_hwnd), BDR_SUNKENOUTER, BF_RECT);
-#endif
 
 	 // draw icons
 	int x = 2;
@@ -1209,10 +1199,6 @@ bool ClockWindow::FormatTime()
 void ClockWindow::Paint()
 {
 	PaintCanvas canvas(_hwnd);
-
-#ifdef _ROS_
-	DrawEdge(canvas, ClientRect(_hwnd), BDR_SUNKENOUTER, BF_TOP|BF_RIGHT);
-#endif
 
 	BkMode bkmode(canvas, TRANSPARENT);
 	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
