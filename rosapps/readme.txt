@@ -1,4 +1,4 @@
-$Id: readme.txt,v 1.3 2001/10/16 21:02:01 ea Exp $
+$Id: readme.txt,v 1.4 2001/12/30 20:29:54 sedwards Exp $
 
 This directory contains core applications that support the
 ReactOS kernel.
@@ -13,7 +13,10 @@ CMD     : This is Eric Kohl's port of COMMAND for ReactOS.
 CMDUTILS: External commands for CMD.
 DEVUTILS: 
 DFLAT32 : 
+MC	: Midnight Commander
+NET	: Ping, Ncftp, Telnet
 NOTEVIL : ReactOS Coders Console Parade.
 SYSUTILS: ReactOS System Utilities.
+TASKMGR : Brian Palmer's Taskmanager
 
 
