@@ -1,5 +1,5 @@
 /*
- *  ReactOS Winhello - Simple Win32 Windowing test
+ *  ReactOS Winhello - Not So Simple Win32 Windowing test
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -14,6 +14,16 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/* What do we test with this app?
+ * - Windows and Class creation
+ * - A Simple Button
+ * - Some font rendering in the Window
+ * - Scrollbar support
+ * - Hotkeys
+ * - Messageboxes
+ * ????????
  */
 
 #include <windows.h>
@@ -89,6 +99,9 @@ WinMain(HINSTANCE hInstance,
   return msg.wParam;
 }
 
+#define CTRLC 1 /* Define our HotKeys */
+#define ALTF1 2 /* Define our HotKeys */
+
 LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
         PAINTSTRUCT   ps;    /* Also used during window drawing */
@@ -125,8 +138,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   }
 	   TextOut(hDC, 530, 10, text, strlen(text)); 
 	   
-	   /*
-	   //Make a line depending on the typed key
+#if 0
+	   // Make a line depending on the typed key
 	   Rect.left = 10;
 	   Rect.top = 75;
 	   Rect.right = 610;
@@ -144,7 +157,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   HBRUSH hbrCustom = CreateSolidBrush ( RGB(text[0], text[0], text[0]));
 	   FillRect(hDC, &Rect, hbrCustom);
 	   DeleteObject ( hbrCustom );
-	   */
+
+#endif
+
 	   ReleaseDC(hWnd, hDC);
 	   return 0;
 	 }
@@ -159,7 +174,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   text[1] = _T('\0');
 	   
 	   
-	   //Write in window
+	   /* Write in window */
 	   Rect.left = 400;
 	   Rect.top = 50;
 	   Rect.right = 550;
@@ -190,7 +205,7 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	   text[1] = _T('\0');
 	   
 
-	   //Write in window
+	   /* Write in window */
 	   Rect.left = 400;
 	   Rect.top = 10;
 	   Rect.right = 550;
@@ -548,7 +563,22 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
  
  	  return 0;
  	  }
+
+	case WM_HOTKEY:
+	 switch(wParam)
+	 {
+          case CTRLC:
+            MessageBox(hWnd, "You just pressed Ctrl+C", "Hotkey", MB_OK | MB_ICONINFORMATION);
+            break;
+          case ALTF1:
+            MessageBox(hWnd, "You just pressed Ctrl+Alt+F1", "Hotkey", MB_OK | MB_ICONINFORMATION);
+            break;
+	 }
+	 break;
+
 	case WM_DESTROY:
+	  UnregisterHotKey(hWnd, CTRLC);
+	  UnregisterHotKey(hWnd, ALTF1);
 	  PostQuitMessage(0);
 	  DeleteObject ( hbrWhite );
 	  DeleteObject ( hbrGray );
@@ -560,6 +590,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	case WM_CREATE:
 	 {
+	  /* Register a Ctrl+Alt+C hotkey*/
+	  RegisterHotKey(hWnd, CTRLC, MOD_CONTROL, VK_C);
+	  RegisterHotKey(hWnd, ALTF1, MOD_CONTROL | MOD_ALT, VK_F1);
+
 	  hbrWhite = CreateSolidBrush ( RGB(0xFF, 0xFF, 0xFF));
 	  hbrGray = CreateSolidBrush ( RGB(0xAF, 0xAF, 0xAF));
 	  hbrBlack = CreateSolidBrush ( RGB(0x00, 0x00, 0x00));
@@ -613,7 +647,10 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	  EndPaint(hWnd, &ps);
 	  //SelectObject(hDC, tf);
 	  hDC = GetDC(hWnd);
-	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", strlen("Hello World from ReactOS!"));
+	  TextOut(hDC, 10, 10, "Hello World from ReactOS!", 
+			strlen("Hello World from ReactOS!"));
+	  TextOut(hDC, 10, 80, "Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support.", 
+			strlen("Press Ctrl+C or Ctrl+Alt+F1 to test Hotkey support."));
           GetClientRect(hWnd, &clr);
           GetWindowRect(hWnd, &wir);
           sprintf(spr, "%lu,%lu,%lu,%lu              ", clr.left, clr.top, clr.right, clr.bottom);
