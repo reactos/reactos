@@ -3,14 +3,18 @@ Creator: robert K.		robertk@mok.lvcm.com
 This is a list of all functions of the doscalls.dll from OS/2.
 Since ReactOS is an OS with flat model and since we have no
 ambitions to support 16-Bit OS/2 apps, we'll not implement souch
-functions. Above that, we want to port ReacOS and the OS/2 sub 
-system to other platforms (i.e. the PowerPC ;-D ).
+16Bit-functions. Above that, we want to port ReacOS and the OS/2 sub 
+system to other platforms (i.e. the PowerPC ;-D ). These platforms
+however don't permit segmented code and memory.
+
 
 Semantics of this file:
+=======================
 Functions with nothing behind are not yet implemented/considered.
 Functions with a ??? should be considered later.
 Functions with a --- will not be implemented.
 Functions with a -  xxx are implemented in some file
+
 in the directory xxx:
 file-	file, pipe io
 sync-	thread synchronisation
