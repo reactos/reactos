@@ -1,4 +1,4 @@
-; $Id: msvcrt.def,v 1.7 2001/07/02 21:51:18 ekohl Exp $
+; $Id: msvcrt.def,v 1.8 2001/07/03 13:21:22 ekohl Exp $
 ;
 ; ReactOS MSVCRT Compatibility Library
 ;
@@ -416,7 +416,7 @@ _purecall
 ; _putch
 _putenv
 ; _putw
-; _putws
+_putws
 _pwctype DATA
 _read
 _rmdir
@@ -613,7 +613,7 @@ fopen
 fprintf
 fputc
 fputs
-; fputwc
+fputwc
 ; fputws
 fread
 free
@@ -685,7 +685,7 @@ putc
 putchar
 puts
 putwc
-; putwchar
+putwchar
 qsort
 raise
 ; rand

@@ -1,11 +1,11 @@
 /* Copyright (C) 1998 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/io.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 
 int setvbuf(FILE *f, char *buf, int type, size_t len)

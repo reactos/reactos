@@ -7,9 +7,8 @@
  * UPDATE HISTORY:
  *              28/12/98: Created
  */
-#include <crtdll/io.h>
 #include <windows.h>
-
+#include <msvcrt/io.h>
 
 
 size_t _write(int _fd, const void *_buf, size_t _nbyte)

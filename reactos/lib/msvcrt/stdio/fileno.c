@@ -1,14 +1,14 @@
-#include <crtdll/stdio.h>
+#include <msvcrt/stdio.h>
 
 #if 0
 #undef fileno
-int fileno(FILE *f) 
+int fileno(FILE *f)
 {
-	return f->_file;
+  return f->_file;
 }
 #endif
 
-int _fileno(FILE *f) 
+int _fileno(FILE *f)
 {
-	return f->_file;
+  return f->_file;
 }

@@ -1,7 +1,7 @@
-#include <crtdll/stdlib.h>
-#include <crtdll/stdio.h>
-#include <crtdll/io.h>
-#include <crtdll/signal.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/signal.h>
 
 char *msg ="Abort\n\r";
 

@@ -1,13 +1,13 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/sys/types.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/io.h>
-#include <crtdll/errno.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/errno.h>
 
 int cntcr(char *bufp, int bufsiz);
 int convert(char *endp, int bufsiz,int n);

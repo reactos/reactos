@@ -1,8 +1,9 @@
-/* $Id: thread.c,v 1.1 2000/06/18 10:57:42 ea Exp $
+/* $Id: thread.c,v 1.2 2001/07/03 13:15:55 ekohl Exp $
  *
  */
 #include <windows.h>
-#include <errno.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/process.h>
 
 unsigned long
 _beginthread (

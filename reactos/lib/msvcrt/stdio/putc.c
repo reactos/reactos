@@ -1,9 +1,9 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <windows.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
-#include <crtdll/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/internal/file.h>
 
 // putc can be a macro
 #undef putc
@@ -36,10 +36,24 @@ int putc(int c, FILE *fp)
 	return EOF;
 }
 
-wint_t putwc(wchar_t c, FILE *fp)
+wint_t putwc(wint_t c, FILE *fp)
 {
+// valid stream macro should check that fp 
+// is dword aligned
+	if (!__validfp (fp)) {
+		__set_errno(EINVAL);
+		return -1;
+	}
+// check for write access on fp
+
+	if ( !OPEN4WRITING(fp)  ) {
+		__set_errno(EINVAL);
+		return -1;
+	}
 	// might check on multi bytes if text mode
- 
+
+	fp->_flag |= _IODIRTY;
+
         if (fp->_cnt > 0 ) {
                 fp->_cnt-= sizeof(wchar_t);
  		*((wchar_t *)(fp->_ptr))++  = c;

@@ -1,6 +1,6 @@
 #include <windows.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
 
 
 char *_tempnam(const char *dir,const char *prefix )

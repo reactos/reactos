@@ -1,7 +1,7 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdlib.h>
-#include <crtdll/ctype.h>
-//#include <crtdll/unconst.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/ctype.h>
+//#include <msvcrt/unconst.h>
 
 static double powten[] =
 {
@@ -11,7 +11,7 @@ static double powten[] =
 
 long double
 _strtold(const char *s, char **sret)
-{	
+{
   double r;		/* result */
   int e, ne;			/* exponent */
   int sign;			/* +- 1.0 */

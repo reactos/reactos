@@ -1,8 +1,8 @@
 #include <windows.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/internal/atexit.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/internal/atexit.h>
 
 struct __atexit *__atexit_ptr = 0;
 

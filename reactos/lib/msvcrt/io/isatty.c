@@ -1,5 +1,5 @@
-#include <crtdll/io.h>
-#include <crtdll/sys/stat.h>
+#include <msvcrt/io.h>
+#include <msvcrt/sys/stat.h>
 
 
 int _isatty( int fd )

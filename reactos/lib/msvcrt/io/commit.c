@@ -1,7 +1,7 @@
 #include <windows.h>
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 #include <msvcrt/errno.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/internal/file.h>
 
 int _commode = _IOCOMMIT;
 

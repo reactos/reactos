@@ -8,7 +8,7 @@
  * Copyright 1997 Uwe Bonnes
  */
 
-#include <crtdll/wchar.h>
+#include <msvcrt/wchar.h>
 
 wchar_t * _wcslwr(wchar_t *x)
 {

@@ -13,13 +13,13 @@
 // possibly store extra information at the handle
 
 #include <windows.h>
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
-#include <crtdll/sys/stat.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/internal/file.h>
-#include <crtdll/string.h>
-#include <crtdll/share.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/sys/stat.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
+#include <msvcrt/string.h>
+#include <msvcrt/share.h>
 
 typedef struct _fileno_modes_type
 {
@@ -33,7 +33,7 @@ fileno_modes_type *fileno_modes = NULL;
 int maxfno = 5;
 int minfno = 5;
 
-char __is_text_file(FILE *p) 
+char __is_text_file(FILE *p)
 {
    if ( p == NULL || fileno_modes == NULL )
      return FALSE;

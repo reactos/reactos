@@ -1,15 +1,14 @@
 /* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <stdarg.h>
-#include <crtdll/malloc.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/malloc.h>
+#include <msvcrt/internal/file.h>
 
 int _isnanl(double x);
 int _isinfl(double x);
 int _isnan(double x);
 int _isinf(double x);
 
-extern int putwc (wchar_t wc, FILE* fileWrite);
 
 int
 __vfwprintf(FILE *fp, const wchar_t *fmt0, va_list argp);
@@ -35,8 +34,6 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
 		len = __vfwprintf(f,fmt,ap);
 
 	return (ferror(f) ? EOF : len);
-
-//	return 0;
 }
 
 
@@ -56,14 +53,14 @@ vfwprintf(FILE *f, const wchar_t *fmt, va_list ap)
  * Appropiated for the reactos kernel, March 1998 -- David Welch
  */
 
-#include <stdarg.h>
+#include <msvcrt/stdarg.h>
 
-#include <crtdll/ctype.h>
-#include <crtdll/string.h>
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/math.h>
-#include <crtdll/internal/ieee.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/math.h>
+#include <msvcrt/internal/ieee.h>
 
 
 #define ZEROPAD		1	/* pad with zero */

@@ -8,12 +8,12 @@
  *              28/12/98: Created
  */
 
-#include <crtdll/io.h>
-#include <crtdll/stdio.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/io.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/internal/file.h>
 
 
 int _setmode(int _fd, int _newmode)
 {
-	return __fileno_setmode(_fd, _newmode);
+  return __fileno_setmode(_fd, _newmode);
 }

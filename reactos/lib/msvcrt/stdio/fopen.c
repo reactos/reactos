@@ -1,10 +1,10 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/sys/types.h>
-#include <crtdll/stdio.h>
-#include <crtdll/io.h>
-#include <crtdll/fcntl.h>
-//#include <crtdll/internal/file.h>
+#include <msvcrt/sys/types.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/io.h>
+#include <msvcrt/fcntl.h>
+//#include <msvcrt/internal/file.h>
 
 //might change fopen(file,mode) -> fsopen(file,mode,_SH_DENYNO);
 

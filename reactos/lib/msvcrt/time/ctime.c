@@ -42,17 +42,17 @@ static char sccsid[] = "@(#)ctime.c	5.23 (Berkeley) 6/22/90";
 
 
 
-#include <crtdll/fcntl.h>
-#include <crtdll/time.h>
-#include <crtdll/string.h>
-#include <crtdll/ctype.h>
-#include <crtdll/stdio.h>
-#include <crtdll/stdlib.h>
+#include <msvcrt/fcntl.h>
+#include <msvcrt/time.h>
+#include <msvcrt/string.h>
+#include <msvcrt/ctype.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/stdlib.h>
 
 #include <windows.h>
 #include "tzfile.h"
 
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 #include "posixrul.h"
 

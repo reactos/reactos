@@ -1,4 +1,4 @@
-#include <crtdll/wchar.h>
+#include <msvcrt/wchar.h>
 
 int _wcsnicmp (const wchar_t *cs, const wchar_t *ct, size_t count)
 {

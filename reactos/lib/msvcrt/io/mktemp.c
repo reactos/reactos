@@ -13,9 +13,9 @@
 /* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
 
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/io.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/io.h>
 
 
 char* _mktemp (char *_template)

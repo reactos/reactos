@@ -9,7 +9,7 @@
  */
 
 #include <windows.h>
-#include <crtdll/process.h>
+#include <msvcrt/process.h>
 
 void *_loaddll (char *name)
 {

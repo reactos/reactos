@@ -8,13 +8,12 @@
  *              28/12/98: Created
  */
 #include <windows.h>
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 
-
-int _unlink( const char *filename )
+int _unlink(const char *filename)
 {
-	if ( !DeleteFileA(filename) )
-		return -1;
-	return 0;
+  if (!DeleteFileA(filename))
+    return -1;
+  return 0;
 }

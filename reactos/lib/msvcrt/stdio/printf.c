@@ -16,9 +16,9 @@
    write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330,
    Boston, MA 02111-1307, USA.  */
 
-#include <stdarg.h>
-#include <crtdll/stdio.h>
-#include <crtdll/wchar.h>
+#include <msvcrt/stdarg.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/wchar.h>
 
 /* Write formatted output to stdout from the format string FORMAT.  */
 /* VARARGS1 */

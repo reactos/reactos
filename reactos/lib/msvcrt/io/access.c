@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <crtdll/io.h>
+#include <msvcrt/io.h>
 
 #ifndef F_OK
  #define F_OK	0x01

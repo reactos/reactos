@@ -1,8 +1,8 @@
-#include <crtdll/signal.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/errno.h>
-#include <crtdll/string.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/signal.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/errno.h>
+#include <msvcrt/string.h>
+#include <msvcrt/internal/file.h>
 
 void _default_handler(int signal);
 

@@ -1,8 +1,8 @@
 /* Copyright (C) 1995 DJ Delorie, see COPYING.DJ for details */
-#include <crtdll/stdio.h>
-#include <crtdll/string.h>
-#include <crtdll/stdlib.h>
-#include <crtdll/internal/file.h>
+#include <msvcrt/stdio.h>
+#include <msvcrt/string.h>
+#include <msvcrt/stdlib.h>
+#include <msvcrt/internal/file.h>
 
 
 FILE *	__alloc_file(void);
@@ -94,5 +94,5 @@ int _fcloseall( void )
 	  /* it isn't full, we can add to it */
 	  break;
      }
-   return total_closed; 
+   return total_closed;
 }
