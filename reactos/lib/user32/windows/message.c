@@ -1,4 +1,4 @@
-/* $Id: message.c,v 1.42 2004/08/15 21:36:30 chorns Exp $
+/* $Id: message.c,v 1.43 2004/08/31 23:32:01 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -541,15 +541,6 @@ MsgiAnsiToUnicodeReply(LPMSG UnicodeMsg, LPMSG AnsiMsg, LRESULT *Result)
           }
         break;
       }
-
-    case WM_GETTEXTLENGTH:
-    case CB_GETLBTEXTLEN:
-    case LB_GETTEXTLEN:
-      {
-        /* FIXME: There may be one DBCS char for each Unicode char */
-        *Result *= 2;
-        break;
-      }
     }
 
   MsgiAnsiToUnicodeCleanup(UnicodeMsg, AnsiMsg);
@@ -606,6 +597,17 @@ MsgiUnicodeToAnsiMessage(LPMSG AnsiMsg, LPMSG UnicodeMsg)
           UnicodeMsg->lParam = (LPARAM)CsA;
           break;
         }
+      case WM_GETTEXT:
+        {
+          /* Ansi string might contain MBCS chars so we need 2 * the number of chars */
+          AnsiMsg->wParam = UnicodeMsg->wParam * 2;
+          AnsiMsg->lParam = (LPARAM) RtlAllocateHeap(GetProcessHeap(), 0, AnsiMsg->wParam);
+          if (NULL == (PVOID) AnsiMsg->lParam)
+            {
+              return FALSE;
+            }
+          break;
+        }
       case WM_SETTEXT:
         {
           ANSI_STRING AnsiString;
@@ -632,6 +634,10 @@ MsgiUnicodeToAnsiCleanup(LPMSG AnsiMsg, LPMSG UnicodeMsg)
   switch(UnicodeMsg->message)
     {
       case WM_GETTEXT:
+        {
+          RtlFreeHeap(GetProcessHeap(), 0, (PVOID) AnsiMsg->lParam);
+          break;
+        }
       case WM_SETTEXT:
         {
           ANSI_STRING AString;
@@ -677,15 +683,6 @@ MsgiUnicodeToAnsiReply(LPMSG AnsiMsg, LPMSG UnicodeMsg, LRESULT *Result)
           {
             UBuffer[AnsiMsg->wParam - 1] = L'\0';
           }
-        break;
-      }
-
-    case WM_GETTEXTLENGTH:
-    case CB_GETLBTEXTLEN:
-    case LB_GETTEXTLEN:
-      {
-        /* FIXME: There may be one DBCS char for each Unicode char */
-        *Result /= sizeof(WCHAR);
         break;
       }
     }
