@@ -833,7 +833,7 @@ NdisRegisterProtocol(
       PathLength = sizeof(SERVICES_KEY) +                               /* \Registry\Machine\System\CurrentControlSet\Services\ */
           wcslen( DataPtr + 8 ) * sizeof(WCHAR) + /* Adapter1  (extracted from \Device\Adapter1)          */
           sizeof(PARAMETERS_KEY) +                                      /* \Parameters\                                         */
-          ProtocolCharacteristics->Name.Length;                         /* Tcpip                                                */
+          ProtocolCharacteristics->Name.Length + sizeof(WCHAR);                         /* Tcpip                                                */
 
       RegistryPathStr = ExAllocatePool(PagedPool, PathLength);
       if(!RegistryPathStr)
