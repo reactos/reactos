@@ -12,7 +12,7 @@ md %BOOTCD_DIR%\disk\reactos\system32
 md %BOOTCD_DIR%\disk\loader
 
 rem copy FreeLoader files
-copy /Y	%FREELDR_DIR%\bootsect\isoboot.bin %BOOTCD_DIR%
+copy /Y %FREELDR_DIR%\bootsect\isoboot.bin %BOOTCD_DIR%
 copy /Y %FREELDR_DIR%\freeldr\obj\i386\setupldr.sys %BOOTCD_DIR%\disk\reactos
 
 copy /Y %FREELDR_DIR%\bootsect\dosmbr.bin %BOOTCD_DIR%\disk\loader
@@ -123,7 +123,6 @@ copy /Y subsys\csrss\csrss.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\ntvdm\ntvdm.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\smss\smss.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\autochk\autochk.exe %BOOTCD_DIR%\disk\install
-copy /Y subsys\system\gstart\gstart.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\lsass\lsass.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\services\services.exe %BOOTCD_DIR%\disk\install
 copy /Y subsys\system\cmd\cmd.exe %BOOTCD_DIR%\disk\install
@@ -140,3 +139,6 @@ rem copy rosapps files
 copy /Y %ROSAPPS_DIR%\games\winemine\winemine.exe %BOOTCD_DIR%\disk\install
 copy /Y %ROSAPPS_DIR%\hcalc\hcalc.exe %BOOTCD_DIR%\disk\install
 copy /Y %ROSAPPS_DIR%\mc\mc.exe %BOOTCD_DIR%\disk\install
+
+rem create the reactos.iso image file
+tools\cdmake\cdmake -m -b %BOOTCD_DIR%\isoboot.bin %BOOTCD_DIR%\disk REACTOS %BOOTCD_DIR%\reactos.iso
