@@ -146,11 +146,16 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			if (found != _sorted_icons.end()) {
 				NotifyInfo& entry = const_cast<NotifyInfo&>(*found);	// Why does GCC 3.3 need this additional const_cast ?!
 
-	//TODO: AttachThreadInput() für SetForegroundWindow() in Client-Prozess
+				 // Notify the message if the owner is still alive
+				if (IsWindow(entry._hWnd)) {
+					 // allow SetForegroundWindow() in Client Process
+					DWORD processId;
+					DWORD threadId = GetWindowThreadProcessId(entry._hWnd, &processId);
 
-				 // Notify the message if the owner if it's still alive
-				if (IsWindow(entry._hWnd))
+					AllowSetForegroundWindow(processId);
+
 					PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+				}
 				else if (_icon_map.erase(entry))	// delete icons without valid owner window
 					Refresh();
 			}
