@@ -393,7 +393,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
     return STATUS_SUCCESS;
 }
 
-static DWORD getNumInterfacesInt(BOOL onlyLoopback)
+static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
 {
     DWORD numEntities, numInterfaces = 0;
     TDIEntityID *entitySet;
@@ -419,7 +419,8 @@ static DWORD getNumInterfacesInt(BOOL onlyLoopback)
 
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
-            (!onlyLoopback || isLoopback( tcpFile, &entitySet[i] )) )
+            (!onlyNonLoopback || 
+	     (onlyNonLoopback && !isLoopback( tcpFile, &entitySet[i] ))) )
             numInterfaces++;
     }
 
