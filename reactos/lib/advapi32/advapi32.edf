@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.13 2001/06/17 20:20:00 ekohl Exp $
+; $Id: advapi32.edf,v 1.14 2001/09/01 19:39:23 rex Exp $
 ;
 ; advapi32.def
 ;
@@ -167,8 +167,8 @@ GetTokenInformation=GetTokenInformation@20
 ;GetTrusteeNameW=GetTrusteeNameW@4
 ;GetTrusteeTypeA=GetTrusteeTypeA@4
 ;GetTrusteeTypeW=GetTrusteeTypeW@4
-;GetUserNameA=GetUserNameA@8
-;GetUserNameW=GetUserNameW@8
+GetUserNameA=GetUserNameA@8
+GetUserNameW=GetUserNameW@8
 ;GrantAccessRightsA=GrantAccessRightsA@16
 ;GrantAccessRightsW=GrantAccessRightsW@16
 ;I_ScGetCurrentGroupStateW=I_ScGetCurrentGroupStateW@12
