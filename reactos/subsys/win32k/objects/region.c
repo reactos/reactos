@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: region.c,v 1.23 2003/05/18 17:16:18 ea Exp $ */
+/* $Id: region.c,v 1.24 2003/05/24 17:26:39 hbirr Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
@@ -842,7 +842,7 @@ static void STDCALL REGION_IntersectO(ROSRGNDATA *pReg,  RECT *r1, RECT *r1End,
 		 */
 		if (left < right)
 		{
-		    MEMCHECK(pReg, *(LPRECT*)pNextRect, *(LPRECT*)pReg->Buffer);
+		    MEMCHECK(pReg, pNextRect, pReg->Buffer);
 		    pNextRect->left = left;
 		    pNextRect->top = top;
 		    pNextRect->right = right;
@@ -924,7 +924,7 @@ static void STDCALL REGION_UnionNonO (ROSRGNDATA *pReg, RECT *r, RECT *rEnd,
 
     while (r != rEnd)
     {
-		MEMCHECK(pReg, *(LPRECT*)pNextRect, *(LPRECT*)pReg->Buffer);
+		MEMCHECK(pReg, pNextRect, pReg->Buffer);
 		pNextRect->left = r->left;
 		pNextRect->top = top;
 		pNextRect->right = r->right;
