@@ -14,74 +14,248 @@
 
 #include <internal/debug.h>
 
+/* FILE STATICS *************************************************************/
+
+POBJECT_TYPE CmKeyType = NULL;
+PKEY_OBJECT RootKey = NULL;
+
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS
-STDCALL 
-NtInitializeRegistry(
-	BOOLEAN SetUpBoot
-	)
+VOID
+CmInitializeRegistry(VOID)
 {
-  return ZwInitializeRegistry(SetUpBoot);
+  ANSI_STRING AnsiString;
+  
+  CmKeyType = ExAllocatePool(NonPagedPool, sizeof(OBJECT_TYPE));
+  CmKeyType->TotalObjects = 0;
+  CmKeyType->TotalHandles = 0;
+  CmKeyType->MaxObjects = ULONG_MAX;
+  CmKeyType->MaxHandles = ULONG_MAX;
+  CmKeyType->PagedPoolCharge = 0;
+  CmKeyType->NonpagedPoolCharge = sizeof(KEY_OBJECT);
+  CmKeyType->Dump = NULL;
+  CmKeyType->Open = NULL;
+  CmKeyType->Close = NULL;
+  CmKeyType->Delete = NULL;
+  CmKeyType->Parse = NULL;
+  CmKeyType->Security = NULL;
+  CmKeyType->QueryName = NULL;
+  CmKeyType->OkayToClose = NULL;
+   
+  RtlInitAnsiString(&AnsiString, "Key");
+  RtlAnsiStringToUnicodeString(&CmKeyType->TypeName, &AnsiString, TRUE);
+
+  RtlInitAnsiString(&AnsiString,"\\Registry");
+  RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, TRUE);
+  InitializeObjectAttributes(&attr, &UnicodeString, 0, NULL, NULL);
+  ZwCreateDirectoryObject(&handle, 0, &attr);
+  RtlFreeUnicodeString(UnicodeString);
+
+  /* FIXME: build initial registry skeleton */
+  RootKey = ObGenericCreateObject(NULL, 
+                                 KEY_ALL_ACCESS, 
+                                 NULL, 
+                                 CmKeyType);
+  if (NewKey == NULL)
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+  RootKey->Flags = 0;
+  KeQuerySystemTime(&RootKey->LastWriteTime);
+  RootKey->TitleIndex = 0;
+  RootKey->NumSubKeys = 0;
+  RootKey->MaxSubNameLength = 0;
+  RootKey->MaxSubClassLength = 0;
+  RootKey->SubKeys = NULL;
+  RootKey->NumValues = 0;
+  RootKey->MaxValueNameLength = 0;
+  RootKey->MaxValueDataLength = 0;
+  RootKey->Values = NULL;
+  RootKey->Name = ExAllocatePool(NonPagedPool, 2);
+  wstrcpy(RootKey->Name, "\\");
+  RootKey->Class = NULL;
+  RootKey->NextKey = NULL;
+
+  /* FIXME: Create initial predefined symbolic links */
+  /* HKEY_LOCAL_MACHINE */
+  /* HKEY_USERS */
 }
 
-NTSTATUS
-STDCALL 
-ZwInitializeRegistry(
-	BOOLEAN SetUpBoot
-	)
+NTSTATUS 
+NtCreateKey(PHANDLE KeyHandle, 
+            ACCESS_MASK DesiredAccess,
+            POBJECT_ATTRIBUTES ObjectAttributes, 
+            ULONG TitleIndex,
+            PUNICODE_STRING Class, 
+            ULONG CreateOptions, 
+            PULONG Disposition)
 {
+  return ZwCreateKey(KeyHandle, 
+                     DesiredAccess,
+                     ObjectAttributes, 
+                     TitleIndex,
+                     Class, 
+                     CreateOptions,
+                     Disposition);
+}
+
+NTSTATUS 
+ZwCreateKey(PHANDLE KeyHandle, 
+            ACCESS_MASK DesiredAccess,
+            POBJECT_ATTRIBUTES ObjectAttributes, 
+            ULONG TitleIndex,
+            PUNICODE_STRING Class, 
+            ULONG CreateOptions,
+            PULONG Disposition)
+{
+  /* FIXME: Should CurLevel be alloced to handle arbitrary size components? */
+  WCHAR *S, *T, CurLevel[255];
+  PKEY_OBJECT ParentKey, CurSubKey, NewKey;
+  
+  assert(ObjectAttributes != NULL);
+
+  /* FIXME: Verify ObjectAttributes is in \\Registry space */
+  if (ObjectAttributes->RootDirectory == NULL)
+    {
+      S = ObjectAttributes->ObjectName;
+      if (wstrncmp(S, "\\Registry", 9))
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+      ParentKey = RootKey;
+
+      /*  Get remainder of full key path after removal of \\Registry */
+      S += 9;
+      if (S[0] != '\\')
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+      S++;
+
+      /*  Walk through key path and fail if any component does not exist */
+      while ((T = wstrchr(S, '\\')) != NULL)
+        {
+          ParentKey = ParentKey->SubKeys;
+          wstrncpy(CurLevel, S, T-S);
+          CurLevel[T-S] = 0;
+          DPRINT("CurLevel:[%w]", CurLevel);
+          while (ParentKey != NULL)
+            {
+              if (wstrcmp(CurLevel, ParentKey->Name) == 0)
+                {
+                  break;
+                }
+              ParentKey = ParentKey->NextKey;
+            }
+          if (ParentKey == NULL)
+            {
+              return STATUS_UNSUCCESSFUL;
+            }
+          S = wstrchr(S, '\\') + 1;
+        }
+
+      /*  Check for existance of subkey , return if it exists */
+      CurSubKey = ParentKey->SubKeys;
+      while (CurSubKey != NULL && wstrcmp(S, CurSubKey->Name) != 0)
+        {
+          CurSubKey = CurSubKey->NextKey;
+        }
+      if (CurSubKey != NULL)
+        {
+          *Disposition = REG_KEY_ALREADY_EXISTS;
+          *KeyHandle = ObInsertHandle(KeGetCurrentProcess(),
+                                      HEADER_TO_BODY(CurSubKey),
+                                      DesiredAccess,
+                                      FALSE);
+
+          return STATUS_SUCCESS;
+        }
+      else
+        {
+          /*  If KeyHandle is not the parent key, or is not open with */
+          /*  KEY_CREATE_SUB_KEY permission, then fail */
+          KeyHandleRep = ObTranslateHandle(KeGetCurrentProcess(), KeyHandle);
+          if (KeyHandleRep == NULL ||
+              KeyHandleRep->ObjectBody != ParentKey ||
+              (KeyHandleRep->GrantedAccess & KEY_CREATE_SUB_KEY) == 0)
+            {
+              return STATUS_UNSUCCESSFUL;
+            }
+          
+          /*  Build new CmKeyType object */
+          NewKey = ObGenericCreateObject(KeyHandle, 
+                                         DesiredAccess, 
+                                         NULL, 
+                                         CmKeyType);
+          if (NewKey == NULL)
+            {
+              return STATUS_UNSUCCESSFUL;
+            }
+          NewKey->Flags = 0;
+          KeQuerySystemTime(&NewKey->LastWriteTime);
+          NewKey->TitleIndex = 0;
+          NewKey->NumSubKeys = 0;
+          NewKey->MaxSubNameLength = 0;
+          NewKey->MaxSubClassLength = 0;
+          NewKey->SubKeys = NULL;
+          NewKey->NumValues = 0;
+          NewKey->MaxValueNameLength = 0;
+          NewKey->MaxValueDataLength = 0;
+          NewKey->Values = NULL;
+          NewKey->Name = ExAllocatePool(NonPagedPool, 
+                                        (wstrlen(S) + 1) * sizeof(WCHAR));
+          wstrcpy(NewKey->Name, S);
+          if (Class != NULL)
+            {
+              NewKey->Class = ExAllocatePool(NonPagedPool, 
+                                             (wstrlen(Class) + 1) * 
+                                               sizeof(WCHAR));
+              wstrcpy(NewKey->Class, Class);
+            }
+          else
+            {
+              NewKey->Class = NULL;
+            }
+          NewKey->NextKey = NULL;
+          
+          /*  Add to end of parent key subkey list */
+          if (ParentKey->SubKeys == NULL)
+            {
+              ParentKey->SubKeys = NewKey;
+            }
+          else
+            {
+              CurSubKey = ParentKey->SubKeys;
+              while (CurSubKey->NextKey != NULL)
+                {
+                  CurSubKey = CurSubKey->NextKey;
+                }
+              NewKey->TitleIndex = CurSubKey->TitleIndex + 1;
+              CurSubKey->NextKey = NewKey;
+            }
+          
+          /*  Increment parent key subkey count and set parent subkey maxes */
+          ParentKey->NumSubKeys++;
+          if (ParentKey->MaxSubNameLength < wstrlen(NewKey->Name))
+            {
+              ParentKey->MaxSubNameLength = wstrlen(NewKey->Name);
+            }
+          if (NewKey->Class != NULL &&
+              ParentKey->MaxSubClassLength < wstrlen(NewKey->Class))
+            {
+              ParentKey->MaxSubClassLength = wstrlen(NewKey->Class);
+            }
+          
+          return STATUS_SUCCESS;
+        }
+    }
+  else
+    {
+      return STATUS_UNSUCCESSFUL;
+    }
+  
+  
   UNIMPLEMENTED;
-}
-
-NTSTATUS RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS RtlCreateRegistryKey(ULONG RelativeTo, PWSTR Path)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS RtlDeleteRegistryValue(ULONG RelativeTo, PWSTR Path,
-				PWSTR ValueName)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS RtlQueryRegistryValues(ULONG RelativeTo,
-				PWSTR Path,
-				PRTL_QUERY_REGISTRY_TABLE QueryTable,
-				PVOID Context,
-				PVOID Environment)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
-			       PWSTR Path,
-			       PWSTR ValueName,
-			       ULONG ValueType,
-			       PVOID ValueData,
-			       ULONG ValueLength)
-{
-   UNIMPLEMENTED;
-}
-
-NTSTATUS NtCreateKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes, ULONG TitleIndex,
-		     PUNICODE_STRING Class, ULONG CreateOptions, 
-		     PULONG Disposition)
-{
-}
-
-NTSTATUS ZwCreateKey(PHANDLE KeyHandle, ACCESS_MASK DesiredAccess,
-		     POBJECT_ATTRIBUTES ObjectAttributes, ULONG TitleIndex,
-		     PUNICODE_STRING Class, ULONG CreateOptions, 
-		     PULONG Disposition)
-{
-   UNIMPLEMENTED;
 }
 
 NTSTATUS NtDeleteKey(HANDLE KeyHandle)
@@ -461,3 +635,51 @@ ZwUnloadKey(
 {
   UNIMPLEMENTED;
 }
+
+NTSTATUS STDCALL 
+NtInitializeRegistry(BOOLEAN SetUpBoot)
+{
+  return ZwInitializeRegistry(SetUpBoot);
+}
+
+NTSTATUS STDCALL 
+ZwInitializeRegistry(BOOLEAN SetUpBoot)
+{
+  UNIMPLEMENTED;
+}
+
+NTSTATUS RtlCheckRegistryKey(ULONG RelativeTo, PWSTR Path)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS RtlCreateRegistryKey(ULONG RelativeTo, PWSTR Path)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS RtlDeleteRegistryValue(ULONG RelativeTo, PWSTR Path,
+				PWSTR ValueName)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS RtlQueryRegistryValues(ULONG RelativeTo,
+				PWSTR Path,
+				PRTL_QUERY_REGISTRY_TABLE QueryTable,
+				PVOID Context,
+				PVOID Environment)
+{
+   UNIMPLEMENTED;
+}
+
+NTSTATUS RtlWriteRegistryValue(ULONG RelativeTo,
+			       PWSTR Path,
+			       PWSTR ValueName,
+			       ULONG ValueType,
+			       PVOID ValueData,
+			       ULONG ValueLength)
+{
+   UNIMPLEMENTED;
+}
+
