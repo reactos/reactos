@@ -133,14 +133,33 @@ std::string XMLString(LPCTSTR s)
 }
 
 
- /// write node with children tree to output stream
-std::ostream& XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int indent)
+ /// write node with children tree to output stream using original white space
+void XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int indent) const
 {
-	bool format = mode==FORMAT_PRETTY;
+	out << '<' << XMLString(*this);
 
-	if (format)
-		for(int i=indent; i--; )
-			out << XML_INDENT_SPACE;
+	for(AttributeMap::const_iterator it=_attributes.begin(); it!=_attributes.end(); ++it)
+		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
+
+	if (!_children.empty() || !_content.empty()) {
+		out << '>' << _content;
+
+		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
+			(*it)->write_worker(out, mode, indent+1);
+
+		out << "</" << XMLString(*this) << '>';
+	} else
+		out << "/>";
+
+	out << _trailing;
+}
+
+
+ /// pretty print node with children tree to output stream
+void XMLNode::pretty_write_worker(std::ostream& out, WRITE_MODE mode, int indent) const
+{
+	for(int i=indent; i--; )
+		out << XML_INDENT_SPACE;
 
 	out << '<' << XMLString(*this);
 
@@ -148,36 +167,23 @@ std::ostream& XMLNode::write_worker(std::ostream& out, WRITE_MODE mode, int inde
 		out << ' ' << XMLString(it->first) << "=\"" << XMLString(it->second) << "\"";
 
 	if (!_children.empty() || !_content.empty()) {
-		out << '>';
-
-		if (format)
-			out << '\n';
-		else
-			out << _content;
+		out << ">\n";
 
 		for(Children::const_iterator it=_children.begin(); it!=_children.end(); ++it)
-			(*it)->write_worker(out, mode, indent+1);
+			(*it)->pretty_write_worker(out, mode, indent+1);
 
-		if (format)
-			for(int i=indent; i--; )
-				out << XML_INDENT_SPACE;
+		for(int i=indent; i--; )
+			out << XML_INDENT_SPACE;
 
-		out << "</" << XMLString(*this) << '>';
-	} else {
-		out << "/>";
-	}
-
-	if (format)
-		out << '\n';
-	else
-		out << _trailing;
-
-	return out;
+		out << "</" << XMLString(*this) << ">\n";
+	} else
+		out << "/>\n";
 }
 
 
+
  /// write node with children tree to output stream using smart formating
-std::ostream& XMLNode::smart_write_worker(std::ostream& out, int indent, bool& next_format)
+bool XMLNode::smart_write_worker(std::ostream& out, int indent, bool next_format) const
 {
 	bool format_pre, format_mid, format_post;
 
@@ -208,7 +214,7 @@ std::ostream& XMLNode::smart_write_worker(std::ostream& out, int indent, bool& n
 			next_format = (*it)->_content.empty() && (*it)->_trailing.empty();
 
 			for(; it!=_children.end(); ++it)
-				(*it)->smart_write_worker(out, indent+1, next_format);
+				next_format = (*it)->smart_write_worker(out, indent+1, next_format);
 		}
 
 		if (next_format)
@@ -216,18 +222,15 @@ std::ostream& XMLNode::smart_write_worker(std::ostream& out, int indent, bool& n
 				out << XML_INDENT_SPACE;
 
 		out << "</" << XMLString(*this) << '>';
-	} else {
+	} else
 		out << "/>";
-	}
 
 	if (format_post)
 		out << '\n';
 	else
 		out << _trailing;
 
-	next_format = format_post;
-
-	return out;
+	return format_post;
 }
 
 

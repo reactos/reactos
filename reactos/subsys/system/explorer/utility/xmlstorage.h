@@ -289,15 +289,22 @@ struct XMLNode : public String
 	};
 
 	 /// write node with children tree to output stream
-	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART, int indent=0)
+	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART, int indent=0) const
 	{
-		if (mode) {
-			return write_worker(out, mode, indent);
-		} else { // FORMAT_SMART
-			bool next_format = _content.empty() && _trailing.empty();
+		switch(mode) {
+		  case FORMAT_PRETTY:
+			pretty_write_worker(out, mode, indent);
+			break;
 
-			return smart_write_worker(out, indent, next_format);
+		  case FORMAT_ORIGINAL:
+			write_worker(out, mode, indent);
+			break;
+
+		default:	 // FORMAT_SMART
+			smart_write_worker(out, indent, _content.empty() && _trailing.empty());
 		}
+
+		return out;
 	}
 
 protected:
@@ -352,8 +359,9 @@ protected:
 			_children.back()->_trailing.append(s, l);
 	}
 
-	std::ostream& write_worker(std::ostream& out, WRITE_MODE mode, int indent);
-	std::ostream& smart_write_worker(std::ostream& out, int indent, bool& next_format);
+	void write_worker(std::ostream& out, WRITE_MODE mode, int indent) const;
+	void pretty_write_worker(std::ostream& out, WRITE_MODE mode, int indent) const;
+	bool smart_write_worker(std::ostream& out, int indent, bool next_format) const;
 };
 
 
@@ -520,6 +528,9 @@ struct XMLPos
 			return false;
 	}
 
+	 /// move X-Path like to position in XML tree
+	bool go(const char* path);
+
 	 /// create node if not already existing and move to it
 	void create(const String& name)
 	{
@@ -545,7 +556,27 @@ struct XMLPos
 		}
 	}
 
-	bool go(const char* path);
+	String& value(const String& name, const String& attr_name)
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (!node) {
+			node = new XMLNode(name);
+			_cur->add_child(node);
+		}
+
+		return (*node)[attr_name];
+	}
+
+	String value(const String& name, const String& attr_name) const
+	{
+		XMLNode* node = _cur->find_first(name);
+
+		if (node)
+			return (*node)[attr_name];
+		else
+			return "";
+	}
 
 protected:
 	XMLNode* _root;
@@ -558,6 +589,117 @@ protected:
 		_stack.push(_cur);
 		_cur = child;
 	}
+};
+
+
+struct XMLBool
+{
+	XMLBool(bool value)
+	 :	_value(value)
+	{
+	}
+
+	XMLBool(LPCTSTR value)
+	{
+		_value = !_tcsicmp(value, TEXT("TRUE"));
+	}
+
+	XMLBool(XMLPos& pos, const String& name, const String& attr_name)
+	{
+		_value = !_tcsicmp(pos.value(name, attr_name), TEXT("TRUE"));
+	}
+
+	operator bool() const
+	{
+		return _value;
+	}
+
+	operator LPCTSTR() const
+	{
+		return _value? TEXT("TRUE"): TEXT("FALSE");
+	}
+
+protected:
+	bool	_value;
+
+private:
+	void operator=(const XMLBool&);	// disallow assignment operations
+};
+
+struct XMLBoolRef
+{
+	XMLBoolRef(XMLPos& pos, const String& name, const String& attr_name)
+	 :	_ref(pos.value(name, attr_name))
+	{
+	}
+
+	XMLBoolRef& operator=(bool value)
+	{
+		_ref.assign(value? TEXT("TRUE"): TEXT("FALSE"));
+
+		return *this;
+	}
+
+protected:
+	String&	_ref;
+};
+
+
+struct XMLNumber
+{
+	XMLNumber(int value)
+	 :	_value(value)
+	{
+	}
+
+	XMLNumber(LPCTSTR value)
+	{
+		_value = _ttoi(value);
+	}
+
+	XMLNumber(XMLPos& pos, const String& name, const String& attr_name)
+	{
+		_value = _ttoi(pos.value(name, attr_name));
+	}
+
+	operator int() const
+	{
+		return _value;
+	}
+
+	operator String() const
+	{
+		TCHAR buffer[32];
+		_stprintf(buffer, TEXT("%d"), _value);
+		return buffer;
+	}
+
+protected:
+	int	_value;
+
+private:
+	void operator=(const XMLBool&);	// disallow assignment operations
+};
+
+struct XMLNumberRef
+{
+	XMLNumberRef(XMLPos& pos, const String& name, const String& attr_name)
+	 :	_ref(pos.value(name, attr_name))
+	{
+	}
+
+	XMLNumberRef& operator=(int value)
+	{
+		TCHAR buffer[32];
+
+		_stprintf(buffer, TEXT("%d"), value);
+		_ref.assign(buffer);
+
+		return *this;
+	}
+
+protected:
+	String&	_ref;
 };
 
 
@@ -672,7 +814,7 @@ struct XMLDoc : public XMLNode
 
 	 /// write XML stream preserving previous white space and comments
 	std::ostream& write(std::ostream& out, WRITE_MODE mode=FORMAT_SMART,
-						const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
+						const std::string& xml_version="1.0", const std::string& encoding="UTF-8") const
 	{
 		out << "<?xml version=\"" << xml_version << "\" encoding=\"" << encoding << "\"?>\n";
 
@@ -683,20 +825,20 @@ struct XMLDoc : public XMLNode
 	}
 
 	 /// write XML stream with formating
-	std::ostream& write_formating(std::ostream& out)
+	std::ostream& write_formating(std::ostream& out) const
 	{
 		return write(out, FORMAT_PRETTY);
 	}
 
 	void write(const std::string& path, WRITE_MODE mode=FORMAT_SMART,
-				const std::string& xml_version="1.0", const std::string& encoding="UTF-8")
+				const std::string& xml_version="1.0", const std::string& encoding="UTF-8") const
 	{
 		std::ofstream out(path.c_str());
 
 		write(out, mode, xml_version, encoding);
 	}
 
-	void write_formating(const std::string& path)
+	void write_formating(const std::string& path) const
 	{
 		std::ofstream out(path.c_str());
 

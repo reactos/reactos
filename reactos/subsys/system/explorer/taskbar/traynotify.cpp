@@ -195,6 +195,8 @@ void NotifyArea::read_config()
 
 	if (pos.go_down("explorer-cfg")) {
 		if (pos.go_down("notify-icons")) {
+			_show_hidden = XMLBool(pos, "option", "show-hidden");
+
 			XMLChildrenFilter icons(pos, "icon");
 
 			for(XMLChildrenFilter::iterator it=icons.begin(); it!=icons.end(); ++it) {
@@ -227,12 +229,13 @@ void NotifyArea::read_config()
 
 void NotifyArea::write_config()
 {
-	 // write notification icon settings to XML configuration
+	 // write notification icon settings to XML configuration file
 	XMLPos pos(&g_Globals._cfg);
 
-	///@todo pos.create("\\explorer-cfg\\startmenu");
 	pos.create("explorer-cfg");
 	pos.create("notify-icons");
+
+	XMLBoolRef(pos, "option", "show-hidden") = _show_hidden;
 
 	for(NotifyIconCfgList::iterator it=_cfg.begin(); it!=_cfg.end(); ++it) {
 		NotifyIconConfig& cfg = *it;

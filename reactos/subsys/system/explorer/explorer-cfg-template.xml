@@ -20,6 +20,7 @@
   </taskbar>
 
   <notify-icons>
+    <option show-hidden="FALSE"/>
     <icon name="Volume Control" text="Volume" show="show"/>
   </notify-icons>
 
