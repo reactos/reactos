@@ -66,11 +66,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(exec);
  * %S ???
  * %* all following parameters (see batfile)
  */
-static BOOL argify(char* res, int len, const char* fmt, const char* lpFile, LPITEMIDLIST pidl, LPCSTR args)
+static BOOL argify(char* out, int len, const char* fmt, const char* lpFile, LPITEMIDLIST pidl, LPCSTR args)
 {
     char    xlpFile[1024];
     BOOL    done = FALSE;
     LPVOID  pv;
+    char    *cmd;
+    char    *res = out;
 
     while (*fmt)
     {
@@ -117,16 +119,23 @@ static BOOL argify(char* res, int len, const char* fmt, const char* lpFile, LPIT
 			/*FIXME Is SearchPath() really needed? We already have separated out the parameter string in args. */
 			if (SearchPathA(NULL, lpFile, ".exe", sizeof(xlpFile), xlpFile, NULL))
 			{
-			    *res++ = '"';
-			    strcpy(res, xlpFile);
-			    res += strlen(xlpFile);
-			    *res++ = '"';
+			    cmd = xlpFile;
+			}
+			else
+			{
+			    cmd = lpFile;
+			}
+			/* Add double quotation marks unless we already have them (e.g.: "%1" %* for exefile) */
+			if (res != out && *(res - 1) == '"')
+			{
+			    strcpy(res, cmd);
+			    res += strlen(cmd);
 			}
 			else
 			{
 			    *res++ = '"';
-			    strcpy(res, lpFile);
-			    res += strlen(lpFile);
+			    strcpy(res, cmd);
+			    res += strlen(cmd);
 			    *res++ = '"';
 			}
 		    }
