@@ -1,9 +1,9 @@
 /*
  * dllmain.c
  *
- * $Revision: 1.3 $
- * $Author: ekohl $
- * $Date: 2000/02/22 20:55:36 $
+ * $Revision: 1.4 $
+ * $Author: dwelch $
+ * $Date: 2002/08/26 13:06:03 $
  *
  */
 
@@ -37,8 +37,6 @@ GdiDllInitialize (
 	switch (dwReason)
 	{
 		case DLL_PROCESS_ATTACH:
-			if (W32kInitialize () == FALSE)
-				return FALSE;
 			GdiProcessSetup ();
 			break;
 

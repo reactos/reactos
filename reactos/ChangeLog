@@ -1,3 +1,29 @@
+2002-08-26  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/gdi32/misc/dllmain.c (GdiDllInitialize): Don't initialize
+	win32k.sys for each process.
+	* subsys/csrss/init.c (CsrServerInitialization): Initialize
+	win32k.sys as well.
+
+2002-08-26  David Welch  <welch@computer2.darkstar.org>
+
+	* ntoskrnl/ps/process.c (NtCreateProcess): Reference the
+	parent process's handle using ExGetPreviousMode.
+
+2002-08-26  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/user32/misc/dllmain.c (Init): Initialize gdi32 as well.
+
+2002-08-26  David Welch  <welch@computer2.darkstar.org>
+
+	* iface/addsys/genw32k.c (main, process): Generate a set of
+	stubs for csrss as well.
+
+2002-08-26  David Welch  <welch@computer2.darkstar.org>
+
+	* lib/kernel32/process/create.c (CreateProcessW): Initialize
+	all the members of the new process's PPB.
+
 2002-08-17  David Welch  <welch@computer2.darkstar.org>
 
 	* ntoskrnl/mm/rmap.c (MmWritePagePhysicalAddress): Ensure the

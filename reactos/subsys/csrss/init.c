@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.14 2002/08/20 20:37:17 hyperion Exp $
+/* $Id: init.c,v 1.15 2002/08/26 13:06:03 dwelch Exp $
  * 
  * reactos/subsys/csrss/init.c
  *
@@ -202,6 +202,8 @@ CsrServerInitialization (
      }
 
    InitializeVideoAddressSpace();
+
+   W32kInitialize();
 
    return TRUE;
 }

@@ -1,4 +1,4 @@
-/* $Id: genw32k.c,v 1.2 2002/07/04 19:56:33 dwelch Exp $
+/* $Id: genw32k.c,v 1.3 2002/08/26 13:06:02 dwelch Exp $
  *
  * COPYRIGHT:             See COPYING in the top level directory
  * PROJECT:               ReactOS version of ntdll
@@ -172,7 +172,8 @@ int
 process(
 	FILE	* in,
 	FILE	* out1,
-	FILE	* out2
+	FILE	* out2,
+	FILE    * out3
 	)
 {
 	char		line [INPUT_BUFFER_SIZE];
@@ -194,6 +195,13 @@ process(
 	 */
 	fprintf(out2,"// Machine generated, don't edit\n");
 	fprintf(out2,"\n\n");
+
+	/*
+	 * CSRSS stubs file header
+	 */
+	fprintf(out3,"// Machine generated, don't edit\n");
+	fprintf(out3,"\n\n");
+
 	/*
 	 * Scan the database. DB is a text file; each line
 	 * is a record, which contains data for one system
@@ -274,6 +282,21 @@ process(
 			fprintf(out2,"\t\"int\t$0x2E\\n\\t\"\n");
 			fprintf(out2,"\t\"ret\t$%d\\n\\t\");\n\n",stacksize);
 
+			/*
+			 * Write the CSRSS stub for the current system call
+			 */
+#ifdef PARAMETERIZED_LIBS
+			fprintf(out3,"__asm__(\"\\n\\t.global _%s@%d\\n\\t\"\n",name,stacksize);
+			fprintf(out3,"\"_%s@%d:\\n\\t\"\n",name,stacksize);
+#else
+			fprintf(out3,"__asm__(\"\\n\\t.global _%s\\n\\t\"\n",name);
+			fprintf(out3,"\"_%s:\\n\\t\"\n",name);
+#endif
+			fprintf(out3,"\t\"mov\t$%d,%%eax\\n\\t\"\n",sys_call_idx | INDEX);
+			fprintf(out3,"\t\"lea\t4(%%esp),%%edx\\n\\t\"\n");
+			fprintf(out3,"\t\"int\t$0x2E\\n\\t\"\n");
+			fprintf(out3,"\t\"ret\t$%d\\n\\t\");\n\n",stacksize);
+
 			/* Next system call index */
 			sys_call_idx++;
 		}
@@ -299,9 +322,10 @@ int main(int argc, char* argv[])
 	FILE	* out1;	/* SERVICE_TABLE */
 	FILE	* out2;	/* GDI32 stubs */
 	FILE	* out3;	/* USER32 stubs */
+	FILE    * out4; /* CSRSS stubs */
 	int	ret;
 
-	if (argc != 5)
+	if (argc != 6)
 	{
 		usage(argv[0]);
 		return(1);
@@ -335,7 +359,14 @@ int main(int argc, char* argv[])
 		return(1);
 	}
 
-	ret = process(in,out2,out3);
+	out4 = fopen(argv[5],"wb");
+	if (out4 == NULL)
+	  {
+	    perror("Failed to open output file (CSRSS stubs)");
+	    return(1);
+	  }
+
+	ret = process(in,out2,out3,out4);
 	rewind(in);
 	ret = makeSystemServiceTable(in, out1);
 

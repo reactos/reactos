@@ -4,3 +4,4 @@ csrss.nostrip.exe
 *.d
 *.o
 *.sym
+win32k.c

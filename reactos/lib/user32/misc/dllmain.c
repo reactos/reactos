@@ -62,12 +62,9 @@ Init(VOID)
   NtCurrentPeb()->KernelCallbackTable[USER32_CALLBACK_SENDGETMINMAXINFO] =
     (PVOID)User32SendGETMINMAXINFOMessageForKernel;
 
-  //ProcessWindowStation = CreateWindowStationW(L"WinStaName",0,GENERIC_ALL,NULL);
-  //Desktop = CreateDesktopA(NULL,NULL,NULL,0,0,NULL);
+  GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
 
-  //GdiDllInitialize(NULL, DLL_PROCESS_ATTACH, NULL);
-
-  return Status;
+  return(Status);
 }
 
 DWORD
@@ -75,11 +72,9 @@ Cleanup(VOID)
 {
   DWORD Status;
 
-  //CloseWindowStation(ProcessWindowStation);
+  GdiDllInitialize(NULL, DLL_PROCESS_DETACH, NULL);
 
-  //GdiDllInitialize(NULL, DLL_PROCESS_DETACH, NULL);
-
-  return Status;
+  return(Status);
 }
 
 INT STDCALL

@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.89 2002/08/20 20:37:14 hyperion Exp $
+/* $Id: process.c,v 1.90 2002/08/26 13:06:03 dwelch Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -452,7 +452,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
    Status = ObReferenceObjectByHandle(ParentProcessHandle,
 				      PROCESS_CREATE_PROCESS,
 				      PsProcessType,
-				      UserMode,
+				      ExGetPreviousMode(),
 				      (PVOID*)&ParentProcess,
 				      NULL);
    if (!NT_SUCCESS(Status))
