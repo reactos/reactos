@@ -257,6 +257,9 @@ int OskitTCPSend( void *socket, OSK_PCHAR Data, OSK_UINT Len,
     mb.m_data = Data;
     mb.m_len  = Len;
     mb.m_flags = M_EOR;
+	mb.m_pkthdr.len = Len;
+	mb.m_next = 0;
+	mb.m_nextpkt = 0;
     error = sosend( socket, NULL, NULL /*&uio*/, (struct mbuf *)&mb, NULL, 0 );
     /*printf("uio.uio_resid = %d\n", uio.uio_resid);*/
     *OutLen = Len /*uio.uio_resid*/;
