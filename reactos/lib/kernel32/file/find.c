@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.25 2000/03/15 23:13:29 ekohl Exp $
+/* $Id: find.c,v 1.26 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* TYPES ********************************************************************/
@@ -60,7 +61,7 @@ InternalFindNextFile (
 	DPRINT("Found %S\n",IData->FileInfo.FileName);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -133,7 +134,7 @@ InternalFindFirstFile (
 	{
 		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
 		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return(NULL);
 	}
 
@@ -154,7 +155,7 @@ InternalFindFirstFile (
 		DPRINT("Status %lx\n", Status);
 		RtlFreeHeap (RtlGetProcessHeap (), 0, IData->PatternStr.Buffer);
 		RtlFreeHeap (RtlGetProcessHeap (), 0, IData);
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return NULL;
 	}
 	DPRINT("Found %S\n",IData->FileInfo.FileName);

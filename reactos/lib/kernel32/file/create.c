@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.20 2000/05/13 13:50:56 dwelch Exp $
+/* $Id: create.c,v 1.21 2000/06/03 14:47:31 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,6 +19,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/
@@ -144,7 +145,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 			  0);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError (RtlNtStatusToDosError (Status));
+	SetLastErrorByStatus (Status);
 	return INVALID_HANDLE_VALUE;
      }
    

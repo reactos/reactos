@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.25 2000/03/15 18:28:58 ekohl Exp $
+/* $Id: dir.c,v 1.26 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -23,6 +23,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS *****************************************************************/
@@ -179,7 +180,7 @@ CreateDirectoryExW (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError(RtlNtStatusToDosError(Status));
+		SetLastErrorByStatus(Status);
 		return FALSE;
 	}
 
@@ -271,7 +272,7 @@ RemoveDirectoryW (
 	if (!NT_SUCCESS(Status))
 	{
 		CHECKPOINT;
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -286,7 +287,7 @@ RemoveDirectoryW (
 	{
 		CHECKPOINT;
 		NtClose(DirectoryHandle);
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -294,7 +295,7 @@ RemoveDirectoryW (
 	if (!NT_SUCCESS(Status))
 	{
 		CHECKPOINT;
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 

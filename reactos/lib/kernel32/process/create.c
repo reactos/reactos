@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.27 2000/04/23 17:40:52 phreak Exp $
+/* $Id: create.c,v 1.28 2000/06/03 14:47:33 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,6 +27,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -247,7 +248,7 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("Failed to open file\n");
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(NULL);
      }
 
@@ -263,7 +264,7 @@ HANDLE KlMapFile(LPCWSTR lpApplicationName,
    if (!NT_SUCCESS(Status))
      {
 	DPRINT("Failed to create section\n");
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(NULL);
      }
 

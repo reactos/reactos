@@ -1,4 +1,5 @@
-/*
+/* $Id: volume.c,v 1.16 2000/06/03 14:47:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/volume.c
@@ -23,6 +24,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 #define MAX_DOS_DRIVES 26
@@ -207,7 +209,7 @@ GetDiskFreeSpaceW(
     if (!NT_SUCCESS(errCode))
     {
         CloseHandle(hFile);
-        SetLastError(RtlNtStatusToDosError(errCode));
+        SetLastErrorByStatus (errCode);
         return FALSE;
     }
 
@@ -310,7 +312,7 @@ GetDiskFreeSpaceExW(
     if (!NT_SUCCESS(errCode))
     {
         CloseHandle(hFile);
-        SetLastError(RtlNtStatusToDosError(errCode));
+        SetLastErrorByStatus (errCode);
         return FALSE;
     }
 
@@ -392,7 +394,7 @@ GetDriveTypeW (
 	if (!NT_SUCCESS(errCode))
 	{
 		CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return 0;
 	}
 	CloseHandle(hFile);
@@ -552,7 +554,7 @@ GetVolumeInformationW(
 	if ( !NT_SUCCESS(errCode) ) {
                 DPRINT("Status: %x\n", errCode);
                 CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 
@@ -573,7 +575,7 @@ GetVolumeInformationW(
 	{
 		DPRINT("Status: %x\n", errCode);
 		CloseHandle(hFile);
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 

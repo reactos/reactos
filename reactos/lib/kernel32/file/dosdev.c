@@ -1,4 +1,5 @@
-/*
+/* $Id: dosdev.c,v 1.3 2000/06/03 14:47:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/dosdev.c
@@ -105,3 +106,4 @@ QueryDosDeviceW(
 	return FALSE;
 }
 
+/* EOF */

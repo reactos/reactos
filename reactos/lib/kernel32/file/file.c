@@ -1,4 +1,5 @@
-/*
+/* $Id: file.c,v 1.23 2000/06/03 14:47:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/file.c
@@ -18,6 +19,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 #define LPPROGRESS_ROUTINE void*
 
@@ -141,7 +143,7 @@ OpenFile (
 
 	if (!NT_SUCCESS(errCode))
 	{
-		SetLastError (RtlNtStatusToDosError (errCode));
+		SetLastErrorByStatus (errCode);
 		return (HFILE)INVALID_HANDLE_VALUE;
 	}
 
@@ -158,7 +160,7 @@ WINBOOL STDCALL FlushFileBuffers(HANDLE hFile)
 				&IoStatusBlock);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return(FALSE);
      }
    return(TRUE);
@@ -213,7 +215,7 @@ DWORD STDCALL SetFilePointer(HANDLE hFile,
 				  FilePositionInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return -1;
      }
    
@@ -245,7 +247,7 @@ DWORD STDCALL GetFileSize(HANDLE hFile,
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	if ( lpFileSizeHigh == NULL ) 
 	  {
 	     return -1;
@@ -305,7 +307,7 @@ DWORD STDCALL GetCompressedFileSizeW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(errCode)) 
      {
 	CloseHandle(hFile);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return 0;
      }
    CloseHandle(hFile);
@@ -330,7 +332,7 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 				    FileDirectoryInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -348,7 +350,7 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 				    FileInternalInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -362,7 +364,7 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 					  FileFsVolumeInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -375,7 +377,7 @@ WINBOOL STDCALL GetFileInformationByHandle(HANDLE hFile,
 				    FileStandardInformation);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -445,7 +447,7 @@ DWORD STDCALL GetFileAttributesW(LPCWSTR lpFileName)
    if (!NT_SUCCESS(errCode))
      {
 	CloseHandle(hFile);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return 0xFFFFFFFF;
      }
    CloseHandle(hFile);
@@ -512,7 +514,7 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(errCode)) 
      {
 	CloseHandle(hFile);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    FileBasic.FileAttributes = dwFileAttributes;
@@ -524,7 +526,7 @@ WINBOOL STDCALL SetFileAttributesW(LPCWSTR lpFileName,
    if (!NT_SUCCESS(errCode)) 
      {
 	CloseHandle(hFile);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    CloseHandle(hFile);
@@ -614,7 +616,7 @@ WINBOOL STDCALL GetFileTime(HANDLE hFile,
 				    FileBasicInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -648,7 +650,7 @@ WINBOOL STDCALL SetFileTime(HANDLE hFile,
 				  FileBasicInformation);
    if (!NT_SUCCESS(errCode)) 
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
    

@@ -1,4 +1,4 @@
-/* $Id: deviceio.c,v 1.6 2000/03/14 23:09:23 ekohl Exp $
+/* $Id: deviceio.c,v 1.7 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -14,6 +14,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 WINBOOL
@@ -38,7 +39,7 @@ DeviceIoControl(
 
 	if (lpBytesReturned == NULL)
 	{
-		SetLastError (RtlNtStatusToDosError (STATUS_INVALID_PARAMETER));
+		SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
 		return FALSE;
 	}
 
@@ -90,13 +91,13 @@ DeviceIoControl(
 		if (NtWaitForSingleObject(hDevice,FALSE,NULL) < 0)
 		{
 			*lpBytesReturned = IoStatusBlock->Information;
-			SetLastError (RtlNtStatusToDosError (errCode));
+			SetLastErrorByStatus (errCode);
 			return FALSE;
 		}
 	}
 	else if (!NT_SUCCESS(errCode))
 	{
-		SetLastError (RtlNtStatusToDosError (errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 
@@ -122,7 +123,7 @@ GetOverlappedResult (
 
 	if (lpOverlapped == NULL)
 	{
-		SetLastError(RtlNtStatusToDosError(STATUS_INVALID_PARAMETER));
+		SetLastErrorByStatus(STATUS_INVALID_PARAMETER);
 		return FALSE;
 	}
 
@@ -130,7 +131,7 @@ GetOverlappedResult (
 	{
 		if (lpNumberOfBytesTransferred == 0)
 		{
-			SetLastError (RtlNtStatusToDosError (STATUS_PENDING));
+			SetLastErrorByStatus (STATUS_PENDING);
 			return FALSE;
 		}
 		else if (bWait == TRUE)
@@ -157,7 +158,7 @@ GetOverlappedResult (
 
 	if (lpOverlapped->Internal < 0)
 	{
-		SetLastError (RtlNtStatusToDosError (lpOverlapped->Internal));
+		SetLastErrorByStatus (lpOverlapped->Internal);
 		return FALSE;
 	}
 

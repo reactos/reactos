@@ -1,4 +1,4 @@
-/* $Id: lfile.c,v 1.5 2000/03/14 23:09:23 ekohl Exp $
+/* $Id: lfile.c,v 1.6 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -134,7 +134,7 @@ _lopen (
 	else if ((iReadWrite & OF_SHARE_EXCLUSIVE) == OF_SHARE_EXCLUSIVE)
 		dwShareMode = 0;
 
-	SetLastError(0);
+	SetLastError (ERROR_SUCCESS);
 	return (HFILE) CreateFileA(
 			lpPathName,
 			dwAccessMask,

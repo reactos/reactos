@@ -1,4 +1,4 @@
-/* $Id: npipe.c,v 1.2 2000/05/14 09:31:01 ea Exp $
+/* $Id: npipe.c,v 1.3 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 #include <ntdll/rtl.h>
 
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -163,7 +164,7 @@ HANDLE STDCALL CreateNamedPipeW(LPCWSTR lpName,
 				  &DefaultTimeOut);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(INVALID_HANDLE_VALUE);
      }
    return(PipeHandle);
@@ -220,7 +221,7 @@ BOOL STDCALL WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 		       FILE_SYNCHRONOUS_IO_ALERT);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    
@@ -238,7 +239,7 @@ BOOL STDCALL WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 			    0);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    
@@ -279,7 +280,7 @@ BOOL STDCALL ConnectNamedPipe(HANDLE hNamedPipe,
 			    0);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    return(TRUE);
@@ -307,7 +308,7 @@ BOOL STDCALL SetNamedPipeHandleState(HANDLE hNamedPipe,
 			    sizeof(GetState));
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    
@@ -370,7 +371,7 @@ BOOL STDCALL SetNamedPipeHandleState(HANDLE hNamedPipe,
 			    0);
    if (!NT_SUCCESS(Status))
      {
-	SetLastError(RtlNtStatusToDosError(Status));
+	SetLastErrorByStatus (Status);
 	return(FALSE);
      }
    return(TRUE);

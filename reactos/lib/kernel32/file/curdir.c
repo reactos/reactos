@@ -1,4 +1,4 @@
-/* $Id: curdir.c,v 1.24 2000/03/16 21:50:56 ekohl Exp $
+/* $Id: curdir.c,v 1.25 2000/06/03 14:47:31 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* GLOBAL VARIABLES **********************************************************/
@@ -120,7 +121,7 @@ SetCurrentDirectoryA (
 
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -143,7 +144,7 @@ SetCurrentDirectoryW (
 	Status = RtlSetCurrentDirectory_U (&UnicodeString);
 	if (!NT_SUCCESS(Status))
 	{
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 

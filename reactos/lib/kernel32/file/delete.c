@@ -1,4 +1,4 @@
-/* $Id: delete.c,v 1.6 2000/03/14 23:09:23 ekohl Exp $
+/* $Id: delete.c,v 1.7 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/
@@ -99,7 +100,7 @@ DeleteFileW (
 	if (!NT_SUCCESS(Status))
 	{
 		CHECKPOINT;
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -114,7 +115,7 @@ DeleteFileW (
 	{
 		CHECKPOINT;
 		NtClose (FileHandle);
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 
@@ -122,7 +123,7 @@ DeleteFileW (
 	if (!NT_SUCCESS (Status))
 	{
 		CHECKPOINT;
-		SetLastError (RtlNtStatusToDosError (Status));
+		SetLastErrorByStatus (Status);
 		return FALSE;
 	}
 

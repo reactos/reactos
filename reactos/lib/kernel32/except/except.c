@@ -1,4 +1,5 @@
-/*
+/* $Id: except.c,v 1.5 2000/06/03 14:47:31 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/misc/except.c
@@ -12,6 +13,7 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 
+#include <kernel32/error.h>
 
 typedef LONG (STDCALL *LPTOP_LEVEL_EXCEPTION_FILTER)(
 	struct _EXCEPTION_POINTERS *ExceptionInfo
@@ -64,7 +66,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 		// Is there a debugger running ?
 		errCode = NtQueryInformationProcess(NtCurrentProcess(),ProcessDebugPort,&DebugPort,sizeof(HANDLE),NULL);
 		if ( !NT_SUCCESS(errCode) ) {
-			SetLastError(RtlNtStatusToDosError(errCode));
+			SetLastErrorByStatus(errCode);
 			return EXCEPTION_EXECUTE_HANDLER;
 		}
 		if ( DebugPort ) {
@@ -95,3 +97,5 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 	return EXCEPTION_EXECUTE_HANDLER;
 	
 }
+
+/* EOF */

@@ -1,4 +1,5 @@
-/*
+/* $Id: lock.c,v 1.5 2000/06/03 14:47:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/file.c
@@ -20,6 +21,7 @@
 
 //#define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -97,7 +99,7 @@ LockFileEx(
 			LockExclusive);
    if ( !NT_SUCCESS(errCode) ) 
      {
-      SetLastError(RtlNtStatusToDosError(errCode));
+      SetLastErrorByStatus (errCode);
       return FALSE;
      }
    
@@ -163,10 +165,11 @@ UnlockFileEx(
 			  &BytesToUnLock,
 			  NULL);
    if ( !NT_SUCCESS(errCode) ) {
-      SetLastError(RtlNtStatusToDosError(errCode));
+      SetLastErrorByStatus (errCode);
       return FALSE;
    }
    
    return TRUE;
 }
 
+/* EOF */

@@ -1,4 +1,4 @@
-/* $Id: copy.c,v 1.6 2000/03/14 23:09:23 ekohl Exp $
+/* $Id: copy.c,v 1.7 2000/06/03 14:47:31 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -17,6 +17,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 #define LPPROGRESS_ROUTINE void*
@@ -65,7 +66,7 @@ CopyFileExW (
    if (!NT_SUCCESS(errCode))
      {
 	NtClose(FileHandleSource);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -76,7 +77,7 @@ CopyFileExW (
    if (!NT_SUCCESS(errCode))
      {
 	NtClose(FileHandleSource);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -103,7 +104,7 @@ CopyFileExW (
      {
 	NtClose(FileHandleSource);
 	NtClose(FileHandleDest);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -116,7 +117,7 @@ CopyFileExW (
      {
 	NtClose(FileHandleSource);
 	NtClose(FileHandleDest);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 
@@ -131,7 +132,7 @@ CopyFileExW (
      {
 	NtClose(FileHandleSource);
 	NtClose(FileHandleDest);
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus(errCode);
 	return FALSE;
      }
 

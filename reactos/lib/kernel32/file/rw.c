@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.12 2000/05/13 13:50:56 dwelch Exp $
+/* $Id: rw.c,v 1.13 2000/06/03 14:47:32 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -18,6 +18,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+#include <kernel32/error.h>
 
 
 /* FUNCTIONS ****************************************************************/
@@ -73,7 +74,7 @@ WINBOOL STDCALL WriteFile(HANDLE hFile,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	DPRINT("WriteFile() failed\n");
 	return FALSE;
      }
@@ -143,7 +144,7 @@ WINBOOL STDCALL ReadFile(HANDLE hFile,
    
    if (!NT_SUCCESS(errCode))  
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return(FALSE);
      }
    return(TRUE);
@@ -199,7 +200,7 @@ WINBOOL STDCALL WriteFileEx (HANDLE				hFile,
 			 NULL);
    if (!NT_SUCCESS(errCode))
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	DPRINT("WriteFileEx() failed\n");
 	return FALSE;
      }
@@ -240,7 +241,7 @@ WINBOOL STDCALL ReadFileEx(HANDLE hFile,
 
    if (!NT_SUCCESS(errCode))  
      {
-	SetLastError(RtlNtStatusToDosError(errCode));
+	SetLastErrorByStatus (errCode);
 	return(FALSE);
      }
    return(TRUE);

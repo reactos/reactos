@@ -1,4 +1,5 @@
-/*
+/* $Id: iocompl.c,v 1.4 2000/06/03 14:47:32 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/iocompl.c
@@ -11,6 +12,9 @@
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <wchar.h>
+
+
+#include <kernel32/error.h>
 
 
 typedef struct _FILE_COMPLETION_INFORMATION {
@@ -44,7 +48,7 @@ CreateIoCompletionPort(
 	IO_STATUS_BLOCK IoStatusBlock;
 
         if ( ExistingCompletionPort == NULL && FileHandle == INVALID_HANDLE_VALUE ) {
-                SetLastError(RtlNtStatusToDosError(STATUS_INVALID_PARAMETER));
+                SetLastErrorByStatus (STATUS_INVALID_PARAMETER);
                 return FALSE;
         }
 
@@ -54,7 +58,7 @@ CreateIoCompletionPort(
 	else {
                 errCode = NtCreateIoCompletion(&CompletionPort,GENERIC_ALL,&IoStatusBlock,NumberOfConcurrentThreads);
                 if (!NT_SUCCESS(errCode) ) {
-                        SetLastError(RtlNtStatusToDosError(errCode));
+                        SetLastErrorByStatus (errCode);
                         return FALSE;
                 }
 
@@ -68,7 +72,7 @@ CreateIoCompletionPort(
                 if ( !NT_SUCCESS(errCode) ) {
 			if ( ExistingCompletionPort == NULL )
                         	NtClose(CompletionPort);
-                        SetLastError(RtlNtStatusToDosError(errCode));
+                        SetLastErrorByStatus (errCode);
                         return FALSE;
                 }
         }
@@ -93,7 +97,7 @@ GetQueuedCompletionStatus(
 
 	errCode = NtRemoveIoCompletion(CompletionPort,(PULONG)lpCompletionKey,(PIO_STATUS_BLOCK)lpOverlapped,&CompletionStatus,&TimeToWait);
 	if (!NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 
@@ -114,7 +118,7 @@ PostQueuedCompletionStatus(
 	errCode = NtSetIoCompletion(CompletionPort,  dwCompletionKey, (PIO_STATUS_BLOCK)lpOverlapped , 0, (PULONG)&dwNumberOfBytesTransferred );
 
 	if ( !NT_SUCCESS(errCode) ) {
-		SetLastError(RtlNtStatusToDosError(errCode));
+		SetLastErrorByStatus (errCode);
 		return FALSE;
 	}
 	return TRUE;
@@ -132,3 +136,6 @@ FileIOCompletionRoutine(
 {
 	return;
 }
+
+
+/* EOF */
