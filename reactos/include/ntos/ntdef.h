@@ -39,6 +39,20 @@
 #define SECONDS_TO_100NS(seconds) (((LONGLONG)(seconds)) * MILLIS_TO_100NS(1000L))
 
 
+/* Helpers for enumarating lists */
+#define LIST_FOR_EACH(entry, head) \
+   for(entry = (head)->Flink; entry != (head); entry = entry->Flink)
+
+/* 
+Safe version which saves pointer to the next entry so the current ptr->field entry
+can be unlinked without corrupting the list. NOTE: Never unlink tmp_entry!!!!!!!!!
+*/
+#define LIST_FOR_EACH_SAFE(tmp_entry, head, ptr, type, field) \
+   for ((tmp_entry)=(head)->Flink; (tmp_entry)!=(head) && \
+        ((ptr) = CONTAINING_RECORD(tmp_entry,type,field)) && \
+        ((tmp_entry) = (tmp_entry)->Flink); )
+
+
 #ifndef __USE_W32API
 
 #define ANYSIZE_ARRAY	(1)
