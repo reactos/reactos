@@ -34,6 +34,7 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL Enabled;
   BOOL SwapButtons;
   UINT CurrentCursor;
+  UINT ButtonsDown;
   LONG x, y;
   BOOL SafetySwitch, SafetySwitch2;
   FAST_MUTEX CursorMutex;
@@ -45,6 +46,7 @@ typedef struct _SYSTEM_CURSORINFO
   DWORD LastBtnDown;
   LONG LastBtnDownX;
   LONG LastBtnDownY;
+  HANDLE LastClkWnd;
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
 typedef struct _WINSTATION_OBJECT

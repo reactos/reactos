@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: winsta.c,v 1.34 2003/09/09 10:57:03 gvg Exp $
+/* $Id: winsta.c,v 1.35 2003/09/24 18:39:34 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -355,6 +355,7 @@ NtUserCreateWindowStation(PUNICODE_STRING lpszWindowStationName,
     
   ExInitializeFastMutex(&WinStaObject->SystemCursor.CursorMutex);
   WinStaObject->SystemCursor.Enabled = FALSE;
+  WinStaObject->SystemCursor.ButtonsDown = 0;
   WinStaObject->SystemCursor.CurrentCursor = 0;
   WinStaObject->SystemCursor.x = (LONG)0;
   WinStaObject->SystemCursor.y = (LONG)0;
