@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.13 2003/07/12 10:24:45 chorns Exp $
+/* $Id: rtl.h,v 1.14 2003/07/29 16:44:48 royce Exp $
  * 
  */
 
@@ -1434,7 +1434,7 @@ RtlMultiByteToUnicodeN (
 	PWCHAR UnicodeString,
 	ULONG  UnicodeSize,
 	PULONG ResultSize,
-	PCHAR  MbString,
+	const PCHAR  MbString,
 	ULONG  MbSize
 	);
 

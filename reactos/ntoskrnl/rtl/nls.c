@@ -1,4 +1,4 @@
-/* $Id: nls.c,v 1.18 2003/07/21 21:53:53 royce Exp $
+/* $Id: nls.c,v 1.19 2003/07/29 16:44:48 royce Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -358,7 +358,7 @@ NTSTATUS STDCALL
 RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 		       ULONG UnicodeSize,
 		       PULONG ResultSize,
-		       PCHAR MbString,
+		       const PCHAR MbString,
 		       ULONG MbSize)
 {
   ULONG Size = 0;
@@ -376,11 +376,7 @@ RtlMultiByteToUnicodeN(PWCHAR UnicodeString,
 	*ResultSize = Size * sizeof(WCHAR);
 
       for (i = 0; i < Size; i++)
-	{
-	  *UnicodeString = NlsAnsiToUnicodeTable[(unsigned int)*MbString];
-	  UnicodeString++;
-	  MbString++;
-	}
+	UnicodeString[i] = NlsAnsiToUnicodeTable[(unsigned int)MbString[i]];
     }
   else
     {
