@@ -43,6 +43,7 @@ typedef struct _KEY_INFO
   struct _KEY_INFO *next;
   char keyname[200];
   PKEY_VALUE_INFO keyvalueinfo;
+  PKEY_VALUE_INFO lastvalue;
 } KEY_INFO, *PKEY_INFO;
 
 typedef struct _MAKEFILE_INFO
@@ -392,8 +393,15 @@ parse_key_value(PKEY_INFO key_info)
         }
       memset(keyvalue_info, 0, sizeof(KEY_VALUE_INFO));
       strcpy(keyvalue_info->filename, string);
-      keyvalue_info->next = key_info->keyvalueinfo;
-      key_info->keyvalueinfo = keyvalue_info;
+      if (NULL != key_info->lastvalue)
+        {
+          key_info->lastvalue->next = keyvalue_info;
+        }
+      else
+        {
+          key_info->keyvalueinfo = keyvalue_info;
+        }
+      key_info->lastvalue = keyvalue_info;
     }
   skip_line();
 }
