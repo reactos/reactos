@@ -52,7 +52,7 @@ int Image_Root;
 #define NUM_BITMAPS  3
 
 
-static HKEY FindRegRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
+HKEY FindRegRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max)
 {
     HKEY hKey = NULL;
     TVITEM item;

@@ -259,8 +259,15 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 return !OnTreeExpanding(pChildWnd->hTreeWnd, (NMTREEVIEW*)lParam);
             case TVN_SELCHANGED:
                 {
+                    HKEY hKey;
                     TCHAR keyPath[1000];
                     int keyPathLen = 0;
+                    keyPath[0] = _T('\0');
+                    hKey = FindRegRoot(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
+                //BOOL RefreshListView(HWND hwndTV, HKEY hKey, LPTSTR keyPath)
+                    RefreshListView(pChildWnd->hListWnd, hKey, keyPath);
+
+                    keyPathLen = 0;
                     keyPath[0] = _T('\0');
                     MakeFullRegPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, keyPath, &keyPathLen, sizeof(keyPath));
                     SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)keyPath);

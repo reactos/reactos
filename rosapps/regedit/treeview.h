@@ -34,6 +34,7 @@ extern "C" {
 
 HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
 BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
+HKEY FindRegRoot(HWND hwndTV, HTREEITEM hItem, LPTSTR keyPath, int* pPathLen, int max);
 
 
 #ifdef __cplusplus
