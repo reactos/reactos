@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2004/08/15 16:50:30 kuehng Exp $
+# $Id: Makefile,v 1.3 2004/10/31 11:54:58 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -10,10 +10,13 @@ TARGET_NAME = ncpa
 
 TARGET_INSTALLDIR = system32
 
-TARGET_BASE = $(TARGET_BASE_LIB_CPL_SYSDM)
+TARGET_BASE = $(TARGET_BASE_LIB_CPL_NCPA)
 
 TARGET_CFLAGS = \
  -I./include \
+ -D_WIN32_IE=0x0600 \
+ -D_WIN32_WINNT=0x0501 \
+ -D__USE_W32API \
  -DUNICODE \
  -D_UNICODE \
  -D__REACTOS__ \

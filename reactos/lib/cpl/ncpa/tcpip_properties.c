@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: tcpip_properties.c,v 1.3 2004/10/11 21:08:04 weiden Exp $
+/* $Id: tcpip_properties.c,v 1.4 2004/10/31 11:54:58 ekohl Exp $
  *
  * PROJECT:         ReactOS Network Control Panel
  * FILE:            lib/cpl/system/tcpip_properties.c
@@ -33,15 +33,17 @@
 #include <windows.h>
 #include <iptypes.h>
 #include <iphlpapi.h>
+#include <commctrl.h>
+#include <prsht.h>
+
 
 #ifdef _MSC_VER
-#include <commctrl.h>
 #include <cpl.h>
 #else
 
 // this is missing on reactos...
 #ifndef IPM_SETADDRESS
-#define IPM_SETADDRESS (WM_USER+101) 
+#define IPM_SETADDRESS (WM_USER+101)
 #endif
 
 #endif
@@ -138,45 +140,32 @@ void DisplayTCPIPProperties(HWND hParent,IP_ADAPTER_INFO *pInfo)
 {
 	PROPSHEETPAGE psp[1];
 	PROPSHEETHEADER psh;
+	INITCOMMONCONTROLSEX cce;
+
+	cce.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	cce.dwICC = ICC_INTERNET_CLASSES;
+	InitCommonControlsEx(&cce);
+
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
 	psh.hwndParent = hParent;
 	psh.hInstance = hApplet;
-#ifdef _MSC_VER
 	psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-#else
-	psh.u1.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_CPLSYSTEM));
-#endif
 	psh.pszCaption = NULL;//Caption;
 	psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
-#ifdef _MSC_VER
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
-#else
-	psh.u2.nStartPage = 0;
-	psh.u3.ppsp = psp;
-#endif
 	psh.pfnCallback = NULL;
 	
 
 	InitPropSheetPage(&psp[0], IDD_TCPIPPROPERTIES, TCPIPPropertyPageProc);
 	psp[0].lParam = (LPARAM)pInfo;
 
-#ifdef _MSC_VER 
-	{
-		INITCOMMONCONTROLSEX cce;
-		cce.dwSize = sizeof(cce);
-		cce.dwICC = ICC_INTERNET_CLASSES;
-		InitCommonControlsEx(&cce);
-	}
-#else
-	InitCommonControls();
-	MessageBox(hParent,_T("If the following Messagebox does not work... fix the reactos #include hell and call the InitCommonControlsEx instead"),_T("Info"),MB_OK);
-#endif
-	if(PropertySheet(&psh)==-1)
+	if (PropertySheet(&psh) == -1)
 	{
 		MessageBox(hParent,_T("Unable to create property sheet"),_T("Error"),MB_ICONSTOP);
-	};
+	}
+
 	return;
 }
