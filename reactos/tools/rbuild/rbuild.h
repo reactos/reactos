@@ -122,6 +122,7 @@ public:
 	std::string name;
 	std::string extension;
 	std::string entrypoint;
+	std::string baseaddress;
 	std::string path;
 	ModuleType type;
 	ImportLibrary* importLibrary;
@@ -157,6 +158,7 @@ public:
 private:
 	std::string GetDefaultModuleExtension () const;
 	std::string GetDefaultModuleEntrypoint () const;
+	std::string GetDefaultModuleBaseaddress () const;
 	void ProcessXMLSubElement ( const XMLElement& e,
 	                            const std::string& path,
 	                            If* pIf = NULL );

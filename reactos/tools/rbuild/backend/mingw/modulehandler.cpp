@@ -1340,9 +1340,10 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ( const Module& module )
 	string base_tmp = ros_junk + module.name + ".base.tmp";
 	string junk_tmp = ros_junk + module.name + ".junk.tmp";
 	string temp_exp = ros_junk + module.name + ".temp.exp";
-	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0xC0000000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+	string gccOptions = ssprintf ("-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
 	                              module.GetBasePath ().c_str (),
-	                              module.entrypoint.c_str () );
+	                              module.entrypoint.c_str (),
+	                              module.baseaddress.c_str () );
 
 	GenerateMacrosAndTargetsTarget ( module );
 
@@ -1466,8 +1467,9 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ( const Modul
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1523,8 +1525,9 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ( const
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1576,8 +1579,9 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ( const Module& modul
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1633,8 +1637,9 @@ MingwNativeCUIModuleHandler::GenerateNativeCUIModuleTarget ( const Module& modul
 		          archiveFilename.c_str (),
 		          importLibraryDependencies.c_str () );
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        "${gcc}",
 		                        linkerParameters,
@@ -1712,8 +1717,9 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ( const Module& module 
 		else
 			linker = "${gcc}";
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x10000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll",
-		                                    module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,
@@ -1770,8 +1776,9 @@ MingwWin32CUIModuleHandler::GenerateWin32CUIModuleTarget ( const Module& module 
 		else
 			linker = "${gcc}";
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,
@@ -1828,8 +1835,9 @@ MingwWin32GUIModuleHandler::GenerateWin32GUIModuleTarget ( const Module& module 
 		else
 			linker = "${gcc}";
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,0x00400000 -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
-		                                     module.entrypoint.c_str () );
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,windows -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000",
+		                                     module.entrypoint.c_str (),
+		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( module,
 		                        linker,
 		                        linkerParameters,

@@ -82,6 +82,12 @@ Module::Module ( const Project& project,
 	else
 		entrypoint = GetDefaultModuleEntrypoint ();
 
+	att = moduleNode.GetAttribute ( "baseaddress", false );
+	if ( att != NULL )
+		baseaddress = att->value;
+	else
+		baseaddress = GetDefaultModuleBaseaddress ();
+
 	att = moduleNode.GetAttribute ( "mangledsymbols", false );
 	if ( att != NULL )
 		mangledSymbols = att->value != "false";
@@ -353,6 +359,39 @@ Module::GetDefaultModuleEntrypoint () const
 			return "_WinMainCRTStartup";
 		case KernelModeDriver:
 			return "_DriverEntry@8";
+		case BuildTool:
+		case StaticLibrary:
+		case ObjectLibrary:
+		case BootLoader:
+		case BootSector:
+		case Iso:
+			return "";
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+string
+Module::GetDefaultModuleBaseaddress () const
+{
+	switch (type)
+	{
+		case Kernel:
+			return "0xc0000000";
+		case KernelModeDLL:
+			return "0x10000";
+		case NativeDLL:
+			return "0x10000";
+		case NativeCUI:
+			return "0x10000";
+		case Win32DLL:
+			return "0x10000";
+		case Win32CUI:
+			return "0x00400000";
+		case Win32GUI:
+			return "0x00400000";
+		case KernelModeDriver:
+			return "0x10000";
 		case BuildTool:
 		case StaticLibrary:
 		case ObjectLibrary:
