@@ -7114,11 +7114,14 @@ KeAcquireSpinLock(
   OUT PKIRQL  OldIrql);
 
 /* System Service Dispatch Table */
-typedef PVOID (NTAPI * SSDT)(VOID);
-typedef SSDT * PSSDT;
+typedef struct _SSDT {
+  ULONG  SysCallPtr;
+} SSDT, *PSSDT;
 
 /* System Service Parameters Table */
-typedef UCHAR SSPT, * PSSPT;
+typedef struct _SSPT {
+  ULONG  ParamBytes;
+} SSPT, *PSSPT;
 
 typedef struct _SSDT_ENTRY {
 	PSSDT  SSDT;
@@ -9112,3 +9115,4 @@ extern NTOSAPI PBOOLEAN KdDebuggerEnabled;
 #endif
 
 #endif /* __WINDDK_H */
+
