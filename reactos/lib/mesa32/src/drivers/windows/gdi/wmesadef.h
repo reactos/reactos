@@ -93,6 +93,7 @@ typedef struct _dibSection{
 }WMDIBSECTION, *PWMDIBSECTION;
 
 #ifdef COMPILE_SETPIXEL
+struct wmesa_context;
 typedef void (*SETPIXELTYPE)(struct wmesa_context *pwc, int iScanLine, int iPixel, BYTE r, BYTE g, BYTE b);
 #endif
 
