@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.123 2004/03/06 01:22:03 navaraf Exp $
+/* $Id: dc.c,v 1.124 2004/03/15 22:02:31 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -175,7 +175,7 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC = DC_LockDc( hNewDC );
 
   /* Copy information from original DC to new DC  */
-  NewDC->hSelf = NewDC;
+  NewDC->hSelf = hNewDC;
 
   NewDC->PDev = OrigDC->PDev;
   NewDC->DMW = OrigDC->DMW;
