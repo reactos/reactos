@@ -197,7 +197,7 @@ VOID DriveMapInstallInt13Handler(PDRIVE_MAP_LIST DriveMap)
 	// Update the IVT
 	RealModeIVT[0x13] = DriveMapHandlerSegOff;
 
-	//CacheInvalidateCacheData();
+	CacheInvalidateCacheData();
 	DriveMapInstalled = TRUE;
 }
 
@@ -214,6 +214,7 @@ VOID DriveMapRemoveInt13Handler(VOID)
 		// Increase the size of low memory
 		(*BiosLowMemorySize)++;
 
+		CacheInvalidateCacheData();
 		DriveMapInstalled = FALSE;
 	}
 }
