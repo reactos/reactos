@@ -1,4 +1,4 @@
-/* $Id: errno.c,v 1.5 2002/10/29 04:45:31 rex Exp $
+/* $Id: errno.c,v 1.6 2003/08/22 13:55:15 ea Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -18,6 +18,39 @@
 int * __PdxGetThreadErrNum(void)
 {
  return &(((__PPDX_TDATA) (NtCurrentTeb()->TlsSlots[__PdxGetProcessData()->TlsIndex]) )->ErrNum);
+}
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	RtlNtStatusToPsxErrno
+ *
+ * DESCRIPTION
+ *	Convert an Executive status ID into a POSIX error number
+ *	(errno.h).
+ *	
+ * NOTE
+ * 	Not present in the legacy WNT (a ReactOS extension to support
+ * 	the POSIX+ subsystem).
+ * 	
+ * ARGUMENTS
+ *	Status	The Executive status ID to convert.
+ *
+ * RETURN VALUE
+ *	errno as in errno.h
+ *	
+ * REVISIONS
+ * 	1999-11-30 ea
+ * 	2003-08-22 ea: moved here from NTDLL
+ */
+INT STDCALL
+RtlNtStatusToPsxErrno(IN NTSTATUS Status)
+{
+#if 0
+  switch (Status)
+    {
+    }
+#endif
+  return -1; /* generic POSIX error */
 }
 
 /* EOF */

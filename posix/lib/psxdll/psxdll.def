@@ -1,4 +1,4 @@
-; $Id: psxdll.def,v 1.10 2002/10/29 04:45:35 rex Exp $
+; $Id: psxdll.def,v 1.11 2003/08/22 13:55:15 ea Exp $
 ;
 ; ReactOS POSIX+ Client Library
 ;
@@ -215,6 +215,7 @@ RtlAnsiCharToUnicodeChar
 RtlFillMemory
 RtlMoveMemory
 RtlMultiByteToUnicodeN
+RtlNtStatusToPsxErrno
 RtlUnicodeToMultiByteN
 RtlUnicodeToMultiByteSize
 RtlUnwind
