@@ -249,21 +249,30 @@ DisplayDacl(PACL pAcl)
 		UNICODE_STRING scSid;
 		ROS_ACE_HEADER* pAce;
 		LPWSTR wszType = 0;
+		PSID pSid;
 
 		status = RtlGetAce(pAcl, i, (ROS_ACE**) &pAce);
+		if ( ! NT_SUCCESS(status) )
+		{
+			printf("RtlGetAce(): status = 0x%08x\n", status);
+			break;
+		}
+
+		pSid = (PSID) (pAce + 1);
 		if ( pAce->AceType == ACCESS_ALLOWED_ACE_TYPE )
 			wszType = L"allow";
 		if ( pAce->AceType == ACCESS_DENIED_ACE_TYPE )
 			wszType = L"deny ";
 
-		RtlConvertSidToUnicodeString(&scSid, (PSID) (pAce + 1), TRUE);
-		printf("%S %wZ 0x%08x\n", wszType, &scSid, pAce->AccessMask);
-		LocalFree(scSid.Buffer);
-	}
+		status = RtlConvertSidToUnicodeString(&scSid, pSid, TRUE);
+		if ( ! NT_SUCCESS(status) )
+		{
+			printf("RtlConvertSidToUnicodeString(): status = 0x%08x\n", status);
+			break;
+		}
 
-	{
-		ROS_ACE_HEADER* pAce;
-		status = RtlGetAce(pAcl, pAcl->AceCount, (ROS_ACE**) &pAce);
+		printf("%d.) %S %wZ 0x%08x\n", i, wszType, &scSid, pAce->AccessMask);
+		LocalFree(scSid.Buffer);
 	}
 }
 
@@ -406,8 +415,8 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 	ptkGroups = (TOKEN_GROUPS*) malloc(uSize);
 	ptkGroups->GroupCount = nGroupCount;
 
-	ptkGroups->Groups[0].Sid = &sidAdministrators;
-	ptkGroups->Groups[0].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
+	ptkGroups->Groups[0].Sid = (SID*) &sidAdministrators;
+	ptkGroups->Groups[0].Attributes = SE_GROUP_ENABLED;
 
 	ptkGroups->Groups[1].Sid = &sidEveryone;
 	ptkGroups->Groups[1].Attributes = SE_GROUP_ENABLED|SE_GROUP_ENABLED_BY_DEFAULT|SE_GROUP_MANDATORY;
@@ -431,9 +440,8 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 	uSize += sizeof(ACE_HEADER) + sizeof(sidSystem);
 	uSize += sizeof(ACE_HEADER) + sizeof(sidAdministrators);
 	uSize = (uSize & (~3)) + 8;
-	tkDefaultDacl.DefaultDacl = malloc(uSize);
-	
-	printf("RtlCreateAcl(0x%08x, %d, %d)\n", tkDefaultDacl.DefaultDacl, uSize, ACL_REVISION);
+	tkDefaultDacl.DefaultDacl = (PACL) malloc(uSize);
+
 	status = RtlCreateAcl(tkDefaultDacl.DefaultDacl, uSize, ACL_REVISION);
 	if ( ! NT_SUCCESS(status) )
 		printf("RtlCreateAcl() failed: 0x%08x\n", status);
@@ -442,9 +450,13 @@ CreateInitialSystemToken(HANDLE* phSystemToken)
 	if ( ! NT_SUCCESS(status) )
 		printf("RtlAddAccessAllowedAce() failed: 0x%08x\n", status);
 
-	status = RtlAddAccessAllowedAce(tkDefaultDacl.DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_EXECUTE|READ_CONTROL, &sidAdministrators);
+	status = RtlAddAccessAllowedAce(tkDefaultDacl.DefaultDacl, ACL_REVISION, GENERIC_READ|GENERIC_EXECUTE|READ_CONTROL, (PSID) &sidAdministrators);
 	if ( ! NT_SUCCESS(status) )
 		printf("RtlAddAccessAllowedAce() failed: 0x%08x\n", status);
+
+	printf("Parameters being passed into ZwCreateToken:\n\n");
+	DisplayTokenSids(&tkUser, ptkGroups, &tkDefaultOwner, &tkPrimaryGroup);
+	DisplayDacl(tkDefaultDacl.DefaultDacl);
 
 	printf("Calling ZwCreateToken()...\n");
 	status = ZwCreateToken(phSystemToken,
@@ -492,7 +504,7 @@ main(int argc, char** argv[])
 
 	// Now do the other one
 	status = CreateInitialSystemToken(&hSystemToken);
-	if ( status == 0 )
+	if ( NT_SUCCESS(status) )
 	{
 		printf("System Token: 0x%08x\n", hSystemToken);
 		DisplayToken(hSystemToken);
