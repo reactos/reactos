@@ -127,14 +127,14 @@ REGEDIT4
 "ErrorControl"=dword:00000000
 "Group"="Event log"
 "ImagePath"=expand:"%SystemRoot%\system32\eventlog.exe"
-"Start"=dword:00000004
+"Start"=dword:00000002
 "Type"=dword:00000010
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Floppy]
 "ErrorControl"=dword:00000000
 "Group"="Primary Disk"
 "ImagePath"=expand:"system32\drivers\floppy.sys"
-"Start"=dword:00000004
+"Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Fs_Rec]
@@ -155,6 +155,13 @@ REGEDIT4
 "ErrorControl"=dword:00000000
 "Group"="Keyboard Port"
 "ImagePath"=expand:"system32\drivers\keyboard.sys"
+"Start"=dword:00000001
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Mouse]
+"ErrorControl"=dword:00000000
+"Group"="Pointer Class"
+"ImagePath"=expand:"system32\drivers\mouclass.sys"
 "Start"=dword:00000001
 "Type"=dword:00000001
 
@@ -207,11 +214,29 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet]
+"ErrorControl"=dword:00000001
+"Group"="PNP_TDI"
+"ImagePath"=expand:"system32\drivers\packet.sys"
+"Start"=dword:00000002
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet\Linkage]
+"Bind"=expand:"\Device\ne2000"
+"Export"=expand:"\Device\packet"
+
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Pice]
 "ErrorControl"=dword:00000000
 "Group"="Debug"
 "ImagePath"=expand:"system32\drivers\pice.sys"
 "Start"=dword:00000004
+"Type"=dword:00000001
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Psaux]
+"ErrorControl"=dword:00000000
+"Group"="Pointer Port"
+"ImagePath"=expand:"system32\drivers\psaux.sys"
+"Start"=dword:00000001
 "Type"=dword:00000001
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\RpcSs]
@@ -234,12 +259,22 @@ REGEDIT4
 "Start"=dword:00000002
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet]
-"ErrorControl"=dword:00000001
-"Group"="PNP_TDI"
-"ImagePath"=expand:"system32\drivers\packet.sys"
-"Start"=dword:00000002
-"Type"=dword:00000001
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Linkage]
+"Bind"=expand:"\Device\ne2000"
+"Export"=expand:"\Device\tcpip"
+"Route"=expand:""
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters]
+"DataBasePath"="DataBasePath"
+"Domain"=""
+"Hostname"="ROSHost"
+"NameServer"="203.13.174.1"
+"ForwardBroadcasts"=dword:00000000
+"IPEnableRouter"=dword:00000000
+"SearchList"=""
+"EnableSecurityFilters"=dword:00000000
+
+[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters\PersistentRoutes]
 
 [\Registry\Machine\SYSTEM\ControlSet001\Services\Vfatfs]
 "ErrorControl"=dword:00000000
@@ -255,42 +290,6 @@ REGEDIT4
 "Start"=dword:00000001
 "Type"=dword:00000001
 
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Mouse]
-"ErrorControl"=dword:00000000
-"Group"="Pointer Class"
-"ImagePath"=expand:"system32\drivers\mouclass.sys"
-"Start"=dword:00000001
-"Type"=dword:00000001
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Psaux]
-"ErrorControl"=dword:00000000
-"Group"="Pointer Port"
-"ImagePath"=expand:"system32\drivers\psaux.sys"
-"Start"=dword:00000001
-"Type"=dword:00000001
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Linkage]
-"Bind"=expand:"\Device\ne2000"
-"Export"=expand:"\Device\tcpip"
-"Route"=expand:""
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters]
-"DataBasePath"="DataBasePath"
-"Domain"=""
-"Hostname"="ROSHost"
-"NameServer"="203.13.174.1"
-"ForwardBroadcasts"=dword:00000000
-"IPEnableRouter"=dword:00000000
-"Address"=dword:6400A8C0
-"SearchList"=""
-"EnableSecurityFilters"=dword:00000000
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Packet\Linkage]
-"Bind"=expand:"\Device\ne2000"
-"Export"=expand:"\Device\packet"
-
-[\Registry\Machine\SYSTEM\ControlSet001\Services\Tcpip\Parameters\PersistentRoutes]
-
 [\Registry\Machine\SYSTEM\ControlSet002]
 
 [\Registry\Machine\SYSTEM\Select]
@@ -304,6 +303,7 @@ REGEDIT4
 "OsLoaderPath"="\"
 "SetupType"=dword:00000000
 "SystemPartition"="\Device\HarddiskVolume1"
+"SystemSetupInProgress"=dword:00000000
 
 [\Registry\Machine\SOFTWARE]
 

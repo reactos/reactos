@@ -1,21 +1,39 @@
 [Version]
-Signature = "$ReactOS$"
+Signature = $ReactOS$
 
 [Directories]
-1 = "\"
+1 = \
 2 = system32
 3 = system32\drivers
 4 = system32\config
 
 [SourceFiles]
+advapi32.dll = 2
 atapi.sys    = 3
+beep.sys     = 3
+blue.sys     = 3
+cdfs.sys     = 3
 cdrom.sys    = 3
 class2.sys   = 3
+csrss.exe    = 2
 disk.sys     = 3
+floppy.sys   = 3
+fs_rec.sys   = 3
 hal.dll      = 2
-scsiport.sys = 3
+kernel32.dll = 2
+msvcrt.dll   = 2
+ntdll.dll    = 2
+ntfs.sys     = 3
 ntoskrnl.exe = 2
+null.sys     = 3
+psaux.sys    = 3
+scsiport.sys = 3
+services.exe = 2
+shell.exe    = 2
+smss.exe     = 2
+system.hiv   = 4
 vfatfs.sys   = 3
+winlogon.exe = 2
 
 [SetupData]
 DefaultPath = \reactos
