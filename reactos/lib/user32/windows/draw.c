@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.26 2003/08/20 03:07:33 silverblade Exp $
+/* $Id: draw.c,v 1.27 2003/08/22 01:55:36 royce Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1845,10 +1845,10 @@ WINBOOL INTERNAL_DrawState(
             case DST_TEXT :
             case DST_PREFIXTEXT :
             {
-                DbgPrint("Calculating rect of DST_TEXT / DST_PREFIXTEXT\n");
-            
                 BOOL success;
 
+                DbgPrint("Calculating rect of DST_TEXT / DST_PREFIXTEXT\n");
+            
                 if (unicode)
                     success = GetTextExtentPoint32W(hdc, (LPWSTR) lData, len, &s);
                 else
