@@ -207,7 +207,7 @@ MiniportHandleInterrupt(
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
   PCNET_DbgPrint(("CSR0 is now 0x%x\n", Data));
 
-  NdisDprAcquireSpinLock(&Adapter->Lock);
+  NdisDprReleaseSpinLock(&Adapter->Lock);
 }
 
 NDIS_STATUS 
@@ -702,7 +702,7 @@ MiInitChip(
 
   /* detect the media state */
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
-  NdisRawWritePortUshort(Adapter->PortOffset + BDP, BCR4_LNKSTE|BCR4_FDLSE/*|BCR4_XMTE|BCR4_RCVME|BCR4_MPSE|BCR4_JABE*/);
+  NdisRawWritePortUshort(Adapter->PortOffset + BDP, BCR4_LNKSTE|BCR4_FDLSE);
   Adapter->MediaState = MiGetMediaState(Adapter);
   
   PCNET_DbgPrint(("card started\n"));
@@ -869,9 +869,8 @@ MiniportInitialize(
         }
 
       /* set up the interrupt */
-      RtlZeroMemory(&Adapter->InterruptObject, sizeof(NDIS_MINIPORT_INTERRUPT));
       Status = NdisMRegisterInterrupt(&Adapter->InterruptObject, Adapter->MiniportAdapterHandle, Adapter->InterruptVector,
-          Adapter->InterruptVector, FALSE, TRUE, NdisInterruptLevelSensitive);
+          Adapter->InterruptVector, TRUE, TRUE, NdisInterruptLevelSensitive);
       if(Status != NDIS_STATUS_SUCCESS)
         {
           PCNET_DbgPrint(("NdisMRegisterInterrupt failed: 0x%x\n", Status));
@@ -1178,6 +1177,14 @@ MiSetMulticast(
 NDIS_MEDIA_STATE
 STDCALL
 MiGetMediaState(PADAPTER Adapter)
+/*
+ * FUNCTION: Determine the link state
+ * ARGUMENTS:
+ *     Adapter: Adapter context
+ * RETURNS:
+ *     NdisMediaStateConnected if the cable is connected
+ *     NdisMediaStateDisconnected if the cable is disconnected
+ */
 {
   ULONG Data;
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, BCR4);
