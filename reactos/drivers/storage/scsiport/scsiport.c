@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scsiport.c,v 1.11 2002/03/17 15:47:31 ekohl Exp $
+/* $Id: scsiport.c,v 1.12 2002/03/27 00:35:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -84,6 +84,10 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
   PHW_STARTIO HwStartIo;
   PHW_INTERRUPT HwInterrupt;
   
+  PSCSI_REQUEST_BLOCK OriginalSrb;
+  SCSI_REQUEST_BLOCK InternalSrb;
+  SENSE_DATA InternalSenseData;
+  
   UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
@@ -150,6 +154,9 @@ static VOID STDCALL
 ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 		PVOID Context);
 
+static PSCSI_REQUEST_BLOCK
+ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			    PSCSI_REQUEST_BLOCK OriginalSrb);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1316,13 +1323,69 @@ ScsiPortDpcForIsr(IN PKDPC Dpc,
 		  IN PVOID DpcContext)
 {
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
 
   DPRINT("ScsiPortDpcForIsr(Dpc %p  DpcDeviceObject %p  DpcIrp %p  DpcContext %p)\n",
 	  Dpc, DpcDeviceObject, DpcIrp, DpcContext);
 
   DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DpcContext;
 
+  IrpStack = IoGetCurrentIrpStackLocation(DeviceExtension->CurrentIrp);
+  Srb = IrpStack->Parameters.Scsi.Srb;
+
+  if (DeviceExtension->OriginalSrb != NULL)
+    {
+      DPRINT("Got sense data!\n");
+
+      DPRINT("Valid: %x\n", DeviceExtension->InternalSenseData.Valid);
+      DPRINT("ErrorCode: %x\n", DeviceExtension->InternalSenseData.ErrorCode);
+      DPRINT("SenseKey: %x\n", DeviceExtension->InternalSenseData.SenseKey);
+      DPRINT("SenseCode: %x\n", DeviceExtension->InternalSenseData.AdditionalSenseCode);
+
+      /* Copy sense data */
+      if (DeviceExtension->OriginalSrb->SenseInfoBufferLength != 0)
+	{
+	  RtlCopyMemory(DeviceExtension->OriginalSrb->SenseInfoBuffer,
+			&DeviceExtension->InternalSenseData,
+			sizeof(SENSE_DATA));
+	  DeviceExtension->OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+	}
+
+      /* Clear current sense data */
+      RtlZeroMemory(&DeviceExtension->InternalSenseData, sizeof(SENSE_DATA));
+
+      IrpStack->Parameters.Scsi.Srb = DeviceExtension->OriginalSrb;
+      DeviceExtension->OriginalSrb = NULL;
+    }
+  else if ((SRB_STATUS(Srb->SrbStatus) != SRB_STATUS_SUCCESS) &&
+	   (Srb->ScsiStatus == SCSISTAT_CHECK_CONDITION))
+    {
+      DPRINT("SCSIOP_REQUEST_SENSE required!\n");
+
+      DeviceExtension->OriginalSrb = Srb;
+      IrpStack->Parameters.Scsi.Srb = ScsiPortInitSenseRequestSrb(DeviceExtension,
+								  Srb);
+
+      if (!KeSynchronizeExecution(DeviceExtension->Interrupt,
+				  ScsiPortStartPacket,
+				  DeviceExtension))
+	{
+	  DPRINT("Synchronization failed!\n");
+
+	  DpcIrp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+	  DpcIrp->IoStatus.Information = 0;
+	  IoCompleteRequest(DpcIrp,
+			    IO_NO_INCREMENT);
+	  IoStartNextPacket(DpcDeviceObject,
+			    FALSE);
+	}
+
+      return;
+    }
+
   DeviceExtension->CurrentIrp = NULL;
+
 
 //  DpcIrp->IoStatus.Information = 0;
 //  DpcIrp->IoStatus.Status = STATUS_SUCCESS;
@@ -1360,5 +1423,45 @@ ScsiPortIoTimer(PDEVICE_OBJECT DeviceObject,
 {
   DPRINT1("ScsiPortIoTimer()\n");
 }
+
+
+static PSCSI_REQUEST_BLOCK
+ScsiPortInitSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+			    PSCSI_REQUEST_BLOCK OriginalSrb)
+{
+  PSCSI_REQUEST_BLOCK Srb;
+  PCDB Cdb;
+
+  Srb = &DeviceExtension->InternalSrb;
+
+  RtlZeroMemory(Srb,
+		sizeof(SCSI_REQUEST_BLOCK));
+
+  Srb->PathId = OriginalSrb->PathId;
+  Srb->TargetId = OriginalSrb->TargetId;
+  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+  Srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+
+  Srb->TimeOutValue = 4;
+
+  Srb->CdbLength = 6;
+  Srb->DataBuffer = &DeviceExtension->InternalSenseData;
+  Srb->DataTransferLength = sizeof(SENSE_DATA);
+
+  Cdb = (PCDB)Srb->Cdb;
+  Cdb->CDB6INQUIRY.OperationCode = SCSIOP_REQUEST_SENSE;
+  Cdb->CDB6INQUIRY.AllocationLength = sizeof(SENSE_DATA);
+
+  return(Srb);
+}
+
+
+static VOID
+ScsiPortFreeSenseRequestSrb(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
+{
+  DeviceExtension->OriginalSrb = NULL;
+}
+
 
 /* EOF */
