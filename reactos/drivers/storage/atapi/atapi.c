@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.34 2002/12/15 00:23:31 sedwards Exp $
+/* $Id: atapi.c,v 1.35 2002/12/22 11:38:41 gvg Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -1372,21 +1372,29 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
          DrvParms->TMSectorCountLo,
          (ULONG)((DrvParms->TMSectorCountHi << 16) + DrvParms->TMSectorCountLo));
 
-  DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
-  if (DrvParms->BytesPerSector == 0)
+  if (! Atapi && 0 != (DrvParms->Capabilities & IDE_DRID_LBA_SUPPORTED))
     {
+      /* LBA ATA drives always have a sector size of 512 */
       DrvParms->BytesPerSector = 512;
     }
   else
     {
-      for (i = 15; i >= 0; i--)
-	{
-	  if (DrvParms->BytesPerSector & (1 << i))
-	    {
-	      DrvParms->BytesPerSector = 1 << i;
-	      break;
-	    }
-	}
+      DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
+      if (DrvParms->BytesPerSector == 0)
+        {
+          DrvParms->BytesPerSector = 512;
+        }
+      else
+        {
+          for (i = 15; i >= 0; i--)
+            {
+              if (DrvParms->BytesPerSector & (1 << i))
+                {
+                  DrvParms->BytesPerSector = 1 << i;
+                  break;
+                }
+            }
+        }
     }
   DPRINT("BytesPerSector %d\n", DrvParms->BytesPerSector);
 
