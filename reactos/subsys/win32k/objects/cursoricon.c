@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.50 2004/02/27 10:08:21 weiden Exp $ */
+/* $Id: cursoricon.c,v 1.51 2004/03/15 20:21:51 navaraf Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -146,7 +146,8 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       {
          /* Remove the cursor if it was displayed */
          IntLockGDIDriver(SurfGDI);
-         SurfGDI->MovePointer(SurfObj, -1, -1, &PointerRect);
+         if (SurfGDI->MovePointer != NULL)
+           SurfGDI->MovePointer(SurfObj, -1, -1, &PointerRect);
          IntUnLockGDIDriver(SurfGDI);
          SetPointerRect(CurInfo, &PointerRect);
       }
@@ -219,15 +220,22 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor,
       CurInfo->CurrentCursorObject = NULL;
     }
     
-    IntLockGDIDriver(SurfGDI);
-    SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, soMask, soColor, XlateObj,
-                                                      NewCursor->IconInfo.xHotspot,
-                                                      NewCursor->IconInfo.yHotspot,
-                                                      CurInfo->x, 
-                                                      CurInfo->y, 
-                                                      &PointerRect,
-                                                      SPS_CHANGE);
-    IntUnLockGDIDriver(SurfGDI);
+    if (SurfGDI->SetPointerShape != NULL)
+    {
+      IntLockGDIDriver(SurfGDI);
+      SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, soMask, soColor, XlateObj,
+                                                        NewCursor->IconInfo.xHotspot,
+                                                        NewCursor->IconInfo.yHotspot,
+                                                        CurInfo->x, 
+                                                        CurInfo->y, 
+                                                        &PointerRect,
+                                                        SPS_CHANGE);
+      IntUnLockGDIDriver(SurfGDI);
+    }
+    else
+    {
+      SurfGDI->PointerStatus = SPS_DECLINE;
+    }
 
     if(SurfGDI->PointerStatus == SPS_DECLINE)
     {

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.63 2004/03/05 09:02:41 hbirr Exp $
+/* $Id: mouse.c,v 1.64 2004/03/15 20:21:50 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -282,7 +282,8 @@ MouseMoveCursor(LONG X, LONG Y)
       {
         ExAcquireFastMutex(&CurInfo->CursorMutex);
         IntLockGDIDriver(SurfGDI);
-        SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
+        if (SurfGDI->MovePointer != NULL)
+          SurfGDI->MovePointer(SurfObj, CurInfo->x, CurInfo->y, &PointerRect);
         IntUnLockGDIDriver(SurfGDI);
         SetPointerRect(CurInfo, &PointerRect);
         ExReleaseFastMutex(&CurInfo->CursorMutex);
@@ -849,14 +850,6 @@ EngMovePointer(
    IN RECTL *prcl)
 {
    GDIDEVICE *ppdev = (GDIDEVICE *)pso->hdev;
-   PSURFGDI SurfGDI = AccessInternalObjectFromUserObject(pso);
-
-   /*
-    * Prevent GDI from trying to remve the mouse cursor,
-    * because it would cause unexpected reentrancy effects.
-    */
-
-   SurfGDI->PointerStatus = SPS_ACCEPT_NOEXCLUDE;
 
    IntHideMousePointer(ppdev, pso);
    ppdev->PointerAttributes.Column = x - ppdev->PointerHotSpot.x;
@@ -873,8 +866,6 @@ EngMovePointer(
       prcl->right = prcl->left + ppdev->PointerAttributes.Width;
       prcl->bottom = prcl->top + ppdev->PointerAttributes.Height;
    }
-
-   SurfGDI->PointerStatus = SPS_ACCEPT_EXCLUDE;
 }
 
 /* EOF */
