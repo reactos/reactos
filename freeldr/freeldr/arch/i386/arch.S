@@ -155,6 +155,15 @@ inrmode:
 	movw	%ax,%fs
 	movw	%ax,%gs
 	movw	%ax,%ss
+
+	/* Clear out the high 16-bits of ESP */
+	/* This is needed because I have a stupid */
+	/* MS-Win98 boot disk that hangs if there is */
+	/* anything other than 0x0000 in the high */
+	/* 16-bits of ESP. Even though real-mode */
+	/* code should only use SP and not ESP. */
+	xorl	%esp,%esp
+
 	movw	stack16,%sp
 
 	/* Put the return address back onto the stack */
