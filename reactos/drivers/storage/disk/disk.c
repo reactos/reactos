@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: disk.c,v 1.20 2002/12/15 14:34:06 ekohl Exp $
+/* $Id: disk.c,v 1.21 2003/01/30 22:09:15 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -979,13 +979,19 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
   Srb->TargetId = DeviceExtension->TargetId;
   Srb->Lun = DeviceExtension->Lun;
 
-
-  /* FIXME: Flush write cache */
-
+  /* Flush write cache */
+  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+  Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
+  Srb->CdbLength = 10;
+  Srb->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
+  ScsiClassSendSrbSynchronous(DeviceObject,
+			      Srb,
+			      NULL,
+			      0,
+			      TRUE);
 
   /* Get current stack location */
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-
 
   /* FIXME: Unlock removable media upon shutdown */
 

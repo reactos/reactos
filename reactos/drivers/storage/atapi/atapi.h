@@ -61,15 +61,21 @@ extern "C" {
 #define    IDE_SR_DRQ               0x08
 #define    IDE_SR_ERR               0x01
 #define  IDE_REG_COMMAND          0x0007
+
+/* IDE/ATA commands */
 #define    IDE_CMD_RESET            0x08
 #define    IDE_CMD_READ             0x20
 #define    IDE_CMD_READ_RETRY       0x21
 #define    IDE_CMD_WRITE            0x30
 #define    IDE_CMD_WRITE_RETRY      0x31
+#define    IDE_CMD_PACKET           0xA0
 #define    IDE_CMD_READ_MULTIPLE    0xC4
-#define	   IDE_CMD_WRITE_MULTIPLE   0xC5
+#define    IDE_CMD_WRITE_MULTIPLE   0xC5
+#define    IDE_CMD_FLUSH_CACHE      0xE7
+#define    IDE_CMD_FLUSH_CACHE_EXT  0xEA
 #define    IDE_CMD_IDENT_ATA_DRV    0xEC
 #define    IDE_CMD_IDENT_ATAPI_DRV  0xA1
+
 //
 //  Access macros for command registers
 //  Each macro takes an address of the command port block, and data

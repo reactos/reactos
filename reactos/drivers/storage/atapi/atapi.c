@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.36 2003/01/28 17:34:20 hbirr Exp $
+/* $Id: atapi.c,v 1.37 2003/01/30 22:08:15 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -233,6 +233,9 @@ static ULONG
 AtapiReadWrite(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	       IN PSCSI_REQUEST_BLOCK Srb);
 
+static ULONG
+AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		PSCSI_REQUEST_BLOCK Srb);
 
 static UCHAR
 AtapiErrorToScsi(PVOID DeviceExtension,
@@ -491,9 +494,9 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
      SlotNumber.u.bits.DeviceNumber = DeviceNumber;
      for (FunctionNumber = StartFunctionNumber; FunctionNumber < PCI_MAX_FUNCTION; FunctionNumber++)
      {
-        SlotNumber.u.bits.FunctionNumber = FunctionNumber;
+	SlotNumber.u.bits.FunctionNumber = FunctionNumber;
 	ChannelFound = FALSE;
-        DeviceFound = FALSE;
+	DeviceFound = FALSE;
 
         DataSize = ScsiPortGetBusData(DeviceExtension,
 				      PCIConfiguration,
@@ -514,7 +517,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 	}
 	  
 	DPRINT("%x %x\n", PciConfig.BaseClass, PciConfig.SubClass);
-        if (PciConfig.BaseClass == 0x01 &&
+	if (PciConfig.BaseClass == 0x01 &&
 	    PciConfig.SubClass == 0x01) // &&
 //	    (PciConfig.ProgIf & 0x05) == 0)
 	{
@@ -906,7 +909,7 @@ AtapiInterrupt(IN PVOID DeviceExtension)
         return(FALSE);
      }
   }
-  
+
   Srb = DevExt->CurrentSrb;
   DPRINT("Srb: %p\n", Srb);
 
@@ -1755,7 +1758,7 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteCylinderLow(DeviceExtension->CommandPortBase, ByteCountLow);
 
   /* Issue command to drive */
-  IDEWriteCommand(DeviceExtension->CommandPortBase, 0xA0); /* Packet command */
+  IDEWriteCommand(DeviceExtension->CommandPortBase, IDE_CMD_PACKET);
 
   /* Wait for DRQ to assert */
   for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
@@ -1813,6 +1816,11 @@ AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
       case SCSIOP_WRITE:
 	SrbStatus = AtapiReadWrite(DeviceExtension,
 				   Srb);
+	break;
+
+      case SCSIOP_SYNCHRONIZE_CACHE:
+	SrbStatus = AtapiFlushCache(DeviceExtension,
+				    Srb);
 	break;
 
       case SCSIOP_MODE_SENSE:
@@ -2132,24 +2140,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       DPRINT ("Drive is BUSY for too long\n");
       return(SRB_STATUS_BUSY);
-#if 0
-      if (++ControllerExtension->Retries > IDE_MAX_CMD_RETRIES)
-        {
-          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
-          Irp = ControllerExtension->CurrentIrp;
-          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-          Irp->IoStatus.Information = 0;
-
-          return FALSE;
-        }
-      else
-        {
-          DPRINT ("Beginning drive reset sequence\n");
-          IDEBeginControllerReset(ControllerExtension);
-
-          return TRUE;
-        }
-#endif
     }
 
   /*  Select the desired drive  */
@@ -2173,24 +2163,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
     {
       DPRINT("Drive is BUSY for too long after drive select\n");
       return(SRB_STATUS_BUSY);
-#if 0
-      if (ControllerExtension->Retries++ > IDE_MAX_CMD_RETRIES)
-	{
-          DbgPrint ("Max Retries on Drive reset reached, returning failure\n");
-          Irp = ControllerExtension->CurrentIrp;
-          Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-          Irp->IoStatus.Information = 0;
-
-          return FALSE;
-	}
-      else
-        {
-          DPRINT("Beginning drive reset sequence\n");
-          IDEBeginControllerReset(ControllerExtension);
-
-          return TRUE;
-        }
-#endif
     }
 #endif
 
@@ -2225,22 +2197,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	{
 	  DPRINT1("Drive is BUSY for too long after sending write command\n");
 	  return(SRB_STATUS_BUSY);
-#if 0
-          if (DeviceExtension->Retries++ > IDE_MAX_CMD_RETRIES)
-            {
-              Irp = ControllerExtension->CurrentIrp;
-              Irp->IoStatus.Status = STATUS_DISK_OPERATION_FAILED;
-              Irp->IoStatus.Information = 0;
-
-              return FALSE;
-            }
-          else
-            {
-              IDEBeginControllerReset(ControllerExtension);
-
-              return TRUE;
-            }
-#endif
 	}
 
       /* Update DeviceExtension data */
@@ -2272,6 +2228,94 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DeviceExtension->ExpectingInterrupt = TRUE;
 
   DPRINT("AtapiReadWrite() done!\n");
+
+  /* Wait for interrupt. */
+  return(SRB_STATUS_PENDING);
+}
+
+
+static ULONG
+AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		PSCSI_REQUEST_BLOCK Srb)
+{
+  ULONG Retries;
+  UCHAR Status;
+
+  DPRINT1("AtapiFlushCache() called!\n");
+
+  if (Srb->PathId != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_PATH_ID;
+      return(SRB_STATUS_INVALID_PATH_ID);
+    }
+
+  if (Srb->TargetId > 1)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_TARGET_ID;
+      return(SRB_STATUS_INVALID_TARGET_ID);
+    }
+
+  if (Srb->Lun != 0)
+    {
+      Srb->SrbStatus = SRB_STATUS_INVALID_LUN;
+      return(SRB_STATUS_INVALID_LUN);
+    }
+
+  if (DeviceExtension->DevicePresent[Srb->TargetId] == FALSE)
+    {
+      Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
+      return(SRB_STATUS_NO_DEVICE);
+    }
+
+  DPRINT1("SCSIOP_SYNCRONIZE_CACHE: TargetId: %lu\n",
+	 Srb->TargetId);
+
+  /* Wait for BUSY to clear */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          break;
+        }
+      ScsiPortStallExecution(10);
+    }
+  DPRINT1("Status=%02x\n", Status);
+  DPRINT1("Waited %ld usecs for busy to clear\n", Retries * 10);
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT1("Drive is BUSY for too long\n");
+      return(SRB_STATUS_BUSY);
+    }
+
+  /* Select the desired drive */
+  IDEWriteDriveHead(DeviceExtension->CommandPortBase,
+		    IDE_DH_FIXED | (Srb->TargetId ? IDE_DH_DRV1 : 0));
+  ScsiPortStallExecution(10);
+
+  /* Issue command to drive */
+  IDEWriteCommand(DeviceExtension->CommandPortBase, IDE_CMD_FLUSH_CACHE);
+
+  /* Wait for controller ready */
+  for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
+    {
+      BYTE  Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
+	{
+	  break;
+	}
+      KeStallExecutionProcessor(10);
+    }
+  if (Retries >= IDE_MAX_WRITE_RETRIES)
+    {
+      DPRINT1("Drive is BUSY for too long after sending write command\n");
+      return(SRB_STATUS_BUSY);
+    }
+
+  /* Indicate expecting an interrupt. */
+  DeviceExtension->ExpectingInterrupt = TRUE;
+
+  DPRINT1("AtapiFlushCache() done!\n");
 
   /* Wait for interrupt. */
   return(SRB_STATUS_PENDING);
