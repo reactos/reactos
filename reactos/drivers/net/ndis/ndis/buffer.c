@@ -52,7 +52,6 @@ __inline ULONG SkipToOffset(
     return Offset;
 }
 
-
 UINT CopyBufferToBufferChain(
     PNDIS_BUFFER DstBuffer,
     UINT DstOffset,
@@ -355,6 +354,8 @@ NdisAllocateBuffer(
         "VirtualAddress (0x%X)  Length (%d)\n",
         Status, Buffer, PoolHandle, VirtualAddress, Length));
 
+    if(!VirtualAddress && !Length) return;
+
     KeAcquireSpinLock(&Pool->SpinLock, &OldIrql);
 
     if (Pool->FreeList) {
@@ -370,13 +371,13 @@ NdisAllocateBuffer(
         Temp->Mdl.MdlFlags      |= (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
         Temp->Mdl.MappedSystemVa = VirtualAddress;
 #else
-	    Temp->Mdl.Next = (PMDL)NULL;
-	    Temp->Mdl.Size = (CSHORT)(sizeof(MDL) +
-            (ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length) * sizeof(ULONG)));
-	    Temp->Mdl.MdlFlags   = (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
-;	    Temp->Mdl.StartVa    = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
-	    Temp->Mdl.ByteOffset = (ULONG_PTR)(VirtualAddress - PAGE_ROUND_DOWN(VirtualAddress));
-	    Temp->Mdl.ByteCount  = Length;
+	Temp->Mdl.Next = (PMDL)NULL;
+	Temp->Mdl.Size = (CSHORT)(sizeof(MDL) +
+				  (ADDRESS_AND_SIZE_TO_SPAN_PAGES(VirtualAddress, Length) * sizeof(ULONG)));
+	Temp->Mdl.MdlFlags   = (MDL_SOURCE_IS_NONPAGED_POOL | MDL_ALLOCATED_FIXED_SIZE);
+	;	    Temp->Mdl.StartVa    = (PVOID)PAGE_ROUND_DOWN(VirtualAddress);
+	Temp->Mdl.ByteOffset = (ULONG_PTR)(VirtualAddress - PAGE_ROUND_DOWN(VirtualAddress));
+	Temp->Mdl.ByteCount  = Length;
         Temp->Mdl.MappedSystemVa = VirtualAddress;
 #if 0
 	    //Temp->Mdl.Process    = PsGetCurrentProcess();
@@ -391,6 +392,7 @@ NdisAllocateBuffer(
         *Status = NDIS_STATUS_SUCCESS;
     } else {
         KeReleaseSpinLock(&Pool->SpinLock, OldIrql);
+	ASSERT(FALSE);
         *Status = NDIS_STATUS_FAILURE;
     }
 }
@@ -850,8 +852,8 @@ NdisFreeBuffer(
     Pool = Temp->BufferPool;
 
     KeAcquireSpinLock(&Pool->SpinLock, &OldIrql);
-    Buffer->Next   = (PMDL)Pool->FreeList;
-    Pool->FreeList = (PNETWORK_HEADER)Buffer;
+    Temp->Next     = (PNETWORK_HEADER)Pool->FreeList;
+    Pool->FreeList = (PNETWORK_HEADER)Temp;
     KeReleaseSpinLock(&Pool->SpinLock, OldIrql);
 }
 
