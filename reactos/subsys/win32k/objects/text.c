@@ -74,7 +74,7 @@ W32kAddFontResource(LPCWSTR  Filename)
 
   if (!NT_SUCCESS(Status))
   {
-    DbgPrint("Could not open module file: %wZ\n", Filename);
+    DbgPrint("Could not open module file: %S\n", Filename);
     return 0;
   }
 
