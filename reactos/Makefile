@@ -4,15 +4,17 @@ ifeq ($(HOST),mingw32-linux)
 	host_gcc = gcc
 	host_gpp = g++
 	nmkdir = mkdir -p
+	rm = rm
 else # mingw32-windows
 	EXEPOSTFIX = .exe
 	SEP = \$(EMPTY_VAR)
 	host_gcc = gcc
 	host_gpp = g++
 	nmkdir = mkdir
+	rm = del /f /q
 endif
 
-default: Makefile.auto
+all: Makefile.auto
 
 ifneq ($(ROS_INTERMEDIATE),)
 $(ROS_INTERMEDIATE)tools: $(ROS_INTERMEDIATE)
@@ -46,3 +48,6 @@ include$(SEP)reactos$(SEP)bugcodes.h ntoskrnl$(SEP)bugcodes.rc: $(WMC_TARGET) nt
 
 include$(SEP)reactos$(SEP)errcodes.h lib$(SEP)kernel32$(SEP)errcodes.rc: $(WMC_TARGET) lib$(SEP)kernel32$(SEP)kernel32.mc
 	$(WMC_TARGET) -H include$(SEP)reactos$(SEP)errcodes.h -o lib$(SEP)kernel32$(SEP)errcodes.rc lib$(SEP)kernel32$(SEP)kernel32.mc
+
+clean::
+	-@$(rm) Makefile.auto $(PREAUTO)
