@@ -29,14 +29,10 @@ DlgMainProc(
 )
 {
   TCHAR szString[256];
-  HWND hPlacementCombo;
 
   switch(uMsg)
   {
     case WM_INITDIALOG:
-      hPlacementCombo = GetDlgItem(hwndDlg, IDC_LICENSE);
-      LoadString(hApplet, IDS_REACTOS, szString, sizeof(szString) / sizeof(TCHAR));
-      SendMessage(hPlacementCombo, CB_INSERTSTRING, 0, (LPARAM)szString);
       break;
 
     case WM_COMMAND:
@@ -69,16 +65,6 @@ DlgMainProc(
       }
       break;
     }
-
-
-
-
-
-
-
-
-
-
     case WM_CLOSE:
     {
       EndDialog(hwndDlg, IDC_CANCEL);
