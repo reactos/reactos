@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.84 2004/10/04 10:16:59 chorns Exp $
+# $Id: helper.mk,v 1.85 2004/10/04 19:41:28 chorns Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -996,7 +996,7 @@ endif
 
 clean_regtests:
 	$(MAKE) -C tests TARGET_REGTESTS=no clean
-	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/Makefile.tests
+	$(RM) ./tests/_rtstub.c ./tests/_regtests.c ./tests/_hooks.c ./tests/_stubs.S ./tests/Makefile.tests
 
 .PHONY: all depends implib clean install dist bootcd depends gen_regtests clean_regtests
 

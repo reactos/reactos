@@ -695,8 +695,15 @@ create_stubs_and_hooks(
 	  stub_index++)
   	{
   		/*
+  		 * Remove, if present, the trailing LF.
+  		 */
+  		if ((s = (char *) strchr(line,'\n')) != NULL)
+  		  {
+  			  *s = '\0';
+  	    }
+
+  		/*
   		 * Remove, if present, the trailing CR.
-  		 * (os specific?)
   		 */
   		if ((s = (char *) strchr(line,'\r')) != NULL)
   		  {
