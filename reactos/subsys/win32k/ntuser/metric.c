@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: metric.c,v 1.13 2003/09/08 15:08:56 weiden Exp $
+/* $Id: metric.c,v 1.14 2003/09/08 18:50:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -186,7 +186,7 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYVSCROLL:
       return(16);
     case SM_CYCAPTION:
-      return(18);
+      return(19);
     case SM_CYKANJIWINDOW:
       return 0;
     case SM_CYMENU:

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: scrollbar.c,v 1.12 2003/09/08 15:08:56 weiden Exp $
+/* $Id: scrollbar.c,v 1.13 2003/09/08 18:50:00 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -182,14 +182,11 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
       {
         ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CXHTHUMB);
         cxy -= (2 * xThumb);
-        if(cxy > ThumbBox)
+        if(cxy >= ThumbBox)
         {
           if(psi->nPage)
           {
-            DbgPrint("cxy = %d, max = %d, min = %d, page = %d\n", cxy, (UINT)psi->nMax, (UINT)psi->nMin, psi->nPage);
-            //ThumbBox = ((UINT)cxy / ((UINT)psi->nMax - (UINT)psi->nMin)) * psi->nPage;
-            ThumbBox = IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1);
-            DbgPrint("ThumbBox = %d\n", ThumbBox);
+            ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
           }
           psbi->xyThumbTop = xThumb;
           psbi->xyThumbBottom = xThumb + ThumbBox;
@@ -215,12 +212,11 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
       {
         ThumbBox = psi->nPage ? MINTRACKTHUMB : NtUserGetSystemMetrics(SM_CYVTHUMB);
         cxy -= (2 * yThumb);
-        if(cxy > ThumbBox)
+        if(cxy >= ThumbBox)
         {
           if(psi->nPage)
           {
-            //ThumbBox = ((UINT)cxy / ((UINT)psi->nMax - (UINT)psi->nMin)) * psi->nPage;
-            ThumbBox = IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1);
+            ThumbBox = max(IntMulDiv(cxy, psi->nPage, psi->nMax - psi->nMin + 1), ThumbBox);
           }
           psbi->xyThumbTop = yThumb;
           psbi->xyThumbBottom = yThumb + ThumbBox;

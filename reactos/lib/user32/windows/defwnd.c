@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.83 2003/09/08 09:56:57 weiden Exp $
+/* $Id: defwnd.c,v 1.84 2003/09/08 18:50:00 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -413,7 +413,7 @@ DrawCaption(
     NONCLIENTMETRICSW nclm;
     BOOL result = FALSE;
     RECT r = *lprc;
-    UINT VCenter = 0, Padding = 0;
+    UINT VCenter = 0, Padding = 0, Height;
     WCHAR buffer[256];
     HFONT hFont = NULL;
     HFONT hOldFont = NULL;
@@ -455,14 +455,17 @@ DrawCaption(
         if (! OldBrush) goto cleanup;
         if (! PatBlt(MemDC, 0, 0, lprc->right - lprc->left, lprc->bottom - lprc->top, PATCOPY )) goto cleanup;
     }
+    
+    /* Windows behaves like this */
+    Height = GetSystemMetrics(SM_CYCAPTION) - 1;
 
     VCenter = (lprc->bottom - lprc->top) / 2;
-    Padding = VCenter - (GetSystemMetrics(SM_CYCAPTION) / 2);
+    Padding = VCenter - (Height / 2);
 
     r.left = Padding;
     r.right = r.left + (lprc->right - lprc->left);
     r.top = Padding;
-    r.bottom = r.top + (GetSystemMetrics(SM_CYCAPTION) / 2);
+    r.bottom = r.top + (Height / 2);
 
     if (uFlags & DC_ICON)
     {
@@ -554,6 +557,8 @@ UserDrawCaptionNC (
 	DWORD style,
 	BOOL active )
 {
+  POINT OldPos;
+  HPEN lPen, oPen;
   RECT r = *rect;
   UINT capflags = 0;
 
@@ -571,10 +576,19 @@ UserDrawCaptionNC (
     r.left += GetSystemMetrics(SM_CXFRAME);
     r.top += GetSystemMetrics(SM_CYFRAME);
     r.right -= GetSystemMetrics(SM_CXFRAME);
-    r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION);
+    r.bottom = r.top + GetSystemMetrics(SM_CYCAPTION) - 1;
 //     GetSystemMetrics(SM_CYCAPTION)) - 1, PATCOPY );
 
     DrawCaption(hWnd, hDC, &r, capflags);
+    
+  /* draw line below caption */
+  lPen = GetSysColorPen(COLOR_MENU);
+  oPen = SelectObject(hDC, lPen);
+  MoveToEx(hDC, r.left, r.bottom, &OldPos);
+  LineTo(hDC, r.right, r.bottom);
+  MoveToEx(hDC, OldPos.x, OldPos.y, NULL);
+  SelectObject(hDC, oPen);
+  r.bottom++;
   
   if (style & WS_SYSMENU)
   {
