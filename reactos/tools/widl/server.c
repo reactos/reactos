@@ -255,6 +255,7 @@ unsigned int get_required_buffer_size(type_t *type)
 
         default:
             error("Unknown/unsupported type: %s\n", type->name);
+            return 0;
     }
 }
 

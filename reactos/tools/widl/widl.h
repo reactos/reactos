@@ -60,4 +60,8 @@ extern int char_number;
 
 extern FILE* header;
 
+extern void write_proxies(ifref_t *ifaces);
+extern void write_client(ifref_t *ifaces);
+extern void write_server(ifref_t *ifaces);
+
 #endif

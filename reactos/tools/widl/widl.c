@@ -36,7 +36,6 @@
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"
-#include "proxy.h"
 #include "wine/wpp.h"
 
 /* future options to reserve characters for: */

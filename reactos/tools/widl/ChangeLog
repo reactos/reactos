@@ -1,5 +1,21 @@
 ChangeLog
+2005-02-27 sedwards
 
+  tools/widl/y.tab.c
+  tools/widl/parser.y
+  tools/widl/widl.c
+  tools/widl/widl.h
+  tools/widl/server.c
+  tools/widl/typelib.c
+
+Merge in Winehq changes to reduce noise.
+  
+  tools/widl/server.h
+  tools/widl/client.h
+  tools/widl/proxy.h  
+
+Deleted unneeded headers.  
+    
 2005-02-26 ekohl
   tools/widl/server.c
 
