@@ -1,4 +1,4 @@
-/* $Id: ppb.c,v 1.7 2000/06/29 23:35:31 dwelch Exp $
+/* $Id: ppb.c,v 1.7.2.1 2000/07/22 11:44:24 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -31,13 +31,15 @@
 
 VOID STDCALL RtlAcquirePebLock(VOID)
 {
-
+	PPEB Peb = NtCurrentPeb ();
+	Peb->FastPebLockRoutine (Peb->FastPebLock);
 }
 
 
 VOID STDCALL RtlReleasePebLock(VOID)
 {
-
+	PPEB Peb = NtCurrentPeb ();
+	Peb->FastPebUnlockRoutine (Peb->FastPebLock);
 }
 
 static

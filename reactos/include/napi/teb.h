@@ -77,6 +77,8 @@ typedef struct _PEB_LDR_DATA
    LIST_ENTRY InInitializationOrderModuleList;
 } PEB_LDR_DATA, *PPEB_LDR_DATA;
 
+typedef VOID STDCALL (*PPEBLOCKROUTINE)(PVOID);
+
 typedef struct _PEB
 {
    UCHAR InheritedAddressSpace;                     // 00h
@@ -90,8 +92,8 @@ typedef struct _PEB
    PVOID SubSystemData;                             // 14h
    PVOID ProcessHeap;                               // 18h
    PVOID FastPebLock;                               // 1Ch
-   PVOID FastPebLockRoutine;                        // 20h
-   PVOID FastPebUnlockRoutine;                      // 24h
+   PPEBLOCKROUTINE FastPebLockRoutine;              // 20h
+   PPEBLOCKROUTINE FastPebUnlockRoutine;            // 24h
    ULONG EnvironmentUpdateCount;                    // 28h
    PVOID* KernelCallbackTable;                      // 2Ch
    PVOID EventLogSection;                           // 30h
