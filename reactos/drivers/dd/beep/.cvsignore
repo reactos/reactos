@@ -5,3 +5,4 @@ beep.coff
 *.o
 *.sym
 *.sys
+*.map

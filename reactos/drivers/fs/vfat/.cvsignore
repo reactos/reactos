@@ -6,3 +6,4 @@ vfatfs.coff
 *.o
 *.sys
 *.sym
+*.map

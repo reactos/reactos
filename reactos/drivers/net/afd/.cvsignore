@@ -2,3 +2,4 @@
 *.sym
 *.sys
 *.o
+*.map

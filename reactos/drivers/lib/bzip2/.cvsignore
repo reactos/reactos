@@ -3,3 +3,4 @@ unbzip2.nostrip.sys
 unbzip2.sym
 *.d
 *.o
+*.map

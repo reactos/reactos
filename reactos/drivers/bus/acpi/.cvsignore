@@ -4,3 +4,4 @@ objects
 *.o
 *.sym
 *.sys
+*.map

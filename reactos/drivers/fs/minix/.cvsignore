@@ -1,2 +1,2 @@
 minix.coff
-minixfs.sys.unstripped
+minixfs.sys.unstripped*.map

@@ -8,3 +8,4 @@ temp.exp
 *.d
 *.o
 *.sym
+*.map

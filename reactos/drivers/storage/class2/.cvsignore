@@ -5,3 +5,4 @@ class2.coff
 *.o
 *.sys
 *.sym
+*.map

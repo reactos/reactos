@@ -5,3 +5,4 @@ null.coff
 *.sym
 *.o
 *.sys
+*.map

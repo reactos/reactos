@@ -7,3 +7,4 @@ isapnp.sys.unstripped
 *.o
 *.sym
 *.sys
+*.map

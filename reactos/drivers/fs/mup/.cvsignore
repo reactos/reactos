@@ -5,3 +5,4 @@ mup.coff
 *.o
 *.sys
 *.sym
+*.map

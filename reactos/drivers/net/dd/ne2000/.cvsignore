@@ -5,3 +5,4 @@ ne2000.coff
 *.sym
 *.o
 *.sys
+*.map

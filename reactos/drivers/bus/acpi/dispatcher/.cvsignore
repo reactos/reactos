@@ -3,3 +3,4 @@ objects
 *.d
 *.o
 *.sym
+*.map

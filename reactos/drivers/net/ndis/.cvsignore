@@ -4,3 +4,4 @@ ndis.coff
 *.o
 *.sym
 *.sys
+*.map

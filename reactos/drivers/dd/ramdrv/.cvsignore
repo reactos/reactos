@@ -5,3 +5,4 @@ ramdrv.coff
 ramdrv.sys
 ramdrv.sys.unstripped
 
+*.map

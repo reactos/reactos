@@ -3,3 +3,4 @@ junk.tmp
 temp.exp
 test.coff
 test.sys.unstripped
+*.map

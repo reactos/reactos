@@ -5,3 +5,4 @@ blue.coff
 *.o
 *.sym
 *.sys
+*.map

@@ -5,3 +5,4 @@ disk.coff
 *.sym
 *.sys
 *.o
+*.map

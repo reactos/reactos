@@ -5,3 +5,4 @@ ide.coff
 *.sys
 *.sym
 *.o
+*.map

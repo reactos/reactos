@@ -6,3 +6,4 @@ fs_rec.coff
 *.o
 *.sym
 *.sys
+*.map

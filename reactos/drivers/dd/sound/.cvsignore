@@ -5,3 +5,4 @@ sound.coff
 sound.sys
 sound.sys.unstripped
 
+*.map

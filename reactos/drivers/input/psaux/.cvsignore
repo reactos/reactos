@@ -2,3 +2,4 @@ psaux.coff
 *.o
 *.sys
 *.sym
+*.map

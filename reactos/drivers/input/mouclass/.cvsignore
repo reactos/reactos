@@ -2,3 +2,4 @@ mouclass.coff
 *.o
 *.sym
 *.sys
+*.map

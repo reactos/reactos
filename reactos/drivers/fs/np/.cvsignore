@@ -2,6 +2,8 @@ base.tmp
 junk.tmp
 temp.exp
 npfs.coff
+*.d
 *.o
 *.sym
 *.sys
+*.map

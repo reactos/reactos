@@ -5,3 +5,4 @@ vgamp.coff
 *.o
 *.sym
 *.sys
+*.map

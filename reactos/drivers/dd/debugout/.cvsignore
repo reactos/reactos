@@ -5,3 +5,4 @@ debugout.coff
 *.sym
 *.o
 *.sys
+*.map

@@ -6,3 +6,4 @@ serial.coff
 serial.sys
 serial.sym
 serial.nostrip.sys
+*.map

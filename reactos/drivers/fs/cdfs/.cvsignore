@@ -6,3 +6,4 @@ cdfs.coff
 *.sys
 *.o
 *.sym
+*.map
