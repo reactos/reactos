@@ -362,7 +362,8 @@ PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
 			/* 
 			 * If the cancel routine is gone, we're already canceled,
 			 * and are spinning on the queue lock in our own cancel
-			 * routine.  Move on to the next candidate.
+			 * routine.  Move on to the next candidate.  It'll get
+			 * removed by the cance routine.
 			 */
 			if(!IoSetCancelRoutine(Irp, NULL))
 				continue;
@@ -374,6 +375,8 @@ PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,
 
 			if(Context && Context->Type == IO_TYPE_CSQ_IRP_CONTEXT)
 				Context->Irp = NULL;
+			
+			break;
 		}
 
 	Csq->CsqReleaseLock(Csq, Irql);
