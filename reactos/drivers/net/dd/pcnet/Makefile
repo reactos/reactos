@@ -8,7 +8,7 @@ TARGET_NAME = pcnet
 #
 TARGET_CFLAGS = -I. -DDBG=1 -Wall -Werror -DNDIS40 -DANONYMOUSUNIONS 
 
-TARGET_OBJECTS = pcnet.o 
+TARGET_OBJECTS = pcnet.o requests.o
 TARGET_DDKLIBS = ndis.a
 include $(PATH_TO_TOP)/rules.mak
 include $(TOOLS_PATH)/helper.mk

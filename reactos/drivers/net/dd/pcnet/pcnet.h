@@ -44,6 +44,8 @@ typedef struct _ADAPTER
   PVOID PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
   ULONG CurrentReceiveDescriptorIndex;
+  ULONG CurrentPacketFilter;
+  ULONG CurrentLookaheadSize;
 
   /* initialization block */
   ULONG InitializationBlockLength;
@@ -71,6 +73,27 @@ typedef struct _ADAPTER
   PCHAR ReceiveBufferPtrPhys;
 
 } ADAPTER, *PADAPTER;
+
+/* forward declarations */
+NDIS_STATUS
+STDCALL
+MiniportQueryInformation(
+    IN NDIS_HANDLE MiniportAdapterContext,
+    IN NDIS_OID Oid,
+    IN PVOID InformationBuffer,
+    IN ULONG InformationBufferLength,
+    OUT PULONG BytesWritten,
+    OUT PULONG BytesNeeded);
+
+NDIS_STATUS
+STDCALL
+MiniportSetInformation(
+    IN NDIS_HANDLE MiniportAdapterContext,
+    IN NDIS_OID Oid,
+    IN PVOID InformationBuffer,
+    IN ULONG InformationBufferLength,
+    OUT PULONG BytesRead,
+    OUT PULONG BytesNeeded);
 
 /* operational constants */
 #define NUMBER_OF_BUFFERS     0x20

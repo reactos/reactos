@@ -38,23 +38,6 @@
 
 VOID
 STDCALL
-MiniportHalt(
-    IN NDIS_HANDLE MiniportAdapterContext)
-/*
- * FUNCTION: Stop the miniport and prepare for unload
- * ARGUMENTS:
- *     MiniportAdapterContext: context specified to NdisMSetAttributes
- * NOTES:
- *     - Called by NDIS at PASSIVE_LEVEL
- */
-{
-  /* XXX Implement me */
-  PCNET_DbgPrint(("Called\n"));
-}
-
-
-VOID
-STDCALL
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -83,13 +66,15 @@ MiniportHandleInterrupt(
     {
       if(Data & CSR0_ERR)
         {
+#if DBG
           if(ErrorHandled)
             {
               PCNET_DbgPrint(("ERROR HANDLED TWO TIMES\n"));
-              __asm__("int $3\n");
+              ASSERT(0);
             }
 
           ErrorHandled = TRUE;
+#endif
 
           PCNET_DbgPrint(("clearing an error\n"));
           NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_MERR|CSR0_BABL|CSR0_CERR|CSR0_MISS);
@@ -98,13 +83,15 @@ MiniportHandleInterrupt(
         }
       else if(Data & CSR0_IDON)
         {
+#if DBG
           if(IdonHandled)
             {
               PCNET_DbgPrint(("IDON HANDLED TWO TIMES\n"));
-              __asm__("int $3\n");
+              ASSERT(0);
             }
 
           IdonHandled = TRUE;
+#endif
 
           PCNET_DbgPrint(("clearing IDON\n"));
           NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_IDON);
@@ -113,13 +100,15 @@ MiniportHandleInterrupt(
         }
       else if(Data & CSR0_RINT)
         {
+#if DBG
           if(ReceiveHandled)
             {
               PCNET_DbgPrint(("RECEIVE HANDLED TWO TIMES\n"));
-              __asm__("int $3\n");
+              ASSERT(0);
             }
 
           ReceiveHandled = TRUE;
+#endif
 
           PCNET_DbgPrint(("receive interrupt - clearing\n"));
           NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_RINT);
@@ -172,7 +161,7 @@ MiniportHandleInterrupt(
       else
         {
           PCNET_DbgPrint(("UNHANDLED INTERRUPT\n"));
-          __asm__("int $3\n");
+          ASSERT(FALSE);
         }
 
       NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
@@ -551,6 +540,44 @@ MiFreeSharedMemory(
 
 
 VOID
+STDCALL
+MiniportHalt(
+    IN NDIS_HANDLE MiniportAdapterContext)
+/*
+ * FUNCTION: Stop the adapter and release any per-adapter resources
+ * ARGUMENTS:
+ *     MiniportAdapterContext: context specified to NdisMSetAttributes
+ * NOTES:
+ *     - Called by NDIS at PASSIVE_LEVEL
+ */
+{
+  PADAPTER Adapter = (PADAPTER)Adapter;
+
+  PCNET_DbgPrint(("Called\n"));
+  ASSERT(Adapter);
+
+  /* stop the chip */
+  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR0);
+  NdisRawWritePortUshort(Adapter->PortOffset + RDP, CSR0_STOP);
+
+  /* deregister the interrupt */
+  NdisMDeregisterInterrupt(&Adapter->InterruptObject);
+
+  /* deregister i/o port range */
+  NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, Adapter->PortOffset);
+
+  /* free shared memory */
+  MiFreeSharedMemory(Adapter);
+
+  /* free map registers */
+  NdisMFreeMapRegisters(Adapter->MiniportAdapterHandle);
+
+  /* free the adapter */
+  NdisFreeMemory(Adapter, 0, 0);
+}
+
+
+VOID
 MiInitChip(
     PADAPTER Adapter)
 /*
@@ -681,13 +708,6 @@ MiTestCard(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR6);
   NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
   PCNET_DbgPrint(("CSR6: 0x%x\n", Data));
-
-  /* finally, fire a test interrupt to test the ISR */
-  NdisRawWritePortUshort(Adapter->PortOffset + RAP, CSR4);
-  NdisRawReadPortUshort(Adapter->PortOffset + RDP, &Data);
-  Data |= CSR4_UINTCMD;
-  NdisRawWritePortUshort(Adapter->PortOffset + RDP, Data);
-  PCNET_DbgPrint(("just wrote 0x%x to CSR4 for test interrupt\n", Data));
 
   return TRUE;
 }
@@ -858,7 +878,7 @@ MiniportInitialize(
 
 #if DBG
   if(!MiTestCard(Adapter))
-    __asm__("int $3\n");
+    ASSERT(0);
 #endif
 
   PCNET_DbgPrint(("returning 0x%x\n", Status));
@@ -923,37 +943,6 @@ MiniportISR(
 
 NDIS_STATUS
 STDCALL
-MiniportQueryInformation(
-    IN NDIS_HANDLE MiniportAdapterContext,
-    IN NDIS_OID Oid,
-    IN PVOID InformationBuffer,
-    IN ULONG InformationBufferLength,
-    OUT PULONG BytesWritten,
-    OUT PULONG BytesNeeded)
-/*
- * FUNCTION: Query an OID from the driver
- * ARGUMENTS:
- *     MiniportAdapterContext: context originally passed to NdisMSetAttributes
- *     Oid: OID NDIS is querying
- *     InformationBuffer: pointer to buffer into which to write the results of the query
- *     InformationBufferLength: size in bytes of InformationBuffer
- *     BytesWritten: number of bytes written into InformationBuffer in response to the query
- *     BytesNeeded: number of bytes needed to answer the query
- * RETURNS:
- *     NDIS_STATUS_SUCCESS on all queries
- * NOTES:
- *     - Called by NDIS at PASSIVE_LEVEL
- *     - If InformationBufferLength is insufficient to store the results, return the amount
- *       needed in BytesNeeded and return NDIS_STATUS_INVALID_LENGTH
- */
-{
-  PCNET_DbgPrint(("Called\n"));
-  return NDIS_STATUS_SUCCESS;
-}
-
-
-NDIS_STATUS
-STDCALL
 MiniportReset(
     OUT PBOOLEAN AddressingReset,
     IN NDIS_HANDLE MiniportAdapterContext)
@@ -970,36 +959,10 @@ MiniportReset(
  */
 {
   PCNET_DbgPrint(("Called\n"));
-  return NDIS_STATUS_SUCCESS;
-}
 
-
-NDIS_STATUS
-STDCALL
-MiniportSetInformation(
-    IN NDIS_HANDLE MiniportAdapterContext,
-    IN NDIS_OID Oid,
-    IN PVOID InformationBuffer,
-    IN ULONG InformationBufferLength,
-    OUT PULONG BytesRead,
-    OUT PULONG BytesNeeded)
-/*
- * FUNCTION: Set a miniport variable (OID)
- * ARGUMENTS:
- *     MiniportAdapterContext: context originally passed into NdisMSetAttributes
- *     Oid: the variable being set
- *     InformationBuffer: the data to set the variable to
- *     InformationBufferLength: number of bytes in InformationBuffer
- *     BytesRead: number of bytes read by us out of the buffer
- *     BytesNeeded: number of bytes required to satisfy the request if InformationBufferLength
- *                  is insufficient
- * RETURNS:
- *     NDIS_STATUS_SUCCESS on all requests
- * NOTES:
- *     - Called by NDIS at PASSIVE_LEVEL
- */
-{
-  PCNET_DbgPrint(("Called\n"));
+  /* MiniportReset doesn't do anything at the moment... perhaps this should be fixed. */
+
+  *AddressingReset = FALSE;
   return NDIS_STATUS_SUCCESS;
 }
 
