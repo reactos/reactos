@@ -19,7 +19,7 @@
 /*
  * GDIOBJ.C - GDI object manipulation routines
  *
- * $Id: gdiobj.c,v 1.31 2003/08/01 20:54:03 royce Exp $
+ * $Id: gdiobj.c,v 1.32 2003/08/04 00:24:07 royce Exp $
  *
  */
 
@@ -267,7 +267,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 	  return  FALSE;
 	}
 
-	objectHeader = (PGDIOBJHDR) handleEntry->pObject;
+	objectHeader = handleEntry->pObject;
 	ASSERT(objectHeader);
 	DPRINT("FreeObj: locks: %x\n", objectHeader->dwCount );
 	if( !(Flag & GDIOBJFLAG_IGNORELOCK) ){
@@ -314,10 +314,8 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, WORD Magic, DWORD Flag)
 			bRet = IconCursor_InternalDelete( (PICONCURSOROBJ) Obj );
 			break;
 	}
-	handleEntry->hProcessId = 0;
 	ExFreePool (handleEntry->pObject);
-	handleEntry->pObject = 0;
-	handleEntry->wMagic = 0;
+	memset ( handleEntry, 0, sizeof(GDI_HANDLE_ENTRY) );
 
 	return  TRUE;
 }
@@ -555,8 +553,8 @@ VOID STDCALL
 W32kDumpGdiObjects( INT Process )
 {
 	DWORD i;
-  	PGDI_HANDLE_ENTRY handleEntry;
-  	PGDIOBJHDR  objectHeader;
+	PGDI_HANDLE_ENTRY handleEntry;
+	PGDIOBJHDR  objectHeader;
 
 	for( i=1; i < GDI_HANDLE_NUMBER; i++ ){
 		handleEntry = GDIOBJ_iGetHandleEntryForIndex ((WORD) i & 0xffff);
@@ -575,23 +573,34 @@ W32kDumpGdiObjects( INT Process )
 PGDIOBJ FASTCALL
 GDIOBJ_LockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
 {
-	PGDIOBJ rc;
-	PGDI_HANDLE_ENTRY handleEntry
-		= GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
-	if ( handleEntry->lockfile )
-	{
-      DbgPrint("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj );
-      DbgPrint("\tcalled from: %s:%i\n", file, line );
-	  DbgPrint("\tpreviously locked from: %s:%i\n", handleEntry->lockfile, handleEntry->lockline );
-	}
-	//DbgPrint("(%s:%i) GDIOBJ_LockObj(0x%x,0x%x)\n", file, line, hObj, Magic );
-	rc = GDIOBJ_LockObj(hObj,Magic);
-	if ( rc && !handleEntry->lockfile )
-	{
-		handleEntry->lockfile = file;
-		handleEntry->lockline = line;
-	}
-	return rc;
+  PGDIOBJ rc;
+  PGDI_HANDLE_ENTRY handleEntry
+    = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
+  if ( handleEntry == 0
+       || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+       || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
+           && handleEntry->hProcessId != PsGetCurrentProcessId ()
+	  )
+     )
+    {
+      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
+      DPRINT1("\tcalled from: %s:%i\n", file, line );
+      return  NULL;
+    }
+  if ( handleEntry->lockfile )
+    {
+      DPRINT1("Caution! GDIOBJ_LockObj trying to lock object (0x%x) second time\n", hObj );
+      DPRINT1("\tcalled from: %s:%i\n", file, line );
+      DPRINT1("\tpreviously locked from: %s:%i\n", handleEntry->lockfile, handleEntry->lockline );
+    }
+  //DbgPrint("(%s:%i) GDIOBJ_LockObj(0x%x,0x%x)\n", file, line, hObj, Magic );
+  rc = GDIOBJ_LockObj(hObj,Magic);
+  if ( rc && !handleEntry->lockfile )
+    {
+      handleEntry->lockfile = file;
+      handleEntry->lockline = line;
+    }
+  return rc;
 }
 #endif//GDIOBJ_LockObj
 
@@ -600,12 +609,23 @@ GDIOBJ_LockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
 BOOL FASTCALL
 GDIOBJ_UnlockObjDbg ( const char* file, int line, HGDIOBJ hObj, WORD Magic )
 {
-	PGDI_HANDLE_ENTRY handleEntry
-		= GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
-	//DbgPrint("(%s:%i) GDIOBJ_UnlockObj(0x%x,0x%x)\n", file, line, hObj, Magic );
-	handleEntry->lockfile = NULL;
-	handleEntry->lockline = 0;
-	return GDIOBJ_UnlockObj(hObj,Magic);
+  PGDI_HANDLE_ENTRY handleEntry
+    = GDIOBJ_iGetHandleEntryForIndex ( GDI_HANDLE2INDEX(hObj) );
+  if ( handleEntry == 0
+       || (handleEntry->wMagic != Magic && Magic != GO_MAGIC_DONTCARE )
+       || (handleEntry->hProcessId != (HANDLE)0xFFFFFFFF
+           && handleEntry->hProcessId != PsGetCurrentProcessId ()
+	  )
+     )
+    {
+      DPRINT1("GDIBOJ_UnlockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic );
+      DPRINT1("\tcalled from: %s:%i\n", file, line );
+      return  NULL;
+    }
+  //DbgPrint("(%s:%i) GDIOBJ_UnlockObj(0x%x,0x%x)\n", file, line, hObj, Magic );
+  handleEntry->lockfile = NULL;
+  handleEntry->lockline = 0;
+  return GDIOBJ_UnlockObj(hObj,Magic);
 }
 #endif//GDIOBJ_LockObj
 
@@ -635,7 +655,7 @@ GDIOBJ_LockObj( HGDIOBJ hObj, WORD Magic )
 	  )
      )
     {
-      DPRINT("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
+      DPRINT1("GDIBOJ_LockObj failed for %d, magic: %d, reqMagic\n",(WORD) hObj & 0xffff, handleEntry->wMagic, Magic);
       return  NULL;
     }
 
@@ -681,7 +701,7 @@ GDIOBJ_UnlockObj( HGDIOBJ hObj, WORD Magic )
 	)
      )
   {
-    DPRINT( "GDIOBJ_UnLockObj: failed\n");
+    DPRINT1( "GDIOBJ_UnLockObj: failed\n");
     return  FALSE;
   }
 
