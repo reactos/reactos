@@ -264,6 +264,8 @@ NTSTATUS IPStartup(
 NTSTATUS IPShutdown(
     VOID);
 
+
+
 #endif /* __IP_H */
 
 /* EOF */

@@ -54,6 +54,35 @@ PCHAR A2S(
 
 #endif /* DBG */
 
+ULONG IPv4NToHl( ULONG Address ) {
+    return 
+	((Address & 0xff) << 24) |
+	((Address & 0xff00) << 8) |
+	((Address >> 8) & 0xff00) |
+	((Address >> 24) & 0xff);
+}
+
+UINT AddrCountPrefixBits( PIP_ADDRESS Netmask ) {
+    UINT Prefix = 0;
+    if( Netmask->Type == IP_ADDRESS_V4 ) {
+	ULONG BitTest = 0x80000000;
+	
+	/* The mask has been read in network order.  Put it in host order
+	 * in order to scan it. */
+
+	ULONG TestMask = IPv4NToHl(Netmask->Address.IPv4Address);
+	
+	while( (BitTest & TestMask) == BitTest ) {
+	    Prefix++;
+	    BitTest >>= 1;
+	}
+	return Prefix;
+    } else {
+	TI_DbgPrint(DEBUG_DATALINK, ("Don't know address type %d\n", 
+				     Netmask->Type));
+	return 0;
+    }
+}
 
 VOID IPAddressFree(
     PVOID Object)

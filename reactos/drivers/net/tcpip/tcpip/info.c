@@ -201,6 +201,127 @@ TDI_STATUS IPTdiQueryInformationEx(
   return TDI_INVALID_PARAMETER;
 }
 
+TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
+				    UINT BufSize,
+				    PUINT BufferSize)
+{
+    UINT Count, Size, Temp;
+    KIRQL OldIrql;
+    PLIST_ENTRY CurrentIFEntry;
+
+    /* Count Adapters */
+    KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+    
+    CurrentIFEntry = InterfaceListHead.Flink;
+    Count = EntityCount;
+    
+    while( CurrentIFEntry != &InterfaceListHead ) {
+	Count++;
+	CurrentIFEntry = CurrentIFEntry->Flink;
+    }
+    
+    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+    
+    Size = Count * sizeof(TDIEntityID);
+    *BufferSize = Size;
+    
+    if (BufSize < Size)
+    {
+	/* The buffer is too small to contain requested data */
+	return TDI_BUFFER_TOO_SMALL;
+    }
+    
+    DbgPrint("About to copy %d TDIEntityIDs (%d bytes) to user\n",
+	     Count, Size);
+    
+    KeAcquireSpinLock(&EntityListLock, &OldIrql);
+    
+    /* Update entity list */
+    for( Temp = EntityCount; Temp < Count; Temp++ ) {
+	EntityList[Temp].tei_entity = IF_ENTITY;
+	EntityList[Temp].tei_instance = Temp - EntityCount;
+    }
+    EntityMax = Count;
+    
+    /* Return entity list */
+    Count = CopyBufferToBufferChain(Buffer, 0, (PUCHAR)EntityList, Size);
+    
+    KeReleaseSpinLock(&EntityListLock, OldIrql);
+    
+    *BufferSize = Size;
+
+    return TDI_SUCCESS;
+}
+
+TDI_STATUS InfoTdiQueryGetInterfaceMIB(TDIObjectID *ID,
+				       PNDIS_BUFFER Buffer,
+				       UINT BufSize,
+				       PUINT BufferSize) {
+    PIFENTRY OutData;
+    UINT ListedIfIndex, Count, Size;
+    PLIST_ENTRY CurrentADEEntry;
+    PADDRESS_ENTRY CurrentADE;
+    PLIST_ENTRY CurrentIFEntry;
+    PIP_INTERFACE CurrentIF;
+    PCHAR IFDescr;
+    KIRQL OldIrql;
+
+    OutData = ExAllocatePool( NonPagedPool, 
+			      sizeof(IFENTRY) + MAX_IFDESCR_LEN );
+
+    if( !OutData ) return STATUS_NO_MEMORY;
+
+    RtlZeroMemory( OutData,sizeof(IFENTRY) + MAX_IFDESCR_LEN );
+
+    KeAcquireSpinLock(&EntityListLock, &OldIrql);
+    ListedIfIndex = ID->toi_entity.tei_instance - EntityCount;
+    if( ListedIfIndex > EntityMax ) {
+	KeReleaseSpinLock(&EntityListLock,OldIrql);
+	return TDI_INVALID_REQUEST;
+    }
+    
+    CurrentIFEntry = InterfaceListHead.Flink;
+    
+    for( Count = 0; Count < ListedIfIndex; Count++ )
+	CurrentIFEntry = CurrentIFEntry->Flink;
+    
+    CurrentIF = CONTAINING_RECORD(CurrentIFEntry, IP_INTERFACE, ListEntry);
+
+    CurrentADEEntry = CurrentIF->ADEListHead.Flink;
+    if( CurrentADEEntry == &CurrentIF->ADEListHead ) {
+	KeReleaseSpinLock( &EntityListLock, OldIrql );
+	return TDI_INVALID_REQUEST;
+    }
+
+    CurrentADE = CONTAINING_RECORD(CurrentADEEntry, ADDRESS_ENTRY, ListEntry);
+    
+    OutData->Index = Count + 1; /* XXX - arty What goes here?? */
+    OutData->Type = CurrentADE->Type;
+    OutData->Mtu = CurrentIF->MTU;
+    OutData->Speed = 10000000; /* XXX - arty Not sure */
+    memcpy(OutData->PhysAddr,
+	   CurrentIF->Address,CurrentIF->AddressLength);
+    OutData->PhysAddrLen = CurrentIF->AddressLength;
+    OutData->AdminStatus = TRUE;
+    OutData->OperStatus = TRUE;
+    IFDescr = (PCHAR)&OutData[1];
+    strcpy(IFDescr,"ethernet adapter");
+    OutData->DescrLen = strlen(IFDescr);
+    IFDescr = IFDescr + strlen(IFDescr);
+    Size = IFDescr - (PCHAR)OutData;
+
+    KeReleaseSpinLock(&InterfaceListLock, OldIrql);
+
+    *BufferSize = Size;
+
+    if( BufSize < Size ) {
+	return TDI_BUFFER_TOO_SMALL;
+    } else {
+	CopyBufferToBufferChain(Buffer, 0, (PUCHAR)&OutData, Size);
+	return TDI_SUCCESS;
+    }
+}
+    
 TDI_STATUS InfoTdiQueryInformationEx(
   PTDI_REQUEST Request,
   TDIObjectID *ID,
@@ -250,47 +371,18 @@ TDI_STATUS InfoTdiQueryInformationEx(
           return TDI_INVALID_PARAMETER;
         }
 
-      /* Count Adapters */
-      KeAcquireSpinLock(&InterfaceListLock, &OldIrql);
+      return InfoTdiQueryListEntities(Buffer, BufSize, BufferSize);
+    }
 
-      CurrentIFEntry = InterfaceListHead.Flink;
-      Count = EntityCount;
+  /* Get an IFENTRY */
+  if (ID->toi_class == INFO_CLASS_PROTOCOL && 
+      ID->toi_type  == INFO_TYPE_PROVIDER &&
+      ID->toi_id    == IF_MIB_STATS_ID) 
+    {
+      if(ID->toi_entity.tei_entity != IF_ENTITY)
+	return TDI_INVALID_REQUEST;
 
-      while( CurrentIFEntry != &InterfaceListHead ) {
-	  Count++;
-	  CurrentIFEntry = CurrentIFEntry->Flink;
-      }
-      
-      KeReleaseSpinLock(&InterfaceListLock, OldIrql);
-
-      Size = Count * sizeof(TDIEntityID);
-      *BufferSize = Size;
-
-      if (BufSize < Size)
-        {
-          /* The buffer is too small to contain requested data */
-          return TDI_BUFFER_TOO_SMALL;
-        }
-
-      DbgPrint("About to copy %d TDIEntityIDs (%d bytes) to user\n",
-	       Count, Size);
-
-      KeAcquireSpinLock(&EntityListLock, &OldIrql);
-
-      /* Update entity list */
-      for( Temp = EntityCount; Temp < Count; Temp++ ) {
-	  EntityList[Temp].tei_entity = IF_ENTITY;
-	  EntityList[Temp].tei_instance = Temp - EntityCount;
-      }
-
-      /* Return entity list */
-      Count = CopyBufferToBufferChain(Buffer, 0, (PUCHAR)EntityList, Size);
-
-      KeReleaseSpinLock(&EntityListLock, OldIrql);
-
-      *BufferSize = Size;
-
-      return TDI_SUCCESS;
+      return InfoTdiQueryGetInterfaceMIB(ID, Buffer, BufSize, BufferSize);
     }
 
     if ((Entity != CL_TL_ENTITY) && (Entity != CO_TL_ENTITY))

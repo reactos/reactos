@@ -125,6 +125,7 @@ extern NDIS_HANDLE GlobalBufferPool;
 extern KSPIN_LOCK EntityListLock;
 extern TDIEntityID *EntityList;
 extern ULONG EntityCount;
+extern ULONG EntityMax;
 extern UDP_STATISTICS UDPStats;
 
 #endif /* __TCPIP_H */

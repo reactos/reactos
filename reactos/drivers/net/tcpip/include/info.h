@@ -7,6 +7,8 @@
 #ifndef __INFO_H
 #define __INFO_H
 
+#define MAX_PHYSADDR_LEN 8
+#define MAX_IFDESCR_LEN  256
 
 typedef struct IPSNMP_INFO {
 	ULONG Forwarding;
@@ -60,7 +62,31 @@ typedef struct IPROUTE_ENTRY {
     ULONG Info;
 } IPROUTE_ENTRY, *PIPROUTE_ENTRY;
 
+typedef struct IFENTRY {
+    ULONG Index;
+    ULONG Type;
+    ULONG Mtu;
+    ULONG Speed;
+    ULONG PhysAddrLen;
+    UCHAR PhysAddr[MAX_PHYSADDR_LEN];
+    ULONG AdminStatus;
+    ULONG OperStatus;
+    ULONG LastChange;
+    ULONG InOctets;
+    ULONG InUcastPackets;
+    ULONG InDiscards;
+    ULONG InErrors;
+    ULONG InUnknownProtos;
+    ULONG OutOctets;
+    ULONG OutUcastPackets;
+    ULONG OutDiscards;
+    ULONG OutErrors;
+    ULONG OutQLen;
+    ULONG DescrLen;
+} IFENTRY, *PIFENTRY;
+ 
 #define	IP_MIB_STATS_ID           1
+#define IF_MIB_STATS_ID           1
 #ifndef IP_MIB_ADDRTABLE_ENTRY_ID
 #define	IP_MIB_ADDRTABLE_ENTRY_ID 0x102
 #endif

@@ -15,7 +15,6 @@
 #include <receive.h>
 #include <arp.h>
 
-
 NDIS_HANDLE NdisProtocolHandle = (NDIS_HANDLE)NULL;
 BOOLEAN ProtocolRegistered     = FALSE;
 LIST_ENTRY AdapterListHead;
@@ -590,6 +589,72 @@ VOID LANTransmit(
     }
 }
 
+static NTSTATUS 
+OpenRegistryKey( PNDIS_STRING RegistryPath, PHANDLE RegHandle ) {
+    OBJECT_ATTRIBUTES Attributes;
+    NTSTATUS Status;
+    
+    InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
+    Status = ZwOpenKey(RegHandle, GENERIC_READ, &Attributes);
+    return Status;
+}
+
+static NTSTATUS ReadIPAddressFromRegistry( HANDLE RegHandle,
+					   PWCHAR RegistryValue,
+					   PIP_ADDRESS *Address ) {
+    UNICODE_STRING ValueName;
+    UNICODE_STRING UnicodeAddress; 
+    NTSTATUS Status;
+    ULONG ResultLength;
+    UCHAR buf[1024];
+    PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
+    ANSI_STRING AnsiAddress;
+    ULONG AnsiLen;
+
+    RtlInitUnicodeString(&ValueName, RegistryValue);
+    Status = 
+	ZwQueryValueKey(RegHandle, 
+			&ValueName, 
+			KeyValuePartialInformation, 
+			Information, 
+			sizeof(buf), 
+			&ResultLength);
+
+    if (!NT_SUCCESS(Status))
+	return Status;
+    /* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
+    TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
+    
+    UnicodeAddress.Buffer = (PWCHAR)&Information->Data;
+    UnicodeAddress.Length = Information->DataLength;
+    UnicodeAddress.MaximumLength = Information->DataLength;
+    
+    AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
+    if(!AnsiLen)
+	return STATUS_NO_MEMORY;
+    
+    AnsiAddress.Buffer = ExAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
+    if(!AnsiAddress.Buffer)
+	return STATUS_NO_MEMORY;
+
+    AnsiAddress.Length = AnsiLen;
+    AnsiAddress.MaximumLength = AnsiLen;
+    
+    Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
+    if (!NT_SUCCESS(Status)) {
+	ExFreePool(AnsiAddress.Buffer);
+	return STATUS_UNSUCCESSFUL;
+    }
+    
+    AnsiAddress.Buffer[AnsiAddress.Length] = 0;
+    *Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
+    if (!Address) {
+	ExFreePool(AnsiAddress.Buffer);
+	return STATUS_UNSUCCESSFUL;
+    }
+
+    return *Address ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
+}
 
 VOID BindAdapter(
     PLAN_ADAPTER Adapter,
@@ -605,11 +670,14 @@ VOID BindAdapter(
 {
     INT i;
     PIP_INTERFACE IF;
-    PIP_ADDRESS Address;
+    PIP_ADDRESS Address = 0;
+    PIP_ADDRESS Netmask = 0;
     PNDIS_PACKET Packet;
     NDIS_STATUS NdisStatus;
     LLIP_BIND_INFO BindInfo;
     ULONG Lookahead = LOOKAHEAD_SIZE;
+    NTSTATUS Status;
+    HANDLE RegHandle = 0;
 
     TI_DbgPrint(DEBUG_DATALINK, ("Called.\n"));
 
@@ -655,99 +723,58 @@ VOID BindAdapter(
         return;
     }
 
-			{
-				/* 
-				 * Query per-adapter configuration from the registry 
-				 * In case anyone is curious:  there *is* an Ndis configuration api
-				 * for this sort of thing, but it doesn't really support things like
-				 * REG_MULTI_SZ very well, and there is a note in the DDK that says that
-				 * protocol drivers developed for win2k and above just use the native
-				 * services (ZwOpenKey, etc).
-				 */
-
-				OBJECT_ATTRIBUTES Attributes;
-				HANDLE RegHandle;
-				NTSTATUS Status;
-				UNICODE_STRING ValueName;
-				UCHAR buf[1024];
-				PKEY_VALUE_PARTIAL_INFORMATION Information = (PKEY_VALUE_PARTIAL_INFORMATION)buf;
-				ULONG ResultLength;
-				ANSI_STRING AnsiAddress;
-				UNICODE_STRING UnicodeAddress;
-				ULONG AnsiLen;
-
-				InitializeObjectAttributes(&Attributes, RegistryPath, OBJ_CASE_INSENSITIVE, 0, 0);
-				Status = ZwOpenKey(&RegHandle, GENERIC_READ, &Attributes);
-
-				if(!NT_SUCCESS(Status))
-					{
-						TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
-
-						/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
-						FreeTDPackets(Adapter);
-						IPDestroyInterface(Adapter->Context);
-						return;
-					}
-
-				RtlInitUnicodeString(&ValueName, L"IPAddress");
-				ZwQueryValueKey(RegHandle, &ValueName, KeyValuePartialInformation, Information, sizeof(buf), &ResultLength);
-				ZwClose(RegHandle);
-
-				/* IP address is stored as a REG_MULTI_SZ - we only pay attention to the first one though */
-				TI_DbgPrint(MIN_TRACE, ("Information DataLength: 0x%x\n", Information->DataLength));
-
-				UnicodeAddress.Buffer = (PWCHAR)&Information->Data;
-				UnicodeAddress.Length = Information->DataLength;
-				UnicodeAddress.MaximumLength = Information->DataLength;
-
-				AnsiLen = RtlUnicodeStringToAnsiSize(&UnicodeAddress);
-				if(!AnsiLen)
-					{
-						TI_DbgPrint(MIN_TRACE, ("Unable to calculate address length\n"));
-						FreeTDPackets(Adapter);
-						IPDestroyInterface(Adapter->Context);
-						return;
-					}
-
-				AnsiAddress.Buffer = ExAllocatePoolWithTag(PagedPool, AnsiLen, 0x01020304);
-				if(!AnsiAddress.Buffer)
-					{
-						TI_DbgPrint(MIN_TRACE, ("ExAllocatePoolWithTag() failed.\n"));
-						FreeTDPackets(Adapter);
-						IPDestroyInterface(Adapter->Context);
-						return;
-					}
-        AnsiAddress.Length = AnsiLen;
-        AnsiAddress.MaximumLength = AnsiLen;
-
-				Status = RtlUnicodeStringToAnsiString(&AnsiAddress, &UnicodeAddress, FALSE);
-        if (!NT_SUCCESS(Status))
-					{
-						TI_DbgPrint(MIN_TRACE, ("RtlUnicodeStringToAnsiString() failed with Status 0x%lx.\n", Status));
-						FreeTDPackets(Adapter);
-						IPDestroyInterface(Adapter->Context);
-						return;
-					}
-
-				AnsiAddress.Buffer[AnsiAddress.Length] = 0;
-				Address = AddrBuildIPv4(inet_addr(AnsiAddress.Buffer));
-				if (!Address) {
-						TI_DbgPrint(MIN_TRACE, ("AddrBuildIPv4() failed.\n"));
-						FreeTDPackets(Adapter);
-						IPDestroyInterface(Adapter->Context);
-						return;
-				}
-
-        TI_DbgPrint(MID_TRACE, ("--> Our IP address on this interface: '%s'\n", A2S(Address)));
-			}
+    /* 
+     * Query per-adapter configuration from the registry 
+     * In case anyone is curious:  there *is* an Ndis configuration api
+     * for this sort of thing, but it doesn't really support things like
+     * REG_MULTI_SZ very well, and there is a note in the DDK that says that
+     * protocol drivers developed for win2k and above just use the native
+     * services (ZwOpenKey, etc).
+     */
+    
+    Status = OpenRegistryKey( RegistryPath, &RegHandle );
+	    
+    if(NT_SUCCESS(Status))
+	Status = ReadIPAddressFromRegistry( RegHandle, L"IPAddress",
+					    &Address );
+    if(NT_SUCCESS(Status)) 
+	Status = ReadIPAddressFromRegistry( RegHandle, L"SubnetMask",
+					    &Netmask );
+    
+    if(!NT_SUCCESS(Status) || !Address || !Netmask)
+    {
+	TI_DbgPrint(MIN_TRACE, ("Unable to open protocol-specific registry key: 0x%x\n", Status));
+	
+	/* XXX how do we proceed?  No ip address, no parameters... do we guess? */
+	if(RegHandle)  
+	    ZwClose(RegHandle);
+	if(Address) Address->Free(Address);
+	if(Netmask) Netmask->Free(Netmask);
+	FreeTDPackets(Adapter);
+	IPDestroyInterface(IF);
+	return;
+    }
+    
+    TI_DbgPrint
+	(MID_TRACE, 
+	 ("--> Our IP address on this interface: '%s'\n", 
+	  A2S(Address)));
+    
+    TI_DbgPrint
+	(MID_TRACE, 
+	 ("--> Our net mask on this interface: '%s'\n", 
+	  A2S(Netmask)));
 
     /* Create a net table entry for this interface */
-    if (!IPCreateNTE(IF, Address, 8)) {
+    if (!IPCreateNTE(IF, Address, AddrCountPrefixBits(Netmask))) {
+	Netmask->Free(Netmask);
         TI_DbgPrint(MIN_TRACE, ("IPCreateNTE() failed.\n"));
         FreeTDPackets(Adapter);
         IPDestroyInterface(IF);
         return;
     }
+
+    Netmask->Free(Netmask);
 
     /* Reference the interface for the NTE. The reference
        for the address is just passed on to the NTE */

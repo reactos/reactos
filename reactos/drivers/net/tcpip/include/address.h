@@ -78,6 +78,10 @@ PADDRESS_FILE AddrSearchNext(
 
 unsigned long PASCAL inet_addr(const char*);
 
+ULONG IPv4NToHl( ULONG Address );
+
+UINT AddrCountPrefixBits( PIP_ADDRESS Netmask );
+
 #endif /* __ADDRESS_H */
 
 /* EOF */
