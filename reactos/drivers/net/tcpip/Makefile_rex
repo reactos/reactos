@@ -1,4 +1,4 @@
-# $Id: Makefile_rex,v 1.1 1999/11/20 20:36:45 ea Exp $
+# $Id: Makefile_rex,v 1.2 2000/03/08 22:37:02 ea Exp $
 #
 # TCPIP.SYS build spec
 #
@@ -40,7 +40,7 @@ $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 		--subsystem=native \
 		-mdll \
 		--dll \
-		-e _DllMain@8 \
+		-e _DriverEntry@8 \
 		-o junk.tmp \
 		-Wl,--image-base,0x0 \
 		-Wl,--file-alignment,0x1000 \

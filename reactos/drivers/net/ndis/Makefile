@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.1 1999/11/24 23:06:23 ea Exp $
+# $Id: Makefile,v 1.2 2000/03/08 22:37:01 ea Exp $
 #
 # NDIS.SYS build spec
 #
@@ -44,7 +44,7 @@ $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 		--subsystem=native \
 		-mdll \
 		--dll \
-		-e _DllMain@8 \
+		-e _DriverEntry@8 \
 		-o junk.tmp \
 		-Wl,--image-base,0x0 \
 		-Wl,--file-alignment,0x1000 \

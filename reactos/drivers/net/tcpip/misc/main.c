@@ -1,15 +1,16 @@
-/* $Id: main.c,v 1.1 1999/11/20 20:36:46 ea Exp $ */
+/* $Id: main.c,v 1.2 2000/03/08 22:37:02 ea Exp $ */
 #include <ntos.h>
 
-BOOLEAN
+NTSTATUS
 STDCALL
-DllMain (
+DriverEntry (
 	IN	PDRIVER_OBJECT	DriverObject,
 	IN	PUNICODE_STRING	RegistryPath
 	)
 {
-	return TRUE;
+	return STATUS_UNSUCCESSFUL;
 }
+
 
 
 /* EOF */

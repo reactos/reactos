@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 1999/11/28 07:59:28 ea Exp $
+# $Id: Makefile,v 1.5 2000/03/08 22:37:02 ea Exp $
 #
 # TDI.SYS build spec
 #
@@ -66,7 +66,7 @@ $(TARGETNAME).sys: $(OBJECTS) misc/$(TARGETNAME).def
 		--subsystem=native \
 		-mdll \
 		--dll \
-		-e _DllMain@8 \
+		-e _DriverEntry@8 \
 		-o $(TARGETNAME).sys \
 		$(TARGETNAME).o \
 		../../../ntoskrnl/ntoskrnl.a \

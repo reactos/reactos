@@ -1,4 +1,4 @@
-; $Id: win32k.def,v 1.7 1999/11/20 21:47:58 ekohl Exp $
+; $Id: win32k.def,v 1.8 2000/03/08 22:37:03 ea Exp $
 ;
 ; win32k.def
 ;
@@ -63,7 +63,7 @@ EngGetPrinterDataFileName
 EngGetProcessHandle
 EngGetType1FontList
 EngLineTo
-EngLoadImage
+EngLoadImage@4
 EngLoadModule
 EngLoadModuleForWrite
 EngLockDriverObj

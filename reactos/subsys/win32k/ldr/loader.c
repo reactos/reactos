@@ -1,6 +1,10 @@
 #include <ddk/winddi.h>
 
-HANDLE EngLoadImage(LPWSTR DriverName)
+HANDLE __cdecl LdrLoadModule (LPWSTR);
+
+HANDLE
+STDCALL
+EngLoadImage (LPWSTR DriverName)
 {
-   return LdrLoadModule(DriverName);
+   return (HANDLE) LdrLoadModule(DriverName);
 }
