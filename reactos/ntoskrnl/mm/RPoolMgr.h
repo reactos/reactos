@@ -1,4 +1,4 @@
-/* $Id: RPoolMgr.h,v 1.4 2004/12/24 17:06:59 navaraf Exp $
+/* $Id$
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -369,6 +369,39 @@ RiBadBlock ( PR_USED pUsed, char* Addr, const char* violation, const char* file,
 	RiPrintLastOwner ( pUsed );
 	R_DEBUG ( "\n" );
 
+	R_DEBUG ( "Contents of Block:\n" );
+	for ( i = 0; i < 8*16 && i < pUsed->UserSize; i += 16 )
+	{
+		int j;
+		R_DEBUG ( "%04X ", i );
+		for ( j = 0; j < 16; j++ )
+		{
+			if ( i+j < pUsed->UserSize )
+			{
+				R_DEBUG ( "%02X ", (unsigned)(unsigned char)Addr[i+j] );
+			}
+			else
+			{
+				R_DEBUG ( "   " );
+			}
+		}
+		R_DEBUG(" ");
+		for ( j = 0; j < 16; j++ )
+		{
+			if ( i+j < pUsed->UserSize )
+			{
+				char c = Addr[i+j];
+				if ( c < 0x20 || c > 0x7E )
+					c = '.';
+				R_DEBUG ( "%c", c );
+			}
+			else
+			{
+				R_DEBUG ( " " );
+			}
+		}
+		R_DEBUG("\n");
+	}
 	R_PANIC();
 }
 static void
@@ -423,11 +456,11 @@ RUsedRedZoneCheck ( PR_POOL pool, PR_USED pUsed, char* Addr, const char* file, i
 	}
 	if ( !bLow || !bHigh )
 	{
-		const char* violation = "High and Low-side redzone";
+		const char* violation = "High and Low-side redzone overwrite";
 		if ( bHigh ) // high is okay, so it was just low failed
-			violation = "Low-side redzone";
+			violation = "Low-side redzone overwrite";
 		else if ( bLow ) // low side is okay, so it was just high failed
-			violation = "High-side redzone";
+			violation = "High-side redzone overwrite";
 		RiBadBlock ( pUsed, Addr, violation, file, line, 1 );
 	}
 }
