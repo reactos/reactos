@@ -45,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
  */
 typedef struct ConnectionPointImpl {
 
-  ICOM_VTABLE(IConnectionPoint)       *lpvtbl;
+  IConnectionPointVtbl       *lpvtbl;
 
   /* IUnknown of our main object*/
   IUnknown *Obj;
@@ -63,7 +63,7 @@ typedef struct ConnectionPointImpl {
   DWORD nSinks;
 } ConnectionPointImpl;
 
-static ICOM_VTABLE(IConnectionPoint) ConnectionPointImpl_VTable;
+static IConnectionPointVtbl ConnectionPointImpl_VTable;
 
 
 /************************************************************************
@@ -71,7 +71,7 @@ static ICOM_VTABLE(IConnectionPoint) ConnectionPointImpl_VTable;
  */
 typedef struct EnumConnectionsImpl {
 
-  ICOM_VTABLE(IEnumConnections)       *lpvtbl;
+  IEnumConnectionsVtbl       *lpvtbl;
 
   DWORD ref;
 
@@ -140,7 +140,7 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
   REFIID  riid,
   void**  ppvObject)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
   /*
@@ -192,7 +192,7 @@ static HRESULT WINAPI ConnectionPointImpl_QueryInterface(
  */
 static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
   This->ref++;
 
@@ -207,7 +207,7 @@ static ULONG WINAPI ConnectionPointImpl_AddRef(IConnectionPoint* iface)
 static ULONG WINAPI ConnectionPointImpl_Release(
       IConnectionPoint* iface)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
 
   /*
@@ -236,7 +236,7 @@ static HRESULT WINAPI ConnectionPointImpl_GetConnectionInterface(
 					       IConnectionPoint *iface,
 					       IID              *piid)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(%p) returning %s\n", This, piid, debugstr_guid(&(This->iid)));
   *piid = This->iid;
   return S_OK;
@@ -250,7 +250,7 @@ static HRESULT WINAPI ConnectionPointImpl_GetConnectionPointContainer(
 				      IConnectionPoint           *iface,
 				      IConnectionPointContainer  **ppCPC)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(%p)\n", This, ppCPC);
 
   return IUnknown_QueryInterface(This->Obj,
@@ -267,7 +267,7 @@ static HRESULT WINAPI ConnectionPointImpl_Advise(IConnectionPoint *iface,
 						 DWORD *pdwCookie)
 {
   DWORD i;
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   IUnknown *lpSink;
   TRACE("(%p)->(%p, %p)\n", This, lpUnk, pdwCookie);
 
@@ -298,7 +298,7 @@ static HRESULT WINAPI ConnectionPointImpl_Advise(IConnectionPoint *iface,
 static HRESULT WINAPI ConnectionPointImpl_Unadvise(IConnectionPoint *iface,
 						   DWORD dwCookie)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(%ld)\n", This, dwCookie);
 
   if(dwCookie == 0 || dwCookie > This->maxSinks) return E_INVALIDARG;
@@ -319,7 +319,7 @@ static HRESULT WINAPI ConnectionPointImpl_EnumConnections(
 						    IConnectionPoint *iface,
 						    LPENUMCONNECTIONS *ppEnum)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   CONNECTDATA *pCD;
   DWORD i, nextslot;
   EnumConnectionsImpl *EnumObj;
@@ -355,9 +355,8 @@ static HRESULT WINAPI ConnectionPointImpl_EnumConnections(
   return hr;
 }
 
-static ICOM_VTABLE(IConnectionPoint) ConnectionPointImpl_VTable =
+static IConnectionPointVtbl ConnectionPointImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   ConnectionPointImpl_QueryInterface,
   ConnectionPointImpl_AddRef,
   ConnectionPointImpl_Release,
@@ -369,7 +368,7 @@ static ICOM_VTABLE(IConnectionPoint) ConnectionPointImpl_VTable =
 };
 
 
-static ICOM_VTABLE(IEnumConnections) EnumConnectionsImpl_VTable;
+static IEnumConnectionsVtbl EnumConnectionsImpl_VTable;
 static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface);
 
 /************************************************************************
@@ -421,7 +420,7 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
   REFIID  riid,
   void**  ppvObject)
 {
-  ICOM_THIS(ConnectionPointImpl, iface);
+  ConnectionPointImpl *This = (ConnectionPointImpl *)iface;
   TRACE("(%p)->(%s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
   /*
@@ -473,7 +472,7 @@ static HRESULT WINAPI EnumConnectionsImpl_QueryInterface(
  */
 static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
   This->ref++;
   IUnknown_AddRef(This->pUnk);
@@ -487,7 +486,7 @@ static ULONG WINAPI EnumConnectionsImpl_AddRef(IEnumConnections* iface)
  */
 static ULONG WINAPI EnumConnectionsImpl_Release(IEnumConnections* iface)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   TRACE("(%p)->(ref=%ld)\n", This, This->ref);
 
   IUnknown_Release(This->pUnk);
@@ -518,7 +517,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Next(IEnumConnections* iface,
 					       ULONG cConn, LPCONNECTDATA pCD,
 					       ULONG *pEnum)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   DWORD nRet = 0;
   TRACE("(%p)->(%ld, %p, %p)\n", This, cConn, pCD, pEnum);
 
@@ -553,7 +552,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Next(IEnumConnections* iface,
 static HRESULT WINAPI EnumConnectionsImpl_Skip(IEnumConnections* iface,
 					       ULONG cSkip)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   TRACE("(%p)->(%ld)\n", This, cSkip);
 
   if(This->nCur + cSkip >= This->nConns)
@@ -571,7 +570,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Skip(IEnumConnections* iface,
  */
 static HRESULT WINAPI EnumConnectionsImpl_Reset(IEnumConnections* iface)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   TRACE("(%p)\n", This);
 
   This->nCur = 0;
@@ -587,7 +586,7 @@ static HRESULT WINAPI EnumConnectionsImpl_Reset(IEnumConnections* iface)
 static HRESULT WINAPI EnumConnectionsImpl_Clone(IEnumConnections* iface,
 						LPENUMCONNECTIONS *ppEnum)
 {
-  ICOM_THIS(EnumConnectionsImpl, iface);
+  EnumConnectionsImpl *This = (EnumConnectionsImpl *)iface;
   EnumConnectionsImpl *newObj;
   TRACE("(%p)->(%p)\n", This, ppEnum);
 
@@ -598,9 +597,8 @@ static HRESULT WINAPI EnumConnectionsImpl_Clone(IEnumConnections* iface,
   return S_OK;
 }
 
-static ICOM_VTABLE(IEnumConnections) EnumConnectionsImpl_VTable =
+static IEnumConnectionsVtbl EnumConnectionsImpl_VTable =
 {
-  ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
   EnumConnectionsImpl_QueryInterface,
   EnumConnectionsImpl_AddRef,
   EnumConnectionsImpl_Release,

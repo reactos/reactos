@@ -20,16 +20,7 @@ DEFINE_GUID(IID_IClassFactory, 0x00000001, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,
 #define IClassFactory_CreateInstance(p,a,b,c) (p)->lpVtbl->CreateInstance(p,a,b,c)
 #define IClassFactory_LockServer(p,a) (p)->lpVtbl->LockServer(p,a)
 
-#if defined(ICOM_MSVTABLE_COMPAT) && (!defined(__cplusplus) || defined(CINTERFACE))
-# define ICOM_MSVTABLE_COMPAT_FIELDS long dummyRTTI1,dummyRTTI2;
-# define ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE 0,0,
-#else
-# define ICOM_MSVTABLE_COMPAT_FIELDS
-# define ICOM_MSVTABLE_COMPAT_DummyRTTIVALUE
-#endif
-
 #define IUnknown_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
     /*** IUnknown methods ***/ \
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \

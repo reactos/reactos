@@ -33,7 +33,7 @@
  * Predeclare the interfaces
  */
 DEFINE_GUID(IID_ISFHelper, 0x1fe68efbL, 0x1874, 0x9812, 0x56, 0xdc, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
-typedef struct ISFHelper ISFHelper, *LPISFHELPER;
+typedef struct ISFHelper *LPISFHELPER;
 
 /*****************************************************************************
  * ISFHelper interface
@@ -46,7 +46,7 @@ typedef struct ISFHelper ISFHelper, *LPISFHELPER;
 	STDMETHOD(AddFolder)(THIS_ HWND  hwnd, LPCSTR  lpName, LPITEMIDLIST * ppidlOut) PURE; \
 	STDMETHOD(DeleteItems)(THIS_ UINT  cidl, LPCITEMIDLIST * apidl) PURE; \
 	STDMETHOD(CopyItems)(THIS_ IShellFolder * pSFFrom, UINT  cidl, LPCITEMIDLIST * apidl) PURE;
-ICOM_DEFINE(ISFHelper, IUnknown)
+DECLARE_INTERFACE_(ISFHelper, IUnknown) { ISFHelper_METHODS };
 #undef INTERFACE
 
 #ifdef COBJMACROS

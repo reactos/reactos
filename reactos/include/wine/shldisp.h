@@ -46,8 +46,6 @@ struct IAutoComplete {
     const IAutoCompleteVtbl* lpVtbl;
 };
 struct IAutoCompleteVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
-
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
         IAutoComplete* This,
@@ -85,7 +83,6 @@ struct IAutoCompleteVtbl {
 #endif
 
 #define IAutoComplete_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
     /*** IUnknown methods ***/ \
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
@@ -157,8 +154,6 @@ struct IAutoComplete2 {
     const IAutoComplete2Vtbl* lpVtbl;
 };
 struct IAutoComplete2Vtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
-
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
         IAutoComplete2* This,
@@ -208,7 +203,6 @@ struct IAutoComplete2Vtbl {
 #endif
 
 #define IAutoComplete2_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
     /*** IUnknown methods ***/ \
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \

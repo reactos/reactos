@@ -1750,7 +1750,6 @@ DEFINE_GUID(IID_IClassActivator, 0x00000140, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x0
 DEFINE_GUID(IID_ISequentialStream, 0x0c733a30, 0x2a1c, 0x11ce, 0xad,0xe5, 0x00,0xaa,0x00,0x44,0x77,0x3d);
 
 #define ISequentialStream_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
     /*** IUnknown methods ***/ \
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
@@ -1830,8 +1829,6 @@ struct IGlobalInterfaceTable {
     const IGlobalInterfaceTableVtbl* lpVtbl;
 };
 struct IGlobalInterfaceTableVtbl {
-    ICOM_MSVTABLE_COMPAT_FIELDS
-
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
         IGlobalInterfaceTable* This,
@@ -1875,7 +1872,6 @@ struct IGlobalInterfaceTableVtbl {
 #endif
 
 #define IGlobalInterfaceTable_METHODS \
-    ICOM_MSVTABLE_COMPAT_FIELDS \
     /*** IUnknown methods ***/ \
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
     STDMETHOD_(ULONG,AddRef)(THIS) PURE; \

@@ -291,7 +291,7 @@ typedef struct _TMAsmProxy {
 
 typedef struct _TMProxyImpl {
     DWORD				*lpvtbl;
-    ICOM_VTABLE(IRpcProxyBuffer)	*lpvtbl2;
+    IRpcProxyBufferVtbl	*lpvtbl2;
     DWORD				ref;
 
     TMAsmProxy				*asmstubs;

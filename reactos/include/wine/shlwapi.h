@@ -846,7 +846,7 @@ typedef struct IQueryAssociations IQueryAssociations,*LPQUERYASSOCIATIONS;
     STDMETHOD(GetKey)(THIS_ ASSOCF  flags, ASSOCKEY  key, LPCWSTR  pszExtra, HKEY * phkeyOut) PURE; \
     STDMETHOD(GetData)(THIS_ ASSOCF  flags, ASSOCDATA  data, LPCWSTR  pszExtra, LPVOID  pvOut, DWORD * pcbOut) PURE; \
     STDMETHOD(GetEnum)(THIS_ ASSOCF  flags, ASSOCENUM  assocenum, LPCWSTR  pszExtra, REFIID  riid, LPVOID * ppvOut) PURE;
-ICOM_DEFINE(IQueryAssociations,IUnknown)
+DECLARE_INTERFACE_(IQueryAssociations,IUnknown) { IQueryAssociations_METHODS };
 #undef INTERFACE
 
 #ifdef COBJMACROS
