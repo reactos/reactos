@@ -2,17 +2,18 @@
 
 char * _strrev(char *s)
 {
-	char  *e;
-	char   a;
-	e=s;
+	char a, *b, *e;
+	b=e=s;
 	while (*e)
 		e++;
-	while (s<e) {
-		a=*s;
-		*s=*e;
+	e--; /* start at last char, not NULL char */
+	while ( b < e )
+	{
+		a=*b;
+		*b=*e;
 		*e=a;
-		s++;
+		b++;
 		e--;
 	}
-	return s;
+	return s; /* return ptr to beginning of string */
 }
