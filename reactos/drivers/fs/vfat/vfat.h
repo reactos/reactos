@@ -74,6 +74,7 @@ typedef struct _slot slot;
 
 typedef struct
 {
+  ERESOURCE Resource;
    PDEVICE_OBJECT StorageDevice;
    BootSector *Boot;
    int rootDirectorySectors, FATStart, rootStart, dataStart;
@@ -107,7 +108,7 @@ typedef struct _VfatFCB
   SFsdNTRequiredFCB     NTRequiredFCB;
    FATDirEntry entry;
    WCHAR *ObjectName; // point on filename (250 chars max) in PathName
-   WCHAR PathName[261];// path+filename 260 max
+   WCHAR PathName[MAX_PATH];// path+filename 260 max
    long RefCount;
    PDEVICE_EXTENSION pDevExt;
    struct _VfatFCB * nextFcb, *prevFcb;
@@ -174,5 +175,11 @@ void VFATWriteCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
 
 //internal functions in dirwr.c
 NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
-                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions);
+                  ,PFILE_OBJECT pFileObject,ULONG RequestedOptions,UCHAR ReqAttr);
 NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
+
+
+//FIXME : following defines must be removed
+//FIXME   when this functions will work.
+#define ExAcquireResourceExclusiveLite(x,y) {}
+#define ExReleaseResourceForThreadLite(x,y) {}
