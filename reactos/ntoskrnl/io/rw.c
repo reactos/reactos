@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.50 2003/11/28 17:17:44 ekohl Exp $
+/* $Id: rw.c,v 1.51 2003/11/30 19:59:41 gdalsnes Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -43,10 +43,9 @@ NtReadFile (IN HANDLE FileHandle,
 	    OUT PIO_STATUS_BLOCK IoStatusBlock,
 	    OUT PVOID Buffer,
 	    IN ULONG Length,
-	    IN PLARGE_INTEGER ByteOffset OPTIONAL,
+      IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
 	    IN PULONG Key OPTIONAL)
 {
-  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
@@ -70,14 +69,22 @@ NtReadFile (IN HANDLE FileHandle,
     {
       return(Status);
     }
-
+    
   if (ByteOffset == NULL)
+  {
+    /* a valid ByteOffset is required if asynch. op. */
+    if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
-      ByteOffset = &FileObject->CurrentByteOffset;
+      DPRINT1("NtReadFile: missing ByteOffset for asynch. op\n");
+      ObDereferenceObject(FileObject);
+      return STATUS_INVALID_PARAMETER;
     }
 
+    ByteOffset = &FileObject->CurrentByteOffset;
+  }
+
   if (Event != NULL)
-    {
+  {
       Status = ObReferenceObjectByHandle(Event,
 					 SYNCHRONIZE,
 					 ExEventObjectType,
@@ -89,12 +96,10 @@ NtReadFile (IN HANDLE FileHandle,
 	  ObDereferenceObject(FileObject);
 	  return(Status);
 	}
-    }
-  else
-    {
-      EventObject = &FileObject->Event;
-      KeResetEvent(EventObject);
-    }
+    KeClearEvent(EventObject);
+  }
+
+  KeClearEvent(&FileObject->Event);
 
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
 				     FileObject->DeviceObject,
@@ -102,7 +107,7 @@ NtReadFile (IN HANDLE FileHandle,
 				     Length,
 				     ByteOffset,
 				     EventObject,
-				     &SafeIoStatusBlock);
+             IoStatusBlock);
 
   /* Trigger FileObject/Event dereferencing */
   Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -112,37 +117,24 @@ NtReadFile (IN HANDLE FileHandle,
 
   StackPtr = IoGetNextIrpStackLocation(Irp);
   StackPtr->FileObject = FileObject;
-  if (Key != NULL)
-    {
-      StackPtr->Parameters.Read.Key = *Key;
-    }
-  else
-    {
-      StackPtr->Parameters.Read.Key = 0;
-    }
+  StackPtr->Parameters.Read.Key = Key ? *Key : 0;
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
-      BOOLEAN Alertable;
-
-      Alertable = (FileObject->Flags & FO_ALERTABLE_IO) ? TRUE : FALSE;
-      Status = KeWaitForSingleObject (EventObject,
+      Status = KeWaitForSingleObject (&FileObject->Event,
 				      Executive,
 				      UserMode,
-				      Alertable,
+              FileObject->Flags & FO_ALERTABLE_IO,
 				      NULL);
-      if (Status != STATUS_WAIT_0)
-	{
-	  /* Wait failed. */
-	  return(Status);
-	}
-
-      Status = SafeIoStatusBlock.Status;
+    if (Status != STATUS_WAIT_0)
+    {
+      /* Wait failed. */
+      return(Status);
     }
 
-  IoStatusBlock->Status = SafeIoStatusBlock.Status;
-  IoStatusBlock->Information = SafeIoStatusBlock.Information;
+      Status = IoStatusBlock->Status;
+  }
 
   return Status;
 }
@@ -170,10 +162,9 @@ NtWriteFile (IN HANDLE FileHandle,
 	     OUT PIO_STATUS_BLOCK IoStatusBlock,
 	     IN PVOID Buffer,
 	     IN ULONG Length,
-	     IN PLARGE_INTEGER ByteOffset OPTIONAL,
+       IN PLARGE_INTEGER ByteOffset OPTIONAL, /* NOT optional for asynch. operations! */
 	     IN PULONG Key OPTIONAL)
 {
-  IO_STATUS_BLOCK SafeIoStatusBlock;
   NTSTATUS Status;
   PFILE_OBJECT FileObject;
   PIRP Irp;
@@ -199,29 +190,37 @@ NtWriteFile (IN HANDLE FileHandle,
     }
 
   if (ByteOffset == NULL)
+  {
+    /* a valid ByteOffset is required if asynch. op. */
+    if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
-      ByteOffset = &FileObject->CurrentByteOffset;
+      DPRINT1("NtWriteFile: missing ByteOffset for asynch. op\n");
+      ObDereferenceObject(FileObject);
+      return STATUS_INVALID_PARAMETER;
     }
 
+    ByteOffset = &FileObject->CurrentByteOffset;
+  }
+
   if (Event != NULL)
-    {
+  {
       Status = ObReferenceObjectByHandle(Event,
 					 SYNCHRONIZE,
 					 ExEventObjectType,
 					 UserMode,
 					 (PVOID*)&EventObject,
 					 NULL);
-      if (!NT_SUCCESS(Status))
-	{
-	  ObDereferenceObject(FileObject);
-	  return(Status);
-	}
-    }
-  else
+    
+    if (!NT_SUCCESS(Status))
     {
-      EventObject = &FileObject->Event;
-      KeResetEvent(EventObject);
+      ObDereferenceObject(FileObject);
+      return(Status);
     }
+    
+    KeClearEvent(EventObject);
+  }
+  
+  KeClearEvent(&FileObject->Event);
 
   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
 				     FileObject->DeviceObject,
@@ -229,35 +228,25 @@ NtWriteFile (IN HANDLE FileHandle,
 				     Length,
 				     ByteOffset,
 				     EventObject,
-				     &SafeIoStatusBlock);
+				     IoStatusBlock);
 
-   /* Trigger FileObject/Event dereferencing */
-   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+  /* Trigger FileObject/Event dereferencing */
+  Irp->Tail.Overlay.OriginalFileObject = FileObject;
 
   Irp->Overlay.AsynchronousParameters.UserApcRoutine = ApcRoutine;
   Irp->Overlay.AsynchronousParameters.UserApcContext = ApcContext;
 
   StackPtr = IoGetNextIrpStackLocation(Irp);
   StackPtr->FileObject = FileObject;
-  if (Key != NULL)
-    {
-      StackPtr->Parameters.Write.Key = *Key;
-    }
-  else
-    {
-      StackPtr->Parameters.Write.Key = 0;
-    }
+  StackPtr->Parameters.Write.Key = Key ? *Key : 0;
 
   Status = IoCallDriver(FileObject->DeviceObject, Irp);
   if (Status == STATUS_PENDING && (FileObject->Flags & FO_SYNCHRONOUS_IO))
     {
-      BOOLEAN Alertable;
-
-      Alertable = (FileObject->Flags & FO_ALERTABLE_IO) ? TRUE : FALSE;
-      Status = KeWaitForSingleObject (EventObject,
+      Status = KeWaitForSingleObject (&FileObject->Event,
 				      Executive,
 				      UserMode,
-				      Alertable,
+              FileObject->Flags & FO_ALERTABLE_IO,
 				      NULL);
       if (Status != STATUS_WAIT_0)
 	{
@@ -265,11 +254,8 @@ NtWriteFile (IN HANDLE FileHandle,
 	  return(Status);
 	}
 
-      Status = SafeIoStatusBlock.Status;
+      Status = IoStatusBlock->Status;
     }
-
-  IoStatusBlock->Status = SafeIoStatusBlock.Status;
-  IoStatusBlock->Information = SafeIoStatusBlock.Information;
 
   return Status;
 }
