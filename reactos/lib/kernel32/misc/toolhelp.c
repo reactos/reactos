@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: toolhelp.c,v 1.6 2004/10/31 00:09:12 weiden Exp $
+/* $Id: toolhelp.c,v 1.7 2004/10/31 00:14:18 weiden Exp $
  *
  * KERNEL32.DLL toolhelp functions
  *
@@ -1127,7 +1127,7 @@ CreateToolhelp32Snapshot(DWORD dwFlags, DWORD th32ProcessID)
                                                &hSnapShotSection);
 
   /*
-   * Free the temporarily allocated memory to collect all information
+   * Free the temporarily allocated memory which is no longer needed
    */
   TH32FreeAllocatedResources(HeapDebug,
                              ModuleDebug,
