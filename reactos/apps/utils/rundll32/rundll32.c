@@ -1,22 +1,7 @@
 /*
- *  ReactOS rundll32
- *  Copyright (C) 2003 ReactOS Team
+ * ReactOS rundll32
+ * Copyright (C) 2003-2004 ReactOS Team
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS rundll32.exe
  * FILE:            apps/utils/rundll32/rundll32.c
@@ -64,46 +49,162 @@ LPCTSTR rundll32_wclass = _T("rundll32_window");
 TCHAR ModuleFileName[MAX_PATH+1];
 LPTSTR ModuleTitle;
 
-LPTSTR FindArgStart(LPTSTR lpStr)
+// CommandLineToArgv converts a command-line string to argc and
+// argv similar to the ones in the standard main function.
+// This is a specialized version coded specifically for rundll32
+// and is not intended to be used in any other program.
+LPTSTR *WINAPI CommandLineToArgv(LPCTSTR lpCmdLine, int *lpArgc)
 {
-	while (*lpStr) {
-		switch (*lpStr) {
-		case _T(' '):
-		case _T('\t'):
-		case _T('\r'):
-		case _T('\n'):
-			break;
-		default:
-			return lpStr;
-		}
-		lpStr++;
-	}
-	return lpStr;
-}
+	LPTSTR *argv, lpSrc, lpDest, lpArg;
+	int argc, nBSlash, nNames;
+	BOOL bInQuotes, bFirstChar;
 
-LPTSTR FindArgEnd(LPTSTR lpStr)
-{
-	if (*lpStr != _T('\"')) {
-		while (*lpStr) {
-			switch (*lpStr) {
-			case _T(' '):
-			case _T('\t'):
-			case _T('\r'):
-			case _T('\n'):
-				*(lpStr++) = 0;
-				return lpStr;
+	// If null was passed in for lpCmdLine, there are no arguments
+	if (!lpCmdLine) {
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
+	}
+
+	lpSrc = (LPTSTR)lpCmdLine;
+	// Skip spaces at beginning
+	while (*lpSrc == _T(' ') || *lpSrc == _T('\t'))
+		lpSrc++;
+
+	// If command-line starts with null, there are no arguments
+	if (*lpSrc == 0) {
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
+	}
+
+	lpArg = lpSrc;
+	argc = 0;
+	nBSlash = 0;
+	bInQuotes = FALSE;
+	bFirstChar = TRUE;
+	nNames = 0;
+
+	// Count the number of arguments
+	while (nNames < 4) {
+		if (*lpSrc == 0 || (*lpSrc == _T(',') && nNames == 2) || ((*lpSrc == _T(' ') || *lpSrc == _T('\t')) && !bInQuotes)) {
+			// Whitespace not enclosed in quotes signals the start of another argument
+			argc++;
+
+			// Skip whitespace between arguments
+			while (*lpSrc == _T(' ') || *lpSrc == _T('\t') || (*lpSrc == _T(',') && nNames == 2))
+				lpSrc++;
+			if (*lpSrc == 0)
+				break;
+			if (nNames >= 3) {
+				// Increment the count for the last argument
+				argc++;
+				break;
 			}
-			lpStr++;
+			nBSlash = 0;
+			bFirstChar = TRUE;
+			continue;
 		}
+		else if (*lpSrc == _T('\\')) {
+			// Count consecutive backslashes
+			nBSlash++;
+			bFirstChar = FALSE;
+		}
+		else if (*lpSrc == _T('\"') && !(nBSlash & 1)) {
+			// Open or close quotes
+			bInQuotes = !bInQuotes;
+			nBSlash = 0;
+		}
+		else {
+			// Some other character
+			nBSlash = 0;
+			if (bFirstChar && ((*lpSrc != _T('/') && nNames <= 1) || nNames > 1))
+				nNames++;
+			bFirstChar = FALSE;
+		}
+		lpSrc++;
 	}
-	else {
-		for (++lpStr;*lpStr && *lpStr != _T('\"');++lpStr) {}
-		if (*lpStr == _T('\"')) {
-			*(lpStr++) = 0;
+
+	// Allocate space for the pointers in argv and the strings in one block
+	argv = (LPTSTR *)malloc(argc * sizeof(LPTSTR) + (_tcslen(lpArg) + 1) * sizeof(TCHAR));
+
+	if (!argv) {
+		// Memory allocation failed
+		if (lpArgc)
+			*lpArgc = 0;
+		return 0;
+	}
+
+	lpSrc = lpArg;
+	lpDest = lpArg = (LPTSTR)(argv + argc);
+	argc = 0;
+	nBSlash = 0;
+	bInQuotes = FALSE;
+	bFirstChar = TRUE;
+	nNames = 0;
+
+	// Fill the argument array
+	while (nNames < 4) {
+		if (*lpSrc == 0 || (*lpSrc == _T(',') && nNames == 2) || ((*lpSrc == _T(' ') || *lpSrc == _T('\t')) && !bInQuotes)) {
+			// Whitespace not enclosed in quotes signals the start of another argument
+			// Null-terminate argument
+			*lpDest++ = 0;
+			argv[argc++] = lpArg;
+
+			// Skip whitespace between arguments
+			while (*lpSrc == _T(' ') || *lpSrc == _T('\t') || (*lpSrc == _T(',') && nNames == 2))
+				lpSrc++;
+			if (*lpSrc == 0)
+				break;
+			lpArg = lpDest;
+			if (nNames >= 3) {
+				// Copy the rest of the command-line to the last argument
+				argv[argc++] = lpArg;
+				_tcscpy(lpArg,lpSrc);
+				break;
+			}
+			nBSlash = 0;
+			bFirstChar = TRUE;
+			continue;
+		}
+		else if (*lpSrc == _T('\\')) {
+			*lpDest++ = _T('\\');
+			lpSrc++;
+
+			// Count consecutive backslashes
+			nBSlash++;
+			bFirstChar = FALSE;
+		}
+		else if (*lpSrc == _T('\"')) {
+			if (!(nBSlash & 1)) {
+				// If an even number of backslashes are before the quotes,
+				// the quotes don't go in the output
+				lpDest -= nBSlash / 2;
+				bInQuotes = !bInQuotes;
+			}
+			else {
+				// If an odd number of backslashes are before the quotes,
+				// output a quote
+				lpDest -= (nBSlash + 1) / 2;
+				*lpDest++ = _T('\"');
+				bFirstChar = FALSE;
+			}
+			lpSrc++;
+			nBSlash = 0;
+		}
+		else {
+			// Copy other characters
+			if (bFirstChar && ((*lpSrc != _T('/') && nNames <= 1) || nNames > 1))
+				nNames++;
+			*lpDest++ = *lpSrc++;
+			nBSlash = 0;
+			bFirstChar = FALSE;
 		}
 	}
 
-	return lpStr;
+	if (lpArgc)
+		*lpArgc = argc;
+	return argv;
 }
 
 void GetModuleTitle(void)
@@ -126,9 +227,15 @@ void GetModuleTitle(void)
 	*lpStr = 0;
 }
 
+// The macro ConvertToWideChar takes a tstring parameter and returns
+// a pointer to a unicode string.  A conversion is performed if
+// neccessary.  FreeConvertedWideChar string should be used on the
+// return value of ConvertToWideChar when the string is no longer
+// needed.  The original string or the string that is returned
+// should not be modified until FreeConvertedWideChar has been called.
 #ifdef UNICODE
 #define ConvertToWideChar(lptString) (lptString)
-#define FreeConvertedWideChar(lptString)
+#define FreeConvertedWideChar(lpwString)
 #else
 
 LPWSTR ConvertToWideChar(LPCSTR lpString)
@@ -144,17 +251,29 @@ LPWSTR ConvertToWideChar(LPCSTR lpString)
 	return lpwString;
 }
 
-#define FreeConvertedWideChar(lptString) free(lptString)
+#define FreeConvertedWideChar(lpwString) free(lpwString)
 #endif
 
+// The macro ConvertToMultiByte takes a tstring parameter and returns
+// a pointer to an ansi string.  A conversion is performed if
+// neccessary.  FreeConvertedMultiByte string should be used on the
+// return value of ConvertToMultiByte when the string is no longer
+// needed.  The original string or the string that is returned
+// should not be modified until FreeConvertedMultiByte has been called.
 #ifdef UNICODE
 #define ConvertToMultiByte(lptString) DuplicateToMultiByte(lptString,0)
-#define FreeConvertedMultiByte(lptString) free(lptString)
+#define FreeConvertedMultiByte(lpaString) free(lpaString)
 #else
 #define ConvertToMultiByte(lptString) (lptString)
-#define FreeConvertedMultiByte(lptString)
+#define FreeConvertedMultiByte(lpaString)
 #endif
 
+// DuplicateToMultiByte takes a tstring parameter and always returns
+// a pointer to a duplicate ansi string.  If nBufferSize is zero,
+// the buffer length is the exact size of the string plus the
+// terminating null.  If nBufferSize is nonzero, the buffer length
+// is equal to nBufferSize.  As with strdup, free should be called
+// for the returned string when it is no longer needed.
 LPSTR DuplicateToMultiByte(LPCTSTR lptString, size_t nBufferSize)
 {
 	LPSTR lpString;
@@ -178,6 +297,7 @@ LRESULT CALLBACK EmptyWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPa
 	return DefWindowProc(hWnd, uMsg, wParam, lParam);
 }
 
+// Registers a minimal window class for passing to the dll function
 ATOM RegisterBlankClass(HINSTANCE hInstance)
 {
 	WNDCLASSEX wcex;
@@ -206,85 +326,119 @@ int WINAPI WinMain(
   int nCmdShow
 )
 {
-	LPTSTR lptCmdLineCopy,lptCmdLine,lptDllName,lptFuncName,lptMsgBuffer;
+	int argc;
+	LPTSTR *argv;
+	LPTSTR lptCmdLine,lptDllName,lptFuncName,lptMsgBuffer;
 	LPSTR lpFuncName,lpaCmdLine;
 	LPWSTR lpwCmdLine;
 	HMODULE hDll;
 	DllWinMainW fnDllWinMainW;
 	DllWinMainA fnDllWinMainA;
 	HWND hWindow;
-	int nRetVal;
+	int nRetVal,i;
 	size_t nStrLen;
 
-	lptCmdLineCopy = _tcsdup(GetCommandLine());
+	// Get command-line in argc-argv format
+	argv = CommandLineToArgv(GetCommandLine(),&argc);
 
-	lptCmdLine = FindArgStart(lptCmdLineCopy);
-	lptCmdLine = FindArgEnd(lptCmdLine);
-	lptDllName = FindArgStart(lptCmdLine);
-	while (*lptDllName == _T('/'))
-		lptDllName = FindArgStart(FindArgEnd(++lptDllName));
-	lptCmdLine = FindArgEnd(lptDllName);
-	if (*lptDllName == _T('\"')) lptDllName++;
+	// Skip all beginning arguments starting with a slash (/)
+	for (i = 1; i < argc; i++)
+		if (*argv[i] != _T('/')) break;
 
-	if (!*lptDllName) {
-		free(lptCmdLineCopy);
+	// If no dll was specified, there is nothing to do
+	if (i >= argc) {
+		if (argv) free(argv);
 		return 0;
 	}
 
-	for (lptFuncName = lptDllName;*lptFuncName && *lptFuncName != _T(',');lptFuncName++) {}
-	if (*lptFuncName == _T(',')) {
-		*(lptFuncName++) = 0;
-	}
-	else {
-		lptFuncName = FindArgStart(lptCmdLine);
-		lptCmdLine = FindArgEnd(lptFuncName);
-		if (*lptFuncName == _T('\"')) lptFuncName++;
-	}
+	lptDllName = argv[i++];
 
+	// The next argument, which specifies the name of the dll function,
+	// can either have a comma between it and the dll filename or a space.
+	// Using a comma here is the preferred method
+	if (i < argc)
+		lptFuncName = argv[i++];
+	else
+		lptFuncName = _T("");
+
+	// If no function name was specified, nothing needs to be done
 	if (!*lptFuncName) {
-		free(lptCmdLineCopy);
+		if (argv) free(argv);
 		return 0;
 	}
 
-	if (*lptCmdLine) lptCmdLine = FindArgStart(lptCmdLine);
+	// The rest of the arguments will be passed to dll function
+	if (i < argc)
+		lptCmdLine = argv[i];
+	else
+		lptCmdLine = _T("");
 
 	nRetVal = 0;
 
+	// Everything is all setup, so load the dll now
 	hDll = LoadLibrary(lptDllName);
 	if (hDll) {
 		nStrLen = _tcslen(lptFuncName);
+		// Make a non-unicode version of the function name,
+		// since that is all GetProcAddress accepts
 		lpFuncName = DuplicateToMultiByte(lptFuncName,nStrLen + 2);
 
+#ifdef UNICODE
 		lpFuncName[nStrLen] = 'W';
 		lpFuncName[nStrLen+1] = 0;
+		// Get address of unicode version of the dll function if it exists
 		fnDllWinMainW = (DllWinMainW)GetProcAddress(hDll,lpFuncName);
 		fnDllWinMainA = 0;
 		if (!fnDllWinMainW) {
+			// If no unicode function was found, get the address of the non-unicode function
 			lpFuncName[nStrLen] = 'A';
 			fnDllWinMainA = (DllWinMainA)GetProcAddress(hDll,lpFuncName);
 			if (!fnDllWinMainA) {
+				// If first non-unicode function was not found, get the address
+				// of the other non-unicode function
 				lpFuncName[nStrLen] = 0;
 				fnDllWinMainA = (DllWinMainA)GetProcAddress(hDll,lpFuncName);
 			}
 		}
+#else
+		// Get address of non-unicode version of the dll function if it exists
+		fnDllWinMainA = (DllWinMainA)GetProcAddress(hDll,lpFuncName);
+		fnDllWinMainW = 0;
+		if (!fnDllWinMainA) {
+			// If first non-unicode function was not found, get the address
+			// of the other non-unicode function
+			lpFuncName[nStrLen] = 'A';
+			lpFuncName[nStrLen+1] = 0;
+			fnDllWinMainA = (DllWinMainA)GetProcAddress(hDll,lpFuncName);
+			if (!fnDllWinMainA) {
+				// If non-unicode function was not found, get the address of the unicode function
+				lpFuncName[nStrLen] = 'W';
+				fnDllWinMainW = (DllWinMainW)GetProcAddress(hDll,lpFuncName);
+			}
+		}
+#endif
 
 		free(lpFuncName);
 
 		RegisterBlankClass(hInstance);
-		// Create a window to pass the handle to the dll function
+		// Create a window so we can pass a window handle to
+		// the dll function; this is required
 		hWindow = CreateWindowEx(0,rundll32_wclass,rundll32_wtitle,0,CW_USEDEFAULT,0,CW_USEDEFAULT,0,0,0,hInstance,0);
 
 		if (fnDllWinMainW) {
+			// Convert the command-line string to unicode and call the dll function
 			lpwCmdLine = ConvertToWideChar(lptCmdLine);
 			nRetVal = fnDllWinMainW(hWindow,hInstance,lpwCmdLine,nCmdShow);
 			FreeConvertedWideChar(lpwCmdLine);
 		}
 		else if (fnDllWinMainA) {
+			// Convert the command-line string to ansi and call the dll function
 			lpaCmdLine = ConvertToMultiByte(lptCmdLine);
 			nRetVal = fnDllWinMainA(hWindow,hInstance,lpaCmdLine,nCmdShow);
 			FreeConvertedMultiByte(lpaCmdLine);
 		}
 		else {
+			// The specified dll function was not found; display an error message
 			GetModuleTitle();
 			lptMsgBuffer = (LPTSTR)malloc((_tcslen(MissingEntry) - 4 + _tcslen(lptFuncName) + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 			_stprintf(lptMsgBuffer,MissingEntry,lptFuncName,lptDllName);
@@ -295,9 +449,11 @@ int WINAPI WinMain(
 		DestroyWindow(hWindow);
 		UnregisterClass(rundll32_wclass,hInstance);
 
+		// The dll function has finished executing, so unload it
 		FreeLibrary(hDll);
 	}
 	else {
+		// The dll could not be loaded; display an error message
 		GetModuleTitle();
 		lptMsgBuffer = (LPTSTR)malloc((_tcslen(DllNotLoaded) - 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 		_stprintf(lptMsgBuffer,DllNotLoaded,lptDllName);
@@ -305,7 +461,7 @@ int WINAPI WinMain(
 		free(lptMsgBuffer);
 	}
 
-	free(lptCmdLineCopy);
+	if (argv) free(argv);
 	return nRetVal;
 }
 
