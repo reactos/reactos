@@ -28,6 +28,7 @@
 _InbvPutPixels:
 	pushl	%ebp
 	movl	%esp, %ebp
+	pushl	%esi
 	pushl	%ebx
 
   /* Compute mask and put it in EBX
@@ -98,6 +99,7 @@ _InbvPutPixels:
   movb  %al, 0x3(%esi)
 
   popl  %ebx
+  popl  %esi
   popl  %ebp
 	ret
 
