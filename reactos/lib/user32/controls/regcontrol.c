@@ -1,4 +1,4 @@
-/* $Id: regcontrol.c,v 1.2 2003/06/22 19:17:18 sedwards Exp $
+/* $Id: regcontrol.c,v 1.3 2003/06/23 14:46:17 rcampbell Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS User32
@@ -38,7 +38,6 @@ static void RegisterBuiltinClass(const struct builtin_class_descr *Descr)
 void ControlsInit(void)
 {
 #if 0
-  RegisterBuiltinClass(&BUTTON_builtin_class);
   RegisterBuiltinClass(&COMBO_builtin_class);
   RegisterBuiltinClass(&COMBOLBOX_builtin_class);
   RegisterBuiltinClass(&DESKTOP_builtin_class);
@@ -48,6 +47,7 @@ void ControlsInit(void)
   RegisterBuiltinClass(&MENU_builtin_class);
   RegisterBuiltinClass(&SCROLL_builtin_class);
 #endif
+  RegisterBuiltinClass(&BUTTON_builtin_class);
   RegisterBuiltinClass(&ICONTITLE_builtin_class);
   RegisterBuiltinClass(&STATIC_builtin_class);
 }
