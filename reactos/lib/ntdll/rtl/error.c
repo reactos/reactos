@@ -1,4 +1,4 @@
-/* $Id: error.c,v 1.2 1999/12/04 21:02:25 ea Exp $
+/* $Id: error.c,v 1.3 1999/12/18 10:16:11 ea Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -8,6 +8,7 @@
  * REVISION HISTORY:
  *                    22/07/99: Added RtlNtStatusToDosError.
  *	1999-11-30: Added RtlNtStatusToPsxErrno.
+ *	1999-12-18: STDCALL RtlNtStatusToDosError
  */
 
 /* INCLUDES *****************************************************************/
@@ -20,7 +21,7 @@
 /* FUNCTIONS ***************************************************************/
 
 
-DWORD RtlNtStatusToDosError(NTSTATUS Status)
+DWORD STDCALL RtlNtStatusToDosError (NTSTATUS Status)
 {
    switch (Status)
    {
@@ -624,7 +625,7 @@ STATUS_VERIFY_REQUIRED               ERROR_MEDIA_CHANGED
  * 	RtlNtStatusToPsxErrno
  *
  * DESCRIPTION
- *	Convert an Execute status ID into a POSIX error number
+ *	Convert an Executive status ID into a POSIX error number
  *	(errno.h).
  *	
  * NOTE
