@@ -1,4 +1,4 @@
-/* $Id: desktop.c,v 1.34 2004/08/21 19:50:39 gvg Exp $
+/* $Id: desktop.c,v 1.35 2004/11/13 01:14:42 rcampbell Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -33,7 +33,7 @@ GetSystemMetrics(int nIndex)
  */
 BOOL STDCALL SetDeskWallpaper(LPCSTR filename)
 {
-	return SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,(PVOID)filename,1);
+	return SystemParametersInfoA(SPI_SETDESKWALLPAPER,0,(PVOID)filename,TRUE);
 }
 /*
  * @implemented
