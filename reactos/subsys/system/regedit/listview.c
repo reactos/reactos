@@ -408,7 +408,9 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 SendMessage(hFrameWnd, WM_COMMAND, MAKEWPARAM(ID_EDIT_MODIFY, 0), 0);
             }
             return TRUE;
-
+	case NM_SETFOCUS:
+	    g_pChildWnd->nFocusPanel = 0;
+	    break;
         case LVN_BEGINLABELEDIT:
             {
               PLINE_INFO lineinfo;
@@ -423,6 +425,40 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
                 else
                 {
                   *Result = FALSE;
+                }
+              }
+              else
+                *Result = TRUE;
+              return TRUE;
+            }
+        case LVN_ENDLABELEDIT:
+            {
+              PLINE_INFO lineinfo;
+              Info = (NMLVDISPINFO*)lParam;
+              if(Info && Info->item.pszText)
+              {
+                lineinfo = (PLINE_INFO)Info->item.lParam;
+                if(!lineinfo->name || !_tcscmp(lineinfo->name, _T("")))
+                {
+                  *Result = FALSE;
+                }
+                else
+                {
+                  LONG ret;
+		  //if((ret = RenameValue(lineinfo->name, Info->item.pszText)) != ERROR_SUCCESS)
+                  {
+		    TCHAR msg[128], caption[128];
+		    
+		    LoadString(hInst, IDS_ERR_RENVAL_CAPTION, caption, sizeof(caption)/sizeof(TCHAR));
+		    if(_tcslen(Info->item.pszText) == 0)
+		    {
+		      LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
+		    }
+		    else
+                    _stprintf(msg, _T("rename from %s to %s"), lineinfo->name, Info->item.pszText);
+                    MessageBox(0, msg, NULL, 0);
+		    *Result = TRUE;
+		  }
                 }
               }
               else

@@ -101,6 +101,7 @@ static void OnPaint(HWND hWnd)
 
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    ChildWnd* pChildWnd = g_pChildWnd;
     switch (LOWORD(wParam)) {
         /* Parse the menu selections: */
     case ID_REGISTRY_EXIT:
@@ -108,6 +109,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case ID_VIEW_REFRESH:
         /* TODO */
+        break;
+    case ID_SWITCH_PANELS:
+        pChildWnd->nFocusPanel = !pChildWnd->nFocusPanel;
+        SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
         break;
     default:
         return FALSE;
@@ -275,10 +280,6 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                     HKEY hRootKey;
 
 		    keyPath = GetItemPath(pChildWnd->hTreeWnd, ((NMTREEVIEW*)lParam)->itemNew.hItem, &hRootKey);
-		    if(!hRootKey)
-		    {
-		      RefreshListView(pChildWnd->hListWnd, 0, NULL);
-		    }
 		    if (keyPath) {
 		        RefreshListView(pChildWnd->hListWnd, hRootKey, keyPath);
 			rootName = get_root_key_name(hRootKey);
@@ -292,10 +293,10 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                 }
                 break;
 	    case NM_SETFOCUS:
-		pChildWnd->nFocusPanel = 1;
+		pChildWnd->nFocusPanel = 0;
 		break;
             default:
-                goto def;
+                return 0;
             }
         } else
         {
@@ -303,12 +304,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             {
 		switch (((LPNMHDR)lParam)->code) {
 		  case NM_SETFOCUS:
-		  	pChildWnd->nFocusPanel = 0;
+		  	pChildWnd->nFocusPanel = 1;
 		  	break;
 		  default:
-                	if(ListWndNotifyProc(pChildWnd->hListWnd, wParam, lParam, &Result))
+                	if(!ListWndNotifyProc(pChildWnd->hListWnd, wParam, lParam, &Result))
                 	{
-                  		return Result;
+                  		goto def;
                 	}
                 	break;
         	}

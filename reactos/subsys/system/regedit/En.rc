@@ -263,6 +263,8 @@ BEGIN
     IDS_QUERY_DELETE_CONFIRM "Confirm Value Delete"
     IDS_ERR_DELVAL_CAPTION  "Error Deleting Values"
     IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
+    IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
+    IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
 END
 
 STRINGTABLE DISCARDABLE

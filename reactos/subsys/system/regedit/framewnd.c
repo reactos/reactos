@@ -658,6 +658,10 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
     case WM_MENUSELECT:
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
         break;
+    case WM_ACTIVATE:
+        if (LOWORD(hWnd))
+          SetFocus(g_pChildWnd->hWnd);
+        break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
         PostQuitMessage(0);
