@@ -45,6 +45,7 @@
 #include "cabinet.h"
 #include "filesup.h"
 #include "drivesup.h"
+#include "genlist.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -128,6 +129,12 @@ static HINF SetupInf;
 static HSPFILEQ SetupFileQueue = NULL;
 
 static BOOLEAN WarnLinuxPartitions = TRUE;
+
+static PGENERIC_LIST ComputerList = NULL;
+static PGENERIC_LIST DisplayList = NULL;
+static PGENERIC_LIST KeyboardList = NULL;
+static PGENERIC_LIST LayoutList = NULL;
+static PGENERIC_LIST PointerList = NULL;
 
 
 /* FUNCTIONS ****************************************************************/
@@ -553,7 +560,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -568,7 +575,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -587,7 +594,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -619,7 +626,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -636,7 +643,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -654,7 +661,7 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
@@ -671,14 +678,14 @@ StartPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
 
   CheckUnattendedSetup();
 
-  return(INTRO_PAGE);
+  return INTRO_PAGE;
 }
 
 
@@ -756,16 +763,16 @@ EmergencyIntroPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(REBOOT_PAGE);
+	  return REBOOT_PAGE;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
-	  return(INTRO_PAGE);
+	  return INTRO_PAGE;
 	}
     }
 
-  return(REPAIR_INTRO_PAGE);
+  return REPAIR_INTRO_PAGE;
 }
 
 
@@ -789,16 +796,16 @@ RepairIntroPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(REBOOT_PAGE);
+	  return REBOOT_PAGE;
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
 	{
-	  return(INTRO_PAGE);
+	  return INTRO_PAGE;
 	}
     }
 
-  return(REPAIR_INTRO_PAGE);
+  return REPAIR_INTRO_PAGE;
 }
 
 
@@ -856,6 +863,46 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 {
   static ULONG Line = 17;
 
+  /* Initialize the computer settings list */
+  if (ComputerList == NULL)
+    {
+      ComputerList = CreateGenericList();
+      AppendGenericListEntry(ComputerList, "Standard-PC", NULL, TRUE);
+    }
+
+  /* Initialize the display settings list */
+  if (DisplayList == NULL)
+    {
+      DisplayList = CreateGenericList();
+      AppendGenericListEntry(DisplayList, "VGA display", NULL, FALSE);
+      AppendGenericListEntry(DisplayList, "VESA display", NULL, FALSE);
+      AppendGenericListEntry(DisplayList, "Automatic detection", NULL, TRUE);
+    }
+
+  /* Initialize the keyboard settings list */
+  if (KeyboardList == NULL)
+    {
+      KeyboardList = CreateGenericList();
+      AppendGenericListEntry(KeyboardList, "XT-, AT- or extended keyboard (83-105 keys)", NULL, TRUE);
+    }
+
+  /* Initialize the keyboard settings list */
+  if (LayoutList == NULL)
+    {
+      LayoutList = CreateGenericList();
+      AppendGenericListEntry(LayoutList, "English (USA)", NULL, TRUE);
+      AppendGenericListEntry(LayoutList, "French (France)", NULL, FALSE);
+      AppendGenericListEntry(LayoutList, "German (Germany)", NULL, FALSE);
+    }
+
+  /* Initialize the keyboard settings list */
+  if (PointerList == NULL)
+    {
+      PointerList = CreateGenericList();
+      AppendGenericListEntry(PointerList, "PS/2 (Mouse port) mouse", NULL, TRUE);
+      AppendGenericListEntry(PointerList, "Serial mouse", NULL, FALSE);
+    }
+
   SetTextXY(6, 8, "The list below shows the current device settings.");
 
   SetTextXY(8, 11, "       Computer:");
@@ -866,12 +913,11 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
   SetTextXY(8, 17, "         Accept:");
 
-
-  SetTextXY(25, 11, "Standard-PC");
-  SetTextXY(25, 12, "Automatic detection");
-  SetTextXY(25, 13, "XT-, AT- or extended keyboard (83-105 keys)");
-  SetTextXY(25, 14, "English (USA)");
-  SetTextXY(25, 15, "PS/2 (Mouse port) mouse");
+  SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
+  SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
+  SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
+  SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
+  SetTextXY(25, 15, GetGenericListEntry(PointerList)->Text);
 
   SetTextXY(25, 17, "Accept these device setings");
   InvertTextXY (24, Line, 48, 1);
@@ -902,8 +948,8 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	    Line++;
 	  InvertTextXY (24, Line, 48, 1);
 	}
-      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
 	  NormalTextXY (24, Line, 48, 1);
 	  if (Line == 11)
@@ -945,21 +991,55 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Computer settings are not implemented yet.");
+  SHORT xScreen;
+  SHORT yScreen;
 
+  SetTextXY(6, 8, "You want to change the type of computer to be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
+  SetTextXY(8, 11, "   Then press ENTER.");
+
+  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  SetTextXY(8, 14, "   the computer type.");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  DrawGenericList(ComputerList,
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
+
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
+  SaveGenericListState(ComputerList);
 
   while(TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList (ComputerList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList (ComputerList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return QUIT_PAGE;
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  RestoreGenericListState(ComputerList);
+	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -974,21 +1054,57 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Display settings are not implemented yet.");
+  SHORT xScreen;
+  SHORT yScreen;
 
+  SetTextXY(6, 8, "You want to change the type of display to be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
+  SetTextXY(8, 11, "   Then press ENTER.");
+
+  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  SetTextXY(8, 14, "   the display type.");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  DrawGenericList(DisplayList,
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
+
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
+  SaveGenericListState(DisplayList);
 
   while(TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList (DisplayList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList (DisplayList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
-	    return QUIT_PAGE;
+	    {
+	      return QUIT_PAGE;
+	    }
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  RestoreGenericListState(DisplayList);
+	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -1003,21 +1119,55 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Keyboard settings are not implemented yet.");
+  SHORT xScreen;
+  SHORT yScreen;
 
+  SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
+  SetTextXY(8, 11, "   Then press ENTER.");
+
+  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  SetTextXY(8, 14, "   the keyboard type.");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  DrawGenericList(KeyboardList,
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
+
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
+  SaveGenericListState(KeyboardList);
 
   while(TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList (KeyboardList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList (KeyboardList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return QUIT_PAGE;
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  RestoreGenericListState(KeyboardList);
+	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -1032,21 +1182,55 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LayoutSettingsPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Keyboard layout settings are not implemented yet.");
+  SHORT xScreen;
+  SHORT yScreen;
 
+  SetTextXY(6, 8, "You want to change the keyboard layout to be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard");
+  SetTextXY(8, 11, "    layout. Then press ENTER.");
+
+  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  SetTextXY(8, 14, "   the keyboard layout.");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  DrawGenericList(LayoutList,
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
+
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
+  SaveGenericListState(LayoutList);
 
   while(TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList (LayoutList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList (LayoutList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return QUIT_PAGE;
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  RestoreGenericListState(LayoutList);
+	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -1061,21 +1245,55 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 PointerSettingsPage(PINPUT_RECORD Ir)
 {
-  SetTextXY(6, 8, "Pointer settings are not implemented yet.");
+  SHORT xScreen;
+  SHORT yScreen;
 
+  SetTextXY(6, 8, "You want to change the pointing device to be installed.");
 
-  SetStatusText("   ENTER = Continue   F3 = Quit");
+  SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired pointing");
+  SetTextXY(8, 11, "    device. Then press ENTER.");
+
+  SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
+  SetTextXY(8, 14, "   the pointing device.");
+
+  GetScreenSize(&xScreen, &yScreen);
+
+  DrawGenericList(PointerList,
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
+
+  SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
+  SaveGenericListState(PointerList);
 
   while(TRUE)
     {
       ConInKey(Ir);
 
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList(PointerList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList(PointerList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
 	{
 	  if (ConfirmQuit(Ir) == TRUE)
 	    return QUIT_PAGE;
 	  break;
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)) /* ESC */
+	{
+	  RestoreGenericListState(PointerList);
+	  return DEVICE_SETTINGS_PAGE;
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
@@ -3493,7 +3711,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3518,7 +3736,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	      if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	      {
-		return(QUIT_PAGE);
+		return QUIT_PAGE;
 	      }
 	    }
 	  }
@@ -3544,7 +3762,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	    if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	  }
 	}
@@ -3565,12 +3783,12 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 	  if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D)	/* ENTER */
 	    {
-	      return(QUIT_PAGE);
+	      return QUIT_PAGE;
 	    }
 	}
     }
 
-  return(SUCCESS_PAGE);
+  return SUCCESS_PAGE;
 }
 
 
@@ -3600,6 +3818,41 @@ QuitPage(PINPUT_RECORD Ir)
       FileSystemList = NULL;
     }
 
+  /* Destroy computer settings list */
+  if (ComputerList != NULL)
+    {
+      DestroyGenericList(ComputerList, TRUE);
+      ComputerList = NULL;
+    }
+
+  /* Destroy display settings list */
+  if (DisplayList != NULL)
+    {
+      DestroyGenericList(DisplayList, TRUE);
+      DisplayList = NULL;
+    }
+
+  /* Destroy keyboard settings list */
+  if (KeyboardList != NULL)
+    {
+      DestroyGenericList(KeyboardList, TRUE);
+      KeyboardList = NULL;
+    }
+
+  /* Destroy keyboard layout list */
+  if (LayoutList != NULL)
+    {
+      DestroyGenericList(LayoutList, TRUE);
+      LayoutList = NULL;
+    }
+
+  /* Destroy pointer device list */
+  if (PointerList != NULL)
+    {
+      DestroyGenericList(PointerList, TRUE);
+      PointerList = NULL;
+    }
+
   SetStatusText("   ENTER = Reboot computer");
 
   while(TRUE)
@@ -3608,7 +3861,7 @@ QuitPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(FLUSH_PAGE);
+	  return FLUSH_PAGE;
 	}
     }
 }
@@ -3628,7 +3881,7 @@ SuccessPage(PINPUT_RECORD Ir)
 
   if (IsUnattendedSetup)
     {
-      return(FLUSH_PAGE);
+      return FLUSH_PAGE;
     }
 
   while(TRUE)
@@ -3637,7 +3890,7 @@ SuccessPage(PINPUT_RECORD Ir)
 
       if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-	  return(FLUSH_PAGE);
+	  return FLUSH_PAGE;
 	}
     }
 }
@@ -3653,7 +3906,7 @@ FlushPage(PINPUT_RECORD Ir)
 
   SetStatusText("   Flushing cache");
 
-  return(REBOOT_PAGE);
+  return REBOOT_PAGE;
 }
 
 

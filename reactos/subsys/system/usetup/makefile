@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.15 2004/02/23 11:58:27 ekohl Exp $
+# $Id: makefile,v 1.16 2004/05/28 12:14:00 ekohl Exp $
 
 PATH_TO_TOP = ../../..
 
@@ -18,8 +18,8 @@ TARGET_INSTALLDIR = system32
 
 TARGET_CFLAGS = -D__NTAPP__ -I$(PATH_TO_TOP)/lib/zlib -Wall -Werror -Wno-format
 
-TARGET_OBJECTS = bootsup.o cabinet.o console.o drivesup.o \
-                 filequeue.o filesup.o format.o fslist.o infcache.o \
+TARGET_OBJECTS = bootsup.o cabinet.o console.o drivesup.o filequeue.o \
+                 filesup.o format.o fslist.o genlist.o infcache.o \
                  inicache.o partlist.o progress.o registry.o usetup.o
 
 include $(PATH_TO_TOP)/rules.mak
