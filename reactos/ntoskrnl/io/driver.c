@@ -534,7 +534,7 @@ IopInitializeDriverModule(
    if (DeviceNode->ServiceName.Buffer)
    {
       RegistryKey.Length = DeviceNode->ServiceName.Length +
-         sizeof(ServicesKeyName);
+         sizeof(ServicesKeyName) - sizeof(UNICODE_NULL);
       RegistryKey.MaximumLength = RegistryKey.Length + sizeof(UNICODE_NULL);
       RegistryKey.Buffer = ExAllocatePool(PagedPool, RegistryKey.MaximumLength);
       wcscpy(RegistryKey.Buffer, ServicesKeyName);
@@ -1234,10 +1234,10 @@ IopInitializeBootDrivers(VOID)
       }
 
       /*
-       * Free memory for all boot files, except ntoskrnl.exe, hal.dll
+       * Free memory for all boot files, except ntoskrnl.exe
        * and symbol files, if the kernel debugger is active
        */
-      if (_stricmp(Extension, ".exe") && _stricmp(Extension, ".dll")
+      if (i != 0 /* ntoskrnl.exe is always the first module */
 #if defined(DBG) || defined(KDBG)
           && _stricmp(Extension, ".sym")
 #endif
