@@ -147,7 +147,10 @@ IoSecondStageCompletion_KernelApcRoutine(
     IN OUT PVOID *SystemArgument2
     )
 {
-   IoFreeIrp((PIRP)(*SystemArgument1));
+   PIRP Irp;
+
+   Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+   IoFreeIrp(Irp);
 }
 
 
@@ -190,8 +193,7 @@ IoSecondStageCompletion(
    /* 
    Remove synchronous irp's from the threads cleanup list.
    To synchronize with the code inserting the entry, this code must run 
-   at APC_LEVEL, thou this routine is currently (incorrecly?) called at
-   irql's from 0 to 2.
+   at APC_LEVEL
    */
    if (!IsListEmpty(&Irp->ThreadListEntry))
    {
@@ -257,7 +259,7 @@ IoSecondStageCompletion(
    //Windows NT File System Internals, page 154
    if (!(Irp->Flags & IRP_PAGING_IO) && OriginalFileObject)
    {
-      // if the event is not the one in the file object, it needs dereferenced   
+      // if the event is not the one in the file object, it needs dereferenced  
       if (Irp->UserEvent && Irp->UserEvent != &OriginalFileObject->Event)   
       {
          ObDereferenceObject(Irp->UserEvent);
@@ -289,7 +291,7 @@ IoSecondStageCompletion(
                         UserApcContext);
 
       KeInsertQueueApc( &Irp->Tail.Apc,
-                        Irp,
+                        Irp->UserIosb,
                         NULL,
                         PriorityBoost);
 
