@@ -194,7 +194,7 @@ NTSTATUS LdrpMapSystemDll(HANDLE ProcessHandle,
    if (Process != CurrentProcess)
      {
        DPRINT("Attaching to Process\n");
-       KeAttachProcess(Process);
+       KeAttachProcess((PKPROCESS)Process);
      }
 
    /*
