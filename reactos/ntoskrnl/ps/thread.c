@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.32 1999/12/02 20:53:55 dwelch Exp $
+/* $Id: thread.c,v 1.33 1999/12/05 23:23:50 phreak Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -467,6 +467,7 @@ VOID PsInitThreadManagment(VOID)
    PsThreadType->Security = NULL;
    PsThreadType->QueryName = NULL;
    PsThreadType->OkayToClose = NULL;
+   PsThreadType->Create = NULL;
    
    PsInitializeThread(NULL,&FirstThread,&FirstThreadHandle,
 		      THREAD_ALL_ACCESS,NULL);
