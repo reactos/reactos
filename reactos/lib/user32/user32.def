@@ -648,7 +648,7 @@ SetWindowLongW@12
 SetWindowPlacement@8
 SetWindowPos@28
 SetWindowRgn@12
-SetWindowStationUser@8
+SetWindowStationUser@16
 SetWindowTextA@8
 SetWindowTextW@8
 SetWindowWord@12

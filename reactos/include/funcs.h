@@ -4695,19 +4695,21 @@ GetInternalWindowPos(
 		     LPPOINT ptIcon
 		     );
 
-HRESULT
+HWND
 STDCALL
 GetProgmanWindow ( VOID );
 
-HRESULT
+HWND
 STDCALL
 GetTaskmanWindow ( VOID );
 
 DWORD
 STDCALL
 SetWindowStationUser(
-		     DWORD x1,
-		     DWORD x2
+		       DWORD Unknown1,
+		       DWORD Unknown2,
+		       DWORD Unknown3,
+		       DWORD Unknown4
 		     );
 
 UINT
@@ -4726,13 +4728,13 @@ SetSystemMenu(
 	      HMENU hMenu
 	      );
 
-HRESULT
+HWND
 STDCALL
-SetTaskmanWindow ( DWORD x );
+SetTaskmanWindow ( HWND x );
 
-HRESULT
+HWND
 STDCALL
-SetProgmanWindow ( DWORD x );
+SetProgmanWindow ( HWND x );
 
 VOID
 STDCALL
