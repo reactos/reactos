@@ -96,35 +96,20 @@ static void InitInstance(HINSTANCE hInstance)
 	WindowClass wcFrame(CLASSNAME_FRAME);
 
 	wcFrame.hIcon		  = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_EXPLORER));
-	wcFrame.hCursor 	  = LoadCursor(0, IDC_ARROW);
-	wcFrame.hIconSm 	  = (HICON)LoadImage(hInstance,
-											 MAKEINTRESOURCE(IDI_EXPLORER),
-											 IMAGE_ICON,
-											 GetSystemMetrics(SM_CXSMICON),
-											 GetSystemMetrics(SM_CYSMICON),
-											 LR_SHARED);
+	wcFrame.hIconSm 	  = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_EXPLORER),
+											 IMAGE_ICON, GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED);
 
 	g_Globals._hframeClass = wcFrame.Register();
 
 
 	 // register child windows class
 
-	WindowClass wcChild(CLASSNAME_CHILDWND);
-
-	wcChild.style		  = CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW;
-	wcChild.hCursor 	  = LoadCursor(0, IDC_ARROW);
-
-	wcChild.Register();
+	WindowClass(CLASSNAME_CHILDWND, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
 
 
 	 // register tree windows class
 
-	WindowClass wcTreeChild(CLASSNAME_WINEFILETREE);
-
-	wcTreeChild.style	  = CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW;
-	wcTreeChild.hCursor   = LoadCursor(0, IDC_ARROW);
-
-	wcTreeChild.Register();
+	WindowClass(CLASSNAME_WINEFILETREE, CS_CLASSDC|CS_DBLCLKS|CS_VREDRAW).Register();
 
 
 	g_Globals._cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);

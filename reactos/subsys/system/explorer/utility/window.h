@@ -117,7 +117,7 @@ template<typename WND_CLASS, typename INFO_CLASS> struct WindowCreatorInfo
 
 struct WindowClass : public WNDCLASSEX
 {
-	WindowClass(LPCTSTR classname, WNDPROC wndproc=Window::WindowWndProc);
+	WindowClass(LPCTSTR classname, UINT style=0, WNDPROC wndproc=Window::WindowWndProc);
 
 	ATOM Register()
 	{

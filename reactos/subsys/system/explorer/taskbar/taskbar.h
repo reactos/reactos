@@ -39,6 +39,13 @@
 #define	WM_SHELLHOOK_NOTIFY		(WM_APP+0x10)
 
 
+#define	CLASSNAME_EXPLORERBAR	_T("Shell_TrayWnd")
+#define	TITLE_EXPLORERBAR		_T("DesktopBar")
+
+#define	CLASSNAME_TASKBAR		_T("MSTaskSwWClass")
+#define	TITLE_TASKBAR			_T("Running Applications")
+
+
 struct DesktopBar : public Window
 {
 	typedef Window super;

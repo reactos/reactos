@@ -11,26 +11,11 @@ Package=<5>
 
 Package=<4>
 {{{
-    Begin Project Dependency
-    Project_Dep_Name shellhook
-    End Project Dependency
 }}}
 
 ###############################################################################
 
 Project: "make_explorer"=.\make_explorer.dsp - Package Owner=<4>
-
-Package=<5>
-{{{
-}}}
-
-Package=<4>
-{{{
-}}}
-
-###############################################################################
-
-Project: "shellhook"=.\shellhook.dsp - Package Owner=<4>
 
 Package=<5>
 {{{

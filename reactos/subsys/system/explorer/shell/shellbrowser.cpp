@@ -77,8 +77,7 @@ LRESULT ShellBrowserChild::Init(LPCREATESTRUCT pcs)
 
 	_hWndFrame = GetParent(pcs->hwndParent);
 
-	RECT rect;
-	GetClientRect(_hwnd, &rect);
+	ClientRect rect(_hwnd);
 
 	SHFILEINFO  sfi;
 
@@ -393,8 +392,7 @@ void ShellBrowserChild::OnTreeItemSelected(int idCtrl, LPNMTREEVIEW pnmtv)
 		pLastShellView->DestroyViewWindow();
 		pLastShellView->Release();
 
-		RECT clnt;
-		GetClientRect(_hwnd, &clnt);
+		ClientRect clnt(_hwnd);
 		resize_children(clnt.right, clnt.bottom);
 	}
 

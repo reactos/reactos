@@ -32,12 +32,14 @@
 #include "../globals.h"
 
 
-WindowClass::WindowClass(LPCTSTR classname, WNDPROC wndproc)
+WindowClass::WindowClass(LPCTSTR classname, UINT style_, WNDPROC wndproc)
 {
 	memset(this, 0, sizeof(WNDCLASSEX));
 
 	cbSize = sizeof(WNDCLASSEX);
+	style = style_;
 	hInstance = g_Globals._hInstance;
+	hCursor = LoadCursor(0, IDC_ARROW);
 
 	lpszClassName = classname;
 	lpfnWndProc = wndproc;
@@ -235,8 +237,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	  case WM_PAINT: {
 		PAINTSTRUCT ps;
 		HBRUSH lastBrush;
-		RECT rt;
-		GetClientRect(_hwnd, &rt);
+		ClientRect rt(_hwnd);
 		BeginPaint(_hwnd, &ps);
 		rt.left = _split_pos-SPLIT_WIDTH/2;
 		rt.right = _split_pos+SPLIT_WIDTH/2+1;
@@ -274,10 +275,9 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;}
 
 	  case WM_LBUTTONDOWN: {
-		RECT rt;
 		int x = LOWORD(lparam);
 
-		GetClientRect(_hwnd, &rt);
+		ClientRect rt(_hwnd);
 
 		if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
 			_last_split = _split_pos;
@@ -295,7 +295,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (wparam == VK_ESCAPE)
 			if (GetCapture() == _hwnd) {
 				_split_pos = _last_split;
-				RECT rt; GetClientRect(_hwnd, &rt);
+				ClientRect rt(_hwnd);
 				resize_children(rt.right, rt.bottom);
 				_last_split = -1;
 				ReleaseCapture();
@@ -307,8 +307,7 @@ LRESULT ChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		if (GetCapture() == _hwnd) {
 			int x = LOWORD(lparam);
 
-			RECT rt;
-			GetClientRect(_hwnd, &rt);
+			ClientRect rt(_hwnd);
 
 			if (x>=0 && x<rt.right) {
 				_split_pos = x;

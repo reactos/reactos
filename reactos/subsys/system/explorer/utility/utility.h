@@ -97,6 +97,15 @@ protected:
 };
 
 
+struct ClientRect : public RECT
+{
+	ClientRect(HWND hwnd)
+	{
+		GetClientRect(hwnd, this);
+	}
+};
+
+
 struct FullScreenParameters {
 	FullScreenParameters()
 	 :	_mode(FALSE)

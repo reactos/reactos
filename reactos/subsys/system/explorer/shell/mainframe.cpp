@@ -410,18 +410,17 @@ int MainFrame::Command(int id, int code)
 void MainFrame::resize_frame_rect(PRECT prect)
 {
 	int new_top;
-	RECT rt;
 
 	if (IsWindowVisible(_htoolbar)) {
 		SendMessage(_htoolbar, WM_SIZE, 0, 0);
-		GetClientRect(_htoolbar, &rt);
+		ClientRect rt(_htoolbar);
 		prect->top = rt.bottom+3;
 		prect->bottom -= rt.bottom+3;
 	}
 
 	if (IsWindowVisible(_hdrivebar)) {
 		SendMessage(_hdrivebar, WM_SIZE, 0, 0);
-		GetClientRect(_hdrivebar, &rt);
+		ClientRect rt(_hdrivebar);
 		new_top = --prect->top + rt.bottom+3;
 		MoveWindow(_hdrivebar, 0, prect->top, rt.right, new_top, TRUE);
 		prect->top = new_top;
@@ -433,7 +432,7 @@ void MainFrame::resize_frame_rect(PRECT prect)
 
 		SendMessage(_hstatusbar, WM_SIZE, 0, 0);
 		SendMessage(_hstatusbar, SB_SETPARTS, 2, (LPARAM)&parts);
-		GetClientRect(_hstatusbar, &rt);
+		ClientRect rt(_hstatusbar);
 		prect->bottom -= rt.bottom;
 	}
 
@@ -456,17 +455,13 @@ void MainFrame::resize_frame(int cx, int cy)
 
 void MainFrame::resize_frame_client()
 {
-	RECT rect;
-
-	GetClientRect(_hwnd, &rect);
+	ClientRect rect(_hwnd);
 
 	resize_frame_rect(&rect);
 }
 
 void MainFrame::frame_get_clientspace(PRECT prect)
 {
-	RECT rt;
-
 	if (!IsIconic(_hwnd))
 		GetClientRect(_hwnd, prect);
 	else {
@@ -483,17 +478,17 @@ void MainFrame::frame_get_clientspace(PRECT prect)
 	}
 
 	if (IsWindowVisible(_htoolbar)) {
-		GetClientRect(_htoolbar, &rt);
+		ClientRect rt(_htoolbar);
 		prect->top += rt.bottom+2;
 	}
 
 	if (IsWindowVisible(_hdrivebar)) {
-		GetClientRect(_hdrivebar, &rt);
+		ClientRect rt(_hdrivebar);
 		prect->top += rt.bottom+2;
 	}
 
 	if (IsWindowVisible(_hstatusbar)) {
-		GetClientRect(_hstatusbar, &rt);
+		ClientRect rt(_hstatusbar);
 		prect->bottom -= rt.bottom;
 	}
 }

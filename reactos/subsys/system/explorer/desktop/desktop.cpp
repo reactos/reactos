@@ -55,8 +55,7 @@ static void draw_desktop_background(HWND hwnd, HDC hdc)
 
 	static const TCHAR BkgndText[] = TEXT("ReactOS 0.1.2 Desktop Example\nby Silver Blade, Martin Fuchs");
 
-	RECT rect;
-	GetClientRect(hwnd, &rect);
+	ClientRect rect(hwnd);
 
 	PaintDesktop(hdc);
 /*
@@ -140,8 +139,7 @@ LRESULT	DesktopWindow::Init(LPCREATESTRUCT pcs)
 		fs.ViewMode = FVM_ICON;
 		fs.fFlags = FWF_DESKTOP|FWF_NOCLIENTEDGE|FWF_NOSCROLL|FWF_BESTFITWINDOW|FWF_SNAPTOGRID;
 
-		RECT rect;
-		GetClientRect(_hwnd, &rect);
+		ClientRect rect(_hwnd);
 
 		hr = _pShellView->CreateViewWindow(NULL, &fs, this, &rect, &hWndView);
 
@@ -232,13 +230,10 @@ LRESULT DesktopWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 HWND create_desktop_window(HINSTANCE hInstance)
 {
-	WindowClass wcDesktop(_T("Progman"));
+	WindowClass wcDesktop(_T("Progman"), CS_DBLCLKS);
 
-	wcDesktop.style 		= CS_DBLCLKS;
 	wcDesktop.hbrBackground = (HBRUSH)(COLOR_BACKGROUND+1);
 	wcDesktop.hIcon			= LoadIcon(0, IDI_APPLICATION);
-	wcDesktop.hCursor		= LoadCursor(0, IDC_ARROW);
-
 
 	ATOM desktopClass = wcDesktop.Register();
 

@@ -776,8 +776,7 @@ int Pane::Notify(int id, NMHDR* pnmh)
 			int dx = phdn->pitem->cxy - _widths[idx];
 			int i;
 
-			RECT clnt;
-			GetClientRect(_hwnd, &clnt);
+			ClientRect clnt(_hwnd);
 
 			 // move immediate to simulate HDS_FULLDRAG (for now [04/2000] not realy needed with WINELIB)
 			Header_SetItem(_hwndHeader, idx, phdn->pitem);

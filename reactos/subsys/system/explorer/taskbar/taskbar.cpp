@@ -42,14 +42,10 @@
 
 HWND InitializeExplorerBar(HINSTANCE hInstance)
 {
-	WindowClass wcExplorerBar(_T("Shell_TrayWnd"));
-
-	wcExplorerBar.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
-	wcExplorerBar.hCursor		= LoadCursor(0, IDC_ARROW);
-
-	ATOM explorerBarClass = wcExplorerBar.Register();
-
 	RECT rect;
+
+	WindowClass wcExplorerBar(CLASSNAME_EXPLORERBAR);
+	wcExplorerBar.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
 
 	rect.left = -2;	// hide left border
 #ifdef TASKBAR_AT_TOP
@@ -61,7 +57,7 @@ HWND InitializeExplorerBar(HINSTANCE hInstance)
 	rect.bottom = rect.top + TASKBAR_HEIGHT + 2;
 
 	return Window::Create(WINDOW_CREATOR(DesktopBar), WS_EX_PALETTEWINDOW,
-							(LPCTSTR)(int)explorerBarClass, _T("DesktopBar"), WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
+							(LPCTSTR)(int)wcExplorerBar.Register(), TITLE_EXPLORERBAR, WS_POPUP|WS_THICKFRAME|WS_CLIPCHILDREN|WS_VISIBLE,
 							rect.left, rect.top, rect.right-rect.left, rect.bottom-rect.top, 0);
 }
 
@@ -74,6 +70,7 @@ DesktopBar::DesktopBar(HWND hwnd)
 
 DesktopBar::~DesktopBar()
 {
+	 // exit application after destroying desktop window
 	PostQuitMessage(0);
 }
 
@@ -86,19 +83,12 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	Button(_hwnd, TEXT("Start"), 2, 2, 50, TASKBAR_HEIGHT-10, IDC_START);//BS_OWNERDRAW
 
 	 // create task bar
-	WindowClass wcTaskBar(_T("MSTaskSwWClass"));
-
+	WindowClass wcTaskBar(CLASSNAME_TASKBAR);
 	wcTaskBar.hbrBackground = (HBRUSH)(COLOR_BTNFACE+1);
-	wcTaskBar.hCursor		= LoadCursor(0, IDC_ARROW);
-
-	ATOM taskbarClass = wcTaskBar.Register();
-
-	RECT clnt;
-	GetClientRect(_hwnd, &clnt);
 
 	_hwndTaskBar = Window::Create(WINDOW_CREATOR(TaskBar), 0,
-							(LPCTSTR)(int)taskbarClass, _T("Running Applications"), WS_CHILD|WS_VISIBLE,
-							TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
+							(LPCTSTR)(int)wcTaskBar.Register(), TITLE_TASKBAR, WS_CHILD|WS_VISIBLE,
+							TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, TASKBAR_HEIGHT, _hwnd);
 
 	TaskBar* taskbar = static_cast<TaskBar*>(Window::get_window(_hwndTaskBar));
 
@@ -138,13 +128,10 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		goto def;
 
-	  case WM_SIZE: {
-		if (_hwndTaskBar) {
-			RECT clnt;
-			GetClientRect(_hwnd, &clnt);
-			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, clnt.right-TASKBAR_LEFT, HIWORD(lparam), TRUE);
-		}
-		break;}
+	  case WM_SIZE:
+		if (_hwndTaskBar)
+			MoveWindow(_hwndTaskBar, TASKBAR_LEFT, 0, ClientRect(_hwnd).right-TASKBAR_LEFT, HIWORD(lparam), TRUE);
+		break;
 
 	  case WM_CLOSE:
 		break;
@@ -247,11 +234,11 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	super::Init(pcs);
 
 	_htoolbar = CreateToolbarEx(_hwnd,
-		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|//CCS_NORESIZE|
+		WS_CHILD|WS_VISIBLE|CCS_NODIVIDER|CCS_TOP|
 		TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE|TBSTYLE_TRANSPARENT,
 		IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
-	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(16,160));
+	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(80,160));
 	//SendMessage(_htoolbar, TB_SETEXTENDEDSTYLE, 0, TBSTYLE_EX_MIXEDBUTTONS);
 	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
@@ -321,6 +308,8 @@ int TaskBar::Command(int id, int code)
 
 			_last_foreground_wnd = hwnd;
 		}
+
+		Refresh();
 
 		return 0;
 	}
