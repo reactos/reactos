@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.11 2002/01/23 23:39:26 chorns Exp $
+# $Id: helper.mk,v 1.12 2002/04/29 23:02:12 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -482,13 +482,14 @@ $(MK_NOSTRIPNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) $(TARGET_LFLAGS) \
+	$(CC) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp \
+		$(TARGET_LFLAGS) \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_NOSTRIPNAME) \
 	  $(MK_FULLRES) $(MK_OBJECTS) $(MK_LIBS) $(MK_GCCLIBS)
@@ -509,13 +510,14 @@ $(MK_FULLNAME): $(MK_FULLRES) $(TARGET_OBJECTS) $(MK_LIBS)
 		--base-file base.tmp \
 		--output-exp temp.exp $(MK_EXTRACMD)
 	- $(RM) base.tmp
-	$(CC) $(TARGET_LFLAGS) \
+	$(CC) \
 		-Wl,--subsystem,native \
 		-Wl,--image-base,$(TARGET_BASE) \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
 		-Wl,--entry,$(TARGET_ENTRY) \
 		-Wl,temp.exp \
+		$(TARGET_LFLAGS) \
 		-mdll -nostartfiles -nostdlib \
 		-o $(MK_FULLNAME) \
 	  $(MK_FULLRES) $(MK_STRIPPED_OBJECT) $(MK_LIBS) $(MK_GCCLIBS)
@@ -526,8 +528,12 @@ endif # MK_MODE
 # Static library target
 ifeq ($(MK_MODE),static)
 
-$(MK_FULLNAME): $(TARGET_OBJECTS)
-	$(AR) -r $(MK_FULLNAME) $(TARGET_OBJECTS)
+$(MK_NOSTRIPNAME): $(TARGET_OBJECTS)
+	$(AR) -r $(MK_NOSTRIPNAME) $(TARGET_OBJECTS)
+
+# FIXME: dummy rule
+$(MK_FULLNAME): $(MK_NOSTRIPNAME)
+	 $(CP) $(MK_NOSTRIPNAME) $(MK_FULLNAME)
 
 endif # MK_MODE
 
