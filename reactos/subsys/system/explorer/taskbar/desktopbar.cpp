@@ -41,7 +41,11 @@
 
 DesktopBar::DesktopBar(HWND hwnd)
  :	super(hwnd),
+#ifdef _ROS_
 	_trayIcon(hwnd, ID_TRAY_VOLUME)
+#else
+	WM_TASKBARCREATED(RegisterWindowMessage(WINMSG_TASKBARCREATED))
+#endif
 {
 	SetWindowIcon(hwnd, IDI_REACTOS/*IDI_SEARCH*/);	// icon in for TrayNotifyDlg
 
@@ -107,6 +111,12 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 		 // create tray notification area
 		_hwndNotify = NotifyArea::Create(_hwnd);
 
+
+	 // notify all top level windows about the successfully created desktop bar
+	 //@@ Use SendMessage() instead of PostMessage() to avoid problems with delayed created shell service objects?
+	PostMessage(HWND_BROADCAST, WM_TASKBARCREATED, 0, 0);
+
+
 	_hwndQuickLaunch = QuickLaunchBar::Create(_hwnd);
 
 	 // create rebar window to manage task and quick launch bar
@@ -147,10 +157,8 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
 
-	RegisterHotkeys();
 
-	 // notify all top level windows about the successfully created desktop bar
-	PostMessage(HWND_BROADCAST, WM_TASKBARCREATED, 0, 0);
+	RegisterHotkeys();
 
 	 // prepare Startmenu, but hide it for now
 	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd));
@@ -332,6 +340,7 @@ int DesktopBar::Command(int id, int code)
 			PostMessage(_hwndQuickLaunch, PM_UPDATE_DESKTOP, desktop_idx, 0);
 		break;}
 
+#ifdef _ROS_
 	  case ID_TRAY_VOLUME:
 		launch_file(_hwnd, TEXT("sndvol32.exe"), SW_SHOWNORMAL);	// launch volume control application
 		break;
@@ -339,6 +348,7 @@ int DesktopBar::Command(int id, int code)
 	  case ID_VOLUME_PROPERTIES:
 		launch_cpanel(_hwnd, TEXT("mmsys.cpl"));
 		break;
+#endif
 
 	  default:
 		if (_hwndQuickLaunch)
@@ -381,6 +391,8 @@ LRESULT DesktopBar::ProcessCopyData(COPYDATASTRUCT* pcd)
 }
 
 
+#ifdef _ROS_
+
 void DesktopBar::AddTrayIcons()
 {
 	_trayIcon.Add(SmallIcon(IDI_SPEAKER), ResString(IDS_VOLUME));
@@ -410,3 +422,5 @@ void DesktopBar::TrayDblClick(UINT id, int btn)
 		break;
 	}
 }
+
+#endif

@@ -1,5 +1,5 @@
 /*
- * Copyright 2003, 2004 Martin Fuchs
+ * Copyright 2005 Martin Fuchs
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,33 +20,17 @@
  //
  // Explorer clone
  //
- // externals.h
+ // shellservices.h
  //
- // Martin Fuchs, 07.06.2003
+ // Martin Fuchs, 28.03.2005
  //
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+ // launch start programs
+extern "C" int startup(int argc, char *argv[]);
 
-
- // explorer main routine
-extern int explorer_main(HINSTANCE hinstance, LPTSTR lpCmdLine, int cmdshow);
-
- // display explorer/file manager window
-extern void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine=NULL);
-
- // display explorer "About" dialog
-extern void explorer_about(HWND hwndParent);
-
- // test for already running desktop instance
-extern BOOL IsAnyDesktopRunning();
-
- // show shutdown dialog
-extern void ShowExitWindowsDialog(HWND hwndOwner);
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
+ // load Shell Service Objects (volume control, printer/network icons, ...)
+struct SSOThread : public Thread
+{
+	int	Run();
+};

@@ -45,10 +45,11 @@ TARGET_OBJECTS := \
 	shell/pane.o \
 	shell/regfs.o \
 	shell/shellbrowser.o \
-	shell/startup.o \
 	shell/unixfs.o \
 	shell/webchild.o \
 	shell/winfs.o \
+	services/startup.o \
+	services/shellservices.o \
 	taskbar/desktopbar.o \
 	taskbar/taskbar.o \
 	taskbar/startmenu.o \

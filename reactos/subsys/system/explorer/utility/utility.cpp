@@ -281,11 +281,11 @@ String get_windows_version_str()
 		} else {
 			TCHAR type[80];
 			DWORD dwBufLen;
-			HKEY hKey;
+			HKEY hkey;
 
-			if (!RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Control\\ProductOptions"), 0, KEY_QUERY_VALUE, &hKey)) {
-				RegQueryValueEx(hKey, TEXT("ProductType"), NULL, NULL, (LPBYTE)type, &dwBufLen);
-				RegCloseKey(hKey);
+			if (!RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Control\\ProductOptions"), 0, KEY_QUERY_VALUE, &hkey)) {
+				RegQueryValueEx(hkey, TEXT("ProductType"), NULL, NULL, (LPBYTE)type, &dwBufLen);
+				RegCloseKey(hkey);
 
 				if (!_tcsicmp(TEXT("WINNT"), type))
 				   str += TEXT(" Workstation");

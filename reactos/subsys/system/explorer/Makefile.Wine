@@ -10,7 +10,7 @@ EXTRA_OBJS = notifyhook.dll libexpat.dll
 EXTRALIBS = $(LIBUUID)
 
 C_SRCS = \
-	shell/startup.c \
+	services/startup.c \
 	utility/splitpath.c
 
 CPP_SRCS = \
@@ -34,6 +34,7 @@ CPP_SRCS = \
 	shell/regfs.cpp \
 	shell/fatfs.cpp \
 	shell/webchild.cpp \
+	services/shellservices.cpp \
 	taskbar/desktopbar.cpp \
 	taskbar/taskbar.cpp \
 	taskbar/startmenu.cpp \

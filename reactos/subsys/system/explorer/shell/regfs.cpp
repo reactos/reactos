@@ -43,9 +43,9 @@ void RegDirectory::read_directory(int scan_flags)
 	_tcscpy(buffer, (LPCTSTR)_path);
 	LPTSTR pname = buffer + _tcslen(buffer);
 
-	HKEY hKey;
+	HKEY hkey;
 
-	if (!RegOpenKeyEx(_hKeyRoot, *buffer=='\\'?buffer+1:buffer, 0, STANDARD_RIGHTS_READ|KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hKey)) {
+	if (!RegOpenKeyEx(_hKeyRoot, *buffer=='\\'?buffer+1:buffer, 0, STANDARD_RIGHTS_READ|KEY_QUERY_VALUE|KEY_ENUMERATE_SUB_KEYS, &hkey)) {
 		if (pname[-1] != '\\')
 			*pname++ = '\\';
 
@@ -60,7 +60,7 @@ void RegDirectory::read_directory(int scan_flags)
 			DWORD name_len = MAX_PATH;
 			DWORD class_len = MAX_PATH;
 
-			if (RegEnumKeyEx(hKey, idx, name, &name_len, 0, class_name, &class_len, &w32fd.ftLastWriteTime))
+			if (RegEnumKeyEx(hkey, idx, name, &name_len, 0, class_name, &class_len, &w32fd.ftLastWriteTime))
 				break;
 
 			w32fd.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
@@ -88,7 +88,7 @@ void RegDirectory::read_directory(int scan_flags)
 		TCHAR value[MAX_PATH];
 		LONG value_len = sizeof(value);
 
-		if (!RegQueryValue(hKey, NULL, value, &value_len) && value_len>1) {
+		if (!RegQueryValue(hkey, NULL, value, &value_len) && value_len>1) {
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
 
 			lstrcpy(w32fd.cFileName, TEXT("(Default)"));
@@ -114,7 +114,7 @@ void RegDirectory::read_directory(int scan_flags)
 		for(int idx=0; ; ++idx) {
 			DWORD name_len = MAX_PATH;
 
-			if (RegEnumValue(hKey, idx, name, &name_len, 0, &type, NULL, NULL))
+			if (RegEnumValue(hkey, idx, name, &name_len, 0, &type, NULL, NULL))
 				break;
 
 			memset(&w32fd, 0, sizeof(WIN32_FIND_DATA));
@@ -147,7 +147,7 @@ void RegDirectory::read_directory(int scan_flags)
 			TCHAR value[MAX_PATH];
 			DWORD value_len = sizeof(value);
 
-			if (!RegQueryValueEx(hKey, name, NULL, NULL, (LPBYTE)value, &value_len)) {
+			if (!RegQueryValueEx(hkey, name, NULL, NULL, (LPBYTE)value, &value_len)) {
 				if (type==REG_SZ || type==REG_EXPAND_SZ || type==REG_LINK)
 					entry->_content = _tcsdup(value);
 				else if (type == REG_DWORD) {
@@ -171,7 +171,7 @@ void RegDirectory::read_directory(int scan_flags)
 		if (last)
 			last->_next = NULL;
 
-		RegCloseKey(hKey);
+		RegCloseKey(hkey);
 	}
 
 	_down = first_entry;

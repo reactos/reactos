@@ -98,7 +98,7 @@ struct NotifyInfo : public NotifyIconIndex, public NotifyIconConfig
 	friend bool operator<(const NotifyInfo& a, const NotifyInfo& b)
 		{return a._idx < b._idx;}
 
-	NotifyInfo& operator=(NOTIFYICONDATA* pnid);
+	bool	modify(NOTIFYICONDATA* pnid);
 
 	int		_idx;	// display index
 	HICON	_hIcon;

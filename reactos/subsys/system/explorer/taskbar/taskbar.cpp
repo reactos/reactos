@@ -144,6 +144,7 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 		(*g_RegisterShellHookWindow)(_hwnd);
 	} else {
 		LOG(TEXT("Shell hooks not available."));
+
 		SetTimer(_hwnd, 0, 200, NULL);
 	}
 
@@ -188,8 +189,6 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  default: def:
 		if (nmsg == WM_SHELLHOOK) {
-			LOG(FmtString(TEXT("SHELLHOOK %x"), wparam));
-
 			switch(wparam) {
 			  case HSHELL_WINDOWCREATED:
 			  case HSHELL_WINDOWDESTROYED:

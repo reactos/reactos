@@ -41,6 +41,8 @@
 
 #include "dialogs/settings.h"	// for MdiSdiDlg
 
+#include "services/shellservices.h"
+
 
 extern "C" int initialize_gdb_stub();	// start up GDB stub
 
@@ -829,7 +831,9 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		 // another undocumented event: "Global\\msgina: ReturnToWelcome"
 		if (!SetShellReadyEvent(TEXT("msgina: ShellReadyEvent")))
 			SetShellReadyEvent(TEXT("Global\\msgina: ShellReadyEvent"));
+	}
 
+	if (!any_desktop_running) {
 		 // launch the shell DDE server
 		if (g_SHDOCVW_ShellDDEInit)
 			(*g_SHDOCVW_ShellDDEInit)(TRUE);
@@ -868,18 +872,31 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	g_Globals.read_persistent();
 
 	if (startup_desktop) {
+		WaitCursor wait;
+
 		g_Globals._desktops.init();
 
 		g_Globals._hwndDesktop = DesktopWindow::Create();
 #ifdef _USE_HDESK
 		g_Globals._desktops.get_current_Desktop()->_hwndDesktop = g_Globals._hwndDesktop;
 #endif
+	}
 
-		/**TODO launching autostart programs can be moved into a background thread. */
-		if (autostart) {
-			char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
-			startup(2, argv);
-		}
+	if (g_Globals._hwndDesktop)
+		g_Globals._desktop_mode = true;
+
+	Thread* pSSOThread = NULL;
+
+	if (startup_desktop) {
+		 // launch SSO thread to allow message processing independent from the explorer main thread
+		pSSOThread = new SSOThread;
+		pSSOThread->Start();
+	}
+
+	/**TODO launching autostart programs can be moved into a background thread. */
+	if (autostart) {
+		char* argv[] = {"", "s"};	// call startup routine in SESSION_START mode
+		startup(2, argv);
 	}
 
 	/**TODO fix command line handling */
@@ -888,17 +905,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
 	}
 
-	if (g_Globals._hwndDesktop)
-		g_Globals._desktop_mode = true;
-
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
 
 	 // write configuration file
 	g_Globals.write_persistent();
 
-	 // shutdown the shell DDE server
-	if (g_SHDOCVW_ShellDDEInit)
-		(*g_SHDOCVW_ShellDDEInit)(FALSE);
+	if (pSSOThread) {
+		pSSOThread->Stop();
+		delete pSSOThread;
+	}
+
+	if (!any_desktop_running) {
+		 // shutdown the shell DDE server
+		if (g_SHDOCVW_ShellDDEInit)
+			(*g_SHDOCVW_ShellDDEInit)(FALSE);
+	}
 
 	return ret;
 }

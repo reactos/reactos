@@ -104,13 +104,23 @@ NotifyInfo::NotifyInfo()
 #define	NID_SIZE_A5	(sizeof(NOTIFYICONDATAA)-sizeof(GUID))
 #define	NID_SIZE_A3	(sizeof(NOTIFYICONDATAA)-sizeof(GUID)-(128-64)*sizeof(CHAR))
 
-NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
+bool NotifyInfo::modify(NOTIFYICONDATA* pnid)
 {
-	_hWnd = pnid->hWnd;
-	_uID = pnid->uID;
+	bool changes = false;
 
-	if (pnid->uFlags & NIF_MESSAGE)
-		_uCallbackMessage = pnid->uCallbackMessage;
+	if (_hWnd!=pnid->hWnd || _uID!=pnid->uID) {
+		_hWnd = pnid->hWnd;
+		_uID = pnid->uID;
+
+		changes = true;
+	}
+
+	if (pnid->uFlags & NIF_MESSAGE) {
+		if (_uCallbackMessage != pnid->uCallbackMessage) {
+			_uCallbackMessage = pnid->uCallbackMessage;
+			changes = true;
+		}
+	}
 
 	if (pnid->uFlags & NIF_ICON) {
 		 // Some applications destroy the icon immediatelly after completing the
@@ -119,15 +129,25 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 			DestroyIcon(_hIcon);
 
 		_hIcon = (HICON) CopyImage(pnid->hIcon, IMAGE_ICON, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0);
+
+		changes = true;	///@todo compare icon
 	}
 
 #ifdef NIF_STATE	// as of 21.08.2003 missing in MinGW headers
-	if (pnid->uFlags & NIF_STATE)
-		_dwState = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
+	if (pnid->uFlags & NIF_STATE) {
+		DWORD new_state = (_dwState&~pnid->dwStateMask) | (pnid->dwState&pnid->dwStateMask);
+
+		if (_dwState != new_state) {
+			_dwState = new_state;
+			changes = true;
+		}
+	}
 #endif
 
 	 // store tool tip text
-	if (pnid->uFlags & NIF_TIP)
+	if (pnid->uFlags & NIF_TIP) {
+		String new_text;
+
 		if (pnid->cbSize==NID_SIZE_W6 || pnid->cbSize==NID_SIZE_W5 || pnid->cbSize==NID_SIZE_W3) {
 			 // UNICODE version of NOTIFYICONDATA structure
 			LPCWSTR txt = (LPCWSTR)pnid->szTip;
@@ -139,7 +159,12 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 				if (!txt[l])
 					break;
 
-			_tipText.assign(txt, l);
+			new_text.assign(txt, l);
+
+			if (new_text != _tipText) {
+				_tipText = new_text;
+				changes = true;
+			}
 		} else if (pnid->cbSize==NID_SIZE_A6 || pnid->cbSize==NID_SIZE_A5 || pnid->cbSize==NID_SIZE_A3) {
 			LPCSTR txt = (LPCSTR)pnid->szTip;
 			int max_len = pnid->cbSize==NID_SIZE_A3? 64: 128;
@@ -149,20 +174,35 @@ NotifyInfo& NotifyInfo::operator=(NOTIFYICONDATA* pnid)
 				if (!txt[l])
 					break;
 
-			_tipText.assign(txt, l);
+			new_text.assign(txt, l);
+
+			if (new_text != _tipText) {
+				_tipText = new_text;
+				changes = true;
+			}
 		}
+	}
 
 	TCHAR title[MAX_PATH];
 
-	if (GetWindowText(_hWnd, title, MAX_PATH))
-		_windowTitle = title;
+	DWORD pid;
+	GetWindowThreadProcessId(_hWnd, &pid);
 
-	create_name();
+	 // avoid to send WM_GETTEXT messages to the own process
+	if (pid != GetCurrentProcessId())
+		if (GetWindowText(_hWnd, title, MAX_PATH)) {
+			if (_windowTitle != title) {
+				_windowTitle = title;
+				changes = true;
+			}
+		}
 
-	///@todo test for real changes
-	_lastChange = GetTickCount();
+	if (changes) {
+		create_name();
+		_lastChange = GetTickCount();
+	}
 
-	return *this;
+	return changes;
 }
 
 
@@ -194,7 +234,7 @@ static bool get_hide_clock_from_registry()
 	bool hide_clock = false;
 
 	 // check if the clock should be hidden
-	if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects2"), &hkeyStuckRects) &&
+	if (!RegOpenKey(HKEY_CURRENT_USER, TEXT("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\StuckRects2"), &hkeyStuckRects) &&
 		!RegQueryValueEx(hkeyStuckRects, TEXT("Settings"), 0, NULL, (LPBYTE)buffer, &len) &&
 		len==sizeof(buffer) && buffer[0]==sizeof(buffer))
 		hide_clock = buffer[2] & 0x08? true: false;
@@ -338,7 +378,7 @@ HWND NotifyArea::Create(HWND hwndParent)
 	ClientRect clnt(hwndParent);
 
 	return Window::Create(WINDOW_CREATOR(NotifyArea), WS_EX_STATICEDGE,
-							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE,
+							wcTrayNotify, TITLE_TRAYNOTIFY, WS_CHILD|WS_VISIBLE|WS_CLIPCHILDREN,
 							clnt.right-(NOTIFYAREA_WIDTH_DEF+1), 1, NOTIFYAREA_WIDTH_DEF, clnt.bottom-2, hwndParent);
 }
 
@@ -448,7 +488,11 @@ LRESULT NotifyArea::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 								(*AllowSetForegroundWindow)(pid);
 						}
 
-						SendMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+						 // use PostMessage() for notifcation icons of Shell Service Objects in the own process
+						if (pid == GetCurrentProcessId())
+							PostMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
+						else
+							SendMessage(entry._hWnd, entry._uCallbackMessage, entry._uID, nmsg);
 					}
 				}
 				else if (_icon_map.erase(entry))	// delete icons without valid owner window
@@ -540,18 +584,35 @@ LRESULT NotifyArea::ProcessTrayNotification(int notify_code, NOTIFYICONDATA* pni
 	  case NIM_ADD:
 	  case NIM_MODIFY:
 		if ((int)pnid->uID >= 0) {	///@todo This is a fix for Windows Task Manager.
-			NotifyInfo& entry = _icon_map[pnid] = pnid;
+			NotifyInfo& entry = _icon_map[pnid];
 
 			 // a new entry?
 			if (entry._idx == -1)
 				entry._idx = ++_next_idx;
+		/*
+			NotifyIconMap::iterator found = _icon_map.find(pnid);
+			NotifyInfo* pentry;
+			 // a new entry?
+			if (found == _icon_map.end()) {
+				pentry = &_icon_map[pnid];
+				pentry->_idx = ++_next_idx;
+			} else {
+				pentry = &found->second;
+				*pentry = pnid;
+			}
+			NotifyInfo& entry = *pentry;
+		*/
+			bool changes = entry.modify(pnid);
 
 #if NOTIFYICON_VERSION>=3	// as of 21.08.2003 missing in MinGW headers
-			if (DetermineHideState(entry) && entry._mode==NIM_HIDE)
+			if (DetermineHideState(entry) && entry._mode==NIM_HIDE) {
 				entry._dwState |= NIS_HIDDEN;
+				changes = true;
+			}
 #endif
 
-			UpdateIcons();	///@todo call only if really changes occurred
+			if (changes)
+				UpdateIcons();	///@todo call only if really changes occurred
 
 			return TRUE;
 		}
@@ -1289,6 +1350,8 @@ bool ClockWindow::FormatTime()
 void ClockWindow::Paint()
 {
 	PaintCanvas canvas(_hwnd);
+
+	FillRect(canvas, &canvas.rcPaint, GetSysColorBrush(COLOR_BTNFACE));
 
 	BkMode bkmode(canvas, TRANSPARENT);
 	FontSelection font(canvas, GetStockFont(ANSI_VAR_FONT));
