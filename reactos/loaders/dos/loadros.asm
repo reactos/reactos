@@ -599,7 +599,24 @@ e_res2:		resw	10
 e_lfanew:	resd	1
 ENDSTRUC
 
-	
+
+_mb_magic:	
+	dd 0
+_mb_flags:	
+	dd 0
+_mb_checksum:
+	dd 0
+_mb_header_addr:
+	dd 0
+_mb_load_addr:
+	dd 0
+_mb_load_end_addr:
+	dd 0
+_mb_bss_end_addr:
+	dd 0
+_mb_entry_addr:
+	dd 0
+		
 _cpe_doshdr:
 	times pe_doshdr_size db 0
 _current_filehandle:
@@ -670,6 +687,38 @@ pe_load_module:
 	jmp	.error
 .mz_hdr_good
 
+	;;
+	;; Find the BSS size
+	;;
+	mov	ebx, dword [_multiboot_mods_count]
+	cmp	ebx, 0
+	jne	.not_first
+	
+	mov	edx, 0
+	mov	ax, 0x4200
+	mov	cx, 0
+	mov	dx, 0x1004
+	mov	bx, [_current_filehandle]
+	int	0x21
+	jnc	.start_seek1
+	mov	dx, error_file_seek_failed
+	jmp	.error
+.start_seek1:
+	mov	ah, 0x3F
+	mov	bx, [_current_filehandle]
+	mov	cx, 32
+	mov	dx, _mb_magic
+	int	0x21
+	jnc	.mb_header_read
+	mov	dx, error_file_read_failed
+	jmp	.error
+.mb_header_read:
+	jmp	.first
+	
+.not_first:	
+	mov	dword [_mb_bss_end_addr], 0
+.first:	
+	
 	;;
 	;; Seek to the end of the file to get the file size
 	;;
@@ -787,12 +836,17 @@ pe_load_module:
 	int	021h
 %endif
 
-.do_round:
+	mov     edx, [_mb_bss_end_addr]
+	cmp	edx, 0
+	je	.no_bss
+	mov	edi, edx	
+.no_bss:		
 	test	di, 0xfff
 	jz	.no_round
 	and	di, 0xf000
 	add	edi, 0x1000
-.no_round
+.no_round:
+
 	mov	bx, [_multiboot_mods_count]
 	imul	bx, bx, multiboot_module_size
 	add	bx, _multiboot_modules
@@ -870,59 +924,6 @@ _himem_copy:
 .l3:	
 	sti
 	pop	esi
-	pop	eax
-	pop	es
-	pop	ds
-	ret
-
-	;;
-	;; Zero high memory
-	;; ARGUMENTS
-	;;	EDI = Destination address
-	;;	ECX = Byte count
-	;; RETURNS
-	;;	EDI = End of the destination region
-	;;	ECX = 0
-	;;
-_himem_zero:
-	push	ds		; Save DS
-	push	es
-	push	eax
-
-	mov	[.old_cs], cs
-
-	cli			; No interrupts during pmode
-	
-	mov	eax, cr0	; Entered protected mode
-	or	eax, 0x1
-	mov	cr0, eax
-
-	jmp	LOADER_CS:.l1	; Flush prefetch queue
-.l1:
-	
-	mov	eax, KERNEL_DS	; Load DS with a suitable selector
-	mov	ds, ax
-	mov	eax, LOADER_DS
-	mov	es, ax
-	
-.l2:
-	mov	byte [ds:edi], 0
-	dec	ecx
-	inc	si
-	inc	edi
-	cmp	ecx, 0
-	jne	.l2
-
-	mov	eax, cr0	; Leave protected mode
-	and	eax, 0xfffffffe
-	mov	cr0, eax
-
-	db	0xea
-	dw	.l3
-.old_cs:
-	dw	0x0
-.l3:
-	sti
 	pop	eax
 	pop	es
 	pop	ds

@@ -49,6 +49,7 @@ BuildCommDCBAndTimeoutsW@12
 BuildCommDCBW@8
 CallNamedPipeA@28
 CallNamedPipeW@28
+CancelIo
 CancelWaitableTimer@4
 ClearCommBreak@4
 ClearCommError@12
