@@ -23,6 +23,8 @@ typedef VOID (*PKKERNEL_ROUTINE)(struct _KAPC* Apc,
 	      
 typedef VOID (*PKRUNDOWN_ROUTINE)(struct _KAPC* Apc);	      
 
+struct _DISPATCHER_HEADER;
+
 typedef struct _KWAIT_BLOCK
 /*
  * PURPOSE: Object describing the wait a thread is currently performing
@@ -30,7 +32,7 @@ typedef struct _KWAIT_BLOCK
 {
    LIST_ENTRY WaitListEntry;
    struct _KTHREAD* Thread;
-   PVOID Object;
+   struct _DISPATCHER_HEADER *Object;
    struct _KWAIT_BLOCK* NextWaitBlock;
    USHORT WaitKey;
    USHORT WaitType;
