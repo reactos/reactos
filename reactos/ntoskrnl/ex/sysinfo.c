@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.49 2004/10/01 20:09:56 hbirr Exp $
+/* $Id: sysinfo.c,v 1.50 2004/10/08 20:02:30 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -530,6 +530,8 @@ QSI_DEF(SystemTimeOfDayInformation)
 QSI_DEF(SystemPathInformation)
 {
 	/* FIXME: QSI returns STATUS_BREAKPOINT. Why? */
+	DPRINT1("NtQuerySystemInformation - SystemPathInformation not implemented\n");
+
 	return (STATUS_BREAKPOINT);
 }
 
@@ -662,6 +664,7 @@ QSI_DEF(SystemProcessInformation)
 QSI_DEF(SystemCallCountInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemCallCountInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -754,6 +757,7 @@ SSI_DEF(SystemFlagsInformation)
 QSI_DEF(SystemCallTimeInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemCallTimeInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -767,6 +771,7 @@ QSI_DEF(SystemModuleInformation)
 QSI_DEF(SystemLocksInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemLocksInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -774,6 +779,7 @@ QSI_DEF(SystemLocksInformation)
 QSI_DEF(SystemStackTraceInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemStackTraceInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -781,6 +787,7 @@ QSI_DEF(SystemStackTraceInformation)
 QSI_DEF(SystemPagedPoolInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemPagedPoolInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -788,6 +795,7 @@ QSI_DEF(SystemPagedPoolInformation)
 QSI_DEF(SystemNonPagedPoolInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemNonPagedPoolInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -795,6 +803,7 @@ QSI_DEF(SystemNonPagedPoolInformation)
 QSI_DEF(SystemHandleInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemHandleInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -802,6 +811,7 @@ QSI_DEF(SystemHandleInformation)
 QSI_DEF(SystemObjectInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemObjectInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -832,6 +842,7 @@ QSI_DEF(SystemPageFileInformation)
 QSI_DEF(SystemVdmInstemulInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemVdmInstemulInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -839,6 +850,7 @@ QSI_DEF(SystemVdmInstemulInformation)
 QSI_DEF(SystemVdmBopInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemVdmBopInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -874,6 +886,7 @@ SSI_DEF(SystemFileCacheInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemFileCacheInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -881,6 +894,7 @@ SSI_DEF(SystemFileCacheInformation)
 QSI_DEF(SystemPoolTagInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemPoolTagInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -888,6 +902,7 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemInterruptInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -895,12 +910,14 @@ QSI_DEF(SystemInterruptInformation)
 QSI_DEF(SystemDpcBehaviourInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemDpcBehaviourInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 SSI_DEF(SystemDpcBehaviourInformation)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemDpcBehaviourInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -917,17 +934,19 @@ QSI_DEF(SystemFullMemoryInformation)
 	{
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
-	DPRINT1("SystemFullMemoryInformation\n");
+	DPRINT("SystemFullMemoryInformation\n");
 
 	PsLookupProcessByProcessId((PVOID) 1, &TheIdleProcess);
 
-        DbgPrint("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
-                 TheIdleProcess->UniqueProcessId,
-                 TheIdleProcess->Pcb.KernelTime,
-                 MiFreeSwapPages,
-                 MiUsedSwapPages);
+        DPRINT("PID: %d, KernelTime: %u PFFree: %d PFUsed: %d\n",
+               TheIdleProcess->UniqueProcessId,
+               TheIdleProcess->Pcb.KernelTime,
+               MiFreeSwapPages,
+               MiUsedSwapPages);
 
+#ifndef NDEBUG
 	MmPrintMemoryStatistic();
+#endif
 	
 	*Spi = MiMemoryConsumers[MC_USER].PagesUsed;
 
@@ -975,6 +994,7 @@ QSI_DEF(SystemTimeAdjustmentInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* FIXME: */
+	DPRINT1("NtQuerySystemInformation - SystemTimeAdjustmentInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -985,6 +1005,7 @@ SSI_DEF(SystemTimeAdjustmentInformation)
 		return (STATUS_INFO_LENGTH_MISMATCH);
 	}
 	/* FIXME: */
+	DPRINT1("NtSetSystemInformation - SystemTimeAdjustmentInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -992,6 +1013,7 @@ SSI_DEF(SystemTimeAdjustmentInformation)
 QSI_DEF(SystemSummaryMemoryInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemSummaryMemoryInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -999,6 +1021,7 @@ QSI_DEF(SystemSummaryMemoryInformation)
 QSI_DEF(SystemNextEventIdInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemNextEventIdInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1006,6 +1029,7 @@ QSI_DEF(SystemNextEventIdInformation)
 QSI_DEF(SystemEventIdsInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemEventIdsInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1013,6 +1037,7 @@ QSI_DEF(SystemEventIdsInformation)
 QSI_DEF(SystemCrashDumpInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemCrashDumpInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1020,6 +1045,7 @@ QSI_DEF(SystemCrashDumpInformation)
 QSI_DEF(SystemExceptionInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemExceptionInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1027,6 +1053,7 @@ QSI_DEF(SystemExceptionInformation)
 QSI_DEF(SystemCrashDumpStateInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemCrashDumpStateInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1034,6 +1061,7 @@ QSI_DEF(SystemCrashDumpStateInformation)
 QSI_DEF(SystemKernelDebuggerInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemKernelDebuggerInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1041,19 +1069,33 @@ QSI_DEF(SystemKernelDebuggerInformation)
 QSI_DEF(SystemContextSwitchInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemContextSwitchInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
 /* Class 37 - Registry Quota Information */
 QSI_DEF(SystemRegistryQuotaInformation)
 {
-	/* FIXME */
-	return (STATUS_NOT_IMPLEMENTED);
+  PSYSTEM_REGISTRY_QUOTA_INFORMATION srqi = (PSYSTEM_REGISTRY_QUOTA_INFORMATION) Buffer;
+
+  *ReqSize = sizeof(SYSTEM_REGISTRY_QUOTA_INFORMATION);
+  if (Size < sizeof(SYSTEM_REGISTRY_QUOTA_INFORMATION))
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+  DPRINT1("Faking max registry size of 32 MB\n");
+  srqi->RegistryQuotaAllowed = 0x2000000;
+  srqi->RegistryQuotaUsed = 0x200000;
+  srqi->Reserved1 = (void*)0x200000;
+
+  return STATUS_SUCCESS;
 }
 
 SSI_DEF(SystemRegistryQuotaInformation)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemRegistryQuotaInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1074,6 +1116,7 @@ SSI_DEF(SystemLoadAndCallImage)
 SSI_DEF(SystemPrioritySeperation)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemPrioritySeperation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1081,6 +1124,7 @@ SSI_DEF(SystemPrioritySeperation)
 QSI_DEF(SystemPlugPlayBusInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemPlugPlayBusInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1088,6 +1132,7 @@ QSI_DEF(SystemPlugPlayBusInformation)
 QSI_DEF(SystemDockInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemDockInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1095,6 +1140,7 @@ QSI_DEF(SystemDockInformation)
 QSI_DEF(SystemPowerInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemPowerInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1102,6 +1148,7 @@ QSI_DEF(SystemPowerInformation)
 QSI_DEF(SystemProcessorSpeedInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemProcessorSpeedInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1148,6 +1195,7 @@ SSI_DEF(SystemCurrentTimeZoneInformation)
 QSI_DEF(SystemLookasideInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemLookasideInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1156,6 +1204,7 @@ QSI_DEF(SystemLookasideInformation)
 SSI_DEF(SystemSetTimeSlipEvent)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemSetTimSlipEvent not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1164,6 +1213,7 @@ SSI_DEF(SystemSetTimeSlipEvent)
 SSI_DEF(SystemCreateSession)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemCreateSession not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1172,6 +1222,7 @@ SSI_DEF(SystemCreateSession)
 SSI_DEF(SystemDeleteSession)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemDeleteSession not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1180,6 +1231,7 @@ SSI_DEF(SystemDeleteSession)
 QSI_DEF(SystemInvalidInfoClass4)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemInvalidInfoClass4 not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1188,6 +1240,7 @@ QSI_DEF(SystemInvalidInfoClass4)
 QSI_DEF(SystemRangeStartInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemRangeStartInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1196,6 +1249,7 @@ QSI_DEF(SystemRangeStartInformation)
 QSI_DEF(SystemVerifierInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemVerifierInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1203,6 +1257,7 @@ QSI_DEF(SystemVerifierInformation)
 SSI_DEF(SystemVerifierInformation)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemVerifierInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1211,6 +1266,7 @@ SSI_DEF(SystemVerifierInformation)
 SSI_DEF(SystemAddVerifier)
 {
 	/* FIXME */
+	DPRINT1("NtSetSystemInformation - SystemAddVerifier not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
@@ -1219,6 +1275,7 @@ SSI_DEF(SystemAddVerifier)
 QSI_DEF(SystemSessionProcessesInformation)
 {
 	/* FIXME */
+	DPRINT1("NtQuerySystemInformation - SystemSessionProcessInformation not implemented\n");
 	return (STATUS_NOT_IMPLEMENTED);
 }
 
