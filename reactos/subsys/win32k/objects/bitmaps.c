@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmaps.c,v 1.46 2003/12/04 21:35:11 fireball Exp $ */
+/* $Id: bitmaps.c,v 1.47 2003/12/08 11:10:02 fireball Exp $ */
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdlib.h>
@@ -32,7 +32,7 @@
 #include <include/surface.h>
 #include <include/palette.h>
 
-#define NDEBUG
+//#define NDEBUG
 #include <win32k/debug1.h>
 
 BOOL STDCALL NtGdiBitBlt(HDC  hDCDest,
@@ -798,7 +798,7 @@ BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
   PSURFOBJ SurfDest, SurfSrc;
   PSURFGDI SurfGDIDest, SurfGDISrc;
   RECTL DestRect;
-  POINTL SourcePoint;
+  RECTL SourceRect;
   BOOL Status;
   PPALGDI PalDestGDI, PalSourceGDI;
   PXLATEOBJ XlateObj = NULL;
@@ -853,8 +853,10 @@ BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
   DestRect.right  = XOriginDest+WidthDest;
   DestRect.bottom = YOriginDest+HeightDest;
 
-  SourcePoint.x = XOriginSrc;
-  SourcePoint.y = YOriginSrc;
+  SourceRect.left   = XOriginSrc;
+  SourceRect.top    = YOriginSrc;
+  SourceRect.right  = XOriginSrc+WidthSrc;
+  SourceRect.bottom = YOriginSrc+HeightSrc;
 
   /* Determine surfaces to be used in the bitblt */
   SurfDest = (PSURFOBJ)AccessUserObject((ULONG)DCDest->Surface);
@@ -955,13 +957,8 @@ BOOL STDCALL NtGdiStretchBlt(HDC  hDCDest,
     }
 
   /* Perform the bitblt operation */
-//  Status = IntEngBitBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip, XlateObj,
-  //                      &DestRect, &SourcePoint, NULL, BrushObj, NULL, ROP);
-             
-  //Status = IntEngStretchBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip,
-  //                    XlateObj, &DestRect, &SourceRect, NULL, NULL, NULL, ROP);
-  Status = FALSE;
-             
+  Status = IntEngStretchBlt(SurfDest, SurfSrc, NULL, DCDest->CombinedClip,
+                      XlateObj, &DestRect, &SourceRect, NULL, NULL, NULL, COLORONCOLOR);
 
   EngDeleteXlate(XlateObj);
   if (UsesPattern)
