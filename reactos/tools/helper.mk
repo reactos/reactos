@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.32 2003/04/05 23:17:22 chorns Exp $
+# $Id: helper.mk,v 1.33 2003/04/13 03:24:26 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -509,7 +509,12 @@ TARGET_NFLAGS += $(MK_NFLAGS)
 
 MK_GCCLIBS := $(addprefix -l, $(TARGET_GCCLIBS))
 
-MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
+ifeq ($(MK_MODE),static)
+  MK_FULLNAME := $(SDK_PATH_LIB)/$(MK_BASENAME)$(MK_EXT)
+else
+  MK_FULLNAME := $(MK_BASENAME)$(MK_EXT)
+endif
+
 MK_IMPLIB_FULLNAME := $(MK_BASENAME)$(MK_IMPLIB_EXT)
 
 MK_NOSTRIPNAME := $(MK_BASENAME).nostrip$(MK_EXT)

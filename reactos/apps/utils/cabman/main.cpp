@@ -474,7 +474,7 @@ VOID CCABManager::OnAdd(PCFFILE File,
 }
 
 
-INT main(INT argc, PCHAR argv[])
+int main(int argc, char * argv[])
 /*
  * FUNCTION: Main entry point
  * ARGUMENTS:

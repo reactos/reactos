@@ -1,21 +1,24 @@
-/* $Id: drivers.c,v 1.1 2003/04/03 00:06:23 hyperion Exp $
+/* $Id: drivers.c,v 1.1 2003/04/13 03:24:27 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        reactos/lib/psapi/enum/drivers.c
+ * FILE:        reactos/lib/epsapi/enum/drivers.c
  * PURPOSE:     Enumerate system modules
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
  *              02/04/2003: Created
+ *              12/04/2003: internal PSAPI renamed EPSAPI (Extended PSAPI) and
+ *                          isolated in its own library to clear the confusion
+ *                          and improve reusability
  */
 
 #include <ddk/ntddk.h>
 #include <debug.h>
 #include <stddef.h>
 
-#include "internal/psapi.h"
+#include <epsapi.h>
 
 NTSTATUS
 NTAPI

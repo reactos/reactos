@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.16 2003/04/05 23:17:21 chorns Exp $
+# $Id: makefile,v 1.17 2003/04/13 03:24:26 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -12,9 +12,7 @@ TARGET_CFLAGS = -fno-builtin
 
 TARGET_LFLAGS = -nostdlib -nostartfiles
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
-
-TARGET_LIBS = $(PATH_TO_TOP)/lib/fslib/vfatlib/vfatlib.a
+TARGET_SDKLIBS = vfatlib.a ntdll.a kernel32.a
 
 TARGET_OBJECTS = \
   chkdsk.o \

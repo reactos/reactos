@@ -1,64 +1,26 @@
-#
-# Makefile for ReactOS Cabinet Manager
-#
+# $Id: makefile,v 1.8 2003/04/13 03:24:26 hyperion Exp $
+
 PATH_TO_TOP = ../../..
 
-#FIXME: why doesn't this work?
-#ZLIB_OBJECTS    = $(PATH_TO_TOP)/drivers/lib/zlib/zlib.a
-ZLIB_PATH = $(PATH_TO_TOP)/drivers/lib/zlib
+TARGET_TYPE = program
 
-ZLIB_OBJECTS    = $(ZLIB_PATH)/adler32.o $(ZLIB_PATH)/deflate.o \
-                  $(ZLIB_PATH)/infblock.o $(ZLIB_PATH)/infcodes.o \
-                  $(ZLIB_PATH)/inflate.o $(ZLIB_PATH)/inftrees.o \
-                  $(ZLIB_PATH)/infutil.o $(ZLIB_PATH)/inffast.o \
-                  $(ZLIB_PATH)/trees.o $(ZLIB_PATH)/zutil.o
-ENGINE_OBJECTS  = $(ZLIB_OBJECTS) cabinet.o mszip.o raw.o
-TEST_OBJECTS    = $(ENGINE_OBJECTS) test.o
-OBJECTS         = $(ENGINE_OBJECTS) main.o dfp.o
-TARGET          = cabman
-PROGS           = $(TARGET).exe test.exe
+TARGET_APPTYPE = console
 
-#FIXME: zlib should be compiled and installed in the SDK by the master makefile
-CFLAGS 		+= -O3 -I$(ZLIB_PATH)
+TARGET_NAME = cabman
 
-CLEAN_FILES = *.o $(TARGET).exe $(TARGET).sym test.exe test.sym
+TARGET_OBJECTS = cabinet.o mszip.o raw.o  main.o dfp.o
 
-all: $(PROGS)
+TARGET_SDKLIBS = zlib.a
 
-clean: 
-	- $(RM) $(CLEAN_FILES)
+TARGET_CFLAGS = -I$(PATH_TO_TOP)/lib/zlib
 
-.phony: clean 
+TARGET_CPPFLAGS = $(TARGET_CFLAGS)
 
-install: $(PROGS:%=$(FLOPPY_DIR)/apps/%)
+TARGET_GCCLIBS = stdc++
 
-$(PROGS:%=$(FLOPPY_DIR)/apps/%): $(FLOPPY_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* $(FLOPPY_DIR)\apps\$*
-else
-	$(CP) $* $(FLOPPY_DIR)/apps/$*
-endif
+TARGET_NORC = yes
 
-dist: $(PROGS:%=../../$(DIST_DIR)/apps/%)
+include $(PATH_TO_TOP)/rules.mak
 
-$(PROGS:%=../../$(DIST_DIR)/apps/%): ../../$(DIST_DIR)/apps/%: %
-ifeq ($(DOSCLI),yes)
-	$(CP) $* ..\..\$(DIST_DIR)\apps\$*
-else
-	$(CP) $* ../../$(DIST_DIR)/apps/$*
-endif
-
-#FIXME: zlib should be compiled and installed in the SDK by the master makefile
-$(ZLIB_PATH)/zlib.a:
-	$(MAKE) -C $(ZLIB_PATH) -f makefile.reactos
-
-$(TARGET).exe: $(OBJECTS) $(ZLIB_PATH)/zlib.a
-	$(CC) $(OBJECTS) -lstdc++ -o $(TARGET).exe
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-	
-test.exe: $(TEST_OBJECTS)
-	$(CC) $(TEST_OBJECTS) -lstdc++ -o test.exe
-	$(NM) --numeric-sort test.exe > test.sym
-
-include ../../../rules.mak
+include $(TOOLS_PATH)/helper.mk
 

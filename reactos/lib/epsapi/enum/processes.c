@@ -1,10 +1,10 @@
-/* $Id: process.c,v 1.6 2003/04/04 20:35:24 hyperion Exp $
+/* $Id: processes.c,v 1.1 2003/04/13 03:24:27 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * LICENSE:     See LGPL.txt in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        reactos/lib/psapi/enum/process.c
+ * FILE:        reactos/lib/epsapi/enum/processes.c
  * PURPOSE:     Enumerate processes and threads
  * PROGRAMMER:  KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:
@@ -26,13 +26,16 @@
  *                           - PsaEnumerateProcessesAndThreads
  *                           - PsaEnumerateProcesses
  *                           - PsaEnumerateThreads
+ *              12/04/2003: internal PSAPI renamed EPSAPI (Extended PSAPI) and
+ *                          isolated in its own library to clear the confusion
+ *                          and improve reusability
  */
 
 #include <ddk/ntddk.h>
 #include <debug.h>
 #include <stddef.h>
 
-#include "internal/psapi.h"
+#include <epsapi.h>
 
 NTSTATUS
 NTAPI

@@ -1,12 +1,10 @@
-# $Id: Makefile,v 1.2 2003/04/05 19:40:41 chorns Exp $
+# $Id: Makefile,v 1.3 2003/04/13 03:24:26 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
 TARGET_TYPE = library
 
 TARGET_NAME = zlib
-
-TARGET_NORC = yes
 
 TARGET_CFLAGS = \
  -MMD -O3 -Wall -Wwrite-strings -Wpointer-arith -Wconversion \
@@ -19,8 +17,5 @@ TARGET_OBJECTS = \
 include $(PATH_TO_TOP)/rules.mak
 
 include $(TOOLS_PATH)/helper.mk
-
-zlib.sym:
-	@echo FIXME!>$@
 
 # EOF

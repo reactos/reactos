@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2003/04/03 00:06:24 hyperion Exp $
+# $Id: makefile,v 1.6 2003/04/13 03:24:26 hyperion Exp $
 
 PATH_TO_TOP = ../..
 
@@ -6,9 +6,9 @@ TARGET_TYPE = dynlink
 
 TARGET_NAME = psapi
 
-TARGET_SDKLIBS = ntdll.a kernel32.a
+TARGET_SDKLIBS = epsapi.a ntdll.a kernel32.a
 
-TARGET_CFLAGS = -I./include -Wall
+TARGET_CFLAGS = -I./include
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
@@ -18,12 +18,10 @@ TARGET_OBJECTS = \
 	misc/dllmain.o \
 	misc/malloc.o \
 	misc/stubs.o \
-	misc/win32.o \
-	enum/module.o \
-	enum/process.o \
-	enum/drivers.o
+	misc/win32.o
 	
 include $(PATH_TO_TOP)/rules.mak
+
 include $(TOOLS_PATH)/helper.mk
 
 # EOF

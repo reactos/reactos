@@ -1,4 +1,4 @@
-/* $Id: win32.c,v 1.7 2003/04/03 00:06:24 hyperion Exp $
+/* $Id: win32.c,v 1.8 2003/04/13 03:24:26 hyperion Exp $
  */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -17,7 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ddk/ntddk.h>
-#include <internal/psapi.h>
+#include <epsapi.h>
 
 /* EmptyWorkingSet */
 BOOL STDCALL EmptyWorkingSet(HANDLE hProcess)
