@@ -165,6 +165,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Language","InstallLanguage",0x0000000
 ; Currently selected language for input
 HKLM,"SYSTEM\CurrentControlSet\Control\NLS\Locale","(Default)",0x00000000,"00000409"
 
+; Some installers check for SP6
+HKLM,"SYSTEM\CurrentControlSet\Control\Windows","CSDVersion",0x00010001,0x00000600
+
 ; Service groups
 HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "Boot Bus Extender", \
