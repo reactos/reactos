@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.61 2000/08/31 00:11:15 dwelch Exp $
+/* $Id: main.c,v 1.62 2000/09/13 10:29:48 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -465,6 +465,7 @@ void _main (PLOADER_PARAMETER_BLOCK LoaderBlock)
    /* Create the SystemRoot symbolic link */
    CreateSystemRootLink (KeLoaderBlock.kernel_parameters);
    
+   CmInitializeRegistry2();
    /*
     * Load Auto configured drivers
     */
