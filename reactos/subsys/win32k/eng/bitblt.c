@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitblt.c,v 1.38 2004/01/11 19:52:27 gvg Exp $
+/* $Id: bitblt.c,v 1.39 2004/01/16 19:32:00 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -472,9 +472,11 @@ IntEngBitBlt(SURFOBJ *DestObj,
   /* Call the driver's DrvBitBlt if available */
   if (NULL != DestGDI->BitBlt)
     {
+      ExAcquireFastMutex(DestGDI->DriverLock);
       ret = DestGDI->BitBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
                             &OutputRect, &InputPoint, MaskOrigin, Brush, BrushOrigin,
                             Rop4);
+      ExReleaseFastMutex(DestGDI->DriverLock);
     }
 
   if (! ret)
@@ -788,8 +790,10 @@ IntEngStretchBlt(SURFOBJ *DestObj,
       /* Drv->StretchBlt (look at http://www.osr.com/ddk/graphics/ddifncs_3ew7.htm )
       SURFOBJ *psoMask // optional, if it exists, then rop4=0xCCAA, otherwise rop4=0xCCCC */
       // FIXME: MaskOrigin is always NULL !
+      ExAcquireFastMutex(DestGDI->DriverLock);
       ret = DestGDI->StretchBlt(DestObj, SourceObj, Mask, ClipRegion, ColorTranslation,
                             &ca, BrushOrigin, &OutputRect, &InputRect, NULL, Mode);
+      ExReleaseFastMutex(DestGDI->DriverLock);
     }
 
   if (! ret)
@@ -908,6 +912,7 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   unsigned           i;
   POINTL             Pt;
   ULONG              Direction;
+  SURFGDI*           DestGDI;
 
   if (NULL != SourcePoint)
     {
@@ -924,8 +929,11 @@ EngMaskBitBlt(SURFOBJ *DestObj,
     InputRect.bottom = DestRect->bottom - DestRect->top;
     }
 
+  DestGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestObj);
+  ExAcquireFastMutex(DestGDI->DriverLock);
   if (! IntEngEnter(&EnterLeaveSource, NULL, &InputRect, TRUE, &Translate, &InputObj))
     {
+    ExReleaseFastMutex(DestGDI->DriverLock);
     return FALSE;
     }
 
@@ -981,12 +989,14 @@ EngMaskBitBlt(SURFOBJ *DestObj,
   if (OutputRect.right <= OutputRect.left || OutputRect.bottom <= OutputRect.top)
     {
     IntEngLeave(&EnterLeaveSource);
+    ExReleaseFastMutex(DestGDI->DriverLock);
     return TRUE;
     }
 
   if (! IntEngEnter(&EnterLeaveDest, DestObj, &OutputRect, FALSE, &Translate, &OutputObj))
     {
     IntEngLeave(&EnterLeaveSource);
+    ExReleaseFastMutex(DestGDI->DriverLock);
     return FALSE;
     }
 
@@ -1080,6 +1090,8 @@ EngMaskBitBlt(SURFOBJ *DestObj,
 
   IntEngLeave(&EnterLeaveDest);
   IntEngLeave(&EnterLeaveSource);
+
+  ExReleaseFastMutex(DestGDI->DriverLock);
 
   /* Dummy BitBlt to let driver know that something has changed.
      0x00AA0029 is the Rop for D (no-op) */

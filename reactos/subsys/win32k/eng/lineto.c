@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.28 2003/12/31 16:06:48 weiden Exp $
+ * $Id: lineto.c,v 1.29 2004/01/16 19:32:00 gvg Exp $
  */
 
 #include <ddk/winddi.h>
@@ -501,7 +501,7 @@ IntEngLineTo(SURFOBJ *DestSurf,
 {
   BOOLEAN ret;
   SURFGDI *SurfGDI;
-RECTL b;
+  RECTL b;
 
   if (Brush->logbrush.lbStyle == BS_NULL)
     return TRUE;
@@ -510,18 +510,20 @@ RECTL b;
   ret = FALSE;
   SurfGDI = (SURFGDI*)AccessInternalObjectFromUserObject(DestSurf);
 
-b.left = min(x1, x2);
-b.right = max(x1, x2);
-b.top = min(y1, y2);
-b.bottom = max(y1, y2);
-if (b.left == b.right) b.right++;
-if (b.top == b.bottom) b.bottom++;
+  b.left = min(x1, x2);
+  b.right = max(x1, x2);
+  b.top = min(y1, y2);
+  b.bottom = max(y1, y2);
+  if (b.left == b.right) b.right++;
+  if (b.top == b.bottom) b.bottom++;
   MouseSafetyOnDrawStart(DestSurf, SurfGDI, x1, y1, x2, y2);
 
   if (NULL != SurfGDI->LineTo)
     {
     /* Call the driver's DrvLineTo */
+    ExAcquireFastMutex(SurfGDI->DriverLock);
     ret = SurfGDI->LineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, mix);
+    ExReleaseFastMutex(SurfGDI->DriverLock);
     }
 
 #if 0

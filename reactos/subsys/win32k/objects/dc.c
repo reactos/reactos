@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.116 2004/01/05 15:43:55 weiden Exp $
+/* $Id: dc.c,v 1.117 2004/01/16 19:32:00 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -213,8 +213,9 @@ NtGdiCreateCompatableDC(HDC hDC)
   NewDC->w.flags        = DC_MEMORY;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
+  NewDC->GDIDevice      = OrigDC->GDIDevice;
   pb = BITMAPOBJ_LockBitmap(hBitmap);
-  NewDC->Surface = BitmapToSurf(pb);
+  NewDC->Surface = BitmapToSurf(pb, NewDC->GDIDevice);
   BITMAPOBJ_UnlockBitmap(hBitmap);
 
   NewDC->w.hPalette = OrigDC->w.hPalette;
@@ -473,6 +474,8 @@ IntCreatePrimarySurface()
   BOOL GotDriver;
   BOOL DoDefault;
 
+  ExInitializeFastMutex(&PrimarySurface.DriverLock);
+
   /*  Open the miniport driver  */
   if ((PrimarySurface.VideoFileObject = DRIVER_FindMPDriver(L"DISPLAY")) == NULL)
     {
@@ -710,6 +713,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 	 sizeof(NewDC->FillPatternSurfaces));
   NewDC->PDev = PrimarySurface.PDev;
   NewDC->Surface = PrimarySurface.Handle;
+  NewDC->GDIDevice = &PrimarySurface;
   NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
 
   NewDC->DMW.dmSize = sizeof(NewDC->DMW);
@@ -1779,7 +1783,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       /* Release the old bitmap, lock the new one and convert it to a SURF */
       EngDeleteSurface(dc->Surface);
       dc->w.hBitmap = hGDIObj;
-      dc->Surface = BitmapToSurf(pb);
+      dc->Surface = BitmapToSurf(pb, dc->GDIDevice);
 
       // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
       if(pb->dib)

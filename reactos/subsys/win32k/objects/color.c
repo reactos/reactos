@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: color.c,v 1.32 2003/12/22 15:30:21 navaraf Exp $ */
+/* $Id: color.c,v 1.33 2004/01/16 19:32:00 gvg Exp $ */
 
 // FIXME: Use PXLATEOBJ logicalToSystem instead of int *mapping
 
@@ -333,7 +333,9 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   } else {
     if(SurfGDI->SetPalette)
     {
+      ExAcquireFastMutex(SurfGDI->DriverLock);
       success = SurfGDI->SetPalette(dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
+      ExReleaseFastMutex(SurfGDI->DriverLock);
     }
   }
 

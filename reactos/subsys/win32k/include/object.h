@@ -136,7 +136,7 @@ HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen );
 
 HBITMAP
 FASTCALL
-BitmapToSurf ( PBITMAPOBJ BitmapObj );
+BitmapToSurf ( PBITMAPOBJ BitmapObj, HDEV GDIDevice );
 
 #endif /* _WIN32K_OBJECT_H */
 

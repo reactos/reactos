@@ -1,5 +1,5 @@
 /*
- * $Id: dib.c,v 1.39 2003/12/20 14:51:41 navaraf Exp $
+ * $Id: dib.c,v 1.40 2004/01/16 19:32:00 gvg Exp $
  *
  * ReactOS W32 Subsystem
  * Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -131,7 +131,7 @@ NtGdiSetDIBits(
   //  lpRGB = &bmi->bmiColors[0];
 
   // Create a temporary surface for the destination bitmap
-  DestBitmap = BitmapToSurf(bitmap);
+  DestBitmap = BitmapToSurf(bitmap, dc->GDIDevice);
 
   DestSurf   = (PSURFOBJ) AccessUserObject( (ULONG)DestBitmap );
   DestGDI    = (PSURFGDI) AccessInternalObject( (ULONG)DestBitmap );

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: objconv.c,v 1.13 2003/09/26 20:58:06 gvg Exp $ */
+/* $Id: objconv.c,v 1.14 2004/01/16 19:32:00 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -67,7 +67,7 @@ HPenToBrushObj ( BRUSHOBJ *brush, HPEN hpen )
   return brush;
 }
 
-HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj)
+HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj, HDEV GDIDevice)
 {
   HBITMAP BitmapHandle;
 
@@ -83,6 +83,10 @@ HBITMAP FASTCALL BitmapToSurf(PBITMAPOBJ BitmapObj)
     BitmapHandle = EngCreateBitmap(BitmapObj->size, BitmapObj->bitmap.bmWidthBytes,
                                    BitmapFormat(BitmapObj->bitmap.bmBitsPixel, BI_RGB),
                                    0, BitmapObj->bitmap.bmBits);
+    }
+  if (NULL != BitmapHandle)
+    {
+      EngAssociateSurface(BitmapHandle, GDIDevice, 0);
     }
 
   return BitmapHandle;

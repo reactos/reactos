@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.42 2004/01/16 15:39:28 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.43 2004/01/16 19:32:00 gvg Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -141,6 +141,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
   
   if(!NewCursor && (CurInfo->CurrentCursorObject || ForceChange))
   {
+    ExAcquireFastMutex(SurfGDI->DriverLock);
     SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, NULL, NULL, NULL,
                                                       0,
                                                       0,
@@ -148,6 +149,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       CurInfo->y, 
                                                       &PointerRect,
                                                       SPS_CHANGE);
+    ExReleaseFastMutex(SurfGDI->DriverLock);
     SetPointerRect(CurInfo, &PointerRect);
     
     CurInfo->CurrentCursorObject = NewCursor; /* i.e. CurrentCursorObject = NULL */
@@ -216,6 +218,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
       CurInfo->CurrentCursorObject = NULL;
     }
     
+    ExAcquireFastMutex(SurfGDI->DriverLock);
     SurfGDI->PointerStatus = SurfGDI->SetPointerShape(SurfObj, soMask, soColor, XlateObj,
                                                       NewCursor->IconInfo.xHotspot,
                                                       NewCursor->IconInfo.yHotspot,
@@ -223,6 +226,7 @@ IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL Fo
                                                       CurInfo->y, 
                                                       &PointerRect,
                                                       SPS_CHANGE);
+    ExReleaseFastMutex(SurfGDI->DriverLock);
     SetPointerRect(CurInfo, &PointerRect);
     
     if(hMask)
