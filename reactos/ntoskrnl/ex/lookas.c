@@ -1,4 +1,4 @@
-/* $Id: lookas.c,v 1.10 2003/07/12 10:24:45 chorns Exp $
+/* $Id: lookas.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,9 +14,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifdef __USE_W32API
-#define NONAMELESSUNION
-#endif
+//#ifdef __USE_W32API
+// #define NONAMELESSUNION
+//#endif
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
 #define NDEBUG
@@ -45,12 +45,12 @@ PSINGLE_LIST_ENTRY
 {
 	PSINGLE_LIST_ENTRY ListEntry;
 
-	ListEntry = ListHead->s.Next.Next;
+	ListEntry = ListHead->Next.Next;
 	if (ListEntry!=NULL)
 	{
-		ListHead->s.Next.Next = ListEntry->Next;
-    ListHead->s.Depth++;
-    ListHead->s.Sequence++;
+		ListHead->Next.Next = ListEntry->Next;
+    ListHead->Depth++;
+    ListHead->Sequence++;
   }
 	return ListEntry;
 }
@@ -64,10 +64,10 @@ PushEntrySList (
 	PSINGLE_LIST_ENTRY	Entry
 	)
 {
-	Entry->Next = ListHead->s.Next.Next;
-	ListHead->s.Next.Next = Entry;
-  ListHead->s.Depth++;
-  ListHead->s.Sequence++;
+	Entry->Next = ListHead->Next.Next;
+	ListHead->Next.Next = Entry;
+  ListHead->Depth++;
+  ListHead->Sequence++;
 }
 
 

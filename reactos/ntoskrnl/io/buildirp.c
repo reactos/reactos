@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.33 2003/07/10 15:47:00 royce Exp $
+/* $Id: buildirp.c,v 1.34 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -14,6 +14,7 @@
 
 #include <ddk/ntddk.h>
 #include <internal/pool.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>

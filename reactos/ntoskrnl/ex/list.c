@@ -1,4 +1,4 @@
-/* $Id: list.c,v 1.10 2003/07/12 10:24:45 chorns Exp $
+/* $Id: list.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,9 +13,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifdef __USE_W32API
-#define NONAMELESSUNION
-#endif
+//#ifdef __USE_W32API
+//#define NONAMELESSUNION
+//#endif
 #include <ddk/ntddk.h>
 
 #define NDEBUG
@@ -176,11 +176,11 @@ ExInterlockedPopEntrySList(IN PSLIST_HEADER ListHead,
   KIRQL oldlvl;
 
   KeAcquireSpinLock(Lock,&oldlvl);
-  ret = PopEntryList(&ListHead->s.Next);
+  ret = PopEntryList(&ListHead->Next);
   if (ret)
     {
-      ListHead->s.Depth--;
-      ListHead->s.Sequence++;
+      ListHead->Depth--;
+      ListHead->Sequence++;
     }
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
@@ -211,10 +211,10 @@ ExInterlockedPushEntrySList(IN PSLIST_HEADER ListHead,
   PSINGLE_LIST_ENTRY ret;
 
   KeAcquireSpinLock(Lock,&oldlvl);
-  ret=ListHead->s.Next.Next;
-  PushEntryList(&ListHead->s.Next,ListEntry);
-  ListHead->s.Depth++;
-  ListHead->s.Sequence++;
+  ret=ListHead->Next.Next;
+  PushEntryList(&ListHead->Next,ListEntry);
+  ListHead->Depth++;
+  ListHead->Sequence++;
   KeReleaseSpinLock(Lock,oldlvl);
   return(ret);
 }

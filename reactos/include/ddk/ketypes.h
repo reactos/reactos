@@ -3,19 +3,7 @@
 #ifndef __INCLUDE_DDK_KETYPES_H
 #define __INCLUDE_DDK_KETYPES_H
 
-#ifdef __NTOSKRNL__
-extern CHAR EXPORTED KeNumberProcessors;
-extern LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
-extern ULONG EXPORTED KeDcacheFlushCount;
-extern ULONG EXPORTED KeIcacheFlushCount;
-#else
-extern CHAR IMPORTED KeNumberProcessors;
-extern LOADER_PARAMETER_BLOCK IMPORTED KeLoaderBlock;
-extern ULONG EXPORTED KeDcacheFlushCount;
-extern ULONG EXPORTED KeIcacheFlushCount;
-#endif
-
-
+// include ntos/ketypes.h here?
 
 struct _KMUTANT;
 

@@ -1,7 +1,10 @@
 #ifndef __INCLUDE_DDK_FSFUNCS_H
 #define __INCLUDE_DDK_FSFUNCS_H
-/* $Id: fsfuncs.h,v 1.19 2003/04/26 23:13:26 hyperion Exp $ */
+/* $Id: fsfuncs.h,v 1.20 2003/08/14 18:30:27 silverblade Exp $ */
 #define FlagOn(x,f) ((x) & (f))
+
+#include <ntos/fstypes.h>
+
 
 VOID
 STDCALL
@@ -217,7 +220,7 @@ FsRtlFastUnlockSingle (
     IN PVOID                Context OPTIONAL,
     IN BOOLEAN              AlreadySynchronized
     );
-VOID
+BOOLEAN
 STDCALL
 FsRtlFindInTunnelCache (
     IN PTUNNEL          Cache,
@@ -453,7 +456,7 @@ FsRtlNotifyFullReportChange (
 VOID
 STDCALL
 FsRtlNotifyUninitializeSync (
-	IN OUT	PNOTIFY_SYNC	* NotifySync
+	IN OUT	PNOTIFY_SYNC *	NotifySync
 	);
 VOID
 STDCALL
@@ -466,7 +469,7 @@ FsRtlNotifyReportChange (
 	);
 
 VOID STDCALL
-FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC *NotifySync);
+FsRtlNotifyInitializeSync(IN OUT PNOTIFY_SYNC * NotifySync);
 
 NTSTATUS STDCALL
 FsRtlNotifyVolumeEvent(IN PFILE_OBJECT FileObject,

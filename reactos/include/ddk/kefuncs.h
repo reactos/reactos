@@ -91,8 +91,6 @@ VOID STDCALL KeEnterCriticalRegion (VOID);
  */
 VOID STDCALL KeEnterKernelDebugger (VOID);
 
-VOID STDCALL KeFlushWriteBuffer (VOID);
-
 KIRQL STDCALL KeGetCurrentIrql (VOID);
 
 #ifndef __USE_W32API

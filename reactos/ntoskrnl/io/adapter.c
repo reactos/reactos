@@ -1,4 +1,4 @@
-/* $Id: adapter.c,v 1.8 2003/07/10 15:47:00 royce Exp $
+/* $Id: adapter.c,v 1.9 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,6 +12,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ddk/halfuncs.h>
 
 #include <internal/debug.h>
 
@@ -19,7 +20,7 @@
 
 POBJECT_TYPE EXPORTED IoAdapterObjectType = NULL;	/* FIXME */
 POBJECT_TYPE EXPORTED IoDeviceHandlerObjectType = NULL;	/* FIXME */
-USHORT       EXPORTED IoDeviceHandlerObjectSize = 0;	/* FIXME */
+ULONG        EXPORTED IoDeviceHandlerObjectSize = 0;    /* FIXME */
 
 /* FUNCTIONS *****************************************************************/
 

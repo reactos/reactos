@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: queue.c,v 1.8 2003/07/11 01:23:15 royce Exp $
+/* $Id: queue.c,v 1.9 2003/08/14 18:30:28 silverblade Exp $
  *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ke/queue.c
@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntos.h>
 #include <internal/ke.h>
 #include <internal/id.h>
 #include <internal/ps.h>

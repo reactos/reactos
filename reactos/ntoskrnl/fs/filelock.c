@@ -1,4 +1,4 @@
-/* $Id: filelock.c,v 1.10 2003/08/07 11:47:33 silverblade Exp $
+/* $Id: filelock.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
  *
  * reactos/ntoskrnl/fs/filelock.c
  *
@@ -6,6 +6,7 @@
 #include <ddk/ntddk.h>
 #include <internal/ifs.h>
 #include <ddk/ntifs.h>
+#include <ntos.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -1,4 +1,4 @@
-/* $Id: tunnel.c,v 1.5 2003/07/10 06:27:13 royce Exp $
+/* $Id: tunnel.c,v 1.6 2003/08/14 18:30:28 silverblade Exp $
  *
  * reactos/ntoskrnl/fs/tunnel.c
  *
@@ -89,7 +89,7 @@ FsRtlDeleteTunnelCache (
  *
  * @unimplemented
  */
-VOID
+BOOLEAN
 STDCALL
 FsRtlFindInTunnelCache (
     IN PTUNNEL          Cache,
@@ -101,6 +101,7 @@ FsRtlFindInTunnelCache (
     OUT PVOID           Data
     )
 {
+    return FALSE;
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: haltypes.h,v 1.1 2003/05/28 18:35:35 chorns Exp $
+/* $Id: haltypes.h,v 1.2 2003/08/14 18:30:27 silverblade Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -10,8 +10,16 @@
  */
 
 
-#ifndef __INCLUDE_DDK_HALTYPES_H
-#define __INCLUDE_DDK_HALTYPES_H
+#ifndef __INCLUDE_NTOS_HALTYPES_H
+#define __INCLUDE_NTOS_HALTYPES_H
+
+#ifdef __GNUC__
+#define STDCALL_FUNC STDCALL
+#else
+#define STDCALL_FUNC(a) (__stdcall a )
+#endif /*__GNUC__*/
+
+#include "types.h"
 
 
 /* HalReturnToFirmware */
@@ -424,13 +432,18 @@ typedef struct _HAL_DISPATCH
 
 #ifdef __NTOSKRNL__
 extern HAL_DISPATCH EXPORTED HalDispatchTable;
-#define HALDISPATCH (&HalDispatchTable)
 #else
 extern PHAL_DISPATCH IMPORTED HalDispatchTable;
-#define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
 #endif
 
 #endif /* !__USE_W32API */
+
+#ifdef __NTOSKRNL__
+#define HALDISPATCH (&HalDispatchTable)
+#else
+#define HALDISPATCH ((PHAL_DISPATCH)&HalDispatchTable)
+#endif
+
 
 #define HAL_DISPATCH_VERSION		1
 #define HalDispatchTableVersion		HALDISPATCH->Version

@@ -1,15 +1,6 @@
 #ifndef __INCLUDE_DDK_FSTYPES_H
 #define __INCLUDE_DDK_FSTYPES_H
-/* $Id: fstypes.h,v 1.12 2003/08/07 11:47:32 silverblade Exp $ */
-
-#define FSRTL_TAG 	TAG('F','S','r','t')
-
-typedef ULONG LBN;
-typedef LBN *PLBN;
-
-typedef ULONG VBN;
-typedef VBN *PVBN;
-
+/* $Id: fstypes.h,v 1.13 2003/08/14 18:30:27 silverblade Exp $ */
 
 #ifndef __USE_W32API
 
@@ -23,6 +14,7 @@ typedef struct _FILE_LOCK_INFO {
     LARGE_INTEGER   EndingByte;
 } FILE_LOCK_INFO, *PFILE_LOCK_INFO;
 
+
 typedef NTSTATUS (*PCOMPLETE_LOCK_IRP_ROUTINE) (
     IN PVOID    Context,
     IN PIRP     Irp
@@ -33,6 +25,7 @@ typedef VOID (*PUNLOCK_ROUTINE) (
     IN PFILE_LOCK_INFO  FileLockInfo
 );
 
+
 typedef struct _FILE_LOCK {
     PCOMPLETE_LOCK_IRP_ROUTINE  CompleteLockIrpRoutine;
     PUNLOCK_ROUTINE             UnlockRoutine;
@@ -42,6 +35,7 @@ typedef struct _FILE_LOCK {
     FILE_LOCK_INFO              LastReturnedLockInfo;
     PVOID                       LastReturnedLock;
 } FILE_LOCK, *PFILE_LOCK;
+
 
 typedef struct _TUNNEL {
     FAST_MUTEX          Mutex;
@@ -67,19 +61,6 @@ typedef struct _NOTIFY_SYNC
 } NOTIFY_SYNC, * PNOTIFY_SYNC;
 
 
-typedef struct _LARGE_MCB
-{
-  PFAST_MUTEX FastMutex;
-  ULONG MaximumPairCount;
-  ULONG PairCount;
-  POOL_TYPE PoolType;
-  PVOID Mapping;
-} LARGE_MCB, *PLARGE_MCB;
-
-typedef struct _MCB {
-    LARGE_MCB LargeMcb;
-} MCB, *PMCB;
-
 typedef VOID
 (*POPLOCK_WAIT_COMPLETE_ROUTINE)(PVOID Context,
 				 PIRP Irp);
@@ -91,11 +72,5 @@ typedef VOID
 typedef PVOID OPLOCK, *POPLOCK;
 
 #endif /* __USE_W32API */
-
-typedef struct _FILE_LOCK_GRANTED {
-	LIST_ENTRY			ListEntry;
-	FILE_LOCK_INFO		Lock;
-} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
-
 
 #endif /* __INCLUDE_DDK_FSFUNCS_H */

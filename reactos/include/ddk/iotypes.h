@@ -1,4 +1,4 @@
-/* $Id: iotypes.h,v 1.51 2003/08/07 11:47:32 silverblade Exp $
+/* $Id: iotypes.h,v 1.52 2003/08/14 18:30:27 silverblade Exp $
  *
  */
 
@@ -742,32 +742,6 @@ typedef struct _IO_STATUS_BLOCK
   ULONG Information;
 } IO_STATUS_BLOCK, *PIO_STATUS_BLOCK;
 
-typedef struct _IO_COMPLETION_PACKET{
-   ULONG             Key;
-   ULONG             Overlapped;
-   IO_STATUS_BLOCK   IoStatus;
-   LIST_ENTRY        ListEntry;
-} IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
-
-typedef struct _IO_PIPE_CREATE_BUFFER
-{
-   BOOLEAN WriteModeMessage;
-   BOOLEAN ReadModeMessage;
-   BOOLEAN NonBlocking;
-   ULONG MaxInstances;
-   ULONG InBufferSize;
-   ULONG OutBufferSize;
-   LARGE_INTEGER TimeOut;
-} IO_PIPE_CREATE_BUFFER, *PIO_PIPE_CREATE_BUFFER;
-
-
-typedef struct _IO_MAILSLOT_CREATE_BUFFER
-{
-   ULONG Param; /* ?? */
-   ULONG MaxMessageSize;
-   LARGE_INTEGER TimeOut;
-} IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
-
 
 /*
  * Driver entry point declaration
@@ -1141,5 +1115,24 @@ typedef VOID STDCALL_FUNC
 (*PFSDNOTIFICATIONPROC)(IN PDEVICE_OBJECT PtrTargetFileSystemDeviceObject,
 			IN BOOLEAN DriverActive);
 #endif // (_WIN32_WINNT >= 0x0400)
+
+
+typedef struct _IO_PIPE_CREATE_BUFFER
+{
+   BOOLEAN WriteModeMessage;
+   BOOLEAN ReadModeMessage;
+   BOOLEAN NonBlocking;
+   ULONG MaxInstances;
+   ULONG InBufferSize;
+   ULONG OutBufferSize;
+   LARGE_INTEGER TimeOut;
+} IO_PIPE_CREATE_BUFFER, *PIO_PIPE_CREATE_BUFFER;
+
+typedef struct _IO_MAILSLOT_CREATE_BUFFER
+{
+   ULONG Param; /* ?? */
+   ULONG MaxMessageSize;
+   LARGE_INTEGER TimeOut;
+} IO_MAILSLOT_CREATE_BUFFER, *PIO_MAILSLOT_CREATE_BUFFER;
 
 #endif /* __INCLUDE_DDK_IOTYPES_H */

@@ -1,8 +1,9 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
-/* $Id: ifs.h,v 1.5 2003/01/25 15:52:43 hbirr Exp $ */
+/* $Id: ifs.h,v 1.6 2003/08/14 18:30:28 silverblade Exp $ */
 
 #include <ddk/ntifs.h>
+#include <ntos.h>
 
 /* Look for "FSrt" in mem view */
 #define IFS_POOL_TAG 0x74725346

@@ -1,4 +1,4 @@
-/* $Id: disk.h,v 1.13 2003/06/22 16:33:44 ekohl Exp $
+/* $Id: disk.h,v 1.14 2003/08/14 18:30:27 silverblade Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -166,16 +166,16 @@ typedef struct _DISK_GEOMETRY
   DWORD BytesPerSector;
 } DISK_GEOMETRY, *PDISK_GEOMETRY;
 
-#ifndef __USE_W32API
-
 typedef struct _DRIVE_LAYOUT_INFORMATION
 {
   DWORD PartitionCount;
   DWORD Signature;
   PARTITION_INFORMATION PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
+} DRIVE_LAYOUT_INFORMATION;
 
-#endif /* !__USE_W32API */
+#ifndef __USE_W32API
+typedef DRIVE_LAYOUT_INFORMATION *PDRIVE_LAYOUT_INFORMATION;
+#endif
 
 #endif /* __INCLUDE_DISK_H */
 

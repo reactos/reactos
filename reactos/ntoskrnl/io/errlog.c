@@ -1,4 +1,4 @@
-/* $Id: errlog.c,v 1.10 2003/07/10 15:47:00 royce Exp $
+/* $Id: errlog.c,v 1.11 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -20,7 +20,7 @@
 
 /* TYPES *********************************************************************/
 
-
+#ifndef __USE_W32API
 typedef struct _IO_ERROR_LOG_PACKET
 {
    UCHAR MajorFunctionCode;
@@ -37,6 +37,7 @@ typedef struct _IO_ERROR_LOG_PACKET
    LARGE_INTEGER DeviceOffset;
    ULONG DumpData[1];
 } IO_ERROR_LOG_PACKET, *PIO_ERROR_LOG_PACKET;
+#endif
 
 typedef struct _ERROR_LOG_ENTRY
 {

@@ -15,6 +15,7 @@
 #define NTOS_MODE_KERNEL
 #include <ntos.h>
 //#include <ntos/synch.h>
+#include <internal/io.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -202,7 +203,7 @@ NtQueryIoCompletion(
                                        NULL);
    if (NT_SUCCESS(Status))
    {
-      ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->SignalState = 
+      ((PIO_COMPLETION_BASIC_INFORMATION)IoCompletionInformation)->Depth = 
          Queue->Header.SignalState;
 
       ObDereferenceObject(Queue);

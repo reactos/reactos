@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: io.h,v 1.32 2003/06/20 22:42:18 ekohl Exp $
+/* $Id: io.h,v 1.33 2003/08/14 18:30:28 silverblade Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -32,6 +32,22 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
+
+
+#ifndef __USE_W32API
+#define DEVICE_TYPE_FROM_CTL_CODE(ctlCode) (((ULONG)(ctlCode&0xffff0000))>>16)
+#endif
+
+#define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
+
+
+typedef struct _IO_COMPLETION_PACKET{
+   ULONG             Key;
+   ULONG             Overlapped;
+   IO_STATUS_BLOCK   IoStatus;
+   LIST_ENTRY        ListEntry;
+} IO_COMPLETION_PACKET, *PIO_COMPLETION_PACKET;
+
 
 typedef struct _DEVICE_NODE
 {
@@ -297,7 +313,7 @@ PIRP IoBuildSynchronousFsdRequestWithMdl(ULONG MajorFunction,
 					 PLARGE_INTEGER StartingOffset,
 					 PKEVENT Event,
 					 PIO_STATUS_BLOCK IoStatusBlock,
-					 ULONG PagingIo);
+					 BOOLEAN PagingIo);
 
 VOID IoInitShutdownNotification(VOID);
 VOID IoShutdownRegisteredDevices(VOID);

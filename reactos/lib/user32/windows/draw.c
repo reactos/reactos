@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: draw.c,v 1.16 2003/08/11 07:02:06 rcampbell Exp $
+/* $Id: draw.c,v 1.17 2003/08/14 18:30:27 silverblade Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -1635,6 +1635,45 @@ DrawStateW(
   int cy,
   UINT fuFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    // AG: Experimental, unfinished, and most likely buggy! I haven't been
+    // able to test this - my intention was to implement some things needed
+    // by the button control.
+
+    if ((! lpOutputFunc) && (fuFlags &  DST_COMPLEX))
+        return FALSE;
+
+    RECT r;
+    SetRect(&r, x, y, cx, cy);
+
+    HBITMAP MemBMP = CreateCompatibleBitmap(hdc, cx, cy);
+    HDC MemDC = CreateCompatibleDC(hdc);
+    
+    HBITMAP OldBMP = (HBITMAP) SelectObject(MemDC, MemBMP);
+
+    // Do drawing first
+
+    if (lpOutputFunc)
+        lpOutputFunc(MemDC, lData, wData, cx, cy);
+
+    else if (fuFlags & DST_TEXT)
+    {
+        int count;
+        if (wData == 0) count = -1;
+        else count = wData;
+        DrawTextW(MemDC, (WCHAR*) lData, count, &r, 0);
+    }
+    
+    // Now apply state effect
+    // not implemented yet ...
+
+
+    // Copy to hdc
+    
+    BitBlt(hdc, x, y, cx, cy, MemDC, 0, 0, SRCCOPY);
+
+    SelectObject(MemDC, OldBMP);
+    DeleteObject(MemBMP);
+    DeleteDC(MemDC);
+
+    return TRUE;
 }

@@ -478,7 +478,7 @@ ExPostSystemEvent (
  *	);
  */
 #define ExQueryDepthSList(ListHead) \
-	(USHORT)(ListHead)->s.Depth
+	(USHORT)(ListHead)->Depth
 
 VOID
 STDCALL

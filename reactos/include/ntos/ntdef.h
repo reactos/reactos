@@ -11,11 +11,11 @@
 #ifndef __INCLUDE_NTDEF_H
 #define __INCLUDE_NTDEF_H
 
-#define PACKED __attribute__((packed))
-
 #define EX_MAXIMUM_WAIT_OBJECTS (64)
 
 #ifndef __USE_W32API
+
+#define PACKED __attribute__((packed))
 
 #define ANYSIZE_ARRAY	(1)
 

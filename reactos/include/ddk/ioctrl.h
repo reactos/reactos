@@ -5,8 +5,8 @@
 #define CTL_CODE(Dev, Func, Meth, Acc) ( ((Dev)<<16) | ((Acc)<<14) | ((Func)<<2) | (Meth))
 
 
-#define DEVICE_TYPE_FROM_CTL_CODE(ctlCode) (((ULONG)(ctlCode&0xffff0000))>>16)
-#define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
+//#define DEVICE_TYPE_FROM_CTL_CODE(ctlCode) (((ULONG)(ctlCode&0xffff0000))>>16)
+//#define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 
 //  IOCTL Parameter buffering methods

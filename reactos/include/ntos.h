@@ -1,6 +1,6 @@
 #ifndef _NTOS_H
 #define _NTOS_H
-/* $Id: ntos.h,v 1.13 2003/08/07 11:47:33 silverblade Exp $ */
+/* $Id: ntos.h,v 1.14 2003/08/14 18:30:27 silverblade Exp $ */
 
 #if defined(NTOS_MODE_USER)
 // include windows.h before ntddk.h to get user mode prototype for InterlockedXxx functions
@@ -14,6 +14,7 @@
 #include "ntos/except.h"
 #include "ntos/file.h"
 #include "ntos/gditypes.h"
+#include "ntos/fstypes.h"   // AG
 #include "ntos/heap.h"
 #include "ntos/kdbgsyms.h"
 #include "ntos/keyboard.h"
@@ -88,6 +89,7 @@
 #include "ntos/halfuncs.h"
 #include "ntos/kdfuncs.h"
 #include "ntos/kefuncs.h"   // AG
+#include "ntos/fstypes.h"   // AG
 #include "ntos/obtypes.h"
 #include "ntos/tss.h"
 #include "rosrtl/thread.h"
