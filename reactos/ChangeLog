@@ -1,3 +1,8 @@
+2004-11-27  WaxDragon  <waxdragon@gmail.com>
+
+	* bootdata/packages/reactos.dff: Add dnsapi.dll, iphlpapi.dll,
+	rpcrt4.dll, and ole32.dll.
+
 2004-11-27  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* apps/utils/driver/load/.cvsignore: Use native line-endings.

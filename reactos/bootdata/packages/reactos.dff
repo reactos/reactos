@@ -118,6 +118,10 @@ lib\ws2_32\ws2_32.dll                   1
 lib\ws2help\ws2help.dll                 1
 lib\wshirda\wshirda.dll                 1
 lib\wsock32\wsock32.dll                 1
+lib\dnsapi\dnsapi.dll                   1
+lib\iphlpapi\iphlpapi.dll               1
+lib\rpcrt4\rpcrt4.dll                   1
+lib\ole32\ole32.dll                     1
 subsys\csrss\csrss.exe                  1
 subsys\csrss\win32csr\win32csr.dll      1
 subsys\ntvdm\ntvdm.exe                  1
