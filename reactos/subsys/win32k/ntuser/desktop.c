@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: desktop.c,v 1.6 2003/12/22 15:30:21 navaraf Exp $
+ *  $Id: desktop.c,v 1.7 2003/12/26 00:47:18 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -357,11 +357,23 @@ NtUserCreateDesktop(
       return NULL;
     }
   
-  /* FIXME: Set correct dimensions. */
   DesktopObject->WorkArea.left = 0;
   DesktopObject->WorkArea.top = 0;
-  DesktopObject->WorkArea.right = 640;
-  DesktopObject->WorkArea.bottom = 480;
+  DesktopObject->WorkArea.right = -1;
+  DesktopObject->WorkArea.bottom = -1;
+  if(ScreenDeviceContext)
+  {
+    PDC dc;
+    PSURFOBJ SurfObj;
+    dc = DC_LockDc(ScreenDeviceContext);
+    SurfObj = (PSURFOBJ)AccessUserObject((ULONG) dc->Surface);
+    if(SurfObj)
+    {
+      DesktopObject->WorkArea.right = SurfObj->sizlBitmap.cx;
+      DesktopObject->WorkArea.bottom = SurfObj->sizlBitmap.cy;
+    }
+    DC_UnlockDc(ScreenDeviceContext);
+  }
 
   /* Initialize some local (to win32k) desktop state. */
   DesktopObject->ActiveMessageQueue = NULL;
