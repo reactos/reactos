@@ -1,4 +1,4 @@
-/* $Id: finfo.c,v 1.13 2002/07/20 00:57:36 ekohl Exp $
+/* $Id: finfo.c,v 1.14 2002/07/20 11:44:37 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -274,6 +274,77 @@ VfatGetNetworkOpenInformation(PVFATFCB Fcb,
 }
 
 
+static NTSTATUS
+VfatGetAllInformation(PFILE_OBJECT FileObject,
+		      PVFATFCB Fcb,
+		      PFILE_ALL_INFORMATION Info,
+		      PULONG BufferLength)
+/*
+ * FUNCTION: Retrieve the all file information
+ */
+{
+  ULONG NameLength;
+
+  assert (Info);
+  assert (Fcb);
+
+  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength)
+    return(STATUS_BUFFER_OVERFLOW);
+
+  /* Basic Information */
+  FsdDosDateTimeToFileTime(Fcb->entry.CreationDate,
+			   Fcb->entry.CreationTime,
+			   &Info->BasicInformation.CreationTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.AccessDate,
+			   0,
+			   &Info->BasicInformation.LastAccessTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
+			   Fcb->entry.UpdateTime,
+			   &Info->BasicInformation.LastWriteTime);
+  FsdDosDateTimeToFileTime(Fcb->entry.UpdateDate,
+			   Fcb->entry.UpdateTime,
+			   &Info->BasicInformation.ChangeTime);
+  Info->BasicInformation.FileAttributes = Fcb->entry.Attrib;
+
+  /* Standard Information */
+  Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
+  Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+  Info->StandardInformation.NumberOfLinks = 0;
+  Info->StandardInformation.DeletePending = Fcb->Flags & FCB_DELETE_PENDING ? TRUE : FALSE;
+  Info->StandardInformation.Directory = Fcb->entry.Attrib & 0x10 ? TRUE : FALSE;
+
+  /* Internal Information */
+  /* FIXME: get a real index, that can be used in a create operation */
+  Info->InternalInformation.IndexNumber.QuadPart = 0;
+
+  /* EA Information */
+  Info->EaInformation.EaSize = 0;
+
+  /* Access Information */
+  /* The IO-Manager adds this information */
+
+  /* Position Information */
+  Info->PositionInformation.CurrentByteOffset.QuadPart = FileObject->CurrentByteOffset.QuadPart;
+
+  /* Mode Information */
+  /* The IO-Manager adds this information */
+
+  /* Alignment Information */
+  /* The IO-Manager adds this information */
+
+  /* Name Information */
+  Info->NameInformation.FileNameLength = NameLength;
+  RtlCopyMemory(Info->NameInformation.FileName,
+		Fcb->PathName,
+		NameLength + sizeof(WCHAR));
+
+  *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR));
+
+  return STATUS_SUCCESS;
+}
+
+
 NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 /*
  * FUNCTION: Retrieve the specified file information
@@ -344,9 +415,14 @@ NTSTATUS VfatQueryInformation(PVFAT_IRP_CONTEXT IrpContext)
 					 SystemBuffer,
 					 &BufferLength);
       break;
+    case FileAllInformation:
+      RC = VfatGetAllInformation(IrpContext->FileObject,
+				 FCB,
+				 SystemBuffer,
+				 &BufferLength);
+      break;
 
     case FileAlternateNameInformation:
-    case FileAllInformation:
       RC = STATUS_NOT_IMPLEMENTED;
       break;
     default:

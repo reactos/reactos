@@ -16,11 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: finfo.c,v 1.3 2002/07/20 00:57:15 ekohl Exp $
+/* $Id: finfo.c,v 1.4 2002/07/20 11:44:24 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/cdfs/dirctl.c
+ * FILE:             services/fs/cdfs/finfo.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
  * PROGRAMMER:       Art Yerkes
  *                   Eric Kohl
@@ -144,9 +144,9 @@ CdfsGetNameInformation(PFILE_OBJECT FileObject,
     return STATUS_BUFFER_OVERFLOW;
 
   NameInfo->FileNameLength = NameLength;
-  memcpy(NameInfo->FileName,
-	 Fcb->PathName,
-	 NameLength + sizeof(WCHAR));
+  RtlCopyMemory(NameInfo->FileName,
+		Fcb->PathName,
+		NameLength + sizeof(WCHAR));
 
   *BufferLength -=
     (sizeof(FILE_NAME_INFORMATION) + NameLength + sizeof(WCHAR));
@@ -175,6 +175,7 @@ CdfsGetInternalInformation(PFCB Fcb,
 
   return(STATUS_SUCCESS);
 }
+
 
 static NTSTATUS
 CdfsGetNetworkOpenInformation(PFCB Fcb,
@@ -206,6 +207,74 @@ CdfsGetNetworkOpenInformation(PFCB Fcb,
   *BufferLength -= sizeof(FILE_NETWORK_OPEN_INFORMATION);
 
   return(STATUS_SUCCESS);
+}
+
+
+static NTSTATUS
+CdfsGetAllInformation(PFILE_OBJECT FileObject,
+		      PFCB Fcb,
+		      PFILE_ALL_INFORMATION Info,
+		      PULONG BufferLength)
+/*
+ * FUNCTION: Retrieve the all file information
+ */
+{
+  ULONG NameLength;
+
+  assert(Info);
+  assert(Fcb);
+
+  NameLength = wcslen(Fcb->PathName) * sizeof(WCHAR);
+  if (*BufferLength < sizeof(FILE_ALL_INFORMATION) + NameLength)
+    return(STATUS_BUFFER_OVERFLOW);
+
+  /* Basic Information */
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->BasicInformation.CreationTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->BasicInformation.LastAccessTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->BasicInformation.LastWriteTime);
+  CdfsDateTimeToFileTime(Fcb,
+			 &Info->BasicInformation.ChangeTime);
+  CdfsFileFlagsToAttributes(Fcb,
+			    &Info->BasicInformation.FileAttributes);
+
+  /* Standard Information */
+  Info->StandardInformation.AllocationSize = Fcb->RFCB.AllocationSize;
+  Info->StandardInformation.EndOfFile = Fcb->RFCB.FileSize;
+  Info->StandardInformation.NumberOfLinks = 0;
+  Info->StandardInformation.DeletePending = FALSE;
+  Info->StandardInformation.Directory = Fcb->Entry.FileFlags & 0x02 ? TRUE : FALSE;
+
+  /* Internal Information */
+  /* FIXME: get a real index, that can be used in a create operation */
+  Info->InternalInformation.IndexNumber.QuadPart = 0;
+
+  /* EA Information */
+  Info->EaInformation.EaSize = 0;
+
+  /* Access Information */
+  /* The IO-Manager adds this information */
+
+  /* Position Information */
+  Info->PositionInformation.CurrentByteOffset.QuadPart = FileObject->CurrentByteOffset.QuadPart;
+
+  /* Mode Information */
+  /* The IO-Manager adds this information */
+
+  /* Alignment Information */
+  /* The IO-Manager adds this information */
+
+  /* Name Information */
+  Info->NameInformation.FileNameLength = NameLength;
+  RtlCopyMemory(Info->NameInformation.FileName,
+		Fcb->PathName,
+		NameLength + sizeof(WCHAR));
+
+  *BufferLength -= (sizeof(FILE_ALL_INFORMATION) + NameLength + sizeof(WCHAR));
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -278,8 +347,14 @@ CdfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 					       &BufferLength);
 	break;
 
-      case FileAlternateNameInformation:
       case FileAllInformation:
+	Status = CdfsGetAllInformation(FileObject,
+				       Fcb,
+				       SystemBuffer,
+				       &BufferLength);
+	break;
+
+      case FileAlternateNameInformation:
 	Status = STATUS_NOT_IMPLEMENTED;
 	break;
 
