@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.23 2004/01/23 21:16:03 ekohl Exp $
+/* $Id: section.c,v 1.24 2004/02/08 10:42:15 jfilby Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -37,6 +37,8 @@ CreateFileMappingA(HANDLE hFile,
    ANSI_STRING AnsiName;
    UNICODE_STRING UnicodeName;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
+   IO_STATUS_BLOCK IoStatusBlock;
+   FILE_STANDARD_INFORMATION FileStandard;
 
    if ((flProtect & (MASK_PAGE_FLAGS | MASK_SEC_FLAGS)) != flProtect)
      {
@@ -53,8 +55,26 @@ CreateFileMappingA(HANDLE hFile,
         SecurityDescriptor = NULL;
      }
 
-   MaximumSize.u.LowPart = dwMaximumSizeLow;
-   MaximumSize.u.HighPart = dwMaximumSizeHigh;
+   if((dwMaximumSizeLow==0)&&(dwMaximumSizeHigh==0))
+   {
+	   // MSDN: If dwMaximumSizeLow and dwMaximumSizeHigh are zero, the maximum size of the 
+	   // file-mapping object is equal to the current size of the file identified by hFile. 
+	   Status = NtQueryInformationFile(hFile,
+		   &IoStatusBlock,
+		   &FileStandard,
+		   sizeof(FILE_STANDARD_INFORMATION),
+		   FileStandardInformation);
+	   if (!NT_SUCCESS(Status))
+	   {
+		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+		   SetLastErrorByStatus(Status);
+		   return NULL;
+	   }
+	   MaximumSize = FileStandard.EndOfFile;
+   } else {
+	   MaximumSize.u.LowPart = dwMaximumSizeLow;
+	   MaximumSize.u.HighPart = dwMaximumSizeHigh;
+   }
    RtlInitAnsiString(&AnsiName,
 		     (LPSTR)lpName);
    RtlAnsiStringToUnicodeString(&UnicodeName,
@@ -100,6 +120,8 @@ CreateFileMappingW(HANDLE hFile,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING UnicodeName;
    PSECURITY_DESCRIPTOR SecurityDescriptor;
+   IO_STATUS_BLOCK IoStatusBlock;
+   FILE_STANDARD_INFORMATION FileStandard;
 
    if ((flProtect & (MASK_PAGE_FLAGS | MASK_SEC_FLAGS)) != flProtect)
      {
@@ -118,7 +140,21 @@ CreateFileMappingW(HANDLE hFile,
 
    if ((dwMaximumSizeLow == 0) && (dwMaximumSizeHigh == 0))
      {
-       MaximumSizePointer = NULL;
+	   // MSDN: If dwMaximumSizeLow and dwMaximumSizeHigh are zero, the maximum size of the 
+	   // file-mapping object is equal to the current size of the file identified by hFile. 
+	   Status = NtQueryInformationFile(hFile,
+		   &IoStatusBlock,
+		   &FileStandard,
+		   sizeof(FILE_STANDARD_INFORMATION),
+		   FileStandardInformation);
+	   if (!NT_SUCCESS(Status))
+	   {
+		   DPRINT("Status 0x%08x obtaining FileStandardInformation for source\n", errCode);
+		   SetLastErrorByStatus(Status);
+		   return NULL;
+	   }
+	   MaximumSize = FileStandard.EndOfFile;
+       MaximumSizePointer = &MaximumSize;
      }
    else
      {
