@@ -676,6 +676,11 @@ QSI_DEF(SystemProcessInformation)
 		else
 			pCur = pCur + curSize + inLen;
 	}  while ((pr != syspr) && (pr != NULL));
+	
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	*ReqSize = ovlSize;
 	return (STATUS_SUCCESS);
@@ -859,6 +864,11 @@ QSI_DEF(SystemHandleInformation)
 	    if ((pr == syspr) || (pr == NULL))
 		break;
         } while ((pr != syspr) && (pr != NULL));
+        
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	DPRINT("SystemHandleInformation 2\n");
 
@@ -898,6 +908,11 @@ QSI_DEF(SystemHandleInformation)
 	    if ((pr == syspr) || (pr == NULL))
 		break;
 	   } while ((pr != syspr) && (pr != NULL));
+
+	if(pr != NULL)
+	{
+          ObDereferenceObject(pr);
+	}
 
 	DPRINT("SystemHandleInformation 4\n");
 	return (STATUS_SUCCESS);
