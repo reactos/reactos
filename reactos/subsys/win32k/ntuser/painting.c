@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: painting.c,v 1.31 2003/09/09 09:39:21 gvg Exp $
+/* $Id: painting.c,v 1.32 2003/09/09 20:06:58 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -507,9 +507,10 @@ PaintRedrawWindow( PWINDOW_OBJECT Window,
 		}
 	      return TRUE;
 	    }
+	  NtGdiOffsetRect(&Rect2, Pt.x, Pt.y);
 	  if (NULL == Window->UpdateRegion)
 	    {
-	      Window->UpdateRegion = 
+	      Window->UpdateRegion =
 		UnsafeIntCreateRectRgnIndirect(&Rect2);
 	    }
 	  else
