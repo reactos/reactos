@@ -755,7 +755,7 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface, HWND hwnd
 
 	SHChangeNotify (bIsFolder ? SHCNE_RENAMEFOLDER : SHCNE_RENAMEITEM, SHCNF_PATHA, szSrc, szDest);
 
-	return S_OK;
+	return hr;
     }
 
     return E_FAIL;
