@@ -1,4 +1,4 @@
-/* $Id: uuid.c,v 1.2 2004/12/18 13:27:58 ekohl Exp $
+/* $Id: uuid.c,v 1.3 2004/12/19 12:52:42 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -52,27 +52,108 @@ ExpInitUuids(VOID)
 }
 
 
-static BOOLEAN
-ExpLoadUuidSequenceCount(PULONG Sequence)
+#define VALUE_BUFFER_SIZE 256
+
+static NTSTATUS
+ExpLoadUuidSequence(PULONG Sequence)
 {
-  /* FIXME */
-  *Sequence = 0x01234567;
-  return TRUE;
+  UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
+  PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING Name;
+  HANDLE KeyHandle;
+  ULONG ValueLength;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&Name,
+		       L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtOpenKey(&KeyHandle,
+		     KEY_QUERY_VALUE,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+    return Status;
+  }
+
+  RtlInitUnicodeString(&Name,
+		       L"UuidSequenceNumber");
+
+  ValueInfo = (PKEY_VALUE_PARTIAL_INFORMATION)ValueBuffer;
+  Status = NtQueryValueKey(KeyHandle,
+			   &Name,
+			   KeyValuePartialInformation,
+			   ValueBuffer,
+			   VALUE_BUFFER_SIZE,
+			   &ValueLength);
+  NtClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("NtQueryValueKey() failed (Status %lx)\n", Status);
+    return Status;
+  }
+
+  *Sequence = *((PULONG)ValueInfo->Data);
+
+  DPRINT("Loaded sequence %lx\n", *Sequence);
+
+  return STATUS_SUCCESS;
+}
+#undef VALUE_BUFFER_SIZE
+
+
+static NTSTATUS
+ExpSaveUuidSequence(PULONG Sequence)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING Name;
+  HANDLE KeyHandle;
+  NTSTATUS Status;
+
+  RtlInitUnicodeString(&Name,
+		       L"\\Registry\\Machine\\Software\\Microsoft\\Rpc");
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &Name,
+			     OBJ_CASE_INSENSITIVE,
+			     NULL,
+			     NULL);
+  Status = NtOpenKey(&KeyHandle,
+		     KEY_SET_VALUE,
+		     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("NtOpenKey() failed (Status %lx)\n", Status);
+    return Status;
+  }
+
+  RtlInitUnicodeString(&Name,
+		       L"UuidSequenceNumber");
+  Status = NtSetValueKey(KeyHandle,
+			 &Name,
+			 0,
+			 REG_DWORD,
+			 Sequence,
+			 sizeof(ULONG));
+  NtClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT("NtSetValueKey() failed (Status %lx)\n", Status);
+  }
+
+  return Status;
 }
 
 
 static VOID
-ExpSaveUuidSequenceCount(ULONG Sequence)
+ExpGetRandomUuidSequence(PULONG Sequence)
 {
   /* FIXME */
-}
-
-
-static VOID
-ExpGetRandomUuidSequenceCount(PULONG Sequence)
-{
-  /* FIXME */
-  *Sequence = 0x76543210;
+  *Sequence = 0x70615243;
 }
 
 
@@ -98,7 +179,6 @@ ExpCreateUuids(PULARGE_INTEGER Time,
 
     if (Time->QuadPart < UuidLastTime.QuadPart)
     {
-//      *Sequence = (*Sequence + 1) & 0x1fff;
       (*Sequence)++;
       UuidSequenceChanged = TRUE;
       UuidCount = 0;
@@ -138,9 +218,10 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
 
   if (!UuidSequenceInitialized)
   {
-    if (!ExpLoadUuidSequenceCount(&UuidSequence))
+    Status = ExpLoadUuidSequence(&UuidSequence);
+    if (!NT_SUCCESS(Status))
     {
-      ExpGetRandomUuidSequenceCount(&UuidSequence);
+      ExpGetRandomUuidSequence(&UuidSequence);
     }
 
     UuidSequenceInitialized = TRUE;
@@ -158,8 +239,9 @@ NtAllocateUuids(OUT PULARGE_INTEGER Time,
 
   if (UuidSequenceChanged)
   {
-    ExpSaveUuidSequenceCount(UuidSequence);
-    UuidSequenceChanged = FALSE;
+    Status = ExpSaveUuidSequence(&UuidSequence);
+    if (NT_SUCCESS(Status))
+      UuidSequenceChanged = FALSE;
   }
 
   ExReleaseFastMutex(&UuidMutex);
