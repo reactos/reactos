@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.40 2002/08/14 20:58:39 dwelch Exp $
+/* $Id: init.c,v 1.41 2002/08/17 15:31:03 hbirr Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -404,11 +404,13 @@ SmPagingFilesQueryRoutine(PWSTR ValueName,
   if ((p = wcschr(ValueData, ' ')) != NULL)
     {
       *p = L'\0';
-      InitialSize.QuadPart = wcstoul(p + 1, &p, 0);
+      InitialSize.QuadPart = wcstoul(p + 1, &p, 0) * 256 * 4096;
       if (*p == ' ')
 	{
-	  MaximumSize.QuadPart = wcstoul(p + 1, NULL, 0);
+	  MaximumSize.QuadPart = wcstoul(p + 1, NULL, 0) * 256 * 4096;
 	}
+      else
+	MaximumSize = InitialSize;
     }
   else
     {
