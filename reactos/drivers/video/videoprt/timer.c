@@ -18,16 +18,16 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c,v 1.1.2.1 2004/03/14 17:16:28 navaraf Exp $
+ * $Id: timer.c,v 1.1.2.1 2004/03/14 17:16:28 navaraf Exp $
  */
 
 #include "videoprt.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-BOOLEAN STDCALL
-VideoPortInterruptRoutine(
-   IN struct _KINTERRUPT *Interrupt,
+VOID STDCALL
+VideoPortTimerRoutine(
+   IN PDEVICE_OBJECT DeviceObject,
    IN PVOID ServiceContext)
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension = ServiceContext;
@@ -37,9 +37,9 @@ VideoPortInterruptRoutine(
       DeviceExtension->FunctionalDeviceObject->DriverObject,
       DeviceExtension->FunctionalDeviceObject->DriverObject);
   
-   ASSERT(DriverExtension->InitializationData.HwInterrupt != NULL);
+   ASSERT(DriverExtension->InitializationData.HwTimer != NULL);
 
-   return DriverExtension->InitializationData.HwInterrupt(
+   DriverExtension->InitializationData.HwTimer(
       DeviceExtension->MiniPortDeviceExtension);
 }
 
@@ -49,47 +49,21 @@ VideoPortInterruptRoutine(
  * @implemented
  */
 
-VP_STATUS STDCALL
-VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
+VOID STDCALL
+VideoPortStartTimer(IN PVOID  HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
-
-   DPRINT("VideoPortEnableInterrupt\n");
-
-   DeviceExtension = CONTAINING_RECORD(
-      HwDeviceExtension,
-      VIDEO_PORT_DEVICE_EXTENSION,
-      MiniPortDeviceExtension);
-
-   Status = HalEnableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0,
-      DeviceExtension->InterruptLevel);
-
-   return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+   DPRINT("VideoPortStartTimer\n");
+   IoStartTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
 }
+
 
 /*
  * @implemented
  */
 
-VP_STATUS STDCALL
-VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
+VOID STDCALL
+VideoPortStopTimer(IN PVOID  HwDeviceExtension)
 {
-   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
-   BOOLEAN Status;
-
-   DPRINT("VideoPortDisableInterrupt\n");
-
-   DeviceExtension = CONTAINING_RECORD(
-      HwDeviceExtension,
-      VIDEO_PORT_DEVICE_EXTENSION,
-      MiniPortDeviceExtension);
-
-   Status = HalDisableSystemInterrupt(
-      DeviceExtension->InterruptVector,
-      0);
-
-   return Status ? NO_ERROR : ERROR_INVALID_ACCESS;
+   DPRINT("VideoPortStopTimer\n");
+   IoStopTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
 }
