@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: menu.c,v 1.52 2004/03/25 12:32:13 gvg Exp $
+/* $Id: menu.c,v 1.53 2004/05/02 21:41:18 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1750,8 +1750,11 @@ NtUserMenuItemInfo(
       SetLastNtError(Status);
       return FALSE;
     }
-  if(sizeof(MENUITEMINFOW) != Size && sizeof(ROSMENUITEMINFO) != Size)
+  if (sizeof(MENUITEMINFOW) != Size
+      && sizeof(MENUITEMINFOW) - sizeof(HBITMAP) != Size
+      && sizeof(ROSMENUITEMINFO) != Size)
     {
+      IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
@@ -1760,6 +1763,15 @@ NtUserMenuItemInfo(
     {
       IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
+      return FALSE;
+    }
+  /* If this is a pre-0x0500 _WIN32_WINNT MENUITEMINFOW, you can't
+     set/get hbmpItem */
+  if (sizeof(MENUITEMINFOW) - sizeof(HBITMAP) == Size
+      && 0 != (ItemInfo.fMask & MIIM_BITMAP))
+    {
+      IntReleaseMenuObject(MenuObject);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
     }
 
