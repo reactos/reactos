@@ -1,9 +1,10 @@
-# $Id: Makefile.i386,v 1.1 2003/05/27 18:56:15 hbirr Exp $
+# $Id: Makefile.i386,v 1.2 2003/06/04 18:14:46 hbirr Exp $
 
 
 EXCLUDE_FILTER = \
 	memchr.o \
 	memcpy.o \
+	memmove.o \
 	memset.o \
 	strcat.o \
 	strchr.o \
