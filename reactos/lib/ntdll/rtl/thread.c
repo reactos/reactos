@@ -42,6 +42,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     ULONG ReservedSize;
     ULONG CommitSize;
     ULONG GuardSize;
+    ULONG RegionSize;
     NTSTATUS Status;
 
     /* initialize initial teb */
@@ -56,6 +57,8 @@ RtlCreateUserThread(HANDLE ProcessHandle,
        ReservedSize = 0x100000; /* 1MByte */
 
     GuardSize = PAGESIZE;
+
+    RegionSize = 0;
 
     /* Reserve stack */
     InitialTeb.StackReserved = NULL;
@@ -93,6 +96,12 @@ RtlCreateUserThread(HANDLE ProcessHandle,
 
     if (!NT_SUCCESS(Status))
     {
+        /* release the stack space */
+        NtFreeVirtualMemory(ProcessHandle,
+                            InitialTeb.StackReserved,
+                            &RegionSize,
+                            MEM_RELEASE);
+
         DPRINT("Error committing stack page!\n");
         return Status;
     }
@@ -110,6 +119,12 @@ RtlCreateUserThread(HANDLE ProcessHandle,
 
     if (!NT_SUCCESS(Status))
     {
+        /* release the stack space */
+        NtFreeVirtualMemory(ProcessHandle,
+                            InitialTeb.StackReserved,
+                            &RegionSize,
+                            MEM_RELEASE);
+
         DPRINT("Error committing guard page!\n");
         return Status;
     }
@@ -144,14 +159,13 @@ RtlCreateUserThread(HANDLE ProcessHandle,
 
     if (!NT_SUCCESS(Status))
     {
-        ULONG RegionSize = 0;
-
         /* release the stack space */
         NtFreeVirtualMemory(ProcessHandle,
                             InitialTeb.StackReserved,
                             &RegionSize,
                             MEM_RELEASE);
 
+        DPRINT("Error creating thread!\n");
         return Status;
     }
 
@@ -221,6 +235,15 @@ RtlInitializeContext(HANDLE ProcessHandle,
     }
 
     return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL
+RtlDestroyUserThreadStack(param1, param2)
+{
+
+
+
 }
 
 /* EOF */
