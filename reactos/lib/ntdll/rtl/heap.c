@@ -625,7 +625,7 @@ static SUBHEAP *HEAP_CreateSubHeap(PVOID BaseAddress,
 	{
 	  ULONG dummySize = 0;
 	  ZwFreeVirtualMemory(NtCurrentProcess(),
-			      address,
+			      &address,
 			      &dummySize,
 			      MEM_RELEASE);
 	  return NULL;
