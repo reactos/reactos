@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: fat.c,v 1.2 2002/05/15 18:02:59 ekohl Exp $
+/* $Id: fat.c,v 1.3 2002/06/12 23:35:55 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -117,12 +117,8 @@ FsRecVfatFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("FAT: IRP_MN_LOAD_FILE_SYSTEM\n");
-#if 0
 	RtlInitUnicodeString(&RegistryPath,
-			     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Vfatfs");
-#endif
-	RtlInitUnicodeString(&RegistryPath,
-			     L"\\SystemRoot\\system32\\drivers\\vfatfs.sys");
+			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Vfatfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))
 	  {

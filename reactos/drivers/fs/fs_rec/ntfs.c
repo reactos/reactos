@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ntfs.c,v 1.3 2002/05/28 16:11:17 ekohl Exp $
+/* $Id: ntfs.c,v 1.4 2002/06/12 23:35:55 ekohl Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -118,12 +118,8 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 
       case IRP_MN_LOAD_FILE_SYSTEM:
 	DPRINT("NTFS: IRP_MN_LOAD_FILE_SYSTEM\n");
-#if 0
 	RtlInitUnicodeString(&RegistryPath,
-			     L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services\\Ntfs");
-#endif
-	RtlInitUnicodeString(&RegistryPath,
-			     L"\\SystemRoot\\system32\\drivers\\ntfs.sys");
+			     L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Ntfs");
 	Status = ZwLoadDriver(&RegistryPath);
 	if (!NT_SUCCESS(Status))
 	  {
