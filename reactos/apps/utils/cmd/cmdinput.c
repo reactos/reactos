@@ -360,19 +360,14 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				break;
 
 			default:
-#ifdef __REACTOS__
-				ch = ir.Event.KeyEvent.AsciiChar;
-				if ((ch >= 32) && (charcount != (maxlen - 2)))
-				{
-#else
 #ifdef _UNICODE
 				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
+				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
 #else
 				ch = ir.Event.KeyEvent.uChar.AsciiChar;
+                                if ((ch >= 32) && (charcount != (maxlen - 2)))
 #endif /* _UNICODE */
-				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
 				{
-#endif /* __REACTOS__ */
 					/* insert character into string... */
 					if (bInsert && current != charcount)
 					{

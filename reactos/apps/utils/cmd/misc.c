@@ -62,15 +62,11 @@ TCHAR cgetchar (VOID)
 	}
 	while (TRUE);
 
-#ifdef __REACTOS__
-	return irBuffer.Event.KeyEvent.AsciiChar;
-#else
 #ifndef _UNICODE
 	return irBuffer.Event.KeyEvent.uChar.AsciiChar;
 #else
 	return irBuffer.Event.KeyEvent.uChar.UnicodeChar;
 #endif /* _UNICODE */
-#endif /* __REACTOS__ */
 }
 
 

@@ -498,7 +498,7 @@ static unsigned int KeyboardHandler(unsigned int irq)
 	rec[KeysRead].wRepeatCount=1;
 	rec[KeysRead].wVirtualKeyCode=ScanToVirtual(thisKey);
 	rec[KeysRead].wVirtualScanCode=thisKey;
-	rec[KeysRead].AsciiChar=VirtualToAscii(rec->wVirtualKeyCode,isDown);
+        rec[KeysRead].uChar.AsciiChar=VirtualToAscii(rec->wVirtualKeyCode,isDown);
 	rec[KeysRead].dwControlKeyState=ctrlKeyState;
 	if (extKey)
 	  {
@@ -525,8 +525,9 @@ static unsigned int KeyboardHandler(unsigned int irq)
    kbdBuffer[bufHead].wRepeatCount=1;
    kbdBuffer[bufHead].wVirtualKeyCode=ScanToVirtual(thisKey);
    kbdBuffer[bufHead].wVirtualScanCode=thisKey;
+   kbdBuffer[bufHead].uChar.UnicodeChar=0;
    // kbdBuffer[bufHead].uChar.AsciiChar=TranslateScanCode(thisKey);
-   kbdBuffer[bufHead].AsciiChar=VirtualToAscii(kbdBuffer[bufHead].wVirtualKeyCode,isDown);
+   kbdBuffer[bufHead].uChar.AsciiChar=VirtualToAscii(kbdBuffer[bufHead].wVirtualKeyCode,isDown);
    kbdBuffer[bufHead].dwControlKeyState=ctrlKeyState;
    if (extKey)
       kbdBuffer[bufHead].dwControlKeyState|=ENHANCED_KEY;

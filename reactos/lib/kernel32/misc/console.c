@@ -141,9 +141,9 @@ ReadConsoleA(HANDLE hConsoleInput,
                         sizeof(KEY_EVENT_RECORD),
 			&Result,
 			NULL);
-	if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.AsciiChar != 0)
+        if (stat && KeyEventRecord.bKeyDown && KeyEventRecord.uChar.AsciiChar != 0)
 	  {
-	     Buffer[i] = KeyEventRecord.AsciiChar;
+             Buffer[i] = KeyEventRecord.uChar.AsciiChar;
 	     i++;
 	  }
      }

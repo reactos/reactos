@@ -340,14 +340,14 @@ typedef struct _KEY_EVENT_RECORD {
   WORD wVirtualKeyCode;      
   WORD wVirtualScanCode; 
 
-  char AsciiChar;
-  char pad;
-#if 0
+//  char AsciiChar;
+//  char pad;
+//#if 0
   union { 
     WCHAR UnicodeChar; 
     CHAR  AsciiChar; 
   } uChar;  
-#endif
+//#endif
   DWORD dwControlKeyState;   
 } KEY_EVENT_RECORD PACKED;
 
