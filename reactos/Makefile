@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.253 2004/10/21 05:08:32 sedwards Exp $
+# $Id: Makefile,v 1.254 2004/10/23 17:07:06 weiden Exp $
 #
 # Global makefile
 #
@@ -67,10 +67,6 @@ SUBSYS = smss win32k csrss ntvdm
 #SERVERS = posix linux os2
 SERVERS = win32
 
-# Boot loaders
-# dos
-LOADERS = dos
-
 # Driver support libraries
 #bzip2 zlib oskittcp
 DRIVERS_LIB = bzip2 oskittcp ip csq
@@ -127,7 +123,7 @@ KERNEL_DRIVERS = $(DRIVERS_LIB) $(DEVICE_DRIVERS) $(INPUT_DRIVERS) $(FS_DRIVERS)
 REGTESTS = regtests
 
 all: bootstrap $(COMPONENTS) $(REGTESTS) $(HALS) $(BUS) $(LIB_FSLIB) $(DLLS) $(SUBSYS) \
-     $(LOADERS) $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
+     $(KERNEL_DRIVERS) $(SYS_APPS) $(SYS_SVC) \
      $(APPS) $(EXT_MODULES)
 
 bootstrap: dk implib iface_native iface_additional
@@ -139,19 +135,19 @@ depends: $(LIB_STATIC:%=%_depends) $(LIB_FSLIB:%=%_depends) msvcrt_depends $(DLL
          $(EXT_MODULES:%=%_depends) $(POSIX_LIBS:%=%_depends)
 
 implib: hallib $(LIB_STATIC) $(COMPONENTS:%=%_implib) $(HALS:%=%_implib) $(BUS:%=%_implib) \
-	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) msvcrt_implib $(DLLS:%=%_implib) $(LOADERS:%=%_implib) \
+	      $(LIB_STATIC:%=%_implib) $(LIB_FSLIB:%=%_implib) msvcrt_implib $(DLLS:%=%_implib) \
 	      $(KERNEL_DRIVERS:%=%_implib) $(SUBSYS:%=%_implib) \
 	      $(SYS_APPS:%=%_implib) $(SYS_SVC:%=%_implib) $(EXT_MODULES:%=%_implib)
 
 test: $(COMPONENTS:%=%_test) $(HALS:%=%_test) $(BUS:%=%_test) \
-	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) msvcrt_test $(DLLS:%=%_test) $(LOADERS:%=%_test) \
+	    $(LIB_STATIC:%=%_test) $(LIB_FSLIB:%=%_test) msvcrt_test $(DLLS:%=%_test) \
 	    $(KERNEL_DRIVERS:%=%_test) $(SUBSYS:%=%_test) \
 	    $(SYS_SVC:%=%_test) $(EXT_MODULES:%=%_test)
 
 clean: tools dk_clean iface_native_clean iface_additional_clean hallib_clean \
        $(HALS:%=%_clean) $(COMPONENTS:%=%_clean) $(BUS:%=%_clean) \
        $(LIB_STATIC:%=%_clean) $(LIB_FSLIB:%=%_clean) msvcrt_clean \
-       $(DLLS:%=%_clean) $(LOADERS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
+       $(DLLS:%=%_clean) $(KERNEL_DRIVERS:%=%_clean) \
        $(SUBSYS:%=%_clean) $(SYS_APPS:%=%_clean) $(SYS_SVC:%=%_clean) \
        $(NET_APPS:%=%_clean) $(APPS:%=%_clean) $(EXT_MODULES:%=%_clean) \
        $(REGTESTS:%=%_clean) clean_after tools_clean
@@ -162,7 +158,7 @@ clean_after:
 fastinstall: tools install_dirs install_before \
          $(COMPONENTS:%=%_install) $(HALS:%=%_install) $(BUS:%=%_install) \
          $(LIB_STATIC:%=%_install) $(LIB_FSLIB:%=%_install) msvcrt_install $(DLLS:%=%_install) \
-         $(LOADERS:%=%_install) $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
+         $(KERNEL_DRIVERS:%=%_install) $(SUBSYS:%=%_install) \
          $(SYS_APPS:%=%_install) $(SYS_SVC:%=%_install) \
          $(APPS:%=%_install) $(EXT_MODULES:%=%_install) $(REGTESTS:%=%_install)
 install: fastinstall registry
@@ -671,26 +667,6 @@ $(STORAGE_DRIVERS:%=%_bootcd): %_bootcd:
 
 
 #
-# Kernel loaders
-#
-$(LOADERS): %:
-	$(MAKE) -C loaders/$*
-
-$(LOADERS:%=%_implib): %_implib: dk
-
-$(LOADERS:%=%_test): %_test:
-
-$(LOADERS:%=%_clean): %_clean:
-	$(MAKE) -C loaders/$* clean
-
-$(LOADERS:%=%_install): %_install:
-	$(MAKE) -C loaders/$* install
-
-.PHONY: $(LOADERS) $(LOADERS:%=%_implib) $(LOADERS:%=%_test) \
-        $(LOADERS:%=%_clean) $(LOADERS:%=%_install)
-
-
-#
 # Required system components
 #
 ntoskrnl: bootstrap
@@ -935,8 +911,6 @@ install_clean:
 	$(RM) $(INSTALL_DIR)/media/*.*
 	$(RM) $(INSTALL_DIR)/inf/*.*
 	$(RM) $(INSTALL_DIR)/bin/*.*
-	$(RM) $(INSTALL_DIR)/*.com
-	$(RM) $(INSTALL_DIR)/*.bat
 	$(RMDIR) $(INSTALL_DIR)/system32/drivers
 	$(RMDIR) $(INSTALL_DIR)/system32/config
 	$(RMDIR) $(INSTALL_DIR)/system32
@@ -960,9 +934,6 @@ install_dirs:
 	$(RMKDIR) $(INSTALL_DIR)/system32/drivers/etc
 
 install_before:
-	$(CP) bootc.lst $(INSTALL_DIR)/bootc.lst
-	$(CP) boot.bat $(INSTALL_DIR)/boot.bat
-	$(CP) aboot.bat $(INSTALL_DIR)/aboot.bat
 	$(CP) media/inf $(INSTALL_DIR)/inf
 	$(CP) media/fonts $(INSTALL_DIR)/media/fonts
 	$(CP) media/nls $(INSTALL_DIR)/system32
