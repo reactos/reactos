@@ -1,4 +1,4 @@
-/* $Id: locale.c,v 1.12 2004/10/24 20:37:27 weiden Exp $
+/* $Id: locale.c,v 1.13 2004/11/15 14:38:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -292,9 +292,18 @@ NtSetDefaultLocale(IN BOOLEAN UserProfile,
 	return(Status);
      }
 
-   ValueLength = swprintf(ValueBuffer,
-			  L"%08lx",
-			  (ULONG)DefaultLocaleId);
+   if (UserProfile)
+     {
+	ValueLength = swprintf(ValueBuffer,
+			       L"%08lx",
+			       (ULONG)DefaultLocaleId);
+     }
+   else
+     {
+	ValueLength = swprintf(ValueBuffer,
+			       L"%04lx",
+			       (ULONG)DefaultLocaleId & 0xFFFF);
+     }
    ValueLength = (ValueLength + 1) * sizeof(WCHAR);
 
    Status = NtSetValueKey(KeyHandle,
