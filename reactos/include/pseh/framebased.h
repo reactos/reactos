@@ -27,13 +27,13 @@
 #include <excpt.h>
 
 #ifdef _SEH_NO_NATIVE_NLG
-#include <setjmp.h>
-#include <stddef.h>
-#else
 #include <pseh/setjmp.h>
 #define longjmp _SEHLongJmp
 #define setjmp _SEHSetJmp
 #define jmp_buf _SEHJmpBuf_t
+#else
+#include <setjmp.h>
+#include <stddef.h>
 #endif
 
 typedef struct __SEHFrame

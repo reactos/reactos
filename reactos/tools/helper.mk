@@ -1,4 +1,4 @@
-# $Id: helper.mk,v 1.65 2004/06/02 18:24:09 hyperion Exp $
+# $Id: helper.mk,v 1.66 2004/06/03 03:09:01 hyperion Exp $
 #
 # Helper makefile for ReactOS modules
 # Variables this makefile accepts:
@@ -583,6 +583,8 @@ endif
 ifeq ($(MK_MODE),kernel)
   MK_DEFBASE := 0x10000
   MK_LIBS := $(addprefix $(DDK_PATH_LIB)/, $(TARGET_DDKLIBS) $(MK_DDKLIBS))
+  MK_CFLAGS += -D_SEH_NO_NATIVE_NLG
+  MK_CPPFLAGS += -D_SEH_NO_NATIVE_NLG
 endif
 
 
