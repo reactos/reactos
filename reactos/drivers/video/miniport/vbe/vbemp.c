@@ -473,9 +473,14 @@ VBEStartIO(
          break;
 
       case IOCTL_VIDEO_SET_COLOR_REGISTERS:
-         /*
-          * FIXME: Check buffer size!
-          */
+         if (RequestPacket->InputBufferLength < sizeof(VIDEO_CLUT) ||
+             RequestPacket->InputBufferLength <
+             (((PVIDEO_CLUT)RequestPacket->InputBuffer)->NumEntries * sizeof(ULONG)) +
+             sizeof(VIDEO_CLUT))
+         {
+            RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
+            return TRUE;
+         }
          Result = VBESetColorRegisters(
             (PVBE_DEVICE_EXTENSION)HwDeviceExtension,
             (PVIDEO_CLUT)RequestPacket->InputBuffer,
@@ -796,6 +801,9 @@ VBESetColorRegisters(
    KV86M_REGISTERS BiosRegisters;
    ULONG Entry;
    PULONG OutputEntry;
+
+   if (ColorLookUpTable->NumEntries + ColorLookUpTable->FirstEntry > 256)
+      return FALSE;
 
    if (DeviceExtension->VGACompatible)
    {
