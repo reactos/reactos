@@ -2200,6 +2200,12 @@ PrepareTape(
 	    WINBOOL bImmediate
 	    );
 
+BOOL
+STDCALL
+ProcessIdToSessionId(
+	DWORD dwProcessId,
+	DWORD* pSessionId
+	);
 
 DWORD
 STDCALL
