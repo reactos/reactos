@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002 by
+# Copyright 1996-2000, 2002, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -18,7 +18,9 @@ ifeq ($(PLATFORM),ansi)
 
   # Note: this test is duplicated in "builds/toplevel.mk".
   #
-  is_unix := $(strip $(wildcard /sbin/init) $(wildcard /usr/sbin/init) $(wildcard /hurd/auth))
+  is_unix := $(strip $(wildcard /sbin/init) \
+                     $(wildcard /usr/sbin/init) \
+                     $(wildcard /hurd/auth))
   ifneq ($(is_unix),)
 
     PLATFORM := unix
@@ -27,8 +29,8 @@ ifeq ($(PLATFORM),ansi)
 endif # test PLATFORM ansi
 
 ifeq ($(PLATFORM),unix)
-  COPY     := cp
-  DELETE   := rm -f
+  COPY   := cp
+  DELETE := rm -f
 
   # If `devel' is the requested target, we use a special configuration
   # file named `unix-dev.mk'.  It disables optimization and libtool.
@@ -83,5 +85,6 @@ ifeq ($(PLATFORM),unix)
   endif
 
 endif   # test PLATFORM unix
+
 
 # EOF

@@ -5,7 +5,7 @@
 /*    Basic Type 1/Type 2 tables definitions and interface (specification  */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -314,7 +314,7 @@ FT_BEGIN_HEADER
   /*    CID_Info                                                           */
   /*                                                                       */
   /* <Description>                                                         */
-  /*   This type is equivalent to @CID_FaceInfoRec. It is deprecated but   */
+  /*   This type is equivalent to CID_FaceInfoRec.  It is deprecated but   */
   /*   kept to maintain source compatibility between various versions of   */
   /*   FreeType.                                                           */
   /*                                                                       */
@@ -373,7 +373,7 @@ FT_BEGIN_HEADER
   *    the face and don't need to be freed by the caller.
   *
   *    If the font's format is not Postscript-based, this function will
-  *    return the @FT_Err_Invalid_Argument error code.
+  *    return the FT_Err_Invalid_Argument error code.
   */
   FT_EXPORT( FT_Error )
   FT_Get_PS_Font_Info( FT_Face          face,

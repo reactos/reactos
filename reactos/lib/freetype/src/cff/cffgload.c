@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType Glyph Loader (body).                                        */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -246,7 +246,6 @@
       builder->current = &loader->current.outline;
       FT_GlyphLoader_Rewind( loader );
 
-      builder->hint_flags    = FT_FACE(face)->internal->hint_flags;
       builder->hints_globals = 0;
       builder->hints_funcs   = 0;
 
@@ -818,7 +817,7 @@
     seed = (FT_Fixed)(char*)&seed           ^
            (FT_Fixed)(char*)&decoder        ^
            (FT_Fixed)(char*)&charstring_base;
-    seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFF;
+    seed = ( seed ^ ( seed >> 10 ) ^ ( seed >> 20 ) ) & 0xFFFFL;
     if ( seed == 0 )
       seed = 0x7384;
 
@@ -903,7 +902,7 @@
         *decoder->top++ = val;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
-        if ( !( val & 0xFFFF ) )
+        if ( !( val & 0xFFFFL ) )
           FT_TRACE4(( " %d", (FT_Int32)( val >> 16 ) ));
         else
           FT_TRACE4(( " %.2f", val / 65536.0 ));
@@ -1770,7 +1769,7 @@
             hinter->apply( hinter->hints,
                            builder->current,
                            (PSH_Globals)builder->hints_globals,
-                           builder->hint_flags );
+                           decoder->hint_mode );
           }
 
           /* add current outline to the glyph slot */
@@ -1824,7 +1823,7 @@
             FT_TRACE4(( " rand" ));
 
             Rand = seed;
-            if ( Rand >= 0x8000 )
+            if ( Rand >= 0x8000L )
               Rand++;
 
             args[0] = Rand;
@@ -2366,15 +2365,16 @@
  #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
-    if ( !error                                       &&
-         face->root.internal->incremental_interface   &&
+    if ( !error                                                              &&
+         face->root.internal->incremental_interface                          &&
          face->root.internal->incremental_interface->funcs->get_glyph_metrics )
     {
       FT_Incremental_MetricsRec  metrics;
 
+
       metrics.bearing_x = decoder.builder.left_bearing.x;
-	  metrics.bearing_y = decoder.builder.left_bearing.y;
-	  metrics.advance   = decoder.builder.advance.x;
+      metrics.bearing_y = decoder.builder.left_bearing.y;
+      metrics.advance   = decoder.builder.advance.x;
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
                 glyph_index, FALSE, &metrics );
@@ -2411,6 +2411,7 @@
       {
         FT_BBox            cbox;
         FT_Glyph_Metrics*  metrics = &glyph->root.metrics;
+        FT_Vector          advance;
 
 
         /* copy the _unscaled_ advance width */
@@ -2439,6 +2440,15 @@
         FT_Outline_Translate( &glyph->root.outline,
                               font_offset.x,
                               font_offset.y );
+
+        advance.x = metrics->horiAdvance;
+        advance.y = 0;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->horiAdvance = advance.x + font_offset.x;
+        advance.x = 0;
+        advance.y = metrics->vertAdvance;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->vertAdvance = advance.y + font_offset.y;
 
         if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )
         {

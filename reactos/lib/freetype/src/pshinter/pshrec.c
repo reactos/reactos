@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript hints recorder (body).                           */
 /*                                                                         */
-/*  Copyright 2001, 2002 by                                                */
+/*  Copyright 2001, 2002, 2003 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,6 +22,8 @@
 #include FT_INTERNAL_DEBUG_H
 #include "pshrec.h"
 #include "pshalgo.h"
+
+#include "pshnterr.h"
 
 #undef  FT_COMPONENT
 #define FT_COMPONENT  trace_pshrec
@@ -820,7 +822,7 @@
       break;
 
     default:
-      hints->error     = FT_Err_Invalid_Argument;
+      hints->error     = PSH_Err_Invalid_Argument;
       hints->hint_type = hint_type;
 
       FT_ERROR(( "ps_hints_open: invalid charstring type!\n" ));
@@ -861,8 +863,9 @@
             FT_Memory  memory = hints->memory;
 
 
-            error = ps_dimension_add_t1stem( dim, stems[0], stems[1],
-                                             memory, NULL );
+            error = ps_dimension_add_t1stem(
+                      dim, (FT_Int)stems[0], (FT_Int)stems[1],
+                      memory, NULL );
             if ( error )
             {
               FT_ERROR(( "ps_hints_stem: could not add stem"
@@ -917,8 +920,9 @@
         /* add the three stems to our hints/masks table */
         for ( count = 0; count < 3; count++, stems += 2 )
         {
-          error = ps_dimension_add_t1stem( dim, stems[0], stems[1],
-                                           memory, &idx[count] );
+          error = ps_dimension_add_t1stem(
+                    dim, (FT_Int)stems[0], (FT_Int)stems[1],
+                    memory, &idx[count] );
           if ( error )
             goto Fail;
         }
@@ -932,7 +936,7 @@
       else
       {
         FT_ERROR(( "ps_hints_t1stem3: called with invalid hint type!\n" ));
-        error = FT_Err_Invalid_Argument;
+        error = PSH_Err_Invalid_Argument;
         goto Fail;
       }
     }
@@ -973,7 +977,7 @@
       else
       {
         /* invalid hint type */
-        error = FT_Err_Invalid_Argument;
+        error = PSH_Err_Invalid_Argument;
         goto Fail;
       }
     }
@@ -1139,7 +1143,7 @@
     funcs->stem  = (T1_Hints_SetStemFunc) t1_hints_stem;
     funcs->stem3 = (T1_Hints_SetStem3Func)ps_hints_t1stem3;
     funcs->reset = (T1_Hints_ResetFunc)   ps_hints_t1reset;
-    funcs->apply = (T1_Hints_ApplyFunc)   PS_HINTS_APPLY_FUNC;
+    funcs->apply = (T1_Hints_ApplyFunc)   ps_hints_apply;
   }
 
 
@@ -1164,7 +1168,8 @@
                   FT_Int     count,
                   FT_Fixed*  coords )
   {
-    FT_Pos  stems[32], y, n, total = count;
+    FT_Pos  stems[32], y, n;
+    FT_Int  total = count;
 
 
     y = 0;
@@ -1179,7 +1184,7 @@
       for ( n = 0; n < count * 2; n++ )
       {
         y       += coords[n];
-        stems[n] = ( y + 0x8000 ) >> 16;
+        stems[n] = ( y + 0x8000L ) >> 16;
       }
 
       /* compute lengths */
@@ -1204,7 +1209,7 @@
     funcs->stems   = (T2_Hints_StemsFunc)  t2_hints_stems;
     funcs->hintmask= (T2_Hints_MaskFunc)   ps_hints_t2mask;
     funcs->counter = (T2_Hints_CounterFunc)ps_hints_t2counter;
-    funcs->apply   = (T2_Hints_ApplyFunc)  PS_HINTS_APPLY_FUNC;
+    funcs->apply   = (T2_Hints_ApplyFunc)  ps_hints_apply;
   }
 
 

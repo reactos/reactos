@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType sbits manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 by                                           */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -189,13 +189,13 @@
           sbit->format    = (FT_Byte)bitmap->pixel_mode;
           sbit->max_grays = (FT_Byte)(bitmap->num_grays - 1);
 
-#if 0 /* this doesn't work well with embedded bitmaps !! */
+#if 0 /* this doesn't work well with embedded bitmaps */
 
           /* grab the bitmap when possible - this is a hack! */
-          if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+          if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
           {
-            slot->flags &= ~FT_GLYPH_OWN_BITMAP;
-            sbit->buffer = bitmap->buffer;
+            slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
+            sbit->buffer           = bitmap->buffer;
           }
           else
 #endif
@@ -216,7 +216,7 @@
       /* we mark unloaded glyphs with `sbit.buffer == 0' */
       /* and 'width == 255', 'height == 0'               */
       /*                                                 */
-      if ( error && error != FT_Err_Out_Of_Memory )
+      if ( error && error != FTC_Err_Out_Of_Memory )
       {
         sbit->width = 255;
         error       = 0;
@@ -308,14 +308,11 @@
         FT_ULong  size;
 
 
-        /* yes, it's safe to ignore errors here */
-        ftc_sbit_node_load( snode,
-                            cache->manager,
-                            FTC_SBIT_FAMILY( FTC_QUERY( squery )->family ),
-                            gindex,
-                            &size );
-
-        cache->manager->cur_weight += size;
+        if ( !ftc_sbit_node_load(
+                snode, cache->manager,
+                FTC_SBIT_FAMILY( FTC_QUERY( squery )->family ),
+                gindex, &size ) )
+          cache->manager->cur_weight += size;
       }
     }
 

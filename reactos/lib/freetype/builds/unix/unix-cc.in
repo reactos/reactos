@@ -1,10 +1,22 @@
-# template for Unix-specific compiler definitions
+#
+# FreeType 2 template for Unix-specific compiler definitions
 #
 
-CC      := @CC@
+# Copyright 1996-2000, 2002, 2003 by
+# David Turner, Robert Wilhelm, and Werner Lemberg.
+#
+# This file is part of the FreeType project, and may only be used, modified,
+# and distributed under the terms of the FreeType project license,
+# LICENSE.TXT.  By continuing to use, modify, or distribute this file you
+# indicate that you have read the license and understand and accept it
+# fully.
+
+
+CC           := @CC@
+COMPILER_SEP := $(SEP)
 
 ifndef LIBTOOL
-  LIBTOOL := $(BUILD)/libtool
+  LIBTOOL := $(BUILD_DIR)/libtool
 endif
 
 
@@ -48,7 +60,7 @@ L := -l
 
 # Target flag.
 #
-T := -o # Don't remove this comment line!  We need the space after `-o'.
+T := -o$(space)
 
 
 # C flags
@@ -58,7 +70,7 @@ T := -o # Don't remove this comment line!  We need the space after `-o'.
 #   Use the ANSIFLAGS variable to define the compiler flags used to enfore
 #   ANSI compliance.
 #
-CFLAGS := -c @XX_CFLAGS@ @CFLAGS@
+CFLAGS := -c @XX_CFLAGS@ @CPPFLAGS@ @CFLAGS@
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.
 #
@@ -80,5 +92,6 @@ LDFLAGS := @LDFLAGS@
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
                           -rpath $(libdir) -version-info $(version_info) \
                           $(LDFLAGS)
+
 
 # EOF

@@ -87,7 +87,7 @@
     OTL_Int    index;
     OTL_Bool   subst = 0;
 
-    if ( parser->context_len != 0xFFFF && parser->context_len < 1 )
+    if ( parser->context_len != 0xFFFFU && parser->context_len < 1 )
       goto Exit;
 
     gindex = otl_parser_get_gindex( parser );
@@ -107,7 +107,7 @@
           {
             OTL_Int  delta = OTL_NEXT_SHORT(p);
 
-            gindex = ( gindex + delta ) & 0xFFFF;
+            gindex = ( gindex + delta ) & 0xFFFFU;
             otl_parser_replace_1( parser, gindex );
             subst = 1;
           }
@@ -223,7 +223,7 @@
     OTL_Int    index;
     OTL_Bool   subst = 0;
 
-    if ( context_len != 0xFFFF && context_len < 1 )
+    if ( context_len != 0xFFFFU && context_len < 1 )
       goto Exit;
 
     gindex = otl_parser_get_gindex( parser );
@@ -341,7 +341,7 @@
 
     OTL_GSUB_Alternate  alternate = parser->alternate;
 
-    if ( context_len != 0xFFFF && context_len < 1 )
+    if ( context_len != 0xFFFFU && context_len < 1 )
       goto Exit;
 
     if ( alternate == NULL )

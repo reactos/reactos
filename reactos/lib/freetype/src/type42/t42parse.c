@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002 by Roberto Alameda.                                     */
+/*  Copyright 2002, 2003 by Roberto Alameda.                               */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -34,24 +34,16 @@
 
 
   static void
-  t42_parse_font_name( T42_Face    face,
-                       T42_Loader  loader );
-                       
-  static void
-  t42_parse_font_bbox( T42_Face    face,
-                       T42_Loader  loader );
-                       
-  static void
   t42_parse_font_matrix( T42_Face    face,
                          T42_Loader  loader );
   static void
   t42_parse_encoding( T42_Face    face,
                       T42_Loader  loader );
-                      
+
   static void
   t42_parse_charstrings( T42_Face    face,
                          T42_Loader  loader );
-                         
+
   static void
   t42_parse_sfnts( T42_Face    face,
                    T42_Loader  loader );
@@ -65,27 +57,33 @@
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_INFO
 
-    T1_FIELD_STRING   ( "version",            version )
-    T1_FIELD_STRING   ( "Notice",             notice )
-    T1_FIELD_STRING   ( "FullName",           full_name )
-    T1_FIELD_STRING   ( "FamilyName",         family_name )
-    T1_FIELD_STRING   ( "Weight",             weight )
-    T1_FIELD_NUM      ( "ItalicAngle",        italic_angle )
-    T1_FIELD_TYPE_BOOL( "isFixedPitch",       is_fixed_pitch )
-    T1_FIELD_NUM      ( "UnderlinePosition",  underline_position )
-    T1_FIELD_NUM      ( "UnderlineThickness", underline_thickness )
+    T1_FIELD_STRING( "version",            version )
+    T1_FIELD_STRING( "Notice",             notice )
+    T1_FIELD_STRING( "FullName",           full_name )
+    T1_FIELD_STRING( "FamilyName",         family_name )
+    T1_FIELD_STRING( "Weight",             weight )
+    T1_FIELD_NUM   ( "ItalicAngle",        italic_angle )
+    T1_FIELD_BOOL  ( "isFixedPitch",       is_fixed_pitch )
+    T1_FIELD_NUM   ( "UnderlinePosition",  underline_position )
+    T1_FIELD_NUM   ( "UnderlineThickness", underline_thickness )
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  T1_FontRec
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_DICT
 
-    T1_FIELD_NUM( "PaintType",   paint_type )
-    T1_FIELD_NUM( "FontType",    font_type )
-    T1_FIELD_NUM( "StrokeWidth", stroke_width )
+    T1_FIELD_KEY  ( "FontName",    font_name )
+    T1_FIELD_NUM  ( "PaintType",   paint_type )
+    T1_FIELD_NUM  ( "FontType",    font_type )
+    T1_FIELD_FIXED( "StrokeWidth", stroke_width )
 
-    T1_FIELD_CALLBACK( "FontName",    t42_parse_font_name )
-    T1_FIELD_CALLBACK( "FontBBox",    t42_parse_font_bbox )
+#undef  FT_STRUCTURE
+#define FT_STRUCTURE  FT_BBox
+#undef  T1CODE
+#define T1CODE        T1_FIELD_LOCATION_BBOX
+
+    T1_FIELD_BBOX("FontBBox", xMin )
+
     T1_FIELD_CALLBACK( "FontMatrix",  t42_parse_font_matrix )
     T1_FIELD_CALLBACK( "Encoding",    t42_parse_encoding )
     T1_FIELD_CALLBACK( "CharStrings", t42_parse_charstrings )
@@ -93,6 +91,10 @@
 
     { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0 }
   };
+
+
+#define T42_KEYWORD_COUNT                                          \
+          ( sizeof ( t42_keywords ) / sizeof ( t42_keywords[0] ) )
 
 
 #define T1_Add_Table( p, i, o, l )  (p)->funcs.add( (p), i, o, l )
@@ -248,63 +250,6 @@
 
 
   static void
-  t42_parse_font_name( T42_Face    face,
-                       T42_Loader  loader )
-  {
-    T42_Parser  parser = &loader->parser;
-    FT_Error    error;
-    FT_Memory   memory = parser->root.memory;
-    FT_Int      len;
-    FT_Byte*    cur;
-    FT_Byte*    cur2;
-    FT_Byte*    limit;
-
-
-    T1_Skip_Spaces( parser );
-
-    cur   = parser->root.cursor;
-    limit = parser->root.limit;
-
-    if ( cur >= limit - 1              ||
-         ( *cur != '/' && *cur != '(') )
-      return;
-
-    cur++;
-    cur2 = cur;
-    while ( cur2 < limit && t42_is_alpha( *cur2 ) )
-      cur2++;
-
-    len = (FT_Int)( cur2 - cur );
-    if ( len > 0 )
-    {
-      if ( FT_ALLOC( face->type1.font_name, len + 1 ) )
-      {
-        parser->root.error = error;
-        return;
-      }
-
-      FT_MEM_COPY( face->type1.font_name, cur, len );
-      face->type1.font_name[len] = '\0';
-    }
-    parser->root.cursor = cur2;
-  }
-
-
-  static void
-  t42_parse_font_bbox( T42_Face   face,
-                       T42_Loader  loader )
-  {
-    T42_Parser  parser = &loader->parser;
-    FT_BBox*    bbox   = &face->type1.font_bbox;
-
-    bbox->xMin = T1_ToInt( parser );
-    bbox->yMin = T1_ToInt( parser );
-    bbox->xMax = T1_ToInt( parser );
-    bbox->yMax = T1_ToInt( parser );
-  }
-
-
-  static void
   t42_parse_font_matrix( T42_Face    face,
                          T42_Loader  loader )
   {
@@ -383,7 +328,7 @@
 
 
       /* read the number of entries in the encoding, should be 256 */
-      count = T1_ToInt( parser );
+      count = (FT_Int)T1_ToInt( parser );
       if ( parser->root.error )
         return;
 
@@ -451,7 +396,7 @@
 
 
           parser->root.cursor = cur;
-          charcode = T1_ToInt( parser );
+          charcode = (FT_Int)T1_ToInt( parser );
           cur      = parser->root.cursor;
 
           /* skip whitespace */
@@ -515,28 +460,28 @@
   t42_hexval( FT_Byte  v )
   {
     FT_UInt  d;
-    
+
     d = (FT_UInt)( v - 'A' );
     if ( d < 6 )
     {
       d += 10;
       goto Exit;
     }
-      
+
     d = (FT_UInt)( v - 'a' );
     if ( d < 6 )
     {
       d += 10;
       goto Exit;
     }
-      
+
     d = (FT_UInt)( v - '0' );
     if ( d < 10 )
       goto Exit;
-      
+
     d = 0;
- 
-  Exit:         
+
+  Exit:
     return d;
   }
 
@@ -668,7 +613,7 @@
           for ( i = 0; i < num_tables; i++ )
           {
             FT_Byte*  p = face->ttf_data + 12 + 16*i + 12;
-            
+
             len = FT_PEEK_ULONG( p );
 
             /* Pad to a 4-byte boundary length */
@@ -715,7 +660,7 @@
     FT_Int         n;
 
 
-    loader->num_glyphs = T1_ToInt( parser );
+    loader->num_glyphs = (FT_Int)T1_ToInt( parser );
     if ( parser->root.error )
       return;
 
@@ -837,13 +782,17 @@
     {
     case T1_FIELD_LOCATION_FONT_INFO:
       dummy_object = &face->type1.font_info;
-      objects      = &dummy_object;
+      break;
+
+    case T1_FIELD_LOCATION_BBOX:
+      dummy_object = &face->type1.font_bbox;
       break;
 
     default:
       dummy_object = &face->type1;
-      objects      = &dummy_object;
     }
+
+    objects = &dummy_object;
 
     if ( field->type == T1_FIELD_TYPE_INTEGER_ARRAY ||
          field->type == T1_FIELD_TYPE_FIXED_ARRAY   )
@@ -864,12 +813,21 @@
                   FT_Byte*    base,
                   FT_Long     size )
   {
-    T42_Parser  parser = &loader->parser;
-    FT_Byte*    cur    = base;
-    FT_Byte*    limit  = cur + size;
-    FT_UInt     n_keywords = sizeof ( t42_keywords ) / 
-                             sizeof ( t42_keywords[0] );
+    T42_Parser  parser     = &loader->parser;
+    FT_Byte*    cur        = base;
+    FT_Byte*    limit      = cur + size;
+    FT_UInt     n_keywords = (FT_UInt)( sizeof ( t42_keywords ) /
+                                        sizeof ( t42_keywords[0] ) );
 
+    FT_Byte     keyword_flags[T42_KEYWORD_COUNT];
+
+    {
+      FT_UInt  n;
+
+
+      for ( n = 0; n < T42_KEYWORD_COUNT; n++ )
+        keyword_flags[n] = 0;
+    }
 
     parser->root.cursor = base;
     parser->root.limit  = base + size;
@@ -942,11 +900,19 @@
               /* we found it -- run the parsing callback! */
               parser->root.cursor = cur2;
               T1_Skip_Spaces( parser );
-              parser->root.error = t42_load_keyword(face,
-                                                    loader,
-                                                    keyword );
-              if ( parser->root.error )
-                return parser->root.error;
+
+              /* only record the first instance of each field/keyword */
+              /* to deal with synthetic fonts correctly               */
+              if ( keyword_flags[i] == 0 )
+              {
+                parser->root.error = t42_load_keyword(face,
+                                                      loader,
+                                                      keyword );
+                if ( parser->root.error )
+                  return parser->root.error;
+              }
+              keyword_flags[i] = 1;
+
               cur = parser->root.cursor;
               break;
             }

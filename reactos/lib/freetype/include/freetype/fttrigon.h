@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType trigonometric functions (specification).                    */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -255,22 +255,6 @@ FT_BEGIN_HEADER
   /*                                                                       */
   FT_EXPORT( FT_Fixed )
   FT_Vector_Length( FT_Vector*  vec );
-
-
-  /*************************************************************************/
-  /*                                                                       */
-  /* @function:                                                            */
-  /*    FT_Vector_Normalize                                                */
-  /*                                                                       */
-  /* @description:                                                         */
-  /*    Normalize a given vector (i.e. compute the equivalent unit         */
-  /*    vector).                                                           */
-  /*                                                                       */
-  /* @inout:                                                               */
-  /*    vec :: The address of target vector.                               */
-  /*                                                                       */
-  FT_EXPORT( void )
-  FT_Vector_Normalize( FT_Vector*  vec );
 
 
   /*************************************************************************/

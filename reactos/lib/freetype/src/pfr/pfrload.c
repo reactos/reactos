@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR loader (body).                                          */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -153,7 +153,7 @@
   pfr_header_load( PFR_Header  header,
                    FT_Stream   stream )
   {
-    FT_Error   error;
+    FT_Error  error;
 
 
     /* read header directly */
@@ -201,9 +201,9 @@
                       FT_UInt32  section_offset,
                       FT_UInt   *acount )
   {
-    FT_Error   error;
-    FT_UInt    count;
-    FT_UInt    result = 0;
+    FT_Error  error;
+    FT_UInt   count;
+    FT_UInt   result = 0;
 
 
     if ( FT_STREAM_SEEK( section_offset ) || FT_READ_USHORT( count ) )
@@ -239,8 +239,8 @@
       return PFR_Err_Invalid_Argument;
 
     if ( FT_STREAM_SKIP( idx * 5 ) ||
-         FT_READ_USHORT( size )      ||
-         FT_READ_UOFF3 ( offset )    )
+         FT_READ_USHORT( size )    ||
+         FT_READ_UOFF3 ( offset )  )
       goto Exit;
 
     /* save logical font size and offset */
@@ -365,7 +365,8 @@
     /* re-allocate when needed */
     if ( phy_font->num_strikes + count > phy_font->max_strikes )
     {
-      FT_UInt  new_max = (phy_font->num_strikes + count + 3) & -4;
+      FT_UInt  new_max = ( phy_font->num_strikes + count + 3 ) & -4;
+
 
       if ( FT_RENEW_ARRAY( phy_font->strikes,
                            phy_font->num_strikes,
@@ -432,30 +433,30 @@
   }
 
 
- /* load font ID, this is a so-called "unique" name that is rather
-  * long and descriptive (like "Tiresias ScreenFont v7.51").
-  *
-  * note that a PFR font's family name is contained in an *undocumented*
-  * string of the "auxiliary data" portion of a physical font record. this
-  * may also contain the "real" style name !
-  *
-  * if no family name is present, the font id is used instead for the
-  * family
-  */
+  /* Load font ID.  This is a so-called "unique" name that is rather
+   * long and descriptive (like "Tiresias ScreenFont v7.51").
+   *
+   * Note that a PFR font's family name is contained in an *undocumented*
+   * string of the "auxiliary data" portion of a physical font record.  This
+   * may also contain the "real" style name!
+   *
+   * If no family name is present, the font ID is used instead for the
+   * family.
+   */
   FT_CALLBACK_DEF( FT_Error )
   pfr_extra_item_load_font_id( FT_Byte*     p,
                                FT_Byte*     limit,
                                PFR_PhyFont  phy_font )
   {
-    FT_Error   error  = 0;
-    FT_Memory  memory = phy_font->memory;
-    FT_UInt    len    = (FT_UInt)( limit - p );
+    FT_Error    error  = 0;
+    FT_Memory   memory = phy_font->memory;
+    FT_PtrDist  len    = limit - p;
 
 
     if ( phy_font->font_id != NULL )
       goto Exit;
 
-    if ( FT_ALLOC( phy_font->font_id, len+1 ) )
+    if ( FT_ALLOC( phy_font->font_id, len + 1 ) )
       goto Exit;
 
     /* copy font ID name, and terminate it for safety */
@@ -702,9 +703,9 @@
   };
 
 
- /* loads a name from the auxiliary data. Since this extracts undocumented
-  * strings from the font file, we need to be careful here
-  */
+  /* Loads a name from the auxiliary data.  Since this extracts undocumented
+   * strings from the font file, we need to be careful here.
+   */
   static FT_Error
   pfr_aux_name_load( FT_Byte*     p,
                      FT_UInt      len,
@@ -715,13 +716,14 @@
     FT_String*  result = NULL;
     FT_UInt     n, ok;
 
-    if ( len > 0 && p[len-1] == 0 )
+
+    if ( len > 0 && p[len - 1] == 0 )
       len--;
 
-   /* check that each character is ASCII, that's to be sure
-    * to not load garbage..
-    */
-    ok = (len > 0);
+    /* check that each character is ASCII for making sure not to
+       load garbage
+     */
+    ok = ( len > 0 );
     for ( n = 0; n < len; n++ )
       if ( p[n] < 32 || p[n] > 127 )
       {
@@ -731,7 +733,7 @@
 
     if ( ok )
     {
-      if ( FT_ALLOC( result, len+1 ) )
+      if ( FT_ALLOC( result, len + 1 ) )
         goto Exit;
 
       FT_MEM_COPY( result, p, len );
@@ -785,7 +787,6 @@
 
     phy_font->num_kern_pairs = 0;
   }
-
 
 
   FT_LOCAL_DEF( FT_Error )
@@ -842,9 +843,9 @@
         goto Fail;
     }
 
-    /* in certain fonts, the auxiliary bytes contain interesting  */
+    /* In certain fonts, the auxiliary bytes contain interesting  */
     /* information. These are not in the specification but can be */
-    /* guessed by looking at the content of a few PFR0 fonts      */
+    /* guessed by looking at the content of a few PFR0 fonts.     */
     PFR_CHECK( 3 );
     num_aux = PFR_NEXT_ULONG( p );
 
@@ -853,6 +854,7 @@
       FT_Byte*  q = p;
       FT_Byte*  q2;
 
+
       PFR_CHECK( num_aux );
       p += num_aux;
 
@@ -860,58 +862,54 @@
       {
         FT_UInt  length, type;
 
+
         if ( q + 4 > p )
           break;
 
-        length = PFR_NEXT_USHORT(q);
+        length = PFR_NEXT_USHORT( q );
         if ( length < 4 || length > num_aux )
           break;
 
         q2   = q + length - 2;
-        type = PFR_NEXT_USHORT(q);
+        type = PFR_NEXT_USHORT( q );
 
         switch ( type )
         {
-          case 1:
-            {
-             /* this seems to correspond to the font's family name,
-              * padded to 16-bits with one zero when necessary
-              */
-              error = pfr_aux_name_load( q, length-4U, memory,
-                                         &phy_font->family_name );
-              if ( error )
-                goto Exit;
-            }
+        case 1:
+          /* this seems to correspond to the font's family name,
+           * padded to 16-bits with one zero when necessary
+           */
+          error = pfr_aux_name_load( q, length - 4U, memory,
+                                     &phy_font->family_name );
+          if ( error )
+            goto Exit;
+          break;
+
+        case 2:
+          if ( q + 32 > q2 )
             break;
 
-          case 2:
-            {
-              if ( q + 32 > q2 )
-                break;
+          q += 10;
+          phy_font->ascent  = PFR_NEXT_SHORT( q );
+          phy_font->descent = PFR_NEXT_SHORT( q );
+          phy_font->leading = PFR_NEXT_SHORT( q );
+          q += 16;
+          break;
 
-              q += 10;
-              phy_font->ascent  = PFR_NEXT_SHORT(q);
-              phy_font->descent = PFR_NEXT_SHORT(q);
-              phy_font->leading = PFR_NEXT_SHORT(q);
-              q += 16;
-            }
-            break;
+        case 3:
+          /* this seems to correspond to the font's style name,
+           * padded to 16-bits with one zero when necessary
+           */
+          error = pfr_aux_name_load( q, length - 4U, memory,
+                                     &phy_font->style_name );
+          if ( error )
+            goto Exit;
+          break;
 
-          case 3:
-            {
-             /* this seems to correspond to the font's style name,
-              * padded to 16-bits with one zero when necessary
-              */
-              error = pfr_aux_name_load( q, length-4U, memory,
-                                         &phy_font->style_name );
-              if ( error )
-                goto Exit;
-            }
-            break;
-
-          default:
-            ;
+        default:
+          ;
         }
+
         q        = q2;
         num_aux -= length;
       }
@@ -920,6 +918,7 @@
     /* read the blue values */
     {
       FT_UInt  n, count;
+
 
       PFR_CHECK( 1 );
       phy_font->num_blue_values = count = PFR_NEXT_BYTE( p );
@@ -1000,7 +999,8 @@
       }
     }
 
-    /* that's it !! */
+    /* that's it! */
+
   Fail:
     FT_FRAME_EXIT();
 

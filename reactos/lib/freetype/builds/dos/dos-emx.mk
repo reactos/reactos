@@ -1,9 +1,9 @@
 #
-# FreeType 2 Type1 driver compilation rules for VMS
+# FreeType 2 configuration rules for the EMX gcc compiler
 #
 
 
-# Copyright 1996-2000, 2002 by
+# Copyright 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,11 +13,9 @@
 # fully.
 
 
-CFLAGS=$(COMP_FLAGS)$(DEBUG)/include=([--.include],[--.src.type1])
+include $(TOP_DIR)/builds/dos/dos-def.mk
+include $(TOP_DIR)/builds/compiler/emx.mk
+include $(TOP_DIR)/builds/link_dos.mk
 
-OBJS=type1.obj
-
-all : $(OBJS)
-        library [--.lib]freetype.olb $(OBJS)
 
 # EOF

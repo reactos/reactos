@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2001, 2002 by
+  Copyright 2000, 2001, 2002, 2003 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,7 +32,7 @@ THE SOFTWARE.
 #include FT_INTERNAL_OBJECTS_H
 
 #include "pcf.h"
-#include "pcfdriver.h"
+#include "pcfdrivr.h"
 #include "pcfread.h"
 
 #include "pcferror.h"
@@ -250,18 +250,22 @@ THE SOFTWARE.
                           FT_ULong  *aformat,
                           FT_ULong  *asize )
   {
-    FT_Error  error = 0;
+    FT_Error  error = PCF_Err_Invalid_File_Format;
     FT_Int    i;
 
 
     for ( i = 0; i < ntables; i++ )
       if ( tables[i].type == type )
       {
-        if ( stream->pos > tables[i].offset )
-          return PCF_Err_Invalid_Stream_Skip;
+        if ( stream->pos > tables[i].offset ) {
+          error = PCF_Err_Invalid_Stream_Skip;
+          goto Fail;
+        }
 
-        if ( FT_STREAM_SKIP( tables[i].offset - stream->pos ) )
-          return PCF_Err_Invalid_Stream_Skip;
+        if ( FT_STREAM_SKIP( tables[i].offset - stream->pos ) ) {
+          error = PCF_Err_Invalid_Stream_Skip;
+          goto Fail;
+        }
 
         *asize   = tables[i].size;  /* unused - to be removed */
         *aformat = tables[i].format;
@@ -269,7 +273,8 @@ THE SOFTWARE.
         return PCF_Err_Ok;
       }
 
-    return PCF_Err_Invalid_File_Format;
+  Fail:
+    return error;
   }
 
 
@@ -914,10 +919,9 @@ THE SOFTWARE.
     {
       FT_Face       root = FT_FACE( face );
       PCF_Property  prop;
-      int           size_set = 0;
 
 
-      root->num_faces = 1;
+      root->num_faces  = 1;
       root->face_index = 0;
       root->face_flags = FT_FACE_FLAG_FIXED_SIZES |
                          FT_FACE_FLAG_HORIZONTAL  |
@@ -931,13 +935,16 @@ THE SOFTWARE.
       if ( prop != NULL )
         if ( prop->isString )
           if ( ( *(prop->value.atom) == 'O' ) ||
-               ( *(prop->value.atom) == 'I' ) )
+               ( *(prop->value.atom) == 'o' ) ||
+               ( *(prop->value.atom) == 'I' ) ||
+               ( *(prop->value.atom) == 'i' ) )
             root->style_flags |= FT_STYLE_FLAG_ITALIC;
 
       prop = pcf_find_property( face, "WEIGHT_NAME" );
       if ( prop != NULL )
         if ( prop->isString )
-          if ( *(prop->value.atom) == 'B' )
+          if ( ( *(prop->value.atom) == 'B' ) ||
+               ( *(prop->value.atom) == 'b' ) )
             root->style_flags |= FT_STYLE_FLAG_BOLD;
 
       root->style_name = (char *)"Regular";
@@ -967,54 +974,56 @@ THE SOFTWARE.
       else
         root->family_name = 0;
 
-      root->num_glyphs = face->nmetrics;
+      /* Note: We shift all glyph indices by +1 since we must
+       * respect the convention that glyph 0 always corresponds
+       * to the "missing glyph".
+       *
+       * This implies bumping the number of "available" glyphs by 1.
+       */
+      root->num_glyphs = face->nmetrics + 1;
 
       root->num_fixed_sizes = 1;
       if ( FT_NEW_ARRAY( root->available_sizes, 1 ) )
         goto Exit;
 
-      prop = pcf_find_property( face, "PIXEL_SIZE" );
-      if ( prop != NULL )
       {
-        root->available_sizes->height =
-        root->available_sizes->width  = (FT_Short)( prop->value.integer );
+        FT_Bitmap_Size*  bsize = root->available_sizes;
 
-        size_set = 1;
-      }
-      else
-      {
+
+        FT_MEM_ZERO( bsize, sizeof ( FT_Bitmap_Size ) );
+
+        prop = pcf_find_property( face, "PIXEL_SIZE" );
+        if ( prop != NULL )
+          bsize->height = (FT_Short)prop->value.integer;
+
+        prop = pcf_find_property( face, "AVERAGE_WIDTH" );
+        if ( prop != NULL )
+          bsize->width = (FT_Short)( ( prop->value.integer + 5 ) / 10 );
+
         prop = pcf_find_property( face, "POINT_SIZE" );
         if ( prop != NULL )
-        {
-          PCF_Property  xres, yres, avgw;
+          /* convert from 722,7 decipoints to 72 points per inch */
+          bsize->size =
+            (FT_Pos)( ( prop->value.integer * 64 * 7200 + 36135L ) / 72270L );
 
+        prop = pcf_find_property( face, "RESOLUTION_X" );
+        if ( prop != NULL )
+          bsize->x_ppem =
+            (FT_Pos)( ( prop->value.integer * bsize->size + 36 ) / 72 );
 
-          xres = pcf_find_property( face, "RESOLUTION_X" );
-          yres = pcf_find_property( face, "RESOLUTION_Y" );
-          avgw = pcf_find_property( face, "AVERAGE_WIDTH" );
+        prop = pcf_find_property( face, "RESOLUTION_Y" );
+        if ( prop != NULL )
+          bsize->y_ppem =
+            (FT_Pos)( ( prop->value.integer * bsize->size + 36 ) / 72 );
 
-          if ( ( yres != NULL ) && ( xres != NULL ) )
-          {
-            root->available_sizes->height =
-              (FT_Short)( prop->value.integer *
-                          yres->value.integer / 720 );
+        if ( bsize->height == 0 )
+          bsize->height = (FT_Short)( ( bsize->y_ppem + 32 ) / 64 );
 
-              root->available_sizes->width =
-                (FT_Short)( prop->value.integer *
-                            xres->value.integer / 720 );
-
-            size_set = 1;
-          }
-        }
+        if ( bsize->height == 0 )
+          bsize->height = 12;
       }
 
-      if (size_set == 0 )
-      {
-        root->available_sizes->width  = 12;
-        root->available_sizes->height = 12;
-      }
-
-      /* set-up charset */
+      /* set up charset */
       {
         PCF_Property  charset_registry = 0, charset_encoding = 0;
 

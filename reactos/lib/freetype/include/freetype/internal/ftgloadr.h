@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph loader (specification).                           */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -50,12 +50,6 @@ FT_BEGIN_HEADER
 #define FT_SUBGLYPH_FLAG_XY_SCALE             0x40
 #define FT_SUBGLYPH_FLAG_2X2                  0x80
 #define FT_SUBGLYPH_FLAG_USE_MY_METRICS      0x200
-
-
-  enum
-  {
-    FT_GLYPH_OWN_BITMAP = 1
-  };
 
 
   typedef struct  FT_SubGlyphRec_

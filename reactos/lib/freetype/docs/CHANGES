@@ -1,86 +1,196 @@
+
+LATEST CHANGES BETWEEN 2.1.5 and 2.1.4
+
+
+  I. IMPORTANT BUG FIXES
+
+    - Parsing the /CIDFontName field now removes the leading slash to
+      be in sync with other font drivers.
+
+    - gzip support was buggy. Some fonts could not be read.
+
+    - Fonts which have nested subglyphs more than one level deep no
+      longer cause a segfault.
+
+    - Creation of synthetic cmaps for fonts in CFF format was broken
+      partially.
+
+    - Numeric font dictionary entries for synthetic fonts are no longer
+      overwritten.
+
+    - The font matrix wasn't applied to the advance width for Type1, CID,
+      and CFF fonts. This caused problem when loading certain synthetic
+      Type 1 fonts like "Helvetica Narrow"
+
+    - The test for the charset registry in BDF and PCF fonts is now
+      case-insensitive.
+
+    - FT_Vector_Rotate rotating sometimes returned strange values due to
+      rounding errors.
+
+    - The PCF driver now returns the correct number of glyphs (including
+      an artificial `notdef' glyph at index 0).
+
+    - FreeType now supports buggy CMaps which are contained in many CJK
+      fonts from Dynalab.
+
+    - Opening an invalid font on a Mac caused a segfault due to
+      double-freeing memory.
+
+    - BDF fonts with more than 32768 glyphs weren't supported properly.
+
+
+  II. IMPORTANT CHANGES
+
+    - Accessing bitmap font formats has been synchronized.  To do that
+      the FT_Bitmap_Size structure has been extended to contain new
+      fields `size', `x_ppem', and `y_ppem'.
+
+    - The FNT driver now returns multiple faces, not multiple strikes.
+
+    - The `psnames' module has been updated to the Adobe Glyph List
+      version 2.0.
+
+    - The `psnames' module now understands `uXXXX[X[X]]' glyph names.
+
+    - The algorithm for guessing the font style has been improved.
+
+    - For fonts in sfnt format, root->height is no longer increased if
+      the line gap is zero.  There exist fonts (containing e.g. form
+      drawing characters) which intentionally have a zero line gap value.
+
+    - ft_glyph_bbox_xxx flags are now deprecated in favour of
+      FT_GLYPH_BBOX_XXX.
+
+    - ft_module_xxx flags are now deprecated in favour of FT_MODULE_XXX.
+
+    - FT_ENCODING_MS_{SJIS,GB2312,BIG5,WANSUNG,JOHAB} are now deprecated
+      in favour of FT_ENCODING_{SJIS,GB2312,GIB5,WANSONG,JOHAB} -- those
+      encodings are not specific to Microsoft.
+
+
+  III. MISCELLANEOUS
+
+    - The autohinter has been further improved; for example, `m' glyphs
+      now retain its vertical symmetry.
+
+    - Partial support of Mac fonts on non-Mac platforms.
+
+    - `make refdoc' (after first `make') builds the HTML documentation.
+      You need Python for this.
+
+    - The make build system should now work more reliably on DOS-like
+      platforms.
+
+    - Support for EMX gcc and Watson C/C++ compilers on MS-DOS has been
+      added.
+
+    - Better VMS build support.
+
+    - Support for the pkg-config package by providing a `freetype.pc'
+      file.
+
+    - New configure option --with-old-mac-fonts for Darwin.
+
+    - Some source files have been renamed (mainly to fit into the 8.3
+      naming scheme).
+
+
+==============================================================================
+
 LATEST CHANGES BETWEEN 2.1.4 and 2.1.3
 
   I. IMPORTANT BUG FIXES
 
-    - updated to newest libtool version, fixes build problems on various
+    - Updated to newest libtool version, fixing build problems on various
       platforms.
 
-    - a fix in the Gzip stream reader, it couldn't read certain .gz files
-      properly due to a small typo. In certain cases, FreeType could also
+    - A fix in the Gzip stream reader: It couldn't read certain .gz files
+      properly due to a small typo.  In certain cases, FreeType could also
       loop endlessly when trying to load tiny gzipped files.
 
-    - the configure script now tries to use the system-wide zlib when
-      it finds one (instead of the copy found in src/gzip). And
+    - The configure script now tries to use the system-wide zlib when
+      it finds one (instead of the copy found in src/gzip).  And
       "freetype-config" has been updated to return relevant flags in this
-      case when invoked with "--libs" (e.g. "-lzlib")
+      case when invoked with "--libs" (e.g. "-lzlib").
 
-    - certain fonts couldn't be loaded by 2.1.3 because they lacked a
-      Unicode charmap (e.g. SYMBOL.TTF). FreeType erroneously rejected
+    - Certain fonts couldn't be loaded by 2.1.3 because they lacked a
+      Unicode charmap (e.g. SYMBOL.TTF).  FreeType erroneously rejected
       them.
 
-    - the CFF loader was modified to accept fonts which only
-      contain a subset of their reference charset. This prevented the
-      correct use of PDF-embedded fonts.
+    - The CFF loader was modified to accept fonts which only contain a
+      subset of their reference charset.  This prevented the correct use
+      of PDF-embedded fonts.
 
-    - the logic to detect Unicode charmaps has been modified. this is required
-      to support fonts which include both 16-bit and 32-bit charmaps (like
-      very recent asian ones) using the new 10 and 12 SFNT formats.
+    - The logic to detect Unicode charmaps has been modified.  This is
+      required to support fonts which include both 16-bit and 32-bit
+      charmaps (like very recent asian ones) using the new 10 and 12 SFNT
+      formats.
 
-    - the TrueType loader now limits the depth of composite glyphs. This is
+    - The TrueType loader now limits the depth of composite glyphs.  This is
       necessary to prevent broken fonts to break the engine by blowing the
       stack with recursive glyph definitions.
 
-    - the CMap cache is now capable of managing UCS-4 character codes that
-      are mapped through extended charmaps in recent TrueType/OpenType fonts
+    - The CMap cache is now capable of managing UCS-4 character codes that
+      are mapped through extended charmaps in recent TrueType/OpenType
+      fonts.
 
-    - the cache sub-system now properly manages out-of-memory conditions,
-      instead of blindly reporting them to the caller. This means that it
+    - The cache sub-system now properly manages out-of-memory conditions
+      instead of blindly reporting them to the caller.  This means that it
       will try to empty the cache before restarting its allocations to see
       if that can help.
 
-    - the PFR driver didn't return the list of available embedded bitmaps
+    - The PFR driver didn't return the list of available embedded bitmaps
       properly.
+
+    - There was a nasty memory leak when using embedded bitmaps in certain
+      font formats.
+
 
   II. IMPORTANT CHANGES
 
     - David Chester contributed some enhancements to the auto-hinter that
-      significantly increase the quality of its output. The Postscript hinter
-      was also improved in several ways..
+      significantly increase the quality of its output.  The Postscript
+      hinter was also improved in several ways.
 
-    - the FT_RENDER_MODE_LIGHT render mode was implemented
+    - The FT_RENDER_MODE_LIGHT render mode was implemented.
 
-    - a new API, called FT_Get_BDF_Property has been added to FT_BDF_H to
-      retrieve BDF properties from BDF _and_ PCF font files. THIS IS STILL
-      EXPERIMENTAL, since it hasn't been properly tested yet.
+    - A new API function called `FT_Get_BDF_Property' has been added to
+      FT_BDF_H to retrieve BDF properties from BDF _and_ PCF font files.
+      THIS IS STILL EXPERIMENTAL, since it hasn't been properly tested yet.
 
-    - a Windows FNT specific API has been added, mostly to access font
-      headers. This is used by Wine
+    - A Windows FNT specific API has been added, mostly to access font
+      headers.  This is used by Wine.
 
-    - TrueType tables without a "hmtx" table are now tolerated when an
-      incremental interface is used. This happens for certain Type42 fonts
+    - TrueType tables without an "hmtx" table are now tolerated when an
+      incremental interface is used.  This happens for certain Type42 fonts
       passed from Ghostscript to FreeType.
 
-    - the PFR font driver is now capable of returning the font family and
-      style names when they're available (instead of the sole "FontID"). This
-      is performed by parsing an *undocumented* portion of the font file !!
+    - The PFR font driver is now capable of returning the font family and
+      style names when they are available (instead of the sole "FontID").
+      This is performed by parsing an *undocumented* portion of the font
+      file!
+
 
   III. MISCELLANEOUS
 
-    - the path stroker in FT_STROKER_H has entered beta stage. It now works
-      very well, but it's interface might change a bit in the future. More
-      on this in later releases
+    - The path stroker in FT_STROKER_H has entered beta stage.  It now works
+      very well, but its interface might change a bit in the future.  More
+      on this in later releases.
 
-    - the documentation for FT_Size_Metrics didn't appear properly in the
-      API reference
+    - The documentation for FT_Size_Metrics didn't appear properly in the
+      API reference.
 
-    - the file docs/VERSION.DLL has been updated to explain versioning
-      with FreeType (i.e. comparing release/libtool/so numbers, and how
-      to use them in Autoconf scripts)
+    - The file docs/VERSION.DLL has been updated to explain versioning
+      with FreeType (i.e., comparing release/libtool/so numbers, and how to
+      use them in autoconf scripts).
 
-    - the installation documentation has been seriously revamped. Everything
-      is now in the "docs" directory.
+    - The installation documentation has been seriously revamped.
+      Everything is now in the "docs" directory.
+
 
 ==============================================================================
+
 LATEST CHANGES BETWEEN 2.1.3 and 2.1.2
 
   I. IMPORTANT BUG FIXES
@@ -111,17 +221,19 @@ LATEST CHANGES BETWEEN 2.1.3 and 2.1.2
       precisely, when trying to apply hints to an empty glyph outline).
 
     - The TrueType glyph loader now supports composites in "Apple format"
-      (they differ slightly from Microsoft/OpenType ones in the way transform
-      offsets are computed).
+      (they differ slightly from Microsoft/OpenType ones in the way
+      transformation offsets are computed).
 
     - FreeType was very slow at opening certain asian CID/CFF fonts, due
-      to fixed increment in dynamic array re-allocations. This has been
-      changed to exponential behaviour to get acceptable performance
+      to fixed increment in dynamic array re-allocations.  This has been
+      changed to exponential behaviour to get acceptable performance.
+
+
 
   II. IMPORTANT CHANGES
 
-    - the PCF driver now supports gzip-compressed font files natively. This
-      means that you'll be able to use all these bitmap fonts that come
+    - The PCF driver now supports gzip-compressed font files natively.  This
+      means that you will be able to use all these bitmap fonts that come
       with XFree86 with FreeType (and libXft/libXft2, by extension).
 
     - The automatic and postscript hinters have both been updated.  This
@@ -160,10 +272,10 @@ LATEST CHANGES BETWEEN 2.1.3 and 2.1.2
 
       Note that the 'ftview' demo program available in the 'ft2demos' package
       has been updated to support LCD-optimized display on non-paletted
-      displays (under Win32 and X11)
+      displays (under Win32 and X11).
 
     - The PFR driver now supports embedded bitmaps (all formats supported),
-      and returns correct kerning metrics for all glyphs
+      and returns correct kerning metrics for all glyphs.
 
     - The TrueType charmap loader now supports certain "broken" fonts that
       load under Windows without problems.
@@ -184,9 +296,10 @@ LATEST CHANGES BETWEEN 2.1.3 and 2.1.2
     - Added support for the DESTDIR variable during "make install".  This
       simplifies packaging of FreeType.
 
-    - included modified copies of the ZLib sources in 'src/gzip' in order
-      to support gzip-compressed PCF fonts. We do not use the system-provided
-      zlib for now, though this is a probable enhancement for future releases
+    - Included modified copies of the ZLib sources in 'src/gzip' in order to
+      support gzip-compressed PCF fonts.  We do not use the system-provided
+      zlib for now, though this is a probable enhancement for future
+      releases.
 
     - The DocMaker tool used to generate the on-line API reference has been
       completely rewritten.  It is now located in

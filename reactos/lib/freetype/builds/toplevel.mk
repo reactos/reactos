@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2001, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -99,7 +99,9 @@ ifdef check_platform
   #
   # note: This test is duplicated in "builds/toplevel.mk".
   #
-  is_unix := $(strip $(wildcard /sbin/init) $(wildcard /usr/sbin/init) $(wildcard /hurd/auth))
+  is_unix := $(strip $(wildcard /sbin/init) \
+                     $(wildcard /usr/sbin/init) \
+                     $(wildcard /hurd/auth))
   ifneq ($(is_unix),)
 
     distclean:
@@ -131,5 +133,6 @@ else
   include $(CONFIG_MK)
 
 endif # test check_platform
+
 
 # EOF

@@ -97,7 +97,6 @@ FT_Select_Charmap
 FT_Set_Char_Size
 FT_Set_Charmap
 FT_Set_Debug_Hook
-FT_Set_Hint_Flags
 FT_Set_Pixel_Sizes
 FT_Set_Renderer
 FT_Set_Transform
@@ -245,9 +244,7 @@ t1_cmap_expert_class_rec
 t1_cmap_standard_class_rec
 t1_cmap_unicode_class_rec
 t1_decoder_funcs
-ps1_hints_apply
-ps2_hints_apply
-ps3_hints_apply
+ps_hints_apply
 pshinter_module_class
 psnames_module_class
 ft_raster1_renderer_class

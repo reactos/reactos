@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -635,7 +635,7 @@
 
     for ( i = 0; i < face->num_sbit_strikes; i++ )
     {
-      if ( ( face->sbit_strikes[i].y_ppem  == y_ppem )    &&
+      if ( ( face->sbit_strikes[i].y_ppem == y_ppem )     &&
            ( ( x_ppem == 0 )                            ||
              ( face->sbit_strikes[i].x_ppem == x_ppem ) ) )
       {
@@ -1232,9 +1232,9 @@
     if ( error )
       goto Exit;
 
-    /* this function is recursive.  At the top-level call, we  */
+    /* This function is recursive.  At the top-level call, we  */
     /* compute the dimensions of the higher-level glyph to     */
-    /* allocate the final pixmap buffer                        */
+    /* allocate the final pixmap buffer.                       */
     if ( depth == 0 )
     {
       FT_Long  size;
@@ -1355,7 +1355,7 @@
                                  y_offset + comp->y_offset,
                                  stream,
                                  &elem_metrics,
-                                 depth+1 );
+                                 depth + 1 );
         if ( error )
           goto Fail_Memory;
       }

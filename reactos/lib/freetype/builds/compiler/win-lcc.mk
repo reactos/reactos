@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,7 +15,8 @@
 
 # Command line name
 #
-CC := lcc
+CC           := lcc
+COMPILER_SEP := $(SEP)
 
 
 # The object file extension (for standard and static libraries).  This can be
@@ -76,6 +77,7 @@ ANSIFLAGS :=
 # library linking
 #
 #CLEAN_LIBRARY :=
-LINK_LIBRARY = lcclib /out:$(subst $(SEP),\\,$@) $(subst $(SEP),\\,$(OBJECTS_LIST))
+LINK_LIBRARY = lcclib /out:$(subst /,$(COMPILER_SEP),$@ $(OBJECTS_LIST))
+
 
 # EOF

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002 by
+# Copyright 1996-2000, 2001, 2002, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -20,12 +20,14 @@
 # The following variables (set by other Makefile components, in the
 # environment, or on the command line) are used:
 #
-#   BUILD          The architecture dependent directory,
+#   BUILD_DIR      The architecture dependent directory,
 #                  e.g. `$(TOP_DIR)/builds/unix'.
 #
 #   OBJ_DIR        The directory in which object files are created.
 #
 #   LIB_DIR        The directory in which the library is created.
+#
+#   DOC_DIR        The directory in which the API reference is created.
 #
 #   INCLUDES       A list of directories to be included additionally.
 #                  Usually empty.
@@ -63,6 +65,7 @@
 #                  `distclean' target.
 #
 #   TOP_DIR, SEP,
+#   COMPILER_SEP,
 #   LIBRARY, CC,
 #   A, I, O, T     Check `config.mk' for details.
 
@@ -70,7 +73,7 @@
 # The targets `objects' and `library' are defined at the end of this
 # Makefile after all other rules have been included.
 #
-.PHONY: single multi objects library
+.PHONY: single multi objects library refdoc
 
 # default target -- build single objects and library
 #
@@ -83,43 +86,29 @@ multi: objects library
 
 # The FreeType source directory, usually `./src'.
 #
-SRC := $(TOP_DIR)$(SEP)src
-
+SRC_DIR := $(TOP_DIR)/src
 
 # The directory where the base layer components are placed, usually
 # `./src/base'.
 #
-BASE_DIR := $(SRC)$(SEP)base
+BASE_DIR := $(SRC_DIR)/base
 
-# The build header file used to define all public header file names
-# as macro.
+# Other derived directories.
 #
-ifndef FT_BUILD_H
-  FT_BUILD_H  := $(TOP_DIR)$(SEP)include$(SEP)ft2build.h
-  FTBUILD_CMD :=
-else
-  FTBUILD_CMD = $(D)FT_BUILD_H=$(FT_BUILD_H)
+PUBLIC_DIR   := $(TOP_DIR)/include/freetype
+INTERNAL_DIR := $(PUBLIC_DIR)/internal
+CONFIG_DIR   := $(PUBLIC_DIR)/config
+CACHE_DIR    := $(PUBLIC_DIR)/cache
+
+# The documentation directory.
+#
+ifndef DOC_DIR
+  DOC_DIR := $(TOP_DIR)/docs/reference
 endif
-
-# A few short-cuts in order to avoid typing $(SEP) all the time for the
-# directory separator.
-#
-# For example: $(SRC_) equals to `./src/' where `.' is $(TOP_DIR).
-#
-#
-SRC_      := $(SRC)$(SEP)
-BASE_     := $(BASE_DIR)$(SEP)
-OBJ_      := $(OBJ_DIR)$(SEP)
-LIB_      := $(LIB_DIR)$(SEP)
-PUBLIC_   := $(TOP_DIR)$(SEP)include$(SEP)freetype$(SEP)
-INTERNAL_ := $(PUBLIC_)internal$(SEP)
-CONFIG_   := $(PUBLIC_)config$(SEP)
-CACHE_    := $(PUBLIC_)cache$(SEP)
-
 
 # The final name of the library file.
 #
-PROJECT_LIBRARY := $(LIB_)$(LIBRARY).$A
+PROJECT_LIBRARY := $(LIB_DIR)/$(LIBRARY).$A
 
 
 # include paths
@@ -130,7 +119,8 @@ PROJECT_LIBRARY := $(LIB_)$(LIBRARY).$A
 #                 in the `freetype/builds/<system>' directory, as these
 #                 files will override the default sources.
 #
-INCLUDES := $(OBJ_DIR) $(BUILD) $(TOP_DIR)$(SEP)include
+INCLUDES := $(subst /,$(COMPILER_SEP),$(OBJ_DIR) $(BUILD_DIR) \
+                                      $(TOP_DIR)/include)
 
 INCLUDE_FLAGS = $(INCLUDES:%=$I%)
 
@@ -164,46 +154,47 @@ OBJECTS_LIST :=
 # This is used to simplify the dependency rules -- if one of these files
 # changes, the whole library is recompiled.
 #
-PUBLIC_H   := $(wildcard $(PUBLIC_)*.h)
-BASE_H     := $(wildcard $(INTERNAL_)*.h)
-CONFIG_H   := $(wildcard $(CONFIG_)*.h) \
-              $(wildcard $(BUILD)$(SEP)freetype$(SEP)config$(SEP)*.h)
-CACHE_H    := $(wildcard $(CACHE_)*.h)
+PUBLIC_H   := $(wildcard $(PUBLIC_DIR)/*.h)
+BASE_H     := $(wildcard $(INTERNAL_DIR)/*.h)
+CONFIG_H   := $(wildcard $(CONFIG_DIR)/*.h) \
+              $(wildcard $(BUILD_DIR)/freetype/config/*.h)
+CACHE_H    := $(wildcard $(CACHE_DIR)/*.h)
+DEVEL_H    := $(wildcard $(TOP_DIR)/devel/*.h)
 
-FREETYPE_H := $(PUBLIC_H) $(BASE_H) $(CONFIG_H) $(CACHE_H)
+FREETYPE_H := $(PUBLIC_H) $(BASE_H) $(CONFIG_H) $(CACHE_H) $(DEVEL_H)
 
 
 # ftsystem component
 #
 ifndef FTSYS_SRC
-  FTSYS_SRC = $(BASE_)ftsystem.c
+  FTSYS_SRC = $(BASE_DIR)/ftsystem.c
 endif
 
-FTSYS_OBJ = $(OBJ_)ftsystem.$O
+FTSYS_OBJ = $(OBJ_DIR)/ftsystem.$O
 
 OBJECTS_LIST += $(FTSYS_OBJ)
 
 $(FTSYS_OBJ): $(FTSYS_SRC) $(FREETYPE_H)
-	$(FT_COMPILE) $T$@ $<
+	$(FT_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # ftdebug component
 #
 ifndef FTDEBUG_SRC
-  FTDEBUG_SRC = $(BASE_)ftdebug.c
+  FTDEBUG_SRC = $(BASE_DIR)/ftdebug.c
 endif
 
-FTDEBUG_OBJ = $(OBJ_)ftdebug.$O
+FTDEBUG_OBJ = $(OBJ_DIR)/ftdebug.$O
 
 OBJECTS_LIST += $(FTDEBUG_OBJ)
 
 $(FTDEBUG_OBJ): $(FTDEBUG_SRC) $(FREETYPE_H)
-	$(FT_COMPILE) $T$@ $<
+	$(FT_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # Include all rule files from FreeType components.
 #
-include $(wildcard $(SRC)/*/rules.mk)
+include $(wildcard $(SRC_DIR)/*/rules.mk)
 
 
 # ftinit component
@@ -217,13 +208,13 @@ include $(wildcard $(SRC)/*/rules.mk)
 #   which contain additional include paths and macros used to compile the
 #   single `ftinit.c' source.
 #
-FTINIT_SRC := $(BASE_)ftinit.c
-FTINIT_OBJ := $(OBJ_)ftinit.$O
+FTINIT_SRC := $(BASE_DIR)/ftinit.c
+FTINIT_OBJ := $(OBJ_DIR)/ftinit.$O
 
 OBJECTS_LIST += $(FTINIT_OBJ)
 
 $(FTINIT_OBJ): $(FTINIT_SRC) $(FREETYPE_H) $(FT_MODULE_LIST)
-	$(FT_COMPILE) $T$@ $<
+	$(FT_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # All FreeType library objects
@@ -255,7 +246,17 @@ objects: $(OBJECTS_LIST)
 library: $(PROJECT_LIBRARY)
 
 .c.$O:
-	$(FT_COMPILE) $T$@ $<
+	$(FT_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
+
+
+refdoc:
+	python $(SRC_DIR)/tools/docmaker/docmaker.py \
+               --prefix=ft2                          \
+               --title=FreeType-2.1.5                \
+               --output=$(DOC_DIR)                   \
+               $(PUBLIC_DIR)/*.h                     \
+               $(PUBLIC_DIR)/config/*.h              \
+               $(PUBLIC_DIR)/cache/*.h
 
 
 .PHONY: clean_project_std distclean_project_std
@@ -280,10 +281,10 @@ distclean_project_std: clean_project_std
 # working correctly on Win9x.
 #
 clean_project_dos:
-	-$(DELETE) $(subst $(SEP),$(HOSTSEP),$(OBJ_))*.$O $(CLEAN) $(NO_OUTPUT)
+	-$(DELETE) $(subst /,\,$(OBJ)/*.$O $(CLEAN) $(NO_OUTPUT))
 
 distclean_project_dos: clean_project_dos
-	-$(DELETE) $(subst $(SEP),$(HOSTSEP),$(PROJECT_LIBRARY)) $(DISTCLEAN) $(NO_OUTPUT)
+	-$(DELETE) $(subst /,\,$(PROJECT_LIBRARY) $(DISTCLEAN) $(NO_OUTPUT))
 
 
 .PHONY: remove_config_mk
@@ -291,7 +292,7 @@ distclean_project_dos: clean_project_dos
 # Remove configuration file (used for distclean).
 #
 remove_config_mk:
-	-$(DELETE) $(subst $(SEP),$(HOSTSEP),$(CONFIG_MK)) $(NO_OUTPUT)
+	-$(DELETE) $(subst /,$(SEP),$(CONFIG_MK) $(NO_OUTPUT))
 
 
 .PHONY: clean distclean
@@ -303,5 +304,7 @@ remove_config_mk:
 #
 clean: clean_project
 distclean: distclean_project remove_config_mk
+	-$(DELETE) $(subst /,$(SEP),$(DOC_DIR)/*.html $(NO_OUTPUT))
+
 
 # EOF

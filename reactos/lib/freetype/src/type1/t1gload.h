@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (specification).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -29,7 +29,7 @@ FT_BEGIN_HEADER
 
   FT_LOCAL( FT_Error )
   T1_Compute_Max_Advance( T1_Face  face,
-                          FT_Int*  max_advance );
+                          FT_Pos*  max_advance );
 
   FT_LOCAL( FT_Error )
   T1_Load_Glyph( T1_GlyphSlot  glyph,

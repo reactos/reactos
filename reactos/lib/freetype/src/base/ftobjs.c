@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (body).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -198,16 +198,17 @@
     return error;
   }
 
+
   FT_BASE_DEF( void )
   ft_glyphslot_free_bitmap( FT_GlyphSlot  slot )
   {
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+    if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
     {
       FT_Memory  memory = FT_FACE_MEMORY( slot->face );
-      
-      
+
+
       FT_FREE( slot->bitmap.buffer );
-      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
+      slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
     else
     {
@@ -220,14 +221,14 @@
 
   FT_BASE_DEF( void )
   ft_glyphslot_set_bitmap( FT_GlyphSlot  slot,
-                           FT_Pointer    buffer )
+                           FT_Byte*      buffer )
   {
     ft_glyphslot_free_bitmap( slot );
-    
+
     slot->bitmap.buffer = buffer;
-    
-    FT_ASSERT( (slot->flags & FT_GLYPH_OWN_BITMAP) == 0 );
-  }                           
+
+    FT_ASSERT( (slot->internal->flags & FT_GLYPH_OWN_BITMAP) == 0 );
+  }
 
 
   FT_BASE_DEF( FT_Error )
@@ -235,15 +236,15 @@
                              FT_ULong      size )
   {
     FT_Memory  memory = FT_FACE_MEMORY( slot->face );
-    
-    
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+
+
+    if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
       FT_FREE( slot->bitmap.buffer );
     else
-      slot->flags |= FT_GLYPH_OWN_BITMAP;
-    
+      slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
+
     return FT_MEM_ALLOC( slot->bitmap.buffer, size );
-  }                             
+  }
 
 
   static void
@@ -260,7 +261,7 @@
     slot->bitmap.rows  = 0;
     slot->bitmap.pitch = 0;
     slot->bitmap.pixel_mode = 0;
-    /* don't touch 'slot->bitmap.buffer' !! */
+    /* don't touch 'slot->bitmap.buffer'! */
 
     slot->bitmap_left   = 0;
     slot->bitmap_top    = 0;
@@ -426,23 +427,6 @@
   }
 
 
-  /* documentation is in freetype.h */
-
-  FT_EXPORT_DEF( void )
-  FT_Set_Hint_Flags( FT_Face     face,
-                     FT_ULong    flags )
-  {
-    FT_Face_Internal  internal;
-
-    if ( !face )
-      return;
-
-    internal = face->internal;
-
-    internal->hint_flags = (FT_UInt)flags;
-  }
-
-
   static FT_Renderer
   ft_lookup_glyph_renderer( FT_GlyphSlot  slot );
 
@@ -465,7 +449,7 @@
     if ( !face || !face->size || !face->glyph )
       return FT_Err_Invalid_Face_Handle;
 
-    if ( glyph_index > (FT_UInt)face->num_glyphs )
+    if ( glyph_index >= (FT_UInt)face->num_glyphs )
       return FT_Err_Invalid_Argument;
 
     slot = face->glyph;
@@ -560,7 +544,8 @@
     }
 
     /* compute the linear advance in 16.16 pixels */
-    if ( ( load_flags & FT_LOAD_LINEAR_DESIGN ) == 0 )
+    if ( ( load_flags & FT_LOAD_LINEAR_DESIGN ) == 0  &&
+         ( face->face_flags & FT_FACE_FLAG_SCALABLE ) )
     {
       FT_UInt           EM      = face->units_per_EM;
       FT_Size_Metrics*  metrics = &face->size->metrics;
@@ -748,11 +733,11 @@
   /* <Description>                                                         */
   /*    This function finds a Unicode charmap, if there is one.            */
   /*    And if there is more than one, it tries to favour the more         */
-  /*    extensive one, i.e. one that supports UCS-4 against those which    */
+  /*    extensive one, i.e., one that supports UCS-4 against those which   */
   /*    are limited to the BMP (said UCS-2 encoding.)                      */
   /*                                                                       */
   /*    This function is called from open_face() (just below), and also    */
-  /*    from FT_Select_Charmap( , FT_ENCODING_UNICODE).                    */
+  /*    from FT_Select_Charmap( ..., FT_ENCODING_UNICODE).                 */
   /*                                                                       */
   static FT_Error
   find_unicode_charmap( FT_Face  face )
@@ -771,26 +756,26 @@
       return FT_Err_Invalid_CharMap_Handle;
 
     /*
-     *  the original TrueType specification(s) only specified charmap
+     *  The original TrueType specification(s) only specified charmap
      *  formats that are capable of mapping 8 or 16 bit character codes to
      *  glyph indices.
      *
-     *  however, recent updates to the Apple and OpenType specifications
+     *  However, recent updates to the Apple and OpenType specifications
      *  introduced new formats that are capable of mapping 32-bit character
-     *  codes as well. And these are already used on some fonts, mainly to
+     *  codes as well.  And these are already used on some fonts, mainly to
      *  map non-BMP Asian ideographs as defined in Unicode.
      *
-     *  for compatibility purposes, these fonts generally come with
+     *  For compatibility purposes, these fonts generally come with
      *  *several* Unicode charmaps:
      *
-     *   - one of them in the "old" 16-bit format, that cannot access
-     *     all glyphs in the font
+     *   - One of them in the "old" 16-bit format, that cannot access
+     *     all glyphs in the font.
      *
-     *   - another one in the "new" 32-bit format, that can access all
+     *   - Another one in the "new" 32-bit format, that can access all
      *     the glyphs.
      *
-     *  this function has been written to always favor a 32-bit charmap
-     *  when found. Otherwise, a 16-bit one is returned when found
+     *  This function has been written to always favor a 32-bit charmap
+     *  when found.  Otherwise, a 16-bit one is returned when found.
      */
 
     /* since the `interesting' table, with id's 3,10, is normally the */
@@ -848,10 +833,10 @@
              FT_Long        face_index,
              FT_Int         num_params,
              FT_Parameter*  params,
-             FT_Face*       aface )
+             FT_Face       *aface )
   {
     FT_Memory         memory;
-    FT_Driver_Class  clazz;
+    FT_Driver_Class   clazz;
     FT_Face           face = 0;
     FT_Error          error, error2;
     FT_Face_Internal  internal;
@@ -897,11 +882,10 @@
     /* select Unicode charmap by default */
     error2 = find_unicode_charmap( face );
 
-    /* if no Unicode charmap can be found, FT_Err_Invalid_CharMap_Handle is
-     * returned.
-     */
+    /* if no Unicode charmap can be found, FT_Err_Invalid_CharMap_Handle */
+    /* is returned.                                                      */
 
-    /* no error should happen, but we want to play safe. */
+    /* no error should happen, but we want to play safe */
     if ( error2 && error2 != FT_Err_Invalid_CharMap_Handle )
     {
       error = error2;
@@ -914,7 +898,7 @@
     if ( error )
     {
       clazz->done_face( face );
-      FT_FREE( face->internal );
+      FT_FREE( internal );
       FT_FREE( face );
       *aface = 0;
     }
@@ -974,6 +958,587 @@
 
     return FT_Open_Face( library, &args, face_index, aface );
   }
+
+
+#if !defined( FT_MACINTOSH ) && defined( FT_CONFIG_OPTION_MAC_FONTS )
+
+  /* The behavior here is very similar to that in base/ftmac.c, but it     */
+  /* is designed to work on non-mac systems, so no mac specific calls.     */
+  /*                                                                       */
+  /* We look at the file and determine if it is a mac dfont file or a mac  */
+  /* resource file, or a macbinary file containing a mac resource file.    */
+  /*                                                                       */
+  /* Unlike ftmac I'm not going to look at a `FOND'.  I don't really see   */
+  /* the point, especially since there may be multiple `FOND' resources.   */
+  /* Instead I'll just look for `sfnt' and `POST' resources, ordered as    */
+  /* they occur in the file.                                               */
+  /*                                                                       */
+  /* Note that multiple `POST' resources do not mean multiple postscript   */
+  /* fonts; they all get jammed together to make what is essentially a     */
+  /* pfb file.                                                             */
+  /*                                                                       */
+  /* We aren't interested in `NFNT' or `FONT' bitmap resources.            */
+  /*                                                                       */
+  /* As soon as we get an `sfnt' load it into memory and pass it off to    */
+  /* FT_Open_Face.                                                         */
+  /*                                                                       */
+  /* If we have a (set of) `POST' resources, massage them into a (memory)  */
+  /* pfb file and pass that to FT_Open_Face.  (As with ftmac.c I'm not     */
+  /* going to try to save the kerning info.  After all that lives in the   */
+  /* `FOND' which isn't in the file containing the `POST' resources so     */
+  /* we don't really have access to it.                                    */
+
+
+  /* Finalizer for a memory stream; gets called by FT_Done_Face().
+     It frees the memory it uses. */
+  /* from ftmac.c */
+  static void
+  memory_stream_close( FT_Stream  stream )
+  {
+    FT_Memory  memory = stream->memory;
+
+
+    FT_FREE( stream->base );
+
+    stream->size  = 0;
+    stream->base  = 0;
+    stream->close = 0;
+  }
+
+
+  /* Create a new memory stream from a buffer and a size. */
+  /* from ftmac.c */
+  static FT_Error
+  new_memory_stream( FT_Library           library,
+                     FT_Byte*             base,
+                     FT_ULong             size,
+                     FT_Stream_CloseFunc  close,
+                     FT_Stream           *astream )
+  {
+    FT_Error   error;
+    FT_Memory  memory;
+    FT_Stream  stream;
+
+
+    if ( !library )
+      return FT_Err_Invalid_Library_Handle;
+
+    if ( !base )
+      return FT_Err_Invalid_Argument;
+
+    *astream = 0;
+    memory = library->memory;
+    if ( FT_NEW( stream ) )
+      goto Exit;
+
+    FT_Stream_OpenMemory( stream, base, size );
+
+    stream->close = close;
+
+    *astream = stream;
+
+  Exit:
+    return error;
+  }
+
+
+  /* Create a new FT_Face given a buffer and a driver name. */
+  /* from ftmac.c */
+  static FT_Error
+  open_face_from_buffer( FT_Library   library,
+                         FT_Byte*     base,
+                         FT_ULong     size,
+                         FT_Long      face_index,
+                         const char*  driver_name,
+                         FT_Face     *aface )
+  {
+    FT_Open_Args  args;
+    FT_Error      error;
+    FT_Stream     stream;
+    FT_Memory     memory = library->memory;
+
+
+    error = new_memory_stream( library,
+                               base,
+                               size,
+                               memory_stream_close,
+                               &stream );
+    if ( error )
+    {
+      FT_FREE( base );
+      return error;
+    }
+
+    args.flags = FT_OPEN_STREAM;
+    args.stream = stream;
+    if ( driver_name )
+    {
+      args.flags = args.flags | FT_OPEN_DRIVER;
+      args.driver = FT_Get_Module( library, driver_name );
+    }
+
+    error = FT_Open_Face( library, &args, face_index, aface );
+
+    if ( error == FT_Err_Ok )
+      (*aface)->face_flags &= ~FT_FACE_FLAG_EXTERNAL_STREAM;
+    else
+    {
+      FT_Stream_Close( stream );
+      FT_FREE( stream );
+    }
+
+    return error;
+  }
+
+
+  /* The resource header says we've got resource_cnt `POST' (type1) */
+  /* resources in this file.  They all need to be coalesced into    */
+  /* one lump which gets passed on to the type1 driver.             */
+  /* Here can be only one PostScript font in a file so face_index   */
+  /* must be 0 (or -1).                                             */
+  /*                                                                */
+  static FT_Error
+  Mac_Read_POST_Resource( FT_Library  library,
+                          FT_Stream   stream,
+                          FT_Long     resource_listoffset,
+                          FT_Long     resource_cnt,
+                          FT_Long     resource_data,
+                          FT_Long     face_index,
+                          FT_Face    *aface )
+  {
+    FT_Error   error  = FT_Err_Cannot_Open_Resource;
+    FT_Memory  memory = library->memory;
+    FT_Byte*   pfb_data;
+    int        i, type, flags, len;
+    FT_Long    pfb_len, pfb_pos, pfb_lenpos;
+    FT_Long    rlen, junk, temp;
+    FT_Long   *offsets;
+
+
+    if ( face_index == -1 )
+      face_index = 0;
+    if ( face_index != 0 )
+      return error;
+
+    if ( FT_ALLOC( offsets, (FT_Long)resource_cnt * sizeof ( FT_Long ) ) )
+      return error;
+
+    error = FT_Stream_Seek( stream, resource_listoffset );
+    if ( error )
+      goto Exit;
+
+    /* Find all the POST resource offsets */
+    for ( i = 0; i < resource_cnt; ++i )
+    {
+      (void)FT_READ_USHORT( junk ); /* resource id */
+      (void)FT_READ_USHORT( junk ); /* rsource name */
+      if ( FT_READ_LONG( temp ) )
+        goto Exit;
+      offsets[i] = resource_data + ( temp & 0xFFFFFFL );
+      (void)FT_READ_LONG( junk );   /* mbz */
+    }
+
+    /* Find the length of all the POST resources, concatenated.  Assume */
+    /* worst case (each resource in its own section).                   */
+    pfb_len = 0;
+    for ( i = 0; i < resource_cnt; ++i )
+    {
+      error = FT_Stream_Seek( stream, offsets[i] );
+      if ( error )
+        goto Exit;
+      if ( FT_READ_LONG( temp ) )
+        goto Exit;
+      pfb_len += temp + 6;
+    }
+
+    if ( FT_ALLOC( pfb_data, (FT_Long)pfb_len + 2 ) )
+      goto Exit;
+
+    pfb_pos             = 0;
+    pfb_data[pfb_pos++] = 0x80;
+    pfb_data[pfb_pos++] = 1;            /* Ascii section */
+    pfb_lenpos          = pfb_pos;
+    pfb_data[pfb_pos++] = 0;            /* 4-byte length, fill in later */
+    pfb_data[pfb_pos++] = 0;
+    pfb_data[pfb_pos++] = 0;
+    pfb_data[pfb_pos++] = 0;
+
+    len = 0;
+    type = 1;
+    for ( i = 0; i < resource_cnt; ++i )
+    {
+      error = FT_Stream_Seek( stream, offsets[i] );
+      if ( error )
+        goto Exit2;
+      if ( FT_READ_LONG( rlen ) )
+        goto Exit;
+      if ( FT_READ_USHORT( flags ) )
+        goto Exit;
+      rlen -= 2;                    /* the flags are part of the resource */
+      if ( ( flags >> 8 ) == type )
+        len += rlen;
+      else
+      {
+        pfb_data[pfb_lenpos    ] =   len         & 0xFF;
+        pfb_data[pfb_lenpos + 1] = ( len >>  8 ) & 0xFF;
+        pfb_data[pfb_lenpos + 2] = ( len >> 16 ) & 0xFF;
+        pfb_data[pfb_lenpos + 3] = ( len >> 24 ) & 0xFF;
+
+        if ( ( flags >> 8 ) == 5 )      /* End of font mark */
+          break;
+
+        pfb_data[pfb_pos++] = 0x80;
+
+        type = flags >> 8;
+        len = rlen;
+
+        pfb_data[pfb_pos++] = type;
+        pfb_lenpos          = pfb_pos;
+        pfb_data[pfb_pos++] = 0;        /* 4-byte length, fill in later */
+        pfb_data[pfb_pos++] = 0;
+        pfb_data[pfb_pos++] = 0;
+        pfb_data[pfb_pos++] = 0;
+      }
+
+      error = FT_Stream_Read( stream, (FT_Byte *)pfb_data + pfb_pos, rlen );
+      pfb_pos += rlen;
+    }
+
+    pfb_data[pfb_pos++] = 0x80;
+    pfb_data[pfb_pos++] = 3;
+
+    pfb_data[pfb_lenpos    ] =   len         & 0xFF;
+    pfb_data[pfb_lenpos + 1] = ( len >>  8 ) & 0xFF;
+    pfb_data[pfb_lenpos + 2] = ( len >> 16 ) & 0xFF;
+    pfb_data[pfb_lenpos + 3] = ( len >> 24 ) & 0xFF;
+
+    return open_face_from_buffer( library,
+                                  pfb_data,
+                                  pfb_pos,
+                                  face_index,
+                                  "type1",
+                                  aface );
+
+  Exit2:
+    FT_FREE( pfb_data );
+
+  Exit:
+    FT_FREE( offsets );
+    return error;
+  }
+
+
+  /* The resource header says we've got resource_cnt `sfnt'      */
+  /* (TrueType/OpenType) resources in this file.  Look through   */
+  /* them for the one indicated by face_index, load it into mem, */
+  /* pass it on the the truetype driver and return it.           */
+  /*                                                             */
+  static FT_Error
+  Mac_Read_sfnt_Resource( FT_Library  library,
+                          FT_Stream   stream,
+                          FT_Long     resource_listoffset,
+                          FT_Long     resource_cnt,
+                          FT_Long     resource_data,
+                          FT_Long     face_index,
+                          FT_Face    *aface )
+  {
+    FT_Memory  memory = library->memory;
+    FT_Byte*   sfnt_data;
+    FT_Error   error;
+    int        i;
+    FT_Long    flag_offset= 0xFFFFFFL;
+    FT_Long    rlen, junk;
+    int        is_cff;
+
+
+    if ( face_index == -1 )
+      face_index = 0;
+    if ( face_index >= resource_cnt )
+      return FT_Err_Cannot_Open_Resource;
+
+    error = FT_Stream_Seek( stream, resource_listoffset );
+    if ( error )
+      goto Exit;
+
+    for ( i = 0; i <= face_index; ++i )
+    {
+      (void)FT_READ_USHORT( junk );     /* resource id */
+      (void)FT_READ_USHORT( junk );     /* rsource name */
+      if ( FT_READ_LONG( flag_offset ) )
+        goto Exit;
+      flag_offset &= 0xFFFFFFL;
+      (void)FT_READ_LONG( junk );       /* mbz */
+    }
+
+    if ( flag_offset == 0xFFFFFFL )
+      return FT_Err_Cannot_Open_Resource;
+
+    error = FT_Stream_Seek( stream, flag_offset + resource_data );
+    if ( error )
+      goto Exit;
+    if ( FT_READ_LONG( rlen ) )
+      goto Exit;
+    if ( rlen == -1 )
+      return FT_Err_Cannot_Open_Resource;
+
+    if ( FT_ALLOC( sfnt_data, (FT_Long)rlen ) )
+      return error;
+    error = FT_Stream_Read( stream, (FT_Byte *)sfnt_data, rlen );
+    if ( error )
+      goto Exit;
+
+    is_cff = rlen > 4 && sfnt_data[0] == 'O' &&
+                         sfnt_data[1] == 'T' &&
+                         sfnt_data[2] == 'T' &&
+                         sfnt_data[3] == 'O';
+
+    error = open_face_from_buffer( library,
+                                   sfnt_data,
+                                   rlen,
+                                   face_index,
+                                   is_cff ? "cff" : "truetype",
+                                   aface );
+
+  Exit:
+    return error;
+  }
+
+
+  /* Check for a valid resource fork header, or a valid dfont    */
+  /* header.  In a resource fork the first 16 bytes are repeated */
+  /* at the location specified by bytes 4-7.  In a dfont bytes   */
+  /* 4-7 point to 16 bytes of zeroes instead.                    */
+  /*                                                             */
+  static FT_Error
+  IsMacResource( FT_Library  library,
+                 FT_Stream   stream,
+                 FT_Long     resource_offset,
+                 FT_Long     face_index,
+                 FT_Face    *aface )
+  {
+    FT_Error       error;
+    unsigned char  head[16], head2[16];
+    FT_Long        rdata_pos, map_pos, rdata_len, map_len;
+    int            allzeros, allmatch, i, cnt, subcnt;
+    FT_Long        type_list, tag, rpos, junk;
+
+
+    error = FT_Stream_Seek( stream, resource_offset );
+    if ( error )
+      goto Exit;
+    error = FT_Stream_Read( stream, (FT_Byte *)head, 16 );
+    if ( error )
+      goto Exit;
+
+    rdata_pos = resource_offset + ( ( head[0] << 24 ) |
+                                    ( head[1] << 16 ) |
+                                    ( head[2] <<  8 ) |
+                                      head[3]         );
+    map_pos   = resource_offset + ( ( head[4] << 24 ) |
+                                    ( head[5] << 16 ) |
+                                    ( head[6] <<  8 ) |
+                                      head[7]         );
+    rdata_len = ( head[ 8] << 24 ) |
+                ( head[ 9] << 16 ) |
+                ( head[10] <<  8 ) |
+                  head[11];
+    map_len   = ( head[12] << 24 ) |
+                ( head[13] << 16 ) |
+                ( head[14] <<  8 ) |
+                  head[15];
+
+    if ( rdata_pos + rdata_len != map_pos || map_pos == resource_offset )
+      return FT_Err_Unknown_File_Format;
+
+    error = FT_Stream_Seek( stream, map_pos );
+    if ( error )
+      goto Exit;
+
+    head2[15] = head[15] + 1;       /* make it be different */
+
+    error = FT_Stream_Read( stream, (FT_Byte*)head2, 16 );
+    if ( error )
+      goto Exit;
+
+    allzeros = 1;
+    allmatch = 1;
+    for ( i = 0; i < 16; ++i )
+    {
+      if ( head2[i] != 0 )
+        allzeros = 0;
+      if ( head2[i] != head[i] )
+        allmatch = 0;
+    }
+    if ( !allzeros && !allmatch )
+      return FT_Err_Unknown_File_Format;
+
+    /* If we've gotten this far then it's probably a mac resource file. */
+    /* Now, does it contain any interesting resources?                  */
+
+    (void)FT_READ_LONG( junk );    /* skip handle to next resource map */
+    (void)FT_READ_USHORT( junk );  /* skip file resource number */
+    (void)FT_READ_USHORT( junk );  /* skip attributes */
+
+    if ( FT_READ_USHORT( type_list ) )
+      goto Exit;
+    if ( type_list == -1 )
+      return FT_Err_Unknown_File_Format;
+
+    error = FT_Stream_Seek( stream, map_pos + type_list );
+    if ( error )
+      goto Exit;
+
+    if ( FT_READ_USHORT( cnt ) )
+      goto Exit;
+
+    ++cnt;
+    for ( i = 0; i < cnt; ++i )
+    {
+      if ( FT_READ_LONG( tag )      ||
+           FT_READ_USHORT( subcnt ) ||
+           FT_READ_USHORT( rpos )   )
+        goto Exit;
+
+      ++subcnt;
+      rpos += map_pos + type_list;
+      if ( tag == FT_MAKE_TAG( 'P', 'O', 'S', 'T' ) )
+        return Mac_Read_POST_Resource( library,
+                                       stream,
+                                       rpos,
+                                       subcnt,
+                                       rdata_pos,
+                                       face_index,
+                                       aface );
+      else if ( tag == FT_MAKE_TAG( 's', 'f', 'n', 't' ) )
+        return Mac_Read_sfnt_Resource( library,
+                                       stream,
+                                       rpos,
+                                       subcnt,
+                                       rdata_pos,
+                                       face_index,
+                                       aface );
+    }
+
+    error = FT_Err_Cannot_Open_Resource; /* this file contains no
+                                            interesting resources */
+  Exit:
+    return error;
+  }
+
+
+  /* Check for a valid macbinary header, and if we find one   */
+  /* check that the (flattened) resource fork in it is valid. */
+  /*                                                          */
+  static FT_Error
+  IsMacBinary( FT_Library  library,
+               FT_Stream   stream,
+               FT_Long     face_index,
+               FT_Face    *aface )
+  {
+    unsigned char  header[128];
+    FT_Error       error;
+    FT_Long        dlen, offset;
+
+
+    error = FT_Stream_Seek( stream, 0 );
+    if ( error )
+      goto Exit;
+
+    error = FT_Stream_Read( stream, (FT_Byte*)header, 128 );
+    if ( error )
+      goto Exit;
+
+    if (            header[ 0] !=  0 ||
+                    header[74] !=  0 ||
+                    header[82] !=  0 ||
+                    header[ 1] ==  0 ||
+                    header[ 1] >  33 ||
+                    header[63] !=  0 ||
+         header[2 + header[1]] !=  0 )
+      return FT_Err_Unknown_File_Format;
+
+    dlen = ( header[0x53] << 24 ) |
+           ( header[0x54] << 16 ) |
+           ( header[0x55] <<  8 ) |
+             header[0x56];
+#if 0
+    rlen = ( header[0x57] << 24 ) |
+           ( header[0x58] << 16 ) |
+           ( header[0x59] <<  8 ) |
+             header[0x5a];
+#endif /* 0 */
+    offset = 128 + ( ( dlen + 127 ) & ~127 );
+
+    return IsMacResource( library, stream, offset, face_index, aface );
+
+  Exit:
+    return error;
+  }
+
+
+  /* Check for some macintosh formats                              */
+  /* Is this a macbinary file?  If so look at the resource fork.   */
+  /* Is this a mac dfont file?                                     */
+  /* Is this an old style resource fork? (in data)                 */
+  /* Else if we're on Mac OS/X, open the resource fork explicitly. */
+  /*                                                               */
+  static FT_Error
+  load_mac_face( FT_Library           library,
+                 FT_Stream            stream,
+                 FT_Long              face_index,
+                 FT_Face             *aface,
+                 const FT_Open_Args  *args )
+  {
+    FT_Error error;
+    FT_UNUSED( args );
+
+
+    error = IsMacBinary( library, stream, face_index, aface );
+    if ( FT_ERROR_BASE( error ) == FT_Err_Unknown_File_Format )
+      error = IsMacResource( library, stream, 0, face_index, aface );
+
+#ifdef FT_MACINTOSH
+    /*
+       I know this section is within code which is normally turned off 
+       for the Mac.  It provides an alternative approach to reading the
+       mac resource forks on OS/X in the event that a user does not wish
+       to compile ftmac.c.
+     */
+         
+    if ( ( FT_ERROR_BASE( error ) == FT_Err_Unknown_File_Format      ||
+           FT_ERROR_BASE( error ) == FT_Err_Invalid_Stream_Operation )  &&
+           ( args->flags & FT_OPEN_PATHNAME )                           )
+    {
+      FT_Open_Args  args2;
+      char*         newpath;
+      FT_Memory     memory;
+      FT_Stream     stream2;
+
+
+      memory = library->memory;
+
+      FT_ALLOC( newpath,
+                ft_strlen( args->pathname ) + ft_strlen( "/rsrc" ) + 1 );
+      ft_strcpy( newpath, args->pathname );
+      ft_strcat( newpath, "/rsrc" );
+
+      args2.flags    = FT_OPEN_PATHNAME;
+      args2.pathname = (char*)newpath;
+      error = ft_input_stream_new( library, &args2, &stream2 );
+      if ( !error )
+      {
+        error = IsMacResource( library, stream2, 0, face_index, aface );
+        FT_Stream_Close( stream2 );
+      }
+      FT_FREE( newpath );
+    }
+
+#endif  /* FT_MACINTOSH */
+
+    return error;
+  }
+
+#endif  /* !FT_MACINTOSH && FT_CONFIG_OPTION_MAC_FONTS */
 
 
   /* documentation is in freetype.h */
@@ -1066,14 +1631,39 @@
           }
 
           error = open_face( driver, stream, face_index,
-                            num_params, params, &face );
+                             num_params, params, &face );
           if ( !error )
             goto Success;
 
           if ( FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format )
-            goto Fail2;
+            goto Fail3;
         }
       }
+
+  Fail3:
+    /* If we are on the mac, and we get an FT_Err_Invalid_Stream_Operation */
+    /* it may be because we have an empty data fork, so we need to check   */
+    /* the resource fork.                                                  */
+    if ( FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format      &&
+         FT_ERROR_BASE( error ) != FT_Err_Invalid_Stream_Operation )
+      goto Fail2;
+
+#ifndef FT_MACINTOSH
+    error = load_mac_face( library, stream, face_index, aface, args );
+    if ( !error )
+    {
+      /* We don't want to go to Success here.  We've already done that. */
+      /* On the other hand, if we succeeded we still need to close this */
+      /* stream (we opened a different stream which extracted the       */
+      /* interesting information out of this stream here.  That stream  */
+      /* will still be open and the face will point to it).             */
+      ft_input_stream_free( stream, external_stream );
+      return error;
+    }
+
+    if ( FT_ERROR_BASE( error ) != FT_Err_Unknown_File_Format )
+      goto Fail2;
+#endif  /* !FT_MACINTOSH */
 
       /* no driver is able to handle this format */
       error = FT_Err_Unknown_File_Format;
@@ -1403,6 +1993,7 @@
 
     driver  = face->driver;
     metrics = &face->size->metrics;
+    clazz   = driver->clazz;
 
     if ( !char_width )
       char_width = char_height;
@@ -1416,17 +2007,13 @@
     if ( !vert_resolution )
       vert_resolution = 72;
 
-    driver = face->driver;
-    clazz  = driver->clazz;
-
     /* default processing -- this can be overridden by the driver */
     if ( char_width  < 1 * 64 )
       char_width  = 1 * 64;
     if ( char_height < 1 * 64 )
       char_height = 1 * 64;
 
-   /* Compute pixel sizes in 26.6 units. we use rounding
-    */
+    /* Compute pixel sizes in 26.6 units with rounding */
     dim_x = ( ( char_width  * horz_resolution + (36+32*72) ) / 72 ) & -64;
     dim_y = ( ( char_height * vert_resolution + (36+32*72) ) / 72 ) & -64;
 
@@ -1464,14 +2051,15 @@
     FT_Error          error = FT_Err_Ok;
     FT_Driver         driver;
     FT_Driver_Class   clazz;
-    FT_Size_Metrics*  metrics = &face->size->metrics;
+    FT_Size_Metrics*  metrics;
 
 
     if ( !face || !face->size || !face->driver )
       return FT_Err_Invalid_Face_Handle;
 
-    driver = face->driver;
-    clazz  = driver->clazz;
+    driver  = face->driver;
+    metrics = &face->size->metrics;
+    clazz   = driver->clazz;
 
     /* default processing -- this can be overridden by the driver */
     if ( pixel_width == 0 )
@@ -1570,10 +2158,10 @@
     if ( !face )
       return FT_Err_Invalid_Face_Handle;
 
-    /* FT_ENCODING_UNICODE is special. We try to find the `best' Unicode */
-    /* charmap available, i.e. one with UCS-4 characters, if possible.   */
-    /*                                                                   */
-    /* This is done by find_unicode_charmap() above, to share code.      */
+    /* FT_ENCODING_UNICODE is special.  We try to find the `best' Unicode */
+    /* charmap available, i.e., one with UCS-4 characters, if possible.   */
+    /*                                                                    */
+    /* This is done by find_unicode_charmap() above, to share code.       */
     if ( encoding == FT_ENCODING_UNICODE )
       return find_unicode_charmap( face );
 
@@ -1661,7 +2249,7 @@
       return FT_Err_Invalid_Argument;
 
     face   = charmap->face;
-    memory = FT_FACE_MEMORY(face);
+    memory = FT_FACE_MEMORY( face );
 
     if ( !FT_ALLOC( cmap, clazz->size ) )
     {
@@ -1717,7 +2305,6 @@
   }
 
 
-
   /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_ULong )
@@ -1741,8 +2328,8 @@
     return result;
   }
 
-  /* documentation is in freetype.h */
 
+  /* documentation is in freetype.h */
 
   FT_EXPORT_DEF( FT_ULong )
   FT_Get_Next_Char( FT_Face   face,
@@ -1768,7 +2355,6 @@
 
     return result;
   }
-
 
 
   /* documentation is in freetype.h */
@@ -1906,11 +2492,11 @@
   /* documentation is in tttables.h */
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Load_Sfnt_Table( FT_Face      face,
-                      FT_ULong     tag,
-                      FT_Long      offset,
-                      FT_Byte*     buffer,
-                      FT_ULong*    length )
+  FT_Load_Sfnt_Table( FT_Face    face,
+                      FT_ULong   tag,
+                      FT_Long    offset,
+                      FT_Byte*   buffer,
+                      FT_ULong*  length )
   {
     SFNT_Load_Table_Func  func;
     FT_Driver             driver;

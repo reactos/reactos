@@ -5,7 +5,7 @@
 /*    Basic Type1/Type2 type definitions and interface (specification      */
 /*    only).                                                               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -108,14 +108,14 @@ FT_BEGIN_HEADER
     FT_Byte**        charstrings;       /* array of glyph charstrings */
     FT_Int*          charstrings_len;
 
-    FT_Byte          paint_type;
+    FT_Byte*         paint_type;
     FT_Byte          font_type;
     FT_Matrix        font_matrix;
     FT_Vector        font_offset;
     FT_BBox          font_bbox;
     FT_Long          font_id;
 
-    FT_Int           stroke_width;
+    FT_Fixed*        stroke_width;
 
   } T1_FontRec, *T1_Font;
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Anti-aliasing renderer interface (body).                             */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 by                                           */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -137,16 +137,16 @@
     cbox.xMax  = ( cbox.xMax + 63 ) & -64;
     cbox.yMax  = ( cbox.yMax + 63 ) & -64;
 
-    width  = ( cbox.xMax - cbox.xMin ) >> 6;
-    height = ( cbox.yMax - cbox.yMin ) >> 6;
+    width  = (FT_UInt)( ( cbox.xMax - cbox.xMin ) >> 6 );
+    height = (FT_UInt)( ( cbox.yMax - cbox.yMin ) >> 6 );
     bitmap = &slot->bitmap;
     memory = render->root.memory;
 
     /* release old bitmap buffer */
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+    if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
     {
       FT_FREE( bitmap->buffer );
-      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
+      slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
 
     /* allocate new one, depends on pixel format */
@@ -169,7 +169,7 @@
     if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
       goto Exit;
 
-    slot->flags |= FT_GLYPH_OWN_BITMAP;
+    slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
 
     /* translate outline to render it into the bitmap */
     FT_Outline_Translate( outline, -cbox.xMin, -cbox.yMin );
@@ -284,7 +284,7 @@
   const FT_Renderer_Class  ft_smooth_renderer_class =
   {
     {
-      ft_module_renderer,
+      FT_MODULE_RENDERER,
       sizeof( FT_RendererRec ),
 
       "smooth",
@@ -313,7 +313,7 @@
   const FT_Renderer_Class  ft_smooth_lcd_renderer_class =
   {
     {
-      ft_module_renderer,
+      FT_MODULE_RENDERER,
       sizeof( FT_RendererRec ),
 
       "smooth-lcd",
@@ -343,7 +343,7 @@
   const FT_Renderer_Class  ft_smooth_lcdv_renderer_class =
   {
     {
-      ft_module_renderer,
+      FT_MODULE_RENDERER,
       sizeof( FT_RendererRec ),
 
       "smooth-lcdv",

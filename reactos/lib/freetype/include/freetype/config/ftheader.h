@@ -509,7 +509,7 @@
   /* */
 
 #define FT_TRIGONOMETRY_H          <freetype/fttrigon.h>
-#define FT_STROKER_H               <freetype/ftstroker.h>
+#define FT_STROKER_H               <freetype/ftstroke.h>
 #define FT_SYNTHESIS_H             <freetype/ftsynth.h>
 #define FT_ERROR_DEFINITIONS_H     <freetype/fterrdef.h>
 
@@ -522,6 +522,8 @@
 #define FT_XFREE86_H               <freetype/ftxf86.h>
 
 #define FT_INCREMENTAL_H           <freetype/ftincrem.h>
+
+#define FT_TRUETYPE_UNPATENTED_H   <freetype/ttunpat.h>
 
   /* now include internal headers definitions from <freetype/internal/...> */
 

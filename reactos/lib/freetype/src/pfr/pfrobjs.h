@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (specification).                         */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -67,11 +67,11 @@ FT_BEGIN_HEADER
   pfr_face_done( PFR_Face  face );
 
 
-  FT_LOCAL( FT_Error )
-  pfr_face_get_kerning( PFR_Face   face,
-                        FT_UInt    glyph1,
-                        FT_UInt    glyph2,
-                        FT_Vector* kerning );
+  FT_LOCAL( void )
+  pfr_face_get_kerning( PFR_Face    face,
+                        FT_UInt     glyph1,
+                        FT_UInt     glyph2,
+                        FT_Vector*  kerning );
 
 
   FT_LOCAL( FT_Error )

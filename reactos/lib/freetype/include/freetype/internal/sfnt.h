@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level `sfnt' driver interface (specification).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -463,14 +463,15 @@ FT_BEGIN_HEADER
   /*    SFNT_Load_Table_Func                                               */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    Loads a given SFNT table in memory                                 */
+  /*    Loads a given SFNT table into memory.                              */
   /*                                                                       */
   typedef FT_Error
-  (*SFNT_Load_Table_Func)( FT_Face      face,
-                           FT_ULong     tag,
-                           FT_Long      offset,
-                           FT_Byte*     buffer,
-                           FT_ULong*    length );
+  (*SFNT_Load_Table_Func)( FT_Face    face,
+                           FT_ULong   tag,
+                           FT_Long    offset,
+                           FT_Byte*   buffer,
+                           FT_ULong*  length );
+
 
   /*************************************************************************/
   /*                                                                       */

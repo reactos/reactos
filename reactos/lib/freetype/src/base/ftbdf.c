@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing BDF-specific strings (body).              */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -20,12 +20,15 @@
 #include FT_INTERNAL_BDF_TYPES_H
 #include FT_INTERNAL_OBJECTS_H
 
+
   static FT_Bool
-  test_font_type( FT_Face face, const char*  name )
+  test_font_type( FT_Face      face,
+                  const char*  name )
   {
     if ( face && face->driver )
     {
       FT_Module  driver = (FT_Module)face->driver;
+
 
       if ( driver->clazz && driver->clazz->module_name )
       {
@@ -74,7 +77,8 @@
                        const char*       prop_name,
                        BDF_PropertyRec  *aproperty )
   {
-    FT_Error   error;
+    FT_Error  error;
+
 
     error = FT_Err_Invalid_Argument;
 
@@ -82,15 +86,21 @@
 
     if ( face != NULL && face->driver != NULL )
     {
-      FT_Driver              driver = face->driver;
-      BDF_GetPropertyFunc    func;
+      FT_Driver            driver = face->driver;
+      BDF_GetPropertyFunc  func;
 
-      func = (BDF_GetPropertyFunc) driver->root.clazz->get_interface(
-                             FT_MODULE( driver ), "get_bdf_property" );
-      if ( func )
-        error = func( face, prop_name, aproperty );
+
+      if ( driver->root.clazz->get_interface )
+      {
+        func = (BDF_GetPropertyFunc)driver->root.clazz->get_interface(
+                 FT_MODULE( driver ), "get_bdf_property" );
+        if ( func )
+          error = func( face, prop_name, aproperty );
+      }
     }
+
     return error;
   }
+
 
 /* END */

@@ -81,7 +81,7 @@ fi
 if test "$echo_cflags" = "yes" ; then
  cflags="-I@includedir@/freetype2"
  if test "@includedir@" != "/usr/include" ; then
-  echo -I@includedir@ $cflags
+  echo $cflags -I@includedir@
  else
   echo $cflags
  fi

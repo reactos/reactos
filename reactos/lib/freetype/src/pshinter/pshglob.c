@@ -5,7 +5,7 @@
 /*    PostScript hinter global hinting management (body).                  */
 /*    Inspired by the new auto-hinter module.                              */
 /*                                                                         */
-/*  Copyright 2001, 2002 by                                                */
+/*  Copyright 2001, 2002, 2003 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used        */
@@ -78,6 +78,8 @@
   }
 
 
+#if 0
+
   /* org_width is is font units, result in device pixels, 26.6 format */
   FT_LOCAL_DEF( FT_Pos )
   psh_dimension_snap_width( PSH_Dimension  dimension,
@@ -121,6 +123,8 @@
 
     return width;
   }
+
+#endif /* 0 */
 
 
   /*************************************************************************/
@@ -640,7 +644,7 @@
           read++;
         }
 
-        dim->stdw.count = write - dim->stdw.widths;
+        dim->stdw.count = priv->num_snap_widths;
       }
 
       /* copy standard heights */
@@ -659,7 +663,7 @@
           read++;
         }
 
-        dim->stdw.count = write - dim->stdw.widths;
+        dim->stdw.count = priv->num_snap_heights;
       }
 
       /* copy blue zones */
@@ -673,7 +677,7 @@
 
       globals->blues.blue_scale = priv->blue_scale
                                   ? priv->blue_scale
-                                  : 0x28937L;   /* 0.039625 * 0x400000L */
+                                  : 0x27A000L; /* 0.039625 * 0x10000 * 1000 */
 
       globals->blues.blue_shift = priv->blue_shift
                                   ? priv->blue_shift
@@ -696,7 +700,7 @@
   }
 
 
-  static FT_Error
+  FT_LOCAL_DEF( FT_Error )
   psh_globals_set_scale( PSH_Globals  globals,
                          FT_Fixed     x_scale,
                          FT_Fixed     y_scale,

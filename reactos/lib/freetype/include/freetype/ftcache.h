@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache subsystem (specification).                            */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -71,7 +71,6 @@ FT_BEGIN_HEADER
   /*   FTC_Node_Unref                                                      */
   /*                                                                       */
   /*   FTC_Font                                                            */
-  /*   FTC_ImageDesc                                                       */
   /*   FTC_ImageCache                                                      */
   /*   FTC_ImageCache_New                                                  */
   /*   FTC_ImageCache_Lookup                                               */
@@ -242,9 +241,9 @@ FT_BEGIN_HEADER
   /*    If you lookup nodes, you have the ability to "acquire" them, i.e., */
   /*    to increment their reference count.  This will prevent the node    */
   /*    from being flushed out of the cache until you explicitly "release" */
-  /*    it (see @FTC_Node_Release).                                        */
+  /*    it (see @FTC_Node_Unref).                                          */
   /*                                                                       */
-  /*    See also @FTC_BitsetCache_Lookup and @FTC_ImageCache_Lookup.       */
+  /*    See also @FTC_SBitCache_Lookup and @FTC_ImageCache_Lookup.         */
   /*                                                                       */
   typedef struct FTC_NodeRec_*  FTC_Node;
 
@@ -368,12 +367,12 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieves the @FT_Face and @FT_Size objects that correspond to a   */
-  /*    given @FTC_SizeID.                                                 */
+  /*    given font.                                                        */
   /*                                                                       */
   /* <Input>                                                               */
   /*    manager :: A handle to the cache manager.                          */
   /*                                                                       */
-  /*    size_id :: The ID of the `font size' to use.                       */
+  /*    font    :: The font to use.                                        */
   /*                                                                       */
   /* <Output>                                                              */
   /*    aface   :: A pointer to the handle of the face object.  Set it to  */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (body).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -153,10 +153,10 @@
   /*    reallocation fails.                                                */
   /*                                                                       */
   FT_LOCAL_DEF( FT_Error )
-  ps_table_add( PS_Table  table,
-                FT_Int    idx,
-                void*     object,
-                FT_Int    length )
+  ps_table_add( PS_Table    table,
+                FT_Int      idx,
+                void*       object,
+                FT_PtrDist  length )
   {
     if ( idx < 0 || idx > table->max_elems )
     {
@@ -178,8 +178,9 @@
 
       while ( new_size < table->cursor + length )
       {
-        /* increase size by 25% and round up to the nearest multiple of 1024 */
-        new_size += (new_size >> 2) + 1;
+        /* increase size by 25% and round up to the nearest multiple
+           of 1024 */
+        new_size += ( new_size >> 2 ) + 1;
         new_size  = ( new_size + 1023 ) & -1024;
       }
 
@@ -265,18 +266,24 @@
   /*************************************************************************/
   /*************************************************************************/
 
-
+  /* In the PostScript Language Reference Manual (PLRM) the following */
+  /* characters are called `white-space characters'.                  */
 #define IS_T1_WHITESPACE( c )  ( (c) == ' '  || (c) == '\t' )
-#define IS_T1_LINESPACE( c )   ( (c) == '\r' || (c) == '\n' )
+#define IS_T1_LINESPACE( c )   ( (c) == '\r' || (c) == '\n' || (c) == '\f' )
+#define IS_T1_NULLSPACE( c )   ( (c) == '\0' )
 
-#define IS_T1_SPACE( c )  ( IS_T1_WHITESPACE( c ) || IS_T1_LINESPACE( c ) )
+  /* According to the PLRM all white-space characters are equivalent, */
+  /* except in comments and strings.                                  */
+#define IS_T1_SPACE( c )  ( IS_T1_WHITESPACE( c ) || \
+                            IS_T1_LINESPACE( c )  || \
+                            IS_T1_NULLSPACE( c )  )
 
 
-  FT_LOCAL_DEF( void )
-  ps_parser_skip_spaces( PS_Parser  parser )
+  static void
+  skip_spaces( FT_Byte**  acur,
+               FT_Byte*   limit )
   {
-    FT_Byte* cur   = parser->cursor;
-    FT_Byte* limit = parser->limit;
+    FT_Byte* cur = *acur;
 
 
     while ( cur < limit )
@@ -288,15 +295,16 @@
         break;
       cur++;
     }
-    parser->cursor = cur;
+
+    *acur = cur;
   }
 
 
-  FT_LOCAL_DEF( void )
-  ps_parser_skip_alpha( PS_Parser  parser )
+  static void
+  skip_alpha( FT_Byte**  acur,
+              FT_Byte*   limit )
   {
-    FT_Byte* cur   = parser->cursor;
-    FT_Byte* limit = parser->limit;
+    FT_Byte*  cur = *acur;
 
 
     while ( cur < limit )
@@ -308,7 +316,22 @@
         break;
       cur++;
     }
-    parser->cursor = cur;
+
+    *acur = cur;
+  }
+
+
+  FT_LOCAL_DEF( void )
+  ps_parser_skip_spaces( PS_Parser  parser )
+  {
+    skip_spaces( &parser->cursor, parser->limit );
+  }
+
+
+  FT_LOCAL_DEF( void )
+  ps_parser_skip_alpha( PS_Parser  parser )
+  {
+    skip_alpha( &parser->cursor, parser->limit );
   }
 
 
@@ -527,6 +550,69 @@
 
     *cursor = cur;
     return result;
+  }
+
+
+  /* <...>: hexadecimal string */
+  static FT_Error
+  ps_tobytes( FT_Byte**  cursor,
+              FT_Byte*   limit,
+              FT_Int     max_bytes,
+              FT_Byte*   bytes,
+              FT_Int*    pnum_bytes )
+  {
+    FT_Error  error = PSaux_Err_Ok;
+
+    FT_Byte*  cur = *cursor;
+    FT_Int    n   = 0;
+    FT_Byte   b;
+
+
+    skip_spaces( &cur, limit );
+
+    if ( *cur != '<' )
+    {
+      error = PSaux_Err_Invalid_File_Format;
+      goto Exit;
+    }
+
+    cur++;
+
+    for ( ; cur < limit; n++ )
+    {
+      FT_Byte*  cur2 = cur;
+
+
+      if ( n + 1 > max_bytes * 2 )
+        goto Exit;
+
+      /* All white-space charcters are ignored. */
+      skip_spaces( &cur, limit );
+
+      b = T1Radix( 16, &cur, cur + 1 );
+
+      if ( cur == cur2 )
+        break;
+
+      /* <f> == <f0> != <0f> */
+      bytes[n / 2] = ( n % 2 ) ? bytes[n / 2] + b
+                               : b * 16;
+    }
+
+    skip_spaces( &cur, limit );
+
+    if ( *cur != '>' )
+    {
+      error = PSaux_Err_Invalid_File_Format;
+      goto Exit;
+    }
+
+    *cursor = ++cur;
+
+  Exit:
+    *pnum_bytes = ( n + 1 ) / 2;
+
+    return error;
   }
 
 
@@ -902,11 +988,16 @@
         goto Store_Integer;
 
       case T1_FIELD_TYPE_FIXED:
+        val = t1_tofixed( &cur, limit, 0 );
+        goto Store_Integer;
+
+      case T1_FIELD_TYPE_FIXED_1000:
         val = t1_tofixed( &cur, limit, 3 );
         goto Store_Integer;
 
       case T1_FIELD_TYPE_INTEGER:
         val = t1_toint( &cur, limit );
+        goto Store_Integer;
 
       Store_Integer:
         switch ( field->size )
@@ -929,14 +1020,21 @@
         break;
 
       case T1_FIELD_TYPE_STRING:
+      case T1_FIELD_TYPE_KEY:
         {
           FT_Memory  memory = parser->memory;
           FT_UInt    len    = (FT_UInt)( limit - cur );
 
 
+          /* with synthetic fonts, it's possible to find a field twice */
           if ( *(FT_String**)q )
-            /* with synthetic fonts, it's possible to find a field twice */
             break;
+
+          if ( field->type == T1_FIELD_TYPE_KEY )
+          {
+            len--;
+            cur++;
+          }
 
           if ( FT_ALLOC( string, len + 1 ) )
             goto Exit;
@@ -1062,6 +1160,20 @@
   ps_parser_to_int( PS_Parser  parser )
   {
     return t1_toint( &parser->cursor, parser->limit );
+  }
+
+
+  FT_LOCAL_DEF( FT_Error )
+  ps_parser_to_bytes( PS_Parser  parser,
+                      FT_Byte*   bytes,
+                      FT_Int     max_bytes,
+                      FT_Int*    pnum_bytes )
+  {
+    return ps_tobytes( &parser->cursor,
+                       parser->limit,
+                       max_bytes,
+                       bytes,
+                       pnum_bytes );
   }
 
 

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -17,11 +17,10 @@ ifndef TOP_DIR
   TOP_DIR := .
 endif
 
-DELETE   := rm -f
-SEP      := /
-HOSTSEP  := $(SEP)
-BUILD    := $(TOP_DIR)/builds/ansi
-PLATFORM := ansi
+DELETE    := rm -f
+SEP       := /
+BUILD_DIR := $(TOP_DIR)/builds/ansi
+PLATFORM  := ansi
 
 
 # The directory where all object files are placed.
@@ -34,7 +33,7 @@ PLATFORM := ansi
 #   make -f $TOP_DIR/Makefile
 #
 ifndef OBJ_DIR
-  OBJ_DIR := $(TOP_DIR)$(SEP)objs
+  OBJ_DIR := $(TOP_DIR)/objs
 endif
 
 

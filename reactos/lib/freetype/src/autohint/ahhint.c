@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Glyph hinter (body).                                                 */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
+/*  Copyright 2000-2001, 2002, 2003 Catharon Productions Inc.              */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -27,10 +27,11 @@
 #include FT_OUTLINE_H
 
 
-#define FACE_GLOBALS( face )  ((AH_Face_Globals)(face)->autohint.data)
+#define FACE_GLOBALS( face )  ( (AH_Face_Globals)(face)->autohint.data )
 
 #define AH_USE_IUP
 #define OPTIM_STEM_SNAP
+
 
   /*************************************************************************/
   /*************************************************************************/
@@ -70,7 +71,7 @@
       }
     }
 
-    scaled = (reference+32) & -64;
+    scaled = ( reference + 32 ) & -64;
 
     if ( width >= reference )
     {
@@ -88,7 +89,9 @@
 
 
   /* compute the snapped width of a given stem */
+
 #ifdef FT_CONFIG_CHESTER_SERIF
+
   static FT_Pos
   ah_compute_stem_width( AH_Hinter      hinter,
                          int            vertical,
@@ -114,7 +117,7 @@
     else if ( (  vertical && !hinter->do_vert_snapping ) ||
               ( !vertical && !hinter->do_horz_snapping ) )
     {
-      /* smooth hinting process, very lightly quantize the stem width */
+      /* smooth hinting process: very lightly quantize the stem width */
       /*                                                              */
 
       /* leave the widths of serifs alone */
@@ -148,8 +151,8 @@
 
         if ( dist < 3 * 64 )
         {
-          delta = ( dist & 63 );
-          dist &= -64;
+          delta  = dist & 63;
+          dist  &= -64;
 
           if ( delta < 10 )
             dist += delta;
@@ -169,7 +172,7 @@
     }
     else
     {
-      /* strong hinting process, snap the stem width to integer pixels */
+      /* strong hinting process: snap the stem width to integer pixels */
       /*                                                               */
       if ( vertical )
       {
@@ -184,7 +187,7 @@
       }
       else
       {
-        dist = ah_snap_width( globals->widths,  globals->num_widths, dist );
+        dist = ah_snap_width( globals->widths, globals->num_widths, dist );
 
         if ( hinter->flags & AH_HINTER_MONOCHROME )
         {
@@ -206,7 +209,7 @@
           else if ( dist < 128 )
             dist = ( dist + 22 ) & -64;
           else
-            /* XXX: round otherwise, prevent color fringes in LCD mode */
+            /* XXX: round otherwise to prevent color fringes in LCD mode */
             dist = ( dist + 32 ) & -64;
         }
       }
@@ -218,7 +221,9 @@
 
     return dist;
   }
-#else /* !CHESTER_SERIF */
+
+#else /* !FT_CONFIG_CHESTER_SERIF */
+
   static FT_Pos
   ah_compute_stem_width( AH_Hinter  hinter,
                          int        vertical,
@@ -242,7 +247,7 @@
     else if ( (  vertical && !hinter->do_vert_snapping ) ||
               ( !vertical && !hinter->do_horz_snapping ) )
     {
-      /* smooth hinting process, very lightly quantize the stem width */
+      /* smooth hinting process: very lightly quantize the stem width */
       /*                                                              */
       if ( dist < 64 )
         dist = 64;
@@ -263,8 +268,8 @@
 
         if ( dist < 3 * 64 )
         {
-          delta = ( dist & 63 );
-          dist &= -64;
+          delta  = dist & 63;
+          dist  &= -64;
 
           if ( delta < 10 )
             dist += delta;
@@ -284,7 +289,7 @@
     }
     else
     {
-      /* strong hinting process, snap the stem width to integer pixels */
+      /* strong hinting process: snap the stem width to integer pixels */
       /*                                                               */
       if ( vertical )
       {
@@ -299,7 +304,7 @@
       }
       else
       {
-        dist = ah_snap_width( globals->widths,  globals->num_widths, dist );
+        dist = ah_snap_width( globals->widths, globals->num_widths, dist );
 
         if ( hinter->flags & AH_HINTER_MONOCHROME )
         {
@@ -321,7 +326,7 @@
           else if ( dist < 128 )
             dist = ( dist + 22 ) & -64;
           else
-            /* XXX: round otherwise, prevent color fringes in LCD mode */
+            /* XXX: round otherwise to prevent color fringes in LCD mode */
             dist = ( dist + 32 ) & -64;
         }
       }
@@ -332,7 +337,8 @@
 
     return dist;
   }
-#endif /* !CHESTER_SERIF */
+
+#endif /* !FT_CONFIG_CHESTER_SERIF */
 
 
   /* align one stem edge relative to the previous stem edge */
@@ -345,17 +351,23 @@
     FT_Pos  dist = stem_edge->opos - base_edge->opos;
 
 #ifdef FT_CONFIG_CHESTER_SERIF
+
     FT_Pos  fitted_width = ah_compute_stem_width( hinter,
                                                   vertical,
                                                   dist,
                                                   base_edge->flags,
                                                   stem_edge->flags );
 
+
     stem_edge->pos = base_edge->pos + fitted_width;
+
 #else
+
     stem_edge->pos = base_edge->pos +
                      ah_compute_stem_width( hinter, vertical, dist );
+
 #endif
+
   }
 
 
@@ -371,6 +383,7 @@
     FT_UNUSED( hinter );
     FT_UNUSED( vertical );
 
+
     dist = serif->opos - base->opos;
     if ( dist < 0 )
     {
@@ -378,15 +391,16 @@
       sign = -1;
     }
 
-    /* do not touch serifs widths !! */
 #if 0
+    /* do not touch serifs widths! */
     if ( base->flags & AH_EDGE_DONE )
     {
       if ( dist >= 64 )
-        dist = (dist+8) & -64;
+        dist = ( dist + 8 ) & -64;
 
       else if ( dist <= 32 && !vertical )
         dist = ( dist + 33 ) >> 1;
+
       else
         dist = 0;
     }
@@ -407,14 +421,14 @@
   /*************************************************************************/
 
 
-  /* Another alternative edge hinting algorithm */
-  static void
-  ah_hint_edges_3( AH_Hinter  hinter )
+  FT_LOCAL_DEF( void )
+  ah_hinter_hint_edges( AH_Hinter  hinter )
   {
     AH_Edge     edges;
     AH_Edge     edge_limit;
     AH_Outline  outline = hinter->glyph;
     FT_Int      dimension;
+    FT_Int      n_edges;
 
 
     edges      = outline->horz_edges;
@@ -454,7 +468,7 @@
           {
             edge1 = edge;
           }
-          else if (edge2 && edge2->blue_edge)
+          else if ( edge2 && edge2->blue_edge )
           {
             blue  = edge2->blue_edge;
             edge1 = edge2;
@@ -478,8 +492,8 @@
         }
       }
 
-      /* now, we will align all stem edges, trying to maintain the */
-      /* relative order of stems in the glyph..                    */
+      /* now we will align all stem edges, trying to maintain the */
+      /* relative order of stems in the glyph                     */
       for ( edge = edges; edge < edge_limit; edge++ )
       {
         AH_EdgeRec*  edge2;
@@ -496,12 +510,11 @@
           continue;
         }
 
-        /* now, align the stem */
+        /* now align the stem */
 
-        /* this should not happen, but it's better to be safe. */
+        /* this should not happen, but it's better to be safe */
         if ( edge2->blue_edge || edge2 < edge )
         {
-
           ah_align_linked_edge( hinter, edge2, edge, dimension );
           edge->flags |= AH_EDGE_DONE;
           continue;
@@ -509,15 +522,18 @@
 
         if ( !anchor )
         {
+
 #ifdef FT_CONFIG_CHESTER_STEM
-          FT_Pos   org_len, org_center, cur_len;
-          FT_Pos   cur_pos1, error1, error2, u_off, d_off;
 
-          org_len    = edge2->opos - edge->opos;
-          cur_len    = ah_compute_stem_width( hinter, dimension, org_len,
-                                              edge->flags, edge2->flags   );
+          FT_Pos  org_len, org_center, cur_len;
+          FT_Pos  cur_pos1, error1, error2, u_off, d_off;
 
-          if (cur_len <= 64 )
+
+          org_len = edge2->opos - edge->opos;
+          cur_len = ah_compute_stem_width( hinter, dimension, org_len,
+                                           edge->flags, edge2->flags );
+
+          if ( cur_len <= 64 )
             u_off = d_off = 32;
           else
           {
@@ -551,44 +567,54 @@
           else
             edge->pos = ( edge->opos + 32 ) & -64;
 
-          anchor    = edge;
+          anchor = edge;
 
           edge->flags |= AH_EDGE_DONE;
 
           ah_align_linked_edge( hinter, edge, edge2, dimension );
-#else /* !CHESTER_STEM */
+
+#else /* !FT_CONFIG_CHESTER_STEM */
+
           edge->pos = ( edge->opos + 32 ) & -64;
           anchor    = edge;
 
           edge->flags |= AH_EDGE_DONE;
 
           ah_align_linked_edge( hinter, edge, edge2, dimension );
-#endif /* !CHESTER_STEM */
+
+#endif /* !FT_CONFIG_CHESTER_STEM */
+
         }
         else
         {
-          FT_Pos   org_pos, org_len, org_center, cur_len;
-          FT_Pos   cur_pos1, cur_pos2, delta1, delta2;
+          FT_Pos  org_pos, org_len, org_center, cur_len;
+          FT_Pos  cur_pos1, cur_pos2, delta1, delta2;
 
 
-          org_pos    = anchor->pos + (edge->opos - anchor->opos);
+          org_pos    = anchor->pos + ( edge->opos - anchor->opos );
           org_len    = edge2->opos - edge->opos;
           org_center = org_pos + ( org_len >> 1 );
 
 #ifdef FT_CONFIG_CHESTER_SERIF
-          cur_len    = ah_compute_stem_width( hinter, dimension, org_len,
-                                              edge->flags, edge2->flags  );
-#else  /* !CHESTER_SERIF */
-          cur_len    = ah_compute_stem_width( hinter, dimension, org_len );
-#endif /* !CHESTER_SERIF */
+
+          cur_len = ah_compute_stem_width( hinter, dimension, org_len,
+                                           edge->flags, edge2->flags  );
+
+
+#else  /* !FT_CONFIG_CHESTER_SERIF */
+
+          cur_len = ah_compute_stem_width( hinter, dimension, org_len );
+
+#endif /* !FT_CONFIG_CHESTER_SERIF */
 
 #ifdef FT_CONFIG_CHESTER_STEM
+
           if ( cur_len < 96 )
           {
             FT_Pos  u_off, d_off;
 
 
-            cur_pos1   = ( org_center + 32 ) & -64;
+            cur_pos1 = ( org_center + 32 ) & -64;
 
             if (cur_len <= 64 )
               u_off = d_off = 32;
@@ -598,11 +624,11 @@
               d_off = 26;
             }
 
-            delta1 = org_center - (cur_pos1 - u_off);
+            delta1 = org_center - ( cur_pos1 - u_off );
             if ( delta1 < 0 )
               delta1 = -delta1;
 
-            delta2 = org_center - (cur_pos1 + d_off);
+            delta2 = org_center - ( cur_pos1 + d_off );
             if ( delta2 < 0 )
               delta2 = -delta2;
 
@@ -616,8 +642,7 @@
           }
           else
           {
-
-            org_pos    = anchor->pos + (edge->opos - anchor->opos);
+            org_pos    = anchor->pos + ( edge->opos - anchor->opos );
             org_len    = edge2->opos - edge->opos;
             org_center = org_pos + ( org_len >> 1 );
 
@@ -638,7 +663,7 @@
             edge2->pos = edge->pos + cur_len;
           }
 
-#else /* !CHESTER_STEM */
+#else /* !FT_CONFIG_CHESTER_STEM */
 
           cur_pos1   = ( org_pos + 32 ) & -64;
           delta1     = ( cur_pos1 + ( cur_len >> 1 ) - org_center );
@@ -653,7 +678,7 @@
           edge->pos  = ( delta1 <= delta2 ) ? cur_pos1 : cur_pos2;
           edge2->pos = edge->pos + cur_len;
 
-#endif /* !CHESTER_STEM */
+#endif /* !FT_CONFIG_CHESTER_STEM */
 
           edge->flags  |= AH_EDGE_DONE;
           edge2->flags |= AH_EDGE_DONE;
@@ -663,11 +688,73 @@
         }
       }
 
+      /* make sure that lowercase m's maintain their symmetry */
+
+      /* In general, lowercase m's have six vertical edges if they are sans */
+      /* serif, or twelve if they are avec serif.  This implementation is   */
+      /* based on that assumption, and seems to work very well with most    */
+      /* faces.  However, if for a certain face this assumption is not      */
+      /* true, the m is just rendered like before.  In addition, any stem   */
+      /* correction will only be applied to symmetrical glyphs (even if the */
+      /* glyph is not an m), so the potential for unwanted distortion is    */
+      /* relatively low.                                                    */
+
+      /* We don't handle horizontal edges since we can't easily assure that */
+      /* the third (lowest) stem aligns with the base line; it might end up */
+      /* one pixel higher or lower.                                         */
+
+      n_edges = edge_limit - edges;
+      if ( !dimension && ( n_edges == 6 || n_edges == 12 ) )
+      {
+        AH_EdgeRec  *edge1, *edge2, *edge3;
+        FT_Pos       dist1, dist2, span, delta;
+
+
+        if ( n_edges == 6 )
+        {
+          edge1 = edges;
+          edge2 = edges + 2;
+          edge3 = edges + 4;
+        }
+        else
+        {
+          edge1 = edges + 1;
+          edge2 = edges + 5;
+          edge3 = edges + 9;
+        }
+
+        dist1 = edge2->opos - edge1->opos;
+        dist2 = edge3->opos - edge2->opos;
+
+        span = dist1 - dist2;
+        if ( span < 0 )
+          span = -span;
+
+        if ( span < 8 )
+        {
+          delta = edge3->pos - ( 2 * edge2->pos - edge1->pos );
+          edge3->pos -= delta;
+          if ( edge3->link )
+            edge3->link->pos -= delta;
+
+          /* move the serifs along with the stem */
+          if ( n_edges == 12 )
+          {
+            ( edges + 8 )->pos -= delta;
+            ( edges + 11 )->pos -= delta;
+          }
+
+          edge3->flags |= AH_EDGE_DONE;
+          if ( edge3->link )
+            edge3->link->flags |= AH_EDGE_DONE;
+        }
+      }
+
       if ( !has_serifs )
         goto Next_Dimension;
 
-      /* now, hint the remaining edges (serifs and single) in order */
-      /* to complete our processing                                 */
+      /* now hint the remaining edges (serifs and single) in order */
+      /* to complete our processing                                */
       for ( edge = edges; edge < edge_limit; edge++ )
       {
         if ( edge->flags & AH_EDGE_DONE )
@@ -698,18 +785,6 @@
     Next_Dimension:
       edges      = outline->vert_edges;
       edge_limit = edges + outline->num_vedges;
-    }
-  }
-
-
-  FT_LOCAL_DEF( void )
-  ah_hinter_hint_edges( AH_Hinter  hinter )
-  {
-    /* AH_Interpolate_Blue_Edges( hinter ); -- doesn't seem to help      */
-    /* reduce the problem of the disappearing eye in the `e' of Times... */
-    /* also, creates some artifacts near the blue zones?                 */
-    {
-      ah_hint_edges_3( hinter );
     }
   }
 
@@ -785,6 +860,7 @@
 
 
   /* hint the strong points -- this is equivalent to the TrueType `IP' */
+  /* hinting instruction                                               */
   static void
   ah_hinter_align_strong_points( AH_Hinter  hinter )
   {
@@ -850,7 +926,7 @@
             goto Store_Point;
           }
 
-          /* is the point after the last edge ? */
+          /* is the point after the last edge? */
           edge  = edge_limit - 1;
           delta = u - edge->fpos;
           if ( delta >= 0 )
@@ -858,6 +934,51 @@
             u = edge->pos + ( ou - edge->opos );
             goto Store_Point;
           }
+
+#if 1
+          {
+            FT_UInt  min, max, mid;
+            FT_Pos   fpos;
+
+
+            /* find enclosing edges */
+            min = 0;
+            max = edge_limit - edges;
+
+            while ( min < max )
+            {
+              mid  = ( max + min ) >> 1;
+              edge = edges + mid;
+              fpos = edge->fpos;
+
+              if ( u < fpos )
+                max = mid;
+              else if ( u > fpos )
+                min = mid + 1;
+              else
+              {
+                /* we are on the edge */
+                u = edge->pos;
+                goto Store_Point;
+              }
+            }
+
+            {
+              AH_Edge  before = edges + min - 1;
+              AH_Edge  after  = edges + min + 0;
+
+
+              /* assert( before && after && before != after ) */
+              if ( before->scale == 0 )
+                before->scale = FT_DivFix( after->pos - before->pos,
+                                           after->fpos - before->fpos );
+
+              u = before->pos + FT_MulFix( fu - before->fpos,
+                                           before->scale );
+            }
+          }
+
+#else /* !0 */
 
           /* otherwise, interpolate the point in between */
           {
@@ -889,11 +1010,15 @@
               after = edge;
             }
 
-            /* assert( before && after && before != after ) */
-            u = before->pos + FT_MulDiv( fu - before->fpos,
-                                         after->pos - before->pos,
-                                         after->fpos - before->fpos );
+            if ( before->scale == 0 )
+              before->scale = FT_DivFix( after->pos - before->pos,
+                                        after->fpos - before->fpos );
+
+            u = before->pos + FT_MulFix( fu - before->fpos,
+                                        before->scale );
           }
+
+#endif /* !0 */
 
         Store_Point:
 
@@ -1001,6 +1126,7 @@
 
 
   /* interpolate weak points -- this is equivalent to the TrueType `IUP' */
+  /* hinting instruction                                                 */
   static void
   ah_hinter_align_weak_points( AH_Hinter  hinter )
   {
@@ -1141,8 +1267,8 @@
   {
     FT_Int           n;
     AH_Face_Globals  globals = hinter->globals;
-    AH_Globals       design = &globals->design;
-    AH_Globals       scaled = &globals->scaled;
+    AH_Globals       design  = &globals->design;
+    AH_Globals       scaled  = &globals->scaled;
 
 
     /* copy content */
@@ -1211,7 +1337,7 @@
       ah_outline_done( hinter->glyph );
 
       /* note: the `globals' pointer is _not_ owned by the hinter */
-      /*       but by the current face object, we don't need to   */
+      /*       but by the current face object; we don't need to   */
       /*       release it                                         */
       hinter->globals = 0;
       hinter->face    = 0;
@@ -1360,8 +1486,8 @@
         }
       }
 
-      /* copy the outline points in the loader's current                */
-      /* extra points, which is used to keep original glyph coordinates */
+      /* copy the outline points in the loader's current               */
+      /* extra points which is used to keep original glyph coordinates */
       error = ah_loader_check_points( gloader, slot->outline.n_points + 2,
                                       slot->outline.n_contours );
       if ( error )
@@ -1389,8 +1515,8 @@
       if ( slot->outline.n_points == 0 )
         goto Hint_Metrics;
 
-      /* now, load the slot image into the auto-outline, and run the */
-      /* automatic hinting process                                   */
+      /* now load the slot image into the auto-outline and run the */
+      /* automatic hinting process                                 */
       error = ah_outline_load( outline, x_scale, y_scale, face );
       if ( error )
         goto Exit;
@@ -1446,7 +1572,7 @@
         FT_SubGlyph  subglyph;
 
 
-        start_point   = gloader->base.outline.n_points;
+        start_point = gloader->base.outline.n_points;
 
         /* first of all, copy the subglyph descriptors in the glyph loader */
         error = ah_loader_check_subglyphs( gloader, num_subglyphs );
@@ -1529,8 +1655,8 @@
             FT_Vector*  p2;
 
 
-            if ( start_point + k >= num_base_points          ||
-                               l >= (FT_UInt)num_new_points  )
+            if ( start_point + k >= num_base_points         ||
+                               l >= (FT_UInt)num_new_points )
             {
               error = AH_Err_Invalid_Composite;
               goto Exit;
@@ -1538,7 +1664,7 @@
 
             l += num_base_points;
 
-            /* for now, only use the current point coordinates     */
+            /* for now, only use the current point coordinates;    */
             /* we may consider another approach in the near future */
             p1 = gloader->base.outline.points + start_point + k;
             p2 = gloader->base.outline.points + start_point + l;
@@ -1583,8 +1709,8 @@
       if ( hinter->transformed )
         FT_Outline_Transform( &gloader->base.outline, &hinter->trans_matrix );
 
-      /* we must translate our final outline by -pp1.x, and compute */
-      /* the new metrics                                            */
+      /* we must translate our final outline by -pp1.x and compute */
+      /* the new metrics                                           */
       if ( hinter->pp1.x )
         FT_Outline_Translate( &gloader->base.outline, -hinter->pp1.x, 0 );
 
@@ -1599,8 +1725,8 @@
       slot->metrics.horiBearingX = bbox.xMin;
       slot->metrics.horiBearingY = bbox.yMax;
 
-      /* for mono-width fonts (like Andale, Courier, etc.), we need */
-      /* to keep the original rounded advance width                 */
+      /* for mono-width fonts (like Andale, Courier, etc.) we need */
+      /* to keep the original rounded advance width                */
       if ( !FT_IS_FIXED_WIDTH( slot->face ) )
         slot->metrics.horiAdvance = hinter->pp2.x - hinter->pp1.x;
       else
@@ -1641,7 +1767,7 @@
     FT_Fixed         x_scale      = size->metrics.x_scale;
     FT_Fixed         y_scale      = size->metrics.y_scale;
     AH_Face_Globals  face_globals = FACE_GLOBALS( face );
-    FT_Render_Mode   hint_mode    = FT_LOAD_TARGET_MODE(load_flags);
+    FT_Render_Mode   hint_mode    = FT_LOAD_TARGET_MODE( load_flags );
 
 
     /* first of all, we need to check that we're using the correct face and */
@@ -1662,19 +1788,22 @@
     }
 
 #ifdef FT_CONFIG_CHESTER_BLUE_SCALE
+
    /* try to optimize the y_scale so that the top of non-capital letters
     * is aligned on a pixel boundary whenever possible
     */
     {
       AH_Globals  design = &face_globals->design;
-      FT_Pos      shoot  = design->blue_shoots[ AH_BLUE_SMALL_TOP ];
+      FT_Pos      shoot  = design->blue_shoots[AH_BLUE_SMALL_TOP];
 
-     /* the value of 'shoot' will be -1000 if the font doesn't have */
-     /* small latin letters; we simply check the sign here...       */
+
+      /* the value of 'shoot' will be -1000 if the font doesn't have */
+      /* small latin letters; we simply check the sign here...       */
       if ( shoot > 0 )
       {
         FT_Pos  scaled = FT_MulFix( shoot, y_scale );
         FT_Pos  fitted = ( scaled + 32 ) & -64;
+
 
         if ( scaled != fitted )
         {
@@ -1685,10 +1814,11 @@
          /* adust x_scale
           */
           if ( fitted < scaled )
-            x_scale -= x_scale/50;  /* x_scale*0.98 with integers */
+            x_scale -= x_scale / 50;  /* x_scale*0.98 with integers */
         }
       }
     }
+
 #endif /* FT_CONFIG_CHESTER_BLUE_SCALE */
 
     /* now, we must check the current character pixel size to see if we */
@@ -1720,12 +1850,9 @@
 
     hinter->do_stem_adjust   = FT_BOOL( hint_mode != FT_RENDER_MODE_LIGHT );
 
-#if 1
-    load_flags  = FT_LOAD_NO_SCALE
-                | FT_LOAD_IGNORE_TRANSFORM ;
-#else
-    load_flags |= FT_LOAD_NO_SCALE | FT_LOAD_NO_RECURSE;
-#endif
+
+    load_flags  |= FT_LOAD_NO_SCALE
+                 | FT_LOAD_IGNORE_TRANSFORM ;
 
     error = ah_hinter_load( hinter, glyph_index, load_flags, 0 );
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    User-selectable configuration macros (specification only).           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -22,11 +22,6 @@
 
 #include <ft2build.h>
 
-  /*
-   * this is a special developer version of "ftoption.h", it is used
-   * to define all debugging options, as well as the TrueType bytecode
-   * interpreter
-   */
 
 FT_BEGIN_HEADER
 
@@ -86,16 +81,16 @@ FT_BEGIN_HEADER
   /* by FreeType to speed up some computations.  However, this will create */
   /* some problems when compiling the library in strict ANSI mode.         */
   /*                                                                       */
-  /* For this reason, the use of 64-bit ints is normally disabled when     */
+  /* For this reason, the use of 64-bit integers is normally disabled when */
   /* the __STDC__ macro is defined.  You can however disable this by       */
-  /* defining here the macro FT_CONFIG_OPTION_FORCE_INT64.                 */
+  /* defining the macro FT_CONFIG_OPTION_FORCE_INT64 here.                 */
   /*                                                                       */
-  /* For most compilers, this will only create compilation warnings        */
-  /* when building the library.                                            */
+  /* For most compilers, this will only create compilation warnings when   */
+  /* building the library.                                                 */
   /*                                                                       */
   /* ObNote: The compiler-specific 64-bit integers are detected in the     */
-  /*         file "ftconfig.h" either statically, or through Autoconf      */
-  /*         on platforms that support it.                                 */
+  /*         file "ftconfig.h" either statically or through the            */
+  /*         `configure' script on supported platforms.                    */
   /*                                                                       */
 #undef  FT_CONFIG_OPTION_FORCE_INT64
 
@@ -105,11 +100,11 @@ FT_BEGIN_HEADER
   /* Gzip-compressed file support.                                         */
   /*                                                                       */
   /*   FreeType now handles font files that have been compressed with the  */
-  /*   'gzip' program. This is mostly used to parse many of the PCF files  */
-  /*   that come with XFree86. The implementation uses 'zlib' to           */
+  /*   'gzip' program.  This is mostly used to parse many of the PCF files */
+  /*   that come with XFree86.  The implementation uses `zlib' to          */
   /*   partially uncompress the file on the fly (see src/base/ftgzip.c).   */
   /*                                                                       */
-  /*   Define this macro if you want to enable this "feature". Note that   */
+  /*   Define this macro if you want to enable this "feature".  Note that  */
   /*   this will however force you to link the zlib to any program that    */
   /*   also uses FreeType.                                                 */
   /*                                                                       */
@@ -122,17 +117,17 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*   This macro is only used when FT_CONFIG_OPTION_USE_ZLIB is defined.  */
   /*   It allows FreeType's "ftgzip" component to link to the system's     */
-  /*   installation of the ZLib library. This is useful on systems like    */
+  /*   installation of the ZLib library.  This is useful on systems like   */
   /*   Unix or VMS where it generally is already available.                */
   /*                                                                       */
   /*   If you let it undefined, the component will use its own copy        */
-  /*   of the zlib sources instead. These have been modified to be         */
+  /*   of the zlib sources instead.  These have been modified to be        */
   /*   included directly within the component and *not* export external    */
-  /*   function names. This allows you to link any program with FreeType   */
+  /*   function names.  This allows you to link any program with FreeType  */
   /*   _and_ ZLib without linking conflicts.                               */
   /*                                                                       */
-  /*   do not #undef this macro here, since the build system might         */
-  /*   define for certain configurations                                   */
+  /*   Do not #undef this macro here since the build system might define   */
+  /*   it for certain configurations only.                                 */
   /*                                                                       */
 /* #define  FT_CONFIG_OPTION_SYSTEM_ZLIB */
 
@@ -171,6 +166,9 @@ FT_BEGIN_HEADER
   /*   FT_EXPORT_DEF here if you want.  If you leave them undefined, they  */
   /*   will be later automatically defined as `extern return_type' to      */
   /*   allow normal compilation.                                           */
+  /*                                                                       */
+  /*   Do not #undef these macros here since the build system might define */
+  /*   them for certain configurations only.                               */
   /*                                                                       */
 /* #define  FT_EXPORT(x)       extern x */
 /* #define  FT_EXPORT_DEF(x)   x */
@@ -221,12 +219,25 @@ FT_BEGIN_HEADER
 
   /*************************************************************************/
   /*                                                                       */
+  /* Support for Mac fonts                                                 */
+  /*                                                                       */
+  /*   Define this macro if you want support for outline fonts in Mac      */
+  /*   format (mac dfont, mac resource, macbinary containing a mac         */
+  /*   resource) on non-Mac platforms.                                     */
+  /*                                                                       */
+  /*   Note that the `FOND' resource isn't checked.                        */
+  /*                                                                       */
+#define FT_CONFIG_OPTION_MAC_FONTS
+
+
+  /*************************************************************************/
+  /*                                                                       */
   /* Allow the use of FT_Incremental_Interface to load typefaces that      */
   /* contain no glyph data, but supply it via a callback function.         */
   /* This allows FreeType to be used with the PostScript language, using   */
   /* the GhostScript interpreter.                                          */
   /*                                                                       */
-/* #define  FT_CONFIG_OPTION_INCREMENTAL */
+/* #define FT_CONFIG_OPTION_INCREMENTAL */
 
 
   /*************************************************************************/
@@ -234,7 +245,7 @@ FT_BEGIN_HEADER
   /* The size in bytes of the render pool used by the scan-line converter  */
   /* to do all of its work.                                                */
   /*                                                                       */
-  /* This must be greater than 4kByte.                                     */
+  /* This must be greater than 4KByte.                                     */
   /*                                                                       */
 #define FT_RENDER_POOL_SIZE  16384L
 
@@ -263,8 +274,11 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*   Don't define any of these macros to compile in `release' mode!      */
   /*                                                                       */
-#define  FT_DEBUG_LEVEL_ERROR
-#define  FT_DEBUG_LEVEL_TRACE
+  /*   Do not #undef these macros here since the build system might define */
+  /*   them for certain configurations only.                               */
+  /*                                                                       */
+#define FT_DEBUG_LEVEL_ERROR
+#define FT_DEBUG_LEVEL_TRACE
 
 
   /*************************************************************************/
@@ -277,10 +291,12 @@ FT_BEGIN_HEADER
   /*   should define FT_DEBUG_MEMORY here.                                 */
   /*                                                                       */
   /*   Note that the memory debugger is only activated at runtime when     */
-  /*   when the _environment_ variable "FT_DEBUG_MEMORY" is also defined!  */
+  /*   when the _environment_ variable "FT2_DEBUG_MEMORY" is defined also! */
   /*                                                                       */
-#define  FT_DEBUG_MEMORY
-
+  /*   Do not #undef this macro here since the build system might define   */
+  /*   it for certain configurations only.                                 */
+  /*                                                                       */
+/* #define FT_DEBUG_MEMORY */
 
 
   /*************************************************************************/
@@ -380,10 +396,22 @@ FT_BEGIN_HEADER
   /* By undefining this, you will only compile the code necessary to load  */
   /* TrueType glyphs without hinting.                                      */
   /*                                                                       */
-  /*   do not #undef this macro here, since the build system might         */
-  /*   define for certain configurations                                   */
+  /*   Do not #undef this macro here, since the build system might         */
+  /*   define it for certain configurations only.                          */
   /*                                                                       */
-#define  TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+#define TT_CONFIG_OPTION_BYTECODE_INTERPRETER
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* Define TT_CONFIG_OPTION_UNPATENTED_HINTING (in addition to            */
+  /* TT_CONFIG_OPTION_BYTECODE_INTERPRETER) to compile the unpatented      */
+  /* work-around hinting system.  Note that for the moment, the algorithm  */
+  /* is only used when selected at runtime through the parameter tag       */
+  /* FT_PARAM_TAG_UNPATENTED_HINTING; or when the debug hook               */
+  /* FT_DEBUG_HOOK_UNPATENTED_HINTING is globally actived                  */
+  /*                                                                       */
+#define TT_CONFIG_OPTION_UNPATENTED_HINTING
 
 
   /*************************************************************************/
@@ -475,21 +503,21 @@ FT_BEGIN_HEADER
  /* */
 
 /*
- * the FT_CONFIG_OPTION_CHESTER_XXXX macros are used to toggle some recent
- * improvements to the auto-hinter contributed by David Chester. They will
- * most likely disappear completely in the next release. For now, you should
- * always keep them defined
+ * The FT_CONFIG_OPTION_CHESTER_XXXX macros are used to toggle some recent
+ * improvements to the auto-hinter contributed by David Chester.  They will
+ * most likely disappear completely in the next release.  For now, you
+ * should always keep them defined.
  *
  */
 #define  FT_CONFIG_OPTION_CHESTER_HINTS
 
 #ifdef   FT_CONFIG_OPTION_CHESTER_HINTS
 
-#  define  FT_CONFIG_CHESTER_SMALL_F
-#  define  FT_CONFIG_CHESTER_ASCENDER
-#  define  FT_CONFIG_CHESTER_SERIF
-#  define  FT_CONFIG_CHESTER_STEM
-#  define  FT_CONFIG_CHESTER_BLUE_SCALE
+#define  FT_CONFIG_CHESTER_SMALL_F
+#define  FT_CONFIG_CHESTER_ASCENDER
+#define  FT_CONFIG_CHESTER_SERIF
+#define  FT_CONFIG_CHESTER_STEM
+#define  FT_CONFIG_CHESTER_BLUE_SCALE
 
 #endif /* FT_CONFIG_OPTION_CHESTER_HINTS */
 

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,7 +15,9 @@
 
 # Compiler command line name
 #
-CC := bcc32
+CC           := bcc32
+COMPILER_SEP := $(SEP)
+
 
 # The object file extension (for standard and static libraries).  This can be
 # .o, .tco, .obj, etc., depending on the platform.
@@ -72,9 +74,9 @@ ANSIFLAGS := -A
 # Library linking
 #
 ifndef CLEAN_LIBRARY
-  CLEAN_LIBRARY = $(DELETE) $(subst $(SEP),$(HOSTSEP),$(PROJECT_LIBRARY))
+  CLEAN_LIBRARY = $(DELETE) $(subst /,$(SEP),$(PROJECT_LIBRARY))
 endif
-TARGET_OBJECTS = $(subst $(SEP),\\,$(OBJECTS_LIST))
-LINK_LIBRARY   = tlib /u $(subst $(SEP),\\,$@) $(TARGET_OBJECTS:%=+%)
+LINK_LIBRARY = tlib /u $(subst /,$(COMPILER_SEP),$@ $(OBJECTS_LIST:%=+%))
+
 
 # EOF

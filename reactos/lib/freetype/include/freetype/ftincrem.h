@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType incremental loading (specification).                        */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -186,10 +186,10 @@ FT_BEGIN_HEADER
   */
   typedef FT_Error
   (*FT_Incremental_GetGlyphMetricsFunc)
-                      ( FT_Incremental                   incremental,
-                        FT_UInt                          glyph_index,
-                        FT_Bool                          vertical,
-                        FT_Incremental_MetricsRec        *ametrics );
+                      ( FT_Incremental              incremental,
+                        FT_UInt                     glyph_index,
+                        FT_Bool                     vertical,
+                        FT_Incremental_MetricsRec  *ametrics );
 
 
   /**************************************************************************
@@ -199,7 +199,7 @@ FT_BEGIN_HEADER
    * 
    * @description:
    *   A table of functions for accessing fonts that load data
-   *   incrementally.  Used in @FT_Incremental_Interface.
+   *   incrementally.  Used in @FT_Incremental_InterfaceRec.
    * 
    * @fields:
    *   get_glyph_data ::
@@ -246,8 +246,7 @@ FT_BEGIN_HEADER
   *       parameter.data = &inc_int;
   *
   *       // set up FT_Open_Args structure
-  *       open_args.flags      = (FT_Open_Flags)( FT_OPEN_PATHNAME |
-  *                                               FT_OPEN_PARAMS   );
+  *       open_args.flags      = FT_OPEN_PATHNAME | FT_OPEN_PARAMS;
   *       open_args.pathname   = my_font_pathname;
   *       open_args.num_params = 1;
   *       open_args.params     = &parameter; // we use one optional argument

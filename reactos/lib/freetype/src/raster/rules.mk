@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2001 by
+# Copyright 1996-2000, 2001, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,58 +13,57 @@
 # fully.
 
 
-# raster1 driver directory
+# raster driver directory
 #
-RAS1_DIR  := $(SRC_)raster
-RAS1_DIR_ := $(RAS1_DIR)$(SEP)
+RASTER_DIR := $(SRC_DIR)/raster
 
 # compilation flags for the driver
 #
-RAS1_COMPILE := $(FT_COMPILE) $I$(RAS1_DIR)
+RASTER_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(RASTER_DIR))
 
 
-# raster1 driver sources (i.e., C files)
+# raster driver sources (i.e., C files)
 #
-RAS1_DRV_SRC := $(RAS1_DIR_)ftraster.c \
-                $(RAS1_DIR_)ftrend1.c
+RASTER_DRV_SRC := $(RASTER_DIR)/ftraster.c \
+                  $(RASTER_DIR)/ftrend1.c
 
 
-# raster1 driver headers
+# raster driver headers
 #
-RAS1_DRV_H := $(RAS1_DRV_SRC:%.c=%.h) \
-              $(RAS1_DIR_)rasterrs.h
+RASTER_DRV_H := $(RASTER_DRV_SRC:%.c=%.h) \
+                $(RASTER_DIR)/rasterrs.h
 
 
-# raster1 driver object(s)
+# raster driver object(s)
 #
-#   RAS1_DRV_OBJ_M is used during `multi' builds.
-#   RAS1_DRV_OBJ_S is used during `single' builds.
+#   RASTER_DRV_OBJ_M is used during `multi' builds.
+#   RASTER_DRV_OBJ_S is used during `single' builds.
 #
-RAS1_DRV_OBJ_M := $(RAS1_DRV_SRC:$(RAS1_DIR_)%.c=$(OBJ_)%.$O)
-RAS1_DRV_OBJ_S := $(OBJ_)raster.$O
+RASTER_DRV_OBJ_M := $(RASTER_DRV_SRC:$(RASTER_DIR)/%.c=$(OBJ_DIR)/%.$O)
+RASTER_DRV_OBJ_S := $(OBJ_DIR)/raster.$O
 
-# raster1 driver source file for single build
+# raster driver source file for single build
 #
-RAS1_DRV_SRC_S := $(RAS1_DIR_)raster.c
+RASTER_DRV_SRC_S := $(RASTER_DIR)/raster.c
 
 
-# raster1 driver - single object
+# raster driver - single object
 #
-$(RAS1_DRV_OBJ_S): $(RAS1_DRV_SRC_S) $(RAS1_DRV_SRC) \
-                   $(FREETYPE_H) $(RAS1_DRV_H)
-	$(RAS1_COMPILE) $T$@ $(RAS1_DRV_SRC_S)
+$(RASTER_DRV_OBJ_S): $(RASTER_DRV_SRC_S) $(RASTER_DRV_SRC) \
+                     $(FREETYPE_H) $(RASTER_DRV_H)
+	$(RASTER_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(RASTER_DRV_SRC_S))
 
 
-# raster1 driver - multiple objects
+# raster driver - multiple objects
 #
-$(OBJ_)%.$O: $(RAS1_DIR_)%.c $(FREETYPE_H) $(RAS1_DRV_H)
-	$(RAS1_COMPILE) $T$@ $<
+$(OBJ_DIR)/%.$O: $(RASTER_DIR)/%.c $(FREETYPE_H) $(RASTER_DRV_H)
+	$(RASTER_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # update main driver object lists
 #
-DRV_OBJS_S += $(RAS1_DRV_OBJ_S)
-DRV_OBJS_M += $(RAS1_DRV_OBJ_M)
+DRV_OBJS_S += $(RASTER_DRV_OBJ_S)
+DRV_OBJS_M += $(RASTER_DRV_OBJ_M)
 
 
 # EOF

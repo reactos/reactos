@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -34,6 +34,9 @@
 #include "ttinterp.h"
 #endif
 
+#ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
+#include FT_TRUETYPE_UNPATENTED_H
+#endif
 
   /*************************************************************************/
   /*                                                                       */
@@ -69,6 +72,7 @@
   tt_glyphzone_done( TT_GlyphZone  zone )
   {
     FT_Memory  memory = zone->memory;
+
 
     if ( memory )
     {
@@ -200,26 +204,43 @@
       goto Exit;
 
     if ( face->root.face_flags & FT_FACE_FLAG_SCALABLE )
-      {
+    {
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
-        if ( !face->root.internal->incremental_interface )
-          error = tt_face_load_loca( face, stream );
-        if ( !error )
-          error = tt_face_load_cvt      ( face, stream ) ||
-                  tt_face_load_fpgm ( face, stream );
+      if ( !face->root.internal->incremental_interface )
+        error = tt_face_load_loca( face, stream );
+      if ( !error )
+        error = tt_face_load_cvt( face, stream ) ||
+                tt_face_load_fpgm( face, stream );
 
 #else
 
-        if ( !error )
-          error = tt_face_load_loca( face, stream ) ||
-                  tt_face_load_cvt      ( face, stream ) ||
-                  tt_face_load_fpgm ( face, stream );
+      if ( !error )
+        error = tt_face_load_loca( face, stream ) ||
+                tt_face_load_cvt( face, stream )  ||
+                tt_face_load_fpgm( face, stream );
 
 #endif
 
-      }
+    }
+
+#ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
+
+    /* Determine whether unpatented hinting is to be used for this face. */
+    face->unpatented_hinting =
+       ( library->debug_hooks[ FT_DEBUG_HOOK_UNPATENTED_HINTING ] != NULL );
+
+    {
+      int  i;
+
+
+      for ( i = 0; i < num_params && !face->unpatented_hinting; i++ )
+        if ( params[i].tag == FT_PARAM_TAG_UNPATENTED_HINTING )
+          face->unpatented_hinting = TRUE;
+    }
+
+#endif /* TT_CONFIG_OPTION_UNPATENTED_HINTING */
 
     /* initialize standard glyph loading routines */
     TT_Init_Glyph_Loading( face );
@@ -569,7 +590,7 @@
       size->ttmetrics.y_ratio = 0x10000L;
     }
 
-    /* Compute root ascender, descender, test height, and max_advance */
+    /* Compute root ascender, descender, text height, and max_advance */
     metrics->ascender    = ( FT_MulFix( face->root.ascender,
                                         metrics->y_scale ) + 32 ) & -64;
     metrics->descender   = ( FT_MulFix( face->root.descender,
@@ -704,39 +725,38 @@
 
     sbit_metrics = &size->strike_metrics;
 
-    error = sfnt->set_sbit_strike(face,
-                                  metrics->x_ppem, metrics->y_ppem,
-                                  &strike_index);
+    error = sfnt->set_sbit_strike( face,
+                                   metrics->x_ppem, metrics->y_ppem,
+                                   &strike_index );
 
     if ( !error )
     {
       TT_SBit_Strike  strike = face->sbit_strikes + strike_index;
 
 
-      sbit_metrics->x_ppem      = metrics->x_ppem;
-      sbit_metrics->y_ppem      = metrics->y_ppem;
+      sbit_metrics->x_ppem = metrics->x_ppem;
+      sbit_metrics->y_ppem = metrics->y_ppem;
 #if 0
       /*
        * sbit_metrics->?_scale
        * are not used now.
        */
-      sbit_metrics->x_scale     = 1 << 16;
-      sbit_metrics->y_scale     = 1 << 16;
+      sbit_metrics->x_scale = 1 << 16;
+      sbit_metrics->y_scale = 1 << 16;
 #endif
 
-      sbit_metrics->ascender    = strike->hori.ascender  << 6;
-      sbit_metrics->descender   = strike->hori.descender << 6;
+      sbit_metrics->ascender  = strike->hori.ascender << 6;
+      sbit_metrics->descender = strike->hori.descender << 6;
 
       /* XXX: Is this correct? */
-      sbit_metrics->height      = sbit_metrics->ascender -
-                                  sbit_metrics->descender;
+      sbit_metrics->height = sbit_metrics->ascender - sbit_metrics->descender;
 
       /* XXX: Is this correct? */
       sbit_metrics->max_advance = ( strike->hori.min_origin_SB  +
                                     strike->hori.max_width      +
                                     strike->hori.min_advance_SB ) << 6;
 
-      size->strike_index = strike_index;
+      size->strike_index = (FT_UInt)strike_index;
     }
     else
     {

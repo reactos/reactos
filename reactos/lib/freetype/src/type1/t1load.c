@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 font loader (body).                                           */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -425,7 +425,7 @@
         token->start++;
 
       len = token->limit - token->start;
-      if ( len <= 0 )
+      if ( len == 0 )
       {
         error = T1_Err_Invalid_File_Format;
         goto Exit;
@@ -693,9 +693,9 @@
 
 
   static FT_Error
-  t1_load_keyword( T1_Face    face,
-                   T1_Loader  loader,
-                   T1_Field   field )
+  t1_load_keyword( T1_Face         face,
+                   T1_Loader       loader,
+                   const T1_Field  field )
   {
     FT_Error  error;
     void*     dummy_object;
@@ -795,7 +795,7 @@
              c != '}' &&
              c != '/' &&
              c != '%' &&
-             ! is_space( c ) 
+             ! is_space( c )
              );
  }
 
@@ -841,71 +841,6 @@
   /* we will now define the routines used to handle */
   /* the `/Encoding', `/Subrs', and `/CharStrings'  */
   /* dictionaries                                   */
-
-  static void
-  parse_font_name( T1_Face    face,
-                   T1_Loader  loader )
-  {
-    T1_Parser   parser = &loader->parser;
-    FT_Error    error;
-    FT_Memory   memory = parser->root.memory;
-    FT_PtrDist  len;
-    FT_Byte*    cur;
-    FT_Byte*    cur2;
-    FT_Byte*    limit;
-
-
-    if ( face->type1.font_name )
-      /*  with synthetic fonts, it's possible we get here twice  */
-      return;
-
-    T1_Skip_Spaces( parser );
-
-    cur   = parser->root.cursor;
-    limit = parser->root.limit;
-
-    if ( cur >= limit - 1 || *cur != '/' )
-      return;
-
-    cur++;
-    cur2 = cur;
-    while ( cur2 < limit && is_name_char( *cur2 ) )
-      cur2++;
-
-    len = cur2 - cur;
-    if ( len > 0 )
-    {
-      if ( FT_ALLOC( face->type1.font_name, len + 1 ) )
-      {
-        parser->root.error = error;
-        return;
-      }
-
-      FT_MEM_COPY( face->type1.font_name, cur, len );
-      face->type1.font_name[len] = '\0';
-    }
-    parser->root.cursor = cur2;
-  }
-
-
-#if 0
-  static void
-  parse_font_bbox( T1_Face    face,
-                   T1_Loader  loader )
-  {
-    T1_Parser  parser = &loader->parser;
-    FT_Fixed   temp[4];
-    FT_BBox*   bbox   = &face->type1.font_bbox;
-
-
-    (void)T1_ToFixedArray( parser, 4, temp, 0 );
-    bbox->xMin = FT_RoundFix( temp[0] );
-    bbox->yMin = FT_RoundFix( temp[1] );
-    bbox->xMax = FT_RoundFix( temp[2] );
-    bbox->yMax = FT_RoundFix( temp[3] );
-  }
-#endif
-
 
   static void
   parse_font_matrix( T1_Face    face,
@@ -1213,12 +1148,12 @@
         FT_MEM_COPY( temp, base, size );
         psaux->t1_decrypt( temp, size, 4330 );
         size -= face->type1.private_dict.lenIV;
-        error = T1_Add_Table( table, idx,
+        error = T1_Add_Table( table, (FT_Int)idx,
                               temp + face->type1.private_dict.lenIV, size );
         FT_FREE( temp );
       }
       else
-        error = T1_Add_Table( table, idx, base, size );
+        error = T1_Add_Table( table, (FT_Int)idx, base, size );
       if ( error )
         goto Fail;
     }
@@ -1498,10 +1433,6 @@
 #include "t1tokens.h"
 
     /* now add the special functions... */
-    T1_FIELD_CALLBACK( "FontName", parse_font_name )
-#if 0
-    T1_FIELD_CALLBACK( "FontBBox", parse_font_bbox )
-#endif
     T1_FIELD_CALLBACK( "FontMatrix", parse_font_matrix )
     T1_FIELD_CALLBACK( "Encoding", parse_encoding )
     T1_FIELD_CALLBACK( "Subrs", parse_subrs )
@@ -1519,11 +1450,16 @@
   };
 
 
+#define T1_FIELD_COUNT                                           \
+          ( sizeof ( t1_keywords ) / sizeof ( t1_keywords[0] ) )
+
+
   static FT_Error
   parse_dict( T1_Face    face,
               T1_Loader  loader,
               FT_Byte*   base,
-              FT_Long    size )
+              FT_Long    size,
+              FT_Byte*   keyword_flags )
   {
     T1_Parser  parser = &loader->parser;
 
@@ -1588,7 +1524,8 @@
           {
             {
               /* now, compare the immediate name to the keyword table */
-              T1_Field  keyword = (T1_Field)t1_keywords;
+              T1_Field  keyword      = (T1_Field)t1_keywords;
+              FT_Byte*  keyword_flag = keyword_flags;
 
 
               for (;;)
@@ -1615,17 +1552,25 @@
                     /* we found it -- run the parsing callback! */
                     parser->root.cursor = cur2;
                     T1_Skip_Spaces( parser );
-                    parser->root.error = t1_load_keyword( face,
-                                                          loader,
-                                                          keyword );
-                    if ( parser->root.error )
-                      return parser->root.error;
+                    
+                    /* we only record the first instance of any      */
+                    /* field to deal adequately with synthetic fonts */
+                    if ( keyword_flag[0] == 0 )
+                    {
+                      parser->root.error = t1_load_keyword( face,
+                                                            loader,
+                                                            keyword );
+                      if ( parser->root.error )
+                        return parser->root.error;
+                    }
+                    keyword_flag[0] = 1;
 
                     cur = parser->root.cursor;
                     break;
                   }
                 }
                 keyword++;
+                keyword_flag++;
               }
             }
           }
@@ -1681,6 +1626,7 @@
     T1_Parser      parser;
     T1_Font        type1 = &face->type1;
     FT_Error       error;
+    FT_Byte        keyword_flags[T1_FIELD_COUNT];
 
     PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
@@ -1701,7 +1647,16 @@
     if ( error )
       goto Exit;
 
-    error = parse_dict( face, &loader, parser->base_dict, parser->base_len );
+    {
+      FT_UInt  n;
+      
+
+      for ( n = 0; n < T1_FIELD_COUNT; n++ )
+        keyword_flags[n] = 0;
+    }
+
+    error = parse_dict( face, &loader, parser->base_dict, parser->base_len,
+                        keyword_flags );
     if ( error )
       goto Exit;
 
@@ -1710,7 +1665,8 @@
       goto Exit;
 
     error = parse_dict( face, &loader, parser->private_dict,
-                        parser->private_len );
+                        parser->private_len,
+                        keyword_flags );
     if ( error )
       goto Exit;
 
@@ -1793,6 +1749,15 @@
             }
           }
       }
+      /* Yes, this happens: Certain PDF-embedded fonts have only a ".notdef"
+       * glyph defined!
+       */
+      if ( min_char > max_char )
+      {
+        min_char = 0;
+        max_char = loader.encoding_table.max_elems;
+      }
+
       type1->encoding.code_first = min_char;
       type1->encoding.code_last  = max_char;
       type1->encoding.num_chars  = loader.num_chars;

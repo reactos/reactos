@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing Windows FNT specific info (body).         */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2003 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -23,10 +23,11 @@
 
 
   FT_EXPORT_DEF( FT_Error )
-  FT_Get_WinFNT_Header( FT_Face              face,
-                        FT_WinFNT_HeaderRec *header )
+  FT_Get_WinFNT_Header( FT_Face               face,
+                        FT_WinFNT_HeaderRec  *header )
   {
-    FT_Error     error;
+    FT_Error  error;
+
 
     error = FT_Err_Invalid_Argument;
 
@@ -38,13 +39,14 @@
       if ( driver->clazz && driver->clazz->module_name              &&
            ft_strcmp( driver->clazz->module_name, "winfonts" ) == 0 )
       {
-        FNT_Size  size = (FNT_Size)face->size;
-        FNT_Font  font = size->font;
+        FNT_Face  fnt_face = (FNT_Face)face;
+        FNT_Font  font     = fnt_face->font;
 
-        if (font)
+
+        if ( font )
         {
-          FT_MEM_COPY( header, &font->header, sizeof(*header) );
-          error    = 0;
+          FT_MEM_COPY( header, &font->header, sizeof ( *header ) );
+          error = FT_Err_Ok;
         }
       }
     }

@@ -1,8 +1,8 @@
-/*  pcfdriver.c
+/*  pcfdrivr.c
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000-2001, 2002 by
+    Copyright (C) 2000, 2001, 2002, 2003 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -35,7 +35,7 @@ THE SOFTWARE.
 #include FT_BDF_H
 
 #include "pcf.h"
-#include "pcfdriver.h"
+#include "pcfdrivr.h"
 #include "pcfutil.h"
 #include "pcfread.h"
 
@@ -63,7 +63,7 @@ THE SOFTWARE.
     cmap->num_encodings = (FT_UInt)face->nencodings;
     cmap->encodings     = face->encodings;
 
-    return FT_Err_Ok;
+    return PCF_Err_Ok;
   }
 
 
@@ -242,9 +242,10 @@ THE SOFTWARE.
     {
       FT_Error  error2;
 
-      /* this didn't work, try gzip support !! */
+
+      /* this didn't work, try gzip support! */
       error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
-      if ( error2 == FT_Err_Unimplemented_Feature )
+      if ( error2 == PCF_Err_Unimplemented_Feature )
         goto Fail;
 
       error = error2;
@@ -273,10 +274,21 @@ THE SOFTWARE.
       if ( ( charset_registry != NULL ) &&
            ( charset_encoding != NULL ) )
       {
-        if ( !ft_strcmp( face->charset_registry, "ISO10646" )     ||
-             ( !ft_strcmp( face->charset_registry, "ISO8859" ) &&
-               !ft_strcmp( face->charset_encoding, "1" )       )  )
+        char*  s = face->charset_registry;
+
+
+        /* Uh, oh, compare first letters manually to avoid dependency
+           on locales. */
+        if ( ( s[0] == 'i' || s[0] == 'I' ) &&
+             ( s[1] == 's' || s[1] == 'S' ) &&
+             ( s[2] == 'o' || s[2] == 'O' ) )
+        {
+          s += 3;
+          if ( !ft_strcmp( s, "10646" )                      ||
+               ( !ft_strcmp( s, "8859" ) &&
+                 !ft_strcmp( face->charset_encoding, "1" ) ) )
           unicode_charmap = 1;
+        }
       }
 
       {
@@ -442,9 +454,9 @@ THE SOFTWARE.
     slot->bitmap_left = metric->leftSideBearing;
     slot->bitmap_top  = metric->ascent;
 
-    slot->metrics.horiAdvance  = metric->characterWidth << 6 ;
-    slot->metrics.horiBearingX = metric->leftSideBearing << 6 ;
-    slot->metrics.horiBearingY = metric->ascent << 6 ;
+    slot->metrics.horiAdvance  = metric->characterWidth << 6;
+    slot->metrics.horiBearingX = metric->leftSideBearing << 6;
+    slot->metrics.horiBearingY = metric->ascent << 6;
     slot->metrics.width        = ( metric->rightSideBearing -
                                    metric->leftSideBearing ) << 6;
     slot->metrics.height       = bitmap->rows << 6;
@@ -464,7 +476,8 @@ THE SOFTWARE.
                         const char*       prop_name,
                         BDF_PropertyRec  *aproperty )
   {
-    PCF_Property   prop;
+    PCF_Property  prop;
+
 
     prop = pcf_find_property( face, prop_name );
     if ( prop != NULL )
@@ -476,16 +489,17 @@ THE SOFTWARE.
       }
       else
       {
-       /* apparently, the PCF driver loads all properties as signed integers !
-        * this really doesn't seem to be a problem, because this is
-        * sufficient for any meaningful values
-        */
+        /* Apparently, the PCF driver loads all properties as signed integers!
+         * This really doesn't seem to be a problem, because this is
+         * sufficient for any meaningful values.
+         */
         aproperty->type      = BDF_PROPERTY_TYPE_INTEGER;
         aproperty->u.integer = prop->value.integer;
       }
       return 0;
     }
-    return FT_Err_Invalid_Argument;
+
+    return PCF_Err_Invalid_Argument;
   }
 
 
@@ -506,7 +520,8 @@ THE SOFTWARE.
   const FT_Driver_ClassRec  pcf_driver_class =
   {
     {
-      ft_module_font_driver,
+      FT_MODULE_FONT_DRIVER        |
+      FT_MODULE_DRIVER_NO_OUTLINES,
       sizeof ( FT_DriverRec ),
 
       "pcf",

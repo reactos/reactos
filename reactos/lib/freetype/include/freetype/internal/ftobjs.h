@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (specification).                   */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -112,7 +112,7 @@ FT_BEGIN_HEADER
   /*   return an error later when trying to load the glyph).               */
   /*                                                                       */
   /*   It also check that fields that must be a multiple of 2, 4, or 8     */
-  /*   dont' have incorrect values, etc.                                   */
+  /*   don't have incorrect values, etc.                                   */
   /*                                                                       */
   /* FT_VALIDATE_PARANOID ::                                               */
   /*   Only for font debugging.  Checks that a table follows the           */
@@ -239,7 +239,7 @@ FT_BEGIN_HEADER
 
   typedef struct  FT_CMap_ClassRec_
   {
-    FT_UInt                size;
+    FT_ULong               size;
     FT_CMap_InitFunc       init;
     FT_CMap_DoneFunc       done;
     FT_CMap_CharIndexFunc  char_index;
@@ -296,9 +296,6 @@ FT_BEGIN_HEADER
   /*    transform_flags  :: Some flags used to classify the transform.     */
   /*                        Only used by the convenience functions.        */
   /*                                                                       */
-  /*    hint_flags       :: Some flags used to change the hinters'         */
-  /*                        behaviour.  Only used for debugging for now.   */
-  /*                                                                       */
   /*    postscript_name  :: Postscript font name for this face.            */
   /*                                                                       */
   /*    incremental_interface ::                                           */
@@ -317,8 +314,6 @@ FT_BEGIN_HEADER
     FT_Matrix    transform_matrix;
     FT_Vector    transform_delta;
     FT_Int       transform_flags;
-
-    FT_UInt32    hint_flags;
 
     const char*  postscript_name;
 
@@ -343,6 +338,11 @@ FT_BEGIN_HEADER
   /*    loader            :: The glyph loader object used to load outlines */
   /*                         into the glyph slot.                          */
   /*                                                                       */
+  /*    flags             :: Possible values are zero or                   */
+  /*                         FT_GLYPH_OWN_BITMAP.  The latter indicates    */
+  /*                         that the FT_GlyphSlot structure owns the      */
+  /*                         bitmap buffer.                                */
+  /*                                                                       */
   /*    glyph_transformed :: Boolean.  Set to TRUE when the loaded glyph   */
   /*                         must be transformed through a specific        */
   /*                         font transformation.  This is _not_ the same  */
@@ -357,9 +357,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*    glyph_hints       :: Format-specific glyph hints management.       */
   /*                                                                       */
+
+#define FT_GLYPH_OWN_BITMAP  0x1
+
   typedef struct  FT_Slot_InternalRec_
   {
     FT_GlyphLoader  loader;
+    FT_UInt         flags;
     FT_Bool         glyph_transformed;
     FT_Matrix       glyph_matrix;
     FT_Vector       glyph_delta;
@@ -416,25 +420,25 @@ FT_BEGIN_HEADER
 
 
 #define FT_MODULE_IS_DRIVER( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                    ft_module_font_driver )
+                                    FT_MODULE_FONT_DRIVER )
 
 #define FT_MODULE_IS_RENDERER( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                      ft_module_renderer )
+                                      FT_MODULE_RENDERER )
 
 #define FT_MODULE_IS_HINTER( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                    ft_module_hinter )
+                                    FT_MODULE_HINTER )
 
 #define FT_MODULE_IS_STYLER( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                    ft_module_styler )
+                                    FT_MODULE_STYLER )
 
 #define FT_DRIVER_IS_SCALABLE( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                      ft_module_driver_scalable )
+                                      FT_MODULE_DRIVER_SCALABLE )
 
 #define FT_DRIVER_USES_OUTLINES( x )  !( FT_MODULE_CLASS( x )->module_flags & \
-                                         ft_module_driver_no_outlines )
+                                         FT_MODULE_DRIVER_NO_OUTLINES )
 
 #define FT_DRIVER_HAS_HINTER( x )  ( FT_MODULE_CLASS( x )->module_flags & \
-                                     ft_module_driver_has_hinter )
+                                     FT_MODULE_DRIVER_HAS_HINTER )
 
 
   /*************************************************************************/
@@ -537,28 +541,30 @@ FT_BEGIN_HEADER
   FT_Done_GlyphSlot( FT_GlyphSlot  slot );
 
  /* */
- 
+
  /*
-  * free the bitmap of a given glyphslot when needed
-  * (i.e. only when it was allocated with ft_glyphslot_alloc_bitmap)
+  * Free the bitmap of a given glyphslot when needed
+  * (i.e., only when it was allocated with ft_glyphslot_alloc_bitmap).
   */
   FT_BASE( void )
   ft_glyphslot_free_bitmap( FT_GlyphSlot  slot );
- 
+
+
  /*
-  * allocate a new bitmap buffer in a glyph slot
+  * Allocate a new bitmap buffer in a glyph slot.
   */
   FT_BASE( FT_Error )
   ft_glyphslot_alloc_bitmap( FT_GlyphSlot  slot,
                              FT_ULong      size );
 
+
  /*
-  * set the bitmap buffer in a glyph slot to a given pointer.
-  * the buffer will not be freed by a later call to ft_glyphslot_free_bitmap
+  * Set the bitmap buffer in a glyph slot to a given pointer.
+  * The buffer will not be freed by a later call to ft_glyphslot_free_bitmap.
   */
   FT_BASE( void )
-  ft_glyphslot_set_bitmap( FT_GlyphSlot   slot,
-                           FT_Pointer     buffer );
+  ft_glyphslot_set_bitmap( FT_GlyphSlot  slot,
+                           FT_Byte*      buffer );
 
 
   /*************************************************************************/
@@ -667,8 +673,18 @@ FT_BEGIN_HEADER
   /*************************************************************************/
 
 
-#define FT_DEBUG_HOOK_TRUETYPE  0
-#define FT_DEBUG_HOOK_TYPE1     1
+/* this hook is used by the TrueType debugger. It must be set to an alternate
+ * truetype bytecode interpreter function
+ */
+#define FT_DEBUG_HOOK_TRUETYPE            0
+
+
+/* set this debug hook to a non-null pointer to force unpatented hinting
+ * for all faces when both TT_CONFIG_OPTION_BYTECODE_INTERPRETER and
+ * TT_CONFIG_OPTION_UNPATENTED_HINTING are defined. this is only used
+ * during debugging
+ */
+#define FT_DEBUG_HOOK_UNPATENTED_HINTING  1
 
 
   /*************************************************************************/

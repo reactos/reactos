@@ -1456,6 +1456,9 @@ FT_BEGIN_HEADER
   /*                            interpreters field is also used to hook    */
   /*                            the debugger in `ttdebug'.                 */
   /*                                                                       */
+  /*    unpatented_hinting   :: If true, use only unpatented methods in    */
+  /*                            the bytecode interpreter.                  */
+  /*                                                                       */
   /*    extra                :: Reserved for third-party font drivers.     */
   /*                                                                       */
   typedef struct  TT_FaceRec_
@@ -1559,6 +1562,10 @@ FT_BEGIN_HEADER
     /* used to hook the debugger for the `ttdebug' utility.        */
     TT_Interpreter        interpreter;
 
+#ifdef TT_CONFIG_OPTION_UNPATENTED_HINTING
+    /* Use unpatented hinting only. */
+    FT_Bool               unpatented_hinting;
+#endif
 
     /***********************************************************************/
     /*                                                                     */

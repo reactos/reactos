@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PostScript Type 1 decoding routines (body).                          */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 by                                           */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -241,8 +241,8 @@
       /* subglyph 1 = accent character */
       subg->index = achar_index;
       subg->flags = FT_SUBGLYPH_FLAG_ARGS_ARE_XY_VALUES;
-      subg->arg1  = adx - asb;
-      subg->arg2  = ady;
+      subg->arg1  = (FT_Int)( adx - asb );
+      subg->arg2  = (FT_Int)ady;
 
       /* set up remaining glyph fields */
       glyph->num_subglyphs = 2;
@@ -565,7 +565,7 @@
           goto Stack_Underflow;
 
         top -= 2;
-        switch ( top[1] )
+        switch ( (FT_Int)top[1] )
         {
         case 1:                     /* start flex feature */
           if ( top[0] != 0 )
@@ -706,7 +706,7 @@
             values = top;
             for ( nn = 0; nn < num_points; nn++ )
             {
-              FT_Int  tmp = values[0];
+              FT_Long  tmp = values[0];
 
 
               for ( mm = 1; mm < blend->num_designs; mm++ )
@@ -785,8 +785,8 @@
 
         case op_seac:
           /* return immediately after the processing */
-          return t1operator_seac( decoder, top[0], top[1],
-                                           top[2], top[3], top[4] );
+          return t1operator_seac( decoder, top[0], top[1], top[2],
+                                           (FT_Int)top[3], (FT_Int)top[4] );
 
         case op_sbw:
           FT_TRACE4(( " sbw" ));
@@ -945,7 +945,7 @@
 
             FT_TRACE4(( " callsubr" ));
 
-            idx = top[0];
+            idx = (FT_Int)top[0];
             if ( idx < 0 || idx >= (FT_Int)decoder->num_subrs )
             {
               FT_ERROR(( "t1_decoder_parse_charstrings: "
@@ -1148,7 +1148,6 @@
 
     decoder->num_glyphs     = (FT_UInt)face->num_glyphs;
     decoder->glyph_names    = glyph_names;
-    decoder->hint_flags     = face->internal->hint_flags;
     decoder->hint_mode      = hint_mode;
     decoder->blend          = blend;
     decoder->parse_callback = parse_callback;

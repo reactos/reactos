@@ -1,13 +1,23 @@
-Note that the list of known bugs for FreeType 2 is now located in the
-document "docs/BUGS".
-
 Here is a list of items that need to be addressed in FreeType 2; they are
 not exactly bugs, but should be considered though:
 
 * Implement stem3/counter hints properly in the Postscript hinter.
 
-* FInalize the cache sub-system. If has been in beta for too long :-)
+* Finalize the cache sub-system.  It has been in beta far too long :-)
 
 * The automatic and Postscript hinters have been improved to increase
-  the quality of AA text, but Monochrome and LCD hinting still suck. we
-  need to do something about that..
+  the quality of AA text, but Monochrome and LCD hinting still suck.  We
+  need to do something about that.
+
+* Add CIDCMap support to the CID driver.
+
+* Add track kerning support to the Type1 and PFR driver and the API
+  (The degree of kerning, e.g. light, normal or tight, and
+  the glyph size has to be passed as parameter).
+
+* Add kerning (AFM file) support to the CID driver.
+
+* Possibly add support for reading PFM files.
+
+
+--- end of TODO ---

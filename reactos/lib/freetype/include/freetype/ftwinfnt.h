@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing Windows fnt-specific data.                */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2003 by                                                      */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -93,31 +93,31 @@ FT_BEGIN_HEADER
   } FT_WinFNT_HeaderRec, *FT_WinFNT_Header;
 
 
-
  /**********************************************************************
   *
   * @function:
   *    FT_Get_WinFNT_Header
   *
   * @description:
-  *    Retrieves a Windows FNT font info header.
+  *    Retrieve a Windows FNT font info header.
   *
   * @input:
-  *    face   :: handle to input face
+  *    face    :: A handle to the input face.
   *
   * @output:
-  *    header :: WinFNT header.
+  *    aheader :: The WinFNT header.
   *
   * @return:
   *   FreeType error code.  0 means success.
   *
   * @note:
-  *   This function only works with Windows FNT faces, returning an erro
+  *   This function only works with Windows FNT faces, returning an error
   *   otherwise.
   */
   FT_EXPORT( FT_Error )
-  FT_Get_WinFNT_Header( FT_Face              face,
-                        FT_WinFNT_HeaderRec *header );
+  FT_Get_WinFNT_Header( FT_Face               face,
+                        FT_WinFNT_HeaderRec  *aheader );
+
 
  /* */
 

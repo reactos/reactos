@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level SFNT driver interface (body).                             */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -149,7 +149,9 @@
       FT_Memory         memory = face->root.memory;
       TT_NameEntryRec*  name   = face->name_table.names + found_win;
       FT_UInt           len    = name->stringLength / 2;
-      FT_Error          error;
+      FT_Error          error  = SFNT_Err_Ok;
+
+      FT_UNUSED( error );
 
 
       if ( !FT_ALLOC( result, name->stringLength + 1 ) )
@@ -189,7 +191,9 @@
       FT_Memory         memory = face->root.memory;
       TT_NameEntryRec*  name   = face->name_table.names + found_apple;
       FT_UInt           len    = name->stringLength;
-      FT_Error          error;
+      FT_Error          error  = SFNT_Err_Ok;
+
+      FT_UNUSED( error );
 
 
       if ( !FT_ALLOC( result, len + 1 ) )

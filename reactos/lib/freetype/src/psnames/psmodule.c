@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    PSNames module implementation (body).                                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,7 +44,7 @@
     char    temp[64];
 
 
-    /* if the name begins with `uni', then the glyph name may be a */
+    /* If the name begins with `uni', then the glyph name may be a */
     /* hard-coded unicode character code.                          */
     if ( glyph_name[0] == 'u' &&
          glyph_name[1] == 'n' &&
@@ -83,7 +83,44 @@
 
         value = ( value << 4 ) + d;
       }
-      if ( count == 0 )
+
+      /* there must be exactly four hex digits */
+      if ( ( *p == '\0' || *p == '.' ) && count == 0 )
+        return value;
+    }
+
+    /* If the name begins with `u', followed by four to six uppercase */
+    /* hexadicimal digits, it is a hard-coded unicode character code. */
+    if ( glyph_name[0] == 'u' )
+    {
+      FT_Int       count;
+      FT_ULong     value = 0;
+      const char*  p     = glyph_name + 1;
+
+
+      for ( count = 6; count > 0; count--, p++ )
+      {
+        char          c = *p;
+        unsigned int  d;
+
+
+        d = (unsigned char)c - '0';
+        if ( d >= 10 )
+        {
+          d = (unsigned char)c - 'A';
+          if ( d >= 6 )
+            d = 16;
+          else
+            d += 10;
+        }
+
+        if ( d >= 16 )
+          break;
+
+        value = ( value << 4 ) + d;
+      }
+
+      if ( ( *p == '\0' || *p == '.' ) && count <= 2 )
         return value;
     }
 
@@ -170,9 +207,9 @@
         {
           uni_char = ps_unicode_value( gname );
 
-          if ( uni_char != 0 && uni_char != 0xFFFF )
+          if ( uni_char != 0 && uni_char != 0xFFFFL )
           {
-            map->unicode     = uni_char;
+            map->unicode     = (FT_UInt)uni_char;
             map->glyph_index = n;
             map++;
           }
@@ -231,7 +268,7 @@
         max = mid - 1;
     }
 
-    return 0xFFFF;
+    return 0xFFFFU;
   }
 
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType and CFF data/program tables loader (body).                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -1505,8 +1505,8 @@
                     FT_ULong     base_offset,
                     FT_ULong     offset )
   {
-    FT_Memory  memory     = stream->memory;
-    FT_Error   error      = 0;
+    FT_Memory  memory = stream->memory;
+    FT_Error   error  = 0;
     FT_UShort  glyph_sid;
 
 
@@ -1557,7 +1557,6 @@
 
           while ( j < num_glyphs )
           {
-
             /* Read the first glyph sid of the range. */
             if ( FT_READ_USHORT( glyph_sid ) )
               goto Exit;
@@ -1595,7 +1594,7 @@
       /* In order to use a predefined charset, the following must be  */
       /* true: The charset constructed for the glyphs in the font's   */
       /* charstrings dictionary must match the predefined charset in  */
-      /* the first num_glyphs                                         */
+      /* the first num_glyphs.                                        */
 
       charset->offset = offset;  /* record charset type */
 
@@ -1680,7 +1679,6 @@
   }
 
 
-
   static void
   cff_encoding_done( CFF_Encoding  encoding )
   {
@@ -1688,7 +1686,6 @@
     encoding->offset = 0;
     encoding->count  = 0;
   }
-
 
 
   static FT_Error
@@ -1699,11 +1696,11 @@
                      FT_ULong      base_offset,
                      FT_ULong      offset )
   {
-    FT_Error    error  = 0;
-    FT_UInt     count;
-    FT_UInt     j;
-    FT_UShort   glyph_sid;
-    FT_UInt     glyph_code;
+    FT_Error   error = 0;
+    FT_UInt    count;
+    FT_UInt    j;
+    FT_UShort  glyph_sid;
+    FT_UInt    glyph_code;
 
 
     /* Check for charset->sids.  If we do not have this, we fail. */
@@ -1720,8 +1717,8 @@
       encoding->codes[j] = 0;
     }
 
-    /* Note: The encoding table in a CFF font is indexed by glyph index,  */
-    /* where the first encoded glyph index is 1.  Hence, we read the char */
+    /* Note: The encoding table in a CFF font is indexed by glyph index;  */
+    /* the first encoded glyph index is 1.  Hence, we read the character  */
     /* code (`glyph_code') at index j and make the assignment:            */
     /*                                                                    */
     /*    encoding->codes[glyph_code] = j + 1                             */
@@ -1734,7 +1731,6 @@
 
     if ( offset > 1 )
     {
-
       encoding->offset = base_offset + offset;
 
       /* we need to parse the table to determine its size */
@@ -1749,9 +1745,10 @@
         {
           FT_Byte*  p;
 
-          /* by convention, GID 0 is always ".notdef" and is never */
-          /* coded in the font. Hence, the number of codes found   */
-          /* in the table is 'count+1'                             */
+
+          /* By convention, GID 0 is always ".notdef" and is never */
+          /* coded in the font.  Hence, the number of codes found  */
+          /* in the table is `count+1'.                            */
           /*                                                       */
           encoding->count = count + 1;
 
@@ -1781,7 +1778,7 @@
 
       case 1:
         {
-          FT_Byte  nleft;
+          FT_UInt  nleft;
           FT_UInt  i = 1;
           FT_UInt  k;
 
@@ -1821,7 +1818,7 @@
             }
           }
 
-          /* simple check, one never knows what can be found in a font */
+          /* simple check; one never knows what can be found in a font */
           if ( encoding->count > 256 )
             encoding->count = 256;
         }
@@ -1856,13 +1853,13 @@
           /* Assign code to SID mapping. */
           encoding->sids[glyph_code] = glyph_sid;
 
-          /* First, lookup GID which has been assigned to */
-          /* SID glyph_sid.                               */
+          /* First, look up GID which has been assigned to */
+          /* SID glyph_sid.                                */
           for ( gindex = 0; gindex < num_glyphs; gindex++ )
           {
             if ( charset->sids[gindex] == glyph_sid )
             {
-              encoding->codes[glyph_code] = (FT_UShort) gindex;
+              encoding->codes[glyph_code] = (FT_UShort)gindex;
               break;
             }
           }
@@ -1874,10 +1871,10 @@
       FT_UInt i;
 
 
-      /* We take into account the fact a CFF font can use a predefined  */
-      /* encoding without containing all of the glyphs encoded by this  */
-      /* encoding (see the note at the end of section 12 in the CFF     */
-      /* specification).                                                */
+      /* We take into account the fact a CFF font can use a predefined */
+      /* encoding without containing all of the glyphs encoded by this */
+      /* encoding (see the note at the end of section 12 in the CFF    */
+      /* specification).                                               */
 
       switch ( (FT_UInt)offset )
       {
@@ -1898,7 +1895,6 @@
         /* and charset.                                           */
 
         encoding->count = 0;
-
 
         for ( j = 0; j < 256; j++ )
         {
@@ -1923,8 +1919,8 @@
               encoding->codes[j] = (FT_UShort)i;
 
               /* update encoding count */
-              if ( encoding->count < j+1 )
-                encoding->count = j+1;
+              if ( encoding->count < j + 1 )
+                encoding->count = j + 1;
             }
           }
         }
@@ -1964,8 +1960,8 @@
     /* set defaults */
     FT_MEM_ZERO( top, sizeof ( *top ) );
 
-    top->underline_position  = -100;
-    top->underline_thickness = 50;
+    top->underline_position  = -100L << 16;
+    top->underline_thickness = 50L << 16;
     top->charstring_type     = 2;
     top->font_matrix.xx      = 0x10000L;
     top->font_matrix.yy      = 0x10000L;
@@ -1992,8 +1988,8 @@
       priv->blue_shift       = 7;
       priv->blue_fuzz        = 1;
       priv->lenIV            = -1;
-      priv->expansion_factor = (FT_Fixed)0.06 * 0x10000L;
-      priv->blue_scale       = (FT_Fixed)0.039625 * 0x10000L;
+      priv->expansion_factor = (FT_Fixed)( 0.06 * 0x10000L );
+      priv->blue_scale       = (FT_Fixed)( 0.039625 * 0x10000L * 1000 );
 
       cff_parser_init( &parser, CFF_CODE_PRIVATE, priv );
 
@@ -2207,7 +2203,7 @@
     if ( font->num_glyphs > 0 )
     {
       error = cff_charset_load( &font->charset, font->num_glyphs, stream,
-                              base_offset, dict->charset_offset );
+                                base_offset, dict->charset_offset );
       if ( error )
         goto Exit;
 

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,17 +13,10 @@
 # fully.
 
 
-DELETE   := del
-HOSTSEP  := $(strip \ )
-BUILD    := $(TOP_DIR)$(SEP)builds$(SEP)win32
-PLATFORM := win32
-
-# by default, we use "\" as a separator on Win32
-# but certain compilers accept "/" as well
-#
-ifndef SEP
-  SEP    := $(HOSTSEP)
-endif
+DELETE    := del
+SEP       := $(strip \ )
+BUILD_DIR := $(TOP_DIR)/builds/win32
+PLATFORM  := win32
 
 
 # The directory where all object files are placed.
@@ -36,7 +29,7 @@ endif
 #   make -f %TOP_DIR%/Makefile
 #
 ifndef OBJ_DIR
-  OBJ_DIR := $(TOP_DIR)$(SEP)objs
+  OBJ_DIR := $(TOP_DIR)/objs
 endif
 
 
@@ -57,5 +50,6 @@ LIBRARY := $(PROJECT)
 # The NO_OUTPUT macro is used to ignore the output of commands.
 #
 NO_OUTPUT = 2> nul
+
 
 # EOF

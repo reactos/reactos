@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PostScript Hinting module                                   */
 /*                                                                         */
-/*  Copyright 2001 by                                                      */
+/*  Copyright 2001, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,9 +21,7 @@
 #include <ft2build.h>
 #include "pshrec.c"
 #include "pshglob.c"
-#include "pshalgo1.c"
-#include "pshalgo2.c"
-#include "pshalgo3.c"
+#include "pshalgo.c"
 #include "pshmod.c"
 
 

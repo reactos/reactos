@@ -98,9 +98,9 @@
   static void
   BBox_Conic_Check( FT_Pos   y1,
                     FT_Pos   y2,
-                          FT_Pos   y3,
-                          FT_Pos*  min,
-                          FT_Pos*  max )
+                    FT_Pos   y3,
+                    FT_Pos*  min,
+                    FT_Pos*  max )
   {
     if ( y1 <= y3 )
     {

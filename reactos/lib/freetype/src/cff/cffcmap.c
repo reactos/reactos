@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF character mapping table (cmap) support (body).                   */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -36,7 +36,6 @@
     CFF_Encoding  encoding = &cff->encoding;
 
 
-    cmap->count = encoding->count;
     cmap->gids  = encoding->codes;
     
     return 0;
@@ -46,7 +45,6 @@
   FT_CALLBACK_DEF( void )
   cff_cmap_encoding_done( CFF_CMapStd  cmap )
   {
-    cmap->count = 0;
     cmap->gids  = NULL;
   }
 
@@ -58,7 +56,7 @@
     FT_UInt  result = 0;
 
 
-    if ( char_code < cmap->count )
+    if ( char_code < 256 )
       result = cmap->gids[char_code];
     
     return result;
@@ -75,14 +73,14 @@
 
     *pchar_code = 0;
 
-    if ( char_code < cmap->count )
+    if ( char_code < 255 )
     {
       FT_UInt  code = (FT_UInt)(char_code + 1);
       
 
       for (;;)
       {
-        if ( code >= cmap->count )
+        if ( code >= 256 )
           break;
           
         result = cmap->gids[code];
@@ -164,7 +162,7 @@
       pair = cmap->pairs;
       for ( n = 0; n < count; n++ )
       {
-        FT_UInt      sid   = charset->sids[n];
+        FT_UInt      sid = charset->sids[n];
         const char*  gname;
 
 
@@ -191,7 +189,7 @@
       {
         /* there are no unicode characters in here! */
         FT_FREE( cmap->pairs );
-        error = FT_Err_Invalid_Argument;
+        error = CFF_Err_Invalid_Argument;
       }
       else
       {

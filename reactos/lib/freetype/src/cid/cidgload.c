@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 Glyph Loader (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,15 +40,16 @@
   cid_load_glyph( T1_Decoder  decoder,
                   FT_UInt     glyph_index )
   {
-    CID_Face      face = (CID_Face)decoder->builder.face;
-    CID_FaceInfo  cid  = &face->cid;
-    FT_Byte*      p;
-    FT_UInt       fd_select;
-    FT_Stream     stream = face->root.stream;
-    FT_Error      error  = 0;
-    FT_Byte*      charstring = 0;
-    FT_Memory     memory = face->root.memory;
-    FT_UInt       glyph_length = 0;
+    CID_Face       face = (CID_Face)decoder->builder.face;
+    CID_FaceInfo   cid  = &face->cid;
+    FT_Byte*       p;
+    FT_UInt        fd_select;
+    FT_Stream      stream = face->root.stream;
+    FT_Error       error  = 0;
+    FT_Byte*       charstring = 0;
+    FT_Memory      memory = face->root.memory;
+    FT_ULong       glyph_length = 0;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
@@ -107,8 +108,7 @@
       fd_select    = (FT_UInt) cid_get_offset( &p, (FT_Byte)cid->fd_bytes );
       off1         = (FT_ULong)cid_get_offset( &p, (FT_Byte)cid->gd_bytes );
       p           += cid->fd_bytes;
-      glyph_length = (FT_UInt) cid_get_offset(
-                                 &p, (FT_Byte)cid->gd_bytes ) - off1;
+      glyph_length = cid_get_offset( &p, (FT_Byte)cid->gd_bytes ) - off1;
       FT_FRAME_EXIT();
 
       if ( glyph_length == 0 )
@@ -146,11 +146,11 @@
 
       /* Decrypt only if lenIV >= 0. */
       if ( decoder->lenIV >= 0 )
-        cid_decrypt( charstring, glyph_length, 4330 );
+        psaux->t1_decrypt( charstring, glyph_length, 4330 );
 
-      error = decoder->funcs.parse_charstrings( decoder,
-                                                charstring + cs_offset,
-                                                glyph_length - cs_offset  );
+      error = decoder->funcs.parse_charstrings(
+                decoder, charstring + cs_offset,
+                (FT_Int)glyph_length - cs_offset  );
     }
 
     FT_FREE( charstring );
@@ -158,15 +158,16 @@
 #ifdef FT_CONFIG_OPTION_INCREMENTAL
 
     /* Incremental fonts can optionally override the metrics. */
-    if ( !error                                       &&
-         face->root.internal->incremental_interface   &&
+    if ( !error                                                              &&
+         face->root.internal->incremental_interface                          &&
          face->root.internal->incremental_interface->funcs->get_glyph_metrics )
     {
       FT_Incremental_MetricsRec  metrics;
 
+
       metrics.bearing_x = decoder->builder.left_bearing.x;
-	  metrics.bearing_y = decoder->builder.left_bearing.y;
-	  metrics.advance   = decoder->builder.advance.x;
+      metrics.bearing_y = decoder->builder.left_bearing.y;
+      metrics.advance   = decoder->builder.advance.x;
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
                 glyph_index, FALSE, &metrics );
@@ -347,6 +348,7 @@
       {
         FT_BBox            cbox;
         FT_Glyph_Metrics*  metrics = &glyph->root.metrics;
+        FT_Vector          advance;
 
 
         /* copy the _unscaled_ advance width */
@@ -371,6 +373,15 @@
         FT_Outline_Translate( &glyph->root.outline,
                               font_offset.x,
                               font_offset.y );
+
+        advance.x = metrics->horiAdvance;
+        advance.y = 0;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->horiAdvance = advance.x + font_offset.x;
+        advance.x = 0;
+        advance.y = metrics->vertAdvance;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->vertAdvance = advance.y + font_offset.y;
 
         if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )
         {

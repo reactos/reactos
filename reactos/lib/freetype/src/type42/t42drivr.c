@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level Type 42 driver interface (body).                          */
 /*                                                                         */
-/*  Copyright 2002 by Roberto Alameda.                                     */
+/*  Copyright 2002, 2003 by Roberto Alameda.                               */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -123,10 +123,10 @@
   const FT_Driver_ClassRec  t42_driver_class =
   {
     {
-      ft_module_font_driver      |
-      ft_module_driver_scalable  |
+      FT_MODULE_FONT_DRIVER       |
+      FT_MODULE_DRIVER_SCALABLE   |
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-      ft_module_driver_has_hinter,
+      FT_MODULE_DRIVER_HAS_HINTER,
 #else
       0,
 #endif

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,7 +15,8 @@
 
 # compiler command line name
 #
-CC := cl
+CC           := cl
+COMPILER_SEP := $(SEP)
 
 
 # The object file extension (for standard and static libraries).  This can be
@@ -74,6 +75,7 @@ ANSIFLAGS := /Za
 # Library linking
 #
 #CLEAN_LIBRARY =
-LINK_LIBRARY  = lib /nologo /out:$@ $(OBJECTS_LIST)
+LINK_LIBRARY  = lib /nologo /out:$(subst /,$(COMPILER_SEP),$@ $(OBJECTS_LIST))
+
 
 # EOF

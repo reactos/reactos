@@ -1,6 +1,6 @@
 /*
  * Copyright 2000 Computing Research Labs, New Mexico State University
- * Copyright 2001, 2002 Francesco Zappa Nardelli
+ * Copyright 2001, 2002, 2003 Francesco Zappa Nardelli
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -183,10 +183,10 @@
   (*hash_free_func)( hashnode  node );
 
   static hashnode*
-  hash_bucket( char*       key,
-               hashtable*  ht )
+  hash_bucket( const char*  key,
+               hashtable*   ht )
   {
-    char*          kp  = key;
+    const char*    kp  = key;
     unsigned long  res = 0;
     hashnode*      bp  = ht->table, *ndp;
 
@@ -317,7 +317,7 @@
 
 
   static hashnode
-  hash_lookup( char*       key,
+  hash_lookup( const char* key,
                hashtable*  ht )
   {
     hashnode *np = hash_bucket( key, ht );
@@ -641,7 +641,7 @@
   {
     _bdf_line_func_t  cb;
     unsigned long     lineno;
-    int               n, res, done, refill, bytes, hold;
+    int               n, done, refill, bytes, hold;
     char              *ls, *le, *pp, *pe, *hp;
     char              *buf = 0;
     FT_Memory         memory = stream->memory;
@@ -661,7 +661,7 @@
     lineno = 1;
     buf[0] = 0;
 
-    res = done = 0;
+    done = 0;
     pp = ls = le = buf;
 
     bytes = 65536L;
@@ -696,7 +696,7 @@
           le -= n;
           n   = pe - pp;
 
-          FT_MEM_COPY( buf, pp, n );
+          FT_MEM_MOVE( buf, pp, n );
 
           pp     = buf + n;
           bytes  = 65536L - n;
@@ -1443,7 +1443,6 @@
     unsigned char*     bp;
     unsigned long      i, slen, nibbles;
 
-    _bdf_line_func_t*  next;
     _bdf_parse_t*      p;
     bdf_glyph_t*       glyph;
     bdf_font_t*        font;
@@ -1451,11 +1450,11 @@
     FT_Memory          memory;
     FT_Error           error = BDF_Err_Ok;
 
+    FT_UNUSED( call_data );
     FT_UNUSED( lineno );        /* only used in debug mode */
 
 
-    next = (_bdf_line_func_t *)call_data;
-    p    = (_bdf_parse_t *)    client_data;
+    p = (_bdf_parse_t *)client_data;
 
     font   = p->font;
     memory = font->memory;
@@ -1883,7 +1882,7 @@
       /*                                                                  */
       /* This is *always* done regardless of the options, because X11     */
       /* requires these two fields to compile fonts.                      */
-      if ( bdf_get_font_property( p->font, (char *)"FONT_ASCENT" ) == 0 )
+      if ( bdf_get_font_property( p->font, "FONT_ASCENT" ) == 0 )
       {
         p->font->font_ascent = p->font->bbx.ascent;
         ft_sprintf( nbuf, "%hd", p->font->bbx.ascent );
@@ -1895,7 +1894,7 @@
         p->font->modified = 1;
       }
 
-      if ( bdf_get_font_property( p->font, (char *)"FONT_DESCENT" ) == 0 )
+      if ( bdf_get_font_property( p->font, "FONT_DESCENT" ) == 0 )
       {
         p->font->font_descent = p->font->bbx.descent;
         ft_sprintf( nbuf, "%hd", p->font->bbx.descent );
@@ -2419,7 +2418,7 @@
 
   FT_LOCAL_DEF( bdf_property_t * )
   bdf_get_font_property( bdf_font_t*  font,
-                         char*        name )
+                         const char*  name )
   {
     hashnode  hn;
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType abstract glyph cache (specification).                       */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2003 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -120,10 +120,10 @@ FT_BEGIN_HEADER
             FTC_GLYPH_FAMILY( gfam )->item_count )
 
   /* compute a glyph request's hash value */
-#define FTC_GLYPH_FAMILY_HASH( gfam, gindex )                         \
-          ( (FT_UFast)(                                               \
-              ( FTC_GLYPH_FAMILY( gfam )->hash << 16 ) |              \
-              ( FTC_GLYPH_FAMILY_CHUNK( gfam, gindex ) & 0xFFFF ) ) )
+#define FTC_GLYPH_FAMILY_HASH( gfam, gindex )                          \
+          ( (FT_UFast)(                                                \
+              ( FTC_GLYPH_FAMILY( gfam )->hash << 16 ) |               \
+              ( FTC_GLYPH_FAMILY_CHUNK( gfam, gindex ) & 0xFFFFU ) ) )
 
   /* must be called in an FTC_Family_CompareFunc to update the query */
   /* whenever a glyph set is matched in the lookup, or when it       */
@@ -138,8 +138,8 @@ FT_BEGIN_HEADER
           } while ( 0 )
 
   /* retrieve glyph index of glyph node */
-#define FTC_GLYPH_NODE_GINDEX( x )                                 \
-          ( (FT_UInt)( FTC_GLYPH_NODE( x )->node.hash & 0xFFFF ) )
+#define FTC_GLYPH_NODE_GINDEX( x )                                  \
+          ( (FT_UInt)( FTC_GLYPH_NODE( x )->node.hash & 0xFFFFU ) )
 
 
   /*************************************************************************/

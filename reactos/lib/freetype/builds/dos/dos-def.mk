@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,15 +13,10 @@
 # fully.
 
 
-DELETE   := del
-HOSTSEP  := $(strip \ )
-BUILD    := $(TOP_DIR)$(SEP)builds$(SEP)dos
-PLATFORM := dos
-
-# except for DJGPP/GCC on Dos
-ifndef SEP
-SEP      := $(HOSTSEP)
-endif
+DELETE    := del
+SEP       := $(strip \ )
+BUILD_DIR := $(TOP_DIR)/builds/dos
+PLATFORM  := dos
 
 
 # The directory where all object files are placed.
@@ -34,7 +29,7 @@ endif
 #   make -f %TOP_DIR%/Makefile
 #
 ifndef OBJ_DIR
-  OBJ_DIR := $(TOP_DIR)$(SEP)objs
+  OBJ_DIR := $(TOP_DIR)/objs
 endif
 
 

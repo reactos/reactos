@@ -1,0 +1,18 @@
+How to prepare a new release
+----------------------------
+
+. include/freetype/freetype.h: Update FREETYPE_MAJOR, FREETYPE_MINOR, and
+  FREETYPE_PATCH.
+
+. builds/unix/configure.ac (version_info): Update according to the libtool
+  rules, then regenerate the configure script.
+
+. builds/freetype.mk (refdoc): Update the --title option.
+
+. docs/CHANGES: Document differences to last release.
+
+. README: Update.
+
+. docs/VERSION.DLL: Document changed version_info.
+
+. ChangeLog: Announce new release.

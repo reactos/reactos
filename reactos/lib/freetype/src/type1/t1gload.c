@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 Glyph Loader (body).                                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -98,8 +98,8 @@
       FT_Incremental_MetricsRec  metrics;
 
       metrics.bearing_x = decoder->builder.left_bearing.x;
-	  metrics.bearing_y = decoder->builder.left_bearing.y;
-	  metrics.advance   = decoder->builder.advance.x;
+      metrics.bearing_y = decoder->builder.left_bearing.y;
+      metrics.advance   = decoder->builder.advance.x;
       error = face->root.internal->incremental_interface->funcs->get_glyph_metrics(
                 face->root.internal->incremental_interface->object,
                 glyph_index, FALSE, &metrics );
@@ -130,7 +130,7 @@
       T1_Face  face = (T1_Face)decoder->builder.face;
 
 
-	  if ( face->root.internal->incremental_interface )
+      if ( face->root.internal->incremental_interface )
         face->root.internal->incremental_interface->funcs->free_glyph_data(
           face->root.internal->incremental_interface->object,
           &glyph_data );
@@ -143,7 +143,7 @@
 
   FT_LOCAL_DEF( FT_Error )
   T1_Compute_Max_Advance( T1_Face  face,
-                          FT_Int*  max_advance )
+                          FT_Pos*  max_advance )
   {
     FT_Error       error;
     T1_DecoderRec  decoder;
@@ -185,7 +185,7 @@
       if ( glyph_index == 0 || decoder.builder.advance.x > *max_advance )
         *max_advance = decoder.builder.advance.x;
         
-      /* ignore the error if one occured - skip to next glyph */
+      /* ignore the error if one occurred - skip to next glyph */
     }
 
     return T1_Err_Ok;
@@ -226,7 +226,9 @@
     FT_Matrix               font_matrix;
     FT_Vector               font_offset;
     FT_Data                 glyph_data;
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
     FT_Bool                 glyph_data_loaded = 0;
+#endif
 
 
     if ( load_flags & FT_LOAD_NO_RECURSE )
@@ -267,7 +269,9 @@
                                                 &glyph_data );
     if ( error )
       goto Exit;
+#ifdef FT_CONFIG_OPTION_INCREMENTAL
     glyph_data_loaded = 1;
+#endif
 
     font_matrix = decoder.font_matrix;
     font_offset = decoder.font_offset;
@@ -300,6 +304,7 @@
       {
         FT_BBox            cbox;
         FT_Glyph_Metrics*  metrics = &glyph->root.metrics;
+        FT_Vector          advance;
 
 
         /* copy the _unscaled_ advance width */
@@ -326,6 +331,15 @@
         FT_Outline_Translate( &glyph->root.outline,
                               font_offset.x,
                               font_offset.y );
+
+        advance.x = metrics->horiAdvance;
+        advance.y = 0;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->horiAdvance = advance.x + font_offset.x;
+        advance.x = 0;
+        advance.y = metrics->vertAdvance;
+        FT_Vector_Transform( &advance, &font_matrix );
+        metrics->vertAdvance = advance.y + font_offset.y;
 #endif
 
         if ( ( load_flags & FT_LOAD_NO_SCALE ) == 0 )

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (specification).            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -52,10 +52,10 @@ FT_BEGIN_HEADER
                 FT_Memory  memory );
 
   FT_LOCAL( FT_Error )
-  ps_table_add( PS_Table  table,
-                FT_Int    idx,
-                void*     object,
-                FT_Int    length );
+  ps_table_add( PS_Table    table,
+                FT_Int      idx,
+                void*       object,
+                FT_PtrDist  length );
 
   FT_LOCAL( void )
   ps_table_done( PS_Table  table );

@@ -46,11 +46,13 @@ abs_ft2_dir=`cd "$ft2_dir" && pwd`
 # build a dummy Makefile if we are not building in the source tree
 
 if test "$abs_curr_dir" != "$abs_ft2_dir"; then
-  echo "OBJ_DIR=$abs_curr_dir"          > Makefile
-  echo "TOP_DIR=$abs_ft2_dir"          >> Makefile
-  echo "OBJ_BUILD=$abs_curr_dir"       >> Makefile
-  echo "LIBTOOL=$abs_curr_dir/libtool" >> Makefile
-  echo "include $abs_ft2_dir/Makefile" >> Makefile
+  mkdir reference
+  echo "TOP_DIR=$abs_ft2_dir"             > Makefile
+  echo "OBJ_DIR=$abs_curr_dir"           >> Makefile
+  echo "OBJ_BUILD=$abs_curr_dir"         >> Makefile
+  echo "DOC_DIR=$abs_curr_dir/reference" >> Makefile
+  echo "LIBTOOL=$abs_curr_dir/libtool"   >> Makefile
+  echo "include $abs_ft2_dir/Makefile"   >> Makefile
 fi
 
 # call make

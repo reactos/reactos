@@ -125,10 +125,6 @@ FT_BEGIN_HEADER
   } PS_DimensionRec, *PS_Dimension;
 
 
-  /* magic value used within PS_HintsRec */
-#define PS_HINTS_MAGIC  0x68696e74   /* "hint" */
-
-
   /* glyph hints descriptor                                */
   /* dimension 0 => X coordinates + vertical hints/stems   */
   /* dimension 1 => Y coordinates + horizontal hints/stems */

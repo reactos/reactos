@@ -6,7 +6,7 @@
 /*    recorders (specification only).  These are used to support native    */
 /*    T1/T2 hints in the "type1", "cid" and "cff" font drivers.            */
 /*                                                                         */
-/*  Copyright 2001, 2002 by                                                */
+/*  Copyright 2001, 2002, 2003 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -261,13 +261,13 @@ FT_BEGIN_HEADER
   /*    been recorded.                                                     */
   /*                                                                       */
   /* @input:                                                               */
-  /*   hints      :: A handle to the Type 1 hints recorder.                */
+  /*   hints     :: A handle to the Type 1 hints recorder.                 */
   /*                                                                       */
-  /*   outline    :: A pointer to the target outline descriptor.           */
+  /*   outline   :: A pointer to the target outline descriptor.            */
   /*                                                                       */
-  /*   globals    :: The hinter globals for this font.                     */
+  /*   globals   :: The hinter globals for this font.                      */
   /*                                                                       */
-  /*   hint_flags :: Hinter bit flags.                                     */
+  /*   hint_mode :: Hinting information.                                   */
   /*                                                                       */
   /* @return:                                                              */
   /*   FreeType error code.  0 means success.                              */
@@ -542,13 +542,13 @@ FT_BEGIN_HEADER
   /*    method.                                                            */
   /*                                                                       */
   /* @input:                                                               */
-  /*    hints      :: A handle to the Type 2 hints recorder.               */
+  /*    hints     :: A handle to the Type 2 hints recorder.                */
   /*                                                                       */
-  /*    outline    :: A pointer to the target outline descriptor.          */
+  /*    outline   :: A pointer to the target outline descriptor.           */
   /*                                                                       */
-  /*    globals    :: The hinter globals for this font.                    */
+  /*    globals   :: The hinter globals for this font.                     */
   /*                                                                       */
-  /*    hint_flags :: Hinter bit flags.                                    */
+  /*    hint_mode :: Hinting information.                                  */
   /*                                                                       */
   /* @return:                                                              */
   /*   FreeType error code.  0 means success.                              */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID-keyed Type1 font loader (body).                                  */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -57,24 +57,6 @@
   }
 
 
-  FT_LOCAL_DEF( void )
-  cid_decrypt( FT_Byte*   buffer,
-               FT_Offset  length,
-               FT_UShort  seed )
-  {
-    while ( length > 0 )
-    {
-      FT_Byte  plain;
-
-
-      plain     = (FT_Byte)( *buffer ^ ( seed >> 8 ) );
-      seed      = (FT_UShort)( ( *buffer + seed ) * 52845U + 22719 );
-      *buffer++ = plain;
-      length--;
-    }
-  }
-
-
   /*************************************************************************/
   /*************************************************************************/
   /*****                                                               *****/
@@ -115,6 +97,10 @@
       object = (FT_Byte*)&cid->font_info;
       break;
 
+    case T1_FIELD_LOCATION_BBOX:
+      object = (FT_Byte*)&cid->font_bbox;
+      break;
+
     default:
       {
         CID_FaceDict  dict;
@@ -147,30 +133,12 @@
     if ( keyword->type == T1_FIELD_TYPE_INTEGER_ARRAY ||
          keyword->type == T1_FIELD_TYPE_FIXED_ARRAY   )
       error = cid_parser_load_field_table( &loader->parser, keyword,
-                                    &dummy_object );
+                                           &dummy_object );
     else
-      error = cid_parser_load_field( &loader->parser, keyword, &dummy_object );
+      error = cid_parser_load_field( &loader->parser,
+                                     keyword, &dummy_object );
   Exit:
     return error;
-  }
-
-
-  FT_CALLBACK_DEF( FT_Error )
-  parse_font_bbox( CID_Face     face,
-                   CID_Parser*  parser )
-  {
-    FT_Fixed  temp[4];
-    FT_BBox*  bbox = &face->cid.font_bbox;
-
-
-    (void)cid_parser_to_fixed_array( parser, 4, temp, 0 );
-    bbox->xMin = FT_RoundFix( temp[0] );
-    bbox->yMin = FT_RoundFix( temp[1] );
-    bbox->xMax = FT_RoundFix( temp[2] );
-    bbox->yMax = FT_RoundFix( temp[3] );
-
-    return CID_Err_Ok;       /* this is a callback function; */
-                            /* we must return an error code */
   }
 
 
@@ -272,20 +240,11 @@
 
 #include "cidtoken.h"
 
-    T1_FIELD_CALLBACK( "FontBBox", parse_font_bbox )
-    T1_FIELD_CALLBACK( "FDArray", parse_fd_array )
+    T1_FIELD_CALLBACK( "FDArray",    parse_fd_array )
     T1_FIELD_CALLBACK( "FontMatrix", parse_font_matrix )
+
     { 0, T1_FIELD_LOCATION_CID_INFO, T1_FIELD_TYPE_NONE, 0, 0, 0, 0, 0 }
   };
-
-
-  static int
-  is_alpha( char  c )
-  {
-    return ( ft_isalnum( (int)c ) ||
-             c == '.'             ||
-             c == '_'             );
-  }
 
 
   static FT_Error
@@ -322,17 +281,15 @@
         /* look for immediates */
         else if ( *cur == '/' && cur + 2 < limit )
         {
-          FT_Byte*  cur2;
-          FT_Int    len;
+          FT_Int  len;
 
 
           cur++;
 
-          cur2 = cur;
-          while ( cur2 < limit && is_alpha( *cur2 ) )
-            cur2++;
+          parser->root.cursor = cur;
+          cid_parser_skip_alpha( parser );
 
-          len = (FT_Int)( cur2 - cur );
+          len = (FT_Int)( parser->root.cursor - cur );
           if ( len > 0 && len < 22 )
           {
             /* now compare the immediate name to the keyword table */
@@ -361,7 +318,6 @@
                 if ( n >= len )
                 {
                   /* we found it - run the parsing callback */
-                  parser->root.cursor = cur2;
                   cid_parser_skip_spaces( parser );
                   parser->root.error = cid_load_keyword( face,
                                                          loader,
@@ -387,14 +343,15 @@
   static FT_Error
   cid_read_subrs( CID_Face  face )
   {
-    CID_FaceInfo  cid    = &face->cid;
-    FT_Memory     memory = face->root.memory;
-    FT_Stream     stream = face->root.stream;
-    FT_Error      error;
-    FT_Int        n;
-    CID_Subrs     subr;
-    FT_UInt       max_offsets = 0;
-    FT_ULong*     offsets = 0;
+    CID_FaceInfo   cid    = &face->cid;
+    FT_Memory      memory = face->root.memory;
+    FT_Stream      stream = face->root.stream;
+    FT_Error       error;
+    FT_Int         n;
+    CID_Subrs      subr;
+    FT_UInt        max_offsets = 0;
+    FT_ULong*      offsets = 0;
+    PSAux_Service  psaux = (PSAux_Service)face->psaux;
 
 
     if ( FT_NEW_ARRAY( face->subrs, cid->num_dicts ) )
@@ -464,7 +421,7 @@
 
 
           len = offsets[count + 1] - offsets[count];
-          cid_decrypt( subr->code[count], len, 4330 );
+          psaux->t1_decrypt( subr->code[count], len, 4330 );
         }
       }
 

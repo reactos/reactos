@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Routines used to compute global metrics automatically (body).        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 Catharon Productions Inc.                    */
+/*  Copyright 2000-2001, 2002, 2003 Catharon Productions Inc.              */
 /*  Author: David Turner                                                   */
 /*                                                                         */
 /*  This file is part of the Catharon Typography Project and shall only    */
@@ -26,6 +26,8 @@
 
 
 #define MAX_TEST_CHARACTERS  12
+
+  /* cf. AH_BLUE_XXX constants in ahtypes.h */
 
   static
   const char*  blue_chars[AH_BLUE_MAX] =
@@ -93,8 +95,8 @@
       goto Exit;
 
     /* we compute the blues simply by loading each character from the */
-    /* 'blue_chars[blues]' string, then compute its top-most and      */
-    /* bottom-most points                                             */
+    /* 'blue_chars[blues]' string, then compute its top-most or       */
+    /* bottom-most points (depending on `AH_IS_TOP_BLUE')             */
 
     AH_LOG(( "blue zones computation\n" ));
     AH_LOG(( "------------------------------------------------\n" ));
@@ -103,6 +105,7 @@
     {
       const char*  p     = blue_chars[blue];
       const char*  limit = p + MAX_TEST_CHARACTERS;
+
       FT_Pos       *blue_ref, *blue_shoot;
 
 
@@ -235,8 +238,8 @@
       AH_LOG(( "\n" ));
 
       /* we have computed the contents of the `rounds' and `flats' tables, */
-      /* now determine the reference and overshoot position of the blue;   */
-      /* we simply take the median value after a simple short              */
+      /* now determine the reference and overshoot position of the blue -- */
+      /* we simply take the median value after a simple sort               */
       sort_values( num_rounds, rounds );
       sort_values( num_flats,  flats  );
 
@@ -312,7 +315,7 @@
     /* stem height of the "-", but it wasn't too good.  Moreover, we now */
     /* have a single character that gives us standard width and height.  */
     {
-      FT_UInt   glyph_index;
+      FT_UInt  glyph_index;
 
 
       glyph_index = FT_Get_Char_Index( hinter->face, 'o' );
@@ -323,7 +326,8 @@
       if ( error )
         goto Exit;
 
-      error = ah_outline_load( hinter->glyph, 0x10000L, 0x10000L, hinter->face );
+      error = ah_outline_load( hinter->glyph, 0x10000L, 0x10000L,
+                               hinter->face );
       if ( error )
         goto Exit;
 
@@ -375,7 +379,7 @@
     }
 
     /* Now, compute the edge distance threshold as a fraction of the */
-    /* smallest width in the font. Set it in `hinter.glyph' too!     */
+    /* smallest width in the font. Set it in `hinter->glyph' too!    */
     if ( edge_distance_threshold == 32000 )
       edge_distance_threshold = 50;
 

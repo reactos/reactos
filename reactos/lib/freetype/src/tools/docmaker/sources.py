@@ -130,7 +130,7 @@ re_markup_tags = [ re_markup_tag1, re_markup_tag2 ]
 #
 # used to detect a cross-reference, after markup tags have been stripped
 #
-re_crossref = re.compile( r'@(\w*)' )
+re_crossref = re.compile( r'@(\w*)(.*)' )
 
 #
 # used to detect italic and bold styles in paragraph text

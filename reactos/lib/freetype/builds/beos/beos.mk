@@ -15,5 +15,5 @@ include $(TOP_DIR)/builds/compiler/ansi-cc.mk
 include $(TOP_DIR)/builds/beos/beos-def.mk
 include $(TOP_DIR)/builds/link_std.mk
 
-# EOF
 
+# EOF

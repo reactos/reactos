@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2001 by
+# Copyright 2001, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,28 +15,26 @@
 
 # PSHINTER driver directory
 #
-PSHINTER_DIR  := $(SRC_)pshinter
-PSHINTER_DIR_ := $(PSHINTER_DIR)$(SEP)
+PSHINTER_DIR := $(SRC_DIR)/pshinter
 
 
 # compilation flags for the driver
 #
-PSHINTER_COMPILE := $(FT_COMPILE) $I$(PSHINTER_DIR)
+PSHINTER_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(PSHINTER_DIR))
 
 
 # PSHINTER driver sources (i.e., C files)
 #
-PSHINTER_DRV_SRC := $(PSHINTER_DIR_)pshrec.c   \
-                    $(PSHINTER_DIR_)pshglob.c  \
-                    $(PSHINTER_DIR_)pshmod.c   \
-                    $(PSHINTER_DIR_)pshalgo1.c \
-                    $(PSHINTER_DIR_)pshalgo2.c \
-                    $(PSHINTER_DIR_)pshalgo3.c
+PSHINTER_DRV_SRC := $(PSHINTER_DIR)/pshrec.c  \
+                    $(PSHINTER_DIR)/pshglob.c \
+                    $(PSHINTER_DIR)/pshmod.c  \
+                    $(PSHINTER_DIR)/pshalgo.c
 
 
 # PSHINTER driver headers
 #
-PSHINTER_DRV_H := $(PSHINTER_DRV_SRC:%c=%h)
+PSHINTER_DRV_H := $(PSHINTER_DRV_SRC:%c=%h) \
+                  $(PSHINTER_DIR)/pshnterr.h
 
 
 # PSHINTER driver object(s)
@@ -44,25 +42,25 @@ PSHINTER_DRV_H := $(PSHINTER_DRV_SRC:%c=%h)
 #   PSHINTER_DRV_OBJ_M is used during `multi' builds.
 #   PSHINTER_DRV_OBJ_S is used during `single' builds.
 #
-PSHINTER_DRV_OBJ_M := $(PSHINTER_DRV_SRC:$(PSHINTER_DIR_)%.c=$(OBJ_)%.$O)
-PSHINTER_DRV_OBJ_S := $(OBJ_)pshinter.$O
+PSHINTER_DRV_OBJ_M := $(PSHINTER_DRV_SRC:$(PSHINTER_DIR)/%.c=$(OBJ_DIR)/%.$O)
+PSHINTER_DRV_OBJ_S := $(OBJ_DIR)/pshinter.$O
 
 # PSHINTER driver source file for single build
 #
-PSHINTER_DRV_SRC_S := $(PSHINTER_DIR_)pshinter.c
+PSHINTER_DRV_SRC_S := $(PSHINTER_DIR)/pshinter.c
 
 
 # PSHINTER driver - single object
 #
 $(PSHINTER_DRV_OBJ_S): $(PSHINTER_DRV_SRC_S) $(PSHINTER_DRV_SRC) \
                        $(FREETYPE_H) $(PSHINTER_DRV_H)
-	$(PSHINTER_COMPILE) $T$@ $(PSHINTER_DRV_SRC_S)
+	$(PSHINTER_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(PSHINTER_DRV_SRC_S))
 
 
 # PSHINTER driver - multiple objects
 #
-$(OBJ_)%.$O: $(PSHINTER_DIR_)%.c $(FREETYPE_H) $(PSHINTER_DRV_H)
-	$(PSHINTER_COMPILE) $T$@ $<
+$(OBJ_DIR)/%.$O: $(PSHINTER_DIR)/%.c $(FREETYPE_H) $(PSHINTER_DRV_H)
+	$(PSHINTER_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # update main driver object lists

@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2001 by
+  Copyright 2003 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -39,7 +39,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __PCFUTIL_H__ */
+#endif /* __PCFREAD_H__ */
 
 
 /* END */

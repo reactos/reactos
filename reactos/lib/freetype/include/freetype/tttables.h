@@ -5,7 +5,7 @@
 /*    Basic SFNT/TrueType tables definitions and interface                 */
 /*    (specification only).                                                */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -541,8 +541,15 @@ FT_BEGIN_HEADER
   } TT_MaxProfile;
 
 
-  /* */
-
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Enum>                                                                */
+  /*    FT_Sfnt_Tag                                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    An enumeration used to specify the index of an SFNT table.         */
+  /*    Used in the @FT_Get_Sfnt_Table API function.                       */
+  /*                                                                       */
   typedef enum
   {
     ft_sfnt_head = 0,
@@ -553,10 +560,11 @@ FT_BEGIN_HEADER
     ft_sfnt_post = 5,
     ft_sfnt_pclt = 6,
 
-    sfnt_max   /* don't remove */
+    sfnt_max   /* internal end mark */
 
   } FT_Sfnt_Tag;
 
+  /* */
 
   /* internal use only */
   typedef void*
@@ -586,12 +594,13 @@ FT_BEGIN_HEADER
   /*    The table is owned by the face object and disappears with it.      */
   /*                                                                       */
   /*    This function is only useful to access SFNT tables that are loaded */
-  /*    by the sfnt/truetype/opentype drivers.  See FT_Sfnt_Tag for a      */
+  /*    by the sfnt/truetype/opentype drivers.  See @FT_Sfnt_Tag for a     */
   /*    list.                                                              */
   /*                                                                       */
   FT_EXPORT( void* )
   FT_Get_Sfnt_Table( FT_Face      face,
                      FT_Sfnt_Tag  tag );
+
 
  /**************************************************************************
   *
@@ -602,54 +611,56 @@ FT_BEGIN_HEADER
   *   Loads any font table into client memory.
   *
   * <Input>
-  *   face   :: handle to source face.
-  *   tag    :: the 4-byte tag of the table to load. Use the value 0 if
-  *             you want to access the whole font file. Else, you can use
-  *             one of the definitions found in the @FT_TRUETYPE_TAGS_H
-  *             file, or forge a new one with @FT_MAKE_TAG
+  *   face   :: A handle to the source face.
+  *
+  *   tag    :: The 4-byte tag of the table to load.  Use the value 0 if
+  *             you want to access the whole font file.  Otherwise, you can
+  *             use one of the definitions found in the @FT_TRUETYPE_TAGS_H
+  *             file, or forge a new one with @FT_MAKE_TAG.
   *              
-  *   offset :: the starting offset in the table (or file if tag == 0)
+  *   offset :: The starting offset in the table (or file if tag == 0).
   *
   * <Output>
-  *   buffer :: target buffer address. client must ensure that there are
-  *             enough bytes in it.
+  *   buffer :: The target buffer address.  The client must ensure that
+  *             the memory array is big enough to hold the data.
   *
   * <InOut>
-  *   length :: if the 'length' parameter is NULL, then try to load the whole
-  *             table, and return an error code if it fails.
+  *   length :: If the `length' parameter is NULL, then try to load the whole
+  *             table.  Return an error code if it fails.
   *
-  *             else, if '*length' is 0, then exit immediately while returning
+  *             Else, if `*length' is 0, exit immediately while returning
   *             the table's (or file) full size in it.
   *
-  *             else, the number of bytes to read from the table or file,
+  *             Else the number of bytes to read from the table or file,
   *             from the starting offset.
   *
   * <Return>
-  *   error code. 0 means success
+  *   FreeType error code.  0 means success.
   *
   * <Note>
-  *   if you need to determine the table's length you should first call this
-  *   function with "*length" set to 0, as in the following example:
+  *   If you need to determine the table's length you should first call this
+  *   function with `*length' set to 0, as in the following example:
   *
   *   {
   *     FT_ULong  length = 0;
+  *
   *
   *     error = FT_Load_Sfnt_Table( face, tag, 0, NULL, &length );
   *     if ( error ) { ... table does not exist ... }
   *
   *     buffer = malloc( length );
-  *     if ( buffer == NULL )  { ... not enough memory ... }
+  *     if ( buffer == NULL ) { ... not enough memory ... }
   *
   *     error = FT_Load_Sfnt_Table( face,tag, 0, buffer, &length );
   *     if ( error ) { ... could not load table ... }
   *   }
   */
   FT_EXPORT( FT_Error )
-  FT_Load_Sfnt_Table( FT_Face      face,
-                      FT_ULong     tag,
-                      FT_Long      offset,
-                      FT_Byte*     buffer,
-                      FT_ULong*    length );
+  FT_Load_Sfnt_Table( FT_Face    face,
+                      FT_ULong   tag,
+                      FT_Long    offset,
+                      FT_Byte*   buffer,
+                      FT_ULong*  length );
 
   /* */
 

@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -13,10 +13,9 @@
 # fully.
 
 
-SEP := /
-
 include $(TOP_DIR)/builds/dos/dos-def.mk
 include $(TOP_DIR)/builds/compiler/gcc.mk
 include $(TOP_DIR)/builds/link_dos.mk
+
 
 # EOF

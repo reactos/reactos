@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 tokenizer (specification).                                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -21,16 +21,17 @@
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_INFO
 
-  T1_FIELD_STRING   ( "version", version )
-  T1_FIELD_STRING   ( "Notice", notice )
-  T1_FIELD_STRING   ( "FullName", full_name )
-  T1_FIELD_STRING   ( "FamilyName", family_name )
-  T1_FIELD_STRING   ( "Weight", weight )
+  T1_FIELD_STRING( "version", version )
+  T1_FIELD_STRING( "Notice", notice )
+  T1_FIELD_STRING( "FullName", full_name )
+  T1_FIELD_STRING( "FamilyName", family_name )
+  T1_FIELD_STRING( "Weight", weight )
 
-  T1_FIELD_NUM      ( "ItalicAngle", italic_angle )
-  T1_FIELD_TYPE_BOOL( "isFixedPitch", is_fixed_pitch )
-  T1_FIELD_NUM      ( "UnderlinePosition", underline_position )
-  T1_FIELD_NUM      ( "UnderlineThickness", underline_thickness )
+  /* we use pointers to detect modifications made by synthetic fonts */
+  T1_FIELD_NUM   ( "ItalicAngle", italic_angle )
+  T1_FIELD_BOOL  ( "isFixedPitch", is_fixed_pitch )
+  T1_FIELD_NUM   ( "UnderlinePosition", underline_position )
+  T1_FIELD_NUM   ( "UnderlineThickness", underline_thickness )
 
 
 #undef  FT_STRUCTURE
@@ -43,7 +44,7 @@
   T1_FIELD_NUM       ( "LanguageGroup", language_group )
   T1_FIELD_NUM       ( "password", password )
 
-  T1_FIELD_FIXED     ( "BlueScale", blue_scale )
+  T1_FIELD_FIXED_1000( "BlueScale", blue_scale )
   T1_FIELD_NUM       ( "BlueShift", blue_shift )
   T1_FIELD_NUM       ( "BlueFuzz",  blue_fuzz )
 
@@ -65,9 +66,10 @@
 #undef  T1CODE
 #define T1CODE        T1_FIELD_LOCATION_FONT_DICT
 
-  T1_FIELD_NUM( "PaintType", paint_type )
-  T1_FIELD_NUM( "FontType", font_type )
-  T1_FIELD_NUM( "StrokeWidth", stroke_width )
+  T1_FIELD_KEY  ( "FontName", font_name )
+  T1_FIELD_NUM  ( "PaintType", paint_type )
+  T1_FIELD_NUM  ( "FontType", font_type )
+  T1_FIELD_FIXED( "StrokeWidth", stroke_width )
 
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  FT_BBox

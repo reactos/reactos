@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType objects manager (body).                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -293,7 +293,7 @@
       sfnt_format = 1;
 
       /* now, the font can be either an OpenType/CFF font, or an SVG CEF */
-      /* font in the later case; it doesn't have a `head' table          */
+      /* font; in the later case it doesn't have a `head' table          */
       error = face->goto_table( face, TTAG_head, stream, 0 );
       if ( !error )
       {
@@ -396,6 +396,9 @@
         else
           root->units_per_EM = 1000;
 
+        root->underline_position  = dict->underline_position >> 16;
+        root->underline_thickness = dict->underline_thickness >> 16;
+
         /* retrieve font family & style name */
         root->family_name  = cff_index_get_name( &cff->name_index, face_index );
         if ( dict->cid_registry )
@@ -463,7 +466,7 @@
         CFF_Encoding   encoding = &cff->encoding;
 
 
-        for ( nn = 0; nn < (FT_UInt) root->num_charmaps; nn++ )
+        for ( nn = 0; nn < (FT_UInt)root->num_charmaps; nn++ )
         {
           cmap = root->charmaps[nn];
 
@@ -482,12 +485,12 @@
         cmaprec.encoding_id = 1;
         cmaprec.encoding    = FT_ENCODING_UNICODE;
 
-        nn = (FT_UInt) root->num_charmaps;
+        nn = (FT_UInt)root->num_charmaps;
 
         FT_CMap_New( &cff_cmap_unicode_class_rec, NULL, &cmaprec, NULL );
 
         /* if no Unicode charmap was previously selected, select this one */
-        if ( root->charmap == NULL && nn != (FT_UInt) root->num_charmaps )
+        if ( root->charmap == NULL && nn != (FT_UInt)root->num_charmaps )
           root->charmap = root->charmaps[nn];
 
       Skip_Unicode:
@@ -501,26 +504,25 @@
 
           if ( encoding->offset == 0 )
           {
-            cmaprec.encoding_id = 0;
+            cmaprec.encoding_id = TT_ADOBE_ID_STANDARD;
             cmaprec.encoding    = FT_ENCODING_ADOBE_STANDARD;
             clazz               = &cff_cmap_encoding_class_rec;
           }
           else if ( encoding->offset == 1 )
           {
-            cmaprec.encoding_id = 1;
+            cmaprec.encoding_id = TT_ADOBE_ID_EXPERT;
             cmaprec.encoding    = FT_ENCODING_ADOBE_EXPERT;
             clazz               = &cff_cmap_encoding_class_rec;
           }
           else
           {
-            cmaprec.encoding_id = 3;
+            cmaprec.encoding_id = TT_ADOBE_ID_CUSTOM;
             cmaprec.encoding    = FT_ENCODING_ADOBE_CUSTOM;
             clazz               = &cff_cmap_encoding_class_rec;
           }
 
           FT_CMap_New( clazz, NULL, &cmaprec, NULL );
         }
-
       }
     }
 

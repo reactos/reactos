@@ -1,4 +1,4 @@
-# FreeType 2 JamRules (c) 2001 David Turner
+# FreeType 2 JamRules (c) 2001, 2002, 2003 David Turner
 #
 # This file contains the Jam rules needed to build the FreeType 2 library.
 # It is shared by all Jamfiles and is included only once in the build
@@ -6,7 +6,7 @@
 #
 
 
-# call SubDirHdrs on a list of directories
+# Call SubDirHdrs on a list of directories.
 #
 rule AddSubDirHdrs
 {

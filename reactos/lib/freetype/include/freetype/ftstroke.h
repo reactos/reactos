@@ -1,5 +1,23 @@
-#ifndef __FT_STROKER_H__
-#define __FT_STROKER_H__
+/***************************************************************************/
+/*                                                                         */
+/*  ftstroke.h                                                             */
+/*                                                                         */
+/*    FreeType path stroker (specification).                               */
+/*                                                                         */
+/*  Copyright 2002, 2003 by                                                */
+/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*                                                                         */
+/*  This file is part of the FreeType project, and may only be used,       */
+/*  modified, and distributed under the terms of the FreeType project      */
+/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
+/*  this file you indicate that you have read the license and              */
+/*  understand and accept it fully.                                        */
+/*                                                                         */
+/***************************************************************************/
+
+
+#ifndef __FT_STROKE_H__
+#define __FT_STROKE_H__
 
 #include <ft2build.h>
 #include FT_OUTLINE_H
@@ -136,4 +154,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FT_STROKER_H__ */
+#endif /* __FT_STROKE_H__ */
+
+
+/* END */

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -115,7 +115,7 @@
 
       while ( left <= right )
       {
-        FT_Int    middle = left + ( ( right - left ) >> 1 );
+        FT_Long   middle = left + ( ( right - left ) >> 1 );
         FT_ULong  cur_pair;
 
 
@@ -226,7 +226,7 @@
 
     size->ttmetrics.valid = FALSE;
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-    size->strike_index    = 0xFFFF;
+    size->strike_index    = 0xFFFFU;
 #endif
 
     return tt_size_reset( size );
@@ -242,11 +242,6 @@
   /*    A driver method used to reset a size's character sizes (horizontal */
   /*    and vertical) expressed in integer pixels.                         */
   /*                                                                       */
-  /* <Input>                                                               */
-  /*    pixel_width  :: The character width expressed in integer pixels.   */
-  /*                                                                       */
-  /*    pixel_height :: The character height expressed in integer pixels.  */
-  /*                                                                       */
   /* <InOut>                                                               */
   /*    size         :: A handle to the target size object.                */
   /*                                                                       */
@@ -254,19 +249,14 @@
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   static FT_Error
-  Set_Pixel_Sizes( TT_Size  size,
-                   FT_UInt  pixel_width,
-                   FT_UInt  pixel_height )
+  Set_Pixel_Sizes( TT_Size  size )
   {
-    FT_UNUSED( pixel_width );
-    FT_UNUSED( pixel_height );
-
     /* many things have been pre-computed by the base layer */
 
     size->metrics         = size->root.metrics;
     size->ttmetrics.valid = FALSE;
 #ifdef TT_CONFIG_OPTION_EMBEDDED_BITMAPS
-    size->strike_index    = 0xFFFF;
+    size->strike_index    = 0xFFFFU;
 #endif
 
     return tt_size_reset( size );
@@ -382,10 +372,10 @@
   const FT_Driver_ClassRec  tt_driver_class =
   {
     {
-      ft_module_font_driver     |
-      ft_module_driver_scalable |
+      FT_MODULE_FONT_DRIVER        |
+      FT_MODULE_DRIVER_SCALABLE    |
 #ifdef TT_CONFIG_OPTION_BYTECODE_INTERPRETER
-      ft_module_driver_has_hinter,
+      FT_MODULE_DRIVER_HAS_HINTER,
 #else
       0,
 #endif

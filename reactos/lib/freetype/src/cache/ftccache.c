@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType internal cache interface (body).                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 by                                           */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -173,7 +173,7 @@
       if ( *pnode == NULL )
       {
         FT_ERROR(( "ftc_node_hash_unlink: unknown node!\n" ));
-        return FT_Err_Ok;
+        return FTC_Err_Ok;
       }
 
       if ( *pnode == node )
@@ -196,7 +196,7 @@
       FTC_Node*  pold;
 
 
-      if ( old_index+1 <= FTC_HASH_INITIAL_SIZE )
+      if ( old_index + 1 <= FTC_HASH_INITIAL_SIZE )
         goto Exit;
 
       if ( p == 0 )
@@ -551,7 +551,7 @@
                     FTC_Query   query,
                     FTC_Node   *anode )
   {
-    FT_Error     error = FT_Err_Ok;
+    FT_Error     error = FTC_Err_Ok;
     FTC_Manager  manager;
     FT_LruNode   lru;
     FT_UInt      free_count = 0;
@@ -567,24 +567,24 @@
 
     manager = cache->manager;
 
-   /*  here's a small note explaining what's hapenning in the code below.
+   /*  here's a small note explaining what's happening in the code below.
     *
-    *  we need to deal intelligently with out-of-memory (OOM) conditions
+    *  We need to deal intelligently with out-of-memory (OOM) conditions
     *  when trying to create a new family or cache node during the lookup.
     *
-    *  when an OOM is detected, we'll try to free one or more "old" nodes
-    *  from the cache, then try again. it may be necessary to do that several
-    *  times, so a loop is needed.
+    *  When an OOM is detected, we try to free one or more "old" nodes
+    *  from the cache, then try again.  It may be necessary to do that
+    *  several times, so a loop is needed.
     *
-    *  the local variable "free_count" holds the number of "old" nodes to
-    *  discard on each attempt. it starts at 1 and doubles on each iteration.
-    *  the loop stops when:
+    *  The local variable "free_count" holds the number of "old" nodes to
+    *  discard on each attempt.  It starts at 1 and doubles on each
+    *  iteration.  The loop stops when:
     *
     *   - a non-OOM error is detected
     *   - a succesful lookup is performed
     *   - there are no more unused nodes in the cache
     *
-    *  for the record, remember that all used nodes appear _before_
+    *  For the record, remember that all used nodes appear _before_
     *  unused ones in the manager's MRU node list.
     */
 
@@ -632,7 +632,6 @@
       }
 
       {
-        FTC_Manager  manager = cache->manager;
         FTC_Family   family  = (FTC_Family) lru;
         FT_UFast     hash    = query->hash;
         FTC_Node*    bucket;
@@ -744,16 +743,17 @@
       }
 
     Fail:
-      if ( error != FT_Err_Out_Of_Memory )
+      if ( error != FTC_Err_Out_Of_Memory )
         goto Exit;
 
-     /* there is not enough memory, try to release some unused nodes
+     /* There is not enough memory; try to release some unused nodes
       * from the cache to make room for a new one.
       */
       {
-        FT_UInt   new_count;
+        FT_UInt  new_count;
 
-        new_count = 1 + free_count*2;
+
+        new_count = 1 + free_count * 2;
 
         /* check overflow and bounds */
         if ( new_count < free_count || free_count > manager->num_nodes )
@@ -763,22 +763,24 @@
 
         /* try to remove "new_count" nodes from the list */
         {
-          FTC_Node   first = manager->nodes_list;
-          FTC_Node   node;
+          FTC_Node  first = manager->nodes_list;
+          FTC_Node  node;
 
-          if ( first == NULL )  /* empty list ! */
+
+          if ( first == NULL )  /* empty list! */
             goto Exit;
 
-         /* go to last node - it's a circular list */
+          /* go to last node - it's a circular list */
           node = first->mru_prev;
           for ( ; node && new_count > 0; new_count-- )
           {
             FTC_Node  prev = node->mru_prev;
 
-           /* used nodes always appear before unused one in the MRU
-            * list. if we find one here, we'd better stop right now
-            * our iteration
-            */
+
+            /* Used nodes always appear before unused one in the MRU
+             * list.  If we find one here, we'd better stop right now
+             * our iteration.
+             */
             if ( node->ref_count > 0 )
             {
               /* if there are no unused nodes in the list, we'd better exit */

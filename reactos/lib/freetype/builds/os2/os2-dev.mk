@@ -5,7 +5,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -19,10 +19,8 @@ ifndef TOP_DIR
   TOP_DIR := .
 endif
 
-SEP   := /
-
 include $(TOP_DIR)/builds/os2/os2-def.mk
-BUILD := $(TOP_DIR)/builds/devel
+BUILD_DIR := $(TOP_DIR)/devel
 
 include $(TOP_DIR)/builds/compiler/gcc-dev.mk
 

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType synthesizing code for emboldening and slanting (body).      */
 /*                                                                         */
-/*  Copyright 2000-2001 by                                                 */
+/*  Copyright 2000-2001, 2002 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -82,14 +82,14 @@
 
     /* we need to compute the `previous' and `next' point */
     /* for these extrema.                                 */
-    cur   = outline->points + n;
-    prev  = cur - 1;
-    next  = cur + 1;
+    cur  = outline->points + n;
+    prev = cur - 1;
+    next = cur + 1;
 
     first = 0;
     for ( c = 0; c < outline->n_contours; c++ )
     {
-      last  = outline->contours[c];
+      last = outline->contours[c];
 
       if ( n == first )
         prev = outline->points + last;

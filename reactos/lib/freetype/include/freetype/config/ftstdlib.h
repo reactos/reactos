@@ -82,6 +82,7 @@
 #include <string.h>
 
 #define ft_strlen   strlen
+#define ft_strcat   strcat
 #define ft_strcmp   strcmp
 #define ft_strncmp  strncmp
 #define ft_memcpy   memcpy

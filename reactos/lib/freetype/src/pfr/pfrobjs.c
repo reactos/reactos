@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR object methods (body).                                  */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,7 +41,8 @@
   FT_LOCAL_DEF( void )
   pfr_face_done( PFR_Face  face )
   {
-    FT_Memory   memory = face->root.driver->root.memory;
+    FT_Memory  memory = face->root.driver->root.memory;
+
 
     /* we don't want dangling pointers */
     face->root.family_name = NULL;
@@ -113,128 +114,127 @@
       goto Exit;
 
     /* now load the physical font descriptor */
-     error = pfr_phy_font_load( &face->phy_font, stream,
-                                 face->log_font.phys_offset,
-                                 face->log_font.phys_size );
-     if ( error )
-       goto Exit;
+    error = pfr_phy_font_load( &face->phy_font, stream,
+                               face->log_font.phys_offset,
+                               face->log_font.phys_size );
+    if ( error )
+      goto Exit;
 
-     /* now, set-up all root face fields */
-     {
-       FT_Face      root     = FT_FACE( face );
-       PFR_PhyFont  phy_font = &face->phy_font;
+    /* now, set-up all root face fields */
+    {
+      FT_Face      root     = FT_FACE( face );
+      PFR_PhyFont  phy_font = &face->phy_font;
 
 
-       root->face_index = face_index;
-       root->num_glyphs = phy_font->num_chars;
-       root->face_flags = FT_FACE_FLAG_SCALABLE;
+      root->face_index = face_index;
+      root->num_glyphs = phy_font->num_chars;
+      root->face_flags = FT_FACE_FLAG_SCALABLE;
 
-       if ( (phy_font->flags & PFR_PHY_PROPORTIONAL) == 0 )
-         root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
+      if ( (phy_font->flags & PFR_PHY_PROPORTIONAL) == 0 )
+        root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
-       if ( phy_font->flags & PFR_PHY_VERTICAL )
-         root->face_flags |= FT_FACE_FLAG_VERTICAL;
-       else
-         root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
+      if ( phy_font->flags & PFR_PHY_VERTICAL )
+        root->face_flags |= FT_FACE_FLAG_VERTICAL;
+      else
+        root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
 
-       if ( phy_font->num_strikes > 0 )
-         root->face_flags |= FT_FACE_FLAG_FIXED_SIZES;
+      if ( phy_font->num_strikes > 0 )
+        root->face_flags |= FT_FACE_FLAG_FIXED_SIZES;
 
-       if ( phy_font->num_kern_pairs > 0 )
-         root->face_flags |= FT_FACE_FLAG_KERNING;
+      if ( phy_font->num_kern_pairs > 0 )
+        root->face_flags |= FT_FACE_FLAG_KERNING;
 
-      /* if no family name was found in the "undocumented" auxiliary
-       * data, use the font ID instead. This sucks but is better than
-       * nothing
+      /* If no family name was found in the "undocumented" auxiliary
+       * data, use the font ID instead.  This sucks but is better than
+       * nothing.
        */
-       root->family_name = phy_font->family_name;
-       if ( root->family_name == NULL )
-         root->family_name = phy_font->font_id;
+      root->family_name = phy_font->family_name;
+      if ( root->family_name == NULL )
+        root->family_name = phy_font->font_id;
 
       /* note that the style name can be NULL in certain PFR fonts,
        * probably meaning "Regular"
        */
-       root->style_name  = phy_font->style_name;
+      root->style_name = phy_font->style_name;
 
-       root->num_fixed_sizes = 0;
-       root->available_sizes = 0;
+      root->num_fixed_sizes = 0;
+      root->available_sizes = 0;
 
-       root->bbox         = phy_font->bbox;
-       root->units_per_EM = (FT_UShort)phy_font->outline_resolution;
-       root->ascender     = (FT_Short) phy_font->bbox.yMax;
-       root->descender    = (FT_Short) phy_font->bbox.yMin;
-       root->height       = (FT_Short)
-                              ( ( ( root->ascender - root->descender ) * 12 )
-                                / 10 );
+      root->bbox         = phy_font->bbox;
+      root->units_per_EM = (FT_UShort)phy_font->outline_resolution;
+      root->ascender     = (FT_Short) phy_font->bbox.yMax;
+      root->descender    = (FT_Short) phy_font->bbox.yMin;
+      root->height       = (FT_Short)(
+        ( ( root->ascender - root->descender ) * 12 ) / 10 );
 
-       if ( phy_font->num_strikes > 0 )
-       {
-         FT_UInt          n, count = phy_font->num_strikes;
-         FT_Bitmap_Size*  size;
-         PFR_Strike       strike;
-         FT_Memory        memory = root->stream->memory;
+      if ( phy_font->num_strikes > 0 )
+      {
+        FT_UInt          n, count = phy_font->num_strikes;
+        FT_Bitmap_Size*  size;
+        PFR_Strike       strike;
+        FT_Memory        memory = root->stream->memory;
          
          
-         if ( FT_NEW_ARRAY( root->available_sizes, count ) )
-           goto Exit;
+        if ( FT_NEW_ARRAY( root->available_sizes, count ) )
+          goto Exit;
          
-         size   = root->available_sizes;
-         strike = phy_font->strikes;
-         for ( n = 0; n < count; n++, size++, strike++ )
-         {
-           size->height = (FT_UShort) strike->y_ppm;
-           size->width  = (FT_UShort) strike->x_ppm;
-         }
-         root->num_fixed_sizes = count;
-       }
+        size   = root->available_sizes;
+        strike = phy_font->strikes;
+        for ( n = 0; n < count; n++, size++, strike++ )
+        {
+          size->height = (FT_UShort)strike->y_ppm;
+          size->width  = (FT_UShort)strike->x_ppm;
+        }
+        root->num_fixed_sizes = count;
+      }
 
-       /* now compute maximum advance width */
-       if ( ( phy_font->flags & PFR_PHY_PROPORTIONAL ) == 0 )
-         root->max_advance_width = (FT_Short)phy_font->standard_advance;
-       else
-       {
-         FT_Int    max = 0;
-         FT_UInt   count = phy_font->num_chars;
-         PFR_Char  gchar = phy_font->chars;
-
-
-         for ( ; count > 0; count--, gchar++ )
-         {
-           if ( max < gchar->advance )
-             max = gchar->advance;
-         }
-
-         root->max_advance_width = (FT_Short)max;
-       }
-
-       root->max_advance_height = root->height;
-
-       root->underline_position  = (FT_Short)( - root->units_per_EM / 10 );
-       root->underline_thickness = (FT_Short)(   root->units_per_EM / 30 );
-
-       /* create charmap */
-       {
-         FT_CharMapRec  charmap;
+      /* now compute maximum advance width */
+      if ( ( phy_font->flags & PFR_PHY_PROPORTIONAL ) == 0 )
+        root->max_advance_width = (FT_Short)phy_font->standard_advance;
+      else
+      {
+        FT_Int    max = 0;
+        FT_UInt   count = phy_font->num_chars;
+        PFR_Char  gchar = phy_font->chars;
 
 
-         charmap.face        = root;
-         charmap.platform_id = 3;
-         charmap.encoding_id = 1;
-         charmap.encoding    = FT_ENCODING_UNICODE;
+        for ( ; count > 0; count--, gchar++ )
+        {
+          if ( max < gchar->advance )
+            max = gchar->advance;
+        }
 
-         FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
+        root->max_advance_width = (FT_Short)max;
+      }
+
+      root->max_advance_height = root->height;
+
+      root->underline_position  = (FT_Short)( - root->units_per_EM / 10 );
+      root->underline_thickness = (FT_Short)(   root->units_per_EM / 30 );
+
+      /* create charmap */
+      {
+        FT_CharMapRec  charmap;
+
+
+        charmap.face        = root;
+        charmap.platform_id = 3;
+        charmap.encoding_id = 1;
+        charmap.encoding    = FT_ENCODING_UNICODE;
+
+        FT_CMap_New( &pfr_cmap_class_rec, NULL, &charmap, NULL );
 
 #if 0
-         /* Select default charmap */
-         if (root->num_charmaps)
-           root->charmap = root->charmaps[0];
+        /* Select default charmap */
+        if (root->num_charmaps)
+          root->charmap = root->charmaps[0];
 #endif
-       }
+      }
 
-       /* check whether we've loaded any kerning pairs */
-       if ( phy_font->num_kern_pairs )
-         root->face_flags |= FT_FACE_FLAG_KERNING;
-     }
+      /* check whether we've loaded any kerning pairs */
+      if ( phy_font->num_kern_pairs )
+        root->face_flags |= FT_FACE_FLAG_KERNING;
+    }
 
   Exit:
     return error;
@@ -279,7 +279,8 @@
     FT_Outline*  outline = &slot->root.outline;
     FT_ULong     gps_offset;
 
-    if (gindex > 0)
+
+    if ( gindex > 0 )
       gindex--;
 
     /* check that the glyph index is correct */
@@ -295,7 +296,7 @@
 
     if ( load_flags & FT_LOAD_SBITS_ONLY )
     {
-      error = FT_Err_Invalid_Argument;
+      error = PFR_Err_Invalid_Argument;
       goto Exit;
     }
 
@@ -352,6 +353,21 @@
       metrics->vertBearingX = 0;
       metrics->vertBearingY = 0;
 
+      /* Apply the font matrix, if any.                 */
+      /* TODO: Test existing fonts with unusual matrix  */
+      /* whether we have to adjust Units per EM.        */
+      {
+        FT_Matrix font_matrix;
+
+
+        font_matrix.xx = face->log_font.matrix[0] << 8;
+        font_matrix.yx = face->log_font.matrix[1] << 8;
+        font_matrix.xy = face->log_font.matrix[2] << 8;
+        font_matrix.yy = face->log_font.matrix[3] << 8;
+
+        FT_Outline_Transform( outline, &font_matrix );
+      }
+
       /* scale when needed */
       if ( scaling )
       {
@@ -395,16 +411,18 @@
   /*************************************************************************/
   /*************************************************************************/
 
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL_DEF( void )
   pfr_face_get_kerning( PFR_Face    face,
                         FT_UInt     glyph1,
                         FT_UInt     glyph2,
                         FT_Vector*  kerning )
   {
-    FT_Error      error;
+    FT_Error      error    = PFR_Err_Ok;
     PFR_PhyFont   phy_font = &face->phy_font;
     PFR_KernItem  item     = phy_font->kern_items;
     FT_UInt32     idx      = PFR_KERN_INDEX( glyph1, glyph2 );
+
+    FT_UNUSED( error ); /* just needed as syntactical sugar */
 
 
     kerning->x = 0;
@@ -420,7 +438,7 @@
     }
 
     /* not found */
-    goto Exit;
+    return;
 
   Found_Item:
     {
@@ -432,7 +450,7 @@
 
       if ( FT_STREAM_SEEK( item->offset )                       ||
            FT_FRAME_ENTER( item->pair_count * item->pair_size ) )
-        goto Exit;
+        return;
 
       min = 0;
       max = item->pair_count;
@@ -473,9 +491,7 @@
 
       FT_FRAME_EXIT();
     }
-
-  Exit:
-    return 0;
   }
+
 
 /* END */

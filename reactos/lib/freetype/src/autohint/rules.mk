@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 2000, 2001 Catharon Productions Inc.
+# Copyright 2000, 2001, 2002, 2003 Catharon Productions Inc.
 # Author: David Turner
 #
 # This file is part of the Catharon Typography Project and shall only
@@ -18,29 +18,28 @@
 
 # AUTO driver directory
 #
-AUTO_DIR  := $(SRC_)autohint
-AUTO_DIR_ := $(AUTO_DIR)$(SEP)
+AUTO_DIR := $(SRC_DIR)/autohint
 
 
 # compilation flags for the driver
 #
-AUTO_COMPILE := $(FT_COMPILE) $I$(AUTO_DIR)
+AUTO_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(AUTO_DIR))
 
 
 # AUTO driver sources (i.e., C files)
 #
-AUTO_DRV_SRC := $(AUTO_DIR_)ahangles.c  \
-                $(AUTO_DIR_)ahglobal.c  \
-                $(AUTO_DIR_)ahglyph.c   \
-                $(AUTO_DIR_)ahhint.c    \
-                $(AUTO_DIR_)ahmodule.c
+AUTO_DRV_SRC := $(AUTO_DIR)/ahangles.c \
+                $(AUTO_DIR)/ahglobal.c \
+                $(AUTO_DIR)/ahglyph.c  \
+                $(AUTO_DIR)/ahhint.c   \
+                $(AUTO_DIR)/ahmodule.c
 
 # AUTO driver headers
 #
 AUTO_DRV_H := $(AUTO_DRV_SRC:%c=%h)  \
-              $(AUTO_DIR_)ahloader.h \
-              $(AUTO_DIR_)ahtypes.h \
-              $(AUTO_DIR_)aherrors.h
+              $(AUTO_DIR)/ahloader.h \
+              $(AUTO_DIR)/ahtypes.h  \
+              $(AUTO_DIR)/aherrors.h
 
 
 # AUTO driver object(s)
@@ -48,25 +47,25 @@ AUTO_DRV_H := $(AUTO_DRV_SRC:%c=%h)  \
 #   AUTO_DRV_OBJ_M is used during `multi' builds.
 #   AUTO_DRV_OBJ_S is used during `single' builds.
 #
-AUTO_DRV_OBJ_M := $(AUTO_DRV_SRC:$(AUTO_DIR_)%.c=$(OBJ_)%.$O)
-AUTO_DRV_OBJ_S := $(OBJ_)autohint.$O
+AUTO_DRV_OBJ_M := $(AUTO_DRV_SRC:$(AUTO_DIR)/%.c=$(OBJ_DIR)/%.$O)
+AUTO_DRV_OBJ_S := $(OBJ_DIR)/autohint.$O
 
 # AUTO driver source file for single build
 #
-AUTO_DRV_SRC_S := $(AUTO_DIR_)autohint.c
+AUTO_DRV_SRC_S := $(AUTO_DIR)/autohint.c
 
 
 # AUTO driver - single object
 #
 $(AUTO_DRV_OBJ_S): $(AUTO_DRV_SRC_S) $(AUTO_DRV_SRC) \
                    $(FREETYPE_H) $(AUTO_DRV_H)
-	$(AUTO_COMPILE) $T$@ $(AUTO_DRV_SRC_S)
+	$(AUTO_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(AUTO_DRV_SRC_S))
 
 
 # AUTO driver - multiple objects
 #
-$(OBJ_)%.$O: $(AUTO_DIR_)%.c $(FREETYPE_H) $(AUTO_DRV_H)
-	$(AUTO_COMPILE) $T$@ $<
+$(OBJ_DIR)/%.$O: $(AUTO_DIR)/%.c $(FREETYPE_H) $(AUTO_DRV_H)
+	$(AUTO_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # update main driver object lists

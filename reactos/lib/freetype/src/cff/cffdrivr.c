@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    OpenType font driver implementation (body).                          */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -165,7 +165,7 @@
   /*    glyph_index :: The index of the glyph in the font file.            */
   /*                                                                       */
   /*    load_flags  :: A flag indicating what to load for this glyph.  The */
-  /*                   FTLOAD_??? constants can be used to control the     */
+  /*                   FT_LOAD_??? constants can be used to control the    */
   /*                   glyph loading process (e.g., whether the outline    */
   /*                   should be scaled, whether to load bitmaps or not,   */
   /*                   whether to hint the outline, etc).                  */
@@ -255,7 +255,7 @@
     /* now, lookup the name itself */
     gname = cff_index_get_sid_string( &font->string_index, sid, psnames );
 
-    if ( buffer_max > 0 )
+    if ( gname && buffer_max > 0 )
     {
       FT_UInt  len = (FT_UInt)ft_strlen( gname );
 
@@ -267,13 +267,12 @@
       ((FT_Byte*)buffer)[len] = 0;
     }
 
-    FT_FREE ( gname );
+    FT_FREE( gname );
     error = CFF_Err_Ok;
 
     Exit:
       return error;
   }
-
 
 
   /*************************************************************************/
@@ -378,9 +377,9 @@
   {
     /* begin with the FT_Module_Class fields */
     {
-      ft_module_font_driver       |
-      ft_module_driver_scalable   |
-      ft_module_driver_has_hinter,
+      FT_MODULE_FONT_DRIVER       |
+      FT_MODULE_DRIVER_SCALABLE   |
+      FT_MODULE_DRIVER_HAS_HINTER,
 
       sizeof( CFF_DriverRec ),
       "cff",

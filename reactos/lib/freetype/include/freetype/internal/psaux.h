@@ -5,7 +5,7 @@
 /*    Auxiliary functions and data structures related to PostScript fonts  */
 /*    (specification).                                                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -70,10 +70,10 @@ FT_BEGIN_HEADER
     (*done)( PS_Table  table );
 
     FT_Error
-    (*add)( PS_Table   table,
-            FT_Int     index,
-            void*      object,
-            FT_Int     length );
+    (*add)( PS_Table    table,
+            FT_Int      idx,
+            void*       object,
+            FT_PtrDist  length );
 
     void
     (*release)( PS_Table  table );
@@ -177,7 +177,9 @@ FT_BEGIN_HEADER
     T1_FIELD_TYPE_BOOL,
     T1_FIELD_TYPE_INTEGER,
     T1_FIELD_TYPE_FIXED,
+    T1_FIELD_TYPE_FIXED_1000,
     T1_FIELD_TYPE_STRING,
+    T1_FIELD_TYPE_KEY,
     T1_FIELD_TYPE_BBOX,
     T1_FIELD_TYPE_INTEGER_ARRAY,
     T1_FIELD_TYPE_FIXED_ARRAY,
@@ -261,7 +263,7 @@ FT_BEGIN_HEADER
           },
 
 
-#define T1_FIELD_TYPE_BOOL( _ident, _fname )                        \
+#define T1_FIELD_BOOL( _ident, _fname )                             \
           T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_BOOL, _fname )
 
 #define T1_FIELD_NUM( _ident, _fname )                                 \
@@ -270,8 +272,14 @@ FT_BEGIN_HEADER
 #define T1_FIELD_FIXED( _ident, _fname )                             \
           T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_FIXED, _fname )
 
+#define T1_FIELD_FIXED_1000( _ident, _fname )                             \
+          T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_FIXED_1000, _fname )
+
 #define T1_FIELD_STRING( _ident, _fname )                             \
           T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_STRING, _fname )
+
+#define T1_FIELD_KEY( _ident, _fname )                             \
+          T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_KEY, _fname )
 
 #define T1_FIELD_BBOX( _ident, _fname )                             \
           T1_NEW_SIMPLE_FIELD( _ident, T1_FIELD_TYPE_BBOX, _fname )
@@ -328,6 +336,12 @@ FT_BEGIN_HEADER
     FT_Fixed
     (*to_fixed)( PS_Parser  parser,
                  FT_Int     power_ten );
+    FT_Error
+    (*to_bytes)( PS_Parser  parser,
+                 FT_Byte*   bytes,
+                 FT_Int     max_bytes,
+                 FT_Int*    pnum_bytes );
+
     FT_Int
     (*to_coord_array)( PS_Parser  parser,
                        FT_Int     max_coords,
@@ -652,7 +666,6 @@ FT_BEGIN_HEADER
 
     PS_Blend             blend;       /* for multiple master support */
 
-    FT_UInt32            hint_flags;
     FT_Render_Mode       hint_mode;
 
     T1_Decoder_Callback  parse_callback;

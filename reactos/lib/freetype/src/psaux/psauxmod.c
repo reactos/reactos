@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType auxiliary PostScript module implementation (body).          */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002 by                                           */
+/*  Copyright 2000-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -42,6 +42,7 @@
     ps_parser_skip_alpha,
     ps_parser_to_int,
     ps_parser_to_fixed,
+    ps_parser_to_bytes,
     ps_parser_to_coord_array,
     ps_parser_to_fixed_array,
     ps_parser_to_token,
@@ -104,7 +105,7 @@
     0,
     sizeof( FT_ModuleRec ),
     "psaux",
-    0x10000L,
+    0x20000L,
     0x20000L,
 
     &psaux_interface,  /* module-specific interface */

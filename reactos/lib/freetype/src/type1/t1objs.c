@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 1 objects manager (body).                                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -118,9 +118,9 @@
 
     if ( funcs )
       error = funcs->set_scale( (PSH_Globals)size->root.internal,
-                                 size->root.metrics.x_scale,
-                                 size->root.metrics.y_scale,
-                                 0, 0 );
+                                size->root.metrics.x_scale,
+                                size->root.metrics.y_scale,
+                                0, 0 );
     return error;
   }
 
@@ -229,6 +229,9 @@
       FT_FREE( type1->encoding.char_name );
       FT_FREE( type1->font_name );
 
+      FT_FREE( type1->paint_type );
+      FT_FREE( type1->stroke_width );
+
 #ifndef T1_CONFIG_OPTION_NO_AFM
       /* release afm data if present */
       if ( face->afm_data )
@@ -275,10 +278,11 @@
                 FT_Int         num_params,
                 FT_Parameter*  params )
   {
-    FT_Error          error;
-    PSNames_Service   psnames;
-    PSAux_Service     psaux;
-    PSHinter_Service  pshinter;
+    FT_Error         error;
+    PSNames_Service  psnames;
+    PSAux_Service    psaux;
+    T1_Font          type1 = &face->type1;
+    PS_FontInfo      info = &type1->font_info;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -298,9 +302,8 @@
 
     face->pshinter = FT_Get_Module_Interface( FT_FACE_LIBRARY( face ),
                                               "pshinter" );
-    pshinter = (PSHinter_Service)face->pshinter;
 
-    /* open the tokenizer, this will also check the font format */
+    /* open the tokenizer; this will also check the font format */
     error = T1_Open_Face( face );
     if ( error )
       goto Exit;
@@ -317,22 +320,23 @@
       goto Exit;
     }
 
-    /* Now, load the font program into the face object */
+    /* now load the font program into the face object */
 
-    /* Init the face object fields */
-    /* Now set up root face fields */
+    /* initialize the face object fields */
+
+    /* set up root face fields */
     {
       FT_Face  root = (FT_Face)&face->root;
 
 
-      root->num_glyphs = face->type1.num_glyphs;
+      root->num_glyphs = type1->num_glyphs;
       root->face_index = face_index;
 
-      root->face_flags = FT_FACE_FLAG_SCALABLE;
+      root->face_flags  = FT_FACE_FLAG_SCALABLE;
       root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
       root->face_flags |= FT_FACE_FLAG_GLYPH_NAMES;
 
-      if ( face->type1.font_info.is_fixed_pitch )
+      if ( info->is_fixed_pitch )
         root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
       if ( face->blend )
@@ -342,45 +346,55 @@
 
       /* get style name -- be careful, some broken fonts only */
       /* have a `/FontName' dictionary entry!                 */
-      root->family_name = face->type1.font_info.family_name;
+      root->family_name = info->family_name;
+      /* assume "Regular" style if we don't know better */
+      root->style_name = (char *)"Regular";
       if ( root->family_name )
       {
-        char*  full   = face->type1.font_info.full_name;
+        char*  full   = info->full_name;
         char*  family = root->family_name;
 
 
         if ( full )
         {
-          while ( *family && *full == *family )
+          while ( *full )
           {
-            family++;
-            full++;
+            if ( *full == *family )
+            {
+              family++;
+              full++;
+            }
+            else
+            {
+              if ( *full == ' ' || *full == '-' )
+                full++;
+              else if ( *family == ' ' || *family == '-' )
+                family++;
+              else
+              {
+                if ( !*family )
+                  root->style_name = full;
+                break;
+              }
+            }
           }
-
-          root->style_name = ( *full == ' ' ? full + 1
-                                            : (char *)"Regular" );
         }
-        else
-          root->style_name = (char *)"Regular";
       }
       else
       {
         /* do we have a `/FontName'? */
-        if ( face->type1.font_name )
-        {
-          root->family_name = face->type1.font_name;
-          root->style_name  = (char *)"Regular";
-        }
+        if ( type1->font_name )
+          root->family_name = type1->font_name;
       }
 
       /* compute style flags */
       root->style_flags = 0;
-      if ( face->type1.font_info.italic_angle )
+      if ( info->italic_angle )
         root->style_flags |= FT_STYLE_FLAG_ITALIC;
-      if ( face->type1.font_info.weight )
+      if ( info->weight )
       {
-        if ( !ft_strcmp( face->type1.font_info.weight, "Bold"  ) ||
-             !ft_strcmp( face->type1.font_info.weight, "Black" ) )
+        if ( !ft_strcmp( info->weight, "Bold"  ) ||
+             !ft_strcmp( info->weight, "Black" ) )
           root->style_flags |= FT_STYLE_FLAG_BOLD;
       }
 
@@ -388,10 +402,10 @@
       root->num_fixed_sizes = 0;
       root->available_sizes = 0;
 
-      root->bbox.xMin =   face->type1.font_bbox.xMin             >> 16;
-      root->bbox.yMin =   face->type1.font_bbox.yMin             >> 16;
-      root->bbox.xMax = ( face->type1.font_bbox.xMax + 0xFFFFU ) >> 16;
-      root->bbox.yMax = ( face->type1.font_bbox.yMax + 0xFFFFU ) >> 16;
+      root->bbox.xMin =   type1->font_bbox.xMin             >> 16;
+      root->bbox.yMin =   type1->font_bbox.yMin             >> 16;
+      root->bbox.xMax = ( type1->font_bbox.xMax + 0xFFFFU ) >> 16;
+      root->bbox.yMax = ( type1->font_bbox.yMax + 0xFFFFU ) >> 16;
 
       /* Set units_per_EM if we didn't set it in parse_font_matrix. */
       if ( !root->units_per_EM )
@@ -400,13 +414,13 @@
       root->ascender  = (FT_Short)( root->bbox.yMax );
       root->descender = (FT_Short)( root->bbox.yMin );
       root->height    = (FT_Short)(
-                          ( ( root->ascender - root->descender ) * 12 ) / 10 );
+        ( ( root->ascender - root->descender ) * 12 ) / 10 );
 
       /* now compute the maximum advance width */
       root->max_advance_width =
         (FT_Short)( root->bbox.xMax );
       {
-        FT_Int  max_advance;
+        FT_Pos  max_advance;
 
 
         error = T1_Compute_Max_Advance( face, &max_advance );
@@ -420,8 +434,8 @@
 
       root->max_advance_height = root->height;
 
-      root->underline_position  = face->type1.font_info.underline_position;
-      root->underline_thickness = face->type1.font_info.underline_thickness;
+      root->underline_position  = info->underline_position >> 16;
+      root->underline_thickness = info->underline_thickness >> 16;
 
       root->internal->max_points   = 0;
       root->internal->max_contours = 0;
@@ -451,7 +465,7 @@
         charmap.platform_id = 7;
         clazz               = NULL;
 
-        switch ( face->type1.encoding_type )
+        switch ( type1->encoding_type )
         {
         case T1_ENCODING_TYPE_STANDARD:
           charmap.encoding    = FT_ENCODING_ADOBE_STANDARD;

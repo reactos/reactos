@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002 by
+# Copyright 1996-2000, 2002, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -15,26 +15,25 @@
 
 # PSAUX driver directory
 #
-PSAUX_DIR  := $(SRC_)psaux
-PSAUX_DIR_ := $(PSAUX_DIR)$(SEP)
+PSAUX_DIR := $(SRC_DIR)/psaux
 
 
 # compilation flags for the driver
 #
-PSAUX_COMPILE := $(FT_COMPILE) $I$(PSAUX_DIR)
+PSAUX_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(PSAUX_DIR))
 
 
 # PSAUX driver sources (i.e., C files)
 #
-PSAUX_DRV_SRC := $(PSAUX_DIR_)psobjs.c   \
-                 $(PSAUX_DIR_)t1decode.c \
-                 $(PSAUX_DIR_)t1cmap.c   \
-                 $(PSAUX_DIR_)psauxmod.c
+PSAUX_DRV_SRC := $(PSAUX_DIR)/psobjs.c   \
+                 $(PSAUX_DIR)/t1decode.c \
+                 $(PSAUX_DIR)/t1cmap.c   \
+                 $(PSAUX_DIR)/psauxmod.c
 
 # PSAUX driver headers
 #
 PSAUX_DRV_H := $(PSAUX_DRV_SRC:%c=%h)  \
-               $(PSAUX_DIR_)psauxerr.h
+               $(PSAUX_DIR)/psauxerr.h
 
 
 # PSAUX driver object(s)
@@ -42,25 +41,25 @@ PSAUX_DRV_H := $(PSAUX_DRV_SRC:%c=%h)  \
 #   PSAUX_DRV_OBJ_M is used during `multi' builds.
 #   PSAUX_DRV_OBJ_S is used during `single' builds.
 #
-PSAUX_DRV_OBJ_M := $(PSAUX_DRV_SRC:$(PSAUX_DIR_)%.c=$(OBJ_)%.$O)
-PSAUX_DRV_OBJ_S := $(OBJ_)psaux.$O
+PSAUX_DRV_OBJ_M := $(PSAUX_DRV_SRC:$(PSAUX_DIR)/%.c=$(OBJ_DIR)/%.$O)
+PSAUX_DRV_OBJ_S := $(OBJ_DIR)/psaux.$O
 
 # PSAUX driver source file for single build
 #
-PSAUX_DRV_SRC_S := $(PSAUX_DIR_)psaux.c
+PSAUX_DRV_SRC_S := $(PSAUX_DIR)/psaux.c
 
 
 # PSAUX driver - single object
 #
 $(PSAUX_DRV_OBJ_S): $(PSAUX_DRV_SRC_S) $(PSAUX_DRV_SRC) \
                    $(FREETYPE_H) $(PSAUX_DRV_H)
-	$(PSAUX_COMPILE) $T$@ $(PSAUX_DRV_SRC_S)
+	$(PSAUX_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(PSAUX_DRV_SRC_S))
 
 
 # PSAUX driver - multiple objects
 #
-$(OBJ_)%.$O: $(PSAUX_DIR_)%.c $(FREETYPE_H) $(PSAUX_DRV_H)
-	$(PSAUX_COMPILE) $T$@ $<
+$(OBJ_DIR)/%.$O: $(PSAUX_DIR)/%.c $(FREETYPE_H) $(PSAUX_DRV_H)
+	$(PSAUX_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # update main driver object lists

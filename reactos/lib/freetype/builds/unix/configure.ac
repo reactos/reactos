@@ -10,7 +10,7 @@ dnl configuration file -- stay in 8.3 limit
 AC_CONFIG_HEADER(ftconfig.h:ftconfig.in)
 
 dnl Don't forget to update VERSION.DLL!
-version_info='9:3:3'
+version_info='9:4:3'
 AC_SUBST(version_info)
 ft_version=`echo $version_info | tr : .`
 AC_SUBST(ft_version)
@@ -70,9 +70,9 @@ dnl checks for library functions
 dnl Here we check whether we can use our mmap file component.
 AC_FUNC_MMAP
 if test "$ac_cv_func_mmap_fixed_mapped" != yes; then
-  FTSYS_SRC='$(BASE_)ftsystem.c'
+  FTSYS_SRC='$(BASE_DIR)/ftsystem.c'
 else
-  FTSYS_SRC='$(BUILD)/ftsystem.c'
+  FTSYS_SRC='$(BUILD_DIR)/ftsystem.c'
 
   FT_MUNMAP_DECL
   FT_MUNMAP_PARAM
@@ -80,7 +80,6 @@ fi
 AC_SUBST(FTSYS_SRC)
 
 AC_CHECK_FUNCS(memcpy memmove)
-
 
 dnl Check for system zlib
 AC_ARG_WITH(zlib,
@@ -93,19 +92,32 @@ if test x$with_zlib != xno && test -n "$LIBZ"; then
   LDFLAGS="$LDFLAGS $LIBZ"
   SYSTEM_ZLIB=yes
 fi
+
+dnl Whether to use Mac OS resource-based fonts or not
+AC_ARG_WITH(old-mac-fonts,
+  [  --with-old-mac-fonts    allow Mac resource-based fonts to be used])
+if test x$with_old_mac_fonts = xyes; then
+  CFLAGS="$CFLAGS -DTARGET_API_MAC_CARBON"
+  LDFLAGS="$LDFLAGS -Xlinker -framework -Xlinker CoreServices \
+                    -Xlinker -framework -Xlinker ApplicationServices"
+else
+  CFLAGS="$CFLAGS -DDARWIN_NO_CARBON"
+fi
+
 AC_SUBST(LIBZ)
 AC_SUBST(CFLAGS)
 AC_SUBST(LDFLAGS)
 AC_SUBST(SYSTEM_ZLIB)
-
-
 
 AC_PROG_LIBTOOL
 
 dnl create the Unix-specific sub-Makefiles `builds/unix/unix-def.mk'
 dnl and 'builds/unix/unix-cc.mk' that will be used by the build system
 dnl
-AC_CONFIG_FILES([unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config])
+AC_CONFIG_FILES([unix-cc.mk:unix-cc.in
+                 unix-def.mk:unix-def.in
+                 freetype-config
+                 freetype2.pc:freetype2.in])
 
 dnl re-generate the Jamfile to use libtool now
 dnl

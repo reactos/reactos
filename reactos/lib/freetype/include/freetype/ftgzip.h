@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Gzip-compressed stream support.                                      */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,47 +40,54 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /*************************************************************************/
 
+
  /************************************************************************
   *
-  * @type: FT_Stream_OpenGzip
+  * @function:
+  *   FT_Stream_OpenGzip
   *
   * @description:
-  *   open a new stream to parse gzip-compressed font files. This is
+  *   Open a new stream to parse gzip-compressed font files.  This is
   *   mainly used to support the compressed *.pcf.gz fonts that come
-  *   with XFree86
+  *   with XFree86.
   *
   * @input:
-  *   stream :: target embedding stream
-  *   source :: source stream, used to
+  *   stream :: The target embedding stream.
+  *
+  *   source :: The source stream.
   *
   * @return:
-  *   error code. 0 means success
+  *   FreeType error code.  0 means success.
   *
   * @note:
-  *   the source stream must be opened _before_ calling this function.
+  *   The source stream must be opened _before_ calling this function.
   *
-  *   calling @FT_Stream_Close on the new stream will *not* call
-  *   @FT_Stream_Close on the source stream. None of the stream objects
-  *   will be released to the heap.
+  *   Calling the internal function FT_Stream_Close on the new stream will
+  *   *not* call FT_Stream_Close on the source stream.  None of the stream
+  *   objects will be released to the heap.
   *
-  *   the stream implementation is very basic, and resets the decompression
-  *   process each time seeking backwards is needed within the stream
+  *   The stream implementation is very basic and resets the decompression
+  *   process each time seeking backwards is needed within the stream.
   *
-  *   in certain builds of the library, gzip compression recognition is
-  *   automatic when calling @FT_New_Face or @FT_Open_Face. This means that
-  *   if no font driver is capable of handling the raw compressed file,
-  *   the library will try to open a gzip stream from it and re-open
-  *   the face with it.
+  *   In certain builds of the library, gzip compression recognition is
+  *   automatically handled when calling @FT_New_Face or @FT_Open_Face.
+  *   This means that if no font driver is capable of handling the raw
+  *   compressed file, the library will try to open a gzipped stream from
+  *   it and re-open the face with it.
   *
-  *   this function may return "FT_Err_Unimplemented" if your build of
+  *   This function may return "FT_Err_Unimplemented" if your build of
   *   FreeType was not compiled with zlib support.
   */
   FT_EXPORT( FT_Error )
-  FT_Stream_OpenGzip( FT_Stream    stream,
-                      FT_Stream    source );
+  FT_Stream_OpenGzip( FT_Stream  stream,
+                      FT_Stream  source );
 
  /* */
+
 
 FT_END_HEADER
 
 #endif /* __FTGZIP_H__ */
+
+
+/* END */

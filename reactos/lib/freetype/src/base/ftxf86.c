@@ -45,7 +45,7 @@
       { "cidtype1", "CID Type 1" },
       { "cff",      "CFF" },
       { "pfr",      "PFR" },
-      { "winfonts",   "Windows FNT" }
+      { "winfonts", "Windows FNT" }
     };
 
     const char*  result = NULL;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CID driver interface (body).                                         */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -69,9 +69,9 @@
   {
     /* first of all, the FT_Module_Class fields */
     {
-      ft_module_font_driver       |
-      ft_module_driver_scalable   |
-      ft_module_driver_has_hinter ,
+      FT_MODULE_FONT_DRIVER       |
+      FT_MODULE_DRIVER_SCALABLE   |
+      FT_MODULE_DRIVER_HAS_HINTER,
 
       sizeof( FT_DriverRec ),
       "t1cid",   /* module name           */

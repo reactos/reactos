@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType name ID definitions (specification only).                   */
 /*                                                                         */
-/*  Copyright 1996-2002 by                                                 */
+/*  Copyright 1996-2002, 2003 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,7 +41,7 @@ FT_BEGIN_HEADER
    *
    * @description:
    *   A list of valid values for the `platform_id' identifier code in
-   *   @FT_CharmapRec and @FT_SfntName structures.
+   *   @FT_CharMapRec and @FT_SfntName structures.
    *
    * @values:
    *   TT_PLATFORM_APPLE_UNICODE ::
@@ -231,34 +231,33 @@ FT_BEGIN_HEADER
    *
    * @values:
    *   TT_MS_ID_SYMBOL_CS ::
-   *     Corresponds to symbol encodings. see @FT_ENCODING_MS_SYMBOL.
+   *     Corresponds to Microsoft symbol encoding. See
+   *     @FT_ENCODING_MS_SYMBOL.
    *
    *   TT_MS_ID_UNICODE_CS ::
    *     Corresponds to a Microsoft WGL4 charmap, matching Unicode.  See
    *     @FT_ENCODING_UNICODE.
    *
    *   TT_MS_ID_SJIS ::
-   *     Corresponds to Microsoft SJIS Japanese encoding.
-   *     See @FT_ENCODING_MS_SJIS.
+   *     Corresponds to SJIS Japanese encoding.  See @FT_ENCODING_SJIS.
    *
    *   TT_MS_ID_GB2312 ::
-   *     Corresponds to Microsoft Simplified Chinese as used in Mainland
-   *     China.  See @FT_ENCODING_MS_GB2312.
+   *     Corresponds to Simplified Chinese as used in Mainland China.  See
+   *     @FT_ENCODING_GB2312.
    *
    *   TT_MS_ID_BIG_5 ::
-   *     Corresponds to Microsoft Traditional Chinese as used in Taiwan and
-   *     Hong Kong.  See @FT_ENCODING_MS_BIG5.
+   *     Corresponds to Traditional Chinese as used in Taiwan and Hong Kong.
+   *     See @FT_ENCODING_BIG5.
    *
    *   TT_MS_ID_WANSUNG ::
-   *     Corresponds to Microsoft Korean Wansung encoding.  See
-   *     @FT_ENCODING_MS_WANSUNG.
+   *     Corresponds to Korean Wansung encoding.  See @FT_ENCODING_WANSUNG.
    *
    *   TT_MS_ID_JOHAB ::
-   *     Corresponds to Microsoft Johab encoding.  See @FT_ENCODING_MS_JOHAB.
+   *     Corresponds to Johab encoding.  See @FT_ENCODING_JOHAB.
    *
    *   TT_MS_ID_UCS_4 ::
-   *     Corresponds to UCS-4 or UTF-32 charmaps.  This has been added into
-   *     OpenType specification as of version 1.4 (mid-2001.)
+   *     Corresponds to UCS-4 or UTF-32 charmaps.  This has been added to
+   *     the OpenType specification version 1.4 (mid-2001.)
    */
 
 #define TT_MS_ID_SYMBOL_CS    0
@@ -705,8 +704,8 @@ FT_BEGIN_HEADER
 #define TT_MS_LANGID_SPANISH_UNITED_STATES             0x540a
   /* The following two IDs blatantly violate MS specs by using a */
   /* sublanguage > 0x1F.                                         */
-#define TT_MS_LANGID_SPANISH_LATIN_AMERICA             0xE40a
-#define TT_MS_LANGID_FRENCH_NORTH_AFRICA               0xE40c
+#define TT_MS_LANGID_SPANISH_LATIN_AMERICA             0xE40aU
+#define TT_MS_LANGID_FRENCH_NORTH_AFRICA               0xE40cU
 
 #define TT_MS_LANGID_FRENCH_MOROCCO                    0x380c
 #define TT_MS_LANGID_FRENCH_HAITI                      0x3c0c

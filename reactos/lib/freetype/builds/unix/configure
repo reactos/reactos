@@ -1009,6 +1009,7 @@ Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
   --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
   --without-zlib          use internal zlib instead of system-wide
+  --with-old-mac-fonts    allow Mac resource-based fonts to be used
   --with-gnu-ld           assume the C compiler uses GNU ld default=no
   --with-pic              try to use only PIC/non-PIC objects default=use both
 
@@ -1402,7 +1403,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
           ac_config_headers="$ac_config_headers ftconfig.h:ftconfig.in"
 
 
-version_info='9:3:3'
+version_info='9:4:3'
 
 ft_version=`echo $version_info | tr : .`
 
@@ -4125,9 +4126,9 @@ fi
 rm -f conftest.mmap
 
 if test "$ac_cv_func_mmap_fixed_mapped" != yes; then
-  FTSYS_SRC='$(BASE_)ftsystem.c'
+  FTSYS_SRC='$(BASE_DIR)/ftsystem.c'
 else
-  FTSYS_SRC='$(BUILD)/ftsystem.c'
+  FTSYS_SRC='$(BUILD_DIR)/ftsystem.c'
 
   echo "$as_me:$LINENO: checking whether munmap must be declared" >&5
 echo $ECHO_N "checking whether munmap must be declared... $ECHO_C" >&6
@@ -4296,7 +4297,6 @@ _ACEOF
 
 fi
 done
-
 
 
 
@@ -4471,6 +4471,19 @@ if test x$with_zlib != xno && test -n "$LIBZ"; then
   SYSTEM_ZLIB=yes
 fi
 
+
+# Check whether --with-old-mac-fonts or --without-old-mac-fonts was given.
+if test "${with_old_mac_fonts+set}" = set; then
+  withval="$with_old_mac_fonts"
+
+fi;
+if test x$with_old_mac_fonts = xyes; then
+  CFLAGS="$CFLAGS -DTARGET_API_MAC_CARBON"
+  LDFLAGS="$LDFLAGS -Xlinker -framework -Xlinker CoreServices \
+                    -Xlinker -framework -Xlinker ApplicationServices"
+else
+  CFLAGS="$CFLAGS -DDARWIN_NO_CARBON"
+fi
 
 
 
@@ -5625,7 +5638,7 @@ test "x$enable_libtool_lock" != xno && enable_libtool_lock=yes
 case $host in
 *-*-irix6*)
   # Find out which ABI we are using.
-  echo '#line 5628 "configure"' > conftest.$ac_ext
+  echo '#line 5641 "configure"' > conftest.$ac_ext
   if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   (eval $ac_compile) 2>&5
   ac_status=$?
@@ -6139,7 +6152,7 @@ chmod -w .
 save_CFLAGS="$CFLAGS"
 CFLAGS="$CFLAGS -o out/conftest2.$ac_objext"
 compiler_c_o=no
-if { (eval echo configure:6142: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
+if { (eval echo configure:6155: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>out/conftest.err; } && test -s out/conftest2.$ac_objext; then
   # The compiler can only warn and ignore the option if not recognized
   # So say no if there are warnings
   if test -s out/conftest.err; then
@@ -6701,7 +6714,7 @@ else
       allow_undefined_flag='-undefined suppress'
       ;;
     *) # Darwin 1.3 on
-      allow_undefined_flag='-flat_namespace -undefined suppress'
+#      allow_undefined_flag='-undefined suppress'
       ;;
     esac
     # FIXME: Relying on posixy $() will cause problems for
@@ -7913,7 +7926,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 7916 "configure"
+#line 7929 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8011,7 +8024,7 @@ else
     lt_dlunknown=0; lt_dlno_uscore=1; lt_dlneed_uscore=2
   lt_status=$lt_dlunknown
   cat > conftest.$ac_ext <<EOF
-#line 8014 "configure"
+#line 8027 "configure"
 #include "confdefs.h"
 
 #if HAVE_DLFCN_H
@@ -8739,7 +8752,7 @@ LIBTOOL='$(SHELL) $(top_builddir)/libtool'
 
 
 
-                              ac_config_files="$ac_config_files unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config"
+                                        ac_config_files="$ac_config_files unix-cc.mk:unix-cc.in unix-def.mk:unix-def.in freetype-config freetype2.pc:freetype2.in"
 
 
 
@@ -9250,6 +9263,7 @@ do
   "unix-cc.mk" ) CONFIG_FILES="$CONFIG_FILES unix-cc.mk:unix-cc.in" ;;
   "unix-def.mk" ) CONFIG_FILES="$CONFIG_FILES unix-def.mk:unix-def.in" ;;
   "freetype-config" ) CONFIG_FILES="$CONFIG_FILES freetype-config" ;;
+  "freetype2.pc" ) CONFIG_FILES="$CONFIG_FILES freetype2.pc:freetype2.in" ;;
   "ftconfig.h" ) CONFIG_HEADERS="$CONFIG_HEADERS ftconfig.h:ftconfig.in" ;;
   *) { { echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

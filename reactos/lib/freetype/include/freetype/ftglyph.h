@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType convenience functions to handle glyphs (specification).     */
 /*                                                                         */
-/*  Copyright 1996-2001 by                                                 */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -282,7 +282,64 @@ FT_BEGIN_HEADER
                       FT_Matrix*  matrix,
                       FT_Vector*  delta );
 
-  /* */
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Enum>                                                                */
+  /*    FT_Glyph_BBox_Mode                                                 */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    The mode how the values of @FT_Glyph_Get_CBox are returned.        */
+  /*                                                                       */
+  /* <Values>                                                              */
+  /*    FT_GLYPH_BBOX_UNSCALED ::                                          */
+  /*      Return unscaled font units.                                      */
+  /*                                                                       */
+  /*    FT_GLYPH_BBOX_SUBPIXELS ::                                         */
+  /*      Return unfitted 26.6 coordinates.                                */
+  /*                                                                       */
+  /*    FT_GLYPH_BBOX_GRIDFIT ::                                           */
+  /*      Return grid-fitted 26.6 coordinates.                             */
+  /*                                                                       */
+  /*    FT_GLYPH_BBOX_TRUNCATE ::                                          */
+  /*      Return coordinates in integer pixels.                            */
+  /*                                                                       */
+  /*    FT_GLYPH_BBOX_PIXELS ::                                            */
+  /*      Return grid-fitted pixel coordinates.                            */
+  /*                                                                       */
+  typedef enum  FT_Glyph_BBox_Mode_
+  {
+    FT_GLYPH_BBOX_UNSCALED  = 0,
+    FT_GLYPH_BBOX_SUBPIXELS = 0,
+    FT_GLYPH_BBOX_GRIDFIT   = 1,
+    FT_GLYPH_BBOX_TRUNCATE  = 2,
+    FT_GLYPH_BBOX_PIXELS    = 3
+
+  } FT_Glyph_BBox_Mode;
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Enum>                                                                */
+  /*    ft_glyph_bbox_xxx                                                  */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    These constants are deprecated.  Use the corresponding             */
+  /*    @FT_Glyph_BBox_Mode values instead.                                */
+  /*                                                                       */
+  /* <Values>                                                              */
+  /*   ft_glyph_bbox_unscaled  :: see @FT_GLYPH_BBOX_UNSCALED              */
+  /*   ft_glyph_bbox_subpixels :: see @FT_GLYPH_BBOX_SUBPIXELS             */
+  /*   ft_glyph_bbox_gridfit   :: see @FT_GLYPH_BBOX_GRIDFIT               */
+  /*   ft_glyph_bbox_truncate  :: see @FT_GLYPH_BBOX_TRUNCATE              */
+  /*   ft_glyph_bbox_pixels    :: see @FT_GLYPH_BBOX_PIXELS                */
+  /*                                                                       */
+#define ft_glyph_bbox_unscaled   FT_GLYPH_BBOX_UNSCALED
+#define ft_glyph_bbox_subpixels  FT_GLYPH_BBOX_SUBPIXELS
+#define ft_glyph_bbox_gridfit    FT_GLYPH_BBOX_GRIDFIT
+#define ft_glyph_bbox_truncate   FT_GLYPH_BBOX_TRUNCATE
+#define ft_glyph_bbox_pixels     FT_GLYPH_BBOX_PIXELS
+
 
   /*************************************************************************/
   /*                                                                       */
@@ -316,11 +373,9 @@ FT_BEGIN_HEADER
   /*    convention.                                                        */
   /*                                                                       */
   /*    If the glyph has been loaded with FT_LOAD_NO_SCALE, `bbox_mode'    */
-  /*    must be set to `ft_glyph_bbox_unscaled' to get unscaled font       */
-  /*    units.                                                             */
-  /*                                                                       */
-  /*    If `bbox_mode' is set to `ft_glyph_bbox_subpixels' the bbox        */
-  /*    coordinates are returned in 26.6 pixels (i.e. 1/64th of pixels).   */
+  /*    must be set to `FT_GLYPH_BBOX_UNSCALED' to get unscaled font       */
+  /*    units in 26.6 pixel format.  The value `FT_GLYPH_BBOX_SUBPIXELS'   */
+  /*    is another name for this constant.                                 */
   /*                                                                       */
   /*    Note that the maximum coordinates are exclusive, which means that  */
   /*    one can compute the width and height of the glyph image (be it in  */
@@ -330,7 +385,7 @@ FT_BEGIN_HEADER
   /*      height = bbox.yMax - bbox.yMin;                                  */
   /*                                                                       */
   /*    Note also that for 26.6 coordinates, if `bbox_mode' is set to      */
-  /*    `ft_glyph_bbox_gridfit', the coordinates will also be grid-fitted, */
+  /*    `FT_GLYPH_BBOX_GRIDFIT', the coordinates will also be grid-fitted, */
   /*    which corresponds to:                                              */
   /*                                                                       */
   /*      bbox.xMin = FLOOR(bbox.xMin);                                    */
@@ -339,23 +394,11 @@ FT_BEGIN_HEADER
   /*      bbox.yMax = CEILING(bbox.yMax);                                  */
   /*                                                                       */
   /*    To get the bbox in pixel coordinates, set `bbox_mode' to           */
-  /*    `ft_glyph_bbox_truncate'.                                          */
+  /*    `FT_GLYPH_BBOX_TRUNCATE'.                                          */
   /*                                                                       */
   /*    To get the bbox in grid-fitted pixel coordinates, set `bbox_mode'  */
-  /*    to `ft_glyph_bbox_pixels'.                                         */
+  /*    to `FT_GLYPH_BBOX_PIXELS'.                                         */
   /*                                                                       */
-  /*    The default value for `bbox_mode' is `ft_glyph_bbox_pixels'.       */
-  /*                                                                       */
-  enum
-  {
-    ft_glyph_bbox_unscaled  = 0, /* return unscaled font units           */
-    ft_glyph_bbox_subpixels = 0, /* return unfitted 26.6 coordinates     */
-    ft_glyph_bbox_gridfit   = 1, /* return grid-fitted 26.6 coordinates  */
-    ft_glyph_bbox_truncate  = 2, /* return coordinates in integer pixels */
-    ft_glyph_bbox_pixels    = 3  /* return grid-fitted pixel coordinates */
-  };
-
-
   FT_EXPORT( void )
   FT_Glyph_Get_CBox( FT_Glyph  glyph,
                      FT_UInt   bbox_mode,
@@ -391,8 +434,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Note>                                                                */
   /*    The glyph image is translated with the `origin' vector before      */
-  /*    rendering.  In case of error, it it translated back to its         */
-  /*    original position and the glyph is left untouched.                 */
+  /*    rendering.                                                         */
   /*                                                                       */
   /*    The first parameter is a pointer to a FT_Glyph handle, that will   */
   /*    be replaced by this function.  Typically, you would use (omitting  */
@@ -413,7 +455,7 @@ FT_BEGIN_HEADER
   /*        // convert to a bitmap (default render mode + destroy old)     */
   /*        if ( glyph->format != FT_GLYPH_FORMAT_BITMAP )                 */
   /*        {                                                              */
-  /*          error = FT_Glyph_To_Bitmap( &glyph, ft_render_mode_default,  */
+  /*          error = FT_Glyph_To_Bitmap( &glyph, FT_RENDER_MODE_DEFAULT,  */
   /*                                      0, 1 );                          */
   /*          if ( error ) // glyph unchanged                              */
   /*            ...                                                        */

@@ -8,7 +8,7 @@
    subject to change. Applications should only use zlib.h.
  */
 
-/* @(#) $Id: zutil.h,v 1.2 2003/04/18 10:44:17 gvg Exp $ */
+/* @(#) $Id: zutil.h,v 1.3 2004/01/21 19:23:46 gvg Exp $ */
 
 #ifndef _Z_UTIL_H
 #define _Z_UTIL_H
@@ -173,8 +173,8 @@ typedef unsigned long  ulg;
 #    define zmemzero(dest, len) _fmemset(dest, 0, len)
 #  else
 #    define zmemcpy ft_memcpy
-#    define zmemcmp memcmp
-#    define zmemzero(dest, len) memset(dest, 0, len)
+#    define zmemcmp ft_memcmp
+#    define zmemzero(dest, len) ft_memset(dest, 0, len)
 #  endif
 #else
    extern void zmemcpy  OF((Bytef* dest, const Bytef* source, uInt len));

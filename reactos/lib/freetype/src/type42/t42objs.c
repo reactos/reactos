@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 objects manager (body).                                      */
 /*                                                                         */
-/*  Copyright 2002 by Roberto Alameda.                                     */
+/*  Copyright 2002, 2003 by Roberto Alameda.                               */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -149,10 +149,12 @@
                  FT_Int         num_params,
                  FT_Parameter*  params )
   {
-    FT_Error          error;
-    PSNames_Service   psnames;
-    PSAux_Service     psaux;
-    FT_Face           root    = (FT_Face)&face->root;
+    FT_Error         error;
+    PSNames_Service  psnames;
+    PSAux_Service    psaux;
+    FT_Face          root  = (FT_Face)&face->root;
+    T1_Font          type1 = &face->type1;
+    PS_FontInfo      info  = &type1->font_info;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
@@ -193,7 +195,7 @@
     /* Init the face object fields */
     /* Now set up root face fields */
 
-    root->num_glyphs   = face->type1.num_glyphs;
+    root->num_glyphs   = type1->num_glyphs;
     root->num_charmaps = 0;
     root->face_index   = face_index;
 
@@ -201,42 +203,52 @@
     root->face_flags |= FT_FACE_FLAG_HORIZONTAL;
     root->face_flags |= FT_FACE_FLAG_GLYPH_NAMES;
 
-    if ( face->type1.font_info.is_fixed_pitch )
+    if ( info->is_fixed_pitch )
       root->face_flags |= FT_FACE_FLAG_FIXED_WIDTH;
 
     /* XXX: TODO -- add kerning with .afm support */
 
     /* get style name -- be careful, some broken fonts only */
     /* have a `/FontName' dictionary entry!                 */
-    root->family_name = face->type1.font_info.family_name;
+    root->family_name = info->family_name;
+    /* assume "Regular" style if we don't know better */
+    root->style_name = (char *)"Regular";
     if ( root->family_name )
     {
-      char*  full   = face->type1.font_info.full_name;
+      char*  full   = info->full_name;
       char*  family = root->family_name;
 
 
       if ( full )
       {
-        while ( *family && *full == *family )
+        while ( *full )
         {
-          family++;
-          full++;
+          if ( *full == *family )
+          {
+            family++;
+            full++;
+          }
+          else
+          {
+            if ( *full == ' ' || *full == '-' )
+              full++;
+            else if ( *family == ' ' || *family == '-' )
+              family++;
+            else
+            {
+              if ( !*family )
+                root->style_name = full;
+              break;
+            }
+          }
         }
-
-        root->style_name = ( *full == ' ' ? full + 1
-                                          : (char *)"Regular" );
       }
-      else
-        root->style_name = (char *)"Regular";
     }
     else
     {
       /* do we have a `/FontName'? */
-      if ( face->type1.font_name )
-      {
-        root->family_name = face->type1.font_name;
-        root->style_name  = (char *)"Regular";
-      }
+      if ( type1->font_name )
+        root->family_name = type1->font_name;
     }
 
     /* no embedded bitmap support */
@@ -266,15 +278,15 @@
     root->max_advance_width  = face->ttf_face->max_advance_width;
     root->max_advance_height = face->ttf_face->max_advance_height;
 
-    root->underline_position  = face->type1.font_info.underline_position;
-    root->underline_thickness = face->type1.font_info.underline_thickness;
+    root->underline_position  = info->underline_position >> 16;
+    root->underline_thickness = info->underline_thickness >> 16;
 
     root->internal->max_points   = 0;
     root->internal->max_contours = 0;
 
     /* compute style flags */
     root->style_flags = 0;
-    if ( face->type1.font_info.italic_angle )
+    if ( info->italic_angle )
       root->style_flags |= FT_STYLE_FLAG_ITALIC;
 
     if ( face->ttf_face->style_flags & FT_STYLE_FLAG_BOLD )
@@ -304,7 +316,7 @@
         charmap.platform_id = 7;
         clazz               = NULL;
 
-        switch ( face->type1.encoding_type )
+        switch ( type1->encoding_type )
         {
         case T1_ENCODING_TYPE_STANDARD:
           charmap.encoding    = FT_ENCODING_ADOBE_STANDARD;
@@ -385,6 +397,9 @@
       FT_FREE( type1->encoding.char_index );
       FT_FREE( type1->encoding.char_name );
       FT_FREE( type1->font_name );
+
+      FT_FREE( type1->paint_type );
+      FT_FREE( type1->stroke_width );
 
       FT_FREE( face->ttf_data );
 
@@ -532,7 +547,7 @@
     T42_Face  t42face = (T42_Face)face;
 
 
-    FT_Activate_Size(size->ttsize);
+    FT_Activate_Size( size->ttsize );
 
     return FT_Set_Char_Size( t42face->ttf_face,
                              char_width,
@@ -551,7 +566,7 @@
     T42_Face  t42face = (T42_Face)face;
 
 
-    FT_Activate_Size(size->ttsize);
+    FT_Activate_Size( size->ttsize );
 
     return FT_Set_Pixel_Sizes( t42face->ttf_face,
                                pixel_width,

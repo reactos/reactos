@@ -85,7 +85,9 @@ struct inflate_blocks_state {
 #define LOAD {LOADIN LOADOUT}
 
 /* masks for lower bits (size given to avoid silly warnings with Visual C++) */
+#ifndef NO_INFLATE_MASK
 local uInt inflate_mask[17];
+#endif
 
 /* copy as much as possible from the sliding window to the output area */
 local int inflate_flush OF((

@@ -2,9 +2,9 @@
 /*                                                                         */
 /*  ftpfr.h                                                                */
 /*                                                                         */
-/*    FreeType API for accessing PFR-specific data                         */
+/*    FreeType API for accessing PFR-specific data (specification only).   */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -49,42 +49,44 @@ FT_BEGIN_HEADER
   *    FT_Get_PFR_Metrics
   *
   * @description:
-  *    returns the outline and metrics resolutions of a given PFR
-  *    face.
+  *    Return the outline and metrics resolutions of a given PFR face.
   *
   * @input:
-  *    face :: handle to input face. It can be a non-PFR face.
+  *    face :: Handle to the input face.  It can be a non-PFR face.
   *
   * @output:
   *    aoutline_resolution ::
-  *      outline resolution. This is equivalent to "face->units_per_EM".
-  *      optional (parameter can be NULL)
+  *      Outline resolution.  This is equivalent to `face->units_per_EM'.
+  *      Optional (parameter can be NULL).
   *
   *    ametrics_resolution ::
-  *      metrics_resolution. This is equivalent to "outline_resolution"
-  *      for non-PFR fonts. can be NULL
-  *      optional (parameter can be NULL)
+  *      Metrics resolution.  This is equivalent to `outline_resolution'
+  *      for non-PFR fonts.  Optional (parameter can be NULL).
   *
   *    ametrics_x_scale ::
-  *      a 16.16 fixed-point number used to scale distance expressed
-  *      in metrics units to device sub-pixels. This is equivalent to
-  *      'face->size->x_scale', but for metrics only.
-  *      optional (parameter can be NULL)
+  *      A 16.16 fixed-point number used to scale distance expressed
+  *      in metrics units to device sub-pixels.  This is equivalent to
+  *      `face->size->x_scale', but for metrics only.  Optional (parameter
+  *      can be NULL)
   *
   *    ametrics_y_scale ::
-  *      same as 'ametrics_x_scale', but for the vertical direction.
+  *      Same as `ametrics_x_scale' but for the vertical direction.
   *      optional (parameter can be NULL)
   *
+  * @return:
+  *    FreeType error code.  0 means success.
+  *
   * @note:
-  *   if the input face is not a PFR, this function will return an error.
+  *   If the input face is not a PFR, this function will return an error.
   *   However, in all cases, it will return valid values.
   */
   FT_EXPORT( FT_Error )
-  FT_Get_PFR_Metrics( FT_Face     face,
-                      FT_UInt    *aoutline_resolution,
-                      FT_UInt    *ametrics_resolution,
-                      FT_Fixed   *ametrics_x_scale,
-                      FT_Fixed   *ametrics_y_scale );
+  FT_Get_PFR_Metrics( FT_Face    face,
+                      FT_UInt   *aoutline_resolution,
+                      FT_UInt   *ametrics_resolution,
+                      FT_Fixed  *ametrics_x_scale,
+                      FT_Fixed  *ametrics_y_scale );
+
 
  /**********************************************************************
   *
@@ -92,25 +94,30 @@ FT_BEGIN_HEADER
   *    FT_Get_PFR_Kerning
   *
   * @description:
-  *    returns the kerning pair corresponding to two glyphs in
-  *    a PFR face. The distance is expressed in metrics units, unlike
-  *    the result of @FT_Get_Kerning.
+  *    Return the kerning pair corresponding to two glyphs in a PFR face.
+  *    The distance is expressed in metrics units, unlike the result of
+  *    @FT_Get_Kerning.
   *
   * @input:
-  *    face :: handle to input face.
-  *    left  :: left glyph index
-  *    right :: right glyph index
+  *    face  :: A handle to the input face.
+  *
+  *    left  :: Index of the left glyph.
+  *
+  *    right :: Index of the right glyph.
   *
   * @output:
-  *    avector :: kerning vector
+  *    avector :: A kerning vector.
+  *
+  * @return:
+  *    FreeType error code.  0 means success.
   *
   * @note:
-  *    this function always return distances in original PFR metrics
-  *    units. This is unlike @FT_Get_Kerning with the @FT_KERNING_UNSCALED
-  *    mode, which always return distances converted to outline units.
+  *    This function always return distances in original PFR metrics
+  *    units.  This is unlike @FT_Get_Kerning with the @FT_KERNING_UNSCALED
+  *    mode, which always returns distances converted to outline units.
   *
-  *    you can use the value of the 'x_scale' and 'y_scale' parameters
-  *    returned by @FT_Get_PFR_Metrics to scale these to device sub-pixels
+  *    You can use the value of the `x_scale' and `y_scale' parameters
+  *    returned by @FT_Get_PFR_Metrics to scale these to device sub-pixels.
   */
   FT_EXPORT( FT_Error )
   FT_Get_PFR_Kerning( FT_Face     face,
@@ -118,35 +125,38 @@ FT_BEGIN_HEADER
                       FT_UInt     right,
                       FT_Vector  *avector );
 
+
  /**********************************************************************
   *
   * @function:
   *    FT_Get_PFR_Advance
   *
   * @description:
-  *    returns a given glyph advance, expressed in original metrics units,
+  *    Return a given glyph advance, expressed in original metrics units,
   *    from a PFR font.
   *
   * @input:
-  *    face   :: handle to input face.
-  *    gindex :: glyph index
+  *    face   :: A handle to the input face.
+  *
+  *    gindex :: The glyph index.
   *
   * @output:
-  *    aadvance :: glyph advance in metrics units
+  *    aadvance :: The glyph advance in metrics units.
   *
   * @return:
-  *    error code. 0 means success
+  *    FreeType error code.  0 means success.
   *
   * @note:
-  *    you can use the 'x_scale' or 'y_scale' results of @FT_Get_PFR_Metrics
-  *    to convert the advance to device sub-pixels (i.e. 1/64th of pixels)
+  *    You can use the `x_scale' or `y_scale' results of @FT_Get_PFR_Metrics
+  *    to convert the advance to device sub-pixels (i.e. 1/64th of pixels).
   */
   FT_EXPORT( FT_Error )
-  FT_Get_PFR_Advance( FT_Face    face,
-                      FT_UInt    gindex,
-                      FT_Pos    *aadvance );
+  FT_Get_PFR_Advance( FT_Face   face,
+                      FT_UInt   gindex,
+                      FT_Pos   *aadvance );
 
  /* */
+
 
 FT_END_HEADER
 

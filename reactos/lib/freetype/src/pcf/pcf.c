@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2001 by
+  Copyright 2000-2001, 2003 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -31,6 +31,6 @@ THE SOFTWARE.
 #include <ft2build.h>
 #include "pcfutil.c"
 #include "pcfread.c"
-#include "pcfdriver.c"
+#include "pcfdrivr.c"
 
 /* END */

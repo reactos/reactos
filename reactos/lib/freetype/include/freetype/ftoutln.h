@@ -46,7 +46,7 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Order>                                                               */
   /*    FT_Outline                                                         */
-  /*    FT_Outline_Flags                                                   */
+  /*    FT_OUTLINE_FLAGS                                                   */
   /*    FT_Outline_New                                                     */
   /*    FT_Outline_Done                                                    */
   /*    FT_Outline_Copy                                                    */

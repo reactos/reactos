@@ -1,8 +1,8 @@
 How to build the freetype2 library on VMS
 -----------------------------------------
 
-Just type one of the following depending on the type of external entries you
-want:
+Just type one of the following depending on the type of external entries
+you want:
 
   mms
 
@@ -14,22 +14,23 @@ The library is avalaible in the directory
 
   [.LIB]
 
-To compile applications using freetype2 you'll need to define the logical
+To compile applications using FreeType  2 you have to define the logical
 FREETYPE pointing to the directory
 
   [.INCLUDE.FREETYPE]
 
-(i.e., if the directory in which this README.VMS file is located is
+i.e.,  if the directory  in which  this INSTALL.VMS  file is  located is
 $disk:[freetype] then define the logical with
 
   define freetype $disk:[freetype.include.freetype]
 
-This version has been tested with Compaq C V6.2-006 on OpenVMS Alpha V7.2-1.
+This version  has been  tested with Compaq  C V6.2-006 on  OpenVMS Alpha
+V7.2-1.
 
 
   Any problems can be reported to
 
-    joukj@hrem.stm.tudelft.nl
+    Jouk Jansen <joukj@hrem.stm.tudelft.nl>
 
 
-      Jouk Jansen
+--- end of INSTALL.VMS ---

@@ -2,7 +2,7 @@
 
   FreeType font driver for pcf fonts
 
-  Copyright (C) 2000-2001, 2002 by
+  Copyright (C) 2000, 2001, 2002, 2003 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -124,10 +124,10 @@ FT_BEGIN_HEADER
   } PCF_AccelRec, *PCF_Accel;
 
 
-  typedef struct  PCD_EncodingRec_
+  typedef struct  PCF_EncodingRec_
   {
-    FT_Long   enc;
-    FT_Short  glyph;
+    FT_Long    enc;
+    FT_UShort  glyph;
 
   } PCF_EncodingRec, *PCF_Encoding;
 

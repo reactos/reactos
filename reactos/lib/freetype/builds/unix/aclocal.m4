@@ -1574,7 +1574,7 @@ else
       allow_undefined_flag='-undefined suppress'
       ;;
     *) # Darwin 1.3 on
-      allow_undefined_flag='-flat_namespace -undefined suppress'
+#      allow_undefined_flag='-undefined suppress'
       ;;
     esac
     # FIXME: Relying on posixy $() will cause problems for

@@ -30,5 +30,8 @@
 #include "ftobjs.c"
 #include "ftnames.c"
 
+#if defined( __APPLE__ ) && !defined ( DARWIN_NO_CARBON )
+#include "ftmac.c"
+#endif
 
 /* END */

@@ -141,7 +141,7 @@ FT_BEGIN_HEADER
   FT_Realloc( FT_Memory  memory,
               FT_Long    current,
               FT_Long    size,
-              void**     P );
+              void*     *P );
 
 
   /*************************************************************************/
@@ -159,17 +159,14 @@ FT_BEGIN_HEADER
   /*    P      :: This is the _address_ of a _pointer_ which points to the */
   /*              allocated block.  It is always set to NULL on exit.      */
   /*                                                                       */
-  /* <Return>                                                              */
-  /*    FreeType error code.  0 means success.                             */
-  /*                                                                       */
   /* <Note>                                                                */
-  /*    If P or *P are NULL, this function should return successfully.     */
+  /*    If P or *P is NULL, this function should return successfully.      */
   /*    This is a strong convention within all of FreeType and its         */
   /*    drivers.                                                           */
   /*                                                                       */
   FT_BASE( void )
   FT_Free( FT_Memory  memory,
-           void**     P );
+           void*     *P );
 
 
 #define FT_MEM_SET( dest, byte, count )     ft_memset( dest, byte, count )

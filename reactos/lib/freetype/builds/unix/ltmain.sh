@@ -2275,15 +2275,28 @@ compiler."
 	case $version_type in
 	none) ;;
 
-	darwin)
-	  # Like Linux, but with the current version available in
-	  # verstring for coding it into the library header
-	  major=.`expr $current - $age`
-	  versuffix="$major.$age.$revision"
-	  # Darwin ld doesn't like 0 for these options...
-	  minor_current=`expr $current + 1`
-	  verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"
-	  ;;
+     darwin* | rhapsody*)
+         case "$host_os" in
+             darwin1.[012])
+                # Like Linux, but with the current version available in
+                # verstring for coding it into the library header
+                major=.`expr $current - $age`
+                versuffix="$major.$age.$revision"
+                # Darwin ld doesn't like 0 for these options...
+                minor_current=`expr $current + 1`
+                verstring="-compatibility_version $minor_current -current_version $minor_current.$revision"
+                ;;
+	        *)
+                # Like Linux, but with the current version available in
+                # verstring for coding it into the library header
+                major=`expr $current - $age`
+                versuffix="$major.$age.$revision"
+                compatage=`expr $age - 1`
+                compatver="$major.$compatage.0"
+                verstring="-compatibility_version $compatver -current_version $versuffix"
+                ;;
+         esac
+     ;;
 
 	freebsd-aout)
 	  major=".$current"

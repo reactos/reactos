@@ -6,7 +6,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -17,9 +17,10 @@
 
 
 include $(TOP_DIR)/builds/unix/unixddef.mk
-BUILD := $(TOP_DIR)/builds/devel
+BUILD_DIR := $(TOP_DIR)/devel
 
 include $(TOP_DIR)/builds/compiler/gcc-dev.mk
 include $(TOP_DIR)/builds/link_std.mk
+
 
 # EOF

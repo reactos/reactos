@@ -3,7 +3,7 @@
 #
 
 
-# Copyright (C) 2000, 2001 by
+# Copyright (C) 2000, 2001, 2003 by
 # Francesco Zappa Nardelli
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -27,54 +27,54 @@
 
 # pcf driver directory
 #
-PCF_DIR  := $(SRC_)pcf
-PCF_DIR_ := $(PCF_DIR)$(SEP)
+PCF_DIR := $(SRC_DIR)/pcf
 
 
-PCF_COMPILE := $(FT_COMPILE) $I$(PCF_DIR)
+PCF_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(PCF_DIR))
 
 
 # pcf driver sources (i.e., C files)
 #
-PCF_DRV_SRC := $(PCF_DIR_)pcfread.c   \
-               $(PCF_DIR_)pcfdriver.c \
-               $(PCF_DIR_)pcfutil.c
+PCF_DRV_SRC := $(PCF_DIR)/pcfread.c  \
+               $(PCF_DIR)/pcfdrivr.c \
+               $(PCF_DIR)/pcfutil.c
 
 # pcf driver headers
 #
-PCF_DRV_H := $(PCF_DIR_)pcf.h       \
-             $(PCF_DIR_)pcfdriver.h \
-             $(PCF_DIR_)pcfutil.h   \
-             $(PCF_DIR_)pcferror.h
+PCF_DRV_H := $(PCF_DIR)/pcf.h      \
+             $(PCF_DIR)/pcfdrivr.h \
+             $(PCF_DIR)/pcfutil.h  \
+             $(PCF_DIR)/pcferror.h
 
 # pcf driver object(s)
 #
 #   PCF_DRV_OBJ_M is used during `multi' builds
 #   PCF_DRV_OBJ_S is used during `single' builds
 #
-PCF_DRV_OBJ_M := $(PCF_DRV_SRC:$(PCF_DIR_)%.c=$(OBJ_)%.$O)
-PCF_DRV_OBJ_S := $(OBJ_)pcf.$O
+PCF_DRV_OBJ_M := $(PCF_DRV_SRC:$(PCF_DIR)/%.c=$(OBJ_DIR)/%.$O)
+PCF_DRV_OBJ_S := $(OBJ_DIR)/pcf.$O
 
-# Windows driver source file for single build
+# pcf driver source file for single build
 #
-PCF_DRV_SRC_S := $(PCF_DIR_)pcf.c
+PCF_DRV_SRC_S := $(PCF_DIR)/pcf.c
 
 
 # pcf driver - single object
 #
 $(PCF_DRV_OBJ_S): $(PCF_DRV_SRC_S) $(PCF_DRV_SRC) $(FREETYPE_H) $(PCF_DRV_H)
-	$(PCF_COMPILE) $T$@ $(PCF_DRV_SRC_S)
+	$(PCF_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $(PCF_DRV_SRC_S))
 
 
 # pcf driver - multiple objects
 #
-$(OBJ_)%.$O: $(PCF_DIR_)%.c $(FREETYPE_H) $(PCF_DRV_H)
-	$(PCF_COMPILE) $T$@ $<
+$(OBJ_DIR)/%.$O: $(PCF_DIR)/%.c $(FREETYPE_H) $(PCF_DRV_H)
+	$(PCF_COMPILE) $T$(subst /,$(COMPILER_SEP),$@ $<)
 
 
 # update main driver object lists
 #
 DRV_OBJS_S += $(PCF_DRV_OBJ_S)
 DRV_OBJS_M += $(PCF_DRV_OBJ_M)
+
 
 # EOF

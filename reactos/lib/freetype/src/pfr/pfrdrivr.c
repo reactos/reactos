@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR driver interface (body).                                */
 /*                                                                         */
-/*  Copyright 2002 by                                                      */
+/*  Copyright 2002, 2003 by                                                */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -30,26 +30,24 @@
                    FT_UInt     right,
                    FT_Vector  *avector )
   {
-    FT_Error  error;
+    PFR_PhyFont  phys = &face->phy_font;
 
-    error = pfr_face_get_kerning( face, left, right, avector );
-    if ( !error )
+
+    pfr_face_get_kerning( face, left, right, avector );
+
+    /* convert from metrics to outline units when necessary */
+    if ( phys->outline_resolution != phys->metrics_resolution )
     {
-      PFR_PhyFont  phys = &face->phy_font;
+      if ( avector->x != 0 )
+        avector->x = FT_MulDiv( avector->x, phys->outline_resolution,
+                                            phys->metrics_resolution );
 
-      /* convert from metrics to outline units when necessary */
-      if ( phys->outline_resolution != phys->metrics_resolution )
-      {
-        if ( avector->x != 0 )
-          avector->x = FT_MulDiv( avector->x, phys->outline_resolution,
-                                              phys->metrics_resolution );
-
-        if ( avector->y != 0 )
-          avector->y = FT_MulDiv( avector->x, phys->outline_resolution,
-                                              phys->metrics_resolution );
-      }
+      if ( avector->y != 0 )
+        avector->y = FT_MulDiv( avector->x, phys->outline_resolution,
+                                            phys->metrics_resolution );
     }
-    return error;
+
+    return PFR_Err_Ok;
   }
 
 
@@ -58,12 +56,14 @@
                    FT_UInt    gindex,
                    FT_Pos    *aadvance )
   {
-    FT_Error     error = FT_Err_Bad_Argument;
+    FT_Error  error = PFR_Err_Bad_Argument;
+
 
     *aadvance = 0;
     if ( face )
     {
       PFR_PhyFont  phys  = &face->phy_font;
+
 
       if ( gindex < phys->num_chars )
       {
@@ -86,6 +86,7 @@
     PFR_PhyFont  phys  = &face->phy_font;
     FT_Fixed     x_scale, y_scale;
     FT_Size      size = face->root.size;
+
 
     if ( aoutline_resolution )
       *aoutline_resolution = phys->outline_resolution;
@@ -128,8 +129,8 @@
   const FT_Driver_ClassRec  pfr_driver_class =
   {
     {
-      ft_module_font_driver      |
-      ft_module_driver_scalable,
+      FT_MODULE_FONT_DRIVER     |
+      FT_MODULE_DRIVER_SCALABLE,
 
       sizeof( FT_DriverRec ),
 

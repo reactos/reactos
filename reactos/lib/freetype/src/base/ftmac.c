@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Mac FOND support.  Written by just@letterror.com.                    */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  Just van Rossum, David Turner, Robert Wilhelm, and Werner Lemberg.     */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -62,15 +62,20 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include FT_INTERNAL_STREAM_H
+
+#ifdef __GNUC__
+#include "../truetype/ttobjs.h"
+#include "../type1/t1objs.h"
+#include <Carbon/Carbon.h>
+#else
 #include "truetype/ttobjs.h"
 #include "type1/t1objs.h"
-
 #include <Resources.h>
 #include <Fonts.h>
 #include <Errors.h>
 #include <Files.h>
 #include <TextUtils.h>
-
+#endif
 
 #include FT_MAC_H
 
@@ -87,7 +92,7 @@
   file_spec_from_path( const char*  pathname,
                        FSSpec*      spec )
   {
-#if TARGET_API_MAC_CARBON
+#if defined( TARGET_API_MAC_CARBON ) && !defined( __MWERKS__ )
 
     OSErr  e;
     FSRef  ref;
@@ -135,7 +140,7 @@
   }
 
 
-#if TARGET_API_MAC_CARBON
+#ifdef TARGET_API_MAC_CARBON
 
   /* is this a Mac OS X .dfont file */
   static Boolean
@@ -144,8 +149,8 @@
     int  nameLen = spec->name[0];
 
 
-    return nameLen >= 6                                   &&
-           !memcmp( spec->name + nameLen - 5, ".dfont", 6 );
+    return nameLen >= 6                                      &&
+           !ft_memcmp( spec->name + nameLen - 5, ".dfont", 6 );
   }
 
 #endif
@@ -165,7 +170,7 @@
 
     while ( *q )
     {
-      if ( isupper( *q ) )
+      if ( ft_isupper( *q ) )
       {
         if ( count )
           max = 3;
@@ -304,7 +309,7 @@
 
         if ( ps_name_len != 0 )
         {
-          memcpy(ps_name, names[0] + 1, ps_name_len);
+          ft_memcpy(ps_name, names[0] + 1, ps_name_len);
           ps_name[ps_name_len] = 0;
         }
         if ( style->indexes[0] > 1 )
@@ -312,7 +317,7 @@
           unsigned char*  suffixes = names[style->indexes[0] - 1];
 
 
-          for ( i = 1; i < suffixes[0]; i++ )
+          for ( i = 1; i <= suffixes[0]; i++ )
           {
             unsigned char*  s;
             size_t          j = suffixes[i] - 1;
@@ -325,7 +330,7 @@
 
               if ( s_len != 0 && ps_name_len + s_len < sizeof ( ps_name ) )
               {
-                memcpy( ps_name + ps_name_len, s + 1, s_len );
+                ft_memcpy( ps_name + ps_name_len, s + 1, s_len );
                 ps_name_len += s_len;
                 ps_name[ps_name_len] = 0;
               }
@@ -541,11 +546,6 @@
     error = FT_Open_Face( library, &args, face_index, aface );
     if ( error == FT_Err_Ok )
       (*aface)->face_flags &= ~FT_FACE_FLAG_EXTERNAL_STREAM;
-    else
-    {
-      FT_Stream_CloseFunc( stream );
-      FT_FREE( stream );
-    }
 
     return error;
   }
@@ -588,6 +588,7 @@
     size_t     sfnt_size;
     FT_Error   error = 0;
     FT_Memory  memory = library->memory;
+    int        is_cff;
 
 
     sfnt = GetResource( 'sfnt', sfnt_id );
@@ -606,11 +607,16 @@
     HUnlock( sfnt );
     ReleaseResource( sfnt );
 
+    is_cff = sfnt_size > 4 && sfnt_data[0] == 'O' &&
+                              sfnt_data[1] == 'T' &&
+                              sfnt_data[2] == 'T' &&
+                              sfnt_data[3] == 'O';
+
     return open_face_from_buffer( library,
                                   sfnt_data,
                                   sfnt_size,
                                   face_index,
-                                  "truetype",
+                                  is_cff ? "cff" : "truetype",
                                   aface );
   }
 
@@ -656,7 +662,7 @@
   }
 
 
-#if TARGET_API_MAC_CARBON
+#ifdef TARGET_API_MAC_CARBON
 
   /* Create a new FT_Face from a file spec to a suitcase file. */
   static FT_Error
@@ -902,7 +908,7 @@
         return FT_New_Face_From_LWFN( library, &spec, face_index, aface );
     }
 
-#if TARGET_API_MAC_CARBON
+#ifdef TARGET_API_MAC_CARBON
 
     if ( is_dfont( &spec ) )
       return FT_New_Face_From_dfont( library, &spec, face_index, aface );

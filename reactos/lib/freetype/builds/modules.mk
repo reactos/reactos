@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000 by
+# Copyright 1996-2000, 2003 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -26,7 +26,7 @@
 # resides.  For now, it is in `include/freetype/config/ftmodule.h'.
 #
 ifndef MODULE_LIST
-  MODULE_LIST := $(TOP_DIR)$(SEP)include$(SEP)$(PROJECT)$(SEP)config$(SEP)ftmodule.h
+  MODULE_LIST := $(TOP_DIR)/include/$(PROJECT)/config/ftmodule.h
 endif
 
 # To build the modules list, we invoke the `make_module_list' target.
@@ -39,8 +39,8 @@ endif
 
 ifneq ($(findstring $(PLATFORM),dos win32 win16 os2),)
   OPEN_MODULE   := @echo$(space)
-  CLOSE_MODULE  :=  >> $(subst $(SEP),$(HOSTSEP),$(MODULE_LIST))
-  REMOVE_MODULE := @-$(DELETE) $(subst $(SEP),$(HOSTSEP),$(MODULE_LIST))
+  CLOSE_MODULE  :=  >> $(subst /,\,$(MODULE_LIST))
+  REMOVE_MODULE := @-$(DELETE) $(subst /,\,$(MODULE_LIST))
 else
   OPEN_MODULE   := @echo "
   CLOSE_MODULE  := " >> $(MODULE_LIST)
@@ -53,7 +53,7 @@ endif
 #
 clean_module_list:
 	$(REMOVE_MODULE)
-	@-echo Regenerating the modules list in $(MODULE_LIST)...
+	@-echo Regenerating modules list in $(MODULE_LIST)...
 
 make_module_list: clean_module_list
 	@echo done.
@@ -72,5 +72,6 @@ ECHO_DRIVER_DONE := )"
 # target `make_module_list'.
 #
 include $(wildcard $(TOP_DIR)/src/*/module.mk)
+
 
 # EOF

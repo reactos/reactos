@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType glyph rasterizer interface (body).                      */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2001, 2002, 2003 by                                     */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -151,10 +151,10 @@
     memory = render->root.memory;
 
     /* release old bitmap buffer */
-    if ( slot->flags & FT_GLYPH_OWN_BITMAP )
+    if ( slot->internal->flags & FT_GLYPH_OWN_BITMAP )
     {
       FT_FREE( bitmap->buffer );
-      slot->flags &= ~FT_GLYPH_OWN_BITMAP;
+      slot->internal->flags &= ~FT_GLYPH_OWN_BITMAP;
     }
 
     /* allocate new one, depends on pixel format */
@@ -178,7 +178,7 @@
     if ( FT_ALLOC( bitmap->buffer, (FT_ULong)pitch * height ) )
       goto Exit;
 
-    slot->flags |= FT_GLYPH_OWN_BITMAP;
+    slot->internal->flags |= FT_GLYPH_OWN_BITMAP;
 
     /* translate outline to render it into the bitmap */
     FT_Outline_Translate( outline, -cbox.xMin, -cbox.yMin );
@@ -212,7 +212,7 @@
   const FT_Renderer_Class  ft_raster1_renderer_class =
   {
     {
-      ft_module_renderer,
+      FT_MODULE_RENDERER,
       sizeof( FT_RendererRec ),
 
       "raster1",
@@ -245,7 +245,7 @@
   const FT_Renderer_Class  ft_raster5_renderer_class =
   {
     {
-      ft_module_renderer,
+      FT_MODULE_RENDERER,
       sizeof( FT_RendererRec ),
 
       "raster5",
