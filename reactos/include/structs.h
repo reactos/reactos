@@ -144,14 +144,14 @@ typedef struct _RECT {
   LONG top;        
   LONG right;      
   LONG bottom;     
-} RECT, *LPRECT, *PRECT; 
+} RECT, *LPRECT, *LPCRECT, *PRECT; 
  
 typedef struct _RECTL { 
   LONG left;     
   LONG top;      
   LONG right;    
   LONG bottom;   
-} RECTL, *PRECTL; 
+} RECTL, *LPRECTL, *LPCRECTL, *PRECTL; 
  
 typedef struct _AppBarData {
   DWORD  cbSize;           
@@ -4396,6 +4396,19 @@ typedef struct _BLENDFUNCTION {
   BYTE     SourceConstantAlpha;
   BYTE     AlphaFormat;
 }BLENDFUNCTION, *PBLENDFUNCTION, *LPBLENDFUNCTION;
+
+typedef enum _GET_FILEEX_INFO_LEVELS {
+    GetFileExInfoStandard
+} GET_FILEEX_INFO_LEVELS;
+
+typedef struct _WIN32_FILE_ATTRIBUTES_DATA {
+    DWORD    dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD    nFileSizeHigh;
+    DWORD    nFileSizeLow;
+} WIN32_FILE_ATTRIBUTE_DATA, *LPWIN32_FILE_ATTRIBUTE_DATA;
 
 #ifdef __cplusplus
 }

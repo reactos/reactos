@@ -30,8 +30,7 @@ Cambridge, MA 02139, USA.
 #ifndef _OBJBASE
 #define _OBJBASE
 
-#include <ole32/guiddef.h>
-
+#include "guiddef.h"
 
 #ifndef EXTERN_C
 	#ifdef __cplusplus
@@ -66,36 +65,6 @@ Cambridge, MA 02139, USA.
 	#define WINOLEAPI        STDAPI
 	#define WINOLEAPI_(type) STDAPI_(type)
 #endif
-
-//	context in which to create COM objects
-typedef enum tagCLSCTX
-{
-	CLSCTX_INPROC_SERVER	= 0x1,
-	CLSCTX_INPROC_HANDLER	= 0x2,
-	CLSCTX_LOCAL_SERVER		= 0x4,
-	CLSCTX_INPROC_SERVER16	= 0x8,
-	CLSCTX_REMOTE_SERVER	= 0x10,
-	CLSCTX_INPROC_HANDLER16	= 0x20,
-	CLSCTX_INPROC_SERVERX86	= 0x40,
-	CLSCTX_INPROC_HANDLERX86= 0x80,
-	CLSCTX_ESERVER_HANDLER	= 0x100,
-	CLSCTX_RESERVED			= 0x200,
-	CLSCTX_NO_CODE_DOWNLOAD	= 0x400,
-	CLSCTX_NO_WX86_TRANSLATION	= 0x800,
-	CLSCTX_NO_CUSTOM_MARSHAL	= 0x1000,
-	CLSCTX_ENABLE_CODE_DOWNLOAD	= 0x2000,
-	CLSCTX_NO_FAILURE_LOG		= 0x4000
-}CLSCTX;
-#define CLSCTX_INPROC           (CLSCTX_INPROC_SERVER|CLSCTX_INPROC_HANDLER)
-
-//	COM initialization flags, passed to CoInitialize.
-typedef enum tagCOINIT
-{
-	COINIT_APARTMENTTHREADED	=	0x2,		//	apartement threaded model
-	COINIT_MULTITHREADED      = 0x0,			//	OLE calls objects on any thread
-	COINIT_DISABLE_OLE1DDE    = 0x4,			//	don't use DDE for Ole1 support
-	COINIT_SPEED_OVER_MEMORY  = 0x8,			//	trade memory for speed*/
-}COINIT;
 
 //
 //	COM interface declaration macros [from the wine implementation
@@ -149,48 +118,5 @@ typedef enum tagCOINIT
 	
 	#define DECLARE_INTERFACE_(iface, baseiface)    DECLARE_INTERFACE(iface)
 #endif
-
-
-
-DEFINE_OLEGUID(IID_IUnknown,		0x00000000L, 0, 0);
-DEFINE_OLEGUID(IID_IClassFactory,	0x00000001L, 0, 0);
-
-//	IUnknown
-//
-DECLARE_INTERFACE(IUnknown)
-{
-	// *** IUnknown methods ***
-	STDMETHOD(QueryInterface)	(THIS_ REFIID riid, VOID* FAR* ppUnk) PURE;
-	STDMETHOD_(ULONG,AddRef)	(THIS) PURE;
-	STDMETHOD_(ULONG,Release)	(THIS) PURE;
-};
-
-//	IClassFactory
-//
-DECLARE_INTERFACE_(IClassFactory, IUnknown)
-{
-	// *** IUnknown methods ***
-	STDMETHOD(QueryInterface)	(THIS_ REFIID iid, VOID* FAR* ppvObject) PURE;
-	STDMETHOD_(ULONG,AddRef)	(THIS) PURE;
-	STDMETHOD_(ULONG,Release)	(THIS) PURE;
-
-	// *** IClassFactory methods ***
-	STDMETHOD(CreateInstance)	(THIS_ IUnknown* pUnkOuter, REFIID riid, VOID* FAR* ppvObject) PURE;
-	STDMETHOD(LockServer)		(THIS_ BOOL fLock) PURE;
-};
-
-
-//
-//	COM API definition
-//
-WINOLEAPI_(VOID)	CoUninitialize();
-WINOLEAPI_(VOID)	CoFreeAllLibraries();
-WINOLEAPI_(DWORD)	CoBuildVersion();
-WINOLEAPI	CoCreateInstance(REFCLSID rclsid, IUnknown* pUnkOuter, DWORD dwClsContext, REFIID riid, VOID** ppv);
-WINOLEAPI	CoGetClassObject(REFCLSID rclsid, DWORD dwClsContext, VOID* pvReserved, REFIID riid, VOID** ppv);
-WINOLEAPI	CoInitializeEx(VOID* lpReserved, DWORD dwCoInit);
-WINOLEAPI	CoInitialize(VOID* lpReserved);
-
-
 
 #endif

@@ -35,6 +35,18 @@
 extern "C" {
 #endif /* __cplusplus */
 
+//
+//	Return Code macros
+//
+#define	SUCCEEDED(Status)	((HRESULT)(Status) >= 0)
+#define	FAILED(Status)		((HRESULT)(Status)<0)
+
+//
+//	Success Codes
+//
+#define S_OK						0x00000000L
+#define S_FALSE						0x00000001L
+
 /* Numerical order */
 
 #define LZERROR_UNKNOWNALG             (-8)
@@ -712,6 +724,437 @@ extern "C" {
 #define ERROR_REC_NON_EXISTENT           4005L
 #define ERROR_RPL_NOT_ALLOWED            4006L
 #define ERROR_NO_BROWSER_SERVERS_FOUND   6118L
+
+
+/* HRESULT values for OLE, SHELL and other Interface stuff */
+/* the codes 4000-40ff are reserved for OLE */
+#define NOERROR                                            0L
+
+#define E_PENDING                                          0x8000000AL
+
+
+#define E_NOTIMPL                                          0x80004001L
+#define E_NOINTERFACE                                      0x80004002L
+#define E_POINTER                                          0x80004003L
+#define E_ABORT                                            0x80004004L
+#define E_FAIL                                             0x80004005L
+/* FIXME: E_UNSPEC is not a standard value but it is used by 
+ * FileMoniker, IOleLink and DoDragDrop as a return value.
+ */
+#define E_UNSPEC                                           E_FAIL
+
+
+#define CO_E_INIT_TLS                                      0x80004006L
+#define CO_E_INIT_SHARED_ALLOCATOR                         0x80004007L
+#define CO_E_INIT_MEMORY_ALLOCATOR                         0x80004008L
+#define CO_E_INIT_CLASS_CACHE                              0x80004009L
+#define CO_E_INIT_RPC_CHANNEL                              0x8000400AL
+#define CO_E_INIT_TLS_SET_CHANNEL_CONTROL                  0x8000400BL
+#define CO_E_INIT_TLS_CHANNEL_CONTROL                      0x8000400CL
+#define CO_E_INIT_UNACCEPTED_USER_ALLOCATOR                0x8000400DL
+#define CO_E_INIT_SCM_MUTEX_EXISTS                         0x8000400EL
+#define CO_E_INIT_SCM_FILE_MAPPING_EXISTS                  0x8000400FL
+#define CO_E_INIT_SCM_MAP_VIEW_OF_FILE                     0x80004010L
+#define CO_E_INIT_SCM_EXEC_FAILURE                         0x80004011L
+#define CO_E_INIT_ONLY_SINGLE_THREADED                     0x80004012L
+
+#define E_UNEXPECTED                                       0x8000FFFFL
+
+#define RPC_E_CALL_REJECTED                                0x80010001L
+#define RPC_E_CALL_CANCELED                                0x80010002L
+#define RPC_E_CANTPOST_INSENDCALL                          0x80010003L
+#define RPC_E_CANTCALLOUT_INASYNCCALL                      0x80010004L
+#define RPC_E_CANTCALLOUT_INEXTERNALCALL                   0x80010005L
+#define RPC_E_CONNECTION_TERMINATED                        0x80010006L
+#define RPC_E_SERVER_DIED                                  0x80010007L
+#define RPC_E_CLIENT_DIED                                  0x80010008L
+#define RPC_E_INVALID_DATAPACKET                           0x80010009L
+#define RPC_E_CANTTRANSMIT_CALL                            0x8001000AL
+#define RPC_E_CLIENT_CANTMARSHAL_DATA                      0x8001000BL
+#define RPC_E_CLIENT_CANTUNMARSHAL_DATA                    0x8001000CL
+#define RPC_E_SERVER_CANTMARSHAL_DATA                      0x8001000DL
+#define RPC_E_SERVER_CANTUNMARSHAL_DATA                    0x8001000EL
+#define RPC_E_INVALID_DATA                                 0x8001000FL
+#define RPC_E_INVALID_PARAMETER                            0x80010010L
+#define RPC_E_CANTCALLOUT_AGAIN                            0x80010011L
+#define RPC_E_SERVER_DIED_DNE                              0x80010012L
+#define RPC_E_SYS_CALL_FAILED                              0x80010100L
+#define RPC_E_OUT_OF_RESOURCES                             0x80010101L
+#define RPC_E_ATTEMPTED_MULTITHREAD                        0x80010102L
+#define RPC_E_NOT_REGISTERED                               0x80010103L
+#define RPC_E_FAULT                                        0x80010104L
+#define RPC_E_SERVERFAULT                                  0x80010105L
+#define RPC_E_CHANGED_MODE                                 0x80010106L
+#define RPC_E_INVALIDMETHOD                                0x80010107L
+#define RPC_E_DISCONNECTED                                 0x80010108L
+#define RPC_E_RETRY                                        0x80010109L
+#define RPC_E_SERVERCALL_RETRYLATER                        0x8001010AL
+#define RPC_E_SERVERCALL_REJECTED                          0x8001010BL
+#define RPC_E_INVALID_CALLDATA                             0x8001010CL
+#define RPC_E_CANTCALLOUT_ININPUTSYNCCALL                  0x8001010DL
+#define RPC_E_WRONG_THREAD                                 0x8001010EL
+#define RPC_E_THREAD_NOT_INIT                              0x8001010FL
+#define RPC_E_VERSION_MISMATCH                             0x80010110L
+#define RPC_E_INVALID_HEADER                               0x80010111L
+#define RPC_E_INVALID_EXTENSION                            0x80010112L
+#define RPC_E_INVALID_IPID                                 0x80010113L
+#define RPC_E_INVALID_OBJECT                               0x80010114L
+#define RPC_S_CALLPENDING                                  0x80010115L
+#define RPC_S_WAITONTIMER                                  0x80010116L
+#define RPC_E_CALL_COMPLETE                                0x80010117L
+#define RPC_E_UNSECURE_CALL                                0x80010118L
+#define RPC_E_TOO_LATE                                     0x80010119L
+#define RPC_E_NO_GOOD_SECURITY_PACKAGES                    0x8001011AL
+#define RPC_E_ACCESS_DENIED                                0x8001011BL
+#define RPC_E_REMOTE_DISABLED                              0x8001011CL
+#define RPC_E_INVALID_OBJREF                               0x8001011DL
+#define RPC_E_NO_CONTEXT                                   0x8001011EL
+#define RPC_E_TIMEOUT                                      0x8001011FL
+#define RPC_E_NO_SYNC                                      0x80010120L
+#define RPC_E_UNEXPECTED                                   0x8001FFFFL
+
+#define DISP_E_UNKNOWNINTERFACE                            0x80020001L
+#define DISP_E_MEMBERNOTFOUND                              0x80020003L
+#define DISP_E_PARAMNOTFOUND                               0x80020004L
+#define DISP_E_TYPEMISMATCH                                0x80020005L
+#define DISP_E_UNKNOWNNAME                                 0x80020006L
+#define DISP_E_NONAMEDARGS                                 0x80020007L
+#define DISP_E_BADVARTYPE                                  0x80020008L
+#define DISP_E_EXCEPTION                                   0x80020009L
+#define DISP_E_OVERFLOW                                    0x8002000AL
+#define DISP_E_BADINDEX                                    0x8002000BL
+#define DISP_E_UNKNOWNLCID                                 0x8002000CL
+#define DISP_E_ARRAYISLOCKED                               0x8002000DL
+#define DISP_E_BADPARAMCOUNT                               0x8002000EL
+#define DISP_E_PARAMNOTOPTIONAL                            0x8002000FL
+#define DISP_E_BADCALLEE                                   0x80020010L
+#define DISP_E_NOTACOLLECTION                              0x80020011L
+#define DISP_E_DIVBYZERO                                   0x80020012L
+
+#define TYPE_E_BUFFERTOOSMALL                              0x80028016L
+#define TYPE_E_FIELDNOTFOUND                               0x80028017L
+#define TYPE_E_INVDATAREAD                                 0x80028018L
+#define TYPE_E_UNSUPFORMAT                                 0x80028019L
+#define TYPE_E_REGISTRYACCESS                              0x8002801CL
+#define TYPE_E_LIBNOTREGISTERED                            0x8002801DL
+#define TYPE_E_UNDEFINEDTYPE                               0x80028027L
+#define TYPE_E_QUALIFIEDNAMEDISALLOWED                     0x80028028L
+#define TYPE_E_INVALIDSTATE                                0x80028029L
+#define TYPE_E_WRONGTYPEKIND                               0x8002802AL
+#define TYPE_E_ELEMENTNOTFOUND                             0x8002802BL
+#define TYPE_E_AMBIGUOUSNAME                               0x8002802CL
+#define TYPE_E_NAMECONFLICT                                0x8002802DL
+#define TYPE_E_UNKNOWNLCID                                 0x8002802EL
+#define TYPE_E_DLLFUNCTIONNOTFOUND                         0x8002802FL
+#define TYPE_E_BADMODULEKIND                               0x800288BDL
+#define TYPE_E_SIZETOOBIG                                  0x800288C5L
+#define TYPE_E_DUPLICATEID                                 0x800288C6L
+#define TYPE_E_INVALIDID                                   0x800288CFL
+#define TYPE_E_TYPEMISMATCH                                0x80028CA0L
+#define TYPE_E_OUTOFBOUNDS                                 0x80028CA1L
+#define TYPE_E_IOERROR                                     0x80028CA2L
+#define TYPE_E_CANTCREATETMPFILE                           0x80028CA3L
+#define TYPE_E_CANTLOADLIBRARY                             0x80029C4AL
+#define TYPE_E_INCONSISTENTPROPFUNCS                       0x80029C83L
+#define TYPE_E_CIRCULARTYPE                                0x80029C84L
+
+#define STG_S_CONVERTED                                    0x00030200L
+#define STG_S_BLOCK                                        0x00030201L
+#define STG_S_RETRYNOW                                     0x00030202L
+#define STG_S_MONITORING                                   0x00030203L
+#define STG_S_MULTIPLEOPENS                                0x00030204L
+#define STG_S_CONSOLIDATIONFAILED                          0x00030205L
+#define STG_S_CANNOTCONSOLIDATE                            0x00030206L
+
+#define STG_E_INVALIDFUNCTION                              0x80030001L
+#define STG_E_FILENOTFOUND                                 0x80030002L
+#define STG_E_PATHNOTFOUND                                 0x80030003L
+#define STG_E_TOOMANYOPENFILES                             0x80030004L
+#define STG_E_ACCESSDENIED                                 0x80030005L
+#define STG_E_INVALIDHANDLE                                0x80030006L
+#define STG_E_INSUFFICIENTMEMORY                           0x80030008L
+#define STG_E_INVALIDPOINTER                               0x80030009L
+#define STG_E_NOMOREFILES                                  0x80030012L
+#define STG_E_DISKISWRITEPROTECTED                         0x80030013L
+#define STG_E_SEEKERROR                                    0x80030019L
+#define STG_E_WRITEFAULT                                   0x8003001DL
+#define STG_E_READFAULT                                    0x8003001EL
+#define STG_E_SHAREVIOLATION                               0x80030020L
+#define STG_E_LOCKVIOLATION                                0x80030021L
+#define STG_E_FILEALREADYEXISTS                            0x80030050L
+#define STG_E_INVALIDPARAMETER                             0x80030057L
+#define STG_E_MEDIUMFULL                                   0x80030070L
+#define STG_E_ABNORMALAPIEXIT                              0x800300FAL
+#define STG_E_INVALIDHEADER                                0x800300FBL
+#define STG_E_INVALIDNAME                                  0x800300FCL
+#define STG_E_UNKNOWN                                      0x800300FDL
+#define STG_E_UNIMPLEMENTEDFUNCTION                        0x800300FEL
+#define STG_E_INVALIDFLAG                                  0x800300FFL
+#define STG_E_INUSE                                        0x80030100L
+#define STG_E_NOTCURRENT                                   0x80030101L
+#define STG_E_REVERTED                                     0x80030102L
+#define STG_E_CANTSAVE                                     0x80030103L
+#define STG_E_OLDFORMAT                                    0x80030104L
+#define STG_E_OLDDLL                                       0x80030105L
+#define STG_E_SHAREREQUIRED                                0x80030106L
+#define STG_E_NOTFILEBASEDSTORAGE                          0x80030107L
+#define STG_E_EXTANTMARSHALLINGS                           0x80030108L
+
+#define OLE_S_FIRST                                        0x00040000L
+#define OLE_S_USEREG                                       0x00040000L
+#define OLE_S_STATIC                                       0x00040001L
+#define OLE_S_MAC_CLIPFORMAT                               0x00040002L
+#define OLE_S_LAST                                         0x000400FFL
+
+#define OLE_E_FIRST                                        0x80040000L
+#define OLE_E_OLEVERB                                      0x80040000L
+#define OLE_E_ADVF                                         0x80040001L
+#define OLE_E_ENUM_NOMORE                                  0x80040002L
+#define OLE_E_ADVISENOTSUPPORTED                           0x80040003L
+#define OLE_E_NOCONNECTION                                 0x80040004L
+#define OLE_E_NOTRUNNING                                   0x80040005L
+#define OLE_E_NOCACHE                                      0x80040006L
+#define OLE_E_BLANK                                        0x80040007L
+#define OLE_E_CLASSDIFF                                    0x80040008L
+#define OLE_E_CANT_GETMONIKER                              0x80040009L
+#define OLE_E_CANT_BINDTOSOURCE                            0x8004000AL
+#define OLE_E_STATIC                                       0x8004000BL
+#define OLE_E_PROMPTSAVECANCELLED                          0x8004000CL
+#define OLE_E_INVALIDRECT                                  0x8004000DL
+#define OLE_E_WRONGCOMPOBJ                                 0x8004000EL
+#define OLE_E_INVALIDHWND                                  0x8004000FL
+#define OLE_E_NOT_INPLACEACTIVE                            0x80040010L
+#define OLE_E_CANTCONVERT                                  0x80040011L
+#define OLE_E_NOSTORAGE                                    0x80040012L
+#define DV_E_FORMATETC                                     0x80040064L
+#define DV_E_DVTARGETDEVICE                                0x80040065L
+#define DV_E_STGMEDIUM                                     0x80040066L
+#define DV_E_STATDATA                                      0x80040067L
+#define DV_E_LINDEX                                        0x80040068L
+#define DV_E_TYMED                                         0x80040069L
+#define DV_E_CLIPFORMAT                                    0x8004006AL
+#define DV_E_DVASPECT                                      0x8004006BL
+#define DV_E_DVTARGETDEVICE_SIZE                           0x8004006CL
+#define DV_E_NOIVIEWOBJECT                                 0x8004006DL
+#define OLE_E_LAST                                         0x800400FFL
+
+#define DRAGDROP_S_FIRST                                   0x00040100L
+#define DRAGDROP_S_DROP                                    0x00040100L
+#define DRAGDROP_S_CANCEL                                  0x00040101L
+#define DRAGDROP_S_USEDEFAULTCURSORS                       0x00040102L
+#define DRAGDROP_S_LAST                                    0x0004010FL
+
+#define DRAGDROP_E_FIRST                                   0x80040100L
+#define DRAGDROP_E_NOTREGISTERED                           0x80040100L
+#define DRAGDROP_E_ALREADYREGISTERED                       0x80040101L
+#define DRAGDROP_E_INVALIDHWND                             0x80040102L
+#define DRAGDROP_E_LAST                                    0x8004010FL
+
+
+#define CLASSFACTORY_S_FIRST                               0x00040110L
+#define CLASSFACTORY_S_LAST                                0x0004011FL
+
+#define CLASSFACTORY_E_FIRST                               0x80040110L
+#define CLASS_E_NOAGGREGATION                              0x80040110L
+#define CLASS_E_CLASSNOTAVAILABLE                          0x80040111L
+#define CLASS_E_NOTLICENSED                                0x80040112L
+#define CLASSFACTORY_E_LAST                                0x8004011FL
+
+#define MARSHAL_S_FIRST                                    0x00040120L
+#define MARSHAL_S_LAST                                     0x0004012FL
+
+#define MARSHAL_E_FIRST                                    0x80040120L
+#define MARSHAL_E_LAST                                     0x8004012FL
+
+#define DATA_S_FIRST                                       0x00040130L
+#define DATA_S_SAMEFORMATETC                               0x00040130L
+#define DATA_S_LAST                                        0x0004013FL
+
+#define DATA_E_FIRST                                       0x80040130L
+#define DATA_E_LAST                                        0x8004013FL
+
+#define VIEW_S_FIRST                                       0x00040140L
+#define VIEW_S_ALREADY_FROZEN                              0x00040140L
+#define VIEW_S_LAST                                        0x0004014FL
+
+#define VIEW_E_FIRST                                       0x80040140L
+#define VIEW_E_DRAW                                        0x80040140L
+#define VIEW_E_LAST                                        0x8004014FL
+
+#define REGDB_S_FIRST                                      0x00040150L
+#define REGDB_S_LAST                                       0x0004015FL
+
+#define REGDB_E_FIRST                                      0x80040150L
+#define REGDB_E_READREGDB                                  0x80040150L
+#define REGDB_E_WRITEREGDB                                 0x80040151L
+#define REGDB_E_KEYMISSING                                 0x80040152L
+#define REGDB_E_INVALIDVALUE                               0x80040153L
+#define REGDB_E_CLASSNOTREG                                0x80040154L
+#define REGDB_E_IIDNOTREG                                  0x80040155L
+#define REGDB_E_LAST                                       0x8004015FL
+
+#define CACHE_S_FIRST                                      0x00040170L
+#define CACHE_S_FORMATETC_NOTSUPPORTED                     0x00040170L
+#define CACHE_S_SAMECACHE                                  0x00040171L
+#define CACHE_S_SOMECACHES_NOTUPDATED                      0x00040172L
+#define CACHE_S_LAST                                       0x0004017FL
+
+#define CACHE_E_FIRST                                      0x80040170L
+#define CACHE_E_NOCACHE_UPDATED                            0x80040170L
+#define CACHE_E_LAST                                       0x8004017FL
+
+#define OLEOBJ_S_FIRST                                     0x00040180L
+#define OLEOBJ_S_INVALIDVERB                               0x00040180L
+#define OLEOBJ_S_CANNOT_DOVERB_NOW                         0x00040181L
+#define OLEOBJ_S_INVALIDHWND                               0x00040182L
+#define OLEOBJ_S_LAST                                      0x0004018FL
+
+#define OLEOBJ_E_FIRST                                     0x80040180L
+#define OLEOBJ_E_NOVERBS                                   0x80040180L
+#define OLEOBJ_E_INVALIDVERB                               0x80040181L
+#define OLEOBJ_E_LAST                                      0x8004018FL
+
+#define CLIENTSITE_S_FIRST                                 0x00040190L
+#define CLIENTSITE_S_LAST                                  0x0004019FL
+
+#define CLIENTSITE_E_FIRST                                 0x80040190L
+#define CLIENTSITE_E_LAST                                  0x8004019FL
+
+#define INPLACE_S_FIRST                                    0x000401A0L
+#define INPLACE_S_TRUNCATED                                0x000401A0L
+#define INPLACE_S_LAST                                     0x000401AFL
+
+#define INPLACE_E_FIRST                                    0x800401A0L
+#define INPLACE_E_NOTUNDOABLE                              0x800401A0L
+#define INPLACE_E_NOTOOLSPACE                              0x800401A1L
+#define INPLACE_E_LAST                                     0x800401AFL
+
+#define ENUM_S_FIRST                                       0x000401B0L
+#define ENUM_S_LAST                                        0x000401BFL
+
+#define ENUM_E_FIRST                                       0x800401B0L
+#define ENUM_E_LAST                                        0x800401BFL
+
+#define CONVERT10_S_FIRST                                  0x000401C0L
+#define CONVERT10_S_NO_PRESENTATION                        0x000401C0L
+#define CONVERT10_S_LAST                                   0x000401CFL
+
+#define CONVERT10_E_FIRST                                  0x800401C0L
+#define CONVERT10_E_OLESTREAM_GET                          0x800401C0L
+#define CONVERT10_E_OLESTREAM_PUT                          0x800401C1L
+#define CONVERT10_E_OLESTREAM_FMT                          0x800401C2L
+#define CONVERT10_E_OLESTREAM_BITMAP_TO_DIB                0x800401C3L
+#define CONVERT10_E_STG_FMT                                0x800401C4L
+#define CONVERT10_E_STG_NO_STD_STREAM                      0x800401C5L
+#define CONVERT10_E_STG_DIB_TO_BITMAP                      0x800401C6L
+#define CONVERT10_E_LAST                                   0x800401CFL
+
+#define CLIPBRD_S_FIRST                                    0x000401D0L
+#define CLIPBRD_S_LAST                                     0x000401DFL
+
+#define CLIPBRD_E_FIRST                                    0x800401D0L
+#define CLIPBRD_E_LAST                                     0x800401DFL
+#define CLIPBRD_E_CANT_OPEN                                0x800401D0L
+#define CLIPBRD_E_CANT_EMPTY                               0x800401D1L
+#define CLIPBRD_E_CANT_SET                                 0x800401D2L
+#define CLIPBRD_E_BAD_DATA                                 0x800401D3L
+#define CLIPBRD_E_CANT_CLOSE                               0x800401D4L
+
+#define MK_S_FIRST                                         0x000401E0L
+#define MK_S_REDUCED_TO_SELF                               0x000401E2L
+#define MK_S_ME                                            0x000401E4L
+#define MK_S_HIM                                           0x000401E5L
+#define MK_S_US                                            0x000401E6L
+#define MK_S_MONIKERALREADYREGISTERED                      0x000401E7L
+#define MK_S_LAST                                          0x000401EFL
+
+#define MK_E_FIRST                                         0x800401E0L
+#define MK_E_CONNECTMANUALLY                               0x800401E0L
+#define MK_E_EXCEEDEDDEADLINE                              0x800401E1L
+#define MK_E_NEEDGENERIC                                   0x800401E2L
+#define MK_E_UNAVAILABLE                                   0x800401E3L
+#define MK_E_SYNTAX                                        0x800401E4L
+#define MK_E_NOOBJECT                                      0x800401E5L
+#define MK_E_INVALIDEXTENSION                              0x800401E6L
+#define MK_E_INTERMEDIATEINTERFACENOTSUPPORTED             0x800401E7L
+#define MK_E_NOTBINDABLE                                   0x800401E8L
+#define MK_E_NOTBOUND                                      0x800401E9L
+#define MK_E_CANTOPENFILE                                  0x800401EAL
+#define MK_E_MUSTBOTHERUSER                                0x800401EBL
+#define MK_E_NOINVERSE                                     0x800401ECL
+#define MK_E_NOSTORAGE                                     0x800401EDL
+#define MK_E_NOPREFIX                                      0x800401EEL
+#define MK_E_ENUMERATION_FAILED                            0x800401EFL
+#define MK_E_LAST                                          0x800401EFL
+
+#define CO_S_FIRST                                         0x000401F0L
+#define CO_S_LAST                                          0x000401FFL
+
+#define CO_E_FIRST                                         0x800401F0L
+#define CO_E_NOTINITIALIZED                                0x800401F0L
+#define CO_E_ALREADYINITIALIZED                            0x800401F1L
+#define CO_E_CANTDETERMINECLASS                            0x800401F2L
+#define CO_E_CLASSSTRING                                   0x800401F3L
+#define CO_E_IIDSTRING                                     0x800401F4L
+#define CO_E_APPNOTFOUND                                   0x800401F5L
+#define CO_E_APPSINGLEUSE                                  0x800401F6L
+#define CO_E_ERRORINAPP                                    0x800401F7L
+#define CO_E_DLLNOTFOUND                                   0x800401F8L
+#define CO_E_ERRORINDLL                                    0x800401F9L
+#define CO_E_WRONGOSFORAPP                                 0x800401FAL
+#define CO_E_OBJNOTREG                                     0x800401FBL
+#define CO_E_OBJISREG                                      0x800401FCL
+#define CO_E_OBJNOTCONNECTED                               0x800401FDL
+#define CO_E_APPDIDNTREG                                   0x800401FEL
+#define CO_E_RELEASED                                      0x800401FFL
+#define CO_E_LAST                                          0x800401FFL
+#define CO_E_FAILEDTOIMPERSONATE                           0x80040200L
+#define CO_E_FAILEDTOGETSECCTX                             0x80040201L
+#define CO_E_FAILEDTOOPENTHREADTOKEN                       0x80040202L
+#define CO_E_FAILEDTOGETTOKENINFO                          0x80040203L
+#define CO_E_TRUSTEEDOESNTMATCHCLIENT                      0x80040204L
+#define CO_E_FAILEDTOQUERYCLIENTBLANKET                    0x80040205L
+#define CO_E_FAILEDTOSETDACL                               0x80040206L
+#define CO_E_ACCESSCHECKFAILED                             0x80040207L
+#define CO_E_NETACCESSAPIFAILED                            0x80040208L
+#define CO_E_WRONGTRUSTEENAMESYNTAX                        0x80040209L
+#define CO_E_INVALIDSID                                    0x8004020AL
+#define CO_E_CONVERSIONFAILED                              0x8004020BL
+#define CO_E_NOMATCHINGSIDFOUND                            0x8004020CL
+#define CO_E_LOOKUPACCSIDFAILED                            0x8004020DL
+#define CO_E_NOMATCHINGNAMEFOUND                           0x8004020EL
+#define CO_E_LOOKUPACCNAMEFAILED                           0x8004020FL
+#define CO_E_SETSERLHNDLFAILED                             0x80040210L
+#define CO_E_FAILEDTOGETWINDIR                             0x80040211L
+#define CO_E_PATHTOOLONG                                   0x80040212L
+#define CO_E_FAILEDTOGENUUID                               0x80040213L
+#define CO_E_FAILEDTOCREATEFILE                            0x80040214L
+#define CO_E_FAILEDTOCLOSEHANDLE                           0x80040215L
+#define CO_E_EXCEEDSYSACLLIMIT                             0x80040216L
+#define CO_E_ACESINWRONGORDER                              0x80040217L
+#define CO_E_INCOMPATIBLESTREAMVERSION                     0x80040218L
+#define CO_E_FAILEDTOOPENPROCESSTOKEN                      0x80040219L
+#define CO_E_DECODEFAILED                                  0x8004021AL
+#define CO_E_ACNOTINITIALIZED                              0x8004021BL
+
+#define E_ACCESSDENIED                                     0x80070005L
+#define E_HANDLE                                           0x80070006L
+#define E_OUTOFMEMORY                                      0x8007000EL
+#define E_INVALIDARG                                       0x80070057L
+
+#define CO_S_NOTALLINTERFACES                              0x00080012L
+
+#define CO_E_CLASS_CREATE_FAILED                           0x80080001L
+#define CO_E_SCM_ERROR                                     0x80080002L
+#define CO_E_SCM_RPC_FAILURE                               0x80080003L
+#define CO_E_BAD_PATH                                      0x80080004L
+#define CO_E_SERVER_EXEC_FAILURE                           0x80080005L
+#define CO_E_OBJSRV_RPC_FAILURE                            0x80080006L
+#define MK_E_NO_NORMALIZED                                 0x80080007L
+#define CO_E_SERVER_STOPPING                               0x80080008L
+#define MEM_E_INVALID_ROOT                                 0x80080009L
+#define MEM_E_INVALID_LINK                                 0x80080010L
+#define MEM_E_INVALID_SIZE                                 0x80080011L
 
 #ifdef __cplusplus
 }

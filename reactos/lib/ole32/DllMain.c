@@ -27,7 +27,15 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#include "Ole32.h"
+#include <ole32/ole32.h>
+
+#include <debug.h>
+
+#ifdef DBG
+
+DWORD DebugTraceLevel = MIN_TRACE;
+
+#endif /* DBG */
 
 BOOL WINAPI DllMain(HINSTANCE hInst, DWORD reason, LPVOID reserved)
 {

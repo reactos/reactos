@@ -27,9 +27,11 @@ Cambridge, MA 02139, USA.
 
 
 ********************************************************************/
-#include "Ole32.h"
+#include <ole32/ole32.h>
 
-/*WINOLEAPI PropVariantClear(PROPVARIANT *pvar){return S_OK;}
+#if 0
+
+WINOLEAPI PropVariantClear(PROPVARIANT *pvar){return S_OK;}
 WINOLEAPI FreePropVariantArray(
   ULONG cVariants,     //Count of elements in the structure
   PROPVARIANT *rgvars  //Pointer to the PROPVARIANT structure
@@ -91,4 +93,23 @@ WINOLEAPI CLSIDFromProgIDEx (IN LPCOLESTR lpszProgID, OUT LPCLSID lpclsid)
 WINOLEAPI_(int) StringFromGUID2(IN REFGUID rguid, OUT LPOLESTR lpsz, IN int cchMax)
 {
 	return S_OK;
-}*/
+}
+
+#endif
+
+/******************************************************************************
+ *		IsValidInterface	[OLE32.78]
+ *
+ * RETURNS
+ *  True, if the passed pointer is a valid interface
+ */
+BOOL WINAPI IsValidInterface(
+	LPUNKNOWN punk	/* [in] interface to be tested */
+) {
+	return !(
+		IsBadReadPtr(punk,4)					||
+		IsBadReadPtr(ICOM_VTBL(punk),4)				||
+		IsBadReadPtr(ICOM_VTBL(punk)->QueryInterface,9)	||
+		IsBadCodePtr((FARPROC)ICOM_VTBL(punk)->QueryInterface)
+	);
+}

@@ -13,7 +13,7 @@ COMPONENTS = iface_native iface_additional hallib ntoskrnl
 HALS = halx86
 BUS = acpi isapnp
 DLLS = ntdll kernel32 advapi32 crtdll msvcrt fmifs gdi32 msafd \
-	ole32 oleaut32 secur32 shell32 user32 ws2_32 version
+	user32 oleaut32 secur32 shell32 ws2_32 version
 SUBSYS = smss win32k csrss
 
 #

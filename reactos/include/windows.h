@@ -32,6 +32,20 @@
 #ifndef _GNU_H_WINDOWS_H
 #define _GNU_H_WINDOWS_H
 
+#ifndef max
+#define max(a,b)   (((a) > (b)) ? (a) : (b))
+#endif
+#ifndef min
+#define min(a,b)   (((a) < (b)) ? (a) : (b))
+#endif
+
+#ifndef MAX
+#define MAX max
+#endif
+#ifndef MIN
+#define MIN min
+#endif
+
 #ifndef RC_INVOKED
 #include <limits.h>
 #include <stdarg.h>

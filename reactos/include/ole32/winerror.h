@@ -29,7 +29,7 @@ Cambridge, MA 02139, USA.
 ********************************************************************/
 #ifndef _WINERROR_H
 #define _WINERROR_H
-
+#if 0
 //
 //	Return Code macros
 //
@@ -54,5 +54,6 @@ Cambridge, MA 02139, USA.
 #define	E_OUTOFMEMORY				0x8007000EL
 #define E_INVALIDARG				0x80070057L
 
+#endif
 
 #endif

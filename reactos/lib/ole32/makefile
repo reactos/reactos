@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.5 2001/08/21 20:13:07 chorns Exp $
+# $Id: makefile,v 1.6 2001/09/02 09:10:47 chorns Exp $
 #
 # Jurgen Van Gael [jurgen.vangael@student.kuleuven.ac.be]
 #
@@ -13,9 +13,11 @@ TARGET_NAME = ole32
 
 TARGET_BASE = 0x77a50000
 
-TARGET_CFLAGS = -fno-rtti
+TARGET_DEFONLY = yes
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_CFLAGS = -fno-rtti -I./include
+
+TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a user32.a gdi32.a msvcrt.a
 
 TARGET_OBJECTS = \
 	DllMain.o \
@@ -24,7 +26,19 @@ TARGET_OBJECTS = \
 	Ole2.o \
 	OleAuto.o \
 	Misc.o \
-	Storage.o
+	Storage.o \
+	storage32.o \
+	stg_stream.o \
+	stg_bigblockfile.o \
+	compobj.o \
+	memlockbytes.o \
+	rpcrt4_main.o \
+	filemoniker.o \
+	bindctx.o \
+	compositemoniker.o \
+	itemmoniker.o \
+	antimoniker.o \
+	datacache.o
 
 include $(PATH_TO_TOP)/rules.mak
 
