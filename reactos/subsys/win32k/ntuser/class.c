@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: class.c,v 1.48 2004/02/24 13:27:03 weiden Exp $
+/* $Id: class.c,v 1.49 2004/03/09 21:21:39 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -433,7 +433,7 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
   if ((int)Offset >= 0)
     {
       DPRINT("GetClassLong(%x, %d)\n", WindowObject->Self, Offset);
-      if (Offset > WindowObject->Class->cbClsExtra - sizeof(LONG))
+      if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return 0;
@@ -514,7 +514,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
   if ((int)Offset >= 0)
     {
       DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
-      if (Offset > WindowObject->Class->cbClsExtra - sizeof(LONG))
+      if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return;

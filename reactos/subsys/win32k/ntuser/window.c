@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.197 2004/02/27 22:21:32 weiden Exp $
+/* $Id: window.c,v 1.198 2004/03/09 21:21:39 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -2674,7 +2674,7 @@ NtUserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    if ((INT)Index >= 0)
    {
-      if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
+      if ((Index + sizeof(LONG)) > WindowObject->ExtraDataSize)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          return 0;
@@ -2774,7 +2774,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 
    if ((INT)Index >= 0)
    {
-      if (Index > WindowObject->ExtraDataSize - sizeof(LONG))
+      if ((Index + sizeof(LONG)) > WindowObject->ExtraDataSize)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          IntReleaseWindowObject(WindowObject);
