@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mm.c,v 1.73 2004/04/10 22:35:25 gdalsnes Exp $
+/* $Id: mm.c,v 1.74 2004/06/01 10:16:26 gdalsnes Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -49,6 +49,51 @@ PVOID MmSystemRangeStart = NULL;
 MM_STATS MmStats;
 
 /* FUNCTIONS ****************************************************************/
+
+
+NTSTATUS STDCALL
+MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
+{
+  NTSTATUS Status;
+
+  if (ExGetPreviousMode() == UserMode)
+    {
+      if ((ULONG)Dest >= KERNEL_BASE)
+   {
+     return(STATUS_ACCESS_VIOLATION);
+   }
+      Status = MmSafeCopyToUser(Dest, Src, NumberOfBytes);
+      return(Status);
+    }
+  else
+    {
+      memcpy(Dest, Src, NumberOfBytes);
+      return(STATUS_SUCCESS);
+    }
+}
+
+NTSTATUS STDCALL
+MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
+{
+  NTSTATUS Status;
+
+  if (ExGetPreviousMode() == UserMode)
+    {
+      if ((ULONG)Src >= KERNEL_BASE)
+   {
+     return(STATUS_ACCESS_VIOLATION);
+   }
+      Status = MmSafeCopyFromUser(Dest, Src, NumberOfBytes);
+      return(Status);
+    }
+  else
+    {
+      memcpy(Dest, Src, NumberOfBytes);
+      return(STATUS_SUCCESS);
+    }
+}
+
+
 
 NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
 {
