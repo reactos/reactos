@@ -4,8 +4,10 @@
  * FILE:        tditest.c
  * PURPOSE:     Testing TDI drivers
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *              Vizzini (vizzini@plasmic.com)
  * REVISIONS:
  *   CSH 01/08-2000 Created
+ *   26-Nov-2003 Vizzini Updated to run properly on Win2ksp4 
  */
 #include <tditest.h>
 
@@ -24,12 +26,7 @@ ULONG LocalAddress;
 BOOLEAN OpenError;
 KEVENT StopEvent;
 HANDLE SendThread;
-KEVENT SendThreadEvent;
 HANDLE ReceiveThread;
-KEVENT ReceiveThreadEvent;
-PVOID ReceiveThreadObject;
-PVOID SendThreadObject;
-
 
 NTSTATUS TdiCall(
     PIRP Irp,
@@ -65,7 +62,7 @@ NTSTATUS TdiCall(
 		{
 			if (CanCancel) 
 				{
-					Status = KeWaitForMultipleObjects(2, (PVOID)&Events, WaitAny, Executive, KernelMode, FALSE, NULL, NULL);
+					Status = KeWaitForMultipleObjects(2, (PVOID)Events, WaitAny, Executive, KernelMode, FALSE, NULL, NULL);
 
 					if (KeReadStateEvent(&StopEvent) != 0) 
 						{
@@ -112,13 +109,15 @@ NTSTATUS TdiOpenDevice(
 	NTSTATUS Status;
 
 	RtlInitUnicodeString(&Name, Protocol);
-	InitializeObjectAttributes(&Attr,      /* Attribute buffer */
+	InitializeObjectAttributes(
+		&Attr,                   /* Attribute buffer */
 		&Name,                   /* Device name */
 		OBJ_CASE_INSENSITIVE,    /* Attributes */
 		NULL,                    /* Root directory */
 		NULL);                   /* Security descriptor */
 
-	Status = ZwCreateFile(Handle,                       /* Return file handle */
+	Status = ZwCreateFile(
+		Handle,                               /* Return file handle */
 		GENERIC_READ | GENERIC_WRITE,         /* Desired access */
 		&Attr,                                /* Object attributes */
 		&Iosb,                                /* IO status */
@@ -132,7 +131,8 @@ NTSTATUS TdiOpenDevice(
 
 	if (NT_SUCCESS(Status)) 
 		{
-			Status  = ObReferenceObjectByHandle(*Handle, /* Handle to open file */
+			Status  = ObReferenceObjectByHandle(
+				*Handle,                        /* Handle to open file */
 				GENERIC_READ | GENERIC_WRITE,   /* Access mode */
 				NULL,                           /* Object type */
 				KernelMode,                     /* Access mode */
@@ -189,7 +189,7 @@ NTSTATUS TdiOpenTransport(
 	NTSTATUS Status;
 	ULONG EaLength;
 
-	/* EaName *must* be 0-termed, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
+	/* EaName must be 0-termed, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
 	EaLength = sizeof(FILE_FULL_EA_INFORMATION) + TDI_TRANSPORT_ADDRESS_LENGTH + sizeof(TA_IP_ADDRESS) + 1;
 	EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
 
@@ -304,7 +304,8 @@ NTSTATUS TdiQueryInformationEx(
 	QueryInfo.ID.toi_type  = Type;
 	QueryInfo.ID.toi_id    = Id;
 
-	return TdiQueryDeviceControl(FileObject,                 /* Transport/connection object */
+	return TdiQueryDeviceControl(
+		FileObject,                                /* Transport/connection object */
 		IOCTL_TCP_QUERY_INFORMATION_EX,            /* Control code */
 		&QueryInfo,                                /* Input buffer */
 		sizeof(TCP_REQUEST_QUERY_INFORMATION_EX),  /* Input buffer length */
@@ -347,7 +348,8 @@ NTSTATUS TdiQueryAddress(
 		}
 
 	/* Query device for supported entities */
-	Status = TdiQueryInformationEx(FileObject, /* File object */
+	Status = TdiQueryInformationEx(
+		FileObject,          /* File object */
 		GENERIC_ENTITY,      /* Entity */
 		TL_INSTANCE,         /* Instance */
 		INFO_CLASS_GENERIC,  /* Entity class */
@@ -374,7 +376,8 @@ NTSTATUS TdiQueryAddress(
 				{
 					/* Query device for entity type */
 					BufferSize = sizeof(EntityType);
-					Status = TdiQueryInformationEx(FileObject, /* File object */
+					Status = TdiQueryInformationEx(
+						FileObject,                  /* File object */
 						CL_NL_ENTITY,                /* Entity */
 						Entities[i].tei_instance,    /* Instance */
 						INFO_CLASS_GENERIC,          /* Entity class */
@@ -391,7 +394,8 @@ NTSTATUS TdiQueryAddress(
 
 					/* Query device for SNMP information */
 					BufferSize = sizeof(SnmpInfo);
- 					Status = TdiQueryInformationEx(FileObject, /* File object */
+ 					Status = TdiQueryInformationEx(
+						FileObject,                  /* File object */
 						CL_NL_ENTITY,                /* Entity */
 						Entities[i].tei_instance,    /* Instance */
 						INFO_CLASS_PROTOCOL,         /* Entity class */
@@ -417,7 +421,8 @@ NTSTATUS TdiQueryAddress(
 									break;
 								}
 
-						Status = TdiQueryInformationEx(FileObject, /* File object */
+						Status = TdiQueryInformationEx(
+							FileObject,                  /* File object */
 							CL_NL_ENTITY,                /* Entity */
 							Entities[i].tei_instance,    /* Instance */
 							INFO_CLASS_PROTOCOL,         /* Entity class */
@@ -746,7 +751,7 @@ VOID TdiSendThread(
 			while (NT_SUCCESS(Status)) 
 				{
 					/* Wait until timeout or stop flag is set */
- 					KeWaitForMultipleObjects( 2, (PVOID)&Events, WaitAny, Executive, KernelMode, FALSE, &Timeout, NULL);
+ 					KeWaitForMultipleObjects( 2, (PVOID)Events, WaitAny, Executive, KernelMode, FALSE, &Timeout, NULL);
 
 					if (KeReadStateEvent(&StopEvent) != 0) 
 						{
@@ -764,8 +769,6 @@ VOID TdiSendThread(
 		}
 
 	TDI_DbgPrint(MAX_TRACE, ("Terminating send thread...\n"));
-
-	KeSetEvent(&SendThreadEvent, 0, FALSE);
 
 	PsTerminateSystemThread(STATUS_SUCCESS);
 }
@@ -812,8 +815,6 @@ VOID TdiReceiveThread(
 		}
 
 	TDI_DbgPrint(MAX_TRACE, ("Terminating receive thread...\n"));
-
-	KeSetEvent(&ReceiveThreadEvent, 0, FALSE);
 
 	PsTerminateSystemThread(STATUS_SUCCESS);
 }
@@ -868,19 +869,25 @@ VOID TdiUnload(
  *     DriverObject = Pointer to a driver object for this driver
  */
 {
+	PVOID ReceiveThreadObject = 0;
+	PVOID SendThreadObject = 0;
+
 	TDI_DbgPrint(MAX_TRACE, ("Setting stop flag\n"));
+
+	/* Get pointers to the thread objects */
+	ObReferenceObjectByHandle(SendThread, THREAD_ALL_ACCESS, NULL, KernelMode, &SendThreadObject, NULL);
+	ObReferenceObjectByHandle(ReceiveThread, THREAD_ALL_ACCESS, NULL, KernelMode, &ReceiveThreadObject, NULL);
+
+	ASSERT(ReceiveThreadObject);
+	ASSERT(SendThreadObject);
 
 	KeSetEvent(&StopEvent, 0, FALSE);
 
 	/* Wait for send thread to stop */
-	KeWaitForSingleObject(&SendThreadEvent, Executive, KernelMode, FALSE, NULL);
-
-	ObDereferenceObject(SendThreadObject);
+	KeWaitForSingleObject(SendThreadObject, Executive, KernelMode, FALSE, NULL);
 
 	/* Wait for receive thread to stop */
-	KeWaitForSingleObject(&ReceiveThreadEvent, Executive, KernelMode, FALSE, NULL);
-
-	ObDereferenceObject(ReceiveThreadObject);
+	KeWaitForSingleObject(ReceiveThreadObject, Executive, KernelMode, FALSE, NULL);
 
 	/* Close device */
 	TdiCloseDevice(TdiTransport, TdiTransportObject);
@@ -908,8 +915,6 @@ DriverEntry(
 	WORK_QUEUE_ITEM WorkItem;
 
 	KeInitializeEvent(&StopEvent, NotificationEvent, FALSE);
-	KeInitializeEvent(&SendThreadEvent, NotificationEvent, FALSE);
-	KeInitializeEvent(&ReceiveThreadEvent, NotificationEvent, FALSE);
 
 	/* Call TdiOpenThread() */
 	KeInitializeEvent(&Event, SynchronizationEvent, FALSE);
@@ -918,7 +923,8 @@ DriverEntry(
 	KeWaitForSingleObject(&Event, Executive, KernelMode, TRUE, NULL);
 
 	/* Create a UDP send thread that sends a dgram every 2 seconds */
-	Status = PsCreateSystemThread(&SendThread,      /* Thread handle */
+	Status = PsCreateSystemThread(
+		&SendThread,                      /* Thread handle */
 		0,                                /* Desired access */
 		NULL,                             /* Object attributes */
 		NULL,                             /* Process handle */
@@ -932,11 +938,9 @@ DriverEntry(
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
 
-	/* Get a pointer to the thread object */
-	ObReferenceObjectByHandle(SendThread, THREAD_ALL_ACCESS, NULL, KernelMode, &SendThreadObject, NULL);
-
 	/* Create a UDP receive thread */
-	Status = PsCreateSystemThread(&ReceiveThread,       /* Thread handle */
+	Status = PsCreateSystemThread(
+		&ReceiveThread,                       /* Thread handle */
 		0,                                    /* Desired access */
 		NULL,                                 /* Object attributes */
 		NULL,                                 /* Process handle */
@@ -948,17 +952,8 @@ DriverEntry(
 		{
 			TDI_DbgPrint(MIN_TRACE, ("PsCreateSystemThread() failed for receive thread (Status = 0x%X).\n", Status));
 			ZwClose(SendThread);
-			ObDereferenceObject(SendThreadObject);	/* deref the extra ref we took above */
 			return STATUS_INSUFFICIENT_RESOURCES;
 		}
-
-	/* Get a pointer to the thread object */
-	ObReferenceObjectByHandle(ReceiveThread, THREAD_ALL_ACCESS, NULL, KernelMode, &ReceiveThreadObject, NULL);
-
-	/* Don't need these for anything, so we might as well close them now.
-			The threads will call PsTerminateSystemThread themselves when they are done */
-	ZwClose(SendThread);
-	ZwClose(ReceiveThread);
 
 	DriverObject->DriverUnload = (PDRIVER_UNLOAD)TdiUnload;
 

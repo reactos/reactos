@@ -19,7 +19,7 @@
 
 #ifdef DBG
 
-extern DWORD DebugTraceLevel;
+extern ULONG DebugTraceLevel;
 
 #ifdef _MSC_VER
 
