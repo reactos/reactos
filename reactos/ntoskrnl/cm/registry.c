@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.33 2000/09/13 11:46:35 jean Exp $
+/* $Id: registry.c,v 1.34 2000/09/14 14:45:06 jean Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -19,7 +19,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-#define  PROTO_REG  1  /* Comment out to disable */
+//#define  PROTO_REG  1  /* Comment out to disable */
 
 /*  -----------------------------------------------------  Typedefs  */
 
@@ -47,6 +47,8 @@
 #define  SYSTEM_REG_FILE  L"\\SystemRoot\\System32\\Config\\SYSTEM"
 #define  SOFTWARE_REG_FILE  L"\\SystemRoot\\System32\\Config\\SOFTWARE"
 #define  USER_REG_FILE  L"\\SystemRoot\\System32\\Config\\USER"
+
+#define  KO_MARKED_FOR_DELETE  0x00000001
 
 // BLOCK_OFFSET = offset in file after header block
 typedef DWORD  BLOCK_OFFSET;
@@ -100,6 +102,7 @@ typedef struct _KEY_BLOCK
   DWORD  Unused4[5];
   WORD  NameSize;
   WORD  ClassSize;
+//  FIXME : Name is char, not wchar
   WCHAR  Name[0];
 } KEY_BLOCK, *PKEY_BLOCK;
 
@@ -132,6 +135,7 @@ typedef struct _VALUE_BLOCK
   DWORD  DataType;
   WORD  Flags;
   WORD  Unused1;
+//  FIXME : Name is char, not wchar
   WCHAR  Name[0];
 } VALUE_BLOCK, *PVALUE_BLOCK;
 
@@ -169,21 +173,17 @@ typedef struct _KEY_OBJECT
   struct _KEY_OBJECT  *SubKey;
 } KEY_OBJECT, *PKEY_OBJECT;
 
-#define  KO_MARKED_FOR_DELETE  0x00000001
 
 /*  -------------------------------------------------  File Statics  */
 
-#if PROTO_REG
 static POBJECT_TYPE  CmiKeyType = NULL;
 static PREGISTRY_FILE  CmiVolatileFile = NULL;
 static PKEY_OBJECT  CmiKeyList = NULL;
 static KSPIN_LOCK  CmiKeyListLock;
 static PREGISTRY_FILE  CmiSystemFile = NULL;
-#endif
 
 /*  -----------------------------------------  Forward Declarations  */
 
-#if PROTO_REG
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
@@ -259,8 +259,6 @@ static NTSTATUS  CmiDestroyKeyBlock(PREGISTRY_FILE  RegistryFile,
 static NTSTATUS  CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
                                            OUT PHASH_TABLE_BLOCK  *HashBlock,
                                            IN ULONG  HashTableSize);
-static PHASH_TABLE_BLOCK  CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
-                                               BLOCK_OFFSET  HashBlockOffset);
 static PKEY_BLOCK  CmiGetKeyFromHashByIndex(PREGISTRY_FILE RegistryFile,
                                             PHASH_TABLE_BLOCK  HashBlock,
                                             ULONG  Index);
@@ -296,14 +294,12 @@ static VOID CmiLockBlock(PREGISTRY_FILE  RegistryFile,
 static VOID  CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
                              PVOID  Block);
 
-#endif
 
 /*  ---------------------------------------------  Public Interface  */
 
 VOID
 CmInitializeRegistry(VOID)
 {
-#if PROTO_REG
   NTSTATUS  Status;
   HANDLE  RootKeyHandle;
   UNICODE_STRING  RootKeyName;
@@ -380,28 +376,28 @@ CHECKPOINT;
   /* FIXME: create remaining structure needed for default handles  */
   /* FIXME: load volatile registry data from ROSDTECT  */
 
-#endif
 }
 
 VOID
 CmInitializeRegistry2(VOID)
 {
-#ifdef xxx
+#ifdef PROTO_REG
  OBJECT_ATTRIBUTES  ObjectAttributes;
  PKEY_OBJECT  NewKey;
  HANDLE  KeyHandle;
  UNICODE_STRING  KeyName;
   /* FIXME : delete temporary \Registry\Machine\System */
-  RtlInitUnicodeString(&KeyName, REG_SYSTEM_KEY_NAME);
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
-  NewKey=ObCreateObject(&KeyHandle,
-                 STANDARD_RIGHTS_REQUIRED,
-                 &ObjectAttributes,
-                 CmiKeyType);
+  /* load the SYSTEM Hive */
 CHECKPOINT;
   CmiSystemFile = CmiCreateRegistry(SYSTEM_REG_FILE);
   if( CmiSystemFile )
   {
+    RtlInitUnicodeString(&KeyName, REG_SYSTEM_KEY_NAME);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
+    NewKey=ObCreateObject(&KeyHandle,
+                 STANDARD_RIGHTS_REQUIRED,
+                 &ObjectAttributes,
+                 CmiKeyType);
     NewKey->RegistryFile = CmiSystemFile;
     NewKey->KeyBlock = CmiGetBlock(CmiSystemFile,32);
     NewKey->Flags = 0;
@@ -409,23 +405,36 @@ CHECKPOINT;
     NewKey->Name = NewKey->KeyBlock->Name;
   }
 CHECKPOINT;
-#endif
-/*
+/* tests :*/
  {
 //  HANDLE HKey;
   NTSTATUS Status;
   PKEY_BLOCK SubKeyBlock;
-  RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Windows");
-  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
       Status = CmiScanForSubKey(CmiSystemFile, 
                                 NewKey->KeyBlock, 
                                 &SubKeyBlock,
-                                L"Windows",
+                                L"ControlSet001",
                                 KEY_READ);
+CHECKPOINT;
+if(NT_SUCCESS(Status))
+{
+ DPRINT("found subkey ,ptr=%x\n",SubKeyBlock);
+ DPRINT("  Id=%x\n",SubKeyBlock->SubBlockId);
+ DPRINT("  Type=%x\n",SubKeyBlock->Type);
+ DPRINT("  parent=%x\n",SubKeyBlock->ParentKeyOffset);
+ DPRINT("  name=%x\n",SubKeyBlock->Name);
+}
+else
+{
+ DPRINT("not found subkey ControlSet001\n");
+}
+//RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\Software\\Windows");
+//RtlInitUnicodeString(&KeyName, L"\\Registry\\Machine\\System\\ControlSet001");
+//  InitializeObjectAttributes(&ObjectAttributes, &KeyName, 0, NULL, NULL);
 //  Status = NtOpenKey ( &HKey, KEY_READ , &ObjectAttributes);
   
  }
-*/
+#endif
 }
 
 VOID 
@@ -447,7 +456,6 @@ NtCreateKey (
 	OUT	PULONG			Disposition
 	)
 {
-#if PROTO_REG
   PWSTR  KeyNameBuf;
   NTSTATUS  Status;
   PKEY_OBJECT  CurKey, NewKey;
@@ -531,9 +539,6 @@ NtCreateKey (
       *Disposition = REG_CREATED_NEW_KEY;
     }
   return  Status;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -543,7 +548,6 @@ NtDeleteKey (
 	IN	HANDLE	KeyHandle
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   
@@ -568,9 +572,6 @@ NtDeleteKey (
   ObDereferenceObject(KeyObject);
 
   return  STATUS_SUCCESS;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -585,7 +586,6 @@ NtEnumerateKey (
 	OUT	PULONG			ResultLength
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -612,7 +612,7 @@ NtEnumerateKey (
   RegistryFile = KeyObject->RegistryFile;
     
   /*  Get pointer to SubKey  */
-  HashTableBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  HashTableBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
   SubKeyBlock = CmiGetKeyFromHashByIndex(RegistryFile, 
                                          HashTableBlock, 
                                          Index);
@@ -722,9 +722,6 @@ NtEnumerateKey (
   ObDereferenceObject (KeyObject);
 
   return  Status;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -739,7 +736,6 @@ NtEnumerateValueKey (
 	OUT	PULONG				ResultLength
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -856,9 +852,6 @@ NtEnumerateValueKey (
   ObDereferenceObject(KeyObject);
 
   return  Status;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -868,11 +861,7 @@ NtFlushKey (
 	IN	HANDLE	KeyHandle
 	)
 {
-#ifdef PROTO_REG
   return  STATUS_SUCCESS;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -884,7 +873,6 @@ NtOpenKey (
 	IN	POBJECT_ATTRIBUTES	ObjectAttributes
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PWSTR  KeyNameBuf;
   PREGISTRY_FILE  FileToUse;
@@ -967,9 +955,6 @@ NtOpenKey (
                           KeyHandle);
   
   return  Status;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -983,7 +968,6 @@ NtQueryKey (
 	OUT	PULONG			ResultLength
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -1108,9 +1092,6 @@ NtQueryKey (
   ObDereferenceObject (KeyObject);
 
   return  Status;
-#else
-  UNIMPLEMENTED;
-#endif
 }
 
 
@@ -1125,7 +1106,6 @@ NtQueryValueKey (
 	OUT	PULONG				ResultLength
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -1240,9 +1220,6 @@ NtQueryValueKey (
   ObDereferenceObject(KeyObject);
   
   return  Status;
-#else
-   UNIMPLEMENTED;
-#endif
 }
 
 
@@ -1257,7 +1234,6 @@ NtSetValueKey (
 	IN	ULONG			DataSize
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -1308,9 +1284,6 @@ NtSetValueKey (
   ObDereferenceObject (KeyObject);
   
   return  Status;
-#else
-   UNIMPLEMENTED;
-#endif
 }
 
 NTSTATUS
@@ -1320,7 +1293,6 @@ NtDeleteValueKey (
 	IN	PUNICODE_STRING	ValueName
 	)
 {
-#ifdef PROTO_REG
   NTSTATUS  Status;
   PKEY_OBJECT  KeyObject;
   PREGISTRY_FILE  RegistryFile;
@@ -1347,9 +1319,6 @@ NtDeleteValueKey (
   ObDereferenceObject(KeyObject);
 
   return  Status;
-#else
-   UNIMPLEMENTED;
-#endif
 }
 
 NTSTATUS
@@ -1544,7 +1513,6 @@ RtlWriteRegistryValue (
 /*  ------------------------------------------  Private Implementation  */
 
 
-#if PROTO_REG
 static NTSTATUS CmiObjectParse(PVOID ParsedObject,
 		     PVOID *NextObject,
 		     PUNICODE_STRING FullPath,
@@ -2145,7 +2113,7 @@ CmiGetMaxNameLength(PREGISTRY_FILE  RegistryFile,
   PKEY_BLOCK  CurSubKeyBlock;
 
   MaxName = 0;
-  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  HashBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
   if (HashBlock == 0)
     {
       return  0;
@@ -2178,7 +2146,7 @@ CmiGetMaxClassLength(PREGISTRY_FILE  RegistryFile,
   PKEY_BLOCK  CurSubKeyBlock;
 
   MaxClass = 0;
-  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  HashBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
   if (HashBlock == 0)
     {
       return  0;
@@ -2277,7 +2245,7 @@ CmiScanForSubKey(IN PREGISTRY_FILE  RegistryFile,
   PHASH_TABLE_BLOCK  HashBlock;
   PKEY_BLOCK  CurSubKeyBlock;
 
-  HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+  HashBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
   *SubKeyBlock = NULL;
   if (HashBlock == 0)
     {
@@ -2343,7 +2311,7 @@ CmiAddSubKey(PREGISTRY_FILE  RegistryFile,
     }
   else
     {
-      HashBlock = CmiGetHashTableBlock(RegistryFile, KeyBlock->HashTableOffset);
+      HashBlock = CmiGetBlock(RegistryFile, KeyBlock->HashTableOffset);
       if (KeyBlock->NumberOfSubKeys + 1 >= HashBlock->HashTableSize)
         {
 
@@ -2683,26 +2651,6 @@ CmiAllocateHashTableBlock(IN PREGISTRY_FILE  RegistryFile,
     }
 
   return  Status;
-}
-
-static PHASH_TABLE_BLOCK  
-CmiGetHashTableBlock(PREGISTRY_FILE  RegistryFile,
-                     BLOCK_OFFSET  HashBlockOffset)
-{
-  PHASH_TABLE_BLOCK  HashBlock;
-
-  if (RegistryFile->Filename == NULL)
-    {
-      CmiLockBlock(RegistryFile, (PVOID) HashBlockOffset);
-
-      HashBlock = (PHASH_TABLE_BLOCK) HashBlockOffset;
-    }
-  else
-    {
-      UNIMPLEMENTED;
-    }
-
-  return  HashBlock;
 }
 
 static PKEY_BLOCK  
@@ -3046,10 +2994,9 @@ CmiReleaseBlock(PREGISTRY_FILE  RegistryFile,
 {
   if (RegistryFile->Filename != NULL)
     {
-      UNIMPLEMENTED;
+      /* FIXME : implement */
     }
 }
 
-#endif
 
 /* EOF */
