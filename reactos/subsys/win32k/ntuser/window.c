@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.163 2003/12/14 17:59:16 navaraf Exp $
+/* $Id: window.c,v 1.164 2003/12/16 18:14:39 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -1466,8 +1466,8 @@ NtUserDestroyWindow(HWND Wnd)
       return FALSE;
     }
 
-  /* Check for desktop window */
-  if (IntIsDesktopWindow(Window))
+  /* Check for owner thread and desktop window */
+  if ((Window->OwnerThread != PsGetCurrentThread()) || IntIsDesktopWindow(Window))
     {
       IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
