@@ -3,7 +3,7 @@
 #
 .EXPORT_ALL_VARIABLES:
 
-#HOST = mingw32-windows
+HOST = mingw32-windows
 
 # uncomment if you use bochs and it displays only 30 rows
 # BOCHS_30ROWS = yes
@@ -11,8 +11,6 @@
 ifeq ($(HOST),mingw32-linux)
 TOPDIR := $(shell if [ "$$PWD" != "" ]; then echo $$PWD; else pwd; fi)
 endif
-
-DOT := \.
 
 #
 # Choose various options
@@ -22,8 +20,8 @@ NASM_FORMAT = win32
 PREFIX = /usr/mingw32-cvs-000216/bin/mingw32-pc-
 #PREFIX = i586-mingw32-
 #PREFIX = /usr/mingw32-cvs-000207/bin/mingw32-cvs-000207-
-EXE_POSTFIX = 
-EXE_PREFIX = ./
+EXE_POSTFIX := 
+EXE_PREFIX := ./
 #CP = cp
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
@@ -33,12 +31,15 @@ FLOPPY_DIR = /a
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
 DOT := \\.
+DSEP := /
+ENABLE_DEPENDENCY_TRACKING := 1
 endif
 
 ifeq ($(HOST),mingw32-windows)
 NASM_FORMAT = win32
 PREFIX = 
-EXE_POSTFIX = .exe
+EXE_PREFIX := 
+EXE_POSTFIX := .exe
 #CP = copy /B
 CP = $(PATH_TO_TOP)/rcopy
 DLLTOOL = $(PREFIX)dlltool --as=$(PREFIX)as
@@ -51,6 +52,8 @@ FLOPPY_DIR = A:
 # DIST_DIR should be relative from the top of the tree
 DIST_DIR = dist
 DOT := \.
+DSEP := \\
+ENABLE_DEPENDENCY_TRACKING := 1
 endif
 
 CC = $(PREFIX)gcc

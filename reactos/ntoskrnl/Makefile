@@ -1,8 +1,10 @@
-# $Id: Makefile,v 1.22 2001/03/15 22:13:50 dwelch Exp $
+# $Id: Makefile,v 1.23 2001/03/15 23:41:31 dwelch Exp $
 #
 # ReactOS Operating System
 #
 PATH_TO_TOP = ..
+
+
 
 #
 # Architecture to build for
@@ -19,12 +21,14 @@ CFLAGS = -Iinclude -D__NTOSKRNL__ -DDBG -g -Wall -Werror
 #	 -Wmissing-prototypes -Wshadow\
 #CFLAGS += -DDBGPRINT_FILE_LOG
 
-all: depends$(EXE_POSTFIX) \
+include $(PATH_TO_TOP)/rules.mak
+
+all: $(EXE_PREFIX)depends$(EXE_POSTFIX) \
 	$(OBJECTS_PATH) \
 	$(TARGETNAME).nostrip.exe \
 	$(TARGETNAME).exe
 
-depends$(EXE_POSTFIX): depends.c
+$(EXE_PREFIX)depends$(EXE_POSTFIX): depends.c
 	$(HOST_CC) -o depends$(EXE_POSTFIX) depends.c
 
 #
@@ -572,7 +576,7 @@ ke/main.o: ke/main.c ../include/reactos/buildno.h
 
 include $(D1_FILES)
 
-.%.d: %.c depends$(EXE_POSTFIX)
+.%.d: %.c $(EXE_PREFIX)depends$(EXE_POSTFIX)
 	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
 .%.d: %.s
@@ -581,6 +585,6 @@ include $(D1_FILES)
 .%.d: %.S
 	$(CC) $(CFLAGS) -M $< | $(EXE_PREFIX)depends$(EXE_POSTFIX) $(@D) $@
 
-include $(PATH_TO_TOP)/rules.mak
+
 
 # EOF
