@@ -33,7 +33,8 @@ NTSTATUS IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
 {
    DeviceObject->Timer = ExAllocatePool(NonPagedPool,sizeof(IO_TIMER));
    KeInitializeTimer(&(DeviceObject->Timer->timer));
-   KeInitializeDpc(&(DeviceObject->Timer->dpc),(PKDEFERRED_ROUTINE)TimerRoutine,Context);
+   KeInitializeDpc(&(DeviceObject->Timer->dpc),
+		   (PKDEFERRED_ROUTINE)TimerRoutine,Context);
    
    return(STATUS_SUCCESS);
 }

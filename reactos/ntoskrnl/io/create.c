@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/create.c
  * PURPOSE:         Handling file create/open apis
- * PROGRAMMER:      David Welch (welch@mcmail.com)
+ * PROGRAMMER:      David Welch (welch@cwcom.net) 
  * UPDATE HISTORY:
  *                  24/05/98: Created
  */
@@ -117,6 +117,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    if (Status != STATUS_SUCCESS && Status != STATUS_FS_QUERY_REQUIRED)
      {
 	DPRINT("%s() = Failed to find object\n",__FUNCTION__);
+	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
 	*FileHandle=0;
 	return(STATUS_UNSUCCESSFUL);
@@ -134,7 +135,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	FileObject->Flags = FileObject->Flags | FO_DIRECT_DEVICE_OPEN;
 	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
 					ObjectAttributes->ObjectName->Length);
-	FileObject->FileName.Length = ObjectAttributes->Length;
+	FileObject->FileName.Length = ObjectAttributes->ObjectName->Length;
 	RtlCopyUnicodeString(&(FileObject->FileName),
 			     ObjectAttributes->ObjectName);
      }
@@ -146,7 +147,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	if (DeviceObject->DeviceType != FILE_DEVICE_FILE_SYSTEM &&
 	    DeviceObject->DeviceType != FILE_DEVICE_DISK)
 	  {
-	     CHECKPOINT;
+	     ObDereferenceObject(FileObject);
 	     ZwClose(*FileHandle);
 	     *FileHandle=0;
 	     return(STATUS_UNSUCCESSFUL);
@@ -158,7 +159,7 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	     Status = IoTryToMountStorageDevice(DeviceObject);
 	     if (Status!=STATUS_SUCCESS)
 	       {
-		  CHECKPOINT;
+		  ObDereferenceObject(FileObject);
 		  ZwClose(*FileHandle);
 		  *FileHandle=0;
 		  return(Status);
@@ -167,13 +168,13 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
 	  }
 	DPRINT("Remainder %x\n",Remainder);
 	DPRINT("Remainder %w\n",Remainder);
-	FileObject->FileName.Buffer = ExAllocatePool(NonPagedPool,
-						     wstrlen(Remainder));
-	RtlInitUnicodeString(&(FileObject->FileName),Remainder);
+	DPRINT("FileObject->FileName.Buffer %w\n",FileObject->FileName.Buffer);
+	RtlInitUnicodeString(&(FileObject->FileName),wstrdup(Remainder));
 	DPRINT("FileObject->FileName.Buffer %x %w\n",
 	       FileObject->FileName.Buffer,FileObject->FileName.Buffer);
      }
    CHECKPOINT;
+   DPRINT("FileObject->FileName.Buffer %x\n",FileObject->FileName.Buffer);
    
    if (CreateOptions & FILE_SYNCHRONOUS_IO_ALERT)
      {
@@ -194,6 +195,8 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
    if (Irp==NULL)
      {
+	ExFreePool(FileObject->FileName.Buffer);
+	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
 	*FileHandle=0;
 	return(STATUS_UNSUCCESSFUL);
@@ -215,6 +218,9 @@ NTSTATUS ZwCreateFile(PHANDLE FileHandle,
    
    if (Status!=STATUS_SUCCESS)
      {
+	DPRINT("FileObject->FileName.Buffer %x\n",FileObject->FileName.Buffer);
+	ExFreePool(FileObject->FileName.Buffer);
+	ObDereferenceObject(FileObject);
 	ZwClose(*FileHandle);
 	*FileHandle=0;
      }

@@ -14,6 +14,9 @@
 #include <wstring.h>
 #include <ddk/ntddk.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 /* TYPES ********************************************************************/
 
 typedef struct _KERNEL32_FIND_FILE_DATA
@@ -74,7 +77,7 @@ WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
                                  TRUE,
                                  &(IData->PatternStr),
                                  FALSE);
-   dprintf("Found %w\n",IData->FileInfo.FileName);
+   DPRINT("Found %w\n",IData->FileInfo.FileName);
    lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
    if (Status != STATUS_SUCCESS)
    {
@@ -95,7 +98,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
    
-   dprintf("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
+   DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
 	   lpFileName, lpFindFileData);
    
    GetCurrentDirectoryW(MAX_PATH, CurrentDirectory);
@@ -104,17 +107,17 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    Directory[2] = '?';
    Directory[3] = '\\';
    Directory[4] = 0;
-   dprintf("Directory %w\n",Directory);
+   DPRINT("Directory %w\n",Directory);
    wcscat(Directory, CurrentDirectory);
-   dprintf("Directory %w\n",Directory);
+   DPRINT("Directory %w\n",Directory);
    wcscat(Directory, lpFileName);
-   dprintf("Directory %w\n",Directory);
+   DPRINT("Directory %w\n",Directory);
    End = wcsrchr(Directory, '\\');
    *End = 0;
    
    wcscpy(Pattern, End+1);
    
-   dprintf("Directory %w Pattern %w\n",Directory,Pattern);
+   DPRINT("Directory %w Pattern %w\n",Directory,Pattern);
    
    IData = HeapAlloc(GetProcessHeap(), 
 		     HEAP_ZERO_MEMORY, 
@@ -151,7 +154,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
 			TRUE,
                         &(IData->PatternStr),
 			FALSE);
-   dprintf("Found %w\n",IData->FileInfo.FileName);
+   DPRINT("Found %w\n",IData->FileInfo.FileName);
    
    lpFindFileData->dwFileAttributes = IData->FileInfo.FileAttributes;
    return(IData);

@@ -176,6 +176,11 @@ NTSTATUS KeWaitForSingleObject(PVOID Object,
 //          hdr->WaitListHead.Flink,hdr->WaitListHead.Blink);
    KeReleaseDispatcherDatabaseLock(FALSE);
    PsSuspendThread(PsGetCurrentThread());
+   
+   if (Timeout!=NULL)
+     {
+	KeCancelTimer(&KeGetCurrentThread()->TimerBlock);
+     }
    return(STATUS_SUCCESS);
 }
 

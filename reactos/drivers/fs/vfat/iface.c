@@ -73,7 +73,7 @@ ULONG Fat16GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster)
    Block=(PUSHORT)DeviceExt->FAT;
    CurrentCluster = Block[CurrentCluster];
    if (CurrentCluster >= 0xfff8 && CurrentCluster <= 0xffff)
-    CurrentCluster = 0xffffffff;
+     CurrentCluster = 0xffffffff;
    DPRINT("Returning %x\n",CurrentCluster);
    return(CurrentCluster);
 }
@@ -821,7 +821,14 @@ NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject,
       Status = FindFile(DeviceExt,Fcb,ParentFcb,current,NULL,NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
-             /* FIXME: should the VfatFCB be freed here?  */
+	     if (Fcb != NULL)
+	       {
+		  ExFreePool(Fcb);
+	       }
+	     if (ParentFcb != NULL)
+	       {
+		  ExFreePool(ParentFcb);
+	       }
 	     return(Status);
 	  }
 	Temp = Fcb;
@@ -863,7 +870,7 @@ BOOLEAN FsdHasFileSystem(PDEVICE_OBJECT DeviceToMount)
  */
 {
    BootSector* Boot;
-
+   
    Boot = ExAllocatePool(NonPagedPool,512);
 
    VFATReadSectors(DeviceToMount, 0, 1, (UCHAR *)Boot);

@@ -146,16 +146,20 @@ NTSTATUS STDCALL ZwQueryPerformanceCounter(IN PLARGE_INTEGER Counter,
 }
 
 
-NTSTATUS 
-KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
+NTSTATUS KeAddThreadTimeout(PKTHREAD Thread, PLARGE_INTEGER Interval)
 {
-  assert(Thread != NULL);
-  assert(Interval != NULL);
+   assert(Thread != NULL);
+   assert(Interval != NULL);
 
-  KeInitializeTimer(&(Thread->TimerBlock));
-  KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
+   DPRINT("KeAddThreadTimeout(Thread %x, Interval %x)\n",Thread,Interval);
+   
+   KeInitializeTimer(&(Thread->TimerBlock));
+   KeSetTimer(&(Thread->TimerBlock),*Interval,NULL);
 
-  return STATUS_SUCCESS;
+   DPRINT("Thread->TimerBlock.entry.Flink %x\n",
+	    Thread->TimerBlock.entry.Flink);
+   
+   return STATUS_SUCCESS;
 }
 
 
@@ -327,6 +331,8 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
 {
    KIRQL oldlvl;
    
+   DPRINT("KeSetTimerEx(Timer %x)\n",Timer);
+   
    KeAcquireSpinLock(&timer_list_lock,&oldlvl);
    
    Timer->dpc=Dpc;
@@ -346,9 +352,11 @@ BOOLEAN KeSetTimerEx(PKTIMER Timer, LARGE_INTEGER DueTime, LONG Period,
    if (Timer->running)
      {
 	KeReleaseSpinLock(&timer_list_lock,oldlvl);
-
 	return TRUE;	
      }
+   DPRINT("Inserting %x in list\n",&Timer->entry);
+   DPRINT("Timer->entry.Flink %x\n",Timer->entry.Flink);
+   Timer->running=TRUE;
    InsertTailList(&timer_list_head,&Timer->entry);
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
    
@@ -366,13 +374,17 @@ BOOLEAN KeCancelTimer(PKTIMER Timer)
 {
    KIRQL oldlvl;
    
+   DPRINT("KeCancelTimer(Timer %x)\n",Timer);
+   
    KeAcquireSpinLock(&timer_list_lock,&oldlvl);
 		     
    if (!Timer->running)
      {
+	KeReleaseSpinLock(&timer_list_lock,oldlvl);
 	return FALSE;
      }
    RemoveEntryList(&Timer->entry);
+   Timer->running = FALSE;
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
 
    return TRUE;
@@ -423,6 +435,7 @@ VOID KeQueryTickCount(PLARGE_INTEGER TickCount)
 
 static void HandleExpiredTimer(PKTIMER current)
 {
+   DPRINT("HandleExpiredTime(current %x)\n",current);
    if (current->dpc!=NULL)
      {
 	DPRINT("current->dpc->DeferredRoutine %x\n",
@@ -431,6 +444,7 @@ static void HandleExpiredTimer(PKTIMER current)
 				      current->dpc->DeferredContext,
 				      current->dpc->SystemArgument1,
 				      current->dpc->SystemArgument2);
+	DPRINT("Finished dpc routine\n");
      }
    current->signaled=TRUE;
    if (current->period != 0)
@@ -456,6 +470,12 @@ void KeExpireTimers(void)
    PKTIMER current = CONTAINING_RECORD(current_entry,KTIMER,entry);
    KIRQL oldlvl;
    
+   DPRINT("KeExpireTimers()\n");
+   DPRINT("&timer_list_head %x\n",&timer_list_head);
+   DPRINT("current_entry %x\n",current_entry);
+   DPRINT("current_entry->Flink %x\n",current_entry->Flink);
+   DPRINT("current_entry->Flink->Flink %x\n",current_entry->Flink->Flink);
+   
    KeAcquireSpinLock(&timer_list_lock,&oldlvl);
    
    while (current_entry!=(&timer_list_head))
@@ -469,6 +489,7 @@ void KeExpireTimers(void)
 	current = CONTAINING_RECORD(current_entry,KTIMER,entry);
      }
    KeReleaseSpinLock(&timer_list_lock,oldlvl);
+   DPRINT("Finished KeExpireTimers()\n");
 }
 
 extern unsigned int nr_used_blocks;
@@ -511,8 +532,9 @@ BOOLEAN KiTimerInterrupt(VOID)
      }
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,ticks);
    memset(str, 0, sizeof(str));
-   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,KiTimerTicks);
+//   sprintf(str,"%.8u %.8u",EiNrUsedBlocks,KiTimerTicks);
 //   sprintf(str,"%.8u %.8u",EiFreeNonPagedPool,EiUsedNonPagedPool);
+   sprintf(str,"%.8u %.8u",PiNrThreads,KiTimerTicks);
    for (i=0;i<17;i++)
      {
 	*vidmem=str[i];

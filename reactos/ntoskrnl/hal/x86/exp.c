@@ -257,15 +257,21 @@ asmlinkage void exception_handler(unsigned int edi,
 
 VOID KeDumpStackFrames(ULONG DummyArg)
 {
-   PULONG Stack = ((PULONG)&DummyArg)[-1];
+   PULONG Stack = &((&DummyArg)[-1]);
    ULONG i;
    
+   Stack = (PVOID)(((ULONG)Stack) & (~0x3));
+   
    DbgPrint("Frames:\n");
-   for (i=0; i<32; i++)
+   for (i=0; i<1024; i++)
      {
-	if (Stack[i] > KERNEL_BASE)
+	if (Stack[i] > KERNEL_BASE && Stack[i] < ((ULONG)&etext))
 	  {
 	     DbgPrint("%.8x  ",Stack[i]);
+	  }
+	if (Stack[i] == 0xceafbeef)
+	  {
+	     DbgPrint("IRQ ");
 	  }
      }
    DbgPrint("\n");

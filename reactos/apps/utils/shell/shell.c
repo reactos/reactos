@@ -142,7 +142,7 @@ void ExecuteCommand(char* line)
      }
    cmd = line;
    
-   debug_printf("cmd '%s' tail '%s'\n",cmd,tail);
+//   debug_printf("cmd '%s' tail '%s'\n",cmd,tail);
    
    if (cmd==NULL)
      {
@@ -194,6 +194,11 @@ void ReadLine(char* line)
 	     line++;
 	  }
      } while (!(KeyEvent.bKeyDown && KeyEvent.AsciiChar == '\n'));
+   ReadFile(KeyboardHandle,
+	    &KeyEvent,
+	    sizeof(KEY_EVENT_RECORD),
+	    &Result,
+	    NULL);
    line--;
    *line = 0;
 }

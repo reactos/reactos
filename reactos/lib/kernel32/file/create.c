@@ -2,21 +2,26 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/create.c
- * PURPOSE:         Directory functions
+ * PURPOSE:         File create/open functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
-		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
+ *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  */
 
+/* INCLUDES *****************************************************************/
 
-#undef WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <ddk/ntddk.h>
 #include <wstring.h>
 #include <string.h>
 #include <kernel32/li.h>
 #include <ddk/rtl.h>
+
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
+/* FUNCTIONS ****************************************************************/
 
 HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
 			   DWORD dwDesiredAccess,
@@ -30,7 +35,7 @@ HANDLE STDCALL CreateFileA(LPCSTR lpFileName,
    WCHAR FileNameW[MAX_PATH];
    ULONG i = 0;
    
-   OutputDebugStringA("CreateFileA\n");
+   DPRINT("CreateFileA\n");
    
    while ((*lpFileName)!=0 && i < MAX_PATH)
      {
@@ -69,7 +74,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    UINT Len = 0;
    WCHAR CurrentDir[MAX_PATH];
    
-   OutputDebugStringA("CreateFileW\n");
+   DPRINT("CreateFileW\n");
    
    if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
      {
@@ -83,16 +88,16 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    PathNameW[3] = '\\';
    PathNameW[4] = 0;
    
-   dprintf("Name %w\n",PathNameW);
+   DPRINT("Name %w\n",PathNameW);
    if (lpFileName[0] != L'\\' && lpFileName[1] != L':')     
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,CurrentDir);
-	dprintf("CurrentDir %w\n",CurrentDir);
+	DPRINT("CurrentDir %w\n",CurrentDir);
 	lstrcatW(PathNameW,CurrentDir);
-	dprintf("Name %w\n",PathNameW);
+	DPRINT("Name %w\n",PathNameW);
      }
    lstrcatW(PathNameW,lpFileName);
-   dprintf("Name %w\n",PathNameW);
+   DPRINT("Name %w\n",PathNameW);
      
    FileNameString.Length = lstrlenW( PathNameW)*sizeof(WCHAR);
 	 

@@ -418,7 +418,7 @@ static VOID KbdDpcRoutine(PKDPC Dpc,
    
    CHECKPOINT;
    DPRINT("KbdDpcRoutine(DeviceObject %x, Irp %x)\n",
-	  DeviceObject,Irp);
+	    DeviceObject,Irp);
    Irp->IoStatus.Status = STATUS_SUCCESS;
    Irp->IoStatus.Information = 0;
    IoCompleteRequest(Irp,IO_NO_INCREMENT);
@@ -479,7 +479,12 @@ static unsigned int KeyboardHandler(unsigned int irq)
 
    ProcessScanCode(thisKey,isDown);
    
-   DPRINT("Key: '%c'\n",VirtualToAscii(ScanToVirtual(thisKey),isDown));
+//   DbgPrint("Key: %c\n",VirtualToAscii(ScanToVirtual(thisKey),isDown));
+//   DbgPrint("Key: %x\n",ScanToVirtual(thisKey));
+   if (ScanToVirtual(thisKey)==0x2a)
+     {
+	KeBugCheck(0);
+     }
    
    if (CurrentIrp!=NULL)
      {

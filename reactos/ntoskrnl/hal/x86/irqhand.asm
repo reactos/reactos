@@ -19,6 +19,9 @@ _irq_handler_%1:
         push    ds
 	push    es
 	
+	mov     eax,0xceafbeef
+	push    eax
+	
 	;
 	; Load DS
 	;
@@ -45,6 +48,9 @@ _irq_handler_%1:
 	; Restore stack, registers and return to interrupted routine
 	;
         pop     eax
+	
+	pop     eax
+	
 	pop     es
         pop     ds
         popa
@@ -59,12 +65,17 @@ _irq_handler_%1:
 	;
         pusha
         push ds
+	push es
+	
+	mov eax,0xceafbeef
+	push eax
 	
 	;
 	; Load DS
 	;
         mov ax,KERNEL_DS
         mov ds,ax
+	mov es,ax
 	
 	;
 	; Mask the related vector at the PIC
@@ -83,6 +94,10 @@ _irq_handler_%1:
 	; Restore stack, registers and return to the interrupted routine
 	;
         pop  eax
+	
+	pop  eax
+	
+	pop  es
         pop  ds
         popa
         iret

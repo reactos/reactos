@@ -172,33 +172,33 @@ WaitForSingleObject(
 	return WaitForSingleObjectEx(hHandle,dwMilliseconds,FALSE);	
 }
 
-DWORD 
-STDCALL
-WaitForSingleObjectEx(
-    HANDLE  hHandle,	
-    DWORD  dwMilliseconds,	
-    BOOL  bAlertable 	
-   )
+DWORD STDCALL WaitForSingleObjectEx(HANDLE  hHandle,	
+				    DWORD  dwMilliseconds,	
+				    BOOL  bAlertable)
 {
-
-	NTSTATUS  errCode;
-	LARGE_INTEGER Time;
-	DWORD retCode;
-
+   
+   NTSTATUS  errCode;
+   PLARGE_INTEGER TimePtr;
+   LARGE_INTEGER Time;
+   DWORD retCode;
+   
+   if (dwMilliseconds == INFINITE)
+     {
+	TimePtr = NULL;
+     }
+   else
+     {
 	SET_LARGE_INTEGER_LOW_PART(Time,dwMilliseconds);
+	TimePtr = &Time;
+     }
 
-	errCode = NtWaitForSingleObject(
-        hHandle,
-	(BOOLEAN) bAlertable,
-	&Time
-	);
-
-	retCode = RtlNtStatusToDosError(errCode);
-	SetLastError(retCode);
-	return retCode;
-	
-
-	
+   errCode = NtWaitForSingleObject(hHandle,
+				   (BOOLEAN) bAlertable,
+				   TimePtr);
+   
+   retCode = RtlNtStatusToDosError(errCode);
+   SetLastError(retCode);
+   return retCode;
 }
 
 DWORD 

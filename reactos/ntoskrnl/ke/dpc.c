@@ -54,7 +54,9 @@ void KeDrainDpcQueue(void)
    PLIST_ENTRY current_entry;
    PKDPC current;
    KIRQL oldlvl;
-  
+   
+   DPRINT("KeDrainDpcQueue()\n");
+   
    KeAcquireSpinLockAtDpcLevel(&DpcQueueLock);
    KeRaiseIrql(HIGH_LEVEL,&oldlvl);
    current_entry = RemoveHeadList(&DpcQueueHead);

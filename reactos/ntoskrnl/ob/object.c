@@ -95,6 +95,9 @@ PVOID ObGenericCreateObject(PHANDLE Handle,
 			    ACCESS_MASK DesiredAccess,
 			    POBJECT_ATTRIBUTES ObjectAttributes,
 			    POBJECT_TYPE Type)
+/*
+ * FUNCTION: Creates a new object
+ */
 {
    POBJECT_HEADER hdr = NULL;
    PWSTR path;
@@ -206,13 +209,12 @@ VOID ObInitializeObjectHeader(POBJECT_TYPE Type, PWSTR name,
  */
 {
    PWSTR temp_name;
-   extern unsigned long long ticks;
    
    DPRINT("ObInitializeObjectHeader(id %x name %w obj %x)\n",Type,
 	  name,ObjectHeader);
 
-   ObjectHeader->HandleCount = 0;
-   ObjectHeader->RefCount = 0;
+   ObjectHeader->HandleCount = 1;
+   ObjectHeader->RefCount = 1;
    ObjectHeader->ObjectType = Type;
    ObjectHeader->Permanent = FALSE;
    if (name==NULL)

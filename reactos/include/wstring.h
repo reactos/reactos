@@ -20,6 +20,7 @@ typedef unsigned short wchar_t;
 extern "C" {
 #endif
 
+wchar_t* wstrdup(const wchar_t* src);
 extern wchar_t * ___wcstok;
 extern wchar_t * wcscpy(wchar_t *,const wchar_t *);
 extern wchar_t * wcsncpy(wchar_t *,const wchar_t *, __kernel_size_t);

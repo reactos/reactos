@@ -6,5 +6,5 @@
 void main()
 {  
    NtDisplayString("Hello world\n");
-   ExitThread(0);
+   ExitProcess(0);
 }

@@ -584,19 +584,9 @@ FlushInstructionCache(
 	return TRUE;
 }
 
-VOID
-STDCALL
-ExitProcess(
-	    UINT uExitCode
-	    ) 
-{
-	
-	NtTerminateProcess(
-		NtCurrentProcess() ,
-		uExitCode
-	);
-	
-
+VOID STDCALL ExitProcess(UINT uExitCode) 
+{	
+   NtTerminateProcess(NtCurrentProcess() ,uExitCode);
 }
 
 VOID

@@ -21,7 +21,10 @@ VOID KiDispatchInterrupt(ULONG irq)
  * level than DISPATCH_LEVEL
  */
 {
-   KeExpireTimers();
+   if (irq == 0)
+     {
+	KeExpireTimers();
+     }
    KeDrainDpcQueue();
    PsDispatchThread();
 }

@@ -46,6 +46,7 @@ static KSPIN_LOCK ThreadListLock = {0,};
 static LIST_ENTRY PriorityListHead[NR_THREAD_PRIORITY_LEVELS]={{NULL,NULL},};
 static BOOLEAN DoneInitYet = FALSE;
 ULONG PiNrThreads = 0;
+ULONG PiNrRunnableThreads = 0;
 
 static PETHREAD CurrentThread = NULL;
 
@@ -61,6 +62,33 @@ PKTHREAD KeGetCurrentThread(VOID)
 PETHREAD PsGetCurrentThread(VOID)
 {
    return((PETHREAD)KeGetCurrentThread());
+}
+
+VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus)
+{
+   KIRQL oldlvl;
+   PLIST_ENTRY current_entry;
+   PETHREAD current;
+   ULONG i;
+
+   KeAcquireSpinLock(&ThreadListLock, &oldlvl);
+
+   for (i=0; i<NR_THREAD_PRIORITY_LEVELS; i++)
+   {
+        current_entry = PriorityListHead[i].Flink;
+        while (current_entry != &PriorityListHead[i])
+        {
+             current = CONTAINING_RECORD(current_entry,ETHREAD,Tcb.Entry);
+             if (current->ThreadsProcess == Process &&
+                 current != PsGetCurrentThread())
+             {
+                  PsTerminateThread(current, ExitStatus);
+             }
+             current_entry = current_entry->Flink;
+        }
+   }
+
+   KeReleaseSpinLock(&ThreadListLock, oldlvl);
 }
 
 static VOID PsInsertIntoThreadList(KPRIORITY Priority, PETHREAD Thread)
@@ -148,7 +176,7 @@ VOID PsDispatchThread(VOID)
 	Candidate = PsScanThreadList(CurrentPriority);
 	if (Candidate == CurrentThread)
 	  {
-//             DbgPrint("Scheduling current thread\n");
+             DPRINT("Scheduling current thread\n");
              KeQueryTickCount(&TickCount);
              CurrentThread->Tcb.LastTick = GET_LARGE_INTEGER_LOW_PART(TickCount);
 	     CurrentThread->Tcb.ThreadState = THREAD_STATE_RUNNING;
@@ -157,7 +185,7 @@ VOID PsDispatchThread(VOID)
 	  }
 	if (Candidate != NULL)
 	  {	
-//             DbgPrint("Scheduling %x\n",Candidate);
+             DPRINT("Scheduling %x\n",Candidate);
 	     
 	     Candidate->Tcb.ThreadState = THREAD_STATE_RUNNING;
 	     
@@ -171,6 +199,8 @@ VOID PsDispatchThread(VOID)
 	     return;
 	  }
      }
+   DbgPrint("CRITICAL: No threads are runnable\n");
+   KeBugCheck(0);
 }
 
 NTSTATUS PsInitializeThread(HANDLE ProcessHandle, 
@@ -207,6 +237,7 @@ NTSTATUS PsInitializeThread(HANDLE ProcessHandle,
 					   NULL);
 	if (Status != STATUS_SUCCESS)
 	  {
+	     DPRINT("Failed at %s:%d\n",__FILE__,__LINE__);
 	     return(Status);
 	  }
      }

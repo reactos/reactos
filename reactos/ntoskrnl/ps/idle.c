@@ -12,6 +12,7 @@
 
 #include <ddk/ntddk.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -27,7 +28,7 @@ static VOID PsIdleThreadMain(PVOID Context)
    
    for(;;)
      {
-//        DbgPrint("Idling.... ");
+        DPRINT("Idling.... DpcQueueSize %d\n",DpcQueueSize);
 	if (DpcQueueSize > 0)
 	  {
 	     KeRaiseIrql(DISPATCH_LEVEL,&oldlvl);

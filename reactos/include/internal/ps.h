@@ -13,6 +13,7 @@ void PsInitThreadManagment(void);
 VOID PsInitProcessManagment(VOID);
 VOID PsInitIdleThread(VOID);
 VOID PsDispatchThread(VOID);
+VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
 
 /*
  * PURPOSE: Thread states

@@ -17,7 +17,7 @@ STDLIB_OBJECTS = stdlib/malloc.o
 OBJECTS = $(STRING_OBJECTS) $(STDIO_OBJECTS) $(STDLIB_OBJECTS)
 
 crtdll.a: $(OBJECTS)
-	$(AR) vrcs crtdll.a $(OBJECTS)
+	$(AR) rcs crtdll.a $(OBJECTS)
 
 dummy:
 

@@ -204,21 +204,10 @@ NTSTATUS STDCALL ZwCreateProcess(
 	DbgPrint("ZwCreateProcess() non-NULL SectionHandle\n");
 	return(STATUS_UNSUCCESSFUL);
      }
-   
+
+   Process->Pcb.ProcessState = PROCESS_STATE_ACTIVE;
+
    return(STATUS_SUCCESS);
-}
-
-
-NTSTATUS STDCALL NtTerminateProcess(IN HANDLE ProcessHandle,
-				    IN NTSTATUS ExitStatus)
-{
-   return(ZwTerminateProcess(ProcessHandle,ExitStatus));
-}
-
-NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
-				    IN NTSTATUS ExitStatus)
-{
-   UNIMPLEMENTED;
 }
 
 
@@ -241,8 +230,7 @@ NTSTATUS STDCALL ZwOpenProcess (OUT PHANDLE ProcessHandle,
    UNIMPLEMENTED;
 }
 
-NTSTATUS STDCALL NtQueryInformationProcess(
-					   IN HANDLE ProcessHandle,
+NTSTATUS STDCALL NtQueryInformationProcess(IN HANDLE ProcessHandle,
 					   IN CINT ProcessInformationClass,
 					   OUT PVOID ProcessInformation,
 					   IN ULONG ProcessInformationLength,
@@ -255,8 +243,7 @@ NTSTATUS STDCALL NtQueryInformationProcess(
 				    ReturnLength));
 }
 
-NTSTATUS STDCALL ZwQueryInformationProcess(
-					   IN HANDLE ProcessHandle,
+NTSTATUS STDCALL ZwQueryInformationProcess(IN HANDLE ProcessHandle,
 					   IN CINT ProcessInformationClass,
 					   OUT PVOID ProcessInformation,
 					   IN ULONG ProcessInformationLength,
@@ -305,14 +292,10 @@ NTSTATUS STDCALL ZwQueryInformationProcess(
    return(Status);
 }
 
-NTSTATUS
-STDCALL
-NtSetInformationProcess(
-	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
-	IN PVOID ProcessInformation,
-	IN ULONG ProcessInformationLength
-	)
+NTSTATUS STDCALL NtSetInformationProcess(IN HANDLE ProcessHandle,
+					 IN CINT ProcessInformationClass,
+					 IN PVOID ProcessInformation,
+					 IN ULONG ProcessInformationLength)
 {
    return(ZwSetInformationProcess(ProcessHandle,
 				  ProcessInformationClass,
@@ -320,14 +303,10 @@ NtSetInformationProcess(
 				  ProcessInformationLength));
 }
 
-NTSTATUS
-STDCALL
-ZwSetInformationProcess(
-	IN HANDLE ProcessHandle,
-	IN CINT ProcessInformationClass,
-	IN PVOID ProcessInformation,
-	IN ULONG ProcessInformationLength
-	)
+NTSTATUS STDCALL ZwSetInformationProcess(IN HANDLE ProcessHandle,
+					 IN CINT ProcessInformationClass,
+					 IN PVOID ProcessInformation,
+					 IN ULONG ProcessInformationLength)
 {
    UNIMPLEMENTED;
 }

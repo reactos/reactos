@@ -14,11 +14,21 @@
 #include <ddk/ntddk.h>
 #include <wstring.h>
 
+#define NDEBUG
 #include <internal/debug.h>
 
 wchar_t * ___wcstok = NULL;
 
 /* FUNCTIONS *****************************************************************/
+
+wchar_t* wstrdup(const wchar_t* src)
+{
+   wchar_t* dest;
+   
+   dest = ExAllocatePool(NonPagedPool, (wstrlen(src)+1)*2);
+   wcscpy(dest,src);
+   return(dest);
+}
 
 wchar_t * 
 wcscat(wchar_t *dest, const wchar_t *src)
@@ -86,13 +96,14 @@ int wcscmp(const wchar_t *cs, const wchar_t *ct)
 wchar_t* wcscpy(wchar_t* str1, const wchar_t* str2)
 {
    wchar_t* s = str1;
-   DbgPrint("wcscpy(str1 %w, str2 %w)\n",str1,str2);
+   DPRINT("wcscpy(str1 %w, str2 %w)\n",str1,str2);
    while ((*str2)!=0)
      {
 	*s = *str2;
 	s++;
 	str2++;
      }
+   *s = 0;
    return(str1);
 }
 

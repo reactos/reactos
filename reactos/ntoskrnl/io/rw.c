@@ -58,9 +58,11 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
    PIO_STACK_LOCATION StackPtr;
    KEVENT Event;
    
+   assert(KeGetCurrentIrql()==PASSIVE_LEVEL);
+   
    DPRINT("ZwReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
 	  "IoStatusBlock %x)\n",
-	  FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
+	    FileHandle,Buffer,Length,ByteOffset,IoStatusBlock);
    
    Status = ObReferenceObjectByHandle(FileHandle,
 				      FILE_READ_DATA,
@@ -70,6 +72,8 @@ NTSTATUS ZwReadFile(HANDLE FileHandle,
 				      NULL);
    if (Status != STATUS_SUCCESS)
      {
+	DPRINT("ZwReadFile() =");
+	DbgPrintErrorMessage(Status);
 	return(Status);
      }
    assert(FileObject != NULL);

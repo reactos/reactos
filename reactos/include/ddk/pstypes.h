@@ -268,4 +268,7 @@ typedef struct _EPROCESS
    KPROCESS Pcb;
 } EPROCESS, *PEPROCESS;
 
+#define PROCESS_STATE_TERMINATED (1)
+#define PROCESS_STATE_ACTIVE     (2)
+
 #endif /* __INCLUDE_DDK_PSTYPES_H */

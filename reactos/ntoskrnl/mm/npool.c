@@ -28,7 +28,7 @@
 #include <ddk/ntddk.h>
 
 
-#if 1
+#if 0
 #define VALIDATE_POOL validate_kernel_pool()
 #else
 #define VALIDATE_POOL
@@ -99,7 +99,8 @@ static void validate_free_list(void)
 
 	if (current->magic != BLOCK_HDR_MAGIC)
 	  {
-	     DbgPrint("Bad block magic (probable pool corruption)\n");
+	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
+		      current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	
@@ -146,7 +147,8 @@ static void validate_used_list(void)
 	
 	if (current->magic != BLOCK_HDR_MAGIC)
 	  {
-	     DbgPrint("Bad block magic (probable pool corruption)\n");
+	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
+		      current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	if (base_addr < (kernel_pool_base) ||
@@ -189,7 +191,8 @@ static void check_duplicates(block_hdr* blk)
      {
 	if (current->magic != BLOCK_HDR_MAGIC)
 	  {
-	     DbgPrint("Bad block magic (probable pool corruption)\n");
+	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
+		      current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 
@@ -538,8 +541,8 @@ asmlinkage VOID ExFreePool(PVOID block)
    
    if (blk->magic != BLOCK_HDR_MAGIC)
      {
-	DbgPrint("ExFreePool of non-allocated address\n");
-	for(;;);
+	DbgPrint("ExFreePool of non-allocated address %x\n",block);
+	KeBugCheck(0);
 	return;
      }
    
@@ -622,7 +625,8 @@ PVOID ExAllocateNonPagedPoolWithTag(ULONG type, ULONG size, ULONG Tag)
 	       current->next);
 	if (current->magic != BLOCK_HDR_MAGIC)
 	  {
-	     DbgPrint("Bad block magic (probable pool corruption)\n");
+	     DbgPrint("Bad block magic (probable pool corruption) at %x\n",
+		      current);
 	     KeBugCheck(KBUG_POOL_FREE_LIST_CORRUPT);
 	  }
 	if (current->size>=size)

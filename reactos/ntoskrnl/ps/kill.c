@@ -22,6 +22,45 @@ extern ULONG PiNrThreads;
 
 /* FUNCTIONS *****************************************************************/
 
+NTSTATUS STDCALL NtTerminateProcess(IN HANDLE ProcessHandle,
+				    IN NTSTATUS ExitStatus)
+{
+   return(ZwTerminateProcess(ProcessHandle,ExitStatus));
+}
+
+NTSTATUS STDCALL ZwTerminateProcess(IN HANDLE ProcessHandle,
+				    IN NTSTATUS ExitStatus)
+{
+   PETHREAD Thread;
+   NTSTATUS Status;
+   PEPROCESS Process;
+   KIRQL oldlvl;
+
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+                                      PROCESS_TERMINATE,
+                                      PsProcessType,
+				      UserMode,
+                                      (PVOID*)&Process,
+				      NULL);
+   if (Status != STATUS_SUCCESS)
+   {
+        return(Status);
+   }
+
+   PiTerminateProcessThreads(Process, ExitStatus);
+   KeRaiseIrql(DISPATCH_LEVEL, &oldlvl);
+   KeDispatcherObjectWakeAll(&Process->Pcb.DispatcherHeader);
+   Process->Pcb.ProcessState = PROCESS_STATE_TERMINATED;
+   if (PsGetCurrentThread()->ThreadsProcess == Process)
+   {
+      KeLowerIrql(oldlvl);
+      PsTerminateSystemThread(ExitStatus);
+   }
+   KeLowerIrql(oldlvl);
+   return(STATUS_SUCCESS);
+}
+
+
 NTSTATUS STDCALL NtTerminateThread(IN HANDLE ThreadHandle,
 				   IN NTSTATUS ExitStatus)
 {
@@ -44,7 +83,12 @@ NTSTATUS STDCALL ZwTerminateThread(IN HANDLE ThreadHandle,
      {
 	return(Status);
      }
-   
+
+   PsTerminateThread(Thread);
+}
+
+VOID PsTerminateThread(PETHREAD Thread, NTSTATUS ExitStatus)
+{
    if (Thread == PsGetCurrentThread())
      {
 	PsTerminateSystemThread(ExitStatus);

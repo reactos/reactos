@@ -1,5 +1,3 @@
-
-
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -19,11 +17,11 @@
 #include <internal/debug.h>
 
 #include "vfat.h"
-//#include "dbgpool.c"
+
 /* FUNCTIONS ***************************************************************/
 
 BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
-            IN ULONG    DiskSector,
+                        IN ULONG    DiskSector,
                         IN ULONG        SectorCount,
 			IN UCHAR*	Buffer)
 {
@@ -33,27 +31,29 @@ BOOLEAN VFATReadSectors(IN PDEVICE_OBJECT pDeviceObject,
     KEVENT          event;
     NTSTATUS        status;
     ULONG           sectorSize;
-    PULONG          mbr;
    
-   DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d,count %d, Buffer %x)\n",
-        pDeviceObject,DiskSector,SectorCount,Buffer);
-
     SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector << 9);
     SET_LARGE_INTEGER_HIGH_PART(sectorNumber, DiskSector >> 23);
-
     KeInitializeEvent(&event, NotificationEvent, FALSE);
+    sectorSize = BLOCKSIZE * SectorCount;
 
-    sectorSize = BLOCKSIZE*SectorCount;
+    /* FIXME: this routine does not need to alloc mem and copy  */
 
-DPRINT("SectorCount=%d,sectorSize=%d,BLOCKSIZE=%d\n",SectorCount,sectorSize,BLOCKSIZE);
-    mbr = ExAllocatePool(NonPagedPool, sectorSize);
-    if (!mbr) {
-        return FALSE;
-    }
 
+    DPRINT("VFATReadSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+           pDeviceObject,
+           DiskSector,
+           Buffer);
+    DPRINT("sectorNumber %08lx:%08lx sectorSize %ld\n", 
+           (unsigned long int)GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
+           (unsigned long int)GET_LARGE_INTEGER_LOW_PART(sectorNumber),
+           sectorSize);
+
+
+    DPRINT("Building synchronous FSD Request...\n");
     irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
                                        pDeviceObject,
-                                       mbr,
+                                       Buffer,
                                        sectorSize,
                                        &sectorNumber,
                                        &event,
@@ -61,19 +61,21 @@ DPRINT("SectorCount=%d,sectorSize=%d,BLOCKSIZE=%d\n",SectorCount,sectorSize,BLOC
 
     if (!irp) {
         DbgPrint("READ failed!!!\n");
-        ExFreePool(mbr);
         return FALSE;
     }
 
+    DPRINT("Calling IO Driver...\n");
     status = IoCallDriver(pDeviceObject,
                           irp);
 
+    DPRINT("Waiting for IO Operation...\n");
     if (status == STATUS_PENDING) {
         KeWaitForSingleObject(&event,
                               Suspended,
                               KernelMode,
                               FALSE,
                               NULL);
+        DPRINT("Getting IO Status...\n");
         status = ioStatus.Status;
     }
 
@@ -85,13 +87,11 @@ DPRINT("SectorCount=%d,sectorSize=%d,BLOCKSIZE=%d\n",SectorCount,sectorSize,BLOC
                  Buffer,
                  GET_LARGE_INTEGER_HIGH_PART(sectorNumber),
                  GET_LARGE_INTEGER_LOW_PART(sectorNumber));
-        ExFreePool(mbr);
         return FALSE;
     }
 
-   RtlCopyMemory(Buffer,mbr,sectorSize);
-
-    ExFreePool(mbr);
+    DPRINT("Copying memory...\n");
+    DPRINT("Block request succeeded\n");
     return TRUE;
 }
 
@@ -108,8 +108,9 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     ULONG           sectorSize;
     PULONG          mbr;
    
-    DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, count %d, Buffer %x)\n",
-        pDeviceObject,DiskSector,SectorCount,Buffer);
+   DPRINT("VFATWriteSector(pDeviceObject %x, DiskSector %d, Buffer %x)\n",
+   	    pDeviceObject,DiskSector,Buffer);
+
     SET_LARGE_INTEGER_LOW_PART(sectorNumber, DiskSector << 9);
     SET_LARGE_INTEGER_HIGH_PART(sectorNumber, DiskSector >> 23);
 
@@ -122,7 +123,7 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     if (!mbr) {
         return FALSE;
     }
-    memcpy(mbr,Buffer,sectorSize);
+
 
     DPRINT("Building synchronous FSD Request...\n");
     irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
@@ -167,5 +168,4 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
     DPRINT("Block request succeeded\n");
     return TRUE;
 }
-
 
