@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: ps.h,v 1.59 2004/06/23 21:02:16 ion Exp $
+/* $Id: ps.h,v 1.60 2004/06/24 21:03:56 ion Exp $
  *
  * FILE:            ntoskrnl/ke/kthread.c
  * PURPOSE:         Process manager definitions
@@ -510,13 +510,13 @@ STDCALL
 VOID
 KeStackAttachProcess (
     IN PKPROCESS Process,
-    OUT PRKAPC_STATE ApcState
+    OUT PKAPC_STATE ApcState
     );
 
 STDCALL
 VOID
 KeUnstackDetachProcess (
-    IN PRKAPC_STATE ApcState
+    IN PKAPC_STATE ApcState
     );
 
 VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
