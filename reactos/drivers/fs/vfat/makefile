@@ -1,10 +1,11 @@
-# $Id: makefile,v 1.11 1999/12/04 20:58:44 ea Exp $
+# $Id: makefile,v 1.12 1999/12/11 21:14:49 dwelch Exp $
 #
 #
 TARGET=vfatfs
 
-#OBJECTS = blockdev.o dir.o dirwr.o iface.o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
-OBJECTS = blockdev.o dir.o dirwr.o iface.o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = blockdev.o dir.o dirwr.o iface.o string.o fat.o rw.o finfo.o \
+          volume.o create.o
+LIBS = ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 
@@ -24,7 +25,7 @@ ifeq ($(DOSCLI),yes)
 	- $(RM) temp.exp
 	- $(RM) $(TARGET).sys
 else
-	- $(RM) blockdev.o dir.o dirwr.o iface.o $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys
+	- $(RM) $(OBJECTS) $(TARGET).coff junk.tmp base.tmp temp.exp $(TARGET).sys
 endif
 
 .phony: clean
@@ -47,7 +48,7 @@ else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
-$(TARGET).sys: $(OBJECTS)
+$(TARGET).sys: $(OBJECTS) $(LIBS)
 	$(CC) \
 		-specs=../../svc_specs \
 		-mdll \
@@ -57,7 +58,7 @@ $(TARGET).sys: $(OBJECTS)
 		-Wl,--defsym,_etext=etext \
 		-Wl,--base-file,base.tmp \
 		-Wl,"-h vfatfs.sys" \
-		$(OBJECTS)
+		$(OBJECTS) $(LIBS)
 	- $(RM) junk.tmp
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
@@ -74,8 +75,9 @@ $(TARGET).sys: $(OBJECTS)
 		-specs=../../svc_specs \
 		-mdll \
 		-o $(TARGET).sys \
-		$(OBJECTS)
+		$(OBJECTS) $(LIBS)
 	- $(RM) temp.exp
 
 
+WARNINGS_ARE_ERRORS = yes
 include ../../../rules.mak

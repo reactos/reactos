@@ -8,6 +8,8 @@ extern void dprintf(char* fmt,...);
 #define DPRINT(args...) do { dprintf("(NTDLL:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
 #endif
 
+#define DPRINT1(args...) do { dprintf("(NTDLL:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
+
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
 

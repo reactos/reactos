@@ -25,17 +25,17 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
 */
 {
  WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
- VfatFCB FileFcb;
+ VFATFCB FileFcb;
  ULONG Sector=0,Entry=0;
  PUCHAR Buffer;
  FATDirEntry * pEntries;
  NTSTATUS status;
  FILE_OBJECT FileObject;
- PVfatCCB pDirCcb;
- PVfatFCB pDirFcb,pFcb;
+ PVFATCCB pDirCcb;
+ PVFATFCB pDirFcb,pFcb;
  short i,posCar,NameLen;
    PathFileName=pFileObject->FileName.Buffer;
-   pFcb=((PVfatCCB)pFileObject->FsContext2)->pFcb;
+   pFcb=((PVFATCCB)pFileObject->FsContext2)->pFcb;
    //find last \ in PathFileName
    posCar=-1;
    for(i=0;PathFileName[i];i++)
@@ -52,7 +52,7 @@ NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject)
    memset(&FileObject,0,sizeof(FILE_OBJECT));
 DPRINT("open directory %w for update of entry %w\n",DirName,FileName);
    status=FsdOpenFile(DeviceExt,&FileObject,DirName);
-   pDirCcb=(PVfatCCB)FileObject.FsContext2;
+   pDirCcb=(PVFATCCB)FileObject.FsContext2;
    assert(pDirCcb);
    pDirFcb=pDirCcb->pFcb;
    assert(pDirFcb);
@@ -79,7 +79,7 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
 */
 {
  WCHAR DirName[MAX_PATH],*FileName,*PathFileName;
- VfatFCB DirFcb,FileFcb;
+ VFATFCB DirFcb,FileFcb;
  FATDirEntry FatEntry;
  NTSTATUS status;
  FILE_OBJECT FileObject;
@@ -89,9 +89,11 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
  short nbSlots=0,nbFree=0,i,j,posCar,NameLen;
  PUCHAR Buffer,Buffer2;
  BOOLEAN needTilde=FALSE,needLong=FALSE;
- PVfatFCB newFCB;
- PVfatCCB newCCB;
+ PVFATFCB newFCB;
+ PVFATCCB newCCB;
  ULONG CurrentCluster;
+   KIRQL oldIrql;
+   
    PathFileName=pFileObject->FileName.Buffer;
    DPRINT("addEntry: Pathname=%w\n",PathFileName);
    //find last \ in PathFileName
@@ -297,19 +299,25 @@ DPRINT("i=%d,j=%d,%d,%d\n",i,j,pEntry->Filename[i],FileName[i]);
           ,sizeof(FATDirEntry)*(nbSlots+1),Offset);
    }
    DPRINT("write entry offset %d status=%x\n",Offset,status);
-   newCCB = ExAllocatePool(NonPagedPool,sizeof(VfatCCB));
-   newFCB = ExAllocatePool(NonPagedPool,sizeof(VfatFCB));
-   memset(newCCB,0,sizeof(VfatCCB));
-   memset(newFCB,0,sizeof(VfatFCB));
+   newCCB = ExAllocatePool(NonPagedPool,sizeof(VFATCCB));
+   newFCB = ExAllocatePool(NonPagedPool,sizeof(VFATFCB));
+   memset(newCCB,0,sizeof(VFATCCB));
+   memset(newFCB,0,sizeof(VFATFCB));
    newCCB->pFcb=newFCB;
    newCCB->PtrFileObject=pFileObject;
    newFCB->RefCount++;
-   //FIXME : initialize all fields in FCB and CCB
-   newFCB->nextFcb=pFirstFcb;
+   
+   /* 
+    * FIXME : initialize all fields in FCB and CCB
+    */
+   KeAcquireSpinLock(&DeviceExt->FcbListLock, &oldIrql);
+   InsertTailList(&DeviceExt->FcbListHead, &newFCB->FcbListEntry);
+   KeReleaseSpinLock(&DeviceExt->FcbListLock, oldIrql);
+   
+   
    memcpy(&newFCB->entry,pEntry,sizeof(FATDirEntry));
 DPRINT("new : entry=%11.11s\n",newFCB->entry.Filename);
 DPRINT("new : entry=%11.11s\n",pEntry->Filename);
-   pFirstFcb=newFCB;
    vfat_wcsncpy(newFCB->PathName,PathFileName,MAX_PATH);
    newFCB->ObjectName=newFCB->PathName+(PathFileName-FileName);
    newFCB->pDevExt=DeviceExt;
@@ -322,9 +330,9 @@ DPRINT("new : entry=%11.11s\n",pEntry->Filename);
      status=FsdWriteFile(DeviceExt,pFileObject,pEntry
           ,sizeof(FATDirEntry),0L);
      pEntry->FirstCluster
-            =((VfatCCB *)(FileObject.FsContext2))->pFcb->entry.FirstCluster;
+            =((VFATCCB *)(FileObject.FsContext2))->pFcb->entry.FirstCluster;
      pEntry->FirstClusterHigh
-            =((VfatCCB *)(FileObject.FsContext2))->pFcb->entry.FirstClusterHigh;
+            =((VFATCCB *)(FileObject.FsContext2))->pFcb->entry.FirstClusterHigh;
      memcpy(pEntry->Filename,"..         ",11);
      if(pEntry->FirstCluster==1 && DeviceExt->FatType!=FAT32)
        pEntry->FirstCluster=0;

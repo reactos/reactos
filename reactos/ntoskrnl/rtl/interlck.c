@@ -1,4 +1,4 @@
-/* $Id: interlck.c,v 1.5 1999/12/10 17:04:37 dwelch Exp $
+/* $Id: interlck.c,v 1.6 1999/12/11 21:14:48 dwelch Exp $
  *
  * reactos/ntoskrnl/rtl/interlck.c
  *
@@ -112,13 +112,11 @@ __asm__(
 	"_InterlockedExchange@8:\n\t"
 	"pushl %ebp\n\t"
 	"movl  %esp,%ebp\n\t"
-	"pushl %eax\n\t"
 	"pushl %ebx\n\t"
 	"movl  12(%ebp),%eax\n\t"
 	"movl  8(%ebp),%ebx\n\t"
 	"xchgl %eax,(%ebx)\n\t"
 	"popl  %ebx\n\t"
-	"popl  %eax\n\t"
 	"movl  %ebp,%esp\n\t"
 	"popl  %ebp\n\t"
 	"ret $8\n\t"

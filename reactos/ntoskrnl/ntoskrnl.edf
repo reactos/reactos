@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.18 1999/12/02 20:53:53 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.19 1999/12/11 21:14:48 dwelch Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -503,3 +503,5 @@ WRITE_PORT_BUFFER_USHORT
 WRITE_PORT_UCHAR
 WRITE_PORT_ULONG
 WRITE_PORT_USHORT
+InsertTailList
+RemoveEntryList

@@ -1,4 +1,4 @@
-/* $Id: utils.c,v 1.18 1999/12/09 19:14:45 ekohl Exp $
+/* $Id: utils.c,v 1.19 1999/12/11 21:14:47 dwelch Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -367,49 +367,50 @@ static NTSTATUS LdrFindDll(PDLL* Dll, PCHAR Name)
  * NOTE
  *
  */
-NTSTATUS
-LdrMapSections (
-	HANDLE			ProcessHandle,
-	PVOID			ImageBase,
-	HANDLE			SectionHandle,
-	PIMAGE_NT_HEADERS	NTHeaders
-	)
+NTSTATUS LdrMapSections(HANDLE			ProcessHandle,
+			PVOID			ImageBase,
+			HANDLE			SectionHandle,
+			PIMAGE_NT_HEADERS	NTHeaders)
 {
-	ULONG		i;
-	NTSTATUS	Status;
-
-
-	for (	i = 0;
-		(i < NTHeaders->FileHeader.NumberOfSections);
-		i++
-		)
-	{
-		PIMAGE_SECTION_HEADER	Sections;
-		LARGE_INTEGER		Offset;
-		ULONG			Base;
+   ULONG		i;
+   NTSTATUS	Status;
+   
+   
+   for (i = 0; (i < NTHeaders->FileHeader.NumberOfSections); i++)
+     {
+	PIMAGE_SECTION_HEADER	Sections;
+	LARGE_INTEGER		Offset;	
+	ULONG			Base;
+	ULONG Size;
 	
-		Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(ImageBase);
-		Base = (ULONG) (Sections[i].VirtualAddress + ImageBase);
-		Offset.u.LowPart = Sections[i].PointerToRawData;
-		Offset.u.HighPart = 0;
-		Status = ZwMapViewOfSection(
-				SectionHandle,
-				ProcessHandle,
-				(PVOID *) & Base,
-				0,
-				Sections[i].Misc.VirtualSize,
-				& Offset,
-				(PULONG) & Sections[i].Misc.VirtualSize,
-				0,
-				MEM_COMMIT,
-				PAGE_READWRITE
-				);
-		if (!NT_SUCCESS(Status))
-		{
-			return Status;
-		}
-	}
-	return STATUS_SUCCESS;
+	Sections = (PIMAGE_SECTION_HEADER) SECHDROFFSET(ImageBase);
+	Base = (ULONG) (Sections[i].VirtualAddress + ImageBase);
+	Offset.u.LowPart = Sections[i].PointerToRawData;
+	Offset.u.HighPart = 0;
+	
+	Size = max(Sections[i].Misc.VirtualSize, Sections[i].SizeOfRawData);
+	
+	DPRINT("Mapping section %d offset %x base %x size %x\n",
+	        i, Offset.u.LowPart, Base, Sections[i].Misc.VirtualSize);
+	DPRINT("Size %x\n", Sections[i].SizeOfRawData);
+	
+	Status = ZwMapViewOfSection(SectionHandle,
+				    ProcessHandle,
+				    (PVOID*)&Base,
+				    0,
+				    Size,
+				    &Offset,
+				    (PULONG)&Size,
+				    0,
+				    MEM_COMMIT,
+				    PAGE_READWRITE);
+	if (!NT_SUCCESS(Status))
+	  {
+	     DPRINT("Failed to map section");
+	     return(Status);
+	  }
+     }
+   return STATUS_SUCCESS;
 }
 
 
@@ -697,14 +698,17 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
    PDLL				Module;
    NTSTATUS			Status;
    
+   DPRINT1("LdrFixupImports(NTHeaders %x, ImageBase %x)\n", NTHeaders, 
+	   ImageBase);
    
    /*
     * Process each import module.
     */
    ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)(
-			     ImageBase + NTHeaders->OptionalHeader
-			     .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
+			       ImageBase + NTHeaders->OptionalHeader
+				 .DataDirectory[IMAGE_DIRECTORY_ENTRY_IMPORT]
 			     .VirtualAddress);
+   DPRINT1("ImportModuleDirectory %x\n", ImportModuleDirectory);
    
    while (ImportModuleDirectory->dwRVAModuleName)
      {
@@ -713,7 +717,7 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	DWORD	pName;
 	PWORD	pHint;
 	
-	DPRINT("ImportModule->Directory->dwRVAModuleName %s\n",
+	DPRINT1("ImportModule->Directory->dwRVAModuleName %s\n",
 	       (PCHAR)(ImageBase + ImportModuleDirectory->dwRVAModuleName));
 	
 	Status = LdrLoadDll(&Module,
@@ -734,61 +738,61 @@ static NTSTATUS LdrFixupImports(PIMAGE_NT_HEADERS	NTHeaders,
 	 */
 	if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
 	  {
-			FunctionNameList = (PULONG) (
-						     ImageBase
-						     + ImportModuleDirectory->dwRVAFunctionNameList
-				);
-		}
-		else
-		{
-			FunctionNameList = (PULONG) (
-				ImageBase
-				+ ImportModuleDirectory->dwRVAFunctionAddressList
-				);
-		}
-		/*
-		 * Walk through function list and fixup addresses.
-		 */
-		while (*FunctionNameList != 0L)
-		{
-			if ((*FunctionNameList) & 0x80000000)
-			{
-				Ordinal = (*FunctionNameList) & 0x7fffffff;
+	     FunctionNameList = (PULONG) (
+					  ImageBase
+					  + ImportModuleDirectory->dwRVAFunctionNameList
+					  );
+	  }
+	else
+	  {
+	     FunctionNameList = (PULONG) (
+					  ImageBase
+					  + ImportModuleDirectory->dwRVAFunctionAddressList
+					  );
+	  }
+	/*
+	 * Walk through function list and fixup addresses.
+	 */
+	while (*FunctionNameList != 0L)
+	  {
+	     if ((*FunctionNameList) & 0x80000000)
+	       {
+		  Ordinal = (*FunctionNameList) & 0x7fffffff;
 				*ImportAddressList = 
-					LdrGetExportByOrdinal(
+		    LdrGetExportByOrdinal(
+					  Module,
+					  Ordinal
+					  );
+	       }
+	     else
+	       {
+		  pName = (DWORD) (
+				   ImageBase
+				   + *FunctionNameList
+				   + 2
+				   );
+		  pHint = (PWORD) (
+				   ImageBase
+				   + *FunctionNameList
+						);
+		  
+		  *ImportAddressList =
+		    LdrGetExportByName(
 						Module,
-						Ordinal
-						);
-			}
-			else
-			{
-				pName = (DWORD) (
-						ImageBase
-						+ *FunctionNameList
-						+ 2
-						);
-				pHint = (PWORD) (
-						ImageBase
-						+ *FunctionNameList
-						);
-
-				*ImportAddressList =
-					LdrGetExportByName(
-						Module,
-						(PUCHAR) pName
-						);
-				if ((*ImportAddressList) == NULL)
-				{
+				       (PUCHAR) pName
+				       );
+		  if ((*ImportAddressList) == NULL)
+		    {
 				   dprintf("Failed to import %s\n", pName);
-					return STATUS_UNSUCCESSFUL;
-				}
-			}
+		       return STATUS_UNSUCCESSFUL;
+		    }
+	       }
 			ImportAddressList++;
-			FunctionNameList++;
-		}
-		ImportModuleDirectory++;
-	}
-	return STATUS_SUCCESS;
+	     FunctionNameList++;
+	  }
+	ImportModuleDirectory++;
+     }
+   return STATUS_SUCCESS;
 }
 
 

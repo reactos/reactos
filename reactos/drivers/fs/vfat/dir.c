@@ -62,7 +62,7 @@ unsigned long vfat_wstrlen(PWSTR s)
 }
 #define DWORD_ROUND_UP(x) ( (((ULONG)(x))%32) ? ((((ULONG)x)&(~0x1f))+0x20) : ((ULONG)x) )
 
-NTSTATUS FsdGetFileNameInformation(PVfatFCB pFcb,
+NTSTATUS FsdGetFileNameInformation(PVFATFCB pFcb,
          PFILE_NAMES_INFORMATION pInfo,ULONG BufferLength)
 {
  ULONG Length;
@@ -76,7 +76,7 @@ NTSTATUS FsdGetFileNameInformation(PVfatFCB pFcb,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FsdGetFileDirectoryInformation(PVfatFCB pFcb,
+NTSTATUS FsdGetFileDirectoryInformation(PVFATFCB pFcb,
           PDEVICE_EXTENSION DeviceExt,
           PFILE_DIRECTORY_INFORMATION pInfo,ULONG BufferLength)
 {
@@ -109,7 +109,7 @@ NTSTATUS FsdGetFileDirectoryInformation(PVfatFCB pFcb,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FsdGetFileFullDirectoryInformation(PVfatFCB pFcb,
+NTSTATUS FsdGetFileFullDirectoryInformation(PVFATFCB pFcb,
           PDEVICE_EXTENSION DeviceExt,
           PFILE_FULL_DIRECTORY_INFORMATION pInfo,ULONG BufferLength)
 {
@@ -142,7 +142,7 @@ NTSTATUS FsdGetFileFullDirectoryInformation(PVfatFCB pFcb,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS FsdGetFileBothInformation(PVfatFCB pFcb,
+NTSTATUS FsdGetFileBothInformation(PVFATFCB pFcb,
           PDEVICE_EXTENSION DeviceExt,
           PFILE_BOTH_DIRECTORY_INFORMATION pInfo,ULONG BufferLength)
 {
@@ -193,9 +193,9 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
  unsigned char *Buffer = NULL;
  PFILE_NAMES_INFORMATION Buffer0 = NULL;
  PFILE_OBJECT pFileObject = NULL;
- PVfatFCB pFcb;
- VfatFCB tmpFcb;
- PVfatCCB pCcb;
+ PVFATFCB pFcb;
+ VFATFCB tmpFcb;
+ PVFATCCB pCcb;
  PDEVICE_EXTENSION DeviceExt;
  WCHAR star[5],*pCharPattern;
  unsigned long OldEntry,OldSector;
@@ -206,7 +206,7 @@ NTSTATUS DoQuery(PDEVICE_OBJECT DeviceObject, PIRP Irp,PIO_STACK_LOCATION Stack)
   FileInformationClass = Stack->Parameters.QueryDirectory.FileInformationClass;
   FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
   pFileObject = Stack->FileObject;
-  pCcb =(PVfatCCB)pFileObject->FsContext2;
+  pCcb =(PVFATCCB)pFileObject->FsContext2;
   pFcb = pCcb->pFcb;
   if(Stack->Flags & SL_RESTART_SCAN)
   {//FIXME : what is really use of RestartScan ?

@@ -1,9 +1,4 @@
-/* $Id: vfat.h,v 1.14 1999/12/04 20:58:44 ea Exp $ */
-
-#include <wchar.h>
-
-
-
+/* $Id: vfat.h,v 1.15 1999/12/11 21:14:49 dwelch Exp $ */
 
 struct _BootSector { 
   unsigned char  magic0, res0, magic1;
@@ -77,7 +72,12 @@ typedef struct _slot slot;
 
 typedef struct
 {
-  ERESOURCE Resource;
+   ERESOURCE DirResource;
+   ERESOURCE FatResource;
+   
+   KSPIN_LOCK FcbListLock;
+   LIST_ENTRY FcbListHead;
+   
    PDEVICE_OBJECT StorageDevice;
    BootSector *Boot;
    int rootDirectorySectors, FATStart, rootStart, dataStart;
@@ -85,6 +85,7 @@ typedef struct
    ULONG BytesPerCluster;
    ULONG FatType;
    unsigned char* FAT;
+   
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
 typedef struct _FSRTL_COMMON_FCB_HEADER{
@@ -105,8 +106,7 @@ typedef struct _SFsdNTRequiredFCB {
   ERESOURCE               PagingIoResource;
 } SFsdNTRequiredFCB, *PtrSFsdNTRequiredFCB;
 
-struct _VfatFCB;
-typedef struct _VfatFCB
+typedef struct _VFATFCB
 {
   SFsdNTRequiredFCB     NTRequiredFCB;
    FATDirEntry entry;
@@ -114,20 +114,20 @@ typedef struct _VfatFCB
    WCHAR PathName[MAX_PATH];// path+filename 260 max
    long RefCount;
    PDEVICE_EXTENSION pDevExt;
-   struct _VfatFCB * nextFcb, *prevFcb;
-   struct _VfatFCB * parentFcb;
-} VfatFCB, *PVfatFCB;
+   LIST_ENTRY FcbListEntry;
+   struct _VFATFCB * parentFcb;
+} VFATFCB, *PVFATFCB;
 
-typedef struct
+typedef struct _VFATCCB
 {
-  VfatFCB *   pFcb;
+  VFATFCB *   pFcb;
   LIST_ENTRY     NextCCB;
   PFILE_OBJECT   PtrFileObject;
   LARGE_INTEGER  CurrentByteOffset;
   ULONG StartSector; // for DirectoryControl
   ULONG StartEntry;  //for DirectoryControl
 //    PSTRING DirectorySearchPattern;// for DirectoryControl ?
-} VfatCCB, *PVfatCCB;
+} VFATCCB, *PVFATCCB;
 
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
@@ -146,9 +146,6 @@ typedef struct __DOSDATE
    WORD	Month:4;
    WORD Year:5;
 } DOSDATE, *PDOSDATE;
-
-
-extern PVfatFCB pFirstFcb;
 
 // functions called by i/o manager :
 NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT _DriverObject,PUNICODE_STRING RegistryPath);
@@ -176,10 +173,10 @@ BOOLEAN VFATWriteSectors(IN PDEVICE_OBJECT pDeviceObject,
 BOOL FsdDosDateTimeToFileTime(WORD wDosDate,WORD wDosTime, TIME *FileTime);
 
 //internal functions in iface.c :
-NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVfatFCB Fcb,
-          PVfatFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
+NTSTATUS FindFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb,
+          PVFATFCB Parent, PWSTR FileToFind,ULONG *StartSector,ULONG *Entry);
 NTSTATUS FsdCloseFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject);
-NTSTATUS FsdGetStandardInformation(PVfatFCB FCB, PDEVICE_OBJECT DeviceObject,
+NTSTATUS FsdGetStandardInformation(PVFATFCB FCB, PDEVICE_OBJECT DeviceObject,
                                    PFILE_STANDARD_INFORMATION StandardInfo);
 NTSTATUS FsdOpenFile(PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, 
              PWSTR FileName);
@@ -200,7 +197,41 @@ NTSTATUS addEntry(PDEVICE_EXTENSION DeviceExt
 NTSTATUS updEntry(PDEVICE_EXTENSION DeviceExt,PFILE_OBJECT pFileObject);
 
 
-//FIXME : following defines must be removed
-//FIXME   when this functions will work.
-#define ExAcquireResourceExclusiveLite(x,y) {}
-#define ExReleaseResourceForThreadLite(x,y) {}
+
+
+/*
+ * String functions
+ */
+void RtlAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length);
+void RtlCatAnsiToUnicode(PWSTR Dest, PCH Source, ULONG Length);
+void vfat_initstr(wchar_t *wstr, ULONG wsize);
+wchar_t * vfat_wcsncat(wchar_t * dest, const wchar_t * src,size_t wstart, size_t wcount);
+wchar_t * vfat_wcsncpy(wchar_t * dest, const wchar_t *src,size_t wcount);
+wchar_t * vfat_movstr(wchar_t *src, ULONG dpos, ULONG spos, ULONG len);
+BOOLEAN wstrcmpi(PWSTR s1, PWSTR s2);
+BOOLEAN wstrcmpjoki(PWSTR s1, PWSTR s2);
+
+/*
+ * functions from fat.c
+ */
+ULONG ClusterToSector(PDEVICE_EXTENSION DeviceExt, ULONG Cluster);
+ULONG GetNextCluster(PDEVICE_EXTENSION DeviceExt, ULONG CurrentCluster);
+VOID VFATLoadCluster(PDEVICE_EXTENSION DeviceExt, PVOID Buffer, ULONG Cluster);
+ULONG FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
+ULONG FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
+ULONG FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt);
+
+/*
+ * functions from volume.c
+ */
+NTSTATUS VfatQueryVolumeInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+/*
+ * functions from finfo.c
+ */
+NTSTATUS VfatSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+/*
+ * From create.c
+ */
+NTSTATUS ReadVolumeLabel(PDEVICE_EXTENSION DeviceExt, PVPB Vpb);
