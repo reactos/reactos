@@ -1,64 +1,29 @@
-#
-#  ReactOS control
-#
-#  Makefile
-#
-#  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
-#
-#  This program is free software; you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  This program is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with this program; if not, write to the Free Software
-#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-#
-	
-PATH_TO_TOP = ..
+# $Id: Makefile,v 1.2 2002/08/17 15:16:38 robd Exp $
 
-TARGET = control
+PATH_TO_TOP = ../../reactos
 
-BASE_CFLAGS = -DGCC -D_WIN32_IE=0x0400 -DUNICODE -D_UNICODE
+TOOLS_PATH = $(PATH_TO_TOP)/tools
 
-RCFLAGS = -DGCC -D_WIN32_IE=0x0400
+TARGET_NORC = yes
 
+TARGET_TYPE = program
 
-OBJS =	framewnd.o \
-        listview.o \
-        main.o
+TARGET_APPTYPE = windows
 
-LIBS = -lgdi32 -luser32 -lkernel32 -lcomctl32
+TARGET_NAME = control
 
-all:	$(TARGET).exe
+TARGET_SDKLIBS = roshel32.a
 
-$(TARGET).res:	$(TARGET).rc
+TARGET_OBJECTS = $(TARGET_NAME).o
 
-$(TARGET).exe:	$(OBJS) $(TARGET).coff
-	$(CC) -Wl,--subsystem,windows -o $(TARGET).exe $(OBJS) $(TARGET).coff $(LIBS)
-	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
-
-
-main.h:		resource.h
-
-main.o:		main.c main.h framewnd.h
-
-framewnd.o:	framewnd.c framewnd.h listview.h main.h
-
-listview.o:	listview.c listview.h main.h 
-
-about.o:	about.c about.h main.h
-
-
-clean:
-	- $(RM) $(OBJS)
-	- $(RM) $(TARGET).exe
-	- $(RM) $(TARGET).sym
-	- $(RM) $(TARGET).coff
+TARGET_CLEAN = $(TARGET_OBJECTS)
 
 include $(PATH_TO_TOP)/rules.mak
+
+include $(TOOLS_PATH)/helper.mk
+
+MK_CFLAGS = -D_UNICODE -DUNICODE
+MK_CPPFLAGS = -D_UNICODE -DUNICODE
+MK_RCFLAGS = -D_UNICODE -DUNICODE
+
+# EOF
