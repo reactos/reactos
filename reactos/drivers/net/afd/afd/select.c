@@ -1,4 +1,4 @@
-/* $Id: select.c,v 1.7 2004/11/21 20:54:52 arty Exp $
+/* $Id: select.c,v 1.8 2004/11/25 23:36:36 arty Exp $
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/net/afd/afd/select.c
@@ -50,7 +50,7 @@ VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
     Poll->Irp->IoStatus.Information = Collected;
     CopyBackStatus( PollReq->Handles,
 		    PollReq->HandleCount );
-    UnlockHandles( PollReq->InternalUse, PollReq->HandleCount );
+    UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
     RemoveEntryList( &Poll->ListEntry );
@@ -83,6 +83,30 @@ VOID SelectTimeout( PKDPC Dpc,
     AFD_DbgPrint(MID_TRACE,("Timeout\n"));
 }
 
+VOID KillExclusiveSelects( PAFD_DEVICE_EXTENSION DeviceExt ) {
+    KIRQL OldIrql;
+    PLIST_ENTRY ListEntry;
+    PAFD_ACTIVE_POLL Poll;
+    PIRP Irp;
+    PAFD_POLL_INFO PollReq;
+
+    KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
+    
+    for( ListEntry = DeviceExt->Polls.Flink;
+	 ListEntry != &DeviceExt->Polls;
+	 ListEntry = ListEntry->Flink ) {
+	Poll = CONTAINING_RECORD(ListEntry, AFD_ACTIVE_POLL, ListEntry);
+	if( Poll->Exclusive ) {
+	    Irp = Poll->Irp;
+	    PollReq = Irp->AssociatedIrp.SystemBuffer;
+	    ZeroEvents( PollReq->Handles, PollReq->HandleCount );
+	    SignalSocket( Poll, PollReq, STATUS_CANCELLED, 0 );
+	}
+    }
+
+    KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
+}
+
 NTSTATUS STDCALL
 AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp, 
 	   PIO_STACK_LOCATION IrpSp ) {
@@ -97,15 +121,19 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	CopySize + sizeof(AFD_ACTIVE_POLL) - sizeof(AFD_POLL_INFO);
     KIRQL OldIrql;
     UINT i, Signalled = 0;
+    ULONG Exclusive = PollReq->Exclusive;
 
     AFD_DbgPrint(MID_TRACE,("Called (HandleCount %d Timeout %d)\n", 
 			    PollReq->HandleCount,
 			    (INT)(PollReq->Timeout.QuadPart)));
 
-    PollReq->InternalUse = 
-	LockHandles( PollReq->Handles, PollReq->HandleCount );
+    SET_AFD_HANDLES(PollReq,
+		    LockHandles( PollReq->Handles, PollReq->HandleCount ));
 
-    if( !PollReq->InternalUse ) {
+    if( Exclusive ) KillExclusiveSelects( DeviceExt );
+	
+
+    if( !AFD_HANDLES(PollReq) ) {
 	Irp->IoStatus.Status = STATUS_NO_MEMORY;
 	Irp->IoStatus.Information = -1;
 	IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
@@ -120,6 +148,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( Poll ) {
 	Poll->Irp = Irp;
 	Poll->DeviceExt = DeviceExt;
+	Poll->Exclusive = Exclusive;
 
 	KeInitializeTimerEx( &Poll->Timer, NotificationTimer );
 	KeSetTimer( &Poll->Timer, PollReq->Timeout, &Poll->TimeoutDpc );
@@ -132,14 +161,14 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	InsertTailList( &DeviceExt->Polls, &Poll->ListEntry );
 
 	for( i = 0; i < PollReq->HandleCount; i++ ) {
-	    if( !PollReq->InternalUse[i].Handle ) continue;
+	    if( !AFD_HANDLES(PollReq)[i].Handle ) continue;
 	    
-	    FileObject = (PFILE_OBJECT)PollReq->InternalUse[i].Handle;
+	    FileObject = (PFILE_OBJECT)AFD_HANDLES(PollReq)[i].Handle;
 	    FCB = FileObject->FsContext;
 	    
 	    if( (FCB->PollState & AFD_EVENT_CLOSE) ||
 		(PollReq->Handles[i].Status & AFD_EVENT_CLOSE) ) {
-		PollReq->InternalUse[i].Handle = 0;
+		AFD_HANDLES(PollReq)[i].Handle = 0;
 		PollReq->Handles[i].Events = 0;
 		PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
 		Signalled++;
@@ -248,14 +277,14 @@ BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
     ASSERT( KeGetCurrentIrql() == DISPATCH_LEVEL );
 
     for( i = 0; i < PollReq->HandleCount; i++ ) {
-	if( !PollReq->InternalUse[i].Handle ) continue;
+	if( !AFD_HANDLES(PollReq)[i].Handle ) continue;
 
-	FileObject = (PFILE_OBJECT)PollReq->InternalUse[i].Handle;
+	FileObject = (PFILE_OBJECT)AFD_HANDLES(PollReq)[i].Handle;
 	FCB = FileObject->FsContext;
 
 	if( (FCB->PollState & AFD_EVENT_CLOSE) ||
 	    (PollReq->Handles[i].Status & AFD_EVENT_CLOSE) ) {
-	    PollReq->InternalUse[i].Handle = 0;
+	    AFD_HANDLES(PollReq)[i].Handle = 0;
 	    PollReq->Handles[i].Events = 0;
 	    PollReq->Handles[i].Status = AFD_EVENT_CLOSE;
 	    Signalled++;

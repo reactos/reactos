@@ -1,4 +1,4 @@
-/* $Id: afd.h,v 1.25 2004/11/21 20:54:52 arty Exp $
+/* $Id: afd.h,v 1.26 2004/11/25 23:36:36 arty Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -65,6 +65,12 @@
 
 #define SGID_CONNECTIONLESS             1 /* XXX Find this flag */
 
+/* XXX This is a hack we should clean up later 
+ * We do this in order to get some storage for the locked handle table
+ * Maybe I'll use some tail item in the irp instead */
+#define AFD_HANDLES(x) ((PAFD_HANDLE)(x)->Exclusive)
+#define SET_AFD_HANDLES(x,y) (((x)->Exclusive) = (ULONG)(y))
+
 typedef struct _AFD_MAPBUF {
     PVOID BufferAddress;
     PMDL  Mdl;
@@ -83,6 +89,7 @@ typedef struct _AFD_ACTIVE_POLL {
     KDPC TimeoutDpc;
     KTIMER Timer;
     PKEVENT EventObject;
+    BOOLEAN Exclusive;
 } AFD_ACTIVE_POLL, *PAFD_ACTIVE_POLL;
 
 typedef struct _IRP_LIST {
