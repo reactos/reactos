@@ -6,6 +6,9 @@
  * UPDATE HISTORY:
 */
 
+#ifdef WIN32_REGDBG
+#include "cm_win32.h"
+#else
 #include <ddk/ntddk.h>
 #include <ddk/ntifs.h>
 #include <roscfg.h>
@@ -19,6 +22,7 @@
 #include <internal/debug.h>
 
 #include "cm.h"
+#endif
 
 
 
@@ -62,7 +66,11 @@ CmiCreateDefaultRootKeyCell(PKEY_CELL RootKeyCell)
 {
   assert(RootKeyCell);
   RtlZeroMemory(RootKeyCell, sizeof(KEY_CELL));
+#ifdef WIN32_REGDBG
+  RootKeyCell->CellSize = -(LONG)sizeof(KEY_CELL);
+#else
   RootKeyCell->CellSize = -sizeof(KEY_CELL);
+#endif
   RootKeyCell->Id = REG_KEY_CELL_ID;
   RootKeyCell->Type = REG_ROOT_KEY_CELL_TYPE;
   ZwQuerySystemTime((PTIME) &RootKeyCell->LastWriteTime);
@@ -481,10 +489,16 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   PHBIN tmpBin;
   ULONG i, j;
 
+  IO_STATUS_BLOCK Iosb;
+
+  DPRINT("CmiInitPermanentRegistryHive(%p, %S, %d) - Entered.\n", RegistryHive, Filename, CreateNew);
+
   /* Duplicate Filename */
   Status = RtlCreateUnicodeString(&RegistryHive->Filename, Filename);
-  if (!NT_SUCCESS(Status))
+  if (!NT_SUCCESS(Status)) {
+    DPRINT("CmiInitPermanentRegistryHive() - Failed 1.\n");
     return Status;
+  }
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &RegistryHive->Filename,
@@ -517,6 +531,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
   if (!NT_SUCCESS(Status))
     {
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiCreateNewRegFile() - Failed with status %x.\n", Status);
       return Status;
     }
 
@@ -533,16 +548,19 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
     {
       ZwClose(FileHandle);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - ObReferenceObjectByHandle Failed with status %x.\n", Status);
       return Status;
     }
 
   FileOffset.u.HighPart = 0;
   FileOffset.u.LowPart = 0;
+  DPRINT("    Attempting to ZwReadFile(%d) for %d bytes into %p\n", FileHandle, sizeof(HIVE_HEADER), RegistryHive->HiveHeader);
   Status = ZwReadFile(FileHandle,
 		      0,
 		      0,
 		      0,
-		      0,
+//		      0,
+              &Iosb,
 		      RegistryHive->HiveHeader,
 		      sizeof(HIVE_HEADER),
 		      &FileOffset,
@@ -554,6 +572,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
     {
       ObDereferenceObject(RegistryHive->FileObject);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed 4.\n");
       return Status;
     }
 
@@ -569,15 +588,29 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
     {
       ObDereferenceObject(RegistryHive->FileObject);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed 5.\n");
       return Status;
     }
+
 #if 0
   /* We have a reference to the file object so we don't need the handle anymore */
   ZwClose(FileHandle);
 #endif
 
   RegistryHive->FileSize = fsi.EndOfFile.u.LowPart;
+#ifdef WIN32_REGDBG
+//  assert(RegistryHive->FileSize);
+  if (RegistryHive->FileSize) {
   RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
+  } else {
+      ObDereferenceObject(RegistryHive->FileObject);
+      RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed, zero length hive file.\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+  }
+#else
+  RegistryHive->BlockListSize = (RegistryHive->FileSize / 4096) - 1;
+#endif
 
   DPRINT("Space needed for block list describing hive: 0x%x\n",
     sizeof(PHBIN *) * RegistryHive->BlockListSize);
@@ -590,6 +623,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       ExFreePool(RegistryHive->BlockList);
       ObDereferenceObject(RegistryHive->FileObject);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed 6.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -611,6 +645,7 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       ExFreePool(RegistryHive->BlockList);
       ObDereferenceObject(RegistryHive->FileObject);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed 7.\n");
       return Status;
     }
 
@@ -618,27 +653,33 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 
   RegistryHive->BlockList[0] = ExAllocatePool(PagedPool,
 	  RegistryHive->FileSize - 4096);
+#ifdef WIN32_REGDBG
+  RtlZeroMemory(RegistryHive->BlockList[0], RegistryHive->FileSize - 4096);
+#endif
 
   if (RegistryHive->BlockList[0] == NULL)
     {
       ExFreePool(RegistryHive->BlockList);
       ObDereferenceObject(RegistryHive->FileObject);
       RtlFreeUnicodeString(&RegistryHive->Filename);
+      DPRINT("CmiInitPermanentRegistryHive() - Failed 8.\n");
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   FileOffset.u.HighPart = 0;
   FileOffset.u.LowPart = 4096;
 
+  DPRINT("    Attempting to ZwReadFile(%d) for %d bytes into %p\n", FileHandle, RegistryHive->FileSize - 4096, (PVOID)RegistryHive->BlockList[0]);
   Status = ZwReadFile(FileHandle,
-		0,
-    0,
-    0,
-    0,
-		(PVOID) RegistryHive->BlockList[0],
-		RegistryHive->FileSize - 4096,
-		&FileOffset,
-    0);
+		      0,
+		      0,
+		      0,
+//		      0,
+              &Iosb,
+		      (PVOID) RegistryHive->BlockList[0],
+		      RegistryHive->FileSize - 4096,
+              &FileOffset,
+              0);
 
   assertmsg(NT_SUCCESS(Status), ("Status: 0x%X\n", Status));
 
@@ -656,7 +697,8 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
       if (tmpBin->BlockId != REG_BIN_ID)
 	{
 	  DPRINT("Bad BlockId %x, offset %x\n", tmpBin->BlockId, BlockOffset);
-	  KeBugCheck(0);
+	  //KeBugCheck(0);
+      return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
       assertmsg((tmpBin->BlockSize % 4096) == 0, ("BlockSize (0x%.08x) must be multiplum of 4K\n", tmpBin->BlockSize));
@@ -696,6 +738,8 @@ CmiInitPermanentRegistryHive(PREGISTRY_HIVE RegistryHive,
 	}
       BlockOffset += tmpBin->BlockSize;
     }
+
+  DPRINT("CmiInitPermanentRegistryHive(%p, %S, %d) - Finished.\n", RegistryHive, Filename, CreateNew);
 
   return STATUS_SUCCESS;
 }
@@ -769,9 +813,12 @@ CmiCreateRegistryHive(PWSTR Filename,
     }
 
   KeInitializeSemaphore(&Hive->RegSem, 1, 1);
+  
   VERIFY_REGISTRY_HIVE(Hive);
 
   *RegistryHive = Hive;
+
+  DPRINT("CmiCreateRegistryHive(Filename %S) - Finished.\n", Filename);
 
   return(STATUS_SUCCESS);
 }
@@ -944,7 +991,7 @@ CmiScanForSubKey(IN PREGISTRY_HIVE RegistryHive,
 
   VERIFY_KEY_CELL(KeyCell);
 
-  DPRINT("Scanning for sub key %s\n", KeyName);
+  //DPRINT("Scanning for sub key %s\n", KeyName);
 
   assert(RegistryHive);
 
@@ -1191,7 +1238,7 @@ CmiScanKeyForValue(IN PREGISTRY_HIVE RegistryHive,
           *ValueCell = CurValueCell;
 	        if (VBOffset)
             *VBOffset = ValueListCell->Values[i];
-          DPRINT("Found value %s\n", ValueName);
+          //DPRINT("Found value %s\n", ValueName);
           break;
         }
       CmiReleaseBlock(RegistryHive, CurValueCell);
