@@ -111,8 +111,9 @@ int ScanNTFSStreams(Entry* entry, HANDLE hFile)
 		}
 	}
 
-	if (!BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx))	// terminate BackupRead() loop
-		THROW_EXCEPTION(GetLastError());
+	if (ctx)
+		if (!BackupRead(hFile, 0, 0, &read, TRUE, FALSE, &ctx))	// terminate BackupRead() loop
+			THROW_EXCEPTION(GetLastError());
 
 	return cnt;
 }
