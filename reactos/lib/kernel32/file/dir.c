@@ -1,4 +1,5 @@
-/*
+/* $Id: dir.c,v 1.22 2000/01/11 17:30:16 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/dir.c
@@ -22,9 +23,6 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-/* EXTERNS ******************************************************************/
-
-DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -96,7 +94,7 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    WCHAR DirectoryNameW[MAX_PATH];
    UINT Len = 0;
 
-   DPRINT("lpTemplateDirectory %w lpNewDirectory %w lpSecurityAttributes %p\n",
+   DPRINT("lpTemplateDirectory %S lpNewDirectory %S lpSecurityAttributes %p\n",
            lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
 
    if ( lpTemplateDirectory != NULL && *lpTemplateDirectory != 0 )
@@ -120,7 +118,8 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
      }
    else if (lpNewDirectory[0] == (WCHAR)'\\')
      {
-	GetCurrentDriveW(MAX_PATH,PathNameW);
+	GetCurrentDirectoryW(MAX_PATH,PathNameW);
+	PathNameW[3] = 0;
 	wcscat(PathNameW, lpNewDirectory);
      }
    else
@@ -160,7 +159,7 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   errCode = ZwCreateFile(&DirectoryHandle,
+   errCode = NtCreateFile(&DirectoryHandle,
 			  DIRECTORY_ALL_ACCESS,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
@@ -211,7 +210,7 @@ WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
    FILE_DISPOSITION_INFORMATION FileDispInfo;
    UINT Len = 0;
    
-   DPRINT("lpPathName %w\n",
+   DPRINT("lpPathName %S\n",
            lpPathName);
 
    if (lpPathName[1] == (WCHAR)':') 
@@ -228,8 +227,8 @@ WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
      }
    else if (lpPathName[0] == (WCHAR)'\\')
      {
-	GetCurrentDriveW(MAX_PATH,PathNameW);
-        wcscat(PathNameW, lpPathName);
+	GetCurrentDirectoryW(MAX_PATH,PathNameW);
+	wcscpy (&PathNameW[2], lpPathName);
      }
    else
      {
@@ -268,9 +267,9 @@ WINBOOL STDCALL RemoveDirectoryW(LPCWSTR lpPathName)
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   DPRINT("DirectoryNameW '%w'\n", DirectoryNameW);
+   DPRINT("DirectoryNameW '%S'\n", DirectoryNameW);
 
-   errCode = ZwCreateFile(&DirectoryHandle,
+   errCode = NtCreateFile(&DirectoryHandle,
                           FILE_WRITE_ATTRIBUTES,    /* 0x110080 */
 			  &ObjectAttributes,
 			  &IoStatusBlock,
@@ -480,7 +479,7 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
    PWSTR p;
    PWSTR prev = NULL;
 
-   DPRINT("GetFullPathNameW(lpFileName %w, nBufferLength %d, lpBuffer %p, "
+   DPRINT("GetFullPathNameW(lpFileName %S, nBufferLength %d, lpBuffer %p, "
           "lpFilePart %p)\n",lpFileName,nBufferLength,lpBuffer,lpFilePart);
 
    if (!lpFileName || !lpBuffer)
@@ -524,7 +523,7 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
         lstrcatW(lpBuffer, lpFileName);
      }
 
-   DPRINT("lpBuffer %w\n",lpBuffer);
+   DPRINT("lpBuffer %S\n",lpBuffer);
 
    p = lpBuffer + 2;
    prev = p;
@@ -535,7 +534,7 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
 
         dwDotLen = GetDotSequenceLengthW (p+1);
         DPRINT("DotSequenceLength %u\n", dwDotLen);
-        DPRINT("prev %w p %w\n",prev,p);
+        DPRINT("prev %S p %S\n",prev,p);
 
         if (dwDotLen == 0)
           {
@@ -585,7 +584,7 @@ DWORD STDCALL GetFullPathNameW(LPCWSTR lpFileName,
         (*lpFilePart) = prev + 1;
      }
 
-   DPRINT("lpBuffer %w\n",lpBuffer);
+   DPRINT("lpBuffer %S\n",lpBuffer);
 
    return wcslen(lpBuffer);
 }
@@ -782,10 +781,9 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 //   IO_STATUS_BLOCK IoStatusBlock;
 
    DPRINT("SearchPath\n");
-   
-	
+
    if (lpPath == NULL)
-     {      
+     {
       // check the directory from which the application loaded
 
 	if (GetCurrentDirectoryW(MAX_PATH, BufferW) > 0)
@@ -822,17 +820,11 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 	   if (  EnvironmentBufferW[i] != 0 )
 	     retCode = SearchPathW(&EnvironmentBufferW[i],lpFileName, lpExtension, nBufferLength, 	lpBuffer,	 lpFilePart 	 );
 	   i += lstrlenW(&EnvironmentBufferW[i]) + 1;
-	   
-			
 	}
-	
-	
+
 	HeapFree(GetProcessHeap(),0,EnvironmentBufferW);
-	
-	
 
 	return retCode;
-	
      }
    else {
 
@@ -840,10 +832,10 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
       lpBuffer[0] = 0;
       i = lstrlenW(lpFileName);
       j = lstrlenW(lpPath);
-      
+
       if ( i + j + 8 < nBufferLength )
 	return i + j + 9;
-      
+
       if ( lpExtension != NULL ) {
 			if ( lpFileName[i-4] != L'.' ) {
 			   wcscpy(FileAndExtensionW,lpFileName);
@@ -921,8 +913,6 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 			wcscpy(lpBuffer,&BufferW[4]);
 			*lpFilePart = wcsrchr(lpBuffer,'\\')+1;
 		}
-
-	
 
 	return lstrlenW(lpBuffer);
    }

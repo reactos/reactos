@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.8 1999/12/30 01:51:37 dwelch Exp $
+/* $Id: section.c,v 1.9 2000/01/11 17:31:22 ekohl Exp $
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -228,7 +228,7 @@ OpenFileMappingA (
    if ( bInheritHandle )
 		Attributes = OBJ_INHERIT;
 
-   RtlInitAnsiString(&AnsiName, lpName);
+   RtlInitAnsiString(&AnsiName, (LPSTR)lpName);
    RtlAnsiStringToUnicodeString(&UnicodeName, &AnsiName, TRUE);
 
 
@@ -289,19 +289,18 @@ OpenFileMappingW (
 
 WINBOOL
 STDCALL
-FlushViewOfFile(
+FlushViewOfFile (
 	LPCVOID	lpBaseAddress,
-	DWORD		dwNumberOfBytesToFlush
+	DWORD	dwNumberOfBytesToFlush
 	)
 {
-
 	NTSTATUS Status;
 	ULONG NumberOfBytesFlushed;
 
-	Status = NtFlushVirtualMemory(NtCurrentProcess(),
-	lpBaseAddress, dwNumberOfBytesToFlush,
-	&NumberOfBytesFlushed
-	);
+	Status = NtFlushVirtualMemory (NtCurrentProcess (),
+	                               (LPVOID)lpBaseAddress,
+	                               dwNumberOfBytesToFlush,
+	                               &NumberOfBytesFlushed);
 	
 	if (!NT_SUCCESS(Status))
 	{

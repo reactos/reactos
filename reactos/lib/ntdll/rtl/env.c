@@ -1,4 +1,4 @@
-/* $Id: env.c,v 1.3 1999/12/06 00:22:43 ekohl Exp $
+/* $Id: env.c,v 1.4 2000/01/11 17:28:57 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -16,7 +16,7 @@
 #include <internal/teb.h>
 #include <string.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <ntdll/ntdll.h>
 
 /* FUNCTIONS *****************************************************************/
@@ -121,8 +121,8 @@ RtlSetCurrentEnvironment (
 
 	RtlAcquirePebLock ();
 
-	EnvPtr = NtCurrentPeb()->Ppb->Environment;
-	NtCurrentPeb()->Ppb->Environment = NewEnvironment;
+	EnvPtr = NtCurrentPeb()->ProcessParameters->Environment;
+	NtCurrentPeb()->ProcessParameters->Environment = NewEnvironment;
 
 	if (OldEnvironment != NULL)
 		*OldEnvironment = EnvPtr;

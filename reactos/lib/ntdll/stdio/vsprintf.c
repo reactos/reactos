@@ -1,3 +1,18 @@
+/* $Id: vsprintf.c,v 1.6 2000/01/11 17:29:17 ekohl Exp $
+ *
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS kernel
+ * FILE:            lib/ntdll/stdio/vsprintf.c
+ * PURPOSE:         Single byte printf functions
+ * PROGRAMMERS:     David Welch
+ *                  Eric Kohl
+ *
+ * TODO:
+ *	- Implement maximum length (cnt) in _vsnprintf().
+ *	- Add MS specific types 'C', 'S', 'Z'...
+ *	- Add MS specific qualifier 'I64'.
+ */
+
 /*
  *  linux/lib/vsprintf.c
  *
@@ -7,17 +22,6 @@
 /* vsprintf.c -- Lars Wirzenius & Linus Torvalds. */
 /*
  * Wirzenius wrote this portably, Torvalds fucked it up :-)
- */
-
-/*
- * Appropiated for the reactos kernel, March 1998 -- David Welch
- *
- * TODO:
- *	- Implement maximum length (cnt) in _vsnprintf().
- *	- Add MS specific types 'C', 'S', 'Z'...
- *	- Add long long support ('ll' qualifier).
- *	- Add MS specific qualifier 'I64'.
- *  Eric Kohl
  */
 
 #include <stdarg.h>
@@ -193,7 +197,8 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		/* get the conversion qualifier */
 		qualifier = -1;
-		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L') {
+		if (*fmt == 'h' || *fmt == 'l' || *fmt == 'L' /*|| *fmt == 'w'*/ ||
+		    (*fmt == 'I' && *(fmt+1) == '6' && *(fmt+2) == '4')) {
 			qualifier = *fmt;
 			++fmt;
 		}
@@ -206,7 +211,10 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
-			*str++ = (unsigned char) va_arg(args, int);
+			if (qualifier == 'l' /*|| qualifier == 'w'*/)
+				*str++ = (unsigned char) va_arg(args, wchar_t);
+			else
+				*str++ = (unsigned char) va_arg(args, int);
 			while (--field_width > 0)
 				*str++ = ' ';
 			continue;
@@ -215,7 +223,10 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = ' ';
-			*str++ = (unsigned char) va_arg(args, wchar_t);
+			if (qualifier == 'h')
+				*str++ = (unsigned char) va_arg(args, int);
+			else
+				*str++ = (unsigned char) va_arg(args, wchar_t);
 			while (--field_width > 0)
 				*str++ = ' ';
 			continue;
@@ -265,6 +276,12 @@ int _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			}
 			continue;
 
+		case 'Z':
+			if (qualifier == 'w') {
+			} else {
+			}
+			continue; 	
+			
 		case 'p':
 			if (field_width == -1) {
 				field_width = 2 * sizeof(void *);

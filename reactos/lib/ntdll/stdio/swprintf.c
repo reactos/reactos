@@ -1,4 +1,4 @@
-/* $Id: swprintf.c,v 1.1 2000/01/10 20:33:06 ekohl Exp $
+/* $Id: swprintf.c,v 1.2 2000/01/11 17:29:17 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -153,7 +153,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 	int i, base;
 	wchar_t * str;
 	const wchar_t *s;
-//	const short int* sw;	/* needed for '%w' only */
+//	const short int* sw;	/* needed for '%S' only */
 
 	int flags;		/* flags to number() */
 
@@ -224,7 +224,7 @@ int _vsnwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, va_list args)
 			if (!(flags & LEFT))
 				while (--field_width > 0)
 					*str++ = L' ';
-			*str++ = (wchar_t) va_arg(args, int);
+			*str++ = (wchar_t) va_arg(args, wchar_t);
 			while (--field_width > 0)
 				*str++ = L' ';
 			continue;

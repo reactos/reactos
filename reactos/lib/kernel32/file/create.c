@@ -1,4 +1,5 @@
-/*
+/* $Id: create.c,v 1.15 2000/01/11 17:30:16 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/create.c
@@ -20,9 +21,6 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-/* EXTERNS ******************************************************************/
-
-DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -96,7 +94,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
 	dwCreationDisposition = FILE_OVERWRITE;
      }
 
-   DPRINT("CreateFileW(lpFileName %w)\n",lpFileName);
+   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
 
    if (dwDesiredAccess & GENERIC_READ)
         dwDesiredAccess |= FILE_GENERIC_READ;
@@ -123,7 +121,8 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
      }
    else if (lpFileName[0] == (WCHAR)'\\')
      {
-	GetCurrentDriveW(MAX_PATH,PathNameW);
+	GetCurrentDirectoryW(MAX_PATH,PathNameW);
+	PathNameW[3] = 0;
 	wcscat(PathNameW, lpFileName);
      }
    else
@@ -163,7 +162,7 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   DPRINT("File Name %w\n",FileNameW);
+   DPRINT("File Name %S\n",FileNameW);
 
    Status = ZwCreateFile(&FileHandle,
 			 dwDesiredAccess,
@@ -184,3 +183,4 @@ HANDLE STDCALL CreateFileW(LPCWSTR lpFileName,
    return(FileHandle);
 }
 
+/* EOF */

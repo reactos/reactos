@@ -46,40 +46,55 @@ typedef struct linux_sigcontext {
 
 typedef ULONG THREADINFOCLASS;
 
-typedef struct _PPB
+typedef struct _CURDIR
 {
-	ULONG		TotalSize;		//  00h
-	ULONG		DataSize;		//  04h
-	BOOLEAN		Normalized;		//  08h
-	ULONG		Unknown1;		//  0Ch
-	ULONG		Unknown2;		//  10h
-	ULONG		Unknown3;		//  14h
-	HANDLE		InputHandle;		//  18h
-	HANDLE		OutputHandle;		//  1Ch
-	HANDLE		ErrorHandle;		//  20h
-	UNICODE_STRING	CurrentDirectory;	//  24h
-	ULONG		Unknown4;		//  2Ch
-	UNICODE_STRING	LibraryPath;		//  30h
-	UNICODE_STRING	CommandLine;		//  38h
-	UNICODE_STRING	ImageName;		//  40h
-	PVOID		Environment;		//  48h
-	DWORD		X;			//  4Ch
-	DWORD		Y;			//  50h
-	DWORD		XSize;			//  54h
-	DWORD		YSize;			//  58h
-	DWORD		XCountChars;		//  5Ch
-	DWORD		YCountChars;		//  60h
-	DWORD		FillAttribute;		//  64h
-	DWORD		Flags;			//  68h
-	DWORD		ShowWindow;		//  6Ch
-	UNICODE_STRING	Title;			//  70h
-	UNICODE_STRING	Desktop;		//  78h
-	UNICODE_STRING	Reserved;		//  80h
-	UNICODE_STRING	Reserved2;		//  88h
-} PPB, *PPPB;
+	UNICODE_STRING	DosPath;
+	HANDLE		Handle;
+} CURDIR, *PCURDIR;
+
+typedef struct _RTL_DRIVE_LETTER_CURDIR
+{
+	USHORT	Flags;
+	USHORT	Length;
+	ULONG	TimeStamp;
+	UNICODE_STRING	DosPath;
+} RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
+
+typedef struct _RTL_USER_PROCESS_PARAMETERS
+{
+	ULONG			MaximumLength;		// 00h
+	ULONG			Length;			// 04h
+	ULONG			Flags;			// 08h
+	ULONG			DebugFlags;		// 0Ch
+	HANDLE			ConsoleHandle;		// 10h
+	ULONG			ConsoleFlags;		// 14h
+	HANDLE			StandardInput;		// 18h
+	HANDLE			StandardOutput;		// 1Ch
+	HANDLE			StandardError;		// 20h
+	CURDIR			CurrentDirectory;	// 24h
+	UNICODE_STRING		DllPath;		// 30h
+	UNICODE_STRING		ImagePathName;		// 38h
+	UNICODE_STRING		CommandLine;		// 40h
+	PVOID			Environment;		// 48h
+	ULONG			StartingX;		// 4Ch
+	ULONG			StartingY;		// 50h
+	ULONG			CountX;			// 54h
+	ULONG			CountY;			// 58h
+	ULONG			CountCharsX;		// 5Ch
+	ULONG			CountCharsY;		// 60h
+	ULONG			FillAttribute;		// 64h
+	ULONG			WindowFlags;		// 68h
+	ULONG			ShowWindowFlags;	// 6Ch
+	UNICODE_STRING		WindowTitle;		// 70h
+	UNICODE_STRING		DesktopInfo;		// 78h
+	UNICODE_STRING		ShellInfo;		// 80h
+	UNICODE_STRING		RuntimeData;		// 88h
+	RTL_DRIVE_LETTER_CURDIR	DLCurrentDirectory[32];	// 90h
+} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
 
 
-typedef struct _LDR {
+typedef struct _LDR
+{
 	UCHAR	Initialized;
 	UCHAR	InInitializationOrderModuleList;
 	PVOID	InLoadOrderModuleList;
@@ -95,7 +110,7 @@ typedef struct _PEB
 	LONG			ImageBaseAddress;           // 03h
 	LDR			Ldr;                        // 07h
 
-	PPPB			Ppb;				// 10h
+	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters;	// 10h
 
 	WORD			NumberOfProcessors;         // 11h
 	WORD			NtGlobalFlag;               // 13h

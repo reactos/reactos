@@ -1,4 +1,4 @@
-/* $Id: cmdline.c,v 1.9 1999/12/10 17:47:29 ekohl Exp $
+/* $Id: cmdline.c,v 1.10 2000/01/11 17:30:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -11,7 +11,6 @@
 
 /* INCLUDES ****************************************************************/
 
-//#define UNICODE
 #include <ddk/ntddk.h>
 #include <windows.h>
 #include <kernel32/proc.h>
@@ -23,6 +22,7 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
+
 
 /* GLOBALS ******************************************************************/
 
@@ -40,7 +40,7 @@ static WINBOOL bCommandLineInitialized = FALSE;
 static VOID
 InitCommandLines (VOID)
 {
-	PPPB Ppb;
+	PRTL_USER_PROCESS_PARAMETERS Params;
 
 	// initialize command line buffers
 	CommandLineW[0] = 0;
@@ -54,11 +54,11 @@ InitCommandLines (VOID)
 	CommandLineStringA.MaximumLength = MAX_PATH;
 
 	// get command line
-	Ppb = NtCurrentPeb()->Ppb;
-	RtlNormalizeProcessParams (Ppb);
+	Params = NtCurrentPeb()->ProcessParameters;
+	RtlNormalizeProcessParams (Params);
 
 	RtlCopyUnicodeString (&CommandLineStringW,
-	                      &(Ppb->CommandLine));
+	                      &(Params->CommandLine));
 	RtlUnicodeStringToAnsiString (&CommandLineStringA,
 	                              &CommandLineStringW,
 	                              FALSE);
@@ -86,7 +86,7 @@ LPWSTR STDCALL GetCommandLineW (VOID)
 		InitCommandLines ();
 	}
 
-	DPRINT ("CommandLine \'%w\'\n", CommandLineW);
+	DPRINT ("CommandLine \'%S\'\n", CommandLineW);
 
 	return(CommandLineW);
 }

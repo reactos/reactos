@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.5 1999/12/06 00:16:33 ekohl Exp $
+/* $Id: rtl.h,v 1.6 2000/01/11 17:28:11 ekohl Exp $
  *
  */
 
@@ -117,22 +117,22 @@ RtlCreateUserThread (
 NTSTATUS
 STDCALL
 RtlCreateUserProcess (
-	PUNICODE_STRING		CommandLine,
-	ULONG			Unknown1,
-	PPPB			Ppb,
-	PSECURITY_DESCRIPTOR	ProcessSd,
-	PSECURITY_DESCRIPTOR	ThreadSd,
-	WINBOOL			bInheritHandles,
-	DWORD			dwCreationFlags,
-	PCLIENT_ID		ClientId,
-	PHANDLE			ProcessHandle,
-	PHANDLE			ThreadHandle
+	PUNICODE_STRING			CommandLine,
+	ULONG				Unknown1,
+	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters,
+	PSECURITY_DESCRIPTOR		ProcessSd,
+	PSECURITY_DESCRIPTOR		ThreadSd,
+	WINBOOL				bInheritHandles,
+	DWORD				dwCreationFlags,
+	PCLIENT_ID			ClientId,
+	PHANDLE				ProcessHandle,
+	PHANDLE				ThreadHandle
 	);
 
 NTSTATUS
 STDCALL
 RtlCreateProcessParameters (
-	IN OUT	PPPB		*Ppb,
+	IN OUT	PRTL_USER_PROCESS_PARAMETERS	*ProcessParameters,
 	IN	PUNICODE_STRING	CommandLine,
 	IN	PUNICODE_STRING	LibraryPath,
 	IN	PUNICODE_STRING	CurrentDirectory,
@@ -147,19 +147,19 @@ RtlCreateProcessParameters (
 VOID
 STDCALL
 RtlDeNormalizeProcessParams (
-	IN OUT	PPPB	Ppb
+	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 VOID
 STDCALL
 RtlDestroyProcessParameters (
-	IN OUT	PPPB	Ppb
+	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 VOID
 STDCALL
 RtlNormalizeProcessParams (
-	IN OUT	PPPB	Ppb
+	IN OUT	PRTL_USER_PROCESS_PARAMETERS	ProcessParameters
 	);
 
 /* EOF */

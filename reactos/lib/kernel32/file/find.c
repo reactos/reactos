@@ -1,4 +1,4 @@
-/* $Id: find.c,v 1.22 1999/10/07 23:43:28 ekohl Exp $
+/* $Id: find.c,v 1.23 2000/01/11 17:30:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -89,7 +89,7 @@ WINBOOL STDCALL InternalFindNextFile(HANDLE hFindFile,
                                  TRUE,
                                  &(IData->PatternStr),
                                  FALSE);
-   DPRINT("Found %w\n",IData->FileInfo.FileName);
+   DPRINT("Found %S\n",IData->FileInfo.FileName);
    if (Status != STATUS_SUCCESS)
    {
         return(FALSE);
@@ -112,7 +112,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    UNICODE_STRING DirectoryNameStr;
    IO_STATUS_BLOCK IoStatusBlock;
 
-   DPRINT("FindFirstFileW(lpFileName %w, lpFindFileData %x)\n",
+   DPRINT("FindFirstFileW(lpFileName %S, lpFindFileData %x)\n",
        lpFileName, lpFindFileData);
 
    GetFullPathNameW(lpFileName, MAX_PATH, CurrentDirectory, NULL);
@@ -121,9 +121,9 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    Directory[2] = '?';
    Directory[3] = '\\';
    Directory[4] = 0;
-   DPRINT("Directory %w\n",Directory);
+   DPRINT("Directory %S\n",Directory);
    wcscat(Directory, CurrentDirectory);
-   DPRINT("Directory %w\n",Directory);
+   DPRINT("Directory %S\n",Directory);
    End = wcsrchr(Directory, '\\');
    *End = 0;
    
@@ -135,7 +135,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
    if (!wcscmp(Pattern, L"*.*"))
         Pattern[1] = 0;
 
-   DPRINT("Directory %w Pattern %w\n",Directory,Pattern);
+   DPRINT("Directory %S Pattern %S\n",Directory,Pattern);
    
    IData = HeapAlloc(GetProcessHeap(), 
 		     HEAP_ZERO_MEMORY, 
@@ -172,7 +172,7 @@ HANDLE STDCALL InternalFindFirstFile(LPCWSTR lpFileName,
 			TRUE,
                         &(IData->PatternStr),
 			FALSE);
-   DPRINT("Found %w\n",IData->FileInfo.FileName);
+   DPRINT("Found %S\n",IData->FileInfo.FileName);
    
    FileDataToWin32Data(lpFindFileData, IData);
 
@@ -340,6 +340,5 @@ FindNextFileW (
 
    return(TRUE);
 }
-
 
 /* EOF */

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.7 1999/10/31 22:41:15 ea Exp $
+/* $Id: rw.c,v 1.8 2000/01/11 17:30:16 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -19,10 +19,8 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
+
 /* FUNCTIONS ****************************************************************/
-
-
-
 
 WINBOOL STDCALL WriteFile(HANDLE hFile,
 			  LPCVOID lpBuffer,	
@@ -168,8 +166,6 @@ WriteFileEx (
    IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
    ptrOffset = &Offset;
 
-  
-
    errCode = NtWriteFile(hFile,
 			 NULL,
 			 ApcRoutine,
@@ -209,8 +205,7 @@ WINBOOL STDCALL ReadFileEx(HANDLE hFile,
    lpOverLapped->Internal = STATUS_PENDING;
    IoStatusBlock = (PIO_STATUS_BLOCK)lpOverLapped;
    ptrOffset = &Offset;
- 
-   
+
    errCode = NtReadFile(hFile,
 			NULL,
 			ApcRoutine,
@@ -220,8 +215,7 @@ WINBOOL STDCALL ReadFileEx(HANDLE hFile,
 			nNumberOfBytesToRead,
 			ptrOffset,
 			NULL);
-   
-   
+
    if (!NT_SUCCESS(errCode))  
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
@@ -229,3 +223,5 @@ WINBOOL STDCALL ReadFileEx(HANDLE hFile,
      }
    return(TRUE);
 }
+
+/* EOF */

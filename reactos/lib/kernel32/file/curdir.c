@@ -1,4 +1,5 @@
-/*
+/* $Id: curdir.c,v 1.19 2000/01/11 17:30:16 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/curdir.c
@@ -20,12 +21,8 @@
 
 /* GLOBALS *******************************************************************/
 
-#define MAX_DOS_DRIVES 26
-
 static HANDLE hCurrentDirectory = NULL;
-static ULONG CurrentDrive = 0;
-
-static WCHAR DriveDirectoryW[MAX_DOS_DRIVES][MAX_PATH] = {{0}};
+static WCHAR CurrentDirectoryW[MAX_PATH];
 
 static WCHAR SystemDirectoryW[MAX_PATH];
 static WCHAR WindowsDirectoryW[MAX_PATH];
@@ -33,15 +30,6 @@ static WCHAR WindowsDirectoryW[MAX_PATH];
 WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName);
 
 /* FUNCTIONS *****************************************************************/
-
-DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer)
-{
-   lpBuffer[0] = 'A' + CurrentDrive;
-   lpBuffer[1] = ':';
-   lpBuffer[2] = '\\';
-   lpBuffer[3] = 0;
-   return(4);
-}
 
 DWORD STDCALL GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
 {
@@ -69,26 +57,28 @@ DWORD STDCALL GetCurrentDirectoryA(DWORD nBufferLength, LPSTR lpBuffer)
 DWORD STDCALL GetCurrentDirectoryW(DWORD nBufferLength, LPWSTR lpBuffer)
 {
    UINT uSize;
-   
+
    DPRINT("GetCurrentDirectoryW()\n");
-   
-   if ( lpBuffer == NULL ) 
+
+   if ( lpBuffer == NULL )
 	return 0;
-   uSize = lstrlenW(DriveDirectoryW[CurrentDrive]) + 2;
+
+   uSize = lstrlenW(CurrentDirectoryW);
    if (nBufferLength > uSize)
      {
-	lpBuffer[0] = 'A' + CurrentDrive;
-	lpBuffer[1] = ':';
-	lpBuffer[2] = 0;
-	lstrcpyW(&lpBuffer[2], DriveDirectoryW[CurrentDrive]);
+	lstrcpyW(lpBuffer, CurrentDirectoryW);
      }
    if (uSize > 3 && lpBuffer[uSize - 1] == L'\\')
      {
         lpBuffer[uSize - 1] = 0;
         uSize--;
      }
-   DPRINT("GetCurrentDirectoryW() = '%w'\n",lpBuffer);
+   DPRINT("GetCurrentDirectoryW() = '%S'\n",lpBuffer);
+
    return uSize;
+#if 0
+	return (RtlGetCurrentDirectory_U (nBufferLength, lpBuffer) / sizeof (WCHAR));
+#endif
 }
 
 WINBOOL STDCALL SetCurrentDirectoryA(LPCSTR lpPathName)
@@ -125,7 +115,7 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
    WCHAR PathName[MAX_PATH];
    HANDLE hDir;
    
-   DPRINT("SetCurrentDirectoryW(lpPathName %w)\n",lpPathName);
+   DPRINT("SetCurrentDirectoryW(lpPathName %S)\n",lpPathName);
    
    if (lpPathName == NULL)
      {
@@ -146,7 +136,7 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
         return FALSE;
      }
 
-   DPRINT("PathName %w\n",PathName);
+   DPRINT("PathName %S\n",PathName);
 
    hDir = CreateFileW(PathName,
 		      GENERIC_READ,
@@ -169,18 +159,25 @@ WINBOOL STDCALL SetCurrentDirectoryW(LPCWSTR lpPathName)
 
    hCurrentDirectory = hDir;
    
-   DPRINT("PathName %w\n",PathName);
-	
-   CurrentDrive = toupper((UCHAR)PathName[0]) - 'A';
-   wcscpy(DriveDirectoryW[CurrentDrive],&PathName[2]);
-   len = lstrlenW(DriveDirectoryW[CurrentDrive]);
-   if (DriveDirectoryW[CurrentDrive][len-1] != '\\')
+   DPRINT("PathName %S\n",PathName);
+
+   wcscpy(CurrentDirectoryW,PathName);
+   len = lstrlenW(CurrentDirectoryW);
+   if (CurrentDirectoryW[len-1] != '\\')
      {
-        DriveDirectoryW[CurrentDrive][len] = '\\';
-        DriveDirectoryW[CurrentDrive][len+1] = 0;
+        CurrentDirectoryW[len] = '\\';
+        CurrentDirectoryW[len+1] = 0;
      }
 
    return TRUE;
+#if 0
+	UNICODE_STRING PathName_U;
+
+	RtlInitUnicodeString (&PathName_U,
+	                      lpPathName);
+
+	return RtlSetCurrentDirectory_U (&PathName_U);
+#endif
 }
 
 DWORD STDCALL GetTempPathA(DWORD nBufferLength, LPSTR lpBuffer)
@@ -285,3 +282,4 @@ GetWindowsDirectoryW(
    return uPathSize;
 }
 
+/* EOF */

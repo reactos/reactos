@@ -42,21 +42,21 @@
 
 static NTSTATUS
 LdrCreatePpb (
-	PPPB	*PpbPtr,
-	HANDLE	ProcessHandle
+	PRTL_USER_PROCESS_PARAMETERS	*PpbPtr,
+	HANDLE				ProcessHandle
 	)
 {
+	RTL_USER_PROCESS_PARAMETERS	Ppb;
 	PVOID		PpbBase;
 	ULONG		PpbSize;
-	PPB		Ppb;
 	ULONG		BytesWritten;
 	NTSTATUS	Status;
 
 	/* Create process parameters block (PPB)*/
 	PpbBase = (PVOID)PEB_STARTUPINFO;
-	PpbSize = sizeof (PPB);
+	PpbSize = sizeof (RTL_USER_PROCESS_PARAMETERS);
 
-	Status = ZwAllocateVirtualMemory (
+	Status = NtAllocateVirtualMemory (
 		ProcessHandle,
 		(PVOID*)&PpbBase,
 		0,
@@ -66,19 +66,19 @@ LdrCreatePpb (
 		);
 	if (!NT_SUCCESS(Status))
 	{
-		DbgPrint ("Ppb allocation failed \n");
+		DbgPrint ("Process Parameters allocation failed \n");
 		DbgPrintErrorMessage (Status);
 		return Status;
 	}
 
 	/* initialize the ppb */
-	memset (&Ppb, 0, sizeof(PPB));
+	memset (&Ppb, 0, sizeof(RTL_USER_PROCESS_PARAMETERS));
 
-	ZwWriteVirtualMemory (
+	NtWriteVirtualMemory (
 			ProcessHandle,
 			PpbBase,
 			&Ppb,
-			sizeof(PPB),
+			sizeof(RTL_USER_PROCESS_PARAMETERS),
 			&BytesWritten);
 
 	*PpbPtr = PpbBase;
@@ -91,7 +91,7 @@ static NTSTATUS
 LdrCreatePeb (
 	PPEB	*PebPtr,
 	HANDLE	ProcessHandle,
-	PPPB	Ppb
+	PRTL_USER_PROCESS_PARAMETERS	Ppb
 	)
 {
 	PPEB		PebBase;
@@ -119,7 +119,7 @@ LdrCreatePeb (
 
 	/* initialize the peb */
 	memset(&Peb, 0, sizeof Peb);
-	Peb.Ppb = Ppb;
+	Peb.ProcessParameters = Ppb;
 
 	ZwWriteVirtualMemory (
 		ProcessHandle,
@@ -177,7 +177,7 @@ NTSTATUS LdrLoadImage(HANDLE		ProcessHandle,
 
    WCHAR			TmpNameBuffer [MAX_PATH];
 
-   PPPB				Ppb;
+   PRTL_USER_PROCESS_PARAMETERS	Ppb;
    PPEB				Peb;
 
 

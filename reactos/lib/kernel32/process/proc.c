@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.25 1999/12/13 22:04:34 dwelch Exp $
+/* $Id: proc.c,v 1.26 2000/01/11 17:30:46 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -22,30 +22,6 @@
 
 #define NDEBUG
 #include <kernel32/kernel32.h>
-
-/* TYPES *********************************************************************/
-/*
-typedef struct _WSTARTUPINFO { 
-  DWORD   cb; 
-  LPWSTR  lpReserved; 
-  LPWSTR  lpDesktop; 
-  LPWSTR  lpTitle; 
-  DWORD   dwX; 
-  DWORD   dwY; 
-  DWORD   dwXSize; 
-  DWORD   dwYSize; 
-  DWORD   dwXCountChars; 
-  DWORD   dwYCountChars; 
-  DWORD   dwFillAttribute; 
-  DWORD   dwFlags; 
-  WORD    wShowWindow; 
-  WORD    cbReserved2; 
-  LPBYTE  lpReserved2; 
-  HANDLE  hStdInput; 
-  HANDLE  hStdOutput; 
-  HANDLE  hStdError; 
-} WSTARTUPINFO, *LPWSTARTUPINFO;
-*/
 
 /* GLOBALS *******************************************************************/
 
@@ -320,7 +296,9 @@ GetStartupInfoW (
 	LPSTARTUPINFOW	lpStartupInfo
 	)
 {
-   PPEB pPeb = NtCurrentPeb();
+   PRTL_USER_PROCESS_PARAMETERS Params;
+
+   Params = NtCurrentPeb()->ProcessParameters;
 
    if (lpStartupInfo == NULL)
      {
@@ -329,24 +307,24 @@ GetStartupInfoW (
      }
 
    lpStartupInfo->cb = sizeof(STARTUPINFOW);
-//   lstrcpyW(lpStartupInfo->lpDesktop, pPeb->Ppb->Desktop);
-//   lstrcpyW(lpStartupInfo->lpTitle, pPeb->Ppb->Title);
-   lpStartupInfo->dwX = pPeb->Ppb->X;
-   lpStartupInfo->dwY = pPeb->Ppb->Y;
-   lpStartupInfo->dwXSize = pPeb->Ppb->XSize;
-   lpStartupInfo->dwYSize = pPeb->Ppb->YSize;
-   lpStartupInfo->dwXCountChars = pPeb->Ppb->XCountChars;
-   lpStartupInfo->dwYCountChars = pPeb->Ppb->YCountChars;
-   lpStartupInfo->dwFillAttribute = pPeb->Ppb->FillAttribute;
-   lpStartupInfo->dwFlags = pPeb->Ppb->Flags;
-   lpStartupInfo->wShowWindow = pPeb->Ppb->ShowWindow;
-//   lpStartupInfo->lpReserved = pPeb->Ppb->lpReserved1;
-//   lpStartupInfo->cbReserved2 = pPeb->Ppb->cbReserved;
-//   lpStartupInfo->lpReserved2 = pPeb->Ppb->lpReserved2;
+   wcscpy (lpStartupInfo->lpDesktop, Params->DesktopInfo.Buffer);
+   wcscpy (lpStartupInfo->lpTitle, Params->WindowTitle.Buffer);
+   lpStartupInfo->dwX = Params->StartingX;
+   lpStartupInfo->dwY = Params->StartingY;
+   lpStartupInfo->dwXSize = Params->CountX;
+   lpStartupInfo->dwYSize = Params->CountY;
+   lpStartupInfo->dwXCountChars = Params->CountCharsX;
+   lpStartupInfo->dwYCountChars = Params->CountCharsY;
+   lpStartupInfo->dwFillAttribute = Params->FillAttribute;
+   lpStartupInfo->dwFlags = Params->WindowFlags;
+   lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+   wcscpy (lpStartupInfo->lpReserved, Params->ShellInfo.Buffer);
+//   lpStartupInfo->cbReserved2 = Params->cbReserved;
+//   lpStartupInfo->lpReserved2 = Params->lpReserved2;
 
-   lpStartupInfo->hStdInput = pPeb->Ppb->InputHandle;
-   lpStartupInfo->hStdOutput = pPeb->Ppb->OutputHandle;
-   lpStartupInfo->hStdError = pPeb->Ppb->ErrorHandle;
+   lpStartupInfo->hStdInput = Params->StandardInput;
+   lpStartupInfo->hStdOutput = Params->StandardOutput;
+   lpStartupInfo->hStdError = Params->StandardError;
 }
 
 
@@ -356,8 +334,10 @@ GetStartupInfoA (
 	LPSTARTUPINFOA	lpStartupInfo
 	)
 {
-   PPEB pPeb = NtCurrentPeb();
+   PRTL_USER_PROCESS_PARAMETERS Params;
    ULONG i = 0;
+
+   Params = NtCurrentPeb()->ProcessParameters;
 
    if (lpStartupInfo == NULL)
      {
@@ -384,22 +364,22 @@ GetStartupInfoA (
      }
    lpStartupInfo->lpTitle[i] = 0;
 #endif
-   lpStartupInfo->dwX = pPeb->Ppb->X;
-   lpStartupInfo->dwY = pPeb->Ppb->Y;
-   lpStartupInfo->dwXSize = pPeb->Ppb->XSize;
-   lpStartupInfo->dwYSize = pPeb->Ppb->YSize;
-   lpStartupInfo->dwXCountChars = pPeb->Ppb->XCountChars;
-   lpStartupInfo->dwYCountChars = pPeb->Ppb->YCountChars;
-   lpStartupInfo->dwFillAttribute = pPeb->Ppb->FillAttribute;
-   lpStartupInfo->dwFlags = pPeb->Ppb->Flags;
-   lpStartupInfo->wShowWindow = pPeb->Ppb->ShowWindow;
-//   lpStartupInfo->cbReserved2 = pPeb->Ppb->cbReserved;
-//   lpStartupInfo->lpReserved = pPeb->Ppb->lpReserved1;
-//   lpStartupInfo->lpReserved2 = pPeb->Ppb->lpReserved2;
+   lpStartupInfo->dwX = Params->StartingX;
+   lpStartupInfo->dwY = Params->StartingY;
+   lpStartupInfo->dwXSize = Params->CountX;
+   lpStartupInfo->dwYSize = Params->CountY;
+   lpStartupInfo->dwXCountChars = Params->CountCharsX;
+   lpStartupInfo->dwYCountChars = Params->CountCharsY;
+   lpStartupInfo->dwFillAttribute = Params->FillAttribute;
+   lpStartupInfo->dwFlags = Params->WindowFlags;
+   lpStartupInfo->wShowWindow = Params->ShowWindowFlags;
+//   lpStartupInfo->cbReserved2 = Params->cbReserved;
+//   lpStartupInfo->lpReserved = Params->lpReserved1;
+//   lpStartupInfo->lpReserved2 = Params->lpReserved2;
 
-   lpStartupInfo->hStdInput = pPeb->Ppb->InputHandle;
-   lpStartupInfo->hStdOutput = pPeb->Ppb->OutputHandle;
-   lpStartupInfo->hStdError = pPeb->Ppb->ErrorHandle;
+   lpStartupInfo->hStdInput = Params->StandardInput;
+   lpStartupInfo->hStdOutput = Params->StandardOutput;
+   lpStartupInfo->hStdError = Params->StandardError;
 }
 
 

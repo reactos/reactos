@@ -1,4 +1,4 @@
-/* $Id: init.c,v 1.8 1999/12/30 01:51:42 dwelch Exp $
+/* $Id: init.c,v 1.9 2000/01/11 17:32:13 ekohl Exp $
  *
  * init.c - Session Manager initialization
  * 
@@ -74,7 +74,7 @@ InitSessionManager (
 	UNICODE_STRING UnicodeString;
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	UNICODE_STRING CmdLineW;
-	PPPB Ppb;
+	PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
 
 
 	/* Create the "\SmApiPort" object (LPC) */
@@ -174,7 +174,7 @@ InitSessionManager (
    RtlInitUnicodeString (&UnicodeString,
 			 L"\\??\\C:\\reactos\\system32\\csrss.exe");
    
-   RtlCreateProcessParameters (&Ppb,
+   RtlCreateProcessParameters (&ProcessParameters,
 			       &UnicodeString,
 			       NULL,
 			       NULL,
@@ -187,7 +187,7 @@ InitSessionManager (
    
    Status = RtlCreateUserProcess (&UnicodeString,
 				  0,
-				  Ppb,
+				  ProcessParameters,
 				  NULL,
 				  NULL,
 				  FALSE,
@@ -202,9 +202,9 @@ InitSessionManager (
 	return FALSE;
      }
 
-   RtlDestroyProcessParameters (Ppb);
+   RtlDestroyProcessParameters (ProcessParameters);
 
-#endif   
+#endif
    
    /* Start the simple shell (shell.exe) */
    DisplayString (L"SM: Executing shell\n");
@@ -216,7 +216,7 @@ InitSessionManager (
 	                      L"\\??\\C:\\reactos\\system32\\winlogon.exe");
 #endif
 
-	RtlCreateProcessParameters (&Ppb,
+	RtlCreateProcessParameters (&ProcessParameters,
 	                            &UnicodeString,
 	                            NULL,
 	                            NULL,
@@ -230,7 +230,7 @@ InitSessionManager (
 
 	Status = RtlCreateUserProcess (&UnicodeString,
 	                               0,
-	                               Ppb,
+	                               ProcessParameters,
 	                               NULL,
 	                               NULL,
 	                               FALSE,
@@ -239,7 +239,7 @@ InitSessionManager (
 	                               &Children[CHILD_WINLOGON],
 	                               NULL);
 
-	RtlDestroyProcessParameters (Ppb);
+	RtlDestroyProcessParameters (ProcessParameters);
 
 	if (!NT_SUCCESS(Status))
 	{

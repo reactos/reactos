@@ -1,4 +1,5 @@
-/*
+/* $Id: delete.c,v 1.5 2000/01/11 17:30:16 ekohl Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/kernel32/file/delete.c
@@ -18,9 +19,6 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 
-/* EXTERNS ******************************************************************/
-
-DWORD STDCALL GetCurrentDriveW(DWORD nBufferLength, PWSTR lpBuffer);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -52,7 +50,7 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
    IO_STATUS_BLOCK IoStatusBlock;
    UINT Len;
 
-   DPRINT("DeleteFileW (lpFileName %w)\n",lpFileName);
+   DPRINT("DeleteFileW (lpFileName %S)\n",lpFileName);
 
    if (lpFileName[1] == (WCHAR)':') 
      {
@@ -64,18 +62,19 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
             lpFileName[2] == (WCHAR)'.' &&
             lpFileName[3] == (WCHAR)'\\')
      {
-        wcscpy(PathNameW, lpFileName);
+	wcscpy(PathNameW, lpFileName);
      }
    else if (lpFileName[0] == (WCHAR)'\\')
      {
-	GetCurrentDriveW(MAX_PATH,PathNameW);
+	GetCurrentDirectoryW(MAX_PATH,PathNameW);
+	PathNameW[3] = 0;
         wcscat(PathNameW, lpFileName);
      }
    else
      {
 	Len =  GetCurrentDirectoryW(MAX_PATH,PathNameW);
 	if ( Len == 0 )
-	  return NULL;
+	  return FALSE;
 	if ( PathNameW[Len-1] != L'\\' ) {
 	   PathNameW[Len] = L'\\';
 	   PathNameW[Len+1] = 0;
@@ -93,10 +92,10 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
    FileNameString.Length = wcslen( FileNameW)*sizeof(WCHAR);
 
    if ( FileNameString.Length == 0 )
-	return NULL;
+	return FALSE;
 
    if ( FileNameString.Length > MAX_PATH*sizeof(WCHAR) )
-	return NULL;
+	return FALSE;
 
    FileNameString.Buffer = (WCHAR *)FileNameW;
    FileNameString.MaximumLength = FileNameString.Length + sizeof(WCHAR);
@@ -108,7 +107,7 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
 
-   DPRINT("FileName %w\n",FileNameW);
+   DPRINT("FileName %S\n",FileNameW);
 
    errCode = ZwCreateFile(&FileHandle,
                           FILE_WRITE_ATTRIBUTES,
@@ -156,3 +155,5 @@ WINBOOL STDCALL DeleteFileW(LPCWSTR lpFileName)
 
    return TRUE;
 }
+
+/* EOF */
