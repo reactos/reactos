@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: partlist.c,v 1.22 2003/08/25 11:56:07 ekohl Exp $
+/* $Id: partlist.c,v 1.23 2003/08/29 11:27:16 ekohl Exp $
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/partlist.c
@@ -1367,8 +1367,7 @@ CreateNewPartition (PPARTLIST List,
       else if (PrevPartEntry == NULL && NextPartEntry != NULL)
 	{
 	  /* Current entry is the first entry */
-
-	  /* FIXME: Update extended partition entries */
+	  return;
 	}
       else if (PrevPartEntry != NULL && NextPartEntry == NULL)
 	{
@@ -1478,8 +1477,7 @@ CreateNewPartition (PPARTLIST List,
       else if (PrevPartEntry == NULL && NextPartEntry != NULL)
 	{
 	  /* Current entry is the first entry */
-
-	  /* FIXME: Update extended partition entries */
+	  return;
 	}
       else if (PrevPartEntry != NULL && NextPartEntry == NULL)
 	{
@@ -1558,6 +1556,14 @@ DeleteCurrentPartition (PPARTLIST List)
   if (PrevPartEntry != NULL && NextPartEntry != NULL)
     {
       /* Current entry is in the middle of the list */
+
+      /*
+       * The first extended partition can not be deleted
+       * as long as other extended partitions are present.
+       */
+      if (PrevPartEntry->ListEntry.Blink == &DiskEntry->PartListHead)
+	return;
+
       /* Copy previous container partition data to current entry */
       RtlCopyMemory (&PrevPartEntry->PartInfo[1],
 		     &PartEntry->PartInfo[1],
@@ -1566,9 +1572,11 @@ DeleteCurrentPartition (PPARTLIST List)
     }
   else if (PrevPartEntry == NULL && NextPartEntry != NULL)
     {
-      /* Current entry is the first entry */
-
-      /* FIXME: Update extended partition entries */
+      /*
+       * A primary partition can not be deleted as long as
+       * extended partitions are present.
+       */
+      return;
     }
   else if (PrevPartEntry != NULL && NextPartEntry == NULL)
     {
