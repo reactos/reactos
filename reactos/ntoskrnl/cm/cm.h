@@ -292,6 +292,10 @@ typedef struct _KEY_OBJECT
 /* Bits 11-0 (bottom 12 bits) of the cell index is the byte offset */
 #define CmiByteOffset(Cellndex)(CellIndex & 0x00000fff)
 
+
+extern BOOLEAN CmiDoVerify;
+
+
 VOID
 CmiVerifyBinCell(PHBIN BinCell);
 VOID
@@ -349,11 +353,13 @@ PKEY_OBJECT  CmiScanKeyList(IN PKEY_OBJECT Parent,
   IN PCHAR  KeyNameBuf,
   IN ULONG  Attributes);
 
-PREGISTRY_HIVE
-CmiCreateRegistryHive(IN PWSTR Filename,
-  IN BOOLEAN  CreateNew);
+NTSTATUS
+CmiCreateRegistryHive(PWSTR Filename,
+  PREGISTRY_HIVE *RegistryHive,
+  BOOLEAN CreateNew);
 
-ULONG  CmiGetMaxNameLength(IN PREGISTRY_HIVE  RegistryHive,
+ULONG
+CmiGetMaxNameLength(IN PREGISTRY_HIVE  RegistryHive,
   IN PKEY_CELL  KeyCell);
 
 ULONG
@@ -468,5 +474,8 @@ NTSTATUS
 CmiAddFree(PREGISTRY_HIVE  RegistryHive,
 	PCELL_HEADER FreeBlock,
   BLOCK_OFFSET FreeOffset);
+
+NTSTATUS
+CmiInitHives(BOOLEAN SetUpBoot);
 
 #endif /*__INCLUDE_CM_H*/

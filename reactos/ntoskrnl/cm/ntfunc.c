@@ -1371,7 +1371,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
 
 NTSTATUS STDCALL
 NtLoadKey(PHANDLE KeyHandle,
-  POBJECT_ATTRIBUTES ObjectAttributes)
+	  POBJECT_ATTRIBUTES ObjectAttributes)
 {
   return NtLoadKey2(KeyHandle, ObjectAttributes, 0);
 }
@@ -1424,12 +1424,11 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_QUERY_VALUE,
-		CmiKeyType,
-		UserMode,
-		(PVOID *) &KeyObject,
-		NULL);
-
+				     KEY_QUERY_VALUE,
+				     CmiKeyType,
+				     UserMode,
+				     (PVOID *) &KeyObject,
+				     NULL);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
@@ -1461,45 +1460,45 @@ NtQueryMultipleValueKey(IN HANDLE KeyHandle,
 			  NULL);
 
       if (!NT_SUCCESS(Status))
-				{
-				  DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
-				  break;
-				}
+	{
+	  DPRINT("CmiScanKeyForValue() failed with status %x\n", Status);
+	  break;
+	}
       else if (ValueCell == NULL)
-				{
-				  Status = STATUS_OBJECT_NAME_NOT_FOUND;
-				  break;
-				}
+	{
+	  Status = STATUS_OBJECT_NAME_NOT_FOUND;
+	  break;
+	}
 
       BufferLength = (BufferLength + 3) & 0xfffffffc;
 
       if (BufferLength + (ValueCell->DataSize & LONG_MAX) <= *Length)
-				{
-				  DataPtr = (PUCHAR)(((ULONG)DataPtr + 3) & 0xfffffffc);
-			
-				  ValueList[i].Type = ValueCell->DataType;
-				  ValueList[i].DataLength = ValueCell->DataSize & LONG_MAX;
-				  ValueList[i].DataOffset = (ULONG) DataPtr - (ULONG) Buffer;
-			
-				  if (ValueCell->DataSize > 0)
-				    {
-				      DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
-				      RtlCopyMemory(DataPtr, DataCell->Data, ValueCell->DataSize & LONG_MAX);
-				      CmiReleaseBlock(RegistryHive, DataCell);
-				    }
-				  else
-				    {
-				      RtlCopyMemory(DataPtr,
-						    &ValueCell->DataOffset,
-						    ValueCell->DataSize & LONG_MAX);
-				    }
-			
-				  DataPtr += ValueCell->DataSize & LONG_MAX;
-				}
+	{
+	  DataPtr = (PUCHAR)(((ULONG)DataPtr + 3) & 0xfffffffc);
+
+	  ValueList[i].Type = ValueCell->DataType;
+	  ValueList[i].DataLength = ValueCell->DataSize & LONG_MAX;
+	  ValueList[i].DataOffset = (ULONG) DataPtr - (ULONG) Buffer;
+
+	  if (ValueCell->DataSize > 0)
+	    {
+	      DataCell = CmiGetBlock(RegistryHive, ValueCell->DataOffset, NULL);
+	      RtlCopyMemory(DataPtr, DataCell->Data, ValueCell->DataSize & LONG_MAX);
+	      CmiReleaseBlock(RegistryHive, DataCell);
+	    }
+	  else
+	    {
+	      RtlCopyMemory(DataPtr,
+			    &ValueCell->DataOffset,
+			    ValueCell->DataSize & LONG_MAX);
+	    }
+
+	  DataPtr += ValueCell->DataSize & LONG_MAX;
+	}
       else
-				{
-				  Status = STATUS_BUFFER_TOO_SMALL;
-				}
+	{
+	  Status = STATUS_BUFFER_TOO_SMALL;
+	}
 
       BufferLength +=  ValueCell->DataSize & LONG_MAX;
     }
@@ -1555,19 +1554,25 @@ NtSetInformationKey(
 	IN	PVOID	 KeyInformation,
 	IN	ULONG	 KeyInformationLength)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtUnloadKey(IN  HANDLE  KeyHandle)
+NtUnloadKey(IN HANDLE KeyHandle)
 {
-	UNIMPLEMENTED;
+  UNIMPLEMENTED;
 }
 
 
 NTSTATUS STDCALL
-NtInitializeRegistry(IN  BOOLEAN  SetUpBoot)
+NtInitializeRegistry(IN BOOLEAN SetUpBoot)
 {
-  return STATUS_SUCCESS;
+  NTSTATUS Status;
+
+  /* FIXME: save boot log file */
+
+  Status = CmiInitHives(SetUpBoot);
+
+  return(Status);
 }

@@ -1,4 +1,4 @@
-/* $Id: registry.c,v 1.69 2002/03/15 19:46:07 chorns Exp $
+/* $Id: registry.c,v 1.70 2002/03/16 19:57:26 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -263,9 +263,9 @@ CmInitializeRegistry(VOID)
   CmiKeyType->DuplicationNotify = NULL;
   RtlInitUnicodeString(&CmiKeyType->TypeName, L"Key");
 
-  /*  Build volitile registry store  */
-  CmiVolatileHive = CmiCreateRegistryHive(NULL, FALSE);
-  assert(CmiVolatileHive != NULL);
+  /*  Build volatile registry store  */
+  Status = CmiCreateRegistryHive(NULL, &CmiVolatileHive, FALSE);
+  assert(NT_SUCCESS(Status));
 
   /* Build the Root Key Object */
   RtlInitUnicodeString(&RootKeyName, REG_ROOT_KEY_NAME);
@@ -479,66 +479,62 @@ CmiConnectHive(PWSTR FileName,
 
   DPRINT("Called. FileName %S\n", FullName);
 
-  RegistryHive = CmiCreateRegistryHive(FileName, CreateNew);
-  if (RegistryHive)
-	  {
-	    RtlInitUnicodeString(&uKeyName, FullName);
-	
-	    InitializeObjectAttributes(&ObjectAttributes,
-        &uKeyName,
-        0,
-        NULL,
-        NULL);
+  Status = CmiCreateRegistryHive(FileName, &RegistryHive, CreateNew);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-	    Status = ObCreateObject(&KeyHandle,
-        STANDARD_RIGHTS_REQUIRED,
-        &ObjectAttributes,
-        CmiKeyType,
-        (PVOID*) &NewKey);
+  RtlInitUnicodeString(&uKeyName, FullName);
 
-	    if (!NT_SUCCESS(Status))
-	      return Status;
+  InitializeObjectAttributes(&ObjectAttributes,
+			     &uKeyName,
+			     0,
+			     NULL,
+			     NULL);
 
-	    NewKey->RegistryHive = RegistryHive;
-	    NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
-	    NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
-	    NewKey->Flags = 0;
-	    NewKey->NumberOfSubKeys = 0;
-	    NewKey->SubKeys = ExAllocatePool(PagedPool,
-        NewKey->KeyCell->NumberOfSubKeys * sizeof(DWORD));
+  Status = ObCreateObject(&KeyHandle,
+			  STANDARD_RIGHTS_REQUIRED,
+			  &ObjectAttributes,
+			  CmiKeyType,
+			  (PVOID*)&NewKey);
+  if (!NT_SUCCESS(Status))
+    return(Status);
 
-	    if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
-        {
-          /* FIXME: Cleanup from CmiCreateRegistryHive() */
-          DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
-          ZwClose(NewKey);
-	        return STATUS_INSUFFICIENT_RESOURCES;
-        }
+  NewKey->RegistryHive = RegistryHive;
+  NewKey->BlockOffset = RegistryHive->HiveHeader->RootKeyCell;
+  NewKey->KeyCell = CmiGetBlock(RegistryHive, NewKey->BlockOffset, NULL);
+  NewKey->Flags = 0;
+  NewKey->NumberOfSubKeys = 0;
+  NewKey->SubKeys = ExAllocatePool(PagedPool,
+  NewKey->KeyCell->NumberOfSubKeys * sizeof(DWORD));
 
-	    NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
-	    NewKey->Name = ExAllocatePool(PagedPool, strlen(KeyName));
+  if ((NewKey->SubKeys == NULL) && (NewKey->KeyCell->NumberOfSubKeys != 0))
+    {
+      /* FIXME: Cleanup from CmiCreateRegistryHive() */
+      DPRINT("NumberOfSubKeys %d\n", NewKey->KeyCell->NumberOfSubKeys);
+      ZwClose(NewKey);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
-	    if ((NewKey->Name == NULL) && (strlen(KeyName) != 0))
-        {
-          /* FIXME: Cleanup from CmiCreateRegistryHive() */
-          DPRINT("strlen(KeyName) %d\n", strlen(KeyName));
-          if (NewKey->SubKeys != NULL)
-            ExFreePool(NewKey->SubKeys);
-          ZwClose(NewKey);
-	        return STATUS_INSUFFICIENT_RESOURCES;
-        }
+  NewKey->SizeOfSubKeys = NewKey->KeyCell->NumberOfSubKeys;
+  NewKey->Name = ExAllocatePool(PagedPool, strlen(KeyName));
 
-	    NewKey->NameSize = strlen(KeyName);
-	    memcpy(NewKey->Name, KeyName, strlen(KeyName));
-	    CmiAddKeyToList(Parent, NewKey);
+  if ((NewKey->Name == NULL) && (strlen(KeyName) != 0))
+    {
+      /* FIXME: Cleanup from CmiCreateRegistryHive() */
+      DPRINT("strlen(KeyName) %d\n", strlen(KeyName));
+      if (NewKey->SubKeys != NULL)
+	ExFreePool(NewKey->SubKeys);
+      ZwClose(NewKey);
+      return(STATUS_INSUFFICIENT_RESOURCES);
+    }
 
-      VERIFY_KEY_OBJECT(NewKey);
-	  }
-  else
-		{
-		  return STATUS_UNSUCCESSFUL;
-		}
-  return STATUS_SUCCESS;
+  NewKey->NameSize = strlen(KeyName);
+  memcpy(NewKey->Name, KeyName, strlen(KeyName));
+  CmiAddKeyToList(Parent, NewKey);
+
+  VERIFY_KEY_OBJECT(NewKey);
+
+  return(STATUS_SUCCESS);
 }
 
 
@@ -546,21 +542,24 @@ NTSTATUS
 CmiInitializeHive(PWSTR FileName,
   PWSTR FullName,
   PCHAR KeyName,
-  PKEY_OBJECT Parent)
+  PKEY_OBJECT Parent,
+  BOOLEAN CreateNew)
 {
   NTSTATUS Status;
 
+  DPRINT("CmiInitializeHive(%s) called\n", KeyName);
+
   /* Try to connect the hive */
   //Status = CmiConnectHive(FileName, FullName, KeyName, Parent, FALSE);
-  Status = CmiConnectHive(FileName, FullName, KeyName, Parent, TRUE);
+  Status = CmiConnectHive(FileName, FullName, KeyName, Parent, CreateNew);
 
   if (!NT_SUCCESS(Status))
-	  {
+    {
       DPRINT("Status %.08x\n", Status);
 #if 0
       WCHAR AltFileName[MAX_PATH];
 
-	    CPRINT("WARNING! Registry file %S not found\n", FileName);
+      CPRINT("WARNING! Registry file %S not found\n", FileName);
 
       wcscpy(AltFileName, FileName);
       wcscat(AltFileName, L".alt");
@@ -568,59 +567,71 @@ CmiInitializeHive(PWSTR FileName,
       /* Try to connect the alternative hive */
       Status = CmiConnectHive(AltFileName, FullName, KeyName, Parent, TRUE);
 
-		  if (!NT_SUCCESS(Status))
-			  {
-   	      CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
-          DPRINT("Status %.08x\n", Status);
-			  }
+      if (!NT_SUCCESS(Status))
+	{
+	  CPRINT("WARNING! Alternative registry file %S not found\n", AltFileName);
+	  DPRINT("Status %.08x\n", Status);
+	}
 #endif
-	  }
+    }
 
-  return Status;
+  DPRINT("CmiInitializeHive() done\n");
+
+  return(Status);
 }
 
 
-extern BOOLEAN CmiDoVerify;
-
-VOID
-CmInitializeRegistry2(VOID)
+NTSTATUS
+CmiInitHives(BOOLEAN SetUpBoot)
 {
   NTSTATUS Status;
+
+  DPRINT("CmiInitHives() called\n");
 
   CmiDoVerify = TRUE;
 
   /* FIXME: Delete temporary \Registry\Machine\System */
 
   /* Connect the SYSTEM hive */
-  Status = CmiInitializeHive(SYSTEM_REG_FILE, REG_SYSTEM_KEY_NAME, "System", CmiMachineKey);
-  assert(NT_SUCCESS(Status));
+  /* FIXME: Don't overwrite the existing 'System' hive yet */
+//  Status = CmiInitializeHive(SYSTEM_REG_FILE, REG_SYSTEM_KEY_NAME, "System", CmiMachineKey);
+//  assert(NT_SUCCESS(Status));
 
   /* Connect the SOFTWARE hive */
-  Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey);
+  Status = CmiInitializeHive(SOFTWARE_REG_FILE, REG_SOFTWARE_KEY_NAME, "Software", CmiMachineKey, SetUpBoot);
   assert(NT_SUCCESS(Status));
 
   /* Connect the SAM hive */
-  Status = CmiInitializeHive(SAM_REG_FILE,REG_SAM_KEY_NAME, "Sam", CmiMachineKey);
+  Status = CmiInitializeHive(SAM_REG_FILE,REG_SAM_KEY_NAME, "Sam", CmiMachineKey, SetUpBoot);
   assert(NT_SUCCESS(Status));
 
   /* Connect the SECURITY hive */
-  Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey);
+  Status = CmiInitializeHive(SEC_REG_FILE, REG_SEC_KEY_NAME, "Security", CmiMachineKey, SetUpBoot);
   assert(NT_SUCCESS(Status));
 
   /* Connect the DEFAULT hive */
-  Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey);
+  Status = CmiInitializeHive(USER_REG_FILE, REG_USER_KEY_NAME, ".Default", CmiUserKey, SetUpBoot);
   assert(NT_SUCCESS(Status));
 
   /* FIXME : initialize standards symbolic links */
 
 //  CmiCheckRegistry(TRUE);
+
+  DPRINT("CmiInitHives() done\n");
+
+  return(STATUS_SUCCESS);
 }
 
 
 VOID
 CmShutdownRegistry(VOID)
 {
-  UNIMPLEMENTED
+  DPRINT("CmShutdownRegistry() called\n");
+
+  /* Note:
+   *	Don't call UNIMPLEMENTED() here since this function is
+   *	called by NtShutdownSystem().
+   */
 }
 
 /* EOF */
