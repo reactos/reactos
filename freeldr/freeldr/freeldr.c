@@ -115,7 +115,7 @@ void BootMain(void)
 			break;
 		}
 
-		DrawBackdrop()
+		DrawBackdrop();
 	}
 
 	MessageBox("Press any key to reboot.");
