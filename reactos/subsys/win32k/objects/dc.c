@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dc.c,v 1.126 2004/04/05 21:26:25 navaraf Exp $
+/* $Id: dc.c,v 1.127 2004/04/06 07:43:33 gvg Exp $
  *
  * DC.C - Device context functions
  *
@@ -1902,12 +1902,10 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
 
       return objOrg;
 
-#if UPDATEREGIONS
     case GDI_OBJECT_TYPE_REGION:
-      DC_UnlockDc ( hDC );
-      SelectClipRgn(hDC, (HRGN)hGDIObj);
-      return NULL;
-#endif
+      DC_UnlockDc (hDC);
+      return (HGDIOBJ) NtGdiSelectClipRgn(hDC, (HRGN) hGDIObj);
+
     default:
       break;
   }
