@@ -1,4 +1,4 @@
-/* $Id: stubsw.c,v 1.16 2003/07/21 19:05:53 royce Exp $
+/* $Id: stubsw.c,v 1.17 2003/07/24 22:17:15 royce Exp $
  *
  * reactos/lib/gdi32/misc/stubs.c
  *
@@ -430,7 +430,7 @@ GetEnhMetaFileDescriptionW(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int 
 STDCALL 
@@ -439,8 +439,7 @@ StartDocW(
 	CONST DOCINFO	*a1
 	)
 {
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+	return W32kStartDoc ( hdc, (CONST PDOCINFO)a1 );
 }
 
 
