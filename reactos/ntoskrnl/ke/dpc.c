@@ -88,7 +88,7 @@ KeInitializeDpc (PKDPC			Dpc,
  */
 {
 	DPRINT("DPC Initializing: %x with Routine: %x\n", Dpc, DeferredRoutine);
-	Dpc->Type = KDpc;
+	Dpc->Type = DpcObject;
 	Dpc->Number= 0;
 	Dpc->Importance= MediumImportance;
 	Dpc->DeferredRoutine = DeferredRoutine;

@@ -1056,6 +1056,17 @@ NtYieldExecution(VOID)
 
 
 /*
+ * NOT EXPORTED
+ */
+NTSTATUS STDCALL
+NtTestAlert(VOID)
+{
+  /* Check and Alert Thread if needed */
+  return KeTestAlertThread(ExGetPreviousMode()) ? STATUS_ALERTED : STATUS_SUCCESS;
+}
+
+
+/*
  * @implemented
  */
 NTSTATUS STDCALL

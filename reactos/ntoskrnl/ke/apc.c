@@ -58,7 +58,7 @@ KeInitializeApc(
 
 	/* Set up the basic APC Structure Data */
 	RtlZeroMemory(Apc, sizeof(KAPC));
-	Apc->Type = KApc;
+	Apc->Type = ApcObject;
 	Apc->Size = sizeof(KAPC);
 	
 	/* Set the Environment */

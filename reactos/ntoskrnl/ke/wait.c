@@ -128,7 +128,7 @@ KiSideEffectsBeforeWake(DISPATCHER_HEADER * hdr,
       case InternalProcessType:
          break;
 
-      case InternalThreadType:
+      case ThreadObject:
          break;
 
       case InternalNotificationEvent:
@@ -386,7 +386,7 @@ BOOLEAN KiDispatcherObjectWake(DISPATCHER_HEADER* hdr, KPRIORITY increment)
      case InternalProcessType:
 	return(KeDispatcherObjectWakeAll(hdr, increment));
 
-     case InternalThreadType:
+     case ThreadObject:
        return(KeDispatcherObjectWakeAll(hdr, increment));
 
      case InternalMutexType:

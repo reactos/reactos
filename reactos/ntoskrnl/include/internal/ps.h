@@ -498,7 +498,7 @@ VOID STDCALL PsExitSpecialApc(PKAPC Apc,
 #define PROCESS_PRIO_RT				18
 
 
-VOID 
+VOID STDCALL
 KeInitializeThread(PKPROCESS Process, PKTHREAD Thread, BOOLEAN First);
 NTSTATUS KeReleaseThread(PKTHREAD Thread);
 
