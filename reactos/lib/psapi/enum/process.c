@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.2 2002/08/29 23:57:53 hyperion Exp $
+/* $Id: process.c,v 1.3 2002/08/31 15:36:55 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -23,8 +23,7 @@ STDCALL
 PsaEnumerateProcesses
 (
  IN PPROC_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext,
- IN OUT PVOID AllocatorContext
+ IN OUT PVOID CallbackContext
 )
 {
  register NTSTATUS nErrCode = STATUS_SUCCESS;
@@ -44,8 +43,8 @@ PsaEnumerateProcesses
   /* free the buffer, and reallocate it to the new size. RATIONALE: since we
      ignore the buffer's contents at this point, there's no point in a realloc()
      that could end up copying a large chunk of data we'd discard anyway */
-  PsaFree(AllocatorContext, pInfoBuffer);
-  pTmp = PsaMalloc(AllocatorContext, nSize);
+  free(pInfoBuffer);
+  pTmp = malloc(nSize);
   
   if(pTmp == NULL)
   {
@@ -101,7 +100,7 @@ PsaEnumerateProcesses
 
 esp_Finalize:
  /* free the buffer */
- PsaFree(AllocatorContext, pInfoBuffer);
+ free(pInfoBuffer);
  
  /* return the last status */
  return (nErrCode);

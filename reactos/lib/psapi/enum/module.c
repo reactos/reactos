@@ -1,4 +1,4 @@
-/* $Id: module.c,v 1.2 2002/08/29 23:57:53 hyperion Exp $
+/* $Id: module.c,v 1.3 2002/08/31 15:36:55 hyperion Exp $
 */
 /*
  * COPYRIGHT:   See COPYING in the top level directory
@@ -23,8 +23,7 @@ STDCALL
 PsaEnumerateSystemModules
 (
  IN PSYSMOD_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext,
- IN OUT PVOID AllocatorContext
+ IN OUT PVOID CallbackContext
 )
 {
  ULONG nSize;
@@ -63,8 +62,8 @@ PsaEnumerateSystemModules
   /* free the buffer, and reallocate it to the new size. RATIONALE: since we
      ignore the buffer's content at this point, there's no point in a realloc(),
      that could end up copying a large chunk of data we'd discard anyway */
-  PsaFree(AllocatorContext, pnModuleCount);
-  pTmp = PsaMalloc(AllocatorContext, nSize);
+  free(pnModuleCount);
+  pTmp = malloc(nSize);
   
   if(pTmp == NULL)
   {
@@ -119,7 +118,7 @@ PsaEnumerateSystemModules
 
 esm_Finalize:
  /* free the buffer */
- PsaFree(AllocatorContext, pnModuleCount);
+ free(pnModuleCount);
 
  return (nErrCode);
 }

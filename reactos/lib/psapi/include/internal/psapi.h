@@ -1,4 +1,4 @@
-/* $Id: psapi.h,v 1.2 2002/08/29 23:57:54 hyperion Exp $
+/* $Id: psapi.h,v 1.3 2002/08/31 15:36:55 hyperion Exp $
 */
 /*
  * internal/psapi.h
@@ -61,8 +61,7 @@ STDCALL
 PsaEnumerateProcesses
 (
  IN PPROC_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext,
- IN OUT PVOID AllocatorContext
+ IN OUT PVOID CallbackContext
 );
 
 NTSTATUS
@@ -70,8 +69,7 @@ STDCALL
 PsaEnumerateSystemModules
 (
  IN PSYSMOD_ENUM_ROUTINE Callback,
- IN OUT PVOID CallbackContext,
- IN OUT PVOID AllocatorContext
+ IN OUT PVOID CallbackContext
 );
 
 NTSTATUS
@@ -82,11 +80,6 @@ PsaEnumerateProcessModules
  IN PPROCMOD_ENUM_ROUTINE Callback,
  IN OUT PVOID CallbackContext
 );
-
-/* the user must provide these */
-PVOID STDCALL PsaMalloc(IN OUT PVOID Context, IN ULONG Size);
-PVOID STDCALL PsaRealloc(IN OUT PVOID Context, IN PVOID Addr, IN ULONG Size);
-VOID STDCALL PsaFree(IN OUT PVOID Context, IN PVOID Addr);
 
 /* MACROS */
 #define DEFINE_DBG_MSG(__str__) "PSAPI: " __str__ "\n"

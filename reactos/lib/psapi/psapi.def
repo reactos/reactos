@@ -1,24 +1,24 @@
-; $Id: psapi.def,v 1.1 2002/06/18 22:11:55 hyperion Exp $
+; $Id: psapi.def,v 1.2 2002/08/31 15:36:56 hyperion Exp $
 ;
 
 LIBRARY PSAPI.DLL
 EXPORTS
-EmptyWorkingSet@4
-EnumDeviceDrivers@12
-EnumProcessModules@16
-EnumProcesses@12
-GetDeviceDriverBaseNameA@12
-GetDeviceDriverBaseNameW@12
-GetDeviceDriverFileNameA@12
-GetDeviceDriverFileNameW@12
-GetMappedFileNameA@16
-GetMappedFileNameW@16
-GetModuleBaseNameA@16
-GetModuleBaseNameW@16
-GetModuleFileNameExA@16
-GetModuleFileNameExW@16
-GetModuleInformation@16
-GetProcessMemoryInfo@12
-GetWsChanges@12
-InitializeProcessForWsWatch@4
-QueryWorkingSet@12
+EmptyWorkingSet             @10
+EnumDeviceDrivers           @2 
+EnumProcessModules          @3 
+EnumProcesses               @4 
+GetDeviceDriverBaseNameA    @5 
+GetDeviceDriverBaseNameW    @6 
+GetDeviceDriverFileNameA    @7 
+GetDeviceDriverFileNameW    @8 
+GetMappedFileNameA          @9 
+GetMappedFileNameW          @1 
+GetModuleBaseNameA          @11
+GetModuleBaseNameW          @12
+GetModuleFileNameExA        @13
+GetModuleFileNameExW        @14
+GetModuleInformation        @15
+GetProcessMemoryInfo        @16
+GetWsChanges                @17
+InitializeProcessForWsWatch @18
+QueryWorkingSet             @19
