@@ -97,7 +97,6 @@ OBJECTS_KE = \
 	ke/bug.o \
 	ke/catch.o \
 	ke/clock.o \
-	ke/critical.o \
 	ke/dpc.o \
 	ke/device.o \
 	ke/event.o \

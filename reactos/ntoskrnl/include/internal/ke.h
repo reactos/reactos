@@ -179,7 +179,7 @@ VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
 		  
-VOID KiInitializeUserApc(IN PVOID Reserved,
+VOID STDCALL KiInitializeUserApc(IN PVOID Reserved,
 			 IN PKTRAP_FRAME TrapFrame,
 			 IN PKNORMAL_ROUTINE NormalRoutine,
 			 IN PVOID NormalContext,
