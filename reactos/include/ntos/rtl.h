@@ -1,4 +1,4 @@
-/* $Id: rtl.h,v 1.22 2003/12/31 11:33:07 hbirr Exp $
+/* $Id: rtl.h,v 1.23 2004/01/18 22:28:48 gdalsnes Exp $
  * 
  */
 
@@ -364,64 +364,83 @@ RemoveTailList (
 
 
 /*
-Macros for sorted inserts. Lists are walked in reverse order to maintain
-FIFO behaviour required by some callers...
+ * FIFO versions are slower but ensures that entries with equal SortField value
+ * are placed in FIFO order (assuming that entries are removed from Head).
+ */
 
-VOID InsertXcendingList(
-  PLIST_ENTRY ListHead,
-  PLIST_ENTRY NewEntry,
-  ...
-  
--Gunnar
-*/
-
-#define InsertDescendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
+#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
 {\
   PLIST_ENTRY current;\
-  BOOL Inserted = FALSE;\
 \
-  current = (ListHead)->Blink;\
+  current = (ListHead)->Flink;\
   while (current != (ListHead))\
   {\
-    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
-        CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >\
+        (NewEntry)->SortField)\
     {\
-      InsertHeadList(current, (NewEntry));\
-      Inserted = TRUE;\
       break;\
     }\
-    current = current->Blink;\
+    current = current->Flink;\
   }\
 \
-  if (!Inserted)\
-  {\
-    InsertHeadList((ListHead), (NewEntry));\
-  }\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
 
-#define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
+#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
 {\
   PLIST_ENTRY current;\
-  BOOL Inserted = FALSE;\
 \
-  current = (ListHead)->Blink;\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
+  while (current != (ListHead))\
+  {\
+    if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField >=\
+        (NewEntry)->SortField)\
+    {\
+      break;\
+    }\
+    current = current->Flink;\
+  }\
+\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
+}
+
+
+#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+{\
+  PLIST_ENTRY current;\
+\
+  current = (ListHead)->Flink;\
   while (current != (ListHead))\
   {\
     if (CONTAINING_RECORD(current, Type, ListEntryField)->SortField <=\
-        CONTAINING_RECORD((NewEntry), Type, ListEntryField)->SortField)\
+        (NewEntry)->SortField)\
     {\
-      InsertHeadList(current, (NewEntry));\
-      Inserted = TRUE;\
       break;\
     }\
-    current = current->Blink;\
+    current = current->Flink;\
   }\
 \
-  if (!Inserted)\
-  {\
-    InsertHeadList((ListHead), (NewEntry));\
-  }\
+  InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
 
