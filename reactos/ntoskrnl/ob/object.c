@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.76 2004/03/12 00:28:13 dwelch Exp $
+/* $Id: object.c,v 1.77 2004/03/12 00:46:35 dwelch Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -565,7 +565,7 @@ ObOpenObjectByPointer(IN POBJECT Object,
 
 
 static NTSTATUS
-ObpPerformRetentionChecks(POBJECT_HEADER Header)
+ObpDeleteObject(POBJECT_HEADER Header)
 {
   DPRINT("ObPerformRetentionChecks(Header %p)\n", Header);
   if (KeGetCurrentIrql() != PASSIVE_LEVEL)
@@ -594,7 +594,7 @@ ObpPerformRetentionChecks(POBJECT_HEADER Header)
 
 
 VOID STDCALL
-ObpPerformRetentionChecksWorkRoutine (IN PVOID Parameter)
+ObpDeleteObjectWorkRoutine (IN PVOID Parameter)
 {
   PRETENTION_CHECK_PARAMS Params = (PRETENTION_CHECK_PARAMS)Parameter;
   /* ULONG Tag; */ /* See below */
@@ -604,73 +604,71 @@ ObpPerformRetentionChecksWorkRoutine (IN PVOID Parameter)
 
   /* Turn this on when we have ExFreePoolWithTag
   Tag = Params->ObjectHeader->ObjectType->Tag; */
-  ObpPerformRetentionChecks(Params->ObjectHeader);
+  ObpDeleteObject(Params->ObjectHeader);
   ExFreePool(Params);
   /* ExFreePoolWithTag(Params, Tag); */
 }
 
 
-static NTSTATUS
-ObpPerformRetentionChecksDpcLevel(IN POBJECT_HEADER ObjectHeader,
-				  IN LONG OldRefCount)
+STATIC NTSTATUS
+ObpDeleteObjectDpcLevel(IN POBJECT_HEADER ObjectHeader,
+			IN LONG OldRefCount)
 {
   if (ObjectHeader->RefCount < 0)
     {
       CPRINT("Object %p/%p has invalid reference count (%d)\n",
-	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), ObjectHeader->RefCount);
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), 
+	     ObjectHeader->RefCount);
       KEBUGCHECK(0);
     }
 
   if (ObjectHeader->HandleCount < 0)
     {
       CPRINT("Object %p/%p has invalid handle count (%d)\n",
-	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), ObjectHeader->HandleCount);
+	     ObjectHeader, HEADER_TO_BODY(ObjectHeader), 
+	     ObjectHeader->HandleCount);
       KEBUGCHECK(0);
     }
 
-  if (OldRefCount == 0 &&
-      ObjectHeader->HandleCount == 0 &&
-      ObjectHeader->Permanent == FALSE)
+  if (ObjectHeader->CloseInProcess)
     {
-      if (ObjectHeader->CloseInProcess)
-	{
-	  KEBUGCHECK(0);
-	  return STATUS_UNSUCCESSFUL;
-	}
-      ObjectHeader->CloseInProcess = TRUE;
-
-      switch (KeGetCurrentIrql ())
-	{
-	  case PASSIVE_LEVEL:
-	    return ObpPerformRetentionChecks (ObjectHeader);
-
-	  case APC_LEVEL:
-	  case DISPATCH_LEVEL:
-	    {
-	      PRETENTION_CHECK_PARAMS Params;
-
-	      /*
-	       * Can we get rid of this NonPagedPoolMustSucceed call and still be a
-	       * 'must succeed' function?  I don't like to bugcheck on no memory!
-	       */
-	      Params = (PRETENTION_CHECK_PARAMS)ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
-								      sizeof(RETENTION_CHECK_PARAMS),
-								      ObjectHeader->ObjectType->Tag);
-	      Params->ObjectHeader = ObjectHeader;
-	      ExInitializeWorkItem(&Params->WorkItem,
-				   ObpPerformRetentionChecksWorkRoutine,
-				   (PVOID)Params);
-	      ExQueueWorkItem(&Params->WorkItem,
-			      CriticalWorkQueue);
-	    }
-	    return STATUS_PENDING;
-
-	  default:
-	    DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported IRQL %u!\n",
-		   KeGetCurrentIrql());
-	    KEBUGCHECK(0);
-	    return STATUS_UNSUCCESSFUL;
-	}
+      KEBUGCHECK(0);
+      return STATUS_UNSUCCESSFUL;
+    }
+  ObjectHeader->CloseInProcess = TRUE;
+  
+  switch (KeGetCurrentIrql ())
+    {
+    case PASSIVE_LEVEL:
+      return ObpDeleteObject (ObjectHeader);
+      
+    case APC_LEVEL:
+    case DISPATCH_LEVEL:
+      {
+	PRETENTION_CHECK_PARAMS Params;
+	
+	/*
+	  We use must succeed pool here because if the allocation fails
+	  then we leak memory.
+	*/
+	Params = (PRETENTION_CHECK_PARAMS)
+	  ExAllocatePoolWithTag(NonPagedPoolMustSucceed,
+				sizeof(RETENTION_CHECK_PARAMS),
+				ObjectHeader->ObjectType->Tag);
+	Params->ObjectHeader = ObjectHeader;
+	ExInitializeWorkItem(&Params->WorkItem,
+			     ObpDeleteObjectWorkRoutine,
+			     (PVOID)Params);
+	ExQueueWorkItem(&Params->WorkItem,
+			CriticalWorkQueue);
+      }
+      return STATUS_PENDING;
+      
+    default:
+      DPRINT("ObpPerformRetentionChecksDpcLevel called at unsupported "
+	     "IRQL %u!\n", KeGetCurrentIrql());
+      KEBUGCHECK(0);
+      return STATUS_UNSUCCESSFUL;
     }
 
   return STATUS_SUCCESS;
@@ -697,7 +695,6 @@ VOID FASTCALL
 ObfReferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
-  LONG NewRefCount;
 
   assert(Object);
 
@@ -709,8 +706,7 @@ ObfReferenceObject(IN PVOID Object)
       KEBUGCHECK(0);
     }
 
-  NewRefCount = InterlockedIncrement(&Header->RefCount);
-  ObpPerformRetentionChecksDpcLevel(Header, NewRefCount);
+  (VOID)InterlockedIncrement(&Header->RefCount);
 }
 
 
@@ -735,20 +731,30 @@ ObfDereferenceObject(IN PVOID Object)
 {
   POBJECT_HEADER Header;
   LONG NewRefCount;
+  BOOL Permanent;
+  ULONG HandleCount;
 
   assert(Object);
 
   /* Extract the object header. */
   Header = BODY_TO_HEADER(Object);
+  Permanent = Header->Permanent;
+  HandleCount = Header->HandleCount;
 
   /* 
      Drop our reference and get the new count so we can tell if this was the
      last reference.
   */
   NewRefCount = InterlockedDecrement(&Header->RefCount);
+  assert(NewRefCount >= 0);
 
   /* Check whether the object can now be deleted. */
-  ObpPerformRetentionChecksDpcLevel(Header, NewRefCount);
+  if (NewRefCount == 0 &&
+      HandleCount == 0 &&
+      !Permanent)
+    {
+      ObpDeleteObjectDpcLevel(Header, NewRefCount);
+    }
 }
 
 
