@@ -1,4 +1,5 @@
-/*
+/* $Id: ide.c,v 1.23 1999/12/04 20:58:36 ea Exp $
+ *
  *  IDE.C - IDE Disk driver 
  *     written by Rex Jolliff
  *     with help from various documentation sources and a few peeks at

@@ -1,3 +1,5 @@
+/* $Id: vfat.h,v 1.14 1999/12/04 20:58:44 ea Exp $ */
+
 #include <wchar.h>
 
 

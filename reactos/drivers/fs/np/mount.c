@@ -1,4 +1,5 @@
-/*
+/* $Id: mount.c,v 1.2 1999/12/04 20:58:42 ea Exp $
+ *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
  * FILE:       services/fs/np/mount.c
@@ -13,7 +14,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-#include "np.h"
+#include "npfs.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -122,3 +123,6 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT _DriverObject,
    
    return(STATUS_SUCCESS);
 }
+
+
+/* EOF */

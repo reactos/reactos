@@ -1,21 +1,23 @@
-#
+# $Id: makefile,v 1.7 1999/12/04 20:58:41 ea Exp $
 #
 #
 TARGET=vidport
-OBJECTS = vidport.o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 
-all: vidport.sys vidport.a
+all: $(TARGET).sys vidport.a
 
 .phony: all
 
 clean:
-	- $(RM) vidport.o
+	- $(RM) $(TARGET).o
+	- $(RM) $(TARGET).a
+	- $(RM) $(TARGET).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
-	- $(RM) vidport.sys
+	- $(RM) $(TARGET).sys
 
 .phony: clean
 
@@ -37,7 +39,7 @@ else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
-vidport.sys: $(OBJECTS)
+$(TARGET).sys: $(OBJECTS)
 	$(DLLTOOL) \
 		--dllname $(TARGET).sys \
 		--def $(TARGET).def \

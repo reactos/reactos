@@ -1,4 +1,5 @@
-/*
+/* $Id: parallel.c,v 1.4 1999/12/04 20:58:40 ea Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/parallel/parallel.c

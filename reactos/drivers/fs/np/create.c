@@ -1,4 +1,5 @@
-/*
+/* $Id: create.c,v 1.2 1999/12/04 20:58:42 ea Exp $
+ *
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
  * FILE:       services/fs/np/create.c
@@ -13,7 +14,7 @@
 //#define NDEBUG
 #include <internal/debug.h>
 
-#include "np.h"
+#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -33,7 +34,7 @@ NTSTATUS NpfsCreatePipe(PNPFS_DEVICE_EXTENSION DeviceExt,
    PipeDescr = ExAllocatePool(NonPagedPool, sizeof(NPFS_FSCONTEXT));
    if (PipeDescr == NULL)
      {
-	return(STATUS_OUT_OF_MEMORY);
+	return(STATUS_NO_MEMORY);
      }
    
    Status = NpfsCreateEntry(PipeName, PipeDescr);
@@ -68,3 +69,6 @@ NTSTATUS NpfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    
    return(Status);
 }
+
+
+/* EOF */

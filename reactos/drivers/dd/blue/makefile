@@ -1,18 +1,20 @@
-#
+# $Id: makefile,v 1.9 1999/12/04 20:58:36 ea Exp $
 #
 #
 TARGET = blue
 
 BASE_CFLAGS = -I../../../include
 
-OBJECTS = blue.o ../../../ntoskrnl/ntoskrnl.a
+#OBJECTS = $(TARGET).o $(TARGET).coff ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = $(TARGET).o ../../../ntoskrnl/ntoskrnl.a
 
-all: blue.sys
+all: $(TARGET).sys
 
 .phony: all
 
 clean:
-	- $(RM) blue.o
+	- $(RM) $(TARGET).o
+	- $(RM) $(TARGET).coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
@@ -38,16 +40,31 @@ else
 	$(CP) $(TARGET).sys ../../../$(DIST_DIR)/drivers/$(TARGET).sys
 endif
 
-blue.sys: $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(OBJECTS)
+$(TARGET).sys: $(OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp $(OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname blue.sys --base-file base.tmp \
-		   --output-exp temp.exp
+	$(DLLTOOL) \
+		--dllname $(TARGET).sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-	      -specs=../../svc_specs -mdll -o blue.sys $(OBJECTS) -Wl,temp.exp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=../../svc_specs \
+		-mdll \
+		-o $(TARGET).sys \
+		$(OBJECTS)
 	- $(RM) temp.exp
 
 

@@ -1,10 +1,10 @@
-/*
-
- ** Serial driver
- ** Written by Jason Filby (jasonfilby@yahoo.com)
- ** For ReactOS (www.sid-dis.com/reactos)
-
-*/
+/* $Id: serial.c,v 1.7 1999/12/04 20:58:41 ea Exp $
+ *
+ * Serial driver
+ * Written by Jason Filby (jasonfilby@yahoo.com)
+ * For ReactOS (www.reactos.com)
+ *
+ */
 
 #include <ddk/ntddk.h>
 #include <internal/mmhal.h>

@@ -1,4 +1,5 @@
-/*
+/* $Id: null.c,v 1.3 1999/12/04 20:58:39 ea Exp $
+ *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/null/null.c

@@ -1,8 +1,8 @@
-#
+# $Id: makefile,v 1.6 1999/12/04 20:58:35 ea Exp $
 #
 #
 TARGET = beep
-OBJECTS = beep.o ../../../ntoskrnl/ntoskrnl.a
+OBJECTS = beep.o beep.coff ../../../ntoskrnl/ntoskrnl.a
 
 BASE_CFLAGS = -I../../../include
 
@@ -12,6 +12,7 @@ all: beep.sys
 
 clean:
 	- $(RM) beep.o
+	- $(RM) beep.coff
 	- $(RM) junk.tmp
 	- $(RM) base.tmp
 	- $(RM) temp.exp
@@ -39,15 +40,31 @@ endif
 
 
 beep.sys: $(OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp \
+		$(OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname beep.sys --base-file base.tmp \
-	           --output-exp temp.exp
+	$(DLLTOOL) \
+		--dllname beep.sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-	      -specs=../../svc_specs -mdll -o beep.sys $(OBJECTS) -Wl,temp.exp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=../../svc_specs \
+		-mdll \
+		-o $(TARGET).sys \
+		$(OBJECTS)
 	- $(RM) temp.exp
 
 include ../../../rules.mak

@@ -19,7 +19,7 @@ typedef struct
    LIST_ENTRY GlobalListEntry;
    ULONG Flags;
    LIST_ENTRY MsgListHead;
-   KPSIN_LOCK MsgListLock;
+   KSPIN_LOCK MsgListLock;
 } NPFS_FSCONTEXT, *PNPFS_FSCONTEXT;
 
 #endif /* __SERVICES_FS_NP_NPFS_H */

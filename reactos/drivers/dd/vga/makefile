@@ -3,8 +3,8 @@
 #
 BASE_CFLAGS = -I../../../include
 
-MP_OBJECTS = vgamp.o ../../../ntoskrnl/ntoskrnl.a ../vidport/vidport.a
-DDI_OBJECTS = vgaddi.o ../../../subsys/win32k/win32k.a
+MP_OBJECTS = vgamp.o vgamp.coff ../../../ntoskrnl/ntoskrnl.a ../vidport/vidport.a
+DDI_OBJECTS = vgaddi.o vgaddi.coff ../../../subsys/win32k/win32k.a
 
 all: vgamp.sys vgaddi.sys
 
@@ -16,31 +16,64 @@ clean:
 	- $(RM) base.tmp
 	- $(RM) temp.exp
 	- $(RM) *.sys
+	- $(RM) *.coff
 
 .phony: clean
 
 vgamp.sys: $(MP_OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(MP_OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp \
+		$(MP_OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname vgamp.sys --base-file base.tmp \
-	           --output-exp temp.exp
+	$(DLLTOOL) \
+		--dllname vgamp.sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-              -specs=../../svc_specs -mdll -o vgamp.sys $(MP_OBJECTS) -Wl,temp.exp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=../../svc_specs \
+		-mdll \
+		-o vgamp.sys \
+		$(MP_OBJECTS)
 	- $(RM) temp.exp
 
 vgaddi.sys: $(DDI_OBJECTS)
-	$(CC) -specs=../../svc_specs -mdll -o junk.tmp -Wl,--defsym,_end=end \
-	      -Wl,--defsym,_edata=__data_end__ -Wl,--defsym,_etext=etext \
-	      -Wl,--base-file,base.tmp $(DDI_OBJECTS)
+	$(CC) \
+		-specs=../../svc_specs \
+		-mdll \
+		-o junk.tmp \
+		-Wl,--defsym,_end=end \
+		-Wl,--defsym,_edata=__data_end__ \
+		-Wl,--defsym,_etext=etext \
+		-Wl,--base-file,base.tmp \
+		$(DDI_OBJECTS)
 	- $(RM) junk.tmp
-	$(DLLTOOL) --dllname vgaddi.sys --base-file base.tmp \
-	           --output-exp temp.exp
+	$(DLLTOOL) \
+		--dllname vgaddi.sys \
+		--base-file base.tmp \
+		--output-exp temp.exp \
+		--kill-at
 	- $(RM) base.tmp
-	$(CC) --verbose -Wl,--image-base,0x10000 -Wl,-e,_DriverEntry@8 \
-              -specs=../../svc_specs -mdll -o vgaddi.sys $(DDI_OBJECTS) -Wl,temp.exp
+	$(CC) \
+		--verbose \
+		-Wl,--image-base,0x10000 \
+		-Wl,-e,_DriverEntry@8 \
+		-Wl,temp.exp \
+		-specs=../../svc_specs \
+		-mdll \
+		-o vgaddi.sys \
+		$(DDI_OBJECTS)
 	- $(RM) temp.exp
 
 floppy: $(FLOPPY_DIR)/drivers/vgamp.sys $(FLOPPY_DIR)/drivers/vgaddi.sys
