@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.165 2003/09/25 15:54:42 navaraf Exp $
+; $Id: ntoskrnl.def,v 1.166 2003/09/25 18:29:45 navaraf Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
