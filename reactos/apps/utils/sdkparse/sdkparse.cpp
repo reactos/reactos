@@ -58,6 +58,7 @@ const char* libc_includes[] =
 {
 	"basestd.h",
 	"except.h",
+	"float.h",
 	"limits.h",
 	"stdarg.h",
 	"stddef.h",
@@ -87,6 +88,8 @@ BOOL FileEnumProc ( PWIN32_FIND_DATA pwfd, const char* filename, long lParam )
 
 void main()
 {
+	//import_file ( "coff.h" );
+
 	File f ( "input.lst", "r" );
 	if ( !f.isopened() )
 	{
@@ -133,7 +136,7 @@ bool import_file ( const char* filename )
 	/*{
 		string no_comments ( filename );
 		no_comments += ".nocom.txt";
-		File::SaveFromString ( s, no_comments );
+		File::SaveFromString ( no_comments.c_str(), s, false );
 	}*/
 
 	Header* h = new Header ( filename );

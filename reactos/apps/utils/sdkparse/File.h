@@ -99,6 +99,7 @@ public:
 	}
 
 	static bool LoadIntoString ( std::string& s, const char* filename );
+	static bool SaveFromString ( const char* filename, const std::string& s, bool binary );
 
 private:
 	File(const File&) {}

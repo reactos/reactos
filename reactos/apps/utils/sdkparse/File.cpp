@@ -118,3 +118,12 @@ void File::close()
 	s.resize ( len );
 	return true;
 }
+
+/*static*/ bool File::SaveFromString ( const char* filename, const std::string& s, bool binary )
+{
+	File out ( filename, binary ? "wb" : "w" );
+	if ( !out.isopened() )
+		return false;
+	out.write ( s.c_str(), s.size() );
+	return true;
+}
