@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.14 2002/09/01 20:39:56 dwelch Exp $
+/* $Id: window.c,v 1.15 2002/09/03 22:44:21 dwelch Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -424,6 +424,7 @@ NtUserCreateWindowEx(DWORD dwExStyle,
   InsertHeadList(&ParentWindow->ChildrenListHead, 
 		 &WindowObject->SiblingListEntry);
   InitializeListHead(&WindowObject->ChildrenListHead);
+  InitializeListHead(&WindowObject->PropListHead);
 
   RtlInitUnicodeString(&WindowObject->WindowName, WindowName.Buffer);
   RtlFreeUnicodeString(&WindowName);

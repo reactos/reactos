@@ -76,7 +76,7 @@ INT STDCALL W32kSetDIBits(HDC  hDC,
   PPALGDI hDCPalette;
   RGBQUAD *lpRGB;
   HPALETTE DDB_Palette, DIB_Palette;
-  USHORT DDB_Palette_Type, DIB_Palette_Type;
+  ULONG DDB_Palette_Type, DIB_Palette_Type;
 
 
   // Check parameters
@@ -691,6 +691,7 @@ RGBQUAD *DIB_MapPaletteColors(PDC dc, LPBITMAPINFO lpbmi)
 HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
 {
   BYTE bits;
+  ULONG ColourCount;
 
   // Determine Bits Per Pixel
   bits = bmi->bmiHeader.biBitCount;
@@ -707,5 +708,15 @@ HPALETTE BuildDIBPalette(BITMAPINFO *bmi, PINT paletteType)
     *paletteType = PAL_RGB; // FIXME: This could be BGR, must still check
   }
 
-  return EngCreatePalette(*paletteType, bmi->bmiHeader.biClrUsed, bmi->bmiColors, 0, 0, 0);
+  if (bmi->bmiHeader.biClrUsed == 0 &&
+      bmi->bmiHeader.biBitCount <= 8)
+    {
+      ColourCount = 1 << bmi->bmiHeader.biBitCount;
+    }
+  else
+    {
+      ColourCount = bmi->bmiHeader.biClrUsed;
+    }
+
+  return EngCreatePalette(*paletteType, ColourCount, bmi->bmiColors, 0, 0, 0);
 }

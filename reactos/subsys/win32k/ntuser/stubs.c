@@ -92,18 +92,6 @@ NtUserBuildNameList(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserBuildPropList(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2,
-  DWORD Unknown3)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL
@@ -1369,16 +1357,6 @@ NtUserRemoveMenu(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserRemoveProp(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL
@@ -1594,18 +1572,6 @@ STDCALL
 NtUserSetParent(
   DWORD Unknown0,
   DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
-
-DWORD
-STDCALL
-NtUserSetProp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
 {
   UNIMPLEMENTED
 

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: bitmap.c,v 1.1 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: bitmap.c,v 1.2 2002/09/03 22:44:20 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -34,20 +34,230 @@
 
 /* FUNCTIONS *****************************************************************/
 
-HBITMAP
-STDCALL
-LoadBitmapA(
-  HINSTANCE hInstance,
-  LPCSTR lpBitmapName)
+HANDLE STDCALL
+LoadImageA(HINSTANCE hinst,
+	   LPCSTR lpszName,
+	   UINT uType,
+	   int cxDesired,
+	   int cyDesired,
+	   UINT fuLoad)
 {
-  return (HBITMAP)0;
+  LPWSTR lpszWName;
+  HANDLE Handle;
+
+  if (HIWORD(lpszName))
+    {
+      lpszWName = User32ConvertString(lpszName);
+      Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
+			  cyDesired, fuLoad);
+      User32FreeString(lpszWName);
+    }
+  else
+    {
+      Handle = LoadImageW(hinst, lpszWName, uType, cxDesired,
+			  cyDesired, fuLoad);
+    }
+  return(Handle);
 }
 
-HBITMAP
-STDCALL
-LoadBitmapW(
-  HINSTANCE hInstance,
-  LPCWSTR lpBitmapName)
+HANDLE STATIC
+LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 {
-  return (HBITMAP)0;
+  HANDLE hResource;
+  HANDLE hFile;
+  HANDLE hSection;
+  BITMAPINFO* BitmapInfo;
+  BITMAPINFO* PrivateInfo;
+  HDC hScreenDc;
+  HANDLE hBitmap;
+  ULONG HeaderSize;
+  ULONG ColourCount;
+  PVOID Data;
+
+  if (!(fuLoad & LR_LOADFROMFILE))
+    {
+      if (hInstance == NULL)
+	{
+	  hInstance = GetModuleHandle(L"USER32");		
+	}
+      hResource = FindResourceW(hInstance, lpszName, RT_BITMAP);
+      if (hResource == NULL)
+	{
+	  return(NULL);
+	}
+      hResource = LoadResource(hInstance, hResource);
+      if (hResource == NULL)
+	{
+	  return(NULL);
+	}
+      BitmapInfo = LockResource(hResource);
+      if (BitmapInfo == NULL)
+	{
+	  return(NULL);
+	}
+    }
+  else
+    {
+      hFile = CreateFile(lpszName,
+			 GENERIC_READ,
+			 FILE_SHARE_READ,
+			 NULL,
+			 OPEN_EXISTING,
+			 0,
+			 NULL);
+      if (hFile == NULL)
+	{
+	  return(NULL);
+	}
+      hSection = CreateFileMapping(hFile,
+				   NULL,
+				   PAGE_READONLY,
+				   0,
+				   0,
+				   NULL);
+      CloseHandle(hFile);
+      if (hSection == NULL)
+	{		
+	  return(NULL);
+	}
+      BitmapInfo = MapViewOfFile(hSection, 
+				 FILE_MAP_READ,
+				 0, 
+				 0,
+				 0);
+      CloseHandle(hSection);
+      if (BitmapInfo == NULL)
+	{
+	  return(NULL);
+	}
+    }
+
+  if (BitmapInfo->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
+    {
+      BITMAPCOREHEADER* Core = (BITMAPCOREHEADER*)BitmapInfo;
+      ColourCount = (Core->bcBitCount <= 8) ? (1 << Core->bcBitCount) : 0;
+      HeaderSize = sizeof(BITMAPCOREHEADER) + ColourCount * sizeof(RGBTRIPLE);
+    }
+  else
+    {
+      ColourCount = BitmapInfo->bmiHeader.biClrUsed;
+      if (ColourCount == 0 && BitmapInfo->bmiHeader.biBitCount <= 8)
+	{
+	  ColourCount = 1 << BitmapInfo->bmiHeader.biBitCount;
+	}
+      HeaderSize = sizeof(BITMAPINFOHEADER) + ColourCount * sizeof(RGBQUAD);
+    }
+  Data = (PVOID)BitmapInfo + HeaderSize;
+
+  PrivateInfo = RtlAllocateHeap(RtlGetProcessHeap(), 0, HeaderSize);
+  if (PrivateInfo == NULL)
+    {
+      if (fuLoad & LR_LOADFROMFILE)
+	{
+	  UnmapViewOfFile(BitmapInfo);
+	}
+      return(NULL);
+    }
+  memcpy(PrivateInfo, BitmapInfo, HeaderSize);
+
+  /* FIXME: Handle colour conversion and transparency. */
+
+  hScreenDc = CreateDCW(L"DISPLAY", NULL, NULL, NULL);
+  if (hScreenDc == NULL)
+    {
+      if (fuLoad & LR_LOADFROMFILE)
+	{
+	  UnmapViewOfFile(BitmapInfo);
+	}
+      return(NULL);
+    }
+
+  if (fuLoad & LR_CREATEDIBSECTION)
+    {
+      DIBSECTION Dib;
+
+      hBitmap = CreateDIBSection(hScreenDc, PrivateInfo, DIB_RGB_COLORS, NULL, 
+				 0, 0);
+      GetObjectA(hBitmap, sizeof(DIBSECTION), &Dib);
+      SetDIBits(hScreenDc, hBitmap, 0, Dib.dsBm.bmHeight, Data, BitmapInfo,
+		DIB_RGB_COLORS);
+    }
+  else
+    {
+      hBitmap = CreateDIBitmap(hScreenDc, &PrivateInfo->bmiHeader, CBM_INIT,
+			       Data, PrivateInfo, DIB_RGB_COLORS);
+    }
+
+  RtlFreeHeap(RtlGetProcessHeap(), 0, PrivateInfo);
+  /*DeleteDC(hScreenDc);*/
+  if (fuLoad & LR_LOADFROMFILE)
+    {
+      UnmapViewOfFile(BitmapInfo);
+    }
+  return(hBitmap);
+}
+
+HANDLE STDCALL
+LoadImageW(HINSTANCE hinst,
+	   LPCWSTR lpszName,
+	   UINT uType,
+	   int cxDesired,
+	   int cyDesired,
+	   UINT fuLoad)
+{  
+  if (fuLoad & LR_DEFAULTSIZE)
+    {
+      if (uType == IMAGE_ICON)
+	{
+	  if (cxDesired == 0)
+	    {
+	      cxDesired = GetSystemMetrics(SM_CXICON);
+	    }
+	  if (cyDesired == 0)
+	    {
+	      cyDesired = GetSystemMetrics(SM_CYICON);
+	    }
+	}
+      else if (uType == IMAGE_CURSOR)
+	{
+	  if (cxDesired == 0)
+	    {
+	      cxDesired = GetSystemMetrics(SM_CXCURSOR);
+	    }
+	  if (cyDesired == 0)
+	    {
+	      cyDesired = GetSystemMetrics(SM_CYCURSOR);
+	    }
+	}
+    }
+
+  switch (uType)
+    {
+    case IMAGE_BITMAP:
+      {
+	return(LoadBitmapImage(hinst, lpszName, fuLoad));
+      }
+    case IMAGE_CURSOR:
+      {
+	DbgPrint("FIXME: Need support for loading cursors.\n");
+	return(NULL);
+      }
+    default:
+      DbgBreakPoint();
+      break;
+    }
+  return(NULL);
+}
+
+
+HBITMAP STDCALL
+LoadBitmapA(HINSTANCE hInstance, LPCSTR lpBitmapName)
+{
+  return(LoadImageA(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0));
+}
+
+HBITMAP STDCALL
+LoadBitmapW(HINSTANCE hInstance, LPCWSTR lpBitmapName)
+{
+  return(LoadImageW(hInstance, lpBitmapName, IMAGE_BITMAP, 0, 0, 0));
 }

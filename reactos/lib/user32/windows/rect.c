@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: rect.c,v 1.6 2002/09/01 20:39:55 dwelch Exp $
+/* $Id: rect.c,v 1.7 2002/09/03 22:44:20 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -61,15 +61,24 @@ InflateRect(LPRECT rect, int dx, int dy)
   return(TRUE);
 }
 
-WINBOOL
-STDCALL
-IntersectRect(
-  LPRECT lprcDst,
-  CONST RECT *lprcSrc1,
-  CONST RECT *lprcSrc2)
+WINBOOL STDCALL
+IntersectRect(LPRECT lprcDst,
+	      CONST RECT *lprcSrc1,
+	      CONST RECT *lprcSrc2)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  if (IsRectEmpty(lprcSrc1) || IsRectEmpty(lprcSrc2) ||
+      lprcSrc1->left >= lprcSrc2->right || 
+      lprcSrc2->left >= lprcSrc1->right ||
+      lprcSrc1->top >= lprcSrc2->bottom || 
+      lprcSrc2->top >= lprcSrc1->bottom)
+    {
+      SetRectEmpty(lprcDst);
+      return(FALSE);
+    }
+  lprcDst->left = max(lprcSrc1->left, lprcSrc2->left);
+  lprcDst->right = min(lprcSrc1->right, lprcSrc2->right);
+  lprcDst->top = max(lprcSrc1->top, lprcSrc2->top);
+  lprcDst->bottom = min(lprcSrc1->bottom, lprcSrc2->bottom);
 }
 
 WINBOOL STDCALL

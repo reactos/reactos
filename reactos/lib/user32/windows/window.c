@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.10 2002/08/31 23:18:46 dwelch Exp $
+/* $Id: window.c,v 1.11 2002/09/03 22:44:20 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -691,17 +691,15 @@ GetWindowRect(HWND hWnd,
 }
 
 int STDCALL
-GetWindowTextA(HWND hWnd,
-	       LPSTR lpString,
-	       int nMaxCount)
+GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
-  return 0;
+  return(SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
 }
 
 int STDCALL
 GetWindowTextLengthA(HWND hWnd)
 {
-  return 0;
+  return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
 }
 
 int STDCALL

@@ -36,6 +36,11 @@ BEGIN
     END
 END
 
+OBM_CLOSE BITMAP "resources/obm_close.bmp"
+OBM_REDUCE BITMAP "resources/obm_reduce.bmp"
+OBM_ZOOM BITMAP "resources/obm_zoom.bmp"
+OBM_RESTORE BITMAP "resources/obm_restore.bmp"
+
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
@@ -56,3 +61,5 @@ BEGIN
         PUSHBUTTON "&Yes", 6, 206, 26, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
         PUSHBUTTON "&No", 7, 304, 56, 40, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
+
+

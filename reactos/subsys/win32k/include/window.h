@@ -8,6 +8,13 @@
 #include <include/winsta.h>
 #include <include/dce.h>
 
+typedef struct _PROPERTY
+{
+  LIST_ENTRY PropListEntry;
+  HANDLE Data;
+  ATOM Atom;
+} PROPERTY, *PPROPERTY;
+
 typedef struct _INTERNALPOS
 {
   RECT NormalRect;
@@ -75,6 +82,8 @@ typedef struct _WINDOW_OBJECT
   struct _WINDOW_OBJECT* Parent;
   /* DC Entries (DCE) */
   PDCE Dce;
+  /* Property list head.*/
+  LIST_ENTRY PropListHead;
 } WINDOW_OBJECT, *PWINDOW_OBJECT;
 
 /* Window flags. */

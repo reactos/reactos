@@ -1,4 +1,4 @@
-/* $Id: stubs.c,v 1.11 2002/09/01 20:39:55 dwelch Exp $
+/* $Id: stubs.c,v 1.12 2002/09/03 22:44:20 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -262,31 +262,6 @@ IsWindowEnabled(
 
 
 
-HANDLE
-STDCALL
-LoadImageA(
-  HINSTANCE hinst,
-  LPCSTR lpszName,
-  UINT uType,
-  int cxDesired,
-  int cyDesired,
-  UINT fuLoad)
-{
-  return (HANDLE)0;
-}
-
-HANDLE
-STDCALL
-LoadImageW(
-  HINSTANCE hinst,
-  LPCWSTR lpszName,
-  UINT uType,
-  int cxDesired,
-  int cyDesired,
-  UINT fuLoad)
-{
-  return (HANDLE)0;
-}
 
 int
 STDCALL

@@ -392,6 +392,7 @@ NtUserGetMessage                        4
 NtUserGetMouseMovePointsEx              5
 NtUserGetObjectInformation              5
 NtUserGetOpenClipboardWindow            0
+NtUserGetProp				2
 NtUserGetPriorityClipboardFormat        2
 NtUserGetProcessWindowStation           0
 NtUserGetScrollBarInfo                  3
@@ -455,6 +456,7 @@ NtUserSBGetParms                        4
 NtUserScrollDC                          7
 NtUserScrollWindowEx                    8
 NtUserSendInput                         3
+NtUserSendMessage                       4
 NtUserSendMessageCallback               6
 NtUserSendNotifyMessage                 4
 NtUserSetActiveWindow                   1

@@ -32,9 +32,20 @@ User32ConvertString(PCSTR String)
 {
   ANSI_STRING InString;
   UNICODE_STRING OutString;
- RtlInitAnsiString(&InString, String);
+  RtlInitAnsiString(&InString, String);
   RtlAnsiStringToUnicodeString(&OutString, &InString, TRUE);
   return(OutString.Buffer);
+}
+
+VOID
+User32ConvertUnicodeString(PWSTR SrcString, PSTR DestString, ULONG DestSize)
+{
+  UNICODE_STRING InString;
+  ANSI_STRING OutString;
+  RtlInitUnicodeString(&InString, SrcString);
+  OutString.Buffer = DestString;
+  OutString.MaximumLength = DestSize;
+  RtlUnicodeStringToAnsiString(&OutString, &InString, FALSE);
 }
 
 VOID

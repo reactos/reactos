@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-
+#if 0
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
@@ -475,3 +475,4 @@ LONG NC_HandleNCPaint(HWND hwnd , HRGN clip)
     }
     return 0;
 }
+#endif

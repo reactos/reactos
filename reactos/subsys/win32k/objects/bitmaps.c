@@ -32,6 +32,12 @@ BOOL STDCALL W32kBitBlt(HDC  hDCDest,
   PXLATEOBJ XlateObj = NULL;
   HPALETTE SourcePalette, DestPalette;
 
+  /* Offset the destination and source by the origin of their DCs. */
+  XDest += DCDest->w.DCOrgX;
+  YDest += DCDest->w.DCOrgY;
+  XSrc += DCSrc->w.DCOrgX;
+  YSrc += DCSrc->w.DCOrgY;
+
   DestRect.left   = XDest;
   DestRect.top    = YDest;
   DestRect.right  = XDest+Width;

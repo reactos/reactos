@@ -1,4 +1,4 @@
-/* $Id: defwnd.c,v 1.6 2002/09/01 20:39:55 dwelch Exp $
+/* $Id: defwnd.c,v 1.7 2002/09/03 22:44:20 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -242,17 +242,14 @@ static void UserDrawCaptionNC( HDC hdc, RECT *rect, HWND hwnd,
   char buffer[256];
 
   if (!hbitmapClose)
-    {
-	if (!(hbitmapClose = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_CLOSE) )))
-        {    
-	    return;
-        }
-	hbitmapMinimize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCE) );
-	hbitmapMinimizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCED) );
-	hbitmapMaximize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOM) );
-	hbitmapMaximizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOMD) );
-	hbitmapRestore   = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORE) );
-	hbitmapRestoreD  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORED) );
+    {      
+      hbitmapClose = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_CLOSE));
+      hbitmapMinimize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCE) );
+      hbitmapMinimizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_REDUCED) );
+      hbitmapMaximize  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOM) );
+      hbitmapMaximizeD = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_ZOOMD) );
+      hbitmapRestore   = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORE) );
+      hbitmapRestoreD  = LoadBitmapW( 0, MAKEINTRESOURCE(OBM_RESTORED) );
     }
     
   if (GetWindowLong(hwnd, GWL_EXSTYLE) & WS_EX_DLGMODALFRAME)
@@ -1074,7 +1071,7 @@ DefWindowProcA(HWND hWnd,
 	      }
 	    return(0);
 	  }
-	strncpy((PWSTR)lParam, WindowText, wParam);
+	strncpy(lParam, WindowText, wParam);
 	return(min(wParam, wcslen(WindowText)));
       }
 

@@ -12,3 +12,9 @@ VOID
 User32FreeHeap(PVOID Block);
 PVOID
 User32AllocHeap(ULONG Size);
+VOID
+User32ConvertUnicodeString(PWSTR SrcString, PSTR DestString, ULONG DestSize);
+PWSTR
+User32ConvertString(PCSTR String);
+VOID
+User32FreeString(PWSTR String);

@@ -11,6 +11,8 @@ INT STDCALL
 NtUserReleaseDC(HWND hWnd, HDC hDc);
 BOOL STDCALL
 NtUserGetWindowRect(HWND hWnd, LPRECT Rect);
+HANDLE STDCALL
+NtUserGetProp(HWND hWnd, ATOM Atom);
 
 NTSTATUS
 STDCALL
@@ -1125,11 +1127,8 @@ NtUserRemoveMenu(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
-STDCALL
-NtUserRemoveProp(
-  DWORD Unknown0,
-  DWORD Unknown1);
+HANDLE STDCALL
+NtUserRemoveProp(HWND hWnd, ATOM Atom);
 
 DWORD
 STDCALL
@@ -1356,12 +1355,8 @@ STDCALL
 NtUserSetProcessWindowStation(
   HWINSTA hWindowStation);
 
-DWORD
-STDCALL
-NtUserSetProp(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+BOOL STDCALL
+NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data);
 
 DWORD
 STDCALL

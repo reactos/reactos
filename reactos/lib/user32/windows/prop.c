@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: prop.c,v 1.1 2002/06/13 20:36:40 dwelch Exp $
+/* $Id: prop.c,v 1.2 2002/09/03 22:44:20 dwelch Exp $
  *
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/windows/input.c
@@ -32,95 +32,144 @@
 #include <user32.h>
 #include <debug.h>
 
+
 /* FUNCTIONS *****************************************************************/
 
-int
-STDCALL
-EnumPropsA(
-  HWND hWnd,
-  PROPENUMPROC lpEnumFunc)
+int STDCALL
+EnumPropsA(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
   return 0;
 }
 
-int
-STDCALL
-EnumPropsExA(
-  HWND hWnd,
-  PROPENUMPROCEX lpEnumFunc,
-  LPARAM lParam)
+int STDCALL
+EnumPropsExA(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
   return 0;
 }
 
-int
-STDCALL
-EnumPropsExW(
-  HWND hWnd,
-  PROPENUMPROCEX lpEnumFunc,
-  LPARAM lParam)
+int STDCALL
+EnumPropsExW(HWND hWnd, PROPENUMPROCEX lpEnumFunc, LPARAM lParam)
 {
   return 0;
 }
 
-int
-STDCALL
-EnumPropsW(
-  HWND hWnd,
-  PROPENUMPROC lpEnumFunc)
+int STDCALL
+EnumPropsW(HWND hWnd, PROPENUMPROC lpEnumFunc)
 {
   return 0;
 }
-HANDLE
-STDCALL
-GetPropA(
-  HWND hWnd,
-  LPCSTR lpString)
+
+HANDLE STDCALL
+GetPropA(HWND hWnd, LPCSTR lpString)
 {
-  return (HANDLE)0;
+  PWSTR lpWString;
+  HANDLE Ret;
+  if (HIWORD(lpString))
+    {
+      lpWString = User32ConvertString(lpString);
+      if (lpWString == NULL)
+	{
+	  return(FALSE);
+	}
+      Ret = GetPropW(hWnd, lpWString);
+      User32FreeString(lpWString);
+    }
+  else
+    {
+      Ret = GetPropW(hWnd, lpString);
+    }  
+  return(Ret);
 }
 
-HANDLE
-STDCALL
-GetPropW(
-  HWND hWnd,
-  LPCWSTR lpString)
+HANDLE STDCALL
+GetPropW(HWND hWnd, LPCWSTR lpString)
 {
-  return (HANDLE)0;
-}
-HANDLE
-STDCALL
-RemovePropA(
-  HWND hWnd,
-  LPCSTR lpString)
-{
-  return (HANDLE)0;
+  ATOM Atom;
+  if (HIWORD(lpString))
+    {
+      Atom = GlobalFindAtomW(lpString);
+    }
+  else
+    {
+      Atom = LOWORD(lpString);
+    }
+  return(NtUserGetProp(hWnd, Atom));
 }
 
-HANDLE
-STDCALL
-RemovePropW(
-  HWND hWnd,
-  LPCWSTR lpString)
+HANDLE STDCALL
+RemovePropA(HWND hWnd, LPCSTR lpString)
 {
-  return (HANDLE)0;
-}
-WINBOOL
-STDCALL
-SetPropA(
-  HWND hWnd,
-  LPCSTR lpString,
-  HANDLE hData)
-{
-  return FALSE;
+  PWSTR lpWString;
+  HANDLE Ret;
+
+  if (HIWORD(lpString))
+    {
+      lpWString = User32ConvertString(lpString);
+      if (lpWString == NULL)
+	{
+	  return(FALSE);
+	}
+      Ret = RemovePropW(hWnd, lpWString);
+      User32FreeString(lpWString);
+    }
+  else
+    {
+      Ret = RemovePropW(hWnd, lpWString);
+    }
+  return(Ret);
 }
 
-WINBOOL
-STDCALL
-SetPropW(
-  HWND hWnd,
-  LPCWSTR lpString,
-  HANDLE hData)
+HANDLE STDCALL
+RemovePropW(HWND hWnd,
+	    LPCWSTR lpString)
 {
-  return FALSE;
+  ATOM Atom;
+  if (HIWORD(lpString))
+    {
+      Atom = GlobalFindAtomW(lpString);
+    }
+  else
+    {
+      Atom = LOWORD(lpString);
+    }
+  return(NtUserRemoveProp(hWnd, Atom));
+}
+
+WINBOOL STDCALL
+SetPropA(HWND hWnd, LPCSTR lpString, HANDLE hData)
+{
+  PWSTR lpWString;
+  BOOL Ret;
+  
+  if (HIWORD(lpString))
+    {
+      lpWString = User32ConvertString(lpString);
+      if (lpWString == NULL)
+	{
+	  return(FALSE);
+	}
+      Ret = SetPropW(hWnd, lpWString, hData);
+      User32FreeString(lpWString);
+    }
+  else
+    {
+      Ret = SetPropW(hWnd, lpString, hData);
+    }
+  return(Ret);
+}
+
+WINBOOL STDCALL
+SetPropW(HWND hWnd, LPCWSTR lpString, HANDLE hData)
+{
+  ATOM Atom;
+  if (HIWORD(lpString))
+    {
+      Atom = GlobalFindAtomW(lpString);
+    }
+  else
+    {
+      Atom = LOWORD(lpString);
+    }
+  
+  return(NtUserSetProp(hWnd, Atom, hData));
 }
