@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: mouse.c,v 1.71 2004/05/30 14:01:12 weiden Exp $
+/* $Id: mouse.c,v 1.72 2004/06/20 12:34:17 navaraf Exp $
  *
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Mouse
@@ -66,6 +66,8 @@ EnableMouse(HDC hDisplayDC)
     
     CurInfo->Enabled = (SPS_ACCEPT_EXCLUDE == SurfGDI->PointerStatus ||
                         SPS_ACCEPT_NOEXCLUDE == SurfGDI->PointerStatus);
+
+    IntLoadDefaultCursors();
     
     ObDereferenceObject(InputWindowStation);
   }

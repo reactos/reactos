@@ -21,6 +21,9 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 HMENU STDCALL
 IntLoadSysMenuTemplate();
 
+BOOL STDCALL
+IntLoadDefaultCursors(VOID);
+
 LRESULT STDCALL
 IntCallHookProc(INT HookId,
                 INT Code,

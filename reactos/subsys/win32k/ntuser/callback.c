@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: callback.c,v 1.24 2004/06/16 06:09:40 gvg Exp $
+/* $Id: callback.c,v 1.25 2004/06/20 12:34:20 navaraf Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -229,6 +229,29 @@ IntLoadSysMenuTemplate()
       return(0);
     }
   return (HMENU)Result;
+}
+
+BOOL STDCALL
+IntLoadDefaultCursors(VOID)
+{
+  LRESULT Result;
+  NTSTATUS Status;
+  PVOID ResultPointer;
+  ULONG ResultLength;
+  BOOL DefaultCursor = TRUE;
+
+  ResultPointer = &Result;
+  ResultLength = sizeof(LRESULT);
+  Status = NtW32Call(USER32_CALLBACK_LOADDEFAULTCURSORS,
+		     &DefaultCursor,
+		     sizeof(BOOL),
+		     &ResultPointer,
+		     &ResultLength);
+  if (!NT_SUCCESS(Status))
+    {
+      return FALSE;
+    }
+  return TRUE;
 }
 
 LRESULT STDCALL
