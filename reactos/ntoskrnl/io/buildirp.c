@@ -1,4 +1,4 @@
-/* $Id: buildirp.c,v 1.31 2003/03/21 21:09:40 hbirr Exp $
+/* $Id: buildirp.c,v 1.32 2003/06/04 21:41:12 gdalsnes Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -358,66 +358,24 @@ IoBuildSynchronousFsdRequest(ULONG MajorFunction,
  */
 {
    PIRP Irp;
-   PIO_STACK_LOCATION StackPtr;
    
    DPRINT("IoBuildSynchronousFsdRequest(MajorFunction %x, DeviceObject %x, "
 	  "Buffer %x, Length %x, StartingOffset %x, Event %x, "
 	  "IoStatusBlock %x\n",MajorFunction,DeviceObject,Buffer,Length,
 	  StartingOffset,Event,IoStatusBlock);
    
-   Irp = IoAllocateIrp(DeviceObject->StackSize,TRUE);
+   Irp = IoBuildAsynchronousFsdRequest(MajorFunction,
+                                       DeviceObject,
+                                       Buffer,
+                                       Length,
+                                       StartingOffset,
+                                       IoStatusBlock );
    if (Irp==NULL)
      {
 	return(NULL);
      }
    
    Irp->UserEvent = Event;
-   Irp->UserIosb = IoStatusBlock;
-   DPRINT("Irp->UserIosb %x\n", Irp->UserIosb);
-   Irp->Tail.Overlay.Thread = PsGetCurrentThread();
-
-   StackPtr = IoGetNextIrpStackLocation(Irp);
-   StackPtr->MajorFunction = MajorFunction;
-   StackPtr->MinorFunction = 0;
-   StackPtr->Flags = 0;
-   StackPtr->Control = 0;
-   StackPtr->DeviceObject = DeviceObject;
-   StackPtr->FileObject = NULL;
-   StackPtr->CompletionRoutine = NULL;
-   
-   if (Buffer != NULL)
-     {
-	IoPrepareIrpBuffer(Irp,
-			   DeviceObject,
-			   Buffer,
-			   Length,
-			   MajorFunction);
-     }
-   
-   if (MajorFunction == IRP_MJ_READ)
-     {
-       if (StartingOffset != NULL)
-	 {
-	    StackPtr->Parameters.Read.ByteOffset = *StartingOffset;
-	 }
-       else
-	 {
-            StackPtr->Parameters.Read.ByteOffset.QuadPart = 0;
-	 }
-	StackPtr->Parameters.Read.Length = Length;
-     }
-   else
-     {
-       if (StartingOffset!=NULL)
-	 {
-	    StackPtr->Parameters.Write.ByteOffset = *StartingOffset;
-	 }
-       else
-	 {
-            StackPtr->Parameters.Write.ByteOffset.QuadPart = 0;
-	 }
-	StackPtr->Parameters.Write.Length = Length;
-     }
 
    return(Irp);
 }
