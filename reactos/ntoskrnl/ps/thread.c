@@ -1,4 +1,4 @@
-/* $Id: thread.c,v 1.95 2002/06/15 11:27:28 jfilby Exp $
+/* $Id: thread.c,v 1.96 2002/06/16 20:52:07 jfilby Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -636,9 +636,9 @@ NtW32Call (IN ULONG RoutineIndex,
   /* Set up the new kernel and user environment. */
   StackSize = (ULONG)(Thread->Tcb.StackBase - Thread->Tcb.StackLimit);  
   NewStack = PsAllocateCallbackStack(StackSize);
-  memcpy(NewStack + StackSize - sizeof(KTRAP_FRAME), Thread->Tcb.TrapFrame,
-	 sizeof(KTRAP_FRAME));
-  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - sizeof(KTRAP_FRAME));
+  memcpy(NewStack + StackSize - 124, Thread->Tcb.TrapFrame,
+	 124);
+  NewFrame = (PKTRAP_FRAME)(NewStack + StackSize - 124);
   NewFrame->Esp -= (ArgumentLength + (4 * sizeof(ULONG))); 
   NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
   UserEsp = (PULONG)NewFrame->Esp;
@@ -655,7 +655,7 @@ NtW32Call (IN ULONG RoutineIndex,
   SavedInitialStack = Thread->Tcb.InitialStack;
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
-  Thread->Tcb.KernelStack = NewStack + StackSize - sizeof(KTRAP_FRAME);
+  Thread->Tcb.KernelStack = NewStack + StackSize - 124;
   KePushAndStackSwitchAndSysRet(SavedStackLimit, 
 				(ULONG)SavedStackBase, 
 				(ULONG)SavedInitialStack, (ULONG)Result, 
