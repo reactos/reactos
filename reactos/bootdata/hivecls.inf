@@ -35,7 +35,7 @@ HKCR,"InternetShortcut\DefaultIcon","",0x00020000,"%SystemRoot%\system32\url.dll
 ; install notepad as handler for .txt files
 HKCR,".txt","",0x00000000,"txtfile"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
-HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\bin\notepad.exe"
+HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\bin\notepad.exe %1"
 
 HKCR,"CLSID",,0x00000012
 
