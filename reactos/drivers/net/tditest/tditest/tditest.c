@@ -189,7 +189,8 @@ NTSTATUS TdiOpenTransport(
 	NTSTATUS Status;
 	ULONG EaLength;
 
-	EaLength = sizeof(FILE_FULL_EA_INFORMATION) + TDI_TRANSPORT_ADDRESS_LENGTH + sizeof(TA_IP_ADDRESS);
+	/* EaName *must* be 0-termed, even though TDI_TRANSPORT_ADDRESS_LENGTH does *not* include the 0 */
+	EaLength = sizeof(FILE_FULL_EA_INFORMATION) + TDI_TRANSPORT_ADDRESS_LENGTH + sizeof(TA_IP_ADDRESS) + 1;
 	EaInfo = (PFILE_FULL_EA_INFORMATION)ExAllocatePool(NonPagedPool, EaLength);
 
 	if (!EaInfo) 
@@ -199,10 +200,14 @@ NTSTATUS TdiOpenTransport(
 		}
 
 	RtlZeroMemory(EaInfo, EaLength);
+
 	EaInfo->EaNameLength = TDI_TRANSPORT_ADDRESS_LENGTH;
+
+	/* don't copy the 0; we have already zeroed it */
 	RtlCopyMemory(EaInfo->EaName, TdiTransportAddress, TDI_TRANSPORT_ADDRESS_LENGTH);
+
 	EaInfo->EaValueLength = sizeof(TA_IP_ADDRESS);
-	Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH);
+	Address = (PTA_IP_ADDRESS)(EaInfo->EaName + TDI_TRANSPORT_ADDRESS_LENGTH + 1); // 0-term
 	Address->TAAddressCount                 = 1;
 	Address->Address[0].AddressLength       = TDI_ADDRESS_LENGTH_IP;
 	Address->Address[0].AddressType         = TDI_ADDRESS_TYPE_IP;
