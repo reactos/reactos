@@ -1136,7 +1136,6 @@ RtlOemStringToCountedUnicodeString(
 /*
  * private
  *
- 
  * NOTES
  *  Same as RtlOemStringToUnicodeString but doesn't write terminating null
  *  A partial copy is NOT performed if the dest buffer is too small!
@@ -1191,12 +1190,11 @@ RtlpOemStringToCountedUnicodeString(
 }
 
 
-//FIXME: sjekk returnverdi og returtype. Wine koflikter mht. returtype for EqualString og EqualComputer---
 /*
  * @implemented
  *
  * RETURNS
- *  0 if the names are equal, non-zero otherwise.
+ *  TRUE if the names are equal, FALSE if not
  *
  * NOTES
  *  The comparison is case insensitive.
@@ -1215,7 +1213,7 @@ RtlEqualComputerName(
    {
       if (NT_SUCCESS(RtlUpcaseUnicodeStringToOemString( &OemString2, ComputerName2, TRUE )))
       {
-         Result = RtlEqualString( &OemString1, &OemString2, FALSE );
+         Result = RtlEqualString( &OemString1, &OemString2, TRUE );
          RtlFreeOemString( &OemString2 );
       }
       RtlFreeOemString( &OemString1 );
@@ -1224,12 +1222,11 @@ RtlEqualComputerName(
    return Result;
 }
 
-//FIXME: sjekk returnverdi og returtype. Wine koflikter mht. returtype for EqualString og EqualComputer---
 /*
  * @implemented
  *
  * RETURNS
- *  0 if the names are equal, non-zero otherwise.
+ *  TRUE if the names are equal, FALSE if not
  *
  * NOTES
  *  The comparison is case insensitive.
@@ -2469,12 +2466,33 @@ RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 
 /*
  * @implemented
+ *
+ * NOTES
+ *  See RtlpDuplicateUnicodeString
  */
 NTSTATUS STDCALL
 RtlDuplicateUnicodeString(
    INT AddNull,
    IN PUNICODE_STRING SourceString,
    PUNICODE_STRING DestinationString)
+{
+   return RtlpDuplicateUnicodeString(
+            AddNull,
+            SourceString,
+            DestinationString,
+            NonPagedPool);
+}
+   
+   
+/*
+ * @implemented
+ */
+NTSTATUS STDCALL
+RtlpDuplicateUnicodeString(
+   INT AddNull,
+   IN PUNICODE_STRING SourceString,
+   PUNICODE_STRING DestinationString,
+   POOL_TYPE PoolType)
 {
    if (SourceString == NULL || DestinationString == NULL)
       return STATUS_INVALID_PARAMETER;
@@ -2493,7 +2511,7 @@ RtlDuplicateUnicodeString(
       if (AddNull)
          DestMaxLength += sizeof(UNICODE_NULL);
 
-      DestinationString->Buffer = RtlAllocateHeap(RtlGetProcessHeap(), 0, DestMaxLength);
+      DestinationString->Buffer = ExAllocatePool(PoolType, DestMaxLength);
       if (DestinationString->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
