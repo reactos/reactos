@@ -201,6 +201,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\ServiceGroupOrder","List",0x00010000, \
  "NDIS", \
  "PNP_TDI", \
  "TDI", \
+ "PlugPlay", \
  "Extended Base"
 
 ; Group order, the first DWORD is the count of entries, 
@@ -675,6 +676,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Type",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","ImagePath",0x00020000,"system32\drivers\ntice.sys"
 ;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Start",0x00010001,0x00000000
 ;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Type",0x00010001,0x00000001
+
+; Plug and Play manager
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Group",0x00000000,"PlugPlay"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ImagePath",0x00020000,"%SystemRoot%\system32\umpnpmgr.exe"
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Start",0x00010001,0x00000002
+HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","Type",0x00010001,0x00000010
 
 ; PS/2 mouse port driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Psaux","ErrorControl",0x00010001,0x00000000

@@ -105,8 +105,7 @@ SYS_APPS = autochk calc cmd explorer expand format ibrowser msiexec regedt32 reg
   winlogon regedit winefile notepad reactos
 
 # System services
-# rpcss eventlog
-SYS_SVC = rpcss eventlog
+SYS_SVC = rpcss eventlog umpnpmgr
 
 APPS = testsets utils
 
