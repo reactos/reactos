@@ -1,4 +1,4 @@
-/* $Id: virtual.c,v 1.34 2000/08/20 17:02:09 dwelch Exp $
+/* $Id: virtual.c,v 1.35 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -19,8 +19,6 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
-#include <string.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -11,7 +11,6 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <internal/stddef.h>
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>

@@ -1,8 +1,8 @@
-/* $Id: time.c,v 1.10 2000/06/07 13:04:34 ekohl Exp $
+/* $Id: time.c,v 1.11 2000/10/22 16:36:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            kernel/excutive/time.c
+ * FILE:            ntoskrnl/ex/time.c
  * PURPOSE:         Time
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  * UPDATE HISTORY:
@@ -13,7 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ex.h>
-#include <string.h>
 
 #include <internal/debug.h>
 

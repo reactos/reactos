@@ -1,4 +1,4 @@
-/* $Id: halddk.h,v 1.5 2000/07/24 23:48:24 ekohl Exp $
+/* $Id: halddk.h,v 1.6 2000/10/22 16:34:38 ekohl Exp $
  *
  * COPYRIGHT:                See COPYING in the top level directory
  * PROJECT:                  ReactOS kernel
@@ -10,8 +10,8 @@
  */
 
 
-#ifndef __INCLUDE_INTERNAL_HAL_DDK_H
-#define __INCLUDE_INTERNAL_HAL_DDK_H
+#ifndef __INCLUDE_DDK_HALDDK_H
+#define __INCLUDE_DDK_HALDDK_H
 
 /* HalReturnToFirmware */
 #define FIRMWARE_HALT   1
@@ -463,6 +463,13 @@ HalInitializeProcessor (
 
 BOOLEAN
 STDCALL
+HalInitSystem (
+	ULONG			BootPhase,
+	PLOADER_PARAMETER_BLOCK	LoaderBlock
+	);
+
+BOOLEAN
+STDCALL
 HalMakeBeep (
 	ULONG Frequency
 	);
@@ -684,4 +691,4 @@ STDCALL
 WRITE_PORT_USHORT (PUSHORT Port, USHORT Value);
 
 
-#endif /* __INCLUDE_INTERNAL_HAL_DDK_H */
+#endif /* __INCLUDE_DDK_HALDDK_H */

@@ -1,4 +1,4 @@
-/* $Id: rtl.c,v 1.10 2000/08/28 21:49:11 ekohl Exp $
+/* $Id: rtl.c,v 1.11 2000/10/22 16:36:51 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,8 +15,6 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/ldr.h>
 
 #define NDEBUG

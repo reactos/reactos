@@ -1,4 +1,4 @@
-/* $Id: resource.c,v 1.14 2000/07/04 01:27:58 ekohl Exp $
+/* $Id: resource.c,v 1.15 2000/10/22 16:36:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -40,8 +40,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ke.h>
-#include <stddef.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

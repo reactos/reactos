@@ -1,4 +1,4 @@
-/* $Id: ntobj.c,v 1.6 2000/05/09 21:30:06 ekohl Exp $
+/* $Id: ntobj.c,v 1.7 2000/10/22 16:36:53 ekohl Exp $
  *
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,10 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
-#include <string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

@@ -1,4 +1,4 @@
-/* $Id: kmap.c,v 1.3 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: kmap.c,v 1.4 2000/10/22 16:36:51 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -10,9 +10,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
-#include <internal/stddef.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
 #include <internal/bitops.h>

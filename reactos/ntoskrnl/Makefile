@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.2 2000/10/08 12:43:56 ekohl Exp $
+# $Id: Makefile,v 1.3 2000/10/22 16:36:48 ekohl Exp $
 #
 # ReactOS Operating System
 #
@@ -450,6 +450,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -468,6 +469,7 @@ $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(TARGETNAME).a $(IE_DATA)
 		-Wl,-T,ntoskrnl.lnk \
 		-mdll \
 		-o $(TARGETNAME).nostrip.exe \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -484,6 +486,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o junk.tmp \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \
@@ -502,6 +505,7 @@ $(TARGETNAME).exe: $(TARGETNAME).o $(TARGETNAME).a
 		-nostartfiles -nostdlib \
 		-mdll \
 		-o $(TARGETNAME).exe \
+		-Wl,--subsystem,native \
 		-Wl,--image-base,0xc0000000 \
 		-Wl,--file-alignment,0x1000 \
 		-Wl,--section-alignment,0x1000 \

@@ -11,11 +11,9 @@
 /* INCLUDES ***************************************************************/
 
 #include <limits.h>
-#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -82,7 +80,7 @@ VOID STDCALL ObAddEntryDirectory(PDIRECTORY_OBJECT Parent,
    KIRQL oldlvl;
    POBJECT_HEADER Header = BODY_TO_HEADER(Object);
 
-   RtlInitUnicodeString(&Header->Name, wcsdup(Name));
+   RtlCreateUnicodeString(&Header->Name, Name);
    Header->Parent = Parent;
 
    KeAcquireSpinLock(&Parent->Lock, &oldlvl);

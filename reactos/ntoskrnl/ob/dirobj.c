@@ -1,4 +1,4 @@
-/* $Id: dirobj.c,v 1.8 2000/03/26 22:00:09 dwelch Exp $
+/* $Id: dirobj.c,v 1.9 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -11,11 +11,9 @@
 
 /* INCLUDES ***************************************************************/
 
-#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
 #include <internal/io.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

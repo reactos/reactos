@@ -1,4 +1,4 @@
-/* $Id: timer.c,v 1.35 2000/10/07 13:41:52 dwelch Exp $
+/* $Id: timer.c,v 1.36 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -19,9 +19,6 @@
 
 #include <limits.h>
 #include <ddk/ntddk.h>
-#include <string.h>
-#include <internal/string.h>
-#include <stdio.h>
 #include <internal/ke.h>
 #include <internal/id.h>
 #include <internal/ps.h>

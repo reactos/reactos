@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.38 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: section.c,v 1.39 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -17,7 +17,6 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/ps.h>
-#include <wchar.h>
 
 #define NDEBUG
 #include <internal/debug.h>

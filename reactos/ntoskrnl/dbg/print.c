@@ -1,4 +1,4 @@
-/* $Id: print.c,v 1.9 2000/05/25 15:55:08 ekohl Exp $
+/* $Id: print.c,v 1.10 2000/10/22 16:36:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,7 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
 #include <internal/kd.h>
 
 

@@ -1,4 +1,4 @@
-/* $Id: sysinfo.c,v 1.6 2000/08/26 16:19:40 ekohl Exp $
+/* $Id: sysinfo.c,v 1.7 2000/10/22 16:36:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -12,8 +12,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ddk/zwtypes.h>
-#include <string.h>
 #include <internal/ex.h>
 #include <internal/ldr.h>
 

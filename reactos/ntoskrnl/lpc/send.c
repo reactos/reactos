@@ -1,4 +1,4 @@
-/* $Id: send.c,v 1.2 2000/06/29 23:35:40 dwelch Exp $
+/* $Id: send.c,v 1.3 2000/10/22 16:36:51 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -13,8 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/port.h>
 #include <internal/dbg.h>
 

@@ -36,13 +36,13 @@ typedef struct _MODULE_OBJECT
   CSHORT  ObjectType;
   CSHORT  ObjectSize;
   PVOID  Base;
-   ULONG Length;
+  ULONG Length;
   unsigned int  Flags;
   PVOID  EntryPoint;
   LIST_ENTRY ListEntry;
-  PWSTR Name;
+  UNICODE_STRING Name;
   union
-    { 
+    {
       struct
         {
           unsigned int NumberOfSyms;

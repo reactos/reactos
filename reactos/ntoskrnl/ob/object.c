@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.28 2000/10/07 13:41:53 dwelch Exp $
+/* $Id: object.c,v 1.29 2000/10/22 16:36:53 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -11,10 +11,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <wchar.h>
 #include <ddk/ntddk.h>
 #include <internal/ob.h>
-#include <internal/string.h>
 #include <internal/ps.h>
 #include <internal/id.h>
 #include <internal/ke.h>

@@ -1,4 +1,4 @@
-/* $Id: rw.c,v 1.32 2000/10/11 20:50:34 dwelch Exp $
+/* $Id: rw.c,v 1.33 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -13,8 +13,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/ob.h>
 
 #define NDEBUG

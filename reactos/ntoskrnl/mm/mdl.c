@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.25 2000/08/20 17:02:08 dwelch Exp $
+/* $Id: mdl.c,v 1.26 2000/10/22 16:36:51 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
-#include <string.h>
 #include <internal/ps.h>
 
 #define NDEBUG

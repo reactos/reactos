@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.22 2000/09/12 10:12:11 jean Exp $
+/* $Id: device.c,v 1.23 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -12,13 +12,10 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-
 #include <internal/io.h>
 #include <internal/ob.h>
 #include <internal/ldr.h>
 #include <internal/id.h>
-#include <string.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

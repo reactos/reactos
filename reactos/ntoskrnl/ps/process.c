@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.53 2000/10/07 13:41:54 dwelch Exp $
+/* $Id: process.c,v 1.54 2000/10/22 16:36:53 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -17,8 +17,6 @@
 #include <internal/mm.h>
 #include <internal/ke.h>
 #include <internal/ps.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/id.h>
 #include <napi/teb.h>
 #include <internal/ldr.h>

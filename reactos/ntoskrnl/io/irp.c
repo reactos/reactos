@@ -1,4 +1,4 @@
-/* $Id: irp.c,v 1.30 2000/10/11 20:50:34 dwelch Exp $
+/* $Id: irp.c,v 1.31 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -31,7 +31,6 @@
 /* INCLUDES ****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <string.h>
 #include <internal/io.h>
 #include <internal/ps.h>
 

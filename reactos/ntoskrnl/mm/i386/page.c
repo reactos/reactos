@@ -1,4 +1,4 @@
-/* $Id: page.c,v 1.15 2000/10/07 13:41:53 dwelch Exp $
+/* $Id: page.c,v 1.16 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
@@ -14,7 +14,6 @@
 #include <ddk/ntddk.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
-#include <string.h>
 #include <internal/ex.h>
 #include <internal/ps.h>
 

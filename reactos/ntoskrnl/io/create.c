@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.32 2000/10/07 13:41:51 dwelch Exp $
+/* $Id: create.c,v 1.33 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,7 +15,6 @@
 #include <internal/ob.h>
 #include <internal/io.h>
 #include <internal/id.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -137,10 +136,8 @@ IopCreateFile (
 			}
 			DeviceObject = IoGetAttachedDevice(DeviceObject);
 		}
-		RtlInitUnicodeString (
-			& (FileObject->FileName),
-			wcsdup (RemainingPath)
-			);
+		RtlCreateUnicodeString(&(FileObject->FileName),
+				       RemainingPath);
 	}
 	DPRINT(
 		"FileObject->FileName.Buffer %S\n",

@@ -16,8 +16,6 @@
 #include <internal/ntoskrnl.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
-#include <string.h>
-#include <internal/string.h>
 #include <napi/teb.h>
 #include <internal/ldr.h>
 

@@ -1,4 +1,4 @@
-/* $Id: loader.c,v 1.64 2000/10/08 16:32:53 dwelch Exp $
+/* $Id: loader.c,v 1.65 2000/10/22 16:36:51 ekohl Exp $
  * 
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -28,8 +28,6 @@
 #include <internal/mmhal.h>
 #include <internal/ob.h>
 #include <internal/ps.h>
-#include <string.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -79,7 +77,6 @@ VOID LdrInitModuleManagement(VOID)
   HANDLE DirHandle, ModuleHandle;
   NTSTATUS Status;
   WCHAR NameBuffer[60];
-  ANSI_STRING AnsiString;
   UNICODE_STRING ModuleName;
   OBJECT_ATTRIBUTES ObjectAttributes;
   PIMAGE_DOS_HEADER DosHeader;
@@ -102,8 +99,7 @@ VOID LdrInitModuleManagement(VOID)
   IoDriverObjectType->QueryName = NULL;
   IoDriverObjectType->OkayToClose = NULL;
   IoDriverObjectType->Create = LdrCreateModule;
-  RtlInitAnsiString(&AnsiString, "Module");
-  RtlAnsiStringToUnicodeString(&IoDriverObjectType->TypeName, &AnsiString, TRUE);
+  RtlInitUnicodeString(&IoDriverObjectType->TypeName, L"Module");
 
   /*  Create Modules object directory  */
   wcscpy(NameBuffer, MODULE_ROOT_NAME);
@@ -145,7 +141,8 @@ VOID LdrInitModuleManagement(VOID)
   ModuleObject->Base = (PVOID) KERNEL_BASE;
   ModuleObject->Flags = MODULE_FLAG_PE;
   InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
-  ModuleObject->Name = wcsdup(L"ntoskrnl.exe");
+  RtlCreateUnicodeString(&ModuleObject->Name,
+			 L"ntoskrnl.exe");
   DosHeader = (PIMAGE_DOS_HEADER) KERNEL_BASE;
   ModuleObject->Image.PE.FileHeader =
     (PIMAGE_FILE_HEADER) ((DWORD) ModuleObject->Base +
@@ -300,7 +297,6 @@ LdrLoadModule(PUNICODE_STRING Filename)
   PMODULE_OBJECT  ModuleObject;
   FILE_STANDARD_INFORMATION FileStdInfo;
   WCHAR  NameBuffer[60];
-//  PWSTR  RemainingPath;
   UNICODE_STRING  ModuleName;
 
   /*  Check for module already loaded  */
@@ -816,7 +812,7 @@ LdrPEProcessModule(PVOID ModuleLoadBase, PUNICODE_STRING pModuleName)
   ModuleObject->Base = DriverBase;
   ModuleObject->Flags = MODULE_FLAG_PE;
   InsertTailList(&ModuleListHead, &ModuleObject->ListEntry);
-  ModuleObject->Name = wcsdup(NameBuffer);
+  RtlCreateUnicodeString(&ModuleObject->Name, NameBuffer);
   ModuleObject->EntryPoint = (PVOID) ((DWORD)DriverBase + 
     PEOptionalHeader->AddressOfEntryPoint);
   ModuleObject->Length = DriverSize;

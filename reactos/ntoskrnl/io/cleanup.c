@@ -12,8 +12,6 @@
 
 #include <ddk/ntddk.h>
 #include <internal/io.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/ob.h>
 #include <internal/mm.h>
 #include <internal/ps.h>

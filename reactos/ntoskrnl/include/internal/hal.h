@@ -7,7 +7,4 @@
 #error "Unknown processor"
 #endif
 
-BOOLEAN STDCALL HalInitSystem (ULONG			BootPhase,
-			       PLOADER_PARAMETER_BLOCK	LoaderBlock);
-
 #endif

@@ -13,8 +13,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <wchar.h>
-#include <ctype.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -177,17 +175,6 @@ size_t wcscspn(const wchar_t *str,const wchar_t *reject)
 		s++;
 	} while (*s);
 	return s-str; /* nr of wchars */
-}
-
-
-/* this function is NOT exported */
-wchar_t* wcsdup(wchar_t* src)
-{
-	wchar_t* dest;
-
-	dest = ExAllocatePool (NonPagedPool, (wcslen (src)+1)*2);
-	wcscpy (dest,src);
-	return (dest);
 }
 
 

@@ -1,4 +1,4 @@
-/* $Id: mminit.c,v 1.9 2000/10/22 13:28:20 ekohl Exp $
+/* $Id: mminit.c,v 1.10 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -13,13 +13,9 @@
 
 #include <ddk/ntddk.h>
 #include <internal/i386/segment.h>
-#include <internal/stddef.h>
 #include <internal/mm.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/ntoskrnl.h>
 #include <internal/bitops.h>
-#include <internal/string.h>
 #include <internal/io.h>
 #include <internal/ps.h>
 #include <internal/mmhal.h>

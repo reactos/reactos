@@ -1,4 +1,4 @@
-/* $Id: pager.c,v 1.4 2000/07/19 14:18:19 dwelch Exp $
+/* $Id: pager.c,v 1.5 2000/10/22 16:36:52 ekohl Exp $
  *
  * COPYRIGHT:    See COPYING in the top level directory
  * PROJECT:      ReactOS kernel
@@ -16,8 +16,6 @@
 #include <internal/ke.h>
 #include <internal/mm.h>
 #include <internal/mmhal.h>
-#include <string.h>
-#include <internal/string.h>
 
 #define NDEBUG
 #include <internal/debug.h>

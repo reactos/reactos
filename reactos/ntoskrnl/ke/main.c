@@ -1,4 +1,4 @@
-/* $Id: main.c,v 1.65 2000/10/07 20:55:15 ekohl Exp $
+/* $Id: main.c,v 1.66 2000/10/22 16:36:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -15,8 +15,6 @@
 #include <internal/ntoskrnl.h>
 #include <reactos/buildno.h>
 #include <internal/mm.h>
-#include <string.h>
-#include <internal/string.h>
 #include <internal/module.h>
 #include <internal/ldr.h>
 #include <internal/ex.h>
@@ -24,10 +22,10 @@
 #include <internal/hal.h>
 #include <internal/ke.h>
 #include <internal/io.h>
-
 #include <internal/mmhal.h>
 #include <internal/i386/segment.h>
 #include <napi/shared_data.h>
+
 
 #define NDEBUG
 #include <internal/debug.h>
