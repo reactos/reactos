@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.208 2004/04/02 20:51:08 weiden Exp $
+/* $Id: window.c,v 1.209 2004/04/02 23:54:26 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -3200,12 +3200,16 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
    switch(Index)
    {
-      case 0x00:
+      case QUERY_WINDOW_UNIQUE_PROCESS_ID:
          Result = (DWORD)IntGetWndProcessId(Window);
          break;
 
-      case 0x01:
+      case QUERY_WINDOW_UNIQUE_THREAD_ID:
          Result = (DWORD)IntGetWndThreadId(Window);
+         break;
+
+      case QUERY_WINDOW_ISHUNG:
+         Result = (DWORD)MsqIsHung(Window->MessageQueue);
          break;
 
       default:

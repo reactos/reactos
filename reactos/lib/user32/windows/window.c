@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.104 2004/04/02 22:16:09 weiden Exp $
+/* $Id: window.c,v 1.105 2004/04/02 23:54:26 weiden Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1456,14 +1456,13 @@ InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 IsHungAppWindow(HWND hwnd)
 {
-  /* FIXME: ReactOS doesnt identify hung app windows yet */
-  return FALSE;
+  return (NtUserQueryWindow(hwnd, QUERY_WINDOW_ISHUNG) != 0);
 }
 
 /*

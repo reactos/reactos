@@ -1065,6 +1065,9 @@ NtUserQueryUserCounters(
   DWORD Unknown3,
   DWORD Unknown4);
 
+#define QUERY_WINDOW_UNIQUE_PROCESS_ID	0x00
+#define QUERY_WINDOW_UNIQUE_THREAD_ID	0x01
+#define QUERY_WINDOW_ISHUNG	0x04
 DWORD
 STDCALL
 NtUserQueryWindow(
