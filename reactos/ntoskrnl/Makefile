@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.84 2002/10/03 19:29:09 robd Exp $
+# $Id: Makefile,v 1.85 2002/10/09 07:11:24 ei Exp $
 #
 # ReactOS Operating System
 #
@@ -505,13 +505,6 @@ OBJECTS := \
 	$(OBJECTS_PATH)/se.o \
 	$(OBJECTS_RESOURCE)
 
-CLEAN_FILES = $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
-              ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
-              rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
-              lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
-              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
-	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
-	      $(TAG_OBJECTS)
 
 $(TARGETNAME).nostrip.exe: $(TARGETNAME).o $(IE_DATA)
 	$(CC) \
@@ -658,7 +651,14 @@ $(DDK_PATH_LIB)/$(TARGETNAME).a: $(TARGETNAME).def
 implib: $(DDK_PATH_LIB)/$(TARGETNAME).a
 
 clean:
-	- $(RM) $(CLEAN_FILES)
+	- $(RM) $(OBJECTS_PATH)/*.o cc/*.o cm/*.o dbg/*.o dbg/i386/*.o ex/*.o \
+              ex/i386/*.o io/*.o ke/*.o ldr/*.o mm/*.o nt/*.o ob/*.o ps/*.o \
+              rtl/*.o se/*.o ke/i386/*.o mm/i386/*.o fs/*.o po/*.o nls/*.o \
+              lpc/*.o kd/*.o $(TARGETNAME).o junk.tmp base.tmp temp.exp \
+              $(TARGETNAME).exe $(TARGETNAME).nostrip.exe $(TARGETNAME).sym ntoskrnl.map \
+	          $(TARGETNAME).coff bugcodes.rc msg?????.bin $(DEP_FILES) \
+	      $(TAG_OBJECTS)
+
 
 .PHONY: clean
 
