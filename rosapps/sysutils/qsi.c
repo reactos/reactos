@@ -1,4 +1,4 @@
-/* $Id: qsi.c,v 1.4 2001/01/13 18:17:17 ea Exp $
+/* $Id: qsi.c,v 1.5 2001/01/14 19:59:43 ea Exp $
  *
  * PROJECT    : ReactOS Operating System (see http://www.reactos.com/)
  * DESCRIPTION: Tool to query system information
@@ -22,7 +22,7 @@
  * 		Added almost all structures for getting system
  * 		information (from UNDOCNT.H by Dabak et alii).
  * 	2001-01-13 (ea)
- * 		New QSI classe names used by E.Kohl.
+ * 		New QSI class names used by E.Kohl.
  */
 #include <windows.h>
 #include <stdio.h>
@@ -949,7 +949,38 @@ CMD_DEF(9)
 		return EXIT_FAILURE;
 	}
 	printf ("  NtGlobalFlag: %08x\n", Info.Flags);
-	/* FIXME: decode each flag */
+	if (FLG_STOP_ON_EXCEPTION & Info.Flags) printf ("\tSTOP_ON_EXCEPTION\n");
+	if (FLG_STOP_ON_HANG_GUI & Info.Flags) printf ("\tSTOP_ON_HANG_GUI\n");
+	if (FLG_SHOW_LDR_SNAPS & Info.Flags) printf ("\tSHOW_LDR_SNAPS\n");
+	if (FLG_DEBUG_INITIAL_COMMAND & Info.Flags) printf ("\tDEBUG_INITIAL_COMMAND\n");
+	if (FLG_HEAP_ENABLE_TAIL_CHECK & Info.Flags) printf ("\tHEAP_ENABLE_TAIL_CHECK\n");
+	if (FLG_HEAP_ENABLE_FREE_CHECK & Info.Flags) printf ("\tHEAP_ENABLE_FREE_CHECK\n");
+	if (FLG_HEAP_ENABLE_TAGGING & Info.Flags) printf ("\tHEAP_ENABLE_TAGGING\n");
+	if (FLG_HEAP_ENABLE_TAG_BY_DLL & Info.Flags) printf ("\tHEAP_ENABLE_TAG_BY_DLL\n");
+	if (FLG_HEAP_ENABLE_CALL_TRACING & Info.Flags) printf ("\tHEAP_ENABLE_CALL_TRACING\n");
+	if (FLG_HEAP_DISABLE_COALESCING & Info.Flags) printf ("\tHEAP_DISABLE_COALESCING\n");
+	if (FLG_HEAP_VALIDATE_PARAMETERS & Info.Flags) printf ("\tHEAP_VALIDATE_PARAMETERS\n");
+	if (FLG_HEAP_VALIDATE_ALL & Info.Flags) printf ("\tHEAP_VALIDATE_ALL\n");
+	if (FLG_POOL_ENABLE_TAIL_CHECK & Info.Flags) printf ("\tPOOL_ENABLE_TAIL_CHECK\n");
+	if (FLG_POOL_ENABLE_FREE_CHECK & Info.Flags) printf ("\tPOOL_ENABLE_FREE_CHECK\n");
+	if (FLG_POOL_ENABLE_TAGGING & Info.Flags) printf ("\tPOOL_ENABLE_TAGGING\n");
+	if (FLG_USER_STACK_TRACE_DB & Info.Flags) printf ("\tUSER_STACK_TRACE_DB\n");
+	if (FLG_KERNEL_STACK_TRACE_DB & Info.Flags) printf ("\tKERNEL_STACK_TRACE_DB\n");
+	if (FLG_MAINTAIN_OBJECT_TYPELIST & Info.Flags) printf ("\tMAINTAIN_OBJECT_TYPELIST\n");
+	if (FLG_IGNORE_DEBUG_PRIV & Info.Flags) printf ("\tIGNORE_DEBUG_PRIV\n");
+	if (FLG_ENABLE_CSRDEBUG & Info.Flags) printf ("\tENABLE_CSRDEBUG\n");
+	if (FLG_ENABLE_KDEBUG_SYMBOL_LOAD & Info.Flags) printf ("\tENABLE_KDEBUG_SYMBOL_LOAD\n");
+	if (FLG_DISABLE_PAGE_KERNEL_STACKS & Info.Flags) printf ("\tDISABLE_PAGE_KERNEL_STACKS\n");
+	if (FLG_ENABLE_CLOSE_EXCEPTION & Info.Flags) printf ("\tENABLE_CLOSE_EXCEPTION\n");
+	if (FLG_ENABLE_EXCEPTION_LOGGING & Info.Flags) printf ("\tENABLE_EXCEPTION_LOGGING\n");
+	if (FLG_ENABLE_DBGPRINT_BUFFERING & Info.Flags) printf ("\tENABLE_DBGPRINT_BUFFERING\n");
+	if (FLG_UNKNOWN_01000000 & Info.Flags) printf ("\tUNKNOWN_01000000\n");
+	if (FLG_UNKNOWN_02000000 & Info.Flags) printf ("\tUNKNOWN_02000000\n");
+	if (FLG_UNKNOWN_04000000 & Info.Flags) printf ("\tUNKNOWN_04000000\n");
+	if (FLG_UNKNOWN_10000000 & Info.Flags) printf ("\tUNKNOWN_10000000\n");
+	if (FLG_UNKNOWN_20000000 & Info.Flags) printf ("\tUNKNOWN_20000000\n");
+	if (FLG_UNKNOWN_40000000 & Info.Flags) printf ("\tUNKNOWN_40000000\n");
+	if (FLG_UNKNOWN_80000000 & Info.Flags) printf ("\tUNKNOWN_80000000\n");
 
 	return EXIT_SUCCESS;
 }
