@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.10 2003/02/09 02:18:10 narnaoud Exp $
+# $Id: Makefile,v 1.11 2003/10/19 22:59:36 narnaoud Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -66,7 +66,7 @@ CLEAN_FILES = \
 
 
 $(TARGET_NAME)$(EXE_POSTFIX): $(OBJECTS) $(TARGET_NAME).coff
-	$(CC) -Wl,--subsystem,console -o $(TARGET_NAME)$(EXE_POSTFIX) $(OBJECTS) $(TARGET_NAME).coff $(IMPORT_KERNEL32) $(IMPORT_USER32)
+	$(CXX) -Wl,--subsystem,console -o $(TARGET_NAME)$(EXE_POSTFIX) $(OBJECTS) $(TARGET_NAME).coff $(IMPORT_KERNEL32) $(IMPORT_USER32)
 	$(NM) --numeric-sort $(TARGET_NAME)$(EXE_POSTFIX) > $(TARGET_NAME).sym
 
 
