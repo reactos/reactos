@@ -26,12 +26,6 @@ VPATH += ../utility
 VPATH += ../shell
 VPATH += plugins
 
-WINE_MODE = yes
-
-WINE_RC = $(TARGET_NAME)
-
-WINE_INCLUDE = ./
-
 TARGET_GCCLIBS = comctl32 ole32 uuid
 
 TARGET_SDKLIBS = \
