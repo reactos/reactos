@@ -18,7 +18,7 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c,v 1.22 2004/03/14 18:35:02 dwelch Exp $
+ * $Id: videoprt.c,v 1.23 2004/03/14 19:25:34 dwelch Exp $
  */
 
 #include "videoprt.h"
@@ -1208,6 +1208,7 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
   PVIDEO_REQUEST_PACKET vrp;
   BOOLEAN Ret;
+  NTSTATUS Status;
 
   DPRINT("VidDispatchDeviceControl\n");
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
@@ -1248,19 +1249,34 @@ VidDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject,
       /* Map from win32 error codes to ntstatus values. */
       switch (Irp->IoStatus.Status)
 	{
-	case ERROR_NOT_ENOUGH_MEMORY: return STATUS_INSUFFICIENT_RESOURCES;
-	case ERROR_MORE_DATA: return STATUS_BUFFER_OVERFLOW;
-	case ERROR_INVALID_FUNCTION: return STATUS_NOT_IMPLEMENTED;
-	case ERROR_INVALID_PARAMETER: return STATUS_INVALID_PARAMETER;
-	case ERROR_INSUFFICIENT_BUFFER: return STATUS_BUFFER_TOO_SMALL;
-	case ERROR_DEV_NOT_EXIST: return STATUS_DEVICE_DOES_NOT_EXIST;
-	case ERROR_IO_PENDING: return STATUS_PENDING;
+	case ERROR_NOT_ENOUGH_MEMORY: 
+	  Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+	  break;
+	case ERROR_MORE_DATA: 
+	  Irp->IoStatus.Status = STATUS_BUFFER_OVERFLOW;
+	  break;
+	case ERROR_INVALID_FUNCTION: 
+	  Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+	  break;
+	case ERROR_INVALID_PARAMETER: 
+	  Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+	  break;
+	case ERROR_INSUFFICIENT_BUFFER: 
+	  Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+	  break;
+	case ERROR_DEV_NOT_EXIST: 
+	  Irp->IoStatus.Status = STATUS_DEVICE_DOES_NOT_EXIST;
+	  break;
+	case ERROR_IO_PENDING: 
+	  Irp->IoStatus.Status = STATUS_PENDING;
+	  break;
 	}
     }
 
+  Status = Irp->IoStatus.Status;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 PVOID STDCALL
