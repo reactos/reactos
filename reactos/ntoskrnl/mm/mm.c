@@ -1,4 +1,4 @@
-/* $Id: mm.c,v 1.26 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: mm.c,v 1.27 2000/04/02 13:32:41 ea Exp $
  *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel 
@@ -52,6 +52,9 @@ static MEMORY_AREA* kernel_text_desc = NULL;
 static MEMORY_AREA* kernel_data_desc = NULL;
 static MEMORY_AREA* kernel_param_desc = NULL;
 static MEMORY_AREA* kernel_pool_desc = NULL;
+
+ULONG EXPORTED MmUserProbeAddress [PAGESIZE] = {0,}; /* FIXME */
+PVOID EXPORTED MmHighestUserAddress = NULL; /* FIXME */
 
 /* FUNCTIONS ****************************************************************/
 
@@ -331,12 +334,12 @@ ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code)
    return(NT_SUCCESS(Status));
 }
 
-BOOLEAN MmIsThisAnNtAsSystem(VOID)
+BOOLEAN STDCALL MmIsThisAnNtAsSystem(VOID)
 {
    return(IsThisAnNtAsSystem);
 }
 
-MM_SYSTEM_SIZE MmQuerySystemSize(VOID)
+MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
 {
    return(MmSystemSize);
 }
@@ -424,6 +427,56 @@ VOID MmInitSystem (ULONG Phase, boot_param* bp, ULONG LastKernelAddress)
 	MmInitSectionImplementation();
 	MmInitPagingFile();
      }
+}
+
+
+/* Miscellanea functions: they may fit somewhere else */
+
+DWORD
+STDCALL
+MmAdjustWorkingSetSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	UNIMPLEMENTED;
+	return (0);
+}
+
+
+DWORD
+STDCALL
+MmDbgTranslatePhysicalAddress (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
+	return (0);
+}
+
+
+NTSTATUS
+STDCALL
+MmGrowKernelStack (
+	DWORD	Unknown0
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+BOOLEAN
+STDCALL
+MmSetAddressRangeModified (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
+	return (FALSE);
 }
 
 /* EOF */

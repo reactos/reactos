@@ -1,9 +1,9 @@
+#ifndef _INCLUDE_DDK_MMFUNCS_H
+#define _INCLUDE_DDK_MMFUNCS_H
+/* $Id: mmfuncs.h,v 1.5 2000/04/02 13:32:38 ea Exp $ */
 /* MEMORY MANAGMENT ******************************************************/
 
 #include <internal/mmhal.h>
-
-BOOLEAN MmIsNonPagedSystemAddressValid(PVOID VirtualAddress);
-BOOLEAN MmIsThisAnNtAsSystem(VOID);
 
 #define PAGE_ROUND_UP(x) ( (((ULONG)x)%PAGESIZE) ? ((((ULONG)x)&(~0xfff))+0x1000) : ((ULONG)x) )
 #define PAGE_ROUND_DOWN(x) (((ULONG)x)&(~0xfff))
@@ -63,6 +63,13 @@ extern inline unsigned int ADDRESS_AND_SIZE_TO_SPAN_PAGES(PVOID Va,
  */
 #define BYTES_TO_PAGES(size) (?)
 
+DWORD
+STDCALL
+MmAdjustWorkingSetSize (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
 PVOID
 STDCALL
 MmAllocateContiguousMemory (
@@ -80,8 +87,17 @@ MmAllocateNonCachedMemory (
  * ARGUMENTS:
  *        MemoryDescriptorList = MDL to fill
  */
-VOID MmBuildMdlForNonPagedPool(PMDL MemoryDescriptorList);
-
+VOID
+STDCALL
+MmBuildMdlForNonPagedPool (
+	PMDL	MemoryDescriptorList
+	);
+BOOLEAN
+STDCALL
+MmCanFileBeTruncated (
+	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+	IN	PLARGE_INTEGER			NewFileSize
+	);
 /*
  * FUNCTION: Allocates and initializes an MDL
  * ARGUMENTS:
@@ -90,7 +106,50 @@ VOID MmBuildMdlForNonPagedPool(PMDL MemoryDescriptorList);
  *        Length = Length in bytes of the buffer
  * RETURNS: A pointer to the initalized MDL
  */
-PMDL MmCreateMdl(PMDL MemoryDescriptorList, PVOID Base, ULONG Length);
+PMDL
+STDCALL
+MmCreateMdl (
+	PMDL	MemoryDescriptorList,
+	PVOID	Base,
+	ULONG	Length
+	);
+#if 0
+NTSTATUS
+STDCALL
+MmCreateSection (
+	OUT	PSECTION_OBJECT		* SectionObject,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	PLARGE_INTEGER		MaximumSize,
+	IN	ULONG			SectionPageProtection,
+	IN	ULONG			AllocationAttributes,
+	IN	HANDLE			FileHandle		OPTIONAL,
+	IN	PFILE_OBJECT		File			OPTIONAL
+	);
+#endif
+DWORD
+STDCALL
+MmDbgTranslatePhysicalAddress (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	);
+BOOLEAN
+STDCALL
+MmDisableModifiedWriteOfSection (
+	DWORD	Unknown0
+	);
+BOOLEAN
+STDCALL
+MmFlushImageSection (
+	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+	IN	MMFLUSH_TYPE			FlushType
+	);
+BOOLEAN
+STDCALL
+MmForceSectionClosed (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	);
 VOID
 STDCALL
 MmFreeContiguousMemory (
@@ -108,7 +167,7 @@ MmFreeNonCachedMemory (
  *         Mdl = the mdl
  * RETURNS: Size of the buffer 
  */
-ULONG MmGetMdlByteCount(PMDL Mdl);
+#define MmGetMdlByteCount(Mdl)  ((Mdl)->ByteCount)
 
 /*
  * FUNCTION: Returns the byte offset within a page of the buffer described
@@ -117,7 +176,7 @@ ULONG MmGetMdlByteCount(PMDL Mdl);
  *         Mdl = the mdl
  * RETURNS: The offset in bytes
  */
-ULONG MmGetMdlByteOffset(PMDL Mdl);
+#define MmGetMdlByteOffset(Mdl)  ((Mdl)->ByteOffset)
 
 /*
  * FUNCTION: Returns the initial virtual address for a buffer described
@@ -126,7 +185,8 @@ ULONG MmGetMdlByteOffset(PMDL Mdl);
  *        Mdl = the mdl
  * RETURNS: The initial virtual address
  */
-PVOID MmGetMdlVirtualAddress(PMDL Mdl);
+#define MmGetMdlVirtualAddress(Mdl)  \
+	((PVOID) ((PCHAR) (Mdl)->StartVa + (Mdl)->ByteOffset))
 
 /*
  * FUNCTION: Returns the physical address corresponding to a given valid
@@ -135,7 +195,12 @@ PVOID MmGetMdlVirtualAddress(PMDL Mdl);
  *       BaseAddress = the virtual address
  * RETURNS: The physical address
  */
-PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID BaseAddress);
+PHYSICAL_ADDRESS
+STDCALL
+MmGetPhysicalAddress (
+	IN	PVOID	BaseAddress
+	);
+#define MmGetProcedureAddress(Address) (Address)
 
 /*
  * FUNCTION: Maps the physical pages described by an MDL into system space
@@ -144,7 +209,16 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID BaseAddress);
  * RETURNS: The base system address for the mapped buffer
  */
 PVOID MmGetSystemAddressForMdl(PMDL Mdl);
-
+NTSTATUS
+STDCALL
+MmGrowKernelStack (
+	DWORD	Unknown0
+	);
+#ifdef __NTOSKRNL__
+extern PVOID EXPORTED MmHighestUserAddress;
+#else
+extern PVOID IMPORTED MmHighestUserAddress;
+#endif
 /*
  * FUNCTION: Initalizes an mdl
  * ARGUMENTS: 
@@ -160,23 +234,39 @@ VOID MmInitializeMdl(PMDL MemoryDescriptorList, PVOID BaseVa, ULONG Length);
  *       VirtualAddress = address to be check
  * RETURNS: TRUE if an access would be valid
  */
-BOOLEAN MmIsAddressValid(PVOID VirtualAddress);
-
+BOOLEAN
+STDCALL
+MmIsAddressValid (
+	IN	PVOID	VirtualAddress
+	);
+BOOLEAN
+STDCALL
+MmIsNonPagedSystemAddressValid (
+	IN	PVOID	VirtualAddress
+	);
+BOOLEAN
+STDCALL
+MmIsRecursiveIoFault (
+	VOID
+	);
 /*
  * FUNCTION: Checks if the current platform is a workstation or a server
  * RETURNS: If the system is a server returns true
  * NOTE: Drivers can use this as an estimate of the likely resources
  * available
  */
-BOOLEAN MmIsThisAnAsSystem(VOID);
-   
+BOOLEAN
+STDCALL
+MmIsThisAnNtAsSystem (
+	VOID
+	);
 /*
  * FUNCTION: Locks a section of the driver's code into memory
  * ARGUMENTS:
  *        AddressWithinSection = Any address in the region
  * RETURNS: A handle to the region
  */
-PVOID MmLockPagableCodeSection(PVOID AddressWithinSection);
+#define MmLockPagableCodeSection(Address) MmLockPagableDataSection(Address)
 
 /*
  * FUNCTION: Locks a section of the driver's data into memory
@@ -184,28 +274,33 @@ PVOID MmLockPagableCodeSection(PVOID AddressWithinSection);
  *        AddressWithinSection = Any address in the region
  * RETURNS: A handle to the region
  */
-PVOID MmLockPagableDataSection(PVOID AddressWithinSection);
-
+PVOID
+STDCALL
+MmLockPagableDataSection (
+	PVOID	AddressWithinSection
+	);
+PVOID
+STDCALL
+MmLockPagableImageSection (
+	PVOID	AddressWithinSection
+	);
 /*
  * FUNCTION: Locks a section of memory
  * ARGUMENTS: 
  *         ImageSectionHandle = handle returned from MmLockPagableCodeSection
  *                              or MmLockPagableDataSection
  */
-VOID MmLockPagableSectionByHandle(PVOID ImageSectionHandle);
-   
+VOID
+STDCALL
+MmLockPagableSectionByHandle (
+	PVOID	ImageSectionHandle
+	);
 PVOID
 STDCALL
 MmMapIoSpace (
 	PHYSICAL_ADDRESS	PhysicalAddress,
 	ULONG			NumberOfBytes,
 	BOOLEAN			CacheEnable
-	);
-VOID
-STDCALL
-MmUnmapIoSpace (
-	PVOID	BaseAddress,
-	ULONG	NumberOfBytes
 	);
 /*
  * FUNCTION: Maps the pages described by a given MDL
@@ -214,23 +309,90 @@ MmUnmapIoSpace (
  *        AccessMode = Access mode in which to map the MDL
  * RETURNS: The base virtual address which maps the buffer
  */
-PVOID MmMapLockedPages(PMDL MemoryDescriptorList, KPROCESSOR_MODE AccessMode);
+PVOID
+STDCALL
+MmMapLockedPages (
+	PMDL		MemoryDescriptorList,
+	KPROCESSOR_MODE	AccessMode
+	);
+VOID
+STDCALL
+MmMapMemoryDumpMdl (
+	PVOID	Unknown0
+	);
+PVOID
+STDCALL
+MmMapVideoDisplay (
+	IN	PHYSICAL_ADDRESS	PhysicalAddress,
+	IN	ULONG			NumberOfBytes,
+	IN	MEMORY_CACHING_TYPE	CacheType
+	);
+NTSTATUS
+STDCALL
+MmMapViewInSystemSpace (
+	IN	PVOID	Section,
+	OUT	PVOID	* MappedBase,
+	IN	PULONG	ViewSize
+	);
+PVOID
+STDCALL
+MmMapViewOfSection (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8,
+	DWORD	Unknown9
+	);
 
 /*
  * FUNCTION: Makes the whole driver pageable
  * ARGUMENTS:
  *         AddressWithinSection = Any address within the driver
  */
-VOID MmPageEntireDriver(PVOID AddressWithinSection);
-   
+VOID
+STDCALL
+MmPageEntireDriver (
+	PVOID	AddressWithinSection
+	);
 /*
  * FUNCTION: Resets the pageable status of a driver's sections to their
  * compile time settings
  * ARGUMENTS:
  *         AddressWithinSection = Any address within the driver
  */
-VOID MmResetDriverPaging(PVOID AddressWithinSection);
-   
+VOID
+STDCALL
+MmResetDriverPaging (
+	PVOID	AddressWithinSection
+	);
+DWORD
+STDCALL
+MmSecureVirtualMemory (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	);
+BOOLEAN
+STDCALL
+MmSetAddressRangeModified (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	);
+NTSTATUS
+STDCALL
+MmSetBankedSection (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	);
 /*
  * FUNCTION: Reinitializes a caller-allocated MDL
  * ARGUMENTS:
@@ -248,16 +410,22 @@ VOID MmPrepareMdlForReuse(PMDL Mdl);
  *         Operation = Types of operation for which the pages should be
  *                     probed
  */
-VOID MmProbeAndLockPages(PMDL MemoryDescriptorList, 
-			 KPROCESSOR_MODE AccessMode, 
-			 LOCK_OPERATION Operation);
-   
+VOID
+STDCALL
+MmProbeAndLockPages (
+	PMDL		MemoryDescriptorList, 
+	KPROCESSOR_MODE	AccessMode, 
+	LOCK_OPERATION	Operation
+	);
 /*
  * FUNCTION: Returns an estimate of the amount of memory in the system
  * RETURNS: Either MmSmallSystem, MmMediumSystem or MmLargeSystem
  */
-MM_SYSTEM_SIZE MmQuerySystemSize(VOID);
-
+MM_SYSTEM_SIZE
+STDCALL
+MmQuerySystemSize (
+	VOID
+	);
 /*
  * FUNCTION: Returns the number of bytes to allocate for an MDL 
  * describing a given address range
@@ -266,22 +434,67 @@ MM_SYSTEM_SIZE MmQuerySystemSize(VOID);
  *          Length = size in bytes of the region
  * RETURNS: The number of bytes required for the MDL
  */
-ULONG MmSizeOfMdl(PVOID Base, ULONG Length);
-   
+ULONG
+STDCALL
+MmSizeOfMdl (
+	PVOID	Base,
+	ULONG	Length
+	);
 /*
  * FUNCTION: Unlocks the physical pages described by a given MDL
  * ARGUMENTS:
  *          Mdl = Mdl to unlock
  */
-VOID MmUnlockPages(PMDL Mdl);
-   
+VOID
+STDCALL
+MmUnlockPages (
+	PMDL	Mdl
+	);
 /*
  * FUNCTION: Releases a section of driver code or data previously locked into 
  * memory
  * ARGUMENTS: 
  *         ImageSectionHandle = Handle for the locked section
  */
-VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle);
-
-VOID MmUnmapLockedPages(PVOID BaseAddress, PMDL MemoryDescriptorList);
-
+VOID
+STDCALL
+MmUnlockPagableImageSection (
+	PVOID	ImageSectionHandle
+	);
+VOID
+STDCALL
+MmUnmapIoSpace (
+	PVOID	BaseAddress,
+	ULONG	NumberOfBytes
+	);
+VOID
+STDCALL
+MmUnmapLockedPages (
+	PVOID	BaseAddress,
+	PMDL	MemoryDescriptorList
+	);
+VOID
+STDCALL
+MmUnmapVideoDisplay (
+	IN	PVOID	BaseAddress,
+	IN	ULONG	NumberOfBytes
+	);
+NTSTATUS
+STDCALL
+MmUnmapViewInSystemSpace (
+	DWORD	Unknown0
+	);
+#if 0
+NTSTATUS
+STDCALL
+MmUnmapViewOfSection (
+	PEPROCESS	Process,
+	PMEMORY_AREA	MemoryArea
+	)
+#endif
+VOID
+STDCALL
+MmUnsecureVirtualMemory (
+	DWORD	Unknown0
+	);
+#endif

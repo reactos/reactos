@@ -1,4 +1,5 @@
-/*
+/* $Id: page.c,v 1.7 2000/04/02 13:32:43 ea Exp $
+ *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/i386/page.c
@@ -275,7 +276,7 @@ VOID MmSetPageProtect(PEPROCESS Process,
      }
 }
 
-PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
+PHYSICAL_ADDRESS STDCALL MmGetPhysicalAddress(PVOID vaddr)
 /*
  * FUNCTION: Returns the physical address corresponding to a virtual address
  */
@@ -291,3 +292,6 @@ PHYSICAL_ADDRESS MmGetPhysicalAddress(PVOID vaddr)
    
    return p;
 }
+
+
+/* EOF */

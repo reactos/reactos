@@ -1,4 +1,4 @@
-/* $Id: section.c,v 1.26 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: section.c,v 1.27 2000/04/02 13:32:41 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -23,7 +23,7 @@
 
 /* GLOBALS *******************************************************************/
 
-POBJECT_TYPE MmSectionType = NULL;
+POBJECT_TYPE EXPORTED MmSectionObjectType = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -113,31 +113,32 @@ NTSTATUS MmInitSectionImplementation(VOID)
 {
    ANSI_STRING AnsiString;
    
-   MmSectionType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
+   MmSectionObjectType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
    
-   MmSectionType->TotalObjects = 0;
-   MmSectionType->TotalHandles = 0;
-   MmSectionType->MaxObjects = ULONG_MAX;
-   MmSectionType->MaxHandles = ULONG_MAX;
-   MmSectionType->PagedPoolCharge = 0;
-   MmSectionType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
-   MmSectionType->Dump = NULL;
-   MmSectionType->Open = NULL;
-   MmSectionType->Close = NULL;
-   MmSectionType->Delete = MmpDeleteSection;
-   MmSectionType->Parse = NULL;
-   MmSectionType->Security = NULL;
-   MmSectionType->QueryName = NULL;
-   MmSectionType->OkayToClose = NULL;
-   MmSectionType->Create = MmpCreateSection;
+   MmSectionObjectType->TotalObjects = 0;
+   MmSectionObjectType->TotalHandles = 0;
+   MmSectionObjectType->MaxObjects = ULONG_MAX;
+   MmSectionObjectType->MaxHandles = ULONG_MAX;
+   MmSectionObjectType->PagedPoolCharge = 0;
+   MmSectionObjectType->NonpagedPoolCharge = sizeof(SECTION_OBJECT);
+   MmSectionObjectType->Dump = NULL;
+   MmSectionObjectType->Open = NULL;
+   MmSectionObjectType->Close = NULL;
+   MmSectionObjectType->Delete = MmpDeleteSection;
+   MmSectionObjectType->Parse = NULL;
+   MmSectionObjectType->Security = NULL;
+   MmSectionObjectType->QueryName = NULL;
+   MmSectionObjectType->OkayToClose = NULL;
+   MmSectionObjectType->Create = MmpCreateSection;
    
    RtlInitAnsiString(&AnsiString,"Section");
-   RtlAnsiStringToUnicodeString(&MmSectionType->TypeName,
+   RtlAnsiStringToUnicodeString(&MmSectionObjectType->TypeName,
 				&AnsiString,TRUE);
    return(STATUS_SUCCESS);
 }
 
 
+/* FIXME: NtCS should call MmCS */
 NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle, 
 				  IN ACCESS_MASK DesiredAccess,
 				  IN POBJECT_ATTRIBUTES	ObjectAttributes OPTIONAL,
@@ -178,7 +179,7 @@ NTSTATUS STDCALL NtCreateSection (OUT PHANDLE SectionHandle,
    Section = ObCreateObject(SectionHandle,
 			    DesiredAccess,
 			    ObjectAttributes,
-			    MmSectionType);
+			    MmSectionObjectType);
    DPRINT("SectionHandle %x\n", SectionHandle);
    if (Section == NULL)
      {
@@ -259,7 +260,7 @@ NTSTATUS STDCALL NtOpenSection(PHANDLE			SectionHandle,
 				    ObjectAttributes->Attributes,
 				    NULL,
 				    DesiredAccess,
-				    MmSectionType,
+				    MmSectionObjectType,
 				    UserMode,
 				    NULL,
 				    &Object);
@@ -356,7 +357,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    
    Status = ObReferenceObjectByHandle(SectionHandle,
 				      SECTION_MAP_READ,
-				      MmSectionType,
+				      MmSectionObjectType,
 				      UserMode,
 				      (PVOID*)&Section,
 				      NULL);
@@ -440,7 +441,7 @@ NTSTATUS STDCALL NtMapViewOfSection(HANDLE SectionHandle,
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmUnmapViewOfSection(PEPROCESS Process,
+NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
 			      PMEMORY_AREA MemoryArea)
 {
    PSECTION_OBJECT Section;
@@ -606,5 +607,192 @@ PVOID STDCALL MmAllocateSection (IN ULONG Length)
    return ((PVOID)Result);
 }
 
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	MmMapViewOfSection@40
+ *
+ * DESCRIPTION
+ *	
+ * ARGUMENTS
+ * 	FIXME: stack space allocated is 40 bytes, but nothing
+ * 	is known about what they are filled with.
+ *
+ * RETURN VALUE
+ * 	Status.
+ *
+ */
+PVOID
+STDCALL
+MmMapViewOfSection (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5,
+	DWORD	Unknown6,
+	DWORD	Unknown7,
+	DWORD	Unknown8,
+	DWORD	Unknown9
+	)
+{
+	UNIMPLEMENTED;
+	return (NULL);
+}
+
+
+BOOLEAN
+STDCALL
+MmCanFileBeTruncated (
+	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+	IN	PLARGE_INTEGER			NewFileSize
+	)
+{
+	UNIMPLEMENTED;
+	return (FALSE);
+}
+
+
+BOOLEAN
+STDCALL
+MmDisableModifiedWriteOfSection (
+	DWORD	Unknown0
+	)
+{
+	UNIMPLEMENTED;
+	return (FALSE);
+}
+
+BOOLEAN
+STDCALL
+MmFlushImageSection (
+	IN	PSECTION_OBJECT_POINTERS	SectionObjectPointer,
+	IN	MMFLUSH_TYPE			FlushType
+	)
+{
+	UNIMPLEMENTED;
+	return (FALSE);
+}
+
+BOOLEAN
+STDCALL
+MmForceSectionClosed (
+	DWORD	Unknown0,
+	DWORD	Unknown1
+	)
+{
+	UNIMPLEMENTED;
+	return (FALSE);
+}
+
+
+NTSTATUS
+STDCALL
+MmMapViewInSystemSpace (
+	IN	PVOID	Section,
+	OUT	PVOID	* MappedBase,
+	IN	PULONG	ViewSize
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+NTSTATUS
+STDCALL
+MmUnmapViewInSystemSpace (
+	DWORD	Unknown0
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+NTSTATUS
+STDCALL
+MmSetBankedSection (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2,
+	DWORD	Unknown3,
+	DWORD	Unknown4,
+	DWORD	Unknown5
+	)
+{
+	UNIMPLEMENTED;
+	return (STATUS_NOT_IMPLEMENTED);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ * 	MmCreateSection@
+ * 	
+ * DESCRIPTION
+ * 	Creates a section object.
+ * 	
+ * ARGUMENTS
+ *	SectionObjiect (OUT)
+ *		Caller supplied storage for the resulting pointer
+ *		to a SECTION_BOJECT instance;
+ *		
+ *	DesiredAccess
+ *		Specifies the desired access to the section can be a
+ *		combination of:
+ *			STANDARD_RIGHTS_REQUIRED	|
+ *			SECTION_QUERY			|
+ *			SECTION_MAP_WRITE		|
+ *			SECTION_MAP_READ		|
+ *			SECTION_MAP_EXECUTE
+ *			
+ *	ObjectAttributes [OPTIONAL]
+ *		Initialized attributes for the object can be used 
+ *		to create a named section;
+ *
+ *	MaximumSize
+ *		Maximizes the size of the memory section. Must be 
+ *		non-NULL for a page-file backed section. 
+ *		If value specified for a mapped file and the file is 
+ *		not large enough, file will be extended.
+ *		
+ *	SectionPageProtection
+ *		Can be a combination of:
+ *			PAGE_READONLY	| 
+ *			PAGE_READWRITE	|
+ *			PAGE_WRITEONLY	| 
+ *			PAGE_WRITECOPY
+ *			
+ *	AllocationAttributes
+ *		Can be a combination of:
+ *			SEC_IMAGE	| 
+ *			SEC_RESERVE
+ *			
+ *	FileHandle
+ *		Handle to a file to create a section mapped to a file
+ *		instead of a memory backed section;
+ *
+ *	File
+ *		Unknown.
+ *	
+ * RETURN VALUE
+ * 	Status.
+ */
+NTSTATUS
+STDCALL
+MmCreateSection (
+	OUT	PSECTION_OBJECT		* SectionObject,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	PLARGE_INTEGER		MaximumSize,
+	IN	ULONG			SectionPageProtection,
+	IN	ULONG			AllocationAttributes,
+	IN	HANDLE			FileHandle		OPTIONAL,
+	IN	PFILE_OBJECT		File			OPTIONAL
+	)
+{
+	return (STATUS_NOT_IMPLEMENTED);
+}
 
 /* EOF */

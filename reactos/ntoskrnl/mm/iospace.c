@@ -1,4 +1,4 @@
-/* $Id: iospace.c,v 1.3 2000/03/29 13:11:54 dwelch Exp $
+/* $Id: iospace.c,v 1.4 2000/04/02 13:32:41 ea Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -114,6 +114,40 @@ VOID STDCALL MmUnmapIoSpace (IN PVOID BaseAddress,
 			  BaseAddress,
 			  NumberOfBytes,
 			  FALSE);
+}
+
+
+/**********************************************************************
+ * NAME							EXPORTED
+ *	MmMapVideoDisplay@16
+ */
+PVOID
+STDCALL
+MmMapVideoDisplay (
+	IN	PHYSICAL_ADDRESS	PhysicalAddress,
+	IN	ULONG			NumberOfBytes,
+	IN	MEMORY_CACHING_TYPE	CacheType
+	)
+{
+	return MmMapIoSpace (
+			PhysicalAddress,
+			NumberOfBytes,
+			CacheType
+			);
+}
+
+
+VOID
+STDCALL
+MmUnmapVideoDisplay (
+	IN	PVOID	BaseAddress,
+	IN	ULONG	NumberOfBytes
+	)
+{
+	MmUnmapIoSpace (
+		BaseAddress,
+		NumberOfBytes
+		);
 }
 
 

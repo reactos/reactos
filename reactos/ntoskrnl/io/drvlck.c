@@ -1,4 +1,5 @@
-/*
+/* $Id: drvlck.c,v 1.3 2000/04/02 13:32:41 ea Exp $
+ *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/drvlck.c
@@ -17,6 +18,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
+#if 0
 VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
 /*
  * FUNCTION: Releases a section of driver code or driver data, previously
@@ -30,13 +32,15 @@ VOID MmUnlockPagableImageSection(PVOID ImageSectionHandle)
 //   MmUnlockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
    UNIMPLEMENTED;
 }
+#endif
 
-VOID MmLockPagableSectionByHandle(PVOID ImageSectionHandle)
+VOID STDCALL MmLockPagableSectionByHandle(PVOID ImageSectionHandle)
 {
 //   MmLockMemoryArea((MEMORY_AREA *)ImageSectionHandle);
    UNIMPLEMENTED;
 }
 
+#if 0
 PVOID MmLockPagableCodeSection(PVOID AddressWithinSection)
 {
    PVOID Handle;
@@ -44,17 +48,33 @@ PVOID MmLockPagableCodeSection(PVOID AddressWithinSection)
    MmLockPagableSectionByHandle(Handle);
    return(Handle);
 }
+#endif
 
-PVOID MmLockPagableDataSection(PVOID AddressWithinSection)
+PVOID STDCALL MmLockPagableDataSection(PVOID AddressWithinSection)
 {
-   return(MmLockPagableCodeSection(AddressWithinSection));
+   PVOID Handle;
+   Handle = MmOpenMemoryAreaByAddress(NULL,AddressWithinSection);
+   MmLockPagableSectionByHandle(Handle);
+   return(Handle);
 }
 
-VOID MmPageEntireDriver(PVOID AddressWithinSection)
+
+VOID
+STDCALL
+MmUnlockPagableImageSection (
+	PVOID	ImageSectionHandle
+	)
 {
 }
 
-VOID MmResetDriverPaging(PVOID AddressWithinSection)
+
+VOID STDCALL MmPageEntireDriver(PVOID AddressWithinSection)
 {
 }
 
+VOID STDCALL MmResetDriverPaging(PVOID AddressWithinSection)
+{
+}
+
+
+/* EOF */

@@ -1,3 +1,7 @@
+#ifndef _INCLUDE_DDK_MMTYPES_H
+#define _INCLUDE_DDK_MMTYPES_H
+/* $Id: mmtypes.h,v 1.4 2000/04/02 13:32:38 ea Exp $ */
+
 
 typedef struct _MADDRESS_SPACE
 {
@@ -42,3 +46,24 @@ typedef struct _MDL
 #define MmSmallSystem (0)
 #define MmMediumSystem (1)
 #define MmLargeSystem (2)
+/* Used in MmFlushImageSection */
+typedef
+enum _MMFLUSH_TYPE
+{
+	MmFlushForDelete,
+	MmFlushForWrite
+
+} MMFLUSH_TYPE;
+
+typedef
+enum _MEMORY_CACHING_TYPE
+{
+	MmNonCached = FALSE,
+	MmCached = TRUE,
+	MmFrameBufferCached,
+	MmHardwareCoherentCached,
+	MmMaximumCacheType
+		
+} MEMORY_CACHING_TYPE;
+
+#endif

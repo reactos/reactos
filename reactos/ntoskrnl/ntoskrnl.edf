@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.edf,v 1.51 2000/03/29 13:11:53 dwelch Exp $
+; $Id: ntoskrnl.edf,v 1.52 2000/04/02 13:32:40 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -296,13 +296,54 @@ KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
 KeWaitForSingleObject
+MmAdjustWorkingSetSize=MmAdjustWorkingSetSize@12
 MmAllocateContiguousMemory=MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory=MmAllocateNonCachedMemory@4
+MmBuildMdlForNonPagedPool=MmBuildMdlForNonPagedPool@4
+MmCanFileBeTruncated=MmCanFileBeTruncated@8
+MmCreateMdl=MmCreateMdl@12
+MmCreateSection=MmCreateSection@32
+MmDbgTranslatePhysicalAddress=MmDbgTranslatePhysicalAddress@8
+MmDisableModifiedWriteOfSection=MmDisableModifiedWriteOfSection@4
+MmFlushImageSection=MmFlushImageSection@8
+MmForceSectionClosed=MmForceSectionClosed@8
 MmFreeContiguousMemory=MmFreeContiguousMemory@4
 MmFreeNonCachedMemory=MmFreeNonCachedMemory@8
-MmGetSystemAddressForMdl
+MmGetPhysicalAddress=MmGetPhysicalAddress@4
+MmGrowKernelStack=MmGrowKernelStack@4
+MmHighestUserAddress DATA
+MmIsAddressValid=MmIsAddressValid@4
+MmIsNonPagedSystemAddressValid=MmIsNonPagedSystemAddressValid@4
+MmIsRecursiveIoFault=MmIsRecursiveIoFault@0
+MmIsThisAnNtAsSystem=MmIsThisAnNtAsSystem@0
+MmLockPagableDataSection=MmLockPagableDataSection@4
+MmLockPagableImageSection=MmLockPagableDataSection@4
+MmLockPagableSectionByHandle=MmLockPagableSectionByHandle@4
 MmMapIoSpace=MmMapIoSpace@16
+MmMapLockedPages=MmMapLockedPages@8
+MmMapMemoryDumpMdl=MmMapMemoryDumpMdl@4
+MmMapVideoDisplay=MmMapVideoDisplay@16
+MmMapViewInSystemSpace=MmMapViewInSystemSpace@12
+MmMapViewOfSection=MmMapViewOfSection@40
+MmPageEntireDriver=MmPageEntireDriver@4
+MmProbeAndLockPages=MmProbeAndLockPages@12
+MmQuerySystemSize=MmQuerySystemSize@0
+MmResetDriverPaging=MmResetDriverPaging@4
+MmSectionObjectType DATA
+MmSecureVirtualMemory=MmSecureVirtualMemory@12
+MmSetAddressRangeModified=MmSetAddressRangeModified@8
+MmSetBankedSection=MmSetBankedSection@24
+MmSizeOfMdl=MmSizeOfMdl@8
+MmSystemRangeStart=MmSectionObjectType
+MmUnlockPagableImageSection=MmUnlockPagableImageSection@4
+MmUnlockPages=MmUnlockPages@4
 MmUnmapIoSpace=MmUnmapIoSpace@8
+MmUnmapLockedPages=MmUnmapLockedPages@8
+MmUnmapVideoDisplay=MmUnmapVideoDisplay@8
+MmUnmapViewInSystemSpace=MmUnmapViewInSystemSpace@4
+MmUnmapViewOfSection=MmUnmapViewOfSection@8
+MmUnsecureVirtualMemory=MmUnsecureVirtualMemory@4
+MmUserProbeAddress DATA
 NlsAnsiCodePage	DATA
 NlsLeadByteInfo	DATA
 NlsMbCodePageTag	DATA
@@ -654,6 +695,7 @@ IoGetCurrentIrpStackLocation
 IoInitializeDpcRequest
 IoMarkIrpPending
 IoRequestDpc
+MmGetSystemAddressForMdl
 ;
 ;
 ; exports from hal.dll

@@ -1,4 +1,4 @@
-; $Id: ntoskrnl.def,v 1.64 2000/03/29 13:11:53 dwelch Exp $
+; $Id: ntoskrnl.def,v 1.65 2000/04/02 13:32:40 ea Exp $
 ;
 ; reactos/ntoskrnl/ntoskrnl.def
 ;
@@ -297,13 +297,54 @@ KeSetEvent
 KeSetTimer
 KeSynchronizeExecution
 KeWaitForSingleObject
+MmAdjustWorkingSetSize@12
 MmAllocateContiguousMemory@12
 MmAllocateNonCachedMemory@4
+MmBuildMdlForNonPagedPool@4
+MmCanFileBeTruncated@8
+MmCreateMdl@12
+MmCreateSection@32
+MmDbgTranslatePhysicalAddress@8
+MmDisableModifiedWriteOfSection@4
+MmFlushImageSection@8
+MmForceSectionClosed@8
 MmFreeContiguousMemory@4
 MmFreeNonCachedMemory@8
-MmGetSystemAddressForMdl
+MmGetPhysicalAddress@4
+MmGrowKernelStack@4
+MmHighestUserAddress DATA
+MmIsAddressValid@4
+MmIsNonPagedSystemAddressValid@4
+MmIsRecursiveIoFault@0
+MmIsThisAnNtAsSystem@0
+MmLockPagableDataSection@4
+MmLockPagableImageSection@4=MmLockPagableDataSection@4
+MmLockPagableSectionByHandle@4
 MmMapIoSpace@16
+MmMapLockedPages@8
+MmMapMemoryDumpMdl@4
+MmMapVideoDisplay@16
+MmMapViewInSystemSpace@12
+MmMapViewOfSection@40
+MmPageEntireDriver@4
+MmProbeAndLockPages@12
+MmQuerySystemSize@0
+MmResetDriverPaging@4
+MmSectionObjectType DATA
+MmSecureVirtualMemory@12
+MmSetAddressRangeModified@8
+MmSetBankedSection@24
+MmSizeOfMdl@8
+MmSystemRangeStart=MmSectionObjectType
+MmUnlockPagableImageSection@4
+MmUnlockPages@4
 MmUnmapIoSpace@8
+MmUnmapLockedPages@8
+MmUnmapVideoDisplay@8
+MmUnmapViewInSystemSpace@4
+MmUnmapViewOfSection@8
+MmUnsecureVirtualMemory@4
+MmUserProbeAddress DATA
 NlsAnsiCodePage	DATA
 NlsLeadByteInfo	DATA
 NlsMbCodePageTag	DATA
@@ -728,6 +769,7 @@ IoGetCurrentIrpStackLocation
 IoInitializeDpcRequest
 IoMarkIrpPending
 IoRequestDpc
+MmGetSystemAddressForMdl
 ;
 ;
 ; exports from hal.dll

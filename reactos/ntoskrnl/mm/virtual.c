@@ -1,4 +1,5 @@
-/*
+/* $Id: virtual.c,v 1.26 2000/04/02 13:32:42 ea Exp $
+ *
  * COPYRIGHT:   See COPYING in the top directory
  * PROJECT:     ReactOS kernel
  * FILE:        ntoskrnl/mm/virtual.c
@@ -78,12 +79,12 @@ NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
    return(STATUS_SUCCESS);
 }
 
-BOOLEAN MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
+BOOLEAN STDCALL MmIsNonPagedSystemAddressValid(PVOID VirtualAddress)
 {
    UNIMPLEMENTED;
 }
 
-BOOLEAN MmIsAddressValid(PVOID VirtualAddress)
+BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
 /*
  * FUNCTION: Checks whether the given address is valid for a read or write
  * ARGUMENTS:
@@ -635,3 +636,27 @@ NTSTATUS STDCALL NtWriteVirtualMemory(IN	HANDLE	ProcessHandle,
    return(STATUS_SUCCESS);
 }
 
+
+DWORD
+STDCALL
+MmSecureVirtualMemory (
+	DWORD	Unknown0,
+	DWORD	Unknown1,
+	DWORD	Unknown2
+	)
+{
+	UNIMPLEMENTED;
+	return 0;
+}
+
+
+VOID
+STDCALL
+MmUnsecureVirtualMemory (
+	DWORD	Unknown0
+	)
+{
+	UNIMPLEMENTED;
+}
+
+/* EOF */

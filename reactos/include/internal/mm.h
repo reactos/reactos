@@ -119,7 +119,7 @@ PVOID MmGetMdlPageAddress(PMDL Mdl, PVOID Offset);
 VOID MiShutdownMemoryManager(VOID);
 ULONG MmGetPhysicalAddressForProcess(PEPROCESS Process,
 				     PVOID Address);
-NTSTATUS MmUnmapViewOfSection(PEPROCESS Process,
+NTSTATUS STDCALL MmUnmapViewOfSection(PEPROCESS Process,
 			      PMEMORY_AREA MemoryArea);
 PVOID MiTryToSharePageInSection(PSECTION_OBJECT Section, ULONG Offset);
 
@@ -127,5 +127,19 @@ NTSTATUS MmSafeCopyFromUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 NTSTATUS MmSafeCopyToUser(PVOID Dest, PVOID Src, ULONG NumberOfBytes);
 VOID MmInitPagingFile(VOID);
 ULONG MmPageFault(ULONG cs, ULONG eip, ULONG error_code);
+
+/* FIXME: it should be in ddk/mmfuncs.h */
+NTSTATUS
+STDCALL
+MmCreateSection (
+	OUT	PSECTION_OBJECT		* SectionObject,
+	IN	ACCESS_MASK		DesiredAccess,
+	IN	POBJECT_ATTRIBUTES	ObjectAttributes	OPTIONAL,
+	IN	PLARGE_INTEGER		MaximumSize,
+	IN	ULONG			SectionPageProtection,
+	IN	ULONG			AllocationAttributes,
+	IN	HANDLE			FileHandle		OPTIONAL,
+	IN	PFILE_OBJECT		File			OPTIONAL
+	);
 
 #endif
