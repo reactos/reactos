@@ -16,13 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: logfile.c,v 1.2 2004/01/14 22:15:09 gvg Exp $
+/* $Id: logfile.c,v 1.3 2004/08/28 11:08:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Log file functions
  * FILE:              lib/syssetup/logfile.c
- * PROGRAMER:         Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:         Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/

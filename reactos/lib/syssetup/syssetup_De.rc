@@ -108,13 +108,24 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "ReactOS Installation"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.", IDC_STATIC, 13, 12, 212, 16
-   LTEXT "Um fortzufahren muss Ihr Computer neu gesratet werden. "\
-         "Der Computer wird in 15 Minuten automatisch neu gestartet oder wenn Sie auf "\
-         "Neustart klicken.", IDC_STATIC, 13, 33, 212, 32
-/*   GROUPBOX "", -1, 7, 3, 231, 106 */
-   CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
-   PUSHBUTTON "&Neustart", IDOK, 98, 87, 50, 14
+    LTEXT "Die Installation von ReactOS wurde erfolgreich fertiggestellt.", IDC_STATIC, 13, 12, 212, 16
+    LTEXT "Um fortzufahren muss Ihr Computer neu gesratet werden. "\
+          "Der Computer wird in 15 Minuten automatisch neu gestartet oder wenn Sie auf "\
+          "Neustart klicken.", IDC_STATIC, 13, 33, 212, 32
+/*    GROUPBOX "", -1, 7, 3, 231, 106 */
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
+    PUSHBUTTON "&Neustart", IDOK, 98, 87, 50, 14
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_OWNERTITLE       "Owner page title"
+    IDS_OWNERSUBTITLE    "Owner page subtitle"
+    IDS_COMPUTERTITLE    "Computer page title"
+    IDS_COMPUTERSUBTITLE "Computer page subtitle"
+    IDS_LOCALETITLE      "Locale page title"
+    IDS_LOCALESUBTITLE   "Locale page subtitle"
 END
 
 /* EOF */

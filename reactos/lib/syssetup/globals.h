@@ -27,6 +27,7 @@ typedef struct _SETUPDATA
 
 
 extern HINSTANCE hDllInstance;
+extern HINF hSysSetupInf;
 
 /* wizard.c */
 VOID InstallWizard (VOID);

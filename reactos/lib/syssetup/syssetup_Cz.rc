@@ -106,9 +106,21 @@ STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
 CAPTION "Instatalace ReactOSu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT "Instalace ReactOSu byla úspìšnì dokonèena.", -1, 13, 12, 212, 16
-   LTEXT "Pro pokraèování potøebuje instalaèní program restartovat Váš poèítaè. Poèítaè bude automaticky restartován za 15 sekund nebo zmáèknete-li tlaèítko Restartovat.", -1, 13, 33, 212, 32
-/*   GROUPBOX "", -1, 7, 3, 231, 106 */
-   CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
-   PUSHBUTTON "&Restartovat", IDOK, 98, 87, 50, 14
+    LTEXT "Instalace ReactOSu byla úspìšnì dokonèena.", -1, 13, 12, 212, 16
+    LTEXT "Pro pokraèování potøebuje instalaèní program restartovat Váš poèítaè. Poèítaè bude automaticky restartován za 15 sekund nebo zmáèknete-li tlaèítko Restartovat.", -1, 13, 33, 212, 32
+/*    GROUPBOX "", -1, 7, 3, 231, 106 */
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
+    PUSHBUTTON "&Restartovat", IDOK, 98, 87, 50, 14
 END
+
+STRINGTABLE
+BEGIN
+    IDS_OWNERTITLE       "Owner page title"
+    IDS_OWNERSUBTITLE    "Owner page subtitle"
+    IDS_COMPUTERTITLE    "Computer page title"
+    IDS_COMPUTERSUBTITLE "Computer page subtitle"
+    IDS_LOCALETITLE      "Locale page title"
+    IDS_LOCALESUBTITLE   "Locale page subtitle"
+END
+
+/* EOF */

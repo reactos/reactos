@@ -16,19 +16,20 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dllmain.c,v 1.3 2004/04/16 13:37:18 ekohl Exp $
+/* $Id: dllmain.c,v 1.4 2004/08/28 11:08:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Main file
  * FILE:              lib/syssetup/dllmain.c
- * PROGRAMER:         Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:         Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <windows.h>
 #include <commctrl.h>
+#include <setupapi.h>
 
 #include "globals.h"
 

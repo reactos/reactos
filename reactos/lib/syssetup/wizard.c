@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: wizard.c,v 1.5 2004/08/03 13:43:00 ekohl Exp $
+/* $Id: wizard.c,v 1.6 2004/08/28 11:08:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
@@ -32,8 +32,10 @@
 
 #include <string.h>
 #include <tchar.h>
+#include <setupapi.h>
 
 #include <syssetup.h>
+
 
 #include "globals.h"
 #include "resource.h"
@@ -435,16 +437,16 @@ InstallWizard(VOID)
 
   /* Create the Owner page */
   psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_TITLE1);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUBTITLE1);
+//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_OWNERTITLE);
+//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_OWNERSUBTITLE);
   psp.pszTemplate = MAKEINTRESOURCE(IDD_OWNERPAGE);
   psp.pfnDlgProc = OwnerPageDlgProc;
   ahpsp[1] = CreatePropertySheetPage(&psp);
 
   /* Create the Computer page */
   psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle =    MAKEINTRESOURCE(IDS_TITLE2);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUBTITLE2);
+//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_COMPUTERTITLE);
+//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_COMPUTERSUBTITLE);
   psp.pfnDlgProc = ComputerPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_COMPUTERPAGE);
   ahpsp[2] = CreatePropertySheetPage(&psp);
@@ -452,8 +454,8 @@ InstallWizard(VOID)
 
   /* Create the Locale page */
   psp.dwFlags = PSP_DEFAULT; // | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
-//  psp.pszHeaderTitle =    MAKEINTRESOURCE(IDS_TITLE2);
-//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_SUBTITLE2);
+//  psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_LOCALETITLE);
+//  psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_LOCALESUBTITLE);
   psp.pfnDlgProc = LocalePageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_LOCALEPAGE);
   ahpsp[3] = CreatePropertySheetPage(&psp);

@@ -16,13 +16,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: install.c,v 1.15 2004/08/03 13:43:00 ekohl Exp $
+/* $Id: install.c,v 1.16 2004/08/28 11:08:50 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
  * FILE:              lib/syssetup/install.c
- * PROGRAMER:         Eric Kohl (ekohl@rz-online.de)
+ * PROGRAMER:         Eric Kohl
  */
 
 /* INCLUDES *****************************************************************/
@@ -37,6 +37,7 @@
 #include <samlib.h>
 #include <syssetup.h>
 #include <userenv.h>
+#include <setupapi.h>
 
 #include "globals.h"
 #include "resource.h"
@@ -51,6 +52,7 @@ VOID WINAPI CreateCmdLink(VOID);
 PSID DomainSid = NULL;
 PSID AdminSid = NULL;
 
+HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -247,46 +249,42 @@ CreateTempDir(LPCWSTR VarName)
   RegCloseKey (hKey);
 }
 
-#define SECTIONBUF_SIZE 4096
 
 BOOL
 ProcessSysSetupInf(VOID)
 {
-  LPTSTR pBuf2;
-  TCHAR szBuf[SECTIONBUF_SIZE];
-  DWORD dwBufSize;
+  INFCONTEXT InfContext;
+  TCHAR LineBuffer[256];
+  DWORD LineLength;
 
-  SetLastError(0);
-
-  dwBufSize = GetPrivateProfileSection(_T("DeviceInfsToInstall"),
-				       szBuf,
-				       SECTIONBUF_SIZE,
-				       _T("Inf\\SYSSETUP.INF"));
-
-  /* fix this first... */
-  if (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED)
-    return TRUE;
-
-  if (dwBufSize == SECTIONBUF_SIZE-2)
-    return FALSE;
-
-  if (!dwBufSize)
-    return FALSE;
-
-  pBuf2 = szBuf;
-  while (*pBuf2)
+  if (!SetupFindFirstLine(hSysSetupInf,
+			  _T("DeviceInfsToInstall"),
+			  NULL,
+			  &InfContext))
   {
-    OutputDebugString(_T("Calling Class Installer for "));
-    OutputDebugString(pBuf2);
-    OutputDebugString(_T("\r\n"));
+    return FALSE;
+  }
+
+  do
+  {
+    if (!SetupGetStringField(&InfContext,
+			     0,
+			     LineBuffer,
+			     256,
+			     &LineLength))
+    {
+      return FALSE;
+    }
 
 #if 0
     /* FIXME: Currently unsupported */
-    if (!SetupDiInstallClass(NULL, pBuf2, DI_QUIETINSTALL, NULL))
+    if (!SetupDiInstallClass(NULL, LineBuffer, DI_QUIETINSTALL, NULL))
+    {
       return FALSE;
+    }
 #endif
-    pBuf2 += _tcslen(pBuf2) + 1;
   }
+  while (SetupFindNextLine(&InfContext, &InfContext));
 
   return TRUE;
 }
@@ -355,7 +353,7 @@ InstallReactOS (HINSTANCE hInstance)
     }
 
   /* Append the Admin-RID */
-  AppendRidToSid (&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
+  AppendRidToSid(&AdminSid, DomainSid, DOMAIN_USER_RID_ADMIN);
 
 #if 0
   RtlConvertSidToUnicodeString (&SidString, DomainSid, TRUE);
@@ -364,45 +362,57 @@ InstallReactOS (HINSTANCE hInstance)
 #endif
 
   /* Create the Administrator account */
-  if (!SamCreateUser (L"Administrator", L"", AdminSid))
-    {
-      DebugPrint ("SamCreateUser() failed!\n");
-      RtlFreeSid (AdminSid);
-      RtlFreeSid (DomainSid);
-      return 0;
-    }
+  if (!SamCreateUser(L"Administrator", L"", AdminSid))
+  {
+    DebugPrint("SamCreateUser() failed!\n");
+    RtlFreeSid(AdminSid);
+    RtlFreeSid(DomainSid);
+    return 0;
+  }
 
   /* Create the Administrator profile */
-  if (!CreateUserProfileW (AdminSid, L"Administrator"))
-    {
-      DebugPrint ("CreateUserProfileW() failed!\n");
-      RtlFreeSid (AdminSid);
-      RtlFreeSid (DomainSid);
-      return 0;
-    }
+  if (!CreateUserProfileW(AdminSid, L"Administrator"))
+  {
+    DebugPrint("CreateUserProfileW() failed!\n");
+    RtlFreeSid(AdminSid);
+    RtlFreeSid(DomainSid);
+    return 0;
+  }
 
-  RtlFreeSid (AdminSid);
-  RtlFreeSid (DomainSid);
+  RtlFreeSid(AdminSid);
+  RtlFreeSid(DomainSid);
 
   CreateTempDir(L"TEMP");
   CreateTempDir(L"TMP");
 
-  if(!ProcessSysSetupInf())
+  hSysSetupInf = SetupOpenInfFileW(L"syssetup.inf",
+				   NULL,
+				   INF_STYLE_WIN4,
+				   NULL);
+  if (hSysSetupInf == INVALID_HANDLE_VALUE)
   {
-      DebugPrint("ProcessSysSetupInf() failed!\n");
-	  return 0;
+    DebugPrint("SetupOpenInfFileW() failed to open 'syssetup.inf' (Error: %lu)\n", GetLastError());
+    return 0;
+  }
+
+  if (!ProcessSysSetupInf())
+  {
+    DebugPrint("ProcessSysSetupInf() failed!\n");
+    return 0;
   }
 
   InstallWizard();
 
+  SetupCloseInfFile(hSysSetupInf);
+
 #ifdef VMWINST
-  RunVMWInstall ();
+  RunVMWInstall();
 #endif
 
-  DialogBox (hDllInstance,
-	     MAKEINTRESOURCE(IDD_RESTART),
-	     NULL,
-	     RestartDlgProc);
+  DialogBox(hDllInstance,
+	    MAKEINTRESOURCE(IDD_RESTART),
+	    NULL,
+	    RestartDlgProc);
 
   return 0;
 }
