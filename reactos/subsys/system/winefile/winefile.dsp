@@ -203,6 +203,11 @@ SOURCE=.\license.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\read_unix.c
+# PROP Exclude_From_Build 1
+# End Source File
+# Begin Source File
+
 SOURCE=.\winefile.c
 # End Source File
 # Begin Source File

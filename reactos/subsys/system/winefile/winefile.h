@@ -42,7 +42,9 @@
 #include <tchar.h>
 #include <ctype.h>
 
+#ifdef _MSC_VER
 #include <malloc.h>	/* for alloca() */
+#endif
 
 #ifndef _NO_EXTENSIONS
 #define	_SHELL_FOLDERS
@@ -57,11 +59,6 @@
 #define FILE_ATTRIBUTE_SPARSE_FILE          0x00000200
 #define FILE_ATTRIBUTE_REPARSE_POINT        0x00000400
 #define FILE_ATTRIBUTE_NOT_CONTENT_INDEXED  0x00002000
-#endif
-
-#ifndef BTNS_BUTTON
-#define BTNS_BUTTON TBSTYLE_BUTTON
-#define BTNS_SEP TBSTYLE_SEP
 #endif
 
 
@@ -106,11 +103,6 @@ enum IMAGE {
 #define	COLOR_SPLITBAR		LTGRAY_BRUSH
 #endif
 
-#define	WINEFILEFRAME		_T("WFS_Frame")
-#define	WINEFILETREE		_T("WFS_Tree")
-#define	WINEFILEDRIVES		_T("WFS_Drives")
-#define	WINEFILEMDICLIENT	_T("WFS_MdiClient")
-
 #define	FRM_CALC_CLIENT		0xBF83
 #define	Frame_CalcFrameClient(hwnd, prt) ((BOOL)SNDMSG(hwnd, FRM_CALC_CLIENT, 0, (LPARAM)(PRECT)prt))
 
@@ -147,11 +139,3 @@ typedef struct
   UINT			cfStrFName;
 #endif
 } WINEFILE_GLOBALS;
-
-extern WINEFILE_GLOBALS Globals;
-
-#ifdef UNICODE
-extern void _wsplitpath(const WCHAR* path, WCHAR* drv, WCHAR* dir, WCHAR* name, WCHAR* ext);
-#else
-extern void _splitpath(const CHAR* path, CHAR* drv, CHAR* dir, CHAR* name, CHAR* ext);
-#endif

@@ -90,6 +90,16 @@
 #define IDS_WINE						1208
 #define IDS_WINE_FILE					1209
 
+#define IDS_COL_NAME					1210
+#define IDS_COL_SIZE					1211
+#define IDS_COL_CDATE					1212
+#define IDS_COL_ADATE					1213
+#define IDS_COL_MDATE					1214
+#define IDS_COL_IDX						1215
+#define IDS_COL_LINKS					1216
+#define IDS_COL_ATTR					1217
+#define IDS_COL_SEC						1218
+
 
 /* range for drive bar command ids: 0x9000..0x90FF */
 

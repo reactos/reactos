@@ -181,3 +181,16 @@ STRINGTABLE
 	IDS_WINE		"WINE"
 	IDS_WINE_FILE	"Wine File"
 }
+
+STRINGTABLE
+{
+	IDS_COL_NAME	"Name"
+	IDS_COL_SIZE	"Größe"
+	IDS_COL_CDATE	"CDatum"
+	IDS_COL_ADATE	"ZDatum"
+	IDS_COL_MDATE	"ÄDatum"
+	IDS_COL_IDX		"Index/Inode"
+	IDS_COL_LINKS	"Links"
+	IDS_COL_ATTR	"Attribute"
+	IDS_COL_SEC		"Sicherheit"
+}

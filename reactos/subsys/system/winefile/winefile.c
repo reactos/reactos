@@ -18,31 +18,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifdef __WINE__
-#include "config.h"
-#include "wine/port.h"
-#endif
-
 #include <locale.h>
+#include <time.h>
 
 #define NONAMELESSUNION
 #include "winefile.h"
+
 #include "resource.h"
 
-
-/* for read_directory_unix() */
-#if !defined(_NO_EXTENSIONS) && defined(__WINE__)
-#include <dirent.h>
-#include <sys/stat.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <time.h>
-#endif
-
-#ifdef UNICODE
-extern int swprintf(wchar_t*, const wchar_t*, ...);
-#endif
 
 #ifdef _NO_EXTENSIONS
 #undef _LEFT_FILES
@@ -69,11 +52,6 @@ extern int swprintf(wchar_t*, const wchar_t*, ...);
 #define	DEFAULT_SPLIT_POS	200
 #endif
 
-
-WINEFILE_GLOBALS Globals;
-
-extern void WineLicense(HWND hwnd);
-extern void WineWarranty(HWND hwnd);
 
 enum ENTRY_TYPE {
 	ET_WINDOWS,
@@ -173,6 +151,29 @@ typedef struct {
 } ChildWnd;
 
 
+extern void WineLicense(HWND hwnd);
+extern void WineWarranty(HWND hwnd);
+
+
+#ifdef __WINE__
+
+/* functions in read_unix.c */
+
+extern void call_getcwd(char* buffer, size_t len);
+extern void* call_opendir(const char* path);
+extern int call_readdir(void* pdir, char* name, unsigned* pinode);
+extern void call_closedir(void* pdir);
+
+extern int call_stat(
+	const char* path, int* pis_dir,
+	unsigned long* psize_low, unsigned long* psize_high,
+	time_t* patime, time_t* pmtime,
+	unsigned long* plinks
+);
+
+#endif
+
+
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
 static void set_curdir(ChildWnd* child, Entry* entry, HWND hwnd);
 static void get_path(Entry* dir, PTSTR path);
@@ -182,11 +183,19 @@ LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam);
 
 
+/* globals */
+WINEFILE_GLOBALS Globals;
+
+
 /* some common string constants */
 const static TCHAR sEmpty[] = {'\0'};
 const static TCHAR sSpace[] = {' ', '\0'};
 const static TCHAR sNumFmt[] = {'%','d','\0'};
 const static TCHAR sQMarks[] = {'?','?','?','\0'};
+
+/* window class names */
+const static TCHAR sWINEFILEFRAME[] = {'W','F','S','_','F','r','a','m','e','\0'};
+const static TCHAR sWINEFILETREE[] = {'W','F','S','_','T','r','e','e','\0'};
 
 #ifdef _MSC_VER
 /* #define LONGLONGARG _T("I64") */
@@ -432,7 +441,7 @@ static BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 
 	stime.wYear = tm->tm_year+1900;
 	stime.wMonth = tm->tm_mon+1;
-	/*	stime.wDayOfWeek */
+	/* stime.wDayOfWeek */
 	stime.wDay = tm->tm_mday;
 	stime.wHour = tm->tm_hour;
 	stime.wMinute = tm->tm_min;
@@ -441,11 +450,12 @@ static BOOL time_to_filetime(const time_t* t, FILETIME* ftime)
 	return SystemTimeToFileTime(&stime, ftime);
 }
 
-static void read_directory_unix(Entry* dir, LPCTSTR path)
+void read_directory_unix(Entry* dir, LPCTSTR path)
 {
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
 	Entry* entry;
+	void* pdir;
 
 #ifdef UNICODE
 	char cpath[MAX_PATH];
@@ -455,14 +465,15 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	const char* cpath = path;
 #endif
 
-	DIR* pdir = opendir(cpath);
+	pdir = call_opendir(cpath);
 
 	int level = dir->level + 1;
 
 	if (pdir) {
-		struct stat st;
-		struct dirent* ent;
 		char buffer[MAX_PATH], *p, *s;
+		time_t atime, mtime;
+		unsigned inode;
+		int is_dir;
 
 		for(p=buffer,s=cpath; *s; )
 			*p++ = *s++;
@@ -470,7 +481,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 		if (p==buffer || p[-1]!='/')
 			*p++ = '/';
 
-		while((ent=readdir(pdir))) {
+		while(call_readdir(pdir, p, &inode)) {
 			entry = alloc_entry();
 
 			if (!first_entry)
@@ -482,30 +493,26 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 			entry->etype = ET_UNIX;
 
 #ifdef UNICODE
-			MultiByteToWideChar(CP_UNIXCP, 0, ent->d_name, -1, entry->data.cFileName, MAX_PATH);
+			MultiByteToWideChar(CP_UNIXCP, 0, p, -1, entry->data.cFileName, MAX_PATH);
 #else
-			lstrcpy(entry->data.cFileName, ent->d_name);
+			lstrcpy(entry->data.cFileName, p);
 #endif
 
-			entry->data.dwFileAttributes = ent->d_name[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
+			entry->data.dwFileAttributes = p[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
 
-			strcpy(p, ent->d_name);
-
-			if (!stat(buffer, &st)) {
-				if (S_ISDIR(st.st_mode))
+			if (!call_stat(buffer, &is_dir,
+				&entry->data.nFileSizeLow, &entry->data.nFileSizeHigh,
+				&atime, &mtime, &entry->bhfi.nNumberOfLinks))
+			{
+				if (is_dir)
 					entry->data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-				entry->data.nFileSizeLow = st.st_size & 0xFFFFFFFF;
-				entry->data.nFileSizeHigh = st.st_size >> 32;
-
 				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
-				time_to_filetime(&st.st_atime, &entry->data.ftLastAccessTime);
-				time_to_filetime(&st.st_mtime, &entry->data.ftLastWriteTime);
+				time_to_filetime(&atime, &entry->data.ftLastAccessTime);
+				time_to_filetime(&mtime, &entry->data.ftLastWriteTime);
 
-				entry->bhfi.nFileIndexLow = ent->d_ino;
+				entry->bhfi.nFileIndexLow = inode;
 				entry->bhfi.nFileIndexHigh = 0;
-
-				entry->bhfi.nNumberOfLinks = st.st_nlink;
 
 				entry->bhfi_valid = TRUE;
 			} else {
@@ -525,7 +532,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 
 		last->next = NULL;
 
-		closedir(pdir);
+		call_closedir(pdir);
 	}
 
 	dir->down = first_entry;
@@ -1540,7 +1547,7 @@ static HWND create_child_window(ChildWnd* child)
 	MDICREATESTRUCT mcs;
 	int idx;
 
-	mcs.szClass = WINEFILETREE;
+	mcs.szClass = sWINEFILETREE;
 	mcs.szTitle = (LPTSTR)child->path;
 	mcs.hOwner  = Globals.hInstance;
 	mcs.x       = child->pos.rcNormalPosition.left;
@@ -1985,10 +1992,10 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 
 	
 #ifdef UNICODE
-					getcwd(cpath, MAX_PATH);
+					call_getcwd(cpath, MAX_PATH);
 					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);
 #else
-					getcwd(path, MAX_PATH);
+					call_getcwd(path, MAX_PATH);
 #endif
 					child = alloc_child_window(path, NULL, hwnd);
 
@@ -2072,21 +2079,8 @@ LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam
 }
 
 
-static const LPTSTR g_pos_names[COLUMNS] = {
-	TEXT(""),			/* symbol */
-	TEXT("Name"),
-	TEXT("Size"),
-	TEXT("CDate"),
-#ifndef _NO_EXTENSIONS
-	TEXT("ADate"),
-	TEXT("MDate"),
-	TEXT("Index/Inode"),
-	TEXT("Links"),
-#endif /* _NO_EXTENSIONS */
-	TEXT("Attributes"),
-#ifndef _NO_EXTENSIONS
-	TEXT("Security")
-#endif
+static TCHAR g_pos_names[20][COLUMNS] = {
+	{'\0'}	/* symbol */
 };
 
 static const int g_pos_align[] = {
@@ -2546,28 +2540,28 @@ static void output_number(Pane* pane, LPDRAWITEMSTRUCT dis, int col, LPCTSTR str
 
 static int is_exe_file(LPCTSTR ext)
 {
-	static const LPCTSTR executable_extensions[] = {
-		TEXT("COM"),
-		TEXT("EXE"),
-		TEXT("BAT"),
-		TEXT("CMD"),
+	static const TCHAR executable_extensions[][4] = {
+		{'C','O','M','\0'},
+		{'E','X','E','\0'},
+		{'B','A','T','\0'},
+		{'C','M','D','\0'},
 #ifndef _NO_EXTENSIONS
-		TEXT("CMM"),
-		TEXT("BTM"),
-		TEXT("AWK"),
+		{'C','M','M','\0'},
+		{'B','T','M','\0'},
+		{'A','W','K','\0'},
 #endif /* _NO_EXTENSIONS */
-		0
+		{'\0'}
 	};
 
 	TCHAR ext_buffer[_MAX_EXT];
-	const LPCTSTR* p;
+	const TCHAR (*p)[4];
 	LPCTSTR s;
 	LPTSTR d;
 
 	for(s=ext+1,d=ext_buffer; (*d=tolower(*s)); s++)
 		d++;
 
-	for(p=executable_extensions; *p; p++)
+	for(p=executable_extensions; (*p)[0]; p++)
 		if (!_tcscmp(ext_buffer, *p))
 			return 1;
 
@@ -3780,6 +3774,7 @@ static void InitInstance(HINSTANCE hinstance)
 	WNDCLASSEX wcFrame;
 	WNDCLASS wcChild;
 	ATOM hChildClass;
+	int col;
 
 	INITCOMMONCONTROLSEX icc = {
 		sizeof(INITCOMMONCONTROLSEX),
@@ -3805,7 +3800,7 @@ static void InitInstance(HINSTANCE hinstance)
 	wcFrame.hCursor       = LoadCursor(0, IDC_ARROW);
 	wcFrame.hbrBackground = 0;
 	wcFrame.lpszMenuName  = 0;
-	wcFrame.lpszClassName = WINEFILEFRAME;
+	wcFrame.lpszClassName = sWINEFILEFRAME;
 	wcFrame.hIconSm       = (HICON)LoadImage(hinstance,
 											 MAKEINTRESOURCE(IDI_WINEFILE),
 											 IMAGE_ICON,
@@ -3827,7 +3822,7 @@ static void InitInstance(HINSTANCE hinstance)
 	wcChild.hCursor       = LoadCursor(0, IDC_ARROW);
 	wcChild.hbrBackground = 0;
 	wcChild.lpszMenuName  = 0;
-	wcChild.lpszClassName = WINEFILETREE;
+	wcChild.lpszClassName = sWINEFILETREE;
 
 	hChildClass = RegisterClass(&wcChild);
 
@@ -3844,7 +3839,28 @@ static void InitInstance(HINSTANCE hinstance)
 	CoInitialize(NULL);
 	CoGetMalloc(MEMCTX_TASK, &Globals.iMalloc);
 	SHGetDesktopFolder(&Globals.iDesktop);
+#ifdef __WINE__
+	Globals.cfStrFName = RegisterClipboardFormatA(CFSTR_FILENAME);
+#else
 	Globals.cfStrFName = RegisterClipboardFormat(CFSTR_FILENAME);
+#endif
+#endif
+
+	/* load column strings */
+	col = 0;
+
+	load_string(g_pos_names[col++], IDS_COL_NAME);
+	load_string(g_pos_names[col++], IDS_COL_SIZE);
+	load_string(g_pos_names[col++], IDS_COL_CDATE);
+#ifndef _NO_EXTENSIONS
+	load_string(g_pos_names[col++], IDS_COL_ADATE);
+	load_string(g_pos_names[col++], IDS_COL_MDATE);
+	load_string(g_pos_names[col++], IDS_COL_IDX);
+	load_string(g_pos_names[col++], IDS_COL_LINKS);
+#endif
+	load_string(g_pos_names[col++], IDS_COL_ATTR);
+#ifndef _NO_EXTENSIONS
+	load_string(g_pos_names[col++], IDS_COL_SEC);
 #endif
 }
 
@@ -4085,7 +4101,7 @@ int APIENTRY WinMain(HINSTANCE hinstance,
 					 int	   cmdshow)
 {
 #ifdef _NO_EXTENSIONS
-	if (find_window_class(WINEFILEFRAME))
+	if (find_window_class(sWINEFILEFRAME))
 		return 1;
 #endif
 
