@@ -1,4 +1,4 @@
-/* $Id: mp.c,v 1.4 2002/10/01 19:27:19 chorns Exp $
+/* $Id: mp.c,v 1.5 2002/12/09 18:42:41 robd Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -1393,7 +1393,9 @@ VOID MpsTimerHandler(
   /*
    * Call the dispatcher
    */
-  PsDispatchThread(THREAD_STATE_RUNNABLE);
+  // TODO FIXME - What happened to definition for THREAD_STATE_RUNNABLE ???
+  // TODO FIXME - What happened to definition for PsDispatchThread ???
+  //PsDispatchThread(THREAD_STATE_RUNNABLE);
 
 #if 0
   /*
