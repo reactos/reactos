@@ -1,4 +1,4 @@
-/* $Id: dirwr.c,v 1.27 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: dirwr.c,v 1.28 2002/08/17 15:15:50 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -135,6 +135,7 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
     *start = i - nbFree;
     if (*start + nbSlots > count)
     {
+      LARGE_INTEGER AllocationSize;
       CHECKPOINT;
       // extend the directory
       if (vfatFCBIsRoot(pDirFcb) && DeviceExt->FatInfo.FatType != FAT32)
@@ -142,8 +143,9 @@ findDirSpace(PDEVICE_EXTENSION DeviceExt,
         // We can't extend a root directory on a FAT12/FAT16 partition
         return FALSE;
       }
-      Status = vfatExtendSpace (DeviceExt, pDirFcb->FileObject,
-                 pDirFcb->RFCB.FileSize.u.LowPart + DeviceExt->FatInfo.BytesPerCluster);
+      AllocationSize.QuadPart = pDirFcb->RFCB.FileSize.u.LowPart + DeviceExt->FatInfo.BytesPerCluster;
+      Status = VfatSetAllocationSizeInformation(pDirFcb->FileObject, pDirFcb,
+	                                        DeviceExt, &AllocationSize);
       if (!NT_SUCCESS(Status))
       {
         return FALSE;
@@ -488,12 +490,12 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   }
 
   size = DeviceExt->FatInfo.BytesPerCluster / sizeof(FATDirEntry);
+  FileOffset.u.HighPart = 0;
+  FileOffset.u.LowPart = start * sizeof(FATDirEntry);
   if (start / size == (start + nbSlots - 1) / size)
   {
     // one cluster
     CHECKPOINT;
-    FileOffset.u.HighPart = 0;
-    FileOffset.u.LowPart = start * sizeof(FATDirEntry);
     CcMapData (pDirFcb->FileObject, &FileOffset, nbSlots * sizeof(FATDirEntry),
                TRUE, &Context, (PVOID*)&pFatEntry);
     memcpy(pFatEntry, Buffer, nbSlots * sizeof(FATDirEntry));
@@ -502,8 +504,6 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
   {
     // two clusters
     CHECKPOINT;
-    FileOffset.u.HighPart = 0;
-    FileOffset.u.LowPart = start * sizeof(FATDirEntry);
     size = DeviceExt->FatInfo.BytesPerCluster -
              (start * sizeof(FATDirEntry)) % DeviceExt->FatInfo.BytesPerCluster;
     CcMapData (pDirFcb->FileObject, &FileOffset, size, TRUE,

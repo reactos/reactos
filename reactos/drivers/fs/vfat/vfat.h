@@ -1,4 +1,4 @@
-/* $Id: vfat.h,v 1.44 2002/08/14 20:58:32 dwelch Exp $ */
+/* $Id: vfat.h,v 1.45 2002/08/17 15:15:50 hbirr Exp $ */
 
 #include <ddk/ntifs.h>
 
@@ -20,7 +20,8 @@ struct _BootSector
   unsigned char  Drive, Res1, Sig;
   unsigned long  VolumeID;
   unsigned char  VolumeLabel[11], SysType[8];
-  unsigned char  Res2[450];
+  unsigned char  Res2[446];
+  unsigned long  Signatur1;
 } __attribute__((packed));
 
 struct _BootSector32
@@ -327,7 +328,7 @@ NTSTATUS VfatSetInformation (PVFAT_IRP_CONTEXT IrpContext);
 NTSTATUS
 VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject, 
 				 PVFATFCB Fcb,
-				 PDEVICE_OBJECT DeviceObject,
+				 PDEVICE_EXTENSION DeviceExt,
 				 PLARGE_INTEGER AllocationSize);
 
 /*  ---------------------------------------------------------  iface.c  */
@@ -476,10 +477,6 @@ NTSTATUS vfatMakeFCBFromDirEntry (PVCB  vcb,
 NTSTATUS VfatRead (PVFAT_IRP_CONTEXT IrpContext);
 
 NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext);
-
-NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt,
-                          PFILE_OBJECT pFileObject,
-                          ULONG NewSize);
 
 NTSTATUS VfatWriteFile (PDEVICE_EXTENSION DeviceExt,
                         PFILE_OBJECT FileObject,

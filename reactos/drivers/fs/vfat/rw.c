@@ -1,5 +1,5 @@
 
-/* $Id: rw.c,v 1.44 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: rw.c,v 1.45 2002/08/17 15:15:50 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -575,123 +575,6 @@ NTSTATUS VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    return Status;
 }
 
-NTSTATUS vfatExtendSpace (PDEVICE_EXTENSION pDeviceExt, PFILE_OBJECT pFileObject, ULONG NewSize)
-{
-  ULONG FirstCluster;
-  ULONG CurrentCluster;
-  ULONG NewCluster;
-  NTSTATUS Status;
-  PVFATFCB pFcb;
-
-
-  pFcb = ((PVFATCCB) (pFileObject->FsContext2))->pFcb;
-
-  DPRINT ("New Size %d,  AllocationSize %d,  BytesPerCluster %d\n",  NewSize,
-    (ULONG)pFcb->RFCB.AllocationSize.QuadPart, pDeviceExt->FatInfo.BytesPerCluster);
-
-  FirstCluster = CurrentCluster = vfatDirEntryGetFirstCluster (pDeviceExt, &pFcb->entry);
-
-  if (NewSize > pFcb->RFCB.AllocationSize.QuadPart || FirstCluster==0)
-  {
-    // size on disk must be extended
-    if (FirstCluster == 0)
-    {
-      // file of size zero
-      Status = NextCluster (pDeviceExt, pFcb, FirstCluster, &CurrentCluster, TRUE);
-      if (!NT_SUCCESS(Status))
-      {
-        DPRINT1("NextCluster failed, Status %x\n", Status);
-        return Status;
-      }
-      NewCluster = FirstCluster = CurrentCluster;
-    }
-    else
-    {
-      Status = OffsetToCluster(pDeviceExt, pFcb, FirstCluster,
-                 pFcb->RFCB.AllocationSize.QuadPart - pDeviceExt->FatInfo.BytesPerCluster,
-                 &CurrentCluster, FALSE);
-      if (!NT_SUCCESS(Status))
-      {
-        DPRINT1("OffsetToCluster failed, Status %x\n", Status);
-        return Status;
-      }
-      if (CurrentCluster == 0xffffffff)
-      {
-        DPRINT1("Not enough disk space.\n");
-        return STATUS_DISK_FULL;
-      }
-      // CurrentCluster zeigt jetzt auf den letzten Cluster in der Kette
-      NewCluster = CurrentCluster;
-      Status = NextCluster(pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
-      if (NewCluster != 0xffffffff)
-      {
-        DPRINT1("Difference between size from direntry and the FAT.\n");
-      }
-    }
-
-    Status = OffsetToCluster(pDeviceExt, pFcb, FirstCluster,
-               ROUND_DOWN(NewSize-1, pDeviceExt->FatInfo.BytesPerCluster),
-               &NewCluster, TRUE);
-    if (!NT_SUCCESS(Status) || NewCluster == 0xffffffff)
-    {
-      DPRINT1("Not enough free space on disk\n");
-      if (pFcb->RFCB.AllocationSize.QuadPart > 0)
-      {
-        NewCluster = CurrentCluster;
-        // FIXME: check status
-        NextCluster(pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
-        WriteCluster(pDeviceExt, CurrentCluster, 0xffffffff);
-      }
-      // free the allocated space
-      while (NewCluster != 0xffffffff)
-      {
-        CurrentCluster = NewCluster;
-        // FIXME: check status
-        NextCluster (pDeviceExt, pFcb, FirstCluster, &NewCluster, FALSE);
-        WriteCluster (pDeviceExt, CurrentCluster, 0);
-      }
-      return STATUS_DISK_FULL;
-    }
-    if (pFcb->RFCB.AllocationSize.QuadPart == 0)
-    {
-      pFcb->entry.FirstCluster = FirstCluster;
-      if(pDeviceExt->FatInfo.FatType == FAT32)
-        pFcb->entry.FirstClusterHigh = FirstCluster >> 16;
-    }
-    pFcb->RFCB.AllocationSize.QuadPart = ROUND_UP(NewSize, pDeviceExt->FatInfo.BytesPerCluster);
-    if (pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY)
-    {
-      pFcb->RFCB.FileSize.QuadPart = pFcb->RFCB.AllocationSize.QuadPart;
-      pFcb->RFCB.ValidDataLength.QuadPart = pFcb->RFCB.AllocationSize.QuadPart;
-    }
-    else
-    {
-      pFcb->entry.FileSize = NewSize;
-      pFcb->RFCB.FileSize.QuadPart = NewSize;
-      pFcb->RFCB.ValidDataLength.QuadPart = NewSize;
-    }
-    CcSetFileSizes(pFileObject, (PCC_FILE_SIZES)&pFcb->RFCB.AllocationSize);
-  }
-  else
-  {
-    if (NewSize > pFcb->RFCB.FileSize.QuadPart)
-    {
-      // size on disk must not be extended
-      if (!(pFcb->entry.Attrib & FILE_ATTRIBUTE_DIRECTORY))
-      {
-        pFcb->entry.FileSize = NewSize;
-	  }
-        pFcb->RFCB.FileSize.QuadPart = NewSize;
-        CcSetFileSizes(pFileObject, (PCC_FILE_SIZES)&pFcb->RFCB.AllocationSize);
-      }
-    else
-    {
-      // nothing to do
-    }
-  }
-  return STATUS_SUCCESS;
-}
-
 NTSTATUS
 VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 {
@@ -809,6 +692,16 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
       }
 
       CHECKPOINT;
+      if (IrpContext->FileObject->PrivateCacheMap == NULL)
+      {
+	  ULONG CacheSize;
+	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
+	  if (CacheSize < PAGESIZE)
+	  {
+	     CacheSize = PAGESIZE;
+	  }
+	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
+      }
       if (!CcCopyRead(IrpContext->FileObject, &ByteOffset, Length,
                       IrpContext->Flags & IRPCONTEXT_CANWAIT, Buffer,
                       &IrpContext->Irp->IoStatus))
@@ -1039,8 +932,10 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    if (!(Fcb->Flags & (FCB_IS_FAT|FCB_IS_VOLUME)) && !(IrpContext->Irp->Flags & IRP_PAGING_IO))
    {
-      Status = vfatExtendSpace(IrpContext->DeviceExt, IrpContext->FileObject,
-                               ByteOffset.u.LowPart + Length);
+      LARGE_INTEGER AllocationSize;
+      AllocationSize.QuadPart = ByteOffset.u.LowPart + Length;
+      Status = VfatSetAllocationSizeInformation(IrpContext->FileObject, Fcb,
+	                                        IrpContext->DeviceExt, &AllocationSize);
       CHECKPOINT;
       if (!NT_SUCCESS (Status))
       {
@@ -1067,7 +962,16 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
          goto ByeBye;
       }
       CHECKPOINT;
-
+      if (IrpContext->FileObject->PrivateCacheMap == NULL)
+      {
+	  ULONG CacheSize;
+	  CacheSize = IrpContext->DeviceExt->FatInfo.BytesPerCluster;
+	  if (CacheSize < PAGESIZE)
+	  {
+	     CacheSize = PAGESIZE;
+	  }
+	  CcRosInitializeFileCache(IrpContext->FileObject, &Fcb->RFCB.Bcb, CacheSize);
+      }
       if (CcCopyWrite(IrpContext->FileObject, &ByteOffset, Length,
                       1 /*IrpContext->Flags & IRPCONTEXT_CANWAIT*/, Buffer))
       {

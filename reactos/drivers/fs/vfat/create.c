@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: create.c,v 1.43 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: create.c,v 1.44 2002/08/17 15:15:50 hbirr Exp $
  *
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/vfat/create.c
@@ -759,7 +759,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	      Irp->IoStatus.Information = FILE_CREATED;
 	      VfatSetAllocationSizeInformation(FileObject, 
 					       pFcb,
-					       DeviceObject,
+					       DeviceExt,
 					       &Irp->Overlay.AllocationSize);
 	      VfatSetExtendedAttributes(FileObject, 
 					Irp->AssociatedIrp.SystemBuffer,

@@ -1,4 +1,4 @@
-/* $Id: fcb.c,v 1.17 2002/08/14 20:58:31 dwelch Exp $
+/* $Id: fcb.c,v 1.18 2002/08/17 15:15:50 hbirr Exp $
  *
  *
  * FILE:             fcb.c
@@ -105,9 +105,18 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
   if (pFCB->RefCount <= 0 && (!vfatFCBIsDirectory (pVCB, pFCB) || pFCB->Flags & FCB_DELETE_PENDING))
   {
     RemoveEntryList (&pFCB->FcbListEntry);    
+    KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
+    if (vfatFCBIsDirectory(pVCB, pFCB))
+    {
+      CcRosReleaseFileCache(pFCB->FileObject, pFCB->RFCB.Bcb);
+      ExFreePool(pFCB->FileObject->FsContext2);
+      pFCB->FileObject->FsContext2 = NULL;
+      ObDereferenceObject(pFCB->FileObject);
+    }
     vfatDestroyFCB (pFCB);
   }
-  KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
+  else
+    KeReleaseSpinLock (&pVCB->FcbListLock, oldIrql);
 }
 
 VOID
@@ -190,7 +199,6 @@ vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
     KeBugCheck (0);
   }
 
-  ObDereferenceObject (fileObject);
   fcb->Flags |= FCB_CACHE_INITIALIZED;
 
   return  status;
@@ -349,24 +357,6 @@ vfatAttachFCBToFileObject (PDEVICE_EXTENSION  vcb,
   newCCB->pFcb = fcb;
   newCCB->PtrFileObject = fileObject;
   fcb->pDevExt = vcb;
-
-  if (!(fcb->Flags & FCB_CACHE_INITIALIZED))
-  {
-    ULONG  fileCacheQuantum;
-
-    fileCacheQuantum = (vcb->FatInfo.BytesPerCluster >= PAGESIZE) ? 
-				vcb->FatInfo.BytesPerCluster : PAGESIZE;
-    status = CcRosInitializeFileCache (fileObject,
-                                       &fcb->RFCB.Bcb,
-                                       fileCacheQuantum);
-    if (!NT_SUCCESS (status))
-    {
-      DbgPrint ("CcRosInitializeFileCache failed\n");
-      KeBugCheck (0);
-    }
-    fcb->Flags |= FCB_CACHE_INITIALIZED;
-  }
-
   DPRINT ("file open: fcb:%x file size: %d\n", fcb, fcb->entry.FileSize);
 
   return  STATUS_SUCCESS;
