@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: dos8dot3.c,v 1.2 2002/06/06 16:17:26 ekohl Exp $
+/* $Id: dos8dot3.c,v 1.3 2002/06/06 18:59:50 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -121,12 +121,15 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
   DPRINT("ExtLength: %hu\n", ExtLength);
 
   /* Determine next index */
+  CurrentIndex = Context->LastIndexValue;
   CopyLength = min(NameLength, (CurrentIndex < 10) ? 6 : 5);
+  DPRINT("CopyLength: %hu\n", CopyLength);
+
   if ((Context->NameLength == CopyLength) &&
       (wcsncmp(Context->NameBuffer, NameBuffer, CopyLength) == 0) &&
       (Context->ExtensionLength == ExtLength) &&
       (wcsncmp(Context->ExtensionBuffer, ExtBuffer, ExtLength) == 0))
-    CurrentIndex = Context->LastIndexValue + 1;
+    CurrentIndex++;
   else
     CurrentIndex = 1;
   DPRINT("CurrentIndex: %hu\n", CurrentIndex);
@@ -242,7 +245,5 @@ RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
 
   return(TRUE);
 }
-
-
 
 /* EOF */
