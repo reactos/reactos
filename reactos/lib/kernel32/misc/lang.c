@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.4 2004/01/14 21:40:12 rcampbell Exp $
+/* $Id: lang.c,v 1.5 2004/01/14 21:41:24 rcampbell Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <kernel32/kernel32.h>
 #include <string.h>
+
+/* FIXME:  these are included in winnls.h, however including this file causes alot of 
+           conflicting type errors. */
 
 #define LOCALE_SYEARMONTH 0x1006
 #define LOCALE_IPAPERSIZE 0x100A
@@ -616,6 +619,7 @@ GetGeoInfoA(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return 0;
 }
+
 const WCHAR *RosGetLocaleValueName( DWORD lctype )
 {
     static const WCHAR iCalendarTypeW[] = {'i','C','a','l','e','n','d','a','r','T','y','p','e',0};
