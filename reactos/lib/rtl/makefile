@@ -30,7 +30,10 @@ TARGET_OBJECTS = \
 	time.o \
 	timezone.o \
 	unicode.o \
-	version.o
+	version.o \
+	encode.o \
+	image.o \
+	splaytree.o
 
 #	atom
 #	registry
