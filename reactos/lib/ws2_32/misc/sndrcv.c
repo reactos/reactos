@@ -7,6 +7,8 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+
+#include <w32api.h>
 #include <ws2_32.h>
 #include <catalog.h>
 #include <handle.h>
@@ -297,9 +299,15 @@ WSASendTo(
 
   assert(Provider->ProcTable.lpWSPSendTo);
 
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+  Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
+    lpNumberOfBytesSent, dwFlags, (CONST LPSOCKADDR) lpTo, iToLen, lpOverlapped,
+    lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+#else
   Code = Provider->ProcTable.lpWSPSendTo(s, lpBuffers, dwBufferCount,
     lpNumberOfBytesSent, dwFlags, lpTo, iToLen, lpOverlapped,
     lpCompletionRoutine, NULL /* lpThreadId */, &Errno);
+#endif /* __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
 
   DereferenceProviderByPointer(Provider);
 

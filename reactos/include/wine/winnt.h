@@ -57,6 +57,14 @@ static inline struct _TEB * NtCurrentTeb(void)
  return pTeb;
 }
 
+#if (_WIN32_WINNT >= 0x0500)
+typedef LONG (WINAPI *PVECTORED_EXCEPTION_HANDLER)(PEXCEPTION_POINTERS);
 #endif
+
+/* Fix buggy definition in w32api 2.4 */
+#undef INVALID_FILE_ATTRIBUTES
+#define INVALID_FILE_ATTRIBUTES ((DWORD) (-1))
+
+#endif /* __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
 
 #endif  /* __WINE_WINNT_H */

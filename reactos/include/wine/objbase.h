@@ -19,6 +19,11 @@
 #define WINOLEAPI STDAPI
 #define WINOLEAPI_(type) STDAPI_(type)
 
+#ifdef DBG
+#undef DBG
+#define DBG 1
+#endif
+
 #include_next <objbase.h>
 
 #ifndef _OBJBASE_H_

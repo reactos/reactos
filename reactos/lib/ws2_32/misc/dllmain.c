@@ -7,6 +7,7 @@
  * REVISIONS:
  *   CSH 01/09-2000 Created
  */
+#include <w32api.h>
 #include <ws2_32.h>
 #include <catalog.h>
 #include <handle.h>
@@ -394,8 +395,13 @@ bind(
     return SOCKET_ERROR;
   }
 
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+  Status = Provider->ProcTable.lpWSPBind(
+    s, (CONST LPSOCKADDR) name, namelen, &Errno);
+#else
   Status = Provider->ProcTable.lpWSPBind(
     s, name, namelen, &Errno);
+#endif /* __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
 
   DereferenceProviderByPointer(Provider);
 
@@ -538,8 +544,13 @@ WSAConnect(
     return SOCKET_ERROR;
   }
 
+#if (__W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
+  Status = Provider->ProcTable.lpWSPConnect(
+    s, (CONST LPSOCKADDR) name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
+#else
   Status = Provider->ProcTable.lpWSPConnect(
     s, name, namelen, lpCallerData, lpCalleeData, lpSQOS, lpGQOS, &Errno);
+#endif
 
   DereferenceProviderByPointer(Provider);
 
