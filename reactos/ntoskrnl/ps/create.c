@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.67 2003/09/25 20:08:36 ekohl Exp $
+/* $Id: create.c,v 1.67.12.1 2003/12/17 01:32:47 hyperion Exp $
  *
  * COPYRIGHT:              See COPYING in the top level directory
  * PROJECT:                ReactOS kernel
@@ -48,6 +48,7 @@ extern LIST_ENTRY PiThreadListHead;
 static ULONG PiThreadNotifyRoutineCount = 0;
 static PCREATE_THREAD_NOTIFY_ROUTINE
 PiThreadNotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
+FAST_MUTEX PiThreadNotifyRoutineLock;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -286,39 +287,14 @@ PiBeforeBeginThread(CONTEXT c)
 VOID STDCALL
 PiDeleteThread(PVOID ObjectBody)
 {
-  KIRQL oldIrql;
   PETHREAD Thread;
-  ULONG i;
-  PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
-  ULONG NotifyRoutineCount;
 
   Thread = (PETHREAD)ObjectBody;
 
   DPRINT("PiDeleteThread(ObjectBody %x)\n",ObjectBody);
 
-  /* Terminate Win32 thread */
-  PsTerminateWin32Thread (Thread);
-
   ObDereferenceObject(Thread->ThreadsProcess);
   Thread->ThreadsProcess = NULL;
-
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-  for (i = 0; i < PiThreadNotifyRoutineCount; i++)
-  {
-     NotifyRoutine[i] = PiThreadNotifyRoutine[i];
-  }
-  NotifyRoutineCount = PiThreadNotifyRoutineCount;
-  PiNrThreads--;
-  RemoveEntryList(&Thread->Tcb.ThreadListEntry);
-  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
-
-  for (i = 0; i < NotifyRoutineCount; i++)
-  {
-     //must be called below DISPATCH_LVL
-     NotifyRoutine[i](Thread->Cid.UniqueProcess,
-                      Thread->Cid.UniqueThread,
-                      FALSE);
-  }
 
   KeReleaseThread(Thread);
   DPRINT("PiDeleteThread() finished\n");
@@ -334,11 +310,7 @@ PsInitializeThread(HANDLE ProcessHandle,
 {
    PETHREAD Thread;
    NTSTATUS Status;
-   KIRQL oldIrql;
    PEPROCESS Process;
-   ULONG i;
-   ULONG NotifyRoutineCount;
-   PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine[MAX_THREAD_NOTIFY_ROUTINE_COUNT];
 
    /*
     * Reference process
@@ -418,26 +390,9 @@ PsInitializeThread(HANDLE ProcessHandle,
    DPRINT("Thread->Cid.UniqueThread %d\n",Thread->Cid.UniqueThread);
    
    *ThreadPtr = Thread;
-   
-   KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
-   InsertTailList(&PiThreadListHead, &Thread->Tcb.ThreadListEntry);
-   for (i = 0; i < PiThreadNotifyRoutineCount; i++)
-   {
-      NotifyRoutine[i] = PiThreadNotifyRoutine[i];
-   }
-   NotifyRoutineCount = PiThreadNotifyRoutineCount;
-   KeReleaseSpinLock(&PiThreadListLock, oldIrql);
 
    Thread->Tcb.BasePriority = Thread->ThreadsProcess->Pcb.BasePriority;
    Thread->Tcb.Priority = Thread->Tcb.BasePriority;
-
-  for (i = 0; i < NotifyRoutineCount; i++)
-  {
-      //must be called below DISPATCH_LVL
-      NotifyRoutine[i](Thread->Cid.UniqueProcess,
-			       Thread->Cid.UniqueThread,
-			       TRUE);
-  }
 
   return(STATUS_SUCCESS);
 }
@@ -633,11 +588,6 @@ NtCreateThread(PHANDLE ThreadHandle,
     }
 
   /*
-   * Maybe send a message to the process's debugger
-   */
-  DbgkCreateThread((PVOID)ThreadContext->Eip);
-
-  /*
    * First, force the thread to be non-alertable for user-mode alerts.
    */
   Thread->Tcb.Alertable = FALSE;
@@ -651,10 +601,17 @@ NtCreateThread(PHANDLE ThreadHandle,
       PsSuspendThread(Thread, NULL);
     }
 
+  /* Run the thread and process creation notification routines */
+  if(InterlockedIncrement(Thread->ThreadsProcess->ThreadCount) == 1)
+   PspRunProcessNotifyRoutines(Thread->ThreadsProcess, TRUE);
+
+  PspRunThreadNotifyRoutines(Thread, TRUE);
+
   /*
    * Queue an APC to the thread that will execute the ntdll startup
    * routine.
    */
+  /* FIXME: this should be done in the context of the created thread */
   LdrInitApc = ExAllocatePool(NonPagedPool, sizeof(KAPC));
   KeInitializeApc(LdrInitApc, &Thread->Tcb, OriginalApcEnvironment, LdrInitApcKernelRoutine,
 		  LdrInitApcRundownRoutine, LdrpGetSystemDllEntryPoint(), 
@@ -665,6 +622,9 @@ NtCreateThread(PHANDLE ThreadHandle,
    * Start the thread running and force it to execute the APC(s) we just
    * queued before it runs anything else in user-mode.
    */
+  /* FIXME: this is, of course, wrong. Having the thread queue the APC itself
+     will allow us to replace this dirty, ugly hack with a straightforward
+     KeLowerIrql(PASSIVE_LEVEL) */
   Thread->Tcb.Alertable = TRUE;
   Thread->Tcb.Alerted[0] = 1;
   PsUnblockThread(Thread, NULL);
@@ -735,6 +695,34 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
    return(STATUS_SUCCESS);
 }
 
+static VOID STDCALL PspAcquireThreadNotifyRoutineLock(VOID)
+{
+ KeEnterCriticalRegion();
+ ExAcquireFastMutexUnsafe(&PiThreadNotifyRoutineLock);
+}
+
+static VOID STDCALL PspReleaseThreadNotifyRoutineLock(VOID)
+{
+ ExReleaseFastMutexUnsafe(&PiThreadNotifyRoutineLock);
+ KeLeaveCriticalRegion();
+}
+
+VOID STDCALL PspRunThreadNotifyRoutines
+(
+ PETHREAD Thread,
+ BOOLEAN Create
+)
+{
+ ULONG i;
+ CLIENT_ID cid = Thread->Cid;
+
+ PspAcquireThreadNotifyRoutineLock();
+
+ for(i = 0; i < PiThreadNotifyRoutineCount; ++ i)
+  PiThreadNotifyRoutine[i](cid.UniqueProcess, cid.UniqueThread, Create);
+
+ PspReleaseThreadNotifyRoutineLock();
+}
 
 /*
  * @implemented
@@ -742,18 +730,18 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 PsSetCreateThreadNotifyRoutine(IN PCREATE_THREAD_NOTIFY_ROUTINE NotifyRoutine)
 {
-  KIRQL oldIrql;
+  PspAcquireThreadNotifyRoutineLock();
 
-  KeAcquireSpinLock(&PiThreadListLock, &oldIrql);
   if (PiThreadNotifyRoutineCount >= MAX_THREAD_NOTIFY_ROUTINE_COUNT)
   {
-    KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+    PspReleaseThreadNotifyRoutineLock();
     return(STATUS_INSUFFICIENT_RESOURCES);
   }
 
   PiThreadNotifyRoutine[PiThreadNotifyRoutineCount] = NotifyRoutine;
   PiThreadNotifyRoutineCount++;
-  KeReleaseSpinLock(&PiThreadListLock, oldIrql);
+
+  PspReleaseThreadNotifyRoutineLock();
 
   return(STATUS_SUCCESS);
 }
