@@ -55,7 +55,7 @@ VfatxFormat (PUNICODE_STRING DriveRoot,
     NULL);
 
   Status = NtOpenFile(&FileHandle,
-    FILE_WRITE_ACCESS | FILE_WRITE_ATTRIBUTES,
+    FILE_GENERIC_READ | FILE_GENERIC_WRITE,
     &ObjectAttributes,
     &Iosb,
     FILE_SHARE_READ,
