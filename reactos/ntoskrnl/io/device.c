@@ -1,4 +1,4 @@
-/* $Id: device.c,v 1.75 2004/08/18 08:33:25 ekohl Exp $
+/* $Id: device.c,v 1.76 2004/08/18 15:09:02 navaraf Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -435,6 +435,8 @@ IoAttachDeviceToDeviceStack(
    AttachedDevice->AttachedDevice = SourceDevice;
    SourceDevice->AttachedDevice = NULL;
    SourceDevice->StackSize = AttachedDevice->StackSize + 1;
+   SourceDevice->AlignmentRequirement = AttachedDevice->AlignmentRequirement;
+   SourceDevice->SectorSize = AttachedDevice->SectorSize;
    SourceDevice->Vpb = AttachedDevice->Vpb;
    return AttachedDevice;
 }
@@ -640,8 +642,8 @@ IoCreateDevice(
        CreatedDeviceObject->DeviceType == FILE_DEVICE_TAPE)
    {
       IoAttachVpb(CreatedDeviceObject);      
-      CreatedDeviceObject->SectorSize = 512; /* FIXME */
    }
+   CreatedDeviceObject->SectorSize = 512; /* FIXME */
   
    DeviceObjectExtension =
       ExAllocatePoolWithTag(
