@@ -1,0 +1,16 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = riched32.dll
+IMPORTS   = user32 kernel32
+
+C_SRCS = \
+	charlist.c \
+	reader.c \
+	text-writer.c \
+	richedit.c
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

@@ -40,7 +40,7 @@ reactos/lib/imm32
 reactos/lib/msvcrt20
 reactos/lib/mpr                 # Imported 20040201
 reactos/lib/ole32               # Synced to Wine-20040121
-reactos/lib/richedit		#Out of sync
+reactos/lib/richedit		# Synced 20040201
 reactos/lib/rpcrt4		#Out of date In need of new merge
 reactos/lib/shell32             # 2004/01/22: Heavy syncing in progress
 reactos/lib/shlwapi             # Synced to Wine-20040121

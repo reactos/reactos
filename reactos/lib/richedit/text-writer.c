@@ -45,20 +45,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
-static void	TextClass ();
-static void	ControlClass ();
-static void	Destination ();
-static void	SpecialChar ();
-static void	PutStdChar ();
-static void	PutLitChar ();
-static void	PutLitStr ();
+static void	TextClass (RTF_Info *info);
+static void	ControlClass (RTF_Info *info);
+static void	Destination (RTF_Info *info);
+static void	SpecialChar (RTF_Info *info);
+static void	PutStdChar (RTF_Info *info, int stdCode);
+static void	PutLitChar (RTF_Info *info, int c);
+static void	PutLitStr (RTF_Info *info, char	*s);
 
+#if 0
 static char	*outMap[rtfSC_MaxChar];
 
 static CHARLIST charlist = {0, NULL, NULL};
+#endif
 
-int RTFToBuffer(char* pBuffer, int nBufferSize);
-int RTFToBuffer(char* pBuffer, int nBufferSize)
+/*int RTFToBuffer(char* pBuffer, int nBufferSize); */
+int RTFToBuffer(RTF_Info *info, char* pBuffer, int nBufferSize)
 {
 
    /* check if the buffer is big enough to hold all characters  */
@@ -66,13 +68,13 @@ int RTFToBuffer(char* pBuffer, int nBufferSize)
 
    TRACE("\n");
 
-   if(nBufferSize < charlist.nCount + 1) {
-        return charlist.nCount + CHARLIST_CountChar(&charlist, '\n') + 1;
+   if(nBufferSize < info->charlist.nCount + 1) {
+        return info->charlist.nCount + CHARLIST_CountChar(&info->charlist, '\n') + 1;
    }
 
-   while(charlist.nCount)
+   while(info->charlist.nCount)
    {
-       *pBuffer = CHARLIST_Dequeue(&charlist);
+       *pBuffer = CHARLIST_Dequeue(&info->charlist);
        if(*pBuffer=='\n')
        {
          *pBuffer = '\r';
@@ -92,19 +94,19 @@ int RTFToBuffer(char* pBuffer, int nBufferSize)
  */
 
 void
-WriterInit ()
+WriterInit (RTF_Info *info )
 {
-	RTFReadOutputMap (outMap,1);
+	RTFReadOutputMap (info, info->outMap,1);
 }
 
 
 int
-BeginFile ()
+BeginFile (RTF_Info *info )
 {
 	/* install class callbacks */
 
-	RTFSetClassCallback (rtfText, TextClass);
-	RTFSetClassCallback (rtfControl, ControlClass);
+	RTFSetClassCallback (info, rtfText, TextClass);
+	RTFSetClassCallback (info, rtfControl, ControlClass);
 
 	return (1);
 }
@@ -119,38 +121,38 @@ BeginFile ()
  */
 
 static void
-TextClass ()
+TextClass (RTF_Info *info)
 {
 char	buf[rtfBufSiz];
 
 	TRACE("\n");
 
-	if (rtfFormat == SF_TEXT)
-	        PutLitChar (rtfMajor);
-	else if (rtfMinor != rtfSC_nothing)
-		PutStdChar (rtfMinor);
+	if (info->rtfFormat == SF_TEXT)
+	        PutLitChar (info, info->rtfMajor);
+	else if (info->rtfMinor != rtfSC_nothing)
+		PutStdChar (info, info->rtfMinor);
 	else
 	{
-		if (rtfMajor < 128)	/* in ASCII range */
-			sprintf (buf, "[[%c]]", rtfMajor);
+		if (info->rtfMajor < 128)	/* in ASCII range */
+			sprintf (buf, "[[%c]]", info->rtfMajor);
 		else
-			sprintf (buf, "[[\\'%02x]]", rtfMajor);
-		PutLitStr (buf);
+			sprintf (buf, "[[\\'%02x]]", info->rtfMajor);
+		PutLitStr (info, buf);
 	}
 }
 
 
 static void
-ControlClass ()
+ControlClass (RTF_Info *info)
 {
 	TRACE("\n");
-	switch (rtfMajor)
+	switch (info->rtfMajor)
 	{
 	case rtfDestination:
-		Destination ();
+		Destination (info);
 		break;
 	case rtfSpecialChar:
-		SpecialChar ();
+		SpecialChar (info);
 		break;
 	}
 }
@@ -163,12 +165,12 @@ ControlClass ()
  */
 
 static void
-Destination ()
+Destination (RTF_Info *info)
 {
 
 	TRACE("\n");
 
-	switch (rtfMinor)
+	switch (info->rtfMinor)
 	{
 	case rtfPict:
 	case rtfFNContSep:
@@ -183,7 +185,7 @@ Destination ()
 	case rtfIComment:
 	case rtfIVersion:
 	case rtfIDoccomm:
-		RTFSkipGroup ();
+		RTFSkipGroup (info);
 		break;
 	}
 }
@@ -195,52 +197,52 @@ Destination ()
  * can be controlled by the text-map file.
  */
 
-void SpecialChar ()
+void SpecialChar (RTF_Info *info)
 {
 
 	TRACE("\n");
 
-	switch (rtfMinor)
+	switch (info->rtfMinor)
 	{
 	case rtfPage:
 	case rtfSect:
 	case rtfRow:
 	case rtfLine:
 	case rtfPar:
-		PutLitChar ('\n');
+		PutLitChar (info, '\n');
 		break;
 	case rtfCell:
-		PutStdChar (rtfSC_space);	/* make sure cells are separated */
+		PutStdChar (info, rtfSC_space);	/* make sure cells are separated */
 		break;
 	case rtfNoBrkSpace:
-		PutStdChar (rtfSC_nobrkspace);
+		PutStdChar (info, rtfSC_nobrkspace);
 		break;
 	case rtfTab:
-		PutLitChar ('\t');
+		PutLitChar (info, '\t');
 		break;
 	case rtfNoBrkHyphen:
-		PutStdChar (rtfSC_nobrkhyphen);
+		PutStdChar (info, rtfSC_nobrkhyphen);
 		break;
 	case rtfBullet:
-		PutStdChar (rtfSC_bullet);
+		PutStdChar (info, rtfSC_bullet);
 		break;
 	case rtfEmDash:
-		PutStdChar (rtfSC_emdash);
+		PutStdChar (info, rtfSC_emdash);
 		break;
 	case rtfEnDash:
-		PutStdChar (rtfSC_endash);
+		PutStdChar (info, rtfSC_endash);
 		break;
 	case rtfLQuote:
-		PutStdChar (rtfSC_quoteleft);
+		PutStdChar (info, rtfSC_quoteleft);
 		break;
 	case rtfRQuote:
-		PutStdChar (rtfSC_quoteright);
+		PutStdChar (info, rtfSC_quoteright);
 		break;
 	case rtfLDblQuote:
-		PutStdChar (rtfSC_quotedblleft);
+		PutStdChar (info, rtfSC_quotedblleft);
 		break;
 	case rtfRDblQuote:
-		PutStdChar (rtfSC_quotedblright);
+		PutStdChar (info, rtfSC_quotedblright);
 		break;
 	}
 }
@@ -255,7 +257,7 @@ void SpecialChar ()
  * obvious and provides incentive to fix it. :-)
  */
 
-void PutStdChar (int stdCode)
+void PutStdChar (RTF_Info *info, int stdCode)
 {
 
   char	*oStr = (char *) NULL;
@@ -266,28 +268,28 @@ void PutStdChar (int stdCode)
 */
 	TRACE("\n");
 
-	oStr = outMap[stdCode];
+	oStr = info->outMap[stdCode];
 	if (oStr == (char *) NULL)	/* no output sequence in map */
 	{
-		sprintf (buf, "[[%s]]", RTFStdCharName (stdCode));
+		sprintf (buf, "[[%s]]", RTFStdCharName (info, stdCode));
 		oStr = buf;
 	}
-	PutLitStr (oStr);
+	PutLitStr (info, oStr);
 }
 
 
-void PutLitChar (int c)
+void PutLitChar (RTF_Info *info, int c)
 {
-	CHARLIST_Enqueue(&charlist, (char) c);
+	CHARLIST_Enqueue(&info->charlist, (char) c);
         /* fputc (c, ostream); */
 }
 
 
-static void PutLitStr (char	*s)
+static void PutLitStr (RTF_Info *info, char	*s)
 {
 	for(;*s;s++)
 	{
-	  CHARLIST_Enqueue(&charlist, *s);
+	  CHARLIST_Enqueue(&info->charlist, *s);
 	}
 	/* fputs (s, ostream); */
 }
