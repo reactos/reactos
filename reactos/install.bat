@@ -16,6 +16,8 @@ copy services\dd\vga\miniport\vgamp.sys c:\reactos\system32\drivers
 copy services\dd\vga\display\vgaddi.dll c:\reactos\system32\drivers
 copy services\dd\vidport\vidport.sys c:\reactos\system32\drivers
 copy apps\system\shell\shell.exe c:\reactos\system32
+copy apps\system\winlogon\winlogon.exe c:\reactos\system32
+copy apps\system\services\services.exe c:\reactos\system32
 copy lib\ntdll\ntdll.dll c:\reactos\system32
 copy lib\kernel32\kernel32.dll c:\reactos\system32
 copy lib\crtdll\crtdll.dll c:\reactos\system32
@@ -30,7 +32,6 @@ copy apps\cat\cat.exe c:\reactos\bin
 copy subsys\smss\smss.exe c:\reactos\system32
 copy subsys\csrss\csrss.exe c:\reactos\system32
 copy subsys\win32k\win32k.sys c:\reactos\system32\drivers
-copy apps\system\winlogon\winlogon.exe c:\reactos\system32
 copy apps\apc\apc.exe c:\reactos\bin
 copy apps\shm\shmsrv.exe c:\reactos\bin
 copy apps\shm\shmclt.exe c:\reactos\bin

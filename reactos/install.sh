@@ -11,6 +11,8 @@ cp services/dd/vga/display/vgaddi.dll $1/reactos/system32/drivers
 cp services/dd/vidport/vidport.sys $1/reactos/system32/drivers
 cp services/fs/minix/minixfs.sys $1/reactos/system32/drivers
 cp apps/system/shell/shell.exe $1/reactos/system32
+cp apps/system/winlogon/winlogon.exe $1/reactos/system32/
+cp apps/system/services/services.exe $1/reactos/system32/
 cp lib/ntdll/ntdll.dll $1/reactos/system32
 cp lib/kernel32/kernel32.dll $1/reactos/system32
 cp lib/crtdll/crtdll.dll $1/reactos/system32
@@ -24,7 +26,6 @@ cp apps/cat/cat.exe $1/reactos/bin
 cp subsys/smss/smss.exe $1/reactos/system32
 cp subsys/csrss/csrss.exe $1/reactos/system32
 cp subsys/win32k/win32k.sys $1/reactos/system32/drivers
-cp apps/system/winlogon/winlogon.exe $1/reactos/system32/
 cp apps/apc/apc.exe $1/reactos/bin
 cp apps/shm/shmsrv.exe $1/reactos/bin
 cp apps/shm/shmclt.exe $1/reactos/bin
