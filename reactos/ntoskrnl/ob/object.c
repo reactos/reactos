@@ -1,4 +1,4 @@
-/* $Id: object.c,v 1.77 2004/03/12 00:46:35 dwelch Exp $
+/* $Id: object.c,v 1.78 2004/07/16 17:19:15 ekohl Exp $
  * 
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
@@ -36,14 +36,14 @@ typedef struct _RETENTION_CHECK_PARAMS
 
 PVOID HEADER_TO_BODY(POBJECT_HEADER obj)
 {
-   return(((char*)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
+  return(((char*)obj)+sizeof(OBJECT_HEADER)-sizeof(COMMON_BODY_HEADER));
 }
 
 
 POBJECT_HEADER BODY_TO_HEADER(PVOID body)
 {
-   PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
-   return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
+  PCOMMON_BODY_HEADER chdr = (PCOMMON_BODY_HEADER)body;
+  return(CONTAINING_RECORD((&(chdr->Type)),OBJECT_HEADER,Type));
 }
 
 
@@ -76,44 +76,44 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	     PUNICODE_STRING RemainingPath,
 	     POBJECT_TYPE ObjectType)
 {
-   PVOID NextObject;
-   PVOID CurrentObject;
-   PVOID RootObject;
-   POBJECT_HEADER CurrentHeader;
-   NTSTATUS Status;
-   PWSTR current;
-   UNICODE_STRING PathString;
-   ULONG Attributes;
-   PUNICODE_STRING ObjectName;
+  PVOID NextObject;
+  PVOID CurrentObject;
+  PVOID RootObject;
+  POBJECT_HEADER CurrentHeader;
+  NTSTATUS Status;
+  PWSTR current;
+  UNICODE_STRING PathString;
+  ULONG Attributes;
+  PUNICODE_STRING ObjectName;
 
-   DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
-	  "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
-   DPRINT("ObjectAttributes->ObjectName %wZ\n",
-	  ObjectAttributes->ObjectName);
+  DPRINT("ObFindObject(ObjectAttributes %x, ReturnedObject %x, "
+	 "RemainingPath %x)\n",ObjectAttributes,ReturnedObject,RemainingPath);
+  DPRINT("ObjectAttributes->ObjectName %wZ\n",
+	 ObjectAttributes->ObjectName);
 
-   RtlInitUnicodeString (RemainingPath, NULL);
+  RtlInitUnicodeString (RemainingPath, NULL);
 
-   if (ObjectAttributes->RootDirectory == NULL)
-     {
-	ObReferenceObjectByPointer(NameSpaceRoot,
-				   DIRECTORY_TRAVERSE,
-				   NULL,
-				   UserMode);
-	CurrentObject = NameSpaceRoot;
-     }
-   else
-     {
-	Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
-					   DIRECTORY_TRAVERSE,
-					   NULL,
-					   UserMode,
-					   &CurrentObject,
-					   NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	     return(Status);
-	  }
-     }
+  if (ObjectAttributes->RootDirectory == NULL)
+    {
+      ObReferenceObjectByPointer(NameSpaceRoot,
+				 DIRECTORY_TRAVERSE,
+				 NULL,
+				 UserMode);
+      CurrentObject = NameSpaceRoot;
+    }
+  else
+    {
+      Status = ObReferenceObjectByHandle(ObjectAttributes->RootDirectory,
+					 DIRECTORY_TRAVERSE,
+					 NULL,
+					 UserMode,
+					 &CurrentObject,
+					 NULL);
+      if (!NT_SUCCESS(Status))
+	{
+	  return Status;
+	}
+    }
 
   ObjectName = ObjectAttributes->ObjectName;
   if (ObjectName->Length == 0 ||
@@ -148,13 +148,13 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 
   current = PathString.Buffer;
 
-   RootObject = CurrentObject;
-   Attributes = ObjectAttributes->Attributes;
-   if (ObjectType == ObSymbolicLinkType)
-     Attributes |= OBJ_OPENLINK;
+  RootObject = CurrentObject;
+  Attributes = ObjectAttributes->Attributes;
+  if (ObjectType == ObSymbolicLinkType)
+    Attributes |= OBJ_OPENLINK;
 
-   while (TRUE)
-     {
+  while (TRUE)
+    {
 	DPRINT("current %S\n",current);
 	CurrentHeader = BODY_TO_HEADER(CurrentObject);
 
@@ -189,14 +189,14 @@ ObFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
 	  }
 	ObDereferenceObject(CurrentObject);
 	CurrentObject = NextObject;
-     }
-   
-   if (current)
-      RtlCreateUnicodeString (RemainingPath, current);
-   RtlFreeUnicodeString (&PathString);
-   *ReturnedObject = CurrentObject;
-   
-   return(STATUS_SUCCESS);
+    }
+
+  if (current)
+     RtlCreateUnicodeString (RemainingPath, current);
+  RtlFreeUnicodeString (&PathString);
+  *ReturnedObject = CurrentObject;
+
+  return STATUS_SUCCESS;
 }
 
 
@@ -451,6 +451,30 @@ ObCreateObject (IN KPROCESSOR_MODE ObjectAttributesAccessMode OPTIONAL,
     }
   RtlFreeUnicodeString( &RemainingPath );
 
+  if (Header->ObjectType != NULL)
+    {
+      /* FIXME: Call SeAssignSecurity() to create a new security descriptor */
+
+      if (Header->ObjectType->Security != NULL)
+	{
+	  /* FIXME: Call the security method */
+	  Status = STATUS_SUCCESS;
+	}
+      else
+	{
+	  /* Assign the security descriptor to the object header */
+	  if (ObjectAttributes != NULL && ObjectAttributes->SecurityDescriptor != NULL)
+	    {
+	      Status = ObpAddSecurityDescriptor(ObjectAttributes->SecurityDescriptor,
+						&Header->SecurityDescriptor);
+	    }
+	  else
+	    {
+	      Status = STATUS_SUCCESS;
+	    }
+	}
+    }
+
   if (Object != NULL)
     {
       *Object = HEADER_TO_BODY(Header);
@@ -572,6 +596,11 @@ ObpDeleteObject(POBJECT_HEADER Header)
     {
       DPRINT("ObpPerformRetentionChecks called at an unsupported IRQL.  Use ObpPerformRetentionChecksDpcLevel instead.\n");
       KEBUGCHECK(0);
+    }
+
+  if (Header->SecurityDescriptor != NULL)
+    {
+      ObpRemoveSecurityDescriptor(Header->SecurityDescriptor);
     }
 
   if (Header->ObjectType != NULL &&

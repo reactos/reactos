@@ -56,7 +56,7 @@ ObReleaseObjectSecurity(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS STDCALL
 NtQuerySecurityObject(IN HANDLE Handle,
@@ -81,7 +81,7 @@ NtQuerySecurityObject(IN HANDLE Handle,
     }
 
   Header = BODY_TO_HEADER(Object);
-  if (Header->ObjectType != NULL &&
+  if (Header->ObjectType == NULL &&
       Header->ObjectType->Security != NULL)
     {
       Status = Header->ObjectType->Security(Object,
@@ -93,12 +93,33 @@ NtQuerySecurityObject(IN HANDLE Handle,
     }
   else
     {
-      Status = STATUS_NOT_IMPLEMENTED;
+      if (Header->SecurityDescriptor != NULL)
+	{
+	  /* FIXME: Use SecurityInformation */
+	  *ResultLength = RtlLengthSecurityDescriptor(Header->SecurityDescriptor);
+	  if (Length >= *ResultLength)
+	    {
+	      RtlCopyMemory(SecurityDescriptor,
+			    Header->SecurityDescriptor,
+			    *ResultLength);
+
+	      Status = STATUS_SUCCESS;
+	    }
+	  else
+	    {
+	      Status = STATUS_BUFFER_TOO_SMALL;
+	    }
+	}
+      else
+	{
+	  *ResultLength = 0;
+	  Status = STATUS_UNSUCCESSFUL;
+	}
     }
 
   ObDereferenceObject(Object);
 
-  return(Status);
+  return Status;
 }
 
 

@@ -133,8 +133,21 @@ ObDuplicateObject(PEPROCESS SourceProcess,
 		  BOOLEAN InheritHandle,
 		  ULONG	Options);
 
-ULONG 
-ObpGetHandleCountbyHandleTable(PHANDLE_TABLE HandleTable);
+ULONG
+ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable);
+
+
+/* Security descriptor cache functions */
+
+NTSTATUS
+ObpInitSdCache(VOID);
+
+NTSTATUS
+ObpAddSecurityDescriptor(IN PSECURITY_DESCRIPTOR SourceSD,
+			 OUT PSECURITY_DESCRIPTOR *DestinationSD);
+
+NTSTATUS
+ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 
 #endif /* __INCLUDE_INTERNAL_OBJMGR_H */

@@ -1,4 +1,4 @@
-/* $Id: namespc.c,v 1.44 2003/11/17 02:12:51 hyperion Exp $
+/* $Id: namespc.c,v 1.45 2004/07/16 17:19:15 ekohl Exp $
  *
  * COPYRIGHT:      See COPYING in the top level directory
  * PROJECT:        ReactOS kernel
@@ -348,6 +348,9 @@ ObInit(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING Name;
+
+  /* Initialize the security descriptor cache */
+  ObpInitSdCache();
 
   /* create 'directory' object type */
   ObDirectoryType = ExAllocatePool(NonPagedPool,sizeof(OBJECT_TYPE));
