@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: cursoricon.c,v 1.33 2003/12/10 17:33:42 gvg Exp $ */
+/* $Id: cursoricon.c,v 1.34 2003/12/10 22:09:56 weiden Exp $ */
 
 #undef WIN32_LEAN_AND_MEAN
 
@@ -294,7 +294,9 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
 {
   PUSER_HANDLE_TABLE HandleTable;
   PCURICON_OBJECT Object;
+  HBITMAP bmpMask, bmpColor;
   NTSTATUS Status;
+  BOOL Ret;
   
   HandleTable = (PUSER_HANDLE_TABLE)WinStaObject->SystemCursor.CurIconHandleTable;
   
@@ -304,15 +306,20 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
     return FALSE;
   }
   
-  /* Delete the bitmaps */
-  if(Object->IconInfo.hbmMask)
-    NtGdiDeleteObject(Object->IconInfo.hbmMask);
-  if(Object->IconInfo.hbmColor)
-    NtGdiDeleteObject(Object->IconInfo.hbmColor);
+  bmpMask = Object->IconInfo.hbmMask;
+  bmpColor = Object->IconInfo.hbmColor;
   
   ObmDereferenceObject(Object);
   
-  return NT_SUCCESS(ObmCloseHandle(HandleTable, Handle));
+  Ret = NT_SUCCESS(ObmCloseHandle(HandleTable, Handle));
+  
+  /* delete bitmaps */
+  if(bmpMask)
+    NtGdiDeleteObject(bmpMask);
+  if(bmpColor)
+    NtGdiDeleteObject(bmpColor);
+  
+  return Ret;
 }
 
 /*

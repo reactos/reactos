@@ -51,6 +51,8 @@ typedef struct _WINSTATION_OBJECT
   HANDLE SystemMenuTemplate;
   SYSTEM_CURSORINFO SystemCursor;
   UINT CaretBlinkRate;
+  HANDLE ShellWindow;
+  HANDLE ShellListView;
   struct _DESKTOP_OBJECT* ActiveDesktop;
   /* FIXME: Clipboard */
   LIST_ENTRY HotKeyListHead;

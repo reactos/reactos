@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: window.c,v 1.155 2003/12/08 18:21:25 navaraf Exp $
+/* $Id: window.c,v 1.156 2003/12/10 22:09:56 weiden Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -70,10 +70,6 @@ static WORD WndProcHandlesArraySize = 0;
 #define REGISTERED_MESSAGE_MIN 0xc000
 #define REGISTERED_MESSAGE_MAX 0xffff
 #define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */
-
-/* globally stored handles to the shell windows */
-HWND hwndShellWindow = 0;
-HWND hwndShellListView = 0;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -315,11 +311,14 @@ static LRESULT IntDestroyWindow(PWINDOW_OBJECT Window,
     }
 
   /* reset shell window handles */
-  if (Window->Self == hwndShellWindow)
-    hwndShellWindow = 0;
+  if(ProcessData->WindowStation)
+  {
+    if (Window->Self == ProcessData->WindowStation->ShellWindow)
+      ProcessData->WindowStation->ShellWindow = NULL;
 
-  if (Window->Self == hwndShellListView)
-    hwndShellListView = 0;
+    if (Window->Self == ProcessData->WindowStation->ShellListView)
+      ProcessData->WindowStation->ShellListView = NULL;
+  }
 
   /* Unregister hot keys */
   UnregisterWindowHotKeys (Window);
@@ -2065,7 +2064,24 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
 HWND STDCALL
 NtUserGetShellWindow()
 {
-   return hwndShellWindow;
+  PWINSTATION_OBJECT WinStaObject;
+  HWND Ret;
+
+  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				       KernelMode,
+				       0,
+				       &WinStaObject);
+  
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return (HWND)0;
+  }
+  
+  Ret = (HWND)WinStaObject->ShellWindow;
+  
+  ObDereferenceObject(WinStaObject);
+  return Ret;
 }
 
 /*
@@ -2078,14 +2094,30 @@ NtUserGetShellWindow()
  *    @implemented
  */
 
-DWORD STDCALL
+BOOL STDCALL
 NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 {
+  PWINSTATION_OBJECT WinStaObject;
+
+  NTSTATUS Status = IntValidateWindowStationHandle(PROCESS_WINDOW_STATION(),
+				       KernelMode,
+				       0,
+				       &WinStaObject);
+  
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastNtError(Status);
+    return FALSE;
+  }
+  
    /*
     * Test if we are permitted to change the shell window.
     */
-   if (hwndShellWindow)
+   if (WinStaObject->ShellWindow)
+   {
+      ObDereferenceObject(WinStaObject);
       return FALSE;
+   }
 
    /*
     * Move shell window into background.
@@ -2101,17 +2133,24 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
 #endif
 
       if (NtUserGetWindowLong(hwndListView, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+      {
+         ObDereferenceObject(WinStaObject);
          return FALSE;
+      }
    }
 
    if (NtUserGetWindowLong(hwndShell, GWL_EXSTYLE, FALSE) & WS_EX_TOPMOST)
+   {
+      ObDereferenceObject(WinStaObject);
       return FALSE;
+   }
 
    WinPosSetWindowPos(hwndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
-   hwndShellWindow = hwndShell;
-   hwndShellListView = hwndListView;
-
+   WinStaObject->ShellWindow = hwndShell;
+   WinStaObject->ShellListView = hwndListView;
+   
+   ObDereferenceObject(WinStaObject);
    return TRUE;
 }
 
@@ -2414,6 +2453,8 @@ LONG STDCALL
 NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
    PWINDOW_OBJECT WindowObject;
+   PW32PROCESS Process;
+   PWINSTATION_OBJECT WindowStation;
    LONG OldValue;
    STYLESTRUCT Style;
 
@@ -2453,8 +2494,13 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             /*
              * Remove extended window style bit WS_EX_TOPMOST for shell windows.
              */
-            if (hWnd == hwndShellWindow || hWnd == hwndShellListView)
-               Style.styleNew &= ~WS_EX_TOPMOST;
+            Process = WindowObject->OwnerThread->ThreadsProcess->Win32Process;
+            WindowStation = Process->WindowStation;
+            if(WindowStation)
+            {
+              if (hWnd == WindowStation->ShellWindow || hWnd == WindowStation->ShellListView)
+                 Style.styleNew &= ~WS_EX_TOPMOST;
+            }
 
             IntSendSTYLECHANGINGMessage(hWnd, GWL_EXSTYLE, &Style);
             WindowObject->ExStyle = (DWORD)Style.styleNew;

@@ -1460,7 +1460,7 @@ NtUserSetScrollInfo(
   LPSCROLLINFO lpsi, 
   DWORD *Changed);
 
-DWORD
+BOOL
 STDCALL
 NtUserSetShellWindowEx(
   HWND hwndShell,
