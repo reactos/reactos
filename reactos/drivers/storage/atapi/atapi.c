@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: atapi.c,v 1.31 2002/12/09 20:04:44 hbirr Exp $
+/* $Id: atapi.c,v 1.32 2002/12/10 12:18:33 ekohl Exp $
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ATAPI miniport driver
@@ -113,9 +113,15 @@ PCI_NATIVE_CONTROLLER const PciNativeController[] =
     {
 	0x105A,		    // Promise 
 	0x4D68,		    // PDC20268, Ultra100TX2
+    },
+    {
+	0x105A,		    // Promise 
+	0x4D30,		    // PDC20267, Ultra100
     }
 };
 #endif
+
+
 //  -----------------------------------------------  Discardable Declarations
 
 #ifdef  ALLOC_PRAGMA
@@ -355,11 +361,11 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
 //        statusToReturn = newStatus;
 #endif
 
-
   DPRINT("Returning from DriverEntry\n");
 
   return(Status);
 }
+
 
 BOOLEAN
 AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
@@ -442,6 +448,7 @@ AtapiClaimHwResources(PATAPI_MINIPORT_EXTENSION DevExt,
    }
    return TRUE;
 }
+
 
 #ifdef ENABLE_PCI
 static ULONG STDCALL
@@ -583,6 +590,7 @@ AtapiFindCompatiblePciController(PVOID DeviceExtension,
 }
 #endif
 
+
 #ifdef ENABLE_ISA
 static ULONG STDCALL
 AtapiFindIsaBusController(PVOID DeviceExtension,
@@ -652,6 +660,7 @@ AtapiFindIsaBusController(PVOID DeviceExtension,
 }
 #endif
 
+
 #ifdef ENABLE_NATIVE_PCI
 static ULONG STDCALL
 AtapiFindNativePciController(PVOID DeviceExtension,
@@ -690,7 +699,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 				      SlotNumber.u.AsULONG,
 				      &PciConfig,
 				      PCI_COMMON_HDR_LENGTH);
-        if (DataSize != PCI_COMMON_HDR_LENGTH)
+	if (DataSize != PCI_COMMON_HDR_LENGTH)
 	{
 	   break;
 	}
@@ -704,8 +713,8 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 	}
 	if (Count < sizeof(PciNativeController)/sizeof(PCI_NATIVE_CONTROLLER)) 
 	{
-	   /* We have found a known natice pci ide controller */
-   	   if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
+	   /* We have found a known native pci ide controller */
+	   if ((PciConfig.ProgIf & 0x80) && (PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_SPACE))
 	   {
 	      DPRINT("Found IDE Bus Master controller!\n");
 	      BusMasterBasePort = PciConfig.u.type0.BaseAddresses[4] & PCI_ADDRESS_IO_ADDRESS_MASK;
@@ -717,9 +726,9 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 	   }
 
 	   DPRINT("VendorID: %04x, DeviceID: %04x\n", PciConfig.VendorID, PciConfig.DeviceID);
-           ConfigInfo->NumberOfBuses = 1;
-           ConfigInfo->MaximumNumberOfTargets = 2;
-           ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
+	   ConfigInfo->NumberOfBuses = 1;
+	   ConfigInfo->MaximumNumberOfTargets = 2;
+	   ConfigInfo->MaximumTransferLength = 0x10000; /* max 64Kbyte */
 
 	   /* FIXME:
 	        We must not store and use the last tested slot number. If there is a recall
@@ -774,7 +783,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
 		 }
 	      }
 	   }
-	} 		     
+	}
      }
      StartFunctionNumber = 0;
   }
@@ -785,6 +794,7 @@ AtapiFindNativePciController(PVOID DeviceExtension,
   return(SP_RETURN_NOT_FOUND);
 }
 #endif
+
 
 static BOOLEAN STDCALL
 AtapiInitialize(IN PVOID DeviceExtension)
