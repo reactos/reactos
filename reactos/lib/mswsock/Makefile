@@ -20,9 +20,9 @@ TARGET_CFLAGS = \
 
 TARGET_LFLAGS = -nostartfiles -nostdlib
 
-TARGET_SDKLIBS = kernel32.a
+TARGET_SDKLIBS = kernel32.a ws2_32.a
 
-TARGET_OBJECTS = stubs.o
+TARGET_OBJECTS = stubs.o extensions.o
 
 TARGET_CLEAN = $(DEP_FILES)
 
