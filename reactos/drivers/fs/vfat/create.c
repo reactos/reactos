@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.3 2000/02/22 02:02:08 ekohl Exp $
+/* $Id: create.c,v 1.4 2000/06/17 22:00:46 phreak Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -46,7 +46,7 @@ BOOLEAN IsDeletedEntry(PVOID Block, ULONG Offset)
 {
    /* Checks special character */
 
-   return ((((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5));
+   return ((((FATDirEntry *)Block)[Offset].Filename[0] == 0xe5) || (((FATDirEntry *)Block)[Offset].Filename[0] == 0));
 }
 
 BOOLEAN GetEntryName(PVOID Block, PULONG _Offset, PWSTR Name, PULONG _jloop,
