@@ -23,6 +23,9 @@
 #include <windows.h>
 #include <kernel32/heap.h>
 
+#define NDEBUG
+#include <kernel32/kernel32>
+
 /* FUNCTIONS ***************************************************************/
 
 /*********************************************************************
@@ -49,7 +52,7 @@ UINT WINAPI LocalFlags(HLOCAL hmem)
       }
       else
       {
-         dprintf("GlobalSize: invalid handle\n");
+         DPRINT("GlobalSize: invalid handle\n");
          retval=0;
       }
       HeapUnlock(__ProcessHeap);

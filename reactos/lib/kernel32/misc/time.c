@@ -432,7 +432,7 @@ GetTimeZoneInformation(
 		       LPTIME_ZONE_INFORMATION lpTimeZoneInformation
 		       )
 {
- // aprintf("GetTimeZoneInformation()\n");
+ // DPRINT("GetTimeZoneInformation()\n");
    
  // memset(lpTimeZoneInformation, 0, sizeof(TIME_ZONE_INFORMATION));
   

@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.26 2000/01/11 17:30:46 ekohl Exp $
+/* $Id: proc.c,v 1.27 2000/01/20 22:56:49 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -56,7 +56,7 @@ GetProcessTimes (
 	LPFILETIME	lpUserTime
 	)
 {
-	dprintf("GetProcessTimes is unimplemented\n");
+	DPRINT("GetProcessTimes is unimplemented\n");
 	return FALSE;
 }
 

@@ -20,6 +20,9 @@
 #include <kernel32/thread.h>
 #include <wchar.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 extern PLOCALE	__TebLocale;
 
 #define GetTebLocale() __TebLocale
@@ -37,7 +40,7 @@ INT WideCharToMultiByte(UINT cpid, DWORD flags, LPCWSTR src, int srclen,
    CHAR      d;
    WCHAR     c;  
   
- //  aprintf("WideCharToMultiByte()\n");
+   DPRINT("WideCharToMultiByte()\n");
     
    /* get codepage */
    switch(cpid)

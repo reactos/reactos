@@ -26,6 +26,9 @@
 #include <kernel32/thread.h>
 #include <string.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 
 extern PLOCALE	__TebLocale;
 
@@ -34,7 +37,7 @@ extern PLOCALE	__TebLocale;
 
 UINT STDCALL GetACP(void)
 {
-   //aprintf("GetACP()\n");
+   DPRINT("GetACP()\n");
    
    /* XXX: read from registry, take this as default */
    return GetTebLocale()->AnsiCodePage->Id;
@@ -42,7 +45,7 @@ UINT STDCALL GetACP(void)
 
 UINT STDCALL GetOEMCP(void)
 {
-   //aprintf("GetOEMCP()\n");
+   DPRINT("GetOEMCP()\n");
    /* XXX: read from registry, take this as default */
    return GetTebLocale()->OemCodePage->Id;
 }
@@ -51,7 +54,7 @@ WINBOOL STDCALL IsValidCodePage(UINT codepage)
 {
    PCODEPAGE pcp;
  
-   //aprintf("IsValidCodePage( %u )\n", codepage);  
+   DPRINT("IsValidCodePage( %u )\n", codepage);  
    
    switch(codepage)
    {
@@ -70,7 +73,7 @@ WINBOOL GetCPInfo(UINT codepage, LPCPINFO pcpinfo)
 {
     PCODEPAGE pcp;
    
- //   aprintf("GetCPInfo( %u, 0x%lX )\n", codepage, (ULONG) pcpinfo);
+    DPRINT("GetCPInfo( %u, 0x%lX )\n", codepage, (ULONG) pcpinfo);
     
     pcp=__CPFirst;
     while((pcp)&&(pcp->Id!=codepage))

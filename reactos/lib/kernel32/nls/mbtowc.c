@@ -19,6 +19,9 @@
 #include <wchar.h>
 #include <string.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
+
 extern PLOCALE	__TebLocale;
 
 #define GetTebLocale() __TebLocale
@@ -32,8 +35,8 @@ INT MultiByteToWideChar(UINT cpid, DWORD flags, LPCSTR src, int srclen,
    WCHAR     **atou;
    CHAR      c;  
   
-   //aprintf("MultiByteToWideChar( %u, 0x%lX, %s, %d, 0x%lX, %d )\n", 
-   //        cpid, flags, src, srclen, (ULONG) dest, destlen);
+   DPRINT("MultiByteToWideChar( %u, 0x%lX, %s, %d, 0x%lX, %d )\n", 
+          cpid, flags, src, srclen, (ULONG) dest, destlen);
     
    /* get codepage */
    switch(cpid)

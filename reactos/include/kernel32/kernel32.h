@@ -1,19 +1,16 @@
 #include <windows.h>
 
-#define UNIMPLEMENTED dprintf("%s at %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
+#define UNIMPLEMENTED DbgPrint("%s at %s:%d is unimplemented\n",__FUNCTION__,__FILE__,__LINE__);
 
 #ifdef NDEBUG
 #define DPRINT(args...) 
 #define CHECKPOINT
 #else
-#define DPRINT(args...) do { dprintf("(KERNEL32:%s:%d) ",__FILE__,__LINE__); dprintf(args); } while(0);
-#define CHECKPOINT do { dprintf("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
+#define DPRINT(args...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0);
+#define CHECKPOINT do { DbgPrint("(KERNEL32:%s:%d) Checkpoint\n",__FILE__,__LINE__); } while(0);
 #endif
 
-#define DPRINT1(args...) do { dprintf("(KERNEL32:%s:%d) ",__FILE__,__LINE__); dprintf(args);  } while(0);
-
-void dprintf(char* fmt, ...);
-void aprintf(char* fmt, ...);
+#define DPRINT1(args...) do { DbgPrint("(KERNEL32:%s:%d) ",__FILE__,__LINE__); DbgPrint(args);  } while(0);
 
 #define  MAGIC(c1,c2,c3,c4)  ((c1) + ((c2)<<8) + ((c3)<<16) + ((c4)<<24))
 

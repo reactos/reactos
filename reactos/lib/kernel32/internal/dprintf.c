@@ -34,25 +34,3 @@ VOID STDCALL OutputDebugStringW(LPCWSTR lpOutputString)
 	
    NtDisplayString(&UnicodeOutput);
 }
-
-void dprintf(char* fmt, ...)
-{
-   va_list va_args;
-   char buffer[255];
-   
-   va_start(va_args,fmt);
-   vsprintf(buffer,fmt,va_args);
-   OutputDebugStringA(buffer);
-   va_end(fmt);
-}
-
-void aprintf(char* fmt, ...)
-{
-   va_list va_args;
-   char buffer[255];
-   
-   va_start(va_args,fmt);
-   vsprintf(buffer,fmt,va_args);
-   OutputDebugStringA(buffer);
-   va_end(fmt);
-}

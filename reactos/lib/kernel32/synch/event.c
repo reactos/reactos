@@ -12,6 +12,8 @@
 #include <windows.h>
 #include <wchar.h>
 
+#define NDEBUG
+#include <kernel32/kernel32.h>
 
 WINBOOL STDCALL SetEvent(HANDLE hEvent)
 {
@@ -76,13 +78,13 @@ HANDLE STDCALL CreateEventW(LPSECURITY_ATTRIBUTES lpEventAttributes,
 	PtrObjectAttributes = NULL;
      }	
     
-   dprintf( "Calling NtCreateEvent\n" );
+   DPRINT( "Calling NtCreateEvent\n" );
    errCode = NtCreateEvent(&hEvent,
 			   STANDARD_RIGHTS_ALL|EVENT_READ_ACCESS|EVENT_WRITE_ACCESS,
 			   PtrObjectAttributes,
 			   bManualReset,
 			   bInitialState);
-   dprintf( "Called\n" );
+   DPRINT( "Called\n" );
    if (!NT_SUCCESS(errCode)) 
      {
 	SetLastError(RtlNtStatusToDosError(errCode));

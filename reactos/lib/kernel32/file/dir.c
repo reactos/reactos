@@ -1,4 +1,4 @@
-/* $Id: dir.c,v 1.22 2000/01/11 17:30:16 ekohl Exp $
+/* $Id: dir.c,v 1.23 2000/01/20 22:55:37 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -732,7 +732,7 @@ DWORD STDCALL SearchPathW(LPCWSTR lpPath,
 	OBJECT_ATTRIBUTES ObjectAttributes;
 	IO_STATUS_BLOCK IoStatusBlock;
 
-	dprintf("SearchPath\n");
+	DPRINT("SearchPath\n");
 
 	if ( lpPath == NULL )  {
 		// check the directory from which the application loaded
