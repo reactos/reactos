@@ -1748,7 +1748,7 @@ errCleanUp:
 /**************************************************************************
  * 			MCI_Close				[internal]
  */
-static	DWORD MCI_Close(UINT16 wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParms)
+static	DWORD MCI_Close(UINT wDevID, DWORD dwParam, LPMCI_GENERIC_PARMS lpParms)
 {
     DWORD		dwRet;
     LPWINE_MCIDRIVER	wmd;
