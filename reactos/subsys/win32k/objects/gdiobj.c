@@ -327,7 +327,7 @@ GDIOBJ_AllocObj(ULONG ObjectType)
   PW32PROCESS W32Process;
   PGDIOBJHDR  newObject;
   PPAGED_LOOKASIDE_LIST LookasideList;
-  LONG CurrentProcessId, LockedProcessId;
+  HANDLE CurrentProcessId, LockedProcessId;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -351,11 +351,8 @@ GDIOBJ_AllocObj(ULONG ObjectType)
       PGDIOBJ ObjectBody;
       LONG TypeInfo;
 
-      /* shift the process id to the left so we can use the first bit to lock
-         the object.
-         FIXME - don't shift once ROS' PIDs match with nt! */
-      CurrentProcessId = (LONG)PsGetCurrentProcessId() << 1;
-      LockedProcessId = CurrentProcessId | 0x1;
+      CurrentProcessId = PsGetCurrentProcessId();
+      LockedProcessId = (HANDLE)((ULONG_PTR)CurrentProcessId | 0x1);
 
       newObject->LockingThread = NULL;
       newObject->Locks = 0;
@@ -376,7 +373,7 @@ GDIOBJ_AllocObj(ULONG ObjectType)
       FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
       if(FreeEntry != NULL)
       {
-        LONG PrevProcId;
+        HANDLE PrevProcId;
         UINT Index;
         HGDIOBJ Handle;
 
@@ -387,8 +384,8 @@ GDIOBJ_AllocObj(ULONG ObjectType)
         Handle = (HGDIOBJ)((Index & 0xFFFF) | (ObjectType & 0xFFFF0000));
 
 LockHandle:
-        PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, 0);
-        if(PrevProcId == 0)
+        PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, 0);
+        if(PrevProcId == NULL)
         {
           ASSERT(Entry->KernelData == NULL);
 
@@ -399,7 +396,7 @@ LockHandle:
           Entry->Type = TypeInfo;
 
           /* unlock the entry */
-          InterlockedExchange(&Entry->ProcessId, CurrentProcessId);
+          InterlockedExchangePointer(&Entry->ProcessId, CurrentProcessId);
 
 #ifdef GDI_DEBUG
           memset ( GDIHandleAllocator[Index], 0xcd, GDI_STACK_LEVELS * sizeof(ULONG) );
@@ -468,7 +465,8 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
 {
   PGDI_TABLE_ENTRY Entry;
   PPAGED_LOOKASIDE_LIST LookasideList;
-  LONG ProcessId, LockedProcessId, PrevProcId, ExpectedType;
+  HANDLE ProcessId, LockedProcessId, PrevProcId;
+  LONG ExpectedType;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -484,10 +482,8 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
     return FALSE;
   }
 
-  /* shift the process id to the left so we can use the first bit to lock the object.
-     FIXME - don't shift once ROS' PIDs match with nt! */
-  ProcessId = (LONG)PsGetCurrentProcessId() << 1;
-  LockedProcessId = ProcessId | 0x1;
+  ProcessId = PsGetCurrentProcessId();
+  LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
   ExpectedType = ((ObjectType != GDI_OBJECT_TYPE_DONTCARE) ? ObjectType : 0);
 
@@ -496,7 +492,7 @@ GDIOBJ_FreeObj(HGDIOBJ hObj, DWORD ObjectType)
 LockHandle:
   /* lock the object, we must not delete global objects, so don't exchange the locking
      process ID to zero when attempting to lock a global object... */
-  PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, ProcessId);
+  PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, ProcessId);
   if(PrevProcId == ProcessId)
   {
     if(Entry->Type != 0 && Entry->KernelData != NULL && (ExpectedType == 0 || ((Entry->Type << 16) == ExpectedType)))
@@ -516,7 +512,7 @@ LockHandle:
         Entry->KernelData = NULL;
 
         /* unlock the handle slot */
-        InterlockedExchange(&Entry->ProcessId, 0);
+        InterlockedExchangePointer(&Entry->ProcessId, NULL);
 
         /* push this entry to the free list */
         InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
@@ -546,7 +542,7 @@ LockHandle:
         Entry->Type = 0;
 
         /* unlock the handle slot */
-        InterlockedExchange(&Entry->ProcessId, 0);
+        InterlockedExchangePointer(&Entry->ProcessId, NULL);
 
         /* report a successful deletion as the object is actually removed from the table */
         return TRUE;
@@ -562,7 +558,7 @@ LockHandle:
       {
         DPRINT1("Attempted to delete object 0x%x which was already deleted!\n", hObj);
       }
-      InterlockedExchange(&Entry->ProcessId, PrevProcId);
+      InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
     }
   }
   else if(PrevProcId == LockedProcessId)
@@ -581,13 +577,13 @@ LockHandle:
   }
   else
   {
-    if((PrevProcId >> 1) == 0)
+    if(((ULONG_PTR)PrevProcId & 0x1) == 0)
     {
       DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!", hObj);
     }
     else
     {
-      DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, PrevProcId >> 1, ProcessId >> 1);
+      DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
     }
 #ifdef GDI_DEBUG
     DPRINT1("-> called from %s:%i\n", file, line);
@@ -712,7 +708,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
   PGDI_TABLE_ENTRY Entry, End;
   PEPROCESS CurrentProcess;
   PW32PROCESS W32Process;
-  LONG ProcId;
+  HANDLE ProcId;
   ULONG Index = RESERVE_ENTRIES_COUNT;
 
   DPRINT("Starting CleanupForProcess prochandle %x Pid %d\n", Process, Process->UniqueProcessId);
@@ -728,7 +724,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
   {
     /* FIXME - Instead of building the handle here and delete it using GDIOBJ_FreeObj
                we should delete it directly here! */
-    ProcId = ((LONG)Process->UniqueProcessId << 1);
+    ProcId = Process->UniqueProcessId;
 
     End = &HandleTable->Entries[GDI_HANDLE_COUNT];
     for(Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
@@ -736,7 +732,7 @@ GDI_CleanupForProcess (struct _EPROCESS *Process)
         Entry++, Index++)
     {
       /* ignore the lock bit */
-      if((Entry->ProcessId & ~0x1) == ProcId && Entry->Type != 0)
+      if((HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcId && Entry->Type != 0)
       {
         HGDIOBJ ObjectHandle;
 
@@ -785,7 +781,8 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
 {
   PGDI_TABLE_ENTRY Entry;
   PETHREAD Thread;
-  LONG ProcessId, LockedProcessId, PrevProcId, ExpectedType;
+  HANDLE ProcessId, LockedProcessId, PrevProcId;
+  LONG ExpectedType;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -794,10 +791,8 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
 
   Thread = PsGetCurrentThread();
 
-  /* shift the process id to the left so we can use the first bit to lock the object.
-     FIXME - don't shift once ROS' PIDs match with nt! */
-  ProcessId = (LONG)PsGetCurrentProcessId() << 1;
-  LockedProcessId = ProcessId | 0x1;
+  ProcessId = PsGetCurrentProcessId();
+  LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
   ExpectedType = ((ObjectType != GDI_OBJECT_TYPE_DONTCARE) ? ObjectType : 0);
 
@@ -805,7 +800,7 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
 
 LockHandle:
   /* lock the object, we must not delete stock objects, so don't check!!! */
-  PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, ProcessId);
+  PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, ProcessId);
   if(PrevProcId == ProcessId)
   {
     LONG EntryType = Entry->Type << 16;
@@ -835,14 +830,14 @@ LockHandle:
 #endif
         }
 
-        InterlockedExchange(&Entry->ProcessId, PrevProcId);
+        InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
         /* we're done, return the object body */
         return GDIHdrToBdy(GdiHdr);
       }
       else
       {
-        InterlockedExchange(&Entry->ProcessId, PrevProcId);
+        InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
 #ifdef GDI_DEBUG
         if(++Attempts > 20)
@@ -857,7 +852,7 @@ LockHandle:
     }
     else
     {
-      InterlockedExchange(&Entry->ProcessId, PrevProcId);
+      InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
       if(EntryType == 0)
       {
@@ -888,17 +883,17 @@ LockHandle:
     /* try again */
     goto LockHandle;
   }
-  else if((PrevProcId & ~0x1) == 0)
+  else if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
   {
     /* we're trying to lock a global object, change the ProcessId to 0 and try again */
-    ProcessId = 0x0;
-    LockedProcessId = ProcessId |0x1;
+    ProcessId = NULL;
+    LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
     goto LockHandle;
   }
   else
   {
-    DPRINT1("Attempted to lock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, PrevProcId >> 1, PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
+    DPRINT1("Attempted to lock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
     KeRosDumpStackFrames ( NULL, 20 );
 #ifdef GDI_DEBUG
     DPRINT1("-> called from %s:%i\n", file, line);
@@ -927,7 +922,7 @@ GDIOBJ_UnlockObj (HGDIOBJ hObj)
 {
   PGDI_TABLE_ENTRY Entry;
   PETHREAD Thread;
-  LONG ProcessId, LockedProcessId, PrevProcId;
+  HANDLE ProcessId, LockedProcessId, PrevProcId;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -935,16 +930,14 @@ GDIOBJ_UnlockObj (HGDIOBJ hObj)
   DPRINT("GDIOBJ_UnlockObj: hObj: 0x%08x\n", hObj);
   Thread = PsGetCurrentThread();
 
-  /* shift the process id to the left so we can use the first bit to lock the object.
-     FIXME - don't shift once ROS' PIDs match with nt! */
-  ProcessId = (LONG)PsGetCurrentProcessId() << 1;
-  LockedProcessId = ProcessId | 0x1;
+  ProcessId = PsGetCurrentProcessId();
+  LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
   Entry = GDI_HANDLE_GET_ENTRY(HandleTable, hObj);
 
 LockHandle:
   /* lock the handle, we must not delete stock objects, so don't check!!! */
-  PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, ProcessId);
+  PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, ProcessId);
   if(PrevProcId == ProcessId)
   {
     /* we're unlocking an object that belongs to our process or it's a global
@@ -982,7 +975,7 @@ LockHandle:
 
           /* we should delete the handle */
           Entry->KernelData = NULL;
-          InterlockedExchange(&Entry->ProcessId, 0);
+          InterlockedExchangePointer(&Entry->ProcessId, 0);
 
           InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
                                     &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
@@ -1005,7 +998,7 @@ LockHandle:
         else
         {
           /* remove the handle slot lock */
-          InterlockedExchange(&Entry->ProcessId, PrevProcId);
+          InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
           Ret = TRUE;
         }
 
@@ -1017,7 +1010,7 @@ LockHandle:
       {
         DPRINT1("Attempted to unlock object 0x%x, previously locked by other thread (0x%x) from %s:%i (called from %s:%i)\n",
                 hObj, PrevThread, GdiHdr->lockfile, GdiHdr->lockline, file, line);
-        InterlockedExchange(&Entry->ProcessId, PrevProcId);
+        InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
       }
 #endif
       else
@@ -1029,7 +1022,7 @@ LockHandle:
         }
 #endif
         /* FIXME - we should give up after some time unless we want to wait forever! */
-        InterlockedExchange(&Entry->ProcessId, PrevProcId);
+        InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
         DelayExecution();
         goto LockHandle;
@@ -1037,7 +1030,7 @@ LockHandle:
     }
     else
     {
-      InterlockedExchange(&Entry->ProcessId, PrevProcId);
+      InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
       DPRINT1("Attempted to unlock object 0x%x that is deleted!\n", hObj);
     }
   }
@@ -1055,17 +1048,17 @@ LockHandle:
     /* try again */
     goto LockHandle;
   }
-  else if((PrevProcId & ~0x1) == 0)
+  else if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
   {
     /* we're trying to unlock a global object, change the ProcessId to 0 and try again */
-    ProcessId = 0x0;
-    LockedProcessId = ProcessId |0x1;
+    ProcessId = NULL;
+    LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
     goto LockHandle;
   }
   else
   {
-    DPRINT1("Attempted to unlock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, PrevProcId >> 1, PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
+    DPRINT1("Attempted to unlock foreign handle: 0x%x, Owner: 0x%x locked: 0x%x Caller: 0x%x, stockobj: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)PrevProcId & 0x1, PsGetCurrentProcessId(), GDI_HANDLE_IS_STOCKOBJ(hObj));
   }
 
   return FALSE;
@@ -1075,19 +1068,19 @@ BOOL INTERNAL_CALL
 GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle)
 {
   PGDI_TABLE_ENTRY Entry;
-  LONG ProcessId;
+  HANDLE ProcessId;
   BOOL Ret;
 
   DPRINT("GDIOBJ_OwnedByCurrentProcess: ObjectHandle: 0x%08x\n", ObjectHandle);
 
   if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
   {
-    ProcessId = (LONG)PsGetCurrentProcessId() << 1;
+    ProcessId = PsGetCurrentProcessId();
 
     Entry = GDI_HANDLE_GET_ENTRY(HandleTable, ObjectHandle);
     Ret = Entry->KernelData != NULL &&
           Entry->Type != 0 &&
-          (Entry->ProcessId & ~0x1) == ProcessId;
+          (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1) == ProcessId;
 
     return Ret;
   }
@@ -1103,7 +1096,7 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj)
  *             MIGHT ATTEMPT TO LOCK THE OBJECT DURING THIS CALL!!!
  */
   PGDI_TABLE_ENTRY Entry;
-  LONG ProcessId, LockedProcessId, PrevProcId;
+  HANDLE ProcessId, LockedProcessId, PrevProcId;
   PETHREAD Thread;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
@@ -1117,16 +1110,14 @@ GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj)
 
   if(!GDI_HANDLE_IS_STOCKOBJ(*hObj))
   {
-    /* shift the process id to the left so we can use the first bit to lock the object.
-       FIXME - don't shift once ROS' PIDs match with nt! */
-    ProcessId = (LONG)PsGetCurrentProcessId() << 1;
-    LockedProcessId = ProcessId | 0x1;
+    ProcessId = PsGetCurrentProcessId();
+    LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
     Entry = GDI_HANDLE_GET_ENTRY(HandleTable, *hObj);
 
 LockHandle:
     /* lock the object, we must not convert stock objects, so don't check!!! */
-    PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, LockedProcessId, ProcessId);
+    PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, LockedProcessId, ProcessId);
     if(PrevProcId == ProcessId)
     {
       LONG NewType, PrevType, OldType;
@@ -1165,7 +1156,7 @@ LockHandle:
             NTSTATUS Status;
 
             /* FIXME */
-            Status = PsLookupProcessByProcessId((PVOID)(PrevProcId >> 1), &OldProcess);
+            Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
             if(NT_SUCCESS(Status))
             {
               W32Process = OldProcess->Win32Process;
@@ -1178,7 +1169,7 @@ LockHandle:
           }
 
           /* remove the process id lock and make it global */
-          InterlockedExchange(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
+          InterlockedExchangePointer(&Entry->ProcessId, GDI_GLOBAL_PROCESS);
 
           *hObj = (HGDIOBJ)((ULONG)(*hObj) | GDI_HANDLE_STOCK_MASK);
 
@@ -1199,7 +1190,7 @@ LockHandle:
           /* WTF?! The object is already locked by a different thread!
              Release the lock, wait a bit and try again!
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchange(&Entry->ProcessId, PrevProcId);
+          InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
           DelayExecution();
           goto LockHandle;
@@ -1237,7 +1228,7 @@ void INTERNAL_CALL
 GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 {
   PGDI_TABLE_ENTRY Entry;
-  LONG ProcessId, LockedProcessId, PrevProcId;
+  HANDLE ProcessId, LockedProcessId, PrevProcId;
   PETHREAD Thread;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
@@ -1249,16 +1240,14 @@ GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS NewOwner)
 
   if(!GDI_HANDLE_IS_STOCKOBJ(ObjectHandle))
   {
-    /* shift the process id to the left so we can use the first bit to lock the object.
-       FIXME - don't shift once ROS' PIDs match with nt! */
-    ProcessId = (LONG)PsGetCurrentProcessId() << 1;
-    LockedProcessId = ProcessId | 0x1;
+    ProcessId = PsGetCurrentProcessId();
+    LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
 
     Entry = GDI_HANDLE_GET_ENTRY(HandleTable, ObjectHandle);
 
 LockHandle:
     /* lock the object, we must not convert stock objects, so don't check!!! */
-    PrevProcId = InterlockedCompareExchange(&Entry->ProcessId, ProcessId, LockedProcessId);
+    PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, ProcessId, LockedProcessId);
     if(PrevProcId == ProcessId)
     {
       PETHREAD PrevThread;
@@ -1276,7 +1265,7 @@ LockHandle:
 
           /* dereference the process' object counter */
           /* FIXME */
-          Status = PsLookupProcessByProcessId((PVOID)(PrevProcId >> 1), &OldProcess);
+          Status = PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)PrevProcId & ~0x1), &OldProcess);
           if(NT_SUCCESS(Status))
           {
             W32Process = OldProcess->Win32Process;
@@ -1289,8 +1278,7 @@ LockHandle:
 
           if(NewOwner != NULL)
           {
-            /* FIXME */
-            ProcessId = (LONG)PsGetProcessId(NewOwner) << 1;
+            ProcessId = PsGetProcessId(NewOwner);
 
             /* Increase the new process' object counter */
             W32Process = NewOwner->Win32Process;
@@ -1303,7 +1291,7 @@ LockHandle:
             ProcessId = 0;
 
           /* remove the process id lock and change it to the new process id */
-          InterlockedExchange(&Entry->ProcessId, ProcessId);
+          InterlockedExchangePointer(&Entry->ProcessId, ProcessId);
 
           /* we're done! */
           return;
@@ -1325,7 +1313,7 @@ LockHandle:
              being deleted in the meantime (because we don't have aquired a reference
              at this point).
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchange(&Entry->ProcessId, PrevProcId);
+          InterlockedExchangePointer(&Entry->ProcessId, PrevProcId);
 
           DelayExecution();
           goto LockHandle;
@@ -1350,16 +1338,16 @@ LockHandle:
       /* try again */
       goto LockHandle;
     }
-    else if((PrevProcId >> 1) == 0)
+    else if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
     {
       /* allow changing ownership of global objects */
-      ProcessId = 0;
-      LockedProcessId = ProcessId | 0x1;
+      ProcessId = NULL;
+      LockedProcessId = (HANDLE)((ULONG_PTR)ProcessId | 0x1);
       goto LockHandle;
     }
-    else if((PrevProcId >> 1) != (LONG)PsGetCurrentProcessId())
+    else if((HANDLE)((ULONG_PTR)PrevProcId & ~0x1) != PsGetCurrentProcessId())
     {
-      DPRINT1("Attempted to change ownership of object 0x%x (pid: 0x%x) from pid 0x%x!!!\n", ObjectHandle, PrevProcId >> 1, PsGetCurrentProcessId());
+      DPRINT1("Attempted to change ownership of object 0x%x (pid: 0x%x) from pid 0x%x!!!\n", ObjectHandle, (ULONG_PTR)PrevProcId & ~0x1, PsGetCurrentProcessId());
     }
     else
     {
@@ -1373,7 +1361,7 @@ GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
 {
   PGDI_TABLE_ENTRY FromEntry;
   PETHREAD Thread;
-  LONG FromProcessId, FromLockedProcessId, FromPrevProcId;
+  HANDLE FromProcessId, FromLockedProcessId, FromPrevProcId;
 #ifdef GDI_DEBUG
   ULONG Attempts = 0;
 #endif
@@ -1386,12 +1374,12 @@ GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo)
   {
     FromEntry = GDI_HANDLE_GET_ENTRY(HandleTable, CopyFrom);
 
-    FromProcessId = FromEntry->ProcessId & ~0x1;
-    FromLockedProcessId = FromProcessId | 0x1;
+    FromProcessId = (HANDLE)((ULONG_PTR)FromEntry->ProcessId & ~0x1);
+    FromLockedProcessId = (HANDLE)((ULONG_PTR)FromProcessId | 0x1);
 
 LockHandleFrom:
     /* lock the object, we must not convert stock objects, so don't check!!! */
-    FromPrevProcId = InterlockedCompareExchange(&FromEntry->ProcessId, FromProcessId, FromLockedProcessId);
+    FromPrevProcId = InterlockedCompareExchangePointer(&FromEntry->ProcessId, FromProcessId, FromLockedProcessId);
     if(FromPrevProcId == FromProcessId)
     {
       PETHREAD PrevThread;
@@ -1408,11 +1396,11 @@ LockHandleFrom:
         {
           /* now let's change the ownership of the target object */
 
-          if((FromPrevProcId & ~0x1) != 0)
+          if(((ULONG_PTR)FromPrevProcId & ~0x1) != 0)
           {
             PEPROCESS ProcessTo;
             /* FIXME */
-            if(NT_SUCCESS(PsLookupProcessByProcessId((PVOID)(FromPrevProcId >> 1), &ProcessTo)))
+            if(NT_SUCCESS(PsLookupProcessByProcessId((HANDLE)((ULONG_PTR)FromPrevProcId & ~0x1), &ProcessTo)))
             {
               GDIOBJ_SetOwnership(CopyTo, ProcessTo);
               ObDereferenceObject(ProcessTo);
@@ -1424,7 +1412,7 @@ LockHandleFrom:
             GDIOBJ_SetOwnership(CopyTo, NULL);
           }
 
-          InterlockedExchange(&FromEntry->ProcessId, FromPrevProcId);
+          InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
         }
         else
         {
@@ -1443,7 +1431,7 @@ LockHandleFrom:
              being deleted in the meantime (because we don't have aquired a reference
              at this point).
              FIXME - we should give up after some time unless we want to wait forever! */
-          InterlockedExchange(&FromEntry->ProcessId, FromPrevProcId);
+          InterlockedExchangePointer(&FromEntry->ProcessId, FromPrevProcId);
 
           DelayExecution();
           goto LockHandleFrom;
@@ -1468,12 +1456,12 @@ LockHandleFrom:
       /* try again */
       goto LockHandleFrom;
     }
-    else if((FromPrevProcId >> 1) != (LONG)PsGetCurrentProcessId())
+    else if((HANDLE)((ULONG_PTR)FromPrevProcId & ~0x1) != PsGetCurrentProcessId())
     {
       /* FIXME - should we really allow copying ownership from objects that we don't even own? */
-      DPRINT1("WARNING! Changing copying ownership of object 0x%x (pid: 0x%x) to pid 0x%x!!!\n", CopyFrom, FromPrevProcId >> 1, PsGetCurrentProcessId());
-      FromProcessId = FromPrevProcId & ~0x1;
-      FromLockedProcessId = FromProcessId | 0x1;
+      DPRINT1("WARNING! Changing copying ownership of object 0x%x (pid: 0x%x) to pid 0x%x!!!\n", CopyFrom, (ULONG_PTR)FromPrevProcId & ~0x1, PsGetCurrentProcessId());
+      FromProcessId = (HANDLE)((ULONG_PTR)FromPrevProcId & ~0x1);
+      FromLockedProcessId = (HANDLE)((ULONG_PTR)FromProcessId | 0x1);
       goto LockHandleFrom;
     }
     else
