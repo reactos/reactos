@@ -1,4 +1,4 @@
-/* $Id: lang.c,v 1.22 2004/08/26 16:03:09 hbirr Exp $
+/* $Id: lang.c,v 1.23 2004/09/24 00:36:14 weiden Exp $
  *
  * COPYRIGHT: See COPYING in the top level directory
  * PROJECT  : ReactOS user mode libraries
@@ -22,8 +22,6 @@
 #define LOCALE_LOCALEINFOFLAGSMASK (LOCALE_NOUSEROVERRIDE|LOCALE_USE_CP_ACP|LOCALE_RETURN_NUMBER)
 
 //static LCID SystemLocale = MAKELCID(LANG_ENGLISH, SORT_DEFAULT);
-
-//#define _OLE2NLS_IN_BUILD_
 
 
 /******************************************************************************
@@ -251,8 +249,6 @@ EnumSystemLanguageGroupsA(
 }
 
 
-#ifndef _OLE2NLS_IN_BUILD_
-
 /*
  * @unimplemented
  */
@@ -281,10 +277,6 @@ EnumSystemLocalesA (
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
-
-#endif
-
-
 
 
 /*
@@ -352,8 +344,6 @@ GetCalendarInfoW(
 }
 
 
-#ifndef _OLE2NLS_IN_BUILD_
-
 /*
  * @unimplemented
  */
@@ -381,8 +371,6 @@ GetCPInfo (
 
     return TRUE;
 }
-
-#endif
 
 
 /*
@@ -762,8 +750,6 @@ INT STDCALL GetLocaleInfoA( LCID lcid, LCTYPE lctype, LPSTR buffer, INT len )
 }
 
 
-#ifndef _OLE2NLS_IN_BUILD_
-
 /*
  * @implemented
  */
@@ -789,8 +775,6 @@ GetSystemDefaultLCID (VOID)
 //  return SystemLocale;
 }
 
-#endif
-
 
 /*
  * @unimplemented
@@ -804,8 +788,6 @@ GetSystemDefaultUILanguage(VOID)
 }
 
 
-#ifndef _OLE2NLS_IN_BUILD_
-
 /*
  * @implemented
  */
@@ -816,13 +798,6 @@ GetThreadLocale (VOID)
   return NtCurrentTeb()->CurrentLocale;
 }
 
-#endif
-
-
-
-
-
-#ifndef _OLE2NLS_IN_BUILD_
 
 /*
  * @implemented
@@ -843,22 +818,37 @@ STDCALL
 GetUserDefaultLCID (VOID)
 {
     LCID lcid;
-    NtQueryDefaultLocale(TRUE, &lcid);
+    NTSTATUS Status;
+    
+    Status = NtQueryDefaultLocale(TRUE, &lcid);
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+    
     return lcid;
 }
 
-#endif
-
 
 /*
- * @unimplemented
+ * @implemented
  */
 LANGID
 STDCALL
 GetUserDefaultUILanguage(VOID)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+    LANGID LangId;
+    NTSTATUS Status;
+  
+     Status = NtQueryDefaultUILanguage(&LangId);
+    if(!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return 0;
+    }
+  
+    return LangId;
 }
 
 
@@ -922,9 +912,6 @@ IsValidLocale(
 }
 
 
-
-#ifndef _OLE2NLS_IN_BUILD_
-
 /*
  * @unimplemented
  */
@@ -962,8 +949,6 @@ LCMapStringW (
     return 0;
 }
 
-#endif
-
 
 /*
  * @unimplemented
@@ -995,8 +980,6 @@ SetCalendarInfoW(
     return 0;
 }
 
-
-#ifndef _OLE2NLS_IN_BUILD_
 
 /*
  * @unimplemented
@@ -1073,8 +1056,6 @@ BOOL WINAPI SetThreadLocale( LCID lcid )
     }
     return TRUE;
 }
-
-#endif
 
 
 /*
