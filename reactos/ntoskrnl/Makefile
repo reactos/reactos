@@ -101,10 +101,8 @@ OBJECTS_KE = \
 	ke/bug.o \
 	ke/catch.o \
 	ke/clock.o \
-	ke/critical.o \
 	ke/dpc.o \
 	ke/device.o \
-	ke/error.o \
 	ke/event.o \
 	ke/kqueue.o \
 	ke/kthread.o \
@@ -118,7 +116,6 @@ OBJECTS_KE = \
 	ke/spinlock.o \
 	ke/timer.o \
 	ke/wait.o \
-	ke/alert.o
 
 # Memory Manager (Mm)
 OBJECTS_MM = \
@@ -219,7 +216,8 @@ OBJECTS_OB = \
 	ob/object.o \
 	ob/sdcache.o \
 	ob/security.o \
-	ob/symlink.o
+	ob/symlink.o \
+	ob/wait.o
 
 # Process Manager (Ps)
 OBJECTS_PS = \
@@ -242,6 +240,7 @@ OBJECTS_PS = \
 OBJECTS_EX = \
 	ex/btree.o \
 	ex/callback.o \
+	ex/error.o \
 	ex/event.o \
 	ex/evtpair.o \
 	ex/fmutex.o \

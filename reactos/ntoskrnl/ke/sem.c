@@ -19,36 +19,39 @@
 /*
  * @implemented
  */
-VOID STDCALL
-KeInitializeSemaphore (PKSEMAPHORE	Semaphore,
-		       LONG		Count,
-		       LONG		Limit)
+VOID
+STDCALL
+KeInitializeSemaphore(PKSEMAPHORE Semaphore,
+                      LONG Count,
+                      LONG Limit)
 {
-   KeInitializeDispatcherHeader(&Semaphore->Header,
-				InternalSemaphoreType,
-				sizeof(KSEMAPHORE)/sizeof(ULONG),
-				Count);
-   Semaphore->Limit=Limit;
+
+    DPRINT("KeInitializeSemaphore Sem: %x\n", Semaphore);
+    
+    /* Simply Initialize the Header */
+    KeInitializeDispatcherHeader(&Semaphore->Header,
+                                 SemaphoreObject,
+                                 sizeof(KSEMAPHORE)/sizeof(ULONG),
+                                 Count);
+
+    /* Set the Limit */
+    Semaphore->Limit = Limit;  
 }
 
 /*
  * @implemented
  */
-LONG STDCALL
-KeReadStateSemaphore (PKSEMAPHORE	Semaphore)
+LONG 
+STDCALL
+KeReadStateSemaphore(PKSEMAPHORE Semaphore)
 {
-   return(Semaphore->Header.SignalState);
+    /* Just return the Signal State */
+    return(Semaphore->Header.SignalState);
 }
 
 /*
  * @implemented
- */
-LONG STDCALL
-KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
-		    KPRIORITY	Increment,
-		    LONG		Adjustment,
-		    BOOLEAN		Wait)
-/*
+ *
  * FUNCTION: KeReleaseSemaphore releases a given semaphore object. This
  * routine supplies a runtime priority boost for waiting threads. If this
  * call sets the semaphore to the Signaled state, the semaphore count is
@@ -68,40 +71,65 @@ KeReleaseSemaphore (PKSEMAPHORE	Semaphore,
  * RETURNS: If the return value is zero, the previous state of the semaphore
  *          object is Not-Signaled.
  */
+LONG 
+STDCALL
+KeReleaseSemaphore(PKSEMAPHORE Semaphore,
+                   KPRIORITY Increment,
+                   LONG Adjustment,
+                   BOOLEAN Wait)
+
 {
-  ULONG InitialState;
-  KIRQL OldIrql;
+    ULONG InitialState;
+    KIRQL OldIrql;
+    PKTHREAD CurrentThread;
 
-  DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, "
-	  "Wait %d)\n", Semaphore, Increment, Adjustment, Wait);
+    DPRINT("KeReleaseSemaphore(Semaphore %x, Increment %d, Adjustment %d, Wait %d)\n", 
+            Semaphore, 
+            Increment, 
+            Adjustment, 
+            Wait);
 
-  OldIrql = KeAcquireDispatcherDatabaseLock();
+    /* Lock the Dispatcher Database */
+    OldIrql = KeAcquireDispatcherDatabaseLock();
 
-  InitialState = Semaphore->Header.SignalState;
-  if (Semaphore->Limit < (LONG) InitialState + Adjustment ||
-      InitialState > InitialState + Adjustment)
-    {
-      ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
+    /* Save the Old State */
+    InitialState = Semaphore->Header.SignalState;
+    
+    /* Check if the Limit was exceeded */
+    if (Semaphore->Limit < (LONG) InitialState + Adjustment || 
+        InitialState > InitialState + Adjustment) {
+        
+        /* Raise an error if it was exceeded */
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+        ExRaiseStatus(STATUS_SEMAPHORE_LIMIT_EXCEEDED);
     }
 
-  Semaphore->Header.SignalState += Adjustment;
-  if (InitialState == 0)
-    {
-      KiDispatcherObjectWake(&Semaphore->Header, SEMAPHORE_INCREMENT);
+    /* Now set the new state */
+    Semaphore->Header.SignalState += Adjustment;
+    
+    /* Check if we should wake it */
+    if (InitialState == 0 && !IsListEmpty(&Semaphore->Header.WaitListHead)) {
+        
+        /* Wake the Semaphore */
+        KiWaitTest(&Semaphore->Header, SEMAPHORE_INCREMENT);
     }
 
-  if (Wait == FALSE)
-    {
-      KeReleaseDispatcherDatabaseLock(OldIrql);
-    }
-  else
-    {
-      KTHREAD *Thread = KeGetCurrentThread();
-      Thread->WaitNext = TRUE;
-      Thread->WaitIrql = OldIrql;
+    /* If the Wait is true, then return with a Wait and don't unlock the Dispatcher Database */
+    if (Wait == FALSE) {
+        
+        /* Release the Lock */
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+    
+    } else {
+        
+        /* Set a wait */
+        CurrentThread = KeGetCurrentThread();
+        CurrentThread->WaitNext = TRUE;
+        CurrentThread->WaitIrql = OldIrql;
     }
 
-  return(InitialState);
+    /* Return the previous state */
+    return InitialState;
 }
 
 /* EOF */
