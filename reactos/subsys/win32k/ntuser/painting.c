@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- *  $Id: painting.c,v 1.56 2003/12/30 16:55:00 weiden Exp $
+ *  $Id: painting.c,v 1.57 2003/12/30 18:19:20 weiden Exp $
  *
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS kernel
@@ -648,7 +648,8 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
          if (Child->Style & WS_VISIBLE &&
              (Child->UpdateRegion != NULL ||
               Child->Flags & WINDOWOBJECT_NEED_INTERNALPAINT ||
-              Child->Flags & WINDOWOBJECT_NEED_NCPAINT))
+              Child->Flags & WINDOWOBJECT_NEED_NCPAINT)
+             && IntWndBelongsToThread(Child, Thread))
          {
             hFoundWnd = Child->Self;
             break;
