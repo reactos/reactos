@@ -55,30 +55,6 @@
 #endif
 
 
-#ifndef BTNS_BUTTON
-#define BTNS_BUTTON TBSTYLE_BUTTON //missing in old mingw headers
-#define BTNS_SEP TBSTYLE_SEP
-#define BTNS_NOPREFIX TBSTYLE_NOPREFIX
-#endif
-
-#ifndef TB_HITTEST	//missing in mingw headers
-#define TB_HITTEST (WM_USER+69)
-#endif
-
-#ifndef TB_GETBUTTONINFO	//missing in mingw headers
-#define TB_GETBUTTONINFO (WM_USER+65)
-#endif
-
-#ifndef __WINE__
-#ifndef SFGAO_HIDDEN	//SFGAO_GHOSTED wrong defined, SFGAO_HIDDEN missing in mingw headers
-#define	SFGAO_HIDDEN 0x00080000L
-#undef SFGAO_GHOSTED
-#define SFGAO_GHOSTED 0x00008000L
-#endif
-#endif
-
-
-
 #ifdef __cplusplus
 
 #ifdef _MSC_VER
