@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.32 2001/08/14 20:47:30 hbirr Exp $
+/* $Id: create.c,v 1.33 2001/10/10 22:12:34 hbirr Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -20,6 +20,8 @@
 #include "vfat.h"
 
 /* GLOBALS *******************************************************************/
+
+#define ENTRIES_PER_PAGE   (PAGESIZE / sizeof (FATDirEntry))
 
 /* FUNCTIONS *****************************************************************/
 
@@ -98,8 +100,8 @@ static void  vfat8Dot3ToVolumeLabel (PCHAR pBasename, PCHAR pExtension, PWSTR pN
 }
 
 NTSTATUS
-GetEntryName(PDEVICE_EXTENSION DeviceExt,
-             PVOID Block,
+GetEntryName(PVOID *pContext,
+             PVOID *Block,
              PFILE_OBJECT FileObject,
              PWSTR Name,
              PULONG pIndex,
@@ -112,14 +114,15 @@ GetEntryName(PDEVICE_EXTENSION DeviceExt,
   FATDirEntry * test;
   slot * test2;
   ULONG cpos;
-  ULONG Offset = *pIndex % ENTRIES_PER_SECTOR;
+  ULONG Offset = *pIndex % ENTRIES_PER_PAGE;
   ULONG Read;
+  LARGE_INTEGER FileOffset;
 
   *Name = 0;
   while (TRUE)
   {
-    test = (FATDirEntry *) Block;
-    test2 = (slot *) Block;
+    test = (FATDirEntry *) *Block;
+    test2 = (slot *) *Block;
     if (vfatIsDirEntryEndMarker(&test[Offset]))
     {
       return STATUS_NO_MORE_ENTRIES;
@@ -150,16 +153,17 @@ GetEntryName(PDEVICE_EXTENSION DeviceExt,
 	    (*pIndex)++;
         Offset++;
 
-	    if (Offset == ENTRIES_PER_SECTOR)
+	    if (Offset == ENTRIES_PER_PAGE)
         {
           Offset = 0;
-          Status = VfatReadFile (DeviceExt, FileObject, Block, BLOCKSIZE,
-                     *pIndex * sizeof(FATDirEntry), &Read, TRUE);
-          if (!NT_SUCCESS(Status) || Read != BLOCKSIZE)
+          CcUnpinData(*pContext);
+          FileOffset.QuadPart = *pIndex * sizeof(FATDirEntry);
+          if(!CcMapData(FileObject, &FileOffset, PAGESIZE, TRUE, pContext, Block))
           {
+            *pContext = NULL;
             return STATUS_NO_MORE_ENTRIES;
           }
-	      test2 = (slot *) Block;
+	      test2 = (slot *) *Block;
         }
         DPRINT ("  long name entry found at %d\n", *pIndex);
 
@@ -178,17 +182,18 @@ GetEntryName(PDEVICE_EXTENSION DeviceExt,
 	  }
       (*pIndex)++;
       Offset++;
-	  if (Offset == ENTRIES_PER_SECTOR)
+	  if (Offset == ENTRIES_PER_PAGE)
       {
         Offset = 0;
-        Status = VfatReadFile (DeviceExt, FileObject, Block, BLOCKSIZE,
-                   *pIndex * sizeof(FATDirEntry), &Read, TRUE);
-        if (!NT_SUCCESS(Status) || Read != BLOCKSIZE)
-        {
+        CcUnpinData(*pContext);
+        FileOffset.QuadPart = *pIndex * sizeof(FATDirEntry);
+        if(!CcMapData(FileObject, &FileOffset, PAGESIZE, TRUE, pContext, Block))
+         {
+          *pContext = NULL;
           return STATUS_NO_MORE_ENTRIES;
         }
-	    test2 = (slot *) Block;
-        test = (FATDirEntry*) Block;
+	    test2 = (slot *) *Block;
+        test = (FATDirEntry*) *Block;
       }
     }
     else
@@ -304,7 +309,6 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 {
   WCHAR name[256];
   WCHAR name2[14];
-  FILE_OBJECT tmpFileObject;
   char * block;
   WCHAR TempStr[2];
   NTSTATUS Status;
@@ -314,7 +318,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   ULONG FirstCluster;
   ULONG Read;
   BOOL isRoot;
-  BOOL first;
+  LARGE_INTEGER FileOffset;
+  PVOID Context = NULL;
 
   DPRINT ("FindFile(Parent %x, FileToFind '%S', DirIndex: %d)\n", Parent, FileToFind, pDirIndex ? *pDirIndex : 0);
   DPRINT ("FindFile: old Pathname %x, old Objectname %x)\n",Fcb->PathName, Fcb->ObjectName);
@@ -386,31 +391,23 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   if (pDirIndex && (*pDirIndex))
     DirIndex = *pDirIndex;
 
-
-  memset (&tmpFileObject, 0, sizeof(FILE_OBJECT));
-
-  Status = VfatOpenFile(DeviceExt, &tmpFileObject, Parent->PathName);
-  if (!NT_SUCCESS(Status))
-  {
-    if (pDirIndex)
-	  *pDirIndex = DirIndex;
-    return (STATUS_UNSUCCESSFUL);
-  }
-  Offset = DirIndex % ENTRIES_PER_SECTOR;
-  first = TRUE;
-  block = ExAllocatePool (NonPagedPool, BLOCKSIZE);
+  Offset = DirIndex % ENTRIES_PER_PAGE;
   while(TRUE)
   {
-    if (first || Offset == ENTRIES_PER_SECTOR)
+    if (Context == NULL || Offset == ENTRIES_PER_PAGE)
     {
-      first = FALSE;
-      if (Offset == ENTRIES_PER_SECTOR)
+      if (Offset == ENTRIES_PER_PAGE)
         Offset = 0;
-      Status = VfatReadFile (DeviceExt, &tmpFileObject, block, BLOCKSIZE,
-                 (DirIndex - Offset) * sizeof(FATDirEntry), &Read, TRUE);
-      if (!NT_SUCCESS(Status) || Read != BLOCKSIZE)
+      if (Context)
       {
-        break;
+        CcUnpinData(Context);
+      }
+      FileOffset.QuadPart = (DirIndex - Offset) * sizeof(FATDirEntry);
+      if (!CcMapData(Parent->FileObject, &FileOffset, PAGESIZE, TRUE,
+             &Context, (PVOID*)&block))
+      {
+         Context = NULL;
+         break;
       }
     }
 	if (vfatIsDirEntryVolume(&((FATDirEntry*)block)[Offset]))
@@ -419,10 +416,11 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
       DirIndex++;
 	  continue;
     }
-    Status = GetEntryName (DeviceExt, block, &tmpFileObject, name, &DirIndex, pDirIndex2);
+    Status = GetEntryName (&Context, (PVOID*)&block, Parent->FileObject, name,
+                           &DirIndex, pDirIndex2);
     if (Status == STATUS_NO_MORE_ENTRIES)
       break;
-    Offset = DirIndex % ENTRIES_PER_SECTOR;
+    Offset = DirIndex % ENTRIES_PER_PAGE;
     if (NT_SUCCESS(Status))
 	{
       vfat8Dot3ToString(((FATDirEntry *) block)[Offset].Filename,((FATDirEntry *) block)[Offset].Ext, name2);
@@ -452,9 +450,9 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
 		vfat_wcsncpy (Fcb->ObjectName, name, MAX_PATH);
 		if (pDirIndex)
 		  *pDirIndex = DirIndex;
-        DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",Fcb->PathName, Fcb->ObjectName, DirIndex);
-		ExFreePool (block);
-        VfatCloseFile(DeviceExt, &tmpFileObject);
+         DPRINT("FindFile: new Pathname %S, new Objectname %S, DirIndex %d\n",Fcb->PathName, Fcb->ObjectName, DirIndex);
+		if (Context)
+		  CcUnpinData(Context);
 		return STATUS_SUCCESS;
 	  }
     }
@@ -463,8 +461,8 @@ FindFile (PDEVICE_EXTENSION DeviceExt,
   }
   if (pDirIndex)
 	*pDirIndex = DirIndex;
-  ExFreePool (block);
-  VfatCloseFile(DeviceExt, &tmpFileObject);
+  if (Context)
+    CcUnpinData(Context);
   return (STATUS_UNSUCCESSFUL);
 }
 
@@ -681,9 +679,16 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	  pFcb->entry.FirstCluster = 0;
 	  pFcb->entry.FirstClusterHigh = 0;
 	  updEntry (DeviceExt, FileObject);
+	  if ((ULONG)pFcb->RFCB.FileSize.QuadPart > 0)
+	  {
+	    pFcb->RFCB.AllocationSize.QuadPart = 0;
+	    pFcb->RFCB.FileSize.QuadPart = 0;
+	    pFcb->RFCB.ValidDataLength.QuadPart = 0;
+	    CcSetFileSizes(FileObject, (PCC_FILE_SIZES)&pFcb->RFCB.AllocationSize);
+	  }
 	  while (Cluster != 0xffffffff && Cluster > 1)
 	  {
-	    Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, TRUE);
+	    Status = GetNextCluster (DeviceExt, Cluster, &NextCluster, FALSE);
 	    WriteCluster (DeviceExt, Cluster, 0);
 	    Cluster = NextCluster;
 	  }
