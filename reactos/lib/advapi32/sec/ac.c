@@ -1,4 +1,4 @@
-/* $Id: ac.c,v 1.10 2004/08/15 17:03:15 chorns Exp $
+/* $Id: ac.c,v 1.11 2004/09/13 12:14:11 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -139,6 +139,33 @@ AddAccessAllowedAce (
 /*
  * @implemented
  */
+BOOL STDCALL
+AddAccessAllowedAceEx(PACL pAcl,
+		      DWORD dwAceRevision,
+		      DWORD AceFlags,
+		      DWORD AccessMask,
+		      PSID pSid)
+{
+  NTSTATUS Status;
+
+  Status = RtlAddAccessAllowedAceEx(pAcl,
+                                    dwAceRevision,
+                                    AceFlags,
+                                    AccessMask,
+                                    pSid);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 BOOL
 STDCALL
 AddAccessDeniedAce (
@@ -161,6 +188,33 @@ AddAccessDeniedAce (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+AddAccessDeniedAceEx(PACL pAcl,
+		     DWORD dwAceRevision,
+		     DWORD AceFlags,
+		     DWORD AccessMask,
+		     PSID pSid)
+{
+  NTSTATUS Status;
+
+  Status = RtlAddAccessDeniedAceEx(pAcl,
+                                   dwAceRevision,
+                                   AceFlags,
+                                   AccessMask,
+                                   pSid);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 
@@ -223,6 +277,37 @@ AddAuditAccessAce (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+AddAuditAccessAceEx(PACL pAcl,
+		    DWORD dwAceRevision,
+		    DWORD AceFlags,
+		    DWORD dwAccessMask,
+		    PSID pSid,
+		    BOOL bAuditSuccess,
+		    BOOL bAuditFailure)
+{
+  NTSTATUS Status;
+
+  Status = RtlAddAuditAccessAceEx(pAcl,
+                                  dwAceRevision,
+                                  AceFlags,
+                                  dwAccessMask,
+                                  pSid,
+                                  bAuditSuccess,
+                                  bAuditFailure);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastError(RtlNtStatusToDosError(Status));
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 

@@ -1,8 +1,8 @@
-/* $Id: hwprofiles.c,v 1.3 2004/08/15 17:03:14 chorns Exp $
+/* $Id: hwprofiles.c,v 1.4 2004/09/13 12:13:35 ekohl Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/misc/sysfun.c
+ * FILE:            lib/advapi32/misc/hwprofiles.c
  * PURPOSE:         advapi32.dll Hardware Functions
  * PROGRAMMER:      Steven Edwards
  * UPDATE HISTORY:
@@ -27,6 +27,14 @@
 BOOL STDCALL
 GetCurrentHwProfileA(LPHW_PROFILE_INFOA pInfo)
 {
-	DPRINT("GetCurrentHwProfileA stub\n");
-	return 1;
+  DPRINT("GetCurrentHwProfileA stub\n");
+  return TRUE;
+}
+
+
+BOOL STDCALL
+GetCurrentHwProfileW(LPHW_PROFILE_INFOW pInfo)
+{
+  DPRINT("GetCurrentHwProfileW stub\n");
+  return TRUE;
 }

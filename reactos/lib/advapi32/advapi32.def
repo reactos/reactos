@@ -1,4 +1,4 @@
-; $Id: advapi32.def,v 1.21 2004/08/23 21:16:25 gvg Exp $
+; $Id: advapi32.def,v 1.22 2004/09/13 12:14:55 ekohl Exp $
 ;
 ; advapi32.def
 ;
@@ -12,12 +12,12 @@ AccessCheck@32
 AccessCheckAndAuditAlarmA@44
 AccessCheckAndAuditAlarmW@44
 AddAccessAllowedAce@16
-;AddAccessAllowedAceEx@20
+AddAccessAllowedAceEx@20
 AddAccessDeniedAce@16
-;AddAccessDeniedAceEx@20
+AddAccessDeniedAceEx@20
 AddAce@20
 AddAuditAccessAce@24
-;AddAuditAccessAceEx@28
+AddAuditAccessAceEx@28
 AdjustTokenGroups@24
 AdjustTokenPrivileges@24
 AllocateAndInitializeSid@44
@@ -127,7 +127,7 @@ GetAclInformation@16
 ;GetAuditedPermissionsFromSDA
 ;GetAuditedPermissionsFromSDW
 GetCurrentHwProfileA@4
-;GetCurrentHwProfileW@4
+GetCurrentHwProfileW@4
 ;GetEffectiveAccessRightsA
 ;GetEffectiveAccessRightsW
 ;GetEffectiveRightsFromAclA@12
@@ -179,7 +179,7 @@ GetUserNameW@8
 ;I_ScSetServiceBitsA@20
 ;I_ScSetServiceBitsW@20
 ImpersonateLoggedOnUser@4
-;ImpersonateNamedPipeClient@4
+ImpersonateNamedPipeClient@4
 ImpersonateSelf@4
 InitializeAcl@12
 InitializeSecurityDescriptor@8

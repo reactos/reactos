@@ -1,4 +1,4 @@
-; $Id: advapi32.edf,v 1.41 2004/08/23 21:16:25 gvg Exp $
+; $Id: advapi32.edf,v 1.42 2004/09/13 12:14:55 ekohl Exp $
 ;
 ; advapi32.edf
 ;
@@ -12,9 +12,12 @@ AccessCheck=AccessCheck@32
 AccessCheckAndAuditAlarmA=AccessCheckAndAuditAlarmA@44
 AccessCheckAndAuditAlarmW=AccessCheckAndAuditAlarmW@44
 AddAccessAllowedAce=AddAccessAllowedAce@16
+AddAccessAllowedAceEx=AddAccessAllowedAceEx@20
 AddAccessDeniedAce=AddAccessDeniedAce@16
+AddAccessDeniedAceEx=AddAccessDeniedAceEx@20
 AddAce=AddAce@20
 AddAuditAccessAce=AddAuditAccessAce@24
+AddAuditAccessAceEx=AddAuditAccessAceEx@28
 AdjustTokenGroups=AdjustTokenGroups@24
 AdjustTokenPrivileges=AdjustTokenPrivileges@24
 AllocateAndInitializeSid=AllocateAndInitializeSid@44
@@ -123,7 +126,7 @@ GetAclInformation=GetAclInformation@16
 ;GetAuditedPermissionsFromSDA
 ;GetAuditedPermissionsFromSDW
 GetCurrentHwProfileA=GetCurrentHwProfileA@4
-;GetCurrentHwProfileW=GetCurrentHwProfileW@4
+GetCurrentHwProfileW=GetCurrentHwProfileW@4
 ;GetEffectiveAccessRightsA
 ;GetEffectiveAccessRightsW
 ;GetEffectiveRightsFromAclA=GetEffectiveRightsFromAclA@12
@@ -175,7 +178,7 @@ GetUserNameW=GetUserNameW@8
 ;I_ScSetServiceBitsA=I_ScSetServiceBitsA@20
 ;I_ScSetServiceBitsW=I_ScSetServiceBitsW@20
 ImpersonateLoggedOnUser=ImpersonateLoggedOnUser@4
-;ImpersonateNamedPipeClient=ImpersonateNamedPipeClient@4
+ImpersonateNamedPipeClient=ImpersonateNamedPipeClient@4
 ImpersonateSelf=ImpersonateSelf@4
 InitializeAcl=InitializeAcl@12
 InitializeSecurityDescriptor=InitializeSecurityDescriptor@8
