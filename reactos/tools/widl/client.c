@@ -61,6 +61,7 @@ static void write_procformatstring(type_t *iface)
     func_t *func = iface->funcs;
     var_t *var;
     unsigned int type_offset = 2;
+    int in_attr, out_attr;
 
     print_client("static const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =\n");
     print_client("{\n");
@@ -79,6 +80,13 @@ static void write_procformatstring(type_t *iface)
             while (NEXT_LINK(var)) var = NEXT_LINK(var);
             while (var)
             {
+                out_attr = is_attr(var->attrs, ATTR_OUT);
+                in_attr = is_attr(var->attrs, ATTR_IN);
+
+                /* set 'in' attribute if neither 'in' nor 'out' is set */
+                if (!out_attr && !in_attr)
+                    in_attr = 1;
+
                 if (var->ptr_level == 0)
                 {
                     if (is_base_type(var->type))
@@ -96,7 +104,12 @@ static void write_procformatstring(type_t *iface)
                 {
                     if (is_base_type(var->type))
                     {
-                        print_client("0x4d,    /* FC_IN_PARAM */\n");
+                        if (in_attr & !out_attr)
+                            print_client("0x4d,    /* FC_IN_PARAM */\n");
+                        else if (!in_attr & out_attr)
+                            print_client("0x51,    /* FC_OUT_PARAM */\n");
+                        else if (in_attr & out_attr)
+                            print_client("0x50,    /* FC_IN_OUT_PARAM */\n");
                         fprintf(client, "#ifndef _ALPHA_\n");
                         print_client("0x01,\n");
                         fprintf(client, "#else\n");
@@ -150,6 +163,7 @@ static void write_typeformatstring(type_t *iface)
 {
     func_t *func = iface->funcs;
     var_t *var;
+    int out_attr;
 
     print_client("static const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =\n");
     print_client("{\n");
@@ -168,6 +182,8 @@ static void write_typeformatstring(type_t *iface)
             while (NEXT_LINK(var)) var = NEXT_LINK(var);
             while (var)
             {
+                out_attr = is_attr(var->attrs, ATTR_OUT);
+
                 if (var->ptr_level > 1)
                 {
                     error("Function '%s' argument '%s': Pointer level %d not supported!\n",
@@ -179,7 +195,10 @@ static void write_typeformatstring(type_t *iface)
                 {
                     if (is_base_type(var->type))
                     {
-                        print_client("0x11, 0x08,    /* FC_RP [simple_pointer] */\n");
+                        if (out_attr)
+                            print_client("0x11, 0x0c,    /* FC_RP [allocated_on_stack] [simple_pointer] */\n");
+                        else
+                            print_client("0x11, 0x08,    /* FC_RP [simple_pointer] */\n");
                         print_client("0x%02x,          /* FC_<type> */\n", var->type->type);
                         print_client("0x5c,          /* FC_PAD */\n");
                     }
@@ -210,74 +229,79 @@ static void print_message_buffer_size(func_t *func)
     int last_size = -1;
     int in_attr;
     int out_attr;
+    int nothing_printed = 1;
     var_t *var;
 
-    if (!func->args)
+    if (func->args)
     {
-        fprintf(client, " 0U");
-        return;
+        var = func->args;
+        while (NEXT_LINK(var)) var = NEXT_LINK(var);
+        for (; var; var = PREV_LINK(var))
+        {
+            out_attr = is_attr(var->attrs, ATTR_OUT);
+            in_attr = is_attr(var->attrs, ATTR_IN);
+
+            /* set 'in' attribute if neither 'in' nor 'out' is found */
+            if (!out_attr && !in_attr)
+                in_attr = 1;
+
+            if (!in_attr)
+                continue;
+
+            alignment = 0;
+            switch (var->type->type)
+            {
+            case RPC_FC_BYTE:
+            case RPC_FC_CHAR:
+            case RPC_FC_SMALL:
+                size = 1;
+                alignment = 0;
+                break;
+
+            case RPC_FC_WCHAR:
+            case RPC_FC_USHORT:
+            case RPC_FC_SHORT:
+                size = 2;
+                if (last_size > 0 && last_size < 2)
+                    alignment += (2 - last_size);
+                break;
+
+            case RPC_FC_ULONG:
+            case RPC_FC_LONG:
+            case RPC_FC_FLOAT:
+                size = 4;
+                if (last_size > 0 && last_size < 4)
+                    alignment += (4 - last_size);
+                break;
+
+            case RPC_FC_HYPER:
+            case RPC_FC_DOUBLE:
+                size = 8;
+                if (last_size > 0 && last_size < 4)
+                    alignment += (4 - last_size);
+                break;
+
+            case RPC_FC_IGNORE:
+                size = 0;
+                break;
+
+            default:
+                error("Unknown/unsupported type!");
+                return;
+            }
+
+            if (last_size != -1)
+                fprintf(client, " +");
+            fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
+            nothing_printed = 0;
+
+            last_size = size;
+        }
     }
 
-    var = func->args;
-    while (NEXT_LINK(var)) var = NEXT_LINK(var);
-    for (; var; var = PREV_LINK(var))
+    if (nothing_printed)
     {
-        out_attr = is_attr(var->attrs, ATTR_OUT);
-        in_attr = is_attr(var->attrs, ATTR_IN);
-
-        /* set 'in' attribute if neither 'in' nor 'out' is found */
-        if (!out_attr && !in_attr)
-            in_attr = 1;
-
-        if (!in_attr)
-            continue;
-
-        alignment = 0;
-        switch (var->type->type)
-        {
-        case RPC_FC_BYTE:
-        case RPC_FC_CHAR:
-        case RPC_FC_SMALL:
-            size = 1;
-            alignment = 0;
-            break;
-
-        case RPC_FC_WCHAR:
-        case RPC_FC_USHORT:
-        case RPC_FC_SHORT:
-            size = 2;
-            if (last_size > 0 && last_size < 2)
-                alignment += (2 - last_size);
-            break;
-
-        case RPC_FC_ULONG:
-        case RPC_FC_LONG:
-        case RPC_FC_FLOAT:
-            size = 4;
-            if (last_size > 0 && last_size < 4)
-                alignment += (4 - last_size);
-            break;
-
-        case RPC_FC_HYPER:
-        case RPC_FC_DOUBLE:
-            size = 8;
-            if (last_size > 0 && last_size < 4)
-                alignment += (4 - last_size);
-            break;
-
-        case RPC_FC_IGNORE:
-            size = 0;
-            break;
-
-        default:
-            error("Unknown/unsupported type!");
-        }
-
-        if (last_size != -1)
-            fprintf(client, " +");
-        fprintf(client, " %dU", (size == 0) ? 0 : size + alignment);
-
-        last_size = size;
+        fprintf(client, " 0U");
     }
 }
 
@@ -376,6 +400,137 @@ static void marshall_in_arguments(func_t *func)
 }
 
 
+static void unmarshall_out_arguments(func_t *func)
+{
+    unsigned int alignment;
+    unsigned int size;
+    unsigned int last_size = 0;
+    int out_attr;
+    var_t *var;
+    var_t *def;
+
+    def = func->def;
+
+    /* unmarshall the out arguments */
+    if (func->args)
+    {
+        var = func->args;
+        while (NEXT_LINK(var)) var = NEXT_LINK(var);
+        for (; var; var = PREV_LINK(var))
+        {
+            out_attr = is_attr(var->attrs, ATTR_OUT);
+            if (!out_attr)
+                continue;
+
+            if (var->ptr_level > 1)
+            {
+                error("Function '%s' argument '%s': Pointer level %d not supported!\n",
+                      func->def->name, var->name, var->ptr_level);
+                return;
+            }
+
+            alignment = 0;
+            switch (var->type->type)
+            {
+            case RPC_FC_BYTE:
+            case RPC_FC_CHAR:
+            case RPC_FC_SMALL:
+                size = 1;
+                alignment = 0;
+                break;
+
+            case RPC_FC_WCHAR:
+            case RPC_FC_USHORT:
+            case RPC_FC_SHORT:
+                size = 2;
+                if (last_size > 0 && last_size < 2)
+                    alignment = (2 - last_size);
+                break;
+
+            case RPC_FC_ULONG:
+            case RPC_FC_LONG:
+            case RPC_FC_FLOAT:
+                size = 4;
+                if (last_size > 0 && last_size < 4)
+                    alignment = (4 - last_size);
+                break;
+
+            case RPC_FC_HYPER:
+            case RPC_FC_DOUBLE:
+                size = 8;
+                if (last_size > 0 && last_size < 4)
+                    alignment = (4 - last_size);
+                break;
+
+            case RPC_FC_IGNORE:
+                size = 0;
+                break;
+
+            default:
+                error("Unknown/unsupported type!");
+            }
+
+            if (size != 0)
+            {
+                if (var->ptr_level == 1)
+                {
+                    fprintf(client, "\n");
+                    if (alignment != 0)
+                        print_client("_StubMsg.Buffer += %u;\n", alignment);
+
+                    print_client("*");
+                    write_name(client, var);
+                    fprintf(client, " = *((");
+                    write_type(client, var->type, NULL, var->tname);
+                    fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
+                }
+
+                last_size = size;
+            }
+        }
+    }
+
+    /* unmarshall return value */
+    if (!is_void(def->type, NULL))
+    {
+        alignment = 0;
+        switch (def->type->type)
+        {
+        case RPC_FC_BYTE:
+        case RPC_FC_CHAR:
+        case RPC_FC_SMALL:
+        case RPC_FC_WCHAR:
+        case RPC_FC_USHORT:
+        case RPC_FC_SHORT:
+        case RPC_FC_ULONG:
+        case RPC_FC_LONG:
+        case RPC_FC_FLOAT:
+            size = 4;
+            if (last_size > 0 && last_size < 4)
+                alignment = (4 - last_size);
+            break;
+
+        case RPC_FC_HYPER:
+        case RPC_FC_DOUBLE:
+            size = 8;
+            if (last_size > 0 && last_size < 4)
+                alignment = (4 - last_size);
+            break;
+
+        default:
+            error("Unknown/unsupported type!");
+        }
+
+       fprintf(client, "\n");
+       if (alignment != 0)
+           print_client("_StubMsg.Buffer += %u;\n", alignment);
+       print_client("_RetVal = *((");
+       write_type(client, def->type, def, def->tname);
+       fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
+    }
+}
+
+
 static void check_pointers(func_t *func)
 {
     var_t *var;
@@ -405,6 +560,30 @@ static void check_pointers(func_t *func)
 
         var = PREV_LINK(var);
     }
+}
+
+
+static int use_return_buffer(func_t *func)
+{
+    var_t *var;
+
+    if (!is_void(func->def->type, NULL))
+        return 1;
+
+    if (!func->args)
+        return 0;
+
+    var = func->args;
+    while (NEXT_LINK(var)) var = NEXT_LINK(var);
+    while (var)
+    {
+        if (is_attr(var->attrs, ATTR_OUT))
+            return 1;
+
+        var = PREV_LINK(var);
+    }
+
+    return 0;
 }
 
 
@@ -523,11 +702,10 @@ static void write_function_stubs(type_t *iface)
         print_client("(unsigned char __RPC_FAR *)_StubMsg.Buffer);\n");
         indent--;
 
-        /* convert data representation */
-        if (!is_void(def->type, NULL))
+        if (use_return_buffer(func))
         {
+            /* convert data representation */
             fprintf(client, "\n");
-
             print_client("if ((_RpcMessage.DataRepresentation & 0x0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION)\n");
             indent++;
             print_client("NdrConvert(\n");
@@ -535,11 +713,9 @@ static void write_function_stubs(type_t *iface)
             print_client("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
             print_client("(PFORMAT_STRING)&__MIDL_ProcFormatString.Format[%u]);\n", proc_offset);
             indent -= 2;
-            fprintf(client, "\n");
 
-            print_client("_RetVal = *((");
-            write_type(client, def->type, def, def->tname);
-            fprintf(client, " __RPC_FAR *)_StubMsg.Buffer)++;\n");
+            /* unmarshal out arguments */
+            unmarshall_out_arguments(func);
         }
 
         /* update proc_offset */

@@ -1,5 +1,13 @@
 ChangeLog
 
+2005-03-12 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+Implement [in], [out] and [in, out] support for pointers to basic types.
+
+
 2005-03-10 ekohl
 
    tools/widl/client.c
