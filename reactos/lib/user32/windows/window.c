@@ -1,4 +1,4 @@
-/* $Id: window.c,v 1.31 2003/05/17 14:37:23 gvg Exp $
+/* $Id: window.c,v 1.32 2003/05/18 07:51:41 gvg Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS user32.dll
@@ -1014,8 +1014,7 @@ SetWindowPos(HWND hWnd,
 	     int cy,
 	     UINT uFlags)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserSetWindowPos(hWnd,hWndInsertAfter, X, Y, cx, cy, uFlags);
 }
 
 WINBOOL STDCALL

@@ -1,4 +1,4 @@
-/* $Id: winpos.c,v 1.8 2003/05/17 14:30:28 gvg Exp $
+/* $Id: winpos.c,v 1.9 2003/05/18 07:51:41 gvg Exp $
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
@@ -499,6 +499,9 @@ WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
     {
       /* FIXME: Move the window bits */
     }
+
+  Window->WindowRect = NewWindowRect;
+  Window->ClientRect = NewClientRect;
 
   if (WinPos.flags & SWP_HIDEWINDOW)
     {
