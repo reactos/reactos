@@ -288,6 +288,8 @@ MingwModuleHandler::GenerateDirectoryTargets () const
 	
 	set_string::iterator it;
 	size_t wrap_count = 0;
+
+	fprintf ( fMakefile, "ifneq ($(ROS_INTERMEDIATE),)\n" );
 	fprintf ( fMakefile, "directories::" );
 
 	for ( it = directory_set.begin ();
@@ -322,7 +324,8 @@ MingwModuleHandler::GenerateDirectoryTargets () const
 	}
 
 	fprintf ( fMakefile, 
-	          "::\n\t${mkdir} $@\n\n" );
+	          "::\n\t${mkdir} $@\n" );
+	fprintf ( fMakefile, "endif\n\n" );
 
 	directory_set.clear ();
 }
