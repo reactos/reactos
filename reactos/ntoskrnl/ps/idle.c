@@ -22,6 +22,7 @@
 HANDLE PsIdleThreadHandle = NULL;
 extern ULONG DpcQueueSize;
 PETHREAD PiIdleThread;
+extern CHAR KiTimerSystemAuditing;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -38,6 +39,11 @@ PsIdleThreadMain(PVOID Context)
 	   KiDispatchInterrupt();
 	   KeLowerIrql(oldlvl);
 	 }
+/*
+ *	Tell ke/timer.c it's okay to run.
+ */
+       KiTimerSystemAuditing = 1;
+
        NtYieldExecution();
 
        Ke386HaltProcessor();

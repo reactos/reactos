@@ -1,4 +1,4 @@
-/* $Id: process.c,v 1.127 2004/03/10 09:14:29 gvg Exp $
+/* $Id: process.c,v 1.128 2004/04/18 00:50:53 jimtabor Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -1084,6 +1084,26 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
       case ProcessQuotaLimits:
       case ProcessIoCounters:
       case ProcessTimes:
+	if (ProcessInformationLength != sizeof(KERNEL_USER_TIMES))
+	{
+	  Status = STATUS_INFO_LENGTH_MISMATCH;
+	}
+	else
+	{
+	   PKERNEL_USER_TIMES ProcessTimeP =
+	                     (PKERNEL_USER_TIMES)ProcessInformation;
+	    
+	   ProcessTimeP->CreateTime = (TIME) Process->CreateTime;
+           ProcessTimeP->UserTime.QuadPart = Process->Pcb.UserTime * 100000;
+           ProcessTimeP->KernelTime.QuadPart = Process->Pcb.KernelTime * 100000;
+	   ProcessTimeP->ExitTime = (TIME) Process->ExitTime;
+
+	  if (ReturnLength)
+	  {
+	    *ReturnLength = sizeof(KERNEL_USER_TIMES);
+	  }
+	}
+	break;
       case ProcessDebugPort:
       case ProcessLdtInformation:
       case ProcessWorkingSetWatch:
