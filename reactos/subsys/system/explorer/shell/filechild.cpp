@@ -410,6 +410,26 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 			return TRUE;}
 
+		case WM_CONTEXTMENU: {
+			 // first select the current item in the listbox
+			HWND hpanel = (HWND) wparam;
+			POINTS& pos = MAKEPOINTS(lparam);
+			POINT pt; POINTSTOPOINT(pt, pos);
+			ScreenToClient(hpanel, &pt);
+			SendMessage(hpanel, WM_LBUTTONDOWN, 0, MAKELONG(pt.x, pt.y));
+			SendMessage(hpanel, WM_LBUTTONUP, 0, MAKELONG(pt.x, pt.y));
+
+			 // now create the popup menu using shell namespace and IContextMenu
+			Pane* pane = GetFocus()==_left_hwnd? _left: _right;
+			int idx = ListBox_GetCurSel(*pane);
+			Entry* entry = (Entry*) ListBox_GetItemData(*pane, idx);
+
+			ShellPath shell_path = entry->create_absolute_pidl();
+			LPCITEMIDLIST pidl = shell_path;
+
+			CHECKERROR(ShellFolderContextMenu(Desktop(), _hwnd, 1, &pidl, pos.x, pos.y));
+			break;}
+
 		default: def:
 			return super::WndProc(nmsg, wparam, lparam);
 	}
