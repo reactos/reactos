@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.h,v 1.5 2001/01/13 23:53:23 narnaoud Exp $ */
+/* $Id: RegistryExplorer.h,v 1.6 2001/04/16 05:11:54 narnaoud Exp $ */
 
 #ifndef _REGISTRY_EXPLORER_H__INCLUDED
 #define _REGISTRY_EXPLORER_H__INCLUDED
@@ -48,5 +48,10 @@
 #define PROMPT_BUFFER_SIZE	1024
 
 #define COMMAND_NA_ON_ROOT	_T(" is not applicable to root key.\n")
+
+#define SETTINGS_REGISTRY_KEY  _T("SOFTWARE\\Registry Explorer")
+#define NORMAL_TEXT_ATTRIBUTES_VALUE_NAME        _T("Normal Text Color")
+#define PROMPT_TEXT_ATTRIBUTES_VALUE_NAME        _T("Prompt Text Color")
+#define PROMPT_VALUE_NAME                        _T("Prompt")
 
 #endif //#ifndef _REGISTRY_EXPLORER_H__INCLUDED

@@ -1,4 +1,4 @@
-/* $Id: RegistryExplorer.cpp,v 1.5 2001/04/15 22:17:50 narnaoud Exp $
+/* $Id: RegistryExplorer.cpp,v 1.6 2001/04/16 05:11:54 narnaoud Exp $
  *
  * regexpl - Console Registry Explorer
  *
@@ -20,7 +20,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-// Registry Explorer.cpp : Defines the entry point for the console application.
+// RegistryExplorer.cpp : Defines the entry point for the Regiistry Explorer.
 //
 
 #include "ph.h"
@@ -46,6 +46,8 @@
 #include "ShellCommandDeleteKey.h"
 #include "ShellCommandSetValue.h"
 #include "ShellCommandDeleteValue.h"
+#include "Prompt.h"
+#include "Settings.h"
 
 TCHAR pchCurrentKey[PROMPT_BUFFER_SIZE];
 
@@ -134,6 +136,38 @@ int main ()
 
 	int nRetCode = 0;
 
+  HRESULT hr;
+
+  CSettings *pSettings = NULL;
+  CPrompt *pPrompt = NULL;
+
+  pSettings = new CSettings();
+  if (!pSettings)
+	{
+		_ftprintf(stderr,_T("Cannot initialize settings. Out of memory.\n"));
+		goto Abort;
+	}
+
+  hr = pSettings->Load(SETTINGS_REGISTRY_KEY);
+  if (FAILED(hr))
+	{
+		_ftprintf(stderr,_T("Cannot load settings. Error is 0x%X.\n"),(unsigned int)hr);
+		goto Abort;
+	}
+  
+  pPrompt = new CPrompt(Tree,hr);
+  if (!pPrompt)
+	{
+		_ftprintf(stderr,_T("Cannot initialize prompt. Out of memory.\n"));
+		goto Abort;
+	}
+
+  if (FAILED(hr))
+	{
+		_ftprintf(stderr,_T("Cannot initialize prompt. Error is 0x%X.\n"),(unsigned int)hr);
+		goto Abort;
+	}
+
 // input buffer size in chars
 #define INPUT_BUFFER_SIZE	1024
 //#define INPUT_BUFFER_SIZE	128
@@ -154,7 +188,7 @@ int main ()
 	if (!Console.GetTextAttribute(wOldConsoleAttribute)) goto Abort;
 
 	Console.SetTitle(_T("Registry Explorer"));
-	Console.SetTextAttribute(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED/*|FOREGROUND_INTENSITY*/);
+	Console.SetTextAttribute(pSettings->GetNormalTextAttributes());
 
 	VERIFY(SetConsoleCtrlHandler((PHANDLER_ROUTINE)HandlerRoutine,TRUE));
 
@@ -164,25 +198,29 @@ int main ()
 
   //Tree.SetDesiredOpenKeyAccess(KEY_READ);
 
-  const TCHAR *pszCurrentPath;
+  hr = pPrompt->SetPrompt(pSettings->GetPrompt());
+  if (FAILED(hr))
+  {
+    _ftprintf(stderr,_T("Cannot initialize prompt. Error is 0x%X.\n"),(unsigned int)hr);
+    goto Abort;
+  }
+  
 GetCommand:
 	// prompt
 	// TODO: make prompt user-customizable
 	Console.EnableWrite();
-  pszCurrentPath = Tree.GetCurrentPath();
-	Console.Write(pszCurrentPath?pszCurrentPath:_T("NULL (Internal Error)"));
-	Console.Write(_T("\n# "));
+	pPrompt->ShowPrompt(Console);
 	Console.FlushInputBuffer();
 
 	blnCommandExecutionInProgress = FALSE;
 
 	// Set command line color
-//	Console.SetTextAttribute(/*FOREGROUND_BLUE|*/FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY);
+  Console.SetTextAttribute(pSettings->GetPromptTextAttributes());
 	if (!Console.ReadLine())
     goto Abort;
 
 	// Set normal color
-//	Console.SetTextAttribute(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|FOREGROUND_INTENSITY);
+	Console.SetTextAttribute(pSettings->GetNormalTextAttributes());
 
 	Console.BeginScrollingOperation();
 	blnCommandExecutionInProgress = TRUE;
@@ -222,6 +260,14 @@ GetCommand:
 Abort:
 	_ftprintf(stderr,_T("Abnormal program termination.\nPlease report bugs to ") EMAIL _T("\n"));
 	nRetCode = 1;
+
 Exit:
+
+  if (pSettings)
+    delete pSettings;
+
+  if (pPrompt)
+    delete pPrompt;
+
 	return nRetCode;
 }

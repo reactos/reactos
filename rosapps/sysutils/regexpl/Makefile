@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.4 2001/01/10 01:25:29 narnaoud Exp $
+# $Id: Makefile,v 1.5 2001/04/16 05:11:54 narnaoud Exp $
 #
 #  ReactOS makefile for RegExpl
 #
@@ -52,6 +52,8 @@ OBJECTS = \
 	TextHistory.o			\
 	Completion.o			\
 	Pattern.o			\
+	Settings.o			\
+	Prompt.o			\
 	$(TARGET_NAME).coff
 
 CLEAN_FILES = \
