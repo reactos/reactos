@@ -170,7 +170,7 @@ typedef union _ULARGE_INTEGER
   {
     DWORD LowPart;
     DWORD HighPart;
-  } u;
+  };
 #endif /* ANONYMOUSUNIONS */
   ULONGLONG QuadPart;
 } ULARGE_INTEGER, *PULARGE_INTEGER;
