@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: clip.c,v 1.16 2003/08/11 21:10:49 royce Exp $
+/* $Id: clip.c,v 1.17 2003/10/30 08:56:37 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -259,7 +259,7 @@ CompareLeftUp(const PRECT r1, const PRECT r2)
  * @implemented
  */
 ULONG STDCALL
-CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
+CLIPOBJ_cEnumStart(IN CLIPOBJ* ClipObj,
 		   IN BOOL ShouldDoAll,
 		   IN ULONG ClipType,
 		   IN ULONG BuildOrder,
@@ -316,17 +316,17 @@ CLIPOBJ_cEnumStart(IN PCLIPOBJ ClipObj,
  * @implemented
  */
 BOOL STDCALL
-CLIPOBJ_bEnum(IN PCLIPOBJ ClipObj,
+CLIPOBJ_bEnum(IN CLIPOBJ* ClipObj,
 	      IN ULONG ObjSize,
 	      OUT ULONG *EnumRects)
 {
   CLIPGDI *ClipGDI = (CLIPGDI*)AccessInternalObjectFromUserObject(ClipObj);
   ULONG nCopy;
-  PENUMRECTS pERects = (PENUMRECTS)EnumRects;
+  ENUMRECTS* pERects = (ENUMRECTS*)EnumRects;
 
   //calculate how many rectangles we should copy
-  nCopy = MIN( ClipGDI->EnumMax - ClipGDI->EnumPos,
-               MIN( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
+  nCopy = min( ClipGDI->EnumMax - ClipGDI->EnumPos,
+               min( ClipGDI->EnumRects.c - ClipGDI->EnumPos,
                     (ObjSize - sizeof(ULONG)) / sizeof(RECTL)));
 
   RtlCopyMemory( pERects->arcl, ClipGDI->EnumRects.arcl + ClipGDI->EnumPos,

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: surface.c,v 1.25 2003/08/28 12:35:59 gvg Exp $
+/* $Id: surface.c,v 1.26 2003/10/30 08:56:38 gvg Exp $
  * 
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -81,25 +81,25 @@ ULONG FASTCALL BitmapFormat(WORD Bits, DWORD Compression)
   }
 }
 
-static VOID Dummy_PutPixel(PSURFOBJ SurfObj, LONG x, LONG y, ULONG c)
+static VOID Dummy_PutPixel(SURFOBJ* SurfObj, LONG x, LONG y, ULONG c)
 {
   return;
 }
 
-static VOID Dummy_HLine(PSURFOBJ SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
+static VOID Dummy_HLine(SURFOBJ* SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   return;
 }
 
-static VOID Dummy_VLine(PSURFOBJ SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
+static VOID Dummy_VLine(SURFOBJ* SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
   return;
 }
 
 static BOOLEAN Dummy_BitBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
                             SURFGDI *DestGDI,  SURFGDI *SourceGDI,
-                            PRECTL  DestRect,  POINTL  *SourcePoint,
-			    PBRUSHOBJ BrushObj, POINTL* BrushOrign,
+                            RECTL*  DestRect,  POINTL  *SourcePoint,
+			    BRUSHOBJ* BrushObj, POINTL* BrushOrign,
                             XLATEOBJ *ColorTranslation, ULONG Rop4)
 {
   return FALSE;
@@ -156,7 +156,7 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
 
   NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
   SurfObj = (PVOID)AccessUserObject((ULONG)NewBitmap);
-  SurfObj->dhpdev = dhsurf;
+  SurfObj->dhsurf = dhsurf;
 
   return NewBitmap;
 }
@@ -244,7 +244,7 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
 
   SurfGDI->BitsPerPixel = BitsPerFormat(Format);
   SurfObj->dhsurf = dhsurf;
-  SurfObj->hsurf  = dhsurf; // FIXME: Is this correct??
+  SurfObj->hsurf  = (HSURF) dhsurf; // FIXME: Is this correct??
   SurfObj->sizlBitmap = Size;
   SurfObj->iBitmapFormat = Format;
   SurfObj->lDelta = DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format));

@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: lineto.c,v 1.25 2003/10/29 08:38:55 gvg Exp $
+ * $Id: lineto.c,v 1.26 2003/10/30 08:56:38 gvg Exp $
  */
 
 #include <ddk/winddi.h>
@@ -33,9 +33,9 @@
 #include <include/surface.h>
 
 static void FASTCALL
-TranslateRects(RECT_ENUM *RectEnum, PPOINTL Translate)
+TranslateRects(RECT_ENUM *RectEnum, POINTL* Translate)
 {
-  PRECTL CurrentRect;
+  RECTL* CurrentRect;
 
   if (0 != Translate->x || 0 != Translate->y)
     {
@@ -53,14 +53,14 @@ TranslateRects(RECT_ENUM *RectEnum, PPOINTL Translate)
  * Draw a line from top-left to bottom-right
  */
 static void FASTCALL
-NWtoSE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
-       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
-       PPOINTL Translate)
+NWtoSE(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
+       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       POINTL* Translate)
 {
   int i;
   int error;
   BOOLEAN EnumMore;
-  PRECTL ClipRect;
+  RECTL* ClipRect;
   RECT_ENUM RectEnum;
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
@@ -123,14 +123,14 @@ NWtoSE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
 }
 
 static void FASTCALL
-SWtoNE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
-       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
-       PPOINTL Translate)
+SWtoNE(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
+       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       POINTL* Translate)
 {
   int i;
   int error;
   BOOLEAN EnumMore;
-  PRECTL ClipRect;
+  RECTL* ClipRect;
   RECT_ENUM RectEnum;
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
@@ -192,14 +192,14 @@ SWtoNE(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
 }
 
 static void FASTCALL
-NEtoSW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
-       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
-       PPOINTL Translate)
+NEtoSW(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
+       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       POINTL* Translate)
 {
   int i;
   int error;
   BOOLEAN EnumMore;
-  PRECTL ClipRect;
+  RECTL* ClipRect;
   RECT_ENUM RectEnum;
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
@@ -261,14 +261,14 @@ NEtoSW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
 }
 
 static void FASTCALL
-SEtoNW(PSURFOBJ OutputObj, PSURFGDI OutputGDI, PCLIPOBJ Clip,
-       PBRUSHOBJ Brush, LONG x, LONG y, LONG deltax, LONG deltay,
-       PPOINTL Translate)
+SEtoNW(SURFOBJ* OutputObj, SURFGDI* OutputGDI, CLIPOBJ* Clip,
+       BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG deltay,
+       POINTL* Translate)
 {
   int i;
   int error;
   BOOLEAN EnumMore;
-  PRECTL ClipRect;
+  RECTL* ClipRect;
   RECT_ENUM RectEnum;
   ULONG Pixel = Brush->iSolidColor;
   LONG delta;
@@ -553,10 +553,10 @@ IntEngPolyline(SURFOBJ *DestSurf,
   //Draw the Polyline with a call to IntEngLineTo for each segment.
   for (i = 1; i < dCount; i++)
     {
-      rect.left = MIN(pt[i-1].x, pt[i].x);
-      rect.top = MIN(pt[i-1].y, pt[i].y);
-      rect.right = MAX(pt[i-1].x, pt[i].x);
-      rect.bottom = MAX(pt[i-1].y, pt[i].y);
+      rect.left = min(pt[i-1].x, pt[i].x);
+      rect.top = min(pt[i-1].y, pt[i].y);
+      rect.right = max(pt[i-1].x, pt[i].x);
+      rect.bottom = max(pt[i-1].y, pt[i].y);
       ret = IntEngLineTo(DestSurf,
 	                 Clip,
 	                 Brush,

@@ -37,7 +37,7 @@ HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,
 
 HPALETTE FASTCALL PALETTE_Init (VOID);
 VOID     FASTCALL PALETTE_ValidateFlags (PALETTEENTRY* lpPalE, INT size);
-INT      STDCALL  PALETTE_SetMapping(PPALOBJ palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
+INT      STDCALL  PALETTE_SetMapping(PALOBJ* palPtr, UINT uStart, UINT uNum, BOOL mapOnly);
 INT      FASTCALL PALETTE_ToPhysical (PDC dc, COLORREF color);
 
 PPALETTEENTRY FASTCALL ReturnSystemPalette (VOID);
