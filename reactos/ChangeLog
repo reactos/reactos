@@ -1,3 +1,12 @@
+2004-02-25  Casper S. Hornstrup  <chorns@users.sourceforge.net>
+
+	* drivers/net/tcpip/datalink/loopback.c: Reformat.
+	* drivers/net/tcpip/network/neighbor.c: Ditto.
+	* drivers/net/tcpip/tcpip/info.c: Ditto.
+	* drivers/net/tcpip/transport/datagram/datagram.c: Cleanup.
+	If there is an out-of-resources situation, don't transmit the
+	datagram out of order.
+
 2004-02-23  Casper S. Hornstrup  <chorns@users.sourceforge.net>
 
 	* tools/regtests.c (KMSTUB): Correct device name.

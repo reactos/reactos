@@ -46,38 +46,46 @@ VOID DatagramWorker(
   KeAcquireSpinLock(&DGPendingListLock, &OldIrql1);
 
   CurrentADFEntry = DGPendingListHead.Flink;
-  while (CurrentADFEntry != &DGPendingListHead) {
-    RemoveEntryList(CurrentADFEntry);
-    CurrentADF = CONTAINING_RECORD(CurrentADFEntry,
-                                   ADDRESS_FILE,
-                                   ListEntry);
+  while (CurrentADFEntry != &DGPendingListHead)
+    {
+      RemoveEntryList(CurrentADFEntry);
+      CurrentADF = CONTAINING_RECORD(CurrentADFEntry,
+        ADDRESS_FILE,
+        ListEntry);
 
-    KeAcquireSpinLock(&CurrentADF->Lock, &OldIrql2);
+      KeAcquireSpinLock(&CurrentADF->Lock, &OldIrql2);
 
-    if (AF_IS_BUSY(CurrentADF)) {
-      /* The send worker function is already running so we just
-         set the pending send flag on the address file object */
+      if (AF_IS_BUSY(CurrentADF))
+        {
+          /* The send worker function is already running so we just
+             set the pending send flag on the address file object */
 
-      AF_SET_PENDING(CurrentADF, AFF_SEND);
-      KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
-    } else {
-      if (!IsListEmpty(&CurrentADF->TransmitQueue)) {
-        /* The transmit queue is not empty. Dequeue a send
-           request and process it */
+          AF_SET_PENDING(CurrentADF, AFF_SEND);
+          KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
+        }
+      else
+        {
+          if (!IsListEmpty(&CurrentADF->TransmitQueue))
+            {
+              /* The transmit queue is not empty. Dequeue a send
+                 request and process it */
 
-        CurrentSREntry = RemoveHeadList(&CurrentADF->TransmitQueue);
-        CurrentSR      = CONTAINING_RECORD(CurrentADFEntry,
-                                           DATAGRAM_SEND_REQUEST,
-                                           ListEntry);
+              CurrentSREntry = RemoveHeadList(&CurrentADF->TransmitQueue);
+              CurrentSR = CONTAINING_RECORD(CurrentADFEntry,
+                DATAGRAM_SEND_REQUEST,
+                ListEntry);
 
-        KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
+              KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
 
-        DGSend(CurrentADF, CurrentSR);
-      } else
-        KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
+              DGSend(CurrentADF, CurrentSR);
+            }
+          else
+            {
+              KeReleaseSpinLock(&CurrentADF->Lock, OldIrql2);
+            }
+        }
+      CurrentADFEntry = CurrentADFEntry->Flink;
     }
-    CurrentADFEntry = CurrentADFEntry->Flink;
-  }
 
   KeReleaseSpinLock(&DGPendingListLock, OldIrql1);
 
@@ -160,9 +168,12 @@ VOID DGSend(
 
   TI_DbgPrint(MAX_TRACE, ("Called.\n"));
 
+  ASSERT(SendRequest->Build);
+
   /* Get the information we need from the address file
      now so we minimize the time we hold the spin lock */
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  ASSERT(AddrFile->ADE);
   LocalPort = AddrFile->Port;
   ADE       = AddrFile->ADE;
   ReferenceObject(ADE);
@@ -170,64 +181,72 @@ VOID DGSend(
 
   /* Loop until there are no more send requests in the
      transmit queue or until we run out of resources */
-  for (;;) {
-    Status = (*SendRequest->Build)(SendRequest, ADE->Address, LocalPort, &IPPacket);
-    if (!NT_SUCCESS(Status)) {
-      KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-      /* An error occurred, enqueue the send request again and return */
-      InsertTailList(&AddrFile->TransmitQueue, &SendRequest->ListEntry);
-      DereferenceObject(ADE);
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  for (;;)
+    {
+      Status = (*SendRequest->Build)(SendRequest, ADE->Address, LocalPort, &IPPacket);
+      if (!NT_SUCCESS(Status))
+        {
+          KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+          /* An error occurred, enqueue the send request again and return */
+          InsertHeadList(&AddrFile->TransmitQueue, &SendRequest->ListEntry);
+          DereferenceObject(ADE);
+          KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+    
+          TI_DbgPrint(MIN_TRACE, ("Leaving (insufficient resources).\n"));
+          return;
+        }
 
-      TI_DbgPrint(MIN_TRACE, ("Leaving (insufficient resources).\n"));
-      return;
-    }
-
-    /* Get a route to the destination address */
-    if (RouteGetRouteToDestination(SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS) {
-      /* Set completion routine and send the packet */
-      PC(IPPacket->NdisPacket)->Complete = SendDatagramComplete;
-      PC(IPPacket->NdisPacket)->Context  = SendRequest;
-      if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS)
-          SendDatagramComplete(
-            SendRequest,
+      /* Get a route to the destination address */
+      if (RouteGetRouteToDestination(SendRequest->RemoteAddress, ADE->NTE, &RCN) == IP_SUCCESS)
+        {
+          /* Set completion routine and send the packet */
+          PC(IPPacket->NdisPacket)->Complete = SendDatagramComplete;
+          PC(IPPacket->NdisPacket)->Context  = SendRequest;
+          if (IPSendDatagram(IPPacket, RCN) != STATUS_SUCCESS)
+            {
+              SendDatagramComplete(SendRequest,
+                IPPacket->NdisPacket,
+                NDIS_STATUS_REQUEST_ABORTED);
+            }
+          /* We're done with the RCN */
+          DereferenceObject(RCN);
+        }
+      else
+        {
+          /* No route to destination */
+          /* FIXME: Which error code should we use here? */
+          TI_DbgPrint(MIN_TRACE, ("No route to destination address (0x%X).\n",
+              SendRequest->RemoteAddress->Address.IPv4Address));
+          SendDatagramComplete(SendRequest,
             IPPacket->NdisPacket,
             NDIS_STATUS_REQUEST_ABORTED);
-      /* We're done with the RCN */
-      DereferenceObject(RCN);
-    } else {
-      /* No route to destination */
-      /* FIXME: Which error code should we use here? */
-      TI_DbgPrint(MIN_TRACE, ("No route to destination address (0x%X).\n",
-          SendRequest->RemoteAddress->Address.IPv4Address));
-      SendDatagramComplete(
-        SendRequest,
-        IPPacket->NdisPacket,
-        NDIS_STATUS_REQUEST_ABORTED);
+        }
+
+      (*IPPacket->Free)(IPPacket);
+  
+      /* Check transmit queue for more to send */
+  
+      KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+  
+      if (!IsListEmpty(&AddrFile->TransmitQueue))
+        {
+          /* Transmit queue is not empty, process one more request */
+          CurrentEntry = RemoveHeadList(&AddrFile->TransmitQueue);
+          SendRequest  = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+    
+          KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+        }
+      else
+        {
+          /* Transmit queue is empty */
+          AF_CLR_PENDING(AddrFile, AFF_SEND);
+          DereferenceObject(ADE);
+          KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  
+          TI_DbgPrint(MAX_TRACE, ("Leaving (empty queue).\n"));
+          return;
+        }
     }
-
-    (*IPPacket->Free)(IPPacket);
-
-    /* Check transmit queue for more to send */
-
-    KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
-
-    if (!IsListEmpty(&AddrFile->TransmitQueue)) {
-      /* Transmit queue is not empty, process one more request */
-      CurrentEntry = RemoveHeadList(&AddrFile->TransmitQueue);
-      SendRequest  = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-    } else {
-      /* Transmit queue is empty */
-      AF_CLR_PENDING(AddrFile, AFF_SEND);
-      DereferenceObject(ADE);
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (empty queue).\n"));
-      return;
-    }
-  }
 }
 
 
@@ -264,94 +283,108 @@ VOID DGDeliverData(
 
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-  if (AddrFile->Protocol == IPPROTO_UDP) {
-    DataBuffer = IPPacket->Data;
-  } else {
-    /* Give client the IP header too if it is a raw IP file object */
-    DataBuffer = IPPacket->Header;
-  }
-
-  if (!IsListEmpty(&AddrFile->ReceiveQueue)) {
-    PLIST_ENTRY CurrentEntry;
-    PDATAGRAM_RECEIVE_REQUEST Current;
-    BOOLEAN Found;
-
-    TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
-
-    /* Search receive request list to find a match */
-    Found = FALSE;
-    CurrentEntry = AddrFile->ReceiveQueue.Flink;
-    while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found)) {
-      Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-      if (!Current->RemoteAddress)
-        Found = TRUE;
-      else if (AddrIsEqual(Address, Current->RemoteAddress))
-        Found = TRUE;
-
-      if (Found) {
-        /* FIXME: Maybe we should check if the buffer of this
-           receive request is large enough and if not, search
-           for another */
-
-        /* Remove the request from the queue */
-        RemoveEntryList(&Current->ListEntry);
-        AddrFile->RefCount--;
-        break;
-      }
-      CurrentEntry = CurrentEntry->Flink;
+  if (AddrFile->Protocol == IPPROTO_UDP)
+    {
+      DataBuffer = IPPacket->Data;
+    }
+  else
+    {
+      /* Give client the IP header too if it is a raw IP file object */
+      DataBuffer = IPPacket->Header;
     }
 
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  if (!IsListEmpty(&AddrFile->ReceiveQueue))
+    {
+      PLIST_ENTRY CurrentEntry;
+      PDATAGRAM_RECEIVE_REQUEST Current;
+      BOOLEAN Found;
+  
+      TI_DbgPrint(MAX_TRACE, ("There is a receive request.\n"));
+  
+      /* Search receive request list to find a match */
+      Found = FALSE;
+      CurrentEntry = AddrFile->ReceiveQueue.Flink;
+      while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found))
+        {
+          Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+          if (!Current->RemoteAddress)
+            Found = TRUE;
+          else if (AddrIsEqual(Address, Current->RemoteAddress))
+            Found = TRUE;
+    
+          if (Found)
+            {
+              /* FIXME: Maybe we should check if the buffer of this
+                 receive request is large enough and if not, search
+                 for another */
+    
+              /* Remove the request from the queue */
+              RemoveEntryList(&Current->ListEntry);
+              AddrFile->RefCount--;
+              break;
+            }
+          CurrentEntry = CurrentEntry->Flink;
+        }
 
-    if (Found) {
-      TI_DbgPrint(MAX_TRACE, ("Suitable receive request found.\n"));
+      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+  
+      if (Found)
+        {
+          TI_DbgPrint(MAX_TRACE, ("Suitable receive request found.\n"));
+    
+          /* Copy the data into buffer provided by the user */
+          CopyBufferToBufferChain(Current->Buffer,
+            0,
+            DataBuffer,
+            DataSize);
+  
+          /* Complete the receive request */
+          (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
+    
+          /* Finally free the receive request */
+          if (Current->RemoteAddress)
+            {
+              DereferenceObject(Current->RemoteAddress);
+            }
+          ExFreePool(Current);
+        }
+    }
+  else if (AddrFile->RegisteredReceiveDatagramHandler)
+    {
+      TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
 
-      /* Copy the data into buffer provided by the user */
-      CopyBufferToBufferChain(
-        Current->Buffer,
+      ReceiveHandler = AddrFile->ReceiveDatagramHandler;
+      HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
+
+      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
+      if (Address->Type == IP_ADDRESS_V4)
+        {
+          AddressLength = sizeof(IPv4_RAW_ADDRESS);
+          SourceAddress = &Address->Address.IPv4Address;
+        }
+      else /* (Address->Type == IP_ADDRESS_V6) */
+        {
+          AddressLength = sizeof(IPv6_RAW_ADDRESS);
+          SourceAddress = Address->Address.IPv6Address;
+        }
+
+      Status = (*ReceiveHandler)(HandlerContext,
+        AddressLength,
+        SourceAddress,
         0,
+        NULL,
+        TDI_RECEIVE_ENTIRE_MESSAGE,
+        DataSize,
+        DataSize,
+        &BytesTaken,
         DataBuffer,
-        DataSize);
-
-      /* Complete the receive request */
-      (*Current->Complete)(Current->Context, STATUS_SUCCESS, DataSize);
-
-      /* Finally free the receive request */
-      if (Current->RemoteAddress)
-        DereferenceObject(Current->RemoteAddress);
-      ExFreePool(Current);
+        NULL);
     }
-  } else if (AddrFile->RegisteredReceiveDatagramHandler) {
-    TI_DbgPrint(MAX_TRACE, ("Calling receive event handler.\n"));
-
-    ReceiveHandler = AddrFile->ReceiveDatagramHandler;
-    HandlerContext = AddrFile->ReceiveDatagramHandlerContext;
-
-    KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-    if (Address->Type == IP_ADDRESS_V4) {
-      AddressLength = sizeof(IPv4_RAW_ADDRESS);
-      SourceAddress = &Address->Address.IPv4Address;
-    } else /* (Address->Type == IP_ADDRESS_V6) */ {
-      AddressLength = sizeof(IPv6_RAW_ADDRESS);
-      SourceAddress = Address->Address.IPv6Address;
+  else
+    {
+      TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
     }
-
-    Status = (*ReceiveHandler)(
-      HandlerContext,
-      AddressLength,
-      SourceAddress,
-      0,
-      NULL,
-      TDI_RECEIVE_ENTIRE_MESSAGE,
-      DataSize,
-      DataSize,
-      &BytesTaken,
-      DataBuffer,
-      NULL);
-  } else {
-    TI_DbgPrint(MAX_TRACE, ("Discarding datagram.\n"));
-  }
 
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
@@ -378,28 +411,33 @@ VOID DGCancelSendRequest(
 
   /* Search the request list for the specified request and remove it */
   CurrentEntry = AddrFile->TransmitQueue.Flink;
-  while ((CurrentEntry != &AddrFile->TransmitQueue) && (!Found)) {
-	  Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
-    if (Context == Current->Context) {
-      /* We've found the request, now remove it from the queue */
-      RemoveEntryList(CurrentEntry);
-      AddrFile->RefCount--;
-      Found = TRUE;
-      break;
+  while ((CurrentEntry != &AddrFile->TransmitQueue) && (!Found))
+    {
+  	  Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_SEND_REQUEST, ListEntry);
+      if (Context == Current->Context)
+        {
+          /* We've found the request, now remove it from the queue */
+          RemoveEntryList(CurrentEntry);
+          AddrFile->RefCount--;
+          Found = TRUE;
+          break;
+        }
+      CurrentEntry = CurrentEntry->Flink;
     }
-    CurrentEntry = CurrentEntry->Flink;
-  }
 
   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
-  if (Found) {
-    /* Complete the request and free its resources */
-    (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
-    DereferenceObject(Current->RemoteAddress);
-    ExFreePool(Current);
-  } else {
-    TI_DbgPrint(MID_TRACE, ("Cannot find send request.\n"));
-  }
+  if (Found)
+    {
+      /* Complete the request and free its resources */
+      (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
+      DereferenceObject(Current->RemoteAddress);
+      ExFreePool(Current);
+    }
+  else
+    {
+      TI_DbgPrint(MID_TRACE, ("Cannot find send request.\n"));
+    }
 }
 
 
@@ -424,31 +462,39 @@ VOID DGCancelReceiveRequest(
 
   /* Search the request list for the specified request and remove it */
   CurrentEntry = AddrFile->ReceiveQueue.Flink;
-  while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found)) {
-	  Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
-    if (Context == Current->Context) {
-      /* We've found the request, now remove it from the queue */
-      RemoveEntryList(CurrentEntry);
-      AddrFile->RefCount--;
-      Found = TRUE;
-      break;
+  while ((CurrentEntry != &AddrFile->ReceiveQueue) && (!Found))
+    {
+  	  Current = CONTAINING_RECORD(CurrentEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+      if (Context == Current->Context)
+        {
+          /* We've found the request, now remove it from the queue */
+          RemoveEntryList(CurrentEntry);
+          AddrFile->RefCount--;
+          Found = TRUE;
+          break;
+        }
+      CurrentEntry = CurrentEntry->Flink;
     }
-    CurrentEntry = CurrentEntry->Flink;
-  }
 
   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
-  if (Found) {
-    /* Complete the request and free its resources */
-    (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
-    /* Remote address can be NULL if the caller wants to receive
-       packets sent from any address */
-    if (Current->RemoteAddress)
-      DereferenceObject(Current->RemoteAddress);
-    ExFreePool(Current);
-  } else {
-    TI_DbgPrint(MID_TRACE, ("Cannot find receive request.\n"));
-  }
+  if (Found)
+    {
+      /* Complete the request and free its resources */
+      (*Current->Complete)(Current->Context, STATUS_CANCELLED, 0);
+
+      /* Remote address can be NULL if the caller wants to receive
+         packets sent from any address */
+      if (Current->RemoteAddress)
+        {
+          DereferenceObject(Current->RemoteAddress);
+        }
+      ExFreePool(Current);
+    }
+  else
+    {
+      TI_DbgPrint(MID_TRACE, ("Cannot find receive request.\n"));
+    }
 }
 
 
@@ -465,32 +511,25 @@ NTSTATUS DGTransmit(
  */
 {
   KIRQL OldIrql;
-CP
+
   KeAcquireSpinLock(&AddressFile->Lock, &OldIrql);
-CP
-  if (AF_IS_BUSY(AddressFile)) {
-CP
-    /* Queue send request on the transmit queue */
-    InsertTailList(&AddressFile->TransmitQueue, &SendRequest->ListEntry);
-CP
-    /* Reference address file and set pending send request flag */
-    ReferenceObject(AddressFile);
-CP
-    AF_SET_PENDING(AddressFile, AFF_SEND);
-CP
-    KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
-CP
-    TI_DbgPrint(MAX_TRACE, ("Leaving (queued).\n"));
-  } else {
-CP
-    KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
-CP
-    /* Send the datagram */
-    DGSend(AddressFile, SendRequest);
-CP
-    TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-  }
-CP
+  if (AF_IS_BUSY(AddressFile))
+    {
+      /* Queue send request on the transmit queue */
+      InsertTailList(&AddressFile->TransmitQueue, &SendRequest->ListEntry);
+      /* Reference address file and set pending send request flag */
+      ReferenceObject(AddressFile);
+      AF_SET_PENDING(AddressFile, AFF_SEND);
+      KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
+      TI_DbgPrint(MAX_TRACE, ("Leaving (queued).\n"));
+    }
+  else
+    {
+      KeReleaseSpinLock(&AddressFile->Lock, OldIrql);
+      /* Send the datagram */
+      DGSend(AddressFile, SendRequest);
+      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+    }
   return STATUS_PENDING;
 }
 
@@ -523,34 +562,43 @@ NTSTATUS DGSendDatagram(
 
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-  if (AF_IS_VALID(AddrFile)) {
-    /* Initialize a send request */
-    Status = BuildDatagramSendRequest(
-      &SendRequest,
-      NULL,
-      0,
-      Buffer,
-      DataSize,
-      Request->RequestNotifyObject,
-      Request->RequestContext,
-      Build,
-      0);
-    if (NT_SUCCESS(Status)) {
-      Status = AddrGetAddress(
-        ConnInfo->RemoteAddress,
-        &SendRequest->RemoteAddress,
-        &SendRequest->RemotePort,
-        &AddrFile->AddrCache);
-      if (NT_SUCCESS(Status)) {
-        KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-        return DGTransmit(AddrFile, SendRequest);
-      } else {
-        ExFreePool(SendRequest);
-      }
-    } else
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-  } else
-    Status = STATUS_ADDRESS_CLOSED;
+  if (AF_IS_VALID(AddrFile))
+    {
+      /* Initialize a send request */
+      Status = BuildDatagramSendRequest(&SendRequest,
+        NULL,
+        0,
+        Buffer,
+        DataSize,
+        Request->RequestNotifyObject,
+        Request->RequestContext,
+        Build,
+        0);
+      if (NT_SUCCESS(Status))
+        {
+          Status = AddrGetAddress(ConnInfo->RemoteAddress,
+            &SendRequest->RemoteAddress,
+            &SendRequest->RemotePort,
+            &AddrFile->AddrCache);
+          if (NT_SUCCESS(Status))
+            {
+              KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+              return DGTransmit(AddrFile, SendRequest);
+            }
+          else
+            {
+              ExFreePool(SendRequest);
+            }
+        }
+      else
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+  else
+    {
+      Status = STATUS_ADDRESS_CLOSED;
+    }
 
   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
@@ -595,50 +643,62 @@ NTSTATUS DGReceiveDatagram(
 
   KeAcquireSpinLock(&AddrFile->Lock, &OldIrql);
 
-  if (AF_IS_VALID(AddrFile)) {
-    ReceiveRequest = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
-    if (ReceiveRequest) {
-      /* Initialize a receive request */
-
-      /* Extract the remote address filter from the request (if any) */
-      if (((ConnInfo->RemoteAddressLength != 0)) && (ConnInfo->RemoteAddress)) {
-        Status = AddrGetAddress(ConnInfo->RemoteAddress,
-          &ReceiveRequest->RemoteAddress,
-          &ReceiveRequest->RemotePort,
-          &AddrFile->AddrCache);
-        if (!NT_SUCCESS(Status)) {
+  if (AF_IS_VALID(AddrFile))
+    {
+      ReceiveRequest = ExAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+      if (ReceiveRequest)
+        {
+          /* Initialize a receive request */
+    
+          /* Extract the remote address filter from the request (if any) */
+          if (((ConnInfo->RemoteAddressLength != 0)) && (ConnInfo->RemoteAddress))
+            {
+              Status = AddrGetAddress(ConnInfo->RemoteAddress,
+                &ReceiveRequest->RemoteAddress,
+                &ReceiveRequest->RemotePort,
+                &AddrFile->AddrCache);
+              if (!NT_SUCCESS(Status))
+                {
+                  KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
+                  ExFreePool(ReceiveRequest);
+                  return Status;
+                }
+            }
+          else
+            {
+              ReceiveRequest->RemotePort    = 0;
+              ReceiveRequest->RemoteAddress = NULL;
+            }
+          ReceiveRequest->ReturnInfo = ReturnInfo;
+          ReceiveRequest->Buffer = Buffer;
+          /* If ReceiveLength is 0, the whole buffer is available to us */
+          ReceiveRequest->BufferSize = (ReceiveLength == 0) ?
+            MmGetMdlByteCount(Buffer) : ReceiveLength;
+          ReceiveRequest->Complete = Request->RequestNotifyObject;
+          ReceiveRequest->Context = Request->RequestContext;
+    
+          /* Queue receive request */
+          InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
+    
+          /* Reference address file and set pending receive request flag */
+          AddrFile->RefCount++;
+          AF_SET_PENDING(AddrFile, AFF_RECEIVE);
+    
           KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-          ExFreePool(ReceiveRequest);
-          return Status;
+    
+          TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
+    
+          return STATUS_PENDING;
         }
-      } else {
-        ReceiveRequest->RemotePort    = 0;
-        ReceiveRequest->RemoteAddress = NULL;
-      }
-      ReceiveRequest->ReturnInfo = ReturnInfo;
-      ReceiveRequest->Buffer     = Buffer;
-      /* If ReceiveLength is 0, the whole buffer is available to us */
-      ReceiveRequest->BufferSize = (ReceiveLength == 0) ?
-        MmGetMdlByteCount(Buffer) : ReceiveLength;
-      ReceiveRequest->Complete   = Request->RequestNotifyObject;
-      ReceiveRequest->Context    = Request->RequestContext;
-
-      /* Queue receive request */
-      InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
-
-      /* Reference address file and set pending receive request flag */
-      AddrFile->RefCount++;
-      AF_SET_PENDING(AddrFile, AFF_RECEIVE);
-
-      KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
-
-      TI_DbgPrint(MAX_TRACE, ("Leaving (pending).\n"));
-
-      return STATUS_PENDING;
-    } else
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-  } else
-    Status = STATUS_INVALID_ADDRESS;
+      else
+        {
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+  else
+    {
+      Status = STATUS_INVALID_ADDRESS;
+    }
 
   KeReleaseSpinLock(&AddrFile->Lock, OldIrql);
 
@@ -676,6 +736,3 @@ NTSTATUS DGShutdown(
 {
   return STATUS_SUCCESS;
 }
-
-
-/* EOF */
