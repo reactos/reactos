@@ -24,6 +24,9 @@
 
 /* GLOBALS ***************************************************************/
 
+VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
+VOID PsBeginThreadWithContextInternal(VOID);
+
 #define FIRST_TSS_SELECTOR (KERNEL_DS + 0x8)
 #define FIRST_TSS_OFFSET (FIRST_TSS_SELECTOR / 8)
 
@@ -69,6 +72,10 @@ void HalTaskSwitch(PKTHREAD thread)
    DPRINT("trap %x iomap_base %x nr %x io_bitmap[0] %x\n",
           thread->Context.trap,thread->Context.iomap_base,
           thread->Context.nr,thread->Context.io_bitmap[0]);
+   DPRINT("&gdt[nr/8].a %.8x gdt[nr/8].a %.8x gdt[nr/8].b %.8x\n",
+	  &(gdt[thread->Context.nr/8].a),
+	  gdt[thread->Context.nr/8].a,
+	  gdt[thread->Context.nr/8].b);
    __asm__("pushfl\n\t"
 	   "cli\n\t"
 	   "ljmp %0\n\t"
@@ -95,23 +102,6 @@ static unsigned int allocate_tss_descriptor(void)
 	  }
      }
    return(0);
-}
-
-static void begin_thread(PKSTART_ROUTINE fn, PVOID start_context)
-/*
- * FUNCTION: This function is the start point for all new threads
- * ARGUMENTS:
- *          fn = Actual start point of the thread
- *          start_context = Parameter to pass to the start routine
- * RETURNS: Can't 
- */
-{
-   NTSTATUS ret;
-//   DPRINT("begin_thread %x %x\n",fn,start_context);
-   KeLowerIrql(PASSIVE_LEVEL);
-   ret = fn(start_context);
-   PsTerminateSystemThread(ret);
-   for(;;);
 }
 
 #define FLAG_NT (1<<14)
@@ -177,8 +167,9 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    unsigned int desc;
    unsigned int length;
    unsigned int base;
-   unsigned int* kernel_stack;
+   PVOID kernel_stack;
    NTSTATUS Status;
+   PVOID stack_start;
    
    DPRINT("HalInitTaskWithContext(Thread %x, Context %x)\n",
           Thread,Context);
@@ -202,33 +193,29 @@ NTSTATUS HalInitTaskWithContext(PETHREAD Thread, PCONTEXT Context)
    gdt[desc].b = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
                  | (base & 0xff000000);
    
+   stack_start = kernel_stack + 4096 - sizeof(CONTEXT);
+   memcpy(stack_start, Context, sizeof(CONTEXT));
+   
    /*
     * Initialize the thread context
     */
    memset(&Thread->Tcb.Context,0,sizeof(hal_thread_state));
    Thread->Tcb.Context.ldt = null_ldt_sel;
-   Thread->Tcb.Context.eflags = Context->EFlags;
+   Thread->Tcb.Context.eflags = (1<<1) + (1<<9);
    Thread->Tcb.Context.iomap_base = FIELD_OFFSET(hal_thread_state,io_bitmap);
-   Thread->Tcb.Context.esp0 = (ULONG)&kernel_stack[1021];
+   Thread->Tcb.Context.esp0 = stack_start;
    Thread->Tcb.Context.ss0 = KERNEL_DS;
-   Thread->Tcb.Context.esp = Context->Esp;
-   Thread->Tcb.Context.ss = Context->SegSs;
-   Thread->Tcb.Context.cs = Context->SegCs;
-   Thread->Tcb.Context.eip = Context->Eip;
+   Thread->Tcb.Context.esp = stack_start;
+   Thread->Tcb.Context.ss = KERNEL_DS;
+   Thread->Tcb.Context.cs = KERNEL_CS;
+   Thread->Tcb.Context.eip = PsBeginThreadWithContextInternal;
    Thread->Tcb.Context.io_bitmap[0] = 0xff;
    Thread->Tcb.Context.cr3 = 
           linear_to_physical(Thread->ThreadsProcess->Pcb.PageTableDirectory);
-   Thread->Tcb.Context.ds = Context->SegDs;
-   Thread->Tcb.Context.es = Context->SegEs;
-   Thread->Tcb.Context.fs = Context->SegFs;
-   Thread->Tcb.Context.gs = Context->SegGs;
-   Thread->Tcb.Context.eax = Context->Eax;
-   Thread->Tcb.Context.ebx = Context->Ebx;
-   Thread->Tcb.Context.ecx = Context->Ecx;
-   Thread->Tcb.Context.edx = Context->Edx;
-   Thread->Tcb.Context.edi = Context->Edi;
-   Thread->Tcb.Context.esi = Context->Esi;
-   Thread->Tcb.Context.ebp = Context->Ebp;
+   Thread->Tcb.Context.ds = KERNEL_DS;
+   Thread->Tcb.Context.es = KERNEL_DS;
+   Thread->Tcb.Context.fs = KERNEL_DS;
+   Thread->Tcb.Context.gs = KERNEL_DS;
 
    Thread->Tcb.Context.nr = desc * 8;
    DPRINT("Allocated %x\n",desc*8);
@@ -267,6 +254,13 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    gdt[desc].b = ((base & 0xff0000)>>16) | 0x8900 | (length & 0xf0000)
                  | (base & 0xff000000);
    
+//   DPRINT("sizeof(descriptor) %d\n",sizeof(descriptor));
+//   DPRINT("desc %d\n",desc);
+   DPRINT("&gdt[desc].a %.8x gdt[desc].a %.8x\ngdt[desc].b %.8x\n",
+	  &(gdt[desc].a),
+	  gdt[desc].a,
+	  gdt[desc].b);
+   
    /*
     * Initialize the stack for the thread (including the two arguments to 
     * the general start routine).					   
@@ -287,7 +281,7 @@ BOOLEAN HalInitTask(PETHREAD thread, PKSTART_ROUTINE fn, PVOID StartContext)
    thread->Tcb.Context.esp = &kernel_stack[1021];
    thread->Tcb.Context.ss = KERNEL_DS;
    thread->Tcb.Context.cs = KERNEL_CS;
-   thread->Tcb.Context.eip = (unsigned long)begin_thread;
+   thread->Tcb.Context.eip = (unsigned long)PsBeginThread;
    thread->Tcb.Context.io_bitmap[0] = 0xff;
    thread->Tcb.Context.cr3 = 
           linear_to_physical(thread->ThreadsProcess->Pcb.PageTableDirectory);
