@@ -5,19 +5,19 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer  <brianp@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 	
 #ifndef __PERFDATA_H
@@ -37,7 +37,7 @@ typedef struct _TIME {
 
 typedef ULARGE_INTEGER	TIME, *PTIME;
 
-//typedef WCHAR			UNICODE_STRING;
+/* typedef WCHAR			UNICODE_STRING; */
 typedef struct _UNICODE_STRING {
     USHORT	Length;
     USHORT	MaximumLength;
@@ -107,7 +107,7 @@ typedef enum _KWAIT_REASON
    MaximumWaitReason,
 } KWAIT_REASON;
 
-// SystemProcessThreadInfo (5)
+/* SystemProcessThreadInfo (5) */
 typedef struct _SYSTEM_THREAD_INFORMATION
 {
 	TIME		KernelTime;
@@ -172,7 +172,7 @@ typedef struct
 	WORD	wUnknown3;
 } SYSTEM_BASIC_INFORMATION;
 
-// SystemPerformanceInfo (2)
+/* SystemPerformanceInfo (2) */
 typedef struct _SYSTEM_PERFORMANCE_INFORMATION
 {
 	LARGE_INTEGER	/*TotalProcessorTime*/liIdleTime;
@@ -261,7 +261,7 @@ typedef struct
 	DWORD			dwReserved;
 } SYSTEM_TIME_INFORMATION;
 
-// SystemCacheInformation (21)
+/* SystemCacheInformation (21) */
 typedef struct _SYSTEM_CACHE_INFORMATION
 {
 	ULONG	CurrentSize;
@@ -273,7 +273,7 @@ typedef struct _SYSTEM_CACHE_INFORMATION
 
 } SYSTEM_CACHE_INFORMATION;
 
-// SystemPageFileInformation (18)
+/* SystemPageFileInformation (18) */
 typedef
 struct _SYSTEM_PAGEFILE_INFORMATION
 {
@@ -285,8 +285,8 @@ struct _SYSTEM_PAGEFILE_INFORMATION
 	
 } SYSTEM_PAGEFILE_INFORMATION, *PSYSTEM_PAGEFILE_INFORMATION;
 
-// SystemHandleInformation (16)
-// (see ontypes.h)
+/* SystemHandleInformation (16) */
+/* (see ontypes.h) */
 typedef
 struct _SYSTEM_HANDLE_ENTRY
 {
@@ -307,7 +307,7 @@ struct _SYSTEM_HANDLE_INFORMATION
 	
 } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
 
-// SystemProcessorPerformanceInformation (8)
+/* SystemProcessorPerformanceInformation (8) */
 typedef
 struct _SYSTEM_PROCESSORTIME_INFO
 {
@@ -338,35 +338,8 @@ struct _SYSTEM_PROCESSORTIME_INFO
 #define GR_GDIOBJECTS     0       /* Count of GDI objects */
 #define GR_USEROBJECTS    1       /* Count of USER objects */
 
-// ntdll!NtQuerySystemInformation (NT specific!) 
-// 
-// The function copies the system information of the 
-// specified type into a buffer 
-// 
-// NTSYSAPI 
-// NTSTATUS 
-// NTAPI 
-// NtQuerySystemInformation( 
-// IN UINT SystemInformationClass, // information type 
-// OUT PVOID SystemInformation, // pointer to buffer 
-// IN ULONG SystemInformationLength, // buffer size in bytes 
-// OUT PULONG ReturnLength OPTIONAL // pointer to a 32-bit 
-// // variable that receives 
-// // the number of bytes 
-// // written to the buffer 
-// ); 
 typedef LONG (WINAPI *PROCNTQSI)(UINT,PVOID,ULONG,PULONG); 
-
-//DWORD GetGuiResources (
-//  HANDLE hProcess,  // handle to process
-//  DWORD uiFlags     // GUI object type
-//);
 typedef DWORD (WINAPI *PROCGGR)(HANDLE,DWORD);
-
-//BOOL GetProcessIoCounters(
-//  HANDLE hProcess,           // handle to process
-//  PIO_COUNTERS lpIoCounters  // I/O accouting information
-//);
 typedef BOOL (WINAPI *PROCGPIC)(HANDLE,PIO_COUNTERS);
 
 BOOL	PerfDataInitialize(void);
@@ -419,4 +392,4 @@ ULONG	PerfDataGetTotalThreadCount(void);
 };
 #endif
 
-#endif // __PERFDATA_H
+#endif /* __PERFDATA_H */

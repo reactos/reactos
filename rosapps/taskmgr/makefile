@@ -8,12 +8,14 @@ PATH_TO_TOP = ../../reactos
 
 TARGET_TYPE = program
 
-TARGET_APPTYPE = console
+TARGET_APPTYPE = windows
 
 TARGET_NAME = taskmgr
 
-#TARGET_CFLAGS = -DDBG -D_WIN32_IE=0x0400
-#TARGET_RCFLAGS = -D_WIN32_IE=0x0400
+TARGET_CFLAGS = -DDBG -D_WIN32_IE=0x0501 -D_WIN32_WINNT=0x0501 \
+-fexceptions -Wall -D__USE_W32API
+
+TARGET_RCFLAGS = 
 
 WINE_MODE = yes
 
@@ -25,7 +27,7 @@ TARGET_SDKLIBS = \
 	kernel32.a \
 	user32.a \
 	gdi32.a \
-	$(COMCTL32_TARGET).a
+	comctl32.a
 
 TARGET_GCCLIBS = stdc++
 

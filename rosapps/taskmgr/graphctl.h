@@ -5,19 +5,19 @@
  *
  *  Copyright (C) 2002  Robert Dickenson <robd@reactos.org>
  *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
  *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
  *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #ifndef __GRAPH_CTRL_H__
@@ -32,7 +32,7 @@
 
 class TGraphCtrl
 {
-// Attributes
+/* Attributes */
 public:
   double AppendPoint(double dNewPoint0, double dNewPoint1 = 0.0,
                      double dNewPoint2 = 0.0, double dNewPoint3 = 0.0);
@@ -46,7 +46,7 @@ public:
   void DrawPoint();
   void Reset();
 
-  // Operations
+  /* Operations */
 public:
   BOOL Create(DWORD dwStyle, const RECT& rect, HWND hParentWnd, UINT nID=NULL);
   BOOL Create(HWND hWnd, HWND hParentWnd, UINT nID=NULL);
@@ -59,22 +59,22 @@ public:
   static int CtrlCount;
 #endif
 
-// Implementation
+/* Implementation */
 public:
-  int m_nShiftPixels;          // amount to shift with each new point 
+  int m_nShiftPixels;          /* amount to shift with each new point */
   int m_nYDecimals;
 
   char m_strXUnitsString[50];
   char m_strYUnitsString[50];
 
-  COLORREF m_crBackColor;                 // background color
-  COLORREF m_crGridColor;                 // grid color
-  COLORREF m_crPlotColor[MAX_PLOTS];      // data color  
+  COLORREF m_crBackColor;                 /* background color */
+  COLORREF m_crGridColor;                 /* grid color */
+  COLORREF m_crPlotColor[MAX_PLOTS];      /* data color   */
   
-  double m_dCurrentPosition[MAX_PLOTS];   // current position
-  double m_dPreviousPosition[MAX_PLOTS];  // previous position
+  double m_dCurrentPosition[MAX_PLOTS];   /* current position */
+  double m_dPreviousPosition[MAX_PLOTS];  /* previous position */
 
-// Construction
+/* Construction */
 public:
   TGraphCtrl();
   virtual ~TGraphCtrl();
@@ -87,8 +87,8 @@ protected:
   int m_nPlotHeight;
   int m_nPlotWidth;
 
-  double m_dLowerLimit;        // lower bounds
-  double m_dUpperLimit;        // upper bounds
+  double m_dLowerLimit;        /* lower bounds */
+  double m_dUpperLimit;        /* upper bounds */
   double m_dRange;
   double m_dVerticalFactor;
 
