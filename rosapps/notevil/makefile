@@ -1,4 +1,4 @@
-# $Id: makefile,v 1.3 2000/09/12 23:21:20 ea Exp $
+# $Id: makefile,v 1.4 2001/07/28 08:02:05 ea Exp $
 #
 # ReactOS makefile for notevil
 # Compiler: egcs 1.1.2
@@ -23,7 +23,7 @@ $(TARGET).exe: $(OBJECTS)
 		-o $(TARGET).exe \
 		-lkernel32 \
 		-luser32 \
-		-lcrtdll
+		-lmsvcrt
 	$(NM) --numeric-sort $(TARGET).exe > $(TARGET).sym
 
 $(TARGET).coff: $(TARGET).rc

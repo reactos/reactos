@@ -18,7 +18,7 @@ CLEAN_FILES = *.o cmd.exe cmd.sym cmd.coff
 
 
 cmd.exe: $(OBJECTS)
-	$(CC) $(OBJECTS) -lkernel32 -lcrtdll -luser32 -o cmd.exe
+	$(CC) $(OBJECTS) -lkernel32 -lmsvcrt -luser32 -o cmd.exe
 	$(NM) --numeric-sort cmd.exe > cmd.sym
 
 
