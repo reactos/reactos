@@ -128,9 +128,11 @@ GetDiskFreeSpaceA(
     LPDWORD lpTotalNumberOfClusters
     )
 {
-	ULONG i;
-	WCHAR RootPathNameW[MAX_PATH];
-    	i = 0;
+    WCHAR RootPathNameW[MAX_PATH];
+
+    if (lpRootPathName)
+    {
+        ULONG i = 0;
    	while ((*lpRootPathName)!=0 && i < MAX_PATH)
      	{
 		RootPathNameW[i] = *lpRootPathName;
@@ -138,7 +140,13 @@ GetDiskFreeSpaceA(
 		i++;
      	}
    	RootPathNameW[i] = 0;
-	return GetDiskFreeSpaceW(RootPathNameW,lpSectorsPerCluster, lpBytesPerSector, lpNumberOfFreeClusters, lpTotalNumberOfClusters );
+    }
+
+    return GetDiskFreeSpaceW(lpRootPathName?RootPathNameW:NULL,
+                             lpSectorsPerCluster,
+                             lpBytesPerSector,
+                             lpNumberOfFreeClusters,
+                             lpTotalNumberOfClusters);
 }
 
 WINBOOL
@@ -153,10 +161,21 @@ GetDiskFreeSpaceW(
 {
     FILE_FS_SIZE_INFORMATION FileFsSize;
     IO_STATUS_BLOCK IoStatusBlock;
+    WCHAR RootPathName[MAX_PATH];
     HANDLE hFile;
     NTSTATUS errCode;
+
+    if (lpRootPathName)
+    {
+        wcsncpy (RootPathName, lpRootPathName, 3);
+    }
+    else
+    {
+        GetCurrentDirectoryW (MAX_PATH, RootPathName);
+        RootPathName[3] = 0;
+    }
 	
-    hFile = CreateFileW(lpRootPathName,
+    hFile = CreateFileW(RootPathName,
                         FILE_READ_ATTRIBUTES,
                         FILE_SHARE_READ,
                         NULL,
@@ -194,17 +213,20 @@ GetDiskFreeSpaceExA(
     )
 {
     WCHAR DirectoryNameW[MAX_PATH];
-    ULONG i;
 
-    i = 0;
-    while ((*lpDirectoryName)!=0 && i < MAX_PATH)
+    if (lpDirectoryName)
     {
-        DirectoryNameW[i] = *lpDirectoryName;
-        lpDirectoryName++;
-        i++;
+        ULONG i = 0;
+        while ((*lpDirectoryName)!=0 && i < MAX_PATH)
+        {
+            DirectoryNameW[i] = *lpDirectoryName;
+            lpDirectoryName++;
+            i++;
+        }
+        DirectoryNameW[i] = 0;
     }
-    DirectoryNameW[i] = 0;
-    return GetDiskFreeSpaceExW(DirectoryNameW,
+
+    return GetDiskFreeSpaceExW(lpDirectoryName?DirectoryNameW:NULL,
                                lpFreeBytesAvailableToCaller,
                                lpTotalNumberOfBytes,
                                lpTotalNumberOfFreeBytes);
@@ -222,14 +244,22 @@ GetDiskFreeSpaceExW(
 {
     FILE_FS_SIZE_INFORMATION FileFsSize;
     IO_STATUS_BLOCK IoStatusBlock;
+    ULARGE_INTEGER BytesPerCluster;
+    WCHAR RootPathName[MAX_PATH];
     HANDLE hFile;
     NTSTATUS errCode;
-    WCHAR RootPath[4];
-    ULARGE_INTEGER BytesPerCluster;
 
-    wcsncpy (RootPath, lpDirectoryName, 3);
+    if (lpDirectoryName)
+    {
+        wcsncpy (RootPathName, lpDirectoryName, 3);
+    }
+    else
+    {
+        GetCurrentDirectoryW (MAX_PATH, RootPathName);
+        RootPathName[3] = 0;
+    }
 	
-    hFile = CreateFileW(RootPath,
+    hFile = CreateFileW(RootPathName,
                         FILE_READ_ATTRIBUTES,
                         FILE_SHARE_READ,
                         NULL,

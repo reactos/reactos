@@ -27,44 +27,56 @@
 WINBOOL STDCALL CreateDirectoryA(LPCSTR lpPathName,
 				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-	return CreateDirectoryExA(NULL,lpPathName,lpSecurityAttributes);
+   return CreateDirectoryExA(NULL,lpPathName,lpSecurityAttributes);
 }
 
 WINBOOL STDCALL CreateDirectoryExA(LPCSTR lpTemplateDirectory,
 				   LPCSTR lpNewDirectory,
 				   LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-	WCHAR TemplateDirectoryW[MAX_PATH];
-	WCHAR NewDirectoryW[MAX_PATH];
-	ULONG i;
-	i = 0;
-   	while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
-     	{
-		TemplateDirectoryW[i] = *lpTemplateDirectory;
-		lpTemplateDirectory++;
-		i++;
-     	}
-   	TemplateDirectoryW[i] = 0;
+   WCHAR TemplateDirectoryW[MAX_PATH];
+   WCHAR NewDirectoryW[MAX_PATH];
+   ULONG i;
 
-	i = 0;
-   	while ((*lpNewDirectory)!=0 && i < MAX_PATH)
-     	{
-		NewDirectoryW[i] = *lpNewDirectory;
-		lpNewDirectory++;
-		i++;
-     	}
-   	NewDirectoryW[i] = 0;
-	return CreateDirectoryExW(TemplateDirectoryW,
-				  NewDirectoryW,
-				  lpSecurityAttributes);
+   DPRINT("lpTemplateDirectory %s lpNewDirectory %s lpSecurityAttributes %p\n",
+          lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
+
+   if (lpTemplateDirectory)
+     {
+        i = 0;
+        while ((*lpTemplateDirectory)!=0 && i < MAX_PATH)
+          {
+             TemplateDirectoryW[i] = *lpTemplateDirectory;
+             lpTemplateDirectory++;
+             i++;
+          }
+        TemplateDirectoryW[i] = 0;
+     }
+   DPRINT ("\n");
+
+   if (lpNewDirectory)
+     {
+        i = 0;
+        while ((*lpNewDirectory)!=0 && i < MAX_PATH)
+          {
+             NewDirectoryW[i] = *lpNewDirectory;
+             lpNewDirectory++;
+             i++;
+          }
+        NewDirectoryW[i] = 0;
+     }
+   DPRINT ("\n");
+
+   return CreateDirectoryExW(lpTemplateDirectory?TemplateDirectoryW:NULL,
+                             lpNewDirectory?NewDirectoryW:NULL,
+                             lpSecurityAttributes);
 }
 
 
 WINBOOL STDCALL CreateDirectoryW(LPCWSTR lpPathName, 
 				 LPSECURITY_ATTRIBUTES lpSecurityAttributes)
 {
-	
-	return CreateDirectoryExW(NULL,lpPathName,lpSecurityAttributes);
+   return CreateDirectoryExW(NULL,lpPathName,lpSecurityAttributes);
 }
 
 WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
@@ -76,8 +88,11 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING DirectoryNameString;
    IO_STATUS_BLOCK IoStatusBlock;
-   
-   if ( lpTemplateDirectory != NULL ) 
+
+   DPRINT("lpTemplateDirectory %w lpNewDirectory %w lpSecurityAttributes %p\n",
+           lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
+
+   if ( lpTemplateDirectory != NULL && *lpTemplateDirectory != 0 )
      {
 	// get object attributes from template directory
 	DPRINT("KERNEL32:FIXME:%s:%d\n",__FILE__,__LINE__);
@@ -87,14 +102,14 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
    DirectoryNameString.Length = lstrlenW(lpNewDirectory)*sizeof(WCHAR);
    DirectoryNameString.Buffer = (WCHAR *)lpNewDirectory;
    DirectoryNameString.MaximumLength = DirectoryNameString.Length+sizeof(WCHAR);
-	
+
    ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
    ObjectAttributes.RootDirectory = NULL;
    ObjectAttributes.ObjectName = &DirectoryNameString;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE| OBJ_INHERIT;
+   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE | OBJ_INHERIT;
    ObjectAttributes.SecurityDescriptor = NULL;
    ObjectAttributes.SecurityQualityOfService = NULL;
-   
+
    errCode = ZwCreateFile(&DirectoryHandle,
 			  DIRECTORY_ALL_ACCESS,
 			  &ObjectAttributes,
@@ -106,15 +121,15 @@ WINBOOL STDCALL CreateDirectoryExW(LPCWSTR lpTemplateDirectory,
 			  0,
 			  NULL,
 			  0);
-
+   DPRINT("errCode: %x\n", errCode);
    if (!NT_SUCCESS(errCode))
      {
 	SetLastError(RtlNtStatusToDosError(errCode));
 	return FALSE;
      }
-   
+
    NtClose(DirectoryHandle);
-   
+
    return TRUE;
 }
 
