@@ -230,9 +230,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
       {  
          PAINTSTRUCT ps;
          HDC Hdc = BeginPaint(HWnd, &ps);
-#if 0
          try
-#endif
          {
             // 
             // TODO: Add palette support...
@@ -245,9 +243,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
                    HMemDC, 0, 0, 
                    SRCCOPY);
          }
-#if 0
          catch (...)
-#endif
          {
             EndPaint(HWnd, &ps);
          }
