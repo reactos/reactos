@@ -1,4 +1,4 @@
-/* $Id: proc.c,v 1.42 2001/09/02 17:59:44 ea Exp $
+/* $Id: proc.c,v 1.43 2002/05/07 22:26:29 hbirr Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -506,10 +506,24 @@ ExitProcess (
 	UINT	uExitCode
 	)
 {
+        CSRSS_API_REQUEST CsrRequest;
+        CSRSS_API_REPLY CsrReply;
+	NTSTATUS Status;
+
 	/* unload all dll's */
 	LdrShutdownProcess ();
 
-	/* FIXME: notify csrss of process termination */
+	/* notify csrss of process termination */
+	CsrRequest.Type = CSRSS_TERMINATE_PROCESS;
+	Status = CsrClientCallServer(&CsrRequest, 
+		                     &CsrReply,
+				     sizeof(CSRSS_API_REQUEST),
+				     sizeof(CSRSS_API_REPLY));
+	if (!NT_SUCCESS(Status) || !NT_SUCCESS(CsrReply.Status))
+	{
+		DbgPrint("Failed to tell csrss about terminating process. Expect trouble.\n");
+	}
+
 
 	NtTerminateProcess (NtCurrentProcess (),
 	                    uExitCode);
