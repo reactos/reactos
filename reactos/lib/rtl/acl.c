@@ -1,4 +1,4 @@
-/*
+/* $Id: acl.c,v 1.5 2004/11/27 16:33:21 ekohl Exp $
  *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
@@ -43,11 +43,11 @@ RtlFirstFreeAce(PACL Acl,
          return(FALSE);
       }
       if (Current->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
-            Acl->AclRevision < ACL_REVISION3)
+          Acl->AclRevision < ACL_REVISION3)
       {
          return(FALSE);
       }
-      Current = (PACE)((PVOID)Current + (ULONG)Current->Header.AceSize);
+      Current = (PACE)((ULONG_PTR)Current + (ULONG_PTR)Current->Header.AceSize);
       i++;
    }
    while (i < Acl->AceCount);
@@ -74,7 +74,7 @@ RtlGetAce(PACL Acl,
    *Ace = (PACE)(Acl + 1);
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -117,7 +117,7 @@ RtlpAddKnownAce (PACL Acl,
       return(STATUS_INVALID_SID);
    }
    if (Acl->AclRevision > MAX_ACL_REVISION ||
-         Revision > MAX_ACL_REVISION)
+       Revision > MAX_ACL_REVISION)
    {
       return(STATUS_UNKNOWN_REVISION);
    }
@@ -231,7 +231,7 @@ RtlpAddData(PVOID AceList,
 {
    if (Offset > 0)
    {
-      memcpy((PUCHAR)Ace + AceListLength,
+      memcpy((PVOID)Ace + AceListLength,
              Ace,
              Offset);
    }
@@ -261,7 +261,7 @@ RtlAddAce(PACL Acl,
    ULONG j;
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -286,7 +286,7 @@ RtlAddAce(PACL Acl,
    while ((PVOID)Current < ((PVOID)AceList + AceListLength))
    {
       if (AceList->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
-            AclRevision < ACL_REVISION3)
+          AclRevision < ACL_REVISION3)
       {
          return(STATUS_INVALID_PARAMETER);
       }
@@ -356,7 +356,7 @@ RtlAddAuditAccessAce(PACL Acl,
    }
 
    if (Acl->AclRevision > MAX_ACL_REVISION ||
-         Revision > MAX_ACL_REVISION)
+       Revision > MAX_ACL_REVISION)
    {
       return(STATUS_REVISION_MISMATCH);
    }
@@ -496,7 +496,7 @@ RtlDeleteAce(PACL Acl,
    PACE Current;
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -551,7 +551,7 @@ RtlCreateAcl(PACL Acl,
       return(STATUS_INVALID_PARAMETER);
    }
 
-   AclSize = (AclSize + 3) & ~(0x3);
+   AclSize = ROUND_UP(AclSize, 4);
    Acl->AclSize = AclSize;
    Acl->AclRevision = AclRevision;
    Acl->AceCount = 0;
@@ -574,7 +574,7 @@ RtlQueryInformationAcl(PACL Acl,
    PACE Ace;
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -639,7 +639,7 @@ RtlSetInformationAcl(PACL Acl,
                      ACL_INFORMATION_CLASS InformationClass)
 {
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -681,10 +681,10 @@ RtlValidAcl (PACL Acl)
    PACE Ace;
    USHORT Size;
 
-   Size = (Acl->AclSize + 3) & ~3;
+   Size = ROUND_UP(Acl->AclSize, 4);
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-         Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION)
    {
       return(FALSE);
    }
