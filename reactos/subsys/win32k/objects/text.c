@@ -22,7 +22,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id: text.c,v 1.110 2004/08/24 17:29:00 navaraf Exp $ */
+/* $Id: text.c,v 1.111 2004/09/13 17:17:17 gvg Exp $ */
 #include <w32k.h>
 
 #include <ft2build.h>
@@ -129,8 +129,10 @@ InitFontSupport(VOID)
    ExInitializeFastMutex(&FreeTypeLock);
 
    ulError = FT_Init_FreeType(&library);
-   if (ulError)
+   if (ulError) {
+      DPRINT1("FT_Init_FreeType failed with error code 0x%x\n", ulError);
       return FALSE;
+   }
 
    IntLoadSystemFonts();
 
