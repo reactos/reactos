@@ -1,4 +1,4 @@
-/* $Id: path.c,v 1.7 2001/03/07 22:29:09 cnettel Exp $
+/* $Id: path.c,v 1.8 2001/03/08 22:48:42 dwelch Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -27,7 +27,6 @@
 
 
 /* FUNCTIONS *****************************************************************/
-
 
 static ULONG RtlpGetDotSequence (PWSTR p)
 {
@@ -119,7 +118,7 @@ RtlDetermineDosPathNameType_U (
 	PWSTR Path
 	)
 {
-//	DPRINT ("RtlDetermineDosPathNameType_U %S\n", Path);
+	DPRINT ("RtlDetermineDosPathNameType_U %S\n", Path);
 
 	if (Path == NULL)
 		return 0;
@@ -240,7 +239,7 @@ RtlGetCurrentDirectory_U (
 	ULONG Length;
 	PCURDIR cd;
 
-//	DPRINT ("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
+	DPRINT ("RtlGetCurrentDirectory %lu %p\n", MaximumLength, Buffer);
 
 	cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
 
@@ -250,8 +249,8 @@ RtlGetCurrentDirectory_U (
 	    cd->DosPath.Buffer[Length - 2] != L':')
 		Length--;
 
-//	DPRINT ("cd->DosPath.Buffer %S Length %d\n",
-//	        cd->DosPath.Buffer, Length);
+	DPRINT ("cd->DosPath.Buffer %S Length %d\n",
+	        cd->DosPath.Buffer, Length);
 
 	if (MaximumLength / sizeof(WCHAR) > Length)
 	{
@@ -283,10 +282,7 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
    ULONG size;
    HANDLE handle = NULL;
    PWSTR wcs;
-   PWSTR devpathstart, loopvar;
    PWSTR buf = 0;
-   PFILE_NAME_INFORMATION objnameinfo;
-   ULONG reslength;
    
    DPRINT ("RtlSetCurrentDirectory %wZ\n", name);
 
@@ -337,28 +333,6 @@ NTSTATUS STDCALL RtlSetCurrentDirectory_U (PUNICODE_STRING name)
 			&iosb,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT);
-
-   objnameinfo = RtlAllocateHeap (RtlGetProcessHeap(),
-			  0,
-			  cd->DosPath.MaximumLength*sizeof(WCHAR)+4); // A little margin, for Length pre-fix
-
-   NtQueryInformationFile(handle,NULL,objnameinfo,sizeof(OBJECT_NAME_INFORMATION),FileNameInformation);
-   
-   devpathstart=buf+wcslen(buf);
-
-   for (loopvar=objnameinfo->FileName;(*loopvar);loopvar++)
-	if ((*loopvar)=='\\')
-	{
-	   devpathstart--;
-	   for (;devpathstart>buf && (*devpathstart)!='\\';devpathstart--) {}
-	}
-
-   wcscpy(devpathstart, objnameinfo->FileName);
-
-   
-RtlFreeHeap (RtlGetProcessHeap (),
-		     0,
-		     objnameinfo);
    if (!NT_SUCCESS(Status))
      {
 	RtlFreeHeap (RtlGetProcessHeap (),
@@ -419,8 +393,8 @@ RtlGetFullPathName_U (
 	PCURDIR cd;
 	NTSTATUS Status;
 
-//	DPRINT("RtlGetFullPathName_U %S %ld %p %p\n",
-//	       DosName, size, buf, FilePart);
+	DPRINT("RtlGetFullPathName_U %S %ld %p %p\n",
+	       DosName, size, buf, FilePart);
 
 	if (!DosName || !*DosName)
 		return 0;
@@ -461,7 +435,7 @@ CHECKPOINT;
 	RtlAcquirePebLock();
 
 	cd = &(NtCurrentPeb ()->ProcessParameters->CurrentDirectory);
-//DPRINT("type %ld\n", type);
+DPRINT("type %ld\n", type);
 	switch (type)
 	{
 		case 1:		/* \\xxx or \\.xxx */
@@ -532,7 +506,7 @@ CHECKPOINT;
 			return 0;
 	}
 
-//	DPRINT("buf \'%S\' DosName \'%S\' len %ld\n", buf, DosName, len);
+	DPRINT("buf \'%S\' DosName \'%S\' len %ld\n", buf, DosName, len);
 	/* add dosname to prefix */
 	wcsncat (buf, DosName, len);
 
@@ -546,9 +520,9 @@ CHECKPOINT;
 	if (len < 3 && buf[len-1] == L':')
 		wcscat (buf, L"\\");
 
-//	DPRINT("buf \'%S\'\n", buf);
+	DPRINT("buf \'%S\'\n", buf);
 	RtlpEatPath (buf);
-//	DPRINT("buf \'%S\'\n", buf);
+	DPRINT("buf \'%S\'\n", buf);
 
 	len = wcslen (buf);
 
