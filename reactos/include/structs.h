@@ -2253,6 +2253,10 @@ typedef struct tagENHMETAHEADER {
   DWORD nPalEntries;
   SIZEL szlDevice;
   SIZEL szlMillimeters;
+  DWORD cbPixelFormat;
+  DWORD offPixelFormat;
+  DWORD bOpenGL;
+  SIZEL szlMicrometers;
 } ENHMETAHEADER, *LPENHMETAHEADER;
 
 typedef struct tagENHMETARECORD {
