@@ -104,8 +104,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
    * Setup a stack frame for exit from the task switching routine
    */
 
-  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) +
-    sizeof(FLOATING_SAVE_AREA) + sizeof(KTRAP_FRAME);
+  InitSize = 5 * sizeof(DWORD) + 6 * sizeof(DWORD) + sizeof(DWORD) +
+             sizeof(KTRAP_FRAME);
   KernelStack = (PULONG)(Thread->KernelStack - InitSize);
 
   /* Set up the initial frame for the return from the dispatcher. */
@@ -137,7 +137,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread, PCONTEXT Context)
   TrapFrame->Gs = Context->SegGs;
   TrapFrame->Es = Context->SegEs;
   TrapFrame->Ds = Context->SegDs;
-  TrapFrame->Edx = Context->Ebx;
+  TrapFrame->Edx = Context->Edx;
   TrapFrame->Ecx = Context->Ecx;
   TrapFrame->Eax = Context->Eax;
   TrapFrame->PreviousMode = UserMode;
