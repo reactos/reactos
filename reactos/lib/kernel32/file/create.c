@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.37 2004/07/18 17:08:29 navaraf Exp $
+/* $Id: create.c,v 1.38 2004/07/22 02:32:40 navaraf Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -86,7 +86,6 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    HANDLE FileHandle;
    NTSTATUS Status;
    ULONG Flags = 0;
-   ULONG DesiredAccess = 0;
    CSRSS_API_REQUEST Request;
    CSRSS_API_REPLY Reply;
 
@@ -179,23 +178,11 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
     }
    }
    else
-   {
     Flags |= FILE_NON_DIRECTORY_FILE;
-   }
     
-   if(dwDesiredAccess & GENERIC_ALL)
-     DesiredAccess |= FILE_READ_DATA | FILE_WRITE_DATA;
-   else
-   {
-     if(dwDesiredAccess & GENERIC_READ)
-       DesiredAccess |= FILE_READ_DATA;
-     
-     if(dwDesiredAccess & GENERIC_WRITE)
-       DesiredAccess |= FILE_WRITE_DATA;
-   }    
     
-   /* handle may allways be waited on and querying attributes are allways allowed */
-   DesiredAccess |= SYNCHRONIZE|FILE_READ_ATTRIBUTES; 
+  /* handle may allways be waited on and querying attributes are allways allowed */
+  dwDesiredAccess |= SYNCHRONIZE|FILE_READ_ATTRIBUTES; 
 
    /* FILE_FLAG_POSIX_SEMANTICS is handled later */
 
@@ -270,7 +257,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
    /* perform the call */
    Status = NtCreateFile (&FileHandle,
-			  DesiredAccess,
+			  dwDesiredAccess,
 			  &ObjectAttributes,
 			  &IoStatusBlock,
 			  NULL,
