@@ -426,6 +426,7 @@ NdisMAllocateMapRegisters(
     {
       NDIS_DbgPrint(MAX_TRACE, ("iterating, basemapregistersneeded = %d, IoAlloc = 0x%x\n", BaseMapRegistersNeeded, IoAllocateAdapterChannel));
 
+      BaseMapRegistersNeeded--;
       Adapter->NdisMiniportBlock.CurrentMapRegister = BaseMapRegistersNeeded;
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         {
@@ -453,8 +454,6 @@ NdisMAllocateMapRegisters(
       NDIS_DbgPrint(MAX_TRACE, ("resetting event\n"));
 
       KeResetEvent(&Adapter->DmaEvent);
-
-      BaseMapRegistersNeeded--;
     }
 
   NDIS_DbgPrint(MAX_TRACE, ("returning success\n"));
