@@ -635,6 +635,10 @@ void NotifyArea::UpdateIcons()
 	UpdateWindow(_hwnd);
 }
 
+#ifdef _MSC_VER
+#pragma comment(lib, "msimg32")	// for AlphaBlend()
+#endif
+
 void NotifyArea::Paint()
 {
 	BufferedPaintCanvas canvas(_hwnd);
@@ -654,8 +658,18 @@ void NotifyArea::Paint()
 		x += NOTIFYICON_DIST;
 	}
 
+	MemCanvas mem_dc;
+	SelectedBitmap bmp(mem_dc, CreateCompatibleBitmap(canvas, NOTIFYICON_SIZE, NOTIFYICON_SIZE));
+	RECT rect = {0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE};
+	BLENDFUNCTION blend = {AC_SRC_OVER, 0, 128, 0};
+
 	for(NotifyIconSet::const_iterator it=_sorted_icons.begin(); it!=_sorted_icons.end(); ++it) {
-		DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
+		if (it->_dwState & NIS_HIDDEN) {
+			FillRect(mem_dc, &rect, GetSysColorBrush(COLOR_BTNFACE));
+			DrawIconEx(mem_dc, 0, 0, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
+			AlphaBlend(canvas, x, y, NOTIFYICON_SIZE, NOTIFYICON_SIZE, mem_dc, 0, 0, NOTIFYICON_SIZE, NOTIFYICON_SIZE, blend);
+		} else
+			DrawIconEx(canvas, x, y, it->_hIcon, NOTIFYICON_SIZE, NOTIFYICON_SIZE, 0, 0, DI_NORMAL);
 
 		x += NOTIFYICON_DIST;
 	}

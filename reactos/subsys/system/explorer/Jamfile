@@ -43,7 +43,7 @@ exe explorer :
 	dialogs/searchprogram.cpp
 	dialogs/settings.cpp
 	i386-stub-win32.c
- :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501
+ :	<define>WIN32 <define>_WIN32_IE=0x0600 <define>_WIN32_WINNT=0x0501 <define>WINVER=0x0500
 	<cxxflags>-I$(INCLUDE)
 #nur für GCC:	<cxxflags>-fexceptions <cxxflags>-Wall
 	<find-shared-library>gdi32
@@ -52,6 +52,7 @@ exe explorer :
 	<find-shared-library>uuid
 	<find-shared-library>wsock32
 	<find-shared-library>oleaut32
+	<find-shared-library>msimg32
 #	<find-shared-library>expat
 	<linkflags>notifyhook.dll
 	<linkflags>libexpat.dll

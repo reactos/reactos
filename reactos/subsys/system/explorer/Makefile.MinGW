@@ -8,7 +8,7 @@ CC = gcc
 CXX = g++
 LINK = g++
 
-CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -fexceptions -Wall -I.
+CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -fexceptions -Wall -I.
 RCFLAGS	= -DWIN32 -D__WINDRES__
 LFLAGS	= -Wl,--subsystem,windows
 
@@ -75,7 +75,7 @@ OBJECTS = \
 	i386-stub-win32.o \
 	xmlstorage.o
 
-LIBS = gdi32 comctl32 ole32 uuid
+LIBS = gdi32 comctl32 msimg32 ole32 uuid
 DELAYIMPORTS = oleaut32 wsock32
 
 all: $(TARGET)
