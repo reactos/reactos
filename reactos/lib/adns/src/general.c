@@ -117,7 +117,7 @@ int adns__vbuf_ensure(vbuf *vb, int want) {
   void *nb;
   
   if (vb->avail >= want) return 1;
-  nb= realloc(vb->buf,want); if (!nb) return 0;
+  nb= realloc(vb->buf, (size_t) want); if (!nb) return 0;
   vb->buf= nb;
   vb->avail= want;
   return 1;
@@ -136,8 +136,8 @@ int adns__vbuf_append(vbuf *vb, const byte *data, int len) {
   if (vb->avail < newlen) {
     if (newlen<20) newlen= 20;
     newlen <<= 1;
-    nb= realloc(vb->buf,newlen);
-    if (!nb) { newlen= vb->used+len; nb= realloc(vb->buf,newlen); }
+    nb= realloc(vb->buf,(size_t) newlen);
+    if (!nb) { newlen= vb->used+len; nb= realloc(vb->buf, (size_t) newlen); }
     if (!nb) return 0;
     vb->buf= nb;
     vb->avail= newlen;
@@ -205,7 +205,7 @@ adns_status adns_rr_info(adns_rrtype type,
   if (st) goto x_freevb;
   if (!adns__vbuf_append(&vb,"",1)) { st= adns_s_nomemory; goto x_freevb; }
   assert((int)strlen(vb.buf) == vb.used-1);
-  *data_r= realloc(vb.buf,vb.used);
+  *data_r= realloc(vb.buf, (size_t) vb.used);
   if (!*data_r) *data_r= vb.buf;
   return adns_s_ok;
 
@@ -328,7 +328,7 @@ void adns__isort(void *array, int nobjs, int sz, void *tempbuf,
 	 place--);
     if (place != i) {
       memcpy(tempbuf, data + i*sz, (size_t) sz);
-      memmove(data + (place+1)*sz, data + place*sz, (i-place)*sz);
+      memmove(data + (place+1)*sz, data + place*sz, (size_t) (i-place)*sz);
       memcpy(data + place*sz, tempbuf, (size_t) sz);
     }
   }
