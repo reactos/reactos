@@ -1,4 +1,4 @@
-/* $Id: mdl.c,v 1.17 2004/08/15 16:39:03 chorns Exp $
+/* $Id: mdl.c,v 1.18 2004/08/21 20:47:28 tamlin Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
@@ -102,7 +102,7 @@ IoBuildPartialMdl(PMDL SourceMdl,
    TargetMdl->ByteCount = Length;
    TargetMdl->Process = SourceMdl->Process;
    Delta = (ULONG_PTR)VirtualAddress - ((ULONG_PTR)SourceMdl->StartVa + SourceMdl->ByteOffset);
-   TargetMdl->MappedSystemVa = SourceMdl->MappedSystemVa + Delta;
+   TargetMdl->MappedSystemVa = (char*)SourceMdl->MappedSystemVa + Delta;
 
    TargetMdl->MdlFlags = SourceMdl->MdlFlags & (MDL_IO_PAGE_READ|MDL_SOURCE_IS_NONPAGED_POOL|MDL_MAPPED_TO_SYSTEM_VA);
    TargetMdl->MdlFlags |= MDL_PARTIAL;
