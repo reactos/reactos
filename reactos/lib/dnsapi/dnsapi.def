@@ -83,6 +83,7 @@ EXPORTS
     DnsQueryConfig = DnsQueryConfig@0 @82
     DnsQueryEx = DnsQueryEx@0 @83
     DnsQuery_A = DnsQuery_A@24 @84
+    DnsQuery_A@24
     DnsQuery_UTF8 = DnsQuery_UTF8@24 @85
     DnsQuery_W = DnsQuery_W@24 @86
     DnsRecordBuild_UTF8 = DnsRecordBuild_UTF8@0 @87
@@ -90,6 +91,7 @@ EXPORTS
     DnsRecordCompare = DnsRecordCompare@0 @89
     DnsRecordCopyEx = DnsRecordCopyEx@0 @90
     DnsRecordListFree = DnsRecordListFree@8 @91
+    DnsRecordListFree@8
     DnsRecordSetCompare = DnsRecordSetCompare@0 @92
     DnsRecordSetCopyEx = DnsRecordSetCopyEx@0 @93
     DnsRecordSetDetach = DnsRecordSetDetach@0 @94

@@ -1,4 +1,4 @@
-# $Id: Makefile,v 1.3 2003/12/18 12:09:57 arty Exp $
+# $Id: Makefile,v 1.4 2003/12/25 09:52:44 arty Exp $
 
 PATH_TO_TOP = ../..
 
@@ -10,7 +10,9 @@ TARGET_NAME = dnsapi
 
 TARGET_BASE = 0x78000000
 
-TARGET_LFLAGS = -nostartfiles -g
+TARGET_LFLAGS = -nostartfiles -g --kill-at
+
+DLLTOOL_ADD = -A
 
 TARGET_SDKLIBS = adns.a kernel32.a iphlpapi.a ws2_32.a msvcrt.a ntdll.a \
 	rosrtl.a
