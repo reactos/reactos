@@ -33,7 +33,7 @@
 #include <sys/types.h>
 #include <sys/param.h>
 #include <sys/stat.h>
-#if defined (__MINGW32__) || defined(_MSC_VER)
+#if defined(_MSC_VER)
 #include <sys/time.h___>
 #else
 #include <time.h>

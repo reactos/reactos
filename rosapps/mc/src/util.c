@@ -35,7 +35,7 @@
 #include <signal.h>		/* my_system */
 #include <limits.h>		/* INT_MAX */
 #ifndef SCO_FLAVOR
-#if defined (__MINGW32__) || defined(_MSC_VER)
+#if defined(_MSC_VER)
 #	include <sys/time.h___>
 #else
 #	include <sys/time.h>	/* alex: sys/select.h defines struct timeval */
@@ -88,7 +88,7 @@ int message (int error, char *header, char *text, ...);
 #include "user.h"		/* expand_format */
 #include "../vfs/vfs.h"
 
-/* "$Id: util.c,v 1.1 2001/12/30 09:55:20 sedwards Exp $" */
+/* "$Id: util.c,v 1.2 2003/06/27 21:10:35 gvg Exp $" */
 
 char app_text [] = "Midnight-Commander";
 

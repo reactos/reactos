@@ -79,7 +79,7 @@
 #ifdef SCO_FLAVOR
 #	include <sys/timeb.h>	/* alex: for struct timeb, used in time.h */
 #endif /* SCO_FLAVOR */
-#if defined (__MINGW32__) || defined(_MSC_VER)
+#if defined(_MSC_VER)
 #include <sys/time.h___>
 #else
 #include <time.h>
@@ -122,7 +122,7 @@ static
 
 int do_reget;
 
-/* rcsid [] = "$Id: file.c,v 1.1 2001/12/30 09:55:25 sedwards Exp $" */
+/* rcsid [] = "$Id: file.c,v 1.2 2003/06/27 21:10:35 gvg Exp $" */
 int verbose = 1;
 
 /* Recursive operation on subdirectories */
