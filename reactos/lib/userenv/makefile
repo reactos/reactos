@@ -15,7 +15,8 @@ TARGET_LFLAGS = -nostdlib -nostartfiles
 
 TARGET_SDKLIBS = ntdll.a kernel32.a advapi32.a
 
-TARGET_OBJECTS = directory.o profile.o misc.o registry.o setup.o userenv.o 
+TARGET_OBJECTS = directory.o environment.o profile.o misc.o registry.o \
+                 setup.o userenv.o
 
 DEP_OBJECTS = $(TARGET_OBJECTS)
 
