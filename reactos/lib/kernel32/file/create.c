@@ -1,4 +1,4 @@
-/* $Id: create.c,v 1.24 2002/05/07 22:21:02 hbirr Exp $
+/* $Id: create.c,v 1.25 2002/08/18 04:20:21 hyperion Exp $
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
@@ -9,11 +9,14 @@
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  Removed use of SearchPath (not used by Windows)
+ *                  18/08/2002: CreateFileW mess cleaned up (KJK::Hyperion)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+/* please FIXME: ddk/ntddk.h should be enough */
+#include <ddk/iodef.h>
 #include <ntdll/rtl.h>
 #include <windows.h>
 
@@ -82,6 +85,17 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    NTSTATUS Status;
    ULONG Flags = 0;
 
+   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
+
+   if(hTemplateFile != NULL)
+   {
+    /* FIXME */
+    DPRINT("Template file feature not supported yet\n");
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return INVALID_HANDLE_VALUE;
+   }
+
+   /* validate & translate the creation disposition */
    switch (dwCreationDisposition)
      {
       case CREATE_NEW:
@@ -97,40 +111,95 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 	break;
 	
       case OPEN_ALWAYS:
-	dwCreationDisposition = OPEN_ALWAYS;
+	dwCreationDisposition = FILE_OPEN_IF;
 	break;
 
       case TRUNCATE_EXISTING:
 	dwCreationDisposition = FILE_OVERWRITE;
+      
+      default:
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return (INVALID_HANDLE_VALUE);
      }
+
+   /* validate & translate the flags */
+   if (dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED)
+   {
+    DPRINT("Overlapped I/O not supported\n");
+    SetLastError(ERROR_NOT_SUPPORTED);
+    return INVALID_HANDLE_VALUE;
+   }
+   else
+     Flags |= FILE_SYNCHRONOUS_IO_ALERT;
    
-   DPRINT("CreateFileW(lpFileName %S)\n",lpFileName);
+   /* validate & translate the filename */
+   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
+				      &NtPathU,
+				      NULL,
+				      NULL))
+   {
+     SetLastError(ERROR_BAD_PATHNAME);
+     return INVALID_HANDLE_VALUE;
+   }
    
+   DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
+
+   /* translate the flags that need no validation */
+   if(dwFlagsAndAttributes & FILE_FLAG_WRITE_THROUGH)
+    Flags |= FILE_WRITE_THROUGH;
+
+   if(dwFlagsAndAttributes & FILE_FLAG_NO_BUFFERING)
+    Flags |= FILE_NO_INTERMEDIATE_BUFFERING;
+
+   if(dwFlagsAndAttributes & FILE_FLAG_RANDOM_ACCESS)
+    Flags |= FILE_RANDOM_ACCESS;
+   
+   if(dwFlagsAndAttributes & FILE_FLAG_SEQUENTIAL_SCAN)
+    Flags |= FILE_SEQUENTIAL_ONLY;
+   
+   if(dwFlagsAndAttributes & FILE_FLAG_DELETE_ON_CLOSE)
+    Flags |= FILE_DELETE_ON_CLOSE;
+   
+   if(dwFlagsAndAttributes & FILE_FLAG_BACKUP_SEMANTICS)
+   {
+    if(dwDesiredAccess & GENERIC_READ)
+     Flags |= FILE_OPEN_FOR_BACKUP_INTENT;
+    
+    if(dwDesiredAccess & GENERIC_WRITE)
+     Flags |= FILE_OPEN_FOR_RECOVERY;
+   }
+   else
+    Flags |= FILE_NON_DIRECTORY_FILE;
+
+   /* FILE_FLAG_POSIX_SEMANTICS is handled later */
+
+#if 0
+   /* FIXME: Win32 constants to be defined */
+   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_REPARSE_POINT)
+    Flags |= FILE_OPEN_REPARSE_POINT;
+   
+   if(dwFlagsAndAttributes & FILE_FLAG_OPEN_NO_RECALL)
+    Flags |= FILE_OPEN_NO_RECALL;
+#endif
+
+   /* translate the desired access */
    if (dwDesiredAccess & GENERIC_READ)
      dwDesiredAccess |= FILE_GENERIC_READ;
    
    if (dwDesiredAccess & GENERIC_WRITE)
      dwDesiredAccess |= FILE_GENERIC_WRITE;
    
-   if (!(dwFlagsAndAttributes & FILE_FLAG_OVERLAPPED))
-     {
-	Flags |= FILE_SYNCHRONOUS_IO_ALERT;
-     }
-   
-   if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpFileName,
-				      &NtPathU,
-				      NULL,
-				      NULL))
-     return INVALID_HANDLE_VALUE;
-   
-   DPRINT("NtPathU \'%S\'\n", NtPathU.Buffer);
-   
-   ObjectAttributes.Length = sizeof(OBJECT_ATTRIBUTES);
-   ObjectAttributes.RootDirectory = NULL;
-   ObjectAttributes.ObjectName = &NtPathU;
-   ObjectAttributes.Attributes = OBJ_CASE_INSENSITIVE;
-   ObjectAttributes.SecurityDescriptor = NULL;
-   ObjectAttributes.SecurityQualityOfService = NULL;
+   if (dwDesiredAccess & GENERIC_EXECUTE)
+     dwDesiredAccess |= FILE_GENERIC_EXECUTE;
+
+   /* build the object attributes */
+   InitializeObjectAttributes(
+    &ObjectAttributes,
+    &NtPathU,
+    0,
+    NULL,
+    NULL
+   );
 
    if (lpSecurityAttributes)
    {
@@ -139,6 +208,10 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
       ObjectAttributes.SecurityDescriptor = lpSecurityAttributes->lpSecurityDescriptor;
    }
    
+   if(!(dwFlagsAndAttributes & FILE_FLAG_POSIX_SEMANTICS))
+    ObjectAttributes.Attributes |= OBJ_CASE_INSENSITIVE;
+
+   /* perform the call */
    Status = NtCreateFile (&FileHandle,
 			  dwDesiredAccess,
 			  &ObjectAttributes,
@@ -153,11 +226,19 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
    RtlFreeUnicodeString(&NtPathU);
 
+   /* error */
    if (!NT_SUCCESS(Status))
      {
 	SetLastErrorByStatus (Status);
 	return INVALID_HANDLE_VALUE;
      }
+   
+   switch(IoStatusBlock.Information)
+   {
+    case FILE_OPENED:
+    case FILE_CREATED:
+     SetLastError(ERROR_ALREADY_EXISTS);
+   }
    
    return FileHandle;
 }
