@@ -1,0 +1,59 @@
+
+all: kimage
+
+#
+# Defines $(HAL_OBJECTS)
+#
+include hal/x86/sources
+
+RTL_OBJECTS = rtl/vsprintf.o rtl/lookas.o rtl/unicode.o rtl/strtok.o \
+              rtl/time.o rtl/unalign.o rtl/mem.o rtl/largeint.o rtl/ctype.o \
+	      rtl/list.o rtl/slist.o rtl/interlck.o
+
+KE_OBJECTS = ke/main.o ke/timer.o ke/error.o ke/catch.o ke/exports.o \
+             ke/module.o ke/dpc.o ke/wait.o ke/kqueue.o ke/dispatch.o \
+	     ke/sem.o ke/critical.o ke/event.o ke/apc.o ke/bug.o \
+	     ke/mutex.o
+
+MM_OBJECTS = mm/mm.o mm/freelist.o mm/pool.o mm/pageflt.o mm/virtual.o \
+             mm/mdl.o mm/zone.o mm/cont.o mm/ncache.o mm/iospace.o \
+	     mm/section.o
+           
+
+IO_OBJECTS = io/iomgr.o io/create.o io/irp.o io/device.o io/rw.o \
+             io/queue.o io/drvlck.o io/timer.o io/share.o io/errlog.o \
+	     io/shutdown.o io/fdisk.o io/cancel.o io/error.o io/arc.o \
+	     io/dpc.o io/symlink.o io/adapter.o io/cntrller.o io/mdl.o \
+	     io/resource.o io/event.o io/process.o io/file.o io/ioctrl.o
+
+OB_OBJECTS = ob/object.o ob/handle.o ob/namespc.o
+
+PS_OBJECTS = ps/psmgr.o ps/thread.o ps/process.o
+
+EX_OBJECTS = ex/work.o ex/fmutex.o ex/resource.o ex/time.o ex/interlck.o
+
+SE_OBJECTS = se/semgr.o
+
+CFG_OBJECTS = cfg/registry.o
+
+TST_OBJECTS = tst/test.o
+
+OBJECTS = $(HAL_OBJECTS) $(KE_OBJECTS) $(RTL_OBJECTS) $(MM_OBJECTS) \
+          $(IO_OBJECTS) $(OB_OBJECTS) $(PS_OBJECTS) $(EX_OBJECTS) \
+	  $(SE_OBJECTS) $(CFG_OBJECTS) $(TST_OBJECTS)
+	 
+utils/export/export$(EXE_POSTFIX): utils/export/export.c
+	$(NATIVE_CC) -g utils/export/export.c -o utils/export/export$(EXE_POSTFIX)
+
+ke/exports.o: exports.lst utils/export/export$(EXE_POSTFIX)
+	utils/export/export$(EXE_POSTFIX) < exports.lst > ke/exports.c
+	$(CC) $(CFLAGS) -c ke/exports.c -o ke/exports.o
+
+kimage: $(OBJECTS)
+	$(LD) --defsym _end=end --defsym _etext=etext --oformat=$(KERNEL_BFD_TARGET) -Ttext c0000000 $(LDFLAGS) $(OBJECTS) -o kimage
+	$(NM) --numeric-sort kimage > kernel.sym
+	$(OBJCOPY) -O binary kimage kimage.bin
+
+dummy:
+	
+include ../rules.mak

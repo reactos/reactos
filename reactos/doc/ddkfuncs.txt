@@ -1,0 +1,27 @@
+This is a list of the functions documented in the ddk that have been
+implemented
+
+IoAllocateController
+IoFreeController
+IoCreateController
+IoDeleteController
+IoStartNextPacket
+IoStartNextPacketByKey
+IoStartPacket
+IoSizeOfIrp
+IoMarkIrpPending
+IoFreeIrp
+IoConnectInterrupt
+IoDisconnectInterrupt
+IoGetCurrentIrpStackLocation
+IoGetNextIrpStackLocation
+IoRequestDpc
+IoInitializeDpc
+IoInitializeTimer
+IoStartTimer
+IoStopTimer
+
+Partially implemented
+
+IoCreateDevice
+IoCallDriver
