@@ -16,6 +16,8 @@
 #include <info.h>
 
 NTSTATUS IRPFinish( PIRP Irp, NTSTATUS Status ) {
+    TI_DbgPrint(MID_TRACE,("Called: Irp %x, Status %x Event %x\n", Irp, Status, Irp->UserEvent));
+
     IoSetCancelRoutine( Irp, NULL );
 
     if( Status == STATUS_PENDING )

@@ -440,8 +440,12 @@ nopages:
 					MH_ALIGN(m, len);
 			}
 			space -= len;
+#ifndef __REACTOS__
 			error = uiomove(mtod(m, caddr_t), (int)len, uio);
 			resid = uio->uio_resid;
+#else
+			resid = 0;
+#endif
 			m->m_len = len;
 			*mp = m;
 			top->m_pkthdr.len += len;

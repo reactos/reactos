@@ -290,7 +290,7 @@ NTSTATUS TCPSendData
 			   Connection->SocketContext));
 
     Status = OskitTCPSend( Connection->SocketContext, 
-			 BufferData, PacketSize, (OSK_UINT *)DataUsed, 0 );
+			 BufferData, PacketSize, DataUsed, 0 );
 
     KeReleaseSpinLock(&Connection->Lock, OldIrql);
 

@@ -488,6 +488,7 @@ TiDispatchInternal(
  */
 {
   NTSTATUS Status;
+  BOOL Complete = TRUE;
   PIO_STACK_LOCATION IrpSp;
 
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
@@ -509,6 +510,7 @@ TiDispatchInternal(
 
   case TDI_SEND:
     Status = DispTdiSend(Irp);
+    Complete = FALSE; /* Completed in DispTdiSend */
     break;
 
   case TDI_SEND_DATAGRAM:
@@ -562,7 +564,10 @@ TiDispatchInternal(
 
   TI_DbgPrint(DEBUG_IRP, ("Leaving. Status = (0x%X).\n", Status));
 
-  return IRPFinish( Irp, Status );
+  if( Complete ) 
+      IRPFinish( Irp, Status );
+
+  return Status;
 }
 
 
