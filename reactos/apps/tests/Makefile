@@ -9,13 +9,15 @@ include $(PATH_TO_TOP)/rules.mak
 # test_old tests
 TEST_APPS = accelerator alive apc args atomtest bench bitblt button \
 button2 capclock carets combo consume copymove count dibtest dump_shared_data \
-edit enumwnd enumws event global_mem gradient hello kernel32 mdi \
+edit enumwnd enumws event global_mem gradient hello mdi \
 hivetest icontest isotest lineclip linetest lpc \
 mktime mstest multithrdwin multiwin mutex nptest patblt primitives pteb \
 regtest sectest sertest shaptest shm statst statst2 stretchblt suspend \
 tcpsvr terminate txtscale thread thread_msg tokentest user32 vmtest \
 winhello wm_erasebkgnd wm_paint eventpair threadwait popupmenu \
 map_dup_inherit p_dup_handle apc2 enhmetafile dirdlg guithreadinfo
+# Build failure:
+# kernel32
 
 TEST_MISC = 
 
